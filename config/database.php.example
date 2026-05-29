@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Copy to database.php and fill in credentials.
+ */
+return [
+    'driver'   => 'mysql',
+    'host'     => '127.0.0.1',
+    'port'     => 3306,
+    'database' => 'study114',
+    'username' => 'root',
+    'password' => '',
+    'charset'  => 'utf8mb4',
+    'collation'=> 'utf8mb4_unicode_ci',
+];

@@ -1,0 +1,17 @@
+# Dependencies
+/vendor/
+
+# Config (local secrets)
+/config/database.php
+.env
+
+# Storage
+/storage/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
