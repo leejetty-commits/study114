@@ -1,0 +1,114 @@
+.form-textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.register-card {
+  max-width: 42rem;
+}
+
+.register-section-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: var(--space-8) 0 var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.register-section-title:first-of-type {
+  margin-top: var(--space-4);
+}
+
+.register-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--gray-200);
+}
+
+.register-hint {
+  font-size: var(--text-sm);
+  color: var(--gray-500);
+  margin-top: var(--space-1);
+}
+
+.register-region-slot {
+  padding: var(--space-4);
+  border: 1px solid var(--gray-200);
+  border-radius: 0.5rem;
+  margin-bottom: var(--space-3);
+  background: var(--gray-50);
+}
+
+.register-region-slot.is-primary {
+  border-color: var(--brand-orange);
+  background: var(--brand-orange-light);
+}
+
+.register-subject-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: var(--space-2);
+  align-items: end;
+  margin-bottom: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .register-subject-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.register-check-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: var(--space-2);
+}
+
+.register-image-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.register-image-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px dashed var(--gray-300);
+  border-radius: 0.375rem;
+  font-size: var(--text-sm);
+}
+
+.register-summary {
+  background: var(--gray-50);
+  border-radius: 0.5rem;
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.register-summary dt {
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-top: var(--space-2);
+}
+
+.register-summary dd {
+  color: var(--gray-800);
+  margin-left: 0;
+}
+
+.register-summary dt:first-child {
+  margin-top: 0;
+}
+
+.field-db-name {
+  font-size: var(--text-xs);
+  color: var(--gray-400);
+  font-family: ui-monospace, monospace;
+}

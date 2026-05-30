@@ -4,30 +4,47 @@
 
 ## 1차 범위
 
-- 가입 방식
-- 공통 회원 DB
-- 공부방 등록 DB
-- 과외쌤 등록 DB
+- 가입 방식 · 공통 회원 DB · 공부방 등록 DB · 과외쌤 등록 DB
 
 상품 설계·결제·만 14세 미만 분기는 1차 제외.
 
-## 문서
+## Cursor — SSOT 시작점
 
-| 문서 | 설명 |
-|------|------|
-| [docs/01-project-overview.md](docs/01-project-overview.md) | 프로젝트 원칙·범위 |
-| [docs/02-folder-structure.md](docs/02-folder-structure.md) | 폴더 구조 |
-| [docs/03-registration.md](docs/03-registration.md) | 가입 방식 |
-| [docs/04-location-policy.md](docs/04-location-policy.md) | 지역·단지 정책 |
-| [docs/database/README.md](docs/database/README.md) | DB 설계 개요 |
-| [sql/schema/001_init.sql](sql/schema/001_init.sql) | 통합 DDL 초안 |
+**[docs/ssot/README.md](docs/ssot/README.md)** — 한 줄: **2+4+5장 DB → 9장 메인 UI → 10장 순서**
 
-## 로컬 개발 (예정)
+| 장 | 문서 | 용도 |
+|----|------|------|
+| 2장 | [02-registration-and-member-db.md](docs/ssot/02-registration-and-member-db.md) | 가입·회원 **개념** |
+| 4장 | [04-member-db-and-role-profiles.md](docs/ssot/04-member-db-and-role-profiles.md) | **회원/역할/지역 DB** |
+| 5장 | [05-study-room-db.md](docs/ssot/05-study-room-db.md) | **공부방 DB** |
+| 9장 | [09-main-screen-roles.md](docs/ssot/09-main-screen-roles.md) | 메인 4종 UI |
+| 10장 | [10-phase1-execution-plan.md](docs/ssot/10-phase1-execution-plan.md) | 실행 순서 |
 
-```bash
-# DB 생성
-mysql -u root -p < sql/schema/001_init.sql
+## UI 프리뷰
+
+| 패키지 | URL |
+|--------|-----|
+| [preview/auth-ui/](preview/auth-ui/) | http://localhost:5173 |
+| [preview/home-ui/](preview/home-ui/) | http://localhost:5174 |
+| [preview/study-room-ui/](preview/study-room-ui/) | http://localhost:5175 |
+
+## DB (로컬) — study114_dev
+
+**MySQL 8.4 (Docker)** · 호스트 포트 **3307** (기존 MariaDB 3306과 충돌 회피)
+
+```powershell
+docker compose -f docker/docker-compose.dev.yml up -d
+# 최초 1회 또는 스키마 재적용
+.\scripts\apply-schema-dev.ps1
+# 테이블 확인
+.\scripts\verify-schema-dev.ps1
 ```
+
+| 항목 | 값 |
+|------|-----|
+| DB명 | `study114_dev` |
+| root 비밀번호 | `study114dev` |
+| 포트 | `3307` |
 
 ## 배포
 

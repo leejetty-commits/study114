@@ -1,0 +1,374 @@
+﻿section
+=== TABLES ===
+Tables_in_study114_dev
+complexes
+facility_masters
+regions
+student_subject_targets
+students
+study_room_facilities
+study_room_images
+study_room_regions
+study_room_subject_targets
+study_rooms
+user_profiles
+user_roles
+users
+section
+=== users ===
+*************************** 1. row ***************************
+       Table: users
+Create Table: CREATE TABLE `users` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('active','pending','blocked','withdrawn') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
+  `email_verified_at` datetime DEFAULT NULL,
+  `last_login_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` datetime DEFAULT NULL COMMENT '탈퇴/비활성 추적',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_users_email` (`email`),
+  KEY `idx_users_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='회원 계정 (1차 가입 주체: 학부모)'
+Field	Type	Null	Key	Default	Extra
+id	bigint unsigned	NO	PRI	NULL	auto_increment
+email	varchar(255)	NO	UNI	NULL	
+password_hash	varchar(255)	NO		NULL	
+status	enum('active','pending','blocked','withdrawn')	NO	MUL	active	
+email_verified_at	datetime	YES		NULL	
+last_login_at	datetime	YES		NULL	
+created_at	datetime	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+updated_at	datetime	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+deleted_at	datetime	YES		NULL	
+section
+=== user_profiles ===
+*************************** 1. row ***************************
+       Table: user_profiles
+Create Table: CREATE TABLE `user_profiles` (
+  `user_id` bigint unsigned NOT NULL,
+  `real_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '실명',
+  `gender` enum('male','female') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '성별 (2장 잠금)',
+  `birth_date` date DEFAULT NULL COMMENT '생년월일 (2장 잠금)',
+  `address_zip` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '우편번호',
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address_line1` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '기본 주소 (1차 UI address)',
+  `address_line2` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '상세 주소',
+  `default_region_id` bigint unsigned DEFAULT NULL COMMENT '기본 동 FK',
+  `default_complex_id` bigint unsigned DEFAULT NULL COMMENT '기본 단지 FK',
+  `phone_verified_at` datetime DEFAULT NULL,
+  `home_region_id` bigint unsigned DEFAULT NULL COMMENT '거주 동',
+  `home_complex_id` bigint unsigned DEFAULT NULL COMMENT '거주 단지 (있으면 단지 우선)',
+  `home_address_detail` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '거주 상세주소',
+  `activity_region_id` bigint unsigned DEFAULT NULL COMMENT '활동 동',
+  `activity_complex_id` bigint unsigned DEFAULT NULL COMMENT '활동 단지 (있으면 단지 우선)',
+  `activity_address_detail` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '활동 상세주소',
+  `sms_opt_in` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'SMS 수신',
+  `email_opt_in` tinyint(1) NOT NULL DEFAULT '0' COMMENT '이메일 수신',
+  `safe_number_opt_in` tinyint(1) NOT NULL DEFAULT '0' COMMENT '안전번호 확장',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  KEY `idx_user_profiles_home_region` (`home_region_id`),
+  KEY `idx_user_profiles_home_complex` (`home_complex_id`),
+  KEY `idx_user_profiles_activity_region` (`activity_region_id`),
+  KEY `idx_user_profiles_activity_complex` (`activity_complex_id`),
+  KEY `fk_user_profiles_default_region` (`default_region_id`),
+  KEY `fk_user_profiles_default_complex` (`default_complex_id`),
+  CONSTRAINT `fk_user_profiles_activity_complex` FOREIGN KEY (`activity_complex_id`) REFERENCES `complexes` (`id`),
+  CONSTRAINT `fk_user_profiles_activity_region` FOREIGN KEY (`activity_region_id`) REFERENCES `regions` (`id`),
+  CONSTRAINT `fk_user_profiles_default_complex` FOREIGN KEY (`default_complex_id`) REFERENCES `complexes` (`id`),
+  CONSTRAINT `fk_user_profiles_default_region` FOREIGN KEY (`default_region_id`) REFERENCES `regions` (`id`),
+  CONSTRAINT `fk_user_profiles_home_complex` FOREIGN KEY (`home_complex_id`) REFERENCES `complexes` (`id`),
+  CONSTRAINT `fk_user_profiles_home_region` FOREIGN KEY (`home_region_id`) REFERENCES `regions` (`id`),
+  CONSTRAINT `fk_user_profiles_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='회원 프로필 (기본·활동 주소 분리)'
+Field	Type	Null	Key	Default	Extra
+user_id	bigint unsigned	NO	PRI	NULL	
+real_name	varchar(50)	NO		NULL	
+gender	enum('male','female')	YES		NULL	
+birth_date	date	YES		NULL	
+address_zip	varchar(10)	YES		NULL	
+phone	varchar(20)	YES		NULL	
+address_line1	varchar(255)	YES		NULL	
+address_line2	varchar(255)	YES		NULL	
+default_region_id	bigint unsigned	YES	MUL	NULL	
+default_complex_id	bigint unsigned	YES	MUL	NULL	
+phone_verified_at	datetime	YES		NULL	
+home_region_id	bigint unsigned	YES	MUL	NULL	
+home_complex_id	bigint unsigned	YES	MUL	NULL	
+home_address_detail	varchar(255)	YES		NULL	
+activity_region_id	bigint unsigned	YES	MUL	NULL	
+activity_complex_id	bigint unsigned	YES	MUL	NULL	
+activity_address_detail	varchar(255)	YES		NULL	
+sms_opt_in	tinyint(1)	NO		0	
+email_opt_in	tinyint(1)	NO		0	
+safe_number_opt_in	tinyint(1)	NO		0	
+created_at	datetime	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+updated_at	datetime	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+section
+=== user_roles ===
+*************************** 1. row ***************************
+       Table: user_roles
+Create Table: CREATE TABLE `user_roles` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint unsigned NOT NULL,
+  `role_type` enum('guardian_student','study_room_owner','tutor','admin') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_primary` tinyint(1) NOT NULL DEFAULT '0' COMMENT '대표 역할',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
+  `granted_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_roles` (`user_id`,`role_type`),
+  KEY `idx_user_roles_role` (`role_type`),
+  CONSTRAINT `fk_user_roles_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='회원 역할'
+Field	Type	Null	Key	Default	Extra
+id	bigint unsigned	NO	PRI	NULL	auto_increment
+user_id	bigint unsigned	NO	MUL	NULL	
+role_type	enum('guardian_student','study_room_owner','tutor','admin')	NO	MUL	NULL	
+is_primary	tinyint(1)	NO		0	
+status	enum('active','inactive')	NO		active	
+granted_at	datetime	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+section
+=== students ===
+*************************** 1. row ***************************
+       Table: students
+Create Table: CREATE TABLE `students` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `guardian_user_id` bigint unsigned NOT NULL COMMENT '학부모 users.id',
+  `student_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '원본 이름 비공개',
+  `public_display_name` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '블라인드 공개명',
+  `request_title` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `request_summary` text COLLATE utf8mb4_unicode_ci,
+  `gender` enum('male','female') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `birth_year` smallint DEFAULT NULL,
+  `school_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `grade_level` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `school_track` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `preferred_lesson_type` enum('study_room','tutor') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `preferred_region_id` bigint unsigned DEFAULT NULL,
+  `preferred_complex_id` bigint unsigned DEFAULT NULL,
+  `preferred_tutor_gender` enum('male','female','any') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `preferred_fee_amount` int unsigned DEFAULT NULL,
+  `lessons_per_week` smallint unsigned DEFAULT NULL,
+  `minutes_per_lesson` smallint unsigned DEFAULT NULL,
+  `lesson_format` enum('one_on_one','group') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `academic_level_note` text COLLATE utf8mb4_unicode_ci,
+  `preferred_style_note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `preferred_school_note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `preferred_academic_background_note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `expected_tutoring_period_note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `required_document_note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `contact_time_note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `feature_1` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `feature_2` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `feature_3` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `exposure_status` enum('draft','published','hidden','deleted') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'draft',
+  `published_at` datetime DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  `sort_order` tinyint unsigned NOT NULL DEFAULT '0',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_students_guardian` (`guardian_user_id`,`sort_order`),
+  KEY `idx_students_exposure` (`exposure_status`,`published_at`),
+  KEY `idx_students_preferred_region` (`preferred_region_id`),
+  KEY `idx_students_preferred_complex` (`preferred_complex_id`),
+  CONSTRAINT `fk_students_guardian` FOREIGN KEY (`guardian_user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `fk_students_preferred_complex` FOREIGN KEY (`preferred_complex_id`) REFERENCES `complexes` (`id`),
+  CONSTRAINT `fk_students_preferred_region` FOREIGN KEY (`preferred_region_id`) REFERENCES `regions` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='학부모 소속 자녀 + 과외등록 (4장)'
+section
+=== student_subject_targets ===
+*************************** 1. row ***************************
+       Table: student_subject_targets
+Create Table: CREATE TABLE `student_subject_targets` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `student_id` bigint unsigned NOT NULL,
+  `school_level` enum('preschool','elementary','middle','high','general','other') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `subject_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_primary` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sst_student` (`student_id`),
+  KEY `idx_sst_subject` (`subject_name`,`school_level`),
+  CONSTRAINT `fk_sst_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='학생 희망과목 (4장)'
+section
+=== study_rooms ===
+*************************** 1. row ***************************
+       Table: study_rooms
+Create Table: CREATE TABLE `study_rooms` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint unsigned NOT NULL COMMENT '등록 회원(운영자)',
+  `study_room_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '공부방명/노출명',
+  `operator_display_name` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '운영자 표시명',
+  `intro_short` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '짧은 소개',
+  `intro_long` text COLLATE utf8mb4_unicode_ci COMMENT '상세 소개',
+  `lesson_place_type` enum('home','office') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '재택/교습소',
+  `region_id` bigint unsigned DEFAULT NULL COMMENT '기본 위치 동',
+  `complex_id` bigint unsigned DEFAULT NULL COMMENT '기본 위치 단지',
+  `price_amount` int unsigned DEFAULT NULL COMMENT '월 기준 대표 금액(원)',
+  `price_description` text COLLATE utf8mb4_unicode_ci COMMENT '가격 설명',
+  `career_years` smallint unsigned DEFAULT NULL COMMENT '교습 경력(년)',
+  `academy_career_years` smallint unsigned DEFAULT NULL COMMENT '학원 경력(년)',
+  `franchise_flag` tinyint(1) NOT NULL DEFAULT '0',
+  `franchise_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `education_office_registered` tinyint(1) NOT NULL DEFAULT '0' COMMENT '교육청 등록',
+  `education_office_reg_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `feature_1` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `feature_2` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `feature_3` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `contact_time_note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '연락 가능 시간',
+  `facility_note` text COLLATE utf8mb4_unicode_ci COMMENT '시설·환경 자유기술',
+  `address_text` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '표시용 주소 요약',
+  `latitude` decimal(10,7) DEFAULT NULL COMMENT '지도 위도',
+  `longitude` decimal(10,7) DEFAULT NULL COMMENT '지도 경도',
+  `capacity_per_time` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '1타임 수업 인원',
+  `recruitment_count` smallint unsigned DEFAULT NULL COMMENT '모집 인원',
+  `main_subject_note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '주력과목 요약',
+  `teaching_style` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '지도 스타일',
+  `weekend_available` tinyint(1) NOT NULL DEFAULT '0' COMMENT '주말 가능',
+  `one_on_one_available` tinyint(1) NOT NULL DEFAULT '0' COMMENT '1:1 가능',
+  `contact_phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profile_status` enum('draft','pending','published','hidden') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'draft',
+  `published_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_study_rooms_user` (`user_id`),
+  KEY `idx_study_rooms_status_published` (`profile_status`,`published_at`),
+  KEY `idx_study_rooms_price` (`profile_status`,`price_amount`),
+  KEY `fk_study_rooms_region` (`region_id`),
+  KEY `fk_study_rooms_complex` (`complex_id`),
+  CONSTRAINT `fk_study_rooms_complex` FOREIGN KEY (`complex_id`) REFERENCES `complexes` (`id`),
+  CONSTRAINT `fk_study_rooms_region` FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`),
+  CONSTRAINT `fk_study_rooms_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='공부방'
+section
+=== study_room_regions ===
+*************************** 1. row ***************************
+       Table: study_room_regions
+Create Table: CREATE TABLE `study_room_regions` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `study_room_id` bigint unsigned NOT NULL,
+  `slot` tinyint unsigned NOT NULL COMMENT '1~3 (공부방당 최대 3개)',
+  `region_id` bigint unsigned NOT NULL COMMENT '동 (필수)',
+  `complex_id` bigint unsigned DEFAULT NULL COMMENT '단지 (선택, 있으면 우선)',
+  `is_primary` tinyint(1) NOT NULL DEFAULT '0' COMMENT '대표지역',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_study_room_regions_slot` (`study_room_id`,`slot`),
+  KEY `idx_study_room_regions_region` (`region_id`),
+  KEY `idx_study_room_regions_complex` (`complex_id`),
+  KEY `idx_study_room_regions_room` (`study_room_id`),
+  CONSTRAINT `fk_study_room_regions_complex` FOREIGN KEY (`complex_id`) REFERENCES `complexes` (`id`),
+  CONSTRAINT `fk_study_room_regions_region` FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`),
+  CONSTRAINT `fk_study_room_regions_room` FOREIGN KEY (`study_room_id`) REFERENCES `study_rooms` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `chk_study_room_regions_slot` CHECK ((`slot` between 1 and 3))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='공부방-지역 매핑 (최대 3)'
+section
+=== study_room_subject_targets ===
+*************************** 1. row ***************************
+       Table: study_room_subject_targets
+Create Table: CREATE TABLE `study_room_subject_targets` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `study_room_id` bigint unsigned NOT NULL,
+  `subject_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '과목명',
+  `is_main` tinyint(1) NOT NULL DEFAULT '0' COMMENT '주력과목',
+  `school_level` enum('preschool','elementary','middle','high','retake','general','other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `grade_band` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '학년대 세부',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_study_room_subject_targets` (`study_room_id`,`subject_name`,`school_level`),
+  KEY `idx_study_room_subject_targets_subject` (`subject_name`,`school_level`),
+  CONSTRAINT `fk_study_room_subject_targets_room` FOREIGN KEY (`study_room_id`) REFERENCES `study_rooms` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='공부방 대상 과목'
+section
+=== study_room_images ===
+*************************** 1. row ***************************
+       Table: study_room_images
+Create Table: CREATE TABLE `study_room_images` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `study_room_id` bigint unsigned NOT NULL,
+  `image_type` enum('cover','interior','facility','other') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'other' COMMENT '이미지 유형',
+  `sort_order` tinyint unsigned NOT NULL COMMENT '1~5',
+  `image_path` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '업로드 경로',
+  `original_filename` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_study_room_images_order` (`study_room_id`,`sort_order`),
+  KEY `idx_study_room_images_room` (`study_room_id`),
+  CONSTRAINT `fk_study_room_images_room` FOREIGN KEY (`study_room_id`) REFERENCES `study_rooms` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `chk_study_room_images_sort` CHECK ((`sort_order` between 1 and 5))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='공부방 이미지 (최대 5장)'
+section
+=== facility_masters ===
+*************************** 1. row ***************************
+       Table: facility_masters
+Create Table: CREATE TABLE `facility_masters` (
+  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
+  `facility_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `facility_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sort_order` smallint unsigned NOT NULL DEFAULT '0',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_facility_masters_code` (`facility_code`),
+  KEY `idx_facility_masters_active` (`is_active`,`sort_order`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='공부방 시설·환경 마스터 (체크형)'
+section
+=== study_room_facilities ===
+*************************** 1. row ***************************
+       Table: study_room_facilities
+Create Table: CREATE TABLE `study_room_facilities` (
+  `study_room_id` bigint unsigned NOT NULL,
+  `facility_id` smallint unsigned NOT NULL,
+  `note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '시설별 보충',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`study_room_id`,`facility_id`),
+  KEY `idx_study_room_facilities_facility` (`facility_id`),
+  CONSTRAINT `fk_study_room_facilities_facility` FOREIGN KEY (`facility_id`) REFERENCES `facility_masters` (`id`),
+  CONSTRAINT `fk_study_room_facilities_room` FOREIGN KEY (`study_room_id`) REFERENCES `study_rooms` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='공부방-시설 선택 (체크형)'
+section
+=== regions ===
+*************************** 1. row ***************************
+       Table: regions
+Create Table: CREATE TABLE `regions` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `sido_code` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '시도 코드',
+  `sido_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sigungu_code` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '시군구 코드',
+  `sigungu_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `dong_code` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '동 코드',
+  `dong_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_regions_dong_code` (`dong_code`),
+  KEY `idx_regions_sigungu` (`sigungu_code`),
+  KEY `idx_regions_sido` (`sido_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='행정동 단위 지역 마스터'
+section
+=== complexes ===
+*************************** 1. row ***************************
+       Table: complexes
+Create Table: CREATE TABLE `complexes` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `region_id` bigint unsigned NOT NULL COMMENT '소속 동(FK)',
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_complexes_region` (`region_id`),
+  KEY `idx_complexes_name` (`name`),
+  CONSTRAINT `fk_complexes_region` FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='아파트·단지 마스터'

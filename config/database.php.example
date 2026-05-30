@@ -3,15 +3,17 @@
 declare(strict_types=1);
 
 /**
- * Copy to database.php and fill in credentials.
+ * Docker MySQL 8.4 — study114_dev
+ * 로컬 PHP: host 127.0.0.1, port 3307
+ * Docker api 서비스: STUDY114_DB_HOST=mysql, STUDY114_DB_PORT=3306
  */
 return [
-    'driver'   => 'mysql',
-    'host'     => '127.0.0.1',
-    'port'     => 3306,
-    'database' => 'study114',
-    'username' => 'root',
-    'password' => '',
-    'charset'  => 'utf8mb4',
-    'collation'=> 'utf8mb4_unicode_ci',
+    'driver'    => 'mysql',
+    'host'      => getenv('STUDY114_DB_HOST') ?: '127.0.0.1',
+    'port'      => (int) (getenv('STUDY114_DB_PORT') ?: 3307),
+    'database'  => 'study114_dev',
+    'username'  => 'root',
+    'password'  => 'study114dev',
+    'charset'   => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
 ];

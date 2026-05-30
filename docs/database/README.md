@@ -27,12 +27,12 @@ erDiagram
 
 과외쌤(`tutors` 등)은 DDL 미확정 — [tutors.md](tutors.md) 참고.
 
-## 테이블 목록 (001_init.sql)
+## 테이블 목록 (001_init.sql + 002)
 
 | # | 테이블 | 그룹 | 문서 |
 |---|--------|------|------|
 | 1 | users | 회원 | [members.md](members.md) |
-| 2 | user_profiles | 회원 | [members.md](members.md) |
+| 2 | user_profiles | 회원 | [members.md](members.md) — **002** gender, birth_date, address, consent |
 | 3 | user_roles | 회원 | [members.md](members.md) |
 | 4 | students | 회원 | [members.md](members.md) |
 | 5 | regions | 지역 | [04-location-policy.md](../04-location-policy.md) |
@@ -60,6 +60,10 @@ erDiagram
 
 ```bash
 mysql -u root -p < sql/schema/001_init.sql
+mysql -u root -p study114 < sql/schema/002_profile_signup_fields.sql
+mysql -u root -p study114 < sql/schema/004_member_ssot_align.sql
+mysql -u root -p study114 < sql/schema/005_study_room_ssot_align.sql
+mysql -u root -p study114 < sql/schema/006_facility_masters_seed.sql
 ```
 
 FK 생성 순서는 스크립트 내 테이블 정의 순서와 동일.

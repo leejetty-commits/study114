@@ -1,35 +1,36 @@
-# 과외쌤 DB (미확정)
+# 과외쌤 DB
 
-> **현재 상태**: `sql/schema/001_init.sql` 에 과외쌤 테이블 **미포함**.  
-> DDL 하단 TODO 주석만 존재. 본 문서는 **참고용 초안**이며, 스키마 확정 시 DDL·문서를 함께 갱신한다.
+> **SSOT 4장 §7이 최우선.**  
+> [ssot/04-member-db-and-role-profiles.md](../ssot/04-member-db-and-role-profiles.md#7-tutors--과외쌤-프로필-1차-잠금--ddl-todo)
 
-## 예약된 연동
+개념 잠금: [ssot/02-registration-and-member-db.md](../ssot/02-registration-and-member-db.md) §7
 
-- `user_roles.role = 'tutor'` — 역할 enum 만 DDL에 포함
-- 한 회원이 `study_room_owner` + `tutor` 동시 보유 가능 (설계 원칙)
+---
 
-## 예상 테이블 (TODO)
+## 상태
 
-| 테이블 | 용도 |
-|--------|------|
-| tutors | 과외쌤 프로필 (users 1:1 권장) |
-| tutor_subjects | 과목·학교급 |
-| tutor_regions | 활동 지역 (단지 우선 / 동 fallback) |
+| 항목 | 내용 |
+|------|------|
+| `001_init.sql` | tutors 테이블 **미포함** |
+| `user_roles.tutor` | enum만 예약 |
+| DDL | `003_tutors.sql` **작성 예정** |
 
-## 1차 방향 (확정 전)
+## 1차 방침 (2장 잠금)
 
-- 등록 + 기본 검색
-- 홈 핵심은 공부방 우선
-- 지역 정책은 공부방과 동일: 단지 우선, 없으면 동
+- 등록 + 기본 검색 **포함**
+- 홈 핵심 = **공부방 우선**
+- 지역 = 단지 우선 / 없으면 동
 
-## 확정 시 할 일
+## 2장 잠금 필드 (요약)
 
-1. `sql/schema/002_tutors.sql` (또는 001 병합) 작성
-2. 본 문서를 DDL 컬럼·인덱스 수준으로 상세화
-3. [README.md](README.md) ER·테이블 목록 갱신
+표시명 · 소개 · 희망지역 · 과외형태 · 수업장소 · 대상 · 주력과목 · 경력 · 학원경력 · 수업횟수/시간 · 희망 과외비 · 지도스타일 · 연락시간 · 증빙 · 사진 · 특징
 
-## URL (추후)
+→ 컬럼안: **4장 §7**
 
-- `/tutors` — 목록·검색
-- `/tutors/{id}` — 상세
-- `/tutors/register` — 등록·수정
+---
+
+## 변경 이력
+
+| 날짜 | 내용 |
+|------|------|
+| 2026-05-31 | SSOT 4장 §7 연동 |

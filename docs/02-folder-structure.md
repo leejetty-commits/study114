@@ -5,17 +5,22 @@ PHP 8.2 MVC-lite 구조. 1차는 설계·스키마 중심이며, 애플리케이
 ```
 study114/
 ├── README.md
-├── docs/                          # 설계 문서
+├── docs/
+│   ├── ssot/                      # ★ SSOT (2·4·5·9·10장)
+│   │   ├── README.md              # Cursor 시작점
+│   │   ├── 02-registration-and-member-db.md
+│   │   ├── 04-member-db-and-role-profiles.md
+│   │   ├── 05-study-room-db.md
+│   │   ├── 09-main-screen-roles.md
+│   │   └── 10-phase1-execution-plan.md
 │   ├── 01-project-overview.md
 │   ├── 02-folder-structure.md
-│   ├── 03-registration.md
+│   ├── 03-registration.md         # 2장 요약
 │   ├── 04-location-policy.md
 │   └── database/
-│       ├── README.md
-│       ├── members.md
-│       ├── study_rooms.md
-│       └── tutors.md
-├── public/                        # 웹 document root (배포 시 이 디렉터리만 노출)
+├── preview/                       # UI 프리뷰 (Vite)
+│   └── auth-ui/                   # 2장 인증/가입
+├── public/
 │   ├── index.php                  # 프론트 컨트롤러
 │   └── assets/
 │       ├── css/

@@ -1,0 +1,47 @@
+# 로컬 개발용 MySQL 8 — study114_dev
+# Usage:
+#   docker compose -f docker/docker-compose.dev.yml up -d
+#   .\scripts\apply-schema-dev.ps1
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: study114-mysql-dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: study114dev
+      MYSQL_DATABASE: study114_dev
+    ports:
+      - "3307:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - study114_mysql_dev_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pstudy114dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: study114-api-dev
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ..:/app
+    ports:
+      - "8080:8080"
+    environment:
+      STUDY114_DB_HOST: mysql
+      STUDY114_DB_PORT: "3306"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  study114_mysql_dev_data:

@@ -1,0 +1,15 @@
+{
+  "name": "@study114/home-ui-preview",
+  "private": true,
+  "version": "0.1.0",
+  "description": "우동공과 메인 화면 UI 프리뷰 (9장)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}
