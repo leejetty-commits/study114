@@ -1,4 +1,5 @@
 import { DUMMY_STUDY_ROOMS, MY_STUDY_ROOM, SLOT_TOP, SLOT_MID } from '../data.js';
+import { formatMonthlyWon } from '../exposure-format.js';
 import {
   renderHomeShell,
   renderRegionBar,
@@ -32,20 +33,20 @@ function renderMyStudyRoomBox() {
 export function renderStudyRoom() {
   const top3 = DUMMY_STUDY_ROOMS.slice(0, 3).map((r, i) => ({
     slot: SLOT_TOP[i],
-    name: r.name,
-    meta: r.subject,
-    price: r.price,
+    name: r.study_room_name,
+    meta: r.main_subject_note,
+    price: formatMonthlyWon(r.price_amount),
   }));
   const mid5 = DUMMY_STUDY_ROOMS.slice(0, 5).map((r, i) => ({
     slot: SLOT_MID[i],
-    name: r.name,
-    meta: r.subject,
-    price: r.price,
+    name: r.study_room_name,
+    meta: r.main_subject_note,
+    price: formatMonthlyWon(r.price_amount),
   }));
   const list = DUMMY_STUDY_ROOMS.map((r) => ({
-    title: r.name,
-    meta: `${r.subject} · ${r.price}`,
-    date: r.registered,
+    title: r.study_room_name,
+    meta: `${r.main_subject_note} · ${formatMonthlyWon(r.price_amount)}`,
+    date: r.registered_at,
   }));
 
   const content = `

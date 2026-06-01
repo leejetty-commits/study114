@@ -53,18 +53,18 @@ function renderStudentList() {
 export function renderTutor() {
   const top3 = DUMMY_TUTORS.slice(0, 3).map((t, i) => ({
     slot: SLOT_TOP[i],
-    name: t.name,
-    meta: `${t.subject} · ${t.area}`,
+    name: t.display_name,
+    meta: `${t.main_subject_note} · ${t.location_label}`,
   }));
   const mid5 = DUMMY_TUTORS.map((t, i) => ({
     slot: SLOT_MID[i],
-    name: t.name,
-    meta: `${t.subject} · ${t.area}`,
+    name: t.display_name,
+    meta: `${t.main_subject_note} · ${t.location_label}`,
   }));
   const list = DUMMY_TUTORS.map((t) => ({
-    title: t.name,
-    meta: `${t.subject} · ${t.area}`,
-    date: t.registered,
+    title: t.display_name,
+    meta: `${t.main_subject_note} · ${t.location_label}`,
+    date: t.registered_at,
   }));
 
   const content = `

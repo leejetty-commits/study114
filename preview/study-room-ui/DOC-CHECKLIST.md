@@ -31,6 +31,13 @@ http://localhost:5175 · `cd preview/study-room-ui && npm run dev`
 - [x] `study_room_images` — `image_type`, `sort_order` (0~5)
 - [x] `profile_status` — draft / pending / published
 
+## 등록 2단계 (5·8·9장 · 2026-06-01)
+
+- [x] **기본등록** — basic + location → 일반 리스트 가능
+- [x] **상세등록** — lesson + career + facility → 누구나 이어서
+- [x] **Prime/Pick** — 상세등록 완료 전제 (complete 화면 안내)
+- [x] **youtube_url** — 상세등록(facility) · 외부 URL 1개
+
 ## 설계 원칙
 
 - [x] 가격 숫자 + 설명

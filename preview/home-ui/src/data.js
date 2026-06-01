@@ -1,46 +1,56 @@
 /** @typedef {'guest' | 'parent' | 'study_room' | 'tutor'} HomeRole */
 
-/** 지역 데모 — 단지 우선 / 동 fallback */
+/** auth-ui 프리뷰 (2장) */
+export const AUTH_UI_BASE = 'http://localhost:5173';
+
+export {
+  EXPOSURE_STUDY_ROOMS,
+  EXPOSURE_TUTORS,
+  EXPOSURE_STUDENTS,
+  DUMMY_STUDY_ROOMS,
+  DUMMY_TUTORS,
+  DUMMY_STUDENT_REQUESTS,
+} from './exposure-data.js';
+
+/** 비회원 데모 고정 지역 — 9장 §4-1 */
+export const GUEST_DEMO_REGION = {
+  dong: '대치동',
+  gu: '강남구',
+  city: '서울',
+  full: '서울 강남구 대치동',
+  metro: '강남·서초·송파 권역',
+  policy: '동 우선 · 빌라·다세대 포함',
+};
+
 export const REGIONS = {
   complex: {
     type: 'complex',
-    label: '래미안 역삼',
-    sub: '서울 강남구 역삼동',
+    label: '대치 래미안',
+    sub: '서울 강남구 대치동',
     policy: '단지 우선',
   },
   dong: {
     type: 'dong',
-    label: '역삼동',
-    sub: '서울 강남구 · 빌라·다세대 포함',
+    label: GUEST_DEMO_REGION.dong,
+    sub: `${GUEST_DEMO_REGION.city} ${GUEST_DEMO_REGION.gu} · 빌라·다세대 포함`,
     policy: '동 우선',
   },
 };
 
-export const DUMMY_STUDY_ROOMS = [
-  { id: 1, name: '역삼 우등생 공부방', subject: '수학·영어', price: '월 35만원~', registered: '2026-05-28', badge: '고정 A' },
-  { id: 2, name: '해피러닝 공부방', subject: '국어·과학', price: '월 28만원~', registered: '2026-05-27', badge: '고정 B' },
-  { id: 3, name: '스마트 공부방', subject: '영어 전문', price: '월 40만원~', registered: '2026-05-26', badge: '고정 C' },
-  { id: 4, name: '맑은공부방', subject: '종합', price: '월 30만원~', registered: '2026-05-25', badge: null },
-  { id: 5, name: '드림 공부방', subject: '수학', price: '월 32만원~', registered: '2026-05-24', badge: null },
-  { id: 6, name: '새싹 공부방', subject: '초등 종합', price: '월 25만원~', registered: '2026-05-23', badge: null },
-  { id: 7, name: '밝은미래 공부방', subject: '중등', price: '월 38만원~', registered: '2026-05-22', badge: null },
-];
-
-export const DUMMY_TUTORS = [
-  { id: 1, name: '김수학 선생님', subject: '수학', area: '역삼·논현', registered: '2026-05-28' },
-  { id: 2, name: '이영어 선생님', subject: '영어', area: '역삼동', registered: '2026-05-27' },
-  { id: 3, name: '박국어 선생님', subject: '국어', area: '강남구', registered: '2026-05-26' },
-  { id: 4, name: '최과학 선생님', subject: '과학', area: '역삼동', registered: '2026-05-25' },
-  { id: 5, name: '정종합 선생님', subject: '종합', area: '서초·강남', registered: '2026-05-24' },
-];
+export const GUEST_REGION_STATS = {
+  studyRooms: 47,
+  tutors: 62,
+  studentRequests: 128,
+  updated: '2026-06-01',
+};
 
 export const DUMMY_STUDENTS = [
-  { id: 1, name: '김민준', grade: '초5', school: '역삼초', parent: '김우동' },
-  { id: 2, name: '김서연', grade: '중1', school: '역삼중', parent: '김우동' },
+  { id: 1, name: '김민준', grade: '초5', school: '대치초', parent: '김우동' },
+  { id: 2, name: '김서연', grade: '중1', school: '대치중', parent: '김우동' },
 ];
 
 export const MY_STUDY_ROOM = {
-  name: '우동공부방 역삼점',
+  name: '우동공부방 대치점',
   status: '운영중',
   views: 128,
   inquiries: 5,
@@ -55,8 +65,31 @@ export const MY_TUTOR = {
   registered: '2026-04-15',
 };
 
-/** 상단 3박스 슬롯 라벨 (고정) */
-export const SLOT_TOP = ['고정 A', '고정 B', '고정 C'];
+export const SLOT_PRIME = ['Prime A', 'Prime B', 'Prime C'];
+export const SLOT_PICK_ROW = ['Pick 1', 'Pick 2', 'Pick 3', 'Pick 4', 'Pick 5'];
+export const SLOT_TOP = SLOT_PRIME;
+export const SLOT_MID = SLOT_PICK_ROW;
 
-/** 중단 5박스 슬롯 라벨 (고정형 시작) */
-export const SLOT_MID = ['고정 1', '고정 2', '고정 3', '고정 4', '고정 5'];
+export const AD_FALLBACKS = {
+  premium: {
+    tag: '프리미엄',
+    title: '우리동네 상단 노출',
+    desc: 'Prime·Pick 슬롯 — 상세등록 완료 전제',
+    cta: '상품 안내',
+    action: 'ad-premium',
+  },
+  partner: {
+    tag: '제휴',
+    title: '지역 학원·교육 브랜드',
+    desc: '광고 슬롯',
+    cta: '광고 문의',
+    action: 'ad-inquiry',
+  },
+  public: {
+    tag: '안내',
+    title: '우동공과 이용 가이드',
+    desc: '등록·비교검색 안내',
+    cta: '이용 안내',
+    action: 'ad-guide',
+  },
+};

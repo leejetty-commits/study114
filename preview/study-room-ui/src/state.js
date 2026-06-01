@@ -1,12 +1,26 @@
 /** 5장 SSOT 필드명 — DB 컬럼과 1:1 */
 
+/** 기본등록 → 일반 리스트 · 상세등록 → Prime/Pick 자격 전제 (5·8·9장) */
+export const REGISTER_PHASES = {
+  basic: {
+    label: '기본등록',
+    hint: '완료 시 일반 리스트 노출 가능',
+    stepKeys: ['basic', 'location'],
+  },
+  detail: {
+    label: '상세등록',
+    hint: '누구나 이어서 작성 · 완료 시 Prime/Pick 자격',
+    stepKeys: ['lesson', 'career', 'facility'],
+  },
+};
+
 export const STEPS = [
-  { path: '/register/basic', key: 'basic', label: '기본정보', step: 1 },
-  { path: '/register/location', key: 'location', label: '위치', step: 2 },
-  { path: '/register/lesson', key: 'lesson', label: '수업·가격', step: 3 },
-  { path: '/register/career', key: 'career', label: '경력·특징', step: 4 },
-  { path: '/register/facility', key: 'facility', label: '시설·연락·사진', step: 5 },
-  { path: '/register/complete', key: 'complete', label: '등록완료', step: 6 },
+  { path: '/register/basic', key: 'basic', label: '기본정보', step: 1, phase: 'basic' },
+  { path: '/register/location', key: 'location', label: '위치', step: 2, phase: 'basic' },
+  { path: '/register/lesson', key: 'lesson', label: '수업·가격', step: 3, phase: 'detail' },
+  { path: '/register/career', key: 'career', label: '경력·특징', step: 4, phase: 'detail' },
+  { path: '/register/facility', key: 'facility', label: '시설·연락·사진', step: 5, phase: 'detail' },
+  { path: '/register/complete', key: 'complete', label: '등록완료', step: 6, phase: null },
 ];
 
 export const SCHOOL_LEVELS = [
@@ -96,7 +110,11 @@ export const registerState = {
     { image_type: 'cover', sort_order: 1, name: '대표.jpg' },
   ],
 
+  /** 상세등록 — 외부 YouTube URL 1개 (5장 §15) `[임시]` 컬럼명 */
+  youtube_url: '',
+
   profile_status: 'draft',
+  detail_registration_complete: false,
 };
 
 export function emptySubject() {

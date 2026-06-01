@@ -10,7 +10,7 @@ http://localhost:5174 · `cd preview/home-ui && npm run dev`
 
 | # | 화면 | 라우트 | SSOT | 상태 |
 |---|------|--------|------|------|
-| 1 | 비로그인 메인 | `#/guest` | §3·§4 | ✅ |
+| 1 | 비로그인 메인 | `#/guest` | §3·§4 | ✅ 리디자인 (대치동) |
 | 2 | 학부모 메인 | `#/parent` | §5-1 | ✅ |
 | 3 | 공부방 메인 | `#/study-room` | §5-2 | ✅ |
 | 4 | 과외쌤 메인 | `#/tutor` | §5-3 | ✅ |
@@ -26,7 +26,8 @@ http://localhost:5174 · `cd preview/home-ui && npm run dev`
 
 ## 역할별 콘텐츠 (§4·§5)
 
-- [x] 비회원 = **샘플 지역 데모** + 지도 + CTA (§4)
+- [x] 비회원 = **대치동 고정 데모** + 지역 히어로·지도 + 공부방/과외 Prime·Pick + 학생 리스트 (§4)
+- [x] 비회원 = 로그인 유도 (상세·찜·비교·문의) · [GUEST-REDESIGN.md](./GUEST-REDESIGN.md)
 - [x] 학부모 = **공부방/과외쌤 탭** (디폴트 공부방) (§5-1)
 - [x] 학부모 = 자녀 학습 요약
 - [x] 공부방 = **박스 + 리스트** (학생 리스트 비핵심) (§5-2)
@@ -38,9 +39,15 @@ http://localhost:5174 · `cd preview/home-ui && npm run dev`
 - [x] 지도 — 과외쌤·학부모 과외탭 **미제공**
 - [x] **단지 우선 / 동 우선** — 툴바 전환
 
-## GNB (§13)
+## GNB · 메뉴 (6장 · 9장 §13)
 
-- [x] 역할별 ○ / △ / ✕ 반영
+- [x] **유틸 + GNB 2층** · 6장 §3·§4
+- [x] 퀵매칭·앱·자료실 **미노출**
+- [x] GNB: 공부방찾기·과외쌤찾기·학생/학부모·등록·안전과외·고객센터
+- [x] 역할별 ○ / △ / ✕ — [nav-config.js](./src/nav-config.js)
+- [x] 11장 Prime/Pick/Basic 노출 필드 — [exposure-schema.js](./src/exposure-schema.js) · [EXPOSURE-REPORT.md](./EXPOSURE-REPORT.md)
+- [x] 비교검색 비로그인 차단 · 로그인 후 팝업 표 (`#/parent`)
+- [ ] 비교 3건 선택 UX · API 연동
 
 ## 광고 (§11)
 

@@ -1,55 +1,11 @@
 import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES } from './state.js';
 import { REGIONS } from './data.js';
-
-/** GNB 노출 — SSOT 9장 §4.1 */
-const GNB = [
-  { id: 'home', label: '홈', href: null },
-  { id: 'find_room', label: '공부방 찾기', href: null },
-  { id: 'register_room', label: '공부방 등록', href: null },
-  { id: 'find_tutor', label: '과외 찾기', href: null },
-  { id: 'register_tutor', label: '과외 등록', href: null },
-  { id: 'mypage', label: '마이페이지', href: null },
-];
-
-/** @type {Record<string, Record<string, 'show' | 'limited' | 'hide'>>} */
-const GNB_VISIBILITY = {
-  guest: {
-    home: 'show',
-    find_room: 'show',
-    register_room: 'hide',
-    find_tutor: 'show',
-    register_tutor: 'hide',
-    mypage: 'hide',
-  },
-  parent: {
-    home: 'show',
-    find_room: 'show',
-    register_room: 'hide',
-    find_tutor: 'show',
-    register_tutor: 'hide',
-    mypage: 'show',
-  },
-  study_room: {
-    home: 'show',
-    find_room: 'limited',
-    register_room: 'show',
-    find_tutor: 'limited',
-    register_tutor: 'hide',
-    mypage: 'show',
-  },
-  tutor: {
-    home: 'show',
-    find_room: 'limited',
-    register_room: 'hide',
-    find_tutor: 'show',
-    register_tutor: 'show',
-    mypage: 'show',
-  },
-};
+import { UTIL_MENU, GNB_MAIN, GNB_VISIBILITY, GNB_ACTION_HINTS } from './nav-config.js';
 
 export function renderPreviewToolbar() {
   const current = getCurrentScreen();
   const region = previewState.regionKey;
+  const isGuest = current === 'guest';
 
   return `
     <div class="preview-toolbar">
@@ -63,8 +19,12 @@ export function renderPreviewToolbar() {
           })
           .join('')}
         <span class="preview-toolbar__divider"></span>
-        <button type="button" class="preview-toolbar__btn ${region === 'complex' ? 'is-active' : ''}" data-region="complex">단지 우선</button>
-        <button type="button" class="preview-toolbar__btn ${region === 'dong' ? 'is-active' : ''}" data-region="dong">동 우선</button>
+        ${
+          isGuest
+            ? `<span class="preview-toolbar__hint">비회원: 대치동 고정</span>`
+            : `<button type="button" class="preview-toolbar__btn ${region === 'complex' ? 'is-active' : ''}" data-region="complex">단지 우선</button>
+               <button type="button" class="preview-toolbar__btn ${region === 'dong' ? 'is-active' : ''}" data-region="dong">동 우선</button>`
+        }
       </div>
     </div>
   `;
@@ -74,51 +34,64 @@ export function renderPreviewToolbar() {
  * @param {'guest' | 'parent' | 'study_room' | 'tutor'} role
  * @param {{ showAuth?: boolean, showRoleSwitch?: boolean }} opts
  */
+function renderUtilBar(role, showAuth) {
+  const items = showAuth ? UTIL_MENU.guest : UTIL_MENU.loggedIn;
+  return items
+    .map((item) => {
+      if (item.external && item.href) {
+        const cls = item.emphasis ? 'home-util__link home-util__link--emphasis' : 'home-util__link';
+        return `<a href="${item.href}" class="${cls}" target="_blank" rel="noopener">${item.label}</a>`;
+      }
+      return `<button type="button" class="home-util__link" data-action="${item.action}">${item.label}</button>`;
+    })
+    .join('');
+}
+
+function renderGnbLink(item, role, { mobile = false } = {}) {
+  const vis = GNB_VISIBILITY[role][item.id];
+  if (vis === 'hide') {
+    return mobile ? '' : `<span class="home-gnb__item is-muted">${item.label}</span>`;
+  }
+  const isHomeContext = getCurrentScreen() === 'guest' && item.id === 'find_room';
+  const cls = [
+    'home-gnb__item',
+    isHomeContext ? 'is-active' : '',
+    vis === 'limited' ? 'is-limited' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const suffix = vis === 'limited' && !mobile ? ' △' : '';
+  return `<a href="#" class="${cls}" data-action="gnb-${item.id}">${item.label}${suffix}</a>`;
+}
+
+/**
+ * @param {'guest' | 'parent' | 'study_room' | 'tutor'} role
+ * @param {{ showAuth?: boolean, showRoleSwitch?: boolean }} opts
+ */
 export function renderHeader(role, opts = {}) {
   const { showAuth = role === 'guest', showRoleSwitch = role !== 'guest' } = opts;
 
-  const gnbItems = GNB.map((item) => {
-    const vis = GNB_VISIBILITY[role][item.id];
-    if (vis === 'hide') {
-      return `<span class="home-gnb__item is-muted">${item.label}</span>`;
-    }
-    const cls = [
-      'home-gnb__item',
-      item.id === 'home' ? 'is-active' : '',
-      vis === 'limited' ? 'is-limited' : '',
-    ]
-      .filter(Boolean)
-      .join(' ');
-    return `<a href="#" class="${cls}" data-action="gnb-${item.id}">${item.label}${vis === 'limited' ? ' △' : ''}</a>`;
-  }).join('');
-
-  const mobileGnb = GNB.map((item) => {
-    const vis = GNB_VISIBILITY[role][item.id];
-    if (vis === 'hide') return '';
-    const cls = ['home-gnb__item', item.id === 'home' ? 'is-active' : ''].filter(Boolean).join(' ');
-    return `<a href="#" class="${cls}" data-action="gnb-${item.id}">${item.label}</a>`;
-  }).join('');
+  const gnbItems = GNB_MAIN.map((item) => renderGnbLink(item, role)).join('');
+  const mobileGnb = GNB_MAIN.map((item) => renderGnbLink(item, role, { mobile: true })).join('');
 
   return `
     <header class="home-header">
-      <div class="home-header__inner">
-        <a href="#/guest" class="home-header__logo" data-nav="/guest">
-          <img src="/assets/brand/logo-wordmark.png" alt="우동공과" width="120" height="32" />
-        </a>
-        <nav class="home-gnb" aria-label="주 메뉴">${gnbItems}</nav>
-        <div class="home-header__actions">
+      <div class="home-header__util">
+        <div class="home-header__util-inner">
+          <nav class="home-util" aria-label="유틸 메뉴">${renderUtilBar(role, showAuth)}</nav>
           ${
             showRoleSwitch
-              ? `<button type="button" class="btn btn--ghost btn--sm" data-action="role-switch" title="역할 전환">역할 ▾</button>`
+              ? `<button type="button" class="home-util__link home-util__link--role" data-action="role-switch" title="역할 전환">역할 ▾</button>`
               : ''
           }
-          ${
-            showAuth
-              ? `<a href="http://localhost:5173/#/login" class="btn btn--ghost btn--sm" target="_blank" rel="noopener">로그인</a>
-                 <a href="http://localhost:5173/#/signup/terms" class="btn btn--primary btn--sm" target="_blank" rel="noopener">회원가입</a>`
-              : `<button type="button" class="btn btn--ghost btn--sm" data-action="notify">알림</button>
-                 <button type="button" class="btn btn--secondary btn--sm" data-action="mypage">마이페이지</button>`
-          }
+        </div>
+      </div>
+      <div class="home-header__main">
+        <div class="home-header__inner">
+          <a href="#/guest" class="home-header__logo" data-nav="/guest" aria-label="우동공과 홈">
+            <img src="/assets/brand/logo-wordmark.png" alt="우동공과" width="120" height="32" />
+          </a>
+          <nav class="home-gnb" aria-label="메인 메뉴">${gnbItems}</nav>
         </div>
       </div>
       <nav class="home-gnb-mobile" aria-label="모바일 메뉴">${mobileGnb}</nav>
@@ -262,15 +235,17 @@ export function renderAdInline() {
 }
 
 export function renderHomeShell(role, mainContent, opts = {}) {
-  const { showAuth, showRoleSwitch } = opts;
+  const { showAuth, showRoleSwitch, sidebarHtml, loginStrip } = opts;
+  const sidebar = sidebarHtml ?? renderAdSidebar();
   return `
     ${renderPreviewToolbar()}
     <div class="home-shell">
       ${renderHeader(role, { showAuth, showRoleSwitch })}
       <div class="home-body">
         <div class="home-main">${mainContent}</div>
-        ${renderAdSidebar()}
+        ${sidebar}
       </div>
+      ${loginStrip ? loginStrip : ''}
       ${renderFooter()}
     </div>
   `;
@@ -298,7 +273,15 @@ export function bindLayoutEvents(root, rerender) {
       if (action === 'role-switch') {
         alert('[프리뷰] 복수 역할 전환 UI — 9장 §2.2 (추후 구현)');
       } else if (action.startsWith('gnb-')) {
-        alert(`[프리뷰] ${el.textContent?.trim()} — 링크 연결 추후`);
+        const gnbId = action.replace('gnb-', '');
+        const hint = GNB_ACTION_HINTS[gnbId];
+        if (gnbId === 'register_room' && typeof hint === 'string' && hint.startsWith('http')) {
+          window.open(hint, '_blank', 'noopener');
+        } else {
+          alert(`[프리뷰] ${el.textContent?.trim()}\n${hint || '연결 추후'}`);
+        }
+      } else if (action.startsWith('util-')) {
+        alert(`[프리뷰] ${el.textContent?.trim()} — 6장 유틸 메뉴 (연결 추후)`);
       } else if (el.dataset.href) {
         window.open(el.dataset.href, '_blank', 'noopener');
       } else {

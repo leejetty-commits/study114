@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "start": "powershell -ExecutionPolicy Bypass -File ./start-preview.ps1",
+    "open": "powershell -ExecutionPolicy Bypass -File ./start-preview.ps1",
     "build": "vite build",
     "preview": "vite preview"
   },

@@ -1,10 +1,15 @@
 /** @typedef {'guest' | 'parent' | 'study_room' | 'tutor'} HomeRole */
 /** @typedef {'study_room' | 'tutor'} ParentTab */
 
-/** @type {{ parentTab: ParentTab, regionKey: 'complex' | 'dong' }} */
+/** @type {{ parentTab: ParentTab, regionKey: 'complex' | 'dong', guestListPages: Record<string, number> }} */
 export const previewState = {
   parentTab: 'study_room',
-  regionKey: 'complex',
+  regionKey: 'dong',
+  guestListPages: {
+    study_room: 1,
+    tutor: 1,
+    student: 1,
+  },
 };
 
 export const ROUTES = {
@@ -27,6 +32,16 @@ export function setParentTab(tab) {
 
 export function setRegionKey(key) {
   previewState.regionKey = key;
+}
+
+/** @param {'study_room'|'tutor'|'student'} listId */
+export function setGuestListPage(listId, page) {
+  previewState.guestListPages[listId] = Math.max(1, page);
+}
+
+/** @param {'study_room'|'tutor'|'student'} listId */
+export function getGuestListPage(listId) {
+  return previewState.guestListPages[listId] || 1;
 }
 
 export function navigate(path) {

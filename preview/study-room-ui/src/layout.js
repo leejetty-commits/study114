@@ -1,4 +1,4 @@
-import { STEPS } from './state.js';
+import { STEPS, REGISTER_PHASES } from './state.js';
 
 const ROUTES = Object.fromEntries(STEPS.map((s) => [s.path, s.key]));
 
@@ -69,14 +69,26 @@ export function renderRegisterShell(content, options = {}) {
 
 export function renderStepIndicator(currentStep) {
   const steps = [1, 2, 3, 4, 5];
+  const phase =
+    currentStep <= 2 ? 'basic' : 'detail';
+  const phaseMeta = REGISTER_PHASES[phase];
   return `
+    <div class="register-phase" aria-label="등록 단계">
+      <div class="register-phase__labels">
+        <span class="register-phase__tag ${phase === 'basic' ? 'is-active' : currentStep > 2 ? 'is-done' : ''}">${REGISTER_PHASES.basic.label}</span>
+        <span class="register-phase__arrow">→</span>
+        <span class="register-phase__tag ${phase === 'detail' ? 'is-active' : ''}">${REGISTER_PHASES.detail.label}</span>
+      </div>
+      <p class="register-phase__hint">${phaseMeta.hint}</p>
+    </div>
     <div class="step-indicator" aria-label="등록 단계 ${currentStep}/5">
       ${steps
         .map((n) => {
           let cls = 'step-indicator__dot';
           if (n === currentStep) cls += ' is-active';
           else if (n < currentStep) cls += ' is-done';
-          return `<span class="${cls}"></span>`;
+          if (n === 2) cls += ' step-indicator__dot--phase-end';
+          return `<span class="${cls}" title="${n <= 2 ? REGISTER_PHASES.basic.label : REGISTER_PHASES.detail.label}"></span>`;
         })
         .join('')}
     </div>

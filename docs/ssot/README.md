@@ -18,7 +18,10 @@
 | **회원/역할/지역 DB 만들기** | [2장](02-registration-and-member-db.md) + [4장](04-member-db-and-role-profiles.md) |
 | **공부방 상세 DB 만들기** | [2장 §6](02-registration-and-member-db.md#6-공부방-등록-db-잠금-개념) + [5장](05-study-room-db.md) |
 | **공부방 등록 UI 프리뷰** | [5장](05-study-room-db.md) · `preview/study-room-ui/` |
-| **메인 4종 UI 프리뷰** | [9장](09-main-screen-roles.md) · `preview/home-ui/` |
+| **메인 4종 UI 프리뷰** | [9장](09-main-screen-roles.md) · [6장](06-phase1-menu-structure.md) · `preview/home-ui/` |
+| **1차 메뉴·비교·제외 기능** | [6장](06-phase1-menu-structure.md) |
+| **과외쌤 등록·열람권 후보** | [8장](08-tutor-registration-db.md) |
+| **메인 노출·비교검색 표** | [11장](11-main-exposure-and-compare.md) |
 | **인증/가입 UI** | [2장 §3](02-registration-and-member-db.md#3-인증가입-화면-잠금) · `preview/auth-ui/` |
 | **실행 순서·병행** | [10장](10-phase1-execution-plan.md) |
 
@@ -31,6 +34,9 @@
 | **2장** | [02-registration-and-member-db.md](02-registration-and-member-db.md) | 잠금 | 가입·회원구조·프로필·지역 **개념** |
 | **4장** | [04-member-db-and-role-profiles.md](04-member-db-and-role-profiles.md) | 잠금 | **공통 회원·역할·지역·자녀·과외** 테이블 |
 | **5장** | [05-study-room-db.md](05-study-room-db.md) | 잠금 | **공부방** 등록·상세 테이블 |
+| **6장** | [06-phase1-menu-structure.md](06-phase1-menu-structure.md) | 잠금 | 1차 메뉴·GNB·비교·제외 기능 |
+| **8장** | [08-tutor-registration-db.md](08-tutor-registration-db.md) | 잠금 | 과외쌤 2단계 등록·유튜브·열람권 후보 |
+| **11장** | [11-main-exposure-and-compare.md](11-main-exposure-and-compare.md) | 잠금 | Prime/Pick/Basic 노출·비교표 |
 | **9장** | [09-main-screen-roles.md](09-main-screen-roles.md) | 잠금 | 메인 4종·역할별 노출 |
 | **10장** | [10-phase1-execution-plan.md](10-phase1-execution-plan.md) | 잠금 | 1차 실행 순서 |
 
@@ -88,3 +94,4 @@
 | 2026-05-31 | home-ui · 4·5장 추가 · Cursor 가이드 |
 | 2026-05-31 | Notion 9장 원문 반영 |
 | 2026-05-31 | study-room-ui 프리뷰 · 006 facility seed |
+| 2026-06-01 | 6·8장 잠금 · home-ui 2층 헤더 · 등록 2단계 정합 |

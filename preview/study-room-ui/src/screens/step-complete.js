@@ -24,9 +24,13 @@ export function renderComplete() {
       <div style="font-size:3rem;line-height:1;margin-bottom:var(--space-4);">✓</div>
       <h2 class="auth-heading" style="font-size:var(--text-2xl);">공부방 등록 프리뷰 완료</h2>
       <p class="auth-subheading">profile_status: <strong>${s.profile_status}</strong></p>
+      <p class="auth-subheading" style="margin-top:var(--space-2);">
+        상세등록: <strong>${s.detail_registration_complete ? '완료' : '미완료'}</strong>
+        · Prime/Pick 자격: <strong>${s.detail_registration_complete ? '충족(노출권 별도)' : '미충족 — 일반 리스트만'}</strong>
+      </p>
     </div>
 
-    ${renderTempNotice('실제 저장·API 연동은 10장 단계 6에서 진행')}
+    ${renderTempNotice('기본등록만 완료 시 일반 리스트 · 상세등록 완료 후 Prime/Pick 자격 (5·8·9장)')}
 
     <dl class="register-summary">
       <dt>공부방명</dt><dd>${s.study_room_name}</dd>

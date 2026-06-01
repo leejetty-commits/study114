@@ -48,6 +48,14 @@ export function renderFacility() {
         <input class="form-input" type="tel" id="contact_phone" name="contact_phone" value="${s.contact_phone}" />
       </div>
 
+      ${renderSectionTitle('유튜브 (상세등록 · 1개)')}
+      <p class="register-hint mb-4">외부 YouTube URL만 · 직접 업로드 없음 · 5·8장 §15</p>
+      <div class="form-group">
+        <label class="form-label" for="youtube_url">YouTube 링크</label>
+        <span class="field-db-name">youtube_url</span>
+        <input class="form-input" type="url" id="youtube_url" name="youtube_url" placeholder="https://www.youtube.com/watch?v=..." value="${s.youtube_url}" />
+      </div>
+
       ${renderSectionTitle('사진 (0~5장)')}
       <p class="register-hint mb-4">study_room_images · image_type / image_path / sort_order</p>
       <div class="register-image-list">
@@ -95,6 +103,9 @@ export function bindFacilityEvents(root) {
   bindFormNav(root, '/register/career', null);
 
   root.querySelector('[data-action="next"]')?.addEventListener('click', () => {
+    const yt = root.querySelector('#youtube_url');
+    if (yt) registerState.youtube_url = yt.value.trim();
+    registerState.detail_registration_complete = true;
     navigate('/register/complete');
   });
 
