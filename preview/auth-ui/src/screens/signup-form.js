@@ -1,9 +1,16 @@
 import { signupState, ROLE_LABELS, DUMMY_USER } from '../state.js';
+import { signupApi } from '../auth-api.js';
 import { renderAuthShell, renderStepIndicator, renderRoleBadge, bindGlobalEvents, navigate } from '../layout.js';
 
 export function renderSignupForm() {
   const role = signupState.role || 'student';
   const roleLabel = ROLE_LABELS[role];
+  const genderLabels = {
+    student: '학부모 성별',
+    study_room: '원장 성별',
+    tutor: '과외쌤 성별',
+  };
+  const genderLabel = genderLabels[role] || '성별';
 
   const content = `
     ${renderStepIndicator(3)}
@@ -65,8 +72,9 @@ export function renderSignupForm() {
         </div>
 
         <div class="form-group">
-          <span class="form-label form-label--required">성별</span>
-          <div class="form-radio-group" role="radiogroup" aria-label="성별">
+          <span class="form-label form-label--required">${esc(genderLabel)}</span>
+          <p class="form-note">매칭·검색 needs · user_profiles.gender</p>
+          <div class="form-radio-group" role="radiogroup" aria-label="${esc(genderLabel)}">
             <label class="form-radio">
               <input
                 class="form-radio__input"
@@ -88,17 +96,6 @@ export function renderSignupForm() {
               <span class="form-radio__label">여</span>
             </label>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label form-label--required" for="signup-birth-date">생년월일</label>
-          <input
-            class="form-input"
-            type="date"
-            id="signup-birth-date"
-            name="birth_date"
-            value="${DUMMY_USER.birthDate}"
-          />
         </div>
 
         <div class="form-group">
@@ -151,21 +148,7 @@ export function renderSignupForm() {
           </label>
         </div>
 
-        <div class="form-group form-group--extension">
-          <label class="form-check">
-            <input
-              class="form-check__input"
-              type="checkbox"
-              name="safe_number_use"
-              id="signup-safe-number-use"
-              ${DUMMY_USER.safeNumberUse ? 'checked' : ''}
-            />
-            <span class="form-check__label">안전번호 사용 여부</span>
-          </label>
-          <p class="form-hint">확장 포인트 — 1차 프리뷰용 UI만 제공</p>
-        </div>
-
-        <p class="form-note">${roleLabel} 상세 정보는 가입 완료 후 상세등록 단계에서 입력합니다.</p>
+        <p class="form-note">${roleLabel} 상세 정보는 기본등록 단계에서 이어서 입력합니다.</p>
 
         <div class="form-error" data-signup-error hidden role="alert"></div>
 
@@ -198,7 +181,6 @@ export function bindSignupFormEvents(root) {
     payload.role = signupState.role || 'student';
     payload.sms_consent = fd.get('sms_consent') === 'on';
     payload.email_consent = fd.get('email_consent') === 'on';
-    payload.safe_number_use = fd.get('safe_number_use') === 'on';
 
     const submitBtn = form.querySelector('[type="submit"]');
     if (submitBtn) {
@@ -210,6 +192,7 @@ export function bindSignupFormEvents(root) {
       const res = await fetch('/api/auth/signup.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
@@ -231,8 +214,10 @@ export function bindSignupFormEvents(root) {
         email: data.email,
         roleType: data.role_type,
       };
+      signupState.accountAddress = payload.address || '';
+      signupState.profileGender = payload.gender || null;
       console.info('[signup] saved', signupState.lastSignup);
-      navigate('/signup/complete');
+      navigate('/signup/basic');
     } catch (err) {
       const msg = err instanceof Error ? err.message : '네트워크 오류';
       if (errorEl) {

@@ -1,8 +1,11 @@
 import { getCurrentScreen, getCurrentPath } from './layout.js';
+import { signupState } from './state.js';
+import { fetchRegions } from './auth-api.js';
 import { renderLogin, bindLoginEvents } from './screens/login.js';
 import { renderSignupTerms, bindSignupTermsEvents } from './screens/signup-terms.js';
 import { renderSignupRole, bindSignupRoleEvents } from './screens/signup-role.js';
 import { renderSignupForm, bindSignupFormEvents } from './screens/signup-form.js';
+import { renderSignupBasic, bindSignupBasicEvents } from './screens/signup-basic.js';
 import { renderSignupComplete, bindSignupCompleteEvents } from './screens/signup-complete.js';
 import { renderFindId, bindFindIdEvents } from './screens/find-id.js';
 import { renderFindPassword, bindFindPasswordEvents } from './screens/find-password.js';
@@ -12,6 +15,7 @@ const SCREENS = {
   signupTerms: { render: renderSignupTerms, bind: bindSignupTermsEvents },
   signupRole: { render: renderSignupRole, bind: bindSignupRoleEvents },
   signupForm: { render: renderSignupForm, bind: bindSignupFormEvents },
+  signupBasic: { render: renderSignupBasic, bind: bindSignupBasicEvents },
   signupComplete: { render: renderSignupComplete, bind: bindSignupCompleteEvents },
   findId: { render: renderFindId, bind: bindFindIdEvents },
   findPassword: { render: renderFindPassword, bind: bindFindPasswordEvents },
@@ -33,7 +37,12 @@ function init() {
 
   window.addEventListener('hashchange', render);
   window.addEventListener('themechange', render);
-  render();
+  fetchRegions()
+    .then((regions) => {
+      signupState.regions = regions;
+    })
+    .catch(() => {})
+    .finally(render);
 }
 
 init();

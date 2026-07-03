@@ -15,6 +15,51 @@ http://localhost:5174 · `cd preview/home-ui && npm run dev`
 | 3 | 공부방 메인 | `#/study-room` | §5-2 | ✅ |
 | 4 | 과외쌤 메인 | `#/tutor` | §5-3 | ✅ |
 
+## 15장 마이페이지 (부록 A hash)
+
+| # | 화면 | 라우트 | SSOT | 상태 |
+|---|------|--------|------|------|
+| 1 | 마이페이지 홈 | `#/mypage/home` | P15-01 | ✅ |
+| 2 | 내 등록 | `#/mypage/registrations` | P15-02 | ✅ |
+| 3 | 찜 | `#/mypage/wishlist` | P15-06 | ✅ |
+| 4 | 최근열람 | `#/mypage/recent` | P15-07 | ✅ |
+| 5 | 쪽지 요약 | `#/mypage/messages` | P15-08 | ✅ |
+| 6 | 유료 요약 | `#/mypage/plans` | P15-09 | ✅ |
+| 7 | 계정/설정 | `#/mypage/account` | P15-11 | ✅ |
+
+진입: 툴바 「마이페이지」·유틸 메뉴 · `#/parent` 등 역할 화면에서 이동.  
+`/mypage/...` 경로 URL은 부팅 시 `#/mypage/...`로 자동 변환.
+
+## 16장 쪽지함 (부록 A hash · 16a)
+
+| # | 화면 | 라우트 | SSOT | 상태 |
+|---|------|--------|------|------|
+| 1 | 쪽지함 리스트 | `#/messages/inbox` | P16-01 | ✅ |
+| 2 | 보낸/진행중 탭 | `#/messages/sent` · `#/messages/active` | P16-01 탭 | ✅ |
+| 3 | 대화방 | `#/messages/thread/{id}` | P16-02 | ✅ |
+| 4 | 첫 메모 | 오버레이 (학생 상세 등) | P16-03 | ✅ |
+| 5 | 유료 게이트 | 오버레이 (무료 공급자) | P16-04 | ✅ |
+
+진입: 툴바 「쪽지함」·유틸 「쪽지함」·P15-08 「쪽지함 열기」·과외/공부방 화면 학생 상세 「메모」.
+
+데모: 공급자 역할 화면에서 툴바 **무료/유료** 전환 · `#/tutor` 또는 `#/study-room` → 학생 카드 → 메모.
+
+## 17장 고객센터 (부록 A hash · 17a)
+
+| # | 화면 | 라우트 | SSOT | 상태 |
+|---|------|--------|------|------|
+| 1 | 고객센터 홈 | `#/support` | P17-01 | ✅ |
+| 2 | 이용안내 섹션 | `#/support/guide` | P17-01 #guide | ✅ |
+| 3 | FAQ | `#/support/faq` · `#faq` | P17-04 | ✅ |
+| 4 | 공지 | `#/support/notice` | P17-05 | ✅ |
+| 5 | 운영 문의 | `#/support/contact` | P17-07 | ✅ |
+| 6 | 안전과외 목록 | `#/support/safe` | P17-02 | ✅ |
+| 7 | 가이드 상세 | `#/support/safe/{slug}` | P17-03 · G1~G4 | ✅ |
+
+진입: GNB·유틸 「고객센터」·「이용안내」·푸터 · 툴바 「고객센터」.
+
+CTA: **guest** → 로그인 유도 + 운영 문의 · **로그인** → 쪽지함 + 운영 문의 (17장 §4-1).
+
 ## 구조 (§6·§7·§8)
 
 - [x] 상단 3박스 — Prime · **실제 3칸 고정 슬롯**
@@ -43,11 +88,13 @@ http://localhost:5174 · `cd preview/home-ui && npm run dev`
 
 - [x] **유틸 + GNB 2층** · 6장 §3·§4
 - [x] 퀵매칭·앱·자료실 **미노출**
-- [x] GNB: 공부방찾기·과외쌤찾기·학생/학부모·등록·안전과외·고객센터
+- [x] GNB: 공부방찾기·과외쌤찾기·학생/학부모·등록·고객센터 (안전과외는 이용안내/고객센터 하위)
 - [x] 역할별 ○ / △ / ✕ — [nav-config.js](./src/nav-config.js)
 - [x] 11장 Prime/Pick/Basic 노출 필드 — [exposure-schema.js](./src/exposure-schema.js) · [EXPOSURE-REPORT.md](./EXPOSURE-REPORT.md)
 - [x] 비교검색 비로그인 차단 · 로그인 후 팝업 표 (`#/parent`)
-- [ ] 비교 3건 선택 UX · API 연동
+- [x] 비교검색 로그인 게이트 · 표 모달 · **⇄ 사용자 선택 최대 3건**
+- [x] **찜** sessionStorage · 마이페이지(유틸) 목록 · 찜→비교 담기
+- [ ] 찜·비교 API · 서버 저장
 
 ## 광고 (§11)
 
@@ -59,7 +106,7 @@ http://localhost:5174 · `cd preview/home-ui && npm run dev`
 | 항목 | 상태 |
 |------|------|
 | Prime/Pick/Local **상품 노출명** | `[임시]` |
-| GNB·버튼 실제 라우팅 | `[임시]` alert |
+| GNB·버튼 실제 라우팅 | ✅ search-ui·등록 UI · **고객센터 #/support (17a)** |
 | 역할 전환 UI | `[임시]` placeholder |
 | 지도 API | `[임시]` CSS placeholder |
 | 광고 실제 슬롯·구매 연동 | `[임시]` dashed box |

@@ -1,10 +1,6 @@
 -- =============================================================================
--- study114 schema 004 — member DB SSOT align (4장)
--- Apply AFTER 001_init.sql (+ 002 if already applied)
---
--- ⚠️ students 테이블은 001과 구조가 다릅니다. 운영 DB가 있으면 백업 후 적용.
--- Usage:
---   mysql -u root -p study114 < sql/schema/004_member_ssot_align.sql
+-- study114 schema 004 — member DB SSOT align (4장 · 2026-07)
+-- Apply AFTER 001_init.sql (+ 002, 003)
 -- =============================================================================
 
 USE study114;
@@ -17,12 +13,11 @@ ALTER TABLE users
   ADD COLUMN deleted_at DATETIME NULL COMMENT '탈퇴/비활성 추적' AFTER updated_at;
 
 -- ---------------------------------------------------------------------------
--- user_profiles — 4장 §5 컬럼 정합
--- (002 적용済み 가정: gender, birth_date, address, sms_consent 등 존재)
+-- user_profiles — 4장 §5
 -- ---------------------------------------------------------------------------
 ALTER TABLE user_profiles
   CHANGE COLUMN name real_name VARCHAR(50) NOT NULL COMMENT '실명',
-  CHANGE COLUMN address address_line1 VARCHAR(255) NULL COMMENT '기본 주소 (1차 UI address)',
+  CHANGE COLUMN address address_line1 VARCHAR(255) NULL COMMENT '기본 주소',
   ADD COLUMN address_zip VARCHAR(10) NULL COMMENT '우편번호' AFTER birth_date,
   ADD COLUMN address_line2 VARCHAR(255) NULL COMMENT '상세 주소' AFTER address_line1,
   ADD COLUMN default_region_id BIGINT UNSIGNED NULL COMMENT '기본 동 FK' AFTER address_line2,
@@ -31,7 +26,6 @@ ALTER TABLE user_profiles
   CHANGE COLUMN email_consent email_opt_in TINYINT(1) NOT NULL DEFAULT 0 COMMENT '이메일 수신',
   CHANGE COLUMN safe_number_use safe_number_opt_in TINYINT(1) NOT NULL DEFAULT 0 COMMENT '안전번호 확장';
 
--- FK (regions/complexes 존재 시)
 ALTER TABLE user_profiles
   ADD CONSTRAINT fk_user_profiles_default_region
     FOREIGN KEY (default_region_id) REFERENCES regions (id),
@@ -52,8 +46,10 @@ ALTER TABLE user_roles
   ADD COLUMN status ENUM('active', 'inactive') NOT NULL DEFAULT 'active' AFTER is_primary;
 
 -- ---------------------------------------------------------------------------
--- students — 4장 §7 전면 재정의 (001 단순 스키마 대체)
+-- students — 4장 §7 (school_name·sort_order 제외)
 -- ---------------------------------------------------------------------------
+DROP TABLE IF EXISTS student_preferred_teaching_style_badges;
+DROP TABLE IF EXISTS student_preferred_lesson_places;
 DROP TABLE IF EXISTS student_subject_targets;
 DROP TABLE IF EXISTS students;
 
@@ -64,16 +60,22 @@ CREATE TABLE students (
   public_display_name             VARCHAR(50)     NULL COMMENT '블라인드 공개명',
   request_title                   VARCHAR(200)    NULL,
   request_summary                 TEXT            NULL,
+  request_summary_visibility      ENUM('private', 'paid_only') NOT NULL DEFAULT 'private',
+  special_request_note            TEXT            NULL,
+  special_request_visibility      ENUM('private', 'paid_only') NOT NULL DEFAULT 'private',
   gender                          ENUM('male', 'female') NULL,
   birth_year                      SMALLINT        NULL,
-  school_name                     VARCHAR(100)    NULL,
   grade_level                     VARCHAR(20)     NULL,
   school_track                    VARCHAR(50)     NULL,
   preferred_lesson_type           ENUM('study_room', 'tutor') NULL,
-  preferred_region_id             BIGINT UNSIGNED NULL,
-  preferred_complex_id            BIGINT UNSIGNED NULL,
+  preferred_studyroom_region_id   BIGINT UNSIGNED NULL,
+  preferred_studyroom_complex_id  BIGINT UNSIGNED NULL,
+  preferred_tutor_region_id       BIGINT UNSIGNED NULL,
+  preferred_region_note           VARCHAR(255)    NULL,
   preferred_tutor_gender          ENUM('male', 'female', 'any') NULL,
-  preferred_fee_amount            INT UNSIGNED    NULL,
+  preferred_student_count_group   ENUM('solo', 'two', 'three', 'four_plus') NULL,
+  preferred_fee_amount            INT UNSIGNED    NULL COMMENT '과외쌤 맥락 수업예산',
+  preferred_studyroom_fee_amount  INT UNSIGNED    NULL COMMENT '공부방 맥락 수업예산',
   lessons_per_week                SMALLINT UNSIGNED NULL,
   minutes_per_lesson              SMALLINT UNSIGNED NULL,
   lesson_format                   ENUM('one_on_one', 'group') NULL,
@@ -90,30 +92,53 @@ CREATE TABLE students (
   exposure_status                 ENUM('draft', 'published', 'hidden', 'deleted') NOT NULL DEFAULT 'draft',
   published_at                    DATETIME        NULL,
   deleted_at                      DATETIME        NULL,
-  sort_order                      TINYINT UNSIGNED NOT NULL DEFAULT 0,
   created_at                      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at                      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  KEY idx_students_guardian (guardian_user_id, sort_order),
+  KEY idx_students_guardian (guardian_user_id, created_at),
   KEY idx_students_exposure (exposure_status, published_at),
-  KEY idx_students_preferred_region (preferred_region_id),
-  KEY idx_students_preferred_complex (preferred_complex_id),
+  KEY idx_students_studyroom_region (preferred_studyroom_region_id),
+  KEY idx_students_tutor_region (preferred_tutor_region_id),
   CONSTRAINT fk_students_guardian FOREIGN KEY (guardian_user_id) REFERENCES users (id),
-  CONSTRAINT fk_students_preferred_region FOREIGN KEY (preferred_region_id) REFERENCES regions (id),
-  CONSTRAINT fk_students_preferred_complex FOREIGN KEY (preferred_complex_id) REFERENCES complexes (id)
+  CONSTRAINT fk_students_studyroom_region FOREIGN KEY (preferred_studyroom_region_id) REFERENCES regions (id),
+  CONSTRAINT fk_students_studyroom_complex FOREIGN KEY (preferred_studyroom_complex_id) REFERENCES complexes (id),
+  CONSTRAINT fk_students_tutor_region FOREIGN KEY (preferred_tutor_region_id) REFERENCES regions (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='학부모 소속 자녀 + 과외등록 (4장)';
 
 CREATE TABLE student_subject_targets (
-  id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  student_id   BIGINT UNSIGNED NOT NULL,
-  school_level ENUM('preschool', 'elementary', 'middle', 'high', 'general', 'other') NOT NULL,
-  subject_name VARCHAR(50)     NOT NULL,
-  is_primary   TINYINT(1)      NOT NULL DEFAULT 0,
-  created_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  student_id        BIGINT UNSIGNED NOT NULL,
+  school_level      ENUM('preschool', 'elementary', 'middle', 'high', 'n_su', 'general', 'other') NOT NULL,
+  subject_master_id BIGINT UNSIGNED NULL,
+  subject_name      VARCHAR(50)     NOT NULL,
+  is_primary        TINYINT(1)      NOT NULL DEFAULT 0,
+  created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_sst_student (student_id),
   KEY idx_sst_subject (subject_name, school_level),
-  CONSTRAINT fk_sst_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
+  CONSTRAINT fk_sst_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE,
+  CONSTRAINT fk_sst_subject_master FOREIGN KEY (subject_master_id) REFERENCES subject_masters (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='학생 희망과목 (4장)';
+  COMMENT='학생 희망과목 (4장 §7-1)';
+
+CREATE TABLE student_preferred_lesson_places (
+  id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  student_id BIGINT UNSIGNED NOT NULL,
+  place_type ENUM('student_home', 'study_room', 'public_place') NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_student_place (student_id, place_type),
+  CONSTRAINT fk_splp_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='학생 희망 수업장소 (4장 §7-1-1)';
+
+CREATE TABLE student_preferred_teaching_style_badges (
+  id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  student_id    BIGINT UNSIGNED NOT NULL,
+  badge_name    ENUM('passion', 'meticulous', 'kind', 'from_basics', 'advanced_focus', 'concept_focus', 'solution_focus') NOT NULL,
+  display_order SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  KEY idx_sptsb_student (student_id, display_order),
+  CONSTRAINT fk_sptsb_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='학생 희망 강의스타일 배지 (4장 §7-1-2)';

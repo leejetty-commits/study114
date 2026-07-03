@@ -1,23 +1,31 @@
-import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES } from './state.js';
+import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isSupportRoute, navigateToSupport } from './state.js';
+import { getDefaultMypagePath } from './mypage/router.js';
+import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
-import { UTIL_MENU, GNB_MAIN, GNB_VISIBILITY, GNB_ACTION_HINTS } from './nav-config.js';
+import { UTIL_MENU, GNB_MAIN, GNB_VISIBILITY, resolveGnbLink, searchUiUrl } from './nav-config.js';
 
 export function renderPreviewToolbar() {
   const current = getCurrentScreen();
+  const onMypage = isMypageRoute();
+  const onMessages = isMessagesRoute();
+  const onSupport = isSupportRoute();
   const region = previewState.regionKey;
-  const isGuest = current === 'guest';
+  const isGuest = current === 'guest' && !onMypage && !onMessages && !onSupport;
 
   return `
     <div class="preview-toolbar">
-      <span class="preview-toolbar__label">우동공과 · 메인 UI 프리뷰 (9장)</span>
+      <span class="preview-toolbar__label">우동공과 · 메인 UI 프리뷰 (9·15·16·17장)</span>
       <div class="preview-toolbar__group">
         ${Object.entries(ROUTES)
           .map(([path, key]) => {
             const meta = SCREEN_META[key];
-            const active = key === current;
+            const active = !onMypage && !onMessages && !onSupport && key === current;
             return `<button type="button" class="preview-toolbar__btn ${active ? 'is-active' : ''}" data-nav="${path}">${meta.label}</button>`;
           })
           .join('')}
+        <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${getDefaultMypagePath(getNavRole())}">마이페이지</button>
+        <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지함</button>
+        <button type="button" class="preview-toolbar__btn ${onSupport ? 'is-active' : ''}" data-nav="/support">고객센터</button>
         <span class="preview-toolbar__divider"></span>
         ${
           isGuest
@@ -105,7 +113,7 @@ export function renderFooter() {
       <div class="home-footer__links">
         <a href="#">약관</a>
         <a href="#">개인정보</a>
-        <a href="#">고객센터</a>
+        <a href="#/support" data-action="util-support">고객센터</a>
       </div>
       <p>© 2026 우동공과 · study114 · UI Preview</p>
     </footer>
@@ -255,7 +263,12 @@ export function bindLayoutEvents(root, rerender) {
   root.querySelectorAll('[data-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      navigate(el.dataset.nav);
+      const target = el.dataset.nav || '/guest';
+      if (target === '/support' || target.startsWith('/support/')) {
+        navigateToSupport(target);
+      } else {
+        navigate(target);
+      }
     });
   });
 
@@ -274,12 +287,29 @@ export function bindLayoutEvents(root, rerender) {
         alert('[프리뷰] 복수 역할 전환 UI — 9장 §2.2 (추후 구현)');
       } else if (action.startsWith('gnb-')) {
         const gnbId = action.replace('gnb-', '');
-        const hint = GNB_ACTION_HINTS[gnbId];
-        if (gnbId === 'register_room' && typeof hint === 'string' && hint.startsWith('http')) {
-          window.open(hint, '_blank', 'noopener');
+        const link = resolveGnbLink(gnbId, getNavRole());
+        if (link?.external) {
+          window.open(link.url, '_blank', 'noopener');
+        } else if (link) {
+          if (gnbId === 'support') navigateToSupport('/support');
+          else navigate(link.url);
         } else {
-          alert(`[프리뷰] ${el.textContent?.trim()}\n${hint || '연결 추후'}`);
+          alert(`[프리뷰] ${el.textContent?.trim()} — 연결 추후`);
         }
+      } else if (action === 'search') {
+        window.open(searchUiUrl('room', getNavRole()), '_blank', 'noopener');
+      } else if (action === 'util-mypage') {
+        navigate(getDefaultMypagePath(getNavRole()));
+      } else if (action === 'util-messages') {
+        navigate(getDefaultMessagesPath());
+      } else if (action === 'util-recent') {
+        navigate('/mypage/recent');
+      } else if (action === 'util-logout') {
+        navigate('/guest');
+      } else if (action === 'util-guide') {
+        navigateToSupport('/support/guide');
+      } else if (action === 'util-support') {
+        navigateToSupport('/support');
       } else if (action.startsWith('util-')) {
         alert(`[프리뷰] ${el.textContent?.trim()} — 6장 유틸 메뉴 (연결 추후)`);
       } else if (el.dataset.href) {

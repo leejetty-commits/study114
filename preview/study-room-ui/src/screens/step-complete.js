@@ -1,4 +1,4 @@
-import { registerState, FACILITY_OPTIONS, SCHOOL_LEVELS } from '../state.js';
+import { registerState, getFacilityOptions, LESSON_PLACE_TYPES, CAPACITY_PER_TIME_OPTIONS } from '../state.js';
 import {
   renderRegisterShell,
   renderTempNotice,
@@ -12,7 +12,7 @@ function formatPrice(amount) {
 
 function facilityNames() {
   return registerState.facility_ids
-    .map((id) => FACILITY_OPTIONS.find((f) => f.id === id)?.facility_name)
+    .map((id) => getFacilityOptions().find((f) => f.id === id)?.facility_name)
     .filter(Boolean)
     .join(', ');
 }
@@ -22,11 +22,11 @@ export function renderComplete() {
   const content = `
     <div class="panel text-center mb-6">
       <div style="font-size:3rem;line-height:1;margin-bottom:var(--space-4);">✓</div>
-      <h2 class="auth-heading" style="font-size:var(--text-2xl);">공부방 등록 프리뷰 완료</h2>
-      <p class="auth-subheading">profile_status: <strong>${s.profile_status}</strong></p>
+      <h2 class="auth-heading" style="font-size:var(--text-2xl);">공부방 등록 완료</h2>
+      <p class="auth-subheading">study_room_id: <strong>${s.study_room_id ?? '—'}</strong> · profile_status: <strong>${s.profile_status}</strong></p>
       <p class="auth-subheading" style="margin-top:var(--space-2);">
-        상세등록: <strong>${s.detail_registration_complete ? '완료' : '미완료'}</strong>
-        · Prime/Pick 자격: <strong>${s.detail_registration_complete ? '충족(노출권 별도)' : '미충족 — 일반 리스트만'}</strong>
+        상세등록: <strong>${s.detail_completion_status}</strong>
+        · Prime/Pick 자격: <strong>${s.detail_completion_status === 'expanded_complete' ? '충족(노출권 별도)' : '미충족 — 일반 리스트만'}</strong>
       </p>
     </div>
 
@@ -35,7 +35,8 @@ export function renderComplete() {
     <dl class="register-summary">
       <dt>공부방명</dt><dd>${s.study_room_name}</dd>
       <dt>운영자</dt><dd>${s.operator_display_name}</dd>
-      <dt>교습장</dt><dd>${s.lesson_place_type === 'home' ? '재택' : '교습소'}</dd>
+      <dt>교습장</dt><dd>${LESSON_PLACE_TYPES.find((t) => t.value === s.lesson_place_type)?.label || '—'}</dd>
+      <dt>타임별 원생수</dt><dd>${CAPACITY_PER_TIME_OPTIONS.find((o) => o.value === s.capacity_per_time)?.label || '—'}</dd>
       <dt>기본 위치</dt><dd>${s.address_text}</dd>
       <dt>월 대표 가격</dt><dd>${formatPrice(s.price_amount)}</dd>
       <dt>과목</dt><dd>${s.subjects.map((x) => x.subject_name).join(', ')}</dd>

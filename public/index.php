@@ -2,13 +2,20 @@
 
 declare(strict_types=1);
 
-/**
- * study114 front controller (placeholder)
- * Document root: public/
- */
+require_once dirname(__DIR__) . '/src/bootstrap.php';
+require_once dirname(__DIR__) . '/src/helpers.php';
 
-http_response_code(503);
-header('Content-Type: text/html; charset=utf-8');
+use Study114\Core\Router;
 
-echo '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>study114</title></head>';
-echo '<body><h1>우동공과 (study114)</h1><p>설계 단계 — docs/ 및 sql/schema/ 참고</p></body></html>';
+$uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+
+if ($uri !== '/' && $uri !== '/index.php') {
+    $static = __DIR__ . $uri;
+    if (is_file($static)) {
+        return false;
+    }
+}
+
+/** @var Router $router */
+$router = require dirname(__DIR__) . '/src/routes/web.php';
+$router->dispatch($_SERVER['REQUEST_METHOD'] ?? 'GET', $uri);

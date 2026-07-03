@@ -2,8 +2,6 @@ import { STEPS, REGISTER_PHASES } from './state.js';
 
 const ROUTES = Object.fromEntries(STEPS.map((s) => [s.path, s.key]));
 
-const STEP_LABELS = Object.fromEntries(STEPS.map((s) => [s.key, s.label]));
-
 /** @param {string} path */
 export function navigate(path) {
   window.location.hash = path;
@@ -35,6 +33,8 @@ export function renderPreviewToolbar(activeScreen) {
             return `<button type="button" class="preview-toolbar__btn ${isActive ? 'is-active' : ''}" data-nav="${s.path}">${s.label}</button>`;
           })
           .join('')}
+        <span class="preview-toolbar__divider"></span>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login" title="room-owner1@dev.local">Dev 로그인</button>
         <span class="preview-toolbar__divider"></span>
         <button type="button" class="preview-toolbar__btn ${activeScreen === 'complete' ? 'is-active' : ''}" data-nav="/register/complete">완료</button>
         <a href="http://localhost:5174/#/study-room" class="preview-toolbar__btn" target="_blank" rel="noopener">메인 프리뷰 ↗</a>
@@ -114,6 +114,16 @@ export function bindGlobalEvents(root) {
       e.preventDefault();
       navigate(el.dataset.nav);
     });
+  });
+
+  root.querySelector('[data-action="dev-login"]')?.addEventListener('click', async () => {
+    try {
+      const { devLogin } = await import('./register-api.js');
+      const user = await devLogin();
+      alert(`로그인: ${user.email} (${user.role_type})`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '로그인 실패');
+    }
   });
 }
 

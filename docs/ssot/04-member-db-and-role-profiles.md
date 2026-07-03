@@ -41,11 +41,14 @@
 | `users` | 공통 계정 | 로그인·상태·인증 기준 |
 | `user_profiles` | 기본 인적 정보 | 연락처·주소·수신동의·**기본 거주지** |
 | `user_roles` | 역할 매핑 | 공부방/과외/학부모 **동시 보유** |
-| `students` | 학부모 소속 자녀 + **과외등록 원본** | 별도 로그인 없음 |
-| `student_subject_targets` | 학생 희망과목 매핑 | 과외 검색·매칭 |
+| `students` | 학부모 소속 자녀 + **과외등록 원본** | 별도 로그인 없음 · **school_name 없음** |
+| `subject_masters` | 공통 과목 마스터 | 공부방/과외쌤/학생 공통 |
+| `student_subject_targets` | 학생 희망과목 매핑 | `subject_master_id` FK |
+| `student_preferred_lesson_places` | 희망 수업장소 | `student_home` / `study_room` / `public_place` |
+| `student_preferred_teaching_style_badges` | 희망 강의스타일 | 배지 복수 |
 
 지역 마스터: `regions` · `complexes` (2장 §8)  
-공부방 본문: **5장** · 과외쌤 프로필: **2장 §7** → `tutors` (DDL TODO)
+공부방 본문: **5장** · 과외쌤 프로필: **8장** → `008_tutors.sql` · `010_tutor_extended.sql`
 
 ---
 
@@ -111,7 +114,7 @@
 | 구분 | 저장 |
 |------|------|
 | 회원 집 주소 | `user_profiles` (address_* · default_region/complex) |
-| 자녀 희망 지역 | `students.preferred_region_id` / `preferred_complex_id` |
+| 자녀 희망 지역 | `preferred_studyroom_region/complex` · `preferred_tutor_region` · `preferred_region_note` |
 | 공부방·과외 활동 지역 | 5장 · tutors (역할별 상세) |
 
 ---
@@ -157,19 +160,26 @@
 | public_display_name | VARCHAR(50) | YES | 블라인드 **공개용** 표시명 |
 | request_title | VARCHAR(200) | YES | 과외등록 제목 |
 | request_summary | TEXT | YES | 과외등록 요약 |
+| request_summary_visibility | ENUM | NO | `private` · `paid_only` |
+| special_request_note | TEXT | YES | 특이요청/개인사정 |
+| special_request_visibility | ENUM | NO | `private` · `paid_only` |
 | gender | ENUM('male','female') | YES | |
 | birth_year | SMALLINT | YES | 출생연도 |
-| school_name | VARCHAR(100) | YES | |
-| grade_level | VARCHAR(20) | YES | 학년/학교급 |
+| grade_level | VARCHAR(20) | YES | 학교급/학년 |
 | school_track | VARCHAR(50) | YES | 계열/분류 |
-| preferred_lesson_type | ENUM('study_room','tutor') | YES | 희망 교습형태 |
-| preferred_region_id | BIGINT UNSIGNED | YES | FK → regions |
-| preferred_complex_id | BIGINT UNSIGNED | YES | FK → complexes |
+| preferred_lesson_type | ENUM('study_room','tutor') | YES | |
+| preferred_studyroom_region_id | BIGINT UNSIGNED | YES | FK → regions (동) |
+| preferred_studyroom_complex_id | BIGINT UNSIGNED | YES | FK → complexes |
+| preferred_tutor_region_id | BIGINT UNSIGNED | YES | FK → regions (시) |
+| preferred_region_note | VARCHAR(255) | YES | 지역 보충 |
 | preferred_tutor_gender | ENUM('male','female','any') | YES | |
-| preferred_fee_amount | INT UNSIGNED | YES | 희망 과외비 |
+| preferred_student_count_group | ENUM | YES | `solo`·`two`·`three`·`four_plus` — UI **희망 수업인원** |
+| preferred_fee_amount | INT UNSIGNED | YES | 수업예산(과외) |
+| preferred_studyroom_fee_amount | INT UNSIGNED | YES | 수업예산(공부방) |
 | lessons_per_week | SMALLINT UNSIGNED | YES | 주 N회 |
 | minutes_per_lesson | SMALLINT UNSIGNED | YES | 1회 분 |
-| lesson_format | ENUM('one_on_one','group') | YES | 1:1 / 그룹 |
+| lesson_format | ENUM('one_on_one','group') | YES | UI **단독과외** / **그룹과외** (DB code 유지) |
+| student_gender_group | ENUM('male','female','mixed') | YES | 그룹과외 시 남/여/남여 구성 |
 | academic_level_note | TEXT | YES | |
 | preferred_style_note | VARCHAR(255) | YES | |
 | preferred_school_note | VARCHAR(255) | YES | |
@@ -183,8 +193,7 @@
 | exposure_status | ENUM | NO | `draft` · `published` · `hidden` · `deleted` |
 | published_at | DATETIME | YES | 과외등록 공개 시각 |
 | deleted_at | DATETIME | YES | |
-| sort_order | TINYINT UNSIGNED | NO | default 0 · 자녀 표시 순 |
-| created_at / updated_at | DATETIME | NO | |
+| created_at / updated_at | DATETIME | NO | 등록순 = `ORDER BY created_at ASC, id ASC` |
 
 ### 7-1. 노출 상태 (§10-1-1)
 
@@ -204,28 +213,31 @@
 |------|------|------|
 | id | BIGINT UNSIGNED | PK |
 | student_id | BIGINT UNSIGNED | FK → students |
-| school_level | ENUM | `preschool` · `elementary` · `middle` · `high` · `general` · `other` |
-| subject_name | VARCHAR(50) | 희망 과목명 |
+| school_level | ENUM | `preschool` · `elementary` · `middle` · `high` · `n_su` · `general` · `other` |
+| subject_master_id | BIGINT UNSIGNED | FK → subject_masters |
+| subject_name | VARCHAR(50) | 표시용 과목명 |
 | is_primary | TINYINT(1) | 주요 과목 |
 
-### 7-3. 과외등록 — 필수 vs 선택
-
-**공개(`published`) 시 필수** (저장만일 때는 선택):
+### 7-2. 과외등록 — 필수 13항목 (저장만 vs 공개)
 
 | 항목 | DB |
 |------|-----|
-| 희망교습형태 | `preferred_lesson_type` (= `tutor` 전제) |
+| 희망교습형태 | `preferred_lesson_type` |
 | 학생성별 | `gender` |
 | 학교급/학년 | `grade_level` |
-| 희망지역 | `preferred_region_id` (+ complex) |
+| 희망지역 | studyroom/tutor region + `preferred_region_note` |
 | 희망과목 | `student_subject_targets` |
-| 과외유형 | `lesson_format` |
+| 희망 수업장소 | `student_preferred_lesson_places` |
+| 희망 수업인원 | `preferred_student_count_group` (화면 용어 · DB code 동일) |
+| 수업형태 | `lesson_format` — 단독과외 시 인원 `solo` 자동 |
+| 그룹 구성 | `student_gender_group` — **그룹과외일 때만** |
 | 주 횟수 | `lessons_per_week` |
 | 1회 시간 | `minutes_per_lesson` |
+| 희망 강의스타일 | `student_preferred_teaching_style_badges` |
 | 희망과외쌤성별 | `preferred_tutor_gender` |
-| 희망과외비 | `preferred_fee_amount` |
+| 수업예산 | `preferred_fee_amount` / `preferred_studyroom_fee_amount` |
 
-**선택 상세:** 학교명, 출생연도, 계열, 학업수준, 희망 스타일/학교/학력, 예상기간, 요구서류, 연락시간, 특징1~3 → §7-3 표 (Notion 원문)
+**visibility (1차 구현):** `request_summary_visibility` · `special_request_visibility` — UI + 상세 권한 제어 포함. 무료 공급자 차단 · 유료는 `paid_only`만 열람.
 
 > **001 gap:** `students` 테이블 **전면 재설계** — `004` 참고.
 
@@ -258,6 +270,18 @@ students 1 ── N student_subject_targets
 - [x] 안전번호 = **컬럼만** · UI 1차 **비노출** (§10-3)
 - [x] 집 주소 vs 활동/희망 지역 **분리** (§10-2)
 
+### 9-1. ENUM 표현 (2026-07-04 정합)
+
+| 컬럼 | DB code | UI 라벨 |
+|------|---------|---------|
+| `lesson_format` | `one_on_one` · `group` | 단독과외 · 그룹과외 |
+| `student_gender_group` | `male` · `female` · `mixed` | 남 · 여 · 남여 |
+| `preferred_student_count_group` | `solo` · `two` · `three` · `four_plus` | 단독 · 2명 · 3명 · 4명 이상 |
+
+- **DB enum 값 변경 없음** — 화면·API는 code → 한글 매핑만
+- 단독과외 선택 시 `preferred_student_count_group=solo` 자동
+- 그룹과외 선택 시 `student_gender_group` + 희망 수업인원 **함께** 입력
+
 ---
 
 ## 10. ER
@@ -268,7 +292,7 @@ regions ──< complexes
 users ── user_profiles
   ├──< user_roles
   ├──< students ──< student_subject_targets
-  └──< tutors (TODO) · study_rooms (5장)
+  └──< tutors (8장) · study_rooms (5장)
 ```
 
 ---
@@ -279,7 +303,9 @@ users ── user_profiles
 |------|------|
 | [001_init.sql](../../sql/schema/001_init.sql) | 초안 · **4장과 부분 불일치** |
 | [002_profile_signup_fields.sql](../../sql/schema/002_profile_signup_fields.sql) | 2장 UI 임시 컬럼명 (`name`, `sms_consent` 등) |
-| **[004_member_ssot_align.sql](../../sql/schema/004_member_ssot_align.sql)** | **4장 정합 migration (적용 전 검토)** |
+| **[004_member_ssot_align.sql](../../sql/schema/004_member_ssot_align.sql)** | **4장 정합** |
+| [003_subject_masters.sql](../../sql/schema/003_subject_masters.sql) | 과목 마스터 + 시드 |
+| [008_tutors.sql](../../sql/schema/008_tutors.sql) | **8장** |
 
 **충돌 시 4장 SSOT 우선.** 002 적용 후 004로 rename·추가.
 
@@ -290,4 +316,5 @@ users ── user_profiles
 | 날짜 | 내용 |
 |------|------|
 | 2026-05-31 | 4장 초안 |
-| 2026-05-31 | Notion 4장 원문 전면 반영 · 004 migration |
+| 2026-07-04 | Notion 4장 2026-07 갱신 · school_name·sort_order 제거 · visibility·신규 매핑 테이블 |
+| 2026-07-04 | `student_gender_group` · **희망 수업인원** 용어 · `lesson_format` DB code 유지(§9-1) |

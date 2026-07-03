@@ -43,15 +43,15 @@ export const EXPOSURE_TIERS = {
   },
 };
 
-/** 6장 — 과외쌤 비교검색 경량 항목 */
+/** 6장 — 과외쌤 비교검색 경량 항목 (8장 필드명) */
 export const TUTOR_COMPARE_FIELDS = [
-  'display_name',
-  'gender',
-  'main_subjects',
-  'service_regions',
-  'representative_fee',
-  'career_summary',
-  'feature_note',
+  'tutor_display_name',
+  'student_gender_group',
+  'main_subject_note',
+  'location_label',
+  'fee_card_label',
+  'career_year_band',
+  'feature_1',
 ];
 
 /** 8장 — 학생 열람권 후보 (구현 보류) */
@@ -67,3 +67,6 @@ export const TUTOR_VIEW_PASS_CANDIDATE = {
 
 /** 1차 UI에 노출하지 않는 메뉴 ID */
 export const MENU_EXCLUDED_PHASE1 = ['quick_match', 'app_download', 'library_portal'];
+
+/** 6장 §3 — 안전과외: GNB 독립 메뉴 아님 · 이용안내/고객센터 하위 설명 페이지 */
+export const SAFE_TUTOR_PLACEMENT = ['util-guide', 'util-support', 'gnb-support'];

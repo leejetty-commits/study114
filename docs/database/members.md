@@ -11,30 +11,27 @@
 | user_profiles | §5 |
 | user_roles | §6 |
 | students | §7 |
-| student_subject_targets | §7-2 |
+| subject_masters | §3 · 5장 §5-1 |
+| student_subject_targets | §7-1 |
+| student_preferred_lesson_places | §7-1-1 |
+| student_preferred_teaching_style_badges | §7-1-2 |
 
 ## DDL 순서
 
 ```bash
-mysql -u root -p < sql/schema/001_init.sql
-mysql -u root -p study114 < sql/schema/002_profile_signup_fields.sql   # 선택
-mysql -u root -p study114 < sql/schema/004_member_ssot_align.sql     # 4장 정합
+.\scripts\apply-schema-dev.ps1   # 001 → 002 → 003 → 004 → 005 → 006 → 007 → 008
 ```
 
-## 2장 UI ↔ DB
+## 잠금 요약 (2026-07)
 
-가입 폼 UI `name`은 2장 잠금 · DB는 4장 (`real_name`, `sms_opt_in` 등).  
-매핑표: **4장 §5-1**
-
-## 잠금 요약
-
-- 학부모 기준 · `guardian_student`
-- 공부방+과외 **동시 역할** · **화면은 역할 1개**
-- 자녀 **N명** · **draft/published/hidden/deleted**
-- 안전번호: 컬럼만 · UI 1차 비노출
+- `students.school_name` · `sort_order` **없음** — `grade_level` / `school_track` · `created_at` 등록순
+- visibility 2축: `request_summary_visibility` · `special_request_visibility` (`private` / `paid_only`)
+- 수업형태: `lesson_format` (`one_on_one` / `group`) · 그룹 시 `student_gender_group` ([011](../../sql/schema/011_student_gender_group.sql))
+- 화면 **희망 수업인원** = `preferred_student_count_group`
+- 수업예산: `preferred_fee_amount` + `preferred_studyroom_fee_amount`
 
 ## 변경 이력
 
 | 날짜 | 내용 |
 |------|------|
-| 2026-05-31 | Notion 4장 원문 반영 |
+| 2026-07-04 | Notion 4장 2026-07 갱신 반영 |

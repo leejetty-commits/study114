@@ -1,0 +1,15 @@
+{
+  "name": "@study114/tutor-ui-preview",
+  "private": true,
+  "version": "0.1.0",
+  "description": "우동공과 과외쌤 등록 UI 프리뷰 (8장)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}

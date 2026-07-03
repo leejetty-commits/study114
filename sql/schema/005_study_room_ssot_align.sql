@@ -24,13 +24,15 @@ ALTER TABLE study_rooms
 
 ALTER TABLE study_rooms
   ADD COLUMN operator_display_name VARCHAR(50) NULL COMMENT '운영자 표시명' AFTER study_room_name,
-  ADD COLUMN intro_short VARCHAR(255) NULL COMMENT '짧은 소개' AFTER operator_display_name,
-  ADD COLUMN lesson_place_type ENUM('home', 'office') NULL COMMENT '재택/교습소' AFTER intro_long,
-  ADD COLUMN region_id BIGINT UNSIGNED NULL COMMENT '기본 위치 동' AFTER lesson_place_type,
+  ADD COLUMN slogan VARCHAR(255) NULL COMMENT '한줄 슬로건' AFTER operator_display_name,
+  ADD COLUMN intro_short VARCHAR(255) NULL COMMENT '짧은 소개' AFTER slogan,
+  ADD COLUMN lesson_place_type ENUM('academy', 'study_room') NULL COMMENT '교습소/공부방' AFTER intro_long,
+  ADD COLUMN lesson_operation_type ENUM('group_by_time_slot', 'time_slot_mixed_grade', 'individual_visit') NULL COMMENT '수업운영형태' AFTER lesson_place_type,
+  ADD COLUMN region_id BIGINT UNSIGNED NULL COMMENT '기본 위치 동' AFTER lesson_operation_type,
   ADD COLUMN complex_id BIGINT UNSIGNED NULL COMMENT '기본 위치 단지' AFTER region_id,
   ADD COLUMN latitude DECIMAL(10, 7) NULL COMMENT '지도 위도' AFTER address_text,
   ADD COLUMN longitude DECIMAL(10, 7) NULL COMMENT '지도 경도' AFTER latitude,
-  ADD COLUMN capacity_per_time VARCHAR(50) NULL COMMENT '1타임 수업 인원' AFTER longitude,
+  ADD COLUMN capacity_per_time ENUM('one_to_four', 'five_to_eight', 'nine_plus') NULL COMMENT '타임별 원생수' AFTER longitude,
   ADD COLUMN recruitment_count SMALLINT UNSIGNED NULL COMMENT '모집 인원' AFTER capacity_per_time,
   ADD COLUMN main_subject_note VARCHAR(255) NULL COMMENT '주력과목 요약' AFTER recruitment_count,
   ADD COLUMN teaching_style VARCHAR(255) NULL COMMENT '지도 스타일' AFTER main_subject_note,
@@ -45,7 +47,8 @@ ALTER TABLE study_rooms
   ADD COLUMN feature_1 VARCHAR(100) NULL AFTER education_office_reg_no,
   ADD COLUMN feature_2 VARCHAR(100) NULL AFTER feature_1,
   ADD COLUMN feature_3 VARCHAR(100) NULL AFTER feature_2,
-  ADD COLUMN contact_time_note VARCHAR(255) NULL COMMENT '연락 가능 시간' AFTER feature_3;
+  ADD COLUMN contact_time_note VARCHAR(255) NULL COMMENT '연락 가능 시간' AFTER feature_3,
+  ADD COLUMN detail_completion_status ENUM('basic_only', 'expanded_in_progress', 'expanded_complete') NOT NULL DEFAULT 'basic_only' COMMENT '기본/상세등록 상태' AFTER profile_status;
 
 ALTER TABLE study_rooms
   ADD CONSTRAINT fk_study_rooms_region FOREIGN KEY (region_id) REFERENCES regions (id),
@@ -65,9 +68,11 @@ UPDATE study_room_regions SET is_primary = 1 WHERE slot = 1;
 -- ---------------------------------------------------------------------------
 ALTER TABLE study_room_subject_targets
   CHANGE COLUMN subject subject_name VARCHAR(50) NOT NULL COMMENT '과목명',
-  MODIFY COLUMN school_level ENUM('preschool', 'elementary', 'middle', 'high', 'retake', 'general', 'other') NULL,
+  MODIFY COLUMN school_level ENUM('preschool', 'elementary', 'middle', 'high', 'n_su', 'general', 'other') NULL,
   ADD COLUMN grade_band VARCHAR(20) NULL COMMENT '학년대 세부' AFTER school_level,
-  ADD COLUMN is_main TINYINT(1) NOT NULL DEFAULT 0 COMMENT '주력과목' AFTER subject_name;
+  ADD COLUMN subject_master_id BIGINT UNSIGNED NULL COMMENT '과목 마스터 FK' AFTER grade_band,
+  ADD COLUMN is_main TINYINT(1) NOT NULL DEFAULT 0 COMMENT '주력과목' AFTER subject_name,
+  ADD CONSTRAINT fk_srst_subject_master FOREIGN KEY (subject_master_id) REFERENCES subject_masters (id);
 
 -- ---------------------------------------------------------------------------
 -- study_room_images — 5장 §6

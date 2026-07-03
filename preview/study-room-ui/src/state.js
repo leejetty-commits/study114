@@ -28,9 +28,26 @@ export const SCHOOL_LEVELS = [
   { value: 'elementary', label: '초등' },
   { value: 'middle', label: '중등' },
   { value: 'high', label: '고등' },
-  { value: 'retake', label: '재수' },
+  { value: 'n_su', label: 'N수' },
   { value: 'general', label: '일반' },
   { value: 'other', label: '기타' },
+];
+
+export const LESSON_PLACE_TYPES = [
+  { value: 'academy', label: '교습소' },
+  { value: 'study_room', label: '공부방' },
+];
+
+export const LESSON_OPERATION_TYPES = [
+  { value: 'group_by_time_slot', label: '그룹별 타임수업' },
+  { value: 'time_slot_mixed_grade', label: '타임별 무학년 수업' },
+  { value: 'individual_visit', label: '개인별 내방수업' },
+];
+
+export const CAPACITY_PER_TIME_OPTIONS = [
+  { value: 'one_to_four', label: '1~4명' },
+  { value: 'five_to_eight', label: '5~8명' },
+  { value: 'nine_plus', label: '최대 9명' },
 ];
 
 /** 5장 §11-3 권장 체크 ~5개 */
@@ -49,6 +66,11 @@ export const IMAGE_TYPES = [
   { value: 'other', label: '기타' },
 ];
 
+export const PERSONAL_GENDER_OPTIONS = [
+  { value: 'male', label: '남' },
+  { value: 'female', label: '여' },
+];
+
 export const DUMMY_REGIONS = [
   { id: 1, label: '서울 강남구 대치동' },
   { id: 2, label: '서울 서초구 반포동' },
@@ -61,12 +83,42 @@ export const DUMMY_COMPLEXES = [
   { id: 3, region_id: 3, label: '해운대두산위브' },
 ];
 
+/** API 마스터 (init 시 채움) */
+export const apiMasters = {
+  regions: /** @type {Array<{id: number, label: string}>} */ ([]),
+  complexes: /** @type {Array<{id: number, region_id: number, label: string}>} */ ([]),
+  facilities: /** @type {Array<{id: number, facility_code: string, facility_name: string}>} */ ([]),
+};
+
+export function getRegions() {
+  return apiMasters.regions.length ? apiMasters.regions : DUMMY_REGIONS;
+}
+
+export function getComplexes() {
+  return apiMasters.complexes.length ? apiMasters.complexes : DUMMY_COMPLEXES;
+}
+
+export function getFacilityOptions() {
+  if (apiMasters.facilities.length) {
+    return apiMasters.facilities.map((f) => ({
+      id: f.id,
+      facility_code: f.facility_code,
+      facility_name: f.facility_name,
+    }));
+  }
+  return FACILITY_OPTIONS;
+}
+
 export const registerState = {
+  study_room_id: null,
+  gender: 'female',
   study_room_name: '우동공과 대치점',
+  slogan: '매일 성장하는 작은 공부방',
   operator_display_name: '김선생',
   intro_short: '대치동 인근 소규모 맞춤 공부방',
   intro_long: '학생 개별 수준에 맞춘 관리형 공부방입니다. 자기주도와 피드백을 병행합니다.',
-  lesson_place_type: 'office',
+  lesson_place_type: 'academy',
+  lesson_operation_type: 'group_by_time_slot',
 
   region_id: '1',
   complex_id: '1',
@@ -79,7 +131,7 @@ export const registerState = {
     { region_id: '', complex_id: '', is_primary: false },
   ],
 
-  capacity_per_time: '4~6명',
+  capacity_per_time: 'one_to_four',
   recruitment_count: '12',
   main_subject_note: '수학·영어',
   teaching_style: '자기주도 + 개별 피드백',
@@ -88,8 +140,8 @@ export const registerState = {
   price_amount: '350000',
   price_description: '주 2회 기준 월 35만원. 과목·횟수별 상이 — 문의',
   subjects: [
-    { school_level: 'middle', grade_band: '중1~2', subject_name: '수학', is_main: true },
-    { school_level: 'middle', grade_band: '중1~2', subject_name: '영어', is_main: false },
+    { school_level: 'middle', grade_band: '중1~2', subject_master_id: '6', subject_name: '수학(중등)', is_main: true },
+    { school_level: 'middle', grade_band: '중1~2', subject_master_id: '3', subject_name: '영어문법', is_main: false },
   ],
 
   career_years: '8',
@@ -114,9 +166,9 @@ export const registerState = {
   youtube_url: '',
 
   profile_status: 'draft',
-  detail_registration_complete: false,
+  detail_completion_status: 'expanded_in_progress',
 };
 
 export function emptySubject() {
-  return { school_level: 'middle', grade_band: '', subject_name: '', is_main: false };
+  return { school_level: 'middle', grade_band: '', subject_master_id: '', subject_name: '', is_main: false };
 }

@@ -30,7 +30,6 @@ final class SignupService
         $passwordConfirm = $this->requireString($input, 'password_confirm');
         $name = $this->requireString($input, 'name');
         $gender = $this->requireString($input, 'gender');
-        $birthDate = $this->requireString($input, 'birth_date');
         $phone = $this->requireString($input, 'phone');
         $address = $this->requireString($input, 'address');
         $roleUi = $this->requireString($input, 'role');
@@ -47,9 +46,6 @@ final class SignupService
         if (!in_array($gender, ['male', 'female'], true)) {
             throw new InvalidArgumentException('gender: male 또는 female만 허용됩니다.');
         }
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthDate)) {
-            throw new InvalidArgumentException('birth_date: YYYY-MM-DD 형식이어야 합니다.');
-        }
         if (!isset(self::ROLE_MAP[$roleUi])) {
             throw new InvalidArgumentException('role: student, study_room, tutor 중 하나여야 합니다.');
         }
@@ -57,7 +53,7 @@ final class SignupService
         $roleType = self::ROLE_MAP[$roleUi];
         $smsOptIn = !empty($input['sms_consent']) ? 1 : 0;
         $emailOptIn = !empty($input['email_consent']) ? 1 : 0;
-        $safeNumberOptIn = !empty($input['safe_number_use']) ? 1 : 0;
+        $safeNumberOptIn = 0;
 
         $addressZip = isset($input['address_zip']) && $input['address_zip'] !== ''
             ? (string) $input['address_zip'] : null;
@@ -83,7 +79,7 @@ final class SignupService
                 $name,
                 $phone,
                 $gender,
-                $birthDate,
+                null,
                 $addressZip,
                 $address,
                 $addressLine2,
@@ -135,7 +131,7 @@ final class SignupService
         string $realName,
         string $phone,
         string $gender,
-        string $birthDate,
+        ?string $birthDate,
         ?string $addressZip,
         string $addressLine1,
         ?string $addressLine2,

@@ -1,4 +1,6 @@
-import { registerState, FACILITY_OPTIONS, IMAGE_TYPES } from '../state.js';
+import { registerState, getFacilityOptions, IMAGE_TYPES } from '../state.js';
+import { syncFacilityFromForm } from '../form-collect.js';
+import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
@@ -10,7 +12,7 @@ import {
 } from '../layout.js';
 
 function renderFacilityChecks() {
-  return FACILITY_OPTIONS.map((f) => {
+  return getFacilityOptions().map((f) => {
     const checked = registerState.facility_ids.includes(f.id);
     return `
       <label class="form-check">
@@ -25,7 +27,7 @@ function renderFacilityChecks() {
 export function renderFacility() {
   const s = registerState;
   const content = `
-    ${renderTempNotice('이미지 업로드 · 저장 API는 추후 연동 (0~5장)')}
+    ${renderTempNotice('이미지 업로드는 경로만 저장 · 파일 업로드는 추후')}
     <form data-form="facility">
       ${renderSectionTitle('시설 · 환경 (체크형)')}
       <p class="register-hint mb-4">study_room_facilities · facility_masters (~5개, 5장 §11-3)</p>
@@ -100,13 +102,15 @@ export function renderFacility() {
 
 export function bindFacilityEvents(root) {
   bindGlobalEvents(root);
-  bindFormNav(root, '/register/career', null);
+  const prevBtn = root.querySelector('[data-action="prev"]');
+  prevBtn?.addEventListener('click', () => navigate('/register/career'));
 
-  root.querySelector('[data-action="next"]')?.addEventListener('click', () => {
-    const yt = root.querySelector('#youtube_url');
-    if (yt) registerState.youtube_url = yt.value.trim();
-    registerState.detail_registration_complete = true;
-    navigate('/register/complete');
+  const nextBtn = root.querySelector('[data-action="next"]');
+  nextBtn?.addEventListener('click', () => {
+    withSaving(nextBtn, async () => {
+      syncFacilityFromForm(root.querySelector('[data-form="facility"]'), registerState);
+      await saveAndNavigate(registerState, 'facility', '/register/complete');
+    });
   });
 
   root.querySelector('[data-action="add-image"]')?.addEventListener('click', () => {

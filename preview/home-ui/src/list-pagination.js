@@ -1,6 +1,7 @@
 import { setGuestListPage } from './state.js';
 
 export const GUEST_LIST_PAGE_SIZE = 10;
+export const PICK_PAGE_SIZE = 5;
 
 /**
  * @param {Array<object>} items

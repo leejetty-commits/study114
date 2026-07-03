@@ -1,10 +1,16 @@
 /** @typedef {'student' | 'study_room' | 'tutor'} MemberRole */
 
-/** @type {{ role: MemberRole | null, termsAgreed: boolean, lastSignup: { userId: number, email: string, roleType: string } | null }} */
+/** @type {{ role: MemberRole | null, termsAgreed: boolean, accountAddress: string, basicRegister: Record<string, object>, lastSignup: { userId: number, email: string, roleType: string } | null }} */
 export const signupState = {
   role: null,
   termsAgreed: false,
+  accountAddress: '',
+  profileGender: null,
+  basicRegister: {},
   lastSignup: null,
+  /** @type {Array<{id: number, label: string}>} */
+  regions: [],
+  basicRegisterResult: null,
 };
 
 /** 문서 잠금: 회원 구분 3축 */
@@ -31,12 +37,10 @@ export const DUMMY_USER = {
   email: 'parent@example.com',
   name: '김우동',
   gender: 'female',
-  birthDate: '1985-03-15',
   phone: '010-1234-5678',
   address: '서울특별시 강남구 역삼동 123-45 101동 1001호',
   smsConsent: true,
   emailConsent: false,
-  safeNumberUse: false,
 };
 
 /** 문서 잠금: 약관동의 항목 — [임시] SSOT 2장 §3.2, 법무 확정 전 변경 가능 */
@@ -52,7 +56,11 @@ export const TERMS = [
 export function resetSignupState() {
   signupState.role = null;
   signupState.termsAgreed = false;
+  signupState.accountAddress = '';
+  signupState.basicRegister = {};
+  signupState.basicRegisterResult = null;
   signupState.lastSignup = null;
+  signupState.regions = [];
 }
 
 export function setRole(role) {

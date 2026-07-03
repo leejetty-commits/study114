@@ -4,12 +4,12 @@ import {
   GUEST_REGION_STATS,
   AD_FALLBACKS,
   SLOT_PRIME,
-  SLOT_PICK_ROW,
 } from './data.js';
 import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS, EXPOSURE_STUDENTS } from './exposure-data.js';
 import {
   renderExposureBox,
   renderGuestPaginatedListBlock,
+  renderPickPaginatedBlock,
 } from './exposure-render.js';
 import { bindGuestListPagination } from './list-pagination.js';
 import { SECTION_HEADINGS, renderSectionHeading } from './section-headings.js';
@@ -69,14 +69,7 @@ function renderStudyRoomPrimePick() {
       <div class="expo-grid--3">
         ${pool.slice(0, 3).map((item, i) => renderExposureBox('study_room', 'prime', item, SLOT_PRIME[i], guestOpts)).join('')}
       </div>
-
-      ${renderSectionHeading(SECTION_HEADINGS.pickStudyRoom)}
-      <div class="expo-grid--5">
-        ${pool.slice(3, 8).map((item, i) => renderExposureBox('study_room', 'pick', item, SLOT_PICK_ROW[i], guestOpts)).join('')}
-      </div>
-      <div class="expo-grid--5 expo-grid--5-second">
-        ${pool.slice(8, 13).map((item, i) => renderExposureBox('study_room', 'pick', item, `Pick ${i + 6}`, guestOpts)).join('')}
-      </div>
+      ${renderPickPaginatedBlock('study_room', 'pick_study_room', SECTION_HEADINGS.pickStudyRoom, pool, guestOpts)}
     </div>
   `;
 }
@@ -100,14 +93,7 @@ function renderTutorPrimePick() {
       <div class="expo-grid--3">
         ${pool.slice(0, 3).map((item, i) => renderExposureBox('tutor', 'prime', item, SLOT_PRIME[i], guestOpts)).join('')}
       </div>
-
-      ${renderSectionHeading(SECTION_HEADINGS.pickTutor)}
-      <div class="expo-grid--5">
-        ${pool.slice(3, 8).map((item, i) => renderExposureBox('tutor', 'pick', item, SLOT_PICK_ROW[i], guestOpts)).join('')}
-      </div>
-      <div class="expo-grid--5 expo-grid--5-second">
-        ${pool.slice(8, 13).map((item, i) => renderExposureBox('tutor', 'pick', item, `Pick ${i + 6}`, guestOpts)).join('')}
-      </div>
+      ${renderPickPaginatedBlock('tutor', 'pick_tutor', SECTION_HEADINGS.pickTutor, pool, guestOpts)}
     </div>
   `;
 }

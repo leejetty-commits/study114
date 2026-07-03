@@ -1,9 +1,12 @@
 import { registerState } from '../state.js';
+import { syncCareerFromForm } from '../form-collect.js';
+import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
   renderNavButtons,
   bindGlobalEvents,
   bindFormNav,
+  navigate,
 } from '../layout.js';
 
 export function renderCareer() {
@@ -77,5 +80,13 @@ export function renderCareer() {
 
 export function bindCareerEvents(root) {
   bindGlobalEvents(root);
-  bindFormNav(root, '/register/lesson', '/register/facility');
+  const nextBtn = root.querySelector('[data-action="next"]');
+  const prevBtn = root.querySelector('[data-action="prev"]');
+  prevBtn?.addEventListener('click', () => navigate('/register/lesson'));
+  nextBtn?.addEventListener('click', () => {
+    withSaving(nextBtn, async () => {
+      syncCareerFromForm(root.querySelector('[data-form="career"]'), registerState);
+      await saveAndNavigate(registerState, 'career', '/register/facility');
+    });
+  });
 }

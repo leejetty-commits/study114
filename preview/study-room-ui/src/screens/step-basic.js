@@ -1,9 +1,12 @@
-import { registerState } from '../state.js';
+import { registerState, LESSON_PLACE_TYPES, PERSONAL_GENDER_OPTIONS } from '../state.js';
+import { syncBasicFromForm } from '../form-collect.js';
+import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
   renderNavButtons,
   bindGlobalEvents,
   bindFormNav,
+  navigate,
 } from '../layout.js';
 
 export function renderBasic() {
@@ -14,6 +17,25 @@ export function renderBasic() {
         <label class="form-label form-label--required" for="study_room_name">공부방명</label>
         <span class="field-db-name">study_room_name</span>
         <input class="form-input" id="study_room_name" name="study_room_name" value="${s.study_room_name}" required />
+      </div>
+      <div class="form-group">
+        <span class="form-label form-label--required">원장 성별</span>
+        <span class="field-db-name">user_profiles.gender</span>
+        <p class="register-hint">매칭·검색 needs에 사용</p>
+        <div class="form-radio-group" role="radiogroup">
+          ${PERSONAL_GENDER_OPTIONS.map(
+            (t) => `
+          <label class="form-radio">
+            <input type="radio" name="gender" value="${t.value}" ${s.gender === t.value ? 'checked' : ''} required />
+            <span class="form-radio__label">${t.label}</span>
+          </label>`,
+          ).join('')}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="slogan">슬로건</label>
+        <span class="field-db-name">slogan</span>
+        <input class="form-input" id="slogan" name="slogan" maxlength="255" value="${s.slogan}" placeholder="한줄 캐치프레이즈" />
       </div>
       <div class="form-group">
         <label class="form-label" for="operator_display_name">운영자 표시명</label>
@@ -34,14 +56,13 @@ export function renderBasic() {
         <span class="form-label form-label--required">교습장 형태</span>
         <span class="field-db-name">lesson_place_type</span>
         <div class="form-radio-group" role="radiogroup">
+          ${LESSON_PLACE_TYPES.map(
+            (t) => `
           <label class="form-radio">
-            <input type="radio" name="lesson_place_type" value="home" ${s.lesson_place_type === 'home' ? 'checked' : ''} />
-            <span class="form-radio__label">재택</span>
-          </label>
-          <label class="form-radio">
-            <input type="radio" name="lesson_place_type" value="office" ${s.lesson_place_type === 'office' ? 'checked' : ''} />
-            <span class="form-radio__label">교습소</span>
-          </label>
+            <input type="radio" name="lesson_place_type" value="${t.value}" ${s.lesson_place_type === t.value ? 'checked' : ''} />
+            <span class="form-radio__label">${t.label}</span>
+          </label>`,
+          ).join('')}
         </div>
       </div>
       ${renderNavButtons(null, '다음: 위치')}
@@ -56,5 +77,13 @@ export function renderBasic() {
 
 export function bindBasicEvents(root) {
   bindGlobalEvents(root);
-  bindFormNav(root, null, '/register/location');
+  const nextBtn = root.querySelector('[data-action="next"]');
+  nextBtn?.addEventListener('click', () => {
+    withSaving(nextBtn, async () => {
+      syncBasicFromForm(root.querySelector('[data-form="basic"]'), registerState);
+      await saveAndNavigate(registerState, 'basic', '/register/location');
+    });
+  });
+  const prev = root.querySelector('[data-action="prev"]');
+  if (prev) prev.addEventListener('click', () => navigate('/register/basic'));
 }

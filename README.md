@@ -27,6 +27,21 @@
 | [preview/auth-ui/](preview/auth-ui/) | http://localhost:5173 |
 | [preview/home-ui/](preview/home-ui/) | http://localhost:5174 |
 | [preview/study-room-ui/](preview/study-room-ui/) | http://localhost:5175 |
+| [preview/search-ui/](preview/search-ui/) | http://localhost:5176 |
+
+## PHP MVC (로컬 API)
+
+Docker `study114-api-dev` · 포트 **8080**
+
+| 경로 | 용도 |
+|------|------|
+| http://localhost:8080/auth/login | 로그인 (MVC) |
+| http://localhost:8080/auth/signup/terms | 가입 플로우 |
+| http://localhost:8080/api/auth/signup.php | 가입 JSON API |
+| http://localhost:8080/api/auth/login.php | 로그인 JSON API |
+| http://localhost:8080/api/search/search.php | 검색 JSON API |
+
+dev 시드 로그인: `guardian1@dev.local` / `password`
 
 ## DB (로컬) — study114_dev
 

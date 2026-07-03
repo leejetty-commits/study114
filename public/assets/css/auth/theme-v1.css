@@ -1,0 +1,70 @@
+/* ── Theme V1: 안정형 ──
+   부드러운 모서리, 은은한 그림자, 따뜻한 배경 톤 */
+
+[data-theme='v1'] {
+  --page-bg: linear-gradient(180deg, #fff7ed 0%, var(--gray-50) 40%);
+  --logo-radius: 0.625rem;
+  --heading-size: var(--text-2xl);
+  --heading-tracking: -0.02em;
+
+  --input-radius: 0.625rem;
+  --input-padding-y: 0.8125rem;
+  --input-padding-x: 1rem;
+  --input-border: var(--gray-200);
+  --input-focus-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+
+  --btn-radius: 0.625rem;
+  --btn-padding-y: 0.9375rem;
+  --btn-primary-bg: var(--brand-orange);
+  --btn-primary-hover: var(--brand-orange-dark);
+  --btn-primary-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+
+  --panel-radius: 1rem;
+  --panel-padding: var(--space-6);
+  --panel-bg: #fff;
+  --panel-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+  --panel-border: none;
+
+  --role-icon-radius: 0.75rem;
+  --link-color: var(--brand-blue);
+}
+
+[data-theme='v1'] body,
+[data-theme='v1'] .auth-shell {
+  background: var(--gray-50);
+  background-image: linear-gradient(180deg, #fff7ed 0%, var(--gray-50) 35%, var(--gray-50) 100%);
+}
+
+[data-theme='v1'] .panel {
+  border: 1px solid rgba(249, 115, 22, 0.08);
+}
+
+[data-theme='v1'] .role-card {
+  border-radius: 1rem;
+}
+
+[data-theme='v1'] .terms-all {
+  background: var(--brand-orange-light);
+  border: 1px solid rgba(249, 115, 22, 0.12);
+}
+
+[data-theme='v1'] .step-indicator__dot.is-active {
+  background: var(--brand-orange);
+}
+
+[data-theme='v1'] .social-btn {
+  border-radius: 0.625rem;
+}
+
+[data-theme='v1'] .form-check__input {
+  accent-color: var(--brand-orange);
+}
+
+[data-theme='v1'] .form-input:focus {
+  border-color: var(--brand-orange);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+}
+
+[data-theme='v1'] .role-card.is-selected {
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.12);
+}

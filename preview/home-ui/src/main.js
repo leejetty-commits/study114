@@ -3,6 +3,10 @@ import { renderGuest, bindGuestEvents } from './screens/guest.js';
 import { renderParent, bindParentEvents } from './screens/parent.js';
 import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';
 import { renderTutor, bindTutorEvents } from './screens/tutor.js';
+import { isMypageRoute, bootstrapMypageRoute, isMessagesRoute, bootstrapMessagesRoute, isSupportRoute, bootstrapSupportRoute } from './state.js';
+import { renderMypage, bindMypageEvents } from './mypage/index.js';
+import { renderMessages, bindMessagesEvents } from './messages/index.js';
+import { renderSupport, bindSupportEvents } from './support/index.js';
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -12,9 +16,24 @@ const SCREENS = {
 };
 
 function render() {
+  const app = document.getElementById('app');
+  if (isSupportRoute()) {
+    app.innerHTML = renderSupport();
+    bindSupportEvents(app, render);
+    return;
+  }
+  if (isMessagesRoute()) {
+    app.innerHTML = renderMessages();
+    bindMessagesEvents(app, render);
+    return;
+  }
+  if (isMypageRoute()) {
+    app.innerHTML = renderMypage();
+    bindMypageEvents(app, render);
+    return;
+  }
   const key = getCurrentScreen();
   const screen = SCREENS[key] || SCREENS.guest;
-  const app = document.getElementById('app');
   app.innerHTML = screen.render();
   screen.bind(app, render);
 }
@@ -35,6 +54,9 @@ function showBootError(err) {
 
 function init() {
   try {
+    bootstrapMypageRoute();
+    bootstrapMessagesRoute();
+    bootstrapSupportRoute();
     if (!window.location.hash) {
       window.location.hash = '#/guest';
     }

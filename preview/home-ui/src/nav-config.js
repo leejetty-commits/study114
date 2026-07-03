@@ -1,9 +1,15 @@
-import { AUTH_UI_BASE } from './data.js';
+import {
+  AUTH_UI_BASE,
+  HOME_UI_BASE,
+  STUDY_ROOM_REGISTER_URL,
+  TUTOR_REGISTER_URL,
+  searchUiUrl,
+  resolveGnbLink,
+} from '../../shared/preview-links.js';
 import { MENU_EXCLUDED_PHASE1 } from './policy.js';
-
 /** @typedef {'guest' | 'parent' | 'study_room' | 'tutor'} NavRole */
 
-/** 유틸 메뉴 — 6장 §3 */
+/** 유틸 메뉴 — 6장 §6 */
 export const UTIL_MENU = {
   guest: [
     { id: 'region', label: '지역선택', action: 'util-region' },
@@ -21,14 +27,13 @@ export const UTIL_MENU = {
   ],
 };
 
-/** 메인 GNB — 6장 §4 (퀵매칭·앱·자료실 제외) */
+/** 메인 GNB — 6장 §7 (퀵매칭·안전과외 독립·앱·자료실 제외) */
 export const GNB_MAIN = [
   { id: 'find_room', label: '공부방찾기' },
   { id: 'find_tutor', label: '과외쌤찾기' },
   { id: 'student_parent', label: '학생/학부모' },
   { id: 'register_room', label: '공부방등록' },
   { id: 'register_tutor', label: '과외쌤등록' },
-  { id: 'safe_tutor', label: '안전과외' },
   { id: 'support', label: '고객센터' },
 ];
 
@@ -41,7 +46,6 @@ export const GNB_VISIBILITY = {
     student_parent: 'show',
     register_room: 'hide',
     register_tutor: 'hide',
-    safe_tutor: 'show',
     support: 'show',
   },
   parent: {
@@ -50,7 +54,6 @@ export const GNB_VISIBILITY = {
     student_parent: 'show',
     register_room: 'hide',
     register_tutor: 'hide',
-    safe_tutor: 'show',
     support: 'show',
   },
   study_room: {
@@ -59,7 +62,6 @@ export const GNB_VISIBILITY = {
     student_parent: 'show',
     register_room: 'show',
     register_tutor: 'hide',
-    safe_tutor: 'show',
     support: 'show',
   },
   tutor: {
@@ -68,25 +70,14 @@ export const GNB_VISIBILITY = {
     student_parent: 'show',
     register_room: 'hide',
     register_tutor: 'show',
-    safe_tutor: 'show',
     support: 'show',
   },
 };
 
-/** 프리뷰: 공부방 등록 UI */
-export const STUDY_ROOM_REGISTER_URL = 'http://localhost:5175/#/register/basic';
+/** 프리뷰: 검색 UI (13장) — 공부방 탭 기본 */
+export const SEARCH_UI_URL = searchUiUrl('room');
 
-/** GNB id → 프리뷰 동작 */
-export const GNB_ACTION_HINTS = {
-  find_room: '공부방 찾기 · 지역 리스트/지도',
-  find_tutor: '과외쌤 찾기',
-  student_parent: '학생 의뢰·탐색 (내부 카피: 학생 중심)',
-  register_room: STUDY_ROOM_REGISTER_URL,
-  register_tutor: '과외쌤 등록 플로우 (추후 tutor-ui)',
-  safe_tutor: '안전과외 안내',
-  support: '고객센터',
-};
-
+export { AUTH_UI_BASE, HOME_UI_BASE, STUDY_ROOM_REGISTER_URL, TUTOR_REGISTER_URL, searchUiUrl, resolveGnbLink };
 export function isMenuExcluded(id) {
   return MENU_EXCLUDED_PHASE1.includes(id);
 }

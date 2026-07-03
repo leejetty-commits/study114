@@ -1,36 +1,47 @@
 # 과외쌤 DB
 
-> **SSOT 4장 §7이 최우선.**  
-> [ssot/04-member-db-and-role-profiles.md](../ssot/04-member-db-and-role-profiles.md#7-tutors--과외쌤-프로필-1차-잠금--ddl-todo)
+> **SSOT 8장 최우선**  
+> [ssot/08-tutor-registration-db.md](../ssot/08-tutor-registration-db.md)
 
-개념 잠금: [ssot/02-registration-and-member-db.md](../ssot/02-registration-and-member-db.md) §7
+## 핵심 테이블
 
----
+| 테이블 | 8장 |
+|--------|-----|
+| tutors | §4 |
+| tutor_subject_targets | §5 |
+| tutor_regions | §6 |
+| tutor_lesson_places | §6-1 |
+| tutor_images | §7 |
+| tutor_teaching_style_badges | §7-1 |
+| tutor_verification_documents | §8 |
+| subject_masters | §3 · [003](../../sql/schema/003_subject_masters.sql) |
 
-## 상태
+## DDL
 
-| 항목 | 내용 |
-|------|------|
-| `001_init.sql` | tutors 테이블 **미포함** |
-| `user_roles.tutor` | enum만 예약 |
-| DDL | `003_tutors.sql` **작성 예정** |
+```bash
+.\scripts\apply-schema-dev.ps1   # … 008 → 010
+```
 
-## 1차 방침 (2장 잠금)
+## ENUM (DB code)
 
-- 등록 + 기본 검색 **포함**
-- 홈 핵심 = **공부방 우선**
-- 지역 = 단지 우선 / 없으면 동
+| 축 | code |
+|----|------|
+| student_gender_group | `male` · `female` · `mixed` |
+| student_count_group | `solo` · `two` · `three` · `four_plus` |
+| career_year_band | `y1_3` · `y4_6` · `y7_10` · `y10_plus` |
+| university_status | `enrolled` · `leave` · `completed` · `graduated` |
+| tutor lesson place | `student_home_visit` · `public_place` · `tutor_home` |
+| age_band | `early_20s` … `over_50` |
 
-## 2장 잠금 필드 (요약)
+## 잠금 요약 (2026-07)
 
-표시명 · 소개 · 희망지역 · 과외형태 · 수업장소 · 대상 · 주력과목 · 경력 · 학원경력 · 수업횟수/시간 · 희망 과외비 · 지도스타일 · 연락시간 · 증빙 · 사진 · 특징
-
-→ 컬럼안: **4장 §7**
-
----
+- 표시명 = `tutor_display_name` (구 `display_name` 아님)
+- 경력 = `career_year_band` (구 `career_years` 아님)
+- 증빙 = `proof_document_available` + `tutor_verification_documents`
+- 카드 가격 = `preferred_fee_amount` + `lessons_per_week` + `minutes_per_lesson`
 
 ## 변경 이력
 
 | 날짜 | 내용 |
 |------|------|
-| 2026-05-31 | SSOT 4장 §7 연동 |
+| 2026-07-04 | Notion 8장 갱신 · 008/010 반영 |

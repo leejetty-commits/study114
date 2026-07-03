@@ -5,6 +5,7 @@ const ROUTES = {
   '/signup/terms': 'signupTerms',
   '/signup/role': 'signupRole',
   '/signup/form': 'signupForm',
+  '/signup/basic': 'signupBasic',
   '/signup/complete': 'signupComplete',
   '/find-id': 'findId',
   '/find-password': 'findPassword',
@@ -15,6 +16,7 @@ const SCREEN_LABELS = {
   signupTerms: '약관동의',
   signupRole: '회원구분',
   signupForm: '가입폼',
+  signupBasic: '기본등록',
   signupComplete: '가입완료',
   findId: '아이디찾기',
   findPassword: '비밀번호찾기',
@@ -94,10 +96,10 @@ export function renderAuthShell(content, options = {}) {
   `;
 }
 
-export function renderStepIndicator(currentStep) {
-  const steps = [1, 2, 3, 4];
+export function renderStepIndicator(currentStep, totalSteps = 6) {
+  const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
   return `
-    <div class="step-indicator" aria-label="가입 단계 ${currentStep}/4">
+    <div class="step-indicator" aria-label="가입 단계 ${currentStep}/${totalSteps}">
       ${steps
         .map((step) => {
           let cls = 'step-indicator__dot';

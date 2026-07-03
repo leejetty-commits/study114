@@ -9,6 +9,7 @@ import {
   renderGuestLoginStrip,
   bindGuestSectionEvents,
 } from '../guest-sections.js';
+import { bindStudentDetailEvents } from '../student-detail-modal.js';
 
 export function renderGuest() {
   const content = `
@@ -29,4 +30,5 @@ export function renderGuest() {
 export function bindGuestEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
   bindGuestSectionEvents(root, rerender);
+  bindStudentDetailEvents(root, { onRerender: rerender });
 }

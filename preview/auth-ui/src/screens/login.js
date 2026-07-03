@@ -1,4 +1,5 @@
 import { renderAuthShell, renderBrandHero, renderSocialLogin, bindGlobalEvents } from '../layout.js';
+import { loginApi } from '../auth-api.js';
 
 export function renderLogin() {
   const content = `
@@ -16,7 +17,7 @@ export function renderLogin() {
             id="login-email"
             name="email"
             placeholder="example@email.com"
-            value="parent@example.com"
+            value="guardian1@dev.local"
             autocomplete="email"
           />
         </div>
@@ -27,8 +28,8 @@ export function renderLogin() {
             type="password"
             id="login-password"
             name="password"
-            placeholder="비밀번호 입력"
-            value="••••••••"
+            placeholder="password"
+            value=""
             autocomplete="current-password"
           />
         </div>
@@ -65,8 +66,27 @@ export function bindLoginEvents(root) {
   bindGlobalEvents(root);
 
   const form = root.querySelector('[data-form="login"]');
-  form?.addEventListener('submit', (e) => {
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    alert('[프리뷰] 로그인 성공! 이후 역할별 홈 화면으로 이동합니다.');
+    const fd = new FormData(form);
+    const submitBtn = form.querySelector('[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '로그인 중…';
+    }
+    try {
+      const data = await loginApi({
+        email: String(fd.get('email') ?? ''),
+        password: String(fd.get('password') ?? ''),
+      });
+      alert(`로그인 성공\n${data.email} (${data.role_type})`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '로그인 실패');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '로그인';
+      }
+    }
   });
 }

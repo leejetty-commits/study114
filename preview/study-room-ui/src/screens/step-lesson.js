@@ -1,10 +1,13 @@
-import { registerState, SCHOOL_LEVELS, emptySubject } from '../state.js';
+import { registerState, SCHOOL_LEVELS, LESSON_OPERATION_TYPES, CAPACITY_PER_TIME_OPTIONS, emptySubject } from '../state.js';
+import { syncLessonFromForm } from '../form-collect.js';
+import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
   renderNavButtons,
   bindGlobalEvents,
   bindFormNav,
+  navigate,
 } from '../layout.js';
 
 function renderSubjectRow(sub, idx) {
@@ -24,6 +27,11 @@ function renderSubjectRow(sub, idx) {
         <input class="form-input" data-field="grade_band" value="${sub.grade_band}" placeholder="예: 중1~2" />
       </div>
       <div class="form-group">
+        <label class="form-label">과목 마스터 ID</label>
+        <span class="field-db-name">subject_master_id</span>
+        <input class="form-input" data-field="subject_master_id" value="${sub.subject_master_id || ''}" placeholder="003 subject_masters" />
+      </div>
+      <div class="form-group">
         <label class="form-label">과목</label>
         <span class="field-db-name">subject_name</span>
         <input class="form-input" data-field="subject_name" value="${sub.subject_name}" />
@@ -41,11 +49,29 @@ export function renderLesson() {
   const content = `
     <form data-form="lesson">
       ${renderSectionTitle('수업 정보')}
+      <div class="form-group">
+        <label class="form-label">수업운영형태</label>
+        <span class="field-db-name">lesson_operation_type</span>
+        <div class="form-radio-group" role="radiogroup">
+          ${LESSON_OPERATION_TYPES.map(
+            (t) => `
+          <label class="form-radio">
+            <input type="radio" name="lesson_operation_type" value="${t.value}" ${s.lesson_operation_type === t.value ? 'checked' : ''} />
+            <span class="form-radio__label">${t.label}</span>
+          </label>`,
+          ).join('')}
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="capacity_per_time">1타임 인원</label>
+          <label class="form-label" for="capacity_per_time">타임별 원생수</label>
           <span class="field-db-name">capacity_per_time</span>
-          <input class="form-input" id="capacity_per_time" name="capacity_per_time" value="${s.capacity_per_time}" />
+          <select class="form-input" id="capacity_per_time" name="capacity_per_time">
+            ${CAPACITY_PER_TIME_OPTIONS.map(
+              (o) =>
+                `<option value="${o.value}" ${s.capacity_per_time === o.value ? 'selected' : ''}>${o.label}</option>`,
+            ).join('')}
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label" for="recruitment_count">모집 인원</label>
@@ -108,7 +134,15 @@ export function renderLesson() {
 
 export function bindLessonEvents(root) {
   bindGlobalEvents(root);
-  bindFormNav(root, '/register/location', '/register/career');
+  const nextBtn = root.querySelector('[data-action="next"]');
+  const prevBtn = root.querySelector('[data-action="prev"]');
+  prevBtn?.addEventListener('click', () => navigate('/register/location'));
+  nextBtn?.addEventListener('click', () => {
+    withSaving(nextBtn, async () => {
+      syncLessonFromForm(root.querySelector('[data-form="lesson"]'), registerState);
+      await saveAndNavigate(registerState, 'lesson', '/register/career');
+    });
+  });
 
   root.querySelector('[data-action="add-subject"]')?.addEventListener('click', () => {
     registerState.subjects.push(emptySubject());

@@ -33,11 +33,16 @@
 | 테이블 | 역할 |
 |--------|------|
 | `study_rooms` | 공부방 기본 프로필 · 핵심 샵 정보 |
-| `study_room_subject_targets` | 대상/과목 매핑 · 학년대별 |
+| `subject_masters` | 공통 과목 마스터 · [003](../../sql/schema/003_subject_masters.sql) |
+| `study_room_subject_targets` | 대상/과목 매핑 · `subject_master_id` |
 | `study_room_regions` | 활동/노출 지역 · **최대 3 · 대표 1** |
 | `study_room_images` | 사진 · 대표/내부/시설/기타 |
 | `facility_masters` | 시설 **체크형** 마스터 |
 | `study_room_facilities` | 공부방 ↔ 시설 매핑 |
+| `study_room_verification_documents` | 증빙 문서 · 검수 |
+| `study_room_badges` | Prime/Pick 신뢰 배지 |
+| `study_room_exposure_assignments` | 노출 편성 · 광고 운영 |
+| `study_room_exposure_waitlists` | 예약대기 · 오픈 알림 |
 
 후기: **§11-4** — 1차 방향만 잠금, DDL은 `study_room_reviews` (TODO)
 
@@ -50,16 +55,18 @@
 | id | BIGINT UNSIGNED | NO | PK |
 | user_id | BIGINT UNSIGNED | NO | FK → users · 운영 회원 |
 | study_room_name | VARCHAR(100) | NO | 공부방명 / 노출명 |
+| slogan | VARCHAR(255) | YES | 한줄 슬로건 |
 | operator_display_name | VARCHAR(50) | YES | 운영자 표시명 |
 | intro_short | VARCHAR(255) | YES | 짧은 소개 |
 | intro_long | TEXT | YES | 상세 소개 |
-| lesson_place_type | ENUM('home','office') | YES | 재택 / 교습소 |
+| lesson_place_type | ENUM | YES | `academy` · `study_room` (교습소/공부방) |
+| lesson_operation_type | ENUM | YES | `group_by_time_slot` · `time_slot_mixed_grade` · `individual_visit` |
 | region_id | BIGINT UNSIGNED | YES | FK · **기본 위치** 동 |
 | complex_id | BIGINT UNSIGNED | YES | FK · **기본 위치** 단지 |
 | address_text | VARCHAR(255) | YES | 표시용 주소 요약 |
 | latitude | DECIMAL(10,7) | YES | 지도 |
 | longitude | DECIMAL(10,7) | YES | 지도 |
-| capacity_per_time | VARCHAR(50) | YES | 1타임 수업 인원 |
+| capacity_per_time | ENUM | YES | `one_to_four` · `five_to_eight` · `nine_plus` |
 | recruitment_count | SMALLINT UNSIGNED | YES | 모집 인원 |
 | main_subject_note | VARCHAR(255) | YES | 주력과목 요약 |
 | teaching_style | VARCHAR(255) | YES | 지도 스타일 |
@@ -77,9 +84,10 @@
 | feature_2 | VARCHAR(100) | YES | 특징 2 |
 | feature_3 | VARCHAR(100) | YES | 특징 3 |
 | contact_time_note | VARCHAR(255) | YES | 연락 가능 시간 |
-| contact_phone | VARCHAR(20) | YES | 문의 전화 |
 | facility_note | TEXT | YES | 시설/환경 **자유기술** |
+| youtube_url | VARCHAR(500) | YES | 상세등록 YouTube 1개 (009) |
 | profile_status | ENUM | NO | `draft` · `pending` · `published` · `hidden` |
+| detail_completion_status | ENUM | NO | `basic_only` · `expanded_in_progress` · `expanded_complete` |
 | published_at | DATETIME | YES | |
 | deleted_at | DATETIME | YES | soft delete |
 | created_at / updated_at | DATETIME | NO | |
@@ -101,9 +109,10 @@
 |------|------|------|
 | id | BIGINT UNSIGNED | PK |
 | study_room_id | FK | |
-| school_level | ENUM | `preschool` · `elementary` · `middle` · `high` · `retake` · `general` · `other` |
+| school_level | ENUM | `preschool` · `elementary` · `middle` · `high` · `n_su` · `general` · `other` |
 | grade_band | VARCHAR(20) | YES · 학년대 세부 |
-| subject_name | VARCHAR(50) | 과목명 |
+| subject_master_id | BIGINT UNSIGNED | FK → subject_masters |
+| subject_name | VARCHAR(50) | 표시용 과목명 |
 | is_main | TINYINT(1) | 주력과목 |
 
 > 001: `subject` → `subject_name`, `school_level` enum 확장, `is_main` 추가
@@ -251,6 +260,7 @@ study_rooms (1)
 | [001_init.sql](../../sql/schema/001_init.sql) | 초안 · 5장과 **다수 불일치** |
 | [003_study_room_fields.sql](../../sql/schema/003_study_room_fields.sql) | **폐기** — 005로 대체 |
 | **[005_study_room_ssot_align.sql](../../sql/schema/005_study_room_ssot_align.sql)** | **5장 정합** |
+| **[009_study_room_extended.sql](../../sql/schema/009_study_room_extended.sql)** | **§11-10 증빙·배지·노출** |
 
 **충돌 시 5장 SSOT 우선.**
 
@@ -279,4 +289,4 @@ study_rooms (1)
 |------|------|
 | 2026-05-31 | 5장 초안 (2장 매핑) |
 | 2026-05-31 | Notion 5장 원문 전면 반영 · 005 migration |
-| 2026-06-01 | 기본/상세 2단계 · Prime/Pick 조건 · youtube_url 잠금 |
+| 2026-07-04 | Notion 5장 2026-07 갱신 · slogan/operation/capacity enum · 009 extended |

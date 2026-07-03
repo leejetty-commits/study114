@@ -1,109 +1,148 @@
-# 11장 — 메인 노출 항목 및 비교검색 표시 기준 잠금
+# 11장 — 메인 노출 항목 및 비교검색 표시 기준
 
 **상태: 잠금**  
-**연동:** [6장](06-phase1-menu-structure.md) · [9장](09-main-screen-roles.md) · [5장](05-study-room-db.md) · [8장](08-tutor-registration-db.md) · [4장 §7](04-member-db-and-role-profiles.md#7-students--자녀--과외등록)  
+**연동:** [6장](06-phase1-menu-structure.md) · [9장](09-main-screen-roles.md) · [4장](04-member-db-and-role-profiles.md) · [5장](05-study-room-db.md) · [8장](08-tutor-registration-db.md) · [13장](13-search-page-fields.md)  
 **프리뷰:** [preview/home-ui/](../../preview/home-ui/) · [EXPOSURE-REPORT.md](../../preview/home-ui/EXPOSURE-REPORT.md)
 
 ---
 
-## 1. 노출 밀도 원칙
+## 1. 목적
 
-| 등급 | 성격 | 동일 DB 원본 |
-|------|------|----------------|
-| **Prime** | 설득 | 다른 밀도로 표시 |
-| **Pick** | 핵심 비교 | 다른 밀도로 표시 |
-| **Basic** | 대량 노출 (리스트) | 다른 밀도로 표시 |
+- Prime / Pick / Basic **노출 항목** 기준
+- **비교검색** 자격·표시 방식·로그인 조건
+- 등급별 **표시 밀도** (폰트 크기 동일 · 이미지·필드 수·배치로 차별)
 
 ---
 
-## 2. 비교검색 (잠금)
+## 2. 공통 원칙
 
-| 규칙 | 내용 |
+| 원칙 | 내용 |
 |------|------|
-| 비회원 | **열리지 않음** |
-| 로그인 후 | **팝업(모달) · 표 형태** |
-| 자격 | 등급보다 **비교 필수 항목 충족** 우선 |
-| 공통 | 핵심 비교 항목은 **전 등급 공통** |
-| Prime/Pick | 핵심 비교표 + **보조 정보** 추가 가능 |
-| 최대 | **3개** 비교 |
+| 역할 | Prime=설득 · Pick=핵심 비교 · Basic=대량 탐색 |
+| 비교 자격 | 등급이 아닌 **필수 항목 충족** |
+| 비교 항목 | **전 등급 공통** 핵심표 · Prime/Pick은 보조만 추가 |
+| 비회원 | 비교검색 **불가** |
+| 비교 UI | 로그인 후 **모달 표** · 카드에서 체크 → 팝업 비교 |
+| 비교 최대 | **3개** |
+| 중복 노출 | Prime/Pick 항목도 Basic 리스트에 **포함 가능** |
+| 리스트 | **3구역 행형** (좌: 썸네일+이름 / 중: 설명 2줄+ / 우: 가격·상태·날짜·액션) |
+| 액션 | 추천 / 찜 / 후기(답글 포함) / 쪽지 / 비교 — **아이콘+숫자** |
+| 후기 | 0이면 숨김 · 1+ 이면 아이콘+개수 |
+| 페이지네이션 | 숫자형 · 현재 페이지 밑줄 · **가운데 정렬** |
 
 ---
 
-## 3. 공부방 노출 항목 (5장 DB)
+## 3. 실DB 상태 (2026-07)
 
-### 3-1. Prime 박스
-
-| UI | DB |
-|----|-----|
-| 대표 이미지 | `study_room_images.image_path` |
-| 공부방명 | `study_rooms.study_room_name` |
-| 위치 | `region_id` / `complex_id` / `address_text` |
-| 주력과목 | `study_rooms.main_subject_note` |
-| 대상 학년 | `study_room_subject_targets.school_level` / `grade_band` |
-| 대표 가격 | `study_rooms.price_amount` |
-| 짧은 소개 | `study_rooms.intro_short` |
-| 특징 2개 | `feature_1` / `feature_2` |
-| 배지 1~2 | `education_office_registered` · `career_years` · `one_on_one_available` · `weekend_available` |
-
-### 3-2. Pick 박스
-
-대표 이미지 · 공부방명 · 위치 · 주력과목 · 대상 학년 · 대표 가격 · 특징 1 · 배지 1
-
-### 3-3. Basic 리스트
-
-공부방명 · 위치 · 주력과목 · 대상 학년 · 대표 가격 · 상태 태그 1 · 최근 등록
-
-### 3-4. 비교검색 표 (로그인·모달)
-
-공부방명 · 위치 · 대상 학년 · 주력과목 · 가격 대표값 · 수업 형태 · 1타임 인원 · 교육청 등록 · 주말 가능 · 시설 핵심 · 특징 1~3
+| 구분 | 상태 | DDL |
+|------|------|-----|
+| 공부방 | 연결 가능 | 005 · 009 |
+| 학생 | 연결 가능 | 004 |
+| 과외쌤 | **008/010 적용** | 008 · 010 |
 
 ---
 
-## 4. 과외쌤 노출 항목 (8장 · **실DB 미생성**)
+## 4. 공부방 노출 (5장)
 
-필드명: `tutors` · `tutor_regions` · `tutor_subject_targets` · `tutor_images`
+### 4-0. 최신 카드 양식 (2026-07-04 우선)
+
+- **표형태** 카드 · 가로 **균등 배분** (Basic 특히)
+- 괄호 항목명 미표시 · **값만**
+- Prime/Pick 이미지 **우하단 비교 오버레이**
+- Pick: `intro_short` 숨김 · `feature_1` 1개만
+- Basic 3행:
+  1. 공부방명 / 대상 / 과목 / 가격 / 비교
+  2. 위치 / 수업장소 / 원생수 / 수업형태 / 특징1
+  3. 슬로건 / 액션
 
 ### 4-1. Prime
 
-프로필 이미지(`tutor_images.image_path`) · 표시명(`tutors.display_name`) · 주요 과목(`tutor_subject_targets`) · 가능 지역(`tutor_regions`) · 대표 과외비 · 경력 · `intro_short` · `feature_1`/`feature_2` · 검증 배지
-
-### 4-2. Pick
-
-이미지 · 표시명 · 주요 과목 · 가능 지역 · 대표 과외비 · 경력 또는 특징 1
-
-### 4-3. Basic 리스트
-
-표시명 · 주요 과목 · 가능 지역 · 대표 과외비 · 경력 또는 특징 1
-
-### 4-4. 비교검색 표 (경량)
-
-표시명 · 성별/수업 형태 · 주요 과목 · 가능 지역 · 대표 과외비 · 경력 · 학력 요약 · 증빙 가능 · 특징 1~3
-
----
-
-## 5. 학생 리스트 (4장 · 비교 대상 아님)
+위치 상단 1줄 → 이미지(16:9) → 공부방명·가격 → 신뢰배지 → 대상·과목 → 수업장소·원생수·수업운영형태 → 특징 → 소개 → 슬로건 → 액션
 
 | UI | DB |
 |----|-----|
-| 공개 표시명 | `students.public_display_name` |
-| 학교급/학년 | `students.grade_level` |
-| 성별 | `students.gender` |
-| 희망 지역 | `preferred_region_id` / `preferred_complex_id` |
-| 희망 과목 | `student_subject_targets.subject_name` |
-| 희망 과외비 | `students.preferred_fee_amount` |
-| 짧은 요청문 | `students.request_summary` |
+| 이미지 | `study_room_images.image_path` |
+| 위치 | `region_id` / `complex_id` / `address_text` |
+| 공부방명 | `study_room_name` |
+| 가격 | `price_amount` |
+| 대상 | `study_room_subject_targets.school_level` / `grade_band` |
+| 과목 | `main_subject_note` |
+| 수업장소 | `lesson_place_type` |
+| 원생수 | `capacity_per_time` |
+| 수업형태 | `lesson_operation_type` |
+| 특징 | `feature_1~3` |
+| 소개 | `intro_short` |
+| 슬로건 | `slogan` |
+| 배지 | `study_room_badges` · 교육청등록 등 |
 
-카드형 X · **리스트형** · 하단 수요 노출
+### 4-2. Pick / Basic
+
+Pick: Prime에서 소개 제외 · 특징1 · 슬로건 유지  
+Basic: §4-0 3행 구조 · 이미지 기본 제외
+
+### 4-3. 비교검색 표
+
+공부방명 · 위치 · 대상 학년 · 주력과목 · 가격 · **수업장소** · **수업운영형태** · 타임별 원생수 · 교육청등록 · 주말가능 · 시설 핵심 · 특징1~3
+
+### 4-4. 비교 자격 (§7)
+
+`study_room_name` · `region_id|complex_id` · `main_subject_note` · `price_amount` · `study_room_subject_targets` 1건+ · `feature_1|intro_short`
 
 ---
 
-## 6. 실DB 연결 (1차)
+## 5. 과외쌤 노출 (8장)
 
-| 대상 | 상태 |
-|------|------|
-| 공부방 | **연결 가능** (5장 DDL) |
-| 학생 | **연결 가능** (4장 DDL) |
-| 과외쌤 | **실DB 미생성** — 8장 필드명으로 프리뷰 더미만 |
+### 5-0. 최신 카드 양식 (2026-07-04 우선)
+
+- 표형태 · **추천** 용어 통일 (`좋아요` X)
+- **강의스타일** = `tutor_teaching_style_badges`
+- **학생구성** = 성별구분 + **수업인원** (예: `혼성 · 단독`)
+- **학교·학과** 한 줄 · **주교재** 서술형
+- **증빙서류 n개 등록** (집계 · 클릭 시 미니팝업)
+- 가격 카드: **월 + 주횟수 + 1회시간**
+
+Basic 3행:
+1. 표시명 / 대상 / 과목 / 가격요약 / 비교
+2. 활동지역 / 수업장소 / 학생구성 / 특징1 / 강의스타일1
+3. 슬로건 / 액션
+
+### 5-1. Prime / Pick
+
+Prime: 지역 상단 → 이미지 → 졸업·경력배지 → 학교·학과 → 가격요약 → 표시명 → 증빙문구 → 대상·과목 → 장소 → 학생구성 → 주교재 → 특징 → 강의스타일 → 소개 → 슬로건  
+Pick: 소개 숨김 · 특징1만
+
+### 5-2. 비교검색 표
+
+표시명 · 성별/연령대 · 주요과목 · 활동지역 · 월과외비·주·분 · 경력구간 · 학적상태 · 학교·학과 · 강의장소 · 학생구성 · 강의스타일 · 증빙 n개 · 특징1~3
+
+### 5-3. 메인 바디 우선순위
+
+- **주력과목 헤드라인** → 활동 시 1~3 · 시 탭 필터
+- 2순위 과목 과외쌤 = **Basic만**
+- 학생 리스트 = 선택 시+과목 필터 · Basic만
+- 노출 수: Prime 3 · Pick 10 · Basic 20 (과외쌤)
+
+### 5-4. 비교 자격
+
+`tutor_display_name` · `main_subject_note|tutor_subject_targets` · `tutor_regions` 1건+ · `preferred_fee_amount` · `career_year_band|feature_1`
+
+---
+
+## 6. 학생 리스트 (4장 · 비교 대상 아님)
+
+### 6-0. Basic 2행 (2026-07-04)
+
+| 행 | 좌 | 중 | 우 |
+|----|----|----|-----|
+| 1 | 공개표시명 · 성별·학년 | 희망과목 · 강의스타일 1~2 | **수업예산** · 주횟수·1회시간 |
+| 2 | 희망 지역 | 희망 장소 · **희망 수업인원** | 요청 **비공개/유료공개** 상태 |
+
+- 지역: 과외 맥락 **시** · 공부방 맥락 **동/단지**
+- `request_summary` — **Basic 미노출** · 상세+권한
+
+### 6-1. DB 필드
+
+`public_display_name` · `grade_level` · `gender` · `preferred_studyroom_region_id` / `preferred_tutor_region_id` / `preferred_region_note` · `student_subject_targets` · `preferred_fee_amount` / `preferred_studyroom_fee_amount` · `student_preferred_lesson_places` · `preferred_student_count_group` · `lessons_per_week` · `minutes_per_lesson` · `student_preferred_teaching_style_badges` · visibility 2축
 
 ---
 
@@ -111,4 +150,5 @@
 
 | 날짜 | 내용 |
 |------|------|
-| 2026-06-01 | 11장 잠금 — 노출 항목·비교검색 표 |
+| 2026-06-01 | 11장 잠금 초안 |
+| 2026-07-04 | 학생·과외 **수업인원** 용어 · tutor 학생구성 예시 정합 |

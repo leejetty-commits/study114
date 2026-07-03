@@ -1,4 +1,6 @@
 import { DUMMY_TUTORS, DUMMY_STUDENTS, MY_TUTOR, SLOT_TOP, SLOT_MID } from '../data.js';
+import { previewState } from '../state.js';
+import { renderStudentRegisterForm } from '../student-detail-modal.js';
 import {
   renderHomeShell,
   renderRegionBar,
@@ -8,6 +10,8 @@ import {
   renderAdInline,
   bindLayoutEvents,
 } from '../layout.js';
+import { bindStudentDetailEvents } from '../student-detail-modal.js';
+import { EXPOSURE_STUDENTS } from '../exposure-data.js';
 
 function renderMyTutorBox() {
   return `
@@ -53,28 +57,34 @@ function renderStudentList() {
 export function renderTutor() {
   const top3 = DUMMY_TUTORS.slice(0, 3).map((t, i) => ({
     slot: SLOT_TOP[i],
-    name: t.display_name,
+    name: t.tutor_display_name,
     meta: `${t.main_subject_note} · ${t.location_label}`,
   }));
   const mid5 = DUMMY_TUTORS.map((t, i) => ({
     slot: SLOT_MID[i],
-    name: t.display_name,
+    name: t.tutor_display_name,
     meta: `${t.main_subject_note} · ${t.location_label}`,
   }));
   const list = DUMMY_TUTORS.map((t) => ({
-    title: t.display_name,
+    title: t.tutor_display_name,
     meta: `${t.main_subject_note} · ${t.location_label}`,
     date: t.registered_at,
   }));
 
   const content = `
     ${renderRegionBar(false)}
+    <div class="provider-sub-toggle" style="margin-bottom:var(--space-3);display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap">
+      <span style="font-size:var(--text-sm)">공급자 구독 (프리뷰):</span>
+      <button type="button" class="btn btn--sm ${previewState.providerSubscription === 'free' ? 'btn--primary' : 'btn--secondary'}" data-provider-subscription="free">무료</button>
+      <button type="button" class="btn btn--sm ${previewState.providerSubscription === 'paid' ? 'btn--primary' : 'btn--secondary'}" data-provider-subscription="paid">유료</button>
+    </div>
     ${renderMyTutorBox()}
     ${renderTop3Section('상단 고정 3박스', '과외쌤 노출 슬롯', top3)}
     ${renderAdInline()}
     ${renderMid5Section('중단 고정 5박스', '고정형 시작', mid5)}
     ${renderBottomList('과외쌤 리스트', list)}
     ${renderStudentList()}
+    ${renderStudentRegisterForm(EXPOSURE_STUDENTS[0])}
     <p style="font-size:var(--text-xs);color:var(--gray-400);margin-top:var(--space-4);">
       지도 미제공 · 1차 핵심 배너 제외 (등록·검색 링크만)
     </p>
@@ -85,4 +95,5 @@ export function renderTutor() {
 
 export function bindTutorEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
+  bindStudentDetailEvents(root, { onRerender: rerender });
 }

@@ -20,11 +20,16 @@
 | 0 | SSOT 문서 정립 | 2·4·5·9·10장 | ✅ | `docs/ssot/` |
 | 1 | 인증/가입 UI 프리뷰 | 2장 §3 | ✅ | `preview/auth-ui/` |
 | 2 | 메인 4종 UI 프리뷰 | 9장 | ✅ | `preview/home-ui/` |
-| 3 | DB DDL 4·5장 적용 | 4·5장 | ✅ | `study114_dev` · Docker MySQL 8.4 |
-| 4 | PHP MVC 인증·가입 | 2장 | ⏳ | `src/Views/auth/` |
+| 3 | DB DDL 4·5·8장 적용 | 4·5·8장 | ✅ | `study114_dev` · Docker MySQL 8.4 |
+| 3b | 검색 UI 프리뷰 | 13장 | ✅ | `preview/search-ui/` |
+| 3c | 검색 API · dev 시드 | 13장 | ✅ | `public/api/search/` · `012_search_dev_seed.sql` |
+| 4 | PHP MVC 인증·가입 | 2·14장 | ✅ | `/auth/*` · BasicRegisterService |
 | 5 | 공부방 등록 UI 프리뷰 | 5장 | ✅ | `preview/study-room-ui/` |
-| 6 | 공부방 API·DB 연동 | 5장 | ⏳ | |
-| 7 | 과외쌤 DDL·검색 | 4장 §7 | ⏳ | `003_tutors.sql` |
+| 6 | 공부방 API·DB 연동 | 5장 | ✅ | `StudyRoomRegisterService` · `api/study-room/register.php` · study-room-ui |
+| 7 | 과외쌤 DDL·검색 | 4·8·13장 | ✅ | `008_tutors.sql` · SearchService tutor 탭 |
+| 7b | auth-ui ↔ API 실연동 | 2·14장 | ✅ | `auth-api.js` · signup/basic-register/login |
+| 8 | 과외쌤 등록 UI 프리뷰 | 8장 | ✅ | `preview/tutor-ui/` |
+| 8b | 과외쌤 API·DB 연동 | 8장 | ✅ | `TutorRegisterService` · `api/tutor/register.php` |
 
 ---
 
@@ -58,6 +63,8 @@
 | `preview/auth-ui` | 5173 | 2장 인증/가입 |
 | `preview/home-ui` | 5174 | 9장 메인 4종 |
 | `preview/study-room-ui` | 5175 | 5장 공부방 등록 |
+| `preview/search-ui` | 5176 | 13장 검색 3탭 |
+| `preview/tutor-ui` | 5177 | 8장 과외쌤 등록 |
 
 - 공통: `src/styles/base.css` 토큰·브랜드 자산 공유
 - 프리뷰 툴바: 화면·테마 전환 (auth-ui 1안/2안 유지)
@@ -70,15 +77,22 @@
 - [x] 인증/가입 7화면 프리뷰 (2장 1:1)
 - [x] 메인 4종 프리뷰 (9장)
 - [x] 공부방 등록 UI 프리뷰 (5장)
-- [ ] DDL 로컬 적용 (`scripts/apply-schema.ps1`)
+- [x] DDL 로컬 적용 (`scripts/apply-schema-dev.ps1`)
 - [ ] study114.net 배포 준비
 
 ---
 
 ## 5. 다음 우선 1건
 
-> **로컬 MySQL에 DDL 적용** — `.\scripts\apply-schema.ps1`  
-> 이후 **10장 단계 4** PHP MVC 인증 또는 **단계 6** 공부방 API 연동
+> **15장 마이페이지 SSOT 확정** → `docs/ssot/15-mypage-structure.md` (초안) · 이후 16장 쪽지 · 15a 프리뷰
+
+대안: study114.net 배포 준비 · home-ui exposure ↔ search-ui 연동
+
+---
+
+## 5b. 최근 완료
+
+- **home-ui ↔ search-ui GNB 연동** — `preview/shared/preview-links.js` · GNB·지역바 검색 → search-ui (`?role=`)
 
 ---
 
@@ -100,4 +114,10 @@
 | 2026-05-31 | 1차 실행 순서·병행안 초안. 단계 0·1 완료 표시 |
 | 2026-05-31 | 단계 2 메인 4종 프리뷰 완료 |
 | 2026-05-31 | 4·5장 SSOT 추가 · Cursor 가이드 |
-| 2026-05-31 | 단계 5 공부방 등록 UI · DDL apply 스크립트 |
+| 2026-07-04 | 단계 8·8b 과외쌤 — tutor-ui · TutorRegisterService · API 연동 |
+| 2026-07-04 | auth-ui API — signup 세션 · basic-register · regions · login |
+| 2026-07-04 | 단계 7 과외쌤 — 008/010 DDL · tutor 검색 API DISTINCT+ORDER BY 수정 |
+| 2026-07-04 | 단계 6 공부방 API — StudyRoomRegisterService · study-room-ui 연동 |
+| 2026-07-04 | home-ui ↔ search-ui GNB — preview-links · ?role= 동기화 |
+| 2026-07-04 | Notion 6장(2026-07-03) — 안전과외 GNB 제외 · SSOT·nav-config 동기화 |
+| 2026-07-04 | home-ui 찜·비교 — ⇄ 선택 3건 · 마이페이지 찜 모달 · sessionStorage |

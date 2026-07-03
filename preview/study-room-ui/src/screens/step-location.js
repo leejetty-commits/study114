@@ -1,4 +1,6 @@
-import { registerState, DUMMY_REGIONS, DUMMY_COMPLEXES } from '../state.js';
+import { registerState, getRegions, getComplexes } from '../state.js';
+import { syncLocationFromForm } from '../form-collect.js';
+import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
@@ -6,16 +8,17 @@ import {
   renderTempNotice,
   bindGlobalEvents,
   bindFormNav,
+  navigate,
 } from '../layout.js';
 
 function regionOptions(selected) {
-  return DUMMY_REGIONS.map(
+  return getRegions().map(
     (r) => `<option value="${r.id}" ${String(selected) === String(r.id) ? 'selected' : ''}>${r.label}</option>`
   ).join('');
 }
 
 function complexOptions(regionId, selected) {
-  const list = DUMMY_COMPLEXES.filter((c) => String(c.region_id) === String(regionId));
+  const list = getComplexes().filter((c) => String(c.region_id) === String(regionId));
   return `<option value="">— 동 기준 —</option>${list
     .map(
       (c) =>
@@ -55,7 +58,7 @@ function renderSavedRegion(slot, idx) {
 export function renderLocation() {
   const s = registerState;
   const content = `
-    ${renderTempNotice('지역 검색 API · 지도 좌표는 추후 연동')}
+    ${renderTempNotice('지역·단지는 API 마스터 연동 · 지도 좌표는 추후')}
     <form data-form="location">
       ${renderSectionTitle('공부방 기본 위치')}
       <p class="register-hint mb-4">study_rooms.region_id / complex_id — 공부방 기본 위치 (5장 §7)</p>
@@ -93,7 +96,15 @@ export function renderLocation() {
 
 export function bindLocationEvents(root) {
   bindGlobalEvents(root);
-  bindFormNav(root, '/register/basic', '/register/lesson');
+  const nextBtn = root.querySelector('[data-action="next"]');
+  const prevBtn = root.querySelector('[data-action="prev"]');
+  prevBtn?.addEventListener('click', () => navigate('/register/basic'));
+  nextBtn?.addEventListener('click', () => {
+    withSaving(nextBtn, async () => {
+      syncLocationFromForm(root, registerState);
+      await saveAndNavigate(registerState, 'location', '/register/lesson');
+    });
+  });
 
   root.querySelector('#region_id')?.addEventListener('change', (e) => {
     registerState.region_id = e.target.value;

@@ -19,12 +19,13 @@ http://localhost:5175 · `cd preview/study-room-ui && npm run dev`
 
 ## 필드명 (DB 1:1)
 
-- [x] `study_room_name`, `operator_display_name`, `intro_short/long`, `lesson_place_type`
+- [x] `study_room_name`, `slogan`, `operator_display_name`, `intro_short/long`, `lesson_place_type` (`academy`/`study_room`)
+- [x] `lesson_operation_type`, `detail_completion_status`
 - [x] `region_id`, `complex_id`, `address_text` + `study_room_regions` (max 3, `is_primary`)
-- [x] `capacity_per_time`, `recruitment_count`, `main_subject_note`, `teaching_style`
+- [x] `capacity_per_time` enum (`one_to_four`/`five_to_eight`/`nine_plus`), `recruitment_count`, `main_subject_note`, `teaching_style`
 - [x] `weekend_available`, `one_on_one_available`
 - [x] `price_amount` (월·원), `price_description`
-- [x] `study_room_subject_targets` — `school_level`, `grade_band`, `subject_name`, `is_main`
+- [x] `study_room_subject_targets` — `school_level` (`n_su`), `grade_band`, `subject_master_id`, `subject_name`, `is_main`
 - [x] `career_years`, `academy_career_years`, franchise, education_office, `feature_1~3`
 - [x] `facility_masters` 체크 ~5 + `facility_note`
 - [x] `contact_time_note`, `contact_phone`
@@ -54,7 +55,7 @@ http://localhost:5175 · `cd preview/study-room-ui && npm run dev`
 | 지도 좌표 lat/lng | `[임시]` 미노출 |
 | 이미지 업로드 | `[임시]` 목록만 |
 | 폼 → API 저장 | 미구현 (10장 단계 6) |
-| 후기 | 5장 §11-4 TODO |
+| 증빙·배지·노출 편성 테이블 | 009 DDL · UI 미구현 |
 
 ## 연동
 
