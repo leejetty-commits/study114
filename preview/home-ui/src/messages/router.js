@@ -1,44 +1,64 @@
-/** 16장 P16-xx — hash 경로 (부록 A, 미확정) */
+/** 16장 P16-xx — hash 경로 (마이페이지 우측 본문, 부록 A) */
 
 /** @typedef {'P16-01'|'P16-02'|'P16-03'|'P16-04'} MessagesScreenId */
 /** @typedef {'inbox'|'sent'|'active'} MessagesListTab */
 
+export const MESSAGES_BASE = '/mypage/messages';
+
 /** @type {MessagesListTab[]} */
 export const MESSAGES_TABS = ['inbox', 'sent', 'active'];
 
-/** @type {Record<string, MessagesScreenId>} */
-export const MESSAGES_PATH_TO_SCREEN = {
-  '/messages': 'P16-01',
-  '/messages/inbox': 'P16-01',
-  '/messages/sent': 'P16-01',
-  '/messages/active': 'P16-01',
-};
+/** @param {string} p */
+function mapLegacyPath(p) {
+  if (p === '/messages' || p === '/messages/') return `${MESSAGES_BASE}/inbox`;
+  if (p === '/messages/inbox') return `${MESSAGES_BASE}/inbox`;
+  if (p === '/messages/sent') return `${MESSAGES_BASE}/sent`;
+  if (p === '/messages/active') return `${MESSAGES_BASE}/active`;
+  const m = p.match(/^\/messages\/thread\/(\d+)$/);
+  if (m) return `${MESSAGES_BASE}/thread/${m[1]}`;
+  return null;
+}
 
 /** @param {string} hashPath */
 export function normalizeMessagesPath(hashPath) {
   const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
-  if (p === '/messages' || p === '/messages/') return '/messages/inbox';
-  if (MESSAGES_PATH_TO_SCREEN[p]) return p;
-  const threadMatch = p.match(/^\/messages\/thread\/(\d+)$/);
+  const legacy = mapLegacyPath(p);
+  if (legacy) return legacy;
+  if (p === MESSAGES_BASE || p === `${MESSAGES_BASE}/`) return MESSAGES_BASE;
+  if (
+    p === `${MESSAGES_BASE}/inbox` ||
+    p === `${MESSAGES_BASE}/sent` ||
+    p === `${MESSAGES_BASE}/active`
+  ) {
+    return p;
+  }
+  const threadMatch = p.match(/^\/mypage\/messages\/thread\/(\d+)$/);
   if (threadMatch) return p;
   return null;
 }
 
+/** P15-08 요약이 아닌 16장 본문 경로 */
+export function isMessagesDetailPath(path) {
+  const n = normalizeMessagesPath(path);
+  return !!n && n !== MESSAGES_BASE;
+}
+
 export function getDefaultMessagesPath() {
-  return '/messages/inbox';
+  return `${MESSAGES_BASE}/inbox`;
 }
 
 /** @param {string} path */
 export function getListTabFromPath(path) {
-  if (path === '/messages/sent') return 'sent';
-  if (path === '/messages/active') return 'active';
+  if (path.endsWith('/sent')) return 'sent';
+  if (path.endsWith('/active')) return 'active';
   return 'inbox';
 }
 
 /** @param {string} path */
 export function getScreenIdForPath(path) {
-  if (path.startsWith('/messages/thread/')) return 'P16-02';
-  return MESSAGES_PATH_TO_SCREEN[path] || 'P16-01';
+  if (path.includes('/thread/')) return 'P16-02';
+  if (isMessagesDetailPath(path)) return 'P16-01';
+  return 'P15-08';
 }
 
 /** @param {MessagesScreenId} screenId */
@@ -48,6 +68,7 @@ export function screenTitle(screenId) {
     'P16-02': '대화방',
     'P16-03': '첫 메모 보내기',
     'P16-04': '유료등록 게이트',
+    'P15-08': '쪽지',
   };
   return map[screenId] || '쪽지함';
 }
@@ -60,13 +81,18 @@ export function tabLabel(tab) {
 
 /** @param {MessagesListTab} tab */
 export function tabPath(tab) {
-  if (tab === 'sent') return '/messages/sent';
-  if (tab === 'active') return '/messages/active';
-  return '/messages/inbox';
+  if (tab === 'sent') return `${MESSAGES_BASE}/sent`;
+  if (tab === 'active') return `${MESSAGES_BASE}/active`;
+  return `${MESSAGES_BASE}/inbox`;
+}
+
+/** @param {number} id */
+export function threadPath(id) {
+  return `${MESSAGES_BASE}/thread/${id}`;
 }
 
 /** @param {string} path */
 export function parseThreadId(path) {
-  const m = path.match(/^\/messages\/thread\/(\d+)$/);
+  const m = path.match(/\/messages\/thread\/(\d+)$/);
   return m ? Number(m[1]) : null;
 }

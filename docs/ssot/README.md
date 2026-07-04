@@ -27,8 +27,11 @@
 | **가입·기본등록 입력** | [14장](14-registration-input-flow.md) |
 | **메인 노출·비교검색 표** | [11장](11-main-exposure-and-compare.md) |
 | **마이페이지·찜·운영 허브** | [15장](15-mypage-structure.md) |
+| **학부모·자녀 의뢰 관리** | [19장](19-student-registration-management.md) · P15-03 / P19-xx |
 | **쪽지함·접촉·13장 §8 UX** | [16장](16-messages-structure-proposal.md) |
 | **고객센터·안전과외 가이드** | [17장](17-customer-center-and-safe-guide.md) |
+| **게시판·자료실·GNU 커뮤니티** | [23장 내부 초안](../internal/23-board-community-integration-draft.md) |
+| **유료·결제·포인트** | [18장 정책](18-paid-services-rough.md) · [18b 수치 placeholder](18b-paid-catalog-placeholder.md) |
 | **인증/가입 UI** | [2장 §3](02-registration-and-member-db.md#3-인증가입-화면-잠금) · `preview/auth-ui/` |
 | **실행 순서·병행** | [10장](10-phase1-execution-plan.md) |
 
@@ -51,6 +54,10 @@
 | **15장** | [15-mypage-structure.md](15-mypage-structure.md) | **초안** | 마이페이지 · 찜 · 운영 허브 |
 | **16장** | [16-messages-structure-proposal.md](16-messages-structure-proposal.md) | **초안** | 쪽지함 · 접촉 · 13장 §8 UX |
 | **17장** | [17-customer-center-and-safe-guide.md](17-customer-center-and-safe-guide.md) | **초안** | 고객센터 · 이용안내 · 안전과외 가이드 |
+| **18장** | [18-paid-services-rough.md](18-paid-services-rough.md) | **정책 러프** | 유료 · 포인트 · Prime/ROI · 접촉 경계 |
+| **18b** | [18b-paid-catalog-placeholder.md](18b-paid-catalog-placeholder.md) | **placeholder** | 수치·단가·맛보기 · 첫 과금=부스트 |
+| **19장** | [19-student-registration-management.md](19-student-registration-management.md) | **초안** | 학부모 · 자녀 의뢰 등록 관리 |
+| **23장** | [../internal/23-board-community-integration-draft.md](../internal/23-board-community-integration-draft.md) | **내부 초안** | 게시판 · 자료실 · GNU 커뮤니티 · SSO |
 
 ---
 

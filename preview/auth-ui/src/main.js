@@ -1,6 +1,7 @@
 import { getCurrentScreen, getCurrentPath } from './layout.js';
 import { signupState } from './state.js';
 import { fetchRegions } from './auth-api.js';
+import { isReturnImportMode, getReturnImportRole } from '../../shared/student-auth-bridge.js';
 import { renderLogin, bindLoginEvents } from './screens/login.js';
 import { renderSignupTerms, bindSignupTermsEvents } from './screens/signup-terms.js';
 import { renderSignupRole, bindSignupRoleEvents } from './screens/signup-role.js';
@@ -33,6 +34,15 @@ function render() {
 function init() {
   if (!window.location.hash) {
     window.location.hash = '#/login';
+  }
+
+  if (isReturnImportMode()) {
+    const role = getReturnImportRole() || 'student';
+    signupState.role = role;
+    const path = getCurrentPath();
+    if (!path.startsWith('/signup/basic')) {
+      window.location.hash = '#/signup/basic?return_import=1&role=student';
+    }
   }
 
   window.addEventListener('hashchange', render);

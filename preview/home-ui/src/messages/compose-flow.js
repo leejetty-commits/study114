@@ -3,11 +3,11 @@
  * @typedef {'student'|'study_room'|'tutor'} MemoTargetKind
  */
 
-import { getNavRole, navigate } from '../state.js';
+import { threadPath } from './router.js';
+import { getNavRole, navigate, previewState } from '../state.js';
 import { checkFirstMemoPermission, getScopeBadge } from './permissions.js';
 import { showPaidGateOverlay, showComposeModal } from './overlays.js';
 import { getStudentProtectedVisibility } from '../student-visibility.js';
-import { previewState } from '../state.js';
 
 /**
  * @param {object} opts
@@ -59,7 +59,7 @@ export function startFirstMemoFlow(opts) {
     showRequestInPanel: showRequest,
     requestSummary,
     structuredLine,
-    onSent: (threadId) => navigate(`/messages/thread/${threadId}`),
+    onSent: (threadId) => navigate(threadPath(threadId)),
   });
 }
 

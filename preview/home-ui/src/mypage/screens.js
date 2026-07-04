@@ -1,4 +1,4 @@
-import { AUTH_UI_BASE, STUDY_ROOM_REGISTER_URL, TUTOR_REGISTER_URL, searchUiUrl } from '../nav-config.js';
+import { STUDY_ROOM_REGISTER_URL, TUTOR_REGISTER_URL, searchUiUrl } from '../nav-config.js';
 import { getNavRole } from '../state.js';
 import {
   getPreviewProfile,
@@ -16,7 +16,16 @@ import {
 import { formatMonthlyWon, formatTutorFeeCard } from '../exposure-format.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { MYPAGE_NAV } from './router.js';
-import { getMessagesSummaryCounts } from '../messages/screens.js';
+import { getMessagesSummaryCounts, renderMessagesScreen } from '../messages/screens.js';
+import { isMessagesDetailPath } from '../messages/router.js';
+import { isStudentRegPath } from '../student-reg/router.js';
+import { renderStudentRegScreen } from '../student-reg/screens.js';
+import { previewState } from '../state.js';
+import {
+  PAID_CATALOG_PLACEHOLDER,
+  FREE_TIER_COPY,
+  PAID_TIER_COPY,
+} from './plans-catalog.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -59,14 +68,16 @@ export function renderMypageScreen(path) {
   const counts = getSummaryCounts(r);
   const cta = getPrimaryCta(r);
 
+  if (isStudentRegPath(path)) return renderStudentRegScreen(path);
+
   if (path === '/mypage/home') return renderHome(r, profile, counts, cta);
   if (path === '/mypage/registrations') return renderRegistrationsIndex(r);
-  if (path === '/mypage/registrations/students') return renderStudents(r);
   if (path === '/mypage/registrations/study-rooms') return renderStudyRooms(r);
   if (path === '/mypage/registrations/tutors') return renderTutors(r);
   if (path === '/mypage/wishlist') return renderWishlist();
   if (path === '/mypage/recent') return renderRecent(r);
-  if (path === '/mypage/messages') return renderMessages();
+  if (isMessagesDetailPath(path)) return renderMessagesScreen(path);
+  if (path === '/mypage/messages') return renderMessagesSummary();
   if (path === '/mypage/plans') return renderPlans(r);
   if (path === '/mypage/verification') return renderVerification(r);
   if (path === '/mypage/account') return renderAccount(r, profile);
@@ -138,36 +149,6 @@ function renderRegistrationsIndex(role) {
           )
           .join('')}
       </div>
-    </section>`;
-}
-
-function renderStudents(role) {
-  const students = getRegistrationData(role).students;
-  if (!students.length) {
-    return `
-      <section class="mypage-panel mypage-empty">
-        <p>등록된 자녀가 없습니다.</p>
-        <p class="mypage-muted">15장 §11 · 자녀 등록 CTA 우선</p>
-        <a href="${AUTH_UI_BASE}/#/signup/basic" class="btn btn--primary" target="_blank" rel="noopener">자녀 기본등록</a>
-      </section>`;
-  }
-  return `
-    <section class="mypage-panel">
-      <ul class="mypage-entity-list">
-        ${students
-          .map(
-            (s) => `
-          <li class="mypage-entity">
-            <div>
-              <strong>${esc(s.public_display_name)}</strong>
-              <span class="mypage-muted">${esc(s.grade_level)} · students.exposure_status</span>
-            </div>
-            <span class="mypage-badge mypage-badge--${s.exposure_status}">${statusLabel(s.exposure_status)}</span>
-            <button type="button" class="btn btn--secondary btn--sm" disabled>관리 (19장)</button>
-          </li>`,
-          )
-          .join('')}
-      </ul>
     </section>`;
 }
 
@@ -284,7 +265,7 @@ function renderRecent(role) {
     </section>`;
 }
 
-function renderMessages() {
+function renderMessagesSummary() {
   const { unread, active } = getMessagesSummaryCounts();
   return `
     <section class="mypage-panel">
@@ -293,7 +274,7 @@ function renderMessages() {
         <div class="mypage-stat"><span>읽지 않음</span><strong>${unread}</strong></div>
         <div class="mypage-stat"><span>진행중</span><strong>${active}</strong></div>
       </div>
-      <a href="#/messages/inbox" class="btn btn--primary" data-nav="/messages/inbox">쪽지함 열기</a>
+      <a href="#/mypage/messages/inbox" class="btn btn--primary" data-mypage-nav="/mypage/messages/inbox">쪽지함 열기</a>
     </section>`;
 }
 
@@ -303,25 +284,52 @@ function renderPlans(role) {
       <section class="mypage-panel">
         <p class="mypage-lead">15장 §7 · 학부모는 <strong>상품 설명 열람</strong>만 · 구매 UI 없음</p>
         <div class="mypage-info-box">
-          <p>Prime/Pick 노출 · 학생 열람권/메모권은 <strong>공부방·과외쌤</strong>이 이용하는 유료 서비스입니다.</p>
-          <p class="mypage-muted">18장에서 상품 카탈로그 · 17장 고객센터 연계</p>
+          <p>Prime/Pick · 학생 메모권/열람권은 <strong>공부방·과외쌤</strong> 유료 서비스입니다.</p>
+          <p class="mypage-muted">18장 정책 · 18b 수치 placeholder</p>
         </div>
-        <button type="button" class="btn btn--secondary" disabled>유료 서비스 안내 보기</button>
+        <h2 class="mypage-subhead">소비형 SKU (참고)</h2>
+        <ul class="mypage-entity-list plans-catalog plans-catalog--readonly">
+          ${PAID_CATALOG_PLACEHOLDER.filter((i) => i.kind === 'consumable')
+            .slice(0, 3)
+            .map(
+              (item) => `
+            <li class="mypage-entity">
+              <div><strong>${esc(item.name)}</strong><span class="mypage-muted">${esc(item.tagline)}</span></div>
+              <span class="mypage-badge">${esc(item.priceLabel)}</span>
+            </li>`,
+            )
+            .join('')}
+        </ul>
       </section>`;
   }
+
+  const tier = previewState.providerSubscription;
+  const tierCopy = tier === 'paid' ? PAID_TIER_COPY : FREE_TIER_COPY;
+
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">18장 · 이용중 상품 · 만료 D-day</p>
-      <ul class="mypage-entity-list">
-        <li class="mypage-entity">
-          <div><strong>Pick 노출 (30일)</strong><span class="mypage-muted">12일 남음</span></div>
-          <span class="mypage-badge">이용중</span>
-        </li>
-        <li class="mypage-entity">
-          <div><strong>학생 메모권</strong><span class="mypage-muted">유료등록 필요 시</span></div>
-          <span class="mypage-badge mypage-badge--draft">미가입</span>
-        </li>
+      <p class="mypage-lead">P15-09 · 18장 · 18b placeholder · 데모 구독: <strong>${tier}</strong></p>
+      <div class="mypage-info-box plans-tier-box">
+        <strong>${esc(tierCopy.title)}</strong>
+        <ul class="plans-tier-list">${tierCopy.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+      </div>
+      <h2 class="mypage-subhead">상품 카탈로그 (18b)</h2>
+      <ul class="plans-catalog">
+        ${PAID_CATALOG_PLACEHOLDER.map(
+          (item) => `
+          <li class="plans-catalog__item${item.featured ? ' is-featured' : ''}">
+            <div class="plans-catalog__head">
+              <strong>${esc(item.name)}</strong>
+              <span class="plans-catalog__kind">${esc(item.kind)}</span>
+            </div>
+            <p class="plans-catalog__tagline">${esc(item.tagline)}</p>
+            <p class="plans-catalog__price">${esc(item.priceLabel)}${item.pointsLabel ? ` · ${esc(item.pointsLabel)}` : ''}</p>
+            <ul class="plans-catalog__bullets">${item.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
+            <button type="button" class="btn btn--secondary btn--sm" disabled title="PG 연동 후순위">구매 (placeholder)</button>
+          </li>`,
+        ).join('')}
       </ul>
+      <p class="mypage-note">P16-04 게이트 CTA → 이 화면 · 첫 과금=단기 부스트 (18§7)</p>
     </section>`;
 }
 

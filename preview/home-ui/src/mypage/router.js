@@ -1,3 +1,12 @@
+import {
+  isMessagesDetailPath,
+  getScreenIdForPath as getMessagesScreenId,
+  screenTitle as messagesScreenTitle,
+  normalizeMessagesPath,
+  MESSAGES_BASE,
+} from '../messages/router.js';
+import { isStudentRegPath, parseStudentRegPath, studentRegScreenTitle } from '../student-reg/router.js';
+
 /** 15장 P15-xx — 논리 화면 ID · hash 경로 (부록 A, 미확정) */
 
 /** @typedef {'P15-01'|'P15-02'|'P15-03'|'P15-04'|'P15-05'|'P15-06'|'P15-07'|'P15-08'|'P15-09'|'P15-10'|'P15-11'} MypageScreenId */
@@ -40,6 +49,8 @@ export const MYPAGE_PATH_TO_SCREEN = {
 export function normalizeMypagePath(hashPath) {
   const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
   if (p === '/mypage' || p === '/mypage/') return null;
+  if (isStudentRegPath(p)) return p;
+  if (normalizeMessagesPath(p)) return normalizeMessagesPath(p);
   return MYPAGE_PATH_TO_SCREEN[p] ? p : null;
 }
 
@@ -52,11 +63,21 @@ export function getDefaultMypagePath(role) {
 
 /** @param {string} path */
 export function getScreenIdForPath(path) {
+  const reg = parseStudentRegPath(path);
+  if (reg) return reg.screenId;
+  if (path === MESSAGES_BASE || isMessagesDetailPath(path)) return getMessagesScreenId(path);
   return MYPAGE_PATH_TO_SCREEN[path] || 'P15-01';
 }
 
 /** @param {MypageScreenId} screenId */
-export function screenTitle(screenId) {
+export function screenTitle(screenId, path) {
+  if (path) {
+    const reg = parseStudentRegPath(path);
+    if (reg) return studentRegScreenTitle(reg.screenId);
+    if (path === MESSAGES_BASE || isMessagesDetailPath(path)) {
+      return messagesScreenTitle(getMessagesScreenId(path));
+    }
+  }
   const map = {
     'P15-01': '마이페이지 홈',
     'P15-02': '내 등록',

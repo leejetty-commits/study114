@@ -1,6 +1,8 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents } from '../layout.js';
 import { getNavRole } from '../state.js';
 import { MYPAGE_NAV, getScreenIdForPath, screenTitle } from './router.js';
+import { isMessagesDetailPath } from '../messages/router.js';
+import { renderMessagesProviderToolbar } from '../messages/shell.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -13,12 +15,13 @@ function esc(s) {
 export function renderMypageShell(currentPath, bodyHtml) {
   const role = getNavRole();
   const screenId = getScreenIdForPath(currentPath);
-  const title = screenTitle(screenId);
+  const title = screenTitle(screenId, currentPath);
 
   const navItems = MYPAGE_NAV.map((item) => {
     const active =
       currentPath === item.path ||
-      (item.path === '/mypage/registrations' && currentPath.startsWith('/mypage/registrations'));
+      (item.path === '/mypage/registrations' && currentPath.startsWith('/mypage/registrations')) ||
+      (item.path === '/mypage/messages' && currentPath.startsWith('/mypage/messages'));
     const emph = item.emphasis?.includes(role) ? ' is-emphasis' : '';
     return `
       <a href="#${item.path}" class="mypage-nav__link${active ? ' is-active' : ''}${emph}" data-mypage-nav="${item.path}">
@@ -42,8 +45,9 @@ export function renderMypageShell(currentPath, bodyHtml) {
           <div class="mypage-content">
             <header class="mypage-content__head">
               <h1 class="mypage-content__title">${esc(title)}</h1>
-              <span class="mypage-content__screen-id">${esc(screenId)}</span>
+              <span class="mypage-content__screen-id">${esc(screenId)}${isMessagesDetailPath(currentPath) ? ' · 16장' : ''}</span>
             </header>
+            ${isMessagesDetailPath(currentPath) ? renderMessagesProviderToolbar() : ''}
             ${bodyHtml}
           </div>
         </div>

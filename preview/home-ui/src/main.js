@@ -3,9 +3,8 @@ import { renderGuest, bindGuestEvents } from './screens/guest.js';
 import { renderParent, bindParentEvents } from './screens/parent.js';
 import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';
 import { renderTutor, bindTutorEvents } from './screens/tutor.js';
-import { isMypageRoute, bootstrapMypageRoute, isMessagesRoute, bootstrapMessagesRoute, isSupportRoute, bootstrapSupportRoute } from './state.js';
+import { isMypageRoute, bootstrapMypageRoute, bootstrapMessagesRoute, isSupportRoute, bootstrapSupportRoute } from './state.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
-import { renderMessages, bindMessagesEvents } from './messages/index.js';
 import { renderSupport, bindSupportEvents } from './support/index.js';
 
 const SCREENS = {
@@ -20,11 +19,6 @@ function render() {
   if (isSupportRoute()) {
     app.innerHTML = renderSupport();
     bindSupportEvents(app, render);
-    return;
-  }
-  if (isMessagesRoute()) {
-    app.innerHTML = renderMessages();
-    bindMessagesEvents(app, render);
     return;
   }
   if (isMypageRoute()) {

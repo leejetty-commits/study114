@@ -20,6 +20,11 @@ import {
   VISIBILITY_OPTIONS,
 } from '../register-enums.js';
 import { basicRegisterApi } from '../auth-api.js';
+import {
+  buildHomeStudentImportUrl,
+  isReturnImportMode,
+  mapAuthFormToStudentRecord,
+} from '../../../shared/student-auth-bridge.js';
 import { renderAuthShell, renderStepIndicator, renderRoleBadge, bindGlobalEvents, navigate } from '../layout.js';
 
 function esc(s) {
@@ -403,6 +408,7 @@ export function renderSignupBasic() {
     <div class="panel auth-shell__card--wide">
       <h1 class="auth-heading">기본등록</h1>
       <p class="auth-subheading mb-6">14장 — 검색·비교에 필요한 핵심 정보를 입력해 주세요.</p>
+      ${isReturnImportMode() ? '<p class="form-note form-note--highlight">home-ui 자녀 추가 모드 — 저장 후 마이페이지로 돌아갑니다.</p>' : ''}
       ${renderRoleBadge(role)}
       ${body}
       <p class="form-note mt-6">상세 소개·시설·증빙 등은 가입 후 <strong>상세등록</strong>에서 이어서 작성합니다.</p>
@@ -474,9 +480,35 @@ export function bindSignupBasicEvents(root) {
       if (!signupState.basicRegister) signupState.basicRegister = {};
       signupState.basicRegister[role] = data;
       signupState.basicRegisterResult = result;
+
+      if (isReturnImportMode() && role === 'student') {
+        const region = signupState.regions.find((r) => String(r.id) === String(data.region_id));
+        const record = mapAuthFormToStudentRecord(data, {
+          studentId: result.student_id,
+          regionLabel: region?.label,
+          apiOk: true,
+        });
+        window.location.href = buildHomeStudentImportUrl(record);
+        return;
+      }
       navigate('/signup/complete');
     } catch (err) {
-      alert(err instanceof Error ? err.message : '기본등록 실패');
+      if (isReturnImportMode() && role === 'student') {
+        const region = signupState.regions.find((r) => String(r.id) === String(data.region_id));
+        const record = mapAuthFormToStudentRecord(data, {
+          regionLabel: region?.label,
+          apiOk: false,
+        });
+        const go = confirm(
+          `API 저장 실패: ${err instanceof Error ? err.message : err}\n\n프리뷰용으로 home-ui에만 반영할까요?`,
+        );
+        if (go) {
+          window.location.href = buildHomeStudentImportUrl(record);
+          return;
+        }
+      } else {
+        alert(err instanceof Error ? err.message : '기본등록 실패');
+      }
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;

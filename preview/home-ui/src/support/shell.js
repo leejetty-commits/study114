@@ -1,6 +1,7 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents } from '../layout.js';
 import { getNavRole } from '../state.js';
-import { getScreenIdForPath, screenTitle } from './router.js';
+import { getScreenIdForPath } from './router.js';
+import { renderPageTitle, renderSupportNav } from './nav.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -13,7 +14,6 @@ function esc(s) {
 export function renderSupportShell(currentPath, bodyHtml) {
   const role = getNavRole();
   const screenId = getScreenIdForPath(currentPath);
-  const title = screenTitle(screenId);
   const sub = role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
 
   return `
@@ -24,16 +24,14 @@ export function renderSupportShell(currentPath, bodyHtml) {
         <div class="sup-layout">
           <header class="sup-content__head">
             <div>
-              <h1 class="sup-content__title">${esc(title)}</h1>
+              <h1 class="sup-content__title">${renderPageTitle(currentPath)}</h1>
               <span class="sup-content__screen-id">${esc(screenId)} · 17장</span>
             </div>
-            ${
-              currentPath !== '/support'
-                ? `<a href="#/support" class="sup-link-muted" data-sup-nav="/support">P17-01 홈</a>`
-                : ''
-            }
           </header>
-          ${bodyHtml}
+          <div class="sup-frame">
+            ${renderSupportNav(currentPath)}
+            <div class="sup-frame__body">${bodyHtml}</div>
+          </div>
           <a href="#${sub}" class="sup-back-home" data-nav="${sub}">← 메인 홈으로</a>
         </div>
       </main>

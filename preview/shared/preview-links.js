@@ -30,6 +30,12 @@ export function homeUiUrl(screen = 'guest') {
   return `${HOME_UI_BASE}/#/${screen}`;
 }
 
+/** @param {string} [path] e.g. `/support`, `/support/safe`, `/support/safe/no-prepay` */
+export function supportUiUrl(path = '/support') {
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${HOME_UI_BASE}#${p}`;
+}
+
 /** @returns {Record<string, string>} */
 export function parseHashQuery() {
   const hash = window.location.hash.slice(1);

@@ -6,6 +6,8 @@
 import { getWishlistIds } from '../user-actions-state.js';
 import { getRecentViews } from './recent-store.js';
 import { getMessagesSummaryCounts } from '../messages/screens.js';
+import { getStudents, getStudentSummaryCounts } from '../student-reg/store.js';
+import { studentSectionPath } from '../student-reg/router.js';
 
 const PREVIEW_PROFILE = {
   email: 'parent@example.com',
@@ -16,10 +18,14 @@ const PREVIEW_PROFILE = {
 /** @type {Record<MypageRole, { students: object[], studyRooms: object[], tutors: object[] }>} */
 const REGISTRATIONS = {
   parent: {
-    students: [
-      { id: 1, public_display_name: '맑은하늘', grade_level: '중2', exposure_status: 'published' },
-      { id: 2, public_display_name: '초등왕', grade_level: '초5', exposure_status: 'draft' },
-    ],
+    get students() {
+      return getStudents().map((s) => ({
+        id: s.id,
+        public_display_name: s.public_display_name,
+        grade_level: s.grade_level,
+        exposure_status: s.exposure_status,
+      }));
+    },
     studyRooms: [],
     tutors: [],
   },
@@ -76,24 +82,29 @@ export function getRegistrationData(role) {
 /** @param {MypageRole} role */
 export function getSummaryCounts(role) {
   const reg = getRegistrationData(role);
-  const published =
-    role === 'parent'
-      ? reg.students.filter((s) => s.exposure_status === 'published').length
-      : role === 'study_room'
-        ? reg.studyRooms.filter((r) => r.profile_status === 'published').length
-        : reg.tutors.filter((t) => t.profile_status === 'published').length;
-  const draft =
-    role === 'parent'
-      ? reg.students.filter((s) => s.exposure_status === 'draft').length
-      : role === 'study_room'
-        ? reg.studyRooms.filter((r) => r.profile_status === 'draft').length
-        : reg.tutors.filter((t) => t.profile_status === 'draft').length;
+  let published;
+  let draft;
+  let hidden = 0;
+
+  if (role === 'parent') {
+    const sc = getStudentSummaryCounts();
+    published = sc.published;
+    draft = sc.draft;
+    hidden = sc.hidden;
+  } else if (role === 'study_room') {
+    published = reg.studyRooms.filter((r) => r.profile_status === 'published').length;
+    draft = reg.studyRooms.filter((r) => r.profile_status === 'draft').length;
+  } else {
+    published = reg.tutors.filter((t) => t.profile_status === 'published').length;
+    draft = reg.tutors.filter((t) => t.profile_status === 'draft').length;
+  }
 
   const wishlistCount = getWishlistIds('study_room').length + getWishlistIds('tutor').length;
 
   return {
     published,
     draft,
+    hidden,
     wishlist: wishlistCount,
     unreadMessages: messageCounts().unread,
     activeThreads: messageCounts().active,
@@ -120,7 +131,7 @@ export function getPrimaryCta(role) {
       return {
         text: `「${draft.public_display_name}」 의뢰 공개하기`,
         hint: 'exposure_status: draft',
-        path: '/mypage/registrations/students',
+        path: studentSectionPath(draft.id, 'publish'),
       };
     }
     return { text: '희망 조건 수정하기', hint: '19장', path: '/mypage/registrations/students' };

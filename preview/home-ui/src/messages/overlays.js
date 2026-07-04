@@ -6,6 +6,7 @@
 import { GATE_COPY } from './permissions.js';
 import { findOrCreateThread } from './thread-store.js';
 import { navigate } from '../state.js';
+import { threadPath } from './router.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -17,13 +18,14 @@ export function showPaidGateOverlay(opts = {}) {
   wrap.innerHTML = `
     <div class="msg-overlay" data-overlay="gate" role="dialog" aria-modal="true" aria-labelledby="msg-gate-title">
       <div class="msg-overlay__panel msg-gate">
-        <p class="msg-overlay__screen-id">P16-04 · 16장 §7</p>
+        <p class="msg-overlay__screen-id">P16-04 · 16장 §1-2 · §7</p>
         <h2 id="msg-gate-title" class="msg-gate__title">${esc(GATE_COPY.title)}</h2>
         <p class="msg-gate__body">${esc(GATE_COPY.body)}</p>
+        <p class="msg-gate__reply">${esc(GATE_COPY.replyNote)}</p>
         <p class="msg-gate__hint">${esc(GATE_COPY.hint)}</p>
         <p class="msg-gate__note">학부모 화면 아님 · 15장 §7</p>
         <div class="msg-overlay__actions">
-          <button type="button" class="btn btn--primary" data-action="gate-plans" disabled>${esc(GATE_COPY.cta)}</button>
+          <button type="button" class="btn btn--primary" data-action="gate-plans">${esc(GATE_COPY.cta)}</button>
           <button type="button" class="btn btn--secondary" data-action="close-overlay">닫기</button>
         </div>
       </div>
@@ -32,6 +34,11 @@ export function showPaidGateOverlay(opts = {}) {
   document.body.appendChild(el);
   el.querySelector('[data-action="close-overlay"]')?.addEventListener('click', () => {
     el.remove();
+    opts.onClose?.();
+  });
+  el.querySelector('[data-action="gate-plans"]')?.addEventListener('click', () => {
+    el.remove();
+    navigate('/mypage/plans');
     opts.onClose?.();
   });
   el.addEventListener('click', (e) => {
@@ -99,7 +106,7 @@ export function showComposeModal(opts) {
     });
     close();
     if (opts.onSent) opts.onSent(thread.id);
-    else navigate(`/messages/thread/${thread.id}`);
+    else navigate(threadPath(thread.id));
   });
   return el;
 }

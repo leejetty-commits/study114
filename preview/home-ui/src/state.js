@@ -3,7 +3,7 @@
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
 import { getDefaultMypagePath, normalizeMypagePath } from './mypage/router.js';
-import { getDefaultMessagesPath, normalizeMessagesPath } from './messages/router.js';
+import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
 import { getDefaultSupportPath, normalizeSupportPath } from './support/router.js';
 
 const ACTIVE_ROLE_KEY = 'study114-preview-active-role';
@@ -78,7 +78,7 @@ export function navigate(path) {
 export function isMessagesRoute() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
-  return path === '/messages' || path.startsWith('/messages/');
+  return path === '/messages' || (path.startsWith('/messages/') && !path.startsWith('/mypage/'));
 }
 
 export function isSupportRoute() {
@@ -143,7 +143,7 @@ export function bootstrapMessagesRoute() {
 
   if (!hash && pathname.startsWith('/messages')) {
     const bare = pathname === '/messages' || pathname === '/messages/';
-    const target = bare ? getDefaultMessagesPath() : pathname;
+    const target = bare ? getDefaultMessagesPath() : mapPathnameToMypageMessages(pathname);
     window.location.replace(`${origin}/${search}#${target}`);
     return true;
   }
@@ -152,17 +152,19 @@ export function bootstrapMessagesRoute() {
 
   const hashPath = hash.slice(1);
   const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
-  if (path === '/messages' || path === '/messages/') {
-    window.location.replace(`#${getDefaultMessagesPath()}`);
-    return true;
-  }
-
-  if (path.startsWith('/messages/') && !normalizeMessagesPath(path)) {
-    window.location.replace(`#${getDefaultMessagesPath()}`);
+  const normalized = normalizeMessagesPath(path);
+  if (path === '/messages' || path === '/messages/' || path.startsWith('/messages/')) {
+    window.location.replace(`#${normalized || getDefaultMessagesPath()}`);
     return true;
   }
 
   return false;
+}
+
+/** @param {string} pathname */
+function mapPathnameToMypageMessages(pathname) {
+  const normalized = normalizeMessagesPath(pathname);
+  return normalized || getDefaultMessagesPath();
 }
 
 export function bootstrapSupportRoute() {
@@ -228,7 +230,7 @@ export function getMessagesPath() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
   const normalized = normalizeMessagesPath(path);
-  if (normalized) return normalized;
+  if (normalized && isMessagesDetailPath(path)) return normalized;
   return getDefaultMessagesPath();
 }
 
