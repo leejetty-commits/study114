@@ -35,3 +35,12 @@
 - [ ] 지역선택·광역 모달 (§8-3)
 - [ ] 공부방 지도 핀 연동 (§8-2-2)
 - [x] home-ui GNB → search-ui 탭·역할(`?role=`) 연동
+
+## 24·25장 handoff 2차 (P24-08 · search-ui)
+
+- [x] `@home-ui` alias — compare bar · P24 상세 · handoff toast
+- [x] 결과행 — 찜 · ⇄ 비교 · 상세 (room/tutor · 로그인 역할)
+- [x] `search-handoff.js` · `handoff-bridge.css` · auth session hydrate
+- [x] Compare Bar N/3 · `compare-modal.js` · `notifyCompareToggle`
+
+## 미구현 (1차 이후)

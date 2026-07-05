@@ -4,10 +4,22 @@
  */
 
 import { getWishlistIds } from '../user-actions-state.js';
+import { getStudentReviewIds } from '../student-review-store.js';
 import { getRecentViews } from './recent-store.js';
 import { getMessagesSummaryCounts } from '../messages/screens.js';
 import { getStudents, getStudentSummaryCounts } from '../student-reg/store.js';
 import { studentSectionPath } from '../student-reg/router.js';
+import { studyRoomSectionPath, studyRoomHubPath } from '../study-room-reg/router.js';
+import { tutorSectionPath, tutorHubPath } from '../tutor-reg/router.js';
+import { getTutors, getTutorSummaryCounts, getPublishReadiness as getTutorPublishReadiness, getMemoCreditsRemaining } from '../tutor-reg/store.js';
+import { getMatchingVisibility } from '../tutor-reg/format.js';
+import { getStudyRooms, getStudyRoomSummaryCounts } from '../study-room-reg/store.js';
+import { inquiryStatusLabel } from '../study-room-reg/format.js';
+import { exposureStatusLabel } from '../lifecycle-copy.js';
+import {
+  SUBMISSION_STATUS_LABELS,
+  SUBMISSION_VISIBILITY_LABELS,
+} from './mypage-copy.js';
 
 const PREVIEW_PROFILE = {
   email: 'parent@example.com',
@@ -30,32 +42,32 @@ const REGISTRATIONS = {
     tutors: [],
   },
   study_room: {
-    students: [],
-    studyRooms: [
-      {
-        id: 1,
-        study_room_name: '우동공과 대치점',
-        profile_status: 'published',
-        detail_completion_status: 'expanded_in_progress',
-        prime_eligible: false,
-      },
-      { id: 2, study_room_name: '임시 공부방', profile_status: 'draft', detail_completion_status: 'basic_only', prime_eligible: false },
-    ],
+    get students() {
+      return [];
+    },
+    get studyRooms() {
+      return getStudyRooms().map((r) => ({
+        id: r.id,
+        study_room_name: r.study_room_name,
+        profile_status: r.profile_status,
+        detail_completion_status: r.detail_completion_status,
+        prime_eligible: r.prime_eligible,
+      }));
+    },
     tutors: [],
   },
   tutor: {
     students: [],
     studyRooms: [],
-    tutors: [
-      {
-        id: 1,
-        tutor_display_name: '김수학',
-        profile_status: 'published',
-        detail_completion_status: 'expanded_complete',
-        verification_status: 'pending',
-        prime_eligible: true,
-      },
-    ],
+    get tutors() {
+      return getTutors().map((t) => ({
+        id: t.id,
+        tutor_display_name: t.tutor_display_name,
+        profile_status: t.profile_status,
+        detail_completion_status: t.detail_completion_status,
+        prime_eligible: t.detail_completion_status === 'expanded_complete',
+      }));
+    },
   },
 };
 
@@ -92,14 +104,37 @@ export function getSummaryCounts(role) {
     draft = sc.draft;
     hidden = sc.hidden;
   } else if (role === 'study_room') {
-    published = reg.studyRooms.filter((r) => r.profile_status === 'published').length;
-    draft = reg.studyRooms.filter((r) => r.profile_status === 'draft').length;
+    const sc = getStudyRoomSummaryCounts();
+    published = sc.published;
+    draft = sc.draft;
+    hidden = sc.hidden;
+  } else if (role === 'tutor') {
+    const sc = getTutorSummaryCounts();
+    published = sc.published;
+    draft = sc.draft;
+    hidden = sc.hidden;
   } else {
     published = reg.tutors.filter((t) => t.profile_status === 'published').length;
     draft = reg.tutors.filter((t) => t.profile_status === 'draft').length;
   }
 
   const wishlistCount = getWishlistIds('study_room').length + getWishlistIds('tutor').length;
+  const studentReviewCount = getStudentReviewIds().length;
+  const recentCount = getRecentViews(role).length;
+
+  let inquiryLabel = null;
+  let matchingLabel = null;
+  let memoCredits = null;
+
+  if (role === 'study_room') {
+    const pub = getStudyRooms().find((r) => r.profile_status === 'published');
+    inquiryLabel = pub ? inquiryStatusLabel(pub.inquiry_status) : '—';
+  }
+  if (role === 'tutor') {
+    const tutor = getTutors().find((t) => t.profile_status === 'published') || getTutors()[0];
+    matchingLabel = tutor ? getMatchingVisibility(tutor).status : '—';
+    memoCredits = getMemoCreditsRemaining();
+  }
 
   return {
     published,
@@ -109,7 +144,11 @@ export function getSummaryCounts(role) {
     unreadMessages: messageCounts().unread,
     activeThreads: messageCounts().active,
     paidDaysLeft: role === 'parent' ? null : 12,
-    recentCount: getRecentViews(role).length,
+    recentCount,
+    studentReviewCount,
+    inquiryLabel,
+    matchingLabel,
+    memoCredits,
   };
 }
 
@@ -138,36 +177,92 @@ export function getPrimaryCta(role) {
   }
 
   if (role === 'study_room') {
-    const room = reg.studyRooms[0];
+    const rooms = getStudyRooms();
+    const room = rooms[0];
     if (!room || room.detail_completion_status !== 'expanded_complete') {
       return {
         text: '상세등록 완료하고 Pick/Prime 노출',
-        hint: 'detail_completion_status',
-        path: null,
-        externalRegister: true,
-        kind: 'study_room',
+        hint: 'detail_completion_status · P20-03b',
+        path: room ? studyRoomSectionPath(room.id, 'detail') : '/mypage/registrations/study-rooms',
       };
     }
-    return { text: '노출 상태 확인하기', path: '/mypage/registrations/study-rooms' };
+    const hub = studyRoomHubPath(room.id);
+    return { text: '운영 상태 확인하기', hint: 'P20-02 상태판', path: hub };
   }
 
   if (role === 'tutor') {
+    const tutors = getTutors();
+    const draft = tutors.find((t) => t.profile_status === 'draft' || !getTutorPublishReadiness(t).canPublish);
+    if (draft) {
+      const r = getTutorPublishReadiness(draft);
+      if (!r.canPublish) {
+        return {
+          text: '기본·상세 보강 후 공개하기',
+          hint: `공개 준비 ${r.doneCount}/${r.totalCount} · P21-03`,
+          path: tutorSectionPath(draft.id, 'basic'),
+        };
+      }
+      return {
+        text: '미리보기·공개하기',
+        hint: 'profile_status: draft',
+        path: tutorSectionPath(draft.id, 'publish'),
+      };
+    }
+    const published = tutors.find((t) => t.profile_status === 'published');
+    if (published) {
+      return {
+        text: '학생 접근·쪽지 확인',
+        hint: 'P21-05 · 16§8',
+        path: tutorSectionPath(published.id, 'access'),
+      };
+    }
     return {
-      text: '증빙·유료등록 → 학생 메모 권한',
-      hint: '18·21장',
-      path: '/mypage/plans',
+      text: '과외 운영 상태 확인',
+      hint: 'P21-02 상태판',
+      path: tutors[0] ? tutorHubPath(tutors[0].id) : '/mypage/registrations/tutors',
     };
   }
 
   return { text: '마이페이지 둘러보기', path: '/mypage/home' };
 }
 
+/** students.exposure_status · 22§3 (profile_status.pending과 별개) */
 export function statusLabel(status) {
-  const map = {
-    draft: '임시저장',
-    published: '공개중',
-    hidden: '숨김',
-    pending: '검토중',
-  };
-  return map[status] || status;
+  return exposureStatusLabel(status);
+}
+
+/** 21장 · P15-10 제출자료 항목 (프리뷰 더미) */
+export const SUBMISSION_DOC_ITEMS = [
+  { key: 'identity', label: '본인 확인 자료', status: 'submitted', visibility: 'self_only' },
+  { key: 'education', label: '학력 자료', status: 'submitted', visibility: 'public' },
+  { key: 'career', label: '경력 자료', status: 'optional', visibility: 'public' },
+  { key: 'certificate', label: '자격증', status: 'not_submitted', visibility: 'private' },
+];
+
+const SUBMISSION_STATUS_LABELS_LOCAL = SUBMISSION_STATUS_LABELS;
+const SUBMISSION_VISIBILITY_LABELS_LOCAL = SUBMISSION_VISIBILITY_LABELS;
+
+/** @param {string} status */
+export function submissionDocStatusLabel(status) {
+  return SUBMISSION_STATUS_LABELS_LOCAL[status] || status;
+}
+
+/** @param {string} visibility */
+export function submissionDocVisibilityLabel(visibility) {
+  return SUBMISSION_VISIBILITY_LABELS_LOCAL[visibility] || visibility;
+}
+
+/** @param {typeof SUBMISSION_DOC_ITEMS} docs */
+export function formatSubmissionDocSummary(docs) {
+  const total = docs.length;
+  const submitted = docs.filter((d) => d.status === 'submitted' || d.status === 'optional').length;
+  const missing = docs.filter((d) => d.status === 'not_submitted').length;
+  if (missing) return `제출 ${submitted}/${total} · 미제출 ${missing}`;
+  return `제출 ${submitted}/${total}`;
+}
+
+/** @param {MypageRole} role */
+export function getSubmissionDocs(role) {
+  if (role !== 'tutor') return [];
+  return SUBMISSION_DOC_ITEMS;
 }

@@ -6,6 +6,7 @@ import { renderTutor, bindTutorEvents } from './screens/tutor.js';
 import { isMypageRoute, bootstrapMypageRoute, bootstrapMessagesRoute, isSupportRoute, bootstrapSupportRoute } from './state.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
 import { renderSupport, bindSupportEvents } from './support/index.js';
+import { initAuthSession } from './auth-session.js';
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -61,7 +62,11 @@ function init() {
         showBootError(e);
       }
     });
-    render();
+    window.addEventListener('auth:login', () => render());
+    window.addEventListener('auth:logout', () => render());
+    initAuthSession()
+      .then(() => render())
+      .catch((err) => showBootError(err));
   } catch (err) {
     showBootError(err);
   }

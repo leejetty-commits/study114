@@ -2,6 +2,13 @@ import { COMPARE_MAX } from './exposure-schema.js';
 import { formatMonthlyWon, formatTutorFeeCard } from './exposure-format.js';
 import { openCompareModal } from './compare-modal.js';
 import {
+  compareBarHint,
+  COMPARE_BAR_LABELS,
+  WISH_LABELS,
+  EMPTY_COPY,
+} from './handoff-copy.js';
+import { notifyCompareToggle } from './handoff-utils.js';
+import {
   addCompareFromWishlist,
   clearCompare,
   getCompareIds,
@@ -38,8 +45,8 @@ export function renderCompareBar() {
       return `
         <div class="compare-bar__group">
           <span class="compare-bar__label">${label} <strong>${count}/${COMPARE_MAX}</strong></span>
-          <button type="button" class="btn btn--primary btn--sm" data-action="compare-bar-open" data-compare-kind="${kind}">비교하기</button>
-          <button type="button" class="btn btn--secondary btn--sm" data-action="compare-bar-clear" data-compare-kind="${kind}">비우기</button>
+          <button type="button" class="btn btn--primary btn--sm" data-action="compare-bar-open" data-compare-kind="${kind}">${COMPARE_BAR_LABELS.open}</button>
+          <button type="button" class="btn btn--secondary btn--sm" data-action="compare-bar-clear" data-compare-kind="${kind}">${COMPARE_BAR_LABELS.clear}</button>
         </div>`;
     })
     .filter(Boolean);
@@ -47,7 +54,7 @@ export function renderCompareBar() {
   if (!blocks.length) return '';
   return `
     <aside class="compare-bar" aria-label="비교 담기">
-      <p class="compare-bar__hint">6장 · ⇄로 선택 · 최대 ${COMPARE_MAX}개</p>
+      <p class="compare-bar__hint">${compareBarHint(COMPARE_MAX)}</p>
       ${blocks.join('')}
     </aside>`;
 }
@@ -55,7 +62,7 @@ export function renderCompareBar() {
 function renderWishlistSection(kind, label) {
   const items = getWishlistItems(kind);
   if (!items.length) {
-    return `<p class="wishlist-modal__empty">${label} 찜 목록이 비어 있습니다.</p>`;
+    return `<p class="wishlist-modal__empty">${EMPTY_COPY.wishlist}</p>`;
   }
   return `
     <ul class="wishlist-modal__list">
@@ -69,7 +76,7 @@ function renderWishlistSection(kind, label) {
           </div>
           <div class="wishlist-modal__actions">
             <button type="button" class="btn btn--secondary btn--sm" data-action="wishlist-add-compare" data-item-kind="${kind}" data-item-id="${item.id}">비교에 담기</button>
-            <button type="button" class="btn btn--secondary btn--sm" data-action="wishlist-remove" data-item-kind="${kind}" data-item-id="${item.id}">찜 해제</button>
+            <button type="button" class="btn btn--secondary btn--sm" data-action="wishlist-remove" data-item-kind="${kind}" data-item-id="${item.id}">${WISH_LABELS.remove}</button>
           </div>
         </li>`,
         )
@@ -131,17 +138,10 @@ export function openWishlistModal(onUpdate) {
 
   root.querySelectorAll('[data-action="wishlist-add-compare"]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const result = addCompareFromWishlist(btn.dataset.itemKind, btn.dataset.itemId);
-      if (result.full) {
-        alert(`비교는 최대 ${COMPARE_MAX}개까지 담을 수 있습니다.`);
-        return;
-      }
-      if (result.ineligible) {
-        alert('비교 필수 항목 미충족 항목입니다.');
-        return;
-      }
+      const kind = btn.dataset.itemKind;
+      const result = addCompareFromWishlist(kind, btn.dataset.itemId);
+      if (!notifyCompareToggle(result, kind, { sourceRoute: 'wishlist' })) return;
       onUpdate?.();
-      alert('비교 담기에 추가했습니다. 하단 바에서 「비교하기」를 눌러주세요.');
     });
   });
 
@@ -150,8 +150,10 @@ export function openWishlistModal(onUpdate) {
   });
 }
 
-/** @param {HTMLElement} root @param {() => void} rerender */
-export function bindUserActionEvents(root, rerender) {
+/** @param {HTMLElement} root @param {() => void} rerender @param {{ sourceRoute?: string }} [opts] */
+export function bindUserActionEvents(root, rerender, opts = {}) {
+  const sourceRoute = opts.sourceRoute || 'search';
+
   root.querySelectorAll('[data-action="wish-toggle"]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -165,15 +167,9 @@ export function bindUserActionEvents(root, rerender) {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const result = toggleCompare(btn.dataset.itemKind, btn.dataset.itemId);
-      if (result.full) {
-        alert(`비교는 최대 ${COMPARE_MAX}개까지 담을 수 있습니다.`);
-        return;
-      }
-      if (result.ineligible) {
-        alert('비교 필수 항목 미충족 항목입니다.');
-        return;
-      }
+      const kind = btn.dataset.itemKind;
+      const result = toggleCompare(kind, btn.dataset.itemId);
+      if (!notifyCompareToggle(result, kind, { sourceRoute })) return;
       rerender();
     });
   });

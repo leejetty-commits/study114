@@ -19,3 +19,11 @@ SELECT facility_code, facility_name FROM facility_masters ORDER BY sort_order;
 
 SELECT 'user_roles' AS check_group;
 SHOW COLUMNS FROM user_roles LIKE 'role_type';
+
+SELECT 'handoff basket (25§부록 B)' AS check_group;
+SHOW TABLES LIKE 'user_favorites';
+SHOW TABLES LIKE 'user_compare_items';
+SHOW TABLES LIKE 'user_recent_views';
+SHOW TABLES LIKE 'provider_student_reviews';
+SHOW COLUMNS FROM user_recent_views LIKE 'last_route';
+SHOW COLUMNS FROM provider_student_reviews LIKE 'provider_role';

@@ -7,7 +7,20 @@ import {
   TUTOR_PLACE_LABELS,
   UNIVERSITY_STATUS_LABELS,
 } from './tutor-enums.js';
-import { TEACHING_STYLE_LABELS, VISIBILITY_LABELS, STUDENT_COUNT_LABELS, STUDENT_PLACE_LABELS, LESSON_FORMAT_LABELS, STUDENT_GENDER_GROUP_LABELS } from './student-enums.js';
+import {
+  TEACHING_STYLE_LABELS,
+  VISIBILITY_LABELS,
+  STUDENT_COUNT_LABELS,
+  STUDENT_PLACE_LABELS,
+  LESSON_FORMAT_LABELS,
+  STUDENT_GENDER_GROUP_LABELS,
+} from './student-enums.js';
+import {
+  profileStatusLabel as lifecycleProfileStatusLabel,
+  exposureStatusLabel as lifecycleExposureStatusLabel,
+  formatVerificationDocCountPublic,
+  formatProofDocumentPublic,
+} from './lifecycle-copy.js';
 
 export function formatMonthlyWon(price_amount) {
   if (price_amount == null || price_amount === '') return '—';
@@ -63,7 +76,7 @@ export function formatUniversitySummary(item) {
 }
 
 export function formatProofDocument(proof_document_available) {
-  return proof_document_available ? '가능' : '미제공';
+  return formatProofDocumentPublic(proof_document_available);
 }
 
 export function formatTutorLessonPlaces(lesson_places) {
@@ -122,9 +135,7 @@ export function formatVisibilitySummary(item) {
 }
 
 export function formatVerificationDocCount(item) {
-  const n = item.verification_doc_count;
-  if (n == null || n === 0) return '—';
-  return `증빙서류 ${n}개 등록`;
+  return formatVerificationDocCountPublic(item);
 }
 
 export function formatTutorTrustBadges(item) {
@@ -196,27 +207,15 @@ export function formatGenderLesson(gender, lesson_format) {
 }
 
 export function formatVerification(verification_available) {
-  return verification_available ? '가능' : '미제공';
+  return formatProofDocumentPublic(verification_available);
 }
 
 export function formatProfileStatus(profile_status) {
-  const map = {
-    draft: '작성중',
-    pending: '검토중',
-    published: '노출',
-    hidden: '숨김',
-  };
-  return map[profile_status] || profile_status || '—';
+  return lifecycleProfileStatusLabel(profile_status);
 }
 
 export function formatExposureStatus(exposure_status) {
-  const map = {
-    draft: '비공개',
-    published: '모집중',
-    hidden: '숨김',
-    deleted: '삭제',
-  };
-  return map[exposure_status] || exposure_status || '—';
+  return lifecycleExposureStatusLabel(exposure_status);
 }
 
 export function formatCareerYears(career_years) {
@@ -236,7 +235,7 @@ export function studyRoomBadges(r) {
 
 export function tutorBadges(t) {
   const b = [];
-  if (t.proof_document_available) b.push('증빙가능');
+  if (t.proof_document_available) b.push('제출자료');
   if (t.career_year_band === 'y10_plus') b.push('경력 10년+');
   else if (t.career_year_band) b.push(`경력 ${formatCareerYearBand(t.career_year_band)}`);
   return b.slice(0, 2);
@@ -295,7 +294,7 @@ export function browseIdentityStudent(item) {
 
 export function browseStatusTutor(item) {
   if (item.profile_status) return formatProfileStatus(item.profile_status);
-  return item.proof_document_available ? '노출' : '검토중';
+  return item.proof_document_available ? '제출함' : '미제출';
 }
 
 /**

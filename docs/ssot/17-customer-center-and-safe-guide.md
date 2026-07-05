@@ -1,9 +1,9 @@
 # 17장 — 고객센터·이용안내 및 안전과외 가이드
 
-**상태: 초안** (Notion [17장 잠금](https://app.notion.com/p/campstory/17-92d0f2fb40fd4f3bb8b5230ec16d18a3) · Notion·Cursor 합의 반영)  
+**상태: UX·실행 1차 잠금** (Notion [17장 잠금](https://app.notion.com/p/campstory/17-92d0f2fb40fd4f3bb8b5230ec16d18a3) · Notion·Cursor 합의 · **home-ui 17a ✅**)  
 **역할:** **신뢰·안내 레이어** — 우동공과가 **무엇을 하고 · 하지 않는지**를 설명하고, 안전과외 **교육형 가이드** 제공  
-**연동:** [4장](04-member-db-and-role-profiles.md) · [6장](06-phase1-menu-structure.md) · [9장](09-main-screen-roles.md) · [11장](11-main-exposure-and-compare.md) · [13장](13-search-page-fields.md) · [14장](14-registration-input-flow.md) · [15장](15-mypage-structure.md) · [16장](16-messages-structure-proposal.md) · 18장 `[미작성]`  
-**구현 메모:** [부록 A](#부록-a-구현-추적-임시)
+**연동:** [4장](04-member-db-and-role-profiles.md) · [6장](06-phase1-menu-structure.md) · [9장](09-main-screen-roles.md) · [11장](11-main-exposure-and-compare.md) · [13장](13-search-page-fields.md) · [14장](14-registration-input-flow.md) · [15장](15-mypage-structure.md) · [16장](16-messages-structure-proposal.md) · [18장](18-paid-services-rough.md) · [22장](22-platform-lifecycle-principles.md)  
+**코드 정본:** [§13](#13-코드-정본-1차) · [부록 A](#부록-a-구현-추적)
 
 > **본문 원칙:** 15·16장과 동일 — URL·CMS·문의 티켓 DDL은 **부록**. 화면 ID(P17-xx)와 **정책·콘텐츠 범위**만 잠근다.
 
@@ -60,7 +60,7 @@
 |---------|------|-----|:---:|------|
 | P17-04 | FAQ | **P17-01 섹션** `#faq` | ○ | 정적 5~8문항 |
 | P17-05 | 공지사항 | **P17-01 섹션** `#notice` | ○ | 운영 공지 리스트 |
-| P17-06 | 약관/정책 | **P17-01 섹션** · 푸터 | ○ | 링크 모음 |
+| P17-06 | 약관/정책 | **P17-01 섹션** · 푸터 | ○ | **링크 허브만** → [26장 (예정)](30-first-route-map-and-screen-inventory.md#12-26장-예정-27a28) |
 | P17-07 | 문의하기 | **P17-01 섹션** `#contact` | ○ | **운영** 이메일/외부 폼 |
 
 | UI 요소 | 층 | 1차 | 비고 |
@@ -90,7 +90,7 @@ P17-01 히어로 · P17-03 상단에 **긍정 3원칙 + 부정 5항**을 함께 
 | 원칙 | 사용자-facing 방향 |
 |------|-------------------|
 | **학생 보호** | 민감정보·공개 범위를 보수적으로 — 필요한 범위만 공개 |
-| **공급자 검증** | 등록·증빙·검토 상태를 확인하며 비교 |
+| **공급자 제출자료 확인** | 등록·**제출자료**·**공개 상태**를 **직접 비교** — 플랫폼이 사실을 검증·보증하지 않음 ([22장](22-platform-lifecycle-principles.md)) |
 | **플랫폼 비중계** | 대금·연락 **중개·보증**은 1차 핵심 기능 아님 |
 
 ### 3-2. 「우동공과가 하지 않는 것」(부정)
@@ -142,13 +142,15 @@ P17-01 히어로 · P17-03 상단에 **긍정 3원칙 + 부정 5항**을 함께 
 
 > **문의하기(P17-07) ≠ 쪽지함.** 고객센터 홈에서 두 CTA를 **나란히** 두되 역할을 구분한다.
 
-### 4-2. 이용안내 `#guide` — 역할별 요약 `[임시]`
+### 4-2. 이용안내 `#guide` — 역할별 요약
 
 **학부모(guardian)** — 공부방/과외 찾기 · 찜/비교 · 학생 공개 범위 · 안전 대화
 
-**공부방** — 기본/상세등록 · Prime/Pick 의미(11·18장 링크) · 학생 접촉 권한(13·16장) · 검증
+**공부방** — 기본/상세등록 · Prime/Pick 의미(11·18장 링크) · 학생 접촉 권한(13·16장) · **제출자료**
 
-**과외** — 프로필·증빙 · **메모 vs 유료**(13·16·18장) · 학생 상세 열람 범위 · 안전과외
+**과외** — 프로필·**제출자료** · **메모 vs 유료**(13·16·18장) · 학생 상세 열람 범위 · 안전과외
+
+**비회원(guest)** — 회원가입 후 탐색·찜·비교 · 회원 간 공식 접촉은 로그인 후 쪽지 · 운영 문의는 P17-07
 
 ---
 
@@ -162,9 +164,11 @@ P17-01 히어로 · P17-03 상단에 **긍정 3원칙 + 부정 5항**을 함께 
 | G2 | `prepay` | 선입금·전액선불 주의 | ○ | 학부모 |
 | G3 | `first-meeting` | 첫 연락·시범 · 쪽지 활용 | ○ | 전체 |
 | G4 | `dispute` | 분쟁 · 플랫폼 역할과 한계 | ○ | 전체 |
-| G5 | `provider-check` | 공급자 체크리스트 | △ | 공급자 |
-| G6 | `parent-check` | 학부모 체크리스트 | △ | 학부모 |
-| G7 | `privacy` | 연락처 · 쪽지 밖 자율 교환 | △ | 전체 |
+| G5 | `provider-check` | 공급자 체크리스트 | ○ | 공급자 |
+| G6 | `parent-check` | 학부모 체크리스트 | ○ | 학부모 |
+| G7 | `privacy` | 연락처 · 쪽지 밖 자율 교환 | ○ | 전체 |
+
+> **17b:** G5~G7은 **보조(secondary)** 우선순위이나 **체크리스트형 카피**는 확정(프리뷰).
 
 ---
 
@@ -201,9 +205,14 @@ P17-01 히어로 · P17-03 상단에 **긍정 3원칙 + 부정 5항**을 함께 
 | 채널 | 대상 | 1차 |
 |------|------|:---:|
 | **쪽지**(P16-01) | **회원 ↔ 회원** | ○ (로그인) |
-| **이메일 / 외부 폼** | **운영·서비스** 문의 | ○ |
-| 자체 티켓 · SLA · admin | — | 후순위 |
+| **티켓 폼** | **운영·서비스** 문의 | ○ (17c 프리뷰) |
+| **이메일 발송 · SLA** | — | 후순위 (17e) |
 | 전화 상담 | — | ✕ |
+
+### 7-4. P17-06 약관/정책 → 26장 이관 (잠금)
+
+**P17-06은 고객센터 내 placeholder 링크·푸터 진입만 담당한다.**  
+약관·개인정보·플랫폼 역할 고지 **정적 copy 정본**은 **[26장 (예정)](30-first-route-map-and-screen-inventory.md#12-26장-예정-27a28)** · [30장 부록 C](30-first-route-map-and-screen-inventory.md#부록-c-boardkey--route-매핑-23장-연동).
 
 ---
 
@@ -239,17 +248,18 @@ P17-01 히어로 · P17-03 상단에 **긍정 3원칙 + 부정 5항**을 함께 
 
 ### 포함
 
-- P17-01~03 · G1~G4
+- P17-01~03 · G1~G7 (G5~G7 = 보조 우선순위 · 17b 카피)
 - §3 원칙·경계 박스
-- P17-04 FAQ · P17-05 공지 · P17-06 약관 · **P17-07 운영 문의(이메일/폼)**
+- P17-04 FAQ · P17-05 공지 · P17-06 약관 · **P17-07 운영 문의(티켓)**
 - GNB/유틸 → P17-01
 - **CTA 2갈래**(§4-1)
+- **17c 프리뷰:** 공지 CMS · 티켓 접수·목록 · admin placeholder
 
 ### 제외 · 후순위
 
 - 안전과외 GNB 독립 · 에스크로 · **안전번호** 기능
-- CS 티켓 · admin · 챗봇 · 헬프 검색
-- G5~G7 전문화 · CMS · 다국어
+- **실제** admin 인증 · 이메일 발송 · SLA · CS 챗봇 · 헬프 검색
+- FAQ CMS · 다국어 · GNU 게시판(23장)
 
 ---
 
@@ -275,7 +285,30 @@ P17-01 히어로 · P17-03 상단에 **긍정 3원칙 + 부정 5항**을 함께 
 
 ---
 
-## 부록 A. 구현 추적 (임시)
+## 13. 코드 정본 (1차)
+
+| 항목 | 경로 | SSOT |
+|------|------|------|
+| **copy · 원칙 · FAQ · 가이드** | `preview/home-ui/src/support/support-copy.js` | §3 · §4 · §5 · §7 |
+| **공지 CMS store** | `support/notice-store.js` | §7-2 · 17c |
+| **티켓 store** | `support/ticket-store.js` | §7-3 · 17c |
+| **운영 admin UI** | `support/admin-screens.js` | 17c · `#/support/admin/*` |
+| **화면·CTA·아코디언** | `support/screens.js` | P17-01~03 · §4-1 · §6 |
+| **사이드 nav** | `support/nav.js` | §2-3 |
+| **라우트** | `support/router.js` | 부록 A |
+| **쉘** | `support/shell.js` | §2 |
+| **22장 copy** | `lifecycle-copy.js` | §3-1 제출자료 톤 |
+| **P24 → 안전 가이드** | `detail-decision/detail-utils.js` | `#/support/safe` 링크 |
+
+**콘텐츠:** G1~G7 · G5~G7 체크리스트(17b) · 공지·티켓 = sessionStorage `[임시]`.
+
+검증: [home-ui/DOC-CHECKLIST.md](../../preview/home-ui/DOC-CHECKLIST.md) §17장.
+
+---
+
+## 부록 A. 구현 추적
+
+> **1차 프리뷰 정본:** hash `#/support/*` · GNB/유틸 「고객센터」·「이용안내」.
 
 ### A-1. URL 후보 (미확정)
 
@@ -286,22 +319,24 @@ P17-01 히어로 · P17-03 상단에 **긍정 3원칙 + 부정 5항**을 함께 
 | `/support/safe-tutoring/{slug}` | P17-03 |
 | `#/support` · `#/support/safe/{slug}` | home-ui 프리뷰 |
 
-앵커: `#guide` · `#faq` · `#notice` · `#contact`
+| `#/support/admin` · `#/support/admin/notices` · `#/support/admin/tickets` | 17c 운영 CMS |
+| `#/support/contact/tickets` | 사용자 티켓 목록(프리뷰) |
 
-### A-2. 현재 프리뷰 갭
+### A-2. 현재 프리뷰 (17a~c ✅)
 
 | 항목 | home-ui |
 |------|---------|
-| util-guide · support · gnb-support | ✅ **17a** `#/support` · CTA 2갈래 |
-| G5~G7 본문·CMS | 후순위 |
+| util-guide · support · gnb-support | ✅ `#/support` · CTA 2갈래 |
+| support-copy.js | ✅ §3~§7 copy 단일 출처 |
+| G1~G4 · G5~G7 체크리스트 | ✅ 17b |
+| 공지 CMS · 티켓 · admin | ✅ 17c sessionStorage |
 
-### A-3. 실행 후보
+### A-3. 후속 후보
 
 | 단계 | 산출물 |
 |------|--------|
-| 17a | ✅ P17-01~03 · GNB/유틸 · CTA 2갈래 |
-| 17b | G1~G4 카피 확정 · FAQ 문구 |
-| 17c | 공지 CMS · 티켓 `[후순위]` |
+| 17d | FAQ CMS · GNU/23장 게시판 API 연동 |
+| 17e | admin 인증 · 이메일 발송 · SLA |
 
 ---
 
@@ -312,3 +347,5 @@ P17-01 히어로 · P17-03 상단에 **긍정 3원칙 + 부정 5항**을 함께 
 | 2026-07-04 | 17장 초안 — P17-01~03 · §3 · 6장 정합 |
 | 2026-07-04 | **Notion·Cursor 합의** — P17-04~07 섹션화 · 3원칙+부정 박스 · **회원 쪽지 vs 운영 문의 분리** · guest CTA 2갈래 · 표현 다듬기 |
 | 2026-07-04 | **17a** home-ui `#/support` · G1~G4 · FAQ·공지·운영 문의 폼 |
+| 2026-07-06 | **UX·실행 1차 잠금** — `support-copy.js` · §13 · P17-03 관련 가이드 |
+| 2026-07-06 | **17b~c** · **P17-06→26장 이관** · [30장](30-first-route-map-and-screen-inventory.md) |

@@ -3,6 +3,8 @@ import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
 import { UTIL_MENU, GNB_MAIN, GNB_VISIBILITY, resolveGnbLink, searchUiUrl } from './nav-config.js';
+import { getAuthUser, isLoggedIn, devLoginAs, logout } from './auth-session.js';
+import { isHandoffApiMode } from './handoff-backend.js';
 
 export function renderPreviewToolbar() {
   const current = getCurrentScreen();
@@ -11,10 +13,15 @@ export function renderPreviewToolbar() {
   const onSupport = isSupportRoute();
   const region = previewState.regionKey;
   const isGuest = current === 'guest' && !onMypage && !onMessages && !onSupport;
+  const authUser = getAuthUser();
+  const apiOn = isHandoffApiMode();
+  const authLabel = authUser
+    ? `${authUser.name || authUser.email} · API ${apiOn ? 'ON' : 'OFF'}`
+    : '비로그인 · sessionStorage';
 
   return `
     <div class="preview-toolbar">
-      <span class="preview-toolbar__label">우동공과 · 메인 UI 프리뷰 (9·15·16·17장)</span>
+      <span class="preview-toolbar__label">우동공과 · 메인 UI 프리뷰 (9·15·16·17·25장)</span>
       <div class="preview-toolbar__group">
         ${Object.entries(ROUTES)
           .map(([path, key]) => {
@@ -26,6 +33,12 @@ export function renderPreviewToolbar() {
         <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${getDefaultMypagePath(getNavRole())}">마이페이지</button>
         <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지함</button>
         <button type="button" class="preview-toolbar__btn ${onSupport ? 'is-active' : ''}" data-nav="/support">고객센터</button>
+        <span class="preview-toolbar__divider"></span>
+        <span class="preview-toolbar__hint" title="handoff store">${authLabel}</span>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-parent" title="guardian1@dev.local">Dev·학부모</button>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-room" title="room-owner1@dev.local">Dev·공부방</button>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-tutor" title="tutor-owner1@dev.local">Dev·과외</button>
+        ${isLoggedIn() ? `<button type="button" class="preview-toolbar__btn" data-action="dev-logout">로그아웃</button>` : ''}
         <span class="preview-toolbar__divider"></span>
         ${
           isGuest
@@ -285,6 +298,16 @@ export function bindLayoutEvents(root, rerender) {
       const action = el.dataset.action;
       if (action === 'role-switch') {
         alert('[프리뷰] 복수 역할 전환 UI — 9장 §2.2 (추후 구현)');
+      } else if (action === 'dev-login-parent' || action === 'dev-login-room' || action === 'dev-login-tutor') {
+        const key = action === 'dev-login-parent' ? 'parent' : action === 'dev-login-room' ? 'study_room' : 'tutor';
+        devLoginAs(key)
+          .then(() => rerender())
+          .catch((err) => alert(err instanceof Error ? err.message : String(err)));
+      } else if (action === 'dev-logout') {
+        logout().then(() => {
+          navigate('/guest');
+          rerender();
+        });
       } else if (action.startsWith('gnb-')) {
         const gnbId = action.replace('gnb-', '');
         const link = resolveGnbLink(gnbId, getNavRole());

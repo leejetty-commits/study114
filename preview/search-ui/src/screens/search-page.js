@@ -10,6 +10,17 @@ import {
   VIEWER_ROLE_LABELS,
 } from '../state.js';
 import { bindGlobalEvents, renderSearchShell } from '../layout.js';
+import { renderCompareBar, bindUserActionEvents } from '@home-ui/user-actions-ui.js';
+import { bindCompareEvents } from '@home-ui/compare-modal.js';
+import { openDetailDecision, resolveDetailItem } from '@home-ui/detail-decision/index.js';
+import {
+  tabToKind,
+  canUseCompare,
+  renderSearchRowActions,
+  mapSearchItemToDetail,
+  resolveSearchViewer,
+  isSearchLoggedIn,
+} from '../search-handoff.js';
 
 function esc(value) {
   return String(value ?? '')
@@ -223,6 +234,7 @@ function renderResultSection(tab) {
   }
 
   const rows = previewState.searchRows;
+  const items = previewState.searchItems;
 
   const mapNote = meta.mapEnabled
     ? '<p class="search-results__hint">§8-2-2 — 공부방: 리스트와 지도 핀이 동일 필터 결과를 공유합니다.</p>'
@@ -242,14 +254,19 @@ function renderResultSection(tab) {
       ${emptyNote}
       <ul class="search-result-rows">
         ${rows
-          .map(
-            (r) => `
-          <li class="search-result-row">
+          .map((r, idx) => {
+            const item = items[idx] || {};
+            const actions = renderSearchRowActions(tab, item, previewState.role);
+            return `
+          <li class="search-result-row" data-search-row="${idx}">
             <div class="search-result-row__col search-result-row__col--left">${esc(r.left).replace(/\n/g, '<br>')}</div>
             <div class="search-result-row__col search-result-row__col--center">${esc(r.center).replace(/\n/g, '<br>')}</div>
-            <div class="search-result-row__col search-result-row__col--right">${esc(r.right).replace(/\n/g, '<br>')}</div>
-          </li>`,
-          )
+            <div class="search-result-row__col search-result-row__col--right">
+              <div>${esc(r.right).replace(/\n/g, '<br>')}</div>
+              <div class="search-result-row__actions">${actions}</div>
+            </div>
+          </li>`;
+          })
           .join('')}
       </ul>
     </section>`;
@@ -277,6 +294,7 @@ function renderSearchForm(tab) {
     </div>
     ${renderSubscriptionNote(tab)}
     ${renderFilterBar(tab)}
+    ${canUseCompare(tab, previewState.role) ? renderCompareBar() : ''}
     <form class="search-form" data-search-form>
       <section class="search-section">
         <h2 class="search-section__title">기본검색</h2>
@@ -317,11 +335,50 @@ export function renderSearchPage() {
 
 export function bindSearchPageEvents(root, rerender) {
   bindGlobalEvents(root);
+  const viewer = resolveSearchViewer(previewState.role);
+  const loggedIn = isSearchLoggedIn() || previewState.role !== 'guest';
+
+  bindUserActionEvents(root, rerender, { sourceRoute: 'search' });
+  bindCompareEvents(root, loggedIn);
+
+  root.querySelectorAll('[data-action="search-open-detail"]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const kind = btn.dataset.searchKind;
+      const id = Number(btn.dataset.searchId);
+      const tab = getCurrentTab();
+      const idx = Number(btn.closest('[data-search-row]')?.dataset.searchRow);
+      const searchItem = previewState.searchItems[idx];
+      const mapped = searchItem ? mapSearchItemToDetail(tab, searchItem) : null;
+      const exposureItem =
+        kind === 'study_room' || kind === 'tutor' || kind === 'student'
+          ? resolveDetailItem(kind, id) || mapped
+          : mapped;
+      if (!exposureItem) return;
+      openDetailDecision({
+        kind,
+        id,
+        item: exposureItem,
+        viewer,
+        onRerender: rerender,
+        sourceRoute: 'search',
+      });
+    });
+  });
+
+  root.querySelectorAll('[data-search-row]').forEach((row) => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('button, a, [data-action]')) return;
+      const btn = row.querySelector('[data-action="search-open-detail"]');
+      btn?.click();
+    });
+  });
 
   root.querySelectorAll('[data-tab]').forEach((btn) => {
     btn.addEventListener('click', () => {
       previewState.searchExecuted = false;
       previewState.searchRows = [];
+      previewState.searchItems = [];
       previewState.searchTotal = 0;
       previewState.searchError = null;
       navigateTab(/** @type {import('../state.js').SearchTab} */ (btn.dataset.tab));
@@ -369,6 +426,7 @@ export function bindSearchPageEvents(root, rerender) {
     previewState.searchExecuted = false;
     previewState.expanded = false;
     previewState.searchRows = [];
+    previewState.searchItems = [];
     previewState.searchTotal = 0;
     previewState.searchError = null;
     rerender();
@@ -399,6 +457,7 @@ export function bindSearchPageEvents(root, rerender) {
       previewState.searchLoading = false;
       previewState.searchError = null;
       previewState.searchRows = [];
+      previewState.searchItems = [];
       previewState.searchTotal = 0;
       previewState.studentLessonFormat = 'one_on_one';
       setTimeout(rerender, 0);
@@ -418,9 +477,11 @@ async function runSearch(form, rerender) {
     const filters = collectFiltersFromForm(form, tab);
     const result = await searchApi(tab, filters);
     previewState.searchRows = result.rows || [];
+    previewState.searchItems = result.items || [];
     previewState.searchTotal = result.total ?? 0;
   } catch (err) {
     previewState.searchRows = [];
+    previewState.searchItems = [];
     previewState.searchTotal = 0;
     previewState.searchError = err instanceof Error ? err.message : '검색에 실패했습니다.';
   } finally {

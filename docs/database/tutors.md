@@ -37,7 +37,7 @@
 
 - 표시명 = `tutor_display_name` (구 `display_name` 아님)
 - 경력 = `career_year_band` (구 `career_years` 아님)
-- 증빙 = `proof_document_available` + `tutor_verification_documents`
+- **제출자료** = `proof_document_available` + `tutor_verification_documents` (저장·표시만 · [22장](../ssot/22-platform-lifecycle-principles.md))
 - 카드 가격 = `preferred_fee_amount` + `lessons_per_week` + `minutes_per_lesson`
 
 ## 변경 이력

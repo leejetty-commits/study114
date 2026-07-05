@@ -25,6 +25,10 @@ import {
 } from './list-pagination.js';
 import { getGuestListPage } from './state.js';
 import { isWishlisted, isInCompare } from './user-actions-state.js';
+import {
+  renderStudentProviderActions,
+  renderStudentConsumerActions,
+} from './student-review-ui.js';
 import { SLOT_PICK_ROW } from './data.js';
 
 function esc(s) {
@@ -288,11 +292,11 @@ function renderTrustBadges(badges, max = 4) {
 }
 
 function renderVerificationCell(item, maxDocs) {
-  const count = item.verification_doc_count ?? (item.proof_document_available ? 3 : 0);
+  const count = item.verification_doc_count ?? (item.proof_document_available ? 1 : 0);
   if (!count) return '—';
   const shown = maxDocs === 1 ? 1 : count;
-  const label = `${shown}개 등록 · 팝업`;
-  return `<button type="button" class="expo-link-btn" data-action="login-gate" data-gate="verify" data-gate-label="증빙">${esc(label)}</button>`;
+  const label = `${shown}개 공개 · 상세`;
+  return `<button type="button" class="expo-link-btn" data-action="login-gate" data-gate="trust" data-gate-label="제출자료">${esc(label)}</button>`;
 }
 
 function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = false }, actions = '') {
@@ -326,7 +330,7 @@ function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = fa
 
 function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99, stack = false }, actions = '') {
   const verifyCell = {
-    html: `<span class="expo-tbl__label">증빙서류</span> ${renderVerificationCell(item, verifyMax === 1 ? 1 : 99)}`,
+    html: `<span class="expo-tbl__label">제출자료</span> ${renderVerificationCell(item, verifyMax === 1 ? 1 : 99)}`,
     cls: 'expo-tbl__cell--verify',
   };
 
@@ -506,13 +510,11 @@ function renderBasicTutorRow(item, opts) {
 }
 
 function renderBasicStudentRow(item, opts) {
-  const actions = renderItemActions(
-    actionOptsFromItem(item, {
-      guest: opts.guest,
-      compareKind: 'study_room',
-      showCompare: false,
-    }),
-  );
+  const viewerRole = opts.viewerRole || (opts.guest ? 'guest' : 'parent');
+  const actions =
+    viewerRole === 'tutor' || viewerRole === 'study_room'
+      ? renderStudentProviderActions(item, { guest: opts.guest, viewerRole })
+      : renderStudentConsumerActions();
   const schedule =
     item.lessons_per_week && item.minutes_per_lesson
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`

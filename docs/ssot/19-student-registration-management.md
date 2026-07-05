@@ -1,11 +1,12 @@
 # 19장 — 학생(학부모) 의뢰 등록 관리
 
-**상태: 초안** (Notion §6 · Cursor 합의 반영)  
+**상태: UX·실행 1차 잠금** (Notion · Cursor · **home-ui 19a ✅** · API △)  
 **작성:** 2026-07-04  
 **역할:** `guardian_student` 역할의 **자녀(students) 의뢰** — **저장 / 공개 / 수정 / 숨김 / 삭제 lifecycle**  
-**연동:** [4장](04-member-db-and-role-profiles.md) · [14장](14-registration-input-flow.md) · [13장](13-search-page-fields.md) · [15장](15-mypage-structure.md) · [16장](16-messages-structure-proposal.md) · [18장](18-paid-services-rough.md)  
-**후속:** 20장 공부방 · 21장 과외 `[미작성]`  
-**프리뷰:** `preview/auth-ui/` · `preview/home-ui/` P15-03 → P19-xx `[임시]`
+**연동:** [22장](22-platform-lifecycle-principles.md) · [24장](24-detail-decision-layer.md) · [30장](30-first-route-map-and-screen-inventory.md) · [4장](04-member-db-and-role-profiles.md) · [14장](14-registration-input-flow.md) · [13장](13-search-page-fields.md) · [15장](15-mypage-structure.md) · [16장](16-messages-structure-proposal.md) · [18장](18-paid-services-rough.md)  
+**후속:** [20장](20-study-room-registration-management.md) · [21장](21-tutor-registration-management.md)  
+**프리뷰:** `preview/auth-ui/` · `preview/home-ui/` P15-03 → P19-xx  
+**코드 정본:** [§13](#13-코드-정본-1차) · [부록 A](#부록-a-url-hash--kebab-case)
 
 > **범위 재정의 (Notion 6-0):** 19장은 14장 입력 필드를 **다시 정의하지 않는다.**  
 > **14장 §4를 참조**한 뒤 **상태·권한·공개 관리 lifecycle** 만 잠근다.
@@ -21,6 +22,18 @@
 - **학생 비교검색:** **없음** (6·11·13장 — 학부모 비교는 공부방·과외만)
 
 **한 줄:** 19장 = **자녀 카드 기반 lifecycle 관리** · 14장 = **입력 필드 정의**.
+
+### 0-1. 플랫폼 공통 원칙 (적용)
+
+**원본:** [22장](22-platform-lifecycle-principles.md)
+
+| 22장 원칙 | 19장 적용 |
+|-----------|-----------|
+| 운영자 심사·승인·반려 없음 | 학부모가 **직접** 공개·숨김·삭제 |
+| 체크리스트 자동 판정 | P19-04 공개 게이트 (기본+상세 필수) |
+| 자기확인 | P19-04 미리보기·공개 confirm |
+| 당사자 합의 접촉 | 16장 · 학부모↔공급자 |
+| `profile_status.pending` | **해당 없음** — 학생은 `exposure_status` (4장) |
 
 ---
 
@@ -214,7 +227,7 @@
 
 | 항목 | 장 |
 |------|-----|
-| 입력 위젯·검증 규칙 상세 | 14장 |
+| 입력 위젯·**입력 유효성** 규칙 상세 | 14장 |
 | `students` DDL | 4장 |
 | 학생찾기 필터 UI | 13장 |
 | 공급자 메모·게이트 | 16·18장 |
@@ -259,17 +272,33 @@
 
 ## 10. 1차 포함 / 제외 (19a)
 
-### 포함
+### 포함 — home-ui
 
-- [ ] P19-01 카드 · draft/published/hidden 탭 · 전환
-- [ ] P19-02 허브 · **상단 6메뉴** shell
-- [ ] P19-03a 기본 · P19-03b 상세 · 임시저장
-- [ ] P19-04 미리보기 + 공개 게이트 (기본+상세)
-- [ ] P19-05 공개설정
-- [ ] P19-06 숨김·삭제
-- [ ] home-ui 프리뷰
+- [x] P19-01 카드 · draft/published/hidden 탭 · 전환
+- [x] P19-02 허브 · **상단 메뉴** shell · 빠른 이동
+- [x] P19-03a 기본 · P19-03b 상세 · 임시저장
+- [x] P19-04 미리보기 + 공개 게이트 (기본+상세)
+- [x] P19-05 공개설정 · visibility
+- [x] P19-06 숨김·삭제 (P19-02 허브 흡수)
+- [x] home-ui · P19 reg-mgmt shell · auth-ui 연동
 
-### 제외
+### 포함 — 백엔드 · 후속 (△)
+
+- [ ] students API · auth-ui import 동기화
+- [ ] P15-01 **숨김** 숫자 연동
+
+### 10-1. 프리뷰 구현 상태 (2026-07-06)
+
+| P19 | home-ui | 비고 |
+|-----|---------|------|
+| P19-01 | ✅ | sessionStorage seed |
+| P19-02 | ✅ | 허브 · 위험 구역 |
+| P19-03a/b | ✅ | home-ui 폼 (auth-ui 1차 자녀 별도) |
+| P19-04 | ✅ | 학생찾기 미리보기 · 공개 게이트 |
+| P19-05 | ✅ | visibility · P24-04 연동 규칙 |
+| P19-06 | ✅ | P19-02 흡수 |
+
+### 제외 · 후순위
 
 - 학생 사진 · 비교 · 공개 예약 · deleted 복구 · 운영자 강제 숨김
 
@@ -277,11 +306,13 @@
 
 ## 11. 구현 우선순위
 
-1. P19-01 카드 + 상태 탭 + P15-03
-2. P19-02 허브 + 메뉴 골격
-3. P19-03a/b 저장 + P19-04 공개 검사
-4. P19-05 · P19-06
-5. P15-01 **숨김** 숫자 연동 △
+**1차 (완료):** §10 home-ui 표 — P19-01~06 shell.
+
+**2차 (△):**
+
+1. P15-01 **숨김** 숫자 연동
+2. students API · auth-ui store 동기화
+3. [24장](24-detail-decision-layer.md) P24-04 학습 요청 카드 실시간 반영
 
 ---
 
@@ -297,7 +328,36 @@
 
 ---
 
-## 부록 A. URL 후보
+## 13. 코드 정본 (1차)
+
+| 항목 | 경로 | SSOT |
+|------|------|------|
+| **copy · 탭 · visibility · 허브** | `preview/home-ui/src/student-reg/student-reg-copy.js` | §3 · §5 · §10 |
+| **라우트 · P19-xx ID** | `student-reg/router.js` | §3-1 · 부록 A |
+| **화면 · 폼 · 허브** | `student-reg/screens.js` | P19-01~05 |
+| **라벨 · exposure 행** | `student-reg/format.js` | §5 · 13§7-4 |
+| **store · lifecycle** | `student-reg/store.js` | §4 |
+| **22장 copy** | `lifecycle-copy.js` | §0 · footnote |
+| **auth-ui 1차 자녀** | `shared/student-auth-bridge.js` | §8-2 |
+| **P15-03 진입** | `mypage/preview-data.js` · P15 shell | §8-1 |
+| **P24 학습 요청** | `detail-decision/` P24-04 | 24§9 |
+
+**저장:** students = `sessionStorage` `[임시]` · API/auth-ui 동기화 △.
+
+**프리뷰 vs 백엔드:**
+
+| 구분 | UI (home-ui) | API |
+|------|:------------:|:---:|
+| P19-01~06 shell | ✅ | △ |
+| auth-ui 첫 자녀 import | ✅ | △ |
+
+검증: [home-ui/DOC-CHECKLIST.md](../../preview/home-ui/DOC-CHECKLIST.md) §19장 · [30장 §8](30-first-route-map-and-screen-inventory.md#8-인벤토리--19--20--21장-등록운영-home-ui).
+
+---
+
+## 부록 A. URL (hash · kebab-case)
+
+> **1차 프리뷰 정본:** `#/mypage/registrations/students/*` · `student-reg/router.js`
 
 | 경로 | P19 |
 |------|-----|
@@ -316,7 +376,9 @@
 |------|------|
 | 2026-07-04 | 19장 초안 — P19-xx · lifecycle |
 | 2026-07-04 | **Notion §6 반영** — 범위 재정의 · 상단 6메뉴 · 기본/상세 분리 · 카드 관리형 · `preferred_tutor_gender` 상세 · 비교검색 ✕ |
+| 2026-07-06 | **home-ui 1차** · §10-1 · auth-ui 연동 |
+| 2026-07-06 | **UX·실행 1차 잠금** — §13 코드 정본 · `student-reg-copy.js` · 30장 §8 연동 |
 
 ---
 
-*확정 시 잠금. 20·21장은 동일 골격(상단 메뉴 + lifecycle)으로 작성.*
+*충돌 시 [22장](22-platform-lifecycle-principles.md) 우선.*

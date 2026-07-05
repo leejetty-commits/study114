@@ -22,12 +22,17 @@
 | **공부방 등록 UI 프리뷰** | [5장](05-study-room-db.md) · `preview/study-room-ui/` |
 | **메인 4종 UI 프리뷰** | [9장](09-main-screen-roles.md) · [6장](06-phase1-menu-structure.md) · `preview/home-ui/` |
 | **1차 메뉴·비교·제외 기능** | [6장](06-phase1-menu-structure.md) |
-| **과외쌤 등록·열람권** | [8장](08-tutor-registration-db.md) |
+| **과외쌤 등록·운영 관리** | [21장](21-tutor-registration-management.md) · P15-05 / P15-10 / P21-xx |
+| **상세 모달·판단 UX** | [24장](24-detail-decision-layer.md) · P24-xx · 11/13/16/20/21 연동 |
+| **찜·비교·handoff·재방문** | [25장](25-decision-handoff-layer.md) · P25-xx · `handoff-copy.js` |
+| **라우트맵·화면 ID 인벤토리** | [30장](30-first-route-map-and-screen-inventory.md) · Cursor 구현 지도 |
+| **과외쌤 DB·열람권** | [8장](08-tutor-registration-db.md) |
 | **검색 UI 프리뷰** | [13장](13-search-page-fields.md) · `preview/search-ui/` |
 | **가입·기본등록 입력** | [14장](14-registration-input-flow.md) |
 | **메인 노출·비교검색 표** | [11장](11-main-exposure-and-compare.md) |
-| **마이페이지·찜·운영 허브** | [15장](15-mypage-structure.md) |
+| **마이페이지·찜·운영 허브** | [15장](15-mypage-structure.md) · [22장](22-platform-lifecycle-principles.md) |
 | **학부모·자녀 의뢰 관리** | [19장](19-student-registration-management.md) · P15-03 / P19-xx |
+| **공부방 등록·운영 관리** | [20장](20-study-room-registration-management.md) · P15-04 / P20-xx |
 | **쪽지함·접촉·13장 §8 UX** | [16장](16-messages-structure-proposal.md) |
 | **고객센터·안전과외 가이드** | [17장](17-customer-center-and-safe-guide.md) |
 | **게시판·자료실·GNU 커뮤니티** | [23장 내부 초안](../internal/23-board-community-integration-draft.md) |
@@ -51,12 +56,18 @@
 | **14장** | [14-registration-input-flow.md](14-registration-input-flow.md) | 잠금 | 가입·기본등록 · 입력방식 |
 | **9장** | [09-main-screen-roles.md](09-main-screen-roles.md) | 잠금 | 메인 4종·역할별 노출 |
 | **10장** | [10-phase1-execution-plan.md](10-phase1-execution-plan.md) | 잠금 | 1차 실행 순서 |
-| **15장** | [15-mypage-structure.md](15-mypage-structure.md) | **초안** | 마이페이지 · 찜 · 운영 허브 |
-| **16장** | [16-messages-structure-proposal.md](16-messages-structure-proposal.md) | **초안** | 쪽지함 · 접촉 · 13장 §8 UX |
-| **17장** | [17-customer-center-and-safe-guide.md](17-customer-center-and-safe-guide.md) | **초안** | 고객센터 · 이용안내 · 안전과외 가이드 |
+| **15장** | [15-mypage-structure.md](15-mypage-structure.md) | **UX·실행 1차 잠금** | 마이페이지 · P15-xx · `mypage-copy.js` |
+| **16장** | [16-messages-structure-proposal.md](16-messages-structure-proposal.md) | **UX·실행 1차 잠금** | 쪽지함 · 접촉 · 13§8 UX · `messages-copy.js` |
+| **17장** | [17-customer-center-and-safe-guide.md](17-customer-center-and-safe-guide.md) | **UX·실행 1차 잠금** | 고객센터 · 안전과외 · `support-copy.js` · home-ui 17a |
 | **18장** | [18-paid-services-rough.md](18-paid-services-rough.md) | **정책 러프** | 유료 · 포인트 · Prime/ROI · 접촉 경계 |
 | **18b** | [18b-paid-catalog-placeholder.md](18b-paid-catalog-placeholder.md) | **placeholder** | 수치·단가·맛보기 · 첫 과금=부스트 |
-| **19장** | [19-student-registration-management.md](19-student-registration-management.md) | **초안** | 학부모 · 자녀 의뢰 등록 관리 |
+| **19장** | [19-student-registration-management.md](19-student-registration-management.md) | **UX·실행 1차 잠금** | 학부모 · P19-xx · `student-reg-copy.js` |
+| **20장** | [20-study-room-registration-management.md](20-study-room-registration-management.md) | **UX·실행 1차 잠금** | 공부방 · P20-xx · `study-room-reg-copy.js` |
+| **21장** | [21-tutor-registration-management.md](21-tutor-registration-management.md) | **UX·실행 1차 잠금** | 과외 운영센터 · P21-xx · `tutor-reg-copy.js` |
+| **22장** | [22-platform-lifecycle-principles.md](22-platform-lifecycle-principles.md) | **1차 잠금** | **횡단** · 심사 없음 · pending deprecated · `lifecycle-copy.js` |
+| **24장** | [24-detail-decision-layer.md](24-detail-decision-layer.md) | **UX·실행 1차 잠금** | **상세 판단 레이어** · P24-xx · `detail-decision/` · Modal First |
+| **25장** | [25-decision-handoff-layer.md](25-decision-handoff-layer.md) | **UX·실행 1차 잠금 (초안)** | **Handoff** · 찜·비교·최근 · `handoff-copy.js` |
+| **30장** | [30-first-route-map-and-screen-inventory.md](30-first-route-map-and-screen-inventory.md) | **초안 (harvest)** | **라우트맵·P-ID 인벤토리** · 문서·코드·프리뷰 상태판 |
 | **23장** | [../internal/23-board-community-integration-draft.md](../internal/23-board-community-integration-draft.md) | **내부 초안** | 게시판 · 자료실 · GNU 커뮤니티 · SSO |
 
 ---
@@ -123,4 +134,12 @@
 | 2026-07-04 | **15장** 마이페이지 초안 (페이지表 · 권한 · 1차 범위) |
 | 2026-07-04 | **15장** Notion 합의 반영 — 기획 정본/구현 부록 분리 |
 | 2026-07-04 | **16장** home-ui 16a — `#/messages/*` · P16-03/04 |
+| 2026-07-06 | **30장** 초안 — route harvest · ID 3층 · 부록 A~D · 24/17 동기화 |
+| 2026-07-06 | **17장** 17b~c · P17-06→26 이관 |
+| 2026-07-06 | **15장** 1차 잠금 — `mypage-copy.js` · §4-3-1 · home-ui 15a |
+| 2026-07-06 | **16장** 1차 잠금 — `messages-copy.js` · P24→P16 · home-ui 16a |
+| 2026-07-06 | **22장** 1차 잠금 — `lifecycle-copy.js` · P24 Trust · §10 코드 정본 |
+| 2026-07-06 | **24장** §19·부록 B — home-ui 24a ✅ · P24-B 블록 ID |
+| 2026-07-06 | **21장** 제출자료 원칙 · **15장** P15-10 · **22장** 용어·시스템 안내 |
+| 2026-07-06 | SSOT 전역 정합 — 17·18·19·16·02·08·05·database 하위 |
 | 2026-07-04 | **17장** Notion·Cursor 합의 — P17-04~07 섹션 · 쪽지/운영 문의 분리 |

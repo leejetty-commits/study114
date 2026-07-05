@@ -2,7 +2,7 @@
 /** @typedef {'study_room' | 'tutor'} ParentTab */
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
-import { getDefaultMypagePath, normalizeMypagePath } from './mypage/router.js';
+import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES } from './mypage/router.js';
 import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
 import { getDefaultSupportPath, normalizeSupportPath } from './support/router.js';
 
@@ -215,6 +215,11 @@ export function bootstrapMypageRoute() {
   const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
   if (path === '/mypage' || path === '/mypage/') {
     window.location.replace(`#${getDefaultMypagePath(getNavRole())}`);
+    return true;
+  }
+
+  if (MYPAGE_LEGACY_ALIASES[path]) {
+    window.location.replace(`#${MYPAGE_LEGACY_ALIASES[path]}`);
     return true;
   }
 

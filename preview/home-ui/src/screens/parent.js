@@ -14,6 +14,7 @@ import { renderExposureBox, renderBasicListBlock, renderPickPaginatedBlock } fro
 import { renderCompareBar, bindUserActionEvents, openWishlistModal } from '../user-actions-ui.js';
 import { bindCompareEvents } from '../compare-modal.js';
 import { bindGuestListPagination } from '../list-pagination.js';
+import { bindDetailDecisionEvents } from '../detail-decision/index.js';
 
 function renderParentTabs() {
   const tab = previewState.parentTab;
@@ -78,4 +79,5 @@ export function bindParentEvents(root, rerender) {
   bindGuestListPagination(root, rerender);
   bindCompareEvents(root, true);
   bindUserActionEvents(root, rerender);
+  bindDetailDecisionEvents(root, { onRerender: rerender, viewer: 'parent' });
 }

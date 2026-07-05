@@ -17,7 +17,8 @@ export function renderMypageShell(currentPath, bodyHtml) {
   const screenId = getScreenIdForPath(currentPath);
   const title = screenTitle(screenId, currentPath);
 
-  const navItems = MYPAGE_NAV.map((item) => {
+  const navItems = MYPAGE_NAV.filter((item) => !item.roles || item.roles.includes(role))
+    .map((item) => {
     const active =
       currentPath === item.path ||
       (item.path === '/mypage/registrations' && currentPath.startsWith('/mypage/registrations')) ||
@@ -28,7 +29,8 @@ export function renderMypageShell(currentPath, bodyHtml) {
         ${esc(item.label)}
         <span class="mypage-nav__id">${item.screenId}</span>
       </a>`;
-  }).join('');
+    })
+    .join('');
 
   return `
     ${renderPreviewToolbar()}

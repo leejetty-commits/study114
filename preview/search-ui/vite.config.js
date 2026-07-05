@@ -9,6 +9,7 @@ export default defineConfig({
       '@auth-styles': resolve(__dirname, '../auth-ui/src/styles'),
       '@home-enums': resolve(__dirname, '../home-ui/src/student-enums.js'),
       '@home-visibility': resolve(__dirname, '../home-ui/src/student-visibility.js'),
+      '@home-ui': resolve(__dirname, '../home-ui/src'),
     },
   },
   server: {

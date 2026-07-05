@@ -6,12 +6,6 @@ import {
   LESSON_FORMAT_LABELS,
   STUDENT_GENDER_GROUP_LABELS,
 } from './student-enums.js';
-import {
-  getStudentProtectedVisibility,
-  PAID_GATE_MESSAGE,
-} from './student-visibility.js';
-import { previewState } from './state.js';
-import { startFirstMemoFlow } from './messages/compose-flow.js';
 
 function esc(s) {
   if (s == null) return '';
@@ -88,111 +82,5 @@ export function renderStudentRegisterForm(student = {}) {
   `;
 }
 
-function renderProtectedBlock(label, content, visible) {
-  if (!visible) {
-    return `
-      <div class="student-detail__protected student-detail__protected--blocked">
-        <span class="student-detail__protected-label">${esc(label)}</span>
-        <p class="student-detail__protected-msg">${PAID_GATE_MESSAGE}</p>
-      </div>
-    `;
-  }
-  return `
-    <div class="student-detail__protected student-detail__protected--open">
-      <span class="student-detail__protected-label">${esc(label)}</span>
-      <p>${esc(content || '—')}</p>
-    </div>
-  `;
-}
-
-/** 학생 상세 모달 (공급자 권한 반영) */
-export function renderStudentDetailModal(student) {
-  if (!student) return '';
-  const sub = previewState.providerSubscription;
-  const vis = getStudentProtectedVisibility(student, sub);
-  const places = (student.lesson_places || [])
-    .map((p) => STUDENT_PLACE_LABELS[p] || p)
-    .join(' · ');
-  const styles = (student.teaching_style_badges || [])
-    .map((b) => TEACHING_STYLE_LABELS[b] || b)
-    .join(' · ');
-  const budget =
-    student.preferred_lesson_type === 'study_room'
-      ? student.preferred_studyroom_fee_amount
-      : student.preferred_fee_amount;
-
-  return `
-    <div class="modal-overlay" id="student-detail-modal" role="dialog" aria-modal="true">
-      <div class="modal student-detail">
-        <header class="modal__head">
-          <h2>${esc(student.public_display_name)} · 상세</h2>
-          <button type="button" class="modal__close" data-action="close-student-detail" aria-label="닫기">×</button>
-        </header>
-        <div class="modal__body">
-          <p class="student-detail__meta">${esc(student.grade_level || '—')} · ${esc(student.location_label || '—')}</p>
-          <dl class="student-detail__dl">
-            <dt>희망 과목</dt><dd>${esc(student.subject_label || '—')}</dd>
-            <dt>희망 수업장소</dt><dd>${esc(places || '—')}</dd>
-            <dt>수업형태</dt><dd>${esc(LESSON_FORMAT_LABELS[student.lesson_format] || '—')}</dd>
-            ${
-              student.lesson_format === 'group'
-                ? `<dt>그룹 구성</dt><dd>${esc(STUDENT_GENDER_GROUP_LABELS[student.student_gender_group] || '—')}</dd>
-            <dt>희망 수업인원</dt><dd>${esc(STUDENT_COUNT_LABELS[student.preferred_student_count_group] || '—')}</dd>`
-                : `<dt>희망 수업인원</dt><dd>단독</dd>`
-            }
-            <dt>희망 강의스타일</dt><dd>${esc(styles || '—')}</dd>
-            <dt>수업예산</dt><dd>${budget != null ? `${Number(budget).toLocaleString('ko-KR')}원` : '—'}</dd>
-          </dl>
-          ${renderProtectedBlock('요청문', student.request_summary, vis.requestSummary)}
-          ${renderProtectedBlock('특이요청사항', student.special_request_note, vis.specialRequest)}
-          <p class="student-detail__sub-hint">
-            공급자 구독: <strong>${sub === 'paid' ? '유료' : '무료'}</strong>
-            · 요청문 ${VISIBILITY_LABELS[student.request_summary_visibility] || '비공개'}
-            · 특이요청 ${VISIBILITY_LABELS[student.special_request_visibility] || '비공개'}
-          </p>
-        </div>
-        <footer class="modal__foot">
-          <button type="button" class="btn btn--secondary btn--sm" data-action="student-memo"
-            ${sub !== 'paid' ? `title="${PAID_GATE_MESSAGE}"` : ''}>
-            메모 보내기
-          </button>
-          <button type="button" class="btn btn--primary btn--sm" data-action="close-student-detail">닫기</button>
-        </footer>
-      </div>
-    </div>
-  `;
-}
-
-export function bindStudentDetailEvents(root, { onRerender } = {}) {
-  root.querySelectorAll('[data-action="open-student-detail"]').forEach((el) => {
-    el.addEventListener('click', () => {
-      const id = Number(el.dataset.studentId);
-      const student = window.__STUDENT_PREVIEW_POOL?.find((s) => s.id === id);
-      if (!student) return;
-      const wrap = document.createElement('div');
-      wrap.innerHTML = renderStudentDetailModal(student);
-      const modal = wrap.firstElementChild;
-      document.body.appendChild(modal);
-      modal.querySelector('[data-action="close-student-detail"]')?.addEventListener('click', () => modal.remove());
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
-      });
-      modal.querySelector('[data-action="student-memo"]')?.addEventListener('click', () => {
-        startFirstMemoFlow({
-          kind: 'student',
-          targetId: student.id,
-          targetName: student.public_display_name || '학생',
-          student,
-          structuredLine: `${student.grade_level || '—'} · 희망 과외 · 대치동`,
-        });
-      });
-    });
-  });
-
-  root.querySelectorAll('[data-provider-subscription]').forEach((el) => {
-    el.addEventListener('click', () => {
-      previewState.providerSubscription = el.dataset.providerSubscription;
-      onRerender?.();
-    });
-  });
-}
+/** @deprecated P24 detail-decision으로 이관 — bindStudentDetailEvents는 detail-decision/index.js 사용 */
+export { bindStudentDetailEvents } from './detail-decision/index.js';

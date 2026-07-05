@@ -4,7 +4,7 @@
 
 import { parseHashQuery, parseNavRole } from '../../shared/preview-links.js';
 
-/** @type {{ tab: SearchTab, expanded: boolean, role: ViewerRole, subscription: ProviderSubscription, searchExecuted: boolean, searchLoading: boolean, searchError: string | null, searchTotal: number, searchRows: Array<{ left: string, center: string, right: string }> }} */
+/** @type {{ tab: SearchTab, expanded: boolean, role: ViewerRole, subscription: ProviderSubscription, searchExecuted: boolean, searchLoading: boolean, searchError: string | null, searchTotal: number, searchRows: Array<{ left: string, center: string, right: string }>, searchItems: Array<Record<string, unknown>> }} */
 export const previewState = {
   tab: 'room',
   expanded: false,
@@ -13,6 +13,7 @@ export const previewState = {
   searchError: null,
   searchTotal: 0,
   searchRows: [],
+  searchItems: [],
   role: 'study_room',
   subscription: 'free',
   studentLessonFormat: 'one_on_one',

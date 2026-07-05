@@ -30,7 +30,7 @@ http://localhost:5175 · `cd preview/study-room-ui && npm run dev`
 - [x] `facility_masters` 체크 ~5 + `facility_note`
 - [x] `contact_time_note`, `contact_phone`
 - [x] `study_room_images` — `image_type`, `sort_order` (0~5)
-- [x] `profile_status` — draft / pending / published
+- [x] `profile_status` — draft / published (22장 · **pending UI ✕**)
 
 ## 등록 2단계 (5·8·9장 · 2026-06-01)
 

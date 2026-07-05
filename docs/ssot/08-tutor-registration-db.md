@@ -24,7 +24,7 @@
 | 4 | 과목·학생군 = **매핑 구조** · `subject_masters` 공통 |
 | 5 | 활동 지역 **최대 3 · 대표 1** · 홈 상단 **시 탭** |
 | 6 | **조건형 서비스** — 지도/단지 중심 아님 |
-| 7 | 증빙 = **별도 검증 테이블** · 정보 vs 광고권 **분리** |
+| 7 | 증빙 = **별도 제출자료 테이블** (`tutor_verification_documents`) · 정보 vs 광고권 **분리** · [22장](22-platform-lifecycle-principles.md) |
 
 ---
 
@@ -39,7 +39,7 @@
 | `tutor_lesson_places` | 강의장소 복수 |
 | `tutor_images` | 프로필/소개/증빙보조 |
 | `tutor_teaching_style_badges` | 강의스타일 배지 |
-| `tutor_verification_documents` | 증빙서류 검수 |
+| `tutor_verification_documents` | 증빙서류 · **제출자료 저장** ([22장](22-platform-lifecycle-principles.md) — 운영자 검수 ✕) |
 
 ---
 
@@ -67,12 +67,20 @@
 | university_status | ENUM | `enrolled` · `leave` · `completed` · `graduated` |
 | university_note | VARCHAR(255) | 학력 요약(보조) |
 | proof_document_available | TINYINT(1) | 증빙 제출 가능 |
-| verification_badge_visible | TINYINT(1) | 검증 배지 노출 |
+| verification_badge_visible | TINYINT(1) | 증빙 안내 배지 노출 (플랫폼 심사·보증 ✕) |
 | feature_1~3 | VARCHAR(100) | 특징 |
 | contact_time_note | VARCHAR(255) | 연락 시간 |
 | youtube_url | VARCHAR(500) | 상세등록 YouTube 1개 (010) |
-| profile_status | ENUM | draft / pending / published / hidden |
+| profile_status | ENUM | draft / pending / published / hidden — **`pending` §4-1 deprecated** |
 | detail_completion_status | ENUM | basic_only / expanded_in_progress / expanded_complete |
+
+### 4-1. `profile_status` · `pending` (deprecated)
+
+> **플랫폼 공통:** [22장](22-platform-lifecycle-principles.md) §3 · [5장 §4-2](05-study-room-db.md#4-2-profile_status--pending-deprecated)와 동일 정책.
+
+- `pending` — enum 유지 · **1차 공개 lifecycle·21장 UI에서 사용 금지**
+- 운영자 검수·승인·반려 의미 **금지**
+- 「공개 준비 미완료」= 체크리스트 계산값 · `pending` **아님**
 
 ---
 
@@ -142,3 +150,4 @@ Basic 1 · Pick 2 · Prime 3 노출.
 |------|------|
 | 2026-06-01 | 2단계·Prime/Pick·유튜브·열람권 후보 |
 | 2026-07-04 | Notion 8장 2026-07 전면 반영 · 008/010 · `student_count_group` UI **수업인원** |
+| 2026-07-06 | **§4-1** `profile_status.pending` deprecated — [22장](22-platform-lifecycle-principles.md) |

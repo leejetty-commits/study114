@@ -1,9 +1,9 @@
 # 16장 — 쪽지함 및 접촉 흐름
 
-**상태: 초안** (Notion 15~22 §3 · Notion·Cursor 합의 반영 · **구현 전**)  
+**상태: UX·실행 1차 잠금** (Notion 15~22 §3 · Notion·Cursor 합의 · **home-ui 16a ✅**)  
 **역할:** 13장 §8 **권한 정책을 UX로 증명** — 블라인드 중계형 대화 · 공개 범위 · 유료 게이트 · 6장 쪽지 원칙  
-**연동:** [15장](15-mypage-structure.md) · [13장](13-search-page-fields.md) · [11장](11-main-exposure-and-compare.md) · [18장](18-paid-services-rough.md) · 22장 `[미작성]`  
-**구현 메모:** [부록 A](#부록-a-구현-추적-임시)
+**연동:** [15장](15-mypage-structure.md) · [13장](13-search-page-fields.md) · [11장](11-main-exposure-and-compare.md) · [18장](18-paid-services-rough.md) · [22장](22-platform-lifecycle-principles.md) · [24장](24-detail-decision-layer.md)  
+**코드 정본:** [§13](#13-코드-정본-1차) · [부록 A](#부록-a-구현-추적)
 
 > **본문 원칙:** 15장과 동일 — URL·DDL·데이터 개념은 **부록**. 화면 ID(P16-xx)와 **정책·권한·1차 범위**만 잠근다.
 
@@ -46,6 +46,21 @@
 
 - free 공급자 = **대기 중인 샵** — 받은 쪽지·학부모 문의에 **답장 가능** · 학생찾기에서 **먼저** 메모만 차단.
 - P16-04는 **콜드 아웃리치**에만 적용 — 학부모 화면·선연락 수신 **해당 없음**.
+
+### 1-3. 역할별 접촉 채널 비중 `[원본 · 2026-07-06]`
+
+쪽지는 우동공과의 **공식 접촉 채널**이다.  
+다만 **역할별 사용 빈도와 운영 UI 비중은 다르다.** 권한 모델(§8)은 **공통** · 화면·CTA **강조는 역할별**.
+
+| 역할 | 쪽지·상담 빈도 | 운영 UI 해석 |
+|------|----------------|--------------|
+| **공부방** | **저** — 결정 직전 **보조** 채널 | [20장](20-study-room-registration-management.md) `inquiry_status` = **상담 수용 표지판** (대화량·활성도 ✕) |
+| **과외쌤** | **高** — 학생찾기·조건 협의·콜드 메모 | [21장](21-tutor-registration-management.md) **학생 접근·쪽지** = **1급 운영축** |
+| **학부모** | 공급자와의 공식 접촉 | **무료 중심** · 16장 본문 |
+
+> **공통 (변경 없음):** 학부모→공급자 선연락·답장 **free** · 공급자→학생 **콜드 메모** 유료 — §1-2 · [18§4](18-paid-services-rough.md#4-접촉메모-정책-168-연동--잠금).
+
+**참조:** [15§4-3](15-mypage-structure.md#4-3-숫자-요약--cta) 홈 강조 · [18§4-1](18-paid-services-rough.md#4-1-역할별-유료-안내-순서) SKU 순서 · [20§4-3](20-study-room-registration-management.md#4-3-축-b--상담-수용-상태-inquiry_status-1차-ddl--api) · [21§4-3](21-tutor-registration-management.md#4-3-매칭-가시성-ui-계산--20장-inquiry_status-대칭) · [22§9](22-platform-lifecycle-principles.md#9-역할별-접촉-채널-비중-요약) 요약.
 
 ---
 
@@ -252,7 +267,7 @@
 |------|------|------|
 | 6장 유틸 「쪽지함」 | P16-01 | 딥링크 |
 | P15-08 「쪽지함 열기」 | P16-01 | 15=허브 · 16=본문 |
-| 22장 CTA 「메모/쪽지」 | P16-03 → P16-02 | 상세·쪽지 충돌 방지 |
+| 22장 CTA 「메모/쪽지」 | P16-03 → P16-02 | [24장](24-detail-decision-layer.md) 상세 Sticky CTA |
 | 13장 검색 「메모 보내기」 | P16-03 | 공급자 |
 | P16-04 성공 CTA | 18장 | 상품·결제 본문 |
 
@@ -276,7 +291,7 @@
 - 안전번호·전화 중계
 - 파일 첨부 · 이미지
 - 운영자 admin 콘솔 (별도)
-- 시스템 **운영 알림**(15장 §1-1) — 쪽지와 분리
+- 시스템 **안내**(15장 §1-1) — 쪽지와 분리 · **운영자 심사·반려형 알림 없음** ([22장 §7-1](22-platform-lifecycle-principles.md#7-1-시스템-안내--허용-유형-1차-방향))
 
 ---
 
@@ -304,9 +319,28 @@
 
 ---
 
-## 부록 A. 구현 추적 (임시)
+## 13. 코드 정본 (1차)
 
-> **정본 아님.** 10장 · 프리뷰 DOC-CHECKLIST · PHP/API 확정 시 갱신·이관.
+| 항목 | 경로 | SSOT |
+|------|------|------|
+| **copy · 배지 · 게이트** | `preview/home-ui/src/messages/messages-copy.js` | §3 · §4 · §7 |
+| **권한 판정** | `messages/permissions.js` | §1-2 · §8 |
+| **첫 메모 진입** | `messages/compose-flow.js` | P16-03 · §6 |
+| **오버레이** | `messages/overlays.js` | P16-03 · P16-04 |
+| **리스트·대화방** | `messages/screens.js` | P16-01 · P16-02 |
+| **thread 재사용** | `messages/thread-store.js` | §6-3 |
+| **라우트** | `messages/router.js` | 부록 A |
+| **P24 → P16** | `detail-decision/detail-shell.js` → `compose-flow.js` | §9 · 24장 CTA |
+
+**저장:** thread·message = `sessionStorage` `[임시]` · API·DDL은 후속.
+
+검증: [home-ui/DOC-CHECKLIST.md](../../preview/home-ui/DOC-CHECKLIST.md) §16장.
+
+---
+
+## 부록 A. 구현 추적
+
+> **1차 프리뷰 정본:** hash `#/mypage/messages/*` · 레거시 `#/messages/*` → 자동 리다이렉트.
 
 ### A-1. URL 후보 (미확정)
 
@@ -340,13 +374,14 @@ thread·context 상세 규칙은 §6-3 정본 · 스키마는 후속 DDL.
 | 유료 게이트 | P16-04 오버레이 | ○ (논리 ID) |
 | 보낸 쪽지 | P16-01 탭 | ✕ |
 
-### A-4. 실행 후보 (10장)
+### A-4. 실행 (home-ui 16a)
 
-| 단계 | 산출물 |
-|------|--------|
-| 16a | 권한 게이트 + P16-04 프리뷰 | ✅ home-ui 오버레이 |
-| 16b | thread API + P16-02/03 | △ sessionStorage |
+| 단계 | 산출물 | 상태 |
+|------|--------|:----:|
+| 16a | 권한 게이트 + P16-04 오버레이 | ✅ |
+| 16b | thread sessionStorage + P16-02/03 | ✅ |
 | 16c | P16-01 + P15-08 연결 | ✅ |
+| 16d | P24 상세 CTA → compose-flow | ✅ |
 
 ---
 
@@ -354,6 +389,8 @@ thread·context 상세 규칙은 §6-3 정본 · 스키마는 후속 DDL.
 
 | 날짜 | 내용 |
 |------|------|
+| 2026-07-06 | **1차 잠금** — §13 코드 정본 · `messages-copy.js` · P24 연동 · home-ui 16a ✅ |
 | 2026-07-04 | 16장 페이지 구조 **제안** — P16-01~08 · 13장 권한 · 15장 진입 |
 | 2026-07-04 | **Notion·Cursor 합의 반영** — 정본 4축 · 3층 UI · P16-01~04 중심 · 부록 분리 · thread 재사용 · 검색/데이터 약화 |
 | 2026-07-04 | **18장 정책 연동** — §1-2 접촉 방향 · 콜드만 P16-04 · 선연락·답장 free |
+| 2026-07-06 | **§1-3** 역할별 접촉 채널 비중 **원본** — 공부방 저빈도 · 과외 고빈도 |

@@ -12,6 +12,7 @@ export const SUPPORT_NAV = [
 /** @param {string} path */
 export function getActiveNavId(path) {
   if (path.startsWith('/support/safe')) return 'safe';
+  if (path === '/support/contact/tickets') return 'contact';
   const hit = SUPPORT_NAV.find((n) => n.path !== '/support' && path === n.path);
   if (hit) return hit.id;
   return 'home';
@@ -19,6 +20,8 @@ export function getActiveNavId(path) {
 
 /** @param {string} path */
 export function getPageTitleSuffix(path) {
+  if (path.startsWith('/support/admin')) return '운영';
+  if (path === '/support/contact/tickets') return '문의내역';
   const id = getActiveNavId(path);
   const item = SUPPORT_NAV.find((n) => n.id === id);
   return item?.titleSuffix || '홈';

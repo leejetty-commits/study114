@@ -39,7 +39,7 @@
 | `study_room_images` | 사진 · 대표/내부/시설/기타 |
 | `facility_masters` | 시설 **체크형** 마스터 |
 | `study_room_facilities` | 공부방 ↔ 시설 매핑 |
-| `study_room_verification_documents` | 증빙 문서 · 검수 |
+| `study_room_verification_documents` | 증빙 문서 · **제출자료 저장** ([22장](22-platform-lifecycle-principles.md) — 운영자 검수 ✕) |
 | `study_room_badges` | Prime/Pick 신뢰 배지 |
 | `study_room_exposure_assignments` | 노출 편성 · 광고 운영 |
 | `study_room_exposure_waitlists` | 예약대기 · 오픈 알림 |
@@ -86,7 +86,7 @@
 | contact_time_note | VARCHAR(255) | YES | 연락 가능 시간 |
 | facility_note | TEXT | YES | 시설/환경 **자유기술** |
 | youtube_url | VARCHAR(500) | YES | 상세등록 YouTube 1개 (009) |
-| profile_status | ENUM | NO | `draft` · `pending` · `published` · `hidden` |
+| profile_status | ENUM | NO | `draft` · `pending` · `published` · `hidden` — **`pending`은 §4-2 deprecated** |
 | detail_completion_status | ENUM | NO | `basic_only` · `expanded_in_progress` · `expanded_complete` |
 | published_at | DATETIME | YES | |
 | deleted_at | DATETIME | YES | soft delete |
@@ -99,7 +99,26 @@
 | `name` | `study_room_name` |
 | `description` | `intro_long` (+ `intro_short` 추가) |
 | `address_detail` | `address_text` |
-| `status` | `profile_status` (+ `pending`) |
+| `status` | `profile_status` (+ `pending` — **§4-2 deprecated**) |
+
+### 4-2. `profile_status` · `pending` (deprecated)
+
+> **플랫폼 공통:** [22장](22-platform-lifecycle-principles.md) §3
+
+| 값 | 1차 공개 lifecycle | 비고 |
+|----|-------------------|------|
+| `draft` | ○ 저장중 | study-room-ui 임시저장 |
+| `published` | ○ 공개중 | 원장 직접 전환 |
+| `hidden` | ○ 숨김 | 원장 직접 전환 |
+| `pending` | **deprecated — 사용 금지** | enum **삭제하지 않음** (DDL·레거시 참조 대비) |
+
+**`pending` 금지 사항**
+
+- 운영자 검수·승인·반려·「검토 대기」 의미로 **읽거나 쓰지 않는다**
+- [20장](20-study-room-registration-management.md) · **21장** UI·API·탭에 **노출하지 않는다**
+- 「공개 준비 미완료」는 `pending`이 **아니다** — 필수 체크리스트 **UI 계산값** (20장)
+
+**1차 구현:** 신규 코드는 `draft` / `published` / `hidden` 만 전환. 기존 row에 `pending`이 있으면 마이그레이션·정책 별도 `[후순위]`.
 
 ---
 
@@ -231,7 +250,7 @@
 |------|-----------|
 | 후기 텍스트 | 비추천/싫어요 |
 | 추천/도움돼요 | |
-| 신고 + 관리자 검수/숨김 | |
+| 신고 + 관리자 **조치**/숨김 | |
 
 → `study_room_reviews`, `study_room_review_helpful` (추후)
 
@@ -290,3 +309,4 @@ study_rooms (1)
 | 2026-05-31 | 5장 초안 (2장 매핑) |
 | 2026-05-31 | Notion 5장 원문 전면 반영 · 005 migration |
 | 2026-07-04 | Notion 5장 2026-07 갱신 · slogan/operation/capacity enum · 009 extended |
+| 2026-07-06 | **§4-2** `profile_status.pending` deprecated — [22장](22-platform-lifecycle-principles.md) |

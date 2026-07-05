@@ -1,6 +1,6 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents } from '../layout.js';
 import { getNavRole } from '../state.js';
-import { getScreenIdForPath } from './router.js';
+import { getScreenIdForPath, isAdminSupportPath } from './router.js';
 import { renderPageTitle, renderSupportNav } from './nav.js';
 
 function esc(s) {
@@ -13,7 +13,7 @@ function esc(s) {
  */
 export function renderSupportShell(currentPath, bodyHtml) {
   const role = getNavRole();
-  const screenId = getScreenIdForPath(currentPath);
+  const screenId = isAdminSupportPath(currentPath) ? 'P17-admin' : getScreenIdForPath(currentPath);
   const sub = role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
 
   return `

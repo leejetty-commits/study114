@@ -39,7 +39,7 @@
 
 - **슬로건** · **수업운영형태** · **과목 마스터** 선택형
 - 수업형태 UI = `lesson_operation_type` · 원생수 UI = `capacity_per_time`
-- Prime/Pick = **확장모드 완료** + 증빙 검수 배지 · 노출 편성 테이블 분리
+- Prime/Pick = **확장모드 완료** + **제출자료·증빙 안내** 배지 · 노출 편성 테이블 분리 · [22장](../ssot/22-platform-lifecycle-principles.md)
 - `youtube_url` — 상세등록 1개 (009)
 
 ## 변경 이력

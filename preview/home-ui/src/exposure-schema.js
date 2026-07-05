@@ -82,7 +82,7 @@ export const TUTOR_PRIME_FIELDS = [
   { key: 'education_summary', label: '학교·학과', db: 'university_name / major_name' },
   { key: 'fee_card_label', label: '월·주·분', db: 'preferred_fee_amount + lessons_per_week + minutes_per_lesson' },
   { key: 'tutor_display_name', label: '표시명', db: 'tutors.tutor_display_name' },
-  { key: 'verification_count_label', label: '증빙', db: 'tutor_verification_documents 집계' },
+  { key: 'verification_count_label', label: '제출자료', db: 'tutor_verification_documents 집계' },
   { key: 'grade_band', label: '대상', db: 'tutor_subject_targets.school_level/grade_band' },
   { key: 'main_subject_note', label: '과목', db: 'tutors.main_subject_note' },
   { key: 'lesson_places_label', label: '수업장소', db: 'tutor_lesson_places' },
@@ -136,7 +136,7 @@ export const TUTOR_COMPARE_ROWS = [
   { key: 'lesson_places_label', label: '강의장소', db: 'tutor_lesson_places' },
   { key: 'student_target_label', label: '학생구성', db: 'student_gender_group / student_count_group' },
   { key: 'teaching_style_label', label: '강의스타일', db: 'tutor_teaching_style_badges' },
-  { key: 'verification_count_label', label: '증빙서류', db: 'tutor_verification_documents' },
+  { key: 'verification_count_label', label: '제출자료', db: 'tutor_verification_documents' },
   { key: 'features_joined', label: '특징', db: 'tutors.feature_1~3' },
 ];
 

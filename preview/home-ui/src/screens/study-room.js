@@ -10,6 +10,20 @@ import {
   renderAdInline,
   bindLayoutEvents,
 } from '../layout.js';
+import { bindDetailDecisionEvents } from '../detail-decision/index.js';
+import { EXPOSURE_STUDENTS } from '../exposure-data.js';
+import { renderBrowseList } from '../exposure-render.js';
+
+function renderStudentFindPreview() {
+  return `
+    <section class="home-section">
+      <div class="list-block">
+        <div class="list-block__head">학생찾기 (13§7 · P25-S10)</div>
+        ${renderBrowseList('student', EXPOSURE_STUDENTS.slice(0, 6), { guest: false, viewerRole: 'study_room' })}
+      </div>
+    </section>
+  `;
+}
 
 function renderMyStudyRoomBox() {
   return `
@@ -57,6 +71,7 @@ export function renderStudyRoom() {
     ${renderAdInline()}
     ${renderMid5Section('중단 고정 5박스', '고정형 시작', mid5)}
     ${renderBottomList('공부방 리스트', list)}
+    ${renderStudentFindPreview()}
   `;
 
   return renderHomeShell('study_room', content, { showAuth: false, showRoleSwitch: true });
@@ -64,4 +79,5 @@ export function renderStudyRoom() {
 
 export function bindStudyRoomEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
+  bindDetailDecisionEvents(root, { onRerender: rerender, viewer: 'study_room' });
 }

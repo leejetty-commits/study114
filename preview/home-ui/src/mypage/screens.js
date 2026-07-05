@@ -1,13 +1,36 @@
-import { STUDY_ROOM_REGISTER_URL, TUTOR_REGISTER_URL, searchUiUrl } from '../nav-config.js';
+import {
+  LIFECYCLE_FOOTNOTE_SUBMISSION,
+  SUBMISSION_DOCS_LEAD,
+  TRUST_PLATFORM_DISCLAIMER,
+} from '../lifecycle-copy.js';
+import { TUTOR_REGISTER_URL, STUDY_ROOM_REGISTER_URL, searchUiUrl } from '../nav-config.js';
 import { getNavRole } from '../state.js';
 import {
   getPreviewProfile,
   getRegistrationData,
   getSummaryCounts,
   getPrimaryCta,
-  statusLabel,
+  getSubmissionDocs,
+  submissionDocStatusLabel,
+  submissionDocVisibilityLabel,
+  formatSubmissionDocSummary,
 } from './preview-data.js';
 import { getRecentViews } from './recent-store.js';
+import { getStudentReviewItems, removeStudentReview } from '../student-review-store.js';
+import { getHandoffFromQuery, getProviderRegDeepLink } from '../handoff-link.js';
+import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
+import { STUDENT_REVIEW, studentReviewItemLabel } from '../handoff-copy.js';
+import {
+  renderBasketLifecycleBadge,
+  isBasketLifecycleMuted,
+  resolveBasketItem,
+} from '../handoff-lifecycle.js';
+import { renderResumeToken } from '../handoff-resume.js';
+import { renderDecisionStickers } from '../handoff-sticker.js';
+import { getStudentSearchUrl } from '../tutor-reg/format.js';
+import { openDetailDecision } from '../detail-decision/index.js';
+import { startFirstMemoFlow } from '../messages/compose-flow.js';
+import { exposureStatusLabel } from '../lifecycle-copy.js';
 import {
   getWishlistItems,
   removeWishlist,
@@ -15,17 +38,34 @@ import {
 } from '../user-actions-state.js';
 import { formatMonthlyWon, formatTutorFeeCard } from '../exposure-format.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
+import { notifyCompareToggle } from '../handoff-utils.js';
 import { MYPAGE_NAV } from './router.js';
 import { getMessagesSummaryCounts, renderMessagesScreen } from '../messages/screens.js';
 import { isMessagesDetailPath } from '../messages/router.js';
 import { isStudentRegPath } from '../student-reg/router.js';
 import { renderStudentRegScreen } from '../student-reg/screens.js';
+import { isStudyRoomRegPath } from '../study-room-reg/router.js';
+import { renderStudyRoomRegScreen } from '../study-room-reg/screens.js';
+import { isTutorRegPath } from '../tutor-reg/router.js';
+import { renderTutorRegScreen } from '../tutor-reg/screens.js';
 import { previewState } from '../state.js';
 import {
   PAID_CATALOG_PLACEHOLDER,
   FREE_TIER_COPY,
   PAID_TIER_COPY,
 } from './plans-catalog.js';
+import {
+  HOME_EMPHASIS,
+  HOME_STATS_NOTE,
+  EMPTY_ONBOARDING,
+  GUARDIAN_PLANS_COPY,
+  WISHLIST_NOTE,
+  RECENT_NOTE,
+  STUDENT_REVIEW_NOTE,
+  MESSAGES_SUMMARY_LEAD,
+  REGISTRATIONS_LEAD,
+  homeEmphasisStatKeys,
+} from './mypage-copy.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -69,19 +109,58 @@ export function renderMypageScreen(path) {
   const cta = getPrimaryCta(r);
 
   if (isStudentRegPath(path)) return renderStudentRegScreen(path);
+  if (isStudyRoomRegPath(path)) return renderStudyRoomRegScreen(path);
+  if (isTutorRegPath(path)) return renderTutorRegScreen(path);
 
   if (path === '/mypage/home') return renderHome(r, profile, counts, cta);
   if (path === '/mypage/registrations') return renderRegistrationsIndex(r);
-  if (path === '/mypage/registrations/study-rooms') return renderStudyRooms(r);
-  if (path === '/mypage/registrations/tutors') return renderTutors(r);
   if (path === '/mypage/wishlist') return renderWishlist();
   if (path === '/mypage/recent') return renderRecent(r);
+  if (path === '/mypage/student-review') return renderStudentReview(r);
   if (isMessagesDetailPath(path)) return renderMessagesScreen(path);
   if (path === '/mypage/messages') return renderMessagesSummary();
   if (path === '/mypage/plans') return renderPlans(r);
-  if (path === '/mypage/verification') return renderVerification(r);
+  if (path === '/mypage/submission-docs' || path === '/mypage/verification') return renderSubmissionDocs(r);
   if (path === '/mypage/account') return renderAccount(r, profile);
   return renderHome(r, profile, counts, cta);
+}
+
+function renderHomeStat(key, label, value, emphasis) {
+  if (key === 'paidDaysLeft' && value == null) {
+    return `<div class="mypage-stat is-muted" title="15장 §7"><span>유료</span><strong>공급자용</strong></div>`;
+  }
+  const cls = emphasis ? 'mypage-stat is-emphasis' : 'mypage-stat';
+  return `<div class="${cls}"><span>${esc(label)}</span><strong>${esc(String(value ?? '—'))}</strong></div>`;
+}
+
+function buildHomeStats(role, counts) {
+  const emph = new Set(homeEmphasisStatKeys(role));
+  /** @type {Array<[string, string, unknown]>} */
+  const rows = [
+    ['published', '공개중', counts.published],
+    ['draft', '임시저장', counts.draft],
+    ['wishlist', '찜', counts.wishlist],
+    ['unreadMessages', '읽지 않은 쪽지', counts.unreadMessages],
+    ['recentCount', '최근열람', counts.recentCount],
+  ];
+  if (role === 'study_room' && counts.inquiryLabel != null) {
+    rows.splice(2, 0, ['inquiryLabel', '상담 수용', counts.inquiryLabel]);
+  }
+  if (role === 'study_room' || role === 'tutor') {
+    rows.splice(role === 'tutor' ? 1 : 3, 0, ['studentReviewCount', '학생 검토함', counts.studentReviewCount]);
+  }
+  if (role === 'tutor') {
+    if (counts.memoCredits != null) {
+      rows.splice(1, 0, ['memoCredits', '메모권', `${counts.memoCredits}회`]);
+    }
+    if (counts.matchingLabel != null) {
+      rows.push(['matchingLabel', '매칭', counts.matchingLabel]);
+    }
+  }
+  rows.push(['paidDaysLeft', '유료', counts.paidDaysLeft != null ? `${counts.paidDaysLeft}일` : null]);
+  return rows
+    .map(([key, label, val]) => renderHomeStat(key, label, val, emph.has(key)))
+    .join('');
 }
 
 function renderHome(role, profile, counts, cta) {
@@ -93,11 +172,6 @@ function renderHome(role, profile, counts, cta) {
     </a>`,
   );
 
-  const paidStat =
-    role === 'parent'
-      ? `<span class="mypage-stat is-muted" title="15장 §7">공급자용</span>`
-      : `<span class="mypage-stat"><strong>${counts.paidDaysLeft ?? '—'}</strong>일 남음</span>`;
-
   return `
     <section class="mypage-panel">
       <div class="mypage-status">
@@ -105,16 +179,11 @@ function renderHome(role, profile, counts, cta) {
         <span>${esc(profile.regionLabel)}</span>
         <span class="mypage-muted">${esc(profile.email)}</span>
       </div>
+      <p class="mypage-emphasis" aria-label="역할별 강조">§4-3-1 · ${esc(HOME_EMPHASIS[role] || '')}</p>
       ${renderCtaBlock(cta)}
       <div class="mypage-shortcuts">${cards.join('')}</div>
-      <div class="mypage-stats" aria-label="숫자 요약">
-        <div class="mypage-stat"><span>공개중</span><strong>${counts.published}</strong></div>
-        <div class="mypage-stat"><span>임시저장</span><strong>${counts.draft}</strong></div>
-        <div class="mypage-stat"><span>찜</span><strong>${counts.wishlist}</strong></div>
-        <div class="mypage-stat"><span>읽지 않은 쪽지</span><strong>${counts.unreadMessages}</strong></div>
-        <div class="mypage-stat">${paidStat}</div>
-      </div>
-      <p class="mypage-note">15장 §4 · 숫자는 다음 CTA의 입력값입니다.</p>
+      <div class="mypage-stats" aria-label="숫자 요약">${buildHomeStats(role, counts)}</div>
+      <p class="mypage-note">${HOME_STATS_NOTE}</p>
     </section>`;
 }
 
@@ -128,16 +197,14 @@ function renderRegistrationsIndex(role) {
   }
   if (role === 'tutor') {
     links.push({ path: '/mypage/registrations/tutors', label: '과외 프로필', id: 'P15-05' });
-  }
-  if (role === 'parent') {
-    links.push({ path: '/mypage/registrations/students', label: '자녀 관리 (학부모)', id: 'P15-03' });
+    links.push({ path: '/mypage/submission-docs', label: '제출자료 상태', id: 'P15-10' });
   }
 
   const unique = [...new Map(links.map((l) => [l.path, l])).values()];
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">역할에 맞는 등록 유형으로 이동합니다. (19~21장 본문은 register-ui)</p>
+      <p class="mypage-lead">${REGISTRATIONS_LEAD}</p>
       <div class="mypage-card-grid">
         ${unique
           .map(
@@ -149,50 +216,6 @@ function renderRegistrationsIndex(role) {
           )
           .join('')}
       </div>
-    </section>`;
-}
-
-function renderStudyRooms(role) {
-  const rooms = getRegistrationData(role).studyRooms;
-  return `
-    <section class="mypage-panel">
-      <p class="mypage-lead"><a href="${STUDY_ROOM_REGISTER_URL}" target="_blank" rel="noopener">study-room-ui</a>에서 수정</p>
-      <ul class="mypage-entity-list">
-        ${rooms
-          .map(
-            (r) => `
-          <li class="mypage-entity">
-            <div>
-              <strong>${esc(r.study_room_name)}</strong>
-              <span class="mypage-muted">${esc(r.detail_completion_status)}</span>
-            </div>
-            <span class="mypage-badge mypage-badge--${r.profile_status}">${statusLabel(r.profile_status)}</span>
-          </li>`,
-          )
-          .join('')}
-      </ul>
-    </section>`;
-}
-
-function renderTutors(role) {
-  const tutors = getRegistrationData(role).tutors;
-  return `
-    <section class="mypage-panel">
-      <p class="mypage-lead"><a href="${TUTOR_REGISTER_URL}" target="_blank" rel="noopener">tutor-ui</a> · <a href="#/mypage/verification" data-mypage-nav="/mypage/verification">P15-10 검증</a></p>
-      <ul class="mypage-entity-list">
-        ${tutors
-          .map(
-            (t) => `
-          <li class="mypage-entity">
-            <div>
-              <strong>${esc(t.tutor_display_name)}</strong>
-              <span class="mypage-muted">검증: ${esc(t.verification_status)}</span>
-            </div>
-            <span class="mypage-badge mypage-badge--${t.profile_status}">${statusLabel(t.profile_status)}</span>
-          </li>`,
-          )
-          .join('')}
-      </ul>
     </section>`;
 }
 
@@ -210,10 +233,15 @@ function renderWishlistSection(kind, label) {
             kind === 'tutor'
               ? `${item.main_subject_note} · ${formatTutorFeeCard(item)}`
               : `${item.main_subject_note} · ${formatMonthlyWon(item.price_amount)}`;
+          const lifecycleBadge = renderBasketLifecycleBadge(kind, item);
+          const stickers = renderDecisionStickers(kind, item.id);
+          const muted = isBasketLifecycleMuted(item, kind);
           return `
-          <li class="mypage-entity">
+          <li class="mypage-entity${muted ? ' is-muted' : ''}">
             <div>
               <strong>${esc(title)}</strong>
+              ${stickers}
+              ${lifecycleBadge}
               <span class="mypage-muted">${esc(meta)}</span>
             </div>
             <div class="mypage-entity__actions">
@@ -229,7 +257,7 @@ function renderWishlistSection(kind, label) {
 function renderWishlist() {
   return `
     <section class="mypage-panel">
-      <p class="mypage-note">15장 §5 · 주 사용 맥락: 학부모 탐색 후속 · 공급자는 부기능</p>
+      <p class="mypage-note">${WISHLIST_NOTE}</p>
       <h2 class="mypage-subhead">공부방</h2>
       ${renderWishlistSection('study_room', '공부방')}
       <h2 class="mypage-subhead">과외쌤</h2>
@@ -237,27 +265,98 @@ function renderWishlist() {
     </section>`;
 }
 
+function renderStudentReview(role) {
+  if (role === 'parent') {
+    return `<section class="mypage-panel mypage-empty"><p>${EMPTY_ONBOARDING.submissionParent}</p></section>`;
+  }
+
+  const items = getStudentReviewItems();
+  const itemLabel = studentReviewItemLabel(role);
+  const fromAccess = getHandoffFromQuery() === 'access';
+  const regLink = getProviderRegDeepLink(role);
+
+  if (!items.length) {
+    return `
+      <section class="mypage-panel mypage-empty">
+        ${fromAccess ? `<div class="handoff-deeplink-banner" role="status">${esc(HANDOFF_DEEPLINK.reviewFromAccess)}</div>` : ''}
+        <p>${STUDENT_REVIEW.empty}</p>
+        <a href="${getStudentSearchUrl()}" class="btn btn--primary btn--sm" target="_blank" rel="noopener">학생찾기 보기</a>
+        ${regLink ? `<a href="#${regLink.href}" class="btn btn--secondary btn--sm" data-mypage-nav="${regLink.href}">${esc(regLink.label)} (${regLink.screenId})</a>` : ''}
+      </section>`;
+  }
+
+  return `
+    <section class="mypage-panel">
+      ${fromAccess ? `<div class="handoff-deeplink-banner" role="status">${esc(HANDOFF_DEEPLINK.reviewFromAccess)}</div>` : ''}
+      <p class="mypage-note">${STUDENT_REVIEW_NOTE}</p>
+      ${regLink ? `<p class="mypage-note"><a href="#${regLink.href}" data-mypage-nav="${regLink.href}">${esc(role === 'tutor' ? HANDOFF_DEEPLINK.providerRegCtaTutor : HANDOFF_DEEPLINK.providerRegCtaStudyRoom)}</a> · 메모·쪽지 권한 확인</p>` : ''}
+      <ul class="mypage-entity-list">
+        ${items
+          .map((item) => {
+            const meta = `${item.grade_level || '—'} · ${item.subject_label || '—'} · ${item.location_label || '—'}`;
+            const lifecycleBadge = renderBasketLifecycleBadge('student', item);
+            const stickers = renderDecisionStickers('student', item.id);
+            const muted = isBasketLifecycleMuted(item, 'student');
+            const roleBadge = !lifecycleBadge
+              ? `<span class="mypage-badge">${esc(itemLabel)}</span>`
+              : '';
+            return `
+          <li class="mypage-entity${muted ? ' is-muted' : ''}">
+            <div>
+              <strong>${esc(item.public_display_name || '학습 요청')}</strong>
+              ${stickers}
+              ${lifecycleBadge || roleBadge}
+              <span class="mypage-muted">${esc(meta)} · ${new Date(item.savedAt).toLocaleString('ko-KR')}</span>
+              ${muted ? `<span class="mypage-muted">${esc(exposureStatusLabel(item.exposure_status))}</span>` : ''}
+            </div>
+            <div class="mypage-entity__actions">
+              <button type="button" class="btn btn--secondary btn--sm" data-mypage-review-detail data-student-id="${item.id}">상세</button>
+              <button type="button" class="btn btn--secondary btn--sm" data-mypage-review-memo data-student-id="${item.id}"
+                ${muted ? 'disabled title="공개 중지된 의뢰"' : ''}>${role === 'tutor' ? '메모' : '쪽지'}</button>
+              <button type="button" class="btn btn--secondary btn--sm" data-mypage-review-remove data-student-id="${item.id}">${STUDENT_REVIEW.removeCta}</button>
+            </div>
+          </li>`;
+          })
+          .join('')}
+      </ul>
+    </section>`;
+}
+
 function renderRecent(role) {
   const items = getRecentViews(role);
   if (role === 'parent' && items.length === 0) {
-    return `<section class="mypage-panel mypage-empty"><p>최근열람 기록이 없습니다.</p></section>`;
+    return `<section class="mypage-panel mypage-empty"><p>${EMPTY_ONBOARDING.recentParent}</p></section>`;
   }
   return `
     <section class="mypage-panel">
-      <p class="mypage-note">15장 §6 [임시] · 학부모: 공부방/과외 위주</p>
+      <p class="mypage-note">${RECENT_NOTE}</p>
       ${
         items.length
           ? `<ul class="mypage-entity-list">
         ${items
-          .map(
-            (e) => `
-          <li class="mypage-entity">
+          .map((e) => {
+            const item = resolveBasketItem(e);
+            const lifecycleBadge = item ? renderBasketLifecycleBadge(e.kind, item) : '';
+            const stickers = item ? renderDecisionStickers(e.kind, e.id) : '';
+            const resumeToken = renderResumeToken(e.lastRoute, e.lastAction);
+            const muted = item ? isBasketLifecycleMuted(item, e.kind) : false;
+            const kindLabel =
+              e.kind === 'study_room' ? '공부방' : e.kind === 'tutor' ? '과외쌤' : '학생';
+            return `
+          <li class="mypage-entity${muted ? ' is-muted' : ''}">
             <div>
               <strong>${esc(e.title)}</strong>
-              <span class="mypage-muted">${esc(e.kind)} · ${new Date(e.viewedAt).toLocaleString('ko-KR')}</span>
+              ${stickers}
+              ${lifecycleBadge}
+              ${resumeToken}
+              <span class="mypage-muted">${esc(kindLabel)} · ${new Date(e.viewedAt).toLocaleString('ko-KR')}</span>
             </div>
-          </li>`,
-          )
+            <div class="mypage-entity__actions">
+              <button type="button" class="btn btn--secondary btn--sm" data-mypage-recent-detail
+                data-kind="${e.kind}" data-id="${e.id}" data-last-route="${esc(e.lastRoute || 'mypage')}">다시 보기</button>
+            </div>
+          </li>`;
+          })
           .join('')}
       </ul>`
           : '<p class="mypage-empty-inline">기록 없음</p>'
@@ -269,7 +368,7 @@ function renderMessagesSummary() {
   const { unread, active } = getMessagesSummaryCounts();
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P15-08 요약 → <strong>16장</strong> 쪽지함 본문</p>
+      <p class="mypage-lead">${MESSAGES_SUMMARY_LEAD}</p>
       <div class="mypage-stats">
         <div class="mypage-stat"><span>읽지 않음</span><strong>${unread}</strong></div>
         <div class="mypage-stat"><span>진행중</span><strong>${active}</strong></div>
@@ -282,10 +381,10 @@ function renderPlans(role) {
   if (role === 'parent') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">15장 §7 · 학부모는 <strong>상품 설명 열람</strong>만 · 구매 UI 없음</p>
+        <p class="mypage-lead">${GUARDIAN_PLANS_COPY.lead}</p>
         <div class="mypage-info-box">
-          <p>Prime/Pick · 학생 메모권/열람권은 <strong>공부방·과외쌤</strong> 유료 서비스입니다.</p>
-          <p class="mypage-muted">18장 정책 · 18b 수치 placeholder</p>
+          <p>${GUARDIAN_PLANS_COPY.body}</p>
+          <p class="mypage-muted">${GUARDIAN_PLANS_COPY.footnote}</p>
         </div>
         <h2 class="mypage-subhead">소비형 SKU (참고)</h2>
         <ul class="mypage-entity-list plans-catalog plans-catalog--readonly">
@@ -333,15 +432,50 @@ function renderPlans(role) {
     </section>`;
 }
 
-function renderVerification(role) {
-  if (role !== 'tutor') {
-    return `<section class="mypage-panel"><p class="mypage-muted">과외쌤 전용 (P15-10)</p></section>`;
+function renderSubmissionDocs(role) {
+  if (role === 'parent') {
+    return `<section class="mypage-panel"><p class="mypage-muted">${EMPTY_ONBOARDING.submissionParent}</p></section>`;
   }
+
+  if (role === 'study_room') {
+    return `
+      <section class="mypage-panel">
+        <p class="mypage-lead">15장 §2-1 · ${EMPTY_ONBOARDING.submissionStudyRoom}</p>
+        <p class="mypage-muted">동일 원칙: 운영자 심사·승인·반려 없음 · 제출 여부·공개 상태 표시만</p>
+      </section>`;
+  }
+
+  const docs = getSubmissionDocs(role);
   return `
-    <section class="mypage-panel">
-      <p class="mypage-lead">21장 · 증빙 제출 · 검토 상태</p>
-      <span class="mypage-badge mypage-badge--pending">검토중</span>
-      <p class="mypage-muted">재제출 · tutor-ui 연동 예정</p>
+    <section class="mypage-panel p15-submission">
+      <p class="mypage-lead">${esc(SUBMISSION_DOCS_LEAD)}</p>
+      <div class="p15-submission__summary">
+        <span class="mypage-badge">${esc(formatSubmissionDocSummary(docs))}</span>
+        <a href="${TUTOR_REGISTER_URL}" class="btn btn--secondary btn--sm" target="_blank" rel="noopener">tutor-ui에서 자료 등록</a>
+      </div>
+      <table class="p15-submission__table" aria-label="제출자료 상태">
+        <thead>
+          <tr>
+            <th scope="col">항목</th>
+            <th scope="col">제출 상태</th>
+            <th scope="col">공개 범위</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${docs
+            .map(
+              (d) => `
+            <tr>
+              <td>${esc(d.label)}</td>
+              <td><span class="p15-submission__status p15-submission__status--${esc(d.status)}">${esc(submissionDocStatusLabel(d.status))}</span></td>
+              <td>${esc(submissionDocVisibilityLabel(d.visibility))}</td>
+            </tr>`,
+            )
+            .join('')}
+        </tbody>
+      </table>
+      <p class="mypage-note">${esc(LIFECYCLE_FOOTNOTE_SUBMISSION)}</p>
+      <p class="mypage-note p22-trust-disclaimer">${esc(TRUST_PLATFORM_DISCLAIMER)}</p>
     </section>`;
 }
 
@@ -370,12 +504,54 @@ export function bindMypageScreenEvents(root, rerender) {
       rerender();
     });
   });
+  root.querySelectorAll('[data-mypage-review-remove]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      removeStudentReview(btn.dataset.studentId);
+      rerender();
+    });
+  });
+  root.querySelectorAll('[data-mypage-review-detail]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      openDetailDecision({
+        kind: 'student',
+        id: Number(btn.dataset.studentId),
+        viewer: getNavRole(),
+        onRerender: rerender,
+        sourceRoute: 'mypage',
+      });
+    });
+  });
+  root.querySelectorAll('[data-mypage-review-memo]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = getStudentReviewItems().find((s) => s.id === Number(btn.dataset.studentId));
+      if (!item || item.exposure_status !== 'published') return;
+      startFirstMemoFlow({
+        kind: 'student',
+        targetId: item.id,
+        targetName: item.public_display_name || '학습 요청',
+        student: item,
+        structuredLine: `${item.grade_level || '—'} · ${item.subject_label || '—'} · ${item.location_label || '—'}`,
+      });
+    });
+  });
+  root.querySelectorAll('[data-mypage-recent-detail]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const kind = btn.dataset.kind;
+      if (kind !== 'study_room' && kind !== 'tutor' && kind !== 'student') return;
+      openDetailDecision({
+        kind,
+        id: Number(btn.dataset.id),
+        viewer: getNavRole(),
+        onRerender: rerender,
+        sourceRoute: btn.dataset.lastRoute || 'mypage',
+      });
+    });
+  });
   root.querySelectorAll('[data-mypage-wish-compare]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const result = addCompareFromWishlist(btn.dataset.kind, btn.dataset.id);
-      if (result.full) alert(`비교는 최대 ${COMPARE_MAX}개입니다.`);
-      else if (result.ineligible) alert('비교 자격이 없는 항목입니다.');
-      else rerender();
+      if (!notifyCompareToggle(result, btn.dataset.kind, { sourceRoute: 'mypage' })) return;
+      rerender();
     });
   });
 }

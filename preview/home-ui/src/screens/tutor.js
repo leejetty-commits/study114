@@ -10,8 +10,9 @@ import {
   renderAdInline,
   bindLayoutEvents,
 } from '../layout.js';
-import { bindStudentDetailEvents } from '../student-detail-modal.js';
+import { bindDetailDecisionEvents } from '../detail-decision/index.js';
 import { EXPOSURE_STUDENTS } from '../exposure-data.js';
+import { renderBrowseList } from '../exposure-render.js';
 
 function renderMyTutorBox() {
   return `
@@ -29,6 +30,17 @@ function renderMyTutorBox() {
         <button type="button" class="btn btn--secondary btn--sm" data-action="register-tutor">과외 등록</button>
       </div>
     </div>
+  `;
+}
+
+function renderStudentFindPreview() {
+  return `
+    <section class="home-section">
+      <div class="list-block">
+        <div class="list-block__head">학생찾기 (13§7 · P25-S10)</div>
+        ${renderBrowseList('student', EXPOSURE_STUDENTS.slice(0, 6), { guest: false, viewerRole: 'tutor' })}
+      </div>
+    </section>
   `;
 }
 
@@ -83,6 +95,7 @@ export function renderTutor() {
     ${renderAdInline()}
     ${renderMid5Section('중단 고정 5박스', '고정형 시작', mid5)}
     ${renderBottomList('과외쌤 리스트', list)}
+    ${renderStudentFindPreview()}
     ${renderStudentList()}
     ${renderStudentRegisterForm(EXPOSURE_STUDENTS[0])}
     <p style="font-size:var(--text-xs);color:var(--gray-400);margin-top:var(--space-4);">
@@ -95,5 +108,5 @@ export function renderTutor() {
 
 export function bindTutorEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
-  bindStudentDetailEvents(root, { onRerender: rerender });
+  bindDetailDecisionEvents(root, { onRerender: rerender, viewer: 'tutor' });
 }

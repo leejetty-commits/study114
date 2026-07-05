@@ -1,9 +1,11 @@
 import '@auth-styles/base.css';
 import '@auth-styles/theme-v1.css';
 import './styles/search.css';
+import './styles/handoff-bridge.css';
 
 import { bindSearchPageEvents, renderSearchPage } from './screens/search-page.js';
 import { syncRoleFromHash } from './state.js';
+import { initAuthSession } from '@home-ui/auth-session.js';
 
 function render() {
   syncRoleFromHash();
@@ -17,7 +19,7 @@ function init() {
     window.location.hash = '#/search/room';
   }
   window.addEventListener('hashchange', render);
-  render();
+  initAuthSession().finally(render);
 }
 
 init();

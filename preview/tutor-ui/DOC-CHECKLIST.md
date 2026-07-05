@@ -22,7 +22,7 @@ Dev 로그인: `tutor-owner1@dev.local` / `password`
 ## API
 
 - `POST /api/tutor/register.php` — masters | load | save
-- 단계별 저장 · `draft`/`pending` 프로필만 load
+- 단계별 저장 · `draft`/`published` (22장 · pending UI ✕)
 
 ## 연동
 

@@ -1,6 +1,8 @@
 import { getSupportPath } from '../state.js';
+import { isAdminSupportPath } from './router.js';
 import { renderSupportShell, bindSupportShellEvents } from './shell.js';
 import { renderSupportScreen, bindSupportScreenEvents } from './screens.js';
+import { bindAdminScreenEvents } from './admin-screens.js';
 
 export function renderSupport() {
   const path = getSupportPath();
@@ -12,7 +14,10 @@ export function renderSupport() {
 export function bindSupportEvents(root, rerender) {
   const path = getSupportPath();
   bindSupportShellEvents(root, rerender);
-  bindSupportScreenEvents(root, path);
+  bindSupportScreenEvents(root, path, rerender);
+  if (isAdminSupportPath(path)) {
+    bindAdminScreenEvents(root, path, rerender);
+  }
 }
 
 export { getDefaultSupportPath } from './router.js';

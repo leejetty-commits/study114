@@ -1,15 +1,11 @@
 import { getNavRole } from '../state.js';
 
 import {
-
   canProviderColdMemoToStudent,
-
   canReplyInThread,
-
   FREE_PROVIDER_INBOX_COPY,
-
+  getReplyBlockedMessage,
   isProviderRole,
-
 } from './permissions.js';
 
 import { showPaidGateOverlay } from './overlays.js';
@@ -36,26 +32,18 @@ import { getListTabFromPath, tabLabel, tabPath, parseThreadId, threadPath } from
 
 
 
+import { EMPTY_LIST_COPY } from './messages-copy.js';
+
 function esc(s) {
-
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
-
 }
 
-
-
 function formatRelative(iso) {
-
   const diff = Date.now() - new Date(iso).getTime();
-
   const h = Math.floor(diff / 3600000);
-
   if (h < 1) return '방금';
-
   if (h < 24) return `${h}시간 전`;
-
   return `${Math.floor(h / 24)}일 전`;
-
 }
 
 
@@ -167,21 +155,13 @@ function renderList(tab) {
 /** @param {string} role */
 
 function renderEmptyList(role) {
-
   if (role === 'parent') {
-
-    return `<p class="msg-empty">관심 있는 공부방·과외쌤에게 메모를 보내 보세요.</p>`;
-
+    return `<p class="msg-empty">${EMPTY_LIST_COPY.parent}</p>`;
   }
-
   if (isProviderRole(role) && !canProviderColdMemoToStudent(role)) {
-
     return `<p class="msg-empty">${FREE_PROVIDER_INBOX_COPY.empty}</p>`;
-
   }
-
-  return `<p class="msg-empty">학생찾기에서 의뢰를 확인하고 메모를 보내 보세요.</p>`;
-
+  return `<p class="msg-empty">${EMPTY_LIST_COPY.providerPaid}</p>`;
 }
 
 
@@ -221,26 +201,16 @@ function renderThread(threadId) {
 
 
   const requestBlock =
-
     thread.showRequestInPanel && thread.requestSummary
-
-      ? `<p class="msg-summary__request">(paid_only) 요청문: "${esc(thread.requestSummary)}"</p>`
-
-      : `<p class="msg-summary__muted">요청문 비공개 또는 visibility=private</p>`;
-
-
+      ? `<p class="msg-summary__request">요청문: "${esc(thread.requestSummary)}"</p>`
+      : `<p class="msg-summary__muted">요청문 비공개 · visibility=private</p>`;
 
   const replyBlock = canReply
-
     ? `<form class="msg-reply" data-msg-reply="${threadId}">
-
         <textarea class="msg-reply__input" rows="2" placeholder="답장 입력"></textarea>
-
         <button type="submit" class="btn btn--primary btn--sm">전송</button>
-
       </form>`
-
-    : `<p class="msg-note msg-note--warn">학생에게 먼저 메모를 내려면 유료등록이 필요합니다. (P16-04)</p>`;
+    : `<p class="msg-note msg-note--warn">${esc(getReplyBlockedMessage(thread, role))}</p>`;
 
 
 
