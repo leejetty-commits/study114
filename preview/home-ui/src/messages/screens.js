@@ -8,7 +8,8 @@ import {
   isProviderRole,
 } from './permissions.js';
 
-import { showPaidGateOverlay } from './overlays.js';
+import { showPaidGateOverlay, showReportOverlay } from './overlays.js';
+import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 
 import {
 
@@ -26,13 +27,24 @@ import {
 
   ensureDemoThreads,
 
+  ensureThreadDetail,
+
+  setThreadArchived,
+
+  setThreadBlocked,
+
+  setThreadReported,
+
 } from './thread-store.js';
+
+import { isMessagesApiMode } from '../messages-backend.js';
 
 import { getListTabFromPath, tabLabel, tabPath, parseThreadId, threadPath } from './router.js';
 
 
 
-import { EMPTY_LIST_COPY } from './messages-copy.js';
+import { BLOCK_THREAD_COPY } from './messages-copy.js';
+import { getMessagesEmptyCopy, renderStateCard } from '../empty-state-copy.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -70,7 +82,7 @@ function renderList(tab) {
 
   const threads = getThreadsForTab(tab);
 
-  const tabs = ['inbox', 'sent', 'active']
+  const tabs = ['inbox', 'sent', 'active', 'archive']
 
     .map(
 
@@ -155,13 +167,19 @@ function renderList(tab) {
 /** @param {string} role */
 
 function renderEmptyList(role) {
-  if (role === 'parent') {
-    return `<p class="msg-empty">${EMPTY_LIST_COPY.parent}</p>`;
-  }
+  const copy = getMessagesEmptyCopy(role === 'parent' ? 'parent' : role);
+  const studentSearchHref = '#/tutor/student-search';
+  let html = renderStateCard({
+    title: copy.title,
+    body: copy.body,
+    cta: copy.cta,
+    ctaHref: copy.cta ? studentSearchHref : undefined,
+    screenId: copy.screenId,
+  });
   if (isProviderRole(role) && !canProviderColdMemoToStudent(role)) {
-    return `<p class="msg-empty">${FREE_PROVIDER_INBOX_COPY.empty}</p>`;
+    html += `<p class="msg-note msg-note--warn">${FREE_PROVIDER_INBOX_COPY.hint}</p>`;
   }
-  return `<p class="msg-empty">${EMPTY_LIST_COPY.providerPaid}</p>`;
+  return html;
 }
 
 
@@ -177,6 +195,12 @@ function renderThread(threadId) {
   if (!thread) {
 
     return `<section class="msg-panel msg-empty">대화를 찾을 수 없습니다. <a href="#${tabPath('inbox')}" data-msg-nav="${tabPath('inbox')}">목록으로</a></section>`;
+
+  }
+
+  if (isMessagesApiMode() && thread.messages.length === 0) {
+
+    return `<section class="msg-panel msg-thread msg-thread--loading"><p class="msg-empty">대화를 불러오는 중…</p></section>`;
 
   }
 
@@ -224,9 +248,15 @@ function renderThread(threadId) {
 
         <span class="msg-thread__peer">${esc(thread.peerDisplayName)}</span>
 
-        <button type="button" class="btn btn--secondary btn--sm" disabled title="후순위">신고</button>
+        <button type="button" class="btn btn--secondary btn--sm" data-msg-action="report" data-thread-id="${threadId}">신고</button>
+
+        <button type="button" class="btn btn--secondary btn--sm" data-msg-action="archive" data-thread-id="${threadId}">${thread.isArchived ? '보관 해제' : '보관'}</button>
+
+        <button type="button" class="btn btn--secondary btn--sm" data-msg-action="block" data-thread-id="${threadId}" ${thread.isBlocked ? 'disabled' : ''}>차단</button>
 
       </div>
+
+      ${thread.isBlocked ? `<p class="msg-note msg-note--warn">${esc(thread.blockReason || BLOCK_THREAD_COPY.banner)}</p>` : ''}
 
       <div class="msg-scope">
 
@@ -280,9 +310,73 @@ export function bindMessagesScreenEvents(root, rerender) {
 
 
 
+  root.querySelectorAll('[data-msg-action]').forEach((btn) => {
+
+    btn.addEventListener('click', async () => {
+
+      const id = Number(btn.dataset.threadId);
+
+      const action = btn.dataset.msgAction;
+
+      try {
+
+        if (action === 'report') {
+
+          showReportOverlay({
+
+            onSubmit: async (reason) => {
+
+              await setThreadReported(id, reason);
+
+              rerender();
+
+            },
+
+          });
+
+          return;
+
+        }
+
+        if (action === 'archive') {
+
+          const thread = getThread(id);
+
+          await setThreadArchived(id, !thread?.isArchived);
+
+          rerender();
+
+          return;
+
+        }
+
+        if (action === 'block') {
+
+          if (!confirm(BLOCK_THREAD_COPY.confirm)) return;
+
+          await setThreadBlocked(id);
+
+          rerender();
+
+        }
+
+      } catch (err) {
+
+        console.warn('[messages]', err);
+
+        alert('처리에 실패했습니다.');
+
+      }
+
+    });
+
+  });
+
+
+
   root.querySelectorAll('[data-msg-reply]').forEach((form) => {
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
 
       e.preventDefault();
 
@@ -304,9 +398,22 @@ export function bindMessagesScreenEvents(root, rerender) {
 
       if (!body) return;
 
-      appendMessageToThread(id, body);
+      try {
 
-      rerender();
+        await appendMessageToThread(id, body);
+
+        rerender();
+
+      } catch (err) {
+
+        console.warn('[messages]', err);
+
+        if (err?.code === 'paid_gate') showPaidGateOverlay();
+        else if (err?.code === 'email_verify_required') showEmailVerifyOverlay();
+
+        else alert('답장 전송에 실패했습니다.');
+
+      }
 
     });
 
@@ -318,7 +425,29 @@ export function bindMessagesScreenEvents(root, rerender) {
 
   const threadId = parseThreadId(path.startsWith('/') ? path : `/${path}`);
 
-  if (threadId != null) markThreadRead(threadId);
+  if (threadId != null) {
+
+    if (isMessagesApiMode()) {
+
+      ensureThreadDetail(threadId)
+
+        .then(() => {
+
+          markThreadRead(threadId);
+
+          rerender();
+
+        })
+
+        .catch((err) => console.warn('[messages]', err));
+
+    } else {
+
+      markThreadRead(threadId);
+
+    }
+
+  }
 
 }
 

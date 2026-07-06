@@ -25,7 +25,7 @@ final class SignupService
      */
     public function register(array $input): array
     {
-        $email = $this->requireString($input, 'email');
+        $email = EmailNormalizer::normalize($this->requireString($input, 'email'));
         $password = $this->requireString($input, 'password');
         $passwordConfirm = $this->requireString($input, 'password_confirm');
         $name = $this->requireString($input, 'name');
@@ -37,12 +37,11 @@ final class SignupService
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new InvalidArgumentException('email: 유효한 이메일 형식이 아닙니다.');
         }
-        if (strlen($password) < 8) {
-            throw new InvalidArgumentException('password: 8자 이상 입력해 주세요.');
-        }
-        if ($password !== $passwordConfirm) {
-            throw new InvalidArgumentException('password_confirm: 비밀번호가 일치하지 않습니다.');
-        }
+        (new PasswordPolicy())->validate($password, $passwordConfirm, [
+            'email' => $email,
+            'name'  => $name,
+            'phone' => $phone,
+        ]);
         if (!in_array($gender, ['male', 'female'], true)) {
             throw new InvalidArgumentException('gender: male 또는 female만 허용됩니다.');
         }

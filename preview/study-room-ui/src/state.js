@@ -162,8 +162,10 @@ export const registerState = {
     { image_type: 'cover', sort_order: 1, name: '대표.jpg' },
   ],
 
-  /** 상세등록 — 외부 YouTube URL 1개 (5장 §15) `[임시]` 컬럼명 */
+  /** 상세등록 — 외부 홍보 링크 (nullable) */
   youtube_url: '',
+  facebook_url: '',
+  instagram_url: '',
 
   profile_status: 'draft',
   detail_completion_status: 'expanded_in_progress',

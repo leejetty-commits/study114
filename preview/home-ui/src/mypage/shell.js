@@ -22,7 +22,8 @@ export function renderMypageShell(currentPath, bodyHtml) {
     const active =
       currentPath === item.path ||
       (item.path === '/mypage/registrations' && currentPath.startsWith('/mypage/registrations')) ||
-      (item.path === '/mypage/messages' && currentPath.startsWith('/mypage/messages'));
+      (item.path === '/mypage/messages' && currentPath.startsWith('/mypage/messages')) ||
+      (item.path === '/mypage/plans' && currentPath.startsWith('/mypage/paid'));
     const emph = item.emphasis?.includes(role) ? ' is-emphasis' : '';
     return `
       <a href="#${item.path}" class="mypage-nav__link${active ? ' is-active' : ''}${emph}" data-mypage-nav="${item.path}">

@@ -39,6 +39,7 @@ import {
 import { formatMonthlyWon, formatTutorFeeCard } from '../exposure-format.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { notifyCompareToggle } from '../handoff-utils.js';
+import { renderEmptyStateCard } from '../empty-state-copy.js';
 import { MYPAGE_NAV } from './router.js';
 import { getMessagesSummaryCounts, renderMessagesScreen } from '../messages/screens.js';
 import { isMessagesDetailPath } from '../messages/router.js';
@@ -48,12 +49,17 @@ import { isStudyRoomRegPath } from '../study-room-reg/router.js';
 import { renderStudyRoomRegScreen } from '../study-room-reg/screens.js';
 import { isTutorRegPath } from '../tutor-reg/router.js';
 import { renderTutorRegScreen } from '../tutor-reg/screens.js';
+import { renderSubmissionBoardScreen } from '../submission-board/index.js';
 import { previewState } from '../state.js';
 import {
-  PAID_CATALOG_PLACEHOLDER,
   FREE_TIER_COPY,
   PAID_TIER_COPY,
+  P18_HEADLINE,
 } from './plans-catalog.js';
+import { getRoiMetrics } from '../paid-backend.js';
+import { renderPaidGuide, renderPaidUsage } from './paid-screens.js';
+import { bindPaidCatalogEvents } from '../paid-checkout.js';
+import { bindProviderNoticeEvents } from '../provider-notices.js';
 import {
   HOME_EMPHASIS,
   HOME_STATS_NOTE,
@@ -120,7 +126,12 @@ export function renderMypageScreen(path) {
   if (isMessagesDetailPath(path)) return renderMessagesScreen(path);
   if (path === '/mypage/messages') return renderMessagesSummary();
   if (path === '/mypage/plans') return renderPlans(r);
+  if (path === '/mypage/paid') return renderPaidGuide(r);
+  if (path === '/mypage/paid/usage') return renderPaidUsage(r);
   if (path === '/mypage/submission-docs' || path === '/mypage/verification') return renderSubmissionDocs(r);
+  if (path === '/mypage/submission-board' || path.startsWith('/mypage/submission-board/')) {
+    return renderSubmissionBoardScreen(path);
+  }
   if (path === '/mypage/account') return renderAccount(r, profile);
   return renderHome(r, profile, counts, cta);
 }
@@ -194,10 +205,12 @@ function renderRegistrationsIndex(role) {
   }
   if (role === 'study_room') {
     links.push({ path: '/mypage/registrations/study-rooms', label: '공부방', id: 'P15-04' });
+    links.push({ path: '/mypage/submission-board', label: '제출함', id: 'P23-04' });
   }
   if (role === 'tutor') {
     links.push({ path: '/mypage/registrations/tutors', label: '과외 프로필', id: 'P15-05' });
     links.push({ path: '/mypage/submission-docs', label: '제출자료 상태', id: 'P15-10' });
+    links.push({ path: '/mypage/submission-board', label: '제출함', id: 'P23-04' });
   }
 
   const unique = [...new Map(links.map((l) => [l.path, l])).values()];
@@ -222,7 +235,16 @@ function renderRegistrationsIndex(role) {
 function renderWishlistSection(kind, label) {
   const items = getWishlistItems(kind);
   if (!items.length) {
-    return `<p class="mypage-empty-inline">${label} 찜이 없습니다. <a href="${searchUiUrl(kind === 'tutor' ? 'tutor' : 'room', getNavRole())}" target="_blank" rel="noopener">검색에서 찾기</a></p>`;
+    const searchKind = kind === 'tutor' ? 'tutor' : 'room';
+    return renderEmptyStateCard('wishlist', {
+      ctaHref: searchUiUrl(searchKind, getNavRole()),
+      links: [
+        {
+          label: `${label} 검색`,
+          href: searchUiUrl(searchKind, getNavRole()),
+        },
+      ],
+    });
   }
   return `
     <ul class="mypage-entity-list">
@@ -272,22 +294,33 @@ function renderStudentReview(role) {
 
   const items = getStudentReviewItems();
   const itemLabel = studentReviewItemLabel(role);
-  const fromAccess = getHandoffFromQuery() === 'access';
+  const fromHandoff = getHandoffFromQuery();
+  const fromBanner =
+    fromHandoff === 'exposure'
+      ? HANDOFF_DEEPLINK.reviewFromExposure
+      : fromHandoff === 'access'
+        ? HANDOFF_DEEPLINK.reviewFromAccess
+        : null;
   const regLink = getProviderRegDeepLink(role);
 
   if (!items.length) {
+    const links = [{ label: '학생찾기 보기', href: getStudentSearchUrl() }];
+    if (regLink) {
+      links.push({
+        label: `${regLink.label} (${regLink.screenId})`,
+        href: `#${regLink.href}`,
+      });
+    }
     return `
       <section class="mypage-panel mypage-empty">
-        ${fromAccess ? `<div class="handoff-deeplink-banner" role="status">${esc(HANDOFF_DEEPLINK.reviewFromAccess)}</div>` : ''}
-        <p>${STUDENT_REVIEW.empty}</p>
-        <a href="${getStudentSearchUrl()}" class="btn btn--primary btn--sm" target="_blank" rel="noopener">학생찾기 보기</a>
-        ${regLink ? `<a href="#${regLink.href}" class="btn btn--secondary btn--sm" data-mypage-nav="${regLink.href}">${esc(regLink.label)} (${regLink.screenId})</a>` : ''}
+        ${fromBanner ? `<div class="handoff-deeplink-banner" role="status">${esc(fromBanner)}</div>` : ''}
+        ${renderEmptyStateCard('studentReview', { links })}
       </section>`;
   }
 
   return `
     <section class="mypage-panel">
-      ${fromAccess ? `<div class="handoff-deeplink-banner" role="status">${esc(HANDOFF_DEEPLINK.reviewFromAccess)}</div>` : ''}
+      ${fromBanner ? `<div class="handoff-deeplink-banner" role="status">${esc(fromBanner)}</div>` : ''}
       <p class="mypage-note">${STUDENT_REVIEW_NOTE}</p>
       ${regLink ? `<p class="mypage-note"><a href="#${regLink.href}" data-mypage-nav="${regLink.href}">${esc(role === 'tutor' ? HANDOFF_DEEPLINK.providerRegCtaTutor : HANDOFF_DEEPLINK.providerRegCtaStudyRoom)}</a> · 메모·쪽지 권한 확인</p>` : ''}
       <ul class="mypage-entity-list">
@@ -324,8 +357,16 @@ function renderStudentReview(role) {
 
 function renderRecent(role) {
   const items = getRecentViews(role);
-  if (role === 'parent' && items.length === 0) {
-    return `<section class="mypage-panel mypage-empty"><p>${EMPTY_ONBOARDING.recentParent}</p></section>`;
+  const homePath = role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
+  if (!items.length) {
+    return `
+    <section class="mypage-panel">
+      <p class="mypage-note">${RECENT_NOTE}</p>
+      ${renderEmptyStateCard('recent', {
+        ctaHref: `#${homePath}`,
+        links: [{ label: '탐색하기', href: `#${homePath}` }],
+      })}
+    </section>`;
   }
   return `
     <section class="mypage-panel">
@@ -359,7 +400,10 @@ function renderRecent(role) {
           })
           .join('')}
       </ul>`
-          : '<p class="mypage-empty-inline">기록 없음</p>'
+          : renderEmptyStateCard('recent', {
+              ctaHref: `#${homePath}`,
+              links: [{ label: '탐색하기', href: `#${homePath}` }],
+            })
       }
     </section>`;
 }
@@ -386,49 +430,36 @@ function renderPlans(role) {
           <p>${GUARDIAN_PLANS_COPY.body}</p>
           <p class="mypage-muted">${GUARDIAN_PLANS_COPY.footnote}</p>
         </div>
-        <h2 class="mypage-subhead">소비형 SKU (참고)</h2>
-        <ul class="mypage-entity-list plans-catalog plans-catalog--readonly">
-          ${PAID_CATALOG_PLACEHOLDER.filter((i) => i.kind === 'consumable')
-            .slice(0, 3)
-            .map(
-              (item) => `
-            <li class="mypage-entity">
-              <div><strong>${esc(item.name)}</strong><span class="mypage-muted">${esc(item.tagline)}</span></div>
-              <span class="mypage-badge">${esc(item.priceLabel)}</span>
-            </li>`,
-            )
-            .join('')}
-        </ul>
+        <a href="#/support/faq" class="btn btn--secondary" data-nav="/support/faq">유료 FAQ (P17-04)</a>
       </section>`;
   }
 
   const tier = previewState.providerSubscription;
   const tierCopy = tier === 'paid' ? PAID_TIER_COPY : FREE_TIER_COPY;
+  const metrics = getRoiMetrics();
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P15-09 · 18장 · 18b placeholder · 데모 구독: <strong>${tier}</strong></p>
+      <p class="mypage-lead">P15-09 · ${esc(P18_HEADLINE)} · 데모 tier: <strong>${tier}</strong></p>
       <div class="mypage-info-box plans-tier-box">
         <strong>${esc(tierCopy.title)}</strong>
         <ul class="plans-tier-list">${tierCopy.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
       </div>
-      <h2 class="mypage-subhead">상품 카탈로그 (18b)</h2>
-      <ul class="plans-catalog">
-        ${PAID_CATALOG_PLACEHOLDER.map(
-          (item) => `
-          <li class="plans-catalog__item${item.featured ? ' is-featured' : ''}">
-            <div class="plans-catalog__head">
-              <strong>${esc(item.name)}</strong>
-              <span class="plans-catalog__kind">${esc(item.kind)}</span>
-            </div>
-            <p class="plans-catalog__tagline">${esc(item.tagline)}</p>
-            <p class="plans-catalog__price">${esc(item.priceLabel)}${item.pointsLabel ? ` · ${esc(item.pointsLabel)}` : ''}</p>
-            <ul class="plans-catalog__bullets">${item.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
-            <button type="button" class="btn btn--secondary btn--sm" disabled title="PG 연동 후순위">구매 (placeholder)</button>
-          </li>`,
+      <h2 class="mypage-subhead">반응 요약 (ROI 무료 3종)</h2>
+      <div class="mypage-stats roi-metrics">
+        ${metrics.map(
+          (m) => `
+          <div class="mypage-stat" title="${esc(m.hint)}">
+            <span>${esc(m.label)}</span>
+            <strong>${m.value}</strong>
+          </div>`,
         ).join('')}
-      </ul>
-      <p class="mypage-note">P16-04 게이트 CTA → 이 화면 · 첫 과금=단기 부스트 (18§7)</p>
+      </div>
+      <div class="mypage-actions-row">
+        <a href="#/mypage/paid" class="btn btn--primary" data-mypage-nav="/mypage/paid">유료 서비스 안내 (P18-01)</a>
+        <a href="#/mypage/paid/usage" class="btn btn--secondary" data-mypage-nav="/mypage/paid/usage">반응 상세 (P18-02)</a>
+      </div>
+      <p class="mypage-note">카탈로그·구매는 P18-01 · P16-04 게이트 → 쪽지권 안내 (P18-01)</p>
     </section>`;
 }
 
@@ -439,9 +470,13 @@ function renderSubmissionDocs(role) {
 
   if (role === 'study_room') {
     return `
-      <section class="mypage-panel">
-        <p class="mypage-lead">15장 §2-1 · ${EMPTY_ONBOARDING.submissionStudyRoom}</p>
-        <p class="mypage-muted">동일 원칙: 운영자 심사·승인·반려 없음 · 제출 여부·공개 상태 표시만</p>
+      <section class="mypage-panel p15-submission">
+        <p class="mypage-lead">15장 §2-1 · 공부방 제출자료</p>
+        <p class="mypage-muted">운영자 심사·승인·반려 없음 · 제출 여부·공개 상태 표시만</p>
+        <div class="sub-board-bridge">
+          <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">P23-04 제출함 열기</a>
+          <span class="mypage-muted">boardKey <code>submission</code> · 권한형 업로드</span>
+        </div>
       </section>`;
   }
 
@@ -451,6 +486,7 @@ function renderSubmissionDocs(role) {
       <p class="mypage-lead">${esc(SUBMISSION_DOCS_LEAD)}</p>
       <div class="p15-submission__summary">
         <span class="mypage-badge">${esc(formatSubmissionDocSummary(docs))}</span>
+        <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">P23-04 제출함</a>
         <a href="${TUTOR_REGISTER_URL}" class="btn btn--secondary btn--sm" target="_blank" rel="noopener">tutor-ui에서 자료 등록</a>
       </div>
       <table class="p15-submission__table" aria-label="제출자료 상태">
@@ -554,4 +590,6 @@ export function bindMypageScreenEvents(root, rerender) {
       rerender();
     });
   });
+  bindPaidCatalogEvents(root, rerender);
+  bindProviderNoticeEvents(root, rerender);
 }

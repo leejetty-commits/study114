@@ -44,7 +44,7 @@
 | ✕ | 원본 SSOT |
 |---|-----------|
 | 접촉 권한·방향 재정의 | [16장 §8](16-messages-structure-proposal.md) |
-| free/paid · 포인트 · SKU | [18장](18-paid-services-rough.md) |
+| free/paid · 기간형·횟수권 · SKU | [18장](18-paid-services-rough.md) |
 | `profile_status` · `inquiry_status` · `exposure_status` enum | [5·8·20·21장](20-study-room-registration-management.md) |
 | 검색·비교 **필드 목록** | [11·13장](13-search-page-fields.md) |
 | 학생 공개 범위·`paid_only` visibility | [13§8 · 19장](19-student-registration-management.md) |

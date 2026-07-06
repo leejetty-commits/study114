@@ -82,9 +82,22 @@ export const SEARCH_TABS = {
 };
 
 export const MOCK_SUBJECTS = ['수학', '영어', '국어', '과학', '사회'];
+
+/** 학부모 희망 과외 지역 — 최대 3 · 대표 1 (8장 §6 · 회원가입) */
+export const MOCK_TUTOR_REGIONS = [
+  { id: 'gangnam', label: '서울시 강남구', primary: true },
+  { id: 'seocho', label: '서울시 서초구', primary: false },
+  { id: 'songpa', label: '서울시 송파구', primary: false },
+];
+
+/** @param {number} [index] */
+export function getTutorRegionLabel(index = 0) {
+  return MOCK_TUTOR_REGIONS[index]?.label || MOCK_TUTOR_REGIONS[0].label;
+}
+
 export const MOCK_REGIONS = {
   room: '대치동 · 은마아파트',
-  tutor: '서울시 강남구',
+  tutor: getTutorRegionLabel(0),
   student: '해운대구 · 센텀동',
 };
 

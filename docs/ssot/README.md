@@ -36,8 +36,8 @@
 | **쪽지함·접촉·13장 §8 UX** | [16장](16-messages-structure-proposal.md) |
 | **고객센터·안전과외 가이드** | [17장](17-customer-center-and-safe-guide.md) |
 | **게시판·자료실·GNU 커뮤니티** | [23장 내부 초안](../internal/23-board-community-integration-draft.md) |
-| **유료·결제·포인트** | [18장 정책](18-paid-services-rough.md) · [18b 수치 placeholder](18b-paid-catalog-placeholder.md) |
-| **인증/가입 UI** | [2장 §3](02-registration-and-member-db.md#3-인증가입-화면-잠금) · `preview/auth-ui/` |
+| **유료·결제** | [18장 정책](18-paid-services-rough.md) · [18b 수치 placeholder](18b-paid-catalog-placeholder.md) |
+| **인증/가입 UI** | [2장 §3](02-registration-and-member-db.md#3-인증가입-화면-잠금) · **[9장 부록](09-appendix-login-and-auth-policy.md)** · `preview/auth-ui/` |
 | **실행 순서·병행** | [10장](10-phase1-execution-plan.md) |
 
 ---
@@ -55,19 +55,20 @@
 | **13장** | [13-search-page-fields.md](13-search-page-fields.md) | 잠금 | 검색 기본·확장 · DB 대응 |
 | **14장** | [14-registration-input-flow.md](14-registration-input-flow.md) | 잠금 | 가입·기본등록 · 입력방식 |
 | **9장** | [09-main-screen-roles.md](09-main-screen-roles.md) | 잠금 | 메인 4종·역할별 노출 |
+| **9장 부록** | [09-appendix-login-and-auth-policy.md](09-appendix-login-and-auth-policy.md) | **잠금** | 로그인 화면 · **1차 인증정책 §16** · Cursor handoff |
 | **10장** | [10-phase1-execution-plan.md](10-phase1-execution-plan.md) | 잠금 | 1차 실행 순서 |
 | **15장** | [15-mypage-structure.md](15-mypage-structure.md) | **UX·실행 1차 잠금** | 마이페이지 · P15-xx · `mypage-copy.js` |
 | **16장** | [16-messages-structure-proposal.md](16-messages-structure-proposal.md) | **UX·실행 1차 잠금** | 쪽지함 · 접촉 · 13§8 UX · `messages-copy.js` |
 | **17장** | [17-customer-center-and-safe-guide.md](17-customer-center-and-safe-guide.md) | **UX·실행 1차 잠금** | 고객센터 · 안전과외 · `support-copy.js` · home-ui 17a |
-| **18장** | [18-paid-services-rough.md](18-paid-services-rough.md) | **정책 러프** | 유료 · 포인트 · Prime/ROI · 접촉 경계 |
-| **18b** | [18b-paid-catalog-placeholder.md](18b-paid-catalog-placeholder.md) | **placeholder** | 수치·단가·맛보기 · 첫 과금=부스트 |
+| **18장** | [18-paid-services-rough.md](18-paid-services-rough.md) | **정책 잠금** | 유료 · Prime/Pick 기간형 · 횟수권 · ROI |
+| **18b** | [18b-paid-catalog-placeholder.md](18b-paid-catalog-placeholder.md) | **placeholder** | 더미 단가 · 기간군 · 횟수권 |
 | **19장** | [19-student-registration-management.md](19-student-registration-management.md) | **UX·실행 1차 잠금** | 학부모 · P19-xx · `student-reg-copy.js` |
 | **20장** | [20-study-room-registration-management.md](20-study-room-registration-management.md) | **UX·실행 1차 잠금** | 공부방 · P20-xx · `study-room-reg-copy.js` |
 | **21장** | [21-tutor-registration-management.md](21-tutor-registration-management.md) | **UX·실행 1차 잠금** | 과외 운영센터 · P21-xx · `tutor-reg-copy.js` |
 | **22장** | [22-platform-lifecycle-principles.md](22-platform-lifecycle-principles.md) | **1차 잠금** | **횡단** · 심사 없음 · pending deprecated · `lifecycle-copy.js` |
 | **24장** | [24-detail-decision-layer.md](24-detail-decision-layer.md) | **UX·실행 1차 잠금** | **상세 판단 레이어** · P24-xx · `detail-decision/` · Modal First |
 | **25장** | [25-decision-handoff-layer.md](25-decision-handoff-layer.md) | **UX·실행 1차 잠금 (초안)** | **Handoff** · 찜·비교·최근 · `handoff-copy.js` |
-| **30장** | [30-first-route-map-and-screen-inventory.md](30-first-route-map-and-screen-inventory.md) | **초안 (harvest)** | **라우트맵·P-ID 인벤토리** · 문서·코드·프리뷰 상태판 |
+| **30장** | [30-first-route-map-and-screen-inventory.md](30-first-route-map-and-screen-inventory.md) | **인벤토리 2차** | **라우트맵·P-ID** · [screen-inventory.json](screen-inventory.json) · `npm run sync:inventory` |
 | **23장** | [../internal/23-board-community-integration-draft.md](../internal/23-board-community-integration-draft.md) | **내부 초안** | 게시판 · 자료실 · GNU 커뮤니티 · SSO |
 
 ---

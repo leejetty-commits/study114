@@ -1,5 +1,7 @@
 import { getCurrentTab, previewState } from './state.js';
 import { AUTH_UI_BASE, homeUiUrl } from '../../shared/preview-links.js';
+import { getVisibleSearchTabs, getSearchTabLabel } from './search-role-access.js';
+import { SEARCH_TABS } from './search-schema.js';
 
 function homeLinkForRole(role) {
   switch (role) {
@@ -17,11 +19,11 @@ function homeLinkForRole(role) {
 export function renderPreviewToolbar(activeTab) {
   const role = previewState.role;
   const roleQs = role ? `?role=${encodeURIComponent(role)}` : '';
-  const tabs = [
-    { id: 'room', path: `/search/room${roleQs}`, label: '공부방' },
-    { id: 'tutor', path: `/search/tutor${roleQs}`, label: '과외쌤' },
-    { id: 'student', path: `/search/student${roleQs}`, label: '학생' },
-  ];
+  const tabs = getVisibleSearchTabs(role).map((id) => ({
+    id,
+    path: `/search/${id}${roleQs}`,
+    label: getSearchTabLabel(id, role).replace('찾기', ''),
+  }));
 
   return `
     <div class="preview-toolbar">

@@ -1,4 +1,5 @@
 import { registerState, getFacilityOptions, IMAGE_TYPES } from '../state.js';
+import { validatePromoUrls } from '../../../shared/promo-links.js';
 import { syncFacilityFromForm } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
@@ -50,12 +51,22 @@ export function renderFacility() {
         <input class="form-input" type="tel" id="contact_phone" name="contact_phone" value="${s.contact_phone}" />
       </div>
 
-      ${renderSectionTitle('유튜브 (상세등록 · 1개)')}
-      <p class="register-hint mb-4">외부 YouTube URL만 · 직접 업로드 없음 · 5·8장 §15</p>
+      ${renderSectionTitle('외부 홍보 링크 (상세등록)')}
+      <p class="register-hint mb-4">외부 URL만 저장 · 직접 업로드 없음 · 각 1개 · 빈값 허용</p>
       <div class="form-group">
-        <label class="form-label" for="youtube_url">YouTube 링크</label>
+        <label class="form-label" for="youtube_url">유튜브 링크</label>
         <span class="field-db-name">youtube_url</span>
         <input class="form-input" type="url" id="youtube_url" name="youtube_url" placeholder="https://www.youtube.com/watch?v=..." value="${s.youtube_url}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="facebook_url">페이스북 링크</label>
+        <span class="field-db-name">facebook_url</span>
+        <input class="form-input" type="url" id="facebook_url" name="facebook_url" placeholder="https://www.facebook.com/..." value="${s.facebook_url}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="instagram_url">인스타그램 링크</label>
+        <span class="field-db-name">instagram_url</span>
+        <input class="form-input" type="url" id="instagram_url" name="instagram_url" placeholder="https://www.instagram.com/..." value="${s.instagram_url}" />
       </div>
 
       ${renderSectionTitle('사진 (0~5장)')}
@@ -109,6 +120,11 @@ export function bindFacilityEvents(root) {
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
       syncFacilityFromForm(root.querySelector('[data-form="facility"]'), registerState);
+      const urlErr = validatePromoUrls(registerState);
+      if (urlErr) {
+        alert(urlErr);
+        return;
+      }
       await saveAndNavigate(registerState, 'facility', '/register/complete');
     });
   });

@@ -564,6 +564,10 @@ final class StudyRoomRegisterService
 
                 youtube_url = ?,
 
+                facebook_url = ?,
+
+                instagram_url = ?,
+
                 profile_status = ?,
 
                 published_at = CASE WHEN ? = "published" THEN COALESCE(published_at, NOW()) ELSE published_at END
@@ -580,7 +584,11 @@ final class StudyRoomRegisterService
 
             $this->optionalString($input, 'contact_phone'),
 
-            $this->optionalString($input, 'youtube_url'),
+            $this->optionalUrl($input, 'youtube_url'),
+
+            $this->optionalUrl($input, 'facebook_url'),
+
+            $this->optionalUrl($input, 'instagram_url'),
 
             $profileStatus,
 
@@ -1100,6 +1108,10 @@ final class StudyRoomRegisterService
 
             'youtube_url'              => (string) ($row['youtube_url'] ?? ''),
 
+            'facebook_url'             => (string) ($row['facebook_url'] ?? ''),
+
+            'instagram_url'            => (string) ($row['instagram_url'] ?? ''),
+
             'images'                   => $images,
 
             'profile_status'           => (string) ($row['profile_status'] ?? 'draft'),
@@ -1197,6 +1209,40 @@ final class StudyRoomRegisterService
         }
 
         return trim((string) $input[$key]);
+
+    }
+
+
+
+    /** @param array<string, mixed> $input */
+
+    private function optionalUrl(array $input, string $key): ?string
+
+    {
+
+        $val = $this->optionalString($input, $key);
+
+        if ($val === null) {
+
+            return null;
+
+        }
+
+        if (!filter_var($val, FILTER_VALIDATE_URL)) {
+
+            throw new InvalidArgumentException("{$key}: URL 형식이 올바르지 않습니다.");
+
+        }
+
+        $scheme = parse_url($val, PHP_URL_SCHEME);
+
+        if (!in_array($scheme, ['http', 'https'], true)) {
+
+            throw new InvalidArgumentException("{$key}: http/https만 허용됩니다.");
+
+        }
+
+        return $val;
 
     }
 

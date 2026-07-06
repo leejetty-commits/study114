@@ -1,6 +1,6 @@
 # 인증/가입 UI — SSOT 검증 (2026-07-04)
 
-**SSOT:** [2장](../../docs/ssot/02-registration-and-member-db.md) · [14장](../../docs/ssot/14-registration-input-flow.md)
+**SSOT:** [2장](../../docs/ssot/02-registration-and-member-db.md) · [9장 부록](../../docs/ssot/09-appendix-login-and-auth-policy.md) · [14장](../../docs/ssot/14-registration-input-flow.md)
 
 ## 프리뷰
 
@@ -11,14 +11,15 @@
 
 | # | 화면 | 라우트 | SSOT | 상태 |
 |---|------|--------|------|------|
-| 1 | 로그인 | `#/login` | 2장 §3.1 | ✅ |
+| 1 | 로그인 | `#/login` | 2장 §3.1 · **9장 부록** | ✅ 실서비스 연동 |
 | 2 | 약관동의 | `#/signup/terms` | 2장 §3.2 · 14장 1단계 | ⚠️ `[임시]` UI |
 | 3 | 회원 구분 | `#/signup/role` | 2장 §3.3 · 14장 3단계 | ✅ |
 | 4 | 공통 가입 폼 | `#/signup/form` | 2장 §3.4 · 14장 2단계 | ✅ (생년월일·안전번호 미수집) |
 | 5 | **역할별 기본등록** | `#/signup/basic` | **14장 §4** | ✅ 신규 |
 | 6 | 가입 완료 | `#/signup/complete` | 14장 5~6단계 | ✅ |
 | 7 | 아이디 찾기 | `#/find-id` | 2장 §3.6 | ⚠️ `[임시]` |
-| 8 | 비밀번호 찾기 | `#/find-password` | 2장 §3.7 | ⚠️ `[임시]` |
+| 8 | 비밀번호 찾기 | `#/find-password` | [9장 부록](09-appendix-login-and-auth-policy.md) **§E** | ✅ 4단계·계정비노출 |
+| 9 | 비밀번호 재설정 | `#/reset-password?token=` | [9장 부록](09-appendix-login-and-auth-policy.md) **§E** | ✅ 토큰 예외·완료→로그인 |
 
 ## 14장 기본등록 체크리스트
 
@@ -40,12 +41,26 @@
 ## 플로우
 
 - [x] API 연동: `signup.php` · `basic-register.php` · `regions.php` · `login.php` (세션 쿠키)
+- [x] 로그인 성공 → `home-ui` 리다이렉트 (`resolvePostLoginUrl`, `return_to`)
+- [x] 소셜 3축: **네이버 → 카카오 → 구글** (`/api/auth/oauth/start.php` · `callback.php`)
+- [x] 9장 부록 레이아웃: 흐린 홈 실루엣 · 유틸 바 · 목적 칩 · 둘러보기
 - [x] 약관 → 역할 → 공통 폼 → **기본등록** → 완료 → 상세등록 CTA
+
+## 로그인 · 소셜 · 인증정책 ([9장 부록](../../docs/ssot/09-appendix-login-and-auth-policy.md))
+
+| 항목 | 구현 |
+|------|------|
+| 가입 자동 로그인 | ✅ |
+| SMS OTP 가입 | ❌ 없음 |
+| 비밀번호 규칙 | 8~14자 · 영문+숫자+특수 · `PasswordPolicy` |
+| 이메일 인증 | 행동 전 (`email_verify_required`) |
+| 비번 찾기 | 메일 링크 30분 · HTML 버튼 템플릿 · **서버+클라 재전송 3분** |
+| 소셜 순서 | 네이버 · 카카오 · 구글 |
 
 ## [임시]
 
 | 항목 | 화면 |
 |------|------|
 | 약관동의 | signup-terms |
-| 아이디/비밀번호 찾기 | find-id / find-password |
+| 아이디/비밀번호 찾기 | find-id `[임시]` · find-password ✅ |
 | 지역·과목 선택기 | region_id API 연동 · subject는 텍스트(후속) |

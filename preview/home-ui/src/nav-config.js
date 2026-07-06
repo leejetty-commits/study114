@@ -14,6 +14,7 @@ export const UTIL_MENU = {
   guest: [
     { id: 'region', label: '지역선택', action: 'util-region' },
     { id: 'guide', label: '이용안내', action: 'util-guide' },
+    { id: 'library', label: '자료실', action: 'util-library' },
     { id: 'support', label: '고객센터', action: 'util-support' },
     { id: 'login', label: '로그인', href: `${AUTH_UI_BASE}/#/login`, external: true },
     { id: 'signup', label: '회원가입', href: `${AUTH_UI_BASE}/#/signup/terms`, external: true, emphasis: true },
@@ -43,7 +44,7 @@ export const GNB_VISIBILITY = {
   guest: {
     find_room: 'show',
     find_tutor: 'show',
-    student_parent: 'show',
+    student_parent: 'hide',
     register_room: 'hide',
     register_tutor: 'hide',
     support: 'show',
@@ -51,21 +52,21 @@ export const GNB_VISIBILITY = {
   parent: {
     find_room: 'show',
     find_tutor: 'show',
-    student_parent: 'show',
+    student_parent: 'hide',
     register_room: 'hide',
     register_tutor: 'hide',
     support: 'show',
   },
   study_room: {
-    find_room: 'limited',
-    find_tutor: 'limited',
+    find_room: 'show',
+    find_tutor: 'hide',
     student_parent: 'show',
     register_room: 'show',
     register_tutor: 'hide',
     support: 'show',
   },
   tutor: {
-    find_room: 'limited',
+    find_room: 'hide',
     find_tutor: 'show',
     student_parent: 'show',
     register_room: 'hide',

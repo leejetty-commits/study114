@@ -1,16 +1,18 @@
-import { getMypagePath } from '../state.js';
+import { getMypagePath, getNavRole } from '../state.js';
 import { renderMypageShell, bindMypageShellEvents } from './shell.js';
 import { renderMypageScreen, bindMypageScreenEvents } from './screens.js';
 import { ensureRecentDemo } from './recent-store.js';
 import { ensureWishlistDemo } from '../user-actions-state.js';
 import { ensureStudentReviewDemo } from '../student-review-store.js';
+import { bindStudentReviewEvents } from '../student-review-ui.js';
 import { ensureStudentStore, bindStudentRegEvents } from '../student-reg/index.js';
 import { consumeStudentImportFromHash } from '../student-reg/store.js';
 import { ensureStudyRoomStore, bindStudyRoomRegEvents } from '../study-room-reg/index.js';
 import { ensureTutorStore, bindTutorRegEvents } from '../tutor-reg/index.js';
 import { ensureDemoThreads } from '../messages/thread-store.js';
 import { bindMessagesScreenEvents } from '../messages/screens.js';
-import { bindStudentReviewEvents } from '../student-review-ui.js';
+import { bindMessagesProviderToolbar } from '../messages/shell.js';
+import { bindSubmissionBoardEvents, ensureSubmissionBoardSeed } from '../submission-board/index.js';
 
 /** @param {() => void} rerender */
 export function renderMypage() {
@@ -22,6 +24,7 @@ export function renderMypage() {
   ensureTutorStore();
   consumeStudentImportFromHash();
   ensureDemoThreads();
+  ensureSubmissionBoardSeed(getNavRole() === 'guest' ? 'tutor' : getNavRole());
   const path = getMypagePath();
   const body = renderMypageScreen(path);
   return renderMypageShell(path, body);
@@ -39,4 +42,5 @@ export function bindMypageEvents(root, rerender) {
   bindTutorRegEvents(root, rerender);
   bindMessagesScreenEvents(root, rerender);
   bindMessagesProviderToolbar(root, rerender);
+  bindSubmissionBoardEvents(root, rerender);
 }

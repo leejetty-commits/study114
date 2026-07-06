@@ -2,7 +2,7 @@
 
 **상태: 1차 잠금** (2026-07-06 Notion·Cursor 합의 · 코드 `lifecycle-copy.js` 반영)  
 **역할:** 마이페이지 등록관리(15·19·20·21장) 및 공급·수요 **공개 lifecycle** 전역에 적용하는 **횡단 원칙** — 본 문서가 **원본**  
-**연동:** [15장](15-mypage-structure.md) · [19장](19-student-registration-management.md) · [20장](20-study-room-registration-management.md) · [21장](21-tutor-registration-management.md) · [24장](24-detail-decision-layer.md) · [5장](05-study-room-db.md) · [8장](08-tutor-registration-db.md) · [4장](04-member-db-and-role-profiles.md) · [16장](16-messages-structure-proposal.md) · [17장](17-customer-center-and-safe-guide.md)
+**연동:** [15장](15-mypage-structure.md) · [19장](19-student-registration-management.md) · [20장](20-study-room-registration-management.md) · [21장](21-tutor-registration-management.md) · [24장](24-detail-decision-layer.md) · [28장](28-admin-console-red-line.md) · [5장](05-study-room-db.md) · [8장](08-tutor-registration-db.md) · [4장](04-member-db-and-role-profiles.md) · [16장](16-messages-structure-proposal.md) · [17장](17-customer-center-and-safe-guide.md)
 
 > **용어:** 「22장」은 상품 기능 장이 아니라 **SSOT 횡단 정책** 번호이다. 역할별 적용은 19·20·21장에 둔다.  
 > **상세 모달·판단 UX**는 [24장](24-detail-decision-layer.md) — 본 문서(22장) 범위 **아님**.

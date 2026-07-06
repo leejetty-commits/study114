@@ -38,6 +38,7 @@ http://localhost:5175 · `cd preview/study-room-ui && npm run dev`
 - [x] **상세등록** — lesson + career + facility → 누구나 이어서
 - [x] **Prime/Pick** — 상세등록 완료 전제 (complete 화면 안내)
 - [x] **youtube_url** — 상세등록(facility) · 외부 URL 1개
+- [x] **facebook_url · instagram_url** — 상세등록(facility) · 외부 URL 각 1개 (023)
 
 ## 설계 원칙
 

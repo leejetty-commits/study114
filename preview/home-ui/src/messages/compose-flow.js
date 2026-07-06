@@ -35,7 +35,7 @@ export function startFirstMemoFlow(opts) {
   let structuredLine = opts.structuredLine || '—';
 
   if (opts.kind === 'student' && opts.student) {
-    const vis = getStudentProtectedVisibility(opts.student, previewState.providerSubscription);
+    const vis = getStudentProtectedVisibility(opts.student);
     showRequest = vis.requestSummary;
     requestSummary = showRequest ? opts.student.request_summary : undefined;
     structuredLine =

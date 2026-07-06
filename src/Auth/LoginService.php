@@ -15,7 +15,7 @@ final class LoginService
      */
     public function attempt(string $email, string $password): array
     {
-        $email = trim($email);
+        $email = EmailNormalizer::normalize($email);
         if ($email === '' || $password === '') {
             throw new InvalidArgumentException('이메일과 비밀번호를 입력해 주세요.');
         }
@@ -34,7 +34,7 @@ final class LoginService
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$row || !password_verify($password, (string) $row['password_hash'])) {
-            throw new InvalidArgumentException('이메일 또는 비밀번호가 올바르지 않습니다.');
+            throw new InvalidArgumentException('이메일 또는 비밀번호를 확인해 주세요.');
         }
 
         if ($row['status'] !== 'active') {

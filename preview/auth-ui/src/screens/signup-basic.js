@@ -26,6 +26,8 @@ import {
   mapAuthFormToStudentRecord,
 } from '../../../shared/student-auth-bridge.js';
 import { renderAuthShell, renderStepIndicator, renderRoleBadge, bindGlobalEvents, navigate } from '../layout.js';
+import { parseHashQuery } from '../../../shared/preview-links.js';
+import { resolvePostLoginUrl } from '../../../shared/auth-redirect.js';
 
 function esc(s) {
   if (s == null) return '';
@@ -395,6 +397,7 @@ function renderTutorBasic() {
 
 export function renderSignupBasic() {
   const role = signupState.role || 'student';
+  const oauthMode = parseHashQuery().from === 'oauth';
   const roleLabel = ROLE_LABELS[role];
   const body =
     role === 'study_room'
@@ -404,7 +407,7 @@ export function renderSignupBasic() {
         : renderStudentBasic();
 
   const content = `
-    ${renderStepIndicator(4)}
+    ${oauthMode ? '' : renderStepIndicator(4)}
     <div class="panel auth-shell__card--wide">
       <h1 class="auth-heading">기본등록</h1>
       <p class="auth-subheading mb-6">14장 — 검색·비교에 필요한 핵심 정보를 입력해 주세요.</p>
@@ -415,7 +418,12 @@ export function renderSignupBasic() {
     </div>
   `;
 
-  return renderAuthShell(content, { wide: true, showBack: true, backPath: '/signup/form', backLabel: '공통 가입' });
+  return renderAuthShell(content, {
+    wide: true,
+    showBack: true,
+    backPath: oauthMode ? '/signup/role?from=oauth' : '/signup/form',
+    backLabel: oauthMode ? '회원 구분' : '공통 가입',
+  });
 }
 
 function collectFormData(form) {
@@ -489,6 +497,12 @@ export function bindSignupBasicEvents(root) {
           apiOk: true,
         });
         window.location.href = buildHomeStudentImportUrl(record);
+        return;
+      }
+      if (parseHashQuery().from === 'oauth') {
+        const roleType =
+          role === 'study_room' ? 'study_room_owner' : role === 'tutor' ? 'tutor' : 'guardian_student';
+        window.location.href = resolvePostLoginUrl(roleType);
         return;
       }
       navigate('/signup/complete');

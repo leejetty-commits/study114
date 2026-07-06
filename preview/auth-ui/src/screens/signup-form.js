@@ -1,5 +1,6 @@
 import { signupState, ROLE_LABELS, DUMMY_USER } from '../state.js';
 import { signupApi } from '../auth-api.js';
+import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import { renderAuthShell, renderStepIndicator, renderRoleBadge, bindGlobalEvents, navigate } from '../layout.js';
 
 export function renderSignupForm() {
@@ -57,6 +58,7 @@ export function renderSignupForm() {
             />
           </div>
         </div>
+        <p class="form-hint">${PASSWORD_RULE_HINT}</p>
 
         <div class="form-group">
           <label class="form-label form-label--required" for="signup-name">이름</label>
@@ -181,6 +183,19 @@ export function bindSignupFormEvents(root) {
     payload.role = signupState.role || 'student';
     payload.sms_consent = fd.get('sms_consent') === 'on';
     payload.email_consent = fd.get('email_consent') === 'on';
+
+    const pwError = validatePassword(String(payload.password ?? ''), String(payload.password_confirm ?? ''), {
+      email: String(payload.email ?? ''),
+      name: String(payload.name ?? ''),
+      phone: String(payload.phone ?? ''),
+    });
+    if (pwError) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = pwError;
+      }
+      return;
+    }
 
     const submitBtn = form.querySelector('[type="submit"]');
     if (submitBtn) {

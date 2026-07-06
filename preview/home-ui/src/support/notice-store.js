@@ -1,6 +1,13 @@
 /** 17c — 공지 CMS (프리뷰 sessionStorage `[임시]`) */
 
 import { NOTICES as SEED_NOTICES } from './support-copy.js';
+import {
+  isSupportApiMode,
+  getNoticesCache,
+  apiSaveNotice,
+  apiDeleteNotice,
+  apiResetNoticeSeed,
+} from './support-backend.js';
 
 const KEY = 'study114-support-notices-v1';
 
@@ -36,12 +43,18 @@ function seedIfEmpty() {
 
 /** @returns {SupportNotice[]} */
 export function listNotices() {
+  if (isSupportApiMode()) {
+    return getNoticesCache();
+  }
   seedIfEmpty();
   return loadAll().sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
 }
 
 /** @param {Omit<SupportNotice, 'id'> & { id?: string }} input */
-export function upsertNotice(input) {
+export async function upsertNotice(input) {
+  if (isSupportApiMode()) {
+    return apiSaveNotice(input);
+  }
   seedIfEmpty();
   const notices = loadAll();
   const id = input.id || `notice-${Date.now()}`;
@@ -59,11 +72,19 @@ export function upsertNotice(input) {
 }
 
 /** @param {string} id */
-export function deleteNotice(id) {
+export async function deleteNotice(id) {
+  if (isSupportApiMode()) {
+    await apiDeleteNotice(id);
+    return;
+  }
   seedIfEmpty();
   saveAll(loadAll().filter((n) => n.id !== id));
 }
 
-export function resetNoticesToSeed() {
+export async function resetNoticesToSeed() {
+  if (isSupportApiMode()) {
+    await apiResetNoticeSeed();
+    return;
+  }
   saveAll(SEED_NOTICES.map((n) => ({ ...n })));
 }

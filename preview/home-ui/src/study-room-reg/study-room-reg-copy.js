@@ -95,3 +95,10 @@ export const P20_PREVIEW_MODES = [
   { key: 'basic', label: '검색 카드' },
   { key: 'compare', label: '비교검색' },
 ];
+
+/** P20-02 · P20-05 검토함 브리지 (25§8 · P25-S10 2차) */
+export const P20_HUB_CTA = {
+  studentReview: '학생 검토함',
+  studentSearch: '학생찾기 보기',
+  messages: '쪽지함 열기',
+};

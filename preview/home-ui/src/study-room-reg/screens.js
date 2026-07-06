@@ -13,6 +13,7 @@ import {
   P20_EXPOSURE_SECTION_TITLES,
   P20_LIST_HEAD,
   P20_PREVIEW_MODES,
+  P20_HUB_CTA,
   INQUIRY_OPTIONS,
 } from './study-room-reg-copy.js';
 import {
@@ -43,6 +44,11 @@ import {
   setInquiryStatus,
   getStudyRoomSummaryCounts,
 } from './store.js';
+import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
+import { getStudentReviewIds } from '../student-review-store.js';
+import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
+import { studentReviewPath, getHandoffFromQuery } from '../handoff-link.js';
+import { getStudentSearchUrl } from '../tutor-reg/format.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -258,6 +264,26 @@ function renderList(tab) {
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
+function renderReviewBridgeBlock(room) {
+  if (room.profile_status !== 'published') return '';
+  const reviewCount = getStudentReviewIds().length;
+  return `
+    <div class="p20-hub-block p21-review-bridge">
+      <h3 class="p20-hub-block__title">학생 검토함 (P25-S10)</h3>
+      <p class="p19-form-section__lead">${esc(HANDOFF_DEEPLINK.reviewBridgeLead)}</p>
+      <p class="p20-hint">${esc(HANDOFF_DEEPLINK.reviewFlow)}</p>
+      <div class="p19-summary-grid" style="margin-top:var(--space-3)">
+        <dl class="p19-summary-card"><dt>검토함</dt><dd>${reviewCount}건</dd></dl>
+        <dl class="p19-summary-card"><dt>상담</dt><dd>${esc(inquiryStatusLabel(room.inquiry_status))}</dd></dl>
+      </div>
+      <div class="p19-form-actions" style="margin-top:var(--space-3)">
+        <a href="#${studentReviewPath({ from: 'exposure' })}" class="btn btn--primary" data-mypage-nav="${studentReviewPath({ from: 'exposure' })}">${esc(P20_HUB_CTA.studentReview)}${reviewCount ? ` · ${reviewCount}건` : ''}</a>
+        <a href="${getStudentSearchUrl()}" class="btn btn--secondary" target="_blank" rel="noopener">${esc(P20_HUB_CTA.studentSearch)}</a>
+      </div>
+    </div>`;
+}
+
+/** @param {import('./store.js').StudyRoomRecord} room */
 function renderHub(room) {
   const readiness = getPublishReadiness(room);
   const matrix = getExposureMatrix(room, readiness);
@@ -320,6 +346,8 @@ function renderHub(room) {
         <p class="p20-hint">원장이 직접 선택 · 운영자 승인 없음 (20§4-3 · 22장)</p>
         <a href="#${studyRoomSectionPath(room.id, 'exposure')}" class="btn btn--secondary btn--sm" data-p20-nav="${studyRoomSectionPath(room.id, 'exposure')}">상담 상태 변경 →</a>
       </div>
+
+      ${renderReviewBridgeBlock(room)}
 
       <div class="p20-hub-cta">${renderHubCtaBlock(room)}</div>
     </div>`;
@@ -464,6 +492,7 @@ function renderPublish(room) {
 function renderExposure(room) {
   const readiness = getPublishReadiness(room);
   const blocks = getExposureDetailBlocks(room, readiness);
+  const fromReview = getHandoffFromQuery() === 'review';
 
   const inquiryRadios = INQUIRY_OPTIONS.map(
     (o) => `
@@ -476,6 +505,8 @@ function renderExposure(room) {
 
   const body = `
     <div class="p20-exposure-body" data-p20-room-id="${room.id}">
+      ${fromReview ? `<div class="handoff-deeplink-banner" role="status">${esc(HANDOFF_DEEPLINK.accessFromReview)}</div>` : ''}
+      ${renderReviewBridgeBlock(room)}
       <section class="p20-exposure-section">
         <h3>${esc(P20_EXPOSURE_SECTION_TITLES.searchCompare)}</h3>
         <div class="p20-matrix">${renderMatrixRows(blocks.slice(0, 3))}</div>
@@ -524,7 +555,7 @@ export function bindStudyRoomRegEvents(root, rerender) {
   });
 
   root.querySelectorAll('[data-p20-publish]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const wrap = btn.closest('[data-p20-room-id]') || btn.closest('.p19-publish-body');
       const id = Number(wrap?.dataset.p20RoomId || root.querySelector('[data-p20-room-id]')?.dataset.p20RoomId);
       const confirms = root.querySelectorAll('[data-p20-confirm]');
@@ -533,44 +564,68 @@ export function bindStudyRoomRegEvents(root, rerender) {
         alert('자기확인 항목을 모두 체크해 주세요.');
         return;
       }
-      const result = publishStudyRoom(id);
-      if (!result.ok) {
-        alert(`공개 불가:\n${result.missing?.join('\n') || result.reason}`);
-        return;
+      try {
+        const result = await publishStudyRoom(id);
+        if (!result.ok) {
+          alert(`공개 불가:\n${result.missing?.join('\n') || result.reason}`);
+          return;
+        }
+        alert('공개되었습니다. (profile_status: published)');
+        rerender();
+      } catch (err) {
+        console.warn('[p20]', err);
+        if (err?.code === 'email_verify_required') {
+          showEmailVerifyOverlay();
+          return;
+        }
+        alert('공개 처리에 실패했습니다.');
       }
-      alert('공개되었습니다. (profile_status: published)');
-      rerender();
     });
   });
 
   root.querySelectorAll('[data-p20-hide]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = Number(btn.closest('[data-p20-room-id]')?.dataset.p20RoomId);
       if (!confirm('공부방을 숨김 처리하시겠습니까?')) return;
-      hideStudyRoom(id);
-      rerender();
+      try {
+        await hideStudyRoom(id);
+        rerender();
+      } catch (err) {
+        console.warn('[p20]', err);
+        alert('숨김 처리에 실패했습니다.');
+      }
     });
   });
 
   root.querySelectorAll('[data-p20-delete]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = Number(btn.closest('[data-p20-room-id]')?.dataset.p20RoomId);
       if (!confirm('삭제하시겠습니까? (deleted_at)')) return;
-      deleteStudyRoom(id);
-      window.location.hash = '/mypage/registrations/study-rooms';
-      rerender();
+      try {
+        await deleteStudyRoom(id);
+        window.location.hash = '/mypage/registrations/study-rooms';
+        rerender();
+      } catch (err) {
+        console.warn('[p20]', err);
+        alert('삭제에 실패했습니다.');
+      }
     });
   });
 
   root.querySelectorAll('[data-p20-inquiry-save]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const section = btn.closest('[data-p20-room-id]');
       const id = Number(section?.dataset.p20RoomId);
       const selected = section?.querySelector('input[name="inquiry_status"]:checked');
       if (!selected) return;
-      setInquiryStatus(id, /** @type {any} */ (selected.value));
-      alert('상담 상태가 저장되었습니다.');
-      rerender();
+      try {
+        await setInquiryStatus(id, /** @type {any} */ (selected.value));
+        alert('상담 상태가 저장되었습니다.');
+        rerender();
+      } catch (err) {
+        console.warn('[p20]', err);
+        alert('상담 상태 저장에 실패했습니다.');
+      }
     });
   });
 

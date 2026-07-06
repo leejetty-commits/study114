@@ -14,9 +14,14 @@ export const previewState = {
   searchTotal: 0,
   searchRows: [],
   searchItems: [],
+  searchExposureItems: [],
+  activeResultItems: [],
+  activeResultSource: null,
+  activeRegionLabel: '',
   role: 'study_room',
   subscription: 'free',
   studentLessonFormat: 'one_on_one',
+  tutorRegionIndex: 0,
 };
 
 const TAB_FROM_HASH = {
@@ -66,6 +71,17 @@ export const VIEWER_ROLE_LABELS = {
   tutor: '과외쌤',
 };
 
+export {
+  canShowSearchTab,
+  getVisibleSearchTabs,
+  defaultSearchTabForRole,
+  resolveAllowedTab,
+  ROLE_SEARCH_HEADING,
+  getSearchTabLabel,
+  isProviderSelfPreviewMode,
+} from './search-role-access.js';
+
+/** @deprecated use canShowSearchTab('student', role) */
 export function canShowStudentTab(role) {
-  return role !== 'parent';
+  return role === 'study_room' || role === 'tutor';
 }

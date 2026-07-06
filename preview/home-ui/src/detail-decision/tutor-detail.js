@@ -7,6 +7,7 @@ import {
   formatTutorStudentTarget,
 } from '../exposure-format.js';
 import { esc } from './detail-utils.js';
+import { renderPromoLinksSection } from '../../../shared/promo-links.js';
 
 /** @param {object} item @param {string} viewer */
 export function renderTutorDetailBody(item, viewer) {
@@ -42,5 +43,6 @@ export function renderTutorDetailBody(item, viewer) {
         <dt>경력</dt><dd>${esc(formatCareerYearBand(item.career_year_band))}</dd>
         <dt>제출자료</dt><dd>${item.proof_document_available ? '공개' : '미공개'}</dd>
       </dl>
-    </section>`;
+    </section>
+    ${renderPromoLinksSection(item, esc)}`;
 }

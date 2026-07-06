@@ -1,18 +1,17 @@
-import { DUMMY_TUTORS, DUMMY_STUDENTS, MY_TUTOR, SLOT_TOP, SLOT_MID } from '../data.js';
-import { previewState } from '../state.js';
-import { renderStudentRegisterForm } from '../student-detail-modal.js';
-import {
-  renderHomeShell,
-  renderRegionBar,
-  renderTop3Section,
-  renderMid5Section,
-  renderBottomList,
-  renderAdInline,
-  bindLayoutEvents,
-} from '../layout.js';
+import { MY_TUTOR } from '../data.js';
+import { previewState, setTutorTab, resetTutorFind } from '../state.js';
+import { renderHomeShell, renderAdInline, bindLayoutEvents } from '../layout.js';
+import { renderCompareBar, bindUserActionEvents } from '../user-actions-ui.js';
+import { bindCompareEvents } from '../compare-modal.js';
 import { bindDetailDecisionEvents } from '../detail-decision/index.js';
-import { EXPOSURE_STUDENTS } from '../exposure-data.js';
-import { renderBrowseList } from '../exposure-render.js';
+import {
+  renderProviderHomeTabs,
+  renderProviderHomeBody,
+  bindProviderHomeTabEvents,
+  getProviderHomeMode,
+  isProviderHomeSelfTab,
+} from '../provider-home.js';
+import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 
 function renderMyTutorBox() {
   return `
@@ -33,74 +32,16 @@ function renderMyTutorBox() {
   `;
 }
 
-function renderStudentFindPreview() {
-  return `
-    <section class="home-section">
-      <div class="list-block">
-        <div class="list-block__head">학생찾기 (13§7 · P25-S10)</div>
-        ${renderBrowseList('student', EXPOSURE_STUDENTS.slice(0, 6), { guest: false, viewerRole: 'tutor' })}
-      </div>
-    </section>
-  `;
-}
-
-function renderStudentList() {
-  return `
-    <section class="home-section">
-      <div class="list-block">
-        <div class="list-block__head">학생 리스트</div>
-        ${DUMMY_STUDENTS.map(
-          (s, i) => `
-          <div class="list-item">
-            <span class="list-item__rank">${i + 1}</span>
-            <div class="list-item__body">
-              <div class="list-item__title">${s.name}</div>
-              <div class="list-item__meta">${s.grade} · ${s.school} · 학부모 ${s.parent}</div>
-            </div>
-            <span class="list-item__date">연결됨</span>
-          </div>
-        `,
-        ).join('')}
-      </div>
-    </section>
-  `;
-}
-
 export function renderTutor() {
-  const top3 = DUMMY_TUTORS.slice(0, 3).map((t, i) => ({
-    slot: SLOT_TOP[i],
-    name: t.tutor_display_name,
-    meta: `${t.main_subject_note} · ${t.location_label}`,
-  }));
-  const mid5 = DUMMY_TUTORS.map((t, i) => ({
-    slot: SLOT_MID[i],
-    name: t.tutor_display_name,
-    meta: `${t.main_subject_note} · ${t.location_label}`,
-  }));
-  const list = DUMMY_TUTORS.map((t) => ({
-    title: t.tutor_display_name,
-    meta: `${t.main_subject_note} · ${t.location_label}`,
-    date: t.registered_at,
-  }));
+  const tab = previewState.tutorTab;
+  const showMyBox = isProviderHomeSelfTab('tutor', tab);
 
   const content = `
-    ${renderRegionBar(false)}
-    <div class="provider-sub-toggle" style="margin-bottom:var(--space-3);display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap">
-      <span style="font-size:var(--text-sm)">공급자 구독 (프리뷰):</span>
-      <button type="button" class="btn btn--sm ${previewState.providerSubscription === 'free' ? 'btn--primary' : 'btn--secondary'}" data-provider-subscription="free">무료</button>
-      <button type="button" class="btn btn--sm ${previewState.providerSubscription === 'paid' ? 'btn--primary' : 'btn--secondary'}" data-provider-subscription="paid">유료</button>
-    </div>
-    ${renderMyTutorBox()}
-    ${renderTop3Section('상단 고정 3박스', '과외쌤 노출 슬롯', top3)}
+    ${renderProviderHomeTabs('tutor', tab)}
+    ${showMyBox ? renderMyTutorBox() : ''}
+    ${renderProviderHomeBody('tutor', tab, previewState.tutorFind)}
     ${renderAdInline()}
-    ${renderMid5Section('중단 고정 5박스', '고정형 시작', mid5)}
-    ${renderBottomList('과외쌤 리스트', list)}
-    ${renderStudentFindPreview()}
-    ${renderStudentList()}
-    ${renderStudentRegisterForm(EXPOSURE_STUDENTS[0])}
-    <p style="font-size:var(--text-xs);color:var(--gray-400);margin-top:var(--space-4);">
-      지도 미제공 · 1차 핵심 배너 제외 (등록·검색 링크만)
-    </p>
+    ${isProviderHomeSelfTab('tutor', tab) ? '' : renderCompareBar()}
   `;
 
   return renderHomeShell('tutor', content, { showAuth: false, showRoleSwitch: true });
@@ -108,5 +49,29 @@ export function renderTutor() {
 
 export function bindTutorEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
-  bindDetailDecisionEvents(root, { onRerender: rerender, viewer: 'tutor' });
+
+  bindProviderHomeTabEvents(root, rerender, {
+    role: 'tutor',
+    getTab: () => previewState.tutorTab,
+    setTab: setTutorTab,
+    resetFind: resetTutorFind,
+  });
+
+  bindFindSurfaceEvents(root, rerender, {
+    getTab: () => getProviderHomeMode('tutor', previewState.tutorTab).searchTab,
+    getState: () => previewState.tutorFind,
+    role: 'tutor',
+  });
+
+  if (!isProviderHomeSelfTab('tutor', previewState.tutorTab)) {
+    bindCompareEvents(root, true);
+    bindUserActionEvents(root, rerender, { sourceRoute: 'tutor' });
+  }
+
+  bindDetailDecisionEvents(root, {
+    onRerender: rerender,
+    viewer: 'tutor',
+    sourceRoute: 'tutor',
+    getStudentItem: (id) => previewState.tutorFind.activeResultItems?.find((x) => x.id === id),
+  });
 }

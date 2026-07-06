@@ -188,7 +188,7 @@ discover → basket → decide → act
 | 학생 검토함 | 의도적·메모 가능 · **1.5a UI** |
 | P15-06 찜 | **별개** — 학부모용 공부방/과외 |
 
-**1차 문서:** 정책·RED LINE·ID 잠금. **1.5a:** store · `#/mypage/student-review` · 상세 CTA. **2차:** DDL · P21-05 연동 · lifecycle 뱃지.
+**1차 문서:** 정책·RED LINE·ID 잠금. **1.5a:** store · `#/mypage/student-review` · 상세 CTA. **2차 ✅:** DDL/API · P21-05 · **P20-02/05** 검토함 브리지 · lifecycle 뱃지.
 
 ---
 
@@ -204,7 +204,7 @@ discover → basket → decide → act
 | compare_student | 학생 정보 보호를 위해… | 메모/쪽지 |
 | 후보 소멸 (hidden 등) | 현재 공개가 중지된 대상입니다 | 20·21 lifecycle |
 
-정본: `handoff-copy.js` · 2차 `empty-state-copy.js` 흡수 검토.
+정본: `empty-state-copy.js` (29장) · handoff toast/ribbon은 `handoff-copy.js`.
 
 ---
 
@@ -254,7 +254,7 @@ copy: `handoff-copy.js` 또는 `lifecycle-copy.js` 확장.
 
 **1.5a (완료):** P25-S10 store · 마이페이지 · 상세 CTA · 과외 홈 학생찾기 행.
 
-**2차:** **store → API 스왑 ✅** · 푸시. **부록 B ✅** · **HTTP 배선 ✅** · **resume token ✅** · **판단 스티커 ✅**
+**2차 (완료 · 2026-07-07):** **store → API 스왑 ✅** · **P21-05 · P20-02/05 검토함 브리지 ✅** · lifecycle 뱃지 ✅ · resume token ✅ · 판단 스티커 ✅ · 부록 B DDL/API ✅
 
 ---
 
@@ -358,6 +358,7 @@ copy: `handoff-copy.js` 또는 `lifecycle-copy.js` 확장.
 | 날짜 | 내용 |
 |------|------|
 | 2026-07-06 | **P25-S10 1.5a** — student-review store · `#/mypage/student-review` · 상세·노출 CTA |
+| 2026-07-07 | **P25-S10 2차** — P20-02/05 검토함 브리지 · `from=exposure` · 29장 copy 통합 |
 | 2026-07-06 | **Source Route return CTA** — toast 확장 · `handoff-utils.js` · `showP24Toast` CTA |
 | 2026-07-06 | **Lifecycle 뱃지** — `handoff-lifecycle.js` · 찜·최근·검토함 §10 |
 | 2026-07-06 | **P21-05 ↔ 검토함** — `handoff-link.js` · 양방향 딥링크 · `?from=` 배너 |

@@ -13,9 +13,12 @@ export function tabToKind(tab) {
   return 'student';
 }
 
-/** @param {import('../state.js').SearchTab} tab @param {import('../state.js').ViewerRole} role */
-export function canUseCompare(tab, role) {
-  return role !== 'guest' && (tab === 'room' || tab === 'tutor');
+/** @param {import('../state.js').SearchTab} tab @param {import('../state.js').ViewerRole} role @param {boolean} [homeSelf] */
+export function canUseCompare(tab, role, homeSelf = false) {
+  if (role === 'guest') return false;
+  if (role === 'study_room' && tab === 'room') return false;
+  if (homeSelf && role === 'tutor' && tab === 'tutor') return false;
+  return tab === 'room' || tab === 'tutor';
 }
 
 /**

@@ -1,19 +1,32 @@
 /**
  * 16장 — 쪽지함 copy · 배지 · 빈 상태 (횡단 SSOT)
  * docs/ssot/16-messages-structure-proposal.md §3 · §4 · §7
+ * 빈 상태 정본(신규): docs/ssot/29-empty-error-permission-ux.md · empty-state-copy.js
  */
 
 /** @typedef {'parent'|'study_room'|'tutor'|'guest'} NavRole */
 /** @typedef {'student'|'study_room'|'tutor'} MemoTargetKind */
 
 import { previewState } from '../state.js';
+import { isMessagesApiMode } from '../messages-backend.js';
+import { getMemoGateState } from '../provider-entitlement.js';
 
 function isProviderRole(role) {
   return role === 'study_room' || role === 'tutor';
 }
 
 function isProviderPaid() {
+  if (isMessagesApiMode()) {
+    return getMemoGateState().canColdMemo;
+  }
   return previewState.providerSubscription === 'paid';
+}
+
+function formatMemoExpiry(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 /** §3 공개 범위 배지 */
@@ -23,27 +36,76 @@ export const SCOPE_BADGE_LABELS = {
   publicProfile: '공개 프로필',
 };
 
-/** §4 빈 상태 */
-export const EMPTY_LIST_COPY = {
-  parent: '관심 있는 공부방·과외쌤에게 메모를 보내 보세요.',
-  providerPaid: '학생찾기에서 의뢰를 확인하고 메모를 보내 보세요.',
-};
-
+/** §4 빈 상태 — 정본: empty-state-copy.js `getMessagesEmptyCopy` */
 export const FREE_PROVIDER_INBOX_COPY = {
   empty:
-    '받은 문의에 답장해 보세요. 학생에게 <strong>먼저</strong> 메모를 내려면 유료등록이 필요합니다. (P16-04)',
-  hint: '무료 공급자: 받은 쪽지·학부모 문의 답장 OK · 학생에게 <strong>먼저</strong> 메모만 P16-04',
+    '받은 문의에 답장해 보세요. 학생에게 <strong>먼저</strong> 쪽지를 내려면 쪽지권이 필요합니다. (P16-04)',
+  hint: '무료 공급자: 받은 쪽지·학부모 문의 답장 OK · 학생에게 <strong>먼저</strong> 쪽지만 P16-04',
 };
 
-/** §7 P16-04 */
+/** §7 P16-04 — 18§9-12 행동 직전 업셀 */
 export const GATE_COPY = {
-  title: '유료등록이 필요합니다',
+  title: '쪽지권이 필요합니다',
   body:
-    '학생에게 먼저 메모(콜드 아웃리치)를 내려면 유료 등록 또는 포인트가 필요합니다. 구조화된 학생 정보만 열람할 수 있습니다.',
+    '이 학생에게 먼저 쪽지(콜드 아웃리치)를 내려면 쪽지권이 필요합니다. 구조화된 학생 정보만 열람할 수 있습니다.',
   replyNote: '학부모가 먼저 문의한 대화에는 답장할 수 있습니다.',
-  hint: '13장 §7-4 · 18장 상품 안내',
-  cta: '유료 서비스 보기 (P15-09)',
+  hint: '13장 §7-4 · 18§9-6 쪽지권 · 행동 직전 게이트',
+  cta: '유료 서비스 안내 (P18-01)',
 };
+
+/**
+ * P16-04 — 잔여·소진·만료 분기
+ * @param {{ ticketsRemaining?: number, nearestExpiry?: string|null, bypass?: boolean, canColdMemo?: boolean }} [state]
+ */
+export function buildMemoGateCopy(state = getMemoGateState()) {
+  const remaining = state.ticketsRemaining ?? 0;
+  const expiryLabel = formatMemoExpiry(state.nearestExpiry);
+  const depleted = !state.bypass && remaining <= 0;
+
+  if (depleted) {
+    return {
+      title: '쪽지권이 없습니다',
+      body: '선제 쪽지(콜드 아웃리치)를 내려면 쪽지권이 필요합니다. 구조화된 학생 정보만 열람할 수 있습니다.',
+      replyNote: GATE_COPY.replyNote,
+      hint: '쪽지권은 구매 후 6개월 내 사용 · FIFO 차감',
+      cta: GATE_COPY.cta,
+      remainingLine: '잔여 쪽지권: 0회',
+      expiryLine: expiryLabel ? `가장 가까운 만료: ${expiryLabel} (이미 소진)` : null,
+      showPlansCta: true,
+    };
+  }
+
+  if (remaining > 0) {
+    return {
+      title: '쪽지권 안내',
+      body: `선제 쪽지 전송 시 쪽지권 1회가 차감됩니다. 현재 잔여 ${remaining}회입니다.`,
+      replyNote: GATE_COPY.replyNote,
+      hint: GATE_COPY.hint,
+      cta: '쪽지권 더 구매하기',
+      remainingLine: `잔여 쪽지권: ${remaining}회`,
+      expiryLine: expiryLabel ? `가장 가까운 만료: ${expiryLabel}` : '유효기간: 구매 후 6개월',
+      showPlansCta: true,
+    };
+  }
+
+  return {
+    ...GATE_COPY,
+    remainingLine: null,
+    expiryLine: null,
+    showPlansCta: true,
+  };
+}
+
+/** 선제 쪽지 compose 안내 */
+export function buildMemoComposeChargeCopy(state = getMemoGateState()) {
+  if (state.bypass) {
+    return '운영 bypass — 쪽지권 차감 없음';
+  }
+  const remaining = state.ticketsRemaining ?? 0;
+  const expiryLabel = formatMemoExpiry(state.nearestExpiry);
+  const expiry = expiryLabel ? ` · 만료 ${expiryLabel}` : '';
+  return `선제 쪽지 전송 시 쪽지권 1회 차감 · 잔여 ${remaining}회${expiry}`;
+}
 
 /**
  * §3 — 역할·대상별 공개 범위 배지
@@ -98,9 +160,23 @@ export function getReplyBlockedMessage(thread, role) {
   if (isProviderRole(role) && thread.contextKind === 'student') {
     const peerSpoke = thread.messages.some((m) => m.sender === 'peer');
     if (!peerSpoke && !isProviderPaid()) {
-      return `${GATE_COPY.replyNote} 학생에게 먼저 메모는 유료등록 후 가능합니다. (P16-04)`;
+      return `${GATE_COPY.replyNote} 학생에게 먼저 쪽지는 쪽지권 구매 후 가능합니다. (P16-04)`;
     }
   }
 
   return '답장할 수 없습니다.';
 }
+
+/** §5 신고 사유 `[임시]` */
+export const REPORT_REASONS = [
+  { id: 'spam', label: '스팸·광고' },
+  { id: 'abuse', label: '욕설·혐오' },
+  { id: 'fraud', label: '사기·허위' },
+  { id: 'privacy', label: '개인정보 노출' },
+  { id: 'other', label: '기타' },
+];
+
+export const BLOCK_THREAD_COPY = {
+  confirm: '이 대화를 차단하면 답장을 보낼 수 없습니다. 계속할까요?',
+  banner: '차단된 대화입니다. 답장이 제한됩니다.',
+};

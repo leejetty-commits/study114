@@ -6,6 +6,7 @@ namespace Study114\Handoff;
 
 use InvalidArgumentException;
 use Study114\Database\Connection;
+use Study114\Paid\ProviderRoiService;
 
 /**
  * 25장 부록 B — Handoff basket API surface (서버 영속)
@@ -22,10 +23,12 @@ final class HandoffService
     private const PROVIDER_ROLES = ['tutor', 'study_room'];
 
     private HandoffRepository $repo;
+    private ProviderRoiService $roi;
 
-    public function __construct(?HandoffRepository $repo = null)
+    public function __construct(?HandoffRepository $repo = null, ?ProviderRoiService $roi = null)
     {
         $this->repo = $repo ?? new HandoffRepository(Connection::get());
+        $this->roi = $roi ?? new ProviderRoiService();
     }
 
     /** @return list<array<string, mixed>> */
@@ -115,6 +118,12 @@ final class HandoffService
         $this->assertRecentTargetType($targetType);
         $this->repo->upsertRecent($userId, $targetType, $targetId, $titleSnapshot, $lastRoute, $lastAction);
         $this->repo->pruneRecent($userId, self::RECENT_MAX);
+        if (
+            in_array($targetType, self::PROVIDER_TARGET_TYPES, true)
+            && $lastAction === 'view_detail'
+        ) {
+            $this->roi->recordProfileView($targetType, $targetId, $userId);
+        }
     }
 
     public function patchRecentHandoff(

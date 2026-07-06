@@ -8,8 +8,7 @@ import { isInStudentReview, toggleStudentReview } from '../student-review-store.
 import { renderEntryContextRibbon } from '../handoff-resume.js';
 import { renderPreContactChecklist } from '../handoff-sticker.js';
 import { renderStudentRequestBody } from './student-request-card.js';
-import { renderTutorDetailBody } from './tutor-detail.js';
-import { renderStudyRoomDetailBody } from './studyroom-detail.js';
+import { unlockStudentRequestView } from '../request-unlock.js';
 import {
   esc,
   buildJudgmentTokens,
@@ -18,7 +17,11 @@ import {
   buildTrustStrip,
   buildContactPanel,
   microSafetyCopy,
+  showP24Toast,
 } from './detail-utils.js';
+import { renderTutorDetailBody } from './tutor-detail.js';
+import { renderStudyRoomDetailBody } from './studyroom-detail.js';
+import { AUTH_UI_BASE } from '../data.js';
 import { openCompareModal } from '../compare-modal.js';
 import { getCompareItems } from '../user-actions-state.js';
 
@@ -167,7 +170,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   });
 
   wrap.querySelector('[data-p24-action="login"]')?.addEventListener('click', () => {
-    alert('로그인 후 쪽지·찜·비교를 이용할 수 있습니다. (프리뷰)');
+    window.open(`${AUTH_UI_BASE}/#/login?from=detail`, '_blank', 'noopener');
   });
 
   wrap.querySelector('[data-p24-action="memo"]')?.addEventListener('click', () => {
@@ -225,6 +228,29 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
       if (result.inCompare) patchRecentHandoff(compareKind, btn.dataset.itemId, { lastRoute: sourceRoute, lastAction: 'compare_add' });
       onRerender?.();
       openDetailModal({ kind, item, viewer, onRerender, sourceRoute: 'detail' });
+    });
+  });
+
+  wrap.querySelectorAll('[data-p24-action="unlock-request"]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const studentId = Number(btn.dataset.studentId);
+      btn.disabled = true;
+      try {
+        const result = await unlockStudentRequestView(studentId);
+        const msg = result.consumed
+          ? '요청문을 열람했습니다. (열람권 1회 차감)'
+          : '이미 열람한 학생입니다.';
+        showP24Toast(msg);
+        openDetailModal({ kind, item, viewer, onRerender, sourceRoute });
+      } catch (err) {
+        const code = err && typeof err === 'object' ? /** @type {{code?: string}} */ (err).code : '';
+        if (code === 'paid_gate') {
+          showP24Toast('열람권이 필요합니다. 유료 서비스 안내를 확인해 주세요.');
+        } else {
+          showP24Toast('열람에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+        }
+        btn.disabled = false;
+      }
     });
   });
 

@@ -43,6 +43,22 @@ Docker `study114-api-dev` · 포트 **8080**
 
 dev 시드 로그인: `guardian1@dev.local` / `password`
 
+### 소셜 로그인 (네이버 · 카카오 · 구글)
+
+API 콜백: `http://localhost:8080/api/auth/oauth/callback.php?provider={naver|kakao|google}`
+
+각 공급자 콘솔에 위 redirect URI 등록 후 환경 변수 설정:
+
+| 변수 | 공급자 |
+|------|--------|
+| `OAUTH_NAVER_CLIENT_ID` / `OAUTH_NAVER_CLIENT_SECRET` | 네이버 |
+| `OAUTH_KAKAO_REST_API_KEY` (+ 선택 `OAUTH_KAKAO_CLIENT_SECRET`) | 카카오 |
+| `OAUTH_GOOGLE_CLIENT_ID` / `OAUTH_GOOGLE_CLIENT_SECRET` | Google |
+
+DDL: `sql/schema/018_user_oauth_accounts.sql` · `019_oauth_role_pending.sql` ( `apply-schema-dev.ps1` 에 포함)
+
+로컬 env 템플릿: `config/oauth.env.example` — 값 채운 뒤 Docker API 컨테이너 환경 변수로 전달
+
 ## DB (로컬) — study114_dev
 
 **MySQL 8.4 (Docker)** · 호스트 포트 **3307** (기존 MariaDB 3306과 충돌 회피)

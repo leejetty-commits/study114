@@ -32,11 +32,22 @@ if ($user === null) {
     exit;
 }
 
+$oauthRolePending = false;
+$emailVerified = false;
+try {
+    $oauthRolePending = (new \Study114\Auth\OAuthRoleService())->isRolePendingForUser((int) $user['user_id']);
+    $emailVerified = (new \Study114\Auth\EmailVerificationGate())->isVerified((int) $user['user_id']);
+} catch (Throwable $e) {
+    error_log('[me] auth flags: ' . $e->getMessage());
+}
+
 echo json_encode([
-    'ok'            => true,
-    'authenticated' => true,
-    'user_id'       => $user['user_id'],
-    'email'         => $user['email'],
-    'role_type'     => $user['role_type'],
-    'name'          => $user['name'],
+    'ok'                 => true,
+    'authenticated'      => true,
+    'user_id'            => $user['user_id'],
+    'email'              => $user['email'],
+    'role_type'          => $user['role_type'],
+    'name'               => $user['name'],
+    'oauth_role_pending' => $oauthRolePending,
+    'email_verified'     => $emailVerified,
 ], JSON_UNESCAPED_UNICODE);

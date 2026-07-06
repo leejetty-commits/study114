@@ -32,22 +32,27 @@ export function openDetailDecision({ kind, id, viewer, onRerender, sourceRoute =
   });
 }
 
-/** @param {HTMLElement} root @param {{ onRerender?: () => void, viewer?: string }} [opts] */
-export function bindDetailDecisionEvents(root, { onRerender, viewer } = {}) {
+/** @param {HTMLElement} root @param {{ onRerender?: () => void, viewer?: string, getStudentItem?: (id: number) => object|undefined, sourceRoute?: string }} [opts] */
+export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentItem, sourceRoute = 'search' } = {}) {
   const role = viewer || getNavRole();
-  bindStudentReviewEvents(root, onRerender, { providerRole: role });
+  bindStudentReviewEvents(root, onRerender, {
+    providerRole: role,
+    sourceRoute,
+    getStudentItem,
+  });
 
   root.querySelectorAll('[data-action="open-student-detail"]').forEach((el) => {
     el.addEventListener('click', (e) => {
       if (
         e.target.closest(
-          'button, a, [data-action="compare-toggle"], [data-action="wish-toggle"], [data-action="student-review-toggle"]',
+          'button, a, [data-action="compare-toggle"], [data-action="wish-toggle"], [data-action="student-review-toggle"], [data-action="student-wish-toggle"], [data-action="student-memo-start"]',
         )
       ) {
         return;
       }
       const id = Number(el.dataset.studentId);
-      openDetailDecision({ kind: 'student', id, viewer: role, onRerender });
+      const item = getStudentItem?.(id) || resolveDetailItem('student', id);
+      openDetailDecision({ kind: 'student', id, viewer: role, onRerender, sourceRoute, item: item || undefined });
     });
   });
 
@@ -58,7 +63,7 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer } = {}) {
       const kind = article.dataset.providerKind;
       const id = Number(article.dataset.providerId);
       if (kind !== 'study_room' && kind !== 'tutor') return;
-      openDetailDecision({ kind, id, viewer: role, onRerender });
+      openDetailDecision({ kind, id, viewer: role, onRerender, sourceRoute });
     });
   });
 

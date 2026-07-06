@@ -84,7 +84,27 @@ foreach ($f in @(
   "009_study_room_extended.sql",
   "010_tutor_extended.sql",
   "011_student_gender_group.sql",
-  "012_search_dev_seed.sql"
+  "012_search_dev_seed.sql",
+  "013_handoff_basket.sql",
+  "014_messages.sql",
+  "015_messages_p16_finish.sql",
+  "016_registration_hub.sql",
+  "017_support_center.sql",
+  "018_user_oauth_accounts.sql",
+  "019_oauth_role_pending.sql",
+  "020_auth_policy_tokens.sql",
+  "021_board_engine.sql",
+  "022_admin_ops.sql",
+  "023_promo_social_links.sql",
+  "024_admin_reports.sql",
+  "025_board_post_attachments.sql",
+  "026_admin_dev_seed.sql",
+  "027_provider_roi.sql",
+  "028_provider_tickets.sql",
+  "029_dev_email_verified.sql",
+  "030_provider_request_unlocks.sql",
+  "031_provider_payment_orders.sql",
+  "032_provider_reminders.sql"
 )) {
   Write-Host "Applying $f ..."
   Apply-SqlFile -FileName $f -NoDatabaseArg:($f -eq "001_init.sql")

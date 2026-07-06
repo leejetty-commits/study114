@@ -1,6 +1,7 @@
 /**
  * 15장 — 마이페이지 copy · 빈 상태 · 역할 강조
  * docs/ssot/15-mypage-structure.md §4-3-1 · §7 · §11
+ * 빈 상태 정본(신규): docs/ssot/29-empty-error-permission-ux.md · empty-state-copy.js
  */
 
 /** @typedef {'parent'|'study_room'|'tutor'} MypageRole */
@@ -12,21 +13,20 @@ export const HOME_EMPHASIS = {
   tutor: '학생 접근·쪽지 · 메모권 · 매칭 가시성 · 미읽음 쪽지',
 };
 
-/** §11 빈 상태 · onboarding */
-export const EMPTY_ONBOARDING = {
-  wishlist: '찜이 없습니다. 검색·홈에서 찾아보세요.',
-  recentParent: '최근열람 기록이 없습니다. 공부방·과외 탐색 후 자동 기록됩니다.',
-  recentProvider: '기록 없음',
-  messages: '쪽지가 없습니다. 상세·검색에서 첫 메모를 보내 보세요.',
-  submissionStudyRoom: '공부방 제출자료 UI는 1차 후순위(△) · 동일 원칙 적용',
+/** §15 역할 제한 패널 (Empty ✕ · onboarding guard) */
+export const ONBOARDING_GUARD_COPY = {
   submissionParent: '공급자(과외쌤·공부방) 전용 · P15-10',
+  submissionStudyRoom: '공부방 제출자료 UI는 1차 후순위(△) · 동일 원칙 적용',
 };
+
+/** @deprecated ONBOARDING_GUARD_COPY 사용 */
+export const EMPTY_ONBOARDING = ONBOARDING_GUARD_COPY;
 
 /** §7 학부모 P15-09 */
 export const GUARDIAN_PLANS_COPY = {
   lead: '학부모는 상품 설명 열람만 · 구매·결제 UI 없음 (15장 §7)',
-  body: 'Prime/Pick · 학생 메모권/열람권은 공부방·과외쌤 유료 서비스입니다.',
-  footnote: '18장 정책 · 18b 수치 placeholder',
+  body: 'Prime/Pick 기간형 · 쪽지권/열람권 횟수권은 공부방·과외쌤 유료 서비스입니다.',
+  footnote: '18장 2026-07-07 잠금 · 18b 더미 단가',
 };
 
 export const HOME_STATS_NOTE = '15장 §4 · 숫자는 다음 CTA의 입력값입니다.';

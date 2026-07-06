@@ -6,12 +6,12 @@ import { COMPARE_MAX } from './exposure-schema.js';
 import {
   compareToastAdded,
   compareOpenCta,
-  compareErrorMax,
   COMPARE_ERROR_INELIGIBLE,
   RETURN_CTA,
   STUDENT_REVIEW,
   WISH_TOAST,
 } from './handoff-copy.js';
+import { getCompareMaxCopy } from './empty-state-copy.js';
 import { getCompareIds } from './user-actions-state.js';
 import { showP24Toast } from './detail-decision/detail-utils.js';
 
@@ -63,7 +63,9 @@ export function resolveWishReturnCta(sourceRoute, added) {
 export function notifyCompareToggle(result, kind, opts = {}) {
   const sourceRoute = opts.sourceRoute || 'search';
   if (result.full) {
-    alert(compareErrorMax(COMPARE_MAX));
+    const copy = getCompareMaxCopy(COMPARE_MAX);
+    const cta = resolveCompareReturnCta(sourceRoute, kind, COMPARE_MAX, COMPARE_MAX);
+    showP24Toast(`${copy.title} ${copy.body}`, cta ? { cta } : undefined);
     return false;
   }
   if (result.ineligible) {

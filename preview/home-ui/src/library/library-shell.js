@@ -1,0 +1,49 @@
+import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents } from '../layout.js';
+import { getNavRole } from '../state.js';
+import { LIBRARY_HEAD } from './library-copy.js';
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+
+function getRoleHomePath(role) {
+  if (role === 'guest') return '/guest';
+  if (role === 'parent') return '/parent';
+  if (role === 'study_room') return '/study-room';
+  return '/tutor';
+}
+
+/** @param {string} screenId @param {string} bodyHtml */
+export function renderLibraryShell(screenId, bodyHtml) {
+  const role = getNavRole();
+  const homePath = getRoleHomePath(role);
+  return `
+    ${renderPreviewToolbar()}
+    <div class="home-app">
+      ${renderHeader(role, { showAuth: role === 'guest', showRoleSwitch: role !== 'guest' })}
+      <main class="home-main sup-main">
+        <div class="sup-layout">
+          <header class="sup-content__head">
+            <div>
+              <h1 class="sup-content__title"><span class="sup-content__title-prefix">자료실-</span><span class="sup-content__title-suffix">${esc(LIBRARY_HEAD.title)}</span></h1>
+              <span class="sup-content__screen-id">${esc(screenId)} · 23장 · ${esc(LIBRARY_HEAD.engineLabel)}</span>
+            </div>
+          </header>
+          <div class="sup-frame sup-frame--library">
+            <div class="sup-frame__body">
+              ${bodyHtml}
+              <footer class="sup-frame__foot">
+                <a href="#${homePath}" class="sup-back-home" data-nav="${homePath}">← 메인 홈으로</a>
+              </footer>
+            </div>
+          </div>
+        </div>
+      </main>
+      ${renderFooter()}
+    </div>
+  `;
+}
+
+export function bindLibraryShellEvents(root, rerender) {
+  bindLayoutEvents(root, rerender);
+}

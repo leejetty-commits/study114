@@ -5,7 +5,8 @@
  */
 
 import { previewState } from '../state.js';
-
+import { isMessagesApiMode } from '../messages-backend.js';
+import { canColdMemoFromEntitlement, getMemoTicketsRemaining } from '../provider-entitlement.js';
 export {
   GATE_COPY,
   FREE_PROVIDER_INBOX_COPY,
@@ -18,9 +19,13 @@ export function isProviderRole(role) {
 }
 
 export function isProviderPaid() {
+  if (isMessagesApiMode()) {
+    const can = canColdMemoFromEntitlement();
+    if (can !== null) return can;
+    return getMemoTicketsRemaining() > 0;
+  }
   return previewState.providerSubscription === 'paid';
 }
-
 /** @param {NavRole} role */
 export function canProviderColdMemoToStudent(role) {
   return isProviderRole(role) && isProviderPaid();
@@ -70,6 +75,7 @@ export function checkFirstMemoPermission(ctx) {
  */
 export function canReplyInThread(thread, role) {
   if (!thread) return false;
+  if (thread.isBlocked) return false;
   if (role === 'parent') {
     return thread.contextKind === 'study_room' || thread.contextKind === 'tutor';
   }

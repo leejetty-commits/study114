@@ -179,12 +179,12 @@ export const FAQ_ITEMS = [
     a: '**없습니다.** 대금·연락 중개·보증은 1차 제공 범위가 아닙니다.',
   },
   {
-    q: '유료등록은 학부모가 구매하나요?',
-    a: '아닙니다. 공급자(공부방·과외)용이며, 학부모 과외비 결제와 무관합니다(15·18장).',
+    q: '유료 서비스는 학부모가 구매하나요?',
+    a: '아닙니다. 공급자(공부방·과외)용 Prime/Pick·쪽지권·열람권이며, 학부모 과외비 결제와 무관합니다(15·18장).',
   },
   {
     q: 'Prime/Pick은 무엇인가요?',
-    a: '노출·슬롯 상품입니다. 자세한 내용은 11·18장 FAQ를 참고하세요.',
+    a: '동네 노출 **기간형 포지션 상품**입니다. Hot·추천 등 광고배지는 포지션에 종속됩니다(11·18장).',
   },
   {
     q: '환불·과외비 분쟁은?',
@@ -216,9 +216,12 @@ export const NOTICES = [
 
 /** P17-06 */
 export const TERMS_LINKS = [
-  { label: '이용약관', href: '[후순위]' },
-  { label: '개인정보처리방침', href: '[후순위]' },
-  { label: '운영 정책', href: '[후순위]' },
+  { label: '이용약관', href: '/policy/terms' },
+  { label: '개인정보처리방침', href: '/policy/privacy' },
+  { label: '플랫폼 역할 고지', href: '/policy/platform' },
+  { label: '제출자료/신뢰정보 고지', href: '/policy/trust' },
+  { label: '학생정보 보호 고지', href: '/policy/student-privacy' },
+  { label: '신고/제재/분쟁 안내', href: '/policy/reporting' },
 ];
 
 /** §7-3 운영 문의 · 17c 티켓 */

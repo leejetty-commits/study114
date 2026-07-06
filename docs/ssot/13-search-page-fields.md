@@ -187,5 +187,6 @@
 
 | 날짜 | 내용 |
 |------|------|
+| 2026-07-07 | 프리뷰: 역할별 **2탭** 노출 · 검색 전 지역 피드 · 과외 **3지역 탭** · `homeSelf` 자기노출 · home-ui `provider-home` 연동 — [search-ui/DOC-CHECKLIST](../../preview/search-ui/DOC-CHECKLIST.md) |
 | 2026-07-04 | Notion 13장 전문 동기화 · §3~§8 · `search-ui` §8-1 배치 |
 | 2026-07-04 | `student_gender_group` 신규 · 수업인원 용어 통일 · [011](../../sql/schema/011_student_gender_group.sql) |

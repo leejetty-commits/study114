@@ -1,7 +1,9 @@
 /** @typedef {'guest' | 'parent' | 'study_room' | 'tutor'} HomeRole */
 
-/** auth-ui 프리뷰 (2장) */
-export const AUTH_UI_BASE = 'http://localhost:5173';
+import { AUTH_UI_BASE as AUTH_UI_BASE_SSOT } from '../../shared/preview-links.js';
+
+/** auth-ui 프리뷰 (2장) — SSOT: preview-links.js */
+export const AUTH_UI_BASE = AUTH_UI_BASE_SSOT;
 
 export {
   EXPOSURE_STUDY_ROOMS,

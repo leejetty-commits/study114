@@ -1,10 +1,15 @@
-/** 19장 students 프리뷰 — sessionStorage `[임시]` */
+/** 19장 students 프리뷰 — sessionStorage `[임시]` · Dev 학부모 로그인 시 API */
 
 import {
   decodeStudentImport,
   STUDENT_IMPORT_PARAM,
 } from '../../../shared/student-auth-bridge.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
+import {
+  isRegistrationsApiMode,
+  getStudentsCache,
+  apiStudentAction,
+} from '../registrations-backend.js';
 
 const KEY = 'study114-preview-students-v2';
 
@@ -135,11 +140,15 @@ function nextId(students) {
 }
 
 export function ensureStudentStore() {
+  if (isRegistrationsApiMode()) return;
   if (!sessionStorage.getItem(KEY)) saveAll(SEED.map((s) => ({ ...s })));
 }
 
 /** @returns {StudentRecord[]} */
 export function getStudents(includeDeleted = false) {
+  if (isRegistrationsApiMode()) {
+    return getStudentsCache().filter((s) => includeDeleted || s.exposure_status !== 'deleted');
+  }
   ensureStudentStore();
   return loadAll().filter((s) => includeDeleted || s.exposure_status !== 'deleted');
 }
@@ -157,7 +166,11 @@ export function getStudentsByTab(tab) {
 }
 
 /** @param {number} id @param {Partial<StudentRecord>} patch */
-export function updateStudent(id, patch) {
+export async function updateStudent(id, patch) {
+  if (isRegistrationsApiMode()) {
+    await apiStudentAction(id, 'update', { patch });
+    return getStudent(id);
+  }
   const students = loadAll();
   const idx = students.findIndex((s) => s.id === id);
   if (idx < 0) return null;
@@ -220,7 +233,12 @@ export function getPublishReadiness(student) {
 }
 
 /** @param {number} id */
-export function publishStudent(id) {
+export async function publishStudent(id) {
+  if (isRegistrationsApiMode()) {
+    const data = await apiStudentAction(id, 'publish');
+    if (data.ok === false) return { ok: false, reason: data.reason, missing: data.missing };
+    return { ok: true };
+  }
   const s = getStudent(id);
   if (!s) return { ok: false, reason: 'not_found' };
   const r = getPublishReadiness(s);
@@ -230,12 +248,20 @@ export function publishStudent(id) {
 }
 
 /** @param {number} id */
-export function hideStudent(id) {
+export async function hideStudent(id) {
+  if (isRegistrationsApiMode()) {
+    await apiStudentAction(id, 'hide');
+    return getStudent(id);
+  }
   return updateStudent(id, { exposure_status: 'hidden' });
 }
 
 /** @param {number} id */
-export function deleteStudent(id) {
+export async function deleteStudent(id) {
+  if (isRegistrationsApiMode()) {
+    await apiStudentAction(id, 'delete');
+    return null;
+  }
   return updateStudent(id, { exposure_status: 'deleted' });
 }
 

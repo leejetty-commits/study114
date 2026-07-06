@@ -13,7 +13,11 @@ async function postJson(url, body, { credentials = 'include' } = {}) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
-    throw new Error(data.message || `API 오류 (${res.status})`);
+    const err = new Error(data.message || `API 오류 (${res.status})`);
+    if (data.error) {
+      err.code = data.error;
+    }
+    throw err;
   }
   return data;
 }
@@ -21,6 +25,28 @@ async function postJson(url, body, { credentials = 'include' } = {}) {
 export async function loginApi(payload) {
   return postJson('/api/auth/login.php', payload);
 }
+
+export async function fetchMeApi() {
+  const res = await fetch('/api/auth/me.php', { credentials: 'include' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.message || `API 오류 (${res.status})`);
+  }
+  return data;
+}
+
+/**
+ * @param {string} roleUi student | study_room | tutor
+ */
+export async function oauthCompleteRoleApi(roleUi) {
+  return postJson('/api/auth/oauth/complete-role.php', { role: roleUi });
+}
+
+export {
+  passwordForgotApi,
+  passwordValidateTokenApi,
+  passwordResetApi,
+} from './password-reset-api.js';
 
 export async function signupApi(payload) {
   return postJson('/api/auth/signup.php', payload);

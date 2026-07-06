@@ -1,43 +1,54 @@
-import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isSupportRoute, navigateToSupport } from './state.js';
+import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, navigateToSupport } from './state.js';
+import { POLICY_SHORT_NOTICE } from './policy-copy.js';
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
 import { UTIL_MENU, GNB_MAIN, GNB_VISIBILITY, resolveGnbLink, searchUiUrl } from './nav-config.js';
+import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
 import { getAuthUser, isLoggedIn, devLoginAs, logout } from './auth-session.js';
 import { isHandoffApiMode } from './handoff-backend.js';
+import { isMessagesApiMode } from './messages-backend.js';
 
 export function renderPreviewToolbar() {
   const current = getCurrentScreen();
   const onMypage = isMypageRoute();
   const onMessages = isMessagesRoute();
   const onSupport = isSupportRoute();
+  const onPolicy = isPolicyRoute();
+  const onLibrary = isLibraryRoute();
+  const onAdmin = isAdminRoute();
   const region = previewState.regionKey;
-  const isGuest = current === 'guest' && !onMypage && !onMessages && !onSupport;
+  const isGuest = current === 'guest' && !onMypage && !onMessages && !onSupport && !onPolicy && !onLibrary && !onAdmin;
   const authUser = getAuthUser();
   const apiOn = isHandoffApiMode();
+  const msgApiOn = isMessagesApiMode();
   const authLabel = authUser
-    ? `${authUser.name || authUser.email} · API ${apiOn ? 'ON' : 'OFF'}`
+    ? `${authUser.name || authUser.email} · handoff ${apiOn ? 'ON' : 'OFF'} · 쪽지 ${msgApiOn ? 'ON' : 'OFF'}`
     : '비로그인 · sessionStorage';
 
   return `
     <div class="preview-toolbar">
-      <span class="preview-toolbar__label">우동공과 · 메인 UI 프리뷰 (9·15·16·17·25장)</span>
+      <span class="preview-toolbar__label">우동공과 · 메인 UI 프리뷰 (9·15·16·17·25·26장)</span>
       <div class="preview-toolbar__group">
         ${Object.entries(ROUTES)
           .map(([path, key]) => {
             const meta = SCREEN_META[key];
-            const active = !onMypage && !onMessages && !onSupport && key === current;
+            const active = !onMypage && !onMessages && !onSupport && !onPolicy && !onLibrary && !onAdmin && key === current;
             return `<button type="button" class="preview-toolbar__btn ${active ? 'is-active' : ''}" data-nav="${path}">${meta.label}</button>`;
           })
           .join('')}
         <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${getDefaultMypagePath(getNavRole())}">마이페이지</button>
         <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지함</button>
         <button type="button" class="preview-toolbar__btn ${onSupport ? 'is-active' : ''}" data-nav="/support">고객센터</button>
+        <button type="button" class="preview-toolbar__btn ${onLibrary ? 'is-active' : ''}" data-nav="/library">자료실</button>
+        <button type="button" class="preview-toolbar__btn ${onPolicy ? 'is-active' : ''}" data-nav="/policy/terms">정책</button>
+        <button type="button" class="preview-toolbar__btn ${onAdmin ? 'is-active' : ''}" data-nav="/admin">A28</button>
         <span class="preview-toolbar__divider"></span>
         <span class="preview-toolbar__hint" title="handoff store">${authLabel}</span>
         <button type="button" class="preview-toolbar__btn" data-action="dev-login-parent" title="guardian1@dev.local">Dev·학부모</button>
         <button type="button" class="preview-toolbar__btn" data-action="dev-login-room" title="room-owner1@dev.local">Dev·공부방</button>
         <button type="button" class="preview-toolbar__btn" data-action="dev-login-tutor" title="tutor-owner1@dev.local">Dev·과외</button>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-admin" title="ops@dev.local">Dev·운영</button>
         ${isLoggedIn() ? `<button type="button" class="preview-toolbar__btn" data-action="dev-logout">로그아웃</button>` : ''}
         <span class="preview-toolbar__divider"></span>
         ${
@@ -68,10 +79,23 @@ function renderUtilBar(role, showAuth) {
     .join('');
 }
 
+function gnbItemLabel(item, role) {
+  if (item.id === 'student_parent' && (role === 'study_room' || role === 'tutor')) {
+    return '학생찾기';
+  }
+  if (item.id === 'find_room' && role === 'study_room') {
+    return '공부방찾기';
+  }
+  if (item.id === 'find_tutor' && role === 'tutor') {
+    return '과외쌤찾기';
+  }
+  return item.label;
+}
+
 function renderGnbLink(item, role, { mobile = false } = {}) {
   const vis = GNB_VISIBILITY[role][item.id];
   if (vis === 'hide') {
-    return mobile ? '' : `<span class="home-gnb__item is-muted">${item.label}</span>`;
+    return '';
   }
   const isHomeContext = getCurrentScreen() === 'guest' && item.id === 'find_room';
   const cls = [
@@ -82,7 +106,7 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
     .filter(Boolean)
     .join(' ');
   const suffix = vis === 'limited' && !mobile ? ' △' : '';
-  return `<a href="#" class="${cls}" data-action="gnb-${item.id}">${item.label}${suffix}</a>`;
+  return `<a href="#" class="${cls}" data-action="gnb-${item.id}">${gnbItemLabel(item, role)}${suffix}</a>`;
 }
 
 /**
@@ -124,10 +148,12 @@ export function renderFooter() {
   return `
     <footer class="home-footer">
       <div class="home-footer__links">
-        <a href="#">약관</a>
-        <a href="#">개인정보</a>
+        <a href="#/policy/terms" data-nav="/policy/terms">약관</a>
+        <a href="#/policy/privacy" data-nav="/policy/privacy">개인정보</a>
+        <a href="#/policy/platform" data-nav="/policy/platform">플랫폼 고지</a>
         <a href="#/support" data-action="util-support">고객센터</a>
       </div>
+      <p class="home-footer__notice">${POLICY_SHORT_NOTICE.footer}</p>
       <p>© 2026 우동공과 · study114 · UI Preview</p>
     </footer>
   `;
@@ -298,8 +324,15 @@ export function bindLayoutEvents(root, rerender) {
       const action = el.dataset.action;
       if (action === 'role-switch') {
         alert('[프리뷰] 복수 역할 전환 UI — 9장 §2.2 (추후 구현)');
-      } else if (action === 'dev-login-parent' || action === 'dev-login-room' || action === 'dev-login-tutor') {
-        const key = action === 'dev-login-parent' ? 'parent' : action === 'dev-login-room' ? 'study_room' : 'tutor';
+      } else if (action === 'dev-login-parent' || action === 'dev-login-room' || action === 'dev-login-tutor' || action === 'dev-login-admin') {
+        const key =
+          action === 'dev-login-parent'
+            ? 'parent'
+            : action === 'dev-login-room'
+              ? 'study_room'
+              : action === 'dev-login-admin'
+                ? 'admin'
+                : 'tutor';
         devLoginAs(key)
           .then(() => rerender())
           .catch((err) => alert(err instanceof Error ? err.message : String(err)));
@@ -320,7 +353,8 @@ export function bindLayoutEvents(root, rerender) {
           alert(`[프리뷰] ${el.textContent?.trim()} — 연결 추후`);
         }
       } else if (action === 'search') {
-        window.open(searchUiUrl('room', getNavRole()), '_blank', 'noopener');
+        const role = getNavRole();
+        window.open(searchUiUrl(defaultSearchTabForRole(role), role), '_blank', 'noopener');
       } else if (action === 'util-mypage') {
         navigate(getDefaultMypagePath(getNavRole()));
       } else if (action === 'util-messages') {
@@ -331,6 +365,8 @@ export function bindLayoutEvents(root, rerender) {
         navigate('/guest');
       } else if (action === 'util-guide') {
         navigateToSupport('/support/guide');
+      } else if (action === 'util-library') {
+        navigate('/library');
       } else if (action === 'util-support') {
         navigateToSupport('/support');
       } else if (action.startsWith('util-')) {
@@ -340,15 +376,6 @@ export function bindLayoutEvents(root, rerender) {
       } else {
         alert(`[프리뷰] ${action} — 더미 동작`);
       }
-    });
-  });
-}
-
-export function bindParentTabEvents(root, rerender) {
-  root.querySelectorAll('[data-parent-tab]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      previewState.parentTab = btn.dataset.parentTab;
-      rerender();
     });
   });
 }

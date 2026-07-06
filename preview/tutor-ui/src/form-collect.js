@@ -66,6 +66,8 @@ export function syncContactFromForm(form, state) {
   const fd = new FormData(form);
   state.contact_time_note = String(fd.get('contact_time_note') ?? '');
   state.youtube_url = String(fd.get('youtube_url') ?? '');
+  state.facebook_url = String(fd.get('facebook_url') ?? '');
+  state.instagram_url = String(fd.get('instagram_url') ?? '');
   state.profile_status = String(fd.get('profile_status') ?? 'draft');
 }
 
@@ -113,6 +115,8 @@ export function payloadForStep(step, state) {
       return {
         contact_time_note: state.contact_time_note,
         youtube_url: state.youtube_url,
+        facebook_url: state.facebook_url,
+        instagram_url: state.instagram_url,
         profile_status: state.profile_status,
         images: state.images.map((img) => ({
           image_type: img.image_type,

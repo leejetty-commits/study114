@@ -1,17 +1,24 @@
 /** @typedef {'guest' | 'parent' | 'study_room' | 'tutor'} HomeRole */
 /** @typedef {'study_room' | 'tutor'} ParentTab */
+/** @typedef {'study_room' | 'tutor' | 'student'} ProviderHomeTab */
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
 import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES } from './mypage/router.js';
 import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
 import { getDefaultSupportPath, normalizeSupportPath } from './support/router.js';
+import { getDefaultPolicyPath, normalizePolicyPath } from './policy-router.js';
+import { getDefaultLibraryPath, normalizeLibraryPath } from './library/library-router.js';
+import { getDefaultAdminPath, normalizeAdminPath } from './admin/router.js';
+import { createFindState, resetFindState } from './find-state.js';
 
 const ACTIVE_ROLE_KEY = 'study114-preview-active-role';
 const SUPPORT_CTX_KEY = 'study114-preview-support-context';
 
-/** @type {{ parentTab: ParentTab, regionKey: 'complex' | 'dong', guestListPages: Record<string, number>, providerSubscription: ProviderSubscription }} */
+/** @type {{ parentTab: ParentTab, tutorTab: ProviderHomeTab, studyRoomTab: ProviderHomeTab, regionKey: 'complex' | 'dong', guestListPages: Record<string, number>, providerSubscription: ProviderSubscription, parentFind: import('@search-ui/search-find-surface.js').FindSurfaceState & { searchRows: object[], searchItems: object[] }, tutorFind: import('@search-ui/search-find-surface.js').FindSurfaceState & { searchRows: object[], searchItems: object[] }, studyRoomFind: import('@search-ui/search-find-surface.js').FindSurfaceState & { searchRows: object[], searchItems: object[] } }} */
 export const previewState = {
   parentTab: 'study_room',
+  tutorTab: 'tutor',
+  studyRoomTab: 'study_room',
   regionKey: 'dong',
   guestListPages: {
     study_room: 1,
@@ -21,6 +28,9 @@ export const previewState = {
     pick_tutor: 1,
   },
   providerSubscription: 'free',
+  parentFind: createFindState(),
+  tutorFind: createFindState(),
+  studyRoomFind: createFindState(),
 };
 
 export const ROUTES = {
@@ -38,10 +48,34 @@ export const SCREEN_META = {
   mypage: { label: '마이페이지', role: 'parent' },
   messages: { label: '쪽지함', role: 'parent' },
   support: { label: '고객센터', role: 'guest' },
+  policy: { label: '정책', role: 'guest' },
+  library: { label: '자료실', role: 'guest' },
+  admin: { label: 'A28', role: 'guest' },
 };
 
 export function setParentTab(tab) {
   previewState.parentTab = tab;
+}
+
+export function setTutorTab(tab) {
+  previewState.tutorTab = tab;
+}
+
+export function setStudyRoomTab(tab) {
+  previewState.studyRoomTab = tab;
+}
+
+/** 학부모 홈 — 탭 전환 시 검색 상태 초기화 */
+export function resetParentFind() {
+  resetFindState(previewState.parentFind);
+}
+
+export function resetTutorFind() {
+  resetFindState(previewState.tutorFind);
+}
+
+export function resetStudyRoomFind() {
+  resetFindState(previewState.studyRoomFind);
 }
 
 export function setRegionKey(key) {
@@ -85,6 +119,24 @@ export function isSupportRoute() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
   return path === '/support' || path.startsWith('/support/');
+}
+
+export function isPolicyRoute() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = hash.startsWith('/') ? hash : `/${hash}`;
+  return path === '/policy' || path.startsWith('/policy/');
+}
+
+export function isLibraryRoute() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = hash.startsWith('/') ? hash : `/${hash}`;
+  return path === '/library' || path.startsWith('/library/');
+}
+
+export function isAdminRoute() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = hash.startsWith('/') ? hash : `/${hash}`;
+  return path === '/admin' || path.startsWith('/admin/');
 }
 
 export function isMypageRoute() {
@@ -194,6 +246,87 @@ export function bootstrapSupportRoute() {
   return false;
 }
 
+export function bootstrapPolicyRoute() {
+  const { pathname, hash, origin, search } = window.location;
+
+  if (!hash && pathname.startsWith('/policy')) {
+    const bare = pathname === '/policy' || pathname === '/policy/';
+    const target = bare ? getDefaultPolicyPath() : pathname;
+    window.location.replace(`${origin}/${search}#${target}`);
+    return true;
+  }
+
+  if (!hash) return false;
+
+  const hashPath = hash.slice(1);
+  const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  if (path === '/policy' || path === '/policy/') {
+    window.location.replace(`#${getDefaultPolicyPath()}`);
+    return true;
+  }
+
+  if (path.startsWith('/policy/') && !normalizePolicyPath(path)) {
+    window.location.replace(`#${getDefaultPolicyPath()}`);
+    return true;
+  }
+
+  return false;
+}
+
+export function bootstrapLibraryRoute() {
+  const { pathname, hash, origin, search } = window.location;
+
+  if (!hash && pathname.startsWith('/library')) {
+    const bare = pathname === '/library' || pathname === '/library/';
+    const target = bare ? getDefaultLibraryPath() : pathname;
+    window.location.replace(`${origin}/${search}#${target}`);
+    return true;
+  }
+
+  if (!hash) return false;
+
+  const hashPath = hash.slice(1);
+  const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  if (path === '/library' || path === '/library/') {
+    window.location.replace(`#${getDefaultLibraryPath()}`);
+    return true;
+  }
+
+  if (path.startsWith('/library/') && !normalizeLibraryPath(path)) {
+    window.location.replace(`#${getDefaultLibraryPath()}`);
+    return true;
+  }
+
+  return false;
+}
+
+export function bootstrapAdminRoute() {
+  const { pathname, hash, origin, search } = window.location;
+
+  if (!hash && pathname.startsWith('/admin') && !pathname.startsWith('/administrator')) {
+    const bare = pathname === '/admin' || pathname === '/admin/';
+    const target = bare ? getDefaultAdminPath() : pathname;
+    window.location.replace(`${origin}/${search}#${target}`);
+    return true;
+  }
+
+  if (!hash) return false;
+
+  const hashPath = hash.slice(1);
+  const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  if (path === '/admin' || path === '/admin/') {
+    window.location.replace(`#${getDefaultAdminPath()}`);
+    return true;
+  }
+
+  if (path.startsWith('/admin/') && !normalizeAdminPath(path)) {
+    window.location.replace(`#${getDefaultAdminPath()}`);
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * Path URL(`/mypage/...`) 또는 bare `#/mypage`를 hash 라우트로 정규화.
  * SSOT 부록 A의 PHP 경로로 접속해도 프리뷰가 열리도록 한다.
@@ -247,6 +380,30 @@ export function getSupportPath() {
   return getDefaultSupportPath();
 }
 
+export function getPolicyPath() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = hash.startsWith('/') ? hash : `/${hash}`;
+  const normalized = normalizePolicyPath(path);
+  if (normalized) return normalized;
+  return getDefaultPolicyPath();
+}
+
+export function getLibraryPath() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = hash.startsWith('/') ? hash : `/${hash}`;
+  const normalized = normalizeLibraryPath(path);
+  if (normalized) return normalized;
+  return getDefaultLibraryPath();
+}
+
+export function getAdminPath() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = hash.startsWith('/') ? hash : `/${hash}`;
+  const normalized = normalizeAdminPath(path);
+  if (normalized) return normalized;
+  return getDefaultAdminPath();
+}
+
 export function getMypagePath() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
@@ -258,7 +415,10 @@ export function getMypagePath() {
 export function getCurrentScreen() {
   if (isMypageRoute()) return 'mypage';
   if (isMessagesRoute()) return 'messages';
+  if (isAdminRoute()) return 'admin';
+  if (isLibraryRoute()) return 'library';
   if (isSupportRoute()) return 'support';
+  if (isPolicyRoute()) return 'policy';
   const hash = window.location.hash.slice(1) || '/guest';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
   return ROUTES[path] || 'guest';

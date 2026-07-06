@@ -1,4 +1,10 @@
-/** 20장 study_rooms 프리뷰 — sessionStorage `[임시]` */
+/** 20장 study_rooms 프리뷰 — sessionStorage `[임시]` · Dev 공부방 로그인 시 API */
+
+import {
+  isRegistrationsApiMode,
+  getStudyRoomsCache,
+  apiStudyRoomAction,
+} from '../registrations-backend.js';
 
 const KEY = 'study114-preview-study-rooms-v1';
 
@@ -165,11 +171,15 @@ function nextId(rooms) {
 }
 
 export function ensureStudyRoomStore() {
+  if (isRegistrationsApiMode()) return;
   if (!sessionStorage.getItem(KEY)) saveAll(SEED.map((r) => ({ ...r })));
 }
 
 /** @returns {StudyRoomRecord[]} */
 export function getStudyRooms(includeDeleted = false) {
+  if (isRegistrationsApiMode()) {
+    return getStudyRoomsCache().filter((r) => includeDeleted || !r.deleted_at);
+  }
   ensureStudyRoomStore();
   return loadAll().filter((r) => includeDeleted || !r.deleted_at);
 }
@@ -249,7 +259,12 @@ export function updateStudyRoom(id, patch) {
 }
 
 /** @param {number} id */
-export function publishStudyRoom(id) {
+export async function publishStudyRoom(id) {
+  if (isRegistrationsApiMode()) {
+    const data = await apiStudyRoomAction(id, 'publish');
+    if (data.ok === false) return { ok: false, reason: data.reason, missing: data.missing };
+    return { ok: true };
+  }
   const room = getStudyRoom(id);
   if (!room) return { ok: false, reason: 'not_found' };
   const r = getPublishReadiness(room);
@@ -263,17 +278,29 @@ export function publishStudyRoom(id) {
 }
 
 /** @param {number} id */
-export function hideStudyRoom(id) {
+export async function hideStudyRoom(id) {
+  if (isRegistrationsApiMode()) {
+    await apiStudyRoomAction(id, 'hide');
+    return getStudyRoom(id);
+  }
   return updateStudyRoom(id, { profile_status: 'hidden' });
 }
 
 /** @param {number} id */
-export function deleteStudyRoom(id) {
+export async function deleteStudyRoom(id) {
+  if (isRegistrationsApiMode()) {
+    await apiStudyRoomAction(id, 'delete');
+    return null;
+  }
   return updateStudyRoom(id, { deleted_at: new Date().toISOString(), profile_status: 'hidden' });
 }
 
 /** @param {number} id @param {StudyRoomRecord['inquiry_status']} inquiry_status */
-export function setInquiryStatus(id, inquiry_status) {
+export async function setInquiryStatus(id, inquiry_status) {
+  if (isRegistrationsApiMode()) {
+    await apiStudyRoomAction(id, 'inquiry_status', { inquiry_status });
+    return getStudyRoom(id);
+  }
   return updateStudyRoom(id, { inquiry_status });
 }
 

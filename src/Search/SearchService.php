@@ -139,7 +139,9 @@ final class SearchService
 
         $sql = "
             SELECT DISTINCT sr.id, sr.study_room_name, sr.price_amount, sr.intro_short,
-                   sr.main_subject_note, sr.teaching_style,
+                   sr.main_subject_note, sr.teaching_style, sr.grade_band, sr.feature_1, sr.slogan,
+                   sr.lesson_place_type, sr.capacity_per_time, sr.lesson_operation_type,
+                   sr.education_office_registered, sr.detail_completion_status,
                    r.dong_name, r.sigungu_name, c.name AS complex_name
             FROM study_rooms sr
             LEFT JOIN regions r ON sr.region_id = r.id
@@ -160,6 +162,7 @@ final class SearchService
         $items = [];
         $rows = [];
 
+        $i = 0;
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $regionLabel = $row['complex_name']
                 ? $row['dong_name'] . ' · ' . $row['complex_name']
@@ -172,21 +175,36 @@ final class SearchService
             ]);
             $center = implode("\n", $centerParts);
 
+            $detailStatus = (string) ($row['detail_completion_status'] ?? '');
+            $exposureTier = $this->resolveExposureTier($i, $detailStatus);
+
             $item = [
-                'id'            => (int) $row['id'],
-                'title'         => (string) $row['study_room_name'],
-                'region_label'  => $regionLabel,
-                'summary'       => $center,
-                'price_amount'  => $row['price_amount'] !== null ? (int) $row['price_amount'] : null,
-                'price_label'   => $this->formatMonthlyPrice($row['price_amount']),
+                'id'                         => (int) $row['id'],
+                'title'                      => (string) $row['study_room_name'],
+                'region_label'               => $regionLabel,
+                'summary'                    => $center,
+                'price_amount'               => $row['price_amount'] !== null ? (int) $row['price_amount'] : null,
+                'price_label'                => $this->formatMonthlyPrice($row['price_amount']),
+                'main_subject_note'          => (string) ($row['main_subject_note'] ?? ''),
+                'grade_band'                 => (string) ($row['grade_band'] ?? ''),
+                'feature_1'                  => (string) ($row['feature_1'] ?? ''),
+                'slogan'                     => (string) ($row['slogan'] ?? ''),
+                'lesson_place_type'          => $row['lesson_place_type'] ?? null,
+                'capacity_per_time'          => $row['capacity_per_time'] ?? null,
+                'lesson_operation_type'      => $row['lesson_operation_type'] ?? null,
+                'education_office_registered'=> (bool) ($row['education_office_registered'] ?? false),
+                'detail_completion_status'   => $detailStatus,
+                'prime_eligible'             => $detailStatus === 'expanded_complete',
+                'exposure_tier'              => $exposureTier,
             ];
 
             $items[] = $item;
             $rows[] = [
                 'left'   => $item['title'] . ($regionLabel !== '' ? "\n" . $regionLabel : ''),
                 'center' => $center,
-                'right'  => $item['price_label'] . "\n찜 · 비교 · 상세",
+                'right'  => $item['price_label'] . "\n" . strtoupper($exposureTier),
             ];
+            $i++;
         }
 
         return ['tab' => 'room', 'total' => $total, 'rows' => $rows, 'items' => $items];
@@ -274,7 +292,7 @@ final class SearchService
         $sql = "
             SELECT DISTINCT t.id, t.tutor_display_name, t.preferred_fee_amount,
                    t.university_name, t.major_name, t.career_year_band,
-                   t.lessons_per_week, t.minutes_per_lesson,
+                   t.lessons_per_week, t.minutes_per_lesson, t.detail_completion_status,
                    tst.subject_name, r.sigungu_name, r.sido_name
             FROM tutors t
             LEFT JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.is_primary = 1
@@ -296,6 +314,7 @@ final class SearchService
         $items = [];
         $rows = [];
 
+        $i = 0;
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $regionLabel = trim(($row['sido_name'] ?? '') . ' ' . ($row['sigungu_name'] ?? ''));
             $subjectLine = $row['subject_name'] ?: '';
@@ -311,6 +330,9 @@ final class SearchService
                 $center .= ($center !== '' ? "\n" : '') . '경력 ' . $row['career_year_band'];
             }
 
+            $detailStatus = (string) ($row['detail_completion_status'] ?? '');
+            $exposureTier = $this->resolveExposureTier($i, $detailStatus);
+
             $schedule = [];
             if ($row['lessons_per_week']) {
                 $schedule[] = '주' . $row['lessons_per_week'];
@@ -323,14 +345,24 @@ final class SearchService
             if ($schedule !== []) {
                 $right .= ' · ' . implode(' · ', $schedule);
             }
-            $right .= "\n찜 · 비교 · 상세";
+            $right .= "\n" . strtoupper($exposureTier);
 
             $item = [
-                'id'           => (int) $row['id'],
-                'title'        => (string) $row['tutor_display_name'],
-                'region_label' => $regionLabel,
-                'summary'      => $center,
-                'price_label'  => $this->formatMonthlyPrice($row['preferred_fee_amount']),
+                'id'                     => (int) $row['id'],
+                'title'                  => (string) $row['tutor_display_name'],
+                'region_label'           => $regionLabel,
+                'summary'                => $center,
+                'price_label'            => $this->formatMonthlyPrice($row['preferred_fee_amount']),
+                'preferred_fee_amount'   => $row['preferred_fee_amount'] !== null ? (int) $row['preferred_fee_amount'] : null,
+                'main_subject_note'      => (string) ($row['subject_name'] ?? ''),
+                'university_name'        => (string) ($row['university_name'] ?? ''),
+                'major_name'             => (string) ($row['major_name'] ?? ''),
+                'career_year_band'       => $row['career_year_band'] ?? null,
+                'lessons_per_week'       => $row['lessons_per_week'] !== null ? (int) $row['lessons_per_week'] : null,
+                'minutes_per_lesson'     => $row['minutes_per_lesson'] !== null ? (int) $row['minutes_per_lesson'] : null,
+                'detail_completion_status' => $detailStatus,
+                'prime_eligible'         => $detailStatus === 'expanded_complete',
+                'exposure_tier'          => $exposureTier,
             ];
 
             $items[] = $item;
@@ -339,6 +371,7 @@ final class SearchService
                 'center' => $center,
                 'right'  => $right,
             ];
+            $i++;
         }
 
         return ['tab' => 'tutor', 'total' => $total, 'rows' => $rows, 'items' => $items];
@@ -502,6 +535,15 @@ final class SearchService
                 'gender'       => $row['gender'],
                 'summary'      => implode(' · ', $centerParts),
                 'budget_label' => $this->formatBudget($budget),
+                'subject_name' => $row['subject_name'] ?? null,
+                'region_label' => $placeRegion,
+                'lesson_format' => $row['lesson_format'] ?? null,
+                'student_gender_group' => $row['student_gender_group'] ?? null,
+                'preferred_student_count_group' => $row['preferred_student_count_group'] ?? null,
+                'preferred_lesson_type' => $row['preferred_lesson_type'] ?? null,
+                'preferred_fee_amount' => $row['preferred_fee_amount'] !== null ? (int) $row['preferred_fee_amount'] : null,
+                'preferred_studyroom_fee_amount' => $row['preferred_studyroom_fee_amount'] !== null ? (int) $row['preferred_studyroom_fee_amount'] : null,
+                'exposure_tier' => 'basic',
             ];
 
             $items[] = $item;
@@ -640,5 +682,17 @@ final class SearchService
         }
 
         return number_format($won) . '원';
+    }
+
+    private function resolveExposureTier(int $index, string $detailStatus): string
+    {
+        if ($index < 3 && $detailStatus === 'expanded_complete') {
+            return 'prime';
+        }
+        if ($index < 8) {
+            return 'pick';
+        }
+
+        return 'basic';
     }
 }

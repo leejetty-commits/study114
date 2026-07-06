@@ -48,6 +48,7 @@ import {
   isPaidProvider,
   getMemoCreditsRemaining,
 } from './store.js';
+import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import { previewState } from '../state.js';
 
 function esc(s) {
@@ -675,7 +676,7 @@ function renderExposure(tutor) {
       </section>
       <section class="p20-exposure-section p20-plans-cta">
         <h3>부oost · Prime (18장)</h3>
-        <p class="p19-form-section__lead">Pick/Hot/점프는 포인트 소비 · Prime은 paid 자격 + 운영 배정</p>
+        <p class="p19-form-section__lead">Prime/Pick은 기간형 포지션 · 쪽지권/열람권은 횟수권 (18§9)</p>
         <div class="p19-form-actions">
           <button type="button" class="btn btn--secondary" ${pickRow?.ok ? '' : 'disabled'}>${esc(pickRow?.statusText || 'Pick')}</button>
           <button type="button" class="btn btn--secondary" ${primeRow?.ok ? '' : 'disabled'}>${esc(primeRow?.statusText || 'Prime')}</button>
@@ -717,7 +718,7 @@ export function bindTutorRegEvents(root, rerender) {
   });
 
   root.querySelectorAll('[data-p21-publish]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const wrap = btn.closest('[data-p21-tutor-id]') || btn.closest('.p19-publish-body');
       const id = Number(wrap?.dataset.p21TutorId || root.querySelector('[data-p21-tutor-id]')?.dataset.p21TutorId);
       const confirms = root.querySelectorAll('[data-p21-confirm]');
@@ -726,32 +727,51 @@ export function bindTutorRegEvents(root, rerender) {
         alert('자기확인 항목을 모두 체크해 주세요.');
         return;
       }
-      const result = publishTutor(id);
-      if (!result.ok) {
-        alert(`공개 불가:\n${result.missing?.join('\n') || result.reason}`);
-        return;
+      try {
+        const result = await publishTutor(id);
+        if (!result.ok) {
+          alert(`공개 불가:\n${result.missing?.join('\n') || result.reason}`);
+          return;
+        }
+        alert('공개되었습니다. (profile_status: published)');
+        rerender();
+      } catch (err) {
+        console.warn('[p21]', err);
+        if (err?.code === 'email_verify_required') {
+          showEmailVerifyOverlay();
+          return;
+        }
+        alert('공개 처리에 실패했습니다.');
       }
-      alert('공개되었습니다. (profile_status: published)');
-      rerender();
     });
   });
 
   root.querySelectorAll('[data-p21-hide]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = Number(btn.closest('[data-p21-tutor-id]')?.dataset.p21TutorId);
       if (!confirm('과외 프로필을 숨김 처리하시겠습니까?')) return;
-      hideTutor(id);
-      rerender();
+      try {
+        await hideTutor(id);
+        rerender();
+      } catch (err) {
+        console.warn('[p21]', err);
+        alert('숨김 처리에 실패했습니다.');
+      }
     });
   });
 
   root.querySelectorAll('[data-p21-delete]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = Number(btn.closest('[data-p21-tutor-id]')?.dataset.p21TutorId);
       if (!confirm('삭제하시겠습니까? (deleted_at)')) return;
-      deleteTutor(id);
-      window.location.hash = '/mypage/registrations/tutors';
-      rerender();
+      try {
+        await deleteTutor(id);
+        window.location.hash = '/mypage/registrations/tutors';
+        rerender();
+      } catch (err) {
+        console.warn('[p21]', err);
+        alert('삭제에 실패했습니다.');
+      }
     });
   });
 

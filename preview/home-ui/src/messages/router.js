@@ -1,12 +1,12 @@
 /** 16장 P16-xx — hash 경로 (마이페이지 우측 본문, 부록 A) */
 
 /** @typedef {'P16-01'|'P16-02'|'P16-03'|'P16-04'} MessagesScreenId */
-/** @typedef {'inbox'|'sent'|'active'} MessagesListTab */
+/** @typedef {'inbox'|'sent'|'active'|'archive'} MessagesListTab */
 
 export const MESSAGES_BASE = '/mypage/messages';
 
 /** @type {MessagesListTab[]} */
-export const MESSAGES_TABS = ['inbox', 'sent', 'active'];
+export const MESSAGES_TABS = ['inbox', 'sent', 'active', 'archive'];
 
 /** @param {string} p */
 function mapLegacyPath(p) {
@@ -14,6 +14,7 @@ function mapLegacyPath(p) {
   if (p === '/messages/inbox') return `${MESSAGES_BASE}/inbox`;
   if (p === '/messages/sent') return `${MESSAGES_BASE}/sent`;
   if (p === '/messages/active') return `${MESSAGES_BASE}/active`;
+  if (p === '/messages/archive') return `${MESSAGES_BASE}/archive`;
   const m = p.match(/^\/messages\/thread\/(\d+)$/);
   if (m) return `${MESSAGES_BASE}/thread/${m[1]}`;
   return null;
@@ -28,7 +29,8 @@ export function normalizeMessagesPath(hashPath) {
   if (
     p === `${MESSAGES_BASE}/inbox` ||
     p === `${MESSAGES_BASE}/sent` ||
-    p === `${MESSAGES_BASE}/active`
+    p === `${MESSAGES_BASE}/active` ||
+    p === `${MESSAGES_BASE}/archive`
   ) {
     return p;
   }
@@ -51,6 +53,7 @@ export function getDefaultMessagesPath() {
 export function getListTabFromPath(path) {
   if (path.endsWith('/sent')) return 'sent';
   if (path.endsWith('/active')) return 'active';
+  if (path.endsWith('/archive')) return 'archive';
   return 'inbox';
 }
 
@@ -67,7 +70,7 @@ export function screenTitle(screenId) {
     'P16-01': '쪽지함',
     'P16-02': '대화방',
     'P16-03': '첫 메모 보내기',
-    'P16-04': '유료등록 게이트',
+    'P16-04': '쪽지권 게이트',
     'P15-08': '쪽지',
   };
   return map[screenId] || '쪽지함';
@@ -75,7 +78,7 @@ export function screenTitle(screenId) {
 
 /** @param {MessagesListTab} tab */
 export function tabLabel(tab) {
-  const map = { inbox: '받은', sent: '보낸', active: '진행중' };
+  const map = { inbox: '받은', sent: '보낸', active: '진행중', archive: '보관함' };
   return map[tab] || tab;
 }
 
@@ -83,6 +86,7 @@ export function tabLabel(tab) {
 export function tabPath(tab) {
   if (tab === 'sent') return `${MESSAGES_BASE}/sent`;
   if (tab === 'active') return `${MESSAGES_BASE}/active`;
+  if (tab === 'archive') return `${MESSAGES_BASE}/archive`;
   return `${MESSAGES_BASE}/inbox`;
 }
 

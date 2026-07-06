@@ -30,8 +30,19 @@ export function homeUiUrl(screen = 'guest') {
   return `${HOME_UI_BASE}/#/${screen}`;
 }
 
+export function authUiUrl(path = '/login') {
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${AUTH_UI_BASE}#${p}`;
+}
+
 /** @param {string} [path] e.g. `/support`, `/support/safe`, `/support/safe/no-prepay` */
 export function supportUiUrl(path = '/support') {
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${HOME_UI_BASE}#${p}`;
+}
+
+/** @param {string} [path] e.g. `/policy/terms`, `/policy/privacy` */
+export function policyUiUrl(path = '/policy/terms') {
   const p = path.startsWith('/') ? path : `/${path}`;
   return `${HOME_UI_BASE}#${p}`;
 }

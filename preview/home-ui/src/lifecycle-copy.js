@@ -31,6 +31,15 @@ export const FORBIDDEN_LIFECYCLE_UI_TERMS = [
   '검증 완료',
   '검증 반려',
   '인증쌤',
+  '플랫폼 심사 통과',
+  'pending 심사',
+  '검수 대기',
+  '신뢰도 점수',
+  '인증됨',
+  '플랫폼 확인 완료',
+  '운영자 확인 완료',
+  '공식 인증',
+  '플랫폼 보증',
 ];
 
 /** @param {string} [status] */
@@ -94,7 +103,7 @@ export const LIFECYCLE_PUBLISH_CONFIRM_NOTE =
   '공개 confirm은 운영자 심사가 아니라 당사자 본인의 자기확인입니다.';
 
 export const TRUST_PLATFORM_DISCLAIMER =
-  '공개된 제출자료는 사용자가 직접 등록·공개 선택한 정보입니다. 우동공과는 과외 성과를 보증하지 않습니다.';
+  '제출자료는 등록자가 공개한 참고 정보입니다. 우동공과는 해당 서류를 인증하거나 보증하지 않으며, 중요한 서류는 필요한 경우 발급기관 기준으로 직접 다시 확인해 주세요.';
 
 export const SUBMISSION_DOCS_LEAD =
   'P15-10 · 21장 — 제출 여부·공개 범위만 표시 · 플랫폼 심사·반려 없음';

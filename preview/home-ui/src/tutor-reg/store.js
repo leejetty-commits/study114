@@ -1,6 +1,14 @@
-/** 21장 tutors 프리뷰 — sessionStorage `[임시]` */
+/** 21장 tutors 프리뷰 — sessionStorage `[임시]` · Dev 과외 로그인 시 API */
 
 import { previewState } from '../state.js';
+import {
+  isRegistrationsApiMode,
+  getTutorsCache,
+  apiTutorAction,
+} from '../registrations-backend.js';
+import { getMemoTicketsRemaining } from '../provider-entitlement.js';
+import { isMessagesApiMode } from '../messages-backend.js';
+import { isPaidRoiApiMode } from '../paid-backend.js';
 
 const KEY = 'study114-preview-tutors-v1';
 
@@ -59,6 +67,9 @@ export function isPaidProvider() {
 
 /** @returns {number} */
 export function getMemoCreditsRemaining() {
+  if (isMessagesApiMode() || isPaidRoiApiMode() || isRegistrationsApiMode()) {
+    return getMemoTicketsRemaining();
+  }
   return isPaidProvider() ? 3 : 0;
 }
 
@@ -181,11 +192,15 @@ function nextId(tutors) {
 }
 
 export function ensureTutorStore() {
+  if (isRegistrationsApiMode()) return;
   if (!sessionStorage.getItem(KEY)) saveAll(SEED.map((r) => ({ ...r })));
 }
 
 /** @returns {TutorRecord[]} */
 export function getTutors(includeDeleted = false) {
+  if (isRegistrationsApiMode()) {
+    return getTutorsCache().filter((r) => includeDeleted || !r.deleted_at);
+  }
   ensureTutorStore();
   return loadAll().filter((r) => includeDeleted || !r.deleted_at);
 }
@@ -265,7 +280,12 @@ export function updateTutor(id, patch) {
 }
 
 /** @param {number} id */
-export function publishTutor(id) {
+export async function publishTutor(id) {
+  if (isRegistrationsApiMode()) {
+    const data = await apiTutorAction(id, 'publish');
+    if (data.ok === false) return { ok: false, reason: data.reason, missing: data.missing };
+    return { ok: true };
+  }
   const tutor = getTutor(id);
   if (!tutor) return { ok: false, reason: 'not_found' };
   const r = getPublishReadiness(tutor);
@@ -279,12 +299,20 @@ export function publishTutor(id) {
 }
 
 /** @param {number} id */
-export function hideTutor(id) {
+export async function hideTutor(id) {
+  if (isRegistrationsApiMode()) {
+    await apiTutorAction(id, 'hide');
+    return getTutor(id);
+  }
   return updateTutor(id, { profile_status: 'hidden' });
 }
 
 /** @param {number} id */
-export function deleteTutor(id) {
+export async function deleteTutor(id) {
+  if (isRegistrationsApiMode()) {
+    await apiTutorAction(id, 'delete');
+    return null;
+  }
   return updateTutor(id, { deleted_at: new Date().toISOString(), profile_status: 'hidden' });
 }
 

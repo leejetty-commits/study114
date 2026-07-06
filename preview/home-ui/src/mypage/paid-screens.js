@@ -1,0 +1,181 @@
+import { previewState } from '../state.js';
+import {
+  FREE_TIER_COPY,
+  PAID_TIER_COPY,
+  P18_GUIDE_LEAD,
+  P18_USAGE_LEAD,
+  P18_HEADLINE,
+  P18_RENEWAL_COPY,
+  P18_EXPOSURE_STATUS,
+  getPaidCatalog,
+  getCatalogVariants,
+  formatCatalogPrice,
+} from './plans-catalog.js';
+import { getRoiMetrics, getPaidOperationalStatus } from '../paid-backend.js';
+import { getMemoTicketsRemaining } from '../provider-entitlement.js';
+import { renderProviderNoticeBanners } from '../provider-notices.js';
+import { GUARDIAN_PLANS_COPY } from './mypage-copy.js';
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+
+function renderCatalogItem(item) {
+  const variants = getCatalogVariants(item);
+  const purchasable = item.kind === 'position' || item.kind === 'count';
+  const variantSelect = purchasable
+    ? `<label class="plans-catalog__pick">
+        <span class="mypage-muted">옵션</span>
+        <select data-paid-variant="${esc(item.id)}" class="student-form__select">
+          ${variants.map((v, i) => `<option value="${esc(v)}"${i === 0 ? ' selected' : ''}>${esc(formatCatalogPrice(item, v))}</option>`).join('')}
+        </select>
+      </label>`
+    : `<p class="mypage-muted plans-catalog__dep">Prime/Pick 기간 구독 후 구매 가능</p>`;
+  const buyBtn = purchasable
+    ? `<button type="button" class="btn btn--secondary btn--sm" data-paid-buy data-product-id="${esc(item.id)}" data-product-label="${esc(item.name)}">구매 (dev PG)</button>`
+    : `<button type="button" class="btn btn--secondary btn--sm" disabled title="포지션 종속">구매 불가</button>`;
+
+  return `
+    <li class="plans-catalog__item${item.featured ? ' is-featured' : ''}">
+      <div class="plans-catalog__head">
+        <strong>${esc(item.name)}</strong>
+        <span class="plans-catalog__kind">${esc(item.kind)}</span>
+      </div>
+      <p class="plans-catalog__tagline">${esc(item.tagline)}</p>
+      ${variantSelect}
+      <ul class="plans-catalog__bullets">${item.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
+      ${buyBtn}
+    </li>`;
+}
+
+/** P18-01 — 상품·권한 카탈로그 */
+export function renderPaidGuide(role) {
+  if (role === 'parent') {
+    return `
+      <section class="mypage-panel">
+        <p class="mypage-lead">${GUARDIAN_PLANS_COPY.lead}</p>
+        <div class="mypage-info-box">
+          <p>${GUARDIAN_PLANS_COPY.body}</p>
+          <p class="mypage-muted">${GUARDIAN_PLANS_COPY.footnote}</p>
+        </div>
+        <a href="#/support/faq" class="btn btn--secondary" data-nav="/support/faq">FAQ (P17-04)</a>
+      </section>`;
+  }
+
+  const tier = previewState.providerSubscription;
+  const tierCopy = tier === 'paid' ? PAID_TIER_COPY : FREE_TIER_COPY;
+  const catalog = getPaidCatalog(role);
+  const roleLabel = role === 'study_room' ? '공부방' : '과외쌤';
+  const ops = getPaidOperationalStatus();
+  const memoRemaining = ops?.tickets?.memo?.remaining ?? getMemoTicketsRemaining();
+  const viewRemaining = ops?.tickets?.request_view?.remaining ?? 0;
+  const activePositions = ops?.exposure?.positions ?? [];
+  const statusBadges = [
+    memoRemaining > 0
+      ? `<span class="plans-status-badge" title="쪽지권 잔여">쪽지권 ${memoRemaining}회</span>`
+      : '',
+    viewRemaining > 0
+      ? `<span class="plans-status-badge" title="열람권 잔여">열람권 ${viewRemaining}회</span>`
+      : '',
+    ...activePositions.map(
+      (p) =>
+        `<span class="plans-status-badge is-active" title="기간형 노출">${esc(String(p.sku).toUpperCase())} D-${p.days_left}</span>`,
+    ),
+  ]
+    .filter(Boolean)
+    .join('');
+
+  return `
+    <section class="mypage-panel">
+      <p class="mypage-lead">P18-01 · ${esc(P18_HEADLINE)}</p>
+      ${renderProviderNoticeBanners()}
+      <p class="mypage-muted">${esc(P18_GUIDE_LEAD)}</p>
+      ${statusBadges ? `<p class="plans-status-row">${statusBadges}</p>` : ''}
+      <p class="mypage-muted">역할: <strong>${roleLabel}</strong> · 데모 tier: <strong>${tier}</strong> · <a href="#/mypage/plans" data-mypage-nav="/mypage/plans">P15-09 요약</a></p>
+      <div class="mypage-info-box plans-tier-box">
+        <strong>${esc(tierCopy.title)}</strong>
+        <ul class="plans-tier-list">${tierCopy.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+      </div>
+      <h2 class="mypage-subhead">상품 카탈로그 (${roleLabel} 우선순위 · 18§4-1)</h2>
+      <ul class="plans-catalog">
+        ${catalog.map(renderCatalogItem).join('')}
+      </ul>
+      <div class="mypage-info-box">
+        <strong>${esc(P18_RENEWAL_COPY.title)}</strong>
+        <ul class="plans-tier-list">${P18_RENEWAL_COPY.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+      </div>
+      <p class="mypage-note">P16-04 게이트 → 이 화면 · <a href="#/mypage/paid/usage" data-mypage-nav="/mypage/paid/usage">P18-02 반응·운영 요약</a></p>
+    </section>`;
+}
+
+/** P18-02 — ROI 무료 3종 + 노출 운영 상태 */
+export function renderPaidUsage(role) {
+  if (role === 'parent') {
+    return `
+      <section class="mypage-panel">
+        <p class="mypage-muted">${GUARDIAN_PLANS_COPY.lead}</p>
+      </section>`;
+  }
+
+  const metrics = getRoiMetrics();
+  const ops = getPaidOperationalStatus();
+  const exposure = ops?.exposure;
+  const tickets = ops?.tickets;
+
+  const exposureLabel = exposure?.label ?? P18_EXPOSURE_STATUS.basic;
+  const positionRows =
+    exposure?.positions?.length > 0
+      ? `<ul class="plans-tier-list">${exposure.positions
+          .map(
+            (p) =>
+              `<li><strong>${esc(String(p.sku).toUpperCase())}</strong> · ${p.days_left}일 남음 (~${esc(String(p.ends_at).slice(0, 10))})</li>`,
+          )
+          .join('')}</ul>`
+      : '';
+
+  const ticketRows = tickets
+    ? `<div class="mypage-stats roi-metrics">
+        <div class="mypage-stat" title="선제 쪽지">
+          <span>${esc(tickets.memo.label)}</span>
+          <strong>${tickets.memo.remaining}</strong>
+          <span class="mypage-muted roi-metrics__period">잔여</span>
+        </div>
+        <div class="mypage-stat" title="요청문 열람">
+          <span>${esc(tickets.request_view.label)}</span>
+          <strong>${tickets.request_view.remaining}</strong>
+          <span class="mypage-muted roi-metrics__period">잔여</span>
+        </div>
+      </div>`
+    : '';
+
+  return `
+    <section class="mypage-panel">
+      <p class="mypage-lead">P18-02 · ${esc(P18_USAGE_LEAD)}</p>
+      ${renderProviderNoticeBanners()}
+      <p class="mypage-muted"><a href="#/mypage/paid" data-mypage-nav="/mypage/paid">P18-01 카탈로그</a></p>
+      <h2 class="mypage-subhead">노출 운영 상태</h2>
+      <div class="mypage-info-box">
+        <p><strong>${esc(exposureLabel)}</strong></p>
+        ${positionRows}
+        <p class="mypage-muted">${esc(P18_EXPOSURE_STATUS.note)}</p>
+      </div>
+      <h2 class="mypage-subhead">횟수권 잔여</h2>
+      ${ticketRows || '<p class="mypage-muted">API 연동 후 표시됩니다.</p>'}
+      <h2 class="mypage-subhead">반응 요약 (ROI 무료 3종)</h2>
+      <div class="mypage-stats roi-metrics" aria-label="ROI 무료 3종">
+        ${metrics.map(
+          (m) => `
+          <div class="mypage-stat is-emphasis" title="${esc(m.hint)}">
+            <span>${esc(m.label)}</span>
+            <strong>${m.value}</strong>
+            <span class="mypage-muted roi-metrics__period">${esc(m.period)}</span>
+          </div>`,
+        ).join('')}
+      </div>
+      <div class="mypage-info-box">
+        <p>동네 단위·저숫자도 의미 있음 (18§6-2) · 인사이트·알림형은 후순위</p>
+        <p class="mypage-muted">쪽지 시도/차단 횟수는 ROI 메인 숫자 ✕ — P16-04 내부 업셀만</p>
+      </div>
+      <a href="#/mypage/paid" class="btn btn--secondary" data-mypage-nav="/mypage/paid">노출·연락 상품 보기 (P18-01)</a>
+    </section>`;
+}

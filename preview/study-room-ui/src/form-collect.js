@@ -100,6 +100,8 @@ export function syncFacilityFromForm(form, state) {
   state.contact_time_note = String(fd.get('contact_time_note') ?? '');
   state.contact_phone = String(fd.get('contact_phone') ?? '');
   state.youtube_url = String(fd.get('youtube_url') ?? '');
+  state.facebook_url = String(fd.get('facebook_url') ?? '');
+  state.instagram_url = String(fd.get('instagram_url') ?? '');
   state.profile_status = String(fd.get('profile_status') ?? 'draft');
 }
 
@@ -157,6 +159,8 @@ export function payloadForStep(step, state) {
         contact_time_note: state.contact_time_note,
         contact_phone: state.contact_phone,
         youtube_url: state.youtube_url,
+        facebook_url: state.facebook_url,
+        instagram_url: state.instagram_url,
         profile_status: state.profile_status,
         images: state.images.map((img) => ({
           image_type: img.image_type,

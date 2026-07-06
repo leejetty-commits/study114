@@ -2,7 +2,7 @@
 
 **상태: 잠금**  
 **UI 프리뷰:** [preview/home-ui/](../../preview/home-ui/) · http://localhost:5174  
-**연동:** [2장](02-registration-and-member-db.md) · [4장 §6-1](04-member-db-and-role-profiles.md#6-1-역할-규칙-잠금) · [5장](05-study-room-db.md) · [04-location-policy.md](../04-location-policy.md)
+**연동:** [2장](02-registration-and-member-db.md) · [4장 §6-1](04-member-db-and-role-profiles.md#6-1-역할-규칙-잠금) · [5장](05-study-room-db.md) · [04-location-policy.md](../04-location-policy.md) · **[9장 부록 — 로그인·인증정책](09-appendix-login-and-auth-policy.md)**
 
 ---
 
@@ -243,9 +243,12 @@
 
 ### 10-2. 로그인
 
-- **최신 단순형** · 빠른 로그인·가입·소셜 진입 우선
-- 네이버 / 구글 소셜 **유지 가능** `[임시]` API
-- SSOT UI: `preview/auth-ui/`
+- **9장 부록** 레이아웃: 흐린 홈 실루엣 · 중앙 카드 · 유틸 바(지역·이용안내·고객센터) · **카드 아래** 목적 칩 3개
+- 빠른 로그인·가입·소셜 진입 우선 · 성공 시 **home-ui** 복귀 (`return_to` 지원)
+- 소셜 **3축 (한국)**: **네이버 → 카카오 → 구글** — `user_oauth_accounts` · `/api/auth/oauth/`
+- **인증정책·로그인 부록**: [9장 부록](09-appendix-login-and-auth-policy.md) §16 — 이메일+비밀번호 1차 · 행동 전 인증 · 비밀번호 규칙 · 메일 링크 재설정
+- **소셜 신규 가입**: OAuth 콜백 → `#/signup/role?from=oauth` → 역할 선택 → (공급자) 기본등록
+- SSOT UI: `preview/auth-ui/` · 상세: **[9장 부록](09-appendix-login-and-auth-policy.md)**
 
 ### 10-3. 회원가입
 
@@ -321,5 +324,7 @@
 
 | 날짜 | 내용 |
 |------|------|
+| 2026-07-07 | **9장 부록** SSOT — 로그인·인증정책 §16 통합 (`09-appendix-login-and-auth-policy.md`) |
+| 2026-07-07 | 프리뷰: 학부모·공부방·과외쌤 홈 **2탭 통일** (`provider-home`) · 공급자 탭1=내 노출 · GNB=search-ui 탐색 · [home-ui/DOC-CHECKLIST](../../preview/home-ui/DOC-CHECKLIST.md) |
 | 2026-05-31 | 4종 메인·노출 규칙 초안 |
 | 2026-05-31 | Notion 9장 원문 전면 반영 — 데모 홈·슬롯·등급·반응형·광고 |

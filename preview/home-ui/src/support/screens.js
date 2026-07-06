@@ -142,7 +142,7 @@ function renderHome() {
        </a>`,
   ).join('');
   const terms = TERMS_LINKS.map(
-    (t) => `<span class="sup-term-chip">${esc(t.label)} · ${esc(t.href)}</span>`,
+    (t) => `<a href="#${t.href}" class="sup-term-chip" data-sup-nav="${t.href}">${esc(t.label)}</a>`,
   ).join('');
 
   return `
@@ -171,6 +171,7 @@ function renderGuideSection() {
        <div class="sup-inline-links">
          <a href="#/support/faq" class="sup-inline-link" data-sup-nav="/support/faq">FAQ 보기</a>
          <a href="#/support/safe" class="sup-inline-link" data-sup-nav="/support/safe">안전과외 가이드</a>
+         <a href="#/library" class="sup-inline-link" data-sup-nav="/library">자료실</a>
        </div>`,
       { lead: `역할별 요약 — ${roleGuide.title}` },
     )}`;
@@ -390,17 +391,22 @@ export function bindSupportScreenEvents(root, path, rerender) {
 
   const form = root.querySelector('[data-sup-contact-form]');
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form);
-      const ticket = createTicket({
-        email: String(fd.get('email')),
-        category: String(fd.get('category')),
-        body: String(fd.get('body')),
-        role: getNavRole(),
-      });
-      sessionStorage.setItem(TICKET_FLASH_KEY, ticket.id);
-      rerender?.();
+      try {
+        const ticket = await createTicket({
+          email: String(fd.get('email')),
+          category: String(fd.get('category')),
+          body: String(fd.get('body')),
+          role: getNavRole(),
+        });
+        sessionStorage.setItem(TICKET_FLASH_KEY, ticket.id);
+        rerender?.();
+      } catch (err) {
+        console.warn('[support]', err);
+        alert('문의 접수에 실패했습니다.');
+      }
     });
   }
 

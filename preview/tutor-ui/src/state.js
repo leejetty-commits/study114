@@ -148,6 +148,8 @@ export const registerState = {
   teaching_style_badges: ['meticulous', 'concept_focus'],
   contact_time_note: '평일 18:00~22:00',
   youtube_url: '',
+  facebook_url: '',
+  instagram_url: '',
   images: [{ image_type: 'profile', sort_order: 1, name: 'profile.jpg' }],
   profile_status: 'draft',
   detail_completion_status: 'basic_only',

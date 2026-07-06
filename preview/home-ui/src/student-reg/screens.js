@@ -1,4 +1,5 @@
 import { authStudentAddUrl } from '../../../shared/student-auth-bridge.js';
+import { renderEmptyStateCard } from '../empty-state-copy.js';
 import { statusLabel } from '../mypage/preview-data.js';
 import {
   LIFECYCLE_FOOTNOTE_REG,
@@ -32,6 +33,7 @@ import {
   labelTeachingStyles,
   studentToExposureRow,
 } from './format.js';
+import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import {
   getStudentsByTab,
   getStudent,
@@ -306,7 +308,9 @@ function renderList(tab) {
 
   const cards =
     students.length === 0
-      ? `<p class="mypage-empty">해당 상태의 자녀가 없습니다.</p>`
+      ? renderEmptyStateCard(tab === 'all' ? 'students' : 'studentsTab', {
+          ctaHref: tab === 'all' ? authStudentAddUrl() : undefined,
+        })
       : `<div class="p19-card-grid">
         ${students
           .map(
@@ -695,12 +699,17 @@ export function bindStudentRegEvents(root, rerender) {
       sync();
     }
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = Number(form.dataset.p19StudentId);
       const patch = parseStudentForm(form);
-      updateStudent(id, patch);
-      rerender();
+      try {
+        await updateStudent(id, patch);
+        rerender();
+      } catch (err) {
+        console.warn('[p19]', err);
+        alert('저장에 실패했습니다.');
+      }
     });
 
     form.querySelectorAll('.p19-chip input[type="checkbox"]').forEach((input) => {
@@ -719,35 +728,54 @@ export function bindStudentRegEvents(root, rerender) {
   });
 
   root.querySelectorAll('[data-p19-publish]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const wrap = btn.closest('[data-p19-student-id]');
       const id = Number(wrap?.dataset.p19StudentId);
-      const result = publishStudent(id);
-      if (!result.ok) {
-        alert(`공개 불가:\n${result.missing?.join('\n') || result.reason}`);
-        return;
+      try {
+        const result = await publishStudent(id);
+        if (!result.ok) {
+          alert(`공개 불가:\n${result.missing?.join('\n') || result.reason}`);
+          return;
+        }
+        alert('공개되었습니다. (published)');
+        rerender();
+      } catch (err) {
+        console.warn('[p19]', err);
+        if (err?.code === 'email_verify_required') {
+          showEmailVerifyOverlay();
+          return;
+        }
+        alert('공개 처리에 실패했습니다.');
       }
-      alert('공개되었습니다. (published)');
-      rerender();
     });
   });
 
   root.querySelectorAll('[data-p19-hide]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = Number(btn.closest('[data-p19-student-id]')?.dataset.p19StudentId);
       if (!confirm('노출을 철회(숨김)하시겠습니까?')) return;
-      hideStudent(id);
-      rerender();
+      try {
+        await hideStudent(id);
+        rerender();
+      } catch (err) {
+        console.warn('[p19]', err);
+        alert('숨김 처리에 실패했습니다.');
+      }
     });
   });
 
   root.querySelectorAll('[data-p19-delete]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = Number(btn.closest('[data-p19-student-id]')?.dataset.p19StudentId);
       if (!confirm('삭제하시겠습니까? (deleted)')) return;
-      deleteStudent(id);
-      window.location.hash = '/mypage/registrations/students';
-      rerender();
+      try {
+        await deleteStudent(id);
+        window.location.hash = '/mypage/registrations/students';
+        rerender();
+      } catch (err) {
+        console.warn('[p19]', err);
+        alert('삭제에 실패했습니다.');
+      }
     });
   });
 }

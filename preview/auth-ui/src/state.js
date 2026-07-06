@@ -71,7 +71,7 @@ export function setRole(role) {
 export const FIND_ID_TEMP = true;
 
 /** [임시] 비밀번호 찾기 — SSOT 2장 §3.7 미잠금 */
-export const FIND_PASSWORD_TEMP = true;
+export const FIND_PASSWORD_TEMP = false;
 
 export function markTermsAgreed() {
   signupState.termsAgreed = true;

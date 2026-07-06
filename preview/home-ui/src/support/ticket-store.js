@@ -1,5 +1,13 @@
 /** 17c — 운영 문의 티켓 (프리뷰 sessionStorage `[임시]`) */
 
+import {
+  isSupportApiMode,
+  getTicketsCache,
+  getTicketsCacheByEmail,
+  apiCreateTicket,
+  apiUpdateTicketStatus,
+} from './support-backend.js';
+
 const KEY = 'study114-support-tickets-v1';
 
 /**
@@ -45,7 +53,10 @@ function nextTicketId() {
  * @param {{ email: string, category: string, body: string, role?: string }} input
  * @returns {SupportTicket}
  */
-export function createTicket(input) {
+export async function createTicket(input) {
+  if (isSupportApiMode()) {
+    return apiCreateTicket(input);
+  }
   const now = new Date().toISOString();
   const ticket = {
     id: nextTicketId(),
@@ -65,17 +76,26 @@ export function createTicket(input) {
 
 /** @returns {SupportTicket[]} */
 export function listTickets() {
+  if (isSupportApiMode()) {
+    return getTicketsCache();
+  }
   return loadAll().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 /** @param {string} email */
 export function listTicketsByEmail(email) {
+  if (isSupportApiMode()) {
+    return getTicketsCacheByEmail(email);
+  }
   const normalized = email.trim().toLowerCase();
   return listTickets().filter((t) => t.email.toLowerCase() === normalized);
 }
 
 /** @param {string} id @param {TicketStatus} status */
-export function updateTicketStatus(id, status) {
+export async function updateTicketStatus(id, status) {
+  if (isSupportApiMode()) {
+    return apiUpdateTicketStatus(id, status);
+  }
   const tickets = loadAll();
   const idx = tickets.findIndex((t) => t.id === id);
   if (idx < 0) return null;

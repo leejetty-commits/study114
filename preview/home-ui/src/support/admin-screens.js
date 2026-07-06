@@ -70,6 +70,10 @@ export function renderAdminScreen(path) {
            <span class="sup-admin-hub__title">티켓 관리</span>
            <span class="sup-admin-hub__desc">P17-07 접수 목록·상태</span>
          </a>
+         <a href="#/admin" class="sup-admin-hub__card sup-admin-hub__card--a28" data-sup-nav="/admin">
+           <span class="sup-admin-hub__title">A28 운영 콘솔</span>
+           <span class="sup-admin-hub__desc">28장 · RED LINE · #/admin/*</span>
+         </a>
        </div>`,
     )
   );
@@ -177,10 +181,10 @@ export function bindAdminScreenEvents(root, path, rerender) {
     });
 
     root.querySelectorAll('[data-notice-delete]').forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-notice-delete');
         if (!id || !window.confirm('이 공지를 삭제할까요?')) return;
-        deleteNotice(id);
+        await deleteNotice(id);
         rerender();
       });
     });
@@ -191,16 +195,16 @@ export function bindAdminScreenEvents(root, path, rerender) {
       form.querySelector('[name="date"]').value = new Date().toISOString().slice(0, 10);
     });
 
-    form?.querySelector('[data-notice-seed-reset]')?.addEventListener('click', () => {
+    form?.querySelector('[data-notice-seed-reset]')?.addEventListener('click', async () => {
       if (!window.confirm('공지를 초기 시드 데이터로 되돌릴까요?')) return;
-      resetNoticesToSeed();
+      await resetNoticesToSeed();
       rerender();
     });
 
-    form?.addEventListener('submit', (e) => {
+    form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form);
-      upsertNotice({
+      await upsertNotice({
         id: String(fd.get('id') || '').trim() || undefined,
         date: String(fd.get('date')),
         title: String(fd.get('title')),
@@ -215,10 +219,10 @@ export function bindAdminScreenEvents(root, path, rerender) {
 
   if (path === '/support/admin/tickets') {
     root.querySelectorAll('[data-ticket-status]').forEach((sel) => {
-      sel.addEventListener('change', () => {
+      sel.addEventListener('change', async () => {
         const id = sel.getAttribute('data-ticket-status');
         if (!id) return;
-        updateTicketStatus(id, sel.value);
+        await updateTicketStatus(id, sel.value);
       });
     });
   }

@@ -2,6 +2,7 @@ import { registerState } from '../state.js';
 import { syncContactFromForm } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import { renderRegisterShell, renderNavButtons, renderTempNotice, bindGlobalEvents, navigate } from '../layout.js';
+import { validatePromoUrls } from '../../../shared/promo-links.js';
 
 export function renderContact() {
   const s = registerState;
@@ -13,11 +14,25 @@ export function renderContact() {
         <span class="field-db-name">contact_time_note</span>
         <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note}" />
       </div>
+
+      <h3 class="register-section-title">외부 홍보 링크 (상세등록)</h3>
+      <p class="register-hint mb-4">외부 URL만 · 각 1개 · 빈값 허용</p>
       <div class="form-group">
-        <label class="form-label" for="youtube_url">YouTube (상세등록 1개)</label>
+        <label class="form-label" for="youtube_url">유튜브 링크</label>
         <span class="field-db-name">youtube_url</span>
         <input class="form-input" type="url" id="youtube_url" name="youtube_url" value="${s.youtube_url}" placeholder="https://www.youtube.com/..." />
       </div>
+      <div class="form-group">
+        <label class="form-label" for="facebook_url">페이스북 링크</label>
+        <span class="field-db-name">facebook_url</span>
+        <input class="form-input" type="url" id="facebook_url" name="facebook_url" value="${s.facebook_url}" placeholder="https://www.facebook.com/..." />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="instagram_url">인스타그램 링크</label>
+        <span class="field-db-name">instagram_url</span>
+        <input class="form-input" type="url" id="instagram_url" name="instagram_url" value="${s.instagram_url}" placeholder="https://www.instagram.com/..." />
+      </div>
+
       <div class="form-group">
         <label class="form-label" for="profile_status">저장 상태</label>
         <span class="field-db-name">profile_status</span>
@@ -39,6 +54,11 @@ export function bindContactEvents(root) {
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
       syncContactFromForm(root.querySelector('[data-form="contact"]'), registerState);
+      const urlErr = validatePromoUrls(registerState);
+      if (urlErr) {
+        alert(urlErr);
+        return;
+      }
       await saveAndNavigate(registerState, 'contact', '/register/complete');
     });
   });

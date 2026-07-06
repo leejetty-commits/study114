@@ -1,4 +1,5 @@
 import { AUTH_UI_BASE } from './data.js';
+import { renderEmptyStateCard } from './empty-state-copy.js';
 import {
   STUDY_ROOM_COMPARE_ROWS,
   TUTOR_COMPARE_ROWS,
@@ -69,10 +70,11 @@ function renderCompareTable(items, rows) {
 }
 
 function renderCompareEmpty(kind) {
-  const label = kind === 'study_room' ? '공부방' : '과외쌤';
-  return `
-    <p class="compare-modal__empty">비교할 ${label}을(를) 아직 선택하지 않았습니다.</p>
-    <p class="compare-modal__note">카드·리스트의 ⇄ 버튼으로 최대 ${COMPARE_MAX}개까지 담은 뒤 「비교하기」를 눌러주세요.</p>`;
+  const exploreHref = kind === 'study_room' ? '#/parent' : '#/parent';
+  return renderEmptyStateCard('compare', {
+    ctaHref: exploreHref,
+    links: [{ label: '탐색하기', href: exploreHref }],
+  });
 }
 
 /**

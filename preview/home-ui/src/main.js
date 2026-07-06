@@ -1,12 +1,21 @@
+import '@search-ui/styles/search.css';
 import { getCurrentScreen } from './state.js';
 import { renderGuest, bindGuestEvents } from './screens/guest.js';
 import { renderParent, bindParentEvents } from './screens/parent.js';
 import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';
 import { renderTutor, bindTutorEvents } from './screens/tutor.js';
-import { isMypageRoute, bootstrapMypageRoute, bootstrapMessagesRoute, isSupportRoute, bootstrapSupportRoute } from './state.js';
+import { isMypageRoute, bootstrapMypageRoute, bootstrapMessagesRoute, isSupportRoute, bootstrapSupportRoute, isPolicyRoute, bootstrapPolicyRoute, isLibraryRoute, bootstrapLibraryRoute, isAdminRoute, bootstrapAdminRoute } from './state.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
 import { renderSupport, bindSupportEvents } from './support/index.js';
-import { initAuthSession } from './auth-session.js';
+import { renderPolicy, bindPolicyEvents } from './policy-index.js';
+import { renderLibrary, bindLibraryEvents } from './library/index.js';
+import { renderAdmin, bindAdminEvents } from './admin/index.js';
+import { initAuthSession, isAdminUser } from './auth-session.js';
+import { parseHashQuery } from '../../shared/preview-links.js';
+import { showEmailVerifyOverlay } from './email-verify-overlay.js';
+import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
+import { activateBoardApi, deactivateBoardApi } from './board/board-backend.js';
+import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -17,9 +26,24 @@ const SCREENS = {
 
 function render() {
   const app = document.getElementById('app');
+  if (isAdminRoute()) {
+    app.innerHTML = renderAdmin();
+    bindAdminEvents(app, render);
+    return;
+  }
+  if (isLibraryRoute()) {
+    app.innerHTML = renderLibrary();
+    bindLibraryEvents(app, render);
+    return;
+  }
   if (isSupportRoute()) {
     app.innerHTML = renderSupport();
     bindSupportEvents(app, render);
+    return;
+  }
+  if (isPolicyRoute()) {
+    app.innerHTML = renderPolicy();
+    bindPolicyEvents(app, render);
     return;
   }
   if (isMypageRoute()) {
@@ -52,6 +76,9 @@ function init() {
     bootstrapMypageRoute();
     bootstrapMessagesRoute();
     bootstrapSupportRoute();
+    bootstrapPolicyRoute();
+    bootstrapLibraryRoute();
+    bootstrapAdminRoute();
     if (!window.location.hash) {
       window.location.hash = '#/guest';
     }
@@ -62,10 +89,47 @@ function init() {
         showBootError(e);
       }
     });
-    window.addEventListener('auth:login', () => render());
-    window.addEventListener('auth:logout', () => render());
-    initAuthSession()
-      .then(() => render())
+    window.addEventListener('auth:login', async () => {
+      if (isAdminUser()) {
+        await activateAdminApi().catch((err) => {
+          console.warn('[admin] api disabled — static A28 fallback', err);
+          deactivateAdminApi();
+        });
+      } else {
+        deactivateAdminApi();
+      }
+      render();
+    });
+    window.addEventListener('auth:logout', () => {
+      deactivateAdminApi();
+      render();
+    });
+    Promise.all([
+      activateSupportApi().catch((err) => {
+        console.warn('[support] api disabled — sessionStorage fallback', err);
+        deactivateSupportApi();
+      }),
+      activateBoardApi().catch((err) => {
+        console.warn('[board] api disabled — sessionStorage fallback', err);
+        deactivateBoardApi();
+      }),
+      initAuthSession(),
+    ])
+      .then(async ([, , user]) => {
+        if (user && isAdminUser()) {
+          await activateAdminApi().catch((err) => {
+            console.warn('[admin] api disabled — static A28 fallback', err);
+            deactivateAdminApi();
+          });
+        }
+        const q = parseHashQuery();
+        if (q.email_verified === '1') {
+          window.alert('이메일 인증이 완료되었습니다.');
+        } else if (q.email_verify_error) {
+          showEmailVerifyOverlay();
+        }
+        render();
+      })
       .catch((err) => showBootError(err));
   } catch (err) {
     showBootError(err);

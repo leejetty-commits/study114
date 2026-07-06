@@ -3,6 +3,10 @@ import { getCompareIds, isInCompare, getCompareItems } from '../user-actions-sta
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { compareRibbonText, compareOpenCta } from '../handoff-copy.js';
 import { formatTrustInfoStrip, TRUST_PLATFORM_DISCLAIMER } from '../lifecycle-copy.js';
+import { AUTH_UI_BASE } from '../data.js';
+import {
+  renderPermissionStateCard,
+} from '../empty-state-copy.js';
 import { navigate } from '../state.js';
 import { openCompareModal } from '../compare-modal.js';
 
@@ -162,14 +166,17 @@ export function buildTrustStrip(kind, item) {
 
 /** @param {'study_room'|'tutor'|'student'} kind @param {object} item @param {string} viewer */
 export function buildContactPanel(kind, item, viewer) {
+  const loginHref = `${AUTH_UI_BASE}/#/login`;
   if (viewer === 'guest') {
-    return `<ul class="p24-contact"><li class="p24-contact__item is-locked">로그인 후 쪽지·메모 가능</li></ul>`;
+    return `<div class="p24-contact">${renderPermissionStateCard('guest', { loginHref })}</div>`;
   }
-  if (kind === 'student' && viewer === 'tutor') {
+  if (kind === 'student' && (viewer === 'tutor' || viewer === 'study_room')) {
     const can = item.exposure_status === 'published';
-    return `<ul class="p24-contact">
-      <li class="p24-contact__item${can ? ' is-ok' : ' is-locked'}">${can ? '✓ 메모 가능' : '🔒 접촉 불가'}</li>
-    </ul>`;
+    if (!can) {
+      return `<div class="p24-contact">${renderPermissionStateCard('student_protection')}</div>`;
+    }
+    const label = viewer === 'tutor' ? '메모 가능' : '상담/쪽지 가능';
+    return `<ul class="p24-contact"><li class="p24-contact__item is-ok">${label}</li></ul>`;
   }
   if (kind === 'study_room') {
     const st = item.inquiry_status || 'open';

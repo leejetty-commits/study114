@@ -1,29 +1,17 @@
-import { DUMMY_STUDY_ROOMS, MY_STUDY_ROOM, SLOT_TOP, SLOT_MID } from '../data.js';
-import { formatMonthlyWon } from '../exposure-format.js';
-import {
-  renderHomeShell,
-  renderRegionBar,
-  renderTop3Section,
-  renderMid5Section,
-  renderBottomList,
-  renderMapBlock,
-  renderAdInline,
-  bindLayoutEvents,
-} from '../layout.js';
+import { MY_STUDY_ROOM } from '../data.js';
+import { previewState, setStudyRoomTab, resetStudyRoomFind } from '../state.js';
+import { renderHomeShell, renderAdInline, bindLayoutEvents } from '../layout.js';
+import { bindCompareEvents } from '../compare-modal.js';
+import { bindUserActionEvents } from '../user-actions-ui.js';
 import { bindDetailDecisionEvents } from '../detail-decision/index.js';
-import { EXPOSURE_STUDENTS } from '../exposure-data.js';
-import { renderBrowseList } from '../exposure-render.js';
-
-function renderStudentFindPreview() {
-  return `
-    <section class="home-section">
-      <div class="list-block">
-        <div class="list-block__head">학생찾기 (13§7 · P25-S10)</div>
-        ${renderBrowseList('student', EXPOSURE_STUDENTS.slice(0, 6), { guest: false, viewerRole: 'study_room' })}
-      </div>
-    </section>
-  `;
-}
+import {
+  renderProviderHomeTabs,
+  renderProviderHomeBody,
+  bindProviderHomeTabEvents,
+  getProviderHomeMode,
+  isProviderHomeSelfTab,
+} from '../provider-home.js';
+import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 
 function renderMyStudyRoomBox() {
   return `
@@ -45,33 +33,14 @@ function renderMyStudyRoomBox() {
 }
 
 export function renderStudyRoom() {
-  const top3 = DUMMY_STUDY_ROOMS.slice(0, 3).map((r, i) => ({
-    slot: SLOT_TOP[i],
-    name: r.study_room_name,
-    meta: r.main_subject_note,
-    price: formatMonthlyWon(r.price_amount),
-  }));
-  const mid5 = DUMMY_STUDY_ROOMS.slice(0, 5).map((r, i) => ({
-    slot: SLOT_MID[i],
-    name: r.study_room_name,
-    meta: r.main_subject_note,
-    price: formatMonthlyWon(r.price_amount),
-  }));
-  const list = DUMMY_STUDY_ROOMS.map((r) => ({
-    title: r.study_room_name,
-    meta: `${r.main_subject_note} · ${formatMonthlyWon(r.price_amount)}`,
-    date: r.registered_at,
-  }));
+  const tab = previewState.studyRoomTab;
+  const showMyBox = isProviderHomeSelfTab('study_room', tab);
 
   const content = `
-    ${renderRegionBar(false)}
-    ${renderMyStudyRoomBox()}
-    ${renderMapBlock()}
-    ${renderTop3Section('상단 고정 3박스', '공부방 노출 슬롯', top3)}
+    ${renderProviderHomeTabs('study_room', tab)}
+    ${showMyBox ? renderMyStudyRoomBox() : ''}
+    ${renderProviderHomeBody('study_room', tab, previewState.studyRoomFind)}
     ${renderAdInline()}
-    ${renderMid5Section('중단 고정 5박스', '고정형 시작', mid5)}
-    ${renderBottomList('공부방 리스트', list)}
-    ${renderStudentFindPreview()}
   `;
 
   return renderHomeShell('study_room', content, { showAuth: false, showRoleSwitch: true });
@@ -79,5 +48,29 @@ export function renderStudyRoom() {
 
 export function bindStudyRoomEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
-  bindDetailDecisionEvents(root, { onRerender: rerender, viewer: 'study_room' });
+
+  bindProviderHomeTabEvents(root, rerender, {
+    role: 'study_room',
+    getTab: () => previewState.studyRoomTab,
+    setTab: setStudyRoomTab,
+    resetFind: resetStudyRoomFind,
+  });
+
+  bindFindSurfaceEvents(root, rerender, {
+    getTab: () => getProviderHomeMode('study_room', previewState.studyRoomTab).searchTab,
+    getState: () => previewState.studyRoomFind,
+    role: 'study_room',
+  });
+
+  if (!isProviderHomeSelfTab('study_room', previewState.studyRoomTab)) {
+    bindCompareEvents(root, true);
+    bindUserActionEvents(root, rerender, { sourceRoute: 'study_room' });
+  }
+
+  bindDetailDecisionEvents(root, {
+    onRerender: rerender,
+    viewer: 'study_room',
+    sourceRoute: 'study_room',
+    getStudentItem: (id) => previewState.studyRoomFind.activeResultItems?.find((x) => x.id === id),
+  });
 }

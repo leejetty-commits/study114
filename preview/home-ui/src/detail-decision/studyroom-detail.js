@@ -4,6 +4,7 @@ import {
   formatLessonPlace,
 } from '../exposure-format.js';
 import { esc, inquiryStatusLabel } from './detail-utils.js';
+import { renderPromoLinksSection } from '../../../shared/promo-links.js';
 
 /** @param {object} item @param {string} viewer */
 export function renderStudyRoomDetailBody(item, viewer) {
@@ -35,5 +36,6 @@ export function renderStudyRoomDetailBody(item, viewer) {
         <dt>시설</dt><dd>${esc(item.facility_summary || '—')}</dd>
         <dt>교육청 등록</dt><dd>${item.education_office_registered ? '공개' : '미공개'}</dd>
       </dl>
-    </section>`;
+    </section>
+    ${renderPromoLinksSection(item, esc)}`;
 }

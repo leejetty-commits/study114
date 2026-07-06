@@ -1,0 +1,20 @@
+{
+  "name": "study114",
+  "private": true,
+  "scripts": {
+    "e2e": "playwright test",
+    "e2e:a28-07": "playwright test e2e/a28-07-exposure-patch.spec.js",
+    "e2e:ops-smoke": "playwright test e2e/a28-07-ops-smoke.spec.js",
+    "e2e:p18-02": "playwright test e2e/p18-02-roi-api.spec.js",
+    "e2e:p18-b": "playwright test e2e/p18-b-tickets.spec.js",
+    "e2e:p18-c": "playwright test e2e/p18-c-request-view.spec.js",
+    "e2e:p18-d": "playwright test e2e/p18-d-checkout.spec.js",
+    "e2e:p18-e": "playwright test e2e/p18-e-reminders.spec.js",
+    "e2e:ui": "playwright test --ui",
+    "sync:inventory": "node scripts/sync-screen-inventory.mjs",
+    "sync:inventory:check": "node scripts/sync-screen-inventory.mjs --check"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}

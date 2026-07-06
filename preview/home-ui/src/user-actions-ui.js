@@ -1,11 +1,11 @@
 import { COMPARE_MAX } from './exposure-schema.js';
 import { formatMonthlyWon, formatTutorFeeCard } from './exposure-format.js';
 import { openCompareModal } from './compare-modal.js';
+import { renderEmptyStateCard } from './empty-state-copy.js';
 import {
   compareBarHint,
   COMPARE_BAR_LABELS,
   WISH_LABELS,
-  EMPTY_COPY,
 } from './handoff-copy.js';
 import { notifyCompareToggle } from './handoff-utils.js';
 import {
@@ -62,7 +62,7 @@ export function renderCompareBar() {
 function renderWishlistSection(kind, label) {
   const items = getWishlistItems(kind);
   if (!items.length) {
-    return `<p class="wishlist-modal__empty">${EMPTY_COPY.wishlist}</p>`;
+    return renderEmptyStateCard('wishlist');
   }
   return `
     <ul class="wishlist-modal__list">

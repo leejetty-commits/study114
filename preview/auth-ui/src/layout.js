@@ -9,6 +9,7 @@ const ROUTES = {
   '/signup/complete': 'signupComplete',
   '/find-id': 'findId',
   '/find-password': 'findPassword',
+  '/reset-password': 'resetPassword',
 };
 
 const SCREEN_LABELS = {
@@ -20,6 +21,7 @@ const SCREEN_LABELS = {
   signupComplete: '가입완료',
   findId: '아이디찾기',
   findPassword: '비밀번호찾기',
+  resetPassword: '비밀번호재설정',
 };
 
 /** @param {string} path */
@@ -27,10 +29,12 @@ export function navigate(path) {
   window.location.hash = path;
 }
 
-/** @returns {string} */
+/** @returns {string} pathname only (query stripped) — e.g. #/reset-password?token=… → /reset-password */
 export function getCurrentPath() {
   const hash = window.location.hash.slice(1) || '/login';
-  return hash.startsWith('/') ? hash : `/${hash}`;
+  const path = hash.startsWith('/') ? hash : `/${hash}`;
+  const qIdx = path.indexOf('?');
+  return qIdx === -1 ? path : path.slice(0, qIdx);
 }
 
 /** @returns {string} */
@@ -67,7 +71,20 @@ export function renderPreviewToolbar(activeScreen) {
 }
 
 export function renderAuthShell(content, options = {}) {
-  const { wide = false, showBack = false, backPath = '/login', backLabel = '뒤로' } = options;
+  const { wide = false, showBack = false, backPath = '/login', backLabel = '뒤로', hideDefaultCard = false } = options;
+
+  if (hideDefaultCard) {
+    return `
+    ${renderPreviewToolbar(getCurrentScreen())}
+    <div class="auth-shell auth-shell--stage">
+      <main class="auth-shell__main auth-shell__main--stage">
+        ${content}
+      </main>
+      <footer class="auth-shell__footer">
+        © 2026 우동공과 · study114
+      </footer>
+    </div>`;
+  }
 
   return `
     ${renderPreviewToolbar(getCurrentScreen())}
@@ -112,16 +129,23 @@ export function renderStepIndicator(currentStep, totalSteps = 6) {
   `;
 }
 
-export function renderSocialLogin() {
+export function renderSocialLogin(returnTo = '') {
+  const attr = returnTo ? ` data-return-to="${String(returnTo).replace(/"/g, '&quot;')}"` : '';
   return `
-    <div class="social-login">
-      <button type="button" class="social-btn social-btn--naver" data-action="social-naver">
+    <div class="social-login" aria-label="소셜 로그인">
+      <button type="button" class="social-btn social-btn--naver" data-action="social-naver"${attr}>
         <svg class="social-btn__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M16.273 12.845L7.376 0H0v24h7.727V11.156L16.624 24H24V0h-7.727v12.845z"/>
         </svg>
         네이버로 시작하기
       </button>
-      <button type="button" class="social-btn social-btn--google" data-action="social-google">
+      <button type="button" class="social-btn social-btn--kakao" data-action="social-kakao"${attr}>
+        <svg class="social-btn__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.78 5.34 4.45 6.84L5.5 21l3.77-2.07C10.47 19.29 11.22 19.4 12 19.4c5.52 0 10-3.58 10-8.4S17.52 3 12 3z"/>
+        </svg>
+        카카오로 시작하기
+      </button>
+      <button type="button" class="social-btn social-btn--google" data-action="social-google"${attr}>
         <svg class="social-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -174,13 +198,6 @@ export function bindGlobalEvents(root) {
     el.addEventListener('click', () => {
       document.body.dataset.theme = el.dataset.themeSwitch;
       window.dispatchEvent(new Event('themechange'));
-    });
-  });
-
-  root.querySelectorAll('[data-action="social-naver"], [data-action="social-google"]').forEach((el) => {
-    el.addEventListener('click', () => {
-      const provider = el.dataset.action === 'social-naver' ? '네이버' : 'Google';
-      alert(`[프리뷰] ${provider} 소셜 로그인은 추후 연동 예정입니다.`);
     });
   });
 }

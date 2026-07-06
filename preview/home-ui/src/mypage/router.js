@@ -16,10 +16,17 @@ import {
   parseTutorRegPath,
   tutorRegScreenTitle,
 } from '../tutor-reg/router.js';
+import {
+  isSubmissionBoardPath,
+  normalizeSubmissionBoardPath,
+  parseSubmissionBoardPath,
+  submissionBoardScreenTitle,
+} from '../submission-board/submission-router.js';
+import { isPaidPath, parsePaidPath, paidScreenTitle } from './paid-router.js';
 
 /** 15장 P15-xx — 논리 화면 ID · hash 경로 (부록 A, 미확정) */
 
-/** @typedef {'P15-01'|'P15-02'|'P15-03'|'P15-04'|'P15-05'|'P15-06'|'P15-07'|'P15-08'|'P15-09'|'P15-10'|'P15-11'|'P25-S10'} MypageScreenId */
+/** @typedef {'P15-01'|'P15-02'|'P15-03'|'P15-04'|'P15-05'|'P15-06'|'P15-07'|'P15-08'|'P15-09'|'P15-10'|'P15-11'|'P25-S10'|'P23-04'} MypageScreenId */
 
 /**
  * @typedef {object} MypageNavItem
@@ -54,6 +61,7 @@ export const MYPAGE_PATH_TO_SCREEN = {
   '/mypage/messages': 'P15-08',
   '/mypage/plans': 'P15-09',
   '/mypage/submission-docs': 'P15-10',
+  '/mypage/submission-board': 'P23-04',
   '/mypage/verification': 'P15-10',
   '/mypage/account': 'P15-11',
 };
@@ -72,6 +80,9 @@ export function normalizeMypagePath(hashPath) {
   if (isStudyRoomRegPath(p)) return p;
   if (isTutorRegPath(p)) return p;
   if (normalizeMessagesPath(p)) return normalizeMessagesPath(p);
+  const subBoard = normalizeSubmissionBoardPath(p);
+  if (subBoard) return subBoard;
+  if (isPaidPath(p)) return p;
   return MYPAGE_PATH_TO_SCREEN[p] ? p : null;
 }
 
@@ -91,6 +102,9 @@ export function getScreenIdForPath(path) {
   const tr = parseTutorRegPath(path);
   if (tr) return tr.screenId;
   if (path === MESSAGES_BASE || isMessagesDetailPath(path)) return getMessagesScreenId(path);
+  if (isSubmissionBoardPath(path)) return parseSubmissionBoardPath(path).screenId;
+  const paid = parsePaidPath(path);
+  if (paid) return paid;
   return MYPAGE_PATH_TO_SCREEN[path] || 'P15-01';
 }
 
@@ -106,6 +120,11 @@ export function screenTitle(screenId, path) {
     if (path === MESSAGES_BASE || isMessagesDetailPath(path)) {
       return messagesScreenTitle(getMessagesScreenId(path));
     }
+    if (isSubmissionBoardPath(path)) {
+      return submissionBoardScreenTitle(parseSubmissionBoardPath(path).screenId, path);
+    }
+    const paidId = parsePaidPath(path);
+    if (paidId) return paidScreenTitle(paidId);
   }
   const map = {
     'P15-01': '마이페이지 홈',
@@ -118,6 +137,9 @@ export function screenTitle(screenId, path) {
     'P15-08': '쪽지',
     'P15-09': '유료서비스',
     'P15-10': '제출자료 상태',
+    'P23-04': '제출함',
+    'P23-04a': '제출 작성',
+    'P23-04b': '제출 상세',
     'P15-11': '계정/설정',
     'P25-S10': '학생 검토함',
   };

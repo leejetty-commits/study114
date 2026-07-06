@@ -1,7 +1,10 @@
 /**
  * 25장 — Handoff copy · Compare Bar · Empty/Max · 찜 라벨
  * docs/ssot/25-decision-handoff-layer.md §9 · §14
+ * Empty/Max 정본(신규): docs/ssot/29-empty-error-permission-ux.md · empty-state-copy.js
  */
+
+import { getCompareMaxCopy } from './empty-state-copy.js';
 
 /** @param {number} count @param {number} max */
 export function compareRibbonText(count, max) {
@@ -46,7 +49,8 @@ export const WISH_LABELS = {
 
 /** @param {number} max */
 export function compareErrorMax(max) {
-  return `비교는 최대 ${max}개까지 담을 수 있습니다.`;
+  const { body } = getCompareMaxCopy(max);
+  return body;
 }
 
 export const COMPARE_ERROR_INELIGIBLE =
@@ -58,12 +62,16 @@ export const COMPARE_ERROR_MIXED_KIND =
 export const COMPARE_ERROR_STUDENT =
   '학생 정보 보호를 위해 학생은 비교할 수 없습니다.';
 
-export const EMPTY_COPY = {
-  wishlist: '아직 찜한 후보가 없습니다. 검색에서 마음에 드는 후보를 저장해 보세요.',
-  recent: '최근에 본 후보가 없습니다.',
-  compareNeedOneMore: '비교하려면 후보를 하나 더 담아주세요.',
-  studentReview: '아직 검토함에 담은 학생이 없습니다. 학생찾기에서 조건에 맞는 의뢰를 저장해 보세요.',
-};
+/** @deprecated empty-state-copy.js `getEmptyCopy` / `getCompareMaxCopy` 사용 */
+export function getHandoffEmptyLine(key) {
+  const map = {
+    wishlist: '아직 찜한 후보가 없습니다. 검색에서 마음에 드는 후보를 저장해 보세요.',
+    recent: '최근에 본 후보가 없습니다.',
+    compareNeedOneMore: '비교하려면 후보를 하나 더 담아주세요.',
+    studentReview: '아직 검토함에 담은 학생이 없습니다. 학생찾기에서 조건에 맞는 의뢰를 저장해 보세요.',
+  };
+  return map[key] || '';
+}
 
 /** 25§10 Lifecycle-aware basket */
 export const LIFECYCLE_BASKET = {
@@ -74,6 +82,7 @@ export const LIFECYCLE_BASKET = {
 export const HANDOFF_DEEPLINK = {
   reviewFlow: '학생찾기 → 검토함 → 접근·쪽지 → 메모/쪽지',
   reviewFromAccess: '학생 접근·쪽지에서 이동했습니다. 검토 후 메모·쪽지를 보내세요.',
+  reviewFromExposure: '노출·상담에서 이동했습니다. 검토 후 상담·쪽지를 보내세요.',
   accessFromReview: '검토함에서 이동했습니다. 메모 권한·잔여 횟수를 확인하세요.',
   reviewBridgeLead: '메모·쪽지 전에 담아 둔 학생 의뢰를 검토합니다.',
   reviewBridgeCta: '검토함 열기',
@@ -90,7 +99,6 @@ export const STUDENT_REVIEW = {
   itemLabelStudyRoom: '상담후보',
   toastAdded: '검토함에 담았습니다',
   toastRemoved: '검토함에서 뺐습니다',
-  empty: '아직 검토함에 담은 학생이 없습니다. 학생찾기에서 조건에 맞는 의뢰를 저장해 보세요.',
   note: '25장 §8 · 메모·쪽지 전 검토용 · 비교·찜과 별개',
   lifecycleHidden: '현재 공개가 중지된 의뢰입니다',
 };
@@ -103,6 +111,7 @@ export function studentReviewItemLabel(role) {
 /** 25§6 resume token — 최근열람 · 상세 Entry Context Ribbon */
 export const RESUME_ROUTE_LABELS = {
   search: '검색에서',
+  parent: '학부모 홈에서',
   detail: '상세에서',
   wishlist: '찜 목록에서',
   mypage: '마이페이지에서',

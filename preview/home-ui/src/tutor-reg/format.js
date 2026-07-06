@@ -6,6 +6,7 @@ import { TUTOR_REGISTER_URL, HOME_UI_BASE } from '../nav-config.js';
 import { formatTutorFeeCard } from '../exposure-format.js';
 import { tutorHubPath } from './router.js';
 import { getPublishReadiness, isPaidProvider, getMemoCreditsRemaining } from './store.js';
+import { getRequestViewTicketsRemaining } from '../request-unlock.js';
 
 /** @typedef {import('./store.js').TutorRecord} TutorRecord */
 
@@ -171,7 +172,7 @@ export function getUnlockCards(tutor) {
         { label: '유료 등록', ok: paid },
         { label: '메모권 잔여', ok: memos > 0 },
       ],
-      { label: '메모권·유료 (P16-04)', external: '#/mypage/plans' },
+      { label: '메모권·유료 (P16-04)', external: '#/mypage/paid' },
     ),
     build(
       'request_doc',
@@ -180,7 +181,7 @@ export function getUnlockCards(tutor) {
         { label: '유료 등급', ok: paid },
         { label: '프로필 공개', ok: published },
       ],
-      { label: '유료 확인', external: '#/mypage/plans' },
+      { label: '유료 확인', external: '#/mypage/paid' },
     ),
     build(
       'pick',
@@ -199,7 +200,7 @@ export function getUnlockCards(tutor) {
         { label: '프로필 공개', ok: published },
         { label: '상세등록 완료', ok: expanded },
       ],
-      { label: 'Prime 자격 확인', external: '#/mypage/plans' },
+      { label: 'Prime 자격 확인', external: '#/mypage/paid' },
     ),
   ].filter(Boolean);
 }
@@ -240,6 +241,7 @@ export function getMatchingVisibility(tutor) {
 export function getAccessMatrix(tutor) {
   const paid = isPaidProvider();
   const memos = getMemoCreditsRemaining();
+  const viewTickets = getRequestViewTicketsRemaining();
   const published = tutor.profile_status === 'published';
 
   return [
@@ -270,8 +272,8 @@ export function getAccessMatrix(tutor) {
     {
       key: 'request_doc',
       label: '요청문(paid_only) 열람',
-      ok: paid,
-      reason: !paid ? 'paid 권한 필요' : null,
+      ok: viewTickets > 0,
+      reason: viewTickets <= 0 ? '열람권 필요 (P18-01)' : null,
     },
     {
       key: 'pick',
@@ -355,7 +357,7 @@ export function getHubCtas(tutor) {
     { label: '학생 접근·쪽지', path: 'access', primary: true },
     { label: '학생 검토함', path: 'student_review', external: '#/mypage/student-review?from=access', primary: false },
     { label: '학생찾기 보기', path: 'student_search', external: '#/tutor', primary: false },
-    { label: '메모권·유료', path: 'plans', external: '#/mypage/plans', primary: false },
+    { label: '메모권·유료', path: 'plans', external: '#/mypage/paid', primary: false },
   ];
 }
 

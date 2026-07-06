@@ -1,6 +1,14 @@
 import { TERMS, TERMS_TEMP } from '../state.js';
 import { renderAuthShell, renderStepIndicator, renderTempNotice, bindGlobalEvents, navigate } from '../layout.js';
 import { markTermsAgreed } from '../state.js';
+import { policyUiUrl } from '../../../shared/preview-links.js';
+
+const TERM_POLICY_PATH = {
+  service: '/policy/terms',
+  privacy: '/policy/privacy',
+  location: '/policy/platform',
+  marketing: '/policy/privacy',
+};
 
 export function renderSignupTerms() {
   const termsItems = TERMS.map(
@@ -17,7 +25,7 @@ export function renderSignupTerms() {
             ${term.required ? '<strong>[필수]</strong>' : '[선택]'} ${term.label}
           </span>
         </label>
-        <button type="button" class="terms-item__view" data-action="view-terms">보기</button>
+        <button type="button" class="terms-item__view" data-action="view-terms" data-term-id="${term.id}">보기</button>
       </div>
     `,
   ).join('');
@@ -87,7 +95,9 @@ export function bindSignupTermsEvents(root) {
 
   root.querySelectorAll('[data-action="view-terms"]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      alert('[프리뷰] 약관 전문은 추후 연동 예정입니다.');
+      const termId = btn.getAttribute('data-term-id') || 'service';
+      const path = TERM_POLICY_PATH[termId] || '/policy/terms';
+      window.open(policyUiUrl(path), '_blank', 'noopener');
     });
   });
 

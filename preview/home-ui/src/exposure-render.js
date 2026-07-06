@@ -114,6 +114,7 @@ export function renderItemActions(opts = {}) {
     guest = false,
     compareKind = 'study_room',
     showCompare = true,
+    showWish = true,
     itemId,
     recommend_count = 0,
     wish_count = 0,
@@ -133,11 +134,14 @@ export function renderItemActions(opts = {}) {
   const wishAttrs = guest
     ? `data-action="login-gate" data-gate="wish" data-gate-label="찜"`
     : `data-action="wish-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`;
-  const wishBtn = actionCountBtn(wished ? '♥' : '♡', wish_count, {
-    title: `찜 ${wish_count}`,
-    cls: wished ? 'is-active' : '',
-    attrs: wishAttrs,
-  });
+  const wishBtn =
+    !showWish
+      ? ''
+      : actionCountBtn(wished ? '♥' : '♡', wish_count, {
+          title: `찜 ${wish_count}`,
+          cls: wished ? 'is-active' : '',
+          attrs: wishAttrs,
+        });
 
   const reviewBtn = actionCountBtn('💬', review_count, {
     title: `후기 ${review_count}`,
@@ -428,6 +432,8 @@ export function renderExposureBox(kind, tier, item, slotLabel, opts = {}) {
   const actionOpts = actionOptsFromItem(item, {
     guest: opts.guest,
     compareKind: kind,
+    showCompare: opts.showCompare !== false,
+    showWish: opts.showWish !== false,
   });
   const actions = renderItemActions(actionOpts);
   if (tier === 'prime') {
@@ -441,12 +447,16 @@ export function renderExposureBox(kind, tier, item, slotLabel, opts = {}) {
 }
 
 function renderBasicStudyRoomRow(item, opts) {
-  const actions = renderItemActions(
-    actionOptsFromItem(item, { guest: opts.guest, compareKind: 'study_room' }),
-  );
+  const actionOpts = actionOptsFromItem(item, {
+    guest: opts.guest,
+    compareKind: 'study_room',
+    showCompare: opts.showCompare !== false,
+    showWish: opts.showWish !== false,
+  });
+  const actions = renderItemActions(actionOpts);
   const compare = renderCompareChip('study_room', item.id, {
     guest: opts.guest,
-    showCompare: true,
+    showCompare: opts.showCompare !== false,
   });
   return `
     <article class="expo-basic expo-basic--study_room" data-provider-id="${item.id}" data-provider-kind="study_room">
@@ -475,10 +485,17 @@ function renderBasicStudyRoomRow(item, opts) {
 }
 
 function renderBasicTutorRow(item, opts) {
-  const actions = renderItemActions(
-    actionOptsFromItem(item, { guest: opts.guest, compareKind: 'tutor' }),
-  );
-  const compare = renderCompareChip('tutor', item.id, { guest: opts.guest, showCompare: true });
+  const actionOpts = actionOptsFromItem(item, {
+    guest: opts.guest,
+    compareKind: 'tutor',
+    showCompare: opts.showCompare !== false,
+    showWish: opts.showWish !== false,
+  });
+  const actions = renderItemActions(actionOpts);
+  const compare = renderCompareChip('tutor', item.id, {
+    guest: opts.guest,
+    showCompare: opts.showCompare !== false,
+  });
   const schedule =
     item.lessons_per_week && item.minutes_per_lesson
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
@@ -513,7 +530,11 @@ function renderBasicStudentRow(item, opts) {
   const viewerRole = opts.viewerRole || (opts.guest ? 'guest' : 'parent');
   const actions =
     viewerRole === 'tutor' || viewerRole === 'study_room'
-      ? renderStudentProviderActions(item, { guest: opts.guest, viewerRole })
+      ? renderStudentProviderActions(item, {
+          guest: opts.guest,
+          viewerRole,
+          sourceRoute: opts.sourceRoute || 'search',
+        })
       : renderStudentConsumerActions();
   const schedule =
     item.lessons_per_week && item.minutes_per_lesson
