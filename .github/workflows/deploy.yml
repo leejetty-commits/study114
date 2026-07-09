@@ -8,17 +8,46 @@ on:
 jobs:
   ftp-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy via FTP
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Inject dothome env (GitHub Variables)
+        env:
+          NAVER_MAP_CLIENT_ID: ${{ vars.VITE_NAVER_MAP_CLIENT_ID }}
+        run: |
+          if [ -z "$NAVER_MAP_CLIENT_ID" ]; then
+            echo "::error::GitHub variable VITE_NAVER_MAP_CLIENT_ID is not set (Settings → Secrets and variables → Actions → Variables)"
+            exit 1
+          fi
+          sed -i "s/^VITE_NAVER_MAP_CLIENT_ID=.*/VITE_NAVER_MAP_CLIENT_ID=${NAVER_MAP_CLIENT_ID}/" preview/.env.dothome.example
+
+      - name: Build for dothome
+        run: pwsh -ExecutionPolicy Bypass -File scripts/build-dothome.ps1
+
+      - name: Verify build output
+        env:
+          NAVER_MAP_CLIENT_ID: ${{ vars.VITE_NAVER_MAP_CLIENT_ID }}
+        run: |
+          test -f public/index.html
+          js_file=$(ls public/assets/index-*.js | head -n 1)
+          test -n "$js_file"
+          grep -q "$NAVER_MAP_CLIENT_ID" "$js_file"
+
+      - name: Deploy public/ via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: "112.175.184.80"
           username: "study114"
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: "/hosting/study114/html/"
+          local-dir: "./public/"
           port: 21
           protocol: ftp
