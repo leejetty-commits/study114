@@ -18,5 +18,7 @@ jobs:
         with:
           server: "112.175.184.80"
           username: "study114"
-          password: $ secrets.FTP_PASSWORD 
+          password: ${{ secrets.FTP_PASSWORD }}
           server-dir: "/hosting/study114/html/"
+          port: 21
+          protocol: ftp
