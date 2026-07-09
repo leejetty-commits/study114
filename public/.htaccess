@@ -25,3 +25,12 @@
 </IfModule>
 
 DirectoryIndex index.html index.php
+
+# 닷홈: PHP OAuth·리다이렉트 URL (미설정 시 127.0.0.1 폴백 → 소셜 로그인 오류 시 localhost로 튕김)
+<IfModule mod_env.c>
+  SetEnv STUDY114_API_BASE http://study114.dothome.co.kr
+  SetEnv STUDY114_HOME_UI http://study114.dothome.co.kr
+  SetEnv STUDY114_AUTH_UI http://study114.dothome.co.kr/auth
+  SetEnv STUDY114_APP_ENV production
+  SetEnv STUDY114_DEBUG 0
+</IfModule>
