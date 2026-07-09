@@ -1,42 +1,27 @@
-# study114 — shared hosting (Apache 2.4 + PHP 8.2)
-# document root = public/ 내용 → 닷홈 /hosting/study114/html
+# study114 — dothome minimal safe version
 
-<IfModule mod_rewrite.c>  RewriteEngine On
+<IfModule mod_rewrite.c>
+  RewriteEngine On
   RewriteBase /
 
-  # 실제 파일·디렉터리는 그대로 서빙 (api/*.php, 정적 자산)
+  # 실제 파일/디렉터리는 그대로 제공
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # PHP MVC 인증 라우트 (/auth/#/... SPA와 경로 분리)
+  # PHP MVC 인증 라우트
   RewriteRule ^auth/(login|logout|find-id|find-password)/?$ index.php [L,QSA]
   RewriteRule ^auth/signup/(terms|role|form|basic|complete)/?$ index.php [L,QSA]
 
-  # Vite SPA hash 라우트 fallback
+  # SPA fallback
   RewriteRule ^auth/ auth/index.html [L]
   RewriteRule ^search/ search/index.html [L]
   RewriteRule ^register/room/ register/room/index.html [L]
   RewriteRule ^register/tutor/ register/tutor/index.html [L]
 
-  # home-ui (나머지 비-API 경로)
+  # home-ui fallback
   RewriteCond %{REQUEST_URI} !^/api/
   RewriteRule ^ index.html [L]
 </IfModule>
 
 DirectoryIndex index.html index.php
-
-# ── 닷홈 운영: PHP가 getenv()로 읽을 값 (비밀번호는 database.php에 직접 입력 권장) ──
-# HTTPS 적용 후 http:// → https:// 로 교체
-#<IfModule mod_env.c>
-#  SetEnv STUDY114_API_BASE http://study114.dothome.co.kr
-#  SetEnv STUDY114_HOME_UI http://study114.dothome.co.kr
-#  SetEnv STUDY114_AUTH_UI http://study114.dothome.co.kr/auth
-#  SetEnv STUDY114_APP_ENV production
-#  SetEnv STUDY114_DEBUG 0
-#</IfModule>
-
-# PHP MVC 정적·API는 캐시 허용, HTML은 짧게<IfModule mod_expires.c>
-  ExpiresActive On
-  ExpiresByType text/html "access plus 0 seconds"
-</IfModule>
