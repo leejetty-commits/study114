@@ -1,290 +1,332 @@
 # 닷홈 서버 정리 체크리스트 (무손상 방식)
 
-**문서 성격:** `/hosting/study114/` 서버 파일 정리 작업 기록·검증용  
+**문서 성격:** FTP 실측 기준 서버 파일 정리·격리·검증 기록  
 **기준일:** 2026-07-10  
 **도메인:** `http://study114.dothome.co.kr`  
 **관련:** [01-dothome-deploy.md](./01-dothome-deploy.md) · [00-project-tree-and-key-files.md](./00-project-tree-and-key-files.md) · `.cursor/rules/study114-workflow.mdc`
 
 ---
 
-## 작업 원칙 (필수)
+## 0. 작업 원칙
 
 | # | 원칙 |
 |---|------|
-| 1 | **모르면 삭제하지 말고 HOLD** |
+| 1 | 모르면 **삭제하지 말고 HOLD** |
 | 2 | 즉시 삭제 ❌ → **목록화 → 분류 → 격리 → 검증** |
 | 3 | 화면·페이지에 영향 줄 수 있는 경로는 **초기 정리 대상에서 제외** |
-| 4 | 각 단계마다 **이 문서 체크리스트 갱신** |
-| 5 | **1묶음 처리 후 사이트 확인** — 한 번에 많이 지우지 않음 |
+| 4 | **1개 또는 1묶음** 처리 후 사이트 확인 |
+| 5 | **FTP 실측 항목만** 물리 존재 판단 근거로 사용 |
+| 6 | **URL 200 ≠ 물리 파일 존재** (SPA fallback 가능) |
+| 7 | **삭제보다 격리**(이동·이름변경) 우선 |
+| 8 | 확신 없으면 KEEP이 아니라 **HOLD** |
+| 9 | 검증 통과 전 **다음 항목 진행 금지** |
+| 10 | 매 단계 **이 문서 갱신** |
 
-**보고 형식 (매 단계):**
-
-- 이번 단계에서 건드린 경로
-- 처리 방식 (유지 / 격리 / 삭제 / 보류)
-- 검증 결과
-- 다음 단계
-
----
-
-## A. 보호 경로 (절대 즉시 삭제 금지)
-
-아래 경로는 **운영·화면·API 동작에 직결**. 정리 1단계~중반까지 **손대지 않음**.
-
-### A-1. 웹 document root (`html/`)
-
-| 경로 | 이유 |
-|------|------|
-| `/hosting/study114/html/api/` | JSON API 전체 |
-| `/hosting/study114/html/assets/` | MVC CSS·브랜드·SPA 번들 |
-| `/hosting/study114/html/auth/` | auth-ui SPA |
-| `/hosting/study114/html/search/` | search-ui SPA |
-| `/hosting/study114/html/register/` | study-room-ui · tutor-ui SPA |
-| `/hosting/study114/html/index.php` | PHP MVC 진입 |
-| `/hosting/study114/html/index.html` | home-ui SPA |
-| `/hosting/study114/html/.htaccess` | Apache 라우팅 |
-
-### A-2. PHP 백엔드 (`html/` 형제)
-
-| 경로 | 이유 |
-|------|------|
-| `/hosting/study114/src/` | `index.php` → `bootstrap.php` 참조 |
-| `/hosting/study114/config/` | DB·OAuth·앱 설정 (`database.php` 포함) |
-| `/hosting/study114/storage/` | 로그·첨부 (런타임 쓰기) |
-
-### A-3. 정리 시 주의 (보호는 아니나 신중)
-
-| 경로 | 비고 |
-|------|------|
-| `/hosting/study114/html/api/health/db.php` | 보호 목록은 아님 — **마지막 단계**에서만 삭제·접근제한 검토 |
+**보고 형식 (매 단계):** 건드린 경로 · 처리 방식 · 검증 결과 · 다음 단계
 
 ---
 
-## B. 서버 현재 트리 기록
+## A. 보호 경로 (이번 단계 삭제·격리·이름변경 금지)
 
-> **작업 전 FTP·파일관리자로 실제 목록을 채운다.**  
-> 아래는 **기대 구조**와 **잘못 올라갔을 수 있는 항목** 템플릿.
+### A-1. Study114 운영 (FTP 실측 확인)
 
-### B-1. 기록일 / 담당
+| FTP 경로 | 분류 | 근거 |
+|----------|------|------|
+| `/html/api/` | **KEEP·보호** | JSON API |
+| `/html/assets/` | **KEEP·보호** | 정적·SPA 번들 |
+| `/html/auth/` | **KEEP·보호** | auth-ui SPA |
+| `/html/search/` | **KEEP·보호** | search-ui SPA |
+| `/html/register/` | **KEEP·보호** | study-room · tutor SPA |
+| `/html/index.php` | **KEEP·보호** | PHP MVC 진입 |
+| `/html/index.html` | **KEEP·보호** | home-ui SPA |
+| `/html/.htaccess` | **KEEP·보호** | Apache 라우팅 |
+| `/src/` | **KEEP·보호** | PHP 앱 전체 (실측: Admin·Auth·…·bootstrap.php) |
+| `/config/` | **KEEP·보호** | 서버 설정 |
+| `/storage/` | **KEEP·보호** | 런타임 (attachments·logs) |
+
+### A-2. 호스팅·계정 기본 (이번 정리 범위 제외)
+
+| FTP 경로 | 처리 |
+|----------|------|
+| `/.bash_logout`, `/.bash_profile`, `/.bashrc` | **손대지 않음** |
+| `/.htpasswd` | **손대지 않음** |
+| `/.webalizer/` | **손대지 않음** |
+| `/webalizer.conf` | **손대지 않음** |
+| `/hosting/` | **손대지 않음** |
+
+### A-3. 마지막 단계만 검토
+
+| FTP 경로 | 비고 |
+|----------|------|
+| `/html/api/health/db.php` | 보호 아님 — **최종 단계** 삭제·접근제한 검토 |
+
+---
+
+## B. 서버 현재 트리 기록 (FTP 실측)
+
+### B-1. 기록 메타
 
 | 항목 | 값 |
 |------|-----|
 | 기록일 | `2026-07-10` |
-| 기록자 | Cursor 에이전트 (HTTP 실측 1차) |
-| 기록 방법 | HTTP GET/HEAD + `api/health/db.php` · **FTP 실측은 미완** |
+| 기록 방법 | **FTP 실측** (사용자 제공 목록) + HTTP 기준선 (2026-07-10) |
+| 해석 규칙 | 아래 목록에 **없는** 경로는 «실측 없음 → 판단 불가» |
 
-### B-2. `/hosting/study114/` 실제 트리 (채워 넣기)
+### B-2. FTP 루트 (`/`) 관측
 
 ```
-/hosting/study114/
-├── html/                    [x] HTTP로 운영 경로 확인  [ ] FTP 전체 목록 미완
-│   ├── .htaccess            [x] 동작 중 (rewrite·SPA)
-│   ├── index.php            [x] (API·MVC 경유)
-│   ├── index.html           [x] 200 · home-ui
-│   ├── api/                 [x] health/db.php 응답 확인
-│   ├── assets/              [x] index-DWF3U39s.js 서빙
-│   ├── auth/                [x] 200
-│   ├── search/              [x] 200
-│   ├── register/            [x] room·tutor 200
-│   └── (기타)               [ ] FTP로 html/ 직접 목록 필요
-├── src/                     [ ] FTP 미확인 (db.php ok → 추정 존재)
-├── config/                  [ ] FTP 미확인 (db.php ok → 추정 존재)
-├── storage/                 [ ] FTP 미확인
-└── (기타 최상위)            [ ] FTP 미확인
+/
+├── .webalizer/
+├── config/
+├── hosting/
+│   └── study114/
+├── html/
+├── src/
+├── storage/
+├── .bash_logout
+├── .bash_profile
+├── .bashrc
+├── .htpasswd
+└── webalizer.conf
 ```
 
-**HTTP 1차 관찰 (2026-07-10):**
+### B-3. `/html/` 관측
 
-- 운영 URL 전부 200 (메인·auth·search·register)
-- 현재 home 번들: `assets/index-DWF3U39s.js` (지도 Client ID `n1eb29x3e5` 포함 확인)
-- GitHub Actions deploy run #8 **success** (commit `4e8f624`)
+```
+/html/
+├── api/
+├── assets/
+├── auth/
+├── register/
+├── search/
+├── .ftp-deploy-sync-state...    ← 파일명 전체 FTP에서 재확인 필요
+├── .htaccess
+├── .htaccess.bak
+├── index.html
+├── index.php
+└── setup-finish.html
+```
 
-### B-3. `html/` 안에 **있으면 안 되는** 후보 (실제 존재 여부 체크)
+**FTP 실측에 없음 (판단 불가 — REMOVE 확정 금지):**
 
-| 서버 경로 (html/ 하위) | repo 대응 | HTTP 1차 | FTP 실측 |
-|------------------------|-----------|----------|----------|
-| `docs/` | `docs/` | SPA fallback만 (물리 폴더 **미확인**) | [ ] |
-| `docs/ssot/README.md` | 파일 직접 | SPA fallback (파일 **없음** 추정) | [ ] |
-| `backups/` | `backups/` | SPA fallback만 | [ ] |
-| `.cursor/` | `.cursor/` | (미요청) | [ ] |
-| `preview/` | `preview/` | SPA fallback만 | [ ] |
-| `preview/home-ui/package.json` | 파일 직접 | SPA fallback (파일 **없음** 추정) | [ ] |
-| `sql/` | `sql/` | SPA fallback만 | [ ] |
-| `scripts/` | `scripts/` | SPA fallback만 | [ ] |
-| `docker/` | `docker/` | (미요청) | [ ] |
-| `legacy/` | `legacy/` | (미요청) | [ ] |
-| `e2e/` | `e2e/` | SPA fallback만 | [ ] |
-| `test-results/` | `test-results/` | SPA fallback만 | [ ] |
-| `node_modules/` | 루트 | SPA fallback만 | [ ] |
-| `.git/HEAD` | 루트 | SPA fallback만 | [ ] |
-| `src/` (html **안**) | 잘못된 배치 | (미요청) | [ ] |
-| `config/` (html **안**) | 잘못된 배치 | (미요청) | [ ] |
-| `.htaccess.bak` | 백업 | **403** (파일 **존재** 추정) | [ ] |
-| `api/health/db.php` | health | **200 JSON** `ok:true` | [x] |
+- `docs/`, `preview/`, `sql/`, `scripts/`, `e2e/`, `node_modules/`, `.git/` 등  
+  → HTTP URL 200만으로는 실재 여부를 단정하지 않음. **추가 FTP 실측 전 HOLD.**
 
-> **해석:** `/docs/`, `/preview/` 등 URL은 200이지만 **home-ui SPA fallback**(`<div id="app">`)이다.  
-> `.htaccess`가 실제 파일 없으면 `index.html`로내므로, **URL 200 ≠ 개발 폴더가 서버에 있음**을 의미하지 않는다.  
-> **FTP로 `html/` 실제 디렉터리 목록**을 반드시 확인한 뒤 REMOVE 후보를 확정한다.
+### B-4. `/src/` 관측
 
-### B-4. `/hosting/study114/` 최상위에 **있으면 안 되는** 후보
+```
+/src/
+├── Admin/
+├── Auth/
+├── Board/
+├── Controllers/
+├── Core/
+├── Database/
+├── Handoff/
+├── Messages/
+├── Models/
+├── Paid/
+├── Registration/
+├── routes/
+├── Search/
+├── StudyRoom/
+├── Support/
+├── Tutor/
+├── Views/
+├── autoload.php
+├── bootstrap.php
+└── helpers.php
+```
 
-| 서버 경로 (study114/ 최상위) | 비고 | 실제 존재 |
-|------------------------------|------|-----------|
-| `docs/` | 개발용 | [ ] |
-| `preview/` | Vite 소스 | [ ] |
-| `node_modules/` | 의존성 | [ ] |
-| `.git/` | Git 메타 | [ ] |
-| 기타: | | [ ] |
+### B-5. `/storage/` 관측
+
+```
+/storage/
+├── attachments/
+└── logs/
+```
+
+### B-6. HTTP 기준선 (참고용 — 물리 존재 근거 아님)
+
+| 검증 | 결과 | 일시 |
+|------|------|------|
+| `/` | 200 OK | 2026-07-10 |
+| `/auth/`, `/search/`, `/register/room/`, `/register/tutor/` | 200 OK | 2026-07-10 |
+| `/api/health/db.php` | `ok: true` | 2026-07-10 |
+| 500 | 없음 | 2026-07-10 |
+| deploy run #8 | success | 2026-07-10 |
 
 ---
 
-## C. 분류표
+## C. 분류표 (FTP 실측 기준 1차 확정)
 
-분류: **KEEP** · **REMOVE 후보** · **HOLD**
+### C-1. KEEP
 
-| 서버 경로 (예시) | 분류 | 근거 | 격리 가능 | 비고 |
-|------------------|------|------|-----------|------|
-| `html/api/` | **KEEP** | 운영 API | — | A 보호 |
-| `html/assets/` | **KEEP** | 정적·SPA 번들 | — | A 보호 |
-| `html/auth/`, `search/`, `register/` | **KEEP** | SPA | — | A 보호 |
-| `html/index.php`, `index.html`, `.htaccess` | **KEEP** | 진입·라우팅 | — | A 보호 |
-| `src/` | **KEEP** | PHP 앱 | — | A 보호 |
-| `config/` | **KEEP** | 설정 | — | A 보호 |
-| `storage/` | **KEEP** | 런타임 | — | A 보호 |
-| `html/docs/` | **HOLD** → FTP 후 재분류 | HTTP상 SPA만 | FTP 목록 전 | 물리 폴더 미확인 |
-| `html/preview/` | **HOLD** → FTP 후 재분류 | HTTP상 SPA만 | FTP 목록 전 | |
-| `html/node_modules/` | **HOLD** → FTP 후 재분류 | HTTP상 SPA만 | FTP 목록 전 | |
-| `html/.git/` | **HOLD** → FTP 후 재분류 | HTTP상 SPA만 | FTP 목록 전 | |
-| `html/.htaccess.bak` | REMOVE 후보 | HTTP 403 | ✅ 격리 가능 | `.htaccess` 정상 후 마지막에 |
-| `html/api/health/db.php` | REMOVE 후보 | 동작 중 | ⚠️ 마지막 단계만 | 삭제 전 §E-0 재검증 |
-| `study114/docs/` (최상위) | REMOVE 후보 | 개발용 | ✅ | html 밖이면 노출 낮음 |
-| `study114/preview/` (최상위) | REMOVE 후보 | 소스 | ✅ | |
-| 용도 불명 파일/폴더 | **HOLD** | 확인 필요 | ❌ | 삭제 금지 |
+| FTP 경로 | 근거 |
+|----------|------|
+| `/config/` | 서버 설정 |
+| `/html/` (전체 트리) | 웹 document root |
+| `/src/` | PHP 앱 |
+| `/storage/` | 런타임 저장소 |
+| `/html/api/` | API |
+| `/html/assets/` | 자산 |
+| `/html/auth/` | SPA |
+| `/html/register/` | SPA |
+| `/html/search/` | SPA |
+| `/html/.htaccess` | 라우팅 |
+| `/html/index.html` | home-ui |
+| `/html/index.php` | MVC 진입 |
+
+### C-2. REMOVE 후보 (1건 — 격리 우선, 삭제는 검증 후)
+
+| FTP 경로 | 근거 | 이번 단계 |
+|----------|------|-----------|
+| `/html/.htaccess.bak` | 백업 성격 · 핵심 동작 파일 아님 (FTP 실측) | **1차 격리 후보만 지정** |
+
+### C-3. HOLD
+
+| FTP 경로 | 근거 |
+|----------|------|
+| `/.webalizer/` | 호스팅·통계 구성 가능 |
+| `/webalizer.conf` | 호스팅 구성 |
+| `/hosting/` | 호스팅 메타 |
+| `/.bash_logout`, `/.bash_profile`, `/.bashrc` | 계정 셸 설정 |
+| `/.htpasswd` | 인증 설정 |
+| `/html/.ftp-deploy-sync-state...` | FTP Deploy 동기화 상태 (삭제 시 재동기화 영향 가능) |
+| `/html/setup-finish.html` | 용도 미확인 — 즉시 판단 금지 |
+| `/html/api/health/db.php` | 동작 중 — **마지막 단계**까지 HOLD |
+| `docs/`, `preview/`, `sql/` 등 | **FTP 실측 없음** — 존재 단정·REMOVE 확정 금지 |
 
 ---
 
 ## D. 정리 실행 순서
 
 ```
-[0] 이 문서 §B 서버 트리 실측 기록
-[1] §C 분류표 실측 반영
-[2] REMOVE 후보도 즉시 삭제 ❌ → 격리(이름변경·상위 이동) 가능 여부 확인
-[3] 가장 안전한 1묶음만 처리 (권장 첫 묶음: html/ 안의 docs/ 또는 test-results/)
-[4] §E 검증 체크리스트 실행
-[5] 문제 없으면 [3] 반복 · 문제 있으면 즉시 롤백(격리 복구)
-[6] 모든 REMOVE 후보 처리 후 §F 잔여 이슈 정리
-[7] 마지막: api/health/db.php 삭제 또는 접근 제한
+[1] FTP 실측 결과 기록          ← 완료 (§B)
+[2] 분류표 확정                 ← 완료 (§C)
+[3] 1차 격리 후보 지정          ← /html/.htaccess.bak (1건만)
+[4] 격리 실행                   ← 미실행 (§D-2 실행안 검토 후)
+[5] 격리 후 검증 6종 (§D-3)     ← 미실행
+[6] 통과 시에만 다음 후보 검토
+[7] db.php                      ← 마지막 단계: 삭제 또는 접근 제한
 ```
 
-### D-1. 권장 처리 우선순위 (안전 → 신중)
+### D-1. 이번 단계에서 하지 않은 것 (금지 준수)
 
-| 순서 | 대상 묶음 | 처리 방식 | 위험도 |
-|------|-----------|-----------|--------|
-| 1 | `html/test-results/`, `html/e2e/` | 격리 → 검증 → 삭제 | 낮음 |
-| 2 | `html/docs/`, `html/docs/ssot/` | 격리 → 검증 → 삭제 | 낮음 |
-| 3 | `html/backups/`, `html/.cursor/` | 격리 → 검증 → 삭제 | 낮음 |
-| 4 | `html/scripts/`, `html/docker/`, `html/sql/` | 격리 → 검증 → 삭제 | 낮음 |
-| 5 | `html/preview/`, `html/node_modules/` | 격리 → 검증 → 삭제 | 중간 (용량·시간) |
-| 6 | `html/.git/`, `html/legacy/` | **HOLD** 우선 → 확인 후 격리 | 중간~높음 |
-| 7 | `html/src/`, `html/config/` (잘못 배치) | **HOLD** — 형제 폴더와 비교 후 | 높음 |
-| 8 | `html/.htaccess.bak` | 격리 → 검증 → 삭제 | 중간 |
-| 9 | `html/api/health/db.php` | 삭제 또는 IP/인증 제한 | 마지막 |
+- `/src/`, `/storage/`, `/config/` 내부 정리
+- `/html/api`, `assets`, `auth`, `register`, `search` 내부 정리
+- `.htaccess`, `index.php`, `index.html` 수정
+- `setup-finish.html`, `.ftp-deploy-sync-state...` 삭제·격리
+- 실측 없는 경로 REMOVE 확정
+- 다중 항목 동시 격리
 
-**격리 예시 (삭제 대신):**
+### D-2. 1차 격리 실행안 초안 — `/html/.htaccess.bak` only
 
-- `docs` → `_TRASH_20260710_docs` (html 밖 `study114/_quarantine/`로 이동 권장)
-- 닷홈 파일관리자: **이동** 우선, **삭제**는 검증 후
+> **⚠️ 아직 실행하지 않음.** FTP에서 파일 존재·이름을 재확인한 뒤, **아래 중 하나만** 선택.
+
+**권장: 방안 A (이동 격리)**
+
+| 항목 | 내용 |
+|------|------|
+| 대상 | `/html/.htaccess.bak` |
+| 처리 | **삭제 아님** — 계정 루트에 격리 폴더 생성 후 **이동** |
+| 격리 폴더 (신규) | `/_quarantine/` (또는 `/_archive_20260710/`) — **`/html/` 밖** |
+| 이동 후 경로 | `/_quarantine/.htaccess.bak` |
+| 롤백 | 동일 이름으로 `/html/.htaccess.bak` 에 **다시 이동** |
+
+**대안: 방안 B (이름변경 격리 — 같은 디렉터리)**
+
+| 항목 | 내용 |
+|------|------|
+| 대상 | `/html/.htaccess.bak` |
+| 처리 | `/html/.htaccess.bak.disabled_20260710` 로 **이름만 변경** |
+| 주의 | Apache가 `*.bak` 외 패턴을 읽지 않는지는 환경 의존 — **방안 A가 더 안전** |
+| 롤백 | 원래 파일명으로 복원 |
+
+**실행 전 체크 (FTP)**
+
+- [ ] `/html/.htaccess` 가 존재하고 운영 중인지 확인
+- [ ] `/html/.htaccess.bak` 파일 크기·수정일 기록 (스크린샷)
+- [ ] 격리 폴더가 **웹에서 URL로 접근 불가**한 위치인지 확인 (`/html/` 밖)
+
+**실행 후 즉시 §D-3 검증 — 1개라도 FAIL이면 롤백**
+
+### D-3. 1차 격리 후 검증 시나리오 (고정)
+
+| # | 검증 | URL / 방법 | 기대 | 결과 |
+|---|------|------------|------|------|
+| 1 | 메인 | `http://study114.dothome.co.kr/` | 200 · 화면 | [ ] |
+| 2 | auth | `.../auth/` | 200 | [ ] |
+| 3 | search | `.../search/` | 200 | [ ] |
+| 4 | register room | `.../register/room/` | 200 | [ ] |
+| 5 | register tutor | `.../register/tutor/` | 200 | [ ] |
+| 6 | API health | `GET .../api/health/db.php` | `ok:true` JSON | [ ] |
+| 7 | 500 | 위 전부 | 500 없음 | [ ] |
 
 ---
 
 ## E. 각 단계별 검증 결과
 
-매 묶음 처리 후 **반드시** 기록. 하나라도 실패 시 **다음 묶음 진행 금지**.
+### E-0. HTTP 기준선 — 2026-07-10 (격리 전 기준)
 
-### E-0. 기준선 (정리 시작 전 1회) — **2026-07-10 완료**
+| 검증 | 결과 |
+|------|------|
+| `/` ~ register SPA | OK |
+| `db.php` | `ok: true` |
+| 500 | 없음 |
+| deploy #8 | success |
 
-| 검증 | URL / 방법 | 기대 | 결과 | 일시 |
-|------|------------|------|------|------|
-| HTTP 상태 | `http://study114.dothome.co.kr/` | 200, 화면 표시 | [x] OK | 2026-07-10 |
-| home-ui | `.../#/guest` | 비회원 화면 | [x] OK (200) | 2026-07-10 |
-| auth SPA | `.../auth/#/login` | auth-ui | [x] OK (200) | 2026-07-10 |
-| search SPA | `.../search/#/search/room` | search-ui | [x] OK (200) | 2026-07-10 |
-| register SPA | `.../register/room/`, `tutor/` | SPA | [x] OK (200) | 2026-07-10 |
-| API health | `GET .../api/health/db.php` | `ok:true` JSON | [x] OK | 2026-07-10 |
-| 지도 번들 | `assets/index-DWF3U39s.js` | Client ID 포함 | [x] `n1eb29x3e5` | 2026-07-10 |
-| 500 없음 | 위 URL 전부 | 500 없음 | [x] | 2026-07-10 |
-| PHP MVC (선택) | `.../auth/login` | MVC 또는 리다이렉트 | [ ] 미실측 | |
-
-### E-1. 단계 로그
-
-#### 단계 0 — 목록화·기준선 (서버 파일 변경 없음)
+### E-1. 단계 0 — HTTP 목록화
 
 | 항목 | 내용 |
 |------|------|
 | 일시 | 2026-07-10 |
-| 건드린 경로 | 없음 (HTTP 실측만) |
-| 처리 방식 | [x] 유지 |
-| 메인 `/` | [x] OK |
-| `/auth` | [x] OK |
-| `/search` | [x] OK |
-| 주요 화면 | [x] OK |
-| 500 여부 | [x] 없음 |
-| 롤백 여부 | [x] 없음 |
-| 다음 단계 | **FTP로 `html/` 실제 목록** → REMOVE 후보 확정 → 1묶음 격리 |
+| 건드린 경로 | 없음 |
+| 처리 방식 | 유지 · HTTP 실측만 |
+| 검증 | §E-0 OK |
+| 다음 | FTP 실측 |
 
-#### 단계 1
+### E-2. 단계 1 — FTP 실측 반영·1차 분류·격리 계획 (현재 단계)
+
+| 항목 | 내용 |
+|------|------|
+| 일시 | 2026-07-10 |
+| 건드린 경로 | **없음** (문서 업데이트만) |
+| 처리 방식 | FTP 실측 반영 · 분류 확정 · 1차 격리 후보 `/html/.htaccess.bak` 지정 |
+| 서버 파일 변경 | **없음** |
+| 검증 | 기존 HTTP 기준선 유지 (재실측 생략 — 변경 없으므로) |
+| 다음 단계 | §D-2 실행안 검토 → **단건 격리 실행** → §D-3 검증 |
+
+### E-3. 단계 2 — `.htaccess.bak` 격리 실행 (예정)
 
 | 항목 | 내용 |
 |------|------|
 | 일시 | |
 | 건드린 경로 | |
-| 처리 방식 | [ ] 유지 [ ] 격리 [ ] 삭제 [ ] 보류 |
-| 격리 위치 (해당 시) | |
-| 메인 `/` | [ ] OK [ ] FAIL |
-| `/auth` | [ ] OK [ ] FAIL |
-| `/search` | [ ] OK [ ] FAIL |
-| 주요 화면 (`#/guest` 등) | [ ] OK [ ] FAIL |
-| 500 여부 | [ ] 없음 [ ] 있음 |
-| 롤백 여부 | [ ] 없음 [ ] 있음 |
+| 처리 방식 | [ ] 격리(이동) [ ] 격리(이름변경) [ ] 보류 |
+| §D-3 검증 | [ ] 전부 PASS [ ] FAIL → 롤백 |
 | 다음 단계 | |
-
-#### 단계 2
-
-| 항목 | 내용 |
-|------|------|
-| 일시 | |
-| 건드린 경로 | |
-| 처리 방식 | [ ] 유지 [ ] 격리 [ ] 삭제 [ ] 보류 |
-| 메인 `/` | [ ] OK [ ] FAIL |
-| `/auth` | [ ] OK [ ] FAIL |
-| `/search` | [ ] OK [ ] FAIL |
-| 주요 화면 | [ ] OK [ ] FAIL |
-| 500 여부 | [ ] 없음 [ ] 있음 |
-| 다음 단계 | |
-
-*(단계 3, 4, … 동일 형식으로 추가)*
 
 ---
 
 ## F. 최종 잔여 이슈
 
-정리 완료 후 작성.
-
-| # | 이슈 | 분류 | 조치 | 담당 | 상태 |
-|---|------|------|------|------|------|
-| 1 | FTP `html/` 실제 목록 미완 | 정리 | 닷홈 파일관리자로 §B-2·B-3 채우기 | | [ ] 진행 필요 |
-| 2 | `api/health/db.php` 잔존·동작 중 | 보안 | **마지막 단계** 삭제 또는 접근 제한 | | [ ] |
-| 3 | `html/.htaccess.bak` 403 | 정리 | FTP 확인 후 격리 → 검증 → 삭제 | | [ ] |
-| 4 | `html/assets/index-*.js` 다수 | 용량 | HOLD — FTP Deploy 동기화 후 검토 | | [ ] |
-| 5 | `src/`·`config/`·`storage/` FTP 미확인 | 운영 | 형제 폴더 존재 확인 (db.php ok) | | [ ] |
-| 6 | docs/preview URL 200 | 오해 방지 | SPA fallback — FTP 전 REMOVE 금지 | | [x] 문서화 |
+| # | 이슈 | 분류 | 조치 | 상태 |
+|---|------|------|------|------|
+| 1 | `/html/.htaccess.bak` 격리 방식 | 정리 | §D-2 방안 A/B 중 선택 · FTP 재확인 후 실행 | [ ] |
+| 2 | `/html/setup-finish.html` 용도 | HOLD | 닷홈 기본·설치 잔여 파일 여부 조사 | [ ] |
+| 3 | `/html/.ftp-deploy-sync-state...` | HOLD | FTP Deploy 재배포 영향 검토 후 판단 | [ ] |
+| 4 | `docs/`, `preview/`, `sql/` 등 | HOLD | **FTP 실측 없음** — 추가 목록 없이는 판단 불가 | [ ] |
+| 5 | `/html/api/health/db.php` | 보안 | 마지막 단계 삭제·접근제한 | [ ] |
+| 6 | `/html/assets/index-*.js` 다수 | 용량 | HOLD — Deploy 동기화 정책 검토 | [ ] |
 
 ### F-1. 정리 완료 선언 조건
 
-- [ ] §B 서버 트리 실측과 §C 분류표 일치
-- [ ] REMOVE 후보 중 **확정 삭제** 항목 처리 완료 (또는 HOLD 사유 기록)
-- [ ] §E 모든 단계 검증 PASS
-- [ ] §A 보호 경로 무손상 확인
-- [ ] `db.php` 마지막 단계 처리 완료
+- [x] §B FTP 실측 기록
+- [x] §C 1차 분류표 확정
+- [ ] 1차 격리 실행 + §D-3 검증 PASS
+- [ ] §A 보호 경로 무손상
+- [ ] `db.php` 마지막 단계 처리
 
 ---
 
@@ -292,5 +334,6 @@
 
 | 날짜 | 내용 |
 |------|------|
-| 2026-07-10 | 무손상 서버 정리 체크리스트 최초 작성 |
-| 2026-07-10 | HTTP 1차 실측·§E-0 기준선·단계 0 로그 반영 |
+| 2026-07-10 | 최초 작성 |
+| 2026-07-10 | HTTP 1차 실측·기준선 |
+| 2026-07-10 | **FTP 실측 반영** · 1차 분류 확정 · `.htaccess.bak` 격리 실행안 초안 · 단계 1 계획 수립 |
