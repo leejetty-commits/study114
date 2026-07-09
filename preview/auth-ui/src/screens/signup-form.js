@@ -3,6 +3,13 @@ import { signupApi } from '../auth-api.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import { renderAuthShell, renderStepIndicator, renderRoleBadge, bindGlobalEvents, navigate } from '../layout.js';
 
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;');
+}
+
 export function renderSignupForm() {
   const role = signupState.role || 'student';
   const roleLabel = ROLE_LABELS[role];

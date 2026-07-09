@@ -25,12 +25,16 @@ final class ProfileGenderSync
     public static function sync(int $userId, array $input): void
     {
         $gender = self::requireFromInput($input);
+        $current = self::get($userId);
+        if ($current === null) {
+            throw new InvalidArgumentException('gender: 프로필을 찾을 수 없습니다.');
+        }
+        if ($current === $gender) {
+            return;
+        }
         $pdo = Connection::get();
         $stmt = $pdo->prepare('UPDATE user_profiles SET gender = ? WHERE user_id = ?');
         $stmt->execute([$gender, $userId]);
-        if ($stmt->rowCount() === 0) {
-            throw new InvalidArgumentException('gender: 프로필을 찾을 수 없습니다.');
-        }
     }
 
     /**

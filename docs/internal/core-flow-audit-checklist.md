@@ -1,7 +1,7 @@
 # Study114 핵심 플로우 점검 체크리스트
 
 **기준일:** 2026-07-10  
-**라운드:** 2 (commit/push · OAuth redirect 재확인 · 로컬 DB 복구)  
+**라운드:** 3 (signup → basic-register 저장 E2E)  
 **운영 URL:** http://study114.dothome.co.kr
 
 ---
@@ -13,7 +13,21 @@
 - 운영 사이트 실측 (curl + 페이지 fetch)
 - 로컬 e2e 스모크 (`e2e/core-flow-routing.spec.js`, `e2e/core-flow-auth.spec.js`)
 
-미포함 (다음 라운드): [3] 가입/기본등록 저장, [4] 검색 플로우, [5] 상세/행동, [6] 쪽지, [7] 마이페이지
+미포함 (다음 라운드): [4] 검색 플로우, [5] 상세/행동, [6] 쪽지, [7] 마이페이지
+
+### [3단계] 회원가입 → 기본등록 저장 (라운드 3)
+
+| 항목 | 역할 | 결과 | 상태 |
+|------|------|------|------|
+| signup API | student / study_room / tutor | 로컬 e2e 3/3 통과 | **OK** |
+| basic-register API | student / study_room / tutor | DB 저장 + `kind`/`id` 반환 | **OK** |
+| auth-ui 화면 플로우 | student | 약관→역할→가입폼→기본등록→완료 e2e 통과 | **OK** |
+| 완료 후 홈 분기 | student → `#/parent` | 새 탭 home-ui 진입 확인 | **OK** |
+
+**수정한 버그 (확정):**
+
+1. `signup-form.js` — `esc is not defined` → 가입폼 화면 미렌더 (**BLOCKER** 해소)
+2. `ProfileGenderSync.php` — 동일 gender UPDATE 시 rowCount 0 오판 → study_room/tutor basic-register 실패 (**BLOCKER** 해소)
 
 ---
 
