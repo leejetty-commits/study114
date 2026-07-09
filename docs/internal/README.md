@@ -11,6 +11,7 @@
 |------|------|----------------|
 | [00-project-tree-and-key-files.md](./00-project-tree-and-key-files.md) | 코드베이스 지도·중요 파일·API 매핑·배포 트리 | ★ 항상 |
 | [01-dothome-deploy.md](./01-dothome-deploy.md) | **닷홈** 배포·CI·DB·빌드·검증·작업 원칙 | ★ **1차 목표** |
+| [02-dothome-server-cleanup-checklist.md](./02-dothome-server-cleanup-checklist.md) | **닷홈 서버 파일 정리** (무손상·격리 우선) | 운영 정리 시 |
 | [01-cafe24-staging-deploy.md](./01-cafe24-staging-deploy.md) | 카페24 스테이징 (보류·참고용) | 참고 |
 | [23-board-community-integration-draft.md](./23-board-community-integration-draft.md) | 커뮤니티(그누보드) 연동 초안 | 장기 |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
@@ -67,3 +68,4 @@ npm run build:dothome
 |------|------|
 | 2026-07-09 | 인덱스 최초 작성 — 닷홈 1차·카페24 참고 분리 |
 | 2026-07-10 | GitHub Actions CI 배포·Variable·gitignore 산출물·작업 원칙 반영 |
+| 2026-07-10 | 02-dothome-server-cleanup-checklist.md 추가 |

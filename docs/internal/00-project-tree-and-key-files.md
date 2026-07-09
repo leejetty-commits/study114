@@ -453,6 +453,7 @@ flowchart TB
 | 지도 키는 어디? | GitHub Variable `VITE_NAVER_MAP_CLIENT_ID` · 로컬은 `.env.dothome.example` |
 | 닷홈 DB·FTP 설정? | [01-dothome-deploy.md](./01-dothome-deploy.md) · `database.php.dothome.example` |
 | 운영 URL 바꾸려면? | `preview/.env.dothome.example` + 재빌드 · `public/.htaccess` SetEnv · `config/auth.php` |
+| 닷홈 서버 파일 정리? | [02-dothome-server-cleanup-checklist.md](./02-dothome-server-cleanup-checklist.md) |
 | 카페24 스테이징? | [01-cafe24-staging-deploy.md](./01-cafe24-staging-deploy.md) (참고) |
 
 ---
