@@ -10,6 +10,17 @@
 # Config (local secrets)
 /config/database.php
 .env
+.env.local
+.env.*.local
+preview/*/.env.production.local
+
+# Staging build outputs (public/ — npm run build:staging)
+/public/index.html
+/public/auth/
+/public/search/
+/public/register/
+/public/assets/home-*
+/public/assets/index-*
 
 # Storage
 /storage/

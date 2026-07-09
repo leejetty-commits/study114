@@ -590,7 +590,7 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
   }
 
   if (ctx.getTab() === 'room') {
-    bindSearchMapPinLinks(root);
+    bindSearchMapPinLinks(root, refreshActiveResultItems(ctx.getTab(), state(), ctx.role));
   }
 }
 

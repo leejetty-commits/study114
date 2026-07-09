@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { resolveViteBase } from '../shared/vite-base.mjs';
 
 export default defineConfig({
+  base: resolveViteBase('/'),
   root: '.',
   resolve: {
     alias: {

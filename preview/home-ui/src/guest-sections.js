@@ -13,6 +13,7 @@ import {
 } from './exposure-render.js';
 import { bindGuestListPagination } from './list-pagination.js';
 import { SECTION_HEADINGS, renderSectionHeading } from './section-headings.js';
+import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
 
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
@@ -34,7 +35,7 @@ export function renderGuestHero() {
   const s = GUEST_REGION_STATS;
   const r = GUEST_DEMO_REGION;
   return `
-    <section class="hero-map" aria-label="우리동네 지도">
+    <section class="hero-map" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${r.full}" data-allow-fallback="true">
       <aside class="hero-map__rail" aria-label="지역 요약">
         <p class="hero-map__eyebrow">우리동네</p>
         <h2 class="hero-map__dong">${r.dong}</h2>
@@ -46,18 +47,16 @@ export function renderGuestHero() {
         </dl>
       </aside>
       <div class="hero-map__canvas">
-        <div class="hero-map__surface" role="img" aria-label="${r.gu} ${r.dong} 공부방 지도">
-          <div class="map-block__grid" aria-hidden="true"></div>
-          <span class="map-block__center-pin" title="${r.dong}"></span>
-          <span class="map-block__pin map-block__pin--sm map-block__pin--orange" style="top:30%;left:36%"></span>
-          <span class="map-block__pin map-block__pin--sm map-block__pin--orange" style="top:46%;left:58%"></span>
-          <span class="map-block__pin map-block__pin--sm map-block__pin--blue" style="top:62%;left:24%"></span>
-          <span class="map-block__pin map-block__pin--sm map-block__pin--purple" style="top:40%;left:72%"></span>
-          <span class="map-block__placeholder">[임시] 지도 API · ${r.gu} ${r.dong}</span>
+        <div class="hero-map__surface hero-map__surface--naver" aria-label="${r.gu} ${r.dong} 공부방 지도">
+          <div class="naver-map-mount-host" data-naver-map-mount></div>
         </div>
       </div>
     </section>
   `;
+}
+
+function guestHeroMapItems() {
+  return EXPOSURE_STUDY_ROOMS.filter((item) => item.profile_status === 'published').slice(0, 12);
 }
 
 function renderStudyRoomPrimePick() {
@@ -177,6 +176,10 @@ export function renderGuestStudyAndTutorSections() {
 
 export function bindGuestSectionEvents(root, rerender) {
   if (rerender) bindGuestListPagination(root, rerender);
+
+  bindStudyRoomMapSection(root, guestHeroMapItems(), {
+    regionLabel: GUEST_DEMO_REGION.full,
+  });
 
   root.querySelectorAll('.item-actions__btn').forEach((btn) => {
     btn.addEventListener('click', (e) => e.stopPropagation());

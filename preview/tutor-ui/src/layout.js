@@ -1,4 +1,5 @@
 import { STEPS, REGISTER_PHASES } from './state.js';
+import { homeUiUrl } from '../../shared/preview-links.js';
 
 const ROUTES = Object.fromEntries(STEPS.map((s) => [s.path, s.key]));
 
@@ -30,7 +31,7 @@ export function renderPreviewToolbar(activeScreen) {
         <button type="button" class="preview-toolbar__btn" data-action="dev-login" title="tutor-owner1@dev.local">Dev 로그인</button>
         <span class="preview-toolbar__divider"></span>
         <button type="button" class="preview-toolbar__btn ${activeScreen === 'complete' ? 'is-active' : ''}" data-nav="/register/complete">완료</button>
-        <a href="http://localhost:5174/#/tutor" class="preview-toolbar__btn" target="_blank" rel="noopener">메인 프리뷰 ↗</a>
+        <a href="${homeUiUrl('tutor')}" class="preview-toolbar__btn" target="_blank" rel="noopener">메인 프리뷰 ↗</a>
       </div>
     </div>
   `;

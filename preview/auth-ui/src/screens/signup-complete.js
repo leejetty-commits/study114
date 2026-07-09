@@ -1,5 +1,11 @@
 import { signupState, ROLE_LABELS, resetSignupState } from '../state.js';
 import { renderAuthShell, renderStepIndicator, bindGlobalEvents } from '../layout.js';
+import {
+  HOME_UI_BASE,
+  STUDY_ROOM_UI_BASE,
+  TUTOR_UI_BASE,
+  homeUiUrl,
+} from '../../../shared/preview-links.js';
 
 function summarizeBasic(role, data) {
   if (!data) return '—';
@@ -86,10 +92,10 @@ export function bindSignupCompleteEvents(root) {
     const role = signupState.role || 'student';
     const target =
       role === 'study_room'
-        ? 'http://localhost:5175'
+        ? STUDY_ROOM_UI_BASE
         : role === 'tutor'
-          ? 'http://localhost:5177'
-          : 'http://localhost:5174 (학부모 메인)';
+          ? TUTOR_UI_BASE
+          : `${HOME_UI_BASE} (학부모 메인)`;
     if (role === 'study_room' || role === 'tutor') {
       window.open(target, '_blank');
       return;
@@ -98,7 +104,7 @@ export function bindSignupCompleteEvents(root) {
   });
 
   root.querySelector('[data-action="go-home"]')?.addEventListener('click', () => {
-    window.open('http://localhost:5174', '_blank');
+    window.open(homeUiUrl('parent'), '_blank');
   });
 
   root.querySelector('[data-nav="/login"]')?.addEventListener('click', () => {

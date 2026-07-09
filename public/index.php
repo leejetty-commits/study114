@@ -9,6 +9,8 @@ use Study114\Core\Router;
 
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
+// 정적 파일 우선 (api/*.php, assets/*, 빌드된 SPA 자산)
+// 루트 / 는 DirectoryIndex index.html(home-ui) → index.php 순 (.htaccess)
 if ($uri !== '/' && $uri !== '/index.php') {
     $static = __DIR__ . $uri;
     if (is_file($static)) {

@@ -6,6 +6,8 @@
 **코드 정본(프리뷰):** `preview/home-ui/src/board-engine-copy.js` · `library/*`  
 **Notion:** [23장-게시판 엔진·GNU 커뮤니티·SSO](https://app.notion.com/p/90e9b270fac8458792cf3abafbf16450)
 
+> **배포 현황 (2026-07-09):** 1차 호스팅·DB 검증은 닷홈 `study114.dothome.co.kr` — [01-dothome-deploy.md](./01-dothome-deploy.md). 아래 `study114.net`은 장기 운영 도메인 목표.
+
 > **장 번호:** 23장은 **자료실 장이 아니라 게시판 엔진 장**이다. `library` 는 boardKey 하위 채널(다운로드형) 중 하나다.
 
 ---

@@ -1,33 +1,20 @@
 /**
  * 공부방찾기 — 지도형 첫 화면 (지도 → 검색 → 결과)
- * activeResultItems와 동일 집합 계약 (핀은 추후 API 연동)
+ * activeResultItems와 동일 집합 · 네이버 지도 1차 연동
  *
- * 후속 연결 계약 (API 미구현 단계):
- * - 핀: `[data-map-pin][data-provider-id][data-provider-kind="study_room"]`
- * - 카드: `[data-provider-id][data-provider-kind="study_room"]` (exposure-render)
- * - `data-map-item-id` = `data-provider-id` 별칭 (하위 호환)
+ * 계약:
+ * - 핀/카드: `[data-provider-id][data-provider-kind="study_room"]`
  * - `bindSearchMapPinLinks`: 핀 클릭 → 카드 강조 · 카드 hover → 핀 강조
- * - 상세 열기: 카드 내 기존 상세 CTA/handoff 재사용 (핀 더블클릭 등은 API 단계에서)
  */
 
 import { MOCK_REGIONS } from './search-schema.js';
+import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
 
 function esc(s) {
   return String(s ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;');
 }
-
-const PIN_LAYOUT = [
-  { top: '30%', left: '36%' },
-  { top: '46%', left: '58%' },
-  { top: '62%', left: '42%' },
-  { top: '38%', left: '68%' },
-  { top: '54%', left: '28%' },
-  { top: '72%', left: '52%' },
-  { top: '24%', left: '48%' },
-  { top: '66%', left: '64%' },
-];
 
 /**
  * @param {object[]} [activeResultItems]
@@ -38,24 +25,14 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
   const region = options.regionLabel || MOCK_REGIONS.room;
   const dong = region.split('·')[0]?.trim() || region;
   const items = Array.isArray(activeResultItems) ? activeResultItems : [];
-  const pinItems = items.slice(0, PIN_LAYOUT.length);
   const resultSource = options.resultSource || (searched ? 'search' : 'region');
-
-  const pinsHtml = pinItems
-    .map((item, i) => {
-      const layout = PIN_LAYOUT[i];
-      const id = item.id ?? '';
-      const name = item.study_room_name || item.title || `공부방 ${id || i + 1}`;
-      return `<button type="button" class="map-block__pin map-block__pin--sm map-block__pin--orange" style="top:${layout.top};left:${layout.left}" title="${esc(name)}" aria-label="${esc(name)}" data-map-pin data-map-pin-action="focus-card" data-provider-id="${esc(id)}" data-provider-kind="study_room" data-map-item-id="${esc(id)}"></button>`;
-    })
-    .join('');
 
   const countNote = items.length
     ? `${items.length}곳 · 하단 목록과 동일`
     : '표시할 공부방이 없습니다';
 
   return `
-    <section class="hero-map hero-map--search" aria-label="공부방 지도" data-result-source="${esc(resultSource)}" data-result-items="activeResultItems">
+    <section class="hero-map hero-map--search" aria-label="공부방 지도" data-study-room-map data-map-variant="search" data-region-label="${esc(region)}" data-result-source="${esc(resultSource)}" data-result-items="activeResultItems">
       <aside class="hero-map__rail" aria-label="지역 요약">
         <p class="hero-map__eyebrow">우리동네</p>
         <h2 class="hero-map__dong">${esc(dong)}</h2>
@@ -63,18 +40,18 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
         <p class="hero-map__hint">${searched ? '검색 결과 · ' : '내 지역 · '}${esc(countNote)}</p>
       </aside>
       <div class="hero-map__canvas">
-        <div class="hero-map__surface" role="img" aria-label="${esc(region)} 공부방 지도" data-map-surface>
-          <div class="map-block__grid" aria-hidden="true"></div>
-          <span class="map-block__center-pin" title="${esc(dong)}"></span>
-          ${pinsHtml}
-          <span class="map-block__placeholder">[임시] 지도 API · ${esc(region)}</span>
+        <div class="hero-map__surface hero-map__surface--naver" aria-label="${esc(region)} 공부방 지도">
+          <div class="naver-map-mount-host" data-naver-map-mount></div>
         </div>
       </div>
     </section>`;
 }
 
-/** @param {HTMLElement} root */
-export function bindSearchMapPinLinks(root) {
+/**
+ * @param {HTMLElement} root
+ * @param {object[]} [activeResultItems]
+ */
+export function bindSearchMapPinLinks(root, activeResultItems = []) {
   const map = root.querySelector('.hero-map--search');
   if (!map) return;
 
@@ -85,36 +62,36 @@ export function bindSearchMapPinLinks(root) {
     });
   };
 
-  map.querySelectorAll('[data-map-pin]').forEach((pin) => {
-    pin.addEventListener('click', () => {
-      const id = pin.getAttribute('data-provider-id') || pin.getAttribute('data-map-item-id');
-      if (!id) return;
-      clearFocus();
-      pin.classList.add('is-map-focused');
-      const card = root.querySelector(
-        `.search-results [data-provider-id="${CSS.escape(id)}"][data-provider-kind="study_room"]`,
-      );
-      if (card) {
-        card.classList.add('is-map-focused');
-        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    });
-  });
+  const focusCard = (id) => {
+    if (!id) return;
+    clearFocus();
+    const card = root.querySelector(
+      `.search-results [data-provider-id="${CSS.escape(id)}"][data-provider-kind="study_room"]`,
+    );
+    if (card) {
+      card.classList.add('is-map-focused');
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
 
-  root.querySelectorAll('.search-results [data-provider-kind="study_room"][data-provider-id]').forEach((card) => {
-    card.addEventListener('mouseenter', () => {
-      const id = card.getAttribute('data-provider-id');
-      if (!id) return;
-      const pin = map.querySelector(`[data-map-pin][data-provider-id="${CSS.escape(id)}"]`);
-      pin?.classList.add('is-map-focused');
-    });
-    card.addEventListener('mouseleave', () => {
-      const id = card.getAttribute('data-provider-id');
-      if (!id) return;
-      const pin = map.querySelector(`[data-map-pin][data-provider-id="${CSS.escape(id)}"]`);
-      if (pin && !pin.classList.contains('is-map-focused')) {
-        pin.classList.remove('is-map-focused');
-      }
+  bindStudyRoomMapSection(root, activeResultItems, {
+    onPinClick: (id) => {
+      focusCard(id);
+    },
+  }).then((controller) => {
+    if (!controller) return;
+
+    root.querySelectorAll('.search-results [data-provider-kind="study_room"][data-provider-id]').forEach((card) => {
+      card.addEventListener('mouseenter', () => {
+        const id = card.getAttribute('data-provider-id');
+        if (!id) return;
+        controller.focusPin(id);
+      });
+      card.addEventListener('click', () => {
+        const id = card.getAttribute('data-provider-id');
+        if (!id) return;
+        controller.focusPin(id);
+      });
     });
   });
 }

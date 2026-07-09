@@ -2,6 +2,9 @@
 $labels = study114_role_labels();
 $user = is_array($user ?? null) ? $user : [];
 $roleLabel = $labels[$role] ?? $role;
+$authCfg = study114_config('auth');
+$homeUi = rtrim((string) ($authCfg['home_ui'] ?? ''), '/');
+$authUi = rtrim((string) ($authCfg['auth_ui'] ?? ''), '/');
 ?>
 <h1 class="auth-heading">가입 완료</h1>
 <p class="auth-subheading mb-8">환영합니다, <?= study114_e($user['name'] ?? '') ?>님!</p>
@@ -28,8 +31,8 @@ require __DIR__ . '/../partials/step-indicator.php';
 <?php endif; ?>
 
 <div class="actions-stack">
-  <a href="http://localhost:5174/" class="btn btn--primary btn--block">메인 홈으로 (home-ui)</a>
-  <a href="http://localhost:5173/#/signup/basic" class="btn btn--secondary btn--block"><?= study114_e($roleLabel) ?> 상세등록 (auth-ui 프리뷰)</a>
+  <a href="<?= study114_e($homeUi) ?>/" class="btn btn--primary btn--block">메인 홈으로 (home-ui)</a>
+  <a href="<?= study114_e($authUi) ?>#/signup/basic" class="btn btn--secondary btn--block"><?= study114_e($roleLabel) ?> 상세등록 (auth-ui 프리뷰)</a>
 </div>
 
 <form method="post" action="/auth/logout" class="mt-6">

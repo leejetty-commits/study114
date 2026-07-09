@@ -12,6 +12,7 @@ import {
   isProviderHomeSelfTab,
 } from '../provider-home.js';
 import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
+import { STUDY_ROOM_REGISTER_URL } from '../../../shared/preview-links.js';
 
 function renderMyStudyRoomBox() {
   return `
@@ -25,7 +26,7 @@ function renderMyStudyRoomBox() {
         <span>등록 <strong>${MY_STUDY_ROOM.registered}</strong></span>
       </div>
       <div style="margin-top:var(--space-4);display:flex;gap:var(--space-2);flex-wrap:wrap;">
-        <button type="button" class="btn btn--primary btn--sm" data-action="edit-room" data-href="http://localhost:5175/#/register/basic">공부방 수정</button>
+        <button type="button" class="btn btn--primary btn--sm" data-action="edit-room" data-href="${STUDY_ROOM_REGISTER_URL}">공부방 수정</button>
         <button type="button" class="btn btn--secondary btn--sm" data-action="manage-room">등록 관리</button>
       </div>
     </div>

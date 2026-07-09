@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
+import { resolveViteBase } from '../shared/vite-base.mjs';
 
 export default defineConfig({
+  base: resolveViteBase('/'),
   root: '.',
   server: {
     port: 5173,

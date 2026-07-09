@@ -1,0 +1,21 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * 카페24 스테이징 DB — study114new
+ * 복사: config/database.php (gitignore)
+ *
+ * DB 이름은 카페24 관리자 → MySQL 관리에서 확인 후 __CAFE24_DB_NAME__ 교체
+ * 비밀번호는 DB 생성 시 설정한 값으로 교체
+ */
+return [
+    'driver'    => 'mysql',
+    'host'      => getenv('STUDY114_DB_HOST') ?: 'localhost',
+    'port'      => (int) (getenv('STUDY114_DB_PORT') ?: 3306),
+    'database'  => getenv('STUDY114_DB_NAME') ?: '__CAFE24_DB_NAME__',
+    'username'  => getenv('STUDY114_DB_USER') ?: 'study114new',
+    'password'  => getenv('STUDY114_DB_PASS') ?: '__CAFE24_DB_PASSWORD__',
+    'charset'   => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
+];

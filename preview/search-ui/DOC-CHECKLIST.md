@@ -92,7 +92,7 @@
 ## 미구현 (1차 이후)
 
 - [ ] 지역선택·광역 모달 (§8-3) — `change-region` alert placeholder
-- [ ] 공부방 지도 핀 실 API 연동 (§8-2-2) — 프리뷰 CSS·`data-provider-id` 계약·`bindSearchMapPinLinks` ✅
+- [x] 공부방 지도 핀 실 API 연동 (§8-2-2) — `preview/shared/naver-map.js` · `VITE_NAVER_MAP_CLIENT_ID`
 
 ## 프리뷰 실행
 

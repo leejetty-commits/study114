@@ -24,11 +24,16 @@ import { renderStudyRoomDetailBody } from './studyroom-detail.js';
 import { AUTH_UI_BASE } from '../data.js';
 import { openCompareModal } from '../compare-modal.js';
 import { getCompareItems } from '../user-actions-state.js';
+import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
 
 const MODAL_ID = 'p24-detail-modal';
 
 export function closeDetailModal() {
-  document.getElementById(MODAL_ID)?.remove();
+  const modal = document.getElementById(MODAL_ID);
+  modal?.querySelectorAll('[data-naver-map-mount]').forEach((mount) => {
+    /** @type {{ destroy?: () => void }|undefined} */ (mount)._mapController?.destroy?.();
+  });
+  modal?.remove();
   document.body.style.overflow = '';
 }
 
@@ -161,6 +166,14 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
 
   document.body.appendChild(wrap);
   document.body.style.overflow = 'hidden';
+
+  if (kind === 'study_room') {
+    const mapAccordion = wrap.querySelector('.p24-map-accordion');
+    mapAccordion?.addEventListener('toggle', () => {
+      if (!mapAccordion.open) return;
+      bindStudyRoomMapSection(wrap, [item], { regionLabel: item.location_label || '' });
+    });
+  }
 
   wrap.querySelectorAll('[data-p24-action="close"]').forEach((btn) => {
     btn.addEventListener('click', closeDetailModal);

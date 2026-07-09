@@ -8,10 +8,30 @@ export const PREVIEW_PORTS = {
   tutor: 5177,
 };
 
-export const AUTH_UI_BASE = `http://127.0.0.1:${PREVIEW_PORTS.auth}`;
-export const HOME_UI_BASE = `http://127.0.0.1:${PREVIEW_PORTS.home}`;
-export const STUDY_ROOM_REGISTER_URL = `http://127.0.0.1:${PREVIEW_PORTS.studyRoom}/#/register/basic`;
-export const TUTOR_REGISTER_URL = `http://127.0.0.1:${PREVIEW_PORTS.tutor}/#/register/basic`;
+const LOCAL_ORIGIN = 'http://127.0.0.1';
+
+/**
+ * @param {string} key
+ * @param {string} fallback
+ */
+function envBase(key, fallback) {
+  const value = import.meta.env[key];
+  if (typeof value !== 'string') return fallback;
+  const trimmed = value.trim();
+  return trimmed ? trimmed.replace(/\/$/, '') : fallback;
+}
+
+export const AUTH_UI_BASE = envBase('VITE_AUTH_UI_BASE', `${LOCAL_ORIGIN}:${PREVIEW_PORTS.auth}`);
+export const HOME_UI_BASE = envBase('VITE_HOME_UI_BASE', `${LOCAL_ORIGIN}:${PREVIEW_PORTS.home}`);
+export const SEARCH_UI_BASE = envBase('VITE_SEARCH_UI_BASE', `${LOCAL_ORIGIN}:${PREVIEW_PORTS.search}`);
+export const STUDY_ROOM_UI_BASE = envBase(
+  'VITE_STUDY_ROOM_UI_BASE',
+  `${LOCAL_ORIGIN}:${PREVIEW_PORTS.studyRoom}`,
+);
+export const TUTOR_UI_BASE = envBase('VITE_TUTOR_UI_BASE', `${LOCAL_ORIGIN}:${PREVIEW_PORTS.tutor}`);
+
+export const STUDY_ROOM_REGISTER_URL = `${STUDY_ROOM_UI_BASE}/#/register/basic`;
+export const TUTOR_REGISTER_URL = `${TUTOR_UI_BASE}/#/register/basic`;
 
 /** @typedef {'guest' | 'parent' | 'study_room' | 'tutor'} NavRole */
 /** @typedef {'room' | 'tutor' | 'student'} SearchTab */
@@ -21,7 +41,7 @@ export const TUTOR_REGISTER_URL = `http://127.0.0.1:${PREVIEW_PORTS.tutor}/#/reg
  * @param {NavRole | ''} [role]
  */
 export function searchUiUrl(tab = 'room', role = '') {
-  const base = `http://127.0.0.1:${PREVIEW_PORTS.search}/#/search/${tab}`;
+  const base = `${SEARCH_UI_BASE}/#/search/${tab}`;
   return role ? `${base}?role=${encodeURIComponent(role)}` : base;
 }
 

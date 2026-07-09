@@ -12,7 +12,9 @@
     "e2e:p18-e": "playwright test e2e/p18-e-reminders.spec.js",
     "e2e:ui": "playwright test --ui",
     "sync:inventory": "node scripts/sync-screen-inventory.mjs",
-    "sync:inventory:check": "node scripts/sync-screen-inventory.mjs --check"
+    "sync:inventory:check": "node scripts/sync-screen-inventory.mjs --check",
+    "build:staging": "powershell -ExecutionPolicy Bypass -File scripts/build-staging.ps1",
+    "build:dothome": "powershell -ExecutionPolicy Bypass -File scripts/build-dothome.ps1"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0"

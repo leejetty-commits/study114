@@ -142,6 +142,7 @@ final class SearchService
                    sr.main_subject_note, sr.teaching_style, sr.grade_band, sr.feature_1, sr.slogan,
                    sr.lesson_place_type, sr.capacity_per_time, sr.lesson_operation_type,
                    sr.education_office_registered, sr.detail_completion_status,
+                   sr.latitude, sr.longitude,
                    r.dong_name, r.sigungu_name, c.name AS complex_name
             FROM study_rooms sr
             LEFT JOIN regions r ON sr.region_id = r.id
@@ -196,6 +197,8 @@ final class SearchService
                 'detail_completion_status'   => $detailStatus,
                 'prime_eligible'             => $detailStatus === 'expanded_complete',
                 'exposure_tier'              => $exposureTier,
+                'latitude'                   => $row['latitude'] !== null ? (float) $row['latitude'] : null,
+                'longitude'                  => $row['longitude'] !== null ? (float) $row['longitude'] : null,
             ];
 
             $items[] = $item;

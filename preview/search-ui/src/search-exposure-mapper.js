@@ -61,6 +61,8 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
         apiItem.education_office_registered ?? base.education_office_registered,
       detail_completion_status: apiItem.detail_completion_status || base.detail_completion_status,
       prime_eligible: apiItem.prime_eligible ?? base.prime_eligible,
+      latitude: apiItem.latitude ?? base.latitude ?? null,
+      longitude: apiItem.longitude ?? base.longitude ?? null,
       profile_status: 'published',
       compare_eligible: apiItem.compare_eligible !== false,
       inquiry_status: base.inquiry_status || 'open',

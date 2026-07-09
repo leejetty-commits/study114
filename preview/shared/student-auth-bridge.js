@@ -2,7 +2,7 @@
  * auth-ui → home-ui 자녀 기본등록 연동 (19§8-2 · 프리뷰)
  */
 
-import { HOME_UI_BASE, parseHashQuery } from './preview-links.js';
+import { HOME_UI_BASE, AUTH_UI_BASE, parseHashQuery } from './preview-links.js';
 
 export const STUDENT_IMPORT_PARAM = 'student_import';
 
@@ -88,7 +88,7 @@ export function buildHomeStudentImportUrl(record) {
 
 /** auth-ui 「자녀 추가」 진입 URL */
 export function authStudentAddUrl() {
-  return `http://127.0.0.1:5173/#/signup/basic?return_import=1&role=student`;
+  return `${AUTH_UI_BASE}/#/signup/basic?return_import=1&role=student`;
 }
 
 export function isReturnImportMode() {

@@ -1,0 +1,28 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * 닷홈 DB 설정 — study114 계정
+ *
+ * 사용법:
+ *   1) 이 파일을 config/database.php 로 복사
+ *   2) __DOTHOME_DB_PASSWORD__ 를 실제 DB 비밀번호로 교체
+ *   3) FTP로 config/database.php 업로드 (git에 올리지 않음)
+ *
+ * phpMyAdmin 확인값:
+ *   - 서버: Localhost via UNIX socket
+ *   - DB명: study114
+ *   - 사용자: study114@localhost
+ *   - 문자셋: utf8mb4
+ */
+return [
+    'driver'    => 'mysql',
+    'host'      => getenv('STUDY114_DB_HOST') ?: 'localhost',
+    'port'      => (int) (getenv('STUDY114_DB_PORT') ?: 3306),
+    'database'  => getenv('STUDY114_DB_NAME') ?: 'study114',
+    'username'  => getenv('STUDY114_DB_USER') ?: 'study114',
+    'password'  => getenv('STUDY114_DB_PASS') ?: '__DOTHOME_DB_PASSWORD__',
+    'charset'   => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
+];

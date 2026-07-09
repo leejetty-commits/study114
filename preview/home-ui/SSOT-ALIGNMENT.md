@@ -46,7 +46,7 @@
 | 항목 | 조치 |
 |------|------|
 | 지역선택·광역 모달 (13§8-3) | ⏳ alert placeholder |
-| 지도 API 실연동 | ⏳ CSS placeholder · `data-map-item-id`만 |
+| 지도 API 실연동 | ✅ `preview/shared/naver-map.js` · 공부방만 · `VITE_NAVER_MAP_CLIENT_ID` |
 | 내부 카피 「학생」 통일 | ⏳ 일부 화면 |
 
 ---

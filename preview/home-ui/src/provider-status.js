@@ -217,7 +217,7 @@ export function applyRequestViewUnlockResponse(data) {
 export function getMemoGateState() {
   const ticketsRemaining = getMemoTicketsRemaining();
   const bypass = isColdMemoBypass();
-  const canColdMemo = canColdMemoFromEntitlement() ?? ticketsRemaining > 0 || bypass;
+  const canColdMemo = canColdMemoFromEntitlement() ?? (ticketsRemaining > 0 || bypass);
   return {
     ticketsRemaining,
     nearestExpiry: getMemoNearestExpiry(),

@@ -37,5 +37,11 @@ export function renderStudyRoomDetailBody(item, viewer) {
         <dt>교육청 등록</dt><dd>${item.education_office_registered ? '공개' : '미공개'}</dd>
       </dl>
     </section>
+    <details class="p24-map-accordion" data-study-room-map data-map-variant="detail" data-region-label="${esc(item.location_label || '')}" data-allow-fallback="true">
+      <summary class="p24-map-accordion__summary">위치 지도</summary>
+      <div class="p24-map-accordion__body">
+        <div class="naver-map-mount-host naver-map-mount-host--detail" data-naver-map-mount data-detail-map-for="${esc(String(item.id ?? ''))}"></div>
+      </div>
+    </details>
     ${renderPromoLinksSection(item, esc)}`;
 }

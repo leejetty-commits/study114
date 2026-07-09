@@ -1133,6 +1133,101 @@ a.sup-term-chip:hover {
   white-space: nowrap;
 }
 
+/* ── 네이버 지도 1차 (공부방 전용) ── */
+.hero-map__surface--naver {
+  background: #e8eef3;
+}
+
+.naver-map-mount-host,
+.naver-map-mount {
+  width: 100%;
+  height: 100%;
+  min-height: 12rem;
+}
+
+.naver-map-mount--detail,
+.naver-map-mount-host--detail {
+  min-height: 10rem;
+  height: 10rem;
+}
+
+.naver-map-pin {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: var(--brand-orange, #f97316);
+  transform: rotate(-45deg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.naver-map-pin.is-focused {
+  outline: 2px solid var(--brand-orange, #f97316);
+  outline-offset: 2px;
+  background: #ea580c;
+}
+
+.naver-map-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 10rem;
+  margin: 0;
+  padding: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+  text-align: center;
+  background: #f8fafc;
+}
+
+.naver-map-status--error {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.naver-map-status--config {
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.p24-map-accordion {
+  margin-top: var(--space-4);
+  border: 1px solid var(--gray-200);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.p24-map-accordion__summary {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  background: #f8fafc;
+  list-style: none;
+}
+
+.p24-map-accordion__summary::-webkit-details-marker {
+  display: none;
+}
+
+.p24-map-accordion__body {
+  border-top: 1px solid var(--gray-200);
+}
+
+@media (max-width: 640px) {
+  .naver-map-mount-host,
+  .naver-map-mount {
+    min-height: 9rem;
+  }
+
+  .hero-map__canvas,
+  .hero-map__surface {
+    min-height: 9rem;
+  }
+}
+
 /* ── Content section (no outer panel) ── */
 .content-section {
   margin-bottom: var(--space-5);
