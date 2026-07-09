@@ -1,17 +1,18 @@
 # Study114 핵심 플로우 점검 체크리스트
 
 **기준일:** 2026-07-10  
-**라운드:** 4 (홈 → 검색 → 상세 플로우)  
+**라운드:** 6 (마이페이지 · 찜·비교·최근열람)  
 **운영 URL:** http://study114.dothome.co.kr
 
 ---
 
 ## A. 오늘 점검 범위
 
-- [4단계] 홈 → 검색 → 상세 플로우 (guest/parent · 로컬 브라우저 실측)
-- 로컬 e2e: `e2e/core-flow-search-detail.spec.js` (8케이스)
+- [6단계] 마이페이지 — 찜 · 비교 · 최근열람 (로컬 e2e)
+- [4단계] 홈 → 검색 → 상세 플로우 (guest/parent · 로컬 브라우저 실측) — **완료**
+- 로컬 e2e: `e2e/core-flow-mypage.spec.js` (4케이스) · `e2e/core-flow-search-detail.spec.js` (8케이스)
 
-미포함 (다음 라운드): [5] 쪽지 완결, [6] 마이페이지, 운영 실측(4단계)
+미포함 (다음 라운드): [5] 쪽지 완결 — **완료(9/9)** · 운영 실측(4단계)
 
 ### [4단계] 홈 → 검색 → 상세 (라운드 4)
 
@@ -195,7 +196,7 @@ GET /api/auth/oauth/start.php?provider=naver|kakao|google
 1. **닷홈 서버** — `OAUTH_*` SetEnv + 콘솔 redirect URI 등록 (기존 **BLOCKER**)
 2. **운영 src/ 동기화** — `ProfileGenderSync.php` 등 PHP `src/` FTP/배포 (study_room/tutor basic-register 운영 확정)
 3. **[5단계]** 쪽지 발송·수신·스레드 완결 플로우 — **9/9 통과**, 핵심 버그 2건 해결 (아래 H 참고)
-4. **[6단계]** 마이페이지 (찜·비교·최근열람 운영 실측)
+4. **[6단계]** 마이페이지 — **4/4 통과(로컬)** (아래 I 참고) · 운영 실측은 별도
 5. **보안** — `/api/health/db.php` 운영 삭제 (별도 라운드)
 
 ---
@@ -257,11 +258,32 @@ GET /api/auth/oauth/start.php?provider=naver|kakao|google
 
 **검증:** 케이스 4 **PASS** (2.6s)
 
-### e2e·헬퍼 (미 commit)
+### e2e·헬퍼 (commit: `a2ba727`)
 
 - `e2e/core-flow-messages.spec.js` — 차단·inbox(sent) fixture·assertion
 - `e2e/helpers/messages-flow.js` — tutor assertion strict mode 수정, dialog 핸들러 방어
 - `e2e/helpers/admin-api.js` — `prepBlockThreadE2e()`
+
+---
+
+## I. [6단계] 마이페이지 (라운드 6 · 로컬)
+
+**e2e:** `e2e/core-flow-mypage.spec.js` (4케이스) · 헬퍼 `e2e/helpers/mypage-flow.js`
+**결과: 4/4 통과**
+
+| # | 케이스 | 결과 | 비고 |
+|---|--------|------|------|
+| 1 | 상세 찜 → `#/mypage/wishlist` 노출 + favorites API | **OK** | 2.0s |
+| 2 | 상세 비교 → compare-bar + compare API count | **OK** | 2.0s |
+| 3 | 찜 목록 `비교` 버튼 → API + parent 홈 compare-bar | **OK** | compare-bar는 마이페이지 본문 미렌더(탐색 화면 전용) |
+| 4 | search-ui tutor 상세 → `#/mypage/recent` + recent API | **OK** | 2.1s |
+
+**코드 관찰 (BLOCKER 아님):** `compare-bar`는 `parent.js`·`tutor.js` 탐색 홈에만 포함. 마이페이지 찜에서 비교 담기 후 바는 parent 홈 이동 시 노출.
+
+### e2e·헬퍼 (미 commit)
+
+- `e2e/core-flow-mypage.spec.js`
+- `e2e/helpers/mypage-flow.js`
 
 ---
 
