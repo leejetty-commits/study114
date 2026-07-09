@@ -305,41 +305,25 @@
 | 대상 | `/html/.htaccess`, `/html/.htaccess.bak` 만 |
 | 서버 파일 변경 | **없음** |
 
-#### 프리플라이트 체크리스트
+#### 프리플라이트 체크리스트 — **2026-07-10 최종 확인 (사용자 FTP)**
 
 | # | 항목 | 결과 | 비고 |
 |---|------|------|------|
-| 1 | FTP `/html/.htaccess` 크기·수정일 | [ ] **미확인** | Cursor 환경 FTP 미연결 — **닷홈 파일관리자에서 기록 필요** |
-| 2 | FTP `/html/.htaccess.bak` 크기·수정일 | [ ] **미확인** | 동일 |
-| 3 | 두 파일 내용 비교 | [ ] **미완** | HTTP GET 둘 다 **403** (내용 조회 불가) |
-| 4 | 격리 경로 확정 | [x] **안 `/_quarantine/`** (계정 루트, `/html/` 형제) | 웹 document root 밖 |
-| 5 | 방안 A 이동 격리 실행 | [ ] **미실행** | 1~3 미충족 → **보류** |
+| 1 | FTP `/html/.htaccess` 크기·수정일 | [x] **1KB · 2026-07-10 01:22:47** | 활성 운영 파일 |
+| 2 | FTP `/html/.htaccess.bak` 크기·수정일 | [x] **2KB · 2026-07-09 20:37:58** | 구버전 백업 |
+| 3 | 두 파일 내용 비교 | [x] **완료** | `.htaccess` = minimal safe · `.bak` = SetEnv+mod_expires 구버전 |
+| 4 | 격리 경로 확정 | [x] `/_quarantine/` | `/html/` 형제 |
+| 5 | 실행 판단 | [x] **실행 가능** | `.htaccess` KEEP · `.bak`만 격리 |
 
-#### HTTP 보조 관측 (물리 메타·내용 근거 아님)
-
-| URL | HTTP | 해석 |
-|-----|------|------|
-| `/.htaccess` | 403 | 파일 존재 가능 (직접 접근 차단 — 정상) |
-| `/.htaccess.bak` | 403 | FTP 실측과 일치 (파일 존재 추정) |
-
-#### repo 기준 참고 (`public/.htaccess` = 배포 원본)
-
-- 27줄 · `dothome minimal safe version`
-- `mod_rewrite` + `DirectoryIndex` only
-- `mod_expires` 없음
-
-→ 서버 `/html/.htaccess`가 이 내용과 **동일한지**는 FTP 다운로드 또는 파일관리자 «편집»으로만 확인 가능.
+| 파일 | 크기 | 수정일 | 요약 |
+|------|------|--------|------|
+| `/html/.htaccess` | 1KB | 2026-07-10 01:22:47 | study114 minimal safe version — **KEEP** |
+| `/html/.htaccess.bak` | 2KB | 2026-07-09 20:37:58 | SetEnv·mod_expires 포함 구버전 — **격리 대상** |
 
 #### 실행 판단
 
-**보류 (HOLD)** — FTP에서 크기·수정일·(가능 시) `.bak` 첫 줄 확인 전 격리 실행 금지.
+**실행 가능** — `/html/.htaccess.bak` 1건 → `/_quarantine/.htaccess.bak` 이동 격리 (GitHub Actions `quarantine-htaccess-bak.yml`)
 
-#### 사용자 FTP에서 채울 기록란
-
-| 파일 | 크기 (bytes) | 수정일 | 첫 줄 / 요약 |
-|------|--------------|--------|--------------|
-| `/html/.htaccess` | | | |
-| `/html/.htaccess.bak` | | | |
 
 ### E-4. 단계 3 — `.htaccess.bak` 격리 실행 (예정)
 
