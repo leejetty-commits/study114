@@ -28,13 +28,28 @@ jobs:
           sudo apt-get install -y lftp
           lftp -u "study114,${FTP_PASSWORD}" 112.175.184.80 <<'EOF'
           set ftp:passive-mode on
+          set cmd:trace true
+          cls -1
+          cls -1 html || true
+          cls -1 hosting/study114/html || true
+          mkdir -f _quarantine
+          mkdir -f hosting/study114/_quarantine
+          mv -f html/.htaccess.bak _quarantine/.htaccess.bak
+          bye
+          EOF
+          if ! lftp -u "study114,${FTP_PASSWORD}" 112.175.184.80 -e "set ftp:passive-mode on; cls -1 _quarantine/.htaccess.bak; bye" 2>/dev/null | grep -q htaccess; then
+            echo "Attempt 1 failed, trying hosting/study114 paths..."
+            lftp -u "study114,${FTP_PASSWORD}" 112.175.184.80 <<'EOF'
+          set ftp:passive-mode on
           set cmd:fail-exit yes
+          cd hosting/study114
           mkdir -f _quarantine
           mv -f html/.htaccess.bak _quarantine/.htaccess.bak
-          ls -la html/.htaccess
           ls -la _quarantine/.htaccess.bak
           bye
           EOF
+          fi
+          lftp -u "study114,${FTP_PASSWORD}" 112.175.184.80 -e "set ftp:passive-mode on; cls -1 _quarantine; cls -1 hosting/study114/_quarantine; bye"
 
       - name: Verify site (6 checks)
         run: |
