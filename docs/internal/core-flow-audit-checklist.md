@@ -1,7 +1,7 @@
 # Study114 핵심 플로우 점검 체크리스트
 
 **기준일:** 2026-07-10  
-**라운드:** 6 (마이페이지 · 찜·비교·최근열람)  
+**라운드:** 7 (닷홈 운영 실측 **완료 7/7**)  
 **운영 URL:** http://study114.dothome.co.kr
 
 ---
@@ -12,7 +12,7 @@
 - [4단계] 홈 → 검색 → 상세 플로우 (guest/parent · 로컬 브라우저 실측) — **완료**
 - 로컬 e2e: `e2e/core-flow-mypage.spec.js` (4케이스) · `e2e/core-flow-search-detail.spec.js` (8케이스)
 
-미포함 (다음 라운드): [5] 쪽지 완결 — **완료(9/9)** · 운영 실측(4단계)
+미포함 (다음 라운드): **BLOCKER** — OAuth 키 · 운영 `src/` 동기화
 
 ### [4단계] 홈 → 검색 → 상세 (라운드 4)
 
@@ -191,13 +191,56 @@ GET /api/auth/oauth/start.php?provider=naver|kakao|google
 
 ---
 
-## G. 다음 단계
+## G. 다음 단계 (권장 순서)
 
-1. **닷홈 서버** — `OAUTH_*` SetEnv + 콘솔 redirect URI 등록 (기존 **BLOCKER**)
-2. **운영 src/ 동기화** — `ProfileGenderSync.php` 등 PHP `src/` FTP/배포 (study_room/tutor basic-register 운영 확정)
-3. **[5단계]** 쪽지 발송·수신·스레드 완결 플로우 — **9/9 통과**, 핵심 버그 2건 해결 (아래 H 참고)
-4. **[6단계]** 마이페이지 — **4/4 통과(로컬)** (아래 I 참고) · 운영 실측은 별도
-5. **보안** — `/api/health/db.php` 운영 삭제 (별도 라운드)
+> **한 줄 결론:** 운영 실측으로 제품 수정분(쪽지·마이페이지)을 먼저 닫고 → OAuth 키 · 운영 `src/` 동기화 BLOCKER 처리.
+
+### 1순위 — 닷홈 운영 실측 (라운드 7 · **완료 7/7 OK**)
+
+로컬 검증 완료분을 운영에서 확인. **7/7 OK → [5]+[6] 검증 완료로 묶음** (아래 J).
+
+| # | 확인 항목 | 로컬 | 운영 |
+|---|-----------|------|------|
+| M1 | 쪽지 compose → **thread 진입 · 본문 표시** (크래시 없음) | OK (`a2ba727`) | **OK** (1.9s) |
+| M2 | 상세 모달 → compose 전송 후 **모달 닫힘** | OK | **OK** (1.9s) |
+| M3 | 차단 후 **`차단됨` 배너** · 답장 불가 | OK | **OK** (1.8s) |
+| M4 | **받은/보낸** 탭 필터 (parent 보낸 쪽지 → 보낸 탭) | OK | **OK** (1.8s) |
+| P1 | 마이페이지 **recent** 연동 | OK (4/4) | **OK** (1.7s) |
+| P2 | 마이페이지 **wishlist** 연동 | OK | **OK** (재실행 1.8s · 1차 suite close 타임아웃 플레이크) |
+| P3 | **compare** (상세·API·parent compare-bar) | OK | **OK** (1.9s) |
+
+**운영 전제:** https://study114.dothome.co.kr · `guardian1@dev.local` · Actions run #19–20 success
+
+**실측 URL:** `/#/parent` · `/#/mypage/messages/inbox|sent` · `/#/mypage/wishlist|recent`
+
+### 2순위 — 검증 완료 묶음 ✅
+
+- **[5단계] 쪽지** — 로컬 9/9 + **운영 M1–M4 OK** → **완료**
+- **[6단계] 마이페이지** — 로컬 4/4 + **운영 P1–P3 OK** → **완료**
+
+### 3순위 — 기존 BLOCKER (실측 후)
+
+1. **OAuth provider 키** — `OAUTH_*` SetEnv + 콘솔 redirect URI (기존 **BLOCKER**)
+2. **운영 `src/` 동기화** — `ProfileGenderSync.php` 등 PHP FTP/배포
+3. **보안** — `/api/health/db.php` 운영 삭제 (별도 라운드)
+
+---
+
+## J. [라운드 7] 닷홈 운영 실측
+
+**일시:** 2026-07-10 · **URL:** https://study114.dothome.co.kr  
+**계정:** `guardian1@dev.local` · **자동화:** `e2e/ops-round7-dothome.spec.js`  
+**결과: 7/7 OK → [5]+[6] 검증 완료**
+
+| # | 항목 | 결과 | 메모 |
+|---|------|------|------|
+| M1 | 쪽지 compose → thread · 본문 | **OK** | ~1.9s |
+| M2 | compose 후 모달 닫힘 | **OK** | `#p24-detail-modal` count 0 |
+| M3 | 차단됨 배너 · 답장 불가 | **OK** | |
+| M4 | 보낸 쪽지 → 보낸 탭 | **OK** | 받은 탭 1번째 아님(설계대로) |
+| P1 | 마이페이지 recent | **OK** | 상세 제목 노출 |
+| P2 | 마이페이지 wishlist | **OK** | 7케이스 일괄 실행 시 close 타임아웃 1회 → 단독 재실행 PASS |
+| P3 | compare (상세·API·compare-bar) | **OK** | compare-bar parent 홈에서 확인 |
 
 ---
 
@@ -280,7 +323,7 @@ GET /api/auth/oauth/start.php?provider=naver|kakao|google
 
 **코드 관찰 (BLOCKER 아님):** `compare-bar`는 `parent.js`·`tutor.js` 탐색 홈에만 포함. 마이페이지 찜에서 비교 담기 후 바는 parent 홈 이동 시 노출.
 
-### e2e·헬퍼 (미 commit)
+### e2e·헬퍼 (commit: `32ea694`)
 
 - `e2e/core-flow-mypage.spec.js`
 - `e2e/helpers/mypage-flow.js`
