@@ -325,15 +325,24 @@
 **실행 가능** — `/html/.htaccess.bak` 1건 → `/_quarantine/.htaccess.bak` 이동 격리 (GitHub Actions `quarantine-htaccess-bak.yml`)
 
 
-### E-4. 단계 3 — `.htaccess.bak` 격리 실행 (예정)
+### E-4. 단계 3 — `.htaccess.bak` 격리 실행
 
 | 항목 | 내용 |
 |------|------|
-| 일시 | |
-| 건드린 경로 | |
-| 처리 방식 | [ ] 격리(이동 → `/_quarantine/`) [ ] 보류 |
-| §D-3 검증 | [ ] 전부 PASS [ ] FAIL → 롤백 |
-| 다음 단계 | |
+| 일시 | 2026-07-10 |
+| 건드린 경로 | **없음** (GHA FTP 이동 2회 실패 — 파일 미이동) |
+| 처리 방식 | [x] 보류 — **수동 FTP 이동 필요** |
+| 시도 | `quarantine-htaccess-bak` workflow run #1·#2 **failure** |
+| §D-3 검증 (사이트) | [x] 전부 PASS (변경 없어 기준선 유지) |
+| 롤백 | **불필요** (이동 미발생) |
+| 다음 단계 | 닷홈 파일관리자에서 **수동 이동** (아래) |
+
+**수동 실행 절차 (1분):**
+
+1. `/_quarantine/` 폴더 생성 (없으면)
+2. `/html/.htaccess.bak` → `/_quarantine/.htaccess.bak` **이동** (삭제 금지)
+3. `/html/.htaccess` **건드리지 않음**
+4. §D-3 검증 6종 재실행
 
 ---
 
