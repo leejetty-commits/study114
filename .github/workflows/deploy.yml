@@ -16,7 +16,7 @@ jobs:
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: $ secrets.FTP_SERVER 
-          username: $ vars.FTP_USERNAME 
+          server: "112.175.184.80"
+          username: "study114"
           password: $ secrets.FTP_PASSWORD 
-          server-dir: $ vars.FTP_SERVER_DIR 
+          server-dir: "/hosting/study114/html/"
