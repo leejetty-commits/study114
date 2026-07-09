@@ -141,7 +141,8 @@ checkout
 Variable 미설정 시 workflow는 **Inject dothome env** 단계에서 실패한다.
 
 **Actions가 배포하는 것:** `public/` 전체 (빌드 후 SPA 번들 + `api/` + `index.php` + `.htaccess`)  
-**Actions가 배포하지 않는 것:** `src/`, `config/`, `storage/` → [§8 수동 FTP](#8-ftp-업로드-체크리스트)
+**Actions가 배포하는 것:** `public/` → `html/` · **`src/` → `/hosting/study114/src/`** (형제 폴더)  
+**Actions가 배포하지 않는 것:** `config/`(특히 `database.php`), `storage/` → [§8 수동 FTP](#8-ftp-업로드-체크리스트)
 
 ### 4-B. 로컬 빌드 (수동 FTP·검증용)
 
@@ -317,12 +318,12 @@ https://study114.dothome.co.kr
 | 로컬 (CI 빌드 후) | FTP 대상 | 비고 |
 |-------------------|----------|------|
 | `public/*` | `/hosting/study114/html/` | 프론트 번들·API·`.htaccess`·`index.php` |
+| `src/*` | `/hosting/study114/src/` | PHP 앱 (`html/` 형제) |
 
-### 수동 (최초 1회 또는 PHP/설정 변경 시)
+### 수동 (최초 1회 또는 설정 변경 시)
 
 | 로컬 | FTP 대상 | 필수 |
 |------|----------|------|
-| `src/` | `/hosting/study114/src/` | ✅ (`html/` 형제) |
 | `config/database.php` | `/hosting/study114/config/database.php` | ✅ (git 제외, 서버 전용) |
 | `config/auth.php` 등 | `/hosting/study114/config/` | ✅ |
 | `storage/logs/`, `storage/attachments/` | `/hosting/study114/storage/` | ✅ (빈 폴더 + 쓰기권한) |
@@ -341,7 +342,7 @@ https://study114.dothome.co.kr
 | `scripts/`, `docker/`, `legacy/` | 개발·CI 전용 |
 | `node_modules/`, `.git/`, `.github/` | 의존성·Git 메타 |
 
-> **예외:** `src/`·`config/`·`storage/`는 `public/` 밖에 있지만 **PHP 동작에 필수**. Actions만으로는 부족할 수 있음.
+> **참고:** `src/`는 Actions가 `main` push 시 FTP 배포. `config/`·`storage/`는 여전히 수동.
 
 **업로드 안 해도 됨:** `preview/`, `node_modules/`, `docs/`, `docker/`
 

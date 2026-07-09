@@ -1,7 +1,7 @@
 # Study114 핵심 플로우 점검 체크리스트
 
 **기준일:** 2026-07-10  
-**라운드:** 7 (닷홈 운영 실측 **완료 7/7**)  
+**라운드:** 8 (BLOCKER — src FTP 자동화 · OAuth 키 사람 작업)  
 **운영 URL:** http://study114.dothome.co.kr
 
 ---
@@ -12,7 +12,7 @@
 - [4단계] 홈 → 검색 → 상세 플로우 (guest/parent · 로컬 브라우저 실측) — **완료**
 - 로컬 e2e: `e2e/core-flow-mypage.spec.js` (4케이스) · `e2e/core-flow-search-detail.spec.js` (8케이스)
 
-미포함 (다음 라운드): **BLOCKER** — OAuth 키 · 운영 `src/` 동기화
+미포함 (다음 라운드): **BLOCKER** — OAuth 키 (사람) · `src/` FTP는 Actions에 추가됨 (push 후 확인)
 
 ### [4단계] 홈 → 검색 → 상세 (라운드 4)
 
@@ -218,11 +218,51 @@ GET /api/auth/oauth/start.php?provider=naver|kakao|google
 - **[5단계] 쪽지** — 로컬 9/9 + **운영 M1–M4 OK** → **완료**
 - **[6단계] 마이페이지** — 로컬 4/4 + **운영 P1–P3 OK** → **완료**
 
-### 3순위 — 기존 BLOCKER (실측 후)
+### 3순위 — 기존 BLOCKER (라운드 8)
 
-1. **OAuth provider 키** — `OAUTH_*` SetEnv + 콘솔 redirect URI (기존 **BLOCKER**)
-2. **운영 `src/` 동기화** — `ProfileGenderSync.php` 등 PHP FTP/배포
-3. **보안** — `/api/health/db.php` 운영 삭제 (별도 라운드)
+| # | BLOCKER | 상태 | 조치 |
+|---|---------|------|------|
+| B2 | OAuth provider 키 | **BLOCKER 유지** — 키 발급은 사람 작업 (아래 K) | 콘솔 등록 + 닷홈 `SetEnv OAUTH_*` |
+| B4 | 운영 `src/` 미동기화 | **해소 진행** — Actions에 `src/` FTP 단계 추가 | `main` push 후 GHA 확인 |
+| — | `/api/health/db.php` | 별도 | 운영 삭제 |
+
+---
+
+## K. [라운드 8] BLOCKER 정리
+
+### K-1. 운영 `src/` 동기화
+
+**원인:** GitHub Actions는 기존에 `public/`만 FTP → `/hosting/study114/src/`는 수동. `ProfileGenderSync.php` 등 PHP 수정이 운영에 안 올라감.
+
+**조치:** `.github/workflows/deploy.yml`에 `Deploy src/ via FTP` 단계 추가  
+- local: `./src/` → server: `/hosting/study114/src/`
+
+**검증 (push 후):**
+1. Actions 초록불 (public + src 두 FTP step)
+2. 운영 study_room/tutor basic-register — gender 동일값 재제출 시 실패하지 않음 (로컬에서 `8b7a510`으로 해소된 버그)
+
+### K-2. OAuth provider 키 (사람 작업 · 코드만으로 완료 불가)
+
+**현재 운영:** `oauth/start.php` → 302 `oauth_error=소셜 로그인 설정이 완료되지 않았습니다` (키 없음 확인됨)
+
+**사람이 할 일 (순서):**
+
+1. **콘솔 앱 등록** — Redirect URI 각각 등록  
+   - `http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=naver`  
+   - `http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=kakao`  
+   - `http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=google`  
+   - (HTTPS 전환 시 `https://` URI도 추가)
+2. **닷홈 `html/.htaccess`에 SetEnv 추가** (git에 시크릿 넣지 않음 · 서버만)  
+   ```
+   SetEnv OAUTH_NAVER_CLIENT_ID ...
+   SetEnv OAUTH_NAVER_CLIENT_SECRET ...
+   SetEnv OAUTH_KAKAO_REST_API_KEY ...
+   SetEnv OAUTH_GOOGLE_CLIENT_ID ...
+   SetEnv OAUTH_GOOGLE_CLIENT_SECRET ...
+   ```
+3. **검증:** `GET /api/auth/oauth/start.php?provider=naver` → provider 로그인 페이지로 302 (auth 오류 페이지 아님)
+
+**참고:** `config/oauth.env.example` · `config/dothome.env.example`
 
 ---
 

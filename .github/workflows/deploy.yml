@@ -51,3 +51,15 @@ jobs:
           local-dir: "./public/"
           port: 21
           protocol: ftp
+
+      # PHP 앱은 html/ 형제 src/ 필요 — public/만 올리면 ProfileGenderSync 등 미반영
+      - name: Deploy src/ via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: "112.175.184.80"
+          username: "study114"
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: "/hosting/study114/src/"
+          local-dir: "./src/"
+          port: 21
+          protocol: ftp
