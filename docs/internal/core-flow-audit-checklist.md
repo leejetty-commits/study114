@@ -1,7 +1,7 @@
 # Study114 핵심 플로우 점검 체크리스트
 
 **기준일:** 2026-07-10  
-**라운드:** 1 (진입/라우팅 + Auth 1차)  
+**라운드:** 2 (commit/push · OAuth redirect 재확인 · 로컬 DB 복구)  
 **운영 URL:** http://study114.dothome.co.kr
 
 ---
@@ -48,26 +48,26 @@
 | 세션 유지 (`me.php`) | 로그인 후 authenticated | 운영: `authenticated:true`, `email_verified:true` | — | **OK** (운영) |
 | 로그아웃 | JSON 200 | 운영: `{"ok":true,"logged_out":true}` | — | **OK** (운영) |
 | 비로그인 me | authenticated:false | 운영·로컬 모두 확인 | — | **OK** |
-| 이메일 로그인 (로컬 API) | dev 계정 로그인 | Docker API DB `Access denied for user 'study114'` → 500 | env/config | **BLOCKER** (로컬만) |
+| 이메일 로그인 (로컬 API) | dev 계정 로그인 | compose DB env 수정 후 e2e **5/5 통과** | — | **OK** (로컬) |
 | 소셜 버튼 UI | 3종 노출 | 운영 auth UI에 네이버/카카오/Google 버튼 존재 | UI만 있음 | **PARTIAL** |
-| 소셜 OAuth start | provider redirect | 운영: 302 → `127.0.0.1:5173/#/login?oauth_error=소셜 로그인 설정이 완료되지 않았습니다` | env/config + redirect | **BLOCKER** |
-| OAuth provider 키 | 콘솔·env 등록 | `OAUTH_*` 미설정 (`config/oauth.php` 빈 값) | env/config | **BLOCKER** |
-| OAuth 오류 redirect URL | 운영 auth URL | `STUDY114_AUTH_UI` 미설정 → localhost 폴백 | env/config | **BLOCKER** (수정 준비됨) |
+| 소셜 OAuth start | provider redirect | 운영: 302 → `study114.dothome.co.kr/auth/#/login?oauth_error=…` (키 미설정) | env/config | **PARTIAL** |
+| OAuth provider 키 | 콘솔·env 등록 | `OAUTH_*` 미설정 — naver/kakao/google 동일 | env/config | **BLOCKER** |
+| OAuth 오류 redirect URL | 운영 auth URL | SetEnv 배포 후 localhost 폴백 **해소** (`7fef1a1`) | — | **OK** |
 | 회원가입 API | JSON 201 | 운영: 전체 필드 payload → 201, `user_id`·세션 쿠키 발급 | — | **OK** (운영) |
 | 이메일 인증 | verify 후 플래그 | 운영 dev 계정 `email_verified:true` 확인 | — | **PARTIAL** (플로우 E2E 미검) |
 
 **소셜로그인 상세 (운영 실측):**
 
 ```
-GET /api/auth/oauth/start.php?provider=naver
-→ 302 Location: http://127.0.0.1:5173/#/login?oauth_error=소셜 로그인 설정이 완료되지 않았습니다...
+GET /api/auth/oauth/start.php?provider=naver|kakao|google
+→ 302 Location: http://study114.dothome.co.kr/auth/#/login?oauth_error=소셜 로그인 설정이 완료되지 않았습니다...
 ```
 
 - 버튼: **있음**
-- provider 설정: **없음** (`OAUTH_NAVER_CLIENT_ID` 등)
+- provider 설정: **없음** (`OAUTH_*` env 비어 있음)
 - redirect URI (코드 기준): `http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=*` — 콘솔 등록 필요
 - callback 복귀: **미검증** (start 단계에서 차단)
-- 실패 지점: `OAuthService::isConfigured()` false + `authUiBase()` localhost
+- 실패 지점: `OAuthService::isConfigured()` false (키 미설정). redirect URL 문제는 **해소됨**
 
 ---
 
@@ -75,9 +75,29 @@ GET /api/auth/oauth/start.php?provider=naver
 
 | # | 문제 | 영향 | 상태 |
 |---|------|------|------|
-| B1 | 운영 PHP `STUDY114_*` env 미설정 | OAuth 오류·성공 redirect가 localhost로 향함 | **수정 파일 준비** (`public/.htaccess` SetEnv) — **배포 전** |
-| B2 | OAuth provider 키 미설정 | 소셜 로그인 전면 불가 | **서버/콘솔 작업 필요** (코드만으로 해결 불가) |
-| B3 | 로컬 Docker API DB 인증 실패 | 로컬에서 login/signup API 500 | **로컬 env** (`config/database.php` 또는 compose) |
+| B1 | ~~운영 PHP `STUDY114_*` env 미설정~~ | OAuth redirect localhost | **OK** — `.htaccess` SetEnv 배포됨 (`7fef1a1`, GHA #15) |
+| B2 | OAuth provider 키 미설정 | 소셜 로그인 전면 불가 | **BLOCKER** — 닷홈 SetEnv + 콘솔 등록 필요 |
+| B3 | ~~로컬 Docker API DB 인증 실패~~ | 로컬 login/signup API 500 | **OK** — `docker-compose.dev.yml`에 `STUDY114_DB_*` 명시 |
+
+### Provider별 설정 상태 (라운드 2)
+
+| Provider | Client ID/Key | Client Secret | Redirect URI (코드 생성) | 콘솔 등록 | 상태 |
+|----------|---------------|---------------|--------------------------|-----------|------|
+| Naver | `OAUTH_NAVER_CLIENT_ID` 비어 있음 | `OAUTH_NAVER_CLIENT_SECRET` 비어 있음 | `http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=naver` | 미확인 | **미설정** |
+| Kakao | `OAUTH_KAKAO_REST_API_KEY` 비어 있음 | (선택) `OAUTH_KAKAO_CLIENT_SECRET` | `http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=kakao` | 미확인 | **미설정** |
+| Google | `OAUTH_GOOGLE_CLIENT_ID` 비어 있음 | `OAUTH_GOOGLE_CLIENT_SECRET` 비어 있음 | `http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=google` | 미확인 | **미설정** |
+
+**공통 env (운영):**
+
+| 변수 | 코드 기대값 | 운영 상태 |
+|------|-------------|-----------|
+| `STUDY114_API_BASE` | `http://study114.dothome.co.kr` | **OK** (`.htaccess` SetEnv) |
+| `STUDY114_HOME_UI` | `http://study114.dothome.co.kr` | **OK** |
+| `STUDY114_AUTH_UI` | `http://study114.dothome.co.kr/auth` | **OK** |
+
+**로컬 개발 redirect URI** (`STUDY114_API_BASE=http://127.0.0.1:8080`):
+
+- `http://127.0.0.1:8080/api/auth/oauth/callback.php?provider=naver|kakao|google`
 
 ---
 
@@ -96,13 +116,16 @@ GET /api/auth/oauth/start.php?provider=naver
 
 | 항목 | 결과 |
 |------|------|
-| `npm run build:dothome` | **미실행** (이번 턴은 `.htaccess`·e2e·문서만 변경) |
-| git status | `public/.htaccess` + e2e 2개 + checklist 수정 (uncommitted) |
-| commit | **없음** (사용자 요청 전) |
-| push | **없음** |
-| GitHub Actions | `gh` CLI 미설치 — **미확인** (마지막 커밋 `acfc8ee`) |
+| 라운드 1 commit | `7fef1a1` — `.htaccess` SetEnv + e2e + checklist |
+| GitHub Actions | **Deploy to dothome #15** — 29s, commit `7fef1a1` (성공으로 표시) |
+| 라운드 2 commit | `docker-compose.dev.yml` DB env (진행 예정) |
+| `npm run build:dothome` | 라운드 1·2 모두 **미실행** (불필요) |
 
-> `.htaccess`는 `public/`에 포함되므로 **push 후 Actions FTP 배포**가 되어야 운영 OAuth redirect 수정이 반영됩니다.
+### 로컬 DB 복구 원인 (확정)
+
+- `config/database.php`(gitignore)가 **닷홈 계정** `study114` / DB `study114` 로 설정됨
+- Docker compose는 `STUDY114_DB_*` 미주입 → 닷홈 기본값으로 로컬 MySQL 접속 시도 → `Access denied`
+- **조치:** `docker-compose.dev.yml`에 `study114_dev` / `root` / `study114dev` 명시
 
 ---
 
@@ -123,13 +146,10 @@ GET /api/auth/oauth/start.php?provider=naver
 
 ## G. 다음 단계
 
-1. **commit + push** — `.htaccess` SetEnv 반영 (OAuth redirect localhost 수정)
-2. **닷홈 서버** — `OAUTH_NAVER_*`, `OAUTH_KAKAO_*`, `OAUTH_GOOGLE_*` SetEnv 또는 닷홈 패널 등록
-3. **로컬 Docker** — `study114-api-dev` DB 비밀번호 정합 (`config/database.php` ↔ compose)
-4. **[2단계 잔여]** 회원가입 API 운영 E2E · auth-ui 화면→API 연결 Playwright
-5. **[3단계]** 역할 선택 → basic-register 저장까지
-6. **[4단계]** 홈 → 검색 → 상세 클릭 연결
-7. **보안** — `/api/health/db.php` 운영 서버에서 삭제
+1. **닷홈 서버** — `OAUTH_NAVER_*`, `OAUTH_KAKAO_*`, `OAUTH_GOOGLE_*` SetEnv + 각 콘솔 redirect URI 등록
+2. **[3단계 E2E]** auth-ui: signup → role → `basic-register.php` 저장 → complete → 홈 분기
+3. **[4단계]** 홈 → 검색 → 상세 클릭 연결
+4. **보안** — `/api/health/db.php` 운영 삭제 (별도 라운드)
 
 ---
 

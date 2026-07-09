@@ -39,6 +39,9 @@ services:
     environment:
       STUDY114_DB_HOST: mysql
       STUDY114_DB_PORT: "3306"
+      STUDY114_DB_NAME: study114_dev
+      STUDY114_DB_USER: root
+      STUDY114_DB_PASS: study114dev
       STUDY114_API_BASE: http://127.0.0.1:8080
       STUDY114_HOME_UI: http://127.0.0.1:5174
       STUDY114_AUTH_UI: http://127.0.0.1:5173
