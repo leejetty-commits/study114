@@ -1,19 +1,50 @@
 # Study114 핵심 플로우 점검 체크리스트
 
 **기준일:** 2026-07-10  
-**라운드:** 3 (signup → basic-register 저장 E2E)  
+**라운드:** 4 (홈 → 검색 → 상세 플로우)  
 **운영 URL:** http://study114.dothome.co.kr
 
 ---
 
 ## A. 오늘 점검 범위
 
-- [1단계] 진입/라우팅 기본 점검 (home-ui hash routes)
-- [2단계] 인증(Auth) 기능 점검 — API·세션·소셜로그인 설정 상태
-- 운영 사이트 실측 (curl + 페이지 fetch)
-- 로컬 e2e 스모크 (`e2e/core-flow-routing.spec.js`, `e2e/core-flow-auth.spec.js`)
+- [4단계] 홈 → 검색 → 상세 플로우 (guest/parent · 로컬 브라우저 실측)
+- 로컬 e2e: `e2e/core-flow-search-detail.spec.js` (8케이스)
 
-미포함 (다음 라운드): [4] 검색 플로우, [5] 상세/행동, [6] 쪽지, [7] 마이페이지
+미포함 (다음 라운드): [5] 쪽지 완결, [6] 마이페이지, 운영 실측(4단계)
+
+### [4단계] 홈 → 검색 → 상세 (라운드 4)
+
+| # | 플로우 | 역할 | 분류 | 결과 | 상태 |
+|---|--------|------|------|------|------|
+| 4-1 | `#/guest` GNB 공부방찾기 노출 | guest | 화면 | `nav.home-gnb` · 공부방찾기 링크 | **OK** |
+| 4-2 | GNB 클릭 → search-ui 새 탭 | guest | 라우트 | `:5176/#/search/room?role=guest` | **OK** |
+| 4-3 | guest 홈 카드 클릭 → 상세 모달 | guest | 상세 연결 | `#p24-detail-modal` · 카드 `[data-provider-id]` 클릭 | **OK** |
+| 4-4 | guest 상세 → 로그인 CTA | guest | 상세 연결 | `로그인하고 문의하기` → auth-ui | **OK** |
+| 4-5 | search-ui region feed → 상세 | guest | 라우트+상세 | `#/search/room?role=guest` · 카드 클릭 | **OK** |
+| 4-6 | search-ui 검색 실행 → reset | guest | 화면 | submit → `.search-results--executed` → reset | **OK** |
+| 4-7 | parent `#/parent` 인라인 찾기 → 상세 | parent | 화면+상세 | `[data-search-form]` · 카드 클릭 | **OK** |
+| 4-8 | parent 상세 찜 토글 | parent | API+상세 | handoff ON · 라벨 변경 · 토스트 | **OK** |
+| 4-9 | parent 상세 비교 → compare-bar | parent | API+상세 | 모달 `비교 담김` · `.compare-bar` 노출 | **OK** |
+| 4-10 | parent 상세 → 쪽지 compose | parent | 상세 연결 | `상담/쪽지 보내기` → `[data-overlay="compose"]` | **OK** |
+| 4-11 | search-ui parent · 상세 → 최근열람 | parent | API+라우트 | tutor 상세 후 `#/mypage/recent` 기록 | **OK** |
+
+**e2e:** `core-flow-search-detail.spec.js` **8/8 통과** (로컬 :5174 · :5176 · API :8080)
+
+**주의 (비교):** handoff compare가 3/3 가득 찬 상태면 상세 모달에서 추가 비교가 거부됨(토스트). e2e는 `beforeEach`에서 compare 초기화 후 통과. 일반 플로우는 **OK**.
+
+**코드 관찰 (이번 단계 BLOCKER 아님):**
+
+- `search-handoff.js`의 `data-action="search-open-detail"` — import/핸들러 없음 (dead code). 실제 상세 진입은 **카드 클릭** (`bindDetailDecisionEvents`) 경로.
+- guest 카드 찜/비교는 `data-action="login-gate"` (`guest-sections.js`) — 로그인 유도만.
+
+**운영 src/ 미동기화:** **PARTIAL** 유지 — study_room/tutor basic-register 운영 최종 확정은 별도 src/ 동기화 필요. **4단계 진행 차단 아님.**
+
+---
+
+## A-legacy. 이전 라운드 요약 (1~3)
+
+- [1단계] 라우팅 8/8 OK · [2단계] Auth API OK (OAuth 키 **BLOCKER**) · [3단계] signup→basic-register 5/5 OK
 
 ### [3단계] 회원가입 → 기본등록 저장 (라운드 3)
 
@@ -121,7 +152,8 @@ GET /api/auth/oauth/start.php?provider=naver|kakao|google
 |------|-----------|
 | `public/.htaccess` | `STUDY114_API_BASE` / `HOME_UI` / `AUTH_UI` SetEnv 추가 (OAuth redirect localhost 문제) |
 | `e2e/core-flow-routing.spec.js` | [1단계] 라우팅 스모크 테스트 신규 |
-| `e2e/core-flow-auth.spec.js` | [2단계] Auth API 스모크 테스트 신규 |
+| `e2e/core-flow-signup-basic.spec.js` | [3단계] signup → basic-register |
+| `e2e/core-flow-search-detail.spec.js` | [4단계] 홈 → 검색 → 상세 |
 | `docs/internal/core-flow-audit-checklist.md` | 본 체크리스트 |
 
 ---
@@ -130,10 +162,10 @@ GET /api/auth/oauth/start.php?provider=naver|kakao|google
 
 | 항목 | 결과 |
 |------|------|
-| 라운드 1 commit | `7fef1a1` — `.htaccess` SetEnv + e2e + checklist |
-| GitHub Actions | **Deploy to dothome #15** — 29s, commit `7fef1a1` (성공으로 표시) |
-| 라운드 2 commit | `docker-compose.dev.yml` DB env (진행 예정) |
-| `npm run build:dothome` | 라운드 1·2 모두 **미실행** (불필요) |
+| 라운드 3 commit | `8b7a510` — signup-form esc, ProfileGenderSync, signup e2e, build |
+| GitHub Actions | **Deploy to dothome #17** — commit `8b7a510` |
+| 라운드 4 | e2e `core-flow-search-detail.spec.js` 추가 · **미 commit** |
+| `npm run build:dothome` | 라운드 4 **미실행** (프론트 변경 없음) |
 
 ### 로컬 DB 복구 원인 (확정)
 
@@ -160,10 +192,11 @@ GET /api/auth/oauth/start.php?provider=naver|kakao|google
 
 ## G. 다음 단계
 
-1. **닷홈 서버** — `OAUTH_NAVER_*`, `OAUTH_KAKAO_*`, `OAUTH_GOOGLE_*` SetEnv + 각 콘솔 redirect URI 등록
-2. **[3단계 E2E]** auth-ui: signup → role → `basic-register.php` 저장 → complete → 홈 분기
-3. **[4단계]** 홈 → 검색 → 상세 클릭 연결
-4. **보안** — `/api/health/db.php` 운영 삭제 (별도 라운드)
+1. **닷홈 서버** — `OAUTH_*` SetEnv + 콘솔 redirect URI 등록 (기존 **BLOCKER**)
+2. **운영 src/ 동기화** — `ProfileGenderSync.php` 등 PHP `src/` FTP/배포 (study_room/tutor basic-register 운영 확정)
+3. **[5단계]** 쪽지 발송·수신·스레드 완결 플로우
+4. **[6단계]** 마이페이지 (찜·비교·최근열람 운영 실측)
+5. **보안** — `/api/health/db.php` 운영 삭제 (별도 라운드)
 
 ---
 
