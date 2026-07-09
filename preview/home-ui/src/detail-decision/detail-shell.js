@@ -188,6 +188,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
 
   wrap.querySelector('[data-p24-action="memo"]')?.addEventListener('click', () => {
     const memoKind = kind === 'student' ? 'student' : kind;
+    closeDetailModal();
     startFirstMemoFlow({
       kind: memoKind,
       targetId: item.id,

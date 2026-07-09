@@ -55,25 +55,27 @@ export function getThreadsCache() {
  * @returns {import('./messages/thread-store.js').MessageThread|null}
  */
 export function getThreadFromCache(id) {
-  const detailed = threadDetailCache.get(id);
+  const numId = Number(id);
+  const detailed = threadDetailCache.get(numId);
   if (detailed) {
     return { ...detailed, messages: [...detailed.messages] };
   }
-  const summary = threadsCache.find((t) => t.id === id);
+  const summary = threadsCache.find((t) => Number(t.id) === numId);
   if (!summary) return null;
   return { ...summary, messages: [...(summary.messages ?? [])] };
 }
 
 /** @param {import('./messages/thread-store.js').MessageThread} thread */
 function upsertThreadInCache(thread) {
-  const idx = threadsCache.findIndex((t) => t.id === thread.id);
-  const copy = { ...thread, messages: [...(thread.messages ?? [])] };
+  const id = Number(thread.id);
+  const idx = threadsCache.findIndex((t) => Number(t.id) === id);
+  const copy = { ...thread, id, messages: [...(thread.messages ?? [])] };
   if (idx >= 0) {
     threadsCache[idx] = copy;
   } else {
     threadsCache.unshift(copy);
   }
-  threadDetailCache.set(thread.id, copy);
+  threadDetailCache.set(id, copy);
 }
 
 function warnMessages(err) {

@@ -174,3 +174,10 @@ export function prepRequestViewE2e() {
     "DELETE FROM provider_request_unlocks WHERE provider_user_id=4 AND student_id=1",
   );
 }
+
+/** H-1 E2E — guardian1 · study_room 1 thread 차단 상태 초기화 (재실행 누적 방지) */
+export function prepBlockThreadE2e() {
+  devSql(
+    "UPDATE message_thread_participant_state ps INNER JOIN message_threads t ON t.id=ps.thread_id INNER JOIN users u ON u.id=ps.user_id SET ps.is_blocked=0, ps.block_reason=NULL WHERE t.context_kind='study_room' AND t.context_id=1 AND u.email='guardian1@dev.local'",
+  );
+}

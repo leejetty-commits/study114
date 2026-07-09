@@ -194,9 +194,74 @@ GET /api/auth/oauth/start.php?provider=naver|kakao|google
 
 1. **닷홈 서버** — `OAUTH_*` SetEnv + 콘솔 redirect URI 등록 (기존 **BLOCKER**)
 2. **운영 src/ 동기화** — `ProfileGenderSync.php` 등 PHP `src/` FTP/배포 (study_room/tutor basic-register 운영 확정)
-3. **[5단계]** 쪽지 발송·수신·스레드 완결 플로우
+3. **[5단계]** 쪽지 발송·수신·스레드 완결 플로우 — **9/9 통과**, 핵심 버그 2건 해결 (아래 H 참고)
 4. **[6단계]** 마이페이지 (찜·비교·최근열람 운영 실측)
 5. **보안** — `/api/health/db.php` 운영 삭제 (별도 라운드)
+
+---
+
+## H. [5단계] 쪽지 플로우 (라운드 5 · 로컬)
+
+**e2e:** `e2e/core-flow-messages.spec.js` (9케이스) · 헬퍼 `e2e/helpers/messages-flow.js`
+**최종 기록 (라운드 5 + H-1/H-2/H-3): 9/9 통과, 핵심 버그 2건 해결, e2e 보강 2건**
+
+| # | 케이스 | 결과 | 비고 |
+|---|--------|------|------|
+| 1 | guest 상세 → 로그인 CTA (auth 새 탭) | **OK** | |
+| 2 | guest 쪽지함 비로그인 (데모 스레드) | **OK** | PARTIAL 성격 — 데모 데이터, API 아님. **정책 변경 예정:** 비회원은 로그인 유도만 |
+| 3 | parent compose → 전송 → thread 진입 | **OK** | thread 본문 버그 수정 후 통과 |
+| 4 | 전송 후 API threads · inbox 목록 | **OK** | H-3: e2e 탭·assertion 수정 후 통과 (2.6s) |
+| 5 | thread 답장 전송 | **OK** | 상세 모달 미닫힘 수정 후 통과 (5.4s) |
+| 6 | 보관함(archive) 빈 상태 | **OK** | |
+| 7 | 차단 후 답장 불가 · 종료 배너 | **OK** | H-1 분리 확인 후 H-2 e2e 수정 · PASS (2.5s) |
+| 8 | tutor 무료 · 학생 상세 → 쪽지권 게이트 | **OK** | |
+| 9 | 로그인 → parent 상세 → 첫 쪽지 전송 | **OK** | |
+
+### 해결 완료 — thread 본문 미표시 버그
+
+**증상:** parent compose 전송 후 API 저장(POST 200)·URL 이동(`#/mypage/messages/thread/{id}`)은 정상이었으나, thread 화면에 방금 보낸 본문이 표시되지 않고 브라우저 탭이 응답 불가 → 크래시.
+
+**원인:** `preview/home-ui/src/messages/screens.js`의 `bindMessagesScreenEvents()`가 렌더마다 `ensureThreadDetail().then(rerender)`를 무조건 실행 → **무한 렌더 루프**.
+
+**수정:** `lastAutoHydratedThreadId` 가드로 threadId당 1회만 하이드레이션·rerender.
+
+**수정 파일:** `preview/home-ui/src/messages/screens.js`, `preview/home-ui/src/messages-backend.js`(캐시 키 정규화 보조)
+
+### 해결 완료 — 상세 모달(`#p24-detail-modal`) 미닫힘
+
+**증상:** compose 전송 후 thread 화면으로 이동해도 배경 공부방 상세 모달이 남아, 답장/차단 버튼 클릭을 가로챔.
+
+**원인:** `[data-p24-action="memo"]` 클릭 시 compose만 열고 `closeDetailModal()` 미호출.
+
+**수정:** memo 클릭 시 `closeDetailModal()` 선행 호출.
+
+**수정 파일:** `preview/home-ui/src/detail-decision/detail-shell.js`
+
+**검증:** 케이스 5(답장 전송) **PASS** (5.4s)
+
+### H-1 완료 — 차단 케이스 분리 확인
+
+**판정:** 제품 버그 아님. 기존 실패 원인 = 로컬 dev DB 차단 상태 누적(thread 1 · guardian1 `is_blocked=1`). 깨끗한 상태에서 차단 흐름·답장 제한 정상. e2e assertion 문구 불일치(`차단된 대화입니다` vs 실제 `차단됨`)는 별도.
+
+### H-2 완료 — 차단 e2e 보강
+
+- `prepBlockThreadE2e()` — guardian1 · study_room 1 차단 상태 초기화 (`e2e/helpers/admin-api.js`)
+- assertion `차단됨` + 차단 버튼 enabled 사전 확인 (`e2e/core-flow-messages.spec.js`)
+- **검증:** 케이스 7 **PASS** (2.5s)
+
+### H-3 완료 — inbox(4번) 케이스 분리 확인
+
+**판정:** 제품 버그 아님. parent compose 후 thread는 `initiatedByMe=true`·읽음 처리 → 받은 탭 필터(`!initiatedByMe || unread`)에서 **제외**됨. thread 7(상대 발신·미읽)이 받은 탭 1번째로 보인 것은 **정상 동작**. 기존 실패 = e2e가 받은 탭 1번째 행을 기대한 **assertion 설계 오류** + thread 1 차단 상태 누적(부수).
+
+**수정:** `prepBlockThreadE2e()` 선행 · 목록 확인을 **보낸 탭** + thread id 행 지정 (`e2e/core-flow-messages.spec.js`)
+
+**검증:** 케이스 4 **PASS** (2.6s)
+
+### e2e·헬퍼 (미 commit)
+
+- `e2e/core-flow-messages.spec.js` — 차단·inbox(sent) fixture·assertion
+- `e2e/helpers/messages-flow.js` — tutor assertion strict mode 수정, dialog 핸들러 방어
+- `e2e/helpers/admin-api.js` — `prepBlockThreadE2e()`
 
 ---
 

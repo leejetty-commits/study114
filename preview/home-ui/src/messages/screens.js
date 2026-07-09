@@ -46,6 +46,9 @@ import { getListTabFromPath, tabLabel, tabPath, parseThreadId, threadPath } from
 import { BLOCK_THREAD_COPY } from './messages-copy.js';
 import { getMessagesEmptyCopy, renderStateCard } from '../empty-state-copy.js';
 
+/** bindMessagesScreenEvents가 매 rerender마다 재호출되어도 threadId당 1회만 자동 하이드레이션하기 위한 가드 (무한 렌더 루프 방지) */
+let lastAutoHydratedThreadId = null;
+
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
@@ -190,7 +193,7 @@ function renderThread(threadId) {
 
   const role = getNavRole();
 
-  const thread = getThread(threadId);
+  let thread = getThread(threadId);
 
   if (!thread) {
 
@@ -198,7 +201,19 @@ function renderThread(threadId) {
 
   }
 
-  if (isMessagesApiMode() && thread.messages.length === 0) {
+  if (isMessagesApiMode() && thread.messages.length === 0 && thread.lastPreview) {
+    thread = {
+      ...thread,
+      messages: [
+        {
+          id: 0,
+          sender: 'me',
+          body: thread.lastPreview,
+          createdAt: thread.updatedAt || new Date().toISOString(),
+        },
+      ],
+    };
+  } else if (isMessagesApiMode() && thread.messages.length === 0) {
 
     return `<section class="msg-panel msg-thread msg-thread--loading"><p class="msg-empty">대화를 불러오는 중…</p></section>`;
 
@@ -429,17 +444,15 @@ export function bindMessagesScreenEvents(root, rerender) {
 
     if (isMessagesApiMode()) {
 
-      ensureThreadDetail(threadId)
-
-        .then(() => {
-
-          markThreadRead(threadId);
-
-          rerender();
-
-        })
-
-        .catch((err) => console.warn('[messages]', err));
+      if (lastAutoHydratedThreadId !== threadId) {
+        lastAutoHydratedThreadId = threadId;
+        ensureThreadDetail(threadId)
+          .then(() => {
+            markThreadRead(threadId);
+            rerender();
+          })
+          .catch((err) => console.warn('[messages]', err));
+      }
 
     } else {
 
@@ -447,6 +460,8 @@ export function bindMessagesScreenEvents(root, rerender) {
 
     }
 
+  } else {
+    lastAutoHydratedThreadId = null;
   }
 
 }
