@@ -1,9 +1,9 @@
 # 닷홈 shared hosting 배포 가이드
 
 **문서 성격:** DB 연결·최소 구동 확인용 (**현재 1차 배포 목표**)  
-**기준일:** 2026-07-09  
+**기준일:** 2026-07-10  
 **도메인:** `http://study114.dothome.co.kr`  
-**관련:** [internal/README.md](./README.md) · [00-project-tree-and-key-files.md](./00-project-tree-and-key-files.md) · [01-cafe24-staging-deploy.md](./01-cafe24-staging-deploy.md) (카페24용, 별도 유지)
+**관련:** [internal/README.md](./README.md) · [00-project-tree-and-key-files.md](./00-project-tree-and-key-files.md) · [01-cafe24-staging-deploy.md](./01-cafe24-staging-deploy.md) (카페24용, 별도 유지) · Cursor 규칙 `.cursor/rules/study114-workflow.mdc`
 
 ---
 
@@ -27,10 +27,14 @@
 |------|------|
 | `config/database.php` 없음 | `database.php.dothome.example` 복사 후 비밀번호 입력 |
 | DB 스키마 미적용 | phpMyAdmin에서 `sql/schema/*.sql` 순서대로 import |
-| 프론트 미빌드 | 로컬에서 `npm run build:dothome` 후 `public/` 업로드 |
-| PHP URL이 localhost로 남음 | `.htaccess` SetEnv 주석 해제 또는 `config/*.php` 확인 |
-| 네이버 지도 안 나옴 | 콘솔에 `http://study114.dothome.co.kr` 허용 도메인 추가 |
+| **로컬만 빌드·수정** | GitHub에 push하지 않으면 Actions 배포 안 됨 → [§4-A GitHub Actions](#4-a-github-actions-자동배포-권장) |
+| **`VITE_NAVER_MAP_CLIENT_ID` Variable 미설정** | repo Settings → Variables → Actions에 등록 후 workflow 재실행 |
+| **빌드 산출물 gitignore** | `public/index.html`, `public/assets/index-*` 등은 Git 미추적 → **CI에서 빌드 후 FTP** |
+| PHP URL이 localhost로 남음 | `.htaccess` SetEnv 또는 `config/*.php` 확인 |
+| `.htaccess` mod_expires 오류 | `ExpiresActive`·짝 없는 `</IfModule>` → 사이트 전체 500 → [§3-1 안전 `.htaccess`](#3-1-htaccess-안전-최소본) |
+| 네이버 지도 안 나옴 | 빌드 키 반영 + 콘솔 허용 URL → [§7 네이버 지도](#7-네이버-지도--사람이-할-일) |
 | `db.php` 방치 | 테스트 후 **반드시 삭제** |
+| **`src/`·`config/` 미배치** | `html/` 밖 형제 폴더 필요 — Actions는 `public/`만 올림 → [§8 FTP](#8-ftp-업로드-체크리스트) |
 
 ---
 
@@ -70,6 +74,32 @@
 > `index.php`는 `dirname(__DIR__).'/src/bootstrap.php'`를 읽습니다.  
 > 즉 **`src/`는 `html/`과 같은 깊이(형제 폴더)** 여야 합니다.
 
+### 3-1. `.htaccess` 안전 최소본
+
+닷홈 shared hosting에서 **사이트 전체 500**을 낸 사례: `mod_expires` 블록에서 `<IfModule>`이 주석과 한 줄에 붙고, 짝 없는 `</IfModule>`만 남는 패턴.
+
+**운영 권장:** `public/.htaccess`는 rewrite + `DirectoryIndex`만 유지. 아래는 **넣지 않음**.
+
+- `ExpiresActive` / `ExpiresByType` (닷홈에서 `mod_expires` 허용 불명확)
+- 주석과 `<IfModule>`을 한 줄에 작성
+
+`SetEnv` 블록은 OAuth·PHP URL 확인 단계에서만 **별도 블록**으로 추가.
+
+---
+
+## 3-2) 작업 원칙 (배포 실수 방지)
+
+Cursor 에이전트 규칙: `.cursor/rules/study114-workflow.mdc` (팀 공유용으로 Git 추적)
+
+| 원칙 | 요약 |
+|------|------|
+| 로컬 수정 ≠ GitHub 반영 | `git add` → `commit` → `push` 없으면 Actions 배포 안 됨 |
+| VITE env는 새로고침으로 반영 안 됨 | env 수정 → **빌드** → 산출물 배포 |
+| Actions 초록불 ≠ 최신 로컬 반영 | 마지막 **push된 커밋** 기준 성공 |
+| 완료 보고 | 수정 파일 · 빌드 여부 · `git status` · commit hash · push · 사이트 확인 |
+
+**기본 순서:** 수정 → 빌드 → `git status` → commit → push → Actions 확인 → 실제 사이트 확인
+
 ---
 
 ## 3) SPA 경로 (카페24와 동일 — 닷홈에서도 유지 가능)
@@ -87,27 +117,73 @@
 
 ---
 
-## 4) 빌드 방법 (로컬 PC)
+## 4) 빌드·배포 방법
 
-### 4-1. 프론트 빌드 + public 배치
+### 4-A. GitHub Actions 자동배포 (권장)
+
+**파일:** `.github/workflows/deploy.yml`  
+**트리거:** `main` 브랜치 push
+
+```
+checkout
+  → Node 20
+  → GitHub Variable VITE_NAVER_MAP_CLIENT_ID → preview/.env.dothome.example 패치
+  → pwsh scripts/build-dothome.ps1
+  → public/assets/index-*.js에 Client ID 포함 검증
+  → FTP: local-dir ./public/ → server-dir /hosting/study114/html/
+```
+
+| GitHub 설정 | 이름 | 용도 |
+|-------------|------|------|
+| Secret | `FTP_PASSWORD` | 닷홈 FTP 비밀번호 |
+| Variable | `VITE_NAVER_MAP_CLIENT_ID` | 네이버 지도 Client ID (빌드 시 JS 번들에 박힘) |
+
+Variable 미설정 시 workflow는 **Inject dothome env** 단계에서 실패한다.
+
+**Actions가 배포하는 것:** `public/` 전체 (빌드 후 SPA 번들 + `api/` + `index.php` + `.htaccess`)  
+**Actions가 배포하지 않는 것:** `src/`, `config/`, `storage/` → [§8 수동 FTP](#8-ftp-업로드-체크리스트)
+
+### 4-B. 로컬 빌드 (수동 FTP·검증용)
 
 ```powershell
 cd d:\work\study114
 npm run build:dothome
 ```
 
-동작:
-- `preview/.env.dothome.example` → 각 패키지 `.env.production.local`
-- `scripts/build-shared-hosting.ps1` 실행 (래퍼: `scripts/build-dothome.ps1`)
-- 5개 Vite 빌드 → `public/` 하위에 복사
+### 4-C. `build:dothome` 입출력
 
-### 4-2. 네이버 지도 키 넣기 (선택)
+**입력**
 
-빌드 전 `preview/.env.dothome.example` 에서:
+| 구분 | 경로 |
+|------|------|
+| env 템플릿 | `preview/.env.dothome.example` → 각 패키지 `.env.production.local` |
+| Vite 패키지 5개 | `preview/home-ui`, `auth-ui`, `search-ui`, `study-room-ui`, `tutor-ui` |
+| 공유 소스 | `preview/shared/*` (`naver-map.js`, `preview-links.js` 등) |
+| base 경로 | 스크립트가 패키지별 `VITE_BASE_PATH` 주입 |
 
-```
-VITE_NAVER_MAP_CLIENT_ID=<본인 Client ID>
-```
+**출력 (`public/` 갱신)**
+
+| 패키지 | base | 출력 | 동작 |
+|--------|------|------|------|
+| home-ui | `/` | `public/index.html`, `public/assets/*` | assets **병합** (css/brand 유지) |
+| auth-ui | `/auth/` | `public/auth/` | 폴더 **전체 교체** |
+| search-ui | `/search/` | `public/search/` | 폴더 **전체 교체** |
+| study-room-ui | `/register/room/` | `public/register/room/` | 폴더 **전체 교체** |
+| tutor-ui | `/register/tutor/` | `public/register/tutor/` | 폴더 **전체 교체** |
+
+**빌드가 건드리지 않음:** `public/api/`, `public/index.php`, `public/.htaccess`, `public/assets/css/`, `public/assets/brand/`
+
+**Git 추적:** 빌드 산출물(`public/index.html`, `public/auth/`, `public/search/`, `public/register/`, `public/assets/index-*`)은 `.gitignore` 대상 → **repo에 커밋하지 않음**. CI 빌드 후 FTP가 정식 경로.
+
+### 4-D. 네이버 지도 키
+
+| 환경 | 설정 위치 |
+|------|-----------|
+| **CI (권장)** | GitHub Variable `VITE_NAVER_MAP_CLIENT_ID` |
+| 로컬 빌드 | `preview/.env.dothome.example`에 직접 입력 |
+| 로컬 dev | `preview/home-ui/.env.local` |
+
+`VITE_*` 값은 **빌드 시점**에 JS에 박힘. `.env`만 고치고 새로고침해도 운영 사이트에 반영되지 않음.
 
 ---
 
@@ -184,6 +260,14 @@ http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=google
 
 ## 7) 네이버 지도 — 사람이 할 일
 
+### 장애 판단 순서
+
+| 증상 | 원인 후보 |
+|------|-----------|
+| 사이트 500 / 전체 미노출 | `.htaccess` 등 서버 설정 |
+| `[설정 필요] VITE_NAVER_MAP_CLIENT_ID` | 빌드에 키 미반영 (또는 서버에 옛 JS) |
+| 문구 없는데 지도만 안 뜸 | 허용 도메인·SDK URL·F12 Console 오류 |
+
 ### 코드에서 읽는 위치
 
 | 파일 | 내용 |
@@ -194,15 +278,19 @@ http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=google
 
 ### 네이버 클라우드 콘솔 (수동)
 
+**콘솔:** https://console.ncloud.com/maps/application
+
 **Maps → study114 앱 → Web 서비스 URL** 에 추가:
 
 ```
 http://study114.dothome.co.kr
+https://study114.dothome.co.kr
 ```
 
 로컬 개발용 (유지):
 
 ```
+http://localhost:5174
 http://127.0.0.1:5174
 http://127.0.0.1:5176
 ```
@@ -224,14 +312,36 @@ https://study114.dothome.co.kr
 
 ## 8) FTP 업로드 체크리스트
 
+### 자동 (GitHub Actions — `main` push)
+
+| 로컬 (CI 빌드 후) | FTP 대상 | 비고 |
+|-------------------|----------|------|
+| `public/*` | `/hosting/study114/html/` | 프론트 번들·API·`.htaccess`·`index.php` |
+
+### 수동 (최초 1회 또는 PHP/설정 변경 시)
+
 | 로컬 | FTP 대상 | 필수 |
 |------|----------|------|
-| `public/*` | `html/` | ✅ |
-| `src/` | `src/` | ✅ |
-| `config/database.php` | `config/database.php` | ✅ |
-| `config/auth.php` 등 | `config/` | ✅ |
-| `storage/logs/`, `storage/attachments/` | `storage/` | ✅ (빈 폴더 + 쓰기권한) |
+| `src/` | `/hosting/study114/src/` | ✅ (`html/` 형제) |
+| `config/database.php` | `/hosting/study114/config/database.php` | ✅ (git 제외, 서버 전용) |
+| `config/auth.php` 등 | `/hosting/study114/config/` | ✅ |
+| `storage/logs/`, `storage/attachments/` | `/hosting/study114/storage/` | ✅ (빈 폴더 + 쓰기권한) |
 | `sql/schema/` | 업로드 불필요 | phpMyAdmin import용 |
+
+### 배포 제외 (서버에 올리지 않음)
+
+| 폴더 | 이유 |
+|------|------|
+| `docs/`, `docs/ssot/` | 설계·내부 문서 |
+| `backups/` | 로컬 백업 |
+| `.cursor/` | Cursor 에이전트 규칙 (규칙 파일만 Git 추적) |
+| `preview/` | Vite 소스·`node_modules` |
+| `e2e/`, `test-results/` | 테스트 |
+| `sql/` | DB 스크립트 (파일 배포 아님) |
+| `scripts/`, `docker/`, `legacy/` | 개발·CI 전용 |
+| `node_modules/`, `.git/`, `.github/` | 의존성·Git 메타 |
+
+> **예외:** `src/`·`config/`·`storage/`는 `public/` 밖에 있지만 **PHP 동작에 필수**. Actions만으로는 부족할 수 있음.
 
 **업로드 안 해도 됨:** `preview/`, `node_modules/`, `docs/`, `docker/`
 
@@ -273,7 +383,8 @@ https://study114.dothome.co.kr
 | `config/auth.php`, `oauth.php`, `paid.php` | getenv + localhost 폴백 | SetEnv 또는 서버 설정 필요 |
 | `config/app.php` | ~~localhost 하드코딩~~ | getenv 로 변경 ✅ |
 | `preview/.env.staging.example` | 카페24 URL | 카페24용 유지, 닷홈과 분리 |
-| `public/.htaccess` | 카페24 주석 | shared hosting 공통 + 닷홈 SetEnv ✅ |
+| `public/.htaccess` | 닷홈 안전 최소본 (rewrite만) | mod_expires 제거 ✅ |
+| `.github/workflows/deploy.yml` | CI 빌드 + `public/` FTP | Variable `VITE_NAVER_MAP_CLIENT_ID` 필요 |
 
 ---
 
@@ -286,6 +397,8 @@ https://study114.dothome.co.kr
 | `config/database.php.dothome.example` | DB 연결 → `database.php` 로 복사 |
 | `scripts/build-dothome.ps1` | 닷홈 빌드 단축 명령 |
 | `scripts/build-shared-hosting.ps1` | 닷홈·카페24 공통 빌드 엔진 |
+| `.github/workflows/deploy.yml` | CI: build:dothome → FTP `public/` |
+| `.cursor/rules/study114-workflow.mdc` | Cursor 작업 원칙 (배포·빌드 실수 방지) |
 | `public/api/health/db.php` | DB 연결 테스트 (삭제 필수) |
 
 ---
@@ -296,3 +409,4 @@ https://study114.dothome.co.kr
 |------|------|
 | 2026-07-09 | 닷홈 study114.dothome.co.kr 기준 최초 작성 |
 | 2026-07-09 | internal README·코드베이스 지도와 상호 링크 정리 |
+| 2026-07-10 | GitHub Actions CI 빌드+FTP(`public/`만)·Variable 주입·`.htaccess` 안전본·배포 포함/제외·작업 원칙 반영 |

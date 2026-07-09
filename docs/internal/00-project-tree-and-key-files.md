@@ -1,7 +1,7 @@
 # 우동공과(study114) — 프로젝트 트리·중요 파일 역할 정의
 
 **문서 성격:** Notion·내부 논의용 인벤토리 (현재 코드베이스 기준)  
-**기준일:** 2026-07-09  
+**기준일:** 2026-07-10  
 **Notion:** [부록 — 프로젝트 트리·중요 파일 역할 (코드베이스 지도)](https://app.notion.com/p/3979d518fe7781909f1ec66001ae798c)  
 **대상 독자:** 기획·디자인·개발·배포 논의 참여자  
 **관련 문서:** [01-project-overview.md](../01-project-overview.md) · [02-folder-structure.md](../02-folder-structure.md) · [ssot/README.md](../ssot/README.md) · [internal/README.md](./README.md) · [01-dothome-deploy.md](./01-dothome-deploy.md)
@@ -48,6 +48,8 @@ study114/
 │   ├── build-dothome.ps1     # ★ 닷홈 빌드 (npm run build:dothome)
 │   ├── build-staging.ps1     # 카페24 빌드
 │   └── build-shared-hosting.ps1
+├── .github/workflows/        # ★ deploy.yml — CI build:dothome → FTP public/
+├── .cursor/rules/            # Cursor 작업 원칙 (study114-workflow.mdc)
 ├── e2e/                      # Playwright API·운영 스모크
 └── legacy/                   # 참고용 구보드 (운영 비포함)
 ```
@@ -77,16 +79,17 @@ study114/
 public/
 ├── index.php                    # MVC 프론트 컨트롤러 (정적 파일 우선)
 ├── index.html                   # home-ui 빌드 산출물 (build:dothome 후)
-├── .htaccess                    # ★ Apache SPA fallback + MVC 분리
+├── .htaccess                    # ★ Apache SPA fallback + MVC (닷홈 안전 최소본)
 ├── assets/                      # MVC css/brand + SPA 빌드 자산
-│   ├── css/auth/                # PHP MVC 가입/로그인 화면 스타일
-│   └── brand/                   # 로고 등
-├── auth/                        # auth-ui SPA 빌드 (base /auth/)
-├── search/                      # search-ui SPA 빌드
+│   ├── css/auth/                # PHP MVC 가입/로그인 화면 스타일 (Git 추적)
+│   ├── brand/                   # 로고 등 (Git 추적)
+│   └── index-*.js / index-*.css # SPA 빌드 산출물 (gitignore, CI 생성)
+├── auth/                        # auth-ui SPA 빌드 (gitignore)
+├── search/                      # search-ui SPA 빌드 (gitignore)
 ├── register/
-│   ├── room/                    # study-room-ui SPA 빌드
-│   └── tutor/                   # tutor-ui SPA 빌드
-└── api/                         # JSON API (프리뷰 UI가 주로 호출)
+│   ├── room/                    # study-room-ui SPA 빌드 (gitignore)
+│   └── tutor/                   # tutor-ui SPA 빌드 (gitignore)
+└── api/                         # JSON API (Git 추적)
     ├── auth/                    # 로그인·가입·OAuth·비밀번호·이메일인증
     ├── search/search.php        # 13장 검색
     ├── registrations/           # 마이페이지 등록 허브 (공부방·과외·학생)
@@ -102,7 +105,9 @@ public/
     └── health/db.php            # ⚠️ DB 연결 임시 테스트 (배포 후 삭제)
 ```
 
-> 운영 서버: `public/` 내용 → 닷홈 `html/` · `src/`·`config/`·`storage/`는 `html/` 형제 폴더.  
+> 운영 서버: `public/` 내용 → 닷홈 `html/` · `src/`·`config/`·`storage/`는 `html/` **형제** 폴더.  
+> **자동배포:** `.github/workflows/deploy.yml`이 CI에서 `build:dothome` 후 `public/`만 FTP.  
+> **gitignore:** `index.html`, SPA 폴더, `assets/index-*`는 Git 미추적 → CI 빌드 산출물.  
 > 상세: [01-dothome-deploy.md](./01-dothome-deploy.md)
 
 ### 3-2. `src/` — PHP 도메인 로직
@@ -357,14 +362,27 @@ preview/tutor-ui/src/
 
 | 목적 | 명령/문서 |
 |------|-----------|
-| **닷홈 빌드** | `npm run build:dothome` → [01-dothome-deploy.md](./01-dothome-deploy.md) |
+| **닷홈 자동배포** | `main` push → `.github/workflows/deploy.yml` |
+| **닷홈 로컬 빌드** | `npm run build:dothome` → [01-dothome-deploy.md](./01-dothome-deploy.md) |
+| GitHub Variable | `VITE_NAVER_MAP_CLIENT_ID` (지도 키, CI 빌드 주입) |
+| GitHub Secret | `FTP_PASSWORD` |
 | 카페24 빌드 | `npm run build:staging` → [01-cafe24-staging-deploy.md](./01-cafe24-staging-deploy.md) |
 | 공통 빌드 엔진 | `scripts/build-shared-hosting.ps1` |
 | 닷홈 DB 설정 | `config/database.php.dothome.example` → `database.php` |
 | DB 연결 테스트 | `public/api/health/db.php` (확인 후 삭제) |
 | phpMyAdmin 스키마 | `sql/schema/001`~`033` 순서 import |
+| Cursor 작업 원칙 | `.cursor/rules/study114-workflow.mdc` |
 
-**닷홈 FTP 배치:** `public/*` → `html/` · `src/`·`config/`·`storage/` → `html` 형제 폴더
+**닷홈 FTP 배치**
+
+| 대상 | 경로 | 배포 방식 |
+|------|------|-----------|
+| `public/*` | `html/` | **Actions 자동** (CI 빌드 후) |
+| `src/` | `html` 형제 `src/` | 수동 (최초·PHP 변경 시) |
+| `config/` | `html` 형제 `config/` | 수동 (`database.php` 서버 전용) |
+| `storage/` | `html` 형제 `storage/` | 수동 (쓰기 권한) |
+
+**배포 제외:** `docs/`, `docs/ssot/`, `backups/`, `preview/`, `e2e/`, `sql/`, `scripts/`, `docker/`, `legacy/`, `node_modules/`
 
 ---
 
@@ -431,6 +449,8 @@ flowchart TB
 | mock vs 실데이터? | `exposure-data.js` vs `exposure-bridge.js` |
 | 지도는 어디까지? | `shared/naver-map.js` + ssot 30장 부록(Notion) |
 | 배포 document root? | `public/` → 닷홈 `html/` ([01-dothome-deploy.md](./01-dothome-deploy.md)) |
+| 프론트 자동배포? | `main` push → `.github/workflows/deploy.yml` (CI `build:dothome` → FTP `public/`) |
+| 지도 키는 어디? | GitHub Variable `VITE_NAVER_MAP_CLIENT_ID` · 로컬은 `.env.dothome.example` |
 | 닷홈 DB·FTP 설정? | [01-dothome-deploy.md](./01-dothome-deploy.md) · `database.php.dothome.example` |
 | 운영 URL 바꾸려면? | `preview/.env.dothome.example` + 재빌드 · `public/.htaccess` SetEnv · `config/auth.php` |
 | 카페24 스테이징? | [01-cafe24-staging-deploy.md](./01-cafe24-staging-deploy.md) (참고) |
@@ -452,3 +472,4 @@ flowchart TB
 |------|------|
 | 2026-07-09 | 최초 작성 — 트리·중요 파일·API 매핑·논의 FAQ |
 | 2026-07-09 | 닷홈 배포·빌드 스크립트·config 예시·public SPA 트리 반영 |
+| 2026-07-10 | GitHub Actions CI 배포·gitignore 산출물·배포 포함/제외·FAQ 갱신 |
