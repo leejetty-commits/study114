@@ -25,6 +25,7 @@ import { renderLibrary, bindLibraryEvents } from './library/index.js';
 import { renderAdmin, bindAdminEvents } from './admin/index.js';
 import { initAuthSession, isAdminUser, ROLE_HOME } from './auth-session.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
+import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { showEmailVerifyOverlay } from './email-verify-overlay.js';
 import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
 import { activateBoardApi, deactivateBoardApi } from './board/board-backend.js';
@@ -86,6 +87,9 @@ function showBootError(err) {
 
 function init() {
   try {
+    if (!SHOW_PREVIEW_TOOLBAR) {
+      document.documentElement.style.setProperty('--preview-toolbar-h', '0px');
+    }
     bootstrapMypageRoute();
     bootstrapMessagesRoute();
     bootstrapSupportRoute();

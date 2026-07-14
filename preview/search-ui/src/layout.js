@@ -1,5 +1,6 @@
 import { getCurrentTab, previewState } from './state.js';
 import { AUTH_UI_BASE, homeUiUrl } from '../../shared/preview-links.js';
+import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { getVisibleSearchTabs, getSearchTabLabel } from './search-role-access.js';
 import { SEARCH_TABS } from './search-schema.js';
 
@@ -17,6 +18,7 @@ function homeLinkForRole(role) {
 }
 
 export function renderPreviewToolbar(activeTab) {
+  if (!SHOW_PREVIEW_TOOLBAR) return '';
   const role = previewState.role;
   const roleQs = role ? `?role=${encodeURIComponent(role)}` : '';
   const tabs = getVisibleSearchTabs(role).map((id) => ({

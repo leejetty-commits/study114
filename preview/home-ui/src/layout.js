@@ -8,8 +8,10 @@ import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
 import { getAuthUser, isLoggedIn, devLoginAs, logout } from './auth-session.js';
 import { isHandoffApiMode } from './handoff-backend.js';
 import { isMessagesApiMode } from './messages-backend.js';
+import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 
 export function renderPreviewToolbar() {
+  if (!SHOW_PREVIEW_TOOLBAR) return '';
   const current = getCurrentScreen();
   const onMypage = isMypageRoute();
   const onMessages = isMessagesRoute();

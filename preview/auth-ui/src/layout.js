@@ -1,4 +1,5 @@
 import { ROLE_LABELS } from './state.js';
+import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 
 const ROUTES = {
   '/login': 'login',
@@ -44,6 +45,7 @@ export function getCurrentScreen() {
 }
 
 export function renderPreviewToolbar(activeScreen) {
+  if (!SHOW_PREVIEW_TOOLBAR) return '';
   const screens = Object.entries(ROUTES);
   const theme = document.body.dataset.theme || 'v1';
 

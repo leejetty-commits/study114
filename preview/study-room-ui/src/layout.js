@@ -1,5 +1,6 @@
 import { STEPS, REGISTER_PHASES } from './state.js';
 import { homeUiUrl } from '../../shared/preview-links.js';
+import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 
 const ROUTES = Object.fromEntries(STEPS.map((s) => [s.path, s.key]));
 
@@ -24,6 +25,7 @@ export function getStepMeta(key) {
 }
 
 export function renderPreviewToolbar(activeScreen) {
+  if (!SHOW_PREVIEW_TOOLBAR) return '';
   return `
     <div class="preview-toolbar">
       <span class="preview-toolbar__label">우동공과 · 공부방 등록 UI (5장)</span>
