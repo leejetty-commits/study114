@@ -109,12 +109,25 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
   return `<a href="#" class="${cls}" data-action="gnb-${item.id}">${gnbItemLabel(item, role)}${suffix}</a>`;
 }
 
+/** @returns {'/guest'|'/parent'|'/study-room'|'/tutor'} */
+function roleHomePath() {
+  const user = getAuthUser();
+  if (!user) return '/guest';
+  if (user.role_type === 'study_room_owner') return '/study-room';
+  if (user.role_type === 'tutor') return '/tutor';
+  return '/parent';
+}
+
 /**
  * @param {'guest' | 'parent' | 'study_room' | 'tutor'} role
  * @param {{ showAuth?: boolean, showRoleSwitch?: boolean }} opts
  */
 export function renderHeader(role, opts = {}) {
-  const { showAuth = role === 'guest', showRoleSwitch = role !== 'guest' } = opts;
+  const loggedIn = isLoggedIn();
+  // 로그인 여부 기준 — 화면이 guest여도 세션이 있으면 마이페이지·로그아웃 노출
+  const showAuth = opts.showAuth ?? !loggedIn;
+  const showRoleSwitch = opts.showRoleSwitch ?? loggedIn;
+  const logoPath = loggedIn ? roleHomePath() : '/guest';
 
   const gnbItems = GNB_MAIN.map((item) => renderGnbLink(item, role)).join('');
   const mobileGnb = GNB_MAIN.map((item) => renderGnbLink(item, role, { mobile: true })).join('');
@@ -133,7 +146,7 @@ export function renderHeader(role, opts = {}) {
       </div>
       <div class="home-header__main">
         <div class="home-header__inner">
-          <a href="#/guest" class="home-header__logo" data-nav="/guest" aria-label="우동공과 홈">
+          <a href="#${logoPath}" class="home-header__logo" data-nav="${logoPath}" aria-label="우동공과 홈">
             <img src="/assets/brand/logo-wordmark.png" alt="우동공과" width="120" height="32" />
           </a>
           <nav class="home-gnb" aria-label="메인 메뉴">${gnbItems}</nav>

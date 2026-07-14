@@ -1,16 +1,29 @@
 import '@search-ui/styles/search.css';
-import { getCurrentScreen } from './state.js';
 import { renderGuest, bindGuestEvents } from './screens/guest.js';
 import { renderParent, bindParentEvents } from './screens/parent.js';
 import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';
 import { renderTutor, bindTutorEvents } from './screens/tutor.js';
-import { isMypageRoute, bootstrapMypageRoute, bootstrapMessagesRoute, isSupportRoute, bootstrapSupportRoute, isPolicyRoute, bootstrapPolicyRoute, isLibraryRoute, bootstrapLibraryRoute, isAdminRoute, bootstrapAdminRoute } from './state.js';
+import {
+  getCurrentScreen,
+  navigate,
+  isMypageRoute,
+  bootstrapMypageRoute,
+  bootstrapMessagesRoute,
+  isSupportRoute,
+  bootstrapSupportRoute,
+  isPolicyRoute,
+  bootstrapPolicyRoute,
+  isLibraryRoute,
+  bootstrapLibraryRoute,
+  isAdminRoute,
+  bootstrapAdminRoute,
+} from './state.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
 import { renderSupport, bindSupportEvents } from './support/index.js';
 import { renderPolicy, bindPolicyEvents } from './policy-index.js';
 import { renderLibrary, bindLibraryEvents } from './library/index.js';
 import { renderAdmin, bindAdminEvents } from './admin/index.js';
-import { initAuthSession, isAdminUser } from './auth-session.js';
+import { initAuthSession, isAdminUser, ROLE_HOME } from './auth-session.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
 import { showEmailVerifyOverlay } from './email-verify-overlay.js';
 import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
@@ -121,6 +134,11 @@ function init() {
             console.warn('[admin] api disabled — static A28 fallback', err);
             deactivateAdminApi();
           });
+        }
+        // 소셜/세션 로그인 후 #/guest에 남아 있으면 역할 홈으로 이동
+        if (user && getCurrentScreen() === 'guest' && ROLE_HOME[user.role_type]) {
+          navigate(ROLE_HOME[user.role_type]);
+          return;
         }
         const q = parseHashQuery();
         if (q.email_verified === '1') {

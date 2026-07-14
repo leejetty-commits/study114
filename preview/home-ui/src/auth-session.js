@@ -28,7 +28,7 @@ export const DEV_ACCOUNTS = {
   admin: { email: 'ops@dev.local', password: 'password', label: '운영' },
 };
 
-const ROLE_HOME = {
+export const ROLE_HOME = {
   guardian_student: '/parent',
   study_room_owner: '/study-room',
   tutor: '/tutor',

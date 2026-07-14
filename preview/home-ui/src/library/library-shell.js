@@ -20,7 +20,7 @@ export function renderLibraryShell(screenId, bodyHtml) {
   return `
     ${renderPreviewToolbar()}
     <div class="home-app">
-      ${renderHeader(role, { showAuth: role === 'guest', showRoleSwitch: role !== 'guest' })}
+      ${renderHeader(role)}
       <main class="home-main sup-main">
         <div class="sup-layout">
           <header class="sup-content__head">

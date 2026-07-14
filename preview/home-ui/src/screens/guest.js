@@ -10,8 +10,10 @@ import {
   bindGuestSectionEvents,
 } from '../guest-sections.js';
 import { bindDetailDecisionEvents } from '../detail-decision/index.js';
+import { isLoggedIn } from '../auth-session.js';
 
 export function renderGuest() {
+  const loggedIn = isLoggedIn();
   const content = `
     ${renderGuestTempNotice()}
     ${renderGuestHero()}
@@ -21,9 +23,10 @@ export function renderGuest() {
   `;
 
   return renderHomeShell('guest', content, {
-    showAuth: true,
+    showAuth: !loggedIn,
+    showRoleSwitch: loggedIn,
     sidebarHtml: renderGuestAdSidebar(),
-    loginStrip: renderGuestLoginStrip(),
+    loginStrip: loggedIn ? '' : renderGuestLoginStrip(),
   });
 }
 
