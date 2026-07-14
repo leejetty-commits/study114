@@ -11,6 +11,19 @@ $provider = (string) ($_GET['provider'] ?? '');
 $returnTo = (string) ($_GET['return_to'] ?? '');
 
 try {
+    // 닷홈: Google 콘솔에 http redirect만 등록된 경우가 많음.
+    // https로 시작하면 redirect_uri/세션 쿠키가 어긋나므로 OAuth 왕복은 http로 통일.
+    $origin = study114_request_origin();
+    if ($origin !== null && str_starts_with($origin, 'https://')) {
+        $host = (string) ($_SERVER['HTTP_HOST'] ?? 'study114.dothome.co.kr');
+        $qs = http_build_query(array_filter([
+            'provider'  => $provider,
+            'return_to' => $returnTo !== '' ? $returnTo : null,
+        ]));
+        header('Location: http://' . $host . '/api/auth/oauth/start.php?' . $qs, true, 302);
+        exit;
+    }
+
     $oauth = new OAuthService();
     if (!in_array($provider, OAuthService::providers(), true)) {
         throw new InvalidArgumentException('지원하지 않는 소셜 로그인입니다.');
