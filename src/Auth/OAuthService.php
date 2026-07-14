@@ -36,26 +36,41 @@ final class OAuthService
         };
     }
 
-    public function authorizeUrl(string $provider, string $state): string
+    /**
+     * OAuth redirect_uri — 현재 요청 스키마(http/https)를 우선해 세션 쿠키와 맞춘다.
+     * authorize ↔ token 교환에 동일 문자열을 써야 한다.
+     */
+    public function redirectUri(string $provider): string
+    {
+        if (!in_array($provider, self::providers(), true)) {
+            throw new InvalidArgumentException('지원하지 않는 소셜 로그인입니다.');
+        }
+        $origin = study114_request_origin() ?: (string) $this->config['api_base'];
+
+        return rtrim($origin, '/') . '/api/auth/oauth/callback.php?provider=' . rawurlencode($provider);
+    }
+
+    public function authorizeUrl(string $provider, string $state, ?string $redirectUri = null): string
     {
         $p = $this->providerConfig($provider);
+        $redirectUri = $redirectUri ?? $this->redirectUri($provider);
         return match ($provider) {
             'naver' => 'https://nid.naver.com/oauth2.0/authorize?' . http_build_query([
                 'response_type' => 'code',
                 'client_id'     => $p['client_id'],
-                'redirect_uri'  => $p['redirect_uri'],
+                'redirect_uri'  => $redirectUri,
                 'state'         => $state,
             ]),
             'kakao' => 'https://kauth.kakao.com/oauth/authorize?' . http_build_query([
                 'response_type' => 'code',
                 'client_id'     => $p['rest_api_key'],
-                'redirect_uri'  => $p['redirect_uri'],
+                'redirect_uri'  => $redirectUri,
                 'state'         => $state,
             ]),
             'google' => 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query([
                 'response_type' => 'code',
                 'client_id'     => $p['client_id'],
-                'redirect_uri'  => $p['redirect_uri'],
+                'redirect_uri'  => $redirectUri,
                 'scope'         => 'openid email profile',
                 'state'         => $state,
                 'access_type'   => 'online',
@@ -68,9 +83,9 @@ final class OAuthService
     /**
      * @return array{user_id: int, email: string, role_type: string, name: string, is_new: bool}
      */
-    public function authenticate(string $provider, string $code): array
+    public function authenticate(string $provider, string $code, ?string $redirectUri = null): array
     {
-        $profile = $this->fetchProfile($provider, $code);
+        $profile = $this->fetchProfile($provider, $code, $redirectUri);
         $pdo = Connection::get();
 
         $existing = $this->findByProvider($pdo, $provider, $profile['provider_user_id']);
@@ -114,11 +129,21 @@ final class OAuthService
 
     public function homeUiBase(): string
     {
+        $origin = study114_request_origin();
+        if ($origin !== null) {
+            return rtrim($origin, '/');
+        }
+
         return (string) $this->config['home_ui'];
     }
 
     public function authUiBase(): string
     {
+        $origin = study114_request_origin();
+        if ($origin !== null) {
+            return rtrim($origin, '/') . '/auth';
+        }
+
         return (string) $this->config['auth_ui'];
     }
 
@@ -136,12 +161,12 @@ final class OAuthService
     /**
      * @return array{provider_user_id: string, email: string, name: string, raw: array<string, mixed>}
      */
-    private function fetchProfile(string $provider, string $code): array
+    private function fetchProfile(string $provider, string $code, ?string $redirectUri = null): array
     {
         return match ($provider) {
             'naver'  => $this->fetchNaverProfile($code),
-            'kakao'  => $this->fetchKakaoProfile($code),
-            'google' => $this->fetchGoogleProfile($code),
+            'kakao'  => $this->fetchKakaoProfile($code, $redirectUri),
+            'google' => $this->fetchGoogleProfile($code, $redirectUri),
             default  => throw new InvalidArgumentException('지원하지 않는 소셜 로그인입니다.'),
         };
     }
@@ -179,13 +204,13 @@ final class OAuthService
     }
 
     /** @return array{provider_user_id: string, email: string, name: string, raw: array<string, mixed>} */
-    private function fetchKakaoProfile(string $code): array
+    private function fetchKakaoProfile(string $code, ?string $redirectUri = null): array
     {
         $p = $this->providerConfig('kakao');
         $body = [
             'grant_type'   => 'authorization_code',
             'client_id'    => $p['rest_api_key'],
-            'redirect_uri' => $p['redirect_uri'],
+            'redirect_uri' => $redirectUri ?: $p['redirect_uri'],
             'code'         => $code,
         ];
         if (($p['client_secret'] ?? '') !== '') {
@@ -216,7 +241,7 @@ final class OAuthService
     }
 
     /** @return array{provider_user_id: string, email: string, name: string, raw: array<string, mixed>} */
-    private function fetchGoogleProfile(string $code): array
+    private function fetchGoogleProfile(string $code, ?string $redirectUri = null): array
     {
         $p = $this->providerConfig('google');
         $token = $this->httpForm('https://oauth2.googleapis.com/token', [
@@ -224,7 +249,7 @@ final class OAuthService
             'client_id'     => $p['client_id'],
             'client_secret' => $p['client_secret'],
             'code'          => $code,
-            'redirect_uri'  => $p['redirect_uri'],
+            'redirect_uri'  => $redirectUri ?: $p['redirect_uri'],
         ]);
         $accessToken = (string) ($token['access_token'] ?? '');
         if ($accessToken === '') {
@@ -263,6 +288,7 @@ final class OAuthService
         $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         if (!is_string($raw) || $code >= 400) {
+            error_log('[oauth/httpForm] HTTP ' . $code . ' ' . $url . ' body=' . (is_string($raw) ? substr($raw, 0, 500) : ''));
             throw new RuntimeException('소셜 인증 서버 응답 오류');
         }
         $data = json_decode($raw, true);

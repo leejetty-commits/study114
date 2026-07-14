@@ -37,9 +37,10 @@ try {
     }
 
     $returnTo = (string) ($session['return_to'] ?? '');
+    $redirectUri = (string) ($session['redirect_uri'] ?? $oauth->redirectUri($provider));
     unset($_SESSION['oauth']);
 
-    $user = $oauth->authenticate($provider, $code);
+    $user = $oauth->authenticate($provider, $code, $redirectUri);
     AuthSession::login($user['user_id'], $user['email'], $user['role_type'], $user['name']);
 
     $roleHome = match ($user['role_type']) {
@@ -59,9 +60,11 @@ try {
     }
 
     if ($returnTo !== '' && (str_starts_with($returnTo, '/') || str_starts_with($returnTo, $homeUi))) {
-        $target = str_starts_with($returnTo, 'http') ? $returnTo : $homeUi . '#' . ltrim($returnTo, '#');
+        $target = str_starts_with($returnTo, 'http')
+            ? $returnTo
+            : $homeUi . '/#/' . ltrim($returnTo, '/#');
     } else {
-        $target = $homeUi . '#' . $roleHome;
+        $target = $homeUi . '/#/' . ltrim($roleHome, '/');
     }
 
     header('Location: ' . $target, true, 302);

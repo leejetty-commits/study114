@@ -21,13 +21,17 @@ try {
 
     AuthSession::start();
     $state = bin2hex(random_bytes(16));
+    $redirectUri = $oauth->redirectUri($provider);
     $_SESSION['oauth'] = [
-        'state'     => $state,
-        'provider'  => $provider,
-        'return_to' => $returnTo,
+        'state'        => $state,
+        'provider'     => $provider,
+        'return_to'    => $returnTo,
+        'redirect_uri' => $redirectUri,
     ];
+    // Google 등 외부로 나가기 전에 세션을 확정 저장 (콜백에서 state 유실 방지)
+    session_write_close();
 
-    header('Location: ' . $oauth->authorizeUrl($provider, $state), true, 302);
+    header('Location: ' . $oauth->authorizeUrl($provider, $state, $redirectUri), true, 302);
     exit;
 } catch (Throwable $e) {
     error_log('[oauth/start] ' . $e->getMessage());

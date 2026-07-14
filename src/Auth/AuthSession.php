@@ -9,9 +9,13 @@ final class AuthSession
     public static function start(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
+            $secure = function_exists('study114_request_origin')
+                && str_starts_with((string) study114_request_origin(), 'https://');
             session_start([
                 'cookie_httponly' => true,
                 'cookie_samesite' => 'Lax',
+                'cookie_secure'   => $secure,
+                'cookie_path'     => '/',
             ]);
         }
     }
