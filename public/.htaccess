@@ -33,4 +33,6 @@ DirectoryIndex index.html index.php
   SetEnv STUDY114_AUTH_UI http://study114.dothome.co.kr/auth
   SetEnv STUDY114_APP_ENV production
   SetEnv STUDY114_DEBUG 0
+  SetEnv OAUTH_NAVER_CLIENT_ID 6tjyX7FuwihrLSTkNkNx
+  SetEnv OAUTH_NAVER_CLIENT_SECRET DWIUWqfnT0
 </IfModule>
