@@ -90,6 +90,9 @@ export function parseNavRole(raw) {
  */
 export function resolveGnbLink(gnbId, role) {
   switch (gnbId) {
+    case 'home':
+      // 홈 경로는 세션(role_type)에 따라 layout에서 결정
+      return { external: false, url: '/guest' };
     case 'find_room':
       return { external: true, url: searchUiUrl('room', role) };
     case 'find_tutor':

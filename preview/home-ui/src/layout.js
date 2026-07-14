@@ -95,20 +95,23 @@ function gnbItemLabel(item, role) {
 }
 
 function renderGnbLink(item, role, { mobile = false } = {}) {
-  const vis = GNB_VISIBILITY[role][item.id];
+  const vis = GNB_VISIBILITY[role]?.[item.id] ?? 'show';
   if (vis === 'hide') {
     return '';
   }
-  const isHomeContext = getCurrentScreen() === 'guest' && item.id === 'find_room';
+  const screen = getCurrentScreen();
+  const onRoleHome = screen === 'guest' || screen === 'parent' || screen === 'studyRoom' || screen === 'tutor';
+  const isHomeActive = item.id === 'home' && onRoleHome;
   const cls = [
     'home-gnb__item',
-    isHomeContext ? 'is-active' : '',
+    isHomeActive ? 'is-active' : '',
     vis === 'limited' ? 'is-limited' : '',
   ]
     .filter(Boolean)
     .join(' ');
   const suffix = vis === 'limited' && !mobile ? ' △' : '';
-  return `<a href="#" class="${cls}" data-action="gnb-${item.id}">${gnbItemLabel(item, role)}${suffix}</a>`;
+  const href = item.id === 'home' ? `#${roleHomePath()}` : '#';
+  return `<a href="${href}" class="${cls}" data-action="gnb-${item.id}">${gnbItemLabel(item, role)}${suffix}</a>`;
 }
 
 /** @returns {'/guest'|'/parent'|'/study-room'|'/tutor'} */
@@ -358,6 +361,10 @@ export function bindLayoutEvents(root, rerender) {
         });
       } else if (action.startsWith('gnb-')) {
         const gnbId = action.replace('gnb-', '');
+        if (gnbId === 'home') {
+          navigate(roleHomePath());
+          return;
+        }
         const link = resolveGnbLink(gnbId, getNavRole());
         if (link?.external) {
           window.open(link.url, '_blank', 'noopener');
@@ -377,7 +384,12 @@ export function bindLayoutEvents(root, rerender) {
       } else if (action === 'util-recent') {
         navigate('/mypage/recent');
       } else if (action === 'util-logout') {
-        navigate('/guest');
+        logout()
+          .then(() => {
+            navigate('/guest');
+            rerender();
+          })
+          .catch((err) => alert(err instanceof Error ? err.message : String(err)));
       } else if (action === 'util-guide') {
         navigateToSupport('/support/guide');
       } else if (action === 'util-library') {

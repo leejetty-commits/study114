@@ -30,6 +30,7 @@ export const UTIL_MENU = {
 
 /** 메인 GNB — 6장 §7 (퀵매칭·안전과외 독립·앱·자료실 제외) */
 export const GNB_MAIN = [
+  { id: 'home', label: '홈' },
   { id: 'find_room', label: '공부방찾기' },
   { id: 'find_tutor', label: '과외쌤찾기' },
   { id: 'student_parent', label: '학생/학부모' },
@@ -42,6 +43,7 @@ export const GNB_MAIN = [
 /** @type {Record<NavRole, Record<string, 'show' | 'limited' | 'hide'>>} */
 export const GNB_VISIBILITY = {
   guest: {
+    home: 'show',
     find_room: 'show',
     find_tutor: 'show',
     student_parent: 'hide',
@@ -50,6 +52,7 @@ export const GNB_VISIBILITY = {
     support: 'show',
   },
   parent: {
+    home: 'show',
     find_room: 'show',
     find_tutor: 'show',
     student_parent: 'hide',
@@ -58,6 +61,7 @@ export const GNB_VISIBILITY = {
     support: 'show',
   },
   study_room: {
+    home: 'show',
     find_room: 'show',
     find_tutor: 'hide',
     student_parent: 'show',
@@ -66,6 +70,7 @@ export const GNB_VISIBILITY = {
     support: 'show',
   },
   tutor: {
+    home: 'show',
     find_room: 'hide',
     find_tutor: 'show',
     student_parent: 'show',
