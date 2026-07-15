@@ -1,7 +1,7 @@
 import './styles/tokens.css';
 import './styles/home.css';
-import './styles/design-system.css';
 import '@search-ui/styles/search.css';
+import './styles/design-system.css';
 import { renderGuest, bindGuestEvents } from './screens/guest.js';
 import { renderParent, bindParentEvents } from './screens/parent.js';
 import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';

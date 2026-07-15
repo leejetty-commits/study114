@@ -92,29 +92,33 @@ export function renderAuthShell(content, options = {}) {
   if (hideDefaultCard) {
     return `
     ${renderPreviewToolbar(getCurrentScreen())}
-    <div class="site-chrome-shell auth-shell auth-shell--stage">
+    <div class="site-chrome-shell auth-chrome-shell auth-shell auth-shell--stage">
       ${header}
-      <main class="auth-shell__main auth-shell__main--stage">
-        ${content}
-      </main>
-      <footer class="auth-shell__footer">
-        © 2026 우동공과 · study114
+      <div class="home-body auth-body auth-body--stage">
+        <div class="home-main">
+          ${content}
+        </div>
+      </div>
+      <footer class="home-footer">
+        <p>© 2026 우동공과 · study114</p>
       </footer>
     </div>`;
   }
 
   return `
     ${renderPreviewToolbar(getCurrentScreen())}
-    <div class="site-chrome-shell auth-shell">
+    <div class="site-chrome-shell auth-chrome-shell auth-shell">
       ${header}
-      <main class="auth-shell__main">
-        <div class="auth-shell__card ${wide ? 'auth-shell__card--wide' : ''}">
-          ${showBack ? `<a href="#${backPath}" class="back-link" data-nav="${backPath}">← ${backLabel}</a>` : ''}
-          ${content}
+      <div class="home-body auth-body">
+        <div class="home-main">
+          <div class="auth-shell__card panel ${wide ? 'auth-shell__card--wide' : ''}">
+            ${showBack ? `<a href="#${backPath}" class="back-link" data-nav="${backPath}">← ${backLabel}</a>` : ''}
+            ${content}
+          </div>
         </div>
-      </main>
-      <footer class="auth-shell__footer">
-        © 2026 우동공과 · study114 · UI Preview
+      </div>
+      <footer class="home-footer">
+        <p>© 2026 우동공과 · study114</p>
       </footer>
     </div>
   `;

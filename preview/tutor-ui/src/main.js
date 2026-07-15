@@ -2,8 +2,8 @@ import '@auth-styles/base.css';
 import '@auth-styles/theme-v1.css';
 import '../../home-ui/src/styles/tokens.css';
 import '../../home-ui/src/styles/home.css';
-import '../../home-ui/src/styles/design-system.css';
 import './styles/register.css';
+import '../../home-ui/src/styles/design-system.css';
 
 import { initChromeSession } from '../../shared/chrome-session.js';
 import { getCurrentScreen } from './layout.js';

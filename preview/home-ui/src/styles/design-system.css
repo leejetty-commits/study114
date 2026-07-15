@@ -390,3 +390,126 @@ body {
   background: var(--surface-page);
   border: 1px solid var(--gray-200);
 }
+
+/* ── Cross-app shell: GNB 대상 검색·등록·인증 폭 통일 ── */
+.search-body,
+.register-body,
+.auth-body {
+  display: block !important;
+  grid-template-columns: none !important;
+  max-width: var(--home-max);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--page-gutter);
+  padding-right: var(--page-gutter);
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-8);
+}
+
+.search-body .home-main,
+.register-body .home-main,
+.auth-body .home-main {
+  max-width: none;
+  width: 100%;
+  padding: 0;
+}
+
+.search-chrome-shell .home-footer,
+.register-chrome-shell .home-footer,
+.auth-chrome-shell .home-footer,
+.home-shell .home-footer {
+  max-width: var(--home-max);
+  margin: 0 auto;
+  padding: var(--space-6) var(--page-gutter);
+  text-align: center;
+  font-size: var(--fs-1);
+  color: var(--gray-500);
+  font-family: var(--font-serif);
+}
+
+/* 등록·가입 폼 카드: 본문 폭 안에 읽기용 카드 */
+.register-card,
+.auth-chrome-shell .auth-shell__card,
+.auth-chrome-shell .auth-shell__card--wide {
+  max-width: min(40rem, 100%) !important;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--surface-page);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: none;
+}
+
+.auth-body--stage .home-main {
+  max-width: var(--home-max);
+}
+
+.auth-body--stage .login-stage {
+  width: 100%;
+}
+
+/* 학부모/공급자 홈 탭·박스 — 게스트와 같은 타이포 */
+.parent-tabs__btn,
+.provider-tabs__btn {
+  font-family: var(--font-sans);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-semibold);
+}
+
+.my-box {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  background: var(--surface-page);
+}
+
+.my-box__label {
+  font-size: var(--fs-1);
+  color: var(--gray-500);
+  font-family: var(--font-serif);
+}
+
+.my-box__title {
+  font-size: var(--fs-5);
+  font-weight: var(--fw-bold);
+  margin: var(--space-1) 0 var(--space-3);
+}
+
+.provider-home-head__title,
+.parent-home-head__title,
+.find-surface__title,
+.search-header .auth-heading {
+  font-size: var(--fs-5);
+  font-weight: var(--fw-bold);
+  font-family: var(--font-sans);
+  color: var(--gray-900);
+  margin: 0 0 var(--space-2);
+}
+
+.provider-home-head__desc,
+.parent-home-head__desc,
+.find-surface__desc,
+.search-header .auth-subheading {
+  font-size: var(--fs-2);
+  font-family: var(--font-serif);
+  color: var(--gray-600);
+  margin: 0 0 var(--space-4);
+}
+
+.search-chrome-shell .search-header .auth-heading {
+  font-size: var(--fs-6);
+}
+
+/* 고객센터 프레임도 동일 gutters */
+.sup-frame {
+  border-radius: var(--radius-lg);
+  border-color: var(--gray-200);
+}
+
+.sup-content__title-prefix,
+.sup-content__title-suffix {
+  font-size: inherit;
+}

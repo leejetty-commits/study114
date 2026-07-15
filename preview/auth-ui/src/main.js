@@ -1,3 +1,5 @@
+import './styles/base.css';
+import './styles/theme-v1.css';
 import '../../home-ui/src/styles/tokens.css';
 import '../../home-ui/src/styles/home.css';
 import '../../home-ui/src/styles/design-system.css';

@@ -65,12 +65,14 @@ export function renderSearchShell(content) {
     ${renderPreviewToolbar(getCurrentTab())}
     <div class="site-chrome-shell search-chrome-shell">
       ${header}
-      <main class="auth-shell__main search-chrome-main">
-        <div class="auth-shell__card auth-shell__card--wide search-card">
+      <div class="home-body search-body">
+        <div class="home-main search-main">
           ${content}
         </div>
-      </main>
-      <footer class="auth-shell__footer">© 2026 우동공과 · study114 · 검색</footer>
+      </div>
+      <footer class="home-footer">
+        <p>© 2026 우동공과 · study114</p>
+      </footer>
     </div>
   `;
 }

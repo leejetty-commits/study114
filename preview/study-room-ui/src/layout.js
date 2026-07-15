@@ -70,15 +70,19 @@ export function renderRegisterShell(content, options = {}) {
     ${renderPreviewToolbar(getCurrentScreen())}
     <div class="site-chrome-shell register-chrome-shell">
       ${header}
-      <main class="auth-shell__main">
-        <div class="auth-shell__card auth-shell__card--wide register-card">
-          ${step <= 5 ? renderStepIndicator(step) : ''}
-          <h1 class="auth-heading">${title}</h1>
-          ${subtitle ? `<p class="auth-subheading mb-6">${subtitle}</p>` : ''}
-          ${content}
+      <div class="home-body register-body">
+        <div class="home-main">
+          <div class="register-card panel">
+            ${step <= 5 ? renderStepIndicator(step) : ''}
+            <h1 class="auth-heading">${title}</h1>
+            ${subtitle ? `<p class="auth-subheading mb-6">${subtitle}</p>` : ''}
+            ${content}
+          </div>
         </div>
-      </main>
-      <footer class="auth-shell__footer">© 2026 우동공과 · study114 · 공부방 등록</footer>
+      </div>
+      <footer class="home-footer">
+        <p>© 2026 우동공과 · study114</p>
+      </footer>
     </div>
   `;
 }

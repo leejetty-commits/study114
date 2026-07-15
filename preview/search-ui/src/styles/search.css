@@ -1,5 +1,8 @@
-.search-shell .search-card {
-  max-width: 72rem;
+.search-shell .search-card,
+.search-chrome-shell .search-card,
+.search-main {
+  max-width: var(--home-max);
+  width: 100%;
 }
 
 .search-shell .hero-map--search {
@@ -65,7 +68,7 @@
 
 .item-actions--student .btn.is-active {
   border-color: var(--brand-orange-dark);
-  color: #c2410c;
+  color: var(--brand-orange-dark);
 }
 
 .search-header--compact {
