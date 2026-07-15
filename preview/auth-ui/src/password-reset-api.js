@@ -16,7 +16,8 @@
 
 /** @typedef {'valid'|'invalid'|'expired'|'used'} PasswordResetTokenStatus */
 
-export const PASSWORD_RESET_RESEND_COOLDOWN_SEC = 180;
+/** 서버 config(auth.password_reset_resend_cooldown_seconds)와 동일 — 5분 */
+export const PASSWORD_RESET_RESEND_COOLDOWN_SEC = 300;
 
 /** @type {readonly PasswordResetTokenStatus[]} */
 export const PASSWORD_RESET_TOKEN_STATUSES = ['valid', 'invalid', 'expired', 'used'];

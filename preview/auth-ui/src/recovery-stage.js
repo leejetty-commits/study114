@@ -38,8 +38,14 @@ export function renderPasswordRuleList() {
     </ul>`;
 }
 
-export function renderRecoveryLinks({ login = true, signup = true } = {}) {
+export function renderRecoveryLinks({ login = true, signup = true, findPassword = false, findId = false } = {}) {
   const parts = [];
+  if (findId) {
+    parts.push('<a href="#/find-id" data-nav="/find-id">아이디 찾기</a>');
+  }
+  if (findPassword) {
+    parts.push('<a href="#/find-password" data-nav="/find-password">비밀번호 찾기</a>');
+  }
   if (login) {
     parts.push('<a href="#/login" data-nav="/login">로그인으로 돌아가기</a>');
   }

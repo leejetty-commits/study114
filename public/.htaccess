@@ -33,6 +33,7 @@ DirectoryIndex index.html index.php
   SetEnv STUDY114_AUTH_UI http://study114.dothome.co.kr/auth
   SetEnv STUDY114_APP_ENV production
   SetEnv STUDY114_DEBUG 0
+  SetEnv STUDY114_MAIL_FROM study114@study114.dothome.co.kr
   SetEnv OAUTH_NAVER_CLIENT_ID 6tjyX7FuwihrLSTkNkNx
   SetEnv OAUTH_NAVER_CLIENT_SECRET DWIUWqfnT0
   SetEnv OAUTH_KAKAO_REST_API_KEY c30e95c82362026606967bf5502beb62

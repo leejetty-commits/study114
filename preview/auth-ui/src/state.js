@@ -67,10 +67,10 @@ export function setRole(role) {
   signupState.role = role;
 }
 
-/** [임시] 아이디 찾기 — SSOT 2장 §3.6 미잠금 */
-export const FIND_ID_TEMP = true;
+/** 아이디 찾기 — 이름·휴대폰 → 마스킹 이메일 목록 + 소셜 안내 */
+export const FIND_ID_TEMP = false;
 
-/** [임시] 비밀번호 찾기 — SSOT 2장 §3.7 미잠금 */
+/** 비밀번호 찾기 — 이메일 매직 링크 (TTL 30분 · 재전송 5분) */
 export const FIND_PASSWORD_TEMP = false;
 
 export function markTermsAgreed() {

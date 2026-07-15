@@ -86,10 +86,13 @@ export function renderLogin() {
         </form>
 
         <div class="auth-links mt-6">
-          <span>처음이신가요?</span>
-          <a href="#/signup/terms" data-nav="/signup/terms">회원가입</a>
+          <a href="#/find-id" data-nav="/find-id">아이디 찾기</a>
           <span class="auth-links__sep">|</span>
           <a href="#/find-password" data-nav="/find-password">비밀번호 찾기</a>
+        </div>
+        <div class="auth-links mt-3">
+          <span>처음이신가요?</span>
+          <a href="#/signup/terms" data-nav="/signup/terms">회원가입</a>
         </div>
         <p class="login-stage__signup-hint">학부모·공부방·과외쌤 공통 계정으로 시작합니다.</p>
 

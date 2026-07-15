@@ -49,7 +49,7 @@ function renderRequestStep() {
         </div>
         <button type="submit" class="btn btn--primary btn--block">재설정 메일 보내기</button>
       </form>
-      ${renderRecoveryLinks()}
+      ${renderRecoveryLinks({ findId: true })}
     </div>`;
 }
 

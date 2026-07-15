@@ -30,9 +30,9 @@ final class PasswordResetService
      */
     public function requestReset(string $email): array
     {
-        $cooldown = (int) ($this->config['password_reset_resend_cooldown_seconds'] ?? 180);
+        $cooldown = (int) ($this->config['password_reset_resend_cooldown_seconds'] ?? 300);
         if ($cooldown < 1) {
-            $cooldown = 180;
+            $cooldown = 300;
         }
 
         $email = EmailNormalizer::normalize($email);
@@ -40,7 +40,8 @@ final class PasswordResetService
             return ['sent' => false, 'resend_available_in' => 0];
         }
 
-        $stmt = Connection::get()->prepare(
+        $pdo = Connection::get();
+        $stmt = $pdo->prepare(
             'SELECT u.id, u.email, p.real_name AS name, p.phone
              FROM users u
              INNER JOIN user_profiles p ON p.user_id = u.id
@@ -60,17 +61,54 @@ final class PasswordResetService
             return ['sent' => false, 'resend_available_in' => $remaining];
         }
 
-        $this->tokens->invalidatePurpose($userId, 'password_reset');
-        $raw = $this->tokens->create($userId, 'password_reset', (int) $this->config['password_reset_ttl_minutes']);
+        $providers = $this->oauthProviders($pdo, $userId);
+        $providerLabels = OAuthProviderLabels::labels($providers);
+        $phoneDigits = PhoneNormalizer::digits((string) ($row['phone'] ?? ''));
+        // OAuth 생성 시 phone=null · 이메일 가입은 phone 필수 → phone 없으면 소셜 전용 안내
+        $socialOnly = $providers !== [] && $phoneDigits === '';
 
+        $this->tokens->invalidatePurpose($userId, 'password_reset');
+
+        if ($socialOnly) {
+            $this->tokens->create($userId, 'password_reset', (int) $this->config['password_reset_ttl_minutes']);
+            $mail = PasswordResetMailTemplate::buildSocialOnly($providerLabels);
+            $this->mailer->send($email, $mail['subject'], $mail['plain'], $mail['html']);
+            return ['sent' => true, 'resend_available_in' => $cooldown];
+        }
+
+        $raw = $this->tokens->create($userId, 'password_reset', (int) $this->config['password_reset_ttl_minutes']);
         $link = $this->config['auth_ui'] . '/#/reset-password?token=' . rawurlencode($raw);
         $mail = PasswordResetMailTemplate::build(
             $link,
-            (int) $this->config['password_reset_ttl_minutes']
+            (int) $this->config['password_reset_ttl_minutes'],
+            $providerLabels
         );
         $this->mailer->send($email, $mail['subject'], $mail['plain'], $mail['html']);
 
         return ['sent' => true, 'resend_available_in' => $cooldown];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function oauthProviders(PDO $pdo, int $userId): array
+    {
+        $stmt = $pdo->prepare(
+            'SELECT provider FROM user_oauth_accounts WHERE user_id = ? ORDER BY linked_at ASC'
+        );
+        $stmt->execute([$userId]);
+        $out = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $p = (string) ($row['provider'] ?? '');
+            if ($p !== '') {
+                $out[] = $p;
+            }
+        }
+
+        return $out;
     }
 
     /** @return 'valid'|'expired'|'used'|'invalid' */
