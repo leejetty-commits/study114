@@ -51,13 +51,22 @@ final class SignupService
 
         $roleType = self::ROLE_MAP[$roleUi];
         $smsOptIn = !empty($input['sms_consent']) ? 1 : 0;
-        $emailOptIn = !empty($input['email_consent']) ? 1 : 0;
+        // 아이디·비밀번호 찾기 안내 메일 발송을 위해 이메일 수신 동의 필수
+        if (empty($input['email_consent'])) {
+            throw new InvalidArgumentException(
+                'email_consent: 아이디·비밀번호 찾기 안내를 위해 이메일 수신에 동의해 주세요.'
+            );
+        }
+        $emailOptIn = 1;
         $safeNumberOptIn = 0;
 
-        $addressZip = isset($input['address_zip']) && $input['address_zip'] !== ''
-            ? (string) $input['address_zip'] : null;
+        $addressZip = isset($input['address_zip']) && trim((string) $input['address_zip']) !== ''
+            ? trim((string) $input['address_zip']) : null;
+        if ($addressZip === null) {
+            throw new InvalidArgumentException('address_zip: 주소 검색으로 우편번호를 선택해 주세요.');
+        }
         $addressLine2 = isset($input['address_line2']) && $input['address_line2'] !== ''
-            ? (string) $input['address_line2'] : null;
+            ? trim((string) $input['address_line2']) : null;
         $defaultRegionId = isset($input['default_region_id']) && $input['default_region_id'] !== ''
             ? (int) $input['default_region_id'] : null;
         $defaultComplexId = isset($input['default_complex_id']) && $input['default_complex_id'] !== ''

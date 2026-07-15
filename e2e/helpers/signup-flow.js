@@ -20,10 +20,12 @@ export function buildSignupPayload(role) {
     name: 'E2E테스트',
     gender: 'male',
     phone: '01099998888',
-    address: '서울특별시 강남구 대치동 123',
+    address: '서울특별시 강남구 테헤란로 123',
+    address_zip: '06236',
+    address_line2: '1층',
     role,
     sms_consent: false,
-    email_consent: false,
+    email_consent: true,
   };
 }
 

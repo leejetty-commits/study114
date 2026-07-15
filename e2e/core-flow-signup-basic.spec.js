@@ -52,7 +52,10 @@ test.describe('[3단계] auth-ui 화면 플로우 (student)', () => {
     await page.locator('#signup-name').fill('UI테스트학부모');
     await page.locator('input[name="gender"][value="male"]').check();
     await page.locator('#signup-phone').fill('01077776666');
-    await page.locator('#signup-address').fill('서울특별시 강남구 대치동 1');
+    await page.locator('#signup-address-zip').evaluate((el, v) => { el.value = v; }, '06236');
+    await page.locator('#signup-address').evaluate((el, v) => { el.value = v; }, '서울특별시 강남구 테헤란로 123');
+    await page.locator('#signup-address-line2').fill('1층');
+    await page.locator('#signup-email-consent').check();
     await page.locator('[data-form="signup"] button[type="submit"]').click();
 
     await page.waitForURL(/#\/signup\/basic/, { timeout: 15_000 });
@@ -85,7 +88,9 @@ test.describe('[3단계] auth-ui 화면 플로우 (student)', () => {
     await page.locator('#signup-name').fill('홈분기테스트');
     await page.locator('input[name="gender"][value="female"]').check();
     await page.locator('#signup-phone').fill('01055554444');
-    await page.locator('#signup-address').fill('서울시 강남구');
+    await page.locator('#signup-address-zip').evaluate((el, v) => { el.value = v; }, '06236');
+    await page.locator('#signup-address').evaluate((el, v) => { el.value = v; }, '서울특별시 강남구 테헤란로 456');
+    await page.locator('#signup-email-consent').check();
     await page.locator('[data-form="signup"] button[type="submit"]').click();
     await page.waitForURL(/#\/signup\/basic/);
     await page.locator('[data-form="basic-student"] button[type="submit"]').click();

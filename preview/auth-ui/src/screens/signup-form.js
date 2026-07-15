@@ -1,6 +1,6 @@
 import { signupState, ROLE_LABELS, DUMMY_USER } from '../state.js';
-import { signupApi } from '../auth-api.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
+import { openKakaoPostcode } from '../../../shared/kakao-postcode.js';
 import { renderAuthShell, renderStepIndicator, renderRoleBadge, bindGlobalEvents, navigate } from '../layout.js';
 
 function esc(s) {
@@ -9,6 +9,8 @@ function esc(s) {
     .replace(/</g, '&lt;')
     .replace(/"/g, '&quot;');
 }
+
+const isDev = import.meta.env.DEV;
 
 export function renderSignupForm() {
   const role = signupState.role || 'student';
@@ -19,6 +21,9 @@ export function renderSignupForm() {
     tutor: '과외쌤 성별',
   };
   const genderLabel = genderLabels[role] || '성별';
+  const prefEmail = isDev ? DUMMY_USER.email : '';
+  const prefName = isDev ? DUMMY_USER.name : '';
+  const prefPhone = isDev ? DUMMY_USER.phone : '';
 
   const content = `
     ${renderStepIndicator(3)}
@@ -27,7 +32,7 @@ export function renderSignupForm() {
       <p class="auth-subheading mb-6">공통 회원 정보를 입력해 주세요.</p>
       ${renderRoleBadge(role)}
 
-      <form data-form="signup" class="mt-8">
+      <form data-form="signup" class="mt-8" novalidate>
         <div class="form-group">
           <label class="form-label form-label--required" for="signup-email">이메일(ID)</label>
           <input
@@ -36,8 +41,9 @@ export function renderSignupForm() {
             id="signup-email"
             name="email"
             placeholder="example@email.com"
-            value="${DUMMY_USER.email}"
+            value="${esc(prefEmail)}"
             autocomplete="username"
+            required
           />
         </div>
 
@@ -51,6 +57,7 @@ export function renderSignupForm() {
               name="password"
               placeholder="비밀번호 입력"
               autocomplete="new-password"
+              required
             />
           </div>
           <div class="form-group">
@@ -62,6 +69,7 @@ export function renderSignupForm() {
               name="password_confirm"
               placeholder="비밀번호 재입력"
               autocomplete="new-password"
+              required
             />
           </div>
         </div>
@@ -75,14 +83,14 @@ export function renderSignupForm() {
             id="signup-name"
             name="name"
             placeholder="실명 입력"
-            value="${DUMMY_USER.name}"
+            value="${esc(prefName)}"
             autocomplete="name"
+            required
           />
         </div>
 
         <div class="form-group">
           <span class="form-label form-label--required">${esc(genderLabel)}</span>
-          <p class="form-note">매칭·검색 needs · user_profiles.gender</p>
           <div class="form-radio-group" role="radiogroup" aria-label="${esc(genderLabel)}">
             <label class="form-radio">
               <input
@@ -115,22 +123,48 @@ export function renderSignupForm() {
             id="signup-phone"
             name="phone"
             placeholder="010-0000-0000"
-            value="${DUMMY_USER.phone}"
+            value="${esc(prefPhone)}"
             autocomplete="tel"
+            required
           />
         </div>
 
-        <div class="form-group">
-          <label class="form-label form-label--required" for="signup-address">주소</label>
+        <div class="form-group form-address" data-address-block>
+          <span class="form-label form-label--required">주소</span>
+          <p class="form-hint">동·건물명·지번을 일부만 입력해도 목록이 나타납니다. 지번을 골라도 <strong>도로명 주소로 자동 변환</strong>됩니다.</p>
+          <div class="form-address__zip-row">
+            <input
+              class="form-input"
+              type="text"
+              id="signup-address-zip"
+              name="address_zip"
+              placeholder="우편번호"
+              readonly
+              required
+              aria-label="우편번호"
+            />
+            <button type="button" class="btn btn--secondary" data-action="search-address">주소 검색</button>
+          </div>
           <input
             class="form-input"
             type="text"
             id="signup-address"
             name="address"
-            placeholder="주소 입력"
-            value="${DUMMY_USER.address}"
+            placeholder="도로명 주소 (검색으로 입력)"
+            readonly
+            required
             autocomplete="street-address"
           />
+          <input
+            class="form-input"
+            type="text"
+            id="signup-address-line2"
+            name="address_line2"
+            placeholder="상세주소 (동·호수 등)"
+            autocomplete="address-line2"
+          />
+          <p class="form-hint" data-jibun-hint hidden></p>
+          <p class="form-error" data-address-error hidden role="alert"></p>
         </div>
 
         <div class="form-consent-group">
@@ -141,9 +175,8 @@ export function renderSignupForm() {
               type="checkbox"
               name="sms_consent"
               id="signup-sms-consent"
-              ${DUMMY_USER.smsConsent ? 'checked' : ''}
             />
-            <span class="form-check__label">문자 수신 동의</span>
+            <span class="form-check__label">문자 수신 동의 <span class="form-check__optional">(선택)</span></span>
           </label>
           <label class="form-check">
             <input
@@ -151,10 +184,14 @@ export function renderSignupForm() {
               type="checkbox"
               name="email_consent"
               id="signup-email-consent"
-              ${DUMMY_USER.emailConsent ? 'checked' : ''}
+              required
             />
-            <span class="form-check__label">이메일 수신 동의</span>
+            <span class="form-check__label">이메일 수신 동의 <span class="form-check__required-mark">(필수)</span></span>
           </label>
+          <p class="form-consent-note" role="note">
+            아이디 찾기·비밀번호 재설정 안내 메일을 보내드리려면 <strong>이메일 수신 동의가 필요합니다.</strong>
+            동의하지 않으면 가입할 수 없습니다.
+          </p>
         </div>
 
         <p class="form-note">${roleLabel} 상세 정보는 기본등록 단계에서 이어서 입력합니다.</p>
@@ -172,11 +209,64 @@ export function renderSignupForm() {
   return renderAuthShell(content, { wide: true, showBack: true, backPath: '/signup/role', backLabel: '회원구분' });
 }
 
+/**
+ * @param {HTMLElement} root
+ * @param {string} msg
+ */
+function showSignupError(root, msg) {
+  const errorEl = root.querySelector('[data-signup-error]');
+  if (errorEl) {
+    errorEl.hidden = false;
+    errorEl.textContent = msg;
+  } else {
+    alert(msg);
+  }
+}
+
 export function bindSignupFormEvents(root) {
   bindGlobalEvents(root);
 
   const form = root.querySelector('[data-form="signup"]');
   const errorEl = root.querySelector('[data-signup-error]');
+  const addressError = root.querySelector('[data-address-error]');
+  const jibunHint = root.querySelector('[data-jibun-hint]');
+  const zipEl = root.querySelector('#signup-address-zip');
+  const addressEl = root.querySelector('#signup-address');
+  const detailEl = root.querySelector('#signup-address-line2');
+
+  root.querySelector('[data-action="search-address"]')?.addEventListener('click', async () => {
+    if (addressError) {
+      addressError.hidden = true;
+      addressError.textContent = '';
+    }
+    try {
+      await openKakaoPostcode((result) => {
+        if (zipEl) zipEl.value = result.zonecode;
+        if (addressEl) {
+          addressEl.value = result.roadAddress + (result.buildingExtra || '');
+        }
+        if (jibunHint) {
+          if (result.jibunAddress) {
+            const prefix = result.convertedFromJibun
+              ? '지번 → 도로명 변환됨'
+              : '지번 참고';
+            jibunHint.hidden = false;
+            jibunHint.textContent = `${prefix}: ${result.jibunAddress}`;
+          } else {
+            jibunHint.hidden = true;
+            jibunHint.textContent = '';
+          }
+        }
+        detailEl?.focus();
+      });
+    } catch (err) {
+      if (addressError) {
+        addressError.hidden = false;
+        addressError.textContent =
+          err instanceof Error ? err.message : '주소 검색을 열 수 없습니다.';
+      }
+    }
+  });
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -190,6 +280,23 @@ export function bindSignupFormEvents(root) {
     payload.role = signupState.role || 'student';
     payload.sms_consent = fd.get('sms_consent') === 'on';
     payload.email_consent = fd.get('email_consent') === 'on';
+    payload.address = String(payload.address ?? '').trim();
+    payload.address_zip = String(payload.address_zip ?? '').trim();
+    payload.address_line2 = String(payload.address_line2 ?? '').trim();
+
+    if (!payload.email_consent) {
+      showSignupError(
+        root,
+        '아이디·비밀번호 찾기 안내를 위해 이메일 수신에 동의해 주세요.',
+      );
+      form.querySelector('#signup-email-consent')?.focus();
+      return;
+    }
+
+    if (!payload.address_zip || !payload.address) {
+      showSignupError(root, '주소 검색으로 도로명 주소를 선택해 주세요.');
+      return;
+    }
 
     const pwError = validatePassword(String(payload.password ?? ''), String(payload.password_confirm ?? ''), {
       email: String(payload.email ?? ''),
@@ -197,10 +304,7 @@ export function bindSignupFormEvents(root) {
       phone: String(payload.phone ?? ''),
     });
     if (pwError) {
-      if (errorEl) {
-        errorEl.hidden = false;
-        errorEl.textContent = pwError;
-      }
+      showSignupError(root, pwError);
       return;
     }
 
@@ -217,17 +321,22 @@ export function bindSignupFormEvents(root) {
         credentials: 'include',
         body: JSON.stringify(payload),
       });
-      const data = await res.json().catch(() => ({}));
+      const rawText = await res.text();
+      let data = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        data = {};
+      }
 
       if (!res.ok || !data.ok) {
-        const msg = data.message || `가입 실패 (HTTP ${res.status})`;
-        if (errorEl) {
-          errorEl.hidden = false;
-          errorEl.textContent = msg;
-        } else {
-          alert(msg);
-        }
-        console.error('[signup]', data);
+        const msg =
+          data.message ||
+          (res.status === 422
+            ? '입력값을 확인해 주세요. (예: 이미 가입된 이메일이거나 필수 항목 누락)'
+            : `가입 실패 (HTTP ${res.status})`);
+        showSignupError(root, msg);
+        console.error('[signup]', res.status, data, rawText?.slice?.(0, 200));
         return;
       }
 
@@ -236,18 +345,13 @@ export function bindSignupFormEvents(root) {
         email: data.email,
         roleType: data.role_type,
       };
-      signupState.accountAddress = payload.address || '';
+      const detail = payload.address_line2 ? ` ${payload.address_line2}` : '';
+      signupState.accountAddress = `${payload.address}${detail}`.trim();
       signupState.profileGender = payload.gender || null;
       console.info('[signup] saved', signupState.lastSignup);
       navigate('/signup/basic');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : '네트워크 오류';
-      if (errorEl) {
-        errorEl.hidden = false;
-        errorEl.textContent = msg;
-      } else {
-        alert(msg);
-      }
+      showSignupError(root, err instanceof Error ? err.message : '네트워크 오류');
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;

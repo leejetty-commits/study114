@@ -77,9 +77,9 @@
 | 성별 | `gender` | Y |
 | 생년월일 | `birth_date` | Y |
 | 휴대폰 | `phone` | Y |
-| 주소 | `address` | Y |
+| 주소 | `address` (도로명) · `address_zip` · `address_line2` | Y (`address_zip`·도로명 검색 필수) |
 | 문자 수신 동의 | `sms_consent` | N |
-| 이메일 수신 동의 | `email_consent` | N |
+| 이메일 수신 동의 | `email_consent` | **Y** (아이디·비밀번호 찾기 안내 메일용) |
 | 안전번호 사용 여부 | `safe_number_use` | N |
 
 > Notion 원문 「이메일」 중복 항목은 **이메일(ID) 1개**로 통합 잠금.

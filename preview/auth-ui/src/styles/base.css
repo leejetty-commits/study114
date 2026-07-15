@@ -704,6 +704,27 @@ img {
   gap: var(--space-2);
 }
 
+.form-address__zip-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.form-address__zip-row .form-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.form-address__zip-row .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.form-address input[readonly] {
+  background: var(--gray-50);
+  cursor: default;
+}
+
 /* ── Consent group ── */
 .form-consent-group {
   margin-top: var(--space-6);
@@ -718,6 +739,23 @@ img {
 
 .form-consent-group .auth-section-title {
   margin-bottom: var(--space-1);
+}
+
+.form-consent-note {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  color: var(--gray-600);
+}
+
+.form-check__optional {
+  color: var(--gray-400);
+  font-weight: 400;
+}
+
+.form-check__required-mark {
+  color: var(--brand-orange-dark, #e65100);
+  font-weight: 600;
 }
 
 .form-group--extension {

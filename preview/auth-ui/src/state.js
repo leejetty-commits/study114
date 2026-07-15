@@ -32,14 +32,14 @@ export const ROLE_ICONS = {
   tutor: '✏️',
 };
 
-/** 프리뷰용 더미 데이터 */
+/** 로컬 개발 프리필용 (운영 빌드에서는 이메일·주소 미프리필 — 중복 가입 422 방지) */
 export const DUMMY_USER = {
   email: 'parent@example.com',
   name: '김우동',
   gender: 'female',
   phone: '010-1234-5678',
-  address: '서울특별시 강남구 역삼동 123-45 101동 1001호',
-  smsConsent: true,
+  address: '',
+  smsConsent: false,
   emailConsent: false,
 };
 
