@@ -47,7 +47,7 @@ export function renderComplete() {
 
     <div class="register-nav" style="border-top:none;padding-top:var(--space-4);">
       <a href="#/register/basic" class="btn btn--secondary" data-nav="/register/basic">처음부터 수정</a>
-      <a href="${homeUiUrl('study-room')}" class="btn btn--primary" target="_blank" rel="noopener">공부방 메인으로 ↗</a>
+      <a href="${homeUiUrl('study-room')}" class="btn btn--primary">공부방 메인으로</a>
     </div>
   `;
   return renderRegisterShell(content, {

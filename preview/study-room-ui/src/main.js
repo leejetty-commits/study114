@@ -1,7 +1,10 @@
 import '@auth-styles/base.css';
 import '@auth-styles/theme-v1.css';
+import '../../home-ui/src/styles/tokens.css';
+import '../../home-ui/src/styles/home.css';
 import './styles/register.css';
 
+import { initChromeSession } from '../../shared/chrome-session.js';
 import { getCurrentScreen } from './layout.js';
 import { renderBasic, bindBasicEvents } from './screens/step-basic.js';
 import { renderLocation, bindLocationEvents } from './screens/step-location.js';
@@ -36,7 +39,7 @@ function init() {
   }
   window.addEventListener('hashchange', render);
 
-  initApi().finally(render);
+  Promise.all([initChromeSession(), initApi()]).finally(render);
 }
 
 async function initApi() {

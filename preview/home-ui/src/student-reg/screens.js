@@ -334,7 +334,7 @@ function renderList(tab) {
           <h2 class="p19-list-head__title">${esc(P19_LIST_HEAD.title)}</h2>
           <p class="p19-list-head__lead">${esc(P19_LIST_HEAD.lead)}</p>
         </div>
-        <a href="${authStudentAddUrl()}" class="btn btn--primary btn--sm" target="_blank" rel="noopener">${esc(P19_LIST_HEAD.registerCta)}</a>
+        <a href="${authStudentAddUrl()}" class="btn btn--primary btn--sm" data-same-tab-href="${authStudentAddUrl()}">${esc(P19_LIST_HEAD.registerCta)}</a>
       </header>
       <div class="p19-tabs" role="tablist">${tabHtml}</div>
       ${cards}

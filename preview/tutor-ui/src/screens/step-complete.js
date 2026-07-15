@@ -20,7 +20,7 @@ export function renderComplete() {
     </dl>
     <div class="register-nav" style="border-top:none;padding-top:var(--space-4);">
       <a href="#/register/basic" class="btn btn--secondary" data-nav="/register/basic">처음부터 수정</a>
-      <a href="${homeUiUrl('tutor')}" class="btn btn--primary" target="_blank" rel="noopener">과외쌤 메인으로 ↗</a>
+      <a href="${homeUiUrl('tutor')}" class="btn btn--primary">과외쌤 메인으로</a>
     </div>`;
   return renderRegisterShell(content, { step: 6, title: '등록 완료', subtitle: '가입 완료 후 상세등록 CTA (2·9장)' });
 }

@@ -3,12 +3,13 @@ import { POLICY_SHORT_NOTICE } from './policy-copy.js';
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
-import { UTIL_MENU, GNB_MAIN, GNB_VISIBILITY, resolveGnbLink, searchUiUrl } from './nav-config.js';
+import { UTIL_MENU, GNB_MAIN, GNB_VISIBILITY, GNB_MUTED_TITLE, resolveGnbLink, searchUiUrl } from './nav-config.js';
 import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
 import { getAuthUser, isLoggedIn, devLoginAs, logout } from './auth-session.js';
 import { isHandoffApiMode } from './handoff-backend.js';
 import { isMessagesApiMode } from './messages-backend.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
+import { syncSiteHeaderOffset, ensureSiteHeaderOffsetListeners } from '../../shared/site-chrome.js';
 
 export function renderPreviewToolbar() {
   if (!SHOW_PREVIEW_TOOLBAR) return '';
@@ -86,8 +87,6 @@ function gnbItemLabel(item) {
   return item.label;
 }
 
-const GNB_MUTED_TITLE = '현재 역할에서는 이용할 수 없습니다';
-
 function renderGnbLink(item, role, { mobile = false } = {}) {
   const vis = GNB_VISIBILITY[role]?.[item.id] ?? 'show';
   if (vis === 'hide') {
@@ -103,10 +102,9 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
   const isHomeActive = item.id === 'home' && onRoleHome;
   const onSupport = isSupportRoute();
   const isSupportActive = item.id === 'support' && onSupport && !window.location.hash.includes('/guide');
-  const isGuideActive = item.id === 'guide' && onSupport && window.location.hash.includes('/guide');
   const cls = [
     'home-gnb__item',
-    isHomeActive || isSupportActive || isGuideActive ? 'is-active' : '',
+    isHomeActive || isSupportActive ? 'is-active' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -395,10 +393,6 @@ export function bindLayoutEvents(root, rerender) {
           navigateToSupport('/support');
           return;
         }
-        if (gnbId === 'guide') {
-          navigateToSupport('/support/guide');
-          return;
-        }
         const link = resolveGnbLink(gnbId, role);
         if (!link) return;
         if (link.external) {
@@ -434,4 +428,8 @@ export function bindLayoutEvents(root, rerender) {
       // 기타 util-/더미 alert 제거 — 미연결 액션은 무시
     });
   });
+
+  ensureSiteHeaderOffsetListeners();
+  syncSiteHeaderOffset(root);
+  requestAnimationFrame(() => syncSiteHeaderOffset(root));
 }

@@ -43,4 +43,6 @@
   --sidebar-width: 10rem;
   --header-h: 3.5rem;
   --preview-toolbar-h: 2.5rem;
+  /* JS(syncSiteHeaderOffset)가 실측값으로 덮어씀 */
+  --site-header-h: 5.5rem;
 }

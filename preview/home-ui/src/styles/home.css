@@ -112,21 +112,23 @@ img {
   box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
 }
 
-/* 고정 헤더 높이만큼 본문 오프셋 (util + main GNB + mobile 줄 여유) */
-.home-shell,
-.home-app {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  padding-top: calc(var(--preview-toolbar-h, 0px) + 6.75rem);
+.site-chrome-shell .auth-shell__main {
+  flex: 1;
+  width: 100%;
+  max-width: var(--home-max, 72rem);
+  margin: 0 auto;
+  padding: var(--space-4);
 }
 
-@media (min-width: 900px) {
-  .home-shell,
-  .home-app {
-    /* 데스크톱: 모바일 GNB 숨김 → 헤더 높이 축소 */
-    padding-top: calc(var(--preview-toolbar-h, 0px) + 5.25rem);
-  }
+.site-chrome-shell .auth-shell__footer {
+  text-align: center;
+  padding: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+}
+
+.search-chrome-shell .search-card {
+  margin: 0 auto;
 }
 
 .home-header__util {
@@ -1176,10 +1178,33 @@ a.sup-term-chip:hover {
 }
 
 /* 네이버 지도 컨트롤이 fixed 헤더 위로 겹치지 않도록 */
+/* 지도 컨트롤은 헤더(z-index:1000)보다 낮게 — 헤더 위로 겹치지 않음 */
 .naver-map-mount .nmap_control,
 .naver-map-mount [class*='zoom'],
-.naver-map-mount-host .nmap_control {
+.naver-map-mount [class*='Zoom'],
+.naver-map-mount-host .nmap_control,
+.naver-map-mount-host [class*='zoom'],
+.hero-map__surface--naver .nmap_control {
   z-index: 2 !important;
+  position: relative;
+  max-height: 100%;
+}
+
+.home-header,
+.site-chrome-header {
+  isolation: isolate;
+}
+
+.map-block,
+.hero-map,
+.hero-map__canvas,
+.hero-map__surface--naver,
+.naver-map-mount-host,
+.naver-map-mount {
+  isolation: isolate;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
 }
 
 .naver-map-mount--detail,

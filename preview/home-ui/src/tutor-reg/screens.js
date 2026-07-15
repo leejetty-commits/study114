@@ -242,7 +242,7 @@ function renderList(tab) {
           <h2 class="p19-list-head__title">과외쌤 운영</h2>
           <p class="p19-list-head__lead">프로필별로 공개·학생 접근·노출 상태를 관리합니다. 입력은 tutor-ui에서 합니다.</p>
         </div>
-        <a href="${TUTOR_REGISTER_URL}" class="btn btn--primary btn--sm" target="_blank" rel="noopener">+ 과외 등록</a>
+        <a href="${TUTOR_REGISTER_URL}" class="btn btn--primary btn--sm" data-same-tab-href="${TUTOR_REGISTER_URL}">+ 과외 등록</a>
       </header>
       <div class="p19-tabs" role="tablist">${tabHtml}</div>
       ${cards}
@@ -472,7 +472,7 @@ function renderBridgeBody(tutor, kind) {
     <li class="p20-bridge__item${s.ok ? ' is-ok' : ' is-miss'}">
       <span class="p20-bridge__icon">${s.ok ? '✓' : '△'}</span>
       <span class="p20-bridge__label">${esc(s.label)}</span>
-      <a href="${tutorUiDeepLink(/** @type {any} */ (s.step), tutor.id)}" class="btn btn--secondary btn--sm" target="_blank" rel="noopener">수정하기</a>
+      <a href="${tutorUiDeepLink(/** @type {any} */ (s.step), tutor.id)}" class="btn btn--secondary btn--sm" data-same-tab-href="${tutorUiDeepLink(/** @type {any} */ (s.step), tutor.id)}">수정하기</a>
     </li>`,
     )
     .join('');

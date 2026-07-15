@@ -89,7 +89,7 @@ function renderCtaBlock(cta) {
     return `
       <div class="mypage-cta">
         <p class="mypage-cta__hint">${esc(cta.hint)}</p>
-        <a href="${url}" class="btn btn--primary" target="_blank" rel="noopener">${esc(cta.text)}</a>
+        <a href="${url}" class="btn btn--primary" data-same-tab-href="${url}">${esc(cta.text)}</a>
       </div>`;
   }
   if (cta.path) {
@@ -488,7 +488,7 @@ function renderSubmissionDocs(role) {
       <div class="p15-submission__summary">
         <span class="mypage-badge">${esc(formatSubmissionDocSummary(docs))}</span>
         <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">P23-04 제출함</a>
-        <a href="${TUTOR_REGISTER_URL}" class="btn btn--secondary btn--sm" target="_blank" rel="noopener">tutor-ui에서 자료 등록</a>
+        <a href="${TUTOR_REGISTER_URL}" class="btn btn--secondary btn--sm" data-same-tab-href="${TUTOR_REGISTER_URL}">tutor-ui에서 자료 등록</a>
       </div>
       <table class="p15-submission__table" aria-label="제출자료 상태">
         <thead>

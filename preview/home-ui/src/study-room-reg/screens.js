@@ -255,7 +255,7 @@ function renderList(tab) {
           <h2 class="p19-list-head__title">${esc(P20_LIST_HEAD.title)}</h2>
           <p class="p19-list-head__lead">${esc(P20_LIST_HEAD.lead)}</p>
         </div>
-        <a href="${STUDY_ROOM_REGISTER_URL}" class="btn btn--primary btn--sm" target="_blank" rel="noopener">${esc(P20_LIST_HEAD.registerCta)}</a>
+        <a href="${STUDY_ROOM_REGISTER_URL}" class="btn btn--primary btn--sm" data-same-tab-href="${STUDY_ROOM_REGISTER_URL}">${esc(P20_LIST_HEAD.registerCta)}</a>
       </header>
       <div class="p19-tabs" role="tablist">${tabHtml}</div>
       ${cards}
@@ -278,7 +278,7 @@ function renderReviewBridgeBlock(room) {
       </div>
       <div class="p19-form-actions" style="margin-top:var(--space-3)">
         <a href="#${studentReviewPath({ from: 'exposure' })}" class="btn btn--primary" data-mypage-nav="${studentReviewPath({ from: 'exposure' })}">${esc(P20_HUB_CTA.studentReview)}${reviewCount ? ` · ${reviewCount}건` : ''}</a>
-        <a href="${getStudentSearchUrl()}" class="btn btn--secondary" target="_blank" rel="noopener">${esc(P20_HUB_CTA.studentSearch)}</a>
+        <a href="${getStudentSearchUrl()}" class="btn btn--secondary" data-same-tab-href="${getStudentSearchUrl()}">${esc(P20_HUB_CTA.studentSearch)}</a>
       </div>
     </div>`;
 }
@@ -377,7 +377,7 @@ function renderBridgeBody(room, kind) {
     <li class="p20-bridge__item${s.ok ? ' is-ok' : ' is-miss'}">
       <span class="p20-bridge__icon">${s.ok ? '✓' : '△'}</span>
       <span class="p20-bridge__label">${esc(s.label)}</span>
-      <a href="${studyRoomUiDeepLink(s.step, room.id)}" class="btn btn--secondary btn--sm" target="_blank" rel="noopener">수정하기</a>
+      <a href="${studyRoomUiDeepLink(s.step, room.id)}" class="btn btn--secondary btn--sm" data-same-tab-href="${studyRoomUiDeepLink(s.step, room.id)}">수정하기</a>
     </li>`,
     )
     .join('');

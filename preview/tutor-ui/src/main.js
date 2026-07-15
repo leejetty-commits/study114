@@ -1,7 +1,10 @@
 import '@auth-styles/base.css';
 import '@auth-styles/theme-v1.css';
+import '../../home-ui/src/styles/tokens.css';
+import '../../home-ui/src/styles/home.css';
 import './styles/register.css';
 
+import { initChromeSession } from '../../shared/chrome-session.js';
 import { getCurrentScreen } from './layout.js';
 import { apiMasters, registerState } from './state.js';
 import { fetchMasters, loadTutor } from './register-api.js';
@@ -47,7 +50,7 @@ async function initApi() {
 function init() {
   if (!window.location.hash) window.location.hash = '#/register/basic';
   window.addEventListener('hashchange', render);
-  initApi().finally(render);
+  Promise.all([initChromeSession(), initApi()]).finally(render);
 }
 
 init();

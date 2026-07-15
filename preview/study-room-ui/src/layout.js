@@ -1,6 +1,18 @@
 import { STEPS, REGISTER_PHASES } from './state.js';
-import { homeUiUrl } from '../../shared/preview-links.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
+import {
+  renderSiteHeader,
+  bindSiteChrome,
+  syncSiteHeaderOffset,
+  ensureSiteHeaderOffsetListeners,
+} from '../../shared/site-chrome.js';
+import {
+  getChromeUser,
+  isChromeLoggedIn,
+  getChromeNavRole,
+  chromeLogout,
+  initChromeSession,
+} from '../../shared/chrome-session.js';
 
 const ROUTES = Object.fromEntries(STEPS.map((s) => [s.path, s.key]));
 
@@ -40,7 +52,6 @@ export function renderPreviewToolbar(activeScreen) {
         <button type="button" class="preview-toolbar__btn" data-action="dev-login" title="room-owner1@dev.local">Dev 로그인</button>
         <span class="preview-toolbar__divider"></span>
         <button type="button" class="preview-toolbar__btn ${activeScreen === 'complete' ? 'is-active' : ''}" data-nav="/register/complete">완료</button>
-        <a href="${homeUiUrl('study-room')}" class="preview-toolbar__btn" target="_blank" rel="noopener">메인 프리뷰 ↗</a>
       </div>
     </div>
   `;
@@ -48,15 +59,17 @@ export function renderPreviewToolbar(activeScreen) {
 
 export function renderRegisterShell(content, options = {}) {
   const { step = 1, title = '공부방 등록', subtitle = '' } = options;
+  const header = renderSiteHeader({
+    user: getChromeUser(),
+    loggedIn: isChromeLoggedIn(),
+    role: getChromeNavRole(),
+    activeGnbId: 'register_room',
+  });
 
   return `
     ${renderPreviewToolbar(getCurrentScreen())}
-    <div class="auth-shell">
-      <header class="auth-shell__header">
-        <a href="#/register/basic" class="auth-shell__logo" data-nav="/register/basic" aria-label="우동공과">
-          <img class="auth-shell__logo-img" src="/assets/brand/logo-wordmark.png" alt="우동공과" width="120" height="32" />
-        </a>
-      </header>
+    <div class="site-chrome-shell register-chrome-shell">
+      ${header}
       <main class="auth-shell__main">
         <div class="auth-shell__card auth-shell__card--wide register-card">
           ${step <= 5 ? renderStepIndicator(step) : ''}
@@ -65,7 +78,7 @@ export function renderRegisterShell(content, options = {}) {
           ${content}
         </div>
       </main>
-      <footer class="auth-shell__footer">© 2026 우동공과 · study114 · 공부방 등록 프리뷰</footer>
+      <footer class="auth-shell__footer">© 2026 우동공과 · study114 · 공부방 등록</footer>
     </div>
   `;
 }
@@ -119,11 +132,21 @@ export function bindGlobalEvents(root) {
     });
   });
 
+  bindSiteChrome(root, {
+    getRole: getChromeNavRole,
+    logout: () => chromeLogout(),
+  });
+  ensureSiteHeaderOffsetListeners();
+  syncSiteHeaderOffset(root);
+  requestAnimationFrame(() => syncSiteHeaderOffset(root));
+
   root.querySelector('[data-action="dev-login"]')?.addEventListener('click', async () => {
     try {
       const { devLogin } = await import('./register-api.js');
       const user = await devLogin();
+      await initChromeSession();
       alert(`로그인: ${user.email} (${user.role_type})`);
+      window.location.reload();
     } catch (err) {
       alert(err instanceof Error ? err.message : '로그인 실패');
     }
