@@ -108,7 +108,15 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
   ]
     .filter(Boolean)
     .join(' ');
-  const href = item.id === 'home' ? `#${roleHomePath()}` : '#';
+  let href = '#';
+  if (item.id === 'home') {
+    href = `#${roleHomePath()}`;
+  } else if (item.id === 'support') {
+    href = '#/support';
+  } else {
+    const link = resolveGnbLink(item.id, role);
+    if (link) href = link.external ? link.url : `#${link.url}`;
+  }
   return `<a href="${href}" class="${cls}" data-action="gnb-${item.id}">${label}</a>`;
 }
 

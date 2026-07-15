@@ -40,6 +40,21 @@ function renderUtilBar(role, showAuth) {
  * @param {NavRole} role
  * @param {{ activeGnbId?: string }} opts
  */
+function roleHomePathForNav(role) {
+  if (role === 'study_room') return '/study-room';
+  if (role === 'tutor') return '/tutor';
+  if (role === 'parent') return '/parent';
+  return '/guest';
+}
+
+function gnbHref(itemId, role) {
+  if (itemId === 'home') return homeHashUrl(roleHomePathForNav(role));
+  if (itemId === 'support') return homeHashUrl('/support');
+  const link = resolveGnbLink(itemId, role);
+  if (!link) return homeHashUrl('/guest');
+  return link.external ? link.url : homeHashUrl(link.url);
+}
+
 function renderGnbLink(item, role, opts = {}) {
   const vis = GNB_VISIBILITY[role]?.[item.id] ?? 'show';
   if (vis === 'hide') return '';
@@ -47,7 +62,7 @@ function renderGnbLink(item, role, opts = {}) {
     return `<span class="home-gnb__item is-muted" title="${GNB_MUTED_TITLE}" aria-disabled="true">${item.label}</span>`;
   }
   const active = opts.activeGnbId === item.id ? ' is-active' : '';
-  const href = item.id === 'home' ? '#' : '#';
+  const href = gnbHref(item.id, role);
   return `<a href="${href}" class="home-gnb__item${active}" data-action="gnb-${item.id}">${item.label}</a>`;
 }
 
@@ -165,12 +180,16 @@ export function bindSiteChrome(root, handlers = {}) {
         const vis = GNB_VISIBILITY[role]?.[gnbId] ?? 'show';
         if (vis === 'limited' || vis === 'hide') return;
 
+        // href에 실제 목적지를 넣어 두었으므로, 타 SPA→홈 이동은 location이 fragment를
+        // 잃지 않도록 pathname 딥링크(homeHashUrl)를 그대로 사용한다.
+        const dest = el.getAttribute('href') || gnbHref(gnbId, role);
         if (gnbId === 'home') {
-          goHomePath(role === 'study_room' ? '/study-room' : role === 'tutor' ? '/tutor' : role === 'parent' ? '/parent' : '/guest');
+          goHomePath(roleHomePathForNav(role));
           return;
         }
         if (gnbId === 'support') {
-          goHomePath('/support');
+          if (navigateHome && isHomeUiHost()) navigateHome('/support');
+          else goSameTab(dest);
           return;
         }
         const link = resolveGnbLink(gnbId, role);
@@ -181,7 +200,8 @@ export function bindSiteChrome(root, handlers = {}) {
       }
 
       if (action === 'util-guide') {
-        goHomePath('/support/guide');
+        if (navigateHome && isHomeUiHost()) navigateHome('/support/guide');
+        else goSameTab(homeHashUrl('/support/guide'));
         return;
       }
       if (action === 'util-mypage') {

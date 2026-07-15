@@ -99,8 +99,26 @@ function init() {
     bootstrapPolicyRoute();
     bootstrapLibraryRoute();
     bootstrapAdminRoute();
+    // pathname 딥링크는 bootstrap*가 hash로 옮긴다. fragment만 유실된 `/`는 guest.
+    // /support 등 pathname이 남은 채 hash만 비면 guest로 덮어쓰지 않는다.
     if (!window.location.hash) {
-      window.location.hash = '#/guest';
+      const path = window.location.pathname.replace(/\/$/, '') || '/';
+      const deep =
+        path === '/support' ||
+        path.startsWith('/support/') ||
+        path === '/mypage' ||
+        path.startsWith('/mypage/') ||
+        path === '/messages' ||
+        path.startsWith('/messages/') ||
+        path === '/policy' ||
+        path.startsWith('/policy/') ||
+        path === '/library' ||
+        path.startsWith('/library/') ||
+        path === '/admin' ||
+        path.startsWith('/admin/');
+      if (!deep) {
+        window.location.hash = '#/guest';
+      }
     }
     window.addEventListener('hashchange', () => {
       try {

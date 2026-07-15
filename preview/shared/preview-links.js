@@ -58,13 +58,14 @@ export function authUiUrl(path = '/login') {
 /** @param {string} [path] e.g. `/support`, `/support/safe`, `/support/safe/no-prepay` */
 export function supportUiUrl(path = '/support') {
   const p = path.startsWith('/') ? path : `/${path}`;
-  return `${HOME_UI_BASE}#${p}`;
+  // pathname 딥링크 — SPA 간 이동 시 hash fragment 유실 방지 (bootstrapSupportRoute가 정규화)
+  return `${HOME_UI_BASE}${p}`;
 }
 
 /** @param {string} [path] e.g. `/policy/terms`, `/policy/privacy` */
 export function policyUiUrl(path = '/policy/terms') {
   const p = path.startsWith('/') ? path : `/${path}`;
-  return `${HOME_UI_BASE}#${p}`;
+  return `${HOME_UI_BASE}${p}`;
 }
 
 /** @returns {Record<string, string>} */

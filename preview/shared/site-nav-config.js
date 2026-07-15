@@ -122,9 +122,32 @@ export function roleHomeHashPath(user) {
   return '/parent';
 }
 
-/** @param {string} hashPath e.g. `/support/guide` */
+/**
+ * home-ui 딥링크 URL.
+ * 고객센터·마이페이지 등은 pathname으로 연다 — 등록/검색 SPA에서 `/#/path`로 이동 시
+ * 리다이렉트 때문에 fragment가 떨어져 `#/guest`로 떨어지는 문제를 막는다.
+ * (home-ui bootstrap*Route가 pathname → hash로 정규화)
+ *
+ * @param {string} hashPath e.g. `/support/guide`
+ */
 export function homeHashUrl(hashPath) {
   const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const pathDeep =
+    p === '/support' ||
+    p.startsWith('/support/') ||
+    p === '/mypage' ||
+    p.startsWith('/mypage/') ||
+    p === '/messages' ||
+    p.startsWith('/messages/') ||
+    p === '/policy' ||
+    p.startsWith('/policy/') ||
+    p === '/library' ||
+    p.startsWith('/library/') ||
+    p === '/admin' ||
+    p.startsWith('/admin/');
+  if (pathDeep) {
+    return `${HOME_UI_BASE}${p}`;
+  }
   return `${HOME_UI_BASE}/#${p}`;
 }
 
