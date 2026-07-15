@@ -60,6 +60,7 @@ import { getRoiMetrics } from '../paid-backend.js';
 import { renderPaidGuide, renderPaidUsage } from './paid-screens.js';
 import { bindPaidCatalogEvents } from '../paid-checkout.js';
 import { bindProviderNoticeEvents } from '../provider-notices.js';
+import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import {
   HOME_EMPHASIS,
   HOME_STATS_NOTE,
@@ -526,14 +527,154 @@ function renderAccount(role, profile) {
       </dl>
       <div class="mypage-form-actions">
         <button type="button" class="btn btn--secondary" data-action="role-switch">역할 전환</button>
-        <button type="button" class="btn btn--secondary" disabled>비밀번호 변경</button>
+        <button type="button" class="btn btn--secondary" data-action="toggle-password-change">비밀번호 변경</button>
         <button type="button" class="btn btn--secondary" data-action="util-logout">로그아웃</button>
+      </div>
+      <div class="mypage-password-change" data-password-change hidden>
+        <h2 class="mypage-password-change__title">비밀번호 변경</h2>
+        <p class="mypage-note">로그인한 상태에서 현재 비밀번호를 확인한 뒤 새 비밀번호로 바꿉니다. 소셜로만 가입한 계정은 이메일 비밀번호가 없을 수 있습니다.</p>
+        <form data-form="change-password" class="mypage-password-change__form" autocomplete="off">
+          <div class="form-group">
+            <label class="form-label form-label--required" for="mypage-pw-current">현재 비밀번호</label>
+            <input class="form-input" type="password" id="mypage-pw-current" name="current_password" autocomplete="current-password" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label form-label--required" for="mypage-pw-new">새 비밀번호</label>
+            <input class="form-input" type="password" id="mypage-pw-new" name="password" autocomplete="new-password" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label form-label--required" for="mypage-pw-confirm">새 비밀번호 확인</label>
+            <input class="form-input" type="password" id="mypage-pw-confirm" name="password_confirm" autocomplete="new-password" required />
+          </div>
+          <p class="form-hint">${esc(PASSWORD_RULE_HINT)}</p>
+          <p class="form-error" data-pw-change-error hidden role="alert"></p>
+          <p class="form-success" data-pw-change-success hidden role="status"></p>
+          <div class="mypage-form-actions">
+            <button type="submit" class="btn btn--primary">변경 저장</button>
+            <button type="button" class="btn btn--ghost" data-action="cancel-password-change">취소</button>
+          </div>
+        </form>
       </div>
     </section>`;
 }
 
+/**
+ * @param {HTMLElement} root
+ */
+function bindPasswordChangeEvents(root) {
+  const panel = root.querySelector('[data-password-change]');
+  const form = root.querySelector('[data-form="change-password"]');
+  const errorEl = root.querySelector('[data-pw-change-error]');
+  const successEl = root.querySelector('[data-pw-change-success]');
+
+  root.querySelector('[data-action="toggle-password-change"]')?.addEventListener('click', () => {
+    if (!panel) return;
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) {
+      form?.querySelector('#mypage-pw-current')?.focus();
+    }
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+    if (successEl) {
+      successEl.hidden = true;
+      successEl.textContent = '';
+    }
+  });
+
+  root.querySelector('[data-action="cancel-password-change"]')?.addEventListener('click', () => {
+    if (panel) panel.hidden = true;
+    form?.reset();
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+    if (successEl) {
+      successEl.hidden = true;
+      successEl.textContent = '';
+    }
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+    if (successEl) {
+      successEl.hidden = true;
+      successEl.textContent = '';
+    }
+
+    const fd = new FormData(form);
+    const currentPassword = String(fd.get('current_password') ?? '');
+    const password = String(fd.get('password') ?? '');
+    const passwordConfirm = String(fd.get('password_confirm') ?? '');
+
+    const clientError = validatePassword(password, passwordConfirm, {
+      email: '',
+      name: '',
+      phone: '',
+    });
+    if (clientError) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = clientError;
+      }
+      return;
+    }
+    if (currentPassword === password) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = '새 비밀번호는 현재 비밀번호와 달라야 합니다.';
+      }
+      return;
+    }
+
+    const submitBtn = form.querySelector('[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '저장 중…';
+    }
+
+    try {
+      const res = await fetch('/api/auth/password/change.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          current_password: currentPassword,
+          password,
+          password_confirm: passwordConfirm,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || `변경 실패 (HTTP ${res.status})`);
+      }
+      form.reset();
+      if (successEl) {
+        successEl.hidden = false;
+        successEl.textContent = data.message || '비밀번호가 변경되었습니다.';
+      }
+    } catch (err) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = err instanceof Error ? err.message : '변경에 실패했습니다.';
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '변경 저장';
+      }
+    }
+  });
+}
+
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
+  bindPasswordChangeEvents(root);
   root.querySelectorAll('[data-mypage-wish-remove]').forEach((btn) => {
     btn.addEventListener('click', () => {
       removeWishlist(btn.dataset.kind, btn.dataset.id);
