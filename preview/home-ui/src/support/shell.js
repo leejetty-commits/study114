@@ -1,11 +1,6 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents } from '../layout.js';
 import { getNavRole } from '../state.js';
-import { getScreenIdForPath, isAdminSupportPath } from './router.js';
 import { renderPageTitle, renderSupportNav } from './nav.js';
-
-function esc(s) {
-  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
-}
 
 /**
  * @param {string} currentPath
@@ -13,7 +8,6 @@ function esc(s) {
  */
 export function renderSupportShell(currentPath, bodyHtml) {
   const role = getNavRole();
-  const screenId = isAdminSupportPath(currentPath) ? 'P17-admin' : getScreenIdForPath(currentPath);
   const sub = role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
 
   return `
@@ -25,7 +19,6 @@ export function renderSupportShell(currentPath, bodyHtml) {
           <header class="sup-content__head">
             <div>
               <h1 class="sup-content__title">${renderPageTitle(currentPath)}</h1>
-              <span class="sup-content__screen-id">${esc(screenId)} · 17장</span>
             </div>
           </header>
           <div class="sup-frame">

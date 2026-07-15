@@ -180,7 +180,6 @@ function renderHome(role, profile, counts, cta) {
     (n) => `
     <a href="#${n.path}" class="mypage-card" data-mypage-nav="${n.path}">
       <span class="mypage-card__label">${esc(n.label)}</span>
-      <span class="mypage-card__id">${n.screenId}</span>
     </a>`,
   );
 
@@ -191,7 +190,7 @@ function renderHome(role, profile, counts, cta) {
         <span>${esc(profile.regionLabel)}</span>
         <span class="mypage-muted">${esc(profile.email)}</span>
       </div>
-      <p class="mypage-emphasis" aria-label="역할별 강조">§4-3-1 · ${esc(HOME_EMPHASIS[role] || '')}</p>
+      <p class="mypage-emphasis" aria-label="역할별 강조">${esc(HOME_EMPHASIS[role] || '')}</p>
       ${renderCtaBlock(cta)}
       <div class="mypage-shortcuts">${cards.join('')}</div>
       <div class="mypage-stats" aria-label="숫자 요약">${buildHomeStats(role, counts)}</div>
@@ -225,7 +224,6 @@ function renderRegistrationsIndex(role) {
             (l) => `
           <a href="#${l.path}" class="mypage-card mypage-card--wide" data-mypage-nav="${l.path}">
             <span class="mypage-card__label">${esc(l.label)}</span>
-            <span class="mypage-card__id">${l.id}</span>
           </a>`,
           )
           .join('')}

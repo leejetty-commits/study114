@@ -28,7 +28,6 @@ export function renderMypageShell(currentPath, bodyHtml) {
     return `
       <a href="#${item.path}" class="mypage-nav__link${active ? ' is-active' : ''}${emph}" data-mypage-nav="${item.path}">
         ${esc(item.label)}
-        <span class="mypage-nav__id">${item.screenId}</span>
       </a>`;
     })
     .join('');
@@ -41,14 +40,12 @@ export function renderMypageShell(currentPath, bodyHtml) {
         <div class="mypage-layout">
           <aside class="mypage-sidebar" aria-label="마이페이지 메뉴">
             <p class="mypage-sidebar__title">마이페이지</p>
-            <p class="mypage-sidebar__doc">15장 · ${esc(screenId)}</p>
             <nav class="mypage-nav">${navItems}</nav>
             <a href="#${role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor'}" class="mypage-nav__back" data-nav="${role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor'}">← 메인 홈으로</a>
           </aside>
           <div class="mypage-content">
             <header class="mypage-content__head">
               <h1 class="mypage-content__title">${esc(title)}</h1>
-              <span class="mypage-content__screen-id">${esc(screenId)}${isMessagesDetailPath(currentPath) ? ' · 16장' : ''}</span>
             </header>
             ${isMessagesDetailPath(currentPath) ? renderMessagesProviderToolbar() : ''}
             ${bodyHtml}

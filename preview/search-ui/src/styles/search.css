@@ -41,7 +41,7 @@
 .search-shell .map-block__pin.is-map-focused,
 .search-shell .expo-card.is-map-focused,
 .search-shell .expo-basic.is-map-focused {
-  outline: 2px solid var(--brand-orange, #f97316);
+  outline: 2px solid var(--brand-orange);
   outline-offset: 2px;
   z-index: 2;
 }
@@ -64,7 +64,7 @@
 }
 
 .item-actions--student .btn.is-active {
-  border-color: #ea580c;
+  border-color: var(--brand-orange-dark);
   color: #c2410c;
 }
 

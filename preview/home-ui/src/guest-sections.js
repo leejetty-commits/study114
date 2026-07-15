@@ -23,12 +23,7 @@ function loginGateAttrs(action, label) {
 }
 
 export function renderGuestTempNotice() {
-  return `
-    <div class="temp-notice" role="status">
-      <span class="temp-notice__badge">프리뷰</span>
-      <span>대치동 고정 · 지도 주연 · 비교검색 로그인 후만</span>
-    </div>
-  `;
+  return '';
 }
 
 export function renderGuestHero() {
@@ -38,8 +33,8 @@ export function renderGuestHero() {
     <section class="hero-map" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${r.full}" data-allow-fallback="true">
       <aside class="hero-map__rail" aria-label="지역 요약">
         <p class="hero-map__eyebrow">우리동네</p>
-        <h2 class="hero-map__dong">${r.dong}</h2>
-        <p class="hero-map__sub">${r.gu}</p>
+        <h1 class="hero-map__dong">${r.dong}</h1>
+        <p class="hero-map__sub">${r.gu} · 공부방·과외쌤을 한눈에 비교하세요</p>
         <dl class="hero-map__stats">
           <div><dt>공부방</dt><dd>${s.studyRooms}</dd></div>
           <div><dt>과외쌤</dt><dd>${s.tutors}</dd></div>

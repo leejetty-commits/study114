@@ -37,7 +37,7 @@ function renderSectionNav(activeSection) {
     <nav class="lib-nav" aria-label="자료실 카테고리">
       ${LIBRARY_SECTIONS.map(
         (s) =>
-          `<a href="#${s.path}" class="lib-nav__link${s.key === activeSection ? ' is-active' : ''}" data-lib-nav="${s.path}">${esc(s.label)} <span class="lib-nav__id">${esc(s.screenId)}</span></a>`,
+          `<a href="#${s.path}" class="lib-nav__link${s.key === activeSection ? ' is-active' : ''}" data-lib-nav="${s.path}">${esc(s.label)}</a>`,
       ).join('')}
       <a href="#/support" class="lib-nav__link lib-nav__link--muted" data-lib-nav="/support">← 고객센터</a>
     </nav>`;

@@ -48,7 +48,6 @@ export function renderSupportNav(path) {
             `<li>
               <a href="#${n.path}" class="sup-nav__link${active === n.id ? ' is-active' : ''}" data-sup-nav="${n.path}">
                 <span class="sup-nav__label">${esc(n.label)}</span>
-                <span class="sup-nav__id">${esc(n.screenId)}</span>
               </a>
             </li>`,
         ).join('')}

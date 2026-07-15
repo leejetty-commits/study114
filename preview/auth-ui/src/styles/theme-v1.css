@@ -2,22 +2,22 @@
    부드러운 모서리, 은은한 그림자, 따뜻한 배경 톤 */
 
 [data-theme='v1'] {
-  --page-bg: linear-gradient(180deg, #fff7ed 0%, var(--gray-50) 40%);
+  --page-bg: var(--surface-section);
   --logo-radius: 0.625rem;
-  --heading-size: var(--text-2xl);
+  --heading-size: var(--fs-6);
   --heading-tracking: -0.02em;
 
-  --input-radius: 0.625rem;
+  --input-radius: var(--radius-md);
   --input-padding-y: 0.8125rem;
   --input-padding-x: 1rem;
   --input-border: var(--gray-200);
-  --input-focus-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+  --input-focus-shadow: 0 0 0 3px rgba(245, 124, 0, 0.12);
 
-  --btn-radius: 0.625rem;
+  --btn-radius: var(--radius-md);
   --btn-padding-y: 0.9375rem;
   --btn-primary-bg: var(--brand-orange);
   --btn-primary-hover: var(--brand-orange-dark);
-  --btn-primary-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+  --btn-primary-shadow: 0 2px 8px rgba(245, 124, 0, 0.25);
 
   --panel-radius: 1rem;
   --panel-padding: var(--space-6);
@@ -31,12 +31,12 @@
 
 [data-theme='v1'] body,
 [data-theme='v1'] .auth-shell {
-  background: var(--gray-50);
-  background-image: linear-gradient(180deg, #fff7ed 0%, var(--gray-50) 35%, var(--gray-50) 100%);
+  background: var(--surface-section);
+  background-image: none;
 }
 
 [data-theme='v1'] .panel {
-  border: 1px solid rgba(249, 115, 22, 0.08);
+  border: 1px solid var(--gray-200);
 }
 
 [data-theme='v1'] .role-card {

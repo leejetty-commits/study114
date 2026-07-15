@@ -38,9 +38,8 @@ export function renderMessagesShell(currentPath, bodyHtml) {
           <header class="msg-content__head">
             <div>
               <h1 class="msg-content__title">${esc(title)}</h1>
-              <span class="msg-content__screen-id">${esc(screenId)} · 16장</span>
             </div>
-            <a href="#/mypage/messages" class="msg-link-muted" data-nav="/mypage/messages">P15-08 요약</a>
+            <a href="#/mypage/messages" class="msg-link-muted" data-nav="/mypage/messages">쪽지 요약</a>
           </header>
           ${renderMessagesProviderToolbar()}
           ${bodyHtml}

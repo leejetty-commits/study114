@@ -3,6 +3,25 @@
   resize: vertical;
 }
 
+.register-card {
+  max-width: min(48rem, 100%);
+  margin: 0 auto;
+}
+
+.register-phase__tag {
+  font-size: var(--fs-1);
+  border-radius: var(--radius-md);
+}
+
+.auth-heading {
+  font-size: var(--fs-6);
+}
+
+.auth-subheading {
+  font-family: var(--font-serif);
+  font-size: var(--fs-2);
+}
+
 .register-phase {
   margin-bottom: var(--space-4);
 }

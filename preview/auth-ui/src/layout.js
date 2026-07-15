@@ -65,11 +65,8 @@ export function renderPreviewToolbar(activeScreen) {
     <div class="preview-toolbar">
       <span class="preview-toolbar__label">우동공과 · 인증 UI 프리뷰</span>
       <div class="preview-toolbar__group">
-        <button type="button" class="preview-toolbar__btn ${theme === 'v1' ? 'is-active' : ''}" data-theme-switch="v1">
-          1안 · 안정형
-        </button>
-        <button type="button" class="preview-toolbar__btn ${theme === 'v2' ? 'is-active' : ''}" data-theme-switch="v2">
-          2안 · 세련형
+        <button type="button" class="preview-toolbar__btn is-active" data-theme-switch="v1">
+          테마 · 안정형
         </button>
         <span class="preview-toolbar__divider"></span>
         ${screens

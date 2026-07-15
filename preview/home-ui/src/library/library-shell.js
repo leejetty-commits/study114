@@ -13,8 +13,8 @@ function getRoleHomePath(role) {
   return '/tutor';
 }
 
-/** @param {string} screenId @param {string} bodyHtml */
-export function renderLibraryShell(screenId, bodyHtml) {
+/** @param {string} _screenId @param {string} bodyHtml */
+export function renderLibraryShell(_screenId, bodyHtml) {
   const role = getNavRole();
   const homePath = getRoleHomePath(role);
   return `
@@ -26,7 +26,6 @@ export function renderLibraryShell(screenId, bodyHtml) {
           <header class="sup-content__head">
             <div>
               <h1 class="sup-content__title"><span class="sup-content__title-prefix">자료실-</span><span class="sup-content__title-suffix">${esc(LIBRARY_HEAD.title)}</span></h1>
-              <span class="sup-content__screen-id">${esc(screenId)} · 23장 · ${esc(LIBRARY_HEAD.engineLabel)}</span>
             </div>
           </header>
           <div class="sup-frame sup-frame--library">
