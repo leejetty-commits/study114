@@ -23,7 +23,7 @@ export function renderParent() {
     ${renderAdInline()}
     ${renderCompareBar()}
   `;
-  return renderHomeShell('parent', content, { showAuth: false, showRoleSwitch: true });
+  return renderHomeShell('parent', content, { showAuth: false, showRoleSwitch: false });
 }
 
 export function bindParentEvents(root, rerender) {

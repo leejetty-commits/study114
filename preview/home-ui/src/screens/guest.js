@@ -24,7 +24,7 @@ export function renderGuest() {
 
   return renderHomeShell('guest', content, {
     showAuth: !loggedIn,
-    showRoleSwitch: loggedIn,
+    showRoleSwitch: false,
     sidebarHtml: renderGuestAdSidebar(),
     loginStrip: loggedIn ? '' : renderGuestLoginStrip(),
   });

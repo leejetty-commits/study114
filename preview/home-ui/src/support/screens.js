@@ -352,7 +352,8 @@ export function bindSupportScreenEvents(root, path, rerender) {
   root.querySelectorAll('[data-sup-external="login"]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      window.open(el.getAttribute('href'), '_blank', 'noopener');
+      const href = el.getAttribute('href');
+      if (href) window.location.assign(href);
     });
   });
 

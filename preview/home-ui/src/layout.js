@@ -72,46 +72,46 @@ function renderUtilBar(role, showAuth) {
   const items = showAuth ? UTIL_MENU.guest : UTIL_MENU.loggedIn;
   return items
     .map((item) => {
-      if (item.external && item.href) {
+      if (item.href) {
         const cls = item.emphasis ? 'home-util__link home-util__link--emphasis' : 'home-util__link';
-        return `<a href="${item.href}" class="${cls}" target="_blank" rel="noopener">${item.label}</a>`;
+        // 같은 탭 이동 — target="_blank" 금지
+        return `<a href="${item.href}" class="${cls}" data-util-href="${item.href}">${item.label}</a>`;
       }
       return `<button type="button" class="home-util__link" data-action="${item.action}">${item.label}</button>`;
     })
     .join('');
 }
 
-function gnbItemLabel(item, role) {
-  if (item.id === 'student_parent' && (role === 'study_room' || role === 'tutor')) {
-    return '학생찾기';
-  }
-  if (item.id === 'find_room' && role === 'study_room') {
-    return '공부방찾기';
-  }
-  if (item.id === 'find_tutor' && role === 'tutor') {
-    return '과외쌤찾기';
-  }
+function gnbItemLabel(item) {
   return item.label;
 }
+
+const GNB_MUTED_TITLE = '현재 역할에서는 이용할 수 없습니다';
 
 function renderGnbLink(item, role, { mobile = false } = {}) {
   const vis = GNB_VISIBILITY[role]?.[item.id] ?? 'show';
   if (vis === 'hide') {
     return '';
   }
+  const label = gnbItemLabel(item);
+  if (vis === 'limited') {
+    const mutedCls = mobile ? 'home-gnb__item is-muted' : 'home-gnb__item is-muted';
+    return `<span class="${mutedCls}" title="${GNB_MUTED_TITLE}" aria-disabled="true">${label}</span>`;
+  }
   const screen = getCurrentScreen();
   const onRoleHome = screen === 'guest' || screen === 'parent' || screen === 'studyRoom' || screen === 'tutor';
   const isHomeActive = item.id === 'home' && onRoleHome;
+  const onSupport = isSupportRoute();
+  const isSupportActive = item.id === 'support' && onSupport && !window.location.hash.includes('/guide');
+  const isGuideActive = item.id === 'guide' && onSupport && window.location.hash.includes('/guide');
   const cls = [
     'home-gnb__item',
-    isHomeActive ? 'is-active' : '',
-    vis === 'limited' ? 'is-limited' : '',
+    isHomeActive || isSupportActive || isGuideActive ? 'is-active' : '',
   ]
     .filter(Boolean)
     .join(' ');
-  const suffix = vis === 'limited' && !mobile ? ' △' : '';
   const href = item.id === 'home' ? `#${roleHomePath()}` : '#';
-  return `<a href="${href}" class="${cls}" data-action="gnb-${item.id}">${gnbItemLabel(item, role)}${suffix}</a>`;
+  return `<a href="${href}" class="${cls}" data-action="gnb-${item.id}">${label}</a>`;
 }
 
 /** @returns {'/guest'|'/parent'|'/study-room'|'/tutor'} */
@@ -123,6 +123,12 @@ function roleHomePath() {
   return '/parent';
 }
 
+/** 같은 탭에서 URL로 이동 (검색·등록·auth SPA) */
+function goSameTab(url) {
+  if (!url) return;
+  window.location.assign(url);
+}
+
 /**
  * @param {'guest' | 'parent' | 'study_room' | 'tutor'} role
  * @param {{ showAuth?: boolean, showRoleSwitch?: boolean }} opts
@@ -131,7 +137,8 @@ export function renderHeader(role, opts = {}) {
   const loggedIn = isLoggedIn();
   // 로그인 여부 기준 — 화면이 guest여도 세션이 있으면 마이페이지·로그아웃 노출
   const showAuth = opts.showAuth ?? !loggedIn;
-  const showRoleSwitch = opts.showRoleSwitch ?? loggedIn;
+  // 역할 전환 UI 미구현 — 더미 alert 방지를 위해 기본 비표시
+  const showRoleSwitch = opts.showRoleSwitch === true;
   const logoPath = loggedIn ? roleHomePath() : '/guest';
 
   const gnbItems = GNB_MAIN.map((item) => renderGnbLink(item, role)).join('');
@@ -329,6 +336,20 @@ export function bindLayoutEvents(root, rerender) {
     });
   });
 
+  root.querySelectorAll('[data-util-href]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      goSameTab(el.dataset.utilHref || el.getAttribute('href'));
+    });
+  });
+
+  root.querySelectorAll('[data-same-tab-href]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      goSameTab(el.dataset.sameTabHref || el.getAttribute('href'));
+    });
+  });
+
   root.querySelectorAll('[data-region]').forEach((el) => {
     el.addEventListener('click', () => {
       previewState.regionKey = el.dataset.region;
@@ -341,7 +362,7 @@ export function bindLayoutEvents(root, rerender) {
       e.preventDefault();
       const action = el.dataset.action;
       if (action === 'role-switch') {
-        alert('[프리뷰] 복수 역할 전환 UI — 9장 §2.2 (추후 구현)');
+        navigate('/mypage/account');
       } else if (action === 'dev-login-parent' || action === 'dev-login-room' || action === 'dev-login-tutor' || action === 'dev-login-admin') {
         const key =
           action === 'dev-login-parent'
@@ -353,7 +374,7 @@ export function bindLayoutEvents(root, rerender) {
                 : 'tutor';
         devLoginAs(key)
           .then(() => rerender())
-          .catch((err) => alert(err instanceof Error ? err.message : String(err)));
+          .catch((err) => console.error('[dev-login]', err));
       } else if (action === 'dev-logout') {
         logout().then(() => {
           navigate('/guest');
@@ -361,22 +382,33 @@ export function bindLayoutEvents(root, rerender) {
         });
       } else if (action.startsWith('gnb-')) {
         const gnbId = action.replace('gnb-', '');
+        const role = getNavRole();
+        const vis = GNB_VISIBILITY[role]?.[gnbId] ?? 'show';
+        if (vis === 'limited' || vis === 'hide') {
+          return;
+        }
         if (gnbId === 'home') {
           navigate(roleHomePath());
           return;
         }
-        const link = resolveGnbLink(gnbId, getNavRole());
-        if (link?.external) {
-          window.open(link.url, '_blank', 'noopener');
-        } else if (link) {
-          if (gnbId === 'support') navigateToSupport('/support');
-          else navigate(link.url);
+        if (gnbId === 'support') {
+          navigateToSupport('/support');
+          return;
+        }
+        if (gnbId === 'guide') {
+          navigateToSupport('/support/guide');
+          return;
+        }
+        const link = resolveGnbLink(gnbId, role);
+        if (!link) return;
+        if (link.external) {
+          goSameTab(link.url);
         } else {
-          alert(`[프리뷰] ${el.textContent?.trim()} — 연결 추후`);
+          navigate(link.url);
         }
       } else if (action === 'search') {
         const role = getNavRole();
-        window.open(searchUiUrl(defaultSearchTabForRole(role), role), '_blank', 'noopener');
+        goSameTab(searchUiUrl(defaultSearchTabForRole(role), role));
       } else if (action === 'util-mypage') {
         navigate(getDefaultMypagePath(getNavRole()));
       } else if (action === 'util-messages') {
@@ -389,20 +421,17 @@ export function bindLayoutEvents(root, rerender) {
             navigate('/guest');
             rerender();
           })
-          .catch((err) => alert(err instanceof Error ? err.message : String(err)));
+          .catch((err) => console.error('[logout]', err));
       } else if (action === 'util-guide') {
         navigateToSupport('/support/guide');
       } else if (action === 'util-library') {
         navigate('/library');
       } else if (action === 'util-support') {
         navigateToSupport('/support');
-      } else if (action.startsWith('util-')) {
-        alert(`[프리뷰] ${el.textContent?.trim()} — 6장 유틸 메뉴 (연결 추후)`);
       } else if (el.dataset.href) {
-        window.open(el.dataset.href, '_blank', 'noopener');
-      } else {
-        alert(`[프리뷰] ${action} — 더미 동작`);
+        goSameTab(el.dataset.href);
       }
+      // 기타 util-/더미 alert 제거 — 미연결 액션은 무시
     });
   });
 }

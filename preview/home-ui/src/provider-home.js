@@ -116,7 +116,7 @@ export function renderSearchCrossLink(role, searchTab) {
   const url = searchUiUrl(searchTab, role);
   return `
     <p class="provider-home-search-link">
-      <a href="${url}" target="_blank" rel="noopener" class="btn btn--secondary btn--sm">${label} ↗</a>
+      <a href="${url}" class="btn btn--secondary btn--sm" data-same-tab-href="${url}">${label}</a>
     </p>`;
 }
 

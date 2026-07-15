@@ -32,7 +32,7 @@ export function renderMessagesShell(currentPath, bodyHtml) {
   return `
     ${renderPreviewToolbar()}
     <div class="home-app">
-      ${renderHeader(role, { showAuth: false, showRoleSwitch: true })}
+      ${renderHeader(role, { showAuth: false, showRoleSwitch: false })}
       <main class="home-main msg-main">
         <div class="msg-layout">
           <header class="msg-content__head">

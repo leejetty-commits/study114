@@ -36,7 +36,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
   return `
     ${renderPreviewToolbar()}
     <div class="home-app">
-      ${renderHeader(role, { showAuth: false, showRoleSwitch: true })}
+      ${renderHeader(role, { showAuth: false, showRoleSwitch: false })}
       <main class="home-main mypage-main">
         <div class="mypage-layout">
           <aside class="mypage-sidebar" aria-label="마이페이지 메뉴">

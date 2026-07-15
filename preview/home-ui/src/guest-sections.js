@@ -121,7 +121,7 @@ export function renderGuestBrowseLists() {
       ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title' }, EXPOSURE_STUDENTS, { guest: true })}
       <div class="list-subsection list-subsection--students-foot">
         <p class="content-section__foot">
-          로그인 후 상세·연락 회원 전용 · <a href="${LOGIN_URL}" target="_blank" rel="noopener">로그인</a>
+          로그인 후 상세·연락 회원 전용 · <a href="${LOGIN_URL}" data-util-href="${LOGIN_URL}">로그인</a>
         </p>
       </div>
     </section>
@@ -163,8 +163,8 @@ export function renderGuestLoginStrip() {
     <aside class="guest-login-strip">
       <p class="guest-login-strip__text">비교검색은 <strong>로그인 후</strong> 팝업 표로만 이용할 수 있습니다.</p>
       <div class="guest-login-strip__btns">
-        <a href="${LOGIN_URL}" class="btn btn--primary btn--sm" target="_blank" rel="noopener">로그인</a>
-        <a href="${SIGNUP_URL}" class="btn btn--secondary btn--sm" target="_blank" rel="noopener">회원가입</a>
+        <a href="${LOGIN_URL}" class="btn btn--primary btn--sm" data-util-href="${LOGIN_URL}">로그인</a>
+        <a href="${SIGNUP_URL}" class="btn btn--secondary btn--sm" data-util-href="${SIGNUP_URL}">회원가입</a>
       </div>
     </aside>
   `;
@@ -189,12 +189,10 @@ export function bindGuestSectionEvents(root, rerender) {
     const handler = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const label = el.dataset.gateLabel || '이 기능';
       const gate = el.dataset.gate || 'default';
-      const go = confirm(`[프리뷰] ${label}\n\n비회원은 일부 탐색만 가능합니다. 로그인 화면으로 이동할까요?`);
-      if (go) {
-        window.open(`${LOGIN_URL}?${new URLSearchParams({ from: 'guest', action: gate })}`, '_blank', 'noopener');
-      }
+      window.location.assign(
+        `${LOGIN_URL}?${new URLSearchParams({ from: 'guest', action: gate })}`,
+      );
     };
     el.addEventListener('click', handler);
   });
@@ -203,12 +201,15 @@ export function bindGuestSectionEvents(root, rerender) {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const kind = btn.dataset.compareKind || 'study_room';
-      alert(`[11장] 비교검색은 로그인 후에만 이용할 수 있습니다.\n\n학부모 메인(#/parent)에서 표 모달을 확인하세요.`);
+      window.location.assign(`${LOGIN_URL}?from=guest&action=compare`);
     });
   });
 
   root.querySelectorAll('[data-action^="ad-"]').forEach((el) => {
-    el.addEventListener('click', () => alert('[프리뷰] 광고·프리미엄 안내'));
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      // 광고 CTA — 유료 안내(마이페이지 플랜)로 동일 탭 이동
+      window.location.hash = '#/mypage/plans';
+    });
   });
 }

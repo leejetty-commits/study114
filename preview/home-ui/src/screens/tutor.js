@@ -44,7 +44,7 @@ export function renderTutor() {
     ${isProviderHomeSelfTab('tutor', tab) ? '' : renderCompareBar()}
   `;
 
-  return renderHomeShell('tutor', content, { showAuth: false, showRoleSwitch: true });
+  return renderHomeShell('tutor', content, { showAuth: false, showRoleSwitch: false });
 }
 
 export function bindTutorEvents(root, rerender) {

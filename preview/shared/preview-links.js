@@ -87,6 +87,7 @@ export function parseNavRole(raw) {
  * @param {string} gnbId
  * @param {NavRole} role
  * @returns {{ external: boolean, url: string } | null}
+ * external=true → 다른 Vite 앱(검색·등록)이지만 같은 탭으로 이동
  */
 export function resolveGnbLink(gnbId, role) {
   switch (gnbId) {
@@ -98,16 +99,15 @@ export function resolveGnbLink(gnbId, role) {
     case 'find_tutor':
       return { external: true, url: searchUiUrl('tutor', role) };
     case 'student_parent':
-      if (role === 'study_room' || role === 'tutor') {
-        return { external: true, url: searchUiUrl('student', role) };
-      }
-      return { external: false, url: '/parent' };
+      return { external: true, url: searchUiUrl('student', role) };
     case 'register_room':
       return { external: true, url: STUDY_ROOM_REGISTER_URL };
     case 'register_tutor':
       return { external: true, url: TUTOR_REGISTER_URL };
     case 'support':
       return { external: false, url: '/support' };
+    case 'guide':
+      return { external: false, url: '/support/guide' };
     default:
       return null;
   }

@@ -44,7 +44,7 @@ export function renderStudyRoom() {
     ${renderAdInline()}
   `;
 
-  return renderHomeShell('study_room', content, { showAuth: false, showRoleSwitch: true });
+  return renderHomeShell('study_room', content, { showAuth: false, showRoleSwitch: false });
 }
 
 export function bindStudyRoomEvents(root, rerender) {
