@@ -11,7 +11,7 @@ import {
 } from '../password-reset-api.js';
 
 const SENT_MESSAGE =
-  '입력한 이메일로 비밀번호 재설정 링크를 보냈습니다. 메일이 보이지 않으면 스팸함도 확인해 주세요.';
+  '입력한 이메일로 비밀번호 재설정 링크를 보냈습니다. 메일 안의 버튼을 누르면 우동공과 사이트에서 새 비밀번호를 설정합니다. 메일이 없으면 스팸함·프로모션함을 확인해 주세요.';
 
 function normalizeEmail(value) {
   return String(value ?? '')
