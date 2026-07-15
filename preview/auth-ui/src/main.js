@@ -1,8 +1,11 @@
+import '../../home-ui/src/styles/tokens.css';
+import '../../home-ui/src/styles/home.css';
 import { getCurrentScreen, getCurrentPath } from './layout.js';
 import { signupState } from './state.js';
 import { fetchRegions } from './auth-api.js';
 import { isReturnImportMode, getReturnImportRole } from '../../shared/student-auth-bridge.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
+import { initChromeSession } from '../../shared/chrome-session.js';
 import { renderLogin, bindLoginEvents } from './screens/login.js';
 import { renderSignupTerms, bindSignupTermsEvents } from './screens/signup-terms.js';
 import { renderSignupRole, bindSignupRoleEvents } from './screens/signup-role.js';
@@ -55,12 +58,14 @@ function init() {
 
   window.addEventListener('hashchange', render);
   window.addEventListener('themechange', render);
-  fetchRegions()
-    .then((regions) => {
-      signupState.regions = regions;
-    })
-    .catch(() => {})
-    .finally(render);
+  Promise.all([
+    initChromeSession().catch(() => null),
+    fetchRegions()
+      .then((regions) => {
+        signupState.regions = regions;
+      })
+      .catch(() => {}),
+  ]).finally(render);
 }
 
 init();

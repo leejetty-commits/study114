@@ -5,11 +5,7 @@ import {
   resolvePostLoginUrl,
   oauthStartUrl,
 } from '../../../shared/auth-redirect.js';
-import {
-  renderLoginUtilBar,
-  renderLoginBackdrop,
-  renderLoginStageBelow,
-} from '../login-stage.js';
+import { renderLoginBackdrop, renderLoginStageBelow } from '../login-stage.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -33,7 +29,6 @@ export function renderLogin() {
 
   const content = `
     <div class="login-stage">
-      ${renderLoginUtilBar()}
       ${renderLoginBackdrop()}
       <div class="login-stage__card panel panel--login">
         <div class="login-stage__brand">
@@ -110,10 +105,6 @@ export function renderLogin() {
 export function bindLoginEvents(root) {
   bindGlobalEvents(root);
   const returnTo = getLoginReturnTo();
-
-  root.querySelector('[data-action="login-region"]')?.addEventListener('click', () => {
-    window.alert('로그인 후 마이페이지·지역 설정에서 활동 지역을 등록할 수 있습니다.');
-  });
 
   root.querySelectorAll('[data-action^="social-"]').forEach((btn) => {
     btn.addEventListener('click', () => {

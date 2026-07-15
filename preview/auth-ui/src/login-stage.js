@@ -1,17 +1,9 @@
 /**
  * 9장 부록 — 로그인 스테이지 (흐린 홈 실루엣 + 중앙 카드)
+ * 유틸 메뉴는 site-chrome 공통 헤더(UTIL_MENU.guest) 사용 — 별도 login-util 두지 않음
  */
 
-import { HOME_UI_BASE, supportUiUrl } from '../../shared/preview-links.js';
-
-export function renderLoginUtilBar() {
-  return `
-    <nav class="login-util" aria-label="로그인 전 유틸">
-      <button type="button" class="login-util__link" data-action="login-region" title="로그인 후 지역 설정">지역선택</button>
-      <a href="${supportUiUrl('/support/guide')}" class="login-util__link" target="_blank" rel="noopener">이용안내</a>
-      <a href="${supportUiUrl('/support')}" class="login-util__link" target="_blank" rel="noopener">고객센터</a>
-    </nav>`;
-}
+import { HOME_UI_BASE } from '../../shared/preview-links.js';
 
 function renderSilhouetteRoom() {
   return `

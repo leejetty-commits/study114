@@ -197,7 +197,7 @@ img {
   position: relative;
   align-items: stretch;
   padding: 0;
-  min-height: calc(100dvh - 2.5rem);
+  min-height: calc(100dvh - var(--preview-toolbar-h, 0px) - var(--site-header-h, 5.5rem));
 }
 
 /* ── Login Stage (9장 부록) ── */

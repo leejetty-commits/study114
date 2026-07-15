@@ -207,19 +207,25 @@ export function bindSiteChrome(root, handlers = {}) {
 
 /**
  * 렌더된 `.home-header` 높이를 실측해 CSS 변수로 반영
+ * fixed 헤더는 flow에서 빠지므로 getBoundingClientRect().height 사용
  * @param {ParentNode} [scope]
  */
 export function syncSiteHeaderOffset(scope = document) {
   const header = scope.querySelector?.('.home-header') || document.querySelector('.home-header');
   const toolbar = document.querySelector('.preview-toolbar');
-  const toolbarH = toolbar ? Math.ceil(toolbar.getBoundingClientRect().height) : 0;
+  const toolbarH = toolbar && getComputedStyle(toolbar).display !== 'none'
+    ? Math.ceil(toolbar.getBoundingClientRect().height)
+    : 0;
   document.documentElement.style.setProperty('--preview-toolbar-h', `${toolbarH}px`);
 
   if (!header) {
     document.documentElement.style.setProperty(HEADER_OFFSET_VAR, '0px');
     return 0;
   }
-  const h = Math.ceil(header.getBoundingClientRect().height);
+  // scrollHeight가 더 안정적일 수 있음 (폰트 로드 전에도 레이아웃 박스 기준)
+  const rectH = Math.ceil(header.getBoundingClientRect().height);
+  const scrollH = Math.ceil(header.scrollHeight);
+  const h = Math.max(rectH, scrollH, 1);
   document.documentElement.style.setProperty(HEADER_OFFSET_VAR, `${h}px`);
   return h;
 }

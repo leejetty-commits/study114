@@ -1,5 +1,17 @@
 import { ROLE_LABELS } from './state.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
+import {
+  renderSiteHeader,
+  bindSiteChrome,
+  syncSiteHeaderOffset,
+  ensureSiteHeaderOffsetListeners,
+} from '../../shared/site-chrome.js';
+import {
+  getChromeUser,
+  isChromeLoggedIn,
+  getChromeNavRole,
+  chromeLogout,
+} from '../../shared/chrome-session.js';
 
 const ROUTES = {
   '/login': 'login',
@@ -74,11 +86,17 @@ export function renderPreviewToolbar(activeScreen) {
 
 export function renderAuthShell(content, options = {}) {
   const { wide = false, showBack = false, backPath = '/login', backLabel = '뒤로', hideDefaultCard = false } = options;
+  const header = renderSiteHeader({
+    user: getChromeUser(),
+    loggedIn: isChromeLoggedIn(),
+    role: getChromeNavRole(),
+  });
 
   if (hideDefaultCard) {
     return `
     ${renderPreviewToolbar(getCurrentScreen())}
-    <div class="auth-shell auth-shell--stage">
+    <div class="site-chrome-shell auth-shell auth-shell--stage">
+      ${header}
       <main class="auth-shell__main auth-shell__main--stage">
         ${content}
       </main>
@@ -90,18 +108,8 @@ export function renderAuthShell(content, options = {}) {
 
   return `
     ${renderPreviewToolbar(getCurrentScreen())}
-    <div class="auth-shell">
-      <header class="auth-shell__header">
-        <a href="#/login" class="auth-shell__logo" data-nav="/login" aria-label="우동공과 홈">
-          <img
-            class="auth-shell__logo-img"
-            src="/assets/brand/logo-wordmark.png"
-            alt="우동공과"
-            width="120"
-            height="32"
-          />
-        </a>
-      </header>
+    <div class="site-chrome-shell auth-shell">
+      ${header}
       <main class="auth-shell__main">
         <div class="auth-shell__card ${wide ? 'auth-shell__card--wide' : ''}">
           ${showBack ? `<a href="#${backPath}" class="back-link" data-nav="${backPath}">← ${backLabel}</a>` : ''}
@@ -202,4 +210,12 @@ export function bindGlobalEvents(root) {
       window.dispatchEvent(new Event('themechange'));
     });
   });
+
+  bindSiteChrome(root, {
+    getRole: getChromeNavRole,
+    logout: () => chromeLogout(),
+  });
+  ensureSiteHeaderOffsetListeners();
+  syncSiteHeaderOffset(root);
+  requestAnimationFrame(() => syncSiteHeaderOffset(root));
 }
