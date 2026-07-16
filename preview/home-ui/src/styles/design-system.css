@@ -668,11 +668,11 @@ body {
   padding-top: 0.25rem;
 }
 
-/* 지도 박스: 가로 -20px, 세로 +30px (박스 자체 높이) */
+/* 지도 박스: 아래 섹션과 좌측 정렬, 우측 지도 캔버스만 -20px, 박스 높이 +30px */
 .home-shell .hero-map {
-  width: calc(100% - 20px);
+  width: 100%;
   max-width: 100%;
-  margin-left: auto;
+  margin-left: 0;
   margin-right: auto;
   box-sizing: border-box;
 }
@@ -681,10 +681,27 @@ body {
   margin-top: 0.85em;
 }
 
+.home-shell .hero-map__cta {
+  width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  font-size: var(--fs-1);
+  line-height: 1.25;
+}
+
 .home-shell .hero-map,
 .home-shell .hero-map__canvas,
 .home-shell .hero-map__surface {
-  min-height: calc(13rem + 30px);
+  min-height: calc(13rem + 30px) !important;
+}
+
+.home-shell .hero-map__surface,
+.home-shell .hero-map__surface--naver,
+.home-shell .hero-map__surface--naver .naver-map-mount-host,
+.home-shell .hero-map__surface--naver .naver-map-mount {
+  height: 100% !important;
 }
 
 @media (max-width: 640px) {
@@ -696,10 +713,17 @@ body {
 }
 
 @media (min-width: 720px) {
+  .home-shell .hero-map__rail {
+    flex: 0 0 calc(10.75rem + 20px);
+    width: calc(10.75rem + 20px);
+    max-width: calc(26% + 20px);
+  }
+
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface {
     min-height: calc(17rem + 30px) !important;
+    height: calc(17rem + 30px);
   }
 }
 
@@ -708,6 +732,7 @@ body {
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface {
     min-height: calc(19rem + 30px) !important;
+    height: calc(19rem + 30px);
   }
 }
 
@@ -716,6 +741,7 @@ body {
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface {
     min-height: calc(22rem + 30px) !important;
+    height: calc(22rem + 30px);
   }
 }
 
@@ -778,6 +804,24 @@ body {
 
 .expo-card > .expo-media-wrap .expo-media {
   border-radius: 0;
+}
+
+.expo-card--tutor .expo-media-overlay__bl {
+  max-width: 58%;
+}
+
+.expo-card--pick.expo-card--tutor .expo-media-overlay__bl {
+  max-width: 52%;
+}
+
+.expo-card--tutor .expo-overlay-bl-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.expo-card--tutor .expo-overlay-bl-grid__cell {
+  padding-left: 0.1875rem;
+  padding-right: 0.1875rem;
+  font-size: 0.5rem;
 }
 
 .expo-empty-prime {

@@ -42,15 +42,19 @@ function esc(s) {
   return String(s).replace(/</g, '&lt;');
 }
 
+function blankDash(text) {
+  return text === '—' ? '' : text;
+}
+
 /** 괄호 필드 — 값만 */
 function valOnly(text, opts = {}) {
-  return { text: text || '—', cls: `expo-tbl__cell--val-only${opts.cls ? ` ${opts.cls}` : ''}`, ...opts };
+  return { text: blankDash(text || ''), cls: `expo-tbl__cell--val-only${opts.cls ? ` ${opts.cls}` : ''}`, ...opts };
 }
 
 /** 항목제목 + 값 (Prime/Pick 표) */
 function labeled(label, text, opts = {}) {
   return {
-    html: `<span class="expo-tbl__label">${esc(label)}</span><span class="expo-tbl__val">${esc(text || '—')}</span>`,
+    html: `<span class="expo-tbl__label">${esc(label)}</span><span class="expo-tbl__val">${esc(blankDash(text || ''))}</span>`,
     cls: opts.cls || '',
     col: opts.col,
   };
@@ -63,7 +67,7 @@ function nameWithGenderCell(name, gender, nameLabel = '성명') {
       ? `<span class="expo-tbl__val-only">${esc(formatGender(gender))}</span>`
       : '';
   return {
-    html: `${g}<span class="expo-tbl__label">${esc(nameLabel)}</span><span class="expo-tbl__val">${esc(name || '—')}</span>`,
+    html: `${g}<span class="expo-tbl__label">${esc(nameLabel)}</span><span class="expo-tbl__val">${esc(blankDash(name || ''))}</span>`,
   };
 }
 
@@ -272,13 +276,13 @@ function appendSloganAndActions(rows, item, actions, { showIntro = true } = {}) 
 }
 
 function renderTutorOverlayBottomGrid(item) {
-  const grad = formatUniversityStatus(item.university_status) || '—';
+  const grad = blankDash(formatUniversityStatus(item.university_status) || '');
   const edu =
     [item.university_name, item.major_name].filter(Boolean).join(' ') ||
     item.university_note ||
-    formatUniversitySummary(item);
-  const career = formatCareerYearBand(item.career_year_band) || '—';
-  const fee = renderTutorFeeOverlay(item);
+    blankDash(formatUniversitySummary(item));
+  const career = blankDash(formatCareerYearBand(item.career_year_band) || '');
+  const fee = blankDash(renderTutorFeeOverlay(item));
   return `<div class="expo-overlay-bl-grid">
     <span class="expo-overlay-bl-grid__cell">${esc(grad)}</span>
     <span class="expo-overlay-bl-grid__cell">${esc(edu)}</span>
