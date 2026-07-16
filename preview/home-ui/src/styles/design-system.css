@@ -587,6 +587,25 @@ body {
   width: 100%;
 }
 
+/* 비로그인 유료상품 등: 배너 없이 단일 컬럼 */
+.home-app > .home-body.home-body--no-promo {
+  display: block !important;
+  grid-template-columns: none !important;
+  max-width: var(--home-max);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--page-gutter);
+  padding-right: var(--page-gutter);
+  box-sizing: border-box;
+}
+
+.home-app > .home-body.home-body--no-promo > .home-main {
+  max-width: none;
+  width: 100%;
+  padding: 0;
+}
+
 /* 배너 없는 페이지: 유료상품 게스트 안내와 동일 위치·폭 */
 .site-gate-wrap {
   max-width: 36rem;
