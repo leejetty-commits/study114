@@ -6,6 +6,15 @@ import {
   OPERATION_LOG_MIN_FIELDS,
 } from '../admin-red-line-copy.js';
 import { listNotices, upsertNotice, deleteNotice } from '../support/notice-store.js';
+import {
+  isOperationalBoardApiActive,
+  listFaqPosts,
+  upsertFaqPost,
+  deleteFaqPost,
+  listGuidePosts,
+  upsertGuidePost,
+  deleteGuidePost,
+} from '../operational-board-store.js';
 import { listTickets, updateTicketStatus } from '../support/ticket-store.js';
 import { TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { SUBMISSION_CATEGORIES } from '../submission-board/submission-copy.js';
@@ -383,7 +392,7 @@ function renderNoticesAdmin() {
     )
     .join('');
   return renderPanel(
-    '채널 · 우측 슬롯 · 공지 CMS',
+    '채널 · 우측 슬롯 · 공지/FAQ/가이드 CMS',
     'A28-05',
     `${renderRedLineBanner()}
      <p class="a28-hint">채널(콘텐츠 공급원)과 우측 슬롯(노출 자리)을 분리 운영합니다. notice/faq/safe-guide 운영 정본은 board_posts입니다.</p>
@@ -391,6 +400,8 @@ function renderNoticesAdmin() {
        <button type="button" class="a28-config-tabs__btn is-active" data-a28-config-tab="channels" role="tab">1. 채널 관리</button>
        <button type="button" class="a28-config-tabs__btn" data-a28-config-tab="rails" role="tab">2. 우측 슬롯 관리</button>
        <button type="button" class="a28-config-tabs__btn" data-a28-config-tab="notices" role="tab">3. 공지 CMS</button>
+       <button type="button" class="a28-config-tabs__btn" data-a28-config-tab="faq" role="tab">4. FAQ CMS</button>
+       <button type="button" class="a28-config-tabs__btn" data-a28-config-tab="guide" role="tab">5. 안전과외 가이드 CMS</button>
      </div>
      <div class="a28-config-panel is-active" data-a28-config-panel="channels">
        <p class="a28-hint">프리셋 기반 채널 추가 · 삭제 대신 hidden/archived · DB/API 연결 시 sessionStorage는 dev fallback</p>
@@ -416,8 +427,83 @@ function renderNoticesAdmin() {
            <button type="button" class="btn btn--secondary btn--sm" data-a28-notice-reset>새 공지</button>
          </div>
        </form>
+     </div>
+     <div class="a28-config-panel" data-a28-config-panel="faq" hidden>
+       ${renderFaqCmsPanel()}
+     </div>
+     <div class="a28-config-panel" data-a28-config-panel="guide" hidden>
+       ${renderGuideCmsPanel()}
      </div>`,
   );
+}
+
+function renderOperationalApiHint() {
+  if (isOperationalBoardApiActive()) return '';
+  return `<p class="a28-hint a28-hint--warn">⚠ board_posts API가 아직 활성화되지 않았습니다(관리자 로그인 필요). 저장 시 이 정본에 반영됩니다.</p>`;
+}
+
+function renderFaqCmsPanel() {
+  const rows = listFaqPosts()
+    .map(
+      (f) =>
+        `<tr data-faq-row="${esc(f.id)}"><td>${esc(String(f.sortOrder))}</td><td>${esc(f.q)}</td>
+         <td class="sup-admin-table__actions">
+           <button type="button" class="btn btn--secondary btn--sm" data-a28-faq-edit="${esc(f.id)}">수정</button>
+           <button type="button" class="btn btn--secondary btn--sm" data-a28-faq-delete="${esc(f.id)}">삭제</button>
+         </td></tr>`,
+    )
+    .join('');
+  return `
+     <p class="a28-hint">board_posts(faq) 운영 정본 · 정렬은 sortOrder 오름차순</p>
+     ${renderOperationalApiHint()}
+     <table class="sup-admin-table"><thead><tr><th>순서</th><th>질문</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="3" class="sup-empty">FAQ 없음</td></tr>'}</tbody></table>
+     <form class="sup-admin-form" data-a28-faq-form>
+       <h3 class="sup-admin-form__title">FAQ 작성 · 수정</h3>
+       <input type="hidden" name="id" value="" />
+       <label class="sup-field"><span>질문</span><input type="text" name="q" required /></label>
+       <label class="sup-field"><span>답변</span><textarea name="a" rows="4" required></textarea></label>
+       <label class="sup-field"><span>정렬 순서</span><input type="number" name="sortOrder" value="0" step="10" /></label>
+       <div class="sup-admin-form__actions">
+         <button type="submit" class="btn btn--primary btn--sm">저장</button>
+         <button type="button" class="btn btn--secondary btn--sm" data-a28-faq-reset>새 FAQ</button>
+       </div>
+     </form>`;
+}
+
+function renderGuideCmsPanel() {
+  const rows = listGuidePosts()
+    .map(
+      (g) =>
+        `<tr data-guide-row="${esc(g.slug)}"><td><code>${esc(g.slug)}</code></td><td>${esc(g.title)}</td><td>${esc(g.priority)}</td>
+         <td class="sup-admin-table__actions">
+           <button type="button" class="btn btn--secondary btn--sm" data-a28-guide-edit="${esc(g.slug)}">수정</button>
+           <button type="button" class="btn btn--secondary btn--sm" data-a28-guide-delete="${esc(g.slug)}">삭제</button>
+         </td></tr>`,
+    )
+    .join('');
+  return `
+     <p class="a28-hint">board_posts(safe-guide) 운영 정본 · slug는 URL 경로(#/support/safe/{slug})로 쓰입니다</p>
+     ${renderOperationalApiHint()}
+     <table class="sup-admin-table"><thead><tr><th>slug</th><th>제목</th><th>우선순위</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="4" class="sup-empty">가이드 없음</td></tr>'}</tbody></table>
+     <form class="sup-admin-form" data-a28-guide-form>
+       <h3 class="sup-admin-form__title">가이드 작성 · 수정</h3>
+       <input type="hidden" name="originalSlug" value="" />
+       <label class="sup-field"><span>slug <small>(영문·숫자·하이픈)</small></span><input type="text" name="slug" pattern="[a-z0-9\\-]+" placeholder="safe-prepay" required /></label>
+       <label class="sup-field"><span>제목</span><input type="text" name="title" required /></label>
+       <label class="sup-field"><span>우선순위</span>
+         <select name="priority">
+           <option value="primary">primary (상단)</option>
+           <option value="secondary">secondary (하단)</option>
+         </select>
+       </label>
+       <label class="sup-field"><span>대상</span><input type="text" name="audience" value="전체" /></label>
+       <label class="sup-field"><span>본문 <small>(줄 단위 문단)</small></span><textarea name="body" rows="5" required></textarea></label>
+       <label class="sup-field"><span>체크리스트 <small>(줄 단위, 선택)</small></span><textarea name="checklist" rows="3"></textarea></label>
+       <div class="sup-admin-form__actions">
+         <button type="submit" class="btn btn--primary btn--sm">저장</button>
+         <button type="button" class="btn btn--secondary btn--sm" data-a28-guide-reset>새 가이드</button>
+       </div>
+     </form>`;
 }
 
 function renderTicketsAdmin() {
@@ -1219,6 +1305,118 @@ export function bindA28ScreenEvents(root, path, rerender) {
       form.reset();
       form.querySelector('[name="id"]').value = '';
       rerender();
+    });
+
+    const faqForm = root.querySelector('[data-a28-faq-form]');
+    root.querySelectorAll('[data-a28-faq-edit]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const item = listFaqPosts().find((f) => f.id === btn.getAttribute('data-a28-faq-edit'));
+        if (!item || !faqForm) return;
+        faqForm.querySelector('[name="id"]').value = item.id;
+        faqForm.querySelector('[name="q"]').value = item.q;
+        faqForm.querySelector('[name="a"]').value = item.a;
+        faqForm.querySelector('[name="sortOrder"]').value = String(item.sortOrder || 0);
+      });
+    });
+    root.querySelectorAll('[data-a28-faq-delete]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-a28-faq-delete');
+        if (!id || !window.confirm('삭제할까요?')) return;
+        try {
+          await deleteFaqPost(id);
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : 'FAQ 삭제 실패');
+        }
+      });
+    });
+    faqForm?.querySelector('[data-a28-faq-reset]')?.addEventListener('click', () => {
+      faqForm.reset();
+      faqForm.querySelector('[name="id"]').value = '';
+    });
+    faqForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(faqForm);
+      try {
+        await upsertFaqPost({
+          id: String(fd.get('id') || '').trim() || undefined,
+          q: String(fd.get('q')),
+          a: String(fd.get('a')),
+          sortOrder: Number(fd.get('sortOrder') || 0),
+        });
+        faqForm.reset();
+        faqForm.querySelector('[name="id"]').value = '';
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : 'FAQ 저장 실패');
+      }
+    });
+
+    const guideForm = root.querySelector('[data-a28-guide-form]');
+    root.querySelectorAll('[data-a28-guide-edit]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const item = listGuidePosts().find((g) => g.slug === btn.getAttribute('data-a28-guide-edit'));
+        if (!item || !guideForm) return;
+        guideForm.querySelector('[name="originalSlug"]').value = item.slug;
+        guideForm.querySelector('[name="slug"]').value = item.slug;
+        guideForm.querySelector('[name="title"]').value = item.title;
+        guideForm.querySelector('[name="priority"]').value = item.priority || 'primary';
+        guideForm.querySelector('[name="audience"]').value = item.audience || '전체';
+        guideForm.querySelector('[name="body"]').value = (item.body || []).join('\n');
+        guideForm.querySelector('[name="checklist"]').value = (item.checklist || [])
+          .map((c) => (c.hint ? `${c.label} | ${c.hint}` : c.label))
+          .join('\n');
+      });
+    });
+    root.querySelectorAll('[data-a28-guide-delete]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const slug = btn.getAttribute('data-a28-guide-delete');
+        if (!slug || !window.confirm('삭제할까요?')) return;
+        try {
+          await deleteGuidePost(slug);
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '가이드 삭제 실패');
+        }
+      });
+    });
+    guideForm?.querySelector('[data-a28-guide-reset]')?.addEventListener('click', () => {
+      guideForm.reset();
+      guideForm.querySelector('[name="originalSlug"]').value = '';
+      guideForm.querySelector('[name="priority"]').value = 'primary';
+      guideForm.querySelector('[name="audience"]').value = '전체';
+    });
+    guideForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(guideForm);
+      const checklist = String(fd.get('checklist') || '')
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .map((line) => {
+          const [label, ...rest] = line.split('|');
+          return { label: label.trim(), hint: rest.join('|').trim() };
+        });
+      const slug = String(fd.get('slug') || '').trim();
+      const originalSlug = String(fd.get('originalSlug') || '').trim();
+      try {
+        await upsertGuidePost({
+          slug,
+          title: String(fd.get('title')),
+          priority: String(fd.get('priority') || 'primary'),
+          audience: String(fd.get('audience') || '전체'),
+          body: String(fd.get('body')).split('\n').map((l) => l.trim()).filter(Boolean),
+          checklist,
+        });
+        if (originalSlug && originalSlug !== slug) {
+          await deleteGuidePost(originalSlug);
+        }
+        guideForm.reset();
+        guideForm.querySelector('[name="originalSlug"]').value = '';
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '가이드 저장 실패');
+      }
     });
   }
 

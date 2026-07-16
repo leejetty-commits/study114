@@ -159,6 +159,60 @@ export async function deleteNoticePost(id) {
   }
 }
 
+/** @param {{ id?: string, q: string, a: string, category?: string, sortOrder?: number }} input */
+export async function upsertFaqPost(input) {
+  if (!isBoardApiMode()) {
+    throw new Error('board_posts API가 활성화되지 않았습니다. (관리자 로그인 필요)');
+  }
+  return mapFaqPost(
+    await apiSaveOperationalPost('faq', {
+      id: input.id,
+      title: input.q,
+      answer: input.a,
+      category_id: input.category || 'general',
+      sortOrder: Number(input.sortOrder || 0),
+      status: 'published',
+      author_role: 'admin',
+    }),
+  );
+}
+
+/** @param {string} id */
+export async function deleteFaqPost(id) {
+  if (isBoardApiMode()) {
+    await apiDeleteOperationalPost('faq', id, 'admin');
+  }
+}
+
+/** @param {{ slug?: string, title: string, priority?: string, audience?: string, body: string[], checklist?: any[] }} input */
+export async function upsertGuidePost(input) {
+  if (!isBoardApiMode()) {
+    throw new Error('board_posts API가 활성화되지 않았습니다. (관리자 로그인 필요)');
+  }
+  const slug = String(input.slug || '').trim();
+  return mapGuidePost(
+    await apiSaveOperationalPost('safe-guide', {
+      id: slug || undefined,
+      post_key: slug || undefined,
+      slug,
+      title: input.title,
+      priority: input.priority || 'primary',
+      audience: input.audience || '전체',
+      body: input.body,
+      checklist: Array.isArray(input.checklist) ? input.checklist : [],
+      status: 'published',
+      author_role: 'admin',
+    }),
+  );
+}
+
+/** @param {string} slug */
+export async function deleteGuidePost(slug) {
+  if (isBoardApiMode()) {
+    await apiDeleteOperationalPost('safe-guide', slug, 'admin');
+  }
+}
+
 export function isOperationalBoardApiActive() {
   return (
     isBoardApiMode() &&

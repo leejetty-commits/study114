@@ -22,7 +22,7 @@ function mapApiPostToLibraryItem(post) {
 
     format: post.format || 'FILE',
 
-    audience: post.audience?.length ? post.audience : ['all'],
+    audience: Array.isArray(post.audience) && post.audience.length ? post.audience : ['all'],
 
     section: post.section || 'library',
 

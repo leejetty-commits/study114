@@ -1,6 +1,6 @@
 import { getNavRole } from '../state.js';
 import { renderEmptyStateCard } from '../empty-state-copy.js';
-import { BOARD_ENGINE_LOCK, BOARD_TYPES, getBoardPolicy } from '../board-engine-copy.js';
+import { BOARD_TYPES, getBoardPolicy } from '../board-engine-copy.js';
 import { LIBRARY_HEAD, LIBRARY_SECTIONS } from './library-copy.js';
 import { canDownloadFromBoard, getLibraryBoardMeta, listLibraryItems } from './library-store.js';
 import { getLibrarySection } from './library-router.js';
@@ -9,57 +9,46 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
-function renderEngineBanner() {
-  return `
-    <div class="lib-engine-banner" role="note">
-      <span class="lib-engine-banner__tag">${esc(BOARD_ENGINE_LOCK.topConcept)}</span>
-      <p class="lib-engine-banner__text">${esc(BOARD_ENGINE_LOCK.libraryPosition)}</p>
-    </div>`;
+function boardTypeLabel(boardType) {
+  return BOARD_TYPES[boardType]?.label || boardType || '자료';
 }
 
 function renderBoardPolicyChips(boardKey, navRole) {
   const meta = getLibraryBoardMeta(boardKey, navRole);
   if (!meta) return '';
-  const type = BOARD_TYPES[meta.policy.boardType];
   const chips = [
-    `<span class="lib-chip lib-chip--type">${esc(type.label)}</span>`,
-    `<span class="lib-chip">read: ${meta.canRead ? '✓' : '✕'}</span>`,
-    `<span class="lib-chip">download: ${meta.canDownload ? '✓' : '로그인'}</span>`,
+    `<span class="lib-chip lib-chip--type">${esc(boardTypeLabel(meta.policy.boardType))}</span>`,
+    `<span class="lib-chip">열람 ${meta.canRead ? '가능' : '제한'}</span>`,
+    `<span class="lib-chip">${meta.canDownload ? '다운로드 가능' : '로그인 후 다운로드'}</span>`,
   ];
   if (meta.policy.requireReview) {
     chips.push('<span class="lib-chip lib-chip--muted">운영 검토 후 노출</span>');
   }
-  return `<div class="lib-policy-chips" aria-label="boardKey 권한">${chips.join('')}</div>`;
+  return `<div class="lib-policy-chips" aria-label="자료 권한 안내">${chips.join('')}</div>`;
 }
 
-function renderSectionNav(activeSection) {
-  return `
-    <nav class="lib-nav" aria-label="자료실 카테고리">
-      ${LIBRARY_SECTIONS.map(
-        (s) =>
-          `<a href="#${s.path}" class="lib-nav__link${s.key === activeSection ? ' is-active' : ''}" data-lib-nav="${s.path}">${esc(s.label)}</a>`,
-      ).join('')}
-      <a href="#/support" class="lib-nav__link lib-nav__link--muted" data-lib-nav="/support">← 고객센터</a>
-    </nav>`;
+function formatAudience(audience) {
+  const aud = Array.isArray(audience) ? audience : ['all'];
+  if (aud.includes('all')) return '전체';
+  return aud.join(' · ');
 }
 
 function renderCard(item, navRole) {
-  const audience = item.audience.includes('all') ? '전체' : item.audience.join(' · ');
   const canDl = canDownloadFromBoard(item.boardKey, navRole);
   const policy = getBoardPolicy(item.boardKey);
   const dlBtn = canDl
-    ? `<button type="button" class="btn btn--secondary btn--sm lib-card__dl" data-lib-download="${esc(item.id)}">다운로드 · ${esc(item.fileLabel)}</button>`
+    ? `<button type="button" class="btn btn--secondary btn--sm lib-card__dl" data-lib-download="${esc(item.id)}">다운로드 · ${esc(item.fileLabel || '파일')}</button>`
     : `<button type="button" class="btn btn--secondary btn--sm lib-card__dl" disabled title="로그인 후 다운로드">다운로드 · 로그인 필요</button>`;
 
   return `
     <article class="lib-card" data-lib-id="${esc(item.id)}">
       <div class="lib-card__head">
-        <div class="lib-card__format">${esc(item.format)}</div>
-        ${policy ? `<span class="lib-card__type">${esc(BOARD_TYPES[policy.boardType].label)}</span>` : ''}
+        <div class="lib-card__format">${esc(item.format || 'FILE')}</div>
+        ${policy ? `<span class="lib-card__type">${esc(boardTypeLabel(policy.boardType))}</span>` : ''}
       </div>
       <h3 class="lib-card__title">${esc(item.title)}</h3>
       <p class="lib-card__summary">${esc(item.summary)}</p>
-      <p class="lib-card__meta"><code>${esc(item.boardKey)}</code> · ${esc(audience)}</p>
+      <p class="lib-card__meta">${esc(formatAudience(item.audience))}</p>
       ${dlBtn}
     </article>`;
 }
@@ -77,8 +66,6 @@ export function renderLibraryScreen(path) {
       : `<div class="lib-grid">${items.map((item) => renderCard(item, navRole)).join('')}</div>`;
 
   return `
-    ${renderEngineBanner()}
-    ${renderSectionNav(section)}
     <section class="sup-panel-card">
       <header class="sup-panel-card__head">
         <div>
@@ -86,7 +73,6 @@ export function renderLibraryScreen(path) {
           <p class="sup-panel-card__lead">${esc(LIBRARY_HEAD.lead)}</p>
           ${renderBoardPolicyChips(meta.boardKey, navRole)}
         </div>
-        <span class="sup-panel-card__id">${esc(meta.screenId)} · <code>${esc(meta.boardKey)}</code></span>
       </header>
       <div class="sup-panel-card__body">
         ${grid}
