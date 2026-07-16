@@ -38,6 +38,8 @@ final class ProviderCheckoutService
 
         '10회권' => '10',
 
+        '20회권' => '20',
+
     ];
 
 
@@ -128,6 +130,32 @@ final class ProviderCheckoutService
 
 
 
+    /**
+     * @return array{orders: list<array<string, mixed>>}
+     */
+    public function listOrders(int $userId, int $limit = 50): array
+    {
+        $rows = $this->orders->listByUser($userId, $limit);
+        $orders = [];
+        foreach ($rows as $row) {
+            $orders[] = [
+                'order_ref' => (string) ($row['order_ref'] ?? ''),
+                'product_id' => (string) ($row['product_id'] ?? ''),
+                'variant_label' => (string) ($row['variant_label'] ?? ''),
+                'product_kind' => (string) ($row['product_kind'] ?? ''),
+                'amount_won' => (int) ($row['amount_won'] ?? 0),
+                'status' => (string) ($row['status'] ?? ''),
+                'pg_provider' => (string) ($row['pg_provider'] ?? ''),
+                'created_at' => (string) ($row['created_at'] ?? ''),
+                'paid_at' => isset($row['paid_at']) ? (string) $row['paid_at'] : null,
+            ];
+        }
+
+        return ['orders' => $orders];
+    }
+
+
+
     /** @return array<string, mixed> */
 
     public function completeOrder(int $userId, string $orderRef): array
@@ -204,7 +232,7 @@ final class ProviderCheckoutService
 
         if ($kind === 'count' && !isset(self::COUNT_VARIANTS[$variant])) {
 
-            throw new InvalidArgumentException('variant: 1회 · 5회권 · 10회권');
+            throw new InvalidArgumentException('variant: 1회 · 5회권 · 10회권 · 20회권');
 
         }
 

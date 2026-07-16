@@ -25,6 +25,7 @@ import {
   getProductConfig,
   getPriceOption,
   getPlanRuntimeSettings,
+  getPlanSetting,
   resolveCheckoutAmount,
   formatKrw,
   isPlansTestMode,
@@ -45,10 +46,44 @@ import {
 } from './checkout-session.js';
 import {
   getHistoryRows,
+  loadHistoryRows,
   appendHistoryRow,
   paymentMethodLabel,
   orderStatusLabel,
 } from './history-mock.js';
+
+/** @type {{ rows: import('./history-mock.js').HistoryRow[], fromApi: boolean, loaded: boolean }} */
+let historyCache = { rows: [], fromApi: false, loaded: false };
+
+/**
+ * @param {number} remaining
+ * @returns {boolean}
+ */
+function isLowCredit(remaining) {
+  const n = Number(remaining) || 0;
+  if (n <= 2) return true;
+  const threshold = Number(getPlanSetting('low_credit_threshold')) || 0.2;
+  // total 미제공 시 절대 잔여만 사용 (2회 이하)
+  return n > 0 && n <= Math.max(2, Math.ceil(10 * threshold));
+}
+
+function renderLowCreditBanner(tickets) {
+  if (!tickets) return '';
+  const warns = [];
+  if (isLowCredit(tickets.memo?.remaining)) {
+    warns.push(`쪽지권 잔여 ${tickets.memo.remaining}회 — 재충전을 권장합니다`);
+  }
+  if (isLowCredit(tickets.request_view?.remaining)) {
+    warns.push(`열람권 잔여 ${tickets.request_view.remaining}회 — 재충전을 권장합니다`);
+  }
+  if (!warns.length) return '';
+  return `
+    <div class="mypage-info-box is-warn plans-low-credit" role="status">
+      <strong>저잔량 안내</strong>
+      <ul class="plans-tier-list">${warns.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
+      <a href="#/plans/access" class="btn btn--secondary btn--sm" data-plans-nav="/plans/access">접근권 충전</a>
+    </div>`;
+}
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -120,11 +155,23 @@ function renderProfileBanner(profile, role) {
 /**
  * @param {import('./profiles.js').ProviderProfile} profile
  * @param {string} productCode
+ * @param {'position'|'access'} [family]
  */
-function getEligibility(profile, productCode) {
+function getEligibility(profile, productCode, family = 'position') {
   /** @type {string[]} */
   const missing = [];
   let canBuy = true;
+
+  if (family === 'access') {
+    if (profile.providerType !== 'tutor') {
+      return { canBuy: false, missing: ['접근권 상품은 과외쌤 전용입니다'] };
+    }
+    const tutor = getTutor(Number(profile.id));
+    if (!tutor) {
+      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+    }
+    return { canBuy: true, missing: [] };
+  }
 
   if (profile.providerType === 'study_room') {
     const room = getStudyRoom(Number(profile.id));
@@ -234,6 +281,79 @@ function renderPositionCard(product, profile, role) {
     </li>`;
 }
 
+/** @param {object} product @param {import('./profiles.js').ProviderProfile | null} profile @param {string} role @param {{ memo?: number, request_view?: number }} remaining */
+function renderAccessCard(product, profile, role, remaining = {}) {
+  const isTutor = role === 'tutor';
+  const options = product.options || [];
+  const eligibility = profile
+    ? getEligibility(profile, product.productCode, 'access')
+    : { canBuy: false, missing: ['적용 프로필을 먼저 선택하세요'] };
+
+  if (role === 'study_room') {
+    return `
+      <li class="plans-catalog__item is-placeholder">
+        <div class="plans-catalog__head">
+          <strong>${esc(product.name)}</strong>
+          <span class="plans-catalog__kind">access · 과외쌤 전용</span>
+        </div>
+        <p class="plans-catalog__tagline">${esc(product.tagline)}</p>
+        <p class="mypage-muted">공부방 역할에서는 구매할 수 없습니다.</p>
+      </li>`;
+  }
+
+  const remainKey = product.productCode === 'memo_ticket' ? 'memo' : 'request_view';
+  const remain = remaining[remainKey];
+  const remainHtml =
+    remain != null
+      ? `<p class="plans-remain">현재 잔여 <strong>${remain}회</strong>${isLowCredit(remain) ? ' · <span class="plans-remain--low">저잔량</span>' : ''}</p>`
+      : '';
+
+  const missingHtml =
+    isTutor && eligibility.missing.length
+      ? `<ul class="plans-eligibility">${eligibility.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`
+      : '';
+
+  const optionSelect = `
+    <label class="plans-catalog__pick">
+      <span class="mypage-muted">팩</span>
+      <select data-plans-option="${esc(product.productCode)}" class="student-form__select">
+        ${options
+          .map((o, i) => {
+            const amt = resolveCheckoutAmount(o.priceKrw);
+            const priceNote = amt.testMode
+              ? `${formatKrw(o.priceKrw)} (테스트 ${formatKrw(amt.chargeKrw)})`
+              : formatKrw(o.priceKrw);
+            return `<option value="${esc(o.optionId)}"${i === 0 ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}</option>`;
+          })
+          .join('')}
+      </select>
+    </label>`;
+
+  const buyDisabled = !isTutor || !profile || !eligibility.canBuy;
+  const buyBtn = isTutor
+    ? `<button type="button" class="btn btn--primary btn--sm" data-plans-buy
+         data-product-code="${esc(product.productCode)}"
+         ${buyDisabled ? 'disabled' : ''}>구매하기</button>`
+    : role === 'guest'
+      ? `<a href="${AUTH_UI_BASE}/#/login" class="btn btn--secondary btn--sm" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그인 후 구매</a>`
+      : `<button type="button" class="btn btn--secondary btn--sm" disabled>구매 불가</button>`;
+
+  return `
+    <li class="plans-catalog__item${product.featured ? ' is-featured' : ''}">
+      <div class="plans-catalog__head">
+        <strong>${esc(product.name)}</strong>
+        <span class="plans-catalog__kind">access</span>
+      </div>
+      <p class="plans-catalog__tagline">${esc(product.tagline)}</p>
+      ${remainHtml}
+      ${optionSelect}
+      <ul class="plans-catalog__bullets">${product.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
+      <p class="mypage-muted">차감: FIFO · 사용기한 ${getPlanSetting('credit_expire_days')}일</p>
+      ${missingHtml}
+      ${buyBtn}
+    </li>`;
+}
+
 function renderTestModeToggle() {
   const on = isPlansTestMode();
   return `
@@ -273,7 +393,7 @@ export function renderPlansHome() {
       : role === 'tutor'
         ? [
             { href: '/plans/positions', label: '노출상품' },
-            { href: '/plans/access', label: '접근권 (준비중)' },
+            { href: '/plans/access', label: '접근권' },
             { href: '/plans/my', label: '내 상품' },
             { href: '/plans/history', label: '결제내역' },
           ]
@@ -344,38 +464,32 @@ export function renderPlansPositions() {
     </section>`;
 }
 
-/** P18-03 접근권 — 준비중 */
+/** P18-03 접근권상품 */
 export function renderPlansAccess() {
   const role = getPlansEffectiveRole();
+  const query = parsePlansQuery();
+  const profile = role === 'tutor' ? resolveSelectedProfile(query, role) : null;
   const products = getCatalogByFamily('access', 'tutor');
+  const ops = getPaidOperationalStatus();
+  const tickets = ops?.tickets;
+  const remaining = {
+    memo: tickets?.memo?.remaining,
+    request_view: tickets?.request_view?.remaining,
+  };
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P18-03 · 접근권상품 (1.5차 준비중)</p>
-      <div class="mypage-info-box">
-        <p>쪽지권·요청문 열람권은 다음 스프린트에서 entitlement pack·차감 로직과 함께 구현합니다.</p>
-        <p class="mypage-muted">탭 구조만 확보 · 읽기 전용</p>
-      </div>
+      <p class="mypage-lead">P18-03 · 접근권상품 (쪽지권 / 요청문 열람권)</p>
+      ${role === 'tutor' ? renderProfileBanner(profile, role) : ''}
+      ${role === 'study_room' ? `<div class="mypage-info-box"><p>접근권 상품은 <strong>과외쌤 전용</strong>입니다. 공부방은 노출상품을 이용해 주세요.</p>
+        <a href="#/plans/positions" class="btn btn--secondary btn--sm" data-plans-nav="/plans/positions">노출상품으로</a></div>` : ''}
+      ${role === 'guest' || role === 'parent' ? renderProfileBanner(null, role) : ''}
+      ${role === 'tutor' ? renderTestModeToggle() : ''}
+      ${role === 'tutor' ? renderLowCreditBanner(tickets) : ''}
       <ul class="plans-catalog">
-        ${products
-          .map(
-            (p) => `
-          <li class="plans-catalog__item is-placeholder">
-            <div class="plans-catalog__head">
-              <strong>${esc(p.name)}</strong>
-              <span class="plans-catalog__kind">access · 준비중</span>
-            </div>
-            <p class="plans-catalog__tagline">${esc(p.tagline)}</p>
-            <ul class="plans-catalog__bullets">${p.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
-            <p class="mypage-muted">가격표 seed: ${(p.options || [])
-              .map((o) => `${o.label} ${formatKrw(o.priceKrw)}`)
-              .join(' · ')}</p>
-            <button type="button" class="btn btn--secondary btn--sm" disabled>준비중</button>
-          </li>`,
-          )
-          .join('')}
+        ${products.map((p) => renderAccessCard(p, profile, role, remaining)).join('')}
       </ul>
-      ${role === 'study_room' ? `<p class="mypage-muted">공부방 역할에서는 접근권 상품이 후순위입니다. 노출상품을 우선 이용하세요.</p>` : ''}
+      <p class="mypage-note">결제 후 pack 생성 · FIFO 차감은 쪽지/열람 사용 시 서버에서 처리됩니다.</p>
     </section>`;
 }
 
@@ -400,6 +514,7 @@ export function renderPlansMy() {
     <section class="mypage-panel">
       <p class="mypage-lead">P18-04 · 내 상품 (상태판)</p>
       ${renderProviderNoticeBanners()}
+      ${role === 'tutor' ? renderLowCreditBanner(tickets) : ''}
       <h2 class="mypage-subhead">이용중 포지션</h2>
       ${
         positions.length
@@ -427,10 +542,11 @@ export function renderPlansMy() {
       ${
         tickets
           ? `<div class="mypage-stats roi-metrics">
-              <div class="mypage-stat"><span>${esc(tickets.memo.label)}</span><strong>${tickets.memo.remaining}</strong></div>
-              <div class="mypage-stat"><span>${esc(tickets.request_view.label)}</span><strong>${tickets.request_view.remaining}</strong></div>
-            </div>`
-          : `<p class="mypage-muted">API 연동 후 표시 · 접근권 구매는 1.5차</p>`
+              <div class="mypage-stat${isLowCredit(tickets.memo.remaining) ? ' is-warn' : ''}"><span>${esc(tickets.memo.label)}</span><strong>${tickets.memo.remaining}</strong></div>
+              <div class="mypage-stat${isLowCredit(tickets.request_view.remaining) ? ' is-warn' : ''}"><span>${esc(tickets.request_view.label)}</span><strong>${tickets.request_view.remaining}</strong></div>
+            </div>
+            <p class="mypage-muted"><a href="#/plans/access" data-plans-nav="/plans/access">접근권 충전하기</a></p>`
+          : `<p class="mypage-muted">API 연동 후 표시 · <a href="#/plans/access" data-plans-nav="/plans/access">접근권 상품</a></p>`
       }
       <h2 class="mypage-subhead">반응 요약 (ROI)</h2>
       <div class="mypage-stats roi-metrics">
@@ -461,11 +577,17 @@ export function renderPlansHistory() {
       </section>`;
   }
 
-  const rows = getHistoryRows();
+  const rows = historyCache.loaded ? historyCache.rows : getHistoryRows();
+  const sourceNote = historyCache.loaded
+    ? historyCache.fromApi
+      ? '서버 주문 기록 · 로컬 보조 병합'
+      : 'API 미연결 · 로컬/seed 목록'
+    : '불러오는 중…';
+
   return `
     <section class="mypage-panel">
       <p class="mypage-lead">P18-05 · 결제내역</p>
-      <p class="mypage-muted">목록 골격 · mock/세션 기록 (API 연결은 후속)</p>
+      <p class="mypage-muted">${esc(sourceNote)}</p>
       <table class="plans-table" aria-label="결제내역">
         <thead>
           <tr>
@@ -632,6 +754,14 @@ export function renderPlansScreen(path) {
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindPlansScreenEvents(root, rerender) {
+  const path = (window.location.hash.slice(1) || '').split('?')[0];
+  if ((path === '/plans/history' || path.endsWith('/history')) && !historyCache.loaded) {
+    loadHistoryRows().then((result) => {
+      historyCache = { rows: result.rows, fromApi: result.fromApi, loaded: true };
+      rerender();
+    });
+  }
+
   root.querySelectorAll('[data-plans-test-mode]').forEach((el) => {
     el.addEventListener('change', () => {
       if (el instanceof HTMLInputElement) {
@@ -705,6 +835,7 @@ export function bindPlansScreenEvents(root, rerender) {
           paidAt: new Date().toISOString(),
           status: 'paid',
         });
+        historyCache.loaded = false;
 
         setCheckoutResult({
           status: 'success',

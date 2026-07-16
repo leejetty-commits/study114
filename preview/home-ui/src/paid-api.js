@@ -11,6 +11,7 @@ export const PAID_ENDPOINTS = {
   requestAccess: '/api/paid/request-access.php',
   checkout: '/api/paid/checkout.php',
   notices: '/api/paid/notices.php',
+  history: '/api/paid/history.php',
 };
 
 async function parseJson(res) {
@@ -97,5 +98,12 @@ export async function completePaidCheckout(orderRef) {
     ...CREDENTIALS,
     body: JSON.stringify({ action: 'complete', order_ref: orderRef }),
   });
+  return parseJson(res);
+}
+
+/** @param {number} [limit] */
+export async function fetchPaidHistory(limit = 50) {
+  const qs = limit > 0 ? `?limit=${limit}` : '';
+  const res = await fetch(`${PAID_ENDPOINTS.history}${qs}`, { ...CREDENTIALS });
   return parseJson(res);
 }

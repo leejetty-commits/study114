@@ -4115,7 +4115,7 @@ a.sup-term-chip:hover {
   gap: var(--space-3);
   margin-top: var(--space-2);
 }
-.plans-checkout-error {
-  color: #b91c1c;
-  margin-top: var(--space-2);
-}
+.plans-remain { font-size: var(--text-sm); margin: 0 0 var(--space-2); }
+.plans-remain--low { color: #b91c1c; font-weight: 700; }
+.mypage-stat.is-warn strong { color: #b91c1c; }
+.plans-low-credit { margin-bottom: var(--space-3); }

@@ -98,5 +98,26 @@ final class ProviderCheckoutRepository
 
     }
 
+
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listByUser(int $userId, int $limit = 50): array
+    {
+        $limit = max(1, min(100, $limit));
+        $stmt = $this->pdo->prepare(
+            'SELECT order_ref, product_id, variant_label, product_kind, amount_won, status, pg_provider, created_at, paid_at
+             FROM provider_payment_orders
+             WHERE user_id = ?
+             ORDER BY COALESCE(paid_at, created_at) DESC, id DESC
+             LIMIT ' . $limit
+        );
+        $stmt->execute([$userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return is_array($rows) ? $rows : [];
+    }
+
 }
 
