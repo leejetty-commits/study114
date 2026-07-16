@@ -198,13 +198,24 @@ function renderCompareChip(kind, itemId, opts) {
   return `<button type="button" class="expo-compare-chip${active ? ' is-active' : ''}" data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${itemId}">비교</button>`;
 }
 
+/** 이미지 없을 때 브랜드형 이니셜 플레이스홀더 (내부 문구 비노출) */
+function placeholderInitial(alt) {
+  const raw = String(alt || '').trim();
+  if (!raw) return '우';
+  const ch = [...raw].find((c) => c !== ' ' && c !== '·') || '우';
+  return ch;
+}
+
 /** @param {'prime'|'pick'|'list'} ratio */
 function renderMedia(image_path, alt, ratio) {
   const cls = `expo-media expo-media--${ratio}`;
   if (image_path) {
     return `<div class="${cls}"><img src="${esc(image_path)}" alt="${esc(alt)}" loading="lazy" /></div>`;
   }
-  return `<div class="${cls} expo-media--placeholder" aria-hidden="true"><span class="expo-media__ph-label">이미지 없음 · 기본값</span></div>`;
+  const initial = placeholderInitial(alt);
+  return `<div class="${cls} expo-media--placeholder" role="img" aria-label="${esc(alt || '프로필')}">
+    <span class="expo-media__ph-initial" aria-hidden="true">${esc(initial)}</span>
+  </div>`;
 }
 
 /**

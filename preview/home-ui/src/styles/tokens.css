@@ -42,7 +42,8 @@
 
   /*
    * Typography — 32장 FS-1~FS-7 (총 7단계 고정)
-   * Sans = Pretendard (UI) · Serif = Noto Serif KR (서술·주석)
+   * Sans = Pretendard (UI: 제목·라벨·값·버튼) · Serif = Noto Serif KR (서술·보조설명만)
+   * 같은 위계(라벨↔값, 네비↔본문)에서 sans/serif를 섞지 않는다.
    */
   --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-serif: 'Noto Serif KR', 'Batang', Georgia, serif;

@@ -4,6 +4,7 @@ import {
   GUEST_REGION_STATS,
   AD_FALLBACKS,
 } from './data.js';
+import { SEARCH_UI_URL } from './nav-config.js';
 import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS, EXPOSURE_STUDENTS } from './exposure-data.js';
 import {
   renderPrimeSlotGrid,
@@ -14,7 +15,6 @@ import {
 import { bindGuestListPagination } from './list-pagination.js';
 import { SECTION_HEADINGS, renderSectionHeading } from './section-headings.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
-import { getExposurePageSizes } from './exposure-rules.js';
 
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
@@ -36,6 +36,9 @@ export function renderGuestHero() {
         <p class="hero-map__eyebrow">우리동네</p>
         <h1 class="hero-map__dong">${r.dong}</h1>
         <p class="hero-map__sub">${r.gu} · 공부방·과외쌤을 한눈에 비교하세요</p>
+        <a href="${SEARCH_UI_URL}" class="btn btn--primary hero-map__cta" data-util-href="${SEARCH_UI_URL}">
+          ${r.dong} 공부방·과외쌤 찾기
+        </a>
         <dl class="hero-map__stats">
           <div><dt>공부방</dt><dd>${s.studyRooms}</dd></div>
           <div><dt>과외쌤</dt><dd>${s.tutors}</dd></div>
@@ -59,11 +62,9 @@ function renderStudyRoomPrimePick() {
   const pool = EXPOSURE_STUDY_ROOMS;
   const guestOpts = { guest: true };
   const occupied = getPrimeOccupied(pool);
-  const { regionScopeType, primeSlots } = getExposurePageSizes();
   return `
     <div class="content-section content-section--orange">
       ${renderSectionHeading({ ...SECTION_HEADINGS.primeStudyRoom, id: 'guest-prime-room' })}
-      <p class="expo-prime-meta mypage-muted">지역 단위(${regionScopeType}) · Prime ${primeSlots}슬롯 · 빈 자리는 홍보카드</p>
       ${renderPrimeSlotGrid('study_room', occupied, guestOpts)}
       ${renderPickPaginatedBlock('study_room', 'pick_study_room', SECTION_HEADINGS.pickStudyRoom, pool, {
         ...guestOpts,
@@ -87,11 +88,9 @@ function renderTutorPrimePick() {
   const pool = EXPOSURE_TUTORS;
   const guestOpts = { guest: true };
   const occupied = getPrimeOccupied(pool);
-  const { regionScopeType, primeSlots } = getExposurePageSizes();
   return `
     <div class="content-section content-section--blue">
       ${renderSectionHeading({ ...SECTION_HEADINGS.primeTutor, id: 'guest-prime-tutor' })}
-      <p class="expo-prime-meta mypage-muted">지역 단위(${regionScopeType}) · Prime ${primeSlots}슬롯 · 빈 자리는 홍보카드</p>
       ${renderPrimeSlotGrid('tutor', occupied, guestOpts)}
       ${renderPickPaginatedBlock('tutor', 'pick_tutor', SECTION_HEADINGS.pickTutor, pool, {
         ...guestOpts,
@@ -116,12 +115,14 @@ export function renderGuestExposureBoxes() {
   return `${renderStudyRoomPrimePick()}${renderTutorPrimePick()}`;
 }
 
-/** 박스 아래: 우동공과 공부방 → 과외쌤 → 학생 */
+/** 박스 아래: 우동공과 공부방 → 과외쌤 → 학생(후반) */
 export function renderGuestBrowseLists() {
   return `
     <section class="guest-browse-lists" aria-label="우동공과 리스트">
       ${renderStudyRoomBasicList()}
       ${renderTutorBasicList()}
+    </section>
+    <section class="guest-browse-lists guest-browse-lists--students" aria-label="학생 학습 의뢰">
       ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title' }, EXPOSURE_STUDENTS, { guest: true })}
       <div class="list-subsection list-subsection--students-foot">
         <p class="content-section__foot">

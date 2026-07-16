@@ -17,9 +17,6 @@ body {
 .section-heading__desc,
 .content-section__desc,
 .hero-map__sub,
-.browse-row__meta,
-.browse-row__center-line--secondary,
-.list-item__meta,
 .mypage-lead,
 .mypage-note,
 .mypage-muted,
@@ -27,6 +24,22 @@ body {
 .login-stage__lead,
 .login-stage__sub {
   font-family: var(--font-serif);
+}
+
+/* UI 메타·값·라벨은 동일 레벨에서 sans로 통일 (서술 serif와 혼용 금지) */
+.browse-row__meta,
+.browse-row__center-line--secondary,
+.list-item__meta,
+.expo-tbl,
+.expo-tbl__label,
+.expo-tbl__val,
+.expo-card__slot,
+.item-actions,
+.mypage-nav__link,
+.sup-nav__link,
+.msg-tab,
+.btn {
+  font-family: var(--font-sans);
 }
 
 /* ── Width + gutters ── */
@@ -235,7 +248,19 @@ body {
 .hero-map__sub {
   font-size: var(--fs-2);
   color: var(--gray-600);
-  margin: var(--space-2) 0 var(--space-4);
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+.hero-map__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 /* ── Buttons unify to brand orange ── */
@@ -313,6 +338,13 @@ body {
   padding-left: var(--page-gutter);
   padding-right: var(--page-gutter);
   border-radius: var(--radius-md);
+}
+
+.guest-browse-lists--students {
+  margin-top: var(--space-8);
+  background: var(--surface-page);
+  border-top: 1px solid var(--gray-200);
+  border-radius: 0;
 }
 
 .guest-login-strip {
@@ -475,6 +507,7 @@ body {
 .my-box__title {
   font-size: var(--fs-5);
   font-weight: var(--fw-bold);
+  font-family: var(--font-sans);
   margin: var(--space-1) 0 var(--space-3);
 }
 

@@ -17,8 +17,8 @@ export function renderGuest() {
   const content = `
     ${renderGuestTempNotice()}
     ${renderGuestHero()}
-    ${renderGuestAdInline()}
     ${renderGuestExposureBoxes()}
+    ${renderGuestAdInline()}
     ${renderGuestBrowseLists()}
   `;
 
