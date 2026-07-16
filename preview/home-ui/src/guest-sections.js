@@ -33,7 +33,6 @@ export function renderGuestHero() {
   return `
     <section class="hero-map" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${r.full}" data-allow-fallback="true">
       <aside class="hero-map__rail" aria-label="지역 요약">
-        <p class="hero-map__eyebrow">우리동네</p>
         <h1 class="hero-map__dong">${r.dong}</h1>
         <p class="hero-map__sub">${r.gu} · 공부방·과외쌤을 한눈에 비교하세요</p>
         <a href="${SEARCH_UI_URL}" class="btn btn--primary hero-map__cta" data-util-href="${SEARCH_UI_URL}">

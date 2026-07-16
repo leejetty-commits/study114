@@ -635,3 +635,188 @@ body {
 .sup-content__title-suffix {
   font-size: inherit;
 }
+
+/* ── 2026-07 홈 화면 밀도·카드 정렬 보정 ── */
+.home-header__util-inner {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.home-util__link,
+.home-util__account {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+
+.home-header__inner {
+  min-height: 2.625rem;
+}
+
+.home-gnb__item {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.home-body,
+.home-app > .home-main,
+.home-app > .mypage-main,
+.home-app > .msg-main,
+.home-app > .sup-main,
+.search-body,
+.register-body,
+.auth-body {
+  padding-top: 0.25rem;
+}
+
+/* 지도 모듈 전체는 20px 좁게, 지도 높이는 기존보다 30px 크게 */
+.home-shell .hero-map {
+  width: calc(100% - 1.25rem);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.home-shell .hero-map__rail {
+  padding-top: 0.75rem;
+}
+
+.home-shell .hero-map__canvas,
+.home-shell .hero-map__surface {
+  min-height: 14.875rem;
+}
+
+@media (max-width: 640px) {
+  .home-shell .hero-map__canvas,
+  .home-shell .hero-map__surface {
+    min-height: 10.875rem;
+  }
+}
+
+@media (min-width: 720px) {
+  .home-shell .hero-map,
+  .home-shell .hero-map__canvas,
+  .home-shell .hero-map__surface {
+    min-height: 18.875rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .home-shell .hero-map,
+  .home-shell .hero-map__canvas,
+  .home-shell .hero-map__surface {
+    min-height: 20.875rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  .home-shell .hero-map,
+  .home-shell .hero-map__canvas,
+  .home-shell .hero-map__surface {
+    min-height: 23.875rem;
+  }
+}
+
+/* 기본 공부방·과외쌤 목록은 학생 목록과 같은 평면·균등 표 구조 */
+.guest-browse-lists:not(.guest-browse-lists--students) {
+  margin-left: 0;
+  margin-right: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.expo-basic--study_room .expo-tbl__cell--compare,
+.expo-basic--tutor .expo-tbl__cell--compare {
+  width: auto;
+}
+
+/* 로그인 안내는 홈 바디와 같은 좌우선, 내용은 높이 중앙에 배치 */
+.guest-login-strip {
+  min-height: 3.5rem;
+  padding: var(--space-3) var(--page-gutter);
+  align-items: center;
+}
+
+/* 카드 이미지를 카드의 위·좌·우 테두리까지 확장 */
+.expo-card {
+  overflow: hidden;
+}
+
+.expo-card--prime:not(.expo-card--empty) > .expo-media-wrap {
+  width: calc(100% + 1.5rem);
+  margin: calc(-1 * var(--space-3)) calc(-1 * var(--space-3)) 0;
+}
+
+.expo-card--pick:not(.expo-card--empty) > .expo-media-wrap {
+  width: calc(100% + 1rem);
+  margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) 0;
+}
+
+.expo-card > .expo-media-wrap .expo-media {
+  border-radius: 0;
+}
+
+.expo-empty-prime {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+/* 이미지 안 비교 선택은 체크박스 형태로 즉시 식별 */
+.expo-compare-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.expo-compare-chip__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 1px solid currentColor;
+  border-radius: 0.1875rem;
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+
+.expo-compare-chip.is-active .expo-compare-chip__check {
+  background: var(--brand-orange);
+  border-color: var(--brand-orange);
+  color: #fff;
+}
+
+/* 카드 항목 제목과 행 간격 */
+.expo-tbl__label {
+  font-family: var(--font-serif);
+  color: #756b62;
+  font-weight: var(--fw-semibold);
+}
+
+.expo-card--tutor .expo-tbl__label,
+.expo-basic--tutor .expo-tbl__label {
+  color: #637086;
+}
+
+.expo-tbl {
+  line-height: 1.25;
+}
+
+.expo-tbl__cell {
+  padding-top: 0.1875rem;
+  padding-bottom: 0.1875rem;
+}
+
+/* 이용안내로 이동한 홈 노출 설명 */
+.sup-exposure-guides {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.sup-exposure-guide__title {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-3);
+  color: var(--gray-800);
+}

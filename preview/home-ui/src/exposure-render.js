@@ -1,4 +1,3 @@
-import { EXPOSURE_TIER_META } from './exposure-schema.js';
 import { renderSectionHeading } from './section-headings.js';
 import {
   formatMonthlyWon,
@@ -27,7 +26,6 @@ import {
   renderStudentProviderActions,
   renderStudentConsumerActions,
 } from './student-review-ui.js';
-import { SLOT_PICK_ROW, SLOT_PRIME } from './data.js';
 import {
   buildPrimeSlotArray,
   getPrimeEmptyCopy,
@@ -192,10 +190,10 @@ export function renderItemActions(opts = {}) {
 function renderCompareChip(kind, itemId, opts) {
   if (opts.showCompare === false) return '';
   if (opts.guest) {
-    return `<button type="button" class="expo-compare-chip" data-action="compare-guest-blocked" data-compare-kind="${kind}">비교</button>`;
+    return `<button type="button" class="expo-compare-chip" aria-pressed="false" data-action="compare-guest-blocked" data-compare-kind="${kind}"><span class="expo-compare-chip__check" aria-hidden="true"></span>비교</button>`;
   }
   const active = isInCompare(kind, itemId);
-  return `<button type="button" class="expo-compare-chip${active ? ' is-active' : ''}" data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${itemId}">비교</button>`;
+  return `<button type="button" class="expo-compare-chip${active ? ' is-active' : ''}" aria-pressed="${active ? 'true' : 'false'}" data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${itemId}"><span class="expo-compare-chip__check" aria-hidden="true">${active ? '✓' : ''}</span>비교</button>`;
 }
 
 /** 이미지 없을 때 브랜드형 이니셜 플레이스홀더 (내부 문구 비노출) */
@@ -398,45 +396,41 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
   return appendSloganAndActions(rows, item, actions, { showIntro });
 }
 
-function renderPrimeStudyRoom(item, slotLabel, tierMeta, actions, opts) {
+function renderPrimeStudyRoom(item, actions, opts) {
   const compare = renderCompareChip('study_room', item.id, opts);
   const rows = studyRoomTableRows(item, { showIntro: true, featureMax: 3 }, actions);
   return `
     <article class="expo-card expo-card--prime expo-card--study_room" data-provider-id="${item.id}" data-provider-kind="study_room">
-      <span class="expo-card__slot">${esc(slotLabel)} · ${tierMeta.label}</span>
       ${renderStudyRoomMediaOverlay(item, compare)}
       ${renderExpoTable(rows, 'expo-tbl--card')}
     </article>`;
 }
 
-function renderPrimeTutor(item, slotLabel, tierMeta, actions, opts) {
+function renderPrimeTutor(item, actions, opts) {
   const compare = renderCompareChip('tutor', item.id, opts);
   const rows = tutorTableRows(item, { showIntro: true, featureMax: 3 }, actions);
   return `
     <article class="expo-card expo-card--prime expo-card--tutor" data-provider-id="${item.id}" data-provider-kind="tutor">
-      <span class="expo-card__slot">${esc(slotLabel)} · ${tierMeta.label}</span>
       ${renderTutorMediaOverlay(item, compare, 'prime')}
       ${renderExpoTable(rows, 'expo-tbl--card')}
     </article>`;
 }
 
-function renderPickStudyRoom(item, slotLabel, tierMeta, actions, opts) {
+function renderPickStudyRoom(item, actions, opts) {
   const compare = renderCompareChip('study_room', item.id, opts);
   const rows = studyRoomTableRows(item, { showIntro: false, featureMax: 1, stack: true }, actions);
   return `
     <article class="expo-card expo-card--pick expo-card--study_room" data-provider-id="${item.id}" data-provider-kind="study_room">
-      <span class="expo-card__slot">${esc(slotLabel)} · ${tierMeta.label}</span>
       ${renderPickStudyRoomMedia(item, compare)}
       ${renderExpoTable(rows, 'expo-tbl--card expo-tbl--compact')}
     </article>`;
 }
 
-function renderPickTutor(item, slotLabel, tierMeta, actions, opts) {
+function renderPickTutor(item, actions, opts) {
   const compare = renderCompareChip('tutor', item.id, opts);
   const rows = tutorTableRows(item, { showIntro: false, featureMax: 1, verifyMax: 1, stack: true }, actions);
   return `
     <article class="expo-card expo-card--pick expo-card--tutor" data-provider-id="${item.id}" data-provider-kind="tutor">
-      <span class="expo-card__slot">${esc(slotLabel)} · ${tierMeta.label}</span>
       ${renderTutorMediaOverlay(item, compare, 'pick')}
       ${renderExpoTable(rows, 'expo-tbl--card expo-tbl--compact')}
     </article>`;
@@ -447,7 +441,6 @@ function renderPickTutor(item, slotLabel, tierMeta, actions, opts) {
  * @param {'prime' | 'pick'} tier
  */
 export function renderExposureBox(kind, tier, item, slotLabel, opts = {}) {
-  const tierMeta = EXPOSURE_TIER_META[tier];
   const actionOpts = actionOptsFromItem(item, {
     guest: opts.guest,
     compareKind: kind,
@@ -457,25 +450,23 @@ export function renderExposureBox(kind, tier, item, slotLabel, opts = {}) {
   const actions = renderItemActions(actionOpts);
   if (tier === 'prime') {
     return kind === 'tutor'
-      ? renderPrimeTutor(item, slotLabel, tierMeta, actions, actionOpts)
-      : renderPrimeStudyRoom(item, slotLabel, tierMeta, actions, actionOpts);
+      ? renderPrimeTutor(item, actions, actionOpts)
+      : renderPrimeStudyRoom(item, actions, actionOpts);
   }
   return kind === 'tutor'
-    ? renderPickTutor(item, slotLabel, tierMeta, actions, actionOpts)
-    : renderPickStudyRoom(item, slotLabel, tierMeta, actions, actionOpts);
+    ? renderPickTutor(item, actions, actionOpts)
+    : renderPickStudyRoom(item, actions, actionOpts);
 }
 
 /**
  * Prime 빈 슬롯 — 다른 상품으로 채우지 않고 홍보카드 유지
  * @param {'study_room'|'tutor'} kind
- * @param {string} slotLabel
  */
-export function renderEmptyPrimePromo(kind, slotLabel) {
+export function renderEmptyPrimePromo(kind) {
   const copy = getPrimeEmptyCopy(kind);
   const tone = kind === 'tutor' ? 'tutor' : 'study_room';
   return `
     <article class="expo-card expo-card--prime expo-card--empty expo-card--${tone}" data-prime-empty="1">
-      <span class="expo-card__slot">${esc(slotLabel)} · 빈 슬롯</span>
       <div class="expo-empty-prime">
         <p class="expo-empty-prime__title">${esc(copy.title)}</p>
         <p class="expo-empty-prime__body">${esc(copy.body)}</p>
@@ -494,10 +485,9 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
   const { primeSlots } = getExposurePageSizes();
   const slots = buildPrimeSlotArray(occupiedItems, primeSlots);
   const cards = slots
-    .map((item, i) => {
-      const label = SLOT_PRIME[i] || `Prime ${i + 1}`;
-      if (!item) return renderEmptyPrimePromo(kind, label);
-      return renderExposureBox(kind, 'prime', item, label, opts);
+    .map((item) => {
+      if (!item) return renderEmptyPrimePromo(kind);
+      return renderExposureBox(kind, 'prime', item, '', opts);
     })
     .join('');
   return `<div class="expo-grid--3">${cards}</div>`;
@@ -642,23 +632,18 @@ export function renderBrowseList(kind, items, opts = {}) {
 }
 
 export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opts = {}) {
-  const { pickSetSize, pickRotationMinutes } = getExposurePageSizes();
+  const { pickSetSize } = getExposurePageSizes();
   const occupied = opts.primeOccupied ?? getPrimeOccupied(allItems);
   const pickPool = rotatePickPool(getPickPool(allItems, occupied));
   const page = opts.page ?? getGuestListPage(listId);
   const pageItems = slicePage(pickPool, page, pickSetSize);
   const cards = pageItems
-    .map((item, i) => {
-      const rank = (page - 1) * pickSetSize + i + 1;
-      const slotLabel = SLOT_PICK_ROW[i] || `Pick ${rank}`;
-      return renderExposureBox(kind, 'pick', item, slotLabel, opts);
-    })
+    .map((item) => renderExposureBox(kind, 'pick', item, '', opts))
     .join('');
 
   return `
     <div class="list-subsection" data-guest-list="${listId}">
       ${renderSectionHeading(headingCfg)}
-      <p class="expo-pick-meta mypage-muted">${pickSetSize}개 1세트 · ${pickRotationMinutes}분 순환 · 최신 입점 우선</p>
       <div class="expo-grid--5">${cards || '<p class="mypage-muted">Pick 노출 후보가 없습니다.</p>'}</div>
       ${renderListPagination(listId, pickPool.length, page, pickSetSize)}
     </div>

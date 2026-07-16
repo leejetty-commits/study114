@@ -7,6 +7,7 @@ import {
   HOME_CARDS,
   GUIDE_ARTICLES,
   ROLE_GUIDES,
+  HOME_EXPOSURE_GUIDES,
   FAQ_ITEMS,
   TERMS_LINKS,
   OPERATIONAL_CONTACT,
@@ -163,6 +164,15 @@ function renderHome() {
 function renderGuideSection() {
   const role = getNavRole();
   const roleGuide = ROLE_GUIDES[role] || ROLE_GUIDES.guest;
+  const exposureGuideHtml = HOME_EXPOSURE_GUIDES.map(
+    (guide) => `
+      <section class="sup-exposure-guide">
+        <h3 class="sup-exposure-guide__title">${esc(guide.title)}</h3>
+        <ul class="sup-list sup-list--bullets">
+          ${guide.items.map((item) => `<li>${esc(item)}</li>`).join('')}
+        </ul>
+      </section>`,
+  ).join('');
   return `
     ${renderPanel(
       '이용안내',
@@ -174,6 +184,12 @@ function renderGuideSection() {
          <a href="#/library" class="sup-inline-link" data-sup-nav="/library">자료실</a>
        </div>`,
       { lead: `역할별 요약 — ${roleGuide.title}` },
+    )}
+    ${renderPanel(
+      '홈 노출 블록 안내',
+      'P17-01 #home-exposure',
+      `<div class="sup-exposure-guides">${exposureGuideHtml}</div>`,
+      { lead: '홈 화면의 프라임·픽·기본 목록 구성과 노출 기준입니다.' },
     )}`;
 }
 
