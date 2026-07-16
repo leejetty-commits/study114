@@ -47,6 +47,12 @@ final class AdminRoleService
         return $this->resolveLevel($auth) === self::LEVEL_MASTER;
     }
 
+    public function isMasterEmail(string $email): bool
+    {
+        $normalized = strtolower(trim($email));
+        return $normalized !== '' && in_array($normalized, self::MASTER_EMAILS, true);
+    }
+
     /** @return list<string> */
     public function listMasterEmails(): array
     {

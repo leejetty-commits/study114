@@ -6,6 +6,7 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Auth\AuthSession;
 use Study114\Auth\LoginService;
+use Study114\Admin\AdminRoleService;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -40,12 +41,13 @@ $password = (string) ($input['password'] ?? '');
 try {
     $user = (new LoginService())->attempt($email, $password);
     AuthSession::login($user['user_id'], $user['email'], $user['role_type'], $user['name']);
+    $effectiveRole = (new AdminRoleService())->isMasterEmail((string) $user['email']) ? 'admin' : $user['role_type'];
 
     echo json_encode([
         'ok'        => true,
         'user_id'   => $user['user_id'],
         'email'     => $user['email'],
-        'role_type' => $user['role_type'],
+        'role_type' => $effectiveRole,
         'name'      => $user['name'],
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {

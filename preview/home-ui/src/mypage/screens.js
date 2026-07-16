@@ -516,13 +516,18 @@ function renderSubmissionDocs(role) {
 }
 
 function renderAccount(role, profile) {
+  const authRole =
+    profile.authRole === 'admin'
+      ? '마스터 관리자'
+      : `${roleLabel(role)} · 9장 역할 전환`;
   return `
     <section class="mypage-panel">
       <dl class="mypage-dl">
         <dt>이름</dt><dd>${esc(profile.name)}</dd>
+        <dt>로그인 계정</dt><dd><strong>${esc(profile.loginId || profile.email)}</strong></dd>
         <dt>이메일</dt><dd>${esc(profile.email)}</dd>
         <dt>대표 지역</dt><dd>${esc(profile.regionLabel)}</dd>
-        <dt>역할</dt><dd>${esc(roleLabel(role))} · 9장 역할 전환</dd>
+        <dt>역할</dt><dd>${esc(authRole)}</dd>
       </dl>
       <div class="mypage-form-actions">
         <button type="button" class="btn btn--secondary" data-action="role-switch">역할 전환</button>

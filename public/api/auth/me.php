@@ -32,10 +32,15 @@ if ($user === null) {
     exit;
 }
 
+$isMasterAdmin = (new \Study114\Admin\AdminRoleService())->isMasterEmail((string) $user['email']);
+if ($isMasterAdmin) {
+    $user['role_type'] = 'admin';
+}
+
 $oauthRolePending = false;
 $emailVerified = false;
 try {
-    $oauthRolePending = (new \Study114\Auth\OAuthRoleService())->isRolePendingForUser((int) $user['user_id']);
+    $oauthRolePending = $isMasterAdmin ? false : (new \Study114\Auth\OAuthRoleService())->isRolePendingForUser((int) $user['user_id']);
     $emailVerified = (new \Study114\Auth\EmailVerificationGate())->isVerified((int) $user['user_id']);
 } catch (Throwable $e) {
     error_log('[me] auth flags: ' . $e->getMessage());

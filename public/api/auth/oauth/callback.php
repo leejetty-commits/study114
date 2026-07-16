@@ -44,12 +44,14 @@ try {
     AuthSession::login($user['user_id'], $user['email'], $user['role_type'], $user['name']);
 
     $roleHome = match ($user['role_type']) {
+        'admin'            => '/guest',
         'study_room_owner' => '/study-room',
         'tutor'            => '/tutor',
         default            => '/parent',
     };
 
-    if ($user['is_new'] || (new OAuthRoleService())->isRolePendingForUser($user['user_id'])) {
+    $isAdmin = $user['role_type'] === 'admin';
+    if (!$isAdmin && ($user['is_new'] || (new OAuthRoleService())->isRolePendingForUser($user['user_id']))) {
         $params = ['from' => 'oauth'];
         if ($returnTo !== '' && (str_starts_with($returnTo, '/') || str_starts_with($returnTo, $homeUi))) {
             $params['return_to'] = $returnTo;

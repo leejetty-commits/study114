@@ -3,6 +3,7 @@
  * @typedef {'parent'|'study_room'|'tutor'} MypageRole
  */
 
+import { getAuthUser } from '../auth-session.js';
 import { getWishlistIds } from '../user-actions-state.js';
 import { getStudentReviewIds } from '../student-review-store.js';
 import { getRecentViews } from './recent-store.js';
@@ -83,7 +84,16 @@ function messageCounts() {
 
 /** @param {MypageRole} role */
 export function getPreviewProfile(role) {
-  return { ...PREVIEW_PROFILE, role };
+  const base = { ...PREVIEW_PROFILE, role };
+  const user = getAuthUser();
+  if (!user) return base;
+  return {
+    ...base,
+    email: user.email || base.email,
+    name: user.name || base.name,
+    loginId: user.email || base.email,
+    authRole: user.role_type || '',
+  };
 }
 
 /** @param {MypageRole} role */

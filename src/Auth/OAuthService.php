@@ -7,6 +7,7 @@ namespace Study114\Auth;
 use InvalidArgumentException;
 use PDO;
 use RuntimeException;
+use Study114\Admin\AdminRoleService;
 use Study114\Database\Connection;
 
 final class OAuthService
@@ -97,10 +98,11 @@ final class OAuthService
         $existing = $this->findByProvider($pdo, $provider, $profile['provider_user_id']);
         if ($existing) {
             $this->touchLogin($pdo, (int) $existing['user_id']);
+            $roleType = $this->effectiveRoleType((string) $existing['email'], (string) $existing['role_type']);
             return [
                 'user_id'   => (int) $existing['user_id'],
                 'email'     => (string) $existing['email'],
-                'role_type' => (string) $existing['role_type'],
+                'role_type' => $roleType,
                 'name'      => (string) $existing['name'],
                 'is_new'    => false,
             ];
@@ -111,10 +113,11 @@ final class OAuthService
             if ($byEmail) {
                 $this->linkProvider($pdo, (int) $byEmail['user_id'], $provider, $profile);
                 $this->touchLogin($pdo, (int) $byEmail['user_id']);
+                $roleType = $this->effectiveRoleType((string) $byEmail['email'], (string) $byEmail['role_type']);
                 return [
                     'user_id'   => (int) $byEmail['user_id'],
                     'email'     => (string) $byEmail['email'],
-                    'role_type' => (string) $byEmail['role_type'],
+                    'role_type' => $roleType,
                     'name'      => (string) $byEmail['name'],
                     'is_new'    => false,
                 ];
@@ -154,6 +157,11 @@ final class OAuthService
         }
 
         return rtrim($configured, '/');
+    }
+
+    private function effectiveRoleType(string $email, string $roleType): string
+    {
+        return (new AdminRoleService())->isMasterEmail($email) ? 'admin' : $roleType;
     }
 
     /** @return array<string, string> */
@@ -395,11 +403,12 @@ final class OAuthService
 
         $pdo->beginTransaction();
         try {
+            $isMasterEmail = (new AdminRoleService())->isMasterEmail($email);
             $stmt = $pdo->prepare(
                 'INSERT INTO users (email, password_hash, status, email_verified_at, oauth_role_pending)
-                 VALUES (?, ?, ?, NOW(), 1)'
+                 VALUES (?, ?, ?, NOW(), ?)'
             );
-            $stmt->execute([$email, $hash, 'active']);
+            $stmt->execute([$email, $hash, 'active', $isMasterEmail ? 0 : 1]);
             $userId = (int) $pdo->lastInsertId();
 
             $stmt = $pdo->prepare(
@@ -407,7 +416,7 @@ final class OAuthService
             );
             $stmt->execute([$userId, $profile['name'], null, '']);
 
-            $roleType = 'guardian_student';
+            $roleType = $isMasterEmail ? 'admin' : 'guardian_student';
             $stmt = $pdo->prepare(
                 'INSERT INTO user_roles (user_id, role_type, is_primary, status) VALUES (?, ?, 1, ?)'
             );

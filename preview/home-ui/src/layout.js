@@ -5,7 +5,7 @@ import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
 import { UTIL_MENU, GNB_MAIN, GNB_VISIBILITY, GNB_MUTED_TITLE, resolveGnbLink, searchUiUrl } from './nav-config.js';
 import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
-import { getAuthUser, isLoggedIn, devLoginAs, logout } from './auth-session.js';
+import { getAuthUser, isLoggedIn, isAdminUser, devLoginAs, logout } from './auth-session.js';
 import { isHandoffApiMode } from './handoff-backend.js';
 import { isMessagesApiMode } from './messages-backend.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
@@ -73,7 +73,14 @@ export function renderPreviewToolbar() {
  */
 function renderUtilBar(role, showAuth) {
   const items = showAuth ? UTIL_MENU.guest : UTIL_MENU.loggedIn;
-  return items
+  const authUser = getAuthUser();
+  const account = authUser
+    ? `<span class="home-util__account" title="${escAttr(authUser.email)}">로그인: ${escAttr(authUser.email)}</span>`
+    : '';
+  const adminLink = isAdminUser()
+    ? `<button type="button" class="home-util__link home-util__link--admin" data-nav="/admin">관리자모드</button>`
+    : '';
+  const base = items
     .map((item) => {
       if (item.href) {
         const cls = item.emphasis ? 'home-util__link home-util__link--emphasis' : 'home-util__link';
@@ -83,6 +90,15 @@ function renderUtilBar(role, showAuth) {
       return `<button type="button" class="home-util__link" data-action="${item.action}">${item.label}</button>`;
     })
     .join('');
+  return `${account}${adminLink}${base}`;
+}
+
+function escAttr(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 function gnbItemLabel(item) {
@@ -130,6 +146,7 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
 function roleHomePath() {
   const user = getAuthUser();
   if (!user) return '/guest';
+  if (user.role_type === 'admin') return '/guest';
   if (user.role_type === 'study_room_owner') return '/study-room';
   if (user.role_type === 'tutor') return '/tutor';
   return '/parent';

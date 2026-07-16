@@ -188,6 +188,25 @@ img {
   background: #fff;
 }
 
+.home-util__account {
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: var(--space-1) var(--space-2);
+  border-radius: 999px;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  font-size: var(--text-xs);
+}
+
+.home-util__link--admin {
+  color: #7c2d12;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  font-weight: 700;
+}
+
 .home-header__main {
   border-bottom: 1px solid var(--gray-100);
 }
@@ -2804,6 +2823,29 @@ a.sup-term-chip:hover {
 }
 .mypage-sidebar__title { font-weight: 700; margin: 0 0 var(--space-1); }
 .mypage-sidebar__doc { font-size: var(--text-xs); color: var(--gray-500); margin: 0 0 var(--space-4); }
+.mypage-account-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  border: 1px solid var(--gray-200);
+  border-radius: 0.625rem;
+  background: #fff;
+}
+.mypage-account-card__label {
+  font-size: 0.6875rem;
+  color: var(--gray-500);
+}
+.mypage-account-card__email {
+  overflow-wrap: anywhere;
+  font-size: var(--text-sm);
+  color: var(--gray-900);
+}
+.mypage-account-card__role {
+  font-size: var(--text-xs);
+  color: var(--gray-600);
+}
 .mypage-nav { display: flex; flex-direction: column; gap: var(--space-1); }
 .mypage-nav__link {
   display: flex; justify-content: space-between; align-items: center;
@@ -2813,6 +2855,17 @@ a.sup-term-chip:hover {
 .mypage-nav__link.is-active { background: #f97316; color: #fff; }
 .mypage-nav__link.is-emphasis:not(.is-active) { font-weight: 700; }
 .mypage-nav__id { font-size: 0.65rem; opacity: 0.75; }
+.mypage-nav__admin {
+  display: block;
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 0.5rem;
+  background: #fff7ed;
+  color: #7c2d12;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+}
 .mypage-nav__back { display: block; margin-top: var(--space-4); font-size: var(--text-sm); color: var(--gray-500); }
 .mypage-content__head { display: flex; align-items: baseline; gap: var(--space-3); margin-bottom: var(--space-4); }
 .mypage-content__title { font-size: var(--text-xl); margin: 0; }

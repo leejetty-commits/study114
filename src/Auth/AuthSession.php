@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Study114\Auth;
 
+use Study114\Admin\AdminRoleService;
+
 final class AuthSession
 {
     public static function start(): void
@@ -23,10 +25,11 @@ final class AuthSession
     public static function login(int $userId, string $email, string $roleType, string $name): void
     {
         self::start();
+        $effectiveRole = (new AdminRoleService())->isMasterEmail($email) ? 'admin' : $roleType;
         $_SESSION['auth'] = [
             'user_id'   => $userId,
             'email'     => $email,
-            'role_type' => $roleType,
+            'role_type' => $effectiveRole,
             'name'      => $name,
         ];
     }
