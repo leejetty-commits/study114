@@ -357,8 +357,9 @@ https://study114.dothome.co.kr
    - 이미 운영 중인 DB라면 **증분만**: `034_board_operational_channels.sql` → `035_content_config_definitions.sql`  
 4. (선택) 검수용 시드: `012_search_dev_seed.sql`, `026_admin_dev_seed.sql` 등
 
-> **자동 적용(1회):** 배포 후 `POST /api/health/migrate-034-035.php` body `{"confirm":"apply-034-035"}`  
-> 또는 관리자 `POST /api/admin/content/migrate.php` (동일 confirm). **적용 확인 후 `migrate-034-035.php` 삭제.**
+> **자동 적용(1회, 완료됨 2026-07-17):** 서버 PDO 멱등 마이그레이션으로 notice/faq/safe-guide seed · channel/slot 정의 적용 완료.  
+> 이후 재적용은 관리자 `POST /api/admin/content/migrate.php` body `{"confirm":"apply-034-035"}` (idempotent).  
+> 임시 `public/api/health/migrate-034-035.php` 는 **삭제됨**.
 
 > 파일이 많으면 `001_init.sql` 먼저 → 나머지를 순서대로.
 
