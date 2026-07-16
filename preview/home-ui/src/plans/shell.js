@@ -9,6 +9,7 @@ import { renderPlansPageTitle, renderPlansNav } from './nav.js';
  */
 export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
   const role = opts.role || getNavRole();
+  const headerRole = opts.headerRole || role;
   const sub =
     role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
   const hideNav =
@@ -18,7 +19,7 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
   return `
     ${renderPreviewToolbar()}
     <div class="home-app">
-      ${renderHeader(role)}
+      ${renderHeader(headerRole)}
       <main class="home-main sup-main">
         <div class="sup-layout plans-layout">
           <header class="sup-content__head">

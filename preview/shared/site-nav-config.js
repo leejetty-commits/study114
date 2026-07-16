@@ -132,12 +132,11 @@ export function canAccessPlansHub(role) {
 }
 
 /**
- * 유료상품 카탈로그(소개형) — GNB 노출과 동일.
- * guest도 카탈로그 열람 가능 (구매·내역은 별도 capability).
+ * guest 카탈로그 열람 — 비로그인은 잠금(로그인 게이트). 공급자만 실사용.
  * @param {NavRole} role
  */
 export function canBrowsePlansCatalog(role) {
-  return canAccessPlansHub(role);
+  return role === 'study_room' || role === 'tutor';
 }
 
 /**

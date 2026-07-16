@@ -14,6 +14,8 @@ import {
   isGnbItemVisible,
 } from './site-nav-config.js';
 
+import { ensureBackToTop } from './back-to-top.js';
+
 const HEADER_OFFSET_VAR = '--site-header-h';
 let offsetBound = false;
 
@@ -223,6 +225,8 @@ export function bindSiteChrome(root, handlers = {}) {
       }
     });
   });
+
+  ensureBackToTop(root);
 }
 
 /**

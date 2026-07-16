@@ -6,6 +6,7 @@ import { REGIONS } from './data.js';
 import { UTIL_MENU, GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVisible } from './nav-config.js';
 import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
 import { getAuthUser, isLoggedIn, isAdminUser, devLoginAs, logout } from './auth-session.js';
+import { ensureBackToTop } from '../../shared/back-to-top.js';
 import { isHandoffApiMode } from './handoff-backend.js';
 import { isMessagesApiMode } from './messages-backend.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
@@ -469,4 +470,5 @@ export function bindLayoutEvents(root, rerender) {
   ensureSiteHeaderOffsetListeners();
   syncSiteHeaderOffset(root);
   requestAnimationFrame(() => syncSiteHeaderOffset(root));
+  ensureBackToTop(root);
 }

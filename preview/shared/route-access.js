@@ -46,28 +46,37 @@ export function signupUrl() {
 }
 
 /**
- * 유료상품 허브(카탈로그) — parent 등은 FAQ로.
+ * 유료상품 허브 — guest는 메뉴만 보이고 실사용은 로그인 게이트.
+ * parent 등은 FAQ로.
  * @param {import('./site-nav-config.js').NavRole} role
- * @returns {{ ok: true } | { ok: false, redirect: string, message: string }}
+ * @returns {{ ok: true } | { ok: false, redirect?: string, message: string, mode?: 'login_gate'|'role_blocked' }}
  */
 export function guardPlansAccess(role) {
+  if (role === 'guest') {
+    return {
+      ok: false,
+      message: '유료상품은 로그인 후 이용할 수 있습니다. 공부방·과외쌤 계정으로 로그인해 주세요.',
+      mode: 'login_gate',
+    };
+  }
   if (canAccessPlansHub(role)) return { ok: true };
   return {
     ok: false,
     redirect: '/support/faq',
     message: '유료상품은 공급자(공부방·과외쌤)용입니다. FAQ에서 안내를 확인하세요.',
+    mode: 'role_blocked',
   };
 }
 
 /**
- * 유료상품 path별 — guest는 카탈로그만, checkout/my/history/result는 로그인 게이트.
+ * 유료상품 path별 — guest 전 구간 잠금, 계정/결제는 공급자만.
  * @param {import('./site-nav-config.js').NavRole} role
  * @param {string} path
- * @returns {{ ok: true } | { ok: false, redirect: string, message: string, mode?: 'login_gate'|'role_blocked' }}
+ * @returns {{ ok: true } | { ok: false, redirect?: string, message: string, mode?: 'login_gate'|'role_blocked' }}
  */
 export function guardPlansPath(role, path) {
   const hub = guardPlansAccess(role);
-  if (!hub.ok) return { ...hub, mode: 'role_blocked' };
+  if (!hub.ok) return hub;
 
   const p = String(path || '/plans').split('?')[0];
   const accountPaths = new Set([
@@ -80,10 +89,7 @@ export function guardPlansPath(role, path) {
     return {
       ok: false,
       redirect: '/plans',
-      message:
-        role === 'guest'
-          ? '내 상품·결제·구매는 로그인 후 이용할 수 있습니다. 상품 안내는 카탈로그에서 먼저 확인하세요.'
-          : '이 메뉴는 공급자(공부방·과외쌤) 로그인 후 이용할 수 있습니다.',
+      message: '이 메뉴는 공급자(공부방·과외쌤) 로그인 후 이용할 수 있습니다.',
       mode: 'login_gate',
     };
   }

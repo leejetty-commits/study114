@@ -100,10 +100,8 @@ export function getGuestListPage(listId) {
 
 export function getNavRole() {
   if (isPlansRoute()) {
-    const stored = sessionStorage.getItem(ACTIVE_ROLE_KEY);
-    if (stored === 'parent' || stored === 'study_room' || stored === 'tutor') {
-      return stored;
-    }
+    // plans 헤더 GNB는 layout.resolveHeaderGnbRole이 세션을 우선한다.
+    // 여기서 stale ACTIVE_ROLE(parent 등)을 쓰면 비로그인 GNB가 줄어든다.
     return 'guest';
   }
   if (isMypageRoute() || isMessagesRoute()) {
