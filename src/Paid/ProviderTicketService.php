@@ -157,6 +157,12 @@ final class ProviderTicketService
 
         $exposureState = count($positions) > 0 ? 'active' : 'basic';
 
+        // seed 기본값 — 이후 plan_runtime_settings / 관리자 설정으로 치환
+        $primeCap = 3;
+        $pickCap = 10;
+        $primeUsed = $this->repo->countActivePositionsBySku('prime');
+        $pickUsed = $this->repo->countActivePositionsBySku('pick');
+
         return [
             'exposure' => [
                 'state' => $exposureState,
@@ -170,6 +176,18 @@ final class ProviderTicketService
                         'days_left' => (int) $row['days_left'],
                     ];
                 }, $positions),
+            ],
+            'slots' => [
+                'prime' => [
+                    'capacity' => $primeCap,
+                    'used' => $primeUsed,
+                    'remaining' => max(0, $primeCap - $primeUsed),
+                ],
+                'pick' => [
+                    'capacity' => $pickCap,
+                    'used' => $pickUsed,
+                    'remaining' => max(0, $pickCap - $pickUsed),
+                ],
             ],
             'tickets' => [
                 'memo' => [

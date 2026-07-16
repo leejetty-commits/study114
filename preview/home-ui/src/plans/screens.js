@@ -51,9 +51,14 @@ import {
   paymentMethodLabel,
   orderStatusLabel,
 } from './history-mock.js';
+import { resolveSlotInventory, getSlotForProduct } from './slot-inventory.js';
+import { renderReceiptPanel, bindReceiptEvents } from './receipt.js';
 
 /** @type {{ rows: import('./history-mock.js').HistoryRow[], fromApi: boolean, loaded: boolean }} */
 let historyCache = { rows: [], fromApi: false, loaded: false };
+
+/** @type {string | null} */
+let openReceiptOrderRef = null;
 
 /**
  * @param {number} remaining
@@ -218,10 +223,13 @@ function getEligibility(profile, productCode, family = 'position') {
   return { canBuy, missing: [...new Set(missing)] };
 }
 
-/** @param {object} product @param {import('./profiles.js').ProviderProfile | null} profile @param {string} role */
-function renderPositionCard(product, profile, role) {
+/** @param {object} product @param {import('./profiles.js').ProviderProfile | null} profile @param {string} role @param {{ prime?: object, pick?: object } | null} [slots] */
+function renderPositionCard(product, profile, role, slots = null) {
   const canPurchaseUi = role === 'study_room' || role === 'tutor';
   const implemented = product.implemented !== false && product.family === 'position';
+  const inv = resolveSlotInventory(slots);
+  const slot = getSlotForProduct(product.productCode, inv);
+  const soldOut = slot != null && slot.remaining <= 0;
 
   if (!implemented) {
     return `
@@ -238,15 +246,23 @@ function renderPositionCard(product, profile, role) {
 
   const options = product.options || [];
   const eligibility = profile ? getEligibility(profile, product.productCode) : { canBuy: false, missing: ['적용 프로필을 먼저 선택하세요'] };
+  if (soldOut) {
+    eligibility.canBuy = false;
+    eligibility.missing = [...eligibility.missing, '슬롯이 마감되었습니다 (대기열은 후속)'];
+  }
   const missingHtml =
     canPurchaseUi && eligibility.missing.length
       ? `<ul class="plans-eligibility">${eligibility.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`
       : '';
 
+  const slotHtml = slot
+    ? `<p class="plans-slot-meta">슬롯 ${slot.used}/${slot.capacity} 사용 · 잔여 <strong>${slot.remaining}</strong>${soldOut ? ' · <span class="plans-remain--low">마감</span>' : ''}</p>`
+    : '';
+
   const optionSelect = `
     <label class="plans-catalog__pick">
       <span class="mypage-muted">기간</span>
-      <select data-plans-option="${esc(product.productCode)}" class="student-form__select">
+      <select data-plans-option="${esc(product.productCode)}" class="student-form__select" ${soldOut ? 'disabled' : ''}>
         ${options
           .map((o, i) => {
             const amt = resolveCheckoutAmount(o.priceKrw);
@@ -259,21 +275,24 @@ function renderPositionCard(product, profile, role) {
       </select>
     </label>`;
 
-  const buyDisabled = !canPurchaseUi || !profile || !eligibility.canBuy;
+  const buyDisabled = !canPurchaseUi || !profile || !eligibility.canBuy || soldOut;
   const buyBtn = canPurchaseUi
-    ? `<button type="button" class="btn btn--primary btn--sm" data-plans-buy
+    ? soldOut
+      ? `<button type="button" class="btn btn--secondary btn--sm" disabled title="대기열 후속">슬롯 마감</button>`
+      : `<button type="button" class="btn btn--primary btn--sm" data-plans-buy
          data-product-code="${esc(product.productCode)}"
          ${buyDisabled ? 'disabled' : ''}
          title="${buyDisabled ? '구매 조건을 확인하세요' : '결제로 이동'}">구매하기</button>`
     : `<a href="${AUTH_UI_BASE}/#/login" class="btn btn--secondary btn--sm" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그인 후 구매</a>`;
 
   return `
-    <li class="plans-catalog__item${product.featured ? ' is-featured' : ''}">
+    <li class="plans-catalog__item${product.featured ? ' is-featured' : ''}${soldOut ? ' is-soldout' : ''}">
       <div class="plans-catalog__head">
         <strong>${esc(product.name)}</strong>
         <span class="plans-catalog__kind">position</span>
       </div>
       <p class="plans-catalog__tagline">${esc(product.tagline)}</p>
+      ${slotHtml}
       ${optionSelect}
       <ul class="plans-catalog__bullets">${product.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
       ${missingHtml}
@@ -451,14 +470,23 @@ export function renderPlansPositions() {
   const products = getCatalogByFamily('position', providerKey).concat(
     getCatalogByFamily('placeholder', providerKey),
   );
+  const ops = getPaidOperationalStatus();
+  const slots = ops?.slots ?? null;
+  const inv = resolveSlotInventory(slots);
 
   return `
     <section class="mypage-panel">
       <p class="mypage-lead">P18-02 · 노출상품 (Prime / Pick 중심)</p>
       ${renderProfileBanner(profile, role)}
       ${role === 'study_room' || role === 'tutor' ? renderTestModeToggle() : ''}
+      <div class="mypage-info-box plans-slot-banner">
+        <strong>슬롯 재고</strong>
+        <p>Prime ${inv.prime.used}/${inv.prime.capacity} (잔여 ${inv.prime.remaining})
+          · Pick ${inv.pick.used}/${inv.pick.capacity} (잔여 ${inv.pick.remaining})</p>
+        <p class="mypage-muted">용량은 seed/설정값 · 사용량은 활성 구독 집계 · 대기열은 후속</p>
+      </div>
       <ul class="plans-catalog">
-        ${products.map((p) => renderPositionCard(p, profile, role)).join('')}
+        ${products.map((p) => renderPositionCard(p, profile, role, slots)).join('')}
       </ul>
       <p class="mypage-note">지역 상단·Basic Boost는 placeholder · 접근권은 <a href="#/plans/access" data-plans-nav="/plans/access">접근권상품</a> 탭</p>
     </section>`;
@@ -580,14 +608,18 @@ export function renderPlansHistory() {
   const rows = historyCache.loaded ? historyCache.rows : getHistoryRows();
   const sourceNote = historyCache.loaded
     ? historyCache.fromApi
-      ? '서버 주문 기록 · 로컬 보조 병합'
+      ? '서버 주문 조회 · 로컬 보조 병합'
       : 'API 미연결 · 로컬/seed 목록'
     : '불러오는 중…';
+  const receiptRow = openReceiptOrderRef
+    ? rows.find((r) => r.orderRef === openReceiptOrderRef) || null
+    : null;
 
   return `
     <section class="mypage-panel">
       <p class="mypage-lead">P18-05 · 결제내역</p>
       <p class="mypage-muted">${esc(sourceNote)}</p>
+      <div class="plans-history-layout">
       <table class="plans-table" aria-label="결제내역">
         <thead>
           <tr>
@@ -598,6 +630,7 @@ export function renderPlansHistory() {
             <th>수단</th>
             <th>일시</th>
             <th>상태</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -614,13 +647,16 @@ export function renderPlansHistory() {
               <td>${esc(paymentMethodLabel(r.paymentMethod))}</td>
               <td>${esc(String(r.paidAt).slice(0, 16).replace('T', ' '))}</td>
               <td>${esc(orderStatusLabel(r.status))}</td>
+              <td><button type="button" class="btn btn--secondary btn--sm" data-plans-receipt-open="${esc(r.orderRef)}">상세</button></td>
             </tr>`,
                   )
                   .join('')
-              : `<tr><td colspan="7" class="mypage-muted">내역이 없습니다.</td></tr>`
+              : `<tr><td colspan="8" class="mypage-muted">내역이 없습니다.</td></tr>`
           }
         </tbody>
       </table>
+      ${receiptRow ? renderReceiptPanel(receiptRow) : ''}
+      </div>
     </section>`;
 }
 
@@ -761,6 +797,18 @@ export function bindPlansScreenEvents(root, rerender) {
       rerender();
     });
   }
+
+  root.querySelectorAll('[data-plans-receipt-open]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      openReceiptOrderRef = btn.getAttribute('data-plans-receipt-open');
+      rerender();
+    });
+  });
+  root.querySelector('[data-plans-receipt-close]')?.addEventListener('click', () => {
+    openReceiptOrderRef = null;
+    rerender();
+  });
+  bindReceiptEvents(root);
 
   root.querySelectorAll('[data-plans-test-mode]').forEach((el) => {
     el.addEventListener('change', () => {

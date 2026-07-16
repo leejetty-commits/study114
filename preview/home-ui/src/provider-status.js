@@ -12,6 +12,7 @@ import { fetchEntitlements } from './messages-api.js';
  *   cold_memo: { can_send: boolean, bypass: boolean, remaining: number, legacy_credits: number, nearest_expiry: string|null },
  *   request_view: { remaining: number, nearest_expiry: string|null, unlocked_student_ids: number[] },
  *   exposure: { state: string, label: string, positions: object[] },
+ *   slots?: { prime: { capacity: number, used: number, remaining: number }, pick: { capacity: number, used: number, remaining: number } },
  *   metrics?: object[],
  *   days?: number,
  *   tickets?: object,
@@ -82,6 +83,7 @@ function applyProviderStatus(data) {
       label: 'Basic — 유료 노출 기간 없음',
       positions: [],
     },
+    slots: data.slots ?? null,
     metrics: data.metrics,
     days: data.days,
     tickets: data.tickets,
@@ -244,6 +246,7 @@ export function getPaidOperationalStatusFromCache() {
   if (!cached) return null;
   return {
     exposure: cached.exposure,
+    slots: cached.slots ?? null,
     tickets: cached.tickets ?? {
       memo: {
         label: '쪽지권',

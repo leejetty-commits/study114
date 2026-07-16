@@ -51,9 +51,9 @@ final class ProviderStatusService
         $viewSummary = $this->tickets->getRequestViewTicketSummary($userId);
         $canColdMemo = $isProvider && $this->tickets->canColdMemo($userId);
         $unlockedIds = $isProvider ? $this->tickets->listUnlockedStudentIds($userId) : [];
-        $exposure = $isProvider
-            ? $this->tickets->getOperationalStatus($userId)['exposure']
-            : $this->emptyExposure();
+        $ops = $isProvider ? $this->tickets->getOperationalStatus($userId) : null;
+        $exposure = $ops['exposure'] ?? $this->emptyExposure();
+        $slots = $ops['slots'] ?? null;
 
         $coldMemo = [
             'can_send' => $canColdMemo,
@@ -75,6 +75,7 @@ final class ProviderStatusService
             'cold_memo' => $coldMemo,
             'request_view' => $requestView,
             'exposure' => $exposure,
+            'slots' => $slots,
             'cold_memo_allowed' => $bypass,
             'memo_credits' => $legacyCredits,
             'memo_tickets' => $memoSummary['remaining'],

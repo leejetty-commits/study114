@@ -106,6 +106,24 @@ final class ProviderTicketRepository
         return is_array($rows) ? $rows : [];
     }
 
+    /**
+     * 전역 활성 포지션 수 (슬롯 재고 계산용)
+     * @param 'prime'|'pick' $skuCode
+     */
+    public function countActivePositionsBySku(string $skuCode): int
+    {
+        if (!in_array($skuCode, ['prime', 'pick'], true)) {
+            return 0;
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM provider_position_subscriptions
+             WHERE sku_code = ? AND ends_at > NOW()'
+        );
+        $stmt->execute([$skuCode]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
     public function decrementLegacyMemoCredits(int $userId): bool
     {
         $stmt = $this->pdo->prepare(
