@@ -38,9 +38,18 @@ export function renderSignupComplete() {
   const saved = signupState.lastSignup;
   const basic = signupState.basicRegister?.[role];
   const profile = signupState.basicRegisterResult;
+  const regions = signupState.extraRegister?.activity_regions || basic?.activity_regions || [];
+  const regionSummary = regions.length
+    ? regions
+        .map((r, i) => {
+          const label = [r.sido, r.gugun].filter(Boolean).join(' ');
+          return `${i + 1}. ${label}${r.is_primary ? ' (대표)' : ''}`;
+        })
+        .join(' · ')
+    : '—';
 
   const content = `
-    ${renderStepIndicator(5)}
+    ${renderStepIndicator(6)}
     <div class="panel success-message">
       <div class="success-icon">✓</div>
       <h1 class="auth-heading">가입 · 기본등록 완료</h1>
@@ -60,6 +69,8 @@ export function renderSignupComplete() {
         <dd>${profile ? `${profile.kind} #${profile.id}` : '—'}</dd>
         <dt>기본등록 요약 (14장)</dt>
         <dd>${summarizeBasic(role, basic)}</dd>
+        <dt>활동 지역 (추가입력)</dt>
+        <dd>${regionSummary}</dd>
       </dl>
 
       <div class="detail-cta panel panel--muted mt-6">

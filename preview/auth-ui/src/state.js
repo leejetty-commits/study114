@@ -7,6 +7,7 @@ export const signupState = {
   accountAddress: '',
   profileGender: null,
   basicRegister: {},
+  extraRegister: {},
   lastSignup: null,
   /** @type {Array<{id: number, label: string}>} */
   regions: [],
@@ -58,6 +59,7 @@ export function resetSignupState() {
   signupState.termsAgreed = false;
   signupState.accountAddress = '';
   signupState.basicRegister = {};
+  signupState.extraRegister = {};
   signupState.basicRegisterResult = null;
   signupState.lastSignup = null;
   signupState.regions = [];

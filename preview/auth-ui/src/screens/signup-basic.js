@@ -8,7 +8,6 @@ import {
   LESSON_FORMAT_OPTIONS,
   LESSON_OPERATION_OPTIONS,
   LESSON_PLACE_TYPE_OPTIONS,
-  PERSONAL_GENDER_OPTIONS,
   PREFERRED_LESSON_TYPE_LABELS,
   SCHOOL_LEVEL_OPTIONS,
   STUDENT_COUNT_OPTIONS,
@@ -17,6 +16,8 @@ import {
   TEACHING_STYLE_OPTIONS,
   TUTOR_PLACE_OPTIONS,
   UNIVERSITY_STATUS_OPTIONS,
+  UNIVERSITY_OPTIONS,
+  MAIN_SUBJECT_OPTIONS,
   VISIBILITY_OPTIONS,
 } from '../register-enums.js';
 import { basicRegisterApi } from '../auth-api.js';
@@ -73,6 +74,53 @@ function renderChips(name, options, { multiple = false, selected = [] } = {}) {
         </label>`,
         )
         .join('')}
+    </div>
+  `;
+}
+
+function renderSubjectPicker(selected = [], otherText = '') {
+  const sel = Array.isArray(selected) ? selected : [selected].filter(Boolean);
+  const showOther = sel.includes('기타');
+  return `
+    <div class="form-group" data-subject-picker>
+      <span class="form-label form-label--required">주력과목</span>
+      ${dbField('main_subject_targets (max 3)')}
+      <p class="form-note">최대 3개까지 선택할 수 있습니다. 기타는 직접 입력합니다.</p>
+      ${renderChips('main_subjects', MAIN_SUBJECT_OPTIONS, { multiple: true, selected: sel })}
+      <input
+        class="form-input mt-4"
+        name="main_subject_other"
+        data-subject-other
+        value="${esc(otherText)}"
+        placeholder="기타 과목 입력"
+        ${showOther ? '' : 'hidden'}
+      />
+    </div>
+  `;
+}
+
+function renderUniversityPicker(selected = '', otherText = '') {
+  const value = selected || '서울대학교';
+  const isOther = value === '기타' || (value && !UNIVERSITY_OPTIONS.some((o) => o.value === value));
+  const selectValue = isOther ? '기타' : value;
+  return `
+    <div class="form-group" data-university-picker>
+      <label class="form-label" for="university_name">출신대학명</label>
+      ${dbField('tutors.university_name')}
+      <select class="form-input" name="university_name" id="university_name" data-university-select>
+        ${UNIVERSITY_OPTIONS.map(
+          (opt) =>
+            `<option value="${esc(opt.value)}" ${selectValue === opt.value ? 'selected' : ''}>${esc(opt.label)}</option>`,
+        ).join('')}
+      </select>
+      <input
+        class="form-input mt-4"
+        name="university_name_other"
+        data-university-other
+        value="${esc(isOther && value !== '기타' ? value : otherText)}"
+        placeholder="대학명 직접 입력"
+        ${selectValue === '기타' ? '' : 'hidden'}
+      />
     </div>
   `;
 }
@@ -210,7 +258,6 @@ function renderStudentBasic() {
 
 function renderStudyRoomBasic() {
   const d = signupState.basicRegister?.study_room || {};
-  const genderDefault = d.gender || signupState.profileGender || 'male';
   return `
     <form data-form="basic-study-room" class="basic-register">
       <p class="auth-section-title">검색 핵심축 (14장 §4-2)</p>
@@ -219,22 +266,7 @@ function renderStudyRoomBasic() {
         ${dbField('study_rooms.study_room_name')}
         <input class="form-input" id="study_room_name" name="study_room_name" value="${esc(d.study_room_name || '대치 우등생 공부방')}" required />
       </div>
-      <div class="form-group">
-        <span class="form-label form-label--required">원장 성별</span>
-        ${dbField('user_profiles.gender')}
-        <p class="form-note">매칭·검색 needs에 사용</p>
-        ${renderChips('gender', PERSONAL_GENDER_OPTIONS, { selected: genderDefault })}
-      </div>
-      <div class="form-group">
-        <label class="form-label form-label--required" for="region_id">대표지역</label>
-        ${dbField('study_rooms.region_id')}
-        ${renderRegionSelect('region_id', d.region_id)}
-      </div>
-      <div class="form-group">
-        <label class="form-label form-label--required" for="main_subject_note">주력과목</label>
-        ${dbField('study_rooms.main_subject_note')}
-        <input class="form-input" id="main_subject_note" name="main_subject_note" value="${esc(d.main_subject_note || '수학·영어')}" />
-      </div>
+      ${renderSubjectPicker(d.main_subjects || ['국영수'], d.main_subject_other || '')}
       <div class="form-group">
         <span class="form-label form-label--required">대상 학교급</span>
         ${dbField('study_room_subject_targets.school_level')}
@@ -267,8 +299,9 @@ function renderStudyRoomBasic() {
         </label>
         ${dbField('study_rooms.education_office_registered')}
       </div>
+      <p class="form-note">대표 활동 지역(최대 3)은 다음 <strong>추가입력</strong> 단계에서 시·구를 선택합니다.</p>
       <div class="actions-stack">
-        <button type="submit" class="btn btn--primary btn--block">기본등록 완료</button>
+        <button type="submit" class="btn btn--primary btn--block">다음: 추가입력</button>
         <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/form">이전</button>
       </div>
     </form>
@@ -277,7 +310,6 @@ function renderStudyRoomBasic() {
 
 function renderTutorBasic() {
   const d = signupState.basicRegister?.tutor || {};
-  const genderDefault = d.gender || signupState.profileGender || 'male';
   return `
     <form data-form="basic-tutor" class="basic-register">
       <p class="auth-section-title">검색 핵심축 (14장 §4-3)</p>
@@ -286,22 +318,7 @@ function renderTutorBasic() {
         ${dbField('tutors.tutor_display_name')}
         <input class="form-input" id="tutor_display_name" name="tutor_display_name" value="${esc(d.tutor_display_name || '김수학')}" required />
       </div>
-      <div class="form-group">
-        <span class="form-label form-label--required">과외쌤 성별</span>
-        ${dbField('user_profiles.gender')}
-        <p class="form-note">매칭·검색 needs에 사용</p>
-        ${renderChips('gender', PERSONAL_GENDER_OPTIONS, { selected: genderDefault })}
-      </div>
-      <div class="form-group">
-        <label class="form-label form-label--required" for="region_id">대표 활동 지역</label>
-        ${dbField('tutor_regions.region_id (is_primary)')}
-        ${renderRegionSelect('region_id', d.region_id)}
-      </div>
-      <div class="form-group">
-        <label class="form-label form-label--required" for="main_subject_note">주력과목</label>
-        ${dbField('tutor_subject_targets')}
-        <input class="form-input" id="main_subject_note" name="main_subject_note" value="${esc(d.main_subject_note || '수학')}" />
-      </div>
+      ${renderSubjectPicker(d.main_subjects || ['수학'], d.main_subject_other || '')}
       <div class="form-row">
         <div class="form-group">
           <span class="form-label form-label--required">지도 대상 성별</span>
@@ -343,16 +360,17 @@ function renderTutorBasic() {
           <input class="form-input" type="number" name="minutes_per_lesson" value="${esc(d.minutes_per_lesson ?? 90)}" />
         </div>
       </div>
+      ${renderUniversityPicker(d.university_name || '서울대학교', d.university_name_other || '')}
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="university_name">출신대학명</label>
-          ${dbField('tutors.university_name')}
-          <input class="form-input" name="university_name" value="${esc(d.university_name || '서울대학교')}" />
+          <label class="form-label" for="graduate_school_name">대학원 (선택)</label>
+          ${dbField('tutors.graduate_school_name')}
+          <input class="form-input" id="graduate_school_name" name="graduate_school_name" value="${esc(d.graduate_school_name || '')}" placeholder="예: OO대학교 교육대학원" />
         </div>
         <div class="form-group">
-          <label class="form-label" for="major_name">전공명</label>
+          <label class="form-label" for="major_name">전공학과</label>
           ${dbField('tutors.major_name')}
-          <input class="form-input" name="major_name" value="${esc(d.major_name || '수학과')}" />
+          <input class="form-input" id="major_name" name="major_name" value="${esc(d.major_name || '')}" placeholder="예: 수학과" />
         </div>
       </div>
       <div class="form-row">
@@ -387,8 +405,9 @@ function renderTutorBasic() {
         ${dbField('tutor_teaching_style_badges')}
         ${renderChips('teaching_style_badges', TEACHING_STYLE_OPTIONS, { multiple: true, selected: d.teaching_style_badges || ['concept_focus'] })}
       </div>
+      <p class="form-note">대표 활동 지역(최대 3)은 다음 <strong>추가입력</strong> 단계에서 시·구를 선택합니다. 성별은 상세등록에서 입력합니다.</p>
       <div class="actions-stack">
-        <button type="submit" class="btn btn--primary btn--block">기본등록 완료</button>
+        <button type="submit" class="btn btn--primary btn--block">다음: 추가입력</button>
         <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/form">이전</button>
       </div>
     </form>
@@ -475,9 +494,73 @@ export function bindSignupBasicEvents(root) {
     syncLessonFormat();
   }
 
+  const subjectPicker = form?.querySelector('[data-subject-picker]');
+  if (subjectPicker) {
+    const otherInput = subjectPicker.querySelector('[data-subject-other]');
+    const syncSubjects = (changedEl) => {
+      const checked = [...subjectPicker.querySelectorAll('input[name="main_subjects"]:checked')];
+      if (checked.length > 3 && changedEl?.checked) {
+        changedEl.checked = false;
+        alert('주력과목은 최대 3개까지 선택할 수 있습니다.');
+      }
+      const hasOther = subjectPicker.querySelector('input[name="main_subjects"][value="기타"]:checked');
+      otherInput?.toggleAttribute('hidden', !hasOther);
+    };
+    subjectPicker.querySelectorAll('input[name="main_subjects"]').forEach((el) => {
+      el.addEventListener('change', () => syncSubjects(el));
+    });
+    syncSubjects();
+  }
+
+  const univPicker = form?.querySelector('[data-university-picker]');
+  if (univPicker) {
+    const select = univPicker.querySelector('[data-university-select]');
+    const other = univPicker.querySelector('[data-university-other]');
+    const syncUniv = () => {
+      other?.toggleAttribute('hidden', select?.value !== '기타');
+    };
+    select?.addEventListener('change', syncUniv);
+    syncUniv();
+  }
+
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = collectFormData(form);
+
+    if (Array.isArray(data.main_subjects) || data.main_subjects) {
+      const subjects = Array.isArray(data.main_subjects)
+        ? data.main_subjects
+        : data.main_subjects
+          ? [data.main_subjects]
+          : [];
+      if (!subjects.length) {
+        alert('주력과목을 1개 이상 선택해 주세요.');
+        return;
+      }
+      if (subjects.length > 3) {
+        alert('주력과목은 최대 3개까지 선택할 수 있습니다.');
+        return;
+      }
+      if (subjects.includes('기타') && !String(data.main_subject_other || '').trim()) {
+        alert('기타 과목을 입력해 주세요.');
+        return;
+      }
+      data.main_subjects = subjects;
+      data.main_subject_note = subjects
+        .map((s) => (s === '기타' ? String(data.main_subject_other || '').trim() : s))
+        .filter(Boolean)
+        .join(' · ');
+    }
+
+    if (data.university_name === '기타') {
+      const otherName = String(data.university_name_other || '').trim();
+      if (!otherName) {
+        alert('출신대학명을 입력해 주세요.');
+        return;
+      }
+      data.university_name = otherName;
+    }
+
     const submitBtn = form.querySelector('[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = true;
@@ -500,9 +583,17 @@ export function bindSignupBasicEvents(root) {
         return;
       }
       if (parseHashQuery().from === 'oauth') {
+        if (role === 'tutor' || role === 'study_room') {
+          navigate('/signup/extra?from=oauth');
+          return;
+        }
         const roleType =
           role === 'study_room' ? 'study_room_owner' : role === 'tutor' ? 'tutor' : 'guardian_student';
         window.location.href = resolvePostLoginUrl(roleType);
+        return;
+      }
+      if (role === 'tutor' || role === 'study_room') {
+        navigate('/signup/extra');
         return;
       }
       navigate('/signup/complete');
@@ -526,7 +617,8 @@ export function bindSignupBasicEvents(root) {
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = '기본등록 완료';
+        submitBtn.textContent =
+          role === 'tutor' || role === 'study_room' ? '다음: 추가입력' : '기본등록 완료';
       }
     }
   });

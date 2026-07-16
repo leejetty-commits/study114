@@ -15,12 +15,6 @@ const isDev = import.meta.env.DEV;
 export function renderSignupForm() {
   const role = signupState.role || 'student';
   const roleLabel = ROLE_LABELS[role];
-  const genderLabels = {
-    student: '학부모 성별',
-    study_room: '원장 성별',
-    tutor: '과외쌤 성별',
-  };
-  const genderLabel = genderLabels[role] || '성별';
   const prefEmail = isDev ? DUMMY_USER.email : '';
   const prefName = isDev ? DUMMY_USER.name : '';
   const prefPhone = isDev ? DUMMY_USER.phone : '';
@@ -90,32 +84,6 @@ export function renderSignupForm() {
         </div>
 
         <div class="form-group">
-          <span class="form-label form-label--required">${esc(genderLabel)}</span>
-          <div class="form-radio-group" role="radiogroup" aria-label="${esc(genderLabel)}">
-            <label class="form-radio">
-              <input
-                class="form-radio__input"
-                type="radio"
-                name="gender"
-                value="male"
-                ${DUMMY_USER.gender === 'male' ? 'checked' : ''}
-              />
-              <span class="form-radio__label">남</span>
-            </label>
-            <label class="form-radio">
-              <input
-                class="form-radio__input"
-                type="radio"
-                name="gender"
-                value="female"
-                ${DUMMY_USER.gender === 'female' ? 'checked' : ''}
-              />
-              <span class="form-radio__label">여</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="form-group">
           <label class="form-label form-label--required" for="signup-phone">휴대폰</label>
           <input
             class="form-input"
@@ -173,20 +141,20 @@ export function renderSignupForm() {
             <input
               class="form-check__input"
               type="checkbox"
-              name="sms_consent"
-              id="signup-sms-consent"
-            />
-            <span class="form-check__label">문자 수신 동의 <span class="form-check__optional">(선택)</span></span>
-          </label>
-          <label class="form-check">
-            <input
-              class="form-check__input"
-              type="checkbox"
               name="email_consent"
               id="signup-email-consent"
               required
             />
             <span class="form-check__label">이메일 수신 동의 <span class="form-check__required-mark">(필수)</span></span>
+          </label>
+          <label class="form-check">
+            <input
+              class="form-check__input"
+              type="checkbox"
+              name="sms_consent"
+              id="signup-sms-consent"
+            />
+            <span class="form-check__label">문자 수신 동의 <span class="form-check__optional">(선택)</span></span>
           </label>
           <p class="form-consent-note" role="note">
             아이디 찾기·비밀번호 재설정 안내 메일을 보내드리려면 <strong>이메일 수신 동의가 필요합니다.</strong>
@@ -347,7 +315,7 @@ export function bindSignupFormEvents(root) {
       };
       const detail = payload.address_line2 ? ` ${payload.address_line2}` : '';
       signupState.accountAddress = `${payload.address}${detail}`.trim();
-      signupState.profileGender = payload.gender || null;
+      signupState.profileGender = null;
       console.info('[signup] saved', signupState.lastSignup);
       navigate('/signup/basic');
     } catch (err) {

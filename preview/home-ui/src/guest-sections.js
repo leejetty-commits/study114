@@ -123,11 +123,6 @@ export function renderGuestBrowseLists() {
     </section>
     <section class="guest-browse-lists guest-browse-lists--students" aria-label="학생 학습 의뢰">
       ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title' }, EXPOSURE_STUDENTS, { guest: true })}
-      <div class="list-subsection list-subsection--students-foot">
-        <p class="content-section__foot">
-          로그인 후 상세·연락 회원 전용 · <a href="${LOGIN_URL}" data-util-href="${LOGIN_URL}">로그인</a>
-        </p>
-      </div>
     </section>
   `;
 }

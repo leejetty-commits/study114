@@ -668,26 +668,30 @@ body {
   padding-top: 0.25rem;
 }
 
-/* 지도 모듈 전체는 20px 좁게, 지도 높이는 기존보다 30px 크게 */
+/* 지도 박스: 가로 -20px, 세로 +30px (박스 자체 높이) */
 .home-shell .hero-map {
-  width: calc(100% - 1.25rem);
+  width: calc(100% - 20px);
+  max-width: 100%;
   margin-left: auto;
   margin-right: auto;
+  box-sizing: border-box;
 }
 
-.home-shell .hero-map__rail {
-  padding-top: 0.75rem;
+.home-shell .hero-map__dong {
+  margin-top: 0.85em;
 }
 
+.home-shell .hero-map,
 .home-shell .hero-map__canvas,
 .home-shell .hero-map__surface {
-  min-height: 14.875rem;
+  min-height: calc(13rem + 30px);
 }
 
 @media (max-width: 640px) {
+  .home-shell .hero-map,
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface {
-    min-height: 10.875rem;
+    min-height: calc(9rem + 30px);
   }
 }
 
@@ -695,7 +699,7 @@ body {
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface {
-    min-height: 18.875rem;
+    min-height: calc(17rem + 30px) !important;
   }
 }
 
@@ -703,7 +707,7 @@ body {
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface {
-    min-height: 20.875rem;
+    min-height: calc(19rem + 30px) !important;
   }
 }
 
@@ -711,8 +715,19 @@ body {
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface {
-    min-height: 23.875rem;
+    min-height: calc(22rem + 30px) !important;
   }
+}
+
+/* 카드 간격 축소 */
+.slot-grid--3,
+.expo-grid--3 {
+  gap: 0.75rem;
+}
+
+.slot-grid--5,
+.expo-grid--5 {
+  gap: 0.625rem;
 }
 
 /* 기본 공부방·과외쌤 목록은 학생 목록과 같은 평면·균등 표 구조 */
@@ -729,11 +744,21 @@ body {
   width: auto;
 }
 
-/* 로그인 안내는 홈 바디와 같은 좌우선, 내용은 높이 중앙에 배치 */
-.guest-login-strip {
+/* 로그인 안내: 본문 카드와 같은 좌우 끝선, 문구 들여쓰기, 수직 중앙 */
+.home-shell > .guest-login-strip {
+  max-width: calc(var(--home-max) - 2 * var(--page-gutter));
+  width: calc(100% - 2 * var(--page-gutter));
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: var(--space-6);
   min-height: 3.5rem;
-  padding: var(--space-3) var(--page-gutter);
+  padding: var(--space-3) var(--space-4);
   align-items: center;
+  box-sizing: border-box;
+}
+
+.home-shell > .guest-login-strip .guest-login-strip__text {
+  padding-left: 1.25rem;
 }
 
 /* 카드 이미지를 카드의 위·좌·우 테두리까지 확장 */

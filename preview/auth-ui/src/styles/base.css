@@ -1332,3 +1332,13 @@ img {
     font-size: 0.6875rem;
   }
 }
+
+.extra-region-slot {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.extra-region-slot:last-of-type {
+  border-bottom: none;
+}

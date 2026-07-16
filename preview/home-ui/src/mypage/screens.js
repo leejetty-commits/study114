@@ -527,6 +527,10 @@ function renderAccount(role, profile) {
         <dt>로그인 계정</dt><dd><strong>${esc(profile.loginId || profile.email)}</strong></dd>
         <dt>이메일</dt><dd>${esc(profile.email)}</dd>
         <dt>대표 지역</dt><dd>${esc(profile.regionLabel)}</dd>
+        <dt>활동 지역 순서</dt>
+        <dd>
+          <p class="mypage-note" style="margin:0;">가입 시 선택한 활동 지역 순서는 마이페이지에서 변경할 수 있습니다. (순서 편집 UI 후속)</p>
+        </dd>
         <dt>역할</dt><dd>${esc(authRole)}</dd>
       </dl>
       <div class="mypage-role-switch" data-role-switch-panel>
