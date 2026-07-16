@@ -665,10 +665,11 @@ body {
 .search-body,
 .register-body,
 .auth-body {
-  padding-top: 0.25rem;
+  /* 헤드 하단 구분선과 바디 상단 사이 여백 */
+  padding-top: 0.75rem;
 }
 
-/* 지도 박스: 아래 섹션과 좌측 정렬, 우측 지도 캔버스만 -20px, 박스 높이 +30px */
+/* 지도 박스: 아래 섹션과 좌측 정렬, 우측 지도 캔버스만 -20px, 박스 높이 +80px */
 .home-shell .hero-map {
   width: 100%;
   max-width: 100%;
@@ -694,7 +695,7 @@ body {
 .home-shell .hero-map,
 .home-shell .hero-map__canvas,
 .home-shell .hero-map__surface {
-  min-height: calc(13rem + 30px) !important;
+  min-height: calc(13rem + 80px) !important;
 }
 
 .home-shell .hero-map__surface,
@@ -708,7 +709,7 @@ body {
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface {
-    min-height: calc(9rem + 30px);
+    min-height: calc(9rem + 80px) !important;
   }
 }
 
@@ -722,8 +723,8 @@ body {
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface {
-    min-height: calc(17rem + 30px) !important;
-    height: calc(17rem + 30px);
+    min-height: calc(17rem + 80px) !important;
+    height: calc(17rem + 80px) !important;
   }
 }
 
@@ -731,8 +732,8 @@ body {
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface {
-    min-height: calc(19rem + 30px) !important;
-    height: calc(19rem + 30px);
+    min-height: calc(19rem + 80px) !important;
+    height: calc(19rem + 80px) !important;
   }
 }
 
@@ -740,8 +741,8 @@ body {
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface {
-    min-height: calc(22rem + 30px) !important;
-    height: calc(22rem + 30px);
+    min-height: calc(22rem + 80px) !important;
+    height: calc(22rem + 80px) !important;
   }
 }
 
@@ -807,21 +808,26 @@ body {
 }
 
 .expo-card--tutor .expo-media-overlay__bl {
-  max-width: 58%;
+  max-width: 62%;
 }
 
 .expo-card--pick.expo-card--tutor .expo-media-overlay__bl {
-  max-width: 52%;
+  max-width: 56%;
 }
 
+/* 졸업·경력(좌)은 좁게, 대학·수강료(우)는 넓게 — 프라임/픽 통일 */
 .expo-card--tutor .expo-overlay-bl-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(2.75rem, 0.34fr) minmax(0, 1fr);
 }
 
 .expo-card--tutor .expo-overlay-bl-grid__cell {
   padding-left: 0.1875rem;
   padding-right: 0.1875rem;
   font-size: 0.5rem;
+}
+
+.expo-card--tutor .expo-overlay-bl-grid__cell:nth-child(odd) {
+  max-width: 4.25rem;
 }
 
 .expo-empty-prime {
@@ -875,6 +881,21 @@ body {
 .expo-tbl__cell {
   padding-top: 0.1875rem;
   padding-bottom: 0.1875rem;
+}
+
+/* 프라임·픽 공부방: 수강료 강조 → 이름 한 줄 확보 */
+.expo-card--study_room .expo-tbl__cell--val-only.expo-tbl__cell--name {
+  white-space: nowrap;
+}
+
+.expo-card--study_room .expo-tbl__cell--val-only.expo-tbl__cell--price {
+  width: 1%;
+  white-space: nowrap;
+  font-size: var(--fs-2);
+  font-style: italic;
+  font-weight: var(--fw-bold);
+  color: #c62828;
+  text-align: right;
 }
 
 /* 이용안내로 이동한 홈 노출 설명 */
