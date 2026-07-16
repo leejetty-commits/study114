@@ -104,7 +104,11 @@ foreach ($f in @(
   "029_dev_email_verified.sql",
   "030_provider_request_unlocks.sql",
   "031_provider_payment_orders.sql",
-  "032_provider_reminders.sql"
+  "032_provider_reminders.sql",
+  "032_admin_accounts_seed.sql",
+  "033_study_room_map_coords.sql",
+  "034_board_operational_channels.sql",
+  "035_content_config_definitions.sql"
 )) {
   Write-Host "Applying $f ..."
   Apply-SqlFile -FileName $f -NoDatabaseArg:($f -eq "001_init.sql")
