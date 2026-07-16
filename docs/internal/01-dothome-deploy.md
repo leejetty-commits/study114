@@ -353,8 +353,12 @@ https://study114.dothome.co.kr
 1. 닷홈 관리자 → phpMyAdmin → DB `study114` 선택  
 2. **가져오기(Import)**  
 3. `sql/schema/` 폴더의 파일을 **번호 순**으로 적용  
-   - `001_init.sql` 부터 `033_study_room_map_coords.sql` 까지 (34개)  
+   - `001_init.sql` 부터 `035_content_config_definitions.sql` 까지  
+   - 이미 운영 중인 DB라면 **증분만**: `034_board_operational_channels.sql` → `035_content_config_definitions.sql`  
 4. (선택) 검수용 시드: `012_search_dev_seed.sql`, `026_admin_dev_seed.sql` 등
+
+> **자동 적용(1회):** 배포 후 `POST /api/health/migrate-034-035.php` body `{"confirm":"apply-034-035"}`  
+> 또는 관리자 `POST /api/admin/content/migrate.php` (동일 confirm). **적용 확인 후 `migrate-034-035.php` 삭제.**
 
 > 파일이 많으면 `001_init.sql` 먼저 → 나머지를 순서대로.
 
@@ -410,4 +414,4 @@ https://study114.dothome.co.kr
 |------|------|
 | 2026-07-09 | 닷홈 study114.dothome.co.kr 기준 최초 작성 |
 | 2026-07-09 | internal README·코드베이스 지도와 상호 링크 정리 |
-| 2026-07-10 | GitHub Actions CI 빌드+FTP(`public/`만)·Variable 주입·`.htaccess` 안전본·배포 포함/제외·작업 원칙 반영 |
+| 2026-07-17 | 034/035(운영형 채널·슬롯 정의) 증분 적용 · `/api/health/migrate-034-035.php` 1회 적용 후 삭제 |

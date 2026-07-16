@@ -17,7 +17,7 @@ final class AdminApi
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
             self::cors();
-            header('Access-Control-Allow-Methods: GET, PATCH, OPTIONS');
+            header('Access-Control-Allow-Methods: GET, POST, PATCH, OPTIONS');
             header('Access-Control-Allow-Headers: Content-Type');
             http_response_code(204);
             exit;
