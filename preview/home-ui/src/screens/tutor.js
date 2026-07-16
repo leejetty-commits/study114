@@ -12,6 +12,7 @@ import {
   isProviderHomeSelfTab,
 } from '../provider-home.js';
 import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
+import { bindGuestListPagination } from '../list-pagination.js';
 
 function renderMyTutorBox() {
   return `
@@ -62,6 +63,8 @@ export function bindTutorEvents(root, rerender) {
     getState: () => previewState.tutorFind,
     role: 'tutor',
   });
+
+  bindGuestListPagination(root, rerender);
 
   if (!isProviderHomeSelfTab('tutor', previewState.tutorTab)) {
     bindCompareEvents(root, true);

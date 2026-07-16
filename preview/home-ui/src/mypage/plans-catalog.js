@@ -137,13 +137,13 @@ export function formatCatalogPrice(item, variant) {
 }
 
 export const FREE_TIER_COPY = {
-  title: 'Basic (무료 공급자)',
+  title: 'Basic (기본 노출)',
   items: [
-    '가게 꾸미기 · 상세·비교 · Basic 노출 · ROI 3종',
-    '지도성향/수업스타일 아이콘 무료 (성실·꼼꼼 등)',
+    '가게 꾸미기 · 상세·비교 · Basic 리스트 · ROI 3종',
+    'Basic Boost·상위 점프 상품 없음 — Prime/Pick으로 전환',
+    '지도성향/수업스타일 아이콘 무료',
     '학부모→공급자 선연락·답장 free',
-    '공급자→학생 선제 쪽지 차단 — 쪽지권 필요 (P16-04)',
-    '요청문 paid_only 열람 차단',
+    '공급자→학생 선제 쪽지·요청문 열람은 접근권 필요',
   ],
 };
 

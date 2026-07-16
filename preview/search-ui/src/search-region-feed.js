@@ -80,12 +80,19 @@ function filterStudentsByRegion(items, regionHint) {
 }
 
 /**
+ * 인덱스 기반 Prime 채움 금지 — 빈 슬롯은 exposure-rules가 EMPTY 카드로 유지
  * @param {object[]} items
  */
 function assignProviderTiers(items) {
-  return items.map((item, i) => ({
+  return items.map((item) => ({
     ...item,
-    exposure_tier: i < 3 ? 'prime' : i < 8 ? 'pick' : 'basic',
+    exposure_tier:
+      item.exposure_tier ||
+      (item.position_sku === 'prime' || item.sku === 'prime'
+        ? 'prime'
+        : item.position_sku === 'pick' || item.sku === 'pick'
+          ? 'pick'
+          : 'basic'),
   }));
 }
 

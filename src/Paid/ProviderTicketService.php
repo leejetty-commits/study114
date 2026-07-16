@@ -158,6 +158,7 @@ final class ProviderTicketService
         $exposureState = count($positions) > 0 ? 'active' : 'basic';
 
         // seed 기본값 — 이후 plan_runtime_settings / 관리자 설정으로 치환
+        // Prime: 지역(행정동/단지) 단위 한정. 현재는 전역 집계 seed.
         $primeCap = 3;
         $pickCap = 10;
         $primeUsed = $this->repo->countActivePositionsBySku('prime');
@@ -178,15 +179,19 @@ final class ProviderTicketService
                 }, $positions),
             ],
             'slots' => [
+                'region_scope_type' => 'dong',
                 'prime' => [
                     'capacity' => $primeCap,
                     'used' => $primeUsed,
                     'remaining' => max(0, $primeCap - $primeUsed),
+                    'scope' => 'region',
                 ],
                 'pick' => [
                     'capacity' => $pickCap,
                     'used' => $pickUsed,
                     'remaining' => max(0, $pickCap - $pickUsed),
+                    'set_size' => 5,
+                    'rotation_minutes' => 15,
                 ],
             ],
             'tickets' => [

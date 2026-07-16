@@ -18,15 +18,12 @@ import { tabToKind } from './search-handoff.js';
  * @param {number} index
  * @returns {ExposureTier}
  */
-export function resolveExposureTier(item, index = 0) {
+export function resolveExposureTier(item, _index = 0) {
   const t = item.exposure_tier;
   if (t === 'prime' || t === 'pick' || t === 'basic') return t;
-  if (item.prime_eligible) return 'prime';
-  if (item.pick_eligible || item.detail_completion_status === 'expanded_complete') {
-    return index < 8 ? 'pick' : 'basic';
-  }
-  if (index < 3) return 'prime';
-  if (index < 8) return 'pick';
+  // 점유는 구독 sku 기준 — 인덱스/eligible로 Prime 슬롯을 채우지 않음
+  if (item.position_sku === 'prime' || item.sku === 'prime') return 'prime';
+  if (item.position_sku === 'pick' || item.sku === 'pick') return 'pick';
   return 'basic';
 }
 

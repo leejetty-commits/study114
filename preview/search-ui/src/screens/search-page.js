@@ -24,7 +24,7 @@ import {
   resolveSearchViewer,
   isSearchLoggedIn,
 } from '../search-handoff.js';
-import { SEARCH_TABS } from '../search-schema.js';
+import { bindGuestListPagination } from '@home-ui/list-pagination.js';
 import {
   esc,
   resetFindSurface,
@@ -132,6 +132,8 @@ export function bindSearchPageEvents(root, rerender) {
     getState: () => previewState,
     role: previewState.role,
   });
+
+  bindGuestListPagination(root, rerender);
 
   root.querySelectorAll('[data-tab]').forEach((btn) => {
     btn.addEventListener('click', () => {

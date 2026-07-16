@@ -1798,6 +1798,49 @@ a.sup-term-chip:hover {
   border-color: #fed7aa;
 }
 
+.expo-card--empty {
+  border-style: dashed;
+  border-color: #fdba74;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 70%);
+  min-height: 10rem;
+  justify-content: center;
+}
+
+.expo-card--empty.expo-card--tutor {
+  border-color: #93c5fd;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 70%);
+}
+
+.expo-empty-prime {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-2) 0;
+}
+
+.expo-empty-prime__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1.35;
+}
+
+.expo-empty-prime__body {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--gray-600);
+  line-height: 1.4;
+}
+
+.expo-prime-meta,
+.expo-pick-meta {
+  margin: 0 0 var(--space-2);
+  font-size: 0.75rem;
+  color: var(--gray-600);
+}
+
 .expo-card--pick {
   padding: var(--space-2);
 }

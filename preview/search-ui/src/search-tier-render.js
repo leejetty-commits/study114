@@ -1,26 +1,31 @@
 /**
  * 검색 결과 — 등급별 레이아웃(Prime/Pick/Basic) 렌더
+ * 규칙: Prime 빈 슬롯 유지 · Pick 5세트+페이지+순환 · Basic 페이지(부스트 없음)
  */
 
-import { SLOT_PRIME, SLOT_PICK_ROW } from '@home-ui/data.js';
 import {
-  renderExposureBox,
+  renderPrimeSlotGrid,
+  renderPickPaginatedBlock,
   renderBasicListBlock,
   renderBrowseList,
+  getPrimeOccupied,
 } from '@home-ui/exposure-render.js';
 import { SECTION_HEADINGS, renderSectionHeading } from '@home-ui/section-headings.js';
 import { partitionByExposureTier } from './search-exposure-mapper.js';
 import { renderSearchZeroState } from '@home-ui/empty-state-copy.js';
 import { isProviderSelfPreviewMode } from './search-role-access.js';
+import { getExposurePageSizes } from '@home-ui/exposure-rules.js';
 
 /**
  * @param {'study_room'|'tutor'} kind
  * @param {object[]} items
  * @param {{ guest?: boolean, viewerRole?: string }} opts
+ * @param {string} [sectionTag]
  * @param {'region'|'search'} [mode]
  */
 function renderProviderTierResults(kind, items, opts = {}, sectionTag = '검색 결과', mode = 'search') {
-  const { prime, pick, basic } = partitionByExposureTier(items);
+  const occupied = getPrimeOccupied(items);
+  const { regionScopeType, primeSlots } = getExposurePageSizes();
   const section =
     kind === 'study_room'
       ? {
@@ -28,48 +33,42 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '검색 
           pick: SECTION_HEADINGS.pickStudyRoom,
           basic: SECTION_HEADINGS.basicStudyRoom,
           color: 'content-section--orange',
+          pickListId: `search_pick_${kind}`,
+          basicListId: `search_basic_${kind}`,
         }
       : {
           prime: SECTION_HEADINGS.primeTutor,
           pick: SECTION_HEADINGS.pickTutor,
           basic: SECTION_HEADINGS.basicTutor,
           color: 'content-section--blue',
+          pickListId: `search_pick_${kind}`,
+          basicListId: `search_basic_${kind}`,
         };
 
-  const primeHtml =
-    prime.length > 0
-      ? `
-      ${renderSectionHeading({ ...section.prime, desc: `${sectionTag} · Prime` })}
-      <div class="expo-grid--3">
-        ${prime
-          .slice(0, 3)
-          .map((item, i) => renderExposureBox(kind, 'prime', item, SLOT_PRIME[i], opts))
-          .join('')}
-      </div>`
-      : '';
-
-  const pickHtml =
-    pick.length > 0
-      ? `
-      ${renderSectionHeading({ ...section.pick, desc: `${sectionTag} · Pick` })}
-      <div class="expo-grid--5">
-        ${pick
-          .map((item, i) =>
-            renderExposureBox(kind, 'pick', item, SLOT_PICK_ROW[i] || `Pick ${i + 1}`, opts),
-          )
-          .join('')}
-      </div>`
-      : '';
-
-  const basicHtml =
-    basic.length > 0
-      ? renderBasicListBlock(kind, { ...section.basic, desc: `${sectionTag} · Basic` }, basic, opts)
-      : '';
-
-  if (!prime.length && !pick.length && !basic.length) {
+  if (!items.length) {
     const tab = kind === 'study_room' ? 'room' : 'tutor';
     return `<div class="search-tier-results search-tier-results--empty">${renderSearchZeroState(tab, mode)}</div>`;
   }
+
+  const primeHtml = `
+      ${renderSectionHeading({ ...section.prime, desc: `${sectionTag} · Prime · ${regionScopeType}` })}
+      <p class="expo-prime-meta">Prime ${primeSlots}슬롯 · 빈 자리 유지 · 자동대체 없음</p>
+      ${renderPrimeSlotGrid(kind, occupied, opts)}`;
+
+  const pickHtml = renderPickPaginatedBlock(
+    kind,
+    section.pickListId,
+    { ...section.pick, desc: `${sectionTag} · Pick` },
+    items,
+    { ...opts, primeOccupied: occupied },
+  );
+
+  const basicHtml = renderBasicListBlock(
+    kind,
+    { ...section.basic, desc: `${sectionTag} · Basic` },
+    items,
+    { ...opts, primeOccupied: occupied, paginated: true, listId: section.basicListId },
+  );
 
   return `
     <div class="content-section ${section.color} search-tier-results">
@@ -82,6 +81,7 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '검색 
 /**
  * @param {object[]} items
  * @param {{ guest?: boolean, viewerRole?: string }} opts
+ * @param {string} [sectionTag]
  * @param {'region'|'search'} [mode]
  */
 function renderStudentTierResults(items, opts = {}, sectionTag = '검색 결과', mode = 'search') {
@@ -103,7 +103,7 @@ function renderStudentTierResults(items, opts = {}, sectionTag = '검색 결과'
 /**
  * @param {import('./state.js').SearchTab} tab
  * @param {object[]} exposureItems
- * @param {{ role: import('./state.js').ViewerRole }} ctx
+ * @param {{ role: import('./state.js').ViewerRole, homeSelf?: boolean }} ctx
  * @param {{ mode?: 'region' | 'search', regionLabel?: string }} [options]
  */
 export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
@@ -112,8 +112,14 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
   const guest = ctx.role === 'guest';
   const viewerRole = ctx.role;
   const selfPreview = isProviderSelfPreviewMode(tab, ctx.role, ctx.homeSelf === true);
-  const opts = { guest, viewerRole, sourceRoute: 'search', showCompare: !selfPreview, showWish: !selfPreview };
-  const tag = mode === 'region' ? regionLabel : '검색 결과';
+  const opts = {
+    guest,
+    viewerRole,
+    sourceRoute: 'search',
+    showCompare: !selfPreview,
+    showWish: !selfPreview,
+  };
+  const tag = mode === 'region' ? regionLabel || '지역 피드' : '검색 결과';
 
   if (tab === 'room') {
     return renderProviderTierResults('study_room', exposureItems, opts, tag, mode);
@@ -123,3 +129,5 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
   }
   return renderStudentTierResults(exposureItems, opts, tag, mode);
 }
+
+export { partitionByExposureTier };

@@ -3,17 +3,18 @@ import {
   GUEST_DEMO_REGION,
   GUEST_REGION_STATS,
   AD_FALLBACKS,
-  SLOT_PRIME,
 } from './data.js';
 import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS, EXPOSURE_STUDENTS } from './exposure-data.js';
 import {
-  renderExposureBox,
+  renderPrimeSlotGrid,
   renderGuestPaginatedListBlock,
   renderPickPaginatedBlock,
+  getPrimeOccupied,
 } from './exposure-render.js';
 import { bindGuestListPagination } from './list-pagination.js';
 import { SECTION_HEADINGS, renderSectionHeading } from './section-headings.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
+import { getExposurePageSizes } from './exposure-rules.js';
 
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
@@ -57,13 +58,17 @@ function guestHeroMapItems() {
 function renderStudyRoomPrimePick() {
   const pool = EXPOSURE_STUDY_ROOMS;
   const guestOpts = { guest: true };
+  const occupied = getPrimeOccupied(pool);
+  const { regionScopeType, primeSlots } = getExposurePageSizes();
   return `
     <div class="content-section content-section--orange">
       ${renderSectionHeading({ ...SECTION_HEADINGS.primeStudyRoom, id: 'guest-prime-room' })}
-      <div class="expo-grid--3">
-        ${pool.slice(0, 3).map((item, i) => renderExposureBox('study_room', 'prime', item, SLOT_PRIME[i], guestOpts)).join('')}
-      </div>
-      ${renderPickPaginatedBlock('study_room', 'pick_study_room', SECTION_HEADINGS.pickStudyRoom, pool, guestOpts)}
+      <p class="expo-prime-meta mypage-muted">지역 단위(${regionScopeType}) · Prime ${primeSlots}슬롯 · 빈 자리는 홍보카드</p>
+      ${renderPrimeSlotGrid('study_room', occupied, guestOpts)}
+      ${renderPickPaginatedBlock('study_room', 'pick_study_room', SECTION_HEADINGS.pickStudyRoom, pool, {
+        ...guestOpts,
+        primeOccupied: occupied,
+      })}
     </div>
   `;
 }
@@ -81,13 +86,17 @@ function renderStudyRoomBasicList() {
 function renderTutorPrimePick() {
   const pool = EXPOSURE_TUTORS;
   const guestOpts = { guest: true };
+  const occupied = getPrimeOccupied(pool);
+  const { regionScopeType, primeSlots } = getExposurePageSizes();
   return `
     <div class="content-section content-section--blue">
       ${renderSectionHeading({ ...SECTION_HEADINGS.primeTutor, id: 'guest-prime-tutor' })}
-      <div class="expo-grid--3">
-        ${pool.slice(0, 3).map((item, i) => renderExposureBox('tutor', 'prime', item, SLOT_PRIME[i], guestOpts)).join('')}
-      </div>
-      ${renderPickPaginatedBlock('tutor', 'pick_tutor', SECTION_HEADINGS.pickTutor, pool, guestOpts)}
+      <p class="expo-prime-meta mypage-muted">지역 단위(${regionScopeType}) · Prime ${primeSlots}슬롯 · 빈 자리는 홍보카드</p>
+      ${renderPrimeSlotGrid('tutor', occupied, guestOpts)}
+      ${renderPickPaginatedBlock('tutor', 'pick_tutor', SECTION_HEADINGS.pickTutor, pool, {
+        ...guestOpts,
+        primeOccupied: occupied,
+      })}
     </div>
   `;
 }

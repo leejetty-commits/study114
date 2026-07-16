@@ -14,6 +14,7 @@ import {
   getProviderHomeMode,
 } from '../provider-home.js';
 import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
+import { bindGuestListPagination } from '../list-pagination.js';
 
 export function renderParent() {
   const tab = previewState.parentTab;
@@ -45,6 +46,8 @@ export function bindParentEvents(root, rerender) {
     getState: () => previewState.parentFind,
     role: 'parent',
   });
+
+  bindGuestListPagination(root, rerender);
 
   bindDetailDecisionEvents(root, {
     onRerender: rerender,

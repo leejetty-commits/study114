@@ -17,8 +17,6 @@ import {
   formatStudentLessonTarget,
 } from './exposure-format.js';
 import {
-  GUEST_LIST_PAGE_SIZE,
-  PICK_PAGE_SIZE,
   sortByDateDesc,
   slicePage,
   renderListPagination,
@@ -29,7 +27,17 @@ import {
   renderStudentProviderActions,
   renderStudentConsumerActions,
 } from './student-review-ui.js';
-import { SLOT_PICK_ROW } from './data.js';
+import { SLOT_PICK_ROW, SLOT_PRIME } from './data.js';
+import {
+  buildPrimeSlotArray,
+  getPrimeEmptyCopy,
+  getExposurePageSizes,
+  rotatePickPool,
+  sortByNewestFirst,
+  getPrimeOccupied,
+  getPickPool,
+  getBasicPool,
+} from './exposure-rules.js';
 
 function esc(s) {
   if (s == null || s === '') return '';
@@ -446,6 +454,44 @@ export function renderExposureBox(kind, tier, item, slotLabel, opts = {}) {
     : renderPickStudyRoom(item, slotLabel, tierMeta, actions, actionOpts);
 }
 
+/**
+ * Prime 빈 슬롯 — 다른 상품으로 채우지 않고 홍보카드 유지
+ * @param {'study_room'|'tutor'} kind
+ * @param {string} slotLabel
+ */
+export function renderEmptyPrimePromo(kind, slotLabel) {
+  const copy = getPrimeEmptyCopy(kind);
+  const tone = kind === 'tutor' ? 'tutor' : 'study_room';
+  return `
+    <article class="expo-card expo-card--prime expo-card--empty expo-card--${tone}" data-prime-empty="1">
+      <span class="expo-card__slot">${esc(slotLabel)} · 빈 슬롯</span>
+      <div class="expo-empty-prime">
+        <p class="expo-empty-prime__title">${esc(copy.title)}</p>
+        <p class="expo-empty-prime__body">${esc(copy.body)}</p>
+        <a href="#/plans/positions" class="btn btn--primary btn--sm" data-nav="/plans/positions">${esc(copy.cta)}</a>
+      </div>
+    </article>`;
+}
+
+/**
+ * 항상 prime_slots 칸 고정 · null은 EMPTY 카드
+ * @param {'study_room'|'tutor'} kind
+ * @param {object[]} occupiedItems
+ * @param {object} [opts]
+ */
+export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
+  const { primeSlots } = getExposurePageSizes();
+  const slots = buildPrimeSlotArray(occupiedItems, primeSlots);
+  const cards = slots
+    .map((item, i) => {
+      const label = SLOT_PRIME[i] || `Prime ${i + 1}`;
+      if (!item) return renderEmptyPrimePromo(kind, label);
+      return renderExposureBox(kind, 'prime', item, label, opts);
+    })
+    .join('');
+  return `<div class="expo-grid--3">${cards}</div>`;
+}
+
 function renderBasicStudyRoomRow(item, opts) {
   const actionOpts = actionOptsFromItem(item, {
     guest: opts.guest,
@@ -585,13 +631,15 @@ export function renderBrowseList(kind, items, opts = {}) {
 }
 
 export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opts = {}) {
-  const pickPool = allItems.slice(3);
+  const { pickSetSize, pickRotationMinutes } = getExposurePageSizes();
+  const occupied = opts.primeOccupied ?? getPrimeOccupied(allItems);
+  const pickPool = rotatePickPool(getPickPool(allItems, occupied));
   const page = opts.page ?? getGuestListPage(listId);
-  const pageItems = slicePage(pickPool, page, PICK_PAGE_SIZE);
+  const pageItems = slicePage(pickPool, page, pickSetSize);
   const cards = pageItems
     .map((item, i) => {
-      const globalIndex = (page - 1) * PICK_PAGE_SIZE + i;
-      const slotLabel = SLOT_PICK_ROW[globalIndex] || `Pick ${globalIndex + 1}`;
+      const rank = (page - 1) * pickSetSize + i + 1;
+      const slotLabel = SLOT_PICK_ROW[i] || `Pick ${rank}`;
       return renderExposureBox(kind, 'pick', item, slotLabel, opts);
     })
     .join('');
@@ -599,32 +647,47 @@ export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opt
   return `
     <div class="list-subsection" data-guest-list="${listId}">
       ${renderSectionHeading(headingCfg)}
-      <div class="expo-grid--5">${cards}</div>
-      ${renderListPagination(listId, pickPool.length, page, PICK_PAGE_SIZE)}
+      <p class="expo-pick-meta mypage-muted">${pickSetSize}개 1세트 · ${pickRotationMinutes}분 순환 · 최신 입점 우선</p>
+      <div class="expo-grid--5">${cards || '<p class="mypage-muted">Pick 노출 후보가 없습니다.</p>'}</div>
+      ${renderListPagination(listId, pickPool.length, page, pickSetSize)}
     </div>
   `;
 }
 
 export function renderGuestPaginatedListBlock(kind, listId, headingCfg, allItems, opts = {}) {
+  const { basicPageSize } = getExposurePageSizes();
+  const occupied = opts.primeOccupied ?? getPrimeOccupied(allItems);
   const dateKey = kind === 'student' ? 'published_at' : 'registered_at';
-  const sorted = sortByDateDesc(allItems, dateKey);
+  const pool =
+    kind === 'student'
+      ? sortByDateDesc(allItems, dateKey)
+      : getBasicPool(allItems, occupied);
   const page = opts.page ?? getGuestListPage(listId);
-  const pageItems = slicePage(sorted, page, GUEST_LIST_PAGE_SIZE);
+  const pageItems = slicePage(pool, page, basicPageSize);
 
   return `
     <div class="list-subsection" data-guest-list="${listId}">
       ${renderSectionHeading(headingCfg)}
-      ${renderBrowseList(kind, pageItems, { guest: opts.guest ?? true })}
-      ${renderListPagination(listId, sorted.length, page, GUEST_LIST_PAGE_SIZE)}
+      ${renderBrowseList(kind, pageItems, { guest: opts.guest ?? true, ...opts })}
+      ${renderListPagination(listId, pool.length, page, basicPageSize)}
     </div>
   `;
 }
 
 export function renderBasicListBlock(kind, headingCfg, items, opts = {}) {
+  const { basicPageSize } = getExposurePageSizes();
+  const listId = opts.listId || `basic_${kind}`;
+  const occupied = opts.primeOccupied ?? [];
+  const pool = occupied.length ? getBasicPool(items, occupied) : sortByNewestFirst(items);
+  const page = opts.page ?? (opts.paginated ? getGuestListPage(listId) : 1);
+  const usePager = opts.paginated !== false;
+  const pageItems = usePager ? slicePage(pool, page, basicPageSize) : pool;
+
   return `
-    <div class="list-subsection">
+    <div class="list-subsection" data-guest-list="${listId}">
       ${renderSectionHeading(headingCfg)}
-      ${renderBrowseList(kind, items, opts)}
+      ${renderBrowseList(kind, pageItems, opts)}
+      ${usePager ? renderListPagination(listId, pool.length, page, basicPageSize) : ''}
     </div>
   `;
 }
@@ -632,3 +695,10 @@ export function renderBasicListBlock(kind, headingCfg, items, opts = {}) {
 export function renderStudentListRow(student) {
   return renderBasicStudentRow(student, { guest: true });
 }
+
+export {
+  getPrimeOccupied,
+  getPickPool,
+  getBasicPool,
+  buildPrimeSlotArray,
+};

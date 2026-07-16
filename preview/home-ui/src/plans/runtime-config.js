@@ -6,7 +6,7 @@
 
 const TEST_MODE_KEY = 'study114-plans-test-mode';
 
-/** @typedef {'position'|'access'|'placeholder'} ProductFamily */
+/** @typedef {'position'|'access'} ProductFamily */
 
 /**
  * @typedef {object} PriceOption
@@ -34,9 +34,22 @@ const TEST_MODE_KEY = 'study114-plans-test-mode';
 
 /** @type {Record<string, number|string|boolean|number[]|object>} */
 export const PLAN_RUNTIME_DEFAULTS = {
+  /** 지역(행정동/단지) 단위 Prime 슬롯 수 */
   prime_slots: 3,
-  pick_slots: 10,
+  /** 지역 기준: dong | complex */
+  region_scope_type: 'dong',
+  /** 데모: 유료 점유 시뮬레이션 수 (빈 카드 노출용). 실구독 API 연동 시 무시 */
+  demo_prime_filled: 1,
+  /** Pick 1세트 크기 */
+  pick_set_size: 5,
+  /** Pick 시간 순환 간격(분) — 15 | 30 */
+  pick_rotation_minutes: 15,
+  /** Pick 페이지 = 세트 크기와 동일 */
+  pick_page_size: 5,
+  /** Basic 페이지 크기 (부스트 상품 없음) */
   basic_page_size: 20,
+  /** 레거시 호환 — Pick 판매 상한 안내용 (세트·페이지와 별개) */
+  pick_slots: 10,
   message_credit_pack: [5, 10, 20],
   request_view_pack: [5, 10, 20],
   credit_expire_days: 180,
@@ -49,6 +62,10 @@ export const PLAN_RUNTIME_DEFAULTS = {
   default_landing_tutor: '/plans',
   payment_methods: ['card', 'transfer', 'vbank'],
   test_amount_krw: 10,
+  prime_empty_title_study_room: '이 자리에 공부방을 홍보하세요',
+  prime_empty_body_study_room: '우리 동네 상단 노출을 먼저 잡아보세요',
+  prime_empty_title_tutor: '이 자리에 과외쌤을 홍보하세요',
+  prime_empty_body_tutor: '지금 먼저 선점하세요 · 동네 상단 노출',
 };
 
 /**
@@ -61,8 +78,8 @@ export const PLAN_CATALOG_SEED = [
     family: 'position',
     providerType: 'both',
     name: 'Prime',
-    tagline: '최상위 희소 포지션 · 기간형',
-    bullets: ['희소 슬롯 · 운영 배정', '기간형 단건 결제', '자동연장 OFF'],
+    tagline: '행정동·단지 단위 선착순 한정 · 빈 슬롯은 홍보카드로 유지',
+    bullets: ['지역 단위 한정 슬롯', '빈 자리 자동대체 없음', '빈 카드로 선점 유도', '기간형 단건 결제'],
     positionCode: 'home_*_prime_top',
     featured: true,
     implemented: true,
@@ -78,8 +95,8 @@ export const PLAN_CATALOG_SEED = [
     family: 'position',
     providerType: 'both',
     name: 'Pick',
-    tagline: 'Prime 아래 포지션 · 기간형',
-    bullets: ['동네 노출 유지', '시즌 예약은 후순위', '자동연장 OFF'],
+    tagline: '5개 1세트 · 페이지 · 시간대 순환',
+    bullets: ['세트 크기 5', '최신 입점 1번 우선', '15·30분 순환 설정 가능', '기간형 단건 결제'],
     positionCode: 'home_*_pick_grid',
     featured: true,
     implemented: true,
@@ -89,26 +106,7 @@ export const PLAN_CATALOG_SEED = [
       { optionId: 'pick_60', durationDays: 60, priceKrw: 55000, label: '60일', apiVariant: '2개월' },
     ],
   },
-  {
-    productCode: 'region_top',
-    family: 'placeholder',
-    providerType: 'both',
-    name: '지역 상단 노출',
-    tagline: '1차 placeholder · 다음 스프린트',
-    bullets: ['구조만 확보', '실구매는 후순위'],
-    implemented: false,
-    options: [],
-  },
-  {
-    productCode: 'basic_boost',
-    family: 'placeholder',
-    providerType: 'both',
-    name: 'Basic Boost',
-    tagline: '1차 placeholder · 다음 스프린트',
-    bullets: ['구조만 확보', '실구매는 후순위'],
-    implemented: false,
-    options: [],
-  },
+  // region_top / basic_boost — 판매 상품에서 제거 (Basic Boost 금지)
   {
     productCode: 'memo_ticket',
     family: 'access',
@@ -171,7 +169,7 @@ export function setPlansTestMode(on) {
 }
 
 /**
- * @param {'position'|'access'|'placeholder'|string} [family]
+ * @param {'position'|'access'|string} [family]
  * @param {'study_room'|'tutor'|string} [providerType]
  */
 export function getCatalogByFamily(family, providerType) {

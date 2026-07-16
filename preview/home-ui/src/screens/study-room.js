@@ -12,6 +12,7 @@ import {
   isProviderHomeSelfTab,
 } from '../provider-home.js';
 import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
+import { bindGuestListPagination } from '../list-pagination.js';
 import { STUDY_ROOM_REGISTER_URL } from '../../../shared/preview-links.js';
 
 function renderMyStudyRoomBox() {
@@ -62,6 +63,8 @@ export function bindStudyRoomEvents(root, rerender) {
     getState: () => previewState.studyRoomFind,
     role: 'study_room',
   });
+
+  bindGuestListPagination(root, rerender);
 
   if (!isProviderHomeSelfTab('study_room', previewState.studyRoomTab)) {
     bindCompareEvents(root, true);

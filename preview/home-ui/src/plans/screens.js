@@ -386,8 +386,9 @@ function renderSettingsHints() {
   const s = getPlanRuntimeSettings();
   return `
     <p class="mypage-muted plans-settings-hint">
-      슬롯 seed · Prime ${s.prime_slots} · Pick ${s.pick_slots} · Basic ${s.basic_page_size}
-      · 주문만료 ${s.order_expire_minutes}분
+      설정 seed · 지역(${s.region_scope_type}) Prime ${s.prime_slots}슬롯
+      · Pick ${s.pick_set_size}세트/${s.pick_rotation_minutes}분 순환
+      · Basic ${s.basic_page_size}/페이지 · 주문만료 ${s.order_expire_minutes}분
     </p>`;
 }
 
@@ -467,28 +468,28 @@ export function renderPlansPositions() {
   const query = parsePlansQuery();
   const profile = resolveSelectedProfile(query, role);
   const providerKey = role === 'tutor' ? 'tutor' : 'study_room';
-  const products = getCatalogByFamily('position', providerKey).concat(
-    getCatalogByFamily('placeholder', providerKey),
-  );
+  const products = getCatalogByFamily('position', providerKey);
   const ops = getPaidOperationalStatus();
   const slots = ops?.slots ?? null;
   const inv = resolveSlotInventory(slots);
+  const settings = getPlanRuntimeSettings();
+  const scopeLabel = settings.region_scope_type === 'complex' ? '단지' : '행정동';
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P18-02 · 노출상품 (Prime / Pick 중심)</p>
+      <p class="mypage-lead">P18-02 · 노출상품 (Prime / Pick · Basic 부스트 없음)</p>
       ${renderProfileBanner(profile, role)}
       ${role === 'study_room' || role === 'tutor' ? renderTestModeToggle() : ''}
       <div class="mypage-info-box plans-slot-banner">
-        <strong>슬롯 재고</strong>
+        <strong>Prime 슬롯 · ${esc(scopeLabel)} 단위</strong>
         <p>Prime ${inv.prime.used}/${inv.prime.capacity} (잔여 ${inv.prime.remaining})
-          · Pick ${inv.pick.used}/${inv.pick.capacity} (잔여 ${inv.pick.remaining})</p>
-        <p class="mypage-muted">용량은 seed/설정값 · 사용량은 활성 구독 집계 · 대기열은 후속</p>
+          · Pick 판매상한 ${inv.pick.used}/${inv.pick.capacity} (잔여 ${inv.pick.remaining})</p>
+        <p class="mypage-muted">피드: 빈 Prime은 홍보카드 유지 · Pick은 ${settings.pick_set_size}개 세트·${settings.pick_rotation_minutes}분 순환 · Basic은 기본 리스트만</p>
       </div>
       <ul class="plans-catalog">
         ${products.map((p) => renderPositionCard(p, profile, role, slots)).join('')}
       </ul>
-      <p class="mypage-note">지역 상단·Basic Boost는 placeholder · 접근권은 <a href="#/plans/access" data-plans-nav="/plans/access">접근권상품</a> 탭</p>
+      <p class="mypage-note">Basic Boost·상위 점프 상품은 판매하지 않습니다. 접근권은 <a href="#/plans/access" data-plans-nav="/plans/access">접근권상품</a> 탭</p>
     </section>`;
 }
 
