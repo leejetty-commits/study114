@@ -12,6 +12,11 @@ import {
   getChromeNavRole,
   chromeLogout,
 } from '../../shared/chrome-session.js';
+import { HOME_UI_BASE } from '../../shared/preview-links.js';
+import {
+  renderSitePromoSidebar,
+  bindSitePromoSidebarEvents,
+} from '../../shared/promo-sidebar.js';
 
 const ROUTES = {
   '/login': 'login',
@@ -85,9 +90,12 @@ export function renderPreviewToolbar(activeScreen) {
 
 export function renderAuthShell(content, options = {}) {
   const { wide = false, showBack = false, backPath = '/login', backLabel = '뒤로', hideDefaultCard = false } = options;
+  const showPromo = isChromeLoggedIn();
+  const bodyPromoClass = showPromo ? ' home-body--with-promo' : ' auth-body--no-promo';
+  const promoSidebar = showPromo ? renderSitePromoSidebar() : '';
   const header = renderSiteHeader({
     user: getChromeUser(),
-    loggedIn: isChromeLoggedIn(),
+    loggedIn: showPromo,
     role: getChromeNavRole(),
   });
 
@@ -96,12 +104,13 @@ export function renderAuthShell(content, options = {}) {
     ${renderPreviewToolbar(getCurrentScreen())}
     <div class="site-chrome-shell auth-chrome-shell auth-shell auth-shell--stage">
       ${header}
-      <div class="home-body auth-body auth-body--stage auth-body--no-promo">
+      <div class="home-body auth-body auth-body--stage${bodyPromoClass}">
         <div class="home-main">
           <div class="site-gate-wrap site-gate-wrap--stage">
             ${content}
           </div>
         </div>
+        ${promoSidebar}
       </div>
       <footer class="home-footer">
         <p>© 2026 우동공과 · study114</p>
@@ -113,7 +122,7 @@ export function renderAuthShell(content, options = {}) {
     ${renderPreviewToolbar(getCurrentScreen())}
     <div class="site-chrome-shell auth-chrome-shell auth-shell">
       ${header}
-      <div class="home-body auth-body auth-body--no-promo">
+      <div class="home-body auth-body${bodyPromoClass}">
         <div class="home-main">
           <div class="site-gate-wrap">
             <div class="auth-shell__card panel ${wide ? 'auth-shell__card--wide' : ''}">
@@ -122,6 +131,7 @@ export function renderAuthShell(content, options = {}) {
             </div>
           </div>
         </div>
+        ${promoSidebar}
       </div>
       <footer class="home-footer">
         <p>© 2026 우동공과 · study114</p>
@@ -221,6 +231,9 @@ export function bindGlobalEvents(root) {
   bindSiteChrome(root, {
     getRole: getChromeNavRole,
     logout: () => chromeLogout(),
+  });
+  bindSitePromoSidebarEvents(root, {
+    plansHash: `${HOME_UI_BASE}/#/plans/positions`,
   });
   ensureSiteHeaderOffsetListeners();
   syncSiteHeaderOffset(root);

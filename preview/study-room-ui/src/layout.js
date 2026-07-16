@@ -13,6 +13,11 @@ import {
   chromeLogout,
   initChromeSession,
 } from '../../shared/chrome-session.js';
+import { HOME_UI_BASE } from '../../shared/preview-links.js';
+import {
+  renderSitePromoSidebar,
+  bindSitePromoSidebarEvents,
+} from '../../shared/promo-sidebar.js';
 
 const ROUTES = Object.fromEntries(STEPS.map((s) => [s.path, s.key]));
 
@@ -59,9 +64,10 @@ export function renderPreviewToolbar(activeScreen) {
 
 export function renderRegisterShell(content, options = {}) {
   const { step = 1, title = '공부방 등록', subtitle = '' } = options;
+  const showPromo = isChromeLoggedIn();
   const header = renderSiteHeader({
     user: getChromeUser(),
-    loggedIn: isChromeLoggedIn(),
+    loggedIn: showPromo,
     role: getChromeNavRole(),
     activeGnbId: 'register_room',
   });
@@ -70,7 +76,7 @@ export function renderRegisterShell(content, options = {}) {
     ${renderPreviewToolbar(getCurrentScreen())}
     <div class="site-chrome-shell register-chrome-shell">
       ${header}
-      <div class="home-body register-body register-body--no-promo">
+      <div class="home-body register-body${showPromo ? ' home-body--with-promo' : ' register-body--no-promo'}">
         <div class="home-main">
           <div class="site-gate-wrap">
             <div class="register-card panel">
@@ -81,6 +87,7 @@ export function renderRegisterShell(content, options = {}) {
             </div>
           </div>
         </div>
+        ${showPromo ? renderSitePromoSidebar() : ''}
       </div>
       <footer class="home-footer">
         <p>© 2026 우동공과 · study114</p>
@@ -141,6 +148,9 @@ export function bindGlobalEvents(root) {
   bindSiteChrome(root, {
     getRole: getChromeNavRole,
     logout: () => chromeLogout(),
+  });
+  bindSitePromoSidebarEvents(root, {
+    plansHash: `${HOME_UI_BASE}/#/plans/positions`,
   });
   ensureSiteHeaderOffsetListeners();
   syncSiteHeaderOffset(root);

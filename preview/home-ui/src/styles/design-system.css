@@ -514,8 +514,8 @@ body {
 
 /* ── Cross-app shell: GNB 대상 검색·등록·인증 폭 통일 ── */
 .search-body:not(.home-body--with-promo),
-.register-body,
-.auth-body {
+.register-body:not(.home-body--with-promo),
+.auth-body:not(.home-body--with-promo) {
   display: block !important;
   grid-template-columns: none !important;
   max-width: var(--home-max);
@@ -531,7 +531,9 @@ body {
 /* 홈과 동일: 본문 + 우측 프로모 배너 */
 .home-body.home-body--with-promo,
 .home-app > .home-body.home-body--with-promo,
-.search-body.home-body--with-promo {
+.search-body.home-body--with-promo,
+.register-body.home-body--with-promo,
+.auth-body.home-body--with-promo {
   display: grid !important;
   max-width: var(--home-max);
   width: 100%;
@@ -545,7 +547,9 @@ body {
 @media (min-width: 1024px) {
   .home-body.home-body--with-promo,
   .home-app > .home-body.home-body--with-promo,
-  .search-body.home-body--with-promo {
+  .search-body.home-body--with-promo,
+  .register-body.home-body--with-promo,
+  .auth-body.home-body--with-promo {
     grid-template-columns: minmax(0, 1fr) 12rem !important;
     gap: var(--space-2);
   }
