@@ -30,7 +30,8 @@ import { renderPolicy, bindPolicyEvents } from './policy-index.js';
 import { renderLibrary, bindLibraryEvents } from './library/index.js';
 import { renderAdmin, bindAdminEvents } from './admin/index.js';
 import { renderPlans, bindPlansEvents } from './plans/index.js';
-import { initAuthSession, isAdminUser, ROLE_HOME } from './auth-session.js';
+import { initAuthSession, isAdminUser, isLoggedIn, ROLE_HOME } from './auth-session.js';
+import { guardRoleHomeAccess } from '../../shared/route-access.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { showEmailVerifyOverlay } from './email-verify-overlay.js';
@@ -91,7 +92,14 @@ function render() {
     return;
   }
   const key = getCurrentScreen();
-  const screen = SCREENS[key] || SCREENS.guest;
+  const roleGate = guardRoleHomeAccess(key, isLoggedIn());
+  if (!roleGate.ok) {
+    if (window.location.hash !== roleGate.redirectHash) {
+      window.location.replace(roleGate.redirectHash);
+      return;
+    }
+  }
+  const screen = SCREENS[roleGate.ok ? key : 'guest'] || SCREENS.guest;
   app.innerHTML = screen.render();
   screen.bind(app, render);
 }

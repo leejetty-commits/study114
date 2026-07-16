@@ -25,6 +25,7 @@ import {
   isSearchLoggedIn,
 } from '../search-handoff.js';
 import { bindGuestListPagination } from '@home-ui/list-pagination.js';
+import { bindProtectedGuestActions } from '../../../shared/guest-gate-ui.js';
 import {
   esc,
   resetFindSurface,
@@ -115,7 +116,8 @@ export function renderSearchPage() {
 export function bindSearchPageEvents(root, rerender) {
   bindGlobalEvents(root);
   const viewer = resolveSearchViewer(previewState.role);
-  const loggedIn = isSearchLoggedIn() || previewState.role !== 'guest';
+  const sessionLoggedIn = isSearchLoggedIn();
+  const loggedIn = sessionLoggedIn;
 
   syncHomeSubscription();
 
@@ -123,10 +125,14 @@ export function bindSearchPageEvents(root, rerender) {
   bindCompareEvents(root, loggedIn);
   bindDetailDecisionEvents(root, {
     onRerender: rerender,
-    viewer,
+    viewer: sessionLoggedIn ? viewer : 'guest',
     sourceRoute: 'search',
     getStudentItem: (id) => previewState.searchExposureItems.find((x) => x.id === id),
   });
+
+  if (!sessionLoggedIn) {
+    bindProtectedGuestActions(root);
+  }
 
   bindFindSurfaceEvents(root, rerender, {
     getTab: getCurrentTab,

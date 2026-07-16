@@ -29,20 +29,25 @@ export function renderPlansPageTitle(path) {
   return `<span class="sup-content__title-prefix">유료상품-</span><span class="sup-content__title-suffix">${esc(suffix)}</span>`;
 }
 
-/** @param {string} path */
-export function renderPlansNav(path) {
+/** @param {string} path @param {{ guestCatalogOnly?: boolean }} [opts] */
+export function renderPlansNav(path, opts = {}) {
   const active = getActivePlansNavId(path);
+  const items = opts.guestCatalogOnly
+    ? PLANS_NAV.filter((n) => n.id === 'home' || n.id === 'positions' || n.id === 'access')
+    : PLANS_NAV;
   return `
     <nav class="sup-nav" aria-label="유료상품 메뉴">
       <ul class="sup-nav__list">
-        ${PLANS_NAV.map(
-          (n) =>
-            `<li>
+        ${items
+          .map(
+            (n) =>
+              `<li>
               <a href="#${n.path}" class="sup-nav__link${active === n.id ? ' is-active' : ''}" data-plans-nav="${n.path}">
                 <span class="sup-nav__label">${esc(n.label)}${n.badge ? ` <em class="plans-nav-badge">${esc(n.badge)}</em>` : ''}</span>
               </a>
             </li>`,
-        ).join('')}
+          )
+          .join('')}
       </ul>
     </nav>`;
 }

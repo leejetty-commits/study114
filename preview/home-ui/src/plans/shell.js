@@ -5,13 +5,15 @@ import { renderPlansPageTitle, renderPlansNav } from './nav.js';
 /**
  * @param {string} currentPath
  * @param {string} bodyHtml
+ * @param {{ role?: string, isGuest?: boolean }} [opts]
  */
-export function renderPlansShell(currentPath, bodyHtml) {
-  const role = getNavRole();
+export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
+  const role = opts.role || getNavRole();
   const sub =
     role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
   const hideNav =
     currentPath.startsWith('/plans/checkout') || currentPath.startsWith('/plans/result');
+  const guestCatalogOnly = Boolean(opts.isGuest);
 
   return `
     ${renderPreviewToolbar()}
@@ -25,7 +27,7 @@ export function renderPlansShell(currentPath, bodyHtml) {
             </div>
           </header>
           <div class="sup-frame">
-            ${hideNav ? '' : renderPlansNav(currentPath)}
+            ${hideNav ? '' : renderPlansNav(currentPath, { guestCatalogOnly })}
             <div class="sup-frame__body">${bodyHtml}</div>
           </div>
           <a href="#${sub}" class="sup-back-home" data-nav="${sub}">← 메인 홈으로</a>

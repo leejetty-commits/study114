@@ -1,4 +1,8 @@
 import { getMypagePath, getNavRole } from '../state.js';
+import { isLoggedIn } from '../auth-session.js';
+import { guardMypageAccess } from '../../../shared/route-access.js';
+import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/guest-gate-ui.js';
+import { renderPreviewToolbar, renderHeader, renderFooter } from '../layout.js';
 import { renderMypageShell, bindMypageShellEvents } from './shell.js';
 import { renderMypageScreen, bindMypageScreenEvents } from './screens.js';
 import { ensureRecentDemo } from './recent-store.js';
@@ -14,8 +18,42 @@ import { bindMessagesScreenEvents } from '../messages/screens.js';
 import { bindMessagesProviderToolbar } from '../messages/shell.js';
 import { bindSubmissionBoardEvents, ensureSubmissionBoardSeed } from '../submission-board/index.js';
 
+function renderMypageLoginGate(message) {
+  const role = 'guest';
+  const panel = renderGuestLoginGatePanel({
+    title: '마이페이지',
+    lead: message,
+    bullets: [
+      '쪽지함·최근열람·찜·등록관리·계정설정은 로그인 후 이용합니다.',
+      '비회원은 홈·찾기·고객센터·상품 안내까지 이용할 수 있습니다.',
+    ],
+    from: 'mypage',
+    primaryLabel: '로그인하고 마이페이지 열기',
+  });
+  return `
+    ${renderPreviewToolbar()}
+    <div class="home-app">
+      ${renderHeader(role)}
+      <main class="home-main mypage-main">
+        <div class="mypage-layout" style="max-width:36rem;margin:2rem auto;">
+          ${panel}
+          <p style="margin-top:1rem;">
+            <a href="#/guest" class="btn btn--secondary" data-nav="/guest">홈으로</a>
+          </p>
+        </div>
+      </main>
+      ${renderFooter()}
+    </div>
+  `;
+}
+
 /** @param {() => void} rerender */
 export function renderMypage() {
+  const gate = guardMypageAccess(isLoggedIn());
+  if (!gate.ok) {
+    return renderMypageLoginGate(gate.message);
+  }
+
   ensureRecentDemo();
   ensureWishlistDemo();
   ensureStudentReviewDemo();
@@ -32,6 +70,18 @@ export function renderMypage() {
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageEvents(root, rerender) {
+  const gate = guardMypageAccess(isLoggedIn());
+  if (!gate.ok) {
+    bindGuestGateLinks(root);
+    root.querySelectorAll('[data-nav]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.hash = el.getAttribute('data-nav') || '/guest';
+      });
+    });
+    return;
+  }
+
   bindMypageShellEvents(root, rerender);
   bindMypageScreenEvents(root, rerender);
   const path = getMypagePath();

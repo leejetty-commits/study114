@@ -131,6 +131,23 @@ export function canAccessPlansHub(role) {
   return isGnbItemVisible(role, 'plans');
 }
 
+/**
+ * 유료상품 카탈로그(소개형) — GNB 노출과 동일.
+ * guest도 카탈로그 열람 가능 (구매·내역은 별도 capability).
+ * @param {NavRole} role
+ */
+export function canBrowsePlansCatalog(role) {
+  return canAccessPlansHub(role);
+}
+
+/**
+ * 유료상품 계정/결제 실사용 — 공급자 로그인 역할만.
+ * @param {NavRole} role
+ */
+export function canAccessPlansAccountRoutes(role) {
+  return role === 'study_room' || role === 'tutor';
+}
+
 /** @param {NavRole} role */
 export function canAccessRegisterRoom(role) {
   return isGnbItemVisible(role, 'register_room');
@@ -139,6 +156,17 @@ export function canAccessRegisterRoom(role) {
 /** @param {NavRole} role */
 export function canAccessRegisterTutor(role) {
   return isGnbItemVisible(role, 'register_tutor');
+}
+
+/**
+ * 등록 폼 입력/임시저장/제출 — GNB 노출과 분리.
+ * guest는 메뉴만 보이고 폼은 못 씀 (소개/로그인 유도만).
+ * @param {NavRole} role
+ * @param {'room' | 'tutor'} kind
+ */
+export function canAccessRegisterForms(role, kind) {
+  if (kind === 'room') return role === 'study_room';
+  return role === 'tutor';
 }
 
 /**

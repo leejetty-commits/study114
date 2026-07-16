@@ -5,8 +5,21 @@ import '../../home-ui/src/styles/home.css';
 import './styles/register.css';
 import '../../home-ui/src/styles/design-system.css';
 
-import { getChromeNavRole, initChromeSession } from '../../shared/chrome-session.js';
+import {
+  getChromeNavRole,
+  getChromeUser,
+  isChromeLoggedIn,
+  initChromeSession,
+  chromeLogout,
+} from '../../shared/chrome-session.js';
 import { guardRegisterAccess } from '../../shared/route-access.js';
+import { renderRegisterIntroGate, bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
+import {
+  renderSiteHeader,
+  bindSiteChrome,
+  syncSiteHeaderOffset,
+  ensureSiteHeaderOffsetListeners,
+} from '../../shared/site-chrome.js';
 import { getCurrentScreen } from './layout.js';
 import { apiMasters, registerState } from './state.js';
 import { fetchMasters, loadTutor } from './register-api.js';
@@ -27,27 +40,72 @@ const SCREENS = {
   complete: { render: renderComplete, bind: bindCompleteEvents },
 };
 
-function enforceRegisterAccess() {
+function renderIntroShell(innerHtml) {
+  const header = renderSiteHeader({
+    user: getChromeUser(),
+    loggedIn: isChromeLoggedIn(),
+    role: getChromeNavRole(),
+    activeGnbId: 'register_tutor',
+  });
+  return `
+    <div class="site-chrome-shell register-chrome-shell">
+      ${header}
+      <div class="home-body register-body">
+        <div class="home-main">
+          <div class="register-card panel">
+            ${innerHtml}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/** @returns {'blocked'|'intro'|'form'} */
+function resolveRegisterMode() {
   const role = getChromeNavRole();
   const gate = guardRegisterAccess(role, 'tutor');
-  if (gate.ok) return false;
-  window.alert(gate.message);
-  window.location.assign(gate.redirectUrl);
-  return true;
+  if (!gate.ok) {
+    window.alert(gate.message);
+    window.location.assign(gate.redirectUrl);
+    return 'blocked';
+  }
+  return gate.mode;
 }
 
 function render() {
-  if (enforceRegisterAccess()) return;
+  const mode = resolveRegisterMode();
+  if (mode === 'blocked') return;
+
+  const app = document.getElementById('app');
+  if (mode === 'intro') {
+    app.innerHTML = renderIntroShell(renderRegisterIntroGate('tutor'));
+    bindGuestGateLinks(app);
+    bindSiteChrome(app, {
+      getRole: getChromeNavRole,
+      logout: async () => {
+        await chromeLogout();
+        render();
+      },
+    });
+    syncSiteHeaderOffset();
+    ensureSiteHeaderOffsetListeners();
+    return;
+  }
+
   const key = getCurrentScreen();
   const screen = SCREENS[key] || SCREENS.basic;
-  document.getElementById('app').innerHTML = screen.render();
-  screen.bind(document.getElementById('app'));
+  app.innerHTML = screen.render();
+  screen.bind(app);
 }
 
 async function initApi() {
   try {
     const masters = await fetchMasters();
     apiMasters.regions = masters.regions ?? [];
+
+    const gate = guardRegisterAccess(getChromeNavRole(), 'tutor');
+    if (!gate.ok || gate.mode !== 'form') return;
+
     const tutor = await loadTutor().catch(() => null);
     if (tutor) applyTutorToState(registerState, tutor);
     else {

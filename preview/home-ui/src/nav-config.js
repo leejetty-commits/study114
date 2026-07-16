@@ -18,8 +18,11 @@ export {
   isGnbItemVisible,
   getGnbVisibility,
   canAccessPlansHub,
+  canAccessPlansAccountRoutes,
+  canBrowsePlansCatalog,
   canAccessRegisterRoom,
   canAccessRegisterTutor,
+  canAccessRegisterForms,
   visibleSearchTabsForRole,
 } from '../../shared/site-nav-config.js';
 

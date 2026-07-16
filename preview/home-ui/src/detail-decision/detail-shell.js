@@ -98,7 +98,9 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   closeDetailModal();
 
   const title = itemTitle(kind, item);
-  recordRecentView(kind, item.id, title, { sourceRoute, lastAction: 'view_detail' });
+  if (viewer !== 'guest') {
+    recordRecentView(kind, item.id, title, { sourceRoute, lastAction: 'view_detail' });
+  }
   const subtitle =
     kind === 'student'
       ? '학습 요청 카드'
