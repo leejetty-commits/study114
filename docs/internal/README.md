@@ -15,6 +15,7 @@
 | [01-cafe24-staging-deploy.md](./01-cafe24-staging-deploy.md) | 카페24 스테이징 (보류·참고용) | 참고 |
 | [23-board-community-integration-draft.md](./23-board-community-integration-draft.md) | 게시판 엔진·GNU·SSO 초안 | 장기 |
 | [23-board-menu-boundary-audit.md](./23-board-menu-boundary-audit.md) | 게시판/정적/서비스 메뉴 경계 진단 · 프리셋 생성 로직 | ★ 23·33 정렬 |
+| [24-youngcart-sample-lab-purpose.md](./24-youngcart-sample-lab-purpose.md) | 영카트 샘플 Lab — 관리자 UX 벤치마크(주) · 커뮤니티 로그인 기초(부) | ★ Lab 착수 전 |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
 
 ---
@@ -71,3 +72,4 @@ npm run build:dothome
 | 2026-07-10 | GitHub Actions CI 배포·Variable·gitignore 산출물·작업 원칙 반영 |
 | 2026-07-10 | 02-dothome-server-cleanup-checklist.md 추가 |
 | 2026-07-17 | 23-board-menu-boundary-audit.md · Notion 23/30/33 동기화 · policy-log route 잠금 |
+| 2026-07-17 | 24-youngcart-sample-lab-purpose.md 추가 — 영카트 Lab 취지·우선순위·진행방식 |
