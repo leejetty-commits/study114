@@ -321,10 +321,10 @@ export function renderMapBlock() {
 }
 
 import { renderSitePromoInline } from '../../shared/promo-sidebar.js';
-import { renderRightRailSidebar } from './right-rail.js';
+import { renderPromoWithRightRail } from './right-rail.js';
 
 export function renderAdSidebar() {
-  return renderRightRailSidebar('home_right_rail');
+  return renderPromoWithRightRail('home_right_rail');
 }
 
 export function renderAdInline() {
@@ -333,7 +333,7 @@ export function renderAdInline() {
 
 export function renderHomeShell(role, mainContent, opts = {}) {
   const { showAuth, showRoleSwitch, sidebarHtml, loginStrip, slotKey = 'home_right_rail' } = opts;
-  const sidebar = sidebarHtml ?? renderRightRailSidebar(slotKey);
+  const sidebar = sidebarHtml ?? renderPromoWithRightRail(slotKey);
   return `
     ${renderPreviewToolbar()}
     <div class="home-shell">
@@ -354,7 +354,7 @@ export function renderHomeShell(role, mainContent, opts = {}) {
  */
 export function renderAppShellWithPromo(opts) {
   const { toolbar = '', headerHtml, mainHtml, footerHtml = renderFooter(), slotKey = 'support_right_rail', sidebarHtml } = opts;
-  const sidebar = sidebarHtml ?? (slotKey ? renderRightRailSidebar(slotKey) : '');
+  const sidebar = sidebarHtml ?? (slotKey ? renderPromoWithRightRail(slotKey) : '');
   return `
     ${toolbar}
     <div class="home-app">

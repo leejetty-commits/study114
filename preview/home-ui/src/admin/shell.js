@@ -39,11 +39,8 @@ function renderSidebar(activePath) {
         <strong>${esc(A28_COPY.hubTitle)}</strong>
         <span class="admin-sidebar__badge">${esc(A28_COPY.previewBadge)}</span>
       </div>
+      <a href="#/guest" class="admin-sidebar__exit" data-nav="/guest">← 서비스로 나가기</a>
       <nav class="admin-sidebar__nav">${links}</nav>
-      <div class="admin-sidebar__foot">
-        <a href="#/support/admin" class="admin-sidebar__muted" data-a28-nav="/support/admin">P17-admin</a>
-        <a href="#/" class="admin-sidebar__muted" data-nav="/">← 서비스 홈</a>
-      </div>
     </aside>`;
 }
 
@@ -65,6 +62,7 @@ export function renderAdminShell(path, bodyHtml) {
           <div class="admin-topbar__right">
             ${renderAdminRoleBadge()}
             <span class="admin-topbar__user">${esc(user?.email || '비로그인')}</span>
+            <a href="#/guest" class="admin-topbar__exit btn btn--secondary btn--sm" data-nav="/guest">← 서비스 홈</a>
           </div>
         </header>
         <div class="admin-shell__body">${bodyHtml}</div>

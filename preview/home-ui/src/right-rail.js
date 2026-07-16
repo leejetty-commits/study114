@@ -5,6 +5,21 @@ import { listLibraryItems } from './library/library-store.js';
 import { getNavRole } from './state.js';
 import { SITE_PROMO_ITEMS, renderPromoCard } from '../../shared/promo-sidebar.js';
 
+/**
+ * 원본 프로모 3장(위) + 게시판 요약 슬롯(아래)
+ * @param {string} [slotKey]
+ */
+export function renderPromoWithRightRail(slotKey = 'home_right_rail') {
+  const rail = renderRightRailMarkup(slotKey, 'stacked');
+  return `
+    <aside class="home-sidebar home-sidebar--guest home-sidebar--promo" aria-label="프로모션 및 게시판 요약">
+      ${renderPromoCard(SITE_PROMO_ITEMS.premium, 'tall')}
+      ${renderPromoCard(SITE_PROMO_ITEMS.partner)}
+      ${renderPromoCard(SITE_PROMO_ITEMS.public)}
+      ${rail}
+    </aside>`;
+}
+
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 }
@@ -138,37 +153,40 @@ function buildRailContent(slotKey) {
   return { slot, itemsHtml };
 }
 
-/** @param {string} slotKey @param {'sidebar'|'inline'} [variant] */
+/** @param {string} slotKey @param {'sidebar'|'inline'|'stacked'} [variant] */
 function renderRightRailMarkup(slotKey, variant = 'sidebar') {
   const { slot, itemsHtml } = buildRailContent(slotKey);
   if (!slot) {
-    return variant === 'inline' ? '' : renderFallbackPromo();
+    if (variant === 'inline' || variant === 'stacked') return '';
+    return renderFallbackPromo();
   }
   const ctaHref = normalizeHref(slot.ctaTarget);
   const mobileClass = ` right-rail--mobile-${slot.mobileBehavior || 'stack'}`;
-  const tag = variant === 'inline' ? 'section' : 'aside';
+  const tag = variant === 'sidebar' ? 'aside' : variant === 'inline' ? 'section' : 'div';
   const shellClass =
     variant === 'inline'
       ? `right-rail right-rail--inline${mobileClass}`
-      : `home-sidebar home-sidebar--guest right-rail${mobileClass}`;
+      : variant === 'stacked'
+        ? `right-rail right-rail--stacked${mobileClass}`
+        : `home-sidebar home-sidebar--guest right-rail${mobileClass}`;
 
   return `
     <${tag} class="${shellClass}" data-right-rail-slot="${esc(slot.slotKey)}" aria-label="${esc(slot.sectionTitle)}">
       <div class="right-rail__head">
-        <span class="right-rail__eyebrow">게시판 요약 슬롯</span>
+        <span class="right-rail__eyebrow">게시판 요약</span>
         <strong class="right-rail__title">${esc(slot.sectionTitle)}</strong>
       </div>
       <div class="right-rail__items">
         ${itemsHtml}
       </div>
       <a href="${esc(ctaHref)}" class="right-rail__cta"${navAttr(slot.ctaTarget)}>${esc(slot.ctaLabel)} →</a>
-      <p class="right-rail__note">본문은 각 게시판 route에서 확인합니다. 이 영역은 진입/요약/추천 전용입니다.</p>
+      <p class="right-rail__note">본문은 각 게시판에서 확인 · 이 영역은 요약/바로가기</p>
     </${tag}>`;
 }
 
 /** @param {string} slotKey */
 export function renderRightRailSidebar(slotKey = 'home_right_rail') {
-  return renderRightRailMarkup(slotKey, 'sidebar');
+  return renderPromoWithRightRail(slotKey);
 }
 
 /** @param {string} slotKey — 상세 모달·검색 하단 등 인라인 보조 블록 */
