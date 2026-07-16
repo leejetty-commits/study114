@@ -50,9 +50,9 @@ function renderIntroShell(innerHtml) {
   return `
     <div class="site-chrome-shell register-chrome-shell">
       ${header}
-      <div class="home-body register-body">
+      <div class="home-body register-body register-body--no-promo">
         <div class="home-main">
-          <div class="register-card panel">
+          <div class="site-gate-wrap">
             ${innerHtml}
           </div>
         </div>

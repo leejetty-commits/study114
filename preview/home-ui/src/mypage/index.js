@@ -2,7 +2,7 @@ import { getMypagePath, getNavRole } from '../state.js';
 import { isLoggedIn } from '../auth-session.js';
 import { guardMypageAccess } from '../../../shared/route-access.js';
 import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/guest-gate-ui.js';
-import { renderPreviewToolbar, renderHeader, renderFooter } from '../layout.js';
+import { renderPreviewToolbar, renderHeader, renderFooter, renderAppShellWithPromo } from '../layout.js';
 import { renderMypageShell, bindMypageShellEvents } from './shell.js';
 import { renderMypageScreen, bindMypageScreenEvents } from './screens.js';
 import { ensureRecentDemo } from './recent-store.js';
@@ -30,21 +30,20 @@ function renderMypageLoginGate(message) {
     from: 'mypage',
     primaryLabel: '로그인하고 마이페이지 열기',
   });
-  return `
-    ${renderPreviewToolbar()}
-    <div class="home-app">
-      ${renderHeader(role)}
-      <main class="home-main mypage-main">
-        <div class="mypage-layout" style="max-width:36rem;margin:2rem auto;">
-          ${panel}
-          <p style="margin-top:1rem;">
-            <a href="#/guest" class="btn btn--secondary" data-nav="/guest">홈으로</a>
-          </p>
-        </div>
-      </main>
-      ${renderFooter()}
+  const mainHtml = `
+    <div class="site-gate-wrap">
+      ${panel}
+      <p class="site-gate-wrap__foot">
+        <a href="#/guest" class="btn btn--secondary" data-nav="/guest">홈으로</a>
+      </p>
     </div>
   `;
+  return renderAppShellWithPromo({
+    toolbar: renderPreviewToolbar(),
+    headerHtml: renderHeader(role),
+    mainHtml,
+    footerHtml: renderFooter(),
+  });
 }
 
 /** @param {() => void} rerender */

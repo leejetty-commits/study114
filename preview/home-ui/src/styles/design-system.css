@@ -513,7 +513,7 @@ body {
 }
 
 /* ── Cross-app shell: GNB 대상 검색·등록·인증 폭 통일 ── */
-.search-body,
+.search-body:not(.home-body--with-promo),
 .register-body,
 .auth-body {
   display: block !important;
@@ -528,6 +528,46 @@ body {
   padding-bottom: var(--space-8);
 }
 
+/* 홈과 동일: 본문 + 우측 프로모 배너 */
+.home-body.home-body--with-promo,
+.home-app > .home-body.home-body--with-promo,
+.search-body.home-body--with-promo {
+  display: grid !important;
+  max-width: var(--home-max);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--page-gutter);
+  padding-right: var(--page-gutter);
+  box-sizing: border-box;
+}
+
+@media (min-width: 1024px) {
+  .home-body.home-body--with-promo,
+  .home-app > .home-body.home-body--with-promo,
+  .search-body.home-body--with-promo {
+    grid-template-columns: minmax(0, 1fr) 12rem !important;
+    gap: var(--space-2);
+  }
+}
+
+.home-body.home-body--with-promo > .home-main,
+.search-body.home-body--with-promo > .home-main {
+  max-width: none;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+}
+
+.home-app > .home-body.home-body--with-promo > .home-main.sup-main,
+.home-app > .home-body.home-body--with-promo > .home-main.mypage-main,
+.home-app > .home-body.home-body--with-promo > .home-main {
+  max-width: none;
+  margin: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .search-body .home-main,
 .register-body .home-main,
 .auth-body .home-main {
@@ -536,10 +576,43 @@ body {
   padding: 0;
 }
 
+.home-body.home-body--with-promo .mypage-layout,
+.home-body.home-body--with-promo .sup-layout,
+.home-body.home-body--with-promo .admin-shell {
+  max-width: none;
+  width: 100%;
+}
+
+/* 배너 없는 페이지: 유료상품 게스트 안내와 동일 위치·폭 */
+.site-gate-wrap {
+  max-width: 36rem;
+  width: 100%;
+  margin: 2rem auto;
+  box-sizing: border-box;
+}
+
+.site-gate-wrap--stage {
+  max-width: min(40rem, 100%);
+}
+
+.site-gate-wrap__foot {
+  margin-top: 1rem;
+}
+
+.site-gate-wrap .register-card,
+.site-gate-wrap .auth-shell__card,
+.site-gate-wrap .auth-shell__card--wide,
+.site-gate-wrap .guest-gate {
+  max-width: 100% !important;
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .search-chrome-shell .home-footer,
 .register-chrome-shell .home-footer,
 .auth-chrome-shell .home-footer,
-.home-shell .home-footer {
+.home-shell .home-footer,
+.home-app .home-footer {
   max-width: var(--home-max);
   margin: 0 auto;
   padding: var(--space-6) var(--page-gutter);
@@ -553,7 +626,7 @@ body {
 .register-card,
 .auth-chrome-shell .auth-shell__card,
 .auth-chrome-shell .auth-shell__card--wide {
-  max-width: min(40rem, 100%) !important;
+  max-width: min(36rem, 100%) !important;
   width: 100%;
   margin: 0 auto;
   background: var(--surface-page);
@@ -669,8 +742,11 @@ body {
   padding-top: 0.75rem;
 }
 
-/* 지도 박스: 아래 섹션과 좌측 정렬, 우측 지도 캔버스만 -20px, 박스 높이 +110px */
-.home-shell .hero-map {
+/* 지도 박스: 홈·찾기·검색 공통 (우측 지도 캔버스 -20px, 박스 높이 +110px) */
+.home-shell .hero-map,
+.search-chrome-shell .hero-map,
+.home-app .hero-map,
+.hero-map--search {
   width: 100%;
   max-width: 100%;
   margin-left: 0;
@@ -678,11 +754,17 @@ body {
   box-sizing: border-box;
 }
 
-.home-shell .hero-map__dong {
+.home-shell .hero-map__dong,
+.search-chrome-shell .hero-map__dong,
+.home-app .hero-map__dong,
+.hero-map--search .hero-map__dong {
   margin-top: 0.85em;
 }
 
-.home-shell .hero-map__cta {
+.home-shell .hero-map__cta,
+.search-chrome-shell .hero-map__cta,
+.home-app .hero-map__cta,
+.hero-map--search .hero-map__cta {
   width: 100%;
   box-sizing: border-box;
   white-space: normal;
@@ -694,27 +776,54 @@ body {
 
 .home-shell .hero-map,
 .home-shell .hero-map__canvas,
-.home-shell .hero-map__surface {
+.home-shell .hero-map__surface,
+.search-chrome-shell .hero-map,
+.search-chrome-shell .hero-map__canvas,
+.search-chrome-shell .hero-map__surface,
+.home-app .hero-map,
+.home-app .hero-map__canvas,
+.home-app .hero-map__surface,
+.hero-map--search,
+.hero-map--search .hero-map__canvas,
+.hero-map--search .hero-map__surface {
   min-height: calc(13rem + 110px) !important;
 }
 
 .home-shell .hero-map__surface,
 .home-shell .hero-map__surface--naver,
 .home-shell .hero-map__surface--naver .naver-map-mount-host,
-.home-shell .hero-map__surface--naver .naver-map-mount {
+.home-shell .hero-map__surface--naver .naver-map-mount,
+.search-chrome-shell .hero-map__surface,
+.search-chrome-shell .hero-map__surface--naver,
+.search-chrome-shell .hero-map__surface--naver .naver-map-mount-host,
+.search-chrome-shell .hero-map__surface--naver .naver-map-mount,
+.home-app .hero-map__surface,
+.home-app .hero-map__surface--naver,
+.hero-map--search .hero-map__surface,
+.hero-map--search .hero-map__surface--naver {
   height: 100% !important;
 }
 
 @media (max-width: 640px) {
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
-  .home-shell .hero-map__surface {
+  .home-shell .hero-map__surface,
+  .search-chrome-shell .hero-map,
+  .search-chrome-shell .hero-map__canvas,
+  .search-chrome-shell .hero-map__surface,
+  .home-app .hero-map,
+  .hero-map--search,
+  .hero-map--search .hero-map__canvas,
+  .hero-map--search .hero-map__surface {
     min-height: calc(9rem + 110px) !important;
   }
 }
 
 @media (min-width: 720px) {
-  .home-shell .hero-map__rail {
+  .home-shell .hero-map__rail,
+  .search-chrome-shell .hero-map__rail,
+  .home-app .hero-map__rail,
+  .hero-map--search .hero-map__rail {
     flex: 0 0 calc(10.75rem + 20px);
     width: calc(10.75rem + 20px);
     max-width: calc(26% + 20px);
@@ -722,7 +831,16 @@ body {
 
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
-  .home-shell .hero-map__surface {
+  .home-shell .hero-map__surface,
+  .search-chrome-shell .hero-map,
+  .search-chrome-shell .hero-map__canvas,
+  .search-chrome-shell .hero-map__surface,
+  .home-app .hero-map,
+  .home-app .hero-map__canvas,
+  .home-app .hero-map__surface,
+  .hero-map--search,
+  .hero-map--search .hero-map__canvas,
+  .hero-map--search .hero-map__surface {
     min-height: calc(17rem + 110px) !important;
     height: calc(17rem + 110px) !important;
   }
@@ -731,7 +849,16 @@ body {
 @media (min-width: 900px) {
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
-  .home-shell .hero-map__surface {
+  .home-shell .hero-map__surface,
+  .search-chrome-shell .hero-map,
+  .search-chrome-shell .hero-map__canvas,
+  .search-chrome-shell .hero-map__surface,
+  .home-app .hero-map,
+  .home-app .hero-map__canvas,
+  .home-app .hero-map__surface,
+  .hero-map--search,
+  .hero-map--search .hero-map__canvas,
+  .hero-map--search .hero-map__surface {
     min-height: calc(19rem + 110px) !important;
     height: calc(19rem + 110px) !important;
   }
@@ -740,7 +867,16 @@ body {
 @media (min-width: 1100px) {
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
-  .home-shell .hero-map__surface {
+  .home-shell .hero-map__surface,
+  .search-chrome-shell .hero-map,
+  .search-chrome-shell .hero-map__canvas,
+  .search-chrome-shell .hero-map__surface,
+  .home-app .hero-map,
+  .home-app .hero-map__canvas,
+  .home-app .hero-map__surface,
+  .hero-map--search,
+  .hero-map--search .hero-map__canvas,
+  .hero-map--search .hero-map__surface {
     min-height: calc(22rem + 110px) !important;
     height: calc(22rem + 110px) !important;
   }
@@ -893,20 +1029,23 @@ body {
   padding-bottom: 0.1875rem;
 }
 
-/* 프라임·픽 공부방: 수강료 강조 → 이름 한 줄 확보 */
+/* 프라임·픽 공부방: 이름은 한 줄, 수강료는 대상 행 우측 */
 .expo-card.expo-card--study_room .expo-tbl__cell--name {
   white-space: nowrap;
 }
 
 .expo-card.expo-card--study_room .expo-tbl__cell--price,
 .expo-card.expo-card--study_room .expo-tbl__cell--val-only.expo-tbl__cell--price {
-  width: 1%;
+  width: 38%;
+  max-width: 9rem;
   white-space: nowrap;
-  font-size: var(--fs-2) !important;
+  font-size: calc(0.6875rem + 1pt) !important;
   font-style: italic !important;
   font-weight: var(--fw-bold);
   color: #c62828 !important;
   text-align: right !important;
+  padding-right: 0 !important;
+  vertical-align: middle;
 }
 
 /* 이용안내로 이동한 홈 노출 설명 */

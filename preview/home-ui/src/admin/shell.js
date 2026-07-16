@@ -1,4 +1,4 @@
-import { renderPreviewToolbar, renderFooter, bindLayoutEvents } from '../layout.js';
+import { renderPreviewToolbar, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { A28_COPY, A28_NAV } from './a28-copy.js';
 import { getAdminScreenId, getAdminMenuId } from './router.js';
 import { canAccessAdminMenu } from './admin-permissions.js';
@@ -53,28 +53,31 @@ export function renderAdminShell(path, bodyHtml) {
   const user = getAuthUser();
   const menuId = getAdminMenuId(path);
 
-  return `
-    ${renderPreviewToolbar()}
-    <div class="home-app a28-app admin-shell-app">
-      <main class="home-main sup-main admin-shell">
-        ${renderSidebar(path)}
-        <div class="admin-shell__main">
-          <header class="admin-topbar">
-            <div class="admin-topbar__left">
-              ${renderBreadcrumb(path)}
-              <span class="admin-topbar__screen">${esc(screenId)} · ${esc(menuId)}</span>
-            </div>
-            <div class="admin-topbar__right">
-              ${renderAdminRoleBadge()}
-              <span class="admin-topbar__user">${esc(user?.email || '비로그인')}</span>
-            </div>
-          </header>
-          <div class="admin-shell__body">${bodyHtml}</div>
-        </div>
-      </main>
-      ${renderFooter()}
+  const mainHtml = `
+    <div class="admin-shell">
+      ${renderSidebar(path)}
+      <div class="admin-shell__main">
+        <header class="admin-topbar">
+          <div class="admin-topbar__left">
+            ${renderBreadcrumb(path)}
+            <span class="admin-topbar__screen">${esc(screenId)} · ${esc(menuId)}</span>
+          </div>
+          <div class="admin-topbar__right">
+            ${renderAdminRoleBadge()}
+            <span class="admin-topbar__user">${esc(user?.email || '비로그인')}</span>
+          </div>
+        </header>
+        <div class="admin-shell__body">${bodyHtml}</div>
+      </div>
     </div>
   `;
+
+  return renderAppShellWithPromo({
+    toolbar: renderPreviewToolbar(),
+    headerHtml: '',
+    mainHtml,
+    footerHtml: renderFooter(),
+  });
 }
 
 export function bindAdminShellEvents(root, rerender) {

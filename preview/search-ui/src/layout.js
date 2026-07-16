@@ -1,5 +1,5 @@
 import { getCurrentTab, previewState } from './state.js';
-import { AUTH_UI_BASE } from '../../shared/preview-links.js';
+import { AUTH_UI_BASE, HOME_UI_BASE } from '../../shared/preview-links.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { getVisibleSearchTabs, getSearchTabLabel } from './search-role-access.js';
 import {
@@ -10,6 +10,10 @@ import {
 } from '../../shared/site-chrome.js';
 import { navRoleFromAuthUser } from '../../shared/site-nav-config.js';
 import { getAuthUser, isLoggedIn, logout } from '@home-ui/auth-session.js';
+import {
+  renderSitePromoSidebar,
+  bindSitePromoSidebarEvents,
+} from '../../shared/promo-sidebar.js';
 
 export function renderPreviewToolbar(activeTab) {
   if (!SHOW_PREVIEW_TOOLBAR) return '';
@@ -65,10 +69,11 @@ export function renderSearchShell(content) {
     ${renderPreviewToolbar(getCurrentTab())}
     <div class="site-chrome-shell search-chrome-shell">
       ${header}
-      <div class="home-body search-body">
+      <div class="home-body search-body home-body--with-promo">
         <div class="home-main search-main">
           ${content}
         </div>
+        ${renderSitePromoSidebar()}
       </div>
       <footer class="home-footer">
         <p>© 2026 우동공과 · study114</p>
@@ -88,6 +93,10 @@ export function bindGlobalEvents(root) {
   bindSiteChrome(root, {
     getRole: resolveChromeRole,
     logout: () => logout(),
+  });
+
+  bindSitePromoSidebarEvents(root, {
+    plansHash: `${HOME_UI_BASE}/#/plans/positions`,
   });
 
   ensureSiteHeaderOffsetListeners();

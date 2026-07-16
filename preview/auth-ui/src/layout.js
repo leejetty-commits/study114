@@ -96,9 +96,11 @@ export function renderAuthShell(content, options = {}) {
     ${renderPreviewToolbar(getCurrentScreen())}
     <div class="site-chrome-shell auth-chrome-shell auth-shell auth-shell--stage">
       ${header}
-      <div class="home-body auth-body auth-body--stage">
+      <div class="home-body auth-body auth-body--stage auth-body--no-promo">
         <div class="home-main">
-          ${content}
+          <div class="site-gate-wrap site-gate-wrap--stage">
+            ${content}
+          </div>
         </div>
       </div>
       <footer class="home-footer">
@@ -111,11 +113,13 @@ export function renderAuthShell(content, options = {}) {
     ${renderPreviewToolbar(getCurrentScreen())}
     <div class="site-chrome-shell auth-chrome-shell auth-shell">
       ${header}
-      <div class="home-body auth-body">
+      <div class="home-body auth-body auth-body--no-promo">
         <div class="home-main">
-          <div class="auth-shell__card panel ${wide ? 'auth-shell__card--wide' : ''}">
-            ${showBack ? `<a href="#${backPath}" class="back-link" data-nav="${backPath}">← ${backLabel}</a>` : ''}
-            ${content}
+          <div class="site-gate-wrap">
+            <div class="auth-shell__card panel ${wide ? 'auth-shell__card--wide' : ''}">
+              ${showBack ? `<a href="#${backPath}" class="back-link" data-nav="${backPath}">← ${backLabel}</a>` : ''}
+              ${content}
+            </div>
           </div>
         </div>
       </div>

@@ -70,13 +70,15 @@ export function renderRegisterShell(content, options = {}) {
     ${renderPreviewToolbar(getCurrentScreen())}
     <div class="site-chrome-shell register-chrome-shell">
       ${header}
-      <div class="home-body register-body">
+      <div class="home-body register-body register-body--no-promo">
         <div class="home-main">
-          <div class="register-card panel">
-            ${step <= 5 ? renderStepIndicator(step) : ''}
-            <h1 class="auth-heading">${title}</h1>
-            ${subtitle ? `<p class="auth-subheading mb-6">${subtitle}</p>` : ''}
-            ${content}
+          <div class="site-gate-wrap">
+            <div class="register-card panel">
+              ${step <= 5 ? renderStepIndicator(step) : ''}
+              <h1 class="auth-heading">${title}</h1>
+              ${subtitle ? `<p class="auth-subheading mb-6">${subtitle}</p>` : ''}
+              ${content}
+            </div>
           </div>
         </div>
       </div>

@@ -320,22 +320,14 @@ export function renderMapBlock() {
   `;
 }
 
+import { renderSitePromoSidebar, renderSitePromoInline } from '../../shared/promo-sidebar.js';
+
 export function renderAdSidebar() {
-  return `
-    <aside class="home-sidebar" aria-label="광고">
-      <div class="ad-slot">
-        <span>광고 슬롯</span>
-        <span>데스크톱 전용</span>
-      </div>
-      <div class="ad-slot" style="min-height: 20rem;">
-        <span>광고 슬롯 2</span>
-      </div>
-    </aside>
-  `;
+  return renderSitePromoSidebar();
 }
 
 export function renderAdInline() {
-  return `<div class="ad-slot ad-slot--inline"><span>광고 · 모바일 인라인</span></div>`;
+  return renderSitePromoInline();
 }
 
 export function renderHomeShell(role, mainContent, opts = {}) {
@@ -345,12 +337,31 @@ export function renderHomeShell(role, mainContent, opts = {}) {
     ${renderPreviewToolbar()}
     <div class="home-shell">
       ${renderHeader(role, { showAuth, showRoleSwitch })}
-      <div class="home-body">
+      <div class="home-body home-body--with-promo">
         <div class="home-main">${mainContent}</div>
         ${sidebar}
       </div>
       ${loginStrip ? loginStrip : ''}
       ${renderFooter()}
+    </div>
+  `;
+}
+
+/**
+ * home-app 계열(유료·이용안내·마이페이지 등)에 홈과 같은 우측 배너 적용
+ * @param {{ toolbar?: string, headerHtml: string, mainHtml: string, footerHtml?: string }} opts
+ */
+export function renderAppShellWithPromo(opts) {
+  const { toolbar = '', headerHtml, mainHtml, footerHtml = renderFooter() } = opts;
+  return `
+    ${toolbar}
+    <div class="home-app">
+      ${headerHtml}
+      <div class="home-body home-body--with-promo">
+        <div class="home-main">${mainHtml}</div>
+        ${renderSitePromoSidebar()}
+      </div>
+      ${footerHtml}
     </div>
   `;
 }
@@ -460,6 +471,8 @@ export function bindLayoutEvents(root, rerender) {
         navigate('/library');
       } else if (action === 'util-support') {
         navigateToSupport('/support');
+      } else if (action.startsWith('ad-')) {
+        navigate('/plans/positions');
       } else if (el.dataset.href) {
         goSameTab(el.dataset.href);
       }

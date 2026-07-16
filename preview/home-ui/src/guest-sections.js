@@ -2,7 +2,6 @@ import {
   AUTH_UI_BASE,
   GUEST_DEMO_REGION,
   GUEST_REGION_STATS,
-  AD_FALLBACKS,
 } from './data.js';
 import { SEARCH_UI_URL } from './nav-config.js';
 import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS, EXPOSURE_STUDENTS } from './exposure-data.js';
@@ -15,6 +14,11 @@ import {
 import { bindGuestListPagination } from './list-pagination.js';
 import { SECTION_HEADINGS, renderSectionHeading } from './section-headings.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
+import {
+  renderSitePromoSidebar,
+  renderSitePromoInline,
+  bindSitePromoSidebarEvents,
+} from '../../shared/promo-sidebar.js';
 
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
@@ -132,29 +136,12 @@ export function renderGuestStudentList() {
   return renderGuestBrowseLists();
 }
 
-function renderPromoCard(item, variant = 'compact') {
-  return `
-    <div class="promo-card promo-card--${variant}" data-action="${item.action}">
-      <span class="promo-card__tag">${item.tag}</span>
-      <h3 class="promo-card__title">${item.title}</h3>
-      <p class="promo-card__desc">${item.desc}</p>
-      <button type="button" class="promo-card__cta">${item.cta} →</button>
-    </div>
-  `;
-}
-
 export function renderGuestAdSidebar() {
-  return `
-    <aside class="home-sidebar home-sidebar--guest" aria-label="프로모션">
-      ${renderPromoCard(AD_FALLBACKS.premium, 'tall')}
-      ${renderPromoCard(AD_FALLBACKS.partner)}
-      ${renderPromoCard(AD_FALLBACKS.public)}
-    </aside>
-  `;
+  return renderSitePromoSidebar();
 }
 
 export function renderGuestAdInline() {
-  return `<div class="guest-ad-inline">${renderPromoCard(AD_FALLBACKS.premium, 'compact')}</div>`;
+  return renderSitePromoInline();
 }
 
 export function renderGuestLoginStrip() {
@@ -204,11 +191,5 @@ export function bindGuestSectionEvents(root, rerender) {
     });
   });
 
-  root.querySelectorAll('[data-action^="ad-"]').forEach((el) => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      // 광고 CTA — 유료 안내(마이페이지 플랜)로 동일 탭 이동
-      window.location.hash = '#/plans/positions';
-    });
-  });
+  bindSitePromoSidebarEvents(root);
 }

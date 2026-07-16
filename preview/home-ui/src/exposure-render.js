@@ -329,12 +329,16 @@ function renderVerificationCell(item, maxDocs) {
   return `<button type="button" class="expo-link-btn" data-action="login-gate" data-gate="trust" data-gate-label="제출자료">${esc(label)}</button>`;
 }
 
+function studyRoomPriceCell(item) {
+  return valOnly(formatMonthlyWon(item.price_amount), { cls: 'expo-tbl__cell--price' });
+}
+
 function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = false }, actions = '') {
   if (stack) {
     const rows = [
-      [valOnly(item.study_room_name, { cls: 'expo-tbl__cell--name' }), valOnly(formatMonthlyWon(item.price_amount), { cls: 'expo-tbl__cell--price' })],
+      [valOnly(item.study_room_name, { cls: 'expo-tbl__cell--name', col: 2 })],
       [{ html: renderTrustBadges(item.badges), col: 2, cls: 'expo-tbl__cell--badges' }],
-      [labeled('대상', item.grade_band, { col: 2 })],
+      [labeled('대상', item.grade_band), studyRoomPriceCell(item)],
       [labeled('과목', item.main_subject_note, { col: 2 })],
       [labeled('수업장소', optionalStudyRoomPlace(item.lesson_place_type), { col: 2 })],
       [labeled('원생수', item.capacity_per_time || '—', { col: 2 })],
@@ -345,9 +349,10 @@ function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = fa
   }
 
   const rows = [
-    [valOnly(item.study_room_name, { cls: 'expo-tbl__cell--name' }), valOnly(formatMonthlyWon(item.price_amount), { cls: 'expo-tbl__cell--price' })],
+    [valOnly(item.study_room_name, { cls: 'expo-tbl__cell--name', col: 2 })],
     [{ html: renderTrustBadges(item.badges), col: 2, cls: 'expo-tbl__cell--badges' }],
-    [labeled('대상', item.grade_band), labeled('과목', item.main_subject_note)],
+    [labeled('대상', item.grade_band), studyRoomPriceCell(item)],
+    [labeled('과목', item.main_subject_note, { col: 2 })],
     [labeled('수업장소', optionalStudyRoomPlace(item.lesson_place_type)), labeled('원생수', item.capacity_per_time || '—')],
     [labeled('수업형태', formatLessonOperationType(item.lesson_operation_type), { col: 2 })],
     [labeled('특징', joinFeatures(item, featureMax), { col: 2, cls: 'expo-tbl__cell--features' })],

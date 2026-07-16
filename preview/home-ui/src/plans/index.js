@@ -4,7 +4,7 @@ import {
   resolveAccessNavRole,
 } from '../../../shared/route-access.js';
 import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/guest-gate-ui.js';
-import { renderPreviewToolbar, renderHeader, renderFooter } from '../layout.js';
+import { renderPreviewToolbar, renderHeader, renderFooter, renderAppShellWithPromo } from '../layout.js';
 import { getAuthUser, isLoggedIn } from '../auth-session.js';
 import { getPlansPath, navigate, getNavRole } from '../state.js';
 import { renderPlansShell, bindPlansShellEvents } from './shell.js';
@@ -33,21 +33,20 @@ function renderPlansLoginGate(message) {
     action: 'plans',
     primaryLabel: '로그인하고 유료상품 열기',
   });
-  return `
-    ${renderPreviewToolbar()}
-    <div class="home-app">
-      ${renderHeader(headerRole)}
-      <main class="home-main sup-main">
-        <div class="sup-layout plans-layout" style="max-width:36rem;margin:2rem auto;">
-          ${panel}
-          <p style="margin-top:1rem;">
-            <a href="#/guest" class="btn btn--secondary" data-nav="/guest">홈으로</a>
-          </p>
-        </div>
-      </main>
-      ${renderFooter()}
+  const mainHtml = `
+    <div class="site-gate-wrap">
+      ${panel}
+      <p class="site-gate-wrap__foot">
+        <a href="#/guest" class="btn btn--secondary" data-nav="/guest">홈으로</a>
+      </p>
     </div>
   `;
+  return renderAppShellWithPromo({
+    toolbar: renderPreviewToolbar(),
+    headerHtml: renderHeader(headerRole),
+    mainHtml,
+    footerHtml: renderFooter(),
+  });
 }
 
 export function renderPlans() {
