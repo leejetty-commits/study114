@@ -3,7 +3,7 @@ import { POLICY_SHORT_NOTICE } from './policy-copy.js';
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
-import { UTIL_MENU, GNB_MAIN, GNB_VISIBILITY, GNB_MUTED_TITLE, resolveGnbLink, searchUiUrl } from './nav-config.js';
+import { UTIL_MENU, GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVisible } from './nav-config.js';
 import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
 import { getAuthUser, isLoggedIn, isAdminUser, devLoginAs, logout } from './auth-session.js';
 import { isHandoffApiMode } from './handoff-backend.js';
@@ -105,16 +105,17 @@ function gnbItemLabel(item) {
   return item.label;
 }
 
+/** 세션 확정 역할 우선 (화면 프리뷰 role보다 GNB 노출 기준) */
+function resolveHeaderGnbRole(fallbackRole) {
+  if (isLoggedIn()) return navRoleFromAuthUser(getAuthUser());
+  return fallbackRole || 'guest';
+}
+
 function renderGnbLink(item, role, { mobile = false } = {}) {
-  const vis = GNB_VISIBILITY[role]?.[item.id] ?? 'show';
-  if (vis === 'hide') {
+  if (!isGnbItemVisible(role, item.id)) {
     return '';
   }
   const label = gnbItemLabel(item);
-  if (vis === 'limited') {
-    const mutedCls = mobile ? 'home-gnb__item is-muted' : 'home-gnb__item is-muted';
-    return `<span class="${mutedCls}" title="${GNB_MUTED_TITLE}" aria-disabled="true">${label}</span>`;
-  }
   const screen = getCurrentScreen();
   const onRoleHome = screen === 'guest' || screen === 'parent' || screen === 'studyRoom' || screen === 'tutor';
   const isHomeActive = item.id === 'home' && onRoleHome;
@@ -166,12 +167,13 @@ export function renderHeader(role, opts = {}) {
   const loggedIn = isLoggedIn();
   // 로그인 여부 기준 — 화면이 guest여도 세션이 있으면 마이페이지·로그아웃 노출
   const showAuth = opts.showAuth ?? !loggedIn;
-  // 역할 전환 UI 미구현 — 더미 alert 방지를 위해 기본 비표시
+  // 역할 전환은 GNB가 아니라 마이페이지/계정설정 — GNB CTA 기본 비표시
   const showRoleSwitch = opts.showRoleSwitch === true;
   const logoPath = loggedIn ? roleHomePath() : '/guest';
+  const gnbRole = resolveHeaderGnbRole(role);
 
-  const gnbItems = GNB_MAIN.map((item) => renderGnbLink(item, role)).join('');
-  const mobileGnb = GNB_MAIN.map((item) => renderGnbLink(item, role, { mobile: true })).join('');
+  const gnbItems = GNB_MAIN.map((item) => renderGnbLink(item, gnbRole)).join('');
+  const mobileGnb = GNB_MAIN.map((item) => renderGnbLink(item, gnbRole, { mobile: true })).join('');
 
   return `
     <header class="home-header">
@@ -391,6 +393,7 @@ export function bindLayoutEvents(root, rerender) {
       e.preventDefault();
       const action = el.dataset.action;
       if (action === 'role-switch') {
+        // GNB가 아니라 마이페이지 계정설정으로 유도
         navigate('/mypage/account');
       } else if (action === 'dev-login-parent' || action === 'dev-login-room' || action === 'dev-login-tutor' || action === 'dev-login-admin') {
         const key =
@@ -411,9 +414,8 @@ export function bindLayoutEvents(root, rerender) {
         });
       } else if (action.startsWith('gnb-')) {
         const gnbId = action.replace('gnb-', '');
-        const role = getNavRole();
-        const vis = GNB_VISIBILITY[role]?.[gnbId] ?? 'show';
-        if (vis === 'limited' || vis === 'hide') {
+        const role = resolveHeaderGnbRole(getNavRole());
+        if (!isGnbItemVisible(role, gnbId)) {
           return;
         }
         if (gnbId === 'home') {

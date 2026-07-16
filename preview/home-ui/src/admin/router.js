@@ -2,6 +2,7 @@
 
 const A28_PATHS = [
   '/admin',
+  '/admin/members',
   '/admin/reports',
   '/admin/notices',
   '/admin/tickets',
@@ -29,6 +30,7 @@ export function getDefaultAdminPath() {
 export function getAdminScreenId(path) {
   const map = {
     '/admin': 'A28-01',
+    '/admin/members': 'A28-02',
     '/admin/reports': 'A28-04',
     '/admin/notices': 'A28-05',
     '/admin/tickets': 'A28-04b',
@@ -45,6 +47,7 @@ export function getAdminScreenId(path) {
 export function getAdminMenuId(path) {
   const map = {
     '/admin': 'hub',
+    '/admin/members': 'members',
     '/admin/reports': 'reports',
     '/admin/notices': 'notices',
     '/admin/tickets': 'tickets',

@@ -67,6 +67,37 @@ export async function fetchCommerceOverview(limit = 50) {
   return readJson(res);
 }
 
+/**
+ * @param {{ q?: string, status?: string, role_type?: string, limit?: number }} [filters]
+ */
+export async function fetchAdminMembers(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.q) params.set('q', filters.q);
+  if (filters.status) params.set('status', filters.status);
+  if (filters.role_type) params.set('role_type', filters.role_type);
+  if (filters.limit) params.set('limit', String(filters.limit));
+  const qs = params.toString();
+  const res = await fetch(`/api/admin/members.php${qs ? `?${qs}` : ''}`, CREDENTIALS);
+  return readJson(res);
+}
+
+/** @param {number} id */
+export async function fetchAdminMemberDetail(id) {
+  const res = await fetch(`/api/admin/members.php?id=${id}`, CREDENTIALS);
+  return readJson(res);
+}
+
+/** @param {Record<string, unknown>} input */
+export async function patchAdminMember(input) {
+  const res = await fetch('/api/admin/members.php', {
+    method: 'PATCH',
+    headers: JSON_HEADERS,
+    ...CREDENTIALS,
+    body: JSON.stringify(input),
+  });
+  return readJson(res);
+}
+
 /** @param {Record<string, unknown>} input */
 export async function patchCommerceCorrection(input) {
   const res = await fetch('/api/admin/commerce.php', {

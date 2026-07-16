@@ -13,7 +13,7 @@
 |------|-----------|-----------|
 | **메뉴 구조** | 퀵매칭·앱다운·자료실/포털 **1차 제외** · 유틸+GNB **2층** · GNB **6항목** | ✅ `nav-config.js` · `layout.js` |
 | **안전과외** | GNB 독립 메뉴 **아님** · 이용안내/고객센터 하위 가이드 | ✅ GNB 제거 · `util-guide`/`support` 안내 |
-| **GNB → search-ui** | 공부방/과외/학생 탭 · `?role=` · 역할별 2탭 | ✅ `preview-links.js` · `search-role-access.js` |
+| **GNB → search-ui** | 공부방/과외/학생 탭 · `?role=` · 역할별 GNB hide와 동기 | ✅ `site-nav-config.js` · `search-role-access.js` |
 | **홈 2탭 vs 검색** | 홈=목적형 · GNB=탐색형 · 공급자 탭1=내 노출 | ✅ `provider-home.js` · `homeSelf` |
 | **과외 3지역 탭** | 등록 활동지역 · 검색 전 피드 1차 필터 | ✅ `MOCK_TUTOR_REGIONS` · search-ui |
 | **표기** | 가입 **학생/학부모** · 내부 카피 **학생** 중심 | △ GNB OK · 학부모 화면 카피 일부 혼재 |

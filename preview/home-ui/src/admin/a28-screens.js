@@ -23,6 +23,11 @@ import {
   getCommerceCache,
   hydrateCommerceCache,
   apiApplyCommerceCorrection,
+  getMembersCache,
+  hydrateMembersCache,
+  getMemberDetailCache,
+  hydrateMemberDetail,
+  apiApplyMemberAction,
 } from './admin-backend.js';
 import { isMasterAdmin } from './admin-guard.js';
 import { canAccessAdminMenu, MASTER_EMAILS, SUB_MASTER_EMAILS, SUB_MASTER_BLOCKED_MENUS } from './admin-permissions.js';
@@ -39,8 +44,53 @@ import {
   A28_EXPOSURE_ACTIONS,
   A28_EXPOSURE_TARGET_LABELS,
   A28_INQUIRY_STATUS_LABELS,
+  A28_MEMBER_STATUS_LABELS,
+  A28_MEMBER_ROLE_LABELS,
+  A28_MEMBER_TIER_LABELS,
 } from './a28-copy.js';
 import { getAdminScreenId } from './router.js';
+
+/** @type {{ q: string, status: string, role_type: string }} */
+let memberFilters = { q: '', status: 'all', role_type: 'all' };
+/** @type {number|null} */
+let openMemberId = null;
+
+const A28_MEMBER_SEED = [
+  {
+    id: 1,
+    email: 'parent@example.com',
+    name: '김학부모',
+    status: 'active',
+    primaryRole: 'guardian_student',
+    emailVerified: true,
+    oauthLinked: false,
+    subscriptionTier: 'free',
+    activePositions: 0,
+    studyRoomCount: 0,
+    tutorCount: 0,
+    studentCount: 2,
+    lastLoginAt: '2026-07-15 10:00:00',
+    createdAt: '2026-01-10 09:00:00',
+    isMaster: false,
+  },
+  {
+    id: 2,
+    email: 'room@example.com',
+    name: '이공부방',
+    status: 'active',
+    primaryRole: 'study_room_owner',
+    emailVerified: true,
+    oauthLinked: true,
+    subscriptionTier: 'paid',
+    activePositions: 1,
+    studyRoomCount: 1,
+    tutorCount: 0,
+    studentCount: 0,
+    lastLoginAt: '2026-07-16 18:22:00',
+    createdAt: '2026-02-01 11:00:00',
+    isMaster: false,
+  },
+];
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -442,6 +492,147 @@ function renderCommerce() {
   );
 }
 
+function renderMembers() {
+  const cache = isAdminApiMode() ? getMembersCache() : null;
+  const members = cache?.members ?? A28_MEMBER_SEED;
+  const filters = cache?.filters ?? memberFilters;
+  const master = isMasterAdmin();
+
+  const rows = members
+    .map((m) => {
+      const role = A28_MEMBER_ROLE_LABELS[m.primaryRole] || m.primaryRole || '—';
+      const status = A28_MEMBER_STATUS_LABELS[m.status] || m.status;
+      const tier = A28_MEMBER_TIER_LABELS[m.subscriptionTier] || m.subscriptionTier || 'free';
+      return `<tr>
+        <td><code>${m.id}</code></td>
+        <td>${esc(m.name || '—')}<br><small>${esc(m.email)}</small></td>
+        <td>${esc(role)}${m.isMaster ? ' · 마스터' : ''}</td>
+        <td>${esc(status)}</td>
+        <td>${esc(tier)}${m.activePositions ? ` · 포지션 ${m.activePositions}` : ''}</td>
+        <td>${m.oauthLinked ? '연동' : '—'}${m.oauthPending ? ' · 역할대기' : ''}</td>
+        <td>${esc(m.lastLoginAt || '—')}</td>
+        <td><button type="button" class="btn btn--secondary btn--sm" data-member-open="${m.id}">상세</button></td>
+      </tr>`;
+    })
+    .join('');
+
+  let detailHtml = '';
+  if (openMemberId) {
+    let detail = isAdminApiMode() ? getMemberDetailCache(openMemberId) : null;
+    if (!detail && !isAdminApiMode()) {
+      const seed = A28_MEMBER_SEED.find((m) => m.id === openMemberId);
+      if (seed) {
+        detail = {
+          ...seed,
+          phone: '010-0000-0000',
+          address: '서울시 예시동',
+          roles: [{ roleType: seed.primaryRole, isPrimary: true, status: 'active' }],
+          oauth: seed.oauthLinked ? [{ provider: 'naver', providerEmail: seed.email, linkedAt: seed.createdAt }] : [],
+          paid: { subscriptionTier: seed.subscriptionTier, positions: [], tickets: [], orders: [] },
+          profileCounts: {
+            studyRooms: seed.studyRoomCount,
+            tutors: seed.tutorCount,
+            students: seed.studentCount,
+          },
+        };
+      }
+    }
+    if (detail) {
+      const roles = (detail.roles || [])
+        .map(
+          (r) =>
+            `<li>${esc(A28_MEMBER_ROLE_LABELS[r.roleType] || r.roleType)}${r.isPrimary ? ' (대표)' : ''} · ${esc(r.status)}</li>`,
+        )
+        .join('');
+      const oauth = (detail.oauth || [])
+        .map((o) => `<li>${esc(o.provider)} · ${esc(o.providerEmail || '—')} · ${esc(o.linkedAt)}</li>`)
+        .join('');
+      const positions = (detail.paid?.positions || [])
+        .map((p) => `<li>${esc(p.sku_code)} · ${esc(p.ends_at)} (D${p.days_left})</li>`)
+        .join('');
+      const tickets = (detail.paid?.tickets || [])
+        .map((t) => `<li>${esc(t.ticket_type)} · 잔여 ${t.remaining}/${t.pack_size}</li>`)
+        .join('');
+      const orders = (detail.paid?.orders || [])
+        .map(
+          (o) =>
+            `<li><code>${esc(o.order_ref)}</code> · ${esc(o.product_id)} · ${esc(o.status)} · ${Number(o.amount_won || 0).toLocaleString()}원</li>`,
+        )
+        .join('');
+
+      const canBlock = detail.status !== 'blocked' && detail.status !== 'withdrawn' && !detail.isMaster;
+      const canRestore = detail.status === 'blocked' && !detail.isMaster;
+      const canWithdraw = master && detail.status !== 'withdrawn' && !detail.isMaster;
+
+      detailHtml = renderDetailDrawer(
+        `member-${detail.id}`,
+        `회원 #${detail.id}`,
+        `<dl class="admin-detail-dl">
+          <dt>계정</dt><dd>${esc(detail.name || '—')} · ${esc(detail.email)}</dd>
+          <dt>상태</dt><dd>${esc(A28_MEMBER_STATUS_LABELS[detail.status] || detail.status)}</dd>
+          <dt>전화</dt><dd>${esc(detail.phone || '—')}</dd>
+          <dt>주소</dt><dd>${esc(detail.address || '—')}</dd>
+          <dt>가입</dt><dd>${esc(detail.createdAt)}</dd>
+          <dt>최근 로그인</dt><dd>${esc(detail.lastLoginAt || '—')}</dd>
+          <dt>프로필 수</dt><dd>공부방 ${detail.profileCounts?.studyRooms || 0} · 과외 ${detail.profileCounts?.tutors || 0} · 자녀 ${detail.profileCounts?.students || 0}</dd>
+          <dt>유료 티어</dt><dd>${esc(A28_MEMBER_TIER_LABELS[detail.paid?.subscriptionTier] || detail.paid?.subscriptionTier || 'free')}</dd>
+        </dl>
+        <h4 class="admin-section-title">역할</h4>
+        <ul class="a28-lists">${roles || '<li>없음</li>'}</ul>
+        <h4 class="admin-section-title">소셜 연동</h4>
+        <ul class="a28-lists">${oauth || '<li>없음</li>'}</ul>
+        <h4 class="admin-section-title">유료·결제 (조회)</h4>
+        <p class="a28-hint">포지션</p><ul class="a28-lists">${positions || '<li>없음</li>'}</ul>
+        <p class="a28-hint">횟수권</p><ul class="a28-lists">${tickets || '<li>없음</li>'}</ul>
+        <p class="a28-hint">최근 주문</p><ul class="a28-lists">${orders || '<li>없음</li>'}</ul>
+        <label class="a28-hint">내부 메모
+          <input type="text" class="admin-input" data-member-memo="${detail.id}" placeholder="조치 사유 (로그 기록)" />
+        </label>
+        <div class="admin-actions">
+          ${canBlock ? `<button type="button" class="btn btn--secondary btn--sm" data-member-action="block" data-member-id="${detail.id}">이용 제한</button>` : ''}
+          ${canRestore ? `<button type="button" class="btn btn--primary btn--sm" data-member-action="restore" data-member-id="${detail.id}">복구</button>` : ''}
+          ${canWithdraw ? `<button type="button" class="btn btn--secondary btn--sm" data-member-action="withdraw" data-member-id="${detail.id}">탈퇴 처리</button>` : ''}
+          ${detail.isMaster ? '<p class="a28-hint">마스터 계정은 제한/탈퇴 불가</p>' : ''}
+        </div>`,
+      );
+    } else {
+      detailHtml = `<p class="a28-hint">회원 #${openMemberId} 상세 로딩 중…</p>`;
+    }
+  }
+
+  return renderPanel(
+    '회원/역할 검색',
+    'A28-02',
+    `${renderRedLineBanner()}
+     <p class="a28-hint">조회 · 이용 제한/복구 · 유료·역할 조회 · 역할 부여/가장(impersonation) UI 없음 · 승인·반려 용어 금지</p>
+     <form class="admin-filter-bar" data-member-filter>
+       <input type="search" name="q" class="admin-input" placeholder="이메일·이름·ID" value="${esc(filters.q || '')}" />
+       <select name="status" class="admin-input--sm">
+         <option value="all"${filters.status === 'all' ? ' selected' : ''}>상태 전체</option>
+         <option value="active"${filters.status === 'active' ? ' selected' : ''}>정상</option>
+         <option value="pending"${filters.status === 'pending' ? ' selected' : ''}>대기</option>
+         <option value="blocked"${filters.status === 'blocked' ? ' selected' : ''}>이용 제한</option>
+         <option value="withdrawn"${filters.status === 'withdrawn' ? ' selected' : ''}>탈퇴</option>
+       </select>
+       <select name="role_type" class="admin-input--sm">
+         <option value="all"${filters.role_type === 'all' ? ' selected' : ''}>역할 전체</option>
+         <option value="guardian_student"${filters.role_type === 'guardian_student' ? ' selected' : ''}>학부모</option>
+         <option value="study_room_owner"${filters.role_type === 'study_room_owner' ? ' selected' : ''}>공부방</option>
+         <option value="tutor"${filters.role_type === 'tutor' ? ' selected' : ''}>과외쌤</option>
+         <option value="admin"${filters.role_type === 'admin' ? ' selected' : ''}>운영자</option>
+       </select>
+       <button type="submit" class="btn btn--primary btn--sm">검색</button>
+       <button type="button" class="btn btn--secondary btn--sm" data-member-refresh>새로고침</button>
+     </form>
+     <p class="a28-hint">${isAdminApiMode() ? `API · ${members.length}명` : '[프리뷰] 정적 시드'}</p>
+     <table class="sup-admin-table">
+       <thead><tr><th>ID</th><th>회원</th><th>대표 역할</th><th>상태</th><th>유료</th><th>소셜</th><th>최근 로그인</th><th></th></tr></thead>
+       <tbody>${rows || '<tr><td colspan="8" class="sup-empty">회원 없음</td></tr>'}</tbody>
+     </table>
+     ${detailHtml}`,
+  );
+}
+
 function renderPermissions() {
   const masterRows = MASTER_EMAILS.map((e) => `<tr><td>마스터</td><td><code>${esc(e)}</code></td><td>전체 메뉴 · 강한 보정 · 권한 설정</td></tr>`).join('');
   const subRows = SUB_MASTER_EMAILS.map((e) => `<tr><td>부마스터</td><td><code>${esc(e)}</code></td><td>운영 조회 · 숨김/복구 · 로그 열람</td></tr>`).join('');
@@ -508,7 +699,8 @@ function renderLogs() {
 /** @param {string} path */
 export function renderA28Screen(path) {
   let body = renderHub();
-  if (path === '/admin/commerce') body = renderCommerce();
+  if (path === '/admin/members') body = renderMembers();
+  else if (path === '/admin/commerce') body = renderCommerce();
   else if (path === '/admin/reports') body = renderReports();
   else if (path === '/admin/notices') body = renderNoticesAdmin();
   else if (path === '/admin/tickets') body = renderTicketsAdmin();
@@ -522,6 +714,78 @@ export function renderA28Screen(path) {
 /** @param {HTMLElement} root @param {string} path @param {() => void} rerender */
 export function bindA28ScreenEvents(root, path, rerender) {
   bindDetailDrawer(root);
+
+  if (path === '/admin/members') {
+    // 최초 진입 시 목록 로드
+    if (isAdminApiMode() && !getMembersCache()) {
+      hydrateMembersCache(memberFilters)
+        .then(() => rerender())
+        .catch(() => {});
+    }
+    const form = root.querySelector('[data-member-filter]');
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!(form instanceof HTMLFormElement)) return;
+      const fd = new FormData(form);
+      memberFilters = {
+        q: String(fd.get('q') || '').trim(),
+        status: String(fd.get('status') || 'all'),
+        role_type: String(fd.get('role_type') || 'all'),
+      };
+      try {
+        if (isAdminApiMode()) await hydrateMembersCache(memberFilters);
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '검색 실패');
+      }
+    });
+    root.querySelector('[data-member-refresh]')?.addEventListener('click', async () => {
+      try {
+        if (isAdminApiMode()) await hydrateMembersCache(memberFilters);
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '새로고침 실패');
+      }
+    });
+    root.querySelectorAll('[data-member-open]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = Number(btn.getAttribute('data-member-open'));
+        if (!id) return;
+        openMemberId = id;
+        try {
+          if (isAdminApiMode()) await hydrateMemberDetail(id);
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '상세 조회 실패');
+        }
+      });
+    });
+    if (openMemberId) {
+      const drawer = root.querySelector(`[data-admin-drawer="member-${openMemberId}"]`);
+      if (drawer) drawer.hidden = false;
+    }
+    root.querySelectorAll('[data-member-action]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const action = btn.getAttribute('data-member-action');
+        const id = Number(btn.getAttribute('data-member-id'));
+        if (!id || !action) return;
+        const labels = { block: '이용 제한', restore: '복구', withdraw: '탈퇴 처리' };
+        if (!window.confirm(`${labels[action] || action} 할까요?`)) return;
+        const memoInput = root.querySelector(`[data-member-memo="${id}"]`);
+        const memo = memoInput instanceof HTMLInputElement ? memoInput.value.trim() : '';
+        try {
+          await apiApplyMemberAction(id, /** @type {'block'|'restore'|'withdraw'} */ (action), {
+            internalMemo: memo,
+          });
+          await hydrateMembersCache(memberFilters);
+          await hydrateMemberDetail(id);
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '조치 실패');
+        }
+      });
+    });
+  }
 
   if (path === '/admin/commerce') {
     root.querySelector('[data-commerce-refresh]')?.addEventListener('click', async () => {

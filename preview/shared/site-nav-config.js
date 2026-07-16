@@ -1,6 +1,8 @@
 /**
  * Study114 / 우동공과 — 유틸·메인 GNB SSOT
  * home-ui / search-ui / study-room-ui / tutor-ui 공통
+ *
+ * 역할별 노출: 6장 메뉴 구조 + Cursor GNB 정책 (로그인 후 비해당 메뉴는 muted 대신 hide)
  */
 
 import {
@@ -37,7 +39,8 @@ export const UTIL_MENU = {
 };
 
 /**
- * 메인 GNB 순서 고정 (이용안내는 GNB에서 제외 → 유틸만)
+ * 메인 GNB 순서 고정 (탐색 → 등록 → 운영/지원)
+ * 이용안내는 GNB에서 제외 → 유틸만
  */
 export const GNB_MAIN = [
   { id: 'home', label: '홈' },
@@ -51,12 +54,14 @@ export const GNB_MAIN = [
 ];
 
 /**
- * 역할별 GNB — 노출 유지, limited = 비활성(muted)
- * guest/parent: 전체 활성
- * study_room: 과외쌤찾기·과외쌤상세등록 limited
- * tutor: 공부방찾기·공부방상세등록 limited
+ * 역할별 GNB — show | hide (limited/muted 사용 금지 · 비해당은 렌더 단계에서 숨김)
  *
- * @type {Record<NavRole, Record<string, 'show' | 'limited' | 'hide'>>}
+ * - guest: 전체 활성
+ * - parent(guardian_student): 공급자 등록·유료상품 숨김
+ * - study_room: 과외쌤찾기·과외쌤상세등록 숨김
+ * - tutor: 공부방찾기·공부방상세등록 숨김
+ *
+ * @type {Record<NavRole, Record<string, 'show' | 'hide'>>}
  */
 export const GNB_VISIBILITY = {
   guest: {
@@ -74,34 +79,81 @@ export const GNB_VISIBILITY = {
     find_room: 'show',
     find_tutor: 'show',
     student_parent: 'show',
-    register_room: 'show',
-    register_tutor: 'show',
+    register_room: 'hide',
+    register_tutor: 'hide',
     plans: 'hide',
     support: 'show',
   },
   study_room: {
     home: 'show',
     find_room: 'show',
-    find_tutor: 'limited',
+    find_tutor: 'hide',
     student_parent: 'show',
     register_room: 'show',
-    register_tutor: 'limited',
+    register_tutor: 'hide',
     plans: 'show',
     support: 'show',
   },
   tutor: {
     home: 'show',
-    find_room: 'limited',
+    find_room: 'hide',
     find_tutor: 'show',
     student_parent: 'show',
-    register_room: 'limited',
+    register_room: 'hide',
     register_tutor: 'show',
     plans: 'show',
     support: 'show',
   },
 };
 
+/** @deprecated limited 정책 폐지 — 하위 호환용 문구만 유지 */
 export const GNB_MUTED_TITLE = '현재 역할에서는 이용할 수 없습니다';
+
+/**
+ * @param {NavRole} role
+ * @param {string} itemId
+ * @returns {'show' | 'hide'}
+ */
+export function getGnbVisibility(role, itemId) {
+  return GNB_VISIBILITY[role]?.[itemId] ?? 'show';
+}
+
+/**
+ * @param {NavRole} role
+ * @param {string} itemId
+ */
+export function isGnbItemVisible(role, itemId) {
+  return getGnbVisibility(role, itemId) === 'show';
+}
+
+/** @param {NavRole} role */
+export function canAccessPlansHub(role) {
+  return isGnbItemVisible(role, 'plans');
+}
+
+/** @param {NavRole} role */
+export function canAccessRegisterRoom(role) {
+  return isGnbItemVisible(role, 'register_room');
+}
+
+/** @param {NavRole} role */
+export function canAccessRegisterTutor(role) {
+  return isGnbItemVisible(role, 'register_tutor');
+}
+
+/**
+ * GNB 찾기 메뉴 → search 탭
+ * @param {NavRole} role
+ * @returns {Array<'room' | 'tutor' | 'student'>}
+ */
+export function visibleSearchTabsForRole(role) {
+  /** @type {Array<'room' | 'tutor' | 'student'>} */
+  const tabs = [];
+  if (isGnbItemVisible(role, 'find_room')) tabs.push('room');
+  if (isGnbItemVisible(role, 'find_tutor')) tabs.push('tutor');
+  if (isGnbItemVisible(role, 'student_parent')) tabs.push('student');
+  return tabs.length ? tabs : ['room'];
+}
 
 /**
  * @param {{ role_type?: string } | null | undefined} user

@@ -56,11 +56,12 @@ function renderSubscriptionNote(tab) {
 }
 
 function renderPreviewControls() {
+  const lockedBySession = isSearchLoggedIn();
   return `
     <div class="search-preview-controls">
       <label>
-        <span>열람 역할</span>
-        <select data-preview="role">
+        <span>열람 역할${lockedBySession ? ' (세션)' : ''}</span>
+        <select data-preview="role" ${lockedBySession ? 'disabled title="로그인 세션 역할 고정 · 전환은 마이페이지/계정설정"' : ''}>
           ${Object.entries(VIEWER_ROLE_LABELS)
             .map(
               ([value, label]) =>

@@ -3,6 +3,8 @@
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
 import { parseHashQuery, parseNavRole } from '../../shared/preview-links.js';
+import { navRoleFromAuthUser } from '../../shared/site-nav-config.js';
+import { getAuthUser, isLoggedIn } from '@home-ui/auth-session.js';
 
 /** @type {{ tab: SearchTab, expanded: boolean, role: ViewerRole, subscription: ProviderSubscription, searchExecuted: boolean, searchLoading: boolean, searchError: string | null, searchTotal: number, searchRows: Array<{ left: string, center: string, right: string }>, searchItems: Array<Record<string, unknown>> }} */
 export const previewState = {
@@ -49,8 +51,12 @@ export function getCurrentTab() {
   return TAB_FROM_HASH[hashPathOnly()] || 'room';
 }
 
-/** GNB·home-ui에서 넘어온 ?role= 동기화 */
+/** GNB·home-ui에서 넘어온 ?role= 동기화 · 로그인 시 세션 역할 우선 */
 export function syncRoleFromHash() {
+  if (isLoggedIn()) {
+    previewState.role = navRoleFromAuthUser(getAuthUser());
+    return;
+  }
   const role = parseNavRole(parseHashQuery().role);
   if (role) {
     previewState.role = role;
@@ -81,7 +87,9 @@ export {
   isProviderSelfPreviewMode,
 } from './search-role-access.js';
 
+import { canShowSearchTab as canShowSearchTabFn } from './search-role-access.js';
+
 /** @deprecated use canShowSearchTab('student', role) */
 export function canShowStudentTab(role) {
-  return role === 'study_room' || role === 'tutor';
+  return canShowSearchTabFn('student', role);
 }

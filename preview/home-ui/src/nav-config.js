@@ -15,6 +15,12 @@ export {
   searchUiUrl,
   supportUiUrl,
   resolveGnbLink,
+  isGnbItemVisible,
+  getGnbVisibility,
+  canAccessPlansHub,
+  canAccessRegisterRoom,
+  canAccessRegisterTutor,
+  visibleSearchTabsForRole,
 } from '../../shared/site-nav-config.js';
 
 import { searchUiUrl } from '../../shared/site-nav-config.js';

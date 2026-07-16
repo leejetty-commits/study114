@@ -519,7 +519,7 @@ function renderAccount(role, profile) {
   const authRole =
     profile.authRole === 'admin'
       ? '마스터 관리자'
-      : `${roleLabel(role)} · 9장 역할 전환`;
+      : `${roleLabel(role)} · 계정설정에서 역할 전환`;
   return `
     <section class="mypage-panel">
       <dl class="mypage-dl">
@@ -529,8 +529,15 @@ function renderAccount(role, profile) {
         <dt>대표 지역</dt><dd>${esc(profile.regionLabel)}</dd>
         <dt>역할</dt><dd>${esc(authRole)}</dd>
       </dl>
+      <div class="mypage-role-switch" data-role-switch-panel>
+        <h2 class="mypage-password-change__title">역할 전환</h2>
+        <p class="mypage-note">역할 전환은 GNB가 아니라 이 계정설정에서만 처리합니다. 현재 세션 역할(<strong>${esc(roleLabel(role))}</strong>) 기준으로 메뉴가 노출됩니다.</p>
+        <p class="mypage-note">다른 역할로 이용하려면 해당 역할 계정으로 다시 로그인하세요. (복수 역할 보유 시 전환 UI는 후속)</p>
+        <div class="mypage-form-actions">
+          <button type="button" class="btn btn--secondary" data-action="util-logout">다른 계정으로 로그인</button>
+        </div>
+      </div>
       <div class="mypage-form-actions">
-        <button type="button" class="btn btn--secondary" data-action="role-switch">역할 전환</button>
         <button type="button" class="btn btn--secondary" data-action="toggle-password-change">비밀번호 변경</button>
         <button type="button" class="btn btn--secondary" data-action="util-logout">로그아웃</button>
       </div>

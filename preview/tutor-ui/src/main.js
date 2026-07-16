@@ -5,7 +5,8 @@ import '../../home-ui/src/styles/home.css';
 import './styles/register.css';
 import '../../home-ui/src/styles/design-system.css';
 
-import { initChromeSession } from '../../shared/chrome-session.js';
+import { getChromeNavRole, initChromeSession } from '../../shared/chrome-session.js';
+import { guardRegisterAccess } from '../../shared/route-access.js';
 import { getCurrentScreen } from './layout.js';
 import { apiMasters, registerState } from './state.js';
 import { fetchMasters, loadTutor } from './register-api.js';
@@ -26,7 +27,17 @@ const SCREENS = {
   complete: { render: renderComplete, bind: bindCompleteEvents },
 };
 
+function enforceRegisterAccess() {
+  const role = getChromeNavRole();
+  const gate = guardRegisterAccess(role, 'tutor');
+  if (gate.ok) return false;
+  window.alert(gate.message);
+  window.location.assign(gate.redirectUrl);
+  return true;
+}
+
 function render() {
+  if (enforceRegisterAccess()) return;
   const key = getCurrentScreen();
   const screen = SCREENS[key] || SCREENS.basic;
   document.getElementById('app').innerHTML = screen.render();

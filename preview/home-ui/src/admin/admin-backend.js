@@ -8,6 +8,9 @@ import {
   patchExposureCorrection,
   fetchCommerceOverview,
   patchCommerceCorrection,
+  fetchAdminMembers,
+  fetchAdminMemberDetail,
+  patchAdminMember,
   fetchAdminSession,
 } from './admin-api.js';
 import { hydrateBoardCache } from '../board/board-backend.js';
@@ -28,6 +31,10 @@ export function isAdminApiMode() {
 
 /** @type {any|null} */
 let commerceCache = null;
+/** @type {{ members: any[], total: number, filters: Record<string, string> }|null} */
+let membersCache = null;
+/** @type {Record<number, any>} */
+let memberDetailCache = {};
 
 function resetCaches() {
   submissionQueueCache = [];
@@ -35,6 +42,8 @@ function resetCaches() {
   reportsCache = [];
   exposureCache = [];
   commerceCache = null;
+  membersCache = null;
+  memberDetailCache = {};
 }
 
 export async function activateAdminApi() {
@@ -164,6 +173,80 @@ export async function hydrateCommerceCache() {
   const data = await fetchCommerceOverview(50);
   commerceCache = { ...data };
   return commerceCache;
+}
+
+/**
+ * @param {{ q?: string, status?: string, role_type?: string, limit?: number }} [filters]
+ */
+export async function hydrateMembersCache(filters = {}) {
+  const data = await fetchAdminMembers({
+    q: filters.q || '',
+    status: filters.status || 'all',
+    role_type: filters.role_type || 'all',
+    limit: filters.limit || 50,
+  });
+  membersCache = {
+    members: (data.members ?? []).map((m) => ({ ...m })),
+    total: Number(data.total || 0),
+    filters: {
+      q: String(filters.q || ''),
+      status: String(filters.status || 'all'),
+      role_type: String(filters.role_type || 'all'),
+    },
+  };
+  return membersCache;
+}
+
+export function getMembersCache() {
+  return membersCache
+    ? {
+        members: membersCache.members.map((m) => ({ ...m })),
+        total: membersCache.total,
+        filters: { ...membersCache.filters },
+      }
+    : null;
+}
+
+/** @param {number} id */
+export async function hydrateMemberDetail(id) {
+  const data = await fetchAdminMemberDetail(id);
+  if (data.member) {
+    memberDetailCache[id] = { ...data.member };
+  }
+  return memberDetailCache[id] || null;
+}
+
+/** @param {number} id */
+export function getMemberDetailCache(id) {
+  return memberDetailCache[id] ? { ...memberDetailCache[id] } : null;
+}
+
+/**
+ * @param {number} userId
+ * @param {'block'|'restore'|'withdraw'} action
+ * @param {{ internalMemo?: string }} [opts]
+ */
+export async function apiApplyMemberAction(userId, action, opts = {}) {
+  const data = await patchAdminMember({
+    user_id: userId,
+    action,
+    internal_memo: opts.internalMemo,
+  });
+  if (data.member) {
+    memberDetailCache[userId] = { ...data.member };
+    if (membersCache) {
+      const idx = membersCache.members.findIndex((m) => m.id === userId);
+      if (idx >= 0) {
+        membersCache.members[idx] = {
+          ...membersCache.members[idx],
+          status: data.member.status,
+          name: data.member.name,
+        };
+      }
+    }
+  }
+  if (data.log) prependLog(data.log);
+  return data;
 }
 
 /**

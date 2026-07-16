@@ -15,6 +15,7 @@ export const A28_COPY = {
 
 export const A28_NAV = [
   { id: 'hub', label: '운영 홈', path: '/admin', screenId: 'A28-01' },
+  { id: 'members', label: '회원관리', path: '/admin/members', screenId: 'A28-02' },
   { id: 'commerce', label: '상품·결제 조회', path: '/admin/commerce', screenId: 'A28-07b' },
   { id: 'exposure', label: '노출 보정', path: '/admin/exposure', screenId: 'A28-07a' },
   { id: 'submission', label: '제출자료 확인', path: '/admin/submission-docs', screenId: 'A28-06' },
@@ -24,6 +25,26 @@ export const A28_NAV = [
   { id: 'logs', label: '운영 로그', path: '/admin/logs', screenId: 'A28-08a' },
   { id: 'permissions', label: '권한·계정', path: '/admin/permissions', screenId: 'A28-08b', masterOnly: true },
 ];
+
+/** A28-02 회원 상태 (승인·반려 용어 금지) */
+export const A28_MEMBER_STATUS_LABELS = {
+  active: '정상',
+  pending: '대기',
+  blocked: '이용 제한',
+  withdrawn: '탈퇴',
+};
+
+export const A28_MEMBER_ROLE_LABELS = {
+  guardian_student: '학부모',
+  study_room_owner: '공부방',
+  tutor: '과외쌤',
+  admin: '운영자',
+};
+
+export const A28_MEMBER_TIER_LABELS = {
+  free: '무료',
+  paid: '유료',
+};
 
 /** A28-04 신고 상태 (심사·승인 용어 금지) */
 export const A28_REPORT_STATUS_LABELS = {
@@ -75,6 +96,9 @@ export const A28_ACTION_LABELS = {
   report_status_change: '신고 상태 변경',
   commerce_position_ends_at: '포지션 만료일 보정',
   commerce_ticket_remaining: '횟수권 잔여 보정',
+  account_block: '이용 제한',
+  account_restore: '복구',
+  account_withdraw: '탈퇴 처리',
 };
 
 /** 운영 로그 대상 유형 (DB target_type) */

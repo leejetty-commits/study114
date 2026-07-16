@@ -6,13 +6,12 @@
 import {
   UTIL_MENU,
   GNB_MAIN,
-  GNB_VISIBILITY,
-  GNB_MUTED_TITLE,
   navRoleFromAuthUser,
   roleHomeHashPath,
   homeHashUrl,
   resolveGnbLink,
   HOME_UI_BASE,
+  isGnbItemVisible,
 } from './site-nav-config.js';
 
 const HEADER_OFFSET_VAR = '--site-header-h';
@@ -57,11 +56,7 @@ function gnbHref(itemId, role) {
 }
 
 function renderGnbLink(item, role, opts = {}) {
-  const vis = GNB_VISIBILITY[role]?.[item.id] ?? 'show';
-  if (vis === 'hide') return '';
-  if (vis === 'limited') {
-    return `<span class="home-gnb__item is-muted" title="${GNB_MUTED_TITLE}" aria-disabled="true">${item.label}</span>`;
-  }
+  if (!isGnbItemVisible(role, item.id)) return '';
   const active = opts.activeGnbId === item.id ? ' is-active' : '';
   const href = gnbHref(item.id, role);
   return `<a href="${href}" class="home-gnb__item${active}" data-action="gnb-${item.id}">${item.label}</a>`;
@@ -178,8 +173,7 @@ export function bindSiteChrome(root, handlers = {}) {
       if (action.startsWith('gnb-')) {
         const gnbId = action.replace('gnb-', '');
         const role = getRole();
-        const vis = GNB_VISIBILITY[role]?.[gnbId] ?? 'show';
-        if (vis === 'limited' || vis === 'hide') return;
+        if (!isGnbItemVisible(role, gnbId)) return;
 
         // href에 실제 목적지를 넣어 두었으므로, 타 SPA→홈 이동은 location이 fragment를
         // 잃지 않도록 pathname 딥링크(homeHashUrl)를 그대로 사용한다.
