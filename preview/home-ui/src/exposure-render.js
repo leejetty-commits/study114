@@ -48,7 +48,12 @@ function blankDash(text) {
 
 /** 괄호 필드 — 값만 */
 function valOnly(text, opts = {}) {
-  return { text: blankDash(text || ''), cls: `expo-tbl__cell--val-only${opts.cls ? ` ${opts.cls}` : ''}`, ...opts };
+  const { cls: extraCls, ...rest } = opts;
+  return {
+    text: blankDash(text || ''),
+    cls: `expo-tbl__cell--val-only${extraCls ? ` ${extraCls}` : ''}`,
+    ...rest,
+  };
 }
 
 /** 항목제목 + 값 (Prime/Pick 표) */
