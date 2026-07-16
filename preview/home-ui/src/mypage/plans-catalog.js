@@ -1,4 +1,14 @@
-/** 18장 2026-07-07 — P15-09 · P18-01 카탈로그 (18b 더미 단가) */
+/** 18장 2026-07-07 — P15-09 · P18-01 카탈로그
+ * 가격·기간 표시는 plans/runtime-config.js seed를 우선한다.
+ */
+
+import {
+  getCatalogByFamily,
+  getProductConfig,
+  formatKrw,
+  resolveCheckoutAmount,
+  isPlansTestMode,
+} from '../plans/runtime-config.js';
 
 /** @typedef {'position'|'count'|'badge_addon'} CatalogKind */
 
@@ -12,43 +22,35 @@
  * @property {boolean} [featured]
  */
 
-export const PERIOD_OPTIONS = ['2주', '3주', '1개월', '2개월', '3개월'];
-export const COUNT_PACK_OPTIONS = ['1회', '5회권', '10회권'];
+/** @deprecated seed는 runtime-config — 호환용 라벨 */
+export const PERIOD_OPTIONS = ['14일', '30일', '60일', '90일'];
+export const COUNT_PACK_OPTIONS = ['5회', '10회', '20회'];
 export const DUMMY_PRICE = '10원';
+
+function familyToKind(family) {
+  if (family === 'position') return 'position';
+  if (family === 'access') return 'count';
+  return 'badge_addon';
+}
+
+/** @param {import('../plans/runtime-config.js').CatalogProductConfig} p */
+function toCatalogProduct(p) {
+  return {
+    id: p.productCode,
+    name: p.name,
+    tagline: p.tagline,
+    kind: /** @type {CatalogKind} */ (familyToKind(p.family)),
+    bullets: p.bullets,
+    featured: p.featured,
+  };
+}
 
 /** @type {Record<string, CatalogProduct>} */
 const PRODUCTS = {
-  prime: {
-    id: 'prime',
-    name: 'Prime',
-    tagline: '최상위 희소 포지션 · 기간형',
-    kind: 'position',
-    bullets: ['희소 슬롯 · 운영 배정', '기간형 단건 결제', '2주~3개월'],
-    featured: true,
-  },
-  pick: {
-    id: 'pick',
-    name: 'Pick',
-    tagline: 'Prime 아래 포지션 · 기간형',
-    kind: 'position',
-    bullets: ['동네 노출 유지 (최소 2주)', '3일·7일 부스트 1차 제외', '시즌 예약은 후순위'],
-    featured: true,
-  },
-  memo_ticket: {
-    id: 'memo_ticket',
-    name: '쪽지권',
-    tagline: '선제 쪽지 1건 (콜드 아웃리치)',
-    kind: 'count',
-    bullets: ['학부모 선연락·답장·열린 대화 후속은 free', '5·10회권 · 사용기한 6개월', 'FIFO 차감'],
-    featured: true,
-  },
-  request_view: {
-    id: 'request_view',
-    name: '요청문 열람권',
-    tagline: '요청문·특이요청 1건 상세 열람',
-    kind: 'count',
-    bullets: ['paid_only 요청문 (13§8)', '5·10회권 · 사용기한 6개월', '학부모 과금 없음'],
-  },
+  prime: toCatalogProduct(getProductConfig('prime')),
+  pick: toCatalogProduct(getProductConfig('pick')),
+  memo_ticket: toCatalogProduct(getProductConfig('memo_ticket')),
+  request_view: toCatalogProduct(getProductConfig('request_view')),
   hot: {
     id: 'hot',
     name: 'Hot',
@@ -111,6 +113,10 @@ export function getPaidCatalog(role) {
 
 /** @param {CatalogProduct} item */
 export function getCatalogVariants(item) {
+  const cfg = getProductConfig(item.id);
+  if (cfg?.options?.length) {
+    return cfg.options.map((o) => o.label);
+  }
   if (item.kind === 'position') return PERIOD_OPTIONS;
   if (item.kind === 'count') return COUNT_PACK_OPTIONS;
   return ['Pick/Prime 기간 종속'];
@@ -118,7 +124,16 @@ export function getCatalogVariants(item) {
 
 /** @param {CatalogProduct} item @param {string} variant */
 export function formatCatalogPrice(item, variant) {
-  return `${variant} · ${DUMMY_PRICE}`;
+  const cfg = getProductConfig(item.id);
+  const opt = cfg?.options?.find((o) => o.label === variant);
+  if (opt) {
+    const amt = resolveCheckoutAmount(opt.priceKrw);
+    if (amt.testMode) {
+      return `${variant} · ${formatKrw(opt.priceKrw)} (테스트 ${formatKrw(amt.chargeKrw)})`;
+    }
+    return `${variant} · ${formatKrw(opt.priceKrw)}`;
+  }
+  return `${variant} · ${isPlansTestMode() ? DUMMY_PRICE : ''}`;
 }
 
 export const FREE_TIER_COPY = {
@@ -151,7 +166,7 @@ export const ROI_FREE_METRICS = [
 export const P18_HEADLINE = '가게 품질 무료 · 홍보·획득 유료';
 
 export const P18_GUIDE_LEAD =
-  '1차 = Prime/Pick 기간형(2주~) + 쪽지권·열람권 횟수권 · 단건 결제 · 자동연장 OFF';
+  '1차 = Prime/Pick 기간형 + 쪽지권·열람권 횟수권 · 단건 결제 · 자동연장 OFF';
 
 export const P18_USAGE_LEAD =
   '조회·찜·비교 담김은 무료 (18§6) · 노출 만료·횟수 소진은 운영 언어로 안내';
@@ -172,3 +187,5 @@ export const P18_EXPOSURE_STATUS = {
 
 /** @deprecated 역할별 getPaidCatalog 사용 */
 export const PAID_CATALOG_PLACEHOLDER = getPaidCatalog('tutor');
+
+export { getCatalogByFamily };

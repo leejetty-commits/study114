@@ -91,7 +91,7 @@ export function renderPaidGuide(role) {
       ${renderProviderNoticeBanners()}
       <p class="mypage-muted">${esc(P18_GUIDE_LEAD)}</p>
       ${statusBadges ? `<p class="plans-status-row">${statusBadges}</p>` : ''}
-      <p class="mypage-muted">역할: <strong>${roleLabel}</strong> · 데모 tier: <strong>${tier}</strong> · <a href="#/mypage/plans" data-mypage-nav="/mypage/plans">P15-09 요약</a></p>
+      <p class="mypage-muted">역할: <strong>${roleLabel}</strong> · 데모 tier: <strong>${tier}</strong> · <a href="#/plans/my" data-nav="/plans/my">내 상품</a></p>
       <div class="mypage-info-box plans-tier-box">
         <strong>${esc(tierCopy.title)}</strong>
         <ul class="plans-tier-list">${tierCopy.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
@@ -104,7 +104,7 @@ export function renderPaidGuide(role) {
         <strong>${esc(P18_RENEWAL_COPY.title)}</strong>
         <ul class="plans-tier-list">${P18_RENEWAL_COPY.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
       </div>
-      <p class="mypage-note">P16-04 게이트 → 이 화면 · <a href="#/mypage/paid/usage" data-mypage-nav="/mypage/paid/usage">P18-02 반응·운영 요약</a></p>
+      <p class="mypage-note">표준 상품센터 → <a href="#/plans" data-nav="/plans">#/plans</a> · <a href="#/plans/my" data-nav="/plans/my">내 상품</a></p>
     </section>`;
 }
 
@@ -152,7 +152,7 @@ export function renderPaidUsage(role) {
     <section class="mypage-panel">
       <p class="mypage-lead">P18-02 · ${esc(P18_USAGE_LEAD)}</p>
       ${renderProviderNoticeBanners()}
-      <p class="mypage-muted"><a href="#/mypage/paid" data-mypage-nav="/mypage/paid">P18-01 카탈로그</a></p>
+      <p class="mypage-muted"><a href="#/plans" data-nav="/plans">상품센터</a></p>
       <h2 class="mypage-subhead">노출 운영 상태</h2>
       <div class="mypage-info-box">
         <p><strong>${esc(exposureLabel)}</strong></p>
@@ -176,6 +176,6 @@ export function renderPaidUsage(role) {
         <p>동네 단위·저숫자도 의미 있음 (18§6-2) · 인사이트·알림형은 후순위</p>
         <p class="mypage-muted">쪽지 시도/차단 횟수는 ROI 메인 숫자 ✕ — P16-04 내부 업셀만</p>
       </div>
-      <a href="#/mypage/paid" class="btn btn--secondary" data-mypage-nav="/mypage/paid">노출·연락 상품 보기 (P18-01)</a>
+      <a href="#/plans/positions" class="btn btn--secondary" data-nav="/plans/positions">노출상품 보기</a>
     </section>`;
 }

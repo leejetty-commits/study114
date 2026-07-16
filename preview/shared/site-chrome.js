@@ -50,6 +50,7 @@ function roleHomePathForNav(role) {
 function gnbHref(itemId, role) {
   if (itemId === 'home') return homeHashUrl(roleHomePathForNav(role));
   if (itemId === 'support') return homeHashUrl('/support');
+  if (itemId === 'plans') return homeHashUrl('/plans');
   const link = resolveGnbLink(itemId, role);
   if (!link) return homeHashUrl('/guest');
   return link.external ? link.url : homeHashUrl(link.url);
@@ -189,6 +190,11 @@ export function bindSiteChrome(root, handlers = {}) {
         }
         if (gnbId === 'support') {
           if (navigateHome && isHomeUiHost()) navigateHome('/support');
+          else goSameTab(dest);
+          return;
+        }
+        if (gnbId === 'plans') {
+          if (navigateHome && isHomeUiHost()) navigateHome('/plans');
           else goSameTab(dest);
           return;
         }

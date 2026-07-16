@@ -455,10 +455,11 @@ function renderPlans(role) {
         ).join('')}
       </div>
       <div class="mypage-actions-row">
-        <a href="#/mypage/paid" class="btn btn--primary" data-mypage-nav="/mypage/paid">유료 서비스 안내 (P18-01)</a>
-        <a href="#/mypage/paid/usage" class="btn btn--secondary" data-mypage-nav="/mypage/paid/usage">반응 상세 (P18-02)</a>
+        <a href="#/plans" class="btn btn--primary" data-nav="/plans">상품센터 열기</a>
+        <a href="#/plans/my" class="btn btn--secondary" data-nav="/plans/my">내 상품 상태</a>
+        <a href="#/plans/positions" class="btn btn--secondary" data-nav="/plans/positions">노출상품</a>
       </div>
-      <p class="mypage-note">카탈로그·구매는 P18-01 · P16-04 게이트 → 쪽지권 안내 (P18-01)</p>
+      <p class="mypage-note">마이페이지는 상태 요약 · 구매·카탈로그는 상품센터(#/plans)</p>
     </section>`;
 }
 

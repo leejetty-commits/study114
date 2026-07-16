@@ -107,6 +107,8 @@ export function resolveGnbLink(gnbId, role) {
       return { external: true, url: TUTOR_REGISTER_URL };
     case 'support':
       return { external: false, url: '/support' };
+    case 'plans':
+      return { external: false, url: '/plans' };
     case 'guide':
       return { external: false, url: '/support/guide' };
     default:

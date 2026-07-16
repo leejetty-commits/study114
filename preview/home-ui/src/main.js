@@ -20,12 +20,16 @@ import {
   bootstrapLibraryRoute,
   isAdminRoute,
   bootstrapAdminRoute,
+  isPlansRoute,
+  bootstrapPlansRoute,
 } from './state.js';
+import { PLANS_REDIRECTS } from './plans/router.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
 import { renderSupport, bindSupportEvents } from './support/index.js';
 import { renderPolicy, bindPolicyEvents } from './policy-index.js';
 import { renderLibrary, bindLibraryEvents } from './library/index.js';
 import { renderAdmin, bindAdminEvents } from './admin/index.js';
+import { renderPlans, bindPlansEvents } from './plans/index.js';
 import { initAuthSession, isAdminUser, ROLE_HOME } from './auth-session.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
@@ -41,11 +45,29 @@ const SCREENS = {
   tutor: { render: renderTutor, bind: bindTutorEvents },
 };
 
+function applyPlansRedirects() {
+  const hash = window.location.hash.slice(1) || '';
+  const pathWithQuery = hash.startsWith('/') ? hash : `/${hash}`;
+  const path = pathWithQuery.split('?')[0];
+  const query = pathWithQuery.includes('?') ? pathWithQuery.slice(pathWithQuery.indexOf('?')) : '';
+  if (PLANS_REDIRECTS[path]) {
+    window.location.replace(`#${PLANS_REDIRECTS[path]}${query}`);
+    return true;
+  }
+  return false;
+}
+
 function render() {
+  if (applyPlansRedirects()) return;
   const app = document.getElementById('app');
   if (isAdminRoute()) {
     app.innerHTML = renderAdmin();
     bindAdminEvents(app, render);
+    return;
+  }
+  if (isPlansRoute()) {
+    app.innerHTML = renderPlans();
+    bindPlansEvents(app, render);
     return;
   }
   if (isLibraryRoute()) {
@@ -93,6 +115,7 @@ function init() {
     if (!SHOW_PREVIEW_TOOLBAR) {
       document.documentElement.style.setProperty('--preview-toolbar-h', '0px');
     }
+    bootstrapPlansRoute();
     bootstrapMypageRoute();
     bootstrapMessagesRoute();
     bootstrapSupportRoute();
@@ -115,7 +138,9 @@ function init() {
         path === '/library' ||
         path.startsWith('/library/') ||
         path === '/admin' ||
-        path.startsWith('/admin/');
+        path.startsWith('/admin/') ||
+        path === '/plans' ||
+        path.startsWith('/plans/');
       if (!deep) {
         window.location.hash = '#/guest';
       }

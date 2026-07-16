@@ -204,7 +204,7 @@ export function bindGuestSectionEvents(root, rerender) {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       // 광고 CTA — 유료 안내(마이페이지 플랜)로 동일 탭 이동
-      window.location.hash = '#/mypage/plans';
+      window.location.hash = '#/plans/positions';
     });
   });
 }

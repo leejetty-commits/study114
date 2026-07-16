@@ -46,6 +46,7 @@ export const GNB_MAIN = [
   { id: 'student_parent', label: '학생찾기' },
   { id: 'register_room', label: '공부방상세등록' },
   { id: 'register_tutor', label: '과외쌤상세등록' },
+  { id: 'plans', label: '유료상품' },
   { id: 'support', label: '고객센터' },
 ];
 
@@ -65,6 +66,7 @@ export const GNB_VISIBILITY = {
     student_parent: 'show',
     register_room: 'show',
     register_tutor: 'show',
+    plans: 'show',
     support: 'show',
   },
   parent: {
@@ -74,6 +76,7 @@ export const GNB_VISIBILITY = {
     student_parent: 'show',
     register_room: 'show',
     register_tutor: 'show',
+    plans: 'hide',
     support: 'show',
   },
   study_room: {
@@ -83,6 +86,7 @@ export const GNB_VISIBILITY = {
     student_parent: 'show',
     register_room: 'show',
     register_tutor: 'limited',
+    plans: 'show',
     support: 'show',
   },
   tutor: {
@@ -92,6 +96,7 @@ export const GNB_VISIBILITY = {
     student_parent: 'show',
     register_room: 'limited',
     register_tutor: 'show',
+    plans: 'show',
     support: 'show',
   },
 };
@@ -144,7 +149,9 @@ export function homeHashUrl(hashPath) {
     p === '/library' ||
     p.startsWith('/library/') ||
     p === '/admin' ||
-    p.startsWith('/admin/');
+    p.startsWith('/admin/') ||
+    p === '/plans' ||
+    p.startsWith('/plans/');
   if (pathDeep) {
     return `${HOME_UI_BASE}${p}`;
   }

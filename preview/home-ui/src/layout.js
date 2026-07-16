@@ -1,4 +1,4 @@
-import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, navigateToSupport } from './state.js';
+import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, navigateToSupport } from './state.js';
 import { POLICY_SHORT_NOTICE } from './policy-copy.js';
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
@@ -20,8 +20,9 @@ export function renderPreviewToolbar() {
   const onPolicy = isPolicyRoute();
   const onLibrary = isLibraryRoute();
   const onAdmin = isAdminRoute();
+  const onPlans = isPlansRoute();
   const region = previewState.regionKey;
-  const isGuest = current === 'guest' && !onMypage && !onMessages && !onSupport && !onPolicy && !onLibrary && !onAdmin;
+  const isGuest = current === 'guest' && !onMypage && !onMessages && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans;
   const authUser = getAuthUser();
   const apiOn = isHandoffApiMode();
   const msgApiOn = isMessagesApiMode();
@@ -36,13 +37,14 @@ export function renderPreviewToolbar() {
         ${Object.entries(ROUTES)
           .map(([path, key]) => {
             const meta = SCREEN_META[key];
-            const active = !onMypage && !onMessages && !onSupport && !onPolicy && !onLibrary && !onAdmin && key === current;
+            const active = !onMypage && !onMessages && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans && key === current;
             return `<button type="button" class="preview-toolbar__btn ${active ? 'is-active' : ''}" data-nav="${path}">${meta.label}</button>`;
           })
           .join('')}
         <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${getDefaultMypagePath(getNavRole())}">마이페이지</button>
         <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지함</button>
         <button type="button" class="preview-toolbar__btn ${onSupport ? 'is-active' : ''}" data-nav="/support">고객센터</button>
+        <button type="button" class="preview-toolbar__btn ${onPlans ? 'is-active' : ''}" data-nav="/plans">유료상품</button>
         <button type="button" class="preview-toolbar__btn ${onLibrary ? 'is-active' : ''}" data-nav="/library">자료실</button>
         <button type="button" class="preview-toolbar__btn ${onPolicy ? 'is-active' : ''}" data-nav="/policy/terms">정책</button>
         <button type="button" class="preview-toolbar__btn ${onAdmin ? 'is-active' : ''}" data-nav="/admin">A28</button>
@@ -101,10 +103,12 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
   const onRoleHome = screen === 'guest' || screen === 'parent' || screen === 'studyRoom' || screen === 'tutor';
   const isHomeActive = item.id === 'home' && onRoleHome;
   const onSupport = isSupportRoute();
+  const onPlans = isPlansRoute();
   const isSupportActive = item.id === 'support' && onSupport && !window.location.hash.includes('/guide');
+  const isPlansActive = item.id === 'plans' && onPlans;
   const cls = [
     'home-gnb__item',
-    isHomeActive || isSupportActive ? 'is-active' : '',
+    isHomeActive || isSupportActive || isPlansActive ? 'is-active' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -113,6 +117,8 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
     href = `#${roleHomePath()}`;
   } else if (item.id === 'support') {
     href = '#/support';
+  } else if (item.id === 'plans') {
+    href = '#/plans';
   } else {
     const link = resolveGnbLink(item.id, role);
     if (link) href = link.external ? link.url : `#${link.url}`;
@@ -399,6 +405,10 @@ export function bindLayoutEvents(root, rerender) {
         }
         if (gnbId === 'support') {
           navigateToSupport('/support');
+          return;
+        }
+        if (gnbId === 'plans') {
+          navigate('/plans');
           return;
         }
         const link = resolveGnbLink(gnbId, role);

@@ -104,7 +104,7 @@ export function showPaidGateOverlay(opts = {}) {
 
     el.remove();
 
-    navigate('/mypage/paid');
+    navigate('/plans/access');
 
     opts.onClose?.();
 

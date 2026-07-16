@@ -4020,3 +4020,102 @@ a.sup-term-chip:hover {
 .email-verify-overlay__body { margin: 0; color: var(--gray-600); font-size: var(--text-sm); line-height: 1.5; }
 .email-verify-overlay__status { margin: var(--space-3) 0 0; font-size: var(--text-sm); color: var(--brand-blue); }
 .email-verify-overlay__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+
+/* 34장 ? 유료상품 센터 (#/plans) */
+.plans-nav-badge {
+  font-style: normal;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  margin-left: 0.25rem;
+}
+.plans-profile-banner.is-active {
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+.plans-profile-banner.is-warn,
+.mypage-info-box.is-warn {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+.plans-profile-name {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+.plans-profile-pick {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.plans-eligibility {
+  margin: var(--space-2) 0;
+  padding-left: 1.1rem;
+  color: #b91c1c;
+  font-size: var(--text-sm);
+}
+.plans-catalog__item.is-placeholder {
+  opacity: 0.72;
+}
+.plans-test-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-3);
+}
+.plans-settings-hint { margin-bottom: var(--space-3); }
+.plans-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  margin: var(--space-2) 0 var(--space-4);
+}
+.plans-table th,
+.plans-table td {
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0.5rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+}
+.plans-table th {
+  color: var(--gray-600);
+  font-weight: 600;
+}
+.plans-checkout-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.plans-checkout-steps > li {
+  padding: var(--space-3);
+  border: 1px solid var(--gray-200);
+  border-radius: 0.5rem;
+  background: #fff;
+}
+.plans-checkout-steps > li.is-done {
+  border-color: #fed7aa;
+  background: #fffbeb;
+}
+.plans-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+}
+.plans-pay-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.plans-checkout-error {
+  color: #b91c1c;
+  margin-top: var(--space-2);
+}

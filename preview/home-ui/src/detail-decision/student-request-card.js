@@ -72,7 +72,7 @@ function renderProtectedBlock(label, content, visible, visibility, studentId) {
 
     : '';
 
-  const plansLink = `<a href="#/mypage/paid" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/paid">${esc(REQUEST_VIEW_GATE_COPY.ctaPlans)}</a>`;
+  const plansLink = `<a href="#/plans/access" class="btn btn--secondary btn--sm" data-nav="/plans/access">${esc(REQUEST_VIEW_GATE_COPY.ctaPlans)}</a>`;
 
 
 

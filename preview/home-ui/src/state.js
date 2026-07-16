@@ -9,6 +9,11 @@ import { getDefaultSupportPath, normalizeSupportPath } from './support/router.js
 import { getDefaultPolicyPath, normalizePolicyPath } from './policy-router.js';
 import { getDefaultLibraryPath, normalizeLibraryPath } from './library/library-router.js';
 import { getDefaultAdminPath, normalizeAdminPath } from './admin/router.js';
+import {
+  getDefaultPlansPath,
+  normalizePlansPath,
+  PLANS_REDIRECTS,
+} from './plans/router.js';
 import { createFindState, resetFindState } from './find-state.js';
 
 const ACTIVE_ROLE_KEY = 'study114-preview-active-role';
@@ -51,6 +56,7 @@ export const SCREEN_META = {
   policy: { label: '정책', role: 'guest' },
   library: { label: '자료실', role: 'guest' },
   admin: { label: 'A28', role: 'guest' },
+  plans: { label: '유료상품', role: 'guest' },
 };
 
 export function setParentTab(tab) {
@@ -93,6 +99,13 @@ export function getGuestListPage(listId) {
 }
 
 export function getNavRole() {
+  if (isPlansRoute()) {
+    const stored = sessionStorage.getItem(ACTIVE_ROLE_KEY);
+    if (stored === 'parent' || stored === 'study_room' || stored === 'tutor') {
+      return stored;
+    }
+    return 'guest';
+  }
   if (isMypageRoute() || isMessagesRoute()) {
     return getActiveRole();
   }
@@ -137,6 +150,12 @@ export function isAdminRoute() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
   return path === '/admin' || path.startsWith('/admin/');
+}
+
+export function isPlansRoute() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
+  return path === '/plans' || path.startsWith('/plans/');
 }
 
 export function isMypageRoute() {
@@ -328,6 +347,48 @@ export function bootstrapAdminRoute() {
 }
 
 /**
+ * `#/plans/*` 정규화 + 기존 mypage paid 경로 리다이렉트
+ * @returns {boolean}
+ */
+export function bootstrapPlansRoute() {
+  const { pathname, hash, origin, search } = window.location;
+
+  if (!hash && pathname.startsWith('/plans')) {
+    const bare = pathname === '/plans' || pathname === '/plans/';
+    const target = bare ? getDefaultPlansPath() : pathname;
+    window.location.replace(`${origin}/${search}#${target}`);
+    return true;
+  }
+
+  if (!hash) return false;
+
+  const hashPath = hash.slice(1);
+  const pathWithQuery = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const pathOnly = pathWithQuery.split('?')[0];
+  const query = pathWithQuery.includes('?') ? pathWithQuery.slice(pathWithQuery.indexOf('?')) : '';
+
+  if (PLANS_REDIRECTS[pathOnly]) {
+    window.location.replace(`#${PLANS_REDIRECTS[pathOnly]}${query}`);
+    return true;
+  }
+
+  if (pathOnly === '/plans' || pathOnly === '/plans/') {
+    if (pathOnly === '/plans/') {
+      window.location.replace(`#${getDefaultPlansPath()}${query}`);
+      return true;
+    }
+    return false;
+  }
+
+  if (pathOnly.startsWith('/plans/') && !normalizePlansPath(pathOnly)) {
+    window.location.replace(`#${getDefaultPlansPath()}`);
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Path URL(`/mypage/...`) 또는 bare `#/mypage`를 hash 라우트로 정규화.
  * SSOT 부록 A의 PHP 경로로 접속해도 프리뷰가 열리도록 한다.
  * @returns {boolean} location.replace를 호출했으면 true
@@ -345,7 +406,15 @@ export function bootstrapMypageRoute() {
   if (!hash) return false;
 
   const hashPath = hash.slice(1);
-  const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const pathWithQuery = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const path = pathWithQuery.split('?')[0];
+  const query = pathWithQuery.includes('?') ? pathWithQuery.slice(pathWithQuery.indexOf('?')) : '';
+
+  if (PLANS_REDIRECTS[path]) {
+    window.location.replace(`#${PLANS_REDIRECTS[path]}${query}`);
+    return true;
+  }
+
   if (path === '/mypage' || path === '/mypage/') {
     window.location.replace(`#${getDefaultMypagePath(getNavRole())}`);
     return true;
@@ -404,6 +473,14 @@ export function getAdminPath() {
   return getDefaultAdminPath();
 }
 
+export function getPlansPath() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
+  const normalized = normalizePlansPath(path);
+  if (normalized) return normalized;
+  return getDefaultPlansPath();
+}
+
 export function getMypagePath() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
@@ -413,6 +490,7 @@ export function getMypagePath() {
 }
 
 export function getCurrentScreen() {
+  if (isPlansRoute()) return 'plans';
   if (isMypageRoute()) return 'mypage';
   if (isMessagesRoute()) return 'messages';
   if (isAdminRoute()) return 'admin';

@@ -150,7 +150,7 @@ function renderRoomShell(room, activeSection, bodyHtml) {
         <nav class="p19-sidebar-nav" aria-label="공부방 운영 메뉴">
           <a href="#${studyRoomHubPath(room.id)}" class="p19-sidebar-nav__link p19-sidebar-nav__link--overview${hubActive}" data-p20-nav="${studyRoomHubPath(room.id)}">운영 홈</a>
           ${navItems}
-          <a href="#/mypage/plans" class="p19-sidebar-nav__link" data-mypage-nav="/mypage/plans">유료·상품 (P15-09)</a>
+          <a href="#/plans/positions?provider_type=study_room&provider_id=${room.id}" class="p19-sidebar-nav__link" data-nav="/plans/positions?provider_type=study_room&provider_id=${room.id}">유료·상품</a>
         </nav>
         <div class="p19-sidebar-status">
           <span class="p19-sidebar-status__label">공개 준비</span>
@@ -525,7 +525,7 @@ function renderExposure(room) {
         <h3>${esc(P20_EXPOSURE_SECTION_TITLES.plans)}</h3>
         <div class="p20-matrix">${renderMatrixRows(blocks.slice(4))}</div>
         <p class="p19-form-section__lead">노출 강화는 P15-09에서 확인합니다.</p>
-        <a href="#/mypage/plans" class="btn btn--secondary" data-mypage-nav="/mypage/plans">유료서비스 보기</a>
+        <a href="#/plans/positions?provider_type=study_room&provider_id=${room.id}" class="btn btn--secondary" data-nav="/plans/positions?provider_type=study_room&provider_id=${room.id}">유료상품 · 노출</a>
       </section>
       <section class="p20-exposure-section p20-messages-link">
         <h3>${esc(P20_EXPOSURE_SECTION_TITLES.messages)}</h3>

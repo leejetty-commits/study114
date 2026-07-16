@@ -172,7 +172,7 @@ export function getUnlockCards(tutor) {
         { label: '유료 등록', ok: paid },
         { label: '메모권 잔여', ok: memos > 0 },
       ],
-      { label: '메모권·유료 (P16-04)', external: '#/mypage/paid' },
+      { label: '메모권·유료 (P16-04)', external: '#/plans/access' },
     ),
     build(
       'request_doc',
@@ -181,7 +181,7 @@ export function getUnlockCards(tutor) {
         { label: '유료 등급', ok: paid },
         { label: '프로필 공개', ok: published },
       ],
-      { label: '유료 확인', external: '#/mypage/paid' },
+      { label: '유료 확인', external: '#/plans' },
     ),
     build(
       'pick',
@@ -200,7 +200,7 @@ export function getUnlockCards(tutor) {
         { label: '프로필 공개', ok: published },
         { label: '상세등록 완료', ok: expanded },
       ],
-      { label: 'Prime 자격 확인', external: '#/mypage/paid' },
+      { label: 'Prime 자격 확인', external: '#/plans/positions' },
     ),
   ].filter(Boolean);
 }
@@ -357,7 +357,7 @@ export function getHubCtas(tutor) {
     { label: '학생 접근·쪽지', path: 'access', primary: true },
     { label: '학생 검토함', path: 'student_review', external: '#/mypage/student-review?from=access', primary: false },
     { label: '학생찾기 보기', path: 'student_search', external: '#/tutor', primary: false },
-    { label: '메모권·유료', path: 'plans', external: '#/mypage/paid', primary: false },
+    { label: '메모권·유료', path: 'plans', external: '#/plans/access', primary: false },
   ];
 }
 

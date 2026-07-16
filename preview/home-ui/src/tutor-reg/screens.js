@@ -133,7 +133,7 @@ function renderTutorShell(tutor, activeSection, bodyHtml) {
         <nav class="p19-sidebar-nav" aria-label="과외쌤 운영 메뉴">
           <a href="#${tutorHubPath(tutor.id)}" class="p19-sidebar-nav__link p19-sidebar-nav__link--overview${hubActive}" data-p21-nav="${tutorHubPath(tutor.id)}">운영 홈</a>
           ${navItems}
-          <a href="#/mypage/plans" class="p19-sidebar-nav__link" data-mypage-nav="/mypage/plans">유료·상품 (P15-09)</a>
+          <a href="#/plans/positions?provider_type=tutor&provider_id=${tutor.id}" class="p19-sidebar-nav__link" data-nav="/plans/positions?provider_type=tutor&provider_id=${tutor.id}">유료·상품</a>
         </nav>
         <div class="p19-sidebar-status">
           <span class="p19-sidebar-status__label">공개 준비</span>
@@ -649,7 +649,7 @@ function renderAccess(tutor) {
         <div class="p19-form-actions">
           <a href="${getStudentSearchUrl()}" class="btn btn--primary">학생찾기 보기 (9·13장)</a>
           <a href="#/mypage/messages/inbox" class="btn btn--secondary" data-mypage-nav="/mypage/messages/inbox">쪽지함 열기 (P16-01)</a>
-          <a href="#/mypage/plans" class="btn btn--secondary" data-mypage-nav="/mypage/plans">메모권·유료 확인</a>
+          <a href="#/plans/access?provider_type=tutor&provider_id=${tutor.id}" class="btn btn--secondary" data-nav="/plans/access?provider_type=tutor&provider_id=${tutor.id}">접근권·쪽지권</a>
         </div>
       </section>
       <p class="p19-form-section__lead">
@@ -680,7 +680,7 @@ function renderExposure(tutor) {
         <div class="p19-form-actions">
           <button type="button" class="btn btn--secondary" ${pickRow?.ok ? '' : 'disabled'}>${esc(pickRow?.statusText || 'Pick')}</button>
           <button type="button" class="btn btn--secondary" ${primeRow?.ok ? '' : 'disabled'}>${esc(primeRow?.statusText || 'Prime')}</button>
-          <a href="#/mypage/plans" class="btn btn--primary" data-mypage-nav="/mypage/plans">유료서비스 보기 (P15-09)</a>
+          <a href="#/plans/positions?provider_type=tutor&provider_id=${tutor.id}" class="btn btn--primary" data-nav="/plans/positions?provider_type=tutor&provider_id=${tutor.id}">유료상품 · 노출</a>
         </div>
       </section>
       <div class="p19-danger-zone" data-p21-tutor-id="${tutor.id}">
