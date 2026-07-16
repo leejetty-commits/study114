@@ -61,6 +61,23 @@ export async function fetchExposureTargets(targetType = 'all', status = '') {
   return readJson(res);
 }
 
+/** @param {number} [limit] */
+export async function fetchCommerceOverview(limit = 50) {
+  const res = await fetch(`/api/admin/commerce.php?limit=${limit}`, CREDENTIALS);
+  return readJson(res);
+}
+
+/** @param {Record<string, unknown>} input */
+export async function patchCommerceCorrection(input) {
+  const res = await fetch('/api/admin/commerce.php', {
+    method: 'PATCH',
+    headers: JSON_HEADERS,
+    ...CREDENTIALS,
+    body: JSON.stringify(input),
+  });
+  return readJson(res);
+}
+
 /** @param {Record<string, unknown>} input */
 export async function patchExposureCorrection(input) {
   const res = await fetch('/api/admin/exposure.php', {
@@ -69,5 +86,10 @@ export async function patchExposureCorrection(input) {
     ...CREDENTIALS,
     body: JSON.stringify(input),
   });
+  return readJson(res);
+}
+
+export async function fetchAdminSession() {
+  const res = await fetch('/api/admin/session.php', CREDENTIALS);
   return readJson(res);
 }

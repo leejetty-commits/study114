@@ -15,12 +15,14 @@ export const A28_COPY = {
 
 export const A28_NAV = [
   { id: 'hub', label: '운영 홈', path: '/admin', screenId: 'A28-01' },
-  { id: 'reports', label: '신고 처리', path: '/admin/reports', screenId: 'A28-04' },
-  { id: 'notices', label: '공지·가이드', path: '/admin/notices', screenId: 'A28-05' },
-  { id: 'tickets', label: '문의 큐', path: '/admin/tickets', screenId: 'A28-04b' },
+  { id: 'commerce', label: '상품·결제 조회', path: '/admin/commerce', screenId: 'A28-07b' },
+  { id: 'exposure', label: '노출 보정', path: '/admin/exposure', screenId: 'A28-07a' },
   { id: 'submission', label: '제출자료 확인', path: '/admin/submission-docs', screenId: 'A28-06' },
-  { id: 'exposure', label: '노출·권한 보정', path: '/admin/exposure', screenId: 'A28-07' },
-  { id: 'logs', label: '운영 로그', path: '/admin/logs', screenId: 'A28-08' },
+  { id: 'reports', label: '신고 처리', path: '/admin/reports', screenId: 'A28-04' },
+  { id: 'tickets', label: '문의 큐', path: '/admin/tickets', screenId: 'A28-04b' },
+  { id: 'notices', label: '공지·가이드', path: '/admin/notices', screenId: 'A28-05' },
+  { id: 'logs', label: '운영 로그', path: '/admin/logs', screenId: 'A28-08a' },
+  { id: 'permissions', label: '권한·계정', path: '/admin/permissions', screenId: 'A28-08b', masterOnly: true },
 ];
 
 /** A28-04 신고 상태 (심사·승인 용어 금지) */
@@ -71,6 +73,8 @@ export const A28_ACTION_LABELS = {
   submission_expose: '제출 노출 반영',
   submission_hide: '제출 숨김',
   report_status_change: '신고 상태 변경',
+  commerce_position_ends_at: '포지션 만료일 보정',
+  commerce_ticket_remaining: '횟수권 잔여 보정',
 };
 
 /** 운영 로그 대상 유형 (DB target_type) */
@@ -79,6 +83,8 @@ export const A28_LOG_TARGET_TYPE_LABELS = {
   tutor: '과외쌤',
   board_post: '제출',
   user: '회원',
+  position_subscription: '포지션 구독',
+  ticket_pack: '횟수권 팩',
 };
 
 /** A28-06 큐 조치 (심사·승인 용어 금지) */

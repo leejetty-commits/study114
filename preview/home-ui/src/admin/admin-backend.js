@@ -6,6 +6,9 @@ import {
   patchAdminReport,
   fetchExposureTargets,
   patchExposureCorrection,
+  fetchCommerceOverview,
+  patchCommerceCorrection,
+  fetchAdminSession,
 } from './admin-api.js';
 import { hydrateBoardCache } from '../board/board-backend.js';
 
@@ -23,11 +26,15 @@ export function isAdminApiMode() {
   return apiMode;
 }
 
+/** @type {any|null} */
+let commerceCache = null;
+
 function resetCaches() {
   submissionQueueCache = [];
   operationLogsCache = [];
   reportsCache = [];
   exposureCache = [];
+  commerceCache = null;
 }
 
 export async function activateAdminApi() {
@@ -41,16 +48,18 @@ export function deactivateAdminApi() {
 }
 
 export async function hydrateAdminCache() {
-  const [queueRes, logsRes, reportsRes, exposureRes] = await Promise.all([
+  const [queueRes, logsRes, reportsRes, exposureRes, commerceRes] = await Promise.all([
     fetchSubmissionQueue('submitted').catch(() => ({ queue: [] })),
     fetchOperationLogs(50).catch(() => ({ logs: [] })),
     fetchAdminReports().catch(() => ({ reports: [] })),
     fetchExposureTargets('all', '').catch(() => ({ items: [] })),
+    fetchCommerceOverview(50).catch(() => null),
   ]);
   submissionQueueCache = (queueRes.queue ?? []).map((item) => ({ ...item }));
   operationLogsCache = (logsRes.logs ?? []).map((log) => ({ ...log }));
   reportsCache = (reportsRes.reports ?? []).map((r) => ({ ...r }));
   exposureCache = (exposureRes.items ?? []).map((item) => ({ ...item }));
+  commerceCache = commerceRes ? { ...commerceRes } : null;
 }
 
 export function getSubmissionQueueCache() {
@@ -144,6 +153,26 @@ export async function apiUpdateAdminReport(id, status, opts = {}) {
   });
   if (data.report) upsertReport(data.report);
   if (data.log) prependLog(data.log);
+  return data;
+}
+
+export function getCommerceCache() {
+  return commerceCache ? { ...commerceCache } : null;
+}
+
+export async function hydrateCommerceCache() {
+  const data = await fetchCommerceOverview(50);
+  commerceCache = { ...data };
+  return commerceCache;
+}
+
+/**
+ * @param {Record<string, unknown>} input
+ */
+export async function apiApplyCommerceCorrection(input) {
+  const data = await patchCommerceCorrection(input);
+  if (data.log) prependLog(data.log);
+  await hydrateCommerceCache().catch(() => {});
   return data;
 }
 

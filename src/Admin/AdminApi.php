@@ -96,6 +96,15 @@ final class AdminApi
         return $auth;
     }
 
+    /** @param array{email?: string, role_type?: string} $auth */
+    public static function requireMaster(array $auth): void
+    {
+        $roles = new AdminRoleService();
+        if (!$roles->isMaster($auth)) {
+            self::fail(403, 'forbidden', '마스터 권한이 필요합니다.');
+        }
+    }
+
     /** @param callable(): void $fn */
     public static function run(callable $fn): void
     {

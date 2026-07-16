@@ -1,4 +1,3 @@
-import { navigate } from '../state.js';
 import {
   ADMIN_RED_LINE_PRINCIPLE,
   ALLOWED_OPERATOR_ACTIONS,
@@ -21,7 +20,12 @@ import {
   getExposureCache,
   hydrateExposureCache,
   apiApplyExposureCorrection,
+  getCommerceCache,
+  hydrateCommerceCache,
+  apiApplyCommerceCorrection,
 } from './admin-backend.js';
+import { isMasterAdmin } from './admin-guard.js';
+import { canAccessAdminMenu, MASTER_EMAILS, SUB_MASTER_EMAILS, SUB_MASTER_BLOCKED_MENUS } from './admin-permissions.js';
 import {
   A28_COPY,
   A28_NAV,
@@ -44,6 +48,36 @@ function esc(s) {
 
 function renderRedLineBanner() {
   return `<div class="a28-redline" role="note"><strong>RED LINE</strong> · ${esc(A28_COPY.redLineBanner)}<br><span class="a28-redline__forbidden">사용자-facing 금지: ${esc(A28_FORBIDDEN_UI)}</span></div>`;
+}
+
+function renderDetailDrawer(id, title, bodyHtml) {
+  return `
+    <aside class="admin-drawer" data-admin-drawer="${esc(id)}" hidden>
+      <div class="admin-drawer__backdrop" data-admin-drawer-close></div>
+      <div class="admin-drawer__panel" role="dialog" aria-label="${esc(title)}">
+        <header class="admin-drawer__head">
+          <strong>${esc(title)}</strong>
+          <button type="button" class="btn btn--secondary btn--sm" data-admin-drawer-close>닫기</button>
+        </header>
+        <div class="admin-drawer__body">${bodyHtml}</div>
+      </div>
+    </aside>`;
+}
+
+function bindDetailDrawer(root) {
+  root.querySelectorAll('[data-admin-drawer-open]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-admin-drawer-open');
+      const drawer = root.querySelector(`[data-admin-drawer="${id}"]`);
+      if (drawer) drawer.hidden = false;
+    });
+  });
+  root.querySelectorAll('[data-admin-drawer-close]').forEach((el) => {
+    el.addEventListener('click', () => {
+      const drawer = el.closest('[data-admin-drawer]');
+      if (drawer) drawer.hidden = true;
+    });
+  });
 }
 
 function renderPanel(title, screenId, bodyHtml, { lead = '' } = {}) {
@@ -73,7 +107,7 @@ function renderNav(activePath) {
 }
 
 function renderHub() {
-  const cards = A28_NAV.filter((n) => n.id !== 'hub')
+  const cards = A28_NAV.filter((n) => n.id !== 'hub' && canAccessAdminMenu(n.id))
     .map(
       (n) =>
         `<a href="#${n.path}" class="sup-admin-hub__card a28-hub__card" data-a28-nav="${n.path}">
@@ -269,7 +303,7 @@ function renderExposure() {
 
   return renderPanel(
     '노출·권한 수동 보정',
-    'A28-07',
+    'A28-07a',
     `${renderRedLineBanner()}
      <p class="a28-hint">검색/노출 상태 보정 · 승인/반려 용어 사용 금지 · 조치 시 운영 로그 기록</p>
      <form class="a28-filter-form" data-a28-exp-filter>
@@ -300,47 +334,238 @@ function renderExposure() {
   );
 }
 
+function renderCommerce() {
+  const data = isAdminApiMode() ? getCommerceCache() : null;
+  const master = isMasterAdmin();
+  const slots = data?.slots;
+  const settings = data?.settings_readonly;
+  const positions = data?.positions ?? [];
+  const tickets = data?.tickets ?? [];
+  const orders = data?.orders ?? [];
+
+  const slotHtml = slots
+    ? `<div class="admin-kpi-row">
+        <div class="admin-kpi"><span>Prime</span><strong>${slots.prime?.used}/${slots.prime?.capacity}</strong><small>잔여 ${slots.prime?.remaining}</small></div>
+        <div class="admin-kpi"><span>Pick</span><strong>${slots.pick?.used}/${slots.pick?.capacity}</strong><small>세트 ${slots.pick?.set_size} · ${slots.pick?.rotation_minutes}분</small></div>
+        <div class="admin-kpi"><span>지역</span><strong>${esc(slots.region_scope_type || 'dong')}</strong><small>조회 전용</small></div>
+      </div>`
+    : '<p class="sup-empty">API 미연결 — 운영자 로그인 후 조회</p>';
+
+  const posRows = positions
+    .map((p) => {
+      const corr = master
+        ? `<div class="admin-inline-corr">
+            <input type="datetime-local" class="admin-input--sm" data-commerce-ends="${p.id}" value="${esc(String(p.ends_at || '').replace(' ', 'T').slice(0, 16))}" />
+            <button type="button" class="btn btn--secondary btn--sm" data-commerce-position-save="${p.id}">만료 보정</button>
+          </div>`
+        : '<span class="a28-muted">마스터 전용</span>';
+      return `<tr>
+        <td><code>${p.id}</code></td>
+        <td>${esc(p.user_email)}</td>
+        <td><strong>${esc(String(p.sku_code).toUpperCase())}</strong></td>
+        <td>${p.days_left}일</td>
+        <td>${esc(p.ends_at)}</td>
+        <td>${corr}</td>
+      </tr>`;
+    })
+    .join('');
+
+  const ticketRows = tickets
+    .map((t) => {
+      const corr = master
+        ? `<div class="admin-inline-corr">
+            <input type="number" min="0" class="admin-input--sm" data-commerce-remain="${t.id}" value="${t.remaining}" />
+            <button type="button" class="btn btn--secondary btn--sm" data-commerce-ticket-save="${t.id}">잔여 보정</button>
+          </div>`
+        : '<span class="a28-muted">마스터 전용</span>';
+      return `<tr>
+        <td><code>${t.id}</code></td>
+        <td>${esc(t.user_email)}</td>
+        <td>${esc(t.ticket_type)}</td>
+        <td>${t.remaining}/${t.pack_size}</td>
+        <td>${esc(t.expires_at)}</td>
+        <td>${corr}</td>
+      </tr>`;
+    })
+    .join('');
+
+  const orderRows = orders
+    .map(
+      (o) => `<tr>
+        <td><code>${esc(o.order_ref)}</code></td>
+        <td>${esc(o.user_email)}</td>
+        <td>${esc(o.product_id)} · ${esc(o.variant_label)}</td>
+        <td>${esc(o.status)}</td>
+        <td>${Number(o.amount_won || 0).toLocaleString()}원</td>
+        <td>${esc(o.paid_at || o.created_at)}</td>
+        <td><button type="button" class="btn btn--secondary btn--sm" data-admin-drawer-open="order-${esc(o.order_ref)}">상세</button></td>
+      </tr>`,
+    )
+    .join('');
+
+  const orderDrawers = orders
+    .map(
+      (o) =>
+        renderDetailDrawer(
+          `order-${o.order_ref}`,
+          `주문 ${o.order_ref}`,
+          `<dl class="admin-detail-dl">
+            <dt>상품</dt><dd>${esc(o.product_id)} (${esc(o.product_kind)})</dd>
+            <dt>옵션</dt><dd>${esc(o.variant_label)}</dd>
+            <dt>결제</dt><dd>${esc(o.status)} · ${esc(o.pg_provider)}</dd>
+            <dt>금액</dt><dd>${Number(o.amount_won || 0).toLocaleString()}원</dd>
+            <dt>생성</dt><dd>${esc(o.created_at)}</dd>
+            <dt>결제완료</dt><dd>${esc(o.paid_at || '—')}</dd>
+          </dl>`,
+        ),
+    )
+    .join('');
+
+  return renderPanel(
+    '상품·노출·결제 조회',
+    'A28-07b',
+    `${renderRedLineBanner()}
+     <p class="a28-hint">가격표·슬롯 수·회전간격 직접 편집 UI는 1차 제외 · 조회 + 마스터 최소 보정만</p>
+     ${slotHtml}
+     ${settings ? `<p class="a28-hint">${esc(settings.note)} · Prime ${settings.prime_slots} · Pick ${settings.pick_set_size}세트 · Basic ${settings.basic_page_size}/p</p>` : ''}
+     <h3 class="admin-section-title">Prime / Pick 활성 구독</h3>
+     <table class="sup-admin-table"><thead><tr><th>ID</th><th>계정</th><th>SKU</th><th>남은일</th><th>만료</th><th>보정</th></tr></thead>
+     <tbody>${posRows || '<tr><td colspan="6" class="sup-empty">활성 구독 없음</td></tr>'}</tbody></table>
+     <h3 class="admin-section-title">접근권(횟수권) 팩</h3>
+     <table class="sup-admin-table"><thead><tr><th>ID</th><th>계정</th><th>유형</th><th>잔여</th><th>만료</th><th>보정</th></tr></thead>
+     <tbody>${ticketRows || '<tr><td colspan="6" class="sup-empty">활성 팩 없음</td></tr>'}</tbody></table>
+     <h3 class="admin-section-title">최근 주문·결제</h3>
+     <table class="sup-admin-table"><thead><tr><th>주문</th><th>계정</th><th>상품</th><th>상태</th><th>금액</th><th>시각</th><th></th></tr></thead>
+     <tbody>${orderRows || '<tr><td colspan="7" class="sup-empty">주문 없음</td></tr>'}</tbody></table>
+     ${orderDrawers}
+     <button type="button" class="btn btn--secondary btn--sm" data-commerce-refresh>목록 새로고침</button>`,
+  );
+}
+
+function renderPermissions() {
+  const masterRows = MASTER_EMAILS.map((e) => `<tr><td>마스터</td><td><code>${esc(e)}</code></td><td>전체 메뉴 · 강한 보정 · 권한 설정</td></tr>`).join('');
+  const subRows = SUB_MASTER_EMAILS.map((e) => `<tr><td>부마스터</td><td><code>${esc(e)}</code></td><td>운영 조회 · 숨김/복구 · 로그 열람</td></tr>`).join('');
+  const blocked = SUB_MASTER_BLOCKED_MENUS.map((m) => `<li><code>${esc(m)}</code></li>`).join('');
+
+  return renderPanel(
+    '권한·계정 (마스터 전용)',
+    'A28-08b',
+    `${renderRedLineBanner()}
+     <p class="a28-hint">1차: 계정 목록·메뉴 차단 정책 조회만 · 권한 부여/회수 UI는 후속</p>
+     <table class="sup-admin-table"><thead><tr><th>등급</th><th>이메일</th><th>범위</th></tr></thead><tbody>${masterRows}${subRows}</tbody></table>
+     <h3 class="admin-section-title">부마스터 접근 금지</h3>
+     <ul class="a28-lists">${blocked}</ul>
+     <p class="a28-hint">운영값(가격·슬롯·회전) 편집 · 결제 강제변경 · 로그 삭제/수정 · 관리자 권한 변경 금지</p>`,
+  );
+}
+
 function renderLogs() {
   const logs = isAdminApiMode() ? getOperationLogsCache() : A28_LOG_SEED;
   const rows = logs
     .map(
       (l) =>
-        `<tr><td><code>${esc(l.id)}</code></td><td>${esc(A28_LOG_TARGET_TYPE_LABELS[l.targetType] || l.targetType || '—')}</td><td>${esc(A28_ACTION_LABELS[l.action] || l.action)}</td><td><code>${esc(l.target)}</code></td><td>${esc(l.operator)}</td><td>${esc(l.at)}</td><td>${l.reversible ? '가능' : '—'}</td></tr>`,
+        `<tr>
+          <td><code>${esc(l.id)}</code></td>
+          <td>${esc(A28_LOG_TARGET_TYPE_LABELS[l.targetType] || l.targetType || '—')}</td>
+          <td>${esc(A28_ACTION_LABELS[l.action] || l.action)}</td>
+          <td><code>${esc(l.target)}</code></td>
+          <td>${esc(l.operator)}</td>
+          <td>${esc(l.at)}</td>
+          <td>${esc(l.reasonCategory || '—')}</td>
+          <td><button type="button" class="btn btn--secondary btn--sm" data-admin-drawer-open="log-${esc(l.id)}">상세</button></td>
+        </tr>`,
+    )
+    .join('');
+  const drawers = logs
+    .map((l) =>
+      renderDetailDrawer(
+        `log-${l.id}`,
+        `로그 ${l.id}`,
+        `<dl class="admin-detail-dl">
+          <dt>조치</dt><dd>${esc(A28_ACTION_LABELS[l.action] || l.action)}</dd>
+          <dt>대상</dt><dd>${esc(l.targetType)} #${esc(l.target)}</dd>
+          <dt>운영자</dt><dd>${esc(l.operator)}</dd>
+          <dt>사유</dt><dd>${esc(l.reasonCategory || '—')}</dd>
+          <dt>메모</dt><dd>${esc(l.detailMemo || '—')}</dd>
+          <dt>되돌리기</dt><dd>${l.reversible ? '가능(후속)' : '—'}</dd>
+          <dt>사용자 알림</dt><dd>${l.userNotified ? 'Y' : 'N'}</dd>
+        </dl>`,
+      ),
     )
     .join('');
   const fields = OPERATION_LOG_MIN_FIELDS.join(' · ');
   return renderPanel(
     '운영 로그',
-    'A28-08',
+    'A28-08a',
     `${renderRedLineBanner()}
-     <p class="a28-hint">필수 필드: ${esc(fields)}</p>
-     <p class="a28-hint">조치 구분: <strong>프로필 숨김</strong>(공부방·과외) · <strong>노출 보정</strong>(공개·상담) · <strong>제출 노출 반영/숨김</strong>(제출)</p>
-     <p class="a28-hint">${isAdminApiMode() ? 'API 연동 · 제출자료 조치 로그 포함' : '[프리뷰] 정적 시드'}</p>
-     <table class="sup-admin-table"><thead><tr><th>ID</th><th>대상 유형</th><th>조치</th><th>대상 ID</th><th>운영자</th><th>시각</th><th>되돌리기</th></tr></thead><tbody>${rows}</tbody></table>`,
+     <p class="a28-hint">필수 필드: ${esc(fields)} · 조회 전용(부마스터 포함) · 삭제/수정 금지</p>
+     <table class="sup-admin-table"><thead><tr><th>ID</th><th>대상 유형</th><th>조치</th><th>대상 ID</th><th>운영자</th><th>시각</th><th>사유</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="8" class="sup-empty">로그 없음</td></tr>'}</tbody></table>
+     ${drawers}
+     <p class="a28-hint">${isAdminApiMode() ? 'API 연동' : '[프리뷰] 정적 시드'}</p>`,
   );
 }
 
 /** @param {string} path */
 export function renderA28Screen(path) {
-  const nav = renderNav(path);
   let body = renderHub();
-  if (path === '/admin/reports') body = renderReports();
+  if (path === '/admin/commerce') body = renderCommerce();
+  else if (path === '/admin/reports') body = renderReports();
   else if (path === '/admin/notices') body = renderNoticesAdmin();
   else if (path === '/admin/tickets') body = renderTicketsAdmin();
   else if (path === '/admin/submission-docs') body = renderSubmissionDocs();
   else if (path === '/admin/exposure') body = renderExposure();
   else if (path === '/admin/logs') body = renderLogs();
-  return nav + body;
+  else if (path === '/admin/permissions') body = renderPermissions();
+  return body;
 }
 
 /** @param {HTMLElement} root @param {string} path @param {() => void} rerender */
 export function bindA28ScreenEvents(root, path, rerender) {
-  root.querySelectorAll('[data-a28-nav]').forEach((el) => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      navigate(el.getAttribute('data-a28-nav') || '/admin');
+  bindDetailDrawer(root);
+
+  if (path === '/admin/commerce') {
+    root.querySelector('[data-commerce-refresh]')?.addEventListener('click', async () => {
+      try {
+        await hydrateCommerceCache();
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '새로고침 실패');
+      }
     });
-  });
+    root.querySelectorAll('[data-commerce-position-save]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-commerce-position-save');
+        const input = root.querySelector(`[data-commerce-ends="${id}"]`);
+        if (!id || !(input instanceof HTMLInputElement) || !input.value) return;
+        const endsAt = input.value.replace('T', ' ') + ':00';
+        if (!window.confirm('포지션 만료일을 보정할까요?')) return;
+        try {
+          await apiApplyCommerceCorrection({ action: 'position_ends_at', position_id: Number(id), ends_at: endsAt });
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '보정 실패');
+        }
+      });
+    });
+    root.querySelectorAll('[data-commerce-ticket-save]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-commerce-ticket-save');
+        const input = root.querySelector(`[data-commerce-remain="${id}"]`);
+        if (!id || !(input instanceof HTMLInputElement)) return;
+        if (!window.confirm('횟수권 잔여를 보정할까요?')) return;
+        try {
+          await apiApplyCommerceCorrection({
+            action: 'ticket_remaining',
+            ticket_pack_id: Number(id),
+            remaining: Number(input.value),
+          });
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '보정 실패');
+        }
+      });
+    });
+  }
 
   if (path === '/admin/notices') {
     const form = root.querySelector('[data-a28-notice-form]');
