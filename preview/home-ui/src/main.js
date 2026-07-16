@@ -186,7 +186,13 @@ function init() {
           });
         }
         // 소셜/세션 로그인 후 #/guest에 남아 있으면 역할 홈으로 이동
-        if (user && getCurrentScreen() === 'guest' && ROLE_HOME[user.role_type]) {
+        // admin은 운영 콘솔이 기본 홈이 아님 — 사이트 진입 시 게스트 홈 유지
+        if (
+          user &&
+          getCurrentScreen() === 'guest' &&
+          user.role_type !== 'admin' &&
+          ROLE_HOME[user.role_type]
+        ) {
           navigate(ROLE_HOME[user.role_type]);
           return;
         }

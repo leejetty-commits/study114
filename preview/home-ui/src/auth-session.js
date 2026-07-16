@@ -32,7 +32,7 @@ export const ROLE_HOME = {
   guardian_student: '/parent',
   study_room_owner: '/study-room',
   tutor: '/tutor',
-  admin: '/admin',
+  // admin: 사이트 기본 랜딩이 아님 — #/admin은 명시 진입만
 };
 
 const ROLE_ACTIVE = {
