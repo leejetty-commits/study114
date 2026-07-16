@@ -40,6 +40,7 @@ export function renderLibraryShell(_screenId, bodyHtml) {
     headerHtml: renderHeader(role),
     mainHtml,
     footerHtml: renderFooter(),
+    slotKey: 'support_right_rail',
   });
 }
 

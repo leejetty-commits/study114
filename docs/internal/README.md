@@ -1,6 +1,6 @@
 # 내부 문서 인덱스 (docs/internal)
 
-**기준일:** 2026-07-10  
+**기준일:** 2026-07-17  
 **대상:** 기획·개발·배포 논의 (Notion 보조용)
 
 ---
@@ -13,7 +13,8 @@
 | [01-dothome-deploy.md](./01-dothome-deploy.md) | **닷홈** 배포·CI·DB·빌드·검증·작업 원칙 | ★ **1차 목표** |
 | [02-dothome-server-cleanup-checklist.md](./02-dothome-server-cleanup-checklist.md) | **닷홈 서버 파일 정리** (무손상·격리 우선) | 운영 정리 시 |
 | [01-cafe24-staging-deploy.md](./01-cafe24-staging-deploy.md) | 카페24 스테이징 (보류·참고용) | 참고 |
-| [23-board-community-integration-draft.md](./23-board-community-integration-draft.md) | 커뮤니티(그누보드) 연동 초안 | 장기 |
+| [23-board-community-integration-draft.md](./23-board-community-integration-draft.md) | 게시판 엔진·GNU·SSO 초안 | 장기 |
+| [23-board-menu-boundary-audit.md](./23-board-menu-boundary-audit.md) | 게시판/정적/서비스 메뉴 경계 진단 · 프리셋 생성 로직 | ★ 23·33 정렬 |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
 
 ---
@@ -69,3 +70,4 @@ npm run build:dothome
 | 2026-07-09 | 인덱스 최초 작성 — 닷홈 1차·카페24 참고 분리 |
 | 2026-07-10 | GitHub Actions CI 배포·Variable·gitignore 산출물·작업 원칙 반영 |
 | 2026-07-10 | 02-dothome-server-cleanup-checklist.md 추가 |
+| 2026-07-17 | 23-board-menu-boundary-audit.md · Notion 23/30/33 동기화 · policy-log route 잠금 |

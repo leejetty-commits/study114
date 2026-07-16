@@ -5,19 +5,17 @@ import {
   PRINCIPLES_POSITIVE,
   PRINCIPLES_NEGATIVE,
   HOME_CARDS,
-  GUIDE_ARTICLES,
   ROLE_GUIDES,
   HOME_EXPOSURE_GUIDES,
-  FAQ_ITEMS,
   TERMS_LINKS,
   OPERATIONAL_CONTACT,
   MEMBER_CONTACT_CTA,
   OPERATIONAL_CTA,
   TICKET_CATEGORIES,
   TICKET_STATUS_LABELS,
-  getRelatedGuides,
 } from './support-copy.js';
 import { listNotices } from './notice-store.js';
+import { listFaqPosts, listGuidePosts, getRelatedGuidePosts, isOperationalBoardApiActive } from '../operational-board-store.js';
 import { createTicket, listTickets } from './ticket-store.js';
 import { renderAdminScreen } from './admin-screens.js';
 import { isAdminSupportPath, getSectionFromPath, parseGuideSlug } from './router.js';
@@ -194,17 +192,22 @@ function renderGuideSection() {
 }
 
 function renderFaqSection() {
-  const posts = FAQ_ITEMS.map((f, i) => ({
-    id: `faq-${i + 1}`,
+  const posts = listFaqPosts().map((f) => ({
+    id: f.id,
     title: f.q,
     body: f.a,
   }));
+  const sourceNote = isOperationalBoardApiActive()
+    ? '운영 정본: board_posts · boardKey `faq`'
+    : '1차 시드 fallback · board_posts 연결 시 자동 전환';
 
   return renderPanel(
     'FAQ 자주 묻는 질문',
     'P17-04',
     renderFaqBoard(posts),
-    { lead: '1차는 정적 Q&A · 후순위 CMS/게시판 연동 가능' },
+    {
+      lead: `${sourceNote} · 화면은 아코디언 UX`,
+    },
   );
 }
 
@@ -222,7 +225,11 @@ function renderNoticeSection() {
     `<p class="sup-section__lead">제목을 누르면 본문이 펼쳐집니다. 다른 공지를 누르면 이전 내용은 접힙니다.</p>
      ${renderSingleOpenBoard(posts, { variant: 'notice' })}
      ${renderAdminFooterLink()}`,
-    { lead: '운영 공지 · 17c CMS에서 추가·수정 가능(프리뷰)' },
+    {
+      lead: isOperationalBoardApiActive()
+        ? '운영 정본: board_posts · boardKey `notice`'
+        : '운영 공지 · A28-05 / 17c CMS에서 추가·수정',
+    },
   );
 }
 
@@ -306,7 +313,7 @@ function renderSafeGuideAccordion(openSlug) {
       .map((g) => {
         const isOpen = openSlug === g.slug;
         const body = renderGuideContent(g);
-        const related = getRelatedGuides(g.slug);
+        const related = getRelatedGuidePosts(g.slug);
         const relatedHtml = related.length
           ? `<div class="sup-related">
                <span class="sup-related__label">관련 가이드</span>
@@ -341,8 +348,8 @@ function renderSafeGuideAccordion(openSlug) {
       </section>`;
   };
 
-  const primary = GUIDE_ARTICLES.filter((g) => g.priority === 'primary');
-  const secondary = GUIDE_ARTICLES.filter((g) => g.priority === 'secondary');
+  const primary = listGuidePosts().filter((g) => g.priority === 'primary');
+  const secondary = listGuidePosts().filter((g) => g.priority === 'secondary');
 
   return `
     ${renderPrinciplesBox(true)}
@@ -352,7 +359,7 @@ function renderSafeGuideAccordion(openSlug) {
       `<p class="sup-section__lead">제목을 누르면 아래에 내용이 펼쳐집니다. 다른 항목을 누르면 이전 내용은 접힙니다.</p>
        ${renderGroup('1차 가이드 (G1~G4)', primary, 'primary')}
        ${renderGroup('보조 가이드 (G5~G7)', secondary, 'secondary')}`,
-      { lead: '페이지 이동 없이 한 화면에서 읽기' },
+      { lead: isOperationalBoardApiActive() ? '운영 정본: board_posts · boardKey `safe-guide`' : '페이지 이동 없이 한 화면에서 읽기' },
     )}
     ${openSlug ? `<span data-sup-scroll-article="${esc(openSlug)}" hidden></span>` : ''}`;
 }

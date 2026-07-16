@@ -14,6 +14,7 @@ import {
   renderSitePromoSidebar,
   bindSitePromoSidebarEvents,
 } from '../../shared/promo-sidebar.js';
+import { renderRightRailSidebar } from '@home-ui/right-rail.js';
 
 export function renderPreviewToolbar(activeTab) {
   if (!SHOW_PREVIEW_TOOLBAR) return '';
@@ -73,7 +74,7 @@ export function renderSearchShell(content) {
         <div class="home-main search-main">
           ${content}
         </div>
-        ${renderSitePromoSidebar()}
+        ${renderRightRailSidebar('search_right_rail')}
       </div>
       <footer class="home-footer">
         <p>© 2026 우동공과 · study114</p>

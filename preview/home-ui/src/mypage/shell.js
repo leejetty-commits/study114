@@ -34,6 +34,13 @@ export function renderMypageShell(currentPath, bodyHtml) {
         : role === 'study_room'
           ? '/study-room'
           : '/tutor';
+  const railSlotKey = currentPath.startsWith('/mypage/registrations')
+    ? 'register_right_rail'
+    : currentPath.startsWith('/mypage/paid') || currentPath.startsWith('/mypage/plans')
+      ? 'plans_right_rail'
+      : currentPath.startsWith('/mypage/submission-board')
+        ? 'detail_right_rail'
+        : 'support_right_rail';
 
   const navItems = MYPAGE_NAV.filter((item) => !item.roles || item.roles.includes(role))
     .map((item) => {
@@ -82,6 +89,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
     headerHtml: renderHeader(role, { showAuth: false, showRoleSwitch: false }),
     mainHtml,
     footerHtml: renderFooter(),
+    slotKey: railSlotKey,
   });
 }
 

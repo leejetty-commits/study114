@@ -212,7 +212,10 @@ P17-01 히어로 · P17-03 상단에 **긍정 3원칙 + 부정 5항**을 함께 
 ### 7-4. P17-06 약관/정책 → 26장 이관 (잠금)
 
 **P17-06은 고객센터 내 placeholder 링크·푸터 진입만 담당한다.**  
-약관·개인정보·플랫폼 역할 고지 **정적 copy 정본**은 **[26장 (예정)](30-first-route-map-and-screen-inventory.md#12-26장-예정-27a28)** · [30장 부록 C](30-first-route-map-and-screen-inventory.md#부록-c-boardkey--route-매핑-23장-연동).
+약관·개인정보·플랫폼 역할 고지 **정적 copy 정본**은 **[26장](30-first-route-map-and-screen-inventory.md#12-26장-예정-27a28)** · route `#/policy/{slug}`.
+
+**레거시:** `#/support/terms` 는 유효 고객센터 섹션이 아니다. 코드에서 `#/policy/terms` 로 redirect 한다 (2026-07-17).  
+정책 **변경 이력** 보드(`policy-log`)는 정적 약관과 별도 — `#/policy/changelog` (후순위 · 23·30장).
 
 ---
 
@@ -349,3 +352,4 @@ P17-01 히어로 · P17-03 상단에 **긍정 3원칙 + 부정 5항**을 함께 
 | 2026-07-04 | **17a** home-ui `#/support` · G1~G4 · FAQ·공지·운영 문의 폼 |
 | 2026-07-06 | **UX·실행 1차 잠금** — `support-copy.js` · §13 · P17-03 관련 가이드 |
 | 2026-07-06 | **17b~c** · **P17-06→26장 이관** · [30장](30-first-route-map-and-screen-inventory.md) |
+| 2026-07-17 | `/support/terms` → `#/policy/terms` · `policy-log`=`#/policy/changelog` 경계 명시 · [23 경계 진단](../internal/23-board-menu-boundary-audit.md) |

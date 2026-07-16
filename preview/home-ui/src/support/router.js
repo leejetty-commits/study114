@@ -2,8 +2,12 @@
 
 /** @typedef {'P17-01'|'P17-02'|'P17-03'} SupportScreenId */
 
-/** P17-01 내부 섹션 (P17-04~07) */
-export const SUPPORT_SECTIONS = ['guide', 'faq', 'notice', 'contact', 'terms'];
+/** P17-01 내부 섹션 (P17-04·05·07 · 이용안내). 약관은 26장 `#/policy/*` — `/support/terms` 잔존 금지 */
+export const SUPPORT_SECTIONS = ['guide', 'faq', 'notice', 'contact'];
+
+/** 레거시: P17-06이 고객센터 하위에 있던 시절 경로 → 정적 정책으로 이관 */
+export const SUPPORT_TERMS_LEGACY_PATH = '/support/terms';
+export const SUPPORT_TERMS_REDIRECT = '/policy/terms';
 
 /** 17c admin · 사용자 티켓 목록 */
 export const SUPPORT_ADMIN_PATHS = ['/support/admin', '/support/admin/notices', '/support/admin/tickets'];
@@ -13,6 +17,8 @@ export const SUPPORT_CONTACT_PATHS = ['/support/contact/tickets'];
 export function normalizeSupportPath(hashPath) {
   const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
   if (p === '/support' || p === '/support/') return '/support';
+  // 정적 정책으로 이관됨 — 여기서 유효 경로로 인정하지 않음 (bootstrap이 redirect)
+  if (p === SUPPORT_TERMS_LEGACY_PATH || p === `${SUPPORT_TERMS_LEGACY_PATH}/`) return null;
   if (SUPPORT_SECTIONS.some((s) => p === `/support/${s}`)) return p;
   if (p === '/support/contact/tickets') return p;
   if (p === '/support/admin' || p === '/support/admin/') return '/support/admin';
@@ -40,7 +46,7 @@ export function getScreenIdForPath(path) {
 
 /** @param {string} path @returns {string | null} */
 export function getSectionFromPath(path) {
-  const m = path.match(/^\/support\/(guide|faq|notice|contact|terms)$/);
+  const m = path.match(/^\/support\/(guide|faq|notice|contact)$/);
   return m ? m[1] : null;
 }
 

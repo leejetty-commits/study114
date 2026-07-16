@@ -36,6 +36,7 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
     headerHtml: renderHeader(headerRole),
     mainHtml,
     footerHtml: renderFooter(),
+    slotKey: hideNav ? null : 'plans_right_rail',
   });
 }
 

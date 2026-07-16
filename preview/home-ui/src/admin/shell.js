@@ -77,6 +77,7 @@ export function renderAdminShell(path, bodyHtml) {
     headerHtml: '',
     mainHtml,
     footerHtml: renderFooter(),
+    slotKey: null,
   });
 }
 

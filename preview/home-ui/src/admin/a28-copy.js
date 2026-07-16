@@ -99,6 +99,14 @@ export const A28_ACTION_LABELS = {
   account_block: '이용 제한',
   account_restore: '복구',
   account_withdraw: '탈퇴 처리',
+  channel_create: '채널 생성',
+  channel_update: '채널 수정',
+  channel_archive: '채널 보관',
+  channel_reset_seed: '채널 seed 복원',
+  slot_update: '슬롯 수정',
+  slot_enable: '슬롯 활성화',
+  slot_disable: '슬롯 비활성화',
+  slot_reset_seed: '슬롯 seed 복원',
 };
 
 /** 운영 로그 대상 유형 (DB target_type) */
@@ -109,6 +117,8 @@ export const A28_LOG_TARGET_TYPE_LABELS = {
   user: '회원',
   position_subscription: '포지션 구독',
   ticket_pack: '횟수권 팩',
+  board_channel: '게시판 채널',
+  right_rail_slot: '우측 슬롯',
 };
 
 /** A28-06 큐 조치 (심사·승인 용어 금지) */

@@ -11,6 +11,26 @@ import { TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy
 import { SUBMISSION_CATEGORIES } from '../submission-board/submission-copy.js';
 import { apiOpenSubmissionAttachment } from '../board/board-backend.js';
 import {
+  archiveBoardChannel,
+  getBoardChannel,
+  getBoardKeyCandidates,
+  getPresetOptions,
+  getSectionOwnerOptions,
+  listBoardChannels,
+  resetBoardChannels,
+  saveBoardChannel,
+} from '../board-channel-store.js';
+import {
+  RIGHT_RAIL_MOBILE_BEHAVIORS,
+  RIGHT_RAIL_PAGE_LABELS,
+  RIGHT_RAIL_SELECTION_MODES,
+  listAllBoardAndRailLogs,
+  listRightRailSlots,
+  resetRightRailSlots,
+  saveRightRailSlot,
+  updateRightRailSlotStatus,
+} from '../right-rail-store.js';
+import {
   isAdminApiMode,
   getSubmissionQueueCache,
   getOperationLogsCache,
@@ -144,6 +164,147 @@ function renderPanel(title, screenId, bodyHtml, { lead = '' } = {}) {
     </section>`;
 }
 
+function yesNo(v) {
+  return v ? 'Y' : '—';
+}
+
+function selected(actual, value) {
+  return String(actual) === String(value) ? ' selected' : '';
+}
+
+function checked(value) {
+  return value ? ' checked' : '';
+}
+
+function optionList(values, active) {
+  return values.map((value) => `<option value="${esc(value)}"${selected(active, value)}>${esc(value)}</option>`).join('');
+}
+
+function renderChannelTable() {
+  const rows = listBoardChannels()
+    .map(
+      (ch) => `<tr>
+        <td><code>${esc(ch.boardKey)}</code></td>
+        <td>${esc(ch.menuLabel)}</td>
+        <td>${esc(ch.boardType)}<br><small>${esc(ch.presetId)}</small></td>
+        <td>${esc(ch.sectionOwner)}</td>
+        <td>${esc(ch.visibility)}<br><small>download ${esc(ch.downloadPolicy)}</small></td>
+        <td>${yesNo(ch.allowWrite)}<br><small>upload ${yesNo(ch.allowUpload)}</small></td>
+        <td><span class="sub-board-status sub-board-status--${esc(ch.status)}">${esc(ch.status)}</span></td>
+        <td><code>${esc(ch.routeSlug || '—')}</code></td>
+        <td>${esc(ch.lastUpdatedAt || '—')}</td>
+        <td class="sup-admin-actions">
+          <button type="button" class="btn btn--secondary btn--sm" data-channel-edit="${esc(ch.boardKey)}">수정</button>
+          <button type="button" class="btn btn--secondary btn--sm" data-channel-archive="${esc(ch.boardKey)}">보관</button>
+        </td>
+      </tr>`,
+    )
+    .join('');
+  return `<table class="sup-admin-table a28-channel-table">
+    <thead><tr><th>boardKey</th><th>menuLabel</th><th>type</th><th>소속</th><th>공개/다운로드</th><th>write policy</th><th>status</th><th>route</th><th>updatedAt</th><th></th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="10" class="sup-empty">채널 없음</td></tr>'}</tbody>
+  </table>`;
+}
+
+function renderChannelForm(channel = null) {
+  const presetId = channel?.presetId || 'notice';
+  const presetOptions = getPresetOptions()
+    .map((preset) => `<option value="${esc(preset.id)}"${selected(presetId, preset.id)}>${esc(preset.label)}</option>`)
+    .join('');
+  const sectionOptions = getSectionOwnerOptions(presetId)
+    .map((owner) => `<option value="${esc(owner)}"${selected(channel?.sectionOwner, owner)}>${esc(owner)}</option>`)
+    .join('');
+  const keyCandidates = getBoardKeyCandidates(presetId);
+  const candidateHint = keyCandidates.length ? `권장: ${keyCandidates.join(' · ')}` : '프리셋 기준 boardKey만 사용';
+  return `
+    <form class="sup-admin-form a28-config-form" data-channel-form>
+      <h3 class="sup-admin-form__title">채널 추가 · 수정</h3>
+      <p class="a28-hint">프리셋 먼저 선택 · 자유 글판 생성 금지 · 정적 정책 페이지 대체 금지</p>
+      <input type="hidden" name="mode" value="${channel ? 'update' : 'create'}" />
+      <label class="sup-field"><span>프리셋</span><select name="presetId" data-channel-preset required>${presetOptions}</select></label>
+      <label class="sup-field"><span>boardKey <small>${esc(candidateHint)}</small></span><input name="boardKey" value="${esc(channel?.boardKey || '')}" placeholder="notice" required /></label>
+      <label class="sup-field"><span>menuLabel</span><input name="menuLabel" value="${esc(channel?.menuLabel || '')}" placeholder="공지사항" required /></label>
+      <label class="sup-field"><span>routeSlug</span><input name="routeSlug" value="${esc(channel?.routeSlug || '')}" placeholder="#/support/notice" /></label>
+      <label class="sup-field"><span>sectionOwner</span><select name="sectionOwner" required>${sectionOptions}</select></label>
+      <label class="sup-field"><span>visibility</span><select name="visibility">${optionList(['public', 'login', 'role'], channel?.visibility || 'public')}</select></label>
+      <label class="sup-field"><span>downloadPolicy</span><select name="downloadPolicy">${optionList(['none', 'public', 'login', 'role', 'admin'], channel?.downloadPolicy || 'none')}</select></label>
+      <label class="sup-field"><span>allowedRoles (comma)</span><input name="allowedRoles" value="${esc((channel?.allowedRoles || ['admin']).join(', '))}" /></label>
+      <div class="a28-checkbox-grid">
+        <label><input type="checkbox" name="allowWrite"${checked(channel?.allowWrite ?? true)} /> allowWrite</label>
+        <label><input type="checkbox" name="allowComment"${checked(channel?.allowComment)} /> allowComment</label>
+        <label><input type="checkbox" name="allowUpload"${checked(channel?.allowUpload)} /> allowUpload</label>
+        <label><input type="checkbox" name="requireReview"${checked(channel?.requireReview)} /> requireReview</label>
+        <label><input type="checkbox" name="isGnuSeparated"${checked(channel?.isGnuSeparated ?? true)} /> GNU 분리</label>
+      </div>
+      <label class="sup-field"><span>status</span><select name="status">${optionList(['active', 'hidden', 'archived'], channel?.status || 'active')}</select></label>
+      <div class="sup-admin-form__actions">
+        <button type="submit" class="btn btn--primary btn--sm">채널 저장</button>
+        <button type="button" class="btn btn--secondary btn--sm" data-channel-reset-form>새 채널</button>
+        <button type="button" class="btn btn--secondary btn--sm" data-channel-reset-seed>채널 seed 복원</button>
+      </div>
+    </form>`;
+}
+
+function renderRightRailTable() {
+  const rows = listRightRailSlots()
+    .map(
+      (slot) => `<tr>
+        <td><code>${esc(slot.slotKey)}</code><br><small>${esc(slot.sectionTitle)}</small></td>
+        <td>${esc(slot.sourceBoardKeys?.join(', ') || slot.sourceBoardKey)}</td>
+        <td>${esc(slot.selectionMode)}</td>
+        <td>${esc(slot.itemLimit)}</td>
+        <td>${esc(slot.mobileBehavior)}</td>
+        <td>${esc(slot.status)}${slot.enabled ? '' : ' · off'}</td>
+        <td>${esc(slot.lastUpdatedAt || '—')}</td>
+        <td><code>${esc(slot.ctaTarget)}</code></td>
+        <td class="sup-admin-actions">
+          <button type="button" class="btn btn--secondary btn--sm" data-rail-edit="${esc(slot.slotKey)}">수정</button>
+          <button type="button" class="btn btn--secondary btn--sm" data-rail-toggle="${esc(slot.slotKey)}" data-rail-next="${slot.enabled ? 'hidden' : 'active'}">${slot.enabled ? '끄기' : '켜기'}</button>
+        </td>
+      </tr>`,
+    )
+    .join('');
+  return `<table class="sup-admin-table a28-rail-table">
+    <thead><tr><th>slotKey</th><th>sourceBoardKey</th><th>selectionMode</th><th>itemLimit</th><th>mobileBehavior</th><th>enabled</th><th>updatedAt</th><th>CTA</th><th></th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="9" class="sup-empty">슬롯 없음</td></tr>'}</tbody>
+  </table>`;
+}
+
+function renderRightRailForm(slot = null) {
+  const current = slot || listRightRailSlots()[0];
+  const slotOptions = listRightRailSlots()
+    .map((s) => `<option value="${esc(s.slotKey)}"${selected(current?.slotKey, s.slotKey)}>${esc(s.slotKey)}</option>`)
+    .join('');
+  const channels = listBoardChannels().filter((ch) => ch.status !== 'archived');
+  const sourceOptions = channels
+    .map((ch) => `<option value="${esc(ch.boardKey)}"${selected(current?.sourceBoardKey, ch.boardKey)}>${esc(ch.boardKey)} · ${esc(ch.menuLabel)}</option>`)
+    .join('');
+  return `
+    <form class="sup-admin-form a28-config-form" data-rail-form>
+      <h3 class="sup-admin-form__title">우측 슬롯 배치 관리</h3>
+      <p class="a28-hint">슬롯은 게시판 본문 자리가 아니라 진입/요약/추천 영역입니다. 모바일에서는 stack/collapse/hide 중 하나로 처리합니다.</p>
+      <label class="sup-field"><span>slotKey</span><select name="slotKey">${slotOptions}</select></label>
+      <label class="sup-field"><span>pageType</span><input name="pageType" value="${esc(current?.pageType || 'home')}" required /></label>
+      <label class="sup-field"><span>sectionTitle</span><input name="sectionTitle" value="${esc(current?.sectionTitle || '')}" required /></label>
+      <label class="sup-field"><span>sourceType</span><select name="sourceType">${optionList(['board', 'static', 'mixed'], current?.sourceType || 'mixed')}</select></label>
+      <label class="sup-field"><span>primary sourceBoardKey</span><select name="sourceBoardKey">${sourceOptions}</select></label>
+      <label class="sup-field"><span>sourceBoardKeys (comma)</span><input name="sourceBoardKeys" value="${esc((current?.sourceBoardKeys || []).join(', '))}" /></label>
+      <label class="sup-field"><span>selectionMode</span><select name="selectionMode">${optionList(RIGHT_RAIL_SELECTION_MODES, current?.selectionMode || 'curated')}</select></label>
+      <label class="sup-field"><span>itemLimit</span><input type="number" name="itemLimit" min="1" max="5" value="${esc(current?.itemLimit || 3)}" /></label>
+      <label class="sup-field"><span>ctaLabel</span><input name="ctaLabel" value="${esc(current?.ctaLabel || '')}" /></label>
+      <label class="sup-field"><span>ctaTarget</span><input name="ctaTarget" value="${esc(current?.ctaTarget || '#/support')}" /></label>
+      <label class="sup-field"><span>visibilityRule</span><select name="visibilityRule">${optionList(['public', 'login', 'role'], current?.visibilityRule || 'public')}</select></label>
+      <label class="sup-field"><span>roleTarget</span><input name="roleTarget" value="${esc(current?.roleTarget || 'all')}" /></label>
+      <label class="sup-field"><span>mobileBehavior</span><select name="mobileBehavior">${optionList(RIGHT_RAIL_MOBILE_BEHAVIORS, current?.mobileBehavior || 'stack')}</select></label>
+      <label class="sup-field"><span>priority</span><input type="number" name="priority" value="${esc(current?.priority || 50)}" /></label>
+      <label class="sup-field"><span>status</span><select name="status">${optionList(['active', 'hidden', 'archived'], current?.status || 'active')}</select></label>
+      <div class="sup-admin-form__actions">
+        <button type="submit" class="btn btn--primary btn--sm">슬롯 저장</button>
+        <button type="button" class="btn btn--secondary btn--sm" data-rail-reset-seed>슬롯 seed 복원</button>
+      </div>
+    </form>`;
+}
+
 function renderNav(activePath) {
   return `
     <nav class="sup-admin-nav a28-nav" aria-label="A28 운영 메뉴">
@@ -222,22 +383,40 @@ function renderNoticesAdmin() {
     )
     .join('');
   return renderPanel(
-    '공지·가이드 CMS',
+    '채널 · 우측 슬롯 · 공지 CMS',
     'A28-05',
     `${renderRedLineBanner()}
-     <p class="a28-hint">P17-admin 공지 기능 이관 대상 · 사용자-facing에는 공지 결과만 노출</p>
-     <table class="sup-admin-table"><thead><tr><th>날짜</th><th>제목</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="3" class="sup-empty">공지 없음</td></tr>'}</tbody></table>
-     <form class="sup-admin-form" data-a28-notice-form>
-       <h3 class="sup-admin-form__title">공지 작성 · 수정</h3>
-       <input type="hidden" name="id" value="" />
-       <label class="sup-field"><span>날짜</span><input type="date" name="date" required /></label>
-       <label class="sup-field"><span>제목</span><input type="text" name="title" required /></label>
-       <label class="sup-field"><span>본문</span><textarea name="body" rows="4" required></textarea></label>
-       <div class="sup-admin-form__actions">
-         <button type="submit" class="btn btn--primary btn--sm">저장</button>
-         <button type="button" class="btn btn--secondary btn--sm" data-a28-notice-reset>새 공지</button>
-       </div>
-     </form>`,
+     <p class="a28-hint">채널(콘텐츠 공급원)과 우측 슬롯(노출 자리)을 분리 운영합니다. notice/faq/safe-guide 운영 정본은 board_posts입니다.</p>
+     <div class="a28-config-tabs" role="tablist">
+       <button type="button" class="a28-config-tabs__btn is-active" data-a28-config-tab="channels" role="tab">1. 채널 관리</button>
+       <button type="button" class="a28-config-tabs__btn" data-a28-config-tab="rails" role="tab">2. 우측 슬롯 관리</button>
+       <button type="button" class="a28-config-tabs__btn" data-a28-config-tab="notices" role="tab">3. 공지 CMS</button>
+     </div>
+     <div class="a28-config-panel is-active" data-a28-config-panel="channels">
+       <p class="a28-hint">프리셋 기반 채널 추가 · 삭제 대신 hidden/archived · DB/API 연결 시 sessionStorage는 dev fallback</p>
+       ${renderChannelTable()}
+       ${renderChannelForm()}
+     </div>
+     <div class="a28-config-panel" data-a28-config-panel="rails" hidden>
+       <p class="a28-hint">슬롯 = 요약/추천/바로가기 전용 · 게시판 본문 삽입 금지</p>
+       ${renderRightRailTable()}
+       ${renderRightRailForm()}
+     </div>
+     <div class="a28-config-panel" data-a28-config-panel="notices" hidden>
+       <p class="a28-hint">board_posts(notice) 연동 시 이 폼도 동일 정본에 저장됩니다.</p>
+       <table class="sup-admin-table"><thead><tr><th>날짜</th><th>제목</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="3" class="sup-empty">공지 없음</td></tr>'}</tbody></table>
+       <form class="sup-admin-form" data-a28-notice-form>
+         <h3 class="sup-admin-form__title">공지 작성 · 수정</h3>
+         <input type="hidden" name="id" value="" />
+         <label class="sup-field"><span>날짜</span><input type="date" name="date" required /></label>
+         <label class="sup-field"><span>제목</span><input type="text" name="title" required /></label>
+         <label class="sup-field"><span>본문</span><textarea name="body" rows="4" required></textarea></label>
+         <div class="sup-admin-form__actions">
+           <button type="submit" class="btn btn--primary btn--sm">저장</button>
+           <button type="button" class="btn btn--secondary btn--sm" data-a28-notice-reset>새 공지</button>
+         </div>
+       </form>
+     </div>`,
   );
 }
 
@@ -651,7 +830,8 @@ function renderPermissions() {
 }
 
 function renderLogs() {
-  const logs = isAdminApiMode() ? getOperationLogsCache() : A28_LOG_SEED;
+  const configLogs = listAllBoardAndRailLogs();
+  const logs = [...configLogs, ...(isAdminApiMode() ? getOperationLogsCache() : A28_LOG_SEED)];
   const rows = logs
     .map(
       (l) =>
@@ -832,6 +1012,176 @@ export function bindA28ScreenEvents(root, path, rerender) {
   }
 
   if (path === '/admin/notices') {
+    const channelForm = root.querySelector('[data-channel-form]');
+    const railForm = root.querySelector('[data-rail-form]');
+
+    root.querySelectorAll('[data-a28-config-tab]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-a28-config-tab');
+        root.querySelectorAll('[data-a28-config-tab]').forEach((el) => el.classList.toggle('is-active', el === btn));
+        root.querySelectorAll('[data-a28-config-panel]').forEach((panel) => {
+          const active = panel.getAttribute('data-a28-config-panel') === tab;
+          panel.classList.toggle('is-active', active);
+          panel.hidden = !active;
+        });
+      });
+    });
+
+    channelForm?.querySelector('[data-channel-preset]')?.addEventListener('change', (e) => {
+      const presetId = e.target?.value || 'notice';
+      const section = channelForm.querySelector('[name="sectionOwner"]');
+      if (section) {
+        section.innerHTML = getSectionOwnerOptions(presetId)
+          .map((owner) => `<option value="${esc(owner)}">${esc(owner)}</option>`)
+          .join('');
+      }
+      const boardKey = channelForm.querySelector('[name="boardKey"]');
+      const candidates = getBoardKeyCandidates(presetId);
+      if (boardKey instanceof HTMLInputElement && candidates.length && !boardKey.value) {
+        boardKey.placeholder = candidates[0];
+      }
+    });
+
+    root.querySelectorAll('[data-channel-edit]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const channel = getBoardChannel(btn.getAttribute('data-channel-edit'));
+        if (!channel || !channelForm) return;
+        channelForm.querySelector('[name="mode"]').value = 'update';
+        channelForm.querySelector('[name="presetId"]').value = channel.presetId;
+        channelForm.querySelector('[name="boardKey"]').value = channel.boardKey;
+        channelForm.querySelector('[name="menuLabel"]').value = channel.menuLabel;
+        channelForm.querySelector('[name="routeSlug"]').value = channel.routeSlug || '';
+        channelForm.querySelector('[name="sectionOwner"]').innerHTML = getSectionOwnerOptions(channel.presetId)
+          .map((owner) => `<option value="${esc(owner)}"${selected(channel.sectionOwner, owner)}>${esc(owner)}</option>`)
+          .join('');
+        channelForm.querySelector('[name="visibility"]').value = channel.visibility;
+        channelForm.querySelector('[name="downloadPolicy"]').value = channel.downloadPolicy;
+        channelForm.querySelector('[name="allowedRoles"]').value = (channel.allowedRoles || []).join(', ');
+        channelForm.querySelector('[name="allowWrite"]').checked = Boolean(channel.allowWrite);
+        channelForm.querySelector('[name="allowComment"]').checked = Boolean(channel.allowComment);
+        channelForm.querySelector('[name="allowUpload"]').checked = Boolean(channel.allowUpload);
+        channelForm.querySelector('[name="requireReview"]').checked = Boolean(channel.requireReview);
+        channelForm.querySelector('[name="isGnuSeparated"]').checked = channel.isGnuSeparated !== false;
+        channelForm.querySelector('[name="status"]').value = channel.status || 'active';
+        channelForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    root.querySelectorAll('[data-channel-archive]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const boardKey = btn.getAttribute('data-channel-archive');
+        if (!boardKey || !window.confirm(`${boardKey} 채널을 보관 상태로 바꿀까요?`)) return;
+        archiveBoardChannel(boardKey);
+        rerender();
+      });
+    });
+
+    channelForm?.querySelector('[data-channel-reset-form]')?.addEventListener('click', () => {
+      channelForm.reset();
+      channelForm.querySelector('[name="mode"]').value = 'create';
+    });
+
+    channelForm?.querySelector('[data-channel-reset-seed]')?.addEventListener('click', () => {
+      if (!window.confirm('채널 설정을 registry seed 기준으로 되돌릴까요?')) return;
+      resetBoardChannels();
+      rerender();
+    });
+
+    channelForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(channelForm);
+      try {
+        await saveBoardChannel(
+          {
+            presetId: String(fd.get('presetId')),
+            boardKey: String(fd.get('boardKey')),
+            menuLabel: String(fd.get('menuLabel')),
+            routeSlug: String(fd.get('routeSlug')),
+            sectionOwner: String(fd.get('sectionOwner')),
+            visibility: String(fd.get('visibility')),
+            downloadPolicy: String(fd.get('downloadPolicy')),
+            allowedRoles: String(fd.get('allowedRoles')),
+            allowWrite: fd.get('allowWrite') === 'on',
+            allowComment: fd.get('allowComment') === 'on',
+            allowUpload: fd.get('allowUpload') === 'on',
+            requireReview: fd.get('requireReview') === 'on',
+            isGnuSeparated: fd.get('isGnuSeparated') === 'on',
+            status: String(fd.get('status')),
+          },
+          { mode: String(fd.get('mode')) === 'update' ? 'update' : 'create' },
+        );
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '채널 저장 실패');
+      }
+    });
+
+    root.querySelectorAll('[data-rail-edit]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const slot = listRightRailSlots().find((row) => row.slotKey === btn.getAttribute('data-rail-edit'));
+        if (!slot || !railForm) return;
+        railForm.querySelector('[name="slotKey"]').value = slot.slotKey;
+        railForm.querySelector('[name="pageType"]').value = slot.pageType;
+        railForm.querySelector('[name="sectionTitle"]').value = slot.sectionTitle;
+        railForm.querySelector('[name="sourceType"]').value = slot.sourceType;
+        railForm.querySelector('[name="sourceBoardKey"]').value = slot.sourceBoardKey;
+        railForm.querySelector('[name="sourceBoardKeys"]').value = (slot.sourceBoardKeys || []).join(', ');
+        railForm.querySelector('[name="selectionMode"]').value = slot.selectionMode;
+        railForm.querySelector('[name="itemLimit"]').value = slot.itemLimit;
+        railForm.querySelector('[name="ctaLabel"]').value = slot.ctaLabel;
+        railForm.querySelector('[name="ctaTarget"]').value = slot.ctaTarget;
+        railForm.querySelector('[name="visibilityRule"]').value = slot.visibilityRule;
+        railForm.querySelector('[name="roleTarget"]').value = slot.roleTarget;
+        railForm.querySelector('[name="mobileBehavior"]').value = slot.mobileBehavior;
+        railForm.querySelector('[name="priority"]').value = slot.priority;
+        railForm.querySelector('[name="status"]').value = slot.status;
+        railForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    root.querySelectorAll('[data-rail-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const slotKey = btn.getAttribute('data-rail-toggle');
+        const next = btn.getAttribute('data-rail-next') || 'hidden';
+        if (!slotKey) return;
+        updateRightRailSlotStatus(slotKey, next);
+        rerender();
+      });
+    });
+
+    railForm?.querySelector('[data-rail-reset-seed]')?.addEventListener('click', () => {
+      if (!window.confirm('우측 슬롯 설정을 seed 기준으로 되돌릴까요?')) return;
+      resetRightRailSlots();
+      rerender();
+    });
+
+    railForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(railForm);
+      try {
+        await saveRightRailSlot({
+          slotKey: String(fd.get('slotKey')),
+          pageType: String(fd.get('pageType')),
+          sourceType: String(fd.get('sourceType')),
+          sourceBoardKey: String(fd.get('sourceBoardKey')),
+          sourceBoardKeys: String(fd.get('sourceBoardKeys')),
+          selectionMode: String(fd.get('selectionMode')),
+          itemLimit: Number(fd.get('itemLimit')),
+          sectionTitle: String(fd.get('sectionTitle')),
+          ctaLabel: String(fd.get('ctaLabel')),
+          ctaTarget: String(fd.get('ctaTarget')),
+          visibilityRule: String(fd.get('visibilityRule')),
+          roleTarget: String(fd.get('roleTarget')),
+          mobileBehavior: String(fd.get('mobileBehavior')),
+          priority: Number(fd.get('priority')),
+          status: String(fd.get('status')),
+        });
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '슬롯 저장 실패');
+      }
+    });
+
     const form = root.querySelector('[data-a28-notice-form]');
     form?.querySelector('[name="date"]')?.setAttribute('value', new Date().toISOString().slice(0, 10));
     root.querySelectorAll('[data-a28-notice-edit]').forEach((btn) => {

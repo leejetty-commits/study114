@@ -38,6 +38,7 @@ import { showEmailVerifyOverlay } from './email-verify-overlay.js';
 import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
 import { activateBoardApi, deactivateBoardApi } from './board/board-backend.js';
 import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
+import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -166,13 +167,19 @@ function init() {
           console.warn('[admin] api disabled — static A28 fallback', err);
           deactivateAdminApi();
         });
+        await activateContentConfigApi().catch((err) => {
+          console.warn('[content-config] api disabled — sessionStorage fallback', err);
+          deactivateContentConfigApi();
+        });
       } else {
         deactivateAdminApi();
+        deactivateContentConfigApi();
       }
       render();
     });
     window.addEventListener('auth:logout', () => {
       deactivateAdminApi();
+      deactivateContentConfigApi();
       render();
     });
     Promise.all([
@@ -191,6 +198,10 @@ function init() {
           await activateAdminApi().catch((err) => {
             console.warn('[admin] api disabled — static A28 fallback', err);
             deactivateAdminApi();
+          });
+          await activateContentConfigApi().catch((err) => {
+            console.warn('[content-config] api disabled — sessionStorage fallback', err);
+            deactivateContentConfigApi();
           });
         }
         // 소셜/세션 로그인 후 #/guest에 남아 있으면 역할 홈으로 이동

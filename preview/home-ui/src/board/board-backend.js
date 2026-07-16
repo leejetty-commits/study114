@@ -8,6 +8,7 @@ import {
 } from './board-api.js';
 
 const LIBRARY_BOARD_KEYS = ['library', 'library-template', 'library-guide-pdf'];
+const OPERATIONAL_BOARD_KEYS = ['notice', 'faq', 'safe-guide'];
 const SUBMISSION_BOARD_KEY = 'submission';
 
 let apiMode = false;
@@ -28,6 +29,10 @@ function setBoardCache(boardKey, posts) {
 
 export function getBoardPostsCache(boardKey) {
   return (postsByBoard.get(boardKey) ?? []).map((p) => ({ ...p }));
+}
+
+export function getOperationalPostsCache(boardKey) {
+  return getBoardPostsCache(boardKey);
 }
 
 export function getSubmissionPostsCache(authorRole) {
@@ -67,11 +72,15 @@ export async function hydrateBoardCache() {
   const results = await Promise.all([
     ...LIBRARY_BOARD_KEYS.map((key) => fetchBoardPosts(key).catch(() => ({ posts: [] }))),
     fetchBoardPosts(SUBMISSION_BOARD_KEY).catch(() => ({ posts: [] })),
+    ...OPERATIONAL_BOARD_KEYS.map((key) => fetchBoardPosts(key).catch(() => ({ posts: [] }))),
   ]);
   LIBRARY_BOARD_KEYS.forEach((key, i) => {
     setBoardCache(key, results[i].posts ?? []);
   });
   setBoardCache(SUBMISSION_BOARD_KEY, results[LIBRARY_BOARD_KEYS.length].posts ?? []);
+  OPERATIONAL_BOARD_KEYS.forEach((key, i) => {
+    setBoardCache(key, results[LIBRARY_BOARD_KEYS.length + 1 + i].posts ?? []);
+  });
 }
 
 /** @param {Record<string, unknown>} input */
@@ -82,10 +91,24 @@ export async function apiSaveSubmissionPost(input) {
   return data.post;
 }
 
+/** @param {string} boardKey @param {Record<string, unknown>} input */
+export async function apiSaveOperationalPost(boardKey, input) {
+  const payload = { board_key: boardKey, author_role: 'admin', ...input, boardKey: undefined };
+  const data = await saveBoardPost(payload);
+  if (data.post) upsertPostCache(boardKey, data.post);
+  return data.post;
+}
+
 /** @param {string} postKey @param {string} authorRole */
 export async function apiDeleteSubmissionPost(postKey, authorRole) {
   await removeBoardPost(SUBMISSION_BOARD_KEY, postKey, authorRole);
   removePostCache(SUBMISSION_BOARD_KEY, postKey);
+}
+
+/** @param {string} boardKey @param {string} postKey @param {string} authorRole */
+export async function apiDeleteOperationalPost(boardKey, postKey, authorRole = 'admin') {
+  await removeBoardPost(boardKey, postKey, authorRole);
+  removePostCache(boardKey, postKey);
 }
 
 /** @param {string} postKey @param {string} authorRole @param {File} file */

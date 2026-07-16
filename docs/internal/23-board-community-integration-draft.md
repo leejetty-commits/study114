@@ -1,9 +1,10 @@
 # 23장 — [내부 초안] 게시판 엔진 · GNU 커뮤니티 · SSO
 
-**상태:** 내부 기획 초안 (SSOT 미잠금) · **2026-07-07 개념 확장** (Notion 정본 동기화)  
-**작성:** 2026-07-04 · **갱신:** 2026-07-07  
+**상태:** 내부 기획 초안 (SSOT 미잠금) · **2026-07-07 개념 확장** · **2026-07-17 메뉴 경계 동기화**  
+**작성:** 2026-07-04 · **갱신:** 2026-07-17  
 **전제 SSOT:** 2·4·6·17장 · **18장=유료·결제(별도)** · 본 문서=**23장**  
-**코드 정본(프리뷰):** `preview/home-ui/src/board-engine-copy.js` · `library/*`  
+**코드 정본(프리뷰):** `preview/home-ui/src/board-engine-copy.js` · `library/*` · `submission-board/*`  
+**경계 진단:** [23-board-menu-boundary-audit.md](./23-board-menu-boundary-audit.md)  
 **Notion:** [23장-게시판 엔진·GNU 커뮤니티·SSO](https://app.notion.com/p/90e9b270fac8458792cf3abafbf16450)
 
 > **배포 현황 (2026-07-09):** 1차 호스팅·DB 검증은 닷홈 `study114.dothome.co.kr` — [01-dothome-deploy.md](./01-dothome-deploy.md). 아래 `study114.net`은 장기 운영 도메인 목표.
@@ -168,11 +169,11 @@ member_external_links
 | `notice` | 공지 | 17장 고객센터 | 운영형 | admin write / 전체 read |
 | `faq` | FAQ | 17장 고객센터 | 운영형 | admin write / 전체 read |
 | `safe-guide` | 안전과외 | 17장 고객센터 | 운영형 | admin write / 전체 read |
-| `policy-log` | 약관 변경 이력 | 26장·푸터 | 운영형 | admin write / 전체 read |
+| `policy-log` | 약관 변경 이력 | 26장·푸터 | 운영형 | admin write / 전체 read · route=`#/policy/changelog` (정적 `#/policy/{terms…}` 와 분리) |
 | **`library`** | **자료·다운로드** | **`#/library` (유틸)** | **다운로드형** | admin write / 로그인 read·download |
 | `library-template` | 양식·체크리스트 | 자료실 하위 | 다운로드형 | admin write / 로그인 download |
 | `library-guide-pdf` | 가이드 PDF | 자료실·고객센터 | 다운로드형 | admin write / 공개 read · 로그인 download |
-| **`submission`** | **제출·업로드** | 후순위 route | **권한형 업로드** | 특정 역할 write/upload · 검토 후 노출 |
+| `submission` | **제출·업로드** | 후순위 route | **권한형 업로드** | 공급자 write/upload · guest 금지 · `#/mypage/submission-board` |
 | `showcase` | 사례 공유 | 2차 후보 | 큐레이션형 | 공급자 write · 운영 검토 |
 
 ### 3-3. 「자료실」과 게시판 엔진의 관계
@@ -376,6 +377,59 @@ member_external_links
 | **17장** | 고객센터·안전과외 가이드 | notice/faq UI는 17장, **엔진·자료실 본문은 23장** |
 | **18장** | 유료·결제·entitlement | 15·16·17장에서 참조 — **본 문서와 무관** |
 | **23장** | **게시판 엔진** · GNU · SSO | 본 문서 · `library`=하위 채널 |
+
+---
+
+## 부록 C — 2026-07-17 메뉴 경계·코드 동기화
+
+**진단 정본:** [23-board-menu-boundary-audit.md](./23-board-menu-boundary-audit.md)  
+**Notion:** 23장 §24 · 30장 §22 · 33장 §23 동기화 완료
+
+| 항목 | 잠금 값 |
+|------|---------|
+| `policy-log` route | `#/policy/changelog` (정적 `#/policy/{terms…}` 와 분리) |
+| `/support/terms` | → `#/policy/terms` redirect |
+| `submission` write | `supply-room` · `supply-tutor` · guest 금지 |
+| `showcase` | `enabled: false` (2차) |
+| 관리자 채널 생성 | `BOARD_CREATE_PRESETS` 프리셋만 · 자유 입력 금지 |
+| Board API 1차 키 | `library*` · `submission` (notice/faq/safe-guide 이관은 2차) |
+
+---
+
+## 부록 D — 2026-07-17 운영 최소판: 채널과 우측 슬롯 분리
+
+**코드 정본**
+
+| 계층 | 파일 | 역할 |
+|------|------|------|
+| 채널 정의 | `preview/home-ui/src/board-channel-store.js` | `BOARD_REGISTRY` seed + 관리자 override |
+| 슬롯 정의 | `preview/home-ui/src/right-rail-store.js` | `home/search/detail/register/plans/support_right_rail` seed |
+| 슬롯 렌더 | `preview/home-ui/src/right-rail.js` | 제목·요약·CTA 렌더 · 본문 삽입 금지 |
+| 관리자 UI | `preview/home-ui/src/admin/a28-screens.js` | A28-05 채널 관리 / 우측 슬롯 관리 |
+
+### D-1. 개념 분리
+
+| 구분 | 의미 | 예 |
+|------|------|----|
+| 채널 | 콘텐츠 공급원 · `boardKey` 단위 | `notice`, `faq`, `library`, `submission` |
+| 슬롯 | 페이지 내 보조 노출 자리 | `home_right_rail`, `support_right_rail` |
+
+**원칙:** 채널은 본문 route를 가진다. 슬롯은 그 본문으로 들어가는 요약/추천/바로가기만 보여준다.
+
+### D-2. 기본 슬롯 seed
+
+| slotKey | 기본 boardKey | 용도 |
+|---------|---------------|------|
+| `home_right_rail` | `notice`, `library`, `safe-guide` | 운영 공지 · 추천 자료 · 처음 이용 가이드 |
+| `search_right_rail` | `faq`, `library-template`, `safe-guide` | 비교/검색 도움말 · 체크리스트 |
+| `detail_right_rail` | `safe-guide`, `submission`, `notice` | 안전 접촉 · 제출자료 안내 |
+| `register_right_rail` | `library-template`, `faq`, `safe-guide` | 작성 가이드 · FAQ |
+| `plans_right_rail` | `notice`, `faq`, `safe-guide` | 상품 이용 안내 |
+| `support_right_rail` | `notice`, `faq`, `library-guide-pdf` | 최신 공지 · FAQ · PDF |
+
+### D-3. 운영 로그
+
+채널 생성/수정/보관, 슬롯 수정/on/off/source 변경은 로컬 프리뷰에서 운영 로그로 남긴다. 실제 DB 전환 시 `admin_operation_logs` 또는 별도 config log 테이블로 이관한다.
 
 ---
 

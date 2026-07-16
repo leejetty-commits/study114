@@ -35,7 +35,7 @@
 | **공부방 등록·운영 관리** | [20장](20-study-room-registration-management.md) · P15-04 / P20-xx |
 | **쪽지함·접촉·13장 §8 UX** | [16장](16-messages-structure-proposal.md) |
 | **고객센터·안전과외 가이드** | [17장](17-customer-center-and-safe-guide.md) |
-| **게시판·자료실·GNU 커뮤니티** | [23장 내부 초안](../internal/23-board-community-integration-draft.md) |
+| **게시판·자료실·GNU 커뮤니티** | [23장 내부 초안](../internal/23-board-community-integration-draft.md) · [메뉴 경계 진단](../internal/23-board-menu-boundary-audit.md) |
 | **유료·결제** | [18장 정책](18-paid-services-rough.md) · [18b 수치 placeholder](18b-paid-catalog-placeholder.md) |
 | **인증/가입 UI** | [2장 §3](02-registration-and-member-db.md#3-인증가입-화면-잠금) · **[9장 부록](09-appendix-login-and-auth-policy.md)** · `preview/auth-ui/` |
 | **실행 순서·병행** | [10장](10-phase1-execution-plan.md) |
@@ -69,7 +69,7 @@
 | **24장** | [24-detail-decision-layer.md](24-detail-decision-layer.md) | **UX·실행 1차 잠금** | **상세 판단 레이어** · P24-xx · `detail-decision/` · Modal First |
 | **25장** | [25-decision-handoff-layer.md](25-decision-handoff-layer.md) | **UX·실행 1차 잠금 (초안)** | **Handoff** · 찜·비교·최근 · `handoff-copy.js` |
 | **30장** | [30-first-route-map-and-screen-inventory.md](30-first-route-map-and-screen-inventory.md) | **인벤토리 2차** | **라우트맵·P-ID** · [screen-inventory.json](screen-inventory.json) · `npm run sync:inventory` |
-| **23장** | [../internal/23-board-community-integration-draft.md](../internal/23-board-community-integration-draft.md) | **내부 초안** | 게시판 · 자료실 · GNU 커뮤니티 · SSO |
+| **23장** | [../internal/23-board-community-integration-draft.md](../internal/23-board-community-integration-draft.md) | **내부 초안** | 게시판 · 자료실 · GNU · SSO · [경계 진단](../internal/23-board-menu-boundary-audit.md) |
 
 ---
 

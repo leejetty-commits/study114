@@ -1,22 +1,39 @@
 /**
  * 23장 — 게시판 엔진 정책 copy (Board Engine SSOT)
- * Notion: 23장-게시판 엔진·GNU 커뮤니티·SSO (2026-07-07 확장)
+ * Notion: 23장-게시판 엔진·GNU 커뮤니티·SSO (2026-07-07 확장 · §20 메뉴 기준)
  * 로컬: docs/internal/23-board-community-integration-draft.md
+ * 관리자 생성: 33장 §12 프리셋 기반 · docs/internal/23-board-menu-boundary-audit.md
  *
  * 상위 개념 = 게시판 엔진. `library` 는 하위 다운로드형 boardKey.
+ * 정적 정책(P26) · 서비스 화면 · GNU 커뮤니티와 경계를 섞지 않는다.
  */
 
 /** @typedef {'operational'|'download'|'upload'|'curation'|'external'} BoardType */
 /** @typedef {'read'|'download'|'write'|'comment'|'upload'|'edit_own'|'delete_own'|'moderate'} BoardAction */
 /** @typedef {'guest'|'member'|'demand'|'supply-room'|'supply-tutor'|'verified'|'admin'} BoardRole */
 /** @typedef {'public'|'login'|'role'} BoardVisibility */
+/** @typedef {'support'|'library'|'policy-log'|'mypage-submission'|'phase2'} SectionOwner */
+/** @typedef {'notice'|'faq'|'guide'|'library'|'submission'|'curation'} BoardPresetId */
 
 export const BOARD_ENGINE_LOCK = {
   oneLiner:
     'Study114 안의 게시판 엔진은 공지·FAQ·가이드·다운로드·제출·공유를 boardKey별 권한으로 운영한다. GNU 커뮤니티와 콘텐츠는 공유하지 않는다.',
   topConcept: '게시판 엔진',
   libraryPosition: '「자료실」은 게시판 엔진 안의 다운로드형 boardKey 묶음에 대한 사용자-facing 명칭 후보다.',
+  boundary:
+    '운영형·자료형·제출형 = 게시판 엔진 · 법적 정본 = 정적 정책 페이지 · 탐색/입력/결제/쪽지 = 서비스 화면 · 자유 UGC = GNU',
 };
+
+/** 26장 정적 정책 slug — 게시판 생성으로 대체 금지 (33장 §12-4·12-5) */
+export const STATIC_POLICY_RESERVED_SLUGS = [
+  'terms',
+  'privacy',
+  'platform',
+  'trust',
+  'safety',
+  'student-privacy',
+  'reporting',
+];
 
 /** @type {Record<BoardType, { label: string; desc: string }>} */
 export const BOARD_TYPES = {
@@ -25,6 +42,96 @@ export const BOARD_TYPES = {
   upload: { label: '권한형 업로드', desc: '특정 역할 write/upload · 제출·사례 공유' },
   curation: { label: '큐레이션형', desc: '운영 선별 노출 · 추천 팁' },
   external: { label: '외부 커뮤니티', desc: 'GNU · 별도 DB · SSO만 연결' },
+};
+
+/**
+ * 33장 §12 — 관리자 「채널 추가」프리셋 (자유 생성형 금지)
+ * @type {Record<BoardPresetId, {
+ *   label: string;
+ *   boardType: BoardType;
+ *   sectionOwners: SectionOwner[];
+ *   defaultVisibility: BoardVisibility;
+ *   allowWriteDefault: boolean;
+ *   allowCommentDefault: boolean;
+ *   allowUploadDefault: boolean;
+ *   requireReviewDefault: boolean;
+ *   guestWriteForbidden: boolean;
+ *   lockedBoardKeys?: string[];
+ * }>}
+ */
+export const BOARD_CREATE_PRESETS = {
+  notice: {
+    label: '운영 공지형',
+    boardType: 'operational',
+    sectionOwners: ['support'],
+    defaultVisibility: 'public',
+    allowWriteDefault: false,
+    allowCommentDefault: false,
+    allowUploadDefault: false,
+    requireReviewDefault: false,
+    guestWriteForbidden: true,
+    lockedBoardKeys: ['notice'],
+  },
+  faq: {
+    label: 'FAQ형',
+    boardType: 'operational',
+    sectionOwners: ['support'],
+    defaultVisibility: 'public',
+    allowWriteDefault: false,
+    allowCommentDefault: false,
+    allowUploadDefault: false,
+    requireReviewDefault: false,
+    guestWriteForbidden: true,
+    lockedBoardKeys: ['faq'],
+  },
+  guide: {
+    label: '가이드형',
+    boardType: 'operational',
+    sectionOwners: ['support', 'policy-log'],
+    defaultVisibility: 'public',
+    allowWriteDefault: false,
+    allowCommentDefault: false,
+    allowUploadDefault: false,
+    requireReviewDefault: false,
+    guestWriteForbidden: true,
+    lockedBoardKeys: ['safe-guide', 'policy-log'],
+  },
+  library: {
+    label: '자료실형',
+    boardType: 'download',
+    sectionOwners: ['library'],
+    defaultVisibility: 'login',
+    allowWriteDefault: false,
+    allowCommentDefault: false,
+    allowUploadDefault: false,
+    requireReviewDefault: false,
+    guestWriteForbidden: true,
+    lockedBoardKeys: ['library', 'library-template', 'library-guide-pdf'],
+  },
+  submission: {
+    label: '제출형',
+    boardType: 'upload',
+    sectionOwners: ['mypage-submission'],
+    defaultVisibility: 'role',
+    allowWriteDefault: true,
+    allowCommentDefault: false,
+    allowUploadDefault: true,
+    requireReviewDefault: true,
+    guestWriteForbidden: true,
+    lockedBoardKeys: ['submission'],
+  },
+  curation: {
+    label: '큐레이션형',
+    boardType: 'curation',
+    sectionOwners: ['phase2'],
+    defaultVisibility: 'role',
+    allowWriteDefault: true,
+    allowCommentDefault: true,
+    allowUploadDefault: true,
+    requireReviewDefault: true,
+    guestWriteForbidden: true,
+    lockedBoardKeys: ['showcase'],
+  },
 };
 
 /** @type {BoardAction[]} */
@@ -57,6 +164,8 @@ export function mapNavRoleToBoardRole(navRole) {
  * @property {string} boardKey
  * @property {string} label
  * @property {BoardType} boardType
+ * @property {BoardPresetId} presetId
+ * @property {SectionOwner} sectionOwner
  * @property {string} [userFacingMenu] 사용자-facing 메뉴명 후보
  * @property {BoardVisibility} visibility
  * @property {BoardRole[]} readRoles
@@ -65,8 +174,11 @@ export function mapNavRoleToBoardRole(navRole) {
  * @property {boolean} allowComment
  * @property {boolean} allowUpload
  * @property {boolean} requireReview
+ * @property {boolean} isGnuSeparated Study114 본체 보드 (GNU와 분리)
+ * @property {boolean} [enabled] false면 2차 전까지 비활성
  * @property {'phase1'|'phase2'} phase
- * @property {string} [routeHint]
+ * @property {string} routeSlug 실제 hash route (정적 /policy/{terms…} 와 충돌 금지)
+ * @property {string} [routeHint] @deprecated routeSlug 별칭
  * @property {string} [ownerChapter]
  */
 
@@ -76,7 +188,9 @@ export const BOARD_REGISTRY = [
     boardKey: 'notice',
     label: '공지',
     boardType: 'operational',
-    userFacingMenu: '고객센터',
+    presetId: 'notice',
+    sectionOwner: 'support',
+    userFacingMenu: '공지사항',
     visibility: 'public',
     readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
     downloadRoles: [],
@@ -84,7 +198,10 @@ export const BOARD_REGISTRY = [
     allowComment: false,
     allowUpload: false,
     requireReview: false,
+    isGnuSeparated: true,
+    enabled: true,
     phase: 'phase1',
+    routeSlug: '#/support/notice',
     routeHint: '#/support/notice',
     ownerChapter: '17',
   },
@@ -92,7 +209,9 @@ export const BOARD_REGISTRY = [
     boardKey: 'faq',
     label: 'FAQ',
     boardType: 'operational',
-    userFacingMenu: '고객센터',
+    presetId: 'faq',
+    sectionOwner: 'support',
+    userFacingMenu: 'FAQ',
     visibility: 'public',
     readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
     downloadRoles: [],
@@ -100,7 +219,10 @@ export const BOARD_REGISTRY = [
     allowComment: false,
     allowUpload: false,
     requireReview: false,
+    isGnuSeparated: true,
+    enabled: true,
     phase: 'phase1',
+    routeSlug: '#/support/faq',
     routeHint: '#/support/faq',
     ownerChapter: '17',
   },
@@ -108,7 +230,9 @@ export const BOARD_REGISTRY = [
     boardKey: 'safe-guide',
     label: '안전 가이드',
     boardType: 'operational',
-    userFacingMenu: '안전과외',
+    presetId: 'guide',
+    sectionOwner: 'support',
+    userFacingMenu: '안전과외 가이드',
     visibility: 'public',
     readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
     downloadRoles: [],
@@ -116,7 +240,10 @@ export const BOARD_REGISTRY = [
     allowComment: false,
     allowUpload: false,
     requireReview: false,
+    isGnuSeparated: true,
+    enabled: true,
     phase: 'phase1',
+    routeSlug: '#/support/safe',
     routeHint: '#/support/safe',
     ownerChapter: '17',
   },
@@ -124,7 +251,9 @@ export const BOARD_REGISTRY = [
     boardKey: 'policy-log',
     label: '정책 변경 이력',
     boardType: 'operational',
-    userFacingMenu: '정책',
+    presetId: 'guide',
+    sectionOwner: 'policy-log',
+    userFacingMenu: '정책 변경 안내',
     visibility: 'public',
     readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
     downloadRoles: [],
@@ -132,14 +261,20 @@ export const BOARD_REGISTRY = [
     allowComment: false,
     allowUpload: false,
     requireReview: false,
+    isGnuSeparated: true,
+    enabled: true,
     phase: 'phase2',
-    routeHint: '#/policy/*',
+    // 정적 P26 slug(terms/privacy/…)와 분리 — `#/policy/*` 와일드카드 금지
+    routeSlug: '#/policy/changelog',
+    routeHint: '#/policy/changelog',
     ownerChapter: '26',
   },
   {
     boardKey: 'library',
     label: '자료·다운로드',
     boardType: 'download',
+    presetId: 'library',
+    sectionOwner: 'library',
     userFacingMenu: '자료실',
     visibility: 'login',
     readRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
@@ -148,7 +283,10 @@ export const BOARD_REGISTRY = [
     allowComment: false,
     allowUpload: false,
     requireReview: false,
+    isGnuSeparated: true,
+    enabled: true,
     phase: 'phase1',
+    routeSlug: '#/library',
     routeHint: '#/library',
     ownerChapter: '23',
   },
@@ -156,6 +294,8 @@ export const BOARD_REGISTRY = [
     boardKey: 'library-template',
     label: '양식·체크리스트',
     boardType: 'download',
+    presetId: 'library',
+    sectionOwner: 'library',
     userFacingMenu: '자료실',
     visibility: 'login',
     readRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
@@ -164,7 +304,10 @@ export const BOARD_REGISTRY = [
     allowComment: false,
     allowUpload: false,
     requireReview: false,
+    isGnuSeparated: true,
+    enabled: true,
     phase: 'phase1',
+    routeSlug: '#/library/templates',
     routeHint: '#/library/templates',
     ownerChapter: '23',
   },
@@ -172,6 +315,8 @@ export const BOARD_REGISTRY = [
     boardKey: 'library-guide-pdf',
     label: '가이드 PDF',
     boardType: 'download',
+    presetId: 'library',
+    sectionOwner: 'library',
     userFacingMenu: '자료실',
     visibility: 'public',
     readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
@@ -180,7 +325,10 @@ export const BOARD_REGISTRY = [
     allowComment: false,
     allowUpload: false,
     requireReview: false,
+    isGnuSeparated: true,
+    enabled: true,
     phase: 'phase1',
+    routeSlug: '#/library/guides',
     routeHint: '#/library/guides',
     ownerChapter: '23',
   },
@@ -188,15 +336,21 @@ export const BOARD_REGISTRY = [
     boardKey: 'submission',
     label: '제출·업로드',
     boardType: 'upload',
+    presetId: 'submission',
+    sectionOwner: 'mypage-submission',
     userFacingMenu: '제출함',
     visibility: 'role',
-    readRoles: ['demand', 'supply-room', 'supply-tutor', 'admin'],
+    // 수요자(parent)는 P15-10 상태 안내용 — 제출함 write/upload 대상 아님 (마이페이지 UX와 정합)
+    readRoles: ['supply-room', 'supply-tutor', 'admin'],
     downloadRoles: ['admin'],
-    writeRoles: ['demand', 'supply-room', 'supply-tutor'],
+    writeRoles: ['supply-room', 'supply-tutor'],
     allowComment: false,
     allowUpload: true,
     requireReview: true,
+    isGnuSeparated: true,
+    enabled: true,
     phase: 'phase1',
+    routeSlug: '#/mypage/submission-board',
     routeHint: '#/mypage/submission-board',
     ownerChapter: '23',
   },
@@ -204,6 +358,8 @@ export const BOARD_REGISTRY = [
     boardKey: 'showcase',
     label: '사례 공유',
     boardType: 'curation',
+    presetId: 'curation',
+    sectionOwner: 'phase2',
     userFacingMenu: '사례',
     visibility: 'role',
     readRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
@@ -212,7 +368,10 @@ export const BOARD_REGISTRY = [
     allowComment: true,
     allowUpload: true,
     requireReview: true,
+    isGnuSeparated: true,
+    enabled: false,
     phase: 'phase2',
+    routeSlug: '',
     routeHint: '후순위',
     ownerChapter: '23',
   },
@@ -228,6 +387,11 @@ export function listBoardsByType(type) {
   return BOARD_REGISTRY.filter((b) => b.boardType === type);
 }
 
+/** @param {SectionOwner} owner */
+export function listBoardsBySection(owner) {
+  return BOARD_REGISTRY.filter((b) => b.sectionOwner === owner);
+}
+
 /**
  * @param {string} boardKey
  * @param {BoardAction} action
@@ -235,10 +399,13 @@ export function listBoardsByType(type) {
  */
 export function canBoardAction(boardKey, action, role) {
   const policy = getBoardPolicy(boardKey);
-  if (!policy) return false;
+  if (!policy || policy.enabled === false) return false;
   if (action === 'read') return policy.readRoles.includes(role);
   if (action === 'download') return policy.downloadRoles.includes(role);
-  if (action === 'write' || action === 'upload') return policy.writeRoles.includes(role);
+  if (action === 'write' || action === 'upload') {
+    if (role === 'guest') return false;
+    return policy.writeRoles.includes(role);
+  }
   if (action === 'comment') return policy.allowComment && policy.readRoles.includes(role);
   if (action === 'moderate') return role === 'admin';
   return false;
@@ -250,4 +417,31 @@ export function getBoardVisibilityBadge(policy, role) {
   if (policy.visibility === 'login' && role === 'guest') return '로그인 필요';
   if (policy.visibility === 'role' && !policy.readRoles.includes(role)) return '역할 제한';
   return null;
+}
+
+/**
+ * 관리자 채널 생성 전 충돌 검사 (33장 §12-4)
+ * @param {{ boardKey: string; routeSlug?: string; sectionOwner?: string }} input
+ * @returns {{ ok: boolean; errors: string[] }}
+ */
+export function validateBoardChannelCreate(input) {
+  const errors = [];
+  const key = String(input.boardKey || '').trim();
+  if (!key) errors.push('boardKey가 필요합니다.');
+  if (BOARD_REGISTRY.some((b) => b.boardKey === key)) {
+    errors.push(`boardKey 중복: ${key}`);
+  }
+  const slug = String(input.routeSlug || '')
+    .replace(/^#/, '')
+    .replace(/^\//, '');
+  if (slug.startsWith('policy/')) {
+    const policySlug = slug.split('/')[1];
+    if (STATIC_POLICY_RESERVED_SLUGS.includes(policySlug)) {
+      errors.push(`정적 정책 페이지와 충돌: /policy/${policySlug}`);
+    }
+  }
+  if (!input.sectionOwner) {
+    errors.push('소속 메뉴군(sectionOwner) 선택이 필요합니다.');
+  }
+  return { ok: errors.length === 0, errors };
 }

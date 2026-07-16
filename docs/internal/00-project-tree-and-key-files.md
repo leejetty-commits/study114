@@ -218,14 +218,19 @@ preview/home-ui/
     ├── compare-modal.js         # 비교검색 표 모달
     ├── mypage/                  # 15장 마이페이지
     ├── messages/                # 16장 쪽지함
-    ├── support/                 # 17장 고객센터
-    ├── admin/                   # 28장 운영 콘솔
-    ├── library/                 # 자료실 프리뷰
-    ├── policy-index.js          # 약관·정책
+    ├── support/                 # 17장 고객센터 (notice/faq/safe UX · boardKey 연동 2차)
+    ├── admin/                   # 28장 운영 콘솔 (A28-05 공지 CMS · 채널 프리셋은 board-engine-copy)
+    ├── library/                 # 23장 자료실 (library* boardKey)
+    ├── submission-board/        # 23장 제출함 (submission boardKey)
+    ├── board-engine-copy.js     # ★ 23장 BOARD_REGISTRY · 프리셋 · 권한
+    ├── board/                   # board API 클라이언트
+    ├── policy-index.js          # 26장 약관·정책 정적 (policy-log 변경이력과 분리)
+    ├── policy-router.js         # `#/policy/{slug}` · changelog 예약
     ├── study-room-reg/          # 공부방 등록 관리 (홈 내)
     ├── tutor-reg/               # 과외 등록 관리 (홈 내)
     └── styles/
         ├── tokens.css           # 디자인 토큰
+        ├── design-system.css
         └── home.css             # ★ 메인 레이아웃·지도·노출 스타일
 ```
 

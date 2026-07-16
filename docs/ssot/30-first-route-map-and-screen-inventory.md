@@ -329,7 +329,7 @@
 
 | 항목 | 현재 기준 | 운영 규칙 |
 |------|-----------|-----------|
-| 마지막 동기화 | **2026-07-07** | `screen-inventory.json` · `npm run sync:inventory` |
+| 마지막 동기화 | **2026-07-17** | 부록 C `policy-log`=`#/policy/changelog` · [23 경계 진단](../internal/23-board-menu-boundary-audit.md) · Notion §22 |
 | 기준 소스 | 문서 우선 → 프리뷰 교차 확인 → 코드 용어 대조 | 코드가 앞서면 「초안 + 프리뷰 ✅」 |
 | dead route | `#/mypage/verification` → `#/mypage/submission-docs` 리다이렉트만 | 진입 불가 route는 별도 표기 |
 | 리네임 후보 | `studyrooms` → `study-rooms` ✅ · P25-07 → P25-04 흡수 · P17-06 → P26 ✅ | route/ID 어긋남 시 본 장에 먼저 표기 |
@@ -494,7 +494,7 @@
 | `notice` | P17-05 · P17-admin | `#/support/notice` | 17 · 23 | 운영형 | notice-store · DDL `017` |
 | `faq` | P17-04 | `#/support/faq` | 17 · 23 | 운영형 | 정적 FAQ |
 | `safe-guide` | P17-02/03 | `#/support/safe/{slug}` | 17 · 23 | 운영형 | support-copy G1~G7 |
-| `policy-log` | P26 변경 이력 | `#/policy/*` (후순위) | 26 · 23 | 운영형 | P17-06 이관 ✅ |
+| `policy-log` | P26 변경 이력 | `#/policy/changelog` (후순위) | 26 · 23 | 운영형 | 정적 `#/policy/{terms…}` 와 **분리** · `#/policy/*` 와일드카드 금지 |
 | `library` | 자료실 (다운로드) | `#/library` | 23 | 다운로드형 | ✅ 프리뷰 · 로그인 read/download |
 | `library-template` | 양식/체크리스트 | `#/library/templates` | 23 | 다운로드형 | 자료실 하위 |
 | `library-guide-pdf` | 가이드 PDF | `#/library/guides` | 23 | 다운로드형 | 공개 read · 로그인 download |
@@ -626,6 +626,9 @@
 | 2026-07-07 | **§12 26장** — P26-01~07 ✅ · P17-06→policy 이관 · `policy-router.js` |
 | 2026-07-07 | **§14~15** — 동기화 메타 · 진입 규칙 요약표 |
 | 2026-07-07 | **23장 게시판 엔진 개념 확장** · `board-engine-copy.js` · 권한 모델 |
+| 2026-07-17 | **부록 C** `policy-log` route `#/policy/changelog` 로 고정 (정적 `#/policy/{terms…}` 와 분리) · 메뉴 경계 진단 `docs/internal/23-board-menu-boundary-audit.md` |
+| 2026-07-17 | **A28-05 운영 최소판** — 채널 관리(`board-channel-store.js`) · 우측 슬롯 관리(`right-rail-store.js`) · slot seed 6종 |
+| 2026-07-17 | **3탄** — notice/faq/safe-guide `board_posts` 통합 · `board_channel_definitions`/`right_rail_slot_definitions` · detail/search rail 연결 |
 | 2026-07-07 | **P19-01** — `EMPTY_COPY.students` · `renderStateCard` 1차 적용 |
 | 2026-07-07 | **29장 copy 통합** — empty-state-copy 정본 · 레거시 re-export 정리 |
 | 2026-07-07 | **§16 본표** — Notion §15 수동 정리본 |

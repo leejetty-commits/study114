@@ -320,10 +320,11 @@ export function renderMapBlock() {
   `;
 }
 
-import { renderSitePromoSidebar, renderSitePromoInline } from '../../shared/promo-sidebar.js';
+import { renderSitePromoInline } from '../../shared/promo-sidebar.js';
+import { renderRightRailSidebar } from './right-rail.js';
 
 export function renderAdSidebar() {
-  return renderSitePromoSidebar();
+  return renderRightRailSidebar('home_right_rail');
 }
 
 export function renderAdInline() {
@@ -331,8 +332,8 @@ export function renderAdInline() {
 }
 
 export function renderHomeShell(role, mainContent, opts = {}) {
-  const { showAuth, showRoleSwitch, sidebarHtml, loginStrip } = opts;
-  const sidebar = sidebarHtml ?? renderAdSidebar();
+  const { showAuth, showRoleSwitch, sidebarHtml, loginStrip, slotKey = 'home_right_rail' } = opts;
+  const sidebar = sidebarHtml ?? renderRightRailSidebar(slotKey);
   return `
     ${renderPreviewToolbar()}
     <div class="home-shell">
@@ -349,17 +350,18 @@ export function renderHomeShell(role, mainContent, opts = {}) {
 
 /**
  * home-app 계열(유료·이용안내·마이페이지 등)에 홈과 같은 우측 배너 적용
- * @param {{ toolbar?: string, headerHtml: string, mainHtml: string, footerHtml?: string }} opts
+ * @param {{ toolbar?: string, headerHtml: string, mainHtml: string, footerHtml?: string, slotKey?: string|null, sidebarHtml?: string }} opts
  */
 export function renderAppShellWithPromo(opts) {
-  const { toolbar = '', headerHtml, mainHtml, footerHtml = renderFooter() } = opts;
+  const { toolbar = '', headerHtml, mainHtml, footerHtml = renderFooter(), slotKey = 'support_right_rail', sidebarHtml } = opts;
+  const sidebar = sidebarHtml ?? (slotKey ? renderRightRailSidebar(slotKey) : '');
   return `
     ${toolbar}
     <div class="home-app">
       ${headerHtml}
       <div class="home-body home-body--with-promo">
         <div class="home-main">${mainHtml}</div>
-        ${renderSitePromoSidebar()}
+        ${sidebar}
       </div>
       ${footerHtml}
     </div>

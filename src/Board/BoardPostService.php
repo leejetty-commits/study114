@@ -11,11 +11,17 @@ final class BoardPostService
 {
     /** @var list<string> */
     private const ALLOWED_BOARD_KEYS = [
+        'notice',
+        'faq',
+        'safe-guide',
         'library',
         'library-template',
         'library-guide-pdf',
         'submission',
     ];
+
+    /** @var list<string> */
+    private const OPERATIONAL_BOARD_KEYS = ['notice', 'faq', 'safe-guide'];
 
     /** @var list<string> */
     private const AUTHOR_ROLES = ['guest', 'parent', 'study_room', 'tutor', 'admin', 'system'];
@@ -38,6 +44,12 @@ final class BoardPostService
         }
 
         $rows = $this->repo->listByBoard($boardKey, $authorRole, $postKey);
+        if ($this->isOperationalBoard($boardKey)) {
+            $rows = array_values(array_filter(
+                $rows,
+                static fn (array $row): bool => (string) ($row['status'] ?? '') === 'published',
+            ));
+        }
 
         return array_map(fn (array $row) => $this->mapPost($row), $rows);
     }
@@ -48,10 +60,58 @@ final class BoardPostService
         $boardKey = trim((string) ($input['board_key'] ?? $input['boardKey'] ?? ''));
         $this->assertBoardKey($boardKey);
 
-        if ($boardKey !== 'submission') {
-            throw new InvalidArgumentException('현재 쓰기는 submission 보드만 지원합니다.');
+        if ($this->isOperationalBoard($boardKey)) {
+            return $this->saveOperational($input, $boardKey);
         }
 
+        if ($boardKey !== 'submission') {
+            throw new InvalidArgumentException('현재 쓰기는 submission·운영형 채널만 지원합니다.');
+        }
+
+        return $this->saveSubmission($input, $boardKey);
+    }
+
+    public function delete(string $boardKey, string $postKey, string $authorRole): void
+    {
+        $this->assertBoardKey($boardKey);
+        $this->assertAuthorRole($authorRole);
+
+        if ($this->isOperationalBoard($boardKey)) {
+            if ($authorRole !== 'admin') {
+                throw new InvalidArgumentException('운영형 채널 삭제는 admin만 허용됩니다.');
+            }
+            $existing = $this->repo->findByKey($boardKey, $postKey);
+            if ($existing === null) {
+                throw new InvalidArgumentException('게시물을 찾을 수 없습니다.');
+            }
+            $this->repo->delete($boardKey, $postKey);
+
+            return;
+        }
+
+        if ($boardKey !== 'submission') {
+            throw new InvalidArgumentException('현재 삭제는 submission·운영형 채널만 지원합니다.');
+        }
+
+        $existing = $this->repo->findByKey($boardKey, $postKey);
+        if ($existing === null) {
+            throw new InvalidArgumentException('게시물을 찾을 수 없습니다.');
+        }
+        if ((string) $existing['author_role'] !== $authorRole) {
+            throw new InvalidArgumentException('작성자 역할이 일치하지 않습니다.');
+        }
+        $status = (string) $existing['status'];
+        if ($status !== 'draft' && $status !== 'submitted') {
+            throw new InvalidArgumentException('삭제할 수 없는 상태입니다.');
+        }
+
+        $this->attachments->deleteForPost($boardKey, $postKey);
+        $this->repo->delete($boardKey, $postKey);
+    }
+
+    /** @param array<string, mixed> $input */
+    private function saveSubmission(array $input, string $boardKey): array
+    {
         $postKey = isset($input['post_key']) ? trim((string) $input['post_key']) : (isset($input['id']) ? trim((string) $input['id']) : null);
         $authorRole = trim((string) ($input['author_role'] ?? $input['authorRole'] ?? ''));
         $this->assertAuthorRole($authorRole);
@@ -114,29 +174,102 @@ final class BoardPostService
         ));
     }
 
-    public function delete(string $boardKey, string $postKey, string $authorRole): void
+    /** @param array<string, mixed> $input */
+    private function saveOperational(array $input, string $boardKey): array
     {
-        $this->assertBoardKey($boardKey);
-        $this->assertAuthorRole($authorRole);
-
-        if ($boardKey !== 'submission') {
-            throw new InvalidArgumentException('현재 삭제는 submission 보드만 지원합니다.');
+        $authorRole = trim((string) ($input['author_role'] ?? $input['authorRole'] ?? ''));
+        if ($authorRole !== 'admin') {
+            throw new InvalidArgumentException('운영형 채널 쓰기는 admin만 허용됩니다.');
         }
 
-        $existing = $this->repo->findByKey($boardKey, $postKey);
-        if ($existing === null) {
-            throw new InvalidArgumentException('게시물을 찾을 수 없습니다.');
-        }
-        if ((string) $existing['author_role'] !== $authorRole) {
-            throw new InvalidArgumentException('작성자 역할이 일치하지 않습니다.');
-        }
-        $status = (string) $existing['status'];
-        if ($status !== 'draft' && $status !== 'submitted') {
-            throw new InvalidArgumentException('삭제할 수 없는 상태입니다.');
+        $postKey = isset($input['post_key']) ? trim((string) $input['post_key']) : (isset($input['id']) ? trim((string) $input['id']) : null);
+        $status = trim((string) ($input['status'] ?? 'published'));
+        if (!in_array($status, ['draft', 'published', 'hidden'], true)) {
+            throw new InvalidArgumentException('status는 draft · published · hidden만 허용됩니다.');
         }
 
-        $this->attachments->deleteForPost($boardKey, $postKey);
-        $this->repo->delete($boardKey, $postKey);
+        $title = trim((string) ($input['title'] ?? ''));
+        if ($title === '') {
+            throw new InvalidArgumentException('제목이 필요합니다.');
+        }
+
+        $description = trim((string) ($input['description'] ?? ''));
+        $memo = trim((string) ($input['memo'] ?? ''));
+        $categoryId = trim((string) ($input['category_id'] ?? $input['categoryId'] ?? 'general'));
+        if ($categoryId === '') {
+            $categoryId = 'general';
+        }
+
+        $meta = $this->buildOperationalMeta($boardKey, $input);
+
+        if ($postKey !== null && $postKey !== '') {
+            $existing = $this->repo->findByKey($boardKey, $postKey);
+            if ($existing === null) {
+                throw new InvalidArgumentException('게시물을 찾을 수 없습니다.');
+            }
+        }
+
+        return $this->mapPost($this->repo->save(
+            $boardKey,
+            $postKey,
+            $authorRole,
+            $status,
+            $title,
+            $description,
+            $memo,
+            $categoryId,
+            '',
+            $meta,
+        ));
+    }
+
+    /** @param array<string, mixed> $input @return array<string, mixed> */
+    private function buildOperationalMeta(string $boardKey, array $input): array
+    {
+        $metaInput = $input['meta'] ?? $input['meta_json'] ?? [];
+        $meta = is_array($metaInput) ? $metaInput : [];
+
+        if ($boardKey === 'notice') {
+            $body = $input['body'] ?? $meta['body'] ?? [];
+            if (is_string($body)) {
+                $body = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $body) ?: [])));
+            }
+            return [
+                'body' => is_array($body) ? array_values(array_map('strval', $body)) : [],
+                'displayDate' => (string) ($input['date'] ?? $input['displayDate'] ?? $meta['displayDate'] ?? date('Y-m-d')),
+                'pinned' => (bool) ($input['pinned'] ?? $meta['pinned'] ?? false),
+            ];
+        }
+
+        if ($boardKey === 'faq') {
+            $answer = trim((string) ($input['answer'] ?? $input['a'] ?? $meta['answer'] ?? $input['description'] ?? ''));
+            return [
+                'answer' => $answer,
+                'sortOrder' => (int) ($input['sortOrder'] ?? $meta['sortOrder'] ?? 0),
+            ];
+        }
+
+        if ($boardKey === 'safe-guide') {
+            $body = $input['body'] ?? $meta['body'] ?? [];
+            if (is_string($body)) {
+                $body = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $body) ?: [])));
+            }
+            $checklist = $input['checklist'] ?? $meta['checklist'] ?? [];
+            return [
+                'slug' => (string) ($input['slug'] ?? $meta['slug'] ?? $input['post_key'] ?? $input['id'] ?? ''),
+                'priority' => (string) ($input['priority'] ?? $meta['priority'] ?? 'primary'),
+                'audience' => (string) ($input['audience'] ?? $meta['audience'] ?? '전체'),
+                'body' => is_array($body) ? array_values(array_map('strval', $body)) : [],
+                'checklist' => is_array($checklist) ? $checklist : [],
+            ];
+        }
+
+        return $meta;
+    }
+
+    private function isOperationalBoard(string $boardKey): bool
+    {
+        return in_array($boardKey, self::OPERATIONAL_BOARD_KEYS, true);
     }
 
     private function assertBoardKey(string $boardKey): void
@@ -164,6 +297,11 @@ final class BoardPostService
 
         $boardKey = (string) $row['board_key'];
         $postKey = (string) $row['post_key'];
+
+        if ($this->isOperationalBoard($boardKey)) {
+            return $this->mapOperationalPost($row, $meta, $created, $updated, $boardKey, $postKey);
+        }
+
         $attachment = $boardKey === 'submission'
             ? $this->attachments->getPrimaryMeta($boardKey, $postKey)
             : null;
@@ -188,6 +326,71 @@ final class BoardPostService
             'audience' => isset($meta['audience']) && is_array($meta['audience'])
                 ? array_values(array_map('strval', $meta['audience']))
                 : [],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @param array<string, mixed> $meta
+     * @return array<string, mixed>
+     */
+    private function mapOperationalPost(
+        array $row,
+        array $meta,
+        string $created,
+        string $updated,
+        string $boardKey,
+        string $postKey,
+    ): array {
+        $base = [
+            'id' => $postKey,
+            'boardKey' => $boardKey,
+            'title' => (string) $row['title'],
+            'description' => (string) ($row['description'] ?? ''),
+            'categoryId' => (string) ($row['category_id'] ?? ''),
+            'status' => (string) $row['status'],
+            'authorRole' => (string) $row['author_role'],
+            'createdAt' => substr($created, 0, 10),
+            'updatedAt' => substr($updated, 0, 10),
+            'meta' => $meta,
+        ];
+
+        if ($boardKey === 'notice') {
+            $displayDate = (string) ($meta['displayDate'] ?? substr($created, 0, 10));
+            $body = isset($meta['body']) && is_array($meta['body'])
+                ? array_values(array_map('strval', $meta['body']))
+                : [];
+
+            return $base + [
+                'date' => $displayDate,
+                'body' => $body,
+                'pinned' => (bool) ($meta['pinned'] ?? false),
+            ];
+        }
+
+        if ($boardKey === 'faq') {
+            $answer = (string) ($meta['answer'] ?? $row['description'] ?? '');
+
+            return $base + [
+                'q' => (string) $row['title'],
+                'a' => $answer,
+                'answer' => $answer,
+                'sortOrder' => (int) ($meta['sortOrder'] ?? 0),
+            ];
+        }
+
+        $slug = (string) ($meta['slug'] ?? $postKey);
+        $body = isset($meta['body']) && is_array($meta['body'])
+            ? array_values(array_map('strval', $meta['body']))
+            : [];
+        $checklist = isset($meta['checklist']) && is_array($meta['checklist']) ? $meta['checklist'] : [];
+
+        return $base + [
+            'slug' => $slug,
+            'priority' => (string) ($meta['priority'] ?? $row['category_id'] ?? 'primary'),
+            'audience' => (string) ($meta['audience'] ?? $row['description'] ?? '전체'),
+            'body' => $body,
+            'checklist' => $checklist,
         ];
     }
 }

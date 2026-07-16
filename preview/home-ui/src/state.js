@@ -5,7 +5,12 @@
 
 import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES } from './mypage/router.js';
 import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
-import { getDefaultSupportPath, normalizeSupportPath } from './support/router.js';
+import {
+  getDefaultSupportPath,
+  normalizeSupportPath,
+  SUPPORT_TERMS_LEGACY_PATH,
+  SUPPORT_TERMS_REDIRECT,
+} from './support/router.js';
 import { getDefaultPolicyPath, normalizePolicyPath } from './policy-router.js';
 import { getDefaultLibraryPath, normalizeLibraryPath } from './library/library-router.js';
 import { getDefaultAdminPath, normalizeAdminPath } from './admin/router.js';
@@ -252,6 +257,12 @@ export function bootstrapSupportRoute() {
   const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
   if (path === '/support' || path === '/support/') {
     window.location.replace(`#${getDefaultSupportPath()}`);
+    return true;
+  }
+
+  // P17-06 레거시 → 26장 정적 약관 (게시판/고객센터 섹션으로 두지 않음)
+  if (path === SUPPORT_TERMS_LEGACY_PATH || path === `${SUPPORT_TERMS_LEGACY_PATH}/`) {
+    window.location.replace(`#${SUPPORT_TERMS_REDIRECT}`);
     return true;
   }
 

@@ -4,7 +4,6 @@ import {
   renderGuestHero,
   renderGuestExposureBoxes,
   renderGuestBrowseLists,
-  renderGuestAdSidebar,
   renderGuestAdInline,
   renderGuestLoginStrip,
   bindGuestSectionEvents,
@@ -25,7 +24,7 @@ export function renderGuest() {
   return renderHomeShell('guest', content, {
     showAuth: !loggedIn,
     showRoleSwitch: false,
-    sidebarHtml: renderGuestAdSidebar(),
+    slotKey: 'home_right_rail',
     loginStrip: loggedIn ? '' : renderGuestLoginStrip(),
   });
 }

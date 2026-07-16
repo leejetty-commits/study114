@@ -25,6 +25,7 @@ import { AUTH_UI_BASE } from '../data.js';
 import { openCompareModal } from '../compare-modal.js';
 import { getCompareItems } from '../user-actions-state.js';
 import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
+import { renderRightRailBlock } from '../right-rail.js';
 
 const MODAL_ID = 'p24-detail-modal';
 
@@ -154,6 +155,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
           ${contact}
         </section>
         ${preContact}
+        ${renderRightRailBlock('detail_right_rail')}
         ${microSafetyCopy()}
       </div>
       <footer class="modal__foot p24-modal__foot">

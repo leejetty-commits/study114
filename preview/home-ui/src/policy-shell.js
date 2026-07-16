@@ -43,6 +43,7 @@ export function renderPolicyShell(title, path, bodyHtml) {
     headerHtml: renderHeader(role),
     mainHtml,
     footerHtml: renderFooter(),
+    slotKey: 'support_right_rail',
   });
 }
 

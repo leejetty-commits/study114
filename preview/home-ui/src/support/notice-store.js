@@ -1,6 +1,6 @@
-/** 17c — 공지 CMS (프리뷰 sessionStorage `[임시]`) */
+/** 공지 — board_posts(notice) 정본 우선 · legacy support API · sessionStorage dev fallback */
 
-import { NOTICES as SEED_NOTICES } from './support-copy.js';
+import { listNoticePosts, upsertNoticePost, deleteNoticePost } from '../operational-board-store.js';
 import {
   isSupportApiMode,
   getNoticesCache,
@@ -8,16 +8,9 @@ import {
   apiDeleteNotice,
   apiResetNoticeSeed,
 } from './support-backend.js';
+import { isOperationalBoardApiActive } from '../operational-board-store.js';
 
 const KEY = 'study114-support-notices-v1';
-
-/**
- * @typedef {object} SupportNotice
- * @property {string} id
- * @property {string} date
- * @property {string} title
- * @property {string[]} body
- */
 
 /** @returns {SupportNotice[]} */
 function loadAll() {
@@ -38,11 +31,22 @@ function saveAll(notices) {
 
 function seedIfEmpty() {
   if (loadAll().length) return;
-  saveAll(SEED_NOTICES.map((n) => ({ ...n })));
+  saveAll(listNoticePosts());
 }
+
+/**
+ * @typedef {object} SupportNotice
+ * @property {string} id
+ * @property {string} date
+ * @property {string} title
+ * @property {string[]} body
+ */
 
 /** @returns {SupportNotice[]} */
 export function listNotices() {
+  if (isOperationalBoardApiActive()) {
+    return listNoticePosts();
+  }
   if (isSupportApiMode()) {
     return getNoticesCache();
   }
@@ -52,6 +56,9 @@ export function listNotices() {
 
 /** @param {Omit<SupportNotice, 'id'> & { id?: string }} input */
 export async function upsertNotice(input) {
+  if (isOperationalBoardApiActive()) {
+    return upsertNoticePost(input);
+  }
   if (isSupportApiMode()) {
     return apiSaveNotice(input);
   }
@@ -73,6 +80,10 @@ export async function upsertNotice(input) {
 
 /** @param {string} id */
 export async function deleteNotice(id) {
+  if (isOperationalBoardApiActive()) {
+    await deleteNoticePost(id);
+    return;
+  }
   if (isSupportApiMode()) {
     await apiDeleteNotice(id);
     return;
@@ -86,5 +97,5 @@ export async function resetNoticesToSeed() {
     await apiResetNoticeSeed();
     return;
   }
-  saveAll(SEED_NOTICES.map((n) => ({ ...n })));
+  saveAll(listNoticePosts());
 }
