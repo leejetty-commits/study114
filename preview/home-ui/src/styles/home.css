@@ -4961,3 +4961,83 @@ a.sup-term-chip:hover {
 }
 .plans-receipt__note { margin-top: var(--space-3); }
 .plans-receipt__actions { margin-top: var(--space-3); }
+
+/* 환경설정 → 프론트 노출 (점검·게스트 배너·예약 팝업) */
+.ops-chrome {
+  position: relative;
+  z-index: 40;
+}
+.ops-chrome__banners {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.ops-chrome__maintenance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  padding: 0.65rem 1.25rem;
+  background: #7f1d1d;
+  color: #fef2f2;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+.ops-chrome__maintenance strong {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.ops-chrome__guest-banner {
+  padding: 0.55rem 1.25rem;
+  background: linear-gradient(90deg, #0f766e 0%, #0d9488 55%, #14b8a6 100%);
+  color: #ecfdf5;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  text-align: center;
+}
+.ops-chrome__popup {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.ops-chrome__popup-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+}
+.ops-chrome__popup-panel {
+  position: relative;
+  z-index: 1;
+  width: min(26rem, 100%);
+  max-height: min(80vh, 32rem);
+  overflow: auto;
+  padding: 1.25rem 1.35rem 1.1rem;
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+  border: 1px solid var(--gray-200);
+}
+.ops-chrome__popup-title {
+  margin: 0 0 0.65rem;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1.3;
+}
+.ops-chrome__popup-body {
+  margin: 0 0 1.1rem;
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+  line-height: 1.55;
+}
+.ops-chrome__popup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}

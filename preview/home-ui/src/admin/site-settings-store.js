@@ -241,3 +241,96 @@ export function resetSiteSettingsSeed() {
   sessionStorage.removeItem(LEGAL_KEY);
   appendLog('site_settings_reset', 'all', 'seed 복원');
 }
+
+/** @param {string} [raw] ISO-ish or datetime-local */
+function parseOpsTime(raw) {
+  const s = String(raw || '').trim();
+  if (!s) return null;
+  const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * @param {{ startAt?: string, endAt?: string }} row
+ * @param {Date} [now]
+ */
+export function isWithinSchedule(row, now = new Date()) {
+  const start = parseOpsTime(row.startAt);
+  const end = parseOpsTime(row.endAt);
+  if (start && now < start) return false;
+  if (end && now > end) return false;
+  return true;
+}
+
+/** @returns {{ enabled: boolean, message: string, until: string }|null} */
+export function getActiveMaintenance() {
+  const s = getSiteSettings();
+  if (!s.maintenanceEnabled) return null;
+  if (s.maintenanceUntil) {
+    const until = parseOpsTime(s.maintenanceUntil);
+    if (until && new Date() > until) return null;
+  }
+  return {
+    enabled: true,
+    message: s.maintenanceMessage || '시스템 점검 중입니다.',
+    until: s.maintenanceUntil || '',
+  };
+}
+
+/** @returns {{ text: string }|null} */
+export function getActiveGuestBanner() {
+  const s = getSiteSettings();
+  if (!s.guestBannerEnabled) return null;
+  const text = String(s.guestBannerText || '').trim();
+  if (!text) return null;
+  return { text };
+}
+
+const DISMISS_PREFIX = 'study114-popup-dismiss:';
+
+/** @param {string} id */
+export function isPopupDismissed(id) {
+  try {
+    const raw = localStorage.getItem(DISMISS_PREFIX + id);
+    if (!raw) return false;
+    const until = Number(raw);
+    if (!until || Number.isNaN(until)) return false;
+    if (Date.now() > until) {
+      localStorage.removeItem(DISMISS_PREFIX + id);
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @param {string} id
+ * @param {number} hours
+ */
+export function dismissPopup(id, hours) {
+  const h = Math.max(0, Number(hours) || 0);
+  const until = h <= 0 ? Date.now() + 365 * 24 * 3600 * 1000 : Date.now() + h * 3600 * 1000;
+  try {
+    localStorage.setItem(DISMISS_PREFIX + id, String(until));
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * @param {'guest_home'|'search'|'mypage'|'all'|string} surface
+ * @returns {Array<Record<string, unknown>>}
+ */
+export function listActivePopupsForSurface(surface) {
+  const now = new Date();
+  return listPopups().filter((p) => {
+    if (!p.enabled) return false;
+    if (!isWithinSchedule(p, now)) return false;
+    if (isPopupDismissed(p.id)) return false;
+    const surf = p.surface || 'all';
+    if (surf === 'all') return true;
+    return surf === surface;
+  });
+}

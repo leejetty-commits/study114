@@ -39,6 +39,7 @@ import { activateSupportApi, deactivateSupportApi } from './support/support-back
 import { activateBoardApi, deactivateBoardApi } from './board/board-backend.js';
 import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
+import { mountOpsChrome } from './site-ops-chrome.js';
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -70,26 +71,31 @@ function render() {
   if (isPlansRoute()) {
     app.innerHTML = renderPlans();
     bindPlansEvents(app, render);
+    mountOpsChrome(app);
     return;
   }
   if (isLibraryRoute()) {
     app.innerHTML = renderLibrary();
     bindLibraryEvents(app, render);
+    mountOpsChrome(app);
     return;
   }
   if (isSupportRoute()) {
     app.innerHTML = renderSupport();
     bindSupportEvents(app, render);
+    mountOpsChrome(app);
     return;
   }
   if (isPolicyRoute()) {
     app.innerHTML = renderPolicy();
     bindPolicyEvents(app, render);
+    mountOpsChrome(app);
     return;
   }
   if (isMypageRoute()) {
     app.innerHTML = renderMypage();
     bindMypageEvents(app, render);
+    mountOpsChrome(app);
     return;
   }
   const key = getCurrentScreen();
@@ -103,6 +109,7 @@ function render() {
   const screen = SCREENS[roleGate.ok ? key : 'guest'] || SCREENS.guest;
   app.innerHTML = screen.render();
   screen.bind(app, render);
+  mountOpsChrome(app);
 }
 
 function showBootError(err) {
