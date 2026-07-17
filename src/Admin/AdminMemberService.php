@@ -26,7 +26,11 @@ final class AdminMemberService
 
     /**
      * @param array{q?: string, status?: string, role_type?: string, limit?: int} $filters
-     * @return array{members: list<array<string, mixed>>, total: int}
+     * @return array{
+     *   members: list<array<string, mixed>>,
+     *   total: int,
+     *   counts: array{all: int, active: int, pending: int, blocked: int, withdrawn: int}
+     * }
      */
     public function list(array $filters = []): array
     {
@@ -35,7 +39,8 @@ final class AdminMemberService
 
         return [
             'members' => $members,
-            'total' => count($members),
+            'total' => $this->repo->countMembers($filters),
+            'counts' => $this->repo->countByStatus($filters),
         ];
     }
 
@@ -53,10 +58,65 @@ final class AdminMemberService
     /**
      * @param array{email?: string, role_type?: string} $auth
      * @param array<string, mixed> $input
-     * @return array{member: array<string, mixed>, log: array<string, mixed>}
+     * @return array{member?: array<string, mixed>, log?: array<string, mixed>, results?: list<array<string, mixed>>, ok_count?: int, fail_count?: int}
      */
     public function applyAction(array $auth, array $input): array
     {
+        $rawIds = $input['user_ids'] ?? null;
+        if (is_array($rawIds)) {
+            $action = trim((string) ($input['action'] ?? ''));
+            if (!in_array($action, ['block', 'restore'], true)) {
+                throw new InvalidArgumentException('일괄 조치는 block, restore만 허용됩니다.');
+            }
+            $memo = trim((string) ($input['internal_memo'] ?? $input['internalMemo'] ?? ''));
+            $ids = [];
+            foreach ($rawIds as $id) {
+                $n = (int) $id;
+                if ($n > 0) {
+                    $ids[$n] = $n;
+                }
+            }
+            $ids = array_values($ids);
+            if ($ids === []) {
+                throw new InvalidArgumentException('user_ids가 필요합니다.');
+            }
+            if (count($ids) > 50) {
+                throw new InvalidArgumentException('일괄 조치는 한 번에 50명까지입니다.');
+            }
+
+            $results = [];
+            $ok = 0;
+            $fail = 0;
+            foreach ($ids as $userId) {
+                try {
+                    $one = $this->applyAction($auth, [
+                        'user_id' => $userId,
+                        'action' => $action,
+                        'internal_memo' => $memo,
+                    ]);
+                    $results[] = [
+                        'user_id' => $userId,
+                        'ok' => true,
+                        'status' => (string) ($one['member']['status'] ?? ''),
+                    ];
+                    $ok++;
+                } catch (InvalidArgumentException $e) {
+                    $results[] = [
+                        'user_id' => $userId,
+                        'ok' => false,
+                        'message' => $e->getMessage(),
+                    ];
+                    $fail++;
+                }
+            }
+
+            return [
+                'results' => $results,
+                'ok_count' => $ok,
+                'fail_count' => $fail,
+            ];
+        }
+
         $userId = (int) ($input['user_id'] ?? $input['id'] ?? 0);
         $action = trim((string) ($input['action'] ?? ''));
         $memo = trim((string) ($input['internal_memo'] ?? $input['internalMemo'] ?? ''));
@@ -88,6 +148,9 @@ final class AdminMemberService
             if ($beforeStatus === 'blocked') {
                 throw new InvalidArgumentException('이미 이용 제한된 계정입니다.');
             }
+            if ($beforeStatus === 'withdrawn') {
+                throw new InvalidArgumentException('탈퇴 계정은 이용 제한할 수 없습니다.');
+            }
             if (!$this->repo->updateStatus($userId, 'blocked', null)) {
                 throw new InvalidArgumentException('이용 제한 처리에 실패했습니다.');
             }
@@ -96,6 +159,9 @@ final class AdminMemberService
         } elseif ($action === 'restore') {
             if ($beforeStatus === 'active') {
                 throw new InvalidArgumentException('이미 정상 계정입니다.');
+            }
+            if ($beforeStatus === 'withdrawn') {
+                throw new InvalidArgumentException('탈퇴 계정은 복구할 수 없습니다.');
             }
             if (!$this->repo->updateStatus($userId, 'active', null)) {
                 throw new InvalidArgumentException('복구 처리에 실패했습니다.');
@@ -140,6 +206,7 @@ final class AdminMemberService
             'id' => (int) $row['id'],
             'email' => $email,
             'name' => (string) ($row['real_name'] ?? ''),
+            'phone' => (string) ($row['phone'] ?? ''),
             'status' => (string) ($row['status'] ?? ''),
             'primaryRole' => $primary !== '' ? $primary : null,
             'emailVerified' => ($row['email_verified_at'] ?? null) !== null,

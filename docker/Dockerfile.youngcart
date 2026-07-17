@@ -1,0 +1,22 @@
+# 영카트/그누보드 Lab 전용 (우동공과 API와 분리)
+# PHP 8.2 + Apache + mysqli/GD — 매뉴얼 요구사항 대응
+FROM php:8.2-apache
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libpng-dev \
+        libjpeg62-turbo-dev \
+        libfreetype6-dev \
+        libzip-dev \
+        libonig-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) mysqli pdo_mysql gd zip mbstring \
+    && a2enmod rewrite \
+    && rm -rf /var/lib/apt/lists/*
+
+# 그누보드 .htaccess 사용을 위해 AllowOverride 허용
+RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' \
+        /etc/apache2/apache2.conf
+
+WORKDIR /var/www/html
+
+EXPOSE 80

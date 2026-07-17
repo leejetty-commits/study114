@@ -26,6 +26,14 @@ import {
   getPresetOptions,
   getSectionOwnerOptions,
   listBoardChannels,
+  listSectionGroupSummary,
+  addCustomSectionGroup,
+  removeCustomSectionGroup,
+  getSectionAccessMembers,
+  addSectionAccessMember,
+  removeSectionAccessMember,
+  copyBoardChannel,
+  CHANNEL_ROLE_OPTIONS,
   resetBoardChannels,
   saveBoardChannel,
 } from '../board-channel-store.js';
@@ -57,6 +65,7 @@ import {
   getMemberDetailCache,
   hydrateMemberDetail,
   apiApplyMemberAction,
+  apiApplyMemberBulkAction,
 } from './admin-backend.js';
 import { isMasterAdmin } from './admin-guard.js';
 import { canAccessAdminMenu, MASTER_EMAILS, SUB_MASTER_EMAILS, SUB_MASTER_BLOCKED_MENUS } from './admin-permissions.js';
@@ -81,6 +90,10 @@ import { getAdminScreenId } from './router.js';
 
 /** @type {{ q: string, status: string, role_type: string }} */
 let memberFilters = { q: '', status: 'all', role_type: 'all' };
+/** @type {{ q: string, status: string, sectionOwner: string }} */
+let channelFilters = { q: '', status: 'all', sectionOwner: 'all' };
+/** @type {string|null} 접근회원 편집 중인 소속 그룹 */
+let openSectionAccessId = null;
 /** @type {number|null} */
 let openMemberId = null;
 
@@ -89,6 +102,7 @@ const A28_MEMBER_SEED = [
     id: 1,
     email: 'parent@example.com',
     name: '김학부모',
+    phone: '010-1111-2222',
     status: 'active',
     primaryRole: 'guardian_student',
     emailVerified: true,
@@ -106,6 +120,7 @@ const A28_MEMBER_SEED = [
     id: 2,
     email: 'room@example.com',
     name: '이공부방',
+    phone: '010-3333-4444',
     status: 'active',
     primaryRole: 'study_room_owner',
     emailVerified: true,
@@ -177,6 +192,12 @@ function yesNo(v) {
   return v ? 'Y' : '—';
 }
 
+function genderLabel(gender) {
+  if (gender === 'male') return '남';
+  if (gender === 'female') return '여';
+  return gender ? String(gender) : '—';
+}
+
 function selected(actual, value) {
   return String(actual) === String(value) ? ' selected' : '';
 }
@@ -189,29 +210,146 @@ function optionList(values, active) {
   return values.map((value) => `<option value="${esc(value)}"${selected(active, value)}>${esc(value)}</option>`).join('');
 }
 
+function renderSectionGroupPanel() {
+  const groups = listSectionGroupSummary();
+  const rows = groups
+    .map((g) => {
+      const sourceLabel = g.source === 'custom' ? '추가' : g.source === 'orphan' ? '사용중' : '프리셋';
+      const canRemove = g.source === 'custom' && g.channelCount === 0;
+      return `<tr>
+        <td><code>${esc(g.id)}</code></td>
+        <td>${esc(g.label)}</td>
+        <td>${esc(sourceLabel)}</td>
+        <td>${g.channelCount}</td>
+        <td>${g.accessMemberCount || 0}</td>
+        <td class="sup-admin-actions">
+          <button type="button" class="btn btn--secondary btn--sm" data-section-filter="${esc(g.id)}">채널 보기</button>
+          <button type="button" class="btn btn--secondary btn--sm" data-section-access="${esc(g.id)}">접근회원</button>
+          ${canRemove ? `<button type="button" class="btn btn--secondary btn--sm" data-section-remove="${esc(g.id)}">삭제</button>` : ''}
+        </td>
+      </tr>`;
+    })
+    .join('');
+
+  let accessPanel = '';
+  if (openSectionAccessId) {
+    const members = getSectionAccessMembers(openSectionAccessId);
+    const memberRows = members
+      .map(
+        (email) => `<tr>
+          <td>${esc(email)}</td>
+          <td><button type="button" class="btn btn--secondary btn--sm" data-section-access-remove="${esc(email)}">제거</button></td>
+        </tr>`,
+      )
+      .join('');
+    accessPanel = `
+      <div class="a28-section-access" data-section-access-panel="${esc(openSectionAccessId)}">
+        <h4 class="admin-section-title">접근회원 · <code>${esc(openSectionAccessId)}</code></h4>
+        <p class="a28-hint">영카트 그룹 접근회원 대응 · 우동공과는 이메일로 식별(운영 메모용 1차). 실제 ACL 연동은 후속.</p>
+        <table class="sup-admin-table">
+          <thead><tr><th>이메일</th><th></th></tr></thead>
+          <tbody>${memberRows || '<tr><td colspan="2" class="sup-empty">접근회원 없음</td></tr>'}</tbody>
+        </table>
+        <form class="admin-filter-bar" data-section-access-form>
+          <input type="email" name="email" class="admin-input" placeholder="member@example.com" required />
+          <button type="submit" class="btn btn--primary btn--sm">접근회원 추가</button>
+          <button type="button" class="btn btn--secondary btn--sm" data-section-access-close>닫기</button>
+        </form>
+      </div>`;
+  }
+
+  return `
+    <section class="a28-section-groups">
+      <h3 class="admin-section-title">소속 그룹 (게시판그룹 경량판)</h3>
+      <p class="a28-hint">영카트 게시판그룹 ≈ <code>sectionOwner</code>. 그룹 추가 · 채널 수 · 접근회원(이메일) · 채널 필터.</p>
+      <table class="sup-admin-table">
+        <thead><tr><th>그룹 ID</th><th>표시명</th><th>출처</th><th>채널 수</th><th>접근회원</th><th></th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="6" class="sup-empty">그룹 없음</td></tr>'}</tbody>
+      </table>
+      <form class="admin-filter-bar" data-section-group-form>
+        <input type="text" name="id" class="admin-input admin-input--sm" placeholder="그룹 ID (예: community)" required pattern="[a-z0-9]+(-[a-z0-9]+)*" />
+        <input type="text" name="label" class="admin-input" placeholder="표시명 (선택)" />
+        <button type="submit" class="btn btn--primary btn--sm">그룹 추가</button>
+      </form>
+      ${accessPanel}
+    </section>`;
+}
+
 function renderChannelTable() {
-  const rows = listBoardChannels()
+  const q = (channelFilters.q || '').trim().toLowerCase();
+  const filtered = listBoardChannels().filter((ch) => {
+    if (channelFilters.status !== 'all' && ch.status !== channelFilters.status) return false;
+    if (channelFilters.sectionOwner !== 'all' && ch.sectionOwner !== channelFilters.sectionOwner) {
+      return false;
+    }
+    if (q) {
+      const hay = `${ch.boardKey} ${ch.menuLabel} ${ch.routeSlug || ''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const all = listBoardChannels();
+  const sectionOwners = [...new Set(all.map((ch) => ch.sectionOwner).filter(Boolean))].sort();
+  const sectionOpts = [
+    `<option value="all"${channelFilters.sectionOwner === 'all' ? ' selected' : ''}>소속 전체</option>`,
+    ...sectionOwners.map(
+      (owner) =>
+        `<option value="${esc(owner)}"${channelFilters.sectionOwner === owner ? ' selected' : ''}>${esc(owner)}</option>`,
+    ),
+  ].join('');
+
+  const rows = filtered
     .map(
       (ch) => `<tr>
+        <td class="td-chk"><input type="checkbox" data-channel-chk value="${esc(ch.boardKey)}" ${ch.status === 'archived' ? 'disabled' : ''} /></td>
         <td><code>${esc(ch.boardKey)}</code></td>
         <td>${esc(ch.menuLabel)}</td>
         <td>${esc(ch.boardType)}<br><small>${esc(ch.presetId)}</small></td>
         <td>${esc(ch.sectionOwner)}</td>
         <td>${esc(ch.visibility)}<br><small>download ${esc(ch.downloadPolicy)}</small></td>
         <td>${yesNo(ch.allowWrite)}<br><small>upload ${yesNo(ch.allowUpload)}</small></td>
-        <td><span class="sub-board-status sub-board-status--${esc(ch.status)}">${esc(ch.status)}</span></td>
+        <td>
+          <select class="admin-input--sm" data-channel-status="${esc(ch.boardKey)}" ${ch.status === 'archived' ? 'disabled' : ''}>
+            ${optionList(['active', 'hidden', 'archived'], ch.status)}
+          </select>
+        </td>
         <td><code>${esc(ch.routeSlug || '—')}</code></td>
         <td>${esc(ch.lastUpdatedAt || '—')}</td>
         <td class="sup-admin-actions">
           <button type="button" class="btn btn--secondary btn--sm" data-channel-edit="${esc(ch.boardKey)}">수정</button>
+          <button type="button" class="btn btn--secondary btn--sm" data-channel-copy="${esc(ch.boardKey)}">복사</button>
           <button type="button" class="btn btn--secondary btn--sm" data-channel-archive="${esc(ch.boardKey)}">보관</button>
         </td>
       </tr>`,
     )
     .join('');
-  return `<table class="sup-admin-table a28-channel-table">
-    <thead><tr><th>boardKey</th><th>menuLabel</th><th>type</th><th>소속</th><th>공개/다운로드</th><th>write policy</th><th>status</th><th>route</th><th>updatedAt</th><th></th></tr></thead>
-    <tbody>${rows || '<tr><td colspan="10" class="sup-empty">채널 없음</td></tr>'}</tbody>
+
+  return `
+    <form class="admin-filter-bar" data-channel-filter>
+      <input type="search" name="q" class="admin-input" placeholder="boardKey · menuLabel · route" value="${esc(channelFilters.q)}" />
+      <select name="status" class="admin-input--sm">
+        <option value="all"${channelFilters.status === 'all' ? ' selected' : ''}>status 전체</option>
+        <option value="active"${channelFilters.status === 'active' ? ' selected' : ''}>active</option>
+        <option value="hidden"${channelFilters.status === 'hidden' ? ' selected' : ''}>hidden</option>
+        <option value="archived"${channelFilters.status === 'archived' ? ' selected' : ''}>archived</option>
+      </select>
+      <select name="sectionOwner" class="admin-input--sm">${sectionOpts}</select>
+      <button type="submit" class="btn btn--primary btn--sm">검색</button>
+      <button type="button" class="btn btn--secondary btn--sm" data-channel-filter-reset>초기화</button>
+    </form>
+    <div class="admin-bulk-bar">
+      <label class="admin-bulk-bar__chk"><input type="checkbox" data-channel-chkall /> 전체 선택</label>
+      <select class="admin-input--sm" data-channel-bulk-status>
+        <option value="active">active</option>
+        <option value="hidden">hidden</option>
+        <option value="archived">archived</option>
+      </select>
+      <button type="button" class="btn btn--secondary btn--sm" data-channel-bulk-apply>선택 status 적용</button>
+      <span class="a28-hint" style="margin:0">${filtered.length}/${all.length}개 표시</span>
+    </div>
+    <table class="sup-admin-table a28-channel-table">
+    <thead><tr><th></th><th>boardKey</th><th>menuLabel</th><th>type</th><th>소속</th><th>공개/다운로드</th><th>write policy</th><th>status</th><th>route</th><th>updatedAt</th><th></th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="11" class="sup-empty">채널 없음</td></tr>'}</tbody>
   </table>`;
 }
 
@@ -225,6 +363,12 @@ function renderChannelForm(channel = null) {
     .join('');
   const keyCandidates = getBoardKeyCandidates(presetId);
   const candidateHint = keyCandidates.length ? `권장: ${keyCandidates.join(' · ')}` : '프리셋 기준 boardKey만 사용';
+  const roles = channel?.allowedRoles || ['admin'];
+  const roleChecks = CHANNEL_ROLE_OPTIONS.map(
+    (r) =>
+      `<label><input type="checkbox" name="role_${r.id}" data-allowed-role="${esc(r.id)}"${checked(roles.includes(r.id))} /> ${esc(r.label)}</label>`,
+  ).join('');
+
   return `
     <form class="sup-admin-form a28-config-form" data-channel-form>
       <h3 class="sup-admin-form__title">채널 추가 · 수정</h3>
@@ -235,16 +379,29 @@ function renderChannelForm(channel = null) {
       <label class="sup-field"><span>menuLabel</span><input name="menuLabel" value="${esc(channel?.menuLabel || '')}" placeholder="공지사항" required /></label>
       <label class="sup-field"><span>routeSlug</span><input name="routeSlug" value="${esc(channel?.routeSlug || '')}" placeholder="#/support/notice" /></label>
       <label class="sup-field"><span>sectionOwner</span><select name="sectionOwner" required>${sectionOptions}</select></label>
-      <label class="sup-field"><span>visibility</span><select name="visibility">${optionList(['public', 'login', 'role'], channel?.visibility || 'public')}</select></label>
-      <label class="sup-field"><span>downloadPolicy</span><select name="downloadPolicy">${optionList(['none', 'public', 'login', 'role', 'admin'], channel?.downloadPolicy || 'none')}</select></label>
-      <label class="sup-field"><span>allowedRoles (comma)</span><input name="allowedRoles" value="${esc((channel?.allowedRoles || ['admin']).join(', '))}" /></label>
-      <div class="a28-checkbox-grid">
-        <label><input type="checkbox" name="allowWrite"${checked(channel?.allowWrite ?? true)} /> allowWrite</label>
-        <label><input type="checkbox" name="allowComment"${checked(channel?.allowComment)} /> allowComment</label>
-        <label><input type="checkbox" name="allowUpload"${checked(channel?.allowUpload)} /> allowUpload</label>
-        <label><input type="checkbox" name="requireReview"${checked(channel?.requireReview)} /> requireReview</label>
-        <label><input type="checkbox" name="isGnuSeparated"${checked(channel?.isGnuSeparated ?? true)} /> GNU 분리</label>
+
+      <div class="a28-perm-matrix" id="anc_channel_auth">
+        <h4 class="admin-section-title">권한 (영카트 권한 매트릭스 축약)</h4>
+        <p class="a28-hint">레벨 숫자 대신 우동공과 역할 · visibility/download + 쓰기·댓글·업로드</p>
+        <div class="a28-perm-matrix__grid">
+          <label class="sup-field"><span>목록/읽기 (visibility)</span>
+            <select name="visibility">${optionList(['public', 'login', 'role'], channel?.visibility || 'public')}</select>
+          </label>
+          <label class="sup-field"><span>다운로드 (downloadPolicy)</span>
+            <select name="downloadPolicy">${optionList(['none', 'public', 'login', 'role', 'admin'], channel?.downloadPolicy || 'none')}</select>
+          </label>
+        </div>
+        <p class="a28-hint">역할 제한 시 허용 역할 (allowedRoles)</p>
+        <div class="a28-checkbox-grid" data-allowed-roles>${roleChecks}</div>
+        <div class="a28-checkbox-grid">
+          <label><input type="checkbox" name="allowWrite"${checked(channel?.allowWrite ?? true)} /> 쓰기</label>
+          <label><input type="checkbox" name="allowComment"${checked(channel?.allowComment)} /> 댓글</label>
+          <label><input type="checkbox" name="allowUpload"${checked(channel?.allowUpload)} /> 업로드</label>
+          <label><input type="checkbox" name="requireReview"${checked(channel?.requireReview)} /> 내부 확인 필요</label>
+          <label><input type="checkbox" name="isGnuSeparated"${checked(channel?.isGnuSeparated ?? true)} /> GNU 분리</label>
+        </div>
       </div>
+
       <label class="sup-field"><span>status</span><select name="status">${optionList(['active', 'hidden', 'archived'], channel?.status || 'active')}</select></label>
       <div class="sup-admin-form__actions">
         <button type="submit" class="btn btn--primary btn--sm">채널 저장</button>
@@ -404,7 +561,8 @@ function renderNoticesAdmin() {
        <button type="button" class="a28-config-tabs__btn" data-a28-config-tab="guide" role="tab">5. 안전과외 가이드 CMS</button>
      </div>
      <div class="a28-config-panel is-active" data-a28-config-panel="channels">
-       <p class="a28-hint">프리셋 기반 채널 추가 · 삭제 대신 hidden/archived · DB/API 연결 시 sessionStorage는 dev fallback</p>
+       <p class="a28-hint">프리셋 기반 채널 추가 · 삭제 대신 hidden/archived · 소속 그룹(sectionOwner)은 영카트 게시판그룹의 경량 대응</p>
+       ${renderSectionGroupPanel()}
        ${renderChannelTable()}
        ${renderChannelForm()}
      </div>
@@ -759,9 +917,23 @@ function renderCommerce() {
 
 function renderMembers() {
   const cache = isAdminApiMode() ? getMembersCache() : null;
-  const members = cache?.members ?? A28_MEMBER_SEED;
   const filters = cache?.filters ?? memberFilters;
+  const seedFiltered = !isAdminApiMode()
+    ? A28_MEMBER_SEED.filter((m) => filters.status === 'all' || m.status === filters.status)
+    : [];
+  const members = cache?.members ?? seedFiltered;
   const master = isMasterAdmin();
+  const counts = cache?.counts ?? countMemberSeed(A28_MEMBER_SEED);
+  const totalLabel = cache?.total ?? seedFiltered.length;
+
+  const chip = (key, label) => {
+    const n = Number(counts[key] ?? 0);
+    const on = (filters.status || 'all') === key ? ' is-on' : '';
+    return `<button type="button" class="admin-ov__chip${on}" data-member-status-chip="${key}">
+      <span class="admin-ov__txt">${label}</span>
+      <span class="admin-ov__num">${n.toLocaleString()}명</span>
+    </button>`;
+  };
 
   const rows = members
     .map((m) => {
@@ -769,8 +941,10 @@ function renderMembers() {
       const status = A28_MEMBER_STATUS_LABELS[m.status] || m.status;
       const tier = A28_MEMBER_TIER_LABELS[m.subscriptionTier] || m.subscriptionTier || 'free';
       return `<tr>
+        <td class="td-chk"><input type="checkbox" name="member_chk" value="${m.id}" data-member-chk ${m.isMaster ? 'disabled' : ''} /></td>
         <td><code>${m.id}</code></td>
         <td>${esc(m.name || '—')}<br><small>${esc(m.email)}</small></td>
+        <td>${esc(m.phone || '—')}</td>
         <td>${esc(role)}${m.isMaster ? ' · 마스터' : ''}</td>
         <td>${esc(status)}</td>
         <td>${esc(tier)}${m.activePositions ? ` · 포지션 ${m.activePositions}` : ''}</td>
@@ -789,8 +963,12 @@ function renderMembers() {
       if (seed) {
         detail = {
           ...seed,
-          phone: '010-0000-0000',
+          phone: seed.phone || '010-0000-0000',
+          gender: 'female',
+          birthDate: '1988-01-15',
           address: '서울시 예시동',
+          smsOptIn: true,
+          emailOptIn: true,
           roles: [{ roleType: seed.primaryRole, isPrimary: true, status: 'active' }],
           oauth: seed.oauthLinked ? [{ provider: 'naver', providerEmail: seed.email, linkedAt: seed.createdAt }] : [],
           paid: { subscriptionTier: seed.subscriptionTier, positions: [], tickets: [], orders: [] },
@@ -836,7 +1014,10 @@ function renderMembers() {
           <dt>계정</dt><dd>${esc(detail.name || '—')} · ${esc(detail.email)}</dd>
           <dt>상태</dt><dd>${esc(A28_MEMBER_STATUS_LABELS[detail.status] || detail.status)}</dd>
           <dt>전화</dt><dd>${esc(detail.phone || '—')}</dd>
+          <dt>성별</dt><dd>${esc(genderLabel(detail.gender))}</dd>
+          <dt>생년월일</dt><dd>${esc(detail.birthDate || '—')}</dd>
           <dt>주소</dt><dd>${esc(detail.address || '—')}</dd>
+          <dt>수신동의</dt><dd>SMS ${detail.smsOptIn ? 'Y' : 'N'} · 이메일 ${detail.emailOptIn ? 'Y' : 'N'}</dd>
           <dt>가입</dt><dd>${esc(detail.createdAt)}</dd>
           <dt>최근 로그인</dt><dd>${esc(detail.lastLoginAt || '—')}</dd>
           <dt>프로필 수</dt><dd>공부방 ${detail.profileCounts?.studyRooms || 0} · 과외 ${detail.profileCounts?.tutors || 0} · 자녀 ${detail.profileCounts?.students || 0}</dd>
@@ -870,8 +1051,15 @@ function renderMembers() {
     'A28-02',
     `${renderRedLineBanner()}
      <p class="a28-hint">조회 · 이용 제한/복구 · 유료·역할 조회 · 역할 부여/가장(impersonation) UI 없음 · 승인·반려 용어 금지</p>
+     <div class="admin-ov" role="group" aria-label="회원 상태 집계">
+       ${chip('all', '전체')}
+       ${chip('active', '정상')}
+       ${chip('pending', '대기')}
+       ${chip('blocked', '이용 제한')}
+       ${chip('withdrawn', '탈퇴')}
+     </div>
      <form class="admin-filter-bar" data-member-filter>
-       <input type="search" name="q" class="admin-input" placeholder="이메일·이름·ID" value="${esc(filters.q || '')}" />
+       <input type="search" name="q" class="admin-input" placeholder="이메일·이름·휴대폰·ID" value="${esc(filters.q || '')}" />
        <select name="status" class="admin-input--sm">
          <option value="all"${filters.status === 'all' ? ' selected' : ''}>상태 전체</option>
          <option value="active"${filters.status === 'active' ? ' selected' : ''}>정상</option>
@@ -880,22 +1068,39 @@ function renderMembers() {
          <option value="withdrawn"${filters.status === 'withdrawn' ? ' selected' : ''}>탈퇴</option>
        </select>
        <select name="role_type" class="admin-input--sm">
-         <option value="all"${filters.role_type === 'all' ? ' selected' : ''}>역할 전체</option>
-         <option value="guardian_student"${filters.role_type === 'guardian_student' ? ' selected' : ''}>학부모</option>
-         <option value="study_room_owner"${filters.role_type === 'study_room_owner' ? ' selected' : ''}>공부방</option>
-         <option value="tutor"${filters.role_type === 'tutor' ? ' selected' : ''}>과외쌤</option>
-         <option value="admin"${filters.role_type === 'admin' ? ' selected' : ''}>운영자</option>
+         <option value="all"${filters.role_type === 'all' ? ' selected' : ''}>역할 포함 · 전체</option>
+         <option value="guardian_student"${filters.role_type === 'guardian_student' ? ' selected' : ''}>학부모 포함</option>
+         <option value="study_room_owner"${filters.role_type === 'study_room_owner' ? ' selected' : ''}>공부방 포함</option>
+         <option value="tutor"${filters.role_type === 'tutor' ? ' selected' : ''}>과외쌤 포함</option>
+         <option value="admin"${filters.role_type === 'admin' ? ' selected' : ''}>운영자 포함</option>
        </select>
        <button type="submit" class="btn btn--primary btn--sm">검색</button>
        <button type="button" class="btn btn--secondary btn--sm" data-member-refresh>새로고침</button>
      </form>
-     <p class="a28-hint">${isAdminApiMode() ? `API · ${members.length}명` : '[프리뷰] 정적 시드'}</p>
+     <p class="a28-hint">${isAdminApiMode() ? `API · 목록 ${members.length}명 / 조건 일치 ${Number(totalLabel).toLocaleString()}명` : '[프리뷰] 정적 시드 · 칩 클릭으로 상태 필터'}</p>
+     <div class="admin-bulk-bar" data-member-bulk-bar>
+       <label class="admin-bulk-bar__chk"><input type="checkbox" data-member-chkall /> 전체 선택</label>
+       <input type="text" class="admin-input admin-input--sm" data-member-bulk-memo placeholder="일괄 조치 메모 (선택)" />
+       <button type="button" class="btn btn--secondary btn--sm" data-member-bulk="block">선택 이용 제한</button>
+       <button type="button" class="btn btn--primary btn--sm" data-member-bulk="restore">선택 복구</button>
+     </div>
      <table class="sup-admin-table">
-       <thead><tr><th>ID</th><th>회원</th><th>대표 역할</th><th>상태</th><th>유료</th><th>소셜</th><th>최근 로그인</th><th></th></tr></thead>
-       <tbody>${rows || '<tr><td colspan="8" class="sup-empty">회원 없음</td></tr>'}</tbody>
+       <thead><tr><th></th><th>ID</th><th>회원</th><th>휴대폰</th><th>대표 역할</th><th>상태</th><th>유료</th><th>소셜</th><th>최근 로그인</th><th></th></tr></thead>
+       <tbody>${rows || '<tr><td colspan="10" class="sup-empty">회원 없음</td></tr>'}</tbody>
      </table>
      ${detailHtml}`,
   );
+}
+
+/** @param {typeof A28_MEMBER_SEED} seed */
+function countMemberSeed(seed) {
+  const out = { all: seed.length, active: 0, pending: 0, blocked: 0, withdrawn: 0 };
+  for (const m of seed) {
+    if (Object.prototype.hasOwnProperty.call(out, m.status)) {
+      out[m.status] += 1;
+    }
+  }
+  return out;
 }
 
 function renderPermissions() {
@@ -1005,6 +1210,18 @@ export function bindA28ScreenEvents(root, path, rerender) {
         window.alert(err instanceof Error ? err.message : '검색 실패');
       }
     });
+    root.querySelectorAll('[data-member-status-chip]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const status = String(btn.getAttribute('data-member-status-chip') || 'all');
+        memberFilters = { ...memberFilters, status };
+        try {
+          if (isAdminApiMode()) await hydrateMembersCache(memberFilters);
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '필터 실패');
+        }
+      });
+    });
     root.querySelector('[data-member-refresh]')?.addEventListener('click', async () => {
       try {
         if (isAdminApiMode()) await hydrateMembersCache(memberFilters);
@@ -1048,6 +1265,45 @@ export function bindA28ScreenEvents(root, path, rerender) {
           rerender();
         } catch (err) {
           window.alert(err instanceof Error ? err.message : '조치 실패');
+        }
+      });
+    });
+    const chkAll = root.querySelector('[data-member-chkall]');
+    chkAll?.addEventListener('change', () => {
+      if (!(chkAll instanceof HTMLInputElement)) return;
+      root.querySelectorAll('[data-member-chk]').forEach((el) => {
+        if (el instanceof HTMLInputElement && !el.disabled) el.checked = chkAll.checked;
+      });
+    });
+    root.querySelectorAll('[data-member-bulk]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const action = btn.getAttribute('data-member-bulk');
+        if (action !== 'block' && action !== 'restore') return;
+        const ids = [...root.querySelectorAll('[data-member-chk]:checked')]
+          .map((el) => Number(el instanceof HTMLInputElement ? el.value : 0))
+          .filter((id) => id > 0);
+        if (!ids.length) {
+          window.alert('회원을 선택해 주세요.');
+          return;
+        }
+        const labels = { block: '이용 제한', restore: '복구' };
+        if (!window.confirm(`선택한 ${ids.length}명에게 ${labels[action]} 할까요?`)) return;
+        const memoEl = root.querySelector('[data-member-bulk-memo]');
+        const memo = memoEl instanceof HTMLInputElement ? memoEl.value.trim() : '';
+        if (!isAdminApiMode()) {
+          window.alert('[프리뷰] API 연결 후 일괄 조치가 가능합니다.');
+          return;
+        }
+        try {
+          const data = await apiApplyMemberBulkAction(ids, action, { internalMemo: memo });
+          const ok = Number(data.ok_count || 0);
+          const fail = Number(data.fail_count || 0);
+          await hydrateMembersCache(memberFilters);
+          if (openMemberId) await hydrateMemberDetail(openMemberId).catch(() => {});
+          rerender();
+          window.alert(`완료: 성공 ${ok} · 실패 ${fail}`);
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '일괄 조치 실패');
         }
       });
     });
@@ -1142,7 +1398,12 @@ export function bindA28ScreenEvents(root, path, rerender) {
           .join('');
         channelForm.querySelector('[name="visibility"]').value = channel.visibility;
         channelForm.querySelector('[name="downloadPolicy"]').value = channel.downloadPolicy;
-        channelForm.querySelector('[name="allowedRoles"]').value = (channel.allowedRoles || []).join(', ');
+        const roles = channel.allowedRoles || [];
+        channelForm.querySelectorAll('[data-allowed-role]').forEach((el) => {
+          if (el instanceof HTMLInputElement) {
+            el.checked = roles.includes(el.getAttribute('data-allowed-role') || '');
+          }
+        });
         channelForm.querySelector('[name="allowWrite"]').checked = Boolean(channel.allowWrite);
         channelForm.querySelector('[name="allowComment"]').checked = Boolean(channel.allowComment);
         channelForm.querySelector('[name="allowUpload"]').checked = Boolean(channel.allowUpload);
@@ -1150,6 +1411,24 @@ export function bindA28ScreenEvents(root, path, rerender) {
         channelForm.querySelector('[name="isGnuSeparated"]').checked = channel.isGnuSeparated !== false;
         channelForm.querySelector('[name="status"]').value = channel.status || 'active';
         channelForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const auth = channelForm.querySelector('#anc_channel_auth');
+        auth?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    });
+
+    root.querySelectorAll('[data-channel-copy]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const sourceKey = btn.getAttribute('data-channel-copy');
+        if (!sourceKey) return;
+        const newKey = window.prompt(`「${sourceKey}」 복사 — 새 boardKey`, `${sourceKey}-copy`);
+        if (!newKey) return;
+        const newLabel = window.prompt('새 menuLabel (선택)', '') || undefined;
+        try {
+          await copyBoardChannel(sourceKey, { boardKey: newKey, menuLabel: newLabel });
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '채널 복사 실패');
+        }
       });
     });
 
@@ -1160,6 +1439,156 @@ export function bindA28ScreenEvents(root, path, rerender) {
         archiveBoardChannel(boardKey);
         rerender();
       });
+    });
+
+    root.querySelectorAll('[data-section-filter]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const owner = btn.getAttribute('data-section-filter') || 'all';
+        channelFilters = { ...channelFilters, sectionOwner: owner };
+        rerender();
+      });
+    });
+    root.querySelectorAll('[data-section-access]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        openSectionAccessId = btn.getAttribute('data-section-access');
+        rerender();
+      });
+    });
+    root.querySelector('[data-section-access-close]')?.addEventListener('click', () => {
+      openSectionAccessId = null;
+      rerender();
+    });
+    const accessForm = root.querySelector('[data-section-access-form]');
+    accessForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!(accessForm instanceof HTMLFormElement) || !openSectionAccessId) return;
+      const fd = new FormData(accessForm);
+      try {
+        addSectionAccessMember(openSectionAccessId, String(fd.get('email') || ''));
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '접근회원 추가 실패');
+      }
+    });
+    root.querySelectorAll('[data-section-access-remove]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const email = btn.getAttribute('data-section-access-remove');
+        if (!email || !openSectionAccessId) return;
+        try {
+          removeSectionAccessMember(openSectionAccessId, email);
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '접근회원 제거 실패');
+        }
+      });
+    });
+    root.querySelectorAll('[data-section-remove]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-section-remove');
+        if (!id || !window.confirm(`${id} 그룹을 삭제할까요?`)) return;
+        try {
+          removeCustomSectionGroup(id);
+          if (channelFilters.sectionOwner === id) {
+            channelFilters = { ...channelFilters, sectionOwner: 'all' };
+          }
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '그룹 삭제 실패');
+        }
+      });
+    });
+    const sectionForm = root.querySelector('[data-section-group-form]');
+    sectionForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!(sectionForm instanceof HTMLFormElement)) return;
+      const fd = new FormData(sectionForm);
+      try {
+        addCustomSectionGroup(String(fd.get('id') || ''), String(fd.get('label') || ''));
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '그룹 추가 실패');
+      }
+    });
+
+    const channelFilter = root.querySelector('[data-channel-filter]');
+    channelFilter?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!(channelFilter instanceof HTMLFormElement)) return;
+      const fd = new FormData(channelFilter);
+      channelFilters = {
+        q: String(fd.get('q') || '').trim(),
+        status: String(fd.get('status') || 'all'),
+        sectionOwner: String(fd.get('sectionOwner') || 'all'),
+      };
+      rerender();
+    });
+    root.querySelector('[data-channel-filter-reset]')?.addEventListener('click', () => {
+      channelFilters = { q: '', status: 'all', sectionOwner: 'all' };
+      rerender();
+    });
+
+    const channelChkAll = root.querySelector('[data-channel-chkall]');
+    channelChkAll?.addEventListener('change', () => {
+      if (!(channelChkAll instanceof HTMLInputElement)) return;
+      root.querySelectorAll('[data-channel-chk]').forEach((el) => {
+        if (el instanceof HTMLInputElement && !el.disabled) el.checked = channelChkAll.checked;
+      });
+    });
+
+    root.querySelectorAll('[data-channel-status]').forEach((sel) => {
+      sel.addEventListener('change', async () => {
+        if (!(sel instanceof HTMLSelectElement)) return;
+        const boardKey = sel.getAttribute('data-channel-status');
+        const status = sel.value;
+        const channel = getBoardChannel(boardKey);
+        if (!boardKey || !channel) return;
+        try {
+          await saveBoardChannel(
+            {
+              ...channel,
+              allowedRoles: (channel.allowedRoles || []).join(', '),
+              status,
+            },
+            { mode: 'update' },
+          );
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : 'status 변경 실패');
+          rerender();
+        }
+      });
+    });
+
+    root.querySelector('[data-channel-bulk-apply]')?.addEventListener('click', async () => {
+      const statusEl = root.querySelector('[data-channel-bulk-status]');
+      const status = statusEl instanceof HTMLSelectElement ? statusEl.value : '';
+      if (!['active', 'hidden', 'archived'].includes(status)) return;
+      const keys = [...root.querySelectorAll('[data-channel-chk]:checked')]
+        .map((el) => (el instanceof HTMLInputElement ? el.value : ''))
+        .filter(Boolean);
+      if (!keys.length) {
+        window.alert('채널을 선택해 주세요.');
+        return;
+      }
+      if (!window.confirm(`선택한 ${keys.length}개 채널 status를 ${status}로 바꿀까요?`)) return;
+      try {
+        for (const boardKey of keys) {
+          const channel = getBoardChannel(boardKey);
+          if (!channel) continue;
+          await saveBoardChannel(
+            {
+              ...channel,
+              allowedRoles: (channel.allowedRoles || []).join(', '),
+              status,
+            },
+            { mode: 'update' },
+          );
+        }
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '일괄 status 변경 실패');
+        rerender();
+      }
     });
 
     channelForm?.querySelector('[data-channel-reset-form]')?.addEventListener('click', () => {
@@ -1176,6 +1605,10 @@ export function bindA28ScreenEvents(root, path, rerender) {
     channelForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(channelForm);
+      const allowedRoles = [...channelForm.querySelectorAll('[data-allowed-role]:checked')]
+        .map((el) => el.getAttribute('data-allowed-role'))
+        .filter(Boolean)
+        .join(', ');
       try {
         await saveBoardChannel(
           {
@@ -1186,7 +1619,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
             sectionOwner: String(fd.get('sectionOwner')),
             visibility: String(fd.get('visibility')),
             downloadPolicy: String(fd.get('downloadPolicy')),
-            allowedRoles: String(fd.get('allowedRoles')),
+            allowedRoles,
             allowWrite: fd.get('allowWrite') === 'on',
             allowComment: fd.get('allowComment') === 'on',
             allowUpload: fd.get('allowUpload') === 'on',

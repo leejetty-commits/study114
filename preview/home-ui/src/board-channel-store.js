@@ -12,8 +12,20 @@ import {
 
 const CHANNEL_KEY = 'study114-board-channel-definitions-v1';
 const CHANNEL_LOG_KEY = 'study114-board-channel-logs-v1';
+const SECTION_GROUPS_KEY = 'study114-board-section-groups-v1';
+const SECTION_ACCESS_KEY = 'study114-board-section-access-v1';
 
 const BOARD_KEY_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const SECTION_OWNER_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** 우동공과 역할 — 영카트 mb_level 매트릭스 대신 사용 */
+export const CHANNEL_ROLE_OPTIONS = [
+  { id: 'guardian_student', label: '학부모' },
+  { id: 'study_room_owner', label: '공부방' },
+  { id: 'tutor', label: '과외쌤' },
+  { id: 'admin', label: '운영자' },
+];
 const RESERVED_STATIC_POLICY_PATHS = STATIC_POLICY_RESERVED_SLUGS.map((slug) => `#/policy/${slug}`);
 
 function nowStamp() {
@@ -130,9 +142,183 @@ export function getPresetOptions() {
   return Object.entries(BOARD_CREATE_PRESETS).map(([id, preset]) => ({ id, ...preset }));
 }
 
+/** @returns {Array<{ id: string, label: string, source: 'custom' }>} */
+export function listCustomSectionGroups() {
+  const rows = loadJson(SECTION_GROUPS_KEY, []);
+  return Array.isArray(rows) ? rows : [];
+}
+
+/**
+ * 영카트 게시판그룹 경량판 — sectionOwner 집계 + 커스텀 그룹.
+ * @returns {Array<{ id: string, label: string, channelCount: number, source: string }>}
+ */
+export function listSectionGroupSummary() {
+  const channels = listBoardChannels();
+  const presetOwners = new Set();
+  Object.values(BOARD_CREATE_PRESETS).forEach((preset) => {
+    (preset.sectionOwners || []).forEach((id) => presetOwners.add(id));
+  });
+  const custom = listCustomSectionGroups();
+  const customMap = new Map(custom.map((g) => [g.id, g]));
+  const used = new Set(channels.map((ch) => ch.sectionOwner).filter(Boolean));
+  const ids = new Set([...presetOwners, ...customMap.keys(), ...used]);
+
+  return [...ids]
+    .sort()
+    .map((id) => {
+      const channelCount = channels.filter((ch) => ch.sectionOwner === id).length;
+      const customRow = customMap.get(id);
+      let source = 'preset';
+      if (customRow) source = 'custom';
+      else if (!presetOwners.has(id)) source = 'orphan';
+      return {
+        id,
+        label: customRow?.label || id,
+        channelCount,
+        accessMemberCount: getSectionAccessMembers(id).length,
+        source,
+      };
+    });
+}
+
+/**
+ * @param {string} id
+ * @param {string} [label]
+ */
+export function addCustomSectionGroup(id, label = '') {
+  const key = String(id || '')
+    .trim()
+    .toLowerCase();
+  if (!key) throw new Error('그룹 ID가 필요합니다.');
+  if (!SECTION_OWNER_RE.test(key)) {
+    throw new Error('그룹 ID는 영문 소문자/숫자/하이픈만 사용할 수 있습니다.');
+  }
+  const rows = listCustomSectionGroups();
+  if (rows.some((g) => g.id === key)) {
+    throw new Error(`이미 있는 그룹입니다: ${key}`);
+  }
+  const next = [
+    ...rows,
+    { id: key, label: String(label || key).trim() || key, source: 'custom' },
+  ];
+  saveJson(SECTION_GROUPS_KEY, next);
+  appendOperationLog('section_group_create', key, label || key);
+  return clone(next[next.length - 1]);
+}
+
+/** @param {string} id */
+export function removeCustomSectionGroup(id) {
+  const key = String(id || '').trim();
+  const inUse = listBoardChannels().some((ch) => ch.sectionOwner === key);
+  if (inUse) {
+    throw new Error('채널이 연결된 그룹은 삭제할 수 없습니다. 채널 소속을 먼저 바꾸세요.');
+  }
+  const presetOwners = new Set();
+  Object.values(BOARD_CREATE_PRESETS).forEach((preset) => {
+    (preset.sectionOwners || []).forEach((oid) => presetOwners.add(oid));
+  });
+  if (presetOwners.has(key)) {
+    throw new Error('프리셋 기본 소속 그룹은 삭제할 수 없습니다.');
+  }
+  const next = listCustomSectionGroups().filter((g) => g.id !== key);
+  saveJson(SECTION_GROUPS_KEY, next);
+  appendOperationLog('section_group_delete', key, '');
+  return true;
+}
+
 export function getSectionOwnerOptions(presetId) {
   const preset = BOARD_CREATE_PRESETS[presetId] || BOARD_CREATE_PRESETS.notice;
-  return preset.sectionOwners;
+  const custom = listCustomSectionGroups().map((g) => g.id);
+  return [...new Set([...(preset.sectionOwners || []), ...custom])];
+}
+
+/** @param {string} sectionOwner @returns {string[]} */
+export function getSectionAccessMembers(sectionOwner) {
+  const map = loadJson(SECTION_ACCESS_KEY, {});
+  const rows = map && typeof map === 'object' ? map[sectionOwner] : null;
+  return Array.isArray(rows) ? rows.map(String) : [];
+}
+
+/**
+ * @param {string} sectionOwner
+ * @param {string} email
+ */
+export function addSectionAccessMember(sectionOwner, email) {
+  const owner = String(sectionOwner || '').trim();
+  const value = String(email || '')
+    .trim()
+    .toLowerCase();
+  if (!owner) throw new Error('그룹 ID가 필요합니다.');
+  if (!EMAIL_RE.test(value)) throw new Error('올바른 이메일 형식이 아닙니다.');
+  const map = { ...(loadJson(SECTION_ACCESS_KEY, {}) || {}) };
+  const current = Array.isArray(map[owner]) ? map[owner].map(String) : [];
+  if (current.includes(value)) throw new Error('이미 등록된 접근회원입니다.');
+  map[owner] = [...current, value];
+  saveJson(SECTION_ACCESS_KEY, map);
+  appendOperationLog('section_access_add', owner, value);
+  return clone(map[owner]);
+}
+
+/**
+ * @param {string} sectionOwner
+ * @param {string} email
+ */
+export function removeSectionAccessMember(sectionOwner, email) {
+  const owner = String(sectionOwner || '').trim();
+  const value = String(email || '')
+    .trim()
+    .toLowerCase();
+  const map = { ...(loadJson(SECTION_ACCESS_KEY, {}) || {}) };
+  const current = Array.isArray(map[owner]) ? map[owner].map(String) : [];
+  map[owner] = current.filter((e) => e !== value);
+  saveJson(SECTION_ACCESS_KEY, map);
+  appendOperationLog('section_access_remove', owner, value);
+  return clone(map[owner]);
+}
+
+/**
+ * 채널 설정 복제 (영카트 board_copy 경량판).
+ * @param {string} sourceKey
+ * @param {{ boardKey: string, menuLabel?: string, routeSlug?: string }} input
+ */
+export async function copyBoardChannel(sourceKey, input) {
+  const src = getBoardChannel(sourceKey);
+  if (!src) throw new Error('원본 채널을 찾을 수 없습니다.');
+  const boardKey = String(input.boardKey || '')
+    .trim()
+    .toLowerCase();
+  if (!boardKey) throw new Error('새 boardKey가 필요합니다.');
+  if (boardKey === src.boardKey) throw new Error('원본과 다른 boardKey를 입력하세요.');
+
+  const menuLabel = String(input.menuLabel || `${src.menuLabel} 복사`).trim();
+  let routeSlug = String(input.routeSlug || '').trim();
+  if (!routeSlug) {
+    const base = src.routeSlug || `#/${src.boardKey}`;
+    routeSlug = `${base}-copy`;
+  }
+
+  return saveBoardChannel(
+    {
+      presetId: src.presetId,
+      boardKey,
+      menuLabel,
+      routeSlug,
+      sectionOwner: src.sectionOwner,
+      visibility: src.visibility,
+      downloadPolicy: src.downloadPolicy,
+      allowedRoles: (src.allowedRoles || []).join(', '),
+      allowWrite: src.allowWrite,
+      allowComment: src.allowComment,
+      allowUpload: src.allowUpload,
+      requireReview: src.requireReview,
+      isGnuSeparated: src.isGnuSeparated,
+      status: src.status === 'archived' ? 'hidden' : src.status,
+    },
+    { mode: 'create' },
+  ).then((created) => {
+    appendOperationLog('channel_copy', boardKey, `from ${sourceKey}`);
+    return created;
+  });
 }
 
 export function getBoardKeyCandidates(presetId) {
@@ -194,8 +380,11 @@ export function validateBoardChannelInput(input, opts = {}) {
   }
   if (!input.menuLabel) errors.push('menuLabel이 필요합니다.');
   if (!input.sectionOwner) errors.push('소속 메뉴군(sectionOwner) 선택이 필요합니다.');
-  if (preset && input.sectionOwner && !preset.sectionOwners.includes(input.sectionOwner)) {
-    errors.push('선택한 프리셋에서 허용되지 않는 소속 메뉴군입니다.');
+  if (preset && input.sectionOwner) {
+    const allowed = getSectionOwnerOptions(input.presetId);
+    if (!allowed.includes(input.sectionOwner)) {
+      errors.push('선택한 프리셋에서 허용되지 않는 소속 메뉴군입니다. 그룹을 먼저 추가하세요.');
+    }
   }
   if (!routeSlug && boardKey !== 'showcase') errors.push('routeSlug가 필요합니다.');
   if (routeSlug && RESERVED_STATIC_POLICY_PATHS.includes(routeSlug)) {

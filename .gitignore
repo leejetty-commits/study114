@@ -35,3 +35,6 @@ Thumbs.db
 
 # Local MySQL data (native install)
 .mysql-data/
+
+# 영카트/그누보드 샘플 Lab (배포·백업 제외)
+/_sample/

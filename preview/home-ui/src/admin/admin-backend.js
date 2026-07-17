@@ -31,7 +31,7 @@ export function isAdminApiMode() {
 
 /** @type {any|null} */
 let commerceCache = null;
-/** @type {{ members: any[], total: number, filters: Record<string, string> }|null} */
+/** @type {{ members: any[], total: number, counts?: Record<string, number>, filters: Record<string, string> }|null} */
 let membersCache = null;
 /** @type {Record<number, any>} */
 let memberDetailCache = {};
@@ -188,6 +188,13 @@ export async function hydrateMembersCache(filters = {}) {
   membersCache = {
     members: (data.members ?? []).map((m) => ({ ...m })),
     total: Number(data.total || 0),
+    counts: {
+      all: Number(data.counts?.all ?? data.total ?? 0),
+      active: Number(data.counts?.active ?? 0),
+      pending: Number(data.counts?.pending ?? 0),
+      blocked: Number(data.counts?.blocked ?? 0),
+      withdrawn: Number(data.counts?.withdrawn ?? 0),
+    },
     filters: {
       q: String(filters.q || ''),
       status: String(filters.status || 'all'),
@@ -202,6 +209,7 @@ export function getMembersCache() {
     ? {
         members: membersCache.members.map((m) => ({ ...m })),
         total: membersCache.total,
+        counts: { ...membersCache.counts },
         filters: { ...membersCache.filters },
       }
     : null;
@@ -247,6 +255,19 @@ export async function apiApplyMemberAction(userId, action, opts = {}) {
   }
   if (data.log) prependLog(data.log);
   return data;
+}
+
+/**
+ * @param {number[]} userIds
+ * @param {'block'|'restore'} action
+ * @param {{ internalMemo?: string }} [opts]
+ */
+export async function apiApplyMemberBulkAction(userIds, action, opts = {}) {
+  return patchAdminMember({
+    user_ids: userIds,
+    action,
+    internal_memo: opts.internalMemo,
+  });
 }
 
 /**

@@ -24,33 +24,7 @@ final class AdminMemberRepository
     public function listMembers(array $filters = []): array
     {
         $limit = max(1, min(200, (int) ($filters['limit'] ?? 50)));
-        $where = ['1=1'];
-        $params = [];
-
-        $q = trim((string) ($filters['q'] ?? ''));
-        if ($q !== '') {
-            $where[] = '(u.email LIKE ? OR p.real_name LIKE ? OR CAST(u.id AS CHAR) = ?)';
-            $like = '%' . $q . '%';
-            $params[] = $like;
-            $params[] = $like;
-            $params[] = $q;
-        }
-
-        $status = trim((string) ($filters['status'] ?? ''));
-        if ($status !== '' && $status !== 'all') {
-            $where[] = 'u.status = ?';
-            $params[] = $status;
-        }
-
-        $roleType = trim((string) ($filters['role_type'] ?? ''));
-        if ($roleType !== '' && $roleType !== 'all') {
-            $where[] = 'EXISTS (
-                SELECT 1 FROM user_roles urf
-                WHERE urf.user_id = u.id AND urf.role_type = ? AND urf.status = ?
-            )';
-            $params[] = $roleType;
-            $params[] = 'active';
-        }
+        [$where, $params] = $this->buildListWhere($filters, true);
 
         $sql = 'SELECT u.id, u.email, u.status, u.email_verified_at, u.oauth_role_pending,
                        u.last_login_at, u.created_at, u.deleted_at,
@@ -92,6 +66,105 @@ final class AdminMemberRepository
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return is_array($rows) ? $rows : [];
+    }
+
+    /**
+     * 목록과 동일 조건의 총건수 (status 필터 포함).
+     *
+     * @param array{q?: string, status?: string, role_type?: string} $filters
+     */
+    public function countMembers(array $filters = []): int
+    {
+        [$where, $params] = $this->buildListWhere($filters, true);
+        $sql = 'SELECT COUNT(*) AS cnt
+                FROM users u
+                LEFT JOIN user_profiles p ON p.user_id = u.id
+                WHERE ' . implode(' AND ', $where);
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return (int) ($row['cnt'] ?? 0);
+    }
+
+    /**
+     * 상태별 집계 칩용. q·role_type만 반영하고 status 필터는 무시 (영카트 local_ov 패턴).
+     *
+     * @param array{q?: string, role_type?: string} $filters
+     * @return array{all: int, active: int, pending: int, blocked: int, withdrawn: int}
+     */
+    public function countByStatus(array $filters = []): array
+    {
+        [$where, $params] = $this->buildListWhere($filters, false);
+        $sql = 'SELECT u.status, COUNT(*) AS cnt
+                FROM users u
+                LEFT JOIN user_profiles p ON p.user_id = u.id
+                WHERE ' . implode(' AND ', $where) . '
+                GROUP BY u.status';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $out = [
+            'all' => 0,
+            'active' => 0,
+            'pending' => 0,
+            'blocked' => 0,
+            'withdrawn' => 0,
+        ];
+        if (!is_array($rows)) {
+            return $out;
+        }
+        foreach ($rows as $row) {
+            $status = (string) ($row['status'] ?? '');
+            $cnt = (int) ($row['cnt'] ?? 0);
+            $out['all'] += $cnt;
+            if (array_key_exists($status, $out)) {
+                $out[$status] = $cnt;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param array{q?: string, status?: string, role_type?: string} $filters
+     * @return array{0: list<string>, 1: list<mixed>}
+     */
+    private function buildListWhere(array $filters, bool $includeStatus): array
+    {
+        $where = ['1=1'];
+        $params = [];
+
+        $q = trim((string) ($filters['q'] ?? ''));
+        if ($q !== '') {
+            $where[] = '(u.email LIKE ? OR p.real_name LIKE ? OR p.phone LIKE ? OR CAST(u.id AS CHAR) = ?)';
+            $like = '%' . $q . '%';
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $q;
+        }
+
+        if ($includeStatus) {
+            $status = trim((string) ($filters['status'] ?? ''));
+            if ($status !== '' && $status !== 'all') {
+                $where[] = 'u.status = ?';
+                $params[] = $status;
+            }
+        }
+
+        $roleType = trim((string) ($filters['role_type'] ?? ''));
+        if ($roleType !== '' && $roleType !== 'all') {
+            $where[] = 'EXISTS (
+                SELECT 1 FROM user_roles urf
+                WHERE urf.user_id = u.id AND urf.role_type = ? AND urf.status = ?
+            )';
+            $params[] = $roleType;
+            $params[] = 'active';
+        }
+
+        return [$where, $params];
     }
 
     /** @return array<string, mixed>|null */

@@ -1,0 +1,21 @@
+# 영카트 Lab — 우동공과 API(8080)와 분리, 포트 8090
+# Usage (기존 MySQL과 같은 네트워크로 기동):
+#   docker compose -f docker/docker-compose.dev.yml -f docker/docker-compose.youngcart.yml up -d --build youngcart
+#
+# 브라우저: http://127.0.0.1:8090/
+# DB Host (설치 화면): mysql / DB명: youngcart_dev / prefix: g5_
+
+services:
+  youngcart:
+    build:
+      context: .
+      dockerfile: Dockerfile.youngcart
+    container_name: study114-youngcart-lab
+    restart: unless-stopped
+    ports:
+      - "8090:80"
+    volumes:
+      - ../_sample/yc5.6.30:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy

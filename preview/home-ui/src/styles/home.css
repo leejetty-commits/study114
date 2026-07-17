@@ -4528,6 +4528,106 @@ a.sup-term-chip:hover {
   margin-bottom: 0.75rem;
 }
 
+/* 영카트 local_ov 패턴 — 회원 상태 집계 칩 */
+.admin-ov {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0 0 0.75rem;
+}
+
+.admin-ov__chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 0.25rem;
+  background: #fff;
+  color: var(--gray-800);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.admin-ov__chip:hover {
+  border-color: var(--gray-500);
+  background: var(--gray-50, #f8fafc);
+}
+
+.admin-ov__chip.is-on {
+  border-color: var(--gray-800);
+  background: var(--gray-900, #0f172a);
+  color: #fff;
+}
+
+.admin-ov__txt {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.admin-ov__num {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 0.25rem;
+  background: var(--gray-50, #f8fafc);
+}
+
+.admin-bulk-bar__chk {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+
+.a28-section-groups {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.a28-section-access {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 0.25rem;
+  background: var(--gray-50, #f8fafc);
+}
+
+.a28-perm-matrix {
+  margin: 0.75rem 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 0.25rem;
+  background: #fff;
+}
+
+.a28-perm-matrix__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.sup-admin-table .td-chk {
+  width: 2rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
 .admin-actions {
   display: flex;
   flex-wrap: wrap;
