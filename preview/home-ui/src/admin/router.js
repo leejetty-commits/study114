@@ -10,6 +10,7 @@ const A28_PATHS = [
   '/admin/exposure',
   '/admin/commerce',
   '/admin/logs',
+  '/admin/settings',
   '/admin/permissions',
 ];
 
@@ -38,6 +39,7 @@ export function getAdminScreenId(path) {
     '/admin/exposure': 'A28-07a',
     '/admin/commerce': 'A28-07b',
     '/admin/logs': 'A28-08a',
+    '/admin/settings': 'A28-09',
     '/admin/permissions': 'A28-08b',
   };
   return map[normalizeAdminPath(path) || '/admin'] || 'A28-01';
@@ -55,6 +57,7 @@ export function getAdminMenuId(path) {
     '/admin/exposure': 'exposure',
     '/admin/commerce': 'commerce',
     '/admin/logs': 'logs',
+    '/admin/settings': 'settings',
     '/admin/permissions': 'permissions',
   };
   return map[normalizeAdminPath(path) || '/admin'] || 'hub';

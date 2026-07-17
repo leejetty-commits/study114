@@ -4622,6 +4622,66 @@ a.sup-term-chip:hover {
   margin-bottom: 0.5rem;
 }
 
+.a28-settings-anchor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
+}
+
+.a28-settings-anchor a {
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+  text-decoration: none;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 0.25rem;
+}
+
+.a28-settings-anchor a:hover {
+  border-color: var(--gray-600);
+}
+
+.a28-settings-section {
+  margin: 0 0 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.a28-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.35rem 0;
+  font-size: var(--text-sm);
+}
+
+.a28-join-matrix-wrap {
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+
+.a28-join-matrix th,
+.a28-join-matrix td {
+  font-size: var(--text-xs);
+  vertical-align: top;
+}
+
+.a28-join-cell {
+  white-space: nowrap;
+}
+
+.a28-join-cell label {
+  display: block;
+  margin: 0.15rem 0;
+}
+
 .sup-admin-table .td-chk {
   width: 2rem;
   text-align: center;

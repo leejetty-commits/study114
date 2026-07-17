@@ -22,6 +22,7 @@ export const A28_NAV = [
   { id: 'reports', label: '신고 처리', path: '/admin/reports', screenId: 'A28-04' },
   { id: 'tickets', label: '문의 큐', path: '/admin/tickets', screenId: 'A28-04b' },
   { id: 'notices', label: '공지·가이드', path: '/admin/notices', screenId: 'A28-05' },
+  { id: 'settings', label: '환경설정', path: '/admin/settings', screenId: 'A28-09', masterOnly: true },
   { id: 'logs', label: '운영 로그', path: '/admin/logs', screenId: 'A28-08a' },
   { id: 'permissions', label: '권한·계정', path: '/admin/permissions', screenId: 'A28-08b', masterOnly: true },
 ];
@@ -99,6 +100,12 @@ export const A28_ACTION_LABELS = {
   account_block: '이용 제한',
   account_restore: '복구',
   account_withdraw: '탈퇴 처리',
+  site_settings_save: '환경설정 저장',
+  site_settings_reset: '환경설정 seed 복원',
+  popup_create: '팝업 생성',
+  popup_update: '팝업 수정',
+  popup_delete: '팝업 삭제',
+  legal_save: '법적 문서 저장',
   channel_create: '채널 생성',
   channel_update: '채널 수정',
   channel_archive: '채널 보관',
@@ -124,6 +131,7 @@ export const A28_LOG_TARGET_TYPE_LABELS = {
   ticket_pack: '횟수권 팩',
   board_channel: '게시판 채널',
   right_rail_slot: '우측 슬롯',
+  site_settings: '환경설정',
 };
 
 /** A28-06 큐 조치 (심사·승인 용어 금지) */

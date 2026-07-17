@@ -86,6 +86,20 @@ import {
   A28_MEMBER_ROLE_LABELS,
   A28_MEMBER_TIER_LABELS,
 } from './a28-copy.js';
+import {
+  getSiteSettings,
+  saveSiteSettings,
+  listPopups,
+  savePopup,
+  deletePopup,
+  getLegalDocs,
+  saveLegalDoc,
+  resetSiteSettingsSeed,
+  JOIN_FIELD_OPTIONS,
+  JOIN_ROLES,
+  POPUP_SURFACES,
+  listSiteSettingsLogs,
+} from './site-settings-store.js';
 import { getAdminScreenId } from './router.js';
 
 /** @type {{ q: string, status: string, role_type: string }} */
@@ -1104,7 +1118,7 @@ function countMemberSeed(seed) {
 }
 
 function renderPermissions() {
-  const masterRows = MASTER_EMAILS.map((e) => `<tr><td>마스터</td><td><code>${esc(e)}</code></td><td>전체 메뉴 · 강한 보정 · 권한 설정</td></tr>`).join('');
+  const masterRows = MASTER_EMAILS.map((e) => `<tr><td>마스터</td><td><code>${esc(e)}</code></td><td>전체 메뉴 · 강한 보정 · 권한 · 환경설정</td></tr>`).join('');
   const subRows = SUB_MASTER_EMAILS.map((e) => `<tr><td>부마스터</td><td><code>${esc(e)}</code></td><td>운영 조회 · 숨김/복구 · 로그 열람</td></tr>`).join('');
   const blocked = SUB_MASTER_BLOCKED_MENUS.map((m) => `<li><code>${esc(m)}</code></li>`).join('');
 
@@ -1112,11 +1126,12 @@ function renderPermissions() {
     '권한·계정 (마스터 전용)',
     'A28-08b',
     `${renderRedLineBanner()}
-     <p class="a28-hint">1차: 계정 목록·메뉴 차단 정책 조회만 · 권한 부여/회수 UI는 후속</p>
+     <p class="a28-hint">영카트 관리권한설정 대응 · 1차: 계정·메뉴 차단 조회 · 부여/회수 UI 후속</p>
      <table class="sup-admin-table"><thead><tr><th>등급</th><th>이메일</th><th>범위</th></tr></thead><tbody>${masterRows}${subRows}</tbody></table>
      <h3 class="admin-section-title">부마스터 접근 금지</h3>
      <ul class="a28-lists">${blocked}</ul>
-     <p class="a28-hint">운영값(가격·슬롯·회전) 편집 · 결제 강제변경 · 로그 삭제/수정 · 관리자 권한 변경 금지</p>`,
+     <p class="a28-hint">환경설정·권한·시스템은 마스터만 · 가격/결제 강제변경 · 로그 삭제 금지</p>
+     <p class="a28-hint"><a href="#/admin/settings">→ 환경설정 (A28-09)</a></p>`,
   );
 }
 
@@ -1167,6 +1182,162 @@ function renderLogs() {
   );
 }
 
+function renderSettings() {
+  const s = getSiteSettings();
+  const popups = listPopups();
+  const legal = getLegalDocs();
+  const settingsLogs = listSiteSettingsLogs().slice(0, 8);
+
+  const joinHead = JOIN_FIELD_OPTIONS.map((f) => `<th>${esc(f.label)}</th>`).join('');
+  const joinRows = JOIN_ROLES.map((role) => {
+    const cells = JOIN_FIELD_OPTIONS.map((field) => {
+      const cell = s.joinPolicy?.[role.id]?.[field.id] || { show: false, emphasize: false };
+      return `<td class="a28-join-cell">
+        <label title="표시"><input type="checkbox" data-join-show="${esc(role.id)}:${esc(field.id)}"${checked(cell.show)} /> 표시</label>
+        <label title="강조"><input type="checkbox" data-join-emph="${esc(role.id)}:${esc(field.id)}"${checked(cell.emphasize)} /> 강조</label>
+      </td>`;
+    }).join('');
+    return `<tr><th scope="row">${esc(role.label)}</th>${cells}</tr>`;
+  }).join('');
+
+  const popupRows = popups
+    .map(
+      (p) => `<tr>
+        <td>${esc(p.title)}</td>
+        <td>${esc(POPUP_SURFACES.find((x) => x.id === p.surface)?.label || p.surface)}</td>
+        <td>${p.enabled ? 'ON' : 'OFF'}</td>
+        <td>${esc(p.startAt || '—')} ~ ${esc(p.endAt || '—')}</td>
+        <td>${p.dismissHours}h</td>
+        <td class="sup-admin-actions">
+          <button type="button" class="btn btn--secondary btn--sm" data-popup-edit="${esc(p.id)}">수정</button>
+          <button type="button" class="btn btn--secondary btn--sm" data-popup-delete="${esc(p.id)}">삭제</button>
+        </td>
+      </tr>`,
+    )
+    .join('');
+
+  const surfaceOpts = POPUP_SURFACES.map((x) => `<option value="${esc(x.id)}">${esc(x.label)}</option>`).join('');
+  const logRows = settingsLogs
+    .map(
+      (l) =>
+        `<tr><td>${esc(A28_ACTION_LABELS[l.action] || l.action)}</td><td><code>${esc(l.target)}</code></td><td>${esc(l.at)}</td></tr>`,
+    )
+    .join('');
+
+  return renderPanel(
+    '환경설정',
+    'A28-09',
+    `${renderRedLineBanner()}
+     <p class="a28-hint">영카트 기본환경·팝업·내용관리·알림 토글의 운영 편의만 이식 · 본인확인 벤더·PG·SMS·테마·파일일괄삭제 제외 · 마스터 전용</p>
+     <nav class="a28-settings-anchor" aria-label="설정 섹션">
+       <a href="#anc_st_basic">사이트</a>
+       <a href="#anc_st_join">가입·등록</a>
+       <a href="#anc_st_notify">운영 알림</a>
+       <a href="#anc_st_popup">예약 팝업</a>
+       <a href="#anc_st_legal">약관·개인정보</a>
+     </nav>
+
+     <section id="anc_st_basic" class="a28-settings-section">
+       <h3 class="admin-section-title">사이트 기본</h3>
+       <form class="sup-admin-form" data-settings-basic>
+         <label class="sup-field"><span>서비스 표시명</span><input name="siteName" value="${esc(s.siteName)}" required /></label>
+         <label class="sup-field"><span>운영 이메일</span><input name="operatorEmail" type="email" value="${esc(s.operatorEmail)}" /></label>
+         <label class="sup-field"><span>운영 전화</span><input name="operatorPhone" value="${esc(s.operatorPhone)}" placeholder="010-0000-0000" /></label>
+         <label class="sup-field"><span>상담 가능 시간</span><input name="supportHours" value="${esc(s.supportHours)}" /></label>
+         <label class="a28-check"><input type="checkbox" name="maintenanceEnabled"${checked(s.maintenanceEnabled)} /> 점검 모드</label>
+         <label class="sup-field"><span>점검 안내 문구</span><textarea name="maintenanceMessage" rows="2">${esc(s.maintenanceMessage)}</textarea></label>
+         <label class="sup-field"><span>점검 종료 예정</span><input name="maintenanceUntil" type="datetime-local" value="${esc(String(s.maintenanceUntil || '').replace(' ', 'T').slice(0, 16))}" /></label>
+         <label class="a28-check"><input type="checkbox" name="guestBannerEnabled"${checked(s.guestBannerEnabled)} /> 게스트 안내 배너</label>
+         <label class="sup-field"><span>배너 문구</span><input name="guestBannerText" value="${esc(s.guestBannerText)}" /></label>
+         <button type="submit" class="btn btn--primary btn--sm">사이트 설정 저장</button>
+       </form>
+     </section>
+
+     <section id="anc_st_join" class="a28-settings-section">
+       <h3 class="admin-section-title">가입·등록 정책</h3>
+       <p class="a28-hint">SSOT 공통 가입 필드는 유지 · 역할별 안내 표시/강조와 등록 창구 on/off (승인 큐 아님)</p>
+       <form class="sup-admin-form" data-settings-join>
+         <div class="a28-checkbox-grid">
+           <label><input type="checkbox" name="signupOpen"${checked(s.signupOpen)} /> 회원가입 접수</label>
+           <label><input type="checkbox" name="studyRoomRegisterOpen"${checked(s.studyRoomRegisterOpen)} /> 공부방 등록 접수</label>
+           <label><input type="checkbox" name="tutorRegisterOpen"${checked(s.tutorRegisterOpen)} /> 과외쌤 등록 접수</label>
+         </div>
+         <label class="sup-field"><span>가입 차단 이메일/도메인 (줄바꿈)</span><textarea name="bannedEmails" rows="3" placeholder="spam@example.com">${esc(s.bannedEmails)}</textarea></label>
+         <label class="sup-field"><span>금지어 (쉼표)</span><input name="bannedWords" value="${esc(s.bannedWords)}" placeholder="욕설,광고성문구" /></label>
+         <div class="a28-join-matrix-wrap">
+           <table class="sup-admin-table a28-join-matrix">
+             <thead><tr><th>역할 \\ 항목</th>${joinHead}</tr></thead>
+             <tbody>${joinRows}</tbody>
+           </table>
+         </div>
+         <button type="submit" class="btn btn--primary btn--sm">가입·등록 정책 저장</button>
+       </form>
+     </section>
+
+     <section id="anc_st_notify" class="a28-settings-section">
+       <h3 class="admin-section-title">운영 알림</h3>
+       <p class="a28-hint">SMTP/벤더 UI 없이 이벤트 on/off만</p>
+       <form class="sup-admin-form" data-settings-notify>
+         <div class="a28-checkbox-grid">
+           <label><input type="checkbox" name="notifyOnReport"${checked(s.notifyOnReport)} /> 새 신고</label>
+           <label><input type="checkbox" name="notifyOnTicket"${checked(s.notifyOnTicket)} /> 새 문의</label>
+           <label><input type="checkbox" name="notifyOnNewProvider"${checked(s.notifyOnNewProvider)} /> 새 공부방·과외 등록</label>
+         </div>
+         <label class="sup-field"><span>수신 이메일 (쉼표)</span><input name="notifyEmails" value="${esc(s.notifyEmails)}" /></label>
+         <button type="submit" class="btn btn--primary btn--sm">알림 설정 저장</button>
+       </form>
+     </section>
+
+     <section id="anc_st_popup" class="a28-settings-section">
+       <h3 class="admin-section-title">예약 팝업·배너</h3>
+       <p class="a28-hint">영카트 팝업레이어 대응 · 기간·노출면·N시간 다시 안 보기</p>
+       <table class="sup-admin-table">
+         <thead><tr><th>제목</th><th>노출</th><th>상태</th><th>기간</th><th>재표시 억제</th><th></th></tr></thead>
+         <tbody>${popupRows || '<tr><td colspan="6" class="sup-empty">팝업 없음</td></tr>'}</tbody>
+       </table>
+       <form class="sup-admin-form" data-popup-form>
+         <h4 class="sup-admin-form__title">팝업 작성 · 수정</h4>
+         <input type="hidden" name="id" value="" />
+         <label class="sup-field"><span>제목</span><input name="title" required /></label>
+         <label class="sup-field"><span>본문</span><textarea name="body" rows="3" required></textarea></label>
+         <label class="sup-field"><span>노출 면</span><select name="surface">${surfaceOpts}</select></label>
+         <label class="sup-field"><span>시작</span><input name="startAt" type="datetime-local" /></label>
+         <label class="sup-field"><span>종료</span><input name="endAt" type="datetime-local" /></label>
+         <label class="sup-field"><span>다시 안 보기 (시간)</span><input name="dismissHours" type="number" min="0" value="24" /></label>
+         <label class="a28-check"><input type="checkbox" name="enabled" /> 사용</label>
+         <div class="sup-admin-form__actions">
+           <button type="submit" class="btn btn--primary btn--sm">팝업 저장</button>
+           <button type="button" class="btn btn--secondary btn--sm" data-popup-reset>새 팝업</button>
+         </div>
+       </form>
+     </section>
+
+     <section id="anc_st_legal" class="a28-settings-section">
+       <h3 class="admin-section-title">약관 · 개인정보</h3>
+       <p class="a28-hint">영카트 내용관리 대응 · FAQ/안전가이드는 공지·가이드 메뉴</p>
+       <form class="sup-admin-form" data-legal-form="terms">
+         <h4 class="sup-admin-form__title">${esc(legal.terms.title)} <small>갱신 ${esc(legal.terms.updatedAt)}</small></h4>
+         <label class="sup-field"><span>제목</span><input name="title" value="${esc(legal.terms.title)}" required /></label>
+         <label class="sup-field"><span>본문</span><textarea name="body" rows="6" required>${esc(legal.terms.body)}</textarea></label>
+         <button type="submit" class="btn btn--primary btn--sm">이용약관 저장</button>
+       </form>
+       <form class="sup-admin-form" data-legal-form="privacy">
+         <h4 class="sup-admin-form__title">${esc(legal.privacy.title)} <small>갱신 ${esc(legal.privacy.updatedAt)}</small></h4>
+         <label class="sup-field"><span>제목</span><input name="title" value="${esc(legal.privacy.title)}" required /></label>
+         <label class="sup-field"><span>본문</span><textarea name="body" rows="6" required>${esc(legal.privacy.body)}</textarea></label>
+         <button type="submit" class="btn btn--primary btn--sm">개인정보처리방침 저장</button>
+       </form>
+     </section>
+
+     <section class="a28-settings-section">
+       <h3 class="admin-section-title">최근 설정 로그</h3>
+       <table class="sup-admin-table"><thead><tr><th>조치</th><th>대상</th><th>시각</th></tr></thead>
+         <tbody>${logRows || '<tr><td colspan="3" class="sup-empty">로그 없음</td></tr>'}</tbody></table>
+       <button type="button" class="btn btn--secondary btn--sm" data-settings-reset-seed>환경설정 seed 복원</button>
+     </section>`,
+  );
+}
+
 /** @param {string} path */
 export function renderA28Screen(path) {
   let body = renderHub();
@@ -1178,6 +1349,7 @@ export function renderA28Screen(path) {
   else if (path === '/admin/submission-docs') body = renderSubmissionDocs();
   else if (path === '/admin/exposure') body = renderExposure();
   else if (path === '/admin/logs') body = renderLogs();
+  else if (path === '/admin/settings') body = renderSettings();
   else if (path === '/admin/permissions') body = renderPermissions();
   return body;
 }
@@ -1966,5 +2138,149 @@ export function bindA28ScreenEvents(root, path, rerender) {
       });
     });
   }
+
+  if (path === '/admin/settings') {
+    const toLocal = (v) => String(v || '').replace(' ', 'T').slice(0, 16);
+
+    root.querySelector('[data-settings-basic]')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      if (!(form instanceof HTMLFormElement)) return;
+      const fd = new FormData(form);
+      saveSiteSettings({
+        siteName: String(fd.get('siteName') || ''),
+        operatorEmail: String(fd.get('operatorEmail') || ''),
+        operatorPhone: String(fd.get('operatorPhone') || ''),
+        supportHours: String(fd.get('supportHours') || ''),
+        maintenanceEnabled: fd.get('maintenanceEnabled') === 'on',
+        maintenanceMessage: String(fd.get('maintenanceMessage') || ''),
+        maintenanceUntil: String(fd.get('maintenanceUntil') || '').replace('T', ' '),
+        guestBannerEnabled: fd.get('guestBannerEnabled') === 'on',
+        guestBannerText: String(fd.get('guestBannerText') || ''),
+      });
+      rerender();
+      window.alert('사이트 설정을 저장했습니다.');
+    });
+
+    root.querySelector('[data-settings-join]')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      if (!(form instanceof HTMLFormElement)) return;
+      const fd = new FormData(form);
+      const current = getSiteSettings();
+      const joinPolicy = cloneJoinPolicy(current.joinPolicy);
+      root.querySelectorAll('[data-join-show]').forEach((el) => {
+        if (!(el instanceof HTMLInputElement)) return;
+        const [role, field] = String(el.getAttribute('data-join-show') || '').split(':');
+        if (joinPolicy[role]?.[field]) joinPolicy[role][field].show = el.checked;
+      });
+      root.querySelectorAll('[data-join-emph]').forEach((el) => {
+        if (!(el instanceof HTMLInputElement)) return;
+        const [role, field] = String(el.getAttribute('data-join-emph') || '').split(':');
+        if (joinPolicy[role]?.[field]) joinPolicy[role][field].emphasize = el.checked;
+      });
+      saveSiteSettings({
+        signupOpen: fd.get('signupOpen') === 'on',
+        studyRoomRegisterOpen: fd.get('studyRoomRegisterOpen') === 'on',
+        tutorRegisterOpen: fd.get('tutorRegisterOpen') === 'on',
+        bannedEmails: String(fd.get('bannedEmails') || ''),
+        bannedWords: String(fd.get('bannedWords') || ''),
+        joinPolicy,
+      });
+      rerender();
+      window.alert('가입·등록 정책을 저장했습니다.');
+    });
+
+    root.querySelector('[data-settings-notify]')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      if (!(form instanceof HTMLFormElement)) return;
+      const fd = new FormData(form);
+      saveSiteSettings({
+        notifyOnReport: fd.get('notifyOnReport') === 'on',
+        notifyOnTicket: fd.get('notifyOnTicket') === 'on',
+        notifyOnNewProvider: fd.get('notifyOnNewProvider') === 'on',
+        notifyEmails: String(fd.get('notifyEmails') || ''),
+      });
+      rerender();
+      window.alert('알림 설정을 저장했습니다.');
+    });
+
+    const popupForm = root.querySelector('[data-popup-form]');
+    root.querySelectorAll('[data-popup-edit]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-popup-edit');
+        const row = listPopups().find((p) => p.id === id);
+        if (!row || !(popupForm instanceof HTMLFormElement)) return;
+        popupForm.querySelector('[name="id"]').value = row.id;
+        popupForm.querySelector('[name="title"]').value = row.title;
+        popupForm.querySelector('[name="body"]').value = row.body;
+        popupForm.querySelector('[name="surface"]').value = row.surface;
+        popupForm.querySelector('[name="startAt"]').value = toLocal(row.startAt);
+        popupForm.querySelector('[name="endAt"]').value = toLocal(row.endAt);
+        popupForm.querySelector('[name="dismissHours"]').value = String(row.dismissHours ?? 24);
+        popupForm.querySelector('[name="enabled"]').checked = Boolean(row.enabled);
+        popupForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+    root.querySelectorAll('[data-popup-delete]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-popup-delete');
+        if (!id || !window.confirm('이 팝업을 삭제할까요?')) return;
+        deletePopup(id);
+        rerender();
+      });
+    });
+    root.querySelector('[data-popup-reset]')?.addEventListener('click', () => {
+      if (!(popupForm instanceof HTMLFormElement)) return;
+      popupForm.reset();
+      popupForm.querySelector('[name="id"]').value = '';
+      popupForm.querySelector('[name="dismissHours"]').value = '24';
+    });
+    popupForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!(popupForm instanceof HTMLFormElement)) return;
+      const fd = new FormData(popupForm);
+      savePopup({
+        id: String(fd.get('id') || ''),
+        title: String(fd.get('title') || ''),
+        body: String(fd.get('body') || ''),
+        surface: String(fd.get('surface') || 'guest_home'),
+        startAt: String(fd.get('startAt') || '').replace('T', ' '),
+        endAt: String(fd.get('endAt') || '').replace('T', ' '),
+        dismissHours: Number(fd.get('dismissHours') || 24),
+        enabled: fd.get('enabled') === 'on',
+      });
+      rerender();
+    });
+
+    root.querySelectorAll('[data-legal-form]').forEach((form) => {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!(form instanceof HTMLFormElement)) return;
+        const key = form.getAttribute('data-legal-form');
+        if (key !== 'terms' && key !== 'privacy') return;
+        const fd = new FormData(form);
+        saveLegalDoc(key, {
+          title: String(fd.get('title') || ''),
+          body: String(fd.get('body') || ''),
+        });
+        rerender();
+        window.alert('문서를 저장했습니다.');
+      });
+    });
+
+    root.querySelector('[data-settings-reset-seed]')?.addEventListener('click', () => {
+      if (!window.confirm('환경설정을 seed로 되돌릴까요?')) return;
+      resetSiteSettingsSeed();
+      rerender();
+    });
+  }
 }
+
+/** @param {Record<string, any>} policy */
+function cloneJoinPolicy(policy) {
+  return JSON.parse(JSON.stringify(policy || {}));
+}
+
 export { getAdminScreenId };
