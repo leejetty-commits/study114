@@ -69,7 +69,7 @@ const GNB_ALL_SHOW = {
  * 역할별 GNB — show | hide (limited/muted 사용 금지 · 비해당은 렌더 단계에서 숨김)
  *
  * - guest / admin: 전체 활성 (운영자는 점검용으로 전부 봄)
- * - parent(guardian_student): 학생찾기 **열람 허용**(29#3) · 공급자 등록·유료상품 숨김
+ * - parent(guardian_student·UI「학생」): 학생찾기 **열람 허용**(29#3·시장비교) · 공급자 등록·유료상품 숨김
  * - study_room: 과외쌤찾기·과외쌤상세등록 숨김
  * - tutor: 공부방찾기·공부방상세등록 숨김
  *

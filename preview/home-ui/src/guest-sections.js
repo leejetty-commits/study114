@@ -1,6 +1,7 @@
 import {
   AUTH_UI_BASE,
   GUEST_DEMO_REGION,
+  GUEST_DEMO_REGIONS_BY_AXIS,
   GUEST_REGION_STATS,
 } from './data.js';
 import { SEARCH_UI_URL } from './nav-config.js';
@@ -91,11 +92,12 @@ function renderTutorPrimePick() {
   const pool = EXPOSURE_TUTORS;
   const guestOpts = { guest: true };
   const occupied = getPrimeOccupied(pool);
+  const tutorRegion = GUEST_DEMO_REGIONS_BY_AXIS.tutor.full;
   return `
     <div class="content-section content-section--blue">
-      ${renderSectionHeading({ ...SECTION_HEADINGS.primeTutor, id: 'guest-prime-tutor' })}
+      ${renderSectionHeading({ ...SECTION_HEADINGS.primeTutor, id: 'guest-prime-tutor', desc: tutorRegion })}
       ${renderPrimeSlotGrid('tutor', occupied, guestOpts)}
-      ${renderPickPaginatedBlock('tutor', 'pick_tutor', SECTION_HEADINGS.pickTutor, pool, {
+      ${renderPickPaginatedBlock('tutor', 'pick_tutor', { ...SECTION_HEADINGS.pickTutor, desc: tutorRegion }, pool, {
         ...guestOpts,
         primeOccupied: occupied,
       })}
@@ -118,15 +120,18 @@ export function renderGuestExposureBoxes() {
   return `${renderStudyRoomPrimePick()}${renderTutorPrimePick()}`;
 }
 
-/** 박스 아래: 우동공과 공부방 → 과외쌤 → 학생(후반) */
+/** 박스 아래: 우동공과 공부방 → 과외쌤 → 학생(후반) — 축별 기본 지역 라벨 */
 export function renderGuestBrowseLists() {
+  const roomLabel = GUEST_DEMO_REGIONS_BY_AXIS.room.full;
+  const tutorLabel = GUEST_DEMO_REGIONS_BY_AXIS.tutor.full;
+  const studentLabel = `${GUEST_DEMO_REGIONS_BY_AXIS.student.full} · 과외 희망`;
   return `
     <section class="guest-browse-lists" aria-label="우동공과 리스트">
-      ${renderStudyRoomBasicList()}
-      ${renderTutorBasicList()}
+      ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, desc: roomLabel }, EXPOSURE_STUDY_ROOMS, { guest: true })}
+      ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, desc: tutorLabel }, EXPOSURE_TUTORS, { guest: true })}
     </section>
     <section class="guest-browse-lists guest-browse-lists--students" aria-label="학생 학습 의뢰">
-      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title' }, EXPOSURE_STUDENTS, { guest: true })}
+      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', desc: studentLabel }, EXPOSURE_STUDENTS, { guest: true })}
     </section>
   `;
 }

@@ -5,13 +5,22 @@
 import { OPTION_LABELS } from './search-enums.js';
 import { MOCK_REGIONS, MOCK_SUBJECTS, SEARCH_TABS, getTutorRegionLabel, MOCK_TUTOR_REGIONS } from './search-schema.js';
 export { getTutorRegionLabel, MOCK_TUTOR_REGIONS } from './search-schema.js';
-import { getRegionFeed } from './search-region-feed.js';
+import { getRegionFeed, getStudentDemandForRegion } from './search-region-feed.js';
 import { filterToProviderSelf } from './search-provider-self.js';
 import { isProviderSelfPreviewMode } from './search-role-access.js';
 import { renderSearchMapBlock, bindSearchMapPinLinks } from './search-map.js';
 import { renderSearchTierResults } from './search-tier-render.js';
 import { collectFiltersFromForm, searchApi } from './search-api.js';
 import { mapSearchResultsToExposure } from './search-exposure-mapper.js';
+import { renderBrowseList } from '@home-ui/exposure-render.js';
+import { SECTION_HEADINGS, renderSectionHeading } from '@home-ui/section-headings.js';
+import {
+  DEFAULT_STUDENT_HOPE_TYPE,
+  renderHopeTypeGate,
+  resolveHopeTypeFromQuery,
+  writeStoredHopeType,
+} from './student-hope-type.js';
+import { parseHashQuery } from '../../shared/preview-links.js';
 
 /**
  * @typedef {object} FindSurfaceState
@@ -29,6 +38,8 @@ import { mapSearchResultsToExposure } from './search-exposure-mapper.js';
  * @property {object[]} [searchRows]
  * @property {object[]} [searchItems]
  * @property {boolean} [homeSelf] — 홈 자기 노출 탭 (과외쌤 우리동네 과외쌤 등)
+ * @property {'tutor'|'study_room'|null} [studentHopeType] — 학생찾기 희망 유형
+ * @property {boolean} [hopeTypeResolved] — 희망 유형 선택/복원 완료
  */
 
 /**
@@ -47,6 +58,9 @@ function regionFeedContext(tab, state, role) {
   const ctx = { role, homeSelf: state.homeSelf === true };
   if (tab === 'tutor') {
     ctx.tutorRegionIndex = resolveTutorRegionIndex(state);
+  }
+  if (tab === 'student' && (state.studentHopeType === 'tutor' || state.studentHopeType === 'study_room')) {
+    ctx.hopeType = state.studentHopeType;
   }
   return ctx;
 }
@@ -69,11 +83,72 @@ function resultDebugAttrs(state) {
   return `data-result-source="${esc(resolveResultSource(state))}" data-result-items="activeResultItems"`;
 }
 
-/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} role */
-function resolveActiveRegionLabel(tab, state, role) {
+/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} [_role] */
+function resolveActiveRegionLabel(tab, state, _role) {
+  if (state.searchExecuted && state.activeRegionLabel) return state.activeRegionLabel;
   if (tab === 'tutor') return getTutorRegionLabel(resolveTutorRegionIndex(state));
   const regionKey = tab === 'room' ? 'room' : 'student';
   return MOCK_REGIONS[regionKey];
+}
+
+/**
+ * @param {import('./state.js').SearchTab} tab
+ * @param {Record<string, unknown>} filters
+ * @param {FindSurfaceState} state
+ */
+function regionLabelFromFilters(tab, filters, state) {
+  if (tab === 'tutor') {
+    const fromFilter = String(filters.tutor_region_id || filters.tutor_region_label || '').trim();
+    return fromFilter || getTutorRegionLabel(resolveTutorRegionIndex(state));
+  }
+  if (tab === 'room') {
+    const fromFilter = String(filters.region_label || filters.region_id || '').trim();
+    return fromFilter || MOCK_REGIONS.room;
+  }
+  const fromFilter = String(filters.preferred_region || filters.region_label || '').trim();
+  return fromFilter || MOCK_REGIONS.student;
+}
+
+/**
+ * @param {string} regionLabel
+ * @param {{ guest?: boolean, viewerRole?: string, hopeType?: 'tutor'|'study_room'|null }} opts
+ */
+function renderStudentDemandBlock(regionLabel, opts = {}) {
+  const hopeType = opts.hopeType ?? DEFAULT_STUDENT_HOPE_TYPE;
+  const items = getStudentDemandForRegion(regionLabel, { hopeType, limit: 6 });
+  if (!items.length) {
+    return `
+      <section class="search-student-demand" aria-label="해당 지역 학생 수요">
+        ${renderSectionHeading({ ...SECTION_HEADINGS.students, desc: `${esc(regionLabel)} · 학생 수요` })}
+        <p class="search-results__hint">이 지역에 표시할 학생 수요가 없습니다.</p>
+      </section>`;
+  }
+  return `
+    <section class="search-student-demand" aria-label="해당 지역 학생 수요">
+      ${renderSectionHeading({ ...SECTION_HEADINGS.students, desc: `${esc(regionLabel)} · 학생 수요` })}
+      <p class="search-results__hint">블라인드 · 시장 수요 참고 · 학생 간 쪽지 불가</p>
+      ${renderBrowseList('student', items, {
+        guest: opts.guest,
+        viewerRole: opts.viewerRole,
+        sourceRoute: 'search',
+      })}
+    </section>`;
+}
+
+/** @param {FindSurfaceState} state */
+export function ensureStudentHopeType(state) {
+  if (state.hopeTypeResolved && (state.studentHopeType === 'tutor' || state.studentHopeType === 'study_room')) {
+    return state.studentHopeType;
+  }
+  const fromQuery = resolveHopeTypeFromQuery(parseHashQuery());
+  if (fromQuery) {
+    state.studentHopeType = fromQuery;
+    state.hopeTypeResolved = true;
+    return fromQuery;
+  }
+  state.studentHopeType = null;
+  state.hopeTypeResolved = false;
+  return null;
 }
 
 /** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} role */
@@ -292,6 +367,22 @@ export function renderCompactRegionBar(tab, state, options = {}) {
   const role = options.role || 'parent';
 
   if (tab === 'tutor') {
+    const guestSingle = role === 'guest';
+    if (guestSingle) {
+      const label = MOCK_REGIONS.tutor;
+      if (variant === 'home') {
+        return `
+          <div class="parent-home-region parent-home-region--tutor" aria-label="활동 지역">
+            <span class="parent-home-region__badge">활동 지역</span>
+            <strong class="parent-home-region__label">${esc(label)}</strong>
+          </div>`;
+      }
+      return `
+        <div class="search-region-auto search-region-auto--compact search-region-auto--tutor">
+          <span class="search-region-auto__badge">기본 지역</span>
+          <strong>${esc(label)}</strong>
+        </div>`;
+    }
     if (variant === 'home') {
       const badge = role === 'tutor' ? '활동 지역' : '희망 지역';
       return `
@@ -310,7 +401,7 @@ export function renderCompactRegionBar(tab, state, options = {}) {
   const regionKey = tab === 'room' ? 'room' : 'student';
   const regionLabel = MOCK_REGIONS[regionKey];
   if (variant === 'home') {
-    const badge = tab === 'room' ? '우리동네' : '활동 지역';
+    const badge = tab === 'room' ? '우리동네' : '탐색 지역';
     const changeBtn =
       role === 'parent'
         ? `<button type="button" class="btn btn--secondary btn--sm" data-action="change-region">지역 변경</button>`
@@ -324,7 +415,7 @@ export function renderCompactRegionBar(tab, state, options = {}) {
   }
   return `
     <div class="search-region-auto search-region-auto--compact">
-      <span class="search-region-auto__badge">내 지역</span>
+      <span class="search-region-auto__badge">기본 지역</span>
       <strong>${esc(regionLabel)}</strong>
       <button type="button" class="btn btn--secondary btn--sm" data-action="change-region">변경</button>
     </div>`;
@@ -432,19 +523,35 @@ export function renderFindFilterBar(tab, state) {
  * @param {import('./state.js').SearchTab} tab
  * @param {FindSurfaceState} state
  * @param {import('./state.js').ViewerRole} role
+ * @param {{ surfaceType?: 'home' | 'search' }} [options]
  */
-export function renderFindResultSection(tab, state, role) {
-  const activeItems = refreshActiveResultItems(tab, state, role);
-  const regionLabel = state.activeRegionLabel || '';
-  const source = resolveResultSource(state);
+export function renderFindResultSection(tab, state, role, options = {}) {
+  const surfaceType = options.surfaceType || 'search';
   const tierCtx = { role, homeSelf: resolveHomeSelf(state) };
   const debugAttrs = resultDebugAttrs(state);
   const resultMode = state.searchExecuted ? 'search' : 'region';
 
+  if (tab === 'student' && surfaceType === 'search') {
+    const hope = ensureStudentHopeType(state);
+    if (!hope) {
+      return `
+        <section class="search-results search-results--hope-gate" aria-label="희망 유형 선택" ${debugAttrs}>
+          ${renderHopeTypeGate()}
+        </section>`;
+    }
+  }
+
+  const activeItems = refreshActiveResultItems(tab, state, role);
+  const regionLabel = state.activeRegionLabel || resolveActiveRegionLabel(tab, state, role);
+
   if (!state.searchExecuted) {
-    const tierHtml = renderSearchTierResults(tab, activeItems, tierCtx, { mode: 'region', regionLabel });
+    const tierHtml = renderSearchTierResults(tab, activeItems, tierCtx, {
+      mode: 'region',
+      regionLabel,
+      surfaceType,
+    });
     return `
-      <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs}>
+      <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}">
         ${tierHtml}
       </section>`;
   }
@@ -464,22 +571,37 @@ export function renderFindResultSection(tab, state, role) {
       </section>`;
   }
 
-  const tierHtml = renderSearchTierResults(tab, activeItems, tierCtx, { mode: 'search', regionLabel });
+  const flatHtml = renderSearchTierResults(tab, activeItems, tierCtx, {
+    mode: 'search',
+    regionLabel,
+    surfaceType,
+  });
+
+  /* 검색 실행 후(결과 국면)에만 학생 수요 — 홈 browse 티어와 분리 */
+  const demandHtml =
+    tab === 'room' || tab === 'tutor'
+      ? renderStudentDemandBlock(regionLabel, {
+          guest: role === 'guest',
+          viewerRole: role,
+          hopeType: tab === 'tutor' ? 'tutor' : 'study_room',
+        })
+      : '';
 
   const mapNote =
     tab === 'room'
-      ? '<p class="search-results__hint">공부방: 지도 핀과 아래 목록은 동일한 결과 집합입니다.</p>'
+      ? '<p class="search-results__hint">공부방: 지도 핀과 아래 목록은 동일한 결과 집합입니다. Prime/Pick/Basic 구획 없음.</p>'
       : tab === 'student'
         ? role === 'parent'
-          ? '<p class="search-results__hint">학생찾기: 시장 비교 열람 · 블라인드 유지 · 쪽지 불가</p>'
+          ? '<p class="search-results__hint">학생찾기: 시장 비교 열람 · 블라인드 유지 · 학생 간 쪽지 불가</p>'
           : '<p class="search-results__hint">학생찾기: 블라인드 리스트 · 비교 없음 · 찜·쪽지 중심</p>'
-        : '<p class="search-results__hint">과외쌤: 조건형 · 지도 없음</p>';
+        : '<p class="search-results__hint">과외쌤: 필터링된 결과 + 해당 지역 학생 수요 · 티어 구획 없음</p>';
 
   return `
-    <section class="search-results search-results--executed" ${debugAttrs} data-result-mode="${esc(resultMode)}">
+    <section class="search-results search-results--executed" ${debugAttrs} data-result-mode="${esc(resultMode)}" data-surface-type="${esc(surfaceType)}">
       <h2 class="search-section__title">검색 결과 <span class="search-results__count">${state.searchTotal}건</span></h2>
       ${mapNote}
-      ${tierHtml}
+      ${flatHtml}
+      ${demandHtml}
     </section>`;
 }
 
@@ -498,6 +620,10 @@ export async function runFindSearch(tab, form, state, role, rerender) {
 
   try {
     const filters = collectFiltersFromForm(form, tab);
+    if (tab === 'student' && state.studentHopeType) {
+      filters.preferred_lesson_type = state.studentHopeType;
+    }
+    state.activeRegionLabel = regionLabelFromFilters(tab, filters, state);
     const result = await searchApi(tab, filters);
     if (state.searchRows) state.searchRows = result.rows || [];
     if (state.searchItems) state.searchItems = result.items || [];
@@ -568,6 +694,19 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
 
   root.querySelector('[data-action="change-region"]')?.addEventListener('click', () => {
     window.alert('§8-3 광역 검색 — 인근 동 → 구군 → 시/도 단계 확장 (추후 UI)');
+  });
+
+  root.querySelectorAll('[data-action="pick-hope-type"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const hope = btn.getAttribute('data-hope');
+      if (hope !== 'tutor' && hope !== 'study_room') return;
+      writeStoredHopeType(hope);
+      state().studentHopeType = hope;
+      state().hopeTypeResolved = true;
+      const base = '#/search/student';
+      window.location.hash = `${base}?hope=${encodeURIComponent(hope)}`;
+      rerender();
+    });
   });
 
   const lessonFormatSelect = root.querySelector('[data-lesson-format-select]');

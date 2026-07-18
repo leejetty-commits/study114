@@ -61,7 +61,7 @@ export function renderLocation() {
     ${renderTempNotice('지역·단지는 API 마스터 연동 · 지도 좌표는 추후')}
     <form data-form="location">
       ${renderSectionTitle('공부방 기본 위치')}
-      <p class="register-hint mb-4">study_rooms.region_id / complex_id — 공부방 기본 위치 (5장 §7)</p>
+      <p class="register-hint mb-4">가입 기본주소와 분리 · ① 행정동/아파트단지 선택 → ② 주소검색(추후) · study_rooms.region_id / complex_id</p>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label form-label--required" for="region_id">동</label>
@@ -80,8 +80,8 @@ export function renderLocation() {
         <input class="form-input" id="address_text" name="address_text" value="${s.address_text}" />
       </div>
 
-      ${renderSectionTitle('노출/활동 저장 지역 (최대 3 · 대표 1)')}
-      <p class="register-hint mb-4">study_room_regions — 로그인 후 지도/핀/메인 노출 기준</p>
+      ${renderSectionTitle('노출 지역 (최대 3 · 대표 1 · 1필수+추가2)')}
+      <p class="register-hint mb-4">study_room_regions — 로그인 후 지도/핀/메인 노출 기준 · 행정동 + 단지(선택)</p>
       ${s.saved_regions.map((slot, i) => renderSavedRegion(slot, i)).join('')}
 
       ${renderNavButtons('/register/basic', '다음: 수업·가격')}

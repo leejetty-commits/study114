@@ -42,9 +42,16 @@ export function mapAuthFormToStudentRecord(data, meta = {}) {
   const preferredLessonType =
     data.preferred_lesson_type === 'study_room' ? 'study_room' : 'tutor';
 
+  const studySlots = Array.isArray(data.preferred_studyroom_regions)
+    ? data.preferred_studyroom_regions
+    : null;
+  const tutorSlots = Array.isArray(data.preferred_tutor_regions)
+    ? data.preferred_tutor_regions
+    : null;
+
   return {
-    student_name: String(data.public_display_name || data.student_name || '새 자녀'),
-    public_display_name: String(data.public_display_name || '새자녀'),
+    student_name: String(data.public_display_name || data.student_name || '새 등록'),
+    public_display_name: String(data.public_display_name || '새학생'),
     grade_level: String(data.grade_level || ''),
     school_level: String(data.school_level || 'middle'),
     gender: String(data.gender || ''),
@@ -52,6 +59,14 @@ export function mapAuthFormToStudentRecord(data, meta = {}) {
     preferred_lesson_type: preferredLessonType,
     region_id: data.region_id ? Number(data.region_id) : undefined,
     region_label: meta.regionLabel || String(data.region_label || '서울특별시 강남구 대치동'),
+    preferred_studyroom_region_id: data.preferred_studyroom_region_id
+      ? Number(data.preferred_studyroom_region_id)
+      : undefined,
+    preferred_tutor_region_id: data.preferred_tutor_region_id
+      ? Number(data.preferred_tutor_region_id)
+      : undefined,
+    preferred_studyroom_regions: studySlots,
+    preferred_tutor_regions: tutorSlots,
     preferred_region_note: String(data.preferred_region_note || ''),
     subject_label: String(data.subject_names || data.subject_label || '').replace(/,/g, ' · '),
     lesson_places: lessonPlaces,

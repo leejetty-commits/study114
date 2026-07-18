@@ -97,7 +97,7 @@ function esc(s) {
 function roleLabel(role) {
   if (role === 'study_room') return '공부방';
   if (role === 'tutor') return '과외쌤';
-  if (role === 'parent') return '학부모/학생';
+  if (role === 'parent') return '학생';
   return '비로그인';
 }
 
@@ -115,7 +115,7 @@ function renderProfileBanner(profile, role) {
     return `
       <div class="mypage-info-box plans-profile-banner">
         <strong>적용 대상</strong>
-        <p>학부모/학생은 유료상품 구매 주체가 아닙니다. FAQ에서 안내만 확인하세요.</p>
+        <p>학생 계정은 유료상품 구매 주체가 아닙니다. FAQ에서 안내만 확인하세요.</p>
         <a href="#/support/faq" class="btn btn--secondary btn--sm" data-nav="/support/faq">FAQ</a>
       </div>`;
   }

@@ -17,7 +17,8 @@ export function syncRegionsFromForm(root, state) {
   root.querySelectorAll('[data-region-slot]').forEach((slotEl, idx) => {
     state.saved_regions.push({
       region_id: slotEl.querySelector('[data-field="region_id"]')?.value ?? '',
-      scope_type: slotEl.querySelector('[data-field="scope_type"]')?.value ?? 'city',
+      /** 정책: 과외 활동지역은 시 단위만 */
+      scope_type: 'city',
       is_primary: idx === primaryIdx,
     });
   });

@@ -554,3 +554,38 @@
     text-align: left;
   }
 }
+
+/* 학생찾기 — 희망 유형 첫 진입 게이트 */
+.search-hope-gate {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md, 8px);
+  background: var(--gray-50, #f8f9fa);
+}
+
+.search-hope-gate__title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.search-hope-gate__desc {
+  margin: 0 0 var(--space-6);
+  color: var(--gray-600);
+  font-size: var(--text-sm);
+}
+
+.search-hope-gate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
+.search-student-demand {
+  margin-top: var(--space-8);
+}
+
+.search-flat-results {
+  margin-top: var(--space-4);
+}

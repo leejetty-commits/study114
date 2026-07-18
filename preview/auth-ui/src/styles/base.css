@@ -713,6 +713,21 @@ img {
   line-height: var(--leading-relaxed);
 }
 
+.hope-region-axis {
+  margin: var(--space-6) 0;
+  padding: var(--space-4);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--panel-radius, 0.75rem);
+}
+
+.hope-region-axis legend {
+  padding: 0 var(--space-2);
+}
+
+.hope-region-slot + .hope-region-slot {
+  margin-top: var(--space-3);
+}
+
 /* ── [임시] SSOT 미잠금 안내 ── */
 .temp-notice {
   display: flex;

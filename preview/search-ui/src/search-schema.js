@@ -83,11 +83,22 @@ export const SEARCH_TABS = {
 
 export const MOCK_SUBJECTS = ['수학', '영어', '국어', '과학', '사회'];
 
-/** 학부모 희망 과외 지역 — 최대 3 · 대표 1 (8장 §6 · 회원가입) */
+/**
+ * 비로그인·프리뷰 기본 지역 (축별 분리 · 7.18 확정)
+ * - 공부방: 행정동 · 과외쌤/학생: 시
+ * 로그인 후에는 계정 노출/활동/희망 슬롯으로 대체한다.
+ */
+export const GUEST_DEFAULT_REGIONS = {
+  room: '서울 강남구 대치동',
+  tutor: '서울시',
+  student: '서울시',
+};
+
+/** 과외 활동/희망 시 — 최대 3 · 대표 1 (시 단위만) */
 export const MOCK_TUTOR_REGIONS = [
-  { id: 'gangnam', label: '서울시 강남구', primary: true },
-  { id: 'seocho', label: '서울시 서초구', primary: false },
-  { id: 'songpa', label: '서울시 송파구', primary: false },
+  { id: 'seoul', label: '서울시', primary: true },
+  { id: 'busan', label: '부산시', primary: false },
+  { id: 'incheon', label: '인천시', primary: false },
 ];
 
 /** @param {number} [index] */
@@ -96,9 +107,9 @@ export function getTutorRegionLabel(index = 0) {
 }
 
 export const MOCK_REGIONS = {
-  room: '대치동 · 은마아파트',
-  tutor: getTutorRegionLabel(0),
-  student: '해운대구 · 센텀동',
+  room: GUEST_DEFAULT_REGIONS.room,
+  tutor: GUEST_DEFAULT_REGIONS.tutor,
+  student: GUEST_DEFAULT_REGIONS.student,
 };
 
 /** §8-4 결과 행 더미 */

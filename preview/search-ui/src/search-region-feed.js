@@ -1,6 +1,6 @@
 /**
- * 검색 전 — 내 지역 기준 Prime · Pick · Basic 피드
- * 공부방: 행정동 + 단지 · 과외: 시/구
+ * 검색 전 — 내 지역 기준 피드 (홈 surface에서만 Prime/Pick/Basic 문법 사용)
+ * 공부방: 행정동 · 과외/학생: 시
  */
 
 import {
@@ -11,13 +11,41 @@ import {
 import { MOCK_REGIONS, getTutorRegionLabel } from './search-schema.js';
 import { getProviderSelfFeed } from './search-provider-self.js';
 
+/** 시드 데이터가 시 접두어 없이 동/구만 가진 경우 — 서울시 스코프 매칭용 */
+const SEOUL_METRO_HINTS = [
+  '서울',
+  '강남',
+  '서초',
+  '송파',
+  '대치',
+  '도곡',
+  '역삼',
+  '개포',
+  '잠실',
+];
+
 /**
  * @param {string} regionHint
- * @returns {{ dong: string, complex: string }}
+ * @returns {{ dong: string, complex: string, city: string }}
  */
 export function parseStudyRoomRegion(regionHint) {
-  const parts = regionHint.split('·').map((s) => s.trim()).filter(Boolean);
-  return { dong: parts[0] || '', complex: parts[1] || '' };
+  const raw = String(regionHint || '').trim();
+  if (raw.includes('·')) {
+    const parts = raw.split('·').map((s) => s.trim()).filter(Boolean);
+    return { dong: parts[0] || '', complex: parts[1] || '', city: '' };
+  }
+  const dongMatch = raw.match(/(\S+동)/);
+  const cityMatch = raw.match(/(\S+시)/);
+  return {
+    dong: dongMatch ? dongMatch[1] : '',
+    complex: '',
+    city: cityMatch ? cityMatch[1] : '',
+  };
+}
+
+function isCityScope(regionHint) {
+  const t = String(regionHint || '').replace(/\s+/g, '');
+  return /시$/.test(t) && !/동$/.test(t);
 }
 
 /**
@@ -43,11 +71,23 @@ export function filterStudyRoomsByRegion(items, regionHint) {
 
 /**
  * @param {object[]} items
- * @param {string} regionHint — 예: 서울시 강남구
+ * @param {string} regionHint — 시 단위 (예: 서울시). 구·동 단위는 받지 않는 정책과 맞춤.
  */
 export function filterTutorsByRegion(items, regionHint) {
   const city = regionHint.trim();
   if (!city) return [];
+
+  if (isCityScope(city)) {
+    const cityToken = city.replace(/\s+/g, '').replace(/시$/, '');
+    return items.filter((item) => {
+      const loc = String(item.location_label || '');
+      if (loc.includes(cityToken) || loc.includes(city)) return true;
+      if (cityToken === '서울') {
+        return SEOUL_METRO_HINTS.some((h) => loc.includes(h));
+      }
+      return false;
+    });
+  }
 
   const cityNorm = city.replace(/\s+/g, '');
   const tokens = city
@@ -67,8 +107,23 @@ export function filterTutorsByRegion(items, regionHint) {
  * @param {object[]} items
  * @param {string} regionHint
  */
-function filterStudentsByRegion(items, regionHint) {
-  const { dong, complex } = parseStudyRoomRegion(regionHint);
+export function filterStudentsByRegion(items, regionHint) {
+  const hint = String(regionHint || '').trim();
+  if (!hint) return [];
+
+  if (isCityScope(hint)) {
+    const cityToken = hint.replace(/\s+/g, '').replace(/시$/, '');
+    return items.filter((item) => {
+      const loc = String(item.location_label || '');
+      if (loc.includes(cityToken) || loc.includes(hint)) return true;
+      if (cityToken === '서울') {
+        return SEOUL_METRO_HINTS.some((h) => loc.includes(h));
+      }
+      return false;
+    });
+  }
+
+  const { dong, complex } = parseStudyRoomRegion(hint);
   if (!dong) return [];
 
   return items.filter((item) => {
@@ -77,6 +132,26 @@ function filterStudentsByRegion(items, regionHint) {
     if (!complex) return true;
     return loc.includes(complex);
   });
+}
+
+/**
+ * 공부방/과외 검색 결과 하단 — 해당 지역 학생 수요 (블라인드)
+ * @param {string} regionHint
+ * @param {{ hopeType?: 'tutor'|'study_room'|null, limit?: number }} [opts]
+ */
+export function getStudentDemandForRegion(regionHint, opts = {}) {
+  const limit = opts.limit ?? 6;
+  let pool = filterStudentsByRegion(EXPOSURE_STUDENTS, regionHint);
+  if (opts.hopeType === 'tutor' || opts.hopeType === 'study_room') {
+    pool = pool.filter(
+      (s) =>
+        s.preferred_lesson_type === opts.hopeType || s.preferred_lesson_type === 'both',
+    );
+  }
+  return pool
+    .filter((s) => s.exposure_status === 'published')
+    .slice(0, limit)
+    .map((item) => ({ ...item, exposure_tier: 'basic' }));
 }
 
 /**
@@ -98,7 +173,7 @@ function assignProviderTiers(items) {
 
 /**
  * @param {import('./state.js').SearchTab} tab
- * @param {{ tutorRegionIndex?: number, role?: import('./state.js').ViewerRole, homeSelf?: boolean }} [ctx]
+ * @param {{ tutorRegionIndex?: number, role?: import('./state.js').ViewerRole, homeSelf?: boolean, hopeType?: 'tutor'|'study_room' }} [ctx]
  * @returns {{ items: object[], regionLabel: string }}
  */
 export function getRegionFeed(tab, ctx = {}) {
@@ -121,7 +196,11 @@ export function getRegionFeed(tab, ctx = {}) {
     return { items: assignProviderTiers(pool.slice(0, 11)), regionLabel };
   }
   const regionLabel = MOCK_REGIONS.student;
-  const pool = filterStudentsByRegion(EXPOSURE_STUDENTS, regionLabel);
+  const hopeType = ctx.hopeType || 'tutor';
+  let pool = filterStudentsByRegion(EXPOSURE_STUDENTS, regionLabel);
+  pool = pool.filter(
+    (s) => s.preferred_lesson_type === hopeType || s.preferred_lesson_type === 'both',
+  );
   return {
     items: pool.slice(0, 8).map((item) => ({
       ...item,

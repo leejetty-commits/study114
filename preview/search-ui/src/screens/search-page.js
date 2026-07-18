@@ -1,17 +1,14 @@
 import { PAID_GATE_MESSAGE } from '@home-visibility';
 import {
   canShowSearchTab,
-  getVisibleSearchTabs,
-  defaultSearchTabForRole,
   resolveAllowedTab,
-  ROLE_SEARCH_HEADING,
   getSearchTabLabel,
 } from '../search-role-access.js';
+import { SEARCH_TABS } from '../search-schema.js';
 import {
   getCurrentTab,
   navigateTab,
   previewState,
-  VIEWER_ROLE_LABELS,
   syncRoleFromHash,
 } from '../state.js';
 import { bindGlobalEvents, renderSearchShell } from '../layout.js';
@@ -26,6 +23,7 @@ import {
 } from '../search-handoff.js';
 import { bindGuestListPagination } from '@home-ui/list-pagination.js';
 import { bindProtectedGuestActions } from '../../../shared/guest-gate-ui.js';
+import { SHOW_PREVIEW_TOOLBAR } from '../../../shared/preview-flags.js';
 import {
   esc,
   resetFindSurface,
@@ -35,20 +33,21 @@ import {
   bindFindSurfaceEvents,
 } from '../search-find-surface.js';
 
-function renderTabButtons(activeTab) {
-  const visible = getVisibleSearchTabs(previewState.role);
-  if (visible.length <= 1) return '';
-  return visible
-    .map((id) => {
-      const label = getSearchTabLabel(id, previewState.role);
-      const cls = ['search-tab', id === activeTab ? 'is-active' : ''].filter(Boolean).join(' ');
-      return `<button type="button" class="${cls}" data-tab="${id}">${esc(label)}</button>`;
-    })
-    .join('');
+/**
+ * 찾기 페이지 바디 탭·역할 셀렉트 제거 — 이동은 GNB만.
+ * DEV 전용 역할/구독 토글은 프리뷰 툴바와 동일 플래그로만 노출.
+ */
+function renderDevPreviewControls() {
+  if (!SHOW_PREVIEW_TOOLBAR || isSearchLoggedIn()) return '';
+  return `
+    <div class="search-preview-controls search-preview-controls--dev" hidden data-dev-only>
+      <p class="search-note">개발용 — 운영 빌드 비노출</p>
+    </div>`;
 }
 
 function renderSubscriptionNote(tab) {
   if (tab !== 'student') return '';
+  if (previewState.role !== 'study_room' && previewState.role !== 'tutor') return '';
   const msg =
     previewState.subscription === 'paid'
       ? '유료 공급자 — 요청문/특이요청은 학생이 paid_only일 때 상세에서만 열람'
@@ -56,50 +55,23 @@ function renderSubscriptionNote(tab) {
   return `<p class="search-note">${esc(msg)}</p>`;
 }
 
-function renderPreviewControls() {
-  const lockedBySession = isSearchLoggedIn();
-  return `
-    <div class="search-preview-controls">
-      <label>
-        <span>열람 역할${lockedBySession ? ' (세션)' : ''}</span>
-        <select data-preview="role" ${lockedBySession ? 'disabled title="로그인 세션 역할 고정 · 전환은 마이페이지/계정설정"' : ''}>
-          ${Object.entries(VIEWER_ROLE_LABELS)
-            .map(
-              ([value, label]) =>
-                `<option value="${value}" ${previewState.role === value ? 'selected' : ''}>${esc(label)}</option>`,
-            )
-            .join('')}
-        </select>
-      </label>
-      <label>
-        <span>공급자 등록</span>
-        <select data-preview="subscription">
-          <option value="free" ${previewState.subscription === 'free' ? 'selected' : ''}>무료</option>
-          <option value="paid" ${previewState.subscription === 'paid' ? 'selected' : ''}>유료</option>
-        </select>
-      </label>
-    </div>`;
-}
-
 function syncHomeSubscription() {
   homePreviewState.providerSubscription = previewState.subscription;
 }
 
 function renderSearchForm(tab) {
-  const heading = ROLE_SEARCH_HEADING[previewState.role] || '찾기';
-  const tabNav = renderTabButtons(tab);
+  const heading = SEARCH_TABS[tab]?.label || getSearchTabLabel(tab, previewState.role);
 
   return `
-    ${renderPreviewControls()}
+    ${renderDevPreviewControls()}
     <header class="search-header search-header--compact">
       <h1 class="auth-heading">${esc(heading)}</h1>
     </header>
-    ${tabNav ? `<nav class="search-tabs" aria-label="검색 탭">${tabNav}</nav>` : ''}
     ${renderSubscriptionNote(tab)}
     ${renderCompactFindForm(tab, previewState, { showMap: tab === 'room', role: previewState.role })}
     ${renderFindFilterBar(tab, previewState)}
     ${canUseCompare(tab, previewState.role) ? renderCompareBar() : ''}
-    ${renderFindResultSection(tab, previewState, previewState.role)}`;
+    ${renderFindResultSection(tab, previewState, previewState.role, { surfaceType: 'search' })}`;
 }
 
 export function renderSearchPage() {
@@ -142,6 +114,7 @@ export function bindSearchPageEvents(root, rerender) {
 
   bindGuestListPagination(root, rerender);
 
+  // 바디 내 탭 이동은 제거 — GNB만 사용. 잔존 data-tab 방어.
   root.querySelectorAll('[data-tab]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const nextTab = /** @type {import('../state.js').SearchTab} */ (btn.dataset.tab);
@@ -150,27 +123,4 @@ export function bindSearchPageEvents(root, rerender) {
       navigateTab(nextTab);
     });
   });
-
-  const roleSelect = root.querySelector('[data-preview="role"]');
-  if (roleSelect) {
-    roleSelect.addEventListener('change', () => {
-      previewState.role = /** @type {import('../state.js').ViewerRole} */ (roleSelect.value);
-      resetFindSurface(previewState);
-      const tab = resolveAllowedTab(getCurrentTab(), previewState.role);
-      if (tab !== getCurrentTab()) {
-        navigateTab(tab);
-        return;
-      }
-      rerender();
-    });
-  }
-
-  const subSelect = root.querySelector('[data-preview="subscription"]');
-  if (subSelect) {
-    subSelect.addEventListener('change', () => {
-      previewState.subscription = /** @type {import('../state.js').ProviderSubscription} */ (subSelect.value);
-      syncHomeSubscription();
-      rerender();
-    });
-  }
 }

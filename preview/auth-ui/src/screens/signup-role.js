@@ -56,7 +56,7 @@ export function renderSignupRole() {
       </button>
 
       <p class="text-center mt-6" style="font-size: var(--text-xs); color: var(--gray-400);">
-        학생(학부모) 회원은 자녀 정보를 가입 후 상세등록·마이페이지에서 등록합니다.
+        학생 회원은 본인 학습 조건을 가입 후 기본등록·마이페이지에서 등록합니다. 같은 계정으로 형제자매 정보도 추가할 수 있습니다.
       </p>
     </div>
   `;

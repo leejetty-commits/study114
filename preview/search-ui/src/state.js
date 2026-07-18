@@ -70,9 +70,10 @@ export function navigateTab(tab) {
   window.location.hash = role ? `${base}?role=${encodeURIComponent(role)}` : base;
 }
 
+/** UI 라벨 — parent 세션은 정책상 「학생」 중심 (DB enum guardian_student는 유지) */
 export const VIEWER_ROLE_LABELS = {
   guest: '비회원',
-  parent: '학부모',
+  parent: '학생',
   study_room: '공부방',
   tutor: '과외쌤',
 };

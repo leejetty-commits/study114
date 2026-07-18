@@ -9,13 +9,16 @@ import { visibleSearchTabsForRole } from '../../shared/site-nav-config.js';
 /** @typedef {import('./state.js').SearchTab} SearchTab */
 /** @typedef {import('./state.js').ViewerRole} ViewerRole */
 
-/** @type {Record<ViewerRole, string>} */
+/**
+ * @deprecated 찾기 페이지 h1은 SEARCH_TABS[tab].label 사용 (공부방찾기/과외쌤찾기/학생찾기)
+ * @type {Record<ViewerRole, string>}
+ */
 export const ROLE_SEARCH_HEADING = {
-  guest: '공부방·과외·학생 찾기',
-  admin: '공부방·과외·학생 찾기',
-  parent: '공부방·과외·학생 찾기',
-  study_room: '공부방 · 학생찾기',
-  tutor: '과외쌤 · 학생찾기',
+  guest: '찾기',
+  admin: '찾기',
+  parent: '찾기',
+  study_room: '찾기',
+  tutor: '찾기',
 };
 
 /** @type {Partial<Record<ViewerRole, Partial<Record<SearchTab, string>>>>} */

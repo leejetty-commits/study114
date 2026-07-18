@@ -43,11 +43,72 @@ function dbField(name) {
   return `<span class="field-db-name">${esc(name)}</span>`;
 }
 
+function regionList() {
+  return signupState.regions.length > 0
+    ? signupState.regions
+    : [{ id: 1, label: '서울특별시 강남구 대치동 (API 로딩 중)' }];
+}
+
+/** @param {unknown} saved @param {number} [count] */
+function normalizeHopeSlots(saved, count = 3) {
+  const arr = Array.isArray(saved) ? saved.map((s) => ({ ...s })) : [];
+  while (arr.length < count) {
+    arr.push({ region_id: '', is_primary: arr.length === 0 });
+  }
+  return arr.slice(0, count).map((s, i) => ({
+    region_id: s.region_id != null ? String(s.region_id) : '',
+    is_primary: Boolean(s.is_primary) || (i === 0 && !arr.some((x) => x.is_primary)),
+  }));
+}
+
+/**
+ * @param {string} axisKey studyroom | tutor
+ * @param {string} title
+ * @param {string} dbHint
+ * @param {Array<{region_id:string,is_primary:boolean}>} slots
+ * @param {'dong'|'city'} depth
+ */
+function renderHopeRegionAxis(axisKey, title, dbHint, slots, depth) {
+  const regions = regionList();
+  const depthHint =
+    depth === 'city'
+      ? '과외 맥락 · 시 단위 권장 (구·동 라벨이어도 탐색 시 시로 해석)'
+      : '공부방 맥락 · 행정동/단지 단위';
+  return `
+    <fieldset class="hope-region-axis" data-hope-axis="${esc(axisKey)}">
+      <legend class="form-label form-label--required">${esc(title)}</legend>
+      ${dbField(dbHint)}
+      <p class="form-note">${esc(depthHint)} · 1개 필수 + 추가 2개</p>
+      ${slots
+        .map((slot, idx) => {
+          const name = `${axisKey}_region_${idx}`;
+          const req = idx === 0 ? 'required' : '';
+          return `
+        <div class="form-group hope-region-slot" data-hope-slot="${idx}">
+          <div class="form-row" style="align-items:center;gap:0.5rem;">
+            <label class="form-label" for="${name}">지역 ${idx + 1}${idx === 0 ? ' (필수)' : ''}</label>
+            <label class="form-check" style="margin-left:auto;">
+              <input type="radio" name="${axisKey}_primary" value="${idx}" ${slot.is_primary || idx === 0 ? 'checked' : ''} />
+              <span class="form-check__label">대표</span>
+            </label>
+          </div>
+          <select class="form-input" name="${name}" id="${name}" data-hope-region="${esc(axisKey)}" ${req}>
+            <option value="">선택</option>
+            ${regions
+              .map(
+                (r) =>
+                  `<option value="${r.id}" ${String(slot.region_id) === String(r.id) ? 'selected' : ''}>${esc(r.label)}</option>`,
+              )
+              .join('')}
+          </select>
+        </div>`;
+        })
+        .join('')}
+    </fieldset>`;
+}
+
 function renderRegionSelect(name, selectedId) {
-  const regions =
-    signupState.regions.length > 0
-      ? signupState.regions
-      : [{ id: 1, label: '서울특별시 강남구 대치동 (API 로딩 중)' }];
+  const regions = regionList();
   const sel = selectedId || regions[0]?.id || '';
   return `
     <select class="form-input" name="${name}" id="${name}" required>
@@ -128,19 +189,43 @@ function renderUniversityPicker(selected = '', otherText = '') {
 function renderStudentBasic() {
   const addr = signupState.accountAddress || '서울특별시 강남구 대치동 (가입 주소)';
   const d = signupState.basicRegister?.student || {};
+  const studySlots = normalizeHopeSlots(
+    d.preferred_studyroom_regions ||
+      (d.preferred_studyroom_region_id || d.region_id
+        ? [{ region_id: d.preferred_studyroom_region_id || d.region_id, is_primary: true }]
+        : null),
+  );
+  const tutorSlots = normalizeHopeSlots(
+    d.preferred_tutor_regions ||
+      (d.preferred_tutor_region_id || d.region_id
+        ? [{ region_id: d.preferred_tutor_region_id || d.region_id, is_primary: true }]
+        : null),
+  );
   return `
     <form data-form="basic-student" class="basic-register">
       <p class="auth-section-title">검색 핵심축 (14장 §4-1)</p>
+      <p class="form-note mb-4">가입 기본주소(<strong>${esc(addr)}</strong>)와 희망/탐색 지역은 분리해 받습니다.</p>
       <div class="form-group">
         <span class="form-label form-label--required">희망 유형</span>
         ${dbField('students.preferred_lesson_type')}
         ${renderChips('preferred_lesson_type', Object.entries(PREFERRED_LESSON_TYPE_LABELS).map(([value, label]) => ({ value, label })), { selected: d.preferred_lesson_type || 'tutor' })}
       </div>
+      ${renderHopeRegionAxis(
+        'studyroom',
+        '공부방용 희망지역',
+        'preferred_studyroom_region_id · preferred_studyroom_regions[3]',
+        studySlots,
+        'dong',
+      )}
+      ${renderHopeRegionAxis(
+        'tutor',
+        '과외쌤용 희망지역',
+        'preferred_tutor_region_id · preferred_tutor_regions[3]',
+        tutorSlots,
+        'city',
+      )}
       <div class="form-group">
-        <label class="form-label form-label--required" for="region_id">희망 지역</label>
-        ${dbField('preferred_studyroom_region_id / preferred_tutor_region_id')}
-        ${renderRegionSelect('region_id', d.region_id)}
-        <input class="form-input mt-4" name="preferred_region_note" value="${esc(d.preferred_region_note || '')}" placeholder="지역 보조 메모 (선택)" />
+        <input class="form-input" name="preferred_region_note" value="${esc(d.preferred_region_note || '')}" placeholder="지역 보조 메모 (선택)" />
         ${dbField('students.preferred_region_note')}
       </div>
       <div class="form-group">
@@ -526,6 +611,46 @@ export function bindSignupBasicEvents(root) {
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = collectFormData(form);
+
+    if (role === 'student') {
+      const packAxis = (axisKey) => {
+        const slots = [0, 1, 2].map((idx) => ({
+          region_id: String(data[`${axisKey}_region_${idx}`] || '').trim(),
+          is_primary: String(data[`${axisKey}_primary`] ?? '0') === String(idx),
+        }));
+        const filled = slots.filter((s) => s.region_id);
+        if (!filled.length) return null;
+        if (!filled.some((s) => s.is_primary)) filled[0].is_primary = true;
+        return filled;
+      };
+      const studySlots = packAxis('studyroom');
+      const tutorSlots = packAxis('tutor');
+      if (!studySlots) {
+        alert('공부방용 희망지역을 1곳 이상 선택해 주세요.');
+        return;
+      }
+      if (!tutorSlots) {
+        alert('과외쌤용 희망지역을 1곳 이상 선택해 주세요.');
+        return;
+      }
+      data.preferred_studyroom_regions = studySlots;
+      data.preferred_tutor_regions = tutorSlots;
+      data.preferred_studyroom_region_id = studySlots.find((s) => s.is_primary)?.region_id || studySlots[0].region_id;
+      data.preferred_tutor_region_id = tutorSlots.find((s) => s.is_primary)?.region_id || tutorSlots[0].region_id;
+      // API 호환: 단일 region_id = 희망유형 축 대표 (기본 과외)
+      const hope = data.preferred_lesson_type === 'study_room' ? 'studyroom' : 'tutor';
+      data.region_id =
+        hope === 'studyroom' ? data.preferred_studyroom_region_id : data.preferred_tutor_region_id;
+      const primaryRegion = regionList().find((r) => String(r.id) === String(data.region_id));
+      data.region_label = primaryRegion?.label || '';
+      // 슬롯 raw 필드 제거
+      [0, 1, 2].forEach((idx) => {
+        delete data[`studyroom_region_${idx}`];
+        delete data[`tutor_region_${idx}`];
+      });
+      delete data.studyroom_primary;
+      delete data.tutor_primary;
+    }
 
     if (Array.isArray(data.main_subjects) || data.main_subjects) {
       const subjects = Array.isArray(data.main_subjects)

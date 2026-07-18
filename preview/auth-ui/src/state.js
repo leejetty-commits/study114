@@ -14,16 +14,19 @@ export const signupState = {
   basicRegisterResult: null,
 };
 
-/** 문서 잠금: 회원 구분 3축 */
+/**
+ * 회원 구분 3축 — UI는 「학생」 중심 (본인 등록 주체).
+ * DB role_type=guardian_student 는 스키마 유지 · 해석만 학생 계정.
+ */
 export const ROLE_LABELS = {
-  student: '학생(학부모)',
+  student: '학생',
   study_room: '공부방',
   tutor: '과외쌤',
 };
 
 export const ROLE_DESCRIPTIONS = {
-  student: '자녀의 학습 정보를 관리하고, 동네 공부방·과외를 찾아보세요.',
-  study_room: '우리 동네 공부방을 등록하고 학부모에게 알려보세요.',
+  student: '본인 학습 조건을 등록하고, 동네 공부방·과외쌤을 찾아보세요. 같은 계정으로 형제자매 정보도 함께 등록할 수 있습니다.',
+  study_room: '우리 동네 공부방을 등록하고 학생에게 알려보세요.',
   tutor: '과외 선생님으로 프로필을 등록하고 학생을 만나보세요.',
 };
 

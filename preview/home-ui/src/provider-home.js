@@ -44,7 +44,7 @@ const HOME_HEAD_COPY = {
     },
     student: {
       title: '우리동네 학생',
-      desc: '다른 학생 의뢰의 금액·지역·과목·수업형태를 비교해 보세요. 이름은 마스킹되며 쪽지는 보낼 수 없습니다.',
+      desc: '다른 학생 의뢰의 금액·지역·과목·수업형태를 시장 비교해 보세요. 이름은 마스킹되며 학생 간 쪽지는 불가합니다.',
     },
   },
   study_room: {
@@ -151,7 +151,7 @@ export function renderProviderHomeBody(role, tabId, findState) {
         hideSearchForm,
       })}
       ${renderFindFilterBar(searchTab, findState)}
-      ${renderFindResultSection(searchTab, findState, role)}
+      ${renderFindResultSection(searchTab, findState, role, { surfaceType: 'home' })}
     </div>`;
 }
 

@@ -14,7 +14,11 @@ export {
   DUMMY_STUDENT_REQUESTS,
 } from './exposure-data.js';
 
-/** 비회원 데모 고정 지역 — 9장 §4-1 */
+/**
+ * 비회원 데모 지역 — 축별 분리 (홈 전체를 대치동으로 통일하지 않음)
+ * - 공부방: 강남구 대치동(행정동)
+ * - 과외쌤·학생: 서울시
+ */
 export const GUEST_DEMO_REGION = {
   dong: '대치동',
   gu: '강남구',
@@ -22,6 +26,21 @@ export const GUEST_DEMO_REGION = {
   full: '서울 강남구 대치동',
   metro: '강남·서초·송파 권역',
   policy: '동 우선 · 빌라·다세대 포함',
+};
+
+export const GUEST_DEMO_REGIONS_BY_AXIS = {
+  room: GUEST_DEMO_REGION,
+  tutor: {
+    label: '서울시',
+    full: '서울시',
+    policy: '시 단위 · 활동/탐색',
+  },
+  student: {
+    label: '서울시',
+    full: '서울시',
+    hopeType: 'tutor',
+    policy: '과외쌤 맥락 우선 · 시 단위',
+  },
 };
 
 export const REGIONS = {

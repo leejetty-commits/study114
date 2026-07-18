@@ -39,7 +39,7 @@ export function openDetailDecision({ kind, id, viewer, onRerender, sourceRoute =
     window.location.assign(`${AUTH_UI_BASE}/#/login?from=student-detail`);
     return;
   }
-  // 29#3: 학부모/학생 로그인 — 다른 학생 카드·상세 비교 열람 허용 (블라인드·요청문 규칙은 유지)
+  // 29#3 · 7.18: 학생 로그인 — 다른 학생 카드·상세 시장 비교 열람 허용 (실명·연락·쪽지·민감정보 금지)
   openDetailModal({
     kind,
     item,
