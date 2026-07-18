@@ -14,18 +14,23 @@ AdminApi::bootstrap();
 AdminApi::run(static function (): void {
     $auth = AdminApi::requireAdmin();
     $roles = new AdminRoleService();
-    if (!$roles->isSuperAdmin($auth)) {
-        AdminApi::fail(403, 'forbidden', '최고관리자만 스키마 마이그레이션을 실행할 수 있습니다.');
-    }
-
     $content = new ContentSchemaMigrateService();
     $accounts = new AdminAccountSchemaMigrateService();
     $method = AdminApi::method();
+    $admin036 = $accounts->status();
+    $needs036Bootstrap = empty($admin036['has_admin_level']);
+    $isSuper = $roles->isSuperAdmin($auth);
+
+    // 036 컬럼이 아직 없으면 부마스터도 1회 부트스트랩 적용 허용 (닭-달걀)
+    if (!$isSuper && !$needs036Bootstrap) {
+        AdminApi::fail(403, 'forbidden', '최고관리자만 스키마 마이그레이션을 실행할 수 있습니다.');
+    }
 
     if ($method === 'GET') {
         AdminApi::ok([
             'content_034_035' => $content->status(),
-            'admin_036' => $accounts->status(),
+            'admin_036' => $admin036,
+            'can_apply_036' => $isSuper || $needs036Bootstrap,
         ]);
     }
 
@@ -34,9 +39,15 @@ AdminApi::run(static function (): void {
         $confirm = (string) ($input['confirm'] ?? '');
 
         if ($confirm === 'apply-034-035') {
+            if (!$isSuper) {
+                AdminApi::fail(403, 'forbidden', '최고관리자만 034/035를 적용할 수 있습니다.');
+            }
             AdminApi::ok(['migrate' => $content->apply()]);
         }
         if ($confirm === 'apply-036') {
+            if (!$isSuper && !$needs036Bootstrap) {
+                AdminApi::fail(403, 'forbidden', '최고관리자만 036을 적용할 수 있습니다.');
+            }
             AdminApi::ok(['migrate' => $accounts->apply()]);
         }
 
