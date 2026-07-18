@@ -1,25 +1,39 @@
-/** 28장 — A28 내부 운영 콘솔 라우트 (#/admin/* · P17-admin과 분리) */
+/**
+ * 관리자 해시 라우트 (#/admin/*)
+ *
+ * 참고(코드용): A28 경로 · 구 `#/admin/notices`·`#/admin/settings`는 서브로 리다이렉트
+ */
 
-const A28_PATHS = [
-  '/admin',
-  '/admin/members',
-  '/admin/reports',
-  '/admin/notices',
-  '/admin/tickets',
-  '/admin/submission-docs',
-  '/admin/exposure',
-  '/admin/commerce',
-  '/admin/logs',
-  '/admin/settings',
-  '/admin/permissions',
-];
+import { flattenAdminNav } from './a28-copy.js';
+
+/** @type {Record<string, string>} */
+const LEGACY_REDIRECTS = {
+  '/admin/notices': '/admin/notices/channels',
+  '/admin/settings': '/admin/settings/basic',
+};
+
+function allAdminPaths() {
+  const fromNav = flattenAdminNav()
+    .map((item) => item.path)
+    .filter(Boolean);
+  return ['/admin', ...fromNav];
+}
+
+/** @param {string} hashPath */
+export function getAdminLegacyRedirect(hashPath) {
+  const raw = hashPath.split('?')[0];
+  const p = raw.startsWith('/') ? raw : `/${raw}`;
+  return LEGACY_REDIRECTS[p] || null;
+}
 
 /** @param {string} hashPath */
 export function normalizeAdminPath(hashPath) {
   const raw = hashPath.split('?')[0];
   const p = raw.startsWith('/') ? raw : `/${raw}`;
   if (p === '/admin' || p === '/admin/') return '/admin';
-  if (A28_PATHS.includes(p)) return p;
+  const redirected = LEGACY_REDIRECTS[p];
+  if (redirected) return redirected;
+  if (allAdminPaths().includes(p)) return p;
   return null;
 }
 
@@ -27,38 +41,48 @@ export function getDefaultAdminPath() {
   return '/admin';
 }
 
-/** @param {string} path */
+/** 개발 참고용 이정표 ID — UI에 표시하지 말 것 */
 export function getAdminScreenId(path) {
-  const map = {
-    '/admin': 'A28-01',
-    '/admin/members': 'A28-02',
-    '/admin/reports': 'A28-04',
-    '/admin/notices': 'A28-05',
-    '/admin/tickets': 'A28-04b',
-    '/admin/submission-docs': 'A28-06',
-    '/admin/exposure': 'A28-07a',
-    '/admin/commerce': 'A28-07b',
-    '/admin/logs': 'A28-08a',
-    '/admin/settings': 'A28-09',
-    '/admin/permissions': 'A28-08b',
-  };
-  return map[normalizeAdminPath(path) || '/admin'] || 'A28-01';
+  const leaf = findAdminNavLeaf(path);
+  return leaf?.screenId || 'A28-01';
+}
+
+/** 권한 검사용 menuId */
+export function getAdminMenuId(path) {
+  const leaf = findAdminNavLeaf(path);
+  return leaf?.menuId || leaf?.id || 'hub';
 }
 
 /** @param {string} path */
-export function getAdminMenuId(path) {
-  const map = {
-    '/admin': 'hub',
-    '/admin/members': 'members',
-    '/admin/reports': 'reports',
-    '/admin/notices': 'notices',
-    '/admin/tickets': 'tickets',
-    '/admin/submission-docs': 'submission',
-    '/admin/exposure': 'exposure',
-    '/admin/commerce': 'commerce',
-    '/admin/logs': 'logs',
-    '/admin/settings': 'settings',
-    '/admin/permissions': 'permissions',
-  };
-  return map[normalizeAdminPath(path) || '/admin'] || 'hub';
+export function findAdminNavLeaf(path) {
+  const n = normalizeAdminPath(path) || '/admin';
+  return flattenAdminNav().find((item) => item.path === n) || flattenAdminNav().find((item) => item.path === '/admin');
+}
+
+/** settings 섹션 키: basic|join|notify|popups|legal */
+export function getSettingsSection(path) {
+  const n = normalizeAdminPath(path) || '';
+  const m = n.match(/^\/admin\/settings\/(.+)$/);
+  return m?.[1] || 'basic';
+}
+
+/** notices 섹션: channels|rails|posts|faq|guide */
+export function getNoticesSection(path) {
+  const n = normalizeAdminPath(path) || '';
+  const m = n.match(/^\/admin\/notices\/(.+)$/);
+  return m?.[1] || 'channels';
+}
+
+/** market 섹션 */
+export function getMarketSection(path) {
+  const n = normalizeAdminPath(path) || '';
+  const m = n.match(/^\/admin\/market\/(.+)$/);
+  return m?.[1] || 'overview';
+}
+
+/** notify 섹션 */
+export function getNotifySection(path) {
+  const n = normalizeAdminPath(path) || '';
+  const m = n.match(/^\/admin\/notify\/(.+)$/);
+  return m?.[1] || 'settings';
 }

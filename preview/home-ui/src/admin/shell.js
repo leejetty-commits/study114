@@ -1,6 +1,11 @@
+/**
+ * 관리자 셸 — 영카트식 그룹 + 서브메뉴 사이드바
+ * (영카트: 좌측 GNB 아이콘 + gnb_oparea 서브. 여기선 그룹 접힘/펼침으로 동일 깊이 처리)
+ */
+
 import { renderPreviewToolbar, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
-import { A28_COPY, A28_NAV } from './a28-copy.js';
-import { getAdminScreenId, getAdminMenuId } from './router.js';
+import { A28_COPY, A28_MENU } from './a28-copy.js';
+import { findAdminNavLeaf } from './router.js';
 import { canAccessAdminMenu } from './admin-permissions.js';
 import { getAuthUser } from '../auth-session.js';
 import { renderAdminRoleBadge } from './admin-guard.js';
@@ -10,45 +15,91 @@ function esc(s) {
 }
 
 /** @param {string} path */
+function findGroupForPath(path) {
+  const leaf = findAdminNavLeaf(path);
+  if (!leaf) return null;
+  for (const g of A28_MENU) {
+    if (g.children?.some((c) => c.path === leaf.path)) return g;
+    if (g.path === leaf.path) return g;
+  }
+  return null;
+}
+
+/** @param {string} path */
 function renderBreadcrumb(path) {
-  const item = A28_NAV.find((n) => n.path === path) || A28_NAV[0];
+  const leaf = findAdminNavLeaf(path);
+  const group = findGroupForPath(path);
+  const groupLabel = group?.children ? group.label : null;
   return `
-    <nav class="admin-breadcrumb" aria-label="breadcrumb">
+    <nav class="admin-breadcrumb" aria-label="위치">
       <a href="#/admin" data-a28-nav="/admin">운영</a>
+      ${groupLabel ? `<span aria-hidden="true">/</span><span>${esc(groupLabel)}</span>` : ''}
       <span aria-hidden="true">/</span>
-      <span>${esc(item?.label || '홈')}</span>
+      <span>${esc(leaf?.label || '홈')}</span>
     </nav>`;
+}
+
+/**
+ * @param {typeof A28_MENU[number]} group
+ * @param {string} activePath
+ */
+function groupHasAccess(group) {
+  if (group.children?.length) {
+    return group.children.some((c) => canAccessAdminMenu(c.menuId || c.id));
+  }
+  return canAccessAdminMenu(group.menuId || group.id);
 }
 
 /** @param {string} activePath */
 function renderSidebar(activePath) {
-  const links = A28_NAV.filter((item) => canAccessAdminMenu(item.id))
-    .map((item) => {
-      const active = item.path === activePath ? ' is-active' : '';
-      const locked = item.masterOnly ? ' admin-sidebar__link--locked' : '';
-      return `<a href="#${item.path}" class="admin-sidebar__link${active}${locked}" data-a28-nav="${item.path}">
-        <span class="admin-sidebar__label">${esc(item.label)}</span>
-        <span class="admin-sidebar__id">${esc(item.screenId)}</span>
-      </a>`;
+  const activeLeaf = findAdminNavLeaf(activePath);
+  const activeGroup = findGroupForPath(activePath);
+
+  const blocks = A28_MENU.filter(groupHasAccess)
+    .map((group) => {
+      if (!group.children?.length) {
+        const active = group.path === activePath ? ' is-active' : '';
+        return `
+          <a href="#${group.path}" class="admin-sidebar__link${active}" data-a28-nav="${group.path}">
+            <span class="admin-sidebar__label">${esc(group.label)}</span>
+          </a>`;
+      }
+
+      const kids = group.children.filter((c) => canAccessAdminMenu(c.menuId || c.id));
+      if (!kids.length) return '';
+
+      const open = activeGroup?.id === group.id;
+      const childLinks = kids
+        .map((c) => {
+          const active = c.path === activeLeaf?.path ? ' is-active' : '';
+          const locked = c.masterOnly ? ' admin-sidebar__sublink--locked' : '';
+          return `<a href="#${c.path}" class="admin-sidebar__sublink${active}${locked}" data-a28-nav="${c.path}">${esc(c.label)}</a>`;
+        })
+        .join('');
+
+      return `
+        <details class="admin-sidebar__group"${open ? ' open' : ''}>
+          <summary class="admin-sidebar__group-title">${esc(group.label)}</summary>
+          <div class="admin-sidebar__subnav">${childLinks}</div>
+        </details>`;
     })
     .join('');
 
   return `
     <aside class="admin-sidebar" aria-label="관리자 메뉴">
       <div class="admin-sidebar__brand">
-        <strong>${esc(A28_COPY.hubTitle)}</strong>
+        <strong>우동공과 관리자</strong>
         <span class="admin-sidebar__badge">${esc(A28_COPY.previewBadge)}</span>
       </div>
       <a href="#/guest" class="admin-sidebar__exit" data-nav="/guest">← 서비스로 나가기</a>
-      <nav class="admin-sidebar__nav">${links}</nav>
+      <nav class="admin-sidebar__nav">${blocks}</nav>
     </aside>`;
 }
 
 /** @param {string} path @param {string} bodyHtml */
 export function renderAdminShell(path, bodyHtml) {
-  const screenId = getAdminScreenId(path);
   const user = getAuthUser();
-  const menuId = getAdminMenuId(path);
+  const leaf = findAdminNavLeaf(path);
 
   const mainHtml = `
     <div class="admin-shell">
@@ -57,7 +108,7 @@ export function renderAdminShell(path, bodyHtml) {
         <header class="admin-topbar">
           <div class="admin-topbar__left">
             ${renderBreadcrumb(path)}
-            <span class="admin-topbar__screen">${esc(screenId)} · ${esc(menuId)}</span>
+            ${leaf?.help ? `<p class="admin-topbar__help">${esc(leaf.help)}</p>` : ''}
           </div>
           <div class="admin-topbar__right">
             ${renderAdminRoleBadge()}
@@ -76,6 +127,7 @@ export function renderAdminShell(path, bodyHtml) {
     mainHtml,
     footerHtml: renderFooter(),
     slotKey: null,
+    appClass: 'home-app--admin',
   });
 }
 

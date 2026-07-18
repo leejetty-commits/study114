@@ -13,7 +13,7 @@ import {
 } from './support/router.js';
 import { getDefaultPolicyPath, normalizePolicyPath } from './policy-router.js';
 import { getDefaultLibraryPath, normalizeLibraryPath } from './library/library-router.js';
-import { getDefaultAdminPath, normalizeAdminPath } from './admin/router.js';
+import { getDefaultAdminPath, normalizeAdminPath, getAdminLegacyRedirect } from './admin/router.js';
 import {
   getDefaultPlansPath,
   normalizePlansPath,
@@ -344,6 +344,12 @@ export function bootstrapAdminRoute() {
   const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
   if (path === '/admin' || path === '/admin/') {
     window.location.replace(`#${getDefaultAdminPath()}`);
+    return true;
+  }
+
+  const legacy = getAdminLegacyRedirect(path);
+  if (legacy) {
+    window.location.replace(`#${legacy}`);
     return true;
   }
 

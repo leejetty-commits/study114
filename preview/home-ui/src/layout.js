@@ -48,7 +48,7 @@ export function renderPreviewToolbar() {
         <button type="button" class="preview-toolbar__btn ${onPlans ? 'is-active' : ''}" data-nav="/plans">유료상품</button>
         <button type="button" class="preview-toolbar__btn ${onLibrary ? 'is-active' : ''}" data-nav="/library">자료실</button>
         <button type="button" class="preview-toolbar__btn ${onPolicy ? 'is-active' : ''}" data-nav="/policy/terms">정책</button>
-        <button type="button" class="preview-toolbar__btn ${onAdmin ? 'is-active' : ''}" data-nav="/admin">A28</button>
+        <button type="button" class="preview-toolbar__btn ${onAdmin ? 'is-active' : ''}" data-nav="/admin">관리자</button>
         <span class="preview-toolbar__divider"></span>
         <span class="preview-toolbar__hint" title="handoff store">${authLabel}</span>
         <button type="button" class="preview-toolbar__btn" data-action="dev-login-parent" title="guardian1@dev.local">Dev·학부모</button>
@@ -350,16 +350,27 @@ export function renderHomeShell(role, mainContent, opts = {}) {
 
 /**
  * home-app 계열(유료·이용안내·마이페이지 등)에 홈과 같은 우측 배너 적용
- * @param {{ toolbar?: string, headerHtml: string, mainHtml: string, footerHtml?: string, slotKey?: string|null, sidebarHtml?: string }} opts
+ * @param {{ toolbar?: string, headerHtml: string, mainHtml: string, footerHtml?: string, slotKey?: string|null, sidebarHtml?: string, appClass?: string }} opts
  */
 export function renderAppShellWithPromo(opts) {
-  const { toolbar = '', headerHtml, mainHtml, footerHtml = renderFooter(), slotKey = 'support_right_rail', sidebarHtml } = opts;
+  const {
+    toolbar = '',
+    headerHtml,
+    mainHtml,
+    footerHtml = renderFooter(),
+    slotKey = 'support_right_rail',
+    sidebarHtml,
+    appClass = '',
+  } = opts;
   const sidebar = sidebarHtml ?? (slotKey ? renderPromoWithRightRail(slotKey) : '');
+  const hasPromo = Boolean(String(sidebar || '').trim());
+  const bodyClass = hasPromo ? 'home-body home-body--with-promo' : 'home-body home-body--no-promo';
+  const appCls = ['home-app', appClass].filter(Boolean).join(' ');
   return `
     ${toolbar}
-    <div class="home-app">
+    <div class="${appCls}">
       ${headerHtml}
-      <div class="home-body home-body--with-promo">
+      <div class="${bodyClass}">
         <div class="home-main">${mainHtml}</div>
         ${sidebar}
       </div>

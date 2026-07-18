@@ -49,7 +49,7 @@ export function renderAdminAccessGate(path) {
       </p>
       <p class="mypage-note">Dev: <code>${esc(adminAccount.email)}</code> / password · 마스터: jetty@naver.com</p>
       <button type="button" class="btn btn--primary" data-action="dev-login-admin">Dev·운영 로그인</button>
-      <a href="#/admin" class="btn btn--secondary btn--sm" data-a28-nav="/admin">← A28 허브</a>
+      <a href="#/admin" class="btn btn--secondary btn--sm" data-a28-nav="/admin">← 운영 홈</a>
     </section>`;
 }
 
