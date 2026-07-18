@@ -15,7 +15,7 @@ import {
   resolveGnbLink,
 } from './preview-links.js';
 
-/** @typedef {'guest' | 'parent' | 'study_room' | 'tutor'} NavRole */
+/** @typedef {'guest' | 'parent' | 'study_room' | 'tutor' | 'admin'} NavRole */
 
 /**
  * 유틸 메뉴
@@ -53,32 +53,36 @@ export const GNB_MAIN = [
   { id: 'support', label: '고객센터' },
 ];
 
+/** 전 메뉴 표시 (비로그인·운영자) */
+const GNB_ALL_SHOW = {
+  home: 'show',
+  find_room: 'show',
+  find_tutor: 'show',
+  student_parent: 'show',
+  register_room: 'show',
+  register_tutor: 'show',
+  plans: 'show',
+  support: 'show',
+};
+
 /**
  * 역할별 GNB — show | hide (limited/muted 사용 금지 · 비해당은 렌더 단계에서 숨김)
  *
- * - guest: 전체 활성
- * - parent(guardian_student): 공급자 등록·유료상품 숨김
+ * - guest / admin: 전체 활성 (운영자는 점검용으로 전부 봄)
+ * - parent(guardian_student): 학생찾기·공급자 등록·유료상품 숨김 (13§8 · 10-6-5)
  * - study_room: 과외쌤찾기·과외쌤상세등록 숨김
  * - tutor: 공부방찾기·공부방상세등록 숨김
  *
  * @type {Record<NavRole, Record<string, 'show' | 'hide'>>}
  */
 export const GNB_VISIBILITY = {
-  guest: {
-    home: 'show',
-    find_room: 'show',
-    find_tutor: 'show',
-    student_parent: 'show',
-    register_room: 'show',
-    register_tutor: 'show',
-    plans: 'show',
-    support: 'show',
-  },
+  guest: { ...GNB_ALL_SHOW },
+  admin: { ...GNB_ALL_SHOW },
   parent: {
     home: 'show',
     find_room: 'show',
     find_tutor: 'show',
-    student_parent: 'show',
+    student_parent: 'hide',
     register_room: 'hide',
     register_tutor: 'hide',
     plans: 'hide',
@@ -132,19 +136,19 @@ export function canAccessPlansHub(role) {
 }
 
 /**
- * guest 카탈로그 열람 — 비로그인은 잠금(로그인 게이트). 공급자만 실사용.
+ * guest 카탈로그 열람 — 비로그인은 잠금(로그인 게이트). 공급자·운영자만 실사용.
  * @param {NavRole} role
  */
 export function canBrowsePlansCatalog(role) {
-  return role === 'study_room' || role === 'tutor';
+  return role === 'study_room' || role === 'tutor' || role === 'admin';
 }
 
 /**
- * 유료상품 계정/결제 실사용 — 공급자 로그인 역할만.
+ * 유료상품 계정/결제 실사용 — 공급자·운영자.
  * @param {NavRole} role
  */
 export function canAccessPlansAccountRoutes(role) {
-  return role === 'study_room' || role === 'tutor';
+  return role === 'study_room' || role === 'tutor' || role === 'admin';
 }
 
 /** @param {NavRole} role */
@@ -159,7 +163,7 @@ export function canAccessRegisterTutor(role) {
 
 /**
  * 등록 폼 입력/임시저장/제출 — GNB 노출과 분리.
- * guest는 메뉴만 보이고 폼은 못 씀 (소개/로그인 유도만).
+ * guest/admin은 메뉴만 보이고 폼은 해당 역할만.
  * @param {NavRole} role
  * @param {'room' | 'tutor'} kind
  */
@@ -188,9 +192,9 @@ export function visibleSearchTabsForRole(role) {
  */
 export function navRoleFromAuthUser(user) {
   if (!user) return 'guest';
+  if (user.role_type === 'admin') return 'admin';
   if (user.role_type === 'study_room_owner') return 'study_room';
   if (user.role_type === 'tutor') return 'tutor';
-  if (user.role_type === 'admin') return 'parent';
   return 'parent';
 }
 

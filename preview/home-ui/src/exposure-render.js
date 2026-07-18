@@ -601,10 +601,16 @@ function renderBasicStudentRow(item, opts) {
     item.lessons_per_week && item.minutes_per_lesson
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
       : '—';
+  // 10-6: 카드에는 요청문 본문 금지 — 공개 메타만 (비공개 / 유료공개 / 로그인 유도)
+  const requestVis = item.request_summary_visibility || 'private';
   const request =
-    item.request_summary_visibility === 'private' && opts.guest
+    opts.guest || viewerRole === 'guest'
       ? '로그인 후'
-      : item.request_summary || '—';
+      : requestVis === 'paid_only'
+        ? '유료공개'
+        : requestVis === 'private'
+          ? '비공개'
+          : '—';
   return `
     <article class="expo-basic expo-basic--student" data-student-id="${item.id}" data-action="open-student-detail">
       ${renderExpoTable(

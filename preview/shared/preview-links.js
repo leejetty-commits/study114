@@ -33,7 +33,7 @@ export const TUTOR_UI_BASE = envBase('VITE_TUTOR_UI_BASE', `${LOCAL_ORIGIN}:${PR
 export const STUDY_ROOM_REGISTER_URL = `${STUDY_ROOM_UI_BASE}/#/register/basic`;
 export const TUTOR_REGISTER_URL = `${TUTOR_UI_BASE}/#/register/basic`;
 
-/** @typedef {'guest' | 'parent' | 'study_room' | 'tutor'} NavRole */
+/** @typedef {'guest' | 'parent' | 'study_room' | 'tutor' | 'admin'} NavRole */
 /** @typedef {'room' | 'tutor' | 'student'} SearchTab */
 
 /**
@@ -78,7 +78,7 @@ export function parseHashQuery() {
 
 /** @param {string | undefined} raw @returns {NavRole | null} */
 export function parseNavRole(raw) {
-  if (raw === 'guest' || raw === 'parent' || raw === 'study_room' || raw === 'tutor') {
+  if (raw === 'guest' || raw === 'parent' || raw === 'study_room' || raw === 'tutor' || raw === 'admin') {
     return raw;
   }
   return null;

@@ -1,5 +1,5 @@
 /** @typedef {'room' | 'tutor' | 'student'} SearchTab */
-/** @typedef {'guest' | 'parent' | 'study_room' | 'tutor'} ViewerRole */
+/** @typedef {'guest' | 'parent' | 'study_room' | 'tutor' | 'admin'} ViewerRole */
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
 import { parseHashQuery, parseNavRole } from '../../shared/preview-links.js';

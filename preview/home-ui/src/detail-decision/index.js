@@ -2,6 +2,7 @@ import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS, EXPOSURE_STUDENTS } from '../exp
 import { getNavRole, previewState } from '../state.js';
 import { bindStudentReviewEvents } from '../student-review-ui.js';
 import { openDetailModal, closeDetailModal } from './detail-shell.js';
+import { AUTH_UI_BASE } from '../data.js';
 
 export { closeDetailModal, openDetailModal } from './detail-shell.js';
 export { showP24Toast } from './detail-utils.js';
@@ -23,10 +24,20 @@ export function resolveDetailItem(kind, id) {
 export function openDetailDecision({ kind, id, viewer, onRerender, sourceRoute = 'search', item: itemOverride }) {
   const item = itemOverride || resolveDetailItem(kind, id);
   if (!item) return;
+  const role = viewer || getNavRole();
+  // 10-6-2: 비로그인 학생 상세 차단 — 로그인 유도만
+  if (kind === 'student' && role === 'guest') {
+    window.location.assign(`${AUTH_UI_BASE}/#/login?from=student-detail`);
+    return;
+  }
+  // 10-6-5 / 13§8: 학부모는 학생찾기 역방향 상세 차단
+  if (kind === 'student' && role === 'parent') {
+    return;
+  }
   openDetailModal({
     kind,
     item,
-    viewer: viewer || getNavRole(),
+    viewer: role,
     onRerender,
     sourceRoute,
   });

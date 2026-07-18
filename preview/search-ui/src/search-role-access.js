@@ -12,7 +12,8 @@ import { visibleSearchTabsForRole } from '../../shared/site-nav-config.js';
 /** @type {Record<ViewerRole, string>} */
 export const ROLE_SEARCH_HEADING = {
   guest: '공부방·과외·학생 찾기',
-  parent: '공부방·과외·학생 찾기',
+  admin: '공부방·과외·학생 찾기',
+  parent: '공부방·과외 찾기',
   study_room: '공부방 · 학생찾기',
   tutor: '과외쌤 · 학생찾기',
 };
