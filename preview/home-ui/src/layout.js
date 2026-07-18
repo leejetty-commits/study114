@@ -1,5 +1,4 @@
 import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, navigateToSupport } from './state.js';
-import { POLICY_SHORT_NOTICE } from './policy-copy.js';
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
@@ -11,6 +10,7 @@ import { isHandoffApiMode } from './handoff-backend.js';
 import { isMessagesApiMode } from './messages-backend.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { syncSiteHeaderOffset, ensureSiteHeaderOffsetListeners } from '../../shared/site-chrome.js';
+import { renderSiteFooter } from '../../shared/site-footer.js';
 
 export function renderPreviewToolbar() {
   if (!SHOW_PREVIEW_TOOLBAR) return '';
@@ -202,18 +202,7 @@ export function renderHeader(role, opts = {}) {
 }
 
 export function renderFooter() {
-  return `
-    <footer class="home-footer">
-      <div class="home-footer__links">
-        <a href="#/policy/terms" data-nav="/policy/terms">약관</a>
-        <a href="#/policy/privacy" data-nav="/policy/privacy">개인정보</a>
-        <a href="#/policy/platform" data-nav="/policy/platform">플랫폼 고지</a>
-        <a href="#/support" data-action="util-support">고객센터</a>
-      </div>
-      <p class="home-footer__notice">${POLICY_SHORT_NOTICE.footer}</p>
-      <p>© 2026 우동공과 · study114 · UI Preview</p>
-    </footer>
-  `;
+  return renderSiteFooter({ linkMode: 'hash' });
 }
 
 export function renderRegionBar(showSearch = true) {

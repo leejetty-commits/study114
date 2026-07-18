@@ -443,13 +443,11 @@ export function renderCompactRegionBar(tab, state, options = {}) {
     </div>`;
 }
 
-function renderProviderSelfNote(tab, role, homeSelf = false) {
+function renderProviderSelfNote(tab, role, homeSelf = false, hidden = false) {
+  if (hidden) return '';
   if (!isProviderSelfPreviewMode(tab, role, homeSelf)) return '';
-  const copy =
-    role === 'tutor'
-      ? '내 과외쌤이 검색·노출 화면에서 어떻게 보이는지 미리보기입니다. 비교·찜은 사용할 수 없습니다.'
-      : '내 공부방이 검색·노출 화면에서 어떻게 보이는지 미리보기입니다. 비교·찜은 사용할 수 없습니다.';
-  return `<p class="search-note search-note--self">${esc(copy)}</p>`;
+  // 홈 본문 주석 제거 — 이용안내(HOME_EXPOSURE_GUIDES)로 이전
+  return '';
 }
 
 /**
@@ -466,6 +464,7 @@ export function renderCompactFindForm(tab, state, options = {}) {
     homeSelf = false,
     hideSearchForm = false,
     hideRegionBar = false,
+    hideSelfNote = false,
   } = options;
   if (homeSelf) state.homeSelf = true;
   const meta = SEARCH_TABS[tab];
@@ -516,7 +515,7 @@ export function renderCompactFindForm(tab, state, options = {}) {
       : renderCompactRegionBar(tab, state, { variant, role });
 
   return `
-    ${renderProviderSelfNote(tab, role, homeSelfFlag)}
+    ${renderProviderSelfNote(tab, role, homeSelfFlag, hideSelfNote)}
     ${regionBar}
     ${showMap
       ? renderSearchMapBlock(activeItems, {
@@ -616,19 +615,9 @@ export function renderFindResultSection(tab, state, role, options = {}) {
         })
       : '';
 
-  const mapNote =
-    tab === 'room'
-      ? '<p class="search-results__hint">공부방: 지도 핀과 아래 목록은 동일한 결과 집합입니다. Prime/Pick/Basic 구획 없음.</p>'
-      : tab === 'student'
-        ? role === 'parent'
-          ? '<p class="search-results__hint">학생찾기: 시장 비교 열람 · 블라인드 유지 · 학생 간 쪽지 불가</p>'
-          : '<p class="search-results__hint">학생찾기: 블라인드 리스트 · 비교 없음 · 찜·쪽지 중심</p>'
-        : '<p class="search-results__hint">과외쌤: 필터링된 결과 + 해당 지역 학생 수요 · 티어 구획 없음</p>';
-
   return `
     <section class="search-results search-results--executed" ${debugAttrs} data-result-mode="${esc(resultMode)}" data-surface-type="${esc(surfaceType)}">
       <h2 class="search-section__title">검색 결과 <span class="search-results__count">${state.searchTotal}건</span></h2>
-      ${mapNote}
       ${flatHtml}
       ${demandHtml}
     </section>`;

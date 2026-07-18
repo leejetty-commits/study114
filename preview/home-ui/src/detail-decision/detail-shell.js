@@ -113,57 +113,81 @@ function isHomeSpaHost() {
 }
 
 function bindFloatingDrag(wrap) {
-  const panel = wrap.querySelector('.p24-modal');
+  const panel = wrap.querySelector('.p24-modal--floating');
   const handle = wrap.querySelector('[data-p24-drag-handle]');
   if (!panel || !handle) return;
+
+  // flex 컨테이너 밖으로 빼서 fixed 좌표로 이동 (transform 방식은 일부 환경에서 무시됨)
+  const rect = panel.getBoundingClientRect();
+  panel.style.position = 'fixed';
+  panel.style.left = `${rect.left}px`;
+  panel.style.top = `${rect.top}px`;
+  panel.style.right = 'auto';
+  panel.style.margin = '0';
+  panel.style.transform = 'none';
+  wrap.appendChild(panel);
 
   let dragging = false;
   let startX = 0;
   let startY = 0;
-  let origX = 0;
-  let origY = 0;
+  let origLeft = rect.left;
+  let origTop = rect.top;
+  /** @type {number|null} */
+  let activePointer = null;
+
+  const clamp = (left, top) => {
+    const w = panel.offsetWidth;
+    const h = panel.offsetHeight;
+    const maxL = Math.max(8, window.innerWidth - w - 8);
+    const maxT = Math.max(8, window.innerHeight - Math.min(h, window.innerHeight * 0.9) - 8);
+    return {
+      left: Math.min(maxL, Math.max(8, left)),
+      top: Math.min(maxT, Math.max(8, top)),
+    };
+  };
 
   const onMove = (e) => {
     if (!dragging) return;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const dx = clientX - startX;
-    const dy = clientY - startY;
-    panel.style.transform = `translate(${origX + dx}px, ${origY + dy}px)`;
+    if (activePointer != null && e.pointerId !== activePointer) return;
+    const pos = clamp(origLeft + (e.clientX - startX), origTop + (e.clientY - startY));
+    panel.style.left = `${pos.left}px`;
+    panel.style.top = `${pos.top}px`;
   };
 
-  const onUp = () => {
+  const onUp = (e) => {
     if (!dragging) return;
+    if (activePointer != null && e.pointerId !== activePointer) return;
     dragging = false;
+    activePointer = null;
     panel.classList.remove('is-dragging');
-    const match = /translate\((-?\d+(?:\.\d+)?)px,\s*(-?\d+(?:\.\d+)?)px\)/.exec(panel.style.transform || '');
-    if (match) {
-      origX = Number(match[1]);
-      origY = Number(match[2]);
+    origLeft = parseFloat(panel.style.left) || origLeft;
+    origTop = parseFloat(panel.style.top) || origTop;
+    try {
+      handle.releasePointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
     }
-    document.removeEventListener('pointermove', onMove);
-    document.removeEventListener('pointerup', onUp);
-    document.removeEventListener('touchmove', onMove);
-    document.removeEventListener('touchend', onUp);
+    handle.removeEventListener('pointermove', onMove);
+    handle.removeEventListener('pointerup', onUp);
+    handle.removeEventListener('pointercancel', onUp);
   };
 
-  const onDown = (e) => {
+  handle.addEventListener('pointerdown', (e) => {
+    if (e.button != null && e.button !== 0) return;
     if (e.target.closest('button, a')) return;
     dragging = true;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    startX = clientX;
-    startY = clientY;
+    activePointer = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+    origLeft = parseFloat(panel.style.left) || panel.getBoundingClientRect().left;
+    origTop = parseFloat(panel.style.top) || panel.getBoundingClientRect().top;
     panel.classList.add('is-dragging');
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-    document.addEventListener('touchmove', onMove, { passive: true });
-    document.addEventListener('touchend', onUp);
+    handle.setPointerCapture(e.pointerId);
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', onUp);
     e.preventDefault();
-  };
-
-  handle.addEventListener('pointerdown', onDown);
-  handle.addEventListener('touchstart', onDown, { passive: false });
+  });
 }
 
 function bindGuestRailNavigation(wrap) {
@@ -236,13 +260,22 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   wrap.setAttribute('role', 'dialog');
   wrap.setAttribute('aria-modal', floating ? 'false' : 'true');
   wrap.innerHTML = `
-    <div class="modal p24-modal${floating ? ' p24-modal--floating' : ''}">
+    <div class="modal p24-modal${floating ? ' p24-modal--floating p24-modal--emphasis' : ' p24-modal--emphasis'}">
+      ${
+        floating
+          ? `<div class="p24-modal__dragbar" data-p24-drag-handle title="끌어서 이동">
+              <span class="p24-modal__dragbar-grip" aria-hidden="true"></span>
+              <span class="p24-modal__dragbar-label">이동</span>
+              <button type="button" class="modal__close p24-modal__dragbar-close" data-p24-action="close" aria-label="닫기">×</button>
+            </div>`
+          : ''
+      }
       <header class="modal__head p24-modal__head"${floating ? ' data-p24-drag-handle' : ''}>
         <div>
-          <p class="p24-modal__kind">${esc(subtitle)}${floating ? ' · 끌어 이동' : ''}</p>
+          <p class="p24-modal__kind">${esc(subtitle)}</p>
           <h2 class="p24-modal__title">${esc(title)}</h2>
         </div>
-        <button type="button" class="modal__close" data-p24-action="close" aria-label="닫기">×</button>
+        ${floating ? '' : '<button type="button" class="modal__close" data-p24-action="close" aria-label="닫기">×</button>'}
       </header>
       <div class="modal__body p24-modal__body">
         ${entryRibbon}

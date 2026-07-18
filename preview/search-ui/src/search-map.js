@@ -70,7 +70,6 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
   return `
     <section class="hero-map hero-map--search" aria-label="공부방 지도" data-study-room-map data-map-variant="search" data-region-label="${esc(region)}" data-result-source="${esc(resultSource)}" data-result-items="activeResultItems">
       <aside class="hero-map__rail" aria-label="지역 요약">
-        <p class="hero-map__eyebrow">우리동네</p>
         <h2 class="hero-map__dong">${esc(parts.dong)}</h2>
         <p class="hero-map__sub">${esc(region)}</p>
         <p class="hero-map__hint">${searched ? '검색 결과 · ' : '내 지역 · '}${esc(countNote)}</p>

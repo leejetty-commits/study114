@@ -171,7 +171,7 @@ export function renderItemActions(opts = {}) {
 
   const msgAttrs = guest
     ? `data-action="login-gate" data-gate="inquire" data-gate-label="쪽지"`
-    : `data-action="login-gate" data-gate="inquire" data-gate-label="쪽지"`;
+    : `data-action="open-detail-memo" data-item-kind="${kind}" data-item-id="${itemId}"`;
   const messageBtn = actionCountBtn('✉', message_count, {
     title: `쪽지 ${message_count}`,
     attrs: msgAttrs,

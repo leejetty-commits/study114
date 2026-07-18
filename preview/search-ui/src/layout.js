@@ -15,6 +15,8 @@ import {
   bindSitePromoSidebarEvents,
 } from '../../shared/promo-sidebar.js';
 import { renderRightRailSidebar } from '@home-ui/right-rail.js';
+import { renderSiteFooter } from '../../shared/site-footer.js';
+import { bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 
 export function renderPreviewToolbar(activeTab) {
   if (!SHOW_PREVIEW_TOOLBAR) return '';
@@ -76,9 +78,7 @@ export function renderSearchShell(content) {
         </div>
         ${renderRightRailSidebar('search_right_rail')}
       </div>
-      <footer class="home-footer">
-        <p>© 2026 우동공과 · study114</p>
-      </footer>
+      ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>
   `;
 }
@@ -99,6 +99,8 @@ export function bindGlobalEvents(root) {
   bindSitePromoSidebarEvents(root, {
     plansHash: `${HOME_UI_BASE}/#/plans/positions`,
   });
+
+  bindGuestGateLinks(root);
 
   ensureSiteHeaderOffsetListeners();
   syncSiteHeaderOffset(root);

@@ -113,15 +113,45 @@
 }
 .p24-overlay--floating .p24-modal--floating {
   pointer-events: auto;
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
-  border: 1px solid var(--gray-300);
-  width: min(94vw, 22rem);
+  width: min(94vw, 22.5rem);
   max-height: min(82vh, 640px);
+  z-index: 1151;
+  border-radius: 0.85rem;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.08),
+    0 22px 48px rgba(15, 23, 42, 0.28);
+  border-top: 3px solid var(--brand-orange, #ea580c);
+}
+.p24-modal__dragbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  background: linear-gradient(90deg, #fff7ed, #ffedd5);
+  border-bottom: 1px solid #fed7aa;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.p24-modal__dragbar-grip {
+  width: 2rem;
+  height: 0.28rem;
+  border-radius: 999px;
+  background: #fb923c;
+  box-shadow: 0 3px 0 #fdba74;
+}
+.p24-modal__dragbar-label {
+  flex: 1;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #c2410c;
 }
 .p24-overlay--floating .p24-modal__head[data-p24-drag-handle] {
   cursor: grab;
   user-select: none;
-  background: linear-gradient(180deg, #fff7ed 0%, #fff 70%);
+  touch-action: none;
+  background: #fffbeb;
 }
 .modal.p24-modal {
   background: #fff;

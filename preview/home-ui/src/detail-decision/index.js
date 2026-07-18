@@ -62,7 +62,7 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
     el.addEventListener('click', (e) => {
       if (
         e.target.closest(
-          'button, a, [data-action="compare-toggle"], [data-action="wish-toggle"], [data-action="student-review-toggle"], [data-action="student-wish-toggle"], [data-action="student-memo-start"]',
+          'button, a, [data-action="compare-toggle"], [data-action="wish-toggle"], [data-action="open-detail-memo"], [data-action="student-review-toggle"], [data-action="student-wish-toggle"], [data-action="student-memo-start"]',
         )
       ) {
         return;
@@ -76,7 +76,7 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
   root.querySelectorAll('[data-provider-id][data-provider-kind]').forEach((article) => {
     article.classList.add('p24-card--clickable');
     article.addEventListener('click', (e) => {
-      if (e.target.closest('button, a, [data-action]')) return;
+      if (e.target.closest('button, a, [data-action], .item-actions, .expo-compare-chip')) return;
       const kind = article.dataset.providerKind;
       const id = Number(article.dataset.providerId);
       if (kind !== 'study_room' && kind !== 'tutor') return;

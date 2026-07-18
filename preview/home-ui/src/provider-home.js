@@ -36,35 +36,35 @@ const HOME_HEAD_COPY = {
   parent: {
     study_room: {
       title: '우리동네 공부방',
-      desc: '집 근처 공부방을 지도와 목록으로 살펴보고, 마음에 드는 곳을 찜하거나 비교해 보세요.',
+      desc: '',
     },
     tutor: {
       title: '우리동네 과외쌤',
-      desc: '등록해 둔 희망 지역(최대 3)을 탭으로 바꿔가며 과외 선생님을 살펴보세요.',
+      desc: '',
     },
     student: {
       title: '우리동네 학생',
-      desc: '다른 학생 의뢰의 금액·지역·과목·수업형태를 시장 비교해 보세요. 이름은 마스킹되며 학생 간 쪽지는 불가합니다.',
+      desc: '',
     },
   },
   study_room: {
     study_room: {
       title: '우리동네 공부방',
-      desc: '내 공부방이 학부모에게 어떻게 보이는지 미리 확인하세요. 경쟁 공부방 비교는 검색 메뉴에서 할 수 있습니다.',
+      desc: '',
     },
     student: {
       title: '우리동네 학생',
-      desc: '내 영업 지역의 학습 요청을 살펴보고, 조건에 맞는 학생에게 쪽지를 보내 보세요.',
+      desc: '',
     },
   },
   tutor: {
     tutor: {
       title: '우리동네 과외쌤',
-      desc: '등록한 활동 지역별로 내 노출 상태를 확인하세요. 경쟁 과외쌤 비교는 검색 메뉴에서 할 수 있습니다.',
+      desc: '',
     },
     student: {
       title: '우리동네 학생',
-      desc: '활동 지역의 학습 요청을 살펴보고, 조건에 맞는 학생에게 쪽지를 보내 보세요.',
+      desc: '',
     },
   },
 };
@@ -100,10 +100,13 @@ export function renderProviderHomeTabs(role, activeTabId, tabAttr = 'data-provid
  */
 export function renderProviderHomeHead(role, tabId) {
   const copy = HOME_HEAD_COPY[role][tabId];
+  const desc = copy.desc
+    ? `<p class="parent-home-head__desc">${copy.desc}</p>`
+    : '';
   return `
     <header class="parent-home-head">
       <h1 class="parent-home-head__title">${copy.title}</h1>
-      <p class="parent-home-head__desc">${copy.desc}</p>
+      ${desc}
     </header>`;
 }
 
@@ -129,8 +132,9 @@ export function renderSearchCrossLink(role, searchTab) {
  * @param {ProviderHomeRole} role
  * @param {ProviderHomeTabId} tabId
  * @param {import('@search-ui/search-find-surface.js').FindSurfaceState} findState
+ * @param {{ hideHead?: boolean, hideRegionBar?: boolean, hideSearchCrossLink?: boolean, hideSelfNote?: boolean }} [opts]
  */
-export function renderProviderHomeBody(role, tabId, findState) {
+export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
   const mode = getProviderHomeMode(role, tabId);
   const searchTab = mode.searchTab;
   const homeSelf = mode.homeSelf === true;
@@ -138,17 +142,23 @@ export function renderProviderHomeBody(role, tabId, findState) {
 
   const showMap = searchTab === 'room';
   const hideSearchForm = homeSelf && role === 'tutor' && tabId === 'tutor';
+  const hideHead = opts.hideHead === true;
+  const hideSearchCross = opts.hideSearchCrossLink === true;
+  const showCross =
+    !hideSearchCross && homeSelf && (role === 'tutor' || role === 'study_room');
 
   return `
     <div class="parent-home-body">
-      ${renderProviderHomeHead(role, tabId)}
-      ${homeSelf && (role === 'tutor' || role === 'study_room') ? renderSearchCrossLink(role, searchTab) : ''}
+      ${hideHead ? '' : renderProviderHomeHead(role, tabId)}
+      ${showCross ? renderSearchCrossLink(role, searchTab) : ''}
       ${renderCompactFindForm(searchTab, findState, {
         showMap,
         variant: 'home',
         role,
         homeSelf,
         hideSearchForm,
+        hideRegionBar: opts.hideRegionBar === true,
+        hideSelfNote: opts.hideSelfNote !== false && hideHead,
       })}
       ${renderFindFilterBar(searchTab, findState)}
       ${renderFindResultSection(searchTab, findState, role, { surfaceType: 'home' })}

@@ -17,6 +17,8 @@ import {
   renderSitePromoSidebar,
   bindSitePromoSidebarEvents,
 } from '../../shared/promo-sidebar.js';
+import { renderSiteFooter } from '../../shared/site-footer.js';
+import { bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 
 const ROUTES = {
   '/login': 'login',
@@ -112,9 +114,7 @@ export function renderAuthShell(content, options = {}) {
         </div>
         ${promoSidebar}
       </div>
-      <footer class="home-footer">
-        <p>© 2026 우동공과 · study114</p>
-      </footer>
+      ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>`;
   }
 
@@ -133,9 +133,7 @@ export function renderAuthShell(content, options = {}) {
         </div>
         ${promoSidebar}
       </div>
-      <footer class="home-footer">
-        <p>© 2026 우동공과 · study114</p>
-      </footer>
+      ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>
   `;
 }
@@ -235,6 +233,7 @@ export function bindGlobalEvents(root) {
   bindSitePromoSidebarEvents(root, {
     plansHash: `${HOME_UI_BASE}/#/plans/positions`,
   });
+  bindGuestGateLinks(root);
   ensureSiteHeaderOffsetListeners();
   syncSiteHeaderOffset(root);
   requestAnimationFrame(() => syncSiteHeaderOffset(root));

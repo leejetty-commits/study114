@@ -18,6 +18,8 @@ import {
   toggleCompare,
   toggleWishlist,
 } from './user-actions-state.js';
+import { openDetailDecision, resolveDetailItem } from './detail-decision/index.js';
+import { startFirstMemoFlow } from './messages/compose-flow.js';
 
 function esc(s) {
   return String(s ?? '').replace(/</g, '&lt;');
@@ -185,6 +187,38 @@ export function bindUserActionEvents(root, rerender, opts = {}) {
     btn.addEventListener('click', () => {
       clearCompare(btn.dataset.compareKind || 'study_room');
       rerender();
+    });
+  });
+
+  // 로그인 쪽지 배지 → 상세 판단 후 메모 플로우
+  root.querySelectorAll('[data-action="open-detail-memo"]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const kind = btn.dataset.itemKind;
+      const id = Number(btn.dataset.itemId);
+      if (kind !== 'study_room' && kind !== 'tutor' && kind !== 'student') return;
+      const item = resolveDetailItem(kind, id);
+      if (!item) {
+        openDetailDecision({ kind, id, onRerender: rerender, sourceRoute });
+        return;
+      }
+      const name =
+        kind === 'tutor'
+          ? item.tutor_display_name
+          : kind === 'student'
+            ? item.public_display_name
+            : item.study_room_name;
+      startFirstMemoFlow({
+        kind,
+        targetId: id,
+        targetName: name || '대상',
+        student: kind === 'student' ? item : undefined,
+        structuredLine:
+          kind === 'student'
+            ? `${item.grade_level || '—'} · ${item.subject_label || '—'} · ${item.location_label || '—'}`
+            : `${item.main_subject_note || '—'} · ${item.location_label || '—'}`,
+      });
     });
   });
 }

@@ -14,7 +14,6 @@ import { SECTION_HEADINGS, renderSectionHeading } from '@home-ui/section-heading
 import { partitionByExposureTier } from './search-exposure-mapper.js';
 import { renderSearchZeroState } from '@home-ui/empty-state-copy.js';
 import { isProviderSelfPreviewMode } from './search-role-access.js';
-import { getExposurePageSizes } from '@home-ui/exposure-rules.js';
 
 /**
  * @param {'study_room'|'tutor'} kind
@@ -25,7 +24,6 @@ import { getExposurePageSizes } from '@home-ui/exposure-rules.js';
  */
 function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 피드', mode = 'region') {
   const occupied = getPrimeOccupied(items);
-  const { regionScopeType, primeSlots } = getExposurePageSizes();
   const section =
     kind === 'study_room'
       ? {
@@ -50,22 +48,23 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
     return `<div class="search-tier-results search-tier-results--empty">${renderSearchZeroState(tab, mode)}</div>`;
   }
 
+  // 섹션 주석(Prime 슬롯·순환 등)은 이용안내로 이전 — 홈에는 제목·지역만
+  const locDesc = sectionTag || '';
   const primeHtml = `
-      ${renderSectionHeading({ ...section.prime, desc: `${sectionTag} · Prime · ${regionScopeType}` })}
-      <p class="expo-prime-meta">Prime ${primeSlots}슬롯 · 빈 자리 유지 · 자동대체 없음</p>
+      ${renderSectionHeading({ ...section.prime, desc: locDesc })}
       ${renderPrimeSlotGrid(kind, occupied, opts)}`;
 
   const pickHtml = renderPickPaginatedBlock(
     kind,
     section.pickListId,
-    { ...section.pick, desc: `${sectionTag} · Pick` },
+    { ...section.pick, desc: locDesc },
     items,
     { ...opts, primeOccupied: occupied },
   );
 
   const basicHtml = renderBasicListBlock(
     kind,
-    { ...section.basic, desc: `${sectionTag} · Basic` },
+    { ...section.basic, desc: locDesc },
     items,
     { ...opts, primeOccupied: occupied, paginated: true, listId: section.basicListId },
   );
@@ -86,19 +85,27 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
  * @param {string} sectionTag
  * @param {'region'|'search'} mode
  */
-function renderProviderFlatResults(kind, items, opts = {}, sectionTag = '검색 결과', mode = 'search') {
+/**
+ * @param {'study_room'|'tutor'} kind
+ * @param {object[]} items
+ * @param {object} opts
+ * @param {string} regionLabel — 활성 지역 (헤더 현재위치와 동일 변수)
+ * @param {'region'|'search'} mode
+ */
+function renderProviderFlatResults(kind, items, opts = {}, regionLabel = '', mode = 'search') {
   const tab = kind === 'study_room' ? 'room' : 'tutor';
-  const title = kind === 'study_room' ? '공부방 결과' : '과외쌤 결과';
+  const findLabel = kind === 'study_room' ? '공부방찾기 결과' : '과외쌤찾기 결과';
+  const loc = String(regionLabel || '').trim();
+  const title = loc ? `${findLabel} 현재위치 ${loc}` : findLabel;
   if (!items.length) {
     return `<div class="search-flat-results search-flat-results--empty" data-surface="search-flat">${renderSearchZeroState(tab, mode)}</div>`;
   }
   return `
     <div class="content-section search-flat-results" data-surface="search-flat">
       ${renderSectionHeading({
-        icon: SECTION_HEADINGS.basicStudyRoom.icon,
+        icon: kind === 'study_room' ? SECTION_HEADINGS.basicStudyRoom.icon : SECTION_HEADINGS.basicTutor.icon,
         iconType: 'logo',
         title,
-        desc: sectionTag,
       })}
       ${renderBrowseList(kind, items, { ...opts, sourceRoute: 'search' })}
     </div>`;
@@ -118,15 +125,9 @@ function renderStudentTierResults(items, opts = {}, sectionTag = '검색 결과'
       </div>`;
   }
 
-  const hint =
-    opts.viewerRole === 'parent'
-      ? '시장 비교 열람 · 블라인드 유지 · 학생 간 쪽지 불가'
-      : '블라인드 리스트 · 지도·비교 없음';
-
   return `
     <div class="content-section search-tier-results" data-surface="student-blind">
-      ${renderSectionHeading({ ...SECTION_HEADINGS.students, desc: `${sectionTag} · 블라인드 리스트` })}
-      <p class="search-results__hint">${hint}</p>
+      ${renderSectionHeading({ ...SECTION_HEADINGS.students, desc: sectionTag || '' })}
       ${renderBrowseList('student', items, { ...opts, sourceRoute: 'search' })}
     </div>`;
 }
@@ -156,20 +157,20 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
     showCompare: !selfPreview,
     showWish: !selfPreview,
   };
-  const tag = mode === 'region' ? regionLabel || '지역 피드' : '검색 결과';
+  const homeTierTag = regionLabel || (mode === 'region' ? '지역 피드' : '검색 결과');
   const useHomeTierGrammar = surfaceType === 'home' && mode === 'region';
 
   if (tab === 'room') {
     return useHomeTierGrammar
-      ? renderProviderTierResults('study_room', exposureItems, opts, tag, mode)
-      : renderProviderFlatResults('study_room', exposureItems, opts, tag, mode);
+      ? renderProviderTierResults('study_room', exposureItems, opts, homeTierTag, mode)
+      : renderProviderFlatResults('study_room', exposureItems, opts, regionLabel, mode);
   }
   if (tab === 'tutor') {
     return useHomeTierGrammar
-      ? renderProviderTierResults('tutor', exposureItems, opts, tag, mode)
-      : renderProviderFlatResults('tutor', exposureItems, opts, tag, mode);
+      ? renderProviderTierResults('tutor', exposureItems, opts, homeTierTag, mode)
+      : renderProviderFlatResults('tutor', exposureItems, opts, regionLabel, mode);
   }
-  return renderStudentTierResults(exposureItems, opts, tag, mode);
+  return renderStudentTierResults(exposureItems, opts, homeTierTag, mode);
 }
 
 export { partitionByExposureTier };

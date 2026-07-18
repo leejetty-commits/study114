@@ -66,10 +66,8 @@ export function bindStudyRoomEvents(root, rerender) {
 
   bindGuestListPagination(root, rerender);
 
-  if (!isProviderHomeSelfTab('study_room', previewState.studyRoomTab)) {
-    bindCompareEvents(root, true);
-    bindUserActionEvents(root, rerender, { sourceRoute: 'study_room' });
-  }
+  bindCompareEvents(root, true);
+  bindUserActionEvents(root, rerender, { sourceRoute: 'study_room' });
 
   bindDetailDecisionEvents(root, {
     onRerender: rerender,
