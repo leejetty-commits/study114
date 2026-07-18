@@ -66,11 +66,12 @@ function renderStudyRoomPrimePick() {
   const pool = EXPOSURE_STUDY_ROOMS;
   const guestOpts = { guest: true };
   const occupied = getPrimeOccupied(pool);
+  const roomLabel = GUEST_DEMO_REGIONS_BY_AXIS.room.full;
   return `
     <div class="content-section content-section--orange">
-      ${renderSectionHeading({ ...SECTION_HEADINGS.primeStudyRoom, id: 'guest-prime-room' })}
+      ${renderSectionHeading({ ...SECTION_HEADINGS.primeStudyRoom, id: 'guest-prime-room', locationLabel: roomLabel })}
       ${renderPrimeSlotGrid('study_room', occupied, guestOpts)}
-      ${renderPickPaginatedBlock('study_room', 'pick_study_room', SECTION_HEADINGS.pickStudyRoom, pool, {
+      ${renderPickPaginatedBlock('study_room', 'pick_study_room', { ...SECTION_HEADINGS.pickStudyRoom, locationLabel: roomLabel }, pool, {
         ...guestOpts,
         primeOccupied: occupied,
       })}
@@ -79,10 +80,11 @@ function renderStudyRoomPrimePick() {
 }
 
 function renderStudyRoomBasicList() {
+  const roomLabel = GUEST_DEMO_REGIONS_BY_AXIS.room.full;
   return renderGuestPaginatedListBlock(
     'study_room',
     'study_room',
-    SECTION_HEADINGS.basicStudyRoom,
+    { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel },
     EXPOSURE_STUDY_ROOMS,
     { guest: true },
   );
@@ -95,9 +97,9 @@ function renderTutorPrimePick() {
   const tutorRegion = GUEST_DEMO_REGIONS_BY_AXIS.tutor.full;
   return `
     <div class="content-section content-section--blue">
-      ${renderSectionHeading({ ...SECTION_HEADINGS.primeTutor, id: 'guest-prime-tutor', desc: tutorRegion })}
+      ${renderSectionHeading({ ...SECTION_HEADINGS.primeTutor, id: 'guest-prime-tutor', locationLabel: tutorRegion })}
       ${renderPrimeSlotGrid('tutor', occupied, guestOpts)}
-      ${renderPickPaginatedBlock('tutor', 'pick_tutor', { ...SECTION_HEADINGS.pickTutor, desc: tutorRegion }, pool, {
+      ${renderPickPaginatedBlock('tutor', 'pick_tutor', { ...SECTION_HEADINGS.pickTutor, locationLabel: tutorRegion }, pool, {
         ...guestOpts,
         primeOccupied: occupied,
       })}
@@ -106,10 +108,11 @@ function renderTutorPrimePick() {
 }
 
 function renderTutorBasicList() {
+  const tutorLabel = GUEST_DEMO_REGIONS_BY_AXIS.tutor.full;
   return renderGuestPaginatedListBlock(
     'tutor',
     'tutor',
-    SECTION_HEADINGS.basicTutor,
+    { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel },
     EXPOSURE_TUTORS,
     { guest: true },
   );
@@ -124,14 +127,14 @@ export function renderGuestExposureBoxes() {
 export function renderGuestBrowseLists() {
   const roomLabel = GUEST_DEMO_REGIONS_BY_AXIS.room.full;
   const tutorLabel = GUEST_DEMO_REGIONS_BY_AXIS.tutor.full;
-  const studentLabel = `${GUEST_DEMO_REGIONS_BY_AXIS.student.full} · 과외 희망`;
+  const studentLabel = GUEST_DEMO_REGIONS_BY_AXIS.student.full;
   return `
     <section class="guest-browse-lists" aria-label="우동공과 리스트">
-      ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, desc: roomLabel }, EXPOSURE_STUDY_ROOMS, { guest: true })}
-      ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, desc: tutorLabel }, EXPOSURE_TUTORS, { guest: true })}
+      ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel }, EXPOSURE_STUDY_ROOMS, { guest: true })}
+      ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel }, EXPOSURE_TUTORS, { guest: true })}
     </section>
     <section class="guest-browse-lists guest-browse-lists--students" aria-label="학생 학습 의뢰">
-      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', desc: studentLabel }, EXPOSURE_STUDENTS, { guest: true })}
+      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', locationLabel: studentLabel }, EXPOSURE_STUDENTS, { guest: true })}
     </section>
   `;
 }

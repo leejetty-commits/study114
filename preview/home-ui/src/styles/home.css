@@ -1420,6 +1420,27 @@ a.sup-term-chip:hover {
   margin: 0;
 }
 
+/* 제목 우측 현재위치 — 라벨 작은글씨 · 지역명 제목과 동일 크기대 */
+.section-heading__loc {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.4rem;
+  margin-left: 0.15rem;
+}
+.section-heading__loc-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--gray-500);
+  line-height: 1.25;
+}
+.section-heading__loc-value {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1.25;
+}
+
 .list-subsection .section-heading {
   padding-top: var(--space-4);
 }
@@ -3011,7 +3032,7 @@ a.sup-term-chip:hover {
   border-radius: 0.375rem;
 }
 
-/* 과외쌤 홈 — 현황 요약 2단 */
+/* 과외쌤 홈 — 좌/우 동일 박스 · 행=가로줄 (시트 임시.cell) */
 .tutor-home-split {
   display: grid;
   gap: var(--space-4);
@@ -3019,34 +3040,69 @@ a.sup-term-chip:hover {
 }
 @media (min-width: 768px) {
   .tutor-home-split {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: stretch;
   }
 }
 .my-box--status {
   border: 2px solid #1d4ed8;
-  background: linear-gradient(165deg, #eff6ff 0%, #fff 42%);
+  background: linear-gradient(165deg, #eff6ff 0%, #fff 38%);
   box-shadow: 0 10px 28px rgba(29, 78, 216, 0.12);
   margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: var(--space-3) var(--space-4);
 }
-.my-box--status .my-box__label {
-  color: #1d4ed8;
-}
-.my-box--status .my-box__title {
-  font-size: 1.35rem;
-}
-.my-box__regions {
+.my-box__row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: 0.4rem 0.65rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px dashed #bfdbfe;
+}
+.my-box__row:last-child {
+  border-bottom: none;
+  padding-bottom: 0.15rem;
+}
+.my-box__row--1 {
+  padding-top: 0.15rem;
+}
+.my-box__name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  letter-spacing: -0.02em;
+}
+.my-box__badge {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  border-radius: 0.3rem;
+  padding: 0.15rem 0.45rem;
+}
+.my-box__actions--row {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
-  margin-top: var(--space-3);
 }
 .my-box__regions-label {
   font-size: var(--text-xs);
   font-weight: 700;
   color: var(--gray-500);
-  margin-right: 0.25rem;
+  flex-shrink: 0;
+}
+.my-box__regions-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
 }
 .my-box__region-pill {
   display: inline-flex;
@@ -3056,72 +3112,177 @@ a.sup-term-chip:hover {
   border-radius: 999px;
   border: 1px solid var(--gray-300);
   background: #fff;
+  font: inherit;
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--gray-700);
+  cursor: pointer;
 }
 .my-box__region-pill.is-primary {
   border-color: #2563eb;
   color: #1d4ed8;
   background: #eff6ff;
 }
+.my-box__region-pill.is-active {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
 .my-box__region-pill .tutor-region-tabs__primary {
   font-size: 0.625rem;
   color: #2563eb;
 }
-.my-box__stats--grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem 0.75rem;
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px dashed #bfdbfe;
-}
-@media (min-width: 520px) {
-  .my-box__stats--grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.my-box__stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
 }
 .my-box__stat {
-  font-size: var(--text-xs);
-  color: var(--gray-600);
-}
-.my-box__stat strong {
-  display: block;
-  margin-top: 0.1rem;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
   font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+.my-box__stat-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--gray-500);
+}
+.my-box__stat-val {
+  font-size: var(--text-sm);
+  font-weight: 700;
   color: var(--gray-900);
 }
-.my-box__actions {
-  margin-top: var(--space-4);
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
+.my-box__hint-inline,
+.my-box__guide-line {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--gray-600);
+  flex: 1;
+  min-width: 12rem;
 }
-.tutor-home-guide {
-  background: #fff;
-  border: 1px solid var(--gray-200);
-  border-radius: 0.75rem;
-  padding: var(--space-4) var(--space-5);
+
+/* 활동지역 분포 막대 (지도 대체 · 활동형) */
+.my-box--activity {
+  gap: 0.35rem;
+}
+.act-panel__lead {
+  margin: 0;
+  padding: 0.15rem 0 0.35rem;
+  font-size: var(--text-sm);
+  color: var(--gray-600);
+  line-height: 1.45;
+}
+.act-bars {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 0.45rem;
+  flex: 1;
+  min-height: 0;
 }
-.tutor-home-guide__title {
+.act-bars__legend {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+.act-bars__swatch {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 0.125rem;
+  margin-right: 0.15rem;
+  vertical-align: -0.05rem;
+}
+.act-bars__swatch--tutor { background: #2563eb; }
+.act-bars__swatch--student { background: #ea580c; }
+.act-bars__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.act-bars__row {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 0.5rem 0.65rem;
+  align-items: center;
+  width: 100%;
   margin: 0;
-  font-size: var(--text-xl);
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 0.45rem;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.act-bars__row:hover {
+  border-color: #93c5fd;
+  background: #f8fafc;
+}
+.act-bars__row.is-active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: inset 3px 0 0 #2563eb;
+}
+.act-bars__region {
+  font-size: var(--text-sm);
   font-weight: 800;
   color: var(--gray-900);
-  letter-spacing: -0.02em;
 }
-.tutor-home-guide__text {
-  margin: 0;
-  font-size: var(--text-sm);
-  line-height: 1.55;
-  color: var(--gray-600);
+.act-bars__region em {
+  display: block;
+  font-style: normal;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #2563eb;
 }
-.tutor-home-guide__link {
-  margin-top: auto;
+.act-bars__pair {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  min-width: 0;
+}
+.act-bars__metric {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+.act-bars__track {
+  display: block;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--gray-100);
+  overflow: hidden;
+}
+.act-bars__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  min-width: 0;
+}
+.act-bars__fill--tutor { background: #2563eb; }
+.act-bars__fill--student { background: #ea580c; }
+.act-bars__num {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  white-space: nowrap;
+}
+.act-bars__key {
+  font-weight: 600;
+  color: var(--gray-500);
+  margin-right: 0.15rem;
+}
+.act-bars__note {
+  margin: 0.15rem 0 0;
+  font-size: 0.625rem;
+  color: var(--gray-400);
 }
 
 /* ?? P24 ?? ?? ??? ?? */

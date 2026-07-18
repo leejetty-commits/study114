@@ -113,18 +113,21 @@ export function renderProviderHomeHead(role, tabId) {
 /**
  * @param {ProviderHomeRole} role
  * @param {import('@search-ui/state.js').SearchTab} searchTab
+ * @param {{ inline?: boolean }} [opts]
  */
-export function renderSearchCrossLink(role, searchTab) {
+export function renderSearchCrossLink(role, searchTab, opts = {}) {
   const label =
     role === 'tutor' && searchTab === 'tutor'
-      ? '경쟁 과외쌤 찾기 (검색)'
+      ? '경쟁 과외쌤 찾기'
       : role === 'study_room' && searchTab === 'room'
-        ? '경쟁 공부방 찾기 (검색)'
+        ? '경쟁 공부방 찾기'
         : '전체 검색 열기';
   const url = searchUiUrl(searchTab, role);
+  const btn = `<a href="${url}" class="btn btn--secondary btn--sm" data-same-tab-href="${url}">${label}</a>`;
+  if (opts.inline) return btn;
   return `
     <p class="provider-home-search-link">
-      <a href="${url}" class="btn btn--secondary btn--sm" data-same-tab-href="${url}">${label}</a>
+      ${btn}
     </p>`;
 }
 
@@ -132,7 +135,7 @@ export function renderSearchCrossLink(role, searchTab) {
  * @param {ProviderHomeRole} role
  * @param {ProviderHomeTabId} tabId
  * @param {import('@search-ui/search-find-surface.js').FindSurfaceState} findState
- * @param {{ hideHead?: boolean, hideRegionBar?: boolean, hideSearchCrossLink?: boolean, hideSelfNote?: boolean }} [opts]
+ * @param {{ hideHead?: boolean, hideRegionBar?: boolean, hideSearchCrossLink?: boolean, hideSelfNote?: boolean, hideFindLead?: boolean }} [opts]
  */
 export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
   const mode = getProviderHomeMode(role, tabId);
@@ -159,6 +162,7 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
         hideSearchForm,
         hideRegionBar: opts.hideRegionBar === true,
         hideSelfNote: opts.hideSelfNote !== false && hideHead,
+        hideFindLead: opts.hideFindLead === true,
       })}
       ${renderFindFilterBar(searchTab, findState)}
       ${renderFindResultSection(searchTab, findState, role, { surfaceType: 'home' })}

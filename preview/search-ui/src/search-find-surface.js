@@ -465,6 +465,7 @@ export function renderCompactFindForm(tab, state, options = {}) {
     hideSearchForm = false,
     hideRegionBar = false,
     hideSelfNote = false,
+    hideFindLead = false,
   } = options;
   if (homeSelf) state.homeSelf = true;
   const meta = SEARCH_TABS[tab];
@@ -475,11 +476,13 @@ export function renderCompactFindForm(tab, state, options = {}) {
   const formClass = isHome ? 'search-form search-form--compact search-form--home-aux' : 'search-form search-form--compact';
   const homeSelfFlag = resolveHomeSelf(state);
 
-  const leadHtml = hideSearchForm
-    ? `<p class="parent-home-find__lead">경쟁 목록·조건 검색은 상단 검색 메뉴를 이용하세요.</p>`
-    : isHome
-      ? `<p class="parent-home-find__lead">조건을 더 좁히려면 아래에서 검색하세요.</p>`
-      : '';
+  const leadHtml = hideFindLead
+    ? ''
+    : hideSearchForm
+      ? ''
+      : isHome
+        ? `<p class="parent-home-find__lead">조건을 더 좁히려면 아래에서 검색하세요.</p>`
+        : '';
 
   const formHtml = hideSearchForm
     ? ''

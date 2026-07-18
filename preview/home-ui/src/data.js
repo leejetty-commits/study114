@@ -79,9 +79,9 @@ export const MY_STUDY_ROOM = {
 };
 
 export const MY_TUTOR = {
-  name: '김우동 과외쌤',
+  name: '김우동',
   subject: '수학·영어',
-  status: '프로필 공개',
+  status: '프로필공개',
   views: 64,
   memoInbox: 3,
   memoSent: 1,

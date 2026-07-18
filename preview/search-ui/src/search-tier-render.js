@@ -48,23 +48,23 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
     return `<div class="search-tier-results search-tier-results--empty">${renderSearchZeroState(tab, mode)}</div>`;
   }
 
-  // 섹션 주석(Prime 슬롯·순환 등)은 이용안내로 이전 — 홈에는 제목·지역만
-  const locDesc = sectionTag || '';
+  // 지역은 제목 우측「현재위치」만 — 제목 아래 중복 제거
+  const loc = sectionTag || '';
   const primeHtml = `
-      ${renderSectionHeading({ ...section.prime, desc: locDesc })}
+      ${renderSectionHeading({ ...section.prime, locationLabel: loc })}
       ${renderPrimeSlotGrid(kind, occupied, opts)}`;
 
   const pickHtml = renderPickPaginatedBlock(
     kind,
     section.pickListId,
-    { ...section.pick, desc: locDesc },
+    { ...section.pick, locationLabel: loc, desc: undefined },
     items,
     { ...opts, primeOccupied: occupied },
   );
 
   const basicHtml = renderBasicListBlock(
     kind,
-    { ...section.basic, desc: locDesc },
+    { ...section.basic, locationLabel: loc, desc: undefined },
     items,
     { ...opts, primeOccupied: occupied, paginated: true, listId: section.basicListId },
   );
@@ -96,7 +96,6 @@ function renderProviderFlatResults(kind, items, opts = {}, regionLabel = '', mod
   const tab = kind === 'study_room' ? 'room' : 'tutor';
   const findLabel = kind === 'study_room' ? '공부방찾기 결과' : '과외쌤찾기 결과';
   const loc = String(regionLabel || '').trim();
-  const title = loc ? `${findLabel} 현재위치 ${loc}` : findLabel;
   if (!items.length) {
     return `<div class="search-flat-results search-flat-results--empty" data-surface="search-flat">${renderSearchZeroState(tab, mode)}</div>`;
   }
@@ -105,7 +104,8 @@ function renderProviderFlatResults(kind, items, opts = {}, regionLabel = '', mod
       ${renderSectionHeading({
         icon: kind === 'study_room' ? SECTION_HEADINGS.basicStudyRoom.icon : SECTION_HEADINGS.basicTutor.icon,
         iconType: 'logo',
-        title,
+        title: findLabel,
+        locationLabel: loc,
       })}
       ${renderBrowseList(kind, items, { ...opts, sourceRoute: 'search' })}
     </div>`;
@@ -127,7 +127,7 @@ function renderStudentTierResults(items, opts = {}, sectionTag = '검색 결과'
 
   return `
     <div class="content-section search-tier-results" data-surface="student-blind">
-      ${renderSectionHeading({ ...SECTION_HEADINGS.students, desc: sectionTag || '' })}
+      ${renderSectionHeading({ ...SECTION_HEADINGS.students, locationLabel: sectionTag || '' })}
       ${renderBrowseList('student', items, { ...opts, sourceRoute: 'search' })}
     </div>`;
 }
