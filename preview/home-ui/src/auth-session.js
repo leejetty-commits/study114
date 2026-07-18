@@ -16,7 +16,7 @@ import { oauthRoleSelectionUrl } from '../../shared/auth-redirect.js';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
 
-/** @typedef {{ user_id: number, email: string, role_type: string, name: string, email_verified?: boolean }} AuthUser */
+/** @typedef {{ user_id: number, email: string, role_type: string, name: string, email_verified?: boolean, admin_level?: string|null, must_change_password?: boolean }} AuthUser */
 
 /** @type {AuthUser|null} */
 let currentUser = null;
@@ -88,6 +88,8 @@ export async function fetchSession() {
     role_type: data.role_type,
     name: data.name,
     email_verified: Boolean(data.email_verified),
+    admin_level: data.admin_level ?? null,
+    must_change_password: Boolean(data.must_change_password),
   };
 }
 
@@ -159,12 +161,16 @@ export async function devLogin(email, password = 'password') {
     role_type: data.role_type,
     name: data.name,
     email_verified: false,
+    admin_level: data.admin_level ?? null,
+    must_change_password: Boolean(data.must_change_password),
   };
   try {
     const me = await fetch('/api/auth/me.php', CREDENTIALS);
     const meData = await me.json().catch(() => ({}));
     if (meData.ok && meData.authenticated) {
       currentUser.email_verified = Boolean(meData.email_verified);
+      currentUser.admin_level = meData.admin_level ?? currentUser.admin_level;
+      currentUser.must_change_password = Boolean(meData.must_change_password);
     }
   } catch {
     /* ignore */

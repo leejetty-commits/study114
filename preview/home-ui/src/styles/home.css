@@ -5000,6 +5000,39 @@ a.sup-term-chip:hover {
   color: #9a3412;
 }
 
+.admin-must-change-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 22rem;
+  margin-top: var(--space-4);
+}
+
+.admin-must-change-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: var(--fs-2);
+}
+
+.admin-must-change-form input {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 0.375rem;
+}
+
+.admin-must-change-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: var(--fs-2);
+}
+
+.a28-ops-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
 .admin-role-badge--sub {
   background: #dbeafe;
   color: #1d4ed8;

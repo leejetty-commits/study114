@@ -40,15 +40,36 @@ $password = (string) ($input['password'] ?? '');
 
 try {
     $user = (new LoginService())->attempt($email, $password);
-    AuthSession::login($user['user_id'], $user['email'], $user['role_type'], $user['name']);
-    $effectiveRole = (new AdminRoleService())->isMasterEmail((string) $user['email']) ? 'admin' : $user['role_type'];
+    $roles = new AdminRoleService();
+    AuthSession::login(
+        $user['user_id'],
+        $user['email'],
+        $user['role_type'],
+        $user['name'],
+        [
+            'admin_level' => $user['admin_level'],
+            'must_change_password' => $user['must_change_password'],
+        ],
+    );
+    $session = AuthSession::user();
+    $effectiveRole = (string) ($session['role_type'] ?? $user['role_type']);
+    $adminLevel = $session['admin_level'] ?? $user['admin_level'];
+    if ($effectiveRole === 'admin' && $adminLevel === null) {
+        $adminLevel = $roles->resolveLevel([
+            'user_id' => $user['user_id'],
+            'email' => $user['email'],
+            'role_type' => 'admin',
+        ]);
+    }
 
     echo json_encode([
-        'ok'        => true,
-        'user_id'   => $user['user_id'],
-        'email'     => $user['email'],
+        'ok' => true,
+        'user_id' => $user['user_id'],
+        'email' => $user['email'],
         'role_type' => $effectiveRole,
-        'name'      => $user['name'],
+        'name' => $user['name'],
+        'admin_level' => $adminLevel,
+        'must_change_password' => !empty($session['must_change_password']),
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(422);

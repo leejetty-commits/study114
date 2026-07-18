@@ -124,3 +124,41 @@ export async function fetchAdminSession() {
   const res = await fetch('/api/admin/session.php', CREDENTIALS);
   return readJson(res);
 }
+
+export async function fetchAdminOperators() {
+  const res = await fetch('/api/admin/operators.php', CREDENTIALS);
+  return readJson(res);
+}
+
+/** @param {Record<string, unknown>} input */
+export async function createAdminOperator(input) {
+  const res = await fetch('/api/admin/operators.php', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    ...CREDENTIALS,
+    body: JSON.stringify(input),
+  });
+  return readJson(res);
+}
+
+/** @param {Record<string, unknown>} input */
+export async function patchAdminOperator(input) {
+  const res = await fetch('/api/admin/operators.php', {
+    method: 'PATCH',
+    headers: JSON_HEADERS,
+    ...CREDENTIALS,
+    body: JSON.stringify(input),
+  });
+  return readJson(res);
+}
+
+/** @param {Record<string, unknown>} input */
+export async function resetAdminOperatorPassword(input) {
+  const res = await fetch('/api/admin/operators.php?action=reset_password', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    ...CREDENTIALS,
+    body: JSON.stringify(input),
+  });
+  return readJson(res);
+}

@@ -7,7 +7,6 @@ namespace Study114\Auth;
 use InvalidArgumentException;
 use PDO;
 use RuntimeException;
-use Study114\Admin\AdminRoleService;
 use Study114\Database\Connection;
 
 final class OAuthService
@@ -161,7 +160,10 @@ final class OAuthService
 
     private function effectiveRoleType(string $email, string $roleType): string
     {
-        return (new AdminRoleService())->isMasterEmail($email) ? 'admin' : $roleType;
+        // admin은 OAuth로 승격·생성하지 않음 — DB role_type / 관리자모드 발급만
+        unset($email);
+
+        return $roleType;
     }
 
     /** @return array<string, string> */
@@ -403,12 +405,12 @@ final class OAuthService
 
         $pdo->beginTransaction();
         try {
-            $isMasterEmail = (new AdminRoleService())->isMasterEmail($email);
+            // 운영 계정(admin)은 OAuth/공개가입으로 생성하지 않음 — 관리자모드 발급만
             $stmt = $pdo->prepare(
                 'INSERT INTO users (email, password_hash, status, email_verified_at, oauth_role_pending)
-                 VALUES (?, ?, ?, NOW(), ?)'
+                 VALUES (?, ?, ?, NOW(), 1)'
             );
-            $stmt->execute([$email, $hash, 'active', $isMasterEmail ? 0 : 1]);
+            $stmt->execute([$email, $hash, 'active']);
             $userId = (int) $pdo->lastInsertId();
 
             $stmt = $pdo->prepare(
@@ -416,7 +418,7 @@ final class OAuthService
             );
             $stmt->execute([$userId, $profile['name'], null, '']);
 
-            $roleType = $isMasterEmail ? 'admin' : 'guardian_student';
+            $roleType = 'guardian_student';
             $stmt = $pdo->prepare(
                 'INSERT INTO user_roles (user_id, role_type, is_primary, status) VALUES (?, ?, 1, ?)'
             );

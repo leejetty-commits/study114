@@ -45,6 +45,9 @@ final class SignupService
         if (!in_array($gender, ['male', 'female'], true)) {
             throw new InvalidArgumentException('gender: male 또는 female만 허용됩니다.');
         }
+        if (in_array(strtolower($roleUi), ['admin', 'super_admin', 'sub_master', 'master'], true)) {
+            throw new InvalidArgumentException('role: 운영 계정은 공개 회원가입으로 만들 수 없습니다.');
+        }
         if (!isset(self::ROLE_MAP[$roleUi])) {
             throw new InvalidArgumentException('role: student, study_room, tutor 중 하나여야 합니다.');
         }

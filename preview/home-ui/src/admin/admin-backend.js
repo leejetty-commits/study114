@@ -12,6 +12,10 @@ import {
   fetchAdminMemberDetail,
   patchAdminMember,
   fetchAdminSession,
+  fetchAdminOperators,
+  createAdminOperator,
+  patchAdminOperator,
+  resetAdminOperatorPassword,
 } from './admin-api.js';
 import { hydrateBoardCache } from '../board/board-backend.js';
 
@@ -24,6 +28,8 @@ let operationLogsCache = [];
 let reportsCache = [];
 /** @type {any[]} */
 let exposureCache = [];
+/** @type {any[]|null} */
+let operatorsCache = null;
 
 export function isAdminApiMode() {
   return apiMode;
@@ -44,6 +50,7 @@ function resetCaches() {
   commerceCache = null;
   membersCache = null;
   memberDetailCache = {};
+  operatorsCache = null;
 }
 
 export async function activateAdminApi() {
@@ -298,5 +305,36 @@ export async function apiApplyExposureCorrection(targetType, targetId, action, o
   if (data.item) upsertExposureItem(data.item);
   if (data.log) prependLog(data.log);
   await hydrateBoardCache().catch(() => {});
+  return data;
+}
+
+export function getOperatorsCache() {
+  return operatorsCache ? operatorsCache.map((o) => ({ ...o })) : null;
+}
+
+export async function hydrateOperatorsCache() {
+  const data = await fetchAdminOperators();
+  operatorsCache = (data.operators ?? []).map((o) => ({ ...o }));
+  return operatorsCache;
+}
+
+/** @param {Record<string, unknown>} input */
+export async function apiCreateOperator(input) {
+  const data = await createAdminOperator(input);
+  await hydrateOperatorsCache();
+  return data;
+}
+
+/** @param {Record<string, unknown>} input */
+export async function apiPatchOperator(input) {
+  const data = await patchAdminOperator(input);
+  await hydrateOperatorsCache();
+  return data;
+}
+
+/** @param {Record<string, unknown>} input */
+export async function apiResetOperatorPassword(input) {
+  const data = await resetAdminOperatorPassword(input);
+  await hydrateOperatorsCache();
   return data;
 }

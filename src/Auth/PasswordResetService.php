@@ -177,8 +177,14 @@ final class PasswordResetService
         }
 
         $pdo = Connection::get();
-        $pdo->prepare('UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?')
-            ->execute([$hash, $userId]);
+        try {
+            $pdo->prepare(
+                'UPDATE users SET password_hash = ?, must_change_password = 0, updated_at = NOW() WHERE id = ?'
+            )->execute([$hash, $userId]);
+        } catch (\Throwable) {
+            $pdo->prepare('UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?')
+                ->execute([$hash, $userId]);
+        }
         $this->tokens->invalidatePurpose($userId, 'password_reset');
     }
 }

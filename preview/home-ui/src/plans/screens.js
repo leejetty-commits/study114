@@ -494,7 +494,7 @@ export function renderPlansPositions() {
         <strong>Prime 슬롯 · ${esc(scopeLabel)} 단위</strong>
         <p>Prime ${inv.prime.used}/${inv.prime.capacity} (잔여 ${inv.prime.remaining})
           · Pick 판매상한 ${inv.pick.used}/${inv.pick.capacity} (잔여 ${inv.pick.remaining})</p>
-        <p class="mypage-muted">피드: 빈 Prime은 홍보카드 유지 · Pick은 ${settings.pick_set_size}개 세트·${settings.pick_rotation_minutes}분 순환 · Basic은 기본 리스트만</p>
+        <p class="mypage-muted">피드: 공부방 Prime ${settings.prime_slots}슬롯 고정 · 과외쌤 Prime은 시 단위·페이지·${settings.pick_rotation_minutes}분 순환 · Pick ${settings.pick_set_size}세트/${settings.pick_rotation_minutes}분 · Basic은 최신순·수동 페이지만</p>
       </div>
       <ul class="plans-catalog">
         ${products.map((p) => renderPositionCard(p, profile, role, slots)).join('')}

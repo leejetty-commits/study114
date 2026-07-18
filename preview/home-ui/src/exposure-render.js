@@ -31,8 +31,10 @@ import {
   getPrimeEmptyCopy,
   getExposurePageSizes,
   rotatePickPool,
+  rotateSetPool,
   sortByNewestFirst,
   getPrimeOccupied,
+  getPrimeCandidatePool,
   getPickPool,
   getBasicPool,
 } from './exposure-rules.js';
@@ -495,13 +497,33 @@ export function renderEmptyPrimePromo(kind) {
 }
 
 /**
- * 항상 prime_slots 칸 고정 · null은 EMPTY 카드
+ * Prime 슬롯
+ * — study_room: 항상 prime_slots 칸 고정 · null은 EMPTY 카드 (회전·페이지 없음)
+ * — tutor: 후보 풀 15분 세트 순환 + 3슬롯 페이지 (시 단위 인원 대응)
+ * 순환 고지는 이용안내 `#/support/guide` (getHomeExposureGuides)에만 둔다.
  * @param {'study_room'|'tutor'} kind
- * @param {object[]} occupiedItems
+ * @param {object[]} occupiedItems — study_room: 점유자 / tutor: 후보 풀 전체
  * @param {object} [opts]
  */
 export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
-  const { primeSlots } = getExposurePageSizes();
+  const { primeSlots, pickRotationMinutes } = getExposurePageSizes();
+
+  if (kind === 'tutor') {
+    const pool = occupiedItems;
+    const rotated = rotateSetPool(pool, primeSlots, pickRotationMinutes);
+    const listId = opts.listId || 'prime_tutor';
+    const page = opts.page ?? getGuestListPage(listId);
+    const pageItems = slicePage(rotated, page, primeSlots);
+    const cards = pageItems.length
+      ? pageItems.map((item) => renderExposureBox(kind, 'prime', item, '', opts)).join('')
+      : Array.from({ length: primeSlots }, () => renderEmptyPrimePromo(kind)).join('');
+    return `
+    <div class="list-subsection" data-guest-list="${listId}">
+      <div class="expo-grid--3">${cards}</div>
+      ${renderListPagination(listId, rotated.length, page, primeSlots)}
+    </div>`;
+  }
+
   const slots = buildPrimeSlotArray(occupiedItems, primeSlots);
   const cards = slots
     .map((item) => {
@@ -740,6 +762,7 @@ export function renderStudentListRow(student) {
 
 export {
   getPrimeOccupied,
+  getPrimeCandidatePool,
   getPickPool,
   getBasicPool,
   buildPrimeSlotArray,

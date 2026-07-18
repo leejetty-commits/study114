@@ -32,27 +32,48 @@ if ($user === null) {
     exit;
 }
 
-$isMasterAdmin = (new \Study114\Admin\AdminRoleService())->isMasterEmail((string) $user['email']);
-if ($isMasterAdmin) {
+$roles = new \Study114\Admin\AdminRoleService();
+$flags = $roles->fetchAuthFlags((int) $user['user_id']);
+$adminLevel = $flags['admin_level'] ?? ($user['admin_level'] ?? null);
+$mustChange = $flags['must_change_password'] ?? !empty($user['must_change_password']);
+
+// bootstrap: DB admin_level 있을 때만 admin으로 표시
+if (($user['role_type'] ?? '') !== 'admin' && $adminLevel !== null
+    && $roles->isBootstrapSuperAdminEmail((string) $user['email'])) {
     $user['role_type'] = 'admin';
+}
+
+if (($user['role_type'] ?? '') === 'admin') {
+    $adminLevel = $roles->resolveLevel([
+        'user_id' => (int) $user['user_id'],
+        'email' => (string) $user['email'],
+        'role_type' => 'admin',
+        'admin_level' => $adminLevel,
+    ]);
+} else {
+    $adminLevel = null;
 }
 
 $oauthRolePending = false;
 $emailVerified = false;
 try {
-    $oauthRolePending = $isMasterAdmin ? false : (new \Study114\Auth\OAuthRoleService())->isRolePendingForUser((int) $user['user_id']);
+    $oauthRolePending = ($user['role_type'] === 'admin')
+        ? false
+        : (new \Study114\Auth\OAuthRoleService())->isRolePendingForUser((int) $user['user_id']);
     $emailVerified = (new \Study114\Auth\EmailVerificationGate())->isVerified((int) $user['user_id']);
 } catch (Throwable $e) {
     error_log('[me] auth flags: ' . $e->getMessage());
 }
 
 echo json_encode([
-    'ok'                 => true,
-    'authenticated'      => true,
-    'user_id'            => $user['user_id'],
-    'email'              => $user['email'],
-    'role_type'          => $user['role_type'],
-    'name'               => $user['name'],
+    'ok' => true,
+    'authenticated' => true,
+    'user_id' => $user['user_id'],
+    'email' => $user['email'],
+    'role_type' => $user['role_type'],
+    'name' => $user['name'],
+    'admin_level' => $adminLevel,
+    'must_change_password' => (bool) $mustChange,
     'oauth_role_pending' => $oauthRolePending,
-    'email_verified'     => $emailVerified,
+    'email_verified' => $emailVerified,
 ], JSON_UNESCAPED_UNICODE);

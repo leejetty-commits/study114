@@ -77,9 +77,16 @@ final class PasswordChangeService
             throw new RuntimeException('비밀번호 저장에 실패했습니다.');
         }
 
-        $pdo->prepare('UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?')
-            ->execute([$newHash, $userId]);
+        try {
+            $pdo->prepare(
+                'UPDATE users SET password_hash = ?, must_change_password = 0, updated_at = NOW() WHERE id = ?'
+            )->execute([$newHash, $userId]);
+        } catch (\Throwable) {
+            $pdo->prepare('UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?')
+                ->execute([$newHash, $userId]);
+        }
 
         (new AuthTokenRepository($pdo))->invalidatePurpose($userId, 'password_reset');
+        AuthSession::clearMustChangePassword();
     }
 }

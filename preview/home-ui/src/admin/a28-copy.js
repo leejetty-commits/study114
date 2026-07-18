@@ -115,7 +115,7 @@ export const A28_MENU = [
         label: '권한·계정',
         path: '/admin/permissions',
         masterOnly: true,
-        help: '마스터/부마스터가 볼 수 있는 메뉴를 확인합니다. (영카트 관리권한설정)',
+        help: '운영 계정(최고관리자·부마스터) 발급·권한·비활성·비밀번호 초기화. 공개 회원가입으로 만들지 않습니다.',
         screenId: 'A28-08b',
       },
     ],

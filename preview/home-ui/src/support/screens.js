@@ -6,7 +6,7 @@ import {
   PRINCIPLES_NEGATIVE,
   HOME_CARDS,
   ROLE_GUIDES,
-  HOME_EXPOSURE_GUIDES,
+  getHomeExposureGuides,
   TERMS_LINKS,
   OPERATIONAL_CONTACT,
   MEMBER_CONTACT_CTA,
@@ -21,6 +21,7 @@ import { renderAdminScreen } from './admin-screens.js';
 import { isAdminSupportPath, getSectionFromPath, parseGuideSlug } from './router.js';
 import { getActiveNavId } from './nav.js';
 import { renderFaqBoard, renderSingleOpenBoard, bindSingleOpenBoard } from '../../../shared/board/index.js';
+import { getPlanRuntimeSettings } from '../plans/runtime-config.js';
 
 const TICKET_FLASH_KEY = 'study114-support-ticket-flash';
 
@@ -162,15 +163,18 @@ function renderHome() {
 function renderGuideSection() {
   const role = getNavRole();
   const roleGuide = ROLE_GUIDES[role] || ROLE_GUIDES.guest;
-  const exposureGuideHtml = HOME_EXPOSURE_GUIDES.map(
-    (guide) => `
+  const exposureGuides = getHomeExposureGuides(getPlanRuntimeSettings());
+  const exposureGuideHtml = exposureGuides
+    .map(
+      (guide) => `
       <section class="sup-exposure-guide">
         <h3 class="sup-exposure-guide__title">${esc(guide.title)}</h3>
         <ul class="sup-list sup-list--bullets">
           ${guide.items.map((item) => `<li>${esc(item)}</li>`).join('')}
         </ul>
       </section>`,
-  ).join('');
+    )
+    .join('');
   return `
     ${renderPanel(
       '이용안내',
@@ -187,7 +191,7 @@ function renderGuideSection() {
       '홈 노출 블록 안내',
       'P17-01 #home-exposure',
       `<div class="sup-exposure-guides">${exposureGuideHtml}</div>`,
-      { lead: '홈 화면의 프라임·픽·기본 목록 구성과 노출 기준입니다.' },
+      { lead: '홈 화면의 프라임·픽·기본 목록 구성과 노출 기준입니다. 순환 고지도 여기에만 안내합니다.' },
     )}`;
 }
 

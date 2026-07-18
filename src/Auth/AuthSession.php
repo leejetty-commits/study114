@@ -22,15 +22,42 @@ final class AuthSession
         }
     }
 
-    public static function login(int $userId, string $email, string $roleType, string $name): void
-    {
+    /**
+     * @param array{admin_level?: ?string, must_change_password?: bool} $extra
+     */
+    public static function login(
+        int $userId,
+        string $email,
+        string $roleType,
+        string $name,
+        array $extra = [],
+    ): void {
         self::start();
-        $effectiveRole = (new AdminRoleService())->isMasterEmail($email) ? 'admin' : $roleType;
+        $roles = new AdminRoleService();
+        $effectiveRole = $roleType;
+        $adminLevel = $roles->normalizeLevel($extra['admin_level'] ?? null);
+        // bootstrap 이메일이라도 DB에 admin_level이 있을 때만 admin 세션
+        if ($effectiveRole !== 'admin' && $roles->isBootstrapSuperAdminEmail($email)) {
+            $flags = $roles->fetchAuthFlags($userId);
+            if (($flags['admin_level'] ?? null) !== null) {
+                $effectiveRole = 'admin';
+                $adminLevel = $flags['admin_level'];
+            }
+        }
+        if ($effectiveRole === 'admin' && $adminLevel === null) {
+            $adminLevel = $roles->resolveLevel([
+                'user_id' => $userId,
+                'email' => $email,
+                'role_type' => 'admin',
+            ]);
+        }
         $_SESSION['auth'] = [
-            'user_id'   => $userId,
-            'email'     => $email,
+            'user_id' => $userId,
+            'email' => $email,
             'role_type' => $effectiveRole,
-            'name'      => $name,
+            'name' => $name,
+            'admin_level' => $effectiveRole === 'admin' ? $adminLevel : null,
+            'must_change_password' => !empty($extra['must_change_password']),
         ];
     }
 
@@ -40,12 +67,30 @@ final class AuthSession
         unset($_SESSION['auth'], $_SESSION['signup']);
     }
 
-    /** @return array{user_id: int, email: string, role_type: string, name: string}|null */
+    /**
+     * @return array{
+     *   user_id: int,
+     *   email: string,
+     *   role_type: string,
+     *   name: string,
+     *   admin_level?: ?string,
+     *   must_change_password?: bool
+     * }|null
+     */
     public static function user(): ?array
     {
         self::start();
         $auth = $_SESSION['auth'] ?? null;
         return is_array($auth) ? $auth : null;
+    }
+
+    /** 비밀번호 변경 후 세션 플래그 갱신 */
+    public static function clearMustChangePassword(): void
+    {
+        self::start();
+        if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
+            $_SESSION['auth']['must_change_password'] = false;
+        }
     }
 
     public static function check(): bool

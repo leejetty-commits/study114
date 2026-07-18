@@ -11,6 +11,7 @@ import {
   renderGuestPaginatedListBlock,
   renderPickPaginatedBlock,
   getPrimeOccupied,
+  getPrimeCandidatePool,
 } from './exposure-render.js';
 import { bindGuestListPagination } from './list-pagination.js';
 import { SECTION_HEADINGS, renderSectionHeading } from './section-headings.js';
@@ -93,12 +94,13 @@ function renderStudyRoomBasicList() {
 function renderTutorPrimePick() {
   const pool = EXPOSURE_TUTORS;
   const guestOpts = { guest: true };
-  const occupied = getPrimeOccupied(pool);
+  /** 시 단위 후보 풀 전체 — Pick/Basic 제외·Prime 회전·페이지에 동일 사용 */
+  const occupied = getPrimeCandidatePool('tutor', pool);
   const tutorRegion = GUEST_DEMO_REGIONS_BY_AXIS.tutor.full;
   return `
     <div class="content-section content-section--blue">
       ${renderSectionHeading({ ...SECTION_HEADINGS.primeTutor, id: 'guest-prime-tutor', locationLabel: tutorRegion })}
-      ${renderPrimeSlotGrid('tutor', occupied, guestOpts)}
+      ${renderPrimeSlotGrid('tutor', occupied, { ...guestOpts, listId: 'prime_tutor' })}
       ${renderPickPaginatedBlock('tutor', 'pick_tutor', { ...SECTION_HEADINGS.pickTutor, locationLabel: tutorRegion }, pool, {
         ...guestOpts,
         primeOccupied: occupied,
@@ -109,12 +111,13 @@ function renderTutorPrimePick() {
 
 function renderTutorBasicList() {
   const tutorLabel = GUEST_DEMO_REGIONS_BY_AXIS.tutor.full;
+  const occupied = getPrimeCandidatePool('tutor', EXPOSURE_TUTORS);
   return renderGuestPaginatedListBlock(
     'tutor',
     'tutor',
     { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel },
     EXPOSURE_TUTORS,
-    { guest: true },
+    { guest: true, primeOccupied: occupied },
   );
 }
 

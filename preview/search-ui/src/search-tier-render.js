@@ -9,6 +9,7 @@ import {
   renderBasicListBlock,
   renderBrowseList,
   getPrimeOccupied,
+  getPrimeCandidatePool,
 } from '@home-ui/exposure-render.js';
 import { SECTION_HEADINGS, renderSectionHeading } from '@home-ui/section-headings.js';
 import { partitionByExposureTier } from './search-exposure-mapper.js';
@@ -23,7 +24,8 @@ import { isProviderSelfPreviewMode } from './search-role-access.js';
  * @param {'region'|'search'} [mode]
  */
 function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 피드', mode = 'region') {
-  const occupied = getPrimeOccupied(items);
+  const occupied =
+    kind === 'tutor' ? getPrimeCandidatePool('tutor', items) : getPrimeOccupied(items);
   const section =
     kind === 'study_room'
       ? {
@@ -31,6 +33,7 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
           pick: SECTION_HEADINGS.pickStudyRoom,
           basic: SECTION_HEADINGS.basicStudyRoom,
           color: 'content-section--orange',
+          primeListId: `search_prime_${kind}`,
           pickListId: `search_pick_${kind}`,
           basicListId: `search_basic_${kind}`,
         }
@@ -39,6 +42,7 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
           pick: SECTION_HEADINGS.pickTutor,
           basic: SECTION_HEADINGS.basicTutor,
           color: 'content-section--blue',
+          primeListId: `search_prime_${kind}`,
           pickListId: `search_pick_${kind}`,
           basicListId: `search_basic_${kind}`,
         };
@@ -52,7 +56,10 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
   const loc = sectionTag || '';
   const primeHtml = `
       ${renderSectionHeading({ ...section.prime, locationLabel: loc })}
-      ${renderPrimeSlotGrid(kind, occupied, opts)}`;
+      ${renderPrimeSlotGrid(kind, occupied, {
+        ...opts,
+        listId: kind === 'tutor' ? section.primeListId : undefined,
+      })}`;
 
   const pickHtml = renderPickPaginatedBlock(
     kind,

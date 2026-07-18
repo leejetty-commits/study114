@@ -64,9 +64,18 @@ import {
   hydrateMemberDetail,
   apiApplyMemberAction,
   apiApplyMemberBulkAction,
+  getOperatorsCache,
+  hydrateOperatorsCache,
+  apiCreateOperator,
+  apiPatchOperator,
+  apiResetOperatorPassword,
 } from './admin-backend.js';
 import { isMasterAdmin } from './admin-guard.js';
-import { canAccessAdminMenu, MASTER_EMAILS, SUB_MASTER_EMAILS, SUB_MASTER_BLOCKED_MENUS } from './admin-permissions.js';
+import {
+  canAccessAdminMenu,
+  ADMIN_LEVEL_LABELS,
+  SUB_MASTER_BLOCKED_MENUS,
+} from './admin-permissions.js';
 import {
   A28_COPY,
   A28_MENU,
@@ -1298,19 +1307,68 @@ function countMemberSeed(seed) {
 }
 
 function renderPermissions() {
-  const masterRows = MASTER_EMAILS.map((e) => `<tr><td>마스터</td><td><code>${esc(e)}</code></td><td>전체 메뉴 · 강한 보정 · 권한 · 환경설정</td></tr>`).join('');
-  const subRows = SUB_MASTER_EMAILS.map((e) => `<tr><td>부마스터</td><td><code>${esc(e)}</code></td><td>운영 조회 · 숨김/복구 · 로그 열람</td></tr>`).join('');
   const blocked = SUB_MASTER_BLOCKED_MENUS.map((m) => `<li>${esc(A28_MENU_ID_LABELS[m] || m)}</li>`).join('');
+  const operators = isAdminApiMode() ? getOperatorsCache() : null;
+  const rows =
+    operators === null
+      ? `<tr><td colspan="6" class="a28-help">${isAdminApiMode() ? '목록을 불러오는 중…' : '미리보기 — 운영자 로그인 후 서버 목록이 표시됩니다.'}</td></tr>`
+      : operators.length
+        ? operators
+            .map((o) => {
+              const levelLabel = ADMIN_LEVEL_LABELS[o.admin_level] || o.admin_level;
+              const statusLabel = o.status === 'active' ? '활성' : '비활성';
+              const temp = o.must_change_password ? ' · 임시비번' : '';
+              const boot = o.is_bootstrap ? ' <span class="a28-badge">초기</span>' : '';
+              return `<tr data-operator-id="${esc(String(o.id))}">
+          <td>${esc(o.name || '—')}${boot}</td>
+          <td><code>${esc(o.email)}</code></td>
+          <td>${esc(levelLabel)}</td>
+          <td>${esc(statusLabel)}${esc(temp)}</td>
+          <td>${esc(o.last_login_at || '—')}</td>
+          <td class="a28-ops-actions">
+            <button type="button" class="btn btn--secondary btn--sm" data-operator-toggle-status="${o.id}" data-status="${o.status === 'active' ? 'inactive' : 'active'}">${o.status === 'active' ? '비활성' : '활성'}</button>
+            <button type="button" class="btn btn--secondary btn--sm" data-operator-toggle-level="${o.id}" data-level="${o.admin_level}">${o.admin_level === 'super_admin' ? '→부마스터' : '→최고관리자'}</button>
+            <button type="button" class="btn btn--secondary btn--sm" data-operator-reset-pw="${o.id}">비번초기화</button>
+          </td>
+        </tr>`;
+            })
+            .join('')
+        : `<tr><td colspan="6" class="a28-help">등록된 운영 계정이 없습니다.</td></tr>`;
 
   return renderPanel(
     '권한·계정',
     'A28-08b',
     `${renderOpsTip()}
-     <p class="a28-help">누가 마스터/부마스터인지, 부마스터가 못 보는 메뉴를 확인합니다. (마스터 전용)</p>
-     <table class="sup-admin-table"><thead><tr><th>등급</th><th>이메일</th><th>범위</th></tr></thead><tbody>${masterRows}${subRows}</tbody></table>
+     <p class="a28-help">운영 계정은 공개 회원가입으로 만들지 않습니다. 최고관리자만 발급·권한·상태·비밀번호를 관리합니다.</p>
+     <h3 class="admin-section-title">운영 계정 목록</h3>
+     <table class="sup-admin-table">
+       <thead><tr><th>이름</th><th>이메일</th><th>등급</th><th>상태</th><th>최근 로그인</th><th>조치</th></tr></thead>
+       <tbody>${rows}</tbody>
+     </table>
+     <button type="button" class="btn btn--secondary btn--sm" data-operator-refresh>목록 새로고침</button>
+     <h3 class="admin-section-title">계정 발급</h3>
+     <form class="sup-admin-form" data-operator-create>
+       <label>이름 <input name="name" required maxlength="50" /></label>
+       <label>로그인 이메일 <input name="email" type="email" required /></label>
+       <label>임시 비밀번호 <input name="password" type="password" required autocomplete="new-password" /></label>
+       <label>비밀번호 확인 <input name="password_confirm" type="password" required autocomplete="new-password" /></label>
+       <label>권한등급
+         <select name="admin_level">
+           <option value="sub_master">부마스터</option>
+           <option value="super_admin">최고관리자</option>
+         </select>
+       </label>
+       <label>상태
+         <select name="status">
+           <option value="active">활성</option>
+           <option value="inactive">비활성</option>
+         </select>
+       </label>
+       <button type="submit" class="btn btn--primary btn--sm">발급</button>
+     </form>
+     <p class="a28-help">발급·초기화 시 첫 로그인 후 비밀번호 변경이 강제됩니다. 마지막 최고관리자는 비활성/강등할 수 없습니다.</p>
      <h3 class="admin-section-title">부마스터가 볼 수 없는 메뉴</h3>
      <ul class="a28-lists">${blocked}</ul>
-     <p class="a28-help">환경설정·권한은 마스터만. 가격·결제를 강제로 바꾸거나 로그를 지우면 안 됩니다.</p>
      <p class="a28-help"><a href="#/admin/settings/basic">→ 사이트 기본 설정</a></p>`,
   );
 }
@@ -2254,6 +2312,91 @@ export function renderA28Screen(path) {
 /** @param {HTMLElement} root @param {string} path @param {() => void} rerender */
 export function bindA28ScreenEvents(root, path, rerender) {
   bindDetailDrawer(root);
+
+  if (path === '/admin/permissions') {
+    if (isAdminApiMode() && !getOperatorsCache()) {
+      hydrateOperatorsCache()
+        .then(() => rerender())
+        .catch((err) => window.alert(err instanceof Error ? err.message : '목록 로드 실패'));
+    }
+    root.querySelector('[data-operator-refresh]')?.addEventListener('click', async () => {
+      try {
+        await hydrateOperatorsCache();
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '새로고침 실패');
+      }
+    });
+    const createForm = root.querySelector('[data-operator-create]');
+    createForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!(createForm instanceof HTMLFormElement)) return;
+      const fd = new FormData(createForm);
+      try {
+        await apiCreateOperator({
+          name: String(fd.get('name') || '').trim(),
+          email: String(fd.get('email') || '').trim(),
+          password: String(fd.get('password') || ''),
+          password_confirm: String(fd.get('password_confirm') || ''),
+          admin_level: String(fd.get('admin_level') || 'sub_master'),
+          status: String(fd.get('status') || 'active'),
+        });
+        createForm.reset();
+        rerender();
+        window.alert('운영 계정을 발급했습니다.');
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '발급 실패');
+      }
+    });
+    root.querySelectorAll('[data-operator-toggle-status]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = Number(btn.getAttribute('data-operator-toggle-status'));
+        const status = String(btn.getAttribute('data-status') || '');
+        if (!id || !status) return;
+        if (!window.confirm(status === 'inactive' ? '이 계정을 비활성할까요?' : '이 계정을 활성할까요?')) return;
+        try {
+          await apiPatchOperator({ user_id: id, status });
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '상태 변경 실패');
+        }
+      });
+    });
+    root.querySelectorAll('[data-operator-toggle-level]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = Number(btn.getAttribute('data-operator-toggle-level'));
+        const current = String(btn.getAttribute('data-level') || '');
+        const next = current === 'super_admin' ? 'sub_master' : 'super_admin';
+        if (!id) return;
+        if (!window.confirm(`권한을 ${next === 'super_admin' ? '최고관리자' : '부마스터'}로 변경할까요?`)) return;
+        try {
+          await apiPatchOperator({ user_id: id, admin_level: next });
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '권한 변경 실패');
+        }
+      });
+    });
+    root.querySelectorAll('[data-operator-reset-pw]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = Number(btn.getAttribute('data-operator-reset-pw'));
+        if (!id) return;
+        const password = window.prompt('새 임시 비밀번호 (8~14자 · 영문+숫자+특수문자)');
+        if (!password) return;
+        try {
+          await apiResetOperatorPassword({
+            user_id: id,
+            password,
+            password_confirm: password,
+          });
+          rerender();
+          window.alert('임시 비밀번호로 초기화했습니다. 대상자는 로그인 후 비밀번호를 변경해야 합니다.');
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '초기화 실패');
+        }
+      });
+    });
+  }
 
   if (path === '/admin/members') {
     // 최초 진입 시 목록 로드

@@ -100,8 +100,8 @@ final class AdminApi
     public static function requireMaster(array $auth): void
     {
         $roles = new AdminRoleService();
-        if (!$roles->isMaster($auth)) {
-            self::fail(403, 'forbidden', '마스터 권한이 필요합니다.');
+        if (!$roles->isSuperAdmin($auth)) {
+            self::fail(403, 'forbidden', '최고관리자 권한이 필요합니다.');
         }
     }
 

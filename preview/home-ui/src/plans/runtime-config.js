@@ -38,11 +38,16 @@ export const PLAN_RUNTIME_DEFAULTS = {
   prime_slots: 3,
   /** 지역 기준: dong | complex */
   region_scope_type: 'dong',
-  /** 데모: 유료 점유 시뮬레이션 수 (빈 카드 노출용). 실구독 API 연동 시 무시 */
+  /** 데모: 공부방 Prime 유료 점유 시뮬레이션 수 (빈 카드 노출용). 실구독 API 연동 시 무시 */
   demo_prime_filled: 1,
+  /**
+   * 데모: 과외쌤 Prime 후보 풀 크기 (시 단위 · 3슬롯×페이지·15분 순환용).
+   * 공부방 Prime은 demo_prime_filled만 사용(고정 3슬롯).
+   */
+  demo_prime_tutor_pool: 12,
   /** Pick 1세트 크기 */
   pick_set_size: 5,
-  /** Pick 시간 순환 간격(분) — 15 | 30 */
+  /** Pick·과외쌤 Prime 공통 시간 순환 간격(분) — 15 | 30 */
   pick_rotation_minutes: 15,
   /** Pick 페이지 = 세트 크기와 동일 */
   pick_page_size: 5,

@@ -36,6 +36,13 @@ export const previewState = {
     student: 1,
     pick_study_room: 1,
     pick_tutor: 1,
+    /** 과외쌤 Prime — 시 단위 풀 · 3슬롯 페이지 */
+    prime_tutor: 1,
+    search_prime_tutor: 1,
+    search_pick_study_room: 1,
+    search_pick_tutor: 1,
+    search_basic_study_room: 1,
+    search_basic_tutor: 1,
   },
   providerSubscription: 'free',
   parentFind: createFindState(),

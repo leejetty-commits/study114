@@ -23,6 +23,9 @@ final class OAuthRoleService
      */
     public function completeRole(int $userId, string $roleUi): array
     {
+        if (in_array(strtolower($roleUi), ['admin', 'super_admin', 'sub_master', 'master'], true)) {
+            throw new InvalidArgumentException('운영 계정은 공개 가입·소셜 역할선택으로 만들 수 없습니다.');
+        }
         if (!isset(self::ROLE_MAP[$roleUi])) {
             throw new InvalidArgumentException('student, study_room, tutor 중 하나를 선택해 주세요.');
         }

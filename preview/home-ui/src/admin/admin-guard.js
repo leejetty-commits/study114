@@ -2,16 +2,25 @@ import { DEV_ACCOUNTS, getAuthUser, isAdminUser, isLoggedIn } from '../auth-sess
 import {
   canAccessAdminMenu,
   getCurrentAdminLevel,
+  ADMIN_LEVEL,
   ADMIN_LEVEL_LABELS,
   isMasterAdmin,
+  isSuperAdmin,
 } from './admin-permissions.js';
 import { getAdminMenuId } from './router.js';
 
 /** @param {string} path */
 export function canAccessAdminPath(path) {
   if (!isAdminUser()) return false;
+  const user = getAuthUser();
+  if (user?.must_change_password) return true; // gate 화면은 shell에서 처리
   const menuId = getAdminMenuId(path);
   return canAccessAdminMenu(menuId);
+}
+
+export function mustChangeAdminPassword() {
+  const user = getAuthUser();
+  return Boolean(isAdminUser() && user?.must_change_password);
 }
 
 function esc(s) {
@@ -58,8 +67,32 @@ export function renderAdminRoleBadge() {
   const level = getCurrentAdminLevel();
   if (!level) return '';
   const label = ADMIN_LEVEL_LABELS[level] || level;
-  const cls = level === 'master' ? 'admin-role-badge--master' : 'admin-role-badge--sub';
+  const cls =
+    level === ADMIN_LEVEL.SUPER_ADMIN ? 'admin-role-badge--master' : 'admin-role-badge--sub';
   return `<span class="admin-role-badge ${cls}">${esc(label)}</span>`;
 }
 
-export { isMasterAdmin };
+/** 임시 비밀번호 강제 변경 */
+export function renderMustChangePasswordGate() {
+  return `
+    <section class="admin-state admin-state--must-change">
+      <h2>비밀번호 변경 필요</h2>
+      <p>임시 비밀번호로 발급된 계정입니다. 새 비밀번호를 설정한 뒤 운영 콘솔을 이용할 수 있습니다.</p>
+      <form class="admin-must-change-form" data-form="admin-must-change-password" autocomplete="off">
+        <label>현재(임시) 비밀번호
+          <input type="password" name="current_password" required autocomplete="current-password" />
+        </label>
+        <label>새 비밀번호
+          <input type="password" name="password" required autocomplete="new-password" />
+        </label>
+        <label>새 비밀번호 확인
+          <input type="password" name="password_confirm" required autocomplete="new-password" />
+        </label>
+        <p class="a28-help">8~14자 · 영문+숫자+특수문자</p>
+        <p class="admin-must-change-error" data-pw-error hidden></p>
+        <button type="submit" class="btn btn--primary">비밀번호 변경</button>
+      </form>
+    </section>`;
+}
+
+export { isMasterAdmin, isSuperAdmin };

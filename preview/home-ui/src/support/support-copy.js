@@ -164,36 +164,64 @@ export const ROLE_GUIDES = {
   },
 };
 
-/** 홈 노출 블록의 제목 아래에서 이동한 안내문구 */
-export const HOME_EXPOSURE_GUIDES = [
-  {
-    title: '프라임 공부방·과외쌤',
-    items: [
-      '선착순 한정으로 운영되는 지역 상단 노출 영역입니다.',
-      'Prime 슬롯은 빈 자리를 유지하며 자동 대체하지 않습니다.',
-    ],
-  },
-  {
-    title: '픽 공부방·과외쌤',
-    items: ['핵심 정보를 빠르게 비교하는 5개 카드 세트입니다.', '세트는 30분 단위로 순환하며 최신 입점 항목을 우선합니다.'],
-  },
-  {
-    title: '우동공과 공부방·과외쌤',
-    items: ['기본 등록 항목을 최근 등록순으로 보여주는 목록입니다.'],
-  },
-  {
-    title: '우동공과 학생',
-    items: ['선생님을 찾는 학생·학부모의 학습 의뢰를 보여줍니다.', '시장 비교 열람 시에도 이름은 마스킹되며 학생 간 쪽지는 불가합니다.'],
-  },
-  {
-    title: '공급자 홈 미리보기',
-    items: [
-      '내 과외쌤·공부방 홈의 자기 탭은 검색·노출 화면 미리보기입니다.',
-      '자기 미리보기에서는 비교·찜을 쓰지 않고, 경쟁 비교는 찾기(검색) 메뉴를 이용합니다.',
-      '공부방찾기 결과의 지도 핀과 목록은 동일한 결과 집합입니다.',
-    ],
-  },
-];
+/**
+ * 홈 노출 블록 안내 — 이용안내 `#/support/guide` 전용
+ * (홈 피드 본문에는 순환 고지를 두지 않음)
+ * @param {{ pick_rotation_minutes?: number, pick_set_size?: number, prime_slots?: number }} [settings]
+ */
+export function getHomeExposureGuides(settings = {}) {
+  const rot = Math.max(1, Number(settings.pick_rotation_minutes) || 15);
+  const pickSize = Math.max(1, Number(settings.pick_set_size) || 5);
+  const primeSlots = Math.max(1, Number(settings.prime_slots) || 3);
+  return [
+    {
+      title: '프라임 공부방',
+      items: [
+        '선착순 한정으로 운영되는 지역 상단 노출입니다.',
+        `${primeSlots}슬롯 고정이며, 빈 자리는 홍보카드로 유지하고 자동 대체·시간 순환하지 않습니다.`,
+      ],
+    },
+    {
+      title: '프라임 과외쌤',
+      items: [
+        '시(市) 단위로 운영되는 상단 노출입니다.',
+        `후보가 많으면 ${primeSlots}슬롯 페이지로 나누며, 약 ${rot}분마다 세트가 순환됩니다.`,
+      ],
+    },
+    {
+      title: '픽 공부방·과외쌤',
+      items: [
+        `핵심 정보를 빠르게 비교하는 ${pickSize}개 카드 세트입니다.`,
+        `세트는 약 ${rot}분마다 순환하며 최신 입점 항목을 우선합니다.`,
+      ],
+    },
+    {
+      title: '우동공과 공부방·과외쌤',
+      items: [
+        '기본 등록 항목을 최근 등록순으로 보여주는 목록입니다.',
+        '시간 순환 없이 수동 페이지만 사용합니다.',
+      ],
+    },
+    {
+      title: '우동공과 학생',
+      items: [
+        '선생님을 찾는 학생·학부모의 학습 의뢰를 보여줍니다.',
+        '시장 비교 열람 시에도 이름은 마스킹되며 학생 간 쪽지는 불가합니다.',
+      ],
+    },
+    {
+      title: '공급자 홈 미리보기',
+      items: [
+        '내 과외쌤·공부방 홈의 자기 탭은 검색·노출 화면 미리보기입니다.',
+        '자기 미리보기에서는 비교·찜을 쓰지 않고, 경쟁 비교는 찾기(검색) 메뉴를 이용합니다.',
+        '공부방찾기 결과의 지도 핀과 목록은 동일한 결과 집합입니다.',
+      ],
+    },
+  ];
+}
+
+/** @deprecated getHomeExposureGuides() 사용 — 정적 스냅샷(기본 15분) */
+export const HOME_EXPOSURE_GUIDES = getHomeExposureGuides();
 
 /** §7-1 FAQ */
 export const FAQ_ITEMS = [
