@@ -1,4 +1,9 @@
 import { authStudentAddUrl } from '../../../shared/student-auth-bridge.js';
+import {
+  dualHopeRegionsReady,
+  persistFindDefaultsFromStudent,
+  primaryHopeRegionLabel,
+} from '../../../shared/student-hope-regions.js';
 import { renderEmptyStateCard } from '../empty-state-copy.js';
 import { statusLabel } from '../mypage/preview-data.js';
 import {
@@ -34,6 +39,12 @@ import {
   studentToExposureRow,
 } from './format.js';
 import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
+import {
+  bindDualHopeRegionsEvents,
+  collectDualHopeRegions,
+  renderDualHopeRegionsSection,
+} from './hope-regions-ui.js';
+import { ensureHopeRegionMasters } from './hope-region-masters.js';
 import {
   getStudentsByTab,
   getStudent,
@@ -127,9 +138,11 @@ function renderVisibilityRadios(name, value) {
 /** @param {import('./store.js').StudentRecord} student @param {string} activeKey */
 function getStepDone(student, activeKey) {
   if (activeKey === 'basic') {
-    return !!(student.public_display_name && student.subject_label && student.region_label);
+    return !!student.preferred_lesson_type;
   }
-  if (activeKey === 'detail') return !!student.preferred_tutor_gender;
+  if (activeKey === 'detail') {
+    return dualHopeRegionsReady(student).ok && !!student.preferred_tutor_gender;
+  }
   if (activeKey === 'settings') {
     return !!(student.request_summary || student.special_request_note);
   }
@@ -377,7 +390,7 @@ function renderHub(student) {
       </div>
       <div class="p19-summary-grid">
         <dl class="p19-summary-card">
-          <dt>지역</dt><dd>${esc(student.region_label || '—')}</dd>
+          <dt>대표 희망지역</dt><dd>${esc(primaryHopeRegionLabel(student) || '—')}</dd>
         </dl>
         <dl class="p19-summary-card">
           <dt>예산</dt><dd>${esc(labelBudget(student))}</dd>
@@ -426,8 +439,8 @@ function renderBasicForm(student) {
         </label>
         <label class="p19-field p19-field--full">
           <span class="p19-field__label">1차 희망지역 seed (선택)</span>
-          <span class="p19-field__hint">축별 1~3은 상세등록에서 이어서 편집합니다</span>
-          ${renderTextInput('region_label', student.region_label || '', { placeholder: '예: 서울 강남구 대치동' })}
+          <span class="p19-field__hint">상세등록에서 희망유형 축의 1번 슬롯으로만 이어집니다 (반대축 자동 복제 없음)</span>
+          ${renderTextInput('region_label', student.region_label || '', { placeholder: '예: 서울 강남구 대치동 또는 서울특별시' })}
         </label>`,
       )}
       ${renderFormFooter(
@@ -446,7 +459,7 @@ function renderDetailForm(student) {
   const seedSummary = [
     student.preferred_lesson_type &&
       `희망유형: ${FORM_OPTIONS.lessonType.find((o) => o.value === student.preferred_lesson_type)?.label || student.preferred_lesson_type}`,
-    student.region_label && `지역 seed: ${student.region_label}`,
+    primaryHopeRegionLabel(student) && `대표 희망지역: ${primaryHopeRegionLabel(student)}`,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -458,7 +471,12 @@ function renderDetailForm(student) {
         · <a href="#${studentSectionPath(student.id, 'basic')}" data-p19-nav="${studentSectionPath(student.id, 'basic')}">기본정보 수정</a>
       </div>
       ${renderFormSection(
-        '표시 · 지역 · 학년',
+        '희망지역 (상세등록 본체)',
+        '공부방=행정동/단지 · 과외쌤=시 · 각 축 1필수+추가2 · 홈/찾기는 희망유형 축의 1번을 씁니다.',
+        renderDualHopeRegionsSection(student),
+      )}
+      ${renderFormSection(
+        '표시 · 학년',
         '학생찾기 검색/리스트에 쓰이는 핵심 항목입니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
@@ -466,14 +484,6 @@ function renderDetailForm(student) {
             <span class="p19-field__label">공개 표시명 <em class="p19-required">필수</em></span>
             <span class="p19-field__hint">실명 대신 노출되는 이름입니다</span>
             ${renderTextInput('public_display_name', student.public_display_name, { required: true, placeholder: '예: 중2 수학 여학생' })}
-          </label>
-          <label class="p19-field p19-field--full">
-            <span class="p19-field__label">희망 지역</span>
-            ${renderTextInput('region_label', student.region_label || '', { required: true, placeholder: '예: 서울 강남구 대치동' })}
-          </label>
-          <label class="p19-field p19-field--full">
-            <span class="p19-field__label">지역 보조 메모</span>
-            ${renderTextInput('preferred_region_note', student.preferred_region_note || '', { placeholder: '예: 대치역 도보 10분' })}
           </label>
           <label class="p19-field">
             <span class="p19-field__label">희망 과목</span>
@@ -686,6 +696,11 @@ function renderPublish(student) {
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindStudentRegEvents(root, rerender) {
+  ensureHopeRegionMasters();
+  if (root.querySelector('[data-p19-hope-dual]')) {
+    bindDualHopeRegionsEvents(root);
+  }
+
   root.querySelectorAll('[data-p19-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
@@ -715,9 +730,39 @@ export function bindStudentRegEvents(root, rerender) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = Number(form.dataset.p19StudentId);
-      const patch = parseStudentForm(form);
+      const formKind = form.getAttribute('data-p19-form');
+      let patch = parseStudentForm(form);
+
+      if (formKind === 'detail' && form.querySelector('[data-p19-hope-dual]')) {
+        const current = getStudent(id);
+        const hopeType = current?.preferred_lesson_type === 'study_room' ? 'study_room' : 'tutor';
+        const hope = collectDualHopeRegions(form, hopeType);
+        if (hope.error) {
+          alert(hope.error);
+          return;
+        }
+        // FormData에 슬롯 raw 필드가 섞이지 않게 제거 후 구조화 필드만 저장
+        Object.keys(patch).forEach((k) => {
+          if (/^(studyroom_|tutor_region_|tutor_)/.test(k) || k.startsWith('studyroom_')) {
+            delete patch[k];
+          }
+        });
+        patch = {
+          ...patch,
+          preferred_studyroom_regions: hope.preferred_studyroom_regions,
+          preferred_tutor_regions: hope.preferred_tutor_regions,
+          preferred_studyroom_region_id: hope.preferred_studyroom_region_id,
+          preferred_tutor_region_id: hope.preferred_tutor_region_id,
+          preferred_studyroom_complex_id: hope.preferred_studyroom_complex_id,
+          preferred_region_note: hope.preferred_region_note,
+          region_label: hope.region_label,
+          region_id: hope.region_id ? Number(hope.region_id) || hope.region_id : undefined,
+        };
+      }
+
       try {
-        await updateStudent(id, patch);
+        const saved = await updateStudent(id, patch);
+        if (formKind === 'detail' && saved) persistFindDefaultsFromStudent(saved);
         rerender();
       } catch (err) {
         console.warn('[p19]', err);

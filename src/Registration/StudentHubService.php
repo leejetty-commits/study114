@@ -108,7 +108,22 @@ final class StudentHubService
         $need(!empty($s['grade_level']), '학년 (상세등록)');
         $need(!empty($s['gender']), '학생 성별 (상세등록)');
         $need(!empty($s['birth_year']), '출생연도 (상세등록)');
-        $need(!empty($s['region_label']), '희망 지역 (상세등록)');
+        $studyHopeOk = !empty($s['preferred_studyroom_region_id'])
+            || (!empty($s['preferred_studyroom_regions']) && is_array($s['preferred_studyroom_regions'])
+                && !empty($s['preferred_studyroom_regions'][0]['region_id'] ?? $s['preferred_studyroom_regions'][0]['region_label'] ?? null));
+        $tutorHopeOk = !empty($s['preferred_tutor_region_id'])
+            || (!empty($s['preferred_tutor_regions']) && is_array($s['preferred_tutor_regions'])
+                && !empty($s['preferred_tutor_regions'][0]['region_id'] ?? $s['preferred_tutor_regions'][0]['region_label'] ?? null));
+        // 레거시 단일 region_label만 있는 경우: 희망유형 축 1번으로만 인정
+        if (!$studyHopeOk && !$tutorHopeOk && !empty($s['region_label'])) {
+            if (($s['preferred_lesson_type'] ?? '') === 'study_room') {
+                $studyHopeOk = true;
+            } else {
+                $tutorHopeOk = true;
+            }
+        }
+        $need($studyHopeOk, '공부방 희망지역 1번 (상세등록)');
+        $need($tutorHopeOk, '과외쌤 희망지역 1번 (상세등록)');
         $need(!empty($s['subject_label']), '희망 과목 (상세등록)');
         $need(is_array($s['lesson_places']) && $s['lesson_places'] !== [], '희망 수업장소 (상세등록)');
         $need(!empty($s['lesson_format']), '수업형태 (상세등록)');

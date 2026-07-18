@@ -3,7 +3,14 @@
  */
 
 import { OPTION_LABELS } from './search-enums.js';
-import { MOCK_REGIONS, MOCK_SUBJECTS, SEARCH_TABS, getTutorRegionLabel, MOCK_TUTOR_REGIONS } from './search-schema.js';
+import {
+  GUEST_DEFAULT_REGIONS,
+  MOCK_REGIONS,
+  MOCK_SUBJECTS,
+  SEARCH_TABS,
+  getTutorRegionLabel,
+  MOCK_TUTOR_REGIONS,
+} from './search-schema.js';
 export { getTutorRegionLabel, MOCK_TUTOR_REGIONS } from './search-schema.js';
 import { getRegionFeed, getStudentDemandForRegion } from './search-region-feed.js';
 import { filterToProviderSelf } from './search-provider-self.js';
@@ -20,6 +27,7 @@ import {
   resolveHopeTypeFromQuery,
   writeStoredHopeType,
 } from './student-hope-type.js';
+import { resolveFindDefaultRegion } from '../../shared/student-hope-regions.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
 
 /**
@@ -87,8 +95,15 @@ function resultDebugAttrs(state) {
 function resolveActiveRegionLabel(tab, state, _role) {
   if (state.searchExecuted && state.activeRegionLabel) return state.activeRegionLabel;
   if (tab === 'tutor') return getTutorRegionLabel(resolveTutorRegionIndex(state));
-  const regionKey = tab === 'room' ? 'room' : 'student';
-  return MOCK_REGIONS[regionKey];
+  if (tab === 'room') return MOCK_REGIONS.room;
+  // 학생찾기: A→B→C 마지막 희망유형 축의 1번 슬롯 (없으면 게스트 기본)
+  const hope =
+    state.studentHopeType === 'study_room' || state.studentHopeType === 'tutor'
+      ? state.studentHopeType
+      : DEFAULT_STUDENT_HOPE_TYPE;
+  const guestFallback =
+    hope === 'study_room' ? GUEST_DEFAULT_REGIONS.room : GUEST_DEFAULT_REGIONS.student;
+  return resolveFindDefaultRegion(hope, guestFallback);
 }
 
 /**
@@ -106,7 +121,14 @@ function regionLabelFromFilters(tab, filters, state) {
     return fromFilter || MOCK_REGIONS.room;
   }
   const fromFilter = String(filters.preferred_region || filters.region_label || '').trim();
-  return fromFilter || MOCK_REGIONS.student;
+  if (fromFilter) return fromFilter;
+  const hope =
+    state.studentHopeType === 'study_room' || state.studentHopeType === 'tutor'
+      ? state.studentHopeType
+      : DEFAULT_STUDENT_HOPE_TYPE;
+  const guestFallback =
+    hope === 'study_room' ? GUEST_DEFAULT_REGIONS.room : GUEST_DEFAULT_REGIONS.student;
+  return resolveFindDefaultRegion(hope, guestFallback);
 }
 
 /**
@@ -703,6 +725,9 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
       writeStoredHopeType(hope);
       state().studentHopeType = hope;
       state().hopeTypeResolved = true;
+      const guestFallback =
+        hope === 'study_room' ? GUEST_DEFAULT_REGIONS.room : GUEST_DEFAULT_REGIONS.student;
+      state().activeRegionLabel = resolveFindDefaultRegion(hope, guestFallback);
       const base = '#/search/student';
       window.location.hash = `${base}?hope=${encodeURIComponent(hope)}`;
       rerender();

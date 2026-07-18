@@ -1,5 +1,6 @@
 /** P19 — 학생 레코드 라벨 · 13§7-4 exposure 행 매핑 */
 
+import { primaryHopeRegionLabel } from '../../../shared/student-hope-regions.js';
 import {
   LESSON_FORMAT_LABELS,
   SCHOOL_LEVEL_LABELS,
@@ -26,7 +27,7 @@ export function studentToExposureRow(s) {
     gender: s.gender,
     grade_level: s.grade_level,
     subject_label: s.subject_label || '—',
-    location_label: s.region_label || '—',
+    location_label: primaryHopeRegionLabel(s) || s.region_label || '—',
     lesson_places: places,
     lesson_format: s.lesson_format,
     student_gender_group: s.student_gender_group,

@@ -1,6 +1,7 @@
 /**
  * 학생찾기 — 희망 유형(공부방/과외쌤) 첫 진입·기억
- * A: 첫 진입 선택 → B: localStorage 우선 → C: 없으면 과외쌤 + 서울시
+ * A: 첫 진입 선택 → B: localStorage 우선 → C: 없으면 과외쌤
+ * 지역 기본값: 해당 희망유형 축의 1번 슬롯 (student-hope-regions) · 없으면 게스트 기본
  */
 
 const STORAGE_KEY = 'study114.studentFind.lastHopeType';

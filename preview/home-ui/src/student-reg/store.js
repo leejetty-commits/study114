@@ -4,6 +4,11 @@ import {
   decodeStudentImport,
   STUDENT_IMPORT_PARAM,
 } from '../../../shared/student-auth-bridge.js';
+import {
+  dualHopeRegionsReady,
+  hydrateDualHopeRegions,
+  primaryHopeRegionLabel,
+} from '../../../shared/student-hope-regions.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import {
   isRegistrationsApiMode,
@@ -11,9 +16,10 @@ import {
   apiStudentAction,
 } from '../registrations-backend.js';
 
-const KEY = 'study114-preview-students-v2';
+const KEY = 'study114-preview-students-v3';
 
 /**
+ * @typedef {import('../../../shared/student-hope-regions.js').HopeRegionSlot} HopeRegionSlot
  * @typedef {object} StudentRecord
  * @property {number} id
  * @property {string} student_name
@@ -27,6 +33,11 @@ const KEY = 'study114-preview-students-v2';
  * @property {number} [region_id]
  * @property {string} [region_label]
  * @property {string} [preferred_region_note]
+ * @property {HopeRegionSlot[]} [preferred_studyroom_regions]
+ * @property {HopeRegionSlot[]} [preferred_tutor_regions]
+ * @property {string|number} [preferred_studyroom_region_id]
+ * @property {string|number} [preferred_tutor_region_id]
+ * @property {string|number} [preferred_studyroom_complex_id]
  * @property {string} [subject_label]
  * @property {string[]} [lesson_places]
  * @property {'one_on_one'|'group'} [lesson_format]
@@ -48,9 +59,9 @@ const KEY = 'study114-preview-students-v2';
  * @property {boolean} [api_registered]
  */
 
-/** @returns {StudentRecord} */
+/** @param {Partial<StudentRecord>} raw @returns {StudentRecord} */
 function withDefaults(raw, id) {
-  return {
+  const base = {
     lesson_places: ['student_home'],
     lesson_format: 'one_on_one',
     preferred_student_count_group: 'solo',
@@ -61,13 +72,17 @@ function withDefaults(raw, id) {
     preferred_studyroom_fee_amount: 420000,
     request_summary_visibility: 'private',
     special_request_visibility: 'private',
-    region_label: '서울특별시 강남구 대치동',
     school_level: 'middle',
     subject_label: '수학',
     ...raw,
     id,
     updated_at: raw.updated_at || new Date().toISOString(),
   };
+  const dual = hydrateDualHopeRegions(base);
+  const merged = { ...base, ...dual };
+  const primary = primaryHopeRegionLabel(merged);
+  if (primary) merged.region_label = primary;
+  return /** @type {StudentRecord} */ (merged);
 }
 
 const SEED = [
@@ -82,6 +97,19 @@ const SEED = [
       exposure_status: 'published',
       preferred_lesson_type: 'tutor',
       preferred_tutor_gender: 'female',
+      preferred_tutor_regions: [
+        { region_id: '1', region_label: '서울특별시', scope_type: 'city', is_primary: true },
+      ],
+      preferred_studyroom_regions: [
+        {
+          region_id: '1',
+          region_label: '서울특별시 강남구 대치동',
+          complex_id: 'c1',
+          complex_label: '은마아파트',
+          scope_type: 'dong',
+          is_primary: true,
+        },
+      ],
       request_summary: '주 2회 수학 집중',
       request_summary_visibility: 'paid_only',
       published_at: new Date().toISOString(),
@@ -102,6 +130,8 @@ const SEED = [
       lesson_format: 'one_on_one',
       subject_label: '영어',
       preferred_studyroom_fee_amount: 380000,
+      // 레거시 seed 시뮬레이션: region_label만 → 공부방 축 1번에만 매핑
+      region_label: '서울특별시 강남구 대치동',
     },
     2,
   ),
@@ -116,6 +146,17 @@ const SEED = [
       exposure_status: 'hidden',
       preferred_lesson_type: 'tutor',
       preferred_tutor_gender: 'any',
+      preferred_tutor_regions: [
+        { region_id: '5', region_label: '부산광역시', scope_type: 'city', is_primary: true },
+      ],
+      preferred_studyroom_regions: [
+        {
+          region_id: '5',
+          region_label: '부산광역시 해운대구 우동',
+          scope_type: 'dong',
+          is_primary: true,
+        },
+      ],
     },
     3,
   ),
@@ -155,7 +196,13 @@ export function getStudents(includeDeleted = false) {
 
 /** @param {number} id */
 export function getStudent(id) {
-  return getStudents(true).find((s) => s.id === id) || null;
+  const row = getStudents(true).find((s) => s.id === id) || null;
+  if (!row) return null;
+  const dual = hydrateDualHopeRegions(row);
+  const merged = { ...row, ...dual };
+  const primary = primaryHopeRegionLabel(merged);
+  if (primary) merged.region_label = primary;
+  return merged;
 }
 
 /** @param {'all'|'draft'|'published'|'hidden'} tab */
@@ -204,7 +251,11 @@ export function getPublishReadiness(student) {
   need(!!student.grade_level, '학년 (상세등록)');
   need(!!student.gender, '학생 성별 (상세등록)');
   need(!!student.birth_year, '출생연도 (상세등록)');
-  need(!!student.region_label, '희망 지역 (상세등록)');
+  {
+    const hope = dualHopeRegionsReady(student);
+    need(hope.studyOk, '공부방 희망지역 1번 (상세등록)');
+    need(hope.tutorOk, '과외쌤 희망지역 1번 (상세등록)');
+  }
   need(!!student.subject_label, '희망 과목 (상세등록)');
   need(Array.isArray(student.lesson_places) && student.lesson_places.length > 0, '희망 수업장소 (상세등록)');
   need(!!student.lesson_format, '수업형태 (상세등록)');
