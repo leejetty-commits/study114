@@ -280,6 +280,46 @@ export const A28_MENU = [
     ],
   },
   {
+    // Youngcart 부가서비스 — PG·SMS·본인인증 업체 연락 허브 (실연동 전)
+    id: 'grp-addons',
+    label: '부가서비스',
+    help: '문자·카드결제·본인인증 업체 안내와 신청 URL',
+    children: [
+      {
+        id: 'addons-home',
+        menuId: 'addons',
+        label: '부가서비스 홈',
+        path: '/admin/addons',
+        help: '나중에 연동할 문자·PG·본인인증 업체를 한곳에서 봅니다.',
+        screenId: 'A28-09',
+      },
+      {
+        id: 'addons-pg',
+        menuId: 'addons',
+        label: '카드·전자결제(PG)',
+        path: '/admin/addons/pg',
+        help: '이니시스·KCP·토스·나이스 등 결제 모듈 업체 연락처.',
+        screenId: 'A28-09',
+      },
+      {
+        id: 'addons-sms',
+        menuId: 'addons',
+        label: '문자·메시징',
+        path: '/admin/addons/sms',
+        help: '알리고·아이코드 등 SMS 게이트웨이 신청·문서 URL.',
+        screenId: 'A28-09',
+      },
+      {
+        id: 'addons-identity',
+        menuId: 'addons',
+        label: '본인인증',
+        path: '/admin/addons/identity',
+        help: '본인확인 업체 안내(정책상 필요 시만).',
+        screenId: 'A28-09',
+      },
+    ],
+  },
+  {
     // Youngcart menu900 SMS — Lab(실발송 없음), 구조는 동일하게
     id: 'grp-notify',
     label: '알림·문자',
@@ -380,6 +420,7 @@ export const A28_MENU_ID_LABELS = {
   commerce: '마켓·결제',
   exposure: '노출 보정',
   notify: '알림·문자',
+  addons: '부가서비스',
   reports: '신고 처리',
   tickets: '문의',
   submission: '제출자료 확인',

@@ -44,7 +44,7 @@
 
 | 경로 | 설명 |
 |------|------|
-| `#/admin/notify/settings` | 문자 기본설정(게이트웨이 자리·야간제한·이벤트) |
+| `#/admin/notify/settings` | 문자 기본설정 + Lab 안내·업체 URL |
 | `#/admin/notify/sync` | 회원 휴대폰 → 주소록 동기화 |
 | `#/admin/notify/templates` | 템플릿 그룹·문구(단문/장문) |
 | `#/admin/notify/phones` | 수신 그룹·번호(주소록) |
@@ -55,6 +55,17 @@
 저장: `sessionStorage` 키 `study114-admin-sms-lab-v2` (`sms-lab-store.js`)
 
 **2차(실연동):** 알리고/아이코드 등 게이트웨이 키 · 수신 동의 · 발신번호 등록
+
+## 4b. 부가서비스 (영카트 부가서비스 벤치마크)
+
+| 경로 | 설명 |
+|------|------|
+| `#/admin/addons` | 전체 업체 카드 |
+| `#/admin/addons/pg` | 이니시스·KCP·토스·나이스 (카드 결제모듈 연락) |
+| `#/admin/addons/sms` | 알리고·아이코드 |
+| `#/admin/addons/identity` | 나이스아이디·PASS |
+
+카탈로그: `preview/home-ui/src/admin/vendor-addons.js`
 
 ## 6. 회원 상세 포맷
 
@@ -68,4 +79,5 @@ API 실패/캐시 없음 → seed/더미로도 항상 열림 (`buildMemberDetail
 
 - `preview/home-ui/src/admin/sms-lab-store.js`
 - `preview/home-ui/src/admin/marketplace-lab-store.js`
+- `preview/home-ui/src/admin/vendor-addons.js`
 - `a28-copy.js` 메뉴 · `router.js` · `a28-screens.js` · `shell.js` · `layout.js` · `home.css`

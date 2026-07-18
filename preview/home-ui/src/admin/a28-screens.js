@@ -132,9 +132,16 @@ import {
   getSettingsSection,
   getMarketSection,
   getNotifySection,
+  getAddonsSection,
   getAdminScreenId,
 } from './router.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
+import {
+  listAddonVendors,
+  ADDON_CATEGORY_LABELS,
+  ADDON_STATUS_LABELS,
+  SMS_LAB_NOTICE,
+} from './vendor-addons.js';
 
 /** 화면 한글 라벨 (저장값은 영문 유지) */
 const STATUS_KO = { active: '사용', hidden: '숨김', archived: '보관' };
@@ -1629,6 +1636,114 @@ function renderMarketLab(section = 'overview') {
   );
 }
 
+/** @param {import('./vendor-addons.js').AddonVendor[]} vendors */
+function renderAddonVendorCards(vendors) {
+  if (!vendors.length) {
+    return '<p class="a28-help">등록된 업체가 없습니다.</p>';
+  }
+  return `<div class="addon-vendor-grid">${vendors
+    .map((v) => {
+      const cat = ADDON_CATEGORY_LABELS[v.category] || v.category;
+      const st = ADDON_STATUS_LABELS[v.status] || v.status;
+      const links = [
+        v.homeUrl
+          ? `<a class="btn btn--primary btn--sm" href="${esc(v.homeUrl)}" target="_blank" rel="noopener noreferrer">홈페이지</a>`
+          : '',
+        v.applyUrl
+          ? `<a class="btn btn--secondary btn--sm" href="${esc(v.applyUrl)}" target="_blank" rel="noopener noreferrer">신청·가입</a>`
+          : '',
+        v.docsUrl
+          ? `<a class="btn btn--secondary btn--sm" href="${esc(v.docsUrl)}" target="_blank" rel="noopener noreferrer">연동 문서</a>`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ');
+      return `<article class="addon-vendor-card">
+        <header class="addon-vendor-card__head">
+          <h3 class="addon-vendor-card__title">${esc(v.name)}</h3>
+          <span class="addon-vendor-card__badge">${esc(st)}</span>
+        </header>
+        <p class="addon-vendor-card__cat">${esc(cat)}</p>
+        <p class="addon-vendor-card__summary">${esc(v.summary)}</p>
+        ${v.phone ? `<p class="addon-vendor-card__phone">상담 · ${esc(v.phone)}</p>` : ''}
+        ${v.note ? `<p class="a28-help">${esc(v.note)}</p>` : ''}
+        <p class="addon-vendor-card__url"><code>${esc(v.homeUrl)}</code></p>
+        <div class="addon-vendor-card__actions">${links}</div>
+      </article>`;
+    })
+    .join('')}</div>`;
+}
+
+function renderSmsLabNotice() {
+  const smsVendors = listAddonVendors('sms');
+  const urlList = smsVendors
+    .map(
+      (v) =>
+        `<li><strong>${esc(v.name)}</strong> — <a href="${esc(v.homeUrl)}" target="_blank" rel="noopener noreferrer">${esc(v.homeUrl)}</a>${
+          v.applyUrl
+            ? ` · <a href="${esc(v.applyUrl)}" target="_blank" rel="noopener noreferrer">신청</a>`
+            : ''
+        }</li>`,
+    )
+    .join('');
+  return `<div class="a28-help a28-help--warn" role="note">
+      <strong>${esc(SMS_LAB_NOTICE.title)}</strong>
+      <p>${esc(SMS_LAB_NOTICE.body)}</p>
+      <p><strong>업체 URL</strong></p>
+      <ul class="addon-url-list">${urlList}</ul>
+      <p class="addon-notice-links"><a href="#/admin/addons/sms" data-a28-nav="/admin/addons/sms">→ 부가서비스 · 문자·메시징</a>
+        · <a href="#/admin/addons/pg" data-a28-nav="/admin/addons/pg">카드·전자결제(PG)</a></p>
+    </div>`;
+}
+
+/** @param {string} [section] home|pg|sms|identity */
+function renderAddons(section = 'home') {
+  const titleMap = {
+    home: '부가서비스',
+    pg: '카드·전자결제(PG)',
+    sms: '문자·메시징',
+    identity: '본인인증',
+  };
+  const lead =
+    section === 'home'
+      ? '영카트 「부가서비스」처럼, 나중에 연동할 업체의 홈페이지·신청·문서 URL을 모아 두었습니다. 지금은 연락·계약용이며 실결제·실문자 연동은 아직 없습니다.'
+      : section === 'pg'
+        ? '카드 결제모듈 상담·계약이 필요할 때 아래 업체로 바로 이동하세요. 수수료·심사는 업체와 직접 확인합니다.'
+        : section === 'sms'
+          ? '문자 실발송(2차) 전에 가입·발신번호·API 키를 준비할 업체입니다.'
+          : '본인확인이 정책상 필요할 때만 검토합니다. 가입 SMS OTP는 쓰지 않습니다.';
+
+  const category = section === 'home' ? 'all' : section;
+  const vendors = listAddonVendors(/** @type {'all'|'sms'|'pg'|'identity'} */ (category));
+
+  const nav = `<nav class="addon-subnav" aria-label="부가서비스 구분">
+      <a href="#/admin/addons" data-a28-nav="/admin/addons"${section === 'home' ? ' class="is-on"' : ''}>전체</a>
+      <a href="#/admin/addons/pg" data-a28-nav="/admin/addons/pg"${section === 'pg' ? ' class="is-on"' : ''}>카드·PG</a>
+      <a href="#/admin/addons/sms" data-a28-nav="/admin/addons/sms"${section === 'sms' ? ' class="is-on"' : ''}>문자</a>
+      <a href="#/admin/addons/identity" data-a28-nav="/admin/addons/identity"${section === 'identity' ? ' class="is-on"' : ''}>본인인증</a>
+    </nav>`;
+
+  return renderPanel(
+    titleMap[section] || '부가서비스',
+    'A28-09',
+    `${renderOpsTip()}
+     <p class="a28-help">${esc(lead)}</p>
+     ${nav}
+     ${section === 'sms' ? renderSmsLabNotice() : ''}
+     ${renderAddonVendorCards(vendors)}
+     ${
+       section === 'pg'
+         ? '<p class="a28-help">결제·주문 Lab: <a href="#/admin/commerce" data-a28-nav="/admin/commerce">결제·주문</a> · <a href="#/admin/market/overview" data-a28-nav="/admin/market/overview">마켓 현황</a></p>'
+         : ''
+     }
+     ${
+       section === 'sms'
+         ? '<p class="a28-help"><a href="#/admin/notify/settings" data-a28-nav="/admin/notify/settings">→ 문자 기본설정(Lab)</a></p>'
+         : ''
+     }`,
+  );
+}
+
 /** @param {string} [section] settings|templates|send|logs */
 function renderNotifyLab(section = 'settings') {
 
@@ -1653,8 +1768,7 @@ function renderNotifyLab(section = 'settings') {
       'A28-09',
 
       `${renderOpsTip()}
-
-       <p class="a28-help">영카트 SMS 기본설정에 맞춘 Lab입니다. <strong>실제 문자는 아직 발송되지 않습니다.</strong> 게이트웨이(알리고·아이코드 등)는 키·발신번호·수신동의 후 연결합니다.</p>
+       ${renderSmsLabNotice()}
 
        <form class="sup-admin-form" data-sms-settings>
 
@@ -2124,6 +2238,7 @@ export function renderA28Screen(path) {
   if (path === '/admin/members') body = renderMembers();
   else if (path === '/admin/commerce') body = renderCommerce();
   else if (path.startsWith('/admin/market/')) body = renderMarketLab(getMarketSection(path));
+  else if (path === '/admin/addons' || path.startsWith('/admin/addons/')) body = renderAddons(getAddonsSection(path));
   else if (path.startsWith('/admin/notify/')) body = renderNotifyLab(getNotifySection(path));
   else if (path === '/admin/reports') body = renderReports();
   else if (path.startsWith('/admin/notices')) body = renderNoticesAdmin(getNoticesSection(path));

@@ -86,3 +86,11 @@ export function getNotifySection(path) {
   const m = n.match(/^\/admin\/notify\/(.+)$/);
   return m?.[1] || 'settings';
 }
+
+/** addons 섹션: home|pg|sms|identity */
+export function getAddonsSection(path) {
+  const n = normalizeAdminPath(path) || '';
+  if (n === '/admin/addons') return 'home';
+  const m = n.match(/^\/admin\/addons\/(.+)$/);
+  return m?.[1] || 'home';
+}
