@@ -42,10 +42,10 @@ export const P19_LIST_HEAD = {
 
 /** P19-02 허브 빠른 이동 */
 export const P19_HUB_QUICK_ACTIONS = [
-  { path: 'basic', label: '기본등록', desc: '표시명·지역·과목·수업 조건' },
-  { path: 'detail', label: '상세등록', desc: '희망 과외쌤 성별 등' },
+  { path: 'basic', label: '기본등록', desc: '희망 유형 · draft seed' },
+  { path: 'detail', label: '상세등록', desc: '검색/공개 본체 완성' },
   { path: 'settings', label: '공개설정', desc: '요청문·노출 범위' },
-  { path: 'publish', label: '미리보기·공개', desc: '학생찾기 노출 확인', primary: true },
+  { path: 'publish', label: '미리보기·공개', desc: '상세완료 후 학생찾기 등록', primary: true },
 ];
 
 /** P19-06 · P19-02 위험 구역 */

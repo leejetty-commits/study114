@@ -1,14 +1,15 @@
 /** 8장 SSOT 필드명 — DB 컬럼과 1:1 */
 
+/** 기본등록 = draft seed · 상세등록 = 검색/공개 본체 (Notion 14장 2026-07-18) */
 export const REGISTER_PHASES = {
   basic: {
     label: '기본등록',
-    hint: '완료 시 일반 리스트 노출 가능',
+    hint: '공개 전 draft · 상세등록으로 이어짐',
     stepKeys: ['basic', 'regions'],
   },
   detail: {
     label: '상세등록',
-    hint: '완료 시 Prime/Pick 자격',
+    hint: '검색·리스트·공개 본체 · 완료 후 일반 등록 · 이어 Prime/Pick 구매',
     stepKeys: ['lesson', 'career', 'contact'],
   },
 };

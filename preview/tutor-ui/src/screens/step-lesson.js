@@ -3,11 +3,26 @@ import {
   SCHOOL_LEVELS,
   FEE_BASIS_OPTIONS,
   TUTOR_PLACE_OPTIONS,
+  GENDER_GROUP_OPTIONS,
+  STUDENT_COUNT_OPTIONS,
+  AGE_BAND_OPTIONS,
   emptySubject,
 } from '../state.js';
 import { syncLessonFromForm } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import { renderRegisterShell, renderNavButtons, bindGlobalEvents, navigate } from '../layout.js';
+
+function radios(name, options, selected) {
+  return options
+    .map(
+      (o) => `
+    <label class="form-radio">
+      <input type="radio" name="${name}" value="${o.value}" ${selected === o.value ? 'checked' : ''} />
+      <span class="form-radio__label">${o.label}</span>
+    </label>`,
+    )
+    .join('');
+}
 
 function subjectRow(sub, idx) {
   const levels = SCHOOL_LEVELS.map(
@@ -41,10 +56,26 @@ export function renderLesson() {
 
   const content = `
     <form data-form="lesson">
+      <p class="register-hint mb-4">상세등록 본체 · 기본등록 seed(표시명·주력과목)는 같은 필드를 이어서 편집합니다.</p>
       <div class="form-group">
         <label class="form-label form-label--required" for="main_subject_note">주력과목 요약</label>
         <span class="field-db-name">main_subject_note</span>
         <input class="form-input" id="main_subject_note" name="main_subject_note" value="${s.main_subject_note}" />
+      </div>
+      <div class="form-group">
+        <span class="form-label form-label--required">지도 대상 성별</span>
+        <span class="field-db-name">student_gender_group</span>
+        <div class="form-radio-group">${radios('student_gender_group', GENDER_GROUP_OPTIONS, s.student_gender_group)}</div>
+      </div>
+      <div class="form-group">
+        <span class="form-label form-label--required">수업인원</span>
+        <span class="field-db-name">student_count_group</span>
+        <div class="form-radio-group">${radios('student_count_group', STUDENT_COUNT_OPTIONS, s.student_count_group)}</div>
+      </div>
+      <div class="form-group">
+        <span class="form-label">연령대</span>
+        <span class="field-db-name">age_band</span>
+        <div class="form-radio-group">${radios('age_band', AGE_BAND_OPTIONS, s.age_band)}</div>
       </div>
       <div data-subjects-list>${s.subjects.map(subjectRow).join('')}</div>
       <div class="form-row">

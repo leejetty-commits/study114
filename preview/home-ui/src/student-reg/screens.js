@@ -414,12 +414,52 @@ function renderHub(student) {
 
 /** @param {import('./store.js').StudentRecord} student */
 function renderBasicForm(student) {
-  const isGroup = student.lesson_format === 'group';
   const formBody = `
     <form class="p19-form" data-p19-form="basic" data-p19-student-id="${student.id}">
       ${renderFormSection(
-        '표시 · 유형',
-        '학생찾기에 보이는 이름과 희망 유형을 설정합니다.',
+        '기본등록 · draft seed',
+        '희망 유형만 필수입니다. 검색/공개 항목은 상세등록에서 완성합니다.',
+        `
+        <label class="p19-field">
+          <span class="p19-field__label">희망 유형 <em class="p19-required">필수</em></span>
+          ${renderSelect('preferred_lesson_type', FORM_OPTIONS.lessonType, student.preferred_lesson_type, { required: true })}
+        </label>
+        <label class="p19-field p19-field--full">
+          <span class="p19-field__label">1차 희망지역 seed (선택)</span>
+          <span class="p19-field__hint">축별 1~3은 상세등록에서 이어서 편집합니다</span>
+          ${renderTextInput('region_label', student.region_label || '', { placeholder: '예: 서울 강남구 대치동' })}
+        </label>`,
+      )}
+      ${renderFormFooter(
+        '저장해도 학생찾기에 공개되지 않습니다. 다음 단계: 상세등록.',
+        `<button type="submit" class="btn btn--primary">draft 저장</button>
+         <a href="#${studentSectionPath(student.id, 'detail')}" class="btn btn--secondary" data-p19-nav="${studentSectionPath(student.id, 'detail')}">상세등록으로</a>`,
+      )}
+    </form>`;
+
+  return `<section class="mypage-panel p19-panel p19-panel--form">${renderStudentShell(student, 'basic', formBody)}</section>`;
+}
+
+/** @param {import('./store.js').StudentRecord} student */
+function renderDetailForm(student) {
+  const isGroup = student.lesson_format === 'group';
+  const seedSummary = [
+    student.preferred_lesson_type &&
+      `희망유형: ${FORM_OPTIONS.lessonType.find((o) => o.value === student.preferred_lesson_type)?.label || student.preferred_lesson_type}`,
+    student.region_label && `지역 seed: ${student.region_label}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  const formBody = `
+    <form class="p19-form" data-p19-form="detail" data-p19-student-id="${student.id}">
+      <div class="p19-inline-tip">
+        <strong>기본등록 seed</strong> ${esc(seedSummary || '—')}
+        · <a href="#${studentSectionPath(student.id, 'basic')}" data-p19-nav="${studentSectionPath(student.id, 'basic')}">기본정보 수정</a>
+      </div>
+      ${renderFormSection(
+        '표시 · 지역 · 학년',
+        '학생찾기 검색/리스트에 쓰이는 핵심 항목입니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <label class="p19-field p19-field--full">
@@ -427,17 +467,6 @@ function renderBasicForm(student) {
             <span class="p19-field__hint">실명 대신 노출되는 이름입니다</span>
             ${renderTextInput('public_display_name', student.public_display_name, { required: true, placeholder: '예: 중2 수학 여학생' })}
           </label>
-          <label class="p19-field">
-            <span class="p19-field__label">희망 유형</span>
-            ${renderSelect('preferred_lesson_type', FORM_OPTIONS.lessonType, student.preferred_lesson_type, { required: true })}
-          </label>
-        </div>`,
-      )}
-      ${renderFormSection(
-        '지역 · 학년',
-        '수업을 받을 지역과 학년 정보입니다.',
-        `
-        <div class="p19-field-grid p19-field-grid--2">
           <label class="p19-field p19-field--full">
             <span class="p19-field__label">희망 지역</span>
             ${renderTextInput('region_label', student.region_label || '', { required: true, placeholder: '예: 서울 강남구 대치동' })}
@@ -462,7 +491,7 @@ function renderBasicForm(student) {
       )}
       ${renderFormSection(
         '학생 정보',
-        '관리 화면에서만 사용되며 검색에는 표시명만 노출됩니다.',
+        '관리용 · 검색에는 표시명만 노출됩니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <label class="p19-field">
@@ -477,7 +506,7 @@ function renderBasicForm(student) {
       )}
       ${renderFormSection(
         '수업 조건',
-        '장소·형태·횟수 등 희망 수업 조건을 입력합니다.',
+        '장소·형태·횟수 등 희망 수업 조건입니다.',
         `
         <div class="p19-field p19-field--full">
           <span class="p19-field__label">희망 수업장소</span>
@@ -510,8 +539,8 @@ function renderBasicForm(student) {
         </div>`,
       )}
       ${renderFormSection(
-        '스타일 · 예산',
-        '선호하는 강의 스타일과 월 예산을 입력합니다.',
+        '스타일 · 예산 · 과외쌤',
+        '검색 비교와 매칭에 쓰입니다.',
         `
         <div class="p19-field p19-field--full">
           <span class="p19-field__label">희망 강의스타일</span>
@@ -532,25 +561,9 @@ function renderBasicForm(student) {
               <span class="p19-input-suffix">원/월</span>
             </div>
           </label>
-        </div>`,
-      )}
-      ${renderFormFooter('저장해도 학생찾기에는 노출되지 않습니다. 공개는 미리보기 화면에서 진행합니다.', '<button type="submit" class="btn btn--primary">임시 저장</button>')}
-    </form>`;
-
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderStudentShell(student, 'basic', formBody)}</section>`;
-}
-
-/** @param {import('./store.js').StudentRecord} student */
-function renderDetailForm(student) {
-  const formBody = `
-    <form class="p19-form" data-p19-form="detail" data-p19-student-id="${student.id}">
-      ${renderFormSection(
-        '희망 과외쌤 조건',
-        '기본등록과 별도로, 공개 전에 입력하는 상세 항목입니다.',
-        `
+        </div>
         <label class="p19-field p19-field--card">
           <span class="p19-field__label">희망 과외쌤 성별</span>
-          <span class="p19-field__hint">학생찾기 상세에서 공급자에게 표시됩니다</span>
           ${renderSelect(
             'preferred_tutor_gender',
             [
@@ -567,7 +580,7 @@ function renderDetailForm(student) {
         요청문·노출 범위는 <a href="#${studentSectionPath(student.id, 'settings')}" data-p19-nav="${studentSectionPath(student.id, 'settings')}">공개설정</a>에서 관리합니다.
       </div>
       ${renderFormFooter(
-        '',
+        '상세등록을 마친 뒤 미리보기에서 학생찾기에 공개할 수 있습니다.',
         `<button type="submit" class="btn btn--primary">상세 저장</button>
          <a href="#${studentSectionPath(student.id, 'publish')}" class="btn btn--secondary" data-p19-nav="${studentSectionPath(student.id, 'publish')}">미리보기·공개</a>`,
       )}

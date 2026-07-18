@@ -11,7 +11,7 @@ export function renderComplete() {
       <p class="auth-subheading">tutor_id: <strong>${s.tutor_id ?? '—'}</strong> · profile_status: <strong>${s.profile_status}</strong></p>
       <p class="auth-subheading">상세등록: <strong>${s.detail_completion_status}</strong></p>
     </div>
-    ${renderTempNotice('기본등록만 → 일반 리스트 · 상세등록 완료 → Prime/Pick 자격 (8·9장)')}
+    ${renderTempNotice('기본등록만 = draft · 상세등록 완료 후 일반 리스트/검색 · 그다음 Prime/Pick 구매 (14장)')}
     <dl class="register-summary">
       <dt>표시명</dt><dd>${s.tutor_display_name}</dd>
       <dt>주력과목</dt><dd>${s.main_subject_note}</dd>

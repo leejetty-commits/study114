@@ -40,55 +40,28 @@ final class BasicRegisterService
     }
 
     /**
+     * 기본등록 = draft seed 최소 (Notion 14장).
+     * 검색/공개 본체는 상세등록에서 완성한다.
+     *
      * @param array<string, mixed> $input
      */
     private function registerStudent(int $userId, array $input): int
     {
         $preferredLessonType = $this->requireEnum($input, 'preferred_lesson_type', ['tutor', 'study_room']);
-        $regionId = $this->requireRegionId($input, $userId);
-        $gradeLevel = $this->requireString($input, 'grade_level');
-        $schoolLevel = $this->requireEnum($input, 'school_level', $this->schoolLevelCodes());
-        $lessonFormat = $this->requireEnum($input, 'lesson_format', ['one_on_one', 'group']);
-        $lessonsPerWeek = $this->requirePositiveInt($input, 'lessons_per_week');
-        $minutesPerLesson = $this->requirePositiveInt($input, 'minutes_per_lesson');
-        $preferredFee = $this->optionalInt($input, 'preferred_fee_amount');
-        $preferredStudyroomFee = $this->optionalInt($input, 'preferred_studyroom_fee_amount');
-
-        $studentGenderGroup = null;
-        $preferredCountGroup = 'solo';
-        if ($lessonFormat === 'group') {
-            $studentGenderGroup = $this->requireEnum($input, 'student_gender_group', ['male', 'female', 'mixed']);
-            $preferredCountGroup = $this->requireEnum($input, 'preferred_student_count_group', ['solo', 'two', 'three', 'four_plus']);
-            if ($preferredCountGroup === 'solo') {
-                throw new InvalidArgumentException('preferred_student_count_group: 그룹과외는 2명 이상을 선택해 주세요.');
-            }
-        }
+        $regionId = $this->optionalRegionId($input, $userId);
 
         $publicName = $this->optionalString($input, 'public_display_name')
             ?: ($this->optionalString($input, 'student_name') ?: '학생');
         $studentName = $this->optionalString($input, 'student_name') ?: $publicName;
-        $childGender = $this->requireEnum($input, 'gender', ['male', 'female']);
-        $birthYear = $this->requireBirthYear($input);
 
-        $studyroomRegionId = $preferredLessonType === 'study_room' ? $regionId : null;
-        $tutorRegionId = $preferredLessonType === 'tutor' ? $regionId : null;
-        if ($preferredLessonType === 'study_room') {
-            $tutorRegionId = null;
-        }
-
-        $regionNote = $this->optionalString($input, 'preferred_region_note');
-        $requestSummary = $this->optionalString($input, 'request_summary');
-        $requestVisibility = $this->optionalEnum($input, 'request_summary_visibility', ['private', 'paid_only']) ?? 'private';
-
-        $subjectNames = $this->parseSubjectNames($input);
-        $lessonPlaces = $this->parseStringList($input, 'lesson_places', ['student_home', 'study_room', 'public_place']);
-        $styleBadges = $this->parseStringList($input, 'teaching_style_badges', $this->teachingStyleCodes());
-
-        if ($lessonPlaces === []) {
-            throw new InvalidArgumentException('lesson_places: 희망 수업장소를 1개 이상 선택해 주세요.');
-        }
-        if ($styleBadges === []) {
-            throw new InvalidArgumentException('teaching_style_badges: 희망 강의스타일을 1개 이상 선택해 주세요.');
+        $studyroomRegionId = null;
+        $tutorRegionId = null;
+        if ($regionId !== null) {
+            if ($preferredLessonType === 'study_room') {
+                $studyroomRegionId = $regionId;
+            } else {
+                $tutorRegionId = $regionId;
+            }
         }
 
         $pdo = Connection::get();
@@ -96,43 +69,24 @@ final class BasicRegisterService
         try {
             $stmt = $pdo->prepare(
                 'INSERT INTO students (
-                    guardian_user_id, student_name, public_display_name, gender, birth_year, grade_level,
+                    guardian_user_id, student_name, public_display_name,
                     preferred_lesson_type,
-                    preferred_studyroom_region_id, preferred_tutor_region_id, preferred_region_note,
-                    preferred_fee_amount, preferred_studyroom_fee_amount,
-                    lessons_per_week, minutes_per_lesson,
-                    lesson_format, student_gender_group, preferred_student_count_group,
-                    request_summary, request_summary_visibility,
+                    preferred_studyroom_region_id, preferred_tutor_region_id,
+                    request_summary_visibility,
                     exposure_status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
             );
             $stmt->execute([
                 $userId,
                 $studentName,
                 $publicName,
-                $childGender,
-                $birthYear,
-                $gradeLevel,
                 $preferredLessonType,
                 $studyroomRegionId,
                 $tutorRegionId,
-                $regionNote,
-                $preferredFee,
-                $preferredStudyroomFee,
-                $lessonsPerWeek,
-                $minutesPerLesson,
-                $lessonFormat,
-                $studentGenderGroup,
-                $preferredCountGroup,
-                $requestSummary,
-                $requestVisibility,
+                'private',
                 'draft',
             ]);
             $studentId = (int) $pdo->lastInsertId();
-
-            $this->insertStudentSubjects($pdo, $studentId, $subjectNames, $schoolLevel);
-            $this->insertStudentPlaces($pdo, $studentId, $lessonPlaces);
-            $this->insertStudentStyleBadges($pdo, $studentId, $styleBadges);
 
             $pdo->commit();
         } catch (PDOException $e) {
@@ -144,51 +98,36 @@ final class BasicRegisterService
     }
 
     /**
+     * 기본등록 seed: 공부방명 + 노출지역 1 + 주력과목 1 (Notion 14장 §3-3-2).
+     *
      * @param array<string, mixed> $input
      */
     private function registerStudyRoom(int $userId, array $input): int
     {
         $name = $this->requireString($input, 'study_room_name');
         $regionId = $this->requireRegionId($input, $userId);
-        $mainSubject = $this->requireString($input, 'main_subject_note');
-        $priceAmount = $this->requirePositiveInt($input, 'price_amount');
-        $lessonPlace = $this->requireEnum($input, 'lesson_place_type', ['academy', 'study_room']);
-        $lessonOperation = $this->requireEnum($input, 'lesson_operation_type', [
-            'group_by_time_slot', 'time_slot_mixed_grade', 'individual_visit',
-        ]);
-        $capacity = $this->requireEnum($input, 'capacity_per_time', ['one_to_four', 'five_to_eight', 'nine_plus']);
-        $educationOffice = !empty($input['education_office_registered']) ? 1 : 0;
+        $mainSubject = $this->resolveMainSubjectNote($input);
 
-        $schoolLevels = $this->parseStringList($input, 'school_levels', $this->schoolLevelCodes());
-        if ($schoolLevels === []) {
-            throw new InvalidArgumentException('school_levels: 대상 학교급을 1개 이상 선택해 주세요.');
+        if (isset($input['gender']) && (string) $input['gender'] !== '') {
+            ProfileGenderSync::sync($userId, $input);
         }
-
-        ProfileGenderSync::requireFromInput($input);
 
         $pdo = Connection::get();
         $pdo->beginTransaction();
         try {
-            ProfileGenderSync::sync($userId, $input);
-
             $stmt = $pdo->prepare(
                 'INSERT INTO study_rooms (
                     user_id, study_room_name, main_subject_note, region_id,
-                    price_amount, lesson_place_type, lesson_operation_type,
-                    capacity_per_time, education_office_registered, profile_status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                    profile_status, detail_completion_status
+                ) VALUES (?, ?, ?, ?, ?, ?)'
             );
             $stmt->execute([
                 $userId,
                 $name,
                 $mainSubject,
                 $regionId,
-                $priceAmount,
-                $lessonPlace,
-                $lessonOperation,
-                $capacity,
-                $educationOffice,
                 'draft',
+                'basic_only',
             ]);
             $roomId = (int) $pdo->lastInsertId();
 
@@ -197,12 +136,10 @@ final class BasicRegisterService
             )->execute([$roomId, $regionId]);
 
             $subjectId = $this->findSubjectMasterId($pdo, $this->firstSubjectName($mainSubject));
-            foreach ($schoolLevels as $level) {
-                $pdo->prepare(
-                    'INSERT INTO study_room_subject_targets (study_room_id, subject_name, school_level, subject_master_id, is_main)
-                     VALUES (?, ?, ?, ?, ?)'
-                )->execute([$roomId, $this->firstSubjectName($mainSubject), $level, $subjectId, $level === $schoolLevels[0] ? 1 : 0]);
-            }
+            $pdo->prepare(
+                'INSERT INTO study_room_subject_targets (study_room_id, subject_name, school_level, subject_master_id, is_main)
+                 VALUES (?, ?, ?, ?, 1)'
+            )->execute([$roomId, $this->firstSubjectName($mainSubject), 'middle', $subjectId]);
 
             $pdo->commit();
         } catch (PDOException $e) {
@@ -214,70 +151,35 @@ final class BasicRegisterService
     }
 
     /**
+     * 기본등록 seed: 표시명 + 활동 시 1 + 주력과목 1 (Notion 14장 §3-3-3).
+     *
      * @param array<string, mixed> $input
      */
     private function registerTutor(int $userId, array $input): int
     {
         $displayName = $this->requireString($input, 'tutor_display_name');
         $regionId = $this->requireRegionId($input, $userId);
-        $mainSubject = $this->requireString($input, 'main_subject_note');
-        $genderGroup = $this->requireEnum($input, 'student_gender_group', ['male', 'female', 'mixed']);
-        $countGroup = $this->requireEnum($input, 'student_count_group', ['solo', 'two', 'three', 'four_plus']);
-        $preferredFee = $this->requirePositiveInt($input, 'preferred_fee_amount');
-        $feeBasis = $this->requireEnum($input, 'fee_basis_type', ['monthly_by_weekly_schedule', 'monthly_by_total_sessions']);
-        $lessonsPerWeek = $this->optionalInt($input, 'lessons_per_week');
-        $monthlySessions = $this->optionalInt($input, 'monthly_session_count');
-        $minutesPerLesson = $this->optionalInt($input, 'minutes_per_lesson');
-        $universityName = $this->optionalString($input, 'university_name');
-        $majorName = $this->optionalString($input, 'major_name');
-        $universityStatus = $this->optionalEnum($input, 'university_status', ['enrolled', 'leave', 'completed', 'graduated']);
-        $careerBand = $this->optionalEnum($input, 'career_year_band', ['y1_3', 'y4_6', 'y7_10', 'y10_plus']);
-        $ageBand = $this->optionalEnum($input, 'age_band', [
-            'early_20s', 'late_20s', 'early_30s', 'late_30s', 'early_40s', 'late_40s', 'over_50',
-        ]);
+        $mainSubject = $this->resolveMainSubjectNote($input);
 
-        $lessonPlaces = $this->parseStringList($input, 'lesson_places', [
-            'student_home_visit', 'public_place', 'tutor_home',
-        ]);
-        $styleBadges = $this->parseStringList($input, 'teaching_style_badges', $this->teachingStyleCodes());
-        if ($lessonPlaces === []) {
-            throw new InvalidArgumentException('lesson_places: 강의장소를 1개 이상 선택해 주세요.');
+        if (isset($input['gender']) && (string) $input['gender'] !== '') {
+            ProfileGenderSync::sync($userId, $input);
         }
-
-        ProfileGenderSync::requireFromInput($input);
 
         $pdo = Connection::get();
         $pdo->beginTransaction();
         try {
-            ProfileGenderSync::sync($userId, $input);
-
             $stmt = $pdo->prepare(
                 'INSERT INTO tutors (
                     user_id, tutor_display_name, main_subject_note,
-                    student_gender_group, student_count_group,
-                    preferred_fee_amount, fee_basis_type,
-                    lessons_per_week, monthly_session_count, minutes_per_lesson,
-                    university_name, major_name, university_status,
-                    career_year_band, age_band, profile_status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                    profile_status, detail_completion_status
+                ) VALUES (?, ?, ?, ?, ?)'
             );
             $stmt->execute([
                 $userId,
                 $displayName,
                 $mainSubject,
-                $genderGroup,
-                $countGroup,
-                $preferredFee,
-                $feeBasis,
-                $lessonsPerWeek,
-                $monthlySessions,
-                $minutesPerLesson,
-                $universityName,
-                $majorName,
-                $universityStatus,
-                $careerBand,
-                $ageBand,
                 'draft',
+                'basic_only',
             ]);
             $tutorId = (int) $pdo->lastInsertId();
 
@@ -291,18 +193,6 @@ final class BasicRegisterService
                 'INSERT INTO tutor_subject_targets (tutor_id, subject_name, school_level, subject_master_id, is_primary)
                  VALUES (?, ?, ?, ?, 1)'
             )->execute([$tutorId, $this->firstSubjectName($mainSubject), 'middle', $subjectId]);
-
-            foreach ($lessonPlaces as $place) {
-                $pdo->prepare(
-                    'INSERT INTO tutor_lesson_places (tutor_id, place_type) VALUES (?, ?)'
-                )->execute([$tutorId, $place]);
-            }
-
-            foreach ($styleBadges as $i => $badge) {
-                $pdo->prepare(
-                    'INSERT INTO tutor_teaching_style_badges (tutor_id, badge_name, display_order) VALUES (?, ?, ?)'
-                )->execute([$tutorId, $badge, $i]);
-            }
 
             $pdo->commit();
         } catch (PDOException $e) {
@@ -353,6 +243,17 @@ final class BasicRegisterService
     /** @param array<string, mixed> $input */
     private function requireRegionId(array $input, int $userId): int
     {
+        $id = $this->optionalRegionId($input, $userId);
+        if ($id === null) {
+            throw new InvalidArgumentException('region_id: 지역을 선택해 주세요.');
+        }
+
+        return $id;
+    }
+
+    /** @param array<string, mixed> $input */
+    private function optionalRegionId(array $input, int $userId): ?int
+    {
         if (isset($input['region_id']) && $input['region_id'] !== '') {
             return (int) $input['region_id'];
         }
@@ -361,11 +262,42 @@ final class BasicRegisterService
         $stmt = $pdo->prepare('SELECT default_region_id FROM user_profiles WHERE user_id = ?');
         $stmt->execute([$userId]);
         $id = $stmt->fetchColumn();
-        if ($id) {
-            return (int) $id;
+
+        return $id ? (int) $id : null;
+    }
+
+    /** @param array<string, mixed> $input */
+    private function resolveMainSubjectNote(array $input): string
+    {
+        $note = $this->optionalString($input, 'main_subject_note');
+        if ($note !== null) {
+            return $note;
         }
 
-        throw new InvalidArgumentException('region_id: 지역을 선택해 주세요.');
+        $subjects = $input['main_subjects'] ?? null;
+        if (is_array($subjects)) {
+            $parts = [];
+            foreach ($subjects as $s) {
+                $s = trim((string) $s);
+                if ($s === '기타') {
+                    $other = trim((string) ($input['main_subject_other'] ?? ''));
+                    if ($other !== '') {
+                        $parts[] = $other;
+                    }
+                    continue;
+                }
+                if ($s !== '') {
+                    $parts[] = $s;
+                }
+            }
+            if ($parts !== []) {
+                return implode(' · ', $parts);
+            }
+        } elseif (is_string($subjects) && trim($subjects) !== '') {
+            return trim($subjects);
+        }
+
+        throw new InvalidArgumentException('main_subject_note: 주력과목을 1개 이상 선택해 주세요.');
     }
 
     private function findSubjectMasterId(PDO $pdo, string $name): ?int

@@ -83,6 +83,7 @@ export function renderLesson() {
         <label class="form-label" for="main_subject_note">주력과목 요약</label>
         <span class="field-db-name">main_subject_note</span>
         <input class="form-input" id="main_subject_note" name="main_subject_note" value="${s.main_subject_note}" />
+        <p class="form-note">기본등록 seed와 같은 최종 필드입니다.</p>
       </div>
       <div class="form-group">
         <label class="form-label" for="teaching_style">지도 스타일</label>

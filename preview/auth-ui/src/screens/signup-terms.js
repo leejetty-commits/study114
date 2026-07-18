@@ -31,7 +31,7 @@ export function renderSignupTerms() {
   ).join('');
 
   const content = `
-    ${renderStepIndicator(1)}
+    ${renderStepIndicator(1, 5)}
     ${TERMS_TEMP ? renderTempNotice('약관 항목·필수 여부는 SSOT 2장 §3.2 [임시] — 법무 확정 후 잠금') : ''}
     <div class="panel">
       <h1 class="auth-heading">약관 동의</h1>
@@ -104,6 +104,6 @@ export function bindSignupTermsEvents(root) {
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
     markTermsAgreed();
-    navigate('/signup/role');
+    navigate('/signup/form');
   });
 }

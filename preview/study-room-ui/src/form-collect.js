@@ -9,11 +9,9 @@ export function syncBasicFromForm(form, state) {
   const fd = new FormData(form);
   state.gender = String(fd.get('gender') ?? 'male');
   state.study_room_name = String(fd.get('study_room_name') ?? state.study_room_name);
-  state.slogan = String(fd.get('slogan') ?? '');
-  state.operator_display_name = String(fd.get('operator_display_name') ?? '');
-  state.intro_short = String(fd.get('intro_short') ?? '');
-  state.intro_long = String(fd.get('intro_long') ?? '');
-  state.lesson_place_type = String(fd.get('lesson_place_type') ?? 'study_room');
+  if (fd.has('main_subject_note')) {
+    state.main_subject_note = String(fd.get('main_subject_note') ?? '');
+  }
 }
 
 /**

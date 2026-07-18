@@ -74,7 +74,12 @@ final class SearchService
      */
     private function searchRooms(PDO $pdo, array $filters, int $limit, int $offset): array
     {
-        $where = ['sr.profile_status = :status', 'sr.deleted_at IS NULL'];
+        // 일반 리스트/검색 = 상세등록 완료 후 (Notion 14장 §7-2)
+        $where = [
+            'sr.profile_status = :status',
+            'sr.deleted_at IS NULL',
+            "sr.detail_completion_status = 'expanded_complete'",
+        ];
         $params = ['status' => 'published'];
 
         if ($regionId = $this->intFilter($filters, 'region_id')) {
@@ -219,7 +224,11 @@ final class SearchService
      */
     private function searchTutors(PDO $pdo, array $filters, int $limit, int $offset): array
     {
-        $where = ['t.profile_status = :status'];
+        // 일반 리스트/검색 = 상세등록 완료 후 (Notion 14장 §7-2)
+        $where = [
+            't.profile_status = :status',
+            "t.detail_completion_status = 'expanded_complete'",
+        ];
         $params = ['status' => 'published'];
 
         if ($regionId = $this->intFilter($filters, 'tutor_region_id')) {

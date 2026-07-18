@@ -1,6 +1,6 @@
 /**
  * 1차 잠금 정책 — UI·다음 화면 작업 공통 참조
- * SSOT: 5장 · 6장 · 8장 · 9장 · 사용자 잠금 기준 (2026-06-01)
+ * Notion 14장(2026-07-18): 가입 최소 · 기본=draft seed · 상세=검색/공개 본체 · 유료=구매
  */
 
 /** @typedef {'basic' | 'detail'} RegisterPhase */
@@ -9,37 +9,38 @@
 export const REGISTER_FLOW = {
   basic: {
     label: '기본등록',
-    outcome: '일반 리스트(Local List) 노출 가능',
+    outcome: '공개 전 draft 생성 · 상세등록 진입',
     studyRoomSteps: ['basic', 'location'],
     tutorSteps: null,
   },
   detail: {
     label: '상세등록',
-    outcome: '누구나 이어서 작성 가능',
+    outcome: '검색/리스트/공개 본체 완성 · 일반 리스트·검색 등록 가능',
     studyRoomSteps: ['lesson', 'career', 'facility'],
     tutorSteps: null,
     includesYoutube: true,
   },
 };
 
-/** Prime / Pick — 상세등록 완료 + 별도 광고/노출권(9장·5장 §10) */
+/** 일반 리스트/검색 = 상세등록 완료 후 · Prime/Pick = 상세+품질/증빙 */
 export const EXPOSURE_TIERS = {
   prime: {
     label: 'Prime',
     slots: 3,
     requiresDetailComplete: true,
-    note: '상세등록 미완료 시 박스형 상위 노출 불가',
+    note: '상세등록 완료 + 소개/이미지/증빙 등 품질 충족 후 구매',
   },
   pick: {
     label: 'Pick',
     slotsPerRow: 5,
     requiresDetailComplete: true,
-    note: '상세등록 완료가 광고 상품 자격 전제',
+    note: '상세등록 완료 + 품질 충족 후 구매',
   },
+  /** @deprecated 용어 폐기 — 일반 리스트는 상세등록 완료 후 */
   localList: {
-    label: 'Local List',
-    requiresDetailComplete: false,
-    note: '기본등록만으로 일반 리스트 노출 가능',
+    label: '일반 리스트/검색',
+    requiresDetailComplete: true,
+    note: '기본등록만으로는 공개·검색 등록 불가 · 상세등록 완료 후',
   },
 };
 

@@ -196,28 +196,31 @@ export function getPublishReadiness(student) {
     if (!ok) missing.push(label);
   };
 
-  need(!!student.public_display_name, '공개 표시명 (기본등록)');
-  need(!!student.grade_level, '학년 (기본등록)');
-  need(!!student.gender, '학생 성별 (기본등록)');
-  need(!!student.birth_year, '출생연도 (기본등록)');
+  // 기본등록 seed (Notion 14장) — 공개 전제 아님
   need(!!student.preferred_lesson_type, '희망 유형 (기본등록)');
-  need(!!student.region_label, '희망 지역 (기본등록)');
-  need(!!student.subject_label, '희망 과목 (기본등록)');
-  need(Array.isArray(student.lesson_places) && student.lesson_places.length > 0, '희망 수업장소 (기본등록)');
-  need(!!student.lesson_format, '수업형태 (기본등록)');
+
+  // 상세등록 = 검색/공개 본체
+  need(!!student.public_display_name, '공개 표시명 (상세등록)');
+  need(!!student.grade_level, '학년 (상세등록)');
+  need(!!student.gender, '학생 성별 (상세등록)');
+  need(!!student.birth_year, '출생연도 (상세등록)');
+  need(!!student.region_label, '희망 지역 (상세등록)');
+  need(!!student.subject_label, '희망 과목 (상세등록)');
+  need(Array.isArray(student.lesson_places) && student.lesson_places.length > 0, '희망 수업장소 (상세등록)');
+  need(!!student.lesson_format, '수업형태 (상세등록)');
   if (student.lesson_format === 'group') {
-    need(!!student.student_gender_group, '그룹 구성 (기본등록)');
-    need(!!student.preferred_student_count_group && student.preferred_student_count_group !== 'solo', '희망 수업인원 (기본등록)');
+    need(!!student.student_gender_group, '그룹 구성 (상세등록)');
+    need(!!student.preferred_student_count_group && student.preferred_student_count_group !== 'solo', '희망 수업인원 (상세등록)');
   } else {
-    need(!!student.preferred_student_count_group, '희망 수업인원 (기본등록)');
+    need(!!student.preferred_student_count_group, '희망 수업인원 (상세등록)');
   }
-  need(!!student.lessons_per_week, '주 횟수 (기본등록)');
-  need(!!student.minutes_per_lesson, '1회 시간 (기본등록)');
-  need(Array.isArray(student.teaching_style_badges) && student.teaching_style_badges.length > 0, '희망 강의스타일 (기본등록)');
+  need(!!student.lessons_per_week, '주 횟수 (상세등록)');
+  need(!!student.minutes_per_lesson, '1회 시간 (상세등록)');
+  need(Array.isArray(student.teaching_style_badges) && student.teaching_style_badges.length > 0, '희망 강의스타일 (상세등록)');
   if (student.preferred_lesson_type === 'study_room') {
-    need(!!student.preferred_studyroom_fee_amount, '수업예산 공부방 (기본등록)');
+    need(!!student.preferred_studyroom_fee_amount, '수업예산 공부방 (상세등록)');
   } else {
-    need(!!student.preferred_fee_amount, '수업예산 과외 (기본등록)');
+    need(!!student.preferred_fee_amount, '수업예산 과외 (상세등록)');
   }
   need(!!student.preferred_tutor_gender, '희망 과외쌤 성별 (상세등록)');
 
@@ -227,7 +230,8 @@ export function getPublishReadiness(student) {
   return {
     basicOk: basicMissing.length === 0,
     detailOk: detailMissing.length === 0,
-    canPublish: missing.length === 0,
+    /** 일반 리스트/검색 등록 = 상세등록 완료 후 */
+    canPublish: detailMissing.length === 0 && basicMissing.length === 0,
     missing,
   };
 }

@@ -3,12 +3,9 @@ export function syncBasicFromForm(form, state) {
   const fd = new FormData(form);
   state.gender = String(fd.get('gender') ?? 'male');
   state.tutor_display_name = String(fd.get('tutor_display_name') ?? '');
-  state.slogan = String(fd.get('slogan') ?? '');
-  state.intro_short = String(fd.get('intro_short') ?? '');
-  state.intro_long = String(fd.get('intro_long') ?? '');
-  state.student_gender_group = String(fd.get('student_gender_group') ?? 'mixed');
-  state.student_count_group = String(fd.get('student_count_group') ?? 'solo');
-  state.age_band = String(fd.get('age_band') ?? '');
+  if (fd.has('main_subject_note')) {
+    state.main_subject_note = String(fd.get('main_subject_note') ?? '');
+  }
 }
 
 export function syncRegionsFromForm(root, state) {
@@ -28,6 +25,15 @@ export function syncLessonFromForm(form, state) {
   if (!form) return;
   const fd = new FormData(form);
   state.main_subject_note = String(fd.get('main_subject_note') ?? '');
+  if (fd.has('student_gender_group')) {
+    state.student_gender_group = String(fd.get('student_gender_group') ?? 'mixed');
+  }
+  if (fd.has('student_count_group')) {
+    state.student_count_group = String(fd.get('student_count_group') ?? 'solo');
+  }
+  if (fd.has('age_band')) {
+    state.age_band = String(fd.get('age_band') ?? '');
+  }
   state.preferred_fee_amount = String(fd.get('preferred_fee_amount') ?? '');
   state.fee_basis_type = String(fd.get('fee_basis_type') ?? 'monthly_by_weekly_schedule');
   state.lessons_per_week = String(fd.get('lessons_per_week') ?? '');

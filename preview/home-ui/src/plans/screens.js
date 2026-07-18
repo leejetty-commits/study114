@@ -198,9 +198,15 @@ function getEligibility(profile, productCode, family = 'position') {
         canBuy = false;
       }
     }
-    if (productCode === 'pick' && !readiness.canPublish) {
-      missing.push(...(readiness.missing || ['기본 비교 항목이 부족합니다']));
-      canBuy = false;
+    if (productCode === 'pick') {
+      if (room.detail_completion_status !== 'expanded_complete') {
+        missing.push('상세등록 완료 후 구매할 수 있습니다');
+        canBuy = false;
+      }
+      if (!readiness.canPublish) {
+        missing.push(...(readiness.missing || ['상세등록·품질 항목이 부족합니다']));
+        canBuy = false;
+      }
     }
   } else {
     const tutor = getTutor(Number(profile.id));
@@ -425,6 +431,10 @@ export function renderPlansHome() {
   return `
     <section class="mypage-panel">
       <p class="mypage-lead">P18-01 · ${esc(P18_HEADLINE)}</p>
+      <div class="mypage-info-box">
+        <strong>유료 = 구매 단계</strong>
+        <p class="mypage-muted">새 입력 폼이 아닙니다. 상세등록·일반 리스트/검색 등록 후 Prime / Pick / 접근권을 구매합니다.</p>
+      </div>
       ${renderProviderNoticeBanners()}
       ${renderProfileBanner(profile, role)}
       ${role === 'study_room' || role === 'tutor' ? renderTestModeToggle() : ''}

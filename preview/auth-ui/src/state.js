@@ -1,10 +1,26 @@
 /** @typedef {'student' | 'study_room' | 'tutor'} MemberRole */
 
-/** @type {{ role: MemberRole | null, termsAgreed: boolean, accountAddress: string, basicRegister: Record<string, object>, lastSignup: { userId: number, email: string, roleType: string } | null }} */
+/**
+ * @typedef {object} AccountDraft
+ * @property {string} email
+ * @property {string} password
+ * @property {string} password_confirm
+ * @property {string} name
+ * @property {string} phone
+ * @property {string} address
+ * @property {string} address_zip
+ * @property {string} address_line2
+ * @property {boolean} email_consent
+ * @property {boolean} sms_consent
+ */
+
+/** @type {{ role: MemberRole | null, termsAgreed: boolean, accountAddress: string, accountDraft: AccountDraft | null, basicRegister: Record<string, object>, lastSignup: { userId: number, email: string, roleType: string } | null }} */
 export const signupState = {
   role: null,
   termsAgreed: false,
   accountAddress: '',
+  /** 공통가입 폼 임시값 — 역할 선택 후 signup API 호출 */
+  accountDraft: null,
   profileGender: null,
   basicRegister: {},
   extraRegister: {},
@@ -61,6 +77,7 @@ export function resetSignupState() {
   signupState.role = null;
   signupState.termsAgreed = false;
   signupState.accountAddress = '';
+  signupState.accountDraft = null;
   signupState.basicRegister = {};
   signupState.extraRegister = {};
   signupState.basicRegisterResult = null;

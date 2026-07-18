@@ -103,22 +103,22 @@ final class StudentHubService
             }
         };
 
-        $need(!empty($s['public_display_name']), '공개 표시명 (기본등록)');
-        $need(!empty($s['grade_level']), '학년 (기본등록)');
-        $need(!empty($s['gender']), '학생 성별 (기본등록)');
-        $need(!empty($s['birth_year']), '출생연도 (기본등록)');
         $need(!empty($s['preferred_lesson_type']), '희망 유형 (기본등록)');
-        $need(!empty($s['region_label']), '희망 지역 (기본등록)');
-        $need(!empty($s['subject_label']), '희망 과목 (기본등록)');
-        $need(is_array($s['lesson_places']) && $s['lesson_places'] !== [], '희망 수업장소 (기본등록)');
-        $need(!empty($s['lesson_format']), '수업형태 (기본등록)');
-        $need(!empty($s['lessons_per_week']), '주 횟수 (기본등록)');
-        $need(!empty($s['minutes_per_lesson']), '1회 시간 (기본등록)');
-        $need(is_array($s['teaching_style_badges']) && $s['teaching_style_badges'] !== [], '희망 강의스타일 (기본등록)');
+        $need(!empty($s['public_display_name']), '공개 표시명 (상세등록)');
+        $need(!empty($s['grade_level']), '학년 (상세등록)');
+        $need(!empty($s['gender']), '학생 성별 (상세등록)');
+        $need(!empty($s['birth_year']), '출생연도 (상세등록)');
+        $need(!empty($s['region_label']), '희망 지역 (상세등록)');
+        $need(!empty($s['subject_label']), '희망 과목 (상세등록)');
+        $need(is_array($s['lesson_places']) && $s['lesson_places'] !== [], '희망 수업장소 (상세등록)');
+        $need(!empty($s['lesson_format']), '수업형태 (상세등록)');
+        $need(!empty($s['lessons_per_week']), '주 횟수 (상세등록)');
+        $need(!empty($s['minutes_per_lesson']), '1회 시간 (상세등록)');
+        $need(is_array($s['teaching_style_badges']) && $s['teaching_style_badges'] !== [], '희망 강의스타일 (상세등록)');
         if (($s['preferred_lesson_type'] ?? '') === 'study_room') {
-            $need(!empty($s['preferred_studyroom_fee_amount']), '수업예산 공부방 (기본등록)');
+            $need(!empty($s['preferred_studyroom_fee_amount']), '수업예산 공부방 (상세등록)');
         } else {
-            $need(!empty($s['preferred_fee_amount']), '수업예산 과외 (기본등록)');
+            $need(!empty($s['preferred_fee_amount']), '수업예산 과외 (상세등록)');
         }
         $need(!empty($s['preferred_tutor_gender']), '희망 과외쌤 성별 (상세등록)');
 

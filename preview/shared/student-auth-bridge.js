@@ -31,14 +31,14 @@ export function mapAuthFormToStudentRecord(data, meta = {}) {
     ? data.lesson_places
     : data.lesson_places
       ? [data.lesson_places]
-      : ['student_home'];
+      : [];
   const teachingBadges = Array.isArray(data.teaching_style_badges)
     ? data.teaching_style_badges
     : data.teaching_style_badges
       ? [data.teaching_style_badges]
       : [];
 
-  const lessonFormat = String(data.lesson_format || 'one_on_one');
+  const lessonFormat = data.lesson_format ? String(data.lesson_format) : '';
   const preferredLessonType =
     data.preferred_lesson_type === 'study_room' ? 'study_room' : 'tutor';
 
@@ -51,14 +51,14 @@ export function mapAuthFormToStudentRecord(data, meta = {}) {
 
   return {
     student_name: String(data.public_display_name || data.student_name || '새 등록'),
-    public_display_name: String(data.public_display_name || '새학생'),
+    public_display_name: String(data.public_display_name || ''),
     grade_level: String(data.grade_level || ''),
-    school_level: String(data.school_level || 'middle'),
+    school_level: String(data.school_level || ''),
     gender: String(data.gender || ''),
     birth_year: Number(data.birth_year) || undefined,
     preferred_lesson_type: preferredLessonType,
     region_id: data.region_id ? Number(data.region_id) : undefined,
-    region_label: meta.regionLabel || String(data.region_label || '서울특별시 강남구 대치동'),
+    region_label: meta.regionLabel || String(data.region_label || ''),
     preferred_studyroom_region_id: data.preferred_studyroom_region_id
       ? Number(data.preferred_studyroom_region_id)
       : undefined,
@@ -73,10 +73,9 @@ export function mapAuthFormToStudentRecord(data, meta = {}) {
     lesson_format: lessonFormat,
     student_gender_group:
       lessonFormat === 'group' ? String(data.student_gender_group || 'mixed') : '',
-    preferred_student_count_group:
-      lessonFormat === 'one_on_one'
-        ? 'solo'
-        : String(data.preferred_student_count_group || 'two'),
+    preferred_student_count_group: data.preferred_student_count_group
+      ? String(data.preferred_student_count_group)
+      : '',
     lessons_per_week: Number(data.lessons_per_week) || undefined,
     minutes_per_lesson: Number(data.minutes_per_lesson) || undefined,
     teaching_style_badges: teachingBadges,

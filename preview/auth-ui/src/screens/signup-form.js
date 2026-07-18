@@ -1,7 +1,7 @@
-import { signupState, ROLE_LABELS, DUMMY_USER } from '../state.js';
+import { signupState, DUMMY_USER } from '../state.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import { openKakaoPostcode } from '../../../shared/kakao-postcode.js';
-import { renderAuthShell, renderStepIndicator, renderRoleBadge, bindGlobalEvents, navigate } from '../layout.js';
+import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -13,18 +13,16 @@ function esc(s) {
 const isDev = import.meta.env.DEV;
 
 export function renderSignupForm() {
-  const role = signupState.role || 'student';
-  const roleLabel = ROLE_LABELS[role];
-  const prefEmail = isDev ? DUMMY_USER.email : '';
-  const prefName = isDev ? DUMMY_USER.name : '';
-  const prefPhone = isDev ? DUMMY_USER.phone : '';
+  const draft = signupState.accountDraft;
+  const prefEmail = draft?.email || (isDev ? DUMMY_USER.email : '');
+  const prefName = draft?.name || (isDev ? DUMMY_USER.name : '');
+  const prefPhone = draft?.phone || (isDev ? DUMMY_USER.phone : '');
 
   const content = `
-    ${renderStepIndicator(3)}
+    ${renderStepIndicator(2, 5)}
     <div class="panel auth-shell__card--wide">
       <h1 class="auth-heading">회원가입</h1>
-      <p class="auth-subheading mb-6">공통 회원 정보를 입력해 주세요.</p>
-      ${renderRoleBadge(role)}
+      <p class="auth-subheading mb-6">공통 계정 정보만 입력합니다. 역할·검색용 항목은 다음 단계에서 받습니다.</p>
 
       <form data-form="signup" class="mt-8" novalidate>
         <div class="form-group">
@@ -162,19 +160,19 @@ export function renderSignupForm() {
           </p>
         </div>
 
-        <p class="form-note">${roleLabel} 상세 정보는 기본등록 단계에서 이어서 입력합니다.</p>
+        <p class="form-note">역할 선택과 기본등록(draft)은 다음 단계에서 이어집니다.</p>
 
         <div class="form-error" data-signup-error hidden role="alert"></div>
 
         <div class="actions-stack">
-          <button type="submit" class="btn btn--primary btn--block">가입하기</button>
-          <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
+          <button type="submit" class="btn btn--primary btn--block">다음: 역할 선택</button>
+          <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/terms">이전</button>
         </div>
       </form>
     </div>
   `;
 
-  return renderAuthShell(content, { wide: true, showBack: true, backPath: '/signup/role', backLabel: '회원구분' });
+  return renderAuthShell(content, { wide: true, showBack: true, backPath: '/signup/terms', backLabel: '약관동의' });
 }
 
 /**
@@ -245,7 +243,6 @@ export function bindSignupFormEvents(root) {
 
     const fd = new FormData(form);
     const payload = Object.fromEntries(fd.entries());
-    payload.role = signupState.role || 'student';
     payload.sms_consent = fd.get('sms_consent') === 'on';
     payload.email_consent = fd.get('email_consent') === 'on';
     payload.address = String(payload.address ?? '').trim();
@@ -276,55 +273,20 @@ export function bindSignupFormEvents(root) {
       return;
     }
 
-    const submitBtn = form.querySelector('[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = '가입 처리 중…';
-    }
-
-    try {
-      const res = await fetch('/api/auth/signup.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
-      const rawText = await res.text();
-      let data = {};
-      try {
-        data = rawText ? JSON.parse(rawText) : {};
-      } catch {
-        data = {};
-      }
-
-      if (!res.ok || !data.ok) {
-        const msg =
-          data.message ||
-          (res.status === 422
-            ? '입력값을 확인해 주세요. (예: 이미 가입된 이메일이거나 필수 항목 누락)'
-            : `가입 실패 (HTTP ${res.status})`);
-        showSignupError(root, msg);
-        console.error('[signup]', res.status, data, rawText?.slice?.(0, 200));
-        return;
-      }
-
-      signupState.lastSignup = {
-        userId: data.user_id,
-        email: data.email,
-        roleType: data.role_type,
-      };
-      const detail = payload.address_line2 ? ` ${payload.address_line2}` : '';
-      signupState.accountAddress = `${payload.address}${detail}`.trim();
-      signupState.profileGender = null;
-      console.info('[signup] saved', signupState.lastSignup);
-      navigate('/signup/basic');
-    } catch (err) {
-      showSignupError(root, err instanceof Error ? err.message : '네트워크 오류');
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '가입하기';
-      }
-    }
+    signupState.accountDraft = {
+      email: String(payload.email ?? ''),
+      password: String(payload.password ?? ''),
+      password_confirm: String(payload.password_confirm ?? ''),
+      name: String(payload.name ?? ''),
+      phone: String(payload.phone ?? ''),
+      address: payload.address,
+      address_zip: payload.address_zip,
+      address_line2: payload.address_line2,
+      email_consent: true,
+      sms_consent: Boolean(payload.sms_consent),
+    };
+    const detail = payload.address_line2 ? ` ${payload.address_line2}` : '';
+    signupState.accountAddress = `${payload.address}${detail}`.trim();
+    navigate('/signup/role');
   });
 }

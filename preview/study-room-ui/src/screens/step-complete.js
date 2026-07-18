@@ -27,11 +27,12 @@ export function renderComplete() {
       <p class="auth-subheading">study_room_id: <strong>${s.study_room_id ?? '—'}</strong> · profile_status: <strong>${s.profile_status}</strong></p>
       <p class="auth-subheading" style="margin-top:var(--space-2);">
         상세등록: <strong>${s.detail_completion_status}</strong>
-        · Prime/Pick 자격: <strong>${s.detail_completion_status === 'expanded_complete' ? '충족(노출권 별도)' : '미충족 — 일반 리스트만'}</strong>
+        · 일반 리스트/검색: <strong>${s.detail_completion_status === 'expanded_complete' ? '등록 가능(공개 절차 후)' : '상세등록 완료 후 가능'}</strong>
+        · Prime/Pick: <strong>${s.detail_completion_status === 'expanded_complete' ? '구매 단계로 연결(품질·증빙 별도)' : '상세등록 완료 후'}</strong>
       </p>
     </div>
 
-    ${renderTempNotice('기본등록만 완료 시 일반 리스트 · 상세등록 완료 후 Prime/Pick 자격 (5·8·9장)')}
+    ${renderTempNotice('기본등록만 = draft · 상세등록 완료 후 일반 리스트/검색 · 그다음 Prime/Pick 구매 (14장)')}
 
     <dl class="register-summary">
       <dt>공부방명</dt><dd>${s.study_room_name}</dd>
