@@ -134,7 +134,7 @@ import {
   getNotifySection,
   getAdminScreenId,
 } from './router.js';
-import { parseHashQuery } from '../../shared/preview-links.js';
+import { parseHashQuery } from '../../../shared/preview-links.js';
 
 /** 화면 한글 라벨 (저장값은 영문 유지) */
 const STATUS_KO = { active: '사용', hidden: '숨김', archived: '보관' };
@@ -1630,249 +1630,492 @@ function renderMarketLab(section = 'overview') {
 }
 
 /** @param {string} [section] settings|templates|send|logs */
-function renderNotifyLab(section = 'settings') {
-  const lab = getSmsLab();
-  const st = lab.settings;
-  const statusKo = { preview: '미리보기', queued: '대기', sent: '발송', failed: '실패' };
-  const chKo = { sms: '단문', lms: '장문', email: '이메일' };
-
-  if (section === 'settings') {
-    const ev = st.events || {};
-    return renderPanel(
-      '문자 기본설정',
-      'A28-09',
-      `${renderOpsTip()}
-       <p class="a28-help">영카트 SMS 기본설정에 맞춘 Lab입니다. <strong>실제 문자는 아직 발송되지 않습니다.</strong> 게이트웨이(알리고·아이코드 등)는 키·발신번호·수신동의 후 연결합니다.</p>
-       <form class="sup-admin-form" data-sms-settings>
-         <label class="a28-check"><input type="checkbox" name="smsEnabled"${checked(st.smsEnabled)} /> 문자(SMS) 사용(예정)</label>
-         <label class="a28-check"><input type="checkbox" name="emailEnabled"${checked(st.emailEnabled)} /> 이메일 알림 사용</label>
-         <label class="sup-field"><span>게이트웨이</span>
-           <select name="gateway">
-             <option value="none"${selected(st.gateway, 'none')}>연결 안 함(Lab)</option>
-             <option value="aligo"${selected(st.gateway, 'aligo')}>알리고(예정)</option>
-             <option value="icode"${selected(st.gateway, 'icode')}>아이코드(예정)</option>
-           </select>
-         </label>
-         <label class="sup-field"><span>발신 표시명</span><input name="senderName" value="${esc(st.senderName)}" /></label>
-         <label class="sup-field"><span>발신 번호(표시용)</span><input name="senderPhone" value="${esc(st.senderPhone)}" /></label>
-         <label class="sup-field"><span>야간 제한 시작</span><input name="quietHoursStart" value="${esc(st.quietHoursStart)}" placeholder="21:00" /></label>
-         <label class="sup-field"><span>야간 제한 종료</span><input name="quietHoursEnd" value="${esc(st.quietHoursEnd)}" placeholder="08:00" /></label>
-         <h4 class="admin-section-title">자동 알림 이벤트</h4>
-         <div class="a28-checkbox-grid">
-           <label><input type="checkbox" name="onReport"${checked(ev.onReport)} /> 새 신고</label>
-           <label><input type="checkbox" name="onTicket"${checked(ev.onTicket)} /> 새 문의</label>
-           <label><input type="checkbox" name="onNewProvider"${checked(ev.onNewProvider)} /> 새 공부방·과외 등록</label>
-           <label><input type="checkbox" name="onPaidExpire"${checked(ev.onPaidExpire)} /> 유료 만료 임박</label>
-           <label><input type="checkbox" name="onIncompletePay"${checked(ev.onIncompletePay)} /> 미완료 결제</label>
-         </div>
-         <button type="submit" class="btn btn--primary btn--sm">설정 저장</button>
-       </form>
-       <p class="a28-help"><a href="#/admin/settings/notify" data-a28-nav="/admin/settings/notify">→ 환경설정 · 운영 알림</a></p>`,
-    );
-  }
-
-  if (section === 'sync') {
-    return renderPanel(
-      '회원번호 동기화',
-      'A28-09',
-      `${renderOpsTip()}
-       <p class="a28-help">회원관리에 있는 휴대폰을 「테스트」 주소록 그룹으로 가져옵니다. 이미 있는 번호는 건너뜁니다.</p>
-       <p class="a28-help">최근 동기화: ${esc(lab.lastMemberSyncAt || '없음')} · 추가 ${lab.syncedMemberPhones || 0}건</p>
-       <button type="button" class="btn btn--primary btn--sm" data-sms-sync-members>회원 휴대폰 가져오기</button>
-       <p class="a28-help"><a href="#/admin/notify/phones" data-a28-nav="/admin/notify/phones">→ 수신번호 관리</a></p>`,
-    );
-  }
-
-  if (section === 'templates') {
-    const groups = listTemplateGroups();
-    const groupOpts = groups.map((g) => `<option value="${esc(g.id)}">${esc(g.label)}</option>`).join('');
-    const groupRows = groups
-      .map(
-        (g) =>
-          `<tr><td>${esc(g.label)}</td><td><code>${esc(g.id)}</code></td>
-            <td><button type="button" class="btn btn--secondary btn--sm" data-tpl-grp-del="${esc(g.id)}">삭제</button></td></tr>`,
-      )
-      .join('');
-    const rows = listTemplates('all')
-      .map((t) => {
-        const g = groups.find((x) => x.id === t.groupId);
-        return `<tr>
-          <td>${esc(g?.label || t.groupId)}</td>
-          <td>${esc(t.title)}</td>
-          <td>${esc(chKo[t.channel] || t.channel)}</td>
-          <td>${esc(t.body)}</td>
-          <td class="sup-admin-actions">
-            <button type="button" class="btn btn--secondary btn--sm" data-tpl-edit="${esc(t.id)}">수정</button>
-            <button type="button" class="btn btn--secondary btn--sm" data-tpl-delete="${esc(t.id)}">삭제</button>
-          </td>
-        </tr>`;
-      })
-      .join('');
-    return renderPanel(
-      '문구 템플릿',
-      'A28-09',
-      `${renderOpsTip()}
-       <p class="a28-help">그룹으로 묶어 두고, 본문에 {days} 같은 자리표시를 쓸 수 있습니다. 글자 수가 길면 장문(LMS)으로 권장합니다.</p>
-       <h3 class="admin-section-title">템플릿 그룹</h3>
-       <table class="sup-admin-table"><thead><tr><th>이름</th><th>키</th><th></th></tr></thead>
-         <tbody>${groupRows || '<tr><td colspan="3" class="sup-empty">그룹 없음</td></tr>'}</tbody></table>
-       <form class="admin-filter-bar" data-tpl-grp-form>
-         <input name="label" class="admin-input" placeholder="그룹 이름" required />
-         <button type="submit" class="btn btn--primary btn--sm">그룹 추가</button>
-       </form>
-       <h3 class="admin-section-title">템플릿</h3>
-       <table class="sup-admin-table"><thead><tr><th>그룹</th><th>제목</th><th>채널</th><th>본문</th><th></th></tr></thead>
-         <tbody>${rows || '<tr><td colspan="5" class="sup-empty">템플릿 없음</td></tr>'}</tbody></table>
-       <form class="sup-admin-form" data-tpl-form>
-         <h4 class="sup-admin-form__title">템플릿 작성 · 수정</h4>
-         <input type="hidden" name="id" value="" />
-         <label class="sup-field"><span>그룹</span><select name="groupId">${groupOpts}</select></label>
-         <label class="sup-field"><span>제목</span><input name="title" required /></label>
-         <label class="sup-field"><span>채널</span>
-           <select name="channel">
-             <option value="sms">단문(SMS)</option>
-             <option value="lms">장문(LMS)</option>
-             <option value="email">이메일</option>
-           </select>
-         </label>
-         <label class="sup-field"><span>본문</span><textarea name="body" rows="3" required data-sms-body></textarea></label>
-         <p class="a28-help" data-sms-bytes>대략 0바이트 · 단문 권장</p>
-         <div class="sup-admin-form__actions">
-           <button type="submit" class="btn btn--primary btn--sm">저장</button>
-           <button type="button" class="btn btn--secondary btn--sm" data-tpl-reset>새 템플릿</button>
-         </div>
-       </form>`,
-    );
-  }
-
-  if (section === 'phones') {
-    const groups = listPhoneGroups();
-    const groupOpts = groups.map((g) => `<option value="${esc(g.id)}">${esc(g.label)}</option>`).join('');
-    const groupRows = groups
-      .map(
-        (g) =>
-          `<tr><td>${esc(g.label)}</td><td><code>${esc(g.id)}</code></td>
-            <td><button type="button" class="btn btn--secondary btn--sm" data-ph-grp-del="${esc(g.id)}">삭제</button></td></tr>`,
-      )
-      .join('');
-    const rows = listPhones('all')
-      .map((p) => {
-        const g = groups.find((x) => x.id === p.groupId);
-        const sendPath = `/admin/notify/send?phone=${encodeURIComponent(p.phone)}&name=${encodeURIComponent(p.name)}`;
-        return `<tr>
-          <td>${esc(g?.label || p.groupId)}</td>
-          <td>${esc(p.name)}</td>
-          <td>${esc(p.phone)}</td>
-          <td>${esc(p.memo || '—')}</td>
-          <td class="sup-admin-actions">
-            <button type="button" class="btn btn--secondary btn--sm" data-ph-edit="${esc(p.id)}">수정</button>
-            <button type="button" class="btn btn--secondary btn--sm" data-ph-del="${esc(p.id)}">삭제</button>
-            <a class="btn btn--secondary btn--sm" href="#${esc(sendPath)}" data-a28-nav="${esc(sendPath)}">보내기</a>
-          </td>
-        </tr>`;
-      })
-      .join('');
-    return renderPanel(
-      '수신번호 관리',
-      'A28-09',
-      `${renderOpsTip()}
-       <p class="a28-help">운영·테스트용 주소록입니다. 실서비스에서는 수신동의·광고성 문자 규정을 지켜야 합니다.</p>
-       <h3 class="admin-section-title">수신 그룹</h3>
-       <table class="sup-admin-table"><thead><tr><th>이름</th><th>키</th><th></th></tr></thead>
-         <tbody>${groupRows || '<tr><td colspan="3" class="sup-empty">그룹 없음</td></tr>'}</tbody></table>
-       <form class="admin-filter-bar" data-ph-grp-form>
-         <input name="label" class="admin-input" placeholder="그룹 이름" required />
-         <button type="submit" class="btn btn--primary btn--sm">그룹 추가</button>
-       </form>
-       <h3 class="admin-section-title">번호</h3>
-       <table class="sup-admin-table"><thead><tr><th>그룹</th><th>이름</th><th>휴대폰</th><th>메모</th><th></th></tr></thead>
-         <tbody>${rows || '<tr><td colspan="5" class="sup-empty">번호 없음</td></tr>'}</tbody></table>
-       <form class="sup-admin-form" data-ph-form>
-         <h4 class="sup-admin-form__title">번호 추가 · 수정</h4>
-         <input type="hidden" name="id" value="" />
-         <label class="sup-field"><span>그룹</span><select name="groupId">${groupOpts}</select></label>
-         <label class="sup-field"><span>이름</span><input name="name" required /></label>
-         <label class="sup-field"><span>휴대폰</span><input name="phone" required placeholder="010-0000-0000" /></label>
-         <label class="sup-field"><span>메모</span><input name="memo" /></label>
-         <div class="sup-admin-form__actions">
-           <button type="submit" class="btn btn--primary btn--sm">저장</button>
-           <button type="button" class="btn btn--secondary btn--sm" data-ph-reset>새 번호</button>
-         </div>
-       </form>`,
-    );
-  }
-
-  if (section === 'send') {
-    const q = parseHashQuery();
-    const prePhone = q.phone || '';
-    const preName = q.name || '';
-    const tplOpts = listTemplates('all').map((t) => `<option value="${esc(t.id)}">${esc(t.title)}</option>`).join('');
-    const phoneOpts = listPhones('all')
-      .map((p) => `<option value="${esc(p.phone)}" data-name="${esc(p.name)}">${esc(p.name)} · ${esc(p.phone)}</option>`)
-      .join('');
-    return renderPanel(
-      '문자 보내기',
-      'A28-09',
-      `${renderOpsTip()}
-       <p class="a28-help"><strong>실제로 문자를 보내지 않습니다.</strong> 전송내역에 「미리보기」로만 남깁니다.</p>
-       <form class="sup-admin-form" data-sms-send>
-         <label class="sup-field"><span>주소록에서 고르기</span>
-           <select data-sms-pick-phone>
-             <option value="">직접 입력</option>
-             ${phoneOpts}
-           </select>
-         </label>
-         <label class="sup-field"><span>받는 이름</span><input name="toName" value="${esc(preName)}" /></label>
-         <label class="sup-field"><span>받는 번호</span><input name="to" value="${esc(prePhone)}" placeholder="010-0000-0000" required /></label>
-         <label class="sup-field"><span>템플릿</span><select name="templateId" data-sms-tpl>${tplOpts}</select></label>
-         <label class="sup-field"><span>본문</span><textarea name="body" rows="4" data-sms-body></textarea></label>
-         <p class="a28-help" data-sms-bytes>대략 0바이트</p>
-         <button type="submit" class="btn btn--primary btn--sm">미리보기 기록</button>
-       </form>`,
-    );
-  }
-
-  if (section === 'logs-phone') {
-    const rows = listSendLogsByPhone()
-      .map(
-        (r) =>
-          `<tr><td>${esc(r.phone)}</td><td>${esc(r.name || '—')}</td><td>${r.count}</td><td>${esc(statusKo[r.lastStatus] || r.lastStatus)}</td><td>${esc(r.lastAt)}</td></tr>`,
-      )
-      .join('');
-    return renderPanel(
-      '전송내역(번호별)',
-      'A28-09',
-      `${renderOpsTip()}
-       <p class="a28-help">수신번호별로 몇 건 남겼는지 봅니다.</p>
-       <table class="sup-admin-table"><thead><tr><th>번호</th><th>이름</th><th>건수</th><th>최근 상태</th><th>최근 시각</th></tr></thead>
-         <tbody>${rows || '<tr><td colspan="5" class="sup-empty">내역 없음</td></tr>'}</tbody></table>`,
-    );
-  }
-
-  const logs = listSendLogs()
-    .map(
-      (l) =>
-        `<tr>
-          <td>${esc(l.id)}</td>
-          <td>${esc(l.to)}${l.toName ? `<br><small>${esc(l.toName)}</small>` : ''}</td>
-          <td>${esc(l.templateTitle || '—')}</td>
-          <td>${esc(chKo[l.channel] || l.channel)}</td>
-          <td>${esc(statusKo[l.status] || l.status)}</td>
-          <td>${l.byteLen || estimateSmsBytes(l.body)}</td>
-          <td>${esc(l.at)}</td>
-        </tr>`,
-    )
-    .join('');
-  return renderPanel(
-    '전송내역(건별)',
-    'A28-09',
-    `${renderOpsTip()}
-     <p class="a28-help">미리보기 기록이 쌓입니다. 실발송 연동 후 sent/failed 상태가 추가됩니다.</p>
-     <table class="sup-admin-table"><thead><tr><th>ID</th><th>수신</th><th>템플릿</th><th>채널</th><th>상태</th><th>바이트</th><th>시각</th></tr></thead>
-       <tbody>${logs || '<tr><td colspan="7" class="sup-empty">내역 없음</td></tr>'}</tbody></table>
-     <button type="button" class="btn btn--secondary btn--sm" data-sms-reset>문자 Lab 초기화</button>`,
-  );
-}
+function renderNotifyLab(section = 'settings') {
+
+  const lab = getSmsLab();
+
+  const st = lab.settings;
+
+  const statusKo = { preview: '미리보기', queued: '대기', sent: '발송', failed: '실패' };
+
+  const chKo = { sms: '단문', lms: '장문', email: '이메일' };
+
+
+
+  if (section === 'settings') {
+
+    const ev = st.events || {};
+
+    return renderPanel(
+
+      '문자 기본설정',
+
+      'A28-09',
+
+      `${renderOpsTip()}
+
+       <p class="a28-help">영카트 SMS 기본설정에 맞춘 Lab입니다. <strong>실제 문자는 아직 발송되지 않습니다.</strong> 게이트웨이(알리고·아이코드 등)는 키·발신번호·수신동의 후 연결합니다.</p>
+
+       <form class="sup-admin-form" data-sms-settings>
+
+         <label class="a28-check"><input type="checkbox" name="smsEnabled"${checked(st.smsEnabled)} /> 문자(SMS) 사용(예정)</label>
+
+         <label class="a28-check"><input type="checkbox" name="emailEnabled"${checked(st.emailEnabled)} /> 이메일 알림 사용</label>
+
+         <label class="sup-field"><span>게이트웨이</span>
+
+           <select name="gateway">
+
+             <option value="none"${selected(st.gateway, 'none')}>연결 안 함(Lab)</option>
+
+             <option value="aligo"${selected(st.gateway, 'aligo')}>알리고(예정)</option>
+
+             <option value="icode"${selected(st.gateway, 'icode')}>아이코드(예정)</option>
+
+           </select>
+
+         </label>
+
+         <label class="sup-field"><span>발신 표시명</span><input name="senderName" value="${esc(st.senderName)}" /></label>
+
+         <label class="sup-field"><span>발신 번호(표시용)</span><input name="senderPhone" value="${esc(st.senderPhone)}" /></label>
+
+         <label class="sup-field"><span>야간 제한 시작</span><input name="quietHoursStart" value="${esc(st.quietHoursStart)}" placeholder="21:00" /></label>
+
+         <label class="sup-field"><span>야간 제한 종료</span><input name="quietHoursEnd" value="${esc(st.quietHoursEnd)}" placeholder="08:00" /></label>
+
+         <h4 class="admin-section-title">자동 알림 이벤트</h4>
+
+         <div class="a28-checkbox-grid">
+
+           <label><input type="checkbox" name="onReport"${checked(ev.onReport)} /> 새 신고</label>
+
+           <label><input type="checkbox" name="onTicket"${checked(ev.onTicket)} /> 새 문의</label>
+
+           <label><input type="checkbox" name="onNewProvider"${checked(ev.onNewProvider)} /> 새 공부방·과외 등록</label>
+
+           <label><input type="checkbox" name="onPaidExpire"${checked(ev.onPaidExpire)} /> 유료 만료 임박</label>
+
+           <label><input type="checkbox" name="onIncompletePay"${checked(ev.onIncompletePay)} /> 미완료 결제</label>
+
+         </div>
+
+         <button type="submit" class="btn btn--primary btn--sm">설정 저장</button>
+
+       </form>
+
+       <p class="a28-help"><a href="#/admin/settings/notify" data-a28-nav="/admin/settings/notify">→ 환경설정 · 운영 알림</a></p>`,
+
+    );
+
+  }
+
+
+
+  if (section === 'sync') {
+
+    return renderPanel(
+
+      '회원번호 동기화',
+
+      'A28-09',
+
+      `${renderOpsTip()}
+
+       <p class="a28-help">회원관리에 있는 휴대폰을 「테스트」 주소록 그룹으로 가져옵니다. 이미 있는 번호는 건너뜁니다.</p>
+
+       <p class="a28-help">최근 동기화: ${esc(lab.lastMemberSyncAt || '없음')} · 추가 ${lab.syncedMemberPhones || 0}건</p>
+
+       <button type="button" class="btn btn--primary btn--sm" data-sms-sync-members>회원 휴대폰 가져오기</button>
+
+       <p class="a28-help"><a href="#/admin/notify/phones" data-a28-nav="/admin/notify/phones">→ 수신번호 관리</a></p>`,
+
+    );
+
+  }
+
+
+
+  if (section === 'templates') {
+
+    const groups = listTemplateGroups();
+
+    const groupOpts = groups.map((g) => `<option value="${esc(g.id)}">${esc(g.label)}</option>`).join('');
+
+    const groupRows = groups
+
+      .map(
+
+        (g) =>
+
+          `<tr><td>${esc(g.label)}</td><td><code>${esc(g.id)}</code></td>
+
+            <td><button type="button" class="btn btn--secondary btn--sm" data-tpl-grp-del="${esc(g.id)}">삭제</button></td></tr>`,
+
+      )
+
+      .join('');
+
+    const rows = listTemplates('all')
+
+      .map((t) => {
+
+        const g = groups.find((x) => x.id === t.groupId);
+
+        return `<tr>
+
+          <td>${esc(g?.label || t.groupId)}</td>
+
+          <td>${esc(t.title)}</td>
+
+          <td>${esc(chKo[t.channel] || t.channel)}</td>
+
+          <td>${esc(t.body)}</td>
+
+          <td class="sup-admin-actions">
+
+            <button type="button" class="btn btn--secondary btn--sm" data-tpl-edit="${esc(t.id)}">수정</button>
+
+            <button type="button" class="btn btn--secondary btn--sm" data-tpl-delete="${esc(t.id)}">삭제</button>
+
+          </td>
+
+        </tr>`;
+
+      })
+
+      .join('');
+
+    return renderPanel(
+
+      '문구 템플릿',
+
+      'A28-09',
+
+      `${renderOpsTip()}
+
+       <p class="a28-help">그룹으로 묶어 두고, 본문에 {days} 같은 자리표시를 쓸 수 있습니다. 글자 수가 길면 장문(LMS)으로 권장합니다.</p>
+
+       <h3 class="admin-section-title">템플릿 그룹</h3>
+
+       <table class="sup-admin-table"><thead><tr><th>이름</th><th>키</th><th></th></tr></thead>
+
+         <tbody>${groupRows || '<tr><td colspan="3" class="sup-empty">그룹 없음</td></tr>'}</tbody></table>
+
+       <form class="admin-filter-bar" data-tpl-grp-form>
+
+         <input name="label" class="admin-input" placeholder="그룹 이름" required />
+
+         <button type="submit" class="btn btn--primary btn--sm">그룹 추가</button>
+
+       </form>
+
+       <h3 class="admin-section-title">템플릿</h3>
+
+       <table class="sup-admin-table"><thead><tr><th>그룹</th><th>제목</th><th>채널</th><th>본문</th><th></th></tr></thead>
+
+         <tbody>${rows || '<tr><td colspan="5" class="sup-empty">템플릿 없음</td></tr>'}</tbody></table>
+
+       <form class="sup-admin-form" data-tpl-form>
+
+         <h4 class="sup-admin-form__title">템플릿 작성 · 수정</h4>
+
+         <input type="hidden" name="id" value="" />
+
+         <label class="sup-field"><span>그룹</span><select name="groupId">${groupOpts}</select></label>
+
+         <label class="sup-field"><span>제목</span><input name="title" required /></label>
+
+         <label class="sup-field"><span>채널</span>
+
+           <select name="channel">
+
+             <option value="sms">단문(SMS)</option>
+
+             <option value="lms">장문(LMS)</option>
+
+             <option value="email">이메일</option>
+
+           </select>
+
+         </label>
+
+         <label class="sup-field"><span>본문</span><textarea name="body" rows="3" required data-sms-body></textarea></label>
+
+         <p class="a28-help" data-sms-bytes>대략 0바이트 · 단문 권장</p>
+
+         <div class="sup-admin-form__actions">
+
+           <button type="submit" class="btn btn--primary btn--sm">저장</button>
+
+           <button type="button" class="btn btn--secondary btn--sm" data-tpl-reset>새 템플릿</button>
+
+         </div>
+
+       </form>`,
+
+    );
+
+  }
+
+
+
+  if (section === 'phones') {
+
+    const groups = listPhoneGroups();
+
+    const groupOpts = groups.map((g) => `<option value="${esc(g.id)}">${esc(g.label)}</option>`).join('');
+
+    const groupRows = groups
+
+      .map(
+
+        (g) =>
+
+          `<tr><td>${esc(g.label)}</td><td><code>${esc(g.id)}</code></td>
+
+            <td><button type="button" class="btn btn--secondary btn--sm" data-ph-grp-del="${esc(g.id)}">삭제</button></td></tr>`,
+
+      )
+
+      .join('');
+
+    const rows = listPhones('all')
+
+      .map((p) => {
+
+        const g = groups.find((x) => x.id === p.groupId);
+
+        const sendPath = `/admin/notify/send?phone=${encodeURIComponent(p.phone)}&name=${encodeURIComponent(p.name)}`;
+
+        return `<tr>
+
+          <td>${esc(g?.label || p.groupId)}</td>
+
+          <td>${esc(p.name)}</td>
+
+          <td>${esc(p.phone)}</td>
+
+          <td>${esc(p.memo || '—')}</td>
+
+          <td class="sup-admin-actions">
+
+            <button type="button" class="btn btn--secondary btn--sm" data-ph-edit="${esc(p.id)}">수정</button>
+
+            <button type="button" class="btn btn--secondary btn--sm" data-ph-del="${esc(p.id)}">삭제</button>
+
+            <a class="btn btn--secondary btn--sm" href="#${esc(sendPath)}" data-a28-nav="${esc(sendPath)}">보내기</a>
+
+          </td>
+
+        </tr>`;
+
+      })
+
+      .join('');
+
+    return renderPanel(
+
+      '수신번호 관리',
+
+      'A28-09',
+
+      `${renderOpsTip()}
+
+       <p class="a28-help">운영·테스트용 주소록입니다. 실서비스에서는 수신동의·광고성 문자 규정을 지켜야 합니다.</p>
+
+       <h3 class="admin-section-title">수신 그룹</h3>
+
+       <table class="sup-admin-table"><thead><tr><th>이름</th><th>키</th><th></th></tr></thead>
+
+         <tbody>${groupRows || '<tr><td colspan="3" class="sup-empty">그룹 없음</td></tr>'}</tbody></table>
+
+       <form class="admin-filter-bar" data-ph-grp-form>
+
+         <input name="label" class="admin-input" placeholder="그룹 이름" required />
+
+         <button type="submit" class="btn btn--primary btn--sm">그룹 추가</button>
+
+       </form>
+
+       <h3 class="admin-section-title">번호</h3>
+
+       <table class="sup-admin-table"><thead><tr><th>그룹</th><th>이름</th><th>휴대폰</th><th>메모</th><th></th></tr></thead>
+
+         <tbody>${rows || '<tr><td colspan="5" class="sup-empty">번호 없음</td></tr>'}</tbody></table>
+
+       <form class="sup-admin-form" data-ph-form>
+
+         <h4 class="sup-admin-form__title">번호 추가 · 수정</h4>
+
+         <input type="hidden" name="id" value="" />
+
+         <label class="sup-field"><span>그룹</span><select name="groupId">${groupOpts}</select></label>
+
+         <label class="sup-field"><span>이름</span><input name="name" required /></label>
+
+         <label class="sup-field"><span>휴대폰</span><input name="phone" required placeholder="010-0000-0000" /></label>
+
+         <label class="sup-field"><span>메모</span><input name="memo" /></label>
+
+         <div class="sup-admin-form__actions">
+
+           <button type="submit" class="btn btn--primary btn--sm">저장</button>
+
+           <button type="button" class="btn btn--secondary btn--sm" data-ph-reset>새 번호</button>
+
+         </div>
+
+       </form>`,
+
+    );
+
+  }
+
+
+
+  if (section === 'send') {
+
+    const q = parseHashQuery();
+
+    const prePhone = q.phone || '';
+
+    const preName = q.name || '';
+
+    const tplOpts = listTemplates('all').map((t) => `<option value="${esc(t.id)}">${esc(t.title)}</option>`).join('');
+
+    const phoneOpts = listPhones('all')
+
+      .map((p) => `<option value="${esc(p.phone)}" data-name="${esc(p.name)}">${esc(p.name)} · ${esc(p.phone)}</option>`)
+
+      .join('');
+
+    return renderPanel(
+
+      '문자 보내기',
+
+      'A28-09',
+
+      `${renderOpsTip()}
+
+       <p class="a28-help"><strong>실제로 문자를 보내지 않습니다.</strong> 전송내역에 「미리보기」로만 남깁니다.</p>
+
+       <form class="sup-admin-form" data-sms-send>
+
+         <label class="sup-field"><span>주소록에서 고르기</span>
+
+           <select data-sms-pick-phone>
+
+             <option value="">직접 입력</option>
+
+             ${phoneOpts}
+
+           </select>
+
+         </label>
+
+         <label class="sup-field"><span>받는 이름</span><input name="toName" value="${esc(preName)}" /></label>
+
+         <label class="sup-field"><span>받는 번호</span><input name="to" value="${esc(prePhone)}" placeholder="010-0000-0000" required /></label>
+
+         <label class="sup-field"><span>템플릿</span><select name="templateId" data-sms-tpl>${tplOpts}</select></label>
+
+         <label class="sup-field"><span>본문</span><textarea name="body" rows="4" data-sms-body></textarea></label>
+
+         <p class="a28-help" data-sms-bytes>대략 0바이트</p>
+
+         <button type="submit" class="btn btn--primary btn--sm">미리보기 기록</button>
+
+       </form>`,
+
+    );
+
+  }
+
+
+
+  if (section === 'logs-phone') {
+
+    const rows = listSendLogsByPhone()
+
+      .map(
+
+        (r) =>
+
+          `<tr><td>${esc(r.phone)}</td><td>${esc(r.name || '—')}</td><td>${r.count}</td><td>${esc(statusKo[r.lastStatus] || r.lastStatus)}</td><td>${esc(r.lastAt)}</td></tr>`,
+
+      )
+
+      .join('');
+
+    return renderPanel(
+
+      '전송내역(번호별)',
+
+      'A28-09',
+
+      `${renderOpsTip()}
+
+       <p class="a28-help">수신번호별로 몇 건 남겼는지 봅니다.</p>
+
+       <table class="sup-admin-table"><thead><tr><th>번호</th><th>이름</th><th>건수</th><th>최근 상태</th><th>최근 시각</th></tr></thead>
+
+         <tbody>${rows || '<tr><td colspan="5" class="sup-empty">내역 없음</td></tr>'}</tbody></table>`,
+
+    );
+
+  }
+
+
+
+  const logs = listSendLogs()
+
+    .map(
+
+      (l) =>
+
+        `<tr>
+
+          <td>${esc(l.id)}</td>
+
+          <td>${esc(l.to)}${l.toName ? `<br><small>${esc(l.toName)}</small>` : ''}</td>
+
+          <td>${esc(l.templateTitle || '—')}</td>
+
+          <td>${esc(chKo[l.channel] || l.channel)}</td>
+
+          <td>${esc(statusKo[l.status] || l.status)}</td>
+
+          <td>${l.byteLen || estimateSmsBytes(l.body)}</td>
+
+          <td>${esc(l.at)}</td>
+
+        </tr>`,
+
+    )
+
+    .join('');
+
+  return renderPanel(
+
+    '전송내역(건별)',
+
+    'A28-09',
+
+    `${renderOpsTip()}
+
+     <p class="a28-help">미리보기 기록이 쌓입니다. 실발송 연동 후 sent/failed 상태가 추가됩니다.</p>
+
+     <table class="sup-admin-table"><thead><tr><th>ID</th><th>수신</th><th>템플릿</th><th>채널</th><th>상태</th><th>바이트</th><th>시각</th></tr></thead>
+
+       <tbody>${logs || '<tr><td colspan="7" class="sup-empty">내역 없음</td></tr>'}</tbody></table>
+
+     <button type="button" class="btn btn--secondary btn--sm" data-sms-reset>문자 Lab 초기화</button>`,
+
+  );
+
+}
+
 
 
 /** @param {string} path */
@@ -2829,222 +3072,438 @@ export function bindA28ScreenEvents(root, path, rerender) {
     });
   }
 
-  if (path.startsWith('/admin/notify/')) {
-    const bindBytes = (rootEl) => {
-      const body = rootEl.querySelector('[data-sms-body]');
-      const out = rootEl.querySelector('[data-sms-bytes]');
-      if (!(body instanceof HTMLTextAreaElement) || !out) return;
-      const refresh = () => {
-        const n = estimateSmsBytes(body.value);
-        const ch = suggestChannelByBody(body.value);
-        out.textContent = `대략 ${n}바이트 · ${ch === 'lms' ? '장문(LMS) 권장' : '단문(SMS) 가능'}`;
-      };
-      body.addEventListener('input', refresh);
-      refresh();
-    };
-    bindBytes(root);
-
-    root.querySelector('[data-sms-settings]')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const form = e.currentTarget;
-      if (!(form instanceof HTMLFormElement)) return;
-      const fd = new FormData(form);
-      saveSmsSettings({
-        smsEnabled: fd.get('smsEnabled') === 'on',
-        emailEnabled: fd.get('emailEnabled') === 'on',
-        gateway: String(fd.get('gateway') || 'none'),
-        senderName: String(fd.get('senderName') || ''),
-        senderPhone: String(fd.get('senderPhone') || ''),
-        quietHoursStart: String(fd.get('quietHoursStart') || ''),
-        quietHoursEnd: String(fd.get('quietHoursEnd') || ''),
-        events: {
-          onReport: fd.get('onReport') === 'on',
-          onTicket: fd.get('onTicket') === 'on',
-          onNewProvider: fd.get('onNewProvider') === 'on',
-          onPaidExpire: fd.get('onPaidExpire') === 'on',
-          onIncompletePay: fd.get('onIncompletePay') === 'on',
-        },
-      });
-      rerender();
-      window.alert('문자 기본설정을 저장했습니다. (실발송은 아직 없습니다)');
-    });
-
-    root.querySelector('[data-sms-sync-members]')?.addEventListener('click', () => {
-      const cache = getMembersCache();
-      const list = cache?.members?.length ? cache.members : A28_MEMBER_SEED;
-      const data = syncPhonesFromMembers(list);
-      rerender();
-      window.alert(`동기화 완료 · 새로 추가 ${data.syncedMemberPhones}건`);
-    });
-
-    root.querySelector('[data-tpl-grp-form]')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const form = e.currentTarget;
-      if (!(form instanceof HTMLFormElement)) return;
-      const fd = new FormData(form);
-      saveTemplateGroup({ label: String(fd.get('label') || '') });
-      rerender();
-    });
-    root.querySelectorAll('[data-tpl-grp-del]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-tpl-grp-del');
-        if (!id || !window.confirm('이 그룹을 삭제할까요?')) return;
-        try {
-          deleteTemplateGroup(id);
-          rerender();
-        } catch (err) {
-          window.alert(err instanceof Error ? err.message : '삭제 실패');
-        }
-      });
-    });
-
-    const tplForm = root.querySelector('[data-tpl-form]');
-    root.querySelectorAll('[data-tpl-edit]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-tpl-edit');
-        const row = listTemplates('all').find((t) => t.id === id);
-        if (!row || !(tplForm instanceof HTMLFormElement)) return;
-        tplForm.querySelector('[name="id"]').value = row.id;
-        tplForm.querySelector('[name="groupId"]').value = row.groupId;
-        tplForm.querySelector('[name="title"]').value = row.title;
-        tplForm.querySelector('[name="channel"]').value = row.channel || 'sms';
-        tplForm.querySelector('[name="body"]').value = row.body;
-        tplForm.querySelector('[name="body"]')?.dispatchEvent(new Event('input'));
-      });
-    });
-    root.querySelectorAll('[data-tpl-delete]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-tpl-delete');
-        if (!id || !window.confirm('이 템플릿을 삭제할까요?')) return;
-        deleteTemplate(id);
-        rerender();
-      });
-    });
-    root.querySelector('[data-tpl-reset]')?.addEventListener('click', () => {
-      if (!(tplForm instanceof HTMLFormElement)) return;
-      tplForm.reset();
-      tplForm.querySelector('[name="id"]').value = '';
-    });
-    tplForm?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!(tplForm instanceof HTMLFormElement)) return;
-      const fd = new FormData(tplForm);
-      saveTemplate({
-        id: String(fd.get('id') || ''),
-        groupId: String(fd.get('groupId') || ''),
-        title: String(fd.get('title') || ''),
-        channel: String(fd.get('channel') || 'sms'),
-        body: String(fd.get('body') || ''),
-      });
-      rerender();
-    });
-
-    root.querySelector('[data-ph-grp-form]')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const form = e.currentTarget;
-      if (!(form instanceof HTMLFormElement)) return;
-      const fd = new FormData(form);
-      savePhoneGroup({ label: String(fd.get('label') || '') });
-      rerender();
-    });
-    root.querySelectorAll('[data-ph-grp-del]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-ph-grp-del');
-        if (!id || !window.confirm('이 그룹을 삭제할까요?')) return;
-        try {
-          deletePhoneGroup(id);
-          rerender();
-        } catch (err) {
-          window.alert(err instanceof Error ? err.message : '삭제 실패');
-        }
-      });
-    });
-
-    const phForm = root.querySelector('[data-ph-form]');
-    root.querySelectorAll('[data-ph-edit]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-ph-edit');
-        const row = listPhones('all').find((p) => p.id === id);
-        if (!row || !(phForm instanceof HTMLFormElement)) return;
-        phForm.querySelector('[name="id"]').value = row.id;
-        phForm.querySelector('[name="groupId"]').value = row.groupId;
-        phForm.querySelector('[name="name"]').value = row.name;
-        phForm.querySelector('[name="phone"]').value = row.phone;
-        phForm.querySelector('[name="memo"]').value = row.memo || '';
-      });
-    });
-    root.querySelectorAll('[data-ph-del]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-ph-del');
-        if (!id || !window.confirm('이 번호를 삭제할까요?')) return;
-        deletePhone(id);
-        rerender();
-      });
-    });
-    root.querySelector('[data-ph-reset]')?.addEventListener('click', () => {
-      if (!(phForm instanceof HTMLFormElement)) return;
-      phForm.reset();
-      phForm.querySelector('[name="id"]').value = '';
-    });
-    phForm?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!(phForm instanceof HTMLFormElement)) return;
-      const fd = new FormData(phForm);
-      savePhone({
-        id: String(fd.get('id') || ''),
-        groupId: String(fd.get('groupId') || ''),
-        name: String(fd.get('name') || ''),
-        phone: String(fd.get('phone') || ''),
-        memo: String(fd.get('memo') || ''),
-      });
-      rerender();
-    });
-
-    const sendForm = root.querySelector('[data-sms-send]');
-    root.querySelector('[data-sms-pick-phone]')?.addEventListener('change', (e) => {
-      const sel = e.currentTarget;
-      if (!(sel instanceof HTMLSelectElement) || !(sendForm instanceof HTMLFormElement)) return;
-      const opt = sel.selectedOptions[0];
-      if (!opt || !opt.value) return;
-      sendForm.querySelector('[name="to"]').value = opt.value;
-      sendForm.querySelector('[name="toName"]').value = opt.getAttribute('data-name') || '';
-    });
-    const tplSel = root.querySelector('[data-sms-tpl]');
-    const fillTpl = () => {
-      if (!(sendForm instanceof HTMLFormElement) || !(tplSel instanceof HTMLSelectElement)) return;
-      const row = listTemplates('all').find((t) => t.id === tplSel.value);
-      if (row) {
-        const body = sendForm.querySelector('[name="body"]');
-        if (body instanceof HTMLTextAreaElement && !body.value.trim()) {
-          body.value = row.body;
-          body.dispatchEvent(new Event('input'));
-        }
-      }
-    };
-    tplSel?.addEventListener('change', fillTpl);
-    fillTpl();
-
-    sendForm?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!(sendForm instanceof HTMLFormElement)) return;
-      const fd = new FormData(sendForm);
-      previewSend({
-        to: String(fd.get('to') || ''),
-        toName: String(fd.get('toName') || ''),
-        templateId: String(fd.get('templateId') || ''),
-        body: String(fd.get('body') || ''),
-      });
-      rerender();
-      window.alert('전송내역에 미리보기를 남겼습니다. 실제 문자는 보내지 않았습니다.');
-      window.location.hash = '/admin/notify/logs';
-    });
-
-    root.querySelector('[data-sms-reset]')?.addEventListener('click', () => {
-      if (!window.confirm('문자 Lab을 초기화할까요?')) return;
-      resetSmsLab();
-      rerender();
-    });
-  }
+  if (path.startsWith('/admin/notify/')) {
+
+    const bindBytes = (rootEl) => {
+
+      const body = rootEl.querySelector('[data-sms-body]');
+
+      const out = rootEl.querySelector('[data-sms-bytes]');
+
+      if (!(body instanceof HTMLTextAreaElement) || !out) return;
+
+      const refresh = () => {
+
+        const n = estimateSmsBytes(body.value);
+
+        const ch = suggestChannelByBody(body.value);
+
+        out.textContent = `대략 ${n}바이트 · ${ch === 'lms' ? '장문(LMS) 권장' : '단문(SMS) 가능'}`;
+
+      };
+
+      body.addEventListener('input', refresh);
+
+      refresh();
+
+    };
+
+    bindBytes(root);
+
+
+
+    root.querySelector('[data-sms-settings]')?.addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      const form = e.currentTarget;
+
+      if (!(form instanceof HTMLFormElement)) return;
+
+      const fd = new FormData(form);
+
+      saveSmsSettings({
+
+        smsEnabled: fd.get('smsEnabled') === 'on',
+
+        emailEnabled: fd.get('emailEnabled') === 'on',
+
+        gateway: String(fd.get('gateway') || 'none'),
+
+        senderName: String(fd.get('senderName') || ''),
+
+        senderPhone: String(fd.get('senderPhone') || ''),
+
+        quietHoursStart: String(fd.get('quietHoursStart') || ''),
+
+        quietHoursEnd: String(fd.get('quietHoursEnd') || ''),
+
+        events: {
+
+          onReport: fd.get('onReport') === 'on',
+
+          onTicket: fd.get('onTicket') === 'on',
+
+          onNewProvider: fd.get('onNewProvider') === 'on',
+
+          onPaidExpire: fd.get('onPaidExpire') === 'on',
+
+          onIncompletePay: fd.get('onIncompletePay') === 'on',
+
+        },
+
+      });
+
+      rerender();
+
+      window.alert('문자 기본설정을 저장했습니다. (실발송은 아직 없습니다)');
+
+    });
+
+
+
+    root.querySelector('[data-sms-sync-members]')?.addEventListener('click', () => {
+
+      const cache = getMembersCache();
+
+      const list = cache?.members?.length ? cache.members : A28_MEMBER_SEED;
+
+      const data = syncPhonesFromMembers(list);
+
+      rerender();
+
+      window.alert(`동기화 완료 · 새로 추가 ${data.syncedMemberPhones}건`);
+
+    });
+
+
+
+    root.querySelector('[data-tpl-grp-form]')?.addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      const form = e.currentTarget;
+
+      if (!(form instanceof HTMLFormElement)) return;
+
+      const fd = new FormData(form);
+
+      saveTemplateGroup({ label: String(fd.get('label') || '') });
+
+      rerender();
+
+    });
+
+    root.querySelectorAll('[data-tpl-grp-del]').forEach((btn) => {
+
+      btn.addEventListener('click', () => {
+
+        const id = btn.getAttribute('data-tpl-grp-del');
+
+        if (!id || !window.confirm('이 그룹을 삭제할까요?')) return;
+
+        try {
+
+          deleteTemplateGroup(id);
+
+          rerender();
+
+        } catch (err) {
+
+          window.alert(err instanceof Error ? err.message : '삭제 실패');
+
+        }
+
+      });
+
+    });
+
+
+
+    const tplForm = root.querySelector('[data-tpl-form]');
+
+    root.querySelectorAll('[data-tpl-edit]').forEach((btn) => {
+
+      btn.addEventListener('click', () => {
+
+        const id = btn.getAttribute('data-tpl-edit');
+
+        const row = listTemplates('all').find((t) => t.id === id);
+
+        if (!row || !(tplForm instanceof HTMLFormElement)) return;
+
+        tplForm.querySelector('[name="id"]').value = row.id;
+
+        tplForm.querySelector('[name="groupId"]').value = row.groupId;
+
+        tplForm.querySelector('[name="title"]').value = row.title;
+
+        tplForm.querySelector('[name="channel"]').value = row.channel || 'sms';
+
+        tplForm.querySelector('[name="body"]').value = row.body;
+
+        tplForm.querySelector('[name="body"]')?.dispatchEvent(new Event('input'));
+
+      });
+
+    });
+
+    root.querySelectorAll('[data-tpl-delete]').forEach((btn) => {
+
+      btn.addEventListener('click', () => {
+
+        const id = btn.getAttribute('data-tpl-delete');
+
+        if (!id || !window.confirm('이 템플릿을 삭제할까요?')) return;
+
+        deleteTemplate(id);
+
+        rerender();
+
+      });
+
+    });
+
+    root.querySelector('[data-tpl-reset]')?.addEventListener('click', () => {
+
+      if (!(tplForm instanceof HTMLFormElement)) return;
+
+      tplForm.reset();
+
+      tplForm.querySelector('[name="id"]').value = '';
+
+    });
+
+    tplForm?.addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      if (!(tplForm instanceof HTMLFormElement)) return;
+
+      const fd = new FormData(tplForm);
+
+      saveTemplate({
+
+        id: String(fd.get('id') || ''),
+
+        groupId: String(fd.get('groupId') || ''),
+
+        title: String(fd.get('title') || ''),
+
+        channel: String(fd.get('channel') || 'sms'),
+
+        body: String(fd.get('body') || ''),
+
+      });
+
+      rerender();
+
+    });
+
+
+
+    root.querySelector('[data-ph-grp-form]')?.addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      const form = e.currentTarget;
+
+      if (!(form instanceof HTMLFormElement)) return;
+
+      const fd = new FormData(form);
+
+      savePhoneGroup({ label: String(fd.get('label') || '') });
+
+      rerender();
+
+    });
+
+    root.querySelectorAll('[data-ph-grp-del]').forEach((btn) => {
+
+      btn.addEventListener('click', () => {
+
+        const id = btn.getAttribute('data-ph-grp-del');
+
+        if (!id || !window.confirm('이 그룹을 삭제할까요?')) return;
+
+        try {
+
+          deletePhoneGroup(id);
+
+          rerender();
+
+        } catch (err) {
+
+          window.alert(err instanceof Error ? err.message : '삭제 실패');
+
+        }
+
+      });
+
+    });
+
+
+
+    const phForm = root.querySelector('[data-ph-form]');
+
+    root.querySelectorAll('[data-ph-edit]').forEach((btn) => {
+
+      btn.addEventListener('click', () => {
+
+        const id = btn.getAttribute('data-ph-edit');
+
+        const row = listPhones('all').find((p) => p.id === id);
+
+        if (!row || !(phForm instanceof HTMLFormElement)) return;
+
+        phForm.querySelector('[name="id"]').value = row.id;
+
+        phForm.querySelector('[name="groupId"]').value = row.groupId;
+
+        phForm.querySelector('[name="name"]').value = row.name;
+
+        phForm.querySelector('[name="phone"]').value = row.phone;
+
+        phForm.querySelector('[name="memo"]').value = row.memo || '';
+
+      });
+
+    });
+
+    root.querySelectorAll('[data-ph-del]').forEach((btn) => {
+
+      btn.addEventListener('click', () => {
+
+        const id = btn.getAttribute('data-ph-del');
+
+        if (!id || !window.confirm('이 번호를 삭제할까요?')) return;
+
+        deletePhone(id);
+
+        rerender();
+
+      });
+
+    });
+
+    root.querySelector('[data-ph-reset]')?.addEventListener('click', () => {
+
+      if (!(phForm instanceof HTMLFormElement)) return;
+
+      phForm.reset();
+
+      phForm.querySelector('[name="id"]').value = '';
+
+    });
+
+    phForm?.addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      if (!(phForm instanceof HTMLFormElement)) return;
+
+      const fd = new FormData(phForm);
+
+      savePhone({
+
+        id: String(fd.get('id') || ''),
+
+        groupId: String(fd.get('groupId') || ''),
+
+        name: String(fd.get('name') || ''),
+
+        phone: String(fd.get('phone') || ''),
+
+        memo: String(fd.get('memo') || ''),
+
+      });
+
+      rerender();
+
+    });
+
+
+
+    const sendForm = root.querySelector('[data-sms-send]');
+
+    root.querySelector('[data-sms-pick-phone]')?.addEventListener('change', (e) => {
+
+      const sel = e.currentTarget;
+
+      if (!(sel instanceof HTMLSelectElement) || !(sendForm instanceof HTMLFormElement)) return;
+
+      const opt = sel.selectedOptions[0];
+
+      if (!opt || !opt.value) return;
+
+      sendForm.querySelector('[name="to"]').value = opt.value;
+
+      sendForm.querySelector('[name="toName"]').value = opt.getAttribute('data-name') || '';
+
+    });
+
+    const tplSel = root.querySelector('[data-sms-tpl]');
+
+    const fillTpl = () => {
+
+      if (!(sendForm instanceof HTMLFormElement) || !(tplSel instanceof HTMLSelectElement)) return;
+
+      const row = listTemplates('all').find((t) => t.id === tplSel.value);
+
+      if (row) {
+
+        const body = sendForm.querySelector('[name="body"]');
+
+        if (body instanceof HTMLTextAreaElement && !body.value.trim()) {
+
+          body.value = row.body;
+
+          body.dispatchEvent(new Event('input'));
+
+        }
+
+      }
+
+    };
+
+    tplSel?.addEventListener('change', fillTpl);
+
+    fillTpl();
+
+
+
+    sendForm?.addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      if (!(sendForm instanceof HTMLFormElement)) return;
+
+      const fd = new FormData(sendForm);
+
+      previewSend({
+
+        to: String(fd.get('to') || ''),
+
+        toName: String(fd.get('toName') || ''),
+
+        templateId: String(fd.get('templateId') || ''),
+
+        body: String(fd.get('body') || ''),
+
+      });
+
+      rerender();
+
+      window.alert('전송내역에 미리보기를 남겼습니다. 실제 문자는 보내지 않았습니다.');
+
+      window.location.hash = '/admin/notify/logs';
+
+    });
+
+
+
+    root.querySelector('[data-sms-reset]')?.addEventListener('click', () => {
+
+      if (!window.confirm('문자 Lab을 초기화할까요?')) return;
+
+      resetSmsLab();
+
+      rerender();
+
+    });
+
+  }
+
 
 }
 
