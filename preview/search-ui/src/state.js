@@ -20,7 +20,7 @@ export const previewState = {
   activeResultItems: [],
   activeResultSource: null,
   activeRegionLabel: '',
-  role: 'study_room',
+  role: 'guest',
   subscription: 'free',
   studentLessonFormat: 'one_on_one',
   tutorRegionIndex: 0,
@@ -58,9 +58,8 @@ export function syncRoleFromHash() {
     return;
   }
   const role = parseNavRole(parseHashQuery().role);
-  if (role) {
-    previewState.role = role;
-  }
+  // 비로그인: 해시 role 없으면 guest (공부방 등 잔존 role로 게스트 UI가 깨지지 않게)
+  previewState.role = role || 'guest';
 }
 
 /** @param {SearchTab} tab */

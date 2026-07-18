@@ -76,10 +76,29 @@
   margin-bottom: var(--space-3);
 }
 
+.search-header__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.85rem;
+}
+
 .search-header--compact .auth-heading {
   font-size: var(--fs-5);
   font-family: var(--font-sans);
   margin: 0;
+}
+
+.search-header__location {
+  margin: 0;
+  font-size: var(--fs-2);
+  color: var(--gray-600);
+  font-family: var(--font-sans);
+}
+
+.search-header__location strong {
+  color: var(--gray-900);
+  font-weight: 700;
 }
 
 .search-region-auto--compact {

@@ -465,6 +465,7 @@ export function renderCompactFindForm(tab, state, options = {}) {
     role = 'parent',
     homeSelf = false,
     hideSearchForm = false,
+    hideRegionBar = false,
   } = options;
   if (homeSelf) state.homeSelf = true;
   const meta = SEARCH_TABS[tab];
@@ -509,14 +510,20 @@ export function renderCompactFindForm(tab, state, options = {}) {
       </div>
     </form>`;
 
+  const regionBar =
+    hideRegionBar || variant === 'search'
+      ? ''
+      : renderCompactRegionBar(tab, state, { variant, role });
+
   return `
     ${renderProviderSelfNote(tab, role, homeSelfFlag)}
-    ${renderCompactRegionBar(tab, state, { variant, role })}
+    ${regionBar}
     ${showMap
       ? renderSearchMapBlock(activeItems, {
           searched: state.searchExecuted,
           regionLabel: state.activeRegionLabel || MOCK_REGIONS.room,
           resultSource: resolveResultSource(state),
+          guestHomeStyle: role === 'guest',
         })
       : ''}
     ${leadHtml}

@@ -4,7 +4,7 @@ import {
   resolveAllowedTab,
   getSearchTabLabel,
 } from '../search-role-access.js';
-import { SEARCH_TABS } from '../search-schema.js';
+import { MOCK_REGIONS, SEARCH_TABS } from '../search-schema.js';
 import {
   getCurrentTab,
   navigateTab,
@@ -61,14 +61,32 @@ function syncHomeSubscription() {
 
 function renderSearchForm(tab) {
   const heading = SEARCH_TABS[tab]?.label || getSearchTabLabel(tab, previewState.role);
+  const regionLabel =
+    previewState.activeRegionLabel ||
+    (tab === 'room'
+      ? MOCK_REGIONS.room
+      : tab === 'tutor'
+        ? MOCK_REGIONS.tutor
+        : MOCK_REGIONS.student);
+  const locationLine =
+    tab === 'room' || tab === 'tutor' || tab === 'student'
+      ? `<p class="search-header__location" data-search-current-location aria-live="polite">현재위치 <strong>${esc(regionLabel)}</strong></p>`
+      : '';
 
   return `
     ${renderDevPreviewControls()}
     <header class="search-header search-header--compact">
-      <h1 class="auth-heading">${esc(heading)}</h1>
+      <div class="search-header__title-row">
+        <h1 class="auth-heading">${esc(heading)}</h1>
+        ${locationLine}
+      </div>
     </header>
     ${renderSubscriptionNote(tab)}
-    ${renderCompactFindForm(tab, previewState, { showMap: tab === 'room', role: previewState.role })}
+    ${renderCompactFindForm(tab, previewState, {
+      showMap: tab === 'room',
+      role: previewState.role,
+      hideRegionBar: true,
+    })}
     ${renderFindFilterBar(tab, previewState)}
     ${canUseCompare(tab, previewState.role) ? renderCompareBar() : ''}
     ${renderFindResultSection(tab, previewState, previewState.role, { surfaceType: 'search' })}`;

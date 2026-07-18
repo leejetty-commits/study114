@@ -39,6 +39,7 @@ import {
 import {
   maskPublicDisplayName,
   guestStudentTeaserFields,
+  coarseRegionForGuest,
 } from './student-blind-teaser.js';
 
 function esc(s) {
@@ -523,6 +524,9 @@ function renderBasicStudyRoomRow(item, opts) {
     guest: opts.guest,
     showCompare: opts.showCompare !== false,
   });
+  const locationLabel = opts.guest
+    ? coarseRegionForGuest(item.location_label)
+    : item.location_label;
   return `
     <article class="expo-basic expo-basic--study_room" data-provider-id="${item.id}" data-provider-kind="study_room">
       ${renderExpoTable(
@@ -532,10 +536,10 @@ function renderBasicStudyRoomRow(item, opts) {
             labeled('대상', item.grade_band),
             labeled('과목', item.main_subject_note),
             valOnly(formatMonthlyWon(item.price_amount), { cls: 'expo-tbl__cell--price' }),
-            { html: `<span class="expo-tbl__label">비교태그</span>${compare}`, cls: 'expo-tbl__cell--compare' },
+            { html: `<span class="expo-tbl__label">비교</span>${compare}`, cls: 'expo-tbl__cell--compare' },
           ],
           [
-            valOnly(item.location_label),
+            valOnly(locationLabel),
             labeled('수업장소', optionalStudyRoomPlace(item.lesson_place_type)),
             labeled('원생수', item.capacity_per_time || '—'),
             labeled('수업형태', formatLessonOperationType(item.lesson_operation_type)),
@@ -565,6 +569,9 @@ function renderBasicTutorRow(item, opts) {
     item.lessons_per_week && item.minutes_per_lesson
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
       : '—';
+  const locationLabel = opts.guest
+    ? coarseRegionForGuest(item.location_label)
+    : item.location_label;
   return `
     <article class="expo-basic expo-basic--tutor" data-provider-id="${item.id}" data-provider-kind="tutor">
       ${renderExpoTable(
@@ -574,10 +581,10 @@ function renderBasicTutorRow(item, opts) {
             labeled('대상', item.grade_band || '—'),
             labeled('과목', item.main_subject_note),
             valOnly(formatTutorFeeCard(item), { cls: 'expo-tbl__cell--price' }),
-            { html: `<span class="expo-tbl__label">비교태그</span>${compare}`, cls: 'expo-tbl__cell--compare' },
+            { html: `<span class="expo-tbl__label">비교</span>${compare}`, cls: 'expo-tbl__cell--compare' },
           ],
           [
-            valOnly(item.location_label),
+            valOnly(locationLabel),
             labeled('수업장소', optionalTutorPlaces(item.lesson_places)),
             labeled('원생수', formatTutorStudentTarget(item)),
             valOnly(schedule),

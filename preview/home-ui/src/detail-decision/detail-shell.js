@@ -1,6 +1,6 @@
 import { startFirstMemoFlow } from '../messages/compose-flow.js';
 import { toggleWishlist, toggleCompare, isWishlisted, isInCompare } from '../user-actions-state.js';
-import { previewState } from '../state.js';
+import { navigate } from '../state.js';
 import { recordRecentView, patchRecentHandoff } from '../mypage/recent-store.js';
 import { WISH_LABELS, STUDENT_REVIEW } from '../handoff-copy.js';
 import { notifyCompareToggle, notifyStudentReviewToggle, notifyWishToggle } from '../handoff-utils.js';
@@ -22,11 +22,13 @@ import {
 import { renderTutorDetailBody } from './tutor-detail.js';
 import { renderStudyRoomDetailBody } from './studyroom-detail.js';
 import { AUTH_UI_BASE } from '../data.js';
+import { HOME_UI_BASE } from '../../../shared/preview-links.js';
 import { openCompareModal } from '../compare-modal.js';
 import { getCompareItems } from '../user-actions-state.js';
 import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
 import { renderRightRailBlock } from '../right-rail.js';
 import { maskPublicDisplayName } from '../student-blind-teaser.js';
+import { isGuestPublicPath, loginUrl } from '../../../shared/route-access.js';
 
 const MODAL_ID = 'p24-detail-modal';
 
@@ -37,6 +39,7 @@ export function closeDetailModal() {
   });
   modal?.remove();
   document.body.style.overflow = '';
+  document.body.classList.remove('p24-detail-open', 'p24-detail-open--floating');
 }
 
 function itemTitle(kind, item) {
@@ -69,7 +72,14 @@ function resolvePrimaryCta(kind, item, viewer) {
 }
 
 function renderSecondaryActions(kind, item, viewer) {
-  if (viewer === 'guest') return '';
+  if (viewer === 'guest') {
+    if (kind === 'student') return '';
+    return `
+    <button type="button" class="btn btn--secondary btn--sm expo-compare-chip" data-p24-action="compare-guest-blocked"
+      data-item-kind="${kind}" aria-pressed="false">
+      <span class="expo-compare-chip__check" aria-hidden="true"></span>비교
+    </button>`;
+  }
   if (kind === 'student') {
     if (viewer !== 'tutor' && viewer !== 'study_room' && viewer !== 'admin') return '';
     const inReview = isInStudentReview(item.id);
@@ -91,6 +101,94 @@ function renderSecondaryActions(kind, item, viewer) {
       data-item-kind="${compareKind}" data-item-id="${item.id}">
       ${cmpOn ? '비교 해제' : '비교'}
     </button>`;
+}
+
+function isHomeSpaHost() {
+  try {
+    const home = new URL(HOME_UI_BASE, window.location.href);
+    return window.location.origin === home.origin && window.location.pathname.startsWith(home.pathname.replace(/\/$/, '') || '/');
+  } catch {
+    return false;
+  }
+}
+
+function bindFloatingDrag(wrap) {
+  const panel = wrap.querySelector('.p24-modal');
+  const handle = wrap.querySelector('[data-p24-drag-handle]');
+  if (!panel || !handle) return;
+
+  let dragging = false;
+  let startX = 0;
+  let startY = 0;
+  let origX = 0;
+  let origY = 0;
+
+  const onMove = (e) => {
+    if (!dragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const dx = clientX - startX;
+    const dy = clientY - startY;
+    panel.style.transform = `translate(${origX + dx}px, ${origY + dy}px)`;
+  };
+
+  const onUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    panel.classList.remove('is-dragging');
+    const match = /translate\((-?\d+(?:\.\d+)?)px,\s*(-?\d+(?:\.\d+)?)px\)/.exec(panel.style.transform || '');
+    if (match) {
+      origX = Number(match[1]);
+      origY = Number(match[2]);
+    }
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  };
+
+  const onDown = (e) => {
+    if (e.target.closest('button, a')) return;
+    dragging = true;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    startX = clientX;
+    startY = clientY;
+    panel.classList.add('is-dragging');
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('touchmove', onMove, { passive: true });
+    document.addEventListener('touchend', onUp);
+    e.preventDefault();
+  };
+
+  handle.addEventListener('pointerdown', onDown);
+  handle.addEventListener('touchstart', onDown, { passive: false });
+}
+
+function bindGuestRailNavigation(wrap) {
+  wrap.querySelectorAll('a[href], a[data-nav]').forEach((a) => {
+    if (!a.closest('.right-rail')) return;
+    a.addEventListener('click', (e) => {
+      const navPath = a.getAttribute('data-nav') || '';
+      const href = a.getAttribute('href') || '';
+      const path = navPath || href;
+      if (!isGuestPublicPath(path)) {
+        e.preventDefault();
+        window.location.assign(loginUrl('detail', 'rail'));
+        return;
+      }
+      e.preventDefault();
+      const normalized = String(navPath || href.replace(/^#/, '')).replace(/^#/, '');
+      const hashPath = normalized.startsWith('/') ? normalized : `/${normalized}`;
+      if (isHomeSpaHost()) {
+        navigate(hashPath);
+        showP24Toast('안내 페이지로 이동했습니다. 카드를 끌어 위치를 바꿀 수 있어요.');
+        return;
+      }
+      window.location.assign(`${HOME_UI_BASE}/#${hashPath}`);
+    });
+  });
 }
 
 /**
@@ -128,17 +226,20 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   const compareKind = kind === 'tutor' ? 'tutor' : kind === 'study_room' ? 'study_room' : null;
   const compareAware =
     compareKind != null ? buildCompareAwareBar(compareKind, item.id, viewer) : '';
+  const floating = viewer === 'guest';
 
   const wrap = document.createElement('div');
   wrap.id = MODAL_ID;
-  wrap.className = 'modal-overlay p24-overlay';
+  wrap.className = floating
+    ? 'modal-overlay p24-overlay p24-overlay--floating'
+    : 'modal-overlay p24-overlay';
   wrap.setAttribute('role', 'dialog');
-  wrap.setAttribute('aria-modal', 'true');
+  wrap.setAttribute('aria-modal', floating ? 'false' : 'true');
   wrap.innerHTML = `
-    <div class="modal p24-modal">
-      <header class="modal__head p24-modal__head">
+    <div class="modal p24-modal${floating ? ' p24-modal--floating' : ''}">
+      <header class="modal__head p24-modal__head"${floating ? ' data-p24-drag-handle' : ''}>
         <div>
-          <p class="p24-modal__kind">${esc(subtitle)}</p>
+          <p class="p24-modal__kind">${esc(subtitle)}${floating ? ' · 끌어 이동' : ''}</p>
           <h2 class="p24-modal__title">${esc(title)}</h2>
         </div>
         <button type="button" class="modal__close" data-p24-action="close" aria-label="닫기">×</button>
@@ -156,7 +257,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
           ${contact}
         </section>
         ${preContact}
-        ${renderRightRailBlock('detail_right_rail')}
+        ${renderRightRailBlock('detail_right_rail', { guestFilter: floating })}
         ${microSafetyCopy()}
       </div>
       <footer class="modal__foot p24-modal__foot">
@@ -170,9 +271,17 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     </div>`;
 
   document.body.appendChild(wrap);
-  document.body.style.overflow = 'hidden';
+  document.body.classList.add('p24-detail-open');
+  if (floating) {
+    document.body.classList.add('p24-detail-open--floating');
+    document.body.style.overflow = '';
+    bindFloatingDrag(wrap);
+    bindGuestRailNavigation(wrap);
+  } else {
+    document.body.style.overflow = 'hidden';
+  }
 
-  if (kind === 'study_room') {
+  if (kind === 'study_room' && !floating) {
     const mapAccordion = wrap.querySelector('.p24-map-accordion');
     mapAccordion?.addEventListener('toggle', () => {
       if (!mapAccordion.open) return;
@@ -183,12 +292,20 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   wrap.querySelectorAll('[data-p24-action="close"]').forEach((btn) => {
     btn.addEventListener('click', closeDetailModal);
   });
-  wrap.addEventListener('click', (e) => {
-    if (e.target === wrap) closeDetailModal();
-  });
+  if (!floating) {
+    wrap.addEventListener('click', (e) => {
+      if (e.target === wrap) closeDetailModal();
+    });
+  }
 
   wrap.querySelector('[data-p24-action="login"]')?.addEventListener('click', () => {
     window.open(`${AUTH_UI_BASE}/#/login?from=detail`, '_blank', 'noopener');
+  });
+
+  wrap.querySelectorAll('[data-p24-action="compare-guest-blocked"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      window.location.assign(loginUrl('detail', 'compare'));
+    });
   });
 
   wrap.querySelector('[data-p24-action="memo"]')?.addEventListener('click', () => {
@@ -241,10 +358,10 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
 
   wrap.querySelectorAll('[data-p24-action="compare-toggle"]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const compareKind = btn.dataset.itemKind;
-      const result = toggleCompare(compareKind, btn.dataset.itemId);
-      if (!notifyCompareToggle(result, compareKind, { sourceRoute: 'detail' })) return;
-      if (result.inCompare) patchRecentHandoff(compareKind, btn.dataset.itemId, { lastRoute: sourceRoute, lastAction: 'compare_add' });
+      const compareKindBtn = btn.dataset.itemKind;
+      const result = toggleCompare(compareKindBtn, btn.dataset.itemId);
+      if (!notifyCompareToggle(result, compareKindBtn, { sourceRoute: 'detail' })) return;
+      if (result.inCompare) patchRecentHandoff(compareKindBtn, btn.dataset.itemId, { lastRoute: sourceRoute, lastAction: 'compare_add' });
       onRerender?.();
       openDetailModal({ kind, item, viewer, onRerender, sourceRoute: 'detail' });
     });

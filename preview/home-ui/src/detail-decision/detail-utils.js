@@ -9,6 +9,7 @@ import {
 } from '../empty-state-copy.js';
 import { navigate } from '../state.js';
 import { openCompareModal } from '../compare-modal.js';
+import { coarseRegionForGuest } from '../student-blind-teaser.js';
 
 export function esc(s) {
   if (s == null) return '';
@@ -56,12 +57,17 @@ export function buildJudgmentTokens(kind, item, viewer) {
   if (kind === 'study_room') {
     const price = formatMonthlyWon(item.price_amount);
     const inquiry = inquiryStatusLabel(item.inquiry_status);
-    return [item.location_label, item.grade_band, item.main_subject_note, inquiry, price].filter(Boolean);
+    const loc =
+      viewer === 'guest' ? coarseRegionForGuest(item.location_label) : item.location_label;
+    return [loc, item.grade_band, item.main_subject_note, inquiry, price].filter(Boolean);
   }
   if (kind === 'tutor') {
     const fee = formatTutorFeeCard(item);
     const places = formatTutorLessonPlaces(item.lesson_places);
-    return [item.location_label, item.main_subject_note, places, '쪽지 가능', fee].filter(Boolean);
+    const loc =
+      viewer === 'guest' ? coarseRegionForGuest(item.location_label) : item.location_label;
+    const contactToken = viewer === 'guest' ? '로그인 후 쪽지' : '쪽지 가능';
+    return [loc, item.main_subject_note, places, contactToken, fee].filter(Boolean);
   }
   const budget =
     item.preferred_lesson_type === 'study_room'
@@ -87,7 +93,16 @@ export function buildCompareRibbon(kind) {
  * @param {string} viewer
  */
 export function buildCompareAwareBar(kind, itemId, viewer) {
-  if (viewer === 'guest' || kind === 'student') return '';
+  if (kind === 'student') return '';
+  if (viewer === 'guest') {
+    return `
+    <div class="p24-compare-aware" aria-label="비교 상태">
+      <span class="p24-compare-aware__badge">비교담기</span>
+      <button type="button" class="btn btn--secondary btn--sm" data-p24-action="compare-guest-blocked" data-item-kind="${kind}">
+        <span class="expo-compare-chip__check" aria-hidden="true"></span> 비교 담기
+      </button>
+    </div>`;
+  }
   const count = getCompareIds(kind).length;
   const numId = Number(itemId);
   const inBasket = isInCompare(kind, numId);

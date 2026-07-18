@@ -148,3 +148,31 @@ export function guardRoleHomeAccess(screenKey, loggedIn) {
   if (loggedIn) return { ok: true };
   return { ok: false, redirectHash: '#/guest' };
 }
+
+/**
+ * 비로그인(guest)이 카드·레일에서 바로 열 수 있는 공개 path.
+ * 마이페이지·쪽지·제출함·유료계정 등은 false → 로그인 게이트.
+ * @param {string} [pathOrHash]
+ */
+export function isGuestPublicPath(pathOrHash) {
+  let p = String(pathOrHash || '').trim();
+  if (!p) return false;
+  if (p.startsWith('http')) {
+    try {
+      p = new URL(p).hash || new URL(p).pathname;
+    } catch {
+      return false;
+    }
+  }
+  p = p.replace(/^#/, '').split('?')[0];
+  if (!p.startsWith('/')) p = `/${p}`;
+
+  if (p === '/' || p === '/guest') return true;
+  if (p.startsWith('/support')) return true;
+  if (p.startsWith('/library')) return true;
+  if (p.startsWith('/search')) return true;
+  if (p.startsWith('/mypage') || p.startsWith('/messages') || p.startsWith('/admin')) return false;
+  if (p.startsWith('/plans')) return false;
+  if (p.startsWith('/parent') || p.startsWith('/study-room') || p.startsWith('/tutor')) return false;
+  return false;
+}

@@ -141,21 +141,26 @@ function renderFallbackPromo() {
     </div>`;
 }
 
-function buildRailContent(slotKey) {
+/** @param {string} slotKey @param {{ guestFilter?: boolean }} [opts] */
+function buildRailContent(slotKey, opts = {}) {
   const slot = getRightRailSlot(slotKey);
   if (!slot || !slot.enabled || slot.status !== 'active') {
     return { slot: null, itemsHtml: renderFallbackPromo() };
   }
-  const boardKeys = slot.sourceBoardKeys?.length ? slot.sourceBoardKeys : [slot.sourceBoardKey].filter(Boolean);
+  let boardKeys = slot.sourceBoardKeys?.length ? slot.sourceBoardKeys : [slot.sourceBoardKey].filter(Boolean);
+  // 비로그인: 제출함(마이페이지) 등 로그인 전용 보드 제외
+  if (opts.guestFilter) {
+    boardKeys = boardKeys.filter((key) => key !== 'submission');
+  }
   const perBoardLimit = Math.max(1, Math.ceil(Number(slot.itemLimit || 3) / Math.max(1, boardKeys.length)));
   const items = boardKeys.flatMap((key) => itemsForBoard(key, perBoardLimit)).slice(0, Number(slot.itemLimit || 3));
   const itemsHtml = items.length ? items.map(renderRailItem).join('') : renderFallbackPromo();
   return { slot, itemsHtml };
 }
 
-/** @param {string} slotKey @param {'sidebar'|'inline'|'stacked'} [variant] */
-function renderRightRailMarkup(slotKey, variant = 'sidebar') {
-  const { slot, itemsHtml } = buildRailContent(slotKey);
+/** @param {string} slotKey @param {'sidebar'|'inline'|'stacked'} [variant] @param {{ guestFilter?: boolean }} [opts] */
+function renderRightRailMarkup(slotKey, variant = 'sidebar', opts = {}) {
+  const { slot, itemsHtml } = buildRailContent(slotKey, opts);
   if (!slot) {
     if (variant === 'inline' || variant === 'stacked') return '';
     return renderFallbackPromo();
@@ -189,7 +194,7 @@ export function renderRightRailSidebar(slotKey = 'home_right_rail') {
   return renderPromoWithRightRail(slotKey);
 }
 
-/** @param {string} slotKey — 상세 모달·검색 하단 등 인라인 보조 블록 */
-export function renderRightRailBlock(slotKey = 'detail_right_rail') {
-  return renderRightRailMarkup(slotKey, 'inline');
+/** @param {string} slotKey — 상세 모달·검색 하단 등 인라인 보조 블록 @param {{ guestFilter?: boolean }} [opts] */
+export function renderRightRailBlock(slotKey = 'detail_right_rail', opts = {}) {
+  return renderRightRailMarkup(slotKey, 'inline', opts);
 }

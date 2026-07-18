@@ -2251,18 +2251,34 @@ a.sup-term-chip:hover {
 .expo-compare-chip {
   font-size: var(--fs-1);
   font-weight: var(--fw-bold);
-  padding: 0.125rem 0.375rem;
+  padding: 0.2rem 0.45rem;
   border-radius: 0.25rem;
-  border: 1px solid var(--gray-300);
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--gray-700);
+  border: 1.5px solid var(--brand-orange, #ea580c);
+  background: #fff;
+  color: var(--brand-orange-dark, #c2410c);
   cursor: pointer;
+}
+
+.expo-compare-chip__check {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-right: 0.2rem;
+  border: 1.5px solid currentColor;
+  border-radius: 0.125rem;
+  vertical-align: -0.05rem;
 }
 
 .expo-compare-chip.is-active {
   border-color: var(--brand-orange);
-  color: var(--brand-orange);
-  background: #fff7ed;
+  color: #fff;
+  background: var(--brand-orange);
+}
+
+.expo-compare-chip.is-active .expo-compare-chip__check {
+  background: #fff;
+  border-color: #fff;
+  box-shadow: inset 0 0 0 2px var(--brand-orange);
 }
 
 .expo-link-btn {
@@ -2293,33 +2309,37 @@ a.sup-term-chip:hover {
 }
 
 .expo-tbl__cell {
-  border: 1px solid var(--gray-200);
-  padding: 0.3125rem 0.375rem;
+  border: 1px solid var(--gray-300);
+  padding: 0.375rem 0.45rem;
   vertical-align: middle;
-  color: var(--gray-700);
+  color: var(--gray-800);
   word-break: keep-all;
   overflow: hidden;
   text-overflow: ellipsis;
+  background: #fff;
 }
 
 .expo-tbl__label {
   font-weight: 700;
-  color: var(--gray-500);
+  color: var(--gray-600);
   margin-right: 0.25rem;
   font-size: 0.625rem;
 }
 
 .expo-tbl__val {
-  color: var(--gray-800);
+  color: var(--gray-900);
+  font-weight: 600;
 }
 
 .expo-tbl__cell--val-only {
-  color: var(--gray-800);
-  font-weight: 500;
+  color: var(--gray-900);
+  font-weight: 600;
 }
 
 .expo-tbl__cell--val-only.expo-tbl__cell--name {
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 0.75rem;
+  color: var(--gray-950, #0f172a);
 }
 
 .expo-tbl__cell--val-only.expo-tbl__cell--price {
@@ -2411,8 +2431,24 @@ a.sup-term-chip:hover {
 
 .expo-basic {
   background: #fff;
-  border-bottom: 1px solid var(--gray-200);
-  padding: 0.375rem 0;
+  border: 1px solid var(--gray-300);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+}
+
+.expo-basic:hover {
+  border-color: var(--gray-400);
+  background: #fafafa;
+}
+
+.expo-basic.p24-card--clickable {
+  cursor: pointer;
+}
+
+.browse-list--table .expo-basic {
+  border-radius: 0.5rem;
 }
 
 .expo-basic--student {
@@ -2875,6 +2911,41 @@ a.sup-term-chip:hover {
 .modal__body { padding: var(--space-4); }
 .modal__foot { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--gray-200); display: flex; gap: var(--space-2); justify-content: flex-end; }
 .modal__close { background: none; border: none; font-size: 1.25rem; cursor: pointer; }
+
+/* 비로그인 확장카드 — 플로팅 (배경 스크롤·페이지 이동 허용) */
+.p24-overlay--floating {
+  background: transparent;
+  pointer-events: none;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 5rem 1rem 1rem;
+  z-index: 1150;
+}
+.p24-overlay--floating .p24-modal--floating {
+  pointer-events: auto;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+  border: 1px solid var(--gray-300);
+  width: min(94vw, 22rem);
+  max-height: min(82vh, 640px);
+  will-change: transform;
+}
+.p24-overlay--floating .p24-modal__head[data-p24-drag-handle] {
+  cursor: grab;
+  user-select: none;
+  background: linear-gradient(180deg, #fff7ed 0%, #fff 70%);
+}
+.p24-overlay--floating .p24-modal--floating.is-dragging .p24-modal__head {
+  cursor: grabbing;
+}
+.p24-map-guest-note {
+  font-size: var(--text-xs);
+  color: var(--gray-600);
+  margin: 0 0 var(--space-3);
+  padding: 0.5rem 0.65rem;
+  background: var(--gray-50);
+  border: 1px dashed var(--gray-300);
+  border-radius: 0.375rem;
+}
 
 /* ?? P24 ?? ?? ??? ?? */
 .p24-modal { max-width: 32rem; display: flex; flex-direction: column; max-height: min(92vh, 720px); }
