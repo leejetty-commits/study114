@@ -80,4 +80,4 @@ npm run build:dothome
 | 2026-07-18 | 25-youngcart-admin-member-board-port.md · 회원·게시판 Must 이식 순서 |
 | 2026-07-18 | 26-youngcart-settings-port.md · A28-09 환경설정 |
 | 2026-07-18 | 28-gnu-member-field-mapping-review.md — S114 정본·GNU 파생 매핑 · **호스팅 전까지 문서만** |
-| 2026-07-18 | 29-exposure-gnb-decisions.md — 1-A·관리자 B·SSO 단독가입 확정 / **2 B-완화형 확정** / 3·6 보류 |
+| 2026-07-18 | 29-exposure-gnb-decisions.md — 1-A·2 B-완화·**3 피어비교열람**·관리자 B·SSO 확정 / 6 보류 |

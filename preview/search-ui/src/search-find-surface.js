@@ -470,7 +470,9 @@ export function renderFindResultSection(tab, state, role) {
     tab === 'room'
       ? '<p class="search-results__hint">공부방: 지도 핀과 아래 목록은 동일한 결과 집합입니다.</p>'
       : tab === 'student'
-        ? '<p class="search-results__hint">학생찾기: 블라인드 리스트 · 비교 없음 · 찜·쪽지 중심</p>'
+        ? role === 'parent'
+          ? '<p class="search-results__hint">학생찾기: 시장 비교 열람 · 블라인드 유지 · 쪽지 불가</p>'
+          : '<p class="search-results__hint">학생찾기: 블라인드 리스트 · 비교 없음 · 찜·쪽지 중심</p>'
         : '<p class="search-results__hint">과외쌤: 조건형 · 지도 없음</p>';
 
   return `

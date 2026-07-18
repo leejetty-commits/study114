@@ -81,9 +81,10 @@ export function renderSearchRowActions(tab, item, role) {
   const guest = role === 'guest';
 
   if (tab === 'student') {
-    if (guest || role === 'parent') {
-      return `<button type="button" class="btn btn--secondary btn--sm" disabled title="역할 제한">상세</button>`;
+    if (guest) {
+      return `<button type="button" class="btn btn--secondary btn--sm" disabled title="로그인 필요">상세</button>`;
     }
+    // parent: 비교 열람 허용 · 블라인드 유지 (29#3). 공급자와 동일하게 상세 오픈
     return `<button type="button" class="btn btn--secondary btn--sm" data-action="search-open-detail" data-search-kind="student" data-search-id="${id}">상세</button>`;
   }
 

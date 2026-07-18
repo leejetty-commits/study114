@@ -178,6 +178,9 @@ export function buildContactPanel(kind, item, viewer) {
     const label = viewer === 'tutor' ? '메모 가능' : '상담/쪽지 가능';
     return `<ul class="p24-contact"><li class="p24-contact__item is-ok">${label}</li></ul>`;
   }
+  if (kind === 'student' && viewer === 'parent') {
+    return `<ul class="p24-contact"><li class="p24-contact__item is-locked">비교 열람만 · 쪽지·연락처 비공개</li></ul>`;
+  }
   if (kind === 'study_room') {
     const st = item.inquiry_status || 'open';
     const ok = st === 'open' || st === 'waiting_only';

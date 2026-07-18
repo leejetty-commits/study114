@@ -55,9 +55,12 @@ export function renderStudentProviderActions(item, opts = {}) {
     </div>`;
 }
 
-/** 학부모·비회원 — 찜·비교 미렌더 (25§4-2) */
+/** 학부모·학생 피어 열람 — 상세만 (쪽지·찜·검토함 없음 · 29#3) */
 export function renderStudentConsumerActions() {
-  return `<div class="item-actions item-actions--student" aria-label="학생 액션"></div>`;
+  return `
+    <div class="item-actions item-actions--student" aria-label="학생 액션">
+      <span class="item-actions__note">비교 열람 · 상세에서 조건 확인</span>
+    </div>`;
 }
 
 /**

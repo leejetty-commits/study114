@@ -19,6 +19,7 @@ export const PROVIDER_HOME_MODES = {
   parent: [
     { id: 'study_room', label: '우리동네 공부방', searchTab: 'room' },
     { id: 'tutor', label: '우리동네 과외쌤', searchTab: 'tutor' },
+    { id: 'student', label: '우리동네 학생', searchTab: 'student' },
   ],
   study_room: [
     { id: 'study_room', label: '우리동네 공부방', searchTab: 'room', homeSelf: true },
@@ -40,6 +41,10 @@ const HOME_HEAD_COPY = {
     tutor: {
       title: '우리동네 과외쌤',
       desc: '등록해 둔 희망 지역(최대 3)을 탭으로 바꿔가며 과외 선생님을 살펴보세요.',
+    },
+    student: {
+      title: '우리동네 학생',
+      desc: '다른 학생 의뢰의 금액·지역·과목·수업형태를 비교해 보세요. 이름은 마스킹되며 쪽지는 보낼 수 없습니다.',
     },
   },
   study_room: {

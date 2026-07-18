@@ -11,6 +11,7 @@ import {
   getRequestViewGateState,
   REQUEST_VIEW_GATE_COPY,
   FREE_PROVIDER_REQUEST_GATE_COPY,
+  PEER_STUDENT_REQUEST_GATE_COPY,
 } from '../student-visibility.js';
 import { renderPermissionStateCard } from '../empty-state-copy.js';
 import { esc } from './detail-utils.js';
@@ -21,7 +22,7 @@ import { esc } from './detail-utils.js';
  * @param {boolean} visible
  * @param {string} visibility
  * @param {number} studentId
- * @param {{ isPaidProvider?: boolean }} [opts]
+ * @param {{ isPaidProvider?: boolean, viewer?: string }} [opts]
  */
 function renderProtectedBlock(label, content, visible, visibility, studentId, opts = {}) {
   if (visible) {
@@ -38,6 +39,19 @@ function renderProtectedBlock(label, content, visible, visibility, studentId, op
     <div class="p24-protected p24-protected--blocked">
       <span class="p24-protected__label">${esc(label)}</span>
       ${card}
+    </div>`;
+  }
+
+  // paid_only — 학부모 피어: 공급자 유료 게이트 대신 비교범위 안내
+  if (opts.viewer === 'parent') {
+    const copy = PEER_STUDENT_REQUEST_GATE_COPY;
+    return `
+    <div class="p24-protected p24-protected--blocked">
+      <span class="p24-protected__label">${esc(label)}</span>
+      <div class="state-card state-card--permission">
+        <strong class="state-card__title">${esc(copy.title)}</strong>
+        <p class="state-card__body">${esc(copy.body)}</p>
+      </div>
     </div>`;
   }
 
@@ -93,7 +107,9 @@ export function renderStudentRequestBody(student, viewer) {
   const fitHint =
     viewer === 'tutor'
       ? '<p class="p24-fit p24-fit--hint">내 수업 조건과 맞는지 프로필·지역을 확인하세요.</p>'
-      : '';
+      : viewer === 'parent'
+        ? '<p class="p24-fit p24-fit--hint">시장 비교용 열람입니다. 표시명은 마스킹되며 쪽지·연락처는 열리지 않습니다.</p>'
+        : '';
 
   const providerHint =
     viewer === 'tutor' || viewer === 'study_room' || viewer === 'admin'
@@ -124,8 +140,8 @@ export function renderStudentRequestBody(student, viewer) {
     </section>
     <section class="p24-section">
       <h3 class="p24-section__title">요청 · 특이사항</h3>
-      ${renderProtectedBlock('요청문', student.request_summary, vis.requestSummary, student.request_summary_visibility || 'private', studentId, { isPaidProvider: vis.isPaidProvider })}
-      ${renderProtectedBlock('특이요청사항', student.special_request_note, vis.specialRequest, student.special_request_visibility || 'private', studentId, { isPaidProvider: vis.isPaidProvider })}
+      ${renderProtectedBlock('요청문', student.request_summary, vis.requestSummary, student.request_summary_visibility || 'private', studentId, { isPaidProvider: vis.isPaidProvider, viewer })}
+      ${renderProtectedBlock('특이요청사항', student.special_request_note, vis.specialRequest, student.special_request_visibility || 'private', studentId, { isPaidProvider: vis.isPaidProvider, viewer })}
       ${providerHint}
     </section>`;
 }

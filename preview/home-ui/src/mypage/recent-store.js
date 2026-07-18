@@ -83,7 +83,7 @@ export function recordRecentView(kind, id, title, opts = {}) {
 export function getRecentViews(role) {
   const all = /** @type {RecentEntry[]} */ (loadAll());
   if (role === 'parent') {
-    return all.filter((e) => e.kind === 'study_room' || e.kind === 'tutor');
+    return all.filter((e) => e.kind === 'study_room' || e.kind === 'tutor' || e.kind === 'student');
   }
   return all;
 }

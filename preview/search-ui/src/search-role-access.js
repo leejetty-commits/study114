@@ -13,13 +13,18 @@ import { visibleSearchTabsForRole } from '../../shared/site-nav-config.js';
 export const ROLE_SEARCH_HEADING = {
   guest: '공부방·과외·학생 찾기',
   admin: '공부방·과외·학생 찾기',
-  parent: '공부방·과외 찾기',
+  parent: '공부방·과외·학생 찾기',
   study_room: '공부방 · 학생찾기',
   tutor: '과외쌤 · 학생찾기',
 };
 
 /** @type {Partial<Record<ViewerRole, Partial<Record<SearchTab, string>>>>} */
 export const ROLE_SEARCH_TAB_LABELS = {
+  parent: {
+    room: '공부방찾기',
+    tutor: '과외쌤찾기',
+    student: '학생찾기',
+  },
   study_room: {
     room: '공부방찾기',
     student: '학생찾기',

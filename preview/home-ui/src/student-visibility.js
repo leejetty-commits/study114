@@ -76,6 +76,12 @@ export const FREE_PROVIDER_REQUEST_GATE_COPY = {
   ctaPlans: '유료 서비스 안내',
 };
 
+/** 학부모·학생 피어 열람 · 29#3 — 구조화 조건만, 요청문 비공개 규칙 유지 */
+export const PEER_STUDENT_REQUEST_GATE_COPY = {
+  title: '요청문은 비교 열람 범위가 아닙니다',
+  body: '다른 학생의 요청문·특이요청사항은 기존 공개 규칙에 따라 공급자 열람 대상입니다. 금액·지역·과목 등 구조화 조건만 비교하세요.',
+};
+
 export function getRequestViewGateState() {
   const tickets = getRequestViewTicketsRemaining();
   return {

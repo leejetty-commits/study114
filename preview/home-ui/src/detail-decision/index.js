@@ -39,10 +39,7 @@ export function openDetailDecision({ kind, id, viewer, onRerender, sourceRoute =
     window.location.assign(`${AUTH_UI_BASE}/#/login?from=student-detail`);
     return;
   }
-  // 10-6-5 / 13§8: 학부모는 학생찾기 역방향 상세 차단
-  if (kind === 'student' && role === 'parent') {
-    return;
-  }
+  // 29#3: 학부모/학생 로그인 — 다른 학생 카드·상세 비교 열람 허용 (블라인드·요청문 규칙은 유지)
   openDetailModal({
     kind,
     item,

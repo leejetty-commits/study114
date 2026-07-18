@@ -1483,6 +1483,12 @@ a.sup-term-chip:hover {
   margin-top: var(--space-2);
 }
 
+.item-actions__note {
+  font-size: 0.6875rem;
+  color: var(--gray-400);
+  line-height: 1.35;
+}
+
 .tier-row {
   display: flex;
   align-items: baseline;

@@ -1,5 +1,5 @@
 /** @typedef {'guest' | 'parent' | 'study_room' | 'tutor'} HomeRole */
-/** @typedef {'study_room' | 'tutor'} ParentTab */
+/** @typedef {'study_room' | 'tutor' | 'student'} ParentTab */
 /** @typedef {'study_room' | 'tutor' | 'student'} ProviderHomeTab */
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
