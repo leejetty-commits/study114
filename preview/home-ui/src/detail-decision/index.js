@@ -1,11 +1,20 @@
 import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS, EXPOSURE_STUDENTS } from '../exposure-data.js';
 import { getNavRole, previewState } from '../state.js';
+import { getAuthUser, isLoggedIn } from '../auth-session.js';
+import { navRoleFromAuthUser } from '../nav-config.js';
 import { bindStudentReviewEvents } from '../student-review-ui.js';
 import { openDetailModal, closeDetailModal } from './detail-shell.js';
 import { AUTH_UI_BASE } from '../data.js';
 
 export { closeDetailModal, openDetailModal } from './detail-shell.js';
 export { showP24Toast } from './detail-utils.js';
+
+/** 화면 프리뷰 role보다 로그인 세션 역할 우선 (관리자가 #/guest에 있어도 admin) */
+function resolveViewerRole(explicit) {
+  if (explicit) return explicit;
+  if (isLoggedIn()) return navRoleFromAuthUser(getAuthUser());
+  return getNavRole();
+}
 
 /** @param {'study_room'|'tutor'|'student'} kind @param {number} id */
 export function resolveDetailItem(kind, id) {
@@ -24,7 +33,7 @@ export function resolveDetailItem(kind, id) {
 export function openDetailDecision({ kind, id, viewer, onRerender, sourceRoute = 'search', item: itemOverride }) {
   const item = itemOverride || resolveDetailItem(kind, id);
   if (!item) return;
-  const role = viewer || getNavRole();
+  const role = resolveViewerRole(viewer);
   // 10-6-2: 비로그인 학생 상세 차단 — 로그인 유도만
   if (kind === 'student' && role === 'guest') {
     window.location.assign(`${AUTH_UI_BASE}/#/login?from=student-detail`);
@@ -45,7 +54,7 @@ export function openDetailDecision({ kind, id, viewer, onRerender, sourceRoute =
 
 /** @param {HTMLElement} root @param {{ onRerender?: () => void, viewer?: string, getStudentItem?: (id: number) => object|undefined, sourceRoute?: string }} [opts] */
 export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentItem, sourceRoute = 'search' } = {}) {
-  const role = viewer || getNavRole();
+  const role = resolveViewerRole(viewer);
   bindStudentReviewEvents(root, onRerender, {
     providerRole: role,
     sourceRoute,

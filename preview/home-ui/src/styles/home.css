@@ -1447,6 +1447,42 @@ a.sup-term-chip:hover {
   margin-top: var(--space-2);
 }
 
+/* 비로그인 학생 의뢰 티저 — B-완화형 (조건만 · 특정 최소화) */
+.expo-basic--student-teaser {
+  padding: var(--space-3) var(--space-4);
+}
+
+.student-teaser__name {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.student-teaser__meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--gray-600);
+  line-height: 1.4;
+}
+
+.student-teaser__hope {
+  margin: 0.125rem 0 0;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.student-teaser__hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.6875rem;
+  color: var(--gray-400);
+  line-height: 1.35;
+}
+
+.expo-basic--student-teaser .item-actions {
+  margin-top: var(--space-2);
+}
+
 .tier-row {
   display: flex;
   align-items: baseline;

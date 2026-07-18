@@ -17,6 +17,7 @@
 | [23-board-menu-boundary-audit.md](./23-board-menu-boundary-audit.md) | 게시판/정적/서비스 메뉴 경계 진단 · 프리셋 생성 로직 | ★ 23·33 정렬 |
 | [24-youngcart-sample-lab-purpose.md](./24-youngcart-sample-lab-purpose.md) | 영카트 샘플 Lab — 관리자 UX 벤치마크(주) · 커뮤니티 로그인 기초(부) | ★ Lab |
 | [28-gnu-member-field-mapping-review.md](./28-gnu-member-field-mapping-review.md) | g5_member ↔ users 기초 대조 · **우동공과 정본** 맞춤 방향 | ★ SSO 전 |
+| [29-exposure-gnb-decisions.md](./29-exposure-gnb-decisions.md) | 10-6·관리자 GNB 결정 확정/보류 | ★ |
 | [25-youngcart-admin-member-board-port.md](./25-youngcart-admin-member-board-port.md) | 회원·게시판 관리 편의성 이식 Must 1~5 | ★ 진행 중 |
 | [26-youngcart-settings-port.md](./26-youngcart-settings-port.md) | 환경설정 → A28-09 운영 설정 이식 | ★ 신규 |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
@@ -79,3 +80,4 @@ npm run build:dothome
 | 2026-07-18 | 25-youngcart-admin-member-board-port.md · 회원·게시판 Must 이식 순서 |
 | 2026-07-18 | 26-youngcart-settings-port.md · A28-09 환경설정 |
 | 2026-07-18 | 28-gnu-member-field-mapping-review.md — S114 정본·GNU 파생 매핑 · **호스팅 전까지 문서만** |
+| 2026-07-18 | 29-exposure-gnb-decisions.md — 1-A·관리자 B·SSO 단독가입 확정 / **2 B-완화형 확정** / 3·6 보류 |

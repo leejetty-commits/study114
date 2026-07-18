@@ -26,6 +26,7 @@ import { openCompareModal } from '../compare-modal.js';
 import { getCompareItems } from '../user-actions-state.js';
 import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
 import { renderRightRailBlock } from '../right-rail.js';
+import { maskPublicDisplayName } from '../student-blind-teaser.js';
 
 const MODAL_ID = 'p24-detail-modal';
 
@@ -39,7 +40,7 @@ export function closeDetailModal() {
 }
 
 function itemTitle(kind, item) {
-  if (kind === 'student') return item.public_display_name || '학습 요청';
+  if (kind === 'student') return maskPublicDisplayName(item.public_display_name) || '학습 요청';
   if (kind === 'tutor') return item.tutor_display_name || '과외쌤';
   return item.study_room_name || '공부방';
 }
@@ -48,13 +49,13 @@ function resolvePrimaryCta(kind, item, viewer) {
   if (viewer === 'guest') {
     return { label: '로그인하고 문의하기', action: 'login', disabled: false };
   }
-  if (kind === 'student' && viewer === 'tutor') {
+  if (kind === 'student' && (viewer === 'tutor' || viewer === 'study_room' || viewer === 'admin')) {
     const can = item.exposure_status === 'published';
-    return { label: '메모 보내기', action: 'memo', disabled: !can };
-  }
-  if (kind === 'student' && viewer === 'study_room') {
-    const can = item.exposure_status === 'published';
-    return { label: '상담/쪽지 보내기', action: 'memo', disabled: !can };
+    return {
+      label: viewer === 'study_room' ? '상담/쪽지 보내기' : '메모 보내기',
+      action: 'memo',
+      disabled: !can,
+    };
   }
   if (kind === 'tutor' && viewer === 'parent') {
     return { label: '쪽지 보내기', action: 'memo', disabled: false };
@@ -70,11 +71,11 @@ function resolvePrimaryCta(kind, item, viewer) {
 function renderSecondaryActions(kind, item, viewer) {
   if (viewer === 'guest') return '';
   if (kind === 'student') {
-    if (viewer !== 'tutor' && viewer !== 'study_room') return '';
+    if (viewer !== 'tutor' && viewer !== 'study_room' && viewer !== 'admin') return '';
     const inReview = isInStudentReview(item.id);
     return `
     <button type="button" class="btn btn--secondary btn--sm" data-p24-action="student-review-toggle"
-      data-student-id="${item.id}" data-provider-role="${viewer}">
+      data-student-id="${item.id}" data-provider-role="${viewer === 'admin' ? 'tutor' : viewer}">
       ${inReview ? STUDENT_REVIEW.removeCta : STUDENT_REVIEW.addCta}
     </button>`;
   }

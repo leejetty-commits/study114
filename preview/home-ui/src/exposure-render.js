@@ -36,6 +36,10 @@ import {
   getPickPool,
   getBasicPool,
 } from './exposure-rules.js';
+import {
+  maskPublicDisplayName,
+  guestStudentTeaserFields,
+} from './student-blind-teaser.js';
 
 function esc(s) {
   if (s == null || s === '') return '';
@@ -589,10 +593,32 @@ function renderBasicTutorRow(item, opts) {
 
 function renderBasicStudentRow(item, opts) {
   const viewerRole = opts.viewerRole || (opts.guest ? 'guest' : 'parent');
+  const isGuest = Boolean(opts.guest || viewerRole === 'guest');
+  const maskedName = maskPublicDisplayName(item.public_display_name);
+
+  // 비로그인 티저 — B-완화형 (조건만 · 특정 최소화)
+  if (isGuest) {
+    const t = guestStudentTeaserFields(item);
+    const meta = [t.band, t.subject, t.region, t.budget].filter((x) => x && x !== '—').join(' · ');
+    const hopeLine = t.hope || t.chip;
+    return `
+    <article class="expo-basic expo-basic--student expo-basic--student-teaser" data-student-id="${item.id}" data-action="open-student-detail">
+      <div class="student-teaser">
+        <p class="student-teaser__name">${esc(t.name)}</p>
+        <p class="student-teaser__meta">${esc(meta)}</p>
+        ${hopeLine ? `<p class="student-teaser__hope">${esc(hopeLine)}</p>` : ''}
+        <p class="student-teaser__hint">로그인 후 구조화 조건·쪽지를 이용할 수 있습니다.</p>
+        <div class="item-actions item-actions--student">
+          <button type="button" class="btn btn--secondary btn--sm" data-action="login-gate" data-gate="student" data-gate-label="학생상세">로그인하고 보기</button>
+        </div>
+      </div>
+    </article>`;
+  }
+
   const actions =
-    viewerRole === 'tutor' || viewerRole === 'study_room'
+    viewerRole === 'tutor' || viewerRole === 'study_room' || viewerRole === 'admin'
       ? renderStudentProviderActions(item, {
-          guest: opts.guest,
+          guest: false,
           viewerRole,
           sourceRoute: opts.sourceRoute || 'search',
         })
@@ -601,22 +627,15 @@ function renderBasicStudentRow(item, opts) {
     item.lessons_per_week && item.minutes_per_lesson
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
       : '—';
-  // 10-6: 카드에는 요청문 본문 금지 — 공개 메타만 (비공개 / 유료공개 / 로그인 유도)
   const requestVis = item.request_summary_visibility || 'private';
   const request =
-    opts.guest || viewerRole === 'guest'
-      ? '로그인 후'
-      : requestVis === 'paid_only'
-        ? '유료공개'
-        : requestVis === 'private'
-          ? '비공개'
-          : '—';
+    requestVis === 'paid_only' ? '유료공개' : requestVis === 'private' ? '비공개' : '—';
   return `
     <article class="expo-basic expo-basic--student" data-student-id="${item.id}" data-action="open-student-detail">
       ${renderExpoTable(
         [
           [
-            nameWithGenderCell(item.public_display_name, item.gender),
+            labeled('표시명', maskedName),
             labeled('대상', item.grade_level),
             labeled('과목', item.subject_label),
             valOnly(formatStudentBudgetCard(item), { cls: 'expo-tbl__cell--price' }),

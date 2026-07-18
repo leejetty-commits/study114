@@ -15,7 +15,7 @@ export {
 } from './messages-copy.js';
 
 export function isProviderRole(role) {
-  return role === 'study_room' || role === 'tutor';
+  return role === 'study_room' || role === 'tutor' || role === 'admin';
 }
 
 export function isProviderPaid() {
@@ -26,9 +26,10 @@ export function isProviderPaid() {
   }
   return previewState.providerSubscription === 'paid';
 }
-/** @param {NavRole} role */
+/** @param {NavRole | 'admin'} role */
 export function canProviderColdMemoToStudent(role) {
-  return isProviderRole(role) && isProviderPaid();
+  if (role === 'admin') return true;
+  return (role === 'study_room' || role === 'tutor') && isProviderPaid();
 }
 
 /** @deprecated alias */

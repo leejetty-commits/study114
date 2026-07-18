@@ -28,6 +28,7 @@ function roleHomePath(role) {
   if (role === 'study_room') return '/study-room';
   if (role === 'tutor') return '/tutor';
   if (role === 'parent') return '/parent';
+  if (role === 'admin') return '/guest';
   return '/guest';
 }
 

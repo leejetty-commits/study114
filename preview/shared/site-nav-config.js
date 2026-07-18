@@ -168,6 +168,8 @@ export function canAccessRegisterTutor(role) {
  * @param {'room' | 'tutor'} kind
  */
 export function canAccessRegisterForms(role, kind) {
+  /** 관리자·부마스터(role_type=admin) — 검수용으로 폼 실사용 허용 (5-B) */
+  if (role === 'admin') return true;
   if (kind === 'room') return role === 'study_room';
   return role === 'tutor';
 }
