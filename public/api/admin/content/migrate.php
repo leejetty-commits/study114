@@ -8,6 +8,7 @@ use Study114\Admin\AdminAccountSchemaMigrateService;
 use Study114\Admin\AdminApi;
 use Study114\Admin\AdminRoleService;
 use Study114\Admin\ContentSchemaMigrateService;
+use Study114\Admin\RegionBasisSchemaMigrateService;
 
 AdminApi::bootstrap();
 
@@ -16,6 +17,7 @@ AdminApi::run(static function (): void {
     $roles = new AdminRoleService();
     $content = new ContentSchemaMigrateService();
     $accounts = new AdminAccountSchemaMigrateService();
+    $regionBasis = new RegionBasisSchemaMigrateService();
     $method = AdminApi::method();
     $admin036 = $accounts->status();
     $needs036Bootstrap = empty($admin036['has_admin_level']);
@@ -30,7 +32,9 @@ AdminApi::run(static function (): void {
         AdminApi::ok([
             'content_034_035' => $content->status(),
             'admin_036' => $admin036,
+            'region_037' => $regionBasis->status(),
             'can_apply_036' => $isSuper || $needs036Bootstrap,
+            'can_apply_037' => $isSuper,
         ]);
     }
 
@@ -50,8 +54,14 @@ AdminApi::run(static function (): void {
             }
             AdminApi::ok(['migrate' => $accounts->apply()]);
         }
+        if ($confirm === 'apply-037') {
+            if (!$isSuper) {
+                AdminApi::fail(403, 'forbidden', '최고관리자만 037을 적용할 수 있습니다.');
+            }
+            AdminApi::ok(['migrate' => $regionBasis->apply()]);
+        }
 
-        AdminApi::fail(422, 'validation', 'confirm: apply-034-035 또는 apply-036 가 필요합니다.');
+        AdminApi::fail(422, 'validation', 'confirm: apply-034-035 · apply-036 · apply-037 이 필요합니다.');
     }
 
     AdminApi::fail(405, 'method_not_allowed', 'GET · POST만 허용됩니다.');

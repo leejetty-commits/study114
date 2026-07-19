@@ -47,8 +47,10 @@
 
 - [x] F1. 건물 동(101동) 단위 입력 없음 (단지명+주소만)
 - [x] F2. `build:dothome` 완료 · `git status` 확인 (public 산출물은 gitignore)
-- [ ] F2b. `037` 마이그레이션 — **운영/로컬 DB에 수동 적용 필요** (Docker 미기동으로 로컬 자동 적용 불가)
-- [x] F3. commit / push — 진행 후 Actions·사이트 확인
+- [ ] F2b. `037` 마이그레이션 — 운영 DB 미적용 (단지 `address` 빈 문자열 확인됨)
+  - 최고관리자: `POST /api/admin/content/migrate.php` body `{"confirm":"apply-037"}`
+  - 또는 닷홈 phpMyAdmin에서 `037_region_basis_and_complex_address.sql` 실행
+- [x] F3. commit `e335be4` / push / Actions **success** · 사이트 auth·regions API 확인
 
 ---
 
