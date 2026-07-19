@@ -4,6 +4,7 @@
  */
 
 import { getAuthUser } from '../auth-session.js';
+import { resolveAccountDisplayName } from '../auth/display-identity.js';
 import { getWishlistIds } from '../user-actions-state.js';
 import { getStudentReviewIds } from '../student-review-store.js';
 import { getRecentViews } from './recent-store.js';
@@ -87,12 +88,15 @@ export function getPreviewProfile(role) {
   const base = { ...PREVIEW_PROFILE, role };
   const user = getAuthUser();
   if (!user) return base;
+  const displayName = resolveAccountDisplayName(user);
   return {
     ...base,
     email: user.email || base.email,
     name: user.name || base.name,
+    displayName,
     loginId: user.email || base.email,
     authRole: user.role_type || '',
+    oauthProviderLabels: Array.isArray(user.oauth_provider_labels) ? user.oauth_provider_labels : [],
   };
 }
 

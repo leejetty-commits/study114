@@ -16,7 +16,7 @@ import { oauthRoleSelectionUrl } from '../../shared/auth-redirect.js';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
 
-/** @typedef {{ user_id: number, email: string, role_type: string, name: string, email_verified?: boolean, admin_level?: string|null, must_change_password?: boolean }} AuthUser */
+/** @typedef {{ user_id: number, email: string, role_type: string, name: string, email_verified?: boolean, admin_level?: string|null, must_change_password?: boolean, oauth_providers?: string[], oauth_provider_labels?: string[] }} AuthUser */
 
 /** @type {AuthUser|null} */
 let currentUser = null;
@@ -90,11 +90,20 @@ export async function fetchSession() {
     email_verified: Boolean(data.email_verified),
     admin_level: data.admin_level ?? null,
     must_change_password: Boolean(data.must_change_password),
+    oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
+    oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
   };
 }
 
 export function isEmailVerified() {
   return Boolean(currentUser?.email_verified);
+}
+
+/** 사이트 표시명 세션 동기화 (auth email 불변) */
+export function setAuthDisplayName(name) {
+  if (!currentUser) return;
+  currentUser = { ...currentUser, name: String(name || '').trim() };
+  window.dispatchEvent(new CustomEvent('auth:profile', { detail: currentUser }));
 }
 
 function applyRoleContext(roleType) {

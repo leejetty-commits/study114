@@ -8,6 +8,7 @@ import { A28_COPY, A28_MENU } from './a28-copy.js';
 import { findAdminNavLeaf } from './router.js';
 import { canAccessAdminMenu } from './admin-permissions.js';
 import { getAuthUser, ROLE_HOME } from '../auth-session.js';
+import { resolveAccountDisplayName } from '../auth/display-identity.js';
 import { renderAdminRoleBadge } from './admin-guard.js';
 
 function esc(s) {
@@ -119,7 +120,7 @@ export function renderAdminShell(path, bodyHtml) {
           </div>
           <div class="admin-topbar__right">
             ${renderAdminRoleBadge()}
-            <span class="admin-topbar__user">${esc(user?.email || '비로그인')}</span>
+            <span class="admin-topbar__user">${esc(resolveAccountDisplayName(user) || user?.email || '비로그인')}</span>
             <a href="#${roleHomeHash()}" class="admin-topbar__exit btn btn--secondary btn--sm" data-nav="${roleHomeHash()}">← 역할 홈으로</a>
           </div>
         </header>

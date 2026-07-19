@@ -48,6 +48,12 @@ import { renderStudentRegScreen } from '../student-reg/screens.js';
 import { isStudyRoomRegPath } from '../study-room-reg/router.js';
 import { renderStudyRoomRegScreen } from '../study-room-reg/screens.js';
 import { isTutorRegPath } from '../tutor-reg/router.js';
+import { setAuthDisplayName } from '../auth-session.js';
+import {
+  formatLoginAccountLabel,
+  isInternalAuthEmail,
+  resolveAccountDisplayName,
+} from '../auth/display-identity.js';
 import { renderTutorRegScreen } from '../tutor-reg/screens.js';
 import { renderSubmissionBoardScreen } from '../submission-board/index.js';
 import { previewState } from '../state.js';
@@ -183,12 +189,14 @@ function renderHome(role, profile, counts, cta) {
     </a>`,
   );
 
+  const homeIdentity = profile.displayName || profile.name || '회원';
+
   return `
     <section class="mypage-panel">
       <div class="mypage-status">
         <span class="mypage-badge">${esc(roleLabel(role))}</span>
         <span>${esc(profile.regionLabel)}</span>
-        <span class="mypage-muted">${esc(profile.email)}</span>
+        <span class="mypage-muted">${esc(homeIdentity)}</span>
       </div>
       <p class="mypage-emphasis" aria-label="역할별 강조">${esc(HOME_EMPHASIS[role] || '')}</p>
       ${renderCtaBlock(cta)}
@@ -520,17 +528,41 @@ function renderAccount(role, profile) {
     profile.authRole === 'admin'
       ? '마스터 관리자'
       : `${roleLabel(role)} · 계정설정에서 역할 전환`;
+  const socialLabel =
+    Array.isArray(profile.oauthProviderLabels) && profile.oauthProviderLabels.length
+      ? profile.oauthProviderLabels.join(', ')
+      : '없음(이메일 계정)';
+  const loginRaw = profile.loginId || profile.email || '';
+  const loginShown = formatLoginAccountLabel(loginRaw, { revealInternal: true });
+  const loginNote = isInternalAuthEmail(loginRaw)
+    ? '소셜 로그인용 내부 식별자입니다. 사이트에 보이는 이름이 아니며, 여기서 바꿀 수 없습니다.'
+    : '로그인 식별자입니다. 이 값은 변경할 수 없습니다.';
+  const displayValue = escAttr(profile.displayName || profile.name || '');
+
   return `
     <section class="mypage-panel">
-      <dl class="mypage-dl">
-        <dt>이름</dt><dd>${esc(profile.name)}</dd>
-        <dt>로그인 계정</dt><dd><strong>${esc(profile.loginId || profile.email)}</strong></dd>
-        <dt>이메일</dt><dd>${esc(profile.email)}</dd>
-        <dt>대표 지역</dt><dd>${esc(profile.regionLabel)}</dd>
-        <dt>활동 지역 순서</dt>
+      <h2 class="mypage-password-change__title">표시 정보</h2>
+      <p class="mypage-note">사이트 표시명은 마이페이지·헤더에 보이는 이름입니다. 로그인 계정·소셜 연동은 그대로 유지됩니다.</p>
+      <form data-form="change-display-name" class="mypage-display-name__form" autocomplete="off">
+        <div class="form-group">
+          <label class="form-label form-label--required" for="mypage-display-name">사이트 표시명</label>
+          <input class="form-input" type="text" id="mypage-display-name" name="display_name" maxlength="50" required value="${displayValue}" />
+          <p class="form-hint">예: 카카오 과외쌤, 종현 과외쌤 — 2~50자 · 이메일 형태 불가</p>
+        </div>
+        <p class="form-error" data-display-name-error hidden role="alert"></p>
+        <p class="form-success" data-display-name-success hidden role="status"></p>
+        <div class="mypage-form-actions">
+          <button type="submit" class="btn btn--primary">표시명 저장</button>
+        </div>
+      </form>
+      <dl class="mypage-dl mypage-dl--account-meta">
+        <dt>연동된 소셜</dt><dd>${esc(socialLabel)}</dd>
+        <dt>로그인 계정</dt>
         <dd>
-          <p class="mypage-note" style="margin:0;">가입 시 선택한 활동 지역 순서는 마이페이지에서 변경할 수 있습니다. (순서 편집 UI 후속)</p>
+          <code class="mypage-login-id">${esc(loginShown)}</code>
+          <p class="mypage-note" style="margin:0.35rem 0 0;">${esc(loginNote)}</p>
         </dd>
+        <dt>대표 지역</dt><dd>${esc(profile.regionLabel)}</dd>
         <dt>역할</dt><dd>${esc(authRole)}</dd>
       </dl>
       <div class="mypage-role-switch" data-role-switch-panel>
@@ -571,6 +603,13 @@ function renderAccount(role, profile) {
         </form>
       </div>
     </section>`;
+}
+
+function escAttr(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;');
 }
 
 /**
@@ -687,9 +726,78 @@ function bindPasswordChangeEvents(root) {
   });
 }
 
+/**
+ * @param {HTMLElement} root
+ * @param {() => void} [rerender]
+ */
+function bindDisplayNameEvents(root, rerender) {
+  const form = root.querySelector('[data-form="change-display-name"]');
+  if (!form) return;
+  const errorEl = root.querySelector('[data-display-name-error]');
+  const successEl = root.querySelector('[data-display-name-success]');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+    if (successEl) {
+      successEl.hidden = true;
+      successEl.textContent = '';
+    }
+
+    const fd = new FormData(form);
+    const displayName = String(fd.get('display_name') ?? '').trim();
+    if (displayName.length < 2) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = '사이트 표시명은 2자 이상이어야 합니다.';
+      }
+      return;
+    }
+
+    const submitBtn = form.querySelector('[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '저장 중…';
+    }
+
+    try {
+      const res = await fetch('/api/auth/profile.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ display_name: displayName }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || `저장 실패 (HTTP ${res.status})`);
+      }
+      setAuthDisplayName(data.name || displayName);
+      if (successEl) {
+        successEl.hidden = false;
+        successEl.textContent = data.message || '사이트 표시명이 저장되었습니다.';
+      }
+      if (typeof rerender === 'function') rerender();
+    } catch (err) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = err instanceof Error ? err.message : '저장에 실패했습니다.';
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '표시명 저장';
+      }
+    }
+  });
+}
+
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
   bindPasswordChangeEvents(root);
+  bindDisplayNameEvents(root, rerender);
   root.querySelectorAll('[data-mypage-wish-remove]').forEach((btn) => {
     btn.addEventListener('click', () => {
       removeWishlist(btn.dataset.kind, btn.dataset.id);

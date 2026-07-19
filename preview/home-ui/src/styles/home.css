@@ -3499,6 +3499,22 @@ a.sup-term-chip:hover {
   font-size: var(--fs-1);
   color: var(--gray-600);
 }
+.mypage-login-id {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-1);
+  color: var(--gray-600);
+  background: var(--gray-50, #f8fafc);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+}
+.mypage-dl--account-meta {
+  margin-top: var(--space-4);
+}
+.mypage-display-name__form {
+  margin-bottom: var(--space-4);
+}
 .mypage-nav { display: flex; flex-direction: column; gap: var(--space-1); }
 .mypage-nav__link {
   display: flex; justify-content: space-between; align-items: center;

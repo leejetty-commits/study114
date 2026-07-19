@@ -5,6 +5,7 @@ import { REGIONS } from './data.js';
 import { UTIL_MENU, GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVisible } from './nav-config.js';
 import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
 import { getAuthUser, isLoggedIn, isAdminUser, devLoginAs, logout } from './auth-session.js';
+import { resolveAccountDisplayName, isInternalAuthEmail } from './auth/display-identity.js';
 import { ensureBackToTop } from '../../shared/back-to-top.js';
 import { isHandoffApiMode } from './handoff-backend.js';
 import { isMessagesApiMode } from './messages-backend.js';
@@ -28,7 +29,7 @@ export function renderPreviewToolbar() {
   const apiOn = isHandoffApiMode();
   const msgApiOn = isMessagesApiMode();
   const authLabel = authUser
-    ? `${authUser.name || authUser.email} · handoff ${apiOn ? 'ON' : 'OFF'} · 쪽지 ${msgApiOn ? 'ON' : 'OFF'}`
+    ? `${resolveAccountDisplayName(authUser)} · handoff ${apiOn ? 'ON' : 'OFF'} · 쪽지 ${msgApiOn ? 'ON' : 'OFF'}`
     : '비로그인 · sessionStorage';
 
   return `
@@ -78,8 +79,11 @@ function renderUtilBar(role, showAuth) {
   const adminLink = isAdminUser()
     ? `<button type="button" class="home-util__link home-util__link--admin" data-nav="/admin">관리자 콘솔</button>`
     : '';
+  const displayLabel = authUser ? resolveAccountDisplayName(authUser) : '';
+  const titleEmail =
+    authUser && !isInternalAuthEmail(authUser.email) ? authUser.email : displayLabel;
   const account = authUser
-    ? `<span class="home-util__account" title="${escAttr(authUser.email)}">로그인: ${escAttr(authUser.name || authUser.email)}</span>`
+    ? `<span class="home-util__account" title="${escAttr(titleEmail)}">로그인: ${escAttr(displayLabel)}</span>`
     : '';
   const base = items
     .map((item) => {

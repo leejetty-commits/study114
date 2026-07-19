@@ -1,6 +1,7 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole } from '../state.js';
 import { getAuthUser, isAdminUser } from '../auth-session.js';
+import { resolveAccountDisplayName, isInternalAuthEmail, formatLoginAccountLabel } from '../auth/display-identity.js';
 import { MYPAGE_NAV, getScreenIdForPath, screenTitle } from './router.js';
 import { isMessagesDetailPath } from '../messages/router.js';
 import { renderMessagesProviderToolbar } from '../messages/shell.js';
@@ -34,11 +35,15 @@ export function renderMypageShell(currentPath, bodyHtml) {
         : role === 'tutor'
           ? '/tutor'
           : '/guest';
-  const displayName = String(authUser?.name || '').trim();
+  const displayName = resolveAccountDisplayName(authUser);
   const displayEmail = String(authUser?.email || '').trim();
-  const accountPrimary = displayName || displayEmail;
+  const accountPrimary = displayName;
   const accountSecondary =
-    displayName && displayEmail && displayName !== displayEmail ? displayEmail : '';
+    displayEmail && !isInternalAuthEmail(displayEmail) && displayEmail !== displayName
+      ? displayEmail
+      : isInternalAuthEmail(displayEmail)
+        ? `로그인 계정: ${formatLoginAccountLabel(displayEmail)}`
+        : '';
   const railSlotKey = currentPath.startsWith('/mypage/registrations')
     ? 'register_right_rail'
     : currentPath.startsWith('/mypage/paid') || currentPath.startsWith('/mypage/plans')

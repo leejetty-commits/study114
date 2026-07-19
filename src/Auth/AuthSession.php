@@ -92,6 +92,15 @@ final class AuthSession
         }
     }
 
+    /** 사이트 표시명(real_name) 변경 후 세션 name 동기화 — auth email 불변 */
+    public static function updateName(string $name): void
+    {
+        self::start();
+        if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
+            $_SESSION['auth']['name'] = $name;
+        }
+    }
+
     public static function check(): bool
     {
         return self::user() !== null;

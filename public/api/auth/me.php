@@ -47,11 +47,16 @@ $adminLevel = $roles->resolveLevel([
 
 $oauthRolePending = false;
 $emailVerified = false;
+$oauthProviders = [];
+$oauthProviderLabels = [];
 try {
     $oauthRolePending = ($user['role_type'] === 'admin')
         ? false
         : (new \Study114\Auth\OAuthRoleService())->isRolePendingForUser((int) $user['user_id']);
     $emailVerified = (new \Study114\Auth\EmailVerificationGate())->isVerified((int) $user['user_id']);
+    $profileSvc = new \Study114\Auth\ProfileDisplayNameService();
+    $oauthProviders = $profileSvc->oauthProviders((int) $user['user_id']);
+    $oauthProviderLabels = \Study114\Auth\OAuthProviderLabels::labels($oauthProviders);
 } catch (Throwable $e) {
     error_log('[me] auth flags: ' . $e->getMessage());
 }
@@ -67,4 +72,6 @@ echo json_encode([
     'must_change_password' => (bool) $mustChange,
     'oauth_role_pending' => $oauthRolePending,
     'email_verified' => $emailVerified,
+    'oauth_providers' => $oauthProviders,
+    'oauth_provider_labels' => $oauthProviderLabels,
 ], JSON_UNESCAPED_UNICODE);

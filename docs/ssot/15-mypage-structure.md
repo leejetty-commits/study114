@@ -229,13 +229,18 @@ enum·필드명은 14·5·8장 그대로.
 
 | 항목 | 1차 |
 |------|-----|
-| 이메일·이름 표시 | ○ |
+| **사이트 표시명** 수정 | ○ (`user_profiles.real_name` · `POST /api/auth/profile.php`) — auth email 불변 |
+| 연동 소셜 · 로그인 계정(읽기 전용) | ○ — 내부 `oauth_…@users.study114.local` 은 주표시값 아님 |
+| 이메일·이름 표시 | ○ (표시명은 name 우선) |
 | 대표 지역 | ○ (13·9장 default) |
 | 역할 전환 | ○ (9장) |
 | 수신 동의 | ○ |
 | 비밀번호 변경 · 로그아웃 | ○ (로그인 세션 · `POST /api/auth/password/change.php` · 현재 비밀번호 확인 후 변경) |
 | 회원 탈퇴 | `[임시]` |
 | 전화·주소 | 가입 시 · 플랫폼 비노출(6장) |
+| auth email 변경 | **후속 검토** — 이번 라운드 제외 |
+
+상세: [admin-dual-capability-accounts.md](admin-dual-capability-accounts.md) · display identity
 
 ---
 

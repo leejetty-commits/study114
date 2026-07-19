@@ -38,8 +38,21 @@
 ## 3. oauth_… 계정 표시
 
 - **내부 auth email · provider subject 바인딩은 유지** (소셜 로그인 깨지지 않게).
-- 사이트 UI에서는 `user_profiles.real_name` / `tutors.tutor_display_name` 표시명(예: `카카오 과외쌤`)을 우선 노출.
+- 사이트 UI에서는 `user_profiles.real_name`(사이트 표시명)을 우선 노출.
+- 마이페이지 → 계정/설정 → **사이트 표시명** 수정 (`POST /api/auth/profile.php`).
+- 과외 리스팅 노출명 `tutor_display_name`은 등록 UI에서 별도 관리 (계정 표시명과 분리).
 - 내부 email 강제 교체는 이번 라운드 범위 밖 (후속 작업 조건 충족 시만).
+
+### 표시 우선순위
+
+1. 사이트 표시명 (`real_name` / 세션 `name`)
+2. 소셜 라벨 fallback (예: `카카오 회원`) — 표시명 비어 있고 내부 auth email일 때
+3. 일반 이메일 (내부 local 도메인이 아닐 때)
+4. 로그인 계정(auth email)은 계정/설정 보조 정보로만
+
+### auth email 변경을 이번에 하지 않는 이유
+
+계정 찾기 · 비번 재설정 · 관리자 목록 · 중복 정책 · OAuth 복구 경로에 영향 가능 → **후속 검토**.
 
 ---
 

@@ -189,6 +189,9 @@ function init() {
       deactivateContentConfigApi();
       render();
     });
+    window.addEventListener('auth:profile', () => {
+      render();
+    });
     Promise.all([
       activateSupportApi().catch((err) => {
         console.warn('[support] api disabled — sessionStorage fallback', err);
