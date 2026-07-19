@@ -2,11 +2,26 @@
 /** @var array<string, mixed>|null $old */
 $old = is_array($old ?? null) ? $old : [];
 $regions = is_array($regions ?? null) ? $regions : [];
+
+/** 시(도) 단위 옵션 — 라벨 첫 토큰 기준 중복 제거 */
+$cities = [];
+foreach ($regions as $r) {
+    $label = trim((string) ($r['label'] ?? ''));
+    $sido = $label !== '' ? explode(' ', $label)[0] : '';
+    if ($sido === '' || isset($cities[$sido])) {
+        continue;
+    }
+    $cities[$sido] = [
+        'id' => (string) ($r['id'] ?? ''),
+        'label' => $sido,
+    ];
+}
+$oldRegion = (string) study114_old($old, 'region_id', '');
 ?>
 <form method="post" action="/auth/signup/basic" class="basic-register">
   <input type="hidden" name="role_ui" value="tutor">
-  <p class="auth-section-title">기본등록 · draft seed (14장)</p>
-  <p class="form-note">표시명 · 활동지역 1 · 주력과목 1. 나머지는 상세등록입니다.</p>
+  <p class="auth-section-title">기본등록 · 활동 시 seed (10-6)</p>
+  <p class="form-note">표시명 · 활동 시 1 · 주력과목 1. 행정동/단지 선택 없음.</p>
 
   <div class="form-group">
     <label class="form-label form-label--required" for="tutor_display_name">표시명</label>
@@ -14,9 +29,12 @@ $regions = is_array($regions ?? null) ? $regions : [];
   </div>
 
   <div class="form-group">
-    <label class="form-label form-label--required" for="region_id">활동 지역 1번</label>
+    <label class="form-label form-label--required" for="region_id">활동 시 1번</label>
     <select class="form-input" id="region_id" name="region_id" required>
-      <?= study114_select_options($regions, (string) study114_old($old, 'region_id', '')) ?>
+      <option value="">선택</option>
+      <?php foreach ($cities as $city): ?>
+        <option value="<?= study114_e($city['id']) ?>" <?= $oldRegion === $city['id'] ? 'selected' : '' ?>><?= study114_e($city['label']) ?></option>
+      <?php endforeach; ?>
     </select>
   </div>
 

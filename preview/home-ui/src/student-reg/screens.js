@@ -430,21 +430,18 @@ function renderBasicForm(student) {
   const formBody = `
     <form class="p19-form" data-p19-form="basic" data-p19-student-id="${student.id}">
       ${renderFormSection(
-        '기본등록 · draft seed',
-        '희망 유형만 필수입니다. 검색/공개 항목은 상세등록에서 완성합니다.',
+        '기본등록 · 지역 seed',
+        '희망 유형은 필수입니다. 지역 1번은 가입 직후 기본등록에서 받으며, 상세에서 같은 필드를 수정·확장합니다.',
         `
         <label class="p19-field">
           <span class="p19-field__label">희망 유형 <em class="p19-required">필수</em></span>
           ${renderSelect('preferred_lesson_type', FORM_OPTIONS.lessonType, student.preferred_lesson_type, { required: true })}
         </label>
-        <label class="p19-field p19-field--full">
-          <span class="p19-field__label">1차 희망지역 seed (선택)</span>
-          <span class="p19-field__hint">상세등록에서 희망유형 축의 1번 슬롯으로만 이어집니다 (반대축 자동 복제 없음)</span>
-          ${renderTextInput('region_label', student.region_label || '', { placeholder: '예: 서울 강남구 대치동 또는 서울특별시' })}
-        </label>`,
+        <p class="p19-field__hint">대표 희망지역: <strong>${esc(primaryHopeRegionLabel(student) || '미등록 — auth 기본등록에서 지역 seed 필요')}</strong></p>
+        <p class="p19-field__hint">기준: ${esc(student.preferred_studyroom_region_basis || (student.preferred_lesson_type === 'tutor' ? '시' : '—'))}</p>`,
       )}
       ${renderFormFooter(
-        '저장해도 학생찾기에 공개되지 않습니다. 다음 단계: 상세등록.',
+        '저장해도 학생찾기에 공개되지 않습니다. 다음 단계: 상세등록에서 지역 확장.',
         `<button type="submit" class="btn btn--primary">draft 저장</button>
          <a href="#${studentSectionPath(student.id, 'detail')}" class="btn btn--secondary" data-p19-nav="${studentSectionPath(student.id, 'detail')}">상세등록으로</a>`,
       )}
@@ -754,6 +751,7 @@ export function bindStudentRegEvents(root, rerender) {
           preferred_studyroom_region_id: hope.preferred_studyroom_region_id,
           preferred_tutor_region_id: hope.preferred_tutor_region_id,
           preferred_studyroom_complex_id: hope.preferred_studyroom_complex_id,
+          preferred_studyroom_region_basis: hope.preferred_studyroom_region_basis,
           preferred_region_note: hope.preferred_region_note,
           region_label: hope.region_label,
           region_id: hope.region_id ? Number(hope.region_id) || hope.region_id : undefined,

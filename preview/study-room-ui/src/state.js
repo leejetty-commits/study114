@@ -78,15 +78,15 @@ export const DUMMY_REGIONS = [
 ];
 
 export const DUMMY_COMPLEXES = [
-  { id: 1, region_id: 1, label: '래미안대치팰리스' },
-  { id: 2, region_id: 1, label: '대치아이파크' },
-  { id: 3, region_id: 3, label: '해운대두산위브' },
+  { id: 1, region_id: 1, label: '래미안대치팰리스', address: '서울특별시 강남구 대치동 1027' },
+  { id: 2, region_id: 1, label: '대치아이파크', address: '서울특별시 강남구 대치동 950' },
+  { id: 3, region_id: 3, label: '해운대두산위브', address: '부산광역시 해운대구 우동 1514' },
 ];
 
 /** API 마스터 (init 시 채움) */
 export const apiMasters = {
   regions: /** @type {Array<{id: number, label: string}>} */ ([]),
-  complexes: /** @type {Array<{id: number, region_id: number, label: string}>} */ ([]),
+  complexes: /** @type {Array<{id: number, region_id: number, label: string, address?: string}>} */ ([]),
   facilities: /** @type {Array<{id: number, facility_code: string, facility_name: string}>} */ ([]),
 };
 
@@ -121,14 +121,15 @@ export const registerState = {
   lesson_operation_type: 'group_by_time_slot',
 
   region_id: '1',
-  complex_id: '1',
+  complex_id: '',
+  region_basis_type: 'dong',
   address_text: '서울 강남구 대치동 123',
   latitude: '',
   longitude: '',
   saved_regions: [
-    { region_id: '1', complex_id: '1', is_primary: true },
-    { region_id: '2', complex_id: '', is_primary: false },
-    { region_id: '', complex_id: '', is_primary: false },
+    { region_id: '1', complex_id: '', region_basis_type: 'dong', is_primary: true },
+    { region_id: '2', complex_id: '', region_basis_type: 'dong', is_primary: false },
+    { region_id: '', complex_id: '', region_basis_type: 'dong', is_primary: false },
   ],
 
   capacity_per_time: 'one_to_four',

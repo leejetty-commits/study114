@@ -38,6 +38,7 @@ const KEY = 'study114-preview-students-v3';
  * @property {string|number} [preferred_studyroom_region_id]
  * @property {string|number} [preferred_tutor_region_id]
  * @property {string|number} [preferred_studyroom_complex_id]
+ * @property {'dong'|'complex'|string} [preferred_studyroom_region_basis]
  * @property {string} [subject_label]
  * @property {string[]} [lesson_places]
  * @property {'one_on_one'|'group'} [lesson_format]
@@ -253,8 +254,11 @@ export function getPublishReadiness(student) {
   need(!!student.birth_year, '출생연도 (상세등록)');
   {
     const hope = dualHopeRegionsReady(student);
-    need(hope.studyOk, '공부방 희망지역 1번 (상세등록)');
-    need(hope.tutorOk, '과외쌤 희망지역 1번 (상세등록)');
+    if (student.preferred_lesson_type === 'study_room') {
+      need(hope.studyOk, '공부방 희망지역 1번 (상세등록)');
+    } else {
+      need(hope.tutorOk, '과외쌤 희망지역 1번 (상세등록)');
+    }
   }
   need(!!student.subject_label, '희망 과목 (상세등록)');
   need(Array.isArray(student.lesson_places) && student.lesson_places.length > 0, '희망 수업장소 (상세등록)');

@@ -171,6 +171,7 @@ final class AuthController
             'user'          => $user,
             'profileGender' => $user ? ProfileGenderSync::get((int) $user['user_id']) : null,
             'regions'       => $service->listRegions(),
+            'complexes'     => $service->listComplexes(),
             'errors'  => Flash::pullErrors(),
             'old'     => Flash::get('old', []),
             'wide'    => true,

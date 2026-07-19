@@ -15,9 +15,9 @@ INSERT INTO regions (sido_code, sido_name, sigungu_code, sigungu_name, dong_code
   ('26', '부산광역시', '26350', '해운대구', '26350101', '우동'),
   ('26', '부산광역시', '26350', '해운대구', '26350102', '센텀동');
 
-INSERT INTO complexes (region_id, name) VALUES
-  (1, '은마아파트'),
-  (3, '센텀자이');
+INSERT INTO complexes (region_id, name, address) VALUES
+  (1, '은마아파트', '서울특별시 강남구 대치동 316'),
+  (3, '센텀자이', '부산광역시 해운대구 센텀동로 99');
 
 INSERT INTO users (email, password_hash, status) VALUES
   ('room-owner1@dev.local', @pw, 'active'),

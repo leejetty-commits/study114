@@ -121,7 +121,11 @@ export function hydrateDualHopeRegions(student) {
 export function formatHopeSlotLabel(slot, axis) {
   if (!slot) return '';
   if (axis === 'tutor') return String(slot.region_label || '').trim();
-  const parts = [slot.region_label, slot.complex_label].filter(Boolean);
+  if (slot.complex_label) {
+    const addr = String(slot.address_text || '').trim();
+    return addr ? `${slot.complex_label} · ${addr}` : String(slot.complex_label);
+  }
+  const parts = [slot.region_label].filter(Boolean);
   if (parts.length) return parts.join(' · ');
   return String(slot.address_text || '').trim();
 }
@@ -184,15 +188,23 @@ export function validateDualHopeRegions(study, tutor) {
 }
 
 /**
- * 공개 readiness용 — 양축 1번 필수
+ * 공개 readiness용 — 희망유형 축의 1번만 필수 (반대축 강제 금지)
  * @param {object} student
  */
 export function dualHopeRegionsReady(student) {
   const { preferred_studyroom_regions: study, preferred_tutor_regions: tutor } =
     hydrateDualHopeRegions(student || {});
-  const studyOk = !!(study[0]?.region_id || study[0]?.region_label);
+  const hope = student?.preferred_lesson_type === 'study_room' ? 'study_room' : 'tutor';
+  if (hope === 'study_room') {
+    const basis = student?.preferred_studyroom_region_basis;
+    const studyOk =
+      basis === 'complex'
+        ? !!(study[0]?.complex_id || study[0]?.complex_label)
+        : !!(study[0]?.region_id || study[0]?.region_label);
+    return { studyOk, tutorOk: true, ok: studyOk, activeHope: hope };
+  }
   const tutorOk = !!(tutor[0]?.region_id || tutor[0]?.region_label);
-  return { studyOk, tutorOk, ok: studyOk && tutorOk };
+  return { studyOk: true, tutorOk, ok: tutorOk, activeHope: hope };
 }
 
 /** 찾기 A→B→C — 희망유형별 1번 슬롯 기억 */

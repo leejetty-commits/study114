@@ -66,8 +66,9 @@ function init() {
   Promise.all([
     initChromeSession().catch(() => null),
     fetchRegions()
-      .then((regions) => {
-        signupState.regions = regions;
+      .then((data) => {
+        signupState.regions = data.regions ?? data;
+        signupState.complexes = data.complexes ?? [];
       })
       .catch(() => {}),
   ]).finally(render);

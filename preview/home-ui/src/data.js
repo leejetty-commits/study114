@@ -25,7 +25,7 @@ export const GUEST_DEMO_REGION = {
   city: '서울',
   full: '서울 강남구 대치동',
   metro: '강남·서초·송파 권역',
-  policy: '동 우선 · 빌라·다세대 포함',
+  policy: '행정동 기준 · 빌라·다세대 포함',
 };
 
 export const GUEST_DEMO_REGIONS_BY_AXIS = {
@@ -48,13 +48,13 @@ export const REGIONS = {
     type: 'complex',
     label: '대치 래미안',
     sub: '서울 강남구 대치동',
-    policy: '단지 우선',
+    policy: '아파트단지 기준',
   },
   dong: {
     type: 'dong',
     label: GUEST_DEMO_REGION.dong,
     sub: `${GUEST_DEMO_REGION.city} ${GUEST_DEMO_REGION.gu} · 빌라·다세대 포함`,
-    policy: '동 우선',
+    policy: '행정동 기준',
   },
 };
 

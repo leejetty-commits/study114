@@ -40,6 +40,32 @@ final class BasicRegisterService
     }
 
     /**
+     * 아파트단지 마스터 — 주소 포함 (건물 동 단위 아님)
+     *
+     * @return list<array{id: int, region_id: int, label: string, address: string}>
+     */
+    public function listComplexes(): array
+    {
+        $pdo = Connection::get();
+        $stmt = $pdo->query(
+            'SELECT id, region_id, name AS label, COALESCE(address, "") AS address
+             FROM complexes WHERE is_active = 1 ORDER BY region_id ASC, id ASC'
+        );
+        /** @var list<array{id: int|string, region_id: int|string, label: string, address: string}> $rows */
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = [
+                'id' => (int) $row['id'],
+                'region_id' => (int) $row['region_id'],
+                'label' => (string) $row['label'],
+                'address' => (string) $row['address'],
+            ];
+        }
+        return $out;
+    }
+
+    /**
      * 기본등록 = draft seed 최소 (Notion 14장).
      * 검색/공개 본체는 상세등록에서 완성한다.
      *
@@ -48,44 +74,81 @@ final class BasicRegisterService
     private function registerStudent(int $userId, array $input): int
     {
         $preferredLessonType = $this->requireEnum($input, 'preferred_lesson_type', ['tutor', 'study_room']);
-        $regionId = $this->optionalRegionId($input, $userId);
 
         $publicName = $this->optionalString($input, 'public_display_name')
             ?: ($this->optionalString($input, 'student_name') ?: '학생');
         $studentName = $this->optionalString($input, 'student_name') ?: $publicName;
 
         $studyroomRegionId = null;
+        $studyroomComplexId = null;
+        $studyroomBasis = null;
         $tutorRegionId = null;
-        if ($regionId !== null) {
-            if ($preferredLessonType === 'study_room') {
-                $studyroomRegionId = $regionId;
+
+        if ($preferredLessonType === 'study_room') {
+            $studyroomBasis = $this->requireEnum($input, 'region_basis', ['dong', 'complex']);
+            if ($studyroomBasis === 'dong') {
+                $studyroomRegionId = $this->requireExplicitRegionId($input);
+                $studyroomComplexId = null;
             } else {
-                $tutorRegionId = $regionId;
+                $studyroomComplexId = $this->requireComplexId($input);
+                $studyroomRegionId = $this->regionIdForComplex($studyroomComplexId);
             }
+        } else {
+            // 과외쌤 찾기 — 시 기준 region_id 필수 (가입 기본주소 폴백 금지)
+            $tutorRegionId = $this->requireExplicitRegionId($input);
         }
 
         $pdo = Connection::get();
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare(
-                'INSERT INTO students (
-                    guardian_user_id, student_name, public_display_name,
-                    preferred_lesson_type,
-                    preferred_studyroom_region_id, preferred_tutor_region_id,
-                    request_summary_visibility,
-                    exposure_status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-            );
-            $stmt->execute([
-                $userId,
-                $studentName,
-                $publicName,
-                $preferredLessonType,
-                $studyroomRegionId,
-                $tutorRegionId,
-                'private',
-                'draft',
-            ]);
+            $hasBasisCol = $this->columnExists($pdo, 'students', 'preferred_studyroom_region_basis');
+            if ($hasBasisCol) {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO students (
+                        guardian_user_id, student_name, public_display_name,
+                        preferred_lesson_type,
+                        preferred_studyroom_region_id, preferred_studyroom_complex_id,
+                        preferred_studyroom_region_basis,
+                        preferred_tutor_region_id,
+                        request_summary_visibility,
+                        exposure_status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $studentName,
+                    $publicName,
+                    $preferredLessonType,
+                    $studyroomRegionId,
+                    $studyroomComplexId,
+                    $studyroomBasis,
+                    $tutorRegionId,
+                    'private',
+                    'draft',
+                ]);
+            } else {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO students (
+                        guardian_user_id, student_name, public_display_name,
+                        preferred_lesson_type,
+                        preferred_studyroom_region_id, preferred_studyroom_complex_id,
+                        preferred_tutor_region_id,
+                        request_summary_visibility,
+                        exposure_status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $studentName,
+                    $publicName,
+                    $preferredLessonType,
+                    $studyroomRegionId,
+                    $studyroomComplexId,
+                    $tutorRegionId,
+                    'private',
+                    'draft',
+                ]);
+            }
             $studentId = (int) $pdo->lastInsertId();
 
             $pdo->commit();
@@ -105,7 +168,14 @@ final class BasicRegisterService
     private function registerStudyRoom(int $userId, array $input): int
     {
         $name = $this->requireString($input, 'study_room_name');
-        $regionId = $this->requireRegionId($input, $userId);
+        $basis = $this->requireEnum($input, 'region_basis', ['dong', 'complex']);
+        $complexId = null;
+        if ($basis === 'dong') {
+            $regionId = $this->requireExplicitRegionId($input);
+        } else {
+            $complexId = $this->requireComplexId($input);
+            $regionId = $this->regionIdForComplex($complexId);
+        }
         $mainSubject = $this->resolveMainSubjectNote($input);
 
         if (isset($input['gender']) && (string) $input['gender'] !== '') {
@@ -115,25 +185,55 @@ final class BasicRegisterService
         $pdo = Connection::get();
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare(
-                'INSERT INTO study_rooms (
-                    user_id, study_room_name, main_subject_note, region_id,
-                    profile_status, detail_completion_status
-                ) VALUES (?, ?, ?, ?, ?, ?)'
-            );
-            $stmt->execute([
-                $userId,
-                $name,
-                $mainSubject,
-                $regionId,
-                'draft',
-                'basic_only',
-            ]);
+            $hasBasisCol = $this->columnExists($pdo, 'study_rooms', 'region_basis_type');
+            if ($hasBasisCol) {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO study_rooms (
+                        user_id, study_room_name, main_subject_note, region_id, complex_id, region_basis_type,
+                        profile_status, detail_completion_status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $name,
+                    $mainSubject,
+                    $regionId,
+                    $complexId,
+                    $basis,
+                    'draft',
+                    'basic_only',
+                ]);
+            } else {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO study_rooms (
+                        user_id, study_room_name, main_subject_note, region_id, complex_id,
+                        profile_status, detail_completion_status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $name,
+                    $mainSubject,
+                    $regionId,
+                    $complexId,
+                    'draft',
+                    'basic_only',
+                ]);
+            }
             $roomId = (int) $pdo->lastInsertId();
 
-            $pdo->prepare(
-                'INSERT INTO study_room_regions (study_room_id, slot, region_id, is_primary) VALUES (?, 1, ?, 1)'
-            )->execute([$roomId, $regionId]);
+            $hasSlotBasis = $this->columnExists($pdo, 'study_room_regions', 'region_basis_type');
+            if ($hasSlotBasis) {
+                $pdo->prepare(
+                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
+                     VALUES (?, 1, ?, ?, ?, 1)'
+                )->execute([$roomId, $regionId, $complexId, $basis]);
+            } else {
+                $pdo->prepare(
+                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
+                     VALUES (?, 1, ?, ?, 1)'
+                )->execute([$roomId, $regionId, $complexId]);
+            }
 
             $subjectId = $this->findSubjectMasterId($pdo, $this->firstSubjectName($mainSubject));
             $pdo->prepare(
@@ -158,7 +258,8 @@ final class BasicRegisterService
     private function registerTutor(int $userId, array $input): int
     {
         $displayName = $this->requireString($input, 'tutor_display_name');
-        $regionId = $this->requireRegionId($input, $userId);
+        // 활동 시 1 — 가입 기본주소/default_region_id 폴백 금지
+        $regionId = $this->requireExplicitRegionId($input);
         $mainSubject = $this->resolveMainSubjectNote($input);
 
         if (isset($input['gender']) && (string) $input['gender'] !== '') {
@@ -241,29 +342,63 @@ final class BasicRegisterService
     }
 
     /** @param array<string, mixed> $input */
-    private function requireRegionId(array $input, int $userId): int
+    private function requireExplicitRegionId(array $input): int
     {
-        $id = $this->optionalRegionId($input, $userId);
-        if ($id === null) {
+        if (!isset($input['region_id']) || $input['region_id'] === '') {
             throw new InvalidArgumentException('region_id: 지역을 선택해 주세요.');
         }
-
+        $id = (int) $input['region_id'];
+        if ($id <= 0) {
+            throw new InvalidArgumentException('region_id: 지역을 선택해 주세요.');
+        }
+        $pdo = Connection::get();
+        $stmt = $pdo->prepare('SELECT id FROM regions WHERE id = ? AND is_active = 1');
+        $stmt->execute([$id]);
+        if (!$stmt->fetchColumn()) {
+            throw new InvalidArgumentException('region_id: 유효하지 않은 지역입니다.');
+        }
         return $id;
     }
 
     /** @param array<string, mixed> $input */
-    private function optionalRegionId(array $input, int $userId): ?int
+    private function requireComplexId(array $input): int
     {
-        if (isset($input['region_id']) && $input['region_id'] !== '') {
-            return (int) $input['region_id'];
+        if (!isset($input['complex_id']) || $input['complex_id'] === '') {
+            throw new InvalidArgumentException('complex_id: 아파트단지를 선택해 주세요.');
         }
-
+        $id = (int) $input['complex_id'];
+        if ($id <= 0) {
+            throw new InvalidArgumentException('complex_id: 아파트단지를 선택해 주세요.');
+        }
         $pdo = Connection::get();
-        $stmt = $pdo->prepare('SELECT default_region_id FROM user_profiles WHERE user_id = ?');
-        $stmt->execute([$userId]);
-        $id = $stmt->fetchColumn();
+        $stmt = $pdo->prepare('SELECT id FROM complexes WHERE id = ? AND is_active = 1');
+        $stmt->execute([$id]);
+        if (!$stmt->fetchColumn()) {
+            throw new InvalidArgumentException('complex_id: 유효하지 않은 단지입니다.');
+        }
+        return $id;
+    }
 
-        return $id ? (int) $id : null;
+    private function regionIdForComplex(int $complexId): int
+    {
+        $pdo = Connection::get();
+        $stmt = $pdo->prepare('SELECT region_id FROM complexes WHERE id = ? AND is_active = 1');
+        $stmt->execute([$complexId]);
+        $regionId = $stmt->fetchColumn();
+        if (!$regionId) {
+            throw new InvalidArgumentException('complex_id: 단지에 연결된 행정동이 없습니다.');
+        }
+        return (int) $regionId;
+    }
+
+    private function columnExists(PDO $pdo, string $table, string $column): bool
+    {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+        );
+        $stmt->execute([$table, $column]);
+        return (int) $stmt->fetchColumn() > 0;
     }
 
     /** @param array<string, mixed> $input */

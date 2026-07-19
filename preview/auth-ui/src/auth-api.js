@@ -52,10 +52,13 @@ export async function signupApi(payload) {
   return postJson('/api/auth/signup.php', payload);
 }
 
-/** @returns {Promise<Array<{id: number, label: string}>>} */
+/** @returns {Promise<{regions: Array<{id: number, label: string}>, complexes: Array<{id: number, region_id: number, label: string, address: string}>}>} */
 export async function fetchRegions() {
   const data = await postJson('/api/auth/regions.php', { action: 'list' }, { credentials: 'omit' });
-  return data.regions ?? [];
+  return {
+    regions: data.regions ?? [],
+    complexes: data.complexes ?? [],
+  };
 }
 
 /**

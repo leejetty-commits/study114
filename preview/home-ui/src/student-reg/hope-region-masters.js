@@ -1,6 +1,6 @@
 /**
  * 학생 희망지역 마스터 (프리뷰)
- * API 가능 시 /api/auth/regions.php · 실패 시 seed
+ * API 가능 시 /api/auth/regions.php · complexes.address 포함
  */
 
 /** @type {Array<{id:string,label:string}>} */
@@ -15,17 +15,17 @@ const FALLBACK_REGIONS = [
   { id: '8', label: '경기도 성남시 분당구 정자동' },
 ];
 
-/** @type {Array<{id:string,region_id:string,label:string}>} */
+/** @type {Array<{id:string,region_id:string,label:string,address:string}>} */
 const FALLBACK_COMPLEXES = [
-  { id: 'c1', region_id: '1', label: '은마아파트' },
-  { id: 'c2', region_id: '1', label: '대치래미안' },
-  { id: 'c3', region_id: '4', label: '잠실주공' },
-  { id: 'c4', region_id: '5', label: '해운대아이파크' },
+  { id: 'c1', region_id: '1', label: '은마아파트', address: '서울특별시 강남구 대치동 316' },
+  { id: 'c2', region_id: '1', label: '대치래미안', address: '서울특별시 강남구 대치동 888' },
+  { id: 'c3', region_id: '4', label: '잠실주공', address: '서울특별시 송파구 잠실동 22' },
+  { id: 'c4', region_id: '5', label: '해운대아이파크', address: '부산광역시 해운대구 우동 1408' },
 ];
 
 /** @type {Array<{id:string,label:string}>|null} */
 let cachedRegions = null;
-/** @type {Array<{id:string,region_id:string,label:string}>|null} */
+/** @type {Array<{id:string,region_id:string,label:string,address:string}>|null} */
 let cachedComplexes = null;
 /** @type {Promise<void>|null} */
 let loadPromise = null;
@@ -39,7 +39,7 @@ export function getHopeRegionMasters() {
 
 /** @returns {Promise<void>} */
 export function ensureHopeRegionMasters() {
-  if (cachedRegions) return Promise.resolve();
+  if (cachedRegions && cachedComplexes) return Promise.resolve();
   if (loadPromise) return loadPromise;
   loadPromise = (async () => {
     try {
@@ -63,6 +63,15 @@ export function ensureHopeRegionMasters() {
           cachedRegions = list.map((r) => ({
             id: String(r.id),
             label: String(r.label || r.name || ''),
+          }));
+        }
+        const complexes = Array.isArray(data?.complexes) ? data.complexes : [];
+        if (complexes.length) {
+          cachedComplexes = complexes.map((c) => ({
+            id: String(c.id),
+            region_id: String(c.region_id),
+            label: String(c.label || c.name || ''),
+            address: String(c.address || ''),
           }));
         }
       }
@@ -92,10 +101,16 @@ export function listCityOptions() {
   return [...seen.values()];
 }
 
-/** @param {string} regionId */
+/** @param {string} [regionId] */
 export function complexesForRegion(regionId) {
   const { complexes } = getHopeRegionMasters();
+  if (!regionId) return complexes;
   return complexes.filter((c) => String(c.region_id) === String(regionId));
+}
+
+/** 전체 단지 (단지 기준 선선택 시) */
+export function listAllComplexes() {
+  return getHopeRegionMasters().complexes;
 }
 
 /** @param {string} regionId */
@@ -108,4 +123,10 @@ export function labelForRegionId(regionId) {
 export function labelForComplexId(complexId) {
   const { complexes } = getHopeRegionMasters();
   return complexes.find((c) => String(c.id) === String(complexId))?.label || '';
+}
+
+/** @param {string} complexId */
+export function addressForComplexId(complexId) {
+  const { complexes } = getHopeRegionMasters();
+  return complexes.find((c) => String(c.id) === String(complexId))?.address || '';
 }

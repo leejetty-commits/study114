@@ -60,8 +60,8 @@ export function renderPreviewToolbar() {
         ${
           isGuest
             ? `<span class="preview-toolbar__hint">비회원: 대치동 고정</span>`
-            : `<button type="button" class="preview-toolbar__btn ${region === 'complex' ? 'is-active' : ''}" data-region="complex">단지 우선</button>
-               <button type="button" class="preview-toolbar__btn ${region === 'dong' ? 'is-active' : ''}" data-region="dong">동 우선</button>`
+            : `<button type="button" class="preview-toolbar__btn ${region === 'complex' ? 'is-active' : ''}" data-region="complex" title="미리보기: 아파트단지 기준 지역">단지 기준</button>
+               <button type="button" class="preview-toolbar__btn ${region === 'dong' ? 'is-active' : ''}" data-region="dong" title="미리보기: 행정동 기준 지역">행정동 기준</button>`
         }
       </div>
     </div>

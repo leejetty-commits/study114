@@ -19,11 +19,22 @@ export function syncBasicFromForm(form, state) {
  * @param {import('./state.js').RegisterState} state
  */
 export function syncLocationFromForm(root, state) {
+  const basis =
+    root.querySelector('input[name="region_basis_type"]:checked')?.value ||
+    state.region_basis_type ||
+    'dong';
+  state.region_basis_type = basis;
+
   const regionEl = root.querySelector('#region_id');
   const complexEl = root.querySelector('#complex_id');
   const addressEl = root.querySelector('#address_text');
-  if (regionEl) state.region_id = regionEl.value;
-  if (complexEl) state.complex_id = complexEl.value;
+  if (regionEl && !regionEl.closest('[hidden]')) state.region_id = regionEl.value;
+  if (complexEl && !complexEl.closest('[hidden]')) {
+    state.complex_id = complexEl.value;
+    const opt = complexEl.selectedOptions?.[0];
+    if (opt?.dataset?.regionId) state.region_id = opt.dataset.regionId;
+  }
+  if (basis === 'dong') state.complex_id = '';
   if (addressEl) state.address_text = addressEl.value;
 
   const primaryIdx = Number(root.querySelector('input[name="is_primary"]:checked')?.value ?? 0);
@@ -31,9 +42,17 @@ export function syncLocationFromForm(root, state) {
   root.querySelectorAll('[data-region-slot]').forEach((slotEl, idx) => {
     const regionSelect = slotEl.querySelector('[data-field="region_id"]');
     const complexSelect = slotEl.querySelector('[data-field="complex_id"]');
+    let regionId = regionSelect?.value ?? '';
+    let complexId = complexSelect?.value ?? '';
+    if (basis === 'dong') complexId = '';
+    if (basis === 'complex') {
+      const opt = complexSelect?.selectedOptions?.[0];
+      if (opt?.dataset?.regionId) regionId = opt.dataset.regionId;
+    }
     state.saved_regions.push({
-      region_id: regionSelect?.value ?? '',
-      complex_id: complexSelect?.value ?? '',
+      region_id: regionId,
+      complex_id: complexId,
+      region_basis_type: basis,
       is_primary: idx === primaryIdx,
     });
   });
@@ -120,6 +139,7 @@ export function payloadForStep(step, state) {
       return {
         region_id: state.region_id,
         complex_id: state.complex_id,
+        region_basis_type: state.region_basis_type || (state.complex_id ? 'complex' : 'dong'),
         address_text: state.address_text,
         latitude: state.latitude,
         longitude: state.longitude,

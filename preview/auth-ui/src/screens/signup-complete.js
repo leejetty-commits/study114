@@ -71,7 +71,7 @@ export function renderSignupComplete() {
           상세등록 이어하기
         </button>
         <button type="button" class="btn btn--secondary btn--block" data-action="go-home">
-          메인 홈으로
+          메인 홈으로 (지역등록 완료 시)
         </button>
         <button type="button" class="btn btn--ghost btn--block" data-nav="/login">로그인하기</button>
       </div>
@@ -99,6 +99,41 @@ export function bindSignupCompleteEvents(root) {
 
   root.querySelector('[data-action="go-home"]')?.addEventListener('click', () => {
     const role = signupState.role || 'student';
+    const basic = signupState.basicRegister?.[role];
+    const hasSeed =
+      !!basic &&
+      (role === 'student'
+        ? !!(basic.region_id || basic.complex_id || basic.activity_city || basic.region_label)
+        : role === 'study_room'
+          ? !!(basic.region_id || basic.complex_id)
+          : !!(basic.region_id || basic.activity_city));
+
+    if (!hasSeed) {
+      alert('지역등록(기본등록 seed)이 없습니다. 상세등록·지역등록을 이어가 주세요.');
+      root.querySelector('[data-action="go-detail-register"]')?.click();
+      return;
+    }
+
+    // 지역등록만 있고 상세 미완 → 홈은 들어가되, 찾기 기본값은 seed 라벨 사용
+    try {
+      if (basic.region_label || basic.activity_city) {
+        const hope =
+          role === 'student' && basic.preferred_lesson_type === 'study_room'
+            ? 'study_room'
+            : role === 'student'
+              ? 'tutor'
+              : null;
+        if (hope) {
+          const key = 'study114.studentFind.lastRegionByHope';
+          const prev = JSON.parse(sessionStorage.getItem(key) || localStorage.getItem(key) || '{}');
+          prev[hope] = basic.region_label || basic.activity_city;
+          localStorage.setItem(key, JSON.stringify(prev));
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+
     const home =
       role === 'study_room' ? homeUiUrl('study-room') : role === 'tutor' ? homeUiUrl('tutor') : homeUiUrl('parent');
     window.open(home, '_blank');

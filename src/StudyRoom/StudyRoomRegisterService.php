@@ -48,7 +48,9 @@ final class StudyRoomRegisterService
 
         $complexes = $pdo->query(
 
-            'SELECT id, region_id, name AS label FROM complexes ORDER BY region_id ASC, id ASC'
+            'SELECT id, region_id, name AS label, COALESCE(address, "") AS address
+
+             FROM complexes WHERE is_active = 1 ORDER BY region_id ASC, id ASC'
 
         )->fetchAll(PDO::FETCH_ASSOC);
 
@@ -368,9 +370,24 @@ final class StudyRoomRegisterService
 
         $regionId = $this->requirePositiveInt($input, 'region_id');
 
+        $basis = $this->optionalEnum($input, 'region_basis_type', ['dong', 'complex'])
+            ?? $this->optionalEnum($input, 'region_basis', ['dong', 'complex']);
+
         $complexId = $this->optionalInt($input, 'complex_id');
 
-
+        if ($basis === 'dong') {
+            $complexId = null;
+        } elseif ($basis === 'complex') {
+            if ($complexId === null || $complexId <= 0) {
+                throw new InvalidArgumentException('complex_id: 아파트단지 기준에서는 단지를 선택해 주세요.');
+            }
+        } else {
+            // 레거시: complex 있으면 complex, 없으면 dong
+            $basis = ($complexId !== null && $complexId > 0) ? 'complex' : 'dong';
+            if ($basis === 'dong') {
+                $complexId = null;
+            }
+        }
 
         $stmt = $pdo->prepare(
 
@@ -379,6 +396,8 @@ final class StudyRoomRegisterService
                 region_id = ?,
 
                 complex_id = ?,
+
+                region_basis_type = ?,
 
                 address_text = ?,
 
@@ -390,24 +409,45 @@ final class StudyRoomRegisterService
 
         );
 
-        $stmt->execute([
+        try {
+            $stmt->execute([
 
-            $regionId,
+                $regionId,
 
-            $complexId,
+                $complexId,
 
-            $this->optionalString($input, 'address_text'),
+                $basis,
 
-            $this->optionalDecimal($input, 'latitude'),
+                $this->optionalString($input, 'address_text'),
 
-            $this->optionalDecimal($input, 'longitude'),
+                $this->optionalDecimal($input, 'latitude'),
 
-            $roomId,
+                $this->optionalDecimal($input, 'longitude'),
 
-        ]);
+                $roomId,
 
+            ]);
+        } catch (PDOException $e) {
+            // region_basis_type 컬럼 미적용 환경 폴백
+            $stmt = $pdo->prepare(
+                'UPDATE study_rooms SET
+                    region_id = ?, complex_id = ?, address_text = ?, latitude = ?, longitude = ?
+                 WHERE id = ?'
+            );
+            $stmt->execute([
+                $regionId,
+                $complexId,
+                $this->optionalString($input, 'address_text'),
+                $this->optionalDecimal($input, 'latitude'),
+                $this->optionalDecimal($input, 'longitude'),
+                $roomId,
+            ]);
+        }
 
-
+        // syncSavedRegions에 기준 전달
+        if (!isset($input['region_basis_type'])) {
+            $input['region_basis_type'] = $basis;
+        }
         $this->syncSavedRegions($pdo, $roomId, $input);
 
     }
@@ -650,6 +690,21 @@ final class StudyRoomRegisterService
 
             $complexId = isset($slot['complex_id']) && $slot['complex_id'] !== '' ? (int) $slot['complex_id'] : null;
 
+            $slotBasis = isset($slot['region_basis_type']) && in_array($slot['region_basis_type'], ['dong', 'complex'], true)
+                ? $slot['region_basis_type']
+                : null;
+            if ($slotBasis === null) {
+                $slotBasis = isset($input['region_basis_type']) && in_array($input['region_basis_type'], ['dong', 'complex'], true)
+                    ? $input['region_basis_type']
+                    : (($complexId !== null && $complexId > 0) ? 'complex' : 'dong');
+            }
+            if ($slotBasis === 'dong') {
+                $complexId = null;
+            }
+            if ($slotBasis === 'complex' && ($complexId === null || $complexId <= 0)) {
+                continue;
+            }
+
             $isPrimary = !empty($slot['is_primary']) ? 1 : 0;
 
             if ($isPrimary) {
@@ -660,13 +715,23 @@ final class StudyRoomRegisterService
 
 
 
-            $pdo->prepare(
+            try {
+                $pdo->prepare(
 
-                'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
+                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
 
-                 VALUES (?, ?, ?, ?, ?)'
+                     VALUES (?, ?, ?, ?, ?, ?)'
 
-            )->execute([$roomId, $slotNum, $regionId, $complexId, $isPrimary]);
+                )->execute([$roomId, $slotNum, $regionId, $complexId, $slotBasis, $isPrimary]);
+            } catch (PDOException $e) {
+                $pdo->prepare(
+
+                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
+
+                     VALUES (?, ?, ?, ?, ?)'
+
+                )->execute([$roomId, $slotNum, $regionId, $complexId, $isPrimary]);
+            }
 
             $slotNum++;
 
@@ -922,36 +987,42 @@ final class StudyRoomRegisterService
 
 
 
-        $regionStmt = $pdo->prepare(
-
-            'SELECT slot, region_id, complex_id, is_primary
-
-             FROM study_room_regions WHERE study_room_id = ? ORDER BY slot ASC'
-
-        );
-
-        $regionStmt->execute([$roomId]);
-
         $savedRegions = [];
-
-        foreach ($regionStmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
-
-            $savedRegions[] = [
-
-                'region_id'   => (string) $r['region_id'],
-
-                'complex_id'  => $r['complex_id'] !== null ? (string) $r['complex_id'] : '',
-
-                'is_primary'  => (bool) $r['is_primary'],
-
-            ];
-
+        try {
+            $regionStmt = $pdo->prepare(
+                'SELECT slot, region_id, complex_id, region_basis_type, is_primary
+                 FROM study_room_regions WHERE study_room_id = ? ORDER BY slot ASC'
+            );
+            $regionStmt->execute([$roomId]);
+            foreach ($regionStmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $basis = isset($r['region_basis_type']) && in_array($r['region_basis_type'], ['dong', 'complex'], true)
+                    ? $r['region_basis_type']
+                    : (($r['complex_id'] !== null && $r['complex_id'] !== '') ? 'complex' : 'dong');
+                $savedRegions[] = [
+                    'region_id' => (string) $r['region_id'],
+                    'complex_id' => $r['complex_id'] !== null ? (string) $r['complex_id'] : '',
+                    'region_basis_type' => $basis,
+                    'is_primary' => (bool) $r['is_primary'],
+                ];
+            }
+        } catch (PDOException $e) {
+            $regionStmt = $pdo->prepare(
+                'SELECT slot, region_id, complex_id, is_primary
+                 FROM study_room_regions WHERE study_room_id = ? ORDER BY slot ASC'
+            );
+            $regionStmt->execute([$roomId]);
+            foreach ($regionStmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $savedRegions[] = [
+                    'region_id' => (string) $r['region_id'],
+                    'complex_id' => $r['complex_id'] !== null ? (string) $r['complex_id'] : '',
+                    'region_basis_type' => ($r['complex_id'] !== null && $r['complex_id'] !== '') ? 'complex' : 'dong',
+                    'is_primary' => (bool) $r['is_primary'],
+                ];
+            }
         }
 
         while (count($savedRegions) < 3) {
-
-            $savedRegions[] = ['region_id' => '', 'complex_id' => '', 'is_primary' => false];
-
+            $savedRegions[] = ['region_id' => '', 'complex_id' => '', 'region_basis_type' => 'dong', 'is_primary' => false];
         }
 
 
@@ -1053,6 +1124,10 @@ final class StudyRoomRegisterService
             'region_id'                => $row['region_id'] !== null ? (string) $row['region_id'] : '',
 
             'complex_id'               => $row['complex_id'] !== null ? (string) $row['complex_id'] : '',
+
+            'region_basis_type'        => isset($row['region_basis_type']) && in_array($row['region_basis_type'], ['dong', 'complex'], true)
+                ? (string) $row['region_basis_type']
+                : (($row['complex_id'] ?? null) !== null ? 'complex' : 'dong'),
 
             'address_text'             => (string) ($row['address_text'] ?? ''),
 
@@ -1288,6 +1363,22 @@ final class StudyRoomRegisterService
 
         return $value;
 
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @param list<string> $allowed
+     */
+    private function optionalEnum(array $input, string $key, array $allowed): ?string
+    {
+        $value = (string) ($input[$key] ?? '');
+        if ($value === '') {
+            return null;
+        }
+        if (!in_array($value, $allowed, true)) {
+            throw new InvalidArgumentException("{$key}: 유효하지 않은 값입니다.");
+        }
+        return $value;
     }
 
 
