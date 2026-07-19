@@ -151,6 +151,7 @@ import {
   ADDON_STATUS_LABELS,
   SMS_LAB_NOTICE,
 } from './vendor-addons.js';
+import { renderAdminHomePreview, bindAdminHomePreviewEvents } from './admin-home-preview-screen.js';
 
 /** 화면 한글 라벨 (저장값은 영문 유지) */
 const STATUS_KO = { active: '사용', hidden: '숨김', archived: '보관' };
@@ -2306,12 +2307,18 @@ export function renderA28Screen(path) {
   else if (path === '/admin/logs') body = renderLogs();
   else if (path.startsWith('/admin/settings')) body = renderSettings(getSettingsSection(path));
   else if (path === '/admin/permissions') body = renderPermissions();
+  else if (path === '/admin/home-preview') body = renderAdminHomePreview();
   return body;
 }
 
 /** @param {HTMLElement} root @param {string} path @param {() => void} rerender */
 export function bindA28ScreenEvents(root, path, rerender) {
   bindDetailDrawer(root);
+
+  if (path === '/admin/home-preview') {
+    bindAdminHomePreviewEvents(root, rerender);
+    return;
+  }
 
   if (path === '/admin/permissions') {
     if (isAdminApiMode() && !getOperatorsCache()) {
