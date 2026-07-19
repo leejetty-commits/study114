@@ -37,22 +37,13 @@ $flags = $roles->fetchAuthFlags((int) $user['user_id']);
 $adminLevel = $flags['admin_level'] ?? ($user['admin_level'] ?? null);
 $mustChange = $flags['must_change_password'] ?? !empty($user['must_change_password']);
 
-// bootstrap: DB admin_level 있을 때만 admin으로 표시
-if (($user['role_type'] ?? '') !== 'admin' && $adminLevel !== null
-    && $roles->isBootstrapSuperAdminEmail((string) $user['email'])) {
-    $user['role_type'] = 'admin';
-}
-
-if (($user['role_type'] ?? '') === 'admin') {
-    $adminLevel = $roles->resolveLevel([
-        'user_id' => (int) $user['user_id'],
-        'email' => (string) $user['email'],
-        'role_type' => 'admin',
-        'admin_level' => $adminLevel,
-    ]);
-} else {
-    $adminLevel = null;
-}
+// 시장 역할 유지 — admin_level이 있어도 role_type을 admin으로 덮지 않음
+$adminLevel = $roles->resolveLevel([
+    'user_id' => (int) $user['user_id'],
+    'email' => (string) $user['email'],
+    'role_type' => (string) ($user['role_type'] ?? ''),
+    'admin_level' => $adminLevel,
+]);
 
 $oauthRolePending = false;
 $emailVerified = false;

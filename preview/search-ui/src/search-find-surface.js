@@ -93,14 +93,8 @@ function resultDebugAttrs(state) {
 
 /** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} [_role] */
 function resolveActiveRegionLabel(tab, state, _role) {
-  // 관리자 홈 미리보기 전용 오버라이드 (실사용자 GUEST_DEFAULT / localStorage와 분리)
-  if (state.adminPreviewActiveRegion) return String(state.adminPreviewActiveRegion);
   if (state.searchExecuted && state.activeRegionLabel) return state.activeRegionLabel;
   if (tab === 'tutor') {
-    if (Array.isArray(state.adminPreviewTutorRegions) && state.adminPreviewTutorRegions.length) {
-      const idx = resolveTutorRegionIndex(state);
-      return state.adminPreviewTutorRegions[idx]?.label || state.adminPreviewTutorRegions[0].label;
-    }
     return getTutorRegionLabel(resolveTutorRegionIndex(state));
   }
   if (tab === 'room') return MOCK_REGIONS.room;
@@ -120,14 +114,9 @@ function resolveActiveRegionLabel(tab, state, _role) {
  * @param {FindSurfaceState} state
  */
 function regionLabelFromFilters(tab, filters, state) {
-  if (state.adminPreviewActiveRegion) return String(state.adminPreviewActiveRegion);
   if (tab === 'tutor') {
     const fromFilter = String(filters.tutor_region_id || filters.tutor_region_label || '').trim();
     if (fromFilter) return fromFilter;
-    if (Array.isArray(state.adminPreviewTutorRegions) && state.adminPreviewTutorRegions.length) {
-      const idx = resolveTutorRegionIndex(state);
-      return state.adminPreviewTutorRegions[idx]?.label || state.adminPreviewTutorRegions[0].label;
-    }
     return getTutorRegionLabel(resolveTutorRegionIndex(state));
   }
   if (tab === 'room') {

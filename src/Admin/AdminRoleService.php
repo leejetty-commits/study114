@@ -32,10 +32,6 @@ final class AdminRoleService
     /** @param array{email?: string, role_type?: string, admin_level?: ?string, user_id?: int} $auth */
     public function resolveLevel(array $auth): ?string
     {
-        if (($auth['role_type'] ?? '') !== 'admin') {
-            return null;
-        }
-
         $fromAuth = $this->normalizeLevel($auth['admin_level'] ?? null);
         if ($fromAuth !== null) {
             return $fromAuth;
@@ -56,6 +52,11 @@ final class AdminRoleService
             }
         }
 
+        // 시장 역할 + admin_level 없음 → 운영 권한 없음 (bootstrap 이메일도 DB 없으면 미부여)
+        if (($auth['role_type'] ?? '') !== 'admin') {
+            return null;
+        }
+
         if ($this->isBootstrapSuperAdminEmail($email)) {
             return self::LEVEL_SUPER_ADMIN;
         }
@@ -65,6 +66,12 @@ final class AdminRoleService
 
         // admin 역할이지만 등급 없음 — 부마스터로 degrade
         return self::LEVEL_SUB_MASTER;
+    }
+
+    /** 시장 역할이어도 admin_level이 있으면 콘솔 접근 가능 */
+    public function hasAdminCapability(array $auth): bool
+    {
+        return $this->resolveLevel($auth) !== null;
     }
 
     /** @param array{email?: string, role_type?: string, admin_level?: ?string, user_id?: int} $auth */
@@ -213,8 +220,6 @@ final class AdminRoleService
         $pdo ??= Connection::get();
         $stmt = $pdo->query(
             "SELECT COUNT(*) FROM users u
-             INNER JOIN user_roles r
-               ON r.user_id = u.id AND r.role_type = 'admin' AND r.is_primary = 1 AND r.status = 'active'
              WHERE u.admin_level = 'super_admin' AND u.status = 'active'"
         );
 

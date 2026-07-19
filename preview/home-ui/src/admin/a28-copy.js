@@ -59,21 +59,6 @@ export const A28_MENU = [
     screenId: 'A28-01',
   },
   {
-    id: 'grp-home-preview',
-    label: '서비스 홈 미리보기',
-    help: '역할별 홈 검수 · 관리자 seed 전용 (실사용자 기본값과 분리)',
-    children: [
-      {
-        id: 'home-preview',
-        menuId: 'home_preview',
-        label: '홈 미리보기',
-        path: '/admin/home-preview',
-        help: '비로그인·학생·공부방·과외쌤 홈을 기준지역 seed로 재현합니다. 저장·결제·발송은 차단됩니다.',
-        screenId: 'A28-HP',
-      },
-    ],
-  },
-  {
     // Youngcart menu100 환경설정
     id: 'grp-config',
     label: '환경설정',

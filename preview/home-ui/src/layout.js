@@ -75,11 +75,11 @@ export function renderPreviewToolbar() {
 function renderUtilBar(role, showAuth) {
   const items = showAuth ? UTIL_MENU.guest : UTIL_MENU.loggedIn;
   const authUser = getAuthUser();
-  const account = authUser
-    ? `<span class="home-util__account" title="${escAttr(authUser.email)}">로그인: ${escAttr(authUser.email)}</span>`
-    : '';
   const adminLink = isAdminUser()
-    ? `<button type="button" class="home-util__link home-util__link--admin" data-nav="/admin">관리자모드</button>`
+    ? `<button type="button" class="home-util__link home-util__link--admin" data-nav="/admin">관리자 콘솔</button>`
+    : '';
+  const account = authUser
+    ? `<span class="home-util__account" title="${escAttr(authUser.email)}">로그인: ${escAttr(authUser.name || authUser.email)}</span>`
     : '';
   const base = items
     .map((item) => {

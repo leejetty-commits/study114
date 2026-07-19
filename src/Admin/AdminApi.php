@@ -91,7 +91,10 @@ final class AdminApi
     public static function requireAdmin(): array
     {
         $auth = self::requireAuth();
-        self::requireRole($auth, 'admin');
+        $roles = new AdminRoleService();
+        if (!$roles->hasAdminCapability($auth)) {
+            self::fail(403, 'forbidden', '운영자 권한이 필요합니다.');
+        }
 
         return $auth;
     }

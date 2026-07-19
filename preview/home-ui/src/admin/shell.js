@@ -7,11 +7,18 @@ import { renderPreviewToolbar, renderFooter, bindLayoutEvents, renderAppShellWit
 import { A28_COPY, A28_MENU } from './a28-copy.js';
 import { findAdminNavLeaf } from './router.js';
 import { canAccessAdminMenu } from './admin-permissions.js';
-import { getAuthUser } from '../auth-session.js';
+import { getAuthUser, ROLE_HOME } from '../auth-session.js';
 import { renderAdminRoleBadge } from './admin-guard.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+
+/** @returns {string} */
+function roleHomeHash() {
+  const user = getAuthUser();
+  const path = user?.role_type ? ROLE_HOME[user.role_type] : null;
+  return path || '/guest';
 }
 
 /** @param {string} path */
@@ -91,7 +98,7 @@ function renderSidebar(activePath) {
         <strong>우동공과 관리자</strong>
         <span class="admin-sidebar__badge">${esc(A28_COPY.previewBadge)}</span>
       </div>
-      <a href="#/guest" class="admin-sidebar__exit" data-nav="/guest">← 서비스로 나가기</a>
+      <a href="#${roleHomeHash()}" class="admin-sidebar__exit" data-nav="${roleHomeHash()}">← 역할 홈으로 돌아가기</a>
       <nav class="admin-sidebar__nav">${blocks}</nav>
     </aside>`;
 }
@@ -113,7 +120,7 @@ export function renderAdminShell(path, bodyHtml) {
           <div class="admin-topbar__right">
             ${renderAdminRoleBadge()}
             <span class="admin-topbar__user">${esc(user?.email || '비로그인')}</span>
-            <a href="#/guest" class="admin-topbar__exit btn btn--secondary btn--sm" data-nav="/guest">← 서비스 홈</a>
+            <a href="#${roleHomeHash()}" class="admin-topbar__exit btn btn--secondary btn--sm" data-nav="${roleHomeHash()}">← 역할 홈으로</a>
           </div>
         </header>
         <div class="admin-shell__body">${bodyHtml}</div>

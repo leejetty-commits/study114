@@ -10,13 +10,14 @@
 
 1. **admin / 부마스터는 공개 회원가입 대상이 아니다.**
 2. **signup flow(이메일 가입·OAuth 역할선택)로 `admin`을 만들면 안 된다.**
-3. **공통 `users` 체계를 쓰더라도, 생성 경로는 관리자모드 내부 발급만.**
+3. **공통 `users` 체계를 쓰더라도, 생성 경로는 관리자모드 내부 발급만.** (예외: 실계정 dual-capability 승격은 038 마이그레이션)
 4. **생성·관리 UI 위치: `#/admin/permissions` (권한·계정).**
 5. **권한 2단계: `super_admin` / `sub_master`.**
 6. **`super_admin`만** admin·부마스터 생성 / 비활성 / 권한변경 / 비밀번호 초기화.
 7. **`sub_master`는 운영 기능만** — 계정 생성·권한 변경 불가.
-8. **초기 최고관리자:** `jetty@naver.com` (시드 유지 · `super_admin`).
+8. **초기 최고관리자:** `jetty@naver.com` (시드 유지 · `super_admin`) — **시장 역할(공부방) primary 유지 + 콘솔 별도 진입.**
 9. **이후 신규 admin/부마스터는 관리자모드 발급만.**
+10. **시장 역할 + `admin_level` dual-capability 허용** — 기본 홈은 시장 역할, 콘솔은 별도. 상세: [admin-dual-capability-accounts.md](../ssot/admin-dual-capability-accounts.md)
 
 ---
 
@@ -82,10 +83,12 @@ ALTER TABLE users
 
 | 조건 | 의미 |
 |------|------|
-| primary `user_roles.role_type = admin` + `admin_level = super_admin` | 최고관리자 |
-| primary `admin` + `admin_level = sub_master` | 부마스터 |
-| `admin_level IS NULL` 인데 role이 admin | **데이터 오류** — 로그인 시 sub_master로 degrade 또는 거부 (구현 시 택1, 권장: degrade + 로그) |
-| 시장 역할만 | `admin_level` 항상 NULL |
+| `admin_level = super_admin` (primary는 시장 역할 또는 admin) | 최고관리자 · 콘솔 접근 |
+| `admin_level = sub_master` | 부마스터 · 콘솔 접근 |
+| primary `admin` + `admin_level` | 운영 전용 계정 (발급 UI) |
+| 시장 역할 primary + `admin_level` | **dual-capability** — 기본 홈=시장, 콘솔=별도 |
+| `admin_level IS NULL` | 비운영 (콘솔 불가) |
+| `admin_level IS NULL` 인데 role만 admin | **데이터 오류** — 로그인 시 sub_master로 degrade |
 
 **옵션 B — `admin_accounts` 보조 테이블**
 
@@ -122,18 +125,16 @@ admin_accounts (
 ### 2-5. 로그인·세션
 
 ```
-이메일+비밀번호 검증 (기존)
+검증 (이메일+비번 또는 OAuth)
 → users.status == active
-→ primary role_type == admin
-→ admin_level ∈ {super_admin, sub_master}
-→ 세션: role_type=admin, admin_level=…
+→ primary role_type = 시장 역할 또는 admin (발급 전용)
+→ admin_level이 있으면 세션에 보관 (role_type을 admin으로 덮지 않음)
+→ 기본 홈 = ROLE_HOME[primary role]
+→ 콘솔 접근 = admin_level ∈ {super_admin, sub_master}
 → must_change_password == 1 이면 비밀번호 변경 화면으로만 이동 (A28 진입 차단)
 ```
 
-`isMasterEmail` 세션 강제 elevation은:
-
-- **유지(과도기):** bootstrap 이메일만, 그리고 DB에 이미 `super_admin` row 있을 것.
-- **최종:** elevation 제거 · DB만 신뢰.
+bootstrap 이메일로 `role_type=admin` 강제 elevation은 **제거**. DB `admin_level`만 신뢰.
 
 ---
 

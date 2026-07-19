@@ -23,6 +23,9 @@ final class AuthSession
     }
 
     /**
+     * 시장 역할(primary)과 운영 권한(admin_level)을 분리한다.
+     * admin_level이 있어도 role_type을 admin으로 덮지 않는다 — 기본 홈은 시장 역할 홈.
+     *
      * @param array{admin_level?: ?string, must_change_password?: bool} $extra
      */
     public static function login(
@@ -34,17 +37,13 @@ final class AuthSession
     ): void {
         self::start();
         $roles = new AdminRoleService();
-        $effectiveRole = $roleType;
         $adminLevel = $roles->normalizeLevel($extra['admin_level'] ?? null);
-        // bootstrap 이메일이라도 DB에 admin_level이 있을 때만 admin 세션
-        if ($effectiveRole !== 'admin' && $roles->isBootstrapSuperAdminEmail($email)) {
+        if ($adminLevel === null) {
             $flags = $roles->fetchAuthFlags($userId);
-            if (($flags['admin_level'] ?? null) !== null) {
-                $effectiveRole = 'admin';
-                $adminLevel = $flags['admin_level'];
-            }
+            $adminLevel = $flags['admin_level'] ?? null;
         }
-        if ($effectiveRole === 'admin' && $adminLevel === null) {
+        // 순수 admin 전용 계정(primary=admin)인데 등급만 비어 있으면 resolve
+        if ($roleType === 'admin' && $adminLevel === null) {
             $adminLevel = $roles->resolveLevel([
                 'user_id' => $userId,
                 'email' => $email,
@@ -54,9 +53,9 @@ final class AuthSession
         $_SESSION['auth'] = [
             'user_id' => $userId,
             'email' => $email,
-            'role_type' => $effectiveRole,
+            'role_type' => $roleType,
             'name' => $name,
-            'admin_level' => $effectiveRole === 'admin' ? $adminLevel : null,
+            'admin_level' => $adminLevel,
             'must_change_password' => !empty($extra['must_change_password']),
         ];
     }

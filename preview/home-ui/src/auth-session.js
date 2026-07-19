@@ -68,7 +68,7 @@ export function isLoggedIn() {
 }
 
 export function isAdminUser() {
-  return currentUser?.role_type === 'admin';
+  return Boolean(currentUser?.admin_level) || currentUser?.role_type === 'admin';
 }
 
 /** @returns {Promise<AuthUser|null>} */

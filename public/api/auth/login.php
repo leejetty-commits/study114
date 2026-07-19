@@ -53,14 +53,12 @@ try {
     );
     $session = AuthSession::user();
     $effectiveRole = (string) ($session['role_type'] ?? $user['role_type']);
-    $adminLevel = $session['admin_level'] ?? $user['admin_level'];
-    if ($effectiveRole === 'admin' && $adminLevel === null) {
-        $adminLevel = $roles->resolveLevel([
-            'user_id' => $user['user_id'],
-            'email' => $user['email'],
-            'role_type' => 'admin',
-        ]);
-    }
+    $adminLevel = $roles->resolveLevel([
+        'user_id' => $user['user_id'],
+        'email' => $user['email'],
+        'role_type' => $effectiveRole,
+        'admin_level' => $session['admin_level'] ?? $user['admin_level'],
+    ]);
 
     echo json_encode([
         'ok' => true,

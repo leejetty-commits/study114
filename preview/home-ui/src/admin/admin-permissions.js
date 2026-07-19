@@ -41,7 +41,8 @@ export function resolveAdminLevel(email, adminLevel) {
 
 export function getCurrentAdminLevel() {
   const user = getAuthUser();
-  if (!user || user.role_type !== 'admin') return null;
+  if (!user) return null;
+  if (!user.admin_level && user.role_type !== 'admin') return null;
   return resolveAdminLevel(user.email, user.admin_level);
 }
 

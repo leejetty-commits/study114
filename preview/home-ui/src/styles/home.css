@@ -3490,6 +3490,11 @@ a.sup-term-chip:hover {
   font-size: var(--fs-2);
   color: var(--gray-900);
 }
+.mypage-account-card__sub {
+  overflow-wrap: anywhere;
+  font-size: var(--fs-1);
+  color: var(--gray-500);
+}
 .mypage-account-card__role {
   font-size: var(--fs-1);
   color: var(--gray-600);
@@ -5766,81 +5771,3 @@ a.sup-term-chip:hover {
   word-break: keep-all;
   overflow-wrap: break-word;
 }
-
-/* 관리자 · 서비스 홈 미리보기 (검수 seed · 실사용자 state 분리) */
-.ahp-panel { display: flex; flex-direction: column; gap: 1rem; }
-.ahp-banner {
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  background: #0f172a;
-  color: #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-.ahp-banner__warn { margin: 0; font-size: 0.8125rem; color: #fbbf24; }
-.ahp-banner__mode,
-.ahp-banner__region,
-.ahp-banner__extra { margin: 0; font-size: 0.875rem; }
-.ahp-banner__type { color: #94a3b8; margin-left: 0.25rem; }
-.ahp-modes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.ahp-modes__btn {
-  border: 1px solid var(--gray-300);
-  background: #fff;
-  border-radius: 999px;
-  padding: 0.4rem 0.85rem;
-  font-size: 0.8125rem;
-  cursor: pointer;
-}
-.ahp-modes__btn.is-active {
-  background: #0f172a;
-  color: #fff;
-  border-color: #0f172a;
-}
-.ahp-slots {
-  display: grid;
-  gap: 0.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-}
-.ahp-slot {
-  text-align: left;
-  border: 1px solid var(--gray-300);
-  background: #fff;
-  border-radius: 0.5rem;
-  padding: 0.65rem 0.75rem;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-.ahp-slot.is-active {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-  background: #eff6ff;
-}
-.ahp-slot__index { font-size: 0.75rem; color: var(--gray-500); }
-.ahp-slot__label { font-size: 0.9375rem; }
-.ahp-slot__basis { font-size: 0.75rem; color: #2563eb; font-weight: 600; }
-.ahp-region-block { margin: 0.75rem 0 1rem; }
-.ahp-region-block__title { margin: 0 0 0.5rem; font-size: 0.875rem; }
-.ahp-hint,
-.ahp-fixed-region,
-.ahp-footnote { font-size: 0.8125rem; color: var(--gray-600); }
-.ahp-viewport {
-  border: 1px solid var(--gray-200);
-  border-radius: 0.75rem;
-  padding: 1rem;
-  background: #fff;
-}
-.ahp-guest-hero {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-}
-.ahp-guest-hero__title { margin: 0 0 0.25rem; font-size: 1.25rem; }
-.ahp-guest-hero__sub { margin: 0; color: var(--gray-600); font-size: 0.875rem; }

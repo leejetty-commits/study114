@@ -19,21 +19,26 @@ export function renderMypageShell(currentPath, bodyHtml) {
   const title = screenTitle(screenId, currentPath);
   const authUser = getAuthUser();
   const roleLabel =
-    authUser?.role_type === 'admin'
-      ? '마스터 관리자'
-      : role === 'parent'
-        ? '학부모'
-        : role === 'study_room'
-          ? '공부방'
-          : '과외쌤';
+    role === 'parent'
+      ? '학부모'
+      : role === 'study_room'
+        ? '공부방'
+        : role === 'tutor'
+          ? '과외쌤'
+          : '게스트';
   const homePath =
-    authUser?.role_type === 'admin'
-      ? '/guest'
-      : role === 'parent'
-        ? '/parent'
-        : role === 'study_room'
-          ? '/study-room'
-          : '/tutor';
+    role === 'parent'
+      ? '/parent'
+      : role === 'study_room'
+        ? '/study-room'
+        : role === 'tutor'
+          ? '/tutor'
+          : '/guest';
+  const displayName = String(authUser?.name || '').trim();
+  const displayEmail = String(authUser?.email || '').trim();
+  const accountPrimary = displayName || displayEmail;
+  const accountSecondary =
+    displayName && displayEmail && displayName !== displayEmail ? displayEmail : '';
   const railSlotKey = currentPath.startsWith('/mypage/registrations')
     ? 'register_right_rail'
     : currentPath.startsWith('/mypage/paid') || currentPath.startsWith('/mypage/plans')
@@ -65,14 +70,15 @@ export function renderMypageShell(currentPath, bodyHtml) {
           authUser
             ? `<div class="mypage-account-card">
                 <span class="mypage-account-card__label">현재 계정</span>
-                <strong class="mypage-account-card__email">${esc(authUser.email)}</strong>
-                <span class="mypage-account-card__role">${esc(roleLabel)}</span>
+                <strong class="mypage-account-card__email">${esc(accountPrimary)}</strong>
+                ${accountSecondary ? `<span class="mypage-account-card__sub">${esc(accountSecondary)}</span>` : ''}
+                <span class="mypage-account-card__role">${esc(roleLabel)}${isAdminUser() ? ' · 관리자' : ''}</span>
               </div>`
             : ''
         }
         <nav class="mypage-nav">${navItems}</nav>
-        ${isAdminUser() ? '<a href="#/admin" class="mypage-nav__admin" data-nav="/admin">관리자모드로 이동</a>' : ''}
-        <a href="#${homePath}" class="mypage-nav__back" data-nav="${homePath}">← 메인 홈으로</a>
+        ${isAdminUser() ? '<a href="#/admin" class="mypage-nav__admin" data-nav="/admin">관리자 콘솔</a>' : ''}
+        <a href="#${homePath}" class="mypage-nav__back" data-nav="${homePath}">← 역할 홈으로</a>
       </aside>
       <div class="mypage-content">
         <header class="mypage-content__head">
