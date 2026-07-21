@@ -15,11 +15,11 @@ if [[ ! -f "$htaccess" ]]; then
   warn "$htaccess 없음"
 else
   while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
     [[ "$line" =~ ^[[:space:]]*# ]] && continue
-    if [[ "$line" =~ SetEnv[[:space:]]+(OAUTH_[A-Z0-9_]+|STUDY114_MAIL_PROBE_KEY)[[:space:]]+(.*) ]]; then
+    if [[ "$line" =~ ^[[:space:]]*SetEnv[[:space:]]+(OAUTH_[A-Z0-9_]+|STUDY114_MAIL_PROBE_KEY)[[:space:]]+([^[:space:]]+) ]]; then
       key="${BASH_REMATCH[1]}"
       val="${BASH_REMATCH[2]}"
-      val="${val%"${val##*[![:space:]]}"}"  # trim trailing space
       expected="__${key}__"
       if [[ "$val" != "$expected" ]]; then
         warn "$htaccess: $key 값이 placeholder($expected)가 아닙니다. 실값을 커밋하지 마세요. → GitHub Secrets + deploy.yml 주입"
@@ -29,12 +29,18 @@ else
 fi
 
 # 2) Google client_secret 접두사 — 어느 추적 파일이든 금지
-if git grep -n 'GOCSPX-' -- ':' ':(exclude)docs/internal/31-oauth-secret-incident.md' >/dev/null 2>&1; then
-  git grep -n 'GOCSPX-' -- ':' ':(exclude)docs/internal/31-oauth-secret-incident.md' || true
-  warn "추적 파일에 Google client_secret 패턴(GOCSPX-)이 있습니다."
+# (이 스크립트 자신·사고문서는 제외. 패턴 문자열은 오탐 방지로 조립)
+goc_pat="$(printf '%s%s' GOC 'SPX-')"
+if git grep -nI "$goc_pat" -- . \
+  ':!docs/internal/31-oauth-secret-incident.md' \
+  ':!scripts/check-no-committed-secrets.sh' >/dev/null 2>&1; then
+  git grep -nI "$goc_pat" -- . \
+    ':!docs/internal/31-oauth-secret-incident.md' \
+    ':!scripts/check-no-committed-secrets.sh' || true
+  warn "추적 파일에 Google client_secret 패턴이 있습니다."
 fi
 
-# 3) Google client_id 형태는 .htaccess / 비예시 config에만 금지 (문서·example은 키 이름만)
+# 3) Google client_id 형태는 .htaccess / 비예시 config에만 금지
 for f in public/.htaccess config/oauth.php config/auth.php config/app.php; do
   if [[ -f "$f" ]] && grep -Eq 'apps\.googleusercontent\.com' "$f" 2>/dev/null; then
     warn "$f 에 Google client_id 형태가 있습니다. placeholder 또는 env만 사용하세요."
