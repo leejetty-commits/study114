@@ -20,13 +20,13 @@ function esc(s) {
 }
 
 function dbField(name) {
-  return `<span class="field-db-name">${esc(name)}</span>`;
+  return '';
 }
 
 function regionList() {
   return signupState.regions.length > 0
     ? signupState.regions
-    : [{ id: 1, label: '서울특별시 강남구 대치동 (API 로딩 중)' }];
+    : [{ id: 1, label: '서울특별시 강남구 대치동 (지역 정보 불러오는 중)' }];
 }
 
 /** 시(도) 목록 — 과외 활동시 seed */
@@ -137,7 +137,7 @@ function renderBasisChips(selected = 'dong', { allowComplex = true } = {}) {
   return renderChips('region_basis', opts, { selected: allowComplex ? selected : 'dong' });
 }
 
-/** 기본등록 = draft seed 최소 — 지역 1번 seed 필수 (가입 주소와 분리) */
+/** 기본등록에 필요한 최소 정보이며, 가입 주소와 별도로 대표 지역 하나를 받습니다. */
 function renderStudentBasic() {
   const addr = signupState.accountAddress || '가입 주소';
   const d = signupState.basicRegister?.student || {};
@@ -189,7 +189,7 @@ function renderStudentBasic() {
         </select>
       </div>
       <div class="actions-stack">
-        <button type="submit" class="btn btn--primary btn--block">지역등록 · draft 저장</button>
+        <button type="submit" class="btn btn--primary btn--block">지역 등록 · 임시 저장</button>
         <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
       </div>
     </form>
@@ -226,7 +226,7 @@ function renderStudyRoomBasic() {
       </div>
       ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '수학')}
       <div class="actions-stack">
-        <button type="submit" class="btn btn--primary btn--block">draft 저장 · 다음</button>
+        <button type="submit" class="btn btn--primary btn--block">임시 저장 · 다음</button>
         <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
       </div>
     </form>
@@ -239,7 +239,7 @@ function renderTutorBasic() {
   const savedSido = d.activity_city || sidoFromRegionId(d.region_id) || sidos[0] || '';
   return `
     <form data-form="basic-tutor" class="basic-register">
-      <p class="auth-section-title">기본등록 · draft seed</p>
+      <p class="auth-section-title">기본등록 · 임시 저장</p>
       <p class="form-note mb-4">표시명 · 활동 시 1 · 주력과목 1만 받습니다. 나머지는 상세등록입니다.</p>
       <div class="form-group">
         <label class="form-label form-label--required" for="tutor_display_name">표시명</label>
@@ -258,7 +258,7 @@ function renderTutorBasic() {
       </div>
       ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '수학')}
       <div class="actions-stack">
-        <button type="submit" class="btn btn--primary btn--block">draft 저장 · 다음</button>
+        <button type="submit" class="btn btn--primary btn--block">임시 저장 · 다음</button>
         <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
       </div>
     </form>
@@ -280,9 +280,9 @@ export function renderSignupBasic() {
     <div class="panel auth-shell__card--wide">
       <h1 class="auth-heading">기본등록</h1>
       <p class="auth-subheading mb-6">
-        공개 전 <strong>draft</strong>만 만듭니다. 검색·리스트 항목은 상세등록에서 완성합니다.
+        공개 전 임시 저장본을 만듭니다. 검색·목록 항목은 상세등록에서 완성합니다.
       </p>
-      ${isReturnImportMode() ? '<p class="form-note form-note--highlight">home-ui 자녀 추가 모드 — 저장 후 마이페이지로 돌아갑니다.</p>' : ''}
+      ${isReturnImportMode() ? '<p class="form-note form-note--highlight">자녀 추가 중입니다. 저장 후 마이페이지로 돌아갑니다.</p>' : ''}
       ${renderRoleBadge(role)}
       ${body}
     </div>
@@ -534,7 +534,7 @@ export function bindSignupBasicEvents(root) {
           apiOk: false,
         });
         const go = confirm(
-          `API 저장 실패: ${err instanceof Error ? err.message : err}\n\n프리뷰용으로 home-ui에만 반영할까요?`,
+          `서버 저장 실패: ${err instanceof Error ? err.message : err}\n\n화면 확인용으로 마이페이지에만 반영할까요?`,
         );
         if (go) {
           window.location.href = buildHomeStudentImportUrl(record);

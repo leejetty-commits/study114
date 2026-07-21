@@ -121,7 +121,7 @@ function renderTutorBasicList() {
   );
 }
 
-/** 프라임·픽 박스 전체 (공부방 → 과외쌤) */
+/** 대표·추천 노출 박스 전체 (공부방 → 과외쌤) */
 export function renderGuestExposureBoxes() {
   return `${renderStudyRoomPrimePick()}${renderTutorPrimePick()}`;
 }

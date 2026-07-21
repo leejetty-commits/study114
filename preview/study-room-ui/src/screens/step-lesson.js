@@ -23,17 +23,14 @@ function renderSubjectRow(sub, idx) {
       </div>
       <div class="form-group">
         <label class="form-label">학년대</label>
-        <span class="field-db-name">grade_band</span>
         <input class="form-input" data-field="grade_band" value="${sub.grade_band}" placeholder="예: 중1~2" />
       </div>
       <div class="form-group">
         <label class="form-label">과목 마스터 ID</label>
-        <span class="field-db-name">subject_master_id</span>
         <input class="form-input" data-field="subject_master_id" value="${sub.subject_master_id || ''}" placeholder="003 subject_masters" />
       </div>
       <div class="form-group">
         <label class="form-label">과목</label>
-        <span class="field-db-name">subject_name</span>
         <input class="form-input" data-field="subject_name" value="${sub.subject_name}" />
       </div>
       <label class="form-check">
@@ -51,7 +48,6 @@ export function renderLesson() {
       ${renderSectionTitle('수업 정보')}
       <div class="form-group">
         <label class="form-label">수업운영형태</label>
-        <span class="field-db-name">lesson_operation_type</span>
         <div class="form-radio-group" role="radiogroup">
           ${LESSON_OPERATION_TYPES.map(
             (t) => `
@@ -65,7 +61,6 @@ export function renderLesson() {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="capacity_per_time">타임별 원생수</label>
-          <span class="field-db-name">capacity_per_time</span>
           <select class="form-input" id="capacity_per_time" name="capacity_per_time">
             ${CAPACITY_PER_TIME_OPTIONS.map(
               (o) =>
@@ -75,36 +70,31 @@ export function renderLesson() {
         </div>
         <div class="form-group">
           <label class="form-label" for="recruitment_count">모집 인원</label>
-          <span class="field-db-name">recruitment_count</span>
           <input class="form-input" type="number" id="recruitment_count" name="recruitment_count" value="${s.recruitment_count}" />
         </div>
       </div>
       <div class="form-group">
         <label class="form-label" for="main_subject_note">주력과목 요약</label>
-        <span class="field-db-name">main_subject_note</span>
         <input class="form-input" id="main_subject_note" name="main_subject_note" value="${s.main_subject_note}" />
         <p class="form-note">기본등록 seed와 같은 최종 필드입니다.</p>
       </div>
       <div class="form-group">
         <label class="form-label" for="teaching_style">지도 스타일</label>
-        <span class="field-db-name">teaching_style</span>
         <input class="form-input" id="teaching_style" name="teaching_style" value="${s.teaching_style}" />
       </div>
       <div class="form-row">
         <label class="form-check">
           <input class="form-check__input" type="checkbox" name="weekend_available" ${s.weekend_available ? 'checked' : ''} />
           <span class="form-check__label">주말 가능</span>
-          <span class="field-db-name">weekend_available</span>
         </label>
         <label class="form-check">
           <input class="form-check__input" type="checkbox" name="one_on_one_available" ${s.one_on_one_available ? 'checked' : ''} />
           <span class="form-check__label">1:1 가능</span>
-          <span class="field-db-name">one_on_one_available</span>
         </label>
       </div>
 
       ${renderSectionTitle('대상 · 과목')}
-      <p class="register-hint mb-4">study_room_subject_targets · 행 추가는 API 연동 시</p>
+      <p class="register-hint mb-4">과목 행은 필요하면 아래에서 추가할 수 있습니다.</p>
       <div data-subjects-list>
         ${s.subjects.map((sub, i) => renderSubjectRow(sub, i)).join('')}
       </div>
@@ -113,13 +103,11 @@ export function renderLesson() {
       ${renderSectionTitle('가격')}
       <div class="form-group">
         <label class="form-label form-label--required" for="price_amount">월 대표 금액 (원)</label>
-        <span class="field-db-name">price_amount</span>
         <input class="form-input" type="number" id="price_amount" name="price_amount" value="${s.price_amount}" placeholder="350000" />
         <p class="register-hint">검색·정렬·비교용 대표값 (5장 §11-2)</p>
       </div>
       <div class="form-group">
         <label class="form-label" for="price_description">가격 설명</label>
-        <span class="field-db-name">price_description</span>
         <textarea class="form-input form-textarea" id="price_description" name="price_description" rows="3">${s.price_description}</textarea>
       </div>
 

@@ -378,7 +378,7 @@ export function validateBoardChannelInput(input, opts = {}) {
   if (mode === 'create' && existing.some((row) => row.boardKey === boardKey)) {
     errors.push(`이미 존재하는 boardKey입니다: ${boardKey}`);
   }
-  if (!input.menuLabel) errors.push('menuLabel이 필요합니다.');
+  if (!input.menuLabel) errors.push('메뉴 이름이 필요합니다.');
   if (!input.sectionOwner) errors.push('소속 메뉴군(sectionOwner) 선택이 필요합니다.');
   if (preset && input.sectionOwner) {
     const allowed = getSectionOwnerOptions(input.presetId);

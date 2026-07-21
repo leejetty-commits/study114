@@ -71,7 +71,7 @@ export async function searchApi(tab, filters, opts = {}) {
 
   const body = await res.json();
   if (!res.ok || !body.ok) {
-    throw new Error(body.message || `검색 API 오류 (${res.status})`);
+    throw new Error(body.message || `검색 서버 오류 (${res.status})`);
   }
 
   return body;

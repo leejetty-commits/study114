@@ -50,7 +50,6 @@ function renderSavedRegion(slot, idx, basis) {
       </div>
       <div class="form-group">
         <label class="form-label">아파트단지</label>
-        <span class="field-db-name">study_room_regions.complex_id</span>
         <select class="form-input" data-field="complex_id">${complexOptions(slot.complex_id)}</select>
         <input type="hidden" data-field="region_id" value="${slot.region_id || ''}" />
         <input type="hidden" data-field="region_basis_type" value="complex" />
@@ -69,7 +68,6 @@ function renderSavedRegion(slot, idx, basis) {
       </div>
       <div class="form-group">
         <label class="form-label">행정동</label>
-        <span class="field-db-name">study_room_regions.region_id</span>
         <select class="form-input" data-field="region_id">${regionOptions(slot.region_id)}</select>
         <input type="hidden" data-field="complex_id" value="" />
         <input type="hidden" data-field="region_basis_type" value="dong" />
@@ -87,7 +85,7 @@ export function renderLocation() {
   }
 
   const content = `
-    ${renderTempNotice('지역·단지는 API 마스터 연동 · 단지 주소 포함 · 지도 좌표는 추후')}
+    ${renderTempNotice('지역·단지 목록을 불러와 선택합니다. 단지 주소를 포함하며, 지도 좌표는 추후 연결합니다.')}
     <form data-form="location">
       ${renderSectionTitle('노출·기본 위치 기준')}
       <p class="register-hint mb-4">가입 기본주소와 분리 · 행정동 또는 아파트단지 중 <strong>하나만</strong> 선택 · 슬롯 전체 동일 기준</p>
@@ -110,7 +108,6 @@ export function renderLocation() {
         ${renderSectionTitle('기본 위치 · 행정동')}
         <div class="form-group">
           <label class="form-label form-label--required" for="region_id">행정동</label>
-          <span class="field-db-name">region_id</span>
           <select class="form-input" id="region_id" name="region_id">${regionOptions(s.region_id)}</select>
         </div>
       </div>
@@ -118,7 +115,6 @@ export function renderLocation() {
         ${renderSectionTitle('기본 위치 · 아파트단지')}
         <div class="form-group">
           <label class="form-label form-label--required" for="complex_id">아파트단지</label>
-          <span class="field-db-name">complex_id</span>
           <select class="form-input" id="complex_id" name="complex_id">${complexOptions(s.complex_id)}</select>
           <p class="register-hint" data-primary-address>${getComplexes().find((c) => String(c.id) === String(s.complex_id))?.address || '단지 선택 시 주소 표시'}</p>
         </div>
@@ -126,7 +122,6 @@ export function renderLocation() {
 
       <div class="form-group">
         <label class="form-label" for="address_text">주소 요약 (선택)</label>
-        <span class="field-db-name">address_text</span>
         <input class="form-input" id="address_text" name="address_text" value="${s.address_text || ''}" />
       </div>
 

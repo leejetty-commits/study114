@@ -1,6 +1,6 @@
 /** 8장 SSOT 필드명 — DB 컬럼과 1:1 */
 
-/** 기본등록 = draft seed · 상세등록 = 검색/공개 본체 (Notion 14장 2026-07-18) */
+/** 기본등록 = 임시 저장 · 상세등록 = 검색/공개 본체 (Notion 14장 2026-07-18) */
 export const REGISTER_PHASES = {
   basic: {
     label: '기본등록',

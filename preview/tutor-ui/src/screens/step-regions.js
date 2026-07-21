@@ -47,7 +47,6 @@ function renderSlot(slot, idx) {
       </div>
       <div class="form-group">
         <label class="form-label">활동 시</label>
-        <span class="field-db-name">tutor_regions.region_id · scope_type=city</span>
         <select class="form-input" data-field="region_id">
           <option value="">선택</option>
           ${cityOptionsFromRegions(slot.region_id)}

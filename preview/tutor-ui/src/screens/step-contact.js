@@ -11,7 +11,6 @@ export function renderContact() {
     <form data-form="contact">
       <div class="form-group">
         <label class="form-label" for="contact_time_note">연락 가능 시간</label>
-        <span class="field-db-name">contact_time_note</span>
         <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note}" />
       </div>
 
@@ -19,28 +18,24 @@ export function renderContact() {
       <p class="register-hint mb-4">외부 URL만 · 각 1개 · 빈값 허용</p>
       <div class="form-group">
         <label class="form-label" for="youtube_url">유튜브 링크</label>
-        <span class="field-db-name">youtube_url</span>
         <input class="form-input" type="url" id="youtube_url" name="youtube_url" value="${s.youtube_url}" placeholder="https://www.youtube.com/..." />
       </div>
       <div class="form-group">
         <label class="form-label" for="facebook_url">페이스북 링크</label>
-        <span class="field-db-name">facebook_url</span>
         <input class="form-input" type="url" id="facebook_url" name="facebook_url" value="${s.facebook_url}" placeholder="https://www.facebook.com/..." />
       </div>
       <div class="form-group">
         <label class="form-label" for="instagram_url">인스타그램 링크</label>
-        <span class="field-db-name">instagram_url</span>
         <input class="form-input" type="url" id="instagram_url" name="instagram_url" value="${s.instagram_url}" placeholder="https://www.instagram.com/..." />
       </div>
 
       <div class="form-group">
         <label class="form-label" for="profile_status">저장 상태</label>
-        <span class="field-db-name">profile_status</span>
         <select class="form-input" id="profile_status" name="profile_status">
           <option value="draft" ${s.profile_status === 'draft' || s.profile_status === 'pending' ? 'selected' : ''}>저장 중</option>
-          <option value="published" ${s.profile_status === 'published' ? 'selected' : ''}>published · 공개 (P21 운영센터 확인 권장)</option>
+          <option value="published" ${s.profile_status === 'published' ? 'selected' : ''}>공개 (운영 화면에서도 확인 권장)</option>
         </select>
-        <p class="form-hint">22장 · profile_status.pending(검수) 미사용 · 공개는 운영센터 자기확인 후 전환 권장</p>
+        <p class="form-hint">공개는 등록한 본인이 확인한 뒤 전환하는 것을 권장합니다.</p>
       </div>
       ${renderNavButtons('/register/career', '등록 완료')}
     </form>`;

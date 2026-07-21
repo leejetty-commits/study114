@@ -34,26 +34,26 @@ const TEST_MODE_KEY = 'study114-plans-test-mode';
 
 /** @type {Record<string, number|string|boolean|number[]|object>} */
 export const PLAN_RUNTIME_DEFAULTS = {
-  /** 지역(행정동/단지) 단위 Prime 슬롯 수 */
+  /** 지역(행정동/단지) 단위 대표 노출 자리 수 */
   prime_slots: 3,
-  /** 지역 기준: dong | complex */
+  /** 지역 기준: 행정동 | 단지 */
   region_scope_type: 'dong',
-  /** 데모: 공부방 Prime 유료 점유 시뮬레이션 수 (빈 카드 노출용). 실구독 API 연동 시 무시 */
+  /** 데모: 공부방 대표 노출 유료 점유 시뮬레이션 수(빈 카드 표시용). 실제 구독 연동 시 무시 */
   demo_prime_filled: 1,
   /**
-   * 데모: 과외쌤 Prime 후보 풀 크기 (시 단위 · 3슬롯×페이지·15분 순환용).
-   * 공부방 Prime은 demo_prime_filled만 사용(고정 3슬롯).
+   * 데모: 과외쌤 대표 노출 후보 풀 크기(시 단위 · 3자리×페이지·15분 순환).
+   * 공부방 대표 노출은 demo_prime_filled만 사용(고정 3자리).
    */
   demo_prime_tutor_pool: 12,
-  /** Pick 1세트 크기 */
+  /** 추천 노출 1세트 크기 */
   pick_set_size: 5,
-  /** Pick·과외쌤 Prime 공통 시간 순환 간격(분) — 15 | 30 */
+  /** 추천 노출·과외쌤 대표 노출 공통 순환 간격(분) — 15 | 30 */
   pick_rotation_minutes: 15,
-  /** Pick 페이지 = 세트 크기와 동일 */
+  /** 추천 노출 페이지 = 세트 크기와 동일 */
   pick_page_size: 5,
-  /** Basic 페이지 크기 (부스트 상품 없음) */
+  /** 기본 노출 페이지 크기(위로 올리기 상품 없음) */
   basic_page_size: 20,
-  /** 레거시 호환 — Pick 판매 상한 안내용 (세트·페이지와 별개) */
+  /** 예전 호환 — 추천 노출 판매 상한 안내용(세트·페이지와 별개) */
   pick_slots: 10,
   message_credit_pack: [5, 10, 20],
   request_view_pack: [5, 10, 20],
@@ -111,7 +111,7 @@ export const PLAN_CATALOG_SEED = [
       { optionId: 'pick_60', durationDays: 60, priceKrw: 55000, label: '60일', apiVariant: '2개월' },
     ],
   },
-  // region_top / basic_boost — 판매 상품에서 제거 (Basic Boost 금지)
+  // region_top / basic_boost — 판매 상품에서 제거(기본 노출 올리기 상품 없음)
   {
     productCode: 'memo_ticket',
     family: 'access',

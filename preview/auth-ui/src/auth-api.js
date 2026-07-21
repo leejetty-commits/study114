@@ -13,7 +13,7 @@ async function postJson(url, body, { credentials = 'include' } = {}) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
-    const err = new Error(data.message || `API 오류 (${res.status})`);
+    const err = new Error(data.message || `서버 오류 (${res.status})`);
     if (data.error) {
       err.code = data.error;
     }
@@ -30,7 +30,7 @@ export async function fetchMeApi() {
   const res = await fetch('/api/auth/me.php', { credentials: 'include' });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
-    throw new Error(data.message || `API 오류 (${res.status})`);
+    throw new Error(data.message || `서버 오류 (${res.status})`);
   }
   return data;
 }

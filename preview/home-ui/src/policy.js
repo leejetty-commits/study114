@@ -1,6 +1,6 @@
 /**
  * 1차 잠금 정책 — UI·다음 화면 작업 공통 참조
- * Notion 14장(2026-07-18): 가입 최소 · 기본=draft seed · 상세=검색/공개 본체 · 유료=구매
+ * Notion 14장(2026-07-18): 가입 최소 · 기본=임시 저장 · 상세=검색/공개 본체 · 유료=구매
  */
 
 /** @typedef {'basic' | 'detail'} RegisterPhase */
@@ -22,7 +22,7 @@ export const REGISTER_FLOW = {
   },
 };
 
-/** 일반 리스트/검색 = 상세등록 완료 후 · Prime/Pick = 상세+품질/증빙 */
+/** 일반 목록/검색 = 상세등록 완료 후 · 대표/추천 노출 = 상세+품질/증빙 */
 export const EXPOSURE_TIERS = {
   prime: {
     label: '대표 노출',

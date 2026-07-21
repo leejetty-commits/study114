@@ -1677,7 +1677,7 @@ function renderMarketLab(section = 'overview') {
       '매출·순위',
       'A28-07b',
       `${renderOpsTip()}
-       <p class="a28-help">예시(Lab) 숫자입니다. 나중에 실결제 DB와 연결하면 됩니다.</p>
+       <p class="a28-help">미리보기용 예시 숫자입니다. 나중에 실제 결제 기록과 연결하면 됩니다.</p>
        <h3 class="admin-section-title">매출 요약</h3>
        <table class="sup-admin-table"><thead><tr><th>기간</th><th>금액</th><th>건수</th></tr></thead><tbody>${sales}</tbody></table>
        <h3 class="admin-section-title">공부방·과외 순위</h3>
@@ -1833,12 +1833,12 @@ function renderAddons(section = 'home') {
      ${renderAddonVendorCards(vendors)}
      ${
        section === 'pg'
-         ? '<p class="a28-help">결제·주문 Lab: <a href="#/admin/commerce" data-a28-nav="/admin/commerce">결제·주문</a> · <a href="#/admin/market/overview" data-a28-nav="/admin/market/overview">마켓 현황</a></p>'
+         ? '<p class="a28-help">결제·주문 미리보기: <a href="#/admin/commerce" data-a28-nav="/admin/commerce">결제·주문</a> · <a href="#/admin/market/overview" data-a28-nav="/admin/market/overview">마켓 현황</a></p>'
          : ''
      }
      ${
        section === 'sms'
-         ? '<p class="a28-help"><a href="#/admin/notify/settings" data-a28-nav="/admin/notify/settings">→ 문자 기본설정(Lab)</a></p>'
+         ? '<p class="a28-help"><a href="#/admin/notify/settings" data-a28-nav="/admin/notify/settings">→ 문자 기본설정(미리보기)</a></p>'
          : ''
      }`,
   );
@@ -1880,7 +1880,7 @@ function renderNotifyLab(section = 'settings') {
 
            <select name="gateway">
 
-             <option value="none"${selected(st.gateway, 'none')}>연결 안 함(Lab)</option>
+             <option value="none"${selected(st.gateway, 'none')}>연결 안 함(미리보기)</option>
 
              <option value="aligo"${selected(st.gateway, 'aligo')}>알리고(예정)</option>
 
@@ -2324,7 +2324,7 @@ function renderNotifyLab(section = 'settings') {
 
        <tbody>${logs || '<tr><td colspan="7" class="sup-empty">내역 없음</td></tr>'}</tbody></table>
 
-     <button type="button" class="btn btn--secondary btn--sm" data-sms-reset>문자 Lab 초기화</button>`,
+     <button type="button" class="btn btn--secondary btn--sm" data-sms-reset>문자 미리보기 초기화</button>`,
 
   );
 
@@ -2664,7 +2664,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         if (!sourceKey) return;
         const newKey = window.prompt(`「${sourceKey}」 복사 — 새 채널 키`, `${sourceKey}-copy`);
         if (!newKey) return;
-        const newLabel = window.prompt('새 menuLabel (선택)', '') || undefined;
+        const newLabel = window.prompt('새 메뉴 이름 (선택)', '') || undefined;
         try {
           await copyBoardChannel(sourceKey, { boardKey: newKey, menuLabel: newLabel });
           rerender();
@@ -3794,7 +3794,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
     root.querySelector('[data-sms-reset]')?.addEventListener('click', () => {
 
-      if (!window.confirm('문자 Lab을 초기화할까요?')) return;
+      if (!window.confirm('문자 미리보기를 초기화할까요?')) return;
 
       resetSmsLab();
 

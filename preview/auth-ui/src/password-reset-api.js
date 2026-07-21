@@ -43,7 +43,7 @@ export async function passwordForgotApi(email) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
-    throw new Error(data.message || `API 오류 (${res.status})`);
+    throw new Error(data.message || `서버 오류 (${res.status})`);
   }
   return data;
 }
@@ -60,7 +60,7 @@ export async function passwordValidateTokenApi(token) {
 
   // ok = request/handler success only
   if (!res.ok || !data.ok) {
-    throw new Error(data.message || `API 오류 (${res.status})`);
+    throw new Error(data.message || `서버 오류 (${res.status})`);
   }
 
   const status = data.status;
@@ -83,7 +83,7 @@ export async function passwordResetApi(payload) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
-    const err = new Error(data.message || `API 오류 (${res.status})`);
+    const err = new Error(data.message || `서버 오류 (${res.status})`);
     if (data.error) {
       err.code = data.error;
     }

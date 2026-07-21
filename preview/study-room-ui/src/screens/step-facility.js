@@ -19,7 +19,6 @@ function renderFacilityChecks() {
       <label class="form-check">
         <input class="form-check__input" type="checkbox" name="facility_ids" value="${f.id}" ${checked ? 'checked' : ''} />
         <span class="form-check__label">${f.facility_name}</span>
-        <span class="field-db-name">${f.facility_code}</span>
       </label>
     `;
   }).join('');
@@ -35,19 +34,16 @@ export function renderFacility() {
       <div class="register-check-grid mb-4">${renderFacilityChecks()}</div>
       <div class="form-group">
         <label class="form-label" for="facility_note">시설 자유기술</label>
-        <span class="field-db-name">facility_note</span>
         <textarea class="form-input form-textarea" id="facility_note" name="facility_note" rows="3">${s.facility_note}</textarea>
       </div>
 
       ${renderSectionTitle('연락')}
       <div class="form-group">
         <label class="form-label" for="contact_time_note">연락 가능 시간</label>
-        <span class="field-db-name">contact_time_note</span>
         <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note}" />
       </div>
       <div class="form-group">
         <label class="form-label" for="contact_phone">문의 전화</label>
-        <span class="field-db-name">contact_phone</span>
         <input class="form-input" type="tel" id="contact_phone" name="contact_phone" value="${s.contact_phone}" />
       </div>
 
@@ -55,17 +51,14 @@ export function renderFacility() {
       <p class="register-hint mb-4">외부 URL만 저장 · 직접 업로드 없음 · 각 1개 · 빈값 허용</p>
       <div class="form-group">
         <label class="form-label" for="youtube_url">유튜브 링크</label>
-        <span class="field-db-name">youtube_url</span>
         <input class="form-input" type="url" id="youtube_url" name="youtube_url" placeholder="https://www.youtube.com/watch?v=..." value="${s.youtube_url}" />
       </div>
       <div class="form-group">
         <label class="form-label" for="facebook_url">페이스북 링크</label>
-        <span class="field-db-name">facebook_url</span>
         <input class="form-input" type="url" id="facebook_url" name="facebook_url" placeholder="https://www.facebook.com/..." value="${s.facebook_url}" />
       </div>
       <div class="form-group">
         <label class="form-label" for="instagram_url">인스타그램 링크</label>
-        <span class="field-db-name">instagram_url</span>
         <input class="form-input" type="url" id="instagram_url" name="instagram_url" placeholder="https://www.instagram.com/..." value="${s.instagram_url}" />
       </div>
 
@@ -83,7 +76,6 @@ export function renderFacility() {
               ).join('')}
             </select>
             <span>${img.name || '업로드 파일'}</span>
-            <span class="field-db-name">sort_order ${img.sort_order}</span>
           </div>
         `
           )
@@ -93,12 +85,11 @@ export function renderFacility() {
 
       <div class="form-group mt-6">
         <label class="form-label" for="profile_status">저장 상태</label>
-        <span class="field-db-name">profile_status</span>
         <select class="form-input" id="profile_status" name="profile_status">
-          <option value="draft" ${s.profile_status === 'draft' || s.profile_status === 'pending' ? 'selected' : ''}>draft · 저장중</option>
-          <option value="published" ${s.profile_status === 'published' ? 'selected' : ''}>published · 공개 (P20 운영센터 확인 권장)</option>
+          <option value="draft" ${s.profile_status === 'draft' || s.profile_status === 'pending' ? 'selected' : ''}>저장 중</option>
+          <option value="published" ${s.profile_status === 'published' ? 'selected' : ''}>공개 (운영 화면에서도 확인 권장)</option>
         </select>
-        <p class="form-hint">22장 · pending(검수요청) 미사용 · 공개는 운영센터 자기확인 후 전환 권장</p>
+        <p class="form-hint">공개는 등록한 본인이 확인한 뒤 전환하는 것을 권장합니다.</p>
       </div>
 
       ${renderNavButtons('/register/career', '등록 완료')}
@@ -107,7 +98,7 @@ export function renderFacility() {
   return renderRegisterShell(content, {
     step: 5,
     title: '시설 · 연락 · 사진',
-    subtitle: '체크형 + 자유기술 · 이미지 0~5장 (5장 §6·§11-1)',
+    subtitle: '체크형 + 자유 입력 · 이미지 0~5장',
   });
 }
 

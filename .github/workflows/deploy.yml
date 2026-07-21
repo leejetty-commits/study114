@@ -81,7 +81,7 @@ jobs:
           echo "OAuth SetEnv 주입 완료 (값은 출력하지 않음)."
 
       - name: Build for dothome
-        run: pwsh -ExecutionPolicy Bypass -File scripts/build-dothome.ps1
+        run: bash scripts/build-dothome.sh
 
       - name: Verify build output
         env:

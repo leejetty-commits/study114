@@ -160,7 +160,7 @@ export function renderSignupForm() {
           </p>
         </div>
 
-        <p class="form-note">역할 선택과 기본등록(draft)은 다음 단계에서 이어집니다.</p>
+        <p class="form-note">역할 선택과 기본등록(임시 저장)은 다음 단계에서 이어집니다.</p>
 
         <div class="form-error" data-signup-error hidden role="alert"></div>
 

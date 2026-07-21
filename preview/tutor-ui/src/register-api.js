@@ -9,7 +9,7 @@ async function postJson(body) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
-    throw new Error(data.message || `API 오류 (${res.status})`);
+    throw new Error(data.message || `서버 오류 (${res.status})`);
   }
   return data;
 }

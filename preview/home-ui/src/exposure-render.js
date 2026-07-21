@@ -63,7 +63,7 @@ function valOnly(text, opts = {}) {
   };
 }
 
-/** 항목제목 + 값 (Prime/Pick 표) */
+/** 항목제목 + 값 (대표·추천 노출 표) */
 function labeled(label, text, opts = {}) {
   return {
     html: `<span class="expo-tbl__label">${esc(label)}</span><span class="expo-tbl__val">${esc(blankDash(text || ''))}</span>`,

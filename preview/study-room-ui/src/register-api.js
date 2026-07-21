@@ -13,7 +13,7 @@ async function postJson(body) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
-    const msg = data.message || `API 오류 (${res.status})`;
+    const msg = data.message || `서버 오류 (${res.status})`;
     throw new Error(msg);
   }
   return data;

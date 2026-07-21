@@ -1,5 +1,5 @@
 /**
- * 홈 surface = Prime/Pick/Basic 홈 문법
+ * 홈 화면 = 대표/추천/기본 노출 배치 규칙
  * 검색 결과 surface = 순수 결과(flat) — 티어 구획 금지
  */
 
@@ -85,7 +85,7 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
 }
 
 /**
- * 검색 실행 후 · 찾기 페이지 browse — Prime/Pick/Basic 구획 없음
+ * 검색 실행 후 · 찾기 페이지 목록 — 대표/추천/기본 노출 구획 없음
  * @param {'study_room'|'tutor'} kind
  * @param {object[]} items
  * @param {object} opts

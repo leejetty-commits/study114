@@ -33,7 +33,7 @@ export const P21_GAUGE_TITLES = {
   exposureAccess: '노출·접근 준비도',
 };
 
-/** §3-3 · §8 Pick/Prime 라벨 */
+/** 추천 노출·대표 노출 신청 상태 안내 */
 export const PRODUCT_APPLY = {
   eligible: '신청 가능',
   missing: (n) => `조건 ${n}개 부족`,

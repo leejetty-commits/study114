@@ -59,34 +59,28 @@ export function renderLesson() {
       <p class="register-hint mb-4">상세등록 본체 · 기본등록 seed(표시명·주력과목)는 같은 필드를 이어서 편집합니다.</p>
       <div class="form-group">
         <label class="form-label form-label--required" for="main_subject_note">주력과목 요약</label>
-        <span class="field-db-name">main_subject_note</span>
         <input class="form-input" id="main_subject_note" name="main_subject_note" value="${s.main_subject_note}" />
       </div>
       <div class="form-group">
         <span class="form-label form-label--required">지도 대상 성별</span>
-        <span class="field-db-name">student_gender_group</span>
         <div class="form-radio-group">${radios('student_gender_group', GENDER_GROUP_OPTIONS, s.student_gender_group)}</div>
       </div>
       <div class="form-group">
         <span class="form-label form-label--required">수업인원</span>
-        <span class="field-db-name">student_count_group</span>
         <div class="form-radio-group">${radios('student_count_group', STUDENT_COUNT_OPTIONS, s.student_count_group)}</div>
       </div>
       <div class="form-group">
         <span class="form-label">연령대</span>
-        <span class="field-db-name">age_band</span>
         <div class="form-radio-group">${radios('age_band', AGE_BAND_OPTIONS, s.age_band)}</div>
       </div>
       <div data-subjects-list>${s.subjects.map(subjectRow).join('')}</div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label form-label--required" for="preferred_fee_amount">월 대표 과외비</label>
-          <span class="field-db-name">preferred_fee_amount</span>
           <input class="form-input" type="number" id="preferred_fee_amount" name="preferred_fee_amount" value="${s.preferred_fee_amount}" />
         </div>
         <div class="form-group">
           <span class="form-label form-label--required">산정방식</span>
-          <span class="field-db-name">fee_basis_type</span>
           <div class="form-radio-group">${feeBasis}</div>
         </div>
       </div>
@@ -101,7 +95,6 @@ export function renderLesson() {
       </div>
       <div class="form-group">
         <span class="form-label form-label--required">강의장소</span>
-        <span class="field-db-name">tutor_lesson_places</span>
         <div class="register-check-grid">${places}</div>
       </div>
       ${renderNavButtons('/register/regions', '다음: 학력·경력')}
