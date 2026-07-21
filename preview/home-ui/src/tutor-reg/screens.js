@@ -11,8 +11,7 @@ import {
 } from '../lifecycle-copy.js';
 import { renderBrowseList, renderExposureBox } from '../exposure-render.js';
 import { TUTOR_REGISTER_URL } from '../nav-config.js';
-import { getStudentReviewIds } from '../student-review-store.js';
-import { studentReviewPath, getHandoffFromQuery } from '../handoff-link.js';
+import { getHandoffFromQuery } from '../handoff-link.js';
 import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
 import { formatSubmissionDocSummary, getSubmissionDocs } from '../mypage/preview-data.js';
 import {
@@ -34,7 +33,7 @@ import {
   getThreeGauges,
   getHubCtas,
   getUnlockCards,
-  getStudentSearchUrl,
+  getStudentListUrl,
   getProductApplyHint,
 } from './format.js';
 import {
@@ -424,7 +423,7 @@ function renderHub(tutor) {
         <h3 class="p21-block__title">매칭 가시성</h3>
         <ul class="p21-match-conditions">${matching.conditions.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
         <p class="p21-match-status${matching.limited ? ' is-limited' : ' is-ok'}">${esc(matching.status)}</p>
-        <a href="${getStudentSearchUrl()}" class="btn btn--secondary btn--sm">학생찾기 보기 →</a>
+        <a href="${getStudentListUrl()}" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/student-review">${esc(P21_ACCESS_CTA.studentSearch)} →</a>
       </div>
 
       <div class="p21-hub-block" data-hub="exposure">
@@ -598,64 +597,87 @@ function renderPublish(tutor) {
 }
 
 /** @param {import('./store.js').TutorRecord} tutor */
+function resolveAccessNextAction(tutor) {
+  const published = tutor.profile_status === 'published';
+  const paid = isPaidProvider();
+  const memos = getMemoCreditsRemaining();
+  const publishHref = `#${tutorSectionPath(tutor.id, 'publish')}`;
+  const reviewHref = '#/mypage/student-review';
+  const plansHref = '#/mypage/plans';
+
+  if (!published) {
+    return {
+      status: '쪽지 준비 필요',
+      reason: '프로필 공개 후 쪽지를 보낼 수 있어요',
+      label: '공개하기',
+      href: publishHref,
+      navAttr: ` data-p21-nav="${tutorSectionPath(tutor.id, 'publish')}"`,
+    };
+  }
+  if (!paid || memos <= 0) {
+    return {
+      status: '쪽지 준비 필요',
+      reason: !paid ? '유료 이용과 메모권이 필요해요' : '메모권이 부족해요. 이용권을 확인해 주세요',
+      label: P21_ACCESS_CTA.plans,
+      href: plansHref,
+      navAttr: ' data-mypage-nav="/mypage/plans"',
+    };
+  }
+  return {
+    status: '쪽지 가능',
+    reason: '찜한 학생에게 쪽지를 보낼 수 있어요',
+    label: '쪽지 보내기',
+    href: reviewHref,
+    navAttr: ' data-mypage-nav="/mypage/student-review"',
+  };
+}
+
+/** @param {import('./store.js').TutorRecord} tutor */
 function renderAccess(tutor) {
   const accessMatrix = getAccessMatrix(tutor);
-  const matching = getMatchingVisibility(tutor);
   const unlockCards = getUnlockCards(tutor);
   const paid = isPaidProvider();
   const memos = getMemoCreditsRemaining();
-  const reviewCount = getStudentReviewIds().length;
+  const published = tutor.profile_status === 'published';
   const fromReview = getHandoffFromQuery() === 'review';
+  const next = resolveAccessNextAction(tutor);
 
-  const unlockHtml = unlockCards.length
-    ? `<section class="p20-exposure-section"><h3>잠금 해제 (§7-3)</h3><div class="p21-unlock-grid">${unlockCards.map((c) => renderUnlockCard(c, tutor.id)).join('')}</div></section>`
-    : `<section class="p20-exposure-section"><h3>잠금 해제 (§7-3)</h3><p class="p20-hint">현재 잠긴 접근 기능이 없습니다.</p></section>`;
-
-  const reviewBridge = `
-      <section class="p20-exposure-section p21-review-bridge">
-        <h3>관심 학생</h3>
-        <p class="p19-form-section__lead">${esc(HANDOFF_DEEPLINK.reviewBridgeLead)}</p>
-        <p class="p20-hint">${esc(HANDOFF_DEEPLINK.reviewFlow)}</p>
-        <div class="p19-summary-grid" style="margin-top:var(--space-3)">
-          <dl class="p19-summary-card"><dt>검토함</dt><dd>${reviewCount}건</dd></dl>
-          <dl class="p19-summary-card"><dt>남은 메모</dt><dd>${memos}회</dd></dl>
-        </div>
-        <div class="p19-form-actions" style="margin-top:var(--space-3)">
-          <a href="#${studentReviewPath({ from: 'access' })}" class="btn btn--primary" data-mypage-nav="${studentReviewPath({ from: 'access' })}">${esc(P21_ACCESS_CTA.studentReview)}${reviewCount ? ` · ${reviewCount}건` : ''}</a>
-        </div>
-      </section>`;
+  const rulesDetails = `
+    <details class="p21-access-rules">
+      <summary>이용권·접근 규칙 자세히</summary>
+      <section class="p20-exposure-section">
+        <h3>현재 이용 가능한 범위</h3>
+        <div class="p20-matrix">${renderMatrixRows(accessMatrix)}</div>
+      </section>
+      ${
+        unlockCards.length
+          ? `<section class="p20-exposure-section"><h3>잠금 해제</h3><div class="p21-unlock-grid">${unlockCards.map((c) => renderUnlockCard(c, tutor.id)).join('')}</div></section>`
+          : ''
+      }
+      <p class="p19-form-section__lead">
+        <a href="#/mypage/plans" data-mypage-nav="/mypage/plans">${esc(P21_ACCESS_CTA.plans)}</a>
+        · <a href="#/mypage/submission-docs" data-mypage-nav="/mypage/submission-docs">${esc(P21_ACCESS_CTA.submissionDocs)}</a>
+        · 학부모가 먼저 보낸 연락의 답장은 무료 · 학생에게 먼저 보내는 쪽지는 유료
+      </p>
+    </details>`;
 
   const body = `
     <div class="p21-access-body" data-p21-tutor-id="${tutor.id}">
       ${fromReview ? `<div class="handoff-deeplink-banner" role="status">${esc(HANDOFF_DEEPLINK.accessFromReview)}</div>` : ''}
       ${renderProviderSubToggle()}
       <section class="p20-exposure-section">
-        <h3>현재 이용 가능한 범위</h3>
-        <p class="p19-form-section__lead">과외쌤 운영 핵심 — 쪽지·학생 접근 권한</p>
-        <div class="p20-matrix">${renderMatrixRows(accessMatrix)}</div>
-      </section>
-      <section class="p20-exposure-section">
-        <h3>잔여 권한</h3>
+        <h3>쪽지 상태</h3>
+        <p class="p19-form-section__lead"><strong>${esc(next.status)}</strong> · ${esc(next.reason)}</p>
         <div class="p19-summary-grid">
+          <dl class="p19-summary-card"><dt>공개</dt><dd>${published ? '공개중' : '미공개'}</dd></dl>
+          <dl class="p19-summary-card"><dt>남은 메모권</dt><dd>${memos}회</dd></dl>
           <dl class="p19-summary-card"><dt>유료 이용</dt><dd>${paid ? '이용 중' : '이용 안 함'}</dd></dl>
-          <dl class="p19-summary-card"><dt>남은 메모</dt><dd>${memos}회</dd></dl>
-          <dl class="p19-summary-card"><dt>매칭</dt><dd>${esc(matching.status)}</dd></dl>
+        </div>
+        <div class="p19-form-actions" style="margin-top:var(--space-3)">
+          <a href="${next.href}" class="btn btn--primary"${next.navAttr}>${esc(next.label)}</a>
         </div>
       </section>
-      ${unlockHtml}
-      ${reviewBridge}
-      <section class="p20-exposure-section p21-access-links">
-        <h3>다음 행동 (§7-5)</h3>
-        <div class="p19-form-actions">
-          <a href="${getStudentSearchUrl()}" class="btn btn--primary">학생찾기 보기 (9·13장)</a>
-          <a href="#/mypage/messages/inbox" class="btn btn--secondary" data-mypage-nav="/mypage/messages/inbox">쪽지함 열기</a>
-          <a href="#/plans/access?provider_type=tutor&provider_id=${tutor.id}" class="btn btn--secondary" data-nav="/plans/access?provider_type=tutor&provider_id=${tutor.id}">접근권·쪽지권</a>
-        </div>
-      </section>
-      <p class="p19-form-section__lead">
-        <a href="#/mypage/submission-docs" data-mypage-nav="/mypage/submission-docs">제출자료 상태</a>
-        · 학부모가 먼저 보낸 연락의 답장은 무료 · 학생에게 먼저 보내는 쪽지는 유료
-      </p>
+      ${rulesDetails}
     </div>`;
 
   return `<section class="mypage-panel p19-panel p19-panel--form">${renderTutorShell(tutor, 'access', body)}</section>`;

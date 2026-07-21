@@ -2,9 +2,11 @@ import { startFirstMemoFlow } from '../messages/compose-flow.js';
 import { toggleWishlist, toggleCompare, isWishlisted, isInCompare } from '../user-actions-state.js';
 import { navigate } from '../state.js';
 import { recordRecentView, patchRecentHandoff } from '../mypage/recent-store.js';
-import { WISH_LABELS, STUDENT_REVIEW } from '../handoff-copy.js';
+import { WISH_LABELS } from '../handoff-copy.js';
 import { notifyCompareToggle, notifyStudentReviewToggle, notifyWishToggle } from '../handoff-utils.js';
 import { isInStudentReview, toggleStudentReview } from '../student-review-store.js';
+import { checkFirstMemoPermission } from '../messages/permissions.js';
+import { showPaidGateOverlay } from '../messages/overlays.js';
 import { renderEntryContextRibbon } from '../handoff-resume.js';
 import { renderPreContactChecklist } from '../handoff-sticker.js';
 import { renderStudentRequestBody } from './student-request-card.js';
@@ -53,11 +55,22 @@ function resolvePrimaryCta(kind, item, viewer) {
     return { label: '로그인하고 문의하기', action: 'login', disabled: false };
   }
   if (kind === 'student' && (viewer === 'tutor' || viewer === 'study_room' || viewer === 'admin')) {
-    const can = item.exposure_status === 'published';
+    const canPublish = item.exposure_status === 'published';
+    const memoCheck = checkFirstMemoPermission({ kind: 'student', role: viewer === 'admin' ? 'tutor' : viewer });
+    if (!canPublish) {
+      return { label: '쪽지 준비', action: 'memo-prep', disabled: true };
+    }
+    if (!memoCheck.ok) {
+      return {
+        label: '쪽지 준비',
+        action: memoCheck.reason === 'paid_gate' ? 'plans' : 'memo-prep',
+        disabled: false,
+      };
+    }
     return {
-      label: viewer === 'study_room' ? '상담/쪽지 보내기' : '메모 보내기',
+      label: '쪽지 보내기',
       action: 'memo',
-      disabled: !can,
+      disabled: false,
     };
   }
   if (kind === 'tutor' && viewer === 'parent') {
@@ -82,11 +95,11 @@ function renderSecondaryActions(kind, item, viewer) {
   }
   if (kind === 'student') {
     if (viewer !== 'tutor' && viewer !== 'study_room' && viewer !== 'admin') return '';
-    const inReview = isInStudentReview(item.id);
+    const wished = isInStudentReview(item.id);
     return `
     <button type="button" class="btn btn--secondary btn--sm" data-p24-action="student-review-toggle"
       data-student-id="${item.id}" data-provider-role="${viewer === 'admin' ? 'tutor' : viewer}">
-      ${inReview ? STUDENT_REVIEW.removeCta : STUDENT_REVIEW.addCta}
+      ${wished ? WISH_LABELS.remove : WISH_LABELS.add}
     </button>`;
   }
   const compareKind = kind;
@@ -356,13 +369,23 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     });
   });
 
+  wrap.querySelector('[data-p24-action="plans"]')?.addEventListener('click', () => {
+    closeDetailModal();
+    showPaidGateOverlay();
+  });
+
+  wrap.querySelector('[data-p24-action="memo-prep"]')?.addEventListener('click', () => {
+    closeDetailModal();
+    window.location.hash = '/mypage/plans';
+  });
+
   wrap.querySelectorAll('[data-p24-action="student-review-toggle"]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const added = toggleStudentReview(btn.dataset.studentId, {
         providerRole: btn.dataset.providerRole,
       });
       notifyStudentReviewToggle(added, { sourceRoute });
-      if (added) patchRecentHandoff(kind, item.id, { lastRoute: sourceRoute, lastAction: 'review_add' });
+      if (added) patchRecentHandoff(kind, item.id, { lastRoute: sourceRoute, lastAction: 'wish_add' });
       onRerender?.();
       openDetailModal({ kind, item, viewer, onRerender, sourceRoute: 'detail' });
     });

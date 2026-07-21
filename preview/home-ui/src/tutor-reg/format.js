@@ -162,7 +162,7 @@ export function getUnlockCards(tutor) {
         { label: '대표 활동 시', ok: tutor.has_primary_region },
         { label: '공개 준비·필수값', ok: matching.ok },
       ],
-      { label: '학생찾기 보기', external: '#/tutor' },
+      { label: '학생 목록 보기', external: '#/mypage/student-review' },
     ),
     build(
       'cold_memo',
@@ -172,7 +172,7 @@ export function getUnlockCards(tutor) {
         { label: '유료 등록', ok: paid },
         { label: '메모권 잔여', ok: memos > 0 },
       ],
-      { label: '메모권·유료 이용 확인', external: '#/plans/access' },
+      { label: '이용권 확인', external: '#/mypage/plans' },
     ),
     build(
       'request_doc',
@@ -181,7 +181,7 @@ export function getUnlockCards(tutor) {
         { label: '유료 등급', ok: paid },
         { label: '프로필 공개', ok: published },
       ],
-      { label: '유료 확인', external: '#/plans' },
+      { label: '이용권 확인', external: '#/mypage/plans' },
     ),
     build(
       'pick',
@@ -200,14 +200,19 @@ export function getUnlockCards(tutor) {
         { label: '프로필 공개', ok: published },
         { label: '상세등록 완료', ok: expanded },
       ],
-      { label: '대표 노출 자격 확인', external: '#/plans/positions' },
+      { label: '이용권 확인', external: '#/mypage/paid/usage' },
     ),
   ].filter(Boolean);
 }
 
-/** 학생찾기 CTA (9·13장) — 프리뷰는 과외쌤 메인 학생 리스트 */
+/** @deprecated 역할 홈 전용. 마이페이지 본문에서는 `#/mypage/student-review` 사용 */
 export function getStudentSearchUrl() {
   return '#/tutor';
+}
+
+/** 마이페이지 내부 — 관심 학생(찜) 목록 */
+export function getStudentListUrl() {
+  return '#/mypage/student-review';
 }
 
 /** @param {TutorRecord} tutor */
@@ -350,14 +355,14 @@ export function getHubCtas(tutor) {
     return [
       { label: '다시 공개', path: 'publish', primary: true },
       { label: '학생 접근·쪽지', path: 'access', primary: false },
-      { label: '학생찾기 보기', external: '#/tutor', primary: false },
+      { label: '학생 목록 보기', external: '#/mypage/student-review', primary: false },
     ];
   }
   return [
     { label: '학생 접근·쪽지', path: 'access', primary: true },
-    { label: '학생 검토함', path: 'student_review', external: '#/mypage/student-review?from=access', primary: false },
-    { label: '학생찾기 보기', path: 'student_search', external: '#/tutor', primary: false },
-    { label: '메모권·유료', path: 'plans', external: '#/plans/access', primary: false },
+    { label: '찜 목록', path: 'student_review', external: '#/mypage/student-review?from=access', primary: false },
+    { label: '학생 목록 보기', path: 'student_search', external: '#/mypage/student-review', primary: false },
+    { label: '이용권 확인', path: 'plans', external: '#/mypage/plans', primary: false },
   ];
 }
 

@@ -3,7 +3,7 @@ import {
   SUBMISSION_DOCS_LEAD,
   TRUST_PLATFORM_DISCLAIMER,
 } from '../lifecycle-copy.js';
-import { TUTOR_REGISTER_URL, STUDY_ROOM_REGISTER_URL, searchUiUrl } from '../nav-config.js';
+import { TUTOR_REGISTER_URL, STUDY_ROOM_REGISTER_URL } from '../nav-config.js';
 import { getNavRole } from '../state.js';
 import {
   getPreviewProfile,
@@ -27,7 +27,6 @@ import {
 } from '../handoff-lifecycle.js';
 import { renderResumeToken } from '../handoff-resume.js';
 import { renderDecisionStickers } from '../handoff-sticker.js';
-import { getStudentSearchUrl } from '../tutor-reg/format.js';
 import { openDetailDecision } from '../detail-decision/index.js';
 import { startFirstMemoFlow } from '../messages/compose-flow.js';
 import { exposureStatusLabel } from '../lifecycle-copy.js';
@@ -305,13 +304,12 @@ function renderRegistrationsIndex(role) {
 function renderWishlistSection(kind, label) {
   const items = getWishlistItems(kind);
   if (!items.length) {
-    const searchKind = kind === 'tutor' ? 'tutor' : 'room';
     return renderEmptyStateCard('wishlist', {
-      ctaHref: searchUiUrl(searchKind, getNavRole()),
+      ctaHref: '#/mypage/recent',
       links: [
         {
-          label: `${label} 검색`,
-          href: searchUiUrl(searchKind, getNavRole()),
+          label: '최근 본 목록',
+          href: '#/mypage/recent',
         },
       ],
     });
@@ -374,7 +372,7 @@ function renderStudentReview(role) {
   const regLink = getProviderRegDeepLink(role);
 
   if (!items.length) {
-    const links = [{ label: '학생찾기 보기', href: getStudentSearchUrl() }];
+    const links = [{ label: '학생 목록 보기', href: '#/mypage/student-review' }];
     if (regLink) {
       links.push({
         label: regLink.label,
@@ -384,7 +382,7 @@ function renderStudentReview(role) {
     return `
       <section class="mypage-panel mypage-empty">
         ${fromBanner ? `<div class="handoff-deeplink-banner" role="status">${esc(fromBanner)}</div>` : ''}
-        ${renderEmptyStateCard('studentReview', { links })}
+        ${renderEmptyStateCard('studentReview', { links, ctaHref: '#/mypage/student-review' })}
       </section>`;
   }
 
@@ -427,14 +425,13 @@ function renderStudentReview(role) {
 
 function renderRecent(role) {
   const items = getRecentViews(role);
-  const homePath = role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
   if (!items.length) {
     return `
     <section class="mypage-panel">
       <p class="mypage-note">${RECENT_NOTE}</p>
       ${renderEmptyStateCard('recent', {
-        ctaHref: `#${homePath}`,
-        links: [{ label: '탐색하기', href: `#${homePath}` }],
+        ctaHref: '#/mypage/home',
+        links: [{ label: '마이페이지 홈', href: '#/mypage/home' }],
       })}
     </section>`;
   }

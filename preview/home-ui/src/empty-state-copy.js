@@ -91,8 +91,8 @@ export const EMPTY_COPY = {
   wishlist: {
     screenId: 'P15-06',
     title: '아직 찜한 대상이 없습니다',
-    body: '검색에서 관심 대상을 저장해 보세요.',
-    cta: '검색하기',
+    body: '관심 있는 대상을 저장해 두고, 최근 본 목록에서도 이어갈 수 있어요.',
+    cta: '최근 본 목록',
   },
   recent: {
     screenId: 'P15-07',
@@ -120,9 +120,9 @@ export const EMPTY_COPY = {
   },
   studentReview: {
     screenId: 'P25-S10',
-    title: '검토함이 비어 있습니다',
-    body: '학생찾기에서 조건에 맞는 의뢰를 저장해 보세요.',
-    cta: '학생찾기',
+    title: '찜한 학생이 없습니다',
+    body: '마음에 드는 학생 의뢰를 저장해 두고, 준비가 되면 쪽지를 이어가세요.',
+    cta: '학생 목록 보기',
   },
   students: {
     screenId: 'P19-01',
@@ -309,8 +309,8 @@ export function getMessagesEmptyCopy(role) {
   }
   return {
     ...EMPTY_COPY.messages,
-    body: '학생찾기에서 의뢰를 확인하고 메모를 보내 보세요.',
-    cta: '학생찾기',
+    body: '찜한 학생을 확인하고 쪽지를 보내 보세요.',
+    cta: '찜 목록',
   };
 }
 

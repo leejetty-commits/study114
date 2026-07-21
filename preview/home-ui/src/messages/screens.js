@@ -171,12 +171,13 @@ function renderList(tab) {
 
 function renderEmptyList(role) {
   const copy = getMessagesEmptyCopy(role === 'parent' ? 'parent' : role);
-  const studentSearchHref = '#/tutor/student-search';
+  const ctaHref =
+    role === 'parent' ? '#/mypage/wishlist' : '#/mypage/student-review';
   let html = renderStateCard({
     title: copy.title,
     body: copy.body,
     cta: copy.cta,
-    ctaHref: copy.cta ? studentSearchHref : undefined,
+    ctaHref: copy.cta ? ctaHref : undefined,
     screenId: copy.screenId,
   });
   if (isProviderRole(role) && !canProviderColdMemoToStudent(role)) {

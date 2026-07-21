@@ -48,7 +48,6 @@ import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import { getStudentReviewIds } from '../student-review-store.js';
 import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
 import { studentReviewPath, getHandoffFromQuery } from '../handoff-link.js';
-import { getStudentSearchUrl } from '../tutor-reg/format.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -271,14 +270,13 @@ function renderReviewBridgeBlock(room) {
     <div class="p20-hub-block p21-review-bridge">
       <h3 class="p20-hub-block__title">관심 학생</h3>
       <p class="p19-form-section__lead">${esc(HANDOFF_DEEPLINK.reviewBridgeLead)}</p>
-      <p class="p20-hint">${esc(HANDOFF_DEEPLINK.reviewFlow)}</p>
       <div class="p19-summary-grid" style="margin-top:var(--space-3)">
-        <dl class="p19-summary-card"><dt>검토함</dt><dd>${reviewCount}건</dd></dl>
+        <dl class="p19-summary-card"><dt>찜</dt><dd>${reviewCount}건</dd></dl>
         <dl class="p19-summary-card"><dt>상담</dt><dd>${esc(inquiryStatusLabel(room.inquiry_status))}</dd></dl>
       </div>
       <div class="p19-form-actions" style="margin-top:var(--space-3)">
         <a href="#${studentReviewPath({ from: 'exposure' })}" class="btn btn--primary" data-mypage-nav="${studentReviewPath({ from: 'exposure' })}">${esc(P20_HUB_CTA.studentReview)}${reviewCount ? ` · ${reviewCount}건` : ''}</a>
-        <a href="${getStudentSearchUrl()}" class="btn btn--secondary" data-same-tab-href="${getStudentSearchUrl()}">${esc(P20_HUB_CTA.studentSearch)}</a>
+        <a href="#/mypage/student-review" class="btn btn--secondary" data-mypage-nav="/mypage/student-review">${esc(P20_HUB_CTA.studentSearch)}</a>
       </div>
     </div>`;
 }

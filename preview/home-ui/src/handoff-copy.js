@@ -24,7 +24,7 @@ export function compareOpenCta(count, max) {
 /** Source Route return CTA 라벨 (25§4-4 · §6 2차) */
 export const RETURN_CTA = {
   wishlist: '찜 목록으로',
-  studentReview: '검토함 열기',
+  studentReview: '찜 목록 열기',
 };
 
 export const WISH_TOAST = {
@@ -43,7 +43,7 @@ export const COMPARE_BAR_LABELS = {
 };
 
 export const WISH_LABELS = {
-  add: '찜',
+  add: '찜하기',
   remove: '찜 해제',
 };
 
@@ -68,7 +68,7 @@ export function getHandoffEmptyLine(key) {
     wishlist: '아직 찜한 후보가 없습니다. 검색에서 마음에 드는 후보를 저장해 보세요.',
     recent: '최근에 본 후보가 없습니다.',
     compareNeedOneMore: '비교하려면 후보를 하나 더 담아주세요.',
-    studentReview: '아직 검토함에 담은 학생이 없습니다. 학생찾기에서 조건에 맞는 의뢰를 저장해 보세요.',
+    studentReview: '아직 찜한 학생이 없습니다. 마음에 드는 의뢰를 저장해 두세요.',
   };
   return map[key] || '';
 }
@@ -80,26 +80,26 @@ export const LIFECYCLE_BASKET = {
 
 /** P21-05 ↔ P25-S10 딥링크 배너 · CTA */
 export const HANDOFF_DEEPLINK = {
-  reviewFlow: '학생찾기 → 검토함 → 접근·쪽지 → 메모/쪽지',
-  reviewFromAccess: '학생 접근·쪽지에서 이동했습니다. 검토 후 메모·쪽지를 보내세요.',
-  reviewFromExposure: '노출·상담에서 이동했습니다. 검토 후 상담·쪽지를 보내세요.',
-  accessFromReview: '검토함에서 이동했습니다. 메모 권한·잔여 횟수를 확인하세요.',
-  reviewBridgeLead: '메모·쪽지 전에 담아 둔 학생 의뢰를 검토합니다.',
-  reviewBridgeCta: '검토함 열기',
+  reviewFlow: '찜하기 → 찜 목록 → 쪽지 준비/보내기',
+  reviewFromAccess: '학생 접근·쪽지에서 이동했습니다. 찜해 둔 학생에게 쪽지를 이어가세요.',
+  reviewFromExposure: '노출·상담에서 이동했습니다. 찜해 둔 학생에게 상담·쪽지를 이어가세요.',
+  accessFromReview: '찜 목록에서 이동했습니다. 쪽지 가능 여부와 남은 메모권을 확인하세요.',
+  reviewBridgeLead: '찜해 둔 학생을 다시 보고 쪽지를 준비합니다.',
+  reviewBridgeCta: '찜 목록 열기',
   providerRegCtaTutor: '학생 접근·쪽지',
   providerRegCtaStudyRoom: '노출·상담',
 };
 
-/** Provider lane — P25-S10 */
+/** Provider lane — P25-S10 (UI 라벨은 찜, 내부 경로는 student-review 유지) */
 export const STUDENT_REVIEW = {
-  listTitle: '학생 검토함',
-  addCta: '검토함에 담기',
-  removeCta: '검토함에서 빼기',
+  listTitle: '관심 학생',
+  addCta: '찜하기',
+  removeCta: '찜 해제',
   itemLabelTutor: '관심학생',
   itemLabelStudyRoom: '상담후보',
-  toastAdded: '검토함에 담았습니다',
-  toastRemoved: '검토함에서 뺐습니다',
-  note: '25장 §8 · 메모·쪽지 전 검토용 · 비교·찜과 별개',
+  toastAdded: '찜했습니다',
+  toastRemoved: '찜을 해제했습니다',
+  note: '관심 있는 학생을 저장해 두고, 준비가 되었을 때 연락을 이어가세요.',
   lifecycleHidden: '현재 공개가 중지된 의뢰입니다',
 };
 
@@ -115,21 +115,21 @@ export const RESUME_ROUTE_LABELS = {
   detail: '상세에서',
   wishlist: '찜 목록에서',
   mypage: '마이페이지에서',
-  'student-review': '검토함에서',
+  'student-review': '찜 목록에서',
 };
 
 export const RESUME_ACTION_LABELS = {
   view_detail: '상세 열람',
   wish_add: '찜함',
   compare_add: '비교 담음',
-  review_add: '검토함 담음',
+  review_add: '찜함',
 };
 
 /** 25§2차 판단 스티커 — basket 행 */
 export const DECISION_STICKER = {
   wish: '찜',
   compare: '비교',
-  review: '검토함',
+  review: '찜',
 };
 
 /** 24·25§2차 문의 전 체크리스트 (상세 모달) */
@@ -137,6 +137,6 @@ export const PRE_CONTACT_CHECKLIST = {
   title: '문의 전 확인',
   study_room_parent: ['상담 수용 상태를 확인했습니다', '비용·학년대를 다시 봤습니다'],
   tutor_parent: ['과외비·수업 방식을 확인했습니다', '활동 지역을 맞췄습니다'],
-  student_tutor: ['검토함·요청 조건을 확인했습니다', '메모권·잔여 횟수를 확인했습니다'],
-  student_study_room: ['검토함·요청 조건을 확인했습니다', '상담 수용 상태를 확인했습니다'],
+  student_tutor: ['찜·요청 조건을 확인했습니다', '메모권·잔여 횟수를 확인했습니다'],
+  student_study_room: ['찜·요청 조건을 확인했습니다', '상담 수용 상태를 확인했습니다'],
 };

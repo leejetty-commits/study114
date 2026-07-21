@@ -65,7 +65,7 @@ function renderProtectedBlock(label, content, visible, visibility, studentId, op
         <strong class="state-card__title">${esc(copy.title)}</strong>
         <p class="state-card__body">${esc(copy.body)}</p>
         <div class="p24-protected__actions">
-          <a href="#/plans/access" class="btn btn--primary btn--sm" data-nav="/plans/access">${esc(copy.ctaPlans)}</a>
+          <a href="#/mypage/plans" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/plans">${esc(copy.ctaPlans)}</a>
         </div>
       </div>
     </div>`;
@@ -75,7 +75,7 @@ function renderProtectedBlock(label, content, visible, visibility, studentId, op
   const unlockBtn = gate.hasTickets
     ? `<button type="button" class="btn btn--primary btn--sm" data-p24-action="unlock-request" data-student-id="${studentId}">${esc(REQUEST_VIEW_GATE_COPY.ctaUnlock)}</button>`
     : '';
-  const plansLink = `<a href="#/plans/access" class="btn btn--secondary btn--sm" data-nav="/plans/access">${esc(REQUEST_VIEW_GATE_COPY.ctaPlans)}</a>`;
+  const plansLink = `<a href="#/mypage/plans" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/plans">${esc(REQUEST_VIEW_GATE_COPY.ctaPlans)}</a>`;
 
   return `
     <div class="p24-protected p24-protected--blocked">
