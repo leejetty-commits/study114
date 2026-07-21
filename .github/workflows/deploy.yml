@@ -29,6 +29,53 @@ jobs:
           fi
           sed -i "s/^VITE_NAVER_MAP_CLIENT_ID=.*/VITE_NAVER_MAP_CLIENT_ID=${NAVER_MAP_CLIENT_ID}/" preview/.env.dothome.example
 
+      # OAuth 비밀값은 저장소에 두지 않고 배포 시 .htaccess placeholder에 주입한다.
+      - name: Inject OAuth secrets into public/.htaccess
+        env:
+          OAUTH_NAVER_CLIENT_ID: ${{ secrets.OAUTH_NAVER_CLIENT_ID }}
+          OAUTH_NAVER_CLIENT_SECRET: ${{ secrets.OAUTH_NAVER_CLIENT_SECRET }}
+          OAUTH_KAKAO_REST_API_KEY: ${{ secrets.OAUTH_KAKAO_REST_API_KEY }}
+          OAUTH_KAKAO_CLIENT_SECRET: ${{ secrets.OAUTH_KAKAO_CLIENT_SECRET }}
+          OAUTH_GOOGLE_CLIENT_ID: ${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}
+          OAUTH_GOOGLE_CLIENT_SECRET: ${{ secrets.OAUTH_GOOGLE_CLIENT_SECRET }}
+          STUDY114_MAIL_PROBE_KEY: ${{ secrets.STUDY114_MAIL_PROBE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          htaccess=public/.htaccess
+          required="OAUTH_NAVER_CLIENT_ID OAUTH_NAVER_CLIENT_SECRET OAUTH_KAKAO_REST_API_KEY OAUTH_KAKAO_CLIENT_SECRET OAUTH_GOOGLE_CLIENT_ID OAUTH_GOOGLE_CLIENT_SECRET"
+          missing=0
+          for v in $required; do
+            if [ -z "${!v:-}" ]; then
+              echo "::error::GitHub secret $v is not set (Settings → Secrets and variables → Actions → Secrets)"
+              missing=1
+            fi
+          done
+          if [ "$missing" != "0" ]; then
+            echo "::error::OAuth 시크릿 미설정 — 배포 중단 (placeholder .htaccess 업로드 방지)"
+            exit 1
+          fi
+          # mail probe key 미설정 시 랜덤 (저장소·로그에 남기지 않음)
+          if [ -z "${STUDY114_MAIL_PROBE_KEY:-}" ]; then
+            STUDY114_MAIL_PROBE_KEY="probe_$(openssl rand -hex 12)"
+          fi
+          data="$(cat "$htaccess")"
+          for v in $required STUDY114_MAIL_PROBE_KEY; do
+            token="__${v}__"
+            repl="${!v}"
+            case "$data" in
+              *"$token"*) ;;
+              *) echo "::error::placeholder $token not found"; exit 1 ;;
+            esac
+            data="${data//"$token"/"$repl"}"
+          done
+          printf '%s\n' "$data" > "$htaccess"
+          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__' "$htaccess"; then
+            echo "::error::치환되지 않은 placeholder가 남아 있습니다."
+            exit 1
+          fi
+          echo "OAuth SetEnv 주입 완료 (값은 출력하지 않음)."
+
       - name: Build for dothome
         run: pwsh -ExecutionPolicy Bypass -File scripts/build-dothome.ps1
 

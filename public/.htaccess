@@ -27,6 +27,11 @@
 DirectoryIndex index.html index.php
 
 # 닷홈: PHP OAuth·리다이렉트 URL (미설정 시 127.0.0.1 폴백 → 소셜 로그인 오류 시 localhost로 튕김)
+#
+# [보안] OAuth 키·비밀값은 저장소에 커밋하지 않는다.
+# 아래 __..__ placeholder는 배포(.github/workflows/deploy.yml)에서
+# GitHub Actions Secrets 값으로 치환되어 서버 .htaccess에만 실값이 들어간다.
+# (.htaccess 는 Apache가 HTTP로 직접 서빙하지 않으므로 서버 저장은 안전)
 <IfModule mod_env.c>
   SetEnv STUDY114_API_BASE http://study114.dothome.co.kr
   SetEnv STUDY114_HOME_UI http://study114.dothome.co.kr
@@ -34,11 +39,11 @@ DirectoryIndex index.html index.php
   SetEnv STUDY114_APP_ENV production
   SetEnv STUDY114_DEBUG 0
   SetEnv STUDY114_MAIL_FROM study114@study114.dothome.co.kr
-  SetEnv STUDY114_MAIL_PROBE_KEY s114mailProbe7f3a9c2e
-  SetEnv OAUTH_NAVER_CLIENT_ID 6tjyX7FuwihrLSTkNkNx
-  SetEnv OAUTH_NAVER_CLIENT_SECRET DWIUWqfnT0
-  SetEnv OAUTH_KAKAO_REST_API_KEY c30e95c82362026606967bf5502beb62
-  SetEnv OAUTH_KAKAO_CLIENT_SECRET 2X2HqZIqjNfOrpojfJZqb5QuIFKO13lz
-  SetEnv OAUTH_GOOGLE_CLIENT_ID 679151474185-3smgti2t92d03pvgrlekkm0honn8elln.apps.googleusercontent.com
-  SetEnv OAUTH_GOOGLE_CLIENT_SECRET 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
+  SetEnv STUDY114_MAIL_PROBE_KEY __STUDY114_MAIL_PROBE_KEY__
+  SetEnv OAUTH_NAVER_CLIENT_ID __OAUTH_NAVER_CLIENT_ID__
+  SetEnv OAUTH_NAVER_CLIENT_SECRET __OAUTH_NAVER_CLIENT_SECRET__
+  SetEnv OAUTH_KAKAO_REST_API_KEY __OAUTH_KAKAO_REST_API_KEY__
+  SetEnv OAUTH_KAKAO_CLIENT_SECRET __OAUTH_KAKAO_CLIENT_SECRET__
+  SetEnv OAUTH_GOOGLE_CLIENT_ID __OAUTH_GOOGLE_CLIENT_ID__
+  SetEnv OAUTH_GOOGLE_CLIENT_SECRET __OAUTH_GOOGLE_CLIENT_SECRET__
 </IfModule>
