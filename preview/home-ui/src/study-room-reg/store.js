@@ -204,7 +204,7 @@ export function getPublishReadiness(room) {
   need(room.detail_completion_status === 'expanded_complete', '상세등록 완료');
   need(room.has_representative_image, '대표 이미지 1장 이상');
   need(!!(room.intro_short?.trim() || room.intro_long?.trim()), '소개문');
-  need(room.contact_method_set, '문의·연락 방식');
+  need(room.contact_method_set, '문의·쪽지 방식');
 
   const checks = [
     !!room.study_room_name?.trim(),

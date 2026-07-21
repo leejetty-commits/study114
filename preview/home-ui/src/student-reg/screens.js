@@ -368,7 +368,7 @@ function renderHub(student) {
     nextCta = `아직 ${readiness.missing.length}개 항목이 필요합니다.`;
     nextTone = 'warn';
   } else if (student.exposure_status === 'published') {
-    nextCta = '현재 학생찾기에 노출 중입니다.';
+    nextCta = '현재 학생 목록에 노출 중입니다.';
     nextTone = 'success';
   } else if (student.exposure_status === 'hidden') {
     nextCta = '노출이 철회된 상태입니다. 언제든 다시 공개할 수 있습니다.';
@@ -441,7 +441,7 @@ function renderBasicForm(student) {
         <p class="p19-field__hint">기준: ${esc(student.preferred_studyroom_region_basis || (student.preferred_lesson_type === 'tutor' ? '시' : '—'))}</p>`,
       )}
       ${renderFormFooter(
-        '저장해도 학생찾기에 공개되지 않습니다. 다음 단계: 상세등록에서 지역 확장.',
+        '저장해도 학생 목록에 공개되지 않습니다. 다음 단계: 상세등록에서 지역 확장.',
         `<button type="submit" class="btn btn--primary">임시 저장</button>
          <a href="#${studentSectionPath(student.id, 'detail')}" class="btn btn--secondary" data-p19-nav="${studentSectionPath(student.id, 'detail')}">상세등록으로</a>`,
       )}
@@ -474,7 +474,7 @@ function renderDetailForm(student) {
       )}
       ${renderFormSection(
         '표시 · 학년',
-        '학생찾기 검색/리스트에 쓰이는 핵심 항목입니다.',
+        '학생 목록 검색에 쓰이는 핵심 항목입니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <label class="p19-field p19-field--full">
@@ -587,7 +587,7 @@ function renderDetailForm(student) {
         요청문·노출 범위는 <a href="#${studentSectionPath(student.id, 'settings')}" data-p19-nav="${studentSectionPath(student.id, 'settings')}">공개설정</a>에서 관리합니다.
       </div>
       ${renderFormFooter(
-        '상세등록을 마친 뒤 미리보기에서 학생찾기에 공개할 수 있습니다.',
+        '상세등록을 마친 뒤 미리보기에서 학생 목록에 공개할 수 있습니다.',
         `<button type="submit" class="btn btn--primary">상세 저장</button>
          <a href="#${studentSectionPath(student.id, 'publish')}" class="btn btn--secondary" data-p19-nav="${studentSectionPath(student.id, 'publish')}">미리보기·공개</a>`,
       )}

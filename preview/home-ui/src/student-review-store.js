@@ -1,5 +1,5 @@
 /**
- * 25장 §8 P25-S10 — 학생 검토함 (Provider)
+ * 25장 §8 P25-S10 — 관심 학생 (Provider)
  * API 모드: /api/handoff/student-reviews.php
  */
 

@@ -118,7 +118,7 @@ export const PLAN_CATALOG_SEED = [
     providerType: 'tutor',
     name: '쪽지권',
     tagline: '학생에게 먼저 보내는 쪽지 횟수권 · 먼저 산 이용권부터 차감',
-    bullets: ['먼저 산 이용권부터 차감', '사용기한 180일', '학부모가 먼저 보낸 연락과 답장은 무료'],
+    bullets: ['먼저 산 이용권부터 차감', '사용기한 180일', '학부모가 먼저 보낸 쪽지와 답장은 무료'],
     implemented: true,
     featured: true,
     options: [

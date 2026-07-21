@@ -1,5 +1,5 @@
 /**
- * 25장 §10 — Lifecycle-aware basket 뱃지 (찜 · 최근열람 · 검토함)
+ * 25장 §10 — Lifecycle-aware basket 뱃지 (찜 · 최근열람 · 관심 학생)
  */
 
 import { EXPOSURE_STUDENTS } from './exposure-data.js';

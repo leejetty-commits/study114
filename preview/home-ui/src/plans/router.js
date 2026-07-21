@@ -4,11 +4,12 @@
 
 export const PLANS_BASE = '/plans';
 
-/** 기존 mypage paid 경로 → 표준 경로 */
+/** 레거시·상품센터 운영 경로 → 마이페이지 운영 허브 */
 export const PLANS_REDIRECTS = {
-  '/mypage/plans': '/plans/my',
-  '/mypage/paid': '/plans',
-  '/mypage/paid/usage': '/plans/my',
+  '/mypage/paid': '/mypage/plans',
+  '/mypage/paid/usage': '/mypage/plans/my',
+  '/plans/my': '/mypage/plans/my',
+  '/plans/history': '/mypage/plans/history',
 };
 
 /** @type {Record<string, PlansScreenId>} */

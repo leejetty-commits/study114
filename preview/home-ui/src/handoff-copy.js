@@ -99,7 +99,7 @@ export const STUDENT_REVIEW = {
   itemLabelStudyRoom: '상담후보',
   toastAdded: '찜했습니다',
   toastRemoved: '찜을 해제했습니다',
-  note: '관심 있는 학생을 저장해 두고, 준비가 되었을 때 연락을 이어가세요.',
+  note: '관심 있는 학생을 저장해 두고, 준비가 되었을 때 쪽지를 이어가세요.',
   lifecycleHidden: '현재 공개가 중지된 의뢰입니다',
 };
 

@@ -131,7 +131,7 @@ export function getScopeBadge(ctx) {
 
   if (contextKind === 'study_room' || contextKind === 'tutor') {
     const hint = isProviderRole(role)
-      ? '먼저 온 연락의 답장은 무료'
+      ? '먼저 온 쪽지의 답장은 무료'
       : '공급자 상세 공개 범위';
     return {
       label: SCOPE_BADGE_LABELS.publicProfile,

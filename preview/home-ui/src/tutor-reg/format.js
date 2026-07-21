@@ -156,7 +156,7 @@ export function getUnlockCards(tutor) {
   return [
     build(
       'matching',
-      '학생찾기 노출',
+      '학생 목록 노출',
       [
         { label: '프로필 공개', ok: published },
         { label: '대표 활동 시', ok: tutor.has_primary_region },
@@ -200,14 +200,9 @@ export function getUnlockCards(tutor) {
         { label: '프로필 공개', ok: published },
         { label: '상세등록 완료', ok: expanded },
       ],
-      { label: '이용권 확인', external: '#/mypage/paid/usage' },
+      { label: '이용권 확인', external: '#/mypage/plans' },
     ),
   ].filter(Boolean);
-}
-
-/** @deprecated 역할 홈 전용. 마이페이지 본문에서는 `#/mypage/student-review` 사용 */
-export function getStudentSearchUrl() {
-  return '#/tutor';
 }
 
 /** 마이페이지 내부 — 관심 학생(찜) 목록 */
@@ -228,15 +223,15 @@ export function getMatchingVisibility(tutor) {
     tutor.has_lesson_places ? '강의장소 설정됨' : '강의장소 미설정',
   ];
 
-  let status = '학생찾기 노출 불가';
+  let status = '학생 목록 노출 불가';
   let limited = true;
   if (published && hasPrimary && readiness.canPublish) {
-    status = `${tutor.primary_region_label} · ${tutor.main_subject_note} · ${tutor.grade_band || '학생'} 학생찾기 노출 가능`;
+    status = `${tutor.primary_region_label} · ${tutor.main_subject_note} · ${tutor.grade_band || '학생'} 학생 목록 노출 가능`;
     limited = false;
   } else if (!hasPrimary) {
-    status = '대표 활동 시 미설정 — 학생찾기 기본 노출 제한';
+    status = '대표 활동 시 미설정 — 학생 목록 기본 노출 제한';
   } else if (!published) {
-    status = '미공개 — 학생찾기 미노출';
+    status = '미공개 — 학생 목록 미노출';
   }
 
   return { conditions, status, limited, ok: !limited };
@@ -252,7 +247,7 @@ export function getAccessMatrix(tutor) {
   return [
     {
       key: 'reply',
-      label: '학부모 선연락 답장',
+      label: '학부모가 먼저 보낸 쪽지 답장',
       ok: true,
       reason: null,
     },

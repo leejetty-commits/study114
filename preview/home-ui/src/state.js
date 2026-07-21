@@ -369,7 +369,7 @@ export function bootstrapAdminRoute() {
 }
 
 /**
- * `#/plans/*` 정규화 + 기존 mypage paid 경로 리다이렉트
+ * `#/plans/*` 정규화 + 레거시/운영 경로 리다이렉트
  * @returns {boolean}
  */
 export function bootstrapPlansRoute() {

@@ -62,6 +62,7 @@ import {
 } from './plans-catalog.js';
 import { getRoiMetrics } from '../paid-backend.js';
 import { renderPaidGuide, renderPaidUsage } from './paid-screens.js';
+import { renderPlansMy, renderPlansHistory } from '../plans/screens.js';
 import { bindPaidCatalogEvents } from '../paid-checkout.js';
 import { bindProviderNoticeEvents } from '../provider-notices.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
@@ -140,6 +141,8 @@ export function renderMypageScreen(path) {
   if (isMessagesDetailPath(path)) return renderMessagesScreen(path);
   if (path === '/mypage/messages') return renderMessagesSummary();
   if (path === '/mypage/plans') return renderPlans(r);
+  if (path === '/mypage/plans/my') return renderPlansMy();
+  if (path === '/mypage/plans/history') return renderPlansHistory();
   if (path === '/mypage/paid') return renderPaidGuide(r);
   if (path === '/mypage/paid/usage') return renderPaidUsage(r);
   if (path === '/mypage/submission-docs' || path === '/mypage/verification') return renderSubmissionDocs(r);
@@ -184,7 +187,7 @@ function getHomeQuickActions(role) {
   }
   return [
     { icon: '✎', title: '내 등록', note: role === 'study_room' ? '공부방 정보와 공개 상태' : '과외 프로필과 공개 상태', path: '/mypage/registrations' },
-    { icon: '☆', title: '관심 학생', note: '저장한 학생과 연락 준비', path: '/mypage/student-review' },
+    { icon: '☆', title: '관심 학생', note: '저장한 학생과 쪽지 준비', path: '/mypage/student-review' },
     { icon: '✉', title: '쪽지', note: '문의와 진행 중인 대화', path: '/mypage/messages' },
     { icon: '◌', title: '이용 현황', note: '이용권과 남은 기간 확인', path: '/mypage/plans' },
   ];
@@ -390,7 +393,7 @@ function renderStudentReview(role) {
     <section class="mypage-panel">
       ${fromBanner ? `<div class="handoff-deeplink-banner" role="status">${esc(fromBanner)}</div>` : ''}
       <p class="mypage-note">${STUDENT_REVIEW_NOTE}</p>
-      ${regLink ? `<p class="mypage-note"><a href="#${regLink.href}" data-mypage-nav="${regLink.href}">${esc(role === 'tutor' ? HANDOFF_DEEPLINK.providerRegCtaTutor : HANDOFF_DEEPLINK.providerRegCtaStudyRoom)}</a> · 메모·쪽지 권한 확인</p>` : ''}
+      ${regLink ? `<p class="mypage-note"><a href="#${regLink.href}" data-mypage-nav="${regLink.href}">${esc(role === 'tutor' ? HANDOFF_DEEPLINK.providerRegCtaTutor : HANDOFF_DEEPLINK.providerRegCtaStudyRoom)}</a> · 쪽지 권한 확인</p>` : ''}
       <ul class="mypage-entity-list">
         ${items
           .map((item) => {
@@ -413,7 +416,7 @@ function renderStudentReview(role) {
             <div class="mypage-entity__actions">
               <button type="button" class="btn btn--secondary btn--sm" data-mypage-review-detail data-student-id="${item.id}">상세</button>
               <button type="button" class="btn btn--secondary btn--sm" data-mypage-review-memo data-student-id="${item.id}"
-                ${muted ? 'disabled title="공개 중지된 의뢰"' : ''}>${role === 'tutor' ? '메모' : '쪽지'}</button>
+                ${muted ? 'disabled title="공개 중지된 의뢰"' : ''}>쪽지</button>
               <button type="button" class="btn btn--secondary btn--sm" data-mypage-review-remove data-student-id="${item.id}">${STUDENT_REVIEW.removeCta}</button>
             </div>
           </li>`;
@@ -542,8 +545,9 @@ function renderPlans(role) {
         </div>
         <ul class="plans-tier-list">${tierCopy.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
         <div class="mypage-actions-row">
-          <a href="#/mypage/paid/usage" class="btn btn--primary" data-mypage-nav="/mypage/paid/usage">이용 내역 확인</a>
-          <a href="#/mypage/paid" class="btn btn--secondary" data-mypage-nav="/mypage/paid">추가 이용 알아보기</a>
+          <a href="#/mypage/plans/my" class="btn btn--primary" data-mypage-nav="/mypage/plans/my">내 상품</a>
+          <a href="#/mypage/plans/history" class="btn btn--secondary" data-mypage-nav="/mypage/plans/history">결제내역</a>
+          <a href="#/plans" class="btn btn--secondary" data-nav="/plans">추가 이용 알아보기</a>
         </div>
       </section>
     </div>`;

@@ -17,6 +17,7 @@ import { ensureDemoThreads } from '../messages/thread-store.js';
 import { bindMessagesScreenEvents } from '../messages/screens.js';
 import { bindMessagesProviderToolbar } from '../messages/shell.js';
 import { bindSubmissionBoardEvents, ensureSubmissionBoardSeed } from '../submission-board/index.js';
+import { bindPlansScreenEvents } from '../plans/screens.js';
 
 function renderMypageLoginGate(message) {
   const role = 'guest';
@@ -92,4 +93,5 @@ export function bindMypageEvents(root, rerender) {
   bindMessagesScreenEvents(root, rerender);
   bindMessagesProviderToolbar(root, rerender);
   bindSubmissionBoardEvents(root, rerender);
+  bindPlansScreenEvents(root, rerender);
 }

@@ -70,7 +70,7 @@ export function checkFirstMemoPermission(ctx) {
 }
 
 /**
- * P16-02 thread 답장 — 선연락·학부모 thread는 free
+ * P16-02 thread 답장 — 학부모가 먼저 보낸 쪽지 thread는 free
  * @param {{ contextKind: MemoTargetKind, messages: { sender: 'me'|'peer' }[], initiatedByMe?: boolean } | null} thread
  * @param {NavRole} role
  */

@@ -91,7 +91,7 @@ export function renderPaidGuide(role) {
       ${renderProviderNoticeBanners()}
       <p class="mypage-muted">${esc(P18_GUIDE_LEAD)}</p>
       ${statusBadges ? `<p class="plans-status-row">${statusBadges}</p>` : ''}
-      <p class="mypage-muted">역할: <strong>${roleLabel}</strong> · 데모 요금제: <strong>${tier === 'paid' ? '유료' : tier === 'free' ? '무료' : tier}</strong> · <a href="#/plans/my" data-nav="/plans/my">내 상품</a></p>
+      <p class="mypage-muted">역할: <strong>${roleLabel}</strong> · 데모 요금제: <strong>${tier === 'paid' ? '유료' : tier === 'free' ? '무료' : tier}</strong> · <a href="#/mypage/plans/my" data-mypage-nav="/mypage/plans/my">내 상품</a></p>
       <div class="mypage-info-box plans-tier-box">
         <strong>${esc(tierCopy.title)}</strong>
         <ul class="plans-tier-list">${tierCopy.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
@@ -104,7 +104,7 @@ export function renderPaidGuide(role) {
         <strong>${esc(P18_RENEWAL_COPY.title)}</strong>
         <ul class="plans-tier-list">${P18_RENEWAL_COPY.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
       </div>
-      <p class="mypage-note">상품 안내 → <a href="#/plans" data-nav="/plans">이용권</a> · <a href="#/plans/my" data-nav="/plans/my">내 상품</a></p>
+      <p class="mypage-note"><a href="#/mypage/plans" data-mypage-nav="/mypage/plans">이용 현황</a> · <a href="#/mypage/plans/my" data-mypage-nav="/mypage/plans/my">내 상품</a> · <a href="#/plans" data-nav="/plans">추가 이용 알아보기</a></p>
     </section>`;
 }
 

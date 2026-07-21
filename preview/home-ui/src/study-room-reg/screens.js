@@ -276,7 +276,6 @@ function renderReviewBridgeBlock(room) {
       </div>
       <div class="p19-form-actions" style="margin-top:var(--space-3)">
         <a href="#${studentReviewPath({ from: 'exposure' })}" class="btn btn--primary" data-mypage-nav="${studentReviewPath({ from: 'exposure' })}">${esc(P20_HUB_CTA.studentReview)}${reviewCount ? ` · ${reviewCount}건` : ''}</a>
-        <a href="#/mypage/student-review" class="btn btn--secondary" data-mypage-nav="/mypage/student-review">${esc(P20_HUB_CTA.studentSearch)}</a>
       </div>
     </div>`;
 }
@@ -468,7 +467,7 @@ function renderPublish(room) {
       <div class="p20-confirm-card" data-p20-room-id="${room.id}">
         <h3 class="p20-confirm-card__title">자기확인 — 학부모에게 이렇게 보입니다</h3>
         <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="location" /> 위치·주소 공개 범위를 확인했습니다</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="contact" /> 연락·문의 방식 표시를 확인했습니다</label>
+        <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="contact" /> 쪽지·문의 방식 표시를 확인했습니다</label>
         <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="content" /> 대상·과목·소개문 노출을 확인했습니다</label>
         <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="direct" /> ${LIFECYCLE_PUBLISH_CONFIRM_DIRECT}</label>
       </div>

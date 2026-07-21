@@ -489,7 +489,7 @@ export function ensureDemoThreads() {
 
       scopeBadge: '공개 프로필',
 
-      scopeHint: '학부모 선연락 · 답장 free',
+      scopeHint: '학부모가 먼저 보낸 쪽지 · 답장 무료',
 
       showRequestInPanel: false,
 
@@ -537,7 +537,7 @@ export function ensureDemoThreads() {
 
       scopeBadge: '구조화 항목만',
 
-      scopeHint: '학생(학부모) 선연락 · 답장 free',
+      scopeHint: '학생(학부모)이 먼저 보낸 쪽지 · 답장 무료',
 
       showRequestInPanel: false,
 

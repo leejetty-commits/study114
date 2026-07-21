@@ -11,8 +11,6 @@ import {
 } from '../lifecycle-copy.js';
 import { renderBrowseList, renderExposureBox } from '../exposure-render.js';
 import { TUTOR_REGISTER_URL } from '../nav-config.js';
-import { getHandoffFromQuery } from '../handoff-link.js';
-import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
 import { formatSubmissionDocSummary, getSubmissionDocs } from '../mypage/preview-data.js';
 import {
   parseTutorRegPath,
@@ -462,7 +460,7 @@ function renderBridgeBody(tutor, kind) {
     : [
         { step: 'lesson', label: '수업·과목', ok: tutor.has_primary_subject && tutor.has_lesson_places },
         { step: 'career', label: '경력·학력', ok: tutor.education_doc_submitted },
-        { step: 'contact', label: '소개·연락', ok: !!(tutor.intro_short || tutor.intro_long) },
+        { step: 'contact', label: '소개', ok: !!(tutor.intro_short || tutor.intro_long) },
       ];
 
   const items = steps
@@ -639,12 +637,12 @@ function renderAccess(tutor) {
   const paid = isPaidProvider();
   const memos = getMemoCreditsRemaining();
   const published = tutor.profile_status === 'published';
-  const fromReview = getHandoffFromQuery() === 'review';
   const next = resolveAccessNextAction(tutor);
 
   const rulesDetails = `
     <details class="p21-access-rules">
       <summary>이용권·접근 규칙 자세히</summary>
+      ${renderProviderSubToggle()}
       <section class="p20-exposure-section">
         <h3>현재 이용 가능한 범위</h3>
         <div class="p20-matrix">${renderMatrixRows(accessMatrix)}</div>
@@ -657,16 +655,14 @@ function renderAccess(tutor) {
       <p class="p19-form-section__lead">
         <a href="#/mypage/plans" data-mypage-nav="/mypage/plans">${esc(P21_ACCESS_CTA.plans)}</a>
         · <a href="#/mypage/submission-docs" data-mypage-nav="/mypage/submission-docs">${esc(P21_ACCESS_CTA.submissionDocs)}</a>
-        · 학부모가 먼저 보낸 연락의 답장은 무료 · 학생에게 먼저 보내는 쪽지는 유료
+        · 학부모가 먼저 보낸 쪽지의 답장은 무료 · 학생에게 먼저 보내는 쪽지는 유료
       </p>
     </details>`;
 
   const body = `
     <div class="p21-access-body" data-p21-tutor-id="${tutor.id}">
-      ${fromReview ? `<div class="handoff-deeplink-banner" role="status">${esc(HANDOFF_DEEPLINK.accessFromReview)}</div>` : ''}
-      ${renderProviderSubToggle()}
       <section class="p20-exposure-section">
-        <h3>쪽지 상태</h3>
+        <h3>쪽지 현황</h3>
         <p class="p19-form-section__lead"><strong>${esc(next.status)}</strong> · ${esc(next.reason)}</p>
         <div class="p19-summary-grid">
           <dl class="p19-summary-card"><dt>공개</dt><dd>${published ? '공개중' : '미공개'}</dd></dl>

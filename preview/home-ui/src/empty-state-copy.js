@@ -103,7 +103,7 @@ export const EMPTY_COPY = {
   messages: {
     screenId: 'P16-01',
     title: '쪽지가 없습니다',
-    body: '상세·검색에서 첫 메모를 보내 보세요.',
+    body: '상세·목록에서 첫 쪽지를 보내 보세요.',
     cta: null,
   },
   compare: {
@@ -127,7 +127,7 @@ export const EMPTY_COPY = {
   students: {
     screenId: 'P19-01',
     title: '등록된 자녀가 없습니다',
-    body: '자녀별로 희망 조건을 등록하고 학생찾기에 공개할 수 있습니다.',
+    body: '자녀별로 희망 조건을 등록하고 학생 목록에 공개할 수 있습니다.',
     cta: '+ 자녀 추가',
   },
   studentsTab: {

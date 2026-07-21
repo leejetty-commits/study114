@@ -1,5 +1,5 @@
 /**
- * 25장 2차 — P21-05 ↔ 검토함 · P20-05 딥링크
+ * 25장 2차 — P21-05 ↔ 관심 학생 · P20-05 딥링크
  */
 
 import { parseHashQuery } from '../../shared/preview-links.js';

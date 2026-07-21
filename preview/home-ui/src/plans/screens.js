@@ -421,15 +421,15 @@ export function renderPlansHome() {
     role === 'study_room'
       ? [
           { href: '/plans/positions', label: '대표·추천 노출 보기' },
-          { href: '/plans/my', label: '내 상품' },
-          { href: '/plans/history', label: '결제내역' },
+          { href: '/mypage/plans/my', label: '내 상품', internal: true },
+          { href: '/mypage/plans/history', label: '결제내역', internal: true },
         ]
       : role === 'tutor'
         ? [
             { href: '/plans/positions', label: '노출상품' },
             { href: '/plans/access', label: '접근권' },
-            { href: '/plans/my', label: '내 상품' },
-            { href: '/plans/history', label: '결제내역' },
+            { href: '/mypage/plans/my', label: '내 상품', internal: true },
+            { href: '/mypage/plans/history', label: '결제내역', internal: true },
           ]
         : [
             { href: '/plans/positions', label: '노출상품 소개' },
@@ -467,7 +467,7 @@ export function renderPlansHome() {
         ${quickLinks
           .map(
             (l) =>
-              `<a href="#${l.href}" class="btn btn--secondary btn--sm" data-plans-nav="${l.href}">${esc(l.label)}</a>`,
+              `<a href="#${l.href}" class="btn btn--secondary btn--sm" ${l.internal ? 'data-nav' : 'data-plans-nav'}="${l.href}">${esc(l.label)}</a>`,
           )
           .join('')}
       </div>
@@ -606,8 +606,8 @@ export function renderPlansMy() {
           .join('')}
       </div>
       <div class="mypage-actions-row">
-        <a href="#/plans/history" class="btn btn--secondary" data-plans-nav="/plans/history">결제내역</a>
-        <a href="#/mypage/home" class="btn btn--secondary" data-nav="/mypage/home">마이페이지 요약</a>
+        <a href="#/mypage/plans/history" class="btn btn--secondary" data-nav="/mypage/plans/history">결제내역</a>
+        <a href="#/mypage/plans" class="btn btn--secondary" data-nav="/mypage/plans">이용 현황</a>
       </div>
     </section>`;
 }
@@ -784,7 +784,7 @@ export function renderPlansResult() {
         ${result.message ? `<p class="mypage-muted">${esc(result.message)}</p>` : ''}
       </div>
       <div class="mypage-actions-row">
-        <a href="#/plans/my" class="btn btn--primary" data-plans-nav="/plans/my">내 상품 보기</a>
+        <a href="#/mypage/plans/my" class="btn btn--primary" data-nav="/mypage/plans/my">내 상품 보기</a>
         ${ok ? `<a href="${backOp}" class="btn btn--secondary" data-nav="${backOp.slice(1)}">운영 화면으로</a>` : ''}
         ${!ok ? `<a href="#/plans/checkout" class="btn btn--secondary" data-plans-nav="/plans/checkout">다시 결제</a>` : ''}
         <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">상품센터</a>
