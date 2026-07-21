@@ -72,6 +72,16 @@ function isLowCredit(remaining) {
   return n > 0 && n <= Math.max(2, Math.ceil(10 * threshold));
 }
 
+function productLabel(code) {
+  const normalized = String(code || '').toLowerCase();
+  if (normalized.includes('prime')) return '대표 노출';
+  if (normalized.includes('pick')) return '추천 노출';
+  if (normalized.includes('basic')) return '기본 노출';
+  if (normalized.includes('memo')) return '쪽지권';
+  if (normalized.includes('request')) return '요청문 열람권';
+  return '이용 상품';
+}
+
 function renderLowCreditBanner(tickets) {
   if (!tickets) return '';
   const warns = [];
@@ -116,7 +126,7 @@ function renderProfileBanner(profile, role) {
       <div class="mypage-info-box plans-profile-banner">
         <strong>적용 대상</strong>
         <p>학생 계정은 유료상품 구매 주체가 아닙니다. FAQ에서 안내만 확인하세요.</p>
-        <a href="#/support/faq" class="btn btn--secondary btn--sm" data-nav="/support/faq">FAQ</a>
+        <a href="#/support/faq" class="btn btn--secondary btn--sm" data-nav="/support/faq">자주 묻는 질문</a>
       </div>`;
   }
   if (!profile) {
@@ -295,7 +305,7 @@ function renderPositionCard(product, profile, role, slots = null) {
     <li class="plans-catalog__item${product.featured ? ' is-featured' : ''}${soldOut ? ' is-soldout' : ''}">
       <div class="plans-catalog__head">
         <strong>${esc(product.name)}</strong>
-        <span class="plans-catalog__kind">position</span>
+        <span class="plans-catalog__kind">노출 상품</span>
       </div>
       <p class="plans-catalog__tagline">${esc(product.tagline)}</p>
       ${slotHtml}
@@ -319,7 +329,7 @@ function renderAccessCard(product, profile, role, remaining = {}) {
       <li class="plans-catalog__item is-placeholder">
         <div class="plans-catalog__head">
           <strong>${esc(product.name)}</strong>
-          <span class="plans-catalog__kind">access · 과외쌤 전용</span>
+          <span class="plans-catalog__kind">접근권 · 과외쌤 전용</span>
         </div>
         <p class="plans-catalog__tagline">${esc(product.tagline)}</p>
         <p class="mypage-muted">공부방 역할에서는 구매할 수 없습니다.</p>
@@ -346,7 +356,7 @@ function renderAccessCard(product, profile, role, remaining = {}) {
           .map((o, i) => {
             const amt = resolveCheckoutAmount(o.priceKrw);
             const priceNote = amt.testMode
-              ? `${formatKrw(o.priceKrw)} (테스트 ${formatKrw(amt.chargeKrw)})`
+              ? `${formatKrw(o.priceKrw)} (시험 결제 ${formatKrw(amt.chargeKrw)})`
               : formatKrw(o.priceKrw);
             return `<option value="${esc(o.optionId)}"${i === 0 ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}</option>`;
           })
@@ -367,13 +377,13 @@ function renderAccessCard(product, profile, role, remaining = {}) {
     <li class="plans-catalog__item${product.featured ? ' is-featured' : ''}">
       <div class="plans-catalog__head">
         <strong>${esc(product.name)}</strong>
-        <span class="plans-catalog__kind">access</span>
+        <span class="plans-catalog__kind">접근권</span>
       </div>
       <p class="plans-catalog__tagline">${esc(product.tagline)}</p>
       ${remainHtml}
       ${optionSelect}
       <ul class="plans-catalog__bullets">${product.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
-      <p class="mypage-muted">차감: FIFO · 사용기한 ${getPlanSetting('credit_expire_days')}일</p>
+      <p class="mypage-muted">먼저 산 이용권부터 차감 · 사용기한 ${getPlanSetting('credit_expire_days')}일</p>
       ${missingHtml}
       ${buyBtn}
     </li>`;
@@ -384,7 +394,7 @@ function renderTestModeToggle() {
   return `
     <label class="plans-test-mode">
       <input type="checkbox" data-plans-test-mode ${on ? 'checked' : ''} />
-      <span>테스트 모드 (결제 ${formatKrw(getPlanRuntimeSettings().test_amount_krw)})</span>
+      <span>시험 결제 사용 (결제 ${formatKrw(getPlanRuntimeSettings().test_amount_krw)})</span>
     </label>`;
 }
 
@@ -392,9 +402,9 @@ function renderSettingsHints() {
   const s = getPlanRuntimeSettings();
   return `
     <p class="mypage-muted plans-settings-hint">
-      설정 seed · 지역(${s.region_scope_type}) Prime ${s.prime_slots}슬롯
-      · Pick ${s.pick_set_size}세트/${s.pick_rotation_minutes}분 순환
-      · Basic ${s.basic_page_size}/페이지 · 주문만료 ${s.order_expire_minutes}분
+      지역 기준 대표 노출 ${s.prime_slots}자리
+      · 추천 노출 ${s.pick_set_size}개씩/${s.pick_rotation_minutes}분 순환
+      · 기본 노출 ${s.basic_page_size}개/페이지 · 주문 유효시간 ${s.order_expire_minutes}분
     </p>`;
 }
 
@@ -407,12 +417,10 @@ export function renderPlansHome() {
   const tierCopy = tier === 'paid' ? PAID_TIER_COPY : FREE_TIER_COPY;
   const ops = getPaidOperationalStatus();
   const positions = ops?.exposure?.positions ?? [];
-  const settings = getPlanRuntimeSettings();
-
   const quickLinks =
     role === 'study_room'
       ? [
-          { href: '/plans/positions', label: 'Prime/Pick 보러가기' },
+          { href: '/plans/positions', label: '대표·추천 노출 보기' },
           { href: '/plans/my', label: '내 상품' },
           { href: '/plans/history', label: '결제내역' },
         ]
@@ -425,15 +433,15 @@ export function renderPlansHome() {
           ]
         : [
             { href: '/plans/positions', label: '노출상품 소개' },
-            { href: '/support/faq', label: 'FAQ' },
+            { href: '/support/faq', label: '자주 묻는 질문' },
           ];
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P18-01 · ${esc(P18_HEADLINE)}</p>
+      <p class="mypage-lead">${esc(P18_HEADLINE)}</p>
       <div class="mypage-info-box">
         <strong>유료 = 구매 단계</strong>
-        <p class="mypage-muted">새 입력 폼이 아닙니다. 상세등록·일반 리스트/검색 등록 후 Prime / Pick / 접근권을 구매합니다.</p>
+        <p class="mypage-muted">새로 정보를 입력하는 화면이 아닙니다. 상세등록을 마친 뒤 대표 노출·추천 노출·접근권을 구매합니다.</p>
       </div>
       ${renderProviderNoticeBanners()}
       ${renderProfileBanner(profile, role)}
@@ -449,7 +457,7 @@ export function renderPlansHome() {
           ? `<ul class="plans-tier-list">${positions
               .map(
                 (p) =>
-                  `<li><strong>${esc(String(p.sku).toUpperCase())}</strong> · ${p.days_left}일 남음</li>`,
+                  `<li><strong>${esc(productLabel(p.sku))}</strong> · ${p.days_left}일 남음</li>`,
               )
               .join('')}</ul>`
           : `<p class="mypage-muted">${esc(P18_EXPOSURE_STATUS.basic)}</p>`
@@ -463,8 +471,7 @@ export function renderPlansHome() {
           )
           .join('')}
       </div>
-      <p class="mypage-muted">역할: <strong>${esc(roleLabel(role))}</strong>
-        · 기본 랜딩 힌트: ${role === 'study_room' ? settings.default_landing_study_room : settings.default_landing_tutor}</p>
+      <p class="mypage-muted">현재 이용 역할: <strong>${esc(roleLabel(role))}</strong></p>
       <div class="mypage-info-box">
         <strong>${esc(P18_RENEWAL_COPY.title)}</strong>
         <ul class="plans-tier-list">${P18_RENEWAL_COPY.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
@@ -487,19 +494,19 @@ export function renderPlansPositions() {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P18-02 · 노출상품 (Prime / Pick · Basic 부스트 없음)</p>
+      <p class="mypage-lead">노출 상품 (대표 노출 / 추천 노출 · 기본 노출은 추가 올리기 없음)</p>
       ${renderProfileBanner(profile, role)}
       ${role === 'study_room' || role === 'tutor' ? renderTestModeToggle() : ''}
       <div class="mypage-info-box plans-slot-banner">
-        <strong>Prime 슬롯 · ${esc(scopeLabel)} 단위</strong>
-        <p>Prime ${inv.prime.used}/${inv.prime.capacity} (잔여 ${inv.prime.remaining})
-          · Pick 판매상한 ${inv.pick.used}/${inv.pick.capacity} (잔여 ${inv.pick.remaining})</p>
-        <p class="mypage-muted">피드: 공부방 Prime ${settings.prime_slots}슬롯 고정 · 과외쌤 Prime은 시 단위·페이지·${settings.pick_rotation_minutes}분 순환 · Pick ${settings.pick_set_size}세트/${settings.pick_rotation_minutes}분 · Basic은 최신순·수동 페이지만</p>
+        <strong>대표 노출 자리 · ${esc(scopeLabel)} 단위</strong>
+        <p>대표 노출 ${inv.prime.used}/${inv.prime.capacity} (남은 자리 ${inv.prime.remaining})
+          · 추천 노출 ${inv.pick.used}/${inv.pick.capacity} (남은 자리 ${inv.pick.remaining})</p>
+        <p class="mypage-muted">공부방 대표 노출 ${settings.prime_slots}자리 고정 · 과외쌤 대표 노출은 시 단위·페이지·${settings.pick_rotation_minutes}분 순환 · 추천 노출 ${settings.pick_set_size}개씩/${settings.pick_rotation_minutes}분 · 기본 노출은 최신순·직접 페이지 이동</p>
       </div>
       <ul class="plans-catalog">
         ${products.map((p) => renderPositionCard(p, profile, role, slots)).join('')}
       </ul>
-      <p class="mypage-note">Basic Boost·상위 점프 상품은 판매하지 않습니다. 접근권은 <a href="#/plans/access" data-plans-nav="/plans/access">접근권상품</a> 탭</p>
+      <p class="mypage-note">기본 노출을 위로 올리는 별도 상품은 판매하지 않습니다. 접근권은 <a href="#/plans/access" data-plans-nav="/plans/access">접근권 상품</a>에서 확인하세요.</p>
     </section>`;
 }
 
@@ -518,7 +525,7 @@ export function renderPlansAccess() {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P18-03 · 접근권상품 (쪽지권 / 요청문 열람권)</p>
+      <p class="mypage-lead">접근권 상품 (쪽지권 / 요청문 열람권)</p>
       ${role === 'tutor' ? renderProfileBanner(profile, role) : ''}
       ${role === 'study_room' ? `<div class="mypage-info-box"><p>접근권 상품은 <strong>과외쌤 전용</strong>입니다. 공부방은 노출상품을 이용해 주세요.</p>
         <a href="#/plans/positions" class="btn btn--secondary btn--sm" data-plans-nav="/plans/positions">노출상품으로</a></div>` : ''}
@@ -528,7 +535,7 @@ export function renderPlansAccess() {
       <ul class="plans-catalog">
         ${products.map((p) => renderAccessCard(p, profile, role, remaining)).join('')}
       </ul>
-      <p class="mypage-note">결제 후 pack 생성 · FIFO 차감은 쪽지/열람 사용 시 서버에서 처리됩니다.</p>
+      <p class="mypage-note">결제 후 이용권이 생성되며, 먼저 산 이용권부터 차례로 사용됩니다.</p>
     </section>`;
 }
 
@@ -538,7 +545,7 @@ export function renderPlansMy() {
   if (role === 'parent' || role === 'guest') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">P18-04 · 내 상품</p>
+        <p class="mypage-lead">내 상품</p>
         ${renderProfileBanner(null, role)}
       </section>`;
   }
@@ -551,7 +558,7 @@ export function renderPlansMy() {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P18-04 · 내 상품 (상태판)</p>
+      <p class="mypage-lead">내 상품 이용 현황</p>
       ${renderProviderNoticeBanners()}
       ${role === 'tutor' ? renderLowCreditBanner(tickets) : ''}
       <h2 class="mypage-subhead">이용중 포지션</h2>
@@ -564,7 +571,7 @@ export function renderPlansMy() {
                   .map(
                     (p) => `
                   <tr>
-                    <td><strong>${esc(String(p.sku).toUpperCase())}</strong></td>
+                    <td><strong>${esc(productLabel(p.sku))}</strong></td>
                     <td>${p.days_left}일</td>
                     <td>${esc(String(p.ends_at || '').slice(0, 10))}</td>
                     <td><a href="#/plans/positions" class="btn btn--secondary btn--sm" data-plans-nav="/plans/positions">재구매</a></td>
@@ -585,9 +592,9 @@ export function renderPlansMy() {
               <div class="mypage-stat${isLowCredit(tickets.request_view.remaining) ? ' is-warn' : ''}"><span>${esc(tickets.request_view.label)}</span><strong>${tickets.request_view.remaining}</strong></div>
             </div>
             <p class="mypage-muted"><a href="#/plans/access" data-plans-nav="/plans/access">접근권 충전하기</a></p>`
-          : `<p class="mypage-muted">API 연동 후 표시 · <a href="#/plans/access" data-plans-nav="/plans/access">접근권 상품</a></p>`
+          : `<p class="mypage-muted">이용권 정보를 불러오면 표시됩니다. · <a href="#/plans/access" data-plans-nav="/plans/access">접근권 상품</a></p>`
       }
-      <h2 class="mypage-subhead">반응 요약 (ROI)</h2>
+      <h2 class="mypage-subhead">반응 요약</h2>
       <div class="mypage-stats roi-metrics">
         ${metrics
           .map(
@@ -611,7 +618,7 @@ export function renderPlansHistory() {
   if (role === 'parent' || role === 'guest') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">P18-05 · 결제내역</p>
+        <p class="mypage-lead">결제내역</p>
         ${renderProfileBanner(null, role)}
       </section>`;
   }
@@ -619,8 +626,8 @@ export function renderPlansHistory() {
   const rows = historyCache.loaded ? historyCache.rows : getHistoryRows();
   const sourceNote = historyCache.loaded
     ? historyCache.fromApi
-      ? '서버 주문 조회 · 로컬 보조 병합'
-      : 'API 미연결 · 로컬/seed 목록'
+      ? '서버 주문 내역과 이 기기의 임시 내역을 함께 표시'
+      : '서버 연결 전 · 이 기기의 임시 내역'
     : '불러오는 중…';
   const receiptRow = openReceiptOrderRef
     ? rows.find((r) => r.orderRef === openReceiptOrderRef) || null
@@ -628,7 +635,7 @@ export function renderPlansHistory() {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P18-05 · 결제내역</p>
+      <p class="mypage-lead">결제내역</p>
       <p class="mypage-muted">${esc(sourceNote)}</p>
       <div class="plans-history-layout">
       <table class="plans-table" aria-label="결제내역">
@@ -678,7 +685,7 @@ export function renderPlansCheckout() {
   if (!draft) {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">P18-06 · 결제</p>
+        <p class="mypage-lead">결제</p>
         <div class="mypage-info-box is-warn">
           <p>결제할 상품이 없습니다. 노출상품에서 다시 선택해 주세요.</p>
           <a href="#/plans/positions" class="btn btn--primary" data-plans-nav="/plans/positions">노출상품으로</a>
@@ -689,7 +696,7 @@ export function renderPlansCheckout() {
   if (role !== 'study_room' && role !== 'tutor') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">P18-06 · 결제</p>
+        <p class="mypage-lead">결제</p>
         ${renderProfileBanner(null, role)}
       </section>`;
   }
@@ -699,7 +706,7 @@ export function renderPlansCheckout() {
 
   return `
     <section class="mypage-panel plans-checkout">
-      <p class="mypage-lead">P18-06 · 결제</p>
+      <p class="mypage-lead">결제</p>
       <ol class="plans-checkout-steps">
         <li class="is-done"><strong>1. 적용 프로필</strong>
           <p>${esc(draft.providerLabel)} · ${esc(roleLabel(draft.providerType))}</p>
@@ -734,7 +741,7 @@ export function renderPlansCheckout() {
         </li>
         <li>
           <strong>6. 결제 진행</strong>
-          <p class="mypage-muted">mock PG · 실결제는 후속 연동</p>
+          <p class="mypage-muted">현재는 시험 결제 화면이며 실제 결제 연동은 준비 중입니다.</p>
           <div class="mypage-actions-row">
             <button type="button" class="btn btn--primary" data-plans-pay>결제하기</button>
             <a href="#/plans/positions" class="btn btn--secondary" data-plans-nav="/plans/positions">취소</a>
@@ -751,7 +758,7 @@ export function renderPlansResult() {
   if (!result) {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">P18-07 · 결제 결과</p>
+        <p class="mypage-lead">결제 결과</p>
         <div class="mypage-info-box">
           <p>표시할 결과가 없습니다.</p>
           <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">상품홈</a>
@@ -767,7 +774,7 @@ export function renderPlansResult() {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P18-07 · ${ok ? '결제 완료' : '결제 미완료'}</p>
+      <p class="mypage-lead">${ok ? '결제 완료' : '결제 미완료'}</p>
       <div class="mypage-info-box ${ok ? '' : 'is-warn'}">
         <p><strong>${esc(orderStatusLabel(result.status === 'success' ? 'paid' : result.status))}</strong></p>
         ${result.orderRef ? `<p>주문번호 <code>${esc(result.orderRef)}</code></p>` : ''}

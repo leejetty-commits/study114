@@ -100,15 +100,15 @@ export const LIFECYCLE_PUBLISH_CONFIRM_DIRECT =
   '플랫폼 심사 없이 제가 직접 공개합니다 (22장)';
 
 export const LIFECYCLE_PUBLISH_CONFIRM_NOTE =
-  '공개 confirm은 운영자 심사가 아니라 당사자 본인의 자기확인입니다.';
+  '공개 확인은 운영자 심사가 아니라 등록한 본인의 확인입니다.';
 
 export const TRUST_PLATFORM_DISCLAIMER =
   '제출자료는 등록자가 공개한 참고 정보입니다. 우동공과는 해당 서류를 인증하거나 보증하지 않으며, 중요한 서류는 필요한 경우 발급기관 기준으로 직접 다시 확인해 주세요.';
 
 export const SUBMISSION_DOCS_LEAD =
-  'P15-10 · 21장 — 제출 여부·공개 범위만 표시 · 플랫폼 심사·반려 없음';
+  '제출 여부와 공개 범위만 표시하며 플랫폼이 심사하거나 반려하지 않습니다.';
 
 export const REGISTER_UI_PROFILE_STATUS_OPTIONS = [
-  { value: 'draft', label: 'draft · 저장중' },
-  { value: 'published', label: 'published · 공개 (운영센터에서도 확인 권장)' },
+  { value: 'draft', label: '저장 중' },
+  { value: 'published', label: '공개 (운영 화면에서도 확인 권장)' },
 ];

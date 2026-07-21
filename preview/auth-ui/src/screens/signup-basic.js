@@ -546,7 +546,7 @@ export function bindSignupBasicEvents(root) {
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = role === 'student' ? '지역등록 · draft 저장' : 'draft 저장 · 다음';
+        submitBtn.textContent = role === 'student' ? '지역등록 · 임시 저장' : '임시 저장 · 다음';
       }
     }
   });

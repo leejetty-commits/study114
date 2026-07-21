@@ -7,7 +7,7 @@ export const SITE_PROMO_ITEMS = {
   premium: {
     tag: '프리미엄',
     title: '우리동네 상단 노출',
-    desc: 'Prime·Pick 슬롯 — 상세등록 완료 전제',
+    desc: '대표·추천 노출 — 상세등록 완료 후 이용',
     cta: '상품 안내',
     action: 'ad-premium',
   },

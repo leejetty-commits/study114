@@ -15,7 +15,7 @@ export const HOME_EMPHASIS = {
 
 /** §15 역할 제한 패널 (Empty ✕ · onboarding guard) */
 export const ONBOARDING_GUARD_COPY = {
-  submissionParent: '공급자(과외쌤·공부방) 전용 · P15-10',
+  submissionParent: '제출자료 관리는 과외쌤과 공부방 계정에서 이용할 수 있어요.',
   submissionStudyRoom: '공부방 제출자료 UI는 1차 후순위(△) · 동일 원칙 적용',
 };
 
@@ -24,9 +24,9 @@ export const EMPTY_ONBOARDING = ONBOARDING_GUARD_COPY;
 
 /** §7 학부모 P15-09 */
 export const GUARDIAN_PLANS_COPY = {
-  lead: '학부모는 상품 설명 열람만 · 구매·결제 UI 없음 (15장 §7)',
-  body: 'Prime/Pick 기간형 · 쪽지권/열람권 횟수권은 공부방·과외쌤 유료 서비스입니다.',
-  footnote: '18장 2026-07-07 잠금 · 18b 더미 단가',
+  lead: '학부모 계정은 상품 안내를 볼 수 있으며 구매 기능은 제공하지 않아요.',
+  body: '대표 노출·추천 노출과 쪽지권·열람권은 공부방과 과외쌤을 위한 유료 서비스입니다.',
+  footnote: '상품 구성과 가격은 상품 안내에서 확인할 수 있어요.',
 };
 
 export const HOME_STATS_NOTE = '내 상태는 활동에 따라 달라져요.';

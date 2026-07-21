@@ -28,11 +28,11 @@ export function renderComplete() {
       <p class="auth-subheading" style="margin-top:var(--space-2);">
         상세등록: <strong>${s.detail_completion_status}</strong>
         · 일반 리스트/검색: <strong>${s.detail_completion_status === 'expanded_complete' ? '등록 가능(공개 절차 후)' : '상세등록 완료 후 가능'}</strong>
-        · Prime/Pick: <strong>${s.detail_completion_status === 'expanded_complete' ? '구매 단계로 연결(품질·증빙 별도)' : '상세등록 완료 후'}</strong>
+        · 대표/추천 노출: <strong>${s.detail_completion_status === 'expanded_complete' ? '구매 단계로 연결(품질·증빙 별도)' : '상세등록 완료 후'}</strong>
       </p>
     </div>
 
-    ${renderTempNotice('기본등록만 = draft · 상세등록 완료 후 일반 리스트/검색 · 그다음 Prime/Pick 구매 (14장)')}
+    ${renderTempNotice('기본등록은 임시 저장 상태 · 상세등록 완료 후 일반 목록/검색 · 그다음 대표/추천 노출 구매')}
 
     <dl class="register-summary">
       <dt>공부방명</dt><dd>${s.study_room_name}</dd>

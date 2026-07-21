@@ -9,7 +9,7 @@
 export const REGISTER_FLOW = {
   basic: {
     label: '기본등록',
-    outcome: '공개 전 draft 생성 · 상세등록 진입',
+    outcome: '공개 전 임시 저장본 생성 · 상세등록 시작',
     studyRoomSteps: ['basic', 'location'],
     tutorSteps: null,
   },
@@ -25,13 +25,13 @@ export const REGISTER_FLOW = {
 /** 일반 리스트/검색 = 상세등록 완료 후 · Prime/Pick = 상세+품질/증빙 */
 export const EXPOSURE_TIERS = {
   prime: {
-    label: 'Prime',
+    label: '대표 노출',
     slots: 3,
     requiresDetailComplete: true,
     note: '상세등록 완료 + 소개/이미지/증빙 등 품질 충족 후 구매',
   },
   pick: {
-    label: 'Pick',
+    label: '추천 노출',
     slotsPerRow: 5,
     requiresDetailComplete: true,
     note: '상세등록 완료 + 품질 충족 후 구매',

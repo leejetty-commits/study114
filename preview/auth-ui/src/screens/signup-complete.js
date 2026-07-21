@@ -40,7 +40,7 @@ export function renderSignupComplete() {
       <div class="success-icon">✓</div>
       <h1 class="auth-heading">가입 · 기본등록 완료</h1>
       <p class="auth-subheading">
-        계정과 <strong>공개 전 draft</strong>가 만들어졌습니다.<br />
+        계정과 <strong>공개 전 임시 저장본</strong>이 만들어졌습니다.<br />
         아직 검색·리스트에 <strong>공개되지 않습니다</strong>.<br />
         검색/공개에 쓰이는 항목은 <strong>상세등록</strong>에서 완성합니다.
       </p>
@@ -52,7 +52,7 @@ export function renderSignupComplete() {
         <dd>${saved?.email ?? '—'}</dd>
         <dt>역할 (DB role_type)</dt>
         <dd>${saved?.roleType ?? '—'}</dd>
-        <dt>draft 프로필</dt>
+        <dt>임시 저장 프로필</dt>
         <dd>${profile ? `${profile.kind} #${profile.id}` : '—'}</dd>
         <dt>기본등록 seed</dt>
         <dd>${summarizeBasic(role, basic)}</dd>
@@ -62,7 +62,7 @@ export function renderSignupComplete() {
         <p class="auth-section-title">다음 · 상세등록</p>
         <p class="form-note">
           상세등록을 마친 뒤 일반 리스트/검색에 등록할 수 있습니다.
-          Prime / Pick / 접근권은 그다음 <strong>구매 단계</strong>입니다. (${roleLabel})
+          대표 노출 / 추천 노출 / 접근권은 그다음 <strong>구매 단계</strong>입니다. (${roleLabel})
         </p>
       </div>
 

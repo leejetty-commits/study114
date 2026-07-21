@@ -64,7 +64,7 @@ export function guardPlansAccess(role) {
   return {
     ok: false,
     redirect: '/support/faq',
-    message: '유료상품은 공급자(공부방·과외쌤)용입니다. FAQ에서 안내를 확인하세요.',
+    message: '유료상품은 공급자(공부방·과외쌤)용입니다. 자주 묻는 질문에서 안내를 확인하세요.',
     mode: 'role_blocked',
   };
 }

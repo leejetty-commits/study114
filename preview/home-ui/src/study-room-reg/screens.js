@@ -269,7 +269,7 @@ function renderReviewBridgeBlock(room) {
   const reviewCount = getStudentReviewIds().length;
   return `
     <div class="p20-hub-block p21-review-bridge">
-      <h3 class="p20-hub-block__title">학생 검토함 (P25-S10)</h3>
+      <h3 class="p20-hub-block__title">관심 학생</h3>
       <p class="p19-form-section__lead">${esc(HANDOFF_DEEPLINK.reviewBridgeLead)}</p>
       <p class="p20-hint">${esc(HANDOFF_DEEPLINK.reviewFlow)}</p>
       <div class="p19-summary-grid" style="margin-top:var(--space-3)">
@@ -359,7 +359,7 @@ function renderHub(room) {
 function renderBridgeBody(room, kind) {
   const readiness = getPublishReadiness(room);
   const isBasic = kind === 'basic';
-  const title = isBasic ? '기본정보 (P20-03a)' : '상세정보 (P20-03b)';
+  const title = isBasic ? '기본정보' : '상세정보';
   const steps = isBasic
     ? [
         { step: 'basic', label: '기본 프로필', ok: !!room.study_room_name },
@@ -385,7 +385,7 @@ function renderBridgeBody(room, kind) {
   return `
     <div class="p20-bridge">
       <h3 class="p19-form-section__title">${title}</h3>
-      <p class="p19-form-section__lead">입력 폼은 <strong>study-room-ui</strong>에서 수정합니다. 여기서는 요약·부족 항목만 표시합니다.</p>
+      <p class="p19-form-section__lead">공부방 등록 화면에서 정보를 수정합니다. 여기서는 요약과 부족한 항목만 보여드려요.</p>
       <ul class="p20-bridge__list">${items}</ul>
       <dl class="p20-bridge__summary">
         <div><dt>공부방명</dt><dd>${esc(room.study_room_name)}</dd></div>
@@ -524,13 +524,13 @@ function renderExposure(room) {
       <section class="p20-exposure-section p20-plans-cta">
         <h3>${esc(P20_EXPOSURE_SECTION_TITLES.plans)}</h3>
         <div class="p20-matrix">${renderMatrixRows(blocks.slice(4))}</div>
-        <p class="p19-form-section__lead">노출 강화는 P15-09에서 확인합니다.</p>
+        <p class="p19-form-section__lead">노출 강화 상품은 이용 현황에서 확인합니다.</p>
         <a href="#/plans/positions?provider_type=study_room&provider_id=${room.id}" class="btn btn--secondary" data-nav="/plans/positions?provider_type=study_room&provider_id=${room.id}">유료상품 · 노출</a>
       </section>
       <section class="p20-exposure-section p20-messages-link">
         <h3>${esc(P20_EXPOSURE_SECTION_TITLES.messages)}</h3>
         <p class="p19-form-section__lead">문의·상담은 쪽지함에서 확인합니다. 운영센터 주인공은 상담 수용 상태입니다. (16§1-3)</p>
-        <a href="#/mypage/messages/inbox" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/messages/inbox">쪽지함 열기 (P16-01)</a>
+        <a href="#/mypage/messages/inbox" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/messages/inbox">쪽지함 열기</a>
       </section>
       <div class="p19-danger-zone" data-p20-room-id="${room.id}">
         <h3 class="p19-danger-zone__title">${esc(P20_EXPOSURE_SECTION_TITLES.danger)}</h3>

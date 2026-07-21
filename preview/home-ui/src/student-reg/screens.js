@@ -437,12 +437,12 @@ function renderBasicForm(student) {
           <span class="p19-field__label">희망 유형 <em class="p19-required">필수</em></span>
           ${renderSelect('preferred_lesson_type', FORM_OPTIONS.lessonType, student.preferred_lesson_type, { required: true })}
         </label>
-        <p class="p19-field__hint">대표 희망지역: <strong>${esc(primaryHopeRegionLabel(student) || '미등록 — auth 기본등록에서 지역 seed 필요')}</strong></p>
+        <p class="p19-field__hint">대표 희망지역: <strong>${esc(primaryHopeRegionLabel(student) || '미등록 — 기본등록에서 지역을 선택해 주세요')}</strong></p>
         <p class="p19-field__hint">기준: ${esc(student.preferred_studyroom_region_basis || (student.preferred_lesson_type === 'tutor' ? '시' : '—'))}</p>`,
       )}
       ${renderFormFooter(
         '저장해도 학생찾기에 공개되지 않습니다. 다음 단계: 상세등록에서 지역 확장.',
-        `<button type="submit" class="btn btn--primary">draft 저장</button>
+        `<button type="submit" class="btn btn--primary">임시 저장</button>
          <a href="#${studentSectionPath(student.id, 'detail')}" class="btn btn--secondary" data-p19-nav="${studentSectionPath(student.id, 'detail')}">상세등록으로</a>`,
       )}
     </form>`;
@@ -464,7 +464,7 @@ function renderDetailForm(student) {
   const formBody = `
     <form class="p19-form" data-p19-form="detail" data-p19-student-id="${student.id}">
       <div class="p19-inline-tip">
-        <strong>기본등록 seed</strong> ${esc(seedSummary || '—')}
+        <strong>기본등록 내용</strong> ${esc(seedSummary || '—')}
         · <a href="#${studentSectionPath(student.id, 'basic')}" data-p19-nav="${studentSectionPath(student.id, 'basic')}">기본정보 수정</a>
       </div>
       ${renderFormSection(

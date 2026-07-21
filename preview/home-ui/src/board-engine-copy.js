@@ -17,11 +17,11 @@
 
 export const BOARD_ENGINE_LOCK = {
   oneLiner:
-    'Study114 안의 게시판 엔진은 공지·FAQ·가이드·다운로드·제출·공유를 boardKey별 권한으로 운영한다. GNU 커뮤니티와 콘텐츠는 공유하지 않는다.',
+    '우동공과 게시판은 공지·자주 묻는 질문·가이드·자료받기·제출·공유를 채널별 권한으로 운영합니다. 외부 커뮤니티와 콘텐츠를 공유하지 않습니다.',
   topConcept: '게시판 엔진',
-  libraryPosition: '「자료실」은 게시판 엔진 안의 다운로드형 boardKey 묶음에 대한 사용자-facing 명칭 후보다.',
+  libraryPosition: '「자료실」은 게시판 안에서 파일을 내려받는 채널을 묶어 부르는 사용자용 이름입니다.',
   boundary:
-    '운영형·자료형·제출형 = 게시판 엔진 · 법적 정본 = 정적 정책 페이지 · 탐색/입력/결제/쪽지 = 서비스 화면 · 자유 UGC = GNU',
+    '운영·자료·제출 콘텐츠는 게시판에서, 약관은 정책 페이지에서, 탐색·입력·결제·쪽지는 각 서비스 화면에서 관리합니다. 회원 자유 게시글은 외부 커뮤니티와 분리합니다.',
 };
 
 /** 26장 정적 정책 slug — 게시판 생성으로 대체 금지 (33장 §12-4·12-5) */
@@ -37,7 +37,7 @@ export const STATIC_POLICY_RESERVED_SLUGS = [
 
 /** @type {Record<BoardType, { label: string; desc: string }>} */
 export const BOARD_TYPES = {
-  operational: { label: '운영형', desc: '운영자 발행 · 공지·FAQ·가이드' },
+  operational: { label: '운영형', desc: '운영자 발행 · 공지·자주 묻는 질문·가이드' },
   download: { label: '다운로드형', desc: 'PDF·양식·체크리스트 · 썸네일·다운로드' },
   upload: { label: '권한형 업로드', desc: '특정 역할 write/upload · 제출·사례 공유' },
   curation: { label: '큐레이션형', desc: '운영 선별 노출 · 추천 팁' },
@@ -73,7 +73,7 @@ export const BOARD_CREATE_PRESETS = {
     lockedBoardKeys: ['notice'],
   },
   faq: {
-    label: 'FAQ형',
+    label: '자주 묻는 질문형',
     boardType: 'operational',
     sectionOwners: ['support'],
     defaultVisibility: 'public',
@@ -207,11 +207,11 @@ export const BOARD_REGISTRY = [
   },
   {
     boardKey: 'faq',
-    label: 'FAQ',
+    label: '자주 묻는 질문',
     boardType: 'operational',
     presetId: 'faq',
     sectionOwner: 'support',
-    userFacingMenu: 'FAQ',
+    userFacingMenu: '자주 묻는 질문',
     visibility: 'public',
     readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
     downloadRoles: [],
@@ -427,9 +427,9 @@ export function getBoardVisibilityBadge(policy, role) {
 export function validateBoardChannelCreate(input) {
   const errors = [];
   const key = String(input.boardKey || '').trim();
-  if (!key) errors.push('boardKey가 필요합니다.');
+  if (!key) errors.push('채널 식별값이 필요합니다.');
   if (BOARD_REGISTRY.some((b) => b.boardKey === key)) {
-    errors.push(`boardKey 중복: ${key}`);
+    errors.push(`채널 식별값 중복: ${key}`);
   }
   const slug = String(input.routeSlug || '')
     .replace(/^#/, '')
@@ -441,7 +441,7 @@ export function validateBoardChannelCreate(input) {
     }
   }
   if (!input.sectionOwner) {
-    errors.push('소속 메뉴군(sectionOwner) 선택이 필요합니다.');
+    errors.push('소속 그룹 선택이 필요합니다.');
   }
   return { ok: errors.length === 0, errors };
 }

@@ -37,14 +37,14 @@ export function renderContact() {
         <label class="form-label" for="profile_status">저장 상태</label>
         <span class="field-db-name">profile_status</span>
         <select class="form-input" id="profile_status" name="profile_status">
-          <option value="draft" ${s.profile_status === 'draft' || s.profile_status === 'pending' ? 'selected' : ''}>draft · 저장중</option>
+          <option value="draft" ${s.profile_status === 'draft' || s.profile_status === 'pending' ? 'selected' : ''}>저장 중</option>
           <option value="published" ${s.profile_status === 'published' ? 'selected' : ''}>published · 공개 (P21 운영센터 확인 권장)</option>
         </select>
         <p class="form-hint">22장 · profile_status.pending(검수) 미사용 · 공개는 운영센터 자기확인 후 전환 권장</p>
       </div>
       ${renderNavButtons('/register/career', '등록 완료')}
     </form>`;
-  return renderRegisterShell(content, { step: 5, title: '연락 · 사진', subtitle: '8장 §9 · 상세등록 완료 시 Prime/Pick 자격' });
+  return renderRegisterShell(content, { step: 5, title: '연락 · 사진', subtitle: '상세등록 완료 시 대표/추천 노출 자격' });
 }
 
 export function bindContactEvents(root) {

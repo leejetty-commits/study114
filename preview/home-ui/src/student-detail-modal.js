@@ -43,7 +43,7 @@ export function renderStudentRegisterForm(student = {}) {
   return `
     <section class="student-form" id="student-register-preview">
       <h3 class="student-form__title">자녀 기본등록 (프리뷰)</h3>
-      <p class="student-form__hint">SSOT 4장 · 14장 — 수업예산 라벨 통일, 내부 저장 분기</p>
+      <p class="student-form__hint">수업 유형에 맞는 월 예산을 보여드려요.</p>
       <div class="student-form__grid">
         <label class="student-form__field">
           <span class="student-form__label">희망 유형</span>
@@ -59,12 +59,12 @@ export function renderStudentRegisterForm(student = {}) {
         <label class="student-form__field">
           <span class="student-form__label">수업예산 (과외)</span>
           <input name="preferred_fee_amount" type="number" class="student-form__input" value="${esc(String(v.preferred_fee_amount))}" />
-          <span class="student-form__db">students.preferred_fee_amount</span>
+          <span class="student-form__db">과외 희망 예산</span>
         </label>
         <label class="student-form__field">
           <span class="student-form__label">수업예산 (공부방)</span>
           <input name="preferred_studyroom_fee_amount" type="number" class="student-form__input" value="${esc(String(v.preferred_studyroom_fee_amount))}" />
-          <span class="student-form__db">students.preferred_studyroom_fee_amount</span>
+          <span class="student-form__db">공부방 희망 예산</span>
         </label>
       </div>
       <label class="student-form__field student-form__field--full">
@@ -77,7 +77,7 @@ export function renderStudentRegisterForm(student = {}) {
         <textarea name="special_request_note" class="student-form__textarea" rows="2">${esc(v.special_request_note)}</textarea>
       </label>
       ${renderVisibilitySelect('special_request_visibility', v.special_request_visibility)}
-      <button type="button" class="btn btn--primary btn--sm" data-action="save-student-preview">저장 (프리뷰)</button>
+      <button type="button" class="btn btn--primary btn--sm" data-action="save-student-preview">미리보기 저장</button>
     </section>
   `;
 }

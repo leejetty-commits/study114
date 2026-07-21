@@ -4,12 +4,12 @@
 export const REGISTER_PHASES = {
   basic: {
     label: '기본등록',
-    hint: '공개 전 draft · 상세등록으로 이어짐',
+    hint: '공개 전 임시 저장 · 상세등록으로 이어짐',
     stepKeys: ['basic', 'regions'],
   },
   detail: {
     label: '상세등록',
-    hint: '검색·리스트·공개 본체 · 완료 후 일반 등록 · 이어 Prime/Pick 구매',
+    hint: '검색·목록·공개에 쓰이는 정보 · 완료 후 일반 등록 · 이어 대표/추천 노출 구매',
     stepKeys: ['lesson', 'career', 'contact'],
   },
 };

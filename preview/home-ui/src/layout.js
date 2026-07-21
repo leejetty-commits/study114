@@ -29,12 +29,12 @@ export function renderPreviewToolbar() {
   const apiOn = isHandoffApiMode();
   const msgApiOn = isMessagesApiMode();
   const authLabel = authUser
-    ? `${resolveAccountDisplayName(authUser)} · handoff ${apiOn ? 'ON' : 'OFF'} · 쪽지 ${msgApiOn ? 'ON' : 'OFF'}`
-    : '비로그인 · sessionStorage';
+    ? `${resolveAccountDisplayName(authUser)} · 화면 연결 ${apiOn ? '사용' : '미사용'} · 쪽지 연결 ${msgApiOn ? '사용' : '미사용'}`
+    : '비로그인 · 임시 저장';
 
   return `
     <div class="preview-toolbar">
-      <span class="preview-toolbar__label">우동공과 · 메인 UI 프리뷰 (9·15·16·17·25·26장)</span>
+      <span class="preview-toolbar__label">우동공과 · 메인 화면 미리보기</span>
       <div class="preview-toolbar__group">
         ${Object.entries(ROUTES)
           .map(([path, key]) => {
@@ -51,11 +51,11 @@ export function renderPreviewToolbar() {
         <button type="button" class="preview-toolbar__btn ${onPolicy ? 'is-active' : ''}" data-nav="/policy/terms">정책</button>
         <button type="button" class="preview-toolbar__btn ${onAdmin ? 'is-active' : ''}" data-nav="/admin">관리자</button>
         <span class="preview-toolbar__divider"></span>
-        <span class="preview-toolbar__hint" title="handoff store">${authLabel}</span>
-        <button type="button" class="preview-toolbar__btn" data-action="dev-login-parent" title="guardian1@dev.local">Dev·학부모</button>
-        <button type="button" class="preview-toolbar__btn" data-action="dev-login-room" title="room-owner1@dev.local">Dev·공부방</button>
-        <button type="button" class="preview-toolbar__btn" data-action="dev-login-tutor" title="tutor-owner1@dev.local">Dev·과외</button>
-        <button type="button" class="preview-toolbar__btn" data-action="dev-login-admin" title="ops@dev.local">Dev·운영</button>
+        <span class="preview-toolbar__hint" title="화면 연결 상태">${authLabel}</span>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-parent">시험용·학부모</button>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-room">시험용·공부방</button>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-tutor">시험용·과외</button>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-admin">시험용·운영</button>
         ${isLoggedIn() ? `<button type="button" class="preview-toolbar__btn" data-action="dev-logout">로그아웃</button>` : ''}
         <span class="preview-toolbar__divider"></span>
         ${

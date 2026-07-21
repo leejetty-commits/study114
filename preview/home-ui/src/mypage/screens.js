@@ -213,7 +213,7 @@ function renderHome(role, profile, counts, cta) {
       <section class="mypage-home-section" aria-labelledby="mypage-today-title">
         <div class="mypage-home-section__head">
           <div>
-            <span class="mypage-home-section__eyebrow">TODAY</span>
+            <span class="mypage-home-section__eyebrow">오늘</span>
             <h2 id="mypage-today-title">오늘의 내 상태</h2>
           </div>
           <p>${esc(HOME_EMPHASIS[role] || '')}</p>
@@ -239,7 +239,7 @@ function renderHome(role, profile, counts, cta) {
       <section class="mypage-home-section" aria-labelledby="mypage-quick-title">
         <div class="mypage-home-section__head">
           <div>
-            <span class="mypage-home-section__eyebrow">MY SHOP</span>
+            <span class="mypage-home-section__eyebrow">내 공간</span>
             <h2 id="mypage-quick-title">내 공간 둘러보기</h2>
           </div>
           <p>필요한 곳만 골라 편하게 들어가세요.</p>
@@ -377,7 +377,7 @@ function renderStudentReview(role) {
     const links = [{ label: '학생찾기 보기', href: getStudentSearchUrl() }];
     if (regLink) {
       links.push({
-        label: `${regLink.label} (${regLink.screenId})`,
+        label: regLink.label,
         href: `#${regLink.href}`,
       });
     }
@@ -514,7 +514,7 @@ function renderPlans(role) {
       <section class="mypage-panel mypage-usage-overview">
         <div class="mypage-home-section__head">
           <div>
-            <span class="mypage-home-section__eyebrow">MY PLAN</span>
+            <span class="mypage-home-section__eyebrow">내 이용권</span>
             <h2>내 이용 현황</h2>
           </div>
           <span class="mypage-badge ${tier === 'paid' ? 'mypage-badge--published' : ''}">${esc(tierLabel)}</span>
@@ -538,7 +538,7 @@ function renderPlans(role) {
       <section class="mypage-home-section">
         <div class="mypage-home-section__head">
           <div>
-            <span class="mypage-home-section__eyebrow">CURRENT</span>
+            <span class="mypage-home-section__eyebrow">현재 이용 중</span>
             <h2>${esc(tierCopy.title)}</h2>
           </div>
           <p>${esc(P18_HEADLINE)}</p>
@@ -563,8 +563,8 @@ function renderSubmissionDocs(role) {
         <p class="mypage-lead">15장 §2-1 · 공부방 제출자료</p>
         <p class="mypage-muted">운영자 심사·승인·반려 없음 · 제출 여부·공개 상태 표시만</p>
         <div class="sub-board-bridge">
-          <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">P23-04 제출함 열기</a>
-          <span class="mypage-muted">boardKey <code>submission</code> · 권한형 업로드</span>
+          <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">제출함 열기</a>
+          <span class="mypage-muted">등록 자료를 안전하게 올리고 관리할 수 있어요.</span>
         </div>
       </section>`;
   }
@@ -575,8 +575,8 @@ function renderSubmissionDocs(role) {
       <p class="mypage-lead">${esc(SUBMISSION_DOCS_LEAD)}</p>
       <div class="p15-submission__summary">
         <span class="mypage-badge">${esc(formatSubmissionDocSummary(docs))}</span>
-        <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">P23-04 제출함</a>
-        <a href="${TUTOR_REGISTER_URL}" class="btn btn--secondary btn--sm" data-same-tab-href="${TUTOR_REGISTER_URL}">tutor-ui에서 자료 등록</a>
+        <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">제출함</a>
+        <a href="${TUTOR_REGISTER_URL}" class="btn btn--secondary btn--sm" data-same-tab-href="${TUTOR_REGISTER_URL}">과외쌤 등록 화면에서 자료 등록</a>
       </div>
       <table class="p15-submission__table" aria-label="제출자료 상태">
         <thead>

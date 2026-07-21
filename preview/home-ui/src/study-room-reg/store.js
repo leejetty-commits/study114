@@ -221,7 +221,7 @@ export function getPublishReadiness(room) {
   /** @type {string[]} */
   const qualityHints = [];
   if (room.detail_completion_status !== 'expanded_complete') {
-    qualityHints.push('상세등록 완료 시 Prime/Pick 후보');
+    qualityHints.push('상세등록 완료 시 대표/추천 노출 후보');
   }
   if (!room.intro_long?.trim()) qualityHints.push('상세 소개 보강 권장');
   if (!room.slogan?.trim()) qualityHints.push('슬로건 추가 권장');

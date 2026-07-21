@@ -331,7 +331,7 @@ function renderProviderSubToggle() {
       <span class="p21-sub-toggle__label">공급자 구독 (프리뷰)</span>
       <button type="button" class="preview-toolbar__btn${freeActive}" data-provider-subscription="free">무료</button>
       <button type="button" class="preview-toolbar__btn${paidActive}" data-provider-subscription="paid">유료</button>
-      <span class="p21-sub-toggle__hint">P16-04 · 콜드 메모 권한 체험</span>
+      <span class="p21-sub-toggle__hint">학생에게 먼저 보내는 쪽지 권한 체험</span>
     </div>`;
 }
 
@@ -442,7 +442,7 @@ function renderHub(tutor) {
       <div class="p19-summary-grid p21-hub-block" data-hub="summary">
         <dl class="p19-summary-card"><dt>공개 상태</dt><dd>${esc(profileStatusLabel(tutor.profile_status))}</dd></dl>
         <dl class="p19-summary-card"><dt>상세등록</dt><dd>${esc(detailStatusLabel(tutor.detail_completion_status))}</dd></dl>
-        <dl class="p19-summary-card"><dt>유료</dt><dd>${isPaidProvider() ? 'paid' : 'free'}</dd></dl>
+        <dl class="p19-summary-card"><dt>유료</dt><dd>${isPaidProvider() ? '이용 중' : '이용 안 함'}</dd></dl>
         <dl class="p19-summary-card"><dt>메모권</dt><dd>${getMemoCreditsRemaining()}회</dd></dl>
       </div>
     </div>`;
@@ -454,7 +454,7 @@ function renderHub(tutor) {
 function renderBridgeBody(tutor, kind) {
   const readiness = getPublishReadiness(tutor);
   const isBasic = kind === 'basic';
-  const title = isBasic ? '기본정보 (P21-03a)' : '상세정보 (P21-03b)';
+  const title = isBasic ? '기본정보' : '상세정보';
   const steps = isBasic
     ? [
         { step: 'basic', label: '기본 프로필', ok: !!tutor.tutor_display_name },
@@ -480,7 +480,7 @@ function renderBridgeBody(tutor, kind) {
   return `
     <div class="p20-bridge">
       <h3 class="p19-form-section__title">${title}</h3>
-      <p class="p19-form-section__lead">입력 폼은 <strong>tutor-ui</strong>에서 수정합니다. 여기서는 요약·부족 항목만 표시합니다.</p>
+      <p class="p19-form-section__lead">과외쌤 등록 화면에서 정보를 수정합니다. 여기서는 요약과 부족한 항목만 보여드려요.</p>
       <ul class="p20-bridge__list">${items}</ul>
       <dl class="p20-bridge__summary">
         <div><dt>표시명</dt><dd>${esc(tutor.tutor_display_name)}</dd></div>
@@ -513,13 +513,13 @@ function renderPublishPreviewModes(tutor) {
   const modes = [
     {
       key: 'basic',
-      label: 'Basic 리스트',
+      label: '기본 노출 목록',
       html: renderBrowseList('tutor', [row], { guest: false, showCompare: false }),
     },
     {
       key: 'pick',
-      label: 'Pick 카드',
-      html: `<div class="expo-grid--5">${renderExposureBox('tutor', 'pick', row, 'Pick 미리보기', { guest: false })}</div>`,
+      label: '추천 노출 카드',
+      html: `<div class="expo-grid--5">${renderExposureBox('tutor', 'pick', row, '추천 노출 미리보기', { guest: false })}</div>`,
     },
     {
       key: 'detail',
@@ -613,7 +613,7 @@ function renderAccess(tutor) {
 
   const reviewBridge = `
       <section class="p20-exposure-section p21-review-bridge">
-        <h3>학생 검토함 (P25-S10)</h3>
+        <h3>관심 학생</h3>
         <p class="p19-form-section__lead">${esc(HANDOFF_DEEPLINK.reviewBridgeLead)}</p>
         <p class="p20-hint">${esc(HANDOFF_DEEPLINK.reviewFlow)}</p>
         <div class="p19-summary-grid" style="margin-top:var(--space-3)">
@@ -630,14 +630,14 @@ function renderAccess(tutor) {
       ${fromReview ? `<div class="handoff-deeplink-banner" role="status">${esc(HANDOFF_DEEPLINK.accessFromReview)}</div>` : ''}
       ${renderProviderSubToggle()}
       <section class="p20-exposure-section">
-        <h3>현재 접근 가능 범위 (P21-05)</h3>
+        <h3>현재 이용 가능한 범위</h3>
         <p class="p19-form-section__lead">과외쌤 운영 핵심 — 쪽지·학생 접근 권한 (16§8 · 18§4)</p>
         <div class="p20-matrix">${renderMatrixRows(accessMatrix)}</div>
       </section>
       <section class="p20-exposure-section">
         <h3>잔여 권한 (§7-4)</h3>
         <div class="p19-summary-grid">
-          <dl class="p19-summary-card"><dt>유료 등급</dt><dd>${paid ? 'paid' : 'free'}</dd></dl>
+          <dl class="p19-summary-card"><dt>유료 이용</dt><dd>${paid ? '이용 중' : '이용 안 함'}</dd></dl>
           <dl class="p19-summary-card"><dt>남은 메모</dt><dd>${memos}회</dd></dl>
           <dl class="p19-summary-card"><dt>매칭</dt><dd>${esc(matching.status)}</dd></dl>
         </div>
@@ -648,13 +648,13 @@ function renderAccess(tutor) {
         <h3>다음 행동 (§7-5)</h3>
         <div class="p19-form-actions">
           <a href="${getStudentSearchUrl()}" class="btn btn--primary">학생찾기 보기 (9·13장)</a>
-          <a href="#/mypage/messages/inbox" class="btn btn--secondary" data-mypage-nav="/mypage/messages/inbox">쪽지함 열기 (P16-01)</a>
+          <a href="#/mypage/messages/inbox" class="btn btn--secondary" data-mypage-nav="/mypage/messages/inbox">쪽지함 열기</a>
           <a href="#/plans/access?provider_type=tutor&provider_id=${tutor.id}" class="btn btn--secondary" data-nav="/plans/access?provider_type=tutor&provider_id=${tutor.id}">접근권·쪽지권</a>
         </div>
       </section>
       <p class="p19-form-section__lead">
-        <a href="#/mypage/submission-docs" data-mypage-nav="/mypage/submission-docs">P15-10 제출자료 상태</a>
-        · 학부모→과외 선연락 답장은 free · 콜드 메모는 paid
+        <a href="#/mypage/submission-docs" data-mypage-nav="/mypage/submission-docs">제출자료 상태</a>
+        · 학부모가 먼저 보낸 연락의 답장은 무료 · 학생에게 먼저 보내는 쪽지는 유료
       </p>
     </div>`;
 
@@ -675,16 +675,16 @@ function renderExposure(tutor) {
         <div class="p20-matrix">${renderExposureMatrixRows(matrix)}</div>
       </section>
       <section class="p20-exposure-section p20-plans-cta">
-        <h3>부oost · Prime (18장)</h3>
-        <p class="p19-form-section__lead">Prime/Pick은 기간형 포지션 · 쪽지권/열람권은 횟수권 (18§9)</p>
+        <h3>추천·대표 노출</h3>
+        <p class="p19-form-section__lead">대표·추천 노출은 기간형 상품 · 쪽지권/열람권은 횟수형 상품</p>
         <div class="p19-form-actions">
-          <button type="button" class="btn btn--secondary" ${pickRow?.ok ? '' : 'disabled'}>${esc(pickRow?.statusText || 'Pick')}</button>
-          <button type="button" class="btn btn--secondary" ${primeRow?.ok ? '' : 'disabled'}>${esc(primeRow?.statusText || 'Prime')}</button>
+          <button type="button" class="btn btn--secondary" ${pickRow?.ok ? '' : 'disabled'}>${esc(pickRow?.statusText || '추천 노출')}</button>
+          <button type="button" class="btn btn--secondary" ${primeRow?.ok ? '' : 'disabled'}>${esc(primeRow?.statusText || '대표 노출')}</button>
           <a href="#/plans/positions?provider_type=tutor&provider_id=${tutor.id}" class="btn btn--primary" data-nav="/plans/positions?provider_type=tutor&provider_id=${tutor.id}">유료상품 · 노출</a>
         </div>
       </section>
       <div class="p19-danger-zone" data-p21-tutor-id="${tutor.id}">
-        <h3 class="p19-danger-zone__title">위험 구역 (P21-07)</h3>
+        <h3 class="p19-danger-zone__title">공개 중단·삭제</h3>
         <p class="p19-danger-zone__lead">숨김은 검색 미노출 · 삭제는 복구 불가(soft delete)</p>
         <div class="p19-danger-zone__actions">
           <button type="button" class="btn btn--secondary btn--sm" data-p21-hide ${tutor.profile_status === 'hidden' ? 'disabled' : ''}>숨김</button>

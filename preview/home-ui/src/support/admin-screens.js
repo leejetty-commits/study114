@@ -11,7 +11,7 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
-function renderAdminPanel(title, screenId, bodyHtml, { lead = '' } = {}) {
+function renderAdminPanel(title, _screenId, bodyHtml, { lead = '' } = {}) {
   return `
     <section class="sup-panel-card sup-panel-card--admin">
       <header class="sup-panel-card__head">
@@ -19,7 +19,6 @@ function renderAdminPanel(title, screenId, bodyHtml, { lead = '' } = {}) {
           <h2 class="sup-panel-card__title">${esc(title)} <span class="sup-admin-badge">${esc(ADMIN_COPY.previewBadge)}</span></h2>
           ${lead ? `<p class="sup-panel-card__lead">${lead}</p>` : ''}
         </div>
-        <span class="sup-panel-card__id">${esc(screenId)}</span>
       </header>
       <div class="sup-panel-card__body">${bodyHtml}</div>
     </section>`;
@@ -28,7 +27,7 @@ function renderAdminPanel(title, screenId, bodyHtml, { lead = '' } = {}) {
 function renderAdminNav(active) {
   const items = [
     { id: 'hub', label: '운영 홈', path: '/support/admin' },
-    { id: 'notices', label: '공지 CMS', path: '/support/admin/notices' },
+    { id: 'notices', label: '공지 관리', path: '/support/admin/notices' },
     { id: 'tickets', label: '티켓 관리', path: '/support/admin/tickets' },
   ];
   return `
@@ -63,16 +62,16 @@ export function renderAdminScreen(path) {
       `<p class="sup-section__lead">${esc(ADMIN_COPY.hubLead)}</p>
        <div class="sup-admin-hub">
          <a href="#/support/admin/notices" class="sup-admin-hub__card" data-sup-nav="/support/admin/notices">
-           <span class="sup-admin-hub__title">공지 CMS</span>
-           <span class="sup-admin-hub__desc">P17-05 공지 추가·수정</span>
+           <span class="sup-admin-hub__title">공지 관리</span>
+           <span class="sup-admin-hub__desc">공지 추가·수정</span>
          </a>
          <a href="#/support/admin/tickets" class="sup-admin-hub__card" data-sup-nav="/support/admin/tickets">
            <span class="sup-admin-hub__title">티켓 관리</span>
-           <span class="sup-admin-hub__desc">P17-07 접수 목록·상태</span>
+           <span class="sup-admin-hub__desc">접수 목록·상태</span>
          </a>
          <a href="#/admin" class="sup-admin-hub__card sup-admin-hub__card--a28" data-sup-nav="/admin">
-           <span class="sup-admin-hub__title">A28 운영 콘솔</span>
-           <span class="sup-admin-hub__desc">28장 · RED LINE · #/admin/*</span>
+           <span class="sup-admin-hub__title">통합 운영 화면</span>
+           <span class="sup-admin-hub__desc">회원·게시판·상품·설정 관리</span>
          </a>
        </div>`,
     )
@@ -96,7 +95,7 @@ function renderNoticeAdmin() {
     .join('');
 
   return renderAdminPanel(
-    '공지 CMS',
+    '공지 관리',
     'P17-05 · admin',
     `<table class="sup-admin-table">
        <thead><tr><th>날짜</th><th>제목</th><th></th></tr></thead>

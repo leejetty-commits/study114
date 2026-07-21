@@ -7,9 +7,9 @@
 /** @typedef {'study_room' | 'tutor'} ProviderKind */
 
 export const EXPOSURE_TIER_META = {
-  prime: { label: 'Prime', desc: '설득' },
-  pick: { label: 'Pick', desc: '핵심 비교' },
-  basic: { label: 'Basic', desc: '대량 노출' },
+  prime: { label: '대표 노출', desc: '가장 눈에 띄는 자리' },
+  pick: { label: '추천 노출', desc: '비교하기 좋은 자리' },
+  basic: { label: '기본 노출', desc: '일반 목록' },
 };
 
 /** 공부방 Prime — 11장 §4-0·§4-1 */

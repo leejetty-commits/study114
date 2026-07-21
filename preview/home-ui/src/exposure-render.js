@@ -712,7 +712,7 @@ export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opt
   return `
     <div class="list-subsection" data-guest-list="${listId}">
       ${renderSectionHeading(headingCfg)}
-      <div class="expo-grid--5">${cards || '<p class="mypage-muted">Pick 노출 후보가 없습니다.</p>'}</div>
+      <div class="expo-grid--5">${cards || '<p class="mypage-muted">추천 노출 후보가 없습니다.</p>'}</div>
       ${renderListPagination(listId, pickPool.length, page, pickSetSize)}
     </div>
   `;

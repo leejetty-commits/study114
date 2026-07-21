@@ -30,9 +30,9 @@ function renderCatalogItem(item) {
           ${variants.map((v, i) => `<option value="${esc(v)}"${i === 0 ? ' selected' : ''}>${esc(formatCatalogPrice(item, v))}</option>`).join('')}
         </select>
       </label>`
-    : `<p class="mypage-muted plans-catalog__dep">Prime/Pick 기간 구독 후 구매 가능</p>`;
+    : `<p class="mypage-muted plans-catalog__dep">대표·추천 노출 이용 중에 구매할 수 있어요.</p>`;
   const buyBtn = purchasable
-    ? `<button type="button" class="btn btn--secondary btn--sm" data-paid-buy data-product-id="${esc(item.id)}" data-product-label="${esc(item.name)}">구매 (dev PG)</button>`
+    ? `<button type="button" class="btn btn--secondary btn--sm" data-paid-buy data-product-id="${esc(item.id)}" data-product-label="${esc(item.name)}">시험 구매</button>`
     : `<button type="button" class="btn btn--secondary btn--sm" disabled title="포지션 종속">구매 불가</button>`;
 
   return `
@@ -58,7 +58,7 @@ export function renderPaidGuide(role) {
           <p>${GUARDIAN_PLANS_COPY.body}</p>
           <p class="mypage-muted">${GUARDIAN_PLANS_COPY.footnote}</p>
         </div>
-        <a href="#/support/faq" class="btn btn--secondary" data-nav="/support/faq">FAQ (P17-04)</a>
+        <a href="#/support/faq" class="btn btn--secondary" data-nav="/support/faq">자주 묻는 질문</a>
       </section>`;
   }
 
@@ -87,7 +87,7 @@ export function renderPaidGuide(role) {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P18-01 · ${esc(P18_HEADLINE)}</p>
+      <p class="mypage-lead">${esc(P18_HEADLINE)}</p>
       ${renderProviderNoticeBanners()}
       <p class="mypage-muted">${esc(P18_GUIDE_LEAD)}</p>
       ${statusBadges ? `<p class="plans-status-row">${statusBadges}</p>` : ''}
@@ -150,7 +150,7 @@ export function renderPaidUsage(role) {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">P18-02 · ${esc(P18_USAGE_LEAD)}</p>
+      <p class="mypage-lead">${esc(P18_USAGE_LEAD)}</p>
       ${renderProviderNoticeBanners()}
       <p class="mypage-muted"><a href="#/plans" data-nav="/plans">상품센터</a></p>
       <h2 class="mypage-subhead">노출 운영 상태</h2>
@@ -160,9 +160,9 @@ export function renderPaidUsage(role) {
         <p class="mypage-muted">${esc(P18_EXPOSURE_STATUS.note)}</p>
       </div>
       <h2 class="mypage-subhead">횟수권 잔여</h2>
-      ${ticketRows || '<p class="mypage-muted">API 연동 후 표시됩니다.</p>'}
-      <h2 class="mypage-subhead">반응 요약 (ROI 무료 3종)</h2>
-      <div class="mypage-stats roi-metrics" aria-label="ROI 무료 3종">
+      ${ticketRows || '<p class="mypage-muted">이용 내역을 불러오면 여기에 표시됩니다.</p>'}
+      <h2 class="mypage-subhead">무료 반응 요약 3종</h2>
+      <div class="mypage-stats roi-metrics" aria-label="무료 반응 요약 3종">
         ${metrics.map(
           (m) => `
           <div class="mypage-stat is-emphasis" title="${esc(m.hint)}">
@@ -174,7 +174,7 @@ export function renderPaidUsage(role) {
       </div>
       <div class="mypage-info-box">
         <p>동네 단위·저숫자도 의미 있음 (18§6-2) · 인사이트·알림형은 후순위</p>
-        <p class="mypage-muted">쪽지 시도/차단 횟수는 ROI 메인 숫자 ✕ — P16-04 내부 업셀만</p>
+        <p class="mypage-muted">쪽지 시도·차단 횟수는 주요 반응 수치에 포함하지 않습니다.</p>
       </div>
       <a href="#/plans/positions" class="btn btn--secondary" data-nav="/plans/positions">노출상품 보기</a>
     </section>`;

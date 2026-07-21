@@ -65,7 +65,7 @@ export function tutorRegScreenTitle(screenId) {
     'P21-03b': '상세정보',
     'P21-04': '미리보기·공개',
     'P21-05': '학생 접근·쪽지',
-    'P21-06': '노출·부oost',
+    'P21-06': '노출 상품',
     'P21-07': '숨김·삭제',
   };
   return map[screenId] || '과외쌤 운영 관리';

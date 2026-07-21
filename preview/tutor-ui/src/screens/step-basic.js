@@ -44,7 +44,7 @@ export function renderBasic() {
   return renderRegisterShell(content, {
     step: 1,
     title: '과외쌤 기본등록',
-    subtitle: '14장 · draft seed (표시명 · 주력과목 · 다음 단계에서 활동 시 1)',
+    subtitle: '표시명과 주력과목을 먼저 저장하고 다음 단계에서 대표 활동 지역을 선택합니다.',
   });
 }
 

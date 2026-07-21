@@ -58,7 +58,7 @@ function faqItems(limit) {
     title: f.q,
     summary: f.a.replace(/\*\*/g, ''),
     href: '#/support/faq',
-    kind: 'FAQ',
+    kind: '자주 묻는 질문',
   }));
 }
 
@@ -128,7 +128,7 @@ function renderRailItem(item) {
   const href = normalizeHref(item.href);
   return `
     <a href="${esc(href)}" class="right-rail-card"${navAttr(item.href)}>
-      <span class="right-rail-card__kind">${esc(item.kind)} · <code>${esc(item.boardKey)}</code></span>
+      <span class="right-rail-card__kind">${esc(item.kind)}</span>
       <strong class="right-rail-card__title">${esc(item.title)}</strong>
       <span class="right-rail-card__summary">${esc(item.summary)}</span>
     </a>`;

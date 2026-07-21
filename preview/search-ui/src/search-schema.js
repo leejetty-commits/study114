@@ -115,13 +115,13 @@ export const MOCK_REGIONS = {
 /** §8-4 결과 행 더미 */
 export const MOCK_RESULT_ROWS = {
   room: [
-    { left: '대치 Prime 수학 공부방\n대치동', center: '중등·고등 수학\n소수정예 · 숙제관리', right: '월 48만원\n찜 · 비교 · 상세' },
-    { left: '우동 Pick 영어 공부방\n해운대', center: '초등·중등 영어\n발음교정', right: '월 32만원\n찜 · 비교 · 상세' },
-    { left: '센텀 Basic 국어 공부방\n센텀동', center: '초등·중등 국어\n독해 중심', right: '월 22만원\n찜 · 비교 · 상세' },
+    { left: '대치 대표 노출 수학 공부방\n대치동', center: '중등·고등 수학\n소수정예 · 숙제관리', right: '월 48만원\n찜 · 비교 · 상세' },
+    { left: '우동 추천 노출 영어 공부방\n해운대', center: '초등·중등 영어\n발음교정', right: '월 32만원\n찜 · 비교 · 상세' },
+    { left: '센텀 기본 노출 국어 공부방\n센텀동', center: '초등·중등 국어\n독해 중심', right: '월 22만원\n찜 · 비교 · 상세' },
   ],
   tutor: [
-    { left: '대치 Prime 수학\n강남구', center: '중·고 수학 · 서울대 수학과\n경력 7~10년', right: '월 60만원 · 주2 · 90분\n찜 · 비교 · 상세' },
-    { left: '우동 Pick 영어\n해운대', center: '초·중 영어 · 연세대\nIELTS', right: '월 40만원 · 주2 · 60분\n찜 · 비교 · 상세' },
+    { left: '대치 대표 노출 수학\n강남구', center: '중·고 수학 · 서울대 수학과\n경력 7~10년', right: '월 60만원 · 주2 · 90분\n찜 · 비교 · 상세' },
+    { left: '우동 추천 노출 영어\n해운대', center: '초·중 영어 · 연세대\n아이엘츠', right: '월 40만원 · 주2 · 60분\n찜 · 비교 · 상세' },
   ],
   student: [
     { left: '맑은하늘\n중2 · 남', center: '수학·영어 · 학생자택\n단독과외', right: '수업예산 55만\n메모 보내기' },

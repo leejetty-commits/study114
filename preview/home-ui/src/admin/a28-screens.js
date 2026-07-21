@@ -159,6 +159,48 @@ const DL_KO = { none: '불가', public: '전체', login: '로그인 후', role: 
 const SEL_KO = { curated: '직접 고름', latest: '최신순', mixed: '혼합' };
 const MOBILE_KO = { stack: '아래로 쌓기', collapse: '접기', hide: '숨김' };
 const SOURCE_KO = { board: '게시판', static: '고정문', mixed: '혼합' };
+const ORDER_STATUS_KO = {
+  pending: '결제 대기',
+  paid: '결제 완료',
+  failed: '결제 실패',
+  cancelled: '취소',
+  refunded: '환불',
+};
+const SMS_STATUS_KO = {
+  preview: '미리보기',
+  queued: '발송 대기',
+  sent: '발송 완료',
+  failed: '발송 실패',
+};
+
+function adminProductLabel(code) {
+  const normalized = String(code || '').toLowerCase();
+  if (normalized.includes('prime')) return '대표 노출';
+  if (normalized.includes('pick')) return '추천 노출';
+  if (normalized.includes('basic')) return '기본 노출';
+  if (normalized.includes('memo')) return '쪽지권';
+  if (normalized.includes('request')) return '요청문 열람권';
+  return '기타 상품';
+}
+
+function ticketTypeLabel(type) {
+  return String(type || '').includes('memo') ? '쪽지권' : '요청문 열람권';
+}
+
+function sectionOwnerLabel(id) {
+  const labels = {
+    support: '고객센터',
+    library: '자료실',
+    'policy-log': '정책 기록',
+    'mypage-submission': '마이페이지 제출함',
+    phase2: '추후 기능',
+  };
+  return labels[id] || listSectionGroupSummary().find((group) => group.id === id)?.label || '기타';
+}
+
+function presetLabel(id) {
+  return getPresetOptions().find((preset) => preset.id === id)?.label || '기타';
+}
 
 /** @type {{ q: string, status: string, role_type: string }} */
 let memberFilters = { q: '', status: 'all', role_type: 'all' };
@@ -429,8 +471,8 @@ function renderSectionGroupPanel() {
       const sourceLabel = g.source === 'custom' ? '추가' : g.source === 'orphan' ? '사용중' : '프리셋';
       const canRemove = g.source === 'custom' && g.channelCount === 0;
       return `<tr>
-        <td><code>${esc(g.id)}</code></td>
-        <td>${esc(g.label)}</td>
+        <td>${esc(sectionOwnerLabel(g.id))}</td>
+        <td>${g.source === 'custom' ? '직접 추가한 그룹' : '기본 제공 그룹'}</td>
         <td>${esc(sourceLabel)}</td>
         <td>${g.channelCount}</td>
         <td>${g.accessMemberCount || 0}</td>
@@ -456,7 +498,7 @@ function renderSectionGroupPanel() {
       .join('');
     accessPanel = `
       <div class="a28-section-access" data-section-access-panel="${esc(openSectionAccessId)}">
-        <h4 class="admin-section-title">접근회원 · <code>${esc(openSectionAccessId)}</code></h4>
+        <h4 class="admin-section-title">접근회원 · ${esc(sectionOwnerLabel(openSectionAccessId))}</h4>
         <p class="a28-help">이 그룹 글을 볼 수 있는 회원을 이메일로 적어 둡니다. (운영 메모용)</p>
         <table class="sup-admin-table">
           <thead><tr><th>이메일</th><th></th></tr></thead>
@@ -473,13 +515,13 @@ function renderSectionGroupPanel() {
   return `
     <section class="a28-section-groups">
       <h3 class="admin-section-title">소속 그룹 (게시판그룹 경량판)</h3>
-      <p class="a28-help">영카트 게시판그룹 ≈ <code>sectionOwner</code>. 그룹 추가 · 채널 수 · 접근회원(이메일) · 채널 필터.</p>
+      <p class="a28-help">관련 게시판을 한데 묶는 그룹입니다. 그룹 추가 · 채널 수 · 접근회원 · 채널 필터를 관리합니다.</p>
       <table class="sup-admin-table">
-        <thead><tr><th>그룹 ID</th><th>표시명</th><th>출처</th><th>채널 수</th><th>접근회원</th><th></th></tr></thead>
+        <thead><tr><th>그룹</th><th>설명</th><th>출처</th><th>채널 수</th><th>접근회원</th><th></th></tr></thead>
         <tbody>${rows || '<tr><td colspan="6" class="sup-empty">그룹 없음</td></tr>'}</tbody>
       </table>
       <form class="admin-filter-bar" data-section-group-form>
-        <input type="text" name="id" class="admin-input admin-input--sm" placeholder="그룹 ID (예: community)" required pattern="[a-z0-9]+(-[a-z0-9]+)*" />
+        <input type="text" name="id" class="admin-input admin-input--sm" placeholder="그룹 식별값 (영문 소문자)" required pattern="[a-z0-9]+(-[a-z0-9]+)*" />
         <input type="text" name="label" class="admin-input" placeholder="표시명 (선택)" />
         <button type="submit" class="btn btn--primary btn--sm">그룹 추가</button>
       </form>
@@ -506,7 +548,7 @@ function renderChannelTable() {
     `<option value="all"${channelFilters.sectionOwner === 'all' ? ' selected' : ''}>소속 전체</option>`,
     ...sectionOwners.map(
       (owner) =>
-        `<option value="${esc(owner)}"${channelFilters.sectionOwner === owner ? ' selected' : ''}>${esc(owner)}</option>`,
+        `<option value="${esc(owner)}"${channelFilters.sectionOwner === owner ? ' selected' : ''}>${esc(sectionOwnerLabel(owner))}</option>`,
     ),
   ].join('');
 
@@ -514,10 +556,10 @@ function renderChannelTable() {
     .map(
       (ch) => `<tr>
         <td class="td-chk"><input type="checkbox" data-channel-chk value="${esc(ch.boardKey)}" ${ch.status === 'archived' ? 'disabled' : ''} /></td>
-        <td><code>${esc(ch.boardKey)}</code></td>
+        <td>채널<br><small>식별값은 수정 화면에서 확인</small></td>
         <td>${esc(ch.menuLabel)}</td>
-        <td>${esc(ch.boardType)}<br><small>${esc(ch.presetId)}</small></td>
-        <td>${esc(ch.sectionOwner)}</td>
+        <td>${esc(presetLabel(ch.presetId))}</td>
+        <td>${esc(sectionOwnerLabel(ch.sectionOwner))}</td>
         <td>${esc(VIS_KO[ch.visibility] || ch.visibility)}<br><small>받기: ${esc(DL_KO[ch.downloadPolicy] || ch.downloadPolicy)}</small></td>
         <td>${yesNo(ch.allowWrite)}<br><small>업로드 ${yesNo(ch.allowUpload)}</small></td>
         <td>
@@ -525,7 +567,7 @@ function renderChannelTable() {
             ${optionList(['active', 'hidden', 'archived'], ch.status, STATUS_KO)}
           </select>
         </td>
-        <td><code>${esc(ch.routeSlug || '—')}</code></td>
+        <td>${ch.routeSlug ? '설정됨' : '없음'}</td>
         <td>${esc(ch.lastUpdatedAt || '—')}</td>
         <td class="sup-admin-actions">
           <button type="button" class="btn btn--secondary btn--sm" data-channel-edit="${esc(ch.boardKey)}">수정</button>
@@ -571,7 +613,7 @@ function renderChannelForm(channel = null) {
     .map((preset) => `<option value="${esc(preset.id)}"${selected(presetId, preset.id)}>${esc(preset.label)}</option>`)
     .join('');
   const sectionOptions = getSectionOwnerOptions(presetId)
-    .map((owner) => `<option value="${esc(owner)}"${selected(channel?.sectionOwner, owner)}>${esc(owner)}</option>`)
+    .map((owner) => `<option value="${esc(owner)}"${selected(channel?.sectionOwner, owner)}>${esc(sectionOwnerLabel(owner))}</option>`)
     .join('');
   const keyCandidates = getBoardKeyCandidates(presetId);
   const candidateHint = keyCandidates.length ? `권장: ${keyCandidates.join(' · ')}` : '프리셋에 맞는 채널 키만 사용';
@@ -587,7 +629,7 @@ function renderChannelForm(channel = null) {
       <p class="a28-help">먼저 종류(프리셋)를 고른 뒤, 메뉴에 보일 이름과 경로를 적습니다. 마음대로 새 게시판 종류를 만들지 마세요.</p>
       <input type="hidden" name="mode" value="${channel ? 'update' : 'create'}" />
       <label class="sup-field"><span>종류(프리셋)</span><select name="presetId" data-channel-preset required>${presetOptions}</select></label>
-      <label class="sup-field"><span>채널 키 <small>${esc(candidateHint.replace('boardKey', '채널 키'))}</small></span><input name="boardKey" value="${esc(channel?.boardKey || '')}" placeholder="notice" required /></label>
+      <label class="sup-field"><span>채널 식별값 <small>${esc(candidateHint.replace('boardKey', '채널 식별값'))} · 시스템용 영문 소문자</small></span><input name="boardKey" value="${esc(channel?.boardKey || '')}" placeholder="예: notice" required /></label>
       <label class="sup-field"><span>메뉴 이름</span><input name="menuLabel" value="${esc(channel?.menuLabel || '')}" placeholder="공지사항" required /></label>
       <label class="sup-field"><span>주소 경로</span><input name="routeSlug" value="${esc(channel?.routeSlug || '')}" placeholder="#/support/notice" /></label>
       <label class="sup-field"><span>소속 그룹</span><select name="sectionOwner" required>${sectionOptions}</select></label>
@@ -628,10 +670,10 @@ function renderRightRailTable() {
       (slot) => `<tr>
         <td><code>${esc(slot.slotKey)}</code><br><small>${esc(slot.sectionTitle)}</small></td>
         <td>${esc(slot.sourceBoardKeys?.join(', ') || slot.sourceBoardKey)}</td>
-        <td>${esc(slot.selectionMode)}</td>
+        <td>${esc(SEL_KO[slot.selectionMode] || '확인 필요')}</td>
         <td>${esc(slot.itemLimit)}</td>
-        <td>${esc(slot.mobileBehavior)}</td>
-        <td>${esc(slot.status)}${slot.enabled ? '' : ' · off'}</td>
+        <td>${esc(MOBILE_KO[slot.mobileBehavior] || '확인 필요')}</td>
+        <td>${esc(STATUS_KO[slot.status] || '확인 필요')}${slot.enabled ? '' : ' · 꺼짐'}</td>
         <td>${esc(slot.lastUpdatedAt || '—')}</td>
         <td><code>${esc(slot.ctaTarget)}</code></td>
         <td class="sup-admin-actions">
@@ -654,7 +696,7 @@ function renderRightRailForm(slot = null) {
     .join('');
   const channels = listBoardChannels().filter((ch) => ch.status !== 'archived');
   const sourceOptions = channels
-    .map((ch) => `<option value="${esc(ch.boardKey)}"${selected(current?.sourceBoardKey, ch.boardKey)}>${esc(ch.boardKey)} · ${esc(ch.menuLabel)}</option>`)
+    .map((ch) => `<option value="${esc(ch.boardKey)}"${selected(current?.sourceBoardKey, ch.boardKey)}>${esc(ch.menuLabel)}</option>`)
     .join('');
   return `
     <form class="sup-admin-form a28-config-form" data-rail-form>
@@ -769,11 +811,11 @@ function renderNoticesAdmin(section = 'channels') {
     channels: '게시판 채널',
     rails: '우측 배너',
     posts: '공지사항',
-    faq: 'FAQ',
+    faq: '자주 묻는 질문',
     guide: '안전과외 가이드',
   };
   const helps = {
-    channels: '공지·FAQ 같은 글이 어디에 보일지 「채널」로 묶습니다. 소속 그룹으로 비슷한 채널을 모을 수 있어요.',
+    channels: '공지·자주 묻는 질문 같은 글이 어디에 보일지 「채널」로 묶습니다. 소속 그룹으로 비슷한 채널을 모을 수 있어요.',
     rails: '화면 오른쪽 요약·추천·바로가기 자리를 고릅니다. 게시판 본문과는 별개입니다.',
     posts: '사이트에 올릴 공지글을 작성·수정합니다.',
     faq: '자주 묻는 질문과 답변을 관리합니다.',
@@ -833,16 +875,16 @@ function renderFaqCmsPanel() {
   return `
      <p class="a28-help">질문 순서 숫자가 작을수록 위에 보입니다.</p>
      ${renderOperationalApiHint()}
-     <table class="sup-admin-table"><thead><tr><th>순서</th><th>질문</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="3" class="sup-empty">FAQ 없음</td></tr>'}</tbody></table>
+     <table class="sup-admin-table"><thead><tr><th>순서</th><th>질문</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="3" class="sup-empty">등록된 질문 없음</td></tr>'}</tbody></table>
      <form class="sup-admin-form" data-a28-faq-form>
-       <h3 class="sup-admin-form__title">FAQ 작성 · 수정</h3>
+       <h3 class="sup-admin-form__title">자주 묻는 질문 작성 · 수정</h3>
        <input type="hidden" name="id" value="" />
        <label class="sup-field"><span>질문</span><input type="text" name="q" required /></label>
        <label class="sup-field"><span>답변</span><textarea name="a" rows="4" required></textarea></label>
        <label class="sup-field"><span>정렬 순서</span><input type="number" name="sortOrder" value="0" step="10" /></label>
        <div class="sup-admin-form__actions">
          <button type="submit" class="btn btn--primary btn--sm">저장</button>
-         <button type="button" class="btn btn--secondary btn--sm" data-a28-faq-reset>새 FAQ</button>
+         <button type="button" class="btn btn--secondary btn--sm" data-a28-faq-reset>새 질문</button>
        </div>
      </form>`;
 }
@@ -938,7 +980,7 @@ function renderSubmissionDocs() {
      <p class="a28-help">심사·인증이 아닙니다. 내부에서만 보고, 「노출 반영」또는 「숨김」만 합니다.</p>
      <blockquote class="a28-quote">${esc(SUBMISSION_DOC_USER_NOTICE.lead)} ${esc(SUBMISSION_DOC_USER_NOTICE.body)}</blockquote>
      <table class="sup-admin-table">
-       <thead><tr><th>ID</th><th>역할</th><th>제목</th><th>항목</th><th>첨부</th><th>제출일</th><th>내부 메모</th><th>조치</th></tr></thead>
+       <thead><tr><th>식별번호</th><th>역할</th><th>제목</th><th>항목</th><th>첨부</th><th>제출일</th><th>내부 메모</th><th>조치</th></tr></thead>
        <tbody>${rows}</tbody>
      </table>
      <p class="a28-help">${isAdminApiMode() ? '조치하면 운영 로그에 남습니다.' : '미리보기 모드입니다.'}</p>`,
@@ -1019,7 +1061,7 @@ function renderExposure() {
        <button type="submit" class="btn btn--secondary btn--sm">목록 갱신</button>
      </form>
      <table class="sup-admin-table">
-       <thead><tr><th>유형</th><th>ID</th><th>이름</th><th>노출</th><th>상담</th><th>갱신</th><th>내부 메모</th><th>조치</th></tr></thead>
+       <thead><tr><th>유형</th><th>식별번호</th><th>이름</th><th>노출</th><th>상담</th><th>갱신</th><th>내부 메모</th><th>조치</th></tr></thead>
        <tbody>${rows || '<tr><td colspan="8" class="mypage-muted">표시할 항목이 없습니다.</td></tr>'}</tbody>
      </table>
      <p class="a28-help">${isAdminApiMode() ? '조치하면 운영 로그에 남습니다.' : '미리보기 — 운영자 로그인이 필요합니다.'}</p>`,
@@ -1037,11 +1079,11 @@ function renderCommerce() {
 
   const slotHtml = slots
     ? `<div class="admin-kpi-row">
-        <div class="admin-kpi"><span>Prime</span><strong>${slots.prime?.used}/${slots.prime?.capacity}</strong><small>잔여 ${slots.prime?.remaining}</small></div>
-        <div class="admin-kpi"><span>Pick</span><strong>${slots.pick?.used}/${slots.pick?.capacity}</strong><small>세트 ${slots.pick?.set_size} · ${slots.pick?.rotation_minutes}분</small></div>
-        <div class="admin-kpi"><span>지역</span><strong>${esc(slots.region_scope_type || 'dong')}</strong><small>조회 전용</small></div>
+        <div class="admin-kpi"><span>대표 노출</span><strong>${slots.prime?.used}/${slots.prime?.capacity}</strong><small>잔여 ${slots.prime?.remaining}</small></div>
+        <div class="admin-kpi"><span>추천 노출</span><strong>${slots.pick?.used}/${slots.pick?.capacity}</strong><small>한 묶음 ${slots.pick?.set_size}개 · ${slots.pick?.rotation_minutes}분</small></div>
+        <div class="admin-kpi"><span>지역</span><strong>${slots.region_scope_type === 'complex' ? '단지' : '행정동'}</strong><small>조회 전용</small></div>
       </div>`
-    : '<p class="sup-empty">API 미연결 — 운영자 로그인 후 조회</p>';
+    : '<p class="sup-empty">서버 미연결 — 운영자 로그인 후 조회</p>';
 
   const posRows = positions
     .map((p) => {
@@ -1054,7 +1096,7 @@ function renderCommerce() {
       return `<tr>
         <td><code>${p.id}</code></td>
         <td>${esc(p.user_email)}</td>
-        <td><strong>${esc(String(p.sku_code).toUpperCase())}</strong></td>
+        <td><strong>${esc(adminProductLabel(p.sku_code))}</strong></td>
         <td>${p.days_left}일</td>
         <td>${esc(p.ends_at)}</td>
         <td>${corr}</td>
@@ -1073,7 +1115,7 @@ function renderCommerce() {
       return `<tr>
         <td><code>${t.id}</code></td>
         <td>${esc(t.user_email)}</td>
-        <td>${esc(t.ticket_type)}</td>
+        <td>${esc(ticketTypeLabel(t.ticket_type))}</td>
         <td>${t.remaining}/${t.pack_size}</td>
         <td>${esc(t.expires_at)}</td>
         <td>${corr}</td>
@@ -1086,8 +1128,8 @@ function renderCommerce() {
       (o) => `<tr>
         <td><code>${esc(o.order_ref)}</code></td>
         <td>${esc(o.user_email)}</td>
-        <td>${esc(o.product_id)} · ${esc(o.variant_label)}</td>
-        <td>${esc(o.status)}</td>
+        <td>${esc(adminProductLabel(o.product_id))} · ${esc(o.variant_label)}</td>
+        <td>${esc(ORDER_STATUS_KO[o.status] || '상태 확인 필요')}</td>
         <td>${Number(o.amount_won || 0).toLocaleString()}원</td>
         <td>${esc(o.paid_at || o.created_at)}</td>
         <td><button type="button" class="btn btn--secondary btn--sm" data-admin-drawer-open="order-${esc(o.order_ref)}">상세</button></td>
@@ -1102,9 +1144,9 @@ function renderCommerce() {
           `order-${o.order_ref}`,
           `주문 ${o.order_ref}`,
           `<dl class="admin-detail-dl">
-            <dt>상품</dt><dd>${esc(o.product_id)} (${esc(o.product_kind)})</dd>
+            <dt>상품</dt><dd>${esc(adminProductLabel(o.product_id))}</dd>
             <dt>옵션</dt><dd>${esc(o.variant_label)}</dd>
-            <dt>결제</dt><dd>${esc(o.status)} · ${esc(o.pg_provider)}</dd>
+            <dt>결제</dt><dd>${esc(ORDER_STATUS_KO[o.status] || '상태 확인 필요')} · ${esc(o.pg_provider)}</dd>
             <dt>금액</dt><dd>${Number(o.amount_won || 0).toLocaleString()}원</dd>
             <dt>생성</dt><dd>${esc(o.created_at)}</dd>
             <dt>결제완료</dt><dd>${esc(o.paid_at || '—')}</dd>
@@ -1117,15 +1159,15 @@ function renderCommerce() {
     '상품·노출·결제 조회',
     'A28-07b',
     `${renderOpsTip()}
-     <p class="a28-help">가격표·슬롯 수·회전간격 직접 편집 UI는 1차 제외 · 조회 + 마스터 최소 보정만</p>
+     <p class="a28-help">가격표·노출 자리 수·순환 간격은 이 화면에서 직접 바꿀 수 없습니다. 조회와 마스터의 최소 보정만 제공합니다.</p>
      ${slotHtml}
-     ${settings ? `<p class="a28-help">${esc(settings.note)} · Prime ${settings.prime_slots} · Pick ${settings.pick_set_size}세트 · Basic ${settings.basic_page_size}/p</p>` : ''}
-     <h3 class="admin-section-title">Prime / Pick 활성 구독</h3>
-     <table class="sup-admin-table"><thead><tr><th>ID</th><th>계정</th><th>SKU</th><th>남은일</th><th>만료</th><th>보정</th></tr></thead>
+     ${settings ? `<p class="a28-help">대표 노출 ${settings.prime_slots}자리 · 추천 노출 ${settings.pick_set_size}개씩 · 기본 노출 ${settings.basic_page_size}개/페이지</p>` : ''}
+     <h3 class="admin-section-title">대표·추천 노출 이용 중</h3>
+     <table class="sup-admin-table"><thead><tr><th>식별번호</th><th>계정</th><th>상품</th><th>남은일</th><th>만료</th><th>보정</th></tr></thead>
      <tbody>${posRows || '<tr><td colspan="6" class="sup-empty">활성 구독 없음</td></tr>'}</tbody></table>
-     <h3 class="admin-section-title">접근권(횟수권) 팩</h3>
-     <table class="sup-admin-table"><thead><tr><th>ID</th><th>계정</th><th>유형</th><th>잔여</th><th>만료</th><th>보정</th></tr></thead>
-     <tbody>${ticketRows || '<tr><td colspan="6" class="sup-empty">활성 팩 없음</td></tr>'}</tbody></table>
+     <h3 class="admin-section-title">접근권(횟수권) 묶음</h3>
+     <table class="sup-admin-table"><thead><tr><th>식별번호</th><th>계정</th><th>유형</th><th>잔여</th><th>만료</th><th>보정</th></tr></thead>
+     <tbody>${ticketRows || '<tr><td colspan="6" class="sup-empty">사용 중인 묶음 없음</td></tr>'}</tbody></table>
      <h3 class="admin-section-title">최근 주문·결제</h3>
      <table class="sup-admin-table"><thead><tr><th>주문</th><th>계정</th><th>상품</th><th>상태</th><th>금액</th><th>시각</th><th></th></tr></thead>
      <tbody>${orderRows || '<tr><td colspan="7" class="sup-empty">주문 없음</td></tr>'}</tbody></table>
@@ -1156,7 +1198,7 @@ function renderMembers() {
     .map((m) => {
       const role = A28_MEMBER_ROLE_LABELS[m.primaryRole] || m.primaryRole || '—';
       const status = A28_MEMBER_STATUS_LABELS[m.status] || m.status;
-      const tier = A28_MEMBER_TIER_LABELS[m.subscriptionTier] || m.subscriptionTier || 'free';
+      const tier = A28_MEMBER_TIER_LABELS[m.subscriptionTier] || '확인 필요';
       return `<tr>
         <td class="td-chk"><input type="checkbox" name="member_chk" value="${m.id}" data-member-chk ${m.isMaster ? 'disabled' : ''} /></td>
         <td><code>${m.id}</code></td>
@@ -1164,7 +1206,7 @@ function renderMembers() {
         <td>${esc(m.phone || '—')}</td>
         <td>${esc(role)}${m.isMaster ? ' · 마스터' : ''}</td>
         <td>${esc(status)}</td>
-        <td>${esc(tier)}${m.activePositions ? ` · 포지션 ${m.activePositions}` : ''}</td>
+        <td>${esc(tier)}${m.activePositions ? ` · 노출 상품 ${m.activePositions}개` : ''}</td>
         <td>${m.oauthLinked ? '연동' : '—'}${m.oauthPending ? ' · 역할대기' : ''}</td>
         <td>${esc(m.lastLoginAt || '—')}</td>
         <td><button type="button" class="btn btn--secondary btn--sm" data-member-open="${m.id}">상세</button></td>
@@ -1179,22 +1221,22 @@ function renderMembers() {
     const roles = (detail.roles || [])
       .map(
         (r) =>
-          `<li>${esc(A28_MEMBER_ROLE_LABELS[r.roleType] || r.roleType)}${r.isPrimary ? ' (대표)' : ''} · ${esc(r.status)}</li>`,
+          `<li>${esc(A28_MEMBER_ROLE_LABELS[r.roleType] || '역할 확인 필요')}${r.isPrimary ? ' (대표)' : ''} · ${esc(A28_MEMBER_STATUS_LABELS[r.status] || '상태 확인 필요')}</li>`,
       )
       .join('');
     const oauth = (detail.oauth || [])
       .map((o) => `<li>${esc(o.provider)} · ${esc(o.providerEmail || '—')} · ${esc(o.linkedAt)}</li>`)
       .join('');
     const positions = (detail.paid?.positions || [])
-      .map((p) => `<li>${esc(p.sku_code)} · ${esc(p.ends_at)} (D${p.days_left})</li>`)
+      .map((p) => `<li>${esc(adminProductLabel(p.sku_code))} · ${esc(p.ends_at)} (${p.days_left}일 남음)</li>`)
       .join('');
     const tickets = (detail.paid?.tickets || [])
-      .map((t) => `<li>${esc(t.ticket_type)} · 잔여 ${t.remaining}/${t.pack_size}</li>`)
+      .map((t) => `<li>${esc(ticketTypeLabel(t.ticket_type))} · 잔여 ${t.remaining}/${t.pack_size}</li>`)
       .join('');
     const orders = (detail.paid?.orders || [])
       .map(
         (o) =>
-          `<li><code>${esc(o.order_ref)}</code> · ${esc(o.product_id)} · ${esc(o.status)} · ${Number(o.amount_won || 0).toLocaleString()}원</li>`,
+          `<li><code>${esc(o.order_ref)}</code> · ${esc(adminProductLabel(o.product_id))} · ${esc(ORDER_STATUS_KO[o.status] || '상태 확인 필요')} · ${Number(o.amount_won || 0).toLocaleString()}원</li>`,
       )
       .join('');
 
@@ -1226,14 +1268,14 @@ function renderMembers() {
           <dt>가입</dt><dd>${esc(detail.createdAt)}</dd>
           <dt>최근 로그인</dt><dd>${esc(detail.lastLoginAt || '—')}</dd>
           <dt>프로필 수</dt><dd>공부방 ${detail.profileCounts?.studyRooms || 0} · 과외 ${detail.profileCounts?.tutors || 0} · 자녀 ${detail.profileCounts?.students || 0}</dd>
-          <dt>유료 티어</dt><dd>${esc(A28_MEMBER_TIER_LABELS[detail.paid?.subscriptionTier] || detail.paid?.subscriptionTier || 'free')}</dd>
+          <dt>유료 이용</dt><dd>${esc(A28_MEMBER_TIER_LABELS[detail.paid?.subscriptionTier] || '확인 필요')}</dd>
         </dl>
         <h4 class="admin-section-title">역할</h4>
         <ul class="a28-lists">${roles || '<li>없음</li>'}</ul>
         <h4 class="admin-section-title">소셜 연동</h4>
         <ul class="a28-lists">${oauth || '<li>없음</li>'}</ul>
         <h4 class="admin-section-title">유료·결제 (조회)</h4>
-        <p class="a28-help">포지션</p><ul class="a28-lists">${positions || '<li>없음</li>'}</ul>
+        <p class="a28-help">노출 상품</p><ul class="a28-lists">${positions || '<li>없음</li>'}</ul>
         <p class="a28-help">횟수권</p><ul class="a28-lists">${tickets || '<li>없음</li>'}</ul>
         <p class="a28-help">최근 주문</p><ul class="a28-lists">${orders || '<li>없음</li>'}</ul>
         <label class="a28-help">내부 메모
@@ -1253,7 +1295,7 @@ function renderMembers() {
     '회원/역할 검색',
     'A28-02',
     `${renderOpsTip()}
-     <p class="a28-help">조회 · 이용 제한/복구 · 유료·역할 조회 · 역할 부여/가장(impersonation) UI 없음 · 승인·반려 용어 금지</p>
+     <p class="a28-help">회원 조회와 이용 제한·복구, 유료 이용·역할 확인을 제공합니다. 다른 회원으로 대신 로그인하거나 역할을 부여하는 기능은 없습니다.</p>
      <div class="admin-ov" role="group" aria-label="회원 상태 집계">
        ${chip('all', '전체')}
        ${chip('active', '정상')}
@@ -1262,7 +1304,7 @@ function renderMembers() {
        ${chip('withdrawn', '탈퇴')}
      </div>
      <form class="admin-filter-bar" data-member-filter>
-       <input type="search" name="q" class="admin-input" placeholder="이메일·이름·휴대폰·ID" value="${esc(filters.q || '')}" />
+       <input type="search" name="q" class="admin-input" placeholder="이메일·이름·휴대폰·식별번호" value="${esc(filters.q || '')}" />
        <select name="status" class="admin-input--sm">
          <option value="all"${filters.status === 'all' ? ' selected' : ''}>상태 전체</option>
          <option value="active"${filters.status === 'active' ? ' selected' : ''}>정상</option>
@@ -1280,7 +1322,7 @@ function renderMembers() {
        <button type="submit" class="btn btn--primary btn--sm">검색</button>
        <button type="button" class="btn btn--secondary btn--sm" data-member-refresh>새로고침</button>
      </form>
-     <p class="a28-help">${isAdminApiMode() ? `API · 목록 ${members.length}명 / 조건 일치 ${Number(totalLabel).toLocaleString()}명` : '미리보기 — 상태 칩을 눌러 골라 보세요.'}</p>
+     <p class="a28-help">${isAdminApiMode() ? `서버 조회 · 목록 ${members.length}명 / 조건 일치 ${Number(totalLabel).toLocaleString()}명` : '미리보기 — 상태 항목을 눌러 골라 보세요.'}</p>
      <div class="admin-bulk-bar" data-member-bulk-bar>
        <label class="admin-bulk-bar__chk"><input type="checkbox" data-member-chkall /> 전체 선택</label>
        <input type="text" class="admin-input admin-input--sm" data-member-bulk-memo placeholder="일괄 조치 메모 (선택)" />
@@ -1288,7 +1330,7 @@ function renderMembers() {
        <button type="button" class="btn btn--primary btn--sm" data-member-bulk="restore">선택 복구</button>
      </div>
      <table class="sup-admin-table">
-       <thead><tr><th></th><th>ID</th><th>회원</th><th>휴대폰</th><th>대표 역할</th><th>상태</th><th>유료</th><th>소셜</th><th>최근 로그인</th><th></th></tr></thead>
+       <thead><tr><th></th><th>식별번호</th><th>회원</th><th>휴대폰</th><th>대표 역할</th><th>상태</th><th>유료</th><th>소셜</th><th>최근 로그인</th><th></th></tr></thead>
        <tbody>${rows || '<tr><td colspan="10" class="sup-empty">회원 없음</td></tr>'}</tbody>
      </table>
      ${detailHtml}`,
@@ -1381,8 +1423,8 @@ function renderLogs() {
       (l) =>
         `<tr>
           <td><code>${esc(l.id)}</code></td>
-          <td>${esc(A28_LOG_TARGET_TYPE_LABELS[l.targetType] || l.targetType || '—')}</td>
-          <td>${esc(A28_ACTION_LABELS[l.action] || l.action)}</td>
+          <td>${esc(A28_LOG_TARGET_TYPE_LABELS[l.targetType] || '대상 확인 필요')}</td>
+          <td>${esc(A28_ACTION_LABELS[l.action] || '조치 확인 필요')}</td>
           <td><code>${esc(l.target)}</code></td>
           <td>${esc(l.operator)}</td>
           <td>${esc(l.at)}</td>
@@ -1397,7 +1439,7 @@ function renderLogs() {
         `log-${l.id}`,
         `로그 ${l.id}`,
         `<dl class="admin-detail-dl">
-          <dt>조치</dt><dd>${esc(A28_ACTION_LABELS[l.action] || l.action)}</dd>
+          <dt>조치</dt><dd>${esc(A28_ACTION_LABELS[l.action] || '조치 확인 필요')}</dd>
           <dt>대상</dt><dd>${esc(l.targetType)} #${esc(l.target)}</dd>
           <dt>운영자</dt><dd>${esc(l.operator)}</dd>
           <dt>사유</dt><dd>${esc(l.reasonCategory || '—')}</dd>
@@ -1458,7 +1500,7 @@ function renderSettings(section = 'basic') {
   const logRows = settingsLogs
     .map(
       (l) =>
-        `<tr><td>${esc(A28_ACTION_LABELS[l.action] || l.action)}</td><td>${esc(l.target)}</td><td>${esc(l.at)}</td></tr>`,
+        `<tr><td>${esc(A28_ACTION_LABELS[l.action] || '조치 확인 필요')}</td><td>${esc(l.target)}</td><td>${esc(l.at)}</td></tr>`,
     )
     .join('');
 
@@ -1472,9 +1514,9 @@ function renderSettings(section = 'basic') {
   const helps = {
     basic: '서비스 이름·연락처·점검 안내·게스트 배너를 정합니다. 저장하면 회원 화면에 바로 반영됩니다.',
     join: '회원가입·공부방/과외 등록 접수를 켜고, 역할별 안내 항목을 표시/강조합니다. (승인 대기열이 아닙니다)',
-    notify: '새 신고·문의·등록이 오면 받을 이메일과 on/off만 고릅니다.',
+    notify: '새 신고·문의·등록이 오면 받을 이메일과 알림 사용 여부를 고릅니다.',
     popups: '기간과 노출 화면을 정해 안내 팝업을 띄웁니다. 「다시 안 보기」시간은 시간 단위입니다.',
-    legal: '이용약관·개인정보처리방침 글을 고칩니다. FAQ·가이드는 게시판관리 메뉴를 쓰세요.',
+    legal: '이용약관·개인정보처리방침 글을 고칩니다. 자주 묻는 질문·가이드는 게시판관리 메뉴를 쓰세요.',
   };
 
   let body = '';
@@ -1750,7 +1792,7 @@ function renderSmsLabNotice() {
       <p><strong>업체 URL</strong></p>
       <ul class="addon-url-list">${urlList}</ul>
       <p class="addon-notice-links"><a href="#/admin/addons/sms" data-a28-nav="/admin/addons/sms">→ 부가서비스 · 문자·메시징</a>
-        · <a href="#/admin/addons/pg" data-a28-nav="/admin/addons/pg">카드·전자결제(PG)</a></p>
+        · <a href="#/admin/addons/pg" data-a28-nav="/admin/addons/pg">카드·전자결제</a></p>
     </div>`;
 }
 
@@ -1758,7 +1800,7 @@ function renderSmsLabNotice() {
 function renderAddons(section = 'home') {
   const titleMap = {
     home: '부가서비스',
-    pg: '카드·전자결제(PG)',
+    pg: '카드·전자결제',
     sms: '문자·메시징',
     identity: '본인인증',
   };
@@ -1768,7 +1810,7 @@ function renderAddons(section = 'home') {
       : section === 'pg'
         ? '카드 결제모듈 상담·계약이 필요할 때 아래 업체로 바로 이동하세요. 수수료·심사는 업체와 직접 확인합니다.'
         : section === 'sms'
-          ? '문자 실발송(2차) 전에 가입·발신번호·API 키를 준비할 업체입니다.'
+          ? '문자 실제 발송 전에 가입·발신번호·연동키를 준비할 업체입니다.'
           : '본인확인이 정책상 필요할 때만 검토합니다. 가입 SMS OTP는 쓰지 않습니다.';
 
   const category = section === 'home' ? 'all' : section;
@@ -1776,7 +1818,7 @@ function renderAddons(section = 'home') {
 
   const nav = `<nav class="addon-subnav" aria-label="부가서비스 구분">
       <a href="#/admin/addons" data-a28-nav="/admin/addons"${section === 'home' ? ' class="is-on"' : ''}>전체</a>
-      <a href="#/admin/addons/pg" data-a28-nav="/admin/addons/pg"${section === 'pg' ? ' class="is-on"' : ''}>카드·PG</a>
+      <a href="#/admin/addons/pg" data-a28-nav="/admin/addons/pg"${section === 'pg' ? ' class="is-on"' : ''}>카드·전자결제</a>
       <a href="#/admin/addons/sms" data-a28-nav="/admin/addons/sms"${section === 'sms' ? ' class="is-on"' : ''}>문자</a>
       <a href="#/admin/addons/identity" data-a28-nav="/admin/addons/identity"${section === 'identity' ? ' class="is-on"' : ''}>본인인증</a>
     </nav>`;
@@ -1809,7 +1851,7 @@ function renderNotifyLab(section = 'settings') {
 
   const st = lab.settings;
 
-  const statusKo = { preview: '미리보기', queued: '대기', sent: '발송', failed: '실패' };
+  const statusKo = SMS_STATUS_KO;
 
   const chKo = { sms: '단문', lms: '장문', email: '이메일' };
 
@@ -2278,7 +2320,7 @@ function renderNotifyLab(section = 'settings') {
 
      <p class="a28-help">미리보기 기록이 쌓입니다. 실발송 연동 후 sent/failed 상태가 추가됩니다.</p>
 
-     <table class="sup-admin-table"><thead><tr><th>ID</th><th>수신</th><th>템플릿</th><th>채널</th><th>상태</th><th>바이트</th><th>시각</th></tr></thead>
+     <table class="sup-admin-table"><thead><tr><th>식별번호</th><th>수신</th><th>문구 틀</th><th>발송 방식</th><th>상태</th><th>글자 용량</th><th>시각</th></tr></thead>
 
        <tbody>${logs || '<tr><td colspan="7" class="sup-empty">내역 없음</td></tr>'}</tbody></table>
 
@@ -2753,7 +2795,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           );
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : 'status 변경 실패');
+        window.alert(err instanceof Error ? err.message : '상태 변경 실패');
           rerender();
         }
       });
@@ -2770,7 +2812,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         window.alert('채널을 선택해 주세요.');
         return;
       }
-      if (!window.confirm(`선택한 ${keys.length}개 채널 status를 ${status}로 바꿀까요?`)) return;
+      if (!window.confirm(`선택한 ${keys.length}개 채널 상태를 ${STATUS_KO[status] || '선택값'}으로 바꿀까요?`)) return;
       try {
         for (const boardKey of keys) {
           const channel = getBoardChannel(boardKey);
@@ -2786,7 +2828,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         }
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '일괄 status 변경 실패');
+        window.alert(err instanceof Error ? err.message : '일괄 상태 변경 실패');
         rerender();
       }
     });
@@ -2797,7 +2839,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
     });
 
     channelForm?.querySelector('[data-channel-reset-seed]')?.addEventListener('click', () => {
-      if (!window.confirm('채널 설정을 registry seed 기준으로 되돌릴까요?')) return;
+      if (!window.confirm('채널 설정을 초기값으로 되돌릴까요?')) return;
       resetBoardChannels();
       rerender();
     });
@@ -2869,7 +2911,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
     });
 
     railForm?.querySelector('[data-rail-reset-seed]')?.addEventListener('click', () => {
-      if (!window.confirm('우측 슬롯 설정을 seed 기준으로 되돌릴까요?')) return;
+      if (!window.confirm('우측 배너 설정을 초기값으로 되돌릴까요?')) return;
       resetRightRailSlots();
       rerender();
     });
@@ -2959,7 +3001,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           await deleteFaqPost(id);
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : 'FAQ 삭제 실패');
+          window.alert(err instanceof Error ? err.message : '자주 묻는 질문 삭제 실패');
         }
       });
     });
@@ -2981,7 +3023,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         faqForm.querySelector('[name="id"]').value = '';
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : 'FAQ 저장 실패');
+        window.alert(err instanceof Error ? err.message : '자주 묻는 질문 저장 실패');
       }
     });
 

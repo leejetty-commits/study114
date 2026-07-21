@@ -8,11 +8,11 @@ function esc(s) {
 }
 
 export const SECTION_HEADINGS = {
-  primeStudyRoom: { icon: '🏆', iconType: 'emoji', title: '프라임 공부방' },
-  pickStudyRoom: { icon: '⭐', iconType: 'emoji', title: '픽 공부방' },
+  primeStudyRoom: { icon: '🏆', iconType: 'emoji', title: '대표 노출 공부방' },
+  pickStudyRoom: { icon: '⭐', iconType: 'emoji', title: '추천 노출 공부방' },
   basicStudyRoom: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '공부방' },
-  primeTutor: { icon: '🏆', iconType: 'emoji', title: '프라임 과외쌤' },
-  pickTutor: { icon: '⭐', iconType: 'emoji', title: '픽 과외쌤' },
+  primeTutor: { icon: '🏆', iconType: 'emoji', title: '대표 노출 과외쌤' },
+  pickTutor: { icon: '⭐', iconType: 'emoji', title: '추천 노출 과외쌤' },
   basicTutor: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '과외쌤' },
   students: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '학생' },
 };
@@ -51,7 +51,7 @@ export function renderSectionHeading(cfg) {
       : `<span class="section-heading__emoji" aria-hidden="true">${cfg.icon}</span>`;
 
   const locFromDesc =
-    !cfg.locationLabel && cfg.desc && !/[·|]/.test(cfg.desc) && !/Prime|Pick|Basic|블라인드|검색/.test(cfg.desc)
+    !cfg.locationLabel && cfg.desc && !/[·|]/.test(cfg.desc) && !/대표 노출|추천 노출|기본 노출|블라인드|검색/.test(cfg.desc)
       ? cfg.desc
       : '';
   const locationLabel = cfg.locationLabel || locFromDesc;

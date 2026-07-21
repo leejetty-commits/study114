@@ -140,14 +140,14 @@ export const A28_MENU = [
     // Youngcart menu300 게시판관리 (+ 내용·FAQ)
     id: 'grp-board',
     label: '게시판관리',
-    help: '채널·우측 배너·공지·FAQ·가이드',
+    help: '채널·우측 배너·공지·자주 묻는 질문·가이드',
     children: [
       {
         id: 'notices-channels',
         menuId: 'notices',
         label: '게시판 채널',
         path: '/admin/notices/channels',
-        help: '공지·FAQ 등 게시판이 어디에 보일지 채널로 묶습니다.',
+        help: '공지·자주 묻는 질문 등 게시판이 어디에 보일지 채널로 묶습니다.',
         screenId: 'A28-05',
       },
       {
@@ -169,7 +169,7 @@ export const A28_MENU = [
       {
         id: 'notices-faq',
         menuId: 'notices',
-        label: 'FAQ',
+        label: '자주 묻는 질문',
         path: '/admin/notices/faq',
         help: '자주 묻는 질문을 관리합니다.',
         screenId: 'A28-05',
@@ -290,13 +290,13 @@ export const A28_MENU = [
         menuId: 'addons',
         label: '부가서비스 홈',
         path: '/admin/addons',
-        help: '나중에 연동할 문자·PG·본인인증 업체를 한곳에서 봅니다.',
+        help: '나중에 연동할 문자·전자결제·본인인증 업체를 한곳에서 봅니다.',
         screenId: 'A28-09',
       },
       {
         id: 'addons-pg',
         menuId: 'addons',
-        label: '카드·전자결제(PG)',
+        label: '카드·전자결제',
         path: '/admin/addons/pg',
         help: '이니시스·KCP·토스·나이스 등 결제 모듈 업체 연락처.',
         screenId: 'A28-09',
@@ -458,8 +458,8 @@ export const A28_REPORT_STATUS_LABELS = {
 
 /** @type {Array<{ id: string, kind: string, target: string, reason: string, status: string, createdAt: string }>} */
 export const A28_REPORT_SEED = [
-  { id: 'RPT-101', kind: '허위 정보', target: 'tutor #12', reason: '활동 지역 불일치 신고', status: 'open', createdAt: '2026-07-05' },
-  { id: 'RPT-102', kind: '안전 이슈', target: 'thread #8', reason: '부적절 접촉 의심', status: 'protect', createdAt: '2026-07-06' },
+  { id: 'RPT-101', kind: '허위 정보', target: '과외쌤 12번', reason: '활동 지역 불일치 신고', status: 'open', createdAt: '2026-07-05' },
+  { id: 'RPT-102', kind: '안전 이슈', target: '대화 8번', reason: '부적절 접촉 의심', status: 'protect', createdAt: '2026-07-06' },
 ];
 
 /** 노출 보정 조치 (A28-07) */
@@ -484,8 +484,8 @@ export const A28_INQUIRY_STATUS_LABELS = {
 
 /** @type {Array<{ id: string, action: string, target: string, operator: string, at: string, reversible: boolean }>} */
 export const A28_LOG_SEED = [
-  { id: 'LOG-1', action: 'hide_profile', target: 'study_room #3', operator: 'ops@dev', at: '2026-07-06 14:22', reversible: true },
-  { id: 'LOG-2', action: 'restrict_messages', target: 'user #44', operator: 'ops@dev', at: '2026-07-06 15:01', reversible: true },
+  { id: 'LOG-1', action: 'hide_profile', target: '공부방 3번', operator: '운영자', at: '2026-07-06 14:22', reversible: true },
+  { id: 'LOG-2', action: 'restrict_messages', target: '회원 44번', operator: '운영자', at: '2026-07-06 15:01', reversible: true },
 ];
 
 export const A28_ACTION_LABELS = {
@@ -496,7 +496,7 @@ export const A28_ACTION_LABELS = {
   submission_expose: '제출 노출 반영',
   submission_hide: '제출 숨김',
   report_status_change: '신고 상태 변경',
-  commerce_position_ends_at: '포지션 만료일 보정',
+  commerce_position_ends_at: '노출 상품 만료일 보정',
   commerce_ticket_remaining: '횟수권 잔여 보정',
   account_block: '이용 제한',
   account_restore: '복구',
@@ -527,8 +527,8 @@ export const A28_LOG_TARGET_TYPE_LABELS = {
   tutor: '과외쌤',
   board_post: '제출',
   user: '회원',
-  position_subscription: '포지션 구독',
-  ticket_pack: '횟수권 팩',
+  position_subscription: '노출 상품 이용권',
+  ticket_pack: '횟수권 묶음',
   board_channel: '게시판 채널',
   right_rail_slot: '우측 배너',
   site_settings: '환경설정',

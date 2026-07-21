@@ -1,4 +1,4 @@
-import { DEV_ACCOUNTS, getAuthUser, isAdminUser, isLoggedIn } from '../auth-session.js';
+import { getAuthUser, isAdminUser, isLoggedIn } from '../auth-session.js';
 import {
   canAccessAdminMenu,
   getCurrentAdminLevel,
@@ -30,7 +30,6 @@ function esc(s) {
 /** @param {string} path */
 export function renderAdminAccessGate(path) {
   const loggedIn = isLoggedIn();
-  const adminAccount = DEV_ACCOUNTS.admin;
   const user = getAuthUser();
   const level = getCurrentAdminLevel();
   const menuId = getAdminMenuId(path);
@@ -48,16 +47,16 @@ export function renderAdminAccessGate(path) {
   return `
     <section class="admin-state admin-state--denied">
       <h2>운영자 전용</h2>
-      <p><code>${esc(path)}</code> · admin 역할 세션이 필요합니다.</p>
+      <p>이 화면을 보려면 운영자 권한이 필요합니다.</p>
       <p class="admin-state__hint">
         ${
           loggedIn
             ? `현재: ${esc(user?.email || '—')} · 운영자 권한 없음`
-            : '로그인 후 운영자(admin) 역할이 있어야 합니다.'
+            : '로그인 후 운영자 역할이 있어야 합니다.'
         }
       </p>
-      <p class="mypage-note">Dev: <code>${esc(adminAccount.email)}</code> / password · 마스터: jetty@naver.com</p>
-      <button type="button" class="btn btn--primary" data-action="dev-login-admin">Dev·운영 로그인</button>
+      <p class="mypage-note">개발용 운영자 계정으로 화면을 확인할 수 있습니다.</p>
+      <button type="button" class="btn btn--primary" data-action="dev-login-admin">개발용 운영자 로그인</button>
       <a href="#/admin" class="btn btn--secondary btn--sm" data-a28-nav="/admin">← 운영 홈</a>
     </section>`;
 }

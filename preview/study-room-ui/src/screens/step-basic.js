@@ -46,7 +46,7 @@ export function renderBasic() {
   return renderRegisterShell(content, {
     step: 1,
     title: '공부방 기본등록',
-    subtitle: '14장 · draft seed (이름 · 주력과목 · 다음 단계에서 지역 1)',
+    subtitle: '이름과 주력과목을 먼저 저장하고 다음 단계에서 대표 지역을 선택합니다.',
   });
 }
 

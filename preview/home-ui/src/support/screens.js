@@ -96,7 +96,7 @@ function renderContactCtas(contextLabel) {
     </div>`;
 }
 
-function renderPanel(title, screenId, bodyHtml, { lead = '' } = {}) {
+function renderPanel(title, _screenId, bodyHtml, { lead = '' } = {}) {
   return `
     <section class="sup-panel-card">
       <header class="sup-panel-card__head">
@@ -104,7 +104,6 @@ function renderPanel(title, screenId, bodyHtml, { lead = '' } = {}) {
           <h2 class="sup-panel-card__title">${esc(title)}</h2>
           ${lead ? `<p class="sup-panel-card__lead">${lead}</p>` : ''}
         </div>
-        <span class="sup-panel-card__id">${esc(screenId)}</span>
       </header>
       <div class="sup-panel-card__body">${bodyHtml}</div>
     </section>`;
@@ -151,7 +150,7 @@ function renderHome() {
       '빠른 안내',
       'P17-01',
       `<div class="sup-card-grid">${cards}</div>
-       <p class="sup-home-hint">왼쪽 메뉴에서 FAQ · 공지 · 운영문의 · 안전과외 가이드를 각각 확인할 수 있습니다.</p>`,
+       <p class="sup-home-hint">왼쪽 메뉴에서 자주 묻는 질문 · 공지 · 운영문의 · 안전과외 가이드를 각각 확인할 수 있습니다.</p>`,
       { lead: '자주 찾는 주제로 바로 이동합니다.' },
     )}
     ${renderPanel('약관/정책', 'P17-06', `<div class="sup-terms">${terms}</div>`, {
@@ -181,7 +180,7 @@ function renderGuideSection() {
       'P17-01 #guide',
       `<ul class="sup-list sup-list--bullets">${roleGuide.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>
        <div class="sup-inline-links">
-         <a href="#/support/faq" class="sup-inline-link" data-sup-nav="/support/faq">FAQ 보기</a>
+         <a href="#/support/faq" class="sup-inline-link" data-sup-nav="/support/faq">자주 묻는 질문 보기</a>
          <a href="#/support/safe" class="sup-inline-link" data-sup-nav="/support/safe">안전과외 가이드</a>
          <a href="#/library" class="sup-inline-link" data-sup-nav="/library">자료실</a>
        </div>`,
@@ -191,7 +190,7 @@ function renderGuideSection() {
       '홈 노출 블록 안내',
       'P17-01 #home-exposure',
       `<div class="sup-exposure-guides">${exposureGuideHtml}</div>`,
-      { lead: '홈 화면의 프라임·픽·기본 목록 구성과 노출 기준입니다. 순환 고지도 여기에만 안내합니다.' },
+      { lead: '홈 화면의 대표·추천·기본 노출 구성과 기준입니다. 순환 방식도 여기에서 안내합니다.' },
     )}`;
 }
 
@@ -202,11 +201,11 @@ function renderFaqSection() {
     body: f.a,
   }));
   const sourceNote = isOperationalBoardApiActive()
-    ? '운영 정본: board_posts · boardKey `faq`'
+    ? '서버에 저장된 최신 질문을 표시합니다.'
     : '1차 시드 fallback · board_posts 연결 시 자동 전환';
 
   return renderPanel(
-    'FAQ 자주 묻는 질문',
+    '자주 묻는 질문',
     'P17-04',
     renderFaqBoard(posts),
     {
@@ -231,7 +230,7 @@ function renderNoticeSection() {
      ${renderAdminFooterLink()}`,
     {
       lead: isOperationalBoardApiActive()
-        ? '운영 정본: board_posts · boardKey `notice`'
+        ? '서버에 저장된 최신 공지를 표시합니다.'
         : '운영 공지 · A28-05 / 17c CMS에서 추가·수정',
     },
   );
@@ -363,7 +362,7 @@ function renderSafeGuideAccordion(openSlug) {
       `<p class="sup-section__lead">제목을 누르면 아래에 내용이 펼쳐집니다. 다른 항목을 누르면 이전 내용은 접힙니다.</p>
        ${renderGroup('1차 가이드 (G1~G4)', primary, 'primary')}
        ${renderGroup('보조 가이드 (G5~G7)', secondary, 'secondary')}`,
-      { lead: isOperationalBoardApiActive() ? '운영 정본: board_posts · boardKey `safe-guide`' : '페이지 이동 없이 한 화면에서 읽기' },
+      { lead: isOperationalBoardApiActive() ? '서버에 저장된 최신 안전 가이드를 표시합니다.' : '페이지 이동 없이 한 화면에서 읽기' },
     )}
     ${openSlug ? `<span data-sup-scroll-article="${esc(openSlug)}" hidden></span>` : ''}`;
 }

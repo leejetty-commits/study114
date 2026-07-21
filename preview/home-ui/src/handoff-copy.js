@@ -86,8 +86,8 @@ export const HANDOFF_DEEPLINK = {
   accessFromReview: '검토함에서 이동했습니다. 메모 권한·잔여 횟수를 확인하세요.',
   reviewBridgeLead: '메모·쪽지 전에 담아 둔 학생 의뢰를 검토합니다.',
   reviewBridgeCta: '검토함 열기',
-  providerRegCtaTutor: '학생 접근·쪽지 (P21-05)',
-  providerRegCtaStudyRoom: '노출·상담 (P20-05)',
+  providerRegCtaTutor: '학생 접근·쪽지',
+  providerRegCtaStudyRoom: '노출·상담',
 };
 
 /** Provider lane — P25-S10 */

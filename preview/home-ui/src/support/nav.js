@@ -5,7 +5,7 @@ export const SUPPORT_NAV = [
   { id: 'guide', label: '이용안내', path: '/support/guide', screenId: 'P17-01', titleSuffix: '이용안내' },
   { id: 'notice', label: '공지사항', path: '/support/notice', screenId: 'P17-05', titleSuffix: '공지사항' },
   { id: 'safe', label: '안전과외 가이드', path: '/support/safe', screenId: 'P17-02', titleSuffix: '안전과외가이드' },
-  { id: 'faq', label: 'FAQ', path: '/support/faq', screenId: 'P17-04', titleSuffix: 'FAQ' },
+  { id: 'faq', label: '자주 묻는 질문', path: '/support/faq', screenId: 'P17-04', titleSuffix: '자주 묻는 질문' },
   { id: 'contact', label: '운영문의', path: '/support/contact', screenId: 'P17-07', titleSuffix: '운영문의' },
 ];
 

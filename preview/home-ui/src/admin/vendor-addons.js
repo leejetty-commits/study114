@@ -31,7 +31,7 @@ export const ADDON_VENDORS = [
     homeUrl: 'https://smartsms.aligo.in/',
     applyUrl: 'https://smartsms.aligo.in/join.html',
     docsUrl: 'https://smartsms.aligo.in/admin/api/spec.html',
-    note: '2차 실연동 후보. API 키·발신번호·야간 제한을 관리자 설정에 넣을 예정.',
+    note: '실제 연동 후보. 연동키·발신번호·야간 제한을 관리자 설정에 넣을 예정.',
     status: 'planned',
   },
   {
@@ -52,12 +52,12 @@ export const ADDON_VENDORS = [
     id: 'inicis',
     category: 'pg',
     name: 'KG이니시스',
-    summary: '영카트에서 자주 쓰는 카드·간편결제 PG. 상점 ID·사인키 연동.',
+    summary: '영카트에서 자주 쓰는 카드·간편결제 서비스. 상점 식별값·서명키 연동.',
     homeUrl: 'https://www.inicis.com/',
     applyUrl: 'https://www.inicis.com/service_main',
     docsUrl: 'https://manual.inicis.com/',
     phone: '1588-4954',
-    note: '카드 결제모듈 상담·계약용. 우동공과는 실 PG 미연동(Lab) 상태입니다.',
+    note: '카드 결제 모듈 상담·계약용. 우동공과는 실제 전자결제가 아직 연결되지 않은 시험 상태입니다.',
     status: 'planned',
   },
   {
@@ -68,7 +68,7 @@ export const ADDON_VENDORS = [
     homeUrl: 'https://www.kcp.co.kr/',
     applyUrl: 'https://www.kcp.co.kr/payment/paymentGuide',
     docsUrl: 'https://developer.kcp.co.kr/',
-    note: '수수료·심사 일정은 상담 후 확정. 계약 전 테스트 MID로 UI만 맞출 수 있습니다.',
+    note: '수수료·심사 일정은 상담 후 확정. 계약 전 시험용 상점 식별값으로 화면만 맞출 수 있습니다.',
     status: 'planned',
   },
   {
@@ -79,7 +79,7 @@ export const ADDON_VENDORS = [
     homeUrl: 'https://www.tosspayments.com/',
     applyUrl: 'https://www.tosspayments.com/business',
     docsUrl: 'https://docs.tosspayments.com/',
-    note: '후순위 PG 후보. 유료 구독·횟수권 결제 연동 시 검토.',
+    note: '후순위 전자결제 후보. 유료 노출·횟수권 결제를 연결할 때 검토합니다.',
     status: 'planned',
   },
   {
@@ -112,14 +112,14 @@ export const ADDON_VENDORS = [
     summary: '통신사 PASS 앱 기반 본인확인.',
     homeUrl: 'https://www.kmcert.com/',
     applyUrl: 'https://www.kmcert.com/',
-    note: '정책상 필요해질 때만 연락. 현재 Lab 안내만.',
+    note: '정책상 필요해질 때만 연락합니다. 현재는 미리보기 안내만 제공합니다.',
     status: 'lab',
   },
 ];
 
 export const ADDON_CATEGORY_LABELS = {
   sms: '문자·메시징',
-  pg: '카드·전자결제(PG)',
+  pg: '카드·전자결제',
   identity: '본인인증',
 };
 
@@ -131,9 +131,9 @@ export const ADDON_STATUS_LABELS = {
 
 /** SMS Lab 안내문 (문자 기본설정·부가서비스 공통) */
 export const SMS_LAB_NOTICE = {
-  title: '지금은 Lab(미리보기)입니다',
+  title: '지금은 미리보기 단계입니다',
   body:
-    '버튼을 눌러도 실제 휴대폰으로 문자가 나가지 않습니다. 전송내역에 「미리보기」만 남습니다. 실제 발송(2차)은 아래 업체에 가입·API 키·발신번호 등록·수신 동의가 준비된 뒤 연결합니다.',
+    '버튼을 눌러도 실제 휴대폰으로 문자가 나가지 않습니다. 전송내역에 「미리보기」만 남습니다. 실제 발송은 아래 업체에 가입하고 연동키·발신번호 등록·수신 동의를 준비한 뒤 연결합니다.',
 };
 
 /** @param {AddonCategory | 'all'} [category] */

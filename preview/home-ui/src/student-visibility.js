@@ -64,7 +64,7 @@ export function getStudentProtectedVisibility(student, opts = {}) {
 /** 유료 공급자 · paid_only · 아직 unlock 전 */
 export const REQUEST_VIEW_GATE_COPY = {
   title: '요청문 열람권 안내',
-  body: '이 학생의 paid_only 요청문을 보려면 열람권이 필요합니다. (학생당 1회 차감)',
+  body: '이 학생의 유료 전용 요청문을 보려면 열람권이 필요합니다. (학생당 1회 차감)',
   ctaUnlock: '열람권으로 보기 (1회)',
   ctaPlans: '유료 서비스 안내',
 };

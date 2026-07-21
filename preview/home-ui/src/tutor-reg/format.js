@@ -172,7 +172,7 @@ export function getUnlockCards(tutor) {
         { label: '유료 등록', ok: paid },
         { label: '메모권 잔여', ok: memos > 0 },
       ],
-      { label: '메모권·유료 (P16-04)', external: '#/plans/access' },
+      { label: '메모권·유료 이용 확인', external: '#/plans/access' },
     ),
     build(
       'request_doc',
@@ -185,7 +185,7 @@ export function getUnlockCards(tutor) {
     ),
     build(
       'pick',
-      'Pick 신청',
+      '추천 노출 신청',
       [
         { label: '프로필 공개', ok: published },
         { label: '상세등록 완료', ok: expanded },
@@ -194,13 +194,13 @@ export function getUnlockCards(tutor) {
     ),
     build(
       'prime',
-      'Prime 신청',
+      '대표 노출 신청',
       [
         { label: '유료 등급', ok: paid },
         { label: '프로필 공개', ok: published },
         { label: '상세등록 완료', ok: expanded },
       ],
-      { label: 'Prime 자격 확인', external: '#/plans/positions' },
+      { label: '대표 노출 자격 확인', external: '#/plans/positions' },
     ),
   ].filter(Boolean);
 }
@@ -253,7 +253,7 @@ export function getAccessMatrix(tutor) {
     },
     {
       key: 'basic',
-      label: '내 프로필 Basic 노출',
+      label: '내 프로필 기본 노출',
       ok: published,
       reason: !published ? '공개 후 노출' : null,
     },
@@ -267,25 +267,25 @@ export function getAccessMatrix(tutor) {
       key: 'cold_memo',
       label: '학생에게 먼저 메모',
       ok: paid && memos > 0,
-      reason: !paid ? '유료·메모권 필요 (P16-04)' : memos <= 0 ? '메모권 소진' : null,
+      reason: !paid ? '유료 이용과 메모권 필요' : memos <= 0 ? '메모권 소진' : null,
     },
     {
       key: 'request_doc',
-      label: '요청문(paid_only) 열람',
+      label: '유료 전용 요청문 열람',
       ok: viewTickets > 0,
-      reason: viewTickets <= 0 ? '열람권 필요 (P18-01)' : null,
+      reason: viewTickets <= 0 ? '열람권 필요' : null,
     },
     {
       key: 'pick',
-      label: 'Pick 부oost',
+      label: '추천 노출',
       ok: published && tutor.detail_completion_status === 'expanded_complete',
       reason: tutor.detail_completion_status !== 'expanded_complete' ? '상세등록 완료 필요' : !published ? '미공개' : null,
     },
     {
       key: 'prime',
-      label: 'Prime 신청',
+      label: '대표 노출 신청',
       ok: paid && published,
-      reason: !paid ? 'paid 자격 필요' : !published ? '미공개' : null,
+      reason: !paid ? '유료 이용 자격 필요' : !published ? '미공개' : null,
     },
   ];
 }
@@ -305,7 +305,7 @@ export function getExposureMatrix(tutor, readiness) {
   return [
     {
       key: 'search',
-      label: 'Basic 검색',
+      label: '기본 검색 노출',
       ok: published && readiness.canPublish,
       reason: !published ? '공개 후 노출' : readiness.canPublish ? null : '필수 항목 미완료',
       statusText: null,
@@ -319,14 +319,14 @@ export function getExposureMatrix(tutor, readiness) {
     },
     {
       key: 'pick',
-      label: 'Pick',
+      label: '추천 노출',
       ok: published && expanded,
       reason: pickN ? `조건 ${pickN}개 부족` : null,
       statusText: pickN === 0 ? PRODUCT_APPLY.eligible : PRODUCT_APPLY.missing(pickN),
     },
     {
       key: 'prime',
-      label: 'Prime',
+      label: '대표 노출',
       ok: paid && published && expanded,
       reason: primeMissing.length ? `조건 ${primeMissing.length}개 부족` : null,
       statusText: primeMissing.length === 0 ? PRODUCT_APPLY.eligible : PRODUCT_APPLY.missing(primeMissing.length),

@@ -248,7 +248,7 @@ export function addSectionAccessMember(sectionOwner, email) {
   const value = String(email || '')
     .trim()
     .toLowerCase();
-  if (!owner) throw new Error('그룹 ID가 필요합니다.');
+  if (!owner) throw new Error('그룹 식별값이 필요합니다.');
   if (!EMAIL_RE.test(value)) throw new Error('올바른 이메일 형식이 아닙니다.');
   const map = { ...(loadJson(SECTION_ACCESS_KEY, {}) || {}) };
   const current = Array.isArray(map[owner]) ? map[owner].map(String) : [];
@@ -287,8 +287,8 @@ export async function copyBoardChannel(sourceKey, input) {
   const boardKey = String(input.boardKey || '')
     .trim()
     .toLowerCase();
-  if (!boardKey) throw new Error('새 boardKey가 필요합니다.');
-  if (boardKey === src.boardKey) throw new Error('원본과 다른 boardKey를 입력하세요.');
+  if (!boardKey) throw new Error('새 채널 식별값이 필요합니다.');
+  if (boardKey === src.boardKey) throw new Error('원본과 다른 채널 식별값을 입력하세요.');
 
   const menuLabel = String(input.menuLabel || `${src.menuLabel} 복사`).trim();
   let routeSlug = String(input.routeSlug || '').trim();

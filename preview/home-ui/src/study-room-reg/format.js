@@ -84,7 +84,7 @@ function productMatrixRow(type, room) {
   const ok = n === 0;
   return {
     key: type,
-    label: type === 'prime' ? 'Prime' : 'Pick',
+    label: type === 'prime' ? '대표 노출' : '추천 노출',
     ok,
     reason: ok ? null : PRODUCT_APPLY.missing(n),
     statusText: ok ? PRODUCT_APPLY.eligible : PRODUCT_APPLY.missing(n),
@@ -155,8 +155,8 @@ export function getExposureDetailBlocks(room, readiness) {
       ok: room.inquiry_status === 'open' || room.inquiry_status === 'waiting_only',
       reason: capacityHint,
     },
-    { ...prime, label: 'Prime 상품' },
-    { ...pick, label: 'Pick 상품' },
+    { ...prime, label: '대표 노출 상품' },
+    { ...pick, label: '추천 노출 상품' },
   ];
 }
 

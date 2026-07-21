@@ -88,8 +88,8 @@ export const MY_TUTOR = {
   registered: '2026-04-15',
 };
 
-export const SLOT_PRIME = ['Prime A', 'Prime B', 'Prime C'];
-export const SLOT_PICK_ROW = ['Pick 1', 'Pick 2', 'Pick 3', 'Pick 4', 'Pick 5'];
+export const SLOT_PRIME = ['대표 노출 1', '대표 노출 2', '대표 노출 3'];
+export const SLOT_PICK_ROW = ['추천 노출 1', '추천 노출 2', '추천 노출 3', '추천 노출 4', '추천 노출 5'];
 export const SLOT_TOP = SLOT_PRIME;
 export const SLOT_MID = SLOT_PICK_ROW;
 
@@ -97,7 +97,7 @@ export const AD_FALLBACKS = {
   premium: {
     tag: '프리미엄',
     title: '우리동네 상단 노출',
-    desc: 'Prime·Pick 슬롯 — 상세등록 완료 전제',
+    desc: '대표·추천 노출 — 상세등록 완료 후 이용',
     cta: '상품 안내',
     action: 'ad-premium',
   },

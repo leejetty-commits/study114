@@ -83,7 +83,7 @@ function getSeedHistory() {
   const seed = [
     {
       orderRef: 'demo-prime-001',
-      productName: 'Prime · 30일',
+      productName: '대표 노출 · 30일',
       providerLabel: '샘플 공부방',
       amountKrw: 10,
       paymentMethod: 'card',
@@ -95,7 +95,7 @@ function getSeedHistory() {
     },
     {
       orderRef: 'demo-pick-002',
-      productName: 'Pick · 14일',
+      productName: '추천 노출 · 14일',
       providerLabel: '샘플 과외쌤',
       amountKrw: 10,
       paymentMethod: 'transfer',

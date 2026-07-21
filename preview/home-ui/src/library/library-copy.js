@@ -88,7 +88,7 @@ export const LIBRARY_SEED = [
     id: 'pdf-1',
     boardKey: 'library-guide-pdf',
     title: '안전과외 가이드 — 선지급 주의 (PDF)',
-    summary: 'P17-03 safe/prepay 요약본',
+    summary: '안전한 선입금 안내 요약본',
     format: 'PDF',
     audience: ['all'],
     section: 'guides',

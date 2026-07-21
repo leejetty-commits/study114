@@ -32,25 +32,25 @@ function formatMemoExpiry(iso) {
 /** §3 공개 범위 배지 */
 export const SCOPE_BADGE_LABELS = {
   structuredOnly: '구조화 항목만',
-  structuredPlusPaid: '구조화 + paid_only',
+  structuredPlusPaid: '구조화 항목 + 유료 전용 요청문',
   publicProfile: '공개 프로필',
 };
 
 /** §4 빈 상태 — 정본: empty-state-copy.js `getMessagesEmptyCopy` */
 export const FREE_PROVIDER_INBOX_COPY = {
   empty:
-    '받은 문의에 답장해 보세요. 학생에게 <strong>먼저</strong> 쪽지를 내려면 쪽지권이 필요합니다. (P16-04)',
-  hint: '무료 공급자: 받은 쪽지·학부모 문의 답장 OK · 학생에게 <strong>먼저</strong> 쪽지만 P16-04',
+    '받은 문의에 답장해 보세요. 학생에게 <strong>먼저</strong> 쪽지를 보내려면 쪽지권이 필요합니다.',
+  hint: '무료 이용자도 받은 쪽지와 학부모 문의에 답장할 수 있어요. 학생에게 먼저 보내는 쪽지만 쪽지권이 필요합니다.',
 };
 
 /** §7 P16-04 — 18§9-12 행동 직전 업셀 */
 export const GATE_COPY = {
   title: '쪽지권이 필요합니다',
   body:
-    '이 학생에게 먼저 쪽지(콜드 아웃리치)를 내려면 쪽지권이 필요합니다. 구조화된 학생 정보만 열람할 수 있습니다.',
+    '이 학생에게 먼저 쪽지를 보내려면 쪽지권이 필요합니다. 기본 학생 정보는 열람할 수 있습니다.',
   replyNote: '학부모가 먼저 문의한 대화에는 답장할 수 있습니다.',
-  hint: '13장 §7-4 · 18§9-6 쪽지권 · 행동 직전 게이트',
-  cta: '유료 서비스 안내 (P18-01)',
+  hint: '쪽지를 보내기 직전에 이용권 보유 여부를 확인합니다.',
+  cta: '유료 서비스 안내',
 };
 
 /**
@@ -65,9 +65,9 @@ export function buildMemoGateCopy(state = getMemoGateState()) {
   if (depleted) {
     return {
       title: '쪽지권이 없습니다',
-      body: '선제 쪽지(콜드 아웃리치)를 내려면 쪽지권이 필요합니다. 구조화된 학생 정보만 열람할 수 있습니다.',
+      body: '학생에게 먼저 쪽지를 보내려면 쪽지권이 필요합니다. 기본 학생 정보는 열람할 수 있습니다.',
       replyNote: GATE_COPY.replyNote,
-      hint: '쪽지권은 구매 후 6개월 내 사용 · FIFO 차감',
+      hint: '쪽지권은 구매 후 6개월 내 사용 · 먼저 산 이용권부터 차감',
       cta: GATE_COPY.cta,
       remainingLine: '잔여 쪽지권: 0회',
       expiryLine: expiryLabel ? `가장 가까운 만료: ${expiryLabel} (이미 소진)` : null,
@@ -99,7 +99,7 @@ export function buildMemoGateCopy(state = getMemoGateState()) {
 /** 선제 쪽지 compose 안내 */
 export function buildMemoComposeChargeCopy(state = getMemoGateState()) {
   if (state.bypass) {
-    return '운영 bypass — 쪽지권 차감 없음';
+    return '운영자 확인용 — 쪽지권 차감 없음';
   }
   const remaining = state.ticketsRemaining ?? 0;
   const expiryLabel = formatMemoExpiry(state.nearestExpiry);
@@ -124,14 +124,14 @@ export function getScopeBadge(ctx) {
     }
     return {
       label: SCOPE_BADGE_LABELS.structuredPlusPaid,
-      hint: paidOnlyVisible ? '요청문 일부 공개' : '요청문 visibility=private',
+      hint: paidOnlyVisible ? '요청문 일부 공개' : '요청문 비공개',
       showRequest: paidOnlyVisible,
     };
   }
 
   if (contextKind === 'study_room' || contextKind === 'tutor') {
     const hint = isProviderRole(role)
-      ? '선연락 thread · 답장 free'
+      ? '먼저 온 연락의 답장은 무료'
       : '공급자 상세 공개 범위';
     return {
       label: SCOPE_BADGE_LABELS.publicProfile,
@@ -160,7 +160,7 @@ export function getReplyBlockedMessage(thread, role) {
   if (isProviderRole(role) && thread.contextKind === 'student') {
     const peerSpoke = thread.messages.some((m) => m.sender === 'peer');
     if (!peerSpoke && !isProviderPaid()) {
-      return `${GATE_COPY.replyNote} 학생에게 먼저 쪽지는 쪽지권 구매 후 가능합니다. (P16-04)`;
+      return `${GATE_COPY.replyNote} 학생에게 먼저 보내는 쪽지는 쪽지권 구매 후 가능합니다.`;
     }
   }
 

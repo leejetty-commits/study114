@@ -20,7 +20,7 @@ export const FORBIDDEN_UI_PHRASES = [
   '심사 대기',
   '검증 통과',
   '검증 실패',
-  'Pick 후보',
+  '추천 노출 후보',
   '인증쌤',
   '승인',
   'pending',
@@ -37,9 +37,9 @@ export const P21_GAUGE_TITLES = {
 export const PRODUCT_APPLY = {
   eligible: '신청 가능',
   missing: (n) => `조건 ${n}개 부족`,
-  pickPrimeEligiblePaid: 'Pick · Prime 신청 가능',
-  pickEligibleUnpaid: 'Pick 신청 가능 · Prime은 유료 필요',
-  pickPrimeMissing: (n) => `Pick · Prime 조건 ${n}개 부족`,
+  pickPrimeEligiblePaid: '추천 노출 · 대표 노출 신청 가능',
+  pickEligibleUnpaid: '추천 노출 신청 가능 · 대표 노출은 유료 이용 필요',
+  pickPrimeMissing: (n) => `추천 노출 · 대표 노출 조건 ${n}개 부족`,
 };
 
 /** §6 상태판 블록 제목 */
@@ -57,7 +57,7 @@ export const P21_HUB_BLOCK_TITLES = {
 export const P21_ACCESS_CTA = {
   studentSearch: '학생찾기 보기',
   studentReview: '학생 검토함',
-  plans: '메모권·유료 (P16-04)',
+  plans: '쪽지권·유료 이용',
   messages: '쪽지함 열기',
-  submissionDocs: '제출자료 상태 (P15-10)',
+  submissionDocs: '제출자료 상태',
 };

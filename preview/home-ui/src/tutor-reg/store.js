@@ -242,7 +242,7 @@ export function getPublishReadiness(tutor) {
   /** @type {string[]} */
   const qualityHints = [];
   if (tutor.detail_completion_status !== 'expanded_complete') {
-    qualityHints.push('상세등록 완료 시 Pick 신청 가능');
+    qualityHints.push('상세등록 완료 시 추천 노출 신청 가능');
   }
   if (!tutor.education_doc_public) qualityHints.push('학력정보 공개 시 신뢰정보 표시');
   if (!tutor.intro_long?.trim()) qualityHints.push('상세 소개 보강 권장');

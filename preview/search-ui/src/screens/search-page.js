@@ -50,7 +50,7 @@ function renderSubscriptionNote(tab) {
   if (previewState.role !== 'study_room' && previewState.role !== 'tutor') return '';
   const msg =
     previewState.subscription === 'paid'
-      ? '유료 공급자 — 요청문/특이요청은 학생이 paid_only일 때 상세에서만 열람'
+      ? '유료 공급자 — 유료 전용 요청문과 특이요청은 상세 화면에서만 열람'
       : `무료 공급자 — 메모 접근 시 ${PAID_GATE_MESSAGE}`;
   return `<p class="search-note">${esc(msg)}</p>`;
 }

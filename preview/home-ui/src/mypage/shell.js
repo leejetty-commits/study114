@@ -105,7 +105,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
   const mainHtml = `
     <div class="mypage-layout">
       <aside class="mypage-sidebar" aria-label="마이페이지 메뉴">
-        <p class="mypage-sidebar__eyebrow">MY SPACE</p>
+        <p class="mypage-sidebar__eyebrow">내 공간</p>
         <p class="mypage-sidebar__title">나의 우동공과</p>
         ${
           authUser

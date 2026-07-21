@@ -42,7 +42,7 @@ export const P19_LIST_HEAD = {
 
 /** P19-02 허브 빠른 이동 */
 export const P19_HUB_QUICK_ACTIONS = [
-  { path: 'basic', label: '기본등록', desc: '희망 유형 · draft seed' },
+  { path: 'basic', label: '기본등록', desc: '희망 유형 · 임시 저장 내용' },
   { path: 'detail', label: '상세등록', desc: '듀얼 희망지역·검색/공개 본체' },
   { path: 'settings', label: '공개설정', desc: '요청문·노출 범위' },
   { path: 'publish', label: '미리보기·공개', desc: '상세완료 후 학생찾기 등록', primary: true },

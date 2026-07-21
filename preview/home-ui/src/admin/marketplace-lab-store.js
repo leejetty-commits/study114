@@ -71,7 +71,7 @@ function seed() {
       {
         id: 'INC-1',
         email: 'parent@example.com',
-        product: 'Prime 30일',
+        product: '대표 노출 30일',
         amount: 99000,
         step: '결제창 이탈',
         at: '2026-07-17 21:10',

@@ -64,7 +64,7 @@ export function renderPlans() {
       <section class="mypage-panel" style="max-width:32rem;margin:2rem auto;padding:1.5rem;">
         <h1>유료상품</h1>
         <p>${esc(hubGate.message)}</p>
-        <p><a href="#${hubGate.redirect || '/support/faq'}" class="btn btn--primary" data-nav="${hubGate.redirect || '/support/faq'}">FAQ로 이동</a></p>
+        <p><a href="#${hubGate.redirect || '/support/faq'}" class="btn btn--primary" data-nav="${hubGate.redirect || '/support/faq'}">자주 묻는 질문으로 이동</a></p>
         <p><a href="#/mypage/account" class="btn btn--secondary" data-nav="/mypage/account">마이페이지 · 계정설정</a></p>
       </section>`;
   }

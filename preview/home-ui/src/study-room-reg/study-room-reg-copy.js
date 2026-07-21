@@ -20,7 +20,7 @@ export const FORBIDDEN_UI_PHRASES = [
   '심사 대기',
   '검증 통과',
   '검증 실패',
-  'Pick 후보',
+  '추천 노출 후보',
   '인증쌤',
   '승인',
   'pending',
@@ -76,9 +76,9 @@ export const P20_EXPOSURE_SECTION_TITLES = {
   searchCompare: '검색·비교·지역 노출',
   inquiry: '상담 수용 상태 (inquiry_status)',
   capacity: '정원/대기 문의',
-  plans: 'Prime/Pick 상품 (18장)',
+  plans: '대표/추천 노출 상품',
   messages: '쪽지함 (보조)',
-  danger: '위험 구역 (P20-06)',
+  danger: '공개 중단·삭제',
 };
 
 /** P20-01 목록 헤더 */

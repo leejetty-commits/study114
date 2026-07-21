@@ -60,7 +60,7 @@ export function showPaidGateOverlay(opts = {}) {
 
       <div class="msg-overlay__panel msg-gate">
 
-        <p class="msg-overlay__screen-id">P16-04 · 16장 §1-2 · §7</p>
+        <p class="msg-overlay__screen-id">쪽지 보내기</p>
 
         <h2 id="msg-gate-title" class="msg-gate__title">${esc(copy.title)}</h2>
 
@@ -172,7 +172,7 @@ export function showComposeModal(opts) {
 
       <div class="msg-overlay__panel msg-compose">
 
-        <p class="msg-overlay__screen-id">P16-03 · 16장 §6</p>
+        <p class="msg-overlay__screen-id">쪽지 상세</p>
 
         <h2 id="msg-compose-title" class="msg-compose__title">첫 메모 보내기</h2>
 
@@ -318,7 +318,7 @@ export function showReportOverlay(opts) {
 
       <div class="msg-overlay__panel msg-compose">
 
-        <p class="msg-overlay__screen-id">P16-02 · 신고</p>
+        <p class="msg-overlay__screen-id">신고하기</p>
 
         <h2 class="msg-compose__title">신고하기</h2>
 

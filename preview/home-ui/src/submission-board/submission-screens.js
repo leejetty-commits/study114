@@ -35,11 +35,11 @@ function esc(s) {
 
 function renderEngineNote(compact = false) {
   if (compact) {
-    return `<p class="sub-board-banner sub-board-banner--compact"><code>submission</code> · ${esc(BOARD_TYPES.upload.label)}</p>`;
+    return `<p class="sub-board-banner sub-board-banner--compact">자료 제출 · ${esc(BOARD_TYPES.upload.label)}</p>`;
   }
   return `
     <div class="sub-board-banner" role="note">
-      <span class="sub-board-banner__tag">${esc(BOARD_ENGINE_LOCK.topConcept)} · <code>submission</code></span>
+      <span class="sub-board-banner__tag">${esc(BOARD_ENGINE_LOCK.topConcept)} · 자료 제출</span>
       <span class="sub-board-banner__type">${esc(BOARD_TYPES.upload.label)}</span>
       <p class="sub-board-banner__text">${esc(SUBMISSION_BOARD.whatIs)}</p>
       <ul class="sub-board-banner__list">
@@ -54,17 +54,17 @@ function renderPolicyChips(navRole) {
   const policy = getBoardPolicy('submission');
   if (!policy) return '';
   return `
-    <div class="lib-policy-chips" aria-label="boardKey 권한">
+    <div class="lib-policy-chips" aria-label="제출함 권한">
       <span class="lib-chip lib-chip--type">${esc(BOARD_TYPES.upload.label)}</span>
-      <span class="lib-chip">read: ${canBoardAction('submission', 'read', boardRole) ? '✓' : '✕'}</span>
-      <span class="lib-chip">upload: ${canBoardAction('submission', 'upload', boardRole) ? '✓' : '✕'}</span>
+      <span class="lib-chip">읽기: ${canBoardAction('submission', 'read', boardRole) ? '가능' : '불가'}</span>
+      <span class="lib-chip">올리기: ${canBoardAction('submission', 'upload', boardRole) ? '가능' : '불가'}</span>
     </div>`;
 }
 
 function renderBridge() {
   return `
     <div class="sub-board-bridge">
-      <a href="#/mypage/submission-docs" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/submission-docs">P15-10 제출자료 상태</a>
+      <a href="#/mypage/submission-docs" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/submission-docs">제출자료 상태</a>
       <span class="mypage-muted">${esc(SUBMISSION_BOARD.bridgeP15)}</span>
     </div>`;
 }
@@ -198,7 +198,7 @@ function renderHub(navRole, canUpload) {
           <p class="mypage-lead">${esc(SUBMISSION_BOARD.footnote)}</p>
           ${renderPolicyChips(navRole)}
         </div>
-        <span class="mypage-badge">${esc(SUBMISSION_BOARD.screenId)} · <code>${esc(SUBMISSION_BOARD.boardKey)}</code></span>
+        <span class="mypage-badge">내 제출자료</span>
       </header>
       <p class="mypage-note p22-trust-disclaimer">${esc(SUBMISSION_DOC_USER_NOTICE.lead)} ${esc(SUBMISSION_DOC_USER_NOTICE.body)}</p>
       ${renderBridge()}
@@ -233,7 +233,7 @@ function renderDetail(post, navRole) {
           <h2 class="mypage-panel__title">${esc(post.title)}</h2>
           <p class="mypage-lead">${esc(post.description || '—')}</p>
         </div>
-        <span class="mypage-badge">P23-04b · <code>submission</code></span>
+        <span class="mypage-badge">제출 상세</span>
       </header>
       <dl class="sub-board-dl">
         <dt>${esc(SUBMISSION_DETAIL.status)}</dt>
@@ -285,7 +285,7 @@ export function renderSubmissionBoardScreen(path = SUBMISSION_BOARD_BASE) {
       <section class="mypage-panel sub-board-panel">
         ${renderEngineNote(true)}
         <p class="mypage-note"><a href="#${SUBMISSION_BOARD_BASE}" data-sub-nav="${SUBMISSION_BOARD_BASE}">${esc(SUBMISSION_DETAIL.back)}</a></p>
-        <span class="mypage-badge">P23-04a · 작성</span>
+        <span class="mypage-badge">새 자료 작성</span>
         ${renderComposeForm({ canUpload })}
       </section>`;
   }
@@ -300,7 +300,7 @@ export function renderSubmissionBoardScreen(path = SUBMISSION_BOARD_BASE) {
       <section class="mypage-panel sub-board-panel">
         ${renderEngineNote(true)}
         <p class="mypage-note"><a href="#${SUBMISSION_BOARD_BASE}/${esc(post.id)}" data-sub-nav="${SUBMISSION_BOARD_BASE}/${esc(post.id)}">← 상세</a></p>
-        <span class="mypage-badge">P23-04a · 수정</span>
+        <span class="mypage-badge">제출자료 수정</span>
         ${renderComposeForm({ post, canUpload, isEdit: true })}
       </section>`;
   }

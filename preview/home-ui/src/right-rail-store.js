@@ -58,7 +58,7 @@ const DEFAULT_RIGHT_RAIL_SLOTS = [
     selectionMode: 'curated',
     itemLimit: 3,
     sectionTitle: '탐색 도움말',
-    ctaLabel: 'FAQ 보기',
+    ctaLabel: '자주 묻는 질문 보기',
     ctaTarget: '#/support/faq',
     visibilityRule: 'public',
     roleTarget: 'all',
@@ -112,7 +112,7 @@ const DEFAULT_RIGHT_RAIL_SLOTS = [
     selectionMode: 'curated',
     itemLimit: 3,
     sectionTitle: '상품 이용 안내',
-    ctaLabel: '상품 FAQ',
+    ctaLabel: '상품 자주 묻는 질문',
     ctaTarget: '#/support/faq',
     visibilityRule: 'public',
     roleTarget: 'provider',
@@ -220,7 +220,7 @@ export function validateRightRailSlotInput(input) {
   if (input.sourceType === 'board' || input.sourceType === 'mixed') {
     sourceBoardKeys.forEach((key) => {
       const channel = getBoardChannel(key);
-      if (!channel) errors.push(`존재하지 않는 boardKey입니다: ${key}`);
+      if (!channel) errors.push(`존재하지 않는 채널 식별값입니다: ${key}`);
       if (channel?.status === 'archived') errors.push(`보관된 채널은 슬롯 source로 쓸 수 없습니다: ${key}`);
     });
   }
