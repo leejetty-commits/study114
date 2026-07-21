@@ -24,9 +24,18 @@ export async function initChromeSession() {
   try {
     const res = await fetch('/api/auth/me.php', { credentials: 'include' });
     const data = await res.json().catch(() => ({}));
-    if (res.ok && data.ok && data.authenticated && data.user) {
-      currentUser = data.user;
-      return currentUser;
+    if (res.ok && data.ok && data.authenticated) {
+      // me.php는 사용자 필드를 최상위로 반환한다. 과거 형태(data.user)도 함께 지원.
+      const src = data.user && typeof data.user === 'object' ? data.user : data;
+      if (src.role_type) {
+        currentUser = {
+          user_id: src.user_id,
+          email: src.email,
+          role_type: src.role_type,
+          name: src.name,
+        };
+        return currentUser;
+      }
     }
   } catch {
     /* ignore */
