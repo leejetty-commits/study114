@@ -8,9 +8,9 @@
 
 /** §4-3-1 역할별 홈 상단 강조 */
 export const HOME_EMPHASIS = {
-  parent: '찜 · 최근열람 · 쪽지',
-  study_room: '내 등록 · 노출 상태 · 상담 수용',
-  tutor: '학생 접근·쪽지 · 메모권 · 매칭 가시성 · 미읽음 쪽지',
+  parent: '찜한 곳과 새 소식을 가볍게 확인해 보세요.',
+  study_room: '공개 상태와 학생 소식을 한눈에 모았어요.',
+  tutor: '프로필, 관심 학생, 새 쪽지를 한곳에서 확인하세요.',
 };
 
 /** §15 역할 제한 패널 (Empty ✕ · onboarding guard) */
@@ -29,17 +29,17 @@ export const GUARDIAN_PLANS_COPY = {
   footnote: '18장 2026-07-07 잠금 · 18b 더미 단가',
 };
 
-export const HOME_STATS_NOTE = '15장 §4 · 숫자는 다음 CTA의 입력값입니다.';
+export const HOME_STATS_NOTE = '내 상태는 활동에 따라 달라져요.';
 
 export const WISHLIST_NOTE = '15장 §5 · 주 사용: 학부모 탐색 후속 · 공급자는 부기능';
 
 export const RECENT_NOTE = '15장 §6 [임시] · 학부모: 공부방/과외/학생(비교열람) · 공급자: 학생 의뢰 포함';
 
-export const STUDENT_REVIEW_NOTE = '25장 §8 P25-S10 · 메모·쪽지 전 검토 · 비교·찜과 별개';
+export const STUDENT_REVIEW_NOTE = '관심 있는 학생을 저장해 두고, 준비가 되었을 때 연락을 이어가세요.';
 
-export const MESSAGES_SUMMARY_LEAD = 'P15-08 요약 → 16장 쪽지함 본문';
+export const MESSAGES_SUMMARY_LEAD = '새 쪽지와 진행 중인 대화를 한곳에서 확인하세요.';
 
-export const REGISTRATIONS_LEAD = '역할에 맞는 등록 유형으로 이동합니다. (19~21장 본문은 register-ui)';
+export const REGISTRATIONS_LEAD = '현재 등록 상태를 확인하고 필요한 정보만 이어서 수정하세요.';
 
 /** §2-1 P15-10 제출 상태 라벨 (22§7 · 심사 UX ✕) */
 export const SUBMISSION_STATUS_LABELS = {

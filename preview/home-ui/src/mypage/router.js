@@ -33,19 +33,20 @@ import { isPaidPath, parsePaidPath, paidScreenTitle } from './paid-router.js';
  * @property {string} path
  * @property {string} label
  * @property {MypageScreenId} screenId
+ * @property {string} [icon]
  * @property {Array<'parent'|'study_room'|'tutor'>} [roles] — 미설정=전 역할
  */
 
 /** @type {MypageNavItem[]} */
 export const MYPAGE_NAV = [
-  { path: '/mypage/home', label: '내 활동 홈', screenId: 'P15-01', emphasis: ['parent'] },
-  { path: '/mypage/registrations', label: '내 등록', screenId: 'P15-02', emphasis: ['study_room', 'tutor'] },
-  { path: '/mypage/wishlist', label: '찜', screenId: 'P15-06', emphasis: ['parent'], roles: ['parent'] },
-  { path: '/mypage/recent', label: '최근열람', screenId: 'P15-07' },
-  { path: '/mypage/student-review', label: '학생 검토함', screenId: 'P25-S10', emphasis: ['study_room', 'tutor'], roles: ['study_room', 'tutor'] },
-  { path: '/mypage/messages', label: '쪽지', screenId: 'P15-08' },
-  { path: '/mypage/plans', label: '유료서비스', screenId: 'P15-09', emphasis: ['study_room', 'tutor'] },
-  { path: '/mypage/account', label: '계정/설정', screenId: 'P15-11' },
+  { path: '/mypage/home', label: '마이페이지 홈', icon: '⌂', screenId: 'P15-01', emphasis: ['parent'] },
+  { path: '/mypage/registrations', label: '내 등록', icon: '✎', screenId: 'P15-02', emphasis: ['study_room', 'tutor'] },
+  { path: '/mypage/wishlist', label: '찜 목록', icon: '♡', screenId: 'P15-06', emphasis: ['parent'], roles: ['parent'] },
+  { path: '/mypage/recent', label: '최근 본 항목', icon: '◷', screenId: 'P15-07' },
+  { path: '/mypage/student-review', label: '관심 학생', icon: '☆', screenId: 'P25-S10', emphasis: ['study_room', 'tutor'], roles: ['study_room', 'tutor'] },
+  { path: '/mypage/messages', label: '쪽지', icon: '✉', screenId: 'P15-08' },
+  { path: '/mypage/plans', label: '이용 현황', icon: '◌', screenId: 'P15-09', emphasis: ['study_room', 'tutor'] },
+  { path: '/mypage/account', label: '계정 설정', icon: '⚙', screenId: 'P15-11' },
 ];
 
 /** @type {Record<string, MypageScreenId>} */
@@ -88,8 +89,6 @@ export function normalizeMypagePath(hashPath) {
 
 /** @param {import('../state.js').HomeRole extends infer R ? R : never} role */
 export function getDefaultMypagePath(role) {
-  if (role === 'study_room') return '/mypage/registrations/study-rooms';
-  if (role === 'tutor') return '/mypage/registrations/tutors';
   return '/mypage/home';
 }
 
@@ -133,15 +132,15 @@ export function screenTitle(screenId, path) {
     'P15-04': '공부방 목록',
     'P15-05': '과외 프로필',
     'P15-06': '찜 목록',
-    'P15-07': '최근열람',
+    'P15-07': '최근 본 항목',
     'P15-08': '쪽지',
-    'P15-09': '유료서비스',
+    'P15-09': '이용 현황',
     'P15-10': '제출자료 상태',
     'P23-04': '제출함',
     'P23-04a': '제출 작성',
     'P23-04b': '제출 상세',
-    'P15-11': '계정/설정',
-    'P25-S10': '학생 검토함',
+    'P15-11': '계정 설정',
+    'P25-S10': '관심 학생',
   };
   return map[screenId] || '마이페이지';
 }

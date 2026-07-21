@@ -10,6 +10,43 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
+function navItemIsActive(item, currentPath) {
+  return (
+    currentPath === item.path ||
+    (item.path === '/mypage/registrations' && currentPath.startsWith('/mypage/registrations')) ||
+    (item.path === '/mypage/messages' && currentPath.startsWith('/mypage/messages')) ||
+    (item.path === '/mypage/plans' &&
+      (currentPath.startsWith('/mypage/plans') || currentPath.startsWith('/mypage/paid')))
+  );
+}
+
+function renderBreadcrumb(currentPath, title, role) {
+  const primary = MYPAGE_NAV.filter((item) => !item.roles || item.roles.includes(role)).find((item) =>
+    navItemIsActive(item, currentPath),
+  );
+  const parts = [{ label: '마이페이지 홈', path: '/mypage/home' }];
+  if (primary && primary.path !== '/mypage/home') {
+    parts.push({ label: primary.label, path: primary.path });
+  }
+  if (title && title !== parts.at(-1)?.label) {
+    parts.push({ label: title });
+  }
+
+  return `
+    <nav class="mypage-breadcrumb" aria-label="현재 위치">
+      ${parts
+        .map((part, index) => {
+          const isLast = index === parts.length - 1;
+          const content =
+            part.path && !isLast
+              ? `<a href="#${part.path}" data-mypage-nav="${part.path}">${esc(part.label)}</a>`
+              : `<span aria-current="${isLast ? 'page' : 'false'}">${esc(part.label)}</span>`;
+          return `${index ? '<span class="mypage-breadcrumb__sep" aria-hidden="true">›</span>' : ''}${content}`;
+        })
+        .join('')}
+    </nav>`;
+}
+
 /**
  * @param {string} currentPath
  * @param {string} bodyHtml
@@ -36,6 +73,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
           ? '/tutor'
           : '/guest';
   const displayName = resolveAccountDisplayName(authUser);
+  const displayInitial = String(displayName || roleLabel || '우').trim().charAt(0) || '우';
   const displayEmail = String(authUser?.email || '').trim();
   const accountPrimary = displayName;
   const accountSecondary =
@@ -54,15 +92,12 @@ export function renderMypageShell(currentPath, bodyHtml) {
 
   const navItems = MYPAGE_NAV.filter((item) => !item.roles || item.roles.includes(role))
     .map((item) => {
-    const active =
-      currentPath === item.path ||
-      (item.path === '/mypage/registrations' && currentPath.startsWith('/mypage/registrations')) ||
-      (item.path === '/mypage/messages' && currentPath.startsWith('/mypage/messages')) ||
-      (item.path === '/mypage/plans' && currentPath.startsWith('/mypage/paid'));
+    const active = navItemIsActive(item, currentPath);
     const emph = item.emphasis?.includes(role) ? ' is-emphasis' : '';
     return `
       <a href="#${item.path}" class="mypage-nav__link${active ? ' is-active' : ''}${emph}" data-mypage-nav="${item.path}">
-        ${esc(item.label)}
+        <span class="mypage-nav__icon" aria-hidden="true">${esc(item.icon || '•')}</span>
+        <span>${esc(item.label)}</span>
       </a>`;
     })
     .join('');
@@ -70,14 +105,18 @@ export function renderMypageShell(currentPath, bodyHtml) {
   const mainHtml = `
     <div class="mypage-layout">
       <aside class="mypage-sidebar" aria-label="마이페이지 메뉴">
-        <p class="mypage-sidebar__title">마이페이지</p>
+        <p class="mypage-sidebar__eyebrow">MY SPACE</p>
+        <p class="mypage-sidebar__title">나의 우동공과</p>
         ${
           authUser
             ? `<div class="mypage-account-card">
-                <span class="mypage-account-card__label">현재 계정</span>
-                <strong class="mypage-account-card__email">${esc(accountPrimary)}</strong>
-                ${accountSecondary ? `<span class="mypage-account-card__sub">${esc(accountSecondary)}</span>` : ''}
-                <span class="mypage-account-card__role">${esc(roleLabel)}${isAdminUser() ? ' · 관리자' : ''}</span>
+                <span class="mypage-account-card__avatar" aria-hidden="true">${esc(displayInitial)}</span>
+                <span class="mypage-account-card__body">
+                  <span class="mypage-account-card__label">반가워요</span>
+                  <strong class="mypage-account-card__email">${esc(accountPrimary)}</strong>
+                  ${accountSecondary ? `<span class="mypage-account-card__sub">${esc(accountSecondary)}</span>` : ''}
+                  <span class="mypage-account-card__role">${esc(roleLabel)}${isAdminUser() ? ' · 관리자' : ''}</span>
+                </span>
               </div>`
             : ''
         }
@@ -87,6 +126,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
       </aside>
       <div class="mypage-content">
         <header class="mypage-content__head">
+          ${renderBreadcrumb(currentPath, title, role)}
           <h1 class="mypage-content__title">${esc(title)}</h1>
         </header>
         ${isMessagesDetailPath(currentPath) ? renderMessagesProviderToolbar() : ''}

@@ -40,7 +40,6 @@ import { formatMonthlyWon, formatTutorFeeCard } from '../exposure-format.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { notifyCompareToggle } from '../handoff-utils.js';
 import { renderEmptyStateCard } from '../empty-state-copy.js';
-import { MYPAGE_NAV } from './router.js';
 import { getMessagesSummaryCounts, renderMessagesScreen } from '../messages/screens.js';
 import { isMessagesDetailPath } from '../messages/router.js';
 import { isStudentRegPath } from '../student-reg/router.js';
@@ -69,7 +68,6 @@ import { bindProviderNoticeEvents } from '../provider-notices.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import {
   HOME_EMPHASIS,
-  HOME_STATS_NOTE,
   EMPTY_ONBOARDING,
   GUARDIAN_PLANS_COPY,
   WISHLIST_NOTE,
@@ -77,7 +75,6 @@ import {
   STUDENT_REVIEW_NOTE,
   MESSAGES_SUMMARY_LEAD,
   REGISTRATIONS_LEAD,
-  homeEmphasisStatKeys,
 } from './mypage-copy.js';
 
 function esc(s) {
@@ -93,22 +90,33 @@ function renderCtaBlock(cta) {
   if (cta.externalRegister) {
     const url = cta.kind === 'tutor' ? TUTOR_REGISTER_URL : STUDY_ROOM_REGISTER_URL;
     return `
-      <div class="mypage-cta">
-        <p class="mypage-cta__hint">${esc(cta.hint)}</p>
-        <a href="${url}" class="btn btn--primary" data-same-tab-href="${url}">${esc(cta.text)}</a>
+      <div class="mypage-next-action">
+        <div>
+          <span class="mypage-next-action__eyebrow">지금 하면 좋아요</span>
+          <strong class="mypage-next-action__title">${esc(cta.text)}</strong>
+          <p class="mypage-next-action__hint">${esc(cta.hint || '등록 내용을 차근차근 이어서 완성해 보세요.')}</p>
+        </div>
+        <a href="${url}" class="btn btn--primary" data-same-tab-href="${url}">이어하기</a>
       </div>`;
   }
   if (cta.path) {
     return `
-      <div class="mypage-cta">
-        <p class="mypage-cta__hint">${esc(cta.hint || '')}</p>
-        <a href="#${cta.path}" class="btn btn--primary" data-mypage-nav="${cta.path}">${esc(cta.text)}</a>
+      <div class="mypage-next-action">
+        <div>
+          <span class="mypage-next-action__eyebrow">지금 하면 좋아요</span>
+          <strong class="mypage-next-action__title">${esc(cta.text)}</strong>
+          <p class="mypage-next-action__hint">${esc(cta.hint || '필요한 내용을 확인하고 다음 단계로 이어가세요.')}</p>
+        </div>
+        <a href="#${cta.path}" class="btn btn--primary" data-mypage-nav="${cta.path}">바로 확인</a>
       </div>`;
   }
   return `
-    <div class="mypage-cta">
-      <p class="mypage-cta__hint">${esc(cta.hint || '')}</p>
-      <span class="mypage-cta__text">${esc(cta.text)}</span>
+    <div class="mypage-next-action">
+      <div>
+        <span class="mypage-next-action__eyebrow">오늘의 안내</span>
+        <strong class="mypage-next-action__title">${esc(cta.text)}</strong>
+        <p class="mypage-next-action__hint">${esc(cta.hint || '')}</p>
+      </div>
     </div>`;
 }
 
@@ -143,67 +151,122 @@ export function renderMypageScreen(path) {
   return renderHome(r, profile, counts, cta);
 }
 
-function renderHomeStat(key, label, value, emphasis) {
-  if (key === 'paidDaysLeft' && value == null) {
-    return `<div class="mypage-stat is-muted" title="15장 §7"><span>유료</span><strong>공급자용</strong></div>`;
-  }
-  const cls = emphasis ? 'mypage-stat is-emphasis' : 'mypage-stat';
-  return `<div class="${cls}"><span>${esc(label)}</span><strong>${esc(String(value ?? '—'))}</strong></div>`;
+function getHomeGreeting(role) {
+  if (role === 'parent') return '아이에게 맞는 배움, 천천히 살펴보세요';
+  if (role === 'study_room') return '우리 공부방의 오늘을 편안하게 관리하세요';
+  return '과외 활동과 학생 소식을 한곳에서 살펴보세요';
 }
 
-function buildHomeStats(role, counts) {
-  const emph = new Set(homeEmphasisStatKeys(role));
-  /** @type {Array<[string, string, unknown]>} */
-  const rows = [
-    ['published', '공개중', counts.published],
-    ['draft', '임시저장', counts.draft],
-    ['wishlist', '찜', counts.wishlist],
-    ['unreadMessages', '읽지 않은 쪽지', counts.unreadMessages],
-    ['recentCount', '최근열람', counts.recentCount],
+function getHomeHighlights(role, counts) {
+  const registrationState =
+    counts.published > 0 ? `${counts.published}개 공개 중` : counts.draft > 0 ? '작성 이어가기' : '첫 등록 필요';
+  if (role === 'parent') {
+    return [
+      { icon: '♡', label: '찜한 곳', value: `${counts.wishlist}개`, note: '나중에 다시 볼 수 있어요', path: '/mypage/wishlist' },
+      { icon: '◷', label: '최근 본 항목', value: `${counts.recentCount}개`, note: '보던 곳부터 이어보세요', path: '/mypage/recent' },
+      { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '답장이 필요한 소식이에요', path: '/mypage/messages' },
+    ];
+  }
+  return [
+    { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
+    { icon: '☆', label: '관심 학생', value: `${counts.studentReviewCount}명`, note: '저장한 학생을 다시 살펴보세요', path: '/mypage/student-review' },
+    { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
   ];
-  if (role === 'study_room' && counts.inquiryLabel != null) {
-    rows.splice(2, 0, ['inquiryLabel', '상담 수용', counts.inquiryLabel]);
+}
+
+function getHomeQuickActions(role) {
+  if (role === 'parent') {
+    return [
+      { icon: '♡', title: '찜 목록', note: '마음에 둔 공부방과 과외쌤', path: '/mypage/wishlist' },
+      { icon: '◷', title: '최근 본 항목', note: '보던 곳부터 다시 확인', path: '/mypage/recent' },
+      { icon: '✉', title: '쪽지', note: '상담과 답장 모아보기', path: '/mypage/messages' },
+      { icon: '⚙', title: '계정 설정', note: '표시 이름과 로그인 관리', path: '/mypage/account' },
+    ];
   }
-  if (role === 'study_room' || role === 'tutor') {
-    rows.splice(role === 'tutor' ? 1 : 3, 0, ['studentReviewCount', '학생 검토함', counts.studentReviewCount]);
-  }
-  if (role === 'tutor') {
-    if (counts.memoCredits != null) {
-      rows.splice(1, 0, ['memoCredits', '메모권', `${counts.memoCredits}회`]);
-    }
-    if (counts.matchingLabel != null) {
-      rows.push(['matchingLabel', '매칭', counts.matchingLabel]);
-    }
-  }
-  rows.push(['paidDaysLeft', '유료', counts.paidDaysLeft != null ? `${counts.paidDaysLeft}일` : null]);
-  return rows
-    .map(([key, label, val]) => renderHomeStat(key, label, val, emph.has(key)))
-    .join('');
+  return [
+    { icon: '✎', title: '내 등록', note: role === 'study_room' ? '공부방 정보와 공개 상태' : '과외 프로필과 공개 상태', path: '/mypage/registrations' },
+    { icon: '☆', title: '관심 학생', note: '저장한 학생과 연락 준비', path: '/mypage/student-review' },
+    { icon: '✉', title: '쪽지', note: '문의와 진행 중인 대화', path: '/mypage/messages' },
+    { icon: '◌', title: '이용 현황', note: '이용권과 남은 기간 확인', path: '/mypage/plans' },
+  ];
 }
 
 function renderHome(role, profile, counts, cta) {
-  const cards = MYPAGE_NAV.filter((n) => n.path !== '/mypage/home').map(
-    (n) => `
-    <a href="#${n.path}" class="mypage-card" data-mypage-nav="${n.path}">
-      <span class="mypage-card__label">${esc(n.label)}</span>
-    </a>`,
-  );
-
   const homeIdentity = profile.displayName || profile.name || '회원';
+  const highlights = getHomeHighlights(role, counts);
+  const quickActions = getHomeQuickActions(role);
 
   return `
-    <section class="mypage-panel">
-      <div class="mypage-status">
-        <span class="mypage-badge">${esc(roleLabel(role))}</span>
-        <span>${esc(profile.regionLabel)}</span>
-        <span class="mypage-muted">${esc(homeIdentity)}</span>
-      </div>
-      <p class="mypage-emphasis" aria-label="역할별 강조">${esc(HOME_EMPHASIS[role] || '')}</p>
+    <div class="mypage-home">
+      <section class="mypage-home-hero">
+        <div class="mypage-home-hero__copy">
+          <span class="mypage-home-hero__role">${esc(roleLabel(role))} 공간</span>
+          <h2>${esc(homeIdentity)}님,<br>${esc(getHomeGreeting(role))}</h2>
+          <p>${esc(profile.regionLabel)}을 중심으로 내 정보와 소식을 정리해 두었어요.</p>
+        </div>
+        <div class="mypage-home-hero__mark" aria-hidden="true">
+          <span>나의</span>
+          <strong>우동공과</strong>
+        </div>
+      </section>
+
+      <section class="mypage-home-section" aria-labelledby="mypage-today-title">
+        <div class="mypage-home-section__head">
+          <div>
+            <span class="mypage-home-section__eyebrow">TODAY</span>
+            <h2 id="mypage-today-title">오늘의 내 상태</h2>
+          </div>
+          <p>${esc(HOME_EMPHASIS[role] || '')}</p>
+        </div>
+        <div class="mypage-highlight-grid">
+          ${highlights
+            .map(
+              (item) => `
+            <a href="#${item.path}" class="mypage-highlight-card" data-mypage-nav="${item.path}">
+              <span class="mypage-highlight-card__icon" aria-hidden="true">${item.icon}</span>
+              <span class="mypage-highlight-card__label">${esc(item.label)}</span>
+              <strong>${esc(item.value)}</strong>
+              <small>${esc(item.note)}</small>
+              <span class="mypage-highlight-card__arrow" aria-hidden="true">→</span>
+            </a>`,
+            )
+            .join('')}
+        </div>
+      </section>
+
       ${renderCtaBlock(cta)}
-      <div class="mypage-shortcuts">${cards.join('')}</div>
-      <div class="mypage-stats" aria-label="숫자 요약">${buildHomeStats(role, counts)}</div>
-      <p class="mypage-note">${HOME_STATS_NOTE}</p>
-    </section>`;
+
+      <section class="mypage-home-section" aria-labelledby="mypage-quick-title">
+        <div class="mypage-home-section__head">
+          <div>
+            <span class="mypage-home-section__eyebrow">MY SHOP</span>
+            <h2 id="mypage-quick-title">내 공간 둘러보기</h2>
+          </div>
+          <p>필요한 곳만 골라 편하게 들어가세요.</p>
+        </div>
+        <div class="mypage-quick-grid">
+          ${quickActions
+            .map(
+              (item) => `
+            <a href="#${item.path}" class="mypage-quick-card" data-mypage-nav="${item.path}">
+              <span class="mypage-quick-card__icon" aria-hidden="true">${item.icon}</span>
+              <span>
+                <strong>${esc(item.title)}</strong>
+                <small>${esc(item.note)}</small>
+              </span>
+              <span class="mypage-quick-card__arrow" aria-hidden="true">›</span>
+            </a>`,
+            )
+            .join('')}
+        </div>
+      </section>
+
+      <section class="mypage-home-footnote">
+        <span aria-hidden="true">☕</span>
+        <p><strong>한 번에 다 하지 않아도 괜찮아요.</strong><br>필요할 때 돌아와 하나씩 이어가면 됩니다.</p>
+        <a href="#/mypage/account" data-mypage-nav="/mypage/account">내 정보 확인</a>
+      </section>
+    </div>`;
 }
 
 function renderRegistrationsIndex(role) {
@@ -432,43 +495,61 @@ function renderPlans(role) {
   if (role === 'parent') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">${GUARDIAN_PLANS_COPY.lead}</p>
+        <h2 class="mypage-subhead">이용 안내</h2>
         <div class="mypage-info-box">
-          <p>${GUARDIAN_PLANS_COPY.body}</p>
-          <p class="mypage-muted">${GUARDIAN_PLANS_COPY.footnote}</p>
+          <p>학부모 계정은 공부방과 과외쌤을 찾고, 찜하고, 상담하는 기본 기능을 편하게 이용할 수 있어요.</p>
+          <p class="mypage-muted">${GUARDIAN_PLANS_COPY.body}</p>
         </div>
-        <a href="#/support/faq" class="btn btn--secondary" data-nav="/support/faq">유료 FAQ (P17-04)</a>
+        <a href="#/support/faq" class="btn btn--secondary" data-nav="/support/faq">이용 안내 보기</a>
       </section>`;
   }
 
   const tier = previewState.providerSubscription;
   const tierCopy = tier === 'paid' ? PAID_TIER_COPY : FREE_TIER_COPY;
   const metrics = getRoiMetrics();
+  const tierLabel = tier === 'paid' ? '유료 이용 중' : '기본 이용 중';
 
   return `
-    <section class="mypage-panel">
-      <p class="mypage-lead">P15-09 · ${esc(P18_HEADLINE)} · 데모 tier: <strong>${tier}</strong></p>
-      <div class="mypage-info-box plans-tier-box">
-        <strong>${esc(tierCopy.title)}</strong>
+    <div class="mypage-home">
+      <section class="mypage-panel mypage-usage-overview">
+        <div class="mypage-home-section__head">
+          <div>
+            <span class="mypage-home-section__eyebrow">MY PLAN</span>
+            <h2>내 이용 현황</h2>
+          </div>
+          <span class="mypage-badge ${tier === 'paid' ? 'mypage-badge--published' : ''}">${esc(tierLabel)}</span>
+        </div>
+        <p class="mypage-lead">상품을 고르기 전에, 지금 이용 중인 기능과 남은 혜택부터 확인하세요.</p>
+        <div class="mypage-highlight-grid">
+          ${metrics
+            .slice(0, 3)
+            .map(
+              (m) => `
+            <div class="mypage-highlight-card is-static" title="${esc(m.hint)}">
+              <span class="mypage-highlight-card__label">${esc(m.label)}</span>
+              <strong>${m.value}</strong>
+              <small>최근 활동을 기준으로 보여드려요.</small>
+            </div>`,
+            )
+            .join('')}
+        </div>
+      </section>
+
+      <section class="mypage-home-section">
+        <div class="mypage-home-section__head">
+          <div>
+            <span class="mypage-home-section__eyebrow">CURRENT</span>
+            <h2>${esc(tierCopy.title)}</h2>
+          </div>
+          <p>${esc(P18_HEADLINE)}</p>
+        </div>
         <ul class="plans-tier-list">${tierCopy.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
-      </div>
-      <h2 class="mypage-subhead">반응 요약 (ROI 무료 3종)</h2>
-      <div class="mypage-stats roi-metrics">
-        ${metrics.map(
-          (m) => `
-          <div class="mypage-stat" title="${esc(m.hint)}">
-            <span>${esc(m.label)}</span>
-            <strong>${m.value}</strong>
-          </div>`,
-        ).join('')}
-      </div>
-      <div class="mypage-actions-row">
-        <a href="#/plans" class="btn btn--primary" data-nav="/plans">상품센터 열기</a>
-        <a href="#/plans/my" class="btn btn--secondary" data-nav="/plans/my">내 상품 상태</a>
-        <a href="#/plans/positions" class="btn btn--secondary" data-nav="/plans/positions">노출상품</a>
-      </div>
-      <p class="mypage-note">마이페이지는 상태 요약 · 구매·카탈로그는 상품센터(#/plans)</p>
-    </section>`;
+        <div class="mypage-actions-row">
+          <a href="#/mypage/paid/usage" class="btn btn--primary" data-mypage-nav="/mypage/paid/usage">이용 내역 확인</a>
+          <a href="#/mypage/paid" class="btn btn--secondary" data-mypage-nav="/mypage/paid">추가 이용 알아보기</a>
+        </div>
+      </section>
+    </div>`;
 }
 
 function renderSubmissionDocs(role) {

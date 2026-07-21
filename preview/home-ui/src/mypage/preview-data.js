@@ -175,7 +175,7 @@ export function getPrimaryCta(role) {
     if (reg.students.length === 0) {
       return {
         text: '자녀 기본등록 이어하기',
-        hint: 'students 0건 · 15장 §11',
+        hint: '아이의 학년과 희망 조건부터 천천히 등록해 보세요.',
         path: '/mypage/registrations/students',
       };
     }
@@ -183,11 +183,11 @@ export function getPrimaryCta(role) {
     if (draft) {
       return {
         text: `「${draft.public_display_name}」 의뢰 공개하기`,
-        hint: 'exposure_status: draft',
+        hint: '저장해 둔 내용을 확인하고 공개하면 알맞은 선생님을 만날 수 있어요.',
         path: studentSectionPath(draft.id, 'publish'),
       };
     }
-    return { text: '희망 조건 수정하기', hint: '19장', path: '/mypage/registrations/students' };
+    return { text: '희망 조건 살펴보기', hint: '달라진 조건이 있다면 언제든 편하게 고칠 수 있어요.', path: '/mypage/registrations/students' };
   }
 
   if (role === 'study_room') {
@@ -195,13 +195,13 @@ export function getPrimaryCta(role) {
     const room = rooms[0];
     if (!room || room.detail_completion_status !== 'expanded_complete') {
       return {
-        text: '상세등록 완료하고 Pick/Prime 노출',
-        hint: 'detail_completion_status · P20-03b',
+        text: '공부방 소개를 조금 더 채워보세요',
+        hint: '상세 정보가 풍성할수록 학부모가 우리 공부방을 이해하기 쉬워져요.',
         path: room ? studyRoomSectionPath(room.id, 'detail') : '/mypage/registrations/study-rooms',
       };
     }
     const hub = studyRoomHubPath(room.id);
-    return { text: '운영 상태 확인하기', hint: 'P20-02 상태판', path: hub };
+    return { text: '공부방 공개 상태 살펴보기', hint: '공개 정보와 상담 가능 여부를 한 번 확인해 보세요.', path: hub };
   }
 
   if (role === 'tutor') {
@@ -211,28 +211,28 @@ export function getPrimaryCta(role) {
       const r = getTutorPublishReadiness(draft);
       if (!r.canPublish) {
         return {
-          text: '기본·상세 보강 후 공개하기',
-          hint: `공개 준비 ${r.doneCount}/${r.totalCount} · P21-03`,
+          text: '과외 프로필을 조금 더 채워보세요',
+          hint: `공개 준비 ${r.doneCount}/${r.totalCount}개 완료 · 부족한 항목부터 하나씩 이어가세요.`,
           path: tutorSectionPath(draft.id, 'basic'),
         };
       }
       return {
-        text: '미리보기·공개하기',
-        hint: 'profile_status: draft',
+        text: '내 과외 프로필 미리보기',
+        hint: '학생에게 보일 모습을 확인한 뒤 공개할 수 있어요.',
         path: tutorSectionPath(draft.id, 'publish'),
       };
     }
     const published = tutors.find((t) => t.profile_status === 'published');
     if (published) {
       return {
-        text: '학생 접근·쪽지 확인',
-        hint: 'P21-05 · 16§8',
+        text: '관심 학생과 쪽지 확인',
+        hint: '저장해 둔 학생과 새로 도착한 소식을 살펴보세요.',
         path: tutorSectionPath(published.id, 'access'),
       };
     }
     return {
       text: '과외 운영 상태 확인',
-      hint: 'P21-02 상태판',
+      hint: '내 프로필과 공개 상태를 한눈에 살펴보세요.',
       path: tutors[0] ? tutorHubPath(tutors[0].id) : '/mypage/registrations/tutors',
     };
   }
