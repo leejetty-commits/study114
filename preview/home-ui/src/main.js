@@ -161,7 +161,12 @@ function init() {
         window.location.hash = '#/guest';
       }
     }
+    // 부팅 중 bootstrap*Route의 location.replace가 유발하는 hashchange가
+    // 세션(me.php) 로드 전에 조기 render를 일으켜 계정·관리자 콘솔이 늦게
+    // 나타나는 이중 렌더를 막는다. 세션 준비 후 첫 render부터 반영한다.
+    let bootReady = false;
     window.addEventListener('hashchange', () => {
+      if (!bootReady) return;
       try {
         render();
       } catch (e) {
@@ -204,6 +209,7 @@ function init() {
       initAuthSession(),
     ])
       .then(async ([, , user]) => {
+        bootReady = true;
         if (user && isAdminUser()) {
           await activateAdminApi().catch((err) => {
             console.warn('[admin] api disabled — static A28 fallback', err);

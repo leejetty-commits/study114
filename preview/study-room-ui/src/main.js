@@ -98,15 +98,6 @@ function render() {
   screen.bind(app);
 }
 
-function init() {
-  if (!window.location.hash) {
-    window.location.hash = '#/register/basic';
-  }
-  window.addEventListener('hashchange', render);
-
-  Promise.all([initChromeSession(), initApi()]).finally(render);
-}
-
 async function initApi() {
   try {
     const masters = await fetchMasters();
@@ -128,9 +119,42 @@ async function initApi() {
       const cachedId = sessionStorage.getItem('study114_study_room_id');
       if (cachedId) registerState.study_room_id = Number(cachedId);
     }
+    return room;
   } catch {
     /* masters는 비로그인 가능 · load는 401 허용 */
+    return null;
   }
+}
+
+/** 기본등록(이름 + 활동지역) 완료 여부 — 완료 시 상세등록 단계부터 진입 */
+function isBasicComplete(room) {
+  if (!room || !room.study_room_id) return false;
+  const hasName = String(room.study_room_name || '').trim() !== '';
+  const hasRegion =
+    String(room.region_id || '').trim() !== '' ||
+    (Array.isArray(room.saved_regions) &&
+      room.saved_regions.some((r) => String(r?.region_id || '').trim() !== ''));
+  return hasName && hasRegion;
+}
+
+function init() {
+  const enteredAtBasic = !window.location.hash || window.location.hash === '#/register/basic';
+  if (!window.location.hash) {
+    window.location.hash = '#/register/basic';
+  }
+  window.addEventListener('hashchange', render);
+
+  Promise.all([initChromeSession(), initApi()])
+    .then(([, room]) => {
+      if (enteredAtBasic && getChromeNavRole() === 'study_room' && isBasicComplete(room)) {
+        if (window.location.hash !== '#/register/lesson') {
+          window.location.hash = '#/register/lesson';
+          return; // hashchange가 render를 호출
+        }
+      }
+      render();
+    })
+    .catch(() => render());
 }
 
 init();

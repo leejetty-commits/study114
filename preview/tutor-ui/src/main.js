@@ -112,15 +112,38 @@ async function initApi() {
       const cached = sessionStorage.getItem('study114_tutor_id');
       if (cached) registerState.tutor_id = Number(cached);
     }
+    return tutor;
   } catch {
     /* masters는 비로그인 가능 */
+    return null;
   }
 }
 
+/** 기본등록(이름 + 활동지역) 완료 여부 — 완료 시 상세등록 단계부터 진입 */
+function isBasicComplete(tutor) {
+  if (!tutor || !tutor.tutor_id) return false;
+  const hasName = String(tutor.tutor_display_name || '').trim() !== '';
+  const hasRegion =
+    Array.isArray(tutor.saved_regions) &&
+    tutor.saved_regions.some((r) => String(r?.region_id || '').trim() !== '');
+  return hasName && hasRegion;
+}
+
 function init() {
+  const enteredAtBasic = !window.location.hash || window.location.hash === '#/register/basic';
   if (!window.location.hash) window.location.hash = '#/register/basic';
   window.addEventListener('hashchange', render);
-  Promise.all([initChromeSession(), initApi()]).finally(render);
+  Promise.all([initChromeSession(), initApi()])
+    .then(([, tutor]) => {
+      if (enteredAtBasic && getChromeNavRole() === 'tutor' && isBasicComplete(tutor)) {
+        if (window.location.hash !== '#/register/lesson') {
+          window.location.hash = '#/register/lesson';
+          return; // hashchange가 render를 호출
+        }
+      }
+      render();
+    })
+    .catch(() => render());
 }
 
 init();
