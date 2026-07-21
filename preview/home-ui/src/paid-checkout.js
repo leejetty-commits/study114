@@ -25,8 +25,8 @@ function resolveApiVariant(productId, variantLabel) {
  */
 export async function runDevCheckout(productId, variant, label) {
   const apiVariant = resolveApiVariant(productId, variant);
-  const summary = `${label} · ${variant} → ${apiVariant} (dev PG)`;
-  const ok = window.confirm(`${summary}\n\n더미 결제를 진행할까요?`);
+  const summary = `${label} · ${variant} → ${apiVariant} (시험 결제)`;
+  const ok = window.confirm(`${summary}\n\n시험 결제를 진행할까요?`);
   if (!ok) return { cancelled: true };
 
   const created = await createPaidCheckout(productId, apiVariant);
@@ -53,7 +53,7 @@ export function bindPaidCatalogEvents(root, rerender) {
       try {
         const result = await runDevCheckout(productId, variant, label);
         if (!result.cancelled) {
-          alert('결제가 완료되었습니다. (dev mock PG)');
+          alert('결제가 완료되었습니다. (시험 결제)');
           rerender?.();
         }
       } catch (err) {

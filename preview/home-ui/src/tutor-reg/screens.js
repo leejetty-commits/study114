@@ -428,7 +428,7 @@ function renderHub(tutor) {
       </div>
 
       <div class="p21-hub-block" data-hub="exposure">
-        <h3 class="p21-block__title">노출·부oost 매트릭스</h3>
+        <h3 class="p21-block__title">노출 상품 현황</h3>
         <div class="p20-matrix">${renderExposureMatrixRows(exposureMatrix)}</div>
         ${
           readiness.qualityHints.length
@@ -631,11 +631,11 @@ function renderAccess(tutor) {
       ${renderProviderSubToggle()}
       <section class="p20-exposure-section">
         <h3>현재 이용 가능한 범위</h3>
-        <p class="p19-form-section__lead">과외쌤 운영 핵심 — 쪽지·학생 접근 권한 (16§8 · 18§4)</p>
+        <p class="p19-form-section__lead">과외쌤 운영 핵심 — 쪽지·학생 접근 권한</p>
         <div class="p20-matrix">${renderMatrixRows(accessMatrix)}</div>
       </section>
       <section class="p20-exposure-section">
-        <h3>잔여 권한 (§7-4)</h3>
+        <h3>잔여 권한</h3>
         <div class="p19-summary-grid">
           <dl class="p19-summary-card"><dt>유료 이용</dt><dd>${paid ? '이용 중' : '이용 안 함'}</dd></dl>
           <dl class="p19-summary-card"><dt>남은 메모</dt><dd>${memos}회</dd></dl>

@@ -242,7 +242,7 @@ function renderThread(threadId) {
   const requestBlock =
     thread.showRequestInPanel && thread.requestSummary
       ? `<p class="msg-summary__request">요청문: "${esc(thread.requestSummary)}"</p>`
-      : `<p class="msg-summary__muted">요청문 비공개 · visibility=private</p>`;
+      : `<p class="msg-summary__muted">요청문 비공개</p>`;
 
   const replyBlock = canReply
     ? `<form class="msg-reply" data-msg-reply="${threadId}">

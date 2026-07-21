@@ -91,12 +91,12 @@ export function renderPaidGuide(role) {
       ${renderProviderNoticeBanners()}
       <p class="mypage-muted">${esc(P18_GUIDE_LEAD)}</p>
       ${statusBadges ? `<p class="plans-status-row">${statusBadges}</p>` : ''}
-      <p class="mypage-muted">역할: <strong>${roleLabel}</strong> · 데모 tier: <strong>${tier}</strong> · <a href="#/plans/my" data-nav="/plans/my">내 상품</a></p>
+      <p class="mypage-muted">역할: <strong>${roleLabel}</strong> · 데모 요금제: <strong>${tier === 'paid' ? '유료' : tier === 'free' ? '무료' : tier}</strong> · <a href="#/plans/my" data-nav="/plans/my">내 상품</a></p>
       <div class="mypage-info-box plans-tier-box">
         <strong>${esc(tierCopy.title)}</strong>
         <ul class="plans-tier-list">${tierCopy.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
       </div>
-      <h2 class="mypage-subhead">상품 카탈로그 (${roleLabel} 우선순위 · 18§4-1)</h2>
+      <h2 class="mypage-subhead">상품 카탈로그 (${roleLabel} 우선순위)</h2>
       <ul class="plans-catalog">
         ${catalog.map(renderCatalogItem).join('')}
       </ul>
@@ -104,7 +104,7 @@ export function renderPaidGuide(role) {
         <strong>${esc(P18_RENEWAL_COPY.title)}</strong>
         <ul class="plans-tier-list">${P18_RENEWAL_COPY.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
       </div>
-      <p class="mypage-note">표준 상품센터 → <a href="#/plans" data-nav="/plans">#/plans</a> · <a href="#/plans/my" data-nav="/plans/my">내 상품</a></p>
+      <p class="mypage-note">상품 안내 → <a href="#/plans" data-nav="/plans">이용권</a> · <a href="#/plans/my" data-nav="/plans/my">내 상품</a></p>
     </section>`;
 }
 
@@ -173,7 +173,7 @@ export function renderPaidUsage(role) {
         ).join('')}
       </div>
       <div class="mypage-info-box">
-        <p>동네 단위·저숫자도 의미 있음 (18§6-2) · 인사이트·알림형은 후순위</p>
+        <p>동네 단위·적은 숫자도 의미 있습니다. 상세 분석·알림형은 나중에 연결합니다.</p>
         <p class="mypage-muted">쪽지 시도·차단 횟수는 주요 반응 수치에 포함하지 않습니다.</p>
       </div>
       <a href="#/plans/positions" class="btn btn--secondary" data-nav="/plans/positions">노출상품 보기</a>

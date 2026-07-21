@@ -49,7 +49,7 @@ export const P21_HUB_BLOCK_TITLES = {
   gauges: '운영 게이지',
   accessMatrix: '접근·쪽지',
   matching: '매칭 가시성',
-  exposure: '노출·부oost',
+  exposure: '노출 상품',
   ctas: '다음 행동',
 };
 

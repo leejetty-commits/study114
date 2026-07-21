@@ -92,5 +92,5 @@ export const TUTOR_REG_MENUS = [
   { key: 'publish', label: '미리보기·공개', screenId: 'P21-04' },
   { key: 'basic', label: '기본정보', screenId: 'P21-03a' },
   { key: 'detail', label: '상세정보', screenId: 'P21-03b' },
-  { key: 'exposure', label: '노출·부oost', screenId: 'P21-06' },
+  { key: 'exposure', label: '노출 상품', screenId: 'P21-06' },
 ];
