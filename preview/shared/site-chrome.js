@@ -13,19 +13,43 @@ import {
   HOME_UI_BASE,
   isGnbItemVisible,
 } from './site-nav-config.js';
+import {
+  resolveAccountDisplayName,
+  isInternalAuthEmail,
+} from '../home-ui/src/auth/display-identity.js';
 
 import { ensureBackToTop } from './back-to-top.js';
 
 const HEADER_OFFSET_VAR = '--site-header-h';
 let offsetBound = false;
 
+function escAttr(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 /**
  * @param {NavRole} role
  * @param {boolean} showAuth guest util
+ * @param {{ role_type?: string, admin_level?: string|null, email?: string|null, name?: string|null } | null} [user]
  */
-function renderUtilBar(role, showAuth) {
+function renderUtilBar(role, showAuth, user = null) {
   const items = showAuth ? UTIL_MENU.guest : UTIL_MENU.loggedIn;
-  return items
+  const isAdmin = Boolean(user?.admin_level) || user?.role_type === 'admin';
+  const displayLabel = user ? resolveAccountDisplayName(user) : '';
+  const titleEmail = user && !isInternalAuthEmail(user.email) ? user.email : displayLabel;
+  const account =
+    user && !showAuth
+      ? `<span class="home-util__account" title="${escAttr(titleEmail)}">로그인: ${escAttr(displayLabel)}</span>`
+      : '';
+  const adminLink =
+    isAdmin && !showAuth
+      ? `<button type="button" class="home-util__link home-util__link--admin" data-action="util-admin">관리자 콘솔</button>`
+      : '';
+  const base = items
     .map((item) => {
       if (item.href) {
         const cls = item.emphasis ? 'home-util__link home-util__link--emphasis' : 'home-util__link';
@@ -34,6 +58,7 @@ function renderUtilBar(role, showAuth) {
       return `<button type="button" class="home-util__link" data-action="${item.action}">${item.label}</button>`;
     })
     .join('');
+  return `${account}${adminLink}${base}`;
 }
 
 /**
@@ -87,7 +112,7 @@ export function renderSiteHeader(opts = {}) {
     <header class="home-header site-chrome-header" data-site-chrome>
       <div class="home-header__util">
         <div class="home-header__util-inner">
-          <nav class="home-util" aria-label="유틸 메뉴">${renderUtilBar(role, showAuth)}</nav>
+          <nav class="home-util" aria-label="유틸 메뉴">${renderUtilBar(role, showAuth, user)}</nav>
         </div>
       </div>
       <div class="home-header__main">
@@ -204,6 +229,10 @@ export function bindSiteChrome(root, handlers = {}) {
       if (action === 'util-guide') {
         if (navigateHome && isHomeUiHost()) navigateHome('/support/guide');
         else goSameTab(homeHashUrl('/support/guide'));
+        return;
+      }
+      if (action === 'util-admin') {
+        goHomePath('/admin');
         return;
       }
       if (action === 'util-mypage') {

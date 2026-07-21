@@ -3,7 +3,7 @@
  */
 import { navRoleFromAuthUser } from './site-nav-config.js';
 
-/** @typedef {{ user_id: number, email: string, role_type: string, name: string }} AuthUser */
+/** @typedef {{ user_id: number, email: string, role_type: string, name: string, admin_level?: string|null, oauth_provider_labels?: string[] }} AuthUser */
 
 /** @type {AuthUser|null} */
 let currentUser = null;
@@ -14,6 +14,10 @@ export function getChromeUser() {
 
 export function isChromeLoggedIn() {
   return currentUser !== null;
+}
+
+export function isChromeAdmin() {
+  return Boolean(currentUser?.admin_level) || currentUser?.role_type === 'admin';
 }
 
 export function getChromeNavRole() {
@@ -33,6 +37,10 @@ export async function initChromeSession() {
           email: src.email,
           role_type: src.role_type,
           name: src.name,
+          admin_level: src.admin_level ?? null,
+          oauth_provider_labels: Array.isArray(src.oauth_provider_labels)
+            ? src.oauth_provider_labels
+            : [],
         };
         return currentUser;
       }
