@@ -222,7 +222,7 @@ GET /api/auth/oauth/start.php?provider=naver|kakao|google
 
 | # | BLOCKER | 상태 | 조치 |
 |---|---------|------|------|
-| B2 | OAuth provider 키 | **BLOCKER 유지** — 키 발급은 사람 작업 (아래 K) | 콘솔 등록 + 닷홈 `SetEnv OAUTH_*` |
+| B2 | OAuth provider 키 | **OK** — GitHub Secrets + deploy 주입 ([31](31-oauth-secret-incident.md)) | Secrets 등록 · `.htaccess`는 placeholder만 |
 | B4 | 운영 `src/` 미동기화 | **해소 진행** — Actions에 `src/` FTP 단계 추가 | `main` push 후 GHA 확인 |
 | — | `/api/health/db.php` | 별도 | 운영 삭제 |
 
@@ -252,14 +252,10 @@ GET /api/auth/oauth/start.php?provider=naver|kakao|google
    - `http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=kakao`  
    - `http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=google`  
    - (HTTPS 전환 시 `https://` URI도 추가)
-2. **닷홈 `html/.htaccess`에 SetEnv 추가** (git에 시크릿 넣지 않음 · 서버만)  
-   ```
-   SetEnv OAUTH_NAVER_CLIENT_ID ...
-   SetEnv OAUTH_NAVER_CLIENT_SECRET ...
-   SetEnv OAUTH_KAKAO_REST_API_KEY ...
-   SetEnv OAUTH_GOOGLE_CLIENT_ID ...
-   SetEnv OAUTH_GOOGLE_CLIENT_SECRET ...
-   ```
+2. **OAuth 키는 GitHub Actions Secrets에만 등록** (`.htaccess`·git에 실값 금지)  
+   - Secrets: `OAUTH_NAVER_CLIENT_ID` / `OAUTH_NAVER_CLIENT_SECRET` / `OAUTH_KAKAO_REST_API_KEY` / `OAUTH_KAKAO_CLIENT_SECRET` / `OAUTH_GOOGLE_CLIENT_ID` / `OAUTH_GOOGLE_CLIENT_SECRET`  
+   - `public/.htaccess`는 `__OAUTH_*__` placeholder만 유지 → `deploy.yml`이 배포 시 주입  
+   - 상세: [31-oauth-secret-incident.md](31-oauth-secret-incident.md)
 3. **검증:** `GET /api/auth/oauth/start.php?provider=naver` → provider 로그인 페이지로 302 (auth 오류 페이지 아님)
 
 **참고:** `config/oauth.env.example` · `config/dothome.env.example`

@@ -93,3 +93,22 @@ force push 는 파괴적이므로 사용자 명시 승인 후 진행한다.
 - `STUDY114_MAIL_PROBE_KEY` 및 `_mail-probe.php`: 상시 필요 없으면 엔드포인트 삭제 검토.
 - FTP 자격(`FTP_PASSWORD`)은 이미 GitHub Secret — 유지.
 - 저장소 전체 재스캔으로 다른 평문 secret 없는지 확인 (이번엔 `public/.htaccess` 단일 지점).
+
+---
+
+## 6. 재발 방지 (2026-07-22)
+
+| 장치 | 내용 |
+|------|------|
+| placeholder `.htaccess` | 실값 대신 `__OAUTH_*__` 만 커밋 |
+| deploy 주입 | GitHub Secrets → 배포 직전 `.htaccess` 치환 · 미설정 시 배포 중단 |
+| CI 가드 | `scripts/check-no-committed-secrets.sh` — 실값 재커밋 시 배포 실패 |
+| Cursor 규칙 | `.cursor/rules/study114-workflow.mdc` §4-1 — AI/작업자가 `.htaccess`에 시크릿 넣지 않음 |
+| 구문서 정리 | `01-dothome-deploy.md` · `core-flow-audit-checklist.md` — 「서버 `.htaccess`에 직접 SetEnv」안내 제거 |
+
+**사람 체크리스트 (주기)**
+
+1. Secrets에 OAuth 6개가 있는지 확인 (값 조회는 불가 — 로그인 동작으로 검증).
+2. `public/.htaccess` 로컬 파일에 실값이 들어가지 않았는지 `git diff`로 확인.
+3. 키 유출 의심 시 provider 콘솔에서 **즉시 재발급** 후 Secrets 갱신 → 재배포.
+4. (선택) 과거 커밋 히스토리 정리는 force push 승인 후 별도 진행.

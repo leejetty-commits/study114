@@ -126,19 +126,26 @@ Cursor 에이전트 규칙: `.cursor/rules/study114-workflow.mdc` (팀 공유용
 
 ```
 checkout
+  → Guard: scripts/check-no-committed-secrets.sh (.htaccess 실값 커밋 차단)
   → Node 20
   → GitHub Variable VITE_NAVER_MAP_CLIENT_ID → preview/.env.dothome.example 패치
+  → GitHub Secrets OAUTH_* → public/.htaccess placeholder 주입
   → pwsh scripts/build-dothome.ps1
   → public/assets/index-*.js에 Client ID 포함 검증
-  → FTP: local-dir ./public/ → server-dir /hosting/study114/html/
+  → FTP: ./public/ → /hosting/study114/html/ · ./src/ → /hosting/study114/src/
 ```
 
 | GitHub 설정 | 이름 | 용도 |
 |-------------|------|------|
 | Secret | `FTP_PASSWORD` | 닷홈 FTP 비밀번호 |
+| Secret | `OAUTH_NAVER_CLIENT_ID` / `OAUTH_NAVER_CLIENT_SECRET` | 네이버 소셜 로그인 |
+| Secret | `OAUTH_KAKAO_REST_API_KEY` / `OAUTH_KAKAO_CLIENT_SECRET` | 카카오 소셜 로그인 |
+| Secret | `OAUTH_GOOGLE_CLIENT_ID` / `OAUTH_GOOGLE_CLIENT_SECRET` | 구글 소셜 로그인 |
+| Secret | `STUDY114_MAIL_PROBE_KEY` (선택) | 메일 프로브 키 |
 | Variable | `VITE_NAVER_MAP_CLIENT_ID` | 네이버 지도 Client ID (빌드 시 JS 번들에 박힘) |
 
-Variable 미설정 시 workflow는 **Inject dothome env** 단계에서 실패한다.
+OAuth Secret 또는 지도 Variable 미설정 시 workflow는 **해당 Inject 단계**에서 실패한다.  
+**금지:** `public/.htaccess`에 OAuth 실값 커밋 — placeholder(`__OAUTH_*__`)만 허용. 상세: [31-oauth-secret-incident.md](31-oauth-secret-incident.md)
 
 **Actions가 배포하는 것:** `public/` 전체 (빌드 후 SPA 번들 + `api/` + `index.php` + `.htaccess`)  
 **Actions가 배포하는 것:** `public/` → `html/` · **`src/` → `/hosting/study114/src/`** (형제 폴더)  

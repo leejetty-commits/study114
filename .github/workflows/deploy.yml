@@ -19,6 +19,10 @@ jobs:
         with:
           node-version: "20"
 
+      # 재발 방지: .htaccess 등에 실 OAuth 비밀값이 다시 커밋되면 배포 중단
+      - name: Guard — no OAuth secrets in git tree
+        run: bash scripts/check-no-committed-secrets.sh
+
       - name: Inject dothome env (GitHub Variables)
         env:
           NAVER_MAP_CLIENT_ID: ${{ vars.VITE_NAVER_MAP_CLIENT_ID }}

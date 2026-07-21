@@ -26,9 +26,17 @@ alwaysApply: true
 
 ## 4. 자동배포의 의미
 
-- GitHub Actions(`deploy.yml`)는 push 시 **CI에서 `build:dothome` 실행** 후 `public/`만 FTP 업로드.
+- GitHub Actions(`deploy.yml`)는 push 시 **CI에서 `build:dothome` 실행** 후 `public/`(+ `src/`) FTP 업로드.
 - 로컬만 변경된 파일·미 push 커밋은 배포되지 않음. 지도 키는 Variable `VITE_NAVER_MAP_CLIENT_ID` 필요.
 - **"Actions 성공" ≠ "내 최신 수정 반영"**
+
+## 4-1. OAuth·운영 비밀값 (절대 커밋 금지)
+
+- `public/.htaccess`의 `OAUTH_*` / `STUDY114_MAIL_PROBE_KEY`는 **`__NAME__` placeholder만** 허용.
+- 실값은 GitHub Actions **Secrets**에만 두고, `deploy.yml`이 배포 직전에 `.htaccess`에 주입한다.
+- **금지:** `.htaccess`·`.env`·PHP·JS·문서에 client_secret / REST 키 평문 커밋.
+- 배포 전 `scripts/check-no-committed-secrets.sh`가 검사한다. 실패 시 push해도 배포가 막힌다.
+- 상세: `docs/internal/31-oauth-secret-incident.md`
 
 ## 5. 네이버 지도 장애 판단 순서
 
