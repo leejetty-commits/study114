@@ -137,7 +137,7 @@ body {
 
 .plans-catalog__item.is-featured {
   border-color: var(--product-accent, var(--brand-blue)) !important;
-  background: var(--product-accent-soft, var(--brand-blue-light)) !important;
+  background: #fff !important;
 }
 
 /* ── Misc chrome accents ── */

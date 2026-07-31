@@ -3,6 +3,7 @@ import './styles/home.css';
 import '@search-ui/styles/search.css';
 import './styles/design-system.css';
 import './styles/product-chrome.css';
+import './styles/plans-store.css';
 import './styles/mypage-ops.css';
 import { renderGuest, bindGuestEvents } from './screens/guest.js';
 import { renderParent, bindParentEvents } from './screens/parent.js';
