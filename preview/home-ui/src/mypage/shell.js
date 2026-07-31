@@ -105,14 +105,14 @@ export function renderMypageShell(currentPath, bodyHtml) {
   const mainHtml = `
     <div class="mypage-layout">
       <aside class="mypage-sidebar" aria-label="마이페이지 메뉴">
-        <p class="mypage-sidebar__eyebrow">내 공간</p>
-        <p class="mypage-sidebar__title">나의 우동공과</p>
+        <p class="mypage-sidebar__eyebrow">운영 허브</p>
+        <p class="mypage-sidebar__title">마이페이지</p>
         ${
           authUser
             ? `<div class="mypage-account-card">
                 <span class="mypage-account-card__avatar" aria-hidden="true">${esc(displayInitial)}</span>
                 <span class="mypage-account-card__body">
-                  <span class="mypage-account-card__label">반가워요</span>
+                  <span class="mypage-account-card__label">로그인</span>
                   <strong class="mypage-account-card__email">${esc(accountPrimary)}</strong>
                   ${accountSecondary ? `<span class="mypage-account-card__sub">${esc(accountSecondary)}</span>` : ''}
                   <span class="mypage-account-card__role">${esc(roleLabel)}${isAdminUser() ? ' · 관리자' : ''}</span>
@@ -141,6 +141,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
     mainHtml,
     footerHtml: renderFooter(),
     slotKey: railSlotKey,
+    appClass: 'home-app--mypage',
   });
 }
 

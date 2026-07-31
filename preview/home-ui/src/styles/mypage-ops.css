@@ -1,0 +1,602 @@
+/**
+ * 마이페이지 운영 허브 톤 (Visily 방향)
+ * docs/internal/mypage-design-guide-draft.md
+ * home.css의 샵형(크림/오렌지) 스타일을 mypage 스코프에서 덮어쓴다.
+ */
+
+.home-app--mypage,
+.mypage-layout,
+.mypage-home {
+  --mp-bg: #f8fafc;
+  --mp-panel: #ffffff;
+  --mp-ink: #0f172a;
+  --mp-muted: #64748b;
+  --mp-line: #e5e7eb;
+  --mp-accent: var(--brand-blue, #2b7fff);
+  --mp-accent-soft: var(--brand-blue-light, #eef4ff);
+  --mp-radius-card: 0.75rem; /* 12px */
+  --mp-radius-btn: 0.625rem; /* 10px */
+  --mp-title: 1.5rem; /* 24px */
+  --mp-section: 1.125rem; /* 18px */
+  --mp-card-title: 1rem; /* 16px */
+  --mp-body: 0.875rem; /* 14px */
+  --mp-meta: 0.75rem; /* 12px */
+}
+
+.home-app.home-app--mypage > .home-body {
+  background: var(--mp-bg);
+}
+
+.home-app.home-app--mypage > .home-body > .home-main {
+  background: transparent;
+}
+
+/* —— 레이아웃: 1280 체계 · 사이드바 160 —— */
+.mypage-layout {
+  display: grid;
+  grid-template-columns: 10rem minmax(0, 1fr); /* 160px + fluid */
+  gap: 1.5rem; /* 24px */
+  max-width: var(--home-max, 80rem);
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem var(--page-gutter, 2rem) 2rem;
+  box-sizing: border-box;
+}
+
+/* —— 사이드바 —— */
+.mypage-sidebar {
+  position: sticky;
+  top: calc(var(--site-header-h, 4.75rem) + 0.75rem);
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1rem 0.75rem;
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-panel);
+  box-shadow: none;
+  height: fit-content;
+}
+
+.mypage-sidebar__eyebrow {
+  margin: 0 0 0.15rem;
+  color: var(--mp-muted);
+  font-size: var(--mp-meta);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.mypage-sidebar__title {
+  margin: 0 0 0.75rem;
+  color: var(--mp-ink);
+  font-size: var(--mp-card-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.mypage-account-card {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--mp-line);
+  border-radius: 0.625rem;
+  background: var(--mp-bg);
+}
+
+.mypage-account-card__avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: var(--mp-accent-soft);
+  color: var(--mp-accent);
+  font-size: var(--mp-body);
+  font-weight: 700;
+}
+
+.mypage-account-card__label {
+  font-size: var(--mp-meta);
+  color: var(--mp-muted);
+}
+
+.mypage-account-card__email {
+  font-size: var(--mp-body);
+  font-weight: 600;
+  color: var(--mp-ink);
+}
+
+.mypage-account-card__sub,
+.mypage-account-card__role {
+  font-size: var(--mp-meta);
+  color: var(--mp-muted);
+}
+
+.mypage-nav {
+  gap: 0.25rem;
+}
+
+.mypage-nav__link {
+  display: grid;
+  grid-template-columns: 1.25rem 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  font-size: var(--mp-body);
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  box-shadow: none;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+  transform: none;
+}
+
+.mypage-nav__link:hover {
+  background: var(--mp-bg);
+  color: var(--mp-ink);
+  transform: none;
+}
+
+.mypage-nav__link.is-active {
+  background: var(--mp-accent-soft);
+  color: var(--mp-accent);
+  border-color: transparent;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.mypage-nav__link.is-emphasis:not(.is-active) {
+  font-weight: 600;
+}
+
+.mypage-nav__icon {
+  width: 1.25rem;
+  font-size: 0.875rem;
+  opacity: 0.85;
+}
+
+.mypage-nav__admin {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--mp-line);
+  border-radius: 0.5rem;
+  background: var(--mp-panel);
+  color: var(--mp-ink);
+  font-size: var(--mp-body);
+  font-weight: 600;
+}
+
+.mypage-nav__admin:hover {
+  background: var(--mp-bg);
+}
+
+.mypage-nav__back {
+  margin-top: 0.75rem;
+  min-height: auto;
+  padding: 0.5rem 0.4rem;
+  color: var(--mp-muted);
+  font-size: var(--mp-meta);
+}
+
+.mypage-nav__back:hover {
+  color: var(--mp-accent);
+}
+
+/* —— 본문 헤드 —— */
+.mypage-content__head {
+  min-height: 4rem; /* ~64px 가이드 */
+  justify-content: center;
+  gap: 0.35rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--mp-line);
+}
+
+.mypage-content__title {
+  margin: 0;
+  color: var(--mp-ink);
+  font-size: var(--mp-title);
+  font-weight: 700;
+  line-height: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.mypage-breadcrumb {
+  color: var(--mp-muted);
+  font-size: var(--mp-meta);
+}
+
+.mypage-breadcrumb a:hover {
+  color: var(--mp-accent);
+}
+
+.mypage-breadcrumb__sep {
+  color: #cbd5e1;
+}
+
+/* —— 패널 · 리스트 —— */
+.mypage-panel {
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  padding: 1rem 1.25rem;
+  background: var(--mp-panel);
+  box-shadow: none;
+}
+
+.mypage-panel__title,
+.mypage-subhead {
+  color: var(--mp-ink);
+  font-size: var(--mp-section);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.mypage-lead,
+.mypage-note,
+.mypage-muted {
+  color: var(--mp-muted);
+  font-size: var(--mp-body);
+  line-height: 1.5;
+}
+
+.mypage-cta {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-panel);
+}
+
+.mypage-cta__hint {
+  color: var(--mp-muted);
+  font-size: var(--mp-meta);
+}
+
+.mypage-entity {
+  min-height: 3.5rem; /* ~56px */
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-panel);
+  box-shadow: none;
+}
+
+.mypage-card {
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  padding: 1rem;
+  background: var(--mp-panel);
+  font-size: var(--mp-body);
+}
+
+.mypage-card__label {
+  font-size: var(--mp-card-title);
+  font-weight: 600;
+  color: var(--mp-ink);
+}
+
+.mypage-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.mypage-stat {
+  padding: 1rem;
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-panel);
+  font-size: var(--mp-body);
+  color: var(--mp-muted);
+}
+
+.mypage-stat strong {
+  margin-top: 0.25rem;
+  color: var(--mp-ink);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.mypage-stat.is-emphasis strong {
+  color: var(--mp-accent);
+}
+
+.mypage-badge {
+  height: 1.375rem;
+  padding: 0 0.5rem;
+  border-radius: 0.5rem;
+  font-size: var(--mp-meta);
+  font-weight: 600;
+  line-height: 1.375rem;
+}
+
+.mypage-emphasis {
+  color: var(--mp-accent);
+  background: var(--mp-accent-soft);
+  border-radius: 0.5rem;
+  font-size: var(--mp-meta);
+}
+
+/* —— 홈: 히어로 · 숫자 · 바로가기 —— */
+.mypage-home {
+  gap: 1.5rem;
+}
+
+.mypage-home-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-panel);
+  box-shadow: none;
+  overflow: visible;
+}
+
+.mypage-home-hero__role {
+  margin-bottom: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--mp-accent-soft);
+  color: var(--mp-accent);
+  font-size: var(--mp-meta);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.mypage-home-hero h2 {
+  max-width: 36rem;
+  margin: 0;
+  color: var(--mp-ink);
+  font-size: var(--mp-title);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.mypage-home-hero p {
+  margin: 0.35rem 0 0;
+  color: var(--mp-muted);
+  font-size: var(--mp-body);
+  line-height: 1.5;
+}
+
+.mypage-home-hero__mark {
+  display: none; /* 장식 마크 제거 — 운영 허브 */
+}
+
+.mypage-home-section {
+  padding: 1.25rem;
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-panel);
+  box-shadow: none;
+}
+
+.mypage-home-section__head {
+  margin-bottom: 1rem;
+  align-items: flex-start;
+}
+
+.mypage-home-section__head h2 {
+  color: var(--mp-ink);
+  font-size: var(--mp-section);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.mypage-home-section__head > p {
+  color: var(--mp-muted);
+  font-size: var(--mp-meta);
+  text-align: left;
+  max-width: none;
+}
+
+.mypage-home-section__eyebrow,
+.mypage-next-action__eyebrow {
+  color: var(--mp-muted);
+  font-size: var(--mp-meta);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.mypage-highlight-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.mypage-highlight-card {
+  min-height: 5.5rem; /* ~88px 가이드 */
+  padding: 1rem;
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-panel);
+  box-shadow: none;
+  transform: none;
+}
+
+.mypage-highlight-card:hover {
+  border-color: #cbd5e1;
+  background: var(--mp-bg);
+  box-shadow: none;
+  transform: none;
+}
+
+.mypage-highlight-card__icon,
+.mypage-quick-card__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--mp-bg);
+  color: var(--mp-accent);
+  font-size: 0.875rem;
+}
+
+.mypage-highlight-card__label {
+  font-size: var(--mp-meta);
+  color: var(--mp-muted);
+}
+
+.mypage-highlight-card strong {
+  margin-top: 0.25rem;
+  color: var(--mp-ink);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.mypage-highlight-card small {
+  font-size: var(--mp-meta);
+  color: var(--mp-muted);
+}
+
+.mypage-highlight-card__arrow {
+  color: #cbd5e1;
+}
+
+.mypage-next-action {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-panel);
+}
+
+.mypage-next-action__title {
+  color: var(--mp-ink);
+  font-size: var(--mp-card-title);
+  font-weight: 700;
+}
+
+.mypage-next-action__hint {
+  color: var(--mp-muted);
+  font-size: var(--mp-body);
+}
+
+.mypage-next-action .btn {
+  min-height: 2.5rem; /* 40px */
+  border-radius: var(--mp-radius-btn);
+  padding-inline: 1rem;
+  font-size: var(--mp-body);
+}
+
+.mypage-layout .btn--primary,
+.mypage-home .btn--primary {
+  background: var(--mp-accent);
+  border-color: var(--mp-accent);
+  color: #fff;
+}
+
+.mypage-layout .btn--primary:hover,
+.mypage-home .btn--primary:hover {
+  filter: brightness(0.95);
+}
+
+.mypage-quick-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.mypage-quick-card {
+  min-height: 4.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-panel);
+}
+
+.mypage-quick-card:hover {
+  border-color: #cbd5e1;
+  background: var(--mp-bg);
+}
+
+.mypage-quick-card strong {
+  color: var(--mp-ink);
+  font-size: var(--mp-card-title);
+  font-weight: 600;
+}
+
+.mypage-quick-card small {
+  color: var(--mp-muted);
+  font-size: var(--mp-meta);
+}
+
+.mypage-quick-card__arrow {
+  color: #94a3b8;
+}
+
+.mypage-home-footnote {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-bg);
+}
+
+.mypage-home-footnote strong {
+  color: var(--mp-ink);
+}
+
+.mypage-home-footnote a {
+  color: var(--mp-accent);
+  font-weight: 600;
+}
+
+/* 정보 박스·플랜 등 mypage 본문 공통 */
+.mypage-layout .mypage-info-box,
+.mypage-layout .plans-tier-box {
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-panel);
+  box-shadow: none;
+}
+
+.mypage-layout .mypage-actions-row {
+  gap: 0.75rem;
+}
+
+.mypage-layout .mypage-actions-row .btn {
+  min-height: 2.5rem;
+  border-radius: var(--mp-radius-btn);
+  font-size: var(--mp-body);
+}
+
+/* —— 반응형 —— */
+@media (max-width: 1199px) {
+  .mypage-highlight-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .mypage-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding-inline: var(--page-gutter, 1.5rem);
+  }
+
+  .mypage-sidebar {
+    position: static;
+  }
+
+  .mypage-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: 0.35rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .mypage-highlight-grid,
+  .mypage-quick-grid,
+  .mypage-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .mypage-content__title {
+    font-size: 1.25rem;
+  }
+}

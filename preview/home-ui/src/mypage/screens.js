@@ -202,21 +202,17 @@ function renderHome(role, profile, counts, cta) {
     <div class="mypage-home">
       <section class="mypage-home-hero">
         <div class="mypage-home-hero__copy">
-          <span class="mypage-home-hero__role">${esc(roleLabel(role))} 공간</span>
-          <h2>${esc(homeIdentity)}님,<br>${esc(getHomeGreeting(role))}</h2>
-          <p>${esc(profile.regionLabel)}을 중심으로 내 정보와 소식을 정리해 두었어요.</p>
-        </div>
-        <div class="mypage-home-hero__mark" aria-hidden="true">
-          <span>나의</span>
-          <strong>우동공과</strong>
+          <span class="mypage-home-hero__role">${esc(roleLabel(role))}</span>
+          <h2>${esc(homeIdentity)}님, ${esc(getHomeGreeting(role))}</h2>
+          <p>${esc(profile.regionLabel)} 기준으로 등록·쪽지·이용 현황을 한곳에서 관리합니다.</p>
         </div>
       </section>
 
       <section class="mypage-home-section" aria-labelledby="mypage-today-title">
         <div class="mypage-home-section__head">
           <div>
-            <span class="mypage-home-section__eyebrow">오늘</span>
-            <h2 id="mypage-today-title">오늘의 내 상태</h2>
+            <span class="mypage-home-section__eyebrow">요약</span>
+            <h2 id="mypage-today-title">내 상태</h2>
           </div>
           <p>${esc(HOME_EMPHASIS[role] || '')}</p>
         </div>
@@ -241,10 +237,10 @@ function renderHome(role, profile, counts, cta) {
       <section class="mypage-home-section" aria-labelledby="mypage-quick-title">
         <div class="mypage-home-section__head">
           <div>
-            <span class="mypage-home-section__eyebrow">내 공간</span>
-            <h2 id="mypage-quick-title">내 공간 둘러보기</h2>
+            <span class="mypage-home-section__eyebrow">바로가기</span>
+            <h2 id="mypage-quick-title">자주 쓰는 메뉴</h2>
           </div>
-          <p>필요한 곳만 골라 편하게 들어가세요.</p>
+          <p>역할에 맞는 운영 메뉴로 이동합니다.</p>
         </div>
         <div class="mypage-quick-grid">
           ${quickActions
@@ -264,9 +260,8 @@ function renderHome(role, profile, counts, cta) {
       </section>
 
       <section class="mypage-home-footnote">
-        <span aria-hidden="true">☕</span>
-        <p><strong>한 번에 다 하지 않아도 괜찮아요.</strong><br>필요할 때 돌아와 하나씩 이어가면 됩니다.</p>
-        <a href="#/mypage/account" data-mypage-nav="/mypage/account">내 정보 확인</a>
+        <p><strong>계정·역할 변경</strong>은 계정 설정에서 할 수 있습니다.</p>
+        <a href="#/mypage/account" data-mypage-nav="/mypage/account">계정 설정</a>
       </section>
     </div>`;
 }
