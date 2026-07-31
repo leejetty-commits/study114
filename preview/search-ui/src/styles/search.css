@@ -45,7 +45,7 @@
 .search-shell .map-block__pin.is-map-focused,
 .search-shell .expo-card.is-map-focused,
 .search-shell .expo-basic.is-map-focused {
-  outline: 2px solid var(--brand-orange);
+  outline: 2px solid var(--brand-blue);
   outline-offset: 2px;
   z-index: 2;
 }
@@ -68,8 +68,8 @@
 }
 
 .item-actions--student .btn.is-active {
-  border-color: var(--brand-orange-dark);
-  color: var(--brand-orange-dark);
+  border-color: var(--brand-blue-dark);
+  color: var(--brand-blue-dark);
 }
 
 .search-header--compact {
@@ -113,8 +113,8 @@
 
 .search-form--compact {
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--gray-200);
-  border-radius: 0.5rem;
+  border: 1px solid var(--product-line, #e5e7eb);
+  border-radius: var(--product-radius-card, 0.75rem);
   background: #fff;
   margin-bottom: var(--space-4);
 }
@@ -271,8 +271,8 @@
 .search-region-auto__badge {
   padding: 0.125rem 0.5rem;
   border-radius: 999px;
-  background: var(--brand-orange-light);
-  color: var(--brand-orange-dark);
+  background: var(--brand-blue-light);
+  color: var(--brand-blue-dark);
   font-size: var(--text-xs);
   font-weight: 700;
 }
@@ -608,3 +608,24 @@
 .search-flat-results {
   margin-top: var(--space-4);
 }
+
+/* Visily product polish */
+.search-chrome-shell .home-body,
+.search-body {
+  background: var(--product-page-bg, #f8fafc);
+}
+
+.search-results .expo-card,
+.search-results .browse-row,
+.search-result-row {
+  border-radius: var(--product-radius-card, 0.75rem);
+  border-color: var(--product-line, #e5e7eb);
+  background: #fff;
+}
+
+.tutor-region-tabs__btn.is-active {
+  background: var(--brand-blue-light);
+  border-color: var(--brand-blue);
+  color: var(--brand-blue-dark);
+}
+

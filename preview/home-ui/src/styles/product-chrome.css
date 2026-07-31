@@ -1,0 +1,162 @@
+/**
+ * Product UI chrome — Visily 사이트 톤
+ * 헤더/버튼/카드/활성 상태를 mypage ops와 같은 블루 제품 문법으로 통일.
+ * mypage 전용 레이아웃(--mp-*)은 건드리지 않는다.
+ */
+
+/* ── Page canvas ── */
+body {
+  background: var(--product-page-bg, #f8fafc);
+  color: var(--product-ink, #0f172a);
+}
+
+.home-shell,
+.home-app:not(.home-app--mypage),
+.site-chrome-shell {
+  background: var(--product-page-bg, #f8fafc);
+}
+
+.home-main,
+.search-main,
+.auth-body,
+.register-body,
+.sup-main {
+  color: var(--product-ink, #0f172a);
+}
+
+/* ── Header / GNB ── */
+.home-util__link--emphasis {
+  color: var(--product-accent, var(--brand-blue)) !important;
+}
+
+.home-util__link--admin {
+  color: var(--brand-blue-dark) !important;
+  background: var(--product-accent-soft, var(--brand-blue-light)) !important;
+  border-color: #bfdbfe !important;
+}
+
+.home-gnb__item.is-active {
+  color: var(--product-accent, var(--brand-blue)) !important;
+  background: var(--product-accent-soft, var(--brand-blue-light)) !important;
+}
+
+/* ── Primary / secondary buttons ── */
+.btn--primary {
+  background: var(--product-accent, var(--brand-blue)) !important;
+  border-color: var(--product-accent, var(--brand-blue)) !important;
+  color: #fff !important;
+  border-radius: var(--product-radius-btn, 0.625rem);
+}
+
+.btn--primary:hover {
+  background: var(--product-accent-dark, var(--brand-blue-dark)) !important;
+  border-color: var(--product-accent-dark, var(--brand-blue-dark)) !important;
+}
+
+.btn--secondary {
+  background: #fff;
+  color: var(--gray-700);
+  border: 1px solid var(--product-line, #e5e7eb);
+  border-radius: var(--product-radius-btn, 0.625rem);
+}
+
+.btn--secondary:hover {
+  border-color: var(--product-accent, var(--brand-blue));
+  color: var(--product-accent-dark, var(--brand-blue-dark));
+}
+
+/* ── Cards: flat product grammar ── */
+.slot-card,
+.expo-card,
+.auth-shell__card,
+.search-card,
+.register-card,
+.sup-panel-card,
+.panel,
+.plans-catalog__item {
+  border-radius: var(--product-radius-card, 0.75rem);
+  border-color: var(--product-line, #e5e7eb);
+  background: var(--product-panel, #fff);
+  box-shadow: none;
+}
+
+.slot-card:hover,
+.expo-card:hover {
+  border-color: var(--product-accent, var(--brand-blue)) !important;
+  box-shadow: 0 6px 20px rgba(43, 127, 255, 0.08) !important;
+}
+
+/* ── Hero / guest ── */
+.hero-map {
+  background: var(--surface-page);
+  border: 1px solid var(--product-line, #e5e7eb);
+  border-radius: var(--product-radius-card, 0.75rem);
+}
+
+.hero-map__eyebrow,
+.guest-gate__eyebrow {
+  color: var(--product-accent, var(--brand-blue)) !important;
+}
+
+.hero-map__rail {
+  background: var(--product-accent-soft, var(--brand-blue-light));
+}
+
+/* ── Support / plans / tabs ── */
+.sup-nav__link.is-active {
+  background: var(--product-accent-soft, var(--brand-blue-light)) !important;
+  color: var(--product-accent-dark, var(--brand-blue-dark)) !important;
+  border-color: transparent !important;
+  font-weight: 600;
+}
+
+.sup-nav__link.is-active,
+.sup-card:hover,
+.sup-guide-row:hover,
+.sup-accordion__item.is-open,
+.sup-admin-nav__link.is-active,
+.sup-admin-hub__card:hover {
+  border-color: var(--product-accent, var(--brand-blue)) !important;
+}
+
+.msg-tab.is-active {
+  background: var(--product-accent, var(--brand-blue)) !important;
+  border-color: var(--product-accent, var(--brand-blue)) !important;
+  color: #fff !important;
+}
+
+.search-tabs .search-tab.is-active {
+  color: var(--product-accent, var(--brand-blue)) !important;
+  border-color: var(--product-accent, var(--brand-blue)) !important;
+}
+
+.search-result-row__actions .btn.is-active {
+  border-color: var(--product-accent, var(--brand-blue)) !important;
+  color: var(--product-accent-dark, var(--brand-blue-dark)) !important;
+}
+
+.plans-catalog__item.is-featured {
+  border-color: var(--product-accent, var(--brand-blue)) !important;
+  background: var(--product-accent-soft, var(--brand-blue-light)) !important;
+}
+
+/* ── Misc chrome accents ── */
+.back-to-top:hover {
+  border-color: var(--product-accent, var(--brand-blue));
+  color: var(--product-accent-dark, var(--brand-blue-dark));
+}
+
+.preview-toolbar__btn.is-active {
+  background: var(--product-accent, var(--brand-blue));
+  border-color: var(--product-accent, var(--brand-blue));
+}
+
+/* cream/amber leftovers → soft blue (public + shared overlays) */
+.content-section--orange {
+  background: transparent;
+}
+
+.guest-login-strip {
+  background: var(--product-accent-soft, var(--brand-blue-light));
+  border: 1px solid #bfdbfe;
+}

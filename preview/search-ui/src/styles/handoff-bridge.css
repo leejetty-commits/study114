@@ -8,14 +8,14 @@
   gap: 0.5rem 1rem;
   padding: 0.65rem 0.85rem;
   margin-bottom: 1rem;
-  background: var(--brand-orange-light);
+  background: var(--brand-blue-light);
   border: 1px solid #fed7aa;
   border-radius: var(--radius-md, 0.5rem);
   font-size: var(--fs-2);
 }
 .compare-bar__hint {
   margin: 0;
-  color: var(--brand-orange-dark);
+  color: var(--brand-blue-dark);
   width: 100%;
   font-family: var(--font-serif);
 }
@@ -26,7 +26,7 @@
   gap: 0.35rem 0.5rem;
 }
 .compare-bar__label {
-  color: var(--brand-orange-dark);
+  color: var(--brand-blue-dark);
 }
 
 .search-result-row__actions {
@@ -36,8 +36,8 @@
   justify-content: flex-end;
 }
 .search-result-row__actions .btn.is-active {
-  border-color: var(--brand-orange);
-  color: var(--brand-orange-dark);
+  border-color: var(--brand-blue);
+  color: var(--brand-blue-dark);
 }
 
 .compare-modal-root {
@@ -121,14 +121,14 @@
   box-shadow:
     0 0 0 1px rgba(15, 23, 42, 0.08),
     0 22px 48px rgba(15, 23, 42, 0.28);
-  border-top: 3px solid var(--brand-orange, #ea580c);
+  border-top: 3px solid var(--brand-orange, #1565d8);
 }
 .p24-modal__dragbar {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.45rem 0.75rem;
-  background: linear-gradient(90deg, #fff7ed, #ffedd5);
+  background: linear-gradient(90deg, var(--brand-blue-light), #dbeafe);
   border-bottom: 1px solid #fed7aa;
   cursor: grab;
   touch-action: none;
@@ -139,19 +139,19 @@
   height: 0.28rem;
   border-radius: 999px;
   background: #fb923c;
-  box-shadow: 0 3px 0 #fdba74;
+  box-shadow: 0 3px 0 #93c5fd;
 }
 .p24-modal__dragbar-label {
   flex: 1;
   font-size: 0.6875rem;
   font-weight: 700;
-  color: #c2410c;
+  color: #1565d8;
 }
 .p24-overlay--floating .p24-modal__head[data-p24-drag-handle] {
   cursor: grab;
   user-select: none;
   touch-action: none;
-  background: #fffbeb;
+  background: var(--brand-blue-light);
 }
 .modal.p24-modal {
   background: #fff;
@@ -185,7 +185,7 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: var(--brand-orange-light);
+  background: var(--brand-blue-light);
   border-radius: 0.4rem;
   font-size: var(--fs-1);
 }
@@ -234,8 +234,8 @@
 .search-card .btn--primary,
 .compare-modal .btn--primary,
 .p24-modal .btn--primary {
-  background: var(--brand-orange);
-  border-color: var(--brand-orange);
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
   color: #fff;
 }
 .search-card .btn--secondary,

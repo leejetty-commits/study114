@@ -4,6 +4,7 @@ import '../../home-ui/src/styles/tokens.css';
 import '../../home-ui/src/styles/home.css';
 import './styles/register.css';
 import '../../home-ui/src/styles/design-system.css';
+import '../../home-ui/src/styles/product-chrome.css';
 
 import {
   getChromeNavRole,

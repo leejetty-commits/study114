@@ -501,8 +501,8 @@ img {
 }
 
 .preview-toolbar__btn.is-active {
-  background: var(--brand-orange);
-  border-color: var(--brand-orange);
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
   color: #fff;
 }
 
@@ -554,7 +554,7 @@ img {
 
 .form-label--required::after {
   content: ' *';
-  color: var(--brand-orange);
+  color: var(--brand-blue);
 }
 
 .form-input {
@@ -625,12 +625,12 @@ img {
 }
 
 .form-radio:has(.form-radio__input:checked) {
-  border-color: var(--brand-orange);
-  background: var(--brand-orange-light);
+  border-color: var(--brand-blue);
+  background: var(--brand-blue-light);
 }
 
 .form-radio__input {
-  accent-color: var(--brand-orange);
+  accent-color: var(--brand-blue);
 }
 
 .form-radio__label {
@@ -696,7 +696,7 @@ img {
 }
 
 .form-check__required-mark {
-  color: var(--brand-orange-dark, #e65100);
+  color: var(--brand-orange-dark, #1565d8);
   font-weight: 600;
 }
 
@@ -770,7 +770,7 @@ img {
   width: 1.125rem;
   height: 1.125rem;
   margin-top: 0.125rem;
-  accent-color: var(--brand-orange);
+  accent-color: var(--brand-blue);
   flex-shrink: 0;
 }
 
@@ -820,13 +820,13 @@ img {
 }
 
 .btn--primary {
-  background: var(--btn-primary-bg, var(--brand-orange));
+  background: var(--btn-primary-bg, var(--brand-blue));
   color: #fff;
   box-shadow: var(--btn-primary-shadow, none);
 }
 
 .btn--primary:hover {
-  background: var(--btn-primary-hover, var(--brand-orange-dark));
+  background: var(--btn-primary-hover, var(--brand-blue-dark));
 }
 
 .btn--secondary {
@@ -1001,8 +1001,8 @@ img {
 }
 
 .role-card.is-selected {
-  border-color: var(--brand-orange);
-  background: var(--brand-orange-light);
+  border-color: var(--brand-blue);
+  background: var(--brand-blue-light);
 }
 
 .role-card__icon {
@@ -1105,7 +1105,7 @@ img {
 
 .step-indicator__dot.is-active {
   width: 1.5rem;
-  background: var(--brand-orange);
+  background: var(--brand-blue);
 }
 
 .step-indicator__dot.is-done {

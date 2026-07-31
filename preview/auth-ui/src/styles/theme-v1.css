@@ -1,8 +1,8 @@
-/* ── Theme V1: 안정형 ──
-   부드러운 모서리, 은은한 그림자, 따뜻한 배경 톤 */
+/* ── Theme V1: 제품형 (Visily 톤)
+   soft blue accent · 밝은 중립 배경 · flat panel */
 
 [data-theme='v1'] {
-  --page-bg: var(--surface-section);
+  --page-bg: var(--product-page-bg, #f8fafc);
   --logo-radius: 0.625rem;
   --heading-size: var(--fs-6);
   --heading-tracking: -0.02em;
@@ -11,19 +11,19 @@
   --input-padding-y: 0.8125rem;
   --input-padding-x: 1rem;
   --input-border: var(--gray-200);
-  --input-focus-shadow: 0 0 0 3px rgba(245, 124, 0, 0.12);
+  --input-focus-shadow: 0 0 0 3px rgba(43, 127, 255, 0.14);
 
-  --btn-radius: var(--radius-md);
+  --btn-radius: var(--product-radius-btn, 0.625rem);
   --btn-padding-y: 0.9375rem;
-  --btn-primary-bg: var(--brand-orange);
-  --btn-primary-hover: var(--brand-orange-dark);
-  --btn-primary-shadow: 0 2px 8px rgba(245, 124, 0, 0.25);
+  --btn-primary-bg: var(--brand-blue);
+  --btn-primary-hover: var(--brand-blue-dark);
+  --btn-primary-shadow: 0 2px 8px rgba(43, 127, 255, 0.2);
 
-  --panel-radius: 1rem;
+  --panel-radius: var(--product-radius-card, 0.75rem);
   --panel-padding: var(--space-6);
   --panel-bg: #fff;
-  --panel-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
-  --panel-border: none;
+  --panel-shadow: none;
+  --panel-border: 1px solid var(--product-line, #e5e7eb);
 
   --role-icon-radius: 0.75rem;
   --link-color: var(--brand-blue);
@@ -31,25 +31,26 @@
 
 [data-theme='v1'] body,
 [data-theme='v1'] .auth-shell {
-  background: var(--surface-section);
+  background: var(--product-page-bg, #f8fafc);
   background-image: none;
 }
 
 [data-theme='v1'] .panel {
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--product-line, #e5e7eb);
+  box-shadow: none;
 }
 
 [data-theme='v1'] .role-card {
-  border-radius: 1rem;
+  border-radius: var(--product-radius-card, 0.75rem);
 }
 
 [data-theme='v1'] .terms-all {
-  background: var(--brand-orange-light);
-  border: 1px solid rgba(249, 115, 22, 0.12);
+  background: var(--brand-blue-light);
+  border: 1px solid rgba(43, 127, 255, 0.14);
 }
 
 [data-theme='v1'] .step-indicator__dot.is-active {
-  background: var(--brand-orange);
+  background: var(--brand-blue);
 }
 
 [data-theme='v1'] .social-btn {
@@ -57,14 +58,15 @@
 }
 
 [data-theme='v1'] .form-check__input {
-  accent-color: var(--brand-orange);
+  accent-color: var(--brand-blue);
 }
 
 [data-theme='v1'] .form-input:focus {
-  border-color: var(--brand-orange);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(43, 127, 255, 0.14);
 }
 
 [data-theme='v1'] .role-card.is-selected {
-  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.12);
+  border-color: var(--brand-blue);
+  box-shadow: 0 4px 16px rgba(43, 127, 255, 0.1);
 }

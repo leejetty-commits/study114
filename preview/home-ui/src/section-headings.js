@@ -8,13 +8,13 @@ function esc(s) {
 }
 
 export const SECTION_HEADINGS = {
-  primeStudyRoom: { icon: '🏆', iconType: 'emoji', title: '대표 노출 공부방' },
-  pickStudyRoom: { icon: '⭐', iconType: 'emoji', title: '추천 노출 공부방' },
-  basicStudyRoom: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '공부방' },
-  primeTutor: { icon: '🏆', iconType: 'emoji', title: '대표 노출 과외쌤' },
-  pickTutor: { icon: '⭐', iconType: 'emoji', title: '추천 노출 과외쌤' },
-  basicTutor: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '과외쌤' },
-  students: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '학생' },
+  primeStudyRoom: { icon: '🏆', iconType: 'emoji', title: '우리동네 대표 공부방' },
+  pickStudyRoom: { icon: '⭐', iconType: 'emoji', title: '추천 공부방' },
+  basicStudyRoom: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '동네 공부방' },
+  primeTutor: { icon: '🏆', iconType: 'emoji', title: '우리동네 대표 과외쌤' },
+  pickTutor: { icon: '⭐', iconType: 'emoji', title: '추천 과외쌤' },
+  basicTutor: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '동네 과외쌤' },
+  students: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '관심 학생 수요' },
 };
 
 /**

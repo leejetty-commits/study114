@@ -38,8 +38,8 @@
 }
 
 .register-phase__tag.is-active {
-  background: var(--brand-orange-light);
-  color: var(--brand-orange);
+  background: var(--brand-blue-light);
+  color: var(--brand-blue);
 }
 
 .register-phase__tag.is-done {
@@ -104,8 +104,8 @@
 }
 
 .register-region-slot.is-primary {
-  border-color: var(--brand-orange);
-  background: var(--brand-orange-light);
+  border-color: var(--brand-blue);
+  background: var(--brand-blue-light);
 }
 
 .register-subject-row {

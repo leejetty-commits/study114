@@ -3,6 +3,7 @@ import './styles/theme-v1.css';
 import '../../home-ui/src/styles/tokens.css';
 import '../../home-ui/src/styles/home.css';
 import '../../home-ui/src/styles/design-system.css';
+import '../../home-ui/src/styles/product-chrome.css';
 import { getCurrentScreen, getCurrentPath } from './layout.js';
 import { signupState } from './state.js';
 import { fetchRegions } from './auth-api.js';

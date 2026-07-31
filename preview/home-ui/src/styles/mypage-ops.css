@@ -142,11 +142,11 @@
 }
 
 .mypage-nav__link.is-active {
-  background: var(--mp-accent-soft);
-  color: var(--mp-accent);
-  border-color: transparent;
+  background: var(--mp-accent-soft) !important;
+  color: var(--mp-accent) !important;
+  border-color: transparent !important;
   font-weight: 600;
-  box-shadow: none;
+  box-shadow: none !important;
 }
 
 .mypage-nav__link.is-emphasis:not(.is-active) {
@@ -486,14 +486,15 @@
 
 .mypage-layout .btn--primary,
 .mypage-home .btn--primary {
-  background: var(--mp-accent);
-  border-color: var(--mp-accent);
-  color: #fff;
+  background: var(--mp-accent) !important;
+  border-color: var(--mp-accent) !important;
+  color: #fff !important;
 }
 
 .mypage-layout .btn--primary:hover,
 .mypage-home .btn--primary:hover {
   filter: brightness(0.95);
+  background: var(--mp-accent) !important;
 }
 
 .mypage-quick-grid {

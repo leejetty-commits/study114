@@ -30,7 +30,20 @@
   /* Surfaces — 배경 3톤 (장식 금지, 섹션 구획용) */
   --surface-page: #ffffff;
   --surface-section: #f4f6f8;
-  --surface-emphasis: #fff8f0;
+  /* 강조 면: 크림 → 제품형 soft blue (Visily / mypage 톤과 통일) */
+  --surface-emphasis: #eef4ff;
+
+  /* Product UI aliases — 공개·운영 화면 공통 accent (mypage --mp-* 와 동일 계열) */
+  --product-accent: var(--brand-blue);
+  --product-accent-dark: var(--brand-blue-dark);
+  --product-accent-soft: var(--brand-blue-light);
+  --product-page-bg: #f8fafc;
+  --product-panel: #ffffff;
+  --product-line: #e5e7eb;
+  --product-ink: #0f172a;
+  --product-muted: #64748b;
+  --product-radius-card: 0.75rem;
+  --product-radius-btn: 0.625rem;
 
   /* Semantic (auth / forms) */
   --color-success: #16a34a;
