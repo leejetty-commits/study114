@@ -21,6 +21,7 @@ import {
   renderSitePromoInline,
   bindSitePromoSidebarEvents,
 } from '../../shared/promo-sidebar.js';
+import { renderGuestMarketingBanner } from './home-marketing-banner.js';
 
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
@@ -29,8 +30,9 @@ function loginGateAttrs(action, label) {
   return `data-action="login-gate" data-gate="${action}" data-gate-label="${label}" tabindex="0" role="button"`;
 }
 
+/** 홈 상단 마케팅 배너 (3안 · cinema) */
 export function renderGuestTempNotice() {
-  return '';
+  return renderGuestMarketingBanner();
 }
 
 export function renderGuestHero() {

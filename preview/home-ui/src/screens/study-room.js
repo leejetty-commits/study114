@@ -14,6 +14,7 @@ import {
 import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
 import { STUDY_ROOM_REGISTER_URL } from '../../../shared/preview-links.js';
+import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 
 function renderMyStudyRoomBox() {
   return `
@@ -39,6 +40,7 @@ export function renderStudyRoom() {
   const showMyBox = isProviderHomeSelfTab('study_room', tab);
 
   const content = `
+    ${renderHomeMarketingBanner('study_room')}
     ${renderProviderHomeTabs('study_room', tab)}
     ${showMyBox ? renderMyStudyRoomBox() : ''}
     ${renderProviderHomeBody('study_room', tab, previewState.studyRoomFind)}

@@ -15,10 +15,12 @@ import {
 } from '../provider-home.js';
 import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
+import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 
 export function renderParent() {
   const tab = previewState.parentTab;
   const content = `
+    ${renderHomeMarketingBanner('parent')}
     ${renderProviderHomeTabs('parent', tab, 'data-parent-tab')}
     ${renderProviderHomeBody('parent', tab, previewState.parentFind)}
     ${renderAdInline()}

@@ -17,6 +17,7 @@ import { bindGuestListPagination } from '../list-pagination.js';
 import { MOCK_TUTOR_REGIONS } from '@search-ui/search-schema.js';
 import { TUTOR_REGISTER_URL } from '../../../shared/preview-links.js';
 import { renderTutorActivityBars } from '../tutor-activity-chart.js';
+import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 
 /**
  * 시트(임시.cell) 행=가로줄:
@@ -122,6 +123,7 @@ export function renderTutor() {
   const showMyBox = isProviderHomeSelfTab('tutor', tab);
 
   const content = `
+    ${renderHomeMarketingBanner('tutor')}
     ${renderProviderHomeTabs('tutor', tab)}
     ${showMyBox ? renderTutorSelfHero() : ''}
     ${renderProviderHomeBody('tutor', tab, previewState.tutorFind, {
