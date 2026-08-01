@@ -1,6 +1,5 @@
 /**
- * 홈 상단 마케팅 배너 — 사진 배경 + 역할별 레이아웃
- * cinema(게스트) · split(학부모) · compact(공급자)
+ * 홈·메인메뉴 상단 마케팅 배너 — 사진 배경 + cinema 임팩트
  */
 
 .home-mkt {
@@ -11,7 +10,7 @@
   border-radius: var(--home-mkt-radius);
   border: 1px solid var(--product-line, #e5e7eb);
   margin-bottom: var(--space-5, 1.25rem);
-  min-height: 11.5rem;
+  min-height: clamp(15rem, 28vw, 19rem);
   color: #fff;
   background: #0f172a;
 }
@@ -34,7 +33,8 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(105deg, rgba(15, 23, 42, 0.82) 0%, rgba(15, 23, 42, 0.55) 48%, rgba(15, 23, 42, 0.28) 100%);
+    linear-gradient(100deg, rgba(15, 23, 42, 0.88) 0%, rgba(15, 23, 42, 0.62) 42%, rgba(15, 23, 42, 0.22) 100%),
+    linear-gradient(to top, rgba(15, 23, 42, 0.45), transparent 55%);
 }
 
 .home-mkt__inner {
@@ -43,8 +43,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  padding: 1.35rem 1.4rem 1.5rem;
-  max-width: 40rem;
+  justify-content: flex-end;
+  min-height: inherit;
+  box-sizing: border-box;
+  padding: clamp(1.5rem, 3.5vw, 2.35rem);
+  max-width: 44rem;
 }
 
 .home-mkt__eyebrow {
@@ -57,12 +60,11 @@
 
 .home-mkt__title {
   margin: 0;
-  font-size: clamp(1.2rem, 2.4vw, 1.65rem);
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.32;
   letter-spacing: -0.025em;
   color: #fff;
-  text-wrap: balance;
 }
 
 .home-mkt__sub {
@@ -76,7 +78,7 @@
   font-size: var(--text-sm, 0.875rem);
   line-height: 1.55;
   color: rgba(255, 255, 255, 0.88);
-  max-width: 36rem;
+  max-width: 38rem;
 }
 
 .home-mkt__actions {
@@ -102,72 +104,13 @@
   color: #fff !important;
 }
 
-/* ── Guest: cinema (임팩트) ── */
+/* cinema = 기본 대형 (로그인·비로그인 공통) */
 .home-mkt--cinema {
   min-height: clamp(15rem, 28vw, 19rem);
 }
 
-.home-mkt--cinema .home-mkt__inner {
-  padding: clamp(1.5rem, 3.5vw, 2.35rem);
-  max-width: 42rem;
-  justify-content: flex-end;
-  min-height: inherit;
-  box-sizing: border-box;
-}
-
-.home-mkt--cinema .home-mkt__shade {
-  background:
-    linear-gradient(100deg, rgba(15, 23, 42, 0.88) 0%, rgba(15, 23, 42, 0.62) 42%, rgba(15, 23, 42, 0.22) 100%),
-    linear-gradient(to top, rgba(15, 23, 42, 0.45), transparent 55%);
-}
-
-.home-mkt--cinema .home-mkt__title {
-  font-size: clamp(1.35rem, 3vw, 1.9rem);
-}
-
-/* ── Parent: split (탐색·비교) ── */
-.home-mkt--split {
-  min-height: 12.5rem;
-}
-
-.home-mkt--split .home-mkt__shade {
-  background:
-    linear-gradient(90deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.72) 40%, rgba(15, 23, 42, 0.25) 72%, rgba(15, 23, 42, 0.1) 100%);
-}
-
-.home-mkt--split.home-mkt--compare .home-mkt__eyebrow {
-  color: #93c5fd;
-}
-
-/* ── Provider: compact (운영 홈) ── */
-.home-mkt--compact {
-  min-height: 9.5rem;
-  margin-bottom: var(--space-4, 1rem);
-}
-
-.home-mkt--compact .home-mkt__inner {
-  padding: 1.1rem 1.2rem 1.2rem;
-  max-width: 44rem;
-}
-
-.home-mkt--compact .home-mkt__title {
-  font-size: clamp(1.05rem, 2vw, 1.3rem);
-}
-
-.home-mkt--compact .home-mkt__line {
-  font-size: 0.8125rem;
-}
-
-.home-mkt--compact .home-mkt__shade {
-  background:
-    linear-gradient(95deg, rgba(30, 58, 95, 0.9) 0%, rgba(30, 58, 95, 0.7) 50%, rgba(30, 58, 95, 0.35) 100%);
-}
-
 @media (max-width: 720px) {
-  .home-mkt {
-    min-height: 0;
-  }
-
+  .home-mkt,
   .home-mkt--cinema {
     min-height: 14rem;
   }
@@ -175,15 +118,39 @@
   .home-mkt__inner {
     max-width: none;
     padding: 1.15rem 1.1rem 1.25rem;
-  }
-
-  .home-mkt--cinema .home-mkt__inner {
     min-height: 14rem;
-    justify-content: flex-end;
   }
 
   .home-mkt__shade {
     background:
       linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.55) 55%, rgba(15, 23, 42, 0.35) 100%) !important;
+  }
+
+  .home-mkt__title {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+}
+
+/* ── 우측 세로 배너 레일: 밝은 푸른 바탕 위에 카드가 떠 있게 ── */
+@media (min-width: 1024px) {
+  .home-body.home-body--with-promo > .home-sidebar,
+  .home-body.home-body--with-promo > .right-rail,
+  .search-body.home-body--with-promo > .home-sidebar,
+  .search-body.home-body--with-promo > .right-rail {
+    background: #e8f2ff;
+    border: 1px solid #cfe3ff;
+    border-radius: var(--product-radius-card, 0.75rem);
+    padding: 0.75rem;
+    gap: 0.75rem;
+    align-self: stretch;
+    box-sizing: border-box;
+  }
+
+  .home-body.home-body--with-promo > .home-sidebar .promo-card,
+  .home-body.home-body--with-promo > .right-rail .right-rail-card,
+  .search-body.home-body--with-promo > .home-sidebar .promo-card,
+  .search-body.home-body--with-promo > .right-rail .right-rail-card {
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   }
 }

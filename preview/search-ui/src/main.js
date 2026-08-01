@@ -6,6 +6,7 @@ import './styles/search.css';
 import './styles/handoff-bridge.css';
 import '@home-ui/styles/design-system.css';
 import '@home-ui/styles/product-chrome.css';
+import '@home-ui/styles/home-marketing-banner.css';
 
 import { bindSearchPageEvents, renderSearchPage } from './screens/search-page.js';
 import { syncRoleFromHash } from './state.js';

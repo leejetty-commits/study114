@@ -1,6 +1,7 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole } from '../state.js';
 import { renderPageTitle, renderSupportNav } from './nav.js';
+import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 
 /**
  * @param {string} currentPath
@@ -12,6 +13,7 @@ export function renderSupportShell(currentPath, bodyHtml) {
 
   const mainHtml = `
     <div class="sup-layout">
+      ${renderHomeMarketingBanner('support')}
       <header class="sup-content__head">
         <div>
           <h1 class="sup-content__title">${renderPageTitle(currentPath)}</h1>

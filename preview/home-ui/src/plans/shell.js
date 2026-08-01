@@ -1,6 +1,7 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole } from '../state.js';
 import { renderPlansPageTitle, renderPlansNav } from './nav.js';
+import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 
 /**
  * @param {string} currentPath
@@ -15,9 +16,11 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
   const hideNav =
     currentPath.startsWith('/plans/checkout') || currentPath.startsWith('/plans/result');
   const guestCatalogOnly = Boolean(opts.isGuest);
+  const banner = hideNav ? '' : renderHomeMarketingBanner('plans');
 
   const mainHtml = `
     <div class="sup-layout plans-layout">
+      ${banner}
       <header class="sup-content__head">
         <div>
           <h1 class="sup-content__title">${renderPlansPageTitle(currentPath)}</h1>

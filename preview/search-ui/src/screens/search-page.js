@@ -24,6 +24,7 @@ import {
 import { bindGuestListPagination } from '@home-ui/list-pagination.js';
 import { bindProtectedGuestActions } from '../../../shared/guest-gate-ui.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../../shared/preview-flags.js';
+import { renderSearchMarketingBanner } from '@home-ui/home-marketing-banner.js';
 import {
   esc,
   resetFindSurface,
@@ -74,6 +75,7 @@ function renderSearchForm(tab) {
       : '';
 
   return `
+    ${renderSearchMarketingBanner(tab)}
     ${renderDevPreviewControls()}
     <header class="search-header search-header--compact">
       <div class="search-header__title-row">
