@@ -716,13 +716,16 @@ function renderBasicStudentRow(item, opts) {
   const viewerRole = opts.viewerRole || (opts.guest ? 'guest' : 'parent');
   const isGuest = Boolean(opts.guest || viewerRole === 'guest');
   const maskedName = maskPublicDisplayName(item.public_display_name);
+  const locationLabel = isGuest
+    ? coarseRegionForGuest(item.location_label)
+    : item.location_label;
 
-  // 비로그인 티저 — B-완화형 (조건만 · 특정 최소화)
-  if (isGuest) {
-    const t = guestStudentTeaserFields(item);
-    const meta = [t.band, t.subject, t.region, t.budget].filter((x) => x && x !== '—').join(' · ');
-    const hopeLine = t.hope || t.chip;
-    return `
+  if (opts.layout === 'table') {
+    if (isGuest) {
+      const t = guestStudentTeaserFields(item);
+      const meta = [t.band, t.subject, t.region, t.budget].filter((x) => x && x !== '—').join(' · ');
+      const hopeLine = t.hope || t.chip;
+      return `
     <article class="expo-basic expo-basic--student expo-basic--student-teaser" data-student-id="${item.id}" data-action="open-student-detail">
       <div class="student-teaser">
         <p class="student-teaser__name">${esc(t.name)}</p>
@@ -734,24 +737,23 @@ function renderBasicStudentRow(item, opts) {
         </div>
       </div>
     </article>`;
-  }
-
-  const actions =
-    viewerRole === 'tutor' || viewerRole === 'study_room' || viewerRole === 'admin'
-      ? renderStudentProviderActions(item, {
-          guest: false,
-          viewerRole,
-          sourceRoute: opts.sourceRoute || 'search',
-        })
-      : renderStudentConsumerActions();
-  const schedule =
-    item.lessons_per_week && item.minutes_per_lesson
-      ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
-      : '—';
-  const requestVis = item.request_summary_visibility || 'private';
-  const request =
-    requestVis === 'paid_only' ? '유료공개' : requestVis === 'private' ? '비공개' : '—';
-  return `
+    }
+    const actions =
+      viewerRole === 'tutor' || viewerRole === 'study_room' || viewerRole === 'admin'
+        ? renderStudentProviderActions(item, {
+            guest: false,
+            viewerRole,
+            sourceRoute: opts.sourceRoute || 'search',
+          })
+        : renderStudentConsumerActions();
+    const schedule =
+      item.lessons_per_week && item.minutes_per_lesson
+        ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
+        : '—';
+    const requestVis = item.request_summary_visibility || 'private';
+    const request =
+      requestVis === 'paid_only' ? '유료공개' : requestVis === 'private' ? '비공개' : '—';
+    return `
     <article class="expo-basic expo-basic--student" data-student-id="${item.id}" data-action="open-student-detail">
       ${renderExpoTable(
         [
@@ -773,6 +775,84 @@ function renderBasicStudentRow(item, opts) {
         ],
         'expo-tbl--basic expo-tbl--card',
       )}
+    </article>`;
+  }
+
+  if (isGuest) {
+    const t = guestStudentTeaserFields(item);
+    const hopeLine = t.hope || t.chip;
+    return `
+    <article class="expo-basic expo-basic--student expo-hcard" data-student-id="${item.id}" data-action="open-student-detail">
+      <div class="expo-hcard__media-wrap">
+        ${renderMedia(item.image_path, t.name || '학생', 'list')}
+        ${t.band ? `<span class="expo-hcard__badge">${esc(t.band)}</span>` : ''}
+      </div>
+      <div class="expo-hcard__body">
+        <div class="expo-hcard__top">
+          <div class="expo-hcard__title-row">
+            <h3 class="expo-hcard__name">${esc(t.name)}</h3>
+            ${locationLabel ? `<span class="expo-hcard__loc">${esc(locationLabel)}</span>` : ''}
+          </div>
+          <p class="expo-hcard__price">${esc(t.budget || '—')}</p>
+        </div>
+        <ul class="expo-hcard__meta">
+          ${renderHcardMetaItem('과목', t.subject)}
+          ${hopeLine ? renderHcardMetaItem('희망', hopeLine) : ''}
+        </ul>
+        <p class="expo-hcard__slogan">로그인 후 구조화 조건·쪽지를 이용할 수 있습니다.</p>
+      </div>
+      <div class="expo-hcard__side">
+        <div class="expo-hcard__actions">
+          <button type="button" class="btn btn--secondary btn--sm" data-action="login-gate" data-gate="student" data-gate-label="학생상세">로그인하고 보기</button>
+        </div>
+        <button type="button" class="expo-hcard__detail" data-action="open-student-detail" data-student-id="${item.id}">상세</button>
+      </div>
+    </article>`;
+  }
+
+  const actions =
+    viewerRole === 'tutor' || viewerRole === 'study_room' || viewerRole === 'admin'
+      ? renderStudentProviderActions(item, {
+          guest: false,
+          viewerRole,
+          sourceRoute: opts.sourceRoute || 'search',
+        })
+      : renderStudentConsumerActions();
+  const schedule =
+    item.lessons_per_week && item.minutes_per_lesson
+      ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
+      : '—';
+  const requestVis = item.request_summary_visibility || 'private';
+  const request =
+    requestVis === 'paid_only' ? '유료공개' : requestVis === 'private' ? '비공개' : '—';
+
+  return `
+    <article class="expo-basic expo-basic--student expo-hcard" data-student-id="${item.id}" data-action="open-student-detail">
+      <div class="expo-hcard__media-wrap">
+        ${renderMedia(item.image_path, maskedName || '학생', 'list')}
+        ${item.grade_level ? `<span class="expo-hcard__badge">${esc(item.grade_level)}</span>` : ''}
+      </div>
+      <div class="expo-hcard__body">
+        <div class="expo-hcard__top">
+          <div class="expo-hcard__title-row">
+            <h3 class="expo-hcard__name">${esc(maskedName)}</h3>
+            ${locationLabel ? `<span class="expo-hcard__loc">${esc(locationLabel)}</span>` : ''}
+          </div>
+          <p class="expo-hcard__price">${esc(formatStudentBudgetCard(item))}</p>
+        </div>
+        <ul class="expo-hcard__meta">
+          ${renderHcardMetaItem('과목', item.subject_label)}
+          ${renderHcardMetaItem('수업장소', optionalStudentPlaces(item.lesson_places))}
+          ${renderHcardMetaItem('원생수', formatStudentLessonTarget(item))}
+          ${renderHcardMetaItem('일정', schedule)}
+          ${renderHcardMetaItem('요청', request)}
+          ${renderHcardMetaItem('강의스타일', formatTeachingStyleBadges(item.teaching_style_badges, 2))}
+        </ul>
+      </div>
+      <div class="expo-hcard__side">
+        <div class="expo-hcard__actions">${actions}</div>
+        <button type="button" class="expo-hcard__detail" data-action="open-student-detail" data-student-id="${item.id}">상세</button>
+      </div>
     </article>`;
 }
 

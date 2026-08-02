@@ -83,6 +83,13 @@ const TUTOR_LISTING_IMAGES = [
   '/assets/listings/tutor-2.jpg',
   '/assets/listings/room-2.jpg',
 ];
+/** 데모 플레이스홀더 — 이후 학생등록 사진(image_path)이 우선 */
+const STUDENT_LISTING_IMAGES = [
+  '/assets/listings/room-1.jpg',
+  '/assets/listings/room-3.jpg',
+  '/assets/listings/tutor-1.jpg',
+  '/assets/listings/tutor-2.jpg',
+];
 
 function enrichStudyRoom(r) {
   const lesson_place_type =
@@ -127,7 +134,7 @@ function enrichStudent(s) {
     ...s,
     lessons_per_week: s.lessons_per_week ?? 2,
     minutes_per_lesson: s.minutes_per_lesson ?? 90,
-    image_path: null,
+    image_path: s.image_path || STUDENT_LISTING_IMAGES[(id - 1) % STUDENT_LISTING_IMAGES.length],
     recommend_count: id % 4,
     wish_count: id % 7,
     message_count: (id % 4) + 1,

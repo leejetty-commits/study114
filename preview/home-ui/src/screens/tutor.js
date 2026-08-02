@@ -131,7 +131,6 @@ export function renderTutor() {
       hideRegionBar: showMyBox,
       hideSearchCrossLink: showMyBox,
       hideSelfNote: true,
-      hideFindLead: showMyBox,
     })}
     ${renderAdInline()}
     ${isProviderHomeSelfTab('tutor', tab) ? '' : renderCompareBar()}

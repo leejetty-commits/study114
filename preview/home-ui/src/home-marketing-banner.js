@@ -120,8 +120,8 @@ export const HOME_BANNER_COPY = {
       '자주 묻는 질문과 안전과외 가이드에서 흐름을 먼저 확인해 보세요',
       '운영 문의가 필요하면 고객센터에서 이어서 남길 수 있어요',
     ],
-    image: '/assets/banners/discover.jpg',
-    imageAlt: '안내·탐색 분위기',
+    image: '/assets/banners/support.jpg',
+    imageAlt: '고객 문의·응대 안내',
   },
 };
 

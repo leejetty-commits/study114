@@ -469,54 +469,17 @@ export function renderCompactFindForm(tab, state, options = {}) {
     hideSearchForm = false,
     hideRegionBar = false,
     hideSelfNote = false,
-    hideFindLead = false,
   } = options;
   if (homeSelf) state.homeSelf = true;
   const meta = SEARCH_TABS[tab];
   const basicFields = meta.fields.filter((f) => f.tier === 'basic');
   const expandedFields = meta.fields.filter((f) => f.tier === 'expanded');
   const activeItems = refreshActiveResultItems(tab, state, role);
-  const isHome = variant === 'home';
-  const formClass = isHome ? 'search-form search-form--compact search-form--home-aux' : 'search-form search-form--compact';
   const homeSelfFlag = resolveHomeSelf(state);
-
-  const leadHtml = hideFindLead
-    ? ''
-    : hideSearchForm
-      ? ''
-      : isHome
-        ? `<p class="parent-home-find__lead">조건을 더 좁히려면 아래에서 검색하세요.</p>`
-        : '';
 
   const formHtml = hideSearchForm
     ? ''
-    : isHome
-      ? `
-    <form class="${formClass}" ${formAttr}>
-      <legend class="parent-home-find__legend">조건 검색</legend>
-      <section class="search-section search-section--compact">
-        ${renderBasicRows(basicFields, state, true)}
-      </section>
-      ${
-        state.expanded
-          ? `
-      <section class="search-section search-section--expanded">
-        <div class="search-grid search-grid--compact">${expandedFields.map((f) => renderField(f, state, { compact: true })).join('')}</div>
-        <div class="search-actions search-actions--inline">
-          <button type="button" class="btn btn--secondary btn--sm" data-action="apply-expanded">적용</button>
-        </div>
-      </section>`
-          : ''
-      }
-      <div class="search-actions search-actions--compact">
-        <button type="button" class="search-expand__toggle search-expand__toggle--inline" data-action="toggle-expanded" aria-expanded="${state.expanded}">
-          ${state.expanded ? '필터 접기' : '상세 필터'}
-        </button>
-        <button type="reset" class="btn btn--secondary btn--sm">초기화</button>
-        <button type="submit" class="btn btn--primary btn--sm">검색</button>
-      </div>
-    </form>`
-      : `
+    : `
     <form class="search-form search-form--compact search-form--detail3" ${formAttr}>
       <aside class="search-form__title-col" aria-label="상세검색">
         <span class="search-form__title-ico" aria-hidden="true">⌕</span>
@@ -554,6 +517,9 @@ export function renderCompactFindForm(tab, state, options = {}) {
       ? ''
       : renderCompactRegionBar(tab, state, { variant, role });
 
+  const mapBannerStyle =
+    role === 'study_room' ? 'provider_room' : role === 'guest' ? 'guest' : 'search';
+
   return `
     ${renderProviderSelfNote(tab, role, homeSelfFlag, hideSelfNote)}
     ${regionBar}
@@ -562,10 +528,9 @@ export function renderCompactFindForm(tab, state, options = {}) {
           searched: state.searchExecuted,
           regionLabel: state.activeRegionLabel || MOCK_REGIONS.room,
           resultSource: resolveResultSource(state),
-          guestHomeStyle: role === 'guest',
+          bannerStyle: mapBannerStyle,
         })
       : ''}
-    ${leadHtml}
     ${formHtml}`;
 }
 

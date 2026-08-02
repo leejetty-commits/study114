@@ -18,7 +18,7 @@ import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 
 function renderMyStudyRoomBox() {
   return `
-    <div class="my-box">
+    <aside class="my-box my-box--banner-panel" aria-label="내 공부방 박스">
       <div class="my-box__label">내 공부방 박스</div>
       <div class="my-box__title">${MY_STUDY_ROOM.name}</div>
       <div class="my-box__stats">
@@ -27,11 +27,11 @@ function renderMyStudyRoomBox() {
         <span>문의 <strong>${MY_STUDY_ROOM.inquiries}</strong></span>
         <span>등록 <strong>${MY_STUDY_ROOM.registered}</strong></span>
       </div>
-      <div style="margin-top:var(--space-4);display:flex;gap:var(--space-2);flex-wrap:wrap;">
+      <div class="my-box__banner-actions">
         <button type="button" class="btn btn--primary btn--sm" data-action="edit-room" data-href="${STUDY_ROOM_REGISTER_URL}">공부방 수정</button>
         <button type="button" class="btn btn--secondary btn--sm" data-action="manage-room">등록 관리</button>
       </div>
-    </div>
+    </aside>
   `;
 }
 
@@ -40,10 +40,15 @@ export function renderStudyRoom() {
   const showMyBox = isProviderHomeSelfTab('study_room', tab);
 
   const content = `
-    ${renderHomeMarketingBanner('study_room')}
+    <div class="home-mkt-wrap${showMyBox ? ' home-mkt-wrap--with-panel' : ''}">
+      ${renderHomeMarketingBanner('study_room')}
+      ${showMyBox ? `<div class="home-mkt-wrap__panel">${renderMyStudyRoomBox()}</div>` : ''}
+    </div>
     ${renderProviderHomeTabs('study_room', tab)}
-    ${showMyBox ? renderMyStudyRoomBox() : ''}
-    ${renderProviderHomeBody('study_room', tab, previewState.studyRoomFind)}
+    ${renderProviderHomeBody('study_room', tab, previewState.studyRoomFind, {
+      hideHead: showMyBox,
+      hideSearchCrossLink: showMyBox,
+    })}
     ${renderAdInline()}
   `;
 

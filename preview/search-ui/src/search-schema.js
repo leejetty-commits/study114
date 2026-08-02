@@ -61,7 +61,7 @@ export const SEARCH_TABS = {
     ],
   },
   student: {
-    label: '학생찾기',
+    label: '학생 찾기',
     defaultRegionHint: '내 영업권 지역 자동 적용',
     mapEnabled: false,
     fields: [

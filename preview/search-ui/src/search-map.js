@@ -33,25 +33,35 @@ function parseRegionParts(regionLabel) {
  * 지도 풀폭 + 기존 카피를 담은 플로팅 배너
  * @param {object} parts
  * @param {object[]} items
- * @param {{ searched: boolean, region: string, resultSource: string, countNote: string, guestHomeStyle: boolean }} ctx
+ * @param {{ searched: boolean, region: string, resultSource: string, countNote: string, bannerStyle: 'guest'|'provider_room'|'search' }} ctx
  */
 function renderFloatMap(parts, items, ctx) {
-  const { searched, region, resultSource, countNote, guestHomeStyle } = ctx;
-  const sub = guestHomeStyle
-    ? [parts.gu, '공부방·과외쌤을 한눈에 비교하세요'].filter(Boolean).join(' · ')
-    : region;
-  const statsHtml = guestHomeStyle
-    ? `<dl class="hero-map__stats">
+  const { searched, region, resultSource, countNote, bannerStyle } = ctx;
+  const isHero = bannerStyle === 'guest' || bannerStyle === 'provider_room';
+
+  let sub = region;
+  let statsHtml = '';
+  let hint = `${searched ? '검색 결과 · ' : '내 지역 · '}${countNote}`;
+
+  if (bannerStyle === 'guest') {
+    sub = [parts.gu, '공부방·과외쌤을 한눈에 비교하세요'].filter(Boolean).join(' · ');
+    statsHtml = `<dl class="hero-map__stats">
           <div><dt>목록</dt><dd>${items.length}</dd></div>
           <div><dt>상태</dt><dd>${searched ? '검색' : '지역'}</dd></div>
-        </dl>`
-    : '';
-  const hint = guestHomeStyle
-    ? countNote
-    : `${searched ? '검색 결과 · ' : '내 지역 · '}${countNote}`;
-  const variant = guestHomeStyle ? 'hero' : 'search';
-  const extraClass = guestHomeStyle ? '' : ' hero-map--search';
-  const allowFallback = guestHomeStyle ? ' data-allow-fallback="true"' : '';
+        </dl>`;
+    hint = countNote;
+  } else if (bannerStyle === 'provider_room') {
+    sub = [parts.gu, '검색·지역 결과가 반영된 공부방 현황입니다'].filter(Boolean).join(' · ');
+    statsHtml = `<dl class="hero-map__stats">
+          <div><dt>공부방</dt><dd>${items.length}</dd></div>
+          <div><dt>상태</dt><dd>${searched ? '검색' : '지역'}</dd></div>
+        </dl>`;
+    hint = countNote;
+  }
+
+  const variant = isHero ? 'hero' : 'search';
+  const extraClass = isHero ? '' : ' hero-map--search';
+  const allowFallback = isHero ? ' data-allow-fallback="true"' : '';
 
   return `
     <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}" data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
@@ -71,7 +81,7 @@ function renderFloatMap(parts, items, ctx) {
 
 /**
  * @param {object[]} [activeResultItems]
- * @param {{ searched?: boolean, regionLabel?: string, resultSource?: 'region'|'search'|null, guestHomeStyle?: boolean }} [options]
+ * @param {{ searched?: boolean, regionLabel?: string, resultSource?: 'region'|'search'|null, guestHomeStyle?: boolean, bannerStyle?: 'guest'|'provider_room'|'search' }} [options]
  */
 export function renderSearchMapBlock(activeResultItems = [], options = {}) {
   const searched = options.searched === true;
@@ -79,7 +89,9 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
   const parts = parseRegionParts(region);
   const items = Array.isArray(activeResultItems) ? activeResultItems : [];
   const resultSource = options.resultSource || (searched ? 'search' : 'region');
-  const guestHomeStyle = options.guestHomeStyle !== false;
+  const bannerStyle =
+    options.bannerStyle ||
+    (options.guestHomeStyle === false ? 'search' : options.guestHomeStyle === true ? 'guest' : 'guest');
 
   const countNote = items.length
     ? `${items.length}곳 · 하단 목록과 동일`
@@ -90,7 +102,7 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
     region,
     resultSource,
     countNote,
-    guestHomeStyle,
+    bannerStyle,
   });
 }
 
