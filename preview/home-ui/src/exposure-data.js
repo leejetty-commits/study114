@@ -72,6 +72,18 @@ const STUDENT_SEED = [
 
 const INQUIRY_CYCLE = ['open', 'open', 'waiting_only', 'capacity_full', 'paused'];
 
+/** 프리뷰용 목록 썸네일 (실서비스 업로드 전 더미) */
+const ROOM_LISTING_IMAGES = [
+  '/assets/listings/room-1.jpg',
+  '/assets/listings/room-2.jpg',
+  '/assets/listings/room-3.jpg',
+];
+const TUTOR_LISTING_IMAGES = [
+  '/assets/listings/tutor-1.jpg',
+  '/assets/listings/tutor-2.jpg',
+  '/assets/listings/room-2.jpg',
+];
+
 function enrichStudyRoom(r) {
   const lesson_place_type =
     r.lesson_place_type === 'office' ? 'academy' : r.lesson_place_type === 'home' ? 'study_room' : r.lesson_place_type;
@@ -82,7 +94,7 @@ function enrichStudyRoom(r) {
     inquiry_status: r.inquiry_status || INQUIRY_CYCLE[(id - 1) % INQUIRY_CYCLE.length],
     lesson_operation_type: r.lesson_operation_type || 'group_by_time_slot',
     slogan: r.slogan || r.feature_1 || null,
-    image_path: null,
+    image_path: r.image_path || ROOM_LISTING_IMAGES[(id - 1) % ROOM_LISTING_IMAGES.length],
     badges: studyRoomBadges(r),
     recommend_count: (id % 7) + 2,
     wish_count: (id % 15) + 3,
@@ -99,7 +111,7 @@ function enrichTutor(t) {
     slogan: t.slogan || t.feature_1 || null,
     main_material_note: t.main_material_note || null,
     verification_doc_count: t.verification_doc_count ?? (t.proof_document_available ? 3 : 0),
-    image_path: null,
+    image_path: t.image_path || TUTOR_LISTING_IMAGES[(id - 1) % TUTOR_LISTING_IMAGES.length],
     badges: tutorBadges(t),
     recommend_count: (id % 9) + 1,
     wish_count: (id % 11) + 2,

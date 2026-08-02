@@ -3,38 +3,70 @@
  * 카피/필드 값은 유지, 레이아웃·표면만 조정
  */
 
-/* ── 지도: 좌측 플로팅 카드 ── */
+/* ── 지도: 박스 전체 폭 + 좌측 배너 오버레이 ── */
 .search-chrome-shell .hero-map--float-rail {
   position: relative !important;
-  display: block !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+  width: 100% !important;
+  max-width: none !important;
   border: 1px solid var(--gray-200, #e5e7eb);
   border-radius: 0.75rem;
   overflow: hidden;
-  background: #fff;
+  background: #e8eef3;
+  flex-direction: unset !important;
+  align-items: unset !important;
 }
 
 .search-chrome-shell .hero-map--float-rail .hero-map__canvas,
-.search-chrome-shell .hero-map--float-rail .hero-map__surface {
+.search-chrome-shell .hero-map--float-rail .hero-map__surface,
+.search-chrome-shell .hero-map--float-rail .hero-map__surface--naver,
+.search-chrome-shell .hero-map--float-rail .naver-map-mount-host,
+.search-chrome-shell .hero-map--float-rail .naver-map-mount {
+  grid-area: 1 / 1;
   width: 100% !important;
-  display: block;
+  max-width: none !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  display: block !important;
+  flex: none !important;
 }
 
-.search-chrome-shell .hero-map--float-rail .hero-map__rail {
-  position: absolute !important;
-  z-index: 6;
-  left: 1rem;
-  top: 1rem;
-  bottom: auto;
-  width: min(14.5rem, calc(100% - 2rem)) !important;
-  max-width: min(14.5rem, calc(100% - 2rem)) !important;
-  flex: none !important;
+.search-chrome-shell .hero-map--float-rail .hero-map__rail,
+.search-chrome-shell .hero-map--float-rail .hero-map__rail--banner {
+  grid-area: 1 / 1;
+  position: relative !important;
+  z-index: 6 !important;
+  justify-self: start;
+  align-self: start;
+  width: min(14.75rem, calc(100% - 2rem)) !important;
+  max-width: min(14.75rem, calc(100% - 2rem)) !important;
+  flex: 0 0 auto !important;
+  margin: 1rem !important;
   padding: 1.15rem 1.1rem 1rem !important;
-  margin: 0;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.97) !important;
   border: 1px solid #e5e7eb !important;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  border-right: 1px solid #e5e7eb !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
   pointer-events: auto;
+}
+
+@media (min-width: 720px) {
+  .search-chrome-shell .hero-map--float-rail .hero-map__rail,
+  .search-chrome-shell .hero-map--float-rail .hero-map__rail--banner {
+    flex: 0 0 auto !important;
+    width: min(14.75rem, calc(100% - 2rem)) !important;
+    max-width: min(14.75rem, calc(100% - 2rem)) !important;
+  }
+
+  .search-chrome-shell .hero-map--float-rail .hero-map__canvas,
+  .search-chrome-shell .hero-map--float-rail .hero-map__surface {
+    width: 100% !important;
+    max-width: none !important;
+    flex: none !important;
+  }
 }
 
 .search-chrome-shell .hero-map--float-rail .hero-map__dong {
@@ -88,14 +120,28 @@
 }
 
 @media (max-width: 719px) {
-  .search-chrome-shell .hero-map--float-rail .hero-map__rail {
+  .search-chrome-shell .hero-map--float-rail {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .search-chrome-shell .hero-map--float-rail .hero-map__canvas,
+  .search-chrome-shell .hero-map--float-rail .hero-map__surface,
+  .search-chrome-shell .hero-map--float-rail .hero-map__surface--naver {
+    grid-area: auto;
+    order: 2;
+    width: 100% !important;
+  }
+
+  .search-chrome-shell .hero-map--float-rail .hero-map__rail,
+  .search-chrome-shell .hero-map--float-rail .hero-map__rail--banner {
+    grid-area: auto;
+    order: 1;
     position: relative !important;
-    left: auto;
-    top: auto;
     width: 100% !important;
     max-width: none !important;
-    margin: 0;
-    border-radius: 0;
+    margin: 0 !important;
+    border-radius: 0 !important;
     border: none !important;
     border-bottom: 1px solid #e5e7eb !important;
     box-shadow: none;
@@ -259,11 +305,13 @@
   width: 100%;
   height: 100%;
   margin: 0;
+  border-radius: 0;
 }
 
 .search-chrome-shell .expo-hcard__media-wrap .expo-media--list {
   width: 100%;
   height: 100%;
+  max-width: none;
   aspect-ratio: auto;
 }
 
@@ -272,6 +320,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .search-chrome-shell .expo-hcard__badge {

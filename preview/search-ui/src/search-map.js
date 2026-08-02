@@ -45,12 +45,17 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
     ? `${items.length}곳 · 하단 목록과 동일`
     : '표시할 공부방이 없습니다';
 
-  // 검색 화면: 지도 위 좌측 플로팅 카드 (카피·필드 유지)
+  // 검색 화면: 지도 풀블리드 + 좌측 배너 카드 오버레이 (카피·필드 유지)
   if (guestHomeStyle) {
     const sub = [parts.gu, '공부방·과외쌤을 한눈에 비교하세요'].filter(Boolean).join(' · ');
     return `
     <section class="hero-map hero-map--float-rail" aria-label="공부방 지도" data-study-room-map data-map-variant="hero" data-region-label="${esc(region)}" data-result-source="${esc(resultSource)}" data-result-items="activeResultItems" data-allow-fallback="true">
-      <aside class="hero-map__rail" aria-label="지역 요약">
+      <div class="hero-map__canvas">
+        <div class="hero-map__surface hero-map__surface--naver" aria-label="${esc(region)} 공부방 지도">
+          <div class="naver-map-mount-host" data-naver-map-mount></div>
+        </div>
+      </div>
+      <aside class="hero-map__rail hero-map__rail--banner" aria-label="지역 요약">
         <h2 class="hero-map__dong">${esc(parts.dong)}</h2>
         <p class="hero-map__sub">${esc(sub)}</p>
         <dl class="hero-map__stats">
@@ -59,26 +64,21 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
         </dl>
         <p class="hero-map__hint">${esc(countNote)}</p>
       </aside>
-      <div class="hero-map__canvas">
-        <div class="hero-map__surface hero-map__surface--naver" aria-label="${esc(region)} 공부방 지도">
-          <div class="naver-map-mount-host" data-naver-map-mount></div>
-        </div>
-      </div>
     </section>`;
   }
 
   return `
     <section class="hero-map hero-map--search hero-map--float-rail" aria-label="공부방 지도" data-study-room-map data-map-variant="search" data-region-label="${esc(region)}" data-result-source="${esc(resultSource)}" data-result-items="activeResultItems">
-      <aside class="hero-map__rail" aria-label="지역 요약">
-        <h2 class="hero-map__dong">${esc(parts.dong)}</h2>
-        <p class="hero-map__sub">${esc(region)}</p>
-        <p class="hero-map__hint">${searched ? '검색 결과 · ' : '내 지역 · '}${esc(countNote)}</p>
-      </aside>
       <div class="hero-map__canvas">
         <div class="hero-map__surface hero-map__surface--naver" aria-label="${esc(region)} 공부방 지도">
           <div class="naver-map-mount-host" data-naver-map-mount></div>
         </div>
       </div>
+      <aside class="hero-map__rail hero-map__rail--banner" aria-label="지역 요약">
+        <h2 class="hero-map__dong">${esc(parts.dong)}</h2>
+        <p class="hero-map__sub">${esc(region)}</p>
+        <p class="hero-map__hint">${searched ? '검색 결과 · ' : '내 지역 · '}${esc(countNote)}</p>
+      </aside>
     </section>`;
 }
 
