@@ -296,7 +296,7 @@ function renderField(field, state, opts = {}) {
 
   if (field.input === 'toggle') {
     return `
-      <label class="search-field search-field--toggle">
+      <label class="search-field search-field--toggle${compact ? ' search-field--compact' : ''}">
         <span class="search-field__label">${esc(field.label)} ${dbHint}</span>
         <input type="checkbox" class="search-field__toggle" name="${esc(name)}" />
       </label>`;
@@ -304,7 +304,7 @@ function renderField(field, state, opts = {}) {
 
   if (field.input === 'range') {
     return `
-      <div class="search-field search-field--range">
+      <div class="search-field search-field--range${compact ? ' search-field--compact' : ''}">
         <span class="search-field__label">${esc(field.label)} ${dbHint}</span>
         <div class="search-range">
           <input type="number" class="search-field__control" name="${esc(name)}_min" placeholder="최소(원)" min="0" step="10000" />

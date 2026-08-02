@@ -139,6 +139,17 @@
   font-family: var(--font-sans);
 }
 
+.search-field--range.search-field--compact,
+.search-field--toggle.search-field--compact {
+  gap: var(--space-1);
+}
+
+.search-field--toggle.search-field--compact {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
 .search-field--compact .search-field__control {
   padding: var(--space-1) var(--space-2);
   font-size: var(--fs-2);

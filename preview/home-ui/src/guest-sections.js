@@ -39,8 +39,13 @@ export function renderGuestHero() {
   const s = GUEST_REGION_STATS;
   const r = GUEST_DEMO_REGION;
   return `
-    <section class="hero-map" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${r.full}" data-allow-fallback="true">
-      <aside class="hero-map__rail" aria-label="지역 요약">
+    <section class="hero-map hero-map--float-rail" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${r.full}" data-allow-fallback="true">
+      <div class="hero-map__canvas">
+        <div class="hero-map__surface hero-map__surface--naver" aria-label="${r.gu} ${r.dong} 공부방 지도">
+          <div class="naver-map-mount-host" data-naver-map-mount></div>
+        </div>
+      </div>
+      <aside class="hero-map__banner" aria-label="지역 요약">
         <h1 class="hero-map__dong">${r.dong}</h1>
         <p class="hero-map__sub">${r.gu} · 우리동네 공부방·과외를 쪽지로 연결하세요</p>
         <a href="${SEARCH_UI_URL}" class="btn btn--primary hero-map__cta" data-util-href="${SEARCH_UI_URL}">
@@ -52,11 +57,6 @@ export function renderGuestHero() {
           <div><dt>학생</dt><dd>${s.studentRequests}</dd></div>
         </dl>
       </aside>
-      <div class="hero-map__canvas">
-        <div class="hero-map__surface hero-map__surface--naver" aria-label="${r.gu} ${r.dong} 공부방 지도">
-          <div class="naver-map-mount-host" data-naver-map-mount></div>
-        </div>
-      </div>
     </section>
   `;
 }

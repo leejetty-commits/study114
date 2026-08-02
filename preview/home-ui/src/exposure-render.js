@@ -560,43 +560,8 @@ function renderBasicStudyRoomRow(item, opts) {
     ? coarseRegionForGuest(item.location_label)
     : item.location_label;
 
-  if (opts.sourceRoute === 'search') {
-    const tags = featureTagList(item)
-      .map((t) => `<span class="expo-hcard__tag">${esc(t)}</span>`)
-      .join('');
-    const slogan = item.slogan || item.feature_1 || '';
+  if (opts.layout === 'table') {
     return `
-    <article class="expo-basic expo-basic--study_room expo-hcard" data-provider-id="${item.id}" data-provider-kind="study_room">
-      <div class="expo-hcard__media-wrap">
-        ${renderMedia(item.image_path, item.study_room_name, 'list')}
-        ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
-      </div>
-      <div class="expo-hcard__body">
-        <div class="expo-hcard__top">
-          <h3 class="expo-hcard__name">${esc(item.study_room_name || '')}</h3>
-          <p class="expo-hcard__price">${esc(formatMonthlyWon(item.price_amount))}</p>
-        </div>
-        <p class="expo-hcard__loc">${esc(locationLabel || '')}</p>
-        <ul class="expo-hcard__meta">
-          ${renderHcardMetaItem('과목', item.main_subject_note)}
-          ${renderHcardMetaItem('원생수', item.capacity_per_time || '—')}
-          ${renderHcardMetaItem('수업장소', optionalStudyRoomPlace(item.lesson_place_type))}
-          ${renderHcardMetaItem('수업형태', formatLessonOperationType(item.lesson_operation_type))}
-        </ul>
-        ${tags ? `<div class="expo-hcard__tags">${tags}</div>` : ''}
-        ${slogan ? `<p class="expo-hcard__slogan">${esc(slogan)}</p>` : ''}
-        <div class="expo-hcard__foot">
-          <div class="expo-hcard__actions">${actions}</div>
-          <div class="expo-hcard__foot-side">
-            <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="study_room" data-search-id="${item.id}">상세</button>
-            ${compare}
-          </div>
-        </div>
-      </div>
-    </article>`;
-  }
-
-  return `
     <article class="expo-basic expo-basic--study_room" data-provider-id="${item.id}" data-provider-kind="study_room">
       ${renderExpoTable(
         [
@@ -620,6 +585,41 @@ function renderBasicStudyRoomRow(item, opts) {
         'expo-tbl--basic expo-tbl--card',
       )}
     </article>`;
+  }
+
+  const tags = featureTagList(item)
+    .map((t) => `<span class="expo-hcard__tag">${esc(t)}</span>`)
+    .join('');
+  const slogan = item.slogan || item.feature_1 || '';
+  return `
+    <article class="expo-basic expo-basic--study_room expo-hcard" data-provider-id="${item.id}" data-provider-kind="study_room">
+      <div class="expo-hcard__media-wrap">
+        ${renderMedia(item.image_path, item.study_room_name, 'list')}
+        ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
+      </div>
+      <div class="expo-hcard__body">
+        <div class="expo-hcard__top">
+          <div class="expo-hcard__title-row">
+            <h3 class="expo-hcard__name">${esc(item.study_room_name || '')}</h3>
+            ${locationLabel ? `<span class="expo-hcard__loc">${esc(locationLabel)}</span>` : ''}
+          </div>
+          <p class="expo-hcard__price">${esc(formatMonthlyWon(item.price_amount))}</p>
+        </div>
+        <ul class="expo-hcard__meta">
+          ${renderHcardMetaItem('과목', item.main_subject_note)}
+          ${renderHcardMetaItem('원생수', item.capacity_per_time || '—')}
+          ${renderHcardMetaItem('수업장소', optionalStudyRoomPlace(item.lesson_place_type))}
+          ${renderHcardMetaItem('수업형태', formatLessonOperationType(item.lesson_operation_type))}
+        </ul>
+        ${tags ? `<div class="expo-hcard__tags">${tags}</div>` : ''}
+        ${slogan ? `<p class="expo-hcard__slogan">${esc(slogan)}</p>` : ''}
+      </div>
+      <div class="expo-hcard__side">
+        <div class="expo-hcard__actions">${actions}</div>
+        <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="study_room" data-search-id="${item.id}">상세</button>
+        ${compare}
+      </div>
+    </article>`;
 }
 
 function renderBasicTutorRow(item, opts) {
@@ -642,51 +642,8 @@ function renderBasicTutorRow(item, opts) {
     ? coarseRegionForGuest(item.location_label)
     : item.location_label;
 
-  if (opts.sourceRoute === 'search') {
-    const tags = featureTagList(item)
-      .map((t) => `<span class="expo-hcard__tag">${esc(t)}</span>`)
-      .join('');
-    const slogan = item.slogan || item.feature_1 || '';
-    const gender = item.gender && item.gender !== '—' ? formatGender(item.gender) : '';
-    const nameLine = gender
-      ? `<span class="expo-hcard__gender">${esc(gender)}</span>${esc(item.tutor_display_name || '')}`
-      : esc(item.tutor_display_name || '');
+  if (opts.layout === 'table') {
     return `
-    <article class="expo-basic expo-basic--tutor expo-hcard" data-provider-id="${item.id}" data-provider-kind="tutor">
-      <div class="expo-hcard__media-wrap">
-        ${renderMedia(item.image_path, item.tutor_display_name, 'list')}
-        ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
-      </div>
-      <div class="expo-hcard__body">
-        <div class="expo-hcard__top">
-          <h3 class="expo-hcard__name">${nameLine}</h3>
-          <p class="expo-hcard__price">${esc(formatTutorFeeCard(item))}</p>
-        </div>
-        <p class="expo-hcard__loc">${esc(locationLabel || '')}</p>
-        <ul class="expo-hcard__meta">
-          ${renderHcardMetaItem('과목', item.main_subject_note)}
-          ${renderHcardMetaItem('원생수', formatTutorStudentTarget(item))}
-          ${renderHcardMetaItem('수업장소', optionalTutorPlaces(item.lesson_places))}
-          ${
-            schedule && schedule !== '—'
-              ? `<li class="expo-hcard__meta-item"><span class="expo-hcard__v">${esc(schedule)}</span></li>`
-              : ''
-          }
-        </ul>
-        ${tags ? `<div class="expo-hcard__tags">${tags}</div>` : ''}
-        ${slogan ? `<p class="expo-hcard__slogan">${esc(slogan)}</p>` : ''}
-        <div class="expo-hcard__foot">
-          <div class="expo-hcard__actions">${actions}</div>
-          <div class="expo-hcard__foot-side">
-            <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="tutor" data-search-id="${item.id}">상세</button>
-            ${compare}
-          </div>
-        </div>
-      </div>
-    </article>`;
-  }
-
-  return `
     <article class="expo-basic expo-basic--tutor" data-provider-id="${item.id}" data-provider-kind="tutor">
       ${renderExpoTable(
         [
@@ -709,6 +666,49 @@ function renderBasicTutorRow(item, opts) {
         ],
         'expo-tbl--basic expo-tbl--card',
       )}
+    </article>`;
+  }
+
+  const tags = featureTagList(item)
+    .map((t) => `<span class="expo-hcard__tag">${esc(t)}</span>`)
+    .join('');
+  const slogan = item.slogan || item.feature_1 || '';
+  const gender = item.gender && item.gender !== '—' ? formatGender(item.gender) : '';
+  const nameLine = gender
+    ? `<span class="expo-hcard__gender">${esc(gender)}</span>${esc(item.tutor_display_name || '')}`
+    : esc(item.tutor_display_name || '');
+  return `
+    <article class="expo-basic expo-basic--tutor expo-hcard" data-provider-id="${item.id}" data-provider-kind="tutor">
+      <div class="expo-hcard__media-wrap">
+        ${renderMedia(item.image_path, item.tutor_display_name, 'list')}
+        ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
+      </div>
+      <div class="expo-hcard__body">
+        <div class="expo-hcard__top">
+          <div class="expo-hcard__title-row">
+            <h3 class="expo-hcard__name">${nameLine}</h3>
+            ${locationLabel ? `<span class="expo-hcard__loc">${esc(locationLabel)}</span>` : ''}
+          </div>
+          <p class="expo-hcard__price">${esc(formatTutorFeeCard(item))}</p>
+        </div>
+        <ul class="expo-hcard__meta">
+          ${renderHcardMetaItem('과목', item.main_subject_note)}
+          ${renderHcardMetaItem('원생수', formatTutorStudentTarget(item))}
+          ${renderHcardMetaItem('수업장소', optionalTutorPlaces(item.lesson_places))}
+          ${
+            schedule && schedule !== '—'
+              ? `<li class="expo-hcard__meta-item"><span class="expo-hcard__v">${esc(schedule)}</span></li>`
+              : ''
+          }
+        </ul>
+        ${tags ? `<div class="expo-hcard__tags">${tags}</div>` : ''}
+        ${slogan ? `<p class="expo-hcard__slogan">${esc(slogan)}</p>` : ''}
+      </div>
+      <div class="expo-hcard__side">
+        <div class="expo-hcard__actions">${actions}</div>
+        <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="tutor" data-search-id="${item.id}">상세</button>
+        ${compare}
+      </div>
     </article>`;
 }
 
