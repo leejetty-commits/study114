@@ -571,8 +571,11 @@ function renderBasicStudyRoomRow(item, opts) {
         ${renderMedia(item.image_path, item.study_room_name, 'list')}
         ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
       </div>
-      <div class="expo-hcard__main">
-        <h3 class="expo-hcard__name">${esc(item.study_room_name || '')}</h3>
+      <div class="expo-hcard__body">
+        <div class="expo-hcard__top">
+          <h3 class="expo-hcard__name">${esc(item.study_room_name || '')}</h3>
+          <p class="expo-hcard__price">${esc(formatMonthlyWon(item.price_amount))}</p>
+        </div>
         <p class="expo-hcard__loc">${esc(locationLabel || '')}</p>
         <ul class="expo-hcard__meta">
           ${renderHcardMetaItem('과목', item.main_subject_note)}
@@ -582,12 +585,13 @@ function renderBasicStudyRoomRow(item, opts) {
         </ul>
         ${tags ? `<div class="expo-hcard__tags">${tags}</div>` : ''}
         ${slogan ? `<p class="expo-hcard__slogan">${esc(slogan)}</p>` : ''}
-        <div class="expo-hcard__actions">${actions}</div>
-      </div>
-      <div class="expo-hcard__side">
-        <p class="expo-hcard__price">${esc(formatMonthlyWon(item.price_amount))}</p>
-        <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="study_room" data-search-id="${item.id}">상세</button>
-        ${compare}
+        <div class="expo-hcard__foot">
+          <div class="expo-hcard__actions">${actions}</div>
+          <div class="expo-hcard__foot-side">
+            <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="study_room" data-search-id="${item.id}">상세</button>
+            ${compare}
+          </div>
+        </div>
       </div>
     </article>`;
   }
@@ -653,8 +657,11 @@ function renderBasicTutorRow(item, opts) {
         ${renderMedia(item.image_path, item.tutor_display_name, 'list')}
         ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
       </div>
-      <div class="expo-hcard__main">
-        <h3 class="expo-hcard__name">${nameLine}</h3>
+      <div class="expo-hcard__body">
+        <div class="expo-hcard__top">
+          <h3 class="expo-hcard__name">${nameLine}</h3>
+          <p class="expo-hcard__price">${esc(formatTutorFeeCard(item))}</p>
+        </div>
         <p class="expo-hcard__loc">${esc(locationLabel || '')}</p>
         <ul class="expo-hcard__meta">
           ${renderHcardMetaItem('과목', item.main_subject_note)}
@@ -668,12 +675,13 @@ function renderBasicTutorRow(item, opts) {
         </ul>
         ${tags ? `<div class="expo-hcard__tags">${tags}</div>` : ''}
         ${slogan ? `<p class="expo-hcard__slogan">${esc(slogan)}</p>` : ''}
-        <div class="expo-hcard__actions">${actions}</div>
-      </div>
-      <div class="expo-hcard__side">
-        <p class="expo-hcard__price">${esc(formatTutorFeeCard(item))}</p>
-        <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="tutor" data-search-id="${item.id}">상세</button>
-        ${compare}
+        <div class="expo-hcard__foot">
+          <div class="expo-hcard__actions">${actions}</div>
+          <div class="expo-hcard__foot-side">
+            <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="tutor" data-search-id="${item.id}">상세</button>
+            ${compare}
+          </div>
+        </div>
       </div>
     </article>`;
   }
