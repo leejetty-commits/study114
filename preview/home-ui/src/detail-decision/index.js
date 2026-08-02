@@ -73,6 +73,18 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
     });
   });
 
+  root.querySelectorAll('[data-action="search-open-detail"]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const kind = btn.getAttribute('data-search-kind');
+      const id = Number(btn.getAttribute('data-search-id'));
+      if (kind !== 'study_room' && kind !== 'tutor' && kind !== 'student') return;
+      const item = kind === 'student' ? getStudentItem?.(id) || resolveDetailItem('student', id) : undefined;
+      openDetailDecision({ kind, id, viewer: role, onRerender, sourceRoute, item: item || undefined });
+    });
+  });
+
   root.querySelectorAll('[data-provider-id][data-provider-kind]').forEach((article) => {
     article.classList.add('p24-card--clickable');
     article.addEventListener('click', (e) => {

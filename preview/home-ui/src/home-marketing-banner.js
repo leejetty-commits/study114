@@ -208,6 +208,11 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 }
 
+/** 배너 카피 중 '공부방'·'과외쌤'만 오렌지 강조 (문구 자체는 변경 없음) */
+function accentBrandWords(text) {
+  return esc(text).replace(/공부방|과외쌤/g, (m) => `<span class="home-mkt__accent">${m}</span>`);
+}
+
 /** @param {BannerCta} cta */
 function renderCta(cta) {
   if (!cta) return '';
@@ -215,18 +220,18 @@ function renderCta(cta) {
   const cls =
     kind === 'primary' ? 'btn btn--primary home-mkt__cta' : 'btn btn--secondary home-mkt__cta home-mkt__cta--ghost';
   if (cta.external) {
-    return `<a class="${cls}" href="${esc(cta.href)}" data-util-href="${esc(cta.href)}">${esc(cta.label)}</a>`;
+    return `<a class="${cls}" href="${esc(cta.href)}" data-util-href="${esc(cta.href)}">${accentBrandWords(cta.label)}</a>`;
   }
   if (cta.href.startsWith('#')) {
     const hash = cta.href.slice(1);
     if (hash && !hash.startsWith('/') && !cta.nav) {
-      return `<a class="${cls}" href="${esc(cta.href)}">${esc(cta.label)}</a>`;
+      return `<a class="${cls}" href="${esc(cta.href)}">${accentBrandWords(cta.label)}</a>`;
     }
     const nav = cta.nav || cta.href.replace(/^#/, '');
-    return `<a class="${cls}" href="${esc(cta.href.startsWith('#/') ? cta.href : `#${nav}`)}" data-nav="${esc(nav)}">${esc(cta.label)}</a>`;
+    return `<a class="${cls}" href="${esc(cta.href.startsWith('#/') ? cta.href : `#${nav}`)}" data-nav="${esc(nav)}">${accentBrandWords(cta.label)}</a>`;
   }
   const nav = cta.nav || cta.href.replace(/^#/, '');
-  return `<a class="${cls}" href="#${esc(nav)}" data-nav="${esc(nav)}">${esc(cta.label)}</a>`;
+  return `<a class="${cls}" href="#${esc(nav)}" data-nav="${esc(nav)}">${accentBrandWords(cta.label)}</a>`;
 }
 
 /**
@@ -239,9 +244,11 @@ export function renderHomeMarketingBanner(surface) {
   if (!copy) return '';
 
   const titleHtml = copy.headlineLines?.length
-    ? copy.headlineLines.map((line) => esc(line)).join('<br />')
-    : esc(copy.headline || '');
-  const lines = (copy.lines || []).map((line) => `<p class="home-mkt__line">${esc(line)}</p>`).join('');
+    ? copy.headlineLines.map((line) => accentBrandWords(line)).join('<br />')
+    : accentBrandWords(copy.headline || '');
+  const lines = (copy.lines || [])
+    .map((line) => `<p class="home-mkt__line">${accentBrandWords(line)}</p>`)
+    .join('');
   const actions = (cfg.ctas || []).map((c) => renderCta(c)).join('');
 
   return `
@@ -251,7 +258,7 @@ export function renderHomeMarketingBanner(surface) {
         <div class="home-mkt__shade"></div>
       </div>
       <div class="home-mkt__inner">
-        <p class="home-mkt__eyebrow">${esc(copy.eyebrow)}</p>
+        <p class="home-mkt__eyebrow">${accentBrandWords(copy.eyebrow)}</p>
         <h2 class="home-mkt__title">${titleHtml}</h2>
         <div class="home-mkt__sub">${lines}</div>
         <div class="home-mkt__actions">${actions}</div>

@@ -104,6 +104,10 @@
   color: #fff !important;
 }
 
+.home-mkt__accent {
+  color: #fb923c !important;
+}
+
 /* cinema = 기본 대형 (로그인·비로그인 공통) */
 .home-mkt--cinema {
   min-height: clamp(15rem, 28vw, 19rem);

@@ -1,0 +1,436 @@
+/**
+ * 공부방찾기 · 과외쌤찾기 — Visily 톤 (바디만)
+ * 카피/필드 값은 유지, 레이아웃·표면만 조정
+ */
+
+/* ── 지도: 좌측 플로팅 카드 ── */
+.search-chrome-shell .hero-map--float-rail {
+  position: relative !important;
+  display: block !important;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.search-chrome-shell .hero-map--float-rail .hero-map__canvas,
+.search-chrome-shell .hero-map--float-rail .hero-map__surface {
+  width: 100% !important;
+  display: block;
+}
+
+.search-chrome-shell .hero-map--float-rail .hero-map__rail {
+  position: absolute !important;
+  z-index: 6;
+  left: 1rem;
+  top: 1rem;
+  bottom: auto;
+  width: min(14.5rem, calc(100% - 2rem)) !important;
+  max-width: min(14.5rem, calc(100% - 2rem)) !important;
+  flex: none !important;
+  padding: 1.15rem 1.1rem 1rem !important;
+  margin: 0;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  pointer-events: auto;
+}
+
+.search-chrome-shell .hero-map--float-rail .hero-map__dong {
+  margin: 0 0 0.35rem !important;
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: #0f172a;
+  font-family: var(--font-sans, inherit);
+}
+
+.search-chrome-shell .hero-map--float-rail .hero-map__sub {
+  margin: 0 0 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.search-chrome-shell .hero-map--float-rail .hero-map__stats {
+  margin: 0;
+  padding: 0;
+}
+
+.search-chrome-shell .hero-map--float-rail .hero-map__stats > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.search-chrome-shell .hero-map--float-rail .hero-map__stats dt {
+  padding-left: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.search-chrome-shell .hero-map--float-rail .hero-map__stats dd {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--brand-blue, #2563eb);
+}
+
+.search-chrome-shell .hero-map--float-rail .hero-map__hint {
+  margin: 0.65rem 0 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-family: var(--font-sans, inherit);
+}
+
+@media (max-width: 719px) {
+  .search-chrome-shell .hero-map--float-rail .hero-map__rail {
+    position: relative !important;
+    left: auto;
+    top: auto;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0;
+    border-radius: 0;
+    border: none !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    box-shadow: none;
+  }
+}
+
+/* ── 상세검색 3단 (1단=제목) ── */
+.search-chrome-shell .search-form--detail3 {
+  display: grid;
+  grid-template-columns: 7.25rem minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.85rem 1.25rem;
+  align-items: start;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  background: #f3f7fc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+}
+
+.search-chrome-shell .search-form--detail3 .search-form__title-col {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding-top: 0.15rem;
+}
+
+.search-chrome-shell .search-form--detail3 .search-form__title-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.35rem;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--brand-blue, #2563eb);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.search-chrome-shell .search-form--detail3 .search-form__title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--brand-blue, #2563eb);
+  letter-spacing: -0.02em;
+}
+
+.search-chrome-shell .search-form--detail3 .search-form__body-col {
+  grid-column: 2 / -1;
+  min-width: 0;
+}
+
+.search-chrome-shell .search-form--detail3 .search-section--compact {
+  margin-bottom: 0.65rem;
+}
+
+.search-chrome-shell .search-form--detail3 .search-grid--detail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem 0.85rem;
+}
+
+.search-chrome-shell .search-form--detail3 .search-field--compact .search-field__label {
+  color: #475569;
+}
+
+.search-chrome-shell .search-form--detail3 .search-field--compact .search-field__control {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.4rem;
+  min-height: 2.25rem;
+}
+
+.search-chrome-shell .search-form--detail3 .search-form__actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.search-chrome-shell .search-form--detail3 .search-expand__toggle--inline {
+  margin-right: auto;
+}
+
+.search-chrome-shell .search-form--detail3 .search-form__submit {
+  min-width: 6.5rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .search-chrome-shell .search-form--detail3 {
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+  }
+
+  .search-chrome-shell .search-form--detail3 .search-grid--detail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .search-chrome-shell .search-form--detail3 {
+    grid-template-columns: 1fr;
+  }
+
+  .search-chrome-shell .search-form--detail3 .search-form__title-col {
+    grid-row: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .search-chrome-shell .search-form--detail3 .search-form__body-col {
+    grid-column: 1;
+  }
+
+  .search-chrome-shell .search-form--detail3 .search-grid--detail {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── 베이직 리스트: 가로형 카드 ── */
+.search-chrome-shell .browse-list--table {
+  border-top: none;
+}
+
+.search-chrome-shell .expo-hcard {
+  display: grid;
+  grid-template-columns: 7.25rem minmax(0, 1fr) auto;
+  gap: 0.85rem 1rem;
+  align-items: stretch;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow: none;
+}
+
+.search-chrome-shell .expo-hcard:hover {
+  background: #fff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.search-chrome-shell .expo-hcard__media-wrap {
+  position: relative;
+  width: 7.25rem;
+  height: 7.25rem;
+  border-radius: 0.55rem;
+  overflow: hidden;
+  background: #e8eef7;
+  flex-shrink: 0;
+}
+
+.search-chrome-shell .expo-hcard__media-wrap .expo-media {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.search-chrome-shell .expo-hcard__media-wrap .expo-media--list {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+.search-chrome-shell .expo-hcard__media-wrap .expo-media img,
+.search-chrome-shell .expo-hcard__media-wrap .expo-media--placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-chrome-shell .expo-hcard__badge {
+  position: absolute;
+  left: 0.4rem;
+  top: 0.4rem;
+  z-index: 1;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  background: rgba(15, 23, 42, 0.78);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.search-chrome-shell .expo-hcard__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.search-chrome-shell .expo-hcard__name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.search-chrome-shell .expo-hcard__gender {
+  display: inline-block;
+  margin-right: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.search-chrome-shell .expo-hcard__loc {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.search-chrome-shell .expo-hcard__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-chrome-shell .expo-hcard__meta-item {
+  font-size: 0.75rem;
+  color: #334155;
+}
+
+.search-chrome-shell .expo-hcard__k {
+  margin-right: 0.25rem;
+  font-weight: 700;
+  color: #64748b;
+  font-size: 0.6875rem;
+}
+
+.search-chrome-shell .expo-hcard__v {
+  font-weight: 600;
+}
+
+.search-chrome-shell .expo-hcard__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+}
+
+.search-chrome-shell .expo-hcard__tag {
+  display: inline-flex;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.search-chrome-shell .expo-hcard__slogan {
+  margin: 0.1rem 0 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-chrome-shell .expo-hcard__actions {
+  margin-top: auto;
+  padding-top: 0.35rem;
+}
+
+.search-chrome-shell .expo-hcard__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.45rem;
+  min-width: 6.5rem;
+  padding-top: 0.1rem;
+}
+
+.search-chrome-shell .expo-hcard__price {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--brand-blue, #2563eb);
+  line-height: 1.2;
+  text-align: right;
+}
+
+.search-chrome-shell .expo-hcard__detail {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.search-chrome-shell .expo-hcard__detail:hover {
+  color: var(--brand-blue, #2563eb);
+}
+
+.search-chrome-shell .expo-hcard .expo-compare-chip {
+  margin-top: auto;
+}
+
+@media (max-width: 720px) {
+  .search-chrome-shell .expo-hcard {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+  }
+
+  .search-chrome-shell .expo-hcard__media-wrap {
+    width: 5.5rem;
+    height: 5.5rem;
+  }
+
+  .search-chrome-shell .expo-hcard__side {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
+    padding-top: 0;
+  }
+}

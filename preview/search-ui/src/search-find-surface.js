@@ -343,7 +343,8 @@ function renderBasicRows(fields, state, compact = false) {
   const row1 = fields.filter((f) => f.basicRow === 1);
   const row2 = fields.filter((f) => f.basicRow === 2);
   if (compact) {
-    return `<div class="search-grid search-grid--compact">${row1.map((f) => renderField(f, state, { compact: true })).join('')}</div>`;
+    const all = [...row1, ...row2];
+    return `<div class="search-grid search-grid--compact search-grid--detail">${all.map((f) => renderField(f, state, { compact: true })).join('')}</div>`;
   }
   return `
     <p class="search-row-label">1줄 · 핵심</p>
@@ -489,9 +490,10 @@ export function renderCompactFindForm(tab, state, options = {}) {
 
   const formHtml = hideSearchForm
     ? ''
-    : `
+    : isHome
+      ? `
     <form class="${formClass}" ${formAttr}>
-      ${isHome ? '<legend class="parent-home-find__legend">조건 검색</legend>' : ''}
+      <legend class="parent-home-find__legend">조건 검색</legend>
       <section class="search-section search-section--compact">
         ${renderBasicRows(basicFields, state, true)}
       </section>
@@ -512,6 +514,38 @@ export function renderCompactFindForm(tab, state, options = {}) {
         </button>
         <button type="reset" class="btn btn--secondary btn--sm">초기화</button>
         <button type="submit" class="btn btn--primary btn--sm">검색</button>
+      </div>
+    </form>`
+      : `
+    <form class="search-form search-form--compact search-form--detail3" ${formAttr}>
+      <aside class="search-form__title-col" aria-label="상세검색">
+        <span class="search-form__title-ico" aria-hidden="true">⌕</span>
+        <strong class="search-form__title">상세검색</strong>
+      </aside>
+      <div class="search-form__body-col">
+        <section class="search-section search-section--compact">
+          ${renderBasicRows(basicFields, state, true)}
+        </section>
+        ${
+          state.expanded
+            ? `
+        <section class="search-section search-section--expanded">
+          <div class="search-grid search-grid--compact search-grid--detail">${expandedFields.map((f) => renderField(f, state, { compact: true })).join('')}</div>
+        </section>`
+            : ''
+        }
+        <div class="search-form__actions-row">
+          <button type="button" class="search-expand__toggle search-expand__toggle--inline" data-action="toggle-expanded" aria-expanded="${state.expanded}">
+            ${state.expanded ? '필터 접기' : '상세 필터'}
+          </button>
+          <button type="reset" class="btn btn--secondary">초기화</button>
+          <button type="submit" class="btn btn--primary search-form__submit">검색</button>
+          ${
+            state.expanded
+              ? `<button type="button" class="btn btn--secondary btn--sm" data-action="apply-expanded">적용</button>`
+              : ''
+          }
+        </div>
       </div>
     </form>`;
 
