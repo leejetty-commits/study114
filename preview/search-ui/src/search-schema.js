@@ -77,6 +77,7 @@ export const SEARCH_TABS = {
       { key: 'lesson_format', label: '수업형태', tier: 'expanded', db: 'students.lesson_format', input: 'select', optionsKey: 'lesson_format' },
       { key: 'student_gender_group', label: '그룹 구성', tier: 'expanded', groupOnly: true, db: 'students.student_gender_group', input: 'select', optionsKey: 'student_gender_group' },
       { key: 'teaching_style', label: '희망 강의스타일', tier: 'expanded', db: 'student_preferred_teaching_style_badges', input: 'chips', optionsKey: 'teaching_style' },
+      { key: 'preferred_tutor_gender', label: '희망 과외쌤 성별', tier: 'expanded', db: 'students.preferred_tutor_gender', input: 'select', optionsKey: 'preferred_tutor_gender' },
     ],
   },
 };

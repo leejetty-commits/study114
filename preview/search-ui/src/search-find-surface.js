@@ -251,6 +251,29 @@ function renderChips(optionsKey, name) {
 }
 
 /**
+ * @param {FindSurfaceState} state
+ * @returns {'tutor'|'study_room'}
+ */
+function resolveStudentSearchHope(state) {
+  if (state.studentHopeType === 'study_room' || state.studentHopeType === 'tutor') {
+    return state.studentHopeType;
+  }
+  // 7.18: 학생찾기 기본은 과외쌤 맥락(시)
+  return 'tutor';
+}
+
+/**
+ * 희망 유형에 따른 지역 입력축 — 공부방=동/단지, 과외쌤(·both)=시
+ * @param {FindSurfaceState} state
+ * @param {string} [lessonTypeValue]
+ */
+function resolveStudentRegionInput(state, lessonTypeValue) {
+  const raw = String(lessonTypeValue || state.studentHopeType || '').trim();
+  if (raw === 'study_room') return 'region';
+  return 'city';
+}
+
+/**
  * @param {import('./search-schema.js').SEARCH_TABS.room.fields[0]} field
  * @param {FindSurfaceState} state
  * @param {{ compact?: boolean }} [opts]
@@ -270,7 +293,9 @@ function renderField(field, state, opts = {}) {
     const selected =
       field.key === 'lesson_format' && field.optionsKey === 'lesson_format'
         ? state.studentLessonFormat
-        : '';
+        : field.key === 'preferred_lesson_type'
+          ? resolveStudentSearchHope(state)
+          : '';
     const selectOpts = Object.entries(OPTION_LABELS[field.optionsKey] || {})
       .map(
         ([value, label]) =>
@@ -280,7 +305,7 @@ function renderField(field, state, opts = {}) {
     return `
       <label class="search-field${compact ? ' search-field--compact' : ''}">
         <span class="search-field__label">${esc(field.label)} ${dbHint}</span>
-        <select class="search-field__control" name="${esc(name)}" ${field.key === 'lesson_format' ? 'data-lesson-format-select' : ''}>
+        <select class="search-field__control" name="${esc(name)}" ${field.key === 'lesson_format' ? 'data-lesson-format-select' : ''}${field.key === 'preferred_lesson_type' ? ' data-preferred-lesson-type' : ''}>
           <option value="">선택</option>${selectOpts}
         </select>
       </label>`;
@@ -325,17 +350,21 @@ function renderField(field, state, opts = {}) {
       </label>`;
   }
 
+  const inputKind =
+    field.key === 'preferred_region'
+      ? resolveStudentRegionInput(state)
+      : field.input;
   const placeholders = {
     region: '동/행정동 · 단지',
     complex: '단지명',
-    city: '시/구',
+    city: '시 (예: 서울시)',
     text: '입력',
   };
 
   return `
-    <label class="search-field${compact ? ' search-field--compact' : ''}">
+    <label class="search-field${compact ? ' search-field--compact' : ''}"${field.key === 'preferred_region' ? ' data-student-region-field' : ''}>
       <span class="search-field__label">${esc(field.label)} ${dbHint}</span>
-      <input type="text" class="search-field__control" name="${esc(name)}" placeholder="${esc(placeholders[field.input] || '')}" />
+      <input type="text" class="search-field__control" name="${esc(name)}" placeholder="${esc(placeholders[inputKind] || '')}" data-region-axis="${esc(inputKind)}" />
     </label>`;
 }
 
@@ -741,6 +770,23 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
       if (state().studentLessonFormat !== undefined) {
         state().studentLessonFormat = lessonFormatSelect.value || 'one_on_one';
       }
+      rerender();
+    });
+  }
+
+  const hopeTypeSelect = root.querySelector('[data-preferred-lesson-type]');
+  if (hopeTypeSelect) {
+    hopeTypeSelect.addEventListener('change', () => {
+      const v = String(hopeTypeSelect.value || '').trim();
+      if (v === 'tutor' || v === 'study_room') {
+        state().studentHopeType = v;
+        state().hopeTypeResolved = true;
+        writeStoredHopeType(v);
+        const guestFallback =
+          v === 'study_room' ? GUEST_DEFAULT_REGIONS.room : GUEST_DEFAULT_REGIONS.student;
+        state().activeRegionLabel = resolveFindDefaultRegion(v, guestFallback);
+      }
+      // both/빈값: 지역 UI는 시(과외) 축 유지 · 희망유형 상태만 재렌더
       rerender();
     });
   }

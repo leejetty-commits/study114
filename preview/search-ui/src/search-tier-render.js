@@ -161,7 +161,7 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
     guest,
     viewerRole,
     sourceRoute: 'search',
-    showCompare: !selfPreview,
+    showCompare: tab === 'student' ? false : !selfPreview,
     showWish: !selfPreview,
   };
   const homeTierTag = regionLabel || (mode === 'region' ? '지역 피드' : '검색 결과');

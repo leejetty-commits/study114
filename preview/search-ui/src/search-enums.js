@@ -62,9 +62,9 @@ export const GENDER_GROUP_LABELS = {
 };
 
 export const PREFERRED_LESSON_TYPE_LABELS = {
-  tutor: '과외',
+  tutor: '과외쌤',
   study_room: '공부방',
-  both: '과외+공부방',
+  both: '과외쌤+공부방',
 };
 
 export const FACILITY_LABELS = {
@@ -87,6 +87,13 @@ export const STUDENT_GENDER_GROUP_LABELS = {
   mixed: '남여',
 };
 
+/** 13장 §5 — 희망 과외쌤 성별 (유료 상세등록 축) */
+export const PREFERRED_TUTOR_GENDER_LABELS = {
+  female: '여',
+  male: '남',
+  any: '무관',
+};
+
 export const OPTION_LABELS = {
   school_level: SCHOOL_LEVEL_LABELS,
   study_room_place: STUDY_ROOM_PLACE_LABELS,
@@ -104,6 +111,7 @@ export const OPTION_LABELS = {
   facility: FACILITY_LABELS,
   lesson_format: LESSON_FORMAT_LABELS,
   student_gender_group: STUDENT_GENDER_GROUP_LABELS,
+  preferred_tutor_gender: PREFERRED_TUTOR_GENDER_LABELS,
   detail_completion: {
     basic_only: '기본만',
     expanded_in_progress: '상세 진행중',
