@@ -60,15 +60,15 @@ export function isTutorRegPath(hashPath) {
 export function tutorRegScreenTitle(screenId) {
   const map = {
     'P21-01': '과외 프로필 목록',
-    'P21-02': '과외쌤 운영',
+    'P21-02': '등록 현황',
     'P21-03a': '기본정보',
     'P21-03b': '상세정보',
-    'P21-04': '미리보기·공개',
+    'P21-04': '공개하기',
     'P21-05': '학생 접근·쪽지',
     'P21-06': '노출 상품',
     'P21-07': '숨김·삭제',
   };
-  return map[screenId] || '과외쌤 운영 관리';
+  return map[screenId] || '내 등록';
 }
 
 /** @param {number} id */
@@ -86,10 +86,21 @@ export function tutorListTabPath(tab) {
   return tab === 'all' ? BASE : `${BASE}/tab/${tab}`;
 }
 
-/** 21장 §3-1 — reg-mgmt 메뉴 순서 */
+/**
+ * 내 등록 2차 탭 (좌측 중첩 메뉴 금지 · 본문 상단만)
+ * access/exposure는 등록 현황 보조 섹션·별도 경로로 유지
+ */
+export const TUTOR_REG_TOP_TABS = [
+  { key: 'hub', label: '등록 현황' },
+  { key: 'basic', label: '기본정보' },
+  { key: 'detail', label: '상세정보' },
+  { key: 'publish', label: '공개하기' },
+];
+
+/** @deprecated 좌측 중첩 메뉴용 — 상단 탭(TUTOR_REG_TOP_TABS)으로 대체 */
 export const TUTOR_REG_MENUS = [
   { key: 'access', label: '학생 접근·쪽지', screenId: 'P21-05' },
-  { key: 'publish', label: '미리보기·공개', screenId: 'P21-04' },
+  { key: 'publish', label: '공개하기', screenId: 'P21-04' },
   { key: 'basic', label: '기본정보', screenId: 'P21-03a' },
   { key: 'detail', label: '상세정보', screenId: 'P21-03b' },
   { key: 'exposure', label: '노출 상품', screenId: 'P21-06' },

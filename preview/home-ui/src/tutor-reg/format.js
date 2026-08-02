@@ -337,28 +337,43 @@ export function getExposureMatrix(tutor, readiness) {
 /** @param {TutorRecord} tutor */
 export function getHubCtas(tutor) {
   const readiness = getPublishReadiness(tutor);
-  const incomplete = tutor.profile_status === 'draft' || !readiness.canPublish;
 
-  if (incomplete) {
+  if (tutor.profile_status === 'published') {
     return [
-      { label: '기본정보 보강', path: 'basic', primary: true },
-      { label: '상세정보 보강', path: 'detail', primary: false },
-      { label: '미리보기·공개', path: 'publish', primary: false },
+      { label: '활동 정보 보강하기', path: 'detail', primary: true },
+      { label: '학생 접근·쪽지', path: 'access', primary: false },
     ];
   }
   if (tutor.profile_status === 'hidden') {
     return [
-      { label: '다시 공개', path: 'publish', primary: true },
-      { label: '학생 접근·쪽지', path: 'access', primary: false },
-      { label: '학생 목록 보기', external: '#/mypage/student-review', primary: false },
+      { label: '공개 신청하기', path: 'publish', primary: true },
+      { label: '활동 정보 보강하기', path: 'detail', primary: false },
     ];
   }
+  // 저장중·미공개: 시안 CTA 2개만
   return [
-    { label: '학생 접근·쪽지', path: 'access', primary: true },
-    { label: '찜 목록', path: 'student_review', external: '#/mypage/student-review?from=access', primary: false },
-    { label: '학생 목록 보기', path: 'student_search', external: '#/mypage/student-review', primary: false },
-    { label: '이용권 확인', path: 'plans', external: '#/mypage/plans', primary: false },
+    {
+      label: '활동 정보 보강하기',
+      path: readiness.detailRecommended ? 'detail' : 'basic',
+      primary: true,
+    },
+    { label: '공개 신청하기', path: 'publish', primary: false },
   ];
+}
+
+/** 히어로용 필수 인증 축 (신뢰정보 중 핵심 4) */
+export function getRequiredCertGauge(tutor) {
+  const items = [
+    { ok: !!tutor.university_name, label: '학교명' },
+    { ok: !!tutor.university_status, label: '학적상태' },
+    { ok: tutor.education_doc_submitted, label: '학력 제출자료' },
+    { ok: tutor.career_doc_submitted, label: '경력 제출자료' },
+  ];
+  return {
+    done: items.filter((i) => i.ok).length,
+    total: items.length,
+    items,
+  };
 }
 
 /** @param {{ done: number, total: number, label: string }} g */

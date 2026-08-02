@@ -28,7 +28,9 @@ function renderBreadcrumb(currentPath, title, role) {
   if (primary && primary.path !== '/mypage/home') {
     parts.push({ label: primary.label, path: primary.path });
   }
-  if (title && title !== parts.at(-1)?.label) {
+  // 내 등록 하위는 breadcrumb=위치, h1=화면명으로 분리 (중복 금지)
+  const skipTitleInCrumb = currentPath.startsWith('/mypage/registrations/');
+  if (!skipTitleInCrumb && title && title !== parts.at(-1)?.label) {
     parts.push({ label: title });
   }
 

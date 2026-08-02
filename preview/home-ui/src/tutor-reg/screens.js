@@ -1,13 +1,11 @@
 import {
   P21_LIST_TABS,
-  P21_GAUGE_TITLES,
   P21_ACCESS_CTA,
 } from './tutor-reg-copy.js';
 import {
   LIFECYCLE_FOOTNOTE_REG,
   LIFECYCLE_PUBLISH_CONFIRM_DIRECT,
   LIFECYCLE_PUBLISH_CONFIRM_NOTE,
-  publishReadinessLabel,
 } from '../lifecycle-copy.js';
 import { renderBrowseList, renderExposureBox } from '../exposure-render.js';
 import { TUTOR_REGISTER_URL } from '../nav-config.js';
@@ -17,7 +15,7 @@ import {
   tutorHubPath,
   tutorSectionPath,
   tutorListTabPath,
-  TUTOR_REG_MENUS,
+  TUTOR_REG_TOP_TABS,
 } from './router.js';
 import {
   formatTutorSummaryLine,
@@ -27,12 +25,11 @@ import {
   tutorUiDeepLink,
   getExposureMatrix,
   getAccessMatrix,
-  getMatchingVisibility,
   getThreeGauges,
   getHubCtas,
   getUnlockCards,
-  getStudentListUrl,
   getProductApplyHint,
+  getRequiredCertGauge,
 } from './format.js';
 import {
   getTutorsByTab,
@@ -52,95 +49,23 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
-const PHASE_STEPS = [
-  { key: 'basic', label: '기본정보' },
-  { key: 'detail', label: '상세정보' },
-  { key: 'publish', label: '미리보기·공개' },
-  { key: 'access', label: '학생 접근·쪽지' },
-];
-
-/** @param {import('./store.js').TutorRecord} tutor @param {string} activeSection */
-function renderPhaseStepper(tutor, activeSection) {
-  if (activeSection === 'hub') return '';
-  const stepIndex = PHASE_STEPS.findIndex((s) => s.key === activeSection);
-  const progressPct = stepIndex >= 0 ? Math.round(((stepIndex + 1) / PHASE_STEPS.length) * 100) : 0;
-
-  const items = PHASE_STEPS.map((step, i) => {
-    const href = tutorSectionPath(tutor.id, /** @type {any} */ (step.key));
-    const isActive = activeSection === step.key;
-    const readiness = getPublishReadiness(tutor);
-    const isDone =
-      (step.key === 'basic' && tutor.has_primary_subject && tutor.tutor_display_name) ||
-      (step.key === 'detail' && tutor.detail_completion_status === 'expanded_complete') ||
-      (step.key === 'publish' && tutor.profile_status === 'published') ||
-      (step.key === 'access' && tutor.profile_status === 'published');
-    const state = isActive ? 'is-active' : isDone ? 'is-done' : '';
-    const arrow = i < PHASE_STEPS.length - 1 ? '<span class="p19-stepper__arrow" aria-hidden="true">›</span>' : '';
-    return `
-      <a href="#${href}" class="p19-stepper__step ${state}" data-p21-nav="${href}">
-        <span class="p19-stepper__index">${isDone && !isActive ? '✓' : i + 1}</span>
-        <span class="p19-stepper__label">${esc(step.label)}</span>
-      </a>${arrow}`;
-  }).join('');
-
-  const currentLabel = PHASE_STEPS.find((s) => s.key === activeSection)?.label || '';
-
-  return `
-    <div class="p19-stepper-wrap">
-      <div class="p19-progress-mobile" role="progressbar" aria-valuenow="${progressPct}" aria-valuemin="0" aria-valuemax="100">
-        <div class="p19-progress-mobile__track">
-          <div class="p19-progress-mobile__fill" style="width: ${progressPct}%"></div>
-        </div>
-        <span class="p19-progress-mobile__label">${esc(currentLabel)} · ${stepIndex + 1}/${PHASE_STEPS.length}</span>
-      </div>
-      <nav class="p19-stepper" aria-label="운영 단계">${items}</nav>
-    </div>`;
-}
-
 /** @param {import('./store.js').TutorRecord} tutor @param {string} activeSection @param {string} bodyHtml */
 function renderTutorShell(tutor, activeSection, bodyHtml) {
-  const readiness = getPublishReadiness(tutor);
-  const navItems = TUTOR_REG_MENUS.map((m) => {
-    const href = tutorSectionPath(tutor.id, /** @type {any} */ (m.key));
-    const active = activeSection === m.key ? ' is-active' : '';
-    return `<a href="#${href}" class="p19-sidebar-nav__link${active}" data-p21-nav="${href}">${esc(m.label)}</a>`;
+  const tabKey = ['hub', 'basic', 'detail', 'publish'].includes(activeSection)
+    ? activeSection
+    : 'hub';
+
+  const tabs = TUTOR_REG_TOP_TABS.map((t) => {
+    const href =
+      t.key === 'hub' ? tutorHubPath(tutor.id) : tutorSectionPath(tutor.id, /** @type {any} */ (t.key));
+    const active = tabKey === t.key ? ' is-active' : '';
+    return `<a href="#${href}" class="p21-reg-tabs__link${active}" data-p21-nav="${href}" role="tab" aria-selected="${tabKey === t.key}">${esc(t.label)}</a>`;
   }).join('');
 
-  const hubActive = activeSection === 'hub' ? ' is-active' : '';
-  const readinessText = publishReadinessLabel(readiness.canPublish, readiness.missing.length);
-  const paidBadge = isPaidProvider() ? 'paid' : 'free';
-  const memos = getMemoCreditsRemaining();
-
   return `
-    <div class="p19-frame">
-      <aside class="p19-sidebar" aria-label="과외쌤 운영">
-        <div class="p19-sidebar__top">
-          <a href="#/mypage/registrations/tutors" class="p19-back" data-p21-nav="/mypage/registrations/tutors">← 목록</a>
-          <span class="p19-sidebar__readiness mypage-badge${readiness.canPublish ? ' p19-readiness--ok' : ' p19-readiness--pending'}">${esc(readinessText)}</span>
-        </div>
-        <div class="p19-student-card">
-          <div class="p19-student-card__avatar" aria-hidden="true">${esc((tutor.tutor_display_name || '?').charAt(0))}</div>
-          <div class="p19-student-card__body">
-            <strong class="p19-student-card__name">${esc(tutor.tutor_display_name)}</strong>
-            <span class="mypage-badge mypage-badge--${tutor.profile_status}">${esc(profileStatusLabel(tutor.profile_status))}</span>
-            <p class="p19-student-card__meta">${esc(formatTutorSummaryLine(tutor))}</p>
-            <p class="p19-student-card__meta p21-access-badge">${esc(paidBadge)} · 메모권 ${memos}회</p>
-          </div>
-        </div>
-        <nav class="p19-sidebar-nav" aria-label="과외쌤 운영 메뉴">
-          <a href="#${tutorHubPath(tutor.id)}" class="p19-sidebar-nav__link p19-sidebar-nav__link--overview${hubActive}" data-p21-nav="${tutorHubPath(tutor.id)}">운영 홈</a>
-          ${navItems}
-          <a href="#/plans/positions?provider_type=tutor&provider_id=${tutor.id}" class="p19-sidebar-nav__link" data-nav="/plans/positions?provider_type=tutor&provider_id=${tutor.id}">유료·상품</a>
-        </nav>
-        <div class="p19-sidebar-status">
-          <span class="p19-sidebar-status__label">공개 준비</span>
-          <span class="p19-sidebar-status__value${readiness.canPublish ? ' is-ready' : ''}">${readiness.doneCount}/${readiness.totalCount}</span>
-        </div>
-      </aside>
-      <div class="p19-frame__body">
-        ${renderPhaseStepper(tutor, activeSection)}
-        ${bodyHtml}
-      </div>
+    <div class="p21-reg-frame">
+      <nav class="p21-reg-tabs" aria-label="내 등록 메뉴" role="tablist">${tabs}</nav>
+      <div class="p21-reg-frame__body">${bodyHtml}</div>
     </div>`;
 }
 
@@ -247,28 +172,6 @@ function renderList(tab) {
     </section>`;
 }
 
-/** @param {{ done: number, total: number, items: { ok: boolean, label: string }[] }} g @param {string} title */
-function renderGaugeBlock(g, title) {
-  const pct = g.total ? Math.round((g.done / g.total) * 100) : 0;
-  const items = g.items
-    .map(
-      (i) =>
-        `<li class="p21-gauge__item${i.ok ? ' is-ok' : ''}"><span>${i.ok ? '✓' : '△'}</span> ${esc(i.label)}</li>`,
-    )
-    .join('');
-  return `
-    <div class="p21-gauge">
-      <div class="p21-gauge__head">
-        <span class="p21-gauge__title">${esc(title)}</span>
-        <span class="p21-gauge__count">${g.done}/${g.total}</span>
-      </div>
-      <div class="p21-gauge__bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
-        <div class="p21-gauge__fill" style="width: ${pct}%"></div>
-      </div>
-      <ul class="p21-gauge__list">${items}</ul>
-    </div>`;
-}
-
 /** @param {ReturnType<typeof getAccessMatrix>[number][]} rows */
 function renderMatrixRows(rows, lockedClass = 'p20-matrix') {
   return rows
@@ -332,35 +235,41 @@ function renderProviderSubToggle() {
     </div>`;
 }
 
-/** @param {import('./store.js').TutorRecord} tutor */
-function renderHubDiagnosis(tutor, readiness) {
-  const paid = isPaidProvider();
-  const memos = getMemoCreditsRemaining();
-  if (tutor.profile_status === 'draft' && !readiness.canPublish) {
-    return {
-      text: `저장중 · 공개 준비 ${readiness.doneCount}/${readiness.totalCount} · 학생에게 먼저 메모하려면 유료 권한 필요`,
-      tone: 'warn',
-    };
-  }
-  if (tutor.profile_status === 'draft' && readiness.canPublish) {
-    return { text: '공개 준비가 완료되었습니다. 미리보기 후 공개할 수 있습니다.', tone: 'success' };
-  }
-  if (tutor.profile_status === 'published') {
-    const match = getMatchingVisibility(tutor);
-    return {
-      text: `공개중 · ${match.status}${paid ? ` · 메모권 ${memos}회 남음` : ' · 콜드 메모는 유료 권한 필요'}`,
-      tone: 'success',
-    };
-  }
-  if (tutor.profile_status === 'hidden') {
-    return { text: '숨김 상태입니다. 언제든 다시 공개할 수 있습니다.', tone: 'muted' };
-  }
-  return { text: '과외 프로필 상태를 확인해 주세요.', tone: 'info' };
+/** @param {{ ok: boolean, label: string }[]} items */
+function renderChecklist(items) {
+  return `<ul class="p21-check-grid">${items
+    .map(
+      (i) =>
+        `<li class="p21-check-grid__item${i.ok ? ' is-done' : ''}"><span class="p21-check-grid__ico" aria-hidden="true">${i.ok ? '✓' : '○'}</span><span>${esc(i.label)}</span></li>`,
+    )
+    .join('')}</ul>`;
+}
+
+/**
+ * @param {string} title
+ * @param {string} bodyHtml
+ * @param {{ open?: boolean, hint?: string }} [opts]
+ */
+function renderAccordion(title, bodyHtml, opts = {}) {
+  return `
+    <details class="p21-acc"${opts.open ? ' open' : ''}>
+      <summary class="p21-acc__summary">
+        <span class="p21-acc__title">${esc(title)}</span>
+        ${opts.hint ? `<span class="p21-acc__hint">${esc(opts.hint)}</span>` : ''}
+      </summary>
+      <div class="p21-acc__body">${bodyHtml}</div>
+    </details>`;
+}
+
+function renderHubHeroSentence(tutor) {
+  if (tutor.profile_status === 'published') return '현재 프로필이 공개 상태입니다';
+  if (tutor.profile_status === 'hidden') return '현재 프로필이 숨김 상태입니다';
+  return '현재 프로필이 미공개 상태입니다';
 }
 
 /** @param {import('./store.js').TutorRecord} tutor */
 function renderHubCtaBlock(tutor) {
-  const ctas = getHubCtas(tutor);
+  const ctas = getHubCtas(tutor).slice(0, 2);
   return ctas
     .map((c) => {
       if (c.external) {
@@ -378,73 +287,74 @@ function renderHubCtaBlock(tutor) {
 function renderHub(tutor) {
   const readiness = getPublishReadiness(tutor);
   const gauges = getThreeGauges(tutor);
+  const certs = getRequiredCertGauge(tutor);
   const accessMatrix = getAccessMatrix(tutor);
   const exposureMatrix = getExposureMatrix(tutor, readiness);
-  const matching = getMatchingVisibility(tutor);
-  const diag = renderHubDiagnosis(tutor, readiness);
-
-  const readinessList = readiness.missing.length
-    ? `<ul class="p19-alert__list">${readiness.missing
-        .slice(0, 5)
-        .map((m) => `<li>${esc(m)}</li>`)
-        .join('')}</ul>`
-    : '';
+  const badge = profileStatusLabel(tutor.profile_status);
+  const readinessDone = readiness.doneCount;
+  const readinessTotal = readiness.totalCount;
 
   const body = `
-    <div class="p19-hub-body p21-hub-body">
-      <div class="p19-alert p19-alert--${diag.tone} p21-hub-alert">
-        <p class="p19-alert__text">${esc(diag.text)}</p>
-        ${!readiness.canPublish && tutor.profile_status !== 'published' ? readinessList : ''}
+    <div class="p21-hub p21-hub--ops">
+      <section class="p21-hero" aria-label="등록 상태 요약">
+        <span class="p21-hero__badge">${esc(badge)}</span>
+        <h2 class="p21-hero__title">${esc(renderHubHeroSentence(tutor))}</h2>
+        <div class="p21-hero__stats">
+          <p>공개 준비도: <strong>${readinessDone} / ${readinessTotal} 항목 완료</strong></p>
+          <p>필수 인증: <strong>${certs.done} / ${certs.total} 완료</strong></p>
+        </div>
+        <div class="p21-hero__actions">${renderHubCtaBlock(tutor)}</div>
+      </section>
+
+      <div class="p21-mid-grid" aria-label="진행 축 요약">
+        <article class="p21-mid-card">
+          <div class="p21-mid-card__text">
+            <h3 class="p21-mid-card__title">공개 준비도</h3>
+            <p class="p21-mid-card__desc">필수 정보 ${readinessTotal}개 중 ${readinessDone}개 입력됨</p>
+          </div>
+          <span class="p21-mid-card__ico" aria-hidden="true">◎</span>
+        </article>
+        <article class="p21-mid-card">
+          <div class="p21-mid-card__text">
+            <h3 class="p21-mid-card__title">프로필·신뢰 요약</h3>
+            <p class="p21-mid-card__desc">서류 인증 ${gauges.trustInfo.total}개 중 ${gauges.trustInfo.done}개 완료</p>
+          </div>
+          <span class="p21-mid-card__ico" aria-hidden="true">▣</span>
+        </article>
       </div>
 
-      <div class="p21-hub-block" data-hub="readiness">
-        <h3 class="p21-block__title">공개 준비 ${readiness.doneCount}/${readiness.totalCount}</h3>
-        ${
-          readiness.missing.length
-            ? `<ul class="p19-alert__list">${readiness.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`
-            : '<p class="p20-hint">필수 항목이 모두 충족되었습니다.</p>'
-        }
-      </div>
-
-      <div class="p21-gauge-grid p21-hub-block" data-hub="gauges">
-        ${renderGaugeBlock(gauges.completion, P21_GAUGE_TITLES.completion)}
-        ${renderGaugeBlock(gauges.trustInfo, P21_GAUGE_TITLES.trustInfo)}
-        ${renderGaugeBlock(gauges.exposureAccess, P21_GAUGE_TITLES.exposureAccess)}
-      </div>
-
-      <div class="p21-hub-block" data-hub="access">
-        <h3 class="p21-block__title">접근·쪽지 매트릭스</h3>
-        <div class="p20-matrix">${renderMatrixRows(accessMatrix)}</div>
-      </div>
-
-      <div class="p21-hub-block" data-hub="matching">
-        <h3 class="p21-block__title">매칭 가시성</h3>
-        <ul class="p21-match-conditions">${matching.conditions.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
-        <p class="p21-match-status${matching.limited ? ' is-limited' : ' is-ok'}">${esc(matching.status)}</p>
-        <a href="${getStudentListUrl()}" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/student-review">${esc(P21_ACCESS_CTA.studentSearch)} →</a>
-      </div>
-
-      <div class="p21-hub-block" data-hub="exposure">
-        <h3 class="p21-block__title">노출 상품 현황</h3>
-        <div class="p20-matrix">${renderExposureMatrixRows(exposureMatrix)}</div>
-        ${
-          readiness.qualityHints.length
-            ? `<p class="p20-hint">${esc(readiness.qualityHints.join(' · '))}</p>`
-            : ''
-        }
-      </div>
-
-      <div class="p21-hub-cta p21-hub-block" data-hub="cta">${renderHubCtaBlock(tutor)}</div>
-
-      <div class="p19-summary-grid p21-hub-block" data-hub="summary">
-        <dl class="p19-summary-card"><dt>공개 상태</dt><dd>${esc(profileStatusLabel(tutor.profile_status))}</dd></dl>
-        <dl class="p19-summary-card"><dt>상세등록</dt><dd>${esc(detailStatusLabel(tutor.detail_completion_status))}</dd></dl>
-        <dl class="p19-summary-card"><dt>유료</dt><dd>${isPaidProvider() ? '이용 중' : '이용 안 함'}</dd></dl>
-        <dl class="p19-summary-card"><dt>메모권</dt><dd>${getMemoCreditsRemaining()}회</dd></dl>
+      <div class="p21-acc-stack">
+        ${renderAccordion(
+          '프로필 완성도 상세',
+          `<div class="p21-acc__meter"><span>${gauges.completion.done}/${gauges.completion.total}</span>
+            <div class="p21-acc__bar" role="progressbar" aria-valuenow="${Math.round((gauges.completion.done / gauges.completion.total) * 100)}" aria-valuemin="0" aria-valuemax="100">
+              <i style="width:${Math.round((gauges.completion.done / gauges.completion.total) * 100)}%"></i>
+            </div>
+          </div>
+          ${renderChecklist(gauges.completion.items)}`,
+          { open: true },
+        )}
+        ${renderAccordion('신뢰정보(학력/자격 등)', renderChecklist(gauges.trustInfo.items))}
+        ${renderAccordion(
+          '노출 준비도 / 상품 연동 상태',
+          `<div class="p20-matrix p20-matrix--soft">${renderExposureMatrixRows(exposureMatrix)}</div>
+           ${
+             readiness.qualityHints.length
+               ? `<p class="p21-acc__note">${esc(readiness.qualityHints.join(' · '))}</p>`
+               : ''
+           }`,
+        )}
+        ${renderAccordion(
+          '접근·쪽지 매트릭스 상세',
+          `<p class="p21-acc__note">회원 등급·공개 상태에 따른 이용 가능 여부를 확인합니다.</p>
+           <div class="p20-matrix p20-matrix--soft">${renderMatrixRows(accessMatrix)}</div>
+           <p class="p21-acc__note"><a href="#${tutorSectionPath(tutor.id, 'access')}" data-p21-nav="${tutorSectionPath(tutor.id, 'access')}">학생 접근·쪽지 화면 열기 →</a></p>`,
+          { hint: '이용 가능 여부 확인' },
+        )}
       </div>
     </div>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--hub">${renderTutorShell(tutor, 'hub', body)}</section>`;
+  return `<section class="mypage-panel p19-panel p19-panel--hub p19-panel--hub-ops">${renderTutorShell(tutor, 'hub', body)}</section>`;
 }
 
 /** @param {import('./store.js').TutorRecord} tutor @param {'basic'|'detail'} kind */
