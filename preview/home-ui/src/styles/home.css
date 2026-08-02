@@ -349,7 +349,7 @@ img {
 
   .home-body:has(.home-sidebar--guest),
   .home-body.home-body--with-promo {
-    grid-template-columns: minmax(0, 1fr) 12rem;
+    grid-template-columns: minmax(0, 1fr) 14rem;
     gap: var(--space-2);
   }
 }

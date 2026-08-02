@@ -34,9 +34,6 @@ function renderMypageLoginGate(message) {
   const mainHtml = `
     <div class="site-gate-wrap">
       ${panel}
-      <p class="site-gate-wrap__foot">
-        <a href="#/guest" class="btn btn--secondary" data-nav="/guest">홈으로</a>
-      </p>
     </div>
   `;
   return renderAppShellWithPromo({

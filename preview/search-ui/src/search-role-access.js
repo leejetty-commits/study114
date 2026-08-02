@@ -10,7 +10,7 @@ import { visibleSearchTabsForRole } from '../../shared/site-nav-config.js';
 /** @typedef {import('./state.js').ViewerRole} ViewerRole */
 
 /**
- * @deprecated 찾기 페이지 h1은 SEARCH_TABS[tab].label 사용 (공부방찾기/과외쌤찾기/학생찾기)
+ * @deprecated 찾기 페이지 h1은 SEARCH_TABS[tab].label 사용 (공부방 찾기/과외쌤 찾기/학생찾기)
  * @type {Record<ViewerRole, string>}
  */
 export const ROLE_SEARCH_HEADING = {
@@ -24,16 +24,16 @@ export const ROLE_SEARCH_HEADING = {
 /** @type {Partial<Record<ViewerRole, Partial<Record<SearchTab, string>>>>} */
 export const ROLE_SEARCH_TAB_LABELS = {
   parent: {
-    room: '공부방찾기',
-    tutor: '과외쌤찾기',
+    room: '공부방 찾기',
+    tutor: '과외쌤 찾기',
     student: '학생찾기',
   },
   study_room: {
-    room: '공부방찾기',
+    room: '공부방 찾기',
     student: '학생찾기',
   },
   tutor: {
-    tutor: '과외쌤찾기',
+    tutor: '과외쌤 찾기',
     student: '학생찾기',
   },
 };

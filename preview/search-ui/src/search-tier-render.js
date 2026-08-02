@@ -101,7 +101,7 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
  */
 function renderProviderFlatResults(kind, items, opts = {}, regionLabel = '', mode = 'search') {
   const tab = kind === 'study_room' ? 'room' : 'tutor';
-  const findLabel = kind === 'study_room' ? '공부방찾기 결과' : '과외쌤찾기 결과';
+  const findLabel = kind === 'study_room' ? '공부방 찾기 결과' : '과외쌤 찾기 결과';
   const loc = String(regionLabel || '').trim();
   if (!items.length) {
     return `<div class="search-flat-results search-flat-results--empty" data-surface="search-flat">${renderSearchZeroState(tab, mode)}</div>`;

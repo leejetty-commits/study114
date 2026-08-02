@@ -265,27 +265,51 @@ body {
 }
 
 .guest-gate {
-  padding: var(--space-6);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-lg);
-  background: var(--surface-page);
+  padding: var(--space-6) var(--space-6) var(--space-5);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  border-radius: calc(var(--radius-lg) + 2px);
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 10px 28px -12px rgba(15, 23, 42, 0.28),
+    0 4px 10px -4px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
+  font-family: var(--font-sans);
+  color: var(--gray-700);
+}
+
+.guest-gate__eyebrow,
+.guest-gate__title,
+.guest-gate__lead,
+.guest-gate__list {
+  font-family: var(--font-sans);
 }
 
 .guest-gate__eyebrow {
   margin: 0 0 var(--space-2);
-  font-family: var(--font-sans);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-semibold);
+  line-height: var(--leading-relaxed);
   color: var(--brand-blue);
   letter-spacing: 0.02em;
 }
 
 .guest-gate__title {
   margin: 0 0 var(--space-3);
+  font-size: var(--fs-5);
+  font-weight: var(--fw-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.02em;
+  color: var(--gray-900);
 }
 
 .guest-gate__lead {
   margin: 0 0 var(--space-4);
+  font-size: var(--fs-3);
+  font-weight: var(--fw-regular, 400);
+  line-height: var(--leading-relaxed);
   color: var(--gray-600);
 }
 
@@ -293,8 +317,8 @@ body {
   margin: 0 0 var(--space-5);
   padding-left: 1.25rem;
   color: var(--gray-700);
-  font-family: var(--font-sans);
-  font-size: var(--fs-2);
+  font-size: var(--fs-3);
+  font-weight: var(--fw-regular, 400);
   line-height: var(--leading-relaxed);
 }
 
@@ -305,6 +329,8 @@ body {
 .guest-gate__actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   gap: var(--space-3);
 }
 
@@ -551,7 +577,7 @@ body {
   .search-body.home-body--with-promo,
   .register-body.home-body--with-promo,
   .auth-body.home-body--with-promo {
-    grid-template-columns: minmax(0, 1fr) 12rem !important;
+    grid-template-columns: minmax(0, 1fr) 14rem !important;
     gap: var(--space-2);
   }
 }

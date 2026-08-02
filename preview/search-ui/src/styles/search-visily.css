@@ -129,13 +129,15 @@
 }
 
 /* ── 상세검색 3단 ── */
+.search-form.search-form--compact.search-form--detail3,
 .search-form--detail3 {
   display: grid;
   grid-template-columns: 7.25rem minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0.65rem 1.25rem;
+  gap: 0.5rem 1.25rem;
   align-items: start;
-  padding: 0.9rem 1.15rem 0.75rem;
-  margin-bottom: 1.25rem;
+  align-content: start;
+  padding: 0.75rem 1.15rem 0.35rem !important;
+  margin-bottom: 1rem;
   background: #f3f7fc;
   border: 1px solid #e2e8f0;
   border-radius: 0.75rem;
@@ -143,12 +145,13 @@
 
 .search-form--detail3 .search-form__title-col {
   grid-column: 1;
-  grid-row: 1 / span 4;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.35rem;
   padding-top: 0.15rem;
+  align-self: start;
 }
 
 .search-form--detail3 .search-form__title-ico {
@@ -174,16 +177,24 @@
 .search-form--detail3 .search-form__body-col {
   grid-column: 2 / -1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .search-form--detail3 .search-section--compact {
-  margin-bottom: 0.45rem;
+  margin-bottom: 0 !important;
+}
+
+.search-form--detail3 .search-section--expanded {
+  margin-bottom: 0;
+  margin-top: 0;
 }
 
 .search-form--detail3 .search-grid--detail {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem 0.85rem;
+  gap: 0.5rem 0.85rem;
 }
 
 /* 주력과목·가격대·교육청 등록 등 라벨 통일 */
@@ -214,9 +225,8 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
-  margin-top: 0.15rem;
-  margin-bottom: 0;
-  padding-bottom: 0;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .search-form--detail3 .search-expand__toggle--inline {
@@ -240,9 +250,10 @@
 }
 
 @media (max-width: 640px) {
+  .search-form.search-form--compact.search-form--detail3,
   .search-form--detail3 {
     grid-template-columns: 1fr;
-    padding: 0.85rem 0.9rem 0.65rem;
+    padding: 0.7rem 0.9rem 0.3rem !important;
   }
 
   .search-form--detail3 .search-form__title-col {
@@ -271,7 +282,7 @@
 
 .expo-hcard {
   display: grid;
-  grid-template-columns: 10.5rem minmax(0, 1fr) 7.25rem;
+  grid-template-columns: 10.5rem minmax(0, 1fr) auto;
   gap: 1rem 1.15rem;
   align-items: stretch;
   padding: 1rem 1.15rem;
@@ -291,7 +302,7 @@
 .expo-hcard__media-wrap {
   position: relative;
   width: 10.5rem;
-  height: 10.5rem;
+  height: 7rem; /* 기존 대비 높이 1/3 축소 */
   border-radius: 0.7rem;
   overflow: hidden;
   background: #e8eef7;
@@ -451,16 +462,19 @@
 
 .expo-hcard__side {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.5rem;
-  min-width: 7.25rem;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: end;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  min-width: 0;
   padding-top: 0.05rem;
 }
 
 .expo-hcard__actions {
-  width: 100%;
+  width: auto;
+  flex-shrink: 0;
 }
 
 .expo-hcard__actions .item-actions {
@@ -484,6 +498,7 @@
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
+  order: 0;
 }
 
 .expo-hcard__detail:hover {
@@ -498,16 +513,17 @@
   background: #fff;
   padding: 0.3rem 0.65rem;
   font-size: 0.8125rem;
+  order: 0;
 }
 
 @media (max-width: 900px) {
   .expo-hcard {
-    grid-template-columns: 8.5rem minmax(0, 1fr) 6.5rem;
+    grid-template-columns: 8.5rem minmax(0, 1fr) auto;
   }
 
   .expo-hcard__media-wrap {
     width: 8.5rem;
-    height: 8.5rem;
+    height: 5.65rem;
   }
 }
 
@@ -520,7 +536,7 @@
 
   .expo-hcard__media-wrap {
     width: 6.5rem;
-    height: 6.5rem;
+    height: 4.35rem;
   }
 
   .expo-hcard__side {

@@ -38,10 +38,10 @@ export function renderGuestLoginGatePanel(opts) {
       : '';
 
   return `
-    <section class="guest-gate mypage-panel" aria-label="${esc(title)}">
+    <section class="guest-gate" aria-label="${esc(title)}">
       <p class="guest-gate__eyebrow">비회원 안내</p>
-      <h1 class="guest-gate__title auth-heading">${esc(title)}</h1>
-      <p class="guest-gate__lead auth-subheading">${esc(lead)}</p>
+      <h1 class="guest-gate__title">${esc(title)}</h1>
+      <p class="guest-gate__lead">${esc(lead)}</p>
       ${list}
       <div class="guest-gate__actions">
         <a href="${esc(loginHref)}" class="btn btn--primary" data-util-href="${esc(loginHref)}">${esc(primaryLabel)}</a>

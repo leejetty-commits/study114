@@ -20,7 +20,7 @@
 /** @type {Record<SearchTab, { label: string, defaultRegionHint: string, mapEnabled: boolean, fields: SearchField[] }>} */
 export const SEARCH_TABS = {
   room: {
-    label: '공부방찾기',
+    label: '공부방 찾기',
     defaultRegionHint: '내 기본 지역(동/단지) 자동 적용',
     mapEnabled: true,
     fields: [
@@ -41,7 +41,7 @@ export const SEARCH_TABS = {
     ],
   },
   tutor: {
-    label: '과외쌤찾기',
+    label: '과외쌤 찾기',
     defaultRegionHint: '내 기본 시 자동 적용',
     mapEnabled: false,
     fields: [
