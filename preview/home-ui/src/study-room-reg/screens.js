@@ -29,7 +29,6 @@ import {
   inquiryStatusLabel,
   detailStatusLabel,
   roomToExposureRow,
-  studyRoomUiDeepLink,
   getExposureMatrix,
   getExposureDetailBlocks,
   getHubCtas,
@@ -44,10 +43,13 @@ import {
   setInquiryStatus,
   getStudyRoomSummaryCounts,
 } from './store.js';
+import { saveStudyRoomBasicInline, saveStudyRoomDetailInline } from './inline-save.js';
 import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import { getStudentReviewIds } from '../student-review-store.js';
 import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
 import { studentReviewPath, getHandoffFromQuery } from '../handoff-link.js';
+import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
+import { KOREA_SIDOS } from '../../../shared/korea-sidos.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -352,54 +354,149 @@ function renderHub(room) {
   return `<section class="mypage-panel p19-panel p19-panel--hub">${renderRoomShell(room, 'hub', body)}</section>`;
 }
 
-/** @param {import('./store.js').StudyRoomRecord} room @param {'basic'|'detail'} kind */
-function renderBridgeBody(room, kind) {
-  const readiness = getPublishReadiness(room);
-  const isBasic = kind === 'basic';
-  const title = isBasic ? '기본정보' : '상세정보';
-  const editHref = isBasic
-    ? studyRoomUiDeepLink('basic', room.id, { returnSection: 'basic' })
-    : studyRoomUiDeepLink('lesson', room.id, { returnSection: 'detail' });
-
-  const summary = isBasic
-    ? `
-      <div><dt>공부방명</dt><dd>${esc(room.study_room_name || '—')}</dd></div>
-      <div><dt>지역</dt><dd>${esc(room.region_label || '—')}</dd></div>
-      <div><dt>주력과목</dt><dd>${esc(room.main_subject_note || '—')}</dd></div>
-      <div><dt>기본등록</dt><dd>${esc(detailStatusLabel(room.detail_completion_status))}</dd></div>`
-    : `
-      <div><dt>주력과목</dt><dd>${esc(room.main_subject_note || '—')}</dd></div>
-      <div><dt>월 대표 가격</dt><dd>${room.price_amount ? `${Number(room.price_amount).toLocaleString('ko-KR')}원` : '—'}</dd></div>
-      <div><dt>소개</dt><dd>${esc(room.intro_short || room.intro_long || '—')}</dd></div>
-      <div><dt>상세등록</dt><dd>${esc(detailStatusLabel(room.detail_completion_status))}</dd></div>`;
-
+/** @param {string} title @param {string} [lead] @param {string} body */
+function renderFormSection(title, lead, body) {
   return `
-    <div class="p20-bridge p20-bridge--simple">
-      <h3 class="p19-form-section__title">${title}</h3>
-      <p class="p19-form-section__lead">${
-        isBasic
-          ? '가입·기본등록으로 받은 정보입니다. 수정은 아래 버튼으로 이어서 할 수 있습니다.'
-          : '상세등록으로 입력한 정보입니다. 등록 화면에서 이어서 수정합니다.'
-      }</p>
-      <dl class="p20-bridge__summary">${summary}</dl>
-      ${
-        !readiness.canPublish
-          ? `<p class="p20-hint">공개 준비 미완료: ${esc(readiness.missing.slice(0, 3).join(', '))}${readiness.missing.length > 3 ? '…' : ''}</p>`
-          : ''
-      }
-      <div class="p19-form-actions">
-        <a href="${editHref}" class="btn btn--primary" data-same-tab-href="${editHref}">수정하기</a>
-        <a href="#${studyRoomSectionPath(room.id, 'publish')}" class="btn btn--secondary" data-p20-nav="${studyRoomSectionPath(room.id, 'publish')}">미리보기·공개 →</a>
-      </div>
-    </div>`;
+    <section class="p19-form-section">
+      <header class="p19-form-section__head">
+        <h3 class="p19-form-section__title">${esc(title)}</h3>
+        ${lead ? `<p class="p19-form-section__lead">${lead}</p>` : ''}
+      </header>
+      <div class="p19-form-section__body">${body}</div>
+    </section>`;
+}
+
+/** @param {string} [hint] @param {string} buttonsHtml */
+function renderFormFooter(hint, buttonsHtml) {
+  return `
+    <footer class="p19-form-footer">
+      ${hint ? `<p class="p19-form-footer__hint">${hint}</p>` : ''}
+      <div class="p19-form-actions">${buttonsHtml}</div>
+    </footer>`;
+}
+
+function sidoOptions(selectedLabel) {
+  const sel = String(selectedLabel || '').trim().split(/\s+/)[0];
+  return [
+    '<option value="">시·도 선택</option>',
+    ...KOREA_SIDOS.map((s) => {
+      const match = sel && (s.label === sel || s.label.startsWith(sel) || sel.startsWith(s.label));
+      return `<option value="${esc(s.label)}" ${match ? 'selected' : ''}>${esc(s.label)}</option>`;
+    }),
+  ].join('');
+}
+
+/** @param {import('./store.js').StudyRoomRecord} room */
+function renderBasicForm(room) {
+  const formBody = `
+    <form class="p19-form p20-inline-form" data-p20-form="basic" data-p20-room-id="${room.id}">
+      ${renderFormSection(
+        '기본정보',
+        '공부방명 · 노출지역 · 주력과목을 마이페이지 가운데 칸에서 바로 수정합니다.',
+        `
+        <div class="p19-field-grid p19-field-grid--2">
+          <label class="p19-field p19-field--full">
+            <span class="p19-field__label">공부방명 <em class="p19-required">필수</em></span>
+            <input class="p19-input" name="study_room_name" value="${esc(room.study_room_name || '')}" required />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">노출지역 (시·도) <em class="p19-required">필수</em></span>
+            <select class="p19-input" name="region_label" required>${sidoOptions(room.region_label || '')}</select>
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">주력과목 <em class="p19-required">필수</em></span>
+            <select class="p19-input" name="main_subject_note" required>
+              ${renderMainSubjectSelect(room.main_subject_note || '')}
+            </select>
+          </label>
+        </div>`,
+      )}
+      ${renderFormFooter(
+        '저장해도 바로 공개되지 않습니다.',
+        `<button type="submit" class="btn btn--primary">기본정보 저장</button>
+         <a href="#${studyRoomSectionPath(room.id, 'detail')}" class="btn btn--secondary" data-p20-nav="${studyRoomSectionPath(room.id, 'detail')}">상세정보로</a>
+         <a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">운영홈</a>`,
+      )}
+    </form>`;
+
+  return `<section class="mypage-panel p19-panel p19-panel--form">${renderRoomShell(room, 'basic', formBody)}</section>`;
+}
+
+/** @param {import('./store.js').StudyRoomRecord} room */
+function renderDetailForm(room) {
+  const formBody = `
+    <form class="p19-form p20-inline-form" data-p20-form="detail" data-p20-room-id="${room.id}">
+      ${renderFormSection(
+        '상세정보',
+        '수업·소개·시설을 마이페이지 가운데 칸에서 수정합니다.',
+        `
+        <div class="p19-field-grid p19-field-grid--2">
+          <label class="p19-field">
+            <span class="p19-field__label">주력과목 <em class="p19-required">필수</em></span>
+            <select class="p19-input" name="main_subject_note" required>
+              ${renderMainSubjectSelect(room.main_subject_note || '')}
+            </select>
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">월 대표 가격 <em class="p19-required">필수</em></span>
+            <input class="p19-input" type="number" name="price_amount" value="${esc(room.price_amount || '')}" required min="1" />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">슬로건</span>
+            <input class="p19-input" name="slogan" value="${esc(room.slogan || '')}" />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">특징 1</span>
+            <input class="p19-input" name="feature_1" value="${esc(room.feature_1 || '')}" />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">정원/타임</span>
+            <input class="p19-input" name="capacity_per_time" value="${esc(room.capacity_per_time || '')}" placeholder="예: 1~4명" />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">옵션</span>
+            <div class="p19-chip-group" style="margin-top:0.35rem;">
+              <label class="p19-chip${room.weekend_available ? ' is-checked' : ''}">
+                <input type="checkbox" name="weekend_available" value="1" ${room.weekend_available ? 'checked' : ''} />
+                <span>주말 가능</span>
+              </label>
+              <label class="p19-chip${room.one_on_one_available ? ' is-checked' : ''}">
+                <input type="checkbox" name="one_on_one_available" value="1" ${room.one_on_one_available ? 'checked' : ''} />
+                <span>1:1 가능</span>
+              </label>
+            </div>
+          </label>
+          <label class="p19-field p19-field--full">
+            <span class="p19-field__label">짧은 소개</span>
+            <textarea class="p19-input p19-textarea" name="intro_short" rows="2">${esc(room.intro_short || '')}</textarea>
+          </label>
+          <label class="p19-field p19-field--full">
+            <span class="p19-field__label">상세 소개</span>
+            <textarea class="p19-input p19-textarea" name="intro_long" rows="4">${esc(room.intro_long || '')}</textarea>
+          </label>
+          <label class="p19-field p19-field--full">
+            <span class="p19-field__label">시설 요약</span>
+            <textarea class="p19-input p19-textarea" name="facility_summary" rows="2">${esc(room.facility_summary || '')}</textarea>
+          </label>
+        </div>`,
+      )}
+      ${renderFormFooter(
+        '저장 후 미리보기·공개에서 공개 상태를 확인하세요.',
+        `<button type="submit" class="btn btn--primary">상세정보 저장</button>
+         <a href="#${studyRoomSectionPath(room.id, 'publish')}" class="btn btn--secondary" data-p20-nav="${studyRoomSectionPath(room.id, 'publish')}">미리보기·공개</a>
+         <a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">운영홈</a>`,
+      )}
+    </form>`;
+
+  return `<section class="mypage-panel p19-panel p19-panel--form">${renderRoomShell(room, 'detail', formBody)}</section>`;
 }
 
 function renderBasicBridge(room) {
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderRoomShell(room, 'basic', renderBridgeBody(room, 'basic'))}</section>`;
+  return renderBasicForm(room);
 }
 
 function renderDetailBridge(room) {
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderRoomShell(room, 'detail', renderBridgeBody(room, 'detail'))}</section>`;
+  return renderDetailForm(room);
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
@@ -541,6 +638,50 @@ export function bindStudyRoomRegEvents(root, rerender) {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       window.location.hash = el.getAttribute('data-p20-nav') || '/mypage/registrations/study-rooms';
+    });
+  });
+
+  root.querySelectorAll('[data-p20-form]').forEach((form) => {
+    form.querySelectorAll('.p19-chip input[type="checkbox"]').forEach((input) => {
+      input.addEventListener('change', () => {
+        input.closest('.p19-chip')?.classList.toggle('is-checked', input.checked);
+      });
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = Number(form.dataset.p20RoomId);
+      const kind = form.getAttribute('data-p20-form');
+      const fd = new FormData(form);
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) btn.disabled = true;
+      try {
+        if (kind === 'basic') {
+          await saveStudyRoomBasicInline(id, {
+            study_room_name: String(fd.get('study_room_name') || ''),
+            main_subject_note: String(fd.get('main_subject_note') || ''),
+            region_label: String(fd.get('region_label') || ''),
+          });
+        } else if (kind === 'detail') {
+          await saveStudyRoomDetailInline(id, {
+            main_subject_note: String(fd.get('main_subject_note') || ''),
+            price_amount: Number(fd.get('price_amount') || 0),
+            slogan: String(fd.get('slogan') || ''),
+            feature_1: String(fd.get('feature_1') || ''),
+            capacity_per_time: String(fd.get('capacity_per_time') || ''),
+            intro_short: String(fd.get('intro_short') || ''),
+            intro_long: String(fd.get('intro_long') || ''),
+            facility_summary: String(fd.get('facility_summary') || ''),
+            weekend_available: fd.get('weekend_available') === '1',
+            one_on_one_available: fd.get('one_on_one_available') === '1',
+          });
+        }
+        rerender();
+      } catch (err) {
+        alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     });
   });
 

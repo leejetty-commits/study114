@@ -20,9 +20,7 @@ import {
 import {
   formatTutorSummaryLine,
   profileStatusLabel,
-  detailStatusLabel,
   tutorToExposureRow,
-  tutorUiDeepLink,
   getExposureMatrix,
   getAccessMatrix,
   getThreeGauges,
@@ -42,8 +40,16 @@ import {
   isPaidProvider,
   getMemoCreditsRemaining,
 } from './store.js';
+import { saveTutorBasicInline, saveTutorDetailInline } from './inline-save.js';
 import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import { previewState } from '../state.js';
+import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
+import {
+  getCityUnits,
+  renderTutorRegionSlot,
+  bindTutorRegionSlotEvents,
+  collectTutorRegionSlots,
+} from '../../../shared/tutor-region-slots.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -269,7 +275,7 @@ function renderHubHeroSentence(tutor) {
 
 /** @param {import('./store.js').TutorRecord} tutor */
 function renderHubCtaBlock(tutor) {
-  const ctas = getHubCtas(tutor).slice(0, 2);
+  const ctas = getHubCtas(tutor).slice(0, 3);
   return ctas
     .map((c) => {
       if (c.external) {
@@ -357,58 +363,237 @@ function renderHub(tutor) {
   return `<section class="mypage-panel p19-panel p19-panel--hub p19-panel--hub-ops">${renderTutorShell(tutor, 'hub', body)}</section>`;
 }
 
-/** @param {import('./store.js').TutorRecord} tutor @param {'basic'|'detail'} kind */
-function renderBridgeBody(tutor, kind) {
-  const readiness = getPublishReadiness(tutor);
-  const isBasic = kind === 'basic';
-  const title = isBasic ? '기본정보' : '상세정보';
-  const editHref = isBasic
-    ? tutorUiDeepLink('basic', tutor.id, { returnSection: 'basic' })
-    : tutorUiDeepLink('detail', tutor.id, { returnSection: 'detail' });
-
-  const summary = isBasic
-    ? `
-      <div><dt>표시명</dt><dd>${esc(tutor.tutor_display_name || '—')}</dd></div>
-      <div><dt>과외지역</dt><dd>${esc(tutor.primary_region_label || tutor.location_label || '—')}</dd></div>
-      <div><dt>주력과목</dt><dd>${esc(tutor.main_subject_note || '—')}</dd></div>
-      <div><dt>기본등록</dt><dd>${esc(detailStatusLabel(tutor.detail_completion_status))}</dd></div>`
-    : `
-      <div><dt>주력과목</dt><dd>${esc(tutor.main_subject_note || '—')}</dd></div>
-      <div><dt>월 과외비</dt><dd>${tutor.preferred_fee_amount ? `${Number(tutor.preferred_fee_amount).toLocaleString('ko-KR')}원` : '—'}</dd></div>
-      <div><dt>강의장소</dt><dd>${esc((tutor.lesson_places || []).join(', ') || '—')}</dd></div>
-      <div><dt>출신대학</dt><dd>${esc(tutor.university_name || '—')}</dd></div>
-      <div><dt>전공</dt><dd>${esc(tutor.major_name || '—')}</dd></div>
-      <div><dt>소개</dt><dd>${esc(tutor.intro_short || tutor.intro_long || '—')}</dd></div>
-      <div><dt>연락 가능 시간</dt><dd>${esc(tutor.contact_time_note || '—')}</dd></div>
-      <div><dt>상세등록</dt><dd>${esc(detailStatusLabel(tutor.detail_completion_status))}</dd></div>`;
-
+/** @param {string} title @param {string} [lead] @param {string} body */
+function renderFormSection(title, lead, body) {
   return `
-    <div class="p20-bridge p20-bridge--simple">
-      <h3 class="p19-form-section__title">${title}</h3>
-      <p class="p19-form-section__lead">${
-        isBasic
-          ? '가입·기본등록으로 받은 정보입니다. 수정은 아래 버튼으로 이어서 할 수 있습니다.'
-          : '상세등록으로 입력한 수업·학력·연락 정보입니다. 한 화면에서 한꺼번에 수정합니다.'
-      }</p>
-      <dl class="p20-bridge__summary">${summary}</dl>
-      ${
-        !readiness.canPublish
-          ? `<p class="p20-hint">공개 준비 미완료: ${esc(readiness.missing.slice(0, 3).join(', '))}${readiness.missing.length > 3 ? '…' : ''}</p>`
-          : ''
-      }
-      <div class="p19-form-actions">
-        <a href="${editHref}" class="btn btn--primary" data-same-tab-href="${editHref}">수정하기</a>
-        <a href="#${tutorSectionPath(tutor.id, 'publish')}" class="btn btn--secondary" data-p21-nav="${tutorSectionPath(tutor.id, 'publish')}">미리보기·공개 →</a>
-      </div>
-    </div>`;
+    <section class="p19-form-section">
+      <header class="p19-form-section__head">
+        <h3 class="p19-form-section__title">${esc(title)}</h3>
+        ${lead ? `<p class="p19-form-section__lead">${lead}</p>` : ''}
+      </header>
+      <div class="p19-form-section__body">${body}</div>
+    </section>`;
+}
+
+/** @param {string} [hint] @param {string} buttonsHtml */
+function renderFormFooter(hint, buttonsHtml) {
+  return `
+    <footer class="p19-form-footer">
+      ${hint ? `<p class="p19-form-footer__hint">${hint}</p>` : ''}
+      <div class="p19-form-actions">${buttonsHtml}</div>
+    </footer>`;
+}
+
+function tutorRegionSlotsFromRecord(tutor) {
+  const units = getCityUnits([]);
+  const label = String(tutor.primary_region_label || tutor.location_label || '').trim();
+  let regionId = tutor.primary_region_id || '';
+  if (!regionId && label) {
+    const hit =
+      units.find((u) => u.label === label) ||
+      units.find((u) => `${u.sido_name} ${u.label}` === label) ||
+      units.find((u) => label.includes(u.label));
+    regionId = hit?.id || '';
+  }
+  return [
+    { region_id: regionId, scope_type: 'city', is_primary: true },
+    { region_id: '', scope_type: 'city', is_primary: false },
+    { region_id: '', scope_type: 'city', is_primary: false },
+  ];
+}
+
+function displayLabelForRegionId(regionId, units) {
+  const u = (units || []).find((x) => String(x.id) === String(regionId));
+  if (!u) return '';
+  return u.kind === 'metro' ? u.label : `${u.sido_name} ${u.label}`;
+}
+
+const LESSON_PLACE_OPTS = [
+  { value: 'student_home_visit', label: '학생자택방문' },
+  { value: 'public_place', label: '공공장소' },
+  { value: 'tutor_home', label: '강사자택' },
+];
+
+const FEE_BASIS_OPTS = [
+  { value: 'monthly_by_weekly_schedule', label: '주간 일정 기준 월액' },
+  { value: 'monthly_by_total_sessions', label: '월 총 횟수 기준' },
+];
+
+const GENDER_GROUP_OPTS = [
+  { value: 'male', label: '남학생' },
+  { value: 'female', label: '여학생' },
+  { value: 'mixed', label: '혼성' },
+];
+
+const STUDENT_COUNT_OPTS = [
+  { value: 'solo', label: '단독' },
+  { value: 'two', label: '2명' },
+  { value: 'three', label: '3명' },
+  { value: 'four_plus', label: '4명 이상' },
+];
+
+/** @param {import('./store.js').TutorRecord} tutor */
+function renderBasicForm(tutor) {
+  const units = getCityUnits([]);
+  const slots = tutorRegionSlotsFromRecord(tutor);
+  const formBody = `
+    <form class="p19-form p21-inline-form" data-p21-form="basic" data-p21-tutor-id="${tutor.id}">
+      ${renderFormSection(
+        '기본정보 · 과외지역',
+        '표시명·주력과목과 과외지역(시 단위)을 한 화면에서 수정합니다. 광역시는 그 자체, 도는 시까지 선택합니다.',
+        `
+        <div class="register-grid-2">
+          <div class="register-basic-col">
+            <div class="register-basic-fields">
+              <label class="p19-field">
+                <span class="p19-field__label">표시명 <em class="p19-required">필수</em></span>
+                <input class="p19-input" name="tutor_display_name" value="${esc(tutor.tutor_display_name || '')}" required />
+              </label>
+              <label class="p19-field">
+                <span class="p19-field__label">주력과목 <em class="p19-required">필수</em></span>
+                <select class="p19-input" name="main_subject_note" required>
+                  ${renderMainSubjectSelect(tutor.main_subject_note || '')}
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="register-basic-col">
+            <p class="p19-field__label" style="margin:0 0 var(--space-2);">과외지역</p>
+            <p class="p19-field__hint" style="margin-bottom:var(--space-3);">최대 3곳 · 대표 1곳. 기본 단위는 「시」입니다.</p>
+            ${slots.map((slot, i) => renderTutorRegionSlot(slot, i, units, { namePrefix: 'p21_' })).join('')}
+          </div>
+        </div>`,
+      )}
+      ${renderFormFooter(
+        '저장해도 바로 공개되지 않습니다. 공개는 「미리보기·공개」에서 합니다.',
+        `<button type="submit" class="btn btn--primary">기본정보 저장</button>
+         <a href="#${tutorSectionPath(tutor.id, 'detail')}" class="btn btn--secondary" data-p21-nav="${tutorSectionPath(tutor.id, 'detail')}">상세정보로</a>
+         <a href="#${tutorHubPath(tutor.id)}" class="btn btn--ghost" data-p21-nav="${tutorHubPath(tutor.id)}">운영홈</a>`,
+      )}
+    </form>`;
+
+  return `<section class="mypage-panel p19-panel p19-panel--form">${renderTutorShell(tutor, 'basic', formBody)}</section>`;
+}
+
+/** @param {import('./store.js').TutorRecord} tutor */
+function renderDetailForm(tutor) {
+  const places = tutor.lesson_places || [];
+  const placeChecks = LESSON_PLACE_OPTS.map(
+    (p) => `
+      <label class="p19-chip${places.includes(p.value) ? ' is-checked' : ''}">
+        <input type="checkbox" name="lesson_places" value="${esc(p.value)}" ${places.includes(p.value) ? 'checked' : ''} />
+        <span>${esc(p.label)}</span>
+      </label>`,
+  ).join('');
+  const feeBasis = tutor.fee_basis_type || 'monthly_by_weekly_schedule';
+  const gender = tutor.student_gender_group || 'mixed';
+  const count = tutor.student_count_group || 'solo';
+
+  const formBody = `
+    <form class="p19-form p21-inline-form" data-p21-form="detail" data-p21-tutor-id="${tutor.id}">
+      ${renderFormSection(
+        '수업 · 가격',
+        '상세등록 항목을 마이페이지 가운데 칸에서 수정합니다.',
+        `
+        <div class="p19-field-grid p19-field-grid--2">
+          <label class="p19-field">
+            <span class="p19-field__label">주력과목 <em class="p19-required">필수</em></span>
+            <select class="p19-input" name="main_subject_note" required>
+              ${renderMainSubjectSelect(tutor.main_subject_note || '')}
+            </select>
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">월 과외비 <em class="p19-required">필수</em></span>
+            <input class="p19-input" type="number" name="preferred_fee_amount" value="${esc(tutor.preferred_fee_amount || '')}" required min="1" />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">산정방식</span>
+            <select class="p19-input" name="fee_basis_type">
+              ${FEE_BASIS_OPTS.map((o) => `<option value="${o.value}" ${feeBasis === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
+            </select>
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">주 횟수</span>
+            <input class="p19-input" name="lessons_per_week" value="${esc(tutor.lessons_per_week || '')}" />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">1회(분)</span>
+            <input class="p19-input" name="minutes_per_lesson" value="${esc(tutor.minutes_per_lesson || '')}" />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">지도 대상 성별</span>
+            <select class="p19-input" name="student_gender_group">
+              ${GENDER_GROUP_OPTS.map((o) => `<option value="${o.value}" ${gender === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
+            </select>
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">수업인원</span>
+            <select class="p19-input" name="student_count_group">
+              ${STUDENT_COUNT_OPTS.map((o) => `<option value="${o.value}" ${count === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
+            </select>
+          </label>
+          <label class="p19-field p19-field--full">
+            <span class="p19-field__label">강의장소 <em class="p19-required">필수</em></span>
+            <div class="p19-chip-group">${placeChecks}</div>
+          </label>
+          <label class="p19-field p19-field--full">
+            <span class="p19-field__label">가격 설명</span>
+            <textarea class="p19-input p19-textarea" name="fee_description" rows="2">${esc(tutor.fee_description || '')}</textarea>
+          </label>
+        </div>`,
+      )}
+      ${renderFormSection(
+        '학력 · 소개 · 연락',
+        '',
+        `
+        <div class="p19-field-grid p19-field-grid--2">
+          <label class="p19-field">
+            <span class="p19-field__label">출신대학</span>
+            <input class="p19-input" name="university_name" value="${esc(tutor.university_name || '')}" />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">전공</span>
+            <input class="p19-input" name="major_name" value="${esc(tutor.major_name || '')}" />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">학적상태</span>
+            <input class="p19-input" name="university_status" value="${esc(tutor.university_status || '')}" placeholder="재학/휴학/졸업 등" />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">특징 1</span>
+            <input class="p19-input" name="feature_1" value="${esc(tutor.feature_1 || '')}" />
+          </label>
+          <label class="p19-field p19-field--full">
+            <span class="p19-field__label">짧은 소개</span>
+            <textarea class="p19-input p19-textarea" name="intro_short" rows="2">${esc(tutor.intro_short || '')}</textarea>
+          </label>
+          <label class="p19-field p19-field--full">
+            <span class="p19-field__label">상세 소개</span>
+            <textarea class="p19-input p19-textarea" name="intro_long" rows="4">${esc(tutor.intro_long || '')}</textarea>
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">연락 가능 시간</span>
+            <input class="p19-input" name="contact_time_note" value="${esc(tutor.contact_time_note || '')}" />
+          </label>
+        </div>`,
+      )}
+      ${renderFormFooter(
+        '저장 후 운영홈·미리보기에서 공개 상태를 확인하세요.',
+        `<button type="submit" class="btn btn--primary">상세정보 저장</button>
+         <a href="#${tutorSectionPath(tutor.id, 'publish')}" class="btn btn--secondary" data-p21-nav="${tutorSectionPath(tutor.id, 'publish')}">미리보기·공개</a>
+         <a href="#${tutorHubPath(tutor.id)}" class="btn btn--ghost" data-p21-nav="${tutorHubPath(tutor.id)}">운영홈</a>`,
+      )}
+    </form>`;
+
+  return `<section class="mypage-panel p19-panel p19-panel--form">${renderTutorShell(tutor, 'detail', formBody)}</section>`;
 }
 
 function renderBasicBridge(tutor) {
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderTutorShell(tutor, 'basic', renderBridgeBody(tutor, 'basic'))}</section>`;
+  return renderBasicForm(tutor);
 }
 
 function renderDetailBridge(tutor) {
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderTutorShell(tutor, 'detail', renderBridgeBody(tutor, 'detail'))}</section>`;
+  return renderDetailForm(tutor);
 }
 
 /** @param {import('./store.js').TutorRecord} tutor */
@@ -627,6 +812,67 @@ export function bindTutorRegEvents(root, rerender) {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       window.location.hash = el.getAttribute('data-p21-nav') || '/mypage/registrations/tutors';
+    });
+  });
+
+  root.querySelectorAll('[data-p21-form]').forEach((form) => {
+    if (form.getAttribute('data-p21-form') === 'basic') {
+      bindTutorRegionSlotEvents(form, getCityUnits([]));
+    }
+    form.querySelectorAll('.p19-chip input[type="checkbox"]').forEach((input) => {
+      input.addEventListener('change', () => {
+        input.closest('.p19-chip')?.classList.toggle('is-checked', input.checked);
+      });
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = Number(form.dataset.p21TutorId);
+      const kind = form.getAttribute('data-p21-form');
+      const fd = new FormData(form);
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) btn.disabled = true;
+      try {
+        if (kind === 'basic') {
+          const units = getCityUnits([]);
+          const slots = collectTutorRegionSlots(form);
+          const primary = slots.find((s) => s.is_primary && s.region_id) || slots.find((s) => s.region_id);
+          if (!primary?.region_id) {
+            throw new Error('과외지역을 1곳 이상 선택해 주세요. (도는 시까지 선택)');
+          }
+          await saveTutorBasicInline(id, {
+            tutor_display_name: String(fd.get('tutor_display_name') || ''),
+            main_subject_note: String(fd.get('main_subject_note') || ''),
+            primary_region_label: displayLabelForRegionId(primary.region_id, units),
+            primary_region_id: primary.region_id,
+            saved_regions: slots,
+          });
+        } else if (kind === 'detail') {
+          await saveTutorDetailInline(id, {
+            main_subject_note: String(fd.get('main_subject_note') || ''),
+            preferred_fee_amount: Number(fd.get('preferred_fee_amount') || 0),
+            fee_basis_type: String(fd.get('fee_basis_type') || ''),
+            lessons_per_week: String(fd.get('lessons_per_week') || ''),
+            minutes_per_lesson: String(fd.get('minutes_per_lesson') || ''),
+            fee_description: String(fd.get('fee_description') || ''),
+            student_gender_group: String(fd.get('student_gender_group') || ''),
+            student_count_group: String(fd.get('student_count_group') || ''),
+            lesson_places: fd.getAll('lesson_places').map(String),
+            university_name: String(fd.get('university_name') || ''),
+            major_name: String(fd.get('major_name') || ''),
+            university_status: String(fd.get('university_status') || ''),
+            feature_1: String(fd.get('feature_1') || ''),
+            intro_short: String(fd.get('intro_short') || ''),
+            intro_long: String(fd.get('intro_long') || ''),
+            contact_time_note: String(fd.get('contact_time_note') || ''),
+          });
+        }
+        rerender();
+      } catch (err) {
+        alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     });
   });
 

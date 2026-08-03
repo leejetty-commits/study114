@@ -345,24 +345,23 @@ export function getHubCtas(tutor) {
 
   if (tutor.profile_status === 'published') {
     return [
-      { label: '활동 정보 보강하기', path: 'detail', primary: true },
-      { label: '학생 접근·쪽지', path: 'access', primary: false },
+      { label: '기본정보 보정', path: 'basic', primary: false },
+      { label: '상세정보 보정', path: 'detail', primary: true },
+      { label: '미리보기·공개', path: 'publish', primary: false },
     ];
   }
   if (tutor.profile_status === 'hidden') {
     return [
       { label: '공개 신청하기', path: 'publish', primary: true },
-      { label: '활동 정보 보강하기', path: 'detail', primary: false },
+      { label: '기본정보 보정', path: 'basic', primary: false },
+      { label: '상세정보 보정', path: 'detail', primary: false },
     ];
   }
-  // 저장중·미공개: 시안 CTA 2개만
+  // 저장중·미공개
   return [
-    {
-      label: '활동 정보 보강하기',
-      path: readiness.detailRecommended ? 'detail' : 'basic',
-      primary: true,
-    },
-    { label: '공개 신청하기', path: 'publish', primary: false },
+    { label: '기본정보 보정', path: 'basic', primary: !readiness.detailRecommended },
+    { label: '상세정보 보정', path: 'detail', primary: readiness.detailRecommended },
+    { label: '미리보기·공개', path: 'publish', primary: false },
   ];
 }
 

@@ -52,8 +52,9 @@ export function getCurrentScreen() {
   const path = getCurrentPath();
   const key = path.replace(/^\/register\//, '');
   if (LEGACY_STEP_REDIRECT[key]) {
-    navigate(LEGACY_STEP_REDIRECT[key]);
-    return 'lesson';
+    const dest = LEGACY_STEP_REDIRECT[key];
+    navigate(dest);
+    return ROUTES[dest] || 'basic';
   }
   return ROUTES[path] || 'basic';
 }
@@ -64,9 +65,9 @@ export function renderPreviewToolbar(activeScreen) {
     <div class="preview-toolbar">
       <span class="preview-toolbar__label">우동공과 · 과외쌤 등록</span>
       <div class="preview-toolbar__group">
-        ${STEPS.filter((s) => s.key !== 'complete')
+        ${STEPS.filter((s) => s.key !== 'complete' && s.key !== 'regions')
           .map((s) => {
-            const isActive = s.key === activeScreen;
+            const isActive = s.key === activeScreen || (activeScreen === 'regions' && s.key === 'basic');
             return `<button type="button" class="preview-toolbar__btn ${isActive ? 'is-active' : ''}" data-nav="${s.path}">${s.label}</button>`;
           })
           .join('')}
@@ -116,9 +117,10 @@ export function renderStepIndicator(stepKey) {
   const basicDone = Boolean(registerState.basicComplete);
   const visible = basicDone
     ? STEPS.filter((s) => s.phase === 'detail')
-    : STEPS.filter((s) => s.phase);
-  const current = visible.findIndex((s) => s.key === stepKey);
-  const phase = STEPS.find((s) => s.key === stepKey)?.phase || 'detail';
+    : STEPS.filter((s) => s.phase && s.key !== 'regions');
+  const normalizedKey = stepKey === 'regions' ? 'basic' : stepKey;
+  const current = visible.findIndex((s) => s.key === normalizedKey);
+  const phase = STEPS.find((s) => s.key === normalizedKey)?.phase || 'detail';
   const phaseMeta = REGISTER_PHASES[phase];
   return `
     <div class="register-phase" aria-label="등록 단계">

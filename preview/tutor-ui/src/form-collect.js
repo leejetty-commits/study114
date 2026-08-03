@@ -19,6 +19,14 @@ export function syncRegionsFromForm(root, state) {
       is_primary: idx === primaryIdx,
     });
   });
+  while (state.saved_regions.length < 3) {
+    state.saved_regions.push({
+      region_id: '',
+      scope_type: 'city',
+      is_primary: false,
+    });
+  }
+  state.saved_regions = state.saved_regions.slice(0, 3);
 }
 
 export function syncLessonFromForm(form, state) {

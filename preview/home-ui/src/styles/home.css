@@ -4885,6 +4885,11 @@ a.sup-term-chip:hover {
 
 /* ? ?? */
 .p19-form { display: flex; flex-direction: column; gap: var(--space-4); max-width: 40rem; }
+.p21-inline-form,
+.p20-inline-form {
+  max-width: none;
+  width: 100%;
+}
 .p19-form-section {
   border: 1px solid var(--gray-200); border-radius: 0.75rem; overflow: hidden; background: #fff;
 }

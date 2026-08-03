@@ -4,7 +4,7 @@ export const REGISTER_PHASES = {
   basic: {
     label: '기본등록',
     hint: '가입 때 받은 정보가 없으면 여기서 먼저 채웁니다. 이미 있다면 건너뜁니다.',
-    stepKeys: ['basic', 'regions'],
+    stepKeys: ['basic'],
   },
   detail: {
     label: '상세등록',
@@ -15,15 +15,16 @@ export const REGISTER_PHASES = {
 
 export const STEPS = [
   { path: '/register/basic', key: 'basic', label: '기본정보', step: 1, phase: 'basic', uiStepFull: 1 },
-  { path: '/register/regions', key: 'regions', label: '과외지역', step: 2, phase: 'basic', uiStepFull: 2 },
-  { path: '/register/lesson', key: 'lesson', label: '수업·가격', step: 3, phase: 'detail', uiStepFull: 3, uiStepDetail: 1 },
-  { path: '/register/contact', key: 'contact', label: '학력·연락', step: 4, phase: 'detail', uiStepFull: 4, uiStepDetail: 2 },
-  { path: '/register/complete', key: 'complete', label: '등록완료', step: 5, phase: null },
+  { path: '/register/regions', key: 'regions', label: '과외지역', step: 1, phase: 'basic', uiStepFull: 1 },
+  { path: '/register/lesson', key: 'lesson', label: '수업·가격', step: 2, phase: 'detail', uiStepFull: 2, uiStepDetail: 1 },
+  { path: '/register/contact', key: 'contact', label: '학력·연락', step: 3, phase: 'detail', uiStepFull: 3, uiStepDetail: 2 },
+  { path: '/register/complete', key: 'complete', label: '등록완료', step: 4, phase: null },
 ];
 
 /** 옛 학력 단계 URL 호환 */
 export const LEGACY_STEP_REDIRECT = {
   career: '/register/lesson',
+  regions: '/register/basic',
 };
 
 export const PERSONAL_GENDER_OPTIONS = [

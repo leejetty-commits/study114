@@ -11,6 +11,12 @@ import { parseHashQuery } from '../../../shared/preview-links.js';
 import { resolvePostLoginUrl } from '../../../shared/auth-redirect.js';
 import { buildSidoCityOptions, KOREA_SIDOS } from '../../../shared/korea-sidos.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
+import {
+  getCityUnits,
+  renderTutorRegionSlot,
+  bindTutorRegionSlotEvents,
+  collectTutorRegionSlots,
+} from '../../../shared/tutor-region-slots.js';
 
 function esc(s) {
   if (s == null) return '';
@@ -241,28 +247,35 @@ function renderStudyRoomBasic() {
 
 function renderTutorBasic() {
   const d = signupState.basicRegister?.tutor || {};
-  const sidos = listSidoOptions();
-  const savedSido = d.activity_city || sidoFromRegionId(d.region_id) || '';
+  const units = getCityUnits(signupState.cities || []);
+  const slot = {
+    region_id: d.region_id || '',
+    scope_type: 'city',
+    is_primary: true,
+  };
   return `
     <form data-form="basic-tutor" class="basic-register">
       <p class="auth-section-title">기본등록</p>
-      <p class="form-note mb-4">표시명 · 과외지역 1 · 주력과목 1만 받습니다. 나머지는 상세등록에서 이어서 입력합니다.</p>
-      <div class="form-group">
-        <label class="form-label form-label--required" for="tutor_display_name">표시명</label>
-        ${dbField('tutors.tutor_display_name')}
-        <input class="form-input" id="tutor_display_name" name="tutor_display_name" value="${esc(d.tutor_display_name || '')}" required />
+      <p class="form-note mb-4">표시명 · 과외지역 · 주력과목을 받습니다. 광역시는 그 자체, 도는 시까지 선택합니다.</p>
+      <div class="register-grid-2">
+        <div class="register-basic-col">
+          <div class="register-basic-fields">
+            <div class="form-group form-group--full">
+              <label class="form-label form-label--required" for="tutor_display_name">표시명</label>
+              ${dbField('tutors.tutor_display_name')}
+              <input class="form-input" id="tutor_display_name" name="tutor_display_name" value="${esc(d.tutor_display_name || '')}" required />
+            </div>
+            <div class="form-group form-group--full">
+              ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '')}
+            </div>
+          </div>
+        </div>
+        <div class="register-basic-col">
+          <span class="form-label form-label--required">과외지역 1번</span>
+          ${dbField('tutor_regions.scope_type=city')}
+          ${renderTutorRegionSlot(slot, 0, units)}
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label form-label--required" for="activity_city">과외지역 1번 (시·도)</label>
-        ${dbField('tutor_regions.scope_type=city')}
-        <select class="form-input" name="activity_city" id="activity_city" required>
-          <option value="">선택</option>
-          ${sidos
-            .map((s) => `<option value="${esc(s.label)}" ${s.label === savedSido ? 'selected' : ''}>${esc(s.label)}</option>`)
-            .join('')}
-        </select>
-      </div>
-      ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '')}
       <div class="actions-stack">
         <button type="submit" class="btn btn--primary btn--block">저장 · 다음</button>
         <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
@@ -329,6 +342,10 @@ export function bindSignupBasicEvents(root) {
 
   const role = signupState.role || 'student';
   const form = root.querySelector('form[data-form^="basic-"]');
+
+  if (role === 'tutor') {
+    bindTutorRegionSlotEvents(root, getCityUnits(signupState.cities || []));
+  }
 
   function syncBasisPanels() {
     const basis = form?.querySelector('input[name="region_basis"]:checked')?.value || 'dong';
@@ -426,19 +443,22 @@ export function bindSignupBasicEvents(root) {
     }
 
     if (role === 'tutor') {
-      const city = String(data.activity_city || '').trim();
-      if (!city) {
-        alert('과외지역(시·도)을 선택해 주세요.');
+      const slots = collectTutorRegionSlots(form);
+      const primary = slots.find((s) => s.is_primary && s.region_id) || slots.find((s) => s.region_id);
+      if (!primary?.region_id) {
+        alert('과외지역을 선택해 주세요. (도는 시까지 선택)');
         return;
       }
-      const regionId = regionIdForSido(city);
-      if (!regionId) {
-        alert('선택한 시에 매핑된 지역이 없습니다.');
-        return;
-      }
-      data.region_id = regionId;
-      data.region_label = city;
-      data.activity_city = city;
+      const units = getCityUnits(signupState.cities || []);
+      const unit = units.find((u) => String(u.id) === String(primary.region_id));
+      const label = unit
+        ? unit.kind === 'metro'
+          ? unit.label
+          : `${unit.sido_name} ${unit.label}`
+        : '';
+      data.region_id = primary.region_id;
+      data.region_label = label;
+      data.activity_city = label;
     }
 
     if (role === 'study_room') {

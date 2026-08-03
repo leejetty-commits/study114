@@ -217,6 +217,19 @@
   background: #eff6ff;
 }
 
+.register-region-slot__head {
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.register-basic-col {
+  min-width: 0;
+}
+
+.register-basic-col .register-region-slot:last-child {
+  margin-bottom: 0;
+}
+
 .register-subject-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1.2fr auto;
@@ -244,11 +257,49 @@
 .register-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5) var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .register-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.register-region-slot__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.register-region-slot__fields [data-city-wrap][hidden] {
+  display: none !important;
+}
+
+.register-region-slot__fields:has([data-city-wrap][hidden]) > .form-group:first-child {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .register-region-slot__fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.register-basic-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
-@media (max-width: 720px) {
-  .register-grid-2 {
+.register-basic-fields .form-group--full,
+.register-basic-fields .p19-field--full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .register-basic-fields {
     grid-template-columns: 1fr;
   }
 }
