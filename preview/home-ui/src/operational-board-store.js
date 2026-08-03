@@ -92,11 +92,17 @@ function noticeSource() {
 }
 
 function faqSource() {
+  // 시드 FAQ(faq-1~)는 프론트 SSOT를 우선 — 운영 DB 옛 카피가 남아도 JS 배포로 반영
+  const seed = faqSeed();
+  const seedIds = new Set(seed.map((f) => f.id));
   if (isBoardApiMode()) {
     const apiRows = getOperationalPostsCache('faq').map(mapFaqPost);
-    if (apiRows.length) return apiRows;
+    if (apiRows.length) {
+      const extras = apiRows.filter((r) => !seedIds.has(r.id));
+      return [...seed, ...extras];
+    }
   }
-  return faqSeed();
+  return seed;
 }
 
 function guideSource() {

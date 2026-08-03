@@ -110,15 +110,14 @@ function renderContactLoginGate() {
   return renderPanel(
     '문의',
     'contact-login',
-    `<p class="sup-section__lead">운영팀에 직접 남기는 문의입니다. 회원 간 쪽지와 별도 채널입니다.</p>
-     <div class="sup-contact-gate">
+    `<div class="sup-contact-gate">
        <p>문의 작성·내역 확인은 <strong>로그인 후</strong> 이용할 수 있습니다.</p>
        <div class="sup-contact-gate__actions">
          <a href="${esc(href)}" class="btn btn--primary btn--sm" data-sup-external="login">로그인하고 문의하기</a>
          <a href="${esc(AUTH_UI_BASE)}/#/signup/terms" class="btn btn--secondary btn--sm" data-sup-external="login">회원가입</a>
        </div>
      </div>`,
-    { lead: '로그인 회원만 이용할 수 있습니다.' },
+    { lead: '운영팀에 직접 남기는 문의입니다. 회원 간 쪽지와 별도 채널입니다.' },
   );
 }
 
@@ -259,8 +258,7 @@ function renderContactSection() {
   return renderPanel(
     '문의',
     'contact',
-    `<p class="sup-section__lead">운영팀에 직접 남기는 문의입니다. 회원 간 쪽지와 별도 채널입니다.</p>
-     ${flashHtml}
+    `${flashHtml}
      <form class="sup-contact-form" data-sup-contact-form>
        <label class="sup-field">
          <span>문의 유형</span>
