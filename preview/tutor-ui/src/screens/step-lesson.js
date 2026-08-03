@@ -6,12 +6,9 @@ import {
   GENDER_GROUP_OPTIONS,
   STUDENT_COUNT_OPTIONS,
   AGE_BAND_OPTIONS,
-  UNIVERSITY_STATUS_OPTIONS,
-  CAREER_YEAR_BAND_OPTIONS,
-  TEACHING_STYLE_OPTIONS,
   emptySubject,
 } from '../state.js';
-import { syncLessonFromForm, syncCareerFromForm } from '../form-collect.js';
+import { syncLessonFromForm } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
@@ -65,20 +62,11 @@ export function renderLesson() {
       <span class="form-radio__label">${o.label}</span>
     </label>`,
   ).join('');
-  const badges = TEACHING_STYLE_OPTIONS.map(
-    (b) => `
-    <label class="form-check">
-      <input type="checkbox" name="teaching_style_badges" value="${b.id}" ${s.teaching_style_badges.includes(b.id) ? 'checked' : ''} />
-      <span class="form-check__label">${b.label}</span>
-    </label>`,
-  ).join('');
 
   const prevPath = s.basicComplete ? null : '/register/regions';
   const content = `
     <form data-form="lesson">
-      ${renderGuideNotice(
-        '상세등록 1단계입니다. 수업·가격과 학력·경력을 한 화면에서 채운 뒤 다음으로 넘어가세요.',
-      )}
+      ${renderGuideNotice('상세등록 1단계입니다. 수업·과목·가격을 채운 뒤 다음에서 학력·연락을 이어서 입력합니다.')}
       ${renderSectionTitle('수업 · 과목 · 가격')}
       <div class="form-group">
         <label class="form-label form-label--required" for="main_subject_note">주력과목</label>
@@ -125,42 +113,13 @@ export function renderLesson() {
         <span class="form-label form-label--required">강의장소</span>
         <div class="register-check-grid">${places}</div>
       </div>
-
-      ${renderSectionTitle('학력 · 경력 · 특징')}
-      <div class="register-grid-2">
-        <div class="form-group"><label class="form-label">출신대학</label><input class="form-input" name="university_name" value="${s.university_name}" /></div>
-        <div class="form-group"><label class="form-label">전공</label><input class="form-input" name="major_name" value="${s.major_name}" /></div>
-      </div>
-      <div class="form-group">
-        <span class="form-label">학적상태</span>
-        <div class="form-radio-group">${radios('university_status', UNIVERSITY_STATUS_OPTIONS, s.university_status)}</div>
-      </div>
-      <div class="form-group">
-        <span class="form-label">경력구간</span>
-        <div class="form-radio-group">${radios('career_year_band', CAREER_YEAR_BAND_OPTIONS, s.career_year_band)}</div>
-      </div>
-      <div class="form-group"><label class="form-label">주교재</label><input class="form-input" name="main_material_note" value="${s.main_material_note}" /></div>
-      <div class="register-grid-2">
-        <div class="form-group"><label class="form-label">특징 1</label><input class="form-input" name="feature_1" value="${s.feature_1}" /></div>
-        <div class="form-group"><label class="form-label">특징 2</label><input class="form-input" name="feature_2" value="${s.feature_2}" /></div>
-      </div>
-      <div class="form-group">
-        <label class="form-check">
-          <input type="checkbox" name="proof_document_available" ${s.proof_document_available ? 'checked' : ''} />
-          <span class="form-check__label">증빙서류 제출 가능</span>
-        </label>
-      </div>
-      <div class="form-group">
-        <span class="form-label">강의스타일</span>
-        <div class="register-check-grid">${badges}</div>
-      </div>
       <a class="register-mypage-link" href="${mypageRegistrationsUrl()}">표시명·과외지역 등 기본정보는 마이페이지에서 수정</a>
-      ${renderNavButtons(prevPath, '다음: 연락·공개')}
+      ${renderNavButtons(prevPath, '다음: 학력·연락')}
     </form>`;
   return renderRegisterShell(content, {
     stepKey: 'lesson',
-    title: '수업 · 학력',
-    subtitle: '상세등록 1/2 · 학생에게 보이는 수업 정보와 이력을 적어 주세요.',
+    title: '수업 · 가격',
+    subtitle: '상세등록 1/2 · 학생에게 보이는 수업 정보를 적어 주세요.',
   });
 }
 
@@ -174,11 +133,8 @@ export function bindLessonEvents(root) {
   });
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
-      const form = root.querySelector('[data-form="lesson"]');
-      syncLessonFromForm(form, registerState);
-      syncCareerFromForm(form, registerState);
-      await saveAndNavigate(registerState, 'lesson', null);
-      await saveAndNavigate(registerState, 'career', '/register/contact');
+      syncLessonFromForm(root.querySelector('[data-form="lesson"]'), registerState);
+      await saveAndNavigate(registerState, 'lesson', '/register/contact');
     });
   });
 }

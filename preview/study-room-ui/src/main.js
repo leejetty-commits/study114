@@ -22,7 +22,7 @@ import {
   syncSiteHeaderOffset,
   ensureSiteHeaderOffsetListeners,
 } from '../../shared/site-chrome.js';
-import { getCurrentScreen, navigate } from './layout.js';
+import { getCurrentScreen, navigate, isRegisterEditMode } from './layout.js';
 import { renderBasic, bindBasicEvents } from './screens/step-basic.js';
 import { renderLocation, bindLocationEvents } from './screens/step-location.js';
 import { renderLesson, bindLessonEvents } from './screens/step-lesson.js';
@@ -75,9 +75,10 @@ function resolveRegisterMode() {
 
 function maybeSkipBasicSteps() {
   if (!registerState.basicComplete) return false;
+  if (isRegisterEditMode()) return false;
   const key = getCurrentScreen();
   if (BASIC_KEYS.has(key)) {
-    if (window.location.hash !== '#/register/lesson') {
+    if (window.location.hash.split('?')[0] !== '#/register/lesson') {
       navigate('/register/lesson');
       return true;
     }
@@ -149,7 +150,11 @@ function init() {
   Promise.all([initChromeSession(), initApi()])
     .then(([, room]) => {
       registerState.basicComplete = isRoomBasicComplete(room) || registerState.basicComplete;
-      if (registerState.basicComplete && BASIC_KEYS.has(getCurrentScreen())) {
+      if (
+        registerState.basicComplete &&
+        BASIC_KEYS.has(getCurrentScreen()) &&
+        !isRegisterEditMode()
+      ) {
         navigate('/register/lesson');
         return;
       }

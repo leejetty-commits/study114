@@ -4,7 +4,7 @@ import { profileStatusLabel } from '../lifecycle-copy.js';
 import { PRODUCT_APPLY } from './tutor-reg-copy.js';
 import { TUTOR_REGISTER_URL, HOME_UI_BASE } from '../nav-config.js';
 import { formatTutorFeeCard } from '../exposure-format.js';
-import { tutorHubPath } from './router.js';
+import { tutorHubPath, tutorSectionPath } from './router.js';
 import { getPublishReadiness, isPaidProvider, getMemoCreditsRemaining } from './store.js';
 import { getRequestViewTicketsRemaining } from '../request-unlock.js';
 
@@ -57,14 +57,19 @@ export function tutorToExposureRow(tutor) {
 }
 
 /**
- * tutor-ui 딥링크 (21장 부록 C)
- * @param {'basic'|'regions'|'lesson'|'career'|'contact'} step
+ * tutor-ui 딥링크 (마이페이지 기본/상세 수정)
+ * @param {'basic'|'regions'|'lesson'|'career'|'contact'|'detail'} step
  * @param {number} tutorId
+ * @param {{ returnSection?: 'hub'|'basic'|'detail'|'publish' }} [opts]
  */
-export function tutorUiDeepLink(step, tutorId) {
-  const returnTo = encodeURIComponent(`${HOME_UI_BASE}#${tutorHubPath(tutorId)}`);
+export function tutorUiDeepLink(step, tutorId, opts = {}) {
+  const returnSection = opts.returnSection || 'hub';
+  const returnPath =
+    returnSection === 'hub' ? tutorHubPath(tutorId) : tutorSectionPath(tutorId, returnSection);
+  const returnTo = encodeURIComponent(`${HOME_UI_BASE}#${returnPath}`);
   const base = TUTOR_REGISTER_URL.replace(/#\/register\/basic$/, '');
-  return `${base}#/register/${step}?tutor_id=${tutorId}&return_to=${returnTo}`;
+  const edit = step === 'basic' || step === 'regions' || step === 'detail' ? '&edit=1' : '&edit=1';
+  return `${base}#/register/${step}?tutor_id=${tutorId}${edit}&return_to=${returnTo}`;
 }
 
 /** @param {TutorRecord} tutor */

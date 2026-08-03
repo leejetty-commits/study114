@@ -186,7 +186,7 @@ export function renderSocialLogin(returnTo = '') {
 export function renderTempNotice(message) {
   return `
     <div class="temp-notice" role="note">
-      <span class="temp-notice__badge">임시</span>
+      <span class="temp-notice__badge">안내</span>
       <span class="temp-notice__text">${message}</span>
     </div>
   `;

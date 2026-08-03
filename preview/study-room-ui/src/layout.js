@@ -29,7 +29,19 @@ export function navigate(path) {
 
 export function getCurrentPath() {
   const hash = window.location.hash.slice(1) || '/register/basic';
-  return hash.startsWith('/') ? hash : `/${hash}`;
+  const raw = hash.startsWith('/') ? hash : `/${hash}`;
+  return raw.split('?')[0];
+}
+
+/** @returns {URLSearchParams} */
+export function getHashQuery() {
+  const hash = window.location.hash.slice(1);
+  const q = hash.indexOf('?');
+  return new URLSearchParams(q >= 0 ? hash.slice(q + 1) : '');
+}
+
+export function isRegisterEditMode() {
+  return getHashQuery().get('edit') === '1';
 }
 
 export function getCurrentScreen() {

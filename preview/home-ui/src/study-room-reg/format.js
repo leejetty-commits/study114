@@ -3,7 +3,7 @@
 import { profileStatusLabel } from '../lifecycle-copy.js';
 import { STUDY_ROOM_REGISTER_URL, HOME_UI_BASE } from '../nav-config.js';
 import { formatMonthlyWon } from '../exposure-format.js';
-import { studyRoomHubPath } from './router.js';
+import { studyRoomHubPath, studyRoomSectionPath } from './router.js';
 import { getPublishReadiness } from './store.js';
 import {
   INQUIRY_STATUS_LABELS,
@@ -57,14 +57,17 @@ export function roomToExposureRow(room) {
 }
 
 /**
- * study-room-ui 딥링크 (20장 부록 C)
- * @param {'basic'|'location'|'lesson'|'career'|'facility'} step
+ * @param {'basic'|'location'|'lesson'|'career'|'facility'|'detail'} step
  * @param {number} roomId
+ * @param {{ returnSection?: 'hub'|'basic'|'detail'|'publish' }} [opts]
  */
-export function studyRoomUiDeepLink(step, roomId) {
-  const returnTo = encodeURIComponent(`${HOME_UI_BASE}#${studyRoomHubPath(roomId)}`);
+export function studyRoomUiDeepLink(step, roomId, opts = {}) {
+  const returnSection = opts.returnSection || 'hub';
+  const returnPath =
+    returnSection === 'hub' ? studyRoomHubPath(roomId) : studyRoomSectionPath(roomId, returnSection);
+  const returnTo = encodeURIComponent(`${HOME_UI_BASE}#${returnPath}`);
   const base = STUDY_ROOM_REGISTER_URL.replace(/#\/register\/basic$/, '');
-  return `${base}#/register/${step}?room_id=${roomId}&return_to=${returnTo}`;
+  return `${base}#/register/${step}?room_id=${roomId}&edit=1&return_to=${returnTo}`;
 }
 
 /** @param {StudyRoomRecord} room */

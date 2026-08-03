@@ -362,46 +362,43 @@ function renderBridgeBody(tutor, kind) {
   const readiness = getPublishReadiness(tutor);
   const isBasic = kind === 'basic';
   const title = isBasic ? '기본정보' : '상세정보';
-  const steps = isBasic
-    ? [
-        { step: 'basic', label: '기본 프로필', ok: !!tutor.tutor_display_name },
-        { step: 'regions', label: '활동 시·지역', ok: tutor.has_primary_region },
-      ]
-    : [
-        { step: 'lesson', label: '수업·과목', ok: tutor.has_primary_subject && tutor.has_lesson_places },
-        { step: 'career', label: '경력·학력', ok: tutor.education_doc_submitted },
-        { step: 'contact', label: '소개', ok: !!(tutor.intro_short || tutor.intro_long) },
-      ];
+  const editHref = isBasic
+    ? tutorUiDeepLink('basic', tutor.id, { returnSection: 'basic' })
+    : tutorUiDeepLink('detail', tutor.id, { returnSection: 'detail' });
 
-  const items = steps
-    .map(
-      (s) => `
-    <li class="p20-bridge__item${s.ok ? ' is-ok' : ' is-miss'}">
-      <span class="p20-bridge__icon">${s.ok ? '✓' : '△'}</span>
-      <span class="p20-bridge__label">${esc(s.label)}</span>
-      <a href="${tutorUiDeepLink(/** @type {any} */ (s.step), tutor.id)}" class="btn btn--secondary btn--sm" data-same-tab-href="${tutorUiDeepLink(/** @type {any} */ (s.step), tutor.id)}">수정하기</a>
-    </li>`,
-    )
-    .join('');
+  const summary = isBasic
+    ? `
+      <div><dt>표시명</dt><dd>${esc(tutor.tutor_display_name || '—')}</dd></div>
+      <div><dt>과외지역</dt><dd>${esc(tutor.primary_region_label || tutor.location_label || '—')}</dd></div>
+      <div><dt>주력과목</dt><dd>${esc(tutor.main_subject_note || '—')}</dd></div>
+      <div><dt>기본등록</dt><dd>${esc(detailStatusLabel(tutor.detail_completion_status))}</dd></div>`
+    : `
+      <div><dt>주력과목</dt><dd>${esc(tutor.main_subject_note || '—')}</dd></div>
+      <div><dt>월 과외비</dt><dd>${tutor.preferred_fee_amount ? `${Number(tutor.preferred_fee_amount).toLocaleString('ko-KR')}원` : '—'}</dd></div>
+      <div><dt>강의장소</dt><dd>${esc((tutor.lesson_places || []).join(', ') || '—')}</dd></div>
+      <div><dt>출신대학</dt><dd>${esc(tutor.university_name || '—')}</dd></div>
+      <div><dt>전공</dt><dd>${esc(tutor.major_name || '—')}</dd></div>
+      <div><dt>소개</dt><dd>${esc(tutor.intro_short || tutor.intro_long || '—')}</dd></div>
+      <div><dt>연락 가능 시간</dt><dd>${esc(tutor.contact_time_note || '—')}</dd></div>
+      <div><dt>상세등록</dt><dd>${esc(detailStatusLabel(tutor.detail_completion_status))}</dd></div>`;
 
   return `
-    <div class="p20-bridge">
+    <div class="p20-bridge p20-bridge--simple">
       <h3 class="p19-form-section__title">${title}</h3>
-      <p class="p19-form-section__lead">과외쌤 등록 화면에서 정보를 수정합니다. 여기서는 요약과 부족한 항목만 보여드려요.</p>
-      <ul class="p20-bridge__list">${items}</ul>
-      <dl class="p20-bridge__summary">
-        <div><dt>표시명</dt><dd>${esc(tutor.tutor_display_name)}</dd></div>
-        <div><dt>활동 시</dt><dd>${esc(tutor.primary_region_label || tutor.location_label || '—')}</dd></div>
-        <div><dt>주력과목</dt><dd>${esc(tutor.main_subject_note || '—')}</dd></div>
-        <div><dt>상세등록</dt><dd>${esc(detailStatusLabel(tutor.detail_completion_status))}</dd></div>
-      </dl>
+      <p class="p19-form-section__lead">${
+        isBasic
+          ? '가입·기본등록으로 받은 정보입니다. 수정은 아래 버튼으로 이어서 할 수 있습니다.'
+          : '상세등록으로 입력한 수업·학력·연락 정보입니다. 한 화면에서 한꺼번에 수정합니다.'
+      }</p>
+      <dl class="p20-bridge__summary">${summary}</dl>
       ${
         !readiness.canPublish
           ? `<p class="p20-hint">공개 준비 미완료: ${esc(readiness.missing.slice(0, 3).join(', '))}${readiness.missing.length > 3 ? '…' : ''}</p>`
           : ''
       }
       <div class="p19-form-actions">
-        <a href="#${tutorSectionPath(tutor.id, 'publish')}" class="btn btn--primary" data-p21-nav="${tutorSectionPath(tutor.id, 'publish')}">미리보기·공개 →</a>
+        <a href="${editHref}" class="btn btn--primary" data-same-tab-href="${editHref}">수정하기</a>
+        <a href="#${tutorSectionPath(tutor.id, 'publish')}" class="btn btn--secondary" data-p21-nav="${tutorSectionPath(tutor.id, 'publish')}">미리보기·공개 →</a>
       </div>
     </div>`;
 }
@@ -470,7 +467,7 @@ function renderPublish(tutor) {
         .map(
           (m) => `<li class="p19-checklist__item p19-checklist__miss">
         <span class="p19-checklist__icon">△</span><span>${esc(m)}</span>
-        <a href="#${tutorSectionPath(tutor.id, m.includes('상세') ? 'detail' : 'basic')}" data-p21-nav="${tutorSectionPath(tutor.id, 'detail')}">브리지 →</a>
+        <a href="#${tutorSectionPath(tutor.id, m.includes('상세') ? 'detail' : 'basic')}" data-p21-nav="${tutorSectionPath(tutor.id, m.includes('상세') ? 'detail' : 'basic')}">확인 →</a>
       </li>`,
         )
         .join('')

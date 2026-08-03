@@ -115,20 +115,8 @@ export const GENDER_GROUP_OPTIONS = [
   { value: 'mixed', label: '혼성' },
 ];
 
-/** 주력과목 — 최대 3개 · 기타는 서술형 */
-export const MAIN_SUBJECT_OPTIONS = [
-  { value: '국영수사과', label: '국영수사과' },
-  { value: '국영수', label: '국영수' },
-  { value: '국어', label: '국어' },
-  { value: '영어', label: '영어' },
-  { value: '수학', label: '수학' },
-  { value: '과학탐구', label: '과학탐구' },
-  { value: '사회탐구', label: '사회탐구' },
-  { value: '일본어', label: '일본어' },
-  { value: '독일어', label: '독일어' },
-  { value: '프랑스어', label: '프랑스어' },
-  { value: '기타', label: '기타' },
-];
+/** 주력과목 — 가입·등록 공통 목록 */
+export { MAIN_SUBJECT_OPTIONS } from '../../shared/main-subjects.js';
 
 /** 출신대학 목록 + 기타(직접입력) */
 export const UNIVERSITY_OPTIONS = [

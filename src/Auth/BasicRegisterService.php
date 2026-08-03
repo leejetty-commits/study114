@@ -9,6 +9,7 @@ use PDO;
 use PDOException;
 use RuntimeException;
 use Study114\Database\Connection;
+use Study114\Region\SidoRegionEnsure;
 
 final class BasicRegisterService
 {
@@ -30,6 +31,7 @@ final class BasicRegisterService
     public function listRegions(): array
     {
         $pdo = Connection::get();
+        SidoRegionEnsure::ensure($pdo);
         $stmt = $pdo->query(
             'SELECT id, CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
              FROM regions WHERE is_active = 1 ORDER BY id ASC'
@@ -37,6 +39,12 @@ final class BasicRegisterService
         /** @var list<array{id: int, label: string}> $rows */
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return $rows;
+    }
+
+    /** @return list<array{id: int, label: string}> */
+    public function listCities(): array
+    {
+        return SidoRegionEnsure::ensureAndListCities(Connection::get());
     }
 
     /**

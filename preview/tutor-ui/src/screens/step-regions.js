@@ -9,6 +9,8 @@ import {
   mypageRegistrationsUrl,
   bindGlobalEvents,
   navigate,
+  isRegisterEditMode,
+  getHashQuery,
 } from '../layout.js';
 import { buildSidoCityOptions, cityOptionsFromRegionLabels } from '../../../shared/korea-sidos.js';
 
@@ -51,18 +53,36 @@ function renderSlot(slot, idx) {
     </div>`;
 }
 
+function returnFromEdit() {
+  const raw = getHashQuery().get('return_to');
+  if (raw) {
+    window.location.assign(decodeURIComponent(raw));
+    return true;
+  }
+  return false;
+}
+
 export function renderRegions() {
+  const editing = isRegisterEditMode();
   const content = `
-    ${renderGuideNotice('과외지역은 최대 3곳까지 고를 수 있습니다. 대표 지역 1곳은 꼭 지정해 주세요.')}
+    ${renderGuideNotice(
+      editing
+        ? '과외지역을 수정한 뒤 저장하면 마이페이지로 돌아갑니다.'
+        : '과외지역은 최대 3곳까지 고를 수 있습니다. 대표 지역 1곳은 꼭 지정해 주세요.',
+    )}
     <form data-form="regions">
       ${renderSectionTitle('과외지역')}
       ${registerState.saved_regions.map((slot, i) => renderSlot(slot, i)).join('')}
-      <a class="register-mypage-link" href="${mypageRegistrationsUrl()}">이미 등록한 내용을 수정하려면 마이페이지 · 내 등록</a>
-      ${renderNavButtons('/register/basic', '다음: 수업·학력')}
+      ${
+        editing
+          ? ''
+          : `<a class="register-mypage-link" href="${mypageRegistrationsUrl()}">이미 등록한 내용을 수정하려면 마이페이지 · 내 등록</a>`
+      }
+      ${renderNavButtons('/register/basic', editing ? '저장하고 돌아가기' : '다음: 수업·가격')}
     </form>`;
   return renderRegisterShell(content, {
     stepKey: 'regions',
-    title: '과외지역',
+    title: editing ? '과외지역 수정' : '과외지역',
     subtitle: '전국 시·도 목록에서 1곳 이상 선택합니다.',
   });
 }
@@ -71,7 +91,11 @@ export function bindRegionsEvents(root) {
   bindGlobalEvents(root);
   const nextBtn = root.querySelector('[data-action="next"]');
   const prevBtn = root.querySelector('[data-action="prev"]');
-  prevBtn?.addEventListener('click', () => navigate('/register/basic'));
+  prevBtn?.addEventListener('click', () => {
+    const ret = getHashQuery().get('return_to') || '';
+    const q = isRegisterEditMode() ? `?edit=1&return_to=${encodeURIComponent(ret)}` : '';
+    navigate(`/register/basic${q}`);
+  });
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
       syncRegionsFromForm(root, registerState);
@@ -82,6 +106,14 @@ export function bindRegionsEvents(root) {
       const filled = registerState.saved_regions.filter((s) => s.region_id);
       if (!filled.length) {
         alert('과외지역을 1곳 이상 선택해 주세요.');
+        return;
+      }
+      if (isRegisterEditMode()) {
+        await saveAndNavigate(registerState, 'regions', null);
+        registerState.basicComplete = true;
+        if (!returnFromEdit()) {
+          navigate('/register/lesson');
+        }
         return;
       }
       await saveAndNavigate(registerState, 'regions', '/register/lesson');

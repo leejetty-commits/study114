@@ -19,8 +19,10 @@
 }
 
 .register-card.register-card--wide {
-  max-width: min(56rem, 100%);
-  margin: 0 auto;
+  /* 마이페이지 본문 컬럼과 같이 home-main 전체 폭 사용 */
+  max-width: none;
+  width: 100%;
+  margin: 0;
   border: 1px solid #dbe4f0;
   border-radius: 1.1rem;
   padding: clamp(1.25rem, 3vw, 2rem);
@@ -28,6 +30,15 @@
     linear-gradient(180deg, #fbfdff 0%, #fff 38%),
     #fff;
   box-shadow: 0 0.75rem 2rem rgb(15 23 42 / 0.06);
+}
+
+/* 연락·공개 등 폼은 본문 안에서 읽기 좋은 폭만 사용 */
+.register-form-narrow {
+  max-width: 40rem;
+}
+
+.register-grid-2.register-grid-2--tight {
+  max-width: 40rem;
 }
 
 .register-flow .auth-heading {

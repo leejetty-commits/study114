@@ -37,10 +37,12 @@ try {
     $service = new BasicRegisterService();
     $regions = $service->listRegions();
     $complexes = $service->listComplexes();
+    $cities = $service->listCities();
     echo json_encode([
         'ok' => true,
         'regions' => $regions,
         'complexes' => $complexes,
+        'cities' => $cities,
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     error_log('[regions] error: ' . $e->getMessage());

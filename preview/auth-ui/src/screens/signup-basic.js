@@ -1,5 +1,5 @@
 import { signupState } from '../state.js';
-import { PREFERRED_LESSON_TYPE_LABELS, MAIN_SUBJECT_OPTIONS } from '../register-enums.js';
+import { PREFERRED_LESSON_TYPE_LABELS } from '../register-enums.js';
 import { basicRegisterApi } from '../auth-api.js';
 import {
   buildHomeStudentImportUrl,
@@ -9,6 +9,8 @@ import {
 import { renderAuthShell, renderStepIndicator, renderRoleBadge, bindGlobalEvents, navigate } from '../layout.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import { resolvePostLoginUrl } from '../../../shared/auth-redirect.js';
+import { buildSidoCityOptions, KOREA_SIDOS } from '../../../shared/korea-sidos.js';
+import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 
 function esc(s) {
   if (s == null) return '';
@@ -29,23 +31,33 @@ function regionList() {
     : [{ id: 1, label: '서울특별시 강남구 대치동 (지역 정보 불러오는 중)' }];
 }
 
-/** 시(도) 목록 — 과외 활동시 seed */
-function listSidos() {
-  const set = new Set();
+/** 시·도 목록 — 과외지역 seed (전국 + API cities) */
+function listSidoOptions() {
+  const fromApi = buildSidoCityOptions(signupState.cities || []);
+  if (fromApi.length > 0) return fromApi;
+  // cities 미응답 시 regions 라벨에서 시·도 추출
+  const byLabel = new Map();
   regionList().forEach((r) => {
     const sido = String(r.label || '').trim().split(/\s+/)[0];
-    if (sido) set.add(sido);
+    if (sido && !byLabel.has(sido)) byLabel.set(sido, String(r.id));
   });
-  return [...set];
+  return KOREA_SIDOS.map((s) => ({
+    id: byLabel.get(s.label) || '',
+    label: s.label,
+  })).filter((c) => c.id);
 }
 
-/** 시 라벨 → 대표 region_id (해당 시 첫 행) */
+/** 시 라벨 → 대표 region_id */
 function regionIdForSido(sido) {
+  const city = (signupState.cities || []).find((c) => c.label === sido);
+  if (city?.id) return city.id;
   const hit = regionList().find((r) => String(r.label || '').trim().startsWith(sido));
   return hit?.id ?? '';
 }
 
 function sidoFromRegionId(regionId) {
+  const city = (signupState.cities || []).find((c) => String(c.id) === String(regionId));
+  if (city?.label) return city.label;
   const hit = regionList().find((r) => String(r.id) === String(regionId));
   return hit ? String(hit.label || '').trim().split(/\s+/)[0] : '';
 }
@@ -84,20 +96,14 @@ function renderChips(name, options, { selected = [] } = {}) {
 
 /** 주력과목 1개 */
 function renderMainSubjectOne(selected = '') {
-  const value = selected || '수학';
+  const value = selected || '';
   return `
-    <div class="form-group" data-subject-picker>
-      <span class="form-label form-label--required">주력과목 1개</span>
+    <div class="form-group">
+      <label class="form-label form-label--required" for="main_subject">주력과목 1개</label>
       ${dbField('main_subject_note')}
-      ${renderChips('main_subject', MAIN_SUBJECT_OPTIONS, { selected: value })}
-      <input
-        class="form-input mt-4"
-        name="main_subject_other"
-        data-subject-other
-        value=""
-        placeholder="기타 과목 입력"
-        ${value === '기타' ? '' : 'hidden'}
-      />
+      <select class="form-input" name="main_subject" id="main_subject" required>
+        ${renderMainSubjectSelect(value, { includeEmpty: true, emptyLabel: '과목 선택' })}
+      </select>
     </div>
   `;
 }
@@ -176,20 +182,20 @@ function renderStudentBasic() {
         </div>
       </div>
       <div class="form-group" data-student-tutor-block ${hope === 'tutor' ? '' : 'hidden'}>
-        <label class="form-label form-label--required" for="activity_city">활동 시 1번</label>
+        <label class="form-label form-label--required" for="activity_city">과외지역 1번 (시·도)</label>
         ${dbField('preferred_tutor_region_id · scope=city')}
         <select class="form-input" name="activity_city" id="activity_city">
           <option value="">선택</option>
-          ${listSidos()
+          ${listSidoOptions()
             .map((s) => {
               const saved = d.activity_city || sidoFromRegionId(d.region_id) || '';
-              return `<option value="${esc(s)}" ${s === saved ? 'selected' : ''}>${esc(s)}</option>`;
+              return `<option value="${esc(s.label)}" ${s.label === saved ? 'selected' : ''}>${esc(s.label)}</option>`;
             })
             .join('')}
         </select>
       </div>
       <div class="actions-stack">
-        <button type="submit" class="btn btn--primary btn--block">지역 등록 · 임시 저장</button>
+        <button type="submit" class="btn btn--primary btn--block">지역 등록 · 다음</button>
         <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
       </div>
     </form>
@@ -224,9 +230,9 @@ function renderStudyRoomBasic() {
         ${renderComplexSelect('complex_id', d.complex_id, { required: false })}
         <p class="form-note" data-complex-address-hint></p>
       </div>
-      ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '수학')}
+      ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '')}
       <div class="actions-stack">
-        <button type="submit" class="btn btn--primary btn--block">임시 저장 · 다음</button>
+        <button type="submit" class="btn btn--primary btn--block">저장 · 다음</button>
         <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
       </div>
     </form>
@@ -235,30 +241,30 @@ function renderStudyRoomBasic() {
 
 function renderTutorBasic() {
   const d = signupState.basicRegister?.tutor || {};
-  const sidos = listSidos();
-  const savedSido = d.activity_city || sidoFromRegionId(d.region_id) || sidos[0] || '';
+  const sidos = listSidoOptions();
+  const savedSido = d.activity_city || sidoFromRegionId(d.region_id) || '';
   return `
     <form data-form="basic-tutor" class="basic-register">
-      <p class="auth-section-title">기본등록 · 임시 저장</p>
-      <p class="form-note mb-4">표시명 · 활동 시 1 · 주력과목 1만 받습니다. 나머지는 상세등록입니다.</p>
+      <p class="auth-section-title">기본등록</p>
+      <p class="form-note mb-4">표시명 · 과외지역 1 · 주력과목 1만 받습니다. 나머지는 상세등록에서 이어서 입력합니다.</p>
       <div class="form-group">
         <label class="form-label form-label--required" for="tutor_display_name">표시명</label>
         ${dbField('tutors.tutor_display_name')}
         <input class="form-input" id="tutor_display_name" name="tutor_display_name" value="${esc(d.tutor_display_name || '')}" required />
       </div>
       <div class="form-group">
-        <label class="form-label form-label--required" for="activity_city">활동 시 1번</label>
+        <label class="form-label form-label--required" for="activity_city">과외지역 1번 (시·도)</label>
         ${dbField('tutor_regions.scope_type=city')}
         <select class="form-input" name="activity_city" id="activity_city" required>
           <option value="">선택</option>
           ${sidos
-            .map((s) => `<option value="${esc(s)}" ${s === savedSido ? 'selected' : ''}>${esc(s)}</option>`)
+            .map((s) => `<option value="${esc(s.label)}" ${s.label === savedSido ? 'selected' : ''}>${esc(s.label)}</option>`)
             .join('')}
         </select>
       </div>
-      ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '수학')}
+      ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '')}
       <div class="actions-stack">
-        <button type="submit" class="btn btn--primary btn--block">임시 저장 · 다음</button>
+        <button type="submit" class="btn btn--primary btn--block">저장 · 다음</button>
         <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
       </div>
     </form>
@@ -280,7 +286,7 @@ export function renderSignupBasic() {
     <div class="panel auth-shell__card--wide">
       <h1 class="auth-heading">기본등록</h1>
       <p class="auth-subheading mb-6">
-        공개 전 임시 저장본을 만듭니다. 검색·목록 항목은 상세등록에서 완성합니다.
+        검색·목록에 바로 공개되지 않습니다. 검색에 쓰이는 항목은 상세등록에서 완성합니다.
       </p>
       ${isReturnImportMode() ? '<p class="form-note form-note--highlight">자녀 추가 중입니다. 저장 후 마이페이지로 돌아갑니다.</p>' : ''}
       ${renderRoleBadge(role)}
@@ -311,18 +317,8 @@ function packMainSubject(data) {
     alert('주력과목을 선택해 주세요.');
     return null;
   }
-  if (subject === '기타') {
-    const other = String(data.main_subject_other || '').trim();
-    if (!other) {
-      alert('기타 과목을 입력해 주세요.');
-      return null;
-    }
-    data.main_subjects = [other];
-    data.main_subject_note = other;
-  } else {
-    data.main_subjects = [subject];
-    data.main_subject_note = subject;
-  }
+  data.main_subjects = [subject];
+  data.main_subject_note = subject;
   delete data.main_subject;
   delete data.main_subject_other;
   return data;
@@ -333,16 +329,6 @@ export function bindSignupBasicEvents(root) {
 
   const role = signupState.role || 'student';
   const form = root.querySelector('form[data-form^="basic-"]');
-
-  const subjectPicker = form?.querySelector('[data-subject-picker]');
-  if (subjectPicker) {
-    const otherInput = subjectPicker.querySelector('[data-subject-other]');
-    subjectPicker.querySelectorAll('input[name="main_subject"]').forEach((el) => {
-      el.addEventListener('change', () => {
-        otherInput?.toggleAttribute('hidden', el.value !== '기타' || !el.checked);
-      });
-    });
-  }
 
   function syncBasisPanels() {
     const basis = form?.querySelector('input[name="region_basis"]:checked')?.value || 'dong';
@@ -418,7 +404,7 @@ export function bindSignupBasicEvents(root) {
       } else {
         const city = String(data.activity_city || '').trim();
         if (!city) {
-          alert('활동 시를 선택해 주세요.');
+          alert('과외지역(시·도)을 선택해 주세요.');
           return;
         }
         const regionId = regionIdForSido(city);
@@ -442,7 +428,7 @@ export function bindSignupBasicEvents(root) {
     if (role === 'tutor') {
       const city = String(data.activity_city || '').trim();
       if (!city) {
-        alert('활동 시를 선택해 주세요.');
+        alert('과외지역(시·도)을 선택해 주세요.');
         return;
       }
       const regionId = regionIdForSido(city);
@@ -546,7 +532,7 @@ export function bindSignupBasicEvents(root) {
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = role === 'student' ? '지역등록 · 임시 저장' : '임시 저장 · 다음';
+        submitBtn.textContent = role === 'student' ? '지역 등록 · 다음' : '저장 · 다음';
       }
     }
   });

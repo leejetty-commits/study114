@@ -27,6 +27,8 @@ export const signupState = {
   lastSignup: null,
   /** @type {Array<{id: number, label: string}>} */
   regions: [],
+  /** @type {Array<{id: number, label: string}>} */
+  cities: [],
   /** @type {Array<{id: number, region_id: number, label: string, address: string}>} */
   complexes: [],
   basicRegisterResult: null,
@@ -85,6 +87,7 @@ export function resetSignupState() {
   signupState.basicRegisterResult = null;
   signupState.lastSignup = null;
   signupState.regions = [];
+  signupState.cities = [];
   signupState.complexes = [];
 }
 

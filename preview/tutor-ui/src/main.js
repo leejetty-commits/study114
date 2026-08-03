@@ -22,7 +22,7 @@ import {
   syncSiteHeaderOffset,
   ensureSiteHeaderOffsetListeners,
 } from '../../shared/site-chrome.js';
-import { getCurrentScreen, navigate } from './layout.js';
+import { getCurrentScreen, navigate, isRegisterEditMode } from './layout.js';
 import { apiMasters, registerState, isTutorBasicComplete } from './state.js';
 import { fetchMasters, loadTutor } from './register-api.js';
 import { applyTutorToState } from './form-collect.js';
@@ -30,6 +30,7 @@ import { renderBasic, bindBasicEvents } from './screens/step-basic.js';
 import { renderRegions, bindRegionsEvents } from './screens/step-regions.js';
 import { renderLesson, bindLessonEvents } from './screens/step-lesson.js';
 import { renderContact, bindContactEvents } from './screens/step-contact.js';
+import { renderDetail, bindDetailEvents } from './screens/step-detail.js';
 import { renderComplete, bindCompleteEvents } from './screens/step-complete.js';
 
 const SCREENS = {
@@ -37,6 +38,7 @@ const SCREENS = {
   regions: { render: renderRegions, bind: bindRegionsEvents },
   lesson: { render: renderLesson, bind: bindLessonEvents },
   contact: { render: renderContact, bind: bindContactEvents },
+  detail: { render: renderDetail, bind: bindDetailEvents },
   complete: { render: renderComplete, bind: bindCompleteEvents },
 };
 
@@ -76,9 +78,10 @@ function resolveRegisterMode() {
 
 function maybeSkipBasicSteps() {
   if (!registerState.basicComplete) return false;
+  if (isRegisterEditMode()) return false; // 마이페이지 기본정보 수정
   const key = getCurrentScreen();
   if (BASIC_KEYS.has(key)) {
-    if (window.location.hash !== '#/register/lesson') {
+    if (window.location.hash.split('?')[0] !== '#/register/lesson') {
       navigate('/register/lesson');
       return true;
     }
@@ -144,7 +147,11 @@ function init() {
   Promise.all([initChromeSession(), initApi()])
     .then(([, tutor]) => {
       registerState.basicComplete = isTutorBasicComplete(tutor) || registerState.basicComplete;
-      if (registerState.basicComplete && BASIC_KEYS.has(getCurrentScreen())) {
+      if (
+        registerState.basicComplete &&
+        BASIC_KEYS.has(getCurrentScreen()) &&
+        !isRegisterEditMode()
+      ) {
         navigate('/register/lesson');
         return;
       }

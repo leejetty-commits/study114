@@ -21,7 +21,10 @@ import {
 import { renderSiteFooter } from '../../shared/site-footer.js';
 import { bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 
-const ROUTES = Object.fromEntries(STEPS.map((s) => [s.path, s.key]));
+const ROUTES = Object.fromEntries([
+  ...STEPS.map((s) => [s.path, s.key]),
+  ['/register/detail', 'detail'],
+]);
 
 export function navigate(path) {
   window.location.hash = path;
@@ -29,7 +32,20 @@ export function navigate(path) {
 
 export function getCurrentPath() {
   const hash = window.location.hash.slice(1) || '/register/basic';
-  return hash.startsWith('/') ? hash : `/${hash}`;
+  const raw = hash.startsWith('/') ? hash : `/${hash}`;
+  return raw.split('?')[0];
+}
+
+/** @returns {URLSearchParams} */
+export function getHashQuery() {
+  const hash = window.location.hash.slice(1);
+  const q = hash.indexOf('?');
+  return new URLSearchParams(q >= 0 ? hash.slice(q + 1) : '');
+}
+
+/** 마이페이지 등에서 기본정보 수정을 위해 진입했는지 */
+export function isRegisterEditMode() {
+  return getHashQuery().get('edit') === '1';
 }
 
 export function getCurrentScreen() {

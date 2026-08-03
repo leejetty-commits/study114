@@ -16,8 +16,8 @@ export const REGISTER_PHASES = {
 export const STEPS = [
   { path: '/register/basic', key: 'basic', label: '기본정보', step: 1, phase: 'basic', uiStepFull: 1 },
   { path: '/register/regions', key: 'regions', label: '과외지역', step: 2, phase: 'basic', uiStepFull: 2 },
-  { path: '/register/lesson', key: 'lesson', label: '수업·학력', step: 3, phase: 'detail', uiStepFull: 3, uiStepDetail: 1 },
-  { path: '/register/contact', key: 'contact', label: '연락·공개', step: 4, phase: 'detail', uiStepFull: 4, uiStepDetail: 2 },
+  { path: '/register/lesson', key: 'lesson', label: '수업·가격', step: 3, phase: 'detail', uiStepFull: 3, uiStepDetail: 1 },
+  { path: '/register/contact', key: 'contact', label: '학력·연락', step: 4, phase: 'detail', uiStepFull: 4, uiStepDetail: 2 },
   { path: '/register/complete', key: 'complete', label: '등록완료', step: 5, phase: null },
 ];
 

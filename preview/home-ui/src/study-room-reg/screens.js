@@ -357,46 +357,39 @@ function renderBridgeBody(room, kind) {
   const readiness = getPublishReadiness(room);
   const isBasic = kind === 'basic';
   const title = isBasic ? '기본정보' : '상세정보';
-  const steps = isBasic
-    ? [
-        { step: 'basic', label: '기본 프로필', ok: !!room.study_room_name },
-        { step: 'location', label: '위치·지역', ok: room.has_regions },
-      ]
-    : [
-        { step: 'lesson', label: '수업·과목', ok: room.has_subject_targets && room.lesson_place_set },
-        { step: 'career', label: '경력·소개', ok: !!room.intro_short || !!room.intro_long },
-        { step: 'facility', label: '시설·이미지', ok: room.has_representative_image },
-      ];
+  const editHref = isBasic
+    ? studyRoomUiDeepLink('basic', room.id, { returnSection: 'basic' })
+    : studyRoomUiDeepLink('lesson', room.id, { returnSection: 'detail' });
 
-  const items = steps
-    .map(
-      (s) => `
-    <li class="p20-bridge__item${s.ok ? ' is-ok' : ' is-miss'}">
-      <span class="p20-bridge__icon">${s.ok ? '✓' : '△'}</span>
-      <span class="p20-bridge__label">${esc(s.label)}</span>
-      <a href="${studyRoomUiDeepLink(s.step, room.id)}" class="btn btn--secondary btn--sm" data-same-tab-href="${studyRoomUiDeepLink(s.step, room.id)}">수정하기</a>
-    </li>`,
-    )
-    .join('');
+  const summary = isBasic
+    ? `
+      <div><dt>공부방명</dt><dd>${esc(room.study_room_name || '—')}</dd></div>
+      <div><dt>지역</dt><dd>${esc(room.region_label || '—')}</dd></div>
+      <div><dt>주력과목</dt><dd>${esc(room.main_subject_note || '—')}</dd></div>
+      <div><dt>기본등록</dt><dd>${esc(detailStatusLabel(room.detail_completion_status))}</dd></div>`
+    : `
+      <div><dt>주력과목</dt><dd>${esc(room.main_subject_note || '—')}</dd></div>
+      <div><dt>월 대표 가격</dt><dd>${room.price_amount ? `${Number(room.price_amount).toLocaleString('ko-KR')}원` : '—'}</dd></div>
+      <div><dt>소개</dt><dd>${esc(room.intro_short || room.intro_long || '—')}</dd></div>
+      <div><dt>상세등록</dt><dd>${esc(detailStatusLabel(room.detail_completion_status))}</dd></div>`;
 
   return `
-    <div class="p20-bridge">
+    <div class="p20-bridge p20-bridge--simple">
       <h3 class="p19-form-section__title">${title}</h3>
-      <p class="p19-form-section__lead">공부방 등록 화면에서 정보를 수정합니다. 여기서는 요약과 부족한 항목만 보여드려요.</p>
-      <ul class="p20-bridge__list">${items}</ul>
-      <dl class="p20-bridge__summary">
-        <div><dt>공부방명</dt><dd>${esc(room.study_room_name)}</dd></div>
-        <div><dt>지역</dt><dd>${esc(room.region_label || '—')}</dd></div>
-        <div><dt>과목</dt><dd>${esc(room.main_subject_note || '—')}</dd></div>
-        <div><dt>상세등록</dt><dd>${esc(detailStatusLabel(room.detail_completion_status))}</dd></div>
-      </dl>
+      <p class="p19-form-section__lead">${
+        isBasic
+          ? '가입·기본등록으로 받은 정보입니다. 수정은 아래 버튼으로 이어서 할 수 있습니다.'
+          : '상세등록으로 입력한 정보입니다. 등록 화면에서 이어서 수정합니다.'
+      }</p>
+      <dl class="p20-bridge__summary">${summary}</dl>
       ${
         !readiness.canPublish
           ? `<p class="p20-hint">공개 준비 미완료: ${esc(readiness.missing.slice(0, 3).join(', '))}${readiness.missing.length > 3 ? '…' : ''}</p>`
           : ''
       }
       <div class="p19-form-actions">
-        <a href="#${studyRoomSectionPath(room.id, 'publish')}" class="btn btn--primary" data-p20-nav="${studyRoomSectionPath(room.id, 'publish')}">미리보기·공개 →</a>
+        <a href="${editHref}" class="btn btn--primary" data-same-tab-href="${editHref}">수정하기</a>
+        <a href="#${studyRoomSectionPath(room.id, 'publish')}" class="btn btn--secondary" data-p20-nav="${studyRoomSectionPath(room.id, 'publish')}">미리보기·공개 →</a>
       </div>
     </div>`;
 }
