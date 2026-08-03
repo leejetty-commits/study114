@@ -4,6 +4,7 @@
 import {
   registerState,
   SCHOOL_LEVELS,
+  GRADE_BAND_OPTIONS,
   FEE_BASIS_OPTIONS,
   TUTOR_PLACE_OPTIONS,
   GENDER_GROUP_OPTIONS,
@@ -14,7 +15,7 @@ import {
   TEACHING_STYLE_OPTIONS,
   emptySubject,
 } from '../state.js';
-import { syncLessonFromForm, syncCareerFromForm, syncContactFromForm } from '../form-collect.js';
+import { syncLessonFromForm, syncCareerFromForm, syncContactFromForm, validateLessonState } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
@@ -23,7 +24,6 @@ import {
   bindGlobalEvents,
   getHashQuery,
 } from '../layout.js';
-import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import { validatePromoUrls } from '../../../shared/promo-links.js';
 import { HOME_UI_BASE } from '../../../shared/preview-links.js';
 
@@ -43,11 +43,17 @@ function subjectRow(sub, idx) {
   const levels = SCHOOL_LEVELS.map(
     (l) => `<option value="${l.value}" ${sub.school_level === l.value ? 'selected' : ''}>${l.label}</option>`,
   ).join('');
+  const grades = [
+    `<option value="">학년대</option>`,
+    ...GRADE_BAND_OPTIONS.map(
+      (g) => `<option value="${g.value}" ${sub.grade_band === g.value ? 'selected' : ''}>${g.label}</option>`,
+    ),
+  ].join('');
   return `
     <div class="register-subject-row" data-subject-idx="${idx}">
       <select class="form-input" data-field="school_level">${levels}</select>
-      <input class="form-input" data-field="grade_band" value="${sub.grade_band}" placeholder="학년대" />
-      <input class="form-input" data-field="subject_name" value="${sub.subject_name}" placeholder="과목명" />
+      <select class="form-input" data-field="grade_band">${grades}</select>
+      <input class="form-input" data-field="subject_name" value="${sub.subject_name}" placeholder="예: 미적분2, 확률과 통계" />
       <label class="form-check"><input type="checkbox" data-field="is_primary" ${sub.is_primary ? 'checked' : ''} /> 주력</label>
     </div>`;
 }
@@ -89,12 +95,7 @@ export function renderDetail() {
     ${renderGuideNotice('상세정보 전체를 한 화면에서 수정합니다. 저장하면 마이페이지로 돌아갑니다.')}
     <form data-form="detail-all">
       ${renderSectionTitle('수업 · 과목 · 가격')}
-      <div class="form-group">
-        <label class="form-label form-label--required" for="main_subject_note">주력과목</label>
-        <select class="form-input" id="main_subject_note" name="main_subject_note" required>
-          ${renderMainSubjectSelect(s.main_subject_note)}
-        </select>
-      </div>
+      ${s.main_subject_note ? `<p class="form-hint">주력과목(기본등록): <strong>${s.main_subject_note}</strong></p>` : ''}
       <div class="register-grid-2">
         <div class="form-group">
           <span class="form-label form-label--required">지도 대상 성별</span>
@@ -106,7 +107,7 @@ export function renderDetail() {
         </div>
       </div>
       <div class="form-group">
-        <span class="form-label">연령대</span>
+        <span class="form-label">과외쌤 연령대</span>
         <div class="form-radio-group">${radios('age_band', AGE_BAND_OPTIONS, s.age_band)}</div>
       </div>
       <div data-subjects-list>${s.subjects.map(subjectRow).join('')}</div>
@@ -114,7 +115,7 @@ export function renderDetail() {
       <div class="register-grid-2" style="margin-top:var(--space-4);">
         <div class="form-group">
           <label class="form-label form-label--required" for="preferred_fee_amount">월 대표 과외비</label>
-          <input class="form-input" type="number" id="preferred_fee_amount" name="preferred_fee_amount" value="${s.preferred_fee_amount}" />
+          <input class="form-input" type="number" id="preferred_fee_amount" name="preferred_fee_amount" value="${s.preferred_fee_amount}" min="1" />
         </div>
         <div class="form-group">
           <span class="form-label form-label--required">산정방식</span>
@@ -219,6 +220,11 @@ export function bindDetailEvents(root) {
       syncLessonFromForm(form, registerState);
       syncCareerFromForm(form, registerState);
       syncContactFromForm(form, registerState);
+      const lessonErr = validateLessonState(registerState);
+      if (lessonErr) {
+        alert(lessonErr);
+        return;
+      }
       const urlErr = validatePromoUrls(registerState);
       if (urlErr) {
         alert(urlErr);

@@ -63,6 +63,16 @@ export const SCHOOL_LEVELS = [
   { value: 'n_su', label: 'N수' },
 ];
 
+/** 과목 행 · 학년대 (1~6학년) */
+export const GRADE_BAND_OPTIONS = [
+  { value: '1학년', label: '1학년' },
+  { value: '2학년', label: '2학년' },
+  { value: '3학년', label: '3학년' },
+  { value: '4학년', label: '4학년' },
+  { value: '5학년', label: '5학년' },
+  { value: '6학년', label: '6학년' },
+];
+
 export const FEE_BASIS_OPTIONS = [
   { value: 'monthly_by_weekly_schedule', label: '주간 일정 기준' },
   { value: 'monthly_by_total_sessions', label: '월 총 횟수 기준' },

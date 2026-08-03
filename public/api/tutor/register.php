@@ -106,7 +106,7 @@ try {
 
             'error'   => 'unauthenticated',
 
-            'message' => '로그인이 필요합니다. (tutor-owner1@dev.local / password)',
+            'message' => '로그인이 필요합니다. 로그인 후 다시 시도해 주세요.',
 
         ], JSON_UNESCAPED_UNICODE);
 

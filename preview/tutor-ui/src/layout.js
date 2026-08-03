@@ -194,11 +194,30 @@ export function bindGlobalEvents(root) {
   });
 }
 
-export function renderNavButtons(prevPath, nextLabel = '다음') {
+/**
+ * @param {string|null} prevPath
+ * @param {string} nextLabel
+ * @param {{ showSkip?: boolean, skipLabel?: string }} [opts]
+ */
+export function renderNavButtons(prevPath, nextLabel = '다음', opts = {}) {
+  const showSkip = opts.showSkip !== false;
+  const skipLabel = opts.skipLabel || '나중에 하기';
   return `
     <div class="register-nav">
-      ${prevPath ? `<button type="button" class="btn btn--secondary" data-action="prev">이전</button>` : '<span></span>'}
+      <div class="register-nav__start">
+        ${prevPath ? `<button type="button" class="btn btn--secondary" data-action="prev">이전</button>` : ''}
+        ${showSkip ? `<button type="button" class="btn btn--ghost" data-action="skip-detail">${skipLabel}</button>` : ''}
+      </div>
       <button type="button" class="btn btn--primary" data-action="next">${nextLabel}</button>
     </div>
   `;
+}
+
+/** 상세등록 나중에 — 기본등록만으로도 가입·이용 가능 */
+export function skipDetailRegistration() {
+  const ok = window.confirm(
+    '상세등록을 나중에 할까요?\n기본등록만으로도 가입은 완료된 상태입니다. 마이페이지에서 언제든 이어서 작성할 수 있습니다.',
+  );
+  if (!ok) return;
+  window.location.assign(mypageRegistrationsUrl());
 }

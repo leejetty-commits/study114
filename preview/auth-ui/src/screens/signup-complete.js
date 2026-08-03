@@ -59,10 +59,10 @@ export function renderSignupComplete() {
       </dl>
 
       <div class="detail-cta panel panel--muted mt-6">
-        <p class="auth-section-title">다음 · 상세등록</p>
+        <p class="auth-section-title">다음 · 상세등록 (선택)</p>
         <p class="form-note">
-          상세등록을 마친 뒤 일반 리스트/검색에 등록할 수 있습니다.
-          대표 노출 / 추천 노출 / 접근권은 그다음 <strong>구매 단계</strong>입니다. (${roleLabel})
+          기본등록만으로도 가입은 완료되었습니다. 상세등록은 나중에 마이페이지에서 이어갈 수 있습니다.
+          검색·목록 공개에 쓰이는 항목은 상세등록에서 완성합니다. (${roleLabel})
         </p>
       </div>
 
@@ -71,7 +71,7 @@ export function renderSignupComplete() {
           상세등록 이어하기
         </button>
         <button type="button" class="btn btn--secondary btn--block" data-action="go-home">
-          메인 홈으로 (지역등록 완료 시)
+          나중에 상세등록 (홈으로)
         </button>
         <button type="button" class="btn btn--ghost btn--block" data-nav="/login">로그인하기</button>
       </div>
@@ -109,14 +109,15 @@ export function bindSignupCompleteEvents(root) {
           : !!(basic.region_id || basic.activity_city));
 
     if (!hasSeed) {
-      alert('지역등록(기본등록 seed)이 없습니다. 상세등록·지역등록을 이어가 주세요.');
-      root.querySelector('[data-action="go-detail-register"]')?.click();
-      return;
+      const proceed = window.confirm(
+        '지역(기본등록) 정보가 없습니다. 그래도 홈으로 이동할까요?\n마이페이지에서 기본·상세등록을 이어갈 수 있습니다.',
+      );
+      if (!proceed) return;
     }
 
     // 지역등록만 있고 상세 미완 → 홈은 들어가되, 찾기 기본값은 seed 라벨 사용
     try {
-      if (basic.region_label || basic.activity_city) {
+      if (basic?.region_label || basic?.activity_city) {
         const hope =
           role === 'student' && basic.preferred_lesson_type === 'study_room'
             ? 'study_room'

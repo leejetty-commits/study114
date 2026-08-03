@@ -641,7 +641,15 @@ final class TutorRegisterService
 
             }
 
-            $name = $this->requireString($sub, 'subject_name');
+            $nameRaw = isset($sub['subject_name']) ? trim((string) $sub['subject_name']) : '';
+
+            if ($nameRaw === '') {
+
+                continue;
+
+            }
+
+            $name = $nameRaw;
 
             $level = $this->requireEnum($sub, 'school_level', $this->schoolLevelCodes());
 
@@ -677,6 +685,25 @@ final class TutorRegisterService
 
             ]);
 
+        }
+
+        // 모두 빈 행이면 주력과목으로 1건 보장
+        $countStmt = $pdo->prepare('SELECT COUNT(*) FROM tutor_subject_targets WHERE tutor_id = ?');
+        $countStmt->execute([$tutorId]);
+        if ((int) $countStmt->fetchColumn() === 0) {
+            $main = $this->requireString($input, 'main_subject_note');
+            $pdo->prepare(
+                'INSERT INTO tutor_subject_targets
+                 (tutor_id, subject_name, school_level, grade_band, subject_master_id, is_primary)
+                 VALUES (?, ?, ?, ?, ?, ?)'
+            )->execute([
+                $tutorId,
+                $main,
+                'middle',
+                null,
+                $this->findSubjectMasterId($pdo, $main),
+                1,
+            ]);
         }
 
     }

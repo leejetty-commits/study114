@@ -13,6 +13,7 @@ import {
   renderGuideNotice,
   bindGlobalEvents,
   navigate,
+  skipDetailRegistration,
 } from '../layout.js';
 import { validatePromoUrls } from '../../../shared/promo-links.js';
 
@@ -97,7 +98,7 @@ export function renderContact() {
         </div>
       </div>
       <p class="form-hint">공개는 내용을 확인한 뒤 켜 주세요. 사진 업로드는 곧 연결됩니다.</p>
-      ${renderNavButtons('/register/lesson', '등록 완료')}
+      ${renderNavButtons('/register/lesson', '등록 완료', { skipLabel: '나중에 하기' })}
     </form>`;
   return renderRegisterShell(content, {
     stepKey: 'contact',
@@ -110,6 +111,7 @@ export function bindContactEvents(root) {
   bindGlobalEvents(root);
   const nextBtn = root.querySelector('[data-action="next"]');
   root.querySelector('[data-action="prev"]')?.addEventListener('click', () => navigate('/register/lesson'));
+  root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipDetailRegistration());
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
       const form = root.querySelector('[data-form="contact"]');

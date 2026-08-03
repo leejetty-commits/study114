@@ -32,7 +32,10 @@ export function syncRegionsFromForm(root, state) {
 export function syncLessonFromForm(form, state) {
   if (!form) return;
   const fd = new FormData(form);
-  state.main_subject_note = String(fd.get('main_subject_note') ?? '');
+  // 상세등록에서는 주력과목 필드를 두지 않음 — 있으면만 갱신, 없으면 기본등록 값 유지
+  if (fd.has('main_subject_note')) {
+    state.main_subject_note = String(fd.get('main_subject_note') ?? '');
+  }
   if (fd.has('student_gender_group')) {
     state.student_gender_group = String(fd.get('student_gender_group') ?? 'mixed');
   }
@@ -59,6 +62,31 @@ export function syncLessonFromForm(form, state) {
       is_primary: row.querySelector('[data-field="is_primary"]')?.checked ?? false,
     });
   });
+}
+
+/** @returns {string|null} 안내 문구. 통과면 null */
+export function validateLessonState(state) {
+  if (!String(state.main_subject_note || '').trim()) {
+    return '주력과목이 없습니다. 기본등록에서 주력과목을 먼저 저장해 주세요.';
+  }
+  const fee = Number(state.preferred_fee_amount);
+  if (!Number.isFinite(fee) || fee <= 0) {
+    return '월 대표 과외비를 입력해 주세요.';
+  }
+  if (!String(state.fee_basis_type || '').trim()) {
+    return '산정방식을 선택해 주세요.';
+  }
+  if (!Array.isArray(state.lesson_places) || state.lesson_places.length === 0) {
+    return '강의장소를 1개 이상 선택해 주세요.';
+  }
+  for (const sub of state.subjects || []) {
+    const name = String(sub.subject_name || '').trim();
+    const grade = String(sub.grade_band || '').trim();
+    if (grade && !name) {
+      return '학년대를 선택했다면 과목명도 입력해 주세요. (예: 미적분2, 확률과 통계)';
+    }
+  }
+  return null;
 }
 
 export function syncCareerFromForm(form, state) {
@@ -102,7 +130,8 @@ export function payloadForStep(step, state) {
       };
     case 'regions':
       return { saved_regions: state.saved_regions };
-    case 'lesson':
+    case 'lesson': {
+      const subjects = (state.subjects || []).filter((s) => String(s.subject_name || '').trim());
       return {
         main_subject_note: state.main_subject_note,
         student_gender_group: state.student_gender_group,
@@ -115,8 +144,10 @@ export function payloadForStep(step, state) {
         minutes_per_lesson: state.minutes_per_lesson,
         fee_description: state.fee_description,
         lesson_places: state.lesson_places,
-        subjects: state.subjects,
+        // 빈 과목 행은 제외 → 서버가 주력과목으로 폴백
+        subjects,
       };
+    }
     case 'career':
       return {
         university_name: state.university_name,

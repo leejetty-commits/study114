@@ -94,10 +94,11 @@ export async function saveTutorBasicInline(tutorId, basic) {
  * @param {Record<string, unknown>} detail
  */
 export async function saveTutorDetailInline(tutorId, detail) {
-  const subject = String(detail.main_subject_note || '').trim();
+  const current = getTutor(tutorId) || {};
+  const subject = String(detail.main_subject_note || current.main_subject_note || '').trim();
   const fee = Number(detail.preferred_fee_amount || 0);
   const places = Array.isArray(detail.lesson_places) ? detail.lesson_places : [];
-  if (!subject) throw new Error('주력과목을 선택해 주세요.');
+  if (!subject) throw new Error('주력과목이 없습니다. 기본등록에서 주력과목을 먼저 저장해 주세요.');
   if (!fee || fee <= 0) throw new Error('월 과외비를 입력해 주세요.');
   if (!places.length) throw new Error('강의장소를 1개 이상 선택해 주세요.');
 

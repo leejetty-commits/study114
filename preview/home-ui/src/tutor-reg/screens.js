@@ -493,15 +493,9 @@ function renderDetailForm(tutor) {
     <form class="p19-form p21-inline-form" data-p21-form="detail" data-p21-tutor-id="${tutor.id}">
       ${renderFormSection(
         '수업 · 가격',
-        '상세등록 항목을 마이페이지 가운데 칸에서 수정합니다.',
+        '주력과목은 기본등록에서 수정합니다. 여기서는 수업·가격 상세를 채웁니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
-          <label class="p19-field">
-            <span class="p19-field__label">주력과목 <em class="p19-required">필수</em></span>
-            <select class="p19-input" name="main_subject_note" required>
-              ${renderMainSubjectSelect(tutor.main_subject_note || '')}
-            </select>
-          </label>
           <label class="p19-field">
             <span class="p19-field__label">월 과외비 <em class="p19-required">필수</em></span>
             <input class="p19-input" type="number" name="preferred_fee_amount" value="${esc(tutor.preferred_fee_amount || '')}" required min="1" />
@@ -848,8 +842,9 @@ export function bindTutorRegEvents(root, rerender) {
             saved_regions: slots,
           });
         } else if (kind === 'detail') {
+          const current = getTutor(id) || {};
           await saveTutorDetailInline(id, {
-            main_subject_note: String(fd.get('main_subject_note') || ''),
+            main_subject_note: String(current.main_subject_note || ''),
             preferred_fee_amount: Number(fd.get('preferred_fee_amount') || 0),
             fee_basis_type: String(fd.get('fee_basis_type') || ''),
             lessons_per_week: String(fd.get('lessons_per_week') || ''),
