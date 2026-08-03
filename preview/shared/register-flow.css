@@ -18,8 +18,25 @@
   font-family: var(--font-sans);
 }
 
+/* 마이페이지 .mypage-layout 과 동일: 좌측 메뉴 자리(10rem)+gap 비우고 중앙 칼럼 폭 */
+@media (min-width: 1024px) {
+  .register-body .home-main {
+    display: grid;
+    grid-template-columns: var(--sidebar-width, 10rem) minmax(0, 1fr);
+    gap: var(--grid-gap, 1.5rem);
+    align-items: start;
+  }
+
+  .register-body .site-gate-wrap {
+    grid-column: 2;
+    max-width: none;
+    width: 100%;
+    margin-inline: 0;
+  }
+}
+
 .register-card.register-card--wide {
-  /* 마이페이지 본문 컬럼과 같이 home-main 전체 폭 사용 */
+  /* 마이페이지 .mypage-content 흰 박스와 동일 가로폭 */
   max-width: none;
   width: 100%;
   margin: 0;
