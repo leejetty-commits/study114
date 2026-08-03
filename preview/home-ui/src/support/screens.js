@@ -447,7 +447,7 @@ function renderSafeGuideAccordion(openSlug) {
         const related = getRelatedGuidePosts(g.slug);
         const relatedHtml = related.length
           ? `<div class="sup-related">
-               <span class="sup-related__label">관련 가이드</span>
+               <span class="sup-related__label">관련 안내</span>
                ${related
                  .map(
                    (r) =>

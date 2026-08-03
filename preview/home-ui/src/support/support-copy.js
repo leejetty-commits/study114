@@ -42,17 +42,18 @@ export const OPERATIONAL_CTA = {
   hintSuffix: '· 쪽지함과 별도',
 };
 
-/** §5 G1~G7 */
+/** 안전과외 가이드 본문 */
 export const GUIDE_ARTICLES = [
   {
     slug: 'safe-what',
     title: '안전과외란? — 우동공과에서의 의미',
     priority: 'primary',
     audience: '전체',
+    related: ['prepay', 'first-meeting', 'dispute'],
     body: [
-      '안전과외는 결제 보장 상품이 아니라, **선입금 주의·분쟁 예방·당사자 책임**을 설명하는 교육형 가이드입니다.',
-      '우동공과는 과외·공부방 **매칭을 대신하지 않으며**, 탐색·비교·쪽지는 회원 주도로 이루어집니다.',
-      '플랫폼은 에스크로·안전번호·전화 중계를 제공하지 않습니다.',
+      '안전과외는 결제를 보장하는 상품이 아니라, **선입금 주의·분쟁 예방·당사자 책임**을 설명하는 이용 안내입니다.',
+      '우동공과는 과외·공부방 **연결을 대신하지 않으며**, 찾기·비교·쪽지는 회원 주도로 이루어집니다.',
+      '우동공과는 대금 보관·안전번호·전화 연결을 제공하지 않습니다.', // 대금 보관: 플랫폼이 돈을 잠시 맡아 두는 방식
     ],
   },
   {
@@ -60,10 +61,11 @@ export const GUIDE_ARTICLES = [
     title: '선입금·전액선불 주의',
     priority: 'primary',
     audience: '학부모',
+    related: ['safe-what', 'first-meeting', 'dispute'],
     body: [
       '장기·고액 선입금은 신중히 결정하세요.',
-      '영수증·환불 조건은 **당사자 간 문서화**를 권장합니다.',
-      '우동공과는 대금을 보관하거나 지급하지 않습니다.',
+      '영수증·환불 조건은 **당사자 간에 글로 남겨 두는 것**을 권장합니다.',
+      '우동공과는 대금을 보관하거나 대신 지급하지 않습니다.',
     ],
   },
   {
@@ -71,8 +73,9 @@ export const GUIDE_ARTICLES = [
     title: '첫 쪽지·시범 수업 안내',
     priority: 'primary',
     audience: '전체',
+    related: ['safe-what', 'prepay', 'privacy'],
     body: [
-      '회원 간 **공식 접촉**은 쪽지를 사용합니다.',
+      '회원 간 **공식 연락**은 쪽지를 사용합니다.',
       '시범 수업·일정·조건은 쪽지로 먼저 확인한 뒤, 연락처 교환 여부는 당사자가 판단합니다.',
       '플랫폼이 전화·이메일을 대신 전달하지 않습니다.',
     ],
@@ -82,9 +85,10 @@ export const GUIDE_ARTICLES = [
     title: '분쟁이 생기면 — 플랫폼 역할과 한계',
     priority: 'primary',
     audience: '전체',
+    related: ['prepay', 'first-meeting', 'parent-check'],
     body: [
       '과외비·환불 등 분쟁은 **당사자 간 협의**가 우선입니다.',
-      '우동공과는 법률 자문·분쟁 대리 조정을 하지 않습니다.',
+      '우동공과는 법률 자문이나 분쟁 조정을 대신하지 않습니다.',
       '필요 시 소비자원·관할 기관 등 외부 절차를 안내합니다.',
     ],
   },
@@ -93,16 +97,17 @@ export const GUIDE_ARTICLES = [
     title: '공급자(공부방·과외) 체크리스트',
     priority: 'secondary',
     audience: '공급자',
+    related: ['parent-check', 'privacy', 'safe-what'],
     body: [
-      '등록·노출·접촉 권한은 서비스 정책을 따릅니다. 아래 항목을 주기적으로 점검하세요.',
-      '플랫폼은 제출자료의 사실을 검증·보증하지 않습니다 — **공개 상태를 스스로 관리**합니다.',
+      '등록·노출·연락 권한은 서비스 정책을 따릅니다. 아래 항목을 주기적으로 점검하세요.',
+      '플랫폼은 제출자료의 사실을 검증하거나 보증하지 않습니다 — **공개 상태를 스스로 관리**합니다.',
     ],
     checklist: [
       { label: '프로필·등록 정보 최신 여부', hint: '공부방명·과목·지역·소개글이 실제와 일치하는지' },
       { label: '제출자료·공개 상태 확인', hint: '마이페이지 제출자료 상태와 학부모에게 보이는 범위 확인' },
       { label: '상담 가능 상태', hint: '공부방은 상담 가능·일시 중지 등 현재 상태를 유지' },
-      { label: '쪽지·접촉 권한 이해', hint: '학부모가 먼저 보낸 쪽지와 답장은 무료 · 학생에게 먼저 보내는 쪽지만 유료' },
-      { label: '대표·추천 노출 의미', hint: '눈에 잘 띄는 자리를 일정 기간 이용하는 상품 · 매칭과 성과를 보장하지 않음' },
+      { label: '쪽지·연락 권한 이해', hint: '학부모가 먼저 보낸 쪽지와 답장은 무료 · 학생에게 먼저 보내는 쪽지만 유료' },
+      { label: '대표·추천 노출 의미', hint: '눈에 잘 띄는 자리를 일정 기간 이용하는 상품 · 연결·성과를 보장하지 않음' },
       { label: '대금·선입금', hint: '과외비는 당사자 합의 · 대금 보관·지급 중개 없음' },
     ],
   },
@@ -111,15 +116,16 @@ export const GUIDE_ARTICLES = [
     title: '학부모·학생 의뢰 체크리스트',
     priority: 'secondary',
     audience: '학부모',
+    related: ['provider-check', 'prepay', 'privacy'],
     body: [
-      '탐색·비교·접촉은 **회원 주도**입니다. 플랫폼이 후보를 추천하거나 대금을 보관하지 않습니다.',
+      '찾기·비교·연락은 **회원 주도**입니다. 플랫폼이 후보를 골라 주거나 대금을 보관하지 않습니다.',
       '학생 정보는 **필요한 범위만** 공개하세요.',
     ],
     checklist: [
-      { label: '학생 공개 범위·블라인드', hint: '등록·수정 시 공개 필드 · 표시명 확인' },
-      { label: '찜·비교 후 접촉', hint: '후보를 좁힌 뒤 쪽지로 공식 접촉 시작' },
-      { label: '공급자 제출자료 직접 비교', hint: '제출자료·공개 상태는 본인이 확인 — 플랫폼 비보증' },
-      { label: '선입금·고액 선불', hint: '결정 전 선입금 주의 가이드 · 환불 조건은 쪽지·문서로' },
+      { label: '학생 공개 범위·이름 가림', hint: '등록·수정 시 공개 항목 · 표시명 확인' },
+      { label: '찜·비교 후 연락', hint: '후보를 좁힌 뒤 쪽지로 공식 연락 시작' },
+      { label: '공급자 제출자료 직접 비교', hint: '제출자료·공개 상태는 본인이 확인 — 플랫폼이 보증하지 않음' },
+      { label: '선입금·고액 선불', hint: '결정 전 「선입금·전액선불 주의」 안내 · 환불 조건은 쪽지·문서로' },
       { label: '시범·일정·조건', hint: '첫 대화는 쪽지 · 연락처 교환은 당사자 판단' },
       { label: '분쟁 발생 시', hint: '당사자 협의 우선 · 플랫폼 법률·분쟁 대리 없음' },
     ],
@@ -129,15 +135,16 @@ export const GUIDE_ARTICLES = [
     title: '연락처·개인정보 — 쪽지 밖 자율 교환',
     priority: 'secondary',
     audience: '전체',
+    related: ['first-meeting', 'provider-check', 'parent-check'],
     body: [
-      '우동공과는 **안전번호·대리 통화·이메일 중계**를 제공하지 않습니다.',
+      '우동공과는 **안전번호·대리 통화·이메일 전달**을 제공하지 않습니다.',
       '쪽지 밖 연락처 교환은 **회원 간 자율**이며, 플랫폼은 내용·분쟁에 관여하지 않습니다.',
     ],
     checklist: [
-      { label: '공식 접촉 = 쪽지', hint: '회원 ↔ 회원 · 플랫폼 전화·메일 노출 없음' },
+      { label: '공식 연락 = 쪽지', hint: '회원 ↔ 회원 · 플랫폼 전화·메일 노출 없음' },
       { label: '안전번호 없음', hint: '번호 중계·녹취·대리 통화 미제공' },
       { label: '연락처·카톡 교환', hint: '충분히 조건 확인 후 당사자가 판단 · 플랫폼 비관여' },
-      { label: '개인정보 최소 공유', hint: '필요한 범위만 · 학생 민감정보 보수적 공개' },
+      { label: '개인정보 최소 공유', hint: '필요한 범위만 · 학생 민감정보는 조심스럽게 공개' },
       { label: '운영 문의와 구분', hint: '오류·정책·계정 문제는 고객센터 문의 · 회원 간 분쟁은 당사자 간 협의' },
       { label: '신고·차단', hint: '쪽지함·상세에서 사후 조치 — 사전 심사 없음' },
     ],
@@ -148,7 +155,7 @@ export const GUIDE_ARTICLES = [
 export const ROLE_GUIDES = {
   parent: {
     title: '학부모',
-    items: ['공부방/과외 찾기 · 찜/비교', '학생 공개 범위 · 안전 대화', '선입금 전 G2 가이드 확인'],
+    items: ['공부방/과외 찾기 · 찜/비교', '학생 공개 범위 · 안전 대화', '선입금 전 「선입금·전액선불 주의」 확인'],
   },
   study_room: {
     title: '공부방',
@@ -321,5 +328,11 @@ export function getGuideBySlug(slug) {
 export function getRelatedGuides(slug) {
   const current = getGuideBySlug(slug);
   if (!current) return [];
+  if (Array.isArray(current.related) && current.related.length) {
+    return current.related
+      .map((id) => getGuideBySlug(id))
+      .filter(Boolean)
+      .slice(0, 3);
+  }
   return GUIDE_ARTICLES.filter((g) => g.slug !== slug && g.priority === current.priority).slice(0, 3);
 }

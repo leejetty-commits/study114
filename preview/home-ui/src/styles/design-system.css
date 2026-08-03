@@ -38,6 +38,8 @@ body {
 .mypage-nav__link,
 .sup-nav__link,
 .msg-tab,
+.account-settings,
+.account-settings *,
 .btn {
   font-family: var(--font-sans);
 }

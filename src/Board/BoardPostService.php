@@ -384,6 +384,9 @@ final class BoardPostService
             ? array_values(array_map('strval', $meta['body']))
             : [];
         $checklist = isset($meta['checklist']) && is_array($meta['checklist']) ? $meta['checklist'] : [];
+        $related = isset($meta['related']) && is_array($meta['related'])
+            ? array_values(array_map('strval', $meta['related']))
+            : [];
 
         return $base + [
             'slug' => $slug,
@@ -391,6 +394,7 @@ final class BoardPostService
             'audience' => (string) ($meta['audience'] ?? $row['description'] ?? '전체'),
             'body' => $body,
             'checklist' => $checklist,
+            'related' => $related,
         ];
     }
 }

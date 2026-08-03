@@ -55,6 +55,7 @@ function mapGuidePost(post) {
     audience: post.audience || '전체',
     body: Array.isArray(post.body) ? post.body : [],
     checklist: Array.isArray(post.checklist) ? post.checklist : [],
+    related: Array.isArray(post.related) ? post.related : [],
   };
 }
 
@@ -80,6 +81,7 @@ function guideSeed() {
     audience: g.audience,
     body: [...g.body],
     checklist: g.checklist ? g.checklist.map((c) => ({ ...c })) : [],
+    related: Array.isArray(g.related) ? [...g.related] : [],
   }));
 }
 
@@ -106,11 +108,17 @@ function faqSource() {
 }
 
 function guideSource() {
+  // 시드 안전과외 가이드를 프론트 SSOT로 우선
+  const seed = guideSeed();
+  const seedSlugs = new Set(seed.map((g) => g.slug));
   if (isBoardApiMode()) {
     const apiRows = getOperationalPostsCache('safe-guide').map(mapGuidePost);
-    if (apiRows.length) return apiRows;
+    if (apiRows.length) {
+      const extras = apiRows.filter((r) => !seedSlugs.has(r.slug));
+      return [...seed, ...extras];
+    }
   }
-  return guideSeed();
+  return seed;
 }
 
 /** @returns {ReturnType<typeof mapNoticePost>[]} */
@@ -137,6 +145,12 @@ export function getGuidePost(slug) {
 export function getRelatedGuidePosts(slug) {
   const current = getGuidePost(slug);
   if (!current) return [];
+  if (Array.isArray(current.related) && current.related.length) {
+    return current.related
+      .map((id) => getGuidePost(id))
+      .filter(Boolean)
+      .slice(0, 3);
+  }
   return listGuidePosts().filter((g) => g.slug !== slug && g.priority === current.priority).slice(0, 3);
 }
 

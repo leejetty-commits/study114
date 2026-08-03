@@ -46,7 +46,7 @@ import { renderStudentRegScreen } from '../student-reg/screens.js';
 import { isStudyRoomRegPath } from '../study-room-reg/router.js';
 import { renderStudyRoomRegScreen } from '../study-room-reg/screens.js';
 import { isTutorRegPath } from '../tutor-reg/router.js';
-import { setAuthDisplayName } from '../auth-session.js';
+import { setAuthDisplayName, logout } from '../auth-session.js';
 import {
   formatLoginAccountLabel,
   isInternalAuthEmail,
@@ -165,13 +165,13 @@ function getHomeHighlights(role, counts) {
   if (role === 'parent') {
     return [
       { icon: '♡', label: '찜한 곳', value: `${counts.wishlist}개`, note: '나중에 다시 볼 수 있어요', path: '/mypage/wishlist' },
-      { icon: '◷', label: '최근 본 항목', value: `${counts.recentCount}개`, note: '보던 곳부터 이어보세요', path: '/mypage/recent' },
+      { icon: '◷', label: '최근열람', value: `${counts.recentCount}개`, note: '보던 곳부터 이어보세요', path: '/mypage/recent' },
       { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '답장이 필요한 소식이에요', path: '/mypage/messages' },
     ];
   }
   return [
     { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
-    { icon: '☆', label: '관심 학생', value: `${counts.studentReviewCount}명`, note: '저장한 학생을 다시 살펴보세요', path: '/mypage/student-review' },
+    { icon: '☆', label: '관심학생', value: `${counts.studentReviewCount}명`, note: '저장한 학생을 다시 살펴보세요', path: '/mypage/student-review' },
     { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
   ];
 }
@@ -180,16 +180,16 @@ function getHomeQuickActions(role) {
   if (role === 'parent') {
     return [
       { icon: '♡', title: '찜 목록', note: '마음에 둔 공부방과 과외쌤', path: '/mypage/wishlist' },
-      { icon: '◷', title: '최근 본 항목', note: '보던 곳부터 다시 확인', path: '/mypage/recent' },
-      { icon: '✉', title: '쪽지', note: '상담과 답장 모아보기', path: '/mypage/messages' },
-      { icon: '⚙', title: '계정 설정', note: '표시 이름과 로그인 관리', path: '/mypage/account' },
+      { icon: '◷', title: '최근열람', note: '보던 곳부터 다시 확인', path: '/mypage/recent' },
+      { icon: '✉', title: '쪽지함', note: '상담과 답장 모아보기', path: '/mypage/messages' },
+      { icon: '⚙', title: '계정설정', note: '표시 이름과 로그인 관리', path: '/mypage/account' },
     ];
   }
   return [
     { icon: '✎', title: '내 등록', note: role === 'study_room' ? '공부방 정보와 공개 상태' : '과외 프로필과 공개 상태', path: '/mypage/registrations' },
-    { icon: '☆', title: '관심 학생', note: '저장한 학생과 쪽지 준비', path: '/mypage/student-review' },
-    { icon: '✉', title: '쪽지', note: '문의와 진행 중인 대화', path: '/mypage/messages' },
-    { icon: '◌', title: '이용 현황', note: '이용권과 남은 기간 확인', path: '/mypage/plans' },
+    { icon: '☆', title: '관심학생', note: '저장한 학생과 쪽지 준비', path: '/mypage/student-review' },
+    { icon: '✉', title: '쪽지함', note: '문의와 진행 중인 대화', path: '/mypage/messages' },
+    { icon: '◌', title: '이용현황', note: '이용권과 남은 기간 확인', path: '/mypage/plans' },
   ];
 }
 
@@ -204,7 +204,7 @@ function renderHome(role, profile, counts, cta) {
         <div class="mypage-home-hero__copy">
           <span class="mypage-home-hero__role">${esc(roleLabel(role))}</span>
           <h2>${esc(homeIdentity)}님, ${esc(getHomeGreeting(role))}</h2>
-          <p>${esc(profile.regionLabel)} 기준으로 등록·쪽지·이용 현황을 한곳에서 관리합니다.</p>
+          <p>${esc(profile.regionLabel)} 기준으로 등록·쪽지함·이용현황을 한곳에서 관리합니다.</p>
         </div>
       </section>
 
@@ -260,8 +260,8 @@ function renderHome(role, profile, counts, cta) {
       </section>
 
       <section class="mypage-home-footnote">
-        <p><strong>계정·역할 변경</strong>은 계정 설정에서 할 수 있습니다.</p>
-        <a href="#/mypage/account" data-mypage-nav="/mypage/account">계정 설정</a>
+        <p><strong>계정·역할 변경</strong>은 계정설정에서 할 수 있습니다.</p>
+        <a href="#/mypage/account" data-mypage-nav="/mypage/account">계정설정</a>
       </section>
     </div>`;
 }
@@ -628,84 +628,160 @@ function renderAccount(role, profile) {
   }
 
   return `
-    <section class="mypage-panel">
-      <h2 class="mypage-password-change__title">표시 정보</h2>
-      <p class="mypage-note">사이트 표시명은 마이페이지·헤더에 보이는 이름입니다. 로그인 계정·소셜 연동은 그대로 유지됩니다.</p>
-      ${
-        justSaved
-          ? '<p class="form-success" role="status">사이트 표시명이 저장되었습니다.</p>'
-          : ''
-      }
-      <div class="mypage-display-name-summary" data-display-name-summary>
-        <dl class="mypage-dl">
-          <dt>사이트 표시명</dt>
-          <dd><strong data-display-name-current>${displayShown}</strong></dd>
-        </dl>
-        <div class="mypage-form-actions">
-          <button type="button" class="btn btn--secondary" data-action="toggle-display-name">표시명 수정</button>
+    <section class="account-settings">
+      <header class="account-settings__hero">
+        <p class="account-settings__eyebrow">사이트에 보이는 이름</p>
+        <h2 class="account-settings__name" data-display-name-current>${displayShown}</h2>
+        <p class="account-settings__lead">표시명·로그인·역할·보안을 한곳에서 관리합니다.</p>
+        ${
+          justSaved
+            ? '<p class="account-settings__toast" role="status">사이트 표시명이 저장되었습니다.</p>'
+            : ''
+        }
+      </header>
+
+      <article class="account-card">
+        <div class="account-card__head">
+          <h3 class="account-card__title">표시 정보</h3>
+          <p class="account-card__desc">마이페이지·헤더에 보이는 이름입니다. 로그인 계정·소셜 연동은 그대로 유지됩니다.</p>
         </div>
-      </div>
-      <div class="mypage-display-name-edit" data-display-name-edit hidden>
-        <form data-form="change-display-name" class="mypage-display-name__form" autocomplete="off">
-          <div class="form-group">
-            <label class="form-label form-label--required" for="mypage-display-name">사이트 표시명</label>
-            <input class="form-input" type="text" id="mypage-display-name" name="display_name" maxlength="50" required value="${displayValue}" />
-            <p class="form-hint">예: 카카오 과외쌤, 종현 과외쌤 — 2~50자 · 이메일 형태 불가</p>
+        <div class="account-card__body">
+          <div class="account-identity" data-display-name-summary>
+            <div class="account-identity__row">
+              <span class="account-identity__label">사이트 표시명</span>
+              <strong class="account-identity__value" data-display-name-current>${displayShown}</strong>
+            </div>
+            <button type="button" class="btn btn--secondary btn--sm" data-action="toggle-display-name">표시명 수정</button>
           </div>
-          <p class="form-error" data-display-name-error hidden role="alert"></p>
-          <div class="mypage-form-actions">
-            <button type="submit" class="btn btn--primary">표시명 저장</button>
-            <button type="button" class="btn btn--ghost" data-action="cancel-display-name">취소</button>
+          <div class="account-identity-edit" data-display-name-edit hidden>
+            <form data-form="change-display-name" class="account-form" autocomplete="off">
+              <div class="form-group">
+                <label class="form-label form-label--required" for="mypage-display-name">사이트 표시명</label>
+                <input class="form-input" type="text" id="mypage-display-name" name="display_name" maxlength="50" required value="${displayValue}" />
+                <p class="form-hint">예: 카카오 과외쌤, 종현 과외쌤 — 2~50자 · 이메일 형태 불가</p>
+              </div>
+              <p class="form-error" data-display-name-error hidden role="alert"></p>
+              <div class="account-form__actions">
+                <button type="submit" class="btn btn--primary btn--sm">표시명 저장</button>
+                <button type="button" class="btn btn--ghost btn--sm" data-action="cancel-display-name">취소</button>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
-      <dl class="mypage-dl mypage-dl--account-meta">
-        <dt>연동된 소셜</dt><dd>${esc(socialLabel)}</dd>
-        <dt>로그인 계정</dt>
-        <dd>
-          <code class="mypage-login-id">${esc(loginShown)}</code>
-          <p class="mypage-note" style="margin:0.35rem 0 0;">${esc(loginNote)}</p>
-        </dd>
-        <dt>대표 지역</dt><dd>${esc(profile.regionLabel)}</dd>
-        <dt>역할</dt><dd>${esc(authRole)}</dd>
-      </dl>
-      <div class="mypage-role-switch" data-role-switch-panel>
-        <h2 class="mypage-password-change__title">역할 전환</h2>
-        <p class="mypage-note">역할 전환은 GNB가 아니라 이 계정설정에서만 처리합니다. 현재 세션 역할(<strong>${esc(roleLabel(role))}</strong>) 기준으로 메뉴가 노출됩니다.</p>
-        <p class="mypage-note">다른 역할로 이용하려면 해당 역할 계정으로 다시 로그인하세요. (복수 역할 보유 시 전환 UI는 후속)</p>
-        <div class="mypage-form-actions">
-          <button type="button" class="btn btn--secondary" data-action="util-logout">다른 계정으로 로그인</button>
         </div>
-      </div>
-      <div class="mypage-form-actions">
-        <button type="button" class="btn btn--secondary" data-action="toggle-password-change">비밀번호 변경</button>
-        <button type="button" class="btn btn--secondary" data-action="util-logout">로그아웃</button>
-      </div>
-      <div class="mypage-password-change" data-password-change hidden>
-        <h2 class="mypage-password-change__title">비밀번호 변경</h2>
-        <p class="mypage-note">로그인한 상태에서 현재 비밀번호를 확인한 뒤 새 비밀번호로 바꿉니다. 소셜로만 가입한 계정은 이메일 비밀번호가 없을 수 있습니다.</p>
-        <form data-form="change-password" class="mypage-password-change__form" autocomplete="off">
-          <div class="form-group">
-            <label class="form-label form-label--required" for="mypage-pw-current">현재 비밀번호</label>
-            <input class="form-input" type="password" id="mypage-pw-current" name="current_password" autocomplete="current-password" required />
-          </div>
-          <div class="form-group">
-            <label class="form-label form-label--required" for="mypage-pw-new">새 비밀번호</label>
-            <input class="form-input" type="password" id="mypage-pw-new" name="password" autocomplete="new-password" required />
-          </div>
-          <div class="form-group">
-            <label class="form-label form-label--required" for="mypage-pw-confirm">새 비밀번호 확인</label>
-            <input class="form-input" type="password" id="mypage-pw-confirm" name="password_confirm" autocomplete="new-password" required />
-          </div>
-          <p class="form-hint">${esc(PASSWORD_RULE_HINT)}</p>
-          <p class="form-error" data-pw-change-error hidden role="alert"></p>
-          <p class="form-success" data-pw-change-success hidden role="status"></p>
-          <div class="mypage-form-actions">
-            <button type="submit" class="btn btn--primary">변경 저장</button>
-            <button type="button" class="btn btn--ghost" data-action="cancel-password-change">취소</button>
-          </div>
-        </form>
-      </div>
+      </article>
+
+      <article class="account-card">
+        <div class="account-card__head">
+          <h3 class="account-card__title">계정 정보</h3>
+          <p class="account-card__desc">로그인·연동·역할 요약입니다.</p>
+        </div>
+        <div class="account-card__body">
+          <dl class="account-meta">
+            <div class="account-meta__item">
+              <dt>연동된 소셜</dt>
+              <dd>${esc(socialLabel)}</dd>
+            </div>
+            <div class="account-meta__item">
+              <dt>로그인 계정</dt>
+              <dd>
+                <code class="account-meta__code">${esc(loginShown)}</code>
+                <span class="account-meta__hint">${esc(loginNote)}</span>
+              </dd>
+            </div>
+            <div class="account-meta__item">
+              <dt>대표 지역</dt>
+              <dd>${esc(profile.regionLabel)}</dd>
+            </div>
+            <div class="account-meta__item">
+              <dt>역할</dt>
+              <dd>${esc(authRole)}</dd>
+            </div>
+          </dl>
+        </div>
+      </article>
+
+      <article class="account-card" data-role-switch-panel>
+        <div class="account-card__head">
+          <h3 class="account-card__title">역할 전환</h3>
+          <p class="account-card__desc">현재 세션 역할은 <strong>${esc(roleLabel(role))}</strong>입니다. 다른 역할로 쓰려면 해당 계정으로 다시 로그인해 주세요.</p>
+        </div>
+        <div class="account-card__body account-card__body--actions">
+          <button type="button" class="btn btn--secondary btn--sm" data-action="util-logout">다른 계정으로 로그인</button>
+        </div>
+      </article>
+
+      <article class="account-card account-card--session">
+        <div class="account-card__head">
+          <h3 class="account-card__title">로그인 관리</h3>
+          <p class="account-card__desc">비밀번호 변경과 로그아웃을 처리합니다.</p>
+        </div>
+        <div class="account-card__body account-card__body--actions">
+          <button type="button" class="btn btn--secondary btn--sm" data-action="toggle-password-change">비밀번호 변경</button>
+          <button type="button" class="btn btn--secondary btn--sm" data-action="util-logout">로그아웃</button>
+        </div>
+        <div class="account-panel" data-password-change hidden>
+          <h4 class="account-panel__title">비밀번호 변경</h4>
+          <p class="account-panel__desc">현재 비밀번호 확인 후 새 비밀번호로 바꿉니다. 소셜로만 가입한 계정은 이메일 비밀번호가 없을 수 있습니다.</p>
+          <form data-form="change-password" class="account-form" autocomplete="off">
+            <div class="form-group">
+              <label class="form-label form-label--required" for="mypage-pw-current">현재 비밀번호</label>
+              <input class="form-input" type="password" id="mypage-pw-current" name="current_password" autocomplete="current-password" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label form-label--required" for="mypage-pw-new">새 비밀번호</label>
+              <input class="form-input" type="password" id="mypage-pw-new" name="password" autocomplete="new-password" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label form-label--required" for="mypage-pw-confirm">새 비밀번호 확인</label>
+              <input class="form-input" type="password" id="mypage-pw-confirm" name="password_confirm" autocomplete="new-password" required />
+            </div>
+            <p class="form-hint">${esc(PASSWORD_RULE_HINT)}</p>
+            <p class="form-error" data-pw-change-error hidden role="alert"></p>
+            <p class="form-success" data-pw-change-success hidden role="status"></p>
+            <div class="account-form__actions">
+              <button type="submit" class="btn btn--primary btn--sm">변경 저장</button>
+              <button type="button" class="btn btn--ghost btn--sm" data-action="cancel-password-change">취소</button>
+            </div>
+          </form>
+        </div>
+      </article>
+
+      <article class="account-card account-card--danger">
+        <div class="account-card__head">
+          <h3 class="account-card__title">회원탈퇴</h3>
+          <p class="account-card__desc">탈퇴하면 로그인과 서비스 이용이 중단됩니다.</p>
+        </div>
+        <div class="account-card__body account-card__body--actions">
+          <button type="button" class="btn btn--ghost btn--sm mypage-withdraw-trigger" data-action="toggle-withdraw">
+            <span class="mypage-badge mypage-badge--danger">회원탈퇴</span>
+          </button>
+        </div>
+        <div class="account-panel account-panel--danger" data-withdraw-panel hidden>
+          <h4 class="account-panel__title">탈퇴 확인</h4>
+          <p class="account-panel__desc">탈퇴하면 로그인할 수 없으며, 등록·쪽지·찜 등 이용이 중단됩니다. 운영·법령상 필요한 일부 기록은 일정 기간 보관될 수 있습니다.</p>
+          <ul class="account-panel__list">
+            <li>탈퇴 후 동일 계정으로 즉시 재가입·복구되지 않을 수 있습니다.</li>
+            <li>진행 중인 문의·쪽지 대화는 더 이상 확인할 수 없습니다.</li>
+            <li>유료 이용 중이라면 잔여 기간·횟수도 함께 종료됩니다.</li>
+          </ul>
+          <form data-form="withdraw-account" class="account-form" autocomplete="off">
+            <label class="account-check">
+              <input type="checkbox" name="ack_irreversible" required />
+              <span>위 안내를 확인했으며, 탈퇴가 되돌리기 어렵다는 점에 동의합니다.</span>
+            </label>
+            <div class="form-group">
+              <label class="form-label form-label--required" for="mypage-withdraw-confirm">확인 문구</label>
+              <input class="form-input" type="text" id="mypage-withdraw-confirm" name="confirm_text" placeholder="탈퇴합니다" required />
+              <p class="form-hint">계속하려면 <strong>탈퇴합니다</strong>를 입력하세요.</p>
+            </div>
+            <p class="form-error" data-withdraw-error hidden role="alert"></p>
+            <div class="account-form__actions">
+              <button type="submit" class="btn btn--danger btn--sm">탈퇴 확정</button>
+              <button type="button" class="btn btn--ghost btn--sm" data-action="cancel-withdraw">취소</button>
+            </div>
+          </form>
+        </div>
+      </article>
     </section>`;
 }
 
@@ -929,10 +1005,95 @@ function bindDisplayNameEvents(root, rerender) {
   });
 }
 
+/**
+ * @param {HTMLElement} root
+ */
+function bindWithdrawEvents(root) {
+  const panel = root.querySelector('[data-withdraw-panel]');
+  const form = root.querySelector('[data-form="withdraw-account"]');
+  const errorEl = root.querySelector('[data-withdraw-error]');
+
+  root.querySelector('[data-action="toggle-withdraw"]')?.addEventListener('click', () => {
+    if (!panel) return;
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) {
+      form?.querySelector('#mypage-withdraw-confirm')?.focus();
+    }
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+  });
+
+  root.querySelector('[data-action="cancel-withdraw"]')?.addEventListener('click', () => {
+    if (panel) panel.hidden = true;
+    form?.reset();
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const confirmText = String(fd.get('confirm_text') || '').trim();
+    const ack = fd.get('ack_irreversible');
+    if (!ack) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = '안내 동의에 체크해 주세요.';
+      }
+      return;
+    }
+    if (confirmText !== '탈퇴합니다') {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = '확인 문구에 「탈퇴합니다」를 정확히 입력해 주세요.';
+      }
+      return;
+    }
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '처리 중…';
+    }
+    try {
+      const res = await fetch('/api/auth/withdraw.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm_text: confirmText }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || '탈퇴 처리에 실패했습니다.');
+      }
+      await logout();
+      try {
+        sessionStorage.setItem('study114.withdraw.done', '1');
+      } catch {
+        /* ignore */
+      }
+      window.location.hash = '#/guest';
+    } catch (err) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = err instanceof Error ? err.message : '탈퇴 처리에 실패했습니다.';
+      }
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '탈퇴 확정';
+      }
+    }
+  });
+}
+
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
   bindPasswordChangeEvents(root);
   bindDisplayNameEvents(root, rerender);
+  bindWithdrawEvents(root);
   root.querySelectorAll('[data-mypage-wish-remove]').forEach((btn) => {
     btn.addEventListener('click', () => {
       removeWishlist(btn.dataset.kind, btn.dataset.id);
