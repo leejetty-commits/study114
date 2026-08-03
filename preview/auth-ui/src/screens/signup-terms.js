@@ -1,5 +1,5 @@
-import { TERMS, TERMS_TEMP } from '../state.js';
-import { renderAuthShell, renderStepIndicator, renderTempNotice, bindGlobalEvents, navigate } from '../layout.js';
+import { TERMS } from '../state.js';
+import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { markTermsAgreed } from '../state.js';
 import { policyUiUrl } from '../../../shared/preview-links.js';
 
@@ -32,8 +32,16 @@ export function renderSignupTerms() {
 
   const content = `
     ${renderStepIndicator(1, 5)}
-    ${TERMS_TEMP ? renderTempNotice('약관 항목·필수 여부는 SSOT 2장 §3.2 [임시] — 법무 확정 후 잠금') : ''}
     <div class="panel">
+      <div class="login-stage__brand">
+        <img
+          class="login-stage__wordmark"
+          src="/assets/brand/logo-wordmark.png"
+          alt="우동공과"
+          width="120"
+          height="32"
+        />
+      </div>
       <h1 class="auth-heading">약관 동의</h1>
       <p class="auth-subheading mb-8">우동공과 서비스 이용을 위해 약관에 동의해 주세요.</p>
 

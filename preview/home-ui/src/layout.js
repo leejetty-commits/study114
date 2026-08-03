@@ -472,7 +472,7 @@ export function bindLayoutEvents(root, rerender) {
           })
           .catch((err) => console.error('[logout]', err));
       } else if (action === 'util-guide') {
-        navigateToSupport('/support/guide');
+        navigateToSupport('/support');
       } else if (action === 'util-library') {
         navigate('/library');
       } else if (action === 'util-support') {

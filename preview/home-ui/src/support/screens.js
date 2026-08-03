@@ -51,7 +51,8 @@ function renderGuideContent(article) {
 }
 
 function renderAdminFooterLink() {
-  return `<p class="sup-admin-foot"><a href="#/support/admin" class="sup-inline-link" data-sup-nav="/support/admin">운영 콘솔 (17c 프리뷰)</a></p>`;
+  // 일반 사용자 화면에는 운영 콘솔 링크를 노출하지 않음
+  return '';
 }
 
 function renderPrinciplesBox(compact = false) {
@@ -129,10 +130,12 @@ export function renderSupportScreen(path) {
   if (navId === 'faq') return renderFaqSection();
   if (navId === 'notice') return renderNoticeSection();
   if (navId === 'contact') return renderContactSection();
-  return renderHome();
+  return renderGuideSection();
 }
 
-function renderHome() {
+function renderGuideSection() {
+  const role = getNavRole();
+  const roleGuide = ROLE_GUIDES[role] || ROLE_GUIDES.guest;
   const cards = HOME_CARDS.map(
     (c) =>
       `<a href="#${c.href}" class="sup-card" data-sup-nav="${c.href}">
@@ -143,25 +146,6 @@ function renderHome() {
   const terms = TERMS_LINKS.map(
     (t) => `<a href="#${t.href}" class="sup-term-chip" data-sup-nav="${t.href}">${esc(t.label)}</a>`,
   ).join('');
-
-  return `
-    ${renderPrinciplesBox()}
-    ${renderPanel(
-      '빠른 안내',
-      'P17-01',
-      `<div class="sup-card-grid">${cards}</div>
-       <p class="sup-home-hint">왼쪽 메뉴에서 자주 묻는 질문 · 공지 · 운영문의 · 안전과외 가이드를 각각 확인할 수 있습니다.</p>`,
-      { lead: '자주 찾는 주제로 바로 이동합니다.' },
-    )}
-    ${renderPanel('약관/정책', 'P17-06', `<div class="sup-terms">${terms}</div>`, {
-      lead: '푸터와 동일 링크 · 1차는 placeholder',
-    })}
-    ${renderContactCtas('home-footer')}`;
-}
-
-function renderGuideSection() {
-  const role = getNavRole();
-  const roleGuide = ROLE_GUIDES[role] || ROLE_GUIDES.guest;
   const exposureGuides = getHomeExposureGuides(getPlanRuntimeSettings());
   const exposureGuideHtml = exposureGuides
     .map(
@@ -175,23 +159,35 @@ function renderGuideSection() {
     )
     .join('');
   return `
+    ${renderPrinciplesBox()}
     ${renderPanel(
-      '이용안내',
-      'P17-01 #guide',
+      '빠른 안내',
+      'guide-quick',
+      `<div class="sup-card-grid">${cards}</div>
+       <p class="sup-home-hint">왼쪽 메뉴에서 공지 · 안전과외 가이드 · 자주 묻는 질문 · 문의를 각각 확인할 수 있습니다.</p>`,
+      { lead: '자주 찾는 주제로 바로 이동합니다.' },
+    )}
+    ${renderPanel(
+      '역할별 요약',
+      'guide-role',
       `<ul class="sup-list sup-list--bullets">${roleGuide.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>
        <div class="sup-inline-links">
          <a href="#/support/faq" class="sup-inline-link" data-sup-nav="/support/faq">자주 묻는 질문 보기</a>
          <a href="#/support/safe" class="sup-inline-link" data-sup-nav="/support/safe">안전과외 가이드</a>
          <a href="#/library" class="sup-inline-link" data-sup-nav="/library">자료실</a>
        </div>`,
-      { lead: `역할별 요약 — ${roleGuide.title}` },
+      { lead: `${roleGuide.title} 기준으로 정리한 이용 흐름입니다.` },
     )}
     ${renderPanel(
-      '홈 노출 블록 안내',
-      'P17-01 #home-exposure',
+      '홈 노출 안내',
+      'guide-exposure',
       `<div class="sup-exposure-guides">${exposureGuideHtml}</div>`,
-      { lead: '홈 화면의 대표·추천·기본 노출 구성과 기준입니다. 순환 방식도 여기에서 안내합니다.' },
-    )}`;
+      { lead: '홈 화면의 대표·추천·기본 노출 구성과 순환 기준입니다.' },
+    )}
+    ${renderPanel('약관/정책', 'guide-terms', `<div class="sup-terms">${terms}</div>`, {
+      lead: '서비스 이용에 필요한 기본 안내 문서입니다.',
+    })}
+    ${renderContactCtas('guide-footer')}`;
 }
 
 function renderFaqSection() {
@@ -201,15 +197,15 @@ function renderFaqSection() {
     body: f.a,
   }));
   const sourceNote = isOperationalBoardApiActive()
-    ? '서버에 저장된 최신 질문을 표시합니다.'
-    : '1차 시드 fallback · board_posts 연결 시 자동 전환';
+    ? '최신 질문을 표시합니다.'
+    : '자주 찾는 질문을 모았습니다.';
 
   return renderPanel(
     '자주 묻는 질문',
-    'P17-04',
+    'faq',
     renderFaqBoard(posts),
     {
-      lead: `${sourceNote} · 화면은 아코디언 UX`,
+      lead: `${sourceNote} 제목을 누르면 답이 펼쳐집니다.`,
     },
   );
 }
@@ -224,14 +220,14 @@ function renderNoticeSection() {
 
   return renderPanel(
     '공지사항',
-    'P17-05',
+    'notice',
     `<p class="sup-section__lead">제목을 누르면 본문이 펼쳐집니다. 다른 공지를 누르면 이전 내용은 접힙니다.</p>
      ${renderSingleOpenBoard(posts, { variant: 'notice' })}
      ${renderAdminFooterLink()}`,
     {
       lead: isOperationalBoardApiActive()
-        ? '서버에 저장된 최신 공지를 표시합니다.'
-        : '운영 공지 · A28-05 / 17c CMS에서 추가·수정',
+        ? '최신 공지를 표시합니다.'
+        : '서비스 운영 공지입니다.',
     },
   );
 }
@@ -241,7 +237,7 @@ function renderContactSection() {
   const flashHtml = flashId
     ? `<div class="sup-flash sup-flash--success" role="status">
          <strong>${esc(OPERATIONAL_CONTACT.ticketSuccessTitle)}</strong>
-         <p>티켓 번호: <code>${esc(flashId)}</code> · <a href="#/support/contact/tickets" data-sup-nav="/support/contact/tickets">내 문의 내역</a></p>
+         <p>문의 번호: <code>${esc(flashId)}</code> · <a href="#/support/contact/tickets" data-sup-nav="/support/contact/tickets">내 문의 내역</a></p>
        </div>`
     : '';
 
@@ -250,8 +246,8 @@ function renderContactSection() {
   ).join('');
 
   return renderPanel(
-    '운영문의',
-    'P17-07',
+    '문의',
+    'contact',
     `<p class="sup-section__lead">운영·서비스 문의 — 회원 간 쪽지와 <strong>별도 채널</strong>입니다.</p>
      ${flashHtml}
      ${renderContactCtas('contact-page')}
@@ -266,9 +262,9 @@ function renderContactSection() {
        </label>
        <label class="sup-field">
          <span>문의 내용</span>
-         <textarea name="body" rows="4" placeholder="버그·정책·계정 문의" required></textarea>
+         <textarea name="body" rows="4" placeholder="오류·정책·계정 문의" required></textarea>
        </label>
-       <button type="submit" class="btn btn--primary btn--sm">티켓 접수</button>
+       <button type="submit" class="btn btn--primary btn--sm">문의 접수</button>
        <p class="sup-note">${esc(OPERATIONAL_CONTACT.note)}</p>
      </form>
      <p class="sup-contact-extra">
@@ -276,7 +272,7 @@ function renderContactSection() {
        · 수신 이메일 ${esc(OPERATIONAL_CONTACT.email)}
      </p>
      ${renderAdminFooterLink()}`,
-    { lead: '17c 티켓 접수 · SLA·실제 메일 발송은 후속' },
+    { lead: '운영팀에 직접 남기는 문의입니다.' },
   );
 }
 
@@ -298,14 +294,14 @@ function renderContactTicketsSection() {
 
   return renderPanel(
     '내 문의 내역',
-    'P17-07 · tickets',
-    `<p class="sup-section__lead">프리뷰: 동일 브라우저(sessionStorage)에 접수된 티켓입니다.</p>
+    'contact-tickets',
+    `<p class="sup-section__lead">이 브라우저에서 접수한 문의 목록입니다.</p>
      <table class="sup-admin-table sup-user-tickets">
        <thead><tr><th>번호</th><th>유형</th><th>상태</th><th>접수일</th></tr></thead>
        <tbody>${rows || '<tr><td colspan="4" class="sup-empty">접수 내역이 없습니다.</td></tr>'}</tbody>
      </table>
-     <p class="sup-contact-extra"><a href="#/support/contact" class="sup-inline-link" data-sup-nav="/support/contact">← 운영문의 작성</a></p>`,
-    { lead: '운영 문의 티켓 조회(프리뷰)' },
+     <p class="sup-contact-extra"><a href="#/support/contact" class="sup-inline-link" data-sup-nav="/support/contact">← 문의 작성</a></p>`,
+    { lead: '내가 남긴 운영 문의 확인' },
   );
 }
 
@@ -331,7 +327,7 @@ function renderSafeGuideAccordion(openSlug) {
         return `
           <div class="sup-accordion__item${isOpen ? ' is-open' : ''}" data-sup-article="${esc(g.slug)}" data-sup-group="${groupKey}">
             <button type="button" class="sup-accordion__head" aria-expanded="${isOpen ? 'true' : 'false'}">
-              <span class="sup-guide-row__badge">${g.priority === 'primary' ? '1차' : '보조'}</span>
+              <span class="sup-guide-row__badge">${g.priority === 'primary' ? '핵심' : '추가'}</span>
               <span class="sup-accordion__title">${esc(g.title)}</span>
               <span class="sup-guide-row__meta">${esc(g.audience)}</span>
               <span class="sup-accordion__chev" aria-hidden="true"></span>
@@ -358,11 +354,11 @@ function renderSafeGuideAccordion(openSlug) {
     ${renderPrinciplesBox(true)}
     ${renderPanel(
       '안전과외 가이드',
-      'P17-02 · P17-03',
+      'safe',
       `<p class="sup-section__lead">제목을 누르면 아래에 내용이 펼쳐집니다. 다른 항목을 누르면 이전 내용은 접힙니다.</p>
-       ${renderGroup('1차 가이드 (G1~G4)', primary, 'primary')}
-       ${renderGroup('보조 가이드 (G5~G7)', secondary, 'secondary')}`,
-      { lead: isOperationalBoardApiActive() ? '서버에 저장된 최신 안전 가이드를 표시합니다.' : '페이지 이동 없이 한 화면에서 읽기' },
+       ${renderGroup('꼭 읽어 주세요', primary, 'primary')}
+       ${renderGroup('더 알아보기', secondary, 'secondary')}`,
+      { lead: isOperationalBoardApiActive() ? '최신 안전 가이드를 표시합니다.' : '한 화면에서 이어서 읽을 수 있습니다.' },
     )}
     ${openSlug ? `<span data-sup-scroll-article="${esc(openSlug)}" hidden></span>` : ''}`;
 }

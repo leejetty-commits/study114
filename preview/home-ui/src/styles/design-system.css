@@ -280,11 +280,37 @@ body {
   color: var(--gray-700);
 }
 
+.guest-gate__welcome,
 .guest-gate__eyebrow,
 .guest-gate__title,
 .guest-gate__lead,
 .guest-gate__list {
   font-family: var(--font-sans);
+}
+
+.guest-gate__welcome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.45rem;
+  margin: 0 0 var(--space-4);
+  text-align: center;
+  font-size: var(--fs-3, 1rem);
+  font-weight: var(--fw-semibold, 600);
+  line-height: 1.4;
+  color: var(--gray-800);
+}
+
+.guest-gate__welcome-logo {
+  display: inline-block;
+  height: 1.5rem;
+  width: auto;
+  vertical-align: middle;
+}
+
+.guest-gate__welcome-text {
+  white-space: nowrap;
 }
 
 .guest-gate__eyebrow {
@@ -294,6 +320,16 @@ body {
   line-height: var(--leading-relaxed);
   color: var(--brand-blue);
   letter-spacing: 0.02em;
+}
+
+/* 유료상품·공부방/과외 등록 게스트 안내 — 하단 CTA(배지형 버튼) 세로 높이 통일 */
+.guest-gate__actions .btn {
+  box-sizing: border-box;
+  min-height: 2.75rem;
+  padding: 0.75rem 1.25rem;
+  font-size: var(--text-sm, 0.875rem);
+  font-weight: 600;
+  line-height: 1.25;
 }
 
 .guest-gate__title {

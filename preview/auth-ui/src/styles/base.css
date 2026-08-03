@@ -260,13 +260,15 @@ img {
   box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
 }
 
-.login-stage__brand {
+.login-stage__brand,
+.auth-shell__card .login-stage__brand {
   display: flex;
   justify-content: center;
   margin-bottom: var(--space-4);
 }
 
-.login-stage__wordmark {
+.login-stage__wordmark,
+.auth-shell__card .login-stage__wordmark {
   height: 2rem;
   width: auto;
 }

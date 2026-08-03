@@ -7,14 +7,15 @@ export const SITE_PROMO_ITEMS = {
   premium: {
     tag: '프리미엄',
     title: '우리동네 상단 노출',
-    desc: '대표·추천 노출 — 상세등록 완료 후 이용',
+    desc: '프라임/픽(대표·추천) — 상세등록 완료 후 이용',
     cta: '상품 안내',
     action: 'ad-premium',
   },
   partner: {
     tag: '제휴',
     title: '지역 학원·교육 브랜드',
-    desc: '광고 슬롯',
+    // 광고 자리(슬롯) 안내 — 사용자에게는 ‘광고 자리’로 표기
+    desc: '지역 광고 자리 안내',
     cta: '광고 문의',
     action: 'ad-inquiry',
   },

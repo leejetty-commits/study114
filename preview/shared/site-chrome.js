@@ -227,8 +227,8 @@ export function bindSiteChrome(root, handlers = {}) {
       }
 
       if (action === 'util-guide') {
-        if (navigateHome && isHomeUiHost()) navigateHome('/support/guide');
-        else goSameTab(homeHashUrl('/support/guide'));
+        if (navigateHome && isHomeUiHost()) navigateHome('/support');
+        else goSameTab(homeHashUrl('/support'));
         return;
       }
       if (action === 'util-admin') {

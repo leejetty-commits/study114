@@ -500,7 +500,7 @@ export function renderEmptyPrimePromo(kind) {
  * Prime 슬롯
  * — study_room: 항상 prime_slots 칸 고정 · null은 EMPTY 카드 (회전·페이지 없음)
  * — tutor: 후보 풀 15분 세트 순환 + 3슬롯 페이지 (시 단위 인원 대응)
- * 순환 고지는 이용안내 `#/support/guide` (getHomeExposureGuides)에만 둔다.
+ * 순환 고지는 이용안내 `#/support` (getHomeExposureGuides)에만 둔다.
  * @param {'study_room'|'tutor'} kind
  * @param {object[]} occupiedItems — study_room: 점유자 / tutor: 후보 풀 전체
  * @param {object} [opts]

@@ -6,7 +6,7 @@ import {
 import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/guest-gate-ui.js';
 import { renderPreviewToolbar, renderHeader, renderFooter } from '../layout.js';
 import { getAuthUser, isLoggedIn } from '../auth-session.js';
-import { getPlansPath, navigate, getNavRole } from '../state.js';
+import { getPlansPath, getNavRole } from '../state.js';
 import { renderPlansShell, bindPlansShellEvents } from './shell.js';
 import { renderPlansScreen, bindPlansScreenEvents } from './screens.js';
 
@@ -81,26 +81,18 @@ export function bindPlansEvents(root, rerender) {
   const role = resolveAccessNavRole(getAuthUser(), getNavRole());
   const hubGate = guardPlansAccess(role);
   if (!hubGate.ok) {
+    // GNB(유료상품 포함)는 bindLayoutEvents로 연결 — 미연결 시 네이티브 href만 의존해
+    // 다른 SPA→pathname 진입·일부 클릭에서 홈(#/guest)으로 떨어지는 경우가 있음
+    bindPlansShellEvents(root, rerender);
     bindGuestGateLinks(root);
-    root.querySelectorAll('[data-nav]').forEach((el) => {
-      el.addEventListener('click', (e) => {
-        e.preventDefault();
-        navigate(el.getAttribute('data-nav') || hubGate.redirect || '/guest');
-      });
-    });
     return;
   }
 
   const path = getPlansPath();
   const pathGate = guardPlansPath(role, path);
   if (!pathGate.ok) {
+    bindPlansShellEvents(root, rerender);
     bindGuestGateLinks(root);
-    root.querySelectorAll('[data-nav]').forEach((el) => {
-      el.addEventListener('click', (e) => {
-        e.preventDefault();
-        navigate(el.getAttribute('data-nav') || pathGate.redirect || '/plans');
-      });
-    });
     return;
   }
 

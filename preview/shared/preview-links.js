@@ -110,7 +110,7 @@ export function resolveGnbLink(gnbId, role) {
     case 'plans':
       return { external: false, url: '/plans' };
     case 'guide':
-      return { external: false, url: '/support/guide' };
+      return { external: false, url: '/support' };
     default:
       return null;
   }

@@ -262,6 +262,11 @@ export function bootstrapSupportRoute() {
 
   const hashPath = hash.slice(1);
   const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  // 홈·이용안내 통합 — 구 `/support/guide` → `/support`
+  if (path === '/support/guide' || path === '/support/guide/') {
+    window.location.replace(`#${getDefaultSupportPath()}`);
+    return true;
+  }
   if (path === '/support' || path === '/support/') {
     window.location.replace(`#${getDefaultSupportPath()}`);
     return true;

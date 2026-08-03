@@ -65,8 +65,8 @@ export const DUMMY_USER = {
   emailConsent: false,
 };
 
-/** 문서 잠금: 약관동의 항목 — [임시] SSOT 2장 §3.2, 법무 확정 전 변경 가능 */
-export const TERMS_TEMP = true;
+/** 문서 잠금: 약관동의 항목 — 법무 확정 전 문구 조정 가능 (UI 임시 배너 미사용) */
+export const TERMS_TEMP = false;
 
 export const TERMS = [
   { id: 'service', label: '서비스 이용약관', required: true },

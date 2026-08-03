@@ -96,7 +96,7 @@ final class ProviderCheckoutService
 
         if ($kind === 'badge_addon') {
 
-            throw new InvalidArgumentException('광고배지는 Prime/Pick 기간 구독 후 구매할 수 있습니다.');
+            throw new InvalidArgumentException('광고배지는 프라임/픽(대표·추천 노출) 이용 후 구매할 수 있습니다.');
 
         }
 
