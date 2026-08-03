@@ -171,10 +171,28 @@ final class ContentSchemaMigrateService
     private function seedOperationalPosts(): string
     {
         $inserted = 0;
+        $updated = 0;
         foreach ($this->operationalPostRows() as $row) {
             $check = $this->pdo->prepare('SELECT id FROM board_posts WHERE board_key = ? AND post_key = ?');
             $check->execute([$row['board_key'], $row['post_key']]);
-            if ($check->fetchColumn()) {
+            $existingId = $check->fetchColumn();
+            if ($existingId) {
+                // FAQ 시드 문구는 배포 시 최신 카피로 갱신 (기존 행 skip이면 영문·장번호가 남음)
+                if ($row['board_key'] === 'faq' && preg_match('/^faq-\d+$/', (string) $row['post_key'])) {
+                    $upd = $this->pdo->prepare(
+                        'UPDATE board_posts
+                         SET title = ?, description = ?, category_id = ?, meta_json = ?, updated_at = NOW()
+                         WHERE id = ?'
+                    );
+                    $upd->execute([
+                        $row['title'],
+                        $row['description'],
+                        $row['category_id'],
+                        $row['meta_json'],
+                        $existingId,
+                    ]);
+                    $updated++;
+                }
                 continue;
             }
             $stmt = $this->pdo->prepare(
@@ -196,7 +214,7 @@ final class ContentSchemaMigrateService
             $inserted++;
         }
 
-        return "inserted={$inserted}";
+        return "inserted={$inserted},updated={$updated}";
     }
 
     private function seedChannels(): string
@@ -325,9 +343,9 @@ final class ContentSchemaMigrateService
                 'author_role' => 'system',
                 'status' => 'published',
                 'title' => '회원끼리 연락은 어떻게 하나요?',
-                'description' => '회원 간 공식 접촉은 **쪽지(16장)** 입니다. 플랫폼 전화·이메일 중계는 없습니다.',
+                'description' => '회원 간 공식 접촉은 **쪽지**입니다. 플랫폼 전화·이메일 중계는 없습니다.',
                 'category_id' => 'contact',
-                'meta_json' => json_encode(['answer' => '회원 간 공식 접촉은 **쪽지(16장)** 입니다. 플랫폼 전화·이메일 중계는 없습니다.', 'sortOrder' => 10], JSON_UNESCAPED_UNICODE),
+                'meta_json' => json_encode(['answer' => '회원 간 공식 접촉은 **쪽지**입니다. 플랫폼 전화·이메일 중계는 없습니다.', 'sortOrder' => 10], JSON_UNESCAPED_UNICODE),
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
@@ -336,9 +354,9 @@ final class ContentSchemaMigrateService
                 'author_role' => 'system',
                 'status' => 'published',
                 'title' => '운영·서비스 문의는 어디로 하나요?',
-                'description' => '**고객센터 문의** — 이메일이나 문의 양식을 이용합니다. 쪽지함과는 별개입니다.',
+                'description' => '**고객센터 문의**에서 문의 양식을 이용합니다. 쪽지함과는 별개입니다.',
                 'category_id' => 'support',
-                'meta_json' => json_encode(['answer' => '**고객센터 문의** — 이메일이나 문의 양식을 이용합니다. 쪽지함과는 별개입니다.', 'sortOrder' => 20], JSON_UNESCAPED_UNICODE),
+                'meta_json' => json_encode(['answer' => '**고객센터 문의**에서 문의 양식을 이용합니다. 쪽지함과는 별개입니다.', 'sortOrder' => 20], JSON_UNESCAPED_UNICODE),
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
@@ -347,9 +365,9 @@ final class ContentSchemaMigrateService
                 'author_role' => 'system',
                 'status' => 'published',
                 'title' => '안전번호나 에스크로가 있나요?',
-                'description' => '**없습니다.** 대금·연락 중개·보증은 1차 제공 범위가 아닙니다.',
+                'description' => '우동공과에서 제공하지 않는 서비스입니다.',
                 'category_id' => 'safety',
-                'meta_json' => json_encode(['answer' => '**없습니다.** 대금·연락 중개·보증은 1차 제공 범위가 아닙니다.', 'sortOrder' => 30], JSON_UNESCAPED_UNICODE),
+                'meta_json' => json_encode(['answer' => '우동공과에서 제공하지 않는 서비스입니다.', 'sortOrder' => 30], JSON_UNESCAPED_UNICODE),
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
@@ -358,9 +376,9 @@ final class ContentSchemaMigrateService
                 'author_role' => 'system',
                 'status' => 'published',
                 'title' => '유료 서비스는 학부모가 구매하나요?',
-                'description' => '아닙니다. 공급자(공부방·과외)용 프라임/픽·쪽지권·열람권이며, 학부모 과외비 결제와 무관합니다.',
+                'description' => '아닙니다. 공부방·과외쌤용 프라임/픽(대표·추천 노출)·쪽지권·열람권이며, 학부모의 과외비 결제와는 무관합니다.',
                 'category_id' => 'billing',
-                'meta_json' => json_encode(['answer' => '아닙니다. 공급자(공부방·과외)용 프라임/픽·쪽지권·열람권이며, 학부모 과외비 결제와 무관합니다.', 'sortOrder' => 40], JSON_UNESCAPED_UNICODE),
+                'meta_json' => json_encode(['answer' => '아닙니다. 공부방·과외쌤용 프라임/픽(대표·추천 노출)·쪽지권·열람권이며, 학부모의 과외비 결제와는 무관합니다.', 'sortOrder' => 40], JSON_UNESCAPED_UNICODE),
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
@@ -369,9 +387,9 @@ final class ContentSchemaMigrateService
                 'author_role' => 'system',
                 'status' => 'published',
                 'title' => '프라임/픽은 무엇인가요?',
-                'description' => '프라임은 **대표 노출**, 픽은 **추천 노출**입니다. 동네에서 눈에 잘 띄는 자리를 일정 기간 이용하는 상품이며, 주목·추천 등의 광고배지는 이용 중인 노출 상품에 함께 적용됩니다.',
+                'description' => '프라임은 **대표 노출**, 픽은 **추천 노출**입니다. 동네에서 일정 기간 눈에 잘 띄는 자리를 이용하는 상품이며, 주목·추천 같은 표시는 이용 중인 노출 상품에 함께 적용됩니다.',
                 'category_id' => 'billing',
-                'meta_json' => json_encode(['answer' => '프라임은 **대표 노출**, 픽은 **추천 노출**입니다. 동네에서 눈에 잘 띄는 자리를 일정 기간 이용하는 상품이며, 주목·추천 등의 광고배지는 이용 중인 노출 상품에 함께 적용됩니다.', 'sortOrder' => 50], JSON_UNESCAPED_UNICODE),
+                'meta_json' => json_encode(['answer' => '프라임은 **대표 노출**, 픽은 **추천 노출**입니다. 동네에서 일정 기간 눈에 잘 띄는 자리를 이용하는 상품이며, 주목·추천 같은 표시는 이용 중인 노출 상품에 함께 적용됩니다.', 'sortOrder' => 50], JSON_UNESCAPED_UNICODE),
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
@@ -380,9 +398,9 @@ final class ContentSchemaMigrateService
                 'author_role' => 'system',
                 'status' => 'published',
                 'title' => '환불·과외비 분쟁은?',
-                'description' => '당사자 간 협의가 우선이며, 플랫폼은 대리 조정하지 않습니다.',
+                'description' => '당사자 간 협의와 조정으로 결정하며, 우동공과 플랫폼은 일체 관여하지 않습니다.',
                 'category_id' => 'dispute',
-                'meta_json' => json_encode(['answer' => '당사자 간 협의가 우선이며, 플랫폼은 대리 조정하지 않습니다.', 'sortOrder' => 60], JSON_UNESCAPED_UNICODE),
+                'meta_json' => json_encode(['answer' => '당사자 간 협의와 조정으로 결정하며, 우동공과 플랫폼은 일체 관여하지 않습니다.', 'sortOrder' => 60], JSON_UNESCAPED_UNICODE),
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             ...$this->guidePostRows(),
@@ -485,9 +503,9 @@ final class ContentSchemaMigrateService
             ['board_key' => 'faq', 'menu_label' => 'FAQ', 'board_type' => 'operational', 'preset_id' => 'faq', 'section_owner' => 'support', 'route_slug' => '#/support/faq', 'visibility' => 'public', 'download_policy' => 'none', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 20],
             ['board_key' => 'safe-guide', 'menu_label' => '안전과외 가이드', 'board_type' => 'operational', 'preset_id' => 'guide', 'section_owner' => 'support', 'route_slug' => '#/support/safe', 'visibility' => 'public', 'download_policy' => 'none', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 30],
             ['board_key' => 'policy-log', 'menu_label' => '정책 변경 이력', 'board_type' => 'operational', 'preset_id' => 'guide', 'section_owner' => 'policy', 'route_slug' => '#/policy/changelog', 'visibility' => 'public', 'download_policy' => 'none', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 40],
-            ['board_key' => 'library', 'menu_label' => '자료실', 'board_type' => 'download', 'preset_id' => 'library', 'section_owner' => 'library', 'route_slug' => '#/library', 'visibility' => 'login', 'download_policy' => 'login', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 50],
-            ['board_key' => 'library-template', 'menu_label' => '양식·체크리스트', 'board_type' => 'download', 'preset_id' => 'library', 'section_owner' => 'library', 'route_slug' => '#/library/templates', 'visibility' => 'login', 'download_policy' => 'login', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 60],
-            ['board_key' => 'library-guide-pdf', 'menu_label' => '가이드 PDF', 'board_type' => 'download', 'preset_id' => 'library', 'section_owner' => 'library', 'route_slug' => '#/library/guides', 'visibility' => 'public', 'download_policy' => 'login', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 70],
+            ['board_key' => 'library', 'menu_label' => '자료실', 'board_type' => 'download', 'preset_id' => 'library', 'section_owner' => 'library', 'route_slug' => '#/support/library', 'visibility' => 'login', 'download_policy' => 'login', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 50],
+            ['board_key' => 'library-template', 'menu_label' => '양식·체크리스트', 'board_type' => 'download', 'preset_id' => 'library', 'section_owner' => 'library', 'route_slug' => '#/support/library/templates', 'visibility' => 'login', 'download_policy' => 'login', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 60],
+            ['board_key' => 'library-guide-pdf', 'menu_label' => '가이드 PDF', 'board_type' => 'download', 'preset_id' => 'library', 'section_owner' => 'library', 'route_slug' => '#/support/library/guides', 'visibility' => 'public', 'download_policy' => 'login', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 70],
             ['board_key' => 'submission', 'menu_label' => '제출자료', 'board_type' => 'upload', 'preset_id' => 'submission', 'section_owner' => 'mypage', 'route_slug' => '#/mypage/submission-board', 'visibility' => 'role', 'download_policy' => 'none', 'allowed_roles_json' => $roles(['study_room', 'tutor', 'admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 1, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 80],
             ['board_key' => 'showcase', 'menu_label' => '사례 공유', 'board_type' => 'curation', 'preset_id' => 'curation', 'section_owner' => 'community', 'route_slug' => '', 'visibility' => 'role', 'download_policy' => 'none', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 0, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 1, 'is_gnu_separated' => 1, 'enabled' => 0, 'archived' => 0, 'sort_order' => 90],
         ];
@@ -502,9 +520,9 @@ final class ContentSchemaMigrateService
             ['slot_key' => 'home_right_rail', 'page_type' => 'home', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'library', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '오늘의 안내', 'cta_label' => '고객센터 보기', 'cta_target' => '#/support', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'enabled' => 1, 'status' => 'active', 'priority' => 10, 'sort_order' => 10],
             ['slot_key' => 'search_right_rail', 'page_type' => 'search', 'source_type' => 'mixed', 'source_board_key' => 'faq', 'source_board_keys_json' => $keys(['faq', 'library-template', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '탐색 도움말', 'cta_label' => 'FAQ 보기', 'cta_target' => '#/support/faq', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'enabled' => 1, 'status' => 'active', 'priority' => 20, 'sort_order' => 20],
             ['slot_key' => 'detail_right_rail', 'page_type' => 'detail', 'source_type' => 'mixed', 'source_board_key' => 'safe-guide', 'source_board_keys_json' => $keys(['safe-guide', 'submission', 'notice']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '상세 확인 전 안내', 'cta_label' => '안전과외 가이드', 'cta_target' => '#/support/safe', 'mobile_behavior' => 'collapse', 'visibility_rule' => 'public', 'role_target' => 'all', 'enabled' => 1, 'status' => 'active', 'priority' => 30, 'sort_order' => 30],
-            ['slot_key' => 'register_right_rail', 'page_type' => 'register', 'source_type' => 'mixed', 'source_board_key' => 'library-template', 'source_board_keys_json' => $keys(['library-template', 'faq', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '작성 전 체크', 'cta_label' => '서식함 보기', 'cta_target' => '#/library/templates', 'mobile_behavior' => 'stack', 'visibility_rule' => 'login', 'role_target' => 'provider', 'enabled' => 1, 'status' => 'active', 'priority' => 40, 'sort_order' => 40],
+            ['slot_key' => 'register_right_rail', 'page_type' => 'register', 'source_type' => 'mixed', 'source_board_key' => 'library-template', 'source_board_keys_json' => $keys(['library-template', 'faq', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '작성 전 체크', 'cta_label' => '서식함 보기', 'cta_target' => '#/support/library/templates', 'mobile_behavior' => 'stack', 'visibility_rule' => 'login', 'role_target' => 'provider', 'enabled' => 1, 'status' => 'active', 'priority' => 40, 'sort_order' => 40],
             ['slot_key' => 'plans_right_rail', 'page_type' => 'plans', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'faq', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '상품 이용 안내', 'cta_label' => '상품 FAQ', 'cta_target' => '#/support/faq', 'mobile_behavior' => 'collapse', 'visibility_rule' => 'public', 'role_target' => 'provider', 'enabled' => 1, 'status' => 'active', 'priority' => 50, 'sort_order' => 50],
-            ['slot_key' => 'support_right_rail', 'page_type' => 'support', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'faq', 'library-guide-pdf']), 'selection_mode' => 'latest', 'item_limit' => 3, 'section_title' => '빠른 도움말', 'cta_label' => '자료실 보기', 'cta_target' => '#/library/guides', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'enabled' => 1, 'status' => 'active', 'priority' => 60, 'sort_order' => 60],
+            ['slot_key' => 'support_right_rail', 'page_type' => 'support', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'faq', 'library-guide-pdf']), 'selection_mode' => 'latest', 'item_limit' => 3, 'section_title' => '빠른 도움말', 'cta_label' => '자료실 보기', 'cta_target' => '#/support/library/guides', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'enabled' => 1, 'status' => 'active', 'priority' => 60, 'sort_order' => 60],
         ];
     }
 }

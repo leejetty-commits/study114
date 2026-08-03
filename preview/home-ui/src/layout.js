@@ -48,8 +48,8 @@ export function renderPreviewToolbar() {
         <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지함</button>
         <button type="button" class="preview-toolbar__btn ${onSupport ? 'is-active' : ''}" data-nav="/support">고객센터</button>
         <button type="button" class="preview-toolbar__btn ${onPlans ? 'is-active' : ''}" data-nav="/plans">유료상품</button>
-        <button type="button" class="preview-toolbar__btn ${onLibrary ? 'is-active' : ''}" data-nav="/library">자료실</button>
-        <button type="button" class="preview-toolbar__btn ${onPolicy ? 'is-active' : ''}" data-nav="/policy/terms">정책</button>
+        <button type="button" class="preview-toolbar__btn" data-nav="/support/library">자료실</button>
+        <button type="button" class="preview-toolbar__btn" data-nav="/support/policies">약관·정책</button>
         <button type="button" class="preview-toolbar__btn ${onAdmin ? 'is-active' : ''}" data-nav="/admin">관리자</button>
         <span class="preview-toolbar__divider"></span>
         <span class="preview-toolbar__hint" title="화면 연결 상태">${authLabel}</span>
@@ -476,7 +476,7 @@ export function bindLayoutEvents(root, rerender) {
       } else if (action === 'util-guide') {
         navigateToSupport('/support');
       } else if (action === 'util-library') {
-        navigate('/library');
+        navigate('/support/library');
       } else if (action === 'util-support') {
         navigateToSupport('/support');
       } else if (action.startsWith('ad-')) {

@@ -40,9 +40,11 @@ function renderLibraryNav(path) {
 /** @param {string} path */
 function renderLibraryTitle(path) {
   const section = getLibrarySection(path);
+  if (section === 'library') {
+    return `<span class="sup-content__title-prefix">자료실</span>`;
+  }
   const meta = LIBRARY_SECTIONS.find((s) => s.key === section) || LIBRARY_SECTIONS[0];
-  const suffix = section === 'library' ? LIBRARY_HEAD.title : meta.label;
-  return `<span class="sup-content__title-prefix">자료실-</span><span class="sup-content__title-suffix">${esc(suffix)}</span>`;
+  return `<span class="sup-content__title-prefix">자료실</span><span class="sup-content__title-suffix">${esc(meta.label)}</span>`;
 }
 
 /**

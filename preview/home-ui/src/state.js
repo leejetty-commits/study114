@@ -279,7 +279,7 @@ export function bootstrapSupportRoute() {
     return true;
   }
 
-  // P17-06 레거시 → 26장 정적 약관 (게시판/고객센터 섹션으로 두지 않음)
+  // 레거시 약관 경로 → 고객센터 약관·정책
   if (path === SUPPORT_TERMS_LEGACY_PATH || path === `${SUPPORT_TERMS_LEGACY_PATH}/`) {
     window.location.replace(`#${SUPPORT_TERMS_REDIRECT}`);
     return true;
@@ -298,8 +298,8 @@ export function bootstrapPolicyRoute() {
 
   if (!hash && pathname.startsWith('/policy')) {
     const bare = pathname === '/policy' || pathname === '/policy/';
-    const target = bare ? getDefaultPolicyPath() : pathname;
-    window.location.replace(`${origin}/${search}#${target}`);
+    const target = bare ? '/support/policies' : pathname.replace(/^\/policy/, '/support/policies');
+    window.location.replace(`${origin}/${search}#${target === '/support/policies' ? '/support/policies' : target}`);
     return true;
   }
 
@@ -308,12 +308,13 @@ export function bootstrapPolicyRoute() {
   const hashPath = hash.slice(1);
   const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
   if (path === '/policy' || path === '/policy/') {
-    window.location.replace(`#${getDefaultPolicyPath()}`);
+    window.location.replace('#/support/policies');
     return true;
   }
 
-  if (path.startsWith('/policy/') && !normalizePolicyPath(path)) {
-    window.location.replace(`#${getDefaultPolicyPath()}`);
+  if (path.startsWith('/policy/')) {
+    const slug = path.slice('/policy/'.length);
+    window.location.replace(`#/support/policies/${slug || 'terms'}`);
     return true;
   }
 
@@ -325,7 +326,7 @@ export function bootstrapLibraryRoute() {
 
   if (!hash && pathname.startsWith('/library')) {
     const bare = pathname === '/library' || pathname === '/library/';
-    const target = bare ? getDefaultLibraryPath() : pathname;
+    const target = bare ? '/support/library' : pathname.replace(/^\/library/, '/support/library');
     window.location.replace(`${origin}/${search}#${target}`);
     return true;
   }
@@ -335,12 +336,13 @@ export function bootstrapLibraryRoute() {
   const hashPath = hash.slice(1);
   const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
   if (path === '/library' || path === '/library/') {
-    window.location.replace(`#${getDefaultLibraryPath()}`);
+    window.location.replace('#/support/library');
     return true;
   }
 
-  if (path.startsWith('/library/') && !normalizeLibraryPath(path)) {
-    window.location.replace(`#${getDefaultLibraryPath()}`);
+  if (path.startsWith('/library/')) {
+    const rest = path.slice('/library/'.length);
+    window.location.replace(`#/support/library/${rest}`);
     return true;
   }
 
@@ -478,7 +480,7 @@ export function getMessagesPath() {
 
 export function getSupportPath() {
   const hash = window.location.hash.slice(1) || '';
-  const path = hash.startsWith('/') ? hash : `/${hash}`;
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
   const normalized = normalizeSupportPath(path);
   if (normalized) return normalized;
   return getDefaultSupportPath();

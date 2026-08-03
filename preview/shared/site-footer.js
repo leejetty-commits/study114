@@ -27,9 +27,9 @@ export function renderSiteFooter(opts = {}) {
   return `
     <footer class="home-footer">
       <div class="home-footer__links">
-        ${link('/policy/terms', '약관')}
-        ${link('/policy/privacy', '개인정보')}
-        ${link('/policy/platform', '플랫폼 고지')}
+        ${link('/support/policies/terms', '약관')}
+        ${link('/support/policies/privacy', '개인정보')}
+        ${link('/support/policies/platform', '플랫폼 고지')}
         ${
           absolute
             ? `<a href="${homeBase}/#/support" data-util-href="${homeBase}/#/support">고객센터</a>`

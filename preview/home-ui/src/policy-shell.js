@@ -22,7 +22,7 @@ export function renderPolicyShell(title, path, bodyHtml) {
     <div class="sup-layout">
       <header class="sup-content__head">
         <div>
-          <h1 class="sup-content__title"><span class="sup-content__title-prefix">정책-</span><span class="sup-content__title-suffix">${esc(title)}</span></h1>
+          <h1 class="sup-content__title"><span class="sup-content__title-prefix">정책</span><span class="sup-content__title-suffix">${esc(title)}</span></h1>
           <span class="sup-content__screen-id">운영 정책</span>
         </div>
       </header>

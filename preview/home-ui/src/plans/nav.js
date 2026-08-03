@@ -24,7 +24,7 @@ function esc(s) {
 export function renderPlansPageTitle(path) {
   const screenId = getPlansScreenId(path);
   const suffix = plansScreenTitle(screenId || 'P18-01');
-  return `<span class="sup-content__title-prefix">유료상품-</span><span class="sup-content__title-suffix">${esc(suffix)}</span>`;
+  return `<span class="sup-content__title-prefix">유료상품</span><span class="sup-content__title-suffix">${esc(suffix)}</span>`;
 }
 
 /** @param {string} path @param {{ guestCatalogOnly?: boolean }} [opts] */

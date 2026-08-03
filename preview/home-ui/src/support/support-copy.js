@@ -19,12 +19,12 @@ export const PRINCIPLES_NEGATIVE = [
   { label: '법률·분쟁 대리', msg: '당사자 협의 · 필요 시 관할 기관을 이용합니다.' },
 ];
 
-/** §4 P17-01 4카드 */
+/** §4 이용안내 탭·카드 */
 export const HOME_CARDS = [
-  { id: 'start', title: '처음 이용', desc: '회원가입 · 역할 · 탐색 흐름', href: '/support' },
-  { id: 'register', title: '등록 방법', desc: '공부방·과외 등록 안내', href: '/support' },
-  { id: 'wishlist', title: '찜·비교·쪽지', desc: '회원 간 공식 접촉은 쪽지', href: '/support' },
-  { id: 'safe', title: '안전과외 가이드', desc: '선입금·분쟁 예방 교육', href: '/support/safe' },
+  { id: 'start', title: '처음 이용', desc: '회원가입 · 역할 · 탐색 흐름', mode: 'tab' },
+  { id: 'register', title: '등록 방법', desc: '공부방·과외 등록 안내', mode: 'tab' },
+  { id: 'wishlist', title: '찜·비교·쪽지', desc: '회원 간 공식 접촉은 쪽지', mode: 'tab' },
+  { id: 'safe', title: '안전과외 가이드', desc: '선입금·분쟁 예방 교육', mode: 'nav', href: '/support/safe' },
 ];
 
 /** §4-1 · §8 CTA copy */
@@ -223,19 +223,19 @@ export function getHomeExposureGuides(settings = {}) {
 /** @deprecated getHomeExposureGuides() 사용 — 정적 스냅샷(기본 15분) */
 export const HOME_EXPOSURE_GUIDES = getHomeExposureGuides();
 
-/** §7-1 FAQ */
+/** FAQ */
 export const FAQ_ITEMS = [
   {
-    q: '회원끼리 쪽지는 어떻게 주고받나요?',
+    q: '회원끼리 연락은 어떻게 하나요?',
     a: '회원 간 공식 접촉은 **쪽지**입니다. 플랫폼 전화·이메일 중계는 없습니다.',
   },
   {
     q: '운영·서비스 문의는 어디로 하나요?',
-    a: '**고객센터 문의** — 이메일이나 문의 양식을 이용합니다. 쪽지함과는 별개입니다.',
+    a: '**고객센터 문의**에서 문의 양식을 이용합니다. 쪽지함과는 별개입니다.',
   },
   {
     q: '안전번호나 에스크로가 있나요?',
-    a: '**없습니다.** 대금·외부 연락 중개·보증은 1차 제공 범위가 아닙니다.', // 에스크로: 플랫폼이 돈을 잠시 맡아 두는 방식
+    a: '우동공과에서 제공하지 않는 서비스입니다.', // 에스크로: 플랫폼이 돈을 잠시 맡아 두는 방식
   },
   {
     q: '유료 서비스는 학부모가 구매하나요?',
@@ -243,11 +243,11 @@ export const FAQ_ITEMS = [
   },
   {
     q: '프라임/픽은 무엇인가요?',
-    a: '프라임은 **대표 노출**, 픽은 **추천 노출**입니다. 동네에서 눈에 잘 띄는 자리를 일정 기간 이용하는 상품이며, 주목·추천 등의 광고배지는 이용 중인 노출 상품에 함께 적용됩니다.',
+    a: '프라임은 **대표 노출**, 픽은 **추천 노출**입니다. 동네에서 일정 기간 눈에 잘 띄는 자리를 이용하는 상품이며, 주목·추천 같은 표시는 이용 중인 노출 상품에 함께 적용됩니다.',
   },
   {
     q: '환불·과외비 분쟁은?',
-    a: '당사자 간 협의가 우선이며, 플랫폼은 대리 조정하지 않습니다.',
+    a: '당사자 간 협의와 조정으로 결정하며, 우동공과 플랫폼은 일체 관여하지 않습니다.',
   },
 ];
 
@@ -273,14 +273,14 @@ export const NOTICES = [
   },
 ];
 
-/** 약관·정책 링크 */
+/** 약관·정책 링크 (고객센터 내) */
 export const TERMS_LINKS = [
-  { label: '이용약관', href: '/policy/terms' },
-  { label: '개인정보처리방침', href: '/policy/privacy' },
-  { label: '플랫폼 역할 고지', href: '/policy/platform' },
-  { label: '제출자료/신뢰정보 고지', href: '/policy/trust' },
-  { label: '학생정보 보호 고지', href: '/policy/student-privacy' },
-  { label: '신고/제재/분쟁 안내', href: '/policy/reporting' },
+  { label: '이용약관', href: '/support/policies/terms' },
+  { label: '개인정보처리방침', href: '/support/policies/privacy' },
+  { label: '플랫폼 역할 고지', href: '/support/policies/platform' },
+  { label: '제출자료/신뢰정보 고지', href: '/support/policies/trust' },
+  { label: '학생정보 보호 고지', href: '/support/policies/student-privacy' },
+  { label: '신고/제재/분쟁 안내', href: '/support/policies/reporting' },
 ];
 
 /** §7-3 운영 문의 */
@@ -299,7 +299,7 @@ export const TICKET_STATUS_LABELS = {
 
 export const OPERATIONAL_CONTACT = {
   email: 'support@udonggong.example',
-  note: '제출하면 문의 번호가 안내됩니다. 답변은 입력하신 이메일로 받을 수 있습니다.',
+  note: '제출하면 문의 번호가 안내됩니다. 접수한 내용은 「내 문의 내역」에서 확인할 수 있습니다.',
   ticketSuccessTitle: '문의가 접수되었습니다',
 };
 

@@ -790,8 +790,7 @@ body {
   border-color: var(--gray-200);
 }
 
-.sup-content__title-prefix,
-.sup-content__title-suffix {
+.sup-content__title-prefix {
   font-size: inherit;
 }
 

@@ -1,30 +1,36 @@
-/** 17장 P17-xx — hash 경로 (부록 A, 미확정) */
+/** 고객센터 hash 경로 */
 
 /** @typedef {'P17-01'|'P17-02'|'P17-03'} SupportScreenId */
 
-/** P17-01 내부 섹션 (P17-04·05·07 · 이용안내). 약관은 26장 `#/policy/*` — `/support/terms` 잔존 금지 */
-export const SUPPORT_SECTIONS = ['guide', 'faq', 'notice', 'contact'];
-
-/** 레거시: P17-06이 고객센터 하위에 있던 시절 경로 → 정적 정책으로 이관 */
+/** 레거시: 약관이 고객센터 하위에 있던 시절 → 약관·정책 메뉴로 이관 */
 export const SUPPORT_TERMS_LEGACY_PATH = '/support/terms';
-export const SUPPORT_TERMS_REDIRECT = '/policy/terms';
+export const SUPPORT_TERMS_REDIRECT = '/support/policies/terms';
 
 /** 17c admin · 사용자 티켓 목록 */
 export const SUPPORT_ADMIN_PATHS = ['/support/admin', '/support/admin/notices', '/support/admin/tickets'];
 export const SUPPORT_CONTACT_PATHS = ['/support/contact/tickets'];
 
+const POLICY_SLUGS = ['terms', 'privacy', 'platform', 'trust', 'safety', 'student-privacy', 'reporting'];
+const LIBRARY_SECTIONS = ['templates', 'guides'];
+
 /** @param {string} hashPath */
 export function normalizeSupportPath(hashPath) {
-  const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const raw = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const p = raw.split('?')[0];
   if (p === '/support' || p === '/support/') return '/support';
-  // 정적 정책으로 이관됨 — 여기서 유효 경로로 인정하지 않음 (bootstrap이 redirect)
   if (p === SUPPORT_TERMS_LEGACY_PATH || p === `${SUPPORT_TERMS_LEGACY_PATH}/`) return null;
-  if (SUPPORT_SECTIONS.some((s) => p === `/support/${s}`)) return p;
+  if (['guide', 'faq', 'notice', 'contact'].some((s) => p === `/support/${s}`)) return p;
   if (p === '/support/contact/tickets') return p;
   if (p === '/support/admin' || p === '/support/admin/') return '/support/admin';
   if (p === '/support/admin/notices' || p === '/support/admin/tickets') return p;
   if (p === '/support/safe' || p === '/support/safe/') return '/support/safe';
   if (/^\/support\/safe\/[a-z0-9-]+$/.test(p)) return p;
+  if (p === '/support/policies' || p === '/support/policies/') return '/support/policies';
+  const policyMatch = p.match(/^\/support\/policies\/([a-z0-9-]+)$/);
+  if (policyMatch && POLICY_SLUGS.includes(policyMatch[1])) return p;
+  if (p === '/support/library' || p === '/support/library/') return '/support/library';
+  const libMatch = p.match(/^\/support\/library\/([a-z0-9-]+)$/);
+  if (libMatch && LIBRARY_SECTIONS.includes(libMatch[1])) return p;
   return null;
 }
 
@@ -54,6 +60,20 @@ export function getSectionFromPath(path) {
 export function parseGuideSlug(path) {
   const m = path.match(/^\/support\/safe\/([a-z0-9-]+)$/);
   return m ? m[1] : null;
+}
+
+/** @param {string} path */
+export function getSupportPolicySlug(path) {
+  if (path === '/support/policies' || path === '/support/policies/') return 'terms';
+  const m = path.match(/^\/support\/policies\/([a-z0-9-]+)$/);
+  return m ? m[1] : 'terms';
+}
+
+/** @param {string} path */
+export function getSupportLibrarySection(path) {
+  if (path === '/support/library' || path === '/support/library/') return 'library';
+  const m = path.match(/^\/support\/library\/([a-z0-9-]+)$/);
+  return m?.[1] || 'library';
 }
 
 /** @param {SupportScreenId} screenId */
