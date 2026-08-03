@@ -1,3 +1,5 @@
+import { setPendingRoute } from './pending-route.js';
+
 /**
  * 사이트 공통 우측 프로모 배너 — 홈(게스트)과 동일 마크업.
  * 배너 없는 페이지: 로그인·회원가입·공부방/과외쌤 상세등록.
@@ -82,6 +84,7 @@ export function bindSitePromoSidebarEvents(root, opts = {}) {
   root.querySelectorAll('[data-action^="ad-"]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
+      setPendingRoute('/plans/positions');
       if (plansHash.startsWith('http') || plansHash.startsWith('/')) {
         window.location.assign(plansHash);
       } else {

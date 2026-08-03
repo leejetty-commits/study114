@@ -19,6 +19,7 @@ import {
 } from '../home-ui/src/auth/display-identity.js';
 
 import { ensureBackToTop } from './back-to-top.js';
+import { setPendingRoute } from './pending-route.js';
 
 const HEADER_OFFSET_VAR = '--site-header-h';
 let offsetBound = false;
@@ -135,11 +136,18 @@ function goSameTab(url) {
 
 /**
  * 현재 페이지가 home-ui인지 (해시 라우팅 앱)
+ * — http/https 혼용·pathname 딥링크(/plans 등)에서도 true
  */
 export function isHomeUiHost() {
   try {
     const home = new URL(HOME_UI_BASE, window.location.href);
-    return window.location.origin === home.origin && window.location.pathname.replace(/\/$/, '') === home.pathname.replace(/\/$/, '');
+    if (window.location.hostname !== home.hostname) return false;
+    const path = window.location.pathname.replace(/\/$/, '') || '';
+    const homePath = home.pathname.replace(/\/$/, '') || '';
+    if (path === homePath) return true;
+    // pathname 딥링크로 home-ui index.html이 뜬 경우
+    const deepRoots = ['/plans', '/support', '/mypage', '/messages', '/policy', '/library', '/admin'];
+    return deepRoots.some((root) => path === root || path.startsWith(`${root}/`));
   } catch {
     return false;
   }
@@ -215,6 +223,8 @@ export function bindSiteChrome(root, handlers = {}) {
           return;
         }
         if (gnbId === 'plans') {
+          // fragment·pathname 유실 대비 — 도착 측에서 pending으로 복구
+          setPendingRoute('/plans');
           if (navigateHome && isHomeUiHost()) navigateHome('/plans');
           else goSameTab(dest);
           return;

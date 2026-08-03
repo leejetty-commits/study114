@@ -4,6 +4,7 @@ import {
   resolveAccessNavRole,
 } from '../../../shared/route-access.js';
 import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/guest-gate-ui.js';
+import { clearPendingRoute } from '../../../shared/pending-route.js';
 import { renderPreviewToolbar, renderHeader, renderFooter } from '../layout.js';
 import { getAuthUser, isLoggedIn } from '../auth-session.js';
 import { getPlansPath, getNavRole } from '../state.js';
@@ -51,6 +52,8 @@ function renderPlansLoginGate(message) {
 }
 
 export function renderPlans() {
+  // 유료상품 화면이 실제로 열리면 pending 복구는 완료된 것
+  clearPendingRoute();
   const role = resolveAccessNavRole(getAuthUser(), getNavRole());
   const hubGate = guardPlansAccess(role);
   if (!hubGate.ok) {
@@ -81,8 +84,7 @@ export function bindPlansEvents(root, rerender) {
   const role = resolveAccessNavRole(getAuthUser(), getNavRole());
   const hubGate = guardPlansAccess(role);
   if (!hubGate.ok) {
-    // GNB(유료상품 포함)는 bindLayoutEvents로 연결 — 미연결 시 네이티브 href만 의존해
-    // 다른 SPA→pathname 진입·일부 클릭에서 홈(#/guest)으로 떨어지는 경우가 있음
+    // GNB는 bindLayoutEvents로 연결 (게스트 게이트에서도 메뉴 동작 유지)
     bindPlansShellEvents(root, rerender);
     bindGuestGateLinks(root);
     return;

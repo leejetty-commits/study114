@@ -12,6 +12,7 @@ import { isMessagesApiMode } from './messages-backend.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { syncSiteHeaderOffset, ensureSiteHeaderOffsetListeners } from '../../shared/site-chrome.js';
 import { renderSiteFooter } from '../../shared/site-footer.js';
+import { setPendingRoute } from '../../shared/pending-route.js';
 
 export function renderPreviewToolbar() {
   if (!SHOW_PREVIEW_TOOLBAR) return '';
@@ -445,6 +446,7 @@ export function bindLayoutEvents(root, rerender) {
           return;
         }
         if (gnbId === 'plans') {
+          setPendingRoute('/plans');
           navigate('/plans');
           return;
         }
@@ -478,6 +480,7 @@ export function bindLayoutEvents(root, rerender) {
       } else if (action === 'util-support') {
         navigateToSupport('/support');
       } else if (action.startsWith('ad-')) {
+        setPendingRoute('/plans/positions');
         navigate('/plans/positions');
       } else if (el.dataset.href) {
         goSameTab(el.dataset.href);

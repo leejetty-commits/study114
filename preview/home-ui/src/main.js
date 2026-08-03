@@ -45,6 +45,7 @@ import { activateBoardApi, deactivateBoardApi } from './board/board-backend.js';
 import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
 import { mountOpsChrome } from './site-ops-chrome.js';
+import { consumePendingRoute, clearPendingRoute } from '../../shared/pending-route.js';
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -145,26 +146,34 @@ function init() {
     bootstrapAdminRoute();
     // pathname 딥링크는 bootstrap*가 hash로 옮긴다. fragment만 유실된 `/`는 guest.
     // /support 등 pathname이 남은 채 hash만 비면 guest로 덮어쓰지 않는다.
+    // SPA 간 이동으로 hash/pathname이 떨어졌을 때는 pending-route로 복구한다.
     if (!window.location.hash) {
-      const path = window.location.pathname.replace(/\/$/, '') || '/';
-      const deep =
-        path === '/support' ||
-        path.startsWith('/support/') ||
-        path === '/mypage' ||
-        path.startsWith('/mypage/') ||
-        path === '/messages' ||
-        path.startsWith('/messages/') ||
-        path === '/policy' ||
-        path.startsWith('/policy/') ||
-        path === '/library' ||
-        path.startsWith('/library/') ||
-        path === '/admin' ||
-        path.startsWith('/admin/') ||
-        path === '/plans' ||
-        path.startsWith('/plans/');
-      if (!deep) {
-        window.location.hash = '#/guest';
+      const pending = consumePendingRoute();
+      if (pending) {
+        window.location.hash = pending.startsWith('#') ? pending : `#${pending}`;
+      } else {
+        const path = window.location.pathname.replace(/\/$/, '') || '/';
+        const deep =
+          path === '/support' ||
+          path.startsWith('/support/') ||
+          path === '/mypage' ||
+          path.startsWith('/mypage/') ||
+          path === '/messages' ||
+          path.startsWith('/messages/') ||
+          path === '/policy' ||
+          path.startsWith('/policy/') ||
+          path === '/library' ||
+          path.startsWith('/library/') ||
+          path === '/admin' ||
+          path.startsWith('/admin/') ||
+          path === '/plans' ||
+          path.startsWith('/plans/');
+        if (!deep) {
+          window.location.hash = '#/guest';
+        }
       }
+    } else if (window.location.hash.slice(1).split('?')[0] === '/plans' || window.location.hash.slice(1).startsWith('/plans/')) {
+      clearPendingRoute();
     }
     // 부팅 중 bootstrap*Route의 location.replace가 유발하는 hashchange가
     // 세션(me.php) 로드 전에 조기 render를 일으켜 계정·관리자 콘솔이 늦게

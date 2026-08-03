@@ -129,7 +129,14 @@ export function getNavRole() {
 }
 
 export function navigate(path) {
-  window.location.hash = path;
+  const normalized = String(path || '/guest');
+  const withSlash = normalized.startsWith('/') ? normalized : `/${normalized}`;
+  // 동일 hash 재클릭 시 hashchange가 안 뜨는 브라우저 대비
+  if (window.location.hash === `#${withSlash}` || window.location.hash === withSlash) {
+    window.dispatchEvent(new Event('hashchange'));
+    return;
+  }
+  window.location.hash = withSlash;
 }
 
 export function isMessagesRoute() {
@@ -383,6 +390,7 @@ export function bootstrapPlansRoute() {
   if (!hash && pathname.startsWith('/plans')) {
     const bare = pathname === '/plans' || pathname === '/plans/';
     const target = bare ? getDefaultPlansPath() : pathname;
+    // pathname → hash 정규화. origin 루트로 옮기며 fragment를 명시한다.
     window.location.replace(`${origin}/${search}#${target}`);
     return true;
   }
