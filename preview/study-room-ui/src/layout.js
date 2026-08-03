@@ -1,4 +1,4 @@
-import { STEPS, REGISTER_PHASES } from './state.js';
+import { STEPS, REGISTER_PHASES, LEGACY_STEP_REDIRECT, registerState } from './state.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import {
   renderSiteHeader,
@@ -23,20 +23,23 @@ import { bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 
 const ROUTES = Object.fromEntries(STEPS.map((s) => [s.path, s.key]));
 
-/** @param {string} path */
 export function navigate(path) {
   window.location.hash = path;
 }
 
-/** @returns {string} */
 export function getCurrentPath() {
   const hash = window.location.hash.slice(1) || '/register/basic';
   return hash.startsWith('/') ? hash : `/${hash}`;
 }
 
-/** @returns {string} */
 export function getCurrentScreen() {
-  return ROUTES[getCurrentPath()] || 'basic';
+  const path = getCurrentPath();
+  const key = path.replace(/^\/register\//, '');
+  if (LEGACY_STEP_REDIRECT[key]) {
+    navigate(LEGACY_STEP_REDIRECT[key]);
+    return 'lesson';
+  }
+  return ROUTES[path] || 'basic';
 }
 
 export function getStepMeta(key) {
@@ -47,7 +50,7 @@ export function renderPreviewToolbar(activeScreen) {
   if (!SHOW_PREVIEW_TOOLBAR) return '';
   return `
     <div class="preview-toolbar">
-      <span class="preview-toolbar__label">우동공과 · 공부방 등록 UI (5장)</span>
+      <span class="preview-toolbar__label">우동공과 · 공부방 등록</span>
       <div class="preview-toolbar__group">
         ${STEPS.filter((s) => s.key !== 'complete')
           .map((s) => {
@@ -65,7 +68,7 @@ export function renderPreviewToolbar(activeScreen) {
 }
 
 export function renderRegisterShell(content, options = {}) {
-  const { step = 1, title = '공부방 등록', subtitle = '' } = options;
+  const { stepKey = 'basic', title = '공부방 등록', subtitle = '' } = options;
   const showPromo = isChromeLoggedIn();
   const header = renderSiteHeader({
     user: getChromeUser(),
@@ -73,6 +76,8 @@ export function renderRegisterShell(content, options = {}) {
     role: getChromeNavRole(),
     activeGnbId: 'register_room',
   });
+  const meta = STEPS.find((s) => s.key === stepKey);
+  const showSteps = Boolean(meta && meta.phase);
 
   return `
     ${renderPreviewToolbar(getCurrentScreen())}
@@ -81,10 +86,10 @@ export function renderRegisterShell(content, options = {}) {
       <div class="home-body register-body${showPromo ? ' home-body--with-promo' : ' register-body--no-promo'}">
         <div class="home-main">
           <div class="site-gate-wrap">
-            <div class="register-card panel">
-              ${step <= 5 ? renderStepIndicator(step) : ''}
+            <div class="register-card register-card--wide panel register-flow">
+              ${showSteps ? renderStepIndicator(stepKey) : ''}
               <h1 class="auth-heading">${title}</h1>
-              ${subtitle ? `<p class="auth-subheading mb-6">${subtitle}</p>` : ''}
+              ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ''}
               ${content}
             </div>
           </div>
@@ -96,45 +101,55 @@ export function renderRegisterShell(content, options = {}) {
   `;
 }
 
-export function renderStepIndicator(currentStep) {
-  const steps = [1, 2, 3, 4, 5];
-  const phase =
-    currentStep <= 2 ? 'basic' : 'detail';
+export function renderStepIndicator(stepKey) {
+  const basicDone = Boolean(registerState.basicComplete);
+  const visible = basicDone
+    ? STEPS.filter((s) => s.phase === 'detail')
+    : STEPS.filter((s) => s.phase);
+  const current = visible.findIndex((s) => s.key === stepKey);
+  const phase = STEPS.find((s) => s.key === stepKey)?.phase || 'detail';
   const phaseMeta = REGISTER_PHASES[phase];
   return `
     <div class="register-phase" aria-label="등록 단계">
       <div class="register-phase__labels">
-        <span class="register-phase__tag ${phase === 'basic' ? 'is-active' : currentStep > 2 ? 'is-done' : ''}">${REGISTER_PHASES.basic.label}</span>
-        <span class="register-phase__arrow">→</span>
+        ${
+          basicDone
+            ? ''
+            : `<span class="register-phase__tag ${phase === 'basic' ? 'is-active' : 'is-done'}">${REGISTER_PHASES.basic.label}</span>
+        <span class="register-phase__arrow">→</span>`
+        }
         <span class="register-phase__tag ${phase === 'detail' ? 'is-active' : ''}">${REGISTER_PHASES.detail.label}</span>
       </div>
-      <p class="register-phase__hint">${phaseMeta.hint}</p>
+      <p class="register-phase__hint">${phaseMeta?.hint || ''}</p>
     </div>
-    <div class="step-indicator" aria-label="등록 단계 ${currentStep}/5">
-      ${steps
-        .map((n) => {
+    <div class="step-indicator" aria-label="등록 단계 ${Math.max(current, 0) + 1}/${visible.length}">
+      ${visible
+        .map((s, i) => {
           let cls = 'step-indicator__dot';
-          if (n === currentStep) cls += ' is-active';
-          else if (n < currentStep) cls += ' is-done';
-          if (n === 2) cls += ' step-indicator__dot--phase-end';
-          return `<span class="${cls}" title="${n <= 2 ? REGISTER_PHASES.basic.label : REGISTER_PHASES.detail.label}"></span>`;
+          if (i === current) cls += ' is-active';
+          else if (i < current) cls += ' is-done';
+          return `<span class="${cls}" title="${s.label}"></span>`;
         })
         .join('')}
     </div>
   `;
 }
 
+export function renderGuideNotice(message) {
+  return `<div class="register-guide" role="note"><span class="register-guide__mark" aria-hidden="true">i</span><p class="register-guide__text">${message}</p></div>`;
+}
+
+/** @deprecated use renderGuideNotice */
 export function renderTempNotice(message) {
-  return `
-    <div class="temp-notice" role="note">
-      <span class="temp-notice__badge">임시</span>
-      <span class="temp-notice__text">${message}</span>
-    </div>
-  `;
+  return renderGuideNotice(message);
 }
 
 export function renderSectionTitle(text) {
   return `<h2 class="register-section-title">${text}</h2>`;
+}
+
+export function mypageRegistrationsUrl() {
+  return `${HOME_UI_BASE}/#/mypage/registrations`;
 }
 
 export function bindGlobalEvents(root) {

@@ -19,6 +19,7 @@ use PDOException;
 use RuntimeException;
 
 use Study114\Database\Connection;
+use Study114\Region\SidoRegionEnsure;
 
 
 
@@ -26,13 +27,14 @@ final class TutorRegisterService
 
 {
 
-    /** @return array{regions: list<array{id: int, label: string}>} */
+    /** @return array{regions: list<array{id: int, label: string}>, cities: list<array{id: int, label: string}>} */
 
     public function getMasters(): array
 
     {
 
         $pdo = Connection::get();
+        $cities = SidoRegionEnsure::ensureAndListCities($pdo);
 
         $regions = $pdo->query(
 
@@ -44,7 +46,10 @@ final class TutorRegisterService
 
 
 
-        return ['regions' => $this->intIdRows($regions)];
+        return [
+            'regions' => $this->intIdRows($regions),
+            'cities' => $cities,
+        ];
 
     }
 
@@ -292,6 +297,8 @@ final class TutorRegisterService
 
                 tutor_display_name = ?,
 
+                main_subject_note = COALESCE(?, main_subject_note),
+
                 slogan = ?,
 
                 intro_short = ?,
@@ -308,9 +315,15 @@ final class TutorRegisterService
 
         );
 
+        $mainSubject = isset($input['main_subject_note']) && (string) $input['main_subject_note'] !== ''
+            ? $this->requireString($input, 'main_subject_note')
+            : null;
+
         $stmt->execute([
 
             $this->requireString($input, 'tutor_display_name'),
+
+            $mainSubject,
 
             $this->optionalString($input, 'slogan'),
 
@@ -428,6 +441,12 @@ final class TutorRegisterService
 
                 main_subject_note = ?,
 
+                student_gender_group = COALESCE(?, student_gender_group),
+
+                student_count_group = COALESCE(?, student_count_group),
+
+                age_band = COALESCE(?, age_band),
+
                 preferred_fee_amount = ?,
 
                 fee_basis_type = ?,
@@ -447,6 +466,20 @@ final class TutorRegisterService
         $stmt->execute([
 
             $this->requireString($input, 'main_subject_note'),
+
+            isset($input['student_gender_group']) && (string) $input['student_gender_group'] !== ''
+                ? $this->requireEnum($input, 'student_gender_group', ['male', 'female', 'mixed'])
+                : null,
+
+            isset($input['student_count_group']) && (string) $input['student_count_group'] !== ''
+                ? $this->requireEnum($input, 'student_count_group', ['solo', 'two', 'three', 'four_plus'])
+                : null,
+
+            isset($input['age_band']) && (string) $input['age_band'] !== ''
+                ? $this->optionalEnum($input, 'age_band', [
+                    'early_20s', 'late_20s', 'early_30s', 'late_30s', 'early_40s', 'late_40s', 'over_50',
+                ])
+                : null,
 
             $this->requirePositiveInt($input, 'preferred_fee_amount'),
 

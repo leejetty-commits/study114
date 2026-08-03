@@ -1,27 +1,29 @@
-/** 5장 SSOT 필드명 — DB 컬럼과 1:1 */
+/** 공부방 등록 — 기본등록(미완료 시) + 상세등록 2단계 */
 
-/** 기본등록 = 임시 저장 · 상세등록 = 검색/공개 본체 (Notion 14장 2026-07-18) */
 export const REGISTER_PHASES = {
   basic: {
     label: '기본등록',
-    hint: '공개 전 임시 저장 · 상세등록으로 이어짐',
+    hint: '가입 때 받은 정보가 없으면 여기서 먼저 채웁니다. 이미 있다면 건너뜁니다.',
     stepKeys: ['basic', 'location'],
   },
   detail: {
     label: '상세등록',
-    hint: '검색·목록·공개에 쓰이는 정보 · 완료 후 일반 등록 · 이어 대표/추천 노출 구매',
-    stepKeys: ['lesson', 'career', 'facility'],
+    hint: '검색·목록에 보이는 수업·경력·시설 정보를 두 단계로 완성합니다.',
+    stepKeys: ['lesson', 'facility'],
   },
 };
 
 export const STEPS = [
   { path: '/register/basic', key: 'basic', label: '기본정보', step: 1, phase: 'basic' },
   { path: '/register/location', key: 'location', label: '위치', step: 2, phase: 'basic' },
-  { path: '/register/lesson', key: 'lesson', label: '수업·가격', step: 3, phase: 'detail' },
-  { path: '/register/career', key: 'career', label: '경력·특징', step: 4, phase: 'detail' },
-  { path: '/register/facility', key: 'facility', label: '시설·연락·사진', step: 5, phase: 'detail' },
-  { path: '/register/complete', key: 'complete', label: '등록완료', step: 6, phase: null },
+  { path: '/register/lesson', key: 'lesson', label: '수업·경력', step: 3, phase: 'detail' },
+  { path: '/register/facility', key: 'facility', label: '시설·연락', step: 4, phase: 'detail' },
+  { path: '/register/complete', key: 'complete', label: '등록완료', step: 5, phase: null },
 ];
+
+export const LEGACY_STEP_REDIRECT = {
+  career: '/register/lesson',
+};
 
 export const SCHOOL_LEVELS = [
   { value: 'preschool', label: '미취학' },
@@ -72,9 +74,24 @@ export const PERSONAL_GENDER_OPTIONS = [
 ];
 
 export const DUMMY_REGIONS = [
-  { id: 1, label: '서울 강남구 대치동' },
-  { id: 2, label: '서울 서초구 반포동' },
-  { id: 3, label: '부산 해운대구 우동' },
+  { id: 1, label: '서울특별시 강남구 대치동' },
+  { id: 2, label: '서울특별시 서초구 반포동' },
+  { id: 3, label: '부산광역시 해운대구 우동' },
+  { id: 4, label: '대구광역시 수성구 범어동' },
+  { id: 5, label: '인천광역시 연수구 송도동' },
+  { id: 6, label: '광주광역시 서구 치평동' },
+  { id: 7, label: '대전광역시 유성구 봉명동' },
+  { id: 8, label: '울산광역시 남구 삼산동' },
+  { id: 9, label: '세종특별자치시 한솔동' },
+  { id: 10, label: '경기도 성남시 분당구 정자동' },
+  { id: 11, label: '강원특별자치도 춘천시 효자동' },
+  { id: 12, label: '충청북도 청주시 흥덕구 복대동' },
+  { id: 13, label: '충청남도 천안시 서북구 불당동' },
+  { id: 14, label: '전북특별자치도 전주시 완산구 효자동' },
+  { id: 15, label: '전라남도 여수시 학동' },
+  { id: 16, label: '경상북도 포항시 북구 장성동' },
+  { id: 17, label: '경상남도 창원시 성산구 상남동' },
+  { id: 18, label: '제주특별자치도 제주시 노형동' },
 ];
 
 export const DUMMY_COMPLEXES = [
@@ -169,8 +186,20 @@ export const registerState = {
   instagram_url: '',
 
   profile_status: 'draft',
-  detail_completion_status: 'expanded_in_progress',
+  detail_completion_status: 'basic_only',
+  /** @type {boolean} */
+  basicComplete: false,
 };
+
+export function isRoomBasicComplete(room) {
+  if (!room || !room.study_room_id) return false;
+  const hasName = String(room.study_room_name || '').trim() !== '';
+  const hasRegion =
+    String(room.region_id || '').trim() !== '' ||
+    (Array.isArray(room.saved_regions) &&
+      room.saved_regions.some((r) => String(r?.region_id || '').trim() !== ''));
+  return hasName && hasRegion;
+}
 
 export function emptySubject() {
   return { school_level: 'middle', grade_band: '', subject_master_id: '', subject_name: '', is_main: false };

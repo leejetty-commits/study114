@@ -1,9 +1,5 @@
 import { registerState, getFacilityOptions, LESSON_PLACE_TYPES, CAPACITY_PER_TIME_OPTIONS } from '../state.js';
-import {
-  renderRegisterShell,
-  renderTempNotice,
-  bindGlobalEvents,
-} from '../layout.js';
+import { renderRegisterShell, renderGuideNotice, bindGlobalEvents, mypageRegistrationsUrl } from '../layout.js';
 import { homeUiUrl } from '../../../shared/preview-links.js';
 
 function formatPrice(amount) {
@@ -21,40 +17,31 @@ function facilityNames() {
 export function renderComplete() {
   const s = registerState;
   const content = `
-    <div class="panel text-center mb-6">
-      <div style="font-size:3rem;line-height:1;margin-bottom:var(--space-4);">✓</div>
-      <h2 class="auth-heading" style="font-size:var(--text-2xl);">공부방 등록 완료</h2>
-      <p class="auth-subheading">study_room_id: <strong>${s.study_room_id ?? '—'}</strong> · profile_status: <strong>${s.profile_status}</strong></p>
-      <p class="auth-subheading" style="margin-top:var(--space-2);">
-        상세등록: <strong>${s.detail_completion_status}</strong>
-        · 일반 리스트/검색: <strong>${s.detail_completion_status === 'expanded_complete' ? '등록 가능(공개 절차 후)' : '상세등록 완료 후 가능'}</strong>
-        · 대표/추천 노출: <strong>${s.detail_completion_status === 'expanded_complete' ? '구매 단계로 연결(품질·증빙 별도)' : '상세등록 완료 후'}</strong>
-      </p>
+    <div class="register-complete">
+      <div class="register-complete__icon" aria-hidden="true">✓</div>
+      <h2 class="register-complete__title">공부방 등록이 완료되었습니다</h2>
+      <p class="register-complete__thanks">수고하셨습니다!</p>
+      <p class="register-complete__lead">작성해 주신 정보는 검색·목록에 반영됩니다. 대표·추천 노출은 유료 상품에서 이어갈 수 있습니다.</p>
     </div>
-
-    ${renderTempNotice('기본등록은 임시 저장 상태 · 상세등록 완료 후 일반 목록/검색 · 그다음 대표/추천 노출 구매')}
-
+    ${renderGuideNotice('내용을 다시 손보고 싶으면 마이페이지 · 내 등록에서 수정할 수 있습니다.')}
     <dl class="register-summary">
-      <dt>공부방명</dt><dd>${s.study_room_name}</dd>
-      <dt>운영자</dt><dd>${s.operator_display_name}</dd>
+      <dt>공부방명</dt><dd>${s.study_room_name || '—'}</dd>
+      <dt>운영자</dt><dd>${s.operator_display_name || '—'}</dd>
       <dt>교습장</dt><dd>${LESSON_PLACE_TYPES.find((t) => t.value === s.lesson_place_type)?.label || '—'}</dd>
       <dt>타임별 원생수</dt><dd>${CAPACITY_PER_TIME_OPTIONS.find((o) => o.value === s.capacity_per_time)?.label || '—'}</dd>
-      <dt>기본 위치</dt><dd>${s.address_text}</dd>
       <dt>월 대표 가격</dt><dd>${formatPrice(s.price_amount)}</dd>
-      <dt>과목</dt><dd>${s.subjects.map((x) => x.subject_name).join(', ')}</dd>
-      <dt>시설 체크</dt><dd>${facilityNames() || '—'}</dd>
-      <dt>교육청 등록</dt><dd>${s.education_office_registered ? s.education_office_reg_no : '미등록'}</dd>
+      <dt>과목</dt><dd>${s.subjects.map((x) => x.subject_name).filter(Boolean).join(', ') || '—'}</dd>
+      <dt>시설</dt><dd>${facilityNames() || '—'}</dd>
     </dl>
-
-    <div class="register-nav" style="border-top:none;padding-top:var(--space-4);">
-      <a href="#/register/basic" class="btn btn--secondary" data-nav="/register/basic">처음부터 수정</a>
+    <div class="register-nav" style="border-top:none;padding-top:var(--space-2);">
+      <a href="${mypageRegistrationsUrl()}" class="btn btn--secondary">마이페이지에서 수정</a>
       <a href="${homeUiUrl('study-room')}" class="btn btn--primary">공부방 메인으로</a>
     </div>
   `;
   return renderRegisterShell(content, {
-    step: 6,
+    stepKey: 'complete',
     title: '등록 완료',
-    subtitle: '가입 완료 후 상세등록 CTA와 동일 흐름 (2장 · 9장)',
+    subtitle: '',
   });
 }
 

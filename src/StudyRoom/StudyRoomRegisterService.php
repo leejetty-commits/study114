@@ -19,6 +19,7 @@ use PDOException;
 use RuntimeException;
 
 use Study114\Database\Connection;
+use Study114\Region\SidoRegionEnsure;
 
 
 
@@ -34,7 +35,7 @@ final class StudyRoomRegisterService
 
         $pdo = Connection::get();
 
-
+        $cities = SidoRegionEnsure::ensureAndListCities($pdo);
 
         $regions = $pdo->query(
 
@@ -69,6 +70,8 @@ final class StudyRoomRegisterService
         return [
 
             'regions'    => $this->intIdRows($regions),
+
+            'cities'     => $cities,
 
             'complexes'  => $this->intIdRows($complexes, ['region_id']),
 
@@ -326,6 +329,8 @@ final class StudyRoomRegisterService
 
                 study_room_name = ?,
 
+                main_subject_note = COALESCE(?, main_subject_note),
+
                 slogan = ?,
 
                 operator_display_name = ?,
@@ -340,9 +345,15 @@ final class StudyRoomRegisterService
 
         );
 
+        $mainSubject = isset($input['main_subject_note']) && (string) $input['main_subject_note'] !== ''
+            ? $this->requireString($input, 'main_subject_note')
+            : null;
+
         $stmt->execute([
 
             $this->requireString($input, 'study_room_name'),
+
+            $mainSubject,
 
             $this->optionalString($input, 'slogan'),
 

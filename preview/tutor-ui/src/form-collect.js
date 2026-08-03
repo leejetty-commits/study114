@@ -84,6 +84,7 @@ export function payloadForStep(step, state) {
       return {
         gender: state.gender,
         tutor_display_name: state.tutor_display_name,
+        main_subject_note: state.main_subject_note,
         slogan: state.slogan,
         intro_short: state.intro_short,
         intro_long: state.intro_long,
@@ -96,6 +97,9 @@ export function payloadForStep(step, state) {
     case 'lesson':
       return {
         main_subject_note: state.main_subject_note,
+        student_gender_group: state.student_gender_group,
+        student_count_group: state.student_count_group,
+        age_band: state.age_band,
         preferred_fee_amount: state.preferred_fee_amount,
         fee_basis_type: state.fee_basis_type,
         lessons_per_week: state.lessons_per_week,

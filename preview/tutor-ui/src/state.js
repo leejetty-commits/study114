@@ -1,27 +1,30 @@
-/** 8장 SSOT 필드명 — DB 컬럼과 1:1 */
+/** 과외쌤 등록 — 기본등록(미완료 시) + 상세등록 2단계 */
 
-/** 기본등록 = 임시 저장 · 상세등록 = 검색/공개 본체 (Notion 14장 2026-07-18) */
 export const REGISTER_PHASES = {
   basic: {
     label: '기본등록',
-    hint: '공개 전 임시 저장 · 상세등록으로 이어짐',
+    hint: '가입 때 받은 정보가 없으면 여기서 먼저 채웁니다. 이미 있다면 건너뜁니다.',
     stepKeys: ['basic', 'regions'],
   },
   detail: {
     label: '상세등록',
-    hint: '검색·목록·공개에 쓰이는 정보 · 완료 후 일반 등록 · 이어 대표/추천 노출 구매',
-    stepKeys: ['lesson', 'career', 'contact'],
+    hint: '검색·목록에 보이는 수업·학력·연락 정보를 두 단계로 완성합니다.',
+    stepKeys: ['lesson', 'contact'],
   },
 };
 
 export const STEPS = [
-  { path: '/register/basic', key: 'basic', label: '기본정보', step: 1, phase: 'basic' },
-  { path: '/register/regions', key: 'regions', label: '활동지역', step: 2, phase: 'basic' },
-  { path: '/register/lesson', key: 'lesson', label: '과목·가격', step: 3, phase: 'detail' },
-  { path: '/register/career', key: 'career', label: '학력·경력', step: 4, phase: 'detail' },
-  { path: '/register/contact', key: 'contact', label: '연락·사진', step: 5, phase: 'detail' },
-  { path: '/register/complete', key: 'complete', label: '등록완료', step: 6, phase: null },
+  { path: '/register/basic', key: 'basic', label: '기본정보', step: 1, phase: 'basic', uiStepFull: 1 },
+  { path: '/register/regions', key: 'regions', label: '과외지역', step: 2, phase: 'basic', uiStepFull: 2 },
+  { path: '/register/lesson', key: 'lesson', label: '수업·학력', step: 3, phase: 'detail', uiStepFull: 3, uiStepDetail: 1 },
+  { path: '/register/contact', key: 'contact', label: '연락·공개', step: 4, phase: 'detail', uiStepFull: 4, uiStepDetail: 2 },
+  { path: '/register/complete', key: 'complete', label: '등록완료', step: 5, phase: null },
 ];
+
+/** 옛 학력 단계 URL 호환 */
+export const LEGACY_STEP_REDIRECT = {
+  career: '/register/lesson',
+};
 
 export const PERSONAL_GENDER_OPTIONS = [
   { value: 'male', label: '남' },
@@ -103,6 +106,7 @@ export const IMAGE_TYPES = [
 
 export const apiMasters = {
   regions: /** @type {Array<{id: number, label: string}>} */ ([]),
+  cities: /** @type {Array<{id: number, label: string}>} */ ([]),
 };
 
 export function getRegions() {
@@ -111,49 +115,65 @@ export function getRegions() {
     : [{ id: 1, label: '서울특별시 강남구 대치동' }];
 }
 
+export function getCities() {
+  return apiMasters.cities.length ? apiMasters.cities : [];
+}
+
+/** 기본등록(이름+과외지역) 완료 여부 — 상세등록 진입 시 스킵 판단 */
+export function isTutorBasicComplete(tutor) {
+  if (!tutor || !tutor.tutor_id) return false;
+  const hasName = String(tutor.tutor_display_name || '').trim() !== '';
+  const hasRegion =
+    Array.isArray(tutor.saved_regions) &&
+    tutor.saved_regions.some((r) => String(r?.region_id || '').trim() !== '');
+  return hasName && hasRegion;
+}
+
 export const registerState = {
   tutor_id: null,
   gender: 'male',
-  tutor_display_name: '김수학',
-  slogan: '개념부터 문제까지',
-  intro_short: '대치동 중등 수학 전문',
-  intro_long: '학생 수준에 맞춘 맞춤 수업을 진행합니다.',
+  tutor_display_name: '',
+  slogan: '',
+  intro_short: '',
+  intro_long: '',
   student_gender_group: 'mixed',
   student_count_group: 'solo',
   age_band: 'early_30s',
   saved_regions: [
-    { region_id: '1', scope_type: 'city', is_primary: true },
+    { region_id: '', scope_type: 'city', is_primary: true },
     { region_id: '', scope_type: 'city', is_primary: false },
     { region_id: '', scope_type: 'city', is_primary: false },
   ],
-  main_subject_note: '수학',
-  preferred_fee_amount: '480000',
+  main_subject_note: '',
+  preferred_fee_amount: '',
   fee_basis_type: 'monthly_by_weekly_schedule',
-  lessons_per_week: '2',
-  monthly_session_count: '8',
-  minutes_per_lesson: '90',
-  fee_description: '주 2회 · 90분 기준 월 48만원',
+  lessons_per_week: '',
+  monthly_session_count: '',
+  minutes_per_lesson: '',
+  fee_description: '',
   subjects: [
-    { school_level: 'middle', grade_band: '중1~2', subject_master_id: '5', subject_name: '수학', is_primary: true },
+    { school_level: 'middle', grade_band: '', subject_master_id: '', subject_name: '', is_primary: true },
   ],
-  lesson_places: ['student_home_visit', 'public_place'],
-  university_name: '서울대학교',
-  major_name: '수학과',
+  lesson_places: [],
+  university_name: '',
+  major_name: '',
   university_status: 'graduated',
-  career_year_band: 'y7_10',
-  main_material_note: '쎈 수학',
-  feature_1: '개념+심화 병행',
-  feature_2: '내신 대비',
+  career_year_band: 'y1_3',
+  main_material_note: '',
+  feature_1: '',
+  feature_2: '',
   feature_3: '',
-  proof_document_available: true,
-  teaching_style_badges: ['meticulous', 'concept_focus'],
-  contact_time_note: '평일 18:00~22:00',
+  proof_document_available: false,
+  teaching_style_badges: [],
+  contact_time_note: '',
   youtube_url: '',
   facebook_url: '',
   instagram_url: '',
   images: [{ image_type: 'profile', sort_order: 1, name: 'profile.jpg' }],
   profile_status: 'draft',
   detail_completion_status: 'basic_only',
+  /** @type {boolean} */
+  basicComplete: false,
 };
 
 export function emptySubject() {

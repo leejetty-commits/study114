@@ -2,6 +2,7 @@ import '@auth-styles/base.css';
 import '@auth-styles/theme-v1.css';
 import '../../home-ui/src/styles/tokens.css';
 import '../../home-ui/src/styles/home.css';
+import '../../shared/register-flow.css';
 import './styles/register.css';
 import '../../home-ui/src/styles/design-system.css';
 import '../../home-ui/src/styles/product-chrome.css';
@@ -21,14 +22,13 @@ import {
   syncSiteHeaderOffset,
   ensureSiteHeaderOffsetListeners,
 } from '../../shared/site-chrome.js';
-import { getCurrentScreen } from './layout.js';
+import { getCurrentScreen, navigate } from './layout.js';
 import { renderBasic, bindBasicEvents } from './screens/step-basic.js';
 import { renderLocation, bindLocationEvents } from './screens/step-location.js';
 import { renderLesson, bindLessonEvents } from './screens/step-lesson.js';
-import { renderCareer, bindCareerEvents } from './screens/step-career.js';
 import { renderFacility, bindFacilityEvents } from './screens/step-facility.js';
 import { renderComplete, bindCompleteEvents } from './screens/step-complete.js';
-import { apiMasters, registerState } from './state.js';
+import { apiMasters, registerState, isRoomBasicComplete } from './state.js';
 import { fetchMasters, loadRoom } from './register-api.js';
 import { applyRoomToState } from './form-collect.js';
 
@@ -36,10 +36,11 @@ const SCREENS = {
   basic: { render: renderBasic, bind: bindBasicEvents },
   location: { render: renderLocation, bind: bindLocationEvents },
   lesson: { render: renderLesson, bind: bindLessonEvents },
-  career: { render: renderCareer, bind: bindCareerEvents },
   facility: { render: renderFacility, bind: bindFacilityEvents },
   complete: { render: renderComplete, bind: bindCompleteEvents },
 };
+
+const BASIC_KEYS = new Set(['basic', 'location']);
 
 function renderIntroShell(innerHtml) {
   const header = renderSiteHeader({
@@ -61,7 +62,6 @@ function renderIntroShell(innerHtml) {
     </div>`;
 }
 
-/** @returns {'blocked'|'intro'|'form'} */
 function resolveRegisterMode() {
   const role = getChromeNavRole();
   const gate = guardRegisterAccess(role, 'room');
@@ -71,6 +71,18 @@ function resolveRegisterMode() {
     return 'blocked';
   }
   return gate.mode;
+}
+
+function maybeSkipBasicSteps() {
+  if (!registerState.basicComplete) return false;
+  const key = getCurrentScreen();
+  if (BASIC_KEYS.has(key)) {
+    if (window.location.hash !== '#/register/lesson') {
+      navigate('/register/lesson');
+      return true;
+    }
+  }
+  return false;
 }
 
 function render() {
@@ -93,8 +105,10 @@ function render() {
     return;
   }
 
+  if (maybeSkipBasicSteps()) return;
+
   const key = getCurrentScreen();
-  const screen = SCREENS[key] || SCREENS.basic;
+  const screen = SCREENS[key] || SCREENS.lesson;
   app.innerHTML = screen.render();
   screen.bind(app);
 }
@@ -111,47 +125,33 @@ async function initApi() {
     }
 
     const gate = guardRegisterAccess(getChromeNavRole(), 'room');
-    if (!gate.ok || gate.mode !== 'form') return;
+    if (!gate.ok || gate.mode !== 'form') return null;
 
     const room = await loadRoom().catch(() => null);
     if (room) {
       applyRoomToState(registerState, room);
+      registerState.basicComplete = isRoomBasicComplete(room);
     } else {
       const cachedId = sessionStorage.getItem('study114_study_room_id');
       if (cachedId) registerState.study_room_id = Number(cachedId);
+      registerState.basicComplete = false;
     }
     return room;
   } catch {
-    /* masters는 비로그인 가능 · load는 401 허용 */
     return null;
   }
 }
 
-/** 기본등록(이름 + 활동지역) 완료 여부 — 완료 시 상세등록 단계부터 진입 */
-function isBasicComplete(room) {
-  if (!room || !room.study_room_id) return false;
-  const hasName = String(room.study_room_name || '').trim() !== '';
-  const hasRegion =
-    String(room.region_id || '').trim() !== '' ||
-    (Array.isArray(room.saved_regions) &&
-      room.saved_regions.some((r) => String(r?.region_id || '').trim() !== ''));
-  return hasName && hasRegion;
-}
-
 function init() {
-  const enteredAtBasic = !window.location.hash || window.location.hash === '#/register/basic';
-  if (!window.location.hash) {
-    window.location.hash = '#/register/basic';
-  }
+  if (!window.location.hash) window.location.hash = '#/register/basic';
   window.addEventListener('hashchange', render);
 
   Promise.all([initChromeSession(), initApi()])
     .then(([, room]) => {
-      if (enteredAtBasic && getChromeNavRole() === 'study_room' && isBasicComplete(room)) {
-        if (window.location.hash !== '#/register/lesson') {
-          window.location.hash = '#/register/lesson';
-          return; // hashchange가 render를 호출
-        }
+      registerState.basicComplete = isRoomBasicComplete(room) || registerState.basicComplete;
+      if (registerState.basicComplete && BASIC_KEYS.has(getCurrentScreen())) {
+        navigate('/register/lesson');
+        return;
       }
       render();
     })

@@ -1,21 +1,29 @@
 import { registerState } from '../state.js';
 import { syncContactFromForm } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
-import { renderRegisterShell, renderNavButtons, renderTempNotice, bindGlobalEvents, navigate } from '../layout.js';
+import {
+  renderRegisterShell,
+  renderSectionTitle,
+  renderNavButtons,
+  renderGuideNotice,
+  bindGlobalEvents,
+  navigate,
+} from '../layout.js';
 import { validatePromoUrls } from '../../../shared/promo-links.js';
 
 export function renderContact() {
   const s = registerState;
   const content = `
-    ${renderTempNotice('이미지 업로드는 경로만 저장 · 파일 업로드는 추후')}
+    ${renderGuideNotice('상세등록 마지막 단계입니다. 연락 가능 시간과 공개 여부를 확인한 뒤 등록을 마쳐 주세요. 사진 파일 업로드는 곧 연결됩니다.')}
     <form data-form="contact">
+      ${renderSectionTitle('연락 · 공개')}
       <div class="form-group">
         <label class="form-label" for="contact_time_note">연락 가능 시간</label>
-        <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note}" />
+        <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note}" placeholder="예: 평일 18:00~22:00" />
       </div>
 
-      <h3 class="register-section-title">외부 홍보 링크 (상세등록)</h3>
-      <p class="register-hint mb-4">외부 URL만 · 각 1개 · 빈값 허용</p>
+      ${renderSectionTitle('외부 홍보 링크')}
+      <p class="register-hint mb-4">선택 사항입니다. 유튜브·페이스북·인스타그램 주소를 넣을 수 있습니다.</p>
       <div class="form-group">
         <label class="form-label" for="youtube_url">유튜브 링크</label>
         <input class="form-input" type="url" id="youtube_url" name="youtube_url" value="${s.youtube_url}" placeholder="https://www.youtube.com/..." />
@@ -30,22 +38,26 @@ export function renderContact() {
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="profile_status">저장 상태</label>
+        <label class="form-label" for="profile_status">공개 상태</label>
         <select class="form-input" id="profile_status" name="profile_status">
-          <option value="draft" ${s.profile_status === 'draft' || s.profile_status === 'pending' ? 'selected' : ''}>저장 중</option>
-          <option value="published" ${s.profile_status === 'published' ? 'selected' : ''}>공개 (운영 화면에서도 확인 권장)</option>
+          <option value="draft" ${s.profile_status === 'draft' || s.profile_status === 'pending' ? 'selected' : ''}>저장만 (아직 비공개)</option>
+          <option value="published" ${s.profile_status === 'published' ? 'selected' : ''}>공개</option>
         </select>
-        <p class="form-hint">공개는 등록한 본인이 확인한 뒤 전환하는 것을 권장합니다.</p>
+        <p class="form-hint">공개는 내용을 확인한 뒤 켜 주세요.</p>
       </div>
-      ${renderNavButtons('/register/career', '등록 완료')}
+      ${renderNavButtons('/register/lesson', '등록 완료')}
     </form>`;
-  return renderRegisterShell(content, { step: 5, title: '연락 · 사진', subtitle: '상세등록 완료 시 대표/추천 노출 자격' });
+  return renderRegisterShell(content, {
+    stepKey: 'contact',
+    title: '연락 · 공개',
+    subtitle: '상세등록 2/2 · 마무리 후 목록·검색에 활용됩니다.',
+  });
 }
 
 export function bindContactEvents(root) {
   bindGlobalEvents(root);
   const nextBtn = root.querySelector('[data-action="next"]');
-  root.querySelector('[data-action="prev"]')?.addEventListener('click', () => navigate('/register/career'));
+  root.querySelector('[data-action="prev"]')?.addEventListener('click', () => navigate('/register/lesson'));
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
       syncContactFromForm(root.querySelector('[data-form="contact"]'), registerState);

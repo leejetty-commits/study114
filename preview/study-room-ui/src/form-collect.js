@@ -129,6 +129,7 @@ export function payloadForStep(step, state) {
       return {
         gender: state.gender,
         study_room_name: state.study_room_name,
+        main_subject_note: state.main_subject_note,
         slogan: state.slogan,
         operator_display_name: state.operator_display_name,
         intro_short: state.intro_short,

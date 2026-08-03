@@ -5,7 +5,8 @@ import {
   renderRegisterShell,
   renderSectionTitle,
   renderNavButtons,
-  renderTempNotice,
+  renderGuideNotice,
+  mypageRegistrationsUrl,
   bindGlobalEvents,
   navigate,
 } from '../layout.js';
@@ -85,10 +86,10 @@ export function renderLocation() {
   }
 
   const content = `
-    ${renderTempNotice('지역·단지 목록을 불러와 선택합니다. 단지 주소를 포함하며, 지도 좌표는 추후 연결합니다.')}
+    ${renderGuideNotice('행정동 또는 아파트단지 중 하나로 위치를 정합니다. 노출 지역은 최대 3곳까지 둘 수 있습니다.')}
     <form data-form="location">
-      ${renderSectionTitle('노출·기본 위치 기준')}
-      <p class="register-hint mb-4">가입 기본주소와 분리 · 행정동 또는 아파트단지 중 <strong>하나만</strong> 선택 · 슬롯 전체 동일 기준</p>
+      ${renderSectionTitle('위치 기준')}
+      <p class="register-hint mb-4">행정동 또는 아파트단지 중 <strong>하나만</strong> 선택합니다. 슬롯 전체는 같은 기준을 씁니다.</p>
       <div class="chip-group" data-basis-group>
         <label class="chip">
           <input type="radio" name="region_basis_type" value="dong" class="chip__input" ${effectiveBasis === 'dong' ? 'checked' : ''} />
@@ -125,19 +126,20 @@ export function renderLocation() {
         <input class="form-input" id="address_text" name="address_text" value="${s.address_text || ''}" />
       </div>
 
-      ${renderSectionTitle('노출 지역 (최대 3 · 대표 1 · 1필수+추가2)')}
-      <p class="register-hint mb-4">기본등록 seed와 같은 기준·필드를 확장합니다. 행정동과 단지를 섞지 않습니다.</p>
+      ${renderSectionTitle('노출 지역 (최대 3 · 대표 1)')}
+      <p class="register-hint mb-4">기본 위치와 같은 기준으로 추가 지역을 고를 수 있습니다.</p>
       <div data-saved-regions>
         ${s.saved_regions.map((slot, i) => renderSavedRegion(slot, i, effectiveBasis)).join('')}
       </div>
 
-      ${renderNavButtons('/register/basic', '다음: 수업·가격')}
+      <a class="register-mypage-link" href="${mypageRegistrationsUrl()}">이미 등록한 내용을 수정하려면 마이페이지 · 내 등록</a>
+      ${renderNavButtons('/register/basic', '다음: 수업·경력')}
     </form>
   `;
   return renderRegisterShell(content, {
-    step: 2,
-    title: '위치 · 저장 지역',
-    subtitle: '기준 선선택 후 일관 유지 (10-6)',
+    stepKey: 'location',
+    title: '위치 · 노출 지역',
+    subtitle: '전국 지역 목록에서 공부방 위치를 선택합니다.',
   });
 }
 
@@ -232,6 +234,7 @@ export function bindLocationEvents(root) {
         region_id: basis === 'dong' ? s.region_id : s.region_id || registerState.region_id,
       }));
       await saveAndNavigate(registerState, 'location', '/register/lesson');
+      registerState.basicComplete = true;
     });
   });
 }
