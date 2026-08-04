@@ -47,6 +47,11 @@ function renderStepList(steps) {
           (step, index) => `
             <li class="guide-step-card">
               <span class="guide-step-card__index">${index + 1}</span>
+              ${
+                step.icon
+                  ? `<span class="guide-step-card__icon" aria-hidden="true"><img src="${esc(step.icon)}" alt="" width="28" height="28" /></span>`
+                  : ''
+              }
               <h3 class="guide-step-card__title">${esc(step.title)}</h3>
               <p class="guide-step-card__body">${esc(step.body)}</p>
             </li>`,
@@ -67,6 +72,11 @@ function renderFeatureCards(items) {
           .map(
             (item) => `
               <article class="guide-feature-card">
+                ${
+                  item.icon
+                    ? `<div class="guide-feature-card__icon" aria-hidden="true"><img src="${esc(item.icon)}" alt="" width="28" height="28" /></div>`
+                    : ''
+                }
                 <h3 class="guide-feature-card__title">${esc(item.title)}</h3>
                 <p class="guide-feature-card__body">${esc(item.body)}</p>
               </article>`,
@@ -91,17 +101,35 @@ function renderActionCards(items) {
     </section>`;
 }
 
+function normalizeFlowStep(step) {
+  if (typeof step === 'string') return { label: step, caption: '', icon: '' };
+  return {
+    label: step.label || '',
+    caption: step.caption || '',
+    icon: step.icon || '',
+  };
+}
+
 function renderFlowChips(steps) {
   return `
     <div class="guide-flow-chart">
       ${steps
-        .map(
-          (step, index) => `
+        .map((raw, index) => {
+          const step = normalizeFlowStep(raw);
+          return `
             <div class="guide-flow-chart__step">
               <span class="guide-flow-chart__index">${index + 1}</span>
-              <span class="guide-flow-chart__label">${esc(step)}</span>
-            </div>`,
-        )
+              ${
+                step.icon
+                  ? `<span class="guide-flow-chart__icon" aria-hidden="true"><img src="${esc(step.icon)}" alt="" width="24" height="24" /></span>`
+                  : ''
+              }
+              <div class="guide-flow-chart__copy">
+                <span class="guide-flow-chart__label">${esc(step.label)}</span>
+                ${step.caption ? `<span class="guide-flow-chart__caption">${esc(step.caption)}</span>` : ''}
+              </div>
+            </div>`;
+        })
         .join('')}
     </div>`;
 }
@@ -200,6 +228,11 @@ function renderDetailGroups(groups) {
             <h2 class="guide-section__title">${esc(group.title)}</h2>
             <p class="guide-section__desc">${esc(group.lead)}</p>
           </div>
+          ${
+            group.image
+              ? `<div class="guide-detail-group__media" style="background-image:url('${esc(group.image)}')" role="img" aria-label="${esc(group.title)}"></div>`
+              : ''
+          }
           <div class="guide-detail-columns">
             ${group.columns
               .map(

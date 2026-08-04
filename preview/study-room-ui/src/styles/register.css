@@ -1,4 +1,5 @@
 /* study-room-ui 전용 — 공통은 shared/register-flow.css */
-.register-body .site-gate-wrap {
+/* 로그인 후 폼만 본문 전체폭. 비로그인 안내는 유료상품과 동일 36rem */
+.register-body:not(.register-body--no-promo) .site-gate-wrap {
   max-width: none;
 }
