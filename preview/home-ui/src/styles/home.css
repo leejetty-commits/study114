@@ -5753,8 +5753,44 @@ a.sup-term-chip:hover {
   font-size: var(--text-sm);
   font-weight: 800;
 }
-.guide-flow { display: flex; flex-wrap: wrap; gap: 0.55rem; }
-.guide-flow__arrow { color: var(--gray-400); }
+.guide-flow-chart {
+  display: grid;
+  gap: 0.75rem;
+}
+@media (min-width: 900px) {
+  .guide-flow-chart {
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  }
+}
+.guide-flow-chart__step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 4.25rem;
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--gray-200);
+  background: linear-gradient(180deg, #fff, #f8fbff);
+}
+.guide-flow-chart__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--brand-blue);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.guide-flow-chart__label {
+  color: var(--gray-800);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.45;
+}
 .guide-detail-columns { display: grid; gap: 1rem; }
 @media (min-width: 900px) {
   .guide-detail-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }

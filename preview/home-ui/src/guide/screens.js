@@ -1,8 +1,6 @@
 import {
   GUIDE_HOME_CARDS,
-  GUIDE_ROLE_CARDS,
   GUIDE_FLOW_SUMMARY,
-  GUIDE_HOME_FAQ_PREVIEW,
   GUIDE_SUPPORT_LINKS,
   GUIDE_HOME_CTA,
   GUIDE_PAGES,
@@ -95,8 +93,16 @@ function renderActionCards(items) {
 
 function renderFlowChips(steps) {
   return `
-    <div class="guide-flow">
-      ${steps.map((step, index) => `<span class="guide-flow__chip">${esc(step)}${index < steps.length - 1 ? '<span class="guide-flow__arrow">→</span>' : ''}</span>`).join('')}
+    <div class="guide-flow-chart">
+      ${steps
+        .map(
+          (step, index) => `
+            <div class="guide-flow-chart__step">
+              <span class="guide-flow-chart__index">${index + 1}</span>
+              <span class="guide-flow-chart__label">${esc(step)}</span>
+            </div>`,
+        )
+        .join('')}
     </div>`;
 }
 
@@ -122,7 +128,7 @@ function renderGuideHome() {
     <section class="guide-section">
       <div class="guide-section__head">
         <h2 class="guide-section__title">자주 찾는 안내</h2>
-        <p class="guide-section__desc">비질리 시안의 카드 위계를 살려, 가장 많이 찾는 4개 주제를 바로 고를 수 있게 구성했습니다.</p>
+        <p class="guide-section__desc">홈에서는 길게 설명하지 않고, 가장 많이 찾는 4개 주제로 바로 이동할 수 있게 구성했습니다.</p>
       </div>
       <div class="guide-card-grid">
         ${GUIDE_HOME_CARDS.map(
@@ -141,28 +147,8 @@ function renderGuideHome() {
 
     <section class="guide-section guide-section--soft">
       <div class="guide-section__head">
-        <h2 class="guide-section__title">역할별 빠른 시작</h2>
-        <p class="guide-section__desc">찾는 사람과 등록하는 사람의 시작점이 다르기 때문에, 감성 소개 대신 실제 이동 목적이 보이도록 CTA를 분리했습니다.</p>
-      </div>
-      <div class="guide-role-grid">
-        ${GUIDE_ROLE_CARDS.map(
-          (card) => `
-            <article class="guide-role-card">
-              <span class="guide-role-card__eyebrow">${esc(card.eyebrow)}</span>
-              <h3 class="guide-role-card__title">${esc(card.title)}</h3>
-              <p class="guide-role-card__body">${esc(card.body)}</p>
-              <div class="guide-role-card__actions">
-                ${card.ctas.map((cta, index) => renderAction(cta, `guide-btn ${index === 0 ? 'guide-btn--primary' : 'guide-btn--secondary'}`)).join('')}
-              </div>
-            </article>`,
-        ).join('')}
-      </div>
-    </section>
-
-    <section class="guide-section">
-      <div class="guide-section__head">
-        <h2 class="guide-section__title">핵심 흐름 요약</h2>
-        <p class="guide-section__desc">긴 설명 대신 어디서 출발해 어디로 이어지는지 한 번에 보이도록 3개 흐름 블록으로 압축했습니다.</p>
+        <h2 class="guide-section__title">빠른 흐름 요약</h2>
+        <p class="guide-section__desc">자세한 설명은 하위 페이지에서 보고, 여기서는 내 상황에 맞는 흐름만 한눈에 잡을 수 있게 요약했습니다.</p>
       </div>
       <div class="guide-summary-grid">
         ${GUIDE_FLOW_SUMMARY.map(
@@ -174,20 +160,6 @@ function renderGuideHome() {
               </div>
             </article>`,
         ).join('')}
-      </div>
-    </section>
-
-    <section class="guide-section guide-section--faq">
-      <div class="guide-faq-preview">
-        <div class="guide-faq-preview__intro">
-          <span class="guide-eyebrow">FAQ 미리보기</span>
-          <h2 class="guide-section__title">자주 묻는 질문</h2>
-          <p class="guide-section__desc">홈에서는 미리보기만 제공하고, 전체 FAQ는 고객센터로 분리해 안내 허브와 지원 허브의 성격을 나눴습니다.</p>
-          ${renderAction({ label: '전체 FAQ 보기', path: '/support/faq' }, 'guide-btn guide-btn--secondary')}
-        </div>
-        <div class="guide-faq-preview__list">
-          ${GUIDE_HOME_FAQ_PREVIEW.map((item) => `<div class="guide-faq-preview__item">${esc(item)}</div>`).join('')}
-        </div>
       </div>
     </section>
 
@@ -338,13 +310,13 @@ function renderGuideDetail(page) {
     </section>
     ${renderFeatureCards(page.featureCards)}
     ${page.conceptTable ? `<section class="guide-section">${renderConceptTable(page.conceptTable)}</section>` : ''}
+    ${page.flow?.length ? `<section class="guide-section"><div class="guide-section__head"><h2 class="guide-section__title">흐름 차트</h2><p class="guide-section__desc">먼저 전체 흐름을 차트로 보고, 아래 단계별 설명에서 세부를 확인할 수 있게 정리했습니다.</p></div>${renderFlowChips(page.flow)}</section>` : ''}
     <section class="guide-section">
       <div class="guide-section__head">
         <h2 class="guide-section__title">단계별 안내</h2>
       </div>
       ${renderStepList(page.steps || [])}
     </section>
-    ${page.flow?.length ? `<section class="guide-section"><div class="guide-section__head"><h2 class="guide-section__title">흐름 한눈에 보기</h2></div>${renderFlowChips(page.flow)}</section>` : ''}
     ${renderDetailGroups(page.detailGroups)}
     ${page.note ? `<section class="guide-note">${esc(page.note)}</section>` : ''}
     ${renderWarnings(page.warnings)}
