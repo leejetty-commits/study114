@@ -108,6 +108,7 @@ export const GUIDE_PAGES = {
   'getting-started': {
     title: '처음 이용',
     heroLabel: '처음 방문한 분을 위한 전체 흐름',
+    image: '/assets/banners/discover.jpg',
     summary:
       '우동공과는 학부모·학생이 공부방과 과외쌤을 찾고 비교하는 공간이자, 공부방과 과외쌤이 자기 정보를 등록하고 운영하는 공간입니다.',
     lead:
@@ -144,10 +145,16 @@ export const GUIDE_PAGES = {
       { label: '과외쌤 찾기 시작', external: 'search-tutor' },
       { label: '회원가입하고 이어보기', external: 'signup' },
     ],
+    tip: {
+      title: '이렇게 보면 더 빠릅니다',
+      body: '비교 기능은 후보가 2~3개쯤 모였을 때 가장 유용합니다. 먼저 조건을 좁히고, 상세 확인 뒤 쪽지로 이어가는 흐름으로 보시면 덜 헤매게 됩니다.',
+      action: { label: '찜·비교·쪽지 보기', path: '/guide/saved-contact' },
+    },
   },
   registration: {
     title: '등록방법',
     heroLabel: '공급자 등록 흐름 안내',
+    image: '/assets/banners/trust.jpg',
     summary:
       '가입은 가볍게, 기본등록은 최소로, 상세등록에서 실제 공개용 정보를 완성하고, 그 이후에 공개와 유료를 연결합니다.',
     principles: [
@@ -242,12 +249,22 @@ export const GUIDE_PAGES = {
       { label: '과외 등록 시작', external: 'register-tutor' },
       { label: '유료상품 보러가기', path: '/plans' },
     ],
+    footerNote: [
+      '회원가입만으로 자동 공개되지 않으며, 공개 가능한 상태는 상세등록 충족 여부에 따라 달라집니다.',
+      '유료상품은 심사나 승인 단계가 아니라 노출·접근 강화 단계입니다.',
+    ],
   },
   'saved-contact': {
     title: '찜·비교·쪽지',
     heroLabel: '저장부터 첫 연락까지',
+    image: '/assets/banners/compare.jpg',
     summary:
       '찜은 나중에 다시 보기 위한 저장 기능이고, 비교는 여러 후보의 핵심 조건을 나란히 보는 기능이며, 쪽지는 우동공과 안에서 이루어지는 공식 첫 접촉 채널입니다.',
+    featureCards: [
+      { title: '찜하기', body: '마음에 드는 후보를 저장해 나중에 다시 보고 비교 후보로 이어갈 수 있습니다.' },
+      { title: '비교하기', body: '후보가 모였을 때 핵심 조건을 나란히 놓고 차이를 판단할 수 있습니다.' },
+      { title: '쪽지하기', body: '전화번호 공개 전 공식 쪽지 채널로 첫 연락을 시작할 수 있습니다.' },
+    ],
     conceptTable: [
       ['찜', '후보 저장', '마음에 들지만 바로 결정하지 않을 때'],
       ['비교', '여러 후보를 나란히 판단', '2~3개 후보의 차이를 보고 싶을 때'],
@@ -282,10 +299,17 @@ export const GUIDE_PAGES = {
       { label: '공부방 찾기 시작', external: 'search-room' },
       { label: '과외쌤 찾기 시작', external: 'search-tutor' },
     ],
+    actionCards: [
+      { label: '찜 목록 보러가기', path: '/mypage/recent' },
+      { label: '비교 사용법 보기', path: '/guide/saved-contact' },
+      { label: '쪽지함 알아보기', path: '/messages' },
+      { label: '마이페이지에서 이어보기', path: '/mypage' },
+    ],
   },
   safety: {
     title: '안전과외 가이드',
     heroLabel: '플랫폼 보증이 아닌 행동 가이드',
+    image: '/assets/banners/support.jpg',
     summary:
       '안전과외는 결제 기능이 아니라 첫 연락과 개인정보 공유 전에 꼭 알아둘 행동 가이드입니다.',
     lead:
@@ -321,6 +345,23 @@ export const GUIDE_PAGES = {
       { label: '고객센터 가기', path: '/support' },
       { label: '신고/도움 안내 보기', path: '/support/policies/reporting' },
       { label: '쪽지함 알아보기', path: '/messages' },
+    ],
+    supportCards: [
+      {
+        title: '고객센터 가기',
+        body: '운영 문의나 정책 확인이 필요하면 고객센터에서 FAQ, 공지, 문의를 이어서 확인하세요.',
+        action: { label: '고객센터 방문', path: '/support' },
+      },
+      {
+        title: '신고/도움 안내 보기',
+        body: '이상한 요구나 허위 정보가 의심되면 신고·제재 기준과 도움 절차를 먼저 확인해 주세요.',
+        action: { label: '신고 가이드 보기', path: '/support/policies/reporting' },
+      },
+      {
+        title: '쪽지 이용안내 보기',
+        body: '개인정보를 최소 공개하면서 첫 연락을 이어가려면 공식 쪽지 흐름을 먼저 확인하는 편이 좋습니다.',
+        action: { label: '쪽지 안내 보기', path: '/guide/saved-contact' },
+      },
     ],
   },
 };

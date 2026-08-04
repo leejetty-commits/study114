@@ -8,9 +8,7 @@ import {
   GUIDE_PAGES,
 } from './copy.js';
 import { getGuidePageId } from './router.js';
-import { AUTH_UI_BASE, SEARCH_UI_URL, STUDY_ROOM_REGISTER_URL, TUTOR_REGISTER_URL, searchUiUrl } from '../nav-config.js';
-import { getDefaultMessagesPath } from '../messages/router.js';
-import { getDefaultMypagePath } from '../mypage/router.js';
+import { AUTH_UI_BASE, STUDY_ROOM_REGISTER_URL, TUTOR_REGISTER_URL, searchUiUrl } from '../nav-config.js';
 import { getNavRole, navigate } from '../state.js';
 
 function esc(s) {
@@ -48,14 +46,51 @@ function renderStepList(steps) {
     <ol class="guide-step-list">
       ${steps
         .map(
-          (step) => `
+          (step, index) => `
             <li class="guide-step-card">
+              <span class="guide-step-card__index">${index + 1}</span>
               <h3 class="guide-step-card__title">${esc(step.title)}</h3>
               <p class="guide-step-card__body">${esc(step.body)}</p>
             </li>`,
         )
         .join('')}
     </ol>`;
+}
+
+function renderFeatureCards(items) {
+  if (!items?.length) return '';
+  return `
+    <section class="guide-section">
+      <div class="guide-section__head">
+        <h2 class="guide-section__title">핵심 기능 먼저 보기</h2>
+      </div>
+      <div class="guide-feature-grid">
+        ${items
+          .map(
+            (item) => `
+              <article class="guide-feature-card">
+                <h3 class="guide-feature-card__title">${esc(item.title)}</h3>
+                <p class="guide-feature-card__body">${esc(item.body)}</p>
+              </article>`,
+          )
+          .join('')}
+      </div>
+    </section>`;
+}
+
+function renderActionCards(items) {
+  if (!items?.length) return '';
+  return `
+    <section class="guide-section">
+      <div class="guide-section__head">
+        <h2 class="guide-section__title">바로 이어가기</h2>
+      </div>
+      <div class="guide-action-grid">
+        ${items
+          .map((item, index) => renderAction(item, `guide-action-card ${index === 0 ? 'guide-action-card--primary' : ''}`))
+          .join('')}
+      </div>
+    </section>`;
 }
 
 function renderFlowChips(steps) {
@@ -253,15 +288,55 @@ function renderWarnings(items) {
     </section>`;
 }
 
+function renderSupportCards(items) {
+  if (!items?.length) return '';
+  return `
+    <section class="guide-section">
+      <div class="guide-section__head">
+        <h2 class="guide-section__title">도움이 필요할 때</h2>
+      </div>
+      <div class="guide-support-card-grid">
+        ${items
+          .map(
+            (item, index) => `
+              <article class="guide-support-card">
+                <h3 class="guide-support-card__title">${esc(item.title)}</h3>
+                <p class="guide-support-card__body">${esc(item.body)}</p>
+                ${renderAction(item.action, `guide-btn ${index !== 1 ? 'guide-btn--primary' : 'guide-btn--secondary'}`)}
+              </article>`,
+          )
+          .join('')}
+      </div>
+    </section>`;
+}
+
+function renderTipBlock(tip) {
+  if (!tip) return '';
+  return `
+    <section class="guide-tip-card">
+      <div>
+        <h2 class="guide-tip-card__title">${esc(tip.title)}</h2>
+        <p class="guide-tip-card__body">${esc(tip.body)}</p>
+      </div>
+      <div class="guide-tip-card__action">
+        ${renderAction(tip.action, 'guide-btn guide-btn--secondary')}
+      </div>
+    </section>`;
+}
+
 function renderGuideDetail(page) {
   return `
     <section class="guide-detail-hero">
-      <span class="guide-eyebrow">${esc(page.heroLabel || '이용안내')}</span>
-      <h2 class="guide-detail-hero__title">${esc(page.title)}</h2>
-      <p class="guide-detail-hero__body">${esc(page.summary)}</p>
-      ${page.lead ? `<div class="guide-highlight">${esc(page.lead)}</div>` : ''}
-      ${renderPrinciples(page.principles)}
+      <div class="guide-detail-hero__copy">
+        <span class="guide-eyebrow guide-eyebrow--solid">${esc(page.heroLabel || '이용안내')}</span>
+        <h2 class="guide-detail-hero__title">${esc(page.title)}</h2>
+        <p class="guide-detail-hero__body">${esc(page.summary)}</p>
+        ${page.lead ? `<div class="guide-highlight">${esc(page.lead)}</div>` : ''}
+        ${renderPrinciples(page.principles)}
+      </div>
+      ${page.image ? `<div class="guide-detail-hero__media" style="background-image:url('${page.image}')"></div>` : ''}
     </section>
+    ${renderFeatureCards(page.featureCards)}
     ${page.conceptTable ? `<section class="guide-section">${renderConceptTable(page.conceptTable)}</section>` : ''}
     <section class="guide-section">
       <div class="guide-section__head">
@@ -273,7 +348,15 @@ function renderGuideDetail(page) {
     ${renderDetailGroups(page.detailGroups)}
     ${page.note ? `<section class="guide-note">${esc(page.note)}</section>` : ''}
     ${renderWarnings(page.warnings)}
+    ${renderSupportCards(page.supportCards)}
+    ${renderActionCards(page.actionCards)}
     ${renderFaqList(page.faq)}
+    ${renderTipBlock(page.tip)}
+    ${
+      page.footerNote?.length
+        ? `<section class="guide-footer-note"><ul class="guide-bullet-list">${page.footerNote.map((item) => `<li>${esc(item)}</li>`).join('')}</ul></section>`
+        : ''
+    }
     <section class="guide-detail-cta">
       <div class="guide-detail-cta__actions">
         ${(page.ctas || []).map((cta, index) => renderAction(cta, `guide-btn ${index === 0 ? 'guide-btn--primary' : 'guide-btn--secondary'}`)).join('')}
