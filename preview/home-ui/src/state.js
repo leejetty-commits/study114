@@ -6,6 +6,12 @@
 import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES } from './mypage/router.js';
 import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
 import {
+  getDefaultGuidePath,
+  normalizeGuidePath,
+  GUIDE_LEGACY_HOME_PATHS,
+  GUIDE_LEGACY_SAFETY_PATHS,
+} from './guide/router.js';
+import {
   getDefaultSupportPath,
   normalizeSupportPath,
   SUPPORT_TERMS_LEGACY_PATH,
@@ -22,6 +28,7 @@ import {
 import { createFindState, resetFindState } from './find-state.js';
 
 const ACTIVE_ROLE_KEY = 'study114-preview-active-role';
+const GUIDE_CTX_KEY = 'study114-preview-guide-context';
 const SUPPORT_CTX_KEY = 'study114-preview-support-context';
 
 /** @type {{ parentTab: ParentTab, tutorTab: ProviderHomeTab, studyRoomTab: ProviderHomeTab, regionKey: 'complex' | 'dong', guestListPages: Record<string, number>, providerSubscription: ProviderSubscription, parentFind: import('@search-ui/search-find-surface.js').FindSurfaceState & { searchRows: object[], searchItems: object[] }, tutorFind: import('@search-ui/search-find-surface.js').FindSurfaceState & { searchRows: object[], searchItems: object[] }, studyRoomFind: import('@search-ui/search-find-surface.js').FindSurfaceState & { searchRows: object[], searchItems: object[] } }} */
@@ -64,6 +71,7 @@ export const SCREEN_META = {
   tutor: { label: '과외쌤', role: 'tutor' },
   mypage: { label: '마이페이지', role: 'parent' },
   messages: { label: '쪽지함', role: 'parent' },
+  guide: { label: '이용안내', role: 'guest' },
   support: { label: '고객센터', role: 'guest' },
   policy: { label: '정책', role: 'guest' },
   library: { label: '자료실', role: 'guest' },
@@ -119,6 +127,9 @@ export function getNavRole() {
   if (isMypageRoute() || isMessagesRoute()) {
     return getActiveRole();
   }
+  if (isGuideRoute()) {
+    return getGuideContextRole();
+  }
   if (isSupportRoute()) {
     return getSupportContextRole();
   }
@@ -149,6 +160,12 @@ export function isSupportRoute() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
   return path === '/support' || path.startsWith('/support/');
+}
+
+export function isGuideRoute() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = hash.startsWith('/') ? hash : `/${hash}`;
+  return path === '/guide' || path.startsWith('/guide/');
 }
 
 export function isPolicyRoute() {
@@ -205,6 +222,29 @@ export function getSupportContextRole() {
   return 'guest';
 }
 
+export function getGuideContextRole() {
+  const stored = sessionStorage.getItem(GUIDE_CTX_KEY);
+  if (stored === 'guest' || stored === 'parent' || stored === 'study_room' || stored === 'tutor') {
+    return stored;
+  }
+  return 'guest';
+}
+
+export function captureGuideContextRole() {
+  let role = 'guest';
+  if (isMypageRoute() || isMessagesRoute()) {
+    role = getActiveRole();
+  } else if (!isGuideRoute()) {
+    const screen = getCurrentScreen();
+    role = SCREEN_META[screen]?.role ?? 'guest';
+    if (role !== 'guest') setActiveRole(role);
+  } else {
+    role = getGuideContextRole();
+  }
+  sessionStorage.setItem(GUIDE_CTX_KEY, role);
+  return role;
+}
+
 /** 진입 직전 역할을 고객센터 CTA·헤더에 반영 */
 export function captureSupportContextRole() {
   let role = 'guest';
@@ -223,6 +263,11 @@ export function captureSupportContextRole() {
 
 export function navigateToSupport(path = getDefaultSupportPath()) {
   captureSupportContextRole();
+  navigate(path);
+}
+
+export function navigateToGuide(path = getDefaultGuidePath()) {
+  captureGuideContextRole();
   navigate(path);
 }
 
@@ -290,6 +335,39 @@ export function bootstrapSupportRoute() {
     return true;
   }
 
+  return false;
+}
+
+export function bootstrapGuideRoute() {
+  const { pathname, hash, origin, search } = window.location;
+
+  if (!hash && pathname.startsWith('/guide')) {
+    const bare = pathname === '/guide' || pathname === '/guide/';
+    const target = bare ? getDefaultGuidePath() : pathname;
+    window.location.replace(`${origin}/${search}#${target}`);
+    return true;
+  }
+
+  if (!hash) return false;
+
+  const hashPath = hash.slice(1);
+  const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  if (GUIDE_LEGACY_HOME_PATHS.includes(path)) {
+    window.location.replace(`#${getDefaultGuidePath()}`);
+    return true;
+  }
+  if (GUIDE_LEGACY_SAFETY_PATHS.includes(path)) {
+    window.location.replace('#/guide/safety');
+    return true;
+  }
+  if (path === '/guide' || path === '/guide/') {
+    window.location.replace(`#${getDefaultGuidePath()}`);
+    return true;
+  }
+  if (path.startsWith('/guide/') && !normalizeGuidePath(path)) {
+    window.location.replace(`#${getDefaultGuidePath()}`);
+    return true;
+  }
   return false;
 }
 
@@ -486,6 +564,14 @@ export function getSupportPath() {
   return getDefaultSupportPath();
 }
 
+export function getGuidePath() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
+  const normalized = normalizeGuidePath(path);
+  if (normalized) return normalized;
+  return getDefaultGuidePath();
+}
+
 export function getPolicyPath() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
@@ -532,6 +618,7 @@ export function getCurrentScreen() {
   if (isMessagesRoute()) return 'messages';
   if (isAdminRoute()) return 'admin';
   if (isLibraryRoute()) return 'library';
+  if (isGuideRoute()) return 'guide';
   if (isSupportRoute()) return 'support';
   if (isPolicyRoute()) return 'policy';
   const hash = window.location.hash.slice(1) || '/guest';

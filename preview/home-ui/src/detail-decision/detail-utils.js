@@ -216,5 +216,5 @@ export function buildContactPanel(kind, item, viewer) {
 }
 
 export function microSafetyCopy() {
-  return `<p class="p24-safety">${esc(TRUST_PLATFORM_DISCLAIMER)} · <a href="#/support/safe">안전 가이드</a></p>`;
+  return `<p class="p24-safety">${esc(TRUST_PLATFORM_DISCLAIMER)} · <a href="#/guide/safety">안전 가이드</a></p>`;
 }

@@ -67,7 +67,7 @@ function guideItems(limit) {
     boardKey: 'safe-guide',
     title: g.title,
     summary: g.audience || '안전과외 가이드',
-    href: `#/support/safe/${g.slug}`,
+    href: '#/guide/safety',
     kind: '가이드',
   }));
 }

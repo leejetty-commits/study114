@@ -227,7 +227,7 @@ export const POLICY_PAGES = [
       },
       { title: '신고 안내', body: ['사기 의심, 허위 등록, 부적절한 요구, 불쾌한 접촉 등 안전상 우려가 있는 경우 우동공과의 신고 채널을 통해 알려주시기 바랍니다.'] },
     ],
-    links: [{ label: '고객센터 안전과외 가이드 보기', href: '/support/safe' }],
+    links: [{ label: '이용안내 안전과외 가이드 보기', href: '/guide/safety' }],
   },
   {
     id: 'P26-06',

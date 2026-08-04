@@ -3,10 +3,6 @@ import { loginUrl } from '../../../shared/route-access.js';
 import { getNavRole, navigate } from '../state.js';
 import { isLoggedIn, getAuthUser } from '../auth-session.js';
 import {
-  PRINCIPLES_POSITIVE,
-  PRINCIPLES_NEGATIVE,
-  HOME_CARDS,
-  getHomeExposureGuides,
   OPERATIONAL_CONTACT,
   TICKET_CATEGORIES,
   TICKET_STATUS_LABELS,
@@ -18,7 +14,6 @@ import { renderAdminScreen } from './admin-screens.js';
 import {
   isAdminSupportPath,
   getSectionFromPath,
-  parseGuideSlug,
   getSupportPolicySlug,
   getSupportLibrarySection,
 } from './router.js';
@@ -70,26 +65,6 @@ function renderGuideContent(article) {
 
 function renderAdminFooterLink() {
   return '';
-}
-
-function renderPrinciplesBox(compact = false) {
-  const pos = PRINCIPLES_POSITIVE.map(
-    (p) =>
-      `<div class="sup-principle${compact ? ' sup-principle--compact' : ''}">
-         <span class="sup-principle__title">${esc(p.title)}</span>
-         <span class="sup-principle__body">${esc(p.body)}</span>
-       </div>`,
-  ).join('');
-  const neg = PRINCIPLES_NEGATIVE.map(
-    (n) => `<li><strong>${esc(n.label)}</strong> — ${esc(n.msg)}</li>`,
-  ).join('');
-  return `
-    <section class="sup-box sup-box--principles">
-      <h2 class="sup-box__title">안전과외 3대 원칙</h2>
-      <div class="sup-principles">${pos}</div>
-      <h3 class="sup-box__subtitle">우동공과가 하지 않는 것</h3>
-      <ul class="sup-neg-list">${neg}</ul>
-    </section>`;
 }
 
 function renderPanel(title, _screenId, bodyHtml, { lead = '' } = {}) {
@@ -144,63 +119,47 @@ export function renderSupportScreen(path) {
     return renderSupportLibrarySection(path);
   }
 
-  const slug = parseGuideSlug(path);
-  if (slug || path === '/support/safe' || path === '/support/safe/') {
-    return renderSafeGuideAccordion(slug || null);
-  }
-
   const navId = getActiveNavId(path);
-  if (navId === 'guide') return renderGuideSection();
+  if (navId === 'home') return renderSupportHomeSection();
   if (navId === 'faq') return renderFaqSection();
   if (navId === 'notice') return renderNoticeSection();
   if (navId === 'contact') return renderContactSection();
-  return renderGuideSection();
+  return renderSupportHomeSection();
 }
 
-function renderGuideSection() {
-  const cards = HOME_CARDS.map((c) => {
-    if (c.mode === 'nav') {
-      return `<a href="#${c.href}" class="sup-card" data-sup-nav="${c.href}">
-         <span class="sup-card__title">${esc(c.title)}</span>
-         <span class="sup-card__desc">${esc(c.desc)}</span>
-       </a>`;
-    }
-    return `<button type="button" class="sup-card sup-card--tab" data-sup-guide-tab="${esc(c.id)}" aria-pressed="false">
-         <span class="sup-card__title">${esc(c.title)}</span>
-         <span class="sup-card__desc">${esc(c.desc)}</span>
-       </button>`;
-  }).join('');
-
-  const exposureGuides = getHomeExposureGuides(getPlanRuntimeSettings());
-  const exposureGuideHtml = exposureGuides
+function renderSupportHomeSection() {
+  const cards = [
+    { title: '자주 묻는 질문', desc: '가장 자주 확인하는 운영·이용 질문을 빠르게 찾을 수 있어요.', href: '/support/faq' },
+    { title: '공지사항', desc: '서비스 운영 변경, 점검, 업데이트 소식을 확인하세요.', href: '/support/notice' },
+    { title: '문의하기', desc: '계정, 정책, 오류 문의를 남기고 접수 내역을 확인할 수 있어요.', href: '/support/contact' },
+    { title: '약관·정책', desc: '신고·제재, 개인정보, 플랫폼 역할 고지를 한곳에서 살펴보세요.', href: '/support/policies' },
+  ];
+  const cardsHtml = cards
     .map(
-      (guide) => `
-      <section class="sup-exposure-guide">
-        <h3 class="sup-exposure-guide__title">${esc(guide.title)}</h3>
-        <ul class="sup-list sup-list--bullets">
-          ${guide.items.map((item) => `<li>${esc(item)}</li>`).join('')}
-        </ul>
-      </section>`,
+      (card) => `<a href="#${card.href}" class="sup-card" data-sup-nav="${card.href}">
+        <span class="sup-card__title">${esc(card.title)}</span>
+        <span class="sup-card__desc">${esc(card.desc)}</span>
+      </a>`,
     )
     .join('');
-
+  const exposureGuides = getPlanRuntimeSettings();
   return `
     ${renderPanel(
-      '이용안내',
-      'guide-quick',
-      `<div class="sup-card-grid">${cards}</div>
-       <div class="sup-guide-tab-panel" data-sup-guide-panel hidden>
-         <h3 class="sup-guide-tab-panel__title" data-sup-guide-panel-title></h3>
-         <p class="sup-guide-tab-panel__body">내용 준비 중입니다.</p>
-       </div>
-       <p class="sup-home-hint">왼쪽 메뉴에서 공지 · 안전과외 가이드 · 자주 묻는 질문 · 약관·정책 · 자료실 · 문의를 확인할 수 있습니다.</p>`,
-      { lead: '자주 찾는 주제를 고르면 아래에 안내가 표시됩니다.' },
+      '고객센터',
+      'support-home',
+      `<div class="sup-card-grid">${cardsHtml}</div>
+       <p class="sup-home-hint">이용 흐름 안내는 메인메뉴의 이용안내에서, 운영 지원은 고객센터에서 확인할 수 있습니다.</p>`,
+      { lead: 'FAQ, 공지, 문의, 정책 연결을 담당하는 지원 허브입니다.' },
     )}
     ${renderPanel(
-      '홈 노출 안내',
-      'guide-exposure',
-      `<div class="sup-exposure-guides">${exposureGuideHtml}</div>`,
-      { lead: '홈 화면의 대표·추천·기본 노출 구성과 순환 기준입니다.' },
+      '도움이 필요할 때',
+      'support-help',
+      `<ul class="sup-list sup-list--bullets">
+         <li>이용 흐름이 궁금하면 메인메뉴의 <a href="#/guide" class="sup-inline-link" data-sup-nav="/guide">이용안내</a>에서 전체 구조를 먼저 확인하세요.</li>
+         <li>정책·신고·개인정보 관련 기준은 <a href="#/support/policies" class="sup-inline-link" data-sup-nav="/support/policies">약관·정책</a>으로 이어집니다.</li>
+         <li>운영 문의는 로그인 후 문의 작성 및 문의 내역에서 관리할 수 있습니다.</li>
+       </ul>`,
+      { lead: `현재 노출 상품 설정 기준: 픽 순환 ${Number(exposureGuides.pick_rotation_minutes) || 15}분 · 세트 ${Number(exposureGuides.pick_set_size) || 5}개` },
     )}`;
 }
 
@@ -437,63 +396,6 @@ function renderSupportLibrarySection(path) {
     </section>`;
 }
 
-/** @param {string | null} openSlug */
-function renderSafeGuideAccordion(openSlug) {
-  const renderGroup = (title, items, groupKey) => {
-    const accordion = items
-      .map((g) => {
-        const isOpen = openSlug === g.slug;
-        const body = renderGuideContent(g);
-        const related = getRelatedGuidePosts(g.slug);
-        const relatedHtml = related.length
-          ? `<div class="sup-related">
-               <span class="sup-related__label">관련 안내</span>
-               ${related
-                 .map(
-                   (r) =>
-                     `<a href="#/support/safe/${r.slug}" class="sup-related__link" data-sup-nav="/support/safe/${r.slug}">${esc(r.title)}</a>`,
-                 )
-                 .join('')}
-             </div>`
-          : '';
-        return `
-          <div class="sup-accordion__item${isOpen ? ' is-open' : ''}" data-sup-article="${esc(g.slug)}" data-sup-group="${groupKey}">
-            <button type="button" class="sup-accordion__head" aria-expanded="${isOpen ? 'true' : 'false'}">
-              <span class="sup-guide-row__badge">${g.priority === 'primary' ? '핵심' : '추가'}</span>
-              <span class="sup-accordion__title">${esc(g.title)}</span>
-              <span class="sup-guide-row__meta">${esc(g.audience)}</span>
-              <span class="sup-accordion__chev" aria-hidden="true"></span>
-            </button>
-            <div class="sup-accordion__panel"${isOpen ? '' : ' hidden'}>
-              <div class="sup-accordion__content">${body}${relatedHtml}</div>
-            </div>
-          </div>`;
-      })
-      .join('');
-
-    return `
-      <section class="sup-accordion-group">
-        <h3 class="sup-accordion-group__title">${esc(title)}</h3>
-        <div class="sup-accordion" data-sup-accordion="${groupKey}">${accordion}</div>
-      </section>`;
-  };
-
-  const primary = listGuidePosts().filter((g) => g.priority === 'primary');
-  const secondary = listGuidePosts().filter((g) => g.priority === 'secondary');
-
-  return `
-    ${renderPrinciplesBox(true)}
-    ${renderPanel(
-      '안전과외 가이드',
-      'safe',
-      `<p class="sup-section__lead">제목을 누르면 아래에 내용이 펼쳐집니다. 다른 항목을 누르면 이전 내용은 접힙니다.</p>
-       ${renderGroup('꼭 읽어 주세요', primary, 'primary')}
-       ${renderGroup('더 알아보기', secondary, 'secondary')}`,
-      { lead: isOperationalBoardApiActive() ? '최신 안전 가이드를 표시합니다.' : '한 화면에서 이어서 읽을 수 있습니다.' },
-    )}
-    ${openSlug ? `<span data-sup-scroll-article="${esc(openSlug)}" hidden></span>` : ''}`;
-}
-
 /** @param {HTMLElement} root @param {string} path @param {() => void} [rerender] */
 export function bindSupportScreenEvents(root, path, rerender) {
   root.querySelectorAll('[data-sup-nav]').forEach((el) => {
@@ -510,55 +412,7 @@ export function bindSupportScreenEvents(root, path, rerender) {
     });
   });
 
-  const guidePanel = root.querySelector('[data-sup-guide-panel]');
-  const guidePanelTitle = root.querySelector('[data-sup-guide-panel-title]');
-  root.querySelectorAll('[data-sup-guide-tab]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-sup-guide-tab');
-      const card = HOME_CARDS.find((c) => c.id === id);
-      root.querySelectorAll('[data-sup-guide-tab]').forEach((el) => {
-        el.classList.toggle('is-active', el === btn);
-        el.setAttribute('aria-pressed', el === btn ? 'true' : 'false');
-      });
-      if (guidePanel && guidePanelTitle && card) {
-        guidePanel.hidden = false;
-        guidePanelTitle.textContent = card.title;
-      }
-    });
-  });
-
   bindSingleOpenBoard(root);
-
-  root.querySelectorAll('[data-sup-accordion]').forEach((group) => {
-    group.querySelectorAll('.sup-accordion__head').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const item = btn.closest('.sup-accordion__item');
-        const slug = item?.getAttribute('data-sup-article');
-        if (!item || !slug) return;
-
-        const wasOpen = item.classList.contains('is-open');
-        group.querySelectorAll('.sup-accordion__item').forEach((el) => {
-          el.classList.remove('is-open');
-          el.querySelector('.sup-accordion__head')?.setAttribute('aria-expanded', 'false');
-          const panel = el.querySelector('.sup-accordion__panel');
-          if (panel) panel.hidden = true;
-        });
-
-        if (!wasOpen) {
-          item.classList.add('is-open');
-          btn.setAttribute('aria-expanded', 'true');
-          const panel = item.querySelector('.sup-accordion__panel');
-          if (panel) panel.hidden = false;
-          window.location.hash = `#/support/safe/${slug}`;
-          requestAnimationFrame(() => {
-            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          });
-        } else {
-          window.location.hash = '#/support/safe';
-        }
-      });
-    });
-  });
 
   root.querySelectorAll('[data-lib-download]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -596,14 +450,7 @@ export function bindSupportScreenEvents(root, path, rerender) {
     sessionStorage.removeItem(TICKET_FLASH_KEY);
   }
 
-  const scrollArticle = root.querySelector('[data-sup-scroll-article]');
-  if (scrollArticle) {
-    const scrollSlug = scrollArticle.getAttribute('data-sup-scroll-article');
-    requestAnimationFrame(() => {
-      const item = root.querySelector(`[data-sup-article="${scrollSlug}"]`);
-      item?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  } else if (getSectionFromPath(path)) {
+  if (getSectionFromPath(path)) {
     /* legacy section hash */
   }
 }

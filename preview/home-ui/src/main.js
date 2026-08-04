@@ -18,6 +18,8 @@ import {
   isMypageRoute,
   bootstrapMypageRoute,
   bootstrapMessagesRoute,
+  isGuideRoute,
+  bootstrapGuideRoute,
   isSupportRoute,
   bootstrapSupportRoute,
   isPolicyRoute,
@@ -31,6 +33,7 @@ import {
 } from './state.js';
 import { PLANS_REDIRECTS } from './plans/router.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
+import { renderGuide, bindGuideEvents } from './guide/index.js';
 import { renderSupport, bindSupportEvents } from './support/index.js';
 import { renderPolicy, bindPolicyEvents } from './policy-index.js';
 import { renderLibrary, bindLibraryEvents } from './library/index.js';
@@ -93,6 +96,12 @@ function render() {
     mountOpsChrome(app);
     return;
   }
+  if (isGuideRoute()) {
+    app.innerHTML = renderGuide();
+    bindGuideEvents(app, render);
+    mountOpsChrome(app);
+    return;
+  }
   if (isPolicyRoute()) {
     app.innerHTML = renderPolicy();
     bindPolicyEvents(app, render);
@@ -141,6 +150,7 @@ function init() {
     bootstrapPlansRoute();
     bootstrapMypageRoute();
     bootstrapMessagesRoute();
+    bootstrapGuideRoute();
     bootstrapSupportRoute();
     bootstrapPolicyRoute();
     bootstrapLibraryRoute();
@@ -157,6 +167,8 @@ function init() {
         const deep =
           path === '/support' ||
           path.startsWith('/support/') ||
+          path === '/guide' ||
+          path.startsWith('/guide/') ||
           path === '/mypage' ||
           path.startsWith('/mypage/') ||
           path === '/messages' ||

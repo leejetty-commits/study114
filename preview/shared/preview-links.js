@@ -62,6 +62,12 @@ export function supportUiUrl(path = '/support') {
   return `${HOME_UI_BASE}${p}`;
 }
 
+/** @param {string} [path] e.g. `/guide`, `/guide/getting-started`, `/guide/safety` */
+export function guideUiUrl(path = '/guide') {
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${HOME_UI_BASE}${p}`;
+}
+
 /** @param {string} [path] e.g. `/policy/terms`, `/policy/privacy` */
 export function policyUiUrl(path = '/policy/terms') {
   const p = path.startsWith('/') ? path : `/${path}`;
@@ -107,10 +113,10 @@ export function resolveGnbLink(gnbId, role) {
       return { external: true, url: TUTOR_REGISTER_URL };
     case 'support':
       return { external: false, url: '/support' };
+    case 'guide':
+      return { external: false, url: '/guide' };
     case 'plans':
       return { external: false, url: '/plans' };
-    case 'guide':
-      return { external: false, url: '/support' };
     default:
       return null;
   }

@@ -12,6 +12,7 @@ import {
   TUTOR_REGISTER_URL,
   searchUiUrl,
   supportUiUrl,
+  guideUiUrl,
   resolveGnbLink,
 } from './preview-links.js';
 
@@ -40,10 +41,11 @@ export const UTIL_MENU = {
 
 /**
  * 메인 GNB 순서 고정 (탐색 → 등록 → 운영/지원)
- * 이용안내는 GNB에서 제외 → 유틸만
+ * 이용안내는 홈 다음 메인 허브
  */
 export const GNB_MAIN = [
   { id: 'home', label: '홈' },
+  { id: 'guide', label: '이용안내' },
   { id: 'find_room', label: '공부방찾기' },
   { id: 'find_tutor', label: '과외쌤찾기' },
   { id: 'student_parent', label: '학생찾기' },
@@ -56,6 +58,7 @@ export const GNB_MAIN = [
 /** 전 메뉴 표시 (비로그인·운영자) */
 const GNB_ALL_SHOW = {
   home: 'show',
+  guide: 'show',
   find_room: 'show',
   find_tutor: 'show',
   student_parent: 'show',
@@ -80,6 +83,7 @@ export const GNB_VISIBILITY = {
   admin: { ...GNB_ALL_SHOW },
   parent: {
     home: 'show',
+    guide: 'show',
     find_room: 'show',
     find_tutor: 'show',
     student_parent: 'show',
@@ -90,6 +94,7 @@ export const GNB_VISIBILITY = {
   },
   study_room: {
     home: 'show',
+    guide: 'show',
     find_room: 'show',
     find_tutor: 'hide',
     student_parent: 'show',
@@ -100,6 +105,7 @@ export const GNB_VISIBILITY = {
   },
   tutor: {
     home: 'show',
+    guide: 'show',
     find_room: 'hide',
     find_tutor: 'show',
     student_parent: 'show',
@@ -228,6 +234,8 @@ export function homeHashUrl(hashPath) {
     return `${HOME_UI_BASE}/#${p}`;
   }
   const pathDeep =
+    p === '/guide' ||
+    p.startsWith('/guide/') ||
     p === '/support' ||
     p.startsWith('/support/') ||
     p === '/mypage' ||
@@ -252,6 +260,7 @@ export {
   STUDY_ROOM_REGISTER_URL,
   TUTOR_REGISTER_URL,
   searchUiUrl,
+  guideUiUrl,
   supportUiUrl,
   resolveGnbLink,
 };

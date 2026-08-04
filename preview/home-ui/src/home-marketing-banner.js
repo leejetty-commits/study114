@@ -114,11 +114,11 @@ export const HOME_BANNER_COPY = {
   /** 고객센터 */
   support: {
     id: 'support',
-    eyebrow: '우동공과 · 이용 안내',
-    headlineLines: ['등록부터 비교·쪽지까지,', '막히는 지점을 안내로 풀어 드립니다'],
+    eyebrow: '우동공과 · 고객 지원',
+    headlineLines: ['FAQ, 공지, 문의, 정책 연결을', '한곳에서 확인하는 고객센터입니다'],
     lines: [
-      '자주 묻는 질문과 안전과외 가이드에서 흐름을 먼저 확인해 보세요',
-      '운영 문의가 필요하면 고객센터에서 이어서 남길 수 있어요',
+      '이용 흐름이 궁금하면 메인메뉴의 이용안내를 먼저 보고,',
+      '운영 문의나 정책 확인이 필요하면 고객센터에서 이어서 확인하세요',
     ],
     image: '/assets/banners/support.jpg',
     imageAlt: '고객 문의·응대 안내',
@@ -199,7 +199,7 @@ const SURFACE_BANNER = {
     layout: 'cinema',
     ctas: [
       { label: '자주 묻는 질문', href: '#/support/faq', nav: '/support/faq', kind: 'primary' },
-      { label: '안전과외 가이드', href: '#/support/safe', nav: '/support/safe', kind: 'secondary' },
+      { label: '문의하기', href: '#/support/contact', nav: '/support/contact', kind: 'secondary' },
     ],
   },
 };

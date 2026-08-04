@@ -77,7 +77,7 @@ const DEFAULT_RIGHT_RAIL_SLOTS = [
     itemLimit: 3,
     sectionTitle: '상세 확인 전 안내',
     ctaLabel: '안전과외 가이드',
-    ctaTarget: '#/support/safe',
+    ctaTarget: '#/guide/safety',
     visibilityRule: 'public',
     roleTarget: 'all',
     mobileBehavior: 'collapse',

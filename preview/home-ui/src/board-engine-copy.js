@@ -243,8 +243,8 @@ export const BOARD_REGISTRY = [
     isGnuSeparated: true,
     enabled: true,
     phase: 'phase1',
-    routeSlug: '#/support/safe',
-    routeHint: '#/support/safe',
+    routeSlug: '#/guide/safety',
+    routeHint: '#/guide/safety',
     ownerChapter: '17',
   },
   {

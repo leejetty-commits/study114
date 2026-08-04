@@ -13,6 +13,7 @@ export {
   STUDY_ROOM_REGISTER_URL,
   TUTOR_REGISTER_URL,
   searchUiUrl,
+  guideUiUrl,
   supportUiUrl,
   resolveGnbLink,
   isGnbItemVisible,

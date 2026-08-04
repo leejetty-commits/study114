@@ -3,9 +3,8 @@
 import { isLoggedIn } from '../auth-session.js';
 
 export const SUPPORT_NAV = [
+  { id: 'home', label: '고객센터 홈', path: '/support', titleSuffix: '' },
   { id: 'notice', label: '공지사항', path: '/support/notice', titleSuffix: '공지사항' },
-  { id: 'guide', label: '이용안내', path: '/support', titleSuffix: '' },
-  { id: 'safe', label: '안전과외 가이드', path: '/support/safe', titleSuffix: '안전과외 가이드' },
   { id: 'faq', label: '자주 묻는 질문', path: '/support/faq', titleSuffix: '자주 묻는 질문' },
   { id: 'policies', label: '약관·정책', path: '/support/policies', titleSuffix: '약관·정책' },
   { id: 'library', label: '자료실', path: '/support/library', titleSuffix: '자료실' },
@@ -14,15 +13,13 @@ export const SUPPORT_NAV = [
 
 /** @param {string} path */
 export function getActiveNavId(path) {
-  if (path.startsWith('/support/safe')) return 'safe';
   if (path.startsWith('/support/policies')) return 'policies';
   if (path.startsWith('/support/library')) return 'library';
   if (path === '/support/contact/tickets') return 'contact';
-  if (path === '/support/guide' || path === '/support/guide/') return 'guide';
-  if (path === '/support' || path === '/support/') return 'guide';
+  if (path === '/support' || path === '/support/') return 'home';
   const hit = SUPPORT_NAV.find((n) => n.path !== '/support' && path === n.path);
   if (hit) return hit.id;
-  return 'guide';
+  return 'home';
 }
 
 /** @param {string} path */

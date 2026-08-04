@@ -1,4 +1,4 @@
-import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, navigateToSupport } from './state.js';
+import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isGuideRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, navigateToGuide, navigateToSupport } from './state.js';
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
@@ -19,13 +19,14 @@ export function renderPreviewToolbar() {
   const current = getCurrentScreen();
   const onMypage = isMypageRoute();
   const onMessages = isMessagesRoute();
+  const onGuide = isGuideRoute();
   const onSupport = isSupportRoute();
   const onPolicy = isPolicyRoute();
   const onLibrary = isLibraryRoute();
   const onAdmin = isAdminRoute();
   const onPlans = isPlansRoute();
   const region = previewState.regionKey;
-  const isGuest = current === 'guest' && !onMypage && !onMessages && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans;
+  const isGuest = current === 'guest' && !onMypage && !onMessages && !onGuide && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans;
   const authUser = getAuthUser();
   const apiOn = isHandoffApiMode();
   const msgApiOn = isMessagesApiMode();
@@ -40,7 +41,7 @@ export function renderPreviewToolbar() {
         ${Object.entries(ROUTES)
           .map(([path, key]) => {
             const meta = SCREEN_META[key];
-            const active = !onMypage && !onMessages && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans && key === current;
+            const active = !onMypage && !onMessages && !onGuide && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans && key === current;
             return `<button type="button" class="preview-toolbar__btn ${active ? 'is-active' : ''}" data-nav="${path}">${meta.label}</button>`;
           })
           .join('')}
@@ -125,19 +126,23 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
   const screen = getCurrentScreen();
   const onRoleHome = screen === 'guest' || screen === 'parent' || screen === 'studyRoom' || screen === 'tutor';
   const isHomeActive = item.id === 'home' && onRoleHome;
+  const onGuide = isGuideRoute();
   const onSupport = isSupportRoute();
   const onPlans = isPlansRoute();
+  const isGuideActive = item.id === 'guide' && onGuide;
   const isSupportActive = item.id === 'support' && onSupport && !window.location.hash.includes('/guide');
   const isPlansActive = item.id === 'plans' && onPlans;
   const cls = [
     'home-gnb__item',
-    isHomeActive || isSupportActive || isPlansActive ? 'is-active' : '',
+    isHomeActive || isGuideActive || isSupportActive || isPlansActive ? 'is-active' : '',
   ]
     .filter(Boolean)
     .join(' ');
   let href = '#';
   if (item.id === 'home') {
     href = `#${roleHomePath()}`;
+  } else if (item.id === 'guide') {
+    href = '#/guide';
   } else if (item.id === 'support') {
     href = '#/support';
   } else if (item.id === 'plans') {
@@ -380,6 +385,8 @@ export function bindLayoutEvents(root, rerender) {
       const target = el.dataset.nav || '/guest';
       if (target === '/support' || target.startsWith('/support/')) {
         navigateToSupport(target);
+      } else if (target === '/guide' || target.startsWith('/guide/')) {
+        navigateToGuide(target);
       } else {
         navigate(target);
       }
@@ -441,6 +448,10 @@ export function bindLayoutEvents(root, rerender) {
           navigate(roleHomePath());
           return;
         }
+        if (gnbId === 'guide') {
+          navigateToGuide('/guide');
+          return;
+        }
         if (gnbId === 'support') {
           navigateToSupport('/support');
           return;
@@ -474,7 +485,7 @@ export function bindLayoutEvents(root, rerender) {
           })
           .catch((err) => console.error('[logout]', err));
       } else if (action === 'util-guide') {
-        navigateToSupport('/support');
+        navigateToGuide('/guide');
       } else if (action === 'util-library') {
         navigate('/support/library');
       } else if (action === 'util-support') {
