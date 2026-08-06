@@ -140,7 +140,7 @@ function renderGuideHome() {
       <div class="guide-hero__media" aria-hidden="true"></div>
       <div class="guide-hero__shade"></div>
       <div class="guide-hero__inner">
-        <span class="guide-eyebrow">메인메뉴 안내 허브</span>
+        <span class="guide-eyebrow">안내 허브</span>
         <h2 class="guide-hero__title">우동공과 이용안내</h2>
         <p class="guide-hero__body">
           처음 이용하는 분도, 등록을 시작하는 분도 필요한 주제를 골라
@@ -184,7 +184,17 @@ function renderGuideHome() {
             <article class="guide-summary-card">
               <h3 class="guide-summary-card__title">${esc(item.title)}</h3>
               <div class="guide-summary-card__chips">
-                ${item.steps.map((step) => `<span class="guide-summary-card__chip">${esc(step)}</span>`).join('')}
+                ${item.steps
+                  .map((step) => {
+                    if (typeof step === 'string') {
+                      return `<span class="guide-summary-card__chip">${esc(step)}</span>`;
+                    }
+                    if (step.path) {
+                      return renderAction(step, 'guide-summary-card__chip guide-summary-card__chip--link');
+                    }
+                    return `<span class="guide-summary-card__chip">${esc(step.label)}</span>`;
+                  })
+                  .join('')}
               </div>
             </article>`,
         ).join('')}
@@ -194,7 +204,7 @@ function renderGuideHome() {
     <section class="guide-section">
       <div class="guide-section__head">
         <h2 class="guide-section__title">고객센터 연결</h2>
-        <p class="guide-section__desc">이용안내는 가이드 본문, 고객센터는 문제 해결과 지원 중심으로 역할을 분리했습니다.</p>
+        <p class="guide-section__desc">이용안내는 가이드 본문, 고객센터는 문제 해결과 지원 중심으로 도움을 줍니다.</p>
       </div>
       <div class="guide-support-links">
         ${GUIDE_SUPPORT_LINKS.map((item) => renderAction(item, 'guide-support-link')).join('')}
@@ -269,15 +279,31 @@ function renderConceptTable(rows) {
     </div>`;
 }
 
+function formatFaqAnswer(text) {
+  return `<div class="guide-faq-item__a-body">${esc(text)}</div>`;
+}
+
 function renderFaqList(items) {
   if (!items?.length) return '';
+  const hasAnswers = items.some((item) => typeof item === 'object' && item?.a);
   return `
     <section class="guide-section">
       <div class="guide-section__head">
         <h2 class="guide-section__title">함께 많이 묻는 질문</h2>
       </div>
-      <div class="guide-faq-list">
-        ${items.map((item) => `<div class="guide-faq-list__item">${esc(item)}</div>`).join('')}
+      <div class="guide-faq-list${hasAnswers ? ' guide-faq-list--accordion' : ''}">
+        ${items
+          .map((item, index) => {
+            if (typeof item === 'string') {
+              return `<div class="guide-faq-list__item">${esc(item)}</div>`;
+            }
+            return `
+              <details class="guide-faq-item"${index === 0 ? '' : ''}>
+                <summary class="guide-faq-item__q">${esc(item.q)}</summary>
+                <div class="guide-faq-item__a">${formatFaqAnswer(item.a)}</div>
+              </details>`;
+          })
+          .join('')}
       </div>
     </section>`;
 }
@@ -343,7 +369,7 @@ function renderGuideDetail(page) {
     </section>
     ${renderFeatureCards(page.featureCards)}
     ${page.conceptTable ? `<section class="guide-section">${renderConceptTable(page.conceptTable)}</section>` : ''}
-    ${page.flow?.length ? `<section class="guide-section"><div class="guide-section__head"><h2 class="guide-section__title">흐름 차트</h2><p class="guide-section__desc">먼저 전체 흐름을 차트로 보고, 아래 단계별 설명에서 세부를 확인할 수 있게 정리했습니다.</p></div>${renderFlowChips(page.flow)}</section>` : ''}
+    ${page.flow?.length ? `<section class="guide-section"><div class="guide-section__head"><h2 class="guide-section__title">흐름 차트</h2><p class="guide-section__desc">${esc(page.flowLead || '먼저 전체 흐름을 차트로 보고, 아래 단계별 설명에서 세부를 확인할 수 있게 정리했습니다.')}</p></div>${renderFlowChips(page.flow)}</section>` : ''}
     <section class="guide-section">
       <div class="guide-section__head">
         <h2 class="guide-section__title">단계별 안내</h2>

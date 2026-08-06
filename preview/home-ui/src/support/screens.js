@@ -155,7 +155,7 @@ function renderSupportHomeSection() {
       '도움이 필요할 때',
       'support-help',
       `<ul class="sup-list sup-list--bullets">
-         <li>이용 흐름이 궁금하면 메인메뉴의 <a href="#/guide" class="sup-inline-link" data-sup-nav="/guide">이용안내</a>에서 전체 구조를 먼저 확인하세요.</li>
+         <li>이용 흐름이 궁금하면 상단의 <a href="#/guide" class="sup-inline-link" data-sup-nav="/guide">이용안내</a>에서 전체 구조를 먼저 확인하세요.</li>
          <li>정책·신고·개인정보 관련 기준은 <a href="#/support/policies" class="sup-inline-link" data-sup-nav="/support/policies">약관·정책</a>으로 이어집니다.</li>
          <li>운영 문의는 로그인 후 문의 작성 및 문의 내역에서 관리할 수 있습니다.</li>
        </ul>`,

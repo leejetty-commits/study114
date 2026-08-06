@@ -78,6 +78,7 @@ export function renderPreviewToolbar() {
 function renderUtilBar(role, showAuth) {
   const items = showAuth ? UTIL_MENU.guest : UTIL_MENU.loggedIn;
   const authUser = getAuthUser();
+  const onGuide = isGuideRoute();
   const adminLink = isAdminUser()
     ? `<button type="button" class="home-util__link home-util__link--admin" data-nav="/admin">관리자 콘솔</button>`
     : '';
@@ -89,12 +90,15 @@ function renderUtilBar(role, showAuth) {
     : '';
   const base = items
     .map((item) => {
+      const active = item.id === 'guide' && onGuide ? ' is-active' : '';
       if (item.href) {
-        const cls = item.emphasis ? 'home-util__link home-util__link--emphasis' : 'home-util__link';
+        const cls = item.emphasis
+          ? `home-util__link home-util__link--emphasis${active}`
+          : `home-util__link${active}`;
         // 같은 탭 이동 — target="_blank" 금지
         return `<a href="${item.href}" class="${cls}" data-util-href="${item.href}">${item.label}</a>`;
       }
-      return `<button type="button" class="home-util__link" data-action="${item.action}">${item.label}</button>`;
+      return `<button type="button" class="home-util__link${active}" data-action="${item.action}">${item.label}</button>`;
     })
     .join('');
   return `${account}${adminLink}${base}`;

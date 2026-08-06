@@ -41,11 +41,10 @@ export const UTIL_MENU = {
 
 /**
  * 메인 GNB 순서 고정 (탐색 → 등록 → 운영/지원)
- * 이용안내는 홈 다음 메인 허브
+ * 이용안내는 유틸 메뉴(로그인 전·후 공통)로 진입 — GNB 중복 배치 안 함
  */
 export const GNB_MAIN = [
   { id: 'home', label: '홈' },
-  { id: 'guide', label: '이용안내' },
   { id: 'find_room', label: '공부방찾기' },
   { id: 'find_tutor', label: '과외쌤찾기' },
   { id: 'student_parent', label: '학생찾기' },
@@ -58,7 +57,6 @@ export const GNB_MAIN = [
 /** 전 메뉴 표시 (비로그인·운영자) */
 const GNB_ALL_SHOW = {
   home: 'show',
-  guide: 'show',
   find_room: 'show',
   find_tutor: 'show',
   student_parent: 'show',
@@ -83,7 +81,6 @@ export const GNB_VISIBILITY = {
   admin: { ...GNB_ALL_SHOW },
   parent: {
     home: 'show',
-    guide: 'show',
     find_room: 'show',
     find_tutor: 'show',
     student_parent: 'show',
@@ -94,7 +91,6 @@ export const GNB_VISIBILITY = {
   },
   study_room: {
     home: 'show',
-    guide: 'show',
     find_room: 'show',
     find_tutor: 'hide',
     student_parent: 'show',
@@ -105,7 +101,6 @@ export const GNB_VISIBILITY = {
   },
   tutor: {
     home: 'show',
-    guide: 'show',
     find_room: 'hide',
     find_tutor: 'show',
     student_parent: 'show',
