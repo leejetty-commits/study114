@@ -583,14 +583,16 @@ export const GUIDE_PAGES = {
     title: '안전과외 가이드',
     heroLabel: '플랫폼 보증이 아닌 행동 가이드',
     image: '/assets/guide/safety/hero.webp',
-    summary: '안전과외는 결제 기능이 아니라 첫 연락과 개인정보 공유 전에 꼭 알아둘 행동 가이드입니다.',
+    summary:
+      '안전과외는 결제 기능이 아니라 쪽지를 통해서 첫 연락을 할 때, 개인정보 보안에 관해 꼭 알아두어야 할 행동 가이드입니다.',
     lead: '첫 연락은 쪽지부터 시작하고, 개인정보 공유와 비용 협의는 충분히 확인한 뒤 진행해 주세요.',
+    flowLead: '먼저 전체 흐름을 차트로 보고, 아래 단계별 설명에서 더 자세히 확인할 수 있습니다.',
     flow: [
       { label: '공개 정보 확인', caption: '제출자료·소개를 직접 비교', icon: I.shield },
       { label: '쪽지로 첫 연락', caption: '공식 접촉 채널부터', icon: I.messageSafe },
       { label: '조건 정리', caption: '비용·환불·수업 방식', icon: I.wallet },
       { label: '개인정보 최소 공유', caption: '필요한 시점에만', icon: I.check },
-      { label: '이상 시 신고 확인', caption: '멈추고 고객센터·신고', icon: I.alert },
+      { label: '이상시 행동 요령', caption: '멈추고 관련상황 채집 후 고객센터 신고', icon: I.alert },
     ],
     steps: [
       {
@@ -615,35 +617,41 @@ export const GUIDE_PAGES = {
       },
       {
         title: '이상한 요구가 있다면 바로 멈추고 확인하세요',
-        body: '과도한 개인정보 요구, 불쾌한 접촉, 허위 정보가 의심되면 고객센터나 신고 안내를 먼저 확인해 주세요.',
+        body: '과도한 개인정보 요구, 불쾌한 접촉, 허위 정보가 의심되면 고객센터나 신고 안내를 먼저 확인해 주세요. 또한 관련 상황에 대해서 필요한 것들을 충분히 채집해 놓으세요.',
         icon: I.alert,
       },
     ],
     warnings: [
       '우동공과는 대금 보관·전화 중계·분쟁 대리를 제공하지 않습니다.',
       '검증·인증·보증처럼 오해될 수 있는 표현 대신 공개된 신뢰정보를 직접 확인하세요.',
-      '안전번호나 플랫폼 대리 통화 없이, 회원 간 공식 첫 접촉은 쪽지입니다.',
+      '회원 간 공식 접촉은 쪽지입니다. 우동공과 플랫폼에서는 안전번호나 이메일 등을 일체 제공하지 않습니다. 그외 개인간의 정보공유에는 관여하지 않으며 책임을 지지 않습니다.',
     ],
-    ctas: [
-      { label: '고객센터 가기', path: '/support' },
-      { label: '신고/도움 안내 보기', path: '/support/policies/reporting' },
-      { label: '쪽지함 알아보기', path: '/messages' },
-    ],
-    supportCards: [
+    helpSections: [
       {
-        title: '고객센터 가기',
-        body: '운영 문의나 정책 확인이 필요하면 고객센터에서 FAQ, 공지, 문의를 이어서 확인하세요.',
-        action: { label: '고객센터 방문', path: '/support' },
+        title: '안전하게 이어가기',
+        cards: [
+          {
+            title: '쪽지 이용안내',
+            body: '개인정보를 바로 공개하기보다, 우동공과 안의 쪽지로 먼저 연락하는 방법을 확인해 보세요.',
+            action: { label: '쪽지 안내 보기', path: '/guide/saved-contact' },
+            emphasize: true,
+          },
+        ],
       },
       {
-        title: '신고/도움 안내 보기',
-        body: '이상한 요구나 허위 정보가 의심되면 신고·제재 기준과 도움 절차를 먼저 확인해 주세요.',
-        action: { label: '신고 가이드 보기', path: '/support/policies/reporting' },
-      },
-      {
-        title: '쪽지 이용안내 보기',
-        body: '개인정보를 최소 공개하면서 첫 연락을 이어가려면 공식 쪽지 흐름을 먼저 확인하는 편이 좋습니다.',
-        action: { label: '쪽지 안내 보기', path: '/guide/saved-contact' },
+        title: '문제가 생기면',
+        cards: [
+          {
+            title: '신고/도움 안내',
+            body: '이상한 요구, 허위 정보, 불쾌한 접촉이 의심되면 신고 방법과 도움 절차를 먼저 확인해 주세요.',
+            action: { label: '신고/도움 안내 보기', path: '/policy/reporting' },
+          },
+          {
+            title: '고객센터',
+            body: '이용 중 궁금한 점이 있거나 정책과 공지를 확인하고 싶다면 고객센터에서 한 번에 이어서 보실 수 있어요.',
+            action: { label: '고객센터 가기', path: '/support' },
+          },
+        ],
       },
     ],
   },

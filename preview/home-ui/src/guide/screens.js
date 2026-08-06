@@ -351,6 +351,17 @@ function renderWarnings(items) {
     </section>`;
 }
 
+function renderSupportCard(item, { primary = false } = {}) {
+  const btnClass = primary ? 'guide-btn guide-btn--primary' : 'guide-btn guide-btn--secondary';
+  return `
+    <article class="guide-support-card${item.emphasize ? ' guide-support-card--emphasize' : ''}">
+      <h3 class="guide-support-card__title">${esc(item.title)}</h3>
+      <p class="guide-support-card__body">${esc(item.body)}</p>
+      ${renderAction(item.action, btnClass)}
+    </article>`;
+}
+
+/** 레거시 3카드 병렬 · 신규 helpSections(정상/문제 2단) 모두 지원 */
 function renderSupportCards(items) {
   if (!items?.length) return '';
   return `
@@ -359,14 +370,31 @@ function renderSupportCards(items) {
         <h2 class="guide-section__title">도움이 필요할 때</h2>
       </div>
       <div class="guide-support-card-grid">
-        ${items
+        ${items.map((item, index) => renderSupportCard(item, { primary: index === 0 })).join('')}
+      </div>
+    </section>`;
+}
+
+function renderHelpSections(sections) {
+  if (!sections?.length) return '';
+  return `
+    <section class="guide-section guide-help-sections">
+      <div class="guide-help-stack">
+        ${sections
           .map(
-            (item, index) => `
-              <article class="guide-support-card">
-                <h3 class="guide-support-card__title">${esc(item.title)}</h3>
-                <p class="guide-support-card__body">${esc(item.body)}</p>
-                ${renderAction(item.action, `guide-btn ${index !== 1 ? 'guide-btn--primary' : 'guide-btn--secondary'}`)}
-              </article>`,
+            (section) => `
+              <div class="guide-help-group">
+                <h2 class="guide-help-group__title">${esc(section.title)}</h2>
+                <div class="guide-help-group__grid guide-help-group__grid--${section.cards?.length === 1 ? 'single' : 'pair'}">
+                  ${(section.cards || [])
+                    .map((card, index) =>
+                      renderSupportCard(card, {
+                        primary: Boolean(card.emphasize) || (section.cards.length === 1 && index === 0),
+                      }),
+                    )
+                    .join('')}
+                </div>
+              </div>`,
           )
           .join('')}
       </div>
@@ -411,7 +439,7 @@ function renderGuideDetail(page) {
     ${renderDetailGroups(page.detailGroups)}
     ${page.note ? `<section class="guide-note">${esc(page.note)}</section>` : ''}
     ${renderWarnings(page.warnings)}
-    ${renderSupportCards(page.supportCards)}
+    ${page.helpSections?.length ? renderHelpSections(page.helpSections) : renderSupportCards(page.supportCards)}
     ${renderCompareGuide(page.compareGuide)}
     ${renderActionCards(page.actionCards)}
     ${renderFaqList(page.faq)}

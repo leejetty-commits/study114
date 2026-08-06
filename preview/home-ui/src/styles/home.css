@@ -6027,6 +6027,33 @@ a.guide-summary-card__chip--link:hover {
   border: 1px solid var(--gray-200);
   background: #fff;
 }
+.guide-help-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.guide-help-group__title {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--gray-900);
+}
+.guide-help-group__grid {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .guide-help-group__grid--pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.guide-support-card--emphasize {
+  border-color: #bfdbfe;
+  background: linear-gradient(180deg, #eff6ff 0%, #fff 70%);
+}
+.guide-support-card .guide-btn {
+  margin-top: 1rem;
+}
 .guide-footer-note {
   margin-top: 0.5rem;
   padding: 1.35rem 1.35rem 1.25rem;
