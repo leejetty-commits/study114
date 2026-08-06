@@ -24,7 +24,7 @@ export function compareOpenCta(count, max) {
 /** Source Route return CTA 라벨 (25§4-4 · §6 2차) */
 export const RETURN_CTA = {
   wishlist: '찜 목록으로',
-  studentReview: '찜 목록 열기',
+  studentReview: '학생 검토함 열기',
 };
 
 export const WISH_TOAST = {
@@ -68,7 +68,7 @@ export function getHandoffEmptyLine(key) {
     wishlist: '아직 찜한 후보가 없습니다. 검색에서 마음에 드는 후보를 저장해 보세요.',
     recent: '최근에 본 후보가 없습니다.',
     compareNeedOneMore: '비교하려면 후보를 하나 더 담아주세요.',
-    studentReview: '아직 찜한 학생이 없습니다. 마음에 드는 의뢰를 저장해 두세요.',
+    studentReview: '아직 검토 중인 학생이 없습니다. 마음에 드는 의뢰를 저장해 두세요.',
   };
   return map[key] || '';
 }
@@ -80,26 +80,26 @@ export const LIFECYCLE_BASKET = {
 
 /** P21-05 ↔ P25-S10 딥링크 배너 · CTA */
 export const HANDOFF_DEEPLINK = {
-  reviewFlow: '찜하기 → 찜 목록 → 쪽지 준비/보내기',
-  reviewFromAccess: '학생 접근·쪽지에서 이동했습니다. 찜해 둔 학생에게 쪽지를 이어가세요.',
-  reviewFromExposure: '노출·상담에서 이동했습니다. 찜해 둔 학생에게 상담·쪽지를 이어가세요.',
-  accessFromReview: '찜 목록에서 이동했습니다. 쪽지 가능 여부와 남은 메모권을 확인하세요.',
-  reviewBridgeLead: '찜해 둔 학생을 다시 보고 쪽지를 준비합니다.',
-  reviewBridgeCta: '찜 목록 열기',
+  reviewFlow: '검토함 저장 → 학생 검토함 → 쪽지 준비/보내기',
+  reviewFromAccess: '학생 접근·쪽지에서 이동했습니다. 검토 중인 학생에게 쪽지를 이어가세요.',
+  reviewFromExposure: '노출·상담에서 이동했습니다. 검토 중인 학생에게 상담·쪽지를 이어가세요.',
+  accessFromReview: '학생 검토함에서 이동했습니다. 쪽지 가능 여부와 남은 메모권을 확인하세요.',
+  reviewBridgeLead: '검토 중인 학생을 다시 보고 쪽지를 준비합니다.',
+  reviewBridgeCta: '학생 검토함 열기',
   providerRegCtaTutor: '학생 접근·쪽지',
   providerRegCtaStudyRoom: '노출·상담',
 };
 
-/** Provider lane — P25-S10 (UI 라벨은 찜, 내부 경로는 student-review 유지) */
+/** Provider lane — P25-S10 (UI 라벨: 학생 검토함 · 내부 경로 student-review 유지) */
 export const STUDENT_REVIEW = {
-  listTitle: '관심 학생',
-  addCta: '찜하기',
-  removeCta: '찜 해제',
-  itemLabelTutor: '관심학생',
+  listTitle: '학생 검토함',
+  addCta: '검토함에 넣기',
+  removeCta: '검토함에서 빼기',
+  itemLabelTutor: '검토 학생',
   itemLabelStudyRoom: '상담후보',
-  toastAdded: '찜했습니다',
-  toastRemoved: '찜을 해제했습니다',
-  note: '관심 있는 학생을 저장해 두고, 준비가 되었을 때 쪽지를 이어가세요.',
+  toastAdded: '학생 검토함에 넣었습니다',
+  toastRemoved: '학생 검토함에서 뺐습니다',
+  note: '검토할 학생을 저장해 두고, 준비가 되었을 때 쪽지를 이어가세요.',
   lifecycleHidden: '현재 공개가 중지된 의뢰입니다',
 };
 
@@ -115,14 +115,14 @@ export const RESUME_ROUTE_LABELS = {
   detail: '상세에서',
   wishlist: '찜 목록에서',
   mypage: '마이페이지에서',
-  'student-review': '찜 목록에서',
+  'student-review': '학생 검토함에서',
 };
 
 export const RESUME_ACTION_LABELS = {
   view_detail: '상세 열람',
   wish_add: '찜함',
   compare_add: '비교 담음',
-  review_add: '찜함',
+  review_add: '검토함에 넣음',
 };
 
 /** 25§2차 판단 스티커 — basket 행 */

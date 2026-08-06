@@ -709,7 +709,7 @@ function resolveAccessNextAction(tutor) {
   }
   return {
     status: '쪽지 가능',
-    reason: '찜한 학생에게 쪽지를 보낼 수 있어요',
+    reason: '검토 중인 학생에게 쪽지를 보낼 수 있어요',
     label: '쪽지 보내기',
     href: reviewHref,
     navAttr: ' data-mypage-nav="/mypage/student-review"',

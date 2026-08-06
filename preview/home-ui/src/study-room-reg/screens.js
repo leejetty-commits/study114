@@ -270,7 +270,7 @@ function renderReviewBridgeBlock(room) {
   const reviewCount = getStudentReviewIds().length;
   return `
     <div class="p20-hub-block p21-review-bridge">
-      <h3 class="p20-hub-block__title">관심 학생</h3>
+      <h3 class="p20-hub-block__title">학생 검토함</h3>
       <p class="p19-form-section__lead">${esc(HANDOFF_DEEPLINK.reviewBridgeLead)}</p>
       <div class="p19-summary-grid" style="margin-top:var(--space-3)">
         <dl class="p19-summary-card"><dt>찜</dt><dd>${reviewCount}건</dd></dl>

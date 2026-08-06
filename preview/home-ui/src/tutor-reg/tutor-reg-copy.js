@@ -56,7 +56,7 @@ export const P21_HUB_BLOCK_TITLES = {
 /** §7-5 · P21-05 CTA */
 export const P21_ACCESS_CTA = {
   studentSearch: '학생 목록 보기',
-  studentReview: '찜 목록',
+  studentReview: '학생 검토함',
   plans: '이용권 확인',
   messages: '쪽지함 열기',
   submissionDocs: '제출자료 상태',

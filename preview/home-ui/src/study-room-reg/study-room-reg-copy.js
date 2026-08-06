@@ -98,6 +98,6 @@ export const P20_PREVIEW_MODES = [
 
 /** P20-02 · P20-05 관심 학생 브리지 (25§8 · P25-S10 2차) */
 export const P20_HUB_CTA = {
-  studentReview: '찜 목록',
+  studentReview: '학생 검토함',
   messages: '쪽지함 열기',
 };

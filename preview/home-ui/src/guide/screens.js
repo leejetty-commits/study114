@@ -421,11 +421,15 @@ function renderGuideDetail(page) {
         ? `<section class="guide-footer-note"><ul class="guide-bullet-list">${page.footerNote.map((item) => `<li>${esc(item)}</li>`).join('')}</ul></section>`
         : ''
     }
-    <section class="guide-detail-cta">
+    ${
+      page.ctas?.length
+        ? `<section class="guide-detail-cta">
       <div class="guide-detail-cta__actions">
-        ${(page.ctas || []).map((cta, index) => renderAction(cta, `guide-btn ${index === 0 ? 'guide-btn--primary' : 'guide-btn--secondary'}`)).join('')}
+        ${page.ctas.map((cta, index) => renderAction(cta, `guide-btn ${index === 0 ? 'guide-btn--primary' : 'guide-btn--secondary'}`)).join('')}
       </div>
-    </section>
+    </section>`
+        : ''
+    }
   `;
 }
 

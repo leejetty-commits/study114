@@ -14,7 +14,7 @@ export const SECTION_HEADINGS = {
   primeTutor: { icon: '🏆', iconType: 'emoji', title: '우리동네 대표 과외쌤' },
   pickTutor: { icon: '⭐', iconType: 'emoji', title: '추천 과외쌤' },
   basicTutor: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '동네 과외쌤' },
-  students: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '관심 학생' },
+  students: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '학생 학습 의뢰' },
 };
 
 /**

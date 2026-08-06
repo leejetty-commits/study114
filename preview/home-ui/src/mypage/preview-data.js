@@ -225,7 +225,7 @@ export function getPrimaryCta(role) {
     const published = tutors.find((t) => t.profile_status === 'published');
     if (published) {
       return {
-        text: '관심 학생과 쪽지 확인',
+        text: '학생 검토함과 쪽지 확인',
         hint: '저장해 둔 학생과 새로 도착한 소식을 살펴보세요.',
         path: tutorSectionPath(published.id, 'access'),
       };

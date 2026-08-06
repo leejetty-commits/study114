@@ -171,7 +171,7 @@ function getHomeHighlights(role, counts) {
   }
   return [
     { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
-    { icon: '☆', label: '관심학생', value: `${counts.studentReviewCount}명`, note: '저장한 학생을 다시 살펴보세요', path: '/mypage/student-review' },
+    { icon: '☆', label: '학생 검토함', value: `${counts.studentReviewCount}명`, note: '검토 중인 학생을 다시 살펴보세요', path: '/mypage/student-review' },
     { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
   ];
 }
@@ -187,7 +187,7 @@ function getHomeQuickActions(role) {
   }
   return [
     { icon: '✎', title: '내 등록', note: role === 'study_room' ? '공부방 정보와 공개 상태' : '과외 프로필과 공개 상태', path: '/mypage/registrations' },
-    { icon: '☆', title: '관심학생', note: '저장한 학생과 쪽지 준비', path: '/mypage/student-review' },
+    { icon: '☆', title: '학생 검토함', note: '검토 중인 학생과 쪽지 준비', path: '/mypage/student-review' },
     { icon: '✉', title: '쪽지함', note: '문의와 진행 중인 대화', path: '/mypage/messages' },
     { icon: '◌', title: '이용현황', note: '이용권과 남은 기간 확인', path: '/mypage/plans' },
   ];

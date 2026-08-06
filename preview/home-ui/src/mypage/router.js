@@ -44,7 +44,7 @@ export const MYPAGE_NAV = [
   { path: '/mypage/messages', label: '쪽지함', icon: '✉', screenId: 'P15-08' },
   { path: '/mypage/recent', label: '최근열람', icon: '◷', screenId: 'P15-07' },
   { path: '/mypage/wishlist', label: '찜 목록', icon: '♡', screenId: 'P15-06', emphasis: ['parent'], roles: ['parent'] },
-  { path: '/mypage/student-review', label: '관심학생', icon: '☆', screenId: 'P25-S10', emphasis: ['study_room', 'tutor'], roles: ['study_room', 'tutor'] },
+  { path: '/mypage/student-review', label: '학생 검토함', icon: '☆', screenId: 'P25-S10', emphasis: ['study_room', 'tutor'], roles: ['study_room', 'tutor'] },
   { path: '/mypage/plans', label: '이용현황', icon: '◌', screenId: 'P15-09', emphasis: ['study_room', 'tutor'] },
   { path: '/mypage/account', label: '계정설정', icon: '⚙', screenId: 'P15-11' },
 ];
@@ -144,7 +144,7 @@ export function screenTitle(screenId, path) {
     'P23-04a': '제출 작성',
     'P23-04b': '제출 상세',
     'P15-11': '계정설정',
-    'P25-S10': '관심학생',
+    'P25-S10': '학생 검토함',
   };
   return map[screenId] || '마이페이지';
 }

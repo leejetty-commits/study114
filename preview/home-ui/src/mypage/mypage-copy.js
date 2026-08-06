@@ -10,7 +10,7 @@
 export const HOME_EMPHASIS = {
   parent: '찜한 곳과 새 소식을 가볍게 확인해 보세요.',
   study_room: '공개 상태와 학생 소식을 한눈에 모았어요.',
-  tutor: '프로필, 관심 학생, 새 쪽지를 한곳에서 확인하세요.',
+  tutor: '프로필, 학생 검토함, 새 쪽지를 한곳에서 확인하세요.',
 };
 
 /** §15 역할 제한 패널 (Empty ✕ · onboarding guard) */

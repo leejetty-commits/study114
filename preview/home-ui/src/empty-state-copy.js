@@ -120,8 +120,8 @@ export const EMPTY_COPY = {
   },
   studentReview: {
     screenId: 'P25-S10',
-    title: '찜한 학생이 없습니다',
-    body: '마음에 드는 학생 의뢰를 저장해 두고, 준비가 되면 쪽지를 이어가세요.',
+    title: '검토 중인 학생이 없습니다',
+    body: '마음에 드는 학생 의뢰를 검토함에 넣어 두고, 준비가 되면 쪽지를 이어가세요.',
     cta: '학생 목록 보기',
   },
   students: {
@@ -309,7 +309,7 @@ export function getMessagesEmptyCopy(role) {
   }
   return {
     ...EMPTY_COPY.messages,
-    body: '찜한 학생을 확인하고 쪽지를 보내 보세요.',
+    body: '검토 중인 학생을 확인하고 쪽지를 보내 보세요.',
     cta: '찜 목록',
   };
 }
