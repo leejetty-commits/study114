@@ -18,6 +18,10 @@ final class BoardPostService
         'library-template',
         'library-guide-pdf',
         'submission',
+        'concern-director',
+        'concern-tutor',
+        'concern-parent',
+        'concern-solved',
     ];
 
     /** @var list<string> */

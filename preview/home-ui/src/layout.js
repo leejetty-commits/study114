@@ -1,4 +1,4 @@
-import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isGuideRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, navigateToGuide, navigateToSupport } from './state.js';
+import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isGuideRoute, isCommunityRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, navigateToGuide, navigateToSupport } from './state.js';
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
@@ -20,13 +20,14 @@ export function renderPreviewToolbar() {
   const onMypage = isMypageRoute();
   const onMessages = isMessagesRoute();
   const onGuide = isGuideRoute();
+  const onCommunity = isCommunityRoute();
   const onSupport = isSupportRoute();
   const onPolicy = isPolicyRoute();
   const onLibrary = isLibraryRoute();
   const onAdmin = isAdminRoute();
   const onPlans = isPlansRoute();
   const region = previewState.regionKey;
-  const isGuest = current === 'guest' && !onMypage && !onMessages && !onGuide && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans;
+  const isGuest = current === 'guest' && !onMypage && !onMessages && !onGuide && !onCommunity && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans;
   const authUser = getAuthUser();
   const apiOn = isHandoffApiMode();
   const msgApiOn = isMessagesApiMode();
@@ -41,12 +42,13 @@ export function renderPreviewToolbar() {
         ${Object.entries(ROUTES)
           .map(([path, key]) => {
             const meta = SCREEN_META[key];
-            const active = !onMypage && !onMessages && !onGuide && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans && key === current;
+            const active = !onMypage && !onMessages && !onGuide && !onCommunity && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans && key === current;
             return `<button type="button" class="preview-toolbar__btn ${active ? 'is-active' : ''}" data-nav="${path}">${meta.label}</button>`;
           })
           .join('')}
         <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${getDefaultMypagePath(getNavRole())}">마이페이지</button>
         <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지함</button>
+        <button type="button" class="preview-toolbar__btn ${onCommunity ? 'is-active' : ''}" data-nav="/community">커뮤니티</button>
         <button type="button" class="preview-toolbar__btn ${onSupport ? 'is-active' : ''}" data-nav="/support">고객센터</button>
         <button type="button" class="preview-toolbar__btn ${onPlans ? 'is-active' : ''}" data-nav="/plans">유료상품</button>
         <button type="button" class="preview-toolbar__btn" data-nav="/support/library">자료실</button>

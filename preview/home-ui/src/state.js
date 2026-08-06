@@ -25,6 +25,7 @@ import {
   normalizePlansPath,
   PLANS_REDIRECTS,
 } from './plans/router.js';
+import { getDefaultCommunityPath, normalizeCommunityPath, normalizeConcernPath } from './concern/router.js';
 import { createFindState, resetFindState } from './find-state.js';
 
 const ACTIVE_ROLE_KEY = 'study114-preview-active-role';
@@ -167,6 +168,15 @@ export function isGuideRoute() {
   const path = hash.startsWith('/') ? hash : `/${hash}`;
   return path === '/guide' || path.startsWith('/guide/');
 }
+
+export function isCommunityRoute() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
+  return path === '/community' || path.startsWith('/community/') || path === '/concern' || path.startsWith('/concern/');
+}
+
+/** @deprecated */
+export const isConcernRoute = isCommunityRoute;
 
 export function isPolicyRoute() {
   const hash = window.location.hash.slice(1) || '';
@@ -371,6 +381,45 @@ export function bootstrapGuideRoute() {
   return false;
 }
 
+export function bootstrapCommunityRoute() {
+  const { pathname, hash, origin, search } = window.location;
+
+  if (!hash && pathname.startsWith('/community')) {
+    const bare = pathname === '/community' || pathname === '/community/';
+    const target = bare ? getDefaultCommunityPath() : pathname;
+    window.location.replace(`${origin}/${search}#${target}`);
+    return true;
+  }
+  if (!hash && pathname.startsWith('/concern')) {
+    const target = pathname.replace(/^\/concern/, '/community');
+    window.location.replace(`${origin}/${search}#${target}`);
+    return true;
+  }
+
+  if (!hash) return false;
+
+  const hashPath = hash.slice(1);
+  const pathWithQuery = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const path = pathWithQuery.split('?')[0];
+
+  if (path === '/concern' || path.startsWith('/concern/')) {
+    const mapped = path.replace(/^\/concern/, '/community');
+    window.location.replace(`#${mapped}${pathWithQuery.includes('?') ? pathWithQuery.slice(pathWithQuery.indexOf('?')) : ''}`);
+    return true;
+  }
+  if (path === '/community' || path === '/community/') {
+    return false;
+  }
+  if (path.startsWith('/community/') && !normalizeCommunityPath(path)) {
+    window.location.replace(`#${getDefaultCommunityPath()}`);
+    return true;
+  }
+  return false;
+}
+
+/** @deprecated */
+export const bootstrapConcernRoute = bootstrapCommunityRoute;
+
 export function bootstrapPolicyRoute() {
   const { pathname, hash, origin, search } = window.location;
 
@@ -572,6 +621,19 @@ export function getGuidePath() {
   return getDefaultGuidePath();
 }
 
+export function getCommunityPath() {
+  const hash = window.location.hash.slice(1) || '';
+  const pathWithQuery = hash.startsWith('/') ? hash : `/${hash}`;
+  const path = pathWithQuery.split('?')[0];
+  const query = pathWithQuery.includes('?') ? pathWithQuery.slice(pathWithQuery.indexOf('?')) : '';
+  const normalized = normalizeCommunityPath(path) || normalizeConcernPath(path);
+  if (normalized) return `${normalized}${query}`;
+  return getDefaultCommunityPath();
+}
+
+/** @deprecated */
+export const getConcernPath = getCommunityPath;
+
 export function getPolicyPath() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
@@ -619,6 +681,7 @@ export function getCurrentScreen() {
   if (isAdminRoute()) return 'admin';
   if (isLibraryRoute()) return 'library';
   if (isGuideRoute()) return 'guide';
+  if (isCommunityRoute()) return 'community';
   if (isSupportRoute()) return 'support';
   if (isPolicyRoute()) return 'policy';
   const hash = window.location.hash.slice(1) || '/guest';

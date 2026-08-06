@@ -12,16 +12,16 @@
 /** @typedef {'read'|'download'|'write'|'comment'|'upload'|'edit_own'|'delete_own'|'moderate'} BoardAction */
 /** @typedef {'guest'|'member'|'demand'|'supply-room'|'supply-tutor'|'verified'|'admin'} BoardRole */
 /** @typedef {'public'|'login'|'role'} BoardVisibility */
-/** @typedef {'support'|'library'|'policy-log'|'mypage-submission'|'phase2'} SectionOwner */
-/** @typedef {'notice'|'faq'|'guide'|'library'|'submission'|'curation'} BoardPresetId */
+/** @typedef {'support'|'library'|'policy-log'|'mypage-submission'|'community'|'concern'|'phase2'} SectionOwner */
+/** @typedef {'notice'|'faq'|'guide'|'library'|'submission'|'curation'|'concern'} BoardPresetId */
 
 export const BOARD_ENGINE_LOCK = {
   oneLiner:
-    '우동공과 게시판은 공지·자주 묻는 질문·가이드·자료받기·제출·공유를 채널별 권한으로 운영합니다. 외부 커뮤니티와 콘텐츠를 공유하지 않습니다.',
+    '우동공과 게시판은 공지·자주 묻는 질문·가이드·자료받기·제출·고민방·공유를 채널별 권한으로 운영합니다. 외부 커뮤니티와 콘텐츠를 공유하지 않습니다.',
   topConcept: '게시판 엔진',
   libraryPosition: '「자료실」은 게시판 안에서 파일을 내려받는 채널을 묶어 부르는 사용자용 이름입니다.',
   boundary:
-    '운영·자료·제출 콘텐츠는 게시판에서, 약관은 정책 페이지에서, 탐색·입력·결제·쪽지는 각 서비스 화면에서 관리합니다. 회원 자유 게시글은 외부 커뮤니티와 분리합니다.',
+    '운영·자료·제출·역할별 고민방은 게시판에서, 약관은 정책 페이지에서, 탐색·입력·결제·쪽지는 각 서비스 화면에서 관리합니다. GNU 등 외부 커뮤니티 자유게시와는 분리합니다.',
 };
 
 /** 26장 정적 정책 slug — 게시판 생성으로 대체 금지 (33장 §12-4·12-5) */
@@ -131,6 +131,18 @@ export const BOARD_CREATE_PRESETS = {
     requireReviewDefault: true,
     guestWriteForbidden: true,
     lockedBoardKeys: ['showcase'],
+  },
+  concern: {
+    label: '커뮤니티형',
+    boardType: 'upload',
+    sectionOwners: ['community', 'concern'],
+    defaultVisibility: 'public',
+    allowWriteDefault: true,
+    allowCommentDefault: true,
+    allowUploadDefault: true,
+    requireReviewDefault: false,
+    guestWriteForbidden: true,
+    lockedBoardKeys: ['concern-director', 'concern-tutor', 'concern-parent', 'concern-solved'],
   },
 };
 
@@ -374,6 +386,90 @@ export const BOARD_REGISTRY = [
     routeSlug: '',
     routeHint: '후순위',
     ownerChapter: '23',
+  },
+  {
+    boardKey: 'concern-director',
+    label: '원장 고민방',
+    boardType: 'upload',
+    presetId: 'concern',
+    sectionOwner: 'community',
+    userFacingMenu: '원장 고민방',
+    visibility: 'public',
+    readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
+    downloadRoles: [],
+    writeRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+    allowComment: true,
+    allowUpload: true,
+    requireReview: false,
+    isGnuSeparated: true,
+    enabled: true,
+    phase: 'phase1',
+    routeSlug: '#/community/director',
+    routeHint: '#/community/director',
+    ownerChapter: 'community-rail',
+  },
+  {
+    boardKey: 'concern-tutor',
+    label: '과외쌤 고민방',
+    boardType: 'upload',
+    presetId: 'concern',
+    sectionOwner: 'community',
+    userFacingMenu: '과외쌤 고민방',
+    visibility: 'public',
+    readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
+    downloadRoles: [],
+    writeRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+    allowComment: true,
+    allowUpload: true,
+    requireReview: false,
+    isGnuSeparated: true,
+    enabled: true,
+    phase: 'phase1',
+    routeSlug: '#/community/tutor',
+    routeHint: '#/community/tutor',
+    ownerChapter: 'community-rail',
+  },
+  {
+    boardKey: 'concern-parent',
+    label: '학부모/학생 고민방',
+    boardType: 'upload',
+    presetId: 'concern',
+    sectionOwner: 'community',
+    userFacingMenu: '학부모/학생 고민방',
+    visibility: 'public',
+    readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
+    downloadRoles: [],
+    writeRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+    allowComment: true,
+    allowUpload: true,
+    requireReview: false,
+    isGnuSeparated: true,
+    enabled: true,
+    phase: 'phase1',
+    routeSlug: '#/community/parent',
+    routeHint: '#/community/parent',
+    ownerChapter: 'community-rail',
+  },
+  {
+    boardKey: 'concern-solved',
+    label: '해결후기',
+    boardType: 'upload',
+    presetId: 'concern',
+    sectionOwner: 'community',
+    userFacingMenu: '해결후기',
+    visibility: 'public',
+    readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
+    downloadRoles: [],
+    writeRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+    allowComment: true,
+    allowUpload: true,
+    requireReview: false,
+    isGnuSeparated: true,
+    enabled: true,
+    phase: 'phase1',
+    routeSlug: '#/community/solved',
+    routeHint: '#/community/solved',
+    ownerChapter: 'community-rail',
   },
 ];
 

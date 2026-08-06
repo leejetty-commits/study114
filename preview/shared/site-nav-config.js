@@ -50,6 +50,7 @@ export const GNB_MAIN = [
   { id: 'student_parent', label: '학생찾기' },
   { id: 'register_room', label: '공부방상세등록' },
   { id: 'register_tutor', label: '과외쌤상세등록' },
+  { id: 'community', label: '커뮤니티' },
   { id: 'plans', label: '유료상품' },
   { id: 'support', label: '고객센터' },
 ];
@@ -63,6 +64,7 @@ const GNB_ALL_SHOW = {
   register_room: 'show',
   register_tutor: 'show',
   plans: 'show',
+  community: 'show',
   support: 'show',
 };
 
@@ -87,6 +89,7 @@ export const GNB_VISIBILITY = {
     register_room: 'hide',
     register_tutor: 'hide',
     plans: 'hide',
+    community: 'show',
     support: 'show',
   },
   study_room: {
@@ -97,6 +100,7 @@ export const GNB_VISIBILITY = {
     register_room: 'show',
     register_tutor: 'hide',
     plans: 'show',
+    community: 'show',
     support: 'show',
   },
   tutor: {
@@ -107,6 +111,7 @@ export const GNB_VISIBILITY = {
     register_room: 'hide',
     register_tutor: 'show',
     plans: 'show',
+    community: 'show',
     support: 'show',
   },
 };
@@ -231,6 +236,10 @@ export function homeHashUrl(hashPath) {
   const pathDeep =
     p === '/guide' ||
     p.startsWith('/guide/') ||
+    p === '/community' ||
+    p.startsWith('/community/') ||
+    p === '/concern' ||
+    p.startsWith('/concern/') ||
     p === '/support' ||
     p.startsWith('/support/') ||
     p === '/mypage' ||

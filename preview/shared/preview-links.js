@@ -113,6 +113,10 @@ export function resolveGnbLink(gnbId, role) {
       return { external: true, url: TUTOR_REGISTER_URL };
     case 'support':
       return { external: false, url: '/support' };
+    case 'community':
+      return { external: false, url: '/community' };
+    case 'concern':
+      return { external: false, url: '/community' };
     case 'guide':
       return { external: false, url: '/guide' };
     case 'plans':

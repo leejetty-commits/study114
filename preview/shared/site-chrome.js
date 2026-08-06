@@ -77,6 +77,7 @@ function roleHomePathForNav(role) {
 function gnbHref(itemId, role) {
   if (itemId === 'home') return homeHashUrl(roleHomePathForNav(role));
   if (itemId === 'support') return homeHashUrl('/support');
+  if (itemId === 'community' || itemId === 'concern') return homeHashUrl('/community');
   if (itemId === 'plans') return homeHashUrl('/plans');
   const link = resolveGnbLink(itemId, role);
   if (!link) return homeHashUrl('/guest');
@@ -146,7 +147,7 @@ export function isHomeUiHost() {
     const homePath = home.pathname.replace(/\/$/, '') || '';
     if (path === homePath) return true;
     // pathname 딥링크로 home-ui index.html이 뜬 경우
-    const deepRoots = ['/plans', '/support', '/mypage', '/messages', '/policy', '/library', '/admin'];
+    const deepRoots = ['/plans', '/support', '/community', '/concern', '/mypage', '/messages', '/policy', '/library', '/admin'];
     return deepRoots.some((root) => path === root || path.startsWith(`${root}/`));
   } catch {
     return false;
@@ -219,6 +220,11 @@ export function bindSiteChrome(root, handlers = {}) {
         }
         if (gnbId === 'support') {
           if (navigateHome && isHomeUiHost()) navigateHome('/support');
+          else goSameTab(dest);
+          return;
+        }
+        if (gnbId === 'community' || gnbId === 'concern') {
+          if (navigateHome && isHomeUiHost()) navigateHome('/community');
           else goSameTab(dest);
           return;
         }
