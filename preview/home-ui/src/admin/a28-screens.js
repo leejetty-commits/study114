@@ -24,6 +24,7 @@ import {
   getPresetOptions,
   getSectionOwnerOptions,
   listBoardChannels,
+  listConcernChannels,
   listSectionGroupSummary,
   addCustomSectionGroup,
   removeCustomSectionGroup,
@@ -193,6 +194,8 @@ function sectionOwnerLabel(id) {
     library: '자료실',
     'policy-log': '정책 기록',
     'mypage-submission': '마이페이지 제출함',
+    community: '커뮤니티',
+    concern: '커뮤니티(레거시)',
     phase2: '추후 기능',
   };
   return labels[id] || listSectionGroupSummary().find((group) => group.id === id)?.label || '기타';
@@ -626,12 +629,12 @@ function renderChannelForm(channel = null) {
   return `
     <form class="sup-admin-form a28-config-form" data-channel-form>
       <h3 class="sup-admin-form__title">채널 추가 · 수정</h3>
-      <p class="a28-help">먼저 종류(프리셋)를 고른 뒤, 메뉴에 보일 이름과 경로를 적습니다. 마음대로 새 게시판 종류를 만들지 마세요.</p>
+      <p class="a28-help">먼저 종류(프리셋)를 고른 뒤, 메뉴에 보일 이름과 경로를 적습니다. 커뮤니티(고민방)는 <strong>커뮤니티형</strong> 프리셋을 고르고 <code>concern-</code>로 시작하는 식별값을 쓰면 됩니다.</p>
       <input type="hidden" name="mode" value="${channel ? 'update' : 'create'}" />
       <label class="sup-field"><span>종류(프리셋)</span><select name="presetId" data-channel-preset required>${presetOptions}</select></label>
-      <label class="sup-field"><span>채널 식별값 <small>${esc(candidateHint.replace('boardKey', '채널 식별값'))} · 시스템용 영문 소문자</small></span><input name="boardKey" value="${esc(channel?.boardKey || '')}" placeholder="예: notice" required /></label>
-      <label class="sup-field"><span>메뉴 이름</span><input name="menuLabel" value="${esc(channel?.menuLabel || '')}" placeholder="공지사항" required /></label>
-      <label class="sup-field"><span>주소 경로</span><input name="routeSlug" value="${esc(channel?.routeSlug || '')}" placeholder="#/support/notice" /></label>
+      <label class="sup-field"><span>채널 식별값 <small>${esc(candidateHint.replace('boardKey', '채널 식별값'))} · 시스템용 영문 소문자</small></span><input name="boardKey" value="${esc(channel?.boardKey || '')}" placeholder="${presetId === 'concern' ? '예: concern-admission' : '예: notice'}" required /></label>
+      <label class="sup-field"><span>메뉴 이름</span><input name="menuLabel" value="${esc(channel?.menuLabel || '')}" placeholder="${presetId === 'concern' ? '예: 입학 고민방' : '공지사항'}" required /></label>
+      <label class="sup-field"><span>주소 경로</span><input name="routeSlug" value="${esc(channel?.routeSlug || '')}" placeholder="${presetId === 'concern' ? '#/community/admission (비우면 자동)' : '#/support/notice'}" /></label>
       <label class="sup-field"><span>소속 그룹</span><select name="sectionOwner" required>${sectionOptions}</select></label>
 
       <div class="a28-perm-matrix" id="anc_channel_auth">
@@ -696,18 +699,29 @@ function renderRightRailForm(slot = null) {
     .join('');
   const channels = listBoardChannels().filter((ch) => ch.status !== 'archived');
   const sourceOptions = channels
-    .map((ch) => `<option value="${esc(ch.boardKey)}"${selected(current?.sourceBoardKey, ch.boardKey)}>${esc(ch.menuLabel)}</option>`)
+    .map((ch) => `<option value="${esc(ch.boardKey)}"${selected(current?.sourceBoardKey, ch.boardKey)}>${esc(ch.menuLabel)} (${esc(ch.boardKey)})</option>`)
+    .join('');
+  const concernChips = listConcernChannels()
+    .map(
+      (ch) =>
+        `<button type="button" class="btn btn--secondary btn--sm" data-rail-add-concern="${esc(ch.boardKey)}">${esc(ch.menuLabel)}</button>`,
+    )
     .join('');
   return `
     <form class="sup-admin-form a28-config-form" data-rail-form>
       <h3 class="sup-admin-form__title">우측 배너 자리 설정</h3>
-      <p class="a28-help">게시판 본문이 아니라, 화면 오른쪽의 요약·추천·바로가기 자리입니다. 모바일에서는 아래로 쌓기 / 접기 / 숨김 중 하나를 고릅니다.</p>
+      <p class="a28-help">게시판 본문이 아니라, 화면 오른쪽의 요약·추천·바로가기 자리입니다. 커뮤니티 채널을 추가 채널에 넣으면 홈 우측 「현장 고민 HOT」이 그 보드 글을 우선 보여줍니다.</p>
       <label class="sup-field"><span>배너 자리</span><select name="slotKey">${slotOptions}</select></label>
       <label class="sup-field"><span>페이지 종류</span><input name="pageType" value="${esc(current?.pageType || 'home')}" required /></label>
       <label class="sup-field"><span>구역 제목</span><input name="sectionTitle" value="${esc(current?.sectionTitle || '')}" required /></label>
       <label class="sup-field"><span>내용 출처</span><select name="sourceType">${optionList(['board', 'static', 'mixed'], current?.sourceType || 'mixed', SOURCE_KO)}</select></label>
       <label class="sup-field"><span>기본 채널</span><select name="sourceBoardKey">${sourceOptions}</select></label>
-      <label class="sup-field"><span>추가 채널 (쉼표)</span><input name="sourceBoardKeys" value="${esc((current?.sourceBoardKeys || []).join(', '))}" /></label>
+      <label class="sup-field"><span>추가 채널 (쉼표)</span><input name="sourceBoardKeys" value="${esc((current?.sourceBoardKeys || []).join(', '))}" placeholder="notice, concern-director, concern-tutor" /></label>
+      ${
+        concernChips
+          ? `<div class="a28-checkbox-grid" style="margin:0.35rem 0 0.75rem"><span class="a28-help" style="width:100%">커뮤니티 채널 추가:</span>${concernChips}</div>`
+          : ''
+      }
       <label class="sup-field"><span>고르는 방식</span><select name="selectionMode">${optionList(RIGHT_RAIL_SELECTION_MODES, current?.selectionMode || 'curated', SEL_KO)}</select></label>
       <label class="sup-field"><span>표시 개수</span><input type="number" name="itemLimit" min="1" max="5" value="${esc(current?.itemLimit || 3)}" /></label>
       <label class="sup-field"><span>버튼 글자</span><input name="ctaLabel" value="${esc(current?.ctaLabel || '')}" /></label>
@@ -2616,13 +2630,29 @@ export function bindA28ScreenEvents(root, path, rerender) {
       const section = channelForm.querySelector('[name="sectionOwner"]');
       if (section) {
         section.innerHTML = getSectionOwnerOptions(presetId)
-          .map((owner) => `<option value="${esc(owner)}">${esc(owner)}</option>`)
+          .map((owner) => `<option value="${esc(owner)}">${esc(sectionOwnerLabel(owner))}</option>`)
           .join('');
+        if (presetId === 'concern') section.value = 'community';
       }
       const boardKey = channelForm.querySelector('[name="boardKey"]');
+      const routeSlug = channelForm.querySelector('[name="routeSlug"]');
       const candidates = getBoardKeyCandidates(presetId);
-      if (boardKey instanceof HTMLInputElement && candidates.length && !boardKey.value) {
-        boardKey.placeholder = candidates[0];
+      if (boardKey instanceof HTMLInputElement) {
+        if (candidates.length && !boardKey.value) boardKey.placeholder = candidates[0];
+        if (presetId === 'concern') boardKey.placeholder = '예: concern-admission';
+      }
+      if (routeSlug instanceof HTMLInputElement && presetId === 'concern') {
+        routeSlug.placeholder = '#/community/admission (비우면 자동)';
+      }
+    });
+
+    channelForm?.querySelector('[name="boardKey"]')?.addEventListener('change', (e) => {
+      const presetId = channelForm.querySelector('[name="presetId"]')?.value;
+      const routeSlug = channelForm.querySelector('[name="routeSlug"]');
+      const key = String(e.target?.value || '').trim();
+      if (presetId === 'concern' && routeSlug instanceof HTMLInputElement && !routeSlug.value && key) {
+        const slug = key.startsWith('concern-') ? key.slice('concern-'.length) : key;
+        routeSlug.value = `#/community/${slug}`;
       }
     });
 
@@ -2636,7 +2666,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         channelForm.querySelector('[name="menuLabel"]').value = channel.menuLabel;
         channelForm.querySelector('[name="routeSlug"]').value = channel.routeSlug || '';
         channelForm.querySelector('[name="sectionOwner"]').innerHTML = getSectionOwnerOptions(channel.presetId)
-          .map((owner) => `<option value="${esc(owner)}"${selected(channel.sectionOwner, owner)}>${esc(owner)}</option>`)
+          .map((owner) => `<option value="${esc(owner)}"${selected(channel.sectionOwner, owner)}>${esc(sectionOwnerLabel(owner))}</option>`)
           .join('');
         channelForm.querySelector('[name="visibility"]').value = channel.visibility;
         channelForm.querySelector('[name="downloadPolicy"]').value = channel.downloadPolicy;
@@ -2914,6 +2944,20 @@ export function bindA28ScreenEvents(root, path, rerender) {
       if (!window.confirm('우측 배너 설정을 초기값으로 되돌릴까요?')) return;
       resetRightRailSlots();
       rerender();
+    });
+
+    root.querySelectorAll('[data-rail-add-concern]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-rail-add-concern');
+        const input = railForm?.querySelector('[name="sourceBoardKeys"]');
+        if (!key || !(input instanceof HTMLInputElement)) return;
+        const current = input.value
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean);
+        if (!current.includes(key)) current.push(key);
+        input.value = current.join(', ');
+      });
     });
 
     railForm?.addEventListener('submit', async (e) => {

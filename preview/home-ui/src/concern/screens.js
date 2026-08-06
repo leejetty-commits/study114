@@ -1,5 +1,5 @@
 import {
-  CONCERN_BOARDS,
+  listCommunityBoards,
   CONCERN_COMPOSE_HINT,
   CONCERN_HUB_LEAD,
   CONCERN_HUB_TITLE,
@@ -65,7 +65,7 @@ function renderPostRow(post) {
 }
 
 function renderCommunityAlerts() {
-  const alerts = CONCERN_BOARDS.flatMap((board) => listConcernPosts(board.boardKey))
+  const alerts = listCommunityBoards().flatMap((board) => listConcernPosts(board.boardKey))
     .filter((p) => p.type === 'community_alert' && p.pinned)
     .slice(0, 2);
   if (!alerts.length) return '';
@@ -95,7 +95,7 @@ function renderHub() {
       <p class="concern-hero__lead">${esc(CONCERN_HUB_LEAD)}</p>
     </section>
     <section class="concern-board-grid">
-      ${CONCERN_BOARDS.map((board) => {
+      ${listCommunityBoards().map((board) => {
         const hot = listConcernPosts(board.boardKey, { sort: 'hot' })[0];
         const emphasize = board.id === prefer ? ' concern-board-card--prefer' : '';
         return `

@@ -1,8 +1,6 @@
-/** 커뮤니티 라우터 — path /community/* */
+/** 커뮤니티 라우터 — path /community/* (동적 보드 slug) */
 
-import { COMMUNITY_BOARDS, getCommunityBoardBySlug } from './copy.js';
-
-const BOARD_SLUGS = COMMUNITY_BOARDS.map((b) => b.slug).join('|');
+import { listCommunityBoards, getCommunityBoardBySlug } from './copy.js';
 
 export function getDefaultCommunityPath() {
   return '/community';
@@ -11,10 +9,16 @@ export function getDefaultCommunityPath() {
 /** @deprecated */
 export const getDefaultConcernPath = getDefaultCommunityPath;
 
+function boardSlugPattern() {
+  const slugs = listCommunityBoards().map((b) => b.slug).filter(Boolean);
+  if (!slugs.length) return 'director|tutor|parent|solved';
+  return slugs.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+}
+
 export function normalizeCommunityPath(hashPath) {
   const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
   if (p === '/community' || p === '/community/') return '/community';
-  const m = p.match(new RegExp(`^/community/(${BOARD_SLUGS})(?:\\/(new|[^/]+))?$`));
+  const m = p.match(new RegExp(`^/community/(${boardSlugPattern()})(?:\\/(new|[^/]+))?$`));
   if (!m) return null;
   const board = getCommunityBoardBySlug(m[1]);
   if (!board) return null;
@@ -27,7 +31,7 @@ export function normalizeCommunityPath(hashPath) {
 export function normalizeConcernPath(hashPath) {
   const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
   if (p === '/concern' || p === '/concern/') return '/community';
-  const legacy = p.match(/^\/concern\/(director|tutor|parent|solved)(?:\/(new|[^/]+))?$/);
+  const legacy = p.match(/^\/concern\/([^/]+)(?:\/(new|[^/]+))?$/);
   if (!legacy) return normalizeCommunityPath(p);
   const mapped = p.replace(/^\/concern/, '/community');
   return normalizeCommunityPath(mapped);
@@ -49,7 +53,7 @@ export const getConcernView = getCommunityView;
 
 export function communityBoardNav(currentPath) {
   const pathOnly = currentPath.split('?')[0];
-  return COMMUNITY_BOARDS.map((b) => ({
+  return listCommunityBoards().map((b) => ({
     ...b,
     active: pathOnly === b.path || pathOnly.startsWith(`${b.path}/`),
   }));

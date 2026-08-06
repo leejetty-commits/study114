@@ -4,7 +4,7 @@
  */
 
 import {
-  CONCERN_BOARDS,
+  listCommunityBoards,
   CONCERN_POST_TYPES,
   CONCERN_REACTIONS,
 } from './copy.js';
@@ -258,23 +258,28 @@ export function listConcernPosts(boardKey, { type = 'all', sort = 'recent' } = {
 }
 
 export function listAllConcernPosts(opts = {}) {
-  return CONCERN_BOARDS.flatMap((b) => listConcernPosts(b.boardKey, opts));
+  return listCommunityBoards().flatMap((b) => listConcernPosts(b.boardKey, opts));
 }
 
 export function getConcernPost(id) {
   return state.posts.find((p) => p.id === id) || null;
 }
 
-export function getHotConcernSamples({ limit = 3, preferBoardKey } = {}) {
-  const all = listAllConcernPosts({ sort: 'hot' }).filter((p) => p.type !== 'community_alert');
+export function getHotConcernSamples({ limit = 3, preferBoardKey, boardKeys } = {}) {
+  const allowed = Array.isArray(boardKeys) && boardKeys.length ? new Set(boardKeys) : null;
+  const all = listAllConcernPosts({ sort: 'hot' })
+    .filter((p) => p.type !== 'community_alert')
+    .filter((p) => !allowed || allowed.has(p.boardKey));
   if (preferBoardKey) {
     const preferred = all.filter((p) => p.boardKey === preferBoardKey);
     const rest = all.filter((p) => p.boardKey !== preferBoardKey);
     return [...preferred, ...rest].slice(0, limit);
   }
-  // 보드별 1개씩 우선
+  const boards = allowed
+    ? listCommunityBoards().filter((b) => allowed.has(b.boardKey))
+    : listCommunityBoards();
   const picked = [];
-  for (const board of CONCERN_BOARDS) {
+  for (const board of boards) {
     const hit = all.find((p) => p.boardKey === board.boardKey && !picked.includes(p));
     if (hit) picked.push(hit);
   }

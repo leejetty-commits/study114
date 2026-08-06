@@ -4,8 +4,13 @@ import { listNoticePosts, listFaqPosts, listGuidePosts } from './operational-boa
 import { listLibraryItems } from './library/library-store.js';
 import { getNavRole } from './state.js';
 import { SITE_PROMO_ITEMS, renderPromoCard } from '../../shared/promo-sidebar.js';
-import { CONCERN_BOARDS, getConcernBoardByKey, preferredConcernBoardId } from './concern/copy.js';
-import { getHotConcernSamples, reactionTotal } from './concern/store.js';
+import { getBoardChannel, isConcernBoardKey } from './board-channel-store.js';
+import {
+  listCommunityBoards,
+  getConcernBoardByKey,
+  preferredConcernBoardId,
+} from './concern/copy.js';
+import { getHotConcernSamples, listConcernPosts, reactionTotal } from './concern/store.js';
 
 /**
  * 노션 잠금안: 고정 광고 3장 → 3층 슬롯(현장·안내·영상).
@@ -47,8 +52,26 @@ function navAttr(target) {
 }
 
 function boardRoute(boardKey) {
+  const channel = getBoardChannel(boardKey);
+  if (channel?.routeSlug) return channel.routeSlug;
   const policy = getBoardPolicy(boardKey);
-  return policy?.routeSlug || '#/support';
+  if (policy?.routeSlug) return policy.routeSlug;
+  const community = getConcernBoardByKey(boardKey);
+  if (community) return `#${community.path}`;
+  return '#/support';
+}
+
+function concernItems(boardKey, limit) {
+  const board = getConcernBoardByKey(boardKey);
+  return listConcernPosts(boardKey, { sort: 'hot' })
+    .slice(0, limit)
+    .map((post) => ({
+      boardKey,
+      title: post.title,
+      summary: `댓글 ${post.comments?.length || 0} · 반응 ${reactionTotal(post)}`,
+      href: `#${board?.path || '/community'}/${post.id}`,
+      kind: board?.label || '커뮤니티',
+    }));
 }
 
 function noticeItems(limit) {
@@ -132,7 +155,24 @@ function itemsForBoard(boardKey, limit) {
     return libraryItems(boardKey, limit);
   }
   if (boardKey === 'submission') return submissionItems();
+  if (isConcernBoardKey(boardKey)) return concernItems(boardKey, limit);
   return staticFallbackItems(boardKey).slice(0, limit);
+}
+
+/**
+ * 배너↔커뮤니티 연결 알고리즘
+ * 1) 슬롯 sourceBoardKeys 중 커뮤니티(concern) 채널 우선
+ * 2) 없으면 활성 커뮤니티 보드 전체
+ */
+function resolveConcernBoardKeysForSlot(slotKey) {
+  const slot = getRightRailSlot(slotKey);
+  const configured = [];
+  if (slot?.sourceBoardKey) configured.push(slot.sourceBoardKey);
+  if (Array.isArray(slot?.sourceBoardKeys)) configured.push(...slot.sourceBoardKeys);
+  const unique = [...new Set(configured.filter(Boolean))];
+  const concernKeys = unique.filter((key) => isConcernBoardKey(key));
+  if (concernKeys.length) return concernKeys;
+  return listCommunityBoards().map((b) => b.boardKey);
 }
 
 function renderRailItem(item) {
@@ -188,19 +228,24 @@ function liveFieldCopy(slotKey) {
 
 function preferBoardKeyForRole() {
   const id = preferredConcernBoardId(getNavRole());
-  return CONCERN_BOARDS.find((b) => b.id === id)?.boardKey;
+  return listCommunityBoards().find((b) => b.id === id)?.boardKey;
 }
 
 function renderLiveFieldSlot(slotKey) {
   const copy = liveFieldCopy(slotKey);
-  const samples = getHotConcernSamples({ limit: 3, preferBoardKey: preferBoardKeyForRole() });
+  const boardKeys = resolveConcernBoardKeysForSlot(slotKey);
+  const samples = getHotConcernSamples({
+    limit: 3,
+    preferBoardKey: preferBoardKeyForRole(),
+    boardKeys,
+  });
   const items = samples
     .map((post) => {
       const board = getConcernBoardByKey(post.boardKey);
       const href = `${board?.path || '/community'}/${post.id}`;
       return `
         <a href="#${esc(href)}" class="live-rail-card" data-nav="${esc(href)}">
-          <span class="live-rail-card__board">${esc(board?.label || '고민방')}</span>
+          <span class="live-rail-card__board">${esc(board?.label || '커뮤니티')}</span>
           <strong class="live-rail-card__title">${esc(post.title)}</strong>
           <span class="live-rail-card__meta">댓글 ${post.comments?.length || 0} · 반응 ${reactionTotal(post)}</span>
         </a>`;

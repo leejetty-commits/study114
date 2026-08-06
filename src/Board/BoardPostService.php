@@ -278,9 +278,17 @@ final class BoardPostService
 
     private function assertBoardKey(string $boardKey): void
     {
-        if ($boardKey === '' || !in_array($boardKey, self::ALLOWED_BOARD_KEYS, true)) {
+        if ($boardKey === '') {
             throw new InvalidArgumentException('유효하지 않은 board_key입니다.');
         }
+        if (in_array($boardKey, self::ALLOWED_BOARD_KEYS, true)) {
+            return;
+        }
+        // 관리자가 추가한 커뮤니티(고민방) 채널: concern-*
+        if (preg_match('/^concern-[a-z0-9]+(?:-[a-z0-9]+)*$/', $boardKey) === 1) {
+            return;
+        }
+        throw new InvalidArgumentException('유효하지 않은 board_key입니다.');
     }
 
     private function assertAuthorRole(string $authorRole): void

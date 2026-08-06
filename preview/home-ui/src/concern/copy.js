@@ -1,7 +1,10 @@
 /**
  * 커뮤니티 SSOT — 노션 상위메뉴·고민방·해결후기 결정문
  * path: /community/* (legacy /concern → redirect)
+ * 보드 목록: 시드 + 관리자 채널(프리셋 concern) 병합
  */
+
+import { listBoardChannels } from '../board-channel-store.js';
 
 /** @typedef {'worry'|'advice'|'solved'|'request'|'community_alert'} CommunityPostType */
 /** @typedef {'empathy'|'helpful'|'surprise'|'worry'} CommunityReaction */
@@ -15,7 +18,7 @@ export const CONCERN_HUB_TITLE = COMMUNITY_HUB_TITLE;
 export const CONCERN_HUB_LEAD = COMMUNITY_HUB_LEAD;
 
 /** @type {{ id: string; boardKey: string; slug: string; label: string; roleHint: string; path: string; defaultTypes?: string[] }[]} */
-export const COMMUNITY_BOARDS = [
+export const SEED_COMMUNITY_BOARDS = [
   {
     id: 'director',
     boardKey: 'concern-director',
@@ -51,7 +54,66 @@ export const COMMUNITY_BOARDS = [
   },
 ];
 
-/** @deprecated alias */
+function slugFromChannel(channel) {
+  const route = String(channel.routeSlug || '')
+    .replace(/^#/, '')
+    .replace(/^\//, '');
+  const m = route.match(/^community\/([^/]+)/);
+  if (m?.[1]) return m[1];
+  const key = String(channel.boardKey || '');
+  if (key.startsWith('concern-')) return key.slice('concern-'.length);
+  return key;
+}
+
+function roleHintFor(channel, slug) {
+  const seed = SEED_COMMUNITY_BOARDS.find((b) => b.boardKey === channel.boardKey || b.slug === slug);
+  if (seed) return seed.roleHint;
+  return '현장 고민 · 짧은 조언 · 댓글 반응';
+}
+
+function channelToBoard(channel) {
+  const slug = slugFromChannel(channel);
+  const seed = SEED_COMMUNITY_BOARDS.find((b) => b.boardKey === channel.boardKey || b.slug === slug);
+  const isSolved = slug === 'solved' || channel.boardKey.includes('solved');
+  return {
+    id: slug,
+    boardKey: channel.boardKey,
+    slug,
+    label: channel.menuLabel || seed?.label || channel.boardKey,
+    roleHint: roleHintFor(channel, slug),
+    path: `/community/${slug}`,
+    ...(isSolved || seed?.defaultTypes ? { defaultTypes: seed?.defaultTypes || ['solved'] } : {}),
+  };
+}
+
+/**
+ * 활성 커뮤니티 보드 = 관리자 채널(preset concern) ∪ 시드 보정
+ * @returns {typeof SEED_COMMUNITY_BOARDS}
+ */
+export function listCommunityBoards() {
+  const channels = listBoardChannels().filter(
+    (ch) =>
+      ch.presetId === 'concern' &&
+      ch.status !== 'archived' &&
+      ch.status !== 'hidden' &&
+      ch.enabled !== false,
+  );
+  if (!channels.length) return SEED_COMMUNITY_BOARDS.map((b) => ({ ...b }));
+
+  const byKey = new Map();
+  SEED_COMMUNITY_BOARDS.forEach((seed) => {
+    const live = channels.find((ch) => ch.boardKey === seed.boardKey);
+    if (live) byKey.set(seed.boardKey, channelToBoard(live));
+    else byKey.set(seed.boardKey, { ...seed });
+  });
+  channels.forEach((ch) => {
+    if (!byKey.has(ch.boardKey)) byKey.set(ch.boardKey, channelToBoard(ch));
+  });
+  return [...byKey.values()];
+}
+
+/** @deprecated 시드 스냅샷 — 런타임은 listCommunityBoards() 사용 */
+export const COMMUNITY_BOARDS = SEED_COMMUNITY_BOARDS;
 export const CONCERN_BOARDS = COMMUNITY_BOARDS;
 
 /** @type {Record<CommunityPostType, { label: string }>} */
@@ -84,21 +146,42 @@ export const COMMUNITY_IMAGE_MAX = 3;
 export const CONCERN_IMAGE_MAX = COMMUNITY_IMAGE_MAX;
 
 export function preferredCommunityBoardId(navRole) {
-  if (navRole === 'study_room') return 'director';
-  if (navRole === 'tutor') return 'tutor';
-  if (navRole === 'parent') return 'parent';
-  return 'parent';
+  const boards = listCommunityBoards();
+  if (navRole === 'study_room') {
+    return boards.find((b) => b.slug === 'director')?.id || boards[0]?.id || 'director';
+  }
+  if (navRole === 'tutor') {
+    return boards.find((b) => b.slug === 'tutor')?.id || boards[0]?.id || 'tutor';
+  }
+  if (navRole === 'parent') {
+    return boards.find((b) => b.slug === 'parent')?.id || boards[0]?.id || 'parent';
+  }
+  return boards.find((b) => b.slug === 'parent')?.id || boards[0]?.id || 'parent';
 }
 
 export const preferredConcernBoardId = preferredCommunityBoardId;
 
 export function getCommunityBoardBySlug(slug) {
-  return COMMUNITY_BOARDS.find((b) => b.slug === slug) || null;
+  return listCommunityBoards().find((b) => b.slug === slug) || null;
 }
 
 export function getCommunityBoardByKey(boardKey) {
-  return COMMUNITY_BOARDS.find((b) => b.boardKey === boardKey) || null;
+  return listCommunityBoards().find((b) => b.boardKey === boardKey) || null;
 }
 
 export const getConcernBoardBySlug = getCommunityBoardBySlug;
 export const getConcernBoardByKey = getCommunityBoardByKey;
+
+/** 커뮤니티형 채널 식별값 → 권장 경로 */
+export function suggestCommunityRouteSlug(boardKey) {
+  const key = String(boardKey || '').trim();
+  const slug = key.startsWith('concern-') ? key.slice('concern-'.length) : key;
+  return slug ? `#/community/${slug}` : '#/community';
+}
+
+export function isConcernChannelKey(boardKey) {
+  const key = String(boardKey || '');
+  if (key.startsWith('concern-')) return true;
+  const ch = listBoardChannels().find((row) => row.boardKey === key);
+  return ch?.presetId === 'concern';
+}

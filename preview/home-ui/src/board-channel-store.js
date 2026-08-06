@@ -326,6 +326,23 @@ export function getBoardKeyCandidates(presetId) {
   return preset.lockedBoardKeys || [];
 }
 
+/** 활성 커뮤니티(고민방) 채널 */
+export function listConcernChannels() {
+  return listBoardChannels().filter(
+    (ch) =>
+      ch.presetId === 'concern' &&
+      ch.status !== 'archived' &&
+      ch.status !== 'hidden' &&
+      ch.enabled !== false,
+  );
+}
+
+export function isConcernBoardKey(boardKey) {
+  const key = String(boardKey || '');
+  if (key.startsWith('concern-')) return true;
+  return getBoardChannel(key)?.presetId === 'concern';
+}
+
 function normalizedRoute(routeSlug) {
   const value = String(routeSlug || '').trim();
   if (!value) return '';
@@ -358,6 +375,12 @@ function validatePresetBoundary(input, errors) {
   if (key === 'showcase' && presetId !== 'curation') {
     errors.push('showcase는 큐레이션형 프리셋에서만 운영할 수 있습니다.');
   }
+  if (presetId === 'concern' && key && !key.startsWith('concern-')) {
+    errors.push('커뮤니티형 채널 식별값은 concern- 로 시작하세요. 예: concern-admission');
+  }
+  if (key.startsWith('concern-') && presetId !== 'concern') {
+    errors.push('concern-* 채널은 커뮤니티형 프리셋에서만 운영할 수 있습니다.');
+  }
 }
 
 /**
@@ -386,7 +409,13 @@ export function validateBoardChannelInput(input, opts = {}) {
       errors.push('선택한 프리셋에서 허용되지 않는 소속 메뉴군입니다. 그룹을 먼저 추가하세요.');
     }
   }
-  if (!routeSlug && boardKey !== 'showcase') errors.push('routeSlug가 필요합니다.');
+  if (!routeSlug && boardKey !== 'showcase') {
+    if (input.presetId === 'concern' && boardKey) {
+      // buildChannelFromInput에서 자동 채움 — 여기서는 통과
+    } else {
+      errors.push('routeSlug가 필요합니다.');
+    }
+  }
   if (routeSlug && RESERVED_STATIC_POLICY_PATHS.includes(routeSlug)) {
     errors.push(`정적 정책 페이지와 충돌합니다: ${routeSlug}`);
   }
@@ -408,8 +437,14 @@ export function validateBoardChannelInput(input, opts = {}) {
 
 export function buildChannelFromInput(input) {
   const preset = BOARD_CREATE_PRESETS[input.presetId];
+  let routeSlug = normalizedRoute(input.routeSlug);
+  const boardKey = String(input.boardKey || '').trim();
+  if (!routeSlug && input.presetId === 'concern' && boardKey) {
+    const slug = boardKey.startsWith('concern-') ? boardKey.slice('concern-'.length) : boardKey;
+    routeSlug = `#/community/${slug}`;
+  }
   return {
-    boardKey: String(input.boardKey || '').trim(),
+    boardKey,
     menuLabel: String(input.menuLabel || '').trim(),
     boardType: preset.boardType,
     presetId: input.presetId,
@@ -424,7 +459,7 @@ export function buildChannelFromInput(input) {
     isGnuSeparated: input.isGnuSeparated !== false,
     enabled: input.status !== 'hidden' && input.status !== 'archived',
     status: String(input.status || 'active'),
-    routeSlug: normalizedRoute(input.routeSlug),
+    routeSlug,
     lastUpdatedAt: nowStamp(),
     source: 'admin',
   };

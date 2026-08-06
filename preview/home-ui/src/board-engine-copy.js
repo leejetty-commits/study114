@@ -133,7 +133,7 @@ export const BOARD_CREATE_PRESETS = {
     lockedBoardKeys: ['showcase'],
   },
   concern: {
-    label: '커뮤니티형',
+    label: '커뮤니티형 (고민방)',
     boardType: 'upload',
     sectionOwners: ['community', 'concern'],
     defaultVisibility: 'public',
