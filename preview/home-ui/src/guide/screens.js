@@ -92,10 +92,42 @@ function renderActionCards(items) {
     <section class="guide-section">
       <div class="guide-section__head">
         <h2 class="guide-section__title">바로 이어가기</h2>
+        <p class="guide-section__desc">찾기 → 찜 → 비교 → 상세 확인 → 쪽지 흐름을 실제로 이어갈 때 쓰는 입구입니다.</p>
       </div>
-      <div class="guide-action-grid">
+      <div class="guide-next-grid">
         ${items
-          .map((item, index) => renderAction(item, `guide-action-card ${index === 0 ? 'guide-action-card--primary' : ''}`))
+          .map((item, index) => {
+            const target = resolveGuideCtaHref(item);
+            const cls = `guide-next-card ${index === 0 ? 'guide-next-card--primary' : ''}`;
+            const hint = item.hint ? `<span class="guide-next-card__hint">${esc(item.hint)}</span>` : '';
+            const body = `<span class="guide-next-card__label">${esc(item.label)}</span>${hint}`;
+            if (target.external) {
+              return `<a class="${cls}" href="${esc(target.href)}" data-same-tab-href="${esc(target.href)}">${body}</a>`;
+            }
+            return `<a class="${cls}" href="${esc(target.href)}" data-guide-nav="${esc(target.nav)}">${body}</a>`;
+          })
+          .join('')}
+      </div>
+    </section>`;
+}
+
+function renderCompareGuide(guide) {
+  if (!guide) return '';
+  return `
+    <section class="guide-section guide-compare-guide">
+      <div class="guide-section__head">
+        <h2 class="guide-section__title">${esc(guide.title)}</h2>
+        <p class="guide-section__desc">${esc(guide.lead)}</p>
+      </div>
+      <div class="guide-compare-guide__list">
+        ${(guide.blocks || [])
+          .map(
+            (block) => `
+              <article class="guide-compare-guide__block">
+                <h3 class="guide-compare-guide__title">${esc(block.title)}</h3>
+                <div class="guide-compare-guide__body">${esc(block.body)}</div>
+              </article>`,
+          )
           .join('')}
       </div>
     </section>`;
@@ -380,6 +412,7 @@ function renderGuideDetail(page) {
     ${page.note ? `<section class="guide-note">${esc(page.note)}</section>` : ''}
     ${renderWarnings(page.warnings)}
     ${renderSupportCards(page.supportCards)}
+    ${renderCompareGuide(page.compareGuide)}
     ${renderActionCards(page.actionCards)}
     ${renderFaqList(page.faq)}
     ${renderTipBlock(page.tip)}
