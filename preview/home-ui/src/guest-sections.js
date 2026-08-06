@@ -18,9 +18,9 @@ import { SECTION_HEADINGS, renderSectionHeading } from './section-headings.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
 import {
   renderSitePromoSidebar,
-  renderSitePromoInline,
   bindSitePromoSidebarEvents,
 } from '../../shared/promo-sidebar.js';
+import { renderPromoInlineCard } from './promo/screens.js';
 import { renderGuestMarketingBanner } from './home-marketing-banner.js';
 
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
@@ -154,7 +154,7 @@ export function renderGuestAdSidebar() {
 }
 
 export function renderGuestAdInline() {
-  return renderSitePromoInline();
+  return renderPromoInlineCard();
 }
 
 export function renderGuestLoginStrip() {

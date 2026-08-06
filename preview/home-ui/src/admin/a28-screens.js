@@ -36,6 +36,8 @@ import {
   resetBoardChannels,
   saveBoardChannel,
 } from '../board-channel-store.js';
+import { PROMO_LANDINGS } from '../promo/catalog.js';
+import { STUDY_ROOM_PROMO } from '../promo/study-room-content.js';
 import {
   RIGHT_RAIL_MOBILE_BEHAVIORS,
   RIGHT_RAIL_PAGE_LABELS,
@@ -768,12 +770,112 @@ function renderHub() {
     A28_COPY.hubTitle,
     'A28-01',
     `${renderOpsTip()}
+     ${renderPromoQuickBar()}
      <p>${esc(A28_COPY.hubLead)}</p>
      <div class="a28-lists">
        <div><h3>할 수 있는 일</h3><ul>${ALLOWED_OPERATOR_ACTIONS.map((a) => `<li>${esc(a)}</li>`).join('')}</ul></div>
        <div><h3>하지 않는 일</h3><ul>${FORBIDDEN_OPERATOR_ACTIONS.map((a) => `<li>${esc(a)}</li>`).join('')}</ul></div>
      </div>
      <div class="sup-admin-hub">${cardHtml}</div>`,
+  );
+}
+
+/** 카톡/메일용 붙여넣기 한 덩어리 */
+function buildPromoLaunchKit(p, absoluteUrl) {
+  const share = p.shareText || p.title;
+  return `${share}\n\n바로가기: ${absoluteUrl}\n경로: #${p.path}`;
+}
+
+function renderPromoQuickBar() {
+  const live = PROMO_LANDINGS.filter((p) => p.status === 'live');
+  if (!live.length) return '';
+  return `
+    <div class="a28-promo-quick" aria-label="홍보 랜딩 바로가기">
+      <span class="a28-promo-quick__label">홍보 런치</span>
+      ${live
+        .map(
+          (p) =>
+            `<a class="a28-promo-quick__chip" href="#${esc(p.path)}">${esc(p.title.replace(' 랜딩', ''))}</a>
+             <button type="button" class="a28-promo-quick__copy" data-promo-copy-kit="${esc(
+               buildPromoLaunchKit(p, `${window.location.origin}/#${p.path}`),
+             )}">킷 복사</button>`,
+        )
+        .join('')}
+      <a class="a28-promo-quick__more" href="#/admin/promo" data-a28-nav="/admin/promo">데스크 →</a>
+    </div>`;
+}
+
+function renderPromoDesk() {
+  const statusKo = { live: '공개', draft: '초안', planned: '예정' };
+  const railSlots = listRightRailSlots().filter((s) => s.enabled && s.status === 'active');
+  const cards = PROMO_LANDINGS.map((p) => {
+    const absoluteHint = `${window.location.origin}/#${p.path}`;
+    const kit = buildPromoLaunchKit(p, absoluteHint);
+    const linked =
+      p.status === 'live'
+        ? railSlots
+            .filter((s) => String(s.ctaTarget || '').includes(p.path) || p.id === 'study-room')
+            .map((s) => s.slotKey)
+        : [];
+    const uniqueLinked = [...new Set(linked)];
+    return `
+      <article class="a28-promo-card" data-promo-id="${esc(p.id)}">
+        <div class="a28-promo-card__head">
+          <strong>${esc(p.title)}</strong>
+          <span class="a28-promo-card__status a28-promo-card__status--${esc(p.status)}">${esc(statusKo[p.status] || p.status)}</span>
+        </div>
+        <p class="a28-help">${esc(p.audience)} · <code>${esc(p.path)}</code></p>
+        <p class="a28-help">배너: ${esc(p.railHint)}</p>
+        ${
+          uniqueLinked.length
+            ? `<p class="a28-help">연결 슬롯: ${uniqueLinked.map((k) => `<code>${esc(k)}</code>`).join(' ')}</p>`
+            : p.status === 'live'
+              ? `<p class="a28-help">홈 우측 CTA · 게스트 인라인에 기본 연결</p>`
+              : ''
+        }
+        <div class="sup-admin-actions">
+          ${
+            p.status === 'live'
+              ? `<a class="btn btn--primary btn--sm" href="#${esc(p.path)}">페이지 열기</a>
+                 <button type="button" class="btn btn--secondary btn--sm" data-promo-copy-kit="${esc(kit)}">런치 킷 복사</button>
+                 <button type="button" class="btn btn--secondary btn--sm" data-promo-copy-url="${esc(absoluteHint)}">URL만</button>
+                 <button type="button" class="btn btn--secondary btn--sm" data-promo-copy-share="${esc(p.shareText || p.title)}">문구만</button>`
+              : `<button type="button" class="btn btn--secondary btn--sm" disabled>준비 중</button>`
+          }
+        </div>
+      </article>`;
+  }).join('');
+
+  const railPreview = STUDY_ROOM_PROMO.railCard;
+  const livePrimary = PROMO_LANDINGS.find((p) => p.status === 'live');
+  const qrUrl = livePrimary
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(`${window.location.origin}/#${livePrimary.path}`)}`
+    : '';
+  return renderPanel(
+    '홍보 런치 데스크',
+    'A28-promo',
+    `${renderOpsTip()}
+     ${renderPromoQuickBar()}
+     <p class="a28-help">고객센터·자료실이 아닌 <strong>#/promo/*</strong> 프로모션 랜딩입니다. <strong>런치 킷</strong>은 카톡/메일에 바로 붙일 수 있는 문구+URL 묶음입니다.</p>
+     <div class="a28-promo-grid">${cards}</div>
+     ${
+       qrUrl
+         ? `<div class="a28-promo-qr">
+              <img src="${esc(qrUrl)}" width="140" height="140" alt="홍보 랜딩 QR" />
+              <div>
+                <h3 class="admin-section-title">현장용 QR</h3>
+                <p class="a28-help">인쇄물·카톡에 붙여 모바일로 바로 열 수 있습니다. (공개 랜딩 기준)</p>
+              </div>
+            </div>`
+         : ''
+     }
+     <h3 class="admin-section-title">우측 배너 카드 미리보기</h3>
+     <div class="a28-promo-rail-preview">
+       <strong>${esc(railPreview.title)}</strong>
+       <p>${esc(railPreview.desc)}</p>
+       <span>${esc(railPreview.cta)} →</span>
+     </div>
+     <p class="a28-help"><a href="#/admin/notices/rails" data-a28-nav="/admin/notices/rails">→ 우측 배너 자리 설정</a></p>`,
   );
 }
 
@@ -2349,7 +2451,9 @@ function renderNotifyLab(section = 'settings') {
 /** @param {string} path */
 export function renderA28Screen(path) {
   let body = renderHub();
-  if (path === '/admin/members') body = renderMembers();
+  if (path === '/admin') body = renderHub();
+  else if (path === '/admin/promo') body = renderPromoDesk();
+  else if (path === '/admin/members') body = renderMembers();
   else if (path === '/admin/commerce') body = renderCommerce();
   else if (path.startsWith('/admin/market/')) body = renderMarketLab(getMarketSection(path));
   else if (path === '/admin/addons' || path.startsWith('/admin/addons/')) body = renderAddons(getAddonsSection(path));
@@ -2368,6 +2472,40 @@ export function renderA28Screen(path) {
 /** @param {HTMLElement} root @param {string} path @param {() => void} rerender */
 export function bindA28ScreenEvents(root, path, rerender) {
   bindDetailDrawer(root);
+
+  root.querySelectorAll('[data-promo-copy-url]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const text = btn.getAttribute('data-promo-copy-url') || '';
+      try {
+        await navigator.clipboard.writeText(text);
+        window.alert('URL을 복사했습니다.');
+      } catch {
+        window.prompt('복사하세요', text);
+      }
+    });
+  });
+  root.querySelectorAll('[data-promo-copy-share]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const text = btn.getAttribute('data-promo-copy-share') || '';
+      try {
+        await navigator.clipboard.writeText(text);
+        window.alert('공유 문구를 복사했습니다.');
+      } catch {
+        window.prompt('복사하세요', text);
+      }
+    });
+  });
+  root.querySelectorAll('[data-promo-copy-kit]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const text = btn.getAttribute('data-promo-copy-kit') || '';
+      try {
+        await navigator.clipboard.writeText(text);
+        window.alert('런치 킷(문구+URL)을 복사했습니다.');
+      } catch {
+        window.prompt('복사하세요', text);
+      }
+    });
+  });
 
   if (path === '/admin/permissions') {
     if (isAdminApiMode() && !getOperatorsCache()) {

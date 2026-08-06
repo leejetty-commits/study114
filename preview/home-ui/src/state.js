@@ -26,6 +26,7 @@ import {
   PLANS_REDIRECTS,
 } from './plans/router.js';
 import { getDefaultCommunityPath, normalizeCommunityPath, normalizeConcernPath } from './concern/router.js';
+import { getDefaultPromoPath, normalizePromoPath } from './promo/router.js';
 import { createFindState, resetFindState } from './find-state.js';
 
 const ACTIVE_ROLE_KEY = 'study114-preview-active-role';
@@ -177,6 +178,12 @@ export function isCommunityRoute() {
 
 /** @deprecated */
 export const isConcernRoute = isCommunityRoute;
+
+export function isPromoRoute() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
+  return path === '/promo' || path.startsWith('/promo/');
+}
 
 export function isPolicyRoute() {
   const hash = window.location.hash.slice(1) || '';
@@ -420,6 +427,32 @@ export function bootstrapCommunityRoute() {
 /** @deprecated */
 export const bootstrapConcernRoute = bootstrapCommunityRoute;
 
+export function bootstrapPromoRoute() {
+  const { pathname, hash, origin, search } = window.location;
+
+  if (!hash && pathname.startsWith('/promo')) {
+    const bare = pathname === '/promo' || pathname === '/promo/';
+    const target = bare ? getDefaultPromoPath() : pathname;
+    window.location.replace(`${origin}/${search}#${target}`);
+    return true;
+  }
+
+  if (!hash) return false;
+
+  const hashPath = hash.slice(1);
+  const pathWithQuery = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const path = pathWithQuery.split('?')[0];
+  if (path === '/promo' || path === '/promo/') {
+    window.location.replace(`#${getDefaultPromoPath()}`);
+    return true;
+  }
+  if (path.startsWith('/promo/') && !normalizePromoPath(path)) {
+    window.location.replace(`#${getDefaultPromoPath()}`);
+    return true;
+  }
+  return false;
+}
+
 export function bootstrapPolicyRoute() {
   const { pathname, hash, origin, search } = window.location;
 
@@ -634,6 +667,16 @@ export function getCommunityPath() {
 /** @deprecated */
 export const getConcernPath = getCommunityPath;
 
+export function getPromoPath() {
+  const hash = window.location.hash.slice(1) || '';
+  const pathWithQuery = hash.startsWith('/') ? hash : `/${hash}`;
+  const path = pathWithQuery.split('?')[0];
+  const query = pathWithQuery.includes('?') ? pathWithQuery.slice(pathWithQuery.indexOf('?')) : '';
+  const normalized = normalizePromoPath(path);
+  if (normalized) return `${normalized}${query}`;
+  return getDefaultPromoPath();
+}
+
 export function getPolicyPath() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
@@ -682,6 +725,7 @@ export function getCurrentScreen() {
   if (isLibraryRoute()) return 'library';
   if (isGuideRoute()) return 'guide';
   if (isCommunityRoute()) return 'community';
+  if (isPromoRoute()) return 'promo';
   if (isSupportRoute()) return 'support';
   if (isPolicyRoute()) return 'policy';
   const hash = window.location.hash.slice(1) || '/guest';

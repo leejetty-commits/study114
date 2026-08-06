@@ -11,6 +11,7 @@ import {
   preferredConcernBoardId,
 } from './concern/copy.js';
 import { getHotConcernSamples, listConcernPosts, reactionTotal } from './concern/store.js';
+import { renderPromoRailCard } from './promo/screens.js';
 
 /**
  * 노션 잠금안: 고정 광고 3장 → 3층 슬롯(현장·안내·영상).
@@ -21,6 +22,7 @@ export function renderPromoWithRightRail(slotKey = 'home_right_rail') {
   return `
     <aside class="home-sidebar home-sidebar--guest home-sidebar--live-rail" aria-label="현장 고민과 안내">
       ${renderNoticeTopBanner()}
+      ${renderPromoRailCard()}
       ${renderLiveFieldSlot(slotKey)}
       ${renderActionGuideSlot(slotKey)}
     </aside>`;

@@ -22,6 +22,8 @@ import {
   bootstrapGuideRoute,
   isCommunityRoute,
   bootstrapCommunityRoute,
+  isPromoRoute,
+  bootstrapPromoRoute,
   isSupportRoute,
   bootstrapSupportRoute,
   isPolicyRoute,
@@ -37,6 +39,7 @@ import { PLANS_REDIRECTS } from './plans/router.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
 import { renderGuide, bindGuideEvents } from './guide/index.js';
 import { renderConcern, bindConcernEvents } from './concern/index.js';
+import { renderPromo, bindPromoEvents } from './promo/index.js';
 import { renderSupport, bindSupportEvents } from './support/index.js';
 import { renderPolicy, bindPolicyEvents } from './policy-index.js';
 import { renderLibrary, bindLibraryEvents } from './library/index.js';
@@ -111,6 +114,12 @@ function render() {
     mountOpsChrome(app);
     return;
   }
+  if (isPromoRoute()) {
+    app.innerHTML = renderPromo();
+    bindPromoEvents(app, render);
+    mountOpsChrome(app);
+    return;
+  }
   if (isPolicyRoute()) {
     app.innerHTML = renderPolicy();
     bindPolicyEvents(app, render);
@@ -161,6 +170,7 @@ function init() {
     bootstrapMessagesRoute();
     bootstrapGuideRoute();
     bootstrapCommunityRoute();
+    bootstrapPromoRoute();
     bootstrapSupportRoute();
     bootstrapPolicyRoute();
     bootstrapLibraryRoute();
@@ -181,6 +191,8 @@ function init() {
           path.startsWith('/guide/') ||
           path === '/community' ||
           path.startsWith('/community/') ||
+          path === '/promo' ||
+          path.startsWith('/promo/') ||
           path === '/concern' ||
           path.startsWith('/concern/') ||
           path === '/mypage' ||

@@ -59,6 +59,21 @@ export const A28_MENU = [
     screenId: 'A28-01',
   },
   {
+    id: 'grp-promo',
+    label: '홍보 런치',
+    help: '프로모션 랜딩 URL · 배너 연결 · 공유 문구',
+    children: [
+      {
+        id: 'promo-desk',
+        menuId: 'promo',
+        label: '홍보 런치 데스크',
+        path: '/admin/promo',
+        help: '홍보 풀페이지를 열고, URL·공유 문구를 복사하고, 배너 연결 상태를 확인합니다.',
+        screenId: 'A28-promo',
+      },
+    ],
+  },
+  {
     // Youngcart menu100 환경설정
     id: 'grp-config',
     label: '환경설정',
@@ -413,6 +428,7 @@ export const A28_NAV = flattenAdminNav();
 /** 메뉴 id → 한글 (권한 화면용) */
 export const A28_MENU_ID_LABELS = {
   hub: '운영 홈',
+  promo: '홍보 런치',
   settings: '환경설정',
   permissions: '권한·계정',
   members: '회원관리',

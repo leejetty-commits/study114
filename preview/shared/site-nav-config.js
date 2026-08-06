@@ -238,6 +238,8 @@ export function homeHashUrl(hashPath) {
     p.startsWith('/guide/') ||
     p === '/community' ||
     p.startsWith('/community/') ||
+    p === '/promo' ||
+    p.startsWith('/promo/') ||
     p === '/concern' ||
     p.startsWith('/concern/') ||
     p === '/support' ||

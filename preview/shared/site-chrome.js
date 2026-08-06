@@ -147,7 +147,7 @@ export function isHomeUiHost() {
     const homePath = home.pathname.replace(/\/$/, '') || '';
     if (path === homePath) return true;
     // pathname 딥링크로 home-ui index.html이 뜬 경우
-    const deepRoots = ['/plans', '/support', '/community', '/concern', '/mypage', '/messages', '/policy', '/library', '/admin'];
+    const deepRoots = ['/plans', '/support', '/community', '/promo', '/concern', '/mypage', '/messages', '/policy', '/library', '/admin'];
     return deepRoots.some((root) => path === root || path.startsWith(`${root}/`));
   } catch {
     return false;
