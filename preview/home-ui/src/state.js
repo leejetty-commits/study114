@@ -28,6 +28,7 @@ import {
 import { getDefaultCommunityPath, normalizeCommunityPath, normalizeConcernPath } from './concern/router.js';
 import { getDefaultPromoPath, normalizePromoPath } from './promo/router.js';
 import { createFindState, resetFindState } from './find-state.js';
+import { setPendingRoute } from '../../shared/pending-route.js';
 
 const ACTIVE_ROLE_KEY = 'study114-preview-active-role';
 const GUIDE_CTX_KEY = 'study114-preview-guide-context';
@@ -134,6 +135,13 @@ export function getNavRole() {
   }
   if (isSupportRoute()) {
     return getSupportContextRole();
+  }
+  // 커뮤니티·홍보는 역할 홈이 아님 — SCREEN_META에 없어 guest로 떨어지면
+  // 셸/레일 맥락이 깨지고 GNB·동선이 흔들린다. 저장된 활성 역할만 쓰고, 없으면 guest.
+  if (isCommunityRoute() || isPromoRoute()) {
+    const stored = sessionStorage.getItem(ACTIVE_ROLE_KEY);
+    if (stored === 'parent' || stored === 'study_room' || stored === 'tutor') return stored;
+    return 'guest';
   }
   const screen = getCurrentScreen();
   const role = SCREEN_META[screen]?.role ?? 'guest';
@@ -394,11 +402,13 @@ export function bootstrapCommunityRoute() {
   if (!hash && pathname.startsWith('/community')) {
     const bare = pathname === '/community' || pathname === '/community/';
     const target = bare ? getDefaultCommunityPath() : pathname;
+    setPendingRoute(target);
     window.location.replace(`${origin}/${search}#${target}`);
     return true;
   }
   if (!hash && pathname.startsWith('/concern')) {
     const target = pathname.replace(/^\/concern/, '/community');
+    setPendingRoute(target);
     window.location.replace(`${origin}/${search}#${target}`);
     return true;
   }

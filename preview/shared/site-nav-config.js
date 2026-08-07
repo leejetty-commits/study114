@@ -228,20 +228,23 @@ export function roleHomeHashPath(user) {
  */
 export function homeHashUrl(hashPath) {
   const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
-  // 유료상품: pathname `/plans` 딥링크가 서버·리다이렉트에서 떨어지면 `#/guest`로 가는 사례가 있어
-  // hash URL을 쓰고, 클릭 측 setPendingRoute로 fragment 유실을 복구한다.
-  if (p === '/plans' || p.startsWith('/plans/')) {
-    return `${HOME_UI_BASE}/#${p}`;
-  }
-  const pathDeep =
-    p === '/guide' ||
-    p.startsWith('/guide/') ||
+  // pathname 딥링크가 서버·리다이렉트에서 떨어지면 `#/guest`로 가는 사례가 있어
+  // 아래 구간은 hash URL을 쓰고, 클릭 측 setPendingRoute로 fragment 유실을 복구한다.
+  if (
+    p === '/plans' ||
+    p.startsWith('/plans/') ||
     p === '/community' ||
     p.startsWith('/community/') ||
     p === '/promo' ||
     p.startsWith('/promo/') ||
     p === '/concern' ||
-    p.startsWith('/concern/') ||
+    p.startsWith('/concern/')
+  ) {
+    return `${HOME_UI_BASE}/#${p === '/concern' || p.startsWith('/concern/') ? p.replace(/^\/concern/, '/community') : p}`;
+  }
+  const pathDeep =
+    p === '/guide' ||
+    p.startsWith('/guide/') ||
     p === '/support' ||
     p.startsWith('/support/') ||
     p === '/mypage' ||

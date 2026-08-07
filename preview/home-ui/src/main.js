@@ -55,7 +55,7 @@ import { activateBoardApi, deactivateBoardApi } from './board/board-backend.js';
 import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
 import { mountOpsChrome } from './site-ops-chrome.js';
-import { consumePendingRoute, clearPendingRoute } from '../../shared/pending-route.js';
+import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -211,7 +211,12 @@ function init() {
           window.location.hash = '#/guest';
         }
       }
-    } else if (window.location.hash.slice(1).split('?')[0] === '/plans' || window.location.hash.slice(1).startsWith('/plans/')) {
+    } else if (
+      window.location.hash.slice(1).split('?')[0] === '/plans' ||
+      window.location.hash.slice(1).startsWith('/plans/') ||
+      window.location.hash.slice(1).split('?')[0] === '/community' ||
+      window.location.hash.slice(1).startsWith('/community/')
+    ) {
       clearPendingRoute();
     }
     // 부팅 중 bootstrap*Route의 location.replace가 유발하는 hashchange가
@@ -275,14 +280,33 @@ function init() {
         }
         // 소셜/세션 로그인 후 #/guest에 남아 있으면 역할 홈으로 이동
         // admin은 운영 콘솔이 기본 홈이 아님 — 사이트 진입 시 게스트 홈 유지
+        // 커뮤니티·유료상품 등 pending/딥링크와 겹치면 역할홈으로 덮어쓰지 않음
+        const pending = peekPendingRoute();
+        const onDeep =
+          isCommunityRoute() ||
+          isPromoRoute() ||
+          isPlansRoute() ||
+          isSupportRoute() ||
+          isGuideRoute() ||
+          isMypageRoute() ||
+          isAdminRoute();
         if (
           user &&
           getCurrentScreen() === 'guest' &&
+          !onDeep &&
+          !pending &&
           user.role_type !== 'admin' &&
           ROLE_HOME[user.role_type]
         ) {
           navigate(ROLE_HOME[user.role_type]);
           return;
+        }
+        if (pending === '/community' || (pending && pending.startsWith('/community/'))) {
+          clearPendingRoute();
+          if (!isCommunityRoute()) {
+            navigate(pending);
+            return;
+          }
         }
         const q = parseHashQuery();
         if (q.email_verified === '1') {

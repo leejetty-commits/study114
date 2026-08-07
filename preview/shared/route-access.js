@@ -170,6 +170,9 @@ export function isGuestPublicPath(pathOrHash) {
   if (p === '/' || p === '/guest') return true;
   if (p.startsWith('/support')) return true;
   if (p.startsWith('/library')) return true;
+  if (p.startsWith('/guide')) return true;
+  if (p.startsWith('/community') || p.startsWith('/concern')) return true;
+  if (p.startsWith('/promo')) return true;
   if (p.startsWith('/search')) return true;
   if (p.startsWith('/mypage') || p.startsWith('/messages') || p.startsWith('/admin')) return false;
   if (p.startsWith('/plans')) return false;

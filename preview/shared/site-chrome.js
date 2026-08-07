@@ -224,8 +224,10 @@ export function bindSiteChrome(root, handlers = {}) {
           return;
         }
         if (gnbId === 'community' || gnbId === 'concern') {
-          if (navigateHome && isHomeUiHost()) navigateHome('/community');
-          else goSameTab(dest);
+          if (navigateHome && isHomeUiHost()) {
+            setPendingRoute('/community');
+            navigateHome('/community');
+          } else goSameTab(dest);
           return;
         }
         if (gnbId === 'plans') {

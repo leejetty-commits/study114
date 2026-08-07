@@ -136,13 +136,15 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
   const isHomeActive = item.id === 'home' && onRoleHome;
   const onGuide = isGuideRoute();
   const onSupport = isSupportRoute();
+  const onCommunity = isCommunityRoute();
   const onPlans = isPlansRoute();
   const isGuideActive = item.id === 'guide' && onGuide;
   const isSupportActive = item.id === 'support' && onSupport && !window.location.hash.includes('/guide');
+  const isCommunityActive = (item.id === 'community' || item.id === 'concern') && onCommunity;
   const isPlansActive = item.id === 'plans' && onPlans;
   const cls = [
     'home-gnb__item',
-    isHomeActive || isGuideActive || isSupportActive || isPlansActive ? 'is-active' : '',
+    isHomeActive || isGuideActive || isSupportActive || isCommunityActive || isPlansActive ? 'is-active' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -153,6 +155,8 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
     href = '#/guide';
   } else if (item.id === 'support') {
     href = '#/support';
+  } else if (item.id === 'community' || item.id === 'concern') {
+    href = '#/community';
   } else if (item.id === 'plans') {
     href = '#/plans';
   } else {
@@ -462,6 +466,12 @@ export function bindLayoutEvents(root, rerender) {
         }
         if (gnbId === 'support') {
           navigateToSupport('/support');
+          return;
+        }
+        if (gnbId === 'community' || gnbId === 'concern') {
+          // plans와 같이 pending 보험 — 로그인 직후 역할홈 리다이렉트와 겹치면 커뮤니티가 튕긴다
+          setPendingRoute('/community');
+          navigate('/community');
           return;
         }
         if (gnbId === 'plans') {
