@@ -1,5 +1,6 @@
 import './styles/tokens.css';
 import './styles/home.css';
+import './styles/home-right-rail.css';
 import './styles/home-community.css';
 import './styles/home-promo.css';
 import './styles/home-provider-reviews.css';
