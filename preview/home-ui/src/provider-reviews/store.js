@@ -94,23 +94,6 @@ export function getReviewCount(providerType, providerId) {
   ).length;
 }
 
-/** @param {'study_room'|'tutor'} providerType @param {number} providerId */
-function aggregateTags(providerType, providerId) {
-  /** @type {Record<string, number>} */
-  const freq = {};
-  loadAll()
-    .filter((r) => r.provider_type === providerType && r.provider_id === providerId && r.review_status === 'visible')
-    .forEach((r) => {
-      (r.point_tags || []).forEach((t) => {
-        freq[t] = (freq[t] || 0) + 1;
-      });
-    });
-  return Object.entries(freq)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 4)
-    .map(([t]) => t);
-}
-
 function previewHasThread(providerType, providerId) {
   try {
     return getThreads().some(
@@ -163,7 +146,8 @@ export function getReviewSummaryLocal(providerType, providerId, viewer = {}) {
     provider_type: providerType,
     provider_id: providerId,
     review_count: all.length,
-    summary_tags: aggregateTags(providerType, providerId),
+    // 공개 집계 태그는 후순위 — 읽기 화면에 가짜 신뢰 신호가 되지 않도록 비움
+    summary_tags: [],
     origin_hint: {
       consultation: reviews.filter((r) => r.review_origin_type === 'consultation').length,
       experience: reviews.filter((r) => r.review_origin_type === 'experience').length,

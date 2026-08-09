@@ -65,7 +65,8 @@ final class ProviderReviewService
         }
 
         $count = $this->repo->countVisible($providerType, $providerId);
-        $tags = $this->repo->aggregateTags($providerType, $providerId, 4);
+        // 공개 집계 태그(summary_tags)는 후순위 — 읽기/카드에 노출하지 않음.
+        // 태그는 작성폼 보조칩 → point_tags_json 저장 → 해당 후기 항목에서만 렌더.
         $viewer = $this->resolveViewer($auth, $providerType, $providerId);
         $canReadBody = $viewer['can_read_body'];
         $reviews = [];
@@ -91,7 +92,7 @@ final class ProviderReviewService
             'provider_type' => $providerType,
             'provider_id' => $providerId,
             'review_count' => $count,
-            'summary_tags' => $tags,
+            'summary_tags' => [],
             'origin_hint' => [
                 'consultation' => $consultation,
                 'experience' => $experience,

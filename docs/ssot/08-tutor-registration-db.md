@@ -155,11 +155,12 @@ Basic 1 · Pick 2 · Prime 3 노출.
 
 과외쌤 후기는 공부방과 **동일 테이블** `provider_reviews` (`provider_type=tutor`)를 사용한다.
 
-| 차별 축 | 태그 예시 |
+| 차별 축 | 작성 보조칩 예시 (폼 전용) |
 |---------|-----------|
 | 스타일 적합성 | 개념 설명이 잘해요 · 아이와 잘 맞아요 |
 | 실제 운영감 | 숙제 관리가 좋아요 · 시간 약속이 정확해요 |
 
 - DDL/API: [5장 §11-4](05-study-room-db.md) · `040_provider_reviews.sql` · `/api/reviews/index.php`
+- **태그 B안:** 카드/상세 상단 집계·예시 칩 숨김 · 작성폼에서만 선택 → `point_tags_json` · 로그인 후 해당 후기 행에서만 표시
 - **혼동 금지:** `#/mypage/student-review` = 관심 학생 검토함
 

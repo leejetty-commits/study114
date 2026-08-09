@@ -24,7 +24,10 @@ export const PROVIDER_REVIEW_COPY = {
   writeCta: '후기 남기기',
   writeTitle: '후기 남기기',
   originQuestion: '어떤 경험이었나요?',
+  /** 작성 보조칩 — 공개 집계 태그가 아님. 읽기 화면·카드에는 노출하지 않음 */
   tagsQuestion: '좋았던 점을 골라주세요 (1~3개)',
+  tagsHint: '선택한 태그만 후기와 함께 저장됩니다. 본문에는 자동으로 들어가지 않습니다.',
+  bodyLabel: '후기 본문',
   bodyPlaceholder: '상담이나 이용 경험에서 좋았던 점을 짧게 적어주세요.',
   submit: '후기 등록',
   replyLabel: '공급자 답글',

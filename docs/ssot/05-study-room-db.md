@@ -252,9 +252,11 @@
 | 공급자 답글 1회 | 자유댓글 · 다중 리액션 |
 | guest: 개수만 · 본문 로그인 후 | 후기 전용 페이지 · 관리센터 |
 | 작성 자격: 학부모 + 쪽지 thread | 자격 이벤트 테이블 |
+| **태그 B안:** 작성폼 보조칩만 · `point_tags_json` 저장 · 해당 후기 항목에서만 렌더 | 카드/상세 상단 집계·예시 태그 · 본문 자동 삽입 |
 
-DDL: `provider_reviews`, `provider_review_replies` — [040_provider_reviews.sql](../../sql/schema/040_provider_reviews.sql)  
-API: `/api/reviews/index.php` · UI: `preview/home-ui/src/provider-reviews/`  
+DDL: `provider_reviews`, `provider_review_replies` — [040_provider_reviews.sql](../../sql/schema/040_provider_reviews.sql)
+API: `/api/reviews/index.php` · UI: `preview/home-ui/src/provider-reviews/`
+**태그 노출 규칙:** 공개 집계 태그(`summary_tags`)는 후순위(빈 배열). 읽기/카드에 「상담이 편해요」 등 예시·미연결 칩을 두지 않음. 작성 폼에서만 선택 → 저장 → 로그인 후 상세의 **해당 후기 행**에만 표시.
 **혼동 금지:** `#/mypage/student-review` = 관심 학생(검토함), 공급자 후기 아님.
 
 ### 11-5. 엑셀 반영

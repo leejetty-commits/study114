@@ -47,14 +47,14 @@ export async function mountProviderReviewSection(host, providerType, providerId,
 /** @param {object} summary @param {string} viewer */
 function renderReviewSectionMarkup(summary, viewer) {
   const count = Number(summary.review_count) || 0;
-  const tags = (summary.summary_tags || [])
-    .map((t) => `<span class="p24-review-tag">${esc(t)}</span>`)
-    .join('');
+  // B안: 읽기 화면에는 집계/예시 태그 숨김. 태그는 저장된 후기 항목·작성폼에서만.
   const originBits = [];
-  if (summary.origin_hint?.consultation) originBits.push(`상담후기 ${summary.origin_hint.consultation}`);
-  if (summary.origin_hint?.experience) originBits.push(`이용후기 ${summary.origin_hint.experience}`);
-  const hasReply = (summary.reviews || []).some((r) => r.reply);
-  if (hasReply) originBits.push('공급자 답글 있음');
+  if (summary.can_read_body) {
+    if (summary.origin_hint?.consultation) originBits.push(`상담후기 ${summary.origin_hint.consultation}`);
+    if (summary.origin_hint?.experience) originBits.push(`이용후기 ${summary.origin_hint.experience}`);
+    const hasReply = (summary.reviews || []).some((r) => r.reply);
+    if (hasReply) originBits.push('공급자 답글 있음');
+  }
 
   let bodyHtml = '';
   if (!summary.can_read_body) {
@@ -89,7 +89,6 @@ function renderReviewSectionMarkup(summary, viewer) {
       <p class="p24-review-summary-line">${esc(count ? `후기 ${count}개` : '후기 없음')}${
         originBits.length ? ` · ${esc(originBits.join(' · '))}` : ''
       }</p>
-      ${tags ? `<div class="p24-review-tags">${tags}</div>` : ''}
       ${bodyHtml}
       <div data-provider-review-panel></div>
       <p class="p24-review-footnote">${esc(PROVIDER_REVIEW_COPY.notStudentReviewNote)}</p>
@@ -139,17 +138,18 @@ function openWritePanel(host, providerType, providerId, viewer) {
           </fieldset>
           <fieldset class="p24-review-form__field">
             <legend>${esc(PROVIDER_REVIEW_COPY.tagsQuestion)}</legend>
-            <div class="p24-review-form__tags">
+            <p class="p24-review-form__hint">${esc(PROVIDER_REVIEW_COPY.tagsHint)}</p>
+            <div class="p24-review-form__tags" role="group" aria-label="${esc(PROVIDER_REVIEW_COPY.tagsQuestion)}">
               ${allowed
                 .map(
                   (t) =>
-                    `<label class="p24-review-chip"><input type="checkbox" name="tag" value="${esc(t)}" /> ${esc(t)}</label>`,
+                    `<label class="p24-review-chip"><input type="checkbox" name="tag" value="${esc(t)}" /> <span>${esc(t)}</span></label>`,
                 )
                 .join('')}
             </div>
           </fieldset>
           <label class="p24-review-form__field">
-            <span>후기 본문 (${PROVIDER_REVIEW_COPY.bodyMin}~${PROVIDER_REVIEW_COPY.bodyMax}자)</span>
+            <span>${esc(PROVIDER_REVIEW_COPY.bodyLabel)} (${PROVIDER_REVIEW_COPY.bodyMin}~${PROVIDER_REVIEW_COPY.bodyMax}자)</span>
             <textarea name="body" rows="4" maxlength="${PROVIDER_REVIEW_COPY.bodyMax}" placeholder="${esc(PROVIDER_REVIEW_COPY.bodyPlaceholder)}" required></textarea>
           </label>
           <p class="p24-review-form__error" data-review-error hidden></p>
@@ -160,6 +160,11 @@ function openWritePanel(host, providerType, providerId, viewer) {
         </form>`;
       panel.querySelector('[data-review-cancel]')?.addEventListener('click', () => {
         panel.innerHTML = '';
+      });
+      panel.querySelectorAll('.p24-review-chip input[name="tag"]').forEach((input) => {
+        const sync = () => input.closest('.p24-review-chip')?.classList.toggle('is-selected', input.checked);
+        sync();
+        input.addEventListener('change', sync);
       });
       panel.querySelector('form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
