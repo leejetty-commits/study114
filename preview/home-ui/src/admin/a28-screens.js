@@ -155,26 +155,18 @@ import {
   SMS_LAB_NOTICE,
 } from './vendor-addons.js';
 
-/** 화면 한글 라벨 (저장값은 영문 유지) */
-const STATUS_KO = { active: '사용', hidden: '숨김', archived: '보관' };
-const VIS_KO = { public: '전체 공개', login: '로그인 후', role: '역할 제한' };
-const DL_KO = { none: '불가', public: '전체', login: '로그인 후', role: '역할 제한', admin: '관리자만' };
-const SEL_KO = { curated: '직접 고름', latest: '최신순', mixed: '혼합' };
-const MOBILE_KO = { stack: '아래로 쌓기', collapse: '접기', hide: '숨김' };
-const SOURCE_KO = { board: '게시판', static: '고정문', mixed: '혼합' };
-const ORDER_STATUS_KO = {
-  pending: '결제 대기',
-  paid: '결제 완료',
-  failed: '결제 실패',
-  cancelled: '취소',
-  refunded: '환불',
-};
-const SMS_STATUS_KO = {
-  preview: '미리보기',
-  queued: '발송 대기',
-  sent: '발송 완료',
-  failed: '발송 실패',
-};
+import {
+  A28_MEMBER_SEED,
+  DL_KO,
+  MOBILE_KO,
+  ORDER_STATUS_KO,
+  SEL_KO,
+  SMS_STATUS_KO,
+  SOURCE_KO,
+  STATUS_KO,
+  VIS_KO,
+  a28Ui,
+} from './a28-screens-state.js';
 
 function adminProductLabel(code) {
   const normalized = String(code || '').toLowerCase();
@@ -206,72 +198,6 @@ function sectionOwnerLabel(id) {
 function presetLabel(id) {
   return getPresetOptions().find((preset) => preset.id === id)?.label || '기타';
 }
-
-/** @type {{ q: string, status: string, role_type: string }} */
-let memberFilters = { q: '', status: 'all', role_type: 'all' };
-/** @type {{ q: string, status: string, sectionOwner: string }} */
-let channelFilters = { q: '', status: 'all', sectionOwner: 'all' };
-/** @type {string|null} 접근회원 편집 중인 소속 그룹 */
-let openSectionAccessId = null;
-/** @type {number|null} */
-let openMemberId = null;
-
-const A28_MEMBER_SEED = [
-  {
-    id: 1,
-    email: 'parent@example.com',
-    name: '김학부모',
-    phone: '010-1111-2222',
-    status: 'active',
-    primaryRole: 'guardian_student',
-    emailVerified: true,
-    oauthLinked: false,
-    subscriptionTier: 'free',
-    activePositions: 0,
-    studyRoomCount: 0,
-    tutorCount: 0,
-    studentCount: 2,
-    lastLoginAt: '2026-07-15 10:00:00',
-    createdAt: '2026-01-10 09:00:00',
-    isMaster: false,
-  },
-  {
-    id: 2,
-    email: 'room@example.com',
-    name: '이공부방',
-    phone: '010-3333-4444',
-    status: 'active',
-    primaryRole: 'study_room_owner',
-    emailVerified: true,
-    oauthLinked: true,
-    subscriptionTier: 'paid',
-    activePositions: 1,
-    studyRoomCount: 1,
-    tutorCount: 0,
-    studentCount: 0,
-    lastLoginAt: '2026-07-16 18:22:00',
-    createdAt: '2026-02-01 11:00:00',
-    isMaster: false,
-  },
-  {
-    id: 3,
-    email: 'tutor@example.com',
-    name: '박과외',
-    phone: '010-5555-6666',
-    status: 'pending',
-    primaryRole: 'tutor',
-    emailVerified: false,
-    oauthLinked: false,
-    subscriptionTier: 'free',
-    activePositions: 0,
-    studyRoomCount: 0,
-    tutorCount: 1,
-    studentCount: 0,
-    lastLoginAt: '2026-07-14 09:11:00',
-    createdAt: '2026-03-20 14:00:00',
-    isMaster: false,
-  },
-];
 
 /**
  * 회원 상세 포맷(더미 포함) — API 캐시가 없어도 드로어가 항상 열리도록
@@ -491,8 +417,8 @@ function renderSectionGroupPanel() {
     .join('');
 
   let accessPanel = '';
-  if (openSectionAccessId) {
-    const members = getSectionAccessMembers(openSectionAccessId);
+  if (a28Ui.openSectionAccessId) {
+    const members = getSectionAccessMembers(a28Ui.openSectionAccessId);
     const memberRows = members
       .map(
         (email) => `<tr>
@@ -502,8 +428,8 @@ function renderSectionGroupPanel() {
       )
       .join('');
     accessPanel = `
-      <div class="a28-section-access" data-section-access-panel="${esc(openSectionAccessId)}">
-        <h4 class="admin-section-title">접근회원 · ${esc(sectionOwnerLabel(openSectionAccessId))}</h4>
+      <div class="a28-section-access" data-section-access-panel="${esc(a28Ui.openSectionAccessId)}">
+        <h4 class="admin-section-title">접근회원 · ${esc(sectionOwnerLabel(a28Ui.openSectionAccessId))}</h4>
         <p class="a28-help">이 그룹 글을 볼 수 있는 회원을 이메일로 적어 둡니다. (운영 메모용)</p>
         <table class="sup-admin-table">
           <thead><tr><th>이메일</th><th></th></tr></thead>
@@ -535,10 +461,10 @@ function renderSectionGroupPanel() {
 }
 
 function renderChannelTable() {
-  const q = (channelFilters.q || '').trim().toLowerCase();
+  const q = (a28Ui.channelFilters.q || '').trim().toLowerCase();
   const filtered = listBoardChannels().filter((ch) => {
-    if (channelFilters.status !== 'all' && ch.status !== channelFilters.status) return false;
-    if (channelFilters.sectionOwner !== 'all' && ch.sectionOwner !== channelFilters.sectionOwner) {
+    if (a28Ui.channelFilters.status !== 'all' && ch.status !== a28Ui.channelFilters.status) return false;
+    if (a28Ui.channelFilters.sectionOwner !== 'all' && ch.sectionOwner !== a28Ui.channelFilters.sectionOwner) {
       return false;
     }
     if (q) {
@@ -550,10 +476,10 @@ function renderChannelTable() {
   const all = listBoardChannels();
   const sectionOwners = [...new Set(all.map((ch) => ch.sectionOwner).filter(Boolean))].sort();
   const sectionOpts = [
-    `<option value="all"${channelFilters.sectionOwner === 'all' ? ' selected' : ''}>소속 전체</option>`,
+    `<option value="all"${a28Ui.channelFilters.sectionOwner === 'all' ? ' selected' : ''}>소속 전체</option>`,
     ...sectionOwners.map(
       (owner) =>
-        `<option value="${esc(owner)}"${channelFilters.sectionOwner === owner ? ' selected' : ''}>${esc(sectionOwnerLabel(owner))}</option>`,
+        `<option value="${esc(owner)}"${a28Ui.channelFilters.sectionOwner === owner ? ' selected' : ''}>${esc(sectionOwnerLabel(owner))}</option>`,
     ),
   ].join('');
 
@@ -585,12 +511,12 @@ function renderChannelTable() {
 
   return `
     <form class="admin-filter-bar" data-channel-filter>
-      <input type="search" name="q" class="admin-input" placeholder="채널 키 · 메뉴 이름 · 경로" value="${esc(channelFilters.q)}" />
+      <input type="search" name="q" class="admin-input" placeholder="채널 키 · 메뉴 이름 · 경로" value="${esc(a28Ui.channelFilters.q)}" />
       <select name="status" class="admin-input--sm">
-        <option value="all"${channelFilters.status === 'all' ? ' selected' : ''}>상태 전체</option>
-        <option value="active"${channelFilters.status === 'active' ? ' selected' : ''}>사용</option>
-        <option value="hidden"${channelFilters.status === 'hidden' ? ' selected' : ''}>숨김</option>
-        <option value="archived"${channelFilters.status === 'archived' ? ' selected' : ''}>보관</option>
+        <option value="all"${a28Ui.channelFilters.status === 'all' ? ' selected' : ''}>상태 전체</option>
+        <option value="active"${a28Ui.channelFilters.status === 'active' ? ' selected' : ''}>사용</option>
+        <option value="hidden"${a28Ui.channelFilters.status === 'hidden' ? ' selected' : ''}>숨김</option>
+        <option value="archived"${a28Ui.channelFilters.status === 'archived' ? ' selected' : ''}>보관</option>
       </select>
       <select name="sectionOwner" class="admin-input--sm">${sectionOpts}</select>
       <button type="submit" class="btn btn--primary btn--sm">검색</button>
@@ -1295,7 +1221,7 @@ function renderCommerce() {
 
 function renderMembers() {
   const cache = isAdminApiMode() ? getMembersCache() : null;
-  const filters = cache?.filters ?? memberFilters;
+  const filters = cache?.filters ?? a28Ui.memberFilters;
   const seedFiltered = A28_MEMBER_SEED.filter((m) => filters.status === 'all' || m.status === filters.status);
   const members = cache?.members?.length ? cache.members : seedFiltered;
   const master = isMasterAdmin();
@@ -1332,9 +1258,9 @@ function renderMembers() {
     .join('');
 
   let detailHtml = '';
-  if (openMemberId) {
-    const apiDetail = isAdminApiMode() ? getMemberDetailCache(openMemberId) : null;
-    const detail = buildMemberDetail(openMemberId, apiDetail);
+  if (a28Ui.openMemberId) {
+    const apiDetail = isAdminApiMode() ? getMemberDetailCache(a28Ui.openMemberId) : null;
+    const detail = buildMemberDetail(a28Ui.openMemberId, apiDetail);
     const roles = (detail.roles || [])
       .map(
         (r) =>
@@ -2596,7 +2522,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
   if (path === '/admin/members') {
     // 최초 진입 시 목록 로드
     if (isAdminApiMode() && !getMembersCache()) {
-      hydrateMembersCache(memberFilters)
+      hydrateMembersCache(a28Ui.memberFilters)
         .then(() => rerender())
         .catch(() => {});
     }
@@ -2605,13 +2531,13 @@ export function bindA28ScreenEvents(root, path, rerender) {
       e.preventDefault();
       if (!(form instanceof HTMLFormElement)) return;
       const fd = new FormData(form);
-      memberFilters = {
+      a28Ui.memberFilters = {
         q: String(fd.get('q') || '').trim(),
         status: String(fd.get('status') || 'all'),
         role_type: String(fd.get('role_type') || 'all'),
       };
       try {
-        if (isAdminApiMode()) await hydrateMembersCache(memberFilters);
+        if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
         rerender();
       } catch (err) {
         window.alert(err instanceof Error ? err.message : '검색 실패');
@@ -2620,9 +2546,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
     root.querySelectorAll('[data-member-status-chip]').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const status = String(btn.getAttribute('data-member-status-chip') || 'all');
-        memberFilters = { ...memberFilters, status };
+        a28Ui.memberFilters = { ...a28Ui.memberFilters, status };
         try {
-          if (isAdminApiMode()) await hydrateMembersCache(memberFilters);
+          if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
           rerender();
         } catch (err) {
           window.alert(err instanceof Error ? err.message : '필터 실패');
@@ -2631,7 +2557,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
     });
     root.querySelector('[data-member-refresh]')?.addEventListener('click', async () => {
       try {
-        if (isAdminApiMode()) await hydrateMembersCache(memberFilters);
+        if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
         rerender();
       } catch (err) {
         window.alert(err instanceof Error ? err.message : '새로고침 실패');
@@ -2641,7 +2567,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
       btn.addEventListener('click', async () => {
         const id = Number(btn.getAttribute('data-member-open'));
         if (!id) return;
-        openMemberId = id;
+        a28Ui.openMemberId = id;
         try {
           if (isAdminApiMode()) await hydrateMemberDetail(id).catch(() => null);
         } catch {
@@ -2650,8 +2576,8 @@ export function bindA28ScreenEvents(root, path, rerender) {
         rerender();
       });
     });
-    if (openMemberId) {
-      const drawer = root.querySelector(`[data-admin-drawer="member-${openMemberId}"]`);
+    if (a28Ui.openMemberId) {
+      const drawer = root.querySelector(`[data-admin-drawer="member-${a28Ui.openMemberId}"]`);
       if (drawer) drawer.hidden = false;
     }
     root.querySelectorAll('[data-member-action]').forEach((btn) => {
@@ -2667,7 +2593,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           await apiApplyMemberAction(id, /** @type {'block'|'restore'|'withdraw'} */ (action), {
             internalMemo: memo,
           });
-          await hydrateMembersCache(memberFilters);
+          await hydrateMembersCache(a28Ui.memberFilters);
           await hydrateMemberDetail(id);
           rerender();
         } catch (err) {
@@ -2705,8 +2631,8 @@ export function bindA28ScreenEvents(root, path, rerender) {
           const data = await apiApplyMemberBulkAction(ids, action, { internalMemo: memo });
           const ok = Number(data.ok_count || 0);
           const fail = Number(data.fail_count || 0);
-          await hydrateMembersCache(memberFilters);
-          if (openMemberId) await hydrateMemberDetail(openMemberId).catch(() => {});
+          await hydrateMembersCache(a28Ui.memberFilters);
+          if (a28Ui.openMemberId) await hydrateMemberDetail(a28Ui.openMemberId).catch(() => {});
           rerender();
           window.alert(`완료: 성공 ${ok} · 실패 ${fail}`);
         } catch (err) {
@@ -2855,27 +2781,27 @@ export function bindA28ScreenEvents(root, path, rerender) {
     root.querySelectorAll('[data-section-filter]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const owner = btn.getAttribute('data-section-filter') || 'all';
-        channelFilters = { ...channelFilters, sectionOwner: owner };
+        a28Ui.channelFilters = { ...a28Ui.channelFilters, sectionOwner: owner };
         rerender();
       });
     });
     root.querySelectorAll('[data-section-access]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        openSectionAccessId = btn.getAttribute('data-section-access');
+        a28Ui.openSectionAccessId = btn.getAttribute('data-section-access');
         rerender();
       });
     });
     root.querySelector('[data-section-access-close]')?.addEventListener('click', () => {
-      openSectionAccessId = null;
+      a28Ui.openSectionAccessId = null;
       rerender();
     });
     const accessForm = root.querySelector('[data-section-access-form]');
     accessForm?.addEventListener('submit', (e) => {
       e.preventDefault();
-      if (!(accessForm instanceof HTMLFormElement) || !openSectionAccessId) return;
+      if (!(accessForm instanceof HTMLFormElement) || !a28Ui.openSectionAccessId) return;
       const fd = new FormData(accessForm);
       try {
-        addSectionAccessMember(openSectionAccessId, String(fd.get('email') || ''));
+        addSectionAccessMember(a28Ui.openSectionAccessId, String(fd.get('email') || ''));
         rerender();
       } catch (err) {
         window.alert(err instanceof Error ? err.message : '접근회원 추가 실패');
@@ -2884,9 +2810,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
     root.querySelectorAll('[data-section-access-remove]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const email = btn.getAttribute('data-section-access-remove');
-        if (!email || !openSectionAccessId) return;
+        if (!email || !a28Ui.openSectionAccessId) return;
         try {
-          removeSectionAccessMember(openSectionAccessId, email);
+          removeSectionAccessMember(a28Ui.openSectionAccessId, email);
           rerender();
         } catch (err) {
           window.alert(err instanceof Error ? err.message : '접근회원 제거 실패');
@@ -2899,8 +2825,8 @@ export function bindA28ScreenEvents(root, path, rerender) {
         if (!id || !window.confirm(`${id} 그룹을 삭제할까요?`)) return;
         try {
           removeCustomSectionGroup(id);
-          if (channelFilters.sectionOwner === id) {
-            channelFilters = { ...channelFilters, sectionOwner: 'all' };
+          if (a28Ui.channelFilters.sectionOwner === id) {
+            a28Ui.channelFilters = { ...a28Ui.channelFilters, sectionOwner: 'all' };
           }
           rerender();
         } catch (err) {
@@ -2926,7 +2852,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
       e.preventDefault();
       if (!(channelFilter instanceof HTMLFormElement)) return;
       const fd = new FormData(channelFilter);
-      channelFilters = {
+      a28Ui.channelFilters = {
         q: String(fd.get('q') || '').trim(),
         status: String(fd.get('status') || 'all'),
         sectionOwner: String(fd.get('sectionOwner') || 'all'),
@@ -2934,7 +2860,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
       rerender();
     });
     root.querySelector('[data-channel-filter-reset]')?.addEventListener('click', () => {
-      channelFilters = { q: '', status: 'all', sectionOwner: 'all' };
+      a28Ui.channelFilters = { q: '', status: 'all', sectionOwner: 'all' };
       rerender();
     });
 
