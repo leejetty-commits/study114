@@ -85,6 +85,23 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
     });
   });
 
+  root.querySelectorAll('[data-action="open-detail"]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const kind = btn.getAttribute('data-item-kind');
+      const id = Number(btn.getAttribute('data-item-id'));
+      if (kind !== 'study_room' && kind !== 'tutor') return;
+      openDetailDecision({ kind, id, viewer: role, onRerender, sourceRoute });
+      // 후기 버튼: 상세 열린 뒤 후기 섹션으로 스크롤
+      if (btn.getAttribute('data-open-reviews') === '1') {
+        requestAnimationFrame(() => {
+          document.querySelector('[data-provider-review-root]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+    });
+  });
+
   root.querySelectorAll('[data-provider-id][data-provider-kind]').forEach((article) => {
     article.classList.add('p24-card--clickable');
     article.addEventListener('click', (e) => {

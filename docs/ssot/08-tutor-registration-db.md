@@ -151,3 +151,15 @@ Basic 1 · Pick 2 · Prime 3 노출.
 | 2026-06-01 | 2단계·Prime/Pick·유튜브·열람권 후보 |
 | 2026-07-04 | Notion 8장 2026-07 전면 반영 · 008/010 · `student_count_group` UI **수업인원** |
 | 2026-07-06 | **§4-1** `profile_status.pending` deprecated — [22장](22-platform-lifecycle-principles.md) |
+## 11. 후기 (공부방과 공통 · 1차 MVP)
+
+과외쌤 후기는 공부방과 **동일 테이블** `provider_reviews` (`provider_type=tutor`)를 사용한다.
+
+| 차별 축 | 태그 예시 |
+|---------|-----------|
+| 스타일 적합성 | 개념 설명이 잘해요 · 아이와 잘 맞아요 |
+| 실제 운영감 | 숙제 관리가 좋아요 · 시간 약속이 정확해요 |
+
+- DDL/API: [5장 §11-4](05-study-room-db.md) · `040_provider_reviews.sql` · `/api/reviews/index.php`
+- **혼동 금지:** `#/mypage/student-review` = 관심 학생 검토함
+

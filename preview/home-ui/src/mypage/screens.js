@@ -20,6 +20,8 @@ import { getStudentReviewItems, removeStudentReview } from '../student-review-st
 import { getHandoffFromQuery, getProviderRegDeepLink } from '../handoff-link.js';
 import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
 import { STUDENT_REVIEW, studentReviewItemLabel } from '../handoff-copy.js';
+import { fetchMypageReviewSnapshot } from '../provider-reviews/store.js';
+import { REVIEW_ORIGIN_LABELS, PROVIDER_REVIEW_COPY } from '../provider-reviews/copy.js';
 import {
   renderBasketLifecycleBadge,
   isBasketLifecycleMuted,
@@ -167,11 +169,13 @@ function getHomeHighlights(role, counts) {
       { icon: '♡', label: '찜한 곳', value: `${counts.wishlist}개`, note: '나중에 다시 볼 수 있어요', path: '/mypage/wishlist' },
       { icon: '◷', label: '최근열람', value: `${counts.recentCount}개`, note: '보던 곳부터 이어보세요', path: '/mypage/recent' },
       { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '답장이 필요한 소식이에요', path: '/mypage/messages' },
+      { icon: '💬', label: '내가 남긴 후기', value: `${counts.providerReviewCount || 0}개`, note: '상담·이용 후기는 상세에서 작성', path: '/mypage/recent' },
     ];
   }
   return [
     { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
-    { icon: '☆', label: '학생 검토함', value: `${counts.studentReviewCount}명`, note: '검토 중인 학생을 다시 살펴보세요', path: '/mypage/student-review' },
+    { icon: '☆', label: '학생 검토함', value: `${counts.studentReviewCount}명`, note: '관심 학생 저장 · 이용 후기와 다른 기능', path: '/mypage/student-review' },
+    { icon: '💬', label: '받은 후기', value: `${counts.providerReviewCount || 0}개`, note: '답글은 내 프로필 상세에서 1회', path: '/mypage/registrations' },
     { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
   ];
 }
@@ -234,6 +238,19 @@ function renderHome(role, profile, counts, cta) {
 
       ${renderCtaBlock(cta)}
 
+      <section class="mypage-home-section" aria-labelledby="mypage-review-title" data-mypage-review-panel>
+        <div class="mypage-home-section__head">
+          <div>
+            <span class="mypage-home-section__eyebrow">후기</span>
+            <h2 id="mypage-review-title">${role === 'parent' ? '내가 남긴 후기' : '받은 후기'}</h2>
+          </div>
+          <p>${esc(PROVIDER_REVIEW_COPY.notStudentReviewNote)}</p>
+        </div>
+        <div class="mypage-review-panel" data-mypage-review-list>
+          <p class="mypage-muted">불러오는 중…</p>
+        </div>
+      </section>
+
       <section class="mypage-home-section" aria-labelledby="mypage-quick-title">
         <div class="mypage-home-section__head">
           <div>
@@ -264,6 +281,58 @@ function renderHome(role, profile, counts, cta) {
         <a href="#/mypage/account" data-mypage-nav="/mypage/account">계정설정</a>
       </section>
     </div>`;
+}
+
+/** 마이페이지 홈 후기 패널 hydrate (별도 관리센터 아님) */
+export async function hydrateMypageReviewPanel(root) {
+  const box = root?.querySelector?.('[data-mypage-review-list]');
+  if (!box) return;
+  try {
+    const snap = await fetchMypageReviewSnapshot();
+    const items = snap.items || [];
+    if (!items.length) {
+      box.innerHTML = `<p class="mypage-muted">${
+        snap.lane === 'received'
+          ? '아직 받은 후기가 없습니다. 상세에 노출되면 여기에 요약됩니다.'
+          : '아직 남긴 후기가 없습니다. 쪽지 상담 후 상세에서 작성할 수 있습니다.'
+      }</p>`;
+      return;
+    }
+    box.innerHTML = `
+      <ul class="mypage-review-list">
+        ${items
+          .slice(0, 5)
+          .map((r) => {
+            const origin = REVIEW_ORIGIN_LABELS[r.review_origin_type] || '';
+            const reply = r.reply?.body
+              ? `<small class="mypage-review-list__reply">답글: ${esc(r.reply.body)}</small>`
+              : r.can_reply
+                ? `<small class="mypage-review-list__reply">답글 가능 · 프로필 상세에서</small>`
+                : '';
+            const openKind = r.provider_type || '';
+            const openId = r.provider_id || 1;
+            return `<li class="mypage-review-list__item">
+              <button type="button" class="mypage-review-list__open" data-mypage-open-review="${esc(openKind)}" data-id="${openId}">
+                <strong>${esc(origin || '후기')}</strong>
+                <span>${esc(r.review_body || '')}</span>
+                ${reply}
+              </button>
+            </li>`;
+          })
+          .join('')}
+      </ul>
+      ${snap.hint ? `<p class="mypage-muted">${esc(snap.hint)}</p>` : ''}`;
+    box.querySelectorAll('[data-mypage-open-review]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const kind = btn.getAttribute('data-mypage-open-review');
+        const id = Number(btn.getAttribute('data-id'));
+        if (kind !== 'study_room' && kind !== 'tutor') return;
+        openDetailDecision({ kind, id, sourceRoute: 'mypage' });
+      });
+    });
+  } catch {
+    box.innerHTML = `<p class="mypage-muted">후기 요약을 불러오지 못했습니다.</p>`;
+  }
 }
 
 function renderRegistrationsIndex(role) {

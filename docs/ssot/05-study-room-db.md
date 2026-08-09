@@ -44,7 +44,7 @@
 | `study_room_exposure_assignments` | 노출 편성 · 광고 운영 |
 | `study_room_exposure_waitlists` | 예약대기 · 오픈 알림 |
 
-후기: **§11-4** — 1차 방향만 잠금, DDL은 `study_room_reviews` (TODO)
+후기: **§11-4** — 공통 `provider_reviews` (공부방·과외쌤) · student-review와 분리
 
 ---
 
@@ -244,15 +244,18 @@
 
 ### 11-3. 시설 체크 **~5개** + facility_note
 
-### 11-4. 후기 (1차 방향 · DDL TODO)
+### 11-4. 후기 (1차 MVP · 2026-08)
 
 | 포함 | 제외(1차) |
 |------|-----------|
-| 후기 텍스트 | 비추천/싫어요 |
-| 추천/도움돼요 | |
-| 신고 + 관리자 **조치**/숨김 | |
+| 후기 텍스트 · 태그 1~3 · 접점유형 | 비추천/싫어요 · 별점 |
+| 공급자 답글 1회 | 자유댓글 · 다중 리액션 |
+| guest: 개수만 · 본문 로그인 후 | 후기 전용 페이지 · 관리센터 |
+| 작성 자격: 학부모 + 쪽지 thread | 자격 이벤트 테이블 |
 
-→ `study_room_reviews`, `study_room_review_helpful` (추후)
+DDL: `provider_reviews`, `provider_review_replies` — [040_provider_reviews.sql](../../sql/schema/040_provider_reviews.sql)  
+API: `/api/reviews/index.php` · UI: `preview/home-ui/src/provider-reviews/`  
+**혼동 금지:** `#/mypage/student-review` = 관심 학생(검토함), 공급자 후기 아님.
 
 ### 11-5. 엑셀 반영
 

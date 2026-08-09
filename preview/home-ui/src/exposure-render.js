@@ -167,8 +167,11 @@ export function renderItemActions(opts = {}) {
 
   const reviewBtn = actionCountBtn('💬', review_count, {
     title: `후기 ${review_count}`,
-    disabled: true,
     hideWhenZero: true,
+    attrs:
+      itemId != null
+        ? `data-action="open-detail" data-item-kind="${kind}" data-item-id="${itemId}" data-open-reviews="1"`
+        : '',
   });
 
   const msgAttrs = guest

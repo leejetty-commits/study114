@@ -6,6 +6,7 @@ import {
 import { esc, inquiryStatusLabel } from './detail-utils.js';
 import { coarseRegionForGuest } from '../student-blind-teaser.js';
 import { renderPromoLinksSection } from '../../../shared/promo-links.js';
+import { reviewSectionPlaceholder } from '../provider-reviews/ui.js';
 
 /** @param {object} item @param {string} viewer */
 export function renderStudyRoomDetailBody(item, viewer) {
@@ -54,5 +55,6 @@ export function renderStudyRoomDetailBody(item, viewer) {
       </dl>
     </section>
     ${mapBlock}
+    ${reviewSectionPlaceholder()}
     ${isGuest ? '' : renderPromoLinksSection(item, esc)}`;
 }

@@ -90,7 +90,9 @@ export const HANDOFF_DEEPLINK = {
   providerRegCtaStudyRoom: '노출·상담',
 };
 
-/** Provider lane — P25-S10 (UI 라벨: 학생 검토함 · 내부 경로 student-review 유지) */
+/** Provider lane — P25-S10 (UI 라벨: 학생 검토함 · 내부 경로 student-review 유지)
+ * 주의: 공급자 후기(provider reviews)와 이름이 다릅니다. 이 객체는 “관심 학생 저장”만 다룹니다.
+ */
 export const STUDENT_REVIEW = {
   listTitle: '학생 검토함',
   addCta: '검토함에 넣기',
@@ -99,7 +101,7 @@ export const STUDENT_REVIEW = {
   itemLabelStudyRoom: '상담후보',
   toastAdded: '학생 검토함에 넣었습니다',
   toastRemoved: '학생 검토함에서 뺐습니다',
-  note: '검토할 학생을 저장해 두고, 준비가 되었을 때 쪽지를 이어가세요.',
+  note: '관심 있는 학생을 저장해 두고, 준비가 되었을 때 쪽지를 이어가세요. (학부모 이용 후기와는 다른 기능입니다)',
   lifecycleHidden: '현재 공개가 중지된 의뢰입니다',
 };
 

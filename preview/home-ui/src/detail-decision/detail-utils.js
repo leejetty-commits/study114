@@ -176,7 +176,9 @@ export function buildTrustStrip(kind, item) {
         ? 1
         : 0;
   const strip = formatTrustInfoStrip(trustCount, docCount);
-  return `<p class="p24-trust">${esc(strip)} · 플랫폼 보증 아님</p>`;
+  const reviewCount = Number(item.review_count) || 0;
+  const reviewBit = reviewCount > 0 ? ` · 후기 ${reviewCount}` : ' · 후기 준비중';
+  return `<p class="p24-trust">${esc(strip)}${esc(reviewBit)} · 플랫폼 보증 아님</p>`;
 }
 
 /** @param {'study_room'|'tutor'|'student'} kind @param {object} item @param {string} viewer */

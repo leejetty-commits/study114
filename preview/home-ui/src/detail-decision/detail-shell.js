@@ -31,6 +31,7 @@ import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
 import { renderRightRailBlock } from '../right-rail.js';
 import { maskPublicDisplayName } from '../student-blind-teaser.js';
 import { isGuestPublicPath, loginUrl } from '../../../shared/route-access.js';
+import { bindProviderReviewMount } from '../provider-reviews/ui.js';
 
 const MODAL_ID = 'p24-detail-modal';
 
@@ -334,6 +335,8 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
       bindStudyRoomMapSection(wrap, [item], { regionLabel: item.location_label || '' });
     });
   }
+
+  bindProviderReviewMount(wrap, kind, item, viewer);
 
   wrap.querySelectorAll('[data-p24-action="close"]').forEach((btn) => {
     btn.addEventListener('click', closeDetailModal);

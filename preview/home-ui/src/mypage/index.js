@@ -4,7 +4,7 @@ import { guardMypageAccess } from '../../../shared/route-access.js';
 import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/guest-gate-ui.js';
 import { renderPreviewToolbar, renderHeader, renderFooter, renderAppShellWithPromo } from '../layout.js';
 import { renderMypageShell, bindMypageShellEvents } from './shell.js';
-import { renderMypageScreen, bindMypageScreenEvents } from './screens.js';
+import { renderMypageScreen, bindMypageScreenEvents, hydrateMypageReviewPanel } from './screens.js';
 import { ensureRecentDemo } from './recent-store.js';
 import { ensureWishlistDemo } from '../user-actions-state.js';
 import { ensureStudentReviewDemo } from '../student-review-store.js';
@@ -81,6 +81,7 @@ export function bindMypageEvents(root, rerender) {
 
   bindMypageShellEvents(root, rerender);
   bindMypageScreenEvents(root, rerender);
+  void hydrateMypageReviewPanel(root);
   const path = getMypagePath();
   const sourceRoute = path === '/mypage/student-review' ? 'student-review' : 'mypage';
   bindStudentReviewEvents(root, rerender, { sourceRoute });

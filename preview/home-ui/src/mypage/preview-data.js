@@ -22,6 +22,7 @@ import {
   SUBMISSION_STATUS_LABELS,
   SUBMISSION_VISIBILITY_LABELS,
 } from './mypage-copy.js';
+import { countWrittenReviewsPreview, countReceivedReviewsPreview } from '../provider-reviews/store.js';
 
 const PREVIEW_PROFILE = {
   email: 'parent@example.com',
@@ -135,6 +136,10 @@ export function getSummaryCounts(role) {
   const wishlistCount = getWishlistIds('study_room').length + getWishlistIds('tutor').length;
   const studentReviewCount = getStudentReviewIds().length;
   const recentCount = getRecentViews(role).length;
+  const providerReviewCount =
+    role === 'parent'
+      ? countWrittenReviewsPreview(getAuthUser()?.user_id || 6)
+      : countReceivedReviewsPreview(role === 'tutor' ? 'tutor' : 'study_room');
 
   let inquiryLabel = null;
   let matchingLabel = null;
@@ -160,6 +165,7 @@ export function getSummaryCounts(role) {
     paidDaysLeft: role === 'parent' ? null : 12,
     recentCount,
     studentReviewCount,
+    providerReviewCount,
     inquiryLabel,
     matchingLabel,
     memoCredits,

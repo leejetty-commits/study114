@@ -4,6 +4,7 @@
  */
 
 import { studyRoomBadges, tutorBadges } from './exposure-format.js';
+import { syncReviewCountForItem } from './provider-reviews/store.js';
 
 function expandSeed(seed, count, dateKey, idPrefix = '') {
   const out = [];
@@ -107,7 +108,7 @@ function enrichStudyRoom(r) {
     wish_count: (id % 15) + 3,
     message_count: id % 6,
     compare_count: (id % 4) + 1,
-    review_count: id % 5 === 0 ? 0 : (id % 12) + 1,
+    review_count: syncReviewCountForItem('study_room', id),
   };
 }
 
@@ -124,7 +125,7 @@ function enrichTutor(t) {
     wish_count: (id % 11) + 2,
     message_count: (id % 5) + 1,
     compare_count: (id % 3) + 1,
-    review_count: id % 4 === 0 ? 0 : (id % 8) + 1,
+    review_count: syncReviewCountForItem('tutor', id),
   };
 }
 

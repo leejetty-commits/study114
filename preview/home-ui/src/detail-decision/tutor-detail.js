@@ -9,6 +9,7 @@ import {
 import { esc } from './detail-utils.js';
 import { coarseRegionForGuest } from '../student-blind-teaser.js';
 import { renderPromoLinksSection } from '../../../shared/promo-links.js';
+import { reviewSectionPlaceholder } from '../provider-reviews/ui.js';
 
 /** @param {object} item @param {string} viewer */
 export function renderTutorDetailBody(item, viewer) {
@@ -51,5 +52,6 @@ export function renderTutorDetailBody(item, viewer) {
         <dt>제출자료</dt><dd>${item.proof_document_available ? '공개' : '미공개'}</dd>
       </dl>
     </section>
+    ${reviewSectionPlaceholder()}
     ${isGuest ? '' : renderPromoLinksSection(item, esc)}`;
 }
