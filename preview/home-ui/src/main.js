@@ -1,5 +1,7 @@
 import './styles/tokens.css';
 import './styles/home.css';
+import './styles/home-promo.css';
+import './styles/home-provider-reviews.css';
 import '@search-ui/styles/search.css';
 import './styles/design-system.css';
 import './styles/product-chrome.css';
