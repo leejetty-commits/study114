@@ -314,6 +314,14 @@ function buildMemberDetail(id, apiDetail = null) {
   };
 }
 
+function yesNo(v) {
+  return v ? '예' : '—';
+}
+
+function genderLabel(gender) {
+  if (gender === 'male') return '남';
+  if (gender === 'female') return '여';
+  return gender ? String(gender) : '—';
 }
 
 /** @param {string[]} values @param {string} [active] @param {Record<string, string>} [labels] */
