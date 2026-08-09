@@ -2,10 +2,11 @@ import '@auth-styles/base.css';
 import '@auth-styles/theme-v1.css';
 import '@home-ui/styles/tokens.css';
 import '@home-ui/styles/home.css';
-/* home.css 분리분 — 검색 셸의 우측 배너·목록·상세(P24)에 필요 */
+/* home.css 분리분 — 검색 셸의 우측 배너·목록·상세(P24)·소개 카드에 필요 */
 import '@home-ui/styles/home-listings.css';
 import '@home-ui/styles/home-member-flows.css';
 import '@home-ui/styles/home-right-rail.css';
+import '@home-ui/styles/home-promo.css';
 import './styles/search.css';
 import './styles/handoff-bridge.css';
 import '@home-ui/styles/design-system.css';
