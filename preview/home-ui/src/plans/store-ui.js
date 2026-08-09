@@ -254,7 +254,7 @@ export function formatCardPrice(product) {
   const amt = resolveCheckoutAmount(first.priceKrw);
   const display = formatKrw(amt.displayKrw);
   const unit =
-    first.durationDays != null
+    first.durationType != null || first.durationDays != null
       ? `/ ${first.label}`
       : first.creditCount != null
         ? `/ ${first.label}`

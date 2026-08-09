@@ -160,11 +160,34 @@ export function restoreMemoGateE2e() {
 
 /** P18e — reminder 테이블 (032) idempotent */
 export function ensureReminderSchemaE2e() {
+  ensurePositionDurationSchemaE2e();
   devSql(
     'CREATE TABLE IF NOT EXISTS provider_system_notices (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, user_id BIGINT UNSIGNED NOT NULL, notice_kind VARCHAR(64) NOT NULL, dedupe_key VARCHAR(191) NOT NULL, title VARCHAR(200) NOT NULL, body TEXT NOT NULL, action_href VARCHAR(500) NULL, is_read TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY uk_provider_notice_dedupe (dedupe_key), KEY idx_provider_notice_user (user_id, is_read, created_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
   );
   devSql(
     'CREATE TABLE IF NOT EXISTS provider_reminder_dispatches (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, user_id BIGINT UNSIGNED NOT NULL, channel ENUM(\'email\',\'sms\',\'onsite\') NOT NULL, reminder_kind VARCHAR(64) NOT NULL, dedupe_key VARCHAR(191) NOT NULL, sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY uk_provider_dispatch_dedupe (dedupe_key), KEY idx_provider_dispatch_user (user_id, sent_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+  );
+}
+
+/** 039 — day/month + end_exclusive 컬럼 (idempotent) */
+export function ensurePositionDurationSchemaE2e() {
+  try {
+    devSql('SELECT end_exclusive_on FROM provider_position_subscriptions LIMIT 0');
+    return;
+  } catch {
+    /* column missing — apply 039 */
+  }
+  devSql(
+    "ALTER TABLE provider_position_subscriptions ADD COLUMN duration_type ENUM('day','month') NOT NULL DEFAULT 'day' AFTER sku_code, ADD COLUMN duration_value INT UNSIGNED NOT NULL DEFAULT 0 AFTER duration_type, ADD COLUMN started_on DATE NULL AFTER period_days, ADD COLUMN end_exclusive_on DATE NULL AFTER started_on",
+  );
+  devSql(
+    "UPDATE provider_position_subscriptions SET started_on=DATE(starts_at), end_exclusive_on=DATE(ends_at), duration_type='day', duration_value=CASE WHEN period_days>0 THEN period_days ELSE 1 END WHERE started_on IS NULL OR end_exclusive_on IS NULL",
+  );
+  devSql(
+    'UPDATE provider_position_subscriptions SET starts_at=TIMESTAMP(started_on), ends_at=TIMESTAMP(end_exclusive_on) WHERE started_on IS NOT NULL AND end_exclusive_on IS NOT NULL',
+  );
+  devSql(
+    'ALTER TABLE provider_position_subscriptions MODIFY COLUMN started_on DATE NOT NULL, MODIFY COLUMN end_exclusive_on DATE NOT NULL',
   );
 }
 

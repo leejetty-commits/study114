@@ -23,7 +23,7 @@ import {
  */
 
 /** @deprecated seed는 runtime-config — 호환용 라벨 */
-export const PERIOD_OPTIONS = ['14일', '30일', '60일', '90일'];
+export const PERIOD_OPTIONS = ['14일', '21일', '1개월', '2개월', '3개월'];
 export const COUNT_PACK_OPTIONS = ['5회', '10회', '20회'];
 export const DUMMY_PRICE = '10원';
 

@@ -83,7 +83,7 @@ function getSeedHistory() {
   const seed = [
     {
       orderRef: 'demo-prime-001',
-      productName: '대표 노출 · 30일',
+      productName: '대표 노출 · 1개월',
       providerLabel: '샘플 공부방',
       amountKrw: 10,
       paymentMethod: 'card',

@@ -128,7 +128,7 @@ export function renderPaidUsage(role) {
       ? `<ul class="plans-tier-list">${exposure.positions
           .map(
             (p) =>
-              `<li><strong>${esc(String(p.sku).toUpperCase())}</strong> · ${p.days_left}일 남음 (~${esc(String(p.ends_at).slice(0, 10))})</li>`,
+              `<li><strong>${esc(String(p.sku).toUpperCase())}</strong> · ${p.days_left}일 남음 (~${esc(String(p.ends_on || p.ends_at).slice(0, 10))})</li>`,
           )
           .join('')}</ul>`
       : '';

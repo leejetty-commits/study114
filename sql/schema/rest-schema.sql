@@ -1472,13 +1472,20 @@ CREATE TABLE provider_position_subscriptions (
   id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id         BIGINT UNSIGNED NOT NULL,
   sku_code        ENUM('prime', 'pick') NOT NULL,
-  period_days     INT UNSIGNED    NOT NULL,
+  duration_type   ENUM('day', 'month') NOT NULL DEFAULT 'day'
+                  COMMENT 'day=일수형 · month=calendar month',
+  duration_value  INT UNSIGNED    NOT NULL DEFAULT 0
+                  COMMENT 'day면 일수 · month면 개월 수',
+  period_days     INT UNSIGNED    NOT NULL COMMENT 'end_exclusive - started 일수(참고)',
+  started_on      DATE            NOT NULL COMMENT '이용 시작일',
+  end_exclusive_on DATE           NOT NULL COMMENT 'CURDATE() < end_exclusive_on 이면 활성',
   starts_at       DATETIME        NOT NULL,
-  ends_at         DATETIME        NOT NULL,
+  ends_at         DATETIME        NOT NULL COMMENT 'end_exclusive_on 00:00:00',
   source          VARCHAR(32)     NOT NULL DEFAULT 'manual',
   created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_position_user_ends (user_id, ends_at),
+  KEY idx_position_user_end_exclusive (user_id, end_exclusive_on),
   CONSTRAINT fk_position_subs_user
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -1494,8 +1501,11 @@ WHERE memo_credits > 0;
 INSERT INTO provider_ticket_packs (user_id, ticket_type, pack_size, remaining, purchased_at, expires_at, source)
 VALUES (4, 'memo', 5, 5, NOW(), DATE_ADD(NOW(), INTERVAL 6 MONTH), 'manual');
 
-INSERT INTO provider_position_subscriptions (user_id, sku_code, period_days, starts_at, ends_at, source)
-VALUES (4, 'pick', 14, NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY), 'manual');
+INSERT INTO provider_position_subscriptions
+  (user_id, sku_code, duration_type, duration_value, period_days, started_on, end_exclusive_on, starts_at, ends_at, source)
+VALUES
+  (4, 'pick', 'day', 14, 14, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY),
+   TIMESTAMP(CURDATE()), TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 14 DAY)), 'manual');
 
 -- dev: @dev.local 계정 이메일 인증 완료 (E2E·로컬 행동 게이트)
 USE study114;
@@ -1616,4 +1626,9 @@ USE study114;
 UPDATE study_rooms SET latitude = 37.4965, longitude = 127.0602 WHERE id = 1;
 UPDATE study_rooms SET latitude = 35.1638, longitude = 129.1641 WHERE id = 2;
 UPDATE study_rooms SET latitude = 35.1698, longitude = 129.1318 WHERE id = 3;
+
+-- =============================================================================
+-- study114 schema 039 — Prime/Pick day|month + end_exclusive (rest-schema는 CREATE에 반영됨)
+-- 기존 DB는 sql/schema/039_position_duration_calendar.sql 적용
+-- =============================================================================
 

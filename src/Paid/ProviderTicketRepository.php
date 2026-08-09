@@ -94,11 +94,13 @@ final class ProviderTicketRepository
     public function listActivePositions(int $userId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, sku_code, period_days, starts_at, ends_at,
-                    GREATEST(0, DATEDIFF(ends_at, NOW())) AS days_left
+            'SELECT id, sku_code, duration_type, duration_value, period_days,
+                    started_on, end_exclusive_on, starts_at, ends_at,
+                    DATE_SUB(end_exclusive_on, INTERVAL 1 DAY) AS ends_on,
+                    GREATEST(0, DATEDIFF(end_exclusive_on, CURDATE())) AS days_left
              FROM provider_position_subscriptions
-             WHERE user_id = ? AND ends_at > NOW()
-             ORDER BY ends_at DESC'
+             WHERE user_id = ? AND CURDATE() < end_exclusive_on
+             ORDER BY end_exclusive_on DESC'
         );
         $stmt->execute([$userId]);
         $rows = $stmt->fetchAll();
@@ -117,7 +119,7 @@ final class ProviderTicketRepository
         }
         $stmt = $this->pdo->prepare(
             'SELECT COUNT(*) FROM provider_position_subscriptions
-             WHERE sku_code = ? AND ends_at > NOW()'
+             WHERE sku_code = ? AND CURDATE() < end_exclusive_on'
         );
         $stmt->execute([$skuCode]);
 
@@ -229,20 +231,48 @@ final class ProviderTicketRepository
         $stmt->execute([$userId, $ticketType, $count, $count, $source]);
     }
 
-    public function addPositionSubscription(int $userId, string $skuCode, int $periodDays, string $source = 'payment'): void
+    /**
+     * @param array{
+     *   duration_type: string,
+     *   duration_value: int,
+     *   started_on: string,
+     *   end_exclusive_on: string,
+     *   period_days: int,
+     *   starts_at: string,
+     *   ends_at: string
+     * } $period PositionPeriodCalculator::compute|fromVariant 결과
+     */
+    public function addPositionSubscription(int $userId, string $skuCode, array $period, string $source = 'payment'): void
     {
         if (!in_array($skuCode, ['prime', 'pick'], true)) {
             throw new \InvalidArgumentException('sku_code: prime | pick');
         }
-        if ($periodDays <= 0) {
-            throw new \InvalidArgumentException('period_days는 1 이상이어야 합니다.');
+        $type = (string) ($period['duration_type'] ?? '');
+        $value = (int) ($period['duration_value'] ?? 0);
+        if ($type !== PositionPeriodCalculator::TYPE_DAY && $type !== PositionPeriodCalculator::TYPE_MONTH) {
+            throw new \InvalidArgumentException('duration_type: day | month');
+        }
+        if ($value <= 0) {
+            throw new \InvalidArgumentException('duration_value는 1 이상이어야 합니다.');
         }
         $stmt = $this->pdo->prepare(
             'INSERT INTO provider_position_subscriptions
-             (user_id, sku_code, period_days, starts_at, ends_at, source)
-             VALUES (?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL ? DAY), ?)'
+             (user_id, sku_code, duration_type, duration_value, period_days,
+              started_on, end_exclusive_on, starts_at, ends_at, source)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
-        $stmt->execute([$userId, $skuCode, $periodDays, $periodDays, $source]);
+        $stmt->execute([
+            $userId,
+            $skuCode,
+            $type,
+            $value,
+            (int) $period['period_days'],
+            (string) $period['started_on'],
+            (string) $period['end_exclusive_on'],
+            (string) $period['starts_at'],
+            (string) $period['ends_at'],
+            $source,
+        ]);
     }
 
     private function assertTicketType(string $ticketType): void

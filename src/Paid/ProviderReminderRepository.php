@@ -20,11 +20,11 @@ final class ProviderReminderRepository
         }
         $placeholders = implode(',', array_fill(0, count($dayThresholds), '?'));
         $stmt = $this->pdo->prepare(
-            "SELECT id, user_id, sku_code, ends_at,
-                    DATEDIFF(DATE(ends_at), CURDATE()) AS days_left
+            "SELECT id, user_id, sku_code, end_exclusive_on, ends_at,
+                    DATEDIFF(end_exclusive_on, CURDATE()) AS days_left
              FROM provider_position_subscriptions
-             WHERE ends_at > NOW()
-               AND DATEDIFF(DATE(ends_at), CURDATE()) IN ({$placeholders})"
+             WHERE CURDATE() < end_exclusive_on
+               AND DATEDIFF(end_exclusive_on, CURDATE()) IN ({$placeholders})"
         );
         $stmt->execute($dayThresholds);
         $rows = $stmt->fetchAll();

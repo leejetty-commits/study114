@@ -171,7 +171,12 @@ final class ProviderTicketService
                 'positions' => array_map(static function (array $row): array {
                     return [
                         'sku' => (string) $row['sku_code'],
+                        'duration_type' => (string) ($row['duration_type'] ?? 'day'),
+                        'duration_value' => (int) ($row['duration_value'] ?? $row['period_days'] ?? 0),
                         'period_days' => (int) $row['period_days'],
+                        'started_on' => (string) ($row['started_on'] ?? substr((string) $row['starts_at'], 0, 10)),
+                        'end_exclusive_on' => (string) ($row['end_exclusive_on'] ?? ''),
+                        'ends_on' => (string) ($row['ends_on'] ?? ''),
                         'starts_at' => (string) $row['starts_at'],
                         'ends_at' => (string) $row['ends_at'],
                         'days_left' => (int) $row['days_left'],

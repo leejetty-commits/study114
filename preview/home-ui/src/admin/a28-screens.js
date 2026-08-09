@@ -1214,7 +1214,8 @@ function renderCommerce() {
         <td>${esc(p.user_email)}</td>
         <td><strong>${esc(adminProductLabel(p.sku_code))}</strong></td>
         <td>${p.days_left}일</td>
-        <td>${esc(p.ends_at)}</td>
+        <td title="포함 종료일">${esc(p.ends_on || String(p.ends_at || '').slice(0, 10))}</td>
+        <td title="end_exclusive">${esc(p.end_exclusive_on || p.ends_at)}</td>
         <td>${corr}</td>
       </tr>`;
     })
@@ -1279,8 +1280,8 @@ function renderCommerce() {
      ${slotHtml}
      ${settings ? `<p class="a28-help">대표 노출 ${settings.prime_slots}자리 · 추천 노출 ${settings.pick_set_size}개씩 · 기본 노출 ${settings.basic_page_size}개/페이지</p>` : ''}
      <h3 class="admin-section-title">대표·추천 노출 이용 중</h3>
-     <table class="sup-admin-table"><thead><tr><th>식별번호</th><th>계정</th><th>상품</th><th>남은일</th><th>만료</th><th>보정</th></tr></thead>
-     <tbody>${posRows || '<tr><td colspan="6" class="sup-empty">활성 구독 없음</td></tr>'}</tbody></table>
+     <table class="sup-admin-table"><thead><tr><th>식별번호</th><th>계정</th><th>상품</th><th>남은일</th><th>종료(포함)</th><th>exclusive</th><th>보정</th></tr></thead>
+     <tbody>${posRows || '<tr><td colspan="7" class="sup-empty">활성 구독 없음</td></tr>'}</tbody></table>
      <h3 class="admin-section-title">접근권(횟수권) 묶음</h3>
      <table class="sup-admin-table"><thead><tr><th>식별번호</th><th>계정</th><th>유형</th><th>잔여</th><th>만료</th><th>보정</th></tr></thead>
      <tbody>${ticketRows || '<tr><td colspan="6" class="sup-empty">사용 중인 묶음 없음</td></tr>'}</tbody></table>
@@ -1344,7 +1345,7 @@ function renderMembers() {
       .map((o) => `<li>${esc(o.provider)} · ${esc(o.providerEmail || '—')} · ${esc(o.linkedAt)}</li>`)
       .join('');
     const positions = (detail.paid?.positions || [])
-      .map((p) => `<li>${esc(adminProductLabel(p.sku_code))} · ${esc(p.ends_at)} (${p.days_left}일 남음)</li>`)
+      .map((p) => `<li>${esc(adminProductLabel(p.sku_code))} · ~${esc(p.ends_on || p.ends_at)} (${p.days_left}일 남음)</li>`)
       .join('');
     const tickets = (detail.paid?.tickets || [])
       .map((t) => `<li>${esc(ticketTypeLabel(t.ticket_type))} · 잔여 ${t.remaining}/${t.pack_size}</li>`)

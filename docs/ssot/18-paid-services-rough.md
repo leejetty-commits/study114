@@ -363,8 +363,10 @@ provider_entitlements
 position_subscriptions    -- Prime/Pick 기간형 (18b)
   user_id
   sku_code                prime | pick
-  period_days
-  starts_at / ends_at
+  duration_type           day | month
+  duration_value          일수 또는 개월 수
+  started_on / end_exclusive_on   -- 화면 종료일(포함)=exclusive 전날
+  period_days / starts_at / ends_at  -- 호환·참고 (ends_at=exclusive 00:00)
 
 ticket_ledger             -- 횟수권 FIFO (18b)
   user_id

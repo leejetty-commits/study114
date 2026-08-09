@@ -43,7 +43,7 @@ final class AdminMemberRepository
                        ) AS subscription_tier,
                        (
                          SELECT COUNT(*) FROM provider_position_subscriptions pps
-                         WHERE pps.user_id = u.id AND pps.ends_at > NOW()
+                         WHERE pps.user_id = u.id AND CURDATE() < pps.end_exclusive_on
                        ) AS active_positions,
                        (
                          SELECT COUNT(*) FROM study_rooms sr
@@ -231,11 +231,14 @@ final class AdminMemberRepository
         }
 
         $stmt = $this->pdo->prepare(
-            'SELECT sku_code, period_days, starts_at, ends_at,
-                    TIMESTAMPDIFF(DAY, NOW(), ends_at) AS days_left
+            'SELECT sku_code, duration_type, duration_value, period_days,
+                    started_on, end_exclusive_on,
+                    DATE_SUB(end_exclusive_on, INTERVAL 1 DAY) AS ends_on,
+                    starts_at, ends_at,
+                    GREATEST(0, DATEDIFF(end_exclusive_on, CURDATE())) AS days_left
              FROM provider_position_subscriptions
-             WHERE user_id = ? AND ends_at > NOW()
-             ORDER BY ends_at ASC'
+             WHERE user_id = ? AND CURDATE() < end_exclusive_on
+             ORDER BY end_exclusive_on ASC'
         );
         $stmt->execute([$userId]);
         $positions = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];

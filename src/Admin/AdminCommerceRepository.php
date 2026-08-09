@@ -17,13 +17,16 @@ final class AdminCommerceRepository
     {
         $limit = max(1, min(200, $limit));
         $stmt = $this->pdo->prepare(
-            'SELECT p.id, p.user_id, u.email AS user_email, p.sku_code, p.period_days,
+            'SELECT p.id, p.user_id, u.email AS user_email, p.sku_code,
+                    p.duration_type, p.duration_value, p.period_days,
+                    p.started_on, p.end_exclusive_on,
+                    DATE_SUB(p.end_exclusive_on, INTERVAL 1 DAY) AS ends_on,
                     p.starts_at, p.ends_at, p.source, p.created_at,
-                    TIMESTAMPDIFF(DAY, NOW(), p.ends_at) AS days_left
+                    GREATEST(0, DATEDIFF(p.end_exclusive_on, CURDATE())) AS days_left
              FROM provider_position_subscriptions p
              INNER JOIN users u ON u.id = p.user_id
-             WHERE p.ends_at > NOW()
-             ORDER BY p.ends_at ASC, p.id DESC
+             WHERE CURDATE() < p.end_exclusive_on
+             ORDER BY p.end_exclusive_on ASC, p.id DESC
              LIMIT ' . $limit
         );
         $stmt->execute();
@@ -74,7 +77,7 @@ final class AdminCommerceRepository
     {
         $stmt = $this->pdo->prepare(
             'SELECT COUNT(*) FROM provider_position_subscriptions
-             WHERE sku_code = ? AND ends_at > NOW()'
+             WHERE sku_code = ? AND CURDATE() < end_exclusive_on'
         );
         $stmt->execute([$sku]);
 
@@ -83,11 +86,51 @@ final class AdminCommerceRepository
 
     public function updatePositionEndsAt(int $id, string $endsAt): bool
     {
+        $normalized = $this->normalizeExclusiveBoundary($endsAt);
         $stmt = $this->pdo->prepare(
-            'UPDATE provider_position_subscriptions SET ends_at = ? WHERE id = ? LIMIT 1'
+            'UPDATE provider_position_subscriptions
+             SET ends_at = ?, end_exclusive_on = ?
+             WHERE id = ? LIMIT 1'
         );
 
-        return $stmt->execute([$endsAt, $id]) && $stmt->rowCount() > 0;
+        return $stmt->execute([
+            $normalized['ends_at'],
+            $normalized['end_exclusive_on'],
+            $id,
+        ]) && $stmt->rowCount() > 0;
+    }
+
+    /**
+     * 관리자 보정 입력 → end_exclusive 정규화.
+     * 23:59:59 등 포함형 EOD면 다음날 00:00 exclusive로 변환.
+     *
+     * @return array{ends_at: string, end_exclusive_on: string}
+     */
+    private function normalizeExclusiveBoundary(string $endsAt): array
+    {
+        $raw = str_replace('T', ' ', trim($endsAt));
+        $ts = strtotime($raw);
+        if ($ts === false) {
+            throw new \InvalidArgumentException('ends_at 형식이 올바르지 않습니다.');
+        }
+        $hour = (int) date('G', $ts);
+        $minute = (int) date('i', $ts);
+        $second = (int) date('s', $ts);
+        $date = date('Y-m-d', $ts);
+        // 자정(또는 오전)만 있으면 이미 exclusive date로 본다
+        if ($hour === 0 && $minute === 0 && $second === 0) {
+            return [
+                'ends_at' => $date . ' 00:00:00',
+                'end_exclusive_on' => $date,
+            ];
+        }
+        // 포함형 종료 시각 → 다음날 exclusive
+        $exclusive = date('Y-m-d', strtotime($date . ' +1 day'));
+
+        return [
+            'ends_at' => $exclusive . ' 00:00:00',
+            'end_exclusive_on' => $exclusive,
+        ];
     }
 
     public function updateTicketRemaining(int $id, int $remaining): bool
@@ -103,7 +146,10 @@ final class AdminCommerceRepository
     public function getPositionById(int $id): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, user_id, sku_code, period_days, starts_at, ends_at FROM provider_position_subscriptions WHERE id = ? LIMIT 1'
+            'SELECT id, user_id, sku_code, duration_type, duration_value, period_days,
+                    started_on, end_exclusive_on, starts_at, ends_at,
+                    DATE_SUB(end_exclusive_on, INTERVAL 1 DAY) AS ends_on
+             FROM provider_position_subscriptions WHERE id = ? LIMIT 1'
         );
         $stmt->execute([$id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);

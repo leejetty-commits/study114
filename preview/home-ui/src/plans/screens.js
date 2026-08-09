@@ -783,7 +783,7 @@ export function renderPlansMy() {
                   <tr>
                     <td><strong>${esc(productLabel(p.sku))}</strong></td>
                     <td>${p.days_left}일</td>
-                    <td>${esc(String(p.ends_at || '').slice(0, 10))}</td>
+                    <td>${esc(String(p.ends_on || p.ends_at || '').slice(0, 10))}</td>
                     <td><a href="#/plans/positions" class="btn btn--secondary btn--sm" data-plans-nav="/plans/positions">재구매</a></td>
                   </tr>`,
                   )

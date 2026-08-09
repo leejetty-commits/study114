@@ -11,7 +11,9 @@ const TEST_MODE_KEY = 'study114-plans-test-mode';
 /**
  * @typedef {object} PriceOption
  * @property {string} optionId
- * @property {number} [durationDays]
+ * @property {'day'|'month'} [durationType]
+ * @property {number} [durationValue]
+ * @property {number} [durationDays] deprecated — durationType=day 일 때 durationValue
  * @property {number} [creditCount]
  * @property {number} priceKrw
  * @property {string} label
@@ -89,10 +91,11 @@ export const PLAN_CATALOG_SEED = [
     featured: true,
     implemented: true,
     options: [
-      { optionId: 'prime_14', durationDays: 14, priceKrw: 39000, label: '14일', apiVariant: '2주' },
-      { optionId: 'prime_30', durationDays: 30, priceKrw: 69000, label: '30일', apiVariant: '1개월' },
-      { optionId: 'prime_60', durationDays: 60, priceKrw: 119000, label: '60일', apiVariant: '2개월' },
-      { optionId: 'prime_90', durationDays: 90, priceKrw: 159000, label: '90일', apiVariant: '3개월' },
+      { optionId: 'prime_14', durationType: 'day', durationValue: 14, priceKrw: 39000, label: '14일', apiVariant: '2주' },
+      { optionId: 'prime_21', durationType: 'day', durationValue: 21, priceKrw: 52000, label: '21일', apiVariant: '3주' },
+      { optionId: 'prime_1m', durationType: 'month', durationValue: 1, priceKrw: 69000, label: '1개월', apiVariant: '1개월' },
+      { optionId: 'prime_2m', durationType: 'month', durationValue: 2, priceKrw: 119000, label: '2개월', apiVariant: '2개월' },
+      { optionId: 'prime_3m', durationType: 'month', durationValue: 3, priceKrw: 159000, label: '3개월', apiVariant: '3개월' },
     ],
   },
   {
@@ -106,9 +109,11 @@ export const PLAN_CATALOG_SEED = [
     featured: true,
     implemented: true,
     options: [
-      { optionId: 'pick_14', durationDays: 14, priceKrw: 19000, label: '14일', apiVariant: '2주' },
-      { optionId: 'pick_30', durationDays: 30, priceKrw: 33000, label: '30일', apiVariant: '1개월' },
-      { optionId: 'pick_60', durationDays: 60, priceKrw: 55000, label: '60일', apiVariant: '2개월' },
+      { optionId: 'pick_14', durationType: 'day', durationValue: 14, priceKrw: 19000, label: '14일', apiVariant: '2주' },
+      { optionId: 'pick_21', durationType: 'day', durationValue: 21, priceKrw: 26000, label: '21일', apiVariant: '3주' },
+      { optionId: 'pick_1m', durationType: 'month', durationValue: 1, priceKrw: 33000, label: '1개월', apiVariant: '1개월' },
+      { optionId: 'pick_2m', durationType: 'month', durationValue: 2, priceKrw: 55000, label: '2개월', apiVariant: '2개월' },
+      { optionId: 'pick_3m', durationType: 'month', durationValue: 3, priceKrw: 75000, label: '3개월', apiVariant: '3개월' },
     ],
   },
   // region_top / basic_boost — 판매 상품에서 제거(기본 노출 올리기 상품 없음)

@@ -14,7 +14,7 @@ const CRON_KEY = 'dev-cron-key';
 
 function prepPositionExpiry7d() {
   devSql(
-    "UPDATE provider_position_subscriptions SET ends_at=CONCAT(DATE_ADD(CURDATE(), INTERVAL 7 DAY), ' 23:59:59') WHERE user_id=4",
+    "UPDATE provider_position_subscriptions SET end_exclusive_on=DATE_ADD(CURDATE(), INTERVAL 7 DAY), ends_at=TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 7 DAY)) WHERE user_id=4",
   );
 }
 
