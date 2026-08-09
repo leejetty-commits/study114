@@ -19,7 +19,7 @@ function renderBoardPolicyChips(boardKey, navRole) {
   const chips = [
     `<span class="lib-chip lib-chip--type">${esc(boardTypeLabel(meta.policy.boardType))}</span>`,
     `<span class="lib-chip">열람 ${meta.canRead ? '가능' : '제한'}</span>`,
-    `<span class="lib-chip">${meta.canDownload ? '다운로드 가능' : '로그인 후 다운로드'}</span>`,
+    `<span class="lib-chip">${meta.canDownload ? '다운로드 가능' : '자료 다운로드는 로그인 후 가능해요'}</span>`,
   ];
   if (meta.policy.requireReview) {
     chips.push('<span class="lib-chip lib-chip--muted">운영 검토 후 노출</span>');

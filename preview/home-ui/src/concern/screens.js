@@ -2,7 +2,6 @@ import {
   listCommunityBoards,
   CONCERN_COMPOSE_HINT,
   CONCERN_HUB_LEAD,
-  CONCERN_HUB_TITLE,
   CONCERN_POST_TYPES,
   CONCERN_REACTIONS,
   getConcernBoardByKey,
@@ -19,7 +18,16 @@ import {
   toggleConcernReaction,
 } from './store.js';
 import { getNavRole, navigate } from '../state.js';
-import { isLoggedIn } from '../auth-session.js';
+import {
+  boardLoginHref,
+  canCommentBoard,
+  canComposeBoard,
+  canListBoard,
+  canReadBoardDetail,
+  getBoardAccess,
+  roleGateCopy,
+} from '../board-channel-acl.js';
+import { renderStateCard } from '../empty-state-copy.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -50,7 +58,7 @@ function authorLine(post) {
   return `${esc(post.authorName)} · ${esc(post.authorRoleLabel)} · ${esc(formatTime(post.createdAt))}`;
 }
 
-function renderPostRow(post) {
+function renderPostRow(post, summaryOnly = false) {
   const board = getConcernBoardByKey(post.boardKey);
   const href = `${board?.path || '/community'}/${post.id}`;
   return `
@@ -60,12 +68,18 @@ function renderPostRow(post) {
         <strong class="concern-row__title">${esc(post.title)}</strong>
       </div>
       <span class="concern-row__sub">${authorLine(post)}</span>
-      <span class="concern-row__stats">댓글 ${post.comments?.length || 0} · 반응 ${reactionTotal(post)}</span>
+      ${
+        summaryOnly
+          ? '<span class="concern-row__stats">로그인 후 본문·댓글을 볼 수 있어요</span>'
+          : `<span class="concern-row__stats">댓글 ${post.comments?.length || 0} · 반응 ${reactionTotal(post)}</span>`
+      }
     </a>`;
 }
 
-function renderCommunityAlerts() {
-  const alerts = listCommunityBoards().flatMap((board) => listConcernPosts(board.boardKey))
+function renderCommunityAlerts(navRole) {
+  const alerts = listCommunityBoards()
+    .filter((board) => canListBoard(board.boardKey, navRole))
+    .flatMap((board) => listConcernPosts(board.boardKey))
     .filter((p) => p.type === 'community_alert' && p.pinned)
     .slice(0, 2);
   if (!alerts.length) return '';
@@ -89,16 +103,22 @@ function renderHub() {
   const role = getNavRole();
   const prefer = preferredConcernBoardId(role);
   return `
-    ${renderCommunityAlerts()}
+    ${renderCommunityAlerts(role)}
     <section class="concern-hero">
       <p class="concern-eyebrow">현장형 커뮤니티</p>
       <p class="concern-hero__lead">${esc(CONCERN_HUB_LEAD)}</p>
     </section>
     <section class="concern-board-grid">
-      ${listCommunityBoards().map((board) => {
-        const hot = listConcernPosts(board.boardKey, { sort: 'hot' })[0];
-        const emphasize = board.id === prefer ? ' concern-board-card--prefer' : '';
-        return `
+      ${listCommunityBoards()
+        .filter((board) => canListBoard(board.boardKey, role))
+        .map((board) => {
+          const access = getBoardAccess(board.boardKey, role);
+          const hot = listConcernPosts(board.boardKey, { sort: 'hot' })[0];
+          const emphasize = board.id === prefer ? ' concern-board-card--prefer' : '';
+          const writeBtn = access.canCompose
+            ? `<a class="guide-btn guide-btn--secondary" href="#${esc(board.path)}/new" data-concern-nav="${esc(board.path)}/new">글쓰기</a>`
+            : '';
+          return `
           <article class="concern-board-card${emphasize}">
             <h3 class="concern-board-card__title">${esc(board.label)}</h3>
             <p class="concern-board-card__hint">${esc(board.roleHint)}</p>
@@ -109,14 +129,20 @@ function renderHub() {
             }
             <div class="concern-board-card__actions">
               <a class="guide-btn guide-btn--primary" href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">게시판 열기</a>
-              <a class="guide-btn guide-btn--secondary" href="#${esc(board.path)}/new" data-concern-nav="${esc(board.path)}/new">글쓰기</a>
+              ${writeBtn}
             </div>
           </article>`;
-      }).join('')}
+        })
+        .join('')}
     </section>`;
 }
 
 function renderList(board, query) {
+  const role = getNavRole();
+  if (!canListBoard(board.boardKey, role)) {
+    return renderBoardBlocked(board, role);
+  }
+  const access = getBoardAccess(board.boardKey, role);
   const type = query.get('type') || 'all';
   const sort = query.get('sort') || 'recent';
   const posts = listConcernPosts(board.boardKey, { type, sort });
@@ -124,11 +150,21 @@ function renderList(board, query) {
     { id: 'all', label: '전체' },
     ...Object.entries(CONCERN_POST_TYPES).map(([id, meta]) => ({ id, label: meta.label })),
   ];
+  const writeBtn = access.canCompose
+    ? `<a class="guide-btn guide-btn--primary" href="#${esc(board.path)}/new" data-concern-nav="${esc(board.path)}/new">글쓰기</a>`
+    : role === 'guest'
+      ? `<a class="guide-btn guide-btn--secondary" href="${esc(boardLoginHref('community-compose'))}">로그인 후 글쓰기</a>`
+      : '';
+  const summaryNote =
+    access.access === 'summary'
+      ? `<p class="concern-note">${esc(roleGateCopy(board.boardKey).body)}</p>`
+      : '';
   return `
     <section class="concern-list-head">
       <p class="concern-eyebrow">${esc(board.roleHint)}</p>
-      <a class="guide-btn guide-btn--primary" href="#${esc(board.path)}/new" data-concern-nav="${esc(board.path)}/new">글쓰기</a>
+      ${writeBtn}
     </section>
+    ${summaryNote}
     <div class="concern-filters" role="tablist" aria-label="글 유형">
       ${filters
         .map(
@@ -145,36 +181,87 @@ function renderList(board, query) {
       <a class="concern-sort__link${sort === 'comments' ? ' is-active' : ''}" href="#${esc(board.path)}?type=${esc(type)}&sort=comments" data-concern-nav="${esc(board.path)}?type=${esc(type)}&sort=comments">댓글많은</a>
     </div>
     <div class="concern-list">
-      ${posts.length ? posts.map(renderPostRow).join('') : '<p class="concern-empty">아직 글이 없습니다. 첫 고민을 남겨보세요.</p>'}
+      ${
+        posts.length
+          ? posts.map((p) => renderPostRow(p, access.access === 'summary')).join('')
+          : '<p class="concern-empty">아직 글이 없습니다. 첫 고민을 남겨보세요.</p>'
+      }
     </div>`;
 }
 
-function renderReactions(post) {
+function renderReactions(post, enabled) {
   return `
     <div class="concern-reactions" data-concern-post="${esc(post.id)}">
       ${Object.entries(CONCERN_REACTIONS)
         .map(([key, meta]) => {
           const active = hasMyReaction(post.id, key) ? ' is-active' : '';
           const count = Number(post.reactions?.[key] || 0);
-          return `<button type="button" class="concern-reaction${active}" data-concern-reaction="${esc(key)}" aria-pressed="${active ? 'true' : 'false'}">${esc(meta.emoji)} ${esc(meta.label)} <strong>${count}</strong></button>`;
+          const disabled = enabled ? '' : ' disabled';
+          return `<button type="button" class="concern-reaction${active}" data-concern-reaction="${esc(key)}" aria-pressed="${active ? 'true' : 'false'}"${disabled}>${esc(meta.emoji)} ${esc(meta.label)} <strong>${count}</strong></button>`;
         })
         .join('')}
     </div>`;
 }
 
+function renderBoardBlocked(board, role) {
+  const gate = roleGateCopy(board.boardKey);
+  if (role === 'guest') {
+    return renderStateCard({
+      title: '로그인이 필요합니다',
+      body: gate.body || '로그인 후 본문을 볼 수 있어요.',
+      links: [
+        { label: '로그인', href: boardLoginHref('community') },
+        { label: '커뮤니티 홈', href: '#/community' },
+      ],
+    });
+  }
+  return renderStateCard({
+    title: gate.title,
+    body: gate.body,
+    links: [{ label: '커뮤니티 홈', href: '#/community' }],
+  });
+}
+
 function renderDetail(board, postId) {
+  const role = getNavRole();
+  if (!canListBoard(board.boardKey, role)) {
+    return renderBoardBlocked(board, role);
+  }
   const post = getConcernPost(postId);
   if (!post || post.boardKey !== board.boardKey) {
     return `<p class="concern-empty">글을 찾을 수 없습니다. <a href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">목록으로</a></p>`;
   }
-  return `
-    <article class="concern-detail">
-      <a class="concern-back" href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">← ${esc(board.label)}</a>
-      <div class="concern-detail__meta">${typeBadge(post.type)}${post.pinned ? ' <span class="concern-pin">고정</span>' : ''}</div>
-      <h2 class="concern-detail__title">${esc(post.title)}</h2>
-      <p class="concern-detail__author">${authorLine(post)}</p>
-      <div class="concern-detail__body">${esc(post.body)}</div>
-      ${renderReactions(post)}
+  const access = getBoardAccess(board.boardKey, role);
+  const gate = roleGateCopy(board.boardKey);
+
+  let bodyHtml = '';
+  if (access.canDetail) {
+    bodyHtml = `<div class="concern-detail__body">${esc(post.body)}</div>`;
+  } else if (role === 'guest') {
+    bodyHtml = `
+      <div class="concern-detail__gate">
+        ${renderStateCard({
+          title: '로그인이 필요합니다',
+          body: '로그인 후 본문을 볼 수 있어요.',
+          links: [{ label: '로그인', href: boardLoginHref('community-detail') }],
+        })}
+      </div>`;
+  } else {
+    bodyHtml = `
+      <div class="concern-detail__gate">
+        ${renderStateCard({
+          title: gate.title,
+          body: gate.body,
+          links: [{ label: '목록으로', href: `#${board.path}` }],
+        })}
+      </div>`;
+  }
+
+  const reactionsHtml = access.canDetail
+    ? renderReactions(post, access.canComment)
+    : '';
+  const commentsHtml = access.canDetail
+    ? `
       <section class="concern-comments">
         <h3 class="concern-comments__title">댓글 ${post.comments?.length || 0}</h3>
         <ul class="concern-comments__list">
@@ -187,31 +274,66 @@ function renderDetail(board, postId) {
               <p>${esc(c.body)}</p>
             </li>`,
             )
-            .join('') || '<li class="concern-empty">아직 댓글이 없습니다. 한줄 조언을 남겨보세요.</li>'}
+            .join('') || '<li class="concern-empty">아직 댓글이 없습니다.</li>'}
         </ul>
-        <form class="concern-comment-form" data-concern-comment-form="${esc(post.id)}">
+        ${
+          access.canComment
+            ? `<form class="concern-comment-form" data-concern-comment-form="${esc(post.id)}">
           <label class="concern-field">
             <span>댓글</span>
             <textarea name="body" rows="3" maxlength="500" placeholder="짧은 조언이나 경험을 남겨주세요" required></textarea>
           </label>
           <button type="submit" class="guide-btn guide-btn--primary">댓글 남기기</button>
-        </form>
-      </section>
+        </form>`
+            : role === 'guest'
+              ? `<p class="concern-note"><a href="${esc(boardLoginHref('community-comment'))}">로그인 후 댓글을 남길 수 있어요</a></p>`
+              : `<p class="concern-note">이 게시판에서는 댓글 권한이 없습니다.</p>`
+        }
+      </section>`
+    : '';
+
+  return `
+    <article class="concern-detail">
+      <a class="concern-back" href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">← ${esc(board.label)}</a>
+      <div class="concern-detail__meta">${typeBadge(post.type)}${post.pinned ? ' <span class="concern-pin">고정</span>' : ''}</div>
+      <h2 class="concern-detail__title">${esc(post.title)}</h2>
+      <p class="concern-detail__author">${authorLine(post)}</p>
+      ${bodyHtml}
+      ${reactionsHtml}
+      ${commentsHtml}
     </article>`;
 }
 
 function renderCompose(board) {
-  const loggedIn = isLoggedIn();
+  const role = getNavRole();
+  if (!canComposeBoard(board.boardKey, role)) {
+    const gate = roleGateCopy(board.boardKey);
+    if (role === 'guest') {
+      return `
+        <section class="concern-compose">
+          <a class="concern-back" href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">← ${esc(board.label)}</a>
+          ${renderStateCard({
+            title: '로그인이 필요합니다',
+            body: '로그인 후 글을 작성할 수 있어요.',
+            links: [{ label: '로그인', href: boardLoginHref('community-compose') }],
+          })}
+        </section>`;
+    }
+    return `
+      <section class="concern-compose">
+        <a class="concern-back" href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">← ${esc(board.label)}</a>
+        ${renderStateCard({
+          title: gate.title,
+          body: '이 게시판에 글을 쓸 권한이 없습니다.',
+          links: [{ label: '목록으로', href: `#${board.path}` }],
+        })}
+      </section>`;
+  }
   const defaultType = board.defaultTypes?.[0] || 'worry';
   return `
     <section class="concern-compose">
       <a class="concern-back" href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">← ${esc(board.label)}</a>
       <p class="concern-compose__hint">${esc(CONCERN_COMPOSE_HINT)}</p>
-      ${
-        !loggedIn
-          ? `<p class="concern-note">미리보기에서는 비로그인도 작성할 수 있습니다. 운영 반영 시 로그인 후 이용으로 잠급니다.</p>`
-          : ''
-      }
       <form class="concern-compose-form" data-concern-compose="${esc(board.boardKey)}" data-concern-path="${esc(board.path)}">
         <label class="concern-field">
           <span>글 타입</span>
@@ -248,13 +370,16 @@ export function renderConcernScreen(path) {
 
 export function renderConcernSideNav(currentPath) {
   const pathOnly = currentPath.split('?')[0];
+  const role = getNavRole();
   const items = [
     { label: '커뮤니티 홈', path: '/community', active: pathOnly === '/community' },
-    ...concernBoardNav(pathOnly).map((b) => ({
-      label: b.label,
-      path: b.path,
-      active: b.active,
-    })),
+    ...concernBoardNav(pathOnly)
+      .filter((b) => canListBoard(b.boardKey, role))
+      .map((b) => ({
+        label: b.label,
+        path: b.path,
+        active: b.active,
+      })),
   ];
   return `
     <nav class="concern-nav" aria-label="커뮤니티 메뉴">
@@ -288,10 +413,14 @@ export function bindConcernScreenEvents(root, rerender) {
 
   root.querySelectorAll('[data-concern-reaction]').forEach((btn) => {
     btn.addEventListener('click', () => {
+      if (btn.hasAttribute('disabled')) return;
       const wrap = btn.closest('[data-concern-post]');
       const postId = wrap?.getAttribute('data-concern-post');
       const key = btn.getAttribute('data-concern-reaction');
       if (!postId || !key) return;
+      const post = getConcernPost(postId);
+      const role = getNavRole();
+      if (!post || !canCommentBoard(post.boardKey, role)) return;
       toggleConcernReaction(postId, key);
       rerender();
     });
@@ -304,6 +433,9 @@ export function bindConcernScreenEvents(root, rerender) {
       const fd = new FormData(form);
       const body = String(fd.get('body') || '').trim();
       if (!postId || !body) return;
+      const post = getConcernPost(postId);
+      const role = getNavRole();
+      if (!post || !canCommentBoard(post.boardKey, role)) return;
       const meta = roleAuthorMeta();
       addConcernComment(postId, { authorName: meta.authorName, body });
       rerender();
@@ -315,11 +447,13 @@ export function bindConcernScreenEvents(root, rerender) {
       e.preventDefault();
       const boardKey = form.getAttribute('data-concern-compose');
       const basePath = form.getAttribute('data-concern-path') || '/community';
+      const role = getNavRole();
+      if (!boardKey || !canComposeBoard(boardKey, role)) return;
       const fd = new FormData(form);
       const title = String(fd.get('title') || '').trim();
       const body = String(fd.get('body') || '').trim();
       const type = String(fd.get('type') || 'worry');
-      if (!boardKey || !title || !body) return;
+      if (!title || !body) return;
       const meta = roleAuthorMeta();
       const post = createConcernPost({
         boardKey,

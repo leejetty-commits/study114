@@ -121,7 +121,7 @@ final class ContentConfigRepository
         $stmt = $this->pdo->query(
             'SELECT id, slot_key, page_type, source_type, source_board_key, source_board_keys_json,
                     selection_mode, item_limit, section_title, cta_label, cta_target, mobile_behavior,
-                    visibility_rule, role_target, enabled, status, priority, sort_order,
+                    visibility_rule, role_target, guest_filter, enabled, status, priority, sort_order,
                     created_at, updated_at, created_by, updated_by
              FROM right_rail_slot_definitions
              ORDER BY priority ASC, slot_key ASC'
@@ -136,7 +136,7 @@ final class ContentConfigRepository
         $stmt = $this->pdo->prepare(
             'SELECT id, slot_key, page_type, source_type, source_board_key, source_board_keys_json,
                     selection_mode, item_limit, section_title, cta_label, cta_target, mobile_behavior,
-                    visibility_rule, role_target, enabled, status, priority, sort_order,
+                    visibility_rule, role_target, guest_filter, enabled, status, priority, sort_order,
                     created_at, updated_at, created_by, updated_by
              FROM right_rail_slot_definitions
              WHERE slot_key = ?'
@@ -161,7 +161,7 @@ final class ContentConfigRepository
                 'UPDATE right_rail_slot_definitions
                  SET page_type = ?, source_type = ?, source_board_key = ?, source_board_keys_json = ?,
                      selection_mode = ?, item_limit = ?, section_title = ?, cta_label = ?, cta_target = ?,
-                     mobile_behavior = ?, visibility_rule = ?, role_target = ?, enabled = ?, status = ?,
+                     mobile_behavior = ?, visibility_rule = ?, role_target = ?, guest_filter = ?, enabled = ?, status = ?,
                      priority = ?, updated_by = ?, updated_at = NOW()
                  WHERE slot_key = ?'
             );
@@ -178,6 +178,7 @@ final class ContentConfigRepository
                 (string) ($input['mobileBehavior'] ?? $input['mobile_behavior'] ?? 'stack'),
                 (string) ($input['visibilityRule'] ?? $input['visibility_rule'] ?? 'public'),
                 (string) ($input['roleTarget'] ?? $input['role_target'] ?? 'all'),
+                (string) ($input['guestFilter'] ?? $input['guest_filter'] ?? 'allow'),
                 $enabled ? 1 : 0,
                 (string) ($input['status'] ?? 'active'),
                 (int) ($input['priority'] ?? 50),
@@ -189,8 +190,8 @@ final class ContentConfigRepository
                 'INSERT INTO right_rail_slot_definitions
                  (slot_key, page_type, source_type, source_board_key, source_board_keys_json, selection_mode,
                   item_limit, section_title, cta_label, cta_target, mobile_behavior, visibility_rule,
-                  role_target, enabled, status, priority, created_by, updated_by)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                  role_target, guest_filter, enabled, status, priority, created_by, updated_by)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             );
             $stmt->execute([
                 $slotKey,
@@ -206,6 +207,7 @@ final class ContentConfigRepository
                 (string) ($input['mobileBehavior'] ?? $input['mobile_behavior'] ?? 'stack'),
                 (string) ($input['visibilityRule'] ?? $input['visibility_rule'] ?? 'public'),
                 (string) ($input['roleTarget'] ?? $input['role_target'] ?? 'all'),
+                (string) ($input['guestFilter'] ?? $input['guest_filter'] ?? 'allow'),
                 $enabled ? 1 : 0,
                 (string) ($input['status'] ?? 'active'),
                 (int) ($input['priority'] ?? 50),

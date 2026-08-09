@@ -394,10 +394,11 @@ export const BOARD_REGISTRY = [
     presetId: 'concern',
     sectionOwner: 'community',
     userFacingMenu: '원장 고민방',
+    // list: guest 포함 · full detail/compose는 board-channel-acl.js
     visibility: 'public',
     readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
     downloadRoles: [],
-    writeRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+    writeRoles: ['supply-room'],
     allowComment: true,
     allowUpload: true,
     requireReview: false,
@@ -418,7 +419,7 @@ export const BOARD_REGISTRY = [
     visibility: 'public',
     readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
     downloadRoles: [],
-    writeRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+    writeRoles: ['supply-tutor'],
     allowComment: true,
     allowUpload: true,
     requireReview: false,
@@ -436,10 +437,11 @@ export const BOARD_REGISTRY = [
     presetId: 'concern',
     sectionOwner: 'community',
     userFacingMenu: '학부모/학생 고민방',
+    /** 문서 concern-family ≡ concern-parent */
     visibility: 'public',
     readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
     downloadRoles: [],
-    writeRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+    writeRoles: ['demand', 'member'],
     allowComment: true,
     allowUpload: true,
     requireReview: false,
@@ -497,12 +499,19 @@ export function canBoardAction(boardKey, action, role) {
   const policy = getBoardPolicy(boardKey);
   if (!policy || policy.enabled === false) return false;
   if (action === 'read') return policy.readRoles.includes(role);
-  if (action === 'download') return policy.downloadRoles.includes(role);
+  if (action === 'download') {
+    if (role === 'guest') return false;
+    return policy.downloadRoles.includes(role);
+  }
   if (action === 'write' || action === 'upload') {
     if (role === 'guest') return false;
     return policy.writeRoles.includes(role);
   }
-  if (action === 'comment') return policy.allowComment && policy.readRoles.includes(role);
+  // guest는 댓글/반응 불가 — list용 readRoles에 guest가 있어도 comment는 차단
+  if (action === 'comment') {
+    if (role === 'guest') return false;
+    return policy.allowComment && policy.writeRoles.includes(role);
+  }
   if (action === 'moderate') return role === 'admin';
   return false;
 }

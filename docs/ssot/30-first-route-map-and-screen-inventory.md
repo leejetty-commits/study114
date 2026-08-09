@@ -636,6 +636,42 @@
 | 2026-07-07 | **부록 F** — A28-07 QA 조합표 · §11 A28-07 행 분리 · 28§3-b 연동 |
 | 2026-07-07 | **부록 G** — 화면 갭 감사 · §5-b P18 · §8·§16 row 확장 · route ownership 잠금안 |
 | 2026-07-07 | **P18 hash** — `#/mypage/paid` · `#/mypage/paid/usage` · P15-09 허브 분리 |
+| 2026-08-10 | **채널 ACL 런타임 연결** — `board-channel-acl.js` · `BoardChannelAcl.php` · community list/detail 분리 · 레일 `visibilityRule`/`roleTarget`/`guestFilter`/`sourceBoardKeys` 적용 · Board API 세션 게이트 · guest `/library` 잠금(`/library/guides` 목록만) |
+
+### 부록 H. channel ACL · guest list/detail · API gate (2026-08-10)
+
+**런타임 정본:** `preview/home-ui/src/right-rail-store.js` → `DEFAULT_RIGHT_RAIL_SLOTS`  
+(API mode DB overlay · `ContentSchemaMigrateService::railRows` 동일 값 유지)
+
+| slotKey | sourceBoardKeys | guestFilter | visibility/role | mobile |
+|---------|-----------------|-------------|-----------------|--------|
+| home_right_rail | notice, concern-director, concern-tutor, concern-parent | summary_only | public/all | stack |
+| search_right_rail | faq, concern-parent, safe-guide | summary_only | public/all | stack |
+| detail_right_rail | safe-guide, submission, notice | allow | public/all | collapse |
+| register_right_rail | library-template, concern-director, concern-tutor | block | login/provider | stack |
+| plans_right_rail | notice, faq, safe-guide | block | public/provider | collapse |
+| support_right_rail | notice, faq, library-guide-pdf | allow | public/all | stack |
+
+| boardKey | guest list | guest detail | full detail | compose |
+|----------|------------|--------------|-------------|---------|
+| notice/faq/safe-guide | ○ | ○ | 전체 | admin |
+| library / library-template | ✕ | ✕ | login | admin |
+| library-guide-pdf | ○ | ○(메타) | login download | admin |
+| submission | ✕ | ✕ | room/tutor | room/tutor |
+| concern-parent (family) | ○ 제목/요약 | ✕ | parent | parent |
+| concern-director | ○ 제목/요약 | ✕ | room | room |
+| concern-tutor | ○ 제목/요약 | ✕ | tutor | tutor |
+| concern-solved | ○ 제목/요약 | ✕ | login | login |
+
+| surface | gate |
+|---------|------|
+| `#/community/*` detail | FE `canReadBoardDetail` · 본문/댓글/반응 숨김 |
+| HOT/레일 카드 | list ACL + slot sourceBoardKeys만 · 클릭 후 동일 detail 게이트 |
+| `/api/board/posts.php` | session + `BoardChannelAcl` · 본문 redact |
+| attachment token/download | session + submission download ACL |
+| mobile inline rail | `renderRightRailBlock` 동일 ACL |
+
+**배포 후 체크:** guest 상세 URL · compose · API 직접 호출 · HOT 클릭 · room/tutor 역할 mismatch · library download · submission 진입.
 
 ---
 

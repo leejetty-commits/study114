@@ -28,19 +28,19 @@ export const PERMISSION_DENIED_COPY = {
   guest: {
     kind: 'guest',
     title: '로그인이 필요합니다',
-    body: '로그인 후 자세한 정보를 볼 수 있습니다.',
+    body: '로그인 후 본문을 볼 수 있어요.',
     cta: '로그인',
   },
   role: {
     kind: 'role',
     title: '역할 제한',
-    body: '이 기능은 과외쌤 역할에서 이용할 수 있습니다.',
+    body: '이 기능은 해당 역할에서만 이용할 수 있습니다.',
     cta: null,
   },
   paid: {
     kind: 'paid',
     title: '쪽지권·열람권 안내',
-    body: '이 기능은 쪽지권 또는 요청문 열람권이 필요합니다.',
+    body: '이 기능은 이용 조건을 확인한 뒤 사용할 수 있어요.',
     cta: '유료 서비스 안내',
   },
   student_protection: {
@@ -53,6 +53,24 @@ export const PERMISSION_DENIED_COPY = {
     kind: 'not_public',
     title: '비공개 정보',
     body: '이 정보는 아직 공개되지 않았습니다.',
+    cta: null,
+  },
+  download: {
+    kind: 'download',
+    title: '자료 다운로드',
+    body: '자료 다운로드는 로그인 후 가능해요.',
+    cta: '로그인',
+  },
+  room_only: {
+    kind: 'room_only',
+    title: '공부방 운영자 공간',
+    body: '이 공간은 공부방 운영자에게 열려 있어요.',
+    cta: null,
+  },
+  tutor_only: {
+    kind: 'tutor_only',
+    title: '과외쌤 전용 공간',
+    body: '이 공간은 과외쌤 전용이에요.',
     cta: null,
   },
 };

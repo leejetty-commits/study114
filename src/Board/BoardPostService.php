@@ -40,9 +40,22 @@ final class BoardPostService
     }
 
     /** @return list<array<string, mixed>> */
-    public function list(string $boardKey, ?string $authorRole = null, ?string $postKey = null): array
-    {
+    public function list(
+        string $boardKey,
+        ?string $authorRole = null,
+        ?string $postKey = null,
+        ?array $auth = null,
+    ): array {
         $this->assertBoardKey($boardKey);
+        $boardKey = BoardChannelAcl::normalizeBoardKey($boardKey);
+        $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
+        if (!BoardChannelAcl::canList($boardKey, $boardRole)) {
+            throw new BoardAccessException(
+                $auth === null ? 401 : 403,
+                $auth === null ? 'unauthorized' : 'forbidden',
+                $auth === null ? '로그인이 필요합니다.' : '이 게시판을 볼 권한이 없습니다.',
+            );
+        }
         if ($authorRole !== null && $authorRole !== '') {
             $this->assertAuthorRole($authorRole);
         }
@@ -55,34 +68,76 @@ final class BoardPostService
             ));
         }
 
-        return array_map(fn (array $row) => $this->mapPost($row), $rows);
+        $canDetail = BoardChannelAcl::canDetail($boardKey, $boardRole);
+        return array_map(function (array $row) use ($canDetail): array {
+            $mapped = $this->mapPost($row);
+            if (!$canDetail) {
+                return $this->redactPostBody($mapped);
+            }
+
+            return $mapped;
+        }, $rows);
     }
 
     /** @param array<string, mixed> $input */
-    public function save(array $input): array
+    public function save(array $input, ?array $auth = null): array
     {
         $boardKey = trim((string) ($input['board_key'] ?? $input['boardKey'] ?? ''));
         $this->assertBoardKey($boardKey);
+        $boardKey = BoardChannelAcl::normalizeBoardKey($boardKey);
+        $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
 
         if ($this->isOperationalBoard($boardKey)) {
+            if ($auth === null) {
+                throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
+            }
+            $isAdmin = ($auth['role_type'] ?? '') === 'admin' || !empty($auth['admin_level']);
+            if (!$isAdmin && !BoardChannelAcl::canCompose($boardKey, $boardRole)) {
+                throw new BoardAccessException(403, 'forbidden', '운영형 채널 쓰기는 운영자만 허용됩니다.');
+            }
+            // session role wins over client author_role for admin check
+            $input['author_role'] = 'admin';
+
             return $this->saveOperational($input, $boardKey);
         }
 
-        if ($boardKey !== 'submission') {
-            throw new InvalidArgumentException('현재 쓰기는 submission·운영형 채널만 지원합니다.');
+        if ($boardKey === 'submission') {
+            if ($auth === null) {
+                throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
+            }
+            if (!BoardChannelAcl::canCompose($boardKey, $boardRole)) {
+                throw new BoardAccessException(403, 'forbidden', '제출함은 공부방·과외쌤만 이용할 수 있습니다.');
+            }
+            $sessionNav = $this->navRoleFromAuth($auth);
+            $input['author_role'] = $sessionNav;
+
+            return $this->saveSubmission($input, $boardKey);
         }
 
-        return $this->saveSubmission($input, $boardKey);
+        // concern 등 — 서버 쓰기는 아직 미지원이지만 권한 게이트는 강제
+        if ($auth === null) {
+            throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
+        }
+        if (!BoardChannelAcl::canCompose($boardKey, $boardRole)) {
+            throw new BoardAccessException(403, 'forbidden', '이 게시판에 글을 쓸 권한이 없습니다.');
+        }
+        throw new InvalidArgumentException('현재 쓰기는 submission·운영형 채널만 지원합니다.');
     }
 
-    public function delete(string $boardKey, string $postKey, string $authorRole): void
+    public function delete(string $boardKey, string $postKey, string $authorRole, ?array $auth = null): void
     {
         $this->assertBoardKey($boardKey);
-        $this->assertAuthorRole($authorRole);
+        $boardKey = BoardChannelAcl::normalizeBoardKey($boardKey);
+        if ($auth === null) {
+            throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
+        }
+        $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
+        $sessionNav = $this->navRoleFromAuth($auth);
 
         if ($this->isOperationalBoard($boardKey)) {
-            if ($authorRole !== 'admin') {
-                throw new InvalidArgumentException('운영형 채널 삭제는 admin만 허용됩니다.');
+            $isAdmin = ($auth['role_type'] ?? '') === 'admin' || !empty($auth['admin_level']);
+            if (!$isAdmin) {
+                throw new BoardAccessException(403, 'forbidden', '운영형 채널 삭제는 admin만 허용됩니다.');
             }
             $existing = $this->repo->findByKey($boardKey, $postKey);
             if ($existing === null) {
@@ -96,13 +151,19 @@ final class BoardPostService
         if ($boardKey !== 'submission') {
             throw new InvalidArgumentException('현재 삭제는 submission·운영형 채널만 지원합니다.');
         }
+        if (!BoardChannelAcl::canCompose($boardKey, $boardRole)) {
+            throw new BoardAccessException(403, 'forbidden', '제출함 삭제 권한이 없습니다.');
+        }
+        // author_role은 세션 기준
+        $authorRole = $sessionNav;
+        $this->assertAuthorRole($authorRole);
 
         $existing = $this->repo->findByKey($boardKey, $postKey);
         if ($existing === null) {
             throw new InvalidArgumentException('게시물을 찾을 수 없습니다.');
         }
         if ((string) $existing['author_role'] !== $authorRole) {
-            throw new InvalidArgumentException('작성자 역할이 일치하지 않습니다.');
+            throw new BoardAccessException(403, 'forbidden', '작성자만 삭제할 수 있습니다.');
         }
         $status = (string) $existing['status'];
         if ($status !== 'draft' && $status !== 'submitted') {
@@ -111,6 +172,52 @@ final class BoardPostService
 
         $this->attachments->deleteForPost($boardKey, $postKey);
         $this->repo->delete($boardKey, $postKey);
+    }
+
+    /** @param array{role_type?: string} $auth */
+    private function navRoleFromAuth(array $auth): string
+    {
+        $roleType = (string) ($auth['role_type'] ?? '');
+        if ($roleType === 'guardian_student' || $roleType === 'parent' || $roleType === 'student') {
+            return 'parent';
+        }
+        if ($roleType === 'study_room') {
+            return 'study_room';
+        }
+        if ($roleType === 'tutor') {
+            return 'tutor';
+        }
+        if ($roleType === 'admin') {
+            return 'admin';
+        }
+
+        return 'parent';
+    }
+
+    /** @param array<string, mixed> $mapped @return array<string, mixed> */
+    private function redactPostBody(array $mapped): array
+    {
+        $mapped['description'] = '';
+        $mapped['memo'] = '';
+        $mapped['bodyRedacted'] = true;
+        if (isset($mapped['meta']) && is_array($mapped['meta'])) {
+            $meta = $mapped['meta'];
+            if (isset($meta['body'])) {
+                $meta['body'] = [];
+            }
+            if (isset($meta['answer'])) {
+                $meta['answer'] = '';
+            }
+            $mapped['meta'] = $meta;
+        }
+        if (isset($mapped['answer'])) {
+            $mapped['answer'] = '';
+        }
+        if (isset($mapped['body'])) {
+            $mapped['body'] = [];
+        }
+
+        return $mapped;
     }
 
     /** @param array<string, mixed> $input */

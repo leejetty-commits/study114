@@ -1,6 +1,6 @@
 /**
  * 23장 — submission boardKey (권한형 업로드) copy
- * SSOT: board-engine-copy.js · 22장 lifecycle (심사·승인·반려 UX ✕)
+ * SSOT: board-engine-copy.js · 22장 lifecycle (플랫폼 선별 UX ✕)
  */
 
 export const SUBMISSION_BOARD = {
@@ -11,7 +11,7 @@ export const SUBMISSION_BOARD = {
     '로그인한 공부방·과외쌤이 자료를 올리고 본인의 제출 목록을 관리하는 공간입니다. 공개 자료실과는 별도로 운영됩니다.',
   whoCanUpload: '공부방 운영자 · 과외쌤 · (정책 허용 시) 학부모',
   whoCanRead: '본인 제출 목록 · 운영자 내부 확인',
-  footnote: '제출자료를 승인·반려·검증하지 않으며 제출·공개 상태만 중립적으로 표시합니다.',
+  footnote: '제출·공개 상태만 중립적으로 표시하며, 플랫폼이 자료를 보증하지 않습니다.',
   bridgeP15: '제출자료 상태는 과외쌤 등록 과정과 함께 관리됩니다.',
 };
 

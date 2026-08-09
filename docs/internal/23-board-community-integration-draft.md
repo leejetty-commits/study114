@@ -416,16 +416,22 @@ member_external_links
 
 **원칙:** 채널은 본문 route를 가진다. 슬롯은 그 본문으로 들어가는 요약/추천/바로가기만 보여준다.
 
-### D-2. 기본 슬롯 seed
+### D-2. 기본 슬롯 seed (2026-08-10 정본)
 
-| slotKey | 기본 boardKey | 용도 |
-|---------|---------------|------|
-| `home_right_rail` | `notice`, `library`, `safe-guide` | 운영 공지 · 추천 자료 · 처음 이용 가이드 |
-| `search_right_rail` | `faq`, `library-template`, `safe-guide` | 비교/검색 도움말 · 체크리스트 |
-| `detail_right_rail` | `safe-guide`, `submission`, `notice` | 안전 접촉 · 제출자료 안내 |
-| `register_right_rail` | `library-template`, `faq`, `safe-guide` | 작성 가이드 · FAQ |
-| `plans_right_rail` | `notice`, `faq`, `safe-guide` | 상품 이용 안내 |
-| `support_right_rail` | `notice`, `faq`, `library-guide-pdf` | 최신 공지 · FAQ · PDF |
+| slotKey | sourceBoardKeys | guestFilter | visibility/role | mobile |
+|---------|-----------------|-------------|-----------------|--------|
+| `home_right_rail` | notice, concern-director, concern-tutor, concern-parent | summary_only | public/all | stack |
+| `search_right_rail` | faq, concern-parent, safe-guide | summary_only | public/all | stack |
+| `detail_right_rail` | safe-guide, submission, notice | allow | public/all | collapse |
+| `register_right_rail` | library-template, concern-director, concern-tutor | block | login/provider | stack |
+| `plans_right_rail` | notice, faq, safe-guide | block | public/provider | collapse |
+| `support_right_rail` | notice, faq, library-guide-pdf | allow | public/all | stack |
+
+> **정본:** `DEFAULT_RIGHT_RAIL_SLOTS` (`right-rail-store.js`) = DB `ContentSchemaMigrateService::railRows` 와 동일.  
+> 런타임: seed → (API mode) DB overlay → admin sessionStorage.  
+> 필수 소비: `sourceBoardKeys` · `visibilityRule` · `roleTarget` · `guestFilter` · `mobileBehavior`.  
+> list/detail/compose/comment/download 분리는 `board-channel-acl.js` · `BoardChannelAcl.php`.  
+> guest concern = 목록·제목·요약만 · 본문/댓글/반응/작성 차단. Board API는 세션+boardKey 재검증. HOT 전체 보드 fallback 금지.
 
 ### D-3. 운영 로그
 

@@ -134,6 +134,21 @@ final class BoardAttachmentService
             throw new InvalidArgumentException('토큰 대상이 올바르지 않습니다.');
         }
 
+        // 토큰만으로 우회 금지 — 세션 + board ACL 재검증
+        $auth = \Study114\Auth\AuthSession::user();
+        if ($auth === null) {
+            throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
+        }
+        $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
+        $aud = (string) ($payload['aud'] ?? 'owner');
+        if ($aud === 'admin') {
+            if (($auth['role_type'] ?? '') !== 'admin' && empty($auth['admin_level'])) {
+                throw new BoardAccessException(403, 'forbidden', '운영자 권한이 필요합니다.');
+            }
+        } elseif (!BoardChannelAcl::canDownload($boardKey, $boardRole)) {
+            throw new BoardAccessException(403, 'forbidden', '첨부 다운로드 권한이 없습니다.');
+        }
+
         $row = $this->attachments->findPrimary($boardKey, $postKey);
         if ($row === null) {
             throw new InvalidArgumentException('첨부 파일이 없습니다.');

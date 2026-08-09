@@ -140,6 +140,7 @@ final class ContentConfigService
             'ctaTarget' => (string) ($row['cta_target'] ?? '#/support'),
             'visibilityRule' => (string) ($row['visibility_rule'] ?? 'public'),
             'roleTarget' => (string) ($row['role_target'] ?? 'all'),
+            'guestFilter' => (string) ($row['guest_filter'] ?? 'allow'),
             'mobileBehavior' => (string) ($row['mobile_behavior'] ?? 'stack'),
             'priority' => (int) ($row['priority'] ?? 50),
             'status' => (string) ($row['status'] ?? 'active'),

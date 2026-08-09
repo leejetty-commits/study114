@@ -167,12 +167,14 @@
 
 | slotKey | 기본 sourceBoardKeys | 용도 |
 |---------|----------------------|------|
-| `home_right_rail` | `notice`, `library`, `safe-guide` | 운영 공지 · 추천 자료 · 처음 이용 가이드 |
-| `search_right_rail` | `faq`, `library-template`, `safe-guide` | 비교/검색 도움말 · 체크리스트 |
-| `detail_right_rail` | `safe-guide`, `submission`, `notice` | 안전 접촉 · 제출자료 안내 |
-| `register_right_rail` | `library-template`, `faq`, `safe-guide` | 작성 가이드 · 제출 전 체크 |
-| `plans_right_rail` | `notice`, `faq`, `safe-guide` | 상품 이용 안내 |
-| `support_right_rail` | `notice`, `faq`, `library-guide-pdf` | 최신 공지 · FAQ · PDF |
+| `home_right_rail` | `notice`, `concern-director`, `concern-tutor`, `concern-parent` | summary_only · HOT detail gate |
+| `search_right_rail` | `faq`, `concern-parent`, `safe-guide` | summary_only |
+| `detail_right_rail` | `safe-guide`, `submission`, `notice` | allow · collapse |
+| `register_right_rail` | `library-template`, `concern-director`, `concern-tutor` | block · provider |
+| `plans_right_rail` | `notice`, `faq`, `safe-guide` | block · provider |
+| `support_right_rail` | `notice`, `faq`, `library-guide-pdf` | allow |
+
+> 정본: `right-rail-store.js` DEFAULT + DB migrate 동기화. guestFilter 컬럼 필수.
 
 ### H-5. 보류 (3탄 이후)
 

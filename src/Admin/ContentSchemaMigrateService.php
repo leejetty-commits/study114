@@ -132,6 +132,8 @@ final class ContentSchemaMigrateService
     private function createRailTable(): string
     {
         if ($this->tableExists('right_rail_slot_definitions')) {
+            $this->ensureRailGuestFilterColumn();
+
             return 'exists';
         }
         $this->pdo->exec(
@@ -150,6 +152,7 @@ final class ContentSchemaMigrateService
               mobile_behavior         VARCHAR(20) NOT NULL DEFAULT 'stack',
               visibility_rule         VARCHAR(20) NOT NULL DEFAULT 'public',
               role_target             VARCHAR(30) NOT NULL DEFAULT 'all',
+              guest_filter            VARCHAR(20) NOT NULL DEFAULT 'allow',
               enabled                 TINYINT(1) NOT NULL DEFAULT 1,
               status                  VARCHAR(20) NOT NULL DEFAULT 'active',
               priority                INT NOT NULL DEFAULT 50,
@@ -166,6 +169,19 @@ final class ContentSchemaMigrateService
         );
 
         return 'created';
+    }
+
+    private function ensureRailGuestFilterColumn(): void
+    {
+        $stmt = $this->pdo->query("SHOW COLUMNS FROM right_rail_slot_definitions LIKE 'guest_filter'");
+        if ($stmt && $stmt->fetch()) {
+            return;
+        }
+        $this->pdo->exec(
+            "ALTER TABLE right_rail_slot_definitions
+             ADD COLUMN guest_filter VARCHAR(20) NOT NULL DEFAULT 'allow'
+             AFTER role_target"
+        );
     }
 
     private function seedOperationalPosts(): string
@@ -263,18 +279,52 @@ final class ContentSchemaMigrateService
 
     private function seedRails(): string
     {
+        $this->ensureRailGuestFilterColumn();
         $inserted = 0;
+        $updated = 0;
         foreach ($this->railRows() as $row) {
             $check = $this->pdo->prepare('SELECT id FROM right_rail_slot_definitions WHERE slot_key = ?');
             $check->execute([$row['slot_key']]);
-            if ($check->fetchColumn()) {
+            $existingId = $check->fetchColumn();
+            if ($existingId) {
+                // ACL 정본 동기화 — JS DEFAULT_RIGHT_RAIL_SLOTS 와 동일 값으로 맞춤
+                $upd = $this->pdo->prepare(
+                    'UPDATE right_rail_slot_definitions
+                     SET page_type = ?, source_type = ?, source_board_key = ?, source_board_keys_json = ?,
+                         selection_mode = ?, item_limit = ?, section_title = ?, cta_label = ?, cta_target = ?,
+                         mobile_behavior = ?, visibility_rule = ?, role_target = ?, guest_filter = ?,
+                         enabled = ?, status = ?, priority = ?, sort_order = ?, updated_at = NOW()
+                     WHERE id = ?'
+                );
+                $upd->execute([
+                    $row['page_type'],
+                    $row['source_type'],
+                    $row['source_board_key'],
+                    $row['source_board_keys_json'],
+                    $row['selection_mode'],
+                    $row['item_limit'],
+                    $row['section_title'],
+                    $row['cta_label'],
+                    $row['cta_target'],
+                    $row['mobile_behavior'],
+                    $row['visibility_rule'],
+                    $row['role_target'],
+                    $row['guest_filter'],
+                    $row['enabled'],
+                    $row['status'],
+                    $row['priority'],
+                    $row['sort_order'],
+                    $existingId,
+                ]);
+                $updated++;
                 continue;
             }
             $stmt = $this->pdo->prepare(
                 'INSERT INTO right_rail_slot_definitions
                  (slot_key, page_type, source_type, source_board_key, source_board_keys_json, selection_mode, item_limit,
-                  section_title, cta_label, cta_target, mobile_behavior, visibility_rule, role_target, enabled, status, priority, sort_order)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                  section_title, cta_label, cta_target, mobile_behavior, visibility_rule, role_target, guest_filter,
+                  enabled, status, priority, sort_order)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             );
             $stmt->execute([
                 $row['slot_key'],
@@ -290,6 +340,7 @@ final class ContentSchemaMigrateService
                 $row['mobile_behavior'],
                 $row['visibility_rule'],
                 $row['role_target'],
+                $row['guest_filter'],
                 $row['enabled'],
                 $row['status'],
                 $row['priority'],
@@ -298,7 +349,7 @@ final class ContentSchemaMigrateService
             $inserted++;
         }
 
-        return "inserted={$inserted}";
+        return "inserted={$inserted};updated={$updated}";
     }
 
     /** @return list<array<string, mixed>> */
@@ -521,12 +572,12 @@ final class ContentSchemaMigrateService
         $keys = static fn (array $k): string => json_encode($k, JSON_UNESCAPED_UNICODE);
 
         return [
-            ['slot_key' => 'home_right_rail', 'page_type' => 'home', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'library', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '오늘의 안내', 'cta_label' => '고객센터 보기', 'cta_target' => '#/support', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'enabled' => 1, 'status' => 'active', 'priority' => 10, 'sort_order' => 10],
-            ['slot_key' => 'search_right_rail', 'page_type' => 'search', 'source_type' => 'mixed', 'source_board_key' => 'faq', 'source_board_keys_json' => $keys(['faq', 'library-template', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '탐색 도움말', 'cta_label' => 'FAQ 보기', 'cta_target' => '#/support/faq', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'enabled' => 1, 'status' => 'active', 'priority' => 20, 'sort_order' => 20],
-            ['slot_key' => 'detail_right_rail', 'page_type' => 'detail', 'source_type' => 'mixed', 'source_board_key' => 'safe-guide', 'source_board_keys_json' => $keys(['safe-guide', 'submission', 'notice']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '상세 확인 전 안내', 'cta_label' => '안전과외 가이드', 'cta_target' => '#/support/safe', 'mobile_behavior' => 'collapse', 'visibility_rule' => 'public', 'role_target' => 'all', 'enabled' => 1, 'status' => 'active', 'priority' => 30, 'sort_order' => 30],
-            ['slot_key' => 'register_right_rail', 'page_type' => 'register', 'source_type' => 'mixed', 'source_board_key' => 'library-template', 'source_board_keys_json' => $keys(['library-template', 'faq', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '작성 전 체크', 'cta_label' => '서식함 보기', 'cta_target' => '#/support/library/templates', 'mobile_behavior' => 'stack', 'visibility_rule' => 'login', 'role_target' => 'provider', 'enabled' => 1, 'status' => 'active', 'priority' => 40, 'sort_order' => 40],
-            ['slot_key' => 'plans_right_rail', 'page_type' => 'plans', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'faq', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '상품 이용 안내', 'cta_label' => '상품 FAQ', 'cta_target' => '#/support/faq', 'mobile_behavior' => 'collapse', 'visibility_rule' => 'public', 'role_target' => 'provider', 'enabled' => 1, 'status' => 'active', 'priority' => 50, 'sort_order' => 50],
-            ['slot_key' => 'support_right_rail', 'page_type' => 'support', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'faq', 'library-guide-pdf']), 'selection_mode' => 'latest', 'item_limit' => 3, 'section_title' => '빠른 도움말', 'cta_label' => '자료실 보기', 'cta_target' => '#/support/library/guides', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'enabled' => 1, 'status' => 'active', 'priority' => 60, 'sort_order' => 60],
+            ['slot_key' => 'home_right_rail', 'page_type' => 'home', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'concern-director', 'concern-tutor', 'concern-parent']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '오늘의 안내', 'cta_label' => '고객센터 보기', 'cta_target' => '#/support', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'guest_filter' => 'summary_only', 'enabled' => 1, 'status' => 'active', 'priority' => 10, 'sort_order' => 10],
+            ['slot_key' => 'search_right_rail', 'page_type' => 'search', 'source_type' => 'mixed', 'source_board_key' => 'faq', 'source_board_keys_json' => $keys(['faq', 'concern-parent', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '탐색 도움말', 'cta_label' => '자주 묻는 질문 보기', 'cta_target' => '#/support/faq', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'guest_filter' => 'summary_only', 'enabled' => 1, 'status' => 'active', 'priority' => 20, 'sort_order' => 20],
+            ['slot_key' => 'detail_right_rail', 'page_type' => 'detail', 'source_type' => 'mixed', 'source_board_key' => 'safe-guide', 'source_board_keys_json' => $keys(['safe-guide', 'submission', 'notice']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '상세 확인 전 안내', 'cta_label' => '안전과외 가이드', 'cta_target' => '#/guide/safety', 'mobile_behavior' => 'collapse', 'visibility_rule' => 'public', 'role_target' => 'all', 'guest_filter' => 'allow', 'enabled' => 1, 'status' => 'active', 'priority' => 30, 'sort_order' => 30],
+            ['slot_key' => 'register_right_rail', 'page_type' => 'register', 'source_type' => 'mixed', 'source_board_key' => 'library-template', 'source_board_keys_json' => $keys(['library-template', 'concern-director', 'concern-tutor']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '작성 전 체크', 'cta_label' => '서식함 보기', 'cta_target' => '#/library/templates', 'mobile_behavior' => 'stack', 'visibility_rule' => 'login', 'role_target' => 'provider', 'guest_filter' => 'block', 'enabled' => 1, 'status' => 'active', 'priority' => 40, 'sort_order' => 40],
+            ['slot_key' => 'plans_right_rail', 'page_type' => 'plans', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'faq', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '상품 이용 안내', 'cta_label' => '상품 자주 묻는 질문', 'cta_target' => '#/support/faq', 'mobile_behavior' => 'collapse', 'visibility_rule' => 'public', 'role_target' => 'provider', 'guest_filter' => 'block', 'enabled' => 1, 'status' => 'active', 'priority' => 50, 'sort_order' => 50],
+            ['slot_key' => 'support_right_rail', 'page_type' => 'support', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'faq', 'library-guide-pdf']), 'selection_mode' => 'latest', 'item_limit' => 3, 'section_title' => '빠른 도움말', 'cta_label' => '자료실 보기', 'cta_target' => '#/library/guides', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'guest_filter' => 'allow', 'enabled' => 1, 'status' => 'active', 'priority' => 60, 'sort_order' => 60],
         ];
     }
 }

@@ -326,10 +326,27 @@
 
 ---
 
+## 14-b. 우측 레일·채널 권한 (2026-08 잠금)
+
+권한은 **배너 타입이 아니라 `sourceBoardKey` / channel 기준**이다. 우측 레일은 본문 권한이 아니라 **진입·요약·CTA** 표면이다.
+
+| 구분 | 채널 | guest |
+|------|------|-------|
+| 공개 | notice · faq · safe-guide | full |
+| 로그인 | library · library-template | 차단 |
+| 목록만 | library-guide-pdf | 목록 ○ · download login |
+| 공급자 | submission | 차단 (room/tutor) |
+| concern | parent/director/tutor/solved | 제목·요약만 · 본문/댓글/작성 login+역할 |
+
+런타임 정본 seed: `preview/home-ui/src/right-rail-store.js` `DEFAULT_RIGHT_RAIL_SLOTS` · DB seed 동기화.
+
+---
+
 ## 15. 변경 이력
 
 | 날짜 | 내용 |
 |------|------|
+| 2026-08-10 | §14-b 채널 ACL·레일 seed 정본 |
 | 2026-07-17 | GNB §13 **hide** 정책 정렬 · 역할 전환은 계정설정 |
 | 2026-07-07 | 프리뷰: 학부모·공부방·과외쌤 홈 **2탭 통일** (`provider-home`) · 공급자 탭1=내 노출 · GNB=search-ui 탐색 · [home-ui/DOC-CHECKLIST](../../preview/home-ui/DOC-CHECKLIST.md) |
 | 2026-05-31 | 4종 메인·노출 규칙 초안 |

@@ -626,7 +626,7 @@ function renderSubmissionDocs(role) {
     return `
       <section class="mypage-panel p15-submission">
         <p class="mypage-lead">15장 §2-1 · 공부방 제출자료</p>
-        <p class="mypage-muted">운영자 심사·승인·반려 없음 · 제출 여부·공개 상태 표시만</p>
+        <p class="mypage-muted">제출 여부·공개 상태만 표시합니다. 플랫폼이 자료를 선별하거나 보증하지 않습니다.</p>
         <div class="sub-board-bridge">
           <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">제출함 열기</a>
           <span class="mypage-muted">등록 자료를 안전하게 올리고 관리할 수 있어요.</span>

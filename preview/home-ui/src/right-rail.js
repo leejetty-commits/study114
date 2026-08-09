@@ -12,18 +12,36 @@ import {
 } from './concern/copy.js';
 import { getHotConcernSamples, listConcernPosts, reactionTotal } from './concern/store.js';
 import { renderPromoRailCard } from './promo/screens.js';
+import {
+  canListBoard,
+  canShowBoardInRail,
+  isRailSlotVisible,
+  normalizeBoardKey,
+} from './board-channel-acl.js';
 
 /**
  * 노션 잠금안: 고정 광고 3장 → 3층 슬롯(현장·안내·영상).
  * 영상(S3)은 후순위 — 이번 구현에서는 S1+S2만 노출.
+ * channel ACL: visibilityRule · roleTarget · guestFilter · sourceBoardKeys 런타임 적용
  * @param {string} [slotKey]
  */
 export function renderPromoWithRightRail(slotKey = 'home_right_rail') {
+  const navRole = getNavRole();
+  const slot = getRightRailSlot(slotKey);
+  if (slot && !isRailSlotVisible(slot, navRole)) {
+    return `
+      <aside class="home-sidebar home-sidebar--guest home-sidebar--live-rail" aria-label="안내">
+        ${renderNoticeTopBanner()}
+        ${renderPromoRailCard()}
+        ${renderActionGuideSlot(slotKey)}
+      </aside>`;
+  }
+  const guestFilter = slot?.guestFilter || 'allow';
   return `
     <aside class="home-sidebar home-sidebar--guest home-sidebar--live-rail" aria-label="현장 고민과 안내">
       ${renderNoticeTopBanner()}
       ${renderPromoRailCard()}
-      ${renderLiveFieldSlot(slotKey)}
+      ${renderLiveFieldSlot(slotKey, { guestFilter })}
       ${renderActionGuideSlot(slotKey)}
     </aside>`;
 }
@@ -162,19 +180,19 @@ function itemsForBoard(boardKey, limit) {
 }
 
 /**
- * 배너↔커뮤니티 연결 알고리즘
- * 1) 슬롯 sourceBoardKeys 중 커뮤니티(concern) 채널 우선
- * 2) 없으면 활성 커뮤니티 보드 전체
+ * 배너↔커뮤니티 — sourceBoardKeys 중 concern만, ACL 통과분만 (전체 보드 fallback 금지)
  */
-function resolveConcernBoardKeysForSlot(slotKey) {
+function resolveConcernBoardKeysForSlot(slotKey, opts = {}) {
+  const navRole = getNavRole();
   const slot = getRightRailSlot(slotKey);
   const configured = [];
   if (slot?.sourceBoardKey) configured.push(slot.sourceBoardKey);
   if (Array.isArray(slot?.sourceBoardKeys)) configured.push(...slot.sourceBoardKeys);
-  const unique = [...new Set(configured.filter(Boolean))];
-  const concernKeys = unique.filter((key) => isConcernBoardKey(key));
-  if (concernKeys.length) return concernKeys;
-  return listCommunityBoards().map((b) => b.boardKey);
+  const unique = [...new Set(configured.map(normalizeBoardKey).filter(Boolean))];
+  const guestFilter = opts.guestFilter || slot?.guestFilter || 'allow';
+  return unique.filter(
+    (key) => isConcernBoardKey(key) && canShowBoardInRail(key, navRole, { guestFilter }),
+  );
 }
 
 function renderRailItem(item) {
@@ -230,17 +248,20 @@ function liveFieldCopy(slotKey) {
 
 function preferBoardKeyForRole() {
   const id = preferredConcernBoardId(getNavRole());
-  return listCommunityBoards().find((b) => b.id === id)?.boardKey;
+  const key = listCommunityBoards().find((b) => b.id === id)?.boardKey;
+  if (key && canListBoard(key, getNavRole())) return key;
+  return undefined;
 }
 
-function renderLiveFieldSlot(slotKey) {
+/** @param {string} slotKey @param {{ guestFilter?: boolean }} [opts] */
+function renderLiveFieldSlot(slotKey, opts = {}) {
   const copy = liveFieldCopy(slotKey);
-  const boardKeys = resolveConcernBoardKeysForSlot(slotKey);
+  const boardKeys = resolveConcernBoardKeysForSlot(slotKey, opts);
   const samples = getHotConcernSamples({
     limit: 3,
     preferBoardKey: preferBoardKeyForRole(),
     boardKeys,
-  });
+  }).filter((post) => canShowBoardInRail(post.boardKey, getNavRole(), { guestFilter: opts.guestFilter }));
   const items = samples
     .map((post) => {
       const board = getConcernBoardByKey(post.boardKey);
@@ -249,7 +270,7 @@ function renderLiveFieldSlot(slotKey) {
         <a href="#${esc(href)}" class="live-rail-card" data-nav="${esc(href)}">
           <span class="live-rail-card__board">${esc(board?.label || '커뮤니티')}</span>
           <strong class="live-rail-card__title">${esc(post.title)}</strong>
-          <span class="live-rail-card__meta">댓글 ${post.comments?.length || 0} · 반응 ${reactionTotal(post)}</span>
+          <span class="live-rail-card__meta">제목·요약 · 본문은 게시판에서</span>
         </a>`;
     })
     .join('');
@@ -336,40 +357,50 @@ function renderActionGuideSlot(slotKey) {
     </section>`;
 }
 
-/** @param {string} slotKey @param {{ guestFilter?: boolean }} [opts] */
+/** @param {string} slotKey @param {{ guestFilter?: string }} [opts] */
 function buildRailContent(slotKey, opts = {}) {
+  const navRole = getNavRole();
   const slot = getRightRailSlot(slotKey);
-  if (!slot || !slot.enabled || slot.status !== 'active') {
+  if (!isRailSlotVisible(slot, navRole)) {
     return { slot: null, itemsHtml: renderFallbackPromo() };
   }
+  const guestFilter = opts.guestFilter || slot.guestFilter || 'allow';
   let boardKeys = slot.sourceBoardKeys?.length ? slot.sourceBoardKeys : [slot.sourceBoardKey].filter(Boolean);
-  if (opts.guestFilter) {
-    boardKeys = boardKeys.filter((key) => key !== 'submission');
-  }
-  const perBoardLimit = Math.max(1, Math.ceil(Number(slot.itemLimit || 3) / Math.max(1, boardKeys.length)));
+  boardKeys = boardKeys
+    .map(normalizeBoardKey)
+    .filter((key) => canShowBoardInRail(key, navRole, { guestFilter }));
+  const perBoardLimit = Math.max(1, Math.ceil(Number(slot.itemLimit || 3) / Math.max(1, boardKeys.length || 1)));
   const items = boardKeys.flatMap((key) => itemsForBoard(key, perBoardLimit)).slice(0, Number(slot.itemLimit || 3));
   const itemsHtml = items.length ? items.map(renderRailItem).join('') : renderFallbackPromo();
   return { slot, itemsHtml };
 }
 
-/** @param {string} slotKey @param {'sidebar'|'inline'|'stacked'} [variant] @param {{ guestFilter?: boolean }} [opts] */
+/** @param {string} slotKey @param {'sidebar'|'inline'|'stacked'} [variant] @param {{ guestFilter?: string }} [opts] */
 function renderRightRailMarkup(slotKey, variant = 'sidebar', opts = {}) {
-  // 인라인(상세 하단 등): 신규 2층 라이브 레일을 그대로 사용
+  const navRole = getNavRole();
+  const slot = getRightRailSlot(slotKey);
+  const guestFilter = opts.guestFilter || slot?.guestFilter || 'allow';
   if (variant === 'inline') {
+    if (slot && !isRailSlotVisible(slot, navRole)) {
+      return `
+        <section class="right-rail right-rail--inline right-rail--live-inline" data-right-rail-slot="${esc(slotKey)}" aria-label="안내">
+          ${renderActionGuideSlot(slotKey)}
+        </section>`;
+    }
     return `
       <section class="right-rail right-rail--inline right-rail--live-inline" data-right-rail-slot="${esc(slotKey)}" aria-label="현장 고민과 안내">
-        ${renderLiveFieldSlot(slotKey)}
+        ${renderLiveFieldSlot(slotKey, { guestFilter })}
         ${renderActionGuideSlot(slotKey)}
       </section>`;
   }
 
-  const { slot, itemsHtml } = buildRailContent(slotKey, opts);
-  if (!slot) {
+  const { slot: activeSlot, itemsHtml } = buildRailContent(slotKey, { guestFilter });
+  if (!activeSlot) {
     if (variant === 'stacked') return '';
     return renderFallbackPromo();
   }
-  const ctaHref = normalizeHref(slot.ctaTarget);
-  const mobileClass = ` right-rail--mobile-${slot.mobileBehavior || 'stack'}`;
+  const ctaHref = normalizeHref(activeSlot.ctaTarget);
+  const mobileClass = ` right-rail--mobile-${activeSlot.mobileBehavior || 'stack'}`;
   const tag = variant === 'sidebar' ? 'aside' : 'div';
   const shellClass =
     variant === 'stacked'
@@ -377,15 +408,15 @@ function renderRightRailMarkup(slotKey, variant = 'sidebar', opts = {}) {
       : `home-sidebar home-sidebar--guest right-rail${mobileClass}`;
 
   return `
-    <${tag} class="${shellClass}" data-right-rail-slot="${esc(slot.slotKey)}" aria-label="${esc(slot.sectionTitle)}">
+    <${tag} class="${shellClass}" data-right-rail-slot="${esc(activeSlot.slotKey)}" aria-label="${esc(activeSlot.sectionTitle)}">
       <div class="right-rail__head">
         <span class="right-rail__eyebrow">게시판 요약</span>
-        <strong class="right-rail__title">${esc(slot.sectionTitle)}</strong>
+        <strong class="right-rail__title">${esc(activeSlot.sectionTitle)}</strong>
       </div>
       <div class="right-rail__items">
         ${itemsHtml}
       </div>
-      <a href="${esc(ctaHref)}" class="right-rail__cta"${navAttr(slot.ctaTarget)}>${esc(slot.ctaLabel)} →</a>
+      <a href="${esc(ctaHref)}" class="right-rail__cta"${navAttr(activeSlot.ctaTarget)}>${esc(activeSlot.ctaLabel)} →</a>
       <p class="right-rail__note">본문은 각 게시판에서 확인 · 이 영역은 요약/바로가기</p>
     </${tag}>`;
 }

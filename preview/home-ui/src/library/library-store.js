@@ -89,13 +89,11 @@ export function getLibraryItem(id) {
 
 
 /** @param {string} boardKey @param {string} navRole */
-
 export function canDownloadFromBoard(boardKey, navRole) {
-
   const boardRole = mapNavRoleToBoardRole(navRole);
-
+  // guest download 전면 차단 (library-guide-pdf 목록만 허용)
+  if (navRole === 'guest' || boardRole === 'guest') return false;
   return canBoardAction(boardKey, 'download', boardRole);
-
 }
 
 
@@ -116,7 +114,7 @@ export function getLibraryBoardMeta(boardKey, navRole) {
 
     canRead: canBoardAction(boardKey, 'read', boardRole),
 
-    canDownload: canBoardAction(boardKey, 'download', boardRole),
+    canDownload: navRole !== 'guest' && canBoardAction(boardKey, 'download', boardRole),
 
     boardRole,
 

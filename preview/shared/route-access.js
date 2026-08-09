@@ -151,7 +151,9 @@ export function guardRoleHomeAccess(screenKey, loggedIn) {
 
 /**
  * 비로그인(guest)이 카드·레일에서 바로 열 수 있는 공개 path.
- * 마이페이지·쪽지·제출함·유료계정 등은 false → 로그인 게이트.
+ * 마이페이지·쪽지·제출함·유료계정·일반 자료실은 false → 로그인 게이트.
+ * /community 목록·허브는 공개(본문/작성은 화면·API ACL).
+ * /library/guides(PDF 안내)만 guest 목록 허용.
  * @param {string} [pathOrHash]
  */
 export function isGuestPublicPath(pathOrHash) {
@@ -169,7 +171,8 @@ export function isGuestPublicPath(pathOrHash) {
 
   if (p === '/' || p === '/guest') return true;
   if (p.startsWith('/support')) return true;
-  if (p.startsWith('/library')) return true;
+  if (p === '/library/guides' || p.startsWith('/library/guides/')) return true;
+  if (p.startsWith('/library')) return false;
   if (p.startsWith('/guide')) return true;
   if (p.startsWith('/community') || p.startsWith('/concern')) return true;
   if (p.startsWith('/promo')) return true;

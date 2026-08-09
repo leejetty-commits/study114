@@ -342,7 +342,7 @@ function renderHub(room) {
       <div class="p20-hub-block p20-inquiry-board">
         <h3 class="p20-hub-block__title">${esc(P20_HUB_BLOCK_TITLES.inquiryBoard)}</h3>
         <p class="p20-inquiry-board__value">${esc(inquiryStatusLabel(room.inquiry_status))}</p>
-        <p class="p20-hint">원장이 직접 선택 · 운영자 승인 없음 (20§4-3 · 22장)</p>
+        <p class="p20-hint">원장이 직접 선택합니다 (20§4-3 · 22장)</p>
         <a href="#${studyRoomSectionPath(room.id, 'exposure')}" class="btn btn--secondary btn--sm" data-p20-nav="${studyRoomSectionPath(room.id, 'exposure')}">상담 상태 변경 →</a>
       </div>
 
@@ -600,7 +600,7 @@ function renderExposure(room) {
       </section>
       <section class="p20-exposure-section">
         <h3>${esc(P20_EXPOSURE_SECTION_TITLES.inquiry)}</h3>
-        <p class="p19-form-section__lead">원장이 직접 선택 · 운영자 승인·심사 없음 (22장)</p>
+        <p class="p19-form-section__lead">원장이 직접 선택합니다 (22장)</p>
         <div class="p20-inquiry-options">${inquiryRadios}</div>
         <button type="button" class="btn btn--secondary btn--sm" data-p20-inquiry-save>상담 상태 저장</button>
       </section>

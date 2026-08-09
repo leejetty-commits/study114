@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 4) . '/src/bootstrap.php';
 
+use InvalidArgumentException;
+use Study114\Board\BoardAccessException;
 use Study114\Board\BoardAttachmentService;
 use Study114\Board\BoardApi;
 
@@ -22,6 +24,8 @@ BoardApi::run(static function (): void {
     try {
         $service = new BoardAttachmentService();
         $service->streamDownload($token);
+    } catch (BoardAccessException $e) {
+        BoardApi::fail($e->httpStatus, $e->errorCode, $e->getMessage());
     } catch (InvalidArgumentException $e) {
         BoardApi::fail(403, 'forbidden', $e->getMessage());
     }

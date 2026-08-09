@@ -134,6 +134,10 @@ final class BoardApi
 
             $fn();
 
+        } catch (BoardAccessException $e) {
+
+            self::fail($e->httpStatus, $e->errorCode, $e->getMessage());
+
         } catch (InvalidArgumentException $e) {
 
             self::fail(422, 'validation', $e->getMessage());
