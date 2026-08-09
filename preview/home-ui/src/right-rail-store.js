@@ -328,3 +328,8 @@ export function updateRightRailSlotStatus(slotKey, status) {
   appendRailLog(status === 'active' ? 'slot_enable' : 'slot_disable', slotKey, `status=${status}`);
   return next;
 }
+
+export function resetRightRailSlots() {
+  sessionStorage.removeItem(RAIL_KEY);
+  appendRailLog('slot_reset_seed', 'right_rail_slot', '기본 seed 복원');
+}
