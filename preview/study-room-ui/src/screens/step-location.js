@@ -9,6 +9,7 @@ import {
   mypageRegistrationsUrl,
   bindGlobalEvents,
   navigate,
+  isRegisterEditMode,
 } from '../layout.js';
 
 function regionOptions(selected) {
@@ -85,6 +86,14 @@ export function renderLocation() {
     s.region_basis_type = 'dong';
   }
 
+  // 편집 모드가 아니면 기본등록 현황으로 (두 단계를 한 현황으로 합침)
+  if (!isRegisterEditMode()) {
+    return `
+      <div class="site-gate-wrap">
+        <p class="auth-subheading">기본등록 현황으로 이동합니다…</p>
+      </div>`;
+  }
+
   const content = `
     ${renderGuideNotice('행정동 또는 아파트단지 중 하나로 위치를 정합니다. 노출 지역은 최대 3곳까지 둘 수 있습니다.')}
     <form data-form="location">
@@ -133,18 +142,22 @@ export function renderLocation() {
       </div>
 
       <a class="register-mypage-link" href="${mypageRegistrationsUrl()}">이미 등록한 내용을 수정하려면 마이페이지 · 내 등록</a>
-      ${renderNavButtons('/register/basic', '다음: 수업·경력')}
+      ${renderNavButtons('/register/basic', '저장하고 현황으로')}
     </form>
   `;
   return renderRegisterShell(content, {
     stepKey: 'location',
-    title: '위치 · 노출 지역',
-    subtitle: '전국 지역 목록에서 공부방 위치를 선택합니다.',
+    title: '위치 · 노출 지역 수정',
+    subtitle: '위치와 노출 지역만 수정합니다. 저장 후 현황으로 돌아갑니다.',
   });
 }
 
 export function bindLocationEvents(root) {
   bindGlobalEvents(root);
+  if (!isRegisterEditMode()) {
+    navigate('/register/basic');
+    return;
+  }
   const nextBtn = root.querySelector('[data-action="next"]');
   const prevBtn = root.querySelector('[data-action="prev"]');
   prevBtn?.addEventListener('click', () => navigate('/register/basic'));
@@ -233,7 +246,7 @@ export function bindLocationEvents(root) {
         complex_id: basis === 'complex' ? s.complex_id : '',
         region_id: basis === 'dong' ? s.region_id : s.region_id || registerState.region_id,
       }));
-      await saveAndNavigate(registerState, 'location', '/register/lesson');
+      await saveAndNavigate(registerState, 'location', '/register/basic');
       registerState.basicComplete = true;
     });
   });

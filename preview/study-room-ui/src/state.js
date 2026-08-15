@@ -3,7 +3,7 @@
 export const REGISTER_PHASES = {
   basic: {
     label: '기본등록',
-    hint: '가입 때 받은 정보가 없으면 여기서 먼저 채웁니다. 이미 있다면 건너뜁니다.',
+    hint: '저장된 기본·위치 현황을 보고, 필요할 때만 수정한 뒤 상세등록으로 이어갑니다.',
     stepKeys: ['basic', 'location'],
   },
   detail: {
@@ -192,12 +192,15 @@ export const registerState = {
 };
 
 export function isRoomBasicComplete(room) {
-  if (!room || !room.study_room_id) return false;
-  const hasName = String(room.study_room_name || '').trim() !== '';
+  const src = room || registerState;
+  const hasName = String(src.study_room_name || '').trim() !== '';
   const hasRegion =
-    String(room.region_id || '').trim() !== '' ||
-    (Array.isArray(room.saved_regions) &&
-      room.saved_regions.some((r) => String(r?.region_id || '').trim() !== ''));
+    String(src.region_id || '').trim() !== '' ||
+    String(src.complex_id || '').trim() !== '' ||
+    (Array.isArray(src.saved_regions) &&
+      src.saved_regions.some(
+        (r) => String(r?.region_id || '').trim() !== '' || String(r?.complex_id || '').trim() !== '',
+      ));
   return hasName && hasRegion;
 }
 

@@ -41,7 +41,8 @@ export function getHashQuery() {
 }
 
 export function isRegisterEditMode() {
-  return getHashQuery().get('edit') === '1';
+  const edit = getHashQuery().get('edit');
+  return edit === '1' || edit === 'basic' || edit === 'location';
 }
 
 export function getCurrentScreen() {
@@ -114,12 +115,16 @@ export function renderRegisterShell(content, options = {}) {
 }
 
 export function renderStepIndicator(stepKey) {
-  const basicDone = Boolean(registerState.basicComplete);
+  const onBasicOverview = stepKey === 'basic' && !isRegisterEditMode();
+  const editingBasic = isRegisterEditMode() && (stepKey === 'basic' || stepKey === 'location');
+  const basicDone = Boolean(registerState.basicComplete) && !onBasicOverview && !editingBasic;
   const visible = basicDone
     ? STEPS.filter((s) => s.phase === 'detail')
-    : STEPS.filter((s) => s.phase);
+    : onBasicOverview
+      ? STEPS.filter((s) => s.key === 'basic')
+      : STEPS.filter((s) => s.phase);
   const current = visible.findIndex((s) => s.key === stepKey);
-  const phase = STEPS.find((s) => s.key === stepKey)?.phase || 'detail';
+  const phase = onBasicOverview ? 'basic' : STEPS.find((s) => s.key === stepKey)?.phase || 'detail';
   const phaseMeta = REGISTER_PHASES[phase];
   return `
     <div class="register-phase" aria-label="등록 단계">

@@ -73,15 +73,13 @@ function resolveRegisterMode() {
   return gate.mode;
 }
 
-function maybeSkipBasicSteps() {
-  if (!registerState.basicComplete) return false;
+/** 위치 단독 진입 → 기본등록 현황으로 (두 단계를 한 페이지로) */
+function maybeRedirectLocationToOverview() {
+  if (getCurrentScreen() !== 'location') return false;
   if (isRegisterEditMode()) return false;
-  const key = getCurrentScreen();
-  if (BASIC_KEYS.has(key)) {
-    if (window.location.hash.split('?')[0] !== '#/register/lesson') {
-      navigate('/register/lesson');
-      return true;
-    }
+  if (window.location.hash.split('?')[0] !== '#/register/basic') {
+    navigate('/register/basic');
+    return true;
   }
   return false;
 }
@@ -106,10 +104,10 @@ function render() {
     return;
   }
 
-  if (maybeSkipBasicSteps()) return;
+  if (maybeRedirectLocationToOverview()) return;
 
   const key = getCurrentScreen();
-  const screen = SCREENS[key] || SCREENS.lesson;
+  const screen = SCREENS[key] || SCREENS.basic;
   app.innerHTML = screen.render();
   screen.bind(app);
 }
@@ -131,12 +129,11 @@ async function initApi() {
     const room = await loadRoom().catch(() => null);
     if (room) {
       applyRoomToState(registerState, room);
-      registerState.basicComplete = isRoomBasicComplete(room);
     } else {
       const cachedId = sessionStorage.getItem('study114_study_room_id');
       if (cachedId) registerState.study_room_id = Number(cachedId);
-      registerState.basicComplete = false;
     }
+    registerState.basicComplete = isRoomBasicComplete(room) || isRoomBasicComplete(registerState);
     return room;
   } catch {
     return null;
@@ -148,14 +145,11 @@ function init() {
   window.addEventListener('hashchange', render);
 
   Promise.all([initChromeSession(), initApi()])
-    .then(([, room]) => {
-      registerState.basicComplete = isRoomBasicComplete(room) || registerState.basicComplete;
-      if (
-        registerState.basicComplete &&
-        BASIC_KEYS.has(getCurrentScreen()) &&
-        !isRegisterEditMode()
-      ) {
-        navigate('/register/lesson');
+    .then(() => {
+      registerState.basicComplete =
+        isRoomBasicComplete(registerState) || registerState.basicComplete;
+      if (getCurrentScreen() === 'location' && !isRegisterEditMode()) {
+        navigate('/register/basic');
         return;
       }
       render();

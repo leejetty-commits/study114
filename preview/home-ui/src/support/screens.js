@@ -19,7 +19,6 @@ import {
 } from './router.js';
 import { getActiveNavId } from './nav.js';
 import { renderFaqBoard, renderSingleOpenBoard, bindSingleOpenBoard } from '../../../shared/board/index.js';
-import { getPlanRuntimeSettings } from '../plans/runtime-config.js';
 import { POLICY_PAGES, POLICY_SHORT_NOTICE, getPolicyPage } from '../policy-copy.js';
 import { LIBRARY_HEAD, LIBRARY_SECTIONS } from '../library/library-copy.js';
 import { canDownloadFromBoard, getLibraryBoardMeta, listLibraryItems } from '../library/library-store.js';
@@ -120,47 +119,27 @@ export function renderSupportScreen(path) {
   }
 
   const navId = getActiveNavId(path);
-  if (navId === 'home') return renderSupportHomeSection();
   if (navId === 'faq') return renderFaqSection();
   if (navId === 'notice') return renderNoticeSection();
   if (navId === 'contact') return renderContactSection();
-  return renderSupportHomeSection();
+  return renderNoticeSection();
 }
 
-function renderSupportHomeSection() {
+function renderSupportQuickCards() {
   const cards = [
     { title: '자주 묻는 질문', desc: '가장 자주 확인하는 운영·이용 질문을 빠르게 찾을 수 있어요.', href: '/support/faq' },
-    { title: '공지사항', desc: '서비스 운영 변경, 점검, 업데이트 소식을 확인하세요.', href: '/support/notice' },
-    { title: '문의하기', desc: '계정, 정책, 오류 문의를 남기고 접수 내역을 확인할 수 있어요.', href: '/support/contact' },
+    { title: '문의하기', desc: '계정, 결제, 오류 문의를 남기고 접수 내역을 확인할 수 있어요.', href: '/support/contact' },
     { title: '약관·정책', desc: '신고·제재, 개인정보, 플랫폼 역할 고지를 한곳에서 살펴보세요.', href: '/support/policies' },
   ];
-  const cardsHtml = cards
+  return `<div class="sup-card-grid">${cards
     .map(
       (card) => `<a href="#${card.href}" class="sup-card" data-sup-nav="${card.href}">
         <span class="sup-card__title">${esc(card.title)}</span>
         <span class="sup-card__desc">${esc(card.desc)}</span>
       </a>`,
     )
-    .join('');
-  const exposureGuides = getPlanRuntimeSettings();
-  return `
-    ${renderPanel(
-      '고객센터',
-      'support-home',
-      `<div class="sup-card-grid">${cardsHtml}</div>
-       <p class="sup-home-hint">이용 흐름 안내는 메인메뉴의 이용안내에서, 운영 지원은 고객센터에서 확인할 수 있습니다.</p>`,
-      { lead: 'FAQ, 공지, 문의, 정책 연결을 담당하는 지원 허브입니다.' },
-    )}
-    ${renderPanel(
-      '도움이 필요할 때',
-      'support-help',
-      `<ul class="sup-list sup-list--bullets">
-         <li>이용 흐름이 궁금하면 상단의 <a href="#/guide" class="sup-inline-link" data-sup-nav="/guide">이용안내</a>에서 전체 구조를 먼저 확인하세요.</li>
-         <li>정책·신고·개인정보 관련 기준은 <a href="#/support/policies" class="sup-inline-link" data-sup-nav="/support/policies">약관·정책</a>으로 이어집니다.</li>
-         <li>운영 문의는 로그인 후 문의 작성 및 문의 내역에서 관리할 수 있습니다.</li>
-       </ul>`,
-      { lead: `현재 노출 상품 설정 기준: 픽 순환 ${Number(exposureGuides.pick_rotation_minutes) || 15}분 · 세트 ${Number(exposureGuides.pick_set_size) || 5}개` },
-    )}`;
+    .join('')}</div>
+    <p class="sup-home-hint">이용 흐름 안내는 메인메뉴의 이용안내에서, 운영 지원은 고객센터에서 확인할 수 있습니다.</p>`;
 }
 
 function renderFaqSection() {
@@ -186,18 +165,20 @@ function renderNoticeSection() {
     body: n.body,
   }));
 
-  return renderPanel(
-    '공지사항',
-    'notice',
-    `<p class="sup-section__lead">제목을 누르면 본문이 펼쳐집니다. 다른 공지를 누르면 이전 내용은 접힙니다.</p>
+  return `
+    ${renderPanel('바로가기', 'support-quick', renderSupportQuickCards())}
+    ${renderPanel(
+      '공지사항',
+      'notice',
+      `<p class="sup-section__lead">제목을 누르면 본문이 펼쳐집니다. 다른 공지를 누르면 이전 내용은 접힙니다.</p>
      ${renderSingleOpenBoard(posts, { variant: 'notice' })}
      ${renderAdminFooterLink()}`,
-    {
-      lead: isOperationalBoardApiActive()
-        ? '최신 공지를 표시합니다.'
-        : '서비스 운영 공지입니다.',
-    },
-  );
+      {
+        lead: isOperationalBoardApiActive()
+          ? '최신 공지를 표시합니다.'
+          : '서비스 운영 공지입니다.',
+      },
+    )}`;
 }
 
 function renderContactSection() {

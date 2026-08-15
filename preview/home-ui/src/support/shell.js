@@ -42,7 +42,7 @@ export function bindSupportShellEvents(root, rerender) {
   root.querySelectorAll('[data-sup-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      window.location.hash = el.getAttribute('data-sup-nav') || '/support';
+      window.location.hash = el.getAttribute('data-sup-nav') || '/support/notice';
     });
   });
   root.querySelectorAll('[data-nav]').forEach((el) => {
