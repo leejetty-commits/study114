@@ -93,9 +93,9 @@
   margin-top: var(--space-2);
 }
 
-/* 학생 티저(게스트) — 카드 그리드에서도 높이/여백 맞춤 (마스킹 로직 불변) */
+/* 학생 티저(게스트) — 컴팩트 카드 톤 (마스킹 로직 불변) */
 .expo-basic--student-teaser {
-  padding: 1.05rem 1.1rem;
+  padding: 0.55rem 0.7rem;
   height: 100%;
   box-sizing: border-box;
 }
@@ -1092,15 +1092,17 @@
 }
 
 .expo-basic.expo-hcard {
-  padding: 0;
+  /* 패딩·보더는 search-visily .expo-hcard가 담당 (세로대형 오버라이드 금지) */
+  padding: 0.55rem 0.65rem;
   margin-bottom: 0;
-  border-color: #e2e8f0;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  border-color: #e5e7eb;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
 }
 
 .expo-basic.expo-hcard:hover {
   background: #fff;
   border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 .expo-basic.p24-card--clickable {
@@ -1108,7 +1110,7 @@
 }
 
 .browse-list--table .expo-basic {
-  border-radius: 0.75rem;
+  border-radius: 0.65rem;
   margin-bottom: 0;
 }
 
