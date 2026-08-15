@@ -1,6 +1,6 @@
 # 내부 문서 인덱스 (docs/internal)
 
-**기준일:** 2026-07-17  
+**기준일:** 2026-08-10  
 **대상:** 기획·개발·배포 논의 (Notion 보조용)
 
 ---
@@ -21,6 +21,8 @@
 | [30-admin-account-provisioning.md](./30-admin-account-provisioning.md) | admin/부마스터 내부 발급 · super_admin/sub_master · signup 차단 | ★ 정책 잠금 |
 | [25-youngcart-admin-member-board-port.md](./25-youngcart-admin-member-board-port.md) | 회원·게시판 관리 편의성 이식 Must 1~5 | ★ 진행 중 |
 | [26-youngcart-settings-port.md](./26-youngcart-settings-port.md) | 환경설정 → A28-09 운영 설정 이식 | ★ 신규 |
+| [44-list-sort-ops-runbook.md](./44-list-sort-ops-runbook.md) | 정렬·추천·SKY 운영 런북 · rollback | ★ |
+| [45-tutor-expanded-complete-ssot.md](./45-tutor-expanded-complete-ssot.md) | tutor 상세완료·검색 노출 필드 SSOT · 진단 | ★ |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
 
 ---
@@ -81,6 +83,7 @@ npm run build:dothome
 
 | 날짜 | 내용 |
 |------|------|
+| 2026-08-10 | 00-project-tree-and-key-files.md 전면 갱신 (CSS/a28 분리·ACL·Reviews·search CSS 의존) |
 | 2026-07-18 | 14장 가입·기본=draft·상세=본체·유료=구매 정렬 (feature branch, 배포 보류) |
 | 2026-07-09 | 인덱스 최초 작성 — 닷홈 1차·카페24 참고 분리 |
 | 2026-07-10 | GitHub Actions CI 배포·Variable·gitignore 산출물·작업 원칙 반영 |

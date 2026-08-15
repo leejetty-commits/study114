@@ -128,3 +128,16 @@ tutor 노출 진단 SQL: `sql/schema/041_ops_tutor_exposure_diagnose.sql`
 | 운영 DB 041/042 | phpMyAdmin 적용 확인(컬럼·테이블 SHOW) |
 | recommendations ready | true (API) |
 | room 500 | 해소(API 200) |
+
+---
+
+## 8. tutor expanded_complete · 검색 0건 후속
+
+상세: [45-tutor-expanded-complete-ssot.md](45-tutor-expanded-complete-ssot.md)
+
+배포 후 운영 순서:
+
+1. `POST /api/admin/content/migrate.php` `{"confirm":"recompute-tutor-detail"}` (최고관리자)
+2. `sql/schema/041_ops_tutor_exposure_diagnose.sql` 재실행 → `miss_*` 확인
+3. 필드 미충족 published tutor는 **소유자 상세등록 보강** (status 수동 UPDATE 금지)
+4. 검색 `type=tutor` total>0 · Home Basic · sky/recommend 재검증

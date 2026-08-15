@@ -78,6 +78,23 @@ export function validateLessonState(state) {
   if (!String(state.fee_basis_type || '').trim()) {
     return '산정방식을 선택해 주세요.';
   }
+  const basis = String(state.fee_basis_type || '');
+  if (basis === 'monthly_by_weekly_schedule') {
+    const n = Number(state.lessons_per_week);
+    if (!Number.isFinite(n) || n <= 0) {
+      return '주 횟수를 입력해 주세요.';
+    }
+  }
+  if (basis === 'monthly_by_total_sessions') {
+    const n = Number(state.monthly_session_count);
+    if (!Number.isFinite(n) || n <= 0) {
+      return '월 총 횟수를 입력해 주세요.';
+    }
+  }
+  const minutes = Number(state.minutes_per_lesson);
+  if (!Number.isFinite(minutes) || minutes <= 0) {
+    return '1회 수업 시간을 입력해 주세요.';
+  }
   if (!Array.isArray(state.lesson_places) || state.lesson_places.length === 0) {
     return '강의장소를 1개 이상 선택해 주세요.';
   }
@@ -87,6 +104,20 @@ export function validateLessonState(state) {
     if (grade && !name) {
       return '학년대를 선택했다면 과목명도 입력해 주세요. (예: 미적분2, 확률과 통계)';
     }
+  }
+  return null;
+}
+
+export function validateCareerState(state) {
+  if (!String(state.university_name || '').trim()) {
+    return '학교명을 입력해 주세요.';
+  }
+  return null;
+}
+
+export function validateIntroState(state) {
+  if (!String(state.intro_short || '').trim() && !String(state.intro_long || '').trim()) {
+    return '소개문(짧은 소개 또는 상세 소개)을 입력해 주세요.';
   }
   return null;
 }

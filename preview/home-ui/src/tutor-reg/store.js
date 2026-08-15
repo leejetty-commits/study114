@@ -227,6 +227,12 @@ export function getPublishReadiness(tutor) {
   need(tutor.has_profile_image, '프로필 이미지');
   need(!!(tutor.intro_short?.trim() || tutor.intro_long?.trim()), '소개문');
 
+  if (Array.isArray(tutor.detail_missing) && tutor.detail_missing.length) {
+    for (const label of tutor.detail_missing) {
+      if (!missing.includes(label)) missing.push(label);
+    }
+  }
+
   const checks = [
     !!tutor.tutor_display_name?.trim(),
     tutor.has_primary_region,

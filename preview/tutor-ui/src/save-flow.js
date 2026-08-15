@@ -5,6 +5,7 @@ export async function saveAndNavigate(state, step, nextPath) {
   state.tutor_id = result.tutor_id;
   state.profile_status = result.profile_status;
   state.detail_completion_status = result.detail_completion_status;
+  state.detail_missing = Array.isArray(result.detail_missing) ? result.detail_missing : [];
   sessionStorage.setItem('study114_tutor_id', String(result.tutor_id));
   if (nextPath) {
     const { navigate } = await import('./layout.js');

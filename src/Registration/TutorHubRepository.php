@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Registration;
 
 use PDO;
+use Study114\Tutor\TutorDetailCompletionEvaluator;
 
 /** 21장 P21 — tutors 등록 허브 */
 final class TutorHubRepository
@@ -64,17 +65,23 @@ final class TutorHubRepository
             $profileStatus = 'draft';
         }
 
+        $detailEval = (new TutorDetailCompletionEvaluator())->evaluate($this->pdo, $tutorId);
+
         return [
             'id'                       => $tutorId,
             'tutor_display_name'       => (string) ($row['tutor_display_name'] ?? ''),
             'profile_status'           => $profileStatus,
             'detail_completion_status' => (string) ($row['detail_completion_status'] ?? 'basic_only'),
+            'detail_missing'           => $detailEval['missing'],
+            'detail_checks'            => $detailEval['checks'],
             'location_label'           => $primaryRegion !== '' ? $primaryRegion : '—',
             'primary_region_label'     => $primaryRegion,
             'main_subject_note'        => $this->primarySubject($tutorId),
             'grade_band'               => $this->gradeBand($tutorId),
             'preferred_fee_amount'     => $row['preferred_fee_amount'] !== null ? (int) $row['preferred_fee_amount'] : null,
+            'fee_basis_type'           => $row['fee_basis_type'] !== null ? (string) $row['fee_basis_type'] : null,
             'lessons_per_week'         => $row['lessons_per_week'] !== null ? (int) $row['lessons_per_week'] : null,
+            'monthly_session_count'    => $row['monthly_session_count'] !== null ? (int) $row['monthly_session_count'] : null,
             'minutes_per_lesson'       => $row['minutes_per_lesson'] !== null ? (int) $row['minutes_per_lesson'] : null,
             'intro_short'              => $row['intro_short'] !== null ? (string) $row['intro_short'] : null,
             'intro_long'               => $row['intro_long'] !== null ? (string) $row['intro_long'] : null,

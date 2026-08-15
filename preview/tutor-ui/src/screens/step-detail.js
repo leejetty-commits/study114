@@ -15,7 +15,7 @@ import {
   TEACHING_STYLE_OPTIONS,
   emptySubject,
 } from '../state.js';
-import { syncLessonFromForm, syncCareerFromForm, syncContactFromForm, validateLessonState } from '../form-collect.js';
+import { syncLessonFromForm, syncCareerFromForm, syncContactFromForm, validateLessonState, validateCareerState, validateIntroState } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
@@ -229,6 +229,16 @@ export function bindDetailEvents(root) {
       const lessonErr = validateLessonState(registerState);
       if (lessonErr) {
         alert(lessonErr);
+        return;
+      }
+      const careerErr = validateCareerState(registerState);
+      if (careerErr) {
+        alert(careerErr);
+        return;
+      }
+      const introErr = validateIntroState(registerState);
+      if (introErr) {
+        alert(introErr);
         return;
       }
       const urlErr = validatePromoUrls(registerState);

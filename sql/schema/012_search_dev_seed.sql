@@ -88,13 +88,18 @@ INSERT INTO study_room_facilities (study_room_id, facility_id) VALUES
   (1, 5);
 
 INSERT INTO tutors (
-  user_id, tutor_display_name, preferred_fee_amount, university_name, major_name,
+  user_id, tutor_display_name, main_subject_note, preferred_fee_amount, fee_basis_type,
+  university_name, major_name,
   career_year_band, lessons_per_week, minutes_per_lesson,
   student_gender_group, student_count_group, age_band, university_status,
-  profile_status
+  intro_short, profile_status, detail_completion_status
 ) VALUES
-  (4, '대치 Prime 수학', 600000, '서울대', '수학과', 'y7_10', 2, 90, 'mixed', 'solo', 'early_30s', 'graduated', 'published'),
-  (5, '우동 Pick 영어', 400000, '연세대', '영어영문학과', 'y4_6', 2, 60, 'female', 'two', 'late_20s', 'graduated', 'published');
+  (4, '대치 Prime 수학', '수학', 600000, 'monthly_by_weekly_schedule',
+   '서울대', '수학과', 'y7_10', 2, 90, 'mixed', 'solo', 'early_30s', 'graduated',
+   '중·고 수학 전문', 'published', 'basic_only'),
+  (5, '우동 Pick 영어', '영어', 400000, 'monthly_by_weekly_schedule',
+   '연세대', '영어영문학과', 'y4_6', 2, 60, 'female', 'two', 'late_20s', 'graduated',
+   '회화·문법 병행', 'published', 'basic_only');
 
 INSERT INTO tutor_regions (tutor_id, region_id, scope_type, priority_order, is_primary) VALUES
   (1, 1, 'city', 0, 1),

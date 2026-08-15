@@ -6,6 +6,7 @@ namespace Study114\Registration;
 
 use InvalidArgumentException;
 use Study114\Database\Connection;
+use Study114\Tutor\TutorDetailCompletionEvaluator;
 
 /** 21장 P21 — tutors 허브 API */
 final class TutorHubService
@@ -52,9 +53,18 @@ final class TutorHubService
     {
         (new \Study114\Auth\EmailVerificationGate())->assertVerified($userId);
 
+        // 공개 직전 필드 SSOT 재계산 — 스텝 통과로 남은 stale expanded_complete / basic_only 제거
+        (new TutorDetailCompletionEvaluator())->apply(Connection::get(), $tutorId);
+        $tutor = $this->repo->getForOwner($userId, $tutorId) ?? $tutor;
+
         $missing = $this->publishMissing($tutor);
         if ($missing !== []) {
-            return ['ok' => false, 'reason' => 'incomplete', 'missing' => $missing];
+            return [
+                'ok' => false,
+                'reason' => 'incomplete',
+                'missing' => $missing,
+                'detail_missing' => $tutor['detail_missing'] ?? [],
+            ];
         }
         $this->repo->setProfileStatus($tutorId, 'published', date('Y-m-d H:i:s'));
 

@@ -158,6 +158,26 @@ try {
 
 
 
+    if ($action === 'recompute_detail') {
+
+        $tutorId = isset($input['tutor_id']) ? (int) $input['tutor_id'] : 0;
+
+        if ($tutorId < 1) {
+
+            throw new InvalidArgumentException('tutor_id가 필요합니다.');
+
+        }
+
+        $result = $service->recomputeDetailStatus($userId, $tutorId);
+
+        echo json_encode(['ok' => true, ...$result], JSON_UNESCAPED_UNICODE);
+
+        exit;
+
+    }
+
+
+
     http_response_code(400);
 
     echo json_encode([
@@ -166,7 +186,7 @@ try {
 
         'error'   => 'invalid_action',
 
-        'message' => 'action: masters | load | save',
+        'message' => 'action: masters | load | save | recompute_detail',
 
     ], JSON_UNESCAPED_UNICODE);
 

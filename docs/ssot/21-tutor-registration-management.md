@@ -272,6 +272,10 @@
 | `expanded_in_progress` | 체크리스트 · 상태판 |
 | `expanded_complete` | 공개 게이트 · 노출·접근 **신청 가능** 조건 |
 
+**구현 SSOT (2026-08-16):** 스텝 통과가 아니라 **필수 필드**로 판정한다.  
+코드: `TutorDetailCompletionEvaluator` · 문서: [docs/internal/45-tutor-expanded-complete-ssot.md](../internal/45-tutor-expanded-complete-ssot.md).  
+검색 노출 = `profile_status=published` ∩ `detail_completion_status=expanded_complete`.
+
 ### 4-5. 노출 등급 · 신뢰정보 — 직교 축 `[잠금]`
 
 **노출 레벨** (단계형 안내 · DB enum ✕):

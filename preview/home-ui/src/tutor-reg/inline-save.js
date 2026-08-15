@@ -98,28 +98,44 @@ export async function saveTutorDetailInline(tutorId, detail) {
   const subject = String(detail.main_subject_note || current.main_subject_note || '').trim();
   const fee = Number(detail.preferred_fee_amount || 0);
   const places = Array.isArray(detail.lesson_places) ? detail.lesson_places : [];
+  const feeBasis = String(detail.fee_basis_type || current.fee_basis_type || 'monthly_by_weekly_schedule');
+  const minutes = Number(detail.minutes_per_lesson || current.minutes_per_lesson || 0);
+  const lessonsPerWeek = Number(detail.lessons_per_week || current.lessons_per_week || 0);
+  const monthlySessions = Number(detail.monthly_session_count || current.monthly_session_count || 0);
+  const university = String(detail.university_name || '').trim();
+  const introShort = String(detail.intro_short || '').trim();
+  const introLong = String(detail.intro_long || '').trim();
+
   if (!subject) throw new Error('주력과목이 없습니다. 기본등록에서 주력과목을 먼저 저장해 주세요.');
   if (!fee || fee <= 0) throw new Error('월 과외비를 입력해 주세요.');
   if (!places.length) throw new Error('강의장소를 1개 이상 선택해 주세요.');
+  if (!minutes || minutes <= 0) throw new Error('1회 수업 시간을 입력해 주세요.');
+  if (feeBasis === 'monthly_by_weekly_schedule' && (!lessonsPerWeek || lessonsPerWeek <= 0)) {
+    throw new Error('주 횟수를 입력해 주세요.');
+  }
+  if (feeBasis === 'monthly_by_total_sessions' && (!monthlySessions || monthlySessions <= 0)) {
+    throw new Error('월 총 횟수를 입력해 주세요.');
+  }
+  if (!university) throw new Error('학교명을 입력해 주세요.');
+  if (!introShort && !introLong) throw new Error('소개문을 입력해 주세요.');
 
   if (isRegistrationsApiMode()) {
-    const current = getTutor(tutorId) || {};
     await postRegisterSave('lesson', tutorId, {
       main_subject_note: subject,
       student_gender_group: detail.student_gender_group || current.student_gender_group || 'mixed',
       student_count_group: detail.student_count_group || current.student_count_group || 'solo',
       age_band: detail.age_band || current.age_band || '',
       preferred_fee_amount: fee,
-      fee_basis_type: detail.fee_basis_type || 'monthly_by_weekly_schedule',
+      fee_basis_type: feeBasis,
       lessons_per_week: detail.lessons_per_week || current.lessons_per_week || '',
       monthly_session_count: detail.monthly_session_count || '',
-      minutes_per_lesson: detail.minutes_per_lesson || current.minutes_per_lesson || '',
+      minutes_per_lesson: minutes,
       fee_description: detail.fee_description || '',
       lesson_places: places,
       subjects: detail.subjects || [],
     });
     await postRegisterSave('career', tutorId, {
-      university_name: detail.university_name || '',
+      university_name: university,
       major_name: detail.major_name || '',
       university_status: detail.university_status || '',
       career_year_band: detail.career_year_band || '',
@@ -131,8 +147,8 @@ export async function saveTutorDetailInline(tutorId, detail) {
     });
     await postRegisterSave('contact', tutorId, {
       contact_time_note: detail.contact_time_note || '',
-      intro_short: detail.intro_short || '',
-      intro_long: detail.intro_long || '',
+      intro_short: introShort || detail.intro_short || '',
+      intro_long: introLong || detail.intro_long || '',
       profile_status: detail.profile_status || current.profile_status || 'draft',
       youtube_url: detail.youtube_url || '',
       facebook_url: detail.facebook_url || '',
@@ -146,21 +162,24 @@ export async function saveTutorDetailInline(tutorId, detail) {
     main_subject_note: subject,
     has_primary_subject: true,
     preferred_fee_amount: fee,
-    fee_basis_type: detail.fee_basis_type || 'monthly_by_weekly_schedule',
-    lessons_per_week: detail.lessons_per_week ? Number(detail.lessons_per_week) : undefined,
-    minutes_per_lesson: detail.minutes_per_lesson ? Number(detail.minutes_per_lesson) : undefined,
+    fee_basis_type: feeBasis,
+    lessons_per_week: lessonsPerWeek || undefined,
+    monthly_session_count: monthlySessions || undefined,
+    minutes_per_lesson: minutes,
     fee_description: String(detail.fee_description || ''),
     lesson_places: places,
     has_lesson_places: places.length > 0,
     student_gender_group: detail.student_gender_group || undefined,
     student_count_group: detail.student_count_group || undefined,
-    university_name: String(detail.university_name || ''),
+    university_name: university,
     major_name: String(detail.major_name || ''),
     university_status: String(detail.university_status || ''),
     feature_1: String(detail.feature_1 || ''),
-    intro_short: String(detail.intro_short || ''),
-    intro_long: String(detail.intro_long || ''),
+    intro_short: introShort,
+    intro_long: introLong,
     contact_time_note: String(detail.contact_time_note || ''),
+    // 프리뷰만: 서버 SSOT와 동일한 필드 충족 시에만 complete
     detail_completion_status: 'expanded_complete',
+    detail_missing: [],
   });
 }

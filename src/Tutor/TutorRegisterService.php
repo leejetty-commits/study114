@@ -165,7 +165,7 @@ final class TutorRegisterService
 
 
 
-            $this->refreshDetailStatus($pdo, $tutorId, $step);
+            $detailEval = $this->refreshDetailStatus($pdo, $tutorId, $step);
 
 
 
@@ -191,6 +191,16 @@ final class TutorRegisterService
 
             $pdo->commit();
 
+        } catch (InvalidArgumentException $e) {
+
+            if ($pdo->inTransaction()) {
+
+                $pdo->rollBack();
+
+            }
+
+            throw $e;
+
         } catch (PDOException $e) {
 
             $pdo->rollBack();
@@ -208,6 +218,56 @@ final class TutorRegisterService
             'profile_status'           => $status['profile_status'],
 
             'detail_completion_status' => $status['detail_completion_status'],
+
+            'detail_missing'           => $detailEval['missing'] ?? [],
+
+            'detail_checks'            => $detailEval['checks'] ?? [],
+
+        ];
+
+    }
+
+
+
+    /**
+
+     * @return array{
+
+     *   tutor_id: int,
+
+     *   detail_completion_status: string,
+
+     *   detail_missing: list<string>,
+
+     *   detail_checks: array<string, bool>
+
+     * }
+
+     */
+
+    public function recomputeDetailStatus(int $userId, int $tutorId): array
+
+    {
+
+        $this->assertTutorRole($userId);
+
+        $pdo = Connection::get();
+
+        $this->assertOwnership($pdo, $userId, $tutorId);
+
+        $eval = (new TutorDetailCompletionEvaluator())->apply($pdo, $tutorId);
+
+
+
+        return [
+
+            'tutor_id' => $tutorId,
+
+            'detail_completion_status' => $eval['status'],
+
+            'detail_missing' => $eval['missing'],
+
+            'detail_checks' => $eval['checks'],
 
         ];
 
@@ -581,6 +641,30 @@ final class TutorRegisterService
 
 
 
+        // home-ui 인라인 상세저장이 contact 에 intro 를 실어 보내는 경로 지원
+
+        if (array_key_exists('intro_short', $input) || array_key_exists('intro_long', $input)) {
+
+            $introStmt = $pdo->prepare(
+
+                'UPDATE tutors SET intro_short = COALESCE(?, intro_short), intro_long = COALESCE(?, intro_long) WHERE id = ?'
+
+            );
+
+            $introStmt->execute([
+
+                $this->optionalString($input, 'intro_short'),
+
+                $this->optionalString($input, 'intro_long'),
+
+                $tutorId,
+
+            ]);
+
+        }
+
+
+
         $stmt = $pdo->prepare(
 
             'UPDATE tutors SET contact_time_note = ?, youtube_url = ?, facebook_url = ?, instagram_url = ?, profile_status = ? WHERE id = ?'
@@ -606,6 +690,40 @@ final class TutorRegisterService
 
 
         $this->syncImages($pdo, $tutorId, $input);
+
+
+
+        if ($profileStatus === 'published') {
+
+            $eval = (new TutorDetailCompletionEvaluator())->evaluate($pdo, $tutorId);
+
+            if ($eval['status'] !== TutorDetailCompletionEvaluator::STATUS_COMPLETE) {
+
+                throw new InvalidArgumentException(
+
+                    '상세등록이 완료되지 않아 공개할 수 없습니다. 부족: ' . implode(', ', $eval['missing'])
+
+                );
+
+            }
+
+            $countStmt = $pdo->prepare('SELECT COUNT(*) FROM tutor_images WHERE tutor_id = ?');
+
+            $countStmt->execute([$tutorId]);
+
+            if ((int) $countStmt->fetchColumn() < 1) {
+
+                throw new InvalidArgumentException('프로필 이미지가 없어 공개할 수 없습니다.');
+
+            }
+
+            $pdo->prepare(
+
+                'UPDATE tutors SET published_at = COALESCE(published_at, NOW()) WHERE id = ?'
+
+            )->execute([$tutorId]);
+
+        }
 
     }
 
@@ -860,43 +978,35 @@ final class TutorRegisterService
 
 
 
-    private function refreshDetailStatus(PDO $pdo, int $tutorId, string $step): void
+    /**
+
+     * @return array{
+
+     *   status: string,
+
+     *   missing: list<string>,
+
+     *   checks: array<string, bool>,
+
+     *   progress_signals: int,
+
+     *   changed: bool
+
+     * }
+
+     */
+
+    private function refreshDetailStatus(PDO $pdo, int $tutorId, string $step): array
 
     {
 
-        $stmt = $pdo->prepare('SELECT detail_completion_status FROM tutors WHERE id = ?');
+        // $step 은 호출 계보 추적용. 판정은 필드 SSOT.
 
-        $stmt->execute([$tutorId]);
-
-        $current = (string) ($stmt->fetchColumn() ?: 'basic_only');
+        unset($step);
 
 
 
-        $next = $current;
-
-        if ($step === 'regions' && $current === 'basic_only') {
-
-            $next = 'basic_only';
-
-        } elseif (in_array($step, ['lesson', 'career'], true) && $current !== 'expanded_complete') {
-
-            $next = 'expanded_in_progress';
-
-        } elseif ($step === 'contact') {
-
-            $next = 'expanded_complete';
-
-        }
-
-
-
-        if ($next !== $current) {
-
-            $pdo->prepare('UPDATE tutors SET detail_completion_status = ? WHERE id = ?')
-
-                ->execute([$next, $tutorId]);
-
-        }
+        return (new TutorDetailCompletionEvaluator())->apply($pdo, $tutorId);
 
     }
 
@@ -1099,6 +1209,14 @@ final class TutorRegisterService
             'profile_status'             => (string) ($row['profile_status'] ?? 'draft'),
 
             'detail_completion_status'     => (string) ($row['detail_completion_status'] ?? 'basic_only'),
+
+            'detail_missing'               => (new TutorDetailCompletionEvaluator())->evaluate(
+
+                Connection::get(),
+
+                $tutorId
+
+            )['missing'],
 
         ];
 

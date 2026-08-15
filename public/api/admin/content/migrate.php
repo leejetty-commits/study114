@@ -11,6 +11,7 @@ use Study114\Admin\ContentSchemaMigrateService;
 use Study114\Admin\DualCapabilityAdminMigrateService;
 use Study114\Admin\ListSortCountersMigrateService;
 use Study114\Admin\RegionBasisSchemaMigrateService;
+use Study114\Admin\TutorDetailRecomputeService;
 
 AdminApi::bootstrap();
 
@@ -22,6 +23,7 @@ AdminApi::run(static function (): void {
     $regionBasis = new RegionBasisSchemaMigrateService();
     $dualAdmin = new DualCapabilityAdminMigrateService();
     $listSort = new ListSortCountersMigrateService();
+    $tutorDetail = new TutorDetailRecomputeService();
     $method = AdminApi::method();
     $admin036 = $accounts->status();
     $needs036Bootstrap = empty($admin036['has_admin_level']);
@@ -39,10 +41,12 @@ AdminApi::run(static function (): void {
             'region_037' => $regionBasis->status(),
             'dual_admin_038' => $dualAdmin->status(),
             'list_sort_041' => $listSort->status(),
+            'tutor_detail_recompute' => $tutorDetail->status(),
             'can_apply_036' => $isSuper || $needs036Bootstrap,
             'can_apply_037' => $isSuper,
             'can_apply_038' => $isSuper,
             'can_apply_041' => $isSuper,
+            'can_recompute_tutor_detail' => $isSuper,
         ]);
     }
 
@@ -82,8 +86,18 @@ AdminApi::run(static function (): void {
             $seedDemo = !empty($input['seed_demo']);
             AdminApi::ok(['migrate' => $listSort->apply($seedDemo)]);
         }
+        if ($confirm === 'recompute-tutor-detail') {
+            if (!$isSuper) {
+                AdminApi::fail(403, 'forbidden', '최고관리자만 tutor detail 재계산을 실행할 수 있습니다.');
+            }
+            AdminApi::ok(['migrate' => $tutorDetail->apply()]);
+        }
 
-        AdminApi::fail(422, 'validation', 'confirm: apply-034-035 · apply-036 · apply-037 · apply-038 · apply-041 이 필요합니다. apply-041은 042 user_recommendations 포함.');
+        AdminApi::fail(
+            422,
+            'validation',
+            'confirm: apply-034-035 · apply-036 · apply-037 · apply-038 · apply-041 · recompute-tutor-detail'
+        );
     }
 
     AdminApi::fail(405, 'method_not_allowed', 'GET · POST만 허용됩니다.');
