@@ -270,17 +270,16 @@ export function getHotConcernSamples({ limit = 3, preferBoardKey, boardKeys } = 
   const all = listAllConcernPosts({ sort: 'hot' })
     .filter((p) => p.type !== 'community_alert')
     .filter((p) => !allowed || allowed.has(p.boardKey));
-  if (preferBoardKey) {
-    const preferred = all.filter((p) => p.boardKey === preferBoardKey);
-    const rest = all.filter((p) => p.boardKey !== preferBoardKey);
-    return [...preferred, ...rest].slice(0, limit);
-  }
   const boards = allowed
     ? listCommunityBoards().filter((b) => allowed.has(b.boardKey))
     : listCommunityBoards();
+  const ordered = preferBoardKey
+    ? [...boards.filter((b) => b.boardKey === preferBoardKey), ...boards.filter((b) => b.boardKey !== preferBoardKey)]
+    : boards;
   const picked = [];
-  for (const board of boards) {
-    const hit = all.find((p) => p.boardKey === board.boardKey && !picked.includes(p));
+  for (const board of ordered) {
+    if (picked.length >= limit) break;
+    const hit = all.find((p) => p.boardKey === board.boardKey);
     if (hit) picked.push(hit);
   }
   for (const p of all) {

@@ -175,9 +175,9 @@ export function roleGateCopy(boardKey) {
   }
   if (key === 'concern-parent') {
     return {
-      title: '학부모·학생 공간',
-      body: '이 공간의 본문은 학부모·학생 역할로 로그인한 뒤 볼 수 있어요.',
-      roleLabel: '학부모/학생',
+      title: '학생·학부모 공간',
+      body: '이 공간의 본문은 학생·학부모 역할로 로그인한 뒤 볼 수 있어요.',
+      roleLabel: '학생/학부모',
     };
   }
   if (key === 'library-guide-pdf') {

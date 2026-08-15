@@ -5,15 +5,10 @@ import { listLibraryItems } from './library/library-store.js';
 import { getNavRole } from './state.js';
 import { SITE_PROMO_ITEMS, renderPromoCard } from '../../shared/promo-sidebar.js';
 import { getBoardChannel, isConcernBoardKey } from './board-channel-store.js';
-import {
-  listCommunityBoards,
-  getConcernBoardByKey,
-  preferredConcernBoardId,
-} from './concern/copy.js';
+import { getConcernBoardByKey } from './concern/copy.js';
 import { getHotConcernSamples, listConcernPosts, reactionTotal } from './concern/store.js';
 import { renderPromoRailCard } from './promo/screens.js';
 import {
-  canListBoard,
   canShowBoardInRail,
   isRailSlotVisible,
   normalizeBoardKey,
@@ -219,7 +214,7 @@ function liveFieldCopy(slotKey) {
       eyebrow: '탐색 도움',
       title: '많이 보는 고민',
       ctaLabel: '커뮤니티 더 보기',
-      ctaHref: '#/community',
+      ctaHref: '#/community/director',
     };
   }
   if (slotKey === 'detail_right_rail') {
@@ -227,30 +222,23 @@ function liveFieldCopy(slotKey) {
       eyebrow: '판단 보조',
       title: '비슷한 고민 / 사례',
       ctaLabel: '커뮤니티 열기',
-      ctaHref: '#/community',
+      ctaHref: '#/community/director',
     };
   }
   if (slotKey === 'register_right_rail' || slotKey === 'plans_right_rail') {
     return {
       eyebrow: '운영 현장',
       title: '지금 현장 고민',
-      ctaLabel: '원장·쌤 고민 보기',
-      ctaHref: '#/community',
+      ctaLabel: '공부방·쌤 고민 보기',
+      ctaHref: '#/community/director',
     };
   }
   return {
     eyebrow: '오늘의 현장',
     title: '지금 현장 고민 HOT',
     ctaLabel: '커뮤니티 더 보기',
-    ctaHref: '#/community',
+    ctaHref: '#/community/director',
   };
-}
-
-function preferBoardKeyForRole() {
-  const id = preferredConcernBoardId(getNavRole());
-  const key = listCommunityBoards().find((b) => b.id === id)?.boardKey;
-  if (key && canListBoard(key, getNavRole())) return key;
-  return undefined;
 }
 
 /** @param {string} slotKey @param {{ guestFilter?: boolean }} [opts] */
@@ -259,7 +247,6 @@ function renderLiveFieldSlot(slotKey, opts = {}) {
   const boardKeys = resolveConcernBoardKeysForSlot(slotKey, opts);
   const samples = getHotConcernSamples({
     limit: 3,
-    preferBoardKey: preferBoardKeyForRole(),
     boardKeys,
   }).filter((post) => canShowBoardInRail(post.boardKey, getNavRole(), { guestFilter: opts.guestFilter }));
   const items = samples
@@ -306,7 +293,7 @@ function actionCtasForContext(slotKey) {
   if (role === 'study_room') {
     return [
       { title: '3분 등록부터', desc: '기본등록으로 가볍게 시작', href: '#/guide/registration', cta: '등록방법' },
-      { title: '시즌 모집 준비', desc: '소개문·사진 보완 포인트', href: '#/community/director', cta: '원장 고민방' },
+      { title: '시즌 모집 준비', desc: '소개문·사진 보완 포인트', href: '#/community/director', cta: '공부방 고민방' },
       { title: '유료 노출 안내', desc: '상세등록 이후 Prime/Pick', href: '#/plans', cta: '유료상품' },
     ];
   }
@@ -321,7 +308,7 @@ function actionCtasForContext(slotKey) {
   return [
     { title: '찜·비교·쪽지', desc: '첫 연락은 쪽지로 안전하게', href: '#/guide/saved-contact', cta: '이용 흐름' },
     { title: '안전과외 가이드', desc: '개인정보 공유 전 행동 요령', href: '#/guide/safety', cta: '가이드 보기' },
-    { title: '학부모/학생 고민', desc: '선택·루틴·성적 고민 나누기', href: '#/community/parent', cta: '커뮤니티 열기' },
+    { title: '학생/학부모 고민', desc: '선택·루틴·성적 고민 나누기', href: '#/community/parent', cta: '커뮤니티 열기' },
   ];
 }
 

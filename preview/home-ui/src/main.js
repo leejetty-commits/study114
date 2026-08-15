@@ -46,7 +46,7 @@ import {
 import { PLANS_REDIRECTS } from './plans/router.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
 import { renderGuide, bindGuideEvents } from './guide/index.js';
-import { renderConcern, bindConcernEvents } from './concern/index.js';
+import { renderConcern, bindConcernEvents, getDefaultCommunityPath } from './concern/index.js';
 import { renderPromo, bindPromoEvents } from './promo/index.js';
 import { renderSupport, bindSupportEvents } from './support/index.js';
 import { renderPolicy, bindPolicyEvents } from './policy-index.js';
@@ -309,10 +309,12 @@ function init() {
           navigate(ROLE_HOME[user.role_type]);
           return;
         }
-        if (pending === '/community' || (pending && pending.startsWith('/community/'))) {
+        if (pending === '/community' || pending === '/community/' || (pending && pending.startsWith('/community/'))) {
           clearPendingRoute();
+          const target =
+            pending === '/community' || pending === '/community/' ? getDefaultCommunityPath() : pending;
           if (!isCommunityRoute()) {
-            navigate(pending);
+            navigate(target);
             return;
           }
         }

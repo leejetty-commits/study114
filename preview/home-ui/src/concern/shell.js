@@ -1,15 +1,22 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole, getCommunityPath } from '../state.js';
 import { renderConcernScreen, renderConcernSideNav, bindConcernScreenEvents } from './screens.js';
-import { COMMUNITY_HUB_TITLE } from './copy.js';
 import { getCommunityView } from './router.js';
 
-function pageTitle(path) {
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;');
+}
+
+function renderCommunityPageTitle(path) {
   const view = getCommunityView(path.split('?')[0]);
-  if (view.kind === 'hub') return COMMUNITY_HUB_TITLE;
-  if (view.kind === 'compose') return `글쓰기 · ${view.board.label}`;
-  if (view.kind === 'detail') return view.board.label;
-  return view.board?.label || COMMUNITY_HUB_TITLE;
+  const suffix = view.board?.label || '';
+  if (!suffix) {
+    return `<span class="sup-content__title-prefix">커뮤니티</span>`;
+  }
+  return `<span class="sup-content__title-prefix">커뮤니티</span><span class="sup-content__title-suffix">${esc(suffix)}</span>`;
 }
 
 export function renderConcernShell(currentPath, bodyHtml) {
@@ -19,7 +26,7 @@ export function renderConcernShell(currentPath, bodyHtml) {
   const mainHtml = `
     <div class="concern-layout">
       <header class="concern-content__head">
-        <h1 class="concern-content__title">${pageTitle(currentPath)}</h1>
+        <h1 class="concern-content__title">${renderCommunityPageTitle(currentPath)}</h1>
       </header>
       <div class="concern-frame">
         ${renderConcernSideNav(currentPath)}

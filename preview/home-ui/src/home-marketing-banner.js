@@ -84,8 +84,8 @@ export const HOME_BANNER_COPY = {
       '활동 지역·과목·스타일을 모아 보고 찜·비교로 후보를 좁혀 보세요',
       '궁금한 점은 공식 쪽지로 이어갈 수 있어요',
     ],
-    image: '/assets/banners/discover.jpg',
-    imageAlt: '학습 공간',
+    image: '/assets/banners/tutor.webp',
+    imageAlt: '과외 수업 분위기',
   },
   /** 학생찾기 */
   student_find: {
@@ -96,8 +96,8 @@ export const HOME_BANNER_COPY = {
       '요청 요약 중심으로 확인하고, 필요하면 쪽지·관심 저장으로 이어가세요',
       '학부모 과금 없이, 공급자 접근권은 필요할 때만 이용합니다',
     ],
-    image: '/assets/banners/compare.jpg',
-    imageAlt: '비교·판단 분위기',
+    image: '/assets/banners/connect.webp',
+    imageAlt: '학생·학부모 연결 분위기',
   },
   /** 유료상품 */
   plans: {
@@ -108,8 +108,8 @@ export const HOME_BANNER_COPY = {
       '대표·추천 노출은 기간형, 쪽지권·열람권은 횟수권으로 단건 결제합니다',
       '자동연장 없이, 만료되면 기본 노출로 자연스럽게 돌아갑니다',
     ],
-    image: '/assets/banners/trust.jpg',
-    imageAlt: '신뢰·플랫폼 분위기',
+    image: '/assets/banners/plans.jpg',
+    imageAlt: '노출·홍보 분위기',
   },
   /** 고객센터 */
   support: {
@@ -126,12 +126,13 @@ export const HOME_BANNER_COPY = {
 };
 
 /**
- * @type {Record<string, { copyId: BannerCopyId, layout: BannerLayout, ctas: BannerCta[] }>}
+ * @type {Record<string, { copyId: BannerCopyId, layout: BannerLayout, image?: string, ctas: BannerCta[] }>}
  */
 const SURFACE_BANNER = {
   guest: {
     copyId: 'discover',
     layout: 'cinema',
+    image: '/assets/banners/discover.jpg',
     ctas: [
       { label: '우리동네 공부방 찾기', href: searchUiUrl('room'), external: true, kind: 'primary' },
       { label: '우리동네 과외쌤 찾기', href: searchUiUrl('tutor'), external: true, kind: 'secondary' },
@@ -141,6 +142,7 @@ const SURFACE_BANNER = {
   parent: {
     copyId: 'compare',
     layout: 'cinema',
+    image: '/assets/banners/compare.jpg',
     ctas: [
       { label: '우리동네 공부방 찾기', href: searchUiUrl('room', 'parent'), external: true, kind: 'primary' },
       { label: '우리동네 과외쌤 찾기', href: searchUiUrl('tutor', 'parent'), external: true, kind: 'secondary' },
@@ -149,6 +151,7 @@ const SURFACE_BANNER = {
   study_room: {
     copyId: 'trust',
     layout: 'cinema',
+    image: '/assets/banners/trust.jpg',
     ctas: [
       { label: '우리동네 학생 보기', href: searchUiUrl('student', 'study_room'), external: true, kind: 'primary' },
       { label: '유료상품 알아보기', href: '#/plans', nav: '/plans', kind: 'secondary' },
@@ -157,6 +160,7 @@ const SURFACE_BANNER = {
   tutor: {
     copyId: 'trust',
     layout: 'cinema',
+    image: '/assets/banners/tutor.webp',
     ctas: [
       { label: '학생 수요 보기', href: searchUiUrl('student', 'tutor'), external: true, kind: 'primary' },
       { label: '유료상품 알아보기', href: '#/plans', nav: '/plans', kind: 'secondary' },
@@ -165,6 +169,7 @@ const SURFACE_BANNER = {
   search_room: {
     copyId: 'compare',
     layout: 'cinema',
+    image: '/assets/banners/room.webp',
     ctas: [
       { label: '우리동네 과외쌤 찾기', href: searchUiUrl('tutor'), external: true, kind: 'primary' },
       { label: '홈으로', href: HOME_GUEST, external: true, kind: 'secondary' },
@@ -173,6 +178,7 @@ const SURFACE_BANNER = {
   search_tutor: {
     copyId: 'tutor_find',
     layout: 'cinema',
+    image: '/assets/banners/explore.webp',
     ctas: [
       { label: '우리동네 공부방 찾기', href: searchUiUrl('room'), external: true, kind: 'primary' },
       { label: '홈으로', href: HOME_GUEST, external: true, kind: 'secondary' },
@@ -181,6 +187,7 @@ const SURFACE_BANNER = {
   search_student: {
     copyId: 'student_find',
     layout: 'cinema',
+    image: '/assets/banners/connect.webp',
     ctas: [
       { label: '쪽지함으로', href: HOME_MESSAGES, external: true, kind: 'primary' },
       { label: '유료상품 알아보기', href: HOME_PLANS, external: true, kind: 'secondary' },
@@ -189,6 +196,7 @@ const SURFACE_BANNER = {
   plans: {
     copyId: 'plans',
     layout: 'cinema',
+    image: '/assets/banners/plans.jpg',
     ctas: [
       { label: '노출상품 보기', href: '#/plans/positions', nav: '/plans/positions', kind: 'primary' },
       { label: '접근권 보기', href: '#/plans/access', nav: '/plans/access', kind: 'secondary' },
@@ -197,6 +205,7 @@ const SURFACE_BANNER = {
   support: {
     copyId: 'support',
     layout: 'cinema',
+    image: '/assets/banners/support.jpg',
     ctas: [
       { label: '자주 묻는 질문', href: '#/support/faq', nav: '/support/faq', kind: 'primary' },
       { label: '문의하기', href: '#/support/contact', nav: '/support/contact', kind: 'secondary' },
@@ -254,7 +263,7 @@ export function renderHomeMarketingBanner(surface) {
   return `
     <section class="home-mkt home-mkt--${esc(cfg.layout)} home-mkt--${esc(copy.id)}" aria-label="소개 배너">
       <div class="home-mkt__media" aria-hidden="true">
-        <img class="home-mkt__img" src="${esc(copy.image)}" alt="" width="1600" height="900" decoding="async" fetchpriority="high" />
+        <img class="home-mkt__img" src="${esc(cfg.image || copy.image)}" alt="" width="1600" height="900" decoding="async" fetchpriority="high" />
         <div class="home-mkt__shade"></div>
       </div>
       <div class="home-mkt__inner">

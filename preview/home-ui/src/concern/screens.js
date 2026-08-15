@@ -5,9 +5,8 @@ import {
   CONCERN_POST_TYPES,
   CONCERN_REACTIONS,
   getConcernBoardByKey,
-  preferredConcernBoardId,
 } from './copy.js';
-import { concernBoardNav, getConcernView } from './router.js';
+import { concernBoardNav, getConcernView, getDefaultCommunityPath } from './router.js';
 import {
   addConcernComment,
   createConcernPost,
@@ -23,7 +22,6 @@ import {
   canCommentBoard,
   canComposeBoard,
   canListBoard,
-  canReadBoardDetail,
   getBoardAccess,
   roleGateCopy,
 } from '../board-channel-acl.js';
@@ -60,7 +58,7 @@ function authorLine(post) {
 
 function renderPostRow(post, summaryOnly = false) {
   const board = getConcernBoardByKey(post.boardKey);
-  const href = `${board?.path || '/community'}/${post.id}`;
+  const href = `${board?.path || getDefaultCommunityPath()}/${post.id}`;
   return `
     <a class="concern-row" href="#${esc(href)}" data-concern-nav="${esc(href)}">
       <div class="concern-row__head">
@@ -88,7 +86,7 @@ function renderCommunityAlerts(navRole) {
       ${alerts
         .map((post) => {
           const board = getConcernBoardByKey(post.boardKey);
-          const href = `${board?.path || '/community'}/${post.id}`;
+          const href = `${board?.path || getDefaultCommunityPath()}/${post.id}`;
           return `
             <a class="concern-alert-card" href="#${esc(href)}" data-concern-nav="${esc(href)}">
               <span class="concern-alert-card__label">커뮤니티 알림</span>
@@ -99,41 +97,12 @@ function renderCommunityAlerts(navRole) {
     </section>`;
 }
 
-function renderHub() {
-  const role = getNavRole();
-  const prefer = preferredConcernBoardId(role);
+function renderCommunityIntro(navRole) {
   return `
-    ${renderCommunityAlerts(role)}
+    ${renderCommunityAlerts(navRole)}
     <section class="concern-hero">
       <p class="concern-eyebrow">현장형 커뮤니티</p>
       <p class="concern-hero__lead">${esc(CONCERN_HUB_LEAD)}</p>
-    </section>
-    <section class="concern-board-grid">
-      ${listCommunityBoards()
-        .filter((board) => canListBoard(board.boardKey, role))
-        .map((board) => {
-          const access = getBoardAccess(board.boardKey, role);
-          const hot = listConcernPosts(board.boardKey, { sort: 'hot' })[0];
-          const emphasize = board.id === prefer ? ' concern-board-card--prefer' : '';
-          const writeBtn = access.canCompose
-            ? `<a class="guide-btn guide-btn--secondary" href="#${esc(board.path)}/new" data-concern-nav="${esc(board.path)}/new">글쓰기</a>`
-            : '';
-          return `
-          <article class="concern-board-card${emphasize}">
-            <h3 class="concern-board-card__title">${esc(board.label)}</h3>
-            <p class="concern-board-card__hint">${esc(board.roleHint)}</p>
-            ${
-              hot
-                ? `<p class="concern-board-card__hot"><span>지금 HOT</span>${esc(hot.title)}</p>`
-                : '<p class="concern-board-card__hot">아직 글이 없습니다</p>'
-            }
-            <div class="concern-board-card__actions">
-              <a class="guide-btn guide-btn--primary" href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">게시판 열기</a>
-              ${writeBtn}
-            </div>
-          </article>`;
-        })
-        .join('')}
     </section>`;
 }
 
@@ -160,6 +129,7 @@ function renderList(board, query) {
       ? `<p class="concern-note">${esc(roleGateCopy(board.boardKey).body)}</p>`
       : '';
   return `
+    ${renderCommunityIntro(role)}
     <section class="concern-list-head">
       <p class="concern-eyebrow">${esc(board.roleHint)}</p>
       ${writeBtn}
@@ -211,14 +181,14 @@ function renderBoardBlocked(board, role) {
       body: gate.body || '로그인 후 본문을 볼 수 있어요.',
       links: [
         { label: '로그인', href: boardLoginHref('community') },
-        { label: '커뮤니티 홈', href: '#/community' },
+        { label: '다른 게시판', href: `#${getDefaultCommunityPath()}` },
       ],
     });
   }
   return renderStateCard({
     title: gate.title,
     body: gate.body,
-    links: [{ label: '커뮤니티 홈', href: '#/community' }],
+    links: [{ label: '다른 게시판', href: `#${getDefaultCommunityPath()}` }],
   });
 }
 
@@ -362,25 +332,22 @@ export function renderConcernScreen(path) {
   const pathOnly = path.split('?')[0];
   const query = new URLSearchParams(path.includes('?') ? path.slice(path.indexOf('?') + 1) : '');
   const view = getConcernView(pathOnly);
-  if (view.kind === 'hub') return renderHub();
   if (view.kind === 'compose') return renderCompose(view.board);
   if (view.kind === 'detail') return renderDetail(view.board, view.postId);
+  if (!view.board) return '<p class="concern-empty">게시판을 찾을 수 없습니다.</p>';
   return renderList(view.board, query);
 }
 
 export function renderConcernSideNav(currentPath) {
   const pathOnly = currentPath.split('?')[0];
   const role = getNavRole();
-  const items = [
-    { label: '커뮤니티 홈', path: '/community', active: pathOnly === '/community' },
-    ...concernBoardNav(pathOnly)
-      .filter((b) => canListBoard(b.boardKey, role))
-      .map((b) => ({
-        label: b.label,
-        path: b.path,
-        active: b.active,
-      })),
-  ];
+  const items = concernBoardNav(pathOnly)
+    .filter((b) => canListBoard(b.boardKey, role))
+    .map((b) => ({
+      label: b.label,
+      path: b.path,
+      active: b.active,
+    }));
   return `
     <nav class="concern-nav" aria-label="커뮤니티 메뉴">
       ${items
@@ -406,7 +373,7 @@ export function bindConcernScreenEvents(root, rerender) {
   root.querySelectorAll('[data-concern-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      const target = el.getAttribute('data-concern-nav') || '/community';
+      const target = el.getAttribute('data-concern-nav') || getDefaultCommunityPath();
       navigate(target.startsWith('/') ? target : `/${target}`);
     });
   });
@@ -446,7 +413,7 @@ export function bindConcernScreenEvents(root, rerender) {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const boardKey = form.getAttribute('data-concern-compose');
-      const basePath = form.getAttribute('data-concern-path') || '/community';
+      const basePath = form.getAttribute('data-concern-path') || getDefaultCommunityPath();
       const role = getNavRole();
       if (!boardKey || !canComposeBoard(boardKey, role)) return;
       const fd = new FormData(form);

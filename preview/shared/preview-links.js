@@ -114,9 +114,9 @@ export function resolveGnbLink(gnbId, role) {
     case 'support':
       return { external: false, url: '/support' };
     case 'community':
-      return { external: false, url: '/community' };
+      return { external: false, url: '/community/director' };
     case 'concern':
-      return { external: false, url: '/community' };
+      return { external: false, url: '/community/director' };
     case 'guide':
       return { external: false, url: '/guide' };
     case 'plans':

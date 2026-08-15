@@ -3,7 +3,9 @@
 import { listCommunityBoards, getCommunityBoardBySlug } from './copy.js';
 
 export function getDefaultCommunityPath() {
-  return '/community';
+  const boards = listCommunityBoards();
+  const first = boards.find((b) => b.slug !== 'solved') || boards[0];
+  return first?.path || '/community/director';
 }
 
 /** @deprecated */
@@ -17,7 +19,7 @@ function boardSlugPattern() {
 
 export function normalizeCommunityPath(hashPath) {
   const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
-  if (p === '/community' || p === '/community/') return '/community';
+  if (p === '/community' || p === '/community/') return getDefaultCommunityPath();
   const m = p.match(new RegExp(`^/community/(${boardSlugPattern()})(?:\\/(new|[^/]+))?$`));
   if (!m) return null;
   const board = getCommunityBoardBySlug(m[1]);
@@ -30,7 +32,7 @@ export function normalizeCommunityPath(hashPath) {
 /** legacy /concern → /community */
 export function normalizeConcernPath(hashPath) {
   const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
-  if (p === '/concern' || p === '/concern/') return '/community';
+  if (p === '/concern' || p === '/concern/') return getDefaultCommunityPath();
   const legacy = p.match(/^\/concern\/([^/]+)(?:\/(new|[^/]+))?$/);
   if (!legacy) return normalizeCommunityPath(p);
   const mapped = p.replace(/^\/concern/, '/community');
@@ -38,12 +40,14 @@ export function normalizeConcernPath(hashPath) {
 }
 
 export function getCommunityView(path) {
-  const normalized = normalizeCommunityPath(path) || '/community';
-  if (normalized === '/community') return { kind: 'hub' };
+  const normalized = normalizeCommunityPath(path) || getDefaultCommunityPath();
   const parts = normalized.split('/').filter(Boolean);
   const slug = parts[1];
   const board = getCommunityBoardBySlug(slug);
-  if (!board) return { kind: 'hub' };
+  if (!board) {
+    const fallback = getCommunityBoardBySlug(getDefaultCommunityPath().split('/')[2]);
+    return fallback ? { kind: 'list', board: fallback } : { kind: 'list', board: listCommunityBoards()[0] };
+  }
   if (parts[2] === 'new') return { kind: 'compose', board };
   if (parts[2]) return { kind: 'detail', board, postId: parts[2] };
   return { kind: 'list', board };

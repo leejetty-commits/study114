@@ -50,8 +50,8 @@ export const GNB_MAIN = [
   { id: 'student_parent', label: '학생찾기' },
   { id: 'register_room', label: '공부방상세등록' },
   { id: 'register_tutor', label: '과외쌤상세등록' },
-  { id: 'community', label: '커뮤니티' },
   { id: 'plans', label: '유료상품' },
+  { id: 'community', label: '커뮤니티' },
   { id: 'support', label: '고객센터' },
 ];
 

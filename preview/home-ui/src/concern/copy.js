@@ -11,7 +11,7 @@ import { listBoardChannels } from '../board-channel-store.js';
 
 export const COMMUNITY_HUB_TITLE = '커뮤니티';
 export const COMMUNITY_HUB_LEAD =
-  '원장·과외쌤·학부모/학생의 실제 고민과 짧은 조언, 해결후기, 댓글 반응이 쌓이는 현장형 공간입니다.';
+  '공부방·과외쌤·학생/학부모의 실제 고민과 짧은 조언, 해결후기, 댓글 반응이 쌓이는 현장형 공간입니다.';
 
 /** @deprecated alias */
 export const CONCERN_HUB_TITLE = COMMUNITY_HUB_TITLE;
@@ -23,7 +23,7 @@ export const SEED_COMMUNITY_BOARDS = [
     id: 'director',
     boardKey: 'concern-director',
     slug: 'director',
-    label: '원장 고민방',
+    label: '공부방 고민방',
     roleHint: '공부방 운영·모집·학부모 응대',
     path: '/community/director',
   },
@@ -39,7 +39,7 @@ export const SEED_COMMUNITY_BOARDS = [
     id: 'parent',
     boardKey: 'concern-parent',
     slug: 'parent',
-    label: '학부모/학생 고민방',
+    label: '학생/학부모 고민방',
     roleHint: '공부방·과외 선택·루틴·안전',
     path: '/community/parent',
   },
@@ -176,7 +176,7 @@ export const getConcernBoardByKey = getCommunityBoardByKey;
 export function suggestCommunityRouteSlug(boardKey) {
   const key = String(boardKey || '').trim();
   const slug = key.startsWith('concern-') ? key.slice('concern-'.length) : key;
-  return slug ? `#/community/${slug}` : '#/community';
+  return slug ? `#/community/${slug}` : '#/community/director';
 }
 
 export function isConcernChannelKey(boardKey) {

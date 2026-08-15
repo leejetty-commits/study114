@@ -425,7 +425,8 @@ export function bootstrapCommunityRoute() {
     return true;
   }
   if (path === '/community' || path === '/community/') {
-    return false;
+    window.location.replace(`#${getDefaultCommunityPath()}`);
+    return true;
   }
   if (path.startsWith('/community/') && !normalizeCommunityPath(path)) {
     window.location.replace(`#${getDefaultCommunityPath()}`);
