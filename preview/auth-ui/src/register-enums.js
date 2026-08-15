@@ -118,42 +118,5 @@ export const GENDER_GROUP_OPTIONS = [
 /** 주력과목 — 가입·등록 공통 목록 */
 export { MAIN_SUBJECT_OPTIONS } from '../../shared/main-subjects.js';
 
-/** 출신대학 목록 + 기타(직접입력) */
-export const UNIVERSITY_OPTIONS = [
-  '서울대학교',
-  '연세대학교',
-  '고려대학교',
-  '서강대학교',
-  '성균관대학교',
-  '한양대학교',
-  '중앙대학교',
-  '경희대학교',
-  '한국외국어대학교',
-  '서울시립대학교',
-  '이화여자대학교',
-  '숙명여자대학교',
-  '홍익대학교',
-  '건국대학교',
-  '동국대학교',
-  '국민대학교',
-  '숭실대학교',
-  '세종대학교',
-  '단국대학교',
-  '인하대학교',
-  '아주대학교',
-  '가톨릭대학교',
-  '한국과학기술원(KAIST)',
-  '포항공과대학교(POSTECH)',
-  '울산과학기술원(UNIST)',
-  '광주과학기술원(GIST)',
-  '대구경북과학기술원(DGIST)',
-  '부산대학교',
-  '경북대학교',
-  '전남대학교',
-  '전북대학교',
-  '충남대학교',
-  '충북대학교',
-  '강원대학교',
-  '제주대학교',
-  '기타',
-].map((label) => ({ value: label, label }));
+/** 출신대학 목록 — shared SSOT 재export */
+export { KOREAN_UNIVERSITY_OPTIONS as UNIVERSITY_OPTIONS } from '../../shared/korean-universities.js';

@@ -39,13 +39,16 @@ $filters = isset($input['filters']) && is_array($input['filters']) ? $input['fil
 $page = isset($input['page']) ? (int) $input['page'] : 1;
 $limit = isset($input['limit']) ? (int) $input['limit'] : 20;
 
+$sort = isset($input['sort']) ? (string) $input['sort'] : 'latest';
+
 try {
     $service = new SearchService();
-    $result = $service->search($tab, $filters, $page, $limit);
+    $result = $service->search($tab, $filters, $page, $limit, $sort);
 
     echo json_encode([
         'ok'    => true,
         'tab'   => $result['tab'],
+        'sort'  => $result['sort'] ?? $sort,
         'total' => $result['total'],
         'rows'  => $result['rows'],
         'items' => $result['items'],

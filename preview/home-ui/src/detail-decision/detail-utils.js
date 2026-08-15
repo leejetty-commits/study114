@@ -43,7 +43,7 @@ export function countTrustItems(kind, item) {
   }
   if (kind === 'tutor') {
     let n = 0;
-    if (item.university_name || item.university_note) n += 1;
+    if (item.university_name) n += 1;
     if (item.proof_document_available) n += 1;
     if (item.career_year_band) n += 1;
     if (item.feature_1) n += 1;

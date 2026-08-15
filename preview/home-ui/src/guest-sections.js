@@ -14,6 +14,8 @@ import {
   getPrimeCandidatePool,
 } from './exposure-render.js';
 import { bindGuestListPagination } from './list-pagination.js';
+import { bindListSortControls } from '../../shared/list-sort.js';
+import { setGuestListPage } from './state.js';
 import { SECTION_HEADINGS, renderSectionHeading } from './section-headings.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
 import {
@@ -22,6 +24,13 @@ import {
 } from '../../shared/promo-sidebar.js';
 import { renderPromoInlineCard } from './promo/screens.js';
 import { renderGuestMarketingBanner } from './home-marketing-banner.js';
+import {
+  getHomeBasicPool,
+  isHomeBasicLive,
+  refetchHomeBasicKind,
+} from './home-basic-live.js';
+import { toggleRecommendation } from './search-api.js';
+import { isLoggedIn } from './auth-session.js';
 
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
@@ -133,13 +142,18 @@ export function renderGuestBrowseLists() {
   const roomLabel = GUEST_DEMO_REGIONS_BY_AXIS.room.full;
   const tutorLabel = GUEST_DEMO_REGIONS_BY_AXIS.tutor.full;
   const studentLabel = GUEST_DEMO_REGIONS_BY_AXIS.student.full;
+  const live = isHomeBasicLive();
+  const guest = !isLoggedIn();
+  const rooms = getHomeBasicPool('study_room');
+  const tutors = getHomeBasicPool('tutor');
+  const students = getHomeBasicPool('student');
   return `
     <section class="guest-browse-lists" aria-label="우동공과 리스트">
-      ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel }, EXPOSURE_STUDY_ROOMS, { guest: true })}
-      ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel }, EXPOSURE_TUTORS, { guest: true })}
+      ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel }, rooms, { guest, serverSorted: live })}
+      ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel }, tutors, { guest, serverSorted: live })}
     </section>
     <section class="guest-browse-lists guest-browse-lists--students" aria-label="학생 학습 의뢰">
-      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', locationLabel: studentLabel }, EXPOSURE_STUDENTS, { guest: true })}
+      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', locationLabel: studentLabel }, students, { guest, serverSorted: live })}
     </section>
   `;
 }
@@ -175,6 +189,24 @@ export function renderGuestStudyAndTutorSections() {
 
 export function bindGuestSectionEvents(root, rerender) {
   if (rerender) bindGuestListPagination(root, rerender);
+  if (rerender) {
+    bindListSortControls(root, rerender, {
+      onSortChange: (kind, sort, listId) => {
+        if (listId) setGuestListPage(listId, 1);
+        if (!isHomeBasicLive()) return undefined;
+        const k =
+          kind === 'room' || kind === 'study_room'
+            ? 'study_room'
+            : kind === 'tutor'
+              ? 'tutor'
+              : 'student';
+        refetchHomeBasicKind(k, sort).then((ok) => {
+          if (ok) rerender();
+        });
+        return false;
+      },
+    });
+  }
 
   bindStudyRoomMapSection(root, guestHeroMapItems(), {
     regionLabel: GUEST_DEMO_REGION.full,
@@ -182,6 +214,26 @@ export function bindGuestSectionEvents(root, rerender) {
 
   root.querySelectorAll('.item-actions__btn').forEach((btn) => {
     btn.addEventListener('click', (e) => e.stopPropagation());
+  });
+
+  root.querySelectorAll('[data-action="recommend-toggle"]').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const kind = btn.getAttribute('data-item-kind');
+      const id = Number(btn.getAttribute('data-item-id'));
+      if ((kind !== 'study_room' && kind !== 'tutor') || !id) return;
+      try {
+        const data = await toggleRecommendation(kind, id);
+        const countEl = btn.querySelector('.item-actions__count');
+        if (countEl) countEl.textContent = String(data.recommend_count ?? 0);
+        btn.classList.toggle('is-active', Boolean(data.recommended));
+        btn.title = `추천 ${data.recommend_count ?? 0}`;
+      } catch (err) {
+        console.warn('[recommend]', err);
+        window.alert(err instanceof Error ? err.message : '추천 처리에 실패했습니다.');
+      }
+    });
   });
 
   root.querySelectorAll('[data-action="login-gate"]').forEach((el) => {

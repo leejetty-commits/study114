@@ -1,3 +1,5 @@
+import { normalizeUniversityNameInput } from '../../../shared/korean-universities.js';
+
 export function syncBasicFromForm(form, state) {
   if (!form) return;
   const fd = new FormData(form);
@@ -92,8 +94,8 @@ export function validateLessonState(state) {
 export function syncCareerFromForm(form, state) {
   if (!form) return;
   const fd = new FormData(form);
-  state.university_name = String(fd.get('university_name') ?? '');
-  state.major_name = String(fd.get('major_name') ?? '');
+  state.university_name = normalizeUniversityNameInput(fd.get('university_name'));
+  state.major_name = String(fd.get('major_name') ?? '').trim();
   state.university_status = String(fd.get('university_status') ?? '');
   state.career_year_band = String(fd.get('career_year_band') ?? '');
   state.main_material_note = String(fd.get('main_material_note') ?? '');

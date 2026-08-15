@@ -16,7 +16,6 @@ import {
   formatStudentLessonTarget,
 } from './exposure-format.js';
 import {
-  sortByDateDesc,
   slicePage,
   renderListPagination,
 } from './list-pagination.js';
@@ -43,6 +42,11 @@ import {
   guestStudentTeaserFields,
   coarseRegionForGuest,
 } from './student-blind-teaser.js';
+import {
+  readListSortFromHash,
+  renderListSortSelect,
+  sortListItems,
+} from '../../shared/list-sort.js';
 
 function esc(s) {
   if (s == null || s === '') return '';
@@ -148,9 +152,16 @@ export function renderItemActions(opts = {}) {
   const wished = !guest && itemId != null && isWishlisted(kind, itemId);
   const inCompare = !guest && itemId != null && isInCompare(kind, itemId);
 
+  const recommendAttrs = guest
+    ? `data-action="login-gate" data-gate="recommend" data-gate-label="추천"`
+    : itemId != null
+      ? `data-action="recommend-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`
+      : '';
   const recommendBtn = actionCountBtn('👍', recommend_count, {
     title: `추천 ${recommend_count}`,
-    disabled: true,
+    cls: '',
+    attrs: recommendAttrs,
+    disabled: !guest && itemId == null,
   });
 
   const wishAttrs = guest
@@ -292,10 +303,8 @@ function appendSloganAndActions(rows, item, actions, { showIntro = true } = {}) 
 
 function renderTutorOverlayBottomGrid(item) {
   const grad = blankDash(formatUniversityStatus(item.university_status) || '');
-  const edu =
-    [item.university_name, item.major_name].filter(Boolean).join(' ') ||
-    item.university_note ||
-    blankDash(formatUniversitySummary(item));
+  // 학부 대학명·학과만 — university_note(보조)로 학교란을 채우지 않음
+  const edu = blankDash([item.university_name, item.major_name].filter(Boolean).join(' '));
   const career = blankDash(formatCareerYearBand(item.career_year_band) || '');
   const fee = blankDash(renderTutorFeeOverlay(item));
   return `<div class="expo-overlay-bl-grid">
@@ -896,17 +905,24 @@ export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opt
 export function renderGuestPaginatedListBlock(kind, listId, headingCfg, allItems, opts = {}) {
   const { basicPageSize } = getExposurePageSizes();
   const occupied = opts.primeOccupied ?? getPrimeOccupied(allItems);
-  const dateKey = kind === 'student' ? 'published_at' : 'registered_at';
-  const pool =
-    kind === 'student'
-      ? sortByDateDesc(allItems, dateKey)
-      : getBasicPool(allItems, occupied);
+  const sortMode = opts.sortMode || 'home';
+  const sort = opts.sort ?? readListSortFromHash(kind, { mode: sortMode });
+  const serverSorted = Boolean(opts.serverSorted);
+  const pool = serverSorted
+    ? kind === 'student'
+      ? allItems.filter((i) => !i.exposure_status || i.exposure_status === 'published')
+      : allItems.filter((i) => !i.profile_status || i.profile_status === 'published')
+    : kind === 'student'
+      ? sortListItems(allItems, 'student', sort)
+      : getBasicPool(allItems, occupied, { kind, sort });
   const page = opts.page ?? getGuestListPage(listId);
   const pageItems = slicePage(pool, page, basicPageSize);
+  const sortBar = renderListSortSelect(kind, sort, { listId, mode: sortMode });
 
   return `
     <div class="list-subsection" data-guest-list="${listId}">
       ${renderSectionHeading(headingCfg)}
+      ${sortBar}
       ${renderBrowseList(kind, pageItems, { guest: opts.guest ?? true, ...opts })}
       ${renderListPagination(listId, pool.length, page, basicPageSize)}
     </div>
@@ -917,14 +933,23 @@ export function renderBasicListBlock(kind, headingCfg, items, opts = {}) {
   const { basicPageSize } = getExposurePageSizes();
   const listId = opts.listId || `basic_${kind}`;
   const occupied = opts.primeOccupied ?? [];
-  const pool = occupied.length ? getBasicPool(items, occupied) : sortByNewestFirst(items);
+  const sortMode = opts.sortMode || 'home';
+  const sort = opts.sort ?? readListSortFromHash(kind, { mode: sortMode });
+  const pool = occupied.length
+    ? getBasicPool(items, occupied, { kind, sort })
+    : sortListItems(items, kind, sort);
   const page = opts.page ?? (opts.paginated ? getGuestListPage(listId) : 1);
   const usePager = opts.paginated !== false;
   const pageItems = usePager ? slicePage(pool, page, basicPageSize) : pool;
+  const sortBar =
+    opts.showSort === false
+      ? ''
+      : renderListSortSelect(kind, sort, { listId, mode: sortMode });
 
   return `
     <div class="list-subsection" data-guest-list="${listId}">
       ${renderSectionHeading(headingCfg)}
+      ${sortBar}
       ${renderBrowseList(kind, pageItems, opts)}
       ${usePager ? renderListPagination(listId, pool.length, page, basicPageSize) : ''}
     </div>

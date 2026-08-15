@@ -26,6 +26,7 @@ import {
 } from '../layout.js';
 import { validatePromoUrls } from '../../../shared/promo-links.js';
 import { HOME_UI_BASE } from '../../../shared/preview-links.js';
+import { renderUniversityNameField } from '../../../shared/korean-universities.js';
 
 function radios(name, options, selected) {
   return options
@@ -139,8 +140,13 @@ export function renderDetail() {
       <div class="register-form-narrow">
         ${renderSectionTitle('학력 · 경력 · 특징')}
         <div class="register-grid-2 register-grid-2--tight">
-          <div class="form-group"><label class="form-label">출신대학</label><input class="form-input" name="university_name" value="${s.university_name}" /></div>
-          <div class="form-group"><label class="form-label">전공</label><input class="form-input" name="major_name" value="${s.major_name}" /></div>
+          ${renderUniversityNameField({
+            variant: 'form',
+            name: 'university_name',
+            value: s.university_name,
+            id: 'tutor_univ_detail',
+          })}
+          <div class="form-group"><label class="form-label">전공</label><input class="form-input" name="major_name" value="${s.major_name}" placeholder="학과명 (서술형)" /></div>
         </div>
         <div class="form-group">
           <span class="form-label">학적상태</span>

@@ -15,6 +15,11 @@ import { SECTION_HEADINGS, renderSectionHeading } from '@home-ui/section-heading
 import { partitionByExposureTier } from './search-exposure-mapper.js';
 import { renderSearchZeroState } from '@home-ui/empty-state-copy.js';
 import { isProviderSelfPreviewMode } from './search-role-access.js';
+import {
+  readListSortFromHash,
+  renderListSortSelect,
+  sortListItems,
+} from '../../shared/list-sort.js';
 
 /**
  * @param {'study_room'|'tutor'} kind
@@ -73,7 +78,13 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
     kind,
     { ...section.basic, locationLabel: loc, desc: undefined },
     items,
-    { ...opts, primeOccupied: occupied, paginated: true, listId: section.basicListId },
+    {
+      ...opts,
+      primeOccupied: occupied,
+      paginated: true,
+      listId: section.basicListId,
+      sortMode: 'home',
+    },
   );
 
   return `
@@ -103,6 +114,9 @@ function renderProviderFlatResults(kind, items, opts = {}, regionLabel = '', mod
   const tab = kind === 'study_room' ? 'room' : 'tutor';
   const findLabel = kind === 'study_room' ? '공부방 찾기 결과' : '과외쌤 찾기 결과';
   const loc = String(regionLabel || '').trim();
+  const sort = readListSortFromHash(kind, { mode: 'search' });
+  // 검색 API가 이미 정렬한 경우 그대로 · 지역 피드 등은 클라이언트 정렬
+  const ordered = opts.serverSorted ? items : sortListItems(items, kind, sort);
   if (!items.length) {
     return `<div class="search-flat-results search-flat-results--empty" data-surface="search-flat">${renderSearchZeroState(tab, mode)}</div>`;
   }
@@ -114,7 +128,8 @@ function renderProviderFlatResults(kind, items, opts = {}, regionLabel = '', mod
         title: findLabel,
         locationLabel: loc,
       })}
-      ${renderBrowseList(kind, items, { ...opts, sourceRoute: 'search' })}
+      ${renderListSortSelect(kind, sort, { mode: 'search' })}
+      ${renderBrowseList(kind, ordered, { ...opts, sourceRoute: 'search' })}
     </div>`;
 }
 
@@ -132,10 +147,14 @@ function renderStudentTierResults(items, opts = {}, sectionTag = '검색 결과'
       </div>`;
   }
 
+  const sort = readListSortFromHash('student', { mode: 'search' });
+  const ordered = opts.serverSorted ? items : sortListItems(items, 'student', sort);
+
   return `
     <div class="content-section search-tier-results" data-surface="student-blind">
       ${renderSectionHeading({ ...SECTION_HEADINGS.students, locationLabel: sectionTag || '' })}
-      ${renderBrowseList('student', items, { ...opts, sourceRoute: 'search' })}
+      ${renderListSortSelect('student', sort, { mode: 'search' })}
+      ${renderBrowseList('student', ordered, { ...opts, sourceRoute: 'search' })}
     </div>`;
 }
 
@@ -163,6 +182,7 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
     sourceRoute: 'search',
     showCompare: tab === 'student' ? false : !selfPreview,
     showWish: !selfPreview,
+    serverSorted: mode === 'search',
   };
   const homeTierTag = regionLabel || (mode === 'region' ? '지역 피드' : '검색 결과');
   const useHomeTierGrammar = surfaceType === 'home' && mode === 'region';

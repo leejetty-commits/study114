@@ -7,18 +7,21 @@
  */
 
 import { getPlanRuntimeSettings, getPlanSetting } from './plans/runtime-config.js';
+import { sortListItems, DEFAULT_LIST_SORT } from '../../shared/list-sort.js';
 
 /**
  * @param {object[]} items
  * @param {string} [dateKey]
  */
 export function sortByNewestFirst(items, dateKey = 'registered_at') {
-  return [...items].sort((a, b) => {
-    const da = String(a[dateKey] || a.published_at || a.starts_at || '');
-    const db = String(b[dateKey] || b.published_at || b.starts_at || '');
-    if (da !== db) return db.localeCompare(da);
-    return Number(b.id || 0) - Number(a.id || 0);
-  });
+  return sortListItems(
+    items.map((i) => ({
+      ...i,
+      published_at: i.published_at || i[dateKey] || i.registered_at,
+    })),
+    'study_room',
+    DEFAULT_LIST_SORT,
+  );
 }
 
 function isPublished(item) {
@@ -127,13 +130,16 @@ export function getPrimeCandidatePool(kind, pool) {
 
 /**
  * Basic 후보: Prime 점유 제외 (Pick과 중복 가능 — Basic은 기본 리스트)
- * 규칙: Basic은 부스트 없이 기본 노출. Prime만 제외하고 최신순 페이지.
+ * 규칙: Basic은 부스트 없이 기본 노출. Prime만 제외하고 정렬·페이지.
  * @param {object[]} pool
  * @param {object[]} primeOccupied
+ * @param {{ kind?: 'study_room'|'tutor'|'student', sort?: string }} [opts]
  */
-export function getBasicPool(pool, primeOccupied) {
+export function getBasicPool(pool, primeOccupied, opts = {}) {
   const primeIds = new Set(primeOccupied.map((i) => i.id));
-  return sortByNewestFirst(pool.filter((i) => isPublished(i) && !primeIds.has(i.id)));
+  const filtered = pool.filter((i) => isPublished(i) && !primeIds.has(i.id));
+  const kind = opts.kind || 'study_room';
+  return sortListItems(filtered, kind, opts.sort || DEFAULT_LIST_SORT);
 }
 
 /** @param {'study_room'|'tutor'} kind */

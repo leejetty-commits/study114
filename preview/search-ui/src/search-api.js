@@ -55,7 +55,7 @@ export function collectFiltersFromForm(form, tab) {
 /**
  * @param {import('./state.js').SearchTab} tab
  * @param {Record<string, string | string[]>} filters
- * @param {{ page?: number, limit?: number }} [opts]
+ * @param {{ page?: number, limit?: number, sort?: string }} [opts]
  */
 export async function searchApi(tab, filters, opts = {}) {
   const res = await fetch('/api/search/search.php', {
@@ -66,6 +66,7 @@ export async function searchApi(tab, filters, opts = {}) {
       filters,
       page: opts.page ?? 1,
       limit: opts.limit ?? 20,
+      sort: opts.sort ?? 'latest',
     }),
   });
 

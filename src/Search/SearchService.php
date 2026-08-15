@@ -45,11 +45,20 @@ final class SearchService
         'mixed'  => '남여',
     ];
 
+    /** @var list<string> */
+    private const SORT_PROVIDER = ['latest', 'recommend', 'review', 'price_asc', 'price_desc'];
+
+    /** @var list<string> */
+    private const SORT_TUTOR = ['latest', 'recommend', 'review', 'price_asc', 'price_desc', 'sky'];
+
+    /** @var list<string> */
+    private const SORT_STUDENT = ['latest', 'budget_asc', 'budget_desc', 'price_asc', 'price_desc'];
+
     /**
      * @param array<string, mixed> $filters
-     * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
+     * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>, sort: string}
      */
-    public function search(string $tab, array $filters, int $page = 1, int $limit = 20): array
+    public function search(string $tab, array $filters, int $page = 1, int $limit = 20, string $sort = 'latest'): array
     {
         if (!in_array($tab, self::VALID_TABS, true)) {
             throw new InvalidArgumentException('tab: room, tutor, student 중 하나여야 합니다.');
@@ -58,13 +67,158 @@ final class SearchService
         $page = max(1, $page);
         $limit = min(50, max(1, $limit));
         $offset = ($page - 1) * $limit;
+        $sort = $this->normalizeSort($tab, $sort);
 
         $pdo = Connection::get();
 
-        return match ($tab) {
-            'room'    => $this->searchRooms($pdo, $filters, $limit, $offset),
-            'tutor'   => $this->searchTutors($pdo, $filters, $limit, $offset),
-            'student' => $this->searchStudents($pdo, $filters, $limit, $offset),
+        $result = match ($tab) {
+            'room'    => $this->searchRooms($pdo, $filters, $limit, $offset, $sort),
+            'tutor'   => $this->searchTutors($pdo, $filters, $limit, $offset, $sort),
+            'student' => $this->searchStudents($pdo, $filters, $limit, $offset, $sort),
+        };
+        $result['sort'] = $sort;
+
+        return $result;
+    }
+
+    private function normalizeSort(string $tab, string $sort): string
+    {
+        $key = strtolower(trim($sort));
+        if ($key === '') {
+            return 'latest';
+        }
+        if ($tab === 'student') {
+            if ($key === 'price_asc') {
+                return 'budget_asc';
+            }
+            if ($key === 'price_desc') {
+                return 'budget_desc';
+            }
+            return in_array($key, self::SORT_STUDENT, true) ? $key : 'latest';
+        }
+
+        if ($tab === 'tutor') {
+            return in_array($key, self::SORT_TUTOR, true) ? $key : 'latest';
+        }
+
+        return in_array($key, self::SORT_PROVIDER, true) ? $key : 'latest';
+    }
+
+    /** @return array<string, bool> */
+    private function columnCache(PDO $pdo, string $table, string $column): bool
+    {
+        static $cache = [];
+        $key = $table . '.' . $column;
+        if (array_key_exists($key, $cache)) {
+            return $cache[$key];
+        }
+        $stmt = $pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1'
+        );
+        $stmt->execute([$table, $column]);
+        $cache[$key] = (bool) $stmt->fetchColumn();
+
+        return $cache[$key];
+    }
+
+    private function tableExists(PDO $pdo, string $table): bool
+    {
+        static $cache = [];
+        if (array_key_exists($table, $cache)) {
+            return $cache[$table];
+        }
+        $stmt = $pdo->prepare(
+            'SELECT 1 FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? LIMIT 1'
+        );
+        $stmt->execute([$table]);
+        $cache[$table] = (bool) $stmt->fetchColumn();
+
+        return $cache[$table];
+    }
+
+    private function recommendCountExpr(PDO $pdo, string $table, string $alias): string
+    {
+        if ($this->columnCache($pdo, $table, 'recommend_count')) {
+            return "COALESCE({$alias}.recommend_count, 0)";
+        }
+
+        return '0';
+    }
+
+    private function reviewCountExpr(PDO $pdo, string $providerType, string $idAlias): string
+    {
+        if (!$this->tableExists($pdo, 'provider_reviews')) {
+            return '0';
+        }
+
+        return "(SELECT COUNT(*) FROM provider_reviews pr
+            WHERE pr.provider_type = '{$providerType}' AND pr.provider_id = {$idAlias} AND pr.review_status = 'visible')";
+    }
+
+    /**
+     * 최신키: published_at ?? created_at
+     */
+    private function latestKeyExpr(string $alias): string
+    {
+        return "COALESCE({$alias}.published_at, {$alias}.created_at)";
+    }
+
+    /**
+     * SKY 우선 — tutors.university_name 만 (note/대학원 파싱 금지)
+     */
+    private function skyRankExpr(string $alias): string
+    {
+        return "(CASE
+            WHEN TRIM({$alias}.university_name) IN (
+                '서울대학교', '연세대학교', '고려대학교',
+                '서울대', '연세대', '고려대'
+            ) THEN 0
+            ELSE 1
+        END)";
+    }
+
+    /**
+     * 가격/예산 NULL·0 은 정렬 맨 뒤
+     */
+    private function orderByForProvider(
+        string $sort,
+        string $alias,
+        string $priceCol,
+        string $recommendExpr,
+        string $reviewExpr,
+        bool $allowSky = false,
+    ): string {
+        $latest = $this->latestKeyExpr($alias);
+        $idDesc = "{$alias}.id DESC";
+        $priceMissing = "(CASE WHEN {$priceCol} IS NULL OR {$priceCol} = 0 THEN 1 ELSE 0 END) ASC";
+
+        if ($allowSky && $sort === 'sky') {
+            $sky = $this->skyRankExpr($alias);
+
+            return "{$sky} ASC, {$recommendExpr} DESC, {$latest} DESC, {$idDesc}";
+        }
+
+        return match ($sort) {
+            'recommend' => "{$recommendExpr} DESC, {$latest} DESC, {$idDesc}",
+            'review' => "{$reviewExpr} DESC, {$latest} DESC, {$idDesc}",
+            'price_asc' => "{$priceMissing}, {$priceCol} ASC, {$latest} DESC, {$idDesc}",
+            'price_desc' => "{$priceMissing}, {$priceCol} DESC, {$latest} DESC, {$idDesc}",
+            default => "{$latest} DESC, {$idDesc}",
+        };
+    }
+
+    private function orderByForStudent(string $sort, string $alias, string $budgetExpr): string
+    {
+        $latest = $this->latestKeyExpr($alias);
+        $idDesc = "{$alias}.id DESC";
+        $missing = "(CASE WHEN {$budgetExpr} IS NULL OR {$budgetExpr} = 0 THEN 1 ELSE 0 END) ASC";
+
+        return match ($sort) {
+            'budget_asc', 'price_asc' => "{$missing}, {$budgetExpr} ASC, {$latest} DESC, {$idDesc}",
+            'budget_desc', 'price_desc' => "{$missing}, {$budgetExpr} DESC, {$latest} DESC, {$idDesc}",
+            default => "{$latest} DESC, {$idDesc}",
         };
     }
 
@@ -72,7 +226,7 @@ final class SearchService
      * @param array<string, mixed> $filters
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
      */
-    private function searchRooms(PDO $pdo, array $filters, int $limit, int $offset): array
+    private function searchRooms(PDO $pdo, array $filters, int $limit, int $offset, string $sort): array
     {
         // 일반 리스트/검색 = 상세등록 완료 후 (Notion 14장 §7-2)
         $where = [
@@ -136,24 +290,34 @@ final class SearchService
         }
 
         $whereSql = implode(' AND ', $where);
+        $recommendExpr = $this->recommendCountExpr($pdo, 'study_rooms', 'sr');
+        $reviewExpr = $this->reviewCountExpr($pdo, 'study_room', 'sr.id');
+        $orderBy = $this->orderByForProvider($sort, 'sr', 'sr.price_amount', $recommendExpr, $reviewExpr);
 
         $countSql = "SELECT COUNT(DISTINCT sr.id) FROM study_rooms sr WHERE {$whereSql}";
         $stmt = $pdo->prepare($countSql);
         $stmt->execute($params);
         $total = (int) $stmt->fetchColumn();
 
+        $latExpr = $this->columnCache($pdo, 'study_rooms', 'latitude') ? 'sr.latitude' : 'NULL';
+        $lngExpr = $this->columnCache($pdo, 'study_rooms', 'longitude') ? 'sr.longitude' : 'NULL';
+        $gradeExpr = $this->columnCache($pdo, 'study_rooms', 'grade_band') ? 'sr.grade_band' : 'NULL';
+
         $sql = "
             SELECT DISTINCT sr.id, sr.study_room_name, sr.price_amount, sr.intro_short,
-                   sr.main_subject_note, sr.teaching_style, sr.grade_band, sr.feature_1, sr.slogan,
+                   sr.main_subject_note, sr.teaching_style, {$gradeExpr} AS grade_band, sr.feature_1, sr.slogan,
                    sr.lesson_place_type, sr.capacity_per_time, sr.lesson_operation_type,
                    sr.education_office_registered, sr.detail_completion_status,
-                   sr.latitude, sr.longitude,
+                   {$latExpr} AS latitude, {$lngExpr} AS longitude,
+                   sr.published_at, sr.created_at,
+                   {$recommendExpr} AS recommend_count,
+                   {$reviewExpr} AS review_count,
                    r.dong_name, r.sigungu_name, c.name AS complex_name
             FROM study_rooms sr
             LEFT JOIN regions r ON sr.region_id = r.id
             LEFT JOIN complexes c ON sr.complex_id = c.id
             WHERE {$whereSql}
-            ORDER BY sr.id DESC
+            ORDER BY {$orderBy}
             LIMIT :limit OFFSET :offset
         ";
 
@@ -204,6 +368,10 @@ final class SearchService
                 'exposure_tier'              => $exposureTier,
                 'latitude'                   => $row['latitude'] !== null ? (float) $row['latitude'] : null,
                 'longitude'                  => $row['longitude'] !== null ? (float) $row['longitude'] : null,
+                'published_at'               => $row['published_at'] ?? null,
+                'created_at'                 => $row['created_at'] ?? null,
+                'recommend_count'            => (int) ($row['recommend_count'] ?? 0),
+                'review_count'               => (int) ($row['review_count'] ?? 0),
             ];
 
             $items[] = $item;
@@ -222,7 +390,7 @@ final class SearchService
      * @param array<string, mixed> $filters
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
      */
-    private function searchTutors(PDO $pdo, array $filters, int $limit, int $offset): array
+    private function searchTutors(PDO $pdo, array $filters, int $limit, int $offset, string $sort): array
     {
         // 일반 리스트/검색 = 상세등록 완료 후 (Notion 14장 §7-2)
         $where = [
@@ -295,6 +463,9 @@ final class SearchService
         }
 
         $whereSql = implode(' AND ', $where);
+        $recommendExpr = $this->recommendCountExpr($pdo, 'tutors', 't');
+        $reviewExpr = $this->reviewCountExpr($pdo, 'tutor', 't.id');
+        $orderBy = $this->orderByForProvider($sort, 't', 't.preferred_fee_amount', $recommendExpr, $reviewExpr, true);
 
         $countSql = "SELECT COUNT(DISTINCT t.id) FROM tutors t WHERE {$whereSql}";
         $stmt = $pdo->prepare($countSql);
@@ -305,13 +476,16 @@ final class SearchService
             SELECT DISTINCT t.id, t.tutor_display_name, t.preferred_fee_amount,
                    t.university_name, t.major_name, t.career_year_band,
                    t.lessons_per_week, t.minutes_per_lesson, t.detail_completion_status,
+                   t.published_at, t.created_at,
+                   {$recommendExpr} AS recommend_count,
+                   {$reviewExpr} AS review_count,
                    tst.subject_name, r.sigungu_name, r.sido_name
             FROM tutors t
             LEFT JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.is_primary = 1
             LEFT JOIN regions r ON tr.region_id = r.id
             LEFT JOIN tutor_subject_targets tst ON tst.tutor_id = t.id AND tst.is_primary = 1
             WHERE {$whereSql}
-            ORDER BY t.id DESC
+            ORDER BY {$orderBy}
             LIMIT :limit OFFSET :offset
         ";
 
@@ -375,6 +549,10 @@ final class SearchService
                 'detail_completion_status' => $detailStatus,
                 'prime_eligible'         => $detailStatus === 'expanded_complete',
                 'exposure_tier'          => $exposureTier,
+                'published_at'           => $row['published_at'] ?? null,
+                'created_at'             => $row['created_at'] ?? null,
+                'recommend_count'        => (int) ($row['recommend_count'] ?? 0),
+                'review_count'           => (int) ($row['review_count'] ?? 0),
             ];
 
             $items[] = $item;
@@ -393,7 +571,7 @@ final class SearchService
      * @param array<string, mixed> $filters
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
      */
-    private function searchStudents(PDO $pdo, array $filters, int $limit, int $offset): array
+    private function searchStudents(PDO $pdo, array $filters, int $limit, int $offset, string $sort): array
     {
         $where = ['s.exposure_status = :status', 's.deleted_at IS NULL'];
         $params = ['status' => 'published'];
@@ -472,6 +650,8 @@ final class SearchService
         }
 
         $whereSql = implode(' AND ', $where);
+        $budgetExpr = 'COALESCE(s.preferred_fee_amount, s.preferred_studyroom_fee_amount)';
+        $orderBy = $this->orderByForStudent($sort, 's', $budgetExpr);
 
         $countSql = "SELECT COUNT(DISTINCT s.id) FROM students s WHERE {$whereSql}";
         $stmt = $pdo->prepare($countSql);
@@ -483,6 +663,8 @@ final class SearchService
                    s.lesson_format, s.student_gender_group, s.preferred_student_count_group,
                    s.preferred_fee_amount, s.preferred_studyroom_fee_amount,
                    s.preferred_lesson_type,
+                   s.published_at, s.created_at,
+                   {$budgetExpr} AS budget_amount,
                    r.dong_name, r.sigungu_name, c.name AS complex_name,
                    sst.subject_name
             FROM students s
@@ -490,7 +672,7 @@ final class SearchService
             LEFT JOIN complexes c ON s.preferred_studyroom_complex_id = c.id
             LEFT JOIN student_subject_targets sst ON sst.student_id = s.id AND sst.is_primary = 1
             WHERE {$whereSql}
-            ORDER BY s.id ASC
+            ORDER BY {$orderBy}
             LIMIT :limit OFFSET :offset
         ";
 
@@ -555,6 +737,9 @@ final class SearchService
                 'preferred_lesson_type' => $row['preferred_lesson_type'] ?? null,
                 'preferred_fee_amount' => $row['preferred_fee_amount'] !== null ? (int) $row['preferred_fee_amount'] : null,
                 'preferred_studyroom_fee_amount' => $row['preferred_studyroom_fee_amount'] !== null ? (int) $row['preferred_studyroom_fee_amount'] : null,
+                'budget_amount' => $row['budget_amount'] !== null ? (int) $row['budget_amount'] : null,
+                'published_at' => $row['published_at'] ?? null,
+                'created_at' => $row['created_at'] ?? null,
                 'exposure_tier' => 'basic',
             ];
 

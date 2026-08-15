@@ -17,6 +17,7 @@ import {
   tutorListTabPath,
   TUTOR_REG_TOP_TABS,
 } from './router.js';
+import { renderUniversityNameField } from '../../../shared/korean-universities.js';
 import {
   formatTutorSummaryLine,
   profileStatusLabel,
@@ -541,13 +542,16 @@ function renderDetailForm(tutor) {
         '',
         `
         <div class="p19-field-grid p19-field-grid--2">
-          <label class="p19-field">
-            <span class="p19-field__label">출신대학</span>
-            <input class="p19-input" name="university_name" value="${esc(tutor.university_name || '')}" />
-          </label>
+          ${renderUniversityNameField({
+            variant: 'p19',
+            name: 'university_name',
+            value: tutor.university_name || '',
+            id: `p21_univ_${tutor.id || 'new'}`,
+            label: '출신대학',
+          })}
           <label class="p19-field">
             <span class="p19-field__label">전공</span>
-            <input class="p19-input" name="major_name" value="${esc(tutor.major_name || '')}" />
+            <input class="p19-input" name="major_name" value="${esc(tutor.major_name || '')}" placeholder="학과명 (서술형)" />
           </label>
           <label class="p19-field">
             <span class="p19-field__label">학적상태</span>
@@ -853,8 +857,8 @@ export function bindTutorRegEvents(root, rerender) {
             student_gender_group: String(fd.get('student_gender_group') || ''),
             student_count_group: String(fd.get('student_count_group') || ''),
             lesson_places: fd.getAll('lesson_places').map(String),
-            university_name: String(fd.get('university_name') || ''),
-            major_name: String(fd.get('major_name') || ''),
+            university_name: String(fd.get('university_name') || '').trim(),
+            major_name: String(fd.get('major_name') || '').trim(),
             university_status: String(fd.get('university_status') || ''),
             feature_1: String(fd.get('feature_1') || ''),
             intro_short: String(fd.get('intro_short') || ''),

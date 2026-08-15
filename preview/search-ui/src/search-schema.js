@@ -49,7 +49,7 @@ export const SEARCH_TABS = {
       { key: 'subject_master_id', label: '주력과목', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets · is_primary', input: 'subject' },
       { key: 'school_level', label: '대상 학생군/학년', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets.school_level', input: 'select', optionsKey: 'school_level' },
       { key: 'preferred_fee_amount', label: '대표 과외비(월)', tier: 'basic', basicRow: 1, db: 'tutors.preferred_fee_amount', input: 'range' },
-      { key: 'university_name', label: '학교명', tier: 'basic', basicRow: 2, db: 'tutors.university_name', input: 'text' },
+      { key: 'university_name', label: '학교명', tier: 'basic', basicRow: 2, db: 'tutors.university_name', input: 'university' },
       { key: 'career_year_band', label: '경력구간', tier: 'basic', basicRow: 2, db: 'tutors.career_year_band', input: 'select', optionsKey: 'career_year_band' },
       { key: 'place_type', label: '강의장소', tier: 'basic', basicRow: 2, db: 'tutor_lesson_places.place_type', input: 'chips', optionsKey: 'tutor_place' },
       { key: 'major_name', label: '학과명', tier: 'expanded', db: 'tutors.major_name', input: 'text' },

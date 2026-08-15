@@ -29,6 +29,9 @@ import {
 } from './student-hope-type.js';
 import { resolveFindDefaultRegion } from '../../shared/student-hope-regions.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
+import { bindListSortControls, readListSortFromHash } from '../../shared/list-sort.js';
+import { setGuestListPage } from '@home-ui/state.js';
+import { renderUniversityNameField } from '../../shared/korean-universities.js';
 
 /**
  * @typedef {object} FindSurfaceState
@@ -348,6 +351,17 @@ function renderField(field, state, opts = {}) {
           ${MOCK_SUBJECTS.map((s) => `<option value="${esc(s)}">${esc(s)}</option>`).join('')}
         </select>
       </label>`;
+  }
+
+  if (field.input === 'university') {
+    return renderUniversityNameField({
+      variant: 'search',
+      name,
+      id: `search_${field.key}`,
+      listId: `search_${field.key}_list`,
+      labelHtml: `${esc(field.label)} ${dbHint}`,
+      className: compact ? 'search-field--compact' : '',
+    });
   }
 
   const inputKind =
@@ -676,7 +690,9 @@ export async function runFindSearch(tab, form, state, role, rerender) {
       filters.preferred_lesson_type = state.studentHopeType;
     }
     state.activeRegionLabel = regionLabelFromFilters(tab, filters, state);
-    const result = await searchApi(tab, filters);
+    const kind = tab === 'room' ? 'study_room' : tab === 'tutor' ? 'tutor' : 'student';
+    const sort = readListSortFromHash(kind, { mode: 'search' });
+    const result = await searchApi(tab, filters, { sort });
     if (state.searchRows) state.searchRows = result.rows || [];
     if (state.searchItems) state.searchItems = result.items || [];
     state.searchExposureItems = filterToProviderSelf(
@@ -805,6 +821,18 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
   if (ctx.getTab() === 'room') {
     bindSearchMapPinLinks(root, refreshActiveResultItems(ctx.getTab(), state(), ctx.role));
   }
+
+  bindListSortControls(root, rerender, {
+    onSortChange: (kind, _sort, listId) => {
+      if (listId) setGuestListPage(listId, 1);
+      const form = getForm();
+      if (state().searchExecuted && form instanceof HTMLFormElement) {
+        runFindSearch(ctx.getTab(), form, state(), ctx.role, rerender);
+        return false;
+      }
+      return undefined;
+    },
+  });
 }
 
 /** @param {'study_room' | 'tutor'} parentTab */

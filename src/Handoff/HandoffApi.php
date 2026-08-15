@@ -33,6 +33,12 @@ final class HandoffApi
         header('Access-Control-Allow-Credentials: true');
     }
 
+    /** @return array{user_id: int, email: string, role_type: string, name: string}|null */
+    public static function optionalAuth(): ?array
+    {
+        return AuthSession::user();
+    }
+
     /** @return array{user_id: int, email: string, role_type: string, name: string} */
     public static function requireAuth(): array
     {

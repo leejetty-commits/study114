@@ -66,13 +66,14 @@ export function formatTutorStudentTarget(item) {
 
 export function formatUniversitySummary(item) {
   const parts = [];
+  // 학교 기반 표시는 tutors.university_name(+ major)만 — university_note 대체 금지
   if (item.university_name) parts.push(item.university_name);
   if (item.major_name) parts.push(item.major_name);
   if (item.university_status && UNIVERSITY_STATUS_LABELS[item.university_status]) {
     parts.push(UNIVERSITY_STATUS_LABELS[item.university_status]);
   }
   if (parts.length) return parts.join(' ');
-  return item.university_note || '—';
+  return '—';
 }
 
 export function formatProofDocument(proof_document_available) {

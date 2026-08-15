@@ -10,6 +10,9 @@ import {
 } from '../guest-sections.js';
 import { bindDetailDecisionEvents } from '../detail-decision/index.js';
 import { isLoggedIn } from '../auth-session.js';
+import { hydrateHomeBasicFromSearch, isHomeBasicLive } from '../home-basic-live.js';
+
+let homeBasicHydrateStarted = false;
 
 export function renderGuest() {
   const loggedIn = isLoggedIn();
@@ -33,4 +36,12 @@ export function bindGuestEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
   bindGuestSectionEvents(root, rerender);
   bindDetailDecisionEvents(root, { onRerender: rerender, viewer: 'guest' });
+
+  if (!homeBasicHydrateStarted && !isHomeBasicLive()) {
+    homeBasicHydrateStarted = true;
+    hydrateHomeBasicFromSearch().then((ok) => {
+      if (ok) rerender();
+      else homeBasicHydrateStarted = false;
+    });
+  }
 }

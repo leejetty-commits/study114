@@ -63,6 +63,10 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       profile_status: 'published',
       compare_eligible: apiItem.compare_eligible !== false,
       inquiry_status: base.inquiry_status || 'open',
+      published_at: apiItem.published_at ?? base.published_at ?? base.registered_at,
+      created_at: apiItem.created_at ?? base.created_at ?? base.registered_at,
+      recommend_count: apiItem.recommend_count ?? base.recommend_count ?? 0,
+      review_count: apiItem.review_count ?? base.review_count ?? 0,
       badges: studyRoomBadges({
         ...base,
         main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,
@@ -93,6 +97,10 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       detail_completion_status: apiItem.detail_completion_status || base.detail_completion_status,
       profile_status: 'published',
       compare_eligible: apiItem.compare_eligible !== false,
+      published_at: apiItem.published_at ?? base.published_at ?? base.registered_at,
+      created_at: apiItem.created_at ?? base.created_at ?? base.registered_at,
+      recommend_count: apiItem.recommend_count ?? base.recommend_count ?? 0,
+      review_count: apiItem.review_count ?? base.review_count ?? 0,
       badges: tutorBadges({
         ...base,
         main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,
@@ -126,6 +134,8 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
     teaching_style_badges: apiItem.teaching_style_badges || base.teaching_style_badges,
     request_summary_visibility:
       apiItem.request_summary_visibility || base.request_summary_visibility,
+    published_at: apiItem.published_at ?? base.published_at,
+    created_at: apiItem.created_at ?? base.created_at,
     exposure_status: 'published',
     exposure_tier: 'basic',
   };
