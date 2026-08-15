@@ -1,4 +1,4 @@
-import { normalizeUniversityNameInput } from '../../../shared/korean-universities.js';
+import { normalizeUniversityNameInput } from '../../shared/korean-universities.js';
 
 export function syncBasicFromForm(form, state) {
   if (!form) return;
