@@ -1,13 +1,13 @@
 /** 20장 P20-xx — hash 경로 (부록 A) */
 
-/** @typedef {'P20-01'|'P20-02'|'P20-03a'|'P20-03b'|'P20-04'|'P20-05'|'P20-06'} StudyRoomRegScreenId */
+/** @typedef {'P20-01'|'P20-02'|'P20-03a'|'P20-03b'|'P20-04'|'P20-05'|'P20-06'|'P23-04'} StudyRoomRegScreenId */
 
 /**
  * @typedef {object} StudyRoomRegRoute
  * @property {StudyRoomRegScreenId} screenId
  * @property {number} [roomId]
  * @property {'all'|'draft'|'published'|'hidden'|'not_ready'} [listTab]
- * @property {'hub'|'basic'|'detail'|'publish'|'exposure'} [section]
+ * @property {'hub'|'basic'|'detail'|'publish'|'exposure'|'submission'} [section]
  */
 
 export const BASE = '/mypage/registrations/study-rooms';
@@ -30,7 +30,9 @@ export function parseStudyRoomRegPath(hashPath) {
     return { screenId: 'P20-02', roomId: Number(hubMatch[1]), section: 'hub' };
   }
 
-  const sectionMatch = p.match(/^\/mypage\/registrations\/study-rooms\/(\d+)\/(basic|detail|publish|exposure)$/);
+  const sectionMatch = p.match(
+    /^\/mypage\/registrations\/study-rooms\/(\d+)\/(basic|detail|publish|exposure|submission)$/,
+  );
   if (sectionMatch) {
     const roomId = Number(sectionMatch[1]);
     const sec = sectionMatch[2];
@@ -39,6 +41,7 @@ export function parseStudyRoomRegPath(hashPath) {
       detail: 'P20-03b',
       publish: 'P20-04',
       exposure: 'P20-05',
+      submission: 'P23-04',
     };
     return {
       screenId: /** @type {StudyRoomRegScreenId} */ (map[sec]),
@@ -59,14 +62,15 @@ export function isStudyRoomRegPath(hashPath) {
 export function studyRoomRegScreenTitle(screenId) {
   const map = {
     'P20-01': '공부방 목록',
-    'P20-02': '공부방 운영',
+    'P20-02': '운영홈',
     'P20-03a': '기본정보',
     'P20-03b': '상세정보',
     'P20-04': '미리보기·공개',
     'P20-05': '노출·상담',
     'P20-06': '숨김·삭제',
+    'P23-04': '제출함',
   };
-  return map[screenId] || '공부방 운영 관리';
+  return map[screenId] || '공부방';
 }
 
 /** @param {number} id */
@@ -74,7 +78,7 @@ export function studyRoomHubPath(id) {
   return `${BASE}/${id}`;
 }
 
-/** @param {number} id @param {'basic'|'detail'|'publish'|'exposure'} section */
+/** @param {number} id @param {'basic'|'detail'|'publish'|'exposure'|'submission'} section */
 export function studyRoomSectionPath(id, section) {
   return `${BASE}/${id}/${section}`;
 }
@@ -84,9 +88,28 @@ export function studyRoomListTabPath(tab) {
   return tab === 'all' ? BASE : `${BASE}/tab/${tab}`;
 }
 
-export const STUDY_ROOM_REG_MENUS = [
-  { key: 'basic', label: '기본정보', screenId: 'P20-03a' },
-  { key: 'detail', label: '상세정보', screenId: 'P20-03b' },
-  { key: 'publish', label: '미리보기·공개', screenId: 'P20-04' },
-  { key: 'exposure', label: '노출·상담', screenId: 'P20-05' },
+/** 바디 상단 가로 탭 — 필/라운드 박스 금지, 밑줄형 */
+export const STUDY_ROOM_TOP_TABS = [
+  { key: 'hub', label: '운영홈' },
+  { key: 'basic', label: '기본정보' },
+  { key: 'detail', label: '상세정보' },
+  { key: 'publish', label: '미리보기·공개' },
+  { key: 'exposure', label: '노출·상담' },
+  { key: 'submission', label: '제출함' },
 ];
+
+/** @deprecated STUDY_ROOM_TOP_TABS 사용 */
+export const STUDY_ROOM_REG_MENUS = STUDY_ROOM_TOP_TABS.filter((t) => t.key !== 'hub' && t.key !== 'submission').map(
+  (t) => ({
+    key: t.key,
+    label: t.label,
+    screenId:
+      t.key === 'basic'
+        ? 'P20-03a'
+        : t.key === 'detail'
+          ? 'P20-03b'
+          : t.key === 'publish'
+            ? 'P20-04'
+            : 'P20-05',
+  }),
+);

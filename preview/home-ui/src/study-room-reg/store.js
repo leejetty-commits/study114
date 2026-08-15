@@ -51,7 +51,38 @@ const KEY = 'study114-preview-study-rooms-v1';
  * @property {number} totalCount
  * @property {string[]} missing
  * @property {string[]} qualityHints
+ * @property {{ id: string, label: string, ok: boolean, section: 'basic'|'detail'|'publish' }[]} items
  */
+
+/** 공개 필수 항목 — 전체 펼침용 */
+export const PUBLISH_CHECKLIST_DEFS = [
+  { id: 'name', label: '공부방명', section: 'basic' },
+  { id: 'region', label: '활동 지역', section: 'basic' },
+  { id: 'subject', label: '대상·과목', section: 'basic' },
+  { id: 'place', label: '수업 방식', section: 'basic' },
+  { id: 'detail', label: '상세등록 완료', section: 'detail' },
+  { id: 'image', label: '대표 이미지 1장 이상', section: 'detail' },
+  { id: 'intro', label: '소개문', section: 'detail' },
+  { id: 'contact', label: '문의·쪽지 방식', section: 'detail' },
+];
+
+/** @param {StudyRoomRecord} room */
+export function getPublishChecklistItems(room) {
+  const checks = {
+    name: !!room.study_room_name?.trim(),
+    region: !!(room.has_regions && room.region_label),
+    subject: !!(room.has_subject_targets && room.main_subject_note),
+    place: !!(room.lesson_place_set && room.lesson_place_type),
+    detail: room.detail_completion_status === 'expanded_complete',
+    image: !!room.has_representative_image,
+    intro: !!(room.intro_short?.trim() || room.intro_long?.trim()),
+    contact: !!room.contact_method_set,
+  };
+  return PUBLISH_CHECKLIST_DEFS.map((d) => ({
+    ...d,
+    ok: !!checks[d.id],
+  }));
+}
 
 /** @returns {StudyRoomRecord} */
 function withDefaults(raw, id) {
@@ -191,32 +222,9 @@ export function getStudyRoom(id) {
 
 /** @param {StudyRoomRecord} room */
 export function getPublishReadiness(room) {
-  /** @type {string[]} */
-  const missing = [];
-  const need = (ok, label) => {
-    if (!ok) missing.push(label);
-  };
-
-  need(!!room.study_room_name?.trim(), '공부방명');
-  need(room.has_regions && !!room.region_label, '활동 지역');
-  need(room.has_subject_targets && !!room.main_subject_note, '대상·과목');
-  need(room.lesson_place_set && !!room.lesson_place_type, '수업 방식');
-  need(room.detail_completion_status === 'expanded_complete', '상세등록 완료');
-  need(room.has_representative_image, '대표 이미지 1장 이상');
-  need(!!(room.intro_short?.trim() || room.intro_long?.trim()), '소개문');
-  need(room.contact_method_set, '문의·쪽지 방식');
-
-  const checks = [
-    !!room.study_room_name?.trim(),
-    room.has_regions,
-    room.has_subject_targets,
-    room.lesson_place_set,
-    room.detail_completion_status === 'expanded_complete',
-    room.has_representative_image,
-    !!(room.intro_short?.trim() || room.intro_long?.trim()),
-    room.contact_method_set,
-  ];
-  const doneCount = checks.filter(Boolean).length;
+  const items = getPublishChecklistItems(room);
+  const missing = items.filter((i) => !i.ok).map((i) => i.label);
+  const doneCount = items.filter((i) => i.ok).length;
 
   /** @type {string[]} */
   const qualityHints = [];
@@ -232,9 +240,10 @@ export function getPublishReadiness(room) {
     exposureBoostReady:
       room.profile_status === 'published' && room.detail_completion_status === 'expanded_complete',
     doneCount,
-    totalCount: checks.length,
+    totalCount: items.length,
     missing,
     qualityHints,
+    items,
   };
 }
 

@@ -3,7 +3,7 @@
 /** @typedef {'study_room' | 'tutor' | 'student'} ProviderHomeTab */
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
-import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES } from './mypage/router.js';
+import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES, getStudyRoomEntryPath } from './mypage/router.js';
 import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
 import {
   getDefaultGuidePath,
@@ -625,6 +625,14 @@ export function bootstrapMypageRoute() {
 
   if (path === '/mypage' || path === '/mypage/') {
     window.location.replace(`#${getDefaultMypagePath(getNavRole())}`);
+    return true;
+  }
+
+  if (
+    getNavRole() === 'study_room' &&
+    (path === '/mypage/home' || path === '/mypage/registrations')
+  ) {
+    window.location.replace(`#${getStudyRoomEntryPath()}`);
     return true;
   }
 

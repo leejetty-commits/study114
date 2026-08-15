@@ -2,13 +2,11 @@ import {
   LIFECYCLE_FOOTNOTE_REG,
   LIFECYCLE_PUBLISH_CONFIRM_DIRECT,
   LIFECYCLE_PUBLISH_CONFIRM_NOTE,
-  publishReadinessLabel,
 } from '../lifecycle-copy.js';
 import { renderBrowseList } from '../exposure-render.js';
 import { STUDY_ROOM_REGISTER_URL } from '../nav-config.js';
 import {
   P20_LIST_TABS,
-  PHASE_STEPS,
   P20_HUB_BLOCK_TITLES,
   P20_EXPOSURE_SECTION_TITLES,
   P20_LIST_HEAD,
@@ -21,7 +19,8 @@ import {
   studyRoomHubPath,
   studyRoomSectionPath,
   studyRoomListTabPath,
-  STUDY_ROOM_REG_MENUS,
+  STUDY_ROOM_TOP_TABS,
+  BASE as STUDY_ROOM_BASE,
 } from './router.js';
 import {
   formatRoomSummaryLine,
@@ -34,6 +33,7 @@ import {
   getHubCtas,
 } from './format.js';
 import {
+  getStudyRooms,
   getStudyRoomsByTab,
   getStudyRoom,
   getPublishReadiness,
@@ -50,9 +50,16 @@ import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
 import { studentReviewPath, getHandoffFromQuery } from '../handoff-link.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import { KOREA_SIDOS } from '../../../shared/korea-sidos.js';
+import { formatMonthlyWon } from '../exposure-format.js';
+import { renderSubmissionBoardScreen } from '../submission-board/index.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+
+function blank(v) {
+  const s = String(v ?? '').trim();
+  return s || '—';
 }
 
 /** @param {{ label: string, ok: boolean, reason?: string | null, statusText?: string | null }[]} rows */
@@ -82,86 +89,171 @@ function renderHubCtaBlock(room) {
     .join('');
 }
 
-/** @param {import('./store.js').StudyRoomRecord} room @param {string} activeSection */
-function renderPhaseStepper(room, activeSection) {
-  if (activeSection === 'hub') return '';
-  const stepIndex = PHASE_STEPS.findIndex((s) => s.key === activeSection);
-  const progressPct = stepIndex >= 0 ? Math.round(((stepIndex + 1) / PHASE_STEPS.length) * 100) : 0;
-
-  const items = PHASE_STEPS.map((step, i) => {
-    const href = studyRoomSectionPath(room.id, /** @type {any} */ (step.key));
-    const isActive = activeSection === step.key;
-    const readiness = getPublishReadiness(room);
-    const isDone =
-      (step.key === 'basic' && room.has_regions && room.study_room_name) ||
-      (step.key === 'detail' && room.detail_completion_status === 'expanded_complete') ||
-      (step.key === 'publish' && room.profile_status === 'published') ||
-      (step.key === 'exposure' && room.profile_status === 'published');
-    const state = isActive ? 'is-active' : isDone ? 'is-done' : '';
-    const arrow = i < PHASE_STEPS.length - 1 ? '<span class="p19-stepper__arrow" aria-hidden="true">›</span>' : '';
+/** @param {import('./store.js').StudyRoomRecord} room */
+function renderRoomSwitcher(room) {
+  const rooms = getStudyRooms().slice(0, 3);
+  if (rooms.length <= 1) {
     return `
-      <a href="#${href}" class="p19-stepper__step ${state}" data-p20-nav="${href}">
-        <span class="p19-stepper__index">${isDone && !isActive ? '✓' : i + 1}</span>
-        <span class="p19-stepper__label">${esc(step.label)}</span>
-      </a>${arrow}`;
-  }).join('');
+      <div class="mp-room__switcher" role="tablist" aria-label="내 공부방">
+        <span class="mp-room__switcher-item is-active" aria-current="page">${esc(room.study_room_name)}</span>
+      </div>`;
+  }
+  return `
+    <div class="mp-room__switcher" role="tablist" aria-label="내 공부방">
+      ${rooms
+        .map((r) => {
+          const active = r.id === room.id;
+          const href = studyRoomHubPath(r.id);
+          return active
+            ? `<span class="mp-room__switcher-item is-active" aria-current="page">${esc(r.study_room_name)}</span>`
+            : `<a href="#${href}" class="mp-room__switcher-item" data-p20-nav="${href}">${esc(r.study_room_name)}</a>`;
+        })
+        .join('')}
+    </div>`;
+}
 
-  const currentLabel = PHASE_STEPS.find((s) => s.key === activeSection)?.label || '';
+/** @param {import('./store.js').StudyRoomRecord} room @param {string} activeSection */
+function renderTopTabs(room, activeSection) {
+  return `
+    <nav class="mp-room__tabs" aria-label="공부방 메뉴">
+      ${STUDY_ROOM_TOP_TABS.map((tab) => {
+        const href =
+          tab.key === 'hub' ? studyRoomHubPath(room.id) : studyRoomSectionPath(room.id, /** @type {any} */ (tab.key));
+        const active = activeSection === tab.key;
+        return `<a href="#${href}" class="mp-room__tab${active ? ' is-active' : ''}" data-p20-nav="${href}">${esc(tab.label)}</a>`;
+      }).join('')}
+    </nav>`;
+}
+
+/** @param {import('./store.js').PublishReadiness} readiness @param {number} roomId */
+function renderFullChecklist(readiness, roomId) {
+  const items = readiness.items || [];
+  return `
+    <div class="mp-room__checklist">
+      <div class="mp-room__checklist-head">
+        <h3>공개 필수 체크리스트</h3>
+        <span>${readiness.doneCount}/${readiness.totalCount}</span>
+      </div>
+      <ul class="mp-room__checklist-list">
+        ${items
+          .map((item) => {
+            const href = studyRoomSectionPath(roomId, item.section === 'publish' ? 'basic' : item.section);
+            return `
+          <li class="mp-room__checklist-item${item.ok ? ' is-ok' : ' is-miss'}">
+            <span class="mp-room__checklist-mark" aria-hidden="true">${item.ok ? '✓' : '○'}</span>
+            <span>${esc(item.label)}</span>
+            ${
+              item.ok
+                ? '<span class="mp-room__checklist-state">완료</span>'
+                : `<a href="#${href}" class="mp-room__checklist-link" data-p20-nav="${href}">채우기</a>`
+            }
+          </li>`;
+          })
+          .join('')}
+      </ul>
+    </div>`;
+}
+
+/** @param {import('./store.js').StudyRoomRecord} room */
+function renderProgressCta(room) {
+  const readiness = getPublishReadiness(room);
+  const pct = Math.round((readiness.doneCount / readiness.totalCount) * 100);
+  const firstMiss = (readiness.items || []).find((i) => !i.ok);
+  const href = firstMiss
+    ? studyRoomSectionPath(room.id, firstMiss.section === 'publish' ? 'basic' : firstMiss.section)
+    : studyRoomSectionPath(room.id, 'publish');
+  const title = readiness.canPublish
+    ? '공개 준비가 끝났습니다'
+    : `프로필 ${readiness.doneCount}/${readiness.totalCount} 채워짐`;
+  const hint = readiness.canPublish
+    ? '미리보기 후 공개할 수 있습니다.'
+    : firstMiss
+      ? `다음: ${firstMiss.label}`
+      : '부족한 항목을 이어서 채우세요.';
 
   return `
-    <div class="p19-stepper-wrap">
-      <div class="p19-progress-mobile" role="progressbar" aria-valuenow="${progressPct}" aria-valuemin="0" aria-valuemax="100">
-        <div class="p19-progress-mobile__track">
-          <div class="p19-progress-mobile__fill" style="width: ${progressPct}%"></div>
-        </div>
-        <span class="p19-progress-mobile__label">${esc(currentLabel)} · ${stepIndex + 1}/${PHASE_STEPS.length}</span>
+    <a href="#${href}" class="mp-room__progress" data-p20-nav="${href}">
+      <div class="mp-room__progress-copy">
+        <span class="mp-room__progress-eyebrow">지금 하면 좋아요</span>
+        <strong>${esc(title)}</strong>
+        <p>${esc(hint)}</p>
       </div>
-      <nav class="p19-stepper" aria-label="운영 단계">${items}</nav>
+      <div class="mp-room__progress-meter" aria-hidden="true">
+        <span class="mp-room__progress-bar"><i style="width:${pct}%"></i></span>
+        <span class="mp-room__progress-pct">${pct}%</span>
+      </div>
+    </a>`;
+}
+
+/** @param {import('./store.js').StudyRoomRecord} room */
+function renderProfileOverview(room) {
+  const rows = [
+    { label: '공부방명', value: room.study_room_name, section: 'basic' },
+    { label: '공개 상태', value: profileStatusLabel(room.profile_status), section: 'publish' },
+    { label: '상담 상태', value: inquiryStatusLabel(room.inquiry_status), section: 'exposure' },
+    { label: '상세등록', value: detailStatusLabel(room.detail_completion_status), section: 'detail' },
+    { label: '지역', value: room.region_label, section: 'basic' },
+    { label: '주력과목', value: room.main_subject_note, section: 'basic' },
+    { label: '대상 학년', value: room.grade_band, section: 'detail' },
+    { label: '월 대표 가격', value: room.price_amount ? formatMonthlyWon(room.price_amount) : '', section: 'detail' },
+    { label: '수업 방식', value: room.lesson_place_type === 'academy' ? '학원·공부방' : room.lesson_place_type === 'study_room' ? '공부방' : '', section: 'basic' },
+    { label: '슬로건', value: room.slogan, section: 'detail' },
+    { label: '특징', value: room.feature_1, section: 'detail' },
+    { label: '정원/타임', value: room.capacity_per_time, section: 'detail' },
+    { label: '짧은 소개', value: room.intro_short, section: 'detail' },
+    { label: '상세 소개', value: room.intro_long, section: 'detail' },
+    { label: '시설 요약', value: room.facility_summary, section: 'detail' },
+    {
+      label: '옵션',
+      value: [room.weekend_available ? '주말 가능' : '', room.one_on_one_available ? '1:1 가능' : '']
+        .filter(Boolean)
+        .join(' · '),
+      section: 'detail',
+    },
+    { label: '대표 이미지', value: room.has_representative_image ? '등록됨' : '', section: 'detail' },
+    { label: '문의·쪽지 방식', value: room.contact_method_set ? '설정됨' : '', section: 'detail' },
+  ];
+
+  return `
+    <div class="mp-room__overview">
+      <div class="mp-room__overview-head">
+        <h3>프로필 한눈에</h3>
+        <a href="#${studyRoomSectionPath(room.id, 'basic')}" class="btn btn--secondary btn--sm" data-p20-nav="${studyRoomSectionPath(room.id, 'basic')}">수정</a>
+      </div>
+      <dl class="mp-room__dl">
+        ${rows
+          .map((row) => {
+            const empty = !String(row.value ?? '').trim();
+            const href = studyRoomSectionPath(room.id, /** @type {any} */ (row.section));
+            return `
+          <div class="mp-room__dl-row${empty ? ' is-empty' : ''}">
+            <dt>${esc(row.label)}</dt>
+            <dd>
+              <span>${esc(blank(row.value))}</span>
+              ${empty ? `<a href="#${href}" data-p20-nav="${href}">채우기</a>` : `<a href="#${href}" data-p20-nav="${href}">수정</a>`}
+            </dd>
+          </div>`;
+          })
+          .join('')}
+      </dl>
     </div>`;
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room @param {string} activeSection @param {string} bodyHtml */
 function renderRoomShell(room, activeSection, bodyHtml) {
   const readiness = getPublishReadiness(room);
-  const navItems = STUDY_ROOM_REG_MENUS.map((m) => {
-    const href = studyRoomSectionPath(room.id, /** @type {any} */ (m.key));
-    const active = activeSection === m.key ? ' is-active' : '';
-    return `<a href="#${href}" class="p19-sidebar-nav__link${active}" data-p20-nav="${href}">${esc(m.label)}</a>`;
-  }).join('');
-
-  const hubActive = activeSection === 'hub' ? ' is-active' : '';
-  const readinessText = publishReadinessLabel(readiness.canPublish, readiness.missing.length);
-
   return `
-    <div class="p19-frame">
-      <aside class="p19-sidebar" aria-label="공부방 운영">
-        <div class="p19-sidebar__top">
-          <a href="#/mypage/registrations/study-rooms" class="p19-back" data-p20-nav="/mypage/registrations/study-rooms">← 목록</a>
-          <span class="p19-sidebar__readiness mypage-badge${readiness.canPublish ? ' p19-readiness--ok' : ' p19-readiness--pending'}">${esc(readinessText)}</span>
+    <div class="mp-room">
+      <header class="mp-room__head">
+        ${renderRoomSwitcher(room)}
+        <div class="mp-room__meta">
+          <span class="mypage-badge mypage-badge--${room.profile_status}">${esc(profileStatusLabel(room.profile_status))}</span>
+          <span class="mp-room__meta-line">${esc(formatRoomSummaryLine(room))}</span>
+          <span class="mp-room__meta-line">${esc(inquiryStatusLabel(room.inquiry_status))} · 공개준비 ${readiness.doneCount}/${readiness.totalCount}</span>
         </div>
-        <div class="p19-student-card">
-          <div class="p19-student-card__avatar" aria-hidden="true">${esc((room.study_room_name || '?').charAt(0))}</div>
-          <div class="p19-student-card__body">
-            <strong class="p19-student-card__name">${esc(room.study_room_name)}</strong>
-            <span class="mypage-badge mypage-badge--${room.profile_status}">${esc(profileStatusLabel(room.profile_status))}</span>
-            <p class="p19-student-card__meta">${esc(formatRoomSummaryLine(room))}</p>
-            <p class="p19-student-card__meta p20-inquiry-badge">${esc(inquiryStatusLabel(room.inquiry_status))}</p>
-          </div>
-        </div>
-        <nav class="p19-sidebar-nav" aria-label="공부방 운영 메뉴">
-          <a href="#${studyRoomHubPath(room.id)}" class="p19-sidebar-nav__link p19-sidebar-nav__link--overview${hubActive}" data-p20-nav="${studyRoomHubPath(room.id)}">운영 홈</a>
-          ${navItems}
-          <a href="#/plans/positions?provider_type=study_room&provider_id=${room.id}" class="p19-sidebar-nav__link" data-nav="/plans/positions?provider_type=study_room&provider_id=${room.id}">유료·상품</a>
-        </nav>
-        <div class="p19-sidebar-status">
-          <span class="p19-sidebar-status__label">공개 준비</span>
-          <span class="p19-sidebar-status__value${readiness.canPublish ? ' is-ready' : ''}">${readiness.doneCount}/${readiness.totalCount}</span>
-        </div>
-      </aside>
-      <div class="p19-frame__body">
-        ${renderPhaseStepper(room, activeSection)}
-        ${bodyHtml}
-      </div>
+        ${renderTopTabs(room, activeSection)}
+      </header>
+      <div class="mp-room__body">${bodyHtml}</div>
     </div>`;
 }
 
@@ -170,7 +262,19 @@ export function renderStudyRoomRegScreen(path) {
   const route = parseStudyRoomRegPath(path);
   if (!route) return '';
 
-  if (route.screenId === 'P20-01') return renderList(route.listTab || 'all');
+  if (route.screenId === 'P20-01') {
+    const rooms = getStudyRooms();
+    if (rooms.length) {
+      // 중간 목록 depth 제거 — 대표 공부방으로 직행
+      queueMicrotask(() => {
+        if (window.location.hash.includes(STUDY_ROOM_BASE) && !/\/\d+/.test(window.location.hash)) {
+          window.location.hash = studyRoomHubPath(rooms[0].id);
+        }
+      });
+      return renderHub(rooms[0]);
+    }
+    return renderList(route.listTab || 'all');
+  }
   if (!route.roomId) return renderNotFound();
 
   const room = getStudyRoom(route.roomId);
@@ -187,15 +291,17 @@ export function renderStudyRoomRegScreen(path) {
       return renderPublish(room);
     case 'P20-05':
       return renderExposure(room);
+    case 'P23-04':
+      return renderSubmissionTab(room);
     default:
       return renderHub(room);
   }
 }
 
 function renderNotFound() {
-  return `<section class="mypage-panel p19-panel mypage-empty">
+  return `<section class="mypage-panel mp-room mypage-empty">
     <p>공부방 정보를 찾을 수 없습니다.</p>
-    <a href="#/mypage/registrations/study-rooms" class="btn btn--secondary" data-p20-nav="/mypage/registrations/study-rooms">목록으로</a>
+    <a href="${STUDY_ROOM_REGISTER_URL}" class="btn btn--secondary" data-same-tab-href="${STUDY_ROOM_REGISTER_URL}">공부방 등록하기</a>
   </section>`;
 }
 
@@ -226,7 +332,7 @@ function renderList(tab) {
 
   const cards =
     rooms.length === 0
-      ? `<p class="mypage-empty">해당 상태의 공부방이 없습니다.</p>`
+      ? `<p class="mypage-empty">등록된 공부방이 없습니다. 아래에서 첫 공부방을 등록하세요.</p>`
       : `<div class="p19-card-grid">
         ${rooms
           .map((r) => {
@@ -263,6 +369,7 @@ function renderList(tab) {
       <p class="p19-list-footnote">${LIFECYCLE_FOOTNOTE_REG}</p>
     </section>`;
 }
+
 
 /** @param {import('./store.js').StudyRoomRecord} room */
 function renderReviewBridgeBlock(room) {
@@ -303,31 +410,23 @@ function renderHub(room) {
     tone = 'muted';
   }
 
-  const readinessBlock = `
-    <div class="p20-hub-block">
-      <h3 class="p20-hub-block__title">${esc(P20_HUB_BLOCK_TITLES.readiness)} ${readiness.doneCount}/${readiness.totalCount}</h3>
-      ${
-        readiness.missing.length
-          ? `<ul class="p19-alert__list">${readiness.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`
-          : '<p class="p20-hint">필수 항목이 모두 충족되었습니다.</p>'
-      }
-    </div>`;
-
   const body = `
-    <div class="p19-hub-body p20-hub-body">
+    <div class="mp-room__hub">
+      ${renderProgressCta(room)}
+
       <div class="p19-alert p19-alert--${tone}">
         <p class="p19-alert__text">${esc(diagnosis)}</p>
       </div>
 
-      ${readinessBlock}
-
-      <div class="p20-hub-block">
-        <h3 class="p20-hub-block__title">${esc(P20_HUB_BLOCK_TITLES.publishStatus)}</h3>
-        <p class="p20-hub-status-line">
-          <span class="mypage-badge mypage-badge--${room.profile_status}">${esc(profileStatusLabel(room.profile_status))}</span>
-          <span class="p20-hub-status-detail">상세등록: ${esc(detailStatusLabel(room.detail_completion_status))}</span>
-        </p>
+      <div class="mp-room__status-strip" aria-label="현황 요약">
+        <span><em>공개</em>${esc(profileStatusLabel(room.profile_status))}</span>
+        <span><em>상담</em>${esc(inquiryStatusLabel(room.inquiry_status))}</span>
+        <span><em>상세</em>${esc(detailStatusLabel(room.detail_completion_status))}</span>
+        <span><em>준비</em>${readiness.doneCount}/${readiness.totalCount}</span>
       </div>
+
+      ${renderFullChecklist(readiness, room.id)}
+      ${renderProfileOverview(room)}
 
       <div class="p20-hub-block">
         <h3 class="p20-hub-block__title">${esc(P20_HUB_BLOCK_TITLES.exposureMatrix)}</h3>
@@ -339,19 +438,11 @@ function renderHub(room) {
         }
       </div>
 
-      <div class="p20-hub-block p20-inquiry-board">
-        <h3 class="p20-hub-block__title">${esc(P20_HUB_BLOCK_TITLES.inquiryBoard)}</h3>
-        <p class="p20-inquiry-board__value">${esc(inquiryStatusLabel(room.inquiry_status))}</p>
-        <p class="p20-hint">원장이 직접 선택합니다 (20§4-3 · 22장)</p>
-        <a href="#${studyRoomSectionPath(room.id, 'exposure')}" class="btn btn--secondary btn--sm" data-p20-nav="${studyRoomSectionPath(room.id, 'exposure')}">상담 상태 변경 →</a>
-      </div>
-
       ${renderReviewBridgeBlock(room)}
-
       <div class="p20-hub-cta">${renderHubCtaBlock(room)}</div>
     </div>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--hub">${renderRoomShell(room, 'hub', body)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', body)}</section>`;
 }
 
 /** @param {string} title @param {string} [lead] @param {string} body */
@@ -419,7 +510,7 @@ function renderBasicForm(room) {
       )}
     </form>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderRoomShell(room, 'basic', formBody)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'basic', formBody)}</section>`;
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
@@ -488,7 +579,7 @@ function renderDetailForm(room) {
       )}
     </form>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderRoomShell(room, 'detail', formBody)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'detail', formBody)}</section>`;
 }
 
 function renderBasicBridge(room) {
@@ -536,24 +627,10 @@ function renderPublish(room) {
   const r = getPublishReadiness(room);
   const preview = renderPublishPreviewModes(room);
 
-  const checklist = r.missing.length
-    ? r.missing
-        .map(
-          (m) => `<li class="p19-checklist__item p19-checklist__miss">
-        <span class="p19-checklist__icon">△</span><span>${esc(m)}</span>
-        <a href="#${studyRoomSectionPath(room.id, m.includes('상세') ? 'detail' : 'basic')}" data-p20-nav="${studyRoomSectionPath(room.id, 'detail')}">브리지 →</a>
-      </li>`,
-        )
-        .join('')
-    : '<li class="p19-checklist__item p19-checklist__ok"><span class="p19-checklist__icon">✓</span><span>필수 항목이 모두 충족되었습니다.</span></li>';
-
   const body = `
     <div class="p19-publish-body" data-p20-room-id="${room.id}">
       ${preview}
-      <div class="p19-checklist-card">
-        <h3 class="p19-checklist-card__title">공개 필수 체크리스트</h3>
-        <ul class="p19-checklist">${checklist}</ul>
-      </div>
+      ${renderFullChecklist(r, room.id)}
       <div class="p20-confirm-card" data-p20-room-id="${room.id}">
         <h3 class="p20-confirm-card__title">자기확인 — 학부모에게 이렇게 보입니다</h3>
         <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="location" /> 위치·주소 공개 범위를 확인했습니다</label>
@@ -572,7 +649,7 @@ function renderPublish(room) {
       <p class="p19-publish-footnote">${LIFECYCLE_PUBLISH_CONFIRM_NOTE}</p>
     </div>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--publish">${renderRoomShell(room, 'publish', body)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'publish', body)}</section>`;
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
@@ -611,8 +688,8 @@ function renderExposure(room) {
       <section class="p20-exposure-section p20-plans-cta">
         <h3>${esc(P20_EXPOSURE_SECTION_TITLES.plans)}</h3>
         <div class="p20-matrix">${renderMatrixRows(blocks.slice(4))}</div>
-        <p class="p19-form-section__lead">노출 강화 상품은 이용 현황에서 확인합니다.</p>
-        <a href="#/plans/positions?provider_type=study_room&provider_id=${room.id}" class="btn btn--secondary" data-nav="/plans/positions?provider_type=study_room&provider_id=${room.id}">유료상품 · 노출</a>
+        <p class="p19-form-section__lead">노출 강화 상품은 구매상품(이용현황)에서 확인합니다.</p>
+        <a href="#/mypage/plans" class="btn btn--secondary" data-mypage-nav="/mypage/plans">구매상품 · 이용현황</a>
       </section>
       <section class="p20-exposure-section p20-messages-link">
         <h3>${esc(P20_EXPOSURE_SECTION_TITLES.messages)}</h3>
@@ -629,7 +706,18 @@ function renderExposure(room) {
       </div>
     </div>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderRoomShell(room, 'exposure', body)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'exposure', body)}</section>`;
+}
+
+/** @param {import('./store.js').StudyRoomRecord} room */
+function renderSubmissionTab(room) {
+  const board = renderSubmissionBoardScreen('/mypage/submission-board');
+  const body = `
+    <div class="mp-room__submission">
+      <p class="mypage-lead">${esc(room.study_room_name)} 제출함</p>
+      ${board}
+    </div>`;
+  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'submission', body)}</section>`;
 }
 
 /** @param {HTMLElement} root @param {() => void} rerender */
@@ -734,7 +822,7 @@ export function bindStudyRoomRegEvents(root, rerender) {
       if (!confirm('삭제하시겠습니까? (deleted_at)')) return;
       try {
         await deleteStudyRoom(id);
-        window.location.hash = '/mypage/registrations/study-rooms';
+        window.location.hash = '/mypage/registrations';
         rerender();
       } catch (err) {
         console.warn('[p20]', err);

@@ -2,7 +2,7 @@ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, ren
 import { getNavRole } from '../state.js';
 import { getAuthUser, isAdminUser } from '../auth-session.js';
 import { resolveAccountDisplayName, isInternalAuthEmail, formatLoginAccountLabel } from '../auth/display-identity.js';
-import { MYPAGE_NAV, getScreenIdForPath, screenTitle } from './router.js';
+import { MYPAGE_NAV, getScreenIdForPath, screenTitle, getStudyRoomEntryPath } from './router.js';
 import { isMessagesDetailPath } from '../messages/router.js';
 import { renderMessagesProviderToolbar } from '../messages/shell.js';
 
@@ -24,8 +24,9 @@ function renderBreadcrumb(currentPath, title, role) {
   const primary = MYPAGE_NAV.filter((item) => !item.roles || item.roles.includes(role)).find((item) =>
     navItemIsActive(item, currentPath),
   );
-  const parts = [{ label: '마이페이지 홈', path: '/mypage/home' }];
-  if (primary && primary.path !== '/mypage/home') {
+  const homePath = role === 'study_room' || role === 'tutor' ? '/mypage/registrations' : '/mypage/home';
+  const parts = [{ label: '마이페이지', path: homePath }];
+  if (primary && primary.path !== homePath && primary.path !== '/mypage/home') {
     parts.push({ label: primary.label, path: primary.path });
   }
   // 내 등록 하위는 breadcrumb=위치, h1=화면명으로 분리 (중복 금지)
@@ -66,14 +67,6 @@ export function renderMypageShell(currentPath, bodyHtml) {
         : role === 'tutor'
           ? '과외쌤'
           : '게스트';
-  const homePath =
-    role === 'parent'
-      ? '/parent'
-      : role === 'study_room'
-        ? '/study-room'
-        : role === 'tutor'
-          ? '/tutor'
-          : '/guest';
   const displayName = resolveAccountDisplayName(authUser);
   const displayInitial = String(displayName || roleLabel || '우').trim().charAt(0) || '우';
   const displayEmail = String(authUser?.email || '').trim();
@@ -94,10 +87,14 @@ export function renderMypageShell(currentPath, bodyHtml) {
 
   const navItems = MYPAGE_NAV.filter((item) => !item.roles || item.roles.includes(role))
     .map((item) => {
+    const href =
+      item.path === '/mypage/registrations' && role === 'study_room'
+        ? getStudyRoomEntryPath()
+        : item.path;
     const active = navItemIsActive(item, currentPath);
     const emph = item.emphasis?.includes(role) ? ' is-emphasis' : '';
     return `
-      <a href="#${item.path}" class="mypage-nav__link${active ? ' is-active' : ''}${emph}" data-mypage-nav="${item.path}">
+      <a href="#${href}" class="mypage-nav__link${active ? ' is-active' : ''}${emph}" data-mypage-nav="${href}">
         <span class="mypage-nav__icon" aria-hidden="true">${esc(item.icon || '•')}</span>
         <span>${esc(item.label)}</span>
       </a>`;
@@ -107,14 +104,12 @@ export function renderMypageShell(currentPath, bodyHtml) {
   const mainHtml = `
     <div class="mypage-layout">
       <aside class="mypage-sidebar" aria-label="마이페이지 메뉴">
-        <p class="mypage-sidebar__eyebrow">운영 허브</p>
         <p class="mypage-sidebar__title">마이페이지</p>
         ${
           authUser
             ? `<div class="mypage-account-card">
                 <span class="mypage-account-card__avatar" aria-hidden="true">${esc(displayInitial)}</span>
                 <span class="mypage-account-card__body">
-                  <span class="mypage-account-card__label">로그인</span>
                   <strong class="mypage-account-card__email">${esc(accountPrimary)}</strong>
                   ${accountSecondary ? `<span class="mypage-account-card__sub">${esc(accountSecondary)}</span>` : ''}
                   <span class="mypage-account-card__role">${esc(roleLabel)}${isAdminUser() ? ' · 관리자' : ''}</span>
@@ -124,7 +119,6 @@ export function renderMypageShell(currentPath, bodyHtml) {
         }
         <nav class="mypage-nav">${navItems}</nav>
         ${isAdminUser() ? '<a href="#/admin" class="mypage-nav__admin" data-nav="/admin">관리자 콘솔</a>' : ''}
-        <a href="#${homePath}" class="mypage-nav__back" data-nav="${homePath}">← 역할 홈으로</a>
       </aside>
       <div class="mypage-content">
         <header class="mypage-content__head">
@@ -153,7 +147,7 @@ export function bindMypageShellEvents(root, rerender) {
   root.querySelectorAll('[data-mypage-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      window.location.hash = el.getAttribute('data-mypage-nav') || '/mypage/home';
+      window.location.hash = el.getAttribute('data-mypage-nav') || '/mypage';
     });
   });
 }

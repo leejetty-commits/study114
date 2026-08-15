@@ -21,7 +21,7 @@ import { getHandoffFromQuery, getProviderRegDeepLink } from '../handoff-link.js'
 import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
 import { STUDENT_REVIEW, studentReviewItemLabel } from '../handoff-copy.js';
 import { fetchMypageReviewSnapshot } from '../provider-reviews/store.js';
-import { REVIEW_ORIGIN_LABELS, PROVIDER_REVIEW_COPY } from '../provider-reviews/copy.js';
+import { REVIEW_ORIGIN_LABELS } from '../provider-reviews/copy.js';
 import {
   renderBasketLifecycleBadge,
   isBasketLifecycleMuted,
@@ -47,6 +47,7 @@ import { isStudentRegPath } from '../student-reg/router.js';
 import { renderStudentRegScreen } from '../student-reg/screens.js';
 import { isStudyRoomRegPath } from '../study-room-reg/router.js';
 import { renderStudyRoomRegScreen } from '../study-room-reg/screens.js';
+import { getStudyRoomEntryPath } from './router.js';
 import { isTutorRegPath } from '../tutor-reg/router.js';
 import { setAuthDisplayName, logout } from '../auth-session.js';
 import {
@@ -61,10 +62,12 @@ import {
   FREE_TIER_COPY,
   PAID_TIER_COPY,
   P18_HEADLINE,
+  P18_EXPOSURE_STATUS,
 } from './plans-catalog.js';
-import { getRoiMetrics } from '../paid-backend.js';
+import { getRoiMetrics, getPaidOperationalStatus } from '../paid-backend.js';
 import { renderPaidGuide, renderPaidUsage } from './paid-screens.js';
-import { renderPlansMy, renderPlansHistory } from '../plans/screens.js';
+import { renderPlansHistory } from '../plans/screens.js';
+import { getHistoryRows } from '../plans/history-mock.js';
 import { bindPaidCatalogEvents } from '../paid-checkout.js';
 import { bindProviderNoticeEvents } from '../provider-notices.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
@@ -131,6 +134,18 @@ export function renderMypageScreen(path) {
   const counts = getSummaryCounts(r);
   const cta = getPrimaryCta(r);
 
+  // 공부방: 홈·내 등록 중간페이지 → 대표 공부방 직행
+  if (r === 'study_room' && (path === '/mypage/home' || path === '/mypage/registrations')) {
+    const entry = getStudyRoomEntryPath();
+    queueMicrotask(() => {
+      if (window.location.hash === '#/mypage/home' || window.location.hash === '#/mypage/registrations') {
+        window.location.hash = entry;
+      }
+    });
+    if (isStudyRoomRegPath(entry)) return renderStudyRoomRegScreen(entry);
+    return renderStudyRoomRegScreen('/mypage/registrations/study-rooms');
+  }
+
   if (isStudentRegPath(path)) return renderStudentRegScreen(path);
   if (isStudyRoomRegPath(path)) return renderStudyRoomRegScreen(path);
   if (isTutorRegPath(path)) return renderTutorRegScreen(path);
@@ -143,7 +158,7 @@ export function renderMypageScreen(path) {
   if (isMessagesDetailPath(path)) return renderMessagesScreen(path);
   if (path === '/mypage/messages') return renderMessagesSummary();
   if (path === '/mypage/plans') return renderPlans(r);
-  if (path === '/mypage/plans/my') return renderPlansMy();
+  if (path === '/mypage/plans/my') return renderPlans(r);
   if (path === '/mypage/plans/history') return renderPlansHistory();
   if (path === '/mypage/paid') return renderPaidGuide(r);
   if (path === '/mypage/paid/usage') return renderPaidUsage(r);
@@ -169,38 +184,18 @@ function getHomeHighlights(role, counts) {
       { icon: '♡', label: '찜한 곳', value: `${counts.wishlist}개`, note: '나중에 다시 볼 수 있어요', path: '/mypage/wishlist' },
       { icon: '◷', label: '최근열람', value: `${counts.recentCount}개`, note: '보던 곳부터 이어보세요', path: '/mypage/recent' },
       { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '답장이 필요한 소식이에요', path: '/mypage/messages' },
-      { icon: '💬', label: '내가 남긴 후기', value: `${counts.providerReviewCount || 0}개`, note: '상담·이용 후기는 상세에서 작성', path: '/mypage/recent' },
     ];
   }
   return [
     { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
-    { icon: '☆', label: '학생 검토함', value: `${counts.studentReviewCount}명`, note: '관심 학생 저장 · 이용 후기와 다른 기능', path: '/mypage/student-review' },
-    { icon: '💬', label: '받은 후기', value: `${counts.providerReviewCount || 0}개`, note: '답글은 내 프로필 상세에서 1회', path: '/mypage/registrations' },
+    { icon: '☆', label: '학생 검토함', value: `${counts.studentReviewCount}명`, note: '관심 학생 저장', path: '/mypage/student-review' },
     { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
-  ];
-}
-
-function getHomeQuickActions(role) {
-  if (role === 'parent') {
-    return [
-      { icon: '♡', title: '찜 목록', note: '마음에 둔 공부방과 과외쌤', path: '/mypage/wishlist' },
-      { icon: '◷', title: '최근열람', note: '보던 곳부터 다시 확인', path: '/mypage/recent' },
-      { icon: '✉', title: '쪽지함', note: '상담과 답장 모아보기', path: '/mypage/messages' },
-      { icon: '⚙', title: '계정설정', note: '표시 이름과 로그인 관리', path: '/mypage/account' },
-    ];
-  }
-  return [
-    { icon: '✎', title: '내 등록', note: role === 'study_room' ? '공부방 정보와 공개 상태' : '과외 프로필과 공개 상태', path: '/mypage/registrations' },
-    { icon: '☆', title: '학생 검토함', note: '검토 중인 학생과 쪽지 준비', path: '/mypage/student-review' },
-    { icon: '✉', title: '쪽지함', note: '문의와 진행 중인 대화', path: '/mypage/messages' },
-    { icon: '◌', title: '이용현황', note: '이용권과 남은 기간 확인', path: '/mypage/plans' },
   ];
 }
 
 function renderHome(role, profile, counts, cta) {
   const homeIdentity = profile.displayName || profile.name || '회원';
   const highlights = getHomeHighlights(role, counts);
-  const quickActions = getHomeQuickActions(role);
 
   return `
     <div class="mypage-home">
@@ -208,28 +203,25 @@ function renderHome(role, profile, counts, cta) {
         <div class="mypage-home-hero__copy">
           <span class="mypage-home-hero__role">${esc(roleLabel(role))}</span>
           <h2>${esc(homeIdentity)}님, ${esc(getHomeGreeting(role))}</h2>
-          <p>${esc(profile.regionLabel)} 기준으로 등록·쪽지함·이용현황을 한곳에서 관리합니다.</p>
+          <p>${esc(profile.regionLabel)} 기준으로 쪽지함·최근열람을 한곳에서 관리합니다.</p>
         </div>
       </section>
 
       <section class="mypage-home-section" aria-labelledby="mypage-today-title">
         <div class="mypage-home-section__head">
           <div>
-            <span class="mypage-home-section__eyebrow">요약</span>
+            <span class="mypage-home-section__eyebrow">현황</span>
             <h2 id="mypage-today-title">내 상태</h2>
           </div>
           <p>${esc(HOME_EMPHASIS[role] || '')}</p>
         </div>
-        <div class="mypage-highlight-grid">
+        <div class="mypage-status-strip" aria-label="현황 요약">
           ${highlights
             .map(
               (item) => `
-            <a href="#${item.path}" class="mypage-highlight-card" data-mypage-nav="${item.path}">
-              <span class="mypage-highlight-card__icon" aria-hidden="true">${item.icon}</span>
-              <span class="mypage-highlight-card__label">${esc(item.label)}</span>
+            <a href="#${item.path}" class="mypage-status-strip__item" data-mypage-nav="${item.path}">
+              <em>${esc(item.label)}</em>
               <strong>${esc(item.value)}</strong>
-              <small>${esc(item.note)}</small>
-              <span class="mypage-highlight-card__arrow" aria-hidden="true">→</span>
             </a>`,
             )
             .join('')}
@@ -237,49 +229,6 @@ function renderHome(role, profile, counts, cta) {
       </section>
 
       ${renderCtaBlock(cta)}
-
-      <section class="mypage-home-section" aria-labelledby="mypage-review-title" data-mypage-review-panel>
-        <div class="mypage-home-section__head">
-          <div>
-            <span class="mypage-home-section__eyebrow">후기</span>
-            <h2 id="mypage-review-title">${role === 'parent' ? '내가 남긴 후기' : '받은 후기'}</h2>
-          </div>
-          <p>${esc(PROVIDER_REVIEW_COPY.notStudentReviewNote)}</p>
-        </div>
-        <div class="mypage-review-panel" data-mypage-review-list>
-          <p class="mypage-muted">불러오는 중…</p>
-        </div>
-      </section>
-
-      <section class="mypage-home-section" aria-labelledby="mypage-quick-title">
-        <div class="mypage-home-section__head">
-          <div>
-            <span class="mypage-home-section__eyebrow">바로가기</span>
-            <h2 id="mypage-quick-title">자주 쓰는 메뉴</h2>
-          </div>
-          <p>역할에 맞는 운영 메뉴로 이동합니다.</p>
-        </div>
-        <div class="mypage-quick-grid">
-          ${quickActions
-            .map(
-              (item) => `
-            <a href="#${item.path}" class="mypage-quick-card" data-mypage-nav="${item.path}">
-              <span class="mypage-quick-card__icon" aria-hidden="true">${item.icon}</span>
-              <span>
-                <strong>${esc(item.title)}</strong>
-                <small>${esc(item.note)}</small>
-              </span>
-              <span class="mypage-quick-card__arrow" aria-hidden="true">›</span>
-            </a>`,
-            )
-            .join('')}
-        </div>
-      </section>
-
-      <section class="mypage-home-footnote">
-        <p><strong>계정·역할 변경</strong>은 계정설정에서 할 수 있습니다.</p>
-        <a href="#/mypage/account" data-mypage-nav="/mypage/account">계정설정</a>
-      </section>
     </div>`;
 }
 
@@ -571,6 +520,11 @@ function renderPlans(role) {
   const tier = previewState.providerSubscription;
   const tierCopy = tier === 'paid' ? PAID_TIER_COPY : FREE_TIER_COPY;
   const metrics = getRoiMetrics();
+  const ops = getPaidOperationalStatus();
+  const exposure = ops?.exposure;
+  const tickets = ops?.tickets;
+  const positions = exposure?.positions ?? [];
+  const historyRows = getHistoryRows().slice(0, 8);
   const tierLabel = tier === 'paid' ? '유료 이용 중' : '기본 이용 중';
 
   return `
@@ -578,41 +532,77 @@ function renderPlans(role) {
       <section class="mypage-panel mypage-usage-overview">
         <div class="mypage-home-section__head">
           <div>
-            <span class="mypage-home-section__eyebrow">내 이용권</span>
-            <h2>내 이용 현황</h2>
+            <span class="mypage-home-section__eyebrow">구매상품</span>
+            <h2>현재 이용현황</h2>
           </div>
           <span class="mypage-badge ${tier === 'paid' ? 'mypage-badge--published' : ''}">${esc(tierLabel)}</span>
         </div>
-        <p class="mypage-lead">상품을 고르기 전에, 지금 이용 중인 기능과 남은 혜택부터 확인하세요.</p>
-        <div class="mypage-highlight-grid">
+        <p class="mypage-lead">광고·노출 이용 중 상품과 잔여 혜택을 확인합니다.</p>
+        <h3 class="mypage-subhead">이용중 포지션(광고)</h3>
+        ${
+          positions.length
+            ? `<ul class="plans-tier-list">${positions
+                .map(
+                  (p) =>
+                    `<li><strong>${esc(String(p.sku || '').toUpperCase())}</strong> · ${p.days_left}일 남음 (~${esc(String(p.ends_on || p.ends_at || '').slice(0, 10))})</li>`,
+                )
+                .join('')}</ul>`
+            : `<div class="mypage-info-box"><p>${esc(P18_EXPOSURE_STATUS.basic)}</p></div>`
+        }
+        <h3 class="mypage-subhead">횟수권 잔여</h3>
+        ${
+          tickets
+            ? `<div class="mypage-stats roi-metrics">
+                <div class="mypage-stat"><span>${esc(tickets.memo.label)}</span><strong>${tickets.memo.remaining}</strong></div>
+                <div class="mypage-stat"><span>${esc(tickets.request_view.label)}</span><strong>${tickets.request_view.remaining}</strong></div>
+              </div>`
+            : `<p class="mypage-muted">이용권 정보를 불러오면 표시됩니다.</p>`
+        }
+        <h3 class="mypage-subhead">반응 요약</h3>
+        <div class="mypage-stats roi-metrics">
           ${metrics
-            .slice(0, 3)
             .map(
               (m) => `
-            <div class="mypage-highlight-card is-static" title="${esc(m.hint)}">
-              <span class="mypage-highlight-card__label">${esc(m.label)}</span>
-              <strong>${m.value}</strong>
-              <small>최근 활동을 기준으로 보여드려요.</small>
+            <div class="mypage-stat" title="${esc(m.hint)}">
+              <span>${esc(m.label)}</span><strong>${m.value}</strong>
             </div>`,
             )
             .join('')}
         </div>
+        <ul class="plans-tier-list" style="margin-top:1rem">${tierCopy.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
       </section>
 
-      <section class="mypage-home-section">
+      <section class="mypage-panel">
         <div class="mypage-home-section__head">
           <div>
-            <span class="mypage-home-section__eyebrow">현재 이용 중</span>
-            <h2>${esc(tierCopy.title)}</h2>
+            <span class="mypage-home-section__eyebrow">내역</span>
+            <h2>구매·결제내역</h2>
           </div>
           <p>${esc(P18_HEADLINE)}</p>
         </div>
-        <ul class="plans-tier-list">${tierCopy.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
-        <div class="mypage-actions-row">
-          <a href="#/mypage/plans/my" class="btn btn--primary" data-mypage-nav="/mypage/plans/my">내 상품</a>
-          <a href="#/mypage/plans/history" class="btn btn--secondary" data-mypage-nav="/mypage/plans/history">결제내역</a>
-          <a href="#/plans" class="btn btn--secondary" data-nav="/plans">추가 이용 알아보기</a>
-        </div>
+        <table class="plans-table" aria-label="구매내역">
+          <thead><tr><th>상품</th><th>금액</th><th>일시</th><th>상태</th></tr></thead>
+          <tbody>
+            ${
+              historyRows.length
+                ? historyRows
+                    .map(
+                      (r) => `
+              <tr>
+                <td>${esc(r.productName)}</td>
+                <td>${Number(r.amountKrw || 0).toLocaleString('ko-KR')}원</td>
+                <td>${esc(String(r.paidAt || '').slice(0, 16).replace('T', ' '))}</td>
+                <td>${esc(r.status || '')}</td>
+              </tr>`,
+                    )
+                    .join('')
+                : `<tr><td colspan="4" class="mypage-muted">구매내역이 없습니다.</td></tr>`
+            }
+          </tbody>
+        </table>
+        <p class="mypage-muted" style="margin-top:0.75rem">
+          <a href="#/mypage/plans/history" data-mypage-nav="/mypage/plans/history">전체 결제내역</a>
+        </p>
       </section>
     </div>`;
 }

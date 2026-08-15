@@ -179,13 +179,13 @@ export function getHubCtas(room) {
     return [
       { label: '다시 공개', path: 'publish', primary: true },
       { label: '노출·상담', path: 'exposure', primary: false },
-      { label: '이용권 확인', path: 'plans', external: '#/mypage/plans', primary: false },
+      { label: '구매상품', path: 'plans', external: '#/mypage/plans', primary: false },
     ];
   }
   return [
     { label: '노출·상담', path: 'exposure', primary: true },
     { label: '미리보기', path: 'publish', primary: false },
     { label: '학생 검토함', external: '#/mypage/student-review?from=exposure', primary: false },
-    { label: '이용권 확인', path: 'plans', external: '#/mypage/plans', primary: false },
+    { label: '구매상품', path: 'plans', external: '#/mypage/plans', primary: false },
   ];
 }

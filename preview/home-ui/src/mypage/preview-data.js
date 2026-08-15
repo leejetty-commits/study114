@@ -11,11 +11,11 @@ import { getRecentViews } from './recent-store.js';
 import { getMessagesSummaryCounts } from '../messages/screens.js';
 import { getStudents, getStudentSummaryCounts } from '../student-reg/store.js';
 import { studentSectionPath } from '../student-reg/router.js';
-import { studyRoomSectionPath, studyRoomHubPath } from '../study-room-reg/router.js';
+import { studyRoomSectionPath } from '../study-room-reg/router.js';
 import { tutorSectionPath, tutorHubPath } from '../tutor-reg/router.js';
 import { getTutors, getTutorSummaryCounts, getPublishReadiness as getTutorPublishReadiness, getMemoCreditsRemaining } from '../tutor-reg/store.js';
 import { getMatchingVisibility } from '../tutor-reg/format.js';
-import { getStudyRooms, getStudyRoomSummaryCounts } from '../study-room-reg/store.js';
+import { getStudyRooms, getStudyRoomSummaryCounts, getPublishReadiness } from '../study-room-reg/store.js';
 import { inquiryStatusLabel } from '../study-room-reg/format.js';
 import { exposureStatusLabel } from '../lifecycle-copy.js';
 import {
@@ -199,15 +199,28 @@ export function getPrimaryCta(role) {
   if (role === 'study_room') {
     const rooms = getStudyRooms();
     const room = rooms[0];
-    if (!room || room.detail_completion_status !== 'expanded_complete') {
+    if (!room) {
       return {
-        text: '공부방 소개를 조금 더 채워보세요',
-        hint: '상세 정보가 풍성할수록 학부모가 우리 공부방을 이해하기 쉬워져요.',
-        path: room ? studyRoomSectionPath(room.id, 'detail') : '/mypage/registrations/study-rooms',
+        text: '첫 공부방 등록하기',
+        hint: '가게 프로필을 만들고 공개 준비를 시작하세요.',
+        externalRegister: true,
+        kind: 'study_room',
       };
     }
-    const hub = studyRoomHubPath(room.id);
-    return { text: '공부방 공개 상태 살펴보기', hint: '공개 정보와 상담 가능 여부를 한 번 확인해 보세요.', path: hub };
+    const readiness = getPublishReadiness(room);
+    const firstMiss = (readiness.items || []).find((i) => !i.ok);
+    if (firstMiss) {
+      return {
+        text: `프로필 ${readiness.doneCount}/${readiness.totalCount} 채워짐`,
+        hint: `다음: ${firstMiss.label}`,
+        path: studyRoomSectionPath(room.id, firstMiss.section === 'publish' ? 'basic' : firstMiss.section),
+      };
+    }
+    return {
+      text: '공부방 공개 상태 살펴보기',
+      hint: '미리보기 후 공개할 수 있습니다.',
+      path: studyRoomSectionPath(room.id, 'publish'),
+    };
   }
 
   if (role === 'tutor') {
