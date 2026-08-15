@@ -93,9 +93,11 @@
   margin-top: var(--space-2);
 }
 
-/* ???? ?? ?? ?? ? B-??? (??? ? ?? ???) */
+/* 학생 티저(게스트) — 카드 그리드에서도 높이/여백 맞춤 (마스킹 로직 불변) */
 .expo-basic--student-teaser {
-  padding: var(--space-3) var(--space-4);
+  padding: 1.05rem 1.1rem;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .student-teaser__name {
@@ -1078,7 +1080,7 @@
 .expo-basic {
   background: #fff;
   border: 1px solid var(--gray-300);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   padding: 0.5rem 0.625rem;
   margin-bottom: 0.5rem;
   box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
@@ -1089,19 +1091,36 @@
   background: #fafafa;
 }
 
+.expo-basic.expo-hcard {
+  padding: 0;
+  margin-bottom: 0;
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.expo-basic.expo-hcard:hover {
+  background: #fff;
+  border-color: #cbd5e1;
+}
+
 .expo-basic.p24-card--clickable {
   cursor: pointer;
 }
 
 .browse-list--table .expo-basic {
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
+  margin-bottom: 0;
 }
 
 .expo-basic--student {
   cursor: pointer;
 }
 
-.expo-basic--student:hover {
+.expo-basic--student.expo-hcard:hover {
+  background: #fff;
+}
+
+.expo-basic--student:not(.expo-hcard):hover {
   background: var(--gray-50);
 }
 
@@ -1136,7 +1155,7 @@
 }
 
 .browse-list--table {
-  border-top: 1px solid var(--gray-200);
+  border-top: none;
 }
 
 .expo-grid--3 .expo-card,
@@ -1146,7 +1165,7 @@
 
 /* ?? ???? 25 ? 50 ? 25 ?? */
 .browse-list {
-  border-top: 1px solid var(--gray-200);
+  border-top: none;
 }
 
 .browse-row--3col {

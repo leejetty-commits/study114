@@ -1,6 +1,6 @@
 /**
- * Visily 톤 — 홈·검색 공통 (지도 배너 / 상세검색 / 베이직 가로카드)
- * 카피·필드 값은 유지, 레이아웃·표면만 조정
+ * Visily 톤 — 홈·검색 공통 (지도 배너 / 상세검색 / 베이직·찾기결과 카드 그리드)
+ * 카피·필드 값·블라인드/마스킹 로직은 유지, 레이아웃·표면만 조정
  */
 
 /* ── 지도: 박스 전체 폭 + 플로팅 배너 ── */
@@ -272,40 +272,57 @@
   }
 }
 
-/* ── 베이직 리스트: 큰 썸네일 + 이름·동 나란히 + 우측 액션 ── */
+/* ── 베이직·찾기결과 공통: 2단 카드 그리드 (PC/태블릿) / 1단(모바일) ── */
 .browse-list--table {
   border-top: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem 1.25rem;
+  align-items: stretch;
+}
+
+.browse-list--table > .expo-basic,
+.browse-list--table > .expo-hcard {
+  margin-bottom: 0;
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.search-results .browse-list--table,
+.list-subsection .browse-list--table,
+.guest-browse-lists .browse-list--table {
+  margin-top: 0.35rem;
 }
 
 .expo-hcard {
-  display: grid;
-  grid-template-columns: 10.5rem minmax(0, 1fr) auto;
-  gap: 1rem 1.15rem;
-  align-items: stretch;
-  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
   margin-bottom: 0;
+  overflow: hidden;
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.85rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
 }
 
 .expo-hcard:hover {
   background: #fff;
   border-color: #cbd5e1;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
 }
 
 .expo-hcard__media-wrap {
   position: relative;
-  width: 10.5rem;
-  height: 7rem; /* 기존 대비 높이 1/3 축소 */
-  border-radius: 0.7rem;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  border-radius: 0;
   overflow: hidden;
-  background: #e8eef7;
+  background: linear-gradient(145deg, #e8eef7 0%, #dbe7f5 100%);
   flex-shrink: 0;
 }
 
@@ -333,12 +350,12 @@
 
 .expo-hcard__badge {
   position: absolute;
-  left: 0.5rem;
-  top: 0.5rem;
+  left: 0.65rem;
+  top: 0.65rem;
   z-index: 1;
-  padding: 0.18rem 0.5rem;
-  border-radius: 999px;
-  background: #fff;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.96);
   color: #334155;
   border: 1px solid #e2e8f0;
   font-size: 0.6875rem;
@@ -351,21 +368,23 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.45rem;
+  flex: 1 1 auto;
+  padding: 0.95rem 1.05rem 0.4rem;
 }
 
 .expo-hcard__top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem 1rem;
+  gap: 0.65rem 0.85rem;
 }
 
 .expo-hcard__title-row {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.35rem 0.65rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
   min-width: 0;
   flex: 1;
 }
@@ -373,10 +392,14 @@
 .expo-hcard__name {
   margin: 0;
   font-size: 1.05rem;
-  font-weight: 800;
-  color: #1d4ed8;
-  line-height: 1.3;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
   letter-spacing: -0.02em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .expo-hcard__loc {
@@ -385,12 +408,12 @@
   font-weight: 500;
   color: #64748b;
   line-height: 1.35;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .expo-hcard__gender {
   display: inline-block;
-  margin-right: 0.35rem;
+  margin-right: 0.3rem;
   font-size: 0.75rem;
   font-weight: 600;
   color: #64748b;
@@ -399,33 +422,41 @@
 .expo-hcard__price {
   margin: 0;
   flex-shrink: 0;
-  font-size: 1.1rem;
-  font-weight: 800;
+  max-width: 42%;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--brand-blue, #2563eb);
-  line-height: 1.2;
+  line-height: 1.25;
   text-align: right;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: keep-all;
 }
 
 .expo-hcard__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 1rem;
-  margin: 0.1rem 0 0;
-  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.28rem 0.75rem;
+  margin: 0.15rem 0 0;
+  padding: 0.55rem 0 0;
   list-style: none;
+  border-top: 1px solid #f1f5f9;
 }
 
 .expo-hcard__meta-item {
   font-size: 0.78rem;
   color: #475569;
+  line-height: 1.35;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .expo-hcard__k {
   margin-right: 0.25rem;
-  font-weight: 700;
-  color: #64748b;
-  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  font-size: 0.7rem;
 }
 
 .expo-hcard__v {
@@ -436,17 +467,17 @@
 .expo-hcard__tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-top: 0.15rem;
+  gap: 0.3rem;
+  margin-top: 0.1rem;
 }
 
 .expo-hcard__tag {
   display: inline-flex;
-  padding: 0.2rem 0.55rem;
-  border-radius: 0.35rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 0.3rem;
   background: #f1f5f9;
   color: #475569;
-  font-size: 0.7rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   line-height: 1.3;
 }
@@ -455,9 +486,11 @@
   margin: 0.05rem 0 0;
   font-size: 0.75rem;
   color: #94a3b8;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .expo-hcard__side {
@@ -465,11 +498,13 @@
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  align-self: end;
   justify-content: flex-end;
   gap: 0.4rem;
   min-width: 0;
-  padding-top: 0.05rem;
+  margin-top: auto;
+  padding: 0.7rem 1.05rem 0.95rem;
+  border-top: 1px solid #f1f5f9;
+  background: #fafbfc;
 }
 
 .expo-hcard__actions {
@@ -481,7 +516,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.15rem;
+  gap: 0.2rem;
 }
 
 .expo-hcard__detail {
@@ -489,7 +524,7 @@
   align-items: center;
   justify-content: center;
   min-height: 2rem;
-  padding: 0.3rem 0.75rem;
+  padding: 0.3rem 0.8rem;
   border: 1px solid #d1d5db;
   border-radius: 0.45rem;
   background: #fff;
@@ -516,49 +551,102 @@
   order: 0;
 }
 
-@media (max-width: 900px) {
-  .expo-hcard {
-    grid-template-columns: 8.5rem minmax(0, 1fr) auto;
-  }
-
-  .expo-hcard__media-wrap {
-    width: 8.5rem;
-    height: 5.65rem;
-  }
+/* 정보량 차이 미세 조정 — 과외/학생 메타 밀도 */
+.expo-basic--tutor .expo-hcard__meta,
+.expo-basic--student .expo-hcard__meta {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-@media (max-width: 720px) {
-  .expo-hcard {
-    grid-template-columns: 6.5rem minmax(0, 1fr);
-    gap: 0.75rem;
-    padding: 0.85rem;
+.expo-basic--study_room .expo-hcard__media-wrap {
+  aspect-ratio: 16 / 9.5;
+}
+
+.expo-basic--tutor .expo-hcard__media-wrap {
+  aspect-ratio: 16 / 10.5;
+}
+
+.expo-basic--student .expo-hcard__media-wrap {
+  aspect-ratio: 16 / 11;
+}
+
+/* 그리드 안 티저 카드도 동일 표면 */
+.browse-list--table > .expo-basic--student-teaser {
+  display: flex;
+  flex-direction: column;
+  padding: 1.05rem 1.1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.browse-list--table > .expo-basic--student-teaser:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.browse-list--table .student-teaser {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100%;
+}
+
+.browse-list--table .student-teaser .item-actions {
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+@media (max-width: 1100px) {
+  .browse-list--table {
+    gap: 1rem 1.05rem;
   }
 
-  .expo-hcard__media-wrap {
-    width: 6.5rem;
-    height: 4.35rem;
+  .expo-hcard__body {
+    padding: 0.85rem 0.95rem 0.35rem;
   }
 
   .expo-hcard__side {
-    grid-column: 1 / -1;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
-    min-width: 0;
+    padding: 0.65rem 0.95rem 0.85rem;
+  }
+}
+
+@media (max-width: 860px) {
+  .browse-list--table {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+
+  .expo-hcard__name {
+    font-size: 1.02rem;
+  }
+
+  .expo-hcard__price {
+    max-width: 48%;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .expo-hcard__meta {
+    grid-template-columns: 1fr;
   }
 
   .expo-hcard__top {
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.3rem;
   }
 
   .expo-hcard__price {
+    max-width: none;
     text-align: left;
-    white-space: normal;
   }
 
-  .expo-hcard__loc {
-    white-space: normal;
+  .expo-hcard__side {
+    justify-content: stretch;
+  }
+
+  .expo-hcard__actions .item-actions {
+    justify-content: flex-start;
   }
 }
