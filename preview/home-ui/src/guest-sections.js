@@ -27,6 +27,8 @@ import { renderGuestMarketingBanner } from './home-marketing-banner.js';
 import {
   getHomeBasicPool,
   isHomeBasicLive,
+  isHomeBasicAttempted,
+  getHomeBasicLiveError,
   refetchHomeBasicKind,
 } from './home-basic-live.js';
 import { toggleRecommendation } from './search-api.js';
@@ -147,7 +149,15 @@ export function renderGuestBrowseLists() {
   const rooms = getHomeBasicPool('study_room');
   const tutors = getHomeBasicPool('tutor');
   const students = getHomeBasicPool('student');
+  const err = getHomeBasicLiveError();
+  const loadingHint =
+    !isHomeBasicAttempted()
+      ? `<p class="mypage-muted" data-home-basic-status>실데이터 목록을 불러오는 중…</p>`
+      : !live
+        ? `<p class="mypage-muted" data-home-basic-status role="alert">목록을 불러오지 못했습니다.${err ? ` (${escHtml(err)})` : ''} 잠시 후 새로고침해 주세요.</p>`
+        : '';
   return `
+    ${loadingHint}
     <section class="guest-browse-lists" aria-label="우동공과 리스트">
       ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel }, rooms, { guest, serverSorted: live })}
       ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel }, tutors, { guest, serverSorted: live })}
@@ -156,6 +166,14 @@ export function renderGuestBrowseLists() {
       ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', locationLabel: studentLabel }, students, { guest, serverSorted: live })}
     </section>
   `;
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 /** @deprecated renderGuestBrowseLists 사용 */

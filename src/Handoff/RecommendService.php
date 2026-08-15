@@ -60,7 +60,16 @@ final class RecommendService
 
         $this->pdo->beginTransaction();
         try {
-            if ($this->isRecommended($userId, $targetType, $targetId)) {
+            $lock = $this->pdo->prepare(
+                'SELECT 1 FROM user_recommendations
+                 WHERE user_id = ? AND target_type = ? AND target_id = ?
+                 LIMIT 1
+                 FOR UPDATE'
+            );
+            $lock->execute([$userId, $targetType, $targetId]);
+            $exists = (bool) $lock->fetchColumn();
+
+            if ($exists) {
                 $del = $this->pdo->prepare(
                     'DELETE FROM user_recommendations
                      WHERE user_id = ? AND target_type = ? AND target_id = ?'
@@ -81,6 +90,14 @@ final class RecommendService
         } catch (Throwable $e) {
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
+            }
+            // UNIQUE 충돌(연타) → 현재 상태로 재조회
+            if ($this->isDuplicateKey($e)) {
+                $recommended = $this->isRecommended($userId, $targetType, $targetId);
+                return [
+                    'recommended' => $recommended,
+                    'recommend_count' => $this->readCount($targetType, $targetId),
+                ];
             }
             throw $e;
         }
@@ -160,5 +177,11 @@ final class RecommendService
         $stmt->execute([$table]);
 
         return (int) $stmt->fetchColumn() > 0;
+    }
+
+    private function isDuplicateKey(Throwable $e): bool
+    {
+        $msg = $e->getMessage();
+        return str_contains($msg, '1062') || str_contains(strtolower($msg), 'duplicate');
     }
 }

@@ -39,9 +39,8 @@ export function bindGuestEvents(root, rerender) {
 
   if (!homeBasicHydrateStarted && !isHomeBasicLive()) {
     homeBasicHydrateStarted = true;
-    hydrateHomeBasicFromSearch().then((ok) => {
-      if (ok) rerender();
-      else homeBasicHydrateStarted = false;
+    hydrateHomeBasicFromSearch().then(() => {
+      rerender();
     });
   }
 }

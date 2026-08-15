@@ -1,14 +1,9 @@
 /**
  * Home Basic — 실검색 API 서버 정렬 풀
- * mock EXPOSURE_* 클라 재정렬이 아니라, 서버 ORDER BY 후 페이지 자르기.
+ * 운영 정책: live 실패 시 EXPOSURE mock 정렬 금지 → 빈 목록 + 안내
  */
 
 import { searchPreviewTab } from './search-api.js';
-import {
-  EXPOSURE_STUDY_ROOMS,
-  EXPOSURE_TUTORS,
-  EXPOSURE_STUDENTS,
-} from './exposure-data.js';
 import { studyRoomBadges, tutorBadges } from './exposure-format.js';
 import { DEFAULT_LIST_SORT, readListSortFromHash } from '../../shared/list-sort.js';
 
@@ -17,12 +12,14 @@ const PAGE_LIMIT = 50;
 /** 홈 Basic이 한 번에 끌어올 최대 페이지(전체 정렬 근사) */
 const MAX_PAGES = 4;
 
-/** @type {{ study_room: object[]|null, tutor: object[]|null, student: object[]|null, live: boolean, sorts: Record<string,string> }} */
+/** @type {{ study_room: object[]|null, tutor: object[]|null, student: object[]|null, live: boolean, attempted: boolean, error: string|null, sorts: Record<string,string> }} */
 const state = {
   study_room: null,
   tutor: null,
   student: null,
   live: false,
+  attempted: false,
+  error: null,
   sorts: {
     study_room: DEFAULT_LIST_SORT,
     tutor: DEFAULT_LIST_SORT,
@@ -110,18 +107,27 @@ async function fetchAllSorted(tab, sort) {
 
 /**
  * @param {'study_room'|'tutor'|'student'} kind
+ * @returns {object[]}
  */
 export function getHomeBasicPool(kind) {
+  // 운영: mock EXPOSURE_* 폴백 금지 — live 전/실패 모두 빈 배열
   if (state.live && Array.isArray(state[kind])) {
     return state[kind];
   }
-  if (kind === 'tutor') return EXPOSURE_TUTORS;
-  if (kind === 'student') return EXPOSURE_STUDENTS;
-  return EXPOSURE_STUDY_ROOMS;
+  return [];
 }
 
 export function isHomeBasicLive() {
   return state.live;
+}
+
+export function isHomeBasicAttempted() {
+  return state.attempted;
+}
+
+/** @returns {string|null} */
+export function getHomeBasicLiveError() {
+  return state.error;
 }
 
 /**
@@ -131,6 +137,8 @@ export async function hydrateHomeBasicFromSearch(sorts = {}) {
   const roomSort = sorts.study_room || readListSortFromHash('study_room', { mode: 'home' });
   const tutorSort = sorts.tutor || readListSortFromHash('tutor', { mode: 'home' });
   const studentSort = sorts.student || readListSortFromHash('student', { mode: 'home' });
+  state.attempted = true;
+  state.error = null;
 
   try {
     const [rooms, tutors, students] = await Promise.all([
@@ -151,6 +159,10 @@ export async function hydrateHomeBasicFromSearch(sorts = {}) {
   } catch (err) {
     console.warn('[home-basic-live]', err);
     state.live = false;
+    state.study_room = [];
+    state.tutor = [];
+    state.student = [];
+    state.error = err instanceof Error ? err.message : '목록을 불러오지 못했습니다.';
     return false;
   }
 }
@@ -169,9 +181,11 @@ export async function refetchHomeBasicKind(kind, sort) {
     else state.student = items.map(mapStudent);
     state.sorts[kind] = sort;
     state.live = true;
+    state.error = null;
     return true;
   } catch (err) {
     console.warn('[home-basic-live] refetch', err);
+    state.error = err instanceof Error ? err.message : '정렬 목록을 불러오지 못했습니다.';
     return false;
   }
 }
@@ -181,4 +195,6 @@ export function resetHomeBasicLive() {
   state.tutor = null;
   state.student = null;
   state.live = false;
+  state.attempted = false;
+  state.error = null;
 }
