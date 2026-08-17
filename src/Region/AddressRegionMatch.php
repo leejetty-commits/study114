@@ -48,6 +48,13 @@ final class AddressRegionMatch
         if ($rows === []) {
             return null;
         }
+        $rows = array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => (string) ($row['dong_name'] ?? '') !== '시 대표'
+        ));
+        if ($rows === []) {
+            return null;
+        }
 
         $sidoKey = self::compactSido($sido);
         $sigunguKey = preg_replace('/\s+/u', '', $sigungu) ?? $sigungu;

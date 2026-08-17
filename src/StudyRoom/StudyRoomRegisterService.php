@@ -21,6 +21,7 @@ use RuntimeException;
 use Study114\Database\Connection;
 use Study114\Region\AddressRegionMatch;
 use Study114\Region\ComplexEnsure;
+use Study114\Region\RegionEnsure;
 use Study114\Region\SidoRegionEnsure;
 
 
@@ -44,7 +45,9 @@ final class StudyRoomRegisterService
             $regions = $pdo->query(
                 'SELECT id, sido_name, sigungu_name, dong_name,
                         CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
-                 FROM regions WHERE is_active = 1 ORDER BY id ASC'
+                 FROM regions
+                 WHERE is_active = 1 AND dong_name <> \'시 대표\'
+                 ORDER BY id ASC'
             )->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Throwable $e) {
             error_log('[study-room masters] regions: ' . $e->getMessage());
@@ -503,13 +506,13 @@ final class StudyRoomRegisterService
             $pdo,
             (string) ($input['address_sido'] ?? ''),
             (string) ($input['address_sigungu'] ?? ''),
-            (string) ($input['address_bname'] ?? '')
+            (string) ($input['address_bname'] ?? $input['address_hname'] ?? '')
         );
-        if ($matched === null) {
-            throw new InvalidArgumentException('사업장주소의 행정동을 찾지 못했습니다. 주소 검색으로 다시 선택해 주세요.');
+        if ($matched !== null) {
+            return $matched;
         }
 
-        return $matched;
+        return (int) RegionEnsure::fromKakao($pdo, $input)['id'];
     }
 
     /** @param array<string, mixed> $input */
@@ -826,10 +829,16 @@ final class StudyRoomRegisterService
                     $pdo,
                     (string) ($slot['address_sido'] ?? $input['address_sido'] ?? ''),
                     (string) ($slot['address_sigungu'] ?? $input['address_sigungu'] ?? ''),
-                    (string) ($slot['address_bname'] ?? $slot['region_label'] ?? '')
+                    (string) ($slot['address_bname'] ?? $slot['address_hname'] ?? $slot['region_label'] ?? '')
                 );
                 if ($matched !== null) {
                     $regionId = $matched;
+                } else {
+                    try {
+                        $regionId = (int) RegionEnsure::fromKakao($pdo, array_merge($input, $slot))['id'];
+                    } catch (InvalidArgumentException $e) {
+                        $regionId = 0;
+                    }
                 }
             }
             if ($slotBasis === 'complex' && $regionId > 0 && ($complexId === null || $complexId <= 0)) {

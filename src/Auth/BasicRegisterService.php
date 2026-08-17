@@ -11,6 +11,7 @@ use RuntimeException;
 use Study114\Database\Connection;
 use Study114\Region\AddressRegionMatch;
 use Study114\Region\ComplexEnsure;
+use Study114\Region\RegionEnsure;
 use Study114\Region\SidoRegionEnsure;
 
 final class BasicRegisterService
@@ -37,7 +38,9 @@ final class BasicRegisterService
         $stmt = $pdo->query(
             'SELECT id, sido_name, sigungu_name, dong_name,
                     CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
-             FROM regions WHERE is_active = 1 ORDER BY id ASC'
+             FROM regions
+             WHERE is_active = 1 AND dong_name <> \'시 대표\'
+             ORDER BY id ASC'
         );
         /** @var list<array{id: int, label: string}> $rows */
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -324,13 +327,13 @@ final class BasicRegisterService
             $pdo,
             (string) ($input['address_sido'] ?? ''),
             (string) ($input['address_sigungu'] ?? ''),
-            (string) ($input['address_bname'] ?? '')
+            (string) ($input['address_bname'] ?? $input['address_hname'] ?? '')
         );
-        if ($matched === null) {
-            throw new InvalidArgumentException('사업장주소의 행정동을 찾지 못했습니다. 주소 검색으로 다시 선택해 주세요.');
+        if ($matched !== null) {
+            return $matched;
         }
 
-        return $matched;
+        return (int) RegionEnsure::fromKakao($pdo, $input)['id'];
     }
 
     /** @param array<string, mixed> $input */
@@ -373,7 +376,11 @@ final class BasicRegisterService
                     ? $slot['region_basis_type']
                     : $fallbackBasis;
                 if ($regionId <= 0) {
-                    continue;
+                    try {
+                        $regionId = (int) RegionEnsure::fromKakao($pdo, $slot)['id'];
+                    } catch (InvalidArgumentException $e) {
+                        continue;
+                    }
                 }
                 if ($slotBasis === 'complex') {
                     $cname = trim((string) ($slot['complex_name'] ?? ''));

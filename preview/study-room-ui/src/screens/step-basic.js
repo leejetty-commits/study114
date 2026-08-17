@@ -1,4 +1,4 @@
-import { registerState, PERSONAL_GENDER_OPTIONS, getRegions, getComplexes } from '../state.js';
+import { registerState, PERSONAL_GENDER_OPTIONS, apiMasters, getRegions, getComplexes } from '../state.js';
 import { applyRoomToState } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import { loadRoom } from '../register-api.js';
@@ -208,7 +208,14 @@ export function bindBasicEvents(root) {
   });
 
   const form = overlay.querySelector('[data-form="basic-all"]');
-  bindStudyRoomBasicFields(form || overlay, { regions: getRegions() });
+  bindStudyRoomBasicFields(form || overlay, {
+    getRegions,
+    onRegion(region) {
+      if (!apiMasters.regions.some((r) => String(r.id) === String(region.id))) {
+        apiMasters.regions.push(region);
+      }
+    },
+  });
 
   document.removeEventListener('keydown', onEditEscape);
   document.addEventListener('keydown', onEditEscape);

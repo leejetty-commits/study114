@@ -54,12 +54,15 @@ export function loadKakaoPostcode() {
  *   jibunAddress: string,
  *   convertedFromJibun: boolean,
  *   buildingExtra: string,
- *   sido: string,
- *   sigungu: string,
- *   bname: string,
- *   buildingName: string,
- *   apartment: boolean,
- * }}
+   *   sido: string,
+   *   sigungu: string,
+   *   sigunguCode: string,
+   *   bcode: string,
+   *   bname: string,
+   *   hname: string,
+   *   buildingName: string,
+   *   apartment: boolean,
+   * }}
  */
 export function normalizePostcodeResult(data) {
   const zonecode = String(data.zonecode || '').trim();
@@ -106,7 +109,10 @@ export function normalizePostcodeResult(data) {
     buildingExtra,
     sido: String(data.sido || '').trim(),
     sigungu: String(data.sigungu || '').trim(),
+    sigunguCode: String(data.sigunguCode || '').trim(),
+    bcode: String(data.bcode || '').trim(),
     bname: String(data.bname || data.hname || '').trim(),
+    hname: String(data.hname || '').trim(),
     buildingName: String(data.buildingName || '').trim(),
     apartment: String(data.apartment || '').toUpperCase() === 'Y',
   };
@@ -125,7 +131,9 @@ export async function openKakaoPostcode(onComplete, options = {}) {
 
   new Postcode({
     oncomplete(data) {
-      onComplete(normalizePostcodeResult(data));
+      Promise.resolve(onComplete(normalizePostcodeResult(data))).catch((err) => {
+        window.alert(err instanceof Error ? err.message : '주소를 적용하지 못했습니다.');
+      });
     },
     width: options.width ?? '100%',
     height: options.height ?? '100%',

@@ -352,7 +352,14 @@ export function bindSignupBasicEvents(root) {
   }
 
   if (role === 'study_room') {
-    bindStudyRoomBasicFields(form || root, { regions: signupState.regions || [] });
+    bindStudyRoomBasicFields(form || root, {
+      regions: signupState.regions || [],
+      onRegion(region) {
+        if (!signupState.regions.some((r) => String(r.id) === String(region.id))) {
+          signupState.regions.push(region);
+        }
+      },
+    });
   }
 
   function syncBasisPanels() {

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
+use InvalidArgumentException;
 use Study114\Auth\BasicRegisterService;
+use Study114\Database\Connection;
+use Study114\Region\RegionEnsure;
 
 header('Content-Type: application/json; charset=utf-8');
 study114_send_cors_headers(false);
@@ -18,11 +21,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $method = (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET');
 $action = (string) ($_GET['action'] ?? '');
-if ($action === '' && $method === 'POST') {
+$input = [];
+if ($method === 'POST') {
     $raw = file_get_contents('php://input');
-    $input = json_decode($raw ?: '{}', true);
-    if (is_array($input)) {
-        $action = (string) ($input['action'] ?? 'list');
+    $decoded = json_decode($raw ?: '{}', true);
+    if (is_array($decoded)) {
+        $input = $decoded;
+        if ($action === '') {
+            $action = (string) ($input['action'] ?? 'list');
+        }
     }
 }
 if ($action === '') {
@@ -45,6 +52,15 @@ try {
         study114_regions_json([
             'ok' => true,
             'cities' => $service->listCities(),
+        ]);
+        exit;
+    }
+
+    if ($action === 'ensure') {
+        $region = RegionEnsure::fromKakao(Connection::get(), $input);
+        study114_regions_json([
+            'ok' => true,
+            'region' => $region,
         ]);
         exit;
     }
@@ -92,6 +108,12 @@ try {
         $payload['warnings'] = $warnings;
     }
     study114_regions_json($payload);
+} catch (InvalidArgumentException $e) {
+    study114_regions_json([
+        'ok' => false,
+        'error' => 'validation',
+        'message' => $e->getMessage(),
+    ]);
 } catch (Throwable $e) {
     error_log('[regions] error: ' . $e->getMessage());
     study114_regions_json([
