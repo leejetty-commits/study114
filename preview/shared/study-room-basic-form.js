@@ -41,13 +41,32 @@ function defaultSlots(saved) {
   return slots.slice(0, 3);
 }
 
+function lastToken(label) {
+  const parts = String(label || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  return parts[parts.length - 1] || '';
+}
+
+/** 행정동 표시: 시군구 + 동 이름. 도로명·번지 없음. */
+function dongOnlyLabel(result, region) {
+  const raw =
+    blank(result?.hname) ||
+    blank(region?.dong_name) ||
+    blank(result?.bname) ||
+    lastToken(region?.label);
+  const dong = raw.replace(/\s*\d+(-\d+)?\s*$/g, '').trim();
+  if (!dong || dong === '시 대표') return '';
+  const sigungu = blank(result?.sigungu) || blank(region?.sigungu_name);
+  if (sigungu && !dong.includes(sigungu)) return `${sigungu} ${dong}`;
+  return dong;
+}
+
 function slotDisplay(slot) {
   const basis = slot.region_basis_type === 'complex' ? 'complex' : 'dong';
   if (basis === 'complex') {
-    const name = blank(slot.complex_name) || blank(slot.complex_label);
-    const addr = blank(slot.complex_address) || blank(slot.address_text);
-    if (name && addr) return `${name} · ${addr}`;
-    return name || addr;
+    return blank(slot.complex_address) || blank(slot.address_text) || blank(slot.complex_name);
   }
   return blank(slot.region_label);
 }
@@ -55,9 +74,9 @@ function slotDisplay(slot) {
 function slotFilled(slot) {
   const basis = slot.region_basis_type === 'complex' ? 'complex' : 'dong';
   if (basis === 'complex') {
-    return Boolean(blank(slot.complex_id) || blank(slot.complex_name));
+    return Boolean(blank(slot.address_text) || blank(slot.complex_address) || blank(slot.complex_name));
   }
-  return Boolean(blank(slot.region_id) || blank(slot.address_bname) || blank(slot.address_sido));
+  return Boolean(blank(slot.region_id) || blank(slot.address_bname) || blank(slot.address_sido) || blank(slot.region_label));
 }
 
 function renderGender(options, selected) {
@@ -141,19 +160,30 @@ function renderPromoSlot(slot, idx) {
           />
           <button type="button" class="btn btn--secondary" data-address-search="slot-${idx}">주소 검색</button>
         </div>
-        <p class="form-hint">주소 검색으로 동을 고릅니다. 도로명·번지는 저장하지 않습니다.</p>
+        <p class="form-hint">행정동만 저장합니다. 도로명·번지는 넣지 않습니다.</p>
       </div>
       <div data-complex-search ${basis === 'dong' ? 'hidden' : ''}>
-        <div class="form-address__zip-row">
+        <div class="form-address">
+          <div class="form-address__zip-row">
+            <input
+              class="form-input"
+              type="text"
+              data-field="address_zip"
+              value="${esc(slot.address_zip || '')}"
+              placeholder="우편번호"
+              readonly
+            />
+            <button type="button" class="btn btn--secondary" data-address-search="slot-${idx}">주소 검색</button>
+          </div>
           <input
             class="form-input"
             type="text"
             data-field="address_display"
             value="${esc(basis === 'complex' ? slotDisplay(slot) : '')}"
-            placeholder="${req ? '주소 검색으로 아파트단지 선택' : '주소 검색 (선택)'}"
+            placeholder="${req ? '도로명 주소 (검색으로 입력)' : '도로명 주소 (선택)'}"
             readonly
           />
-          <button type="button" class="btn btn--secondary" data-address-search="slot-${idx}">주소 검색</button>
+          <p class="form-hint">사업장주소와 같이 검색합니다. 상세주소(동·호수)는 받지 않습니다.</p>
         </div>
       </div>
       <input type="hidden" data-field="region_id" value="${esc(slot.region_id || '')}" />
@@ -342,9 +372,10 @@ function applySlotResult(slotEl, result, region, basis) {
   const complexAddress = slotEl.querySelector('[data-field="complex_address"]');
   const regionLabel = slotEl.querySelector('[data-field="region_label"]');
   const addressText = slotEl.querySelector('[data-field="address_text"]');
+  const zip = slotEl.querySelector('[data-field="address_zip"]');
   const display = slotEl.querySelector('[data-field="address_display"]');
   const resolved = slotEl.querySelector('[data-slot-resolved]');
-  const dongText = region?.label || result.hname || result.bname || '';
+  const dongText = dongOnlyLabel(result, region);
 
   if (basisEl) basisEl.value = basis;
   if (regionId) regionId.value = region ? String(region.id) : '';
@@ -352,19 +383,20 @@ function applySlotResult(slotEl, result, region, basis) {
   setSlotMeta(slotEl, result);
 
   if (basis === 'complex') {
-    if (complexName) complexName.value = result.buildingName;
+    if (zip) zip.value = result.zonecode || '';
+    if (complexName) complexName.value = result.buildingName || '';
     if (complexAddress) complexAddress.value = road;
     if (complexId) complexId.value = '';
     if (addressText) addressText.value = road;
-    const text = `${result.buildingName}${road ? ` · ${road}` : ''}`;
-    if (display) display.value = text;
-    if (resolved) resolved.textContent = `아파트단지 · ${text}`;
+    if (display) display.value = road;
+    if (resolved) resolved.textContent = road ? `아파트단지 · ${road}` : '';
   } else {
+    if (zip) zip.value = '';
     if (complexName) complexName.value = '';
     if (complexAddress) complexAddress.value = '';
     if (complexId) complexId.value = '';
     if (addressText) addressText.value = '';
-    if (display) display.value = dongText;
+    if (display) display.value = '';
     const query = slotEl.querySelector('[data-field="dong_query"]');
     if (query) query.value = dongText;
     if (resolved) resolved.textContent = dongText ? `행정동 · ${dongText}` : '';
@@ -428,16 +460,13 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
       const slotEl = form.querySelector(`[data-region-slot="${m[1]}"]`);
       if (!slotEl) return;
       const basis = slotBasisOf(slotEl);
-      if (basis === 'complex' && !result.buildingName) {
-        throw new Error('아파트 단지명이 없습니다. 단지 주소를 검색하거나 행정동 기준으로 바꿔 주세요.');
-      }
-      let region = null;
+      applySlotResult(slotEl, result, null, basis);
       try {
-        region = await resolveRegion(result);
+        const region = await resolveRegion(result);
+        applySlotResult(slotEl, result, region, basis);
       } catch {
-        /* 저장 API가 동을 추가한다 */
+        /* 칸은 이미 채움. 동 코드는 저장 API가 추가한다. */
       }
-      applySlotResult(slotEl, result, region, basis);
     });
   }
 
@@ -490,6 +519,7 @@ export function collectStudyRoomBasicFields(root) {
       complex_address: slotEl.querySelector('[data-field="complex_address"]')?.value || '',
       region_label: slotEl.querySelector('[data-field="region_label"]')?.value || '',
       address_text: slotEl.querySelector('[data-field="address_text"]')?.value || '',
+      address_zip: slotEl.querySelector('[data-field="address_zip"]')?.value || '',
       address_sido: slotEl.querySelector('[data-field="address_sido"]')?.value || '',
       address_sigungu: slotEl.querySelector('[data-field="address_sigungu"]')?.value || '',
       address_bname: slotEl.querySelector('[data-field="address_bname"]')?.value || '',
@@ -554,7 +584,7 @@ export function validateStudyRoomBasicFields(data) {
     } else if (!blank(slot.region_id)) {
       return `홍보지역 ${i + 1}의 행정동을 찾지 못했습니다. 주소 검색으로 다시 선택해 주세요.`;
     }
-    if (slot.region_basis_type === 'complex' && !blank(slot.complex_id) && !blank(slot.complex_name)) {
+    if (slot.region_basis_type === 'complex' && !blank(slot.complex_address) && !blank(slot.address_text) && !blank(slot.complex_name)) {
       return `홍보지역 ${i + 1}의 아파트단지를 주소 검색으로 선택해 주세요.`;
     }
   }

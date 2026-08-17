@@ -3,6 +3,8 @@
  * 클라이언트는 형식·용량·최소 크기 검증과 초점(크롭) 1회 조정만 담당한다.
  */
 
+import { bindDraggableDialog } from './draggable-dialog.js';
+
 export const PROMO_IMAGE_SPEC = {
   accept: 'image/jpeg,image/png,image/webp',
   acceptExt: ['jpg', 'jpeg', 'png', 'webp'],
@@ -104,6 +106,10 @@ export function openPromoCropDialog(host, opts) {
       </div>
     `;
     host.appendChild(overlay);
+    bindDraggableDialog(
+      overlay.querySelector('.promo-crop-dialog'),
+      overlay.querySelector('.promo-crop-dialog__title'),
+    );
 
     const prime = overlay.querySelector('[data-crop-prime]');
     const basic = overlay.querySelector('[data-crop-basic]');

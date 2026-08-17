@@ -129,13 +129,27 @@ export async function openKakaoPostcode(onComplete, options = {}) {
     throw new Error('우편번호 서비스를 사용할 수 없습니다.');
   }
 
+  const width = Number(options.width) > 0 ? Number(options.width) : 480;
+  const height = Number(options.height) > 0 ? Number(options.height) : 620;
+  const left = Math.round(
+    (window.screenX || 0) + Math.max(0, ((window.outerWidth || window.innerWidth) - width) / 2),
+  );
+  const top = Math.round(
+    (window.screenY || 0) + Math.max(0, ((window.outerHeight || window.innerHeight) - height) / 2),
+  );
+
   new Postcode({
     oncomplete(data) {
       Promise.resolve(onComplete(normalizePostcodeResult(data))).catch((err) => {
         window.alert(err instanceof Error ? err.message : '주소를 적용하지 못했습니다.');
       });
     },
-    width: options.width ?? '100%',
-    height: options.height ?? '100%',
-  }).open({ popupTitle: '주소 검색' });
+    width,
+    height,
+  }).open({
+    popupTitle: '주소 검색',
+    popupKey: 'study114-postcode',
+    left,
+    top,
+  });
 }

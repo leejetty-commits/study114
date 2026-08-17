@@ -384,8 +384,11 @@ final class BasicRegisterService
                 }
                 if ($slotBasis === 'complex') {
                     $cname = trim((string) ($slot['complex_name'] ?? ''));
+                    $caddr = trim((string) ($slot['complex_address'] ?? $slot['address_text'] ?? ''));
+                    if ($cname === '') {
+                        $cname = $caddr;
+                    }
                     if (($complexId === null || $complexId <= 0) && $cname !== '') {
-                        $caddr = trim((string) ($slot['complex_address'] ?? $slot['address_text'] ?? ''));
                         $complexId = ComplexEnsure::ensure($pdo, $regionId, $cname, $caddr !== '' ? $caddr : null);
                     }
                     if ($complexId === null || $complexId <= 0) {

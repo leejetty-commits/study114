@@ -32,6 +32,7 @@ final class RegionEnsure
         ) ?? '';
 
         $dongName = $hname !== '' ? $hname : $bname;
+        $dongName = trim((string) (preg_replace('/\s*\d+(-\d+)?$/u', '', $dongName) ?? $dongName));
         if ($sido === '' || $dongName === '') {
             throw new InvalidArgumentException('주소에서 시·동을 읽지 못했습니다. 다른 주소를 검색해 주세요.');
         }

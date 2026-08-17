@@ -121,6 +121,9 @@ body.register-edit-open {
   border-bottom: 0;
   background: linear-gradient(135deg, var(--brand-orange, #f57c00), var(--brand-orange-dark, #e65100));
   border-radius: 1.1rem 1.1rem 0 0;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
 }
 
 .register-edit-dialog__title {
@@ -141,6 +144,7 @@ body.register-edit-open {
   line-height: 1;
   color: #fff;
   cursor: pointer;
+  touch-action: auto;
 }
 
 .register-edit-dialog__close:hover {
@@ -421,6 +425,9 @@ form[data-form="facility"] > .register-guide {
 .promo-crop-dialog__title {
   margin: 0 0 0.35rem;
   font-size: 1.05rem;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
 }
 
 .promo-crop-dialog__hint {

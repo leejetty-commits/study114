@@ -843,8 +843,11 @@ final class StudyRoomRegisterService
             }
             if ($slotBasis === 'complex' && $regionId > 0 && ($complexId === null || $complexId <= 0)) {
                 $cname = trim((string) ($slot['complex_name'] ?? ''));
+                $caddr = trim((string) ($slot['complex_address'] ?? $slot['address_text'] ?? ''));
+                if ($cname === '') {
+                    $cname = $caddr;
+                }
                 if ($cname !== '') {
-                    $caddr = trim((string) ($slot['complex_address'] ?? $slot['address_text'] ?? ''));
                     $complexId = ComplexEnsure::ensure($pdo, $regionId, $cname, $caddr !== '' ? $caddr : null);
                 }
             }

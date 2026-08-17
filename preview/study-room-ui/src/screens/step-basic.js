@@ -18,6 +18,7 @@ import {
   validateStudyRoomBasicFields,
   applyStudyRoomBasicToState,
 } from '../../../shared/study-room-basic-form.js';
+import { bindDraggableDialog } from '../../../shared/draggable-dialog.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -208,6 +209,10 @@ export function bindBasicEvents(root) {
   });
 
   const form = overlay.querySelector('[data-form="basic-all"]');
+  bindDraggableDialog(
+    overlay.querySelector('.register-edit-dialog'),
+    overlay.querySelector('.register-edit-dialog__head'),
+  );
   bindStudyRoomBasicFields(form || overlay, {
     getRegions,
     onRegion(region) {
