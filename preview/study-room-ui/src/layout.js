@@ -162,7 +162,7 @@ export function renderTempNotice(message) {
 }
 
 export function renderSectionTitle(text) {
-  return `<h2 class="register-section-title">${text}</h2>`;
+  return `<h2 class="register-section-title register-section-title--bar">${text}</h2>`;
 }
 
 export function mypageRegistrationsUrl() {
@@ -223,7 +223,7 @@ export function renderNavButtons(prevPath, nextLabel = '다음') {
 }
 
 /**
- * 상세등록 단계 — 저장 / 이전 / 건너뜀 / 다음
+ * 상세정보 단계 — 저장 / 이전 / 건너뜀 / 다음
  * @param {{ prevPath: string, nextLabel: string, nextEnabled?: boolean }} opts
  */
 export function renderDetailStepNav(opts) {
@@ -243,7 +243,7 @@ export function renderDetailStepNav(opts) {
   `;
 }
 
-/** 상세등록 건너뜀 — DB에 저장된 값 요약 화면으로 */
+/** 상세정보 건너뜀 — DB에 저장된 값 요약 화면으로 */
 export function skipToSummary() {
   registerState.completeNeedsHydrate = true;
   navigate('/register/complete');

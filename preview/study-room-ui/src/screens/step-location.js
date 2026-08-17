@@ -86,11 +86,11 @@ export function renderLocation() {
     s.region_basis_type = 'dong';
   }
 
-  // 편집 모드가 아니면 기본등록 현황으로 (두 단계를 한 현황으로 합침)
+  // 편집 모드가 아니면 기본정보 현황으로 (두 단계를 한 현황으로 합침)
   if (!isRegisterEditMode()) {
     return `
       <div class="site-gate-wrap">
-        <p class="auth-subheading">기본등록 현황으로 이동합니다…</p>
+        <p class="auth-subheading">기본정보 현황으로 이동합니다…</p>
       </div>`;
   }
 

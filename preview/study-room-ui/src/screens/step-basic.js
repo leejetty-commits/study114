@@ -67,7 +67,7 @@ function isBasicEditRequested() {
   return edit === '1' || edit === 'basic';
 }
 
-/** 기본등록 현황 — 기본정보+위치를 한 페이지에 펼침 */
+/** 기본정보 현황 — 기본정보+위치를 한 페이지에 펼침 */
 function renderBasicOverview() {
   const s = registerState;
   const exposures = exposureLines(s);
@@ -91,7 +91,7 @@ function renderBasicOverview() {
   const content = `
     <div class="register-overview">
       <p class="register-overview__lead">
-        기본등록에 저장된 내용입니다. 수정이 필요할 때만 해당 항목을 고치고, 바로 상세등록으로 이어가세요.
+        기본정보에 저장된 내용입니다. 수정이 필요할 때만 해당 항목을 고치고, 바로 상세정보로 이어가세요.
       </p>
       <dl class="register-overview__dl">
         ${rows
@@ -115,7 +115,7 @@ function renderBasicOverview() {
         <a class="btn btn--secondary" href="#/register/basic?edit=basic" data-nav="/register/basic?edit=basic">기본정보 수정</a>
         <a class="btn btn--secondary" href="#/register/location?edit=location" data-nav="/register/location?edit=location">위치·노출 수정</a>
         <button type="button" class="btn btn--primary" data-action="to-detail">
-          ${filled ? '상세등록 이어하기' : '상세등록으로 (빈칸은 나중에)'}
+          ${filled ? '상세정보 이어하기' : '상세정보로 (빈칸은 나중에)'}
         </button>
       </div>
       <a class="register-mypage-link" href="${mypageRegistrationsUrl()}">마이페이지 · 내 등록에서 관리</a>
@@ -124,8 +124,8 @@ function renderBasicOverview() {
 
   return renderRegisterShell(content, {
     stepKey: 'basic',
-    title: '공부방 기본등록 현황',
-    subtitle: '이름·과목·위치를 한눈에 보고, 상세등록으로 바로 이동합니다.',
+    title: '공부방 기본정보 현황',
+    subtitle: '이름·과목·위치를 한눈에 보고, 상세정보로 바로 이동합니다.',
   });
 }
 

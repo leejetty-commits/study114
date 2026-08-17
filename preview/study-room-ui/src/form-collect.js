@@ -1,6 +1,110 @@
 /** DOM → registerState / API payload 수집 */
 
-import { emptyRoomState } from './state.js';
+import { emptyRoomState, TEACHING_STYLE_OPTIONS, getSubjectOptions } from './state.js';
+
+const LESSON_EXTRA_MARK = 'lesson_extra';
+
+/**
+ * @param {string} text
+ * @returns {number}
+ */
+export function parseFeeAmount(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return 0;
+  const man = raw.match(/(\d+(?:\.\d+)?)\s*만/);
+  if (man) return Math.round(Number(man[1]) * 10000);
+  const digits = raw.replace(/[^\d]/g, '');
+  return digits ? Number(digits) : 0;
+}
+
+/**
+ * @param {Record<string, unknown>} extra
+ * @param {unknown[]} priceItems
+ */
+function composePriceDescription(extra, priceItems) {
+  const lines = (Array.isArray(priceItems) ? priceItems : [])
+    .map((row) => {
+      const item = String(row?.item || '').trim();
+      const fee = String(row?.fee || '').trim();
+      const note = String(row?.note || '').trim();
+      if (!item && !fee && !note) return '';
+      return [item, fee, note].filter(Boolean).join(' · ');
+    })
+    .filter(Boolean);
+  return lines.join('\n');
+}
+
+export { composePriceDescription };
+
+/**
+ * @param {Record<string, unknown>} state
+ * @returns {Record<string, unknown>}
+ */
+export function packLessonExtra(state) {
+  return {
+    _s114: LESSON_EXTRA_MARK,
+    attendance_days: Array.isArray(state.attendance_days) ? state.attendance_days : [],
+    lessons_per_week: String(state.lessons_per_week || ''),
+    minutes_per_lesson: String(state.minutes_per_lesson || ''),
+    lesson_note: String(state.lesson_note || ''),
+    teaching_style_ids: Array.isArray(state.teaching_style_ids) ? state.teaching_style_ids : [],
+    teaching_style_note: String(state.teaching_style_note || ''),
+    price_items: Array.isArray(state.price_items) ? state.price_items : [],
+  };
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {Record<string, unknown>|null}
+ */
+export function parseLessonExtra(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object' && raw !== null && raw._s114 === LESSON_EXTRA_MARK) {
+    return /** @type {Record<string, unknown>} */ (raw);
+  }
+  if (typeof raw !== 'string') return null;
+  const text = raw.trim();
+  if (!text.startsWith('{')) return null;
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && parsed._s114 === LESSON_EXTRA_MARK) return parsed;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+/**
+ * @param {Record<string, unknown>} target
+ * @param {Record<string, unknown>|null|undefined} extra
+ */
+export function applyLessonExtra(target, extra) {
+  if (!extra) return;
+  target.attendance_days = Array.isArray(extra.attendance_days)
+    ? extra.attendance_days.map(String)
+    : [];
+  target.lessons_per_week = String(extra.lessons_per_week || '');
+  target.minutes_per_lesson = String(extra.minutes_per_lesson || '');
+  target.lesson_note = String(extra.lesson_note || '');
+  target.teaching_style_ids = Array.isArray(extra.teaching_style_ids)
+    ? extra.teaching_style_ids.map(String)
+    : [];
+  target.teaching_style_note = String(extra.teaching_style_note || '');
+  target.price_items = Array.isArray(extra.price_items)
+    ? extra.price_items.map((row) => ({
+        item: String(row?.item || ''),
+        fee: String(row?.fee || ''),
+        note: String(row?.note || ''),
+      }))
+    : [];
+}
+
+function teachingStyleLabel(ids) {
+  const set = new Set((ids || []).map(String));
+  return TEACHING_STYLE_OPTIONS.filter((o) => set.has(o.id))
+    .map((o) => o.label)
+    .join(', ');
+}
 
 /**
  * @param {HTMLFormElement|null|undefined} form
@@ -71,19 +175,45 @@ export function syncLessonFromForm(form, state) {
   state.capacity_per_time = String(fd.get('capacity_per_time') ?? state.capacity_per_time);
   state.recruitment_count = String(fd.get('recruitment_count') ?? '');
   state.main_subject_note = String(fd.get('main_subject_note') ?? '');
-  state.teaching_style = String(fd.get('teaching_style') ?? '');
-  state.weekend_available = fd.has('weekend_available');
+  state.teaching_style_ids = fd.getAll('teaching_style_ids').map(String);
+  state.teaching_style_note = String(fd.get('teaching_style_note') ?? '');
+  state.teaching_style = [teachingStyleLabel(state.teaching_style_ids), state.teaching_style_note]
+    .filter((s) => String(s || '').trim())
+    .join(' / ');
   state.one_on_one_available = fd.has('one_on_one_available');
-  state.price_amount = String(fd.get('price_amount') ?? '');
-  state.price_description = String(fd.get('price_description') ?? '');
+  state.attendance_days = fd.getAll('attendance_days').map(String);
+  state.weekend_available =
+    fd.has('weekend_available') ||
+    state.attendance_days.includes('sat') ||
+    state.attendance_days.includes('sun');
+  state.lessons_per_week = String(fd.get('lessons_per_week') ?? '');
+  state.minutes_per_lesson = String(fd.get('minutes_per_lesson') ?? '');
+  state.lesson_note = String(fd.get('lesson_note') ?? '');
+
+  state.price_items = [];
+  form.querySelectorAll('[data-price-idx]').forEach((row) => {
+    state.price_items.push({
+      item: row.querySelector('[data-field="price_item"]')?.value ?? '',
+      fee: row.querySelector('[data-field="price_fee"]')?.value ?? '',
+      note: row.querySelector('[data-field="price_note"]')?.value ?? '',
+    });
+  });
+  const firstFee = (state.price_items || []).map((p) => parseFeeAmount(p.fee)).find((n) => n > 0) || 0;
+  state.price_amount = firstFee ? String(firstFee) : '';
+  state.price_description = composePriceDescription({}, state.price_items);
 
   state.subjects = [];
   form.querySelectorAll('[data-subject-idx]').forEach((row) => {
+    const selected = String(row.querySelector('[data-field="subject_select"]')?.value ?? '').trim();
+    const custom = String(row.querySelector('[data-field="subject_custom"]')?.value ?? '').trim();
+    const subjectName = custom || selected;
+    const master = getSubjectOptions().find((o) => o.value === subjectName);
     state.subjects.push({
-      school_level: row.querySelector('[data-field="school_level"]')?.value ?? 'middle',
+      school_level: row.querySelector('[data-field="school_level"]')?.value ?? '',
       grade_band: row.querySelector('[data-field="grade_band"]')?.value ?? '',
-      subject_master_id: row.querySelector('[data-field="subject_master_id"]')?.value ?? '',
-      subject_name: row.querySelector('[data-field="subject_name"]')?.value ?? '',
+      subject_master_id: master?.id ? String(master.id) : '',
+      subject_name: subjectName,
+      subject_custom: custom,
       is_main: row.querySelector('[data-field="is_main"]')?.checked ?? false,
     });
   });
@@ -155,10 +285,18 @@ export function payloadForStep(step, state) {
         recruitment_count: state.recruitment_count,
         main_subject_note: state.main_subject_note,
         teaching_style: state.teaching_style,
+        teaching_style_ids: state.teaching_style_ids,
+        teaching_style_note: state.teaching_style_note,
         weekend_available: state.weekend_available,
         one_on_one_available: state.one_on_one_available,
+        attendance_days: state.attendance_days,
+        lessons_per_week: state.lessons_per_week,
+        minutes_per_lesson: state.minutes_per_lesson,
+        lesson_note: state.lesson_note,
         price_amount: state.price_amount,
         price_description: state.price_description,
+        price_items: state.price_items,
+        lesson_extra: packLessonExtra(state),
         subjects: (state.subjects || []).filter((s) => String(s.subject_name || '').trim()),
       };
     case 'career':
@@ -209,5 +347,54 @@ export function applyRoomToState(target, room) {
   Object.assign(target, emptyRoomState(), room, ui);
   if (room.study_room_id) {
     target.study_room_id = room.study_room_id;
+  }
+  const extra =
+    parseLessonExtra(room.lesson_extra) ||
+    parseLessonExtra(room.price_description) ||
+    (room.lesson_extra && typeof room.lesson_extra === 'object' ? room.lesson_extra : null);
+  applyLessonExtra(target, extra);
+  if (Array.isArray(room.price_items) && room.price_items.length) {
+    target.price_items = room.price_items.map((row) => ({
+      item: String(row?.item || ''),
+      fee: String(row?.fee || ''),
+      note: String(row?.note || ''),
+    }));
+  }
+  if (extra || (Array.isArray(target.price_items) && target.price_items.length)) {
+    const composed = composePriceDescription(extra || {}, target.price_items);
+    if (composed) target.price_description = composed;
+  }
+  if (Array.isArray(room.attendance_days)) {
+    target.attendance_days = room.attendance_days.map(String);
+  }
+  if (Array.isArray(room.teaching_style_ids)) {
+    const alias = { solution_focus: 'problem_solving', passion: 'passion', from_basics: 'from_basics' };
+    target.teaching_style_ids = room.teaching_style_ids
+      .map((id) => String(alias[id] || id))
+      .filter((id) => TEACHING_STYLE_OPTIONS.some((o) => o.id === id));
+  }
+  if (room.teaching_style_note != null) {
+    target.teaching_style_note = String(room.teaching_style_note || '');
+  }
+  if (!target.teaching_style_ids.length && String(target.teaching_style || '').trim()) {
+    const bits = String(target.teaching_style)
+      .split(/[,/]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const ids = [];
+    const leftover = [];
+    const labelAlias = { 풀이중심: 'problem_solving', 열정: '', 기초부터: '' };
+    bits.forEach((bit) => {
+      const mapped = labelAlias[bit];
+      const hit =
+        TEACHING_STYLE_OPTIONS.find((o) => o.label === bit || o.id === bit) ||
+        (mapped ? TEACHING_STYLE_OPTIONS.find((o) => o.id === mapped) : null);
+      if (hit) ids.push(hit.id);
+      else leftover.push(bit);
+    });
+    target.teaching_style_ids = ids;
+    if (!target.teaching_style_note && leftover.length) {
+      target.teaching_style_note = leftover.join(', ');
+    }
   }
 }

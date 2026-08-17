@@ -68,3 +68,88 @@
     gap: 0.25rem;
   }
 }
+
+.register-section-title.register-section-title--bar {
+  background: var(--brand-orange, #f57c00);
+  color: #fff;
+  border-bottom: none;
+  border-radius: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 1.25rem 0 0.85rem;
+  padding: 0.55rem 0.9rem;
+}
+
+form[data-form]:not(.register-form-narrow) > .register-section-title--bar {
+  margin-left: calc(-1 * clamp(1.25rem, 3vw, 2rem));
+  margin-right: calc(-1 * clamp(1.25rem, 3vw, 2rem));
+  padding-left: clamp(1.25rem, 3vw, 2rem);
+  padding-right: clamp(1.25rem, 3vw, 2rem);
+}
+
+form[data-form]:not(.register-form-narrow) > .register-section-title--bar:first-of-type {
+  margin-top: 0.75rem;
+}
+
+.register-pane .register-section-title--bar {
+  margin: 0 0 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.register-schedule-price {
+  margin-top: 1.25rem;
+  align-items: stretch;
+}
+
+.register-pane {
+  min-width: 0;
+}
+
+.register-weekday-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+}
+
+.register-inline-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.register-inline-fields__num {
+  width: 4.5rem;
+  max-width: 4.5rem;
+}
+
+.register-subject-row {
+  display: grid;
+  grid-template-columns: 7rem 7rem minmax(8rem, 1fr) minmax(8rem, 1fr) auto auto;
+  gap: var(--space-2);
+  align-items: end;
+}
+
+.register-price-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1.1fr) auto;
+  gap: var(--space-2);
+  align-items: end;
+  margin-bottom: var(--space-3);
+  padding: 0.75rem;
+  border-radius: 0.65rem;
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+}
+
+@media (max-width: 900px) {
+  .register-subject-row,
+  .register-price-row {
+    grid-template-columns: 1fr;
+  }
+}
+

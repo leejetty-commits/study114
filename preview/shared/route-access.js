@@ -107,7 +107,7 @@ export function guardPlansPath(role, path) {
  */
 export function guardRegisterAccess(role, kind) {
   const menuOk = kind === 'room' ? canAccessRegisterRoom(role) : canAccessRegisterTutor(role);
-  const label = kind === 'room' ? '공부방상세등록' : '과외쌤상세등록';
+  const label = kind === 'room' ? '공부방상세정보' : '과외쌤상세등록';
 
   if (!menuOk) {
     return {

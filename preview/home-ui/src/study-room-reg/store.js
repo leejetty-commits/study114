@@ -60,7 +60,7 @@ export const PUBLISH_CHECKLIST_DEFS = [
   { id: 'region', label: '활동 지역', section: 'basic' },
   { id: 'subject', label: '대상·과목', section: 'basic' },
   { id: 'place', label: '수업 방식', section: 'basic' },
-  { id: 'detail', label: '상세등록 완료', section: 'detail' },
+  { id: 'detail', label: '상세정보 완료', section: 'detail' },
   { id: 'image', label: '대표 이미지 1장 이상', section: 'detail' },
   { id: 'intro', label: '소개문', section: 'detail' },
   { id: 'contact', label: '문의·쪽지 방식', section: 'detail' },
@@ -105,91 +105,13 @@ function withDefaults(raw, id) {
   };
 }
 
-const SEED = [
-  withDefaults(
-    {
-      id: 1,
-      study_room_name: '우동공과 대치점',
-      profile_status: 'published',
-      inquiry_status: 'open',
-      detail_completion_status: 'expanded_in_progress',
-      region_label: '서울 강남구 대치동',
-      main_subject_note: '수학·영어',
-      grade_band: '중1~2',
-      price_amount: 420000,
-      intro_short: '소규모 밀착 · 학부모 리포트',
-      intro_long: '대치동 거주 원장 직강 · 개별 피드백',
-      feature_1: '개별 피드백',
-      career_years: 12,
-      education_office_registered: true,
-      weekend_available: true,
-      one_on_one_available: true,
-      lesson_place_type: 'academy',
-      capacity_per_time: '4~6명',
-      facility_summary: '냉난방·CCTV',
-      has_representative_image: true,
-      has_subject_targets: true,
-      has_regions: true,
-      lesson_place_set: true,
-      contact_method_set: true,
-      compare_eligible: true,
-      prime_eligible: false,
-      published_at: new Date().toISOString(),
-    },
-    1,
-  ),
-  withDefaults(
-    {
-      id: 2,
-      study_room_name: '임시 공부방',
-      profile_status: 'draft',
-      inquiry_status: 'open',
-      detail_completion_status: 'basic_only',
-      region_label: '서울 강남구 대치동',
-      main_subject_note: '종합',
-      price_amount: 320000,
-      intro_short: '',
-      has_representative_image: false,
-      has_subject_targets: true,
-      has_regions: true,
-      lesson_place_set: false,
-      contact_method_set: false,
-      compare_eligible: false,
-    },
-    2,
-  ),
-  withDefaults(
-    {
-      id: 3,
-      study_room_name: '숨김 테스트 공부방',
-      profile_status: 'hidden',
-      inquiry_status: 'paused',
-      detail_completion_status: 'expanded_complete',
-      region_label: '서울 강남구 도곡동',
-      main_subject_note: '영어',
-      grade_band: '초4~6',
-      price_amount: 380000,
-      intro_short: '창의 융합 중심',
-      intro_long: '독서 코칭 · 실험 수업',
-      has_representative_image: true,
-      has_subject_targets: true,
-      has_regions: true,
-      lesson_place_set: true,
-      contact_method_set: true,
-      compare_eligible: true,
-      prime_eligible: true,
-    },
-    3,
-  ),
-];
-
 function loadAll() {
   try {
     const raw = sessionStorage.getItem(KEY);
-    if (!raw) return SEED.map((r) => ({ ...r }));
+    if (!raw) return [];
     return JSON.parse(raw).rooms || [];
   } catch {
-    return SEED.map((r) => ({ ...r }));
+    return [];
   }
 }
 
@@ -203,7 +125,6 @@ function nextId(rooms) {
 
 export function ensureStudyRoomStore() {
   if (isRegistrationsApiMode()) return;
-  if (!sessionStorage.getItem(KEY)) saveAll(SEED.map((r) => ({ ...r })));
 }
 
 /** @returns {StudyRoomRecord[]} */
@@ -229,7 +150,7 @@ export function getPublishReadiness(room) {
   /** @type {string[]} */
   const qualityHints = [];
   if (room.detail_completion_status !== 'expanded_complete') {
-    qualityHints.push('상세등록 완료 시 대표/추천 노출 후보');
+    qualityHints.push('상세정보 완료 시 대표/추천 노출 후보');
   }
   if (!room.intro_long?.trim()) qualityHints.push('상세 소개 보강 권장');
   if (!room.slogan?.trim()) qualityHints.push('슬로건 추가 권장');

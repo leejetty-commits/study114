@@ -33,7 +33,7 @@ export function renderComplete() {
     <div class="register-complete">
       <div class="register-complete__icon" aria-hidden="true">✓</div>
       <h2 class="register-complete__title">${skipped ? '지금까지 입력한 내용입니다' : '공부방 등록이 완료되었습니다'}</h2>
-      <p class="register-complete__thanks">${skipped ? '상세등록은 마이페이지에서 이어서 채울 수 있습니다.' : '수고하셨습니다!'}</p>
+      <p class="register-complete__thanks">${skipped ? '상세정보는 마이페이지에서 이어서 채울 수 있습니다.' : '수고하셨습니다!'}</p>
       <p class="register-complete__lead">아래는 저장된 전체 항목입니다. 비어 있는 칸은 아직 입력하지 않은 값입니다.</p>
     </div>
     ${renderGuideNotice('내용을 다시 손보고 싶으면 마이페이지 · 내 등록에서 수정할 수 있습니다.')}

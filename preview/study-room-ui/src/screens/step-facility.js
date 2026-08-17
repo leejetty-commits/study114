@@ -29,7 +29,7 @@ function renderFacilityChecks() {
 export function renderFacility() {
   const s = registerState;
   const content = `
-    ${renderGuideNotice('경력·시설·연락을 저장한 뒤에 등록을 마칩니다. 지금은 건너뛰면 지금까지 저장된 값만 요약으로 보여 줍니다.')}
+      ${renderGuideNotice('경력·시설·연락을 저장한 뒤에 등록을 마칩니다. 지금은 건너뛰면 지금까지 저장된 값만 요약으로 보여 줍니다. 마이페이지에서 이어서 해도 됩니다.')}
     <form data-form="facility" class="register-form-narrow">
       ${renderSectionTitle('경력 · 특징')}
       <div class="register-grid-2 register-grid-2--tight">
@@ -139,17 +139,14 @@ export function renderFacility() {
       ${renderDetailStepNav({
         prevPath: '/register/lesson',
         nextLabel: '등록 완료',
-        nextEnabled: Boolean(
-          registerState.detailFacilitySaved ||
-            registerState.detail_completion_status === 'expanded_complete',
-        ),
+        nextEnabled: true,
       })}
     </form>
   `;
   return renderRegisterShell(content, {
     stepKey: 'facility',
     title: '경력 · 시설',
-    subtitle: '상세등록 2/2 · 경력과 시설·연락을 함께 마무리합니다.',
+    subtitle: '상세정보 2/2 · 경력과 시설·연락을 함께 마무리합니다.',
   });
 }
 
@@ -184,10 +181,6 @@ export function bindFacilityEvents(root) {
   });
 
   nextBtn?.addEventListener('click', () => {
-    if (nextBtn.disabled) {
-      alert('먼저 저장해 주세요. 저장 후에 등록을 마칠 수 있습니다.');
-      return;
-    }
     withSaving(nextBtn, async () => {
       await persistFacility();
       registerState.completeNeedsHydrate = true;

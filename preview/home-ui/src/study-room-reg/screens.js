@@ -191,7 +191,7 @@ function renderProfileOverview(room) {
     { label: '공부방명', value: room.study_room_name, section: 'basic' },
     { label: '공개 상태', value: profileStatusLabel(room.profile_status), section: 'publish' },
     { label: '상담 상태', value: inquiryStatusLabel(room.inquiry_status), section: 'exposure' },
-    { label: '상세등록', value: detailStatusLabel(room.detail_completion_status), section: 'detail' },
+    { label: '상세정보', value: detailStatusLabel(room.detail_completion_status), section: 'detail' },
     { label: '지역', value: room.region_label, section: 'basic' },
     { label: '주력과목', value: room.main_subject_note, section: 'basic' },
     { label: '대상 학년', value: room.grade_band, section: 'detail' },

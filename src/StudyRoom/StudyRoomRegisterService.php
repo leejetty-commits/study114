@@ -27,7 +27,7 @@ final class StudyRoomRegisterService
 
 {
 
-    /** @return array{regions: list<array{id: int, label: string}>, complexes: list<array{id: int, region_id: int, label: string}>, facilities: list<array{id: int, facility_code: string, facility_name: string}>} */
+    /** @return array{regions: list<array{id: int, label: string}>, complexes: list<array{id: int, region_id: int, label: string}>, facilities: list<array{id: int, facility_code: string, facility_name: string}>, subjects: list<array{id: int, value: string, label: string}>} */
 
     public function getMasters(): array
 
@@ -68,6 +68,7 @@ final class StudyRoomRegisterService
             'cities'     => $cities,
             'complexes'  => $this->intIdRows($complexes, ['region_id']),
             'facilities' => $this->intIdRows($facilities),
+            'subjects'   => (new StudyRoomLessonDetailStore())->subjectMasters($pdo),
         ];
 
     }
@@ -76,20 +77,28 @@ final class StudyRoomRegisterService
 
     /** @return array<string, mixed>|null */
 
-    public function loadForUser(int $userId): ?array
+    public function loadForUser(int $userId, ?int $roomId = null): ?array
 
     {
 
         $pdo = Connection::get();
 
-        $stmt = $pdo->prepare(
-            'SELECT * FROM study_rooms
-             WHERE user_id = ? AND deleted_at IS NULL
-             ORDER BY updated_at DESC, id DESC
-             LIMIT 1'
-        );
-
-        $stmt->execute([$userId]);
+        if ($roomId !== null && $roomId > 0) {
+            $stmt = $pdo->prepare(
+                'SELECT * FROM study_rooms
+                 WHERE id = ? AND user_id = ? AND deleted_at IS NULL
+                 LIMIT 1'
+            );
+            $stmt->execute([$roomId, $userId]);
+        } else {
+            $stmt = $pdo->prepare(
+                'SELECT * FROM study_rooms
+                 WHERE user_id = ? AND deleted_at IS NULL
+                 ORDER BY updated_at DESC, id DESC
+                 LIMIT 1'
+            );
+            $stmt->execute([$userId]);
+        }
 
         /** @var array<string, mixed>|false $row */
 
@@ -149,6 +158,10 @@ final class StudyRoomRegisterService
 
 
         $pdo = Connection::get();
+
+        if ($step === 'lesson') {
+            (new StudyRoomLessonDetailStore())->ensureSchema($pdo);
+        }
 
         $pdo->beginTransaction();
 
@@ -478,6 +491,15 @@ final class StudyRoomRegisterService
 
     {
 
+        $extra = $this->normalizeLessonExtra($input);
+        $store = new StudyRoomLessonDetailStore();
+        $schemaOk = $store->ensureSchema($pdo);
+        $priceAmount = $this->priceAmountFromLesson($input, $extra);
+        $weekend = !empty($input['weekend_available']) || $this->lessonExtraHasWeekend($extra);
+        $teachingStyle = $this->teachingStyleFromLesson($input, $extra);
+        $readableDesc = $this->composePriceDescriptionText($extra);
+        $encodedFallback = $this->encodeLessonExtra($extra);
+
         $stmt = $pdo->prepare(
 
             'UPDATE study_rooms SET
@@ -518,19 +540,23 @@ final class StudyRoomRegisterService
 
             $this->requireString($input, 'main_subject_note'),
 
-            $this->optionalString($input, 'teaching_style'),
+            $teachingStyle,
 
-            !empty($input['weekend_available']) ? 1 : 0,
+            $weekend ? 1 : 0,
 
             !empty($input['one_on_one_available']) ? 1 : 0,
 
-            $this->requirePositiveInt($input, 'price_amount'),
+            $priceAmount,
 
-            $this->optionalString($input, 'price_description'),
+            $schemaOk ? ($readableDesc !== '' ? $readableDesc : null) : $encodedFallback,
 
             $roomId,
 
         ]);
+
+        if ($schemaOk) {
+            $store->save($pdo, $roomId, $extra);
+        }
 
 
 
@@ -809,6 +835,10 @@ final class StudyRoomRegisterService
 
         foreach ($filled as $sub) {
 
+            $schoolLevel = trim((string) ($sub['school_level'] ?? ''));
+            if ($schoolLevel === '') {
+                throw new InvalidArgumentException('school_level: 학교급을 선택해 주세요.');
+            }
             $schoolLevel = $this->requireEnum($sub, 'school_level', $this->schoolLevelCodes());
 
             $subjectName = $this->requireString($sub, 'subject_name');
@@ -1129,7 +1159,7 @@ final class StudyRoomRegisterService
 
 
 
-        return [
+        $room = [
 
             'study_room_id'            => $roomId,
 
@@ -1222,6 +1252,8 @@ final class StudyRoomRegisterService
             'detail_completion_status' => (string) ($row['detail_completion_status'] ?? 'basic_only'),
 
         ];
+
+        return $this->withLessonExtra($room, $row);
 
     }
 
@@ -1349,7 +1381,265 @@ final class StudyRoomRegisterService
 
     }
 
+    /**
+     * @param array<string, mixed> $room
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private function withLessonExtra(array $room, array $row): array
+    {
+        $store = new StudyRoomLessonDetailStore();
+        $pdo = Connection::get();
+        $extra = $store->load($pdo, (int) $room['study_room_id'], $row);
+        if (($extra['_s114'] ?? '') !== StudyRoomLessonDetailStore::EXTRA_MARK
+            && empty($extra['price_items'])
+            && empty($extra['attendance_days'])
+            && empty($extra['teaching_style_ids'])) {
+            $decoded = $this->decodeLessonExtra((string) ($row['price_description'] ?? ''));
+            if ($decoded !== null) {
+                $extra = $decoded;
+            }
+        }
 
+        $priceItems = [];
+        foreach (($extra['price_items'] ?? []) as $itemRow) {
+            if (!is_array($itemRow)) {
+                continue;
+            }
+            $priceItems[] = [
+                'item' => (string) ($itemRow['item'] ?? ''),
+                'fee' => (string) ($itemRow['fee'] ?? ''),
+                'note' => (string) ($itemRow['note'] ?? ''),
+            ];
+        }
+
+        $lines = [];
+        foreach ($priceItems as $itemRow) {
+            $parts = array_values(array_filter([
+                trim($itemRow['item']),
+                trim($itemRow['fee']),
+                trim($itemRow['note']),
+            ], static fn ($v) => $v !== ''));
+            $line = implode(' · ', $parts);
+            if ($line !== '') {
+                $lines[] = $line;
+            }
+        }
+
+        $days = is_array($extra['attendance_days'] ?? null) ? $extra['attendance_days'] : [];
+        $styleIds = is_array($extra['teaching_style_ids'] ?? null) ? $extra['teaching_style_ids'] : [];
+
+        $room['attendance_days'] = array_values(array_map('strval', $days));
+        $room['lessons_per_week'] = (string) ($extra['lessons_per_week'] ?? '');
+        $room['minutes_per_lesson'] = (string) ($extra['minutes_per_lesson'] ?? '');
+        $room['lesson_note'] = (string) ($extra['lesson_note'] ?? '');
+        $room['teaching_style_ids'] = array_values(array_map('strval', $styleIds));
+        $room['teaching_style_note'] = (string) ($extra['teaching_style_note'] ?? '');
+        $room['price_items'] = $priceItems;
+        $room['lesson_extra'] = $extra;
+        if ($lines !== []) {
+            $room['price_description'] = implode("\n", $lines);
+        } elseif ($this->decodeLessonExtra((string) ($room['price_description'] ?? '')) !== null) {
+            $room['price_description'] = '';
+        }
+
+        return $room;
+    }
+
+    /**
+     * @param array<string, mixed> $extra
+     */
+    private function composePriceDescriptionText(array $extra): string
+    {
+        $lines = [];
+        foreach (($extra['price_items'] ?? []) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $parts = array_values(array_filter([
+                trim((string) ($row['item'] ?? '')),
+                trim((string) ($row['fee'] ?? '')),
+                trim((string) ($row['note'] ?? '')),
+            ], static fn ($v) => $v !== ''));
+            if ($parts !== []) {
+                $lines[] = implode(' · ', $parts);
+            }
+        }
+        return implode("\n", $lines);
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return array<string, mixed>
+     */
+    private function normalizeLessonExtra(array $input): array
+    {
+        $fromPayload = $input['lesson_extra'] ?? null;
+        $base = is_array($fromPayload) ? $fromPayload : [];
+
+        $days = $input['attendance_days'] ?? ($base['attendance_days'] ?? []);
+        if (!is_array($days)) {
+            $days = [];
+        }
+        $allowedDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+        $days = array_values(array_filter($days, static fn ($d) => in_array((string) $d, $allowedDays, true)));
+
+        $styleIds = $input['teaching_style_ids'] ?? ($base['teaching_style_ids'] ?? []);
+        if (!is_array($styleIds)) {
+            $styleIds = [];
+        }
+        $allowedStyles = [
+            'kind', 'meticulous', 'taciturn', 'comprehension', 'problem_solving',
+            'concept_focus', 'advanced_focus', 'pinpoint', 'patient', 'attentive',
+            'solution_notes', 'textbook_focus', 'mock_exam',
+            'passion', 'from_basics', 'solution_focus',
+        ];
+        $styleIds = array_values(array_filter($styleIds, static fn ($id) => in_array((string) $id, $allowedStyles, true)));
+
+        $priceItems = $input['price_items'] ?? ($base['price_items'] ?? []);
+        if (!is_array($priceItems)) {
+            $priceItems = [];
+        }
+        $normalizedPrices = [];
+        foreach ($priceItems as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $item = trim((string) ($row['item'] ?? ''));
+            $fee = trim((string) ($row['fee'] ?? ''));
+            $note = trim((string) ($row['note'] ?? ''));
+            if ($item === '' && $fee === '' && $note === '') {
+                continue;
+            }
+            $normalizedPrices[] = ['item' => $item, 'fee' => $fee, 'note' => $note];
+        }
+
+        return [
+            '_s114' => 'lesson_extra',
+            'attendance_days' => $days,
+            'lessons_per_week' => trim((string) ($input['lessons_per_week'] ?? ($base['lessons_per_week'] ?? ''))),
+            'minutes_per_lesson' => trim((string) ($input['minutes_per_lesson'] ?? ($base['minutes_per_lesson'] ?? ''))),
+            'lesson_note' => trim((string) ($input['lesson_note'] ?? ($base['lesson_note'] ?? ''))),
+            'teaching_style_ids' => $styleIds,
+            'teaching_style_note' => trim((string) ($input['teaching_style_note'] ?? ($base['teaching_style_note'] ?? ''))),
+            'price_items' => $normalizedPrices,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $extra
+     */
+    private function encodeLessonExtra(array $extra): string
+    {
+        $json = json_encode($extra, JSON_UNESCAPED_UNICODE);
+        return is_string($json) ? $json : '{"_s114":"lesson_extra"}';
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function decodeLessonExtra(string $raw): ?array
+    {
+        $text = trim($raw);
+        if ($text === '' || $text[0] !== '{') {
+            return null;
+        }
+        $parsed = json_decode($text, true);
+        if (!is_array($parsed) || ($parsed['_s114'] ?? '') !== 'lesson_extra') {
+            return null;
+        }
+        return $parsed;
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @param array<string, mixed> $extra
+     */
+    private function priceAmountFromLesson(array $input, array $extra): ?int
+    {
+        $direct = $this->optionalInt($input, 'price_amount');
+        if ($direct !== null && $direct > 0) {
+            return $direct;
+        }
+        foreach (($extra['price_items'] ?? []) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $parsed = $this->parseFeeAmount((string) ($row['fee'] ?? ''));
+            if ($parsed !== null && $parsed > 0) {
+                return $parsed;
+            }
+        }
+        return null;
+    }
+
+    private function parseFeeAmount(string $text): ?int
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return null;
+        }
+        if (preg_match('/(\d+(?:\.\d+)?)\s*만/u', $text, $m)) {
+            return (int) round((float) $m[1] * 10000);
+        }
+        $digits = preg_replace('/[^\d]/', '', $text);
+        if ($digits === null || $digits === '') {
+            return null;
+        }
+        return (int) $digits;
+    }
+
+    /**
+     * @param array<string, mixed> $extra
+     */
+    private function lessonExtraHasWeekend(array $extra): bool
+    {
+        $days = $extra['attendance_days'] ?? [];
+        return in_array('sat', $days, true) || in_array('sun', $days, true);
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @param array<string, mixed> $extra
+     */
+    private function teachingStyleFromLesson(array $input, array $extra): ?string
+    {
+        $labels = [
+            'kind' => '친절',
+            'meticulous' => '꼼꼼',
+            'taciturn' => '과묵',
+            'comprehension' => '이해력',
+            'problem_solving' => '문제풀이형',
+            'concept_focus' => '개념중심',
+            'advanced_focus' => '고난이도',
+            'pinpoint' => '족집게',
+            'patient' => '인내형',
+            'attentive' => '경청형',
+            'solution_notes' => '풀이필기중점',
+            'textbook_focus' => '교과서중심',
+            'mock_exam' => '모의고사풀이',
+            'passion' => '열정',
+            'from_basics' => '기초부터',
+            'solution_focus' => '문제풀이형',
+        ];
+        $ids = $extra['teaching_style_ids'] ?? [];
+        $picked = [];
+        foreach ($ids as $id) {
+            $key = (string) $id;
+            if (isset($labels[$key])) {
+                $picked[] = $labels[$key];
+            }
+        }
+        $note = trim((string) ($extra['teaching_style_note'] ?? ''));
+        $joined = implode(', ', $picked);
+        if ($note !== '') {
+            $joined = $joined !== '' ? $joined . ' / ' . $note : $note;
+        }
+        if ($joined !== '') {
+            return mb_substr($joined, 0, 255);
+        }
+        return $this->optionalString($input, 'teaching_style');
+    }
 
     /** @param array<string, mixed> $input */
 

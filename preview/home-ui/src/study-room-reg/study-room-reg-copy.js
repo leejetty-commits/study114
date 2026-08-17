@@ -42,7 +42,7 @@ export const INQUIRY_STATUS_LABELS = {
   waiting_only: '대기 문의 가능',
 };
 
-/** §5 상세등록 상태 */
+/** §5 상세정보 상태 */
 export const DETAIL_STATUS_LABELS = {
   basic_only: '기본만',
   expanded_in_progress: '상세 진행중',

@@ -107,7 +107,10 @@ try {
 
     if ($action === 'load') {
 
-        $room = $service->loadForUser($userId);
+        $roomId = isset($input['study_room_id']) && $input['study_room_id'] !== ''
+            ? (int) $input['study_room_id']
+            : null;
+        $room = $service->loadForUser($userId, $roomId);
 
         echo json_encode(['ok' => true, 'room' => $room], JSON_UNESCAPED_UNICODE);
 

@@ -24,8 +24,10 @@ export async function fetchMasters() {
   return data.masters;
 }
 
-export async function loadRoom() {
-  const data = await postJson({ action: 'load' });
+export async function loadRoom(studyRoomId = null) {
+  const body = { action: 'load' };
+  if (studyRoomId) body.study_room_id = studyRoomId;
+  const data = await postJson(body);
   return data.room;
 }
 

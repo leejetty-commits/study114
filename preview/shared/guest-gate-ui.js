@@ -67,13 +67,13 @@ export function renderGuestLoginGatePanel(opts) {
  */
 export function renderRegisterIntroGate(kind) {
   const isRoom = kind === 'room';
-  const title = isRoom ? '공부방 상세등록' : '과외쌤 상세등록';
+  const title = isRoom ? '공부방 상세정보' : '과외쌤 상세등록';
   const lead = isRoom
     ? '공부방 등록은 로그인 후 진행합니다. 비회원은 절차 안내만 확인할 수 있습니다.'
     : '과외쌤 등록은 로그인 후 진행합니다. 비회원은 절차 안내만 확인할 수 있습니다.';
   const bullets = isRoom
     ? [
-        '기본정보가 있으면 바로 상세등록(수업·경력 → 시설·연락)으로 이어집니다.',
+        '기본정보가 있으면 바로 상세정보(수업·경력 → 시설·연락)으로 이어집니다.',
         '저장·제출은 로그인된 공부방 계정에서만 가능합니다.',
         '등록이 끝나면 대표·추천 노출 상품과 연결할 수 있습니다.',
       ]

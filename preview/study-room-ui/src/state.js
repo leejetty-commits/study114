@@ -1,13 +1,13 @@
-/** 공부방 등록 — 기본등록(미완료 시) + 상세등록 2단계 */
+/** 공부방 등록 — 기본정보(미완료 시) + 상세정보 2단계 */
 
 export const REGISTER_PHASES = {
   basic: {
-    label: '기본등록',
-    hint: '저장된 기본·위치 현황을 보고, 필요할 때만 수정한 뒤 상세등록으로 이어갑니다.',
+    label: '기본정보',
+    hint: '저장된 기본·위치 현황을 보고, 필요할 때만 수정한 뒤 상세정보로 이어갑니다.',
     stepKeys: ['basic', 'location'],
   },
   detail: {
-    label: '상세등록',
+    label: '상세정보',
     hint: '검색·목록에 보이는 수업·경력·시설 정보를 두 단계로 완성합니다.',
     stepKeys: ['lesson', 'facility'],
   },
@@ -50,6 +50,44 @@ export const CAPACITY_PER_TIME_OPTIONS = [
   { value: 'one_to_four', label: '1~4명' },
   { value: 'five_to_eight', label: '5~8명' },
   { value: 'nine_plus', label: '최대 9명' },
+];
+
+/** 대상 과목 행 · 학년 (단수) */
+export const GRADE_OPTIONS = [
+  { value: '1학년', label: '1학년' },
+  { value: '2학년', label: '2학년' },
+  { value: '3학년', label: '3학년' },
+  { value: '4학년', label: '4학년' },
+  { value: '5학년', label: '5학년' },
+  { value: '6학년', label: '6학년' },
+  { value: 'N수', label: 'N수' },
+];
+
+export const WEEKDAY_OPTIONS = [
+  { value: 'mon', label: '월' },
+  { value: 'tue', label: '화' },
+  { value: 'wed', label: '수' },
+  { value: 'thu', label: '목' },
+  { value: 'fri', label: '금' },
+  { value: 'sat', label: '토' },
+  { value: 'sun', label: '일' },
+];
+
+/** 지도 스타일 — 복수 선택 */
+export const TEACHING_STYLE_OPTIONS = [
+  { id: 'kind', label: '친절' },
+  { id: 'meticulous', label: '꼼꼼' },
+  { id: 'taciturn', label: '과묵' },
+  { id: 'comprehension', label: '이해력' },
+  { id: 'problem_solving', label: '문제풀이형' },
+  { id: 'concept_focus', label: '개념중심' },
+  { id: 'advanced_focus', label: '고난이도' },
+  { id: 'pinpoint', label: '족집게' },
+  { id: 'patient', label: '인내형' },
+  { id: 'attentive', label: '경청형' },
+  { id: 'solution_notes', label: '풀이필기중점' },
+  { id: 'textbook_focus', label: '교과서중심' },
+  { id: 'mock_exam', label: '모의고사풀이' },
 ];
 
 /** 5장 §11-3 권장 체크 ~5개 */
@@ -105,25 +143,37 @@ export const apiMasters = {
   regions: /** @type {Array<{id: number, label: string}>} */ ([]),
   complexes: /** @type {Array<{id: number, region_id: number, label: string, address?: string}>} */ ([]),
   facilities: /** @type {Array<{id: number, facility_code: string, facility_name: string}>} */ ([]),
+  subjects: /** @type {Array<{id?: number, value: string, label: string}>} */ ([]),
 };
 
 export function getRegions() {
-  return apiMasters.regions.length ? apiMasters.regions : DUMMY_REGIONS;
+  return apiMasters.regions.length ? apiMasters.regions : [];
 }
 
 export function getComplexes() {
-  return apiMasters.complexes.length ? apiMasters.complexes : DUMMY_COMPLEXES;
+  return apiMasters.complexes.length ? apiMasters.complexes : [];
 }
 
 export function getFacilityOptions() {
-  if (apiMasters.facilities.length) {
-    return apiMasters.facilities.map((f) => ({
-      id: f.id,
-      facility_code: f.facility_code,
-      facility_name: f.facility_name,
-    }));
+  if (!apiMasters.facilities.length) {
+    return [];
   }
-  return FACILITY_OPTIONS;
+  return apiMasters.facilities.map((f) => ({
+    id: f.id,
+    facility_code: f.facility_code,
+    facility_name: f.facility_name,
+  }));
+}
+
+export function getSubjectOptions() {
+  if (apiMasters.subjects.length) {
+    return apiMasters.subjects.map((s) => ({
+      value: String(s.value || s.label || ''),
+      label: String(s.label || s.value || ''),
+      id: s.id,
+    })).filter((s) => s.value);
+  }
+  return [];
 }
 
 export function emptyRoomState() {
@@ -152,10 +202,17 @@ export function emptyRoomState() {
     recruitment_count: '',
     main_subject_note: '',
     teaching_style: '',
+    teaching_style_ids: [],
+    teaching_style_note: '',
     weekend_available: null,
     one_on_one_available: null,
+    attendance_days: [],
+    lessons_per_week: '',
+    minutes_per_lesson: '',
+    lesson_note: '',
     price_amount: '',
     price_description: '',
+    price_items: [],
     subjects: [],
     career_years: '',
     academy_career_years: '',
@@ -199,5 +256,16 @@ export function isRoomBasicComplete(room) {
 }
 
 export function emptySubject() {
-  return { school_level: 'middle', grade_band: '', subject_master_id: '', subject_name: '', is_main: false };
+  return {
+    school_level: '',
+    grade_band: '',
+    subject_master_id: '',
+    subject_name: '',
+    subject_custom: '',
+    is_main: false,
+  };
+}
+
+export function emptyPriceItem() {
+  return { item: '', fee: '', note: '' };
 }

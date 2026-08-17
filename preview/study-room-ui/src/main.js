@@ -22,7 +22,7 @@ import {
   syncSiteHeaderOffset,
   ensureSiteHeaderOffsetListeners,
 } from '../../shared/site-chrome.js';
-import { getCurrentScreen, navigate, isRegisterEditMode } from './layout.js';
+import { getCurrentScreen, navigate, isRegisterEditMode, getHashQuery } from './layout.js';
 import { renderBasic, bindBasicEvents } from './screens/step-basic.js';
 import { renderLocation, bindLocationEvents } from './screens/step-location.js';
 import { renderLesson, bindLessonEvents } from './screens/step-lesson.js';
@@ -73,7 +73,7 @@ function resolveRegisterMode() {
   return gate.mode;
 }
 
-/** 위치 단독 진입 → 기본등록 현황으로 (두 단계를 한 페이지로) */
+/** 위치 단독 진입 → 기본정보 현황으로 (두 단계를 한 페이지로) */
 function maybeRedirectLocationToOverview() {
   if (getCurrentScreen() !== 'location') return false;
   if (isRegisterEditMode()) return false;
@@ -118,9 +118,7 @@ async function initApi() {
     apiMasters.regions = masters.regions ?? [];
     apiMasters.complexes = masters.complexes ?? [];
     apiMasters.facilities = masters.facilities ?? [];
-    if (apiMasters.regions.length && !registerState.region_id) {
-      registerState.region_id = String(apiMasters.regions[0].id);
-    }
+    apiMasters.subjects = masters.subjects ?? [];
   } catch {
     /* 마스터 실패해도 기존 공부방 load는 이어간다 */
   }
@@ -129,7 +127,8 @@ async function initApi() {
     const gate = guardRegisterAccess(getChromeNavRole(), 'room');
     if (!gate.ok || gate.mode !== 'form') return null;
 
-    const room = await loadRoom().catch(() => null);
+    const qRoomId = Number(getHashQuery().get('room_id') || '');
+    const room = await loadRoom(Number.isFinite(qRoomId) && qRoomId > 0 ? qRoomId : null).catch(() => null);
     if (room) {
       applyRoomToState(registerState, room);
       const st = String(room.detail_completion_status || '');

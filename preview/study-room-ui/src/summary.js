@@ -153,10 +153,18 @@ export function buildRoomInputSummary(room) {
         { label: '타임별 원생수', value: labelOf(CAPACITY_PER_TIME_OPTIONS, s.capacity_per_time) },
         { label: '모집 인원', value: str(s.recruitment_count) },
         { label: '지도 스타일', value: str(s.teaching_style) },
+        { label: '지도 스타일 설명', value: str(s.teaching_style_note) },
         { label: '주말 가능', value: yn(s.weekend_available) },
         { label: '1:1 가능', value: yn(s.one_on_one_available) },
+        { label: '출석일', value: Array.isArray(s.attendance_days) ? s.attendance_days.map((d) => ({ mon: '월', tue: '화', wed: '수', thu: '목', fri: '금', sat: '토', sun: '일' }[d] || d)).join(' ') : '' },
+        { label: '주횟수', value: [s.lessons_per_week ? `주 ${s.lessons_per_week}일` : '', s.minutes_per_lesson ? `1일 ${s.minutes_per_lesson}분` : ''].filter(Boolean).join(', ') },
+        { label: '수업참고사항', value: str(s.lesson_note) },
         { label: '월 대표 가격', value: str(s.price_amount) },
         { label: '가격 설명', value: str(s.price_description) },
+        ...(Array.isArray(s.price_items) ? s.price_items : []).map((row, i) => ({
+          label: `가격 ${i + 1}`,
+          value: [str(row?.item), str(row?.fee), str(row?.note)].filter(Boolean).join(' · '),
+        })),
         ...subjectValues.map((value, i) => ({
           label: subjects.length > 1 ? `대상 과목 ${i + 1}` : '대상 과목',
           value,
@@ -192,7 +200,7 @@ export function buildRoomInputSummary(room) {
           value,
         })),
         { label: '공개 상태', value: profileStatusLabel(s.profile_status) },
-        { label: '상세등록 상태', value: detailStatusLabel(s.detail_completion_status) },
+        { label: '상세정보 상태', value: detailStatusLabel(s.detail_completion_status) },
       ],
     },
   ];

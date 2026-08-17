@@ -48,7 +48,7 @@ export const GNB_MAIN = [
   { id: 'find_room', label: '공부방찾기' },
   { id: 'find_tutor', label: '과외쌤찾기' },
   { id: 'student_parent', label: '학생찾기' },
-  { id: 'register_room', label: '공부방상세등록' },
+  { id: 'register_room', label: '공부방상세정보' },
   { id: 'register_tutor', label: '과외쌤상세등록' },
   { id: 'plans', label: '유료상품' },
   { id: 'community', label: '커뮤니티' },
@@ -74,7 +74,7 @@ const GNB_ALL_SHOW = {
  * - guest / admin: 전체 활성 (운영자는 점검용으로 전부 봄)
  * - parent(guardian_student·UI「학생」): 학생찾기 **열람 허용**(29#3·시장비교) · 공급자 등록·유료상품 숨김
  * - study_room: 과외쌤찾기·과외쌤상세등록 숨김
- * - tutor: 공부방찾기·공부방상세등록 숨김
+ * - tutor: 공부방찾기·공부방상세정보 숨김
  *
  * @type {Record<NavRole, Record<string, 'show' | 'hide'>>}
  */
