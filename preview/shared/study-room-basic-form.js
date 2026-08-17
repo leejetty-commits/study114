@@ -149,6 +149,7 @@ function renderPromoSlot(slot, idx) {
         </label>
         <p class="form-hint register-region-slot__basis-hint">효과적인 검색과 홍보를 위해서 주소단위를 선택할 수 있습니다</p>
       </div>
+      <div class="register-region-slot__search">
       <div data-dong-search ${basis === 'complex' ? 'hidden' : ''}>
         <div class="form-address__zip-row">
           <input
@@ -186,6 +187,7 @@ function renderPromoSlot(slot, idx) {
           />
           <p class="form-hint">사업장주소와 같이 검색합니다. 상세주소(동·호수)는 받지 않습니다.</p>
         </div>
+      </div>
       </div>
       <input type="hidden" data-field="region_id" value="${esc(slot.region_id || '')}" />
       <input type="hidden" data-field="complex_id" value="${esc(slot.complex_id || '')}" />
@@ -404,15 +406,6 @@ function applySlotResult(slotEl, result, region, basis) {
   }
 }
 
-function clearSlot(slotEl) {
-  slotEl.querySelectorAll('[data-field]').forEach((el) => {
-    if (el.getAttribute('data-field') === 'region_basis_type') return;
-    el.value = '';
-  });
-  const resolved = slotEl.querySelector('[data-slot-resolved]');
-  if (resolved) resolved.textContent = '';
-}
-
 function syncSlotSearchPanels(slotEl) {
   const basis = slotBasisOf(slotEl);
   const basisEl = slotEl.querySelector('[data-field="region_basis_type"]');
@@ -487,8 +480,11 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
     el.addEventListener('change', () => {
       const slotEl = el.closest('[data-region-slot]');
       if (!slotEl) return;
-      clearSlot(slotEl);
       syncSlotSearchPanels(slotEl);
+      if (slotBasisOf(slotEl) !== 'dong') return;
+      const query = slotEl.querySelector('[data-field="dong_query"]');
+      const label = slotEl.querySelector('[data-field="region_label"]');
+      if (query && !String(query.value || '').trim() && label?.value) query.value = label.value;
     });
   });
 }
