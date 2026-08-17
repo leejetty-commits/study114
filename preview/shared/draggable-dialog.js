@@ -16,14 +16,18 @@ export function bindDraggableDialog(dialog, handle) {
 
   const pin = () => {
     const rect = dialog.getBoundingClientRect();
+    const maxH = Math.max(160, window.innerHeight - 16);
     dialog.style.position = 'fixed';
     dialog.style.margin = '0';
-    dialog.style.left = `${rect.left}px`;
-    dialog.style.top = `${rect.top}px`;
     dialog.style.width = `${rect.width}px`;
-    dialog.style.maxHeight = 'calc(100vh - 1rem)';
+    dialog.style.maxHeight = `${maxH}px`;
     dialog.style.zIndex = '1300';
-    return rect;
+    const h = Math.min(dialog.offsetHeight || rect.height, maxH);
+    const left = Math.min(Math.max(8, rect.left), Math.max(8, window.innerWidth - rect.width - 8));
+    const top = Math.min(Math.max(8, rect.top), Math.max(8, window.innerHeight - h - 8));
+    dialog.style.left = `${left}px`;
+    dialog.style.top = `${top}px`;
+    return { left, top, width: rect.width, height: h };
   };
 
   bar.addEventListener('pointerdown', (e) => {
@@ -45,8 +49,15 @@ export function bindDraggableDialog(dialog, handle) {
 
   bar.addEventListener('pointermove', (e) => {
     if (!dragging) return;
-    const left = Math.max(8, Math.min(window.innerWidth - 96, origLeft + (e.clientX - startX)));
-    const top = Math.max(8, Math.min(window.innerHeight - 48, origTop + (e.clientY - startY)));
+    const headerH = Math.max(40, bar.getBoundingClientRect().height);
+    const w = dialog.offsetWidth;
+    const h = dialog.offsetHeight;
+    const minLeft = 8 - Math.max(0, w - 96);
+    const maxLeft = window.innerWidth - 96;
+    const minTop = headerH - h;
+    const maxTop = window.innerHeight - headerH;
+    const left = Math.max(minLeft, Math.min(maxLeft, origLeft + (e.clientX - startX)));
+    const top = Math.max(minTop, Math.min(maxTop, origTop + (e.clientY - startY)));
     dialog.style.left = `${left}px`;
     dialog.style.top = `${top}px`;
   });
