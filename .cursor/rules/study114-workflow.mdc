@@ -38,6 +38,14 @@ alwaysApply: true
 - 배포 전 `scripts/check-no-committed-secrets.sh`가 검사한다. 실패 시 push해도 배포가 막힌다.
 - 상세: `docs/internal/31-oauth-secret-incident.md`
 
+## 4-2. 도메인 (2026-08-17 기준)
+
+- **정본:** `https://study114.net` — 1차 검증·일반 이용
+- **호환/검증용:** `https://www.study114.net`, `https://study114.dothome.co.kr` (세션·쿠키는 호스트별로 분리. 임시 전환 정책)
+- 닷홈에서 메뉴를 누르면 Vite 절대경로 때문에 정본으로 유도된다. 닷홈 OAuth는 그 호스트 세션만 유지.
+- 일괄 작업 목록: `docs/internal/46-domain-status-batch.md`
+- 코드 301 / www→apex / dothome 제거는 소셜 안정화 후에만.
+
 ## 5. 네이버 지도 장애 판단 순서
 
 | 증상 | 원인 후보 |
@@ -50,7 +58,8 @@ alwaysApply: true
 
 - 콘솔: https://console.ncloud.com/maps/application
 - 확인: Application 선택 · Client ID 일치 · Web 서비스 URL 등록
-  - `http://study114.dothome.co.kr`
+  - `https://study114.net`
+  - `https://www.study114.net`
   - `https://study114.dothome.co.kr`
   - `http://localhost:5174`
   - `http://127.0.0.1:5174`

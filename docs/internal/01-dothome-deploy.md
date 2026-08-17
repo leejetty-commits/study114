@@ -2,7 +2,7 @@
 
 **문서 성격:** DB 연결·최소 구동 확인용 (**현재 1차 배포 목표**)  
 **기준일:** 2026-07-10  
-**도메인:** `http://study114.dothome.co.kr`  
+**도메인:** 정본 `https://study114.net`. 호환 `https://www.study114.net`, `https://study114.dothome.co.kr` — [46-domain-status-batch.md](./46-domain-status-batch.md)  
 **관련:** [internal/README.md](./README.md) · [00-project-tree-and-key-files.md](./00-project-tree-and-key-files.md) · [01-cafe24-staging-deploy.md](./01-cafe24-staging-deploy.md) (카페24용, 별도 유지) · Cursor 규칙 `.cursor/rules/study114-workflow.mdc`
 
 ---
@@ -13,7 +13,7 @@
 
 | 항목 | 값 |
 |------|-----|
-| 사이트 URL | `http://study114.dothome.co.kr` |
+| 사이트 URL | `https://study114.net` |
 | 웹루트 (FTP) | `/hosting/study114/html` |
 | PHP | 8.2 |
 | DB 호스트 | `localhost` |
@@ -106,7 +106,7 @@ Cursor 에이전트 규칙: `.cursor/rules/study114-workflow.mdc` (팀 공유용
 
 | 앱 | URL 예 | Vite `base` |
 |----|--------|-------------|
-| home-ui | `http://study114.dothome.co.kr/#/guest` | `/` |
+| home-ui | `https://study114.net/#/guest` | `/` |
 | auth-ui | `.../auth/#/login` | `/auth/` |
 | search-ui | `.../search/#/search/room` | `/search/` |
 | study-room-ui | `.../register/room/#/register/basic` | `/register/room/` |
@@ -223,9 +223,9 @@ PDO는 `localhost:3306` + `utf8mb4` 로 연결 (`src/Database/Connection.php`).
 
 | 변수 | 값 |
 |------|-----|
-| `STUDY114_API_BASE` | `http://study114.dothome.co.kr` |
-| `STUDY114_HOME_UI` | `http://study114.dothome.co.kr` |
-| `STUDY114_AUTH_UI` | `http://study114.dothome.co.kr/auth` |
+| `STUDY114_API_BASE` | `https://study114.net` |
+| `STUDY114_HOME_UI` | `https://study114.net` |
+| `STUDY114_AUTH_UI` | `https://study114.net/auth` |
 | `STUDY114_APP_ENV` | `production` |
 | `STUDY114_DEBUG` | `0` |
 
@@ -235,9 +235,9 @@ PDO는 `localhost:3306` + `utf8mb4` 로 연결 (`src/Database/Connection.php`).
 
 ```apache
 <IfModule mod_env.c>
-  SetEnv STUDY114_API_BASE http://study114.dothome.co.kr
-  SetEnv STUDY114_HOME_UI http://study114.dothome.co.kr
-  SetEnv STUDY114_AUTH_UI http://study114.dothome.co.kr/auth
+  SetEnv STUDY114_API_BASE https://study114.net
+  SetEnv STUDY114_HOME_UI https://study114.net
+  SetEnv STUDY114_AUTH_UI https://study114.net/auth
   SetEnv STUDY114_APP_ENV production
   SetEnv STUDY114_DEBUG 0
 </IfModule>
@@ -248,9 +248,20 @@ PDO는 `localhost:3306` + `utf8mb4` 로 연결 (`src/Database/Connection.php`).
 ### OAuth Redirect URI (콘솔에 사람이 등록)
 
 ```
-http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=naver
-http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=kakao
-http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=google
+https://study114.net/api/auth/oauth/callback.php?provider=naver
+https://study114.net/api/auth/oauth/callback.php?provider=kakao
+https://study114.net/api/auth/oauth/callback.php?provider=google
+```
+
+호환(시작 호스트와 동일한 URI도 콘솔에 추가):
+
+```
+https://www.study114.net/api/auth/oauth/callback.php?provider=naver
+https://www.study114.net/api/auth/oauth/callback.php?provider=kakao
+https://www.study114.net/api/auth/oauth/callback.php?provider=google
+https://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=naver
+https://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=kakao
+https://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=google
 ```
 
 ### 세션 / 쿠키 / CORS
@@ -258,7 +269,7 @@ http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=google
 | 항목 | 현재 코드 | 닷홈 단일 도메인 |
 |------|-----------|------------------|
 | 세션 | `cookie_samesite=Lax`, httponly | ✅ 추가 설정 불필요 |
-| 쿠키 domain | 미지정 (현재 호스트) | ✅ `study114.dothome.co.kr` 자동 |
+| 쿠키 domain | 미지정 (현재 호스트) | apex / www / 닷홈은 쿠키 공유 안 됨 |
 | CORS | 일부 API `Access-Control-Allow-Origin: *` | ✅ **같은 도메인**이면 브라우저가 CORS 검사 안 함 |
 | API 호출 | 프론트가 `/api/...` 상대경로 | ✅ 빌드 후 같은 도메인이면 OK |
 
@@ -291,7 +302,8 @@ http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=google
 **Maps → study114 앱 → Web 서비스 URL** 에 추가:
 
 ```
-http://study114.dothome.co.kr
+https://study114.net
+https://www.study114.net
 https://study114.dothome.co.kr
 ```
 
@@ -308,13 +320,15 @@ http://127.0.0.1:5176
 콘솔에 추가:
 
 ```
+https://study114.net
+https://www.study114.net
 https://study114.dothome.co.kr
 ```
 
 그리고:
-- `preview/.env.dothome.example` 의 `http://` → `https://` 교체 후 **재빌드**
-- `.htaccess` SetEnv 도 `https://` 로 교체
-- OAuth 콘솔에도 `https://` redirect URI 추가
+- `preview/.env.dothome.example` 의 정본은 `https://study114.net` — **재빌드 필요**
+- `.htaccess` SetEnv 도 `https://study114.net`
+- OAuth 콘솔에도 동일 호스트의 `https://` redirect URI 추가. 구 `http://study114.dothome.co.kr` URI는 확인 전까지 삭제하지 말 것.
 
 ---
 

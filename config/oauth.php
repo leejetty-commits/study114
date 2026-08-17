@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 /**
  * 소셜 로그인 — 네이버 · 카카오 · 구글
- * 운영: 환경변수 또는 배포 시 이 파일 값을 채운다.
+ * redirect_uri 실사용 값은 OAuthService::redirectUri()가 요청 origin으로 만든다.
+ * 아래 값은 env 폴백(메일·로컬·origin 없을 때). 운영 STUDY114_API_BASE=https://study114.net
  */
 $apiBase = rtrim(study114_env('STUDY114_API_BASE', 'http://127.0.0.1:8080'), '/');
 $homeUi = rtrim(study114_env('STUDY114_HOME_UI', 'http://127.0.0.1:5174'), '/');

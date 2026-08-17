@@ -9,10 +9,9 @@ use Study114\Auth\PasswordResetService;
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header('Access-Control-Allow-Origin: *');
+    study114_send_cors_headers();
     header('Access-Control-Allow-Methods: POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');
-    header('Access-Control-Allow-Credentials: true');
     http_response_code(204);
     exit;
 }
@@ -23,8 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Credentials: true');
+study114_send_cors_headers();
 
 $input = json_decode(file_get_contents('php://input') ?: '{}', true);
 $email = is_array($input) ? (string) ($input['email'] ?? '') : '';

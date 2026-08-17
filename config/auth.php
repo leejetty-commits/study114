@@ -14,7 +14,7 @@ return [
     'auth_ui'                    => rtrim($authUi, '/'),
     'home_ui'                    => rtrim($homeUi, '/'),
     'api_base'                   => rtrim($apiBase, '/'),
-    /** 닷홈: SetEnv STUDY114_MAIL_FROM. 실도메인 전환 시 일괄 변경. */
+    /** 닷홈: SetEnv STUDY114_MAIL_FROM. MX/SPF 전환은 메일 작업에서 별도. */
     'mail_from'                  => study114_env('STUDY114_MAIL_FROM', 'noreply@study114.local'),
     'password_reset_ttl_minutes' => 30,
     /** 재설정 메일 재전송 최소 간격(초). 서버·클라이언트 동일 — 5분 */

@@ -27,6 +27,9 @@ final class AuthSession
                 'cookie_lifetime' => self::LIFETIME,
             ]);
         }
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            throw new \RuntimeException('세션을 시작할 수 없습니다.');
+        }
     }
 
     /** 읽기만 하는 API가 세션 파일을 오래 잠그지 않게 한다. */

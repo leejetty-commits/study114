@@ -9,7 +9,7 @@ use Study114\Search\SearchService;
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header('Access-Control-Allow-Origin: *');
+    study114_send_cors_headers(false);
     header('Access-Control-Allow-Methods: POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');
     http_response_code(204);
@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-header('Access-Control-Allow-Origin: *');
+study114_send_cors_headers(false);
 
 $raw = file_get_contents('php://input');
 /** @var array<string, mixed> $input */

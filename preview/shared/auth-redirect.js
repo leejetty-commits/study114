@@ -20,6 +20,12 @@ export function getLoginReturnTo(hashQuery = '') {
   return params.get('return_to') || '';
 }
 
+const ALLOWED_RETURN_ORIGINS = new Set([
+  'https://study114.net',
+  'https://www.study114.net',
+  'https://study114.dothome.co.kr',
+]);
+
 /**
  * @param {string} target
  * @returns {boolean}
@@ -33,8 +39,11 @@ export function isSafeReturnTo(target) {
   }
   try {
     const url = new URL(trimmed);
-    const home = new URL(HOME_UI_BASE);
-    return url.origin === home.origin;
+    if (HOME_UI_BASE) {
+      const home = new URL(HOME_UI_BASE);
+      if (url.origin === home.origin) return true;
+    }
+    return ALLOWED_RETURN_ORIGINS.has(url.origin);
   } catch {
     return false;
   }

@@ -26,9 +26,7 @@ final class ProviderReviewApi
 
     public static function cors(): void
     {
-        $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
-        header('Access-Control-Allow-Origin: ' . ($origin !== '' ? $origin : '*'));
-        header('Access-Control-Allow-Credentials: true');
+        study114_send_cors_headers();
     }
 
     /** @return array{user_id: int, email: string, role_type: string, name: string} */

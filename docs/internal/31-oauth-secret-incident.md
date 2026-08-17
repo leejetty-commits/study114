@@ -55,8 +55,8 @@
 | Kakao | developers.kakao.com → 내 앱 → 앱 키/보안 | **REST API 키 확인 + client secret(보안) 재발급** |
 | Naver | developers.naver.com → 내 애플리케이션 | **client secret 재발급** |
 
-- redirect URI 는 그대로 유지:
-  `http://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=<naver|kakao|google>`
+- redirect URI 는 시작 호스트와 같아야 한다. 정본:
+  `https://study114.net/api/auth/oauth/callback.php?provider=<naver|kakao|google>`
 
 ### 3-2. GitHub Actions Secrets 등록
 

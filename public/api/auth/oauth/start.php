@@ -2,7 +2,16 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__, 4) . '/src/bootstrap.php';
+$bootstrap = dirname(__DIR__, 4) . '/src/bootstrap.php';
+if (!is_file($bootstrap)) {
+    error_log('[oauth/start] bootstrap missing path=' . $bootstrap);
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo '소셜 로그인을 시작할 수 없습니다.';
+    exit;
+}
+
+require_once $bootstrap;
 
 use Study114\Auth\AuthSession;
 use Study114\Auth\OAuthService;
@@ -10,20 +19,21 @@ use Study114\Auth\OAuthService;
 $provider = (string) ($_GET['provider'] ?? '');
 $returnTo = (string) ($_GET['return_to'] ?? '');
 
-try {
-    // 닷홈: Google 콘솔에 http redirect만 등록된 경우가 많음.
-    // https로 시작하면 redirect_uri/세션 쿠키가 어긋나므로 OAuth 왕복은 http로 통일.
-    $origin = study114_request_origin();
-    if ($origin !== null && str_starts_with($origin, 'https://')) {
-        $host = (string) ($_SERVER['HTTP_HOST'] ?? 'study114.dothome.co.kr');
-        $qs = http_build_query(array_filter([
-            'provider'  => $provider,
-            'return_to' => $returnTo !== '' ? $returnTo : null,
-        ]));
-        header('Location: http://' . $host . '/api/auth/oauth/start.php?' . $qs, true, 302);
-        exit;
+$failToLogin = static function (string $message) use ($provider): void {
+    $origin = study114_request_origin() ?? '-';
+    error_log('[oauth/start] fail provider=' . $provider . ' origin=' . $origin . ' msg=' . $message);
+    try {
+        $oauth = new OAuthService();
+        $base = $oauth->authUiBase();
+    } catch (Throwable $ignored) {
+        unset($ignored);
+        $base = rtrim(study114_public_origin(), '/') . '/auth';
     }
+    header('Location: ' . $base . '/#/login?oauth_error=' . rawurlencode($message), true, 302);
+    exit;
+};
 
+try {
     $oauth = new OAuthService();
     if (!in_array($provider, OAuthService::providers(), true)) {
         throw new InvalidArgumentException('지원하지 않는 소셜 로그인입니다.');
@@ -41,15 +51,19 @@ try {
         'return_to'    => $returnTo,
         'redirect_uri' => $redirectUri,
     ];
-    // Google 등 외부로 나가기 전에 세션을 확정 저장 (콜백에서 state 유실 방지)
     session_write_close();
+
+    error_log('[oauth/start] redirect provider=' . $provider
+        . ' origin=' . (study114_request_origin() ?? '-')
+        . ' redirect_uri=' . $redirectUri
+        . ' https=' . (study114_request_is_https() ? '1' : '0')
+        . ' trust_proxy=' . (study114_trust_forwarded_proto() ? '1' : '0'));
 
     header('Location: ' . $oauth->authorizeUrl($provider, $state, $redirectUri), true, 302);
     exit;
 } catch (Throwable $e) {
-    error_log('[oauth/start] ' . $e->getMessage());
-    $oauth = new OAuthService();
-    $target = $oauth->authUiBase() . '/#/login?oauth_error=' . rawurlencode($e->getMessage());
-    header('Location: ' . $target, true, 302);
-    exit;
+    error_log('[oauth/start] ' . $e::class . ' ' . $e->getMessage()
+        . ' provider=' . $provider
+        . ' origin=' . (study114_request_origin() ?? '-'));
+    $failToLogin($e->getMessage());
 }

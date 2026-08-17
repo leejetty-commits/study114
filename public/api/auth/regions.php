@@ -7,7 +7,7 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 use Study114\Auth\BasicRegisterService;
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+study114_send_cors_headers(false);
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');

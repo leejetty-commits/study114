@@ -14,7 +14,7 @@ final class OAuthService
     /** @var array<string, mixed> */
     private array $config;
 
-  public function __construct()
+    public function __construct()
     {
         $this->config = study114_config('oauth');
     }
@@ -38,20 +38,14 @@ final class OAuthService
 
     /**
      * OAuth redirect_uri — authorize ↔ token 교환에 동일 문자열을 써야 한다.
-     * 닷홈은 콘솔에 http URI가 등록된 경우가 대부분이므로 api_base(http)를 우선한다.
-     * (https 시작분은 start.php에서 http로 보냄)
+     * 시작 요청 origin을 유지한다(세션 쿠키 호스트와 일치). 허용 호스트가 아니면 정본.
      */
     public function redirectUri(string $provider): string
     {
         if (!in_array($provider, self::providers(), true)) {
             throw new InvalidArgumentException('지원하지 않는 소셜 로그인입니다.');
         }
-        $base = (string) $this->config['api_base'];
-        $origin = study114_request_origin();
-        // http 요청일 때만 요청 origin 사용 (https는 start에서 http로 전환됨)
-        if ($origin !== null && str_starts_with($origin, 'http://')) {
-            $base = $origin;
-        }
+        $base = study114_public_origin();
 
         return rtrim($base, '/') . '/api/auth/oauth/callback.php?provider=' . rawurlencode($provider);
     }
@@ -137,25 +131,22 @@ final class OAuthService
 
     public function homeUiBase(): string
     {
-        // OAuth 성공 후도 http 세션과 맞추기 위해 config(http) 우선
-        $configured = (string) $this->config['home_ui'];
         $origin = study114_request_origin();
-        if ($origin !== null && str_starts_with($origin, 'http://')) {
+        if ($origin !== null && study114_is_allowed_public_origin($origin)) {
             return rtrim($origin, '/');
         }
 
-        return rtrim($configured, '/');
+        return rtrim((string) $this->config['home_ui'], '/');
     }
 
     public function authUiBase(): string
     {
-        $configured = (string) $this->config['auth_ui'];
         $origin = study114_request_origin();
-        if ($origin !== null && str_starts_with($origin, 'http://')) {
+        if ($origin !== null && study114_is_allowed_public_origin($origin)) {
             return rtrim($origin, '/') . '/auth';
         }
 
-        return rtrim($configured, '/');
+        return rtrim((string) $this->config['auth_ui'], '/');
     }
 
     private function effectiveRoleType(string $email, string $roleType): string

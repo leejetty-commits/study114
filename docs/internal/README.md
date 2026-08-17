@@ -23,6 +23,7 @@
 | [26-youngcart-settings-port.md](./26-youngcart-settings-port.md) | 환경설정 → A28-09 운영 설정 이식 | ★ 신규 |
 | [44-list-sort-ops-runbook.md](./44-list-sort-ops-runbook.md) | 정렬·추천·SKY 운영 런북 · rollback | ★ |
 | [45-tutor-expanded-complete-ssot.md](./45-tutor-expanded-complete-ssot.md) | tutor 상세완료·검색 노출 필드 SSOT · 진단 | ★ |
+| [46-domain-status-batch.md](./46-domain-status-batch.md) | 도메인 현황 · `https://study114.net` 정본 전환 | ★ 운영 |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
 
 ---
@@ -31,7 +32,7 @@
 
 | 항목 | 닷홈 (현재) | 카페24 스테이징 (참고) |
 |------|-------------|------------------------|
-| URL | `http://study114.dothome.co.kr` | `https://study114new.mycafe24.com` |
+| URL | **정본** `https://study114.net`. 호환 `https://www.study114.net`, `https://study114.dothome.co.kr` — [46](./46-domain-status-batch.md) | `https://study114new.mycafe24.com` |
 | 웹루트 FTP | `/hosting/study114/html` | `www/` (= `public/` 내용) |
 | **자동배포** | `main` push → Actions: `build:dothome` → FTP `public/` | (수동·별도) |
 | GitHub Secret | `FTP_PASSWORD` | — |
@@ -64,7 +65,7 @@ npm run build:dothome
 # 사전: Variable VITE_NAVER_MAP_CLIENT_ID · Secret FTP_PASSWORD
 
 # DB 연결 테스트 파일 (업로드 후 삭제)
-# public/api/health/db.php → http://study114.dothome.co.kr/api/health/db.php
+# public/api/health/db.php → https://study114.net/api/health/db.php
 ```
 
 **작업 순서:** 수정 → 빌드 → `git status` → commit → push → Actions 확인 → 사이트 확인

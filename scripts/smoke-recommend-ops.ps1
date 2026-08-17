@@ -1,6 +1,6 @@
 # Ops recommend API checks with session cookie
 $ErrorActionPreference = 'Stop'
-$base = 'https://study114.dothome.co.kr'
+$base = 'https://study114.net'
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 
 $loginBody = '{"email":"guardian1@dev.local","password":"password"}'
