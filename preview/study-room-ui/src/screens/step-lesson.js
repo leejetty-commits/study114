@@ -62,6 +62,7 @@ export function renderLesson() {
         <div class="form-group">
           <label class="form-label" for="capacity_per_time">타임별 원생수</label>
           <select class="form-input" id="capacity_per_time" name="capacity_per_time">
+            <option value="">선택</option>
             ${CAPACITY_PER_TIME_OPTIONS.map(
               (o) =>
                 `<option value="${o.value}" ${s.capacity_per_time === o.value ? 'selected' : ''}>${o.label}</option>`,
@@ -97,7 +98,7 @@ export function renderLesson() {
       ${renderSectionTitle('대상 · 과목')}
       <p class="register-hint mb-4">필요하면 과목을 더 추가할 수 있습니다.</p>
       <div data-subjects-list>
-        ${s.subjects.map((sub, i) => renderSubjectRow(sub, i)).join('')}
+        ${(s.subjects.length ? s.subjects : [emptySubject()]).map((sub, i) => renderSubjectRow(sub, i)).join('')}
       </div>
       <button type="button" class="btn btn--secondary btn--sm mt-4" data-action="add-subject">+ 과목 추가</button>
 

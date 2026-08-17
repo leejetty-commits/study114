@@ -126,76 +126,64 @@ export function getFacilityOptions() {
   return FACILITY_OPTIONS;
 }
 
-export const registerState = {
-  study_room_id: null,
-  gender: 'female',
-  study_room_name: '우동공과 대치점',
-  slogan: '매일 성장하는 작은 공부방',
-  operator_display_name: '김선생',
-  intro_short: '대치동 인근 소규모 맞춤 공부방',
-  intro_long: '학생 개별 수준에 맞춘 관리형 공부방입니다. 자기주도와 피드백을 병행합니다.',
-  lesson_place_type: 'academy',
-  lesson_operation_type: 'group_by_time_slot',
+export function emptyRoomState() {
+  return {
+    study_room_id: null,
+    gender: '',
+    study_room_name: '',
+    slogan: '',
+    operator_display_name: '',
+    intro_short: '',
+    intro_long: '',
+    lesson_place_type: '',
+    lesson_operation_type: '',
+    region_id: '',
+    complex_id: '',
+    region_basis_type: '',
+    address_text: '',
+    latitude: '',
+    longitude: '',
+    saved_regions: [
+      { region_id: '', complex_id: '', region_basis_type: '', is_primary: true },
+      { region_id: '', complex_id: '', region_basis_type: '', is_primary: false },
+      { region_id: '', complex_id: '', region_basis_type: '', is_primary: false },
+    ],
+    capacity_per_time: '',
+    recruitment_count: '',
+    main_subject_note: '',
+    teaching_style: '',
+    weekend_available: null,
+    one_on_one_available: null,
+    price_amount: '',
+    price_description: '',
+    subjects: [],
+    career_years: '',
+    academy_career_years: '',
+    franchise_flag: null,
+    franchise_name: '',
+    education_office_registered: null,
+    education_office_reg_no: '',
+    feature_1: '',
+    feature_2: '',
+    feature_3: '',
+    facility_ids: [],
+    facility_note: '',
+    contact_time_note: '',
+    contact_phone: '',
+    images: [],
+    youtube_url: '',
+    facebook_url: '',
+    instagram_url: '',
+    profile_status: '',
+    detail_completion_status: '',
+    basicComplete: false,
+    detailLessonSaved: false,
+    detailFacilitySaved: false,
+    completeNeedsHydrate: true,
+  };
+}
 
-  region_id: '1',
-  complex_id: '',
-  region_basis_type: 'dong',
-  address_text: '서울 강남구 대치동 123',
-  latitude: '',
-  longitude: '',
-  saved_regions: [
-    { region_id: '1', complex_id: '', region_basis_type: 'dong', is_primary: true },
-    { region_id: '2', complex_id: '', region_basis_type: 'dong', is_primary: false },
-    { region_id: '', complex_id: '', region_basis_type: 'dong', is_primary: false },
-  ],
-
-  capacity_per_time: 'one_to_four',
-  recruitment_count: '12',
-  main_subject_note: '수학·영어',
-  teaching_style: '자기주도 + 개별 피드백',
-  weekend_available: true,
-  one_on_one_available: false,
-  price_amount: '350000',
-  price_description: '주 2회 기준 월 35만원. 과목·횟수별 상이 — 문의',
-  subjects: [
-    { school_level: 'middle', grade_band: '중1~2', subject_master_id: '6', subject_name: '수학(중등)', is_main: true },
-    { school_level: 'middle', grade_band: '중1~2', subject_master_id: '3', subject_name: '영어문법', is_main: false },
-  ],
-
-  career_years: '8',
-  academy_career_years: '3',
-  franchise_flag: false,
-  franchise_name: '',
-  education_office_registered: true,
-  education_office_reg_no: '제2024-001234호',
-  feature_1: '소규모 밀착 관리',
-  feature_2: '학부모 주간 리포트',
-  feature_3: '자습·질의 병행',
-
-  facility_ids: [1, 2, 3, 5],
-  facility_note: '창가 자연광, 정수기·제습기 구비',
-  contact_time_note: '평일 14:00~21:00',
-  contact_phone: '010-1234-5678',
-  images: [
-    { image_type: 'cover', sort_order: 1, name: '대표.jpg' },
-  ],
-
-  /** 상세등록 — 외부 홍보 링크 (nullable) */
-  youtube_url: '',
-  facebook_url: '',
-  instagram_url: '',
-
-  profile_status: 'draft',
-  detail_completion_status: 'basic_only',
-  /** @type {boolean} */
-  basicComplete: false,
-  /** 상세 1단계(수업)를 이번 흐름에서 저장했는지 */
-  detailLessonSaved: false,
-  /** 상세 2단계(경력·시설)를 이번 흐름에서 저장했는지 */
-  detailFacilitySaved: false,
-  /** 요약 화면에서 서버 값을 다시 읽어야 하는지 */
-  completeNeedsHydrate: true,
-};
+export const registerState = emptyRoomState();
 
 export function isRoomBasicComplete(room) {
   const src = room || registerState;

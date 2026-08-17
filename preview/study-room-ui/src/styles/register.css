@@ -43,6 +43,7 @@
 
 .register-overview__row.is-empty dd > span {
   color: var(--gray-400, #94a3b8);
+  min-height: 1.25em;
 }
 
 .register-overview__row dd a {

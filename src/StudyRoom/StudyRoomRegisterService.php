@@ -1133,7 +1133,7 @@ final class StudyRoomRegisterService
 
             'study_room_id'            => $roomId,
 
-            'gender'                   => \Study114\Auth\ProfileGenderSync::get((int) $row['user_id']) ?? 'male',
+            'gender'                   => \Study114\Auth\ProfileGenderSync::get((int) $row['user_id']) ?? '',
 
             'study_room_name'          => (string) ($row['study_room_name'] ?? ''),
 
@@ -1145,9 +1145,9 @@ final class StudyRoomRegisterService
 
             'intro_long'               => (string) ($row['intro_long'] ?? ''),
 
-            'lesson_place_type'        => (string) ($row['lesson_place_type'] ?? 'study_room'),
+            'lesson_place_type'        => (string) ($row['lesson_place_type'] ?? ''),
 
-            'lesson_operation_type'    => (string) ($row['lesson_operation_type'] ?? 'group_by_time_slot'),
+            'lesson_operation_type'    => (string) ($row['lesson_operation_type'] ?? ''),
 
             'region_id'                => $row['region_id'] !== null ? (string) $row['region_id'] : '',
 
@@ -1165,7 +1165,7 @@ final class StudyRoomRegisterService
 
             'saved_regions'            => $savedRegions,
 
-            'capacity_per_time'        => (string) ($row['capacity_per_time'] ?? 'one_to_four'),
+            'capacity_per_time'        => (string) ($row['capacity_per_time'] ?? ''),
 
             'recruitment_count'        => $row['recruitment_count'] !== null ? (string) $row['recruitment_count'] : '',
 
@@ -1173,9 +1173,9 @@ final class StudyRoomRegisterService
 
             'teaching_style'           => (string) ($row['teaching_style'] ?? ''),
 
-            'weekend_available'        => (bool) ($row['weekend_available'] ?? false),
+            'weekend_available'        => $row['weekend_available'] === null ? null : (bool) $row['weekend_available'],
 
-            'one_on_one_available'     => (bool) ($row['one_on_one_available'] ?? false),
+            'one_on_one_available'     => $row['one_on_one_available'] === null ? null : (bool) $row['one_on_one_available'],
 
             'price_amount'             => $row['price_amount'] !== null ? (string) $row['price_amount'] : '',
 
@@ -1187,11 +1187,11 @@ final class StudyRoomRegisterService
 
             'academy_career_years'     => $row['academy_career_years'] !== null ? (string) $row['academy_career_years'] : '',
 
-            'franchise_flag'           => (bool) ($row['franchise_flag'] ?? false),
+            'franchise_flag'           => $row['franchise_flag'] === null ? null : (bool) $row['franchise_flag'],
 
             'franchise_name'           => (string) ($row['franchise_name'] ?? ''),
 
-            'education_office_registered' => (bool) ($row['education_office_registered'] ?? false),
+            'education_office_registered' => $row['education_office_registered'] === null ? null : (bool) $row['education_office_registered'],
 
             'education_office_reg_no'  => (string) ($row['education_office_reg_no'] ?? ''),
 

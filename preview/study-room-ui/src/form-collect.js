@@ -1,5 +1,7 @@
 /** DOM → registerState / API payload 수집 */
 
+import { emptyRoomState } from './state.js';
+
 /**
  * @param {HTMLFormElement|null|undefined} form
  * @param {import('./state.js').RegisterState} state
@@ -198,7 +200,13 @@ export function payloadForStep(step, state) {
  */
 export function applyRoomToState(target, room) {
   if (!room) return;
-  Object.assign(target, room);
+  const ui = {
+    basicComplete: target.basicComplete,
+    detailLessonSaved: target.detailLessonSaved,
+    detailFacilitySaved: target.detailFacilitySaved,
+    completeNeedsHydrate: target.completeNeedsHydrate,
+  };
+  Object.assign(target, emptyRoomState(), room, ui);
   if (room.study_room_id) {
     target.study_room_id = room.study_room_id;
   }
