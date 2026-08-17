@@ -10,7 +10,7 @@ export const SUPPORT_TERMS_REDIRECT = '/support/policies/terms';
 export const SUPPORT_ADMIN_PATHS = ['/support/admin', '/support/admin/notices', '/support/admin/tickets'];
 export const SUPPORT_CONTACT_PATHS = ['/support/contact/tickets'];
 
-const POLICY_SLUGS = ['terms', 'privacy', 'platform', 'trust', 'safety', 'student-privacy', 'reporting'];
+const POLICY_SLUGS = ['terms', 'privacy', 'platform', 'trust', 'safety', 'student-privacy', 'reporting', 'account-contact'];
 const LIBRARY_SECTIONS = ['templates', 'guides'];
 
 /** @param {string} hashPath */

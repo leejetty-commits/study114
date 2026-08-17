@@ -12,100 +12,158 @@ import {
   skipToSummary,
   withRoomId,
 } from '../layout.js';
+import {
+  PROMO_IMAGE_SPEC,
+  validatePromoImageFile,
+  openPromoCropDialog,
+  uploadPromoImage,
+  deletePromoImage,
+} from '../../../shared/promo-image.js';
+
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;');
+}
 
 function renderFacilityChecks() {
-  return getFacilityOptions()
+  const options = getFacilityOptions();
+  if (!options.length) {
+    return '<p class="register-hint">시설 목록을 불러오지 못했습니다. 잠시 후 다시 열어 주세요.</p>';
+  }
+  return options
     .map((f) => {
       const checked = registerState.facility_ids.includes(f.id);
       return `
       <label class="form-check">
         <input class="form-check__input" type="checkbox" name="facility_ids" value="${f.id}" ${checked ? 'checked' : ''} />
-        <span class="form-check__label">${f.facility_name}</span>
+        <span class="form-check__label">${esc(f.facility_name)}</span>
       </label>
     `;
     })
     .join('');
 }
 
+function previewSrc(img) {
+  return img.basic_720_path || img.prime_1280_path || img.image_path || '';
+}
+
+function renderPhotoCard(img, idx) {
+  const src = previewSrc(img);
+  const typeOpts = IMAGE_TYPES.map(
+    (t) =>
+      `<option value="${t.value}" ${img.image_type === t.value ? 'selected' : ''}>${t.label}</option>`,
+  ).join('');
+  return `
+    <article class="register-photo-card" data-image-id="${esc(img.id || '')}" data-photo-idx="${idx}">
+      <div class="register-photo-card__frame">
+        ${
+          src
+            ? `<img src="${esc(src)}" alt="홍보사진 ${idx + 1}" />`
+            : '<span class="register-photo-card__empty">미리보기</span>'
+        }
+      </div>
+      <div class="register-photo-card__meta">
+        <label class="form-label" for="photo-type-${idx}">사진 구분</label>
+        <select class="form-input" id="photo-type-${idx}" data-field="image_type">${typeOpts}</select>
+        <p class="register-hint">${esc(img.name || img.original_filename || '업로드됨')}</p>
+        <button type="button" class="btn btn--ghost btn--sm" data-action="remove-photo" data-idx="${idx}">삭제</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderPhotoGrid() {
+  const images = Array.isArray(registerState.images) ? registerState.images : [];
+  const cards = images.map((img, i) => renderPhotoCard(img, i)).join('');
+  const canAdd = images.length < PROMO_IMAGE_SPEC.maxCount;
+  return `
+    <div class="register-photo-grid" data-photo-grid>
+      ${cards}
+      ${
+        canAdd
+          ? `<label class="register-photo-add">
+              <input type="file" accept="${PROMO_IMAGE_SPEC.accept}" data-action="pick-photo" hidden />
+              <span class="register-photo-add__badge">+ 사진 추가</span>
+              <span class="register-photo-add__hint">${images.length}/${PROMO_IMAGE_SPEC.maxCount}</span>
+            </label>`
+          : ''
+      }
+    </div>
+  `;
+}
+
 export function renderFacility() {
   const s = registerState;
   const content = `
-      ${renderGuideNotice('경력·시설·연락을 저장한 뒤에 등록을 마칩니다. 지금은 건너뛰면 지금까지 저장된 값만 요약으로 보여 줍니다. 마이페이지에서 이어서 해도 됩니다.')}
-    <form data-form="facility" class="register-form-narrow">
+    <form data-form="facility">
+      ${renderGuideNotice('상세정보 2/2단계, 경력·시설·연락을 저장한 뒤에 등록을 마칩니다. 지금 건너뛰면 지금까지 저장된 값만 요약으로 보여 줍니다. 마이페이지에서 이어서 해도 됩니다.')}
       ${renderSectionTitle('경력 · 특징')}
-      <div class="register-grid-2 register-grid-2--tight">
+      <div class="register-grid-2">
         <div class="form-group">
           <label class="form-label" for="career_years">교습 경력 (년)</label>
-          <input class="form-input" type="number" id="career_years" name="career_years" value="${s.career_years}" />
+          <input class="form-input" type="number" id="career_years" name="career_years" value="${esc(s.career_years)}" />
         </div>
         <div class="form-group">
           <label class="form-label" for="academy_career_years">학원 경력 (년)</label>
-          <input class="form-input" type="number" id="academy_career_years" name="academy_career_years" value="${s.academy_career_years}" />
+          <input class="form-input" type="number" id="academy_career_years" name="academy_career_years" value="${esc(s.academy_career_years)}" />
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-check">
-          <input class="form-check__input" type="checkbox" name="franchise_flag" ${s.franchise_flag ? 'checked' : ''} />
-          <span class="form-check__label">프랜차이즈</span>
-        </label>
+      <div class="register-grid-2">
+        <div class="form-group">
+          <label class="form-check">
+            <input class="form-check__input" type="checkbox" name="franchise_flag" ${s.franchise_flag ? 'checked' : ''} />
+            <span class="form-check__label">프랜차이즈</span>
+          </label>
+          <label class="form-label" for="franchise_name">프랜차이즈명</label>
+          <input class="form-input" id="franchise_name" name="franchise_name" value="${esc(s.franchise_name)}" />
+        </div>
+        <div class="form-group">
+          <label class="form-check">
+            <input class="form-check__input" type="checkbox" name="education_office_registered" ${s.education_office_registered ? 'checked' : ''} />
+            <span class="form-check__label">교육청 등록</span>
+          </label>
+          <label class="form-label" for="education_office_reg_no">교육청 등록번호</label>
+          <input class="form-input" id="education_office_reg_no" name="education_office_reg_no" value="${esc(s.education_office_reg_no)}" />
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label" for="franchise_name">프랜차이즈명</label>
-        <input class="form-input" id="franchise_name" name="franchise_name" value="${s.franchise_name}" />
-      </div>
-      <div class="form-group">
-        <label class="form-check">
-          <input class="form-check__input" type="checkbox" name="education_office_registered" ${s.education_office_registered ? 'checked' : ''} />
-          <span class="form-check__label">교육청 등록</span>
-        </label>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="education_office_reg_no">교육청 등록번호</label>
-        <input class="form-input" id="education_office_reg_no" name="education_office_reg_no" value="${s.education_office_reg_no}" />
-      </div>
-      <div class="register-grid-2 register-grid-2--tight">
+      <div class="register-grid-2">
         <div class="form-group">
           <label class="form-label" for="feature_1">특징 1</label>
-          <input class="form-input" id="feature_1" name="feature_1" value="${s.feature_1}" />
+          <input class="form-input" id="feature_1" name="feature_1" value="${esc(s.feature_1)}" />
         </div>
         <div class="form-group">
           <label class="form-label" for="feature_2">특징 2</label>
-          <input class="form-input" id="feature_2" name="feature_2" value="${s.feature_2}" />
+          <input class="form-input" id="feature_2" name="feature_2" value="${esc(s.feature_2)}" />
         </div>
       </div>
       <div class="form-group">
         <label class="form-label" for="feature_3">특징 3</label>
-        <input class="form-input" id="feature_3" name="feature_3" value="${s.feature_3}" />
+        <input class="form-input" id="feature_3" name="feature_3" value="${esc(s.feature_3)}" />
       </div>
 
       ${renderSectionTitle('시설 · 환경')}
       <div class="register-check-grid mb-4">${renderFacilityChecks()}</div>
       <div class="form-group">
         <label class="form-label" for="facility_note">시설 자유기술</label>
-        <textarea class="form-input form-textarea" id="facility_note" name="facility_note" rows="3">${s.facility_note}</textarea>
+        <textarea class="form-input form-textarea" id="facility_note" name="facility_note" rows="3">${esc(s.facility_note)}</textarea>
       </div>
 
-      ${renderSectionTitle('연락 · 공개')}
-      <div class="register-grid-2 register-grid-2--tight">
-        <div class="form-group">
-          <label class="form-label" for="contact_time_note">연락 가능 시간</label>
-          <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note}" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="contact_phone">문의 전화</label>
-          <input class="form-input" type="tel" id="contact_phone" name="contact_phone" value="${s.contact_phone}" />
-        </div>
+      ${renderSectionTitle('소셜홍보 · 공개')}
+      <p class="register-hint">연락은 쪽지로만 합니다. 전화번호·이메일은 이 화면과 검색·상세에 올리지 않습니다.</p>
+      <div class="register-grid-2">
         <div class="form-group">
           <label class="form-label" for="youtube_url">유튜브 링크</label>
-          <input class="form-input" type="url" id="youtube_url" name="youtube_url" placeholder="https://www.youtube.com/..." value="${s.youtube_url}" />
+          <input class="form-input" type="url" id="youtube_url" name="youtube_url" placeholder="https://www.youtube.com/..." value="${esc(s.youtube_url)}" />
         </div>
         <div class="form-group">
           <label class="form-label" for="facebook_url">페이스북 링크</label>
-          <input class="form-input" type="url" id="facebook_url" name="facebook_url" placeholder="https://www.facebook.com/..." value="${s.facebook_url}" />
+          <input class="form-input" type="url" id="facebook_url" name="facebook_url" placeholder="https://www.facebook.com/..." value="${esc(s.facebook_url)}" />
         </div>
         <div class="form-group">
           <label class="form-label" for="instagram_url">인스타그램 링크</label>
-          <input class="form-input" type="url" id="instagram_url" name="instagram_url" placeholder="https://www.instagram.com/..." value="${s.instagram_url}" />
+          <input class="form-input" type="url" id="instagram_url" name="instagram_url" placeholder="https://www.instagram.com/..." value="${esc(s.instagram_url)}" />
         </div>
         <div class="form-group">
           <label class="form-label" for="profile_status">공개 상태</label>
@@ -116,26 +174,9 @@ export function renderFacility() {
         </div>
       </div>
 
-      ${renderSectionTitle('사진 (0~5장)')}
-      <p class="register-hint mb-4">미리보기용입니다. 실제 파일 업로드는 곧 연결됩니다.</p>
-      <div class="register-image-list">
-        ${s.images
-          .map(
-            (img) => `
-          <div class="register-image-item">
-            <select class="form-input" style="max-width:6rem;">
-              ${IMAGE_TYPES.map(
-                (t) =>
-                  `<option value="${t.value}" ${img.image_type === t.value ? 'selected' : ''}>${t.label}</option>`,
-              ).join('')}
-            </select>
-            <span>${img.name || '업로드 파일'}</span>
-          </div>
-        `,
-          )
-          .join('')}
-        <button type="button" class="btn btn--secondary btn--sm" data-action="add-image">+ 사진 추가 (최대 5)</button>
-      </div>
+      ${renderSectionTitle('홍보사진 (0~5장)')}
+      <p class="register-hint">JPG · PNG · WebP / 권장 ${PROMO_IMAGE_SPEC.recommended} / 최소 ${PROMO_IMAGE_SPEC.minWidth}×${PROMO_IMAGE_SPEC.minHeight} / 최대 4MB · 5장. 원본 1장을 올리면 프라임(16:9)과 베이직(1:1) 썸네일을 자동으로 만듭니다. 공개하려면 대표 사진 1장 이상이 필요합니다.</p>
+      ${renderPhotoGrid()}
 
       ${renderDetailStepNav({
         prevPath: '/register/lesson',
@@ -147,7 +188,6 @@ export function renderFacility() {
   return renderRegisterShell(content, {
     stepKey: 'facility',
     title: '경력 · 시설',
-    subtitle: '상세정보 2/2 · 경력과 시설·연락을 함께 마무리합니다.',
   });
 }
 
@@ -161,12 +201,26 @@ export function bindFacilityEvents(root) {
   prevBtn?.addEventListener('click', () => navigate(withRoomId('/register/lesson')));
   root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipToSummary());
 
+  function syncPhotoMeta() {
+    form?.querySelectorAll('[data-photo-idx]').forEach((card) => {
+      const idx = Number(card.getAttribute('data-photo-idx'));
+      if (!registerState.images[idx]) return;
+      const type = card.querySelector('[data-field="image_type"]')?.value;
+      if (type) registerState.images[idx].image_type = type;
+      registerState.images[idx].sort_order = idx + 1;
+    });
+  }
+
   async function persistFacility() {
     syncCareerFromForm(form, registerState);
     syncFacilityFromForm(form, registerState);
+    syncPhotoMeta();
     const urlErr = validatePromoUrls(registerState);
     if (urlErr) {
       throw new Error(urlErr);
+    }
+    if (registerState.profile_status === 'published' && !(registerState.images || []).length) {
+      throw new Error('공개하려면 홍보사진 1장 이상을 올려 주세요.');
     }
     await saveCurrentStep(registerState, 'career');
     await saveCurrentStep(registerState, 'facility');
@@ -189,16 +243,70 @@ export function bindFacilityEvents(root) {
     });
   });
 
-  root.querySelector('[data-action="add-image"]')?.addEventListener('click', () => {
-    if (registerState.images.length >= 5) {
-      alert('이미지는 최대 5장까지입니다.');
+  root.querySelector('[data-action="pick-photo"]')?.addEventListener('change', async (e) => {
+    const input = e.target;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if ((registerState.images || []).length >= PROMO_IMAGE_SPEC.maxCount) {
+      alert('홍보사진은 최대 5장까지입니다.');
       return;
     }
-    registerState.images.push({
-      image_type: 'interior',
-      sort_order: registerState.images.length + 1,
-      name: `photo-${registerState.images.length + 1}.jpg`,
+    const err = await validatePromoImageFile(file);
+    if (err) {
+      alert(err);
+      return;
+    }
+    const crop = await openPromoCropDialog(root, { file });
+    if (!crop) return;
+
+    let roomId = registerState.study_room_id;
+    if (!roomId) {
+      syncCareerFromForm(form, registerState);
+      syncFacilityFromForm(form, registerState);
+      const saved = await saveCurrentStep(registerState, 'career');
+      roomId = saved.study_room_id || registerState.study_room_id;
+    }
+    if (!roomId) {
+      alert('공부방 정보를 먼저 저장한 뒤 사진을 올려 주세요.');
+      return;
+    }
+
+    try {
+      const hasCover = (registerState.images || []).some((img) => img.image_type === 'cover');
+      const image = await uploadPromoImage({
+        studyRoomId: Number(roomId),
+        file,
+        cropX: crop.cropX,
+        cropY: crop.cropY,
+        imageType: hasCover ? 'interior' : 'cover',
+        sortOrder: (registerState.images || []).length + 1,
+      });
+      registerState.images = [...(registerState.images || []), image];
+      window.dispatchEvent(new Event('hashchange'));
+    } catch (uploadErr) {
+      alert(uploadErr instanceof Error ? uploadErr.message : '사진 업로드에 실패했습니다.');
+    }
+  });
+
+  root.querySelectorAll('[data-action="remove-photo"]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const idx = Number(btn.getAttribute('data-idx'));
+      const img = registerState.images[idx];
+      if (!img) return;
+      if (!confirm('이 사진을 삭제할까요?')) return;
+      try {
+        if (img.id && registerState.study_room_id) {
+          await deletePromoImage({
+            studyRoomId: Number(registerState.study_room_id),
+            imageId: Number(img.id),
+          });
+        }
+        registerState.images.splice(idx, 1);
+        window.dispatchEvent(new Event('hashchange'));
+      } catch (delErr) {
+        alert(delErr instanceof Error ? delErr.message : '사진을 삭제하지 못했습니다.');
+      }
     });
-    window.dispatchEvent(new Event('hashchange'));
   });
 }

@@ -35,6 +35,7 @@ const POLICY_NAV_SHORT = {
   safety: '안전과외',
   'student-privacy': '학생정보',
   reporting: '신고·제재',
+  'account-contact': '계정연락처',
 };
 
 function esc(s) {

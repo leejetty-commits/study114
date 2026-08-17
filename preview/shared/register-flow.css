@@ -215,6 +215,72 @@
   margin: 0.25rem 0 0;
 }
 
+.register-flow .form-hint--accent {
+  color: #c2410c;
+  font-weight: 600;
+}
+
+.register-flow .form-address__notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.register-flow .form-address__notes .form-hint {
+  margin: 0;
+}
+
+.register-region-slot__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: var(--space-2);
+}
+
+.sr-dong-search {
+  position: relative;
+}
+
+.sr-dong-search__list {
+  position: absolute;
+  z-index: 8;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.2rem);
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  max-height: 14rem;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.6rem;
+  box-shadow: 0 0.6rem 1.4rem rgb(15 23 42 / 0.12);
+}
+
+.sr-dong-search__item {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sr-dong-search__item:hover,
+.sr-dong-search__item:focus {
+  background: #eff6ff;
+}
+
+[data-study-room-basic-form] [data-promo-regions],
+[data-study-room-basic-form] [data-address-pick] {
+  grid-column: 1 / -1;
+}
+
 .register-flow .form-address {
   display: flex;
   flex-direction: column;

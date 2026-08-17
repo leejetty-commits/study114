@@ -42,6 +42,10 @@ export async function oauthCompleteRoleApi(roleUi) {
   return postJson('/api/auth/oauth/complete-role.php', { role: roleUi });
 }
 
+export async function saveAccountContactApi(payload) {
+  return postJson('/api/auth/account-contact.php', payload);
+}
+
 export {
   passwordForgotApi,
   passwordValidateTokenApi,

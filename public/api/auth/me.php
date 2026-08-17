@@ -48,6 +48,7 @@ $oauthRolePending = false;
 $emailVerified = false;
 $oauthProviders = [];
 $oauthProviderLabels = [];
+$needsAccountContact = false;
 try {
     $oauthRolePending = ($user['role_type'] === 'admin')
         ? false
@@ -56,6 +57,8 @@ try {
     $profileSvc = new \Study114\Auth\ProfileDisplayNameService();
     $oauthProviders = $profileSvc->oauthProviders((int) $user['user_id']);
     $oauthProviderLabels = \Study114\Auth\OAuthProviderLabels::labels($oauthProviders);
+    $needsAccountContact = (new \Study114\Auth\AccountContactService())
+        ->status((int) $user['user_id'])['needs_account_contact'];
 } catch (Throwable $e) {
     error_log('[me] auth flags: ' . $e->getMessage());
 }
@@ -73,4 +76,5 @@ echo json_encode([
     'email_verified' => $emailVerified,
     'oauth_providers' => $oauthProviders,
     'oauth_provider_labels' => $oauthProviderLabels,
+    'needs_account_contact' => $needsAccountContact,
 ], JSON_UNESCAPED_UNICODE);

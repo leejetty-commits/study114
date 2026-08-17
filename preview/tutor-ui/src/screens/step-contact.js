@@ -77,12 +77,8 @@ export function renderContact() {
         <div class="register-check-grid">${badges}</div>
       </div>
 
-      ${renderSectionTitle('연락 · 공개')}
+      ${renderSectionTitle('소셜홍보 · 공개')}
       <div class="register-grid-2 register-grid-2--tight">
-        <div class="form-group">
-          <label class="form-label" for="contact_time_note">연락 가능 시간</label>
-          <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note}" placeholder="예: 평일 18:00~22:00" />
-        </div>
         <div class="form-group">
           <label class="form-label" for="profile_status">공개 상태</label>
           <select class="form-input" id="profile_status" name="profile_status">

@@ -265,15 +265,22 @@ function renderMediaBlock(image_path, alt, ratio, zones = {}) {
     </div>`;
 }
 
+function listingImage(item, ratio) {
+  if (ratio === 'prime') {
+    return item.image_path_prime || item.image_path || '';
+  }
+  return item.image_path_basic || item.image_path || '';
+}
+
 function renderStudyRoomMediaOverlay(item, compareHtml) {
-  return renderMediaBlock(item.image_path, item.study_room_name, 'prime', {
+  return renderMediaBlock(listingImage(item, 'prime'), item.study_room_name, 'prime', {
     tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
     br: compareHtml,
   });
 }
 
 function renderPickStudyRoomMedia(item, compareHtml) {
-  return renderMediaBlock(item.image_path, item.study_room_name, 'pick', {
+  return renderMediaBlock(listingImage(item, 'pick'), item.study_room_name, 'pick', {
     tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
     br: compareHtml,
   });
@@ -606,7 +613,7 @@ function renderBasicStudyRoomRow(item, opts) {
   return `
     <article class="expo-basic expo-basic--study_room expo-hcard" data-provider-id="${item.id}" data-provider-kind="study_room">
       <div class="expo-hcard__media-wrap">
-        ${renderMedia(item.image_path, item.study_room_name, 'list')}
+        ${renderMedia(listingImage(item, 'list'), item.study_room_name, 'list')}
         ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
       </div>
       <div class="expo-hcard__body">

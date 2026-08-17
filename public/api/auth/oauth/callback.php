@@ -43,6 +43,16 @@ try {
     $user = $oauth->authenticate($provider, $code, $redirectUri);
     AuthSession::login($user['user_id'], $user['email'], $user['role_type'], $user['name']);
 
+    $contact = (new \Study114\Auth\AccountContactService())->status((int) $user['user_id']);
+    if ($contact['needs_account_contact']) {
+        $params = ['from' => 'oauth'];
+        if ($returnTo !== '' && (str_starts_with($returnTo, '/') || str_starts_with($returnTo, $homeUi))) {
+            $params['return_to'] = $returnTo;
+        }
+        header('Location: ' . $authUi . '/#/signup/account-contact?' . http_build_query($params), true, 302);
+        exit;
+    }
+
     $roleHome = match ($user['role_type']) {
         'admin'            => '/guest',
         'study_room_owner' => '/study-room',

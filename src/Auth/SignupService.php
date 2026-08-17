@@ -31,6 +31,10 @@ final class SignupService
         $name = $this->requireString($input, 'name');
         $gender = $this->requireString($input, 'gender');
         $phone = $this->requireString($input, 'phone');
+        if (!PhoneNormalizer::isValidMobile($phone)) {
+            throw new InvalidArgumentException('phone: 휴대폰 번호를 정확히 입력해 주세요.');
+        }
+        $phone = PhoneNormalizer::digits($phone);
         $address = $this->requireString($input, 'address');
         $roleUi = $this->requireString($input, 'role');
 

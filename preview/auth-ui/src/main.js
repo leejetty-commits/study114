@@ -15,6 +15,7 @@ import { renderLogin, bindLoginEvents } from './screens/login.js';
 import { renderSignupTerms, bindSignupTermsEvents } from './screens/signup-terms.js';
 import { renderSignupRole, bindSignupRoleEvents } from './screens/signup-role.js';
 import { renderSignupForm, bindSignupFormEvents } from './screens/signup-form.js';
+import { renderSignupAccountContact, bindSignupAccountContactEvents } from './screens/signup-account-contact.js';
 import { renderSignupBasic, bindSignupBasicEvents } from './screens/signup-basic.js';
 import { renderSignupExtra, bindSignupExtraEvents } from './screens/signup-extra.js';
 import { renderSignupComplete, bindSignupCompleteEvents } from './screens/signup-complete.js';
@@ -27,6 +28,7 @@ const SCREENS = {
   signupTerms: { render: renderSignupTerms, bind: bindSignupTermsEvents },
   signupRole: { render: renderSignupRole, bind: bindSignupRoleEvents },
   signupForm: { render: renderSignupForm, bind: bindSignupFormEvents },
+  signupAccountContact: { render: renderSignupAccountContact, bind: bindSignupAccountContactEvents },
   signupBasic: { render: renderSignupBasic, bind: bindSignupBasicEvents },
   signupExtra: { render: renderSignupExtra, bind: bindSignupExtraEvents },
   signupComplete: { render: renderSignupComplete, bind: bindSignupCompleteEvents },

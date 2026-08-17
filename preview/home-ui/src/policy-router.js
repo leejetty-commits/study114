@@ -3,7 +3,7 @@
  * STATIC_POLICY_RESERVED_SLUGS 와 동일 집합을 유지할 것.
  */
 
-const POLICY_SLUGS = ['terms', 'privacy', 'platform', 'trust', 'safety', 'student-privacy', 'reporting'];
+const POLICY_SLUGS = ['terms', 'privacy', 'platform', 'trust', 'safety', 'student-privacy', 'reporting', 'account-contact'];
 
 /** boardKey `policy-log` — 정적 P26 와 충돌하지 않는 전용 slug (구현 후순위) */
 export const POLICY_CHANGELOG_PATH = '/policy/changelog';

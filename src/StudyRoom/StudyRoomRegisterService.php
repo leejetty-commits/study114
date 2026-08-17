@@ -58,6 +58,7 @@ final class StudyRoomRegisterService
             error_log('[study-room masters] complexes: ' . $e->getMessage());
         }
         try {
+            FacilityMastersEnsure::ensure($pdo);
             $facilities = $pdo->query(
                 'SELECT id, facility_code, facility_name
                  FROM facility_masters WHERE is_active = 1 ORDER BY sort_order ASC, id ASC'
@@ -483,6 +484,7 @@ final class StudyRoomRegisterService
         }
         $this->syncSavedRegions($pdo, $roomId, $input);
         $this->saveHomeAddress($pdo, $userId, $input);
+        $this->saveBusinessAddressLine2($pdo, $roomId, $input);
     }
 
     /** @param array<string, mixed> $input */
@@ -529,14 +531,53 @@ final class StudyRoomRegisterService
     /** @param array<string, mixed> $input */
     private function saveHomeAddress(PDO $pdo, int $userId, array $input): void
     {
-        if (!array_key_exists('home_address', $input) && !array_key_exists('home_address_zip', $input)) {
+        if (!array_key_exists('home_address', $input) && !array_key_exists('home_address_zip', $input)
+            && !array_key_exists('home_address_line2', $input)) {
             return;
         }
         $line1 = $this->optionalString($input, 'home_address');
         $zip = $this->optionalString($input, 'home_address_zip');
-        $pdo->prepare(
-            'UPDATE user_profiles SET address_line1 = ?, address_zip = ? WHERE user_id = ?'
-        )->execute([$line1, $zip, $userId]);
+        $line2 = $this->optionalString($input, 'home_address_line2');
+        try {
+            $pdo->prepare(
+                'UPDATE user_profiles SET address_line1 = ?, address_zip = ?, address_line2 = ? WHERE user_id = ?'
+            )->execute([$line1, $zip, $line2, $userId]);
+        } catch (PDOException $e) {
+            $pdo->prepare(
+                'UPDATE user_profiles SET address_line1 = ?, address_zip = ? WHERE user_id = ?'
+            )->execute([$line1, $zip, $userId]);
+        }
+    }
+
+    /** @param array<string, mixed> $input */
+    private function saveBusinessAddressLine2(PDO $pdo, int $roomId, array $input): void
+    {
+        if (!array_key_exists('address_line2', $input)) {
+            return;
+        }
+        $this->ensureBusinessAddressLine2($pdo);
+        $line2 = $this->optionalString($input, 'address_line2');
+        try {
+            $pdo->prepare('UPDATE study_rooms SET address_line2 = ? WHERE id = ?')->execute([$line2, $roomId]);
+        } catch (PDOException $e) {
+            /* 컬럼 미적용 */
+        }
+    }
+
+    private function ensureBusinessAddressLine2(PDO $pdo): void
+    {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+        try {
+            $pdo->exec(
+                'ALTER TABLE study_rooms ADD COLUMN address_line2 VARCHAR(255) NULL COMMENT \'사업장 상세주소\' AFTER address_text'
+            );
+        } catch (PDOException $e) {
+            /* already exists */
+        }
+        $done = true;
     }
 
 
@@ -698,10 +739,6 @@ final class StudyRoomRegisterService
 
                 facility_note = ?,
 
-                contact_time_note = ?,
-
-                contact_phone = ?,
-
                 youtube_url = ?,
 
                 facebook_url = ?,
@@ -719,10 +756,6 @@ final class StudyRoomRegisterService
         $stmt->execute([
 
             $this->optionalString($input, 'facility_note'),
-
-            $this->optionalString($input, 'contact_time_note'),
-
-            $this->optionalString($input, 'contact_phone'),
 
             $this->optionalUrl($input, 'youtube_url'),
 
@@ -1002,10 +1035,6 @@ final class StudyRoomRegisterService
 
 
 
-        $pdo->prepare('DELETE FROM study_room_images WHERE study_room_id = ?')->execute([$roomId]);
-
-
-
         $order = 1;
 
         foreach ($images as $img) {
@@ -1016,13 +1045,7 @@ final class StudyRoomRegisterService
 
             }
 
-            $path = trim((string) ($img['image_path'] ?? $img['name'] ?? ''));
-
-            if ($path === '') {
-
-                continue;
-
-            }
+            $id = isset($img['id']) ? (int) $img['id'] : 0;
 
             $type = (string) ($img['image_type'] ?? 'other');
 
@@ -1032,17 +1055,15 @@ final class StudyRoomRegisterService
 
             }
 
-            $sortOrder = isset($img['sort_order']) ? (int) $img['sort_order'] : $order;
+            if ($id > 0) {
 
+                $pdo->prepare(
 
+                    'UPDATE study_room_images SET image_type = ? WHERE id = ? AND study_room_id = ?'
 
-            $pdo->prepare(
+                )->execute([$type, $id, $roomId]);
 
-                'INSERT INTO study_room_images (study_room_id, image_type, image_path, sort_order)
-
-                 VALUES (?, ?, ?, ?)'
-
-            )->execute([$roomId, $type, $path, $sortOrder]);
+            }
 
             $order++;
 
@@ -1134,7 +1155,7 @@ final class StudyRoomRegisterService
                 'region_label' => (string) ($r['region_label'] ?? ''),
                 'complex_name' => (string) ($r['complex_name'] ?? ''),
                 'complex_address' => (string) ($r['complex_address'] ?? ''),
-                'address_text' => (string) ($r['complex_address'] ?? $r['region_label'] ?? ''),
+                'address_text' => (string) ($r['complex_address'] ?? ''),
             ];
         };
         try {
@@ -1212,9 +1233,25 @@ final class StudyRoomRegisterService
 
 
 
+        try {
+
+            (new \Study114\Media\PromoImageService())->ensureColumns($pdo);
+
+        } catch (\Throwable $e) {
+
+            error_log('[study-room images] ensure: ' . $e->getMessage());
+
+        }
+
+
+
         $imageStmt = $pdo->prepare(
 
-            'SELECT image_type, image_path, sort_order FROM study_room_images
+            'SELECT id, image_type, image_path, sort_order, original_filename,
+
+                    original_path, prime_1280_path, prime_1600_path, basic_360_path, basic_720_path
+
+               FROM study_room_images
 
              WHERE study_room_id = ? ORDER BY sort_order ASC, id ASC'
 
@@ -1228,13 +1265,27 @@ final class StudyRoomRegisterService
 
             $images[] = [
 
+                'id' => (int) ($img['id'] ?? 0),
+
                 'image_type' => (string) $img['image_type'],
 
                 'sort_order' => (int) $img['sort_order'],
 
-                'name'       => (string) $img['image_path'],
+                'name'       => (string) ($img['original_filename'] ?? $img['image_path'] ?? ''),
+
+                'original_filename' => (string) ($img['original_filename'] ?? ''),
 
                 'image_path' => (string) $img['image_path'],
+
+                'original_path' => (string) ($img['original_path'] ?? ''),
+
+                'prime_1280_path' => (string) ($img['prime_1280_path'] ?? ''),
+
+                'prime_1600_path' => (string) ($img['prime_1600_path'] ?? ''),
+
+                'basic_360_path' => (string) ($img['basic_360_path'] ?? ''),
+
+                'basic_720_path' => (string) ($img['basic_720_path'] ?? ''),
 
             ];
 
@@ -1244,15 +1295,17 @@ final class StudyRoomRegisterService
 
         $homeAddress = '';
         $homeZip = '';
+        $homeLine2 = '';
         try {
             $homeStmt = $pdo->prepare(
-                'SELECT address_line1, address_zip FROM user_profiles WHERE user_id = ? LIMIT 1'
+                'SELECT address_line1, address_zip, address_line2 FROM user_profiles WHERE user_id = ? LIMIT 1'
             );
             $homeStmt->execute([(int) $row['user_id']]);
             $home = $homeStmt->fetch(PDO::FETCH_ASSOC);
             if (is_array($home)) {
                 $homeAddress = (string) ($home['address_line1'] ?? '');
                 $homeZip = (string) ($home['address_zip'] ?? '');
+                $homeLine2 = (string) ($home['address_line2'] ?? '');
             }
         } catch (PDOException $e) {
             /* 프로필 주소 컬럼 없으면 빈 값 */
@@ -1266,6 +1319,7 @@ final class StudyRoomRegisterService
 
             'home_address'             => $homeAddress,
             'home_address_zip'         => $homeZip,
+            'home_address_line2'       => $homeLine2,
 
             'study_room_name'          => (string) ($row['study_room_name'] ?? ''),
 
@@ -1290,6 +1344,7 @@ final class StudyRoomRegisterService
                 : (($row['complex_id'] ?? null) !== null ? 'complex' : 'dong'),
 
             'address_text'             => (string) ($row['address_text'] ?? ''),
+            'address_line2'            => (string) ($row['address_line2'] ?? ''),
 
             'latitude'                 => $row['latitude'] !== null ? (string) $row['latitude'] : '',
 
@@ -1337,9 +1392,9 @@ final class StudyRoomRegisterService
 
             'facility_note'            => (string) ($row['facility_note'] ?? ''),
 
-            'contact_time_note'        => (string) ($row['contact_time_note'] ?? ''),
+            'contact_time_note'        => '',
 
-            'contact_phone'            => (string) ($row['contact_phone'] ?? ''),
+            'contact_phone'            => '',
 
             'youtube_url'              => (string) ($row['youtube_url'] ?? ''),
 

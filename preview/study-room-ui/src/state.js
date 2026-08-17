@@ -194,6 +194,8 @@ export function emptyRoomState() {
     address_zip: '',
     home_address: '',
     home_address_zip: '',
+    home_address_line2: '',
+    address_line2: '',
     complex_name: '',
     complex_address: '',
     address_sido: '',

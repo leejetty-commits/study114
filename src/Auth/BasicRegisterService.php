@@ -204,12 +204,20 @@ final class BasicRegisterService
 
         $slots = $this->normalizeSignupPromoSlots($pdo, $input, $regionId, $complexId, $basis);
 
-        if (array_key_exists('home_address', $input) || array_key_exists('home_address_zip', $input)) {
+        if (array_key_exists('home_address', $input) || array_key_exists('home_address_zip', $input)
+            || array_key_exists('home_address_line2', $input)) {
             $home = $this->optionalString($input, 'home_address');
             $zip = $this->optionalString($input, 'home_address_zip');
-            $pdo->prepare(
-                'UPDATE user_profiles SET address_line1 = COALESCE(?, address_line1), address_zip = COALESCE(?, address_zip) WHERE user_id = ?'
-            )->execute([$home, $zip, $userId]);
+            $line2 = $this->optionalString($input, 'home_address_line2');
+            try {
+                $pdo->prepare(
+                    'UPDATE user_profiles SET address_line1 = COALESCE(?, address_line1), address_zip = COALESCE(?, address_zip), address_line2 = COALESCE(?, address_line2) WHERE user_id = ?'
+                )->execute([$home, $zip, $line2, $userId]);
+            } catch (PDOException $e) {
+                $pdo->prepare(
+                    'UPDATE user_profiles SET address_line1 = COALESCE(?, address_line1), address_zip = COALESCE(?, address_zip) WHERE user_id = ?'
+                )->execute([$home, $zip, $userId]);
+            }
         }
 
         $pdo->beginTransaction();
@@ -252,6 +260,15 @@ final class BasicRegisterService
                 ]);
             }
             $roomId = (int) $pdo->lastInsertId();
+
+            $bizLine2 = $this->optionalString($input, 'address_line2');
+            if ($bizLine2 !== null) {
+                try {
+                    $pdo->prepare('UPDATE study_rooms SET address_line2 = ? WHERE id = ?')->execute([$bizLine2, $roomId]);
+                } catch (PDOException $e) {
+                    /* 컬럼 미적용 */
+                }
+            }
 
             $hasSlotBasis = $this->columnExists($pdo, 'study_room_regions', 'region_basis_type');
             foreach ($slots as $slot) {

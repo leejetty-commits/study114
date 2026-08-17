@@ -9,7 +9,7 @@ $genderLabels = [
 $genderLabel = $genderLabels[$role ?? ''] ?? '성별';
 ?>
 <h1 class="auth-heading">회원가입</h1>
-<p class="auth-subheading mb-6">공통 회원 정보를 입력해 주세요.</p>
+<p class="auth-subheading mb-6">공통 회원 정보를 입력해 주세요. 이메일과 휴대폰은 필수이며 다른 회원에게 공개하지 않습니다.</p>
 
 <?php
 $steps = ['약관', '회원구분', '가입', '기본등록', '완료'];
@@ -23,6 +23,7 @@ require __DIR__ . '/../partials/errors.php';
   <div class="form-group">
     <label class="form-label form-label--required" for="signup-email">이메일(ID)</label>
     <input class="form-input" type="email" id="signup-email" name="email" value="<?= study114_e($old['email'] ?? '') ?>" autocomplete="username" required>
+    <p class="form-hint">로그인 ID이자 비밀번호 찾기 기준입니다. 검색·상세·쪽지·프로필에는 노출되지 않습니다.</p>
   </div>
   <div class="form-row">
     <div class="form-group">
@@ -54,6 +55,7 @@ require __DIR__ . '/../partials/errors.php';
   <div class="form-group">
     <label class="form-label form-label--required" for="signup-phone">휴대폰</label>
     <input class="form-input" type="tel" id="signup-phone" name="phone" value="<?= study114_e($old['phone'] ?? '') ?>" autocomplete="tel" required>
+    <p class="form-hint">계정 복구 보조와 운영 안내 기준입니다. 다른 회원에게는 보여 주지 않습니다.</p>
   </div>
   <div class="form-group form-address">
     <span class="form-label form-label--required">주소</span>

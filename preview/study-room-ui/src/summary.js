@@ -186,17 +186,15 @@ export function buildRoomInputSummary(room) {
       ],
     },
     {
-      title: '시설 · 연락',
+      title: '시설 · 소셜홍보',
       rows: [
         { label: '시설', value: facilityNames(s.facility_ids) },
         { label: '시설 설명', value: str(s.facility_note) },
-        { label: '연락 가능 시간', value: str(s.contact_time_note) },
-        { label: '문의 전화', value: str(s.contact_phone) },
         { label: '유튜브', value: str(s.youtube_url) },
         { label: '페이스북', value: str(s.facebook_url) },
         { label: '인스타그램', value: str(s.instagram_url) },
         ...imageValues.map((value, i) => ({
-          label: images.length > 1 ? `사진 ${i + 1}` : '사진',
+          label: images.length > 1 ? `홍보사진 ${i + 1}` : '홍보사진',
           value,
         })),
         { label: '공개 상태', value: profileStatusLabel(s.profile_status) },

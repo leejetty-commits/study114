@@ -288,6 +288,7 @@ export const TERMS_LINKS = [
   { label: '제출자료/신뢰정보 고지', href: '/support/policies/trust' },
   { label: '학생정보 보호 고지', href: '/support/policies/student-privacy' },
   { label: '신고/제재/분쟁 안내', href: '/support/policies/reporting' },
+  { label: '계정·연락처 원칙', href: '/support/policies/account-contact' },
 ];
 
 /** §7-3 운영 문의 */

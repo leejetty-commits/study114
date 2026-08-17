@@ -302,6 +302,8 @@ final class SearchService
         $latExpr = $this->columnCache($pdo, 'study_rooms', 'latitude') ? 'sr.latitude' : 'NULL';
         $lngExpr = $this->columnCache($pdo, 'study_rooms', 'longitude') ? 'sr.longitude' : 'NULL';
         $gradeExpr = $this->columnCache($pdo, 'study_rooms', 'grade_band') ? 'sr.grade_band' : 'NULL';
+        $primeImgExpr = $this->roomCoverImageExpr($pdo, 'prime');
+        $basicImgExpr = $this->roomCoverImageExpr($pdo, 'basic');
 
         $sql = "
             SELECT DISTINCT sr.id, sr.study_room_name, sr.price_amount, sr.intro_short,
@@ -312,7 +314,9 @@ final class SearchService
                    sr.published_at, sr.created_at,
                    {$recommendExpr} AS recommend_count,
                    {$reviewExpr} AS review_count,
-                   r.dong_name, r.sigungu_name, c.name AS complex_name
+                   r.dong_name, r.sigungu_name, c.name AS complex_name,
+                   {$primeImgExpr} AS image_path_prime,
+                   {$basicImgExpr} AS image_path_basic
             FROM study_rooms sr
             LEFT JOIN regions r ON sr.region_id = r.id
             LEFT JOIN complexes c ON sr.complex_id = c.id
@@ -372,6 +376,11 @@ final class SearchService
                 'created_at'                 => $row['created_at'] ?? null,
                 'recommend_count'            => (int) ($row['recommend_count'] ?? 0),
                 'review_count'               => (int) ($row['review_count'] ?? 0),
+                'image_path_prime'           => (string) ($row['image_path_prime'] ?? ''),
+                'image_path_basic'           => (string) ($row['image_path_basic'] ?? ''),
+                'image_path'                 => $exposureTier === 'prime'
+                    ? (string) ($row['image_path_prime'] ?? $row['image_path_basic'] ?? '')
+                    : (string) ($row['image_path_basic'] ?? $row['image_path_prime'] ?? ''),
             ];
 
             $items[] = $item;
@@ -891,5 +900,35 @@ final class SearchService
         }
 
         return 'basic';
+    }
+
+    /** 전화번호·이메일은 검색 SELECT에 넣지 않는다. 홍보사진 파생본만. */
+    private function roomCoverImageExpr(PDO $pdo, string $kind): string
+    {
+        if (!$this->tableExists($pdo, 'study_room_images')) {
+            return 'NULL';
+        }
+        $prime1600 = $this->columnCache($pdo, 'study_room_images', 'prime_1600_path');
+        $prime1280 = $this->columnCache($pdo, 'study_room_images', 'prime_1280_path');
+        $basic720 = $this->columnCache($pdo, 'study_room_images', 'basic_720_path');
+        $basic360 = $this->columnCache($pdo, 'study_room_images', 'basic_360_path');
+        $parts = $kind === 'prime'
+            ? array_values(array_filter([
+                $prime1600 ? "NULLIF(sri.prime_1600_path,'')" : null,
+                $prime1280 ? "NULLIF(sri.prime_1280_path,'')" : null,
+                'NULLIF(sri.image_path,\'\')',
+            ]))
+            : array_values(array_filter([
+                $basic720 ? "NULLIF(sri.basic_720_path,'')" : null,
+                $basic360 ? "NULLIF(sri.basic_360_path,'')" : null,
+                'NULLIF(sri.image_path,\'\')',
+            ]));
+        $coalesce = 'COALESCE(' . implode(', ', $parts) . ')';
+
+        return "(SELECT {$coalesce}
+                  FROM study_room_images sri
+                 WHERE sri.study_room_id = sr.id
+                 ORDER BY (sri.image_type = 'cover') DESC, sri.sort_order ASC, sri.id ASC
+                 LIMIT 1)";
     }
 }

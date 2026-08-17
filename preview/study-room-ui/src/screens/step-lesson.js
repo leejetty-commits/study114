@@ -87,7 +87,7 @@ function renderSubjectRow(sub, idx) {
           ${renderSubjectSelect(selectVal)}
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group register-subject-row__custom">
         <label class="form-label">과목 직접입력</label>
         <input class="form-input" data-field="subject_custom" value="${esc(customVal)}" placeholder="목록에 없으면 직접 입력" />
       </div>
@@ -103,19 +103,21 @@ function renderSubjectRow(sub, idx) {
 function renderPriceRow(row, idx) {
   return `
     <div class="register-price-row" data-price-idx="${idx}">
-      <div class="form-group">
-        <label class="form-label">수업내역</label>
-        <input class="form-input" data-field="price_item" value="${esc(row.item)}" placeholder="예: 중등 수학" />
+      <div class="register-price-row__top">
+        <div class="form-group">
+          <label class="form-label">수업내역</label>
+          <input class="form-input" data-field="price_item" value="${esc(row.item)}" placeholder="예: 중등 수학" />
+        </div>
+        <div class="form-group register-price-row__fee">
+          <label class="form-label">월 수업료</label>
+          <input class="form-input" data-field="price_fee" value="${esc(row.fee)}" placeholder="예: 35만원" />
+        </div>
+        <button type="button" class="btn btn--ghost btn--sm" data-action="remove-price" data-idx="${idx}">삭제</button>
       </div>
-      <div class="form-group">
-        <label class="form-label">월 수업료</label>
-        <input class="form-input" data-field="price_fee" value="${esc(row.fee)}" placeholder="예: 35만원" />
-      </div>
-      <div class="form-group">
+      <div class="form-group register-price-row__note">
         <label class="form-label">수업료 설명</label>
         <input class="form-input" data-field="price_note" value="${esc(row.note)}" placeholder="예: 주 2회 기준" />
       </div>
-      <button type="button" class="btn btn--ghost btn--sm" data-action="remove-price" data-idx="${idx}">삭제</button>
     </div>
   `;
 }
@@ -175,7 +177,7 @@ export function renderLesson() {
   const nextEnabled = true;
   const content = `
     <form data-form="lesson">
-      ${renderGuideNotice('상세정보 1단계입니다. 수업·가격을 채운 뒤 다음으로 진행하세요. 지금은 건너뛰고 마이페이지에서 이어서 해도 됩니다.')}
+      ${renderGuideNotice('상세정보 1/2 단계입니다. 수업·가격을 채운 뒤 다음으로 진행하세요. 지금은 건너뛰고 마이페이지에서 이어서 해도 됩니다.')}
       ${renderSectionTitle('수업 정보')}
       <div class="form-group">
         <label class="form-label">수업운영형태</label>
@@ -189,7 +191,7 @@ export function renderLesson() {
           ).join('')}
         </div>
       </div>
-      <div class="register-grid-2">
+      <div class="register-grid-3">
         <div class="form-group">
           <label class="form-label" for="capacity_per_time">타임별 원생수</label>
           <select class="form-input" id="capacity_per_time" name="capacity_per_time">
@@ -204,12 +206,12 @@ export function renderLesson() {
           <label class="form-label" for="recruitment_count">모집 인원</label>
           <input class="form-input" type="number" id="recruitment_count" name="recruitment_count" value="${esc(s.recruitment_count)}" />
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="main_subject_note">주력과목</label>
-        <select class="form-input" id="main_subject_note" name="main_subject_note">
-          ${renderMainSubjectSelect(s.main_subject_note)}
-        </select>
+        <div class="form-group">
+          <label class="form-label" for="main_subject_note">주력과목</label>
+          <select class="form-input" id="main_subject_note" name="main_subject_note">
+            ${renderMainSubjectSelect(s.main_subject_note)}
+          </select>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">지도 스타일</label>
@@ -235,7 +237,7 @@ export function renderLesson() {
       <div data-subjects-list>
         ${subjects.map((sub, i) => renderSubjectRow(sub, i)).join('')}
       </div>
-      <button type="button" class="btn btn--secondary btn--sm mt-4" data-action="add-subject">+ 과목 추가</button>
+      <button type="button" class="btn btn--secondary btn--sm register-add-btn" data-action="add-subject">+ 과목 추가</button>
 
       <div class="register-grid-2 register-schedule-price">
         <section class="register-pane">
@@ -265,7 +267,7 @@ export function renderLesson() {
           <div data-price-list>
             ${prices.map((row, i) => renderPriceRow(row, i)).join('')}
           </div>
-          <button type="button" class="btn btn--secondary btn--sm mt-4" data-action="add-price">+ 가격 항목 추가</button>
+          <button type="button" class="btn btn--secondary btn--sm register-add-btn" data-action="add-price">+ 가격 항목 추가</button>
         </section>
       </div>
 
@@ -279,7 +281,6 @@ export function renderLesson() {
   return renderRegisterShell(content, {
     stepKey: 'lesson',
     title: '수업 · 가격',
-    subtitle: '상세정보 1/2 · 학생·학부모에게 보이는 수업 정보를 적어 주세요.',
   });
 }
 

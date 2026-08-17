@@ -82,8 +82,8 @@ function overviewRows() {
     { label: '공부방명', value: s.study_room_name },
     { label: '주력과목', value: s.main_subject_note },
     { label: '원장 성별', value: genderLabel(s.gender) },
-    { label: '집주소', value: s.home_address },
-    { label: '사업장주소', value: s.address_text },
+    { label: '집주소', value: [s.home_address, s.home_address_line2].filter((x) => String(x || '').trim()).join(' ') },
+    { label: '사업장주소', value: [s.address_text, s.address_line2].filter((x) => String(x || '').trim()).join(' ') },
     {
       label: '홍보지역',
       value: exposures.join('\n'),

@@ -246,8 +246,6 @@ export function syncFacilityFromForm(form, state) {
   const fd = new FormData(form);
   state.facility_ids = fd.getAll('facility_ids').map((v) => Number(v));
   state.facility_note = String(fd.get('facility_note') ?? '');
-  state.contact_time_note = String(fd.get('contact_time_note') ?? '');
-  state.contact_phone = String(fd.get('contact_phone') ?? '');
   state.youtube_url = String(fd.get('youtube_url') ?? '');
   state.facebook_url = String(fd.get('facebook_url') ?? '');
   state.instagram_url = String(fd.get('instagram_url') ?? '');
@@ -285,11 +283,13 @@ export function payloadForStep(step, state) {
         complex_address: state.complex_address,
         address_text: state.address_text,
         address_zip: state.address_zip,
+        address_line2: state.address_line2,
         address_sido: state.address_sido,
         address_sigungu: state.address_sigungu,
         address_bname: state.address_bname,
         home_address: state.home_address,
         home_address_zip: state.home_address_zip,
+        home_address_line2: state.home_address_line2,
         latitude: state.latitude,
         longitude: state.longitude,
         saved_regions: state.saved_regions,
@@ -303,11 +303,13 @@ export function payloadForStep(step, state) {
         complex_address: state.complex_address,
         address_text: state.address_text,
         address_zip: state.address_zip,
+        address_line2: state.address_line2,
         address_sido: state.address_sido,
         address_sigungu: state.address_sigungu,
         address_bname: state.address_bname,
         home_address: state.home_address,
         home_address_zip: state.home_address_zip,
+        home_address_line2: state.home_address_line2,
         latitude: state.latitude,
         longitude: state.longitude,
         saved_regions: state.saved_regions,
@@ -349,16 +351,19 @@ export function payloadForStep(step, state) {
       return {
         facility_ids: state.facility_ids,
         facility_note: state.facility_note,
-        contact_time_note: state.contact_time_note,
-        contact_phone: state.contact_phone,
         youtube_url: state.youtube_url,
         facebook_url: state.facebook_url,
         instagram_url: state.instagram_url,
         profile_status: state.profile_status,
-        images: state.images.map((img) => ({
+        images: (state.images || []).map((img, i) => ({
+          id: img.id || null,
           image_type: img.image_type,
           image_path: img.image_path || img.name,
-          sort_order: img.sort_order,
+          prime_1280_path: img.prime_1280_path || '',
+          prime_1600_path: img.prime_1600_path || '',
+          basic_360_path: img.basic_360_path || '',
+          basic_720_path: img.basic_720_path || '',
+          sort_order: img.sort_order || i + 1,
         })),
       };
     default:
