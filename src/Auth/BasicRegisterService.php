@@ -377,7 +377,13 @@ final class BasicRegisterService
                     : $fallbackBasis;
                 if ($regionId <= 0) {
                     try {
-                        $regionId = (int) RegionEnsure::fromKakao($pdo, $slot)['id'];
+                        $payload = $input;
+                        foreach ($slot as $key => $value) {
+                            if ($value !== '' && $value !== null) {
+                                $payload[$key] = $value;
+                            }
+                        }
+                        $regionId = (int) RegionEnsure::fromKakao($pdo, $payload)['id'];
                     } catch (InvalidArgumentException $e) {
                         continue;
                     }

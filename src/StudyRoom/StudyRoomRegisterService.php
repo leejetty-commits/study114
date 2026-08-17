@@ -835,7 +835,13 @@ final class StudyRoomRegisterService
                     $regionId = $matched;
                 } else {
                     try {
-                        $regionId = (int) RegionEnsure::fromKakao($pdo, array_merge($input, $slot))['id'];
+                        $payload = $input;
+                        foreach ($slot as $key => $value) {
+                            if ($value !== '' && $value !== null) {
+                                $payload[$key] = $value;
+                            }
+                        }
+                        $regionId = (int) RegionEnsure::fromKakao($pdo, $payload)['id'];
                     } catch (InvalidArgumentException $e) {
                         $regionId = 0;
                     }

@@ -224,10 +224,6 @@ body.register-edit-open {
   background: #fff7ee;
 }
 
-.register-edit-dialog .chip__label {
-  padding: 0.35rem 0.7rem;
-}
-
 .register-nav--overview {
   display: flex;
   flex-wrap: wrap;

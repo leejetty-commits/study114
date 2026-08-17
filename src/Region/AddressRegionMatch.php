@@ -25,6 +25,13 @@ final class AddressRegionMatch
         if ($dong === '') {
             return null;
         }
+        if (str_contains($dong, ' ')) {
+            $parts = preg_split('/\s+/u', $dong) ?: [];
+            $last = trim((string) (end($parts) ?: ''));
+            if ($last !== '') {
+                $dong = $last;
+            }
+        }
 
         $stmt = $pdo->prepare(
             'SELECT id, sido_name, sigungu_name, dong_name

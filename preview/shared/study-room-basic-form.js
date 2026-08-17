@@ -6,7 +6,7 @@
  * 주소칸은 카카오 우편번호(더미 단지 목록 없이 호출).
  */
 
-import { openKakaoPostcode } from './kakao-postcode.js';
+import { loadKakaoPostcode, openKakaoPostcode } from './kakao-postcode.js';
 import { displayRoad } from './address-region-match.js';
 import { ensureRegionFromKakao } from './region-ensure.js';
 import { renderMainSubjectSelect } from './main-subjects.js';
@@ -49,14 +49,14 @@ function lastToken(label) {
   return parts[parts.length - 1] || '';
 }
 
-/** 행정동 표시: 시군구 + 동 이름. 도로명·번지 없음. */
+/** 행정동 표시: 시군구 + 동 이름. 도로명·번지 없음. 가능1동처럼 숫자 있는 행정동은 유지. */
 function dongOnlyLabel(result, region) {
   const raw =
     blank(result?.hname) ||
     blank(region?.dong_name) ||
     blank(result?.bname) ||
     lastToken(region?.label);
-  const dong = raw.replace(/\s*\d+(-\d+)?\s*$/g, '').trim();
+  const dong = raw.replace(/\s+\d+(-\d+)?\s*$/g, '').trim();
   if (!dong || dong === '시 대표') return '';
   const sigungu = blank(result?.sigungu) || blank(region?.sigungu_name);
   if (sigungu && !dong.includes(sigungu)) return `${sigungu} ${dong}`;
@@ -138,7 +138,7 @@ function renderPromoSlot(slot, idx) {
           <span class="form-check__label">대표지역</span>
         </label>
       </div>
-      <div class="chip-group" data-slot-basis-group>
+      <div class="chip-group register-region-slot__basis" data-slot-basis-group>
         <label class="chip">
           <input type="radio" name="slot_basis_${idx}" value="dong" class="chip__input" ${basis === 'dong' ? 'checked' : ''} />
           <span class="chip__label">행정동</span>
@@ -147,6 +147,7 @@ function renderPromoSlot(slot, idx) {
           <input type="radio" name="slot_basis_${idx}" value="complex" class="chip__input" ${basis === 'complex' ? 'checked' : ''} />
           <span class="chip__label">아파트단지</span>
         </label>
+        <p class="form-hint register-region-slot__basis-hint">효과적인 검색과 홍보를 위해서 주소단위를 선택할 수 있습니다</p>
       </div>
       <div data-dong-search ${basis === 'complex' ? 'hidden' : ''}>
         <div class="form-address__zip-row">
@@ -160,7 +161,7 @@ function renderPromoSlot(slot, idx) {
           />
           <button type="button" class="btn btn--secondary" data-address-search="slot-${idx}">주소 검색</button>
         </div>
-        <p class="form-hint">행정동만 저장합니다. 도로명·번지는 넣지 않습니다.</p>
+        <p class="form-hint">선택한 주소의 행정동(가능1동 등)이 있으면 그 동으로 저장합니다. 없으면 법정동으로 저장합니다.</p>
       </div>
       <div data-complex-search ${basis === 'dong' ? 'hidden' : ''}>
         <div class="form-address">
@@ -439,6 +440,8 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
     return region;
   }
 
+  loadKakaoPostcode().catch(() => {});
+
   async function search(kind) {
     await openKakaoPostcode(async (result) => {
       if (kind === 'home') {
@@ -563,9 +566,11 @@ export function validateStudyRoomBasicFields(data) {
   if (!blank(data.main_subject_note)) return '주력과목을 선택해 주세요.';
   if (!['male', 'female'].includes(blank(data.gender))) return '원장 성별을 선택해 주세요.';
   if (!blank(data.address_text)) return '사업장주소를 검색해 주세요.';
-  if (!blank(data.region_id) && !blank(data.address_sido) && !blank(data.address_bname || data.address_hname)) {
-    /* 저장 API가 카카오 동을 regions에 추가한다 */
-  } else if (!blank(data.region_id)) {
+  if (
+    !blank(data.region_id) &&
+    !blank(data.address_sido) &&
+    !blank(data.address_bname || data.address_hname)
+  ) {
     return '사업장주소의 행정동을 찾지 못했습니다. 주소 검색으로 다시 선택해 주세요.';
   }
 
@@ -575,17 +580,18 @@ export function validateStudyRoomBasicFields(data) {
 
   for (const i of filledIdx) {
     const slot = slots[i];
+    if (slot.region_basis_type === 'complex') {
+      if (!blank(slot.complex_address) && !blank(slot.address_text) && !blank(slot.complex_name)) {
+        return `홍보지역 ${i + 1}의 아파트단지를 주소 검색으로 선택해 주세요.`;
+      }
+      continue;
+    }
     if (
       !blank(slot.region_id) &&
       !blank(slot.address_sido) &&
-      !blank(slot.address_bname || slot.address_hname || slot.region_label)
+      !blank(slot.address_bname || slot.address_hname || lastToken(slot.region_label))
     ) {
-      /* 저장 API가 동을 추가한다 */
-    } else if (!blank(slot.region_id)) {
       return `홍보지역 ${i + 1}의 행정동을 찾지 못했습니다. 주소 검색으로 다시 선택해 주세요.`;
-    }
-    if (slot.region_basis_type === 'complex' && !blank(slot.complex_address) && !blank(slot.address_text) && !blank(slot.complex_name)) {
-      return `홍보지역 ${i + 1}의 아파트단지를 주소 검색으로 선택해 주세요.`;
     }
   }
 

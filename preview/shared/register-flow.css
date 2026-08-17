@@ -239,6 +239,29 @@
   margin-bottom: var(--space-2);
 }
 
+.register-region-slot__basis {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  margin: 0.1rem 0 0.4rem;
+}
+
+.register-region-slot .chip__label {
+  padding: 0.18rem 0.6rem;
+  line-height: 1.2;
+  font-size: 0.8125rem;
+  min-height: 0;
+}
+
+.register-region-slot__basis-hint {
+  margin: 0;
+  flex: 1 1 10rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #64748b;
+}
+
 .sr-dong-search {
   position: relative;
 }

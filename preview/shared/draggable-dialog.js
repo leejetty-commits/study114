@@ -2,8 +2,9 @@
  * 페이지 안 대화상자를 제목 줄로 드래그해 옮긴다.
  * @param {HTMLElement} dialog
  * @param {HTMLElement|null} handle
+ * @param {{ zIndex?: number }=} options
  */
-export function bindDraggableDialog(dialog, handle) {
+export function bindDraggableDialog(dialog, handle, options = {}) {
   const bar = handle || dialog;
   if (!dialog || !bar) return;
 
@@ -13,6 +14,7 @@ export function bindDraggableDialog(dialog, handle) {
   let startY = 0;
   let origLeft = 0;
   let origTop = 0;
+  const zIndex = String(Math.max(1300, Number(options.zIndex) || parseInt(dialog.style.zIndex || '0', 10) || 1300));
 
   const pin = () => {
     const rect = dialog.getBoundingClientRect();
@@ -21,7 +23,7 @@ export function bindDraggableDialog(dialog, handle) {
     dialog.style.margin = '0';
     dialog.style.width = `${rect.width}px`;
     dialog.style.maxHeight = `${maxH}px`;
-    dialog.style.zIndex = '1300';
+    dialog.style.zIndex = zIndex;
     const h = Math.min(dialog.offsetHeight || rect.height, maxH);
     const left = Math.min(Math.max(8, rect.left), Math.max(8, window.innerWidth - rect.width - 8));
     const top = Math.min(Math.max(8, rect.top), Math.max(8, window.innerHeight - h - 8));
