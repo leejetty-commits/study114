@@ -169,3 +169,22 @@ function study114_send_cors_headers(bool $credentials = true): void
         header('Access-Control-Allow-Credentials: true');
     }
 }
+
+/**
+ * 닷홈 공유 /tmp 는 다른 사이트의 session.gc_maxlifetime(보통 20~24분)으로 파일이 지워진다.
+ * 우리 수명(7일)을 쓰려면 전용 디렉터리가 필요하다.
+ */
+function study114_session_save_path(): ?string
+{
+    $dir = dirname(__DIR__) . '/storage/sessions';
+    if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) {
+        error_log('[session] mkdir failed path=' . $dir);
+        return null;
+    }
+    if (!is_writable($dir)) {
+        error_log('[session] not writable path=' . $dir);
+        return null;
+    }
+
+    return $dir;
+}

@@ -268,7 +268,7 @@ https://study114.dothome.co.kr/api/auth/oauth/callback.php?provider=google
 
 | 항목 | 현재 코드 | 닷홈 단일 도메인 |
 |------|-----------|------------------|
-| 세션 | `cookie_samesite=Lax`, httponly | ✅ 추가 설정 불필요 |
+| 세션 | `SameSite=Lax`, httponly, 수명 7일, 저장 경로 `storage/sessions` | 공유 `/tmp` GC(약 20분)를 피함. 디렉터리는 PHP가 생성 |
 | 쿠키 domain | 미지정 (현재 호스트) | apex / www / 닷홈은 쿠키 공유 안 됨 |
 | CORS | 일부 API `Access-Control-Allow-Origin: *` | ✅ **같은 도메인**이면 브라우저가 CORS 검사 안 함 |
 | API 호출 | 프론트가 `/api/...` 상대경로 | ✅ 빌드 후 같은 도메인이면 OK |

@@ -17,8 +17,17 @@ final class AuthSession
             $secure = function_exists('study114_request_origin')
                 && str_starts_with((string) study114_request_origin(), 'https://');
             $lifetime = (string) self::LIFETIME;
+            $savePath = function_exists('study114_session_save_path')
+                ? study114_session_save_path()
+                : null;
+            if ($savePath !== null) {
+                session_save_path($savePath);
+            }
             ini_set('session.gc_maxlifetime', $lifetime);
             ini_set('session.cookie_lifetime', $lifetime);
+            if (!headers_sent()) {
+                header('Cache-Control: private, no-store');
+            }
             session_start([
                 'cookie_httponly' => true,
                 'cookie_samesite' => 'Lax',
@@ -30,6 +39,7 @@ final class AuthSession
         if (session_status() !== PHP_SESSION_ACTIVE) {
             throw new \RuntimeException('세션을 시작할 수 없습니다.');
         }
+        $_SESSION['_seen'] = time();
     }
 
     /** 읽기만 하는 API가 세션 파일을 오래 잠그지 않게 한다. */
