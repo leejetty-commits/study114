@@ -268,6 +268,24 @@ export function payloadForStep(step, state) {
         intro_long: state.intro_long,
         lesson_place_type: state.lesson_place_type,
       };
+    case 'basic_all':
+      return {
+        gender: state.gender,
+        study_room_name: state.study_room_name,
+        main_subject_note: state.main_subject_note,
+        slogan: state.slogan,
+        operator_display_name: state.operator_display_name,
+        intro_short: state.intro_short,
+        intro_long: state.intro_long,
+        lesson_place_type: state.lesson_place_type || 'study_room',
+        region_id: state.region_id,
+        complex_id: state.complex_id,
+        region_basis_type: state.region_basis_type || (state.complex_id ? 'complex' : 'dong'),
+        address_text: state.address_text,
+        latitude: state.latitude,
+        longitude: state.longitude,
+        saved_regions: state.saved_regions,
+      };
     case 'location':
       return {
         region_id: state.region_id,

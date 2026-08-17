@@ -143,7 +143,7 @@ final class StudyRoomRegisterService
 
     {
 
-        $allowedSteps = ['basic', 'location', 'lesson', 'career', 'facility'];
+        $allowedSteps = ['basic', 'basic_all', 'location', 'lesson', 'career', 'facility'];
 
         if (!in_array($step, $allowedSteps, true)) {
 
@@ -173,7 +173,7 @@ final class StudyRoomRegisterService
 
             if ($roomId === null) {
 
-                if ($step !== 'basic') {
+                if ($step !== 'basic' && $step !== 'basic_all') {
 
                     throw new InvalidArgumentException('study_room_id: 먼저 기본정보를 저장해 주세요.');
 
@@ -191,19 +191,21 @@ final class StudyRoomRegisterService
 
             match ($step) {
 
-                'basic'    => $this->saveBasic($pdo, $roomId, $input),
+                'basic'     => $this->saveBasic($pdo, $roomId, $input),
 
-                'location' => $this->saveLocation($pdo, $roomId, $input),
+                'basic_all' => $this->saveBasicAndLocation($pdo, $roomId, $input),
 
-                'lesson'   => $this->saveLesson($pdo, $roomId, $input),
+                'location'  => $this->saveLocation($pdo, $roomId, $input),
 
-                'career'   => $this->saveCareer($pdo, $roomId, $input),
+                'lesson'    => $this->saveLesson($pdo, $roomId, $input),
 
-                'facility' => $this->saveFacility($pdo, $roomId, $input),
+                'career'    => $this->saveCareer($pdo, $roomId, $input),
+
+                'facility'  => $this->saveFacility($pdo, $roomId, $input),
 
             };
 
-            if ($step === 'basic') {
+            if ($step === 'basic' || $step === 'basic_all') {
                 \Study114\Auth\ProfileGenderSync::sync($userId, $input);
             }
 
@@ -237,9 +239,19 @@ final class StudyRoomRegisterService
 
         } catch (PDOException $e) {
 
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
 
             throw new RuntimeException('공부방 등록 저장 실패: ' . $e->getMessage(), 0, $e);
+
+        } catch (\Throwable $e) {
+
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            throw $e;
 
         }
 
@@ -338,7 +350,13 @@ final class StudyRoomRegisterService
 
 
     /** @param array<string, mixed> $input */
+    private function saveBasicAndLocation(PDO $pdo, int $roomId, array $input): void
+    {
+        $this->saveBasic($pdo, $roomId, $input);
+        $this->saveLocation($pdo, $roomId, $input);
+    }
 
+    /** @param array<string, mixed> $input */
     private function saveBasic(PDO $pdo, int $roomId, array $input): void
 
     {
@@ -710,30 +728,20 @@ final class StudyRoomRegisterService
 
         $pdo->prepare('DELETE FROM study_room_regions WHERE study_room_id = ?')->execute([$roomId]);
 
-
-
-        $slotNum = 1;
-
+        $inserted = 0;
         $primaryAssigned = false;
 
-        foreach ($slots as $slot) {
-
+        foreach (array_values($slots) as $idx => $slot) {
+            $slotNum = $idx + 1;
+            if ($slotNum > 3) {
+                break;
+            }
             if (!is_array($slot)) {
-
                 continue;
-
             }
 
             $regionId = isset($slot['region_id']) && $slot['region_id'] !== '' ? (int) $slot['region_id'] : 0;
-
-            if ($regionId <= 0 || $slotNum > 3) {
-
-                continue;
-
-            }
-
             $complexId = isset($slot['complex_id']) && $slot['complex_id'] !== '' ? (int) $slot['complex_id'] : null;
-
             $slotBasis = isset($slot['region_basis_type']) && in_array($slot['region_basis_type'], ['dong', 'complex'], true)
                 ? $slot['region_basis_type']
                 : null;
@@ -745,52 +753,51 @@ final class StudyRoomRegisterService
             if ($slotBasis === 'dong') {
                 $complexId = null;
             }
-            if ($slotBasis === 'complex' && ($complexId === null || $complexId <= 0)) {
+
+            $filled = $regionId > 0 && ($slotBasis !== 'complex' || ($complexId !== null && $complexId > 0));
+            if (!$filled) {
                 continue;
             }
 
             $isPrimary = !empty($slot['is_primary']) ? 1 : 0;
-
             if ($isPrimary) {
-
-                $primaryAssigned = true;
-
+                if ($primaryAssigned) {
+                    $isPrimary = 0;
+                } else {
+                    $primaryAssigned = true;
+                }
             }
-
-
 
             try {
                 $pdo->prepare(
-
                     'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
-
                      VALUES (?, ?, ?, ?, ?, ?)'
-
                 )->execute([$roomId, $slotNum, $regionId, $complexId, $slotBasis, $isPrimary]);
             } catch (PDOException $e) {
                 $pdo->prepare(
-
                     'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
-
                      VALUES (?, ?, ?, ?, ?)'
-
                 )->execute([$roomId, $slotNum, $regionId, $complexId, $isPrimary]);
             }
 
-            $slotNum++;
-
+            $inserted++;
         }
 
+        if ($inserted < 1) {
+            throw new InvalidArgumentException('홍보지역을 1곳 이상 선택해 주세요.');
+        }
 
-
-        if (!$primaryAssigned && $slotNum > 1) {
-
-            $pdo->prepare(
-
-                'UPDATE study_room_regions SET is_primary = 1 WHERE study_room_id = ? AND slot = 1'
-
-            )->execute([$roomId]);
-
+        if (!$primaryAssigned) {
+            $minStmt = $pdo->prepare(
+                'SELECT MIN(slot) FROM study_room_regions WHERE study_room_id = ?'
+            );
+            $minStmt->execute([$roomId]);
+            $minSlot = $minStmt->fetchColumn();
+            if ($minSlot !== false && $minSlot !== null) {
+                $pdo->prepare(
+                    'UPDATE study_room_regions SET is_primary = 1 WHERE study_room_id = ? AND slot = ?'
+                )->execute([$roomId, (int) $minSlot]);
+            }
         }
 
     }
@@ -1045,7 +1052,27 @@ final class StudyRoomRegisterService
 
 
 
-        $savedRegions = [];
+        $emptySlot = static function (): array {
+            return [
+                'region_id' => '',
+                'complex_id' => '',
+                'region_basis_type' => 'dong',
+                'is_primary' => false,
+            ];
+        };
+        $savedRegions = [$emptySlot(), $emptySlot(), $emptySlot()];
+        $placeSlot = static function (array $r, string $basis) use (&$savedRegions): void {
+            $slot = (int) ($r['slot'] ?? 0);
+            if ($slot < 1 || $slot > 3) {
+                return;
+            }
+            $savedRegions[$slot - 1] = [
+                'region_id' => (string) $r['region_id'],
+                'complex_id' => $r['complex_id'] !== null ? (string) $r['complex_id'] : '',
+                'region_basis_type' => $basis,
+                'is_primary' => (bool) $r['is_primary'],
+            ];
+        };
         try {
             $regionStmt = $pdo->prepare(
                 'SELECT slot, region_id, complex_id, region_basis_type, is_primary
@@ -1056,12 +1083,7 @@ final class StudyRoomRegisterService
                 $basis = isset($r['region_basis_type']) && in_array($r['region_basis_type'], ['dong', 'complex'], true)
                     ? $r['region_basis_type']
                     : (($r['complex_id'] !== null && $r['complex_id'] !== '') ? 'complex' : 'dong');
-                $savedRegions[] = [
-                    'region_id' => (string) $r['region_id'],
-                    'complex_id' => $r['complex_id'] !== null ? (string) $r['complex_id'] : '',
-                    'region_basis_type' => $basis,
-                    'is_primary' => (bool) $r['is_primary'],
-                ];
+                $placeSlot($r, $basis);
             }
         } catch (PDOException $e) {
             $regionStmt = $pdo->prepare(
@@ -1070,17 +1092,9 @@ final class StudyRoomRegisterService
             );
             $regionStmt->execute([$roomId]);
             foreach ($regionStmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
-                $savedRegions[] = [
-                    'region_id' => (string) $r['region_id'],
-                    'complex_id' => $r['complex_id'] !== null ? (string) $r['complex_id'] : '',
-                    'region_basis_type' => ($r['complex_id'] !== null && $r['complex_id'] !== '') ? 'complex' : 'dong',
-                    'is_primary' => (bool) $r['is_primary'],
-                ];
+                $basis = ($r['complex_id'] !== null && $r['complex_id'] !== '') ? 'complex' : 'dong';
+                $placeSlot($r, $basis);
             }
-        }
-
-        while (count($savedRegions) < 3) {
-            $savedRegions[] = ['region_id' => '', 'complex_id' => '', 'region_basis_type' => 'dong', 'is_primary' => false];
         }
 
 

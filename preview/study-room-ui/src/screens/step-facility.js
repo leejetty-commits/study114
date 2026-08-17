@@ -10,6 +10,7 @@ import {
   bindGlobalEvents,
   navigate,
   skipToSummary,
+  withRoomId,
 } from '../layout.js';
 
 function renderFacilityChecks() {
@@ -157,7 +158,7 @@ export function bindFacilityEvents(root) {
   const nextBtn = root.querySelector('[data-action="next"]');
   const saveBtn = root.querySelector('[data-action="save"]');
 
-  prevBtn?.addEventListener('click', () => navigate('/register/lesson'));
+  prevBtn?.addEventListener('click', () => navigate(withRoomId('/register/lesson')));
   root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipToSummary());
 
   async function persistFacility() {
@@ -184,7 +185,7 @@ export function bindFacilityEvents(root) {
     withSaving(nextBtn, async () => {
       await persistFacility();
       registerState.completeNeedsHydrate = true;
-      navigate('/register/complete');
+      navigate(withRoomId('/register/complete'));
     });
   });
 

@@ -20,6 +20,7 @@ import {
   bindGlobalEvents,
   navigate,
   skipToSummary,
+  basicOverviewPath,
 } from '../layout.js';
 import { MAIN_SUBJECT_OPTIONS, renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 
@@ -301,7 +302,7 @@ export function bindLessonEvents(root) {
   form?.addEventListener('change', refreshNext);
   refreshNext();
 
-  prevBtn?.addEventListener('click', () => navigate('/register/basic'));
+  prevBtn?.addEventListener('click', () => navigate(basicOverviewPath()));
   root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipToSummary());
 
   saveBtn?.addEventListener('click', () => {

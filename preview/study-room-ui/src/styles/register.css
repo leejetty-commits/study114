@@ -5,10 +5,45 @@
 }
 
 .register-overview__lead {
-  margin: 0 0 1rem;
+  margin: 0;
   color: var(--gray-600, #64748b);
   font-size: 0.9375rem;
   line-height: 1.5;
+}
+
+.register-heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 0 0 0.35rem;
+}
+
+.register-heading-row .auth-heading {
+  margin: 0;
+}
+
+.register-heading-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.register-heading-row__lead {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gray-600, #64748b);
+}
+
+.register-overview__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 0 0 1rem;
 }
 
 .register-overview__dl {
@@ -33,10 +68,6 @@
 
 .register-overview__row dd {
   margin: 0;
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  align-items: flex-start;
   font-size: 0.9375rem;
   color: var(--gray-900, #0f172a);
 }
@@ -46,12 +77,66 @@
   min-height: 1.25em;
 }
 
-.register-overview__row dd a {
-  flex-shrink: 0;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--brand-blue, #2b7fff);
-  text-decoration: none;
+.register-edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4.5rem 1rem 2rem;
+  overflow: auto;
+  background: rgb(15 23 42 / 0.45);
+}
+
+body.register-edit-open {
+  overflow: hidden;
+}
+
+.register-edit-dialog {
+  width: min(40rem, 100%);
+  margin: 0 auto 2rem;
+  background: #fff;
+  border-radius: 1.1rem;
+  border: 1px solid #dbe4f0;
+  box-shadow: 0 1.25rem 3rem rgb(15 23 42 / 0.18);
+}
+
+.register-edit-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--gray-200, #e5e7eb);
+}
+
+.register-edit-dialog__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.register-edit-dialog__close {
+  border: 0;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--gray-500, #64748b);
+  cursor: pointer;
+}
+
+.register-edit-dialog__body {
+  padding: 1.1rem 1.25rem 0.5rem;
+}
+
+.register-edit-dialog__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.9rem 1.25rem 1.15rem;
+  border-top: 1px solid var(--gray-200, #e5e7eb);
 }
 
 .register-nav--overview {
@@ -90,6 +175,13 @@ form[data-form]:not(.register-form-narrow) > .register-section-title--bar {
 
 form[data-form]:not(.register-form-narrow) > .register-section-title--bar:first-of-type {
   margin-top: 0.75rem;
+}
+
+.register-edit-dialog form[data-form] > .register-section-title--bar {
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0.9rem;
+  padding-right: 0.9rem;
 }
 
 .register-pane .register-section-title--bar {

@@ -3,7 +3,7 @@
 export const REGISTER_PHASES = {
   basic: {
     label: '기본정보',
-    hint: '저장된 기본·위치 현황을 보고, 필요할 때만 수정한 뒤 상세정보로 이어갑니다.',
+    hint: '저장된 기본정보 현황을 보고, 필요한 항목만 수정한 뒤 상세정보 등록으로 이어 갑니다.',
     stepKeys: ['basic', 'location'],
   },
   detail: {

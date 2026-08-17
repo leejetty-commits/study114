@@ -20,8 +20,8 @@ export async function saveAndNavigate(state, step, nextPath) {
   await saveCurrentStep(state, step);
 
   if (nextPath) {
-    const { navigate } = await import('./layout.js');
-    navigate(nextPath);
+    const { navigate, withRoomId } = await import('./layout.js');
+    navigate(withRoomId(nextPath));
   }
 }
 

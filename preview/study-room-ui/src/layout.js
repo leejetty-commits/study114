@@ -45,11 +45,27 @@ export function isRegisterEditMode() {
   return edit === '1' || edit === 'basic' || edit === 'location';
 }
 
+/** 해시 경로에 현재 room_id 쿼리를 붙인다. */
+export function withRoomId(path) {
+  const roomId = getHashQuery().get('room_id');
+  if (!roomId) return path;
+  const qIndex = path.indexOf('?');
+  const base = qIndex >= 0 ? path.slice(0, qIndex) : path;
+  const q = new URLSearchParams(qIndex >= 0 ? path.slice(qIndex + 1) : '');
+  if (!q.has('room_id')) q.set('room_id', roomId);
+  return `${base}?${q}`;
+}
+
+/** 기본정보 현황 해시. room_id 쿼리는 유지한다. */
+export function basicOverviewPath() {
+  return withRoomId('/register/basic');
+}
+
 export function getCurrentScreen() {
   const path = getCurrentPath();
   const key = path.replace(/^\/register\//, '');
   if (LEGACY_STEP_REDIRECT[key]) {
-    navigate(LEGACY_STEP_REDIRECT[key]);
+    navigate(withRoomId(LEGACY_STEP_REDIRECT[key]));
     return 'lesson';
   }
   return ROUTES[path] || 'basic';
@@ -81,7 +97,7 @@ export function renderPreviewToolbar(activeScreen) {
 }
 
 export function renderRegisterShell(content, options = {}) {
-  const { stepKey = 'basic', title = '공부방 등록', subtitle = '' } = options;
+  const { stepKey = 'basic', title = '공부방 등록', subtitle = '', headingActions = '' } = options;
   const showPromo = isChromeLoggedIn();
   const header = renderSiteHeader({
     user: getChromeUser(),
@@ -101,7 +117,14 @@ export function renderRegisterShell(content, options = {}) {
           <div class="site-gate-wrap">
             <div class="register-card register-card--wide panel register-flow">
               ${showSteps ? renderStepIndicator(stepKey) : ''}
+              ${
+                headingActions
+                  ? `<div class="register-heading-row">
               <h1 class="auth-heading">${title}</h1>
+              <div class="register-heading-row__actions">${headingActions}</div>
+            </div>`
+                  : `<h1 class="auth-heading">${title}</h1>`
+              }
               ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ''}
               ${content}
             </div>
@@ -115,9 +138,8 @@ export function renderRegisterShell(content, options = {}) {
 }
 
 export function renderStepIndicator(stepKey) {
-  const onBasicOverview = stepKey === 'basic' && !isRegisterEditMode();
-  const editingBasic = isRegisterEditMode() && (stepKey === 'basic' || stepKey === 'location');
-  const basicDone = Boolean(registerState.basicComplete) && !onBasicOverview && !editingBasic;
+  const onBasicOverview = stepKey === 'basic';
+  const basicDone = Boolean(registerState.basicComplete) && !onBasicOverview;
   const visible = basicDone
     ? STEPS.filter((s) => s.phase === 'detail')
     : onBasicOverview
@@ -246,5 +268,5 @@ export function renderDetailStepNav(opts) {
 /** 상세정보 건너뜀 — DB에 저장된 값 요약 화면으로 */
 export function skipToSummary() {
   registerState.completeNeedsHydrate = true;
-  navigate('/register/complete');
+  navigate(withRoomId('/register/complete'));
 }

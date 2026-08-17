@@ -22,7 +22,7 @@ import {
   syncSiteHeaderOffset,
   ensureSiteHeaderOffsetListeners,
 } from '../../shared/site-chrome.js';
-import { getCurrentScreen, navigate, isRegisterEditMode, getHashQuery } from './layout.js';
+import { getCurrentScreen, navigate, isRegisterEditMode, getHashQuery, basicOverviewPath } from './layout.js';
 import { renderBasic, bindBasicEvents } from './screens/step-basic.js';
 import { renderLocation, bindLocationEvents } from './screens/step-location.js';
 import { renderLesson, bindLessonEvents } from './screens/step-lesson.js';
@@ -73,20 +73,21 @@ function resolveRegisterMode() {
   return gate.mode;
 }
 
-/** 위치 단독 진입 → 기본정보 현황으로 (두 단계를 한 페이지로) */
+/** 위치 단독 진입 → 기본정보 현황으로 (수정은 현황 팝업) */
 function maybeRedirectLocationToOverview() {
   if (getCurrentScreen() !== 'location') return false;
-  if (isRegisterEditMode()) return false;
-  if (window.location.hash.split('?')[0] !== '#/register/basic') {
-    navigate('/register/basic');
-    return true;
+  if (isRegisterEditMode()) {
+    sessionStorage.setItem('study114_open_basic_edit', '1');
   }
-  return false;
+  navigate(basicOverviewPath());
+  return true;
 }
 
 function render() {
   const mode = resolveRegisterMode();
   if (mode === 'blocked') return;
+
+  document.body.classList.remove('register-edit-open');
 
   const app = document.getElementById('app');
   if (mode === 'intro') {
@@ -157,8 +158,11 @@ function init() {
     .then(() => {
       registerState.basicComplete =
         isRoomBasicComplete(registerState) || registerState.basicComplete;
-      if (getCurrentScreen() === 'location' && !isRegisterEditMode()) {
-        navigate('/register/basic');
+      if (getCurrentScreen() === 'location') {
+        if (isRegisterEditMode()) {
+          sessionStorage.setItem('study114_open_basic_edit', '1');
+        }
+        navigate(basicOverviewPath());
         return;
       }
       render();
