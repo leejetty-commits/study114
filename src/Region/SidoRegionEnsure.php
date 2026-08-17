@@ -80,7 +80,8 @@ final class SidoRegionEnsure
             ];
         }
 
-        foreach (self::PROVINCE_CITIES as $code => [$sidoName, $cities]) {
+        foreach (self::PROVINCE_CITIES as $codeKey => [$sidoName, $cities]) {
+            $code = (string) $codeKey;
             foreach ($cities as $city) {
                 $id = self::findRegionId($pdo, $code, $city, '시 대표');
                 if ($id === null) {
@@ -115,7 +116,8 @@ final class SidoRegionEnsure
             self::ensureRow($pdo, $code, $name, $code . '00', $name, self::dongCode($code, 'metro'), '시 대표');
         }
 
-        foreach (self::PROVINCE_CITIES as $code => [$sidoName, $cities]) {
+        foreach (self::PROVINCE_CITIES as $codeKey => [$sidoName, $cities]) {
+            $code = (string) $codeKey;
             $i = 1;
             foreach ($cities as $city) {
                 $sigunguCode = $code . str_pad((string) $i, 2, '0', STR_PAD_LEFT);
