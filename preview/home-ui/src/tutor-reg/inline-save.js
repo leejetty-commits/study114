@@ -52,30 +52,19 @@ export async function saveTutorBasicInline(tutorId, basic) {
       age_band: current.age_band || '',
       gender: basic.gender || current.gender || 'male',
     });
-    const slots = Array.isArray(basic.saved_regions) ? basic.saved_regions : null;
+    const slots = Array.isArray(basic.saved_regions)
+      ? basic.saved_regions.filter((s) => /^\d+$/.test(String(s.region_id || '')))
+      : null;
     if (slots?.length) {
       await postRegisterSave('regions', tutorId, {
-        saved_regions: slots
-          .filter((s) => s.region_id)
-          .map((s) => ({
-            region_id: String(s.region_id),
-            scope_type: 'city',
-            is_primary: !!s.is_primary,
-          })),
+        saved_regions: slots.map((s) => ({
+          region_id: String(s.region_id),
+          scope_type: 'city',
+          is_primary: !!s.is_primary,
+        })),
       });
     } else {
-      const regionId = basic.primary_region_id || current.primary_region_id || '';
-      if (regionId) {
-        await postRegisterSave('regions', tutorId, {
-          saved_regions: [
-            {
-              region_id: String(regionId),
-              scope_type: 'city',
-              is_primary: true,
-            },
-          ],
-        });
-      }
+      throw new Error('과외지역을 1곳 이상 선택해 주세요. (도는 시까지 선택)');
     }
     await hydrateRegistrationsCache();
     return getTutor(tutorId);
