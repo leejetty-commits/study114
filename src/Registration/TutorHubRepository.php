@@ -66,6 +66,17 @@ final class TutorHubRepository
         }
 
         $detailEval = (new TutorDetailCompletionEvaluator())->evaluate($this->pdo, $tutorId);
+        $savedRegions = $this->savedRegions($tutorId);
+        $primaryRegionId = '';
+        foreach ($savedRegions as $slot) {
+            if (!empty($slot['is_primary']) && $slot['region_id'] !== '') {
+                $primaryRegionId = $slot['region_id'];
+                break;
+            }
+        }
+        if ($primaryRegionId === '' && $savedRegions !== [] && $savedRegions[0]['region_id'] !== '') {
+            $primaryRegionId = $savedRegions[0]['region_id'];
+        }
 
         return [
             'id'                       => $tutorId,
@@ -76,6 +87,8 @@ final class TutorHubRepository
             'detail_checks'            => $detailEval['checks'],
             'location_label'           => $primaryRegion !== '' ? $primaryRegion : '—',
             'primary_region_label'     => $primaryRegion,
+            'primary_region_id'        => $primaryRegionId,
+            'saved_regions'            => $savedRegions,
             'main_subject_note'        => $this->primarySubject($tutorId),
             'grade_band'               => $this->gradeBand($tutorId),
             'preferred_fee_amount'     => $row['preferred_fee_amount'] !== null ? (int) $row['preferred_fee_amount'] : null,
@@ -83,6 +96,7 @@ final class TutorHubRepository
             'lessons_per_week'         => $row['lessons_per_week'] !== null ? (int) $row['lessons_per_week'] : null,
             'monthly_session_count'    => $row['monthly_session_count'] !== null ? (int) $row['monthly_session_count'] : null,
             'minutes_per_lesson'       => $row['minutes_per_lesson'] !== null ? (int) $row['minutes_per_lesson'] : null,
+            'fee_description'          => $row['fee_description'] !== null ? (string) $row['fee_description'] : '',
             'intro_short'              => $row['intro_short'] !== null ? (string) $row['intro_short'] : null,
             'intro_long'               => $row['intro_long'] !== null ? (string) $row['intro_long'] : null,
             'feature_1'                => $row['feature_1'] !== null ? (string) $row['feature_1'] : null,
@@ -100,6 +114,7 @@ final class TutorHubRepository
             'compare_eligible'           => $profileStatus === 'published',
             'student_gender_group'       => $row['student_gender_group'] !== null ? (string) $row['student_gender_group'] : null,
             'student_count_group'        => $row['student_count_group'] !== null ? (string) $row['student_count_group'] : null,
+            'contact_time_note'          => $row['contact_time_note'] !== null ? (string) $row['contact_time_note'] : '',
             'lesson_places'              => $lessonPlaces,
             'teaching_style_badges'      => $badges,
             'updated_at'                 => gmdate('c', strtotime((string) $row['updated_at'])),
@@ -107,6 +122,31 @@ final class TutorHubRepository
                 ? gmdate('c', strtotime((string) $row['published_at'])) : null,
             'deleted_at'                 => null,
         ];
+    }
+
+    /**
+     * @return list<array{region_id: string, scope_type: string, is_primary: bool}>
+     */
+    private function savedRegions(int $tutorId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT region_id, scope_type, is_primary
+             FROM tutor_regions WHERE tutor_id = ? ORDER BY priority_order ASC, is_primary DESC, id ASC'
+        );
+        $stmt->execute([$tutorId]);
+        $slots = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $slots[] = [
+                'region_id' => (string) $r['region_id'],
+                'scope_type' => (string) ($r['scope_type'] ?: 'city'),
+                'is_primary' => (bool) $r['is_primary'],
+            ];
+        }
+        while (count($slots) < 3) {
+            $slots[] = ['region_id' => '', 'scope_type' => 'city', 'is_primary' => false];
+        }
+
+        return array_slice($slots, 0, 3);
     }
 
     private function primaryRegionLabel(int $tutorId): string

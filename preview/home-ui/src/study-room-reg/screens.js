@@ -764,6 +764,7 @@ export function bindStudyRoomRegEvents(root, rerender) {
             one_on_one_available: fd.get('one_on_one_available') === '1',
           });
         }
+        alert('저장되었습니다.');
         rerender();
       } catch (err) {
         alert(err instanceof Error ? err.message : '저장에 실패했습니다.');

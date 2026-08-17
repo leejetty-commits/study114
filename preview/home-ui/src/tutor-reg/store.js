@@ -20,13 +20,17 @@ const KEY = 'study114-preview-tutors-v1';
  * @property {'basic_only'|'expanded_in_progress'|'expanded_complete'} detail_completion_status
  * @property {string} location_label
  * @property {string} primary_region_label
+ * @property {string} [primary_region_id]
+ * @property {{region_id: string, scope_type: string, is_primary: boolean}[]} [saved_regions]
  * @property {string} main_subject_note
  * @property {string} [grade_band]
  * @property {number} [preferred_fee_amount]
  * @property {number} [lessons_per_week]
  * @property {number} [minutes_per_lesson]
+ * @property {string} [fee_description]
  * @property {string} [intro_short]
  * @property {string} [intro_long]
+ * @property {string} [contact_time_note]
  * @property {string} [feature_1]
  * @property {string} [university_name]
  * @property {string} [major_name]

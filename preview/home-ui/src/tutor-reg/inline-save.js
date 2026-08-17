@@ -19,6 +19,9 @@ async function postRegisterSave(step, tutorId, payload) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
+    if (res.status === 401) {
+      throw new Error(data.message || '로그인이 만료되었습니다. 과외쌤 계정으로 다시 로그인해 주세요.');
+    }
     throw new Error(data.message || `저장 실패 (${res.status})`);
   }
   return data;
@@ -86,6 +89,7 @@ export async function saveTutorBasicInline(tutorId, basic) {
     location_label: regionLabel,
     has_primary_region: true,
     primary_region_id: basic.primary_region_id || undefined,
+    saved_regions: Array.isArray(basic.saved_regions) ? basic.saved_regions : undefined,
   });
 }
 
@@ -149,7 +153,6 @@ export async function saveTutorDetailInline(tutorId, detail) {
       contact_time_note: detail.contact_time_note || '',
       intro_short: introShort || detail.intro_short || '',
       intro_long: introLong || detail.intro_long || '',
-      profile_status: detail.profile_status || current.profile_status || 'draft',
       youtube_url: detail.youtube_url || '',
       facebook_url: detail.facebook_url || '',
       instagram_url: detail.instagram_url || '',

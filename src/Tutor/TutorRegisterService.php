@@ -637,7 +637,29 @@ final class TutorRegisterService
 
     {
 
-        $profileStatus = $this->requireEnum($input, 'profile_status', ['draft', 'pending', 'published']);
+        $curStmt = $pdo->prepare('SELECT profile_status FROM tutors WHERE id = ?');
+
+        $curStmt->execute([$tutorId]);
+
+        $currentStatus = (string) ($curStmt->fetchColumn() ?: 'draft');
+
+        if ($currentStatus === 'pending') {
+
+            $currentStatus = 'draft';
+
+        }
+
+
+
+        $requested = isset($input['profile_status']) && trim((string) $input['profile_status']) !== ''
+
+            ? $this->requireEnum($input, 'profile_status', ['draft', 'pending', 'published'])
+
+            : null;
+
+        $profileStatus = $requested ?? $currentStatus;
+
+        $isNewPublish = $profileStatus === 'published' && $currentStatus !== 'published';
 
 
 
@@ -693,7 +715,11 @@ final class TutorRegisterService
 
 
 
-        if ($profileStatus === 'published') {
+        // 이미 공개된 프로필의 상세 수정은 공개 게이트를 다시 타지 않는다.
+
+        // 새로 published 로 올릴 때만 완료·이미지 검사.
+
+        if ($isNewPublish) {
 
             $eval = (new TutorDetailCompletionEvaluator())->evaluate($pdo, $tutorId);
 

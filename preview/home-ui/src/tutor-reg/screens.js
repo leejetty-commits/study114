@@ -386,6 +386,24 @@ function renderFormFooter(hint, buttonsHtml) {
 }
 
 function tutorRegionSlotsFromRecord(tutor) {
+  const saved = Array.isArray(tutor.saved_regions) ? tutor.saved_regions : [];
+  const fromSaved = saved
+    .map((s) => ({
+      region_id: String(s?.region_id || ''),
+      scope_type: s?.scope_type || 'city',
+      is_primary: !!s?.is_primary,
+    }))
+    .slice(0, 3);
+  if (fromSaved.some((s) => s.region_id)) {
+    while (fromSaved.length < 3) {
+      fromSaved.push({ region_id: '', scope_type: 'city', is_primary: false });
+    }
+    if (!fromSaved.some((s) => s.is_primary && s.region_id) && fromSaved[0].region_id) {
+      fromSaved[0].is_primary = true;
+    }
+    return fromSaved;
+  }
+
   const units = getCityUnits([]);
   const label = String(tutor.primary_region_label || tutor.location_label || '').trim();
   let regionId = tutor.primary_region_id || '';
@@ -424,6 +442,14 @@ const GENDER_GROUP_OPTS = [
   { value: 'male', label: '남학생' },
   { value: 'female', label: '여학생' },
   { value: 'mixed', label: '혼성' },
+];
+
+const UNIVERSITY_STATUS_OPTS = [
+  { value: '', label: '선택' },
+  { value: 'enrolled', label: '재학' },
+  { value: 'leave', label: '휴학' },
+  { value: 'completed', label: '수료' },
+  { value: 'graduated', label: '졸업' },
 ];
 
 const STUDENT_COUNT_OPTS = [
@@ -512,6 +538,10 @@ function renderDetailForm(tutor) {
             <input class="p19-input" name="lessons_per_week" value="${esc(tutor.lessons_per_week || '')}" />
           </label>
           <label class="p19-field">
+            <span class="p19-field__label">월 총 횟수</span>
+            <input class="p19-input" name="monthly_session_count" value="${esc(tutor.monthly_session_count || '')}" />
+          </label>
+          <label class="p19-field">
             <span class="p19-field__label">1회(분)</span>
             <input class="p19-input" name="minutes_per_lesson" value="${esc(tutor.minutes_per_lesson || '')}" />
           </label>
@@ -555,7 +585,9 @@ function renderDetailForm(tutor) {
           </label>
           <label class="p19-field">
             <span class="p19-field__label">학적상태</span>
-            <input class="p19-input" name="university_status" value="${esc(tutor.university_status || '')}" placeholder="재학/휴학/졸업 등" />
+            <select class="p19-input" name="university_status">
+              ${UNIVERSITY_STATUS_OPTS.map((o) => `<option value="${o.value}" ${String(tutor.university_status || '') === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
+            </select>
           </label>
           <label class="p19-field">
             <span class="p19-field__label">특징 1</span>
@@ -852,6 +884,7 @@ export function bindTutorRegEvents(root, rerender) {
             preferred_fee_amount: Number(fd.get('preferred_fee_amount') || 0),
             fee_basis_type: String(fd.get('fee_basis_type') || ''),
             lessons_per_week: String(fd.get('lessons_per_week') || ''),
+            monthly_session_count: String(fd.get('monthly_session_count') || ''),
             minutes_per_lesson: String(fd.get('minutes_per_lesson') || ''),
             fee_description: String(fd.get('fee_description') || ''),
             student_gender_group: String(fd.get('student_gender_group') || ''),
@@ -866,6 +899,7 @@ export function bindTutorRegEvents(root, rerender) {
             contact_time_note: String(fd.get('contact_time_note') || ''),
           });
         }
+        alert('저장되었습니다.');
         rerender();
       } catch (err) {
         alert(err instanceof Error ? err.message : '저장에 실패했습니다.');

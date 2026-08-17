@@ -761,6 +761,7 @@ export function bindStudentRegEvents(root, rerender) {
       try {
         const saved = await updateStudent(id, patch);
         if (formKind === 'detail' && saved) persistFindDefaultsFromStudent(saved);
+        alert('저장되었습니다.');
         rerender();
       } catch (err) {
         console.warn('[p19]', err);
