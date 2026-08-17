@@ -133,10 +133,7 @@ function renderPromoSlot(slot, idx) {
     <div class="register-region-slot${slot.is_primary ? ' is-primary' : ''}" data-region-slot="${idx}">
       <div class="register-region-slot__toolbar">
         <strong>홍보지역 ${idx + 1}${req ? ' (필수)' : ' (선택)'}</strong>
-        <label class="form-check">
-          <input class="form-check__input" type="radio" name="is_primary" value="${idx}" ${slot.is_primary ? 'checked' : ''} />
-          <span class="form-check__label">대표지역</span>
-        </label>
+        ${req ? '<span class="register-region-slot__primary-mark">대표지역</span>' : ''}
       </div>
       <div class="chip-group register-region-slot__basis" data-slot-basis-group>
         <label class="chip">
@@ -505,7 +502,7 @@ export function collectStudyRoomBasicFields(root) {
     return String(wrap.querySelector(`[name="${name}"]`)?.value ?? '');
   };
 
-  const primaryIdx = Number(wrap.querySelector('input[name="is_primary"]:checked')?.value ?? 0);
+  const primaryIdx = 0;
   const saved_regions = [];
   wrap.querySelectorAll('[data-region-slot]').forEach((slotEl, idx) => {
     const basis = slotBasisOf(slotEl);
@@ -591,9 +588,7 @@ export function validateStudyRoomBasicFields(data) {
     }
   }
 
-  let primaryIdx = slots.findIndex((s) => s.is_primary);
-  if (!filledIdx.includes(primaryIdx)) primaryIdx = filledIdx[0];
-  data.saved_regions = slots.map((s, i) => ({ ...s, is_primary: i === primaryIdx }));
+  data.saved_regions = slots.map((s, i) => ({ ...s, is_primary: i === 0 }));
   return null;
 }
 

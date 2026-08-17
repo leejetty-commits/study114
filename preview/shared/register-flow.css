@@ -239,6 +239,12 @@
   margin-bottom: var(--space-2);
 }
 
+.register-region-slot__primary-mark {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #c2410c;
+}
+
 .register-region-slot__basis {
   display: flex;
   flex-wrap: nowrap;

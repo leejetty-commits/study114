@@ -162,12 +162,13 @@ final class StudyRoomRegisterService
 
         $this->assertStudyRoomOwner($userId);
 
-
-
         $pdo = Connection::get();
 
         if ($step === 'lesson') {
             (new StudyRoomLessonDetailStore())->ensureSchema($pdo);
+        }
+        if ($step === 'basic' || $step === 'basic_all' || $step === 'location') {
+            $this->ensureBusinessAddressLine2($pdo);
         }
 
         $pdo->beginTransaction();
@@ -558,7 +559,6 @@ final class StudyRoomRegisterService
         if (!array_key_exists('address_line2', $input)) {
             return;
         }
-        $this->ensureBusinessAddressLine2($pdo);
         $line2 = $this->optionalString($input, 'address_line2');
         try {
             $pdo->prepare('UPDATE study_rooms SET address_line2 = ? WHERE id = ?')->execute([$line2, $roomId]);
@@ -571,6 +571,17 @@ final class StudyRoomRegisterService
     {
         static $done = false;
         if ($done) {
+            return;
+        }
+        try {
+            $chk = $pdo->query("SHOW COLUMNS FROM study_rooms LIKE 'address_line2'");
+            if ($chk && $chk->fetch()) {
+                $done = true;
+                return;
+            }
+        } catch (PDOException $e) {
+            /* SHOW 실패 시 ALTER를 시도하지 않고 넘어간다 */
+            $done = true;
             return;
         }
         try {
