@@ -12,8 +12,6 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Auth\AuthSession;
 use Study114\StudyRoom\StudyRoomRegisterService;
-use InvalidArgumentException;
-use Throwable;
 
 
 
