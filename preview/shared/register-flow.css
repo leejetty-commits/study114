@@ -135,9 +135,10 @@
 }
 
 .register-phase__hint {
-  margin: 0.45rem 0 0;
+  margin: 0;
   font-size: var(--reg-hint);
   color: var(--gray-600);
+  flex: 1 1 12rem;
 }
 
 .step-indicator {
@@ -206,12 +207,39 @@
   margin-top: var(--space-2);
 }
 
-.register-hint,
 .register-flow .form-hint,
-.register-flow .form-note {
+.register-flow .form-note,
+.register-hint {
   font-size: var(--reg-hint);
   color: var(--gray-500);
   margin: 0.25rem 0 0;
+}
+
+.register-flow .form-address {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.register-flow .form-address__zip-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.register-flow .form-address__zip-row .form-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.register-flow .form-address__zip-row .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.register-flow .form-address input[readonly] {
+  background: var(--gray-50, #f8fafc);
+  cursor: default;
 }
 
 .register-flow .form-label {

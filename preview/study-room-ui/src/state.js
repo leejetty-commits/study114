@@ -191,6 +191,14 @@ export function emptyRoomState() {
     complex_id: '',
     region_basis_type: '',
     address_text: '',
+    address_zip: '',
+    home_address: '',
+    home_address_zip: '',
+    complex_name: '',
+    complex_address: '',
+    address_sido: '',
+    address_sigungu: '',
+    address_bname: '',
     latitude: '',
     longitude: '',
     saved_regions: [
@@ -245,6 +253,7 @@ export const registerState = emptyRoomState();
 export function isRoomBasicComplete(room) {
   const src = room || registerState;
   const hasName = String(src.study_room_name || '').trim() !== '';
+  const hasAddress = String(src.address_text || '').trim() !== '';
   const hasRegion =
     String(src.region_id || '').trim() !== '' ||
     String(src.complex_id || '').trim() !== '' ||
@@ -252,7 +261,7 @@ export function isRoomBasicComplete(room) {
       src.saved_regions.some(
         (r) => String(r?.region_id || '').trim() !== '' || String(r?.complex_id || '').trim() !== '',
       ));
-  return hasName && hasRegion;
+  return hasName && hasAddress && hasRegion;
 }
 
 export function emptySubject() {

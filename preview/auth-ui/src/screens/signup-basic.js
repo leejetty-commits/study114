@@ -1,5 +1,5 @@
 import { signupState } from '../state.js';
-import { PREFERRED_LESSON_TYPE_LABELS } from '../register-enums.js';
+import { PREFERRED_LESSON_TYPE_LABELS, PERSONAL_GENDER_OPTIONS } from '../register-enums.js';
 import { basicRegisterApi } from '../auth-api.js';
 import {
   buildHomeStudentImportUrl,
@@ -17,6 +17,12 @@ import {
   bindTutorRegionSlotEvents,
   collectTutorRegionSlots,
 } from '../../../shared/tutor-region-slots.js';
+import {
+  renderStudyRoomBasicFields,
+  bindStudyRoomBasicFields,
+  collectStudyRoomBasicFields,
+  validateStudyRoomBasicFields,
+} from '../../../shared/study-room-basic-form.js';
 
 function esc(s) {
   if (s == null) return '';
@@ -210,33 +216,29 @@ function renderStudentBasic() {
 
 function renderStudyRoomBasic() {
   const d = signupState.basicRegister?.study_room || {};
-  const basis = d.region_basis || 'dong';
-  const allowComplex = complexList().length > 0;
+  const draft = signupState.accountDraft || {};
+  const values = {
+    study_room_name: d.study_room_name || '',
+    main_subject_note: d.main_subjects?.[0] || d.main_subject_note || '',
+    gender: d.gender || signupState.profileGender || '',
+    home_address: d.home_address || draft.address || signupState.accountAddress || '',
+    home_address_zip: d.home_address_zip || draft.address_zip || '',
+    address_text: d.address_text || '',
+    address_zip: d.address_zip || '',
+    region_id: d.region_id || '',
+    complex_id: d.complex_id || '',
+    region_basis_type: d.region_basis_type || d.region_basis || 'dong',
+    complex_name: d.complex_name || '',
+    saved_regions: d.saved_regions,
+  };
   return `
     <form data-form="basic-study-room" class="basic-register">
-      <p class="auth-section-title">기본등록 · 노출지역 seed</p>
-      <p class="form-note mb-4">공부방명 · 노출지역 1번만 받습니다. 가입 기본주소와 분리됩니다. 나머지는 상세등록입니다.</p>
-      <div class="form-group">
-        <label class="form-label form-label--required" for="study_room_name">공부방명</label>
-        ${dbField('study_rooms.study_room_name')}
-        <input class="form-input" id="study_room_name" name="study_room_name" value="${esc(d.study_room_name || '')}" required />
-      </div>
-      <div class="form-group">
-        <span class="form-label form-label--required">노출지역 기준</span>
-        ${dbField('study_rooms.region_basis_type')}
-        ${renderBasisChips(basis, { allowComplex })}
-      </div>
-      <div class="form-group" data-basis-panel="dong" ${basis === 'complex' ? 'hidden' : ''}>
-        <label class="form-label form-label--required" for="region_id">노출 행정동 1번</label>
-        ${dbField('study_room_regions.slot=1')}
-        ${renderRegionSelect('region_id', d.region_id, { required: false })}
-      </div>
-      <div class="form-group" data-basis-panel="complex" ${basis === 'complex' ? '' : 'hidden'}>
-        <label class="form-label form-label--required" for="complex_id">노출 아파트단지 1번</label>
-        ${renderComplexSelect('complex_id', d.complex_id, { required: false })}
-        <p class="form-note" data-complex-address-hint></p>
-      </div>
-      ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '')}
+      <p class="auth-section-title">기본등록</p>
+      <p class="form-note mb-4">필수 5항목(공부방명 · 주력과목 · 원장 성별 · 사업장주소 · 홍보지역 1곳)입니다. 집주소와 홍보 2·3곳은 선택입니다.</p>
+      ${renderStudyRoomBasicFields({
+        values,
+        genderOptions: PERSONAL_GENDER_OPTIONS,
+      })}
       <div class="actions-stack">
         <button type="submit" class="btn btn--primary btn--block">저장 · 다음</button>
         <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
@@ -347,6 +349,10 @@ export function bindSignupBasicEvents(root) {
     bindTutorRegionSlotEvents(root, getCityUnits(signupState.cities || []));
   }
 
+  if (role === 'study_room') {
+    bindStudyRoomBasicFields(form || root, { regions: signupState.regions || [] });
+  }
+
   function syncBasisPanels() {
     const basis = form?.querySelector('input[name="region_basis"]:checked')?.value || 'dong';
     form?.querySelectorAll('[data-basis-panel]').forEach((panel) => {
@@ -389,7 +395,16 @@ export function bindSignupBasicEvents(root) {
     e.preventDefault();
     let data = collectFormData(form);
 
-    if (role === 'student') {
+    if (role === 'study_room') {
+      data = collectStudyRoomBasicFields(form);
+      const err = validateStudyRoomBasicFields(data);
+      if (err) {
+        alert(err);
+        return;
+      }
+      data.main_subjects = [data.main_subject_note];
+      data.region_basis = data.region_basis_type;
+    } else if (role === 'student') {
       if (!data.preferred_lesson_type) {
         alert('무엇을 찾을지 선택해 주세요.');
         return;
@@ -437,7 +452,7 @@ export function bindSignupBasicEvents(root) {
       }
     }
 
-    if (role === 'study_room' || role === 'tutor') {
+    if (role === 'tutor') {
       data = packMainSubject(data);
       if (!data) return;
     }
@@ -459,32 +474,6 @@ export function bindSignupBasicEvents(root) {
       data.region_id = primary.region_id;
       data.region_label = label;
       data.activity_city = label;
-    }
-
-    if (role === 'study_room') {
-      const basis = data.region_basis || 'dong';
-      data.region_basis = basis;
-      if (basis === 'dong') {
-        if (!data.region_id) {
-          alert('노출 행정동 1번을 선택해 주세요.');
-          return;
-        }
-        data.complex_id = '';
-        const region = regionList().find((r) => String(r.id) === String(data.region_id));
-        data.region_label = region?.label || '';
-      } else {
-        if (!data.complex_id) {
-          alert('노출 아파트단지 1번을 선택해 주세요.');
-          return;
-        }
-        const complex = complexList().find((c) => String(c.id) === String(data.complex_id));
-        data.region_id = complex ? String(complex.region_id) : '';
-        data.region_label = complex
-          ? `${complex.label}${complex.address ? ` · ${complex.address}` : ''}`
-          : '';
-        data.complex_label = complex?.label || '';
-        data.complex_address = complex?.address || '';
-      }
     }
 
     const submitBtn = form.querySelector('[type="submit"]');

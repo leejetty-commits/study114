@@ -48,7 +48,18 @@ export function loadKakaoPostcode() {
 /**
  * 지번 선택 시에도 도로명 우선 저장 (autoRoadAddress로 변환).
  * @param {Record<string, string>} data
- * @returns {{ zonecode: string, roadAddress: string, jibunAddress: string, convertedFromJibun: boolean, buildingExtra: string }}
+ * @returns {{
+ *   zonecode: string,
+ *   roadAddress: string,
+ *   jibunAddress: string,
+ *   convertedFromJibun: boolean,
+ *   buildingExtra: string,
+ *   sido: string,
+ *   sigungu: string,
+ *   bname: string,
+ *   buildingName: string,
+ *   apartment: boolean,
+ * }}
  */
 export function normalizePostcodeResult(data) {
   const zonecode = String(data.zonecode || '').trim();
@@ -87,7 +98,18 @@ export function normalizePostcodeResult(data) {
     convertedFromJibun = true;
   }
 
-  return { zonecode, roadAddress, jibunAddress, convertedFromJibun, buildingExtra };
+  return {
+    zonecode,
+    roadAddress,
+    jibunAddress,
+    convertedFromJibun,
+    buildingExtra,
+    sido: String(data.sido || '').trim(),
+    sigungu: String(data.sigungu || '').trim(),
+    bname: String(data.bname || data.hname || '').trim(),
+    buildingName: String(data.buildingName || '').trim(),
+    apartment: String(data.apartment || '').toUpperCase() === 'Y',
+  };
 }
 
 /**

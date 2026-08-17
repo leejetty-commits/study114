@@ -69,7 +69,9 @@ function slotLine(slot, idx) {
   if (!slot) return '';
   const basis = str(slot.region_basis_type);
   const loc =
-    basis === 'complex' ? complexLabel(slot.complex_id) : regionLabel(slot.region_id);
+    basis === 'complex'
+      ? str(slot.complex_name) || complexLabel(slot.complex_id)
+      : str(slot.region_label) || regionLabel(slot.region_id);
   const mark = slot.is_primary ? '대표' : String(idx + 1);
   if (!loc && !basis) return '';
   return [mark, basis === 'complex' ? '단지' : basis === 'dong' ? '동' : basis, loc]
@@ -125,6 +127,11 @@ export function buildRoomInputSummary(room) {
         { label: '공부방명', value: str(s.study_room_name) },
         { label: '주력과목', value: str(s.main_subject_note) },
         { label: '원장 성별', value: labelOf(PERSONAL_GENDER_OPTIONS, s.gender) },
+        { label: '집주소', value: str(s.home_address) },
+        { label: '사업장주소', value: str(s.address_text) },
+        { label: '홍보지역 1', value: slotValues[0] },
+        { label: '홍보지역 2', value: slotValues[1] },
+        { label: '홍보지역 3', value: slotValues[2] },
         { label: '교습장', value: labelOf(LESSON_PLACE_TYPES, s.lesson_place_type) },
         { label: '운영자 표시명', value: str(s.operator_display_name) },
         { label: '슬로건', value: str(s.slogan) },
@@ -133,15 +140,8 @@ export function buildRoomInputSummary(room) {
       ],
     },
     {
-      title: '현재위치',
+      title: '위치·좌표',
       rows: [
-        { label: '위치 기준', value: s.region_basis_type === 'complex' ? '단지' : s.region_basis_type === 'dong' ? '동' : str(s.region_basis_type) },
-        { label: '현재위치', value: regionLabel(s.region_id) },
-        { label: '대표 단지', value: complexLabel(s.complex_id) },
-        { label: '홍보지역 1', value: slotValues[0] },
-        { label: '홍보지역 2', value: slotValues[1] },
-        { label: '홍보지역 3', value: slotValues[2] },
-        { label: '주소 요약', value: str(s.address_text) },
         { label: '위도', value: str(s.latitude) },
         { label: '경도', value: str(s.longitude) },
       ],

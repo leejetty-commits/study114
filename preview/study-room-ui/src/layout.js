@@ -158,8 +158,8 @@ export function renderStepIndicator(stepKey) {
         <span class="register-phase__arrow">→</span>`
         }
         <span class="register-phase__tag ${phase === 'detail' ? 'is-active' : ''}">${REGISTER_PHASES.detail.label}</span>
+        <p class="register-phase__hint">${phaseMeta?.hint || ''}</p>
       </div>
-      <p class="register-phase__hint">${phaseMeta?.hint || ''}</p>
     </div>
     <div class="step-indicator" aria-label="등록 단계 ${Math.max(current, 0) + 1}/${visible.length}">
       ${visible

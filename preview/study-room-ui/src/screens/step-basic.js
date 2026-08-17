@@ -1,5 +1,5 @@
 import { registerState, PERSONAL_GENDER_OPTIONS, getRegions, getComplexes } from '../state.js';
-import { syncBasicFromForm, syncLocationFromForm, applyRoomToState } from '../form-collect.js';
+import { applyRoomToState } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import { loadRoom } from '../register-api.js';
 import {
@@ -11,12 +11,13 @@ import {
   basicOverviewPath,
   withRoomId,
 } from '../layout.js';
-import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import {
-  renderLocationFields,
-  bindLocationFieldEvents,
-  validateLocationFields,
-} from '../location-fields.js';
+  renderStudyRoomBasicFields,
+  bindStudyRoomBasicFields,
+  collectStudyRoomBasicFields,
+  validateStudyRoomBasicFields,
+  applyStudyRoomBasicToState,
+} from '../../../shared/study-room-basic-form.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -30,15 +31,19 @@ function genderLabel(value) {
   return PERSONAL_GENDER_OPTIONS.find((o) => o.value === value)?.label || blank(value);
 }
 
-function regionLabel(id) {
-  if (!id) return '';
-  return getRegions().find((r) => String(r.id) === String(id))?.label || String(id);
+function regionLabel(id, fallback = '') {
+  if (!id) return fallback;
+  return getRegions().find((r) => String(r.id) === String(id))?.label || fallback || String(id);
 }
 
-function complexLabel(id) {
-  if (!id) return '';
-  const c = getComplexes().find((x) => String(x.id) === String(id));
-  if (!c) return String(id);
+function complexLabel(slot) {
+  const name = blank(slot?.complex_name);
+  const addr = blank(slot?.complex_address);
+  if (name && addr) return `${name} (${addr})`;
+  if (name) return name;
+  if (!slot?.complex_id) return addr;
+  const c = getComplexes().find((x) => String(x.id) === String(slot.complex_id));
+  if (!c) return addr || String(slot.complex_id);
   return c.address ? `${c.label} (${c.address})` : c.label;
 }
 
@@ -46,18 +51,14 @@ function exposureLines(s) {
   const slots = Array.isArray(s.saved_regions) ? s.saved_regions.slice(0, 3) : [];
   while (slots.length < 3) slots.push({});
   return slots.map((slot, i) => {
-    const basis = slot.region_basis_type || s.region_basis_type || 'dong';
+    const basis = slot.region_basis_type || 'dong';
     const text =
-      basis === 'complex' ? complexLabel(slot.complex_id) : regionLabel(slot.region_id);
+      basis === 'complex'
+        ? complexLabel(slot)
+        : blank(slot.region_label) || regionLabel(slot.region_id);
     const mark = slot.is_primary ? '대표' : `${i + 1}`;
     return `${mark} · ${String(text || '').trim()}`;
   });
-}
-
-function primaryLocationText(s) {
-  const basis = s.region_basis_type === 'complex' ? 'complex' : 'dong';
-  if (basis === 'complex') return complexLabel(s.complex_id) || regionLabel(s.region_id);
-  return regionLabel(s.region_id);
 }
 
 let basicEditOpen = false;
@@ -70,26 +71,24 @@ function isBasicEditRequested() {
 
 /**
  * 공란 규칙
- * - 저장 필수: 공부방명, 주력과목, 원장 성별, 현재위치, 홍보지역 1곳 이상
- * - 저장 선택: 주소 요약, 홍보지역 2·3칸
+ * - 저장 필수 5: 공부방명, 주력과목, 원장 성별, 사업장주소, 홍보지역 1곳 이상
+ * - 저장 선택: 집주소, 홍보지역 2·3칸
  * - 홍보지역은 항상 3칸. 빈 칸은 자리를 유지하고 앞으로 당기지 않음.
- * - 표시: 값이 없으면 빈 칸(is-empty). 더미 문구·대시 문자를 넣지 않음.
  */
 function overviewRows() {
   const s = registerState;
   const exposures = exposureLines(s);
-  const locationText = primaryLocationText(s);
   return [
     { label: '공부방명', value: s.study_room_name },
     { label: '주력과목', value: s.main_subject_note },
     { label: '원장 성별', value: genderLabel(s.gender) },
-    { label: '현재위치', value: locationText },
+    { label: '집주소', value: s.home_address },
+    { label: '사업장주소', value: s.address_text },
     {
       label: '홍보지역',
       value: exposures.join('\n'),
       multiline: true,
     },
-    { label: '주소 요약', value: s.address_text },
   ];
 }
 
@@ -97,8 +96,8 @@ function renderOverviewBoard() {
   return `
     <div class="register-overview">
       <div class="register-overview__toolbar">
+        <button type="button" class="register-phase__tag is-active register-overview__edit-badge" data-action="edit-basic">기본정보 수정</button>
         <p class="register-overview__lead">수정이 필요하면 눌러 주세요.</p>
-        <button type="button" class="btn btn--secondary" data-action="edit-basic">기본정보 수정</button>
       </div>
       <dl class="register-overview__dl">
         ${overviewRows()
@@ -119,37 +118,6 @@ function renderOverviewBoard() {
   `;
 }
 
-function renderBasicFields() {
-  const s = registerState;
-  return `
-        <div class="register-basic-fields">
-          <div class="form-group">
-            <label class="form-label form-label--required" for="study_room_name">공부방명</label>
-            <input class="form-input" id="study_room_name" name="study_room_name" value="${esc(s.study_room_name)}" required />
-          </div>
-          <div class="form-group">
-            <label class="form-label form-label--required" for="main_subject_note">주력과목 1개</label>
-            <select class="form-input" id="main_subject_note" name="main_subject_note" required>
-              ${renderMainSubjectSelect(s.main_subject_note)}
-            </select>
-          </div>
-          <div class="form-group form-group--full">
-            <span class="form-label form-label--required">원장 성별</span>
-            <p class="register-hint">계정 프로필 성별과 같습니다. 여기서 바꾸면 과외쌤·마이페이지 표시도 함께 바뀝니다.</p>
-            <div class="form-radio-group" role="radiogroup">
-              ${PERSONAL_GENDER_OPTIONS.map(
-                (t) => `
-              <label class="form-radio">
-                <input type="radio" name="gender" value="${t.value}" ${s.gender === t.value ? 'checked' : ''} required />
-                <span class="form-radio__label">${t.label}</span>
-              </label>`,
-              ).join('')}
-            </div>
-          </div>
-        </div>
-  `;
-}
-
 function renderBasicEditModal() {
   return `
     <div class="register-edit-overlay" data-basic-edit-overlay>
@@ -159,8 +127,10 @@ function renderBasicEditModal() {
           <button type="button" class="register-edit-dialog__close" data-action="cancel-edit" aria-label="닫기">×</button>
         </div>
         <form data-form="basic-all" class="register-edit-dialog__body">
-          ${renderBasicFields()}
-          ${renderLocationFields(registerState)}
+          ${renderStudyRoomBasicFields({
+            values: registerState,
+            genderOptions: PERSONAL_GENDER_OPTIONS,
+          })}
         </form>
         <div class="register-edit-dialog__foot">
           <button type="button" class="btn btn--secondary" data-action="cancel-edit">취소</button>
@@ -190,7 +160,7 @@ function openBasicEdit() {
   window.dispatchEvent(new Event('hashchange'));
 }
 
-/** 기본정보 현황 — 필수 6항목 현황판 */
+/** 기본정보 현황 — 필수 5항목 + 집주소(선택) 현황판 */
 function renderBasicOverview() {
   if (sessionStorage.getItem('study114_open_basic_edit') === '1') {
     sessionStorage.removeItem('study114_open_basic_edit');
@@ -238,7 +208,7 @@ export function bindBasicEvents(root) {
   });
 
   const form = overlay.querySelector('[data-form="basic-all"]');
-  bindLocationFieldEvents(form || overlay);
+  bindStudyRoomBasicFields(form || overlay, { regions: getRegions() });
 
   document.removeEventListener('keydown', onEditEscape);
   document.addEventListener('keydown', onEditEscape);
@@ -247,25 +217,13 @@ export function bindBasicEvents(root) {
   saveBtn?.addEventListener('click', () => {
     withSaving(saveBtn, async () => {
       const formEl = overlay.querySelector('[data-form="basic-all"]');
-      syncBasicFromForm(formEl, registerState);
-      syncLocationFromForm(formEl, registerState);
-      if (!String(registerState.study_room_name || '').trim()) {
-        alert('공부방명을 입력해 주세요.');
+      const data = collectStudyRoomBasicFields(formEl);
+      const err = validateStudyRoomBasicFields(data);
+      if (err) {
+        alert(err);
         return;
       }
-      if (!String(registerState.main_subject_note || '').trim()) {
-        alert('주력과목을 선택해 주세요.');
-        return;
-      }
-      if (!['male', 'female'].includes(String(registerState.gender || ''))) {
-        alert('원장 성별을 선택해 주세요.');
-        return;
-      }
-      const locErr = validateLocationFields(formEl, registerState);
-      if (locErr) {
-        alert(locErr);
-        return;
-      }
+      applyStudyRoomBasicToState(registerState, data);
       if (!String(registerState.lesson_place_type || '').trim()) {
         registerState.lesson_place_type = 'study_room';
       }
@@ -278,8 +236,10 @@ export function bindBasicEvents(root) {
       }
       registerState.basicComplete = Boolean(
         String(registerState.study_room_name || '').trim() &&
-          (String(registerState.region_id || '').trim() ||
-            (registerState.saved_regions || []).some((r) => String(r?.region_id || r?.complex_id || '').trim())),
+          String(registerState.address_text || '').trim() &&
+          (registerState.saved_regions || []).some((r) =>
+            String(r?.region_id || r?.complex_id || r?.complex_name || '').trim(),
+          ),
       );
       closeBasicEdit();
     }).catch(() => {

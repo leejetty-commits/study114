@@ -9,6 +9,8 @@ use PDO;
 use PDOException;
 use RuntimeException;
 use Study114\Database\Connection;
+use Study114\Region\AddressRegionMatch;
+use Study114\Region\ComplexEnsure;
 use Study114\Region\SidoRegionEnsure;
 
 final class BasicRegisterService
@@ -33,7 +35,8 @@ final class BasicRegisterService
         $pdo = Connection::get();
         SidoRegionEnsure::ensure($pdo);
         $stmt = $pdo->query(
-            'SELECT id, CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
+            'SELECT id, sido_name, sigungu_name, dong_name,
+                    CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
              FROM regions WHERE is_active = 1 ORDER BY id ASC'
         );
         /** @var list<array{id: int, label: string}> $rows */
@@ -169,28 +172,46 @@ final class BasicRegisterService
     }
 
     /**
-     * 기본등록 seed: 공부방명 + 노출지역 1 + 주력과목 1 (Notion 14장 §3-3-2).
+     * 기본등록: 공부방명 · 주력과목 · 성별 · 사업장주소 · 홍보 1곳 (필수).
+     * 집주소·홍보 2·3은 선택. 주소는 검색 결과이며 단지 시드가 없어도 저장한다.
      *
      * @param array<string, mixed> $input
      */
     private function registerStudyRoom(int $userId, array $input): int
     {
         $name = $this->requireString($input, 'study_room_name');
-        $basis = $this->requireEnum($input, 'region_basis', ['dong', 'complex']);
-        $complexId = null;
-        if ($basis === 'dong') {
-            $regionId = $this->requireExplicitRegionId($input);
-        } else {
-            $complexId = $this->requireComplexId($input);
-            $regionId = $this->regionIdForComplex($complexId);
-        }
         $mainSubject = $this->resolveMainSubjectNote($input);
+        ProfileGenderSync::sync($userId, $input);
 
-        if (isset($input['gender']) && (string) $input['gender'] !== '') {
-            ProfileGenderSync::sync($userId, $input);
+        $addressText = trim((string) ($input['address_text'] ?? ''));
+        if ($addressText === '') {
+            throw new InvalidArgumentException('사업장주소를 검색해 주세요.');
         }
+        $regionId = $this->resolveStudyRoomRegionId($input);
+        $basis = $this->optionalEnum($input, 'region_basis_type', ['dong', 'complex'])
+            ?? $this->optionalEnum($input, 'region_basis', ['dong', 'complex'])
+            ?? 'dong';
 
         $pdo = Connection::get();
+        $complexId = $this->resolveStudyRoomComplexId($pdo, $input, $regionId, $addressText);
+        if ($basis === 'complex' && ($complexId === null || $complexId <= 0)) {
+            $basis = 'dong';
+        }
+        if ($basis !== 'complex') {
+            $complexId = null;
+            $basis = 'dong';
+        }
+
+        $slots = $this->normalizeSignupPromoSlots($pdo, $input, $regionId, $complexId, $basis);
+
+        if (array_key_exists('home_address', $input) || array_key_exists('home_address_zip', $input)) {
+            $home = $this->optionalString($input, 'home_address');
+            $zip = $this->optionalString($input, 'home_address_zip');
+            $pdo->prepare(
+                'UPDATE user_profiles SET address_line1 = COALESCE(?, address_line1), address_zip = COALESCE(?, address_zip) WHERE user_id = ?'
+            )->execute([$home, $zip, $userId]);
+        }
+
         $pdo->beginTransaction();
         try {
             $hasBasisCol = $this->columnExists($pdo, 'study_rooms', 'region_basis_type');
@@ -198,6 +219,24 @@ final class BasicRegisterService
                 $stmt = $pdo->prepare(
                     'INSERT INTO study_rooms (
                         user_id, study_room_name, main_subject_note, region_id, complex_id, region_basis_type,
+                        address_text, profile_status, detail_completion_status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $name,
+                    $mainSubject,
+                    $regionId,
+                    $complexId,
+                    $basis,
+                    $addressText,
+                    'draft',
+                    'basic_only',
+                ]);
+            } else {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO study_rooms (
+                        user_id, study_room_name, main_subject_note, region_id, complex_id, address_text,
                         profile_status, detail_completion_status
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
                 );
@@ -207,23 +246,7 @@ final class BasicRegisterService
                     $mainSubject,
                     $regionId,
                     $complexId,
-                    $basis,
-                    'draft',
-                    'basic_only',
-                ]);
-            } else {
-                $stmt = $pdo->prepare(
-                    'INSERT INTO study_rooms (
-                        user_id, study_room_name, main_subject_note, region_id, complex_id,
-                        profile_status, detail_completion_status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?)'
-                );
-                $stmt->execute([
-                    $userId,
-                    $name,
-                    $mainSubject,
-                    $regionId,
-                    $complexId,
+                    $addressText,
                     'draft',
                     'basic_only',
                 ]);
@@ -231,16 +254,31 @@ final class BasicRegisterService
             $roomId = (int) $pdo->lastInsertId();
 
             $hasSlotBasis = $this->columnExists($pdo, 'study_room_regions', 'region_basis_type');
-            if ($hasSlotBasis) {
-                $pdo->prepare(
-                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
-                     VALUES (?, 1, ?, ?, ?, 1)'
-                )->execute([$roomId, $regionId, $complexId, $basis]);
-            } else {
-                $pdo->prepare(
-                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
-                     VALUES (?, 1, ?, ?, 1)'
-                )->execute([$roomId, $regionId, $complexId]);
+            foreach ($slots as $slot) {
+                if ($hasSlotBasis) {
+                    $pdo->prepare(
+                        'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
+                         VALUES (?, ?, ?, ?, ?, ?)'
+                    )->execute([
+                        $roomId,
+                        $slot['slot'],
+                        $slot['region_id'],
+                        $slot['complex_id'],
+                        $slot['region_basis_type'],
+                        $slot['is_primary'],
+                    ]);
+                } else {
+                    $pdo->prepare(
+                        'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
+                         VALUES (?, ?, ?, ?, ?)'
+                    )->execute([
+                        $roomId,
+                        $slot['slot'],
+                        $slot['region_id'],
+                        $slot['complex_id'],
+                        $slot['is_primary'],
+                    ]);
+                }
             }
 
             $subjectId = $this->findSubjectMasterId($pdo, $this->firstSubjectName($mainSubject));
@@ -256,6 +294,115 @@ final class BasicRegisterService
         }
 
         return $roomId;
+    }
+
+    /** @param array<string, mixed> $input */
+    private function resolveStudyRoomRegionId(array $input): int
+    {
+        if (isset($input['region_id']) && (string) $input['region_id'] !== '') {
+            return $this->requireExplicitRegionId($input);
+        }
+        $pdo = Connection::get();
+        $matched = AddressRegionMatch::match(
+            $pdo,
+            (string) ($input['address_sido'] ?? ''),
+            (string) ($input['address_sigungu'] ?? ''),
+            (string) ($input['address_bname'] ?? '')
+        );
+        if ($matched === null) {
+            throw new InvalidArgumentException('사업장주소의 행정동을 찾지 못했습니다. 주소 검색으로 다시 선택해 주세요.');
+        }
+
+        return $matched;
+    }
+
+    /** @param array<string, mixed> $input */
+    private function resolveStudyRoomComplexId(PDO $pdo, array $input, int $regionId, string $addressText): ?int
+    {
+        if (isset($input['complex_id']) && (string) $input['complex_id'] !== '') {
+            try {
+                return $this->requireComplexId($input);
+            } catch (InvalidArgumentException $e) {
+                /* 시드에 없는 id면 이름으로 생성 */
+            }
+        }
+        $name = $this->optionalString($input, 'complex_name');
+        if ($name === null) {
+            return null;
+        }
+        $addr = $this->optionalString($input, 'complex_address') ?? $addressText;
+
+        return ComplexEnsure::ensure($pdo, $regionId, $name, $addr);
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return list<array{slot:int,region_id:int,complex_id:?int,region_basis_type:string,is_primary:int}>
+     */
+    private function normalizeSignupPromoSlots(PDO $pdo, array $input, int $fallbackRegionId, ?int $fallbackComplexId, string $fallbackBasis): array
+    {
+        $raw = $input['saved_regions'] ?? null;
+        $out = [];
+        if (is_array($raw) && $raw !== []) {
+            $primaryAssigned = false;
+            foreach (array_values($raw) as $idx => $slot) {
+                $slotNum = $idx + 1;
+                if ($slotNum > 3 || !is_array($slot)) {
+                    continue;
+                }
+                $regionId = isset($slot['region_id']) && $slot['region_id'] !== '' ? (int) $slot['region_id'] : 0;
+                $complexId = isset($slot['complex_id']) && $slot['complex_id'] !== '' ? (int) $slot['complex_id'] : null;
+                $slotBasis = isset($slot['region_basis_type']) && in_array($slot['region_basis_type'], ['dong', 'complex'], true)
+                    ? $slot['region_basis_type']
+                    : $fallbackBasis;
+                if ($regionId <= 0) {
+                    continue;
+                }
+                if ($slotBasis === 'complex') {
+                    $cname = trim((string) ($slot['complex_name'] ?? ''));
+                    if (($complexId === null || $complexId <= 0) && $cname !== '') {
+                        $caddr = trim((string) ($slot['complex_address'] ?? $slot['address_text'] ?? ''));
+                        $complexId = ComplexEnsure::ensure($pdo, $regionId, $cname, $caddr !== '' ? $caddr : null);
+                    }
+                    if ($complexId === null || $complexId <= 0) {
+                        continue;
+                    }
+                } else {
+                    $complexId = null;
+                    $slotBasis = 'dong';
+                }
+                $isPrimary = !empty($slot['is_primary']) ? 1 : 0;
+                if ($isPrimary) {
+                    if ($primaryAssigned) {
+                        $isPrimary = 0;
+                    } else {
+                        $primaryAssigned = true;
+                    }
+                }
+                $out[] = [
+                    'slot' => $slotNum,
+                    'region_id' => $regionId,
+                    'complex_id' => $complexId,
+                    'region_basis_type' => $slotBasis,
+                    'is_primary' => $isPrimary,
+                ];
+            }
+            if ($out !== [] && !$primaryAssigned) {
+                $out[0]['is_primary'] = 1;
+            }
+        }
+
+        if ($out === []) {
+            $out[] = [
+                'slot' => 1,
+                'region_id' => $fallbackRegionId,
+                'complex_id' => $fallbackBasis === 'complex' ? $fallbackComplexId : null,
+                'region_basis_type' => $fallbackBasis === 'complex' ? 'complex' : 'dong',
+                'is_primary' => 1,
+            ];
+        }
+
+        return $out;
     }
 
     /**
