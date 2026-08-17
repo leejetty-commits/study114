@@ -3,7 +3,7 @@
  * getCityUnits([]) 정적 id(metro-11)는 저장 시 int 캐스팅되어 지역이 비워진다.
  */
 
-import { getCityUnits } from '../../shared/tutor-region-slots.js';
+import { getCityUnits } from '../../../shared/tutor-region-slots.js';
 
 /** @type {Array<{id: string, label: string, sido_code?: string, sido_name?: string, kind?: string}>} */
 let cities = [];
