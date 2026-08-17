@@ -35,19 +35,20 @@ final class TutorRegisterService
 
         $pdo = Connection::get();
         $cities = SidoRegionEnsure::ensureAndListCities($pdo);
-
-        $regions = $pdo->query(
-
-            'SELECT id, CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
-
-             FROM regions WHERE is_active = 1 ORDER BY id ASC'
-
-        )->fetchAll(PDO::FETCH_ASSOC);
-
-
+        $regions = [];
+        try {
+            $regions = $this->intIdRows(
+                $pdo->query(
+                    'SELECT id, CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
+                     FROM regions WHERE is_active = 1 ORDER BY id ASC'
+                )->fetchAll(PDO::FETCH_ASSOC)
+            );
+        } catch (\Throwable $e) {
+            error_log('[tutor masters] regions: ' . $e->getMessage());
+        }
 
         return [
-            'regions' => $this->intIdRows($regions),
+            'regions' => $regions,
             'cities' => $cities,
         ];
 

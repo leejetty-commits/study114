@@ -50,7 +50,7 @@ import {
   bindTutorRegionSlotEvents,
   collectTutorRegionSlots,
 } from '../../../shared/tutor-region-slots.js';
-import { ensureTutorCityUnits, getTutorCityUnits } from './city-units.js';
+import { ensureTutorCityUnits, getTutorCityUnits, tutorCityUnitsError } from './city-units.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -492,9 +492,15 @@ const STUDENT_COUNT_OPTS = [
 function renderBasicForm(tutor) {
   const units = getTutorCityUnits();
   const slots = tutorRegionSlotsFromRecord(tutor);
-  const regionSlotsHtml = units.length
-    ? slots.map((slot, i) => renderTutorRegionSlot(slot, i, units, { namePrefix: 'p21_' })).join('')
-    : '<p class="p19-field__hint">과외지역 목록을 불러오는 중입니다. 잠시만 기다려 주세요.</p>';
+  const cityErr = tutorCityUnitsError();
+  const regionHint = units.length
+    ? ''
+    : cityErr
+      ? `<p class="p19-field__hint">${esc(cityErr)} <button type="button" class="btn btn--ghost btn--sm" data-p21-retry-cities>다시 불러오기</button></p>`
+      : '<p class="p19-field__hint">시 목록을 연결하는 중입니다. 광역시·도는 먼저 선택할 수 있습니다.</p>';
+  const regionSlotsHtml = `${slots
+    .map((slot, i) => renderTutorRegionSlot(slot, i, units, { namePrefix: 'p21_' }))
+    .join('')}${regionHint}`;
   const formBody = `
     <form class="p19-form p21-inline-form" data-p21-form="basic" data-p21-tutor-id="${tutor.id}">
       ${renderFormSection(
@@ -874,12 +880,24 @@ export function bindTutorRegEvents(root, rerender) {
     if (loaded) rerender();
   });
 
+  root.querySelectorAll('[data-p21-retry-cities]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const ok = await ensureTutorCityUnits();
+      if (ok) rerender();
+      else alert(tutorCityUnitsError() || '과외지역 목록을 불러오지 못했습니다.');
+    });
+  });
+
   root.querySelectorAll('[data-p21-nav]').forEach((el) => {
     el.addEventListener('click', async (e) => {
       e.preventDefault();
       const next = el.getAttribute('data-p21-nav') || '/mypage/registrations/tutors';
       const basicForm = root.querySelector('[data-p21-form="basic"]');
       if (basicForm) {
+        if (!getTutorCityUnits().length) {
+          alert('과외지역 목록을 불러온 뒤 이동해 주세요.');
+          return;
+        }
         try {
           await persistTutorBasicForm(basicForm);
           alert('저장되었습니다.');

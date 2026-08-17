@@ -60,6 +60,8 @@ try {
         'admin_level' => $session['admin_level'] ?? $user['admin_level'],
     ]);
 
+    AuthSession::close();
+
     echo json_encode([
         'ok' => true,
         'user_id' => $user['user_id'],

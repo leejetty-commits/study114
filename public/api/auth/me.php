@@ -27,6 +27,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Credentials: true');
 
 $user = AuthSession::user();
+AuthSession::close();
 if ($user === null) {
     echo json_encode(['ok' => true, 'authenticated' => false], JSON_UNESCAPED_UNICODE);
     exit;

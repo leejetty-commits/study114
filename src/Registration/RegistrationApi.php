@@ -41,6 +41,7 @@ final class RegistrationApi
         if ($auth === null) {
             self::fail(401, 'unauthorized', '로그인이 필요합니다.');
         }
+        AuthSession::close();
 
         return $auth;
     }

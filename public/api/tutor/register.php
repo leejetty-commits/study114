@@ -95,6 +95,7 @@ try {
 
 
     $auth = AuthSession::user();
+    AuthSession::close();
 
     if ($auth === null) {
 

@@ -8,17 +8,32 @@ use Study114\Admin\AdminRoleService;
 
 final class AuthSession
 {
+    /** 세션 쿠키·GC 수명 (초). 기본 24분은 닷홈 공유 GC에 쉽게 끊긴다. */
+    private const LIFETIME = 604800;
+
     public static function start(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
             $secure = function_exists('study114_request_origin')
                 && str_starts_with((string) study114_request_origin(), 'https://');
+            $lifetime = (string) self::LIFETIME;
+            ini_set('session.gc_maxlifetime', $lifetime);
+            ini_set('session.cookie_lifetime', $lifetime);
             session_start([
                 'cookie_httponly' => true,
                 'cookie_samesite' => 'Lax',
                 'cookie_secure'   => $secure,
                 'cookie_path'     => '/',
+                'cookie_lifetime' => self::LIFETIME,
             ]);
+        }
+    }
+
+    /** 읽기만 하는 API가 세션 파일을 오래 잠그지 않게 한다. */
+    public static function close(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
         }
     }
 
