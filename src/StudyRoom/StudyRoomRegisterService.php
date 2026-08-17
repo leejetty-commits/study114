@@ -34,49 +34,40 @@ final class StudyRoomRegisterService
     {
 
         $pdo = Connection::get();
-
         $cities = SidoRegionEnsure::ensureAndListCities($pdo);
-
-        $regions = $pdo->query(
-
-            'SELECT id, CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
-
-             FROM regions WHERE is_active = 1 ORDER BY id ASC'
-
-        )->fetchAll(PDO::FETCH_ASSOC);
-
-
-
-        $complexes = $pdo->query(
-
-            'SELECT id, region_id, name AS label, COALESCE(address, "") AS address
-
-             FROM complexes WHERE is_active = 1 ORDER BY region_id ASC, id ASC'
-
-        )->fetchAll(PDO::FETCH_ASSOC);
-
-
-
-        $facilities = $pdo->query(
-
-            'SELECT id, facility_code, facility_name
-
-             FROM facility_masters WHERE is_active = 1 ORDER BY sort_order ASC, id ASC'
-
-        )->fetchAll(PDO::FETCH_ASSOC);
-
-
+        $regions = [];
+        $complexes = [];
+        $facilities = [];
+        try {
+            $regions = $pdo->query(
+                'SELECT id, CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
+                 FROM regions WHERE is_active = 1 ORDER BY id ASC'
+            )->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            error_log('[study-room masters] regions: ' . $e->getMessage());
+        }
+        try {
+            $complexes = $pdo->query(
+                'SELECT id, region_id, name AS label, COALESCE(address, "") AS address
+                 FROM complexes WHERE is_active = 1 ORDER BY region_id ASC, id ASC'
+            )->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            error_log('[study-room masters] complexes: ' . $e->getMessage());
+        }
+        try {
+            $facilities = $pdo->query(
+                'SELECT id, facility_code, facility_name
+                 FROM facility_masters WHERE is_active = 1 ORDER BY sort_order ASC, id ASC'
+            )->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            error_log('[study-room masters] facilities: ' . $e->getMessage());
+        }
 
         return [
-
             'regions'    => $this->intIdRows($regions),
-
             'cities'     => $cities,
-
             'complexes'  => $this->intIdRows($complexes, ['region_id']),
-
             'facilities' => $this->intIdRows($facilities),
-
         ];
 
     }
@@ -94,7 +85,6 @@ final class StudyRoomRegisterService
         $stmt = $pdo->prepare(
             'SELECT * FROM study_rooms
              WHERE user_id = ? AND deleted_at IS NULL
-               AND profile_status IN ("draft", "pending")
              ORDER BY updated_at DESC, id DESC
              LIMIT 1'
         );
@@ -115,6 +105,19 @@ final class StudyRoomRegisterService
 
         return $this->hydrateRoom((int) $row['id'], $row);
 
+    }
+
+    private function findLatestRoomId(PDO $pdo, int $userId): ?int
+    {
+        $stmt = $pdo->prepare(
+            'SELECT id FROM study_rooms
+             WHERE user_id = ? AND deleted_at IS NULL
+             ORDER BY updated_at DESC, id DESC
+             LIMIT 1'
+        );
+        $stmt->execute([$userId]);
+        $id = $stmt->fetchColumn();
+        return $id === false ? null : (int) $id;
     }
 
 
@@ -150,6 +153,10 @@ final class StudyRoomRegisterService
         $pdo->beginTransaction();
 
         try {
+
+            if ($roomId === null) {
+                $roomId = $this->findLatestRoomId($pdo, $userId);
+            }
 
             if ($roomId === null) {
 
@@ -772,7 +779,23 @@ final class StudyRoomRegisterService
 
         $subjects = $input['subjects'] ?? [];
 
-        if (!is_array($subjects) || $subjects === []) {
+        if (!is_array($subjects)) {
+            $subjects = [];
+        }
+
+        $filled = [];
+        foreach ($subjects as $sub) {
+            if (!is_array($sub)) {
+                continue;
+            }
+            $name = trim((string) ($sub['subject_name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $filled[] = $sub;
+        }
+
+        if ($filled === []) {
 
             throw new InvalidArgumentException('subjects: 대상 과목을 1개 이상 입력해 주세요.');
 
@@ -784,13 +807,7 @@ final class StudyRoomRegisterService
 
 
 
-        foreach ($subjects as $sub) {
-
-            if (!is_array($sub)) {
-
-                continue;
-
-            }
+        foreach ($filled as $sub) {
 
             $schoolLevel = $this->requireEnum($sub, 'school_level', $this->schoolLevelCodes());
 

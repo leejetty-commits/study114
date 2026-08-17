@@ -1,14 +1,15 @@
 import { registerState, getFacilityOptions, IMAGE_TYPES } from '../state.js';
 import { validatePromoUrls } from '../../../shared/promo-links.js';
 import { syncFacilityFromForm, syncCareerFromForm } from '../form-collect.js';
-import { saveAndNavigate, withSaving } from '../save-flow.js';
+import { saveCurrentStep, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
-  renderNavButtons,
+  renderDetailStepNav,
   renderGuideNotice,
   bindGlobalEvents,
   navigate,
+  skipToSummary,
 } from '../layout.js';
 
 function renderFacilityChecks() {
@@ -28,7 +29,7 @@ function renderFacilityChecks() {
 export function renderFacility() {
   const s = registerState;
   const content = `
-    ${renderGuideNotice('상세등록 마지막 단계입니다. 경력·시설·연락을 확인한 뒤 등록을 마쳐 주세요.')}
+    ${renderGuideNotice('경력·시설·연락을 저장한 뒤에 등록을 마칩니다. 지금은 건너뛰면 지금까지 저장된 값만 요약으로 보여 줍니다.')}
     <form data-form="facility" class="register-form-narrow">
       ${renderSectionTitle('경력 · 특징')}
       <div class="register-grid-2 register-grid-2--tight">
@@ -135,7 +136,14 @@ export function renderFacility() {
         <button type="button" class="btn btn--secondary btn--sm" data-action="add-image">+ 사진 추가 (최대 5)</button>
       </div>
 
-      ${renderNavButtons('/register/lesson', '등록 완료')}
+      ${renderDetailStepNav({
+        prevPath: '/register/lesson',
+        nextLabel: '등록 완료',
+        nextEnabled: Boolean(
+          registerState.detailFacilitySaved ||
+            registerState.detail_completion_status === 'expanded_complete',
+        ),
+      })}
     </form>
   `;
   return renderRegisterShell(content, {
@@ -147,22 +155,43 @@ export function renderFacility() {
 
 export function bindFacilityEvents(root) {
   bindGlobalEvents(root);
+  const form = root.querySelector('[data-form="facility"]');
   const prevBtn = root.querySelector('[data-action="prev"]');
-  prevBtn?.addEventListener('click', () => navigate('/register/lesson'));
-
   const nextBtn = root.querySelector('[data-action="next"]');
+  const saveBtn = root.querySelector('[data-action="save"]');
+
+  prevBtn?.addEventListener('click', () => navigate('/register/lesson'));
+  root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipToSummary());
+
+  async function persistFacility() {
+    syncCareerFromForm(form, registerState);
+    syncFacilityFromForm(form, registerState);
+    const urlErr = validatePromoUrls(registerState);
+    if (urlErr) {
+      throw new Error(urlErr);
+    }
+    await saveCurrentStep(registerState, 'career');
+    await saveCurrentStep(registerState, 'facility');
+    registerState.detailFacilitySaved = true;
+  }
+
+  saveBtn?.addEventListener('click', () => {
+    withSaving(saveBtn, async () => {
+      await persistFacility();
+      alert('저장되었습니다.');
+      window.dispatchEvent(new Event('hashchange'));
+    });
+  });
+
   nextBtn?.addEventListener('click', () => {
+    if (nextBtn.disabled) {
+      alert('먼저 저장해 주세요. 저장 후에 등록을 마칠 수 있습니다.');
+      return;
+    }
     withSaving(nextBtn, async () => {
-      const form = root.querySelector('[data-form="facility"]');
-      syncCareerFromForm(form, registerState);
-      syncFacilityFromForm(form, registerState);
-      const urlErr = validatePromoUrls(registerState);
-      if (urlErr) {
-        alert(urlErr);
-        return;
-      }
-      await saveAndNavigate(registerState, 'career', null);
-      await saveAndNavigate(registerState, 'facility', '/register/complete');
+      await persistFacility();
+      registerState.completeNeedsHydrate = true;
+      navigate('/register/complete');
     });
   });
 

@@ -1,14 +1,15 @@
 import { registerState, SCHOOL_LEVELS, LESSON_OPERATION_TYPES, CAPACITY_PER_TIME_OPTIONS, emptySubject } from '../state.js';
 import { syncLessonFromForm } from '../form-collect.js';
-import { saveAndNavigate, withSaving } from '../save-flow.js';
+import { saveAndNavigate, saveCurrentStep, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
-  renderNavButtons,
+  renderDetailStepNav,
   renderGuideNotice,
   mypageRegistrationsUrl,
   bindGlobalEvents,
   navigate,
+  skipToSummary,
 } from '../layout.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 
@@ -41,10 +42,9 @@ function renderSubjectRow(sub, idx) {
 
 export function renderLesson() {
   const s = registerState;
-  const prevPath = s.basicComplete ? null : '/register/location';
   const content = `
     <form data-form="lesson">
-      ${renderGuideNotice('상세등록 1단계입니다. 수업·가격과 경력·특징을 한 화면에서 채운 뒤 다음으로 넘어가세요.')}
+      ${renderGuideNotice('상세등록 1단계입니다. 수업·가격을 채운 뒤 저장하세요. 저장이 끝나야 다음 단계로 갈 수 있습니다. 지금은 건너뛰고 나중에 마이페이지에서 이어도 됩니다.')}
       ${renderSectionTitle('수업 정보')}
       <div class="form-group">
         <label class="form-label">수업운영형태</label>
@@ -111,7 +111,15 @@ export function renderLesson() {
         <textarea class="form-input form-textarea" id="price_description" name="price_description" rows="3">${s.price_description}</textarea>
       </div>
       <a class="register-mypage-link" href="${mypageRegistrationsUrl()}">이름·위치 등 기본정보는 마이페이지에서 수정</a>
-      ${renderNavButtons(prevPath, '다음: 경력·시설')}
+      ${renderDetailStepNav({
+        prevPath: '/register/basic',
+        nextLabel: '다음: 경력·시설',
+        nextEnabled: Boolean(
+          registerState.detailLessonSaved ||
+            registerState.detail_completion_status === 'expanded_in_progress' ||
+            registerState.detail_completion_status === 'expanded_complete',
+        ),
+      })}
     </form>
   `;
   return renderRegisterShell(content, {
@@ -121,14 +129,51 @@ export function renderLesson() {
   });
 }
 
+function lessonSaveGuard() {
+  if (!String(registerState.main_subject_note || '').trim()) {
+    return '주력과목을 선택해 주세요.';
+  }
+  if (!Number(registerState.price_amount)) {
+    return '월 대표 금액을 1원 이상 입력해 주세요.';
+  }
+  const hasSubject = (registerState.subjects || []).some((s) => String(s.subject_name || '').trim());
+  if (!hasSubject) {
+    return '대상 과목을 1개 이상 입력해 주세요.';
+  }
+  return '';
+}
+
 export function bindLessonEvents(root) {
   bindGlobalEvents(root);
+  const form = root.querySelector('[data-form="lesson"]');
   const nextBtn = root.querySelector('[data-action="next"]');
   const prevBtn = root.querySelector('[data-action="prev"]');
-  prevBtn?.addEventListener('click', () => navigate('/register/location'));
+  const saveBtn = root.querySelector('[data-action="save"]');
+
+  prevBtn?.addEventListener('click', () => navigate('/register/basic'));
+  root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipToSummary());
+
+  saveBtn?.addEventListener('click', () => {
+    withSaving(saveBtn, async () => {
+      syncLessonFromForm(form, registerState);
+      const missing = lessonSaveGuard();
+      if (missing) throw new Error(missing);
+      await saveCurrentStep(registerState, 'lesson');
+      registerState.detailLessonSaved = true;
+      alert('저장되었습니다.');
+      window.dispatchEvent(new Event('hashchange'));
+    });
+  });
+
   nextBtn?.addEventListener('click', () => {
+    if (nextBtn.disabled) {
+      alert('먼저 저장해 주세요. 저장 후에 다음 단계로 갈 수 있습니다.');
+      return;
+    }
     withSaving(nextBtn, async () => {
-      syncLessonFromForm(root.querySelector('[data-form="lesson"]'), registerState);
+      syncLessonFromForm(form, registerState);
+      const missing = lessonSaveGuard();
+      if (missing) throw new Error(missing);
       await saveAndNavigate(registerState, 'lesson', '/register/facility');
     });
   });

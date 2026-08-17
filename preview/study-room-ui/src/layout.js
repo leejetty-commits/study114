@@ -221,3 +221,30 @@ export function renderNavButtons(prevPath, nextLabel = '다음') {
     </div>
   `;
 }
+
+/**
+ * 상세등록 단계 — 저장 / 이전 / 건너뜀 / 다음
+ * @param {{ prevPath: string, nextLabel: string, nextEnabled?: boolean }} opts
+ */
+export function renderDetailStepNav(opts) {
+  const nextEnabled = opts.nextEnabled !== false;
+  return `
+    <div class="register-nav register-nav--detail">
+      <div class="register-nav__start">
+        <button type="button" class="btn btn--secondary" data-action="prev">이전</button>
+        <button type="button" class="btn btn--secondary" data-action="save">저장</button>
+      </div>
+      <div class="register-nav__skip">
+        <button type="button" class="btn btn--ghost" data-action="skip-detail">건너뜀</button>
+        <p class="register-nav__skip-hint">추후 마이페이지에서 입력가능해요</p>
+      </div>
+      <button type="button" class="btn btn--primary" data-action="next" ${nextEnabled ? '' : 'disabled'}>${opts.nextLabel}</button>
+    </div>
+  `;
+}
+
+/** 상세등록 건너뜀 — DB에 저장된 값 요약 화면으로 */
+export function skipToSummary() {
+  registerState.completeNeedsHydrate = true;
+  navigate('/register/complete');
+}

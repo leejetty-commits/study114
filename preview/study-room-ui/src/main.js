@@ -118,17 +118,27 @@ async function initApi() {
     apiMasters.regions = masters.regions ?? [];
     apiMasters.complexes = masters.complexes ?? [];
     apiMasters.facilities = masters.facilities ?? [];
-
     if (apiMasters.regions.length && !registerState.region_id) {
       registerState.region_id = String(apiMasters.regions[0].id);
     }
+  } catch {
+    /* 마스터 실패해도 기존 공부방 load는 이어간다 */
+  }
 
+  try {
     const gate = guardRegisterAccess(getChromeNavRole(), 'room');
     if (!gate.ok || gate.mode !== 'form') return null;
 
     const room = await loadRoom().catch(() => null);
     if (room) {
       applyRoomToState(registerState, room);
+      const st = String(room.detail_completion_status || '');
+      if (st === 'expanded_in_progress' || st === 'expanded_complete') {
+        registerState.detailLessonSaved = true;
+      }
+      if (st === 'expanded_complete') {
+        registerState.detailFacilitySaved = true;
+      }
     } else {
       const cachedId = sessionStorage.getItem('study114_study_room_id');
       if (cachedId) registerState.study_room_id = Number(cachedId);

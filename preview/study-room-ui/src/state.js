@@ -189,6 +189,12 @@ export const registerState = {
   detail_completion_status: 'basic_only',
   /** @type {boolean} */
   basicComplete: false,
+  /** 상세 1단계(수업)를 이번 흐름에서 저장했는지 */
+  detailLessonSaved: false,
+  /** 상세 2단계(경력·시설)를 이번 흐름에서 저장했는지 */
+  detailFacilitySaved: false,
+  /** 요약 화면에서 서버 값을 다시 읽어야 하는지 */
+  completeNeedsHydrate: true,
 };
 
 export function isRoomBasicComplete(room) {

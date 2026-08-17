@@ -11,8 +11,9 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 
 use Study114\Auth\AuthSession;
-
 use Study114\StudyRoom\StudyRoomRegisterService;
+use InvalidArgumentException;
+use Throwable;
 
 
 
@@ -95,23 +96,15 @@ try {
 
 
     $auth = AuthSession::user();
+    AuthSession::close();
 
     if ($auth === null) {
-
-        http_response_code(401);
-
         echo json_encode([
-
             'ok'      => false,
-
             'error'   => 'unauthenticated',
-
-            'message' => '로그인이 필요합니다. (room-owner1@dev.local / password)',
-
+            'message' => '로그인이 필요합니다. 공부방 계정으로 다시 로그인해 주세요.',
         ], JSON_UNESCAPED_UNICODE);
-
         exit;
-
     }
 
 
@@ -160,47 +153,24 @@ try {
 
 
 
-    http_response_code(400);
-
     echo json_encode([
-
         'ok'      => false,
-
         'error'   => 'invalid_action',
-
         'message' => 'action: masters | load | save',
-
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (InvalidArgumentException $e) {
-
-    http_response_code(422);
-
     echo json_encode([
-
         'ok'      => false,
-
         'error'   => 'validation',
-
         'message' => $e->getMessage(),
-
     ], JSON_UNESCAPED_UNICODE);
-
 } catch (Throwable $e) {
-
     error_log('[study-room/register] error: ' . $e->getMessage());
-
-    http_response_code(500);
-
     echo json_encode([
-
         'ok'      => false,
-
         'error'   => 'server_error',
-
         'message' => $e->getMessage(),
-
     ], JSON_UNESCAPED_UNICODE);
-
 }
 

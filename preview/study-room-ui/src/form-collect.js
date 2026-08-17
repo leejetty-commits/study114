@@ -157,7 +157,7 @@ export function payloadForStep(step, state) {
         one_on_one_available: state.one_on_one_available,
         price_amount: state.price_amount,
         price_description: state.price_description,
-        subjects: state.subjects,
+        subjects: (state.subjects || []).filter((s) => String(s.subject_name || '').trim()),
       };
     case 'career':
       return {

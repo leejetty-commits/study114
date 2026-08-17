@@ -1,10 +1,4 @@
-/**
- * 단계 저장 후 다음 화면으로 이동
- * @param {import('./state.js').RegisterState} state
- * @param {string} step
- * @param {string|null} nextPath
- */
-export async function saveAndNavigate(state, step, nextPath) {
+export async function saveCurrentStep(state, step) {
   const { saveStep } = await import('./register-api.js');
   const { payloadForStep } = await import('./form-collect.js');
 
@@ -13,6 +7,17 @@ export async function saveAndNavigate(state, step, nextPath) {
   state.profile_status = result.profile_status;
   state.detail_completion_status = result.detail_completion_status;
   sessionStorage.setItem('study114_study_room_id', String(result.study_room_id));
+  return result;
+}
+
+/**
+ * 단계 저장 후 다음 화면으로 이동
+ * @param {import('./state.js').RegisterState} state
+ * @param {string} step
+ * @param {string|null} nextPath
+ */
+export async function saveAndNavigate(state, step, nextPath) {
+  await saveCurrentStep(state, step);
 
   if (nextPath) {
     const { navigate } = await import('./layout.js');
