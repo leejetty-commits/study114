@@ -176,6 +176,7 @@ final class StudyRoomRegisterService
         }
         if ($step === 'basic' || $step === 'basic_all' || $step === 'location') {
             $this->ensureBusinessAddressLine2($pdo);
+            $this->ensurePrimaryAudienceTable($pdo);
         }
         if ($step === 'facility' || $step === 'career') {
             $this->ensureCareerTrustColumns($pdo);
@@ -258,7 +259,9 @@ final class StudyRoomRegisterService
 
 
 
-            $pdo->commit();
+            if ($pdo->inTransaction()) {
+                $pdo->commit();
+            }
 
         } catch (PDOException $e) {
 
@@ -604,6 +607,15 @@ final class StudyRoomRegisterService
         static $done = false;
         if ($done) {
             return;
+        }
+        try {
+            $exists = $pdo->query("SHOW TABLES LIKE 'study_room_primary_audiences'");
+            if ($exists && $exists->fetchColumn()) {
+                $done = true;
+                return;
+            }
+        } catch (PDOException $e) {
+            /* CREATE로 이어간다 */
         }
         $pdo->exec(
             "CREATE TABLE IF NOT EXISTS study_room_primary_audiences (

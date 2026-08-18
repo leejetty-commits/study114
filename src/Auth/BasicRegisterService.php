@@ -224,6 +224,7 @@ final class BasicRegisterService
             )->execute([$home, $homeZip, $userId]);
         }
 
+        $this->ensurePrimaryAudienceTable($pdo);
         $pdo->beginTransaction();
         try {
             $existStmt = $pdo->prepare(
@@ -323,7 +324,9 @@ final class BasicRegisterService
 
             $pdo->commit();
         } catch (PDOException $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             throw new RuntimeException('공부방 기본등록 저장 실패: ' . $e->getMessage(), 0, $e);
         }
 
@@ -587,9 +590,21 @@ final class BasicRegisterService
         return (int) $regionId;
     }
 
-    /** @param array<string, mixed> $input */
-    private function saveSignupPrimaryAudiences(PDO $pdo, int $roomId, array $input): void
+    private function ensurePrimaryAudienceTable(PDO $pdo): void
     {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+        try {
+            $exists = $pdo->query("SHOW TABLES LIKE 'study_room_primary_audiences'");
+            if ($exists && $exists->fetchColumn()) {
+                $done = true;
+                return;
+            }
+        } catch (PDOException $e) {
+            /* CREATE로 이어간다 */
+        }
         $pdo->exec(
             "CREATE TABLE IF NOT EXISTS study_room_primary_audiences (
               study_room_id BIGINT UNSIGNED NOT NULL,
@@ -600,6 +615,13 @@ final class BasicRegisterService
               CONSTRAINT fk_srpa_room FOREIGN KEY (study_room_id) REFERENCES study_rooms (id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         );
+        $done = true;
+    }
+
+    /** @param array<string, mixed> $input */
+    private function saveSignupPrimaryAudiences(PDO $pdo, int $roomId, array $input): void
+    {
+        $this->ensurePrimaryAudienceTable($pdo);
         $allowed = ['preschool', 'elementary', 'middle', 'high', 'n_su'];
         $raw = $input['primary_school_levels'] ?? [];
         if (is_string($raw)) {

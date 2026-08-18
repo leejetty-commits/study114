@@ -41,7 +41,7 @@ function renderProofRows(notes) {
     .map(
       (note, idx) => `
       <div class="register-proof-row" data-proof-idx="${idx}">
-        <textarea class="form-input form-textarea" name="other_proof_notes" rows="2" placeholder="예: 자격증, 수상 내역, 보험 가입">${esc(note)}</textarea>
+        <input class="form-input" type="text" name="other_proof_notes" placeholder="예: 자격증, 수상 내역, 보험 가입" value="${esc(note)}" />
         ${
           notes.length > 1
             ? `<button type="button" class="btn btn--ghost btn--sm" data-action="remove-proof" data-idx="${idx}">삭제</button>`
@@ -82,7 +82,7 @@ export function renderFacility() {
     <form data-form="facility">
       ${renderGuideNotice('상세정보 2/2단계입니다. 비어 있어도 저장한 뒤 등록 완료로 넘어갈 수 있습니다. 공개 여부는 맨 아래 칸에서 고릅니다.')}
       ${renderSectionTitle('경력 · 특징')}
-      <div class="register-grid-2">
+      <div class="register-grid-3">
         ${renderUniversityNameField({
           variant: 'form',
           name: 'university_name',
@@ -95,18 +95,20 @@ export function renderFacility() {
           <label class="form-label" for="major_name">전공학과</label>
           <input class="form-input" id="major_name" name="major_name" value="${esc(s.major_name)}" placeholder="학과명 (서술형)" />
         </div>
+        <div class="register-grid-3__spacer" aria-hidden="true"></div>
       </div>
-      <div class="register-grid-2">
+      <div class="register-grid-3">
         <div class="form-group">
-          <label class="form-label" for="career_years">교습 경력 (년)</label>
+          <label class="form-label" for="career_years">교습경력 (년)</label>
           <input class="form-input" type="number" id="career_years" name="career_years" value="${esc(s.career_years)}" />
         </div>
         <div class="form-group">
-          <label class="form-label" for="academy_career_years">학원 경력 (년)</label>
+          <label class="form-label" for="academy_career_years">학원경력 (년)</label>
           <input class="form-input" type="number" id="academy_career_years" name="academy_career_years" value="${esc(s.academy_career_years)}" />
         </div>
+        <div class="register-grid-3__spacer" aria-hidden="true"></div>
       </div>
-      <div class="register-grid-2">
+      <div class="register-grid-3">
         <div class="form-group">
           ${starLabel('feature_1', '경력특징 1')}
           <input class="form-input" id="feature_1" name="feature_1" value="${esc(s.feature_1)}" />
@@ -115,53 +117,55 @@ export function renderFacility() {
           ${starLabel('feature_2', '경력특징 2')}
           <input class="form-input" id="feature_2" name="feature_2" value="${esc(s.feature_2)}" />
         </div>
-      </div>
-      <div class="form-group">
-        ${starLabel('feature_3', '경력특징 3')}
-        <input class="form-input" id="feature_3" name="feature_3" value="${esc(s.feature_3)}" />
+        <div class="form-group">
+          ${starLabel('feature_3', '경력특징 3')}
+          <input class="form-input" id="feature_3" name="feature_3" value="${esc(s.feature_3)}" />
+        </div>
       </div>
 
       ${renderSectionTitle('신뢰')}
       ${renderSubtitle('보유 증빙 서류')}
-      <div class="form-group">
-        <label class="form-check">
-          <input class="form-check__input" type="checkbox" name="business_registration_available" ${s.business_registration_available ? 'checked' : ''} />
-          <span class="form-check__label">사업자등록증</span>
-        </label>
-      </div>
-      <div class="form-group">
-        <label class="form-check">
-          <input class="form-check__input" type="checkbox" name="education_office_registered" ${s.education_office_registered ? 'checked' : ''} />
-          <span class="form-check__label form-label--required">교육청등록증</span>
-        </label>
-        <label class="form-label" for="education_office_reg_no">교육청 등록번호</label>
-        <input class="form-input" id="education_office_reg_no" name="education_office_reg_no" value="${esc(s.education_office_reg_no)}" />
-      </div>
-      <div class="form-group">
-        <label class="form-check">
-          <input class="form-check__input" type="checkbox" name="franchise_flag" ${s.franchise_flag ? 'checked' : ''} />
-          <span class="form-check__label">프랜차이즈</span>
-        </label>
-        <label class="form-label" for="franchise_name">프랜차이즈명</label>
-        <input class="form-input" id="franchise_name" name="franchise_name" value="${esc(s.franchise_name)}" />
+      <div class="register-grid-3">
+        <div class="form-group">
+          <label class="form-check">
+            <input class="form-check__input" type="checkbox" name="business_registration_available" ${s.business_registration_available ? 'checked' : ''} />
+            <span class="form-check__label">사업자등록증</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-check">
+            <input class="form-check__input" type="checkbox" name="education_office_registered" ${s.education_office_registered ? 'checked' : ''} />
+            <span class="form-check__label form-label--required">교육청등록증</span>
+          </label>
+          <label class="form-label" for="education_office_reg_no">교육청 등록번호</label>
+          <input class="form-input" id="education_office_reg_no" name="education_office_reg_no" value="${esc(s.education_office_reg_no)}" />
+        </div>
+        <div class="form-group">
+          <label class="form-check">
+            <input class="form-check__input" type="checkbox" name="franchise_flag" ${s.franchise_flag ? 'checked' : ''} />
+            <span class="form-check__label">프랜차이즈</span>
+          </label>
+          <label class="form-label" for="franchise_name">프랜차이즈명</label>
+          <input class="form-input" id="franchise_name" name="franchise_name" value="${esc(s.franchise_name)}" />
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">기타 증빙 내역</label>
-        <p class="register-hint">사업자등록증·교육청등록증·프랜차이즈 외에 보여줄 증빙이 있으면 한 줄씩 적어 주세요. 「증빙 추가」로 칸을 늘릴 수 있습니다.</p>
+        <p class="register-hint">사업자등록증·교육청등록증·프랜차이즈 외에 보여줄 증빙이 있으면 한 줄씩 적어 주세요. 「+증빙추가」로 칸을 늘릴 수 있습니다.</p>
         <div class="register-proof-list">${renderProofRows(notes)}</div>
-        <button type="button" class="btn btn--secondary btn--sm register-add-btn" data-action="add-proof">증빙 추가</button>
+        <button type="button" class="register-plus-btn" data-action="add-proof">+증빙추가</button>
       </div>
 
       ${renderSectionTitle('시설 · 환경')}
-      <div class="register-check-grid mb-4">${renderFacilityChecks()}</div>
-      <div class="form-group">
+      <div class="register-check-grid">${renderFacilityChecks()}</div>
+      <div class="form-group register-facility-note">
         <label class="form-label" for="facility_note">시설 추가설명</label>
         <textarea class="form-input form-textarea" id="facility_note" name="facility_note" rows="3">${esc(s.facility_note)}</textarea>
       </div>
 
       ${renderSectionTitle('소셜홍보')}
-      <p class="register-hint">연락은 쪽지로만 합니다. 전화번호·이메일은 이 화면과 검색·상세에 올리지 않습니다.</p>
-      <div class="register-grid-2">
+      <p class="register-hint register-social-lead">연락은 쪽지로만 합니다. 전화번호·이메일은 이 화면과 검색·상세에 올리지 않습니다.</p>
+      <div class="register-grid-3 register-social-grid">
         <div class="form-group">
           <label class="form-label" for="youtube_url">유튜브 링크</label>
           <input class="form-input" type="url" id="youtube_url" name="youtube_url" placeholder="https://www.youtube.com/..." value="${esc(s.youtube_url)}" />

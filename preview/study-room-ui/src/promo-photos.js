@@ -53,16 +53,20 @@ export function renderPromoPhotoGrid() {
   const cards = images.map((img, i) => renderPhotoCard(img, i)).join('');
   const canAdd = images.length < PROMO_IMAGE_SPEC.maxCount;
   return `
-    <div class="register-photo-grid" data-photo-grid>
-      ${cards}
+    <div class="register-photo-block" data-photo-grid>
+      ${
+        cards
+          ? `<div class="register-photo-grid">${cards}</div>`
+          : `<p class="register-photo-block__empty">사진을 추가해 주세요. 최대 ${PROMO_IMAGE_SPEC.maxCount}장까지 올릴 수 있습니다.</p>`
+      }
       ${
         canAdd
-          ? `<div class="register-photo-add">
-              <input class="register-photo-add__file" type="file" accept="${PROMO_IMAGE_SPEC.accept}" data-action="pick-photo" />
-              <span class="register-photo-add__badge">+ 사진 추가</span>
-              <span class="register-photo-add__hint">${images.length}/${PROMO_IMAGE_SPEC.maxCount} · 클릭해서 고르기</span>
+          ? `<div class="register-photo-block__actions">
+              <button type="button" class="register-plus-btn" data-action="add-photo">+사진추가</button>
+              <input class="register-plus-btn__file" type="file" accept="${PROMO_IMAGE_SPEC.accept}" data-action="pick-photo" />
+              <span class="register-photo-block__count">${images.length}/${PROMO_IMAGE_SPEC.maxCount}</span>
             </div>`
-          : ''
+          : `<p class="register-photo-block__count">홍보사진은 최대 ${PROMO_IMAGE_SPEC.maxCount}장입니다.</p>`
       }
     </div>
   `;
@@ -89,7 +93,11 @@ export function syncPromoPhotoMeta(root) {
  * @param {{ persistBeforeUpload: () => Promise<void> }} opts
  */
 export function bindPromoPhotos(root, opts) {
-  root.querySelector('[data-action="pick-photo"]')?.addEventListener('change', async (e) => {
+  const fileInput = root.querySelector('[data-action="pick-photo"]');
+  root.querySelector('[data-action="add-photo"]')?.addEventListener('click', () => {
+    fileInput?.click();
+  });
+  fileInput?.addEventListener('change', async (e) => {
     const input = e.target;
     const file = input.files?.[0];
     input.value = '';
@@ -106,11 +114,13 @@ export function bindPromoPhotos(root, opts) {
     const crop = await openPromoCropDialog(document.body, { file });
     if (!crop) return;
 
-    let roomId = registerState.study_room_id;
-    if (!roomId) {
+    try {
       await opts.persistBeforeUpload();
-      roomId = registerState.study_room_id;
+    } catch (saveErr) {
+      alert(saveErr instanceof Error ? saveErr.message : '공부방을 먼저 저장한 뒤 사진을 올려 주세요.');
+      return;
     }
+    const roomId = registerState.study_room_id;
     if (!roomId) {
       alert('공부방 정보를 먼저 저장한 뒤 사진을 올려 주세요.');
       return;

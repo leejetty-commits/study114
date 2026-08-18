@@ -90,73 +90,92 @@ function renderStyleChecks(selected) {
   ).join('');
 }
 
+/** @type {Set<number>|null} 여러 수업일 때 펼친 인덱스. null이면 첫 수업만 펼침 */
+let openClassIndexes = null;
+
+function classIsOpen(idx, total) {
+  if (total <= 1) return true;
+  if (!openClassIndexes) return idx === 0;
+  return openClassIndexes.has(idx);
+}
+
 function renderClassCard(row, idx, total) {
   const known = lessonSubjectOptions().some((o) => o.value === row.subject_name);
   const selectVal = known ? row.subject_name : '';
   const customVal = known ? row.subject_custom || '' : row.subject_custom || row.subject_name || '';
+  const open = classIsOpen(idx, total);
+  const summary = String(row.class_name || '').trim() || '수업명 없음';
   return `
-    <article class="register-class-card" data-class-idx="${idx}">
-      <div class="register-class-card__head">
-        <h3 class="register-class-card__title">수업 ${idx + 1}</h3>
-        ${
-          total > 1
-            ? `<button type="button" class="btn btn--ghost btn--sm" data-action="remove-class" data-idx="${idx}">수업 삭제</button>`
-            : ''
-        }
-      </div>
-      <div class="form-group">
-        <label class="form-label">수업명</label>
-        <input class="form-input" data-field="class_name" value="${esc(row.class_name)}" placeholder="예: 중등 수학 정규" />
-      </div>
-      <div class="register-grid-2">
-        <div class="form-group">
-          <label class="form-label">대상</label>
-          <select class="form-input" data-field="school_level">
-            ${renderSelectOptions(SCHOOL_LEVELS, row.school_level, '대상 선택')}
-          </select>
+    <article class="register-class-card${open ? '' : ' is-collapsed'}" data-class-idx="${idx}">
+      ${
+        total > 1
+          ? `<div class="register-class-card__head">
+        <button type="button" class="register-class-card__toggle" data-action="toggle-class" data-idx="${idx}" aria-expanded="${open ? 'true' : 'false'}">
+          <span class="register-class-card__chevron" aria-hidden="true">${open ? '▾' : '▸'}</span>
+          <span class="register-class-card__summary">${esc(summary)}</span>
+          <span class="register-class-card__toggle-hint">${open ? '접기' : '펼치기'}</span>
+        </button>
+        <button type="button" class="btn btn--ghost btn--sm" data-action="remove-class" data-idx="${idx}">삭제</button>
+      </div>`
+          : ''
+      }
+      <div class="register-class-card__body">
+        <div class="register-grid-3">
+          <div class="form-group">
+            <label class="form-label register-class-card__name-label">수업명</label>
+            <input class="form-input" data-field="class_name" value="${esc(row.class_name)}" placeholder="예: 중등 수학 정규" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">대상</label>
+            <select class="form-input" data-field="school_level">
+              ${renderSelectOptions(SCHOOL_LEVELS, row.school_level, '대상 선택')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">학년</label>
+            <select class="form-input" data-field="grade_band">
+              ${renderSelectOptions(GRADE_OPTIONS, row.grade_band, '학년 선택')}
+            </select>
+          </div>
+        </div>
+        <div class="register-grid-3">
+          <div class="form-group">
+            <label class="form-label">과목</label>
+            <select class="form-input" data-field="subject_select">
+              ${renderSubjectSelect(selectVal)}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">과목 직접입력</label>
+            <input class="form-input" data-field="subject_custom" value="${esc(customVal)}" placeholder="목록에 없으면 직접 입력" />
+          </div>
+          <div class="register-grid-3__spacer" aria-hidden="true"></div>
         </div>
         <div class="form-group">
-          <label class="form-label">학년</label>
-          <select class="form-input" data-field="grade_band">
-            ${renderSelectOptions(GRADE_OPTIONS, row.grade_band, '학년 선택')}
-          </select>
+          <span class="form-label">출석요일</span>
+          <div class="register-weekday-row">${renderWeekdayChecks(row.attendance_days, 'attendance_days')}</div>
         </div>
-      </div>
-      <div class="register-grid-2">
-        <div class="form-group">
-          <label class="form-label">과목</label>
-          <select class="form-input" data-field="subject_select">
-            ${renderSubjectSelect(selectVal)}
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">과목 직접입력</label>
-          <input class="form-input" data-field="subject_custom" value="${esc(customVal)}" placeholder="목록에 없으면 직접 입력" />
-        </div>
-      </div>
-      <div class="form-group">
-        <span class="form-label">출석요일</span>
-        <div class="register-weekday-row">${renderWeekdayChecks(row.attendance_days, 'attendance_days')}</div>
-      </div>
-      <div class="register-grid-2">
-        <div class="form-group">
-          <label class="form-label">주횟수</label>
-          <select class="form-input" data-field="lessons_per_week">
-            ${renderSelectOptions(WEEKLY_LESSON_COUNTS, row.lessons_per_week, '선택')}
-          </select>
+        <div class="register-grid-3">
+          <div class="form-group">
+            <label class="form-label">주횟수</label>
+            <select class="form-input" data-field="lessons_per_week">
+              ${renderSelectOptions(WEEKLY_LESSON_COUNTS, row.lessons_per_week, '선택')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">월 수업료</label>
+            <input class="form-input" data-field="monthly_fee" value="${esc(row.monthly_fee)}" placeholder="예: 35만원" />
+          </div>
+          <div class="register-grid-3__spacer" aria-hidden="true"></div>
         </div>
         <div class="form-group">
-          <label class="form-label">월 수업료</label>
-          <input class="form-input" data-field="monthly_fee" value="${esc(row.monthly_fee)}" placeholder="예: 35만원" />
+          <label class="form-label">수업료 설명</label>
+          <input class="form-input" data-field="fee_note" value="${esc(row.fee_note)}" placeholder="예: 주 2회 기준" />
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">수업료 설명</label>
-        <input class="form-input" data-field="fee_note" value="${esc(row.fee_note)}" placeholder="예: 주 2회 기준" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">수업 참고사항</label>
-        <textarea class="form-input form-textarea" data-field="lesson_note" rows="3" placeholder="이 수업에 대해 학부모에게 알리고 싶은 내용을 적어 주세요.">${esc(row.lesson_note)}</textarea>
+        <div class="form-group">
+          <label class="form-label">수업 참고사항</label>
+          <textarea class="form-input form-textarea" data-field="lesson_note" rows="3" placeholder="이 수업에 대해 학부모에게 알리고 싶은 내용을 적어 주세요.">${esc(row.lesson_note)}</textarea>
+        </div>
       </div>
     </article>
   `;
@@ -209,7 +228,7 @@ export function renderLesson() {
           </select>
         </div>
       </div>
-      <div class="register-grid-3">
+      <div class="register-grid-2">
         <div class="form-group">
           ${starLabel('monthly_fee_manwon', '월 평균 수업료')}
           <div class="register-fee-manwon">
@@ -219,7 +238,7 @@ export function renderLesson() {
         </div>
         <div class="form-group">
           <span class="form-label">결제</span>
-          <div class="form-row">
+          <div class="register-pay-checks">
             <label class="form-check">
               <input class="form-check__input" type="checkbox" name="card_payment_available" ${s.card_payment_available ? 'checked' : ''} />
               <span class="form-check__label">카드결제 여부</span>
@@ -270,11 +289,11 @@ export function renderLesson() {
       ${renderPromoPhotoGrid()}
 
       ${renderSectionTitle('수업상세')}
-      <p class="register-hint mb-4">수업 하나를 하나의 그룹으로 적습니다. 「수업 추가」로 아래로 늘릴 수 있습니다.</p>
+      <p class="register-hint mb-4">수업 하나를 하나의 그룹으로 적습니다. 「+수업추가」로 아래로 늘릴 수 있습니다. 수업이 여러 개이면 접고 펼칠 수 있습니다.</p>
       <div data-classes-list>
         ${classes.map((row, i) => renderClassCard(row, i, classes.length)).join('')}
       </div>
-      <button type="button" class="btn btn--secondary btn--sm register-add-btn" data-action="add-class">수업 추가</button>
+      <button type="button" class="register-plus-btn" data-action="add-class">+수업추가</button>
 
       ${renderDetailStepNav({
         prevPath: '/register/basic',
@@ -336,6 +355,7 @@ export function bindLessonEvents(root) {
     persistForm(form);
     if (!Array.isArray(registerState.classes)) registerState.classes = [];
     registerState.classes.push(emptyClass());
+    openClassIndexes = new Set([registerState.classes.length - 1]);
     window.dispatchEvent(new Event('hashchange'));
   });
 
@@ -345,6 +365,25 @@ export function bindLessonEvents(root) {
       const idx = Number(btn.getAttribute('data-idx'));
       registerState.classes.splice(idx, 1);
       if (!registerState.classes.length) registerState.classes.push(emptyClass());
+      const next = new Set();
+      (openClassIndexes || new Set([0])).forEach((i) => {
+        if (i < idx) next.add(i);
+        else if (i > idx) next.add(i - 1);
+      });
+      openClassIndexes = registerState.classes.length > 1 ? next : null;
+      window.dispatchEvent(new Event('hashchange'));
+    });
+  });
+
+  root.querySelectorAll('[data-action="toggle-class"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      persistForm(form);
+      const idx = Number(btn.getAttribute('data-idx'));
+      const total = Array.isArray(registerState.classes) ? registerState.classes.length : 1;
+      const current = openClassIndexes ? new Set(openClassIndexes) : new Set(total > 1 ? [0] : []);
+      if (current.has(idx)) current.delete(idx);
+      else current.add(idx);
+      openClassIndexes = current;
       window.dispatchEvent(new Event('hashchange'));
     });
   });
