@@ -220,6 +220,17 @@ body.register-edit-open {
   margin-bottom: 0.2rem;
 }
 
+/* 상세1·상세2 입력·선택칸 높이를 기본정보 수정 팝업과 같게 */
+form[data-form="lesson"] input.form-input,
+form[data-form="lesson"] select.form-input,
+form[data-form="facility"] input.form-input,
+form[data-form="facility"] select.form-input {
+  padding: 0.4rem 0.75rem;
+  min-height: 2.15rem;
+  box-sizing: border-box;
+  line-height: 1.35;
+}
+
 .register-edit-dialog .form-address input[readonly] {
   background: #fff7ee;
 }
@@ -629,6 +640,14 @@ form[data-form="facility"] > .register-guide {
   height: 100%;
   color: #64748b;
   font-size: 0.85rem;
+}
+
+.register-photo-card__meta .form-label {
+  margin-bottom: 0.2rem;
+}
+
+.register-photo-card__meta .form-input + .form-label {
+  margin-top: 0.75rem;
 }
 
 .register-photo-card__meta .register-hint {
