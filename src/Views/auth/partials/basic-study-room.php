@@ -6,7 +6,7 @@ $profileGender = (string) ($profileGender ?? study114_old($old, 'gender', ''));
 <form method="post" action="/auth/signup/basic" class="basic-register">
   <input type="hidden" name="role_ui" value="study_room">
   <p class="auth-section-title">기본등록</p>
-  <p class="form-note">필수 5항목(공부방명 · 주력과목 · 원장 성별 · 사업장주소 · 홍보지역 1곳)입니다. 집주소는 선택입니다.</p>
+  <p class="form-note">필수: 교습형태 · 이름 · 주대상 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1번. 홍보 2·3번은 선택입니다. (정본 입력은 가입 SPA 폼)</p>
 
   <div class="form-group">
     <label class="form-label form-label--required" for="study_room_name">공부방명</label>

@@ -218,9 +218,12 @@ function renderStudyRoomBasic() {
   const d = signupState.basicRegister?.study_room || {};
   const draft = signupState.accountDraft || {};
   const values = {
+    lesson_place_type: d.lesson_place_type || '',
     study_room_name: d.study_room_name || '',
+    primary_school_levels: d.primary_school_levels || [],
     main_subject_note: d.main_subjects?.[0] || d.main_subject_note || '',
     gender: d.gender || signupState.profileGender || '',
+    slogan: d.slogan || '',
     home_address: d.home_address || draft.address || signupState.accountAddress || '',
     home_address_zip: d.home_address_zip || draft.address_zip || '',
     home_address_line2: d.home_address_line2 || draft.address_line2 || '',
@@ -236,7 +239,7 @@ function renderStudyRoomBasic() {
   return `
     <form data-form="basic-study-room" class="basic-register">
       <p class="auth-section-title">기본등록</p>
-      <p class="form-note mb-4">필수 5항목(공부방명 · 주력과목 · 원장 성별 · 사업장주소 · 홍보지역 1곳)입니다. 집주소와 홍보 2·3곳은 선택입니다.</p>
+      <p class="form-note mb-4">교습형태 · 이름 · 주대상 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1번은 필수입니다. 홍보 2·3번은 선택입니다.</p>
       ${renderStudyRoomBasicFields({
         values,
         genderOptions: PERSONAL_GENDER_OPTIONS,

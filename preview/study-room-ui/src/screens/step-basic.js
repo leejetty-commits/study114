@@ -1,4 +1,4 @@
-import { registerState, PERSONAL_GENDER_OPTIONS, apiMasters, getRegions, getComplexes } from '../state.js';
+import { registerState, PERSONAL_GENDER_OPTIONS, apiMasters, getRegions, getComplexes, isRoomBasicComplete } from '../state.js';
 import { applyRoomToState } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import { loadRoom } from '../register-api.js';
@@ -18,6 +18,8 @@ import {
   collectStudyRoomBasicFields,
   validateStudyRoomBasicFields,
   applyStudyRoomBasicToState,
+  lessonPlaceNameLabel,
+  formatPrimaryAudienceLabel,
 } from '../../../shared/study-room-basic-form.js';
 import { bindDraggableDialog } from '../../../shared/draggable-dialog.js';
 
@@ -73,17 +75,20 @@ function isBasicEditRequested() {
 
 /**
  * 공란 규칙
- * - 저장 필수 5: 공부방명, 주력과목, 원장 성별, 사업장주소, 홍보지역 1곳 이상
- * - 저장 선택: 집주소, 홍보지역 2·3칸
+ * - 저장 필수: 교습형태, 이름, 주대상, 주력과목, 원장성별, 슬로건, 집주소, 사업장주소, 홍보지역 1곳
+ * - 저장 선택: 홍보지역 2·3칸
  * - 홍보지역은 항상 3칸. 빈 칸은 자리를 유지하고 앞으로 당기지 않음.
  */
 function overviewRows() {
   const s = registerState;
   const exposures = exposureLines(s);
   return [
-    { label: '공부방명', value: s.study_room_name },
+    { label: '교습형태', value: s.lesson_place_type === 'academy' ? '교습소' : s.lesson_place_type === 'study_room' ? '공부방' : '' },
+    { label: lessonPlaceNameLabel(s.lesson_place_type), value: s.study_room_name },
+    { label: '주대상', value: formatPrimaryAudienceLabel(s.primary_school_levels) },
     { label: '주력과목', value: s.main_subject_note },
-    { label: '원장 성별', value: genderLabel(s.gender) },
+    { label: '원장성별', value: genderLabel(s.gender) },
+    { label: '슬로건', value: s.slogan },
     { label: '집주소', value: [s.home_address, s.home_address_line2].filter((x) => String(x || '').trim()).join(' ') },
     { label: '사업장주소', value: [s.address_text, s.address_line2].filter((x) => String(x || '').trim()).join(' ') },
     {
@@ -238,9 +243,6 @@ export function bindBasicEvents(root) {
         return;
       }
       applyStudyRoomBasicToState(registerState, data);
-      if (!String(registerState.lesson_place_type || '').trim()) {
-        registerState.lesson_place_type = 'study_room';
-      }
       await saveAndNavigate(registerState, 'basic_all', null);
       try {
         const room = await loadRoom(registerState.study_room_id);
@@ -248,13 +250,7 @@ export function bindBasicEvents(root) {
       } catch {
         /* 저장은 됐으므로 현황은 현재 state로 표시 */
       }
-      registerState.basicComplete = Boolean(
-        String(registerState.study_room_name || '').trim() &&
-          String(registerState.address_text || '').trim() &&
-          (registerState.saved_regions || []).some((r) =>
-            String(r?.region_id || r?.complex_id || r?.complex_name || '').trim(),
-          ),
-      );
+      registerState.basicComplete = isRoomBasicComplete(registerState);
       closeBasicEdit();
     }).catch(() => {
       /* withSaving이 이미 alert. 실패 시 팝업을 닫지 않는다. */

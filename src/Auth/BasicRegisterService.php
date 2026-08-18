@@ -175,8 +175,8 @@ final class BasicRegisterService
     }
 
     /**
-     * 기본등록: 공부방명 · 주력과목 · 성별 · 사업장주소 · 홍보 1곳 (필수).
-     * 집주소·홍보 2·3은 선택. 주소는 검색 결과이며 단지 시드가 없어도 저장한다.
+     * 기본등록: 교습형태 · 이름 · 주대상 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보 1곳 (필수).
+     * 홍보 2·3은 선택. 주소는 검색 결과이며 단지 시드가 없어도 저장한다.
      *
      * @param array<string, mixed> $input
      */
@@ -184,8 +184,14 @@ final class BasicRegisterService
     {
         $name = $this->requireString($input, 'study_room_name');
         $mainSubject = $this->resolveMainSubjectNote($input);
+        $lessonPlace = $this->requireEnum($input, 'lesson_place_type', ['academy', 'study_room']);
+        $slogan = $this->requireString($input, 'slogan');
         ProfileGenderSync::sync($userId, $input);
 
+        $home = trim((string) ($input['home_address'] ?? ''));
+        if ($home === '') {
+            throw new InvalidArgumentException('집주소를 검색해 주세요.');
+        }
         $addressText = trim((string) ($input['address_text'] ?? ''));
         if ($addressText === '') {
             throw new InvalidArgumentException('사업장주소를 검색해 주세요.');
@@ -206,21 +212,16 @@ final class BasicRegisterService
         }
 
         $slots = $this->normalizeSignupPromoSlots($pdo, $input, $regionId, $complexId, $basis);
-
-        if (array_key_exists('home_address', $input) || array_key_exists('home_address_zip', $input)
-            || array_key_exists('home_address_line2', $input)) {
-            $home = $this->optionalString($input, 'home_address');
-            $zip = $this->optionalString($input, 'home_address_zip');
-            $line2 = $this->optionalString($input, 'home_address_line2');
-            try {
-                $pdo->prepare(
-                    'UPDATE user_profiles SET address_line1 = COALESCE(?, address_line1), address_zip = COALESCE(?, address_zip), address_line2 = COALESCE(?, address_line2) WHERE user_id = ?'
-                )->execute([$home, $zip, $line2, $userId]);
-            } catch (PDOException $e) {
-                $pdo->prepare(
-                    'UPDATE user_profiles SET address_line1 = COALESCE(?, address_line1), address_zip = COALESCE(?, address_zip) WHERE user_id = ?'
-                )->execute([$home, $zip, $userId]);
-            }
+        $homeZip = $this->optionalString($input, 'home_address_zip');
+        $homeLine2 = $this->optionalString($input, 'home_address_line2');
+        try {
+            $pdo->prepare(
+                'UPDATE user_profiles SET address_line1 = ?, address_zip = ?, address_line2 = ? WHERE user_id = ?'
+            )->execute([$home, $homeZip, $homeLine2, $userId]);
+        } catch (PDOException $e) {
+            $pdo->prepare(
+                'UPDATE user_profiles SET address_line1 = ?, address_zip = ? WHERE user_id = ?'
+            )->execute([$home, $homeZip, $userId]);
         }
 
         $pdo->beginTransaction();
@@ -263,6 +264,10 @@ final class BasicRegisterService
                 ]);
             }
             $roomId = (int) $pdo->lastInsertId();
+
+            $pdo->prepare('UPDATE study_rooms SET lesson_place_type = ?, slogan = ? WHERE id = ?')
+                ->execute([$lessonPlace, $slogan, $roomId]);
+            $this->saveSignupPrimaryAudiences($pdo, $roomId, $input);
 
             $bizLine2 = $this->optionalString($input, 'address_line2');
             if ($bizLine2 !== null) {
@@ -404,13 +409,9 @@ final class BasicRegisterService
                     $complexId = null;
                     $slotBasis = 'dong';
                 }
-                $isPrimary = !empty($slot['is_primary']) ? 1 : 0;
+                $isPrimary = $slotNum === 1 ? 1 : 0;
                 if ($isPrimary) {
-                    if ($primaryAssigned) {
-                        $isPrimary = 0;
-                    } else {
-                        $primaryAssigned = true;
-                    }
+                    $primaryAssigned = true;
                 }
                 $out[] = [
                     'slot' => $slotNum,
@@ -420,19 +421,17 @@ final class BasicRegisterService
                     'is_primary' => $isPrimary,
                 ];
             }
-            if ($out !== [] && !$primaryAssigned) {
-                $out[0]['is_primary'] = 1;
-            }
         }
 
-        if ($out === []) {
-            $out[] = [
-                'slot' => 1,
-                'region_id' => $fallbackRegionId,
-                'complex_id' => $fallbackBasis === 'complex' ? $fallbackComplexId : null,
-                'region_basis_type' => $fallbackBasis === 'complex' ? 'complex' : 'dong',
-                'is_primary' => 1,
-            ];
+        $hasSlot1 = false;
+        foreach ($out as $row) {
+            if ((int) $row['slot'] === 1) {
+                $hasSlot1 = true;
+                break;
+            }
+        }
+        if (!$hasSlot1) {
+            throw new InvalidArgumentException('홍보지역 1(대표)을 선택해 주세요.');
         }
 
         return $out;
@@ -577,6 +576,46 @@ final class BasicRegisterService
             throw new InvalidArgumentException('complex_id: 단지에 연결된 행정동이 없습니다.');
         }
         return (int) $regionId;
+    }
+
+    /** @param array<string, mixed> $input */
+    private function saveSignupPrimaryAudiences(PDO $pdo, int $roomId, array $input): void
+    {
+        $pdo->exec(
+            "CREATE TABLE IF NOT EXISTS study_room_primary_audiences (
+              study_room_id BIGINT UNSIGNED NOT NULL,
+              school_level  ENUM('preschool', 'elementary', 'middle', 'high', 'n_su') NOT NULL,
+              created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (study_room_id, school_level),
+              KEY idx_srpa_level (school_level),
+              CONSTRAINT fk_srpa_room FOREIGN KEY (study_room_id) REFERENCES study_rooms (id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        );
+        $allowed = ['preschool', 'elementary', 'middle', 'high', 'n_su'];
+        $raw = $input['primary_school_levels'] ?? [];
+        if (is_string($raw)) {
+            $raw = preg_split('/[,\s]+/', $raw) ?: [];
+        }
+        if (!is_array($raw)) {
+            $raw = [];
+        }
+        $levels = [];
+        foreach ($raw as $lv) {
+            $lv = trim((string) $lv);
+            if (in_array($lv, $allowed, true)) {
+                $levels[] = $lv;
+            }
+        }
+        $levels = array_values(array_unique($levels));
+        if ($levels === []) {
+            throw new InvalidArgumentException('주대상을 1개 이상 선택해 주세요.');
+        }
+        $ins = $pdo->prepare(
+            'INSERT INTO study_room_primary_audiences (study_room_id, school_level) VALUES (?, ?)'
+        );
+        foreach ($levels as $lv) {
+            $ins->execute([$roomId, $lv]);
+        }
     }
 
     private function columnExists(PDO $pdo, string $table, string $column): bool

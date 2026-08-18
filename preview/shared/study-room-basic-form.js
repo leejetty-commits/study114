@@ -1,10 +1,36 @@
 /**
  * 공부방 기본정보 입력 — 가입 기본등록과 현황 수정 팝업이 같은 레이아웃을 쓴다.
  *
- * 필수 5: 공부방명 · 주력과목 · 원장 성별 · 사업장주소 · 홍보지역 1곳
- * 선택: 집주소 · 홍보 2·3
+ * 필수: 교습형태 · 이름 · 주대상 1개 이상 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1곳
+ * 선택: 홍보 2·3
  * 주소칸은 카카오 우편번호(더미 단지 목록 없이 호출).
  */
+
+export const PRIMARY_AUDIENCE_OPTIONS = [
+  { value: 'preschool', label: '미취학' },
+  { value: 'elementary', label: '초등' },
+  { value: 'middle', label: '중등' },
+  { value: 'high', label: '고등' },
+  { value: 'n_su', label: 'N수' },
+];
+
+export const LESSON_PLACE_TYPE_OPTIONS = [
+  { value: 'study_room', label: '공부방' },
+  { value: 'academy', label: '교습소' },
+];
+
+/** @param {string[]} levels */
+export function formatPrimaryAudienceLabel(levels) {
+  const set = new Set((Array.isArray(levels) ? levels : []).map(String));
+  return PRIMARY_AUDIENCE_OPTIONS.filter((o) => set.has(o.value))
+    .map((o) => o.label)
+    .join(' · ');
+}
+
+/** @param {string} [placeType] */
+export function lessonPlaceNameLabel(placeType) {
+  return placeType === 'academy' ? '교습소명' : '공부방명';
+}
 
 import { loadKakaoPostcode, openKakaoPostcode } from './kakao-postcode.js';
 import { displayRoad } from './address-region-match.js';
@@ -220,29 +246,64 @@ export function renderStudyRoomBasicFields(opts = {}) {
     { value: 'female', label: '여' },
   ];
   const slots = defaultSlots(v.saved_regions);
+  const placeType = String(v.lesson_place_type || '');
+  const nameLabel = lessonPlaceNameLabel(placeType);
+  const selectedLevels = Array.isArray(v.primary_school_levels)
+    ? v.primary_school_levels.map(String)
+    : [];
+
+  const placeRadios = LESSON_PLACE_TYPE_OPTIONS.map(
+    (o) => `
+      <label class="form-radio">
+        <input type="radio" name="lesson_place_type" value="${esc(o.value)}" ${placeType === o.value ? 'checked' : ''} required />
+        <span class="form-radio__label">${esc(o.label)}</span>
+      </label>`,
+  ).join('');
+
+  const audienceChecks = PRIMARY_AUDIENCE_OPTIONS.map(
+    (o) => `
+      <label class="form-check">
+        <input type="checkbox" name="primary_school_levels" value="${esc(o.value)}" ${selectedLevels.includes(o.value) ? 'checked' : ''} />
+        <span class="form-check__label">${esc(o.label)}</span>
+      </label>`,
+  ).join('');
 
   return `
     <div class="register-basic-fields" data-study-room-basic-form>
-      <div class="form-group">
-        <label class="form-label form-label--required" for="study_room_name">공부방명</label>
-        <input class="form-input" id="study_room_name" name="study_room_name" value="${esc(v.study_room_name || '')}" required />
+      <div class="form-group form-group--full">
+        <span class="form-label form-label--required">교습형태</span>
+        <p class="form-hint">공부방과 교습소 중 하나를 고르면 이름 칸 이름이 맞춰집니다.</p>
+        <div class="form-radio-group" role="radiogroup">${placeRadios}</div>
       </div>
       <div class="form-group">
-        <label class="form-label form-label--required" for="main_subject_note">주력과목 1개</label>
+        <label class="form-label form-label--required" for="study_room_name" data-place-name-label>${esc(nameLabel)}</label>
+        <input class="form-input" id="study_room_name" name="study_room_name" value="${esc(v.study_room_name || '')}" required />
+      </div>
+      <div class="form-group form-group--full">
+        <span class="form-label form-label--required">주대상</span>
+        <p class="form-hint">학교급을 1개 이상 고르세요. 카드 「대상」에 나갑니다.</p>
+        <div class="register-check-grid">${audienceChecks}</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label form-label--required" for="main_subject_note">주력과목</label>
         <select class="form-input" id="main_subject_note" name="main_subject_note" required>
           ${renderMainSubjectSelect(v.main_subject_note || v.main_subjects?.[0] || '', { includeEmpty: true, emptyLabel: '과목 선택' })}
         </select>
       </div>
       <div class="form-group form-group--full">
-        <span class="form-label form-label--required">원장 성별</span>
+        <span class="form-label form-label--required">원장성별</span>
         <p class="form-hint">계정 프로필 성별과 같습니다. 여기서 바꾸면 과외쌤·마이페이지 표시도 함께 바뀝니다.</p>
         ${renderGender(genderOptions, v.gender || '')}
+      </div>
+      <div class="form-group form-group--full">
+        <label class="form-label form-label--required" for="slogan">슬로건</label>
+        <input class="form-input" id="slogan" name="slogan" maxlength="80" value="${esc(v.slogan || '')}" placeholder="한 줄로 소개해 주세요" required />
       </div>
 
       ${renderAddressBlock({
         key: 'home',
         label: '집주소',
-        required: false,
+        required: true,
         zipName: 'home_address_zip',
         addressName: 'home_address',
         detailName: 'home_address_line2',
@@ -262,7 +323,7 @@ export function renderStudyRoomBasicFields(opts = {}) {
         zip: v.address_zip || '',
         address: v.address_text || '',
         detail: v.address_line2 || '',
-        hint: '사업장주소가 지도에 나타납니다.',
+        hint: '지도 핀 위치입니다. 홈 카드 「위치」에는 나가지 않습니다.',
         extraHidden: `
           <div hidden>
             <input type="hidden" name="region_id" value="${esc(v.region_id || '')}" />
@@ -282,7 +343,7 @@ export function renderStudyRoomBasicFields(opts = {}) {
 
       <div class="form-group form-group--full" data-promo-regions>
         <span class="form-label form-label--required">홍보지역</span>
-        <p class="form-hint">3칸을 유지합니다. <strong>1곳은 필수</strong>, 2·3곳은 선택입니다. 칸마다 주소 검색으로 행정동 또는 아파트단지를 고릅니다. 대표는 1곳만 지정하세요.</p>
+        <p class="form-hint">3칸을 유지합니다. <strong>1번은 필수</strong>, 2·3번은 선택입니다. 카드 「위치」는 홍보지역 1(대표)입니다.</p>
         <div data-saved-regions>
           ${slots.map((slot, i) => renderPromoSlot(slot, i)).join('')}
         </div>
@@ -484,6 +545,13 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
       if (query && !String(query.value || '').trim() && label?.value) query.value = label.value;
     });
   });
+
+  form.querySelectorAll('input[name="lesson_place_type"]').forEach((el) => {
+    el.addEventListener('change', () => {
+      const labelEl = form.querySelector('[data-place-name-label]');
+      if (labelEl) labelEl.textContent = lessonPlaceNameLabel(el.value);
+    });
+  });
 }
 
 /**
@@ -500,6 +568,10 @@ export function collectStudyRoomBasicFields(root) {
     const checked = wrap.querySelector(`[name="${name}"]:checked`);
     if (checked) return String(checked.value ?? '');
     return String(wrap.querySelector(`[name="${name}"]`)?.value ?? '');
+  };
+  const getAll = (name) => {
+    if (fd) return fd.getAll(name).map(String);
+    return [...wrap.querySelectorAll(`[name="${name}"]:checked`)].map((el) => String(el.value ?? ''));
   };
 
   const primaryIdx = 0;
@@ -526,9 +598,12 @@ export function collectStudyRoomBasicFields(root) {
   });
 
   return {
+    lesson_place_type: get('lesson_place_type'),
     study_room_name: get('study_room_name'),
+    primary_school_levels: getAll('primary_school_levels'),
     main_subject_note: get('main_subject_note'),
     gender: get('gender'),
+    slogan: get('slogan'),
     home_address: get('home_address'),
     home_address_zip: get('home_address_zip'),
     home_address_line2: get('home_address_line2'),
@@ -555,9 +630,20 @@ export function collectStudyRoomBasicFields(root) {
  * @returns {string|null}
  */
 export function validateStudyRoomBasicFields(data) {
-  if (!blank(data.study_room_name)) return '공부방명을 입력해 주세요.';
+  const allowedLevels = PRIMARY_AUDIENCE_OPTIONS.map((o) => o.value);
+  if (!['study_room', 'academy'].includes(blank(data.lesson_place_type))) {
+    return '교습형태를 선택해 주세요.';
+  }
+  if (!blank(data.study_room_name)) return `${lessonPlaceNameLabel(data.lesson_place_type)}을 입력해 주세요.`;
+  const levels = (Array.isArray(data.primary_school_levels) ? data.primary_school_levels : [])
+    .map(String)
+    .filter((v) => allowedLevels.includes(v));
+  if (!levels.length) return '주대상을 1개 이상 선택해 주세요.';
+  data.primary_school_levels = levels;
   if (!blank(data.main_subject_note)) return '주력과목을 선택해 주세요.';
-  if (!['male', 'female'].includes(blank(data.gender))) return '원장 성별을 선택해 주세요.';
+  if (!['male', 'female'].includes(blank(data.gender))) return '원장성별을 선택해 주세요.';
+  if (!blank(data.slogan)) return '슬로건을 입력해 주세요.';
+  if (!blank(data.home_address)) return '집주소를 검색해 주세요.';
   if (!blank(data.address_text)) return '사업장주소를 검색해 주세요.';
   if (
     !blank(data.region_id) &&
@@ -568,8 +654,8 @@ export function validateStudyRoomBasicFields(data) {
   }
 
   const slots = Array.isArray(data.saved_regions) ? data.saved_regions : [];
+  if (!slotFilled(slots[0] || {})) return '홍보지역 1(대표)을 선택해 주세요.';
   const filledIdx = slots.map((s, i) => (slotFilled(s) ? i : -1)).filter((i) => i >= 0);
-  if (!filledIdx.length) return '홍보지역을 1곳 이상 선택해 주세요.';
 
   for (const i of filledIdx) {
     const slot = slots[i];
@@ -594,9 +680,12 @@ export function validateStudyRoomBasicFields(data) {
 
 export function applyStudyRoomBasicToState(state, data) {
   Object.assign(state, {
+    lesson_place_type: data.lesson_place_type,
     study_room_name: data.study_room_name,
+    primary_school_levels: data.primary_school_levels,
     main_subject_note: data.main_subject_note,
     gender: data.gender,
+    slogan: data.slogan,
     home_address: data.home_address,
     home_address_zip: data.home_address_zip,
     home_address_line2: data.home_address_line2,

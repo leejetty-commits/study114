@@ -185,6 +185,7 @@ export function emptyRoomState() {
     operator_display_name: '',
     intro_short: '',
     intro_long: '',
+    primary_school_levels: [],
     lesson_place_type: '',
     lesson_operation_type: '',
     region_id: '',
@@ -255,15 +256,19 @@ export const registerState = emptyRoomState();
 export function isRoomBasicComplete(room) {
   const src = room || registerState;
   const hasName = String(src.study_room_name || '').trim() !== '';
+  const hasPlace = ['academy', 'study_room'].includes(String(src.lesson_place_type || ''));
+  const hasAudience = Array.isArray(src.primary_school_levels) && src.primary_school_levels.length > 0;
+  const hasSubject = String(src.main_subject_note || '').trim() !== '';
+  const hasSlogan = String(src.slogan || '').trim() !== '';
+  const hasHome = String(src.home_address || '').trim() !== '';
   const hasAddress = String(src.address_text || '').trim() !== '';
+  const firstPromo = Array.isArray(src.saved_regions) ? src.saved_regions[0] || {} : {};
   const hasRegion =
-    String(src.region_id || '').trim() !== '' ||
-    String(src.complex_id || '').trim() !== '' ||
-    (Array.isArray(src.saved_regions) &&
-      src.saved_regions.some(
-        (r) => String(r?.region_id || '').trim() !== '' || String(r?.complex_id || '').trim() !== '',
-      ));
-  return hasName && hasAddress && hasRegion;
+    String(firstPromo.region_id || '').trim() !== '' ||
+    String(firstPromo.complex_id || '').trim() !== '' ||
+    String(firstPromo.complex_name || '').trim() !== '' ||
+    String(firstPromo.region_label || '').trim() !== '';
+  return hasName && hasPlace && hasAudience && hasSubject && hasSlogan && hasHome && hasAddress && hasRegion;
 }
 
 export function emptySubject() {

@@ -408,7 +408,7 @@ final class StudyRoomRegisterService
 
             $mainSubject,
 
-            $this->optionalString($input, 'slogan'),
+            $this->requireString($input, 'slogan'),
 
             $this->optionalString($input, 'operator_display_name'),
 
@@ -422,6 +422,8 @@ final class StudyRoomRegisterService
 
         ]);
 
+        $this->savePrimaryAudiences($pdo, $roomId, $input);
+
     }
 
 
@@ -430,6 +432,10 @@ final class StudyRoomRegisterService
 
     private function saveLocation(PDO $pdo, int $userId, int $roomId, array $input): void
     {
+        $home = trim((string) ($input['home_address'] ?? ''));
+        if ($home === '') {
+            throw new InvalidArgumentException('집주소를 검색해 주세요.');
+        }
         $addressText = trim((string) ($input['address_text'] ?? ''));
         if ($addressText === '') {
             throw new InvalidArgumentException('사업장주소를 검색해 주세요.');
@@ -537,6 +543,97 @@ final class StudyRoomRegisterService
         $addr = $this->optionalString($input, 'complex_address') ?? $address;
 
         return ComplexEnsure::ensure($pdo, $regionId, $name, $addr);
+    }
+
+    private const PRIMARY_SCHOOL_LEVELS = ['preschool', 'elementary', 'middle', 'high', 'n_su'];
+
+    private const PRIMARY_SCHOOL_LEVEL_LABELS = [
+        'preschool' => '미취학',
+        'elementary' => '초등',
+        'middle' => '중등',
+        'high' => '고등',
+        'n_su' => 'N수',
+    ];
+
+    /** @param array<string, mixed> $input */
+    private function savePrimaryAudiences(PDO $pdo, int $roomId, array $input): void
+    {
+        $this->ensurePrimaryAudienceTable($pdo);
+        $raw = $input['primary_school_levels'] ?? [];
+        if (is_string($raw)) {
+            $raw = preg_split('/[,\s]+/', $raw) ?: [];
+        }
+        if (!is_array($raw)) {
+            $raw = [];
+        }
+        $levels = [];
+        foreach ($raw as $lv) {
+            $lv = trim((string) $lv);
+            if (in_array($lv, self::PRIMARY_SCHOOL_LEVELS, true)) {
+                $levels[] = $lv;
+            }
+        }
+        $levels = array_values(array_unique($levels));
+        if ($levels === []) {
+            throw new InvalidArgumentException('주대상을 1개 이상 선택해 주세요.');
+        }
+        $pdo->prepare('DELETE FROM study_room_primary_audiences WHERE study_room_id = ?')->execute([$roomId]);
+        $ins = $pdo->prepare(
+            'INSERT INTO study_room_primary_audiences (study_room_id, school_level) VALUES (?, ?)'
+        );
+        foreach ($levels as $lv) {
+            $ins->execute([$roomId, $lv]);
+        }
+    }
+
+    private function ensurePrimaryAudienceTable(PDO $pdo): void
+    {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+        $pdo->exec(
+            "CREATE TABLE IF NOT EXISTS study_room_primary_audiences (
+              study_room_id BIGINT UNSIGNED NOT NULL,
+              school_level  ENUM('preschool', 'elementary', 'middle', 'high', 'n_su') NOT NULL,
+              created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (study_room_id, school_level),
+              KEY idx_srpa_level (school_level),
+              CONSTRAINT fk_srpa_room FOREIGN KEY (study_room_id) REFERENCES study_rooms (id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        );
+        $done = true;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function loadPrimaryAudiences(PDO $pdo, int $roomId): array
+    {
+        try {
+            $this->ensurePrimaryAudienceTable($pdo);
+            $stmt = $pdo->prepare(
+                'SELECT school_level FROM study_room_primary_audiences
+                 WHERE study_room_id = ?
+                 ORDER BY FIELD(school_level, "preschool", "elementary", "middle", "high", "n_su")'
+            );
+            $stmt->execute([$roomId]);
+            return array_values(array_filter(array_map('strval', $stmt->fetchAll(PDO::FETCH_COLUMN))));
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /** @param list<string> $levels */
+    private function formatPrimaryAudienceLabel(array $levels): string
+    {
+        $out = [];
+        foreach ($levels as $lv) {
+            if (isset(self::PRIMARY_SCHOOL_LEVEL_LABELS[$lv])) {
+                $out[] = self::PRIMARY_SCHOOL_LEVEL_LABELS[$lv];
+            }
+        }
+        return implode(' · ', $out);
     }
 
     /** @param array<string, mixed> $input */
@@ -821,7 +918,6 @@ final class StudyRoomRegisterService
 
         $pdo->prepare('DELETE FROM study_room_regions WHERE study_room_id = ?')->execute([$roomId]);
 
-        $inserted = 0;
         $primaryAssigned = false;
 
         foreach (array_values($slots) as $idx => $slot) {
@@ -885,13 +981,9 @@ final class StudyRoomRegisterService
                 continue;
             }
 
-            $isPrimary = !empty($slot['is_primary']) ? 1 : 0;
+            $isPrimary = $slotNum === 1 ? 1 : 0;
             if ($isPrimary) {
-                if ($primaryAssigned) {
-                    $isPrimary = 0;
-                } else {
-                    $primaryAssigned = true;
-                }
+                $primaryAssigned = true;
             }
 
             try {
@@ -905,25 +997,10 @@ final class StudyRoomRegisterService
                      VALUES (?, ?, ?, ?, ?)'
                 )->execute([$roomId, $slotNum, $regionId, $complexId, $isPrimary]);
             }
-
-            $inserted++;
-        }
-
-        if ($inserted < 1) {
-            throw new InvalidArgumentException('홍보지역을 1곳 이상 선택해 주세요.');
         }
 
         if (!$primaryAssigned) {
-            $minStmt = $pdo->prepare(
-                'SELECT MIN(slot) FROM study_room_regions WHERE study_room_id = ?'
-            );
-            $minStmt->execute([$roomId]);
-            $minSlot = $minStmt->fetchColumn();
-            if ($minSlot !== false && $minSlot !== null) {
-                $pdo->prepare(
-                    'UPDATE study_room_regions SET is_primary = 1 WHERE study_room_id = ? AND slot = ?'
-                )->execute([$roomId, (int) $minSlot]);
-            }
+            throw new InvalidArgumentException('홍보지역 1(대표)을 선택해 주세요.');
         }
 
     }
@@ -1357,6 +1434,8 @@ final class StudyRoomRegisterService
             /* 프로필 주소 컬럼 없으면 빈 값 */
         }
 
+        $primaryLevels = $this->loadPrimaryAudiences($pdo, $roomId);
+
         $room = [
 
             'study_room_id'            => $roomId,
@@ -1378,6 +1457,10 @@ final class StudyRoomRegisterService
             'intro_long'               => (string) ($row['intro_long'] ?? ''),
 
             'lesson_place_type'        => (string) ($row['lesson_place_type'] ?? ''),
+
+            'primary_school_levels'    => $primaryLevels,
+
+            'primary_audience_label'   => $this->formatPrimaryAudienceLabel($primaryLevels),
 
             'lesson_operation_type'    => (string) ($row['lesson_operation_type'] ?? ''),
 

@@ -50,7 +50,9 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       grade_band: apiItem.grade_band || base.grade_band,
       intro_short: apiItem.intro_short || summaryLines[1] || base.intro_short,
       feature_1: apiItem.feature_1 || base.feature_1,
-      slogan: apiItem.slogan || base.slogan,
+      slogan: Object.prototype.hasOwnProperty.call(apiItem, 'slogan')
+        ? String(apiItem.slogan || '')
+        : (base.slogan || ''),
       lesson_place_type: apiItem.lesson_place_type || base.lesson_place_type,
       capacity_per_time: apiItem.capacity_per_time || base.capacity_per_time,
       lesson_operation_type: apiItem.lesson_operation_type || base.lesson_operation_type,

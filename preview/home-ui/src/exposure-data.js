@@ -101,7 +101,7 @@ function enrichStudyRoom(r) {
     lesson_place_type,
     inquiry_status: r.inquiry_status || INQUIRY_CYCLE[(id - 1) % INQUIRY_CYCLE.length],
     lesson_operation_type: r.lesson_operation_type || 'group_by_time_slot',
-    slogan: r.slogan || r.feature_1 || null,
+    slogan: r.slogan || null,
     image_path: r.image_path || ROOM_LISTING_IMAGES[(id - 1) % ROOM_LISTING_IMAGES.length],
     badges: studyRoomBadges(r),
     recommend_count: (id % 7) + 2,

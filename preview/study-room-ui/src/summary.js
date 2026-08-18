@@ -10,6 +10,7 @@ import {
   PERSONAL_GENDER_OPTIONS,
   IMAGE_TYPES,
 } from './state.js';
+import { formatPrimaryAudienceLabel, lessonPlaceNameLabel } from '../../shared/study-room-basic-form.js';
 
 function str(v) {
   if (v === null || v === undefined) return '';
@@ -125,9 +126,12 @@ export function buildRoomInputSummary(room) {
       title: '기본정보',
       key: 'basic',
       rows: [
-        { label: '공부방명', value: str(s.study_room_name) },
+        { label: '교습형태', value: s.lesson_place_type === 'academy' ? '교습소' : s.lesson_place_type === 'study_room' ? '공부방' : '' },
+        { label: lessonPlaceNameLabel(s.lesson_place_type), value: str(s.study_room_name) },
+        { label: '주대상', value: formatPrimaryAudienceLabel(s.primary_school_levels) },
         { label: '주력과목', value: str(s.main_subject_note) },
-        { label: '원장 성별', value: labelOf(PERSONAL_GENDER_OPTIONS, s.gender) },
+        { label: '원장성별', value: labelOf(PERSONAL_GENDER_OPTIONS, s.gender) },
+        { label: '슬로건', value: str(s.slogan) },
         { label: '집주소', value: str(s.home_address) },
         { label: '사업장주소', value: str(s.address_text) },
         { label: '홍보지역 1', value: slotValues[0] },

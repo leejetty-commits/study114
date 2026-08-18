@@ -14,14 +14,14 @@ export const EXPOSURE_TIER_META = {
 
 /** 공부방 Prime — 11장 §4-0·§4-1 */
 export const STUDY_ROOM_PRIME_FIELDS = [
-  { key: 'location_label', label: '위치', db: 'study_rooms.region_id/complex_id/address_text' },
+  { key: 'location_label', label: '위치', db: 'study_room_regions is_primary (홍보지역1)' },
   { key: 'image_path', label: '대표 이미지(16:9)', db: 'study_room_images.image_path' },
   { key: 'study_room_name', label: '공부방명', db: 'study_rooms.study_room_name' },
   { key: 'price_amount', label: '대표 가격', db: 'study_rooms.price_amount' },
   { key: 'badges', label: '신뢰배지', db: 'study_room_badges / education_office_registered' },
-  { key: 'grade_band', label: '대상', db: 'study_room_subject_targets.school_level/grade_band' },
+  { key: 'grade_band', label: '대상', db: 'study_room_primary_audiences' },
   { key: 'main_subject_note', label: '과목', db: 'study_rooms.main_subject_note' },
-  { key: 'lesson_place_label', label: '수업장소', db: 'study_rooms.lesson_place_type' },
+  { key: 'lesson_place_label', label: '교습형태', db: 'study_rooms.lesson_place_type' },
   { key: 'capacity_per_time', label: '원생수', db: 'study_rooms.capacity_per_time' },
   { key: 'lesson_operation_label', label: '수업형태', db: 'study_rooms.lesson_operation_type' },
   { key: 'features_joined', label: '특징', db: 'study_rooms.feature_1~3' },
@@ -53,7 +53,6 @@ export const STUDY_ROOM_BASIC_FIELDS = [
   'lesson_place_label',
   'capacity_per_time',
   'lesson_operation_label',
-  'feature_1',
   'slogan',
   'registered_at',
 ];
@@ -61,11 +60,11 @@ export const STUDY_ROOM_BASIC_FIELDS = [
 /** 공부방 비교표 — 11장 §4-3 */
 export const STUDY_ROOM_COMPARE_ROWS = [
   { key: 'study_room_name', label: '공부방명', db: 'study_rooms.study_room_name' },
-  { key: 'location_label', label: '위치', db: 'study_rooms.region_id/complex_id/address_text' },
-  { key: 'grade_band', label: '대상 학년', db: 'study_room_subject_targets' },
+  { key: 'location_label', label: '위치', db: 'study_room_regions is_primary (홍보지역1)' },
+  { key: 'grade_band', label: '주대상', db: 'study_room_primary_audiences' },
   { key: 'main_subject_note', label: '주력과목', db: 'study_rooms.main_subject_note' },
   { key: 'price_amount', label: '가격 대표값', db: 'study_rooms.price_amount' },
-  { key: 'lesson_place_label', label: '수업장소', db: 'study_rooms.lesson_place_type' },
+  { key: 'lesson_place_label', label: '교습형태', db: 'study_rooms.lesson_place_type' },
   { key: 'lesson_operation_label', label: '수업운영형태', db: 'study_rooms.lesson_operation_type' },
   { key: 'capacity_per_time', label: '타임별 원생수', db: 'study_rooms.capacity_per_time' },
   { key: 'education_office_registered', label: '교육청 등록', db: 'study_rooms.education_office_registered' },

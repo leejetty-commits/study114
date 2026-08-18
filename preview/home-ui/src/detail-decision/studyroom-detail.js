@@ -36,9 +36,9 @@ export function renderStudyRoomDetailBody(item, viewer) {
       <h3 class="p24-section__title">핵심 조건</h3>
       <dl class="p24-dl">
         <dt>과목</dt><dd>${esc(item.main_subject_note || '—')}</dd>
-        <dt>대상 학년</dt><dd>${esc(item.grade_band || '—')}</dd>
+        <dt>주대상</dt><dd>${esc(item.grade_band || '—')}</dd>
         <dt>위치</dt><dd>${esc(locationLabel)}</dd>
-        <dt>수업장소</dt><dd>${esc(formatLessonPlace(item.lesson_place_type))}</dd>
+        <dt>교습형태</dt><dd>${esc(formatLessonPlace(item.lesson_place_type))}</dd>
         <dt>수업형태</dt><dd>${esc(formatLessonOperationType(item.lesson_operation_type))}</dd>
         <dt>정원</dt><dd>${esc(item.capacity_per_time || '—')}</dd>
         <dt>월 수강료</dt><dd>${esc(formatMonthlyWon(item.price_amount))}</dd>

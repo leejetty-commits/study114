@@ -115,7 +115,14 @@ foreach ($f in @(
   "039_position_duration_calendar.sql",
   "040_provider_reviews.sql",
   "041_list_sort_counters.sql",
-  "042_user_recommendations.sql"
+  "042_user_recommendations.sql",
+  "043_study_room_lesson_detail.sql",
+  "044_study_room_address_line2.sql",
+  "045_facility_masters_env.sql",
+  "046_promo_image_variants.sql",
+  "047_region_ensure_from_kakao.sql",
+  "048_study_room_image_caption.sql",
+  "049_study_room_primary_audiences.sql"
 )) {
   Write-Host "Applying $f ..."
   Apply-SqlFile -FileName $f -NoDatabaseArg:($f -eq "001_init.sql")

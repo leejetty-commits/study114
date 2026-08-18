@@ -26,9 +26,9 @@ export const SEARCH_TABS = {
     fields: [
       { key: 'region_id', label: '지역(동/단지)', tier: 'basic', basicRow: 1, db: 'study_rooms.region_id · study_room_regions', input: 'region' },
       { key: 'subject_master_id', label: '주력과목', tier: 'basic', basicRow: 1, db: 'study_room_subject_targets · main_subject_note', input: 'subject' },
-      { key: 'school_level', label: '대상 학년/학교급', tier: 'basic', basicRow: 1, db: 'study_room_subject_targets.school_level', input: 'select', optionsKey: 'school_level' },
+      { key: 'school_level', label: '주대상', tier: 'basic', basicRow: 1, db: 'study_room_primary_audiences.school_level', input: 'select', optionsKey: 'school_level' },
       { key: 'price_amount', label: '가격대(월)', tier: 'basic', basicRow: 1, db: 'study_rooms.price_amount', input: 'range' },
-      { key: 'lesson_place_type', label: '수업장소', tier: 'basic', basicRow: 2, db: 'study_rooms.lesson_place_type', input: 'select', optionsKey: 'study_room_place' },
+      { key: 'lesson_place_type', label: '교습형태', tier: 'basic', basicRow: 2, db: 'study_rooms.lesson_place_type', input: 'select', optionsKey: 'study_room_place' },
       { key: 'lesson_operation_type', label: '수업운영형태', tier: 'basic', basicRow: 2, db: 'study_rooms.lesson_operation_type', input: 'select', optionsKey: 'lesson_operation' },
       { key: 'education_office_registered', label: '교육청 등록', tier: 'basic', basicRow: 2, db: 'study_rooms.education_office_registered', input: 'toggle' },
       { key: 'one_on_one_available', label: '1:1 가능', tier: 'expanded', db: 'study_rooms.one_on_one_available', input: 'toggle' },

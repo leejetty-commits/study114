@@ -104,6 +104,29 @@ final class SearchService
         return in_array($key, self::SORT_PROVIDER, true) ? $key : 'latest';
     }
 
+    /**
+     * 카드 「위치」= 홍보지역 1(대표). 사업장주소는 핀만.
+     *
+     * @param array<string, mixed> $row
+     */
+    private function promoRegionLabel(array $row): string
+    {
+        $dong = trim((string) ($row['promo_dong_name'] ?? ''));
+        $sigungu = trim((string) ($row['promo_sigungu_name'] ?? ''));
+        $complex = trim((string) ($row['promo_complex_name'] ?? ''));
+        $basis = (string) ($row['promo_basis'] ?? '');
+        if ($basis === 'complex' && $complex !== '') {
+            return $dong !== '' ? ($dong . ' · ' . $complex) : $complex;
+        }
+        if ($dong === '') {
+            return $sigungu;
+        }
+        if ($sigungu !== '' && !str_contains($dong, $sigungu)) {
+            return $sigungu . ' ' . $dong;
+        }
+        return $dong;
+    }
+
     /** @return array<string, bool> */
     private function columnCache(PDO $pdo, string $table, string $column): bool
     {
@@ -255,10 +278,20 @@ final class SearchService
         }
 
         if ($schoolLevel = $this->stringFilter($filters, 'school_level')) {
-            $where[] = 'EXISTS (
-                SELECT 1 FROM study_room_subject_targets srst2
-                WHERE srst2.study_room_id = sr.id AND srst2.school_level = :school_level
-            )';
+            if ($this->tableExists($pdo, 'study_room_primary_audiences')) {
+                $where[] = '(EXISTS (
+                    SELECT 1 FROM study_room_primary_audiences srpa
+                    WHERE srpa.study_room_id = sr.id AND srpa.school_level = :school_level
+                ) OR EXISTS (
+                    SELECT 1 FROM study_room_subject_targets srst2
+                    WHERE srst2.study_room_id = sr.id AND srst2.school_level = :school_level
+                ))';
+            } else {
+                $where[] = 'EXISTS (
+                    SELECT 1 FROM study_room_subject_targets srst2
+                    WHERE srst2.study_room_id = sr.id AND srst2.school_level = :school_level
+                )';
+            }
             $params['school_level'] = $schoolLevel;
         }
 
@@ -302,12 +335,27 @@ final class SearchService
         $latExpr = $this->columnCache($pdo, 'study_rooms', 'latitude') ? 'sr.latitude' : 'NULL';
         $lngExpr = $this->columnCache($pdo, 'study_rooms', 'longitude') ? 'sr.longitude' : 'NULL';
         $gradeExpr = $this->columnCache($pdo, 'study_rooms', 'grade_band') ? 'sr.grade_band' : 'NULL';
+        $audienceExpr = $this->tableExists($pdo, 'study_room_primary_audiences')
+            ? "(SELECT GROUP_CONCAT(
+                    CASE srpa.school_level
+                      WHEN 'preschool' THEN '미취학'
+                      WHEN 'elementary' THEN '초등'
+                      WHEN 'middle' THEN '중등'
+                      WHEN 'high' THEN '고등'
+                      WHEN 'n_su' THEN 'N수'
+                    END
+                    ORDER BY FIELD(srpa.school_level, 'preschool','elementary','middle','high','n_su')
+                    SEPARATOR ' · ')
+               FROM study_room_primary_audiences srpa WHERE srpa.study_room_id = sr.id)"
+            : 'NULL';
         $primeImgExpr = $this->roomCoverImageExpr($pdo, 'prime');
         $basicImgExpr = $this->roomCoverImageExpr($pdo, 'basic');
 
         $sql = "
             SELECT DISTINCT sr.id, sr.study_room_name, sr.price_amount, sr.intro_short,
-                   sr.main_subject_note, sr.teaching_style, {$gradeExpr} AS grade_band, sr.feature_1, sr.slogan,
+                   sr.main_subject_note, sr.teaching_style, {$gradeExpr} AS grade_band,
+                   {$audienceExpr} AS audience_label,
+                   sr.feature_1, sr.slogan,
                    sr.lesson_place_type, sr.capacity_per_time, sr.lesson_operation_type,
                    sr.education_office_registered, sr.detail_completion_status,
                    {$latExpr} AS latitude, {$lngExpr} AS longitude,
@@ -315,11 +363,16 @@ final class SearchService
                    {$recommendExpr} AS recommend_count,
                    {$reviewExpr} AS review_count,
                    r.dong_name, r.sigungu_name, c.name AS complex_name,
+                   pr.dong_name AS promo_dong_name, pr.sigungu_name AS promo_sigungu_name,
+                   pc.name AS promo_complex_name, srr.region_basis_type AS promo_basis,
                    {$primeImgExpr} AS image_path_prime,
                    {$basicImgExpr} AS image_path_basic
             FROM study_rooms sr
             LEFT JOIN regions r ON sr.region_id = r.id
             LEFT JOIN complexes c ON sr.complex_id = c.id
+            LEFT JOIN study_room_regions srr ON srr.study_room_id = sr.id AND srr.is_primary = 1
+            LEFT JOIN regions pr ON srr.region_id = pr.id
+            LEFT JOIN complexes pc ON srr.complex_id = pc.id
             WHERE {$whereSql}
             ORDER BY {$orderBy}
             LIMIT :limit OFFSET :offset
@@ -338,9 +391,7 @@ final class SearchService
 
         $i = 0;
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $regionLabel = $row['complex_name']
-                ? $row['dong_name'] . ' · ' . $row['complex_name']
-                : ($row['dong_name'] ?: $row['sigungu_name'] ?: '');
+            $regionLabel = $this->promoRegionLabel($row);
 
             $centerParts = array_filter([
                 $row['main_subject_note'],
@@ -360,7 +411,9 @@ final class SearchService
                 'price_amount'               => $row['price_amount'] !== null ? (int) $row['price_amount'] : null,
                 'price_label'                => $this->formatMonthlyPrice($row['price_amount']),
                 'main_subject_note'          => (string) ($row['main_subject_note'] ?? ''),
-                'grade_band'                 => (string) ($row['grade_band'] ?? ''),
+                'grade_band'                 => (string) (($row['audience_label'] ?? '') !== ''
+                    ? $row['audience_label']
+                    : ($row['grade_band'] ?? '')),
                 'feature_1'                  => (string) ($row['feature_1'] ?? ''),
                 'slogan'                     => (string) ($row['slogan'] ?? ''),
                 'lesson_place_type'          => $row['lesson_place_type'] ?? null,

@@ -265,6 +265,7 @@ export function payloadForStep(step, state) {
         intro_short: state.intro_short,
         intro_long: state.intro_long,
         lesson_place_type: state.lesson_place_type,
+        primary_school_levels: state.primary_school_levels || [],
       };
     case 'basic_all':
       return {
@@ -275,7 +276,8 @@ export function payloadForStep(step, state) {
         operator_display_name: state.operator_display_name,
         intro_short: state.intro_short,
         intro_long: state.intro_long,
-        lesson_place_type: state.lesson_place_type || 'study_room',
+        lesson_place_type: state.lesson_place_type,
+        primary_school_levels: state.primary_school_levels || [],
         region_id: state.region_id,
         complex_id: state.complex_id,
         region_basis_type: state.region_basis_type || (state.complex_id ? 'complex' : 'dong'),
