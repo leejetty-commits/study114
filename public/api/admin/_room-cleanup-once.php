@@ -43,14 +43,35 @@ try {
 }
 
 $alive = [];
-$keep = [];
+$named = [];
 foreach ($all as $row) {
     if ($row['deleted_at'] !== null && $row['deleted_at'] !== '') {
         continue;
     }
     $alive[] = $row;
     if (trim((string) $row['study_room_name']) === $keepName) {
-        $keep[] = $row;
+        $named[] = $row;
+    }
+}
+
+usort($named, static function (array $a, array $b): int {
+    return strcmp((string) $b['updated_at'], (string) $a['updated_at']);
+});
+$keepRow = $named[0] ?? null;
+$keepUserId = $keepRow !== null ? (int) $keepRow['user_id'] : 0;
+$keepId = $keepRow !== null ? (int) $keepRow['id'] : 0;
+
+$sameUser = [];
+$toRemove = [];
+if ($keepUserId > 0) {
+    foreach ($alive as $row) {
+        if ((int) $row['user_id'] !== $keepUserId) {
+            continue;
+        }
+        $sameUser[] = $row;
+        if ((int) $row['id'] !== $keepId) {
+            $toRemove[] = $row;
+        }
     }
 }
 
@@ -58,11 +79,13 @@ $payload = [
     'ok' => true,
     'keep_name' => $keepName,
     'alive_count' => count($alive),
-    'keep_count' => count($keep),
-    'alive' => $alive,
-    'keep' => $keep,
+    'named_count' => count($named),
+    'keep' => $keepRow,
+    'same_user' => $sameUser,
+    'to_remove' => $toRemove,
     'applied' => false,
     'already_locked' => is_file($lockPath),
+    'note' => '같은 계정에서 이름이 우동공과 대치점인 행 중 가장 최근 수정본만 남깁니다. 다른 계정 시드는 건드리지 않습니다.',
 ];
 
 if (!$apply) {
@@ -78,26 +101,23 @@ if (is_file($lockPath)) {
     exit;
 }
 
-if (count($keep) !== 1) {
+if ($keepRow === null || $keepId < 1) {
     http_response_code(409);
     $payload['ok'] = false;
-    $payload['error'] = 'keep_mismatch';
-    $payload['message'] = '남길 공부방 이름이 정확히 1개가 아니라서 적용하지 않았습니다.';
+    $payload['error'] = 'keep_missing';
+    $payload['message'] = '남길 공부방 이름을 찾지 못해 적용하지 않았습니다.';
     echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     exit;
 }
 
-$keepId = (int) $keep[0]['id'];
-$toRemove = array_values(array_filter($alive, static fn (array $r): bool => (int) $r['id'] !== $keepId));
-
 $upd = $pdo->prepare(
     'UPDATE study_rooms
      SET deleted_at = NOW(), profile_status = "hidden", updated_at = NOW()
-     WHERE deleted_at IS NULL AND id = ?'
+     WHERE deleted_at IS NULL AND id = ? AND user_id = ?'
 );
 $removed = [];
 foreach ($toRemove as $row) {
-    $upd->execute([(int) $row['id']]);
+    $upd->execute([(int) $row['id'], $keepUserId]);
     $removed[] = [
         'id' => (int) $row['id'],
         'user_id' => (int) $row['user_id'],
