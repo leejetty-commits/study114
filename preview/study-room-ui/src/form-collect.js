@@ -119,6 +119,23 @@ export function applyLessonExtra(target, extra) {
   }
 }
 
+function normalizeProofNotes(raw) {
+  if (Array.isArray(raw)) {
+    return raw.map((n) => String(n ?? '').trim()).filter(Boolean);
+  }
+  if (typeof raw === 'string' && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map((n) => String(n ?? '').trim()).filter(Boolean);
+      }
+    } catch {
+      return [raw.trim()];
+    }
+  }
+  return [];
+}
+
 function normalizeClass(row) {
   const days = Array.isArray(row?.attendance_days)
     ? row.attendance_days.map(String)
@@ -307,10 +324,14 @@ export function syncCareerFromForm(form, state) {
   const fd = new FormData(form);
   state.career_years = String(fd.get('career_years') ?? '');
   state.academy_career_years = String(fd.get('academy_career_years') ?? '');
+  state.university_name = String(fd.get('university_name') ?? '').trim();
+  state.major_name = String(fd.get('major_name') ?? '').trim();
   state.franchise_flag = fd.has('franchise_flag');
   state.franchise_name = String(fd.get('franchise_name') ?? '');
   state.education_office_registered = fd.has('education_office_registered');
   state.education_office_reg_no = String(fd.get('education_office_reg_no') ?? '');
+  state.business_registration_available = fd.has('business_registration_available');
+  state.other_proof_notes = fd.getAll('other_proof_notes').map((v) => String(v ?? ''));
   state.feature_1 = String(fd.get('feature_1') ?? '');
   state.feature_2 = String(fd.get('feature_2') ?? '');
   state.feature_3 = String(fd.get('feature_3') ?? '');
@@ -435,10 +456,14 @@ export function payloadForStep(step, state) {
       return {
         career_years: state.career_years,
         academy_career_years: state.academy_career_years,
+        university_name: state.university_name,
+        major_name: state.major_name,
         franchise_flag: state.franchise_flag,
         franchise_name: state.franchise_name,
         education_office_registered: state.education_office_registered,
         education_office_reg_no: state.education_office_reg_no,
+        business_registration_available: state.business_registration_available,
+        other_proof_notes: Array.isArray(state.other_proof_notes) ? state.other_proof_notes : [],
         feature_1: state.feature_1,
         feature_2: state.feature_2,
         feature_3: state.feature_3,
@@ -546,6 +571,10 @@ export function applyRoomToState(target, room) {
   if (room.correction_available != null) {
     target.correction_available = Boolean(room.correction_available);
   }
+  if (room.business_registration_available != null) {
+    target.business_registration_available = Boolean(room.business_registration_available);
+  }
+  target.other_proof_notes = normalizeProofNotes(room.other_proof_notes ?? target.other_proof_notes);
   if (!target.teaching_style_ids.length && String(target.teaching_style || '').trim()) {
     const bits = String(target.teaching_style)
       .split(/[,/]/)

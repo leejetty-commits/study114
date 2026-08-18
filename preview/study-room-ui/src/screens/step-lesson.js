@@ -278,7 +278,7 @@ export function renderLesson() {
 
       ${renderDetailStepNav({
         prevPath: '/register/basic',
-        nextLabel: '다음: 경력·시설',
+        nextLabel: '다음: 경력·신뢰·시설',
         nextEnabled: true,
       })}
     </form>

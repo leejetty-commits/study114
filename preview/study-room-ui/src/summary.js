@@ -182,20 +182,30 @@ export function buildRoomInputSummary(room) {
       ],
     },
     {
-      title: '상세정보 2단계 · 경력·시설',
+      title: '상세정보 2단계 · 경력·신뢰·시설',
       key: 'facility',
       rows: [
+        { label: '출신대학', value: str(s.university_name) },
+        { label: '전공학과', value: str(s.major_name) },
         { label: '교습 경력(년)', value: str(s.career_years) },
         { label: '학원 경력(년)', value: str(s.academy_career_years) },
+        { label: '경력특징 1', value: str(s.feature_1) },
+        { label: '경력특징 2', value: str(s.feature_2) },
+        { label: '경력특징 3', value: str(s.feature_3) },
+        { label: '사업자등록증', value: yn(s.business_registration_available) },
+        { label: '교육청등록증', value: yn(s.education_office_registered) },
+        { label: '교육청 등록번호', value: str(s.education_office_reg_no) },
         { label: '프랜차이즈', value: yn(s.franchise_flag) },
         { label: '프랜차이즈명', value: str(s.franchise_name) },
-        { label: '교육청 등록', value: yn(s.education_office_registered) },
-        { label: '교육청 등록번호', value: str(s.education_office_reg_no) },
-        { label: '특징 1', value: str(s.feature_1) },
-        { label: '특징 2', value: str(s.feature_2) },
-        { label: '특징 3', value: str(s.feature_3) },
+        {
+          label: '기타 증빙 내역',
+          value: (Array.isArray(s.other_proof_notes) ? s.other_proof_notes : [])
+            .map((n) => str(n))
+            .filter(Boolean)
+            .join(' / '),
+        },
         { label: '시설', value: facilityNames(s.facility_ids) },
-        { label: '시설 설명', value: str(s.facility_note) },
+        { label: '시설 추가설명', value: str(s.facility_note) },
         { label: '유튜브', value: str(s.youtube_url) },
         { label: '페이스북', value: str(s.facebook_url) },
         { label: '인스타그램', value: str(s.instagram_url) },

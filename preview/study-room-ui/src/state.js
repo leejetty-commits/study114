@@ -8,7 +8,7 @@ export const REGISTER_PHASES = {
   },
   detail: {
     label: '상세정보',
-    hint: '검색·목록에 보이는 수업·경력·시설 정보를 두 단계로 완성합니다.',
+    hint: '검색·목록에 보이는 수업·경력·신뢰·시설 정보를 두 단계로 완성합니다.',
     stepKeys: ['lesson', 'facility'],
   },
 };
@@ -17,7 +17,7 @@ export const STEPS = [
   { path: '/register/basic', key: 'basic', label: '기본정보', step: 1, phase: 'basic' },
   { path: '/register/location', key: 'location', label: '위치', step: 2, phase: 'basic' },
   { path: '/register/lesson', key: 'lesson', label: '공부방·교습소 상세', step: 3, phase: 'detail' },
-  { path: '/register/facility', key: 'facility', label: '경력·시설', step: 4, phase: 'detail' },
+  { path: '/register/facility', key: 'facility', label: '경력·신뢰·시설', step: 4, phase: 'detail' },
   { path: '/register/complete', key: 'complete', label: '등록완료', step: 5, phase: null },
 ];
 
@@ -254,10 +254,14 @@ export function emptyRoomState() {
     classes: [],
     career_years: '',
     academy_career_years: '',
+    university_name: '',
+    major_name: '',
     franchise_flag: null,
     franchise_name: '',
     education_office_registered: null,
     education_office_reg_no: '',
+    business_registration_available: false,
+    other_proof_notes: [],
     feature_1: '',
     feature_2: '',
     feature_3: '',
@@ -326,4 +330,8 @@ export function emptyClass() {
     fee_note: '',
     lesson_note: '',
   };
+}
+
+export function emptyProofNote() {
+  return '';
 }

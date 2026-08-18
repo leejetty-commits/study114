@@ -90,6 +90,7 @@ final class StudyRoomRegisterService
 
         $pdo = Connection::get();
         (new StudyRoomLessonDetailStore())->ensureSchema($pdo);
+        $this->ensureCareerTrustColumns($pdo);
 
         if ($roomId !== null && $roomId > 0) {
             $stmt = $pdo->prepare(
@@ -177,6 +178,7 @@ final class StudyRoomRegisterService
             $this->ensureBusinessAddressLine2($pdo);
         }
         if ($step === 'facility' || $step === 'career') {
+            $this->ensureCareerTrustColumns($pdo);
             try {
                 (new \Study114\Media\PromoImageService())->ensureColumns($pdo);
             } catch (\Throwable $e) {
@@ -704,6 +706,99 @@ final class StudyRoomRegisterService
         $done = true;
     }
 
+    private function ensureCareerTrustColumns(PDO $pdo): void
+    {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+        $cols = [
+            'university_name' => "VARCHAR(100) NULL COMMENT '출신대학'",
+            'major_name' => "VARCHAR(100) NULL COMMENT '전공학과'",
+            'business_registration_available' => "TINYINT(1) NULL COMMENT '사업자등록증 보유'",
+            'other_proof_notes' => "TEXT NULL COMMENT '기타 증빙 내역 JSON'",
+        ];
+        try {
+            foreach ($cols as $name => $ddl) {
+                $stmt = $pdo->prepare(
+                    'SELECT COUNT(*) FROM information_schema.COLUMNS
+                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+                );
+                $stmt->execute(['study_rooms', $name]);
+                if ((int) $stmt->fetchColumn() > 0) {
+                    continue;
+                }
+                $pdo->exec("ALTER TABLE study_rooms ADD COLUMN {$name} {$ddl}");
+            }
+        } catch (PDOException $e) {
+            error_log('[study-room career-trust schema] ' . $e->getMessage());
+        }
+        $done = true;
+    }
+
+    /** @param array<string, mixed> $input */
+    private function encodeProofNotes(array $input): ?string
+    {
+        $raw = $input['other_proof_notes'] ?? [];
+        if (!is_array($raw)) {
+            $raw = [];
+        }
+        $clean = [];
+        foreach ($raw as $note) {
+            $text = trim((string) $note);
+            if ($text === '') {
+                continue;
+            }
+            if (function_exists('mb_substr')) {
+                $text = (string) mb_substr($text, 0, 200);
+            } else {
+                $text = substr($text, 0, 200);
+            }
+            $clean[] = $text;
+            if (count($clean) >= 20) {
+                break;
+            }
+        }
+        if ($clean === []) {
+            return null;
+        }
+        $json = json_encode($clean, JSON_UNESCAPED_UNICODE);
+        return $json === false ? null : $json;
+    }
+
+    /** @return list<string> */
+    private function decodeProofNotes(mixed $raw): array
+    {
+        if (is_array($raw)) {
+            $items = $raw;
+        } elseif (is_string($raw) && trim($raw) !== '') {
+            $decoded = json_decode($raw, true);
+            $items = is_array($decoded) ? $decoded : [];
+        } else {
+            $items = [];
+        }
+        $out = [];
+        foreach ($items as $item) {
+            $text = trim((string) $item);
+            if ($text !== '') {
+                $out[] = $text;
+            }
+        }
+        return $out;
+    }
+
+    private function clipOptionalString(array $input, string $key, int $max): ?string
+    {
+        $value = $this->optionalString($input, $key);
+        if ($value === null) {
+            return null;
+        }
+        if (function_exists('mb_substr')) {
+            return (string) mb_substr($value, 0, $max);
+        }
+        return substr($value, 0, $max);
+    }
+
 
 
     /** @param array<string, mixed> $input */
@@ -797,6 +892,7 @@ final class StudyRoomRegisterService
     private function saveCareer(PDO $pdo, int $roomId, array $input): void
 
     {
+        $this->ensureCareerTrustColumns($pdo);
 
         $stmt = $pdo->prepare(
 
@@ -806,6 +902,10 @@ final class StudyRoomRegisterService
 
                 academy_career_years = ?,
 
+                university_name = ?,
+
+                major_name = ?,
+
                 franchise_flag = ?,
 
                 franchise_name = ?,
@@ -813,6 +913,10 @@ final class StudyRoomRegisterService
                 education_office_registered = ?,
 
                 education_office_reg_no = ?,
+
+                business_registration_available = ?,
+
+                other_proof_notes = ?,
 
                 feature_1 = ?,
 
@@ -830,6 +934,10 @@ final class StudyRoomRegisterService
 
             $this->optionalInt($input, 'academy_career_years'),
 
+            $this->clipOptionalString($input, 'university_name', 100),
+
+            $this->clipOptionalString($input, 'major_name', 100),
+
             !empty($input['franchise_flag']) ? 1 : 0,
 
             $this->optionalString($input, 'franchise_name'),
@@ -837,6 +945,10 @@ final class StudyRoomRegisterService
             !empty($input['education_office_registered']) ? 1 : 0,
 
             $this->optionalString($input, 'education_office_reg_no'),
+
+            !empty($input['business_registration_available']) ? 1 : 0,
+
+            $this->encodeProofNotes($input),
 
             $this->optionalString($input, 'feature_1'),
 
@@ -1554,6 +1666,10 @@ final class StudyRoomRegisterService
 
             'academy_career_years'     => $row['academy_career_years'] !== null ? (string) $row['academy_career_years'] : '',
 
+            'university_name'          => (string) ($row['university_name'] ?? ''),
+
+            'major_name'               => (string) ($row['major_name'] ?? ''),
+
             'franchise_flag'           => $row['franchise_flag'] === null ? null : (bool) $row['franchise_flag'],
 
             'franchise_name'           => (string) ($row['franchise_name'] ?? ''),
@@ -1561,6 +1677,11 @@ final class StudyRoomRegisterService
             'education_office_registered' => $row['education_office_registered'] === null ? null : (bool) $row['education_office_registered'],
 
             'education_office_reg_no'  => (string) ($row['education_office_reg_no'] ?? ''),
+
+            'business_registration_available' => array_key_exists('business_registration_available', $row) && $row['business_registration_available'] !== null
+                ? (bool) $row['business_registration_available'] : false,
+
+            'other_proof_notes'        => $this->decodeProofNotes($row['other_proof_notes'] ?? null),
 
             'feature_1'                => (string) ($row['feature_1'] ?? ''),
 

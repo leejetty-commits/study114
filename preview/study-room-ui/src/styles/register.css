@@ -318,6 +318,31 @@ form[data-form="lesson"] > .register-guide {
   max-width: 4.5rem;
 }
 
+.register-subtitle {
+  margin: 0.15rem 0 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.register-proof-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.register-proof-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.register-proof-row .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
 .register-class-card {
   margin: 0 0 1rem;
   padding: 1rem;

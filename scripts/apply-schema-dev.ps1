@@ -123,7 +123,8 @@ foreach ($f in @(
   "047_region_ensure_from_kakao.sql",
   "048_study_room_image_caption.sql",
   "049_study_room_primary_audiences.sql",
-  "050_study_room_detail1_classes.sql"
+  "050_study_room_detail1_classes.sql",
+  "051_study_room_career_trust.sql"
 )) {
   Write-Host "Applying $f ..."
   Apply-SqlFile -FileName $f -NoDatabaseArg:($f -eq "001_init.sql")
