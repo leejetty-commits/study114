@@ -308,16 +308,58 @@ form[data-form="lesson"] > .register-guide {
   background: #ffedd5;
 }
 
-.register-plus-btn__file {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
+.register-photo-drop {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 0.35rem;
+  min-height: 10rem;
+  margin: 0 0 0.85rem;
+  padding: 1.25rem 1rem;
+  border: 2px dashed var(--brand-orange, #f57c00);
+  border-radius: 0.85rem;
+  background: #fff7ed;
+  color: #9a3412;
+  text-align: center;
+  cursor: pointer;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+}
+
+.register-photo-drop.is-dragover {
+  background: #ffedd5;
+}
+
+.register-photo-drop__file {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 80px;
+  z-index: 2;
+}
+
+.register-photo-drop__title {
+  position: relative;
+  z-index: 1;
+  font-size: 1rem;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.register-photo-drop__hint {
+  position: relative;
+  z-index: 1;
+  color: #7c2d12;
+  font-size: 0.82rem;
+  pointer-events: none;
+}
+
+.register-photo-pick__error {
+  margin: 0 0 0.75rem;
+  color: #b91c1c;
+  font-size: 0.85rem;
 }
 
 .register-pay-checks {
