@@ -348,6 +348,11 @@ final class StudyRoomRegisterService
 
     {
 
+        $existing = $this->findLatestRoomId($pdo, $userId);
+        if ($existing !== null) {
+            throw new InvalidArgumentException('공부방은 계정당 1개만 등록할 수 있습니다.');
+        }
+
         $name = $this->requireString($input, 'study_room_name');
 
         $lessonPlace = $this->requireEnum($input, 'lesson_place_type', ['academy', 'study_room']);

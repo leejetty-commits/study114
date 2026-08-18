@@ -226,6 +226,15 @@ final class BasicRegisterService
 
         $pdo->beginTransaction();
         try {
+            $existStmt = $pdo->prepare(
+                'SELECT id FROM study_rooms WHERE user_id = ? AND deleted_at IS NULL ORDER BY id ASC LIMIT 1'
+            );
+            $existStmt->execute([$userId]);
+            $existingId = $existStmt->fetchColumn();
+            if ($existingId !== false) {
+                throw new InvalidArgumentException('공부방은 계정당 1개만 등록할 수 있습니다.');
+            }
+
             $hasBasisCol = $this->columnExists($pdo, 'study_rooms', 'region_basis_type');
             if ($hasBasisCol) {
                 $stmt = $pdo->prepare(
