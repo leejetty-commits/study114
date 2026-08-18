@@ -10,6 +10,7 @@ import {
   getHashQuery,
   basicOverviewPath,
   withRoomId,
+  renderRegisterWorkTabs,
 } from '../layout.js';
 import {
   renderStudyRoomBasicFields,
@@ -170,6 +171,7 @@ function renderBasicOverview() {
   if (isBasicEditRequested()) basicEditOpen = true;
   document.body.classList.toggle('register-edit-open', basicEditOpen);
   const content = `
+    ${renderRegisterWorkTabs('basic')}
     ${renderOverviewBoard()}
     ${basicEditOpen ? renderBasicEditModal() : ''}
   `;

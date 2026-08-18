@@ -13,7 +13,7 @@ import {
   chromeLogout,
   initChromeSession,
 } from '../../shared/chrome-session.js';
-import { HOME_UI_BASE } from '../../shared/preview-links.js';
+import { HOME_UI_BASE, homeUiUrl } from '../../shared/preview-links.js';
 import {
   renderSitePromoSidebar,
   bindSitePromoSidebarEvents,
@@ -47,7 +47,11 @@ export function isRegisterEditMode() {
 
 /** 해시 경로에 현재 room_id 쿼리를 붙인다. */
 export function withRoomId(path) {
-  const roomId = getHashQuery().get('room_id');
+  const roomId =
+    getHashQuery().get('room_id') ||
+    (registerState.study_room_id ? String(registerState.study_room_id) : '') ||
+    sessionStorage.getItem('study114_study_room_id') ||
+    '';
   if (!roomId) return path;
   const qIndex = path.indexOf('?');
   const base = qIndex >= 0 ? path.slice(0, qIndex) : path;
@@ -245,7 +249,7 @@ export function renderNavButtons(prevPath, nextLabel = '다음') {
 }
 
 /**
- * 상세정보 단계 — 저장 / 이전 / 건너뜀 / 다음
+ * 상세정보 단계 — 저장 / 이전 / 다음
  * @param {{ prevPath: string, nextLabel: string, nextEnabled?: boolean }} opts
  */
 export function renderDetailStepNav(opts) {
@@ -256,12 +260,52 @@ export function renderDetailStepNav(opts) {
         <button type="button" class="btn btn--secondary" data-action="prev">이전</button>
         <button type="button" class="btn btn--secondary" data-action="save">저장</button>
       </div>
-      <div class="register-nav__skip">
-        <button type="button" class="btn btn--ghost" data-action="skip-detail">건너뜀</button>
-        <p class="register-nav__skip-hint">추후 마이페이지에서 입력가능해요</p>
-      </div>
       <button type="button" class="btn btn--primary" data-action="next" ${nextEnabled ? '' : 'disabled'}>${opts.nextLabel}</button>
     </div>
+  `;
+}
+
+/** @param {'home'|'basic'|'lesson'|'facility'} activeKey */
+export function renderRegisterWorkTabs(activeKey) {
+  const tabs = [
+    { key: 'home', label: '홈', href: homeUiUrl('study-room') },
+    { key: 'basic', label: '기본정보', path: '/register/basic' },
+    { key: 'lesson', label: '상세정보1단계', path: '/register/lesson' },
+    { key: 'facility', label: '상세정보2단계', path: '/register/facility' },
+  ];
+  return `
+    <nav class="register-work-tabs" aria-label="등록 단계 이동">
+      ${tabs
+        .map((tab) => {
+          const active = tab.key === activeKey ? ' is-active' : '';
+          if (tab.href) {
+            return `<a class="register-work-tabs__tab${active}" href="${tab.href}">${tab.label}</a>`;
+          }
+          return `<button type="button" class="register-work-tabs__tab${active}" data-nav="${withRoomId(tab.path)}">${tab.label}</button>`;
+        })
+        .join('')}
+    </nav>
+  `;
+}
+
+export function renderPublishStatusBlock(status, opts = {}) {
+  const v = String(status || 'draft');
+  const lead =
+    opts.lead ||
+    '항목을 채운 뒤, 학부모 검색에 이 공부방을 공개할지 여기서 정합니다. 저장만 하면 검색·목록에 나오지 않습니다.';
+  return `
+    <section class="register-publish-block" data-publish-block>
+      <h3 class="register-publish-block__title">공개 상태</h3>
+      <p class="register-publish-block__lead">${lead}</p>
+      <div class="form-group">
+        <label class="form-label" for="${opts.inputId || 'profile_status'}">지금 상태를 고르세요</label>
+        <select class="form-input" id="${opts.inputId || 'profile_status'}" name="profile_status">
+          <option value="draft" ${v === 'draft' || v === 'pending' ? 'selected' : ''}>저장만 (아직 비공개)</option>
+          <option value="published" ${v === 'published' ? 'selected' : ''}>공개</option>
+        </select>
+      </div>
+      ${opts.extraHtml || ''}
+    </section>
   `;
 }
 

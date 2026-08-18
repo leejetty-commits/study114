@@ -22,7 +22,7 @@ final class PromoImageService
      * @param array<string, mixed> $file $_FILES entry
      * @return array<string, mixed>
      */
-    public function uploadForRoom(int $userId, int $roomId, array $file, float $cropX, float $cropY, string $imageType, int $sortOrder): array
+    public function uploadForRoom(int $userId, int $roomId, array $file, float $cropX, float $cropY, string $imageType, int $sortOrder, string $caption = ''): array
     {
         $pdo = Connection::get();
         $this->ensureColumns($pdo);
@@ -78,13 +78,14 @@ final class PromoImageService
             $paths[$variant] = $this->publicUrlFromAbs((string) $use);
         }
         $imageType = $this->normalizeType($imageType);
+        $caption = $this->clipCaption($caption);
 
         $stmt = $pdo->prepare(
             'INSERT INTO study_room_images
-                (study_room_id, image_type, image_path, sort_order, original_filename,
+                (study_room_id, image_type, image_path, sort_order, original_filename, caption,
                  original_path, prime_1280_path, prime_1600_path, basic_360_path, basic_720_path,
                  crop_offset_x, crop_offset_y, original_width, original_height, original_bytes, original_mime)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $coverPath = $paths['prime_1600'] ?? $paths['prime_1280'] ?? '/' . $originalRel;
         $stmt->execute([
@@ -93,6 +94,7 @@ final class PromoImageService
             $coverPath,
             $sortOrder,
             $origName,
+            $caption !== '' ? $caption : null,
             '/' . $originalRel,
             $paths['prime_1280'] ?? '',
             $paths['prime_1600'] ?? '',
@@ -112,6 +114,7 @@ final class PromoImageService
             'image_path' => $coverPath,
             'sort_order' => $sortOrder,
             'original_filename' => $origName,
+            'caption' => $caption,
             'original_path' => '/' . $originalRel,
             'prime_1280_path' => $paths['prime_1280'] ?? '',
             'prime_1600_path' => $paths['prime_1600'] ?? '',
@@ -174,6 +177,21 @@ final class PromoImageService
         return $this->mapRow($row);
     }
 
+    /** @return array<string, mixed> */
+    public function updateCaption(int $userId, int $roomId, int $imageId, string $caption): array
+    {
+        $pdo = Connection::get();
+        $this->ensureColumns($pdo);
+        $this->assertRoomOwner($pdo, $userId, $roomId);
+        $this->findImage($pdo, $roomId, $imageId);
+        $caption = $this->clipCaption($caption);
+        $pdo->prepare(
+            'UPDATE study_room_images SET caption = ? WHERE id = ? AND study_room_id = ?'
+        )->execute([$caption !== '' ? $caption : null, $imageId, $roomId]);
+
+        return $this->mapRow($this->findImage($pdo, $roomId, $imageId));
+    }
+
     public function delete(int $userId, int $roomId, int $imageId): void
     {
         $pdo = Connection::get();
@@ -207,6 +225,7 @@ final class PromoImageService
             'original_height' => 'SMALLINT UNSIGNED NULL',
             'original_bytes' => 'INT UNSIGNED NULL',
             'original_mime' => 'VARCHAR(40) NULL',
+            'caption' => "VARCHAR(80) NULL COMMENT '홍보사진 한 줄 제목'",
         ];
         foreach ($cols as $name => $ddl) {
             $stmt = $pdo->prepare(
@@ -277,6 +296,19 @@ final class PromoImageService
         return in_array($type, ['cover', 'interior', 'facility', 'other'], true) ? $type : 'cover';
     }
 
+    private function clipCaption(string $caption): string
+    {
+        $caption = trim($caption);
+        if ($caption === '') {
+            return '';
+        }
+        if (function_exists('mb_substr')) {
+            return (string) mb_substr($caption, 0, 80);
+        }
+
+        return substr($caption, 0, 80);
+    }
+
     private function publicRoot(): string
     {
         return dirname(__DIR__, 2) . '/public';
@@ -302,6 +334,7 @@ final class PromoImageService
             'sort_order' => (int) ($row['sort_order'] ?? 0),
             'name' => (string) ($row['original_filename'] ?? $row['image_path'] ?? ''),
             'original_filename' => (string) ($row['original_filename'] ?? ''),
+            'caption' => (string) ($row['caption'] ?? ''),
             'image_path' => (string) ($row['image_path'] ?? ''),
             'original_path' => (string) ($row['original_path'] ?? ''),
             'prime_1280_path' => (string) ($row['prime_1280_path'] ?? ''),

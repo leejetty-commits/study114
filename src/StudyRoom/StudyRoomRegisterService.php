@@ -170,6 +170,13 @@ final class StudyRoomRegisterService
         if ($step === 'basic' || $step === 'basic_all' || $step === 'location') {
             $this->ensureBusinessAddressLine2($pdo);
         }
+        if ($step === 'facility' || $step === 'career') {
+            try {
+                (new \Study114\Media\PromoImageService())->ensureColumns($pdo);
+            } catch (\Throwable $e) {
+                error_log('[study-room images] ensure before save: ' . $e->getMessage());
+            }
+        }
 
         $pdo->beginTransaction();
 
@@ -639,17 +646,17 @@ final class StudyRoomRegisterService
 
         $stmt->execute([
 
-            $this->requireEnum($input, 'lesson_operation_type', [
+            $this->optionalEnum($input, 'lesson_operation_type', [
 
                 'group_by_time_slot', 'time_slot_mixed_grade', 'individual_visit',
 
             ]),
 
-            $this->requireEnum($input, 'capacity_per_time', ['one_to_four', 'five_to_eight', 'nine_plus']),
+            $this->optionalEnum($input, 'capacity_per_time', ['one_to_four', 'five_to_eight', 'nine_plus']),
 
             $this->optionalInt($input, 'recruitment_count'),
 
-            $this->requireString($input, 'main_subject_note'),
+            $this->optionalString($input, 'main_subject_note'),
 
             $teachingStyle,
 
@@ -743,7 +750,8 @@ final class StudyRoomRegisterService
 
     {
 
-        $profileStatus = $this->requireEnum($input, 'profile_status', ['draft', 'pending', 'published']);
+        $profileStatus = $this->optionalEnum($input, 'profile_status', ['draft', 'pending', 'published', 'hidden'])
+            ?? 'draft';
 
 
 
@@ -947,23 +955,23 @@ final class StudyRoomRegisterService
         }
 
         if ($filled === []) {
-
-            throw new InvalidArgumentException('subjects: 대상 과목을 1개 이상 입력해 주세요.');
-
+            return;
         }
 
-
+        $ready = [];
+        foreach ($filled as $sub) {
+            if (trim((string) ($sub['school_level'] ?? '')) !== '') {
+                $ready[] = $sub;
+            }
+        }
+        if ($ready === []) {
+            return;
+        }
 
         $pdo->prepare('DELETE FROM study_room_subject_targets WHERE study_room_id = ?')->execute([$roomId]);
 
+        foreach ($ready as $sub) {
 
-
-        foreach ($filled as $sub) {
-
-            $schoolLevel = trim((string) ($sub['school_level'] ?? ''));
-            if ($schoolLevel === '') {
-                throw new InvalidArgumentException('school_level: 학교급을 선택해 주세요.');
-            }
             $schoolLevel = $this->requireEnum($sub, 'school_level', $this->schoolLevelCodes());
 
             $subjectName = $this->requireString($sub, 'subject_name');
@@ -1086,11 +1094,18 @@ final class StudyRoomRegisterService
 
             if ($id > 0) {
 
+                $caption = trim((string) ($img['caption'] ?? ''));
+                if (function_exists('mb_substr')) {
+                    $caption = (string) mb_substr($caption, 0, 80);
+                } else {
+                    $caption = substr($caption, 0, 80);
+                }
+
                 $pdo->prepare(
 
-                    'UPDATE study_room_images SET image_type = ? WHERE id = ? AND study_room_id = ?'
+                    'UPDATE study_room_images SET image_type = ?, caption = ? WHERE id = ? AND study_room_id = ?'
 
-                )->execute([$type, $id, $roomId]);
+                )->execute([$type, $caption !== '' ? $caption : null, $id, $roomId]);
 
             }
 
@@ -1276,7 +1291,7 @@ final class StudyRoomRegisterService
 
         $imageStmt = $pdo->prepare(
 
-            'SELECT id, image_type, image_path, sort_order, original_filename,
+            'SELECT id, image_type, image_path, sort_order, original_filename, caption,
 
                     original_path, prime_1280_path, prime_1600_path, basic_360_path, basic_720_path
 
@@ -1303,6 +1318,8 @@ final class StudyRoomRegisterService
                 'name'       => (string) ($img['original_filename'] ?? $img['image_path'] ?? ''),
 
                 'original_filename' => (string) ($img['original_filename'] ?? ''),
+
+                'caption' => (string) ($img['caption'] ?? ''),
 
                 'image_path' => (string) $img['image_path'],
 

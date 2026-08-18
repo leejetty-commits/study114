@@ -63,6 +63,7 @@ try {
             (float) ($_POST['crop_y'] ?? 0.5),
             (string) ($_POST['image_type'] ?? 'cover'),
             (int) ($_POST['sort_order'] ?? 0),
+            (string) ($_POST['caption'] ?? ''),
         );
         echo json_encode(['ok' => true, 'image' => $image], JSON_UNESCAPED_UNICODE);
         exit;
@@ -86,13 +87,24 @@ try {
         exit;
     }
 
+    if ($action === 'caption') {
+        $image = $service->updateCaption(
+            $userId,
+            $roomId,
+            $imageId,
+            (string) ($input['caption'] ?? $_POST['caption'] ?? ''),
+        );
+        echo json_encode(['ok' => true, 'image' => $image], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     if ($action === 'delete') {
         $service->delete($userId, $roomId, $imageId);
         echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    throw new InvalidArgumentException('action: upload | recrop | delete');
+    throw new InvalidArgumentException('action: upload | recrop | caption | delete');
 } catch (InvalidArgumentException $e) {
     http_response_code(422);
     echo json_encode(['ok' => false, 'error' => 'validation', 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);

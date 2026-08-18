@@ -7,9 +7,10 @@ import {
   renderSectionTitle,
   renderDetailStepNav,
   renderGuideNotice,
+  renderRegisterWorkTabs,
+  renderPublishStatusBlock,
   bindGlobalEvents,
   navigate,
-  skipToSummary,
   withRoomId,
 } from '../layout.js';
 import {
@@ -18,6 +19,7 @@ import {
   openPromoCropDialog,
   uploadPromoImage,
   deletePromoImage,
+  updatePromoImageCaption,
 } from '../../../shared/promo-image.js';
 
 function esc(s) {
@@ -67,6 +69,8 @@ function renderPhotoCard(img, idx) {
       <div class="register-photo-card__meta">
         <label class="form-label" for="photo-type-${idx}">사진 구분</label>
         <select class="form-input" id="photo-type-${idx}" data-field="image_type">${typeOpts}</select>
+        <label class="form-label" for="photo-caption-${idx}">간단 제목</label>
+        <input class="form-input" id="photo-caption-${idx}" type="text" maxlength="80" data-field="caption" placeholder="한 줄 제목 (선택)" value="${esc(img.caption || '')}" />
         <p class="register-hint">${esc(img.name || img.original_filename || '업로드됨')}</p>
         <button type="button" class="btn btn--ghost btn--sm" data-action="remove-photo" data-idx="${idx}">삭제</button>
       </div>
@@ -83,11 +87,11 @@ function renderPhotoGrid() {
       ${cards}
       ${
         canAdd
-          ? `<label class="register-photo-add">
-              <input type="file" accept="${PROMO_IMAGE_SPEC.accept}" data-action="pick-photo" hidden />
+          ? `<div class="register-photo-add">
+              <input class="register-photo-add__file" type="file" accept="${PROMO_IMAGE_SPEC.accept}" data-action="pick-photo" />
               <span class="register-photo-add__badge">+ 사진 추가</span>
-              <span class="register-photo-add__hint">${images.length}/${PROMO_IMAGE_SPEC.maxCount}</span>
-            </label>`
+              <span class="register-photo-add__hint">${images.length}/${PROMO_IMAGE_SPEC.maxCount} · 클릭해서 고르기</span>
+            </div>`
           : ''
       }
     </div>
@@ -98,7 +102,8 @@ export function renderFacility() {
   const s = registerState;
   const content = `
     <form data-form="facility">
-      ${renderGuideNotice('상세정보 2/2단계, 경력·시설·연락을 저장한 뒤에 등록을 마칩니다. 지금 건너뛰면 지금까지 저장된 값만 요약으로 보여 줍니다. 마이페이지에서 이어서 해도 됩니다.')}
+      ${renderRegisterWorkTabs('facility')}
+      ${renderGuideNotice('상세정보 2/2단계입니다. 비어 있어도 저장한 뒤 등록 완료로 넘어갈 수 있습니다. 공개 여부는 맨 아래 칸에서 고릅니다.')}
       ${renderSectionTitle('경력 · 특징')}
       <div class="register-grid-2">
         <div class="form-group">
@@ -150,7 +155,7 @@ export function renderFacility() {
         <textarea class="form-input form-textarea" id="facility_note" name="facility_note" rows="3">${esc(s.facility_note)}</textarea>
       </div>
 
-      ${renderSectionTitle('소셜홍보 · 공개')}
+      ${renderSectionTitle('소셜홍보')}
       <p class="register-hint">연락은 쪽지로만 합니다. 전화번호·이메일은 이 화면과 검색·상세에 올리지 않습니다.</p>
       <div class="register-grid-2">
         <div class="form-group">
@@ -165,18 +170,15 @@ export function renderFacility() {
           <label class="form-label" for="instagram_url">인스타그램 링크</label>
           <input class="form-input" type="url" id="instagram_url" name="instagram_url" placeholder="https://www.instagram.com/..." value="${esc(s.instagram_url)}" />
         </div>
-        <div class="form-group">
-          <label class="form-label" for="profile_status">공개 상태</label>
-          <select class="form-input" id="profile_status" name="profile_status">
-            <option value="draft" ${s.profile_status === 'draft' || s.profile_status === 'pending' ? 'selected' : ''}>저장만 (아직 비공개)</option>
-            <option value="published" ${s.profile_status === 'published' ? 'selected' : ''}>공개</option>
-          </select>
-        </div>
       </div>
 
       ${renderSectionTitle('홍보사진 (0~5장)')}
-      <p class="register-hint">JPG · PNG · WebP / 권장 ${PROMO_IMAGE_SPEC.recommended} / 최소 ${PROMO_IMAGE_SPEC.minWidth}×${PROMO_IMAGE_SPEC.minHeight} / 최대 4MB · 5장. 원본 1장을 올리면 프라임(16:9)과 베이직(1:1) 썸네일을 자동으로 만듭니다. 공개하려면 대표 사진 1장 이상이 필요합니다.</p>
+      <p class="register-hint">JPG · PNG · WebP / 권장 ${PROMO_IMAGE_SPEC.recommended} / 최소 ${PROMO_IMAGE_SPEC.minWidth}×${PROMO_IMAGE_SPEC.minHeight} / 최대 4MB · 5장. 원본 1장을 올리면 프라임(16:9)과 베이직(1:1) 썸네일을 자동으로 만듭니다. 아이폰은 ‘가장 호환성 높은 포맷’ 또는 JPG로 저장해 주세요. 공개하려면 대표 사진 1장 이상이 필요합니다.</p>
       ${renderPhotoGrid()}
+
+      ${renderPublishStatusBlock(s.profile_status, {
+        lead: '모두 채운 뒤 공개할지, 지금은 저장만 할지 정하는 칸입니다. 등록 완료 화면에서도 다시 고를 수 있습니다.',
+      })}
 
       ${renderDetailStepNav({
         prevPath: '/register/lesson',
@@ -199,7 +201,6 @@ export function bindFacilityEvents(root) {
   const saveBtn = root.querySelector('[data-action="save"]');
 
   prevBtn?.addEventListener('click', () => navigate(withRoomId('/register/lesson')));
-  root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipToSummary());
 
   function syncPhotoMeta() {
     form?.querySelectorAll('[data-photo-idx]').forEach((card) => {
@@ -207,6 +208,8 @@ export function bindFacilityEvents(root) {
       if (!registerState.images[idx]) return;
       const type = card.querySelector('[data-field="image_type"]')?.value;
       if (type) registerState.images[idx].image_type = type;
+      const caption = card.querySelector('[data-field="caption"]')?.value;
+      registerState.images[idx].caption = String(caption || '').trim().slice(0, 80);
       registerState.images[idx].sort_order = idx + 1;
     });
   }
@@ -257,7 +260,7 @@ export function bindFacilityEvents(root) {
       alert(err);
       return;
     }
-    const crop = await openPromoCropDialog(root, { file });
+    const crop = await openPromoCropDialog(document.body, { file });
     if (!crop) return;
 
     let roomId = registerState.study_room_id;
@@ -287,6 +290,26 @@ export function bindFacilityEvents(root) {
     } catch (uploadErr) {
       alert(uploadErr instanceof Error ? uploadErr.message : '사진 업로드에 실패했습니다.');
     }
+  });
+
+  form?.querySelectorAll('[data-field="caption"]').forEach((el) => {
+    el.addEventListener('change', async () => {
+      const card = el.closest('[data-photo-idx]');
+      const idx = Number(card?.getAttribute('data-photo-idx'));
+      const img = registerState.images[idx];
+      if (!img?.id || !registerState.study_room_id) return;
+      const caption = String(el.value || '').trim().slice(0, 80);
+      registerState.images[idx].caption = caption;
+      try {
+        await updatePromoImageCaption({
+          studyRoomId: Number(registerState.study_room_id),
+          imageId: Number(img.id),
+          caption,
+        });
+      } catch (capErr) {
+        alert(capErr instanceof Error ? capErr.message : '사진 제목을 저장하지 못했습니다.');
+      }
+    });
   });
 
   root.querySelectorAll('[data-action="remove-photo"]').forEach((btn) => {

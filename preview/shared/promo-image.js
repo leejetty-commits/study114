@@ -9,8 +9,8 @@ export const PROMO_IMAGE_SPEC = {
   accept: 'image/jpeg,image/png,image/webp',
   acceptExt: ['jpg', 'jpeg', 'png', 'webp'],
   maxBytes: 4 * 1024 * 1024,
-  minWidth: 1200,
-  minHeight: 900,
+  minWidth: 800,
+  minHeight: 600,
   maxCount: 5,
   recommended: '1600×1200 이상',
 };
@@ -105,7 +105,8 @@ export function openPromoCropDialog(host, opts) {
         </div>
       </div>
     `;
-    host.appendChild(overlay);
+    const mount = document.body || host;
+    mount.appendChild(overlay);
     bindDraggableDialog(
       overlay.querySelector('.promo-crop-dialog'),
       overlay.querySelector('.promo-crop-dialog__title'),
@@ -153,7 +154,7 @@ export function openPromoCropDialog(host, opts) {
 }
 
 /**
- * @param {{ studyRoomId: number, file: File, cropX: number, cropY: number, imageType?: string, sortOrder?: number }} input
+ * @param {{ studyRoomId: number, file: File, cropX: number, cropY: number, imageType?: string, sortOrder?: number, caption?: string }} input
  */
 export async function uploadPromoImage(input) {
   const fd = new FormData();
@@ -163,6 +164,7 @@ export async function uploadPromoImage(input) {
   fd.append('crop_y', String(input.cropY));
   fd.append('image_type', input.imageType || 'cover');
   if (input.sortOrder) fd.append('sort_order', String(input.sortOrder));
+  if (input.caption) fd.append('caption', String(input.caption).slice(0, 80));
 
   const res = await fetch('/api/study-room/promo-image.php', {
     method: 'POST',
@@ -195,6 +197,28 @@ export async function recropPromoImage(input) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
     throw new Error(data.message || '썸네일 위치를 다시 적용하지 못했습니다.');
+  }
+  return data.image;
+}
+
+/**
+ * @param {{ studyRoomId: number, imageId: number, caption: string }} input
+ */
+export async function updatePromoImageCaption(input) {
+  const res = await fetch('/api/study-room/promo-image.php', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'caption',
+      study_room_id: input.studyRoomId,
+      image_id: input.imageId,
+      caption: String(input.caption || '').slice(0, 80),
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.message || '사진 제목을 저장하지 못했습니다.');
   }
   return data.image;
 }

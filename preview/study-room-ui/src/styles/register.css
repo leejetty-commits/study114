@@ -425,6 +425,19 @@ form[data-form="facility"] > .register-guide {
   text-align: center;
   border-style: dashed;
   color: #334155;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-photo-add__file {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+  font-size: 0;
 }
 
 .register-photo-add__badge {
@@ -447,7 +460,7 @@ form[data-form="facility"] > .register-guide {
 .promo-crop-overlay {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 5000;
   display: grid;
   place-items: center;
   padding: 1rem;
@@ -542,4 +555,64 @@ form[data-form="facility"] > .register-guide {
     grid-template-columns: 1fr;
   }
 }
+
+.register-work-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+}
+
+.register-work-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.1rem;
+  padding: 0.25rem 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.register-work-tabs__tab.is-active {
+  border-color: var(--brand-orange, #f57c00);
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.register-publish-block {
+  margin: 0.75rem 0 1.1rem;
+  padding: 1rem 1.05rem 0.95rem;
+  border: 2px solid var(--brand-orange, #f57c00);
+  border-radius: 0.85rem;
+  background: #fff7ed;
+}
+
+.register-publish-block__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.02rem;
+  color: #9a3412;
+}
+
+.register-publish-block__lead {
+  margin: 0 0 0.75rem;
+  color: #7c2d12;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.register-publish-block .form-group {
+  margin-bottom: 0.65rem;
+}
+
+.register-publish-block [data-action="save-publish"] {
+  margin-top: 0.15rem;
+}
+
 

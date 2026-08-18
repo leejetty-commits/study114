@@ -358,6 +358,7 @@ export function payloadForStep(step, state) {
         images: (state.images || []).map((img, i) => ({
           id: img.id || null,
           image_type: img.image_type,
+          caption: img.caption || '',
           image_path: img.image_path || img.name,
           prime_1280_path: img.prime_1280_path || '',
           prime_1600_path: img.prime_1600_path || '',

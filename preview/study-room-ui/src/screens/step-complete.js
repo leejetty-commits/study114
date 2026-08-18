@@ -1,9 +1,16 @@
 import { registerState } from '../state.js';
 import { applyRoomToState } from '../form-collect.js';
 import { loadRoom } from '../register-api.js';
+import { saveCurrentStep, withSaving } from '../save-flow.js';
 import { buildRoomInputSummary } from '../summary.js';
-import { renderRegisterShell, renderGuideNotice, bindGlobalEvents, mypageRegistrationsUrl } from '../layout.js';
-import { homeUiUrl } from '../../../shared/preview-links.js';
+import {
+  renderRegisterShell,
+  renderGuideNotice,
+  renderRegisterWorkTabs,
+  renderPublishStatusBlock,
+  bindGlobalEvents,
+} from '../layout.js';
+import { lessonSaveGuard } from './step-lesson.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -23,20 +30,35 @@ function renderSummaryRows(rows) {
     .join('');
 }
 
+function publishBlockers() {
+  const missing = [];
+  if (!(registerState.images || []).length) {
+    missing.push('홍보사진 1장');
+  }
+  const lessonGap = lessonSaveGuard();
+  if (lessonGap) missing.push(lessonGap);
+  return missing;
+}
+
 let hydratingComplete = false;
 
 export function renderComplete() {
   const s = registerState;
   const groups = buildRoomInputSummary(s);
-  const skipped = s.detail_completion_status !== 'expanded_complete';
   const content = `
+    ${renderRegisterWorkTabs('')}
     <div class="register-complete">
       <div class="register-complete__icon" aria-hidden="true">✓</div>
-      <h2 class="register-complete__title">${skipped ? '지금까지 입력한 내용입니다' : '공부방 등록이 완료되었습니다'}</h2>
-      <p class="register-complete__thanks">${skipped ? '상세정보는 마이페이지에서 이어서 채울 수 있습니다.' : '수고하셨습니다!'}</p>
+      <h2 class="register-complete__title">입력 현황입니다</h2>
+      <p class="register-complete__thanks">빈 칸이 있어도 여기서 끝낼 수 있습니다. 위 탭으로 해당 단계에 다시 들어가 이어서 채우세요.</p>
       <p class="register-complete__lead">아래는 저장된 전체 항목입니다. 비어 있는 칸은 아직 입력하지 않은 값입니다.</p>
     </div>
-    ${renderGuideNotice('내용을 다시 손보고 싶으면 마이페이지 · 내 등록에서 수정할 수 있습니다.')}
+    ${renderPublishStatusBlock(s.profile_status, {
+      inputId: 'complete_profile_status',
+      lead: '등록을 마친 뒤 학부모 검색에 공개할지 정합니다. 저장만 하면 검색·목록에 나오지 않습니다. (20장: 저장 ≠ 공개)',
+      extraHtml: `<button type="button" class="btn btn--primary" data-action="save-publish">공개 상태 저장</button>`,
+    })}
+    ${renderGuideNotice('탭: 홈으로 나가거나, 기본정보·상세1·상세2로 돌아가 수정할 수 있습니다.')}
     <div class="register-overview">
       ${groups
         .map(
@@ -45,10 +67,6 @@ export function renderComplete() {
         <dl class="register-overview__dl">${renderSummaryRows(group.rows)}</dl>`,
         )
         .join('')}
-    </div>
-    <div class="register-nav" style="border-top:none;padding-top:var(--space-2);">
-      <a href="${mypageRegistrationsUrl()}" class="btn btn--secondary">마이페이지에서 수정</a>
-      <a href="${homeUiUrl('study-room')}" class="btn btn--primary">공부방 메인으로</a>
     </div>
   `;
   return renderRegisterShell(content, {
@@ -60,6 +78,25 @@ export function renderComplete() {
 
 export function bindCompleteEvents(root) {
   bindGlobalEvents(root);
+  const publishBtn = root.querySelector('[data-action="save-publish"]');
+  const statusSelect = root.querySelector('#complete_profile_status');
+
+  publishBtn?.addEventListener('click', () => {
+    withSaving(publishBtn, async () => {
+      const next = String(statusSelect?.value || 'draft');
+      if (next === 'published') {
+        const blockers = publishBlockers();
+        if (blockers.length) {
+          throw new Error(`공개하려면 먼저 채워 주세요: ${blockers.join(' · ')}`);
+        }
+      }
+      registerState.profile_status = next;
+      await saveCurrentStep(registerState, 'facility');
+      alert(next === 'published' ? '공개 상태로 저장했습니다.' : '저장만(비공개)으로 두었습니다.');
+      window.dispatchEvent(new Event('hashchange'));
+    });
+  });
+
   if (!registerState.completeNeedsHydrate || hydratingComplete) return;
   hydratingComplete = true;
   loadRoom()

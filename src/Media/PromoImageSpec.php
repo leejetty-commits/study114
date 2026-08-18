@@ -7,8 +7,8 @@ namespace Study114\Media;
 final class PromoImageSpec
 {
     public const MAX_BYTES = 4_194_304;
-    public const MIN_WIDTH = 1200;
-    public const MIN_HEIGHT = 900;
+    public const MIN_WIDTH = 800;
+    public const MIN_HEIGHT = 600;
     public const MAX_COUNT = 5;
     public const CROP_ONCE = true;
 

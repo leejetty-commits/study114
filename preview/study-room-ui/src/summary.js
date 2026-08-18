@@ -5,7 +5,6 @@
 import {
   apiMasters,
   SCHOOL_LEVELS,
-  LESSON_PLACE_TYPES,
   LESSON_OPERATION_TYPES,
   CAPACITY_PER_TIME_OPTIONS,
   PERSONAL_GENDER_OPTIONS,
@@ -82,8 +81,9 @@ function slotLine(slot, idx) {
 function imageLine(img) {
   if (!img) return '';
   const type = labelOf(IMAGE_TYPES, img.image_type);
+  const title = str(img.caption);
   const name = str(img.name || img.image_path);
-  return [type, name].filter(Boolean).join(' · ');
+  return [type, title || name].filter(Boolean).join(' · ');
 }
 
 function profileStatusLabel(v) {
@@ -123,6 +123,7 @@ export function buildRoomInputSummary(room) {
   return [
     {
       title: '기본정보',
+      key: 'basic',
       rows: [
         { label: '공부방명', value: str(s.study_room_name) },
         { label: '주력과목', value: str(s.main_subject_note) },
@@ -132,22 +133,13 @@ export function buildRoomInputSummary(room) {
         { label: '홍보지역 1', value: slotValues[0] },
         { label: '홍보지역 2', value: slotValues[1] },
         { label: '홍보지역 3', value: slotValues[2] },
-        { label: '교습장', value: labelOf(LESSON_PLACE_TYPES, s.lesson_place_type) },
-        { label: '운영자 표시명', value: str(s.operator_display_name) },
-        { label: '슬로건', value: str(s.slogan) },
-        { label: '한 줄 소개', value: str(s.intro_short) },
-        { label: '소개', value: str(s.intro_long) },
-      ],
-    },
-    {
-      title: '위치·좌표',
-      rows: [
         { label: '위도', value: str(s.latitude) },
         { label: '경도', value: str(s.longitude) },
       ],
     },
     {
-      title: '수업 · 가격',
+      title: '상세정보 1단계 · 수업·가격',
+      key: 'lesson',
       rows: [
         { label: '수업운영형태', value: labelOf(LESSON_OPERATION_TYPES, s.lesson_operation_type) },
         { label: '타임별 원생수', value: labelOf(CAPACITY_PER_TIME_OPTIONS, s.capacity_per_time) },
@@ -172,7 +164,8 @@ export function buildRoomInputSummary(room) {
       ],
     },
     {
-      title: '경력 · 특징',
+      title: '상세정보 2단계 · 경력·시설',
+      key: 'facility',
       rows: [
         { label: '교습 경력(년)', value: str(s.career_years) },
         { label: '학원 경력(년)', value: str(s.academy_career_years) },
@@ -183,11 +176,6 @@ export function buildRoomInputSummary(room) {
         { label: '특징 1', value: str(s.feature_1) },
         { label: '특징 2', value: str(s.feature_2) },
         { label: '특징 3', value: str(s.feature_3) },
-      ],
-    },
-    {
-      title: '시설 · 소셜홍보',
-      rows: [
         { label: '시설', value: facilityNames(s.facility_ids) },
         { label: '시설 설명', value: str(s.facility_note) },
         { label: '유튜브', value: str(s.youtube_url) },
@@ -203,3 +191,4 @@ export function buildRoomInputSummary(room) {
     },
   ];
 }
+

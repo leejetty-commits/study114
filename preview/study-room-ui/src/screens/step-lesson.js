@@ -17,9 +17,9 @@ import {
   renderSectionTitle,
   renderDetailStepNav,
   renderGuideNotice,
+  renderRegisterWorkTabs,
   bindGlobalEvents,
   navigate,
-  skipToSummary,
   basicOverviewPath,
 } from '../layout.js';
 import { MAIN_SUBJECT_OPTIONS, renderMainSubjectSelect } from '../../../shared/main-subjects.js';
@@ -177,7 +177,8 @@ export function renderLesson() {
   const nextEnabled = true;
   const content = `
     <form data-form="lesson">
-      ${renderGuideNotice('상세정보 1/2 단계입니다. 수업·가격을 채운 뒤 다음으로 진행하세요. 지금은 건너뛰고 마이페이지에서 이어서 해도 됩니다.')}
+      ${renderRegisterWorkTabs('lesson')}
+      ${renderGuideNotice('상세정보 1/2 단계입니다. 비어 있는 칸이 있어도 저장한 뒤 다음으로 넘어갈 수 있습니다. 빠진 항목은 등록 완료 현황에서 다시 채워 주세요.')}
       ${renderSectionTitle('수업 정보')}
       <div class="form-group">
         <label class="form-label">수업운영형태</label>
@@ -304,13 +305,10 @@ export function bindLessonEvents(root) {
   refreshNext();
 
   prevBtn?.addEventListener('click', () => navigate(basicOverviewPath()));
-  root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipToSummary());
 
   saveBtn?.addEventListener('click', () => {
     withSaving(saveBtn, async () => {
       persistForm(form);
-      const missing = lessonSaveGuard();
-      if (missing) throw new Error(missing);
       await saveCurrentStep(registerState, 'lesson');
       registerState.detailLessonSaved = true;
       alert('저장되었습니다.');
@@ -321,8 +319,6 @@ export function bindLessonEvents(root) {
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
       persistForm(form);
-      const missing = lessonSaveGuard();
-      if (missing) throw new Error(missing);
       await saveAndNavigate(registerState, 'lesson', '/register/facility');
       registerState.detailLessonSaved = true;
     });
