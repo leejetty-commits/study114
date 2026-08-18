@@ -6,11 +6,9 @@ import { buildRoomInputSummary } from '../summary.js';
 import {
   renderRegisterShell,
   renderGuideNotice,
-  renderRegisterWorkTabs,
   renderPublishStatusBlock,
   bindGlobalEvents,
 } from '../layout.js';
-import { lessonSaveGuard } from './step-lesson.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -30,27 +28,16 @@ function renderSummaryRows(rows) {
     .join('');
 }
 
-function publishBlockers() {
-  const missing = [];
-  if (!(registerState.images || []).length) {
-    missing.push('홍보사진 1장');
-  }
-  const lessonGap = lessonSaveGuard();
-  if (lessonGap) missing.push(lessonGap);
-  return missing;
-}
-
 let hydratingComplete = false;
 
 export function renderComplete() {
   const s = registerState;
   const groups = buildRoomInputSummary(s);
   const content = `
-    ${renderRegisterWorkTabs('')}
     <div class="register-complete">
       <div class="register-complete__icon" aria-hidden="true">✓</div>
       <h2 class="register-complete__title">입력 현황입니다</h2>
-      <p class="register-complete__thanks">빈 칸이 있어도 여기서 끝낼 수 있습니다. 위 탭으로 해당 단계에 다시 들어가 이어서 채우세요.</p>
+      <p class="register-complete__thanks">빈 칸이 있어도 여기서 끝낼 수 있습니다. 빠진 항목은 해당 단계에서 다시 채워 주세요.</p>
       <p class="register-complete__lead">아래는 저장된 전체 항목입니다. 비어 있는 칸은 아직 입력하지 않은 값입니다.</p>
     </div>
     ${renderPublishStatusBlock(s.profile_status, {
@@ -58,7 +45,7 @@ export function renderComplete() {
       lead: '등록을 마친 뒤 학부모 검색에 공개할지 정합니다. 저장만 하면 검색·목록에 나오지 않습니다. (20장: 저장 ≠ 공개)',
       extraHtml: `<button type="button" class="btn btn--primary" data-action="save-publish">공개 상태 저장</button>`,
     })}
-    ${renderGuideNotice('탭: 홈으로 나가거나, 기본정보·상세1·상세2로 돌아가 수정할 수 있습니다.')}
+    ${renderGuideNotice('기본정보·상세1·상세2 화면에서 이어서 수정할 수 있습니다.')}
     <div class="register-overview">
       ${groups
         .map(
@@ -84,12 +71,6 @@ export function bindCompleteEvents(root) {
   publishBtn?.addEventListener('click', () => {
     withSaving(publishBtn, async () => {
       const next = String(statusSelect?.value || 'draft');
-      if (next === 'published') {
-        const blockers = publishBlockers();
-        if (blockers.length) {
-          throw new Error(`공개하려면 먼저 채워 주세요: ${blockers.join(' · ')}`);
-        }
-      }
       registerState.profile_status = next;
       await saveCurrentStep(registerState, 'facility');
       alert(next === 'published' ? '공개 상태로 저장했습니다.' : '저장만(비공개)으로 두었습니다.');

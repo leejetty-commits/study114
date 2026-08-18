@@ -89,6 +89,7 @@ final class StudyRoomRegisterService
     {
 
         $pdo = Connection::get();
+        (new StudyRoomLessonDetailStore())->ensureSchema($pdo);
 
         if ($roomId !== null && $roomId > 0) {
             $stmt = $pdo->prepare(
@@ -166,6 +167,11 @@ final class StudyRoomRegisterService
 
         if ($step === 'lesson') {
             (new StudyRoomLessonDetailStore())->ensureSchema($pdo);
+            try {
+                (new \Study114\Media\PromoImageService())->ensureColumns($pdo);
+            } catch (\Throwable $e) {
+                error_log('[study-room images] ensure before lesson save: ' . $e->getMessage());
+            }
         }
         if ($step === 'basic' || $step === 'basic_all' || $step === 'location') {
             $this->ensureBusinessAddressLine2($pdo);
@@ -388,9 +394,9 @@ final class StudyRoomRegisterService
 
                 operator_display_name = ?,
 
-                intro_short = ?,
+                intro_short = COALESCE(?, intro_short),
 
-                intro_long = ?,
+                intro_long = COALESCE(?, intro_long),
 
                 lesson_place_type = ?
 
@@ -710,7 +716,7 @@ final class StudyRoomRegisterService
         $store = new StudyRoomLessonDetailStore();
         $schemaOk = $store->ensureSchema($pdo);
         $priceAmount = $this->priceAmountFromLesson($input, $extra);
-        $weekend = !empty($input['weekend_available']) || $this->lessonExtraHasWeekend($extra);
+        $weekend = !empty($input['weekend_available']);
         $teachingStyle = $this->teachingStyleFromLesson($input, $extra);
         $readableDesc = $this->composePriceDescriptionText($extra);
         $encodedFallback = $this->encodeLessonExtra($extra);
@@ -725,13 +731,15 @@ final class StudyRoomRegisterService
 
                 recruitment_count = ?,
 
-                main_subject_note = ?,
-
                 teaching_style = ?,
 
                 weekend_available = ?,
 
                 one_on_one_available = ?,
+
+                intro_short = ?,
+
+                intro_long = ?,
 
                 price_amount = ?,
 
@@ -753,13 +761,15 @@ final class StudyRoomRegisterService
 
             $this->optionalInt($input, 'recruitment_count'),
 
-            $this->optionalString($input, 'main_subject_note'),
-
             $teachingStyle,
 
             $weekend ? 1 : 0,
 
             !empty($input['one_on_one_available']) ? 1 : 0,
+
+            $this->optionalString($input, 'intro_short'),
+
+            $this->optionalString($input, 'intro_long'),
 
             $priceAmount,
 
@@ -776,6 +786,7 @@ final class StudyRoomRegisterService
 
 
         $this->syncSubjects($pdo, $roomId, $input);
+        $this->syncImages($pdo, $roomId, $input);
 
     }
 
@@ -1013,7 +1024,30 @@ final class StudyRoomRegisterService
 
     {
 
+        $fromClasses = array_key_exists('classes', $input) && is_array($input['classes']);
+
         $subjects = $input['subjects'] ?? [];
+
+        if ($fromClasses) {
+            $subjects = [];
+            foreach ($input['classes'] as $cls) {
+                if (!is_array($cls)) {
+                    continue;
+                }
+                $custom = trim((string) ($cls['subject_custom'] ?? ''));
+                $name = $custom !== '' ? $custom : trim((string) ($cls['subject_name'] ?? ''));
+                if ($name === '') {
+                    continue;
+                }
+                $subjects[] = [
+                    'school_level' => $cls['school_level'] ?? '',
+                    'grade_band' => $cls['grade_band'] ?? '',
+                    'subject_master_id' => $cls['subject_master_id'] ?? '',
+                    'subject_name' => $name,
+                    'is_main' => false,
+                ];
+            }
+        }
 
         if (!is_array($subjects)) {
             $subjects = [];
@@ -1031,21 +1065,27 @@ final class StudyRoomRegisterService
             $filled[] = $sub;
         }
 
-        if ($filled === []) {
-            return;
-        }
-
         $ready = [];
         foreach ($filled as $sub) {
             if (trim((string) ($sub['school_level'] ?? '')) !== '') {
                 $ready[] = $sub;
             }
         }
-        if ($ready === []) {
+
+        if (!$fromClasses && $filled === []) {
             return;
         }
 
-        $pdo->prepare('DELETE FROM study_room_subject_targets WHERE study_room_id = ?')->execute([$roomId]);
+        try {
+            $pdo->prepare('DELETE FROM study_room_subject_targets WHERE study_room_id = ?')->execute([$roomId]);
+        } catch (PDOException $e) {
+            error_log('[study-room subjects delete] ' . $e->getMessage());
+            return;
+        }
+
+        if ($ready === []) {
+            return;
+        }
 
         foreach ($ready as $sub) {
 
@@ -1493,6 +1533,17 @@ final class StudyRoomRegisterService
 
             'one_on_one_available'     => $row['one_on_one_available'] === null ? null : (bool) $row['one_on_one_available'],
 
+            'card_payment_available'   => array_key_exists('card_payment_available', $row) && $row['card_payment_available'] !== null
+                ? (bool) $row['card_payment_available'] : false,
+
+            'cash_receipt_available'   => array_key_exists('cash_receipt_available', $row) && $row['cash_receipt_available'] !== null
+                ? (bool) $row['cash_receipt_available'] : false,
+
+            'correction_available'     => array_key_exists('correction_available', $row) && $row['correction_available'] !== null
+                ? (bool) $row['correction_available'] : false,
+
+            'monthly_fee_manwon'       => (string) ($row['monthly_fee_manwon'] ?? ''),
+
             'price_amount'             => $row['price_amount'] !== null ? (string) $row['price_amount'] : '',
 
             'price_description'        => (string) ($row['price_description'] ?? ''),
@@ -1723,6 +1774,30 @@ final class StudyRoomRegisterService
         $room['teaching_style_note'] = (string) ($extra['teaching_style_note'] ?? '');
         $room['price_items'] = $priceItems;
         $room['lesson_extra'] = $extra;
+        $classes = [];
+        if (is_array($extra['classes'] ?? null) && $extra['classes'] !== []) {
+            foreach ($extra['classes'] as $cls) {
+                if (!is_array($cls)) {
+                    continue;
+                }
+                $classes[] = $cls;
+            }
+        }
+        if ($classes === []) {
+            $classes = (new StudyRoomLessonDetailStore())->hydrateClassesFromLegacy(
+                is_array($room['subjects'] ?? null) ? $room['subjects'] : [],
+                $priceItems,
+                $extra
+            );
+        }
+        $room['classes'] = $classes;
+        $room['monthly_fee_manwon'] = (string) ($extra['monthly_fee_manwon'] ?? ($row['monthly_fee_manwon'] ?? ''));
+        $room['card_payment_available'] = !empty($extra['card_payment_available'])
+            || (!empty($row['card_payment_available']));
+        $room['cash_receipt_available'] = !empty($extra['cash_receipt_available'])
+            || (!empty($row['cash_receipt_available']));
+        $room['correction_available'] = !empty($extra['correction_available'])
+            || (!empty($row['correction_available']));
         if ($lines !== []) {
             $room['price_description'] = implode("\n", $lines);
         } elseif ($this->decodeLessonExtra((string) ($room['price_description'] ?? '')) !== null) {
@@ -1800,6 +1875,52 @@ final class StudyRoomRegisterService
             $normalizedPrices[] = ['item' => $item, 'fee' => $fee, 'note' => $note];
         }
 
+        $classes = $input['classes'] ?? ($base['classes'] ?? []);
+        if (!is_array($classes)) {
+            $classes = [];
+        }
+        $normalizedClasses = [];
+        $classDays = [];
+        foreach ($classes as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $rowDays = $row['attendance_days'] ?? [];
+            if (!is_array($rowDays)) {
+                $rowDays = [];
+            }
+            $rowDays = array_values(array_filter($rowDays, static fn ($d) => in_array((string) $d, $allowedDays, true)));
+            foreach ($rowDays as $d) {
+                $classDays[(string) $d] = true;
+            }
+            $normalizedClasses[] = [
+                'class_name' => trim((string) ($row['class_name'] ?? '')),
+                'school_level' => trim((string) ($row['school_level'] ?? '')),
+                'grade_band' => trim((string) ($row['grade_band'] ?? '')),
+                'subject_name' => trim((string) ($row['subject_name'] ?? '')),
+                'subject_custom' => trim((string) ($row['subject_custom'] ?? '')),
+                'attendance_days' => $rowDays,
+                'lessons_per_week' => trim((string) ($row['lessons_per_week'] ?? '')),
+                'monthly_fee' => trim((string) ($row['monthly_fee'] ?? '')),
+                'fee_note' => trim((string) ($row['fee_note'] ?? '')),
+                'lesson_note' => trim((string) ($row['lesson_note'] ?? '')),
+            ];
+        }
+        if ($normalizedClasses !== [] && $days === []) {
+            $days = array_keys($classDays);
+        }
+        if ($normalizedPrices === [] && $normalizedClasses !== []) {
+            foreach ($normalizedClasses as $cls) {
+                $item = $cls['class_name'] !== '' ? $cls['class_name'] : $cls['subject_name'];
+                $fee = $cls['monthly_fee'];
+                $note = $cls['fee_note'];
+                if ($item === '' && $fee === '' && $note === '') {
+                    continue;
+                }
+                $normalizedPrices[] = ['item' => $item, 'fee' => $fee, 'note' => $note];
+            }
+        }
+
         return [
             '_s114' => 'lesson_extra',
             'attendance_days' => $days,
@@ -1809,6 +1930,17 @@ final class StudyRoomRegisterService
             'teaching_style_ids' => $styleIds,
             'teaching_style_note' => trim((string) ($input['teaching_style_note'] ?? ($base['teaching_style_note'] ?? ''))),
             'price_items' => $normalizedPrices,
+            'classes' => $normalizedClasses,
+            'monthly_fee_manwon' => trim((string) ($input['monthly_fee_manwon'] ?? ($base['monthly_fee_manwon'] ?? ''))),
+            'card_payment_available' => array_key_exists('card_payment_available', $input)
+                ? !empty($input['card_payment_available'])
+                : !empty($base['card_payment_available']),
+            'cash_receipt_available' => array_key_exists('cash_receipt_available', $input)
+                ? !empty($input['cash_receipt_available'])
+                : !empty($base['cash_receipt_available']),
+            'correction_available' => array_key_exists('correction_available', $input)
+                ? !empty($input['correction_available'])
+                : !empty($base['correction_available']),
         ];
     }
 
@@ -1843,18 +1975,16 @@ final class StudyRoomRegisterService
      */
     private function priceAmountFromLesson(array $input, array $extra): ?int
     {
+        $man = trim((string) ($input['monthly_fee_manwon'] ?? ($extra['monthly_fee_manwon'] ?? '')));
+        if ($man !== '') {
+            if (preg_match('/(\d+(?:\.\d+)?)/', $man, $m)) {
+                $won = (int) round((float) $m[1] * 10000);
+                return $won > 0 ? $won : null;
+            }
+        }
         $direct = $this->optionalInt($input, 'price_amount');
         if ($direct !== null && $direct > 0) {
             return $direct;
-        }
-        foreach (($extra['price_items'] ?? []) as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $parsed = $this->parseFeeAmount((string) ($row['fee'] ?? ''));
-            if ($parsed !== null && $parsed > 0) {
-                return $parsed;
-            }
         }
         return null;
     }

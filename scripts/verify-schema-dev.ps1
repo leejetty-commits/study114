@@ -12,7 +12,7 @@ $tables = @(
   "users", "user_profiles", "user_roles", "students", "student_subject_targets",
   "subject_masters", "regions", "complexes",
   "study_rooms", "study_room_regions", "study_room_subject_targets",
-  "study_room_images", "facility_masters", "study_room_facilities",
+  "study_room_images", "study_room_classes", "study_room_price_items", "facility_masters", "study_room_facilities",
   "tutors", "tutor_regions", "tutor_subject_targets",
   "tutor_lesson_places", "tutor_teaching_style_badges", "tutor_images"
 )

@@ -65,7 +65,7 @@ export const STUDY_ROOM_COMPARE_ROWS = [
   { key: 'main_subject_note', label: '주력과목', db: 'study_rooms.main_subject_note' },
   { key: 'price_amount', label: '가격 대표값', db: 'study_rooms.price_amount' },
   { key: 'lesson_place_label', label: '교습형태', db: 'study_rooms.lesson_place_type' },
-  { key: 'lesson_operation_label', label: '수업운영형태', db: 'study_rooms.lesson_operation_type' },
+  { key: 'lesson_operation_label', label: '수업운영방식', db: 'study_rooms.lesson_operation_type' },
   { key: 'capacity_per_time', label: '타임별 원생수', db: 'study_rooms.capacity_per_time' },
   { key: 'education_office_registered', label: '교육청 등록', db: 'study_rooms.education_office_registered' },
   { key: 'weekend_available', label: '주말 가능', db: 'study_rooms.weekend_available' },

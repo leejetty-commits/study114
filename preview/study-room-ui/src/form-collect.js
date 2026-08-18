@@ -50,6 +50,11 @@ export function packLessonExtra(state) {
     teaching_style_ids: Array.isArray(state.teaching_style_ids) ? state.teaching_style_ids : [],
     teaching_style_note: String(state.teaching_style_note || ''),
     price_items: Array.isArray(state.price_items) ? state.price_items : [],
+    classes: Array.isArray(state.classes) ? state.classes : [],
+    monthly_fee_manwon: String(state.monthly_fee_manwon || ''),
+    card_payment_available: Boolean(state.card_payment_available),
+    cash_receipt_available: Boolean(state.cash_receipt_available),
+    correction_available: Boolean(state.correction_available),
   };
 }
 
@@ -97,6 +102,83 @@ export function applyLessonExtra(target, extra) {
         note: String(row?.note || ''),
       }))
     : [];
+  if (Array.isArray(extra.classes)) {
+    target.classes = extra.classes.map(normalizeClass);
+  }
+  if (extra.monthly_fee_manwon != null) {
+    target.monthly_fee_manwon = String(extra.monthly_fee_manwon || '');
+  }
+  if (extra.card_payment_available != null) {
+    target.card_payment_available = Boolean(extra.card_payment_available);
+  }
+  if (extra.cash_receipt_available != null) {
+    target.cash_receipt_available = Boolean(extra.cash_receipt_available);
+  }
+  if (extra.correction_available != null) {
+    target.correction_available = Boolean(extra.correction_available);
+  }
+}
+
+function normalizeClass(row) {
+  const days = Array.isArray(row?.attendance_days)
+    ? row.attendance_days.map(String)
+    : String(row?.attendance_days || '')
+        .split(',')
+        .map((d) => d.trim())
+        .filter(Boolean);
+  return {
+    class_name: String(row?.class_name || ''),
+    school_level: String(row?.school_level || ''),
+    grade_band: String(row?.grade_band || ''),
+    subject_name: String(row?.subject_name || ''),
+    subject_custom: String(row?.subject_custom || ''),
+    attendance_days: days,
+    lessons_per_week: String(row?.lessons_per_week || ''),
+    monthly_fee: String(row?.monthly_fee || ''),
+    fee_note: String(row?.fee_note || ''),
+    lesson_note: String(row?.lesson_note || ''),
+  };
+}
+
+function classesToSubjects(classes) {
+  return (classes || []).map((row) => {
+    const custom = String(row.subject_custom || '').trim();
+    const selected = String(row.subject_name || '').trim();
+    const subjectName = custom || selected;
+    const master = getSubjectOptions().find((o) => o.value === subjectName);
+    return {
+      school_level: String(row.school_level || ''),
+      grade_band: String(row.grade_band || ''),
+      subject_master_id: master?.id ? String(master.id) : '',
+      subject_name: subjectName,
+      subject_custom: custom,
+      is_main: false,
+    };
+  });
+}
+
+function classesToPriceItems(classes) {
+  return (classes || []).map((row) => ({
+    item: String(row.class_name || row.subject_name || '').trim(),
+    fee: String(row.monthly_fee || '').trim(),
+    note: String(row.fee_note || '').trim(),
+  }));
+}
+
+function unionAttendanceDays(classes) {
+  const set = new Set();
+  (classes || []).forEach((row) => {
+    (row.attendance_days || []).forEach((d) => set.add(String(d)));
+  });
+  return [...set];
+}
+
+function manwonToPriceAmount(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return '';
+  const n = Number(raw.replace(/[^\d.]/g, ''));
+  if (!Number.isFinite(n) || n <= 0) return '';
+  return String(Math.round(n * 10000));
 }
 
 function teachingStyleLabel(ids) {
@@ -173,50 +255,47 @@ export function syncLessonFromForm(form, state) {
   const fd = new FormData(form);
   state.lesson_operation_type = String(fd.get('lesson_operation_type') ?? state.lesson_operation_type);
   state.capacity_per_time = String(fd.get('capacity_per_time') ?? state.capacity_per_time);
-  state.recruitment_count = String(fd.get('recruitment_count') ?? '');
-  state.main_subject_note = String(fd.get('main_subject_note') ?? '');
   state.teaching_style_ids = fd.getAll('teaching_style_ids').map(String);
   state.teaching_style_note = String(fd.get('teaching_style_note') ?? '');
   state.teaching_style = [teachingStyleLabel(state.teaching_style_ids), state.teaching_style_note]
     .filter((s) => String(s || '').trim())
     .join(' / ');
+  state.weekend_available = fd.has('weekend_available');
   state.one_on_one_available = fd.has('one_on_one_available');
-  state.attendance_days = fd.getAll('attendance_days').map(String);
-  state.weekend_available =
-    fd.has('weekend_available') ||
-    state.attendance_days.includes('sat') ||
-    state.attendance_days.includes('sun');
+  state.correction_available = fd.has('correction_available');
+  state.card_payment_available = fd.has('card_payment_available');
+  state.cash_receipt_available = fd.has('cash_receipt_available');
   state.lessons_per_week = String(fd.get('lessons_per_week') ?? '');
   state.minutes_per_lesson = String(fd.get('minutes_per_lesson') ?? '');
-  state.lesson_note = String(fd.get('lesson_note') ?? '');
+  state.monthly_fee_manwon = String(fd.get('monthly_fee_manwon') ?? '');
+  state.price_amount = manwonToPriceAmount(state.monthly_fee_manwon);
+  state.intro_short = String(fd.get('intro_short') ?? '');
+  state.intro_long = String(fd.get('intro_long') ?? '');
 
-  state.price_items = [];
-  form.querySelectorAll('[data-price-idx]').forEach((row) => {
-    state.price_items.push({
-      item: row.querySelector('[data-field="price_item"]')?.value ?? '',
-      fee: row.querySelector('[data-field="price_fee"]')?.value ?? '',
-      note: row.querySelector('[data-field="price_note"]')?.value ?? '',
-    });
-  });
-  const firstFee = (state.price_items || []).map((p) => parseFeeAmount(p.fee)).find((n) => n > 0) || 0;
-  state.price_amount = firstFee ? String(firstFee) : '';
-  state.price_description = composePriceDescription({}, state.price_items);
-
-  state.subjects = [];
-  form.querySelectorAll('[data-subject-idx]').forEach((row) => {
+  state.classes = [];
+  form.querySelectorAll('[data-class-idx]').forEach((row) => {
     const selected = String(row.querySelector('[data-field="subject_select"]')?.value ?? '').trim();
     const custom = String(row.querySelector('[data-field="subject_custom"]')?.value ?? '').trim();
-    const subjectName = custom || selected;
-    const master = getSubjectOptions().find((o) => o.value === subjectName);
-    state.subjects.push({
-      school_level: row.querySelector('[data-field="school_level"]')?.value ?? '',
-      grade_band: row.querySelector('[data-field="grade_band"]')?.value ?? '',
-      subject_master_id: master?.id ? String(master.id) : '',
-      subject_name: subjectName,
+    const days = [...row.querySelectorAll('[data-field="attendance_days"]:checked')].map((el) =>
+      String(el.value),
+    );
+    state.classes.push({
+      class_name: String(row.querySelector('[data-field="class_name"]')?.value ?? ''),
+      school_level: String(row.querySelector('[data-field="school_level"]')?.value ?? ''),
+      grade_band: String(row.querySelector('[data-field="grade_band"]')?.value ?? ''),
+      subject_name: custom || selected,
       subject_custom: custom,
-      is_main: row.querySelector('[data-field="is_main"]')?.checked ?? false,
+      attendance_days: days,
+      lessons_per_week: String(row.querySelector('[data-field="lessons_per_week"]')?.value ?? ''),
+      monthly_fee: String(row.querySelector('[data-field="monthly_fee"]')?.value ?? ''),
+      fee_note: String(row.querySelector('[data-field="fee_note"]')?.value ?? ''),
+      lesson_note: String(row.querySelector('[data-field="lesson_note"]')?.value ?? ''),
     });
   });
+  state.subjects = classesToSubjects(state.classes);
+  state.price_items = classesToPriceItems(state.classes);
+  state.attendance_days = unionAttendanceDays(state.classes);
+  state.price_description = composePriceDescription({}, state.price_items);
 }
 
 /**
@@ -320,22 +399,37 @@ export function payloadForStep(step, state) {
       return {
         lesson_operation_type: state.lesson_operation_type,
         capacity_per_time: state.capacity_per_time,
-        recruitment_count: state.recruitment_count,
-        main_subject_note: state.main_subject_note,
         teaching_style: state.teaching_style,
         teaching_style_ids: state.teaching_style_ids,
         teaching_style_note: state.teaching_style_note,
         weekend_available: state.weekend_available,
         one_on_one_available: state.one_on_one_available,
+        correction_available: state.correction_available,
+        card_payment_available: state.card_payment_available,
+        cash_receipt_available: state.cash_receipt_available,
         attendance_days: state.attendance_days,
         lessons_per_week: state.lessons_per_week,
         minutes_per_lesson: state.minutes_per_lesson,
-        lesson_note: state.lesson_note,
+        monthly_fee_manwon: state.monthly_fee_manwon,
         price_amount: state.price_amount,
         price_description: state.price_description,
         price_items: state.price_items,
+        intro_short: state.intro_short,
+        intro_long: state.intro_long,
+        classes: state.classes || [],
         lesson_extra: packLessonExtra(state),
         subjects: (state.subjects || []).filter((s) => String(s.subject_name || '').trim()),
+        images: (state.images || []).map((img, i) => ({
+          id: img.id || null,
+          image_type: img.image_type,
+          caption: img.caption || '',
+          image_path: img.image_path || img.name,
+          prime_1280_path: img.prime_1280_path || '',
+          prime_1600_path: img.prime_1600_path || '',
+          basic_360_path: img.basic_360_path || '',
+          basic_720_path: img.basic_720_path || '',
+          sort_order: img.sort_order || i + 1,
+        })),
       };
     case 'career':
       return {
@@ -417,6 +511,40 @@ export function applyRoomToState(target, room) {
   }
   if (room.teaching_style_note != null) {
     target.teaching_style_note = String(room.teaching_style_note || '');
+  }
+  if (Array.isArray(room.classes) && room.classes.length) {
+    target.classes = room.classes.map(normalizeClass);
+  } else if ((!target.classes || !target.classes.length) && Array.isArray(room.subjects) && room.subjects.length) {
+    target.classes = room.subjects.map((sub, i) => {
+      const price = Array.isArray(target.price_items) ? target.price_items[i] || {} : {};
+      return normalizeClass({
+        class_name: price.item || '',
+        school_level: sub.school_level,
+        grade_band: sub.grade_band,
+        subject_name: sub.subject_name,
+        subject_custom: sub.subject_custom,
+        attendance_days: i === 0 ? target.attendance_days : [],
+        lessons_per_week: i === 0 ? target.lessons_per_week : '',
+        monthly_fee: price.fee || '',
+        fee_note: price.note || '',
+        lesson_note: i === 0 ? target.lesson_note : '',
+      });
+    });
+  }
+  if (!target.monthly_fee_manwon && target.price_amount) {
+    const won = Number(target.price_amount);
+    if (Number.isFinite(won) && won > 0) {
+      target.monthly_fee_manwon = String(Math.round(won / 10000));
+    }
+  }
+  if (room.card_payment_available != null) {
+    target.card_payment_available = Boolean(room.card_payment_available);
+  }
+  if (room.cash_receipt_available != null) {
+    target.cash_receipt_available = Boolean(room.cash_receipt_available);
+  }
+  if (room.correction_available != null) {
+    target.correction_available = Boolean(room.correction_available);
   }
   if (!target.teaching_style_ids.length && String(target.teaching_style || '').trim()) {
     const bits = String(target.teaching_style)

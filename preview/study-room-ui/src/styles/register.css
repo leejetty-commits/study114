@@ -318,12 +318,48 @@ form[data-form="lesson"] > .register-guide {
   max-width: 4.5rem;
 }
 
-.register-subject-row {
-  display: grid;
-  grid-template-columns: 7rem 7rem minmax(7rem, 0.85fr) minmax(14rem, 1.8fr) auto auto;
-  gap: var(--space-2);
-  align-items: end;
-  margin-bottom: 0.45rem;
+.register-class-card {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: 1px solid #e8eef6;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.register-class-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+}
+
+.register-class-card__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.register-fee-manwon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.register-fee-manwon .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.register-fee-manwon__unit {
+  flex: none;
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.register-intro-long {
+  min-height: 10rem;
 }
 
 .register-subject-row .form-group,

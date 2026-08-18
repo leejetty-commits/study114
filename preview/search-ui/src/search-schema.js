@@ -29,7 +29,7 @@ export const SEARCH_TABS = {
       { key: 'school_level', label: '주대상', tier: 'basic', basicRow: 1, db: 'study_room_primary_audiences.school_level', input: 'select', optionsKey: 'school_level' },
       { key: 'price_amount', label: '가격대(월)', tier: 'basic', basicRow: 1, db: 'study_rooms.price_amount', input: 'range' },
       { key: 'lesson_place_type', label: '교습형태', tier: 'basic', basicRow: 2, db: 'study_rooms.lesson_place_type', input: 'select', optionsKey: 'study_room_place' },
-      { key: 'lesson_operation_type', label: '수업운영형태', tier: 'basic', basicRow: 2, db: 'study_rooms.lesson_operation_type', input: 'select', optionsKey: 'lesson_operation' },
+      { key: 'lesson_operation_type', label: '수업운영방식', tier: 'basic', basicRow: 2, db: 'study_rooms.lesson_operation_type', input: 'select', optionsKey: 'lesson_operation' },
       { key: 'education_office_registered', label: '교육청 등록', tier: 'basic', basicRow: 2, db: 'study_rooms.education_office_registered', input: 'toggle' },
       { key: 'one_on_one_available', label: '1:1 가능', tier: 'expanded', db: 'study_rooms.one_on_one_available', input: 'toggle' },
       { key: 'weekend_available', label: '주말 가능', tier: 'expanded', db: 'study_rooms.weekend_available', input: 'toggle' },

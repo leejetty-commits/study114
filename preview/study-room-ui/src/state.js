@@ -16,7 +16,7 @@ export const REGISTER_PHASES = {
 export const STEPS = [
   { path: '/register/basic', key: 'basic', label: '기본정보', step: 1, phase: 'basic' },
   { path: '/register/location', key: 'location', label: '위치', step: 2, phase: 'basic' },
-  { path: '/register/lesson', key: 'lesson', label: '수업·가격', step: 3, phase: 'detail' },
+  { path: '/register/lesson', key: 'lesson', label: '공부방·교습소 상세', step: 3, phase: 'detail' },
   { path: '/register/facility', key: 'facility', label: '경력·시설', step: 4, phase: 'detail' },
   { path: '/register/complete', key: 'complete', label: '등록완료', step: 5, phase: null },
 ];
@@ -71,6 +71,28 @@ export const WEEKDAY_OPTIONS = [
   { value: 'fri', label: '금' },
   { value: 'sat', label: '토' },
   { value: 'sun', label: '일' },
+];
+
+/** 소개 구간 · 1일 평균 수업시간 */
+export const DAILY_LESSON_MINUTES = [
+  { value: '30', label: '30분' },
+  { value: '60', label: '60분' },
+  { value: '90', label: '90분' },
+  { value: '120', label: '120분' },
+  { value: '150', label: '150분' },
+  { value: '180', label: '180분' },
+  { value: 'over_180', label: '3시간 초과' },
+];
+
+/** 소개 구간 · 주당 평균 수업회수 / 수업 그룹 주횟수 */
+export const WEEKLY_LESSON_COUNTS = [
+  { value: '1', label: '1회' },
+  { value: '2', label: '2회' },
+  { value: '3', label: '3회' },
+  { value: '4', label: '4회' },
+  { value: '5', label: '5회' },
+  { value: '6', label: '6회' },
+  { value: '7', label: '7회 이상' },
 ];
 
 /** 지도 스타일 — 복수 선택 */
@@ -217,14 +239,19 @@ export function emptyRoomState() {
     teaching_style_note: '',
     weekend_available: null,
     one_on_one_available: null,
+    card_payment_available: false,
+    cash_receipt_available: false,
+    correction_available: false,
     attendance_days: [],
     lessons_per_week: '',
     minutes_per_lesson: '',
     lesson_note: '',
+    monthly_fee_manwon: '',
     price_amount: '',
     price_description: '',
     price_items: [],
     subjects: [],
+    classes: [],
     career_years: '',
     academy_career_years: '',
     franchise_flag: null,
@@ -284,4 +311,19 @@ export function emptySubject() {
 
 export function emptyPriceItem() {
   return { item: '', fee: '', note: '' };
+}
+
+export function emptyClass() {
+  return {
+    class_name: '',
+    school_level: '',
+    grade_band: '',
+    subject_name: '',
+    subject_custom: '',
+    attendance_days: [],
+    lessons_per_week: '',
+    monthly_fee: '',
+    fee_note: '',
+    lesson_note: '',
+  };
 }

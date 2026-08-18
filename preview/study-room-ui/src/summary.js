@@ -9,6 +9,9 @@ import {
   CAPACITY_PER_TIME_OPTIONS,
   PERSONAL_GENDER_OPTIONS,
   IMAGE_TYPES,
+  DAILY_LESSON_MINUTES,
+  WEEKLY_LESSON_COUNTS,
+  WEEKDAY_OPTIONS,
 } from './state.js';
 import { formatPrimaryAudienceLabel, lessonPlaceNameLabel } from '../../shared/study-room-basic-form.js';
 
@@ -55,14 +58,30 @@ function facilityNames(ids) {
     .join(', ');
 }
 
-function subjectLine(sub) {
-  const name = str(sub?.subject_name);
-  const level = labelOf(SCHOOL_LEVELS, sub?.school_level);
-  const grade = str(sub?.grade_band);
-  const bits = [name, level, grade].filter(Boolean);
-  const main = sub?.is_main ? '주력' : '';
-  if (!bits.length && !main) return '';
-  return [bits.join(' · '), main].filter(Boolean).join(' · ');
+function weekdayLabel(days) {
+  const list = Array.isArray(days) ? days : [];
+  return list
+    .map((d) => WEEKDAY_OPTIONS.find((o) => o.value === d)?.label || d)
+    .filter(Boolean)
+    .join(' ');
+}
+
+function classRows(s) {
+  const classes = Array.isArray(s.classes) && s.classes.length ? s.classes : [{}];
+  return classes.flatMap((row, i) => {
+    const prefix = classes.length > 1 ? `수업 ${i + 1} · ` : '수업 · ';
+    return [
+      { label: `${prefix}수업명`, value: str(row?.class_name) },
+      { label: `${prefix}대상`, value: labelOf(SCHOOL_LEVELS, row?.school_level) },
+      { label: `${prefix}학년`, value: str(row?.grade_band) },
+      { label: `${prefix}과목`, value: str(row?.subject_name) },
+      { label: `${prefix}출석요일`, value: weekdayLabel(row?.attendance_days) },
+      { label: `${prefix}주횟수`, value: labelOf(WEEKLY_LESSON_COUNTS, row?.lessons_per_week) },
+      { label: `${prefix}월 수업료`, value: str(row?.monthly_fee) },
+      { label: `${prefix}수업료 설명`, value: str(row?.fee_note) },
+      { label: `${prefix}수업 참고사항`, value: str(row?.lesson_note) },
+    ];
+  });
 }
 
 function slotLine(slot, idx) {
@@ -112,13 +131,9 @@ function detailStatusLabel(v) {
 export function buildRoomInputSummary(room) {
   const s = room && typeof room === 'object' ? room : {};
   const slots = Array.isArray(s.saved_regions) ? s.saved_regions : [];
-  const subjects = Array.isArray(s.subjects) ? s.subjects : [];
   const images = Array.isArray(s.images) ? s.images : [];
 
   const slotValues = [0, 1, 2].map((i) => slotLine(slots[i], i));
-  const subjectValues = subjects.length
-    ? subjects.map((sub, i) => subjectLine(sub) || '')
-    : [''];
   const imageValues = images.length ? images.map((img) => imageLine(img)) : [''];
 
   return [
@@ -142,27 +157,26 @@ export function buildRoomInputSummary(room) {
       ],
     },
     {
-      title: '상세정보 1단계 · 수업·가격',
+      title: '상세정보 1단계 · 공부방·교습소 상세',
       key: 'lesson',
       rows: [
-        { label: '수업운영형태', value: labelOf(LESSON_OPERATION_TYPES, s.lesson_operation_type) },
+        { label: '수업운영방식', value: labelOf(LESSON_OPERATION_TYPES, s.lesson_operation_type) },
         { label: '타임별 원생수', value: labelOf(CAPACITY_PER_TIME_OPTIONS, s.capacity_per_time) },
-        { label: '모집 인원', value: str(s.recruitment_count) },
+        { label: '1일 평균 수업시간', value: labelOf(DAILY_LESSON_MINUTES, s.minutes_per_lesson) },
+        { label: '주당 평균 수업회수', value: labelOf(WEEKLY_LESSON_COUNTS, s.lessons_per_week) },
+        { label: '월 평균 수업료', value: str(s.monthly_fee_manwon) ? `${str(s.monthly_fee_manwon)}만원` : '' },
+        { label: '카드결제 여부', value: yn(s.card_payment_available) },
+        { label: '현금영수증 여부', value: yn(s.cash_receipt_available) },
         { label: '지도 스타일', value: str(s.teaching_style) },
-        { label: '지도 스타일 설명', value: str(s.teaching_style_note) },
+        { label: '지도 스타일 추가설명', value: str(s.teaching_style_note) },
         { label: '주말 가능', value: yn(s.weekend_available) },
+        { label: '첨삭식', value: yn(s.correction_available) },
         { label: '1:1 가능', value: yn(s.one_on_one_available) },
-        { label: '출석일', value: Array.isArray(s.attendance_days) ? s.attendance_days.map((d) => ({ mon: '월', tue: '화', wed: '수', thu: '목', fri: '금', sat: '토', sun: '일' }[d] || d)).join(' ') : '' },
-        { label: '주횟수', value: [s.lessons_per_week ? `주 ${s.lessons_per_week}일` : '', s.minutes_per_lesson ? `1일 ${s.minutes_per_lesson}분` : ''].filter(Boolean).join(', ') },
-        { label: '수업참고사항', value: str(s.lesson_note) },
-        { label: '월 대표 가격', value: str(s.price_amount) },
-        { label: '가격 설명', value: str(s.price_description) },
-        ...(Array.isArray(s.price_items) ? s.price_items : []).map((row, i) => ({
-          label: `가격 ${i + 1}`,
-          value: [str(row?.item), str(row?.fee), str(row?.note)].filter(Boolean).join(' · '),
-        })),
-        ...subjectValues.map((value, i) => ({
-          label: subjects.length > 1 ? `대상 과목 ${i + 1}` : '대상 과목',
+        { label: '한 줄 소개', value: str(s.intro_short) },
+        { label: '공부방·교습소 소개와 자랑', value: str(s.intro_long) },
+        ...classRows(s),
+        ...imageValues.map((value, i) => ({
+          label: images.length > 1 ? `홍보사진 ${i + 1}` : '홍보사진',
           value,
         })),
       ],
@@ -185,10 +199,6 @@ export function buildRoomInputSummary(room) {
         { label: '유튜브', value: str(s.youtube_url) },
         { label: '페이스북', value: str(s.facebook_url) },
         { label: '인스타그램', value: str(s.instagram_url) },
-        ...imageValues.map((value, i) => ({
-          label: images.length > 1 ? `홍보사진 ${i + 1}` : '홍보사진',
-          value,
-        })),
         { label: '공개 상태', value: profileStatusLabel(s.profile_status) },
         { label: '상세정보 상태', value: detailStatusLabel(s.detail_completion_status) },
       ],
