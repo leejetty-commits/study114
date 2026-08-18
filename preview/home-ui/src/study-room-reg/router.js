@@ -95,7 +95,6 @@ export const STUDY_ROOM_TOP_TABS = [
   { key: 'detail', label: '상세정보' },
   { key: 'publish', label: '미리보기·공개' },
   { key: 'exposure', label: '노출·상담' },
-  { key: 'submission', label: '제출함' },
 ];
 
 /** @deprecated STUDY_ROOM_TOP_TABS 사용 */

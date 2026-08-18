@@ -161,6 +161,10 @@ export function mypageRegistrationsUrl() {
   return `${HOME_UI_BASE}/#/mypage/registrations`;
 }
 
+export function mypageSubmissionBoardUrl() {
+  return `${HOME_UI_BASE}/#/mypage/submission-board`;
+}
+
 export function bindGlobalEvents(root) {
   root.querySelectorAll('[data-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {

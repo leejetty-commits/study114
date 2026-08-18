@@ -22,7 +22,7 @@
 | **`profile_status.pending`** | 20·21장 UI **미사용** · [5장 §4-2](05-study-room-db.md#4-2-profile_status--pending-deprecated) deprecated |
 | **쪽지** | 당사자 합의 · 16장 쪽지 |
 | **안전** | 신고·차단·17장 — **사후** (사전 심사 ✕) |
-| **제출자료 (P15-10)** | 운영자 심사·승인·반려 ✕ · **제출 여부·공개 상태 표시만** — [§2-1](#2-1-p15-10-제출자료-상태) · [21장](21-tutor-registration-management.md) |
+| **제출자료 (P15-10)** | 운영자 심사·승인·반려 ✕ · **제출 여부·공개 상태 표시만** — 이번 버전 **과외쌤 사용 · 공부방 숨김** [49](../internal/49-submission-role-split.md) |
 
 역할별 상세: [19장](19-student-registration-management.md) · [20장](20-study-room-registration-management.md) · [21장](21-tutor-registration-management.md)
 
@@ -91,8 +91,8 @@
 | 운영자 보완 요청 | 공개함 · 비공개 · 선택 제출 |
 | 「검증 통과/실패」 | 본인 확인용 · 학부모 공개용 (범위 라벨) |
 
-- **1차 주체:** `tutor` (과외쌤) — [21장](21-tutor-registration-management.md)
-- **공부방:** 동일 원칙 · 증빙 테이블은 [5장](05-study-room-db.md) · 1차 UI는 후순위(권한표 △)
+- **1차 주체:** `tutor` (과외쌤) — [21장](21-tutor-registration-management.md) · **이번 버전 화면 운영 주체**
+- **공부방:** 동일 원칙·테이블은 유지 · **이번 버전 UI는 후순위(숨김)** — 교육청 등록 체크가 최소 신뢰. 운영 분리: [49](../internal/49-submission-role-split.md)
 - **DB 테이블명** `*_verification_documents`는 레거시 명칭 — **운영자 검수 의미로 해석하지 않음** ([22장 §5](22-platform-lifecycle-principles.md#5-본-원칙과-다른-축-혼동-방지))
 
 ---
@@ -276,9 +276,10 @@ enum·필드명은 14·5·8장 그대로.
 | P25-S10 관심 학생 | ✕ | — | ○ | ○ |
 | P15-08 쪽지 요약 | ✕ | ○ | ○ | ○ |
 | P15-09 이용 현황 | ✕ | △ | ○ | ○ |
-| P15-10 제출자료 | ✕ | — | △ | ○ |
+| P15-10 제출자료 | ✕ | — | △ 이번 버전 숨김 | ○ 이번 버전 사용 |
 | P15-11 계정 | ✕ | ○ | ○ | ○ |
 
+- **P15-10:** 공부방 △ = 이번 버전 메뉴·보드 비노출. 과외쌤 ○ = 실제 사용. [49](../internal/49-submission-role-split.md)
 - **guardian △ 최근열람:** 탐색 부기능 · P15-03·찜 중심.
 - **guardian △ 유료:** §7 — 설명 O · 구매 UI ✕.
 
@@ -421,6 +422,7 @@ enum·필드명은 14·5·8장 그대로.
 
 | 날짜 | 내용 |
 |------|------|
+| 2026-08-19 | 제출함 **공통 개발 + 차등 운영** — 공부방 UI 후순위 · 과외쌤 사용. [49](../internal/49-submission-role-split.md) |
 | 2026-07-22 | **운영 허브/상품센터 경계 잠금** — `#/mypage/*` 이용 운영 · `#/plans/*` 상품 탐색/구매 · 관심 학생/쪽지 역할 정렬 |
 | 2026-07-06 | **1차 잠금** — §13 코드 정본 · `mypage-copy.js` · §4-3-1 홈 강조 · home-ui 15a ✅ |
 | 2026-07-04 | 15장 초안 — Notion 15~22 §2 · 페이지表 · 권한 · 1차 범위 |

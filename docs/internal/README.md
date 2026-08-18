@@ -24,6 +24,9 @@
 | [44-list-sort-ops-runbook.md](./44-list-sort-ops-runbook.md) | 정렬·추천·SKY 운영 런북 · rollback | ★ |
 | [45-tutor-expanded-complete-ssot.md](./45-tutor-expanded-complete-ssot.md) | tutor 상세완료·검색 노출 필드 SSOT · 진단 | ★ |
 | [46-domain-status-batch.md](./46-domain-status-batch.md) | 도메인 현황 · `https://study114.net` 정본 전환 | ★ 운영 |
+| [47-study-room-home-card-map.md](./47-study-room-home-card-map.md) | 공부방 홈 카드 × 등록 단계 매핑 · 공개/노출 용어 | ★ |
+| [48-tutor-home-card-map.md](./48-tutor-home-card-map.md) | 과외쌤 홈 카드 × 단계 매핑 · 제출함 | ★ 과외쌤 제출함 유지 |
+| [49-submission-role-split.md](./49-submission-role-split.md) | 제출함 **공통 개발 + 차등 운영** · 공부방 후순위 / 과외쌤 사용 | ★ 이번 버전 |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
 
 ---

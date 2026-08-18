@@ -51,7 +51,6 @@ import { studentReviewPath, getHandoffFromQuery } from '../handoff-link.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import { KOREA_SIDOS } from '../../../shared/korea-sidos.js';
 import { formatMonthlyWon } from '../exposure-format.js';
-import { renderSubmissionBoardScreen } from '../submission-board/index.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -711,11 +710,10 @@ function renderExposure(room) {
 
 /** @param {import('./store.js').StudyRoomRecord} room */
 function renderSubmissionTab(room) {
-  const board = renderSubmissionBoardScreen('/mypage/submission-board');
   const body = `
     <div class="mp-room__submission">
-      <p class="mypage-lead">${esc(room.study_room_name)} 제출함</p>
-      ${board}
+      <p class="mypage-lead">${esc(room.study_room_name)}</p>
+      <p class="mypage-muted">공부방은 제출함을 쓰지 않습니다. 교육청 등록은 상세정보에서 체크합니다. 파일 제출함은 과외쌤 마이페이지에서 다룹니다.</p>
     </div>`;
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'submission', body)}</section>`;
 }

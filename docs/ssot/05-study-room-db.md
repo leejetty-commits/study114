@@ -39,7 +39,7 @@
 | `study_room_images` | 사진 · 대표/내부/시설/기타 |
 | `facility_masters` | 시설 **체크형** 마스터 |
 | `study_room_facilities` | 공부방 ↔ 시설 매핑 |
-| `study_room_verification_documents` | 증빙 문서 · **제출자료 저장** ([22장](22-platform-lifecycle-principles.md) — 운영자 검수 ✕) |
+| `study_room_verification_documents` | 증빙 문서 · **제출자료 저장** ([22장](22-platform-lifecycle-principles.md) — 운영자 검수 ✕) · **이번 버전 UI 후순위** [49](../internal/49-submission-role-split.md) |
 | `study_room_badges` | Prime/Pick 신뢰 배지 |
 | `study_room_exposure_assignments` | 노출 편성 · 광고 운영 |
 | `study_room_exposure_waitlists` | 예약대기 · 오픈 알림 |
@@ -311,6 +311,7 @@ study_rooms (1)
 
 | 날짜 | 내용 |
 |------|------|
+| 2026-08-19 | `study_room_verification_documents` 이번 버전 UI 후순위. [49](../internal/49-submission-role-split.md) |
 | 2026-05-31 | 5장 초안 (2장 매핑) |
 | 2026-05-31 | Notion 5장 원문 전면 반영 · 005 migration |
 | 2026-07-04 | Notion 5장 2026-07 갱신 · slogan/operation/capacity enum · 009 extended |

@@ -15,8 +15,9 @@ export const HOME_EMPHASIS = {
 
 /** §15 역할 제한 패널 (Empty ✕ · onboarding guard) */
 export const ONBOARDING_GUARD_COPY = {
-  submissionParent: '제출자료 관리는 과외쌤과 공부방 계정에서 이용할 수 있어요.',
-  submissionStudyRoom: '공부방 제출자료 UI는 1차 후순위(△) · 동일 원칙 적용',
+  submissionParent: '제출자료 관리는 과외쌤 계정에서 이용할 수 있어요.',
+  submissionStudyRoom:
+    '공부방은 제출함을 쓰지 않습니다. 교육청 등록은 상세정보 2단계에서 체크합니다. 파일 제출함은 과외쌤 마이페이지에서 다룹니다.',
 };
 
 /** @deprecated ONBOARDING_GUARD_COPY 사용 */

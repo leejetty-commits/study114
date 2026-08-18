@@ -164,6 +164,7 @@ export function renderMypageScreen(path) {
   if (path === '/mypage/paid/usage') return renderPaidUsage(r);
   if (path === '/mypage/submission-docs' || path === '/mypage/verification') return renderSubmissionDocs(r);
   if (path === '/mypage/submission-board' || path.startsWith('/mypage/submission-board/')) {
+    if (r === 'study_room' || r === 'parent') return renderSubmissionDocs(r);
     return renderSubmissionBoardScreen(path);
   }
   if (path === '/mypage/account') return renderAccount(r, profile);
@@ -291,7 +292,6 @@ function renderRegistrationsIndex(role) {
   }
   if (role === 'study_room') {
     links.push({ path: '/mypage/registrations/study-rooms', label: '공부방', id: 'P15-04' });
-    links.push({ path: '/mypage/submission-board', label: '제출함', id: 'P23-04' });
   }
   if (role === 'tutor') {
     links.push({ path: '/mypage/registrations/tutors', label: '과외 프로필', id: 'P15-05' });
@@ -613,15 +613,7 @@ function renderSubmissionDocs(role) {
   }
 
   if (role === 'study_room') {
-    return `
-      <section class="mypage-panel p15-submission">
-        <p class="mypage-lead">15장 §2-1 · 공부방 제출자료</p>
-        <p class="mypage-muted">제출 여부·공개 상태만 표시합니다. 플랫폼이 자료를 선별하거나 보증하지 않습니다.</p>
-        <div class="sub-board-bridge">
-          <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">제출함 열기</a>
-          <span class="mypage-muted">등록 자료를 안전하게 올리고 관리할 수 있어요.</span>
-        </div>
-      </section>`;
+    return `<section class="mypage-panel"><p class="mypage-muted">${EMPTY_ONBOARDING.submissionStudyRoom}</p></section>`;
   }
 
   const docs = getSubmissionDocs(role);

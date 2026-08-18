@@ -35,7 +35,7 @@
 | 자기확인 | P20-04 학부모 시점 confirm |
 | 상담 vs 공개 분리 | `profile_status` + `inquiry_status` (원장 선택) |
 | 당사자 합의 접촉 | 16장 |
-| 제출자료 | `study_room_verification_documents` — **저장·표시만** · [P15-10](15-mypage-structure.md#2-1-p15-10-제출자료-상태) 1차 **△ 후순위** |
+| 제출자료 | `study_room_verification_documents` — **저장·표시만** · [P15-10](15-mypage-structure.md#2-1-p15-10-제출자료-상태) **이번 버전 UI 후순위(숨김)** · 운영 분리 [49](../internal/49-submission-role-split.md) |
 
 **공부방 공개 흐름:** 원장 입력 → 체크리스트 → 자기확인 → **직접 공개** → 학부모 판단 → 당사자 합의.
 
@@ -367,7 +367,7 @@ P19-06 대응. 코드·문서 **재사용**을 위해 ID 유지. 라우트 분�
 
 - [ ] **`inquiry_status` DDL + API** (원장 PATCH)
 - [ ] study-room-ui ↔ P20 store **동기화**
-- [ ] P15-10 공부방 제출자료 (△ 후순위)
+- [ ] P15-10 공부방 제출자료 (△ **이번 버전 후순위** · 보드 재가동 ✕ · [49](../internal/49-submission-role-split.md))
 
 ### 11-1. 프리뷰 구현 상태 (2026-07-06)
 
@@ -493,6 +493,7 @@ study-room-ui는 저장·완료 후 `return_to`가 있으면 해당 hash로 이�
 
 | 날짜 | 내용 |
 |------|------|
+| 2026-08-19 | 제출함 **이번 버전 UI 후순위** · 보드 재가동 ✕ · 체크리스트 집중. [49](../internal/49-submission-role-split.md) |
 | 2026-07-06 | 20장 초안 |
 | 2026-07-06 | **Notion·Cursor 합의** — `profile_status` · `inquiry_status` 2축 · [22장](22-platform-lifecycle-principles.md) · pending deprecated · 공개 준비 미완료 · 자기확인 · 딥링크 |
 | 2026-07-06 | 제출자료 원칙 · 입력 유효성 용어 · Pick 배정 |
