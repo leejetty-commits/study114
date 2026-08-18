@@ -308,58 +308,29 @@ form[data-form="lesson"] > .register-guide {
   background: #ffedd5;
 }
 
-.register-photo-drop {
+/* 사진추가: label+file. display:none / visibility:hidden / 1px clip 금지. iOS는 직접 클릭만 연다. */
+.register-plus-btn--photo {
   position: relative;
-  display: grid;
-  place-items: center;
-  gap: 0.35rem;
-  min-height: 10rem;
-  margin: 0 0 0.85rem;
-  padding: 1.25rem 1rem;
-  border: 2px dashed var(--brand-orange, #f57c00);
-  border-radius: 0.85rem;
-  background: #fff7ed;
-  color: #9a3412;
-  text-align: center;
-  cursor: pointer;
   overflow: hidden;
 }
 
-.register-photo-drop.is-dragover {
-  background: #ffedd5;
-}
-
-.register-photo-drop__file {
+.register-plus-btn__file {
   position: absolute;
   inset: 0;
+  z-index: 2;
   width: 100%;
   height: 100%;
-  opacity: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0.01;
   cursor: pointer;
-  font-size: 80px;
-  z-index: 2;
+  font-size: 100px;
 }
 
-.register-photo-drop__title {
+.register-plus-btn--photo > span {
   position: relative;
   z-index: 1;
-  font-size: 1rem;
-  font-weight: 800;
   pointer-events: none;
-}
-
-.register-photo-drop__hint {
-  position: relative;
-  z-index: 1;
-  color: #7c2d12;
-  font-size: 0.82rem;
-  pointer-events: none;
-}
-
-.register-photo-pick__error {
-  margin: 0 0 0.75rem;
-  color: #b91c1c;
-  font-size: 0.85rem;
 }
 
 .register-pay-checks {

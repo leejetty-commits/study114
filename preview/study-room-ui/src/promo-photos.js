@@ -10,6 +10,8 @@ import {
   updatePromoImageCaption,
 } from '../../shared/promo-image.js';
 
+const PHOTO_FILE_ID = 'room-promo-photo-file';
+
 function esc(s) {
   return String(s ?? '')
     .replace(/&/g, '&amp;')
@@ -62,7 +64,15 @@ export function renderPromoPhotoGrid() {
       ${
         canAdd
           ? `<div class="register-photo-block__actions">
-              <button type="button" class="register-plus-btn" data-action="add-photo">+사진추가</button>
+              <label class="register-plus-btn register-plus-btn--photo" for="${PHOTO_FILE_ID}">
+                <input
+                  id="${PHOTO_FILE_ID}"
+                  class="register-plus-btn__file"
+                  type="file"
+                  accept="${PROMO_IMAGE_SPEC.accept},image/*"
+                />
+                <span>+사진추가</span>
+              </label>
               <span class="register-photo-block__count">${images.length}/${PROMO_IMAGE_SPEC.maxCount}</span>
             </div>`
           : `<p class="register-photo-block__count">홍보사진은 최대 ${PROMO_IMAGE_SPEC.maxCount}장입니다.</p>`
@@ -91,88 +101,36 @@ export function syncPromoPhotoMeta(root) {
  * @param {HTMLElement} root
  * @param {{ persistBeforeUpload: () => Promise<void> }} opts
  */
-/**
- * 사진 고르기 팝업. 숨긴 file input 클릭은 브라우저가 막는 경우가 있어, 보이는 창 안에서 고르게 한다.
- * @returns {Promise<File|null>}
- */
-function openPhotoPickDialog() {
-  return new Promise((resolve) => {
-    const overlay = document.createElement('div');
-    overlay.className = 'promo-crop-overlay';
-    overlay.innerHTML = `
-      <div class="promo-crop-dialog register-photo-pick" role="dialog" aria-modal="true" aria-labelledby="photo-pick-title">
-        <h3 id="photo-pick-title" class="promo-crop-dialog__title">홍보사진 추가</h3>
-        <p class="promo-crop-dialog__hint">JPG · PNG · WebP / 권장 ${PROMO_IMAGE_SPEC.recommended} / 최소 ${PROMO_IMAGE_SPEC.minWidth}×${PROMO_IMAGE_SPEC.minHeight} / 최대 4MB. 아래 칸을 누르거나 파일을 끌어다 놓으세요.</p>
-        <label class="register-photo-drop">
-          <input class="register-photo-drop__file" type="file" accept="${PROMO_IMAGE_SPEC.accept}" />
-          <span class="register-photo-drop__title">클릭해서 사진 고르기</span>
-          <span class="register-photo-drop__hint">또는 이 칸에 파일을 놓기</span>
-        </label>
-        <p class="register-photo-pick__error" data-pick-error hidden></p>
-        <div class="promo-crop-dialog__actions">
-          <button type="button" class="btn btn--ghost" data-pick-cancel>취소</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
+export function bindPromoPhotos(root, opts) {
+  const fileInput = root.querySelector(`#${PHOTO_FILE_ID}`);
+  const addLabel = root.querySelector(`label[for="${PHOTO_FILE_ID}"]`);
 
-    const input = overlay.querySelector('.register-photo-drop__file');
-    const drop = overlay.querySelector('.register-photo-drop');
-    const errEl = overlay.querySelector('[data-pick-error]');
-
-    const finish = (file) => {
-      overlay.remove();
-      resolve(file);
-    };
-
-    const showErr = (msg) => {
-      if (!errEl) return;
-      errEl.hidden = !msg;
-      errEl.textContent = msg || '';
-      if (input) input.value = '';
-    };
-
-    const takeFile = async (file) => {
-      if (!file) return;
-      const err = await validatePromoImageFile(file);
-      if (err) {
-        showErr(err);
-        return;
-      }
-      finish(file);
-    };
-
-    overlay.querySelector('[data-pick-cancel]')?.addEventListener('click', () => finish(null));
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) finish(null);
-    });
-    input?.addEventListener('change', () => {
-      takeFile(input.files?.[0] || null);
-    });
-    drop?.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      drop.classList.add('is-dragover');
-    });
-    drop?.addEventListener('dragleave', () => drop.classList.remove('is-dragover'));
-    drop?.addEventListener('drop', (e) => {
-      e.preventDefault();
-      drop.classList.remove('is-dragover');
-      takeFile(e.dataTransfer?.files?.[0] || null);
+  addLabel?.addEventListener('click', () => {
+    console.info('[study114:promo-photo] 사진추가 클릭', {
+      hasInput: Boolean(fileInput),
+      display: fileInput ? getComputedStyle(fileInput).display : null,
+      opacity: fileInput ? getComputedStyle(fileInput).opacity : null,
     });
   });
-}
 
-export function bindPromoPhotos(root, opts) {
-  root.querySelector('[data-action="add-photo"]')?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  fileInput?.addEventListener('click', () => {
+    console.info('[study114:promo-photo] file input 클릭 — 파일선택창 요청');
+  });
+
+  fileInput?.addEventListener('change', async () => {
+    const file = fileInput.files?.[0] || null;
+    fileInput.value = '';
+    console.info('[study114:promo-photo] 파일 선택됨', file ? { name: file.name, size: file.size, type: file.type } : null);
+    if (!file) return;
     if ((registerState.images || []).length >= PROMO_IMAGE_SPEC.maxCount) {
       alert('홍보사진은 최대 5장까지입니다.');
       return;
     }
-    const file = await openPhotoPickDialog();
-    if (!file) return;
-
+    const err = await validatePromoImageFile(file);
+    if (err) {
+      alert(err);
+      return;
+    }
     const crop = await openPromoCropDialog(document.body, { file });
     if (!crop) return;
 
