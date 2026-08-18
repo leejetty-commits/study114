@@ -586,16 +586,16 @@ function renderBasicStudyRoomRow(item, opts) {
         [
           [
             labeled('공부방명', item.study_room_name, { cls: 'expo-tbl__cell--name' }),
-            labeled('대상', item.grade_band),
-            labeled('과목', item.main_subject_note),
+            valOnly(locationLabel),
             valOnly(formatMonthlyWon(item.price_amount), { cls: 'expo-tbl__cell--price' }),
-            { html: `<span class="expo-tbl__label">비교</span>${compare}`, cls: 'expo-tbl__cell--compare' },
+            { html: `<span class="expo-tbl__label">비교</span>${compare}`, cls: 'expo-tbl__cell--compare', col: 2 },
           ],
           [
-            valOnly(locationLabel),
             labeled('교습형태', optionalStudyRoomPlace(item.lesson_place_type)),
+            labeled('대상', item.grade_band),
+            labeled('과목', item.main_subject_note),
             labeled('원생수', item.capacity_per_time || '—'),
-            labeled('수업형태', formatLessonOperationType(item.lesson_operation_type)),
+            labeled('수업운영방식', formatLessonOperationType(item.lesson_operation_type)),
           ],
           [labeled('슬로건', item.slogan || '—', { col: 5 })],
           [{ html: actions, col: 5, cls: 'expo-tbl__cell--actions' }],
@@ -610,7 +610,6 @@ function renderBasicStudyRoomRow(item, opts) {
     <article class="expo-basic expo-basic--study_room expo-hcard" data-provider-id="${item.id}" data-provider-kind="study_room">
       <div class="expo-hcard__media-wrap">
         ${renderMedia(listingImage(item, 'list'), item.study_room_name, 'list')}
-        ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
       </div>
       <div class="expo-hcard__body">
         <div class="expo-hcard__top">
@@ -621,10 +620,11 @@ function renderBasicStudyRoomRow(item, opts) {
           <p class="expo-hcard__price">${esc(formatMonthlyWon(item.price_amount))}</p>
         </div>
         <ul class="expo-hcard__meta">
+          ${renderHcardMetaItem('교습형태', optionalStudyRoomPlace(item.lesson_place_type))}
+          ${renderHcardMetaItem('대상', item.grade_band)}
           ${renderHcardMetaItem('과목', item.main_subject_note)}
           ${renderHcardMetaItem('원생수', item.capacity_per_time || '—')}
-          ${renderHcardMetaItem('교습형태', optionalStudyRoomPlace(item.lesson_place_type))}
-          ${renderHcardMetaItem('수업형태', formatLessonOperationType(item.lesson_operation_type))}
+          ${renderHcardMetaItem('수업운영방식', formatLessonOperationType(item.lesson_operation_type))}
         </ul>
         ${slogan ? `<p class="expo-hcard__slogan">${esc(slogan)}</p>` : ''}
       </div>

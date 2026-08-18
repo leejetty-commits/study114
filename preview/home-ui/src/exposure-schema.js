@@ -23,7 +23,7 @@ export const STUDY_ROOM_PRIME_FIELDS = [
   { key: 'main_subject_note', label: '과목', db: 'study_rooms.main_subject_note' },
   { key: 'lesson_place_label', label: '교습형태', db: 'study_rooms.lesson_place_type' },
   { key: 'capacity_per_time', label: '원생수', db: 'study_rooms.capacity_per_time' },
-  { key: 'lesson_operation_label', label: '수업형태', db: 'study_rooms.lesson_operation_type' },
+  { key: 'lesson_operation_label', label: '수업운영방식', db: 'study_rooms.lesson_operation_type' },
   { key: 'features_joined', label: '특징', db: 'study_rooms.feature_1~3' },
   { key: 'intro_short', label: '소개', db: 'study_rooms.intro_short' },
   { key: 'slogan', label: '슬로건', db: 'study_rooms.slogan' },

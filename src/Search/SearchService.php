@@ -345,7 +345,7 @@ final class SearchService
                       WHEN 'n_su' THEN 'N수'
                     END
                     ORDER BY FIELD(srpa.school_level, 'preschool','elementary','middle','high','n_su')
-                    SEPARATOR ' · ')
+                    SEPARATOR ' ')
                FROM study_room_primary_audiences srpa WHERE srpa.study_room_id = sr.id)"
             : 'NULL';
         $primeImgExpr = $this->roomCoverImageExpr($pdo, 'prime');

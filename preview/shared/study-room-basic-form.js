@@ -24,7 +24,7 @@ export function formatPrimaryAudienceLabel(levels) {
   const set = new Set((Array.isArray(levels) ? levels : []).map(String));
   return PRIMARY_AUDIENCE_OPTIONS.filter((o) => set.has(o.value))
     .map((o) => o.label)
-    .join(' · ');
+    .join(' ');
 }
 
 /** @param {string} [placeType] */
@@ -270,9 +270,9 @@ export function renderStudyRoomBasicFields(opts = {}) {
 
   return `
     <div class="register-basic-fields" data-study-room-basic-form>
-      <div class="form-group form-group--full">
+      <div class="form-group">
         <span class="form-label form-label--required">교습형태</span>
-        <p class="form-hint">공부방과 교습소 중 하나를 고르면 이름 칸 이름이 맞춰집니다.</p>
+        <p class="form-hint">공부방과 교습소 중 하나를 고르세요</p>
         <div class="form-radio-group" role="radiogroup">${placeRadios}</div>
       </div>
       <div class="form-group">
@@ -282,7 +282,7 @@ export function renderStudyRoomBasicFields(opts = {}) {
       <div class="form-group form-group--full">
         <span class="form-label form-label--required">주대상</span>
         <p class="form-hint">학교급을 1개 이상 고르세요. 카드 「대상」에 나갑니다.</p>
-        <div class="register-check-grid">${audienceChecks}</div>
+        <div class="register-check-grid register-check-grid--five">${audienceChecks}</div>
       </div>
       <div class="form-group">
         <label class="form-label form-label--required" for="main_subject_note">주력과목</label>
@@ -290,7 +290,7 @@ export function renderStudyRoomBasicFields(opts = {}) {
           ${renderMainSubjectSelect(v.main_subject_note || v.main_subjects?.[0] || '', { includeEmpty: true, emptyLabel: '과목 선택' })}
         </select>
       </div>
-      <div class="form-group form-group--full">
+      <div class="form-group">
         <span class="form-label form-label--required">원장성별</span>
         <p class="form-hint">계정 프로필 성별과 같습니다. 여기서 바꾸면 과외쌤·마이페이지 표시도 함께 바뀝니다.</p>
         ${renderGender(genderOptions, v.gender || '')}

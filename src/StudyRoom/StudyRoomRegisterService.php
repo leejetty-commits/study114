@@ -633,7 +633,7 @@ final class StudyRoomRegisterService
                 $out[] = self::PRIMARY_SCHOOL_LEVEL_LABELS[$lv];
             }
         }
-        return implode(' · ', $out);
+        return implode(' ', $out);
     }
 
     /** @param array<string, mixed> $input */
