@@ -311,6 +311,10 @@ final class PromoImageService
 
     private function publicRoot(): string
     {
+        $doc = (string) ($_SERVER['DOCUMENT_ROOT'] ?? '');
+        if ($doc !== '' && is_dir($doc)) {
+            return rtrim(str_replace('\\', '/', $doc), '/');
+        }
         return dirname(__DIR__, 2) . '/public';
     }
 
