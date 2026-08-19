@@ -82,12 +82,12 @@ export const LIFECYCLE_BASKET = {
 export const HANDOFF_DEEPLINK = {
   reviewFlow: '검토함 저장 → 학생 검토함 → 쪽지 준비/보내기',
   reviewFromAccess: '학생 접근·쪽지에서 이동했습니다. 검토 중인 학생에게 쪽지를 이어가세요.',
-  reviewFromExposure: '노출·상담에서 이동했습니다. 검토 중인 학생에게 상담·쪽지를 이어가세요.',
+  reviewFromExposure: '쪽지와 문의에서 이동했습니다. 검토 중인 학생에게 상담·쪽지를 이어가세요.',
   accessFromReview: '학생 검토함에서 이동했습니다. 쪽지 가능 여부와 남은 메모권을 확인하세요.',
   reviewBridgeLead: '검토 중인 학생을 다시 보고 쪽지를 준비합니다.',
   reviewBridgeCta: '학생 검토함 열기',
   providerRegCtaTutor: '학생 접근·쪽지',
-  providerRegCtaStudyRoom: '노출·상담',
+  providerRegCtaStudyRoom: '쪽지와 문의',
 };
 
 /** Provider lane — P25-S10 (UI 라벨: 학생 검토함 · 내부 경로 student-review 유지)

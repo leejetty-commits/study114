@@ -66,7 +66,7 @@ export function studyRoomRegScreenTitle(screenId) {
     'P20-03a': '기본정보',
     'P20-03b': '상세정보',
     'P20-04': '미리보기·공개',
-    'P20-05': '노출·상담',
+    'P20-05': '쪽지와 문의',
     'P20-06': '숨김·삭제',
     'P23-04': '제출함',
   };
@@ -94,7 +94,7 @@ export const STUDY_ROOM_TOP_TABS = [
   { key: 'basic', label: '기본정보' },
   { key: 'detail', label: '상세정보' },
   { key: 'publish', label: '미리보기·공개' },
-  { key: 'exposure', label: '노출·상담' },
+  { key: 'exposure', label: '쪽지와 문의' },
 ];
 
 /** @deprecated STUDY_ROOM_TOP_TABS 사용 */

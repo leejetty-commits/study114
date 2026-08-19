@@ -68,7 +68,7 @@ export function getProviderRegDeepLink(role) {
     if (!room) return null;
     return {
       href: studyRoomExposurePath(room.id, { from: 'review' }),
-      label: '노출·상담',
+      label: '쪽지와 문의',
       screenId: 'P20-05',
     };
   }

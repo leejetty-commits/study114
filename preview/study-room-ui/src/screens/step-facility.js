@@ -9,6 +9,8 @@ import {
   renderDetailStepNav,
   renderGuideNotice,
   renderPublishStatusBlock,
+  renderMessageInquiryNotice,
+  offerGoToMessageInquiry,
   bindGlobalEvents,
   navigate,
   withRoomId,
@@ -182,6 +184,7 @@ export function renderFacility() {
 
       ${renderPublishStatusBlock(s.profile_status, {
         lead: '모두 채운 뒤 공개할지, 지금은 저장만 할지 정하는 칸입니다. 등록 완료 화면에서도 다시 고를 수 있습니다.',
+        extraHtml: renderMessageInquiryNotice(),
       })}
 
       ${renderDetailStepNav({
@@ -228,6 +231,7 @@ export function bindFacilityEvents(root) {
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
       await persistFacility();
+      if (offerGoToMessageInquiry(registerState.study_room_id)) return;
       registerState.completeNeedsHydrate = true;
       navigate(withRoomId('/register/complete'));
     });

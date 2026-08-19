@@ -288,6 +288,36 @@ export function renderRegisterWorkTabs(activeKey) {
   `;
 }
 
+export const MESSAGE_INQUIRY_PAGE_TITLE = '쪽지와 문의';
+
+/** @param {number|string|null|undefined} roomId */
+export function messageInquiryPageUrl(roomId) {
+  const id = Number(roomId);
+  if (!id) return '';
+  return `${HOME_UI_BASE}/#/mypage/registrations/study-rooms/${id}/exposure`;
+}
+
+export function renderMessageInquiryNotice() {
+  return `
+    <aside class="register-message-notice" role="note">
+      <p class="register-message-notice__strong">사용자간의 연락은 쪽지로만 가능합니다. 쪽지 가능 여부를 꼭 설정해 주세요.</p>
+      <p class="register-message-notice__where">설정 위치: 마이페이지 → 공부방 운영홈 → <strong>${MESSAGE_INQUIRY_PAGE_TITLE}</strong></p>
+    </aside>
+  `;
+}
+
+/** @param {number|string|null|undefined} roomId @returns {boolean} 이동했으면 true */
+export function offerGoToMessageInquiry(roomId) {
+  const url = messageInquiryPageUrl(roomId);
+  if (!url) return false;
+  const go = window.confirm(
+    '사용자간의 연락은 쪽지로만 가능합니다. 쪽지 가능 여부를 꼭 설정해 주세요.\n\n지금 「쪽지와 문의」로 이동할까요?\n(마이페이지 → 공부방 운영홈 → 쪽지와 문의)',
+  );
+  if (!go) return false;
+  window.location.assign(url);
+  return true;
+}
+
 export function renderPublishStatusBlock(status, opts = {}) {
   const v = String(status || 'draft');
   const lead =

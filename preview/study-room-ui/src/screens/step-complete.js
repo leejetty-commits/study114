@@ -7,6 +7,8 @@ import {
   renderRegisterShell,
   renderGuideNotice,
   renderPublishStatusBlock,
+  renderMessageInquiryNotice,
+  offerGoToMessageInquiry,
   bindGlobalEvents,
 } from '../layout.js';
 
@@ -43,7 +45,7 @@ export function renderComplete() {
     ${renderPublishStatusBlock(s.profile_status, {
       inputId: 'complete_profile_status',
       lead: '등록을 마친 뒤 학부모 검색에 공개할지 정합니다. 저장만 하면 검색·목록에 나오지 않습니다. (20장: 저장 ≠ 공개)',
-      extraHtml: `<button type="button" class="btn btn--primary" data-action="save-publish">공개 상태 저장</button>`,
+      extraHtml: `${renderMessageInquiryNotice()}<button type="button" class="btn btn--primary" data-action="save-publish">공개 상태 저장</button>`,
     })}
     ${renderGuideNotice('기본정보·상세1·상세2 화면에서 이어서 수정할 수 있습니다.')}
     <div class="register-overview">
@@ -74,6 +76,7 @@ export function bindCompleteEvents(root) {
       registerState.profile_status = next;
       await saveCurrentStep(registerState, 'facility');
       alert(next === 'published' ? '공개 상태로 저장했습니다.' : '저장만(비공개)으로 두었습니다.');
+      if (offerGoToMessageInquiry(registerState.study_room_id)) return;
       window.dispatchEvent(new Event('hashchange'));
     });
   });

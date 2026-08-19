@@ -31,7 +31,7 @@ export const PHASE_STEPS = [
   { key: 'basic', label: '기본정보' },
   { key: 'detail', label: '상세정보' },
   { key: 'publish', label: '미리보기·공개' },
-  { key: 'exposure', label: '노출·상담' },
+  { key: 'exposure', label: '쪽지와 문의' },
 ];
 
 /** §4-3 inquiry_status 라벨 */

@@ -865,6 +865,29 @@ form[data-form="facility"] .register-publish-block {
   line-height: 1.5;
 }
 
+.register-message-notice {
+  margin: 0.35rem 0 0.85rem;
+  padding: 0.85rem 0.95rem;
+  border: 2px solid #1d4ed8;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+}
+
+.register-message-notice__strong {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.45;
+  color: #1e3a8a;
+}
+
+.register-message-notice__where {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #1e40af;
+}
+
 .register-publish-block .form-group {
   margin-bottom: 0.65rem;
 }
