@@ -80,13 +80,9 @@ final class SignupService
             ? (int) $input['default_complex_id'] : null;
 
         $pdo = Connection::get();
-
-        if ($this->emailExists($pdo, $email)) {
-            throw new InvalidArgumentException('이미 사용 중인 이메일입니다. 기존 계정으로 로그인해 주세요.');
-        }
-
         $pdo->beginTransaction();
         try {
+            $this->ensureEmailAvailable($pdo, $email);
             $userId = $this->insertUser($pdo, $email, $password);
             $this->insertProfile(
                 $pdo,
@@ -106,8 +102,19 @@ final class SignupService
             );
             $this->insertRole($pdo, $userId, $roleType);
             $pdo->commit();
+        } catch (InvalidArgumentException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
         } catch (PDOException $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $sqlState = (string) $e->getCode();
+            if ($sqlState === '23000') {
+                throw new InvalidArgumentException('이미 사용 중인 이메일입니다. 기존 계정으로 로그인해 주세요.');
+            }
             throw new RuntimeException('DB insert failed: ' . $e->getMessage(), 0, $e);
         }
 
@@ -118,11 +125,19 @@ final class SignupService
         ];
     }
 
-    private function emailExists(PDO $pdo, string $email): bool
+    private function ensureEmailAvailable(PDO $pdo, string $email): void
     {
-        $stmt = $pdo->prepare('SELECT 1 FROM users WHERE email = ? LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, status FROM users WHERE email = ? LIMIT 1');
         $stmt->execute([$email]);
-        return (bool) $stmt->fetchColumn();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return;
+        }
+        if ((string) ($row['status'] ?? '') === 'withdrawn') {
+            (new AccountWithdrawService())->releaseLoginIdentifiers($pdo, (int) $row['id']);
+            return;
+        }
+        throw new InvalidArgumentException('이미 사용 중인 이메일입니다. 기존 계정으로 로그인해 주세요.');
     }
 
     private function insertUser(PDO $pdo, string $email, string $password): int

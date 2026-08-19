@@ -140,4 +140,12 @@ final class AuthTokenRepository
         );
         $stmt->execute([$userId, $purpose]);
     }
+
+    public function invalidateAll(int $userId): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE auth_tokens SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL'
+        );
+        $stmt->execute([$userId]);
+    }
 }

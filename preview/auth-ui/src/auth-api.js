@@ -4,6 +4,26 @@
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
+/** PHP notice가 JSON 앞에 붙어도 본문을 살린다. */
+export function parseApiJson(rawText) {
+  const text = String(rawText || '').trim();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse(text.slice(start, end + 1));
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  }
+}
+
 async function postJson(url, body, { credentials = 'include' } = {}) {
   const res = await fetch(url, {
     method: 'POST',
@@ -11,18 +31,10 @@ async function postJson(url, body, { credentials = 'include' } = {}) {
     credentials,
     body: JSON.stringify(body),
   });
-  const rawText = await res.text();
-  let data = {};
-  try {
-    data = rawText ? JSON.parse(rawText) : {};
-  } catch {
-    data = {};
-  }
+  const data = parseApiJson(await res.text());
   if (!res.ok || !data.ok) {
     const fallback =
-      res.status === 422
-        ? '입력값을 확인해 주세요. 이미 가입된 이메일이면 기존 계정으로 로그인해 주세요.'
-        : `서버 오류 (${res.status})`;
+      res.status === 422 ? '입력값을 확인해 주세요.' : `서버 오류 (${res.status})`;
     const err = new Error(data.message || fallback);
     if (data.error) {
       err.code = data.error;

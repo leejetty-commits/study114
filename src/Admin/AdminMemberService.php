@@ -175,6 +175,7 @@ final class AdminMemberService
             if (!$this->repo->updateStatus($userId, 'withdrawn', date('Y-m-d H:i:s'))) {
                 throw new InvalidArgumentException('탈퇴 처리에 실패했습니다.');
             }
+            (new \Study114\Auth\AccountWithdrawService())->releaseLoginIdentifiers(Connection::get(), $userId);
             $actionKind = 'account_withdraw';
             $afterNote = 'status: ' . $beforeStatus . ' → withdrawn';
         }

@@ -62,6 +62,9 @@ final class LoginService
             throw new InvalidArgumentException('이메일 또는 비밀번호를 확인해 주세요.');
         }
 
+        if ($row['status'] === 'withdrawn') {
+            throw new InvalidArgumentException('탈퇴한 계정입니다. 같은 이메일로 다시 가입해 주세요.');
+        }
         if ($row['status'] !== 'active') {
             throw new InvalidArgumentException('로그인할 수 없는 계정 상태입니다.');
         }

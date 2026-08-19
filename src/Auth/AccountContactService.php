@@ -67,11 +67,15 @@ final class AccountContactService
                 if ($this->isInternalEmail($email)) {
                     throw new InvalidArgumentException('실제 사용 중인 이메일을 입력해 주세요.');
                 }
-                $dup = $pdo->prepare('SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1');
+                $dup = $pdo->prepare('SELECT id, status FROM users WHERE email = ? AND id <> ? LIMIT 1');
                 $dup->execute([$email, $userId]);
-                $existingId = $dup->fetchColumn();
-                if ($existingId) {
-                    $finalUserId = $this->linkStubToExisting($pdo, $userId, (int) $existingId, $phone);
+                $existing = $dup->fetch(PDO::FETCH_ASSOC);
+                if (is_array($existing) && (string) ($existing['status'] ?? '') === 'withdrawn') {
+                    (new AccountWithdrawService())->releaseLoginIdentifiers($pdo, (int) $existing['id']);
+                    $existing = false;
+                }
+                if (is_array($existing)) {
+                    $finalUserId = $this->linkStubToExisting($pdo, $userId, (int) $existing['id'], $phone);
                     $linked = true;
                 } else {
                     $pdo->prepare('UPDATE users SET email = ? WHERE id = ?')

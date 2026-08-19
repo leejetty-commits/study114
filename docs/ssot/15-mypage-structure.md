@@ -251,7 +251,7 @@ enum·필드명은 14·5·8장 그대로.
 | 역할 전환 | ○ (9장) |
 | 수신 동의 | ○ |
 | 비밀번호 변경 · 로그아웃 | ○ (로그인 세션 · `POST /api/auth/password/change.php` · 현재 비밀번호 확인 후 변경) |
-| 회원 탈퇴 | ○ (`POST /api/auth/withdraw.php` · 확인 문구「탈퇴합니다」 · status=`withdrawn`) |
+| 회원 탈퇴 | ○ (`POST /api/auth/withdraw.php` · 확인 문구「탈퇴합니다」 · status=`withdrawn` · 이메일 UNIQUE 슬롯 해제 → 같은 메일 재가입 가능) |
 | 전화·주소 | 가입 시 · 플랫폼 비노출(6장) |
 | auth email 변경 | **후속 검토** — 이번 라운드 제외 |
 

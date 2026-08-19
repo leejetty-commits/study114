@@ -336,10 +336,10 @@ final class OAuthService
              INNER JOIN users u ON u.id = o.user_id
              INNER JOIN user_profiles p ON p.user_id = u.id
              LEFT JOIN user_roles r ON r.user_id = u.id AND r.is_primary = 1 AND r.status = ?
-             WHERE o.provider = ? AND o.provider_user_id = ?
+             WHERE o.provider = ? AND o.provider_user_id = ? AND u.status = ?
              LIMIT 1'
         );
-        $stmt->execute(['active', $provider, $providerUserId]);
+        $stmt->execute(['active', $provider, $providerUserId, 'active']);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return is_array($row) ? $row : null;
     }
@@ -396,6 +396,13 @@ final class OAuthService
 
         $pdo->beginTransaction();
         try {
+            $existing = $pdo->prepare('SELECT id, status FROM users WHERE email = ? LIMIT 1');
+            $existing->execute([$email]);
+            $row = $existing->fetch(PDO::FETCH_ASSOC);
+            if (is_array($row) && (string) ($row['status'] ?? '') === 'withdrawn') {
+                (new AccountWithdrawService())->releaseLoginIdentifiers($pdo, (int) $row['id']);
+            }
+
             $verifiedAt = ($profile['email'] !== '' && !(new AccountContactService())->isInternalEmail($email))
                 ? date('Y-m-d H:i:s')
                 : null;

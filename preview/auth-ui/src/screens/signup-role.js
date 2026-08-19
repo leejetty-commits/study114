@@ -1,6 +1,6 @@
 import { ROLE_LABELS, ROLE_DESCRIPTIONS, ROLE_ICONS, signupState, setRole } from '../state.js';
 import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
-import { oauthCompleteRoleApi, fetchMeApi } from '../auth-api.js';
+import { oauthCompleteRoleApi, fetchMeApi, parseApiJson } from '../auth-api.js';
 import { getLoginReturnTo, resolvePostLoginUrl, setPostVerifyTarget } from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 
@@ -13,7 +13,7 @@ function isOAuthSignupMode() {
 function friendlySignupError(data, status) {
   const raw = String(data?.message || '').trim();
   if (raw.includes('이미 사용 중인 이메일')) {
-    return '이미 가입된 이메일입니다. 기존 계정으로 로그인해 주세요.';
+    return '이미 가입된 이메일입니다. 기존 계정으로 로그인해 주세요. 탈퇴한 메일이면 같은 주소로 다시 가입할 수 있습니다.';
   }
   if (raw.includes('gender')) {
     return '성별을 선택해 주세요.';
@@ -175,13 +175,7 @@ export function bindSignupRoleEvents(root) {
         credentials: 'include',
         body: JSON.stringify(payload),
       });
-      const rawText = await res.text();
-      let data = {};
-      try {
-        data = rawText ? JSON.parse(rawText) : {};
-      } catch {
-        data = {};
-      }
+      const data = parseApiJson(await res.text());
 
       if (!res.ok || !data.ok) {
         const msg = friendlySignupError(data, res.status);
