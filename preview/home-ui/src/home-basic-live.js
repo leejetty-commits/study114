@@ -41,7 +41,7 @@ function mapRoom(item) {
     intro_short: summaryLines[1] || '',
     profile_status: 'published',
     compare_eligible: true,
-    inquiry_status: 'open',
+    inquiry_status: item.inquiry_status || 'paused',
     badges: studyRoomBadges({ main_subject_note: item.main_subject_note || summaryLines[0] || '' }),
     latitude: item.latitude ?? null,
     longitude: item.longitude ?? null,

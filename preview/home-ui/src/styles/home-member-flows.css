@@ -1297,33 +1297,88 @@
 .p20-inquiry-option__desc { grid-column: 2; font-size: var(--text-xs); color: var(--gray-600); }
 
 /* P20-05 쪽지와 문의 (A~F) */
-.p20-inquiries-body { display: flex; flex-direction: column; gap: var(--space-5); }
+.p20-inquiries-body {
+  display: flex; flex-direction: column; gap: var(--space-5);
+}
+@media (min-width: 48rem) {
+  .p20-inquiries-body { gap: var(--space-6); }
+}
+.p20-inquiries-guide {
+  padding: var(--space-4) var(--space-5);
+  border-radius: 0.625rem;
+  background: var(--gray-50, #f8fafc);
+  border: 1px solid var(--gray-200);
+}
+.p20-inquiries-guide__title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+.p20-inquiries-guide__lead {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+  line-height: 1.55;
+}
+.p20-inquiries-settings {
+  padding: var(--space-5);
+  border-radius: 0.625rem;
+  border: 1px solid #bfdbfe;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.p20-inquiries-settings__heading {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
 .p20-inquiries-footnotes {
   margin: 0; padding-left: 1.25rem; font-size: var(--text-sm); color: var(--gray-600);
 }
 .p20-inquiries-footnotes li + li { margin-top: 0.25rem; }
-.p20-inquiries-section__title { font-size: var(--text-base); font-weight: 600; margin: 0 0 var(--space-2); }
+.p20-inquiries-section__title { font-size: var(--text-base); font-weight: 600; margin: 0 0 var(--space-3); }
+.p20-inquiries-section--control {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--gray-100);
+}
+.p20-inquiries-section--control:first-of-type { border-top: none; padding-top: 0; }
+.p20-inquiries-section--preview { padding-top: var(--space-4); border-top: 1px dashed var(--gray-200); }
 .p20-inquiries-switch {
-  display: inline-flex; align-items: center; gap: var(--space-2);
-  padding: var(--space-3); border: 1px solid var(--gray-200); border-radius: 0.5rem;
+  display: inline-flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--gray-200); border-radius: 0.5rem;
   font-weight: 600; cursor: pointer;
+  background: #fafafa;
 }
 .p20-inquiry-reasons { display: flex; flex-direction: column; gap: var(--space-2); }
 .p20-inquiry-reason {
   display: flex; align-items: center; gap: var(--space-2);
-  padding: var(--space-3); border: 1px solid var(--gray-200); border-radius: 0.5rem; cursor: pointer;
+  padding: var(--space-3) var(--space-4); border: 1px solid var(--gray-200); border-radius: 0.5rem; cursor: pointer;
+  background: #fff;
 }
 .p20-inquiry-reason.is-selected { border-color: #93c5fd; background: var(--brand-blue-light); }
 .p20-inquiries-off-reason.is-hidden { display: none; }
-.p20-inquiries-contact-status { font-weight: 600; margin: 0 0 var(--space-2); }
+.p20-inquiries-contact-status { font-weight: 600; margin: 0 0 var(--space-2); font-size: var(--text-sm); }
 .p20-inquiries-contact-status.is-ok { color: #15803d; }
 .p20-inquiries-contact-status.is-warn { color: #b45309; }
-.p20-inquiries-contact-notice { font-size: var(--text-sm); color: var(--gray-600); margin: 0; }
+.p20-inquiries-contact-notice { font-size: var(--text-sm); color: var(--gray-600); margin: 0; line-height: 1.5; }
 .p20-inquiries-card-preview {
-  padding: var(--space-4); border: 1px dashed var(--gray-300); border-radius: 0.5rem;
-  background: #fafafa; max-width: 20rem;
+  padding: var(--space-4); border: 1px solid var(--gray-200); border-radius: 0.5rem;
+  background: var(--gray-50, #f8fafc); max-width: 22rem;
 }
 .p20-inquiries-card-preview__hint { font-size: var(--text-sm); color: var(--gray-600); margin: var(--space-2) 0 0; }
+.p20-inquiries-card-preview__hint.is-hidden { display: none; }
+.p20-inquiries-actions {
+  margin-top: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--gray-200);
+}
 .p20-phone-verify-modal {
   position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center;
   padding: var(--space-4); background: rgba(15, 23, 42, 0.45);

@@ -35,7 +35,7 @@ function mapRoomItem(item, base) {
     intro_short: summaryLines[1] || base.intro_short,
     profile_status: 'published',
     compare_eligible: true,
-    inquiry_status: base.inquiry_status || 'open',
+    inquiry_status: item.inquiry_status ?? base.inquiry_status ?? 'paused',
     badges: studyRoomBadges({ ...base, main_subject_note: summaryLines[0] || base.main_subject_note }),
     latitude: item.latitude ?? base.latitude ?? null,
     longitude: item.longitude ?? base.longitude ?? null,

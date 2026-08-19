@@ -980,7 +980,7 @@ export function renderPlansResult() {
   const backOp =
     result.providerType === 'tutor'
       ? `#/mypage/registrations/tutors/${result.providerId || ''}/exposure`
-      : `#/mypage/registrations/study-rooms/${result.providerId || ''}/exposure`;
+      : `#/mypage/registrations/study-rooms/${result.providerId || ''}/inquiries`;
 
   return `
     <section class="mypage-panel">

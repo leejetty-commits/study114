@@ -29,6 +29,7 @@ import {
   STUDY_ROOM_TOP_TABS,
   studyRoomLegacyExposureRedirect,
   BASE as STUDY_ROOM_BASE,
+  stripHashQuery,
 } from './router.js';
 import {
   formatRoomSummaryLine,
@@ -265,20 +266,19 @@ function renderRoomShell(room, activeSection, bodyHtml) {
 
 /** @param {string} path */
 export function renderStudyRoomRegScreen(path) {
-  const pathOnly = path.split('?')[0];
+  const pathOnly = stripHashQuery(path);
   const legacyRedirect = studyRoomLegacyExposureRedirect(pathOnly);
   if (legacyRedirect) {
     const query = path.includes('?') ? path.slice(path.indexOf('?')) : '';
     queueMicrotask(() => {
-      const hashPath = (window.location.hash.slice(1) || '').split('?')[0];
-      const normalized = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
-      if (studyRoomLegacyExposureRedirect(normalized)) {
+      const hashPath = stripHashQuery(window.location.hash.slice(1) || '');
+      if (studyRoomLegacyExposureRedirect(hashPath)) {
         window.location.replace(`#${legacyRedirect}${query}`);
       }
     });
   }
 
-  const route = parseStudyRoomRegPath(path);
+  const route = parseStudyRoomRegPath(pathOnly);
   if (!route) return '';
 
   if (route.screenId === 'P20-01') {
@@ -679,6 +679,7 @@ function renderInquiries(room) {
   const summaryState = isInquiryReceiving(room.inquiry_status)
     ? P20_INQUIRY_COPY.summaryReceiving
     : `${P20_INQUIRY_COPY.summaryClosed}${cardCta.reasonLine ? ` · ${cardCta.reasonLine}` : ''}`;
+  const contactStatus = phoneOk ? P20_INQUIRY_COPY.contactVerified : P20_INQUIRY_COPY.contactNeeded;
 
   const reasonRadios = INQUIRY_OFF_REASONS.map(
     (o) => `
@@ -690,63 +691,98 @@ function renderInquiries(room) {
 
   const body = `
     <div class="p20-inquiries-body" data-p20-room-id="${room.id}" data-inquiry-receiving="${form.receiving ? '1' : '0'}">
-      <p class="p19-form-section__lead">${esc(P20_INQUIRY_COPY.pageLead)}</p>
-      <ul class="p20-inquiries-footnotes">
-        ${P20_INQUIRY_COPY.footnotes.map((line) => `<li>${esc(line)}</li>`).join('')}
-      </ul>
+      <aside class="p20-inquiries-guide" aria-label="안내">
+        <h3 class="p20-inquiries-guide__title">${esc(P20_INQUIRY_COPY.pageTitle)}</h3>
+        <p class="p20-inquiries-guide__lead">${esc(P20_INQUIRY_COPY.pageLead)}</p>
+        <ul class="p20-inquiries-footnotes">
+          ${P20_INQUIRY_COPY.footnotes.map((line) => `<li>${esc(line)}</li>`).join('')}
+        </ul>
+      </aside>
 
-      <section class="p20-inquiries-summary" aria-label="상태 요약">
-        <dl class="p19-summary-grid">
-          <dl class="p19-summary-card">
-            <dt>현재 문의 상태</dt>
-            <dd>${esc(summaryState)}</dd>
+      <div class="p20-inquiries-settings" aria-label="기능 설정">
+        <section class="p20-inquiries-summary" aria-label="상태 요약">
+          <h3 class="p20-inquiries-settings__heading">현재 상태 요약</h3>
+          <dl class="p19-summary-grid">
+            <dl class="p19-summary-card">
+              <dt>현재 문의 상태</dt>
+              <dd data-p20-inquiry-summary-state>${esc(summaryState)}</dd>
+            </dl>
+            <dl class="p19-summary-card">
+              <dt>카드 버튼</dt>
+              <dd data-p20-inquiry-summary-cta>${esc(cardCta.label)}</dd>
+            </dl>
+            <dl class="p19-summary-card">
+              <dt>연락처 검증</dt>
+              <dd data-p20-inquiry-summary-contact>${esc(contactStatus)}</dd>
+            </dl>
           </dl>
-          <dl class="p19-summary-card">
-            <dt>카드 버튼</dt>
-            <dd>${esc(cardCta.label)}</dd>
-          </dl>
-          <dl class="p19-summary-card">
-            <dt>연락처 확인</dt>
-            <dd>${phoneOk ? esc(P20_INQUIRY_COPY.contactVerified) : esc(P20_INQUIRY_COPY.contactNeeded)}</dd>
-          </dl>
-        </dl>
-      </section>
+        </section>
 
-      <section class="p20-inquiries-section">
-        <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.switchLabel)}</h3>
-        <label class="p20-inquiries-switch">
-          <input type="checkbox" name="inquiry_receiving" data-p20-inquiry-toggle ${form.receiving ? 'checked' : ''} />
-          <span>${esc(P20_INQUIRY_COPY.switchLabel)}</span>
-        </label>
-      </section>
+        <section class="p20-inquiries-section p20-inquiries-section--control">
+          <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.switchLabel)}</h3>
+          <label class="p20-inquiries-switch">
+            <input type="checkbox" name="inquiry_receiving" data-p20-inquiry-toggle ${form.receiving ? 'checked' : ''} />
+            <span>${esc(P20_INQUIRY_COPY.switchLabel)}</span>
+          </label>
+        </section>
 
-      <section class="p20-inquiries-section p20-inquiries-off-reason${form.receiving ? ' is-hidden' : ''}" data-p20-inquiry-off-wrap>
-        <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.offReasonTitle)}</h3>
-        <div class="p20-inquiry-reasons">${reasonRadios}</div>
-      </section>
+        <section class="p20-inquiries-section p20-inquiries-section--control p20-inquiries-off-reason${form.receiving ? ' is-hidden' : ''}" data-p20-inquiry-off-wrap>
+          <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.offReasonTitle)}</h3>
+          <div class="p20-inquiry-reasons">${reasonRadios}</div>
+        </section>
 
-      <section class="p20-inquiries-section">
-        <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.contactBlockTitle)}</h3>
-        <p class="p20-inquiries-contact-status${phoneOk ? ' is-ok' : ' is-warn'}">
-          ${phoneOk ? esc(P20_INQUIRY_COPY.contactVerified) : esc(P20_INQUIRY_COPY.contactNeeded)}
-        </p>
-        <p class="p20-inquiries-contact-notice">${esc(P20_INQUIRY_COPY.contactNotice)}</p>
-      </section>
+        <section class="p20-inquiries-section p20-inquiries-section--control">
+          <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.contactBlockTitle)}</h3>
+          <p class="p20-inquiries-contact-status${phoneOk ? ' is-ok' : ' is-warn'}" data-p20-inquiry-contact-status>
+            ${esc(contactStatus)}
+          </p>
+          <p class="p20-inquiries-contact-notice">${esc(P20_INQUIRY_COPY.contactNotice)}</p>
+        </section>
 
-      <section class="p20-inquiries-section">
-        <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.previewTitle)}</h3>
-        <div class="p20-inquiries-card-preview">
-          <button type="button" class="btn btn--primary btn--sm" disabled>${esc(cardCta.label)}</button>
-          ${cardCta.reasonLine ? `<p class="p20-inquiries-card-preview__hint">${esc(cardCta.reasonLine)}</p>` : ''}
+        <section class="p20-inquiries-section p20-inquiries-section--preview">
+          <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.previewTitle)}</h3>
+          <div class="p20-inquiries-card-preview" data-p20-inquiry-preview>
+            <button type="button" class="btn btn--primary btn--sm" disabled data-p20-inquiry-preview-btn>${esc(cardCta.label)}</button>
+            <p class="p20-inquiries-card-preview__hint${cardCta.reasonLine ? '' : ' is-hidden'}" data-p20-inquiry-preview-hint>${esc(cardCta.reasonLine || '')}</p>
+          </div>
+        </section>
+
+        <div class="p19-form-actions p20-inquiries-actions">
+          <button type="button" class="btn btn--primary" data-p20-inquiry-save>${esc(P20_INQUIRY_COPY.saveCta)}</button>
         </div>
-      </section>
-
-      <div class="p19-form-actions">
-        <button type="button" class="btn btn--primary" data-p20-inquiry-save>${esc(P20_INQUIRY_COPY.saveCta)}</button>
       </div>
     </div>`;
 
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'inquiries', body)}</section>`;
+}
+
+/** @param {HTMLElement|null|undefined} wrap */
+function syncInquiryFormPreview(wrap) {
+  if (!wrap) return;
+  const receiving = wrap.querySelector('[data-p20-inquiry-toggle]')?.checked ?? false;
+  const reasonEl = wrap.querySelector('input[name="inquiry_off_reason"]:checked');
+  const reason = receiving
+    ? null
+    : /** @type {'capacity_full'|'paused'} */ (reasonEl?.value || 'paused');
+  const nextStatus = inquiryStatusFromForm(receiving, reason);
+  const cardCta = resolveStudyRoomCardCta(nextStatus);
+  const summaryState = isInquiryReceiving(nextStatus)
+    ? P20_INQUIRY_COPY.summaryReceiving
+    : `${P20_INQUIRY_COPY.summaryClosed}${cardCta.reasonLine ? ` · ${cardCta.reasonLine}` : ''}`;
+
+  const summaryStateEl = wrap.querySelector('[data-p20-inquiry-summary-state]');
+  const summaryCtaEl = wrap.querySelector('[data-p20-inquiry-summary-cta]');
+  const previewBtn = wrap.querySelector('[data-p20-inquiry-preview-btn]');
+  const previewHint = wrap.querySelector('[data-p20-inquiry-preview-hint]');
+
+  if (summaryStateEl) summaryStateEl.textContent = summaryState;
+  if (summaryCtaEl) summaryCtaEl.textContent = cardCta.label;
+  if (previewBtn) previewBtn.textContent = cardCta.label;
+  if (previewHint) {
+    previewHint.textContent = cardCta.reasonLine || '';
+    previewHint.classList.toggle('is-hidden', !cardCta.reasonLine);
+  }
+  wrap.dataset.inquiryReceiving = receiving ? '1' : '0';
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
@@ -935,14 +971,17 @@ export function bindStudyRoomRegEvents(root, rerender) {
         const radio = el.querySelector('input');
         el.classList.toggle('is-selected', Boolean(radio?.checked));
       });
+      syncInquiryFormPreview(wrap);
     });
   });
 
   root.querySelectorAll('.p20-inquiry-reason input').forEach((input) => {
     input.addEventListener('change', () => {
+      const wrap = input.closest('[data-p20-room-id]');
       input.closest('.p20-inquiry-reasons')?.querySelectorAll('.p20-inquiry-reason').forEach((el) => {
         el.classList.toggle('is-selected', el.querySelector('input')?.checked);
       });
+      syncInquiryFormPreview(wrap);
     });
   });
 

@@ -738,7 +738,8 @@ export function getPlansPath() {
 export function getMypagePath() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
-  const normalized = normalizeMypagePath(path);
+  const pathOnly = path.split('?')[0];
+  const normalized = normalizeMypagePath(pathOnly);
   if (normalized) return normalized;
   return getDefaultMypagePath(getNavRole());
 }

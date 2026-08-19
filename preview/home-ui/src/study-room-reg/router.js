@@ -12,12 +12,18 @@
 
 export const BASE = '/mypage/registrations/study-rooms';
 
+/** hash path에서 query 제거 (예: `?from=review`) */
+export function stripHashQuery(hashPath) {
+  const raw = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  return raw.split('?')[0];
+}
+
 /**
  * @param {string} hashPath
  * @returns {StudyRoomRegRoute | null}
  */
 export function parseStudyRoomRegPath(hashPath) {
-  const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const p = stripHashQuery(hashPath);
   if (p === BASE) return { screenId: 'P20-01', listTab: 'all' };
 
   const tabMatch = p.match(/^\/mypage\/registrations\/study-rooms\/tab\/(all|draft|published|hidden|not_ready)$/);
@@ -61,7 +67,7 @@ export function isStudyRoomRegPath(hashPath) {
 
 /** 레거시 exposure → inquiries 리다이렉트 대상 */
 export function studyRoomLegacyExposureRedirect(hashPath) {
-  const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const p = stripHashQuery(hashPath);
   const m = p.match(/^(\/mypage\/registrations\/study-rooms\/\d+)\/exposure$/);
   if (!m) return null;
   return `${m[1]}/inquiries`;

@@ -67,9 +67,9 @@ export const P20_INQUIRY_COPY = {
   summaryClosed: '안 받음',
   switchLabel: '쪽지 받는 중',
   offReasonTitle: '안 받는 이유',
-  contactBlockTitle: '기본 연락처 내부 확인',
-  contactVerified: '확인 완료',
-  contactNeeded: '확인 필요',
+  contactBlockTitle: '기본 연락처 검증',
+  contactVerified: '현재상태 : 확인 완료',
+  contactNeeded: '현재상태 : 확인 필요',
   contactNotice:
     '휴대폰 본인확인은 내부 신뢰도 점검에서만 사용됩니다. 외부로는 일체 공개되지 않습니다.',
   previewTitle: '카드 미리보기',
