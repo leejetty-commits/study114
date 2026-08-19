@@ -185,7 +185,7 @@
 | P20-03a | screen | 기본정보 | `…/{id}/basic` | 브리지→5175 | 20§5 | ✅ | △ | ○ |
 | P20-03b | screen | 상세정보 보강 | `…/{id}/detail` | 브리지→5175 | 20§5 | ✅ | △ | ○ |
 | P20-04 | screen | **미리보기·공개** | `…/{id}/publish` | publish | 20§5 | ✅ | △ | ○ |
-| P20-05 | screen | 노출·상담 | `…/{id}/exposure` | exposure | 20§7 | ✅ | **△ DDL** | ○ |
+| P20-05 | screen | **쪽지와 문의** | `…/{id}/inquiries` | inquiries | 20§7 | ✅ | **△ DDL** | ○ |
 | P20-06 | — | (P20-05 흡수) | — | — | 20 | ✅ | — | ○ |
 
 ### 21장 과외
@@ -372,7 +372,7 @@
 | P20-02 | 공부방 허브 | page | …/study-rooms/{id} | ✅ | UX 1차 | owner | ○ |  |
 | P20-03a/b | 기본·상세정보 | page | …/{id}/basic · …/detail | ✅ | UX 1차 | owner | ○ | 5175 |
 | **P20-04** | 미리보기·공개 | page | …/{id}/publish | ✅ | UX 1차 | owner | ○ | 공개 직전 확인 |
-| P20-05 | 노출·상담 | page | …/{id}/exposure | ✅ | UX 1차 | owner | ○ | inquiry_status |
+| P20-05 | 쪽지와 문의 | page | …/{id}/inquiries | ✅ | UX 1차 | owner | ○ | inquiry_status |
 | P21-01 | 과외 목록 | page | `#/mypage/registrations/tutors` | ✅ | UX 1차 | tutor | ○ | 5177 브리지 |
 | P21-02 | 과외 허브 | page | …/tutors/{id} | ✅ | UX 1차 | tutor | ○ |  |
 | P21-03a/b | 기본·상세정보 | page | …/{id}/basic · …/detail | ✅ | UX 1차 | tutor | ○ | 5177 |

@@ -37,7 +37,7 @@ export function tutorAccessPath(tutorId, query = {}) {
  * @param {{ from?: string }} [query]
  */
 export function studyRoomExposurePath(roomId, query = {}) {
-  const base = studyRoomSectionPath(roomId, 'exposure');
+  const base = studyRoomSectionPath(roomId, 'inquiries');
   const qs = new URLSearchParams();
   if (query.from) qs.set('from', query.from);
   const q = qs.toString();

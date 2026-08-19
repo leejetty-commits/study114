@@ -1296,6 +1296,47 @@
 .p20-inquiry-option__label { font-weight: 600; font-size: var(--text-sm); }
 .p20-inquiry-option__desc { grid-column: 2; font-size: var(--text-xs); color: var(--gray-600); }
 
+/* P20-05 쪽지와 문의 (A~F) */
+.p20-inquiries-body { display: flex; flex-direction: column; gap: var(--space-5); }
+.p20-inquiries-footnotes {
+  margin: 0; padding-left: 1.25rem; font-size: var(--text-sm); color: var(--gray-600);
+}
+.p20-inquiries-footnotes li + li { margin-top: 0.25rem; }
+.p20-inquiries-section__title { font-size: var(--text-base); font-weight: 600; margin: 0 0 var(--space-2); }
+.p20-inquiries-switch {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-3); border: 1px solid var(--gray-200); border-radius: 0.5rem;
+  font-weight: 600; cursor: pointer;
+}
+.p20-inquiry-reasons { display: flex; flex-direction: column; gap: var(--space-2); }
+.p20-inquiry-reason {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-3); border: 1px solid var(--gray-200); border-radius: 0.5rem; cursor: pointer;
+}
+.p20-inquiry-reason.is-selected { border-color: #93c5fd; background: var(--brand-blue-light); }
+.p20-inquiries-off-reason.is-hidden { display: none; }
+.p20-inquiries-contact-status { font-weight: 600; margin: 0 0 var(--space-2); }
+.p20-inquiries-contact-status.is-ok { color: #15803d; }
+.p20-inquiries-contact-status.is-warn { color: #b45309; }
+.p20-inquiries-contact-notice { font-size: var(--text-sm); color: var(--gray-600); margin: 0; }
+.p20-inquiries-card-preview {
+  padding: var(--space-4); border: 1px dashed var(--gray-300); border-radius: 0.5rem;
+  background: #fafafa; max-width: 20rem;
+}
+.p20-inquiries-card-preview__hint { font-size: var(--text-sm); color: var(--gray-600); margin: var(--space-2) 0 0; }
+.p20-phone-verify-modal {
+  position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center;
+  padding: var(--space-4); background: rgba(15, 23, 42, 0.45);
+}
+.p20-phone-verify-modal__panel {
+  width: min(100%, 28rem); padding: var(--space-5); border-radius: 0.75rem;
+  background: #fff; box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+}
+.p20-phone-verify-modal__title { margin: 0 0 var(--space-3); font-size: var(--text-lg); }
+.p20-phone-verify-modal__body,
+.p20-phone-verify-modal__sub { font-size: var(--text-sm); color: var(--gray-700); margin: 0 0 var(--space-3); }
+.p20-phone-verify-modal__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
 /* 21? ??? ?? (P21-xx) ? p20 ?? ??? + ?????? */
 .p21-access-badge { font-size: var(--text-xs); color: var(--gray-500); margin-top: 0.25rem; }
 .p21-card-sub { font-size: var(--text-xs); color: var(--gray-500); }

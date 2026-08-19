@@ -30,11 +30,8 @@ export function resolveBasketLifecycleBadge(kind, item) {
       };
     }
     const inq = item.inquiry_status || 'open';
-    if (inq === 'paused' || inq === 'capacity_full') {
+    if (inq === 'paused' || inq === 'capacity_full' || inq === 'waiting_only') {
       return { label: inquiryStatusLabel(inq), variant: 'warn', muted: true };
-    }
-    if (inq === 'waiting_only') {
-      return { label: inquiryStatusLabel(inq), variant: 'info', muted: false };
     }
     return null;
   }

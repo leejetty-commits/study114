@@ -40,6 +40,7 @@ const KEY = 'study114-preview-study-rooms-v1';
  * @property {string} [updated_at]
  * @property {string} [published_at]
  * @property {string|null} [deleted_at]
+ * @property {boolean} [owner_phone_verified]
  */
 
 /**
@@ -87,7 +88,7 @@ export function getPublishChecklistItems(room) {
 /** @returns {StudyRoomRecord} */
 function withDefaults(raw, id) {
   return {
-    inquiry_status: 'open',
+    inquiry_status: 'paused',
     detail_completion_status: 'basic_only',
     has_representative_image: false,
     has_subject_targets: false,

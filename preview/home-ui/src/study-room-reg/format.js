@@ -6,19 +6,20 @@ import { formatMonthlyWon } from '../exposure-format.js';
 import { studyRoomHubPath, studyRoomSectionPath } from './router.js';
 import { getPublishReadiness } from './store.js';
 import {
-  INQUIRY_STATUS_LABELS,
   DETAIL_STATUS_LABELS,
-  INQUIRY_OPTIONS,
   PRODUCT_APPLY,
 } from './study-room-reg-copy.js';
+import {
+  operatorInquirySummary,
+} from './inquiry-display.js';
 
 /** @typedef {import('./store.js').StudyRoomRecord} StudyRoomRecord */
 
-export { profileStatusLabel, INQUIRY_OPTIONS };
+export { profileStatusLabel };
 
 /** @param {string} status */
 export function inquiryStatusLabel(status) {
-  return INQUIRY_STATUS_LABELS[status] || status || '—';
+  return operatorInquirySummary(status);
 }
 
 /** @param {string} status */
@@ -127,11 +128,9 @@ export function getExposureDetailBlocks(room, readiness) {
   const capacityHint =
     room.inquiry_status === 'capacity_full'
       ? '정원 마감 — 신규 문의 제한'
-      : room.inquiry_status === 'waiting_only'
-        ? '대기자 문의만 수용'
-        : room.inquiry_status === 'paused'
-          ? '상담 중지 — 노출 유지 · 신규 문의 제한'
-          : '정상 수용';
+      : room.inquiry_status === 'paused' || room.inquiry_status === 'waiting_only'
+        ? '쪽지 안 받음 — 신규 문의 제한'
+        : '쪽지 받는 중';
 
   return [
     {
@@ -154,8 +153,8 @@ export function getExposureDetailBlocks(room, readiness) {
     },
     {
       key: 'capacity',
-      label: '정원/대기 문의',
-      ok: room.inquiry_status === 'open' || room.inquiry_status === 'waiting_only',
+      label: '쪽지 수신',
+      ok: room.inquiry_status === 'open',
       reason: capacityHint,
     },
     { ...prime, label: '대표 노출 상품' },
@@ -178,12 +177,12 @@ export function getHubCtas(room) {
   if (room.profile_status === 'hidden') {
     return [
       { label: '다시 공개', path: 'publish', primary: true },
-      { label: '쪽지와 문의', path: 'exposure', primary: false },
+      { label: '쪽지와 문의', path: 'inquiries', primary: false },
       { label: '구매상품', path: 'plans', external: '#/mypage/plans', primary: false },
     ];
   }
   return [
-    { label: '쪽지와 문의', path: 'exposure', primary: true },
+    { label: '쪽지와 문의', path: 'inquiries', primary: true },
     { label: '미리보기', path: 'publish', primary: false },
     { label: '학생 검토함', external: '#/mypage/student-review?from=exposure', primary: false },
     { label: '구매상품', path: 'plans', external: '#/mypage/plans', primary: false },

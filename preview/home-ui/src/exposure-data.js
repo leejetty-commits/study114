@@ -71,7 +71,7 @@ const STUDENT_SEED = [
   { public_display_name: '수학집중', grade_level: '초6', gender: 'male', location_label: '대치동', subject_label: '수학', preferred_lesson_type: 'study_room', preferred_fee_amount: 480000, preferred_studyroom_fee_amount: 400000, lesson_places: ['study_room', 'public_place'], lesson_format: 'group', student_gender_group: 'male', preferred_student_count_group: 'three', teaching_style_badges: ['meticulous'], request_summary: '중등 선행', request_summary_visibility: 'private', special_request_note: '', special_request_visibility: 'private', exposure_status: 'published' },
 ];
 
-const INQUIRY_CYCLE = ['open', 'open', 'waiting_only', 'capacity_full', 'paused'];
+const INQUIRY_CYCLE = ['paused', 'open', 'capacity_full', 'paused', 'open'];
 
 /** 프리뷰용 목록 썸네일 (실서비스 업로드 전 더미) */
 const ROOM_LISTING_IMAGES = [

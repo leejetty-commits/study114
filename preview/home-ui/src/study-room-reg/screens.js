@@ -8,18 +8,26 @@ import { STUDY_ROOM_REGISTER_URL } from '../nav-config.js';
 import {
   P20_LIST_TABS,
   P20_HUB_BLOCK_TITLES,
-  P20_EXPOSURE_SECTION_TITLES,
   P20_LIST_HEAD,
   P20_PREVIEW_MODES,
   P20_HUB_CTA,
-  INQUIRY_OPTIONS,
+  P20_INQUIRY_COPY,
+  INQUIRY_OFF_REASONS,
 } from './study-room-reg-copy.js';
+import {
+  parseInquiryFormState,
+  inquiryStatusFromForm,
+  resolveStudyRoomCardCta,
+  isInquiryReceiving,
+} from './inquiry-display.js';
+import { isPhoneVerifiedLocal, showPhoneVerifyGateModal } from './phone-verify-gate.js';
 import {
   parseStudyRoomRegPath,
   studyRoomHubPath,
   studyRoomSectionPath,
   studyRoomListTabPath,
   STUDY_ROOM_TOP_TABS,
+  studyRoomLegacyExposureRedirect,
   BASE as STUDY_ROOM_BASE,
 } from './router.js';
 import {
@@ -29,7 +37,6 @@ import {
   detailStatusLabel,
   roomToExposureRow,
   getExposureMatrix,
-  getExposureDetailBlocks,
   getHubCtas,
 } from './format.js';
 import {
@@ -189,7 +196,7 @@ function renderProfileOverview(room) {
   const rows = [
     { label: '공부방명', value: room.study_room_name, section: 'basic' },
     { label: '공개 상태', value: profileStatusLabel(room.profile_status), section: 'publish' },
-    { label: '상담 상태', value: inquiryStatusLabel(room.inquiry_status), section: 'exposure' },
+    { label: '쪽지 상태', value: inquiryStatusLabel(room.inquiry_status), section: 'inquiries' },
     { label: '상세정보', value: detailStatusLabel(room.detail_completion_status), section: 'detail' },
     { label: '지역', value: room.region_label, section: 'basic' },
     { label: '주력과목', value: room.main_subject_note, section: 'basic' },
@@ -258,6 +265,19 @@ function renderRoomShell(room, activeSection, bodyHtml) {
 
 /** @param {string} path */
 export function renderStudyRoomRegScreen(path) {
+  const pathOnly = path.split('?')[0];
+  const legacyRedirect = studyRoomLegacyExposureRedirect(pathOnly);
+  if (legacyRedirect) {
+    const query = path.includes('?') ? path.slice(path.indexOf('?')) : '';
+    queueMicrotask(() => {
+      const hashPath = (window.location.hash.slice(1) || '').split('?')[0];
+      const normalized = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+      if (studyRoomLegacyExposureRedirect(normalized)) {
+        window.location.replace(`#${legacyRedirect}${query}`);
+      }
+    });
+  }
+
   const route = parseStudyRoomRegPath(path);
   if (!route) return '';
 
@@ -289,7 +309,7 @@ export function renderStudyRoomRegScreen(path) {
     case 'P20-04':
       return renderPublish(room);
     case 'P20-05':
-      return renderExposure(room);
+      return renderInquiries(room);
     case 'P23-04':
       return renderSubmissionTab(room);
     default:
@@ -347,7 +367,7 @@ function renderList(tab) {
               <span class="mypage-badge mypage-badge--${badgeClass}">${esc(badge)}</span>
             </div>
             <p class="p19-child-card__meta">${esc(formatRoomSummaryLine(r))}</p>
-            <p class="p19-child-card__meta p20-inquiry-badge">상담: ${esc(inquiryStatusLabel(r.inquiry_status))}</p>
+            <p class="p19-child-card__meta p20-inquiry-badge">쪽지: ${esc(inquiryStatusLabel(r.inquiry_status))}</p>
             <span class="p19-child-card__cta">${esc(P20_LIST_HEAD.manageCta)}</span>
           </a>`;
           })
@@ -380,7 +400,7 @@ function renderReviewBridgeBlock(room) {
       <p class="p19-form-section__lead">${esc(HANDOFF_DEEPLINK.reviewBridgeLead)}</p>
       <div class="p19-summary-grid" style="margin-top:var(--space-3)">
         <dl class="p19-summary-card"><dt>찜</dt><dd>${reviewCount}건</dd></dl>
-        <dl class="p19-summary-card"><dt>상담</dt><dd>${esc(inquiryStatusLabel(room.inquiry_status))}</dd></dl>
+        <dl class="p19-summary-card"><dt>쪽지</dt><dd>${esc(inquiryStatusLabel(room.inquiry_status))}</dd></dl>
       </div>
       <div class="p19-form-actions" style="margin-top:var(--space-3)">
         <a href="#${studentReviewPath({ from: 'exposure' })}" class="btn btn--primary" data-mypage-nav="${studentReviewPath({ from: 'exposure' })}">${esc(P20_HUB_CTA.studentReview)}${reviewCount ? ` · ${reviewCount}건` : ''}</a>
@@ -402,7 +422,7 @@ function renderHub(room) {
     diagnosis = `공개 준비 미완료 · ${readiness.missing.length}개 항목이 필요합니다.`;
     tone = 'warn';
   } else if (room.profile_status === 'published') {
-    diagnosis = `공개중 · ${inquiryStatusLabel(room.inquiry_status)} · 검색·비교 노출 중`;
+    diagnosis = `공개중 · ${inquiryStatusLabel(room.inquiry_status)} · 검색·비교에 노출 중`;
     tone = 'success';
   } else if (room.profile_status === 'hidden') {
     diagnosis = '숨김 상태입니다. 언제든 다시 공개할 수 있습니다.';
@@ -419,7 +439,7 @@ function renderHub(room) {
 
       <div class="mp-room__status-strip" aria-label="현황 요약">
         <span><em>공개</em>${esc(profileStatusLabel(room.profile_status))}</span>
-        <span><em>상담</em>${esc(inquiryStatusLabel(room.inquiry_status))}</span>
+        <span><em>쪽지</em>${esc(inquiryStatusLabel(room.inquiry_status))}</span>
         <span><em>상세</em>${esc(detailStatusLabel(room.detail_completion_status))}</span>
         <span><em>준비</em>${readiness.doneCount}/${readiness.totalCount}</span>
       </div>
@@ -652,60 +672,81 @@ function renderPublish(room) {
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
-function renderExposure(room) {
-  const readiness = getPublishReadiness(room);
-  const blocks = getExposureDetailBlocks(room, readiness);
-  const fromReview = getHandoffFromQuery() === 'review';
+function renderInquiries(room) {
+  const form = parseInquiryFormState(room.inquiry_status);
+  const cardCta = resolveStudyRoomCardCta(room.inquiry_status);
+  const phoneOk = isPhoneVerifiedLocal(room);
+  const summaryState = isInquiryReceiving(room.inquiry_status)
+    ? P20_INQUIRY_COPY.summaryReceiving
+    : `${P20_INQUIRY_COPY.summaryClosed}${cardCta.reasonLine ? ` · ${cardCta.reasonLine}` : ''}`;
 
-  const inquiryRadios = INQUIRY_OPTIONS.map(
+  const reasonRadios = INQUIRY_OFF_REASONS.map(
     (o) => `
-    <label class="p20-inquiry-option${room.inquiry_status === o.value ? ' is-selected' : ''}">
-      <input type="radio" name="inquiry_status" value="${esc(o.value)}" ${room.inquiry_status === o.value ? 'checked' : ''} />
-      <span class="p20-inquiry-option__label">${esc(o.label)}</span>
-      <span class="p20-inquiry-option__desc">${esc(o.desc)}</span>
+    <label class="p20-inquiry-reason${form.reason === o.value ? ' is-selected' : ''}">
+      <input type="radio" name="inquiry_off_reason" value="${esc(o.value)}" ${form.reason === o.value ? 'checked' : ''} ${form.receiving ? 'disabled' : ''} />
+      <span>${esc(o.label)}</span>
     </label>`,
   ).join('');
 
   const body = `
-    <div class="p20-exposure-body" data-p20-room-id="${room.id}">
-      ${fromReview ? `<div class="handoff-deeplink-banner" role="status">${esc(HANDOFF_DEEPLINK.accessFromReview)}</div>` : ''}
-      ${renderReviewBridgeBlock(room)}
-      <section class="p20-exposure-section">
-        <h3>${esc(P20_EXPOSURE_SECTION_TITLES.searchCompare)}</h3>
-        <div class="p20-matrix">${renderMatrixRows(blocks.slice(0, 3))}</div>
+    <div class="p20-inquiries-body" data-p20-room-id="${room.id}" data-inquiry-receiving="${form.receiving ? '1' : '0'}">
+      <p class="p19-form-section__lead">${esc(P20_INQUIRY_COPY.pageLead)}</p>
+      <ul class="p20-inquiries-footnotes">
+        ${P20_INQUIRY_COPY.footnotes.map((line) => `<li>${esc(line)}</li>`).join('')}
+      </ul>
+
+      <section class="p20-inquiries-summary" aria-label="상태 요약">
+        <dl class="p19-summary-grid">
+          <dl class="p19-summary-card">
+            <dt>현재 문의 상태</dt>
+            <dd>${esc(summaryState)}</dd>
+          </dl>
+          <dl class="p19-summary-card">
+            <dt>카드 버튼</dt>
+            <dd>${esc(cardCta.label)}</dd>
+          </dl>
+          <dl class="p19-summary-card">
+            <dt>연락처 확인</dt>
+            <dd>${phoneOk ? esc(P20_INQUIRY_COPY.contactVerified) : esc(P20_INQUIRY_COPY.contactNeeded)}</dd>
+          </dl>
+        </dl>
       </section>
-      <section class="p20-exposure-section">
-        <h3>${esc(P20_EXPOSURE_SECTION_TITLES.inquiry)}</h3>
-        <p class="p19-form-section__lead">원장이 직접 선택합니다 (22장)</p>
-        <div class="p20-inquiry-options">${inquiryRadios}</div>
-        <button type="button" class="btn btn--secondary btn--sm" data-p20-inquiry-save>상담 상태 저장</button>
+
+      <section class="p20-inquiries-section">
+        <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.switchLabel)}</h3>
+        <label class="p20-inquiries-switch">
+          <input type="checkbox" name="inquiry_receiving" data-p20-inquiry-toggle ${form.receiving ? 'checked' : ''} />
+          <span>${esc(P20_INQUIRY_COPY.switchLabel)}</span>
+        </label>
       </section>
-      <section class="p20-exposure-section">
-        <h3>${esc(P20_EXPOSURE_SECTION_TITLES.capacity)}</h3>
-        <div class="p20-matrix">${renderMatrixRows([blocks[3]])}</div>
+
+      <section class="p20-inquiries-section p20-inquiries-off-reason${form.receiving ? ' is-hidden' : ''}" data-p20-inquiry-off-wrap>
+        <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.offReasonTitle)}</h3>
+        <div class="p20-inquiry-reasons">${reasonRadios}</div>
       </section>
-      <section class="p20-exposure-section p20-plans-cta">
-        <h3>${esc(P20_EXPOSURE_SECTION_TITLES.plans)}</h3>
-        <div class="p20-matrix">${renderMatrixRows(blocks.slice(4))}</div>
-        <p class="p19-form-section__lead">노출 강화 상품은 구매상품(이용현황)에서 확인합니다.</p>
-        <a href="#/mypage/plans" class="btn btn--secondary" data-mypage-nav="/mypage/plans">구매상품 · 이용현황</a>
+
+      <section class="p20-inquiries-section">
+        <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.contactBlockTitle)}</h3>
+        <p class="p20-inquiries-contact-status${phoneOk ? ' is-ok' : ' is-warn'}">
+          ${phoneOk ? esc(P20_INQUIRY_COPY.contactVerified) : esc(P20_INQUIRY_COPY.contactNeeded)}
+        </p>
+        <p class="p20-inquiries-contact-notice">${esc(P20_INQUIRY_COPY.contactNotice)}</p>
       </section>
-      <section class="p20-exposure-section p20-messages-link">
-        <h3>${esc(P20_EXPOSURE_SECTION_TITLES.messages)}</h3>
-        <p class="p19-form-section__lead">문의·상담은 쪽지함에서 확인합니다. 운영센터 주인공은 상담 수용 상태입니다. (16§1-3)</p>
-        <a href="#/mypage/messages/inbox" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/messages/inbox">쪽지함 열기</a>
-      </section>
-      <div class="p19-danger-zone" data-p20-room-id="${room.id}">
-        <h3 class="p19-danger-zone__title">${esc(P20_EXPOSURE_SECTION_TITLES.danger)}</h3>
-        <p class="p19-danger-zone__lead">숨김은 검색 미노출 · 삭제는 복구 불가(soft delete)</p>
-        <div class="p19-danger-zone__actions">
-          <button type="button" class="btn btn--secondary btn--sm" data-p20-hide ${room.profile_status === 'hidden' ? 'disabled' : ''}>숨김</button>
-          <button type="button" class="btn btn--ghost btn--sm p19-btn-danger" data-p20-delete>삭제</button>
+
+      <section class="p20-inquiries-section">
+        <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.previewTitle)}</h3>
+        <div class="p20-inquiries-card-preview">
+          <button type="button" class="btn btn--primary btn--sm" disabled>${esc(cardCta.label)}</button>
+          ${cardCta.reasonLine ? `<p class="p20-inquiries-card-preview__hint">${esc(cardCta.reasonLine)}</p>` : ''}
         </div>
+      </section>
+
+      <div class="p19-form-actions">
+        <button type="button" class="btn btn--primary" data-p20-inquiry-save>${esc(P20_INQUIRY_COPY.saveCta)}</button>
       </div>
     </div>`;
 
-  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'exposure', body)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'inquiries', body)}</section>`;
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
@@ -834,22 +875,72 @@ export function bindStudyRoomRegEvents(root, rerender) {
     btn.addEventListener('click', async () => {
       const section = btn.closest('[data-p20-room-id]');
       const id = Number(section?.dataset.p20RoomId);
-      const selected = section?.querySelector('input[name="inquiry_status"]:checked');
-      if (!selected) return;
-      try {
-        await setInquiryStatus(id, /** @type {any} */ (selected.value));
-        alert('상담 상태가 저장되었습니다.');
-        rerender();
-      } catch (err) {
-        console.warn('[p20]', err);
-        alert('상담 상태 저장에 실패했습니다.');
+      const receiving = section?.querySelector('[data-p20-inquiry-toggle]')?.checked ?? false;
+      const reasonEl = section?.querySelector('input[name="inquiry_off_reason"]:checked');
+      if (!receiving && !reasonEl) {
+        alert('안 받는 이유를 선택해 주세요.');
+        return;
       }
+      const reason = receiving ? null : /** @type {'capacity_full'|'paused'} */ (reasonEl.value);
+      const nextStatus = inquiryStatusFromForm(receiving, reason);
+      const room = getStudyRoom(id);
+      const needsPhone = receiving && !isPhoneVerifiedLocal(room);
+
+      const persist = async () => {
+        try {
+          await setInquiryStatus(id, nextStatus);
+          alert('저장되었습니다.');
+          rerender();
+        } catch (err) {
+          console.warn('[p20]', err);
+          if (err?.code === 'phone_verify_required') {
+            showPhoneVerifyGateModal({
+              onVerified: persist,
+              onCancel: rerender,
+            });
+            return;
+          }
+          alert('저장에 실패했습니다.');
+        }
+      };
+
+      if (needsPhone) {
+        showPhoneVerifyGateModal({
+          onVerified: persist,
+          onCancel: rerender,
+        });
+        return;
+      }
+      await persist();
     });
   });
 
-  root.querySelectorAll('.p20-inquiry-option input').forEach((input) => {
+  root.querySelectorAll('[data-p20-inquiry-toggle]').forEach((input) => {
     input.addEventListener('change', () => {
-      input.closest('.p20-inquiry-options')?.querySelectorAll('.p20-inquiry-option').forEach((el) => {
+      const wrap = input.closest('[data-p20-room-id]');
+      const offWrap = wrap?.querySelector('[data-p20-inquiry-off-wrap]');
+      const checked = /** @type {HTMLInputElement} */ (input).checked;
+      offWrap?.classList.toggle('is-hidden', checked);
+      wrap?.querySelectorAll('input[name="inquiry_off_reason"]').forEach((r) => {
+        /** @type {HTMLInputElement} */ (r).disabled = checked;
+      });
+      if (!checked) {
+        const selected = wrap?.querySelector('input[name="inquiry_off_reason"]:checked');
+        if (!selected) {
+          const first = wrap?.querySelector('input[name="inquiry_off_reason"]');
+          if (first) /** @type {HTMLInputElement} */ (first).checked = true;
+        }
+      }
+      wrap?.querySelectorAll('.p20-inquiry-reason').forEach((el) => {
+        const radio = el.querySelector('input');
+        el.classList.toggle('is-selected', Boolean(radio?.checked));
+      });
+    });
+  });
+
+  root.querySelectorAll('.p20-inquiry-reason input').forEach((input) => {
+    input.addEventListener('change', () => {
+      input.closest('.p20-inquiry-reasons')?.querySelectorAll('.p20-inquiry-reason').forEach((el) => {
         el.classList.toggle('is-selected', el.querySelector('input')?.checked);
       });
     });

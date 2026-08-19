@@ -17,7 +17,7 @@ import { AUTH_UI_BASE } from '../../shared/preview-links.js';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
 
-/** @typedef {{ user_id: number, email: string, role_type: string, name: string, email_verified?: boolean, admin_level?: string|null, must_change_password?: boolean, oauth_providers?: string[], oauth_provider_labels?: string[] }} AuthUser */
+/** @typedef {{ user_id: number, email: string, role_type: string, name: string, email_verified?: boolean, phone_verified?: boolean, admin_level?: string|null, must_change_password?: boolean, oauth_providers?: string[], oauth_provider_labels?: string[] }} AuthUser */
 
 /** @type {AuthUser|null} */
 let currentUser = null;
@@ -96,6 +96,7 @@ export async function fetchSession() {
         must_change_password: Boolean(data.must_change_password),
         oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
         oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
+        phone_verified: Boolean(data.phone_verified),
       };
     }
     redirectToEmailVerifyWait();
@@ -115,6 +116,7 @@ export async function fetchSession() {
     must_change_password: Boolean(data.must_change_password),
     oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
     oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
+    phone_verified: Boolean(data.phone_verified),
   };
 }
 
@@ -203,6 +205,7 @@ export async function devLogin(email, password = 'password') {
       currentUser.email_verified = Boolean(meData.email_verified);
       currentUser.admin_level = meData.admin_level ?? currentUser.admin_level;
       currentUser.must_change_password = Boolean(meData.must_change_password);
+      currentUser.phone_verified = Boolean(meData.phone_verified);
     }
   } catch {
     /* ignore */

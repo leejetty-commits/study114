@@ -11,6 +11,7 @@ import { renderEntryContextRibbon } from '../handoff-resume.js';
 import { renderPreContactChecklist } from '../handoff-sticker.js';
 import { renderStudentRequestBody } from './student-request-card.js';
 import { unlockStudentRequestView } from '../request-unlock.js';
+import { resolveStudyRoomCardCta } from '../study-room-reg/inquiry-display.js';
 import {
   esc,
   buildJudgmentTokens,
@@ -78,9 +79,8 @@ function resolvePrimaryCta(kind, item, viewer) {
     return { label: '쪽지 보내기', action: 'memo', disabled: false };
   }
   if (kind === 'study_room' && viewer === 'parent') {
-    const st = item.inquiry_status || 'open';
-    const ok = st === 'open' || st === 'waiting_only';
-    return { label: '상담/쪽지 보내기', action: 'memo', disabled: !ok };
+    const cta = resolveStudyRoomCardCta(item.inquiry_status);
+    return { label: cta.label, action: 'memo', disabled: cta.disabled };
   }
   return { label: '닫기', action: 'close', disabled: false };
 }

@@ -4,6 +4,7 @@
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
 import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES, getStudyRoomEntryPath } from './mypage/router.js';
+import { studyRoomLegacyExposureRedirect } from './study-room-reg/router.js';
 import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
 import {
   getDefaultGuidePath,
@@ -638,6 +639,12 @@ export function bootstrapMypageRoute() {
 
   if (MYPAGE_LEGACY_ALIASES[path]) {
     window.location.replace(`#${MYPAGE_LEGACY_ALIASES[path]}`);
+    return true;
+  }
+
+  const studyRoomExposureLegacy = studyRoomLegacyExposureRedirect(path);
+  if (studyRoomExposureLegacy) {
+    window.location.replace(`#${studyRoomExposureLegacy}${query}`);
     return true;
   }
 

@@ -22,8 +22,12 @@ final class StudyRoomHubRepository
              ORDER BY sr.updated_at DESC, sr.id DESC'
         );
         $stmt->execute([$userId]);
+        $phoneVerified = $this->phoneVerifiedForUser($userId);
 
-        return array_map(fn (array $row) => $this->hydrateRoomRow((int) $row['id'], $row), $stmt->fetchAll());
+        return array_map(
+            fn (array $row) => $this->hydrateRoomRow((int) $row['id'], $row, $phoneVerified),
+            $stmt->fetchAll()
+        );
     }
 
     /** @return array<string, mixed>|null */
@@ -36,7 +40,20 @@ final class StudyRoomHubRepository
         $stmt->execute([$roomId, $userId]);
         $row = $stmt->fetch();
 
-        return $row !== false ? $this->hydrateRoomRow($roomId, $row) : null;
+        return $row !== false
+            ? $this->hydrateRoomRow($roomId, $row, $this->phoneVerifiedForUser($userId))
+            : null;
+    }
+
+    private function phoneVerifiedForUser(int $userId): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT phone_verified_at FROM user_profiles WHERE user_id = ? LIMIT 1'
+        );
+        $stmt->execute([$userId]);
+        $val = $stmt->fetchColumn();
+
+        return $val !== false && $val !== null && $val !== '';
     }
 
     public function setProfileStatus(int $roomId, string $status, ?string $publishedAt = null): void
@@ -65,7 +82,7 @@ final class StudyRoomHubRepository
     }
 
     /** @param array<string, mixed> $row @return array<string, mixed> */
-    private function hydrateRoomRow(int $roomId, array $row): array
+    private function hydrateRoomRow(int $roomId, array $row, bool $ownerPhoneVerified = false): array
     {
         $regionLabel = $this->regionLabel($roomId, $row);
         $hasSubjects = $this->exists(
@@ -89,7 +106,8 @@ final class StudyRoomHubRepository
             'id'                       => $roomId,
             'study_room_name'          => (string) ($row['study_room_name'] ?? ''),
             'profile_status'           => $profileStatus,
-            'inquiry_status'           => (string) ($row['inquiry_status'] ?? 'open'),
+            'inquiry_status'           => (string) ($row['inquiry_status'] ?? 'paused'),
+            'owner_phone_verified'     => $ownerPhoneVerified,
             'detail_completion_status' => (string) ($row['detail_completion_status'] ?? 'basic_only'),
             'region_label'             => $regionLabel,
             'main_subject_note'        => (string) ($row['main_subject_note'] ?? ''),

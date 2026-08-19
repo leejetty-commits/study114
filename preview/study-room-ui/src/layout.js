@@ -294,7 +294,7 @@ export const MESSAGE_INQUIRY_PAGE_TITLE = '쪽지와 문의';
 export function messageInquiryPageUrl(roomId) {
   const id = Number(roomId);
   if (!id) return '';
-  return `${HOME_UI_BASE}/#/mypage/registrations/study-rooms/${id}/exposure`;
+  return `${HOME_UI_BASE}/#/mypage/registrations/study-rooms/${id}/inquiries`;
 }
 
 export function renderMessageInquiryNotice() {

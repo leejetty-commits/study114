@@ -1,4 +1,5 @@
 import { formatMonthlyWon, formatTutorFeeCard, formatTutorLessonPlaces } from '../exposure-format.js';
+import { operatorInquirySummary, resolveStudyRoomCardCta, isInquiryReceiving } from '../study-room-reg/inquiry-display.js';
 import { getCompareIds, isInCompare, getCompareItems } from '../user-actions-state.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { compareRibbonText, compareOpenCta } from '../handoff-copy.js';
@@ -20,15 +21,15 @@ export function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-export const INQUIRY_STATUS_LABELS = {
-  open: '상담 가능',
-  paused: '상담 중지',
-  capacity_full: '정원 마감',
-  waiting_only: '대기 문의 가능',
-};
-
 export function inquiryStatusLabel(status) {
-  return INQUIRY_STATUS_LABELS[status] || status || '—';
+  return operatorInquirySummary(status);
+}
+
+/** @param {string|null|undefined} status */
+export function studyRoomParentInquiryLine(status) {
+  const cta = resolveStudyRoomCardCta(status);
+  if (cta.reasonLine) return `${cta.label} · ${cta.reasonLine}`;
+  return cta.label;
 }
 
 /** @param {'study_room'|'tutor'|'student'} kind @param {object} item */
@@ -56,7 +57,7 @@ export function countTrustItems(kind, item) {
 export function buildJudgmentTokens(kind, item, viewer) {
   if (kind === 'study_room') {
     const price = formatMonthlyWon(item.price_amount);
-    const inquiry = inquiryStatusLabel(item.inquiry_status);
+    const inquiry = studyRoomParentInquiryLine(item.inquiry_status);
     const loc =
       viewer === 'guest' ? coarseRegionForGuest(item.location_label) : item.location_label;
     return [loc, item.grade_band, item.main_subject_note, inquiry, price].filter(Boolean);
@@ -199,16 +200,11 @@ export function buildContactPanel(kind, item, viewer) {
     return `<ul class="p24-contact"><li class="p24-contact__item is-locked">비교 열람만 · 쪽지·연락처 비공개</li></ul>`;
   }
   if (kind === 'study_room') {
-    const st = item.inquiry_status || 'open';
-    const ok = st === 'open' || st === 'waiting_only';
-    const label =
-      st === 'open'
-        ? '✓ 상담/쪽지 가능'
-        : st === 'waiting_only'
-          ? '✓ 대기 문의 가능'
-          : st === 'capacity_full'
-            ? '🔒 정원 마감 · 대기 문의'
-            : '🔒 상담 중지';
+    const cta = resolveStudyRoomCardCta(item.inquiry_status);
+    const ok = isInquiryReceiving(item.inquiry_status);
+    const label = ok
+      ? `✓ ${cta.label}`
+      : `🔒 ${cta.label}${cta.reasonLine ? ` · ${cta.reasonLine}` : ''}`;
     return `<ul class="p24-contact"><li class="p24-contact__item${ok ? ' is-ok' : ' is-locked'}">${label}</li></ul>`;
   }
   if (kind === 'tutor') {

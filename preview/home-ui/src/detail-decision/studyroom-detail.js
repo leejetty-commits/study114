@@ -3,7 +3,7 @@ import {
   formatLessonOperationType,
   formatLessonPlace,
 } from '../exposure-format.js';
-import { esc, inquiryStatusLabel } from './detail-utils.js';
+import { esc, studyRoomParentInquiryLine } from './detail-utils.js';
 import { coarseRegionForGuest } from '../student-blind-teaser.js';
 import { renderPromoLinksSection } from '../../../shared/promo-links.js';
 import { reviewSectionPlaceholder } from '../provider-reviews/ui.js';
@@ -42,7 +42,7 @@ export function renderStudyRoomDetailBody(item, viewer) {
         <dt>수업형태</dt><dd>${esc(formatLessonOperationType(item.lesson_operation_type))}</dd>
         <dt>정원</dt><dd>${esc(item.capacity_per_time || '—')}</dd>
         <dt>월 수강료</dt><dd>${esc(formatMonthlyWon(item.price_amount))}</dd>
-        <dt>상담 수용</dt><dd>${esc(inquiryStatusLabel(item.inquiry_status))}</dd>
+        <dt>쪽지 문의</dt><dd>${esc(studyRoomParentInquiryLine(item.inquiry_status))}</dd>
       </dl>
     </section>
     <section class="p24-section">

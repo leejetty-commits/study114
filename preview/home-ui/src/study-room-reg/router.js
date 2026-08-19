@@ -1,4 +1,4 @@
-/** 20장 P20-xx — hash 경로 (부록 A) */
+/** 20장 P20-xx — hash 경로 (부록 A · P20-05 inquiries) */
 
 /** @typedef {'P20-01'|'P20-02'|'P20-03a'|'P20-03b'|'P20-04'|'P20-05'|'P20-06'|'P23-04'} StudyRoomRegScreenId */
 
@@ -7,7 +7,7 @@
  * @property {StudyRoomRegScreenId} screenId
  * @property {number} [roomId]
  * @property {'all'|'draft'|'published'|'hidden'|'not_ready'} [listTab]
- * @property {'hub'|'basic'|'detail'|'publish'|'exposure'|'submission'} [section]
+ * @property {'hub'|'basic'|'detail'|'publish'|'inquiries'|'submission'} [section]
  */
 
 export const BASE = '/mypage/registrations/study-rooms';
@@ -31,16 +31,17 @@ export function parseStudyRoomRegPath(hashPath) {
   }
 
   const sectionMatch = p.match(
-    /^\/mypage\/registrations\/study-rooms\/(\d+)\/(basic|detail|publish|exposure|submission)$/,
+    /^\/mypage\/registrations\/study-rooms\/(\d+)\/(basic|detail|publish|inquiries|exposure|submission)$/,
   );
   if (sectionMatch) {
     const roomId = Number(sectionMatch[1]);
-    const sec = sectionMatch[2];
+    const rawSec = sectionMatch[2];
+    const sec = rawSec === 'exposure' ? 'inquiries' : rawSec;
     const map = {
       basic: 'P20-03a',
       detail: 'P20-03b',
       publish: 'P20-04',
-      exposure: 'P20-05',
+      inquiries: 'P20-05',
       submission: 'P23-04',
     };
     return {
@@ -56,6 +57,14 @@ export function parseStudyRoomRegPath(hashPath) {
 /** @param {string} hashPath */
 export function isStudyRoomRegPath(hashPath) {
   return parseStudyRoomRegPath(hashPath) != null;
+}
+
+/** 레거시 exposure → inquiries 리다이렉트 대상 */
+export function studyRoomLegacyExposureRedirect(hashPath) {
+  const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const m = p.match(/^(\/mypage\/registrations\/study-rooms\/\d+)\/exposure$/);
+  if (!m) return null;
+  return `${m[1]}/inquiries`;
 }
 
 /** @param {StudyRoomRegScreenId} screenId */
@@ -78,7 +87,7 @@ export function studyRoomHubPath(id) {
   return `${BASE}/${id}`;
 }
 
-/** @param {number} id @param {'basic'|'detail'|'publish'|'exposure'|'submission'} section */
+/** @param {number} id @param {'basic'|'detail'|'publish'|'inquiries'|'submission'} section */
 export function studyRoomSectionPath(id, section) {
   return `${BASE}/${id}/${section}`;
 }
@@ -94,7 +103,7 @@ export const STUDY_ROOM_TOP_TABS = [
   { key: 'basic', label: '기본정보' },
   { key: 'detail', label: '상세정보' },
   { key: 'publish', label: '미리보기·공개' },
-  { key: 'exposure', label: '쪽지와 문의' },
+  { key: 'inquiries', label: '쪽지와 문의' },
 ];
 
 /** @deprecated STUDY_ROOM_TOP_TABS 사용 */
