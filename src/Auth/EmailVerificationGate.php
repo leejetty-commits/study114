@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use PDO;
 use Study114\Database\Connection;
 
-/** 이메일 인증 완료 여부 — 9장 부록 §16-2 · §16-8 */
+/** 이메일 확인 완료 여부 — 9장 부록 §16-2 · 가입 완료 조건 */
 final class EmailVerificationGate
 {
     public function isVerified(int $userId): bool

@@ -1,6 +1,7 @@
 import { signupState } from '../state.js';
 import { PREFERRED_LESSON_TYPE_LABELS, PERSONAL_GENDER_OPTIONS } from '../register-enums.js';
-import { basicRegisterApi } from '../auth-api.js';
+import { fetchMeApi } from '../auth-api.js';
+import { resolveAfterAuthUrl } from '../../../shared/auth-redirect.js';
 import {
   buildHomeStudentImportUrl,
   isReturnImportMode,
@@ -346,6 +347,18 @@ function packMainSubject(data) {
 
 export function bindSignupBasicEvents(root) {
   bindGlobalEvents(root);
+
+  fetchMeApi()
+    .then((me) => {
+      if (!me.authenticated) {
+        navigate('/login');
+        return;
+      }
+      if (!me.email_verified || me.needs_account_contact) {
+        window.location.href = resolveAfterAuthUrl(me);
+      }
+    })
+    .catch(() => navigate('/login'));
 
   const role = signupState.role || 'student';
   const form = root.querySelector('form[data-form^="basic-"]');

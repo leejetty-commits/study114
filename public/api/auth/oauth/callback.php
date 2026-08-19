@@ -53,6 +53,16 @@ try {
         exit;
     }
 
+    $emailVerified = (new \Study114\Auth\EmailVerificationGate())->isVerified((int) $user['user_id']);
+    if (!$emailVerified) {
+        $params = ['from' => 'oauth'];
+        if ($returnTo !== '' && (str_starts_with($returnTo, '/') || str_starts_with($returnTo, $homeUi))) {
+            $params['return_to'] = $returnTo;
+        }
+        header('Location: ' . $authUi . '/#/signup/verify-email?' . http_build_query($params), true, 302);
+        exit;
+    }
+
     $roleHome = match ($user['role_type']) {
         'admin'            => '/guest',
         'study_room_owner' => '/study-room',

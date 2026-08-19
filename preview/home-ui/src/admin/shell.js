@@ -120,7 +120,7 @@ export function renderAdminShell(path, bodyHtml) {
           </div>
           <div class="admin-topbar__right">
             ${renderAdminRoleBadge()}
-            <span class="admin-topbar__user">${esc(resolveAccountDisplayName(user) || user?.email || '비로그인')}</span>
+            <span class="admin-topbar__user">${esc(resolveAccountDisplayName(user) || '비로그인')}</span>
             <a href="#${roleHomeHash()}" class="admin-topbar__exit btn btn--secondary btn--sm" data-nav="${roleHomeHash()}">← 역할 홈으로</a>
           </div>
         </header>

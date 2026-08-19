@@ -7,7 +7,7 @@ namespace Study114\Auth;
 use PDO;
 use Study114\Database\Connection;
 
-/** §16-2 — 행동 전 이메일 인증 */
+/** 9장 C-2 — 가입 완료 조건 + 공개·쪽지 2차 게이트 */
 final class EmailVerificationService
 {
     private AuthTokenRepository $tokens;
@@ -22,8 +22,16 @@ final class EmailVerificationService
         $this->mailer = new AuthMailer();
     }
 
-    public function sendVerification(int $userId): void
+    /**
+     * @return array{sent: bool, resend_available_in: int, already_verified: bool}
+     */
+    public function sendVerification(int $userId): array
     {
+        $cooldown = (int) ($this->config['email_verify_resend_cooldown_seconds'] ?? 300);
+        if ($cooldown < 1) {
+            $cooldown = 300;
+        }
+
         $stmt = Connection::get()->prepare(
             'SELECT email, email_verified_at FROM users WHERE id = ? AND status = ? LIMIT 1'
         );
@@ -33,19 +41,38 @@ final class EmailVerificationService
             throw new \InvalidArgumentException('계정을 찾을 수 없습니다.');
         }
         if ($row['email_verified_at'] !== null) {
-            return;
+            return ['sent' => false, 'resend_available_in' => 0, 'already_verified' => true];
         }
 
         $email = (string) $row['email'];
+        if ((new AccountContactService())->isInternalEmail($email)) {
+            throw new \InvalidArgumentException('실제 사용 중인 이메일을 먼저 입력해 주세요.');
+        }
+
+        $remaining = $this->tokens->resendSecondsRemaining($userId, 'email_verify', $cooldown);
+        if ($remaining > 0) {
+            return ['sent' => false, 'resend_available_in' => $remaining, 'already_verified' => false];
+        }
+
         $this->tokens->invalidatePurpose($userId, 'email_verify');
         $raw = $this->tokens->create($userId, 'email_verify', (int) $this->config['email_verify_ttl_minutes']);
 
         $link = $this->config['api_base'] . '/api/auth/email/verify.php?token=' . rawurlencode($raw);
         $this->mailer->send(
             $email,
-            '[우동공과] 이메일 인증',
-            "안녕하세요.\n\n아래 링크를 눌러 이메일 인증을 완료해 주세요.\n\n{$link}\n\n공개·쪽지·결제 등 일부 기능은 인증 후 이용할 수 있습니다."
+            '[우동공과] 이메일 확인',
+            "안녕하세요.\n\n가입을 완료하려면 아래 링크를 눌러 이메일을 확인해 주세요.\n\n{$link}\n\n이 메일은 로그인 및 계정 확인에 사용됩니다."
         );
+
+        return ['sent' => true, 'resend_available_in' => $cooldown, 'already_verified' => false];
+    }
+
+    public function clearVerifiedAt(int $userId): void
+    {
+        Connection::get()->prepare(
+            'UPDATE users SET email_verified_at = NULL, updated_at = NOW() WHERE id = ?'
+        )->execute([$userId]);
+        $this->tokens->invalidatePurpose($userId, 'email_verify');
     }
 
     public function verifyToken(string $rawToken): int

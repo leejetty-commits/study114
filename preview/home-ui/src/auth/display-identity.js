@@ -20,8 +20,6 @@ export function resolveAccountDisplayName(user) {
   if (name && !isInternalAuthEmail(name)) return name;
   const labels = Array.isArray(user?.oauth_provider_labels) ? user.oauth_provider_labels.filter(Boolean) : [];
   if (labels.length) return `${labels[0]} 회원`;
-  const email = String(user?.email || '').trim();
-  if (email && !isInternalAuthEmail(email)) return email;
   return '회원';
 }
 

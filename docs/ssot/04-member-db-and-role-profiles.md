@@ -57,10 +57,10 @@
 | 컬럼 | 타입 | NULL | 설명 |
 |------|------|------|------|
 | id | BIGINT UNSIGNED | NO | PK (1차: bigint auto) |
-| email | VARCHAR(255) | NO | 로그인 ID · UNIQUE |
+| email | VARCHAR(255) | NO | 로그인 ID · 연락처 메일 · UNIQUE. 칸 하나 |
 | password_hash | VARCHAR(255) | NO | bcrypt |
-| status | ENUM | NO | `active` · `pending` · `blocked` · `withdrawn` |
-| email_verified_at | DATETIME | YES | 2차 |
+| status | ENUM | NO | `active` · `pending` · `blocked` · `withdrawn`. **가입 미확인이어도 active** (화면 게이트) |
+| email_verified_at | DATETIME | YES | **가입 완료 조건**. NULL이면 확인 대기 |
 | last_login_at | DATETIME | YES | |
 | created_at | DATETIME | NO | |
 | updated_at | DATETIME | NO | |
@@ -79,7 +79,7 @@
 |------|------|------|------|
 | user_id | BIGINT UNSIGNED | NO | PK · FK → users |
 | real_name | VARCHAR(50) | NO | 실명 |
-| phone | VARCHAR(20) | YES | 휴대폰 |
+| phone | VARCHAR(20) | YES | 휴대폰. 가입 시 필수 저장(숫자 정규화). 회원 간 비공개 |
 | gender | ENUM('male','female') | YES | |
 | birth_date | DATE | YES | 생년월일 |
 | address_zip | VARCHAR(10) | YES | 우편번호 |
@@ -90,7 +90,7 @@
 | sms_opt_in | TINYINT(1) | NO | default 0 · SMS 수신 |
 | email_opt_in | TINYINT(1) | NO | default 0 · 이메일 수신 |
 | safe_number_opt_in | TINYINT(1) | NO | default 0 · **확장만** (§10-3) |
-| phone_verified_at | DATETIME | YES | 2차 |
+| phone_verified_at | DATETIME | YES | 가입 단계에서는 NULL 유지. 쪽지 수신 ON 때 후속 |
 | created_at / updated_at | DATETIME | NO | |
 
 ### 5-1. 2장 가입 UI ↔ DB 매핑 (잠금)
@@ -318,3 +318,4 @@ users ── user_profiles
 | 2026-05-31 | 4장 초안 |
 | 2026-07-04 | Notion 4장 2026-07 갱신 · school_name·sort_order 제거 · visibility·신규 매핑 테이블 |
 | 2026-07-04 | `student_gender_group` · **희망 수업인원** 용어 · `lesson_format` DB code 유지(§9-1) |
+| 2026-08-20 | 가입 완료 = `email_verified_at`. status는 active 유지. phone_verified는 가입에서 미설정 |

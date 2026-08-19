@@ -43,12 +43,21 @@ try {
     $name = trim((string) ($input['name'] ?? ''));
     AuthSession::login($result['user_id'], $result['email'], $result['role_type'], $name !== '' ? $name : $result['email']);
 
+    $verify = ['sent' => false, 'resend_available_in' => 0];
+    try {
+        $verify = (new \Study114\Auth\EmailVerificationService())->sendVerification((int) $result['user_id']);
+    } catch (Throwable $e) {
+        error_log('[signup] verify mail: ' . $e->getMessage());
+    }
+
     http_response_code(201);
     echo json_encode([
         'ok'        => true,
         'user_id'   => $result['user_id'],
         'email'     => $result['email'],
         'role_type' => $result['role_type'],
+        'email_verified' => false,
+        'resend_available_in' => (int) ($verify['resend_available_in'] ?? 0),
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     error_log('[signup] validation: ' . $e->getMessage());

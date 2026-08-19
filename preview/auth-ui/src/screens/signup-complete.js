@@ -1,11 +1,20 @@
 import { signupState, ROLE_LABELS, resetSignupState } from '../state.js';
-import { renderAuthShell, renderStepIndicator, bindGlobalEvents } from '../layout.js';
+import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
+import { fetchMeApi } from '../auth-api.js';
+import { resolveAfterAuthUrl } from '../../../shared/auth-redirect.js';
 import {
   HOME_UI_BASE,
   STUDY_ROOM_UI_BASE,
   TUTOR_UI_BASE,
   homeUiUrl,
 } from '../../../shared/preview-links.js';
+
+function maskEmail(email) {
+  const e = String(email || '').trim();
+  const at = e.indexOf('@');
+  if (at < 1) return '확인됨';
+  return `${e.slice(0, Math.min(2, at))}***${e.slice(at)}`;
+}
 
 function summarizeBasic(role, data) {
   if (!data) return '—';
@@ -48,8 +57,8 @@ export function renderSignupComplete() {
       <dl class="success-info">
         <dt>회원 ID (DB)</dt>
         <dd>${saved?.userId ?? '—'}</dd>
-        <dt>이메일(ID)</dt>
-        <dd>${saved?.email ?? '—'}</dd>
+        <dt>로그인 계정</dt>
+        <dd>${maskEmail(saved?.email)}</dd>
         <dt>역할 (DB role_type)</dt>
         <dd>${saved?.roleType ?? '—'}</dd>
         <dt>기본등록 프로필</dt>
@@ -83,6 +92,18 @@ export function renderSignupComplete() {
 
 export function bindSignupCompleteEvents(root) {
   bindGlobalEvents(root);
+
+  fetchMeApi()
+    .then((me) => {
+      if (!me.authenticated) {
+        navigate('/login');
+        return;
+      }
+      if (!me.email_verified || me.needs_account_contact) {
+        window.location.href = resolveAfterAuthUrl(me);
+      }
+    })
+    .catch(() => navigate('/login'));
 
   root.querySelector('[data-action="go-detail-register"]')?.addEventListener('click', () => {
     const role = signupState.role || 'student';

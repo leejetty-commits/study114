@@ -14,8 +14,7 @@ function ensureOverlay() {
     <div class="email-verify-overlay__panel" role="dialog" aria-labelledby="email-verify-title">
       <h2 id="email-verify-title" class="email-verify-overlay__title">이메일 인증이 필요합니다</h2>
       <p class="email-verify-overlay__body">
-        공개·쪽지·결제 등 일부 기능은 이메일 인증 후 이용할 수 있습니다.
-        가입 시 사용한 메일함에서 인증 링크를 확인해 주세요.
+        가입을 완료하려면 이메일 확인이 필요합니다. 메일함에서 확인 링크를 눌러 주세요.
       </p>
       <p class="email-verify-overlay__status" data-email-verify-status hidden></p>
       <div class="email-verify-overlay__actions">

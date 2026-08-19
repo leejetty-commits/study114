@@ -8,10 +8,10 @@ use Study114\Auth\EmailVerificationService;
 
 $token = (string) ($_GET['token'] ?? '');
 $config = study114_config('auth');
-$homeUi = (string) $config['home_ui'];
+$authUi = rtrim((string) $config['auth_ui'], '/');
 
-$redirect = static function (string $query) use ($homeUi): void {
-    header('Location: ' . $homeUi . '#/parent?' . $query, true, 302);
+$redirect = static function (string $query) use ($authUi): void {
+    header('Location: ' . $authUi . '/#/signup/verify-email?' . $query, true, 302);
     exit;
 };
 
@@ -21,7 +21,7 @@ if ($token === '') {
 
 try {
     (new EmailVerificationService())->verifyToken($token);
-    $redirect('email_verified=1');
+    $redirect('verified=1');
 } catch (InvalidArgumentException $e) {
     $redirect('email_verify_error=' . rawurlencode($e->getMessage()));
 } catch (Throwable $e) {

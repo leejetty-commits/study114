@@ -33,10 +33,17 @@ if ($user === null) {
 }
 
 try {
-    (new EmailVerificationService())->sendVerification((int) $user['user_id']);
+    $result = (new EmailVerificationService())->sendVerification((int) $user['user_id']);
     echo json_encode([
         'ok'      => true,
-        'message' => '인증 메일을 보냈습니다. 메일함에서 링크를 확인해 주세요.',
+        'sent'    => !empty($result['sent']),
+        'already_verified' => !empty($result['already_verified']),
+        'resend_available_in' => (int) ($result['resend_available_in'] ?? 0),
+        'message' => !empty($result['already_verified'])
+            ? '이미 이메일이 확인되었습니다.'
+            : (!empty($result['sent'])
+                ? '확인 메일을 보냈습니다. 메일함에서 링크를 확인해 주세요.'
+                : '확인 메일은 잠시 후 다시 보낼 수 있습니다.'),
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(422);

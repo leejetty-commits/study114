@@ -87,3 +87,56 @@ export function oauthRoleSelectionUrl(returnTo = '') {
   }
   return `${AUTH_UI_BASE}#/signup/role?${params.toString()}`;
 }
+
+/**
+ * @param {string} [target] basic | role | home
+ */
+export function setPostVerifyTarget(target) {
+  try {
+    sessionStorage.setItem('study114_post_verify', target || 'home');
+  } catch {
+    /* ignore */
+  }
+}
+
+export function consumePostVerifyTarget() {
+  try {
+    const t = sessionStorage.getItem('study114_post_verify') || 'home';
+    sessionStorage.removeItem('study114_post_verify');
+    return t;
+  } catch {
+    return 'home';
+  }
+}
+
+export function emailVerifyWaitUrl(query = '') {
+  const q = query ? (query.startsWith('?') ? query : `?${query}`) : '';
+  return `${AUTH_UI_BASE}#/signup/verify-email${q}`;
+}
+
+/**
+ * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, role_type?: string, admin_level?: string|null }} me
+ * @param {string} [returnTo]
+ */
+export function resolveAfterAuthUrl(me, returnTo = '') {
+  if (!me?.authenticated) {
+    return `${AUTH_UI_BASE}#/login`;
+  }
+  if (me.admin_level) {
+    return resolvePostLoginUrl(me.role_type, returnTo);
+  }
+  if (me.needs_account_contact) {
+    const params = new URLSearchParams();
+    if (me.oauth_role_pending) params.set('from', 'oauth');
+    if (returnTo && isSafeReturnTo(returnTo)) params.set('return_to', returnTo);
+    const q = params.toString();
+    return `${AUTH_UI_BASE}#/signup/account-contact${q ? `?${q}` : ''}`;
+  }
+  if (!me.email_verified) {
+    return emailVerifyWaitUrl();
+  }
+  if (me.oauth_role_pending) {
+    return oauthRoleSelectionUrl(returnTo);
+  }
+  return resolvePostLoginUrl(me.role_type, returnTo);
+}

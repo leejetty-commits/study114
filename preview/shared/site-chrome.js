@@ -13,10 +13,7 @@ import {
   HOME_UI_BASE,
   isGnbItemVisible,
 } from './site-nav-config.js';
-import {
-  resolveAccountDisplayName,
-  isInternalAuthEmail,
-} from '../home-ui/src/auth/display-identity.js';
+import { resolveAccountDisplayName } from '../home-ui/src/auth/display-identity.js';
 
 import { ensureBackToTop } from './back-to-top.js';
 import { setPendingRoute } from './pending-route.js';
@@ -41,10 +38,9 @@ function renderUtilBar(role, showAuth, user = null) {
   const items = showAuth ? UTIL_MENU.guest : UTIL_MENU.loggedIn;
   const isAdmin = Boolean(user?.admin_level) || user?.role_type === 'admin';
   const displayLabel = user ? resolveAccountDisplayName(user) : '';
-  const titleEmail = user && !isInternalAuthEmail(user.email) ? user.email : displayLabel;
   const account =
     user && !showAuth
-      ? `<span class="home-util__account" title="${escAttr(titleEmail)}">로그인: ${escAttr(displayLabel)}</span>`
+      ? `<span class="home-util__account" title="${escAttr(displayLabel)}">로그인: ${escAttr(displayLabel)}</span>`
       : '';
   const adminLink =
     isAdmin && !showAuth

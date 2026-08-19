@@ -11,7 +11,8 @@ import { hydrateProviderNotices, resetProviderNotices } from './provider-notices
 import { hydrateExposureBridge, resetExposureBridge } from './exposure-bridge.js';
 import { activateRegistrationsApi, deactivateRegistrationsApi } from './registrations-backend.js';
 import { navigate, setActiveRole } from './state.js';
-import { oauthRoleSelectionUrl } from '../../shared/auth-redirect.js';
+import { oauthRoleSelectionUrl, emailVerifyWaitUrl } from '../../shared/auth-redirect.js';
+import { AUTH_UI_BASE } from '../../shared/preview-links.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
@@ -76,6 +77,14 @@ export async function fetchSession() {
   const res = await fetch('/api/auth/me.php', CREDENTIALS);
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok || !data.authenticated) {
+    return null;
+  }
+  if (data.needs_account_contact) {
+    window.location.href = `${AUTH_UI_BASE}#/signup/account-contact`;
+    return null;
+  }
+  if (!data.email_verified && !data.admin_level) {
+    window.location.href = emailVerifyWaitUrl();
     return null;
   }
   if (data.oauth_role_pending) {

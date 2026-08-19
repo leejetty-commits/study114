@@ -1,8 +1,9 @@
 import { renderAuthShell, renderSocialLogin, bindGlobalEvents } from '../layout.js';
-import { loginApi } from '../auth-api.js';
+import { loginApi, fetchMeApi } from '../auth-api.js';
 import {
   getLoginReturnTo,
-  resolvePostLoginUrl,
+  resolveAfterAuthUrl,
+  setPostVerifyTarget,
   oauthStartUrl,
 } from '../../../shared/auth-redirect.js';
 import { renderLoginBackdrop, renderLoginStageBelow } from '../login-stage.js';
@@ -130,11 +131,13 @@ export function bindLoginEvents(root) {
       submitBtn.textContent = '로그인 중…';
     }
     try {
-      const data = await loginApi({
+      await loginApi({
         email: String(fd.get('email') ?? ''),
         password: String(fd.get('password') ?? ''),
       });
-      window.location.href = resolvePostLoginUrl(data.role_type, returnTo);
+      const me = await fetchMeApi();
+      if (me.authenticated && !me.email_verified) setPostVerifyTarget('home');
+      window.location.href = resolveAfterAuthUrl(me, returnTo);
     } catch (err) {
       const message = err instanceof Error ? err.message : '로그인에 실패했습니다.';
       if (errorSlot) {

@@ -396,12 +396,15 @@ final class OAuthService
 
         $pdo->beginTransaction();
         try {
+            $verifiedAt = ($profile['email'] !== '' && !(new AccountContactService())->isInternalEmail($email))
+                ? date('Y-m-d H:i:s')
+                : null;
             // 운영 계정(admin)은 OAuth/공개가입으로 생성하지 않음 — 관리자모드 발급만
             $stmt = $pdo->prepare(
                 'INSERT INTO users (email, password_hash, status, email_verified_at, oauth_role_pending)
-                 VALUES (?, ?, ?, NOW(), 1)'
+                 VALUES (?, ?, ?, ?, 1)'
             );
-            $stmt->execute([$email, $hash, 'active']);
+            $stmt->execute([$email, $hash, 'active', $verifiedAt]);
             $userId = (int) $pdo->lastInsertId();
 
             $stmt = $pdo->prepare(

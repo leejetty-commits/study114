@@ -23,7 +23,7 @@ export function renderSignupForm() {
     ${renderStepIndicator(2, 5)}
     <div class="panel auth-shell__card--wide">
       <h1 class="auth-heading">회원가입</h1>
-      <p class="auth-subheading mb-6">공통 계정 정보만 입력합니다. 역할·검색용 항목은 다음 단계에서 받습니다. 이메일과 휴대폰은 필수이며, 다른 회원에게 공개하지 않습니다.</p>
+      <p class="auth-subheading mb-6">공통 계정 정보만 입력합니다. 이메일은 로그인 및 계정 확인에 사용됩니다. 휴대폰 번호는 비공개로 보관됩니다.</p>
 
       <form data-form="signup" class="mt-8" novalidate>
         <div class="form-group">
@@ -38,7 +38,7 @@ export function renderSignupForm() {
             autocomplete="username"
             required
           />
-          <p class="form-hint">로그인 ID이자 비밀번호 찾기 기준입니다. 검색·상세·쪽지·프로필에는 노출되지 않습니다.</p>
+          <p class="form-hint">이메일은 로그인 및 계정 확인에 사용됩니다. 검색·상세·쪽지에는 노출되지 않습니다.</p>
         </div>
 
         <div class="form-row">
@@ -95,7 +95,7 @@ export function renderSignupForm() {
             autocomplete="tel"
             required
           />
-          <p class="form-hint">계정 복구 보조와 운영 안내 기준입니다. 플랫폼이 전화번호를 먼저 공개하지 않으며, 필요하면 쪽지에서 당사자가 직접 교환합니다.</p>
+          <p class="form-hint">휴대폰 번호는 비공개로 보관됩니다. 본인확인은 필요한 경우 내부 신뢰도 점검을 위해 진행될 수 있으며, 다른 사용자에게 공개되지 않습니다.</p>
         </div>
 
         <div class="form-group form-address" data-address-block>

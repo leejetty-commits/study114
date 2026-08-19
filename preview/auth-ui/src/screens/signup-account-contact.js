@@ -1,7 +1,7 @@
 import { renderAuthShell, bindGlobalEvents, navigate } from '../layout.js';
 import { fetchMeApi, saveAccountContactApi } from '../auth-api.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
-import { getLoginReturnTo, resolvePostLoginUrl } from '../../../shared/auth-redirect.js';
+import { getLoginReturnTo, resolveAfterAuthUrl, setPostVerifyTarget } from '../../../shared/auth-redirect.js';
 import { formatMobile, isValidMobile } from '../../../shared/phone.js';
 
 const PHONE_GUIDE =
@@ -11,17 +11,17 @@ export function renderSignupAccountContact() {
   const content = `
     <div class="panel">
       <h1 class="auth-heading">계정 연락처</h1>
-      <p class="auth-subheading mb-6">이메일과 휴대폰은 가입 시 필수입니다. 로그인·비밀번호 찾기·계정 복구·운영 안내에만 쓰고, 검색·상세·쪽지·프로필에는 올리지 않습니다.</p>
+      <p class="auth-subheading mb-6">이메일과 휴대폰은 가입 시 필수입니다. 이메일은 로그인 및 계정 확인에 사용됩니다. 휴대폰 번호는 비공개로 보관됩니다.</p>
       <form data-form="account-contact" novalidate>
         <div class="form-group" data-email-wrap hidden>
           <label class="form-label form-label--required" for="account-email">이메일(ID)</label>
           <input class="form-input" type="email" id="account-email" name="email" autocomplete="username" />
-          <p class="form-hint">로그인 ID이자 비밀번호 찾기 기준입니다. 이미 가입한 이메일이면 그 계정에 소셜이 연결됩니다.</p>
+          <p class="form-hint">이메일은 로그인 및 계정 확인에 사용됩니다. 이미 가입한 이메일이면 그 계정에 소셜이 연결됩니다.</p>
         </div>
         <div class="form-group">
           <label class="form-label form-label--required" for="account-phone">휴대폰</label>
           <input class="form-input" type="tel" id="account-phone" name="phone" placeholder="010-0000-0000" inputmode="numeric" maxlength="13" autocomplete="tel" required />
-          <p class="form-hint">010-0000-0000. 숫자만 넣어도 됩니다. 다른 회원에게는 보여 주지 않습니다.</p>
+          <p class="form-hint">휴대폰 번호는 비공개로 보관됩니다. 본인확인은 필요한 경우 내부 신뢰도 점검을 위해 진행될 수 있으며, 다른 사용자에게 공개되지 않습니다.</p>
         </div>
         <p class="form-error" data-contact-error hidden role="alert"></p>
         <button type="submit" class="btn btn--primary btn--block">저장하고 계속</button>
@@ -100,18 +100,8 @@ export function bindSignupAccountContactEvents(root) {
 
 function continueAfterContact(me) {
   const q = parseHashQuery();
-  if (me.oauth_role_pending) {
-    const params = new URLSearchParams({ from: 'oauth' });
-    if (q.return_to) params.set('return_to', q.return_to);
-    navigate(`/signup/role?${params.toString()}`);
-    return;
-  }
   const returnTo = getLoginReturnTo() || q.return_to;
-  if (returnTo) {
-    window.location.href = String(returnTo).startsWith('http')
-      ? returnTo
-      : resolvePostLoginUrl(me.role_type || 'guardian_student');
-    return;
-  }
-  window.location.href = resolvePostLoginUrl(me.role_type || 'guardian_student');
+  if (me.oauth_role_pending && !me.email_verified) setPostVerifyTarget('role');
+  else if (!me.email_verified) setPostVerifyTarget('home');
+  window.location.href = resolveAfterAuthUrl(me, returnTo);
 }

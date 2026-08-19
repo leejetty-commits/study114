@@ -1,7 +1,7 @@
 import { ROLE_LABELS, ROLE_DESCRIPTIONS, ROLE_ICONS, signupState, setRole } from '../state.js';
 import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { oauthCompleteRoleApi, fetchMeApi } from '../auth-api.js';
-import { getLoginReturnTo, resolvePostLoginUrl } from '../../../shared/auth-redirect.js';
+import { getLoginReturnTo, resolvePostLoginUrl, setPostVerifyTarget } from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 
 const ROLES = ['student', 'study_room', 'tutor'];
@@ -184,7 +184,8 @@ export function bindSignupRoleEvents(root) {
         roleType: data.role_type,
       };
       signupState.accountDraft = null;
-      navigate('/signup/basic');
+      setPostVerifyTarget('basic');
+      navigate('/signup/verify-email');
     } catch (err) {
       showRoleError(root, err instanceof Error ? err.message : '네트워크 오류');
       submitBtn.disabled = false;

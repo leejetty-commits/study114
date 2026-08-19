@@ -220,7 +220,7 @@ export function bindGlobalEvents(root) {
       const { devLogin } = await import('./register-api.js');
       const user = await devLogin();
       await initChromeSession();
-      alert(`로그인: ${user.email} (${user.role_type})`);
+      alert(`로그인되었습니다. (${user.role_type})`);
       window.location.reload();
     } catch (err) {
       alert(err instanceof Error ? err.message : '로그인 실패');
