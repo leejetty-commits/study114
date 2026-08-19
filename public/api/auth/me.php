@@ -24,12 +24,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
 
 study114_send_cors_headers();
 
-$user = AuthSession::user();
-AuthSession::close();
+$user = AuthSession::userIfActive();
 if ($user === null) {
     echo json_encode(['ok' => true, 'authenticated' => false], JSON_UNESCAPED_UNICODE);
     exit;
 }
+AuthSession::close();
 
 $roles = new \Study114\Admin\AdminRoleService();
 $flags = $roles->fetchAuthFlags((int) $user['user_id']);

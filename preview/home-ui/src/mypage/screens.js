@@ -1109,33 +1109,52 @@ function bindWithdrawEvents(root) {
       submitBtn.disabled = true;
       submitBtn.textContent = '처리 중…';
     }
+    const ac = new AbortController();
+    const timer = window.setTimeout(() => ac.abort(), 20000);
     try {
       const res = await fetch('/api/auth/withdraw.php', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ confirm_text: confirmText }),
+        signal: ac.signal,
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         throw new Error(data.message || '탈퇴 처리에 실패했습니다.');
       }
-      await logout();
+      try {
+        await Promise.race([
+          logout(),
+          new Promise((_, reject) => {
+            window.setTimeout(() => reject(new Error('logout-timeout')), 5000);
+          }),
+        ]);
+      } catch {
+        /* 서버가 이미 세션을 지웠으면 무시하고 홈으로 나간다 */
+      }
       try {
         sessionStorage.setItem('study114.withdraw.done', '1');
       } catch {
         /* ignore */
       }
-      window.location.hash = '#/guest';
+      window.location.replace('/');
     } catch (err) {
+      const aborted = err && typeof err === 'object' && 'name' in err && err.name === 'AbortError';
       if (errorEl) {
         errorEl.hidden = false;
-        errorEl.textContent = err instanceof Error ? err.message : '탈퇴 처리에 실패했습니다.';
+        errorEl.textContent = aborted
+          ? '탈퇴 요청이 시간 안에 끝나지 않았습니다. 새로고침 후 로그인 상태로 다시 확인해 주세요.'
+          : err instanceof Error
+            ? err.message
+            : '탈퇴 처리에 실패했습니다.';
       }
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = '탈퇴 확정';
       }
+    } finally {
+      window.clearTimeout(timer);
     }
   });
 }

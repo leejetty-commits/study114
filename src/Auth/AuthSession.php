@@ -111,6 +111,44 @@ final class AuthSession
         return is_array($auth) ? $auth : null;
     }
 
+    /**
+     * 세션은 있어도 DB status가 active가 아니면(탈퇴·차단) 로그아웃한다.
+     * 탈퇴 직후 email_verified=false로 확인 대기에 가두는 루프를 막는다.
+     *
+     * @return array{user_id: int, email: string, role_type: string, name: string, admin_level?: ?string, must_change_password?: bool}|null
+     */
+    public static function userIfActive(): ?array
+    {
+        $user = self::user();
+        if ($user === null) {
+            self::close();
+            return null;
+        }
+        $userId = (int) ($user['user_id'] ?? 0);
+        if ($userId < 1) {
+            self::logout();
+            self::close();
+            return null;
+        }
+        try {
+            $stmt = \Study114\Database\Connection::get()->prepare(
+                'SELECT status FROM users WHERE id = ? LIMIT 1'
+            );
+            $stmt->execute([$userId]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $status = is_array($row) ? (string) ($row['status'] ?? '') : '';
+            if ($status !== 'active') {
+                self::logout();
+                self::close();
+                return null;
+            }
+        } catch (\Throwable $e) {
+            error_log('[auth] userIfActive: ' . $e->getMessage());
+        }
+
+        return $user;
+    }
+
     /** 비밀번호 변경 후 세션 플래그 갱신 */
     public static function clearMustChangePassword(): void
     {

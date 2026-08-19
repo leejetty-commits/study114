@@ -25,6 +25,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
 
 study114_send_cors_headers();
 
+@set_time_limit(20);
+
 $user = AuthSession::user();
 if ($user === null) {
     http_response_code(401);
@@ -36,6 +38,9 @@ if ($user === null) {
     exit;
 }
 
+$userId = (int) $user['user_id'];
+AuthSession::close();
+
 $input = json_decode(file_get_contents('php://input') ?: '{}', true);
 if (!is_array($input)) {
     $input = [];
@@ -45,7 +50,7 @@ $confirmText = (string) ($input['confirm_text'] ?? '');
 
 try {
     $svc = new AccountWithdrawService();
-    $result = $svc->withdraw((int) $user['user_id'], $confirmText);
+    $result = $svc->withdraw($userId, $confirmText);
     AuthSession::logout();
 
     echo json_encode([
