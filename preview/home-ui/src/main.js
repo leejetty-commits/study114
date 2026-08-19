@@ -64,6 +64,7 @@ import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
 import { mountOpsChrome } from './site-ops-chrome.js';
 import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
+import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -275,6 +276,7 @@ function init() {
       initAuthSession(),
     ])
       .then(async ([, , user]) => {
+        if (isAuthRedirectPending()) return;
         bootReady = true;
         if (user && isAdminUser()) {
           await activateAdminApi().catch((err) => {

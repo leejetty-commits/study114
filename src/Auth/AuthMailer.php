@@ -18,7 +18,7 @@ final class AuthMailer
         $this->config = study114_config('auth');
     }
 
-    public function send(string $to, string $subject, string $body, ?string $htmlBody = null): void
+    public function send(string $to, string $subject, string $body, ?string $htmlBody = null): bool
     {
         $fromEmail = $this->fromEmail();
         $fromHeader = $this->fromHeader($fromEmail);
@@ -27,7 +27,8 @@ final class AuthMailer
 
         if (!function_exists('mail')) {
             error_log('[mail] mail() unavailable');
-            return;
+            $this->appendLogLine('MAIL_RESULT=false REASON=mail_unavailable TO=' . $to);
+            return false;
         }
 
         $encodedSubject = $this->encodeHeader($subject);
@@ -50,9 +51,10 @@ final class AuthMailer
         if (!$ok) {
             error_log('[mail] mail() returned false TO=' . $to . ' FROM=' . $fromEmail);
             $this->appendLogLine('MAIL_RESULT=false TO=' . $to . ' FROM=' . $fromEmail);
-        } else {
-            $this->appendLogLine('MAIL_RESULT=true TO=' . $to . ' FROM=' . $fromEmail);
+            return false;
         }
+        $this->appendLogLine('MAIL_RESULT=true TO=' . $to . ' FROM=' . $fromEmail);
+        return true;
     }
 
     private function fromEmail(): string

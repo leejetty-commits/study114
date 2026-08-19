@@ -226,6 +226,18 @@ export function bindGlobalEvents(root) {
   bindSiteChrome(root, {
     getRole: getChromeNavRole,
     logout: () => chromeLogout(),
+    guardNavigation: () => {
+      const user = getChromeUser();
+      if (user && !user.email_verified && getCurrentPath() === '/signup/verify-email') {
+        const status = root.querySelector('[data-verify-status]');
+        if (status) {
+          status.hidden = false;
+          status.textContent = '이메일을 확인한 뒤에 메뉴를 이용할 수 있습니다.';
+        }
+        return false;
+      }
+      return true;
+    },
   });
   bindSitePromoSidebarEvents(root, {
     plansHash: `${HOME_UI_BASE}/#/plans/positions`,

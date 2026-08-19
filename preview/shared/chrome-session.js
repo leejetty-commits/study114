@@ -3,7 +3,12 @@
  */
 import { navRoleFromAuthUser } from './site-nav-config.js';
 import { AUTH_UI_BASE } from './preview-links.js';
-import { emailVerifyWaitUrl } from './auth-redirect.js';
+import {
+  redirectToEmailVerifyWait,
+  isUnverifiedAllowedAuthPath,
+  isOnAuthUi,
+  currentAuthHashPath,
+} from './auth-redirect.js';
 
 /** @typedef {{ user_id: number, email: string, role_type: string, name: string, admin_level?: string|null, oauth_provider_labels?: string[], email_verified?: boolean }} AuthUser */
 
@@ -34,15 +39,19 @@ export async function initChromeSession() {
       const src = data.user && typeof data.user === 'object' ? data.user : data;
       if (src.role_type) {
         if (src.needs_account_contact) {
-          window.location.href = `${AUTH_UI_BASE}#/signup/account-contact`;
-          currentUser = null;
-          return null;
-        }
-        // admin_level은 콘솔 RBAC 전용. 가입완료(email_verified) 예외가 아니다.
-        if (!src.email_verified) {
-          window.location.href = emailVerifyWaitUrl();
-          currentUser = null;
-          return null;
+          if (!(isOnAuthUi() && currentAuthHashPath() === '/signup/account-contact')) {
+            const base = String(AUTH_UI_BASE).replace(/\/$/, '');
+            window.location.replace(`${base}/#/signup/account-contact`);
+            currentUser = null;
+            return null;
+          }
+        } else if (!src.email_verified) {
+          // 대기 화면 안에서는 다시 리다이렉트하지 않는다. /auth ↔ /auth/ 루프 방지.
+          if (!isUnverifiedAllowedAuthPath()) {
+            redirectToEmailVerifyWait();
+            currentUser = null;
+            return null;
+          }
         }
         currentUser = {
           user_id: src.user_id,

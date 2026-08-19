@@ -15,6 +15,7 @@ import {
   chromeLogout,
 } from '../../shared/chrome-session.js';
 import { guardRegisterAccess } from '../../shared/route-access.js';
+import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 import { renderRegisterIntroGate, bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 import {
   renderSiteHeader,
@@ -146,6 +147,7 @@ function init() {
   window.addEventListener('hashchange', render);
   Promise.all([initChromeSession(), initApi()])
     .then(([, tutor]) => {
+      if (isAuthRedirectPending()) return;
       registerState.basicComplete = isTutorBasicComplete(tutor) || registerState.basicComplete;
       if (
         registerState.basicComplete &&

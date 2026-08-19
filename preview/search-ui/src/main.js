@@ -17,6 +17,7 @@ import './styles/search-visily.css';
 import { bindSearchPageEvents, renderSearchPage } from './screens/search-page.js';
 import { syncRoleFromHash } from './state.js';
 import { initAuthSession } from '@home-ui/auth-session.js';
+import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 
 function render() {
   syncRoleFromHash();
@@ -30,7 +31,10 @@ function init() {
     window.location.hash = '#/search/room';
   }
   window.addEventListener('hashchange', render);
-  initAuthSession().finally(render);
+  initAuthSession().then(() => {
+    if (isAuthRedirectPending()) return;
+    render();
+  });
 }
 
 init();

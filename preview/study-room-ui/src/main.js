@@ -15,6 +15,7 @@ import {
   chromeLogout,
 } from '../../shared/chrome-session.js';
 import { guardRegisterAccess } from '../../shared/route-access.js';
+import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 import { renderRegisterIntroGate, bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 import {
   renderSiteHeader,
@@ -156,6 +157,7 @@ function init() {
 
   Promise.all([initChromeSession(), initApi()])
     .then(() => {
+      if (isAuthRedirectPending()) return;
       registerState.basicComplete =
         isRoomBasicComplete(registerState) || registerState.basicComplete;
       if (getCurrentScreen() === 'location') {

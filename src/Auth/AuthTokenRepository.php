@@ -88,7 +88,7 @@ final class AuthTokenRepository
 
         $stmt = $this->pdo->prepare(
             'SELECT created_at FROM auth_tokens
-             WHERE user_id = ? AND purpose = ?
+             WHERE user_id = ? AND purpose = ? AND used_at IS NULL
              ORDER BY id DESC
              LIMIT 1'
         );

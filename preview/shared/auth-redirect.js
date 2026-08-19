@@ -80,12 +80,20 @@ export function oauthStartUrl(provider, returnTo = '') {
  * 소셜 신규 가입 — 회원구분 선택 화면
  * @param {string} [returnTo]
  */
+function authUiHref(hashPathAndQuery) {
+  const hash = hashPathAndQuery.startsWith('#')
+    ? hashPathAndQuery
+    : `#${hashPathAndQuery.startsWith('/') ? hashPathAndQuery : `/${hashPathAndQuery}`}`;
+  // /auth 와 /auth/ 왕복 시 해시가 떨어져 깜박임이 생긴다. 슬래시를 고정한다.
+  return `${String(AUTH_UI_BASE).replace(/\/$/, '')}/${hash}`;
+}
+
 export function oauthRoleSelectionUrl(returnTo = '') {
   const params = new URLSearchParams({ from: 'oauth' });
   if (returnTo && isSafeReturnTo(returnTo)) {
     params.set('return_to', returnTo);
   }
-  return `${AUTH_UI_BASE}#/signup/role?${params.toString()}`;
+  return authUiHref(`/signup/role?${params.toString()}`);
 }
 
 /**
@@ -109,9 +117,65 @@ export function consumePostVerifyTarget() {
   }
 }
 
+const UNVERIFIED_AUTH_PATHS = new Set([
+  '/login',
+  '/signup/terms',
+  '/signup/role',
+  '/signup/form',
+  '/signup/verify-email',
+  '/signup/account-contact',
+  '/find-id',
+  '/find-password',
+  '/reset-password',
+]);
+
+let authRedirectPending = false;
+
+export function isAuthRedirectPending() {
+  return authRedirectPending;
+}
+
+export function isOnAuthUi() {
+  try {
+    const path = (window.location.pathname || '').replace(/\/+$/, '');
+    return path === '/auth' || path.endsWith('/auth');
+  } catch {
+    return false;
+  }
+}
+
+export function currentAuthHashPath() {
+  const raw = (window.location.hash || '').replace(/^#/, '') || '/login';
+  const path = raw.startsWith('/') ? raw : `/${raw}`;
+  const qIdx = path.indexOf('?');
+  return qIdx === -1 ? path : path.slice(0, qIdx);
+}
+
+export function isOnEmailVerifyWait() {
+  return isOnAuthUi() && currentAuthHashPath() === '/signup/verify-email';
+}
+
+export function isUnverifiedAllowedAuthPath() {
+  return isOnAuthUi() && UNVERIFIED_AUTH_PATHS.has(currentAuthHashPath());
+}
+
 export function emailVerifyWaitUrl(query = '') {
   const q = query ? (query.startsWith('?') ? query : `?${query}`) : '';
-  return `${AUTH_UI_BASE}#/signup/verify-email${q}`;
+  return authUiHref(`/signup/verify-email${q}`);
+}
+
+/** @returns {boolean} 실제 이동을 걸었으면 true */
+export function redirectToEmailVerifyWait() {
+  if (isOnEmailVerifyWait()) {
+    return false;
+  }
+  authRedirectPending = true;
+  if (isOnAuthUi()) {
+    window.location.hash = '#/signup/verify-email';
+    return true;
+  }
+  window.location.replace(emailVerifyWaitUrl());
+  return true;
 }
 
 /**
@@ -120,7 +184,7 @@ export function emailVerifyWaitUrl(query = '') {
  */
 export function resolveAfterAuthUrl(me, returnTo = '') {
   if (!me?.authenticated) {
-    return `${AUTH_UI_BASE}#/login`;
+    return authUiHref('/login');
   }
   // admin_level은 콘솔 RBAC 전용. 가입완료 우회가 아니다.
   if (me.needs_account_contact) {
@@ -128,7 +192,7 @@ export function resolveAfterAuthUrl(me, returnTo = '') {
     if (me.oauth_role_pending) params.set('from', 'oauth');
     if (returnTo && isSafeReturnTo(returnTo)) params.set('return_to', returnTo);
     const q = params.toString();
-    return `${AUTH_UI_BASE}#/signup/account-contact${q ? `?${q}` : ''}`;
+    return authUiHref(`/signup/account-contact${q ? `?${q}` : ''}`);
   }
   if (!me.email_verified) {
     return emailVerifyWaitUrl();

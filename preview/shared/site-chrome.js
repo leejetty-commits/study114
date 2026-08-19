@@ -131,6 +131,13 @@ function goSameTab(url) {
   window.location.assign(url);
 }
 
+function runGuarded(guard, fn) {
+  if (typeof guard === 'function' && guard() === false) {
+    return;
+  }
+  fn();
+}
+
 /**
  * 현재 페이지가 home-ui인지 (해시 라우팅 앱)
  * — http/https 혼용·pathname 딥링크(/plans 등)에서도 true
@@ -156,22 +163,25 @@ export function isHomeUiHost() {
  * @param {(path: string) => void} [handlers.navigateHome] home-ui 내부 해시 이동
  * @param {() => Promise<void> | void} [handlers.logout]
  * @param {() => import('./site-nav-config.js').NavRole} [handlers.getRole]
+ * @param {() => boolean} [handlers.guardNavigation] false면 로그아웃 외 이동을 막는다
  */
 export function bindSiteChrome(root, handlers = {}) {
   const getRole = handlers.getRole || (() => 'guest');
   const navigateHome = handlers.navigateHome;
   const logout = handlers.logout;
+  const guardNavigation = handlers.guardNavigation;
 
   root.querySelectorAll('[data-util-href]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      goSameTab(el.dataset.utilHref || el.getAttribute('href'));
+      runGuarded(guardNavigation, () => goSameTab(el.dataset.utilHref || el.getAttribute('href')));
     });
   });
 
   root.querySelectorAll('[data-site-logo]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
+      runGuarded(guardNavigation, () => {
       const href = el.dataset.siteLogo || '';
       if (navigateHome && isHomeUiHost()) {
         try {
@@ -185,6 +195,7 @@ export function bindSiteChrome(root, handlers = {}) {
         }
       }
       goSameTab(href);
+      });
     });
   });
 
@@ -194,6 +205,14 @@ export function bindSiteChrome(root, handlers = {}) {
       const action = el.dataset.action;
       if (!action) return;
 
+      if (action === 'util-logout') {
+        Promise.resolve(logout ? logout() : null).then(() => {
+          goSameTab(homeHashUrl('/guest'));
+        });
+        return;
+      }
+
+      runGuarded(guardNavigation, () => {
       const goHomePath = (path) => {
         if (navigateHome && isHomeUiHost()) {
           navigateHome(path);
@@ -261,11 +280,7 @@ export function bindSiteChrome(root, handlers = {}) {
         goHomePath('/mypage/recent');
         return;
       }
-      if (action === 'util-logout') {
-        Promise.resolve(logout ? logout() : null).then(() => {
-          goSameTab(homeHashUrl('/guest'));
-        });
-      }
+      });
     });
   });
 

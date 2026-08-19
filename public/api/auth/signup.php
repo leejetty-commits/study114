@@ -57,6 +57,7 @@ try {
         'email'     => $result['email'],
         'role_type' => $result['role_type'],
         'email_verified' => false,
+        'email_sent' => !empty($verify['sent']),
         'resend_available_in' => (int) ($verify['resend_available_in'] ?? 0),
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {

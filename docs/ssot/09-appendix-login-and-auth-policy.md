@@ -97,7 +97,7 @@
 
 - **가입 완료의 정의:** `users.email_verified_at IS NOT NULL` **만**. `user_oauth_accounts` 존재·세션 존재·OAuth row는 통과가 아니다.
 - 계정 생성·세션(`status=active`)은 확인 전에 허용한다. 미확인은 `pending`으로 막지 않고 **확인 대기 화면 + 서버 게이트**로 제어한다.
-- 이메일 가입은 생성 직후 확인 메일을 보낸다. 확인 전에는 `#/signup/verify-email`에 머문다.
+- 확인 메일은 **대기 화면 체류와 무관**하게 가입 API(`POST /api/auth/signup.php`)에서 바로 보낸다. 지메일 `local+tag@gmail.com` 알리어스는 가입·발송 모두 허용한다.
 - **소셜 실메일:** 제공자가 준 실메일이고 생성 시 `email_verified_at`을 채운 경우만 확인 완료로 본다.
 - **소셜 스텁**(`oauth_…@users.study114.local`)은 `email_verified_at = NULL`을 유지한다. 게이트·`me.php`도 미확인이다. 실메일 입력 후 확인 메일을 다시 보내고, 링크 클릭 후에만 완료다.
 - 아래 행동은 **메일 확인 완료 후**에만 허용 (소셜 스텁 예외 없음). **저장뿐 아니라 보호된 조회/목록/메타**도 동일하다:
