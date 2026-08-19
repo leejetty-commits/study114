@@ -49,32 +49,28 @@ try {
 
     $raw = json_decode(file_get_contents('php://input') ?: '{}', true);
     $input = is_array($raw) ? $raw : [];
-    $svc->save((int) $user['user_id'], $input);
-    $status = $svc->status((int) $user['user_id']);
+    $saved = $svc->save((int) $user['user_id'], $input);
+    $sessionUser = $svc->sessionUser((int) $saved['user_id']);
+    $status = $svc->status((int) $sessionUser['user_id']);
 
-    if (!$status['needs_email']) {
-        $emailStmtOk = true;
-        try {
-            $fresh = \Study114\Database\Connection::get()->prepare('SELECT email FROM users WHERE id = ?');
-            $fresh->execute([(int) $user['user_id']]);
-            $email = (string) $fresh->fetchColumn();
-            AuthSession::login(
-                (int) $user['user_id'],
-                $email !== '' ? $email : (string) $user['email'],
-                (string) $user['role_type'],
-                (string) ($user['name'] ?? ''),
-            );
-        } catch (Throwable $e) {
-            $emailStmtOk = false;
-            error_log('[account-contact] session email: ' . $e->getMessage());
-        }
-        unset($emailStmtOk);
+    try {
+        AuthSession::login(
+            (int) $sessionUser['user_id'],
+            (string) $sessionUser['email'],
+            (string) $sessionUser['role_type'],
+            (string) $sessionUser['name'],
+        );
+    } catch (Throwable $e) {
+        error_log('[account-contact] session: ' . $e->getMessage());
     }
 
     echo json_encode([
         'ok' => true,
         'needs_account_contact' => $status['needs_account_contact'],
-        'message' => '계정 연락처가 저장되었습니다. 이 정보는 회원에게 공개되지 않습니다.',
+        'linked' => !empty($saved['linked']),
+        'message' => !empty($saved['linked'])
+            ? '기존 계정에 소셜 로그인을 연결했습니다. 이 정보는 회원에게 공개되지 않습니다.'
+            : '계정 연락처가 저장되었습니다. 이 정보는 회원에게 공개되지 않습니다.',
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(422);

@@ -11,9 +11,19 @@ async function postJson(url, body, { credentials = 'include' } = {}) {
     credentials,
     body: JSON.stringify(body),
   });
-  const data = await res.json().catch(() => ({}));
+  const rawText = await res.text();
+  let data = {};
+  try {
+    data = rawText ? JSON.parse(rawText) : {};
+  } catch {
+    data = {};
+  }
   if (!res.ok || !data.ok) {
-    const err = new Error(data.message || `서버 오류 (${res.status})`);
+    const fallback =
+      res.status === 422
+        ? '입력값을 확인해 주세요. 이미 가입된 이메일이면 기존 계정으로 로그인해 주세요.'
+        : `서버 오류 (${res.status})`;
+    const err = new Error(data.message || fallback);
     if (data.error) {
       err.code = data.error;
     }
