@@ -4,6 +4,10 @@
   RewriteEngine On
   RewriteBase /
 
+  # 닷홈 기본 호스트만 정본으로. study114.net · www 는 조건에 안 걸림.
+  RewriteCond %{HTTP_HOST} ^study114\.dothome\.co\.kr$ [NC]
+  RewriteRule ^(.*)$ https://study114.net/$1 [R=301,L]
+
   # 실제 파일/디렉터리는 그대로 제공
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
