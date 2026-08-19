@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use PDO;
 use Study114\Database\Connection;
 
-/** 이메일 확인 완료 여부 — 9장 부록 §16-2 · 가입 완료 조건 */
+/** 가입 완료 조건 — 9장 부록 §16-2. 소셜은 제공자 인증으로 통과 */
 final class EmailVerificationGate
 {
     public function isVerified(int $userId): bool
@@ -18,8 +18,21 @@ final class EmailVerificationGate
         );
         $stmt->execute([$userId, 'active']);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (is_array($row) && ($row['email_verified_at'] ?? null) !== null) {
+            return true;
+        }
 
-        return is_array($row) && ($row['email_verified_at'] ?? null) !== null;
+        return $this->hasOAuthAccount($userId);
+    }
+
+    public function hasOAuthAccount(int $userId): bool
+    {
+        $stmt = Connection::get()->prepare(
+            'SELECT 1 FROM user_oauth_accounts WHERE user_id = ? LIMIT 1'
+        );
+        $stmt->execute([$userId]);
+
+        return (bool) $stmt->fetchColumn();
     }
 
     public function assertVerified(int $userId): void

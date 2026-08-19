@@ -132,7 +132,7 @@ export function resolveAfterAuthUrl(me, returnTo = '') {
     const q = params.toString();
     return `${AUTH_UI_BASE}#/signup/account-contact${q ? `?${q}` : ''}`;
   }
-  if (!me.email_verified) {
+  if (!me.email_verified && !(Array.isArray(me.oauth_providers) && me.oauth_providers.length)) {
     return emailVerifyWaitUrl();
   }
   if (me.oauth_role_pending) {

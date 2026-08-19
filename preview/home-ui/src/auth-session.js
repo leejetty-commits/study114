@@ -83,7 +83,11 @@ export async function fetchSession() {
     window.location.href = `${AUTH_UI_BASE}#/signup/account-contact`;
     return null;
   }
-  if (!data.email_verified && !data.admin_level) {
+  if (
+    !data.email_verified &&
+    !data.admin_level &&
+    !(Array.isArray(data.oauth_providers) && data.oauth_providers.length)
+  ) {
     window.location.href = emailVerifyWaitUrl();
     return null;
   }
