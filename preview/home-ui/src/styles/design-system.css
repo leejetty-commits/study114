@@ -580,7 +580,9 @@ body {
 /* ── Cross-app shell: GNB 대상 검색·등록·인증 폭 통일 ── */
 .search-body:not(.home-body--with-promo),
 .register-body:not(.home-body--with-promo),
-.auth-body:not(.home-body--with-promo) {
+.auth-body:not(.home-body--with-promo),
+.home-body.auth-body,
+.auth-body.auth-body--no-promo {
   display: block !important;
   grid-template-columns: none !important;
   max-width: var(--home-max);
@@ -597,8 +599,7 @@ body {
 .home-body.home-body--with-promo,
 .home-app > .home-body.home-body--with-promo,
 .search-body.home-body--with-promo,
-.register-body.home-body--with-promo,
-.auth-body.home-body--with-promo {
+.register-body.home-body--with-promo {
   display: grid !important;
   max-width: var(--home-max);
   width: 100%;
@@ -613,10 +614,17 @@ body {
   .home-body.home-body--with-promo,
   .home-app > .home-body.home-body--with-promo,
   .search-body.home-body--with-promo,
-  .register-body.home-body--with-promo,
-  .auth-body.home-body--with-promo {
+  .register-body.home-body--with-promo {
     grid-template-columns: minmax(0, 1fr) 14rem !important;
     gap: var(--space-2);
+  }
+
+  /* 로그인·가입은 우측 세로배너 열을 쓰지 않음 */
+  .home-body.auth-body,
+  .auth-body.auth-body--no-promo,
+  .auth-body.home-body--with-promo {
+    display: block !important;
+    grid-template-columns: none !important;
   }
 }
 

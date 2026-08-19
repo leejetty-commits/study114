@@ -13,10 +13,7 @@ import {
   chromeLogout,
 } from '../../shared/chrome-session.js';
 import { HOME_UI_BASE } from '../../shared/preview-links.js';
-import {
-  renderSitePromoSidebar,
-  bindSitePromoSidebarEvents,
-} from '../../shared/promo-sidebar.js';
+import { bindSitePromoSidebarEvents } from '../../shared/promo-sidebar.js';
 import { renderSiteFooter } from '../../shared/site-footer.js';
 import { bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 
@@ -94,12 +91,10 @@ export function renderPreviewToolbar(activeScreen) {
 
 export function renderAuthShell(content, options = {}) {
   const { wide = false, showBack = false, backPath = '/login', backLabel = '뒤로', hideDefaultCard = false } = options;
-  const showPromo = isChromeLoggedIn();
-  const bodyPromoClass = showPromo ? ' home-body--with-promo' : ' auth-body--no-promo';
-  const promoSidebar = showPromo ? renderSitePromoSidebar() : '';
+  const loggedIn = isChromeLoggedIn();
   const header = renderSiteHeader({
     user: getChromeUser(),
-    loggedIn: showPromo,
+    loggedIn,
     role: getChromeNavRole(),
   });
 
@@ -108,13 +103,12 @@ export function renderAuthShell(content, options = {}) {
     ${renderPreviewToolbar(getCurrentScreen())}
     <div class="site-chrome-shell auth-chrome-shell auth-shell auth-shell--stage">
       ${header}
-      <div class="home-body auth-body auth-body--stage${bodyPromoClass}">
+      <div class="home-body auth-body auth-body--stage auth-body--no-promo">
         <div class="home-main">
           <div class="site-gate-wrap site-gate-wrap--stage">
             ${content}
           </div>
         </div>
-        ${promoSidebar}
       </div>
       ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>`;
@@ -124,7 +118,7 @@ export function renderAuthShell(content, options = {}) {
     ${renderPreviewToolbar(getCurrentScreen())}
     <div class="site-chrome-shell auth-chrome-shell auth-shell">
       ${header}
-      <div class="home-body auth-body${bodyPromoClass}">
+      <div class="home-body auth-body auth-body--no-promo">
         <div class="home-main">
           <div class="site-gate-wrap">
             <div class="auth-shell__card panel ${wide ? 'auth-shell__card--wide' : ''}">
@@ -133,7 +127,6 @@ export function renderAuthShell(content, options = {}) {
             </div>
           </div>
         </div>
-        ${promoSidebar}
       </div>
       ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>

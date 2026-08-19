@@ -181,14 +181,22 @@ img {
 
 .login-stage__backdrop {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: min(36rem, 100%);
+  transform: translateX(-50%);
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: var(--space-6);
   padding: var(--space-8) var(--space-6);
-  opacity: 0.35;
+  opacity: 0.28;
   pointer-events: none;
   filter: blur(1px);
+}
+
+.login-silhouette--tutor {
+  display: none;
 }
 
 .login-silhouette {
@@ -453,12 +461,7 @@ img {
 
 @media (max-width: 767px) {
   .login-stage__backdrop {
-    grid-template-columns: 1fr;
     opacity: 0.2;
-  }
-
-  .login-silhouette--tutor {
-    display: none;
   }
 }
 

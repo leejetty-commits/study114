@@ -348,7 +348,7 @@ img {
 }
 
 @media (min-width: 1024px) {
-  .home-body {
+  .home-body:not(.auth-body) {
     grid-template-columns: 1fr var(--sidebar-width);
     gap: var(--space-8);
   }
