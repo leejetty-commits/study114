@@ -7,6 +7,9 @@ namespace Study114\Controllers;
 use InvalidArgumentException;
 use Study114\Auth\AuthSession;
 use Study114\Auth\BasicRegisterService;
+use Study114\Auth\EmailVerificationGate;
+use Study114\Auth\EmailVerificationRequiredException;
+use Study114\Auth\EmailVerificationService;
 use Study114\Auth\LoginService;
 use Study114\Auth\ProfileGenderSync;
 use Study114\Auth\SignupService;
@@ -35,7 +38,10 @@ final class AuthController
         try {
             $user = (new LoginService())->attempt($email, $password);
             AuthSession::login($user['user_id'], $user['email'], $user['role_type'], $user['name']);
-            study114_redirect('/auth/signup/complete');
+            if (!(new EmailVerificationGate())->isVerified((int) $user['user_id'])) {
+                $this->redirectAuthHash('/signup/verify-email');
+            }
+            $this->redirectHomeUi();
         } catch (InvalidArgumentException $e) {
             Flash::set('errors', [$e->getMessage()]);
             Flash::set('old', ['email' => $email]);
@@ -143,8 +149,12 @@ final class AuthController
                 $result['role_type'],
                 (string) ($input['name'] ?? '')
             );
-            Flash::set('signup_success', $result);
-            study114_redirect('/auth/signup/basic');
+            try {
+                (new EmailVerificationService())->sendVerification((int) $result['user_id']);
+            } catch (\Throwable $e) {
+                error_log('[signup] verify mail: ' . $e->getMessage());
+            }
+            $this->redirectAuthHash('/signup/verify-email');
         } catch (InvalidArgumentException $e) {
             Flash::set('errors', [$e->getMessage()]);
             Flash::set('old', $_POST);
@@ -160,8 +170,9 @@ final class AuthController
     public function signupBasicForm(): void
     {
         if (!AuthSession::check()) {
-            study114_redirect('/auth/signup/form');
+            $this->redirectAuthHash('/signup/form');
         }
+        $this->assertEmailVerifiedOrRedirect();
 
         $role = $this->resolveRoleUi();
         $user = AuthSession::user();
@@ -183,13 +194,14 @@ final class AuthController
     public function signupBasicSubmit(): void
     {
         if (!AuthSession::check()) {
-            study114_redirect('/auth/signup/form');
+            $this->redirectAuthHash('/signup/form');
         }
 
         $user = AuthSession::user();
         if ($user === null) {
-            study114_redirect('/auth/login');
+            $this->redirectAuthHash('/login');
         }
+        $this->assertEmailVerifiedOrRedirect();
 
         $role = $this->resolveRoleUi();
 
@@ -212,8 +224,9 @@ final class AuthController
     public function signupComplete(): void
     {
         if (!AuthSession::check()) {
-            study114_redirect('/auth/login');
+            $this->redirectAuthHash('/login');
         }
+        $this->assertEmailVerifiedOrRedirect();
 
         AuthSession::resetSignup();
 
@@ -247,5 +260,35 @@ final class AuthController
         }
 
         return $map[$user['role_type']] ?? 'student';
+    }
+
+    private function authUiBase(): string
+    {
+        return rtrim((string) study114_config('auth')['auth_ui'], '/');
+    }
+
+    private function redirectAuthHash(string $hashPath): never
+    {
+        $hash = ltrim(str_replace('#', '', $hashPath), '/');
+        study114_redirect($this->authUiBase() . '/#/' . $hash);
+    }
+
+    private function redirectHomeUi(): never
+    {
+        $home = rtrim((string) study114_config('auth')['home_ui'], '/');
+        study114_redirect($home === '' ? '/' : $home . '/');
+    }
+
+    private function assertEmailVerifiedOrRedirect(): void
+    {
+        $user = AuthSession::user();
+        if ($user === null) {
+            $this->redirectAuthHash('/login');
+        }
+        try {
+            (new EmailVerificationGate())->assertVerified((int) $user['user_id']);
+        } catch (EmailVerificationRequiredException $e) {
+            $this->redirectAuthHash('/signup/verify-email');
+        }
     }
 }

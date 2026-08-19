@@ -55,6 +55,7 @@ final class AccountContactService
         $pdo->beginTransaction();
         $finalUserId = $userId;
         $linked = false;
+        $replacedStubEmail = false;
         try {
             $this->upsertPhone($pdo, $userId, $phone);
 
@@ -75,6 +76,7 @@ final class AccountContactService
                 } else {
                     $pdo->prepare('UPDATE users SET email = ? WHERE id = ?')
                         ->execute([$email, $userId]);
+                    $replacedStubEmail = true;
                 }
             }
 
@@ -89,6 +91,16 @@ final class AccountContactService
                 $pdo->rollBack();
             }
             throw $e;
+        }
+
+        if ($replacedStubEmail) {
+            try {
+                $verify = new EmailVerificationService();
+                $verify->clearVerifiedAt($finalUserId);
+                $verify->sendVerification($finalUserId);
+            } catch (Throwable $e) {
+                error_log('[account-contact] verify mail: ' . $e->getMessage());
+            }
         }
 
         return [

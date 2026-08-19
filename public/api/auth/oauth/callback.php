@@ -53,6 +53,11 @@ try {
         exit;
     }
 
+    if (!(new \Study114\Auth\EmailVerificationGate())->isVerified((int) $user['user_id'])) {
+        header('Location: ' . $authUi . '/#/signup/verify-email', true, 302);
+        exit;
+    }
+
     $roleHome = match ($user['role_type']) {
         'admin'            => '/guest',
         'study_room_owner' => '/study-room',

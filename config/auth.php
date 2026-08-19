@@ -20,7 +20,7 @@ return [
     /** 재설정 메일 재전송 최소 간격(초). 서버·클라이언트 동일 — 5분 */
     'password_reset_resend_cooldown_seconds' => 300,
     'email_verify_ttl_minutes'   => 24 * 60,
-    /** 가입 확인 메일 재전송 최소 간격(초). 서버·클라이언트 동일 — 5분 */
-    'email_verify_resend_cooldown_seconds' => 300,
+    /** 가입 확인 메일 재전송 최소 간격(초). 서버·클라이언트 동일 — 10분 */
+    'email_verify_resend_cooldown_seconds' => 600,
     'mail_log_path'              => $root . '/storage/logs/mail.log',
 ];

@@ -90,7 +90,17 @@ if ($auth === null) {
 
 }
 
-
+try {
+    (new \Study114\Auth\EmailVerificationGate())->assertVerified((int) $auth['user_id']);
+} catch (\Study114\Auth\EmailVerificationRequiredException $e) {
+    http_response_code(403);
+    echo json_encode([
+        'ok'      => false,
+        'error'   => 'email_verify_required',
+        'message' => $e->getMessage(),
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $roleUi = (string) ($input['role'] ?? '');
 

@@ -44,6 +44,7 @@ final class HandoffApi
         if ($auth === null) {
             self::fail(401, 'unauthorized', '로그인이 필요합니다.');
         }
+        (new \Study114\Auth\EmailVerificationGate())->assertVerified((int) $auth['user_id']);
 
         return $auth;
     }
@@ -110,6 +111,8 @@ final class HandoffApi
     {
         try {
             $fn();
+        } catch (\Study114\Auth\EmailVerificationRequiredException $e) {
+            self::fail(403, 'email_verify_required', $e->getMessage());
         } catch (InvalidArgumentException $e) {
             self::fail(422, 'validation', $e->getMessage());
         } catch (Throwable $e) {

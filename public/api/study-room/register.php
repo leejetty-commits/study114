@@ -103,7 +103,17 @@ try {
 
     $userId = (int) $auth['user_id'];
 
-
+    try {
+        (new \Study114\Auth\EmailVerificationGate())->assertVerified($userId);
+    } catch (\Study114\Auth\EmailVerificationRequiredException $e) {
+        http_response_code(403);
+        echo json_encode([
+            'ok'      => false,
+            'error'   => 'email_verify_required',
+            'message' => $e->getMessage(),
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
     if ($action === 'load') {
 
@@ -154,6 +164,13 @@ try {
         'message' => 'action: masters | load | save',
     ], JSON_UNESCAPED_UNICODE);
 
+} catch (\Study114\Auth\EmailVerificationRequiredException $e) {
+    http_response_code(403);
+    echo json_encode([
+        'ok'      => false,
+        'error'   => 'email_verify_required',
+        'message' => $e->getMessage(),
+    ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     echo json_encode([
         'ok'      => false,

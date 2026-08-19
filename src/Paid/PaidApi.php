@@ -42,6 +42,7 @@ final class PaidApi
         if (!in_array($auth['role_type'], ['tutor', 'study_room_owner'], true)) {
             self::fail(403, 'forbidden', '공급자(과외·공부방) 전용입니다.');
         }
+        (new \Study114\Auth\EmailVerificationGate())->assertVerified((int) $auth['user_id']);
 
         return $auth;
     }
@@ -92,6 +93,8 @@ final class PaidApi
     {
         try {
             $fn();
+        } catch (\Study114\Auth\EmailVerificationRequiredException $e) {
+            self::fail(403, 'email_verify_required', $e->getMessage());
         } catch (PaidGateException $e) {
             self::fail(403, 'paid_gate', $e->getMessage());
         } catch (InvalidArgumentException $e) {

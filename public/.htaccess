@@ -13,9 +13,14 @@
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # PHP MVC 인증 라우트
+  # PHP MVC 인증 라우트 (로그인·찾기만). 가입은 SPA 해시 라우트.
   RewriteRule ^auth/(login|logout|find-id|find-password)/?$ index.php [L,QSA]
-  RewriteRule ^auth/signup/(terms|role|form|basic|complete)/?$ index.php [L,QSA]
+  RewriteRule ^auth/signup/basic/?$ /auth/#/signup/basic [R=302,NE,L]
+  RewriteRule ^auth/signup/complete/?$ /auth/#/signup/complete [R=302,NE,L]
+  RewriteRule ^auth/signup/verify-email/?$ /auth/#/signup/verify-email [R=302,NE,L]
+  RewriteRule ^auth/signup/terms/?$ /auth/#/signup/terms [R=302,NE,L]
+  RewriteRule ^auth/signup/role/?$ /auth/#/signup/role [R=302,NE,L]
+  RewriteRule ^auth/signup/form/?$ /auth/#/signup/form [R=302,NE,L]
 
   # SPA fallback
   RewriteRule ^auth/ auth/index.html [L]

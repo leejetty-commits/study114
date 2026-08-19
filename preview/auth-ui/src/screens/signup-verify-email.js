@@ -14,7 +14,7 @@ import {
 } from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 
-const EMAIL_VERIFY_RESEND_COOLDOWN_SEC = 300;
+const EMAIL_VERIFY_RESEND_COOLDOWN_SEC = 600;
 
 function isInternalAuthEmail(email) {
   const e = String(email || '')
@@ -66,6 +66,7 @@ export function renderSignupVerifyEmail() {
           입력값은 저장되었고 계정은 만들어졌습니다. 메일 안의 링크를 눌러야 가입이 완료됩니다.
         </p>
         <p class="form-hint">이메일은 로그인 및 계정 확인에 사용됩니다.</p>
+        <p class="form-hint">메일이 보이지 않으면 <strong>스팸함·프로모션함</strong>도 확인해 주세요. 확인 메일이 스팸으로 분류되는 경우가 있습니다.</p>
         <p class="form-hint">휴대폰 번호는 비공개로 보관됩니다. 휴대폰 본인확인은 필요한 경우 내부 신뢰도 점검을 위해 진행될 수 있으며, 다른 사용자에게 공개되지 않습니다.</p>
         ${err ? `<p class="form-error" role="alert">${esc(err)}</p>` : ''}
         <p class="recovery-stage__email-hint" data-masked-email></p>

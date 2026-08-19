@@ -39,7 +39,7 @@ export function renderSignupForm() {
             autocomplete="username"
             required
           />
-          <p class="form-hint">이메일은 로그인 및 계정 확인에 사용됩니다. 검색·상세·쪽지에는 노출되지 않습니다.</p>
+          <p class="form-hint">이메일은 로그인 및 계정 확인에 사용됩니다. 검색·상세·쪽지에는 노출되지 않습니다. 확인 메일이 안 보이면 스팸함·프로모션함도 확인해 주세요.</p>
         </div>
 
         <div class="form-row">
