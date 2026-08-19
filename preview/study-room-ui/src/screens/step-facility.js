@@ -10,7 +10,6 @@ import {
   renderGuideNotice,
   renderPublishStatusBlock,
   renderMessageInquiryNotice,
-  offerGoToMessageInquiry,
   bindGlobalEvents,
   navigate,
   withRoomId,
@@ -231,7 +230,7 @@ export function bindFacilityEvents(root) {
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
       await persistFacility();
-      if (offerGoToMessageInquiry(registerState.study_room_id)) return;
+      sessionStorage.setItem('study114_offer_message_inquiry', '1');
       registerState.completeNeedsHydrate = true;
       navigate(withRoomId('/register/complete'));
     });

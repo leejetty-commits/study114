@@ -76,23 +76,37 @@ export function bindCompleteEvents(root) {
       registerState.profile_status = next;
       await saveCurrentStep(registerState, 'facility');
       alert(next === 'published' ? '공개 상태로 저장했습니다.' : '저장만(비공개)으로 두었습니다.');
-      if (offerGoToMessageInquiry(registerState.study_room_id)) return;
       window.dispatchEvent(new Event('hashchange'));
     });
   });
 
-  if (!registerState.completeNeedsHydrate || hydratingComplete) return;
-  hydratingComplete = true;
-  loadRoom()
-    .then((room) => {
-      if (room) applyRoomToState(registerState, room);
-      registerState.completeNeedsHydrate = false;
-      window.dispatchEvent(new Event('hashchange'));
-    })
-    .catch(() => {
-      registerState.completeNeedsHydrate = false;
-    })
-    .finally(() => {
-      hydratingComplete = false;
-    });
+  if (registerState.completeNeedsHydrate) {
+    if (hydratingComplete) return;
+    hydratingComplete = true;
+    loadRoom()
+      .then((room) => {
+        if (room) applyRoomToState(registerState, room);
+        registerState.completeNeedsHydrate = false;
+        window.dispatchEvent(new Event('hashchange'));
+      })
+      .catch(() => {
+        registerState.completeNeedsHydrate = false;
+      })
+      .finally(() => {
+        hydratingComplete = false;
+        maybeOfferMessageInquiry();
+      });
+    return;
+  }
+
+  if (hydratingComplete) return;
+  maybeOfferMessageInquiry();
+}
+
+function maybeOfferMessageInquiry() {
+  if (sessionStorage.getItem('study114_offer_message_inquiry') !== '1') return;
+  if (!registerState.study_room_id) return;
+  sessionStorage.removeItem('study114_offer_message_inquiry');
+  const roomId = registerState.study_room_id;
+  window.setTimeout(() => offerGoToMessageInquiry(roomId), 0);
 }
