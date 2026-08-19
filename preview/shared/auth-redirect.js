@@ -151,6 +151,17 @@ export function currentAuthHashPath() {
   return qIdx === -1 ? path : path.slice(0, qIdx);
 }
 
+export function isGuidePublicPath() {
+  try {
+    const path = (window.location.pathname || '').replace(/\/$/, '') || '';
+    if (path === '/guide' || path.startsWith('/guide/')) return true;
+    const raw = (window.location.hash || '').replace(/^#/, '');
+    const hash = (raw.startsWith('/') ? raw : `/${raw}`).split('?')[0];
+    return hash === '/guide' || hash.startsWith('/guide/');
+  } catch {
+    return false;
+  }
+}
 export function isOnEmailVerifyWait() {
   return isOnAuthUi() && currentAuthHashPath() === '/signup/verify-email';
 }

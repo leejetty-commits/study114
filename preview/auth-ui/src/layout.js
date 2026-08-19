@@ -226,9 +226,10 @@ export function bindGlobalEvents(root) {
   bindSiteChrome(root, {
     getRole: getChromeNavRole,
     logout: () => chromeLogout(),
-    guardNavigation: () => {
+    guardNavigation: (action) => {
       const user = getChromeUser();
       if (user && !user.email_verified && getCurrentPath() === '/signup/verify-email') {
+        if (action === 'util-guide') return true;
         const status = root.querySelector('[data-verify-status]');
         if (status) {
           status.hidden = false;

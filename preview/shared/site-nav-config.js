@@ -21,7 +21,8 @@ import {
 /**
  * 유틸 메뉴
  * - 비로그인: 이용안내 · 로그인 · 회원가입
- * - 로그인: 이용안내 · 쪽지함 · 최근열람 · 마이페이지 · 로그아웃
+ * - 로그인(가입완료): 이용안내 · 쪽지함 · 최근열람 · 마이페이지 · 로그아웃
+ * - 로그인(메일 미확인): 이용안내 · 로그아웃만. 쪽지함·마이페이지는 숨김.
  * 지역선택·고객센터는 유틸에 두지 않음
  */
 export const UTIL_MENU = {
@@ -37,7 +38,21 @@ export const UTIL_MENU = {
     { id: 'mypage', label: '마이페이지', action: 'util-mypage' },
     { id: 'logout', label: '로그아웃', action: 'util-logout' },
   ],
+  pendingVerify: [
+    { id: 'guide', label: '이용안내', action: 'util-guide' },
+    { id: 'logout', label: '로그아웃', action: 'util-logout' },
+  ],
 };
+
+/**
+ * @param {{ email_verified?: boolean } | null} user
+ * @param {boolean} loggedIn
+ */
+export function resolveUtilMenuItems(user, loggedIn) {
+  if (!loggedIn || !user) return UTIL_MENU.guest;
+  if (user.email_verified === false) return UTIL_MENU.pendingVerify;
+  return UTIL_MENU.loggedIn;
+}
 
 /**
  * 메인 GNB 순서 고정 (탐색 → 등록 → 운영/지원)

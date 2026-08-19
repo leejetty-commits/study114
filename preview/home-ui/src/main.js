@@ -53,7 +53,7 @@ import { renderPolicy, bindPolicyEvents } from './policy-index.js';
 import { renderLibrary, bindLibraryEvents } from './library/index.js';
 import { renderAdmin, bindAdminEvents } from './admin/index.js';
 import { renderPlans, bindPlansEvents } from './plans/index.js';
-import { initAuthSession, isAdminUser, isLoggedIn, ROLE_HOME } from './auth-session.js';
+import { initAuthSession, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME } from './auth-session.js';
 import { guardRoleHomeAccess } from '../../shared/route-access.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
@@ -64,7 +64,7 @@ import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
 import { mountOpsChrome } from './site-ops-chrome.js';
 import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
-import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
+import { isAuthRedirectPending, redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -86,6 +86,10 @@ function applyPlansRedirects() {
 }
 
 function render() {
+  if (isLoggedIn() && !isEmailVerified() && !isGuideRoute()) {
+    redirectToEmailVerifyWait();
+    return;
+  }
   if (applyPlansRedirects()) return;
   const app = document.getElementById('app');
   if (isAdminRoute()) {

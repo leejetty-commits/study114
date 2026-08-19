@@ -2,9 +2,9 @@ import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRo
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
-import { UTIL_MENU, GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVisible } from './nav-config.js';
+import { GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVisible, resolveUtilMenuItems } from './nav-config.js';
 import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
-import { getAuthUser, isLoggedIn, isAdminUser, devLoginAs, logout } from './auth-session.js';
+import { getAuthUser, isLoggedIn, isAdminUser, isEmailVerified, devLoginAs, logout } from './auth-session.js';
 import { resolveAccountDisplayName } from './auth/display-identity.js';
 import { ensureBackToTop } from '../../shared/back-to-top.js';
 import { isHandoffApiMode } from './handoff-backend.js';
@@ -13,6 +13,7 @@ import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { syncSiteHeaderOffset, ensureSiteHeaderOffsetListeners } from '../../shared/site-chrome.js';
 import { renderSiteFooter } from '../../shared/site-footer.js';
 import { setPendingRoute } from '../../shared/pending-route.js';
+import { redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
 import { getDefaultCommunityPath } from './concern/router.js';
 
 export function renderPreviewToolbar() {
@@ -81,10 +82,12 @@ export function renderPreviewToolbar() {
  * @param {{ showAuth?: boolean, showRoleSwitch?: boolean }} opts
  */
 function renderUtilBar(role, showAuth) {
-  const items = showAuth ? UTIL_MENU.guest : UTIL_MENU.loggedIn;
   const authUser = getAuthUser();
+  const loggedIn = isLoggedIn();
+  const pendingVerify = loggedIn && !isEmailVerified();
+  const items = resolveUtilMenuItems(authUser, loggedIn);
   const onGuide = isGuideRoute();
-  const adminLink = isAdminUser()
+  const adminLink = isAdminUser() && !pendingVerify
     ? `<button type="button" class="home-util__link home-util__link--admin" data-nav="/admin">관리자 콘솔</button>`
     : '';
   const displayLabel = authUser ? resolveAccountDisplayName(authUser) : '';
@@ -429,6 +432,20 @@ export function bindLayoutEvents(root, rerender) {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       const action = el.dataset.action;
+      if (isLoggedIn() && !isEmailVerified()) {
+        const allowed =
+          action === 'util-logout' ||
+          action === 'util-guide' ||
+          action === 'dev-logout' ||
+          action === 'dev-login-parent' ||
+          action === 'dev-login-room' ||
+          action === 'dev-login-tutor' ||
+          action === 'dev-login-admin';
+        if (!allowed) {
+          redirectToEmailVerifyWait();
+          return;
+        }
+      }
       if (action === 'role-switch') {
         // GNB가 아니라 마이페이지 계정설정으로 유도
         navigate('/mypage/account');

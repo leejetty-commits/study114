@@ -11,7 +11,7 @@ import { hydrateProviderNotices, resetProviderNotices } from './provider-notices
 import { hydrateExposureBridge, resetExposureBridge } from './exposure-bridge.js';
 import { activateRegistrationsApi, deactivateRegistrationsApi } from './registrations-backend.js';
 import { navigate, setActiveRole } from './state.js';
-import { oauthRoleSelectionUrl, redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
+import { oauthRoleSelectionUrl, redirectToEmailVerifyWait, isGuidePublicPath } from '../../shared/auth-redirect.js';
 import { AUTH_UI_BASE } from '../../shared/preview-links.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
@@ -85,6 +85,19 @@ export async function fetchSession() {
   }
   // admin_level은 콘솔 RBAC 전용. 가입완료(email_verified) 예외가 아니다.
   if (!data.email_verified) {
+    if (isGuidePublicPath()) {
+      return {
+        user_id: data.user_id,
+        email: data.email,
+        role_type: data.role_type,
+        name: data.name,
+        email_verified: false,
+        admin_level: data.admin_level ?? null,
+        must_change_password: Boolean(data.must_change_password),
+        oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
+        oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
+      };
+    }
     redirectToEmailVerifyWait();
     return null;
   }

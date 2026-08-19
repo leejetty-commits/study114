@@ -17,6 +17,7 @@ export {
   supportUiUrl,
   resolveGnbLink,
   isGnbItemVisible,
+  resolveUtilMenuItems,
   getGnbVisibility,
   canAccessPlansHub,
   canAccessPlansAccountRoutes,

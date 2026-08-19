@@ -4,7 +4,6 @@
  */
 
 import {
-  UTIL_MENU,
   GNB_MAIN,
   navRoleFromAuthUser,
   roleHomeHashPath,
@@ -12,6 +11,7 @@ import {
   resolveGnbLink,
   HOME_UI_BASE,
   isGnbItemVisible,
+  resolveUtilMenuItems,
 } from './site-nav-config.js';
 import { resolveAccountDisplayName } from '../home-ui/src/auth/display-identity.js';
 
@@ -35,15 +35,17 @@ function escAttr(s) {
  * @param {{ role_type?: string, admin_level?: string|null, email?: string|null, name?: string|null } | null} [user]
  */
 function renderUtilBar(role, showAuth, user = null) {
-  const items = showAuth ? UTIL_MENU.guest : UTIL_MENU.loggedIn;
+  const loggedIn = !showAuth && Boolean(user);
+  const pendingVerify = loggedIn && user?.email_verified === false;
+  const items = resolveUtilMenuItems(user, loggedIn);
   const isAdmin = Boolean(user?.admin_level) || user?.role_type === 'admin';
   const displayLabel = user ? resolveAccountDisplayName(user) : '';
   const account =
-    user && !showAuth
+    loggedIn
       ? `<span class="home-util__account" title="${escAttr(displayLabel)}">로그인: ${escAttr(displayLabel)}</span>`
       : '';
   const adminLink =
-    isAdmin && !showAuth
+    isAdmin && loggedIn && !pendingVerify
       ? `<button type="button" class="home-util__link home-util__link--admin" data-action="util-admin">관리자 콘솔</button>`
       : '';
   const base = items
@@ -131,8 +133,8 @@ function goSameTab(url) {
   window.location.assign(url);
 }
 
-function runGuarded(guard, fn) {
-  if (typeof guard === 'function' && guard() === false) {
+function runGuarded(guard, fn, actionKey) {
+  if (typeof guard === 'function' && guard(actionKey) === false) {
     return;
   }
   fn();
@@ -174,7 +176,7 @@ export function bindSiteChrome(root, handlers = {}) {
   root.querySelectorAll('[data-util-href]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      runGuarded(guardNavigation, () => goSameTab(el.dataset.utilHref || el.getAttribute('href')));
+      runGuarded(guardNavigation, () => goSameTab(el.dataset.utilHref || el.getAttribute('href')), 'util-href');
     });
   });
 
@@ -182,20 +184,20 @@ export function bindSiteChrome(root, handlers = {}) {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       runGuarded(guardNavigation, () => {
-      const href = el.dataset.siteLogo || '';
-      if (navigateHome && isHomeUiHost()) {
-        try {
-          const u = new URL(href, window.location.href);
-          const hash = u.hash.replace(/^#/, '') || '/guest';
-          const path = hash.startsWith('/') ? hash : `/${hash}`;
-          navigateHome(path.split('?')[0]);
-          return;
-        } catch {
-          /* fall through */
+        const href = el.dataset.siteLogo || '';
+        if (navigateHome && isHomeUiHost()) {
+          try {
+            const u = new URL(href, window.location.href);
+            const hash = u.hash.replace(/^#/, '') || '/guest';
+            const path = hash.startsWith('/') ? hash : `/${hash}`;
+            navigateHome(path.split('?')[0]);
+            return;
+          } catch {
+            /* fall through */
+          }
         }
-      }
-      goSameTab(href);
-      });
+        goSameTab(href);
+      }, 'logo');
     });
   });
 
@@ -213,74 +215,70 @@ export function bindSiteChrome(root, handlers = {}) {
       }
 
       runGuarded(guardNavigation, () => {
-      const goHomePath = (path) => {
-        if (navigateHome && isHomeUiHost()) {
-          navigateHome(path);
-        } else {
-          goSameTab(homeHashUrl(path));
-        }
-      };
-
-      if (action.startsWith('gnb-')) {
-        const gnbId = action.replace('gnb-', '');
-        const role = getRole();
-        if (!isGnbItemVisible(role, gnbId)) return;
-
-        // href에 실제 목적지를 넣어 두었으므로, 타 SPA→홈 이동은 location이 fragment를
-        // 잃지 않도록 pathname 딥링크(homeHashUrl)를 그대로 사용한다.
-        const dest = el.getAttribute('href') || gnbHref(gnbId, role);
-        if (gnbId === 'home') {
-          goHomePath(roleHomePathForNav(role));
-          return;
-        }
-        if (gnbId === 'support') {
-          if (navigateHome && isHomeUiHost()) navigateHome('/support');
-          else goSameTab(dest);
-          return;
-        }
-        if (gnbId === 'community' || gnbId === 'concern') {
+        const goHomePath = (path) => {
           if (navigateHome && isHomeUiHost()) {
-            setPendingRoute('/community/director');
-            navigateHome('/community/director');
-          } else goSameTab(dest);
-          return;
-        }
-        if (gnbId === 'plans') {
-          // fragment·pathname 유실 대비 — 도착 측에서 pending으로 복구
-          setPendingRoute('/plans');
-          if (navigateHome && isHomeUiHost()) navigateHome('/plans');
-          else goSameTab(dest);
-          return;
-        }
-        const link = resolveGnbLink(gnbId, role);
-        if (!link) return;
-        if (link.external) goSameTab(link.url);
-        else goHomePath(link.url);
-        return;
-      }
+            navigateHome(path);
+          } else {
+            goSameTab(homeHashUrl(path));
+          }
+        };
 
-      if (action === 'util-guide') {
-        if (navigateHome && isHomeUiHost()) navigateHome('/guide');
-        else goSameTab(homeHashUrl('/guide'));
-        return;
-      }
-      if (action === 'util-admin') {
-        goHomePath('/admin');
-        return;
-      }
-      if (action === 'util-mypage') {
-        goHomePath('/mypage');
-        return;
-      }
-      if (action === 'util-messages') {
-        goHomePath('/messages');
-        return;
-      }
-      if (action === 'util-recent') {
-        goHomePath('/mypage/recent');
-        return;
-      }
-      });
+        if (action.startsWith('gnb-')) {
+          const gnbId = action.replace('gnb-', '');
+          const role = getRole();
+          if (!isGnbItemVisible(role, gnbId)) return;
+
+          const dest = el.getAttribute('href') || gnbHref(gnbId, role);
+          if (gnbId === 'home') {
+            goHomePath(roleHomePathForNav(role));
+            return;
+          }
+          if (gnbId === 'support') {
+            if (navigateHome && isHomeUiHost()) navigateHome('/support');
+            else goSameTab(dest);
+            return;
+          }
+          if (gnbId === 'community' || gnbId === 'concern') {
+            if (navigateHome && isHomeUiHost()) {
+              setPendingRoute('/community/director');
+              navigateHome('/community/director');
+            } else goSameTab(dest);
+            return;
+          }
+          if (gnbId === 'plans') {
+            setPendingRoute('/plans');
+            if (navigateHome && isHomeUiHost()) navigateHome('/plans');
+            else goSameTab(dest);
+            return;
+          }
+          const link = resolveGnbLink(gnbId, role);
+          if (!link) return;
+          if (link.external) goSameTab(link.url);
+          else goHomePath(link.url);
+          return;
+        }
+
+        if (action === 'util-guide') {
+          if (navigateHome && isHomeUiHost()) navigateHome('/guide');
+          else goSameTab(homeHashUrl('/guide'));
+          return;
+        }
+        if (action === 'util-admin') {
+          goHomePath('/admin');
+          return;
+        }
+        if (action === 'util-mypage') {
+          goHomePath('/mypage');
+          return;
+        }
+        if (action === 'util-messages') {
+          goHomePath('/messages');
+          return;
+        }
+        if (action === 'util-recent') {
+          goHomePath('/mypage/recent');
+        }
+      }, action);
     });
   });
 
