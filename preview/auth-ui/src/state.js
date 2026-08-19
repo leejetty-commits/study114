@@ -6,6 +6,7 @@
  * @property {string} password
  * @property {string} password_confirm
  * @property {string} name
+ * @property {'male' | 'female'} gender
  * @property {string} phone
  * @property {string} address
  * @property {string} address_zip
@@ -82,6 +83,7 @@ export function resetSignupState() {
   signupState.termsAgreed = false;
   signupState.accountAddress = '';
   signupState.accountDraft = null;
+  signupState.profileGender = null;
   signupState.basicRegister = {};
   signupState.extraRegister = {};
   signupState.basicRegisterResult = null;

@@ -10,6 +10,19 @@ function isOAuthSignupMode() {
   return parseHashQuery().from === 'oauth';
 }
 
+function friendlySignupError(data, status) {
+  const raw = String(data?.message || '').trim();
+  if (raw.includes('이미 사용 중인 이메일')) {
+    return '이미 가입된 이메일입니다. 기존 계정으로 로그인해 주세요.';
+  }
+  if (raw.includes('gender')) {
+    return '성별을 선택해 주세요.';
+  }
+  if (raw) return raw.replace(/^[a-z_]+:\s*/i, '');
+  if (status === 422) return '입력값을 확인해 주세요. 필수 항목이 빠졌거나 형식이 올바르지 않습니다.';
+  return `가입 실패 (HTTP ${status})`;
+}
+
 function showRoleError(root, msg) {
   let el = root.querySelector('[data-role-error]');
   if (!el) {
@@ -147,6 +160,10 @@ export function bindSignupRoleEvents(root) {
       navigate('/signup/form');
       return;
     }
+    if (draft.gender !== 'male' && draft.gender !== 'female') {
+      showRoleError(root, '성별을 선택해 주세요. 이전 화면으로 돌아가 입력해 주세요.');
+      return;
+    }
 
     submitBtn.disabled = true;
     submitBtn.textContent = '계정 생성 중…';
@@ -167,11 +184,7 @@ export function bindSignupRoleEvents(root) {
       }
 
       if (!res.ok || !data.ok) {
-        const msg =
-          data.message ||
-          (res.status === 422
-            ? '입력값을 확인해 주세요. (예: 이미 가입된 이메일이거나 필수 항목 누락)'
-            : `가입 실패 (HTTP ${res.status})`);
+        const msg = friendlySignupError(data, res.status);
         showRoleError(root, msg);
         submitBtn.disabled = false;
         submitBtn.textContent = '다음: 기본등록';

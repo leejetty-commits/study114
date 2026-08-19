@@ -47,7 +47,7 @@ final class SignupService
             'phone' => $phone,
         ]);
         if (!in_array($gender, ['male', 'female'], true)) {
-            throw new InvalidArgumentException('gender: male 또는 female만 허용됩니다.');
+            throw new InvalidArgumentException('성별은 남 또는 여만 선택할 수 있습니다.');
         }
         if (in_array(strtolower($roleUi), ['admin', 'super_admin', 'sub_master', 'master'], true)) {
             throw new InvalidArgumentException('role: 운영 계정은 공개 회원가입으로 만들 수 없습니다.');
@@ -82,7 +82,7 @@ final class SignupService
         $pdo = Connection::get();
 
         if ($this->emailExists($pdo, $email)) {
-            throw new InvalidArgumentException('email: 이미 사용 중인 이메일입니다.');
+            throw new InvalidArgumentException('이미 사용 중인 이메일입니다. 기존 계정으로 로그인해 주세요.');
         }
 
         $pdo->beginTransaction();
@@ -193,7 +193,18 @@ final class SignupService
     private function requireString(array $input, string $key): string
     {
         if (!isset($input[$key]) || trim((string) $input[$key]) === '') {
-            throw new InvalidArgumentException("{$key}: 필수 입력입니다.");
+            $labels = [
+                'email' => '이메일을',
+                'password' => '비밀번호를',
+                'password_confirm' => '비밀번호 확인을',
+                'name' => '이름을',
+                'gender' => '성별을',
+                'phone' => '휴대폰 번호를',
+                'address' => '주소를',
+                'role' => '회원 구분을',
+            ];
+            $label = $labels[$key] ?? "{$key}을(를)";
+            throw new InvalidArgumentException("{$label} 입력해 주세요.");
         }
         return trim((string) $input[$key]);
     }

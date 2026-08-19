@@ -17,6 +17,7 @@ export function renderSignupForm() {
   const draft = signupState.accountDraft;
   const prefEmail = draft?.email || (isDev ? DUMMY_USER.email : '');
   const prefName = draft?.name || (isDev ? DUMMY_USER.name : '');
+  const prefGender = draft?.gender || '';
   const prefPhone = draft?.phone || (isDev ? DUMMY_USER.phone : '');
 
   const content = `
@@ -81,6 +82,20 @@ export function renderSignupForm() {
             autocomplete="name"
             required
           />
+        </div>
+
+        <div class="form-group">
+          <span class="form-label form-label--required">성별</span>
+          <div class="form-radio-group">
+            <label class="form-radio">
+              <input class="form-radio__input" type="radio" name="gender" value="male"${prefGender === 'male' ? ' checked' : ''} required />
+              <span class="form-radio__label">남</span>
+            </label>
+            <label class="form-radio">
+              <input class="form-radio__input" type="radio" name="gender" value="female"${prefGender === 'female' ? ' checked' : ''} />
+              <span class="form-radio__label">여</span>
+            </label>
+          </div>
         </div>
 
         <div class="form-group">
@@ -252,6 +267,13 @@ export function bindSignupFormEvents(root) {
     payload.address_zip = String(payload.address_zip ?? '').trim();
     payload.address_line2 = String(payload.address_line2 ?? '').trim();
 
+    const gender = String(payload.gender ?? '');
+    if (gender !== 'male' && gender !== 'female') {
+      showSignupError(root, '성별을 선택해 주세요.');
+      form.querySelector('input[name="gender"]')?.focus();
+      return;
+    }
+
     if (!isValidMobile(String(payload.phone ?? ''))) {
       showSignupError(root, '휴대폰 번호를 정확히 입력해 주세요.');
       form.querySelector('#signup-phone')?.focus();
@@ -287,6 +309,7 @@ export function bindSignupFormEvents(root) {
       password: String(payload.password ?? ''),
       password_confirm: String(payload.password_confirm ?? ''),
       name: String(payload.name ?? ''),
+      gender,
       phone: String(payload.phone ?? ''),
       address: payload.address,
       address_zip: payload.address_zip,
@@ -294,6 +317,7 @@ export function bindSignupFormEvents(root) {
       email_consent: true,
       sms_consent: Boolean(payload.sms_consent),
     };
+    signupState.profileGender = gender;
     const detail = payload.address_line2 ? ` ${payload.address_line2}` : '';
     signupState.accountAddress = `${payload.address}${detail}`.trim();
     navigate('/signup/role');
