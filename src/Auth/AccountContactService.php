@@ -151,10 +151,16 @@ final class AccountContactService
 
     private function upsertPhone(PDO $pdo, int $userId, string $phone): void
     {
-        $exists = $pdo->prepare('SELECT 1 FROM user_profiles WHERE user_id = ? LIMIT 1');
+        $exists = $pdo->prepare('SELECT phone FROM user_profiles WHERE user_id = ? LIMIT 1');
         $exists->execute([$userId]);
-        if ($exists->fetchColumn()) {
+        $oldPhone = $exists->fetchColumn();
+        if ($oldPhone !== false) {
+            $oldDigits = PhoneNormalizer::digits((string) $oldPhone);
+            if ($oldDigits !== '' && $oldDigits !== $phone) {
+                (new PhoneVerificationService())->invalidateOnPhoneChange($userId, $pdo);
+            }
             $pdo->prepare('UPDATE user_profiles SET phone = ? WHERE user_id = ?')->execute([$phone, $userId]);
+
             return;
         }
         $pdo->prepare(

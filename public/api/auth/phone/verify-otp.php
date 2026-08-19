@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
+require_once dirname(__DIR__, 4) . '/src/bootstrap.php';
 
 use Study114\Auth\AuthSession;
+use Study114\Auth\PhoneVerificationException;
 use Study114\Auth\PhoneVerificationService;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -33,11 +34,23 @@ if ($user === null) {
 }
 AuthSession::close();
 
+$raw = file_get_contents('php://input');
+/** @var mixed $decoded */
+$decoded = json_decode($raw ?: '{}', true);
+$code = is_array($decoded) ? (string) ($decoded['code'] ?? '') : '';
+
 try {
-    (new PhoneVerificationService())->markVerified((int) $user['user_id']);
-    echo json_encode(['ok' => true, 'phone_verified' => true], JSON_UNESCAPED_UNICODE);
+    $result = (new PhoneVerificationService())->verifyOtp((int) $user['user_id'], $code);
+    echo json_encode(['ok' => true] + $result, JSON_UNESCAPED_UNICODE);
+} catch (PhoneVerificationException $e) {
+    http_response_code(422);
+    echo json_encode([
+        'ok' => false,
+        'error' => $e->errorCode(),
+        'message' => $e->getMessage(),
+    ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
-    error_log('[phone/verify-internal] ' . $e->getMessage());
+    error_log('[phone/verify-otp] ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['ok' => false, 'error' => 'server_error', 'message' => '연락처 확인에 실패했습니다.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['ok' => false, 'error' => 'server_error', 'message' => '인증번호 확인에 실패했습니다.'], JSON_UNESCAPED_UNICODE);
 }

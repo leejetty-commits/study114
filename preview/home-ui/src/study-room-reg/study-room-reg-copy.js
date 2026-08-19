@@ -74,10 +74,11 @@ export const P20_INQUIRY_COPY = {
     '휴대폰 본인확인은 내부 신뢰도 점검에서만 사용됩니다. 외부로는 일체 공개되지 않습니다.',
   previewTitle: '카드 미리보기',
   saveCta: '저장하기',
-  phoneGateTitle: '기본 연락처 확인',
-  phoneGateBody: '학부모의 문의를 받기 시작하려면 기본 연락처 확인이 필요합니다.',
-  phoneGateSub:
-    '휴대폰 본인확인은 내부 신뢰도 점검에서만 사용되며, 외부로는 일체 공개되지 않습니다.',
+  phoneGateTitle: '기본 연락처 검증이 필요합니다',
+  phoneGateBody:
+    '학부모의 문의를 받기 시작하려면 휴대폰 검증이 필요합니다. 인증은 내부 신뢰도 점검을 위해서만 사용되며, 전화번호는 외부에 공개되지 않습니다.',
+  phoneOtpLabel: '인증번호 6자리',
+  phoneResendCta: '인증번호 다시 받기',
   footnotes: [
     '사용자 간의 연락은 쪽지로만 가능합니다.',
     '전화번호는 외부에 공개되지 않습니다.',

@@ -17,7 +17,7 @@ else
   while IFS= read -r line || [[ -n "$line" ]]; do
     line="${line%$'\r'}"
     [[ "$line" =~ ^[[:space:]]*# ]] && continue
-    if [[ "$line" =~ ^[[:space:]]*SetEnv[[:space:]]+(OAUTH_[A-Z0-9_]+|STUDY114_MAIL_PROBE_KEY)[[:space:]]+([^[:space:]]+) ]]; then
+    if [[ "$line" =~ ^[[:space:]]*SetEnv[[:space:]]+(OAUTH_[A-Z0-9_]+|STUDY114_MAIL_PROBE_KEY|STUDY114_PHONE_OTP_PEPPER)[[:space:]]+([^[:space:]]+) ]]; then
       key="${BASH_REMATCH[1]}"
       val="${BASH_REMATCH[2]}"
       expected="__${key}__"

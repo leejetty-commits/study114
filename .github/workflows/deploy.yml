@@ -43,11 +43,12 @@ jobs:
           OAUTH_GOOGLE_CLIENT_ID: ${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}
           OAUTH_GOOGLE_CLIENT_SECRET: ${{ secrets.OAUTH_GOOGLE_CLIENT_SECRET }}
           STUDY114_MAIL_PROBE_KEY: ${{ secrets.STUDY114_MAIL_PROBE_KEY }}
+          STUDY114_PHONE_OTP_PEPPER: ${{ secrets.STUDY114_PHONE_OTP_PEPPER }}
         shell: bash
         run: |
           set -euo pipefail
           htaccess=public/.htaccess
-          required="OAUTH_NAVER_CLIENT_ID OAUTH_NAVER_CLIENT_SECRET OAUTH_KAKAO_REST_API_KEY OAUTH_KAKAO_CLIENT_SECRET OAUTH_GOOGLE_CLIENT_ID OAUTH_GOOGLE_CLIENT_SECRET"
+          required="OAUTH_NAVER_CLIENT_ID OAUTH_NAVER_CLIENT_SECRET OAUTH_KAKAO_REST_API_KEY OAUTH_KAKAO_CLIENT_SECRET OAUTH_GOOGLE_CLIENT_ID OAUTH_GOOGLE_CLIENT_SECRET STUDY114_PHONE_OTP_PEPPER"
           missing=0
           for v in $required; do
             if [ -z "${!v:-}" ]; then
@@ -74,7 +75,7 @@ jobs:
             data="${data//"$token"/"$repl"}"
           done
           printf '%s\n' "$data" > "$htaccess"
-          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__' "$htaccess"; then
+          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__' "$htaccess"; then
             echo "::error::치환되지 않은 placeholder가 남아 있습니다."
             exit 1
           fi

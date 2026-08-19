@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Registration;
 
 use PDO;
+use Study114\Auth\PhoneVerificationService;
 
 /** 20장 P20 — study_rooms 등록 허브 */
 final class StudyRoomHubRepository
@@ -47,13 +48,7 @@ final class StudyRoomHubRepository
 
     private function phoneVerifiedForUser(int $userId): bool
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT phone_verified_at FROM user_profiles WHERE user_id = ? LIMIT 1'
-        );
-        $stmt->execute([$userId]);
-        $val = $stmt->fetchColumn();
-
-        return $val !== false && $val !== null && $val !== '';
+        return (new PhoneVerificationService())->isVerified($userId);
     }
 
     public function setProfileStatus(int $roomId, string $status, ?string $publishedAt = null): void
