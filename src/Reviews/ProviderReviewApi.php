@@ -36,14 +36,20 @@ final class ProviderReviewApi
         if ($auth === null) {
             self::fail(401, 'unauthorized', '로그인이 필요합니다.');
         }
+        (new \Study114\Auth\EmailVerificationGate())->assertVerified((int) $auth['user_id']);
 
         return $auth;
     }
 
-    /** @return array{user_id: int, email: string, role_type: string, name: string}|null */
+    /**
+     * 공개 집계 GET 전용. 미확인 세션은 게스트로 취급한다.
+     * 후기 본문·can_write·is_owner 등 개인 메타는 확인 완료 세션에만 붙는다.
+     *
+     * @return array{user_id: int, email: string, role_type: string, name: string}|null
+     */
     public static function optionalAuth(): ?array
     {
-        return AuthSession::user();
+        return (new \Study114\Auth\EmailVerificationGate())->optionalVerifiedUser(AuthSession::user());
     }
 
     /** @return array<string, mixed> */
@@ -84,6 +90,8 @@ final class ProviderReviewApi
     {
         try {
             $fn();
+        } catch (\Study114\Auth\EmailVerificationRequiredException $e) {
+            self::fail(403, 'email_verify_required', $e->getMessage());
         } catch (InvalidArgumentException $e) {
             self::fail(422, 'validation', $e->getMessage());
         } catch (Throwable $e) {

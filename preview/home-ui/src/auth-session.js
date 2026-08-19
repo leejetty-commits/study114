@@ -83,7 +83,8 @@ export async function fetchSession() {
     window.location.href = `${AUTH_UI_BASE}#/signup/account-contact`;
     return null;
   }
-  if (!data.email_verified && !data.admin_level) {
+  // admin_level은 콘솔 RBAC 전용. 가입완료(email_verified) 예외가 아니다.
+  if (!data.email_verified) {
     window.location.href = emailVerifyWaitUrl();
     return null;
   }

@@ -38,7 +38,8 @@ export async function initChromeSession() {
           currentUser = null;
           return null;
         }
-        if (!src.email_verified && !src.admin_level) {
+        // admin_level은 콘솔 RBAC 전용. 가입완료(email_verified) 예외가 아니다.
+        if (!src.email_verified) {
           window.location.href = emailVerifyWaitUrl();
           currentUser = null;
           return null;

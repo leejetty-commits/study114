@@ -122,9 +122,7 @@ export function resolveAfterAuthUrl(me, returnTo = '') {
   if (!me?.authenticated) {
     return `${AUTH_UI_BASE}#/login`;
   }
-  if (me.admin_level) {
-    return resolvePostLoginUrl(me.role_type, returnTo);
-  }
+  // admin_level은 콘솔 RBAC 전용. 가입완료 우회가 아니다.
   if (me.needs_account_contact) {
     const params = new URLSearchParams();
     if (me.oauth_role_pending) params.set('from', 'oauth');

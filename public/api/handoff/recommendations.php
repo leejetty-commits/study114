@@ -14,6 +14,7 @@ HandoffApi::run(static function (): void {
     $method = HandoffApi::method();
 
     if ($method === 'GET') {
+        // 공개 집계(status) + 확인 완료 세션만 개인 recommended. 미확인은 게스트.
         $auth = HandoffApi::optionalAuth();
         $status = $service->status();
         $payload = ['status' => $status];

@@ -26,9 +26,15 @@ final class MessagesService
         $this->entitlements = $entitlements ?? new ProviderEntitlementService();
     }
 
+    private function assertSignupComplete(int $userId): void
+    {
+        (new \Study114\Auth\EmailVerificationGate())->assertVerified($userId);
+    }
+
     /** @return list<array<string, mixed>> */
     public function listThreads(int $userId): array
     {
+        $this->assertSignupComplete($userId);
         $rows = $this->repo->listThreadsForUser($userId);
 
         return array_map(fn (array $row) => $this->mapThreadSummary($row, $userId), $rows);
@@ -37,6 +43,7 @@ final class MessagesService
     /** @return array<string, mixed>|null */
     public function getThread(int $userId, int $threadId): ?array
     {
+        $this->assertSignupComplete($userId);
         $row = $this->repo->getThreadRow($threadId, $userId);
         if ($row === null) {
             return null;
@@ -54,7 +61,7 @@ final class MessagesService
      */
     public function composeMessage(int $userId, array $input): array
     {
-        (new \Study114\Auth\EmailVerificationGate())->assertVerified($userId);
+        $this->assertSignupComplete($userId);
 
         $contextKind = (string) ($input['context_kind'] ?? '');
         $contextId = (int) ($input['context_id'] ?? 0);
@@ -120,6 +127,7 @@ final class MessagesService
 
     public function replyMessage(int $userId, int $threadId, string $body): array
     {
+        $this->assertSignupComplete($userId);
         $body = trim($body);
         if ($body === '') {
             throw new InvalidArgumentException('본문이 필요합니다.');
@@ -145,6 +153,7 @@ final class MessagesService
 
     public function markThreadRead(int $userId, int $threadId): void
     {
+        $this->assertSignupComplete($userId);
         $row = $this->repo->getThreadRow($threadId, $userId);
         if ($row === null) {
             throw new InvalidArgumentException('대화를 찾을 수 없습니다.');
@@ -154,12 +163,14 @@ final class MessagesService
 
     public function archiveThread(int $userId, int $threadId, bool $archived = true): void
     {
+        $this->assertSignupComplete($userId);
         $this->assertThreadAccess($userId, $threadId);
         $this->repo->upsertParticipantState($threadId, $userId, ['is_archived' => $archived ? 1 : 0]);
     }
 
     public function blockThread(int $userId, int $threadId, string $reason = '차단됨'): void
     {
+        $this->assertSignupComplete($userId);
         $this->assertThreadAccess($userId, $threadId);
         $this->repo->upsertParticipantState($threadId, $userId, [
             'is_blocked'    => 1,
@@ -169,6 +180,7 @@ final class MessagesService
 
     public function reportThread(int $userId, int $threadId, string $reason): void
     {
+        $this->assertSignupComplete($userId);
         $this->assertThreadAccess($userId, $threadId);
         $reason = trim($reason);
         if ($reason === '') {
@@ -183,6 +195,7 @@ final class MessagesService
     /** @return array{unread: int, active: int} */
     public function summaryCounts(int $userId): array
     {
+        $this->assertSignupComplete($userId);
         $threads = $this->listThreads($userId);
         $unread = 0;
         $active = 0;

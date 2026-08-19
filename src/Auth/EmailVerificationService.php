@@ -90,4 +90,26 @@ final class EmailVerificationService
 
         return $userId;
     }
+
+    /**
+     * 확인 링크 1회 소비. 이미 확인된 계정의 재클릭은 성공으로 본다.
+     * 만료·무효·미확인 재클릭은 사용자 문구용 stale.
+     *
+     * @return 'verified'|'already_verified'|'stale'
+     */
+    public function applyVerifyLink(string $rawToken): string
+    {
+        try {
+            $this->verifyToken($rawToken);
+
+            return 'verified';
+        } catch (\InvalidArgumentException) {
+            $row = $this->tokens->findByRaw($rawToken, 'email_verify');
+            if ($row !== null && (new EmailVerificationGate())->isVerified((int) $row['user_id'])) {
+                return 'already_verified';
+            }
+
+            return 'stale';
+        }
+    }
 }

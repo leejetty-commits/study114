@@ -19,10 +19,13 @@ final class AdminRoleService
     /** @deprecated use LEVEL_SUPER_ADMIN */
     public const LEVEL_MASTER = self::LEVEL_SUPER_ADMIN;
 
-    /** 초기 발급 최고관리자 — 시드 유지 · 이후 UI로만 추가 */
+    /**
+     * 초기 발급 최고관리자 — 콘솔 등급 시드 전용.
+     * 가입완료(email_verified_at) 우회 allowlist가 아니다.
+     */
     private const BOOTSTRAP_SUPER_ADMIN_EMAIL = 'jetty@naver.com';
 
-    /** @var list<string> 개발용 시드 (DB 미백필 시 fallback) */
+    /** @var list<string> 개발용 시드 (DB 미백필 시 fallback). 가입완료 예외 아님. */
     private const LEGACY_SUB_MASTER_EMAILS = [
         'ops@dev.local',
         'ops2@dev.local',
@@ -68,7 +71,7 @@ final class AdminRoleService
         return self::LEVEL_SUB_MASTER;
     }
 
-    /** 시장 역할이어도 admin_level이 있으면 콘솔 접근 가능 */
+    /** 시장 역할이어도 admin_level이 있으면 콘솔 RBAC 가능. 가입완료 판정과는 무관. */
     public function hasAdminCapability(array $auth): bool
     {
         return $this->resolveLevel($auth) !== null;

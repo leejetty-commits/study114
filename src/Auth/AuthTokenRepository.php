@@ -53,6 +53,32 @@ final class AuthTokenRepository
         return 'valid';
     }
 
+    /** @return array{user_id: int, used_at: ?string, expires_at: string}|null */
+    public function findByRaw(string $rawToken, string $purpose): ?array
+    {
+        if ($rawToken === '') {
+            return null;
+        }
+
+        $hash = hash('sha256', $rawToken);
+        $stmt = $this->pdo->prepare(
+            'SELECT user_id, used_at, expires_at FROM auth_tokens
+             WHERE token_hash = ? AND purpose = ?
+             LIMIT 1'
+        );
+        $stmt->execute([$hash, $purpose]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return null;
+        }
+
+        return [
+            'user_id' => (int) $row['user_id'],
+            'used_at' => $row['used_at'] !== null ? (string) $row['used_at'] : null,
+            'expires_at' => (string) $row['expires_at'],
+        ];
+    }
+
     /** Most recent request for purpose; 0 = resend allowed now. */
     public function resendSecondsRemaining(int $userId, string $purpose, int $cooldownSeconds): int
     {

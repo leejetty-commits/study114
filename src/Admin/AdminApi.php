@@ -93,6 +93,8 @@ final class AdminApi
         if (!$roles->hasAdminCapability($auth)) {
             self::fail(403, 'forbidden', '운영자 권한이 필요합니다.');
         }
+        // admin_level·bootstrap 이메일은 콘솔 RBAC 전용. 가입완료(email_verified_at) 예외가 아니다.
+        (new \Study114\Auth\EmailVerificationGate())->assertVerified((int) $auth['user_id']);
 
         return $auth;
     }
@@ -111,6 +113,8 @@ final class AdminApi
     {
         try {
             $fn();
+        } catch (\Study114\Auth\EmailVerificationRequiredException $e) {
+            self::fail(403, 'email_verify_required', $e->getMessage());
         } catch (InvalidArgumentException $e) {
             self::fail(422, 'validation', $e->getMessage());
         } catch (Throwable $e) {

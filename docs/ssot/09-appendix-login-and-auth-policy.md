@@ -95,19 +95,56 @@
 
 ### C-2. 이메일 확인 정책 (§16-2)
 
-- **가입 완료의 정의:** `users.email_verified_at IS NOT NULL` **만**. `user_oauth_accounts` 존재는 통과가 아니다.
+- **가입 완료의 정의:** `users.email_verified_at IS NOT NULL` **만**. `user_oauth_accounts` 존재·세션 존재·OAuth row는 통과가 아니다.
 - 계정 생성·세션(`status=active`)은 확인 전에 허용한다. 미확인은 `pending`으로 막지 않고 **확인 대기 화면 + 서버 게이트**로 제어한다.
 - 이메일 가입은 생성 직후 확인 메일을 보낸다. 확인 전에는 `#/signup/verify-email`에 머문다.
 - **소셜 실메일:** 제공자가 준 실메일이고 생성 시 `email_verified_at`을 채운 경우만 확인 완료로 본다.
 - **소셜 스텁**(`oauth_…@users.study114.local`)은 `email_verified_at = NULL`을 유지한다. 게이트·`me.php`도 미확인이다. 실메일 입력 후 확인 메일을 다시 보내고, 링크 클릭 후에만 완료다.
-- 아래 행동은 **메일 확인 완료 후**에만 허용 (소셜 스텁 예외 없음):
+- 아래 행동은 **메일 확인 완료 후**에만 허용 (소셜 스텁 예외 없음). **저장뿐 아니라 보호된 조회/목록/메타**도 동일하다:
   - 기본등록 저장
   - 등록 상세 초안 작성·저장
   - 공개 등록/공개 전환
-  - 쪽지 발송 또는 공식 접촉 시작
+  - 쪽지 발송·답장 **및** inbox/스레드 목록/상세/개수/프리뷰/엔타이틀먼트 조회
+  - 찜·비교·최근본·학생후기 목록
   - 유료 결제/유료 권한 활성화
+  - 운영 콘솔(`/admin`, `AdminApi`)
 - PHP `/auth/signup/basic` 직접 진입·`POST /api/auth/basic-register.php`·등록 API도 동일 기준이다.
 - 확인 메일이 안 보이면 스팸함·프로모션함을 안내한다. 재전송 쿨다운은 10분.
+- 확인 링크 재클릭: 이미 `email_verified_at`이 있으면 성공(`verified=1`)으로 본다. 그 외 만료·무효는 토큰 원문을 노출하지 않고 「이미 확인되었거나 만료된 링크입니다」만 보여 준다.
+
+#### C-2-1. `admin_level` 예외 범위 (없음)
+
+가입완료 게이트는 **관리자 role 전체 예외가 아니다.** 운영 테스트 계정 allowlist 예외도 **아니다.**
+
+| 구분 | 실제 적용 |
+|------|-----------|
+| `users.admin_level` (`super_admin` / `sub_master`) | **콘솔 RBAC 전용.** 가입완료(`email_verified_at`)를 대체하지 않는다. |
+| bootstrap 이메일 `jetty@naver.com` | 최고관리자 **등급 시드** 전용. 메일 확인 우회가 아니다. |
+| `ops@dev.local` 등 레거시 시드 | 부마스터 **등급 fallback** 전용. 메일 확인 우회가 아니다. |
+| 시장 SPA (`fetchSession` / chrome / `resolveAfterAuthUrl`) | `admin_level`이 있어도 미확인이면 확인 대기 화면으로 보낸다. |
+| `AdminApi::requireAdmin` | 콘솔 API도 `email_verified_at` 필수. 미확인 관리자는 403 `email_verify_required`. |
+
+한 줄: **관리자여도 `email_verified_at`이 없으면 가입완료 사용자가 아니다.**
+
+#### C-2-2. optionalAuth 경로 분류
+
+세션이 있어도 미확인이면 **게스트**로 취급한다. 공개 집계만 게스트에게 주고, 개인 메타는 확인 완료 세션에만 붙인다.
+
+| 경로 | 분류 | 미확인 동작 |
+|------|------|-------------|
+| `GET /api/handoff/recommendations.php` `status` | 공개 읽기 | 게스트와 동일 집계 |
+| 같은 GET의 `recommended` (개인 여부) | 보호 | 미확인이면 필드 생략 (게스트) |
+| `POST /api/handoff/recommendations.php` | 보호 | `requireAuth` + verified |
+| `GET/POST /api/handoff/favorites.php` | 보호 | verified 필수 |
+| `GET/POST /api/handoff/compare.php` | 보호 | verified 필수 |
+| `GET/POST /api/handoff/recent.php` | 보호 | verified 필수 |
+| `GET/POST /api/handoff/student-reviews.php` | 보호 | verified 필수 |
+| `GET /api/reviews/index.php?action=summary` 건수 | 공개 읽기 | 게스트 집계. 본문·`can_write`·`is_owner` 없음 |
+| `GET /api/reviews/index.php?action=count` | 공개 읽기 | 게스트 집계 |
+| `GET action=mypage` / `POST create` / `POST reply` | 보호 | verified 필수 |
+| `GET /api/messages/threads.php` (목록·상세·`counts=1`) | 보호 | verified 필수 |
+| `GET /api/messages/entitlements.php` | 보호 | verified 필수 |
+| `GET /api/auth/me.php` | 세션 조회 | 미확인이어도 대기 화면용으로 허용. `email_verified=false` |
 
 ### C-3. 패스코드/OTP 정책 (§16-3)
 
@@ -380,3 +417,4 @@ API `error`: `expired` · `used` · `invalid` — 기술 코드·스택 **노출
 | 2026-07-07 | §17 E-5: 비밀번호 재설정 HTML 버튼 메일 (`PasswordResetMailTemplate`) |
 | 2026-08-20 | 가입 완료 = 이메일 확인 후. 확인 대기는 화면 게이트. 스텁 자동 verified 금지 |
 | 2026-08-20 | 가입 완료 = `email_verified_at`만. PHP/API/등록 저장 서버 차단. 스텁 OAuth 예외 제거. 재전송 10분 |
+| 2026-08-20 | 쪽지 inbox/list/meta 게이트. admin_level 가입완료 예외 제거. optionalAuth 공개/보호 분류. 확인 링크 재클릭 UX |

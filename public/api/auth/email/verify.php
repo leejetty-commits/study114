@@ -16,15 +16,16 @@ $redirect = static function (string $query) use ($authUi): void {
 };
 
 if ($token === '') {
-    $redirect('email_verify_error=' . rawurlencode('인증 토큰이 없습니다.'));
+    $redirect('email_verify_error=' . rawurlencode('이미 확인되었거나 만료된 링크입니다'));
 }
 
 try {
-    (new EmailVerificationService())->verifyToken($token);
-    $redirect('verified=1');
-} catch (InvalidArgumentException $e) {
-    $redirect('email_verify_error=' . rawurlencode($e->getMessage()));
+    $outcome = (new EmailVerificationService())->applyVerifyLink($token);
+    if ($outcome === 'verified' || $outcome === 'already_verified') {
+        $redirect('verified=1');
+    }
+    $redirect('email_verify_error=' . rawurlencode('이미 확인되었거나 만료된 링크입니다'));
 } catch (Throwable $e) {
     error_log('[email/verify] ' . $e->getMessage());
-    $redirect('email_verify_error=' . rawurlencode('이메일 인증 처리 중 오류가 발생했습니다.'));
+    $redirect('email_verify_error=' . rawurlencode('이미 확인되었거나 만료된 링크입니다'));
 }

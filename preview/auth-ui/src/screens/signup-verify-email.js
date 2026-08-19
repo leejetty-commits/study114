@@ -14,6 +14,12 @@ import {
 } from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 
+const EMAIL_VERIFY_STALE_LINK_MSG = '이미 확인되었거나 만료된 링크입니다';
+
+function friendlyVerifyError(raw) {
+  return String(raw || '').trim() ? EMAIL_VERIFY_STALE_LINK_MSG : '';
+}
+
 const EMAIL_VERIFY_RESEND_COOLDOWN_SEC = 600;
 
 function isInternalAuthEmail(email) {
@@ -50,7 +56,7 @@ function continueAfterVerified(me) {
 export function renderSignupVerifyEmail() {
   const q = parseHashQuery();
   const verified = q.verified === '1';
-  const err = q.email_verify_error || '';
+  const err = friendlyVerifyError(q.email_verify_error);
 
   const body = verified
     ? `

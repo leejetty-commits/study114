@@ -31,10 +31,15 @@ final class HandoffApi
         study114_send_cors_headers();
     }
 
-    /** @return array{user_id: int, email: string, role_type: string, name: string}|null */
+    /**
+     * 공개 읽기 GET 전용. 미확인 세션은 게스트로 취급한다.
+     * 보호 정보(찜/비교/최근/개인 추천 여부)에는 requireAuth를 쓴다.
+     *
+     * @return array{user_id: int, email: string, role_type: string, name: string}|null
+     */
     public static function optionalAuth(): ?array
     {
-        return AuthSession::user();
+        return (new \Study114\Auth\EmailVerificationGate())->optionalVerifiedUser(AuthSession::user());
     }
 
     /** @return array{user_id: int, email: string, role_type: string, name: string} */
