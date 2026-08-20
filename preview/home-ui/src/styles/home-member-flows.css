@@ -692,6 +692,13 @@
 .mypage-breadcrumb__sep { color: #c7bdb1; }
 .mypage-content__screen-id { font-size: var(--fs-1); color: var(--gray-500); }
 .mypage-panel { border: 1px solid #eee7dd; border-radius: 1rem; padding: clamp(1rem, 3vw, 1.5rem); background: #fff; box-shadow: 0 0.45rem 1.5rem rgb(65 45 25 / 0.045); }
+.mypage-panel.mp-room-panel {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
 .mypage-status { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); font-size: var(--fs-2); }
 .mypage-badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: var(--fs-1); font-weight: 600; background: var(--gray-200); }
 .mypage-badge--published { background: #dcfce7; color: #166534; }

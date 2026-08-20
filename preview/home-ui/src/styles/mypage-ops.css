@@ -227,6 +227,15 @@
   box-shadow: none;
 }
 
+/* 내 등록: 탭을 감싼 외곽 라운드 박스 제거 — 안쪽 register-card만 유지해 본문 폭 확보 */
+.mypage-panel.mp-room-panel {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .mypage-panel__title,
 .mypage-subhead {
   color: var(--mp-ink);

@@ -551,6 +551,15 @@ body {
   padding: var(--space-5);
 }
 
+/* 내 등록: 탭 외곽 라운드 박스 제거 (안쪽 register-card만) */
+.mypage-panel.mp-room-panel {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
 .sup-layout,
 .msg-layout {
   width: 100%;
