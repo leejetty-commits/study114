@@ -28,6 +28,9 @@ final class PromoImageService
         $this->ensureColumns($pdo);
         $this->assertRoomOwner($pdo, $userId, $roomId);
 
+        // 상세1 실사진 업로드 시 시스템 기본 카드 이미지를 교체한다.
+        (new StudyRoomDefaultImageService())->clearSystemDefaults($pdo, $roomId);
+
         $countStmt = $pdo->prepare('SELECT sort_order FROM study_room_images WHERE study_room_id = ?');
         $countStmt->execute([$roomId]);
         $used = array_map('intval', $countStmt->fetchAll(PDO::FETCH_COLUMN));
@@ -347,6 +350,7 @@ final class PromoImageService
             'basic_720_path' => (string) ($row['basic_720_path'] ?? ''),
             'crop_offset_x' => (float) ($row['crop_offset_x'] ?? 0.5),
             'crop_offset_y' => (float) ($row['crop_offset_y'] ?? 0.5),
+            'is_system_default' => (int) ($row['is_system_default'] ?? 0) === 1,
         ];
     }
 }

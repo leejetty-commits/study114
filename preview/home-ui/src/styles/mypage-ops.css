@@ -1263,3 +1263,41 @@
   }
 }
 
+/* 픽·프라임 유도 · 임베드 등록 */
+.p20-pick-prime-nudge__cols {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+@media (min-width: 720px) {
+  .p20-pick-prime-nudge__cols {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.p20-pick-prime-nudge__sub {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.p20-pick-prime-nudge__list {
+  margin: 0 0 0.75rem;
+  padding-left: 1.1rem;
+  color: #475569;
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+.p20-pick-prime-nudge__list li + li {
+  margin-top: 0.25rem;
+}
+.mp-room-embed.register-flow {
+  max-width: none;
+}
+.register-embed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+

@@ -226,7 +226,12 @@ function renderCompareChip(kind, itemId, opts) {
   return `<button type="button" class="expo-compare-chip${active ? ' is-active' : ''}" aria-pressed="${active ? 'true' : 'false'}" data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${itemId}"><span class="expo-compare-chip__check" aria-hidden="true">${active ? '✓' : ''}</span>비교</button>`;
 }
 
-/** 이미지 없을 때 브랜드형 이니셜 플레이스홀더 (내부 문구 비노출) */
+/** 이미지 없을 때 브랜드 기본 카드 (가입 시 DB 자동삽입과 동일 자산) */
+const ROOM_DEFAULT_BASIC = '/assets/brand/room-card-default-basic.svg';
+const ROOM_DEFAULT_PRIME = '/assets/brand/room-card-default-prime.svg';
+const ROOM_DEFAULT_PICK = '/assets/brand/room-card-default-pick.svg';
+
+/** 이미지 없을 때 브랜드형 이니셜 플레이스홀더 (내부 문구 비노출) — 공부방은 기본 SVG 사용 */
 function placeholderInitial(alt) {
   const raw = String(alt || '').trim();
   if (!raw) return '우';
@@ -235,10 +240,15 @@ function placeholderInitial(alt) {
 }
 
 /** @param {'prime'|'pick'|'list'} ratio */
-function renderMedia(image_path, alt, ratio) {
+function renderMedia(image_path, alt, ratio, opts = {}) {
   const cls = `expo-media expo-media--${ratio}`;
   if (image_path) {
     return `<div class="${cls}"><img src="${esc(image_path)}" alt="${esc(alt)}" loading="lazy" /></div>`;
+  }
+  if (opts.roomDefault) {
+    const src =
+      ratio === 'prime' ? ROOM_DEFAULT_PRIME : ratio === 'pick' ? ROOM_DEFAULT_PICK : ROOM_DEFAULT_BASIC;
+    return `<div class="${cls}"><img src="${esc(src)}" alt="${esc(alt || '우동공과')}" loading="lazy" /></div>`;
   }
   const initial = placeholderInitial(alt);
   return `<div class="${cls} expo-media--placeholder" role="img" aria-label="${esc(alt || '프로필')}">
@@ -248,8 +258,9 @@ function renderMedia(image_path, alt, ratio) {
 
 /**
  * @param {{ tl?: string, bl?: string, br?: string, mid?: string }} zones
+ * @param {{ roomDefault?: boolean }} [opts]
  */
-function renderMediaBlock(image_path, alt, ratio, zones = {}) {
+function renderMediaBlock(image_path, alt, ratio, zones = {}, opts = {}) {
   const parts = [];
   if (zones.tl) parts.push(`<div class="expo-media-overlay__tl">${zones.tl}</div>`);
   if (zones.mid) parts.push(`<div class="expo-media-overlay__mid">${zones.mid}</div>`);
@@ -260,30 +271,42 @@ function renderMediaBlock(image_path, alt, ratio, zones = {}) {
     : '';
   return `
     <div class="expo-media-wrap">
-      ${renderMedia(image_path, alt, ratio)}
+      ${renderMedia(image_path, alt, ratio, opts)}
       ${overlay}
     </div>`;
 }
 
 function listingImage(item, ratio) {
-  if (ratio === 'prime') {
+  if (ratio === 'prime' || ratio === 'pick') {
     return item.image_path_prime || item.image_path || '';
   }
   return item.image_path_basic || item.image_path || '';
 }
 
 function renderStudyRoomMediaOverlay(item, compareHtml) {
-  return renderMediaBlock(listingImage(item, 'prime'), item.study_room_name, 'prime', {
-    tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
-    br: compareHtml,
-  });
+  return renderMediaBlock(
+    listingImage(item, 'prime'),
+    item.study_room_name,
+    'prime',
+    {
+      tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
+      br: compareHtml,
+    },
+    { roomDefault: true },
+  );
 }
 
 function renderPickStudyRoomMedia(item, compareHtml) {
-  return renderMediaBlock(listingImage(item, 'pick'), item.study_room_name, 'pick', {
-    tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
-    br: compareHtml,
-  });
+  return renderMediaBlock(
+    listingImage(item, 'pick'),
+    item.study_room_name,
+    'pick',
+    {
+      tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
+      br: compareHtml,
+    },
+    { roomDefault: true },
+  );
 }
 
 /** 교습형태 미입력 시 (선택) */
@@ -609,7 +632,7 @@ function renderBasicStudyRoomRow(item, opts) {
   return `
     <article class="expo-basic expo-basic--study_room expo-hcard" data-provider-id="${item.id}" data-provider-kind="study_room">
       <div class="expo-hcard__media-wrap">
-        ${renderMedia(listingImage(item, 'list'), item.study_room_name, 'list')}
+        ${renderMedia(listingImage(item, 'list'), item.study_room_name, 'list', { roomDefault: true })}
       </div>
       <div class="expo-hcard__body">
         <div class="expo-hcard__top">

@@ -57,6 +57,24 @@ export const P20_HUB_BLOCK_TITLES = {
   publishStatus: '현재 공개 상태',
   exposureMatrix: '노출 가능 매트릭스',
   inquiryBoard: '쪽지와 문의',
+  pickPrimeNudge: '픽·프라임 노출 준비',
+};
+
+/** 운영홈 — 픽·프라임 유도 (진행률 숫자 없음) */
+export const P20_PICK_PRIME_NUDGE = {
+  title: '픽·프라임 노출을 생각하시나요?',
+  lead: '베이직 검색은 기본정보만으로도 충분합니다. 홍보·광고로 더 잘 보이려면 상세정보에서 아래 항목을 채워 주세요.',
+  detail1Title: '상세정보1에서',
+  detail1Items: [
+    '홍보사진 (카드에 보이는 대표 이미지)',
+    '한 줄 소개',
+    '수업운영방식 · 타임별 원생수',
+    '월 평균 수업료',
+  ],
+  detail2Title: '상세정보2에서',
+  detail2Items: ['경력특징', '교육청등록증', '시설·환경'],
+  ctaDetail1: '상세정보1 채우기',
+  ctaDetail2: '상세정보2 채우기',
 };
 
 /** P20-05 쪽지와 문의 — copy */
@@ -89,7 +107,7 @@ export const P20_INQUIRY_COPY = {
 /** P20-01 목록 헤더 */
 export const P20_LIST_HEAD = {
   title: '공부방 운영',
-  lead: '공부방별로 공개·쪽지 상태를 관리합니다. 입력은 study-room-ui에서 합니다.',
+  lead: '공부방별로 공개·쪽지 상태를 관리합니다.',
   registerCta: '+ 공부방 등록',
   notReadyBadge: '공개 준비 미완료',
   manageCta: '운영하기 →',

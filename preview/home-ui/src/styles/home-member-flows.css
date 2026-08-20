@@ -1256,6 +1256,44 @@
 .p20-hub-status-detail { font-size: var(--text-sm); color: var(--gray-600); }
 .p20-inquiry-board__value { font-size: var(--text-lg); font-weight: 600; margin: 0 0 var(--space-1); }
 .p20-hub-cta { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+
+.p20-pick-prime-nudge__cols {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+}
+@media (min-width: 720px) {
+  .p20-pick-prime-nudge__cols {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.p20-pick-prime-nudge__sub {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.p20-pick-prime-nudge__list {
+  margin: 0 0 var(--space-3);
+  padding-left: 1.1rem;
+  color: var(--gray-700);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+.p20-pick-prime-nudge__list li + li {
+  margin-top: 0.25rem;
+}
+
+.mp-room-embed.register-flow {
+  max-width: none;
+}
+.register-embed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--gray-200);
+}
 .p20-messages-link { padding-top: var(--space-2); border-top: 1px dashed var(--gray-200); }
 .p20-status-board { margin-bottom: var(--space-4); }
 .p20-status-board__title { font-size: var(--text-base); margin: 0 0 var(--space-3); }

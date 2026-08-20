@@ -330,6 +330,12 @@ final class BasicRegisterService
             throw new RuntimeException('공부방 기본등록 저장 실패: ' . $e->getMessage(), 0, $e);
         }
 
+        try {
+            (new \Study114\Media\StudyRoomDefaultImageService())->ensureDefaultForRoom($pdo, $roomId);
+        } catch (\Throwable $e) {
+            /* 기본 이미지 실패해도 가입은 성공 */
+        }
+
         return $roomId;
     }
 

@@ -126,7 +126,13 @@ export function screenTitle(screenId, path) {
     const reg = parseStudentRegPath(path);
     if (reg) return studentRegScreenTitle(reg.screenId);
     const sr = parseStudyRoomRegPath(path);
-    if (sr) return studyRoomRegScreenTitle(sr.screenId);
+    if (sr) {
+      if (sr.roomId) {
+        const room = getStudyRooms().find((r) => r.id === sr.roomId);
+        if (room?.study_room_name) return `내 등록 / ${room.study_room_name}`;
+      }
+      return studyRoomRegScreenTitle(sr.screenId);
+    }
     const tr = parseTutorRegPath(path);
     if (tr) return tutorRegScreenTitle(tr.screenId);
     if (path === MESSAGES_BASE || isMessagesDetailPath(path)) {

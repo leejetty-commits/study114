@@ -76,12 +76,17 @@ function persistForm(form) {
   syncFacilityFromForm(form, registerState);
 }
 
-export function renderFacility() {
+/**
+ * @param {{ includeStepNav?: boolean, includePublishBlock?: boolean }} [opts]
+ */
+export function renderFacilityFormHtml(opts = {}) {
+  const includeStepNav = opts.includeStepNav !== false;
+  const includePublishBlock = opts.includePublishBlock !== false;
   const s = registerState;
   const notes = proofNotes(s);
-  const content = `
+  return `
     <form data-form="facility">
-      ${renderGuideNotice('상세정보 2/2단계입니다. 비어 있어도 저장한 뒤 등록 완료로 넘어갈 수 있습니다. 공개 여부는 맨 아래 칸에서 고릅니다.')}
+      ${renderGuideNotice('상세정보 2단계입니다. 비어 있어도 저장할 수 있습니다.')}
       ${renderSectionTitle('경력 · 특징')}
       <div class="register-grid-3">
         ${renderUniversityNameField({
@@ -181,32 +186,59 @@ export function renderFacility() {
         </div>
       </div>
 
-      ${renderPublishStatusBlock(s.profile_status, {
-        lead: '모두 채운 뒤 공개할지, 지금은 저장만 할지 정하는 칸입니다. 등록 완료 화면에서도 다시 고를 수 있습니다.',
-        extraHtml: renderMessageInquiryNotice(),
-      })}
+      ${
+        includePublishBlock
+          ? renderPublishStatusBlock(s.profile_status, {
+              lead: '모두 채운 뒤 공개할지, 지금은 저장만 할지 정하는 칸입니다. 등록 완료 화면에서도 다시 고를 수 있습니다.',
+              extraHtml: renderMessageInquiryNotice(),
+            })
+          : ''
+      }
 
-      ${renderDetailStepNav({
-        prevPath: '/register/lesson',
-        nextLabel: '등록 완료',
-        nextEnabled: true,
-      })}
+      ${
+        includeStepNav
+          ? renderDetailStepNav({
+              prevPath: '/register/lesson',
+              nextLabel: '등록 완료',
+              nextEnabled: true,
+            })
+          : `<div class="register-embed-actions">
+              <button type="button" class="btn btn--secondary" data-action="cancel-edit">취소</button>
+              <button type="button" class="btn btn--primary" data-action="save">저장</button>
+            </div>`
+      }
     </form>
   `;
-  return renderRegisterShell(content, {
+}
+
+export function renderFacility() {
+  return renderRegisterShell(renderFacilityFormHtml({ includeStepNav: true, includePublishBlock: true }), {
     stepKey: 'facility',
     title: '경력 · 신뢰 · 시설',
   });
 }
 
-export function bindFacilityEvents(root) {
-  bindGlobalEvents(root);
+/**
+ * @param {HTMLElement} root
+ * @param {{ onSaved?: () => void, onCancel?: () => void, onRefresh?: () => void, embed?: boolean }} [opts]
+ */
+export function bindFacilityEvents(root, opts = {}) {
+  if (!opts.embed) bindGlobalEvents(root);
   const form = root.querySelector('[data-form="facility"]');
   const prevBtn = root.querySelector('[data-action="prev"]');
   const nextBtn = root.querySelector('[data-action="next"]');
   const saveBtn = root.querySelector('[data-action="save"]');
+  const refresh = () => {
+    if (typeof opts.onRefresh === 'function') opts.onRefresh();
+    else window.dispatchEvent(new Event('hashchange'));
+  };
 
   prevBtn?.addEventListener('click', () => navigate(withRoomId('/register/lesson')));
+
+  root.querySelector('[data-action="cancel-edit"]')?.addEventListener('click', () => {
+    if (typeof opts.onCancel === 'function') opts.onCancel();
+    else refresh();
+  });
 
   async function persistFacility() {
     persistForm(form);
@@ -222,8 +254,12 @@ export function bindFacilityEvents(root) {
   saveBtn?.addEventListener('click', () => {
     withSaving(saveBtn, async () => {
       await persistFacility();
+      if (typeof opts.onSaved === 'function') {
+        opts.onSaved();
+        return;
+      }
       alert('저장되었습니다.');
-      window.dispatchEvent(new Event('hashchange'));
+      refresh();
     });
   });
 
@@ -241,7 +277,7 @@ export function bindFacilityEvents(root) {
     if (!Array.isArray(registerState.other_proof_notes)) registerState.other_proof_notes = [];
     if (!registerState.other_proof_notes.length) registerState.other_proof_notes.push(emptyProofNote());
     registerState.other_proof_notes.push(emptyProofNote());
-    window.dispatchEvent(new Event('hashchange'));
+    refresh();
   });
 
   root.querySelectorAll('[data-action="remove-proof"]').forEach((btn) => {
@@ -250,7 +286,7 @@ export function bindFacilityEvents(root) {
       const idx = Number(btn.getAttribute('data-idx'));
       registerState.other_proof_notes.splice(idx, 1);
       if (!registerState.other_proof_notes.length) registerState.other_proof_notes.push(emptyProofNote());
-      window.dispatchEvent(new Event('hashchange'));
+      refresh();
     });
   });
 }

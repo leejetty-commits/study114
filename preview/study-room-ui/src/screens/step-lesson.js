@@ -186,10 +186,14 @@ export function lessonSaveGuard() {
   return '';
 }
 
-export function renderLesson() {
+/**
+ * @param {{ includeStepNav?: boolean }} [opts]
+ */
+export function renderLessonFormHtml(opts = {}) {
+  const includeStepNav = opts.includeStepNav !== false;
   const s = registerState;
   const classes = Array.isArray(s.classes) && s.classes.length ? s.classes : [emptyClass()];
-  const content = `
+  return `
     <form data-form="lesson">
       ${renderSectionTitle('공부방·교습소 소개')}
       <div class="form-group">
@@ -295,14 +299,24 @@ export function renderLesson() {
       </div>
       <button type="button" class="register-plus-btn" data-action="add-class">+수업추가</button>
 
-      ${renderDetailStepNav({
-        prevPath: '/register/basic',
-        nextLabel: '다음: 경력·신뢰·시설',
-        nextEnabled: true,
-      })}
+      ${
+        includeStepNav
+          ? renderDetailStepNav({
+              prevPath: '/register/basic',
+              nextLabel: '다음: 경력·신뢰·시설',
+              nextEnabled: true,
+            })
+          : `<div class="register-embed-actions">
+              <button type="button" class="btn btn--secondary" data-action="cancel-edit">취소</button>
+              <button type="button" class="btn btn--primary" data-action="save">저장</button>
+            </div>`
+      }
     </form>
   `;
-  return renderRegisterShell(content, {
+}
+
+export function renderLesson() {
+  return renderRegisterShell(renderLessonFormHtml({ includeStepNav: true }), {
     stepKey: 'lesson',
     title: '공부방·교습소 상세',
     subtitle: '필수정보는 입력을 꼭 해주세요',
@@ -316,12 +330,20 @@ function persistForm(form) {
   }
 }
 
-export function bindLessonEvents(root) {
-  bindGlobalEvents(root);
+/**
+ * @param {HTMLElement} root
+ * @param {{ onSaved?: () => void, onCancel?: () => void, onRefresh?: () => void, embed?: boolean }} [opts]
+ */
+export function bindLessonEvents(root, opts = {}) {
+  if (!opts.embed) bindGlobalEvents(root);
   const form = root.querySelector('[data-form="lesson"]');
   const nextBtn = root.querySelector('[data-action="next"]');
   const prevBtn = root.querySelector('[data-action="prev"]');
   const saveBtn = root.querySelector('[data-action="save"]');
+  const refresh = () => {
+    if (typeof opts.onRefresh === 'function') opts.onRefresh();
+    else window.dispatchEvent(new Event('hashchange'));
+  };
 
   const refreshNext = () => {
     persistForm(form);
@@ -333,13 +355,22 @@ export function bindLessonEvents(root) {
 
   prevBtn?.addEventListener('click', () => navigate(basicOverviewPath()));
 
+  root.querySelector('[data-action="cancel-edit"]')?.addEventListener('click', () => {
+    if (typeof opts.onCancel === 'function') opts.onCancel();
+    else refresh();
+  });
+
   saveBtn?.addEventListener('click', () => {
     withSaving(saveBtn, async () => {
       persistForm(form);
       await saveCurrentStep(registerState, 'lesson');
       registerState.detailLessonSaved = true;
+      if (typeof opts.onSaved === 'function') {
+        opts.onSaved();
+        return;
+      }
       alert('저장되었습니다.');
-      window.dispatchEvent(new Event('hashchange'));
+      refresh();
     });
   });
 
@@ -356,7 +387,7 @@ export function bindLessonEvents(root) {
     if (!Array.isArray(registerState.classes)) registerState.classes = [];
     registerState.classes.push(emptyClass());
     openClassIndexes = new Set([registerState.classes.length - 1]);
-    window.dispatchEvent(new Event('hashchange'));
+    refresh();
   });
 
   root.querySelectorAll('[data-action="remove-class"]').forEach((btn) => {
@@ -371,7 +402,7 @@ export function bindLessonEvents(root) {
         else if (i > idx) next.add(i - 1);
       });
       openClassIndexes = registerState.classes.length > 1 ? next : null;
-      window.dispatchEvent(new Event('hashchange'));
+      refresh();
     });
   });
 
@@ -384,7 +415,7 @@ export function bindLessonEvents(root) {
       if (current.has(idx)) current.delete(idx);
       else current.add(idx);
       openClassIndexes = current;
-      window.dispatchEvent(new Event('hashchange'));
+      refresh();
     });
   });
 

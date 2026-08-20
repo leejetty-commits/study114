@@ -7,11 +7,11 @@ import { renderBrowseList } from '../exposure-render.js';
 import { STUDY_ROOM_REGISTER_URL } from '../nav-config.js';
 import {
   P20_LIST_TABS,
-  P20_HUB_BLOCK_TITLES,
   P20_LIST_HEAD,
   P20_PREVIEW_MODES,
   P20_HUB_CTA,
   P20_INQUIRY_COPY,
+  P20_PICK_PRIME_NUDGE,
   INQUIRY_OFF_REASONS,
 } from './study-room-reg-copy.js';
 import {
@@ -37,8 +37,6 @@ import {
   inquiryStatusLabel,
   detailStatusLabel,
   roomToExposureRow,
-  getExposureMatrix,
-  getHubCtas,
 } from './format.js';
 import {
   getStudyRooms,
@@ -52,6 +50,13 @@ import {
   getStudyRoomSummaryCounts,
 } from './store.js';
 import { saveStudyRoomBasicInline, saveStudyRoomDetailInline } from './inline-save.js';
+import {
+  ensureEmbeddedRegister,
+  shouldReloadEmbeddedView,
+  markEmbeddedViewLoaded,
+  renderEmbeddedPanel,
+  bindEmbeddedPanelEvents,
+} from './embedded-panels.js';
 import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import { getStudentReviewIds } from '../student-review-store.js';
 import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
@@ -83,17 +88,37 @@ function renderMatrixRows(rows) {
     .join('');
 }
 
+/** @deprecated 하단 CTA 제거 — 호환용 빈 구현 */
+function renderHubCtaBlock(_room) {
+  return '';
+}
+
 /** @param {import('./store.js').StudyRoomRecord} room */
-function renderHubCtaBlock(room) {
-  return getHubCtas(room)
-    .map((c) => {
-      if (c.external) {
-        return `<a href="${c.external}" class="btn ${c.primary ? 'btn--primary' : 'btn--secondary'}" data-mypage-nav="${c.external.replace('#', '')}">${esc(c.label)}</a>`;
-      }
-      const href = studyRoomSectionPath(room.id, /** @type {any} */ (c.path));
-      return `<a href="#${href}" class="btn ${c.primary ? 'btn--primary' : 'btn--secondary'}" data-p20-nav="${href}">${esc(c.label)}</a>`;
-    })
-    .join('');
+function renderPickPrimeNudge(room) {
+  const c = P20_PICK_PRIME_NUDGE;
+  const d1 = studyRoomSectionPath(room.id, 'detail');
+  const d2 = studyRoomSectionPath(room.id, 'detail2');
+  return `
+    <div class="p20-hub-block p20-pick-prime-nudge">
+      <h3 class="p20-hub-block__title">${esc(c.title)}</h3>
+      <p class="p19-form-section__lead">${esc(c.lead)}</p>
+      <div class="p20-pick-prime-nudge__cols">
+        <div>
+          <h4 class="p20-pick-prime-nudge__sub">${esc(c.detail1Title)}</h4>
+          <ul class="p20-pick-prime-nudge__list">
+            ${c.detail1Items.map((item) => `<li>${esc(item)}</li>`).join('')}
+          </ul>
+          <a href="#${d1}" class="btn btn--secondary btn--sm" data-p20-nav="${d1}">${esc(c.ctaDetail1)}</a>
+        </div>
+        <div>
+          <h4 class="p20-pick-prime-nudge__sub">${esc(c.detail2Title)}</h4>
+          <ul class="p20-pick-prime-nudge__list">
+            ${c.detail2Items.map((item) => `<li>${esc(item)}</li>`).join('')}
+          </ul>
+          <a href="#${d2}" class="btn btn--secondary btn--sm" data-p20-nav="${d2}">${esc(c.ctaDetail2)}</a>
+        </div>
+      </div>
+    </div>`;
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
@@ -209,7 +234,7 @@ function renderProfileOverview(room) {
     { label: '정원/타임', value: room.capacity_per_time, section: 'detail' },
     { label: '짧은 소개', value: room.intro_short, section: 'detail' },
     { label: '상세 소개', value: room.intro_long, section: 'detail' },
-    { label: '시설 요약', value: room.facility_summary, section: 'detail' },
+    { label: '시설 요약', value: room.facility_summary, section: 'detail2' },
     {
       label: '옵션',
       value: [room.weekend_available ? '주말 가능' : '', room.one_on_one_available ? '1:1 가능' : '']
@@ -218,7 +243,7 @@ function renderProfileOverview(room) {
       section: 'detail',
     },
     { label: '대표 이미지', value: room.has_representative_image ? '등록됨' : '', section: 'detail' },
-    { label: '문의·쪽지 방식', value: room.contact_method_set ? '설정됨' : '', section: 'detail' },
+    { label: '문의·쪽지 방식', value: room.contact_method_set ? '설정됨' : '', section: 'inquiries' },
   ];
 
   return `
@@ -248,7 +273,6 @@ function renderProfileOverview(room) {
 
 /** @param {import('./store.js').StudyRoomRecord} room @param {string} activeSection @param {string} bodyHtml */
 function renderRoomShell(room, activeSection, bodyHtml) {
-  const readiness = getPublishReadiness(room);
   return `
     <div class="mp-room">
       <header class="mp-room__head">
@@ -256,7 +280,7 @@ function renderRoomShell(room, activeSection, bodyHtml) {
         <div class="mp-room__meta">
           <span class="mypage-badge mypage-badge--${room.profile_status}">${esc(profileStatusLabel(room.profile_status))}</span>
           <span class="mp-room__meta-line">${esc(formatRoomSummaryLine(room))}</span>
-          <span class="mp-room__meta-line">${esc(inquiryStatusLabel(room.inquiry_status))} · 공개준비 ${readiness.doneCount}/${readiness.totalCount}</span>
+          <span class="mp-room__meta-line">${esc(inquiryStatusLabel(room.inquiry_status))}</span>
         </div>
         ${renderTopTabs(room, activeSection)}
       </header>
@@ -303,9 +327,11 @@ export function renderStudyRoomRegScreen(path) {
     case 'P20-02':
       return renderHub(room);
     case 'P20-03a':
-      return renderBasicBridge(room);
+      return renderEmbeddedSection(room, 'basic');
     case 'P20-03b':
-      return renderDetailBridge(room);
+      return renderEmbeddedSection(room, 'detail');
+    case 'P20-03c':
+      return renderEmbeddedSection(room, 'detail2');
     case 'P20-04':
       return renderPublish(room);
     case 'P20-05':
@@ -410,19 +436,13 @@ function renderReviewBridgeBlock(room) {
 
 /** @param {import('./store.js').StudyRoomRecord} room */
 function renderHub(room) {
-  const readiness = getPublishReadiness(room);
-  const matrix = getExposureMatrix(room, readiness);
-
   let diagnosis = '공부방 상태를 확인해 주세요.';
   let tone = 'info';
-  if (room.profile_status === 'draft' && readiness.canPublish) {
-    diagnosis = '공개 준비가 완료되었습니다. 미리보기 후 공개할 수 있습니다.';
-    tone = 'success';
-  } else if (room.profile_status === 'draft') {
-    diagnosis = `공개 준비 미완료 · ${readiness.missing.length}개 항목이 필요합니다.`;
-    tone = 'warn';
+  if (room.profile_status === 'draft') {
+    diagnosis = '아직 공개 전입니다. 기본정보가 준비되면 미리보기·공개에서 공개할 수 있어요.';
+    tone = 'info';
   } else if (room.profile_status === 'published') {
-    diagnosis = `공개중 · ${inquiryStatusLabel(room.inquiry_status)} · 검색·비교에 노출 중`;
+    diagnosis = `공개중 · ${inquiryStatusLabel(room.inquiry_status)}`;
     tone = 'success';
   } else if (room.profile_status === 'hidden') {
     diagnosis = '숨김 상태입니다. 언제든 다시 공개할 수 있습니다.';
@@ -431,7 +451,7 @@ function renderHub(room) {
 
   const body = `
     <div class="mp-room__hub">
-      ${renderProgressCta(room)}
+      ${renderPickPrimeNudge(room)}
 
       <div class="p19-alert p19-alert--${tone}">
         <p class="p19-alert__text">${esc(diagnosis)}</p>
@@ -441,24 +461,10 @@ function renderHub(room) {
         <span><em>공개</em>${esc(profileStatusLabel(room.profile_status))}</span>
         <span><em>쪽지</em>${esc(inquiryStatusLabel(room.inquiry_status))}</span>
         <span><em>상세</em>${esc(detailStatusLabel(room.detail_completion_status))}</span>
-        <span><em>준비</em>${readiness.doneCount}/${readiness.totalCount}</span>
       </div>
 
-      ${renderFullChecklist(readiness, room.id)}
       ${renderProfileOverview(room)}
-
-      <div class="p20-hub-block">
-        <h3 class="p20-hub-block__title">${esc(P20_HUB_BLOCK_TITLES.exposureMatrix)}</h3>
-        <div class="p20-matrix">${renderMatrixRows(matrix)}</div>
-        ${
-          readiness.qualityHints.length
-            ? `<p class="p20-hint">${esc(readiness.qualityHints.join(' · '))}</p>`
-            : ''
-        }
-      </div>
-
       ${renderReviewBridgeBlock(room)}
-      <div class="p20-hub-cta">${renderHubCtaBlock(room)}</div>
     </div>`;
 
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', body)}</section>`;
@@ -602,11 +608,34 @@ function renderDetailForm(room) {
 }
 
 function renderBasicBridge(room) {
-  return renderBasicForm(room);
+  return renderEmbeddedSection(room, 'basic');
 }
 
 function renderDetailBridge(room) {
-  return renderDetailForm(room);
+  return renderEmbeddedSection(room, 'detail');
+}
+
+/** @param {import('./store.js').StudyRoomRecord} room @param {'basic'|'detail'|'detail2'} section */
+function renderEmbeddedSection(room, section) {
+  if (shouldReloadEmbeddedView(room.id, section)) {
+    queueMicrotask(() => {
+      ensureEmbeddedRegister(room.id, { force: true })
+        .then(() => {
+          markEmbeddedViewLoaded(room.id, section);
+          window.dispatchEvent(new Event('hashchange'));
+        })
+        .catch((err) => console.error('[embed register]', err));
+    });
+    const loading = `
+      <div class="mp-room-embed is-loading">
+        <p class="p19-form-section__lead">등록 정보를 불러오는 중…</p>
+      </div>`;
+    return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, section, loading)}</section>`;
+  }
+
+  markEmbeddedViewLoaded(room.id, section);
+  const body = renderEmbeddedPanel(room, section);
+  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, section, body)}</section>`;
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
@@ -797,6 +826,8 @@ function renderSubmissionTab(room) {
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindStudyRoomRegEvents(root, rerender) {
+  bindEmbeddedPanelEvents(root, rerender);
+
   root.querySelectorAll('[data-p20-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();

@@ -5,6 +5,9 @@
 | 파일 | 설명 |
 |------|------|
 | `1203우동공과-구매자용.ai` | 일러스트레이터 원본 (구매자용) |
+| `room-card-default-basic.svg` | 베이직 카드 기본(1:1) — 우동공과 / 우리동네 / 공부방 과외쌤 |
+| `room-card-default-pick.svg` | 픽 카드 기본(16:9) |
+| `room-card-default-prime.svg` | 프라임 카드 기본(16:9) |
 | `../preview/auth-ui/public/assets/brand/logo-wordmark.png` | 워드마크 — 「우동공과」 |
 | `../preview/auth-ui/public/assets/brand/logo-full.png` | 풀 로고 — 핀 아이콘 + 「우리동네 공부방과외」 |
 

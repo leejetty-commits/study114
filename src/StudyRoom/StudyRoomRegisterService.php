@@ -119,7 +119,11 @@ final class StudyRoomRegisterService
 
         }
 
-
+        try {
+            (new \Study114\Media\StudyRoomDefaultImageService())->ensureDefaultForRoom($pdo, (int) $row['id']);
+        } catch (\Throwable $e) {
+            error_log('[study-room default image on load] ' . $e->getMessage());
+        }
 
         return $this->hydrateRoom((int) $row['id'], $row);
 
@@ -372,9 +376,14 @@ final class StudyRoomRegisterService
 
         $stmt->execute([$userId, $name, $lessonPlace]);
 
+        $roomId = (int) $pdo->lastInsertId();
+        try {
+            (new \Study114\Media\StudyRoomDefaultImageService())->ensureDefaultForRoom($pdo, $roomId);
+        } catch (\Throwable $e) {
+            error_log('[study-room default image] ' . $e->getMessage());
+        }
 
-
-        return (int) $pdo->lastInsertId();
+        return $roomId;
 
     }
 
@@ -1526,6 +1535,7 @@ final class StudyRoomRegisterService
         try {
 
             (new \Study114\Media\PromoImageService())->ensureColumns($pdo);
+            (new \Study114\Media\StudyRoomDefaultImageService())->ensureColumns($pdo);
 
         } catch (\Throwable $e) {
 
@@ -1535,23 +1545,37 @@ final class StudyRoomRegisterService
 
 
 
-        $imageStmt = $pdo->prepare(
-
-            'SELECT id, image_type, image_path, sort_order, original_filename, caption,
-
-                    original_path, prime_1280_path, prime_1600_path, basic_360_path, basic_720_path
-
-               FROM study_room_images
-
-             WHERE study_room_id = ? ORDER BY sort_order ASC, id ASC'
-
-        );
-
-        $imageStmt->execute([$roomId]);
-
         $images = [];
+        $imageRows = [];
+        try {
+            $imageStmt = $pdo->prepare(
+                'SELECT id, image_type, image_path, sort_order, original_filename, caption,
+                        original_path, prime_1280_path, prime_1600_path, basic_360_path, basic_720_path,
+                        COALESCE(is_system_default, 0) AS is_system_default
+                   FROM study_room_images
+                 WHERE study_room_id = ? ORDER BY sort_order ASC, id ASC'
+            );
+            $imageStmt->execute([$roomId]);
+            $imageRows = $imageStmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            $imageStmt = $pdo->prepare(
+                'SELECT id, image_type, image_path, sort_order, original_filename, caption,
+                        original_path, prime_1280_path, prime_1600_path, basic_360_path, basic_720_path
+                   FROM study_room_images
+                 WHERE study_room_id = ? ORDER BY sort_order ASC, id ASC'
+            );
+            $imageStmt->execute([$roomId]);
+            $imageRows = $imageStmt->fetchAll(PDO::FETCH_ASSOC);
+        }
 
-        foreach ($imageStmt->fetchAll(PDO::FETCH_ASSOC) as $img) {
+        foreach ($imageRows as $img) {
+            // 등록 UI에는 시스템 기본 이미지를 숨기고, 상세1 업로드로만 교체되게 한다.
+            if ((int) ($img['is_system_default'] ?? 0) === 1) {
+                continue;
+            }
+            if ((string) ($img['original_filename'] ?? '') === \Study114\Media\StudyRoomDefaultImageService::MARKER_FILENAME) {
+                continue;
+            }
 
             $images[] = [
 

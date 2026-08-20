@@ -35,6 +35,7 @@ function renderBreadcrumb(currentPath, title, role) {
     parts.push({ label: title });
   }
 
+  // 마이페이지-내 등록 형태 (하이픈 연결)
   return `
     <nav class="mypage-breadcrumb" aria-label="현재 위치">
       ${parts
@@ -44,7 +45,7 @@ function renderBreadcrumb(currentPath, title, role) {
             part.path && !isLast
               ? `<a href="#${part.path}" data-mypage-nav="${part.path}">${esc(part.label)}</a>`
               : `<span aria-current="${isLast ? 'page' : 'false'}">${esc(part.label)}</span>`;
-          return `${index ? '<span class="mypage-breadcrumb__sep" aria-hidden="true">›</span>' : ''}${content}`;
+          return `${index ? '<span class="mypage-breadcrumb__sep" aria-hidden="true">-</span>' : ''}${content}`;
         })
         .join('')}
     </nav>`;
