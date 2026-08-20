@@ -42,6 +42,23 @@
     margin-inline: 0;
   }
 
+  /* 마이페이지 임베드: 좌측메뉴가 이미 있으므로 가짜 10rem 칼럼 사용 금지 */
+  .register-body--embed .home-main,
+  .mp-room-panel .register-body .home-main {
+    display: block;
+    grid-template-columns: none;
+  }
+
+  .register-body--embed .site-gate-wrap,
+  .mp-room-panel .register-body .site-gate-wrap,
+  .mp-room-panel > .mp-room .site-gate-wrap,
+  .mp-room__body > .site-gate-wrap {
+    grid-column: auto;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+  }
+
   /* 비로그인 등록 안내: 유료상품 게스트 게이트와 동일 폭·중앙 정렬 */
   .register-body.register-body--no-promo .home-main {
     display: block;

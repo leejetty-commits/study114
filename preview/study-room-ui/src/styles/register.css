@@ -20,6 +20,25 @@
   margin: 0;
 }
 
+/*
+ * 공부방상세정보 단독 페이지는 .register-body .home-main 에
+ * 마이페이지 좌측메뉴(10rem) 자리를 비워 본문 폭을 맞춘다.
+ * 마이페이지 임베드는 이미 사이드바가 있으므로 그 그리드를 끈다.
+ */
+@media (min-width: 1024px) {
+  .register-body--embed .home-main {
+    display: block;
+    grid-template-columns: none;
+  }
+
+  .register-body--embed .site-gate-wrap {
+    grid-column: auto;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+  }
+}
+
 .register-overview__lead {
   margin: 0;
   color: var(--gray-600, #64748b);

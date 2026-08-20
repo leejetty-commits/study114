@@ -1288,13 +1288,23 @@
   width: 100%;
   box-sizing: border-box;
 }
-.mp-room-panel .register-body--embed {
+.mp-room-panel .register-body--embed,
+.mp-room-panel .site-gate-wrap {
+  max-width: none;
+  width: 100%;
   margin: 0;
 }
-.mp-room-panel .register-body--embed .site-gate-wrap {
+.mp-room-panel .register-body--embed .home-main {
+  display: block !important;
+  grid-template-columns: none !important;
   max-width: none;
+  padding: 0;
   margin: 0;
+}
+.mp-room-panel .register-card.register-card--wide {
+  max-width: none !important;
   width: 100%;
+  margin: 0;
 }
 .register-embed-actions {
   display: flex;

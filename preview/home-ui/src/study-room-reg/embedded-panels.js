@@ -16,7 +16,7 @@ import {
   applyStudyRoomBasicToState,
 } from '../../../shared/study-room-basic-form.js';
 import { bindDraggableDialog } from '../../../shared/draggable-dialog.js';
-import { renderRegisterCardFrame } from '@study-room-ui/layout.js';
+import { renderRegisterCardInner } from '@study-room-ui/layout.js';
 import { renderBasicOverviewBoard, renderBasicEditModal } from '@study-room-ui/screens/step-basic.js';
 import { renderLessonFormHtml, bindLessonEvents } from '@study-room-ui/screens/step-lesson.js';
 import { renderFacilityFormHtml, bindFacilityEvents } from '@study-room-ui/screens/step-facility.js';
@@ -219,9 +219,9 @@ function detail2OverviewRows() {
   ];
 }
 
-/** 공부방상세정보와 동일 카드 틀 + 임베드 식별 attrs */
+/** 마이페이지 본문 전폭 — 공부방상세정보 카드 안쪽만 (가짜 사이드바 그리드 없음) */
 function embedFrame(section, roomId, content, frameOpts) {
-  return renderRegisterCardFrame(content, {
+  return renderRegisterCardInner(content, {
     ...frameOpts,
     showSteps: false,
     cardAttrs: `data-embed-section="${section}" data-embed-room-id="${roomId}"`,
