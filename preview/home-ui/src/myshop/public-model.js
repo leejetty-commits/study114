@@ -1,6 +1,5 @@
 /**
- * 공개 마이샵 — API/캐시 item → 원장 미리보기와 동일 쇼케이스 입력
- * SSOT: 기본정보 + 상세정보1 + 상세정보2. 렌더는 myshop-render.js 단일.
+ * 공개 샵 — API/캐시 item → 단일 ShopPage(renderMyshopShowcase) 입력
  */
 
 import { previewState } from '../state.js';
@@ -37,10 +36,13 @@ function blank(v) {
   return s;
 }
 
-/**
- * @param {object} item
- * @returns {object[]}
- */
+function asBool(v) {
+  if (v === true || v === 1 || v === '1') return true;
+  if (v === false || v === 0 || v === '0') return false;
+  return Boolean(v);
+}
+
+/** @param {object} item @returns {object[]} */
 function normalizeImages(item) {
   /** @type {object[]} */
   const out = [];
@@ -59,8 +61,8 @@ function normalizeImages(item) {
       basic_720_path: blank(img.basic_720_path) || path,
       prime_1280_path: blank(img.prime_1280_path) || path,
       image_type: img.image_type || 'other',
+      title: blank(img.title || img.caption),
       is_system_default: false,
-      title: blank(img.title),
     });
   };
 
@@ -76,7 +78,6 @@ function normalizeImages(item) {
       }
     }
   }
-
   if (Array.isArray(item.gallery)) {
     for (const g of item.gallery) {
       if (typeof g === 'string') {
@@ -89,19 +90,20 @@ function normalizeImages(item) {
       }
     }
   }
-
   for (const key of ['image_path_prime', 'image_path', 'image_path_basic']) {
     const path = blank(item[key]);
     if (!path || seen.has(path)) continue;
     seen.add(path);
-    out.push({ image_path: path, basic_720_path: path, image_type: key === 'image_path_prime' ? 'cover' : 'other' });
+    out.push({
+      image_path: path,
+      basic_720_path: path,
+      image_type: key === 'image_path_prime' ? 'cover' : 'other',
+    });
   }
-
   return out;
 }
 
 /**
- * API/검색 item → renderMyshopShowcase(registerState-like, room) 입력
  * @param {object} item
  * @returns {{ state: object, room: object } | null}
  */
@@ -110,7 +112,14 @@ export function toMyshopShowcaseInputs(item) {
 
   const images = normalizeImages(item);
   const region = blank(item.location_label || item.region_label);
-  const facility = blank(item.facility_summary || item.facility_note);
+  const promo = Array.isArray(item.promo_regions)
+    ? item.promo_regions.map(blank).filter(Boolean)
+    : region
+      ? [region]
+      : [];
+  const facilityNames = Array.isArray(item.facility_names)
+    ? item.facility_names.map(blank).filter(Boolean)
+    : [];
 
   const state = {
     study_room_name: blank(item.study_room_name),
@@ -127,21 +136,45 @@ export function toMyshopShowcaseInputs(item) {
     lesson_place_type: item.lesson_place_type || '',
     lesson_operation_type: item.lesson_operation_type || '',
     capacity_per_time: item.capacity_per_time || '',
+    minutes_per_lesson: item.minutes_per_lesson ?? '',
+    lessons_per_week: item.lessons_per_week ?? '',
     monthly_fee_manwon:
       item.monthly_fee_manwon != null && blank(item.monthly_fee_manwon) !== ''
         ? blank(item.monthly_fee_manwon)
         : '',
-    facility_note: facility,
+    weekend_available: asBool(item.weekend_available),
+    one_on_one_available: asBool(item.one_on_one_available),
+    card_payment_available: asBool(item.card_payment_available),
+    cash_receipt_available: asBool(item.cash_receipt_available),
+    correction_available: asBool(item.correction_available),
+    university_name: blank(item.university_name),
+    major_name: blank(item.major_name),
+    career_years: blank(item.career_years),
+    academy_career_years: blank(item.academy_career_years),
+    franchise_flag: item.franchise_flag == null ? null : asBool(item.franchise_flag),
+    franchise_name: blank(item.franchise_name),
+    education_office_registered: asBool(item.education_office_registered),
+    education_office_reg_no: blank(item.education_office_reg_no),
+    business_registration_available: asBool(item.business_registration_available),
+    other_proof_notes: item.other_proof_notes,
+    facility_ids: Array.isArray(item.facility_ids) ? item.facility_ids : [],
+    facility_names: facilityNames,
+    facility_note: blank(item.facility_note),
+    facility_summary: blank(item.facility_summary),
+    youtube_url: blank(item.youtube_url),
+    facebook_url: blank(item.facebook_url),
+    instagram_url: blank(item.instagram_url),
     inquiry_status: blank(item.inquiry_status),
     classes: Array.isArray(item.classes) ? item.classes : [],
     images,
     region_label: region,
-    saved_regions: region
-      ? [{ is_primary: true, region_label: region, complex_name: '' }]
-      : [],
+    promo_regions: promo,
+    saved_regions: promo.map((label, i) => ({
+      is_primary: i === 0,
+      region_label: label,
+      complex_name: '',
+    })),
     primary_school_levels: [],
-    weekend_available: Boolean(item.weekend_available),
-    one_on_one_available: Boolean(item.one_on_one_available),
   };
 
   const room = {
@@ -154,7 +187,8 @@ export function toMyshopShowcaseInputs(item) {
     grade_band: blank(item.grade_band),
     price_amount: item.price_amount != null ? Number(item.price_amount) : null,
     region_label: region,
-    facility_summary: facility,
+    location_label: region,
+    facility_summary: state.facility_summary,
     inquiry_status: state.inquiry_status,
     lesson_place_type: state.lesson_place_type,
     capacity_per_time: state.capacity_per_time,

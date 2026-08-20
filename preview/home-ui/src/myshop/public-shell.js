@@ -16,8 +16,8 @@ function renderShowcaseHtml(item) {
   const pair = toMyshopShowcaseInputs(item);
   if (!pair) {
     return `
-      <div class="myshop myshop--empty" data-myshop>
-        <p class="myshop-prose" style="padding:1.5rem;text-align:center">이 공부방 소개를 찾을 수 없습니다.</p>
+      <div class="shop shop--empty" data-myshop>
+        <p class="shop-prose" style="padding:1.5rem;text-align:center">이 공부방 소개를 찾을 수 없습니다.</p>
       </div>`;
   }
   return renderMyshopShowcase(pair.state, pair.room);
@@ -42,8 +42,8 @@ export function renderPublicMyshop() {
         ${
           cached
             ? renderShowcaseHtml(cached)
-            : `<div class="myshop myshop--loading" data-pm-loading data-myshop>
-                <p class="myshop-prose" style="padding:1.5rem;text-align:center">소개를 불러오는 중…</p>
+            : `<div class="shop shop--loading" data-pm-loading data-myshop>
+                <p class="shop-prose" style="padding:1.5rem;text-align:center">소개를 불러오는 중…</p>
               </div>`
         }
       </div>

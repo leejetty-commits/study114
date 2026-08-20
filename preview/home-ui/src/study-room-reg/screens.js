@@ -326,8 +326,8 @@ function renderHub(room) {
         .catch((err) => console.error('[myshop]', err));
     });
     const loading = `
-      <div class="myshop myshop--loading">
-        <p class="myshop-hero__lead">마이샵을 준비하고 있어요…</p>
+      <div class="shop shop--loading" data-myshop>
+        <p class="shop-prose">샵 페이지를 준비하고 있어요…</p>
       </div>`;
     return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', loading)}</section>`;
   }

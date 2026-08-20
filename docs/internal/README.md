@@ -27,7 +27,8 @@
 | [47-study-room-home-card-map.md](./47-study-room-home-card-map.md) | 공부방 홈 카드 × 등록 단계 매핑 · 공개/노출 용어 | ★ |
 | [48-tutor-home-card-map.md](./48-tutor-home-card-map.md) | 과외쌤 홈 카드 × 단계 매핑 · 제출함 | ★ 과외쌤 제출함 유지 |
 | [49-submission-role-split.md](./49-submission-role-split.md) | 제출함 **공통 개발 + 차등 운영** · 공부방 후순위 / 과외쌤 사용 | ★ 이번 버전 |
-| [50-student-myshop-routing.md](./50-student-myshop-routing.md) | 공개 마이샵 **풀페이지 본편** · 미니→확대→마이샵 · 복귀 스냅샷 · 역할 공통 열람 | ★ 반영 방향 |
+| [50-student-myshop-routing.md](./50-student-myshop-routing.md) | 샵 **라우팅·복귀** (미니→확대→샵) | ★ |
+| [51-shop-page-redesign.md](./51-shop-page-redesign.md) | **단일 ShopPage** 구조·필드매핑·숨김·스타일 | ★ 본문 SSOT |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
 
 ---
