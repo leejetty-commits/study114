@@ -1,17 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="����">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="우동공과 우리동네 공부방 과외">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#f7fafc"/>
-      <stop offset="55%" stop-color="#eef4fb"/>
-      <stop offset="100%" stop-color="#e8f0fa"/>
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
     </linearGradient>
   </defs>
-  <rect width="1600" height="900" fill="url(#bg)"/>
-  <g font-family="'Pretendard','Noto Sans KR',sans-serif" text-anchor="middle">
-    <text x="800" y="390" font-size="92" font-weight="800" letter-spacing="-1.5">
-      <tspan fill="#e85d75">�</tspan><tspan fill="#f57c00">�</tspan><tspan fill="#2b7fff">�</tspan><tspan fill="#8b5cf6">�</tspan>
-    </text>
-    <text x="800" y="490" fill="#334155" font-size="48" font-weight="700">���$</text>
-    <text x="800" y="560" fill="#64748b" font-size="40" font-weight="600">��) �x$</text>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect x="56" y="80" width="1168" height="560" rx="36" fill="#ffffff" fill-opacity="0.78" stroke="#e2e8f0" stroke-width="2"/>
+  
+  <g aria-hidden="true">
+    <path d="M230 256.6
+      C291.6 260.6 291.6 327 291.6 327
+      L256.4 406.2 L230 454.6 L203.6 406.2 L168.4 327
+      C168.4 327 168.4 260.6 230 256.6 Z"
+      fill="#ff8a65" stroke="#1e293b" stroke-width="5.28" stroke-linejoin="round"/>
+    <circle cx="230" cy="318.2" r="37.4" fill="#1e293b"/>
+    <path d="M210.2 406.2 L249.8 406.2 L230 454.6 Z" fill="#e8c39e" stroke="#1e293b" stroke-width="3.7" stroke-linejoin="round"/>
   </g>
+  <text x="427.2" y="330" fill="#e85d75" font-size="82" font-weight="800" text-anchor="middle" font-family="Pretendard, 'Noto Sans KR', sans-serif">우</text>
+    <text x="515.7" y="330" fill="#f57c00" font-size="82" font-weight="800" text-anchor="middle" font-family="Pretendard, 'Noto Sans KR', sans-serif">동</text>
+    <text x="604.3" y="330" fill="#2b7fff" font-size="82" font-weight="800" text-anchor="middle" font-family="Pretendard, 'Noto Sans KR', sans-serif">공</text>
+    <text x="692.8" y="330" fill="#8b5cf6" font-size="82" font-weight="800" text-anchor="middle" font-family="Pretendard, 'Noto Sans KR', sans-serif">과</text>
+  <text x="860" y="300" fill="#334155" font-size="42" font-weight="700" text-anchor="start" font-family="Pretendard, 'Noto Sans KR', sans-serif">우리동네</text>
+  <text x="860" y="362" fill="#64748b" font-size="38" font-weight="600" text-anchor="start" font-family="Pretendard, 'Noto Sans KR', sans-serif">공부방 과외</text>
 </svg>
