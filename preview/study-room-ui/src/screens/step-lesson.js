@@ -187,10 +187,11 @@ export function lessonSaveGuard() {
 }
 
 /**
- * @param {{ includeStepNav?: boolean }} [opts]
+ * @param {{ includeStepNav?: boolean, includeFooterActions?: boolean }} [opts]
  */
 export function renderLessonFormHtml(opts = {}) {
   const includeStepNav = opts.includeStepNav !== false;
+  const includeFooterActions = opts.includeFooterActions ?? !includeStepNav;
   const s = registerState;
   const classes = Array.isArray(s.classes) && s.classes.length ? s.classes : [emptyClass()];
   return `
@@ -306,10 +307,12 @@ export function renderLessonFormHtml(opts = {}) {
               nextLabel: '다음: 경력·신뢰·시설',
               nextEnabled: true,
             })
-          : `<div class="register-embed-actions">
+          : includeFooterActions
+            ? `<div class="register-embed-actions">
               <button type="button" class="btn btn--secondary" data-action="cancel-edit">취소</button>
               <button type="button" class="btn btn--primary" data-action="save">저장</button>
             </div>`
+            : ''
       }
     </form>
   `;

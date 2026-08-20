@@ -77,11 +77,12 @@ function persistForm(form) {
 }
 
 /**
- * @param {{ includeStepNav?: boolean, includePublishBlock?: boolean }} [opts]
+ * @param {{ includeStepNav?: boolean, includePublishBlock?: boolean, includeFooterActions?: boolean }} [opts]
  */
 export function renderFacilityFormHtml(opts = {}) {
   const includeStepNav = opts.includeStepNav !== false;
   const includePublishBlock = opts.includePublishBlock !== false;
+  const includeFooterActions = opts.includeFooterActions ?? !includeStepNav;
   const s = registerState;
   const notes = proofNotes(s);
   return `
@@ -202,10 +203,12 @@ export function renderFacilityFormHtml(opts = {}) {
               nextLabel: '등록 완료',
               nextEnabled: true,
             })
-          : `<div class="register-embed-actions">
+          : includeFooterActions
+            ? `<div class="register-embed-actions">
               <button type="button" class="btn btn--secondary" data-action="cancel-edit">취소</button>
               <button type="button" class="btn btn--primary" data-action="save">저장</button>
             </div>`
+            : ''
       }
     </form>
   `;

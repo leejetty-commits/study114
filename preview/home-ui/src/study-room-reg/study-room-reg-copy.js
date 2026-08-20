@@ -60,10 +60,11 @@ export const P20_HUB_BLOCK_TITLES = {
   pickPrimeNudge: '픽·프라임 노출 준비',
 };
 
-/** 운영홈 — 픽·프라임 유도 (진행률 숫자 없음) */
+/** 운영홈·미리보기 — 픽·프라임 유도 (진행률·이탈 CTA 없음) */
 export const P20_PICK_PRIME_NUDGE = {
-  title: '픽·프라임 노출을 생각하시나요?',
+  title: '홍보 광고를 위해서 픽 프라임 노출을 생각하시나요?',
   lead: '베이직 검색은 기본정보만으로도 충분합니다. 홍보·광고로 더 잘 보이려면 상세정보에서 아래 항목을 채워 주세요.',
+  leadHint: '상세정보1, 상세정보2 에 가면 필수입력 항목을 채워주면 됩니다',
   detail1Title: '상세정보1에서',
   detail1Items: [
     '홍보사진 (카드에 보이는 대표 이미지)',
@@ -73,8 +74,6 @@ export const P20_PICK_PRIME_NUDGE = {
   ],
   detail2Title: '상세정보2에서',
   detail2Items: ['경력특징', '교육청등록증', '시설·환경'],
-  ctaDetail1: '상세정보1 채우기',
-  ctaDetail2: '상세정보2 채우기',
 };
 
 /** P20-05 쪽지와 문의 — copy */

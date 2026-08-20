@@ -116,6 +116,10 @@ body.register-edit-open {
   box-shadow: 0 1.25rem 3rem rgb(180 83 9 / 0.22);
 }
 
+.register-edit-dialog--wide {
+  width: min(56rem, 100%);
+}
+
 .register-edit-dialog__head {
   display: flex;
   align-items: center;

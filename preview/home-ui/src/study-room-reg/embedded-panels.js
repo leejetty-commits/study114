@@ -261,61 +261,81 @@ function renderBasicEditModal() {
     </div>`;
 }
 
+function renderDetail1EditModal() {
+  return `
+    <div class="register-edit-overlay" data-detail1-edit-overlay>
+      <div class="register-edit-dialog register-edit-dialog--wide" role="dialog" aria-modal="true" aria-labelledby="embed-detail1-edit-title">
+        <div class="register-edit-dialog__head">
+          <h2 id="embed-detail1-edit-title" class="register-edit-dialog__title">상세정보1 수정</h2>
+          <button type="button" class="register-edit-dialog__close" data-action="cancel-edit" aria-label="닫기">×</button>
+        </div>
+        <div class="register-edit-dialog__body">
+          ${renderLessonFormHtml({ includeStepNav: false, includeFooterActions: false })}
+        </div>
+        <div class="register-edit-dialog__foot">
+          <button type="button" class="btn btn--secondary" data-action="cancel-edit">취소</button>
+          <button type="button" class="btn btn--primary" data-action="save">저장</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderDetail2EditModal() {
+  return `
+    <div class="register-edit-overlay" data-detail2-edit-overlay>
+      <div class="register-edit-dialog register-edit-dialog--wide" role="dialog" aria-modal="true" aria-labelledby="embed-detail2-edit-title">
+        <div class="register-edit-dialog__head">
+          <h2 id="embed-detail2-edit-title" class="register-edit-dialog__title">상세정보2 수정</h2>
+          <button type="button" class="register-edit-dialog__close" data-action="cancel-edit" aria-label="닫기">×</button>
+        </div>
+        <div class="register-edit-dialog__body">
+          ${renderFacilityFormHtml({ includeStepNav: false, includePublishBlock: false, includeFooterActions: false })}
+        </div>
+        <div class="register-edit-dialog__foot">
+          <button type="button" class="btn btn--secondary" data-action="cancel-edit">취소</button>
+          <button type="button" class="btn btn--primary" data-action="save">저장</button>
+        </div>
+      </div>
+    </div>`;
+}
+
 /**
  * @param {import('./store.js').StudyRoomRecord} room
  * @param {'basic'|'detail'|'detail2'} section
  */
 export function renderEmbeddedPanel(room, section) {
   const editing = isEmbedEditMode();
-  document.body.classList.toggle('register-edit-open', editing && section === 'basic');
+  document.body.classList.toggle('register-edit-open', editing);
 
   if (section === 'basic') {
-    if (editing) {
-      return `
-        <div class="register-flow mp-room-embed" data-embed-section="basic" data-embed-room-id="${room.id}">
-          ${overviewToolbar('기본정보 수정')}
-          ${overviewDl(basicOverviewRows())}
-          ${renderBasicEditModal()}
-        </div>`;
-    }
     return `
       <div class="register-flow mp-room-embed" data-embed-section="basic" data-embed-room-id="${room.id}">
         <div class="register-overview">
           ${overviewToolbar('기본정보 수정')}
           ${overviewDl(basicOverviewRows())}
         </div>
+        ${editing ? renderBasicEditModal() : ''}
       </div>`;
   }
 
   if (section === 'detail') {
-    if (editing) {
-      return `
-        <div class="register-flow mp-room-embed" data-embed-section="detail" data-embed-room-id="${room.id}">
-          ${renderLessonFormHtml({ includeStepNav: false })}
-        </div>`;
-    }
     return `
       <div class="register-flow mp-room-embed" data-embed-section="detail" data-embed-room-id="${room.id}">
         <div class="register-overview">
           ${overviewToolbar('상세정보1 수정')}
           ${overviewDl(detail1OverviewRows())}
         </div>
+        ${editing ? renderDetail1EditModal() : ''}
       </div>`;
   }
 
-  // detail2
-  if (editing) {
-    return `
-      <div class="register-flow mp-room-embed" data-embed-section="detail2" data-embed-room-id="${room.id}">
-        ${renderFacilityFormHtml({ includeStepNav: false, includePublishBlock: false })}
-      </div>`;
-  }
   return `
     <div class="register-flow mp-room-embed" data-embed-section="detail2" data-embed-room-id="${room.id}">
       <div class="register-overview">
         ${overviewToolbar('상세정보2 수정')}
         ${overviewDl(detail2OverviewRows())}
       </div>
+      ${editing ? renderDetail2EditModal() : ''}
     </div>`;
 }
 
@@ -377,24 +397,42 @@ export function bindEmbeddedPanelEvents(root, rerender) {
   }
 
   if (section === 'detail' && isEmbedEditMode()) {
-    bindLessonEvents(wrap, {
+    const overlay = wrap.querySelector('[data-detail1-edit-overlay]');
+    const close = () => setEditMode(roomId, 'detail', false);
+    overlay?.addEventListener('click', (e) => {
+      if (e.target === overlay) close();
+    });
+    bindDraggableDialog(
+      overlay?.querySelector('.register-edit-dialog'),
+      overlay?.querySelector('.register-edit-dialog__head'),
+    );
+    bindLessonEvents(overlay || wrap, {
       embed: true,
       onSaved: () => {
-        afterRegisterSave(roomId, 'detail').catch(() => setEditMode(roomId, 'detail', false));
+        afterRegisterSave(roomId, 'detail').catch(() => close());
       },
-      onCancel: () => setEditMode(roomId, 'detail', false),
+      onCancel: close,
       onRefresh: rerender,
     });
     return;
   }
 
   if (section === 'detail2' && isEmbedEditMode()) {
-    bindFacilityEvents(wrap, {
+    const overlay = wrap.querySelector('[data-detail2-edit-overlay]');
+    const close = () => setEditMode(roomId, 'detail2', false);
+    overlay?.addEventListener('click', (e) => {
+      if (e.target === overlay) close();
+    });
+    bindDraggableDialog(
+      overlay?.querySelector('.register-edit-dialog'),
+      overlay?.querySelector('.register-edit-dialog__head'),
+    );
+    bindFacilityEvents(overlay || wrap, {
       embed: true,
       onSaved: () => {
-        afterRegisterSave(roomId, 'detail2').catch(() => setEditMode(roomId, 'detail2', false));
+        afterRegisterSave(roomId, 'detail2').catch(() => close());
       },
-      onCancel: () => setEditMode(roomId, 'detail2', false),
+      onCancel: close,
       onRefresh: rerender,
     });
   }

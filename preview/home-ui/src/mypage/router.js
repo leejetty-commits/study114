@@ -129,7 +129,7 @@ export function screenTitle(screenId, path) {
     if (sr) {
       if (sr.roomId) {
         const room = getStudyRooms().find((r) => r.id === sr.roomId);
-        if (room?.study_room_name) return `내 등록 / ${room.study_room_name}`;
+        if (room?.study_room_name) return room.study_room_name;
       }
       return studyRoomRegScreenTitle(sr.screenId);
     }

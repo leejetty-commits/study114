@@ -93,54 +93,28 @@ function renderHubCtaBlock(_room) {
   return '';
 }
 
-/** @param {import('./store.js').StudyRoomRecord} room */
-function renderPickPrimeNudge(room) {
+/** 픽·프라임 유도 — CTA 없음 (미리보기·공개 상단) */
+function renderPickPrimeNudge() {
   const c = P20_PICK_PRIME_NUDGE;
-  const d1 = studyRoomSectionPath(room.id, 'detail');
-  const d2 = studyRoomSectionPath(room.id, 'detail2');
   return `
     <div class="p20-hub-block p20-pick-prime-nudge">
       <h3 class="p20-hub-block__title">${esc(c.title)}</h3>
       <p class="p19-form-section__lead">${esc(c.lead)}</p>
+      <p class="p19-form-section__lead p20-pick-prime-nudge__hint">${esc(c.leadHint)}</p>
       <div class="p20-pick-prime-nudge__cols">
         <div>
           <h4 class="p20-pick-prime-nudge__sub">${esc(c.detail1Title)}</h4>
           <ul class="p20-pick-prime-nudge__list">
             ${c.detail1Items.map((item) => `<li>${esc(item)}</li>`).join('')}
           </ul>
-          <a href="#${d1}" class="btn btn--secondary btn--sm" data-p20-nav="${d1}">${esc(c.ctaDetail1)}</a>
         </div>
         <div>
           <h4 class="p20-pick-prime-nudge__sub">${esc(c.detail2Title)}</h4>
           <ul class="p20-pick-prime-nudge__list">
             ${c.detail2Items.map((item) => `<li>${esc(item)}</li>`).join('')}
           </ul>
-          <a href="#${d2}" class="btn btn--secondary btn--sm" data-p20-nav="${d2}">${esc(c.ctaDetail2)}</a>
         </div>
       </div>
-    </div>`;
-}
-
-/** @param {import('./store.js').StudyRoomRecord} room */
-function renderRoomSwitcher(room) {
-  const rooms = getStudyRooms().slice(0, 3);
-  if (rooms.length <= 1) {
-    return `
-      <div class="mp-room__switcher" role="tablist" aria-label="내 공부방">
-        <span class="mp-room__switcher-item is-active" aria-current="page">${esc(room.study_room_name)}</span>
-      </div>`;
-  }
-  return `
-    <div class="mp-room__switcher" role="tablist" aria-label="내 공부방">
-      ${rooms
-        .map((r) => {
-          const active = r.id === room.id;
-          const href = studyRoomHubPath(r.id);
-          return active
-            ? `<span class="mp-room__switcher-item is-active" aria-current="page">${esc(r.study_room_name)}</span>`
-            : `<a href="#${href}" class="mp-room__switcher-item" data-p20-nav="${href}">${esc(r.study_room_name)}</a>`;
-        })
-        .join('')}
     </div>`;
 }
 
@@ -276,12 +250,6 @@ function renderRoomShell(room, activeSection, bodyHtml) {
   return `
     <div class="mp-room">
       <header class="mp-room__head">
-        ${renderRoomSwitcher(room)}
-        <div class="mp-room__meta">
-          <span class="mypage-badge mypage-badge--${room.profile_status}">${esc(profileStatusLabel(room.profile_status))}</span>
-          <span class="mp-room__meta-line">${esc(formatRoomSummaryLine(room))}</span>
-          <span class="mp-room__meta-line">${esc(inquiryStatusLabel(room.inquiry_status))}</span>
-        </div>
         ${renderTopTabs(room, activeSection)}
       </header>
       <div class="mp-room__body">${bodyHtml}</div>
@@ -436,33 +404,8 @@ function renderReviewBridgeBlock(room) {
 
 /** @param {import('./store.js').StudyRoomRecord} room */
 function renderHub(room) {
-  let diagnosis = '공부방 상태를 확인해 주세요.';
-  let tone = 'info';
-  if (room.profile_status === 'draft') {
-    diagnosis = '아직 공개 전입니다. 기본정보가 준비되면 미리보기·공개에서 공개할 수 있어요.';
-    tone = 'info';
-  } else if (room.profile_status === 'published') {
-    diagnosis = `공개중 · ${inquiryStatusLabel(room.inquiry_status)}`;
-    tone = 'success';
-  } else if (room.profile_status === 'hidden') {
-    diagnosis = '숨김 상태입니다. 언제든 다시 공개할 수 있습니다.';
-    tone = 'muted';
-  }
-
   const body = `
     <div class="mp-room__hub">
-      ${renderPickPrimeNudge(room)}
-
-      <div class="p19-alert p19-alert--${tone}">
-        <p class="p19-alert__text">${esc(diagnosis)}</p>
-      </div>
-
-      <div class="mp-room__status-strip" aria-label="현황 요약">
-        <span><em>공개</em>${esc(profileStatusLabel(room.profile_status))}</span>
-        <span><em>쪽지</em>${esc(inquiryStatusLabel(room.inquiry_status))}</span>
-        <span><em>상세</em>${esc(detailStatusLabel(room.detail_completion_status))}</span>
-      </div>
-
       ${renderProfileOverview(room)}
       ${renderReviewBridgeBlock(room)}
     </div>`;
@@ -677,6 +620,7 @@ function renderPublish(room) {
 
   const body = `
     <div class="p19-publish-body" data-p20-room-id="${room.id}">
+      ${renderPickPrimeNudge()}
       ${preview}
       ${renderFullChecklist(r, room.id)}
       <div class="p20-confirm-card" data-p20-room-id="${room.id}">

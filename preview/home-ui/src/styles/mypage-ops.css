@@ -1289,6 +1289,10 @@
 .p20-pick-prime-nudge__list li + li {
   margin-top: 0.25rem;
 }
+.p20-pick-prime-nudge__hint {
+  margin-top: 0.35rem;
+  color: #64748b;
+}
 .mp-room-embed.register-flow {
   max-width: none;
 }
@@ -1299,5 +1303,8 @@
   margin-top: 1rem;
   padding-top: 0.75rem;
   border-top: 1px solid #e2e8f0;
+}
+.register-edit-dialog--wide {
+  width: min(56rem, 100%);
 }
 
