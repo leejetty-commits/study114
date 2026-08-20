@@ -14,6 +14,5 @@ export {
   myshopReturnLabel,
 } from './return-snapshot.js';
 export { renderPublicMyshop, bindPublicMyshopEvents } from './public-shell.js';
-export { buildPublicMyshopModel, resolvePublicStudyRoomItem } from './public-model.js';
-export { renderPublicMyshopBody, bindPublicMyshopBodyEvents } from './public-body.js';
+export { resolvePublicStudyRoomItem, toMyshopShowcaseInputs } from './public-model.js';
 export { fetchPublicStudyRoom } from './public-api.js';

@@ -1,16 +1,27 @@
 /**
  * 공개 마이샵 풀페이지 셸
- * — 마이페이지 레일·상세 모달로 열지 않음. 바디 전체 독립 본편.
+ * — 본문은 원장 「내 등록 → 마이샵」과 동일 렌더(renderMyshopShowcase)
  */
 
 import { renderHomeShell, bindLayoutEvents } from '../layout.js';
 import { parseMyshopPath } from './router.js';
 import { returnFromPublicMyshop } from './navigate.js';
 import { peekMyshopReturnSnapshot, myshopReturnLabel } from './return-snapshot.js';
-import { resolvePublicStudyRoomItem, buildPublicMyshopModel } from './public-model.js';
-import { renderPublicMyshopBody, bindPublicMyshopBodyEvents } from './public-body.js';
+import { resolvePublicStudyRoomItem, toMyshopShowcaseInputs } from './public-model.js';
 import { fetchPublicStudyRoom } from './public-api.js';
+import { renderMyshopShowcase, bindMyshopEvents } from '../study-room-reg/myshop-render.js';
 import { esc } from '../detail-decision/detail-utils.js';
+
+function renderShowcaseHtml(item) {
+  const pair = toMyshopShowcaseInputs(item);
+  if (!pair) {
+    return `
+      <div class="myshop myshop--empty" data-myshop>
+        <p class="myshop-prose" style="padding:1.5rem;text-align:center">이 공부방 소개를 찾을 수 없습니다.</p>
+      </div>`;
+  }
+  return renderMyshopShowcase(pair.state, pair.room);
+}
 
 export function renderPublicMyshop() {
   const hash = window.location.hash.slice(1) || '';
@@ -19,7 +30,6 @@ export function renderPublicMyshop() {
   const snap = peekMyshopReturnSnapshot();
   const backLabel = myshopReturnLabel(snap);
   const cached = id ? resolvePublicStudyRoomItem(id) : null;
-  const model = cached ? buildPublicMyshopModel(cached) : null;
 
   const body = `
     <div class="myshop-public" data-myshop-public data-study-room-id="${id}">
@@ -30,9 +40,11 @@ export function renderPublicMyshop() {
       </header>
       <div data-myshop-public-mount>
         ${
-          model
-            ? renderPublicMyshopBody(model)
-            : `<div class="pm-empty pm-empty--loading" data-pm-loading><p>소개를 불러오는 중…</p></div>`
+          cached
+            ? renderShowcaseHtml(cached)
+            : `<div class="myshop myshop--loading" data-pm-loading data-myshop>
+                <p class="myshop-prose" style="padding:1.5rem;text-align:center">소개를 불러오는 중…</p>
+              </div>`
         }
       </div>
     </div>
@@ -51,7 +63,7 @@ export function renderPublicMyshop() {
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindPublicMyshopEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
-  bindPublicMyshopBodyEvents(root);
+  bindMyshopEvents(root);
 
   root.querySelector('[data-myshop-back]')?.addEventListener('click', () => {
     if (!returnFromPublicMyshop()) {
@@ -68,12 +80,12 @@ export function bindPublicMyshopEvents(root, rerender) {
     if (!item) {
       if (mount.querySelector('[data-pm-loading]')) {
         const fallback = resolvePublicStudyRoomItem(id);
-        mount.innerHTML = renderPublicMyshopBody(fallback ? buildPublicMyshopModel(fallback) : null);
-        bindPublicMyshopBodyEvents(root);
+        mount.innerHTML = renderShowcaseHtml(fallback);
+        bindMyshopEvents(root);
       }
       return;
     }
-    mount.innerHTML = renderPublicMyshopBody(buildPublicMyshopModel(item));
-    bindPublicMyshopBodyEvents(root);
+    mount.innerHTML = renderShowcaseHtml(item);
+    bindMyshopEvents(root);
   });
 }

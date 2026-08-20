@@ -87,9 +87,13 @@ function feeLine(s, room) {
 }
 
 function capacityLine(s, room) {
-  const fromEnum = labelOf(CAPACITY_PER_TIME_OPTIONS, s.capacity_per_time);
+  const raw = s.capacity_per_time || room?.capacity_per_time;
+  const fromEnum = labelOf(CAPACITY_PER_TIME_OPTIONS, raw);
   if (fromEnum) return fromEnum;
-  return blank(s.capacity_per_time || room?.capacity_per_time);
+  const t = blank(raw);
+  // enum 키(one_to_four 등)는 라벨 없이 노출하지 않음
+  if (!t || /^[a-z][a-z0-9_]*$/i.test(t)) return '';
+  return t;
 }
 
 function operationLine(s) {
@@ -109,13 +113,20 @@ function features(s, room) {
     .filter((v, i, arr) => arr.indexOf(v) === i);
 }
 
+function formatClassFee(raw) {
+  const t = blank(raw);
+  if (!t) return '';
+  if (/만원/.test(t)) return t;
+  return `${t}만원`;
+}
+
 function classSummaries(s) {
   const classes = Array.isArray(s.classes) ? s.classes : [];
   return classes
     .map((c) => {
       const name = blank(c.class_name || c.name);
       const subject = blank(c.subject_label || c.subject);
-      const fee = c.monthly_fee ? `${blank(c.monthly_fee)}만원` : '';
+      const fee = formatClassFee(c.monthly_fee ?? c.fee);
       const bits = [name, subject, fee].filter(Boolean);
       return bits.join(' · ');
     })
@@ -228,7 +239,12 @@ export function renderMyshopShowcase(s, room) {
       <span class="myshop-deco myshop-deco--br" aria-hidden="true">♥</span>
       <header class="myshop-hero">
         <div class="myshop-hero__media">
-          <img src="${esc(heroSrc)}" alt="${esc(name)}" />
+          <img
+            src="${esc(heroSrc)}"
+            alt="${esc(name)}"
+            data-myshop-fallback="${esc(ROOM_DEFAULT_BASIC)}"
+            onerror="if(this.dataset.fallbackApplied)return;this.dataset.fallbackApplied='1';this.src=this.getAttribute('data-myshop-fallback')||'';"
+          />
         </div>
         <div class="myshop-hero__copy">
           <p class="myshop-hero__eyebrow">나의 공부방</p>

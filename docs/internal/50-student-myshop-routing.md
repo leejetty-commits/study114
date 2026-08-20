@@ -130,6 +130,7 @@
 - [x] API 재료 보강 (`GET /api/study-room/public.php` · 검색 list 필드·갤러리 · mapper 패스스루)
 - [x] 수업정보 카드 구조 정리
 - [x] 사진/공간감 polish (모자이크 갤러리)
+- [x] 공개 본문 = 원장 미리보기와 동일 렌더 (`renderMyshopShowcase`)
 - [ ] 문의 CTA 정교화 (본편과 분리, 행동 유발은 별도 라운드)
 
 ---

@@ -14,6 +14,12 @@
   font-weight: 700;
 }
 
+/* 본문은 원장 미리보기(.myshop)와 동일 — 셸만 공개 복귀바 */
+.myshop-public [data-myshop-public-mount] > .myshop {
+  margin-top: 0.15rem;
+}
+
+/* 하위 레거시 pm-* (미사용, 안전망) */
 .pm {
   --pm-ink: #1c1917;
   --pm-muted: #78716c;
