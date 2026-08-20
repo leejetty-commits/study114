@@ -39,6 +39,28 @@ export function resolveStudyRoomCardCta(inquiryStatus) {
 }
 
 /**
+ * 마이샵 본문용 — 이벤트 없는 읽기 전용 상태 문구 (CTA/버튼 카피 금지)
+ * 톤: 짧은 상태형으로 통일
+ * @param {string|null|undefined} inquiryStatus
+ * @returns {string}
+ */
+export function myshopInquiryStatusLine(inquiryStatus) {
+  if (inquiryStatus === 'open' || isInquiryReceiving(inquiryStatus)) {
+    return '현재 쪽지 가능';
+  }
+  if (inquiryStatus === 'capacity_full') {
+    return '현재는 정원 마감 상태입니다';
+  }
+  if (inquiryStatus === 'paused' || inquiryStatus === 'waiting_only') {
+    return '현재는 잠시 쉬는 중입니다';
+  }
+  if (inquiryStatus == null || inquiryStatus === '') {
+    return '';
+  }
+  return '현재는 쪽지를 받지 않아요';
+}
+
+/**
  * @param {string|null|undefined} inquiryStatus
  * @returns {{ receiving: boolean, reason: 'capacity_full'|'paused'|null }}
  */

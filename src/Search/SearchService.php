@@ -352,11 +352,12 @@ final class SearchService
         $basicImgExpr = $this->roomCoverImageExpr($pdo, 'basic');
 
         $sql = "
-            SELECT DISTINCT sr.id, sr.study_room_name, sr.price_amount, sr.intro_short,
+            SELECT DISTINCT sr.id, sr.study_room_name, sr.price_amount, sr.intro_short, sr.intro_long,
                    sr.main_subject_note, sr.teaching_style, {$gradeExpr} AS grade_band,
                    {$audienceExpr} AS audience_label,
-                   sr.feature_1, sr.slogan,
+                   sr.feature_1, sr.feature_2, sr.feature_3, sr.slogan,
                    sr.lesson_place_type, sr.capacity_per_time, sr.lesson_operation_type,
+                   sr.facility_note, sr.inquiry_status,
                    sr.education_office_registered, sr.detail_completion_status,
                    {$latExpr} AS latitude, {$lngExpr} AS longitude,
                    sr.published_at, sr.created_at,
@@ -414,11 +415,18 @@ final class SearchService
                 'grade_band'                 => (string) (($row['audience_label'] ?? '') !== ''
                     ? $row['audience_label']
                     : ($row['grade_band'] ?? '')),
+                'intro_short'                => (string) ($row['intro_short'] ?? ''),
+                'intro_long'                 => (string) ($row['intro_long'] ?? ''),
                 'feature_1'                  => (string) ($row['feature_1'] ?? ''),
+                'feature_2'                  => (string) ($row['feature_2'] ?? ''),
+                'feature_3'                  => (string) ($row['feature_3'] ?? ''),
                 'slogan'                     => (string) ($row['slogan'] ?? ''),
+                'teaching_style'             => (string) ($row['teaching_style'] ?? ''),
                 'lesson_place_type'          => $row['lesson_place_type'] ?? null,
                 'capacity_per_time'          => $row['capacity_per_time'] ?? null,
                 'lesson_operation_type'      => $row['lesson_operation_type'] ?? null,
+                'facility_summary'           => trim((string) ($row['facility_note'] ?? '')),
+                'inquiry_status'             => (string) ($row['inquiry_status'] ?? ''),
                 'education_office_registered'=> (bool) ($row['education_office_registered'] ?? false),
                 'detail_completion_status'   => $detailStatus,
                 'prime_eligible'             => $detailStatus === 'expanded_complete',
@@ -444,6 +452,16 @@ final class SearchService
             ];
             $i++;
         }
+
+        $galleryMap = $this->loadRoomGalleryMap($pdo, array_map(static fn (array $it): int => (int) $it['id'], $items));
+        foreach ($items as &$item) {
+            $id = (int) $item['id'];
+            $item['images'] = $galleryMap[$id] ?? [];
+            if ($item['images'] !== [] && ($item['image_path'] ?? '') === '') {
+                $item['image_path'] = (string) ($item['images'][0]['image_path'] ?? '');
+            }
+        }
+        unset($item);
 
         return ['tab' => 'room', 'total' => $total, 'rows' => $rows, 'items' => $items];
     }
@@ -983,5 +1001,69 @@ final class SearchService
                  WHERE sri.study_room_id = sr.id
                  ORDER BY (sri.image_type = 'cover') DESC, sri.sort_order ASC, sri.id ASC
                  LIMIT 1)";
+    }
+
+    /**
+     * @param list<int> $roomIds
+     * @return array<int, list<array{image_type: string, image_path: string}>>
+     */
+    private function loadRoomGalleryMap(PDO $pdo, array $roomIds): array
+    {
+        $roomIds = array_values(array_filter(array_map('intval', $roomIds), static fn (int $id): bool => $id > 0));
+        if ($roomIds === [] || !$this->tableExists($pdo, 'study_room_images')) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($roomIds), '?'));
+        $hasPrime = $this->columnCache($pdo, 'study_room_images', 'prime_1280_path');
+        $hasBasic = $this->columnCache($pdo, 'study_room_images', 'basic_720_path');
+        $hasSys = $this->columnCache($pdo, 'study_room_images', 'is_system_default');
+        $pathExpr = $hasPrime && $hasBasic
+            ? "COALESCE(NULLIF(prime_1280_path,''), NULLIF(basic_720_path,''), NULLIF(image_path,''))"
+            : 'NULLIF(image_path,\'\')';
+        $sysExpr = $hasSys ? 'COALESCE(is_system_default, 0)' : '0';
+
+        try {
+            $stmt = $pdo->prepare(
+                "SELECT study_room_id, image_type, {$pathExpr} AS image_path, original_filename, {$sysExpr} AS is_system_default
+                   FROM study_room_images
+                  WHERE study_room_id IN ({$placeholders})
+                  ORDER BY study_room_id ASC, (image_type = 'cover') DESC, sort_order ASC, id ASC"
+            );
+            $stmt->execute($roomIds);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $map = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['study_room_id'] ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+            if ((int) ($row['is_system_default'] ?? 0) === 1) {
+                continue;
+            }
+            if ((string) ($row['original_filename'] ?? '') === '__system_default__') {
+                continue;
+            }
+            $path = trim((string) ($row['image_path'] ?? ''));
+            if ($path === '') {
+                continue;
+            }
+            if (!isset($map[$id])) {
+                $map[$id] = [];
+            }
+            if (count($map[$id]) >= 6) {
+                continue;
+            }
+            $map[$id][] = [
+                'image_type' => (string) ($row['image_type'] ?? 'other'),
+                'image_path' => $path,
+            ];
+        }
+
+        return $map;
     }
 }

@@ -1,4 +1,4 @@
-import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isGuideRoute, isCommunityRoute, isPromoRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, navigateToGuide, navigateToSupport } from './state.js';
+import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isGuideRoute, isCommunityRoute, isPromoRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, isMyshopRoute, navigateToGuide, navigateToSupport } from './state.js';
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
@@ -29,8 +29,9 @@ export function renderPreviewToolbar() {
   const onLibrary = isLibraryRoute();
   const onAdmin = isAdminRoute();
   const onPlans = isPlansRoute();
+  const onMyshop = isMyshopRoute();
   const region = previewState.regionKey;
-  const isGuest = current === 'guest' && !onMypage && !onMessages && !onGuide && !onCommunity && !onPromo && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans;
+  const isGuest = current === 'guest' && !onMypage && !onMessages && !onGuide && !onCommunity && !onPromo && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans && !onMyshop;
   const authUser = getAuthUser();
   const apiOn = isHandoffApiMode();
   const msgApiOn = isMessagesApiMode();

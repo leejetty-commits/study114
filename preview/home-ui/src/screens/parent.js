@@ -16,6 +16,7 @@ import {
 import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
+import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
 
 export function renderParent() {
   const tab = previewState.parentTab;
@@ -57,4 +58,6 @@ export function bindParentEvents(root, rerender) {
     sourceRoute: 'parent',
     getStudentItem: (id) => previewState.parentFind.activeResultItems?.find((x) => x.id === id),
   });
+
+  restoreMyshopScrollAndFocusIfPending();
 }

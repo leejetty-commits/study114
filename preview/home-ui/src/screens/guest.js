@@ -11,6 +11,7 @@ import {
 import { bindDetailDecisionEvents } from '../detail-decision/index.js';
 import { isLoggedIn } from '../auth-session.js';
 import { hydrateHomeBasicFromSearch, isHomeBasicLive } from '../home-basic-live.js';
+import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
 
 let homeBasicHydrateStarted = false;
 
@@ -35,7 +36,9 @@ export function renderGuest() {
 export function bindGuestEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
   bindGuestSectionEvents(root, rerender);
-  bindDetailDecisionEvents(root, { onRerender: rerender, viewer: 'guest' });
+  bindDetailDecisionEvents(root, { onRerender: rerender, viewer: 'guest', sourceRoute: 'guest' });
+
+  restoreMyshopScrollAndFocusIfPending();
 
   if (!homeBasicHydrateStarted && !isHomeBasicLive()) {
     homeBasicHydrateStarted = true;

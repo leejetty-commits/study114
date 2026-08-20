@@ -28,6 +28,10 @@ export function resolveDetailItem(kind, id) {
 }
 
 /**
+ * 확대카드(중간 단계) 진입점.
+ * 공부방 학생 탐색 정책: 미니카드 → 여기(확대) → 마이샵(풀페이지 본편).
+ * 배너/카드 클릭은 확대만. 마이샵은 명시적 CTA로만. docs/internal/50-student-myshop-routing.md
+ *
  * @param {{ kind: 'study_room'|'tutor'|'student', id: number, viewer?: string, onRerender?: () => void, sourceRoute?: string, item?: object }} opts
  */
 export function openDetailDecision({ kind, id, viewer, onRerender, sourceRoute = 'search', item: itemOverride }) {

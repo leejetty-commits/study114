@@ -14,6 +14,8 @@ import './styles/product-chrome.css';
 import './styles/home-marketing-banner.css';
 import './styles/plans-store.css';
 import './styles/mypage-ops.css';
+import './styles/myshop.css';
+import './styles/myshop-public.css';
 /* auth base.css 전체 import 금지(전역 reset). 폼 프리미티브만 공유 */
 import '../../shared/register-form-primitives.css';
 import '../../shared/register-flow.css';
@@ -45,9 +47,12 @@ import {
   bootstrapAdminRoute,
   isPlansRoute,
   bootstrapPlansRoute,
+  isMyshopRoute,
+  bootstrapMyshopRoute,
 } from './state.js';
 import { PLANS_REDIRECTS } from './plans/router.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
+import { renderPublicMyshop, bindPublicMyshopEvents } from './myshop/index.js';
 import { renderGuide, bindGuideEvents } from './guide/index.js';
 import { renderConcern, bindConcernEvents, getDefaultCommunityPath } from './concern/index.js';
 import { renderPromo, bindPromoEvents } from './promo/index.js';
@@ -89,7 +94,8 @@ function applyPlansRedirects() {
 }
 
 function render() {
-  if (isLoggedIn() && !isEmailVerified() && !isGuideRoute()) {
+  // 공개 마이샵·가이드는 미인증 로그인 유저도 열람 가능 (공통 쇼케이스)
+  if (isLoggedIn() && !isEmailVerified() && !isGuideRoute() && !isMyshopRoute()) {
     redirectToEmailVerifyWait();
     return;
   }
@@ -142,6 +148,12 @@ function render() {
     mountOpsChrome(app);
     return;
   }
+  if (isMyshopRoute()) {
+    app.innerHTML = renderPublicMyshop();
+    bindPublicMyshopEvents(app, render);
+    mountOpsChrome(app);
+    return;
+  }
   if (isMypageRoute()) {
     app.innerHTML = renderMypage();
     bindMypageEvents(app, render);
@@ -191,6 +203,7 @@ function init() {
     bootstrapPolicyRoute();
     bootstrapLibraryRoute();
     bootstrapAdminRoute();
+    bootstrapMyshopRoute();
     // pathname 딥링크는 bootstrap*가 hash로 옮긴다. fragment만 유실된 `/`는 guest.
     // /support 등 pathname이 남은 채 hash만 비면 guest로 덮어쓰지 않는다.
     // SPA 간 이동으로 hash/pathname이 떨어졌을 때는 pending-route로 복구한다.
@@ -222,7 +235,9 @@ function init() {
           path === '/admin' ||
           path.startsWith('/admin/') ||
           path === '/plans' ||
-          path.startsWith('/plans/');
+          path.startsWith('/plans/') ||
+          path === '/myshop' ||
+          path.startsWith('/myshop/');
         if (!deep) {
           window.location.hash = '#/guest';
         }
@@ -305,6 +320,7 @@ function init() {
           isPlansRoute() ||
           isSupportRoute() ||
           isGuideRoute() ||
+          isMyshopRoute() ||
           isMypageRoute() ||
           isAdminRoute();
         if (

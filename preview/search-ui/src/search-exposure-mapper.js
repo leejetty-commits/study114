@@ -40,6 +40,9 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
   if (tab === 'room') {
     const base = pooled || EXPOSURE_STUDY_ROOMS[index % EXPOSURE_STUDY_ROOMS.length] || EXPOSURE_STUDY_ROOMS[0];
     const summaryLines = String(apiItem.summary || '').split('\n').filter(Boolean);
+    const pickContent = (key, fallback = '') =>
+      Object.prototype.hasOwnProperty.call(apiItem, key) ? apiItem[key] ?? fallback : (base[key] ?? fallback);
+
     const merged = {
       ...base,
       id,
@@ -48,14 +51,18 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       price_amount: apiItem.price_amount ?? base.price_amount,
       main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,
       grade_band: apiItem.grade_band || base.grade_band,
-      intro_short: apiItem.intro_short || summaryLines[1] || base.intro_short,
-      feature_1: apiItem.feature_1 || base.feature_1,
-      slogan: Object.prototype.hasOwnProperty.call(apiItem, 'slogan')
-        ? String(apiItem.slogan || '')
-        : (base.slogan || ''),
+      intro_short: String(pickContent('intro_short', summaryLines[1] || base.intro_short || '')),
+      intro_long: String(pickContent('intro_long', '')),
+      feature_1: String(pickContent('feature_1', base.feature_1 || '')),
+      feature_2: String(pickContent('feature_2', '')),
+      feature_3: String(pickContent('feature_3', '')),
+      slogan: String(pickContent('slogan', base.slogan || '')),
+      teaching_style: String(pickContent('teaching_style', summaryLines[2] || '')),
       lesson_place_type: apiItem.lesson_place_type || base.lesson_place_type,
       capacity_per_time: apiItem.capacity_per_time || base.capacity_per_time,
       lesson_operation_type: apiItem.lesson_operation_type || base.lesson_operation_type,
+      facility_summary: String(pickContent('facility_summary', '')),
+      inquiry_status: String(pickContent('inquiry_status', base.inquiry_status || '')),
       education_office_registered:
         apiItem.education_office_registered ?? base.education_office_registered,
       detail_completion_status: apiItem.detail_completion_status || base.detail_completion_status,
@@ -64,11 +71,14 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       longitude: apiItem.longitude ?? base.longitude ?? null,
       profile_status: 'published',
       compare_eligible: apiItem.compare_eligible !== false,
-      inquiry_status: base.inquiry_status || 'open',
       published_at: apiItem.published_at ?? base.published_at ?? base.registered_at,
       created_at: apiItem.created_at ?? base.created_at ?? base.registered_at,
       recommend_count: apiItem.recommend_count ?? base.recommend_count ?? 0,
       review_count: apiItem.review_count ?? base.review_count ?? 0,
+      image_path: String(apiItem.image_path || base.image_path || ''),
+      image_path_prime: String(apiItem.image_path_prime || apiItem.image_path || base.image_path_prime || ''),
+      image_path_basic: String(apiItem.image_path_basic || apiItem.image_path || base.image_path_basic || ''),
+      images: Array.isArray(apiItem.images) ? apiItem.images : [],
       badges: studyRoomBadges({
         ...base,
         main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,

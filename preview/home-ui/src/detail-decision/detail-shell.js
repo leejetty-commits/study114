@@ -32,6 +32,7 @@ import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
 import { renderRightRailBlock } from '../right-rail.js';
 import { maskPublicDisplayName } from '../student-blind-teaser.js';
 import { isGuestPublicPath, loginUrl } from '../../../shared/route-access.js';
+import { openPublicMyshop } from '../myshop/navigate.js';
 import { bindProviderReviewMount } from '../provider-reviews/ui.js';
 
 const MODAL_ID = 'p24-detail-modal';
@@ -114,6 +115,14 @@ function renderSecondaryActions(kind, item, viewer) {
     <button type="button" class="btn btn--secondary btn--sm" data-p24-action="compare-toggle"
       data-item-kind="${compareKind}" data-item-id="${item.id}">
       ${cmpOn ? '비교 해제' : '비교'}
+    </button>`;
+}
+
+function renderMyshopEntryCta(kind) {
+  if (kind !== 'study_room') return '';
+  return `
+    <button type="button" class="btn btn--secondary btn--sm" data-p24-action="open-myshop">
+      공부방 둘러보기
     </button>`;
 }
 
@@ -311,6 +320,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
         ${compareAware}
         <div class="p24-modal__foot-actions">
           ${secondary}
+          ${renderMyshopEntryCta(kind)}
           <button type="button" class="btn btn--primary btn--sm" data-p24-action="${primary.action}"
             ${primary.disabled ? 'disabled' : ''}>${esc(primary.label)}</button>
         </div>
@@ -349,6 +359,18 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
 
   wrap.querySelector('[data-p24-action="login"]')?.addEventListener('click', () => {
     window.open(`${AUTH_UI_BASE}/#/login?from=detail`, '_blank', 'noopener');
+  });
+
+  wrap.querySelector('[data-p24-action="open-myshop"]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (kind !== 'study_room') return;
+    closeDetailModal();
+    openPublicMyshop({
+      studyRoomId: item.id,
+      sourceRoute,
+      viewerRole: viewer,
+    });
   });
 
   wrap.querySelectorAll('[data-p24-action="compare-guest-blocked"]').forEach((btn) => {

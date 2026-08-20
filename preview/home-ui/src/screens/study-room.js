@@ -15,6 +15,7 @@ import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
 import { STUDY_ROOM_REGISTER_URL } from '../../../shared/preview-links.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
+import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
 
 function renderMyStudyRoomBox() {
   return `
@@ -82,4 +83,6 @@ export function bindStudyRoomEvents(root, rerender) {
     sourceRoute: 'study_room',
     getStudentItem: (id) => previewState.studyRoomFind.activeResultItems?.find((x) => x.id === id),
   });
+
+  restoreMyshopScrollAndFocusIfPending();
 }

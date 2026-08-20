@@ -9,7 +9,6 @@ import {
   P20_LIST_TABS,
   P20_LIST_HEAD,
   P20_PREVIEW_MODES,
-  P20_HUB_CTA,
   P20_INQUIRY_COPY,
   P20_PICK_PRIME_NUDGE,
   INQUIRY_OFF_REASONS,
@@ -35,7 +34,6 @@ import {
   formatRoomSummaryLine,
   profileStatusLabel,
   inquiryStatusLabel,
-  detailStatusLabel,
   roomToExposureRow,
 } from './format.js';
 import {
@@ -57,21 +55,14 @@ import {
   renderEmbeddedPanel,
   bindEmbeddedPanelEvents,
 } from './embedded-panels.js';
+import { renderMyshopShowcase, bindMyshopEvents } from './myshop-render.js';
+import { registerState } from '@study-room-ui/state.js';
 import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
-import { getStudentReviewIds } from '../student-review-store.js';
-import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
-import { studentReviewPath, getHandoffFromQuery } from '../handoff-link.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import { KOREA_SIDOS } from '../../../shared/korea-sidos.js';
-import { formatMonthlyWon } from '../exposure-format.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
-}
-
-function blank(v) {
-  const s = String(v ?? '').trim();
-  return s || '—';
 }
 
 /** @param {{ label: string, ok: boolean, reason?: string | null, statusText?: string | null }[]} rows */
@@ -86,11 +77,6 @@ function renderMatrixRows(rows) {
     </div>`;
     })
     .join('');
-}
-
-/** @deprecated 하단 CTA 제거 — 호환용 빈 구현 */
-function renderHubCtaBlock(_room) {
-  return '';
 }
 
 /** 픽·프라임 유도 — CTA 없음 (등록점검 상단) */
@@ -191,61 +177,6 @@ function renderProgressCta(room) {
     </a>`;
 }
 
-/** @param {import('./store.js').StudyRoomRecord} room */
-function renderProfileOverview(room) {
-  const rows = [
-    { label: '공부방명', value: room.study_room_name, section: 'basic' },
-    { label: '공개 상태', value: profileStatusLabel(room.profile_status), section: 'publish' },
-    { label: '쪽지 상태', value: inquiryStatusLabel(room.inquiry_status), section: 'inquiries' },
-    { label: '상세정보', value: detailStatusLabel(room.detail_completion_status), section: 'detail' },
-    { label: '지역', value: room.region_label, section: 'basic' },
-    { label: '주력과목', value: room.main_subject_note, section: 'basic' },
-    { label: '대상 학년', value: room.grade_band, section: 'detail' },
-    { label: '월 대표 가격', value: room.price_amount ? formatMonthlyWon(room.price_amount) : '', section: 'detail' },
-    { label: '수업 방식', value: room.lesson_place_type === 'academy' ? '학원·공부방' : room.lesson_place_type === 'study_room' ? '공부방' : '', section: 'basic' },
-    { label: '슬로건', value: room.slogan, section: 'detail' },
-    { label: '특징', value: room.feature_1, section: 'detail' },
-    { label: '정원/타임', value: room.capacity_per_time, section: 'detail' },
-    { label: '짧은 소개', value: room.intro_short, section: 'detail' },
-    { label: '상세 소개', value: room.intro_long, section: 'detail' },
-    { label: '시설 요약', value: room.facility_summary, section: 'detail2' },
-    {
-      label: '옵션',
-      value: [room.weekend_available ? '주말 가능' : '', room.one_on_one_available ? '1:1 가능' : '']
-        .filter(Boolean)
-        .join(' · '),
-      section: 'detail',
-    },
-    { label: '대표 이미지', value: room.has_representative_image ? '등록됨' : '', section: 'detail' },
-    { label: '문의·쪽지 방식', value: room.contact_method_set ? '설정됨' : '', section: 'inquiries' },
-  ];
-
-  return `
-    <div class="mp-room__overview">
-      <div class="mp-room__overview-head">
-        <h3>프로필 한눈에</h3>
-        <a href="#${studyRoomSectionPath(room.id, 'basic')}" class="btn btn--secondary btn--sm" data-p20-nav="${studyRoomSectionPath(room.id, 'basic')}">수정</a>
-      </div>
-      <dl class="mp-room__dl">
-        ${rows
-          .map((row) => {
-            const empty = !String(row.value ?? '').trim();
-            const href = studyRoomSectionPath(room.id, /** @type {any} */ (row.section));
-            return `
-          <div class="mp-room__dl-row${empty ? ' is-empty' : ''}">
-            <dt>${esc(row.label)}</dt>
-            <dd>
-              <span>${esc(blank(row.value))}</span>
-              ${empty ? `<a href="#${href}" data-p20-nav="${href}">채우기</a>` : `<a href="#${href}" data-p20-nav="${href}">수정</a>`}
-            </dd>
-          </div>`;
-          })
-          .join('')}
-      </dl>
-    </div>`;
-}
-
-/** @param {import('./store.js').StudyRoomRecord} room @param {string} activeSection @param {string} bodyHtml */
 function renderRoomShell(room, activeSection, bodyHtml) {
   return `
     <div class="mp-room">
@@ -384,32 +315,25 @@ function renderList(tab) {
 }
 
 
-/** @param {import('./store.js').StudyRoomRecord} room */
-function renderReviewBridgeBlock(room) {
-  if (room.profile_status !== 'published') return '';
-  const reviewCount = getStudentReviewIds().length;
-  return `
-    <div class="p20-hub-block p21-review-bridge">
-      <h3 class="p20-hub-block__title">찜한학생</h3>
-      <p class="p19-form-section__lead">${esc(HANDOFF_DEEPLINK.reviewBridgeLead)}</p>
-      <div class="p19-summary-grid" style="margin-top:var(--space-3)">
-        <dl class="p19-summary-card"><dt>찜</dt><dd>${reviewCount}건</dd></dl>
-        <dl class="p19-summary-card"><dt>쪽지</dt><dd>${esc(inquiryStatusLabel(room.inquiry_status))}</dd></dl>
-      </div>
-      <div class="p19-form-actions" style="margin-top:var(--space-3)">
-        <a href="#${studentReviewPath({ from: 'exposure' })}" class="btn btn--primary" data-mypage-nav="${studentReviewPath({ from: 'exposure' })}">${esc(P20_HUB_CTA.studentReview)}${reviewCount ? ` · ${reviewCount}건` : ''}</a>
-      </div>
-    </div>`;
-}
-
-/** @param {import('./store.js').StudyRoomRecord} room */
 function renderHub(room) {
-  const body = `
-    <div class="mp-room__hub">
-      ${renderProfileOverview(room)}
-      ${renderReviewBridgeBlock(room)}
-    </div>`;
+  if (shouldReloadEmbeddedView(room.id, 'hub')) {
+    queueMicrotask(() => {
+      ensureEmbeddedRegister(room.id, { force: true })
+        .then(() => {
+          markEmbeddedViewLoaded(room.id, 'hub');
+          window.dispatchEvent(new Event('hashchange'));
+        })
+        .catch((err) => console.error('[myshop]', err));
+    });
+    const loading = `
+      <div class="myshop myshop--loading">
+        <p class="myshop-hero__lead">마이샵을 준비하고 있어요…</p>
+      </div>`;
+    return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', loading)}</section>`;
+  }
 
+  markEmbeddedViewLoaded(room.id, 'hub');
+  const body = renderMyshopShowcase(registerState, room);
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', body)}</section>`;
 }
 
@@ -771,6 +695,7 @@ function renderSubmissionTab(room) {
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindStudyRoomRegEvents(root, rerender) {
   bindEmbeddedPanelEvents(root, rerender);
+  bindMyshopEvents(root);
 
   root.querySelectorAll('[data-p20-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {

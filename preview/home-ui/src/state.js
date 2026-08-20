@@ -30,6 +30,7 @@ import { getDefaultCommunityPath, normalizeCommunityPath, normalizeConcernPath }
 import { getDefaultPromoPath, normalizePromoPath } from './promo/router.js';
 import { createFindState, resetFindState } from './find-state.js';
 import { setPendingRoute } from '../../shared/pending-route.js';
+import { normalizeMyshopPath } from './myshop/router.js';
 
 const ACTIVE_ROLE_KEY = 'study114-preview-active-role';
 const GUIDE_CTX_KEY = 'study114-preview-guide-context';
@@ -81,6 +82,7 @@ export const SCREEN_META = {
   library: { label: '자료실', role: 'guest' },
   admin: { label: 'A28', role: 'guest' },
   plans: { label: '유료상품', role: 'guest' },
+  myshop: { label: '공개 마이샵', role: 'guest' },
 };
 
 export function setParentTab(tab) {
@@ -139,7 +141,7 @@ export function getNavRole() {
   }
   // 커뮤니티·홍보는 역할 홈이 아님 — SCREEN_META에 없어 guest로 떨어지면
   // 셸/레일 맥락이 깨지고 GNB·동선이 흔들린다. 저장된 활성 역할만 쓰고, 없으면 guest.
-  if (isCommunityRoute() || isPromoRoute()) {
+  if (isCommunityRoute() || isPromoRoute() || isMyshopRoute()) {
     const stored = sessionStorage.getItem(ACTIVE_ROLE_KEY);
     if (stored === 'parent' || stored === 'study_room' || stored === 'tutor') return stored;
     return 'guest';
@@ -216,6 +218,12 @@ export function isPlansRoute() {
   const hash = window.location.hash.slice(1) || '';
   const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
   return path === '/plans' || path.startsWith('/plans/');
+}
+
+export function isMyshopRoute() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
+  return Boolean(normalizeMyshopPath(path));
 }
 
 export function isMypageRoute() {
@@ -461,6 +469,45 @@ export function bootstrapPromoRoute() {
   if (path.startsWith('/promo/') && !normalizePromoPath(path)) {
     window.location.replace(`#${getDefaultPromoPath()}`);
     return true;
+  }
+  return false;
+}
+
+/**
+ * Path URL(`/myshop/...`) 또는 bare `#/myshop`를 hash 라우트로 정규화.
+ * @returns {boolean}
+ */
+export function bootstrapMyshopRoute() {
+  const { pathname, hash, origin, search } = window.location;
+
+  if (!hash && pathname.startsWith('/myshop')) {
+    const target = pathname === '/myshop' || pathname === '/myshop/' ? '/guest' : pathname;
+    if (normalizeMyshopPath(target)) {
+      setPendingRoute(target);
+      window.location.replace(`${origin}/${search}#${target}`);
+      return true;
+    }
+    window.location.replace(`${origin}/${search}#/guest`);
+    return true;
+  }
+
+  if (!hash) return false;
+
+  const hashPath = hash.slice(1);
+  const pathWithQuery = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const path = pathWithQuery.split('?')[0];
+  const query = pathWithQuery.includes('?') ? pathWithQuery.slice(pathWithQuery.indexOf('?')) : '';
+
+  if (path === '/myshop' || path === '/myshop/') {
+    window.location.replace('#/guest');
+    return true;
+  }
+  if (path.startsWith('/myshop/') && !normalizeMyshopPath(path)) {
+    window.location.replace('#/guest');
+    return true;
+  }
+  if (normalizeMyshopPath(path) && query) {
+    /* valid */
   }
   return false;
 }
@@ -746,6 +793,7 @@ export function getMypagePath() {
 
 export function getCurrentScreen() {
   if (isPlansRoute()) return 'plans';
+  if (isMyshopRoute()) return 'myshop';
   if (isMypageRoute()) return 'mypage';
   if (isMessagesRoute()) return 'messages';
   if (isAdminRoute()) return 'admin';

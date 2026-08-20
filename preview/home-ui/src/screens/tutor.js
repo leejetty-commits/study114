@@ -18,6 +18,7 @@ import { MOCK_TUTOR_REGIONS } from '@search-ui/search-schema.js';
 import { TUTOR_REGISTER_URL } from '../../../shared/preview-links.js';
 import { renderTutorActivityBars } from '../tutor-activity-chart.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
+import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
 
 /**
  * 시트(임시.cell) 행=가로줄:
@@ -167,4 +168,6 @@ export function bindTutorEvents(root, rerender) {
     sourceRoute: 'tutor',
     getStudentItem: (id) => previewState.tutorFind.activeResultItems?.find((x) => x.id === id),
   });
+
+  restoreMyshopScrollAndFocusIfPending();
 }
