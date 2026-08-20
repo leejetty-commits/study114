@@ -187,6 +187,13 @@ function getHomeHighlights(role, counts) {
       { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '답장이 필요한 소식이에요', path: '/mypage/messages' },
     ];
   }
+  if (role === 'study_room') {
+    return [
+      { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
+      { icon: '☆', label: '찜한학생', value: `${counts.studentReviewCount}명`, note: '관심 학생 저장', path: '/mypage/student-review' },
+      { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
+    ];
+  }
   return [
     { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
     { icon: '☆', label: '학생 검토함', value: `${counts.studentReviewCount}명`, note: '관심 학생 저장', path: '/mypage/student-review' },

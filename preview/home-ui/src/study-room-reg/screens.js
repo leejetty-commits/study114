@@ -93,7 +93,7 @@ function renderHubCtaBlock(_room) {
   return '';
 }
 
-/** 픽·프라임 유도 — CTA 없음 (미리보기·공개 상단) */
+/** 픽·프라임 유도 — CTA 없음 (등록점검 상단) */
 function renderPickPrimeNudge() {
   const c = P20_PICK_PRIME_NUDGE;
   return `
@@ -390,7 +390,7 @@ function renderReviewBridgeBlock(room) {
   const reviewCount = getStudentReviewIds().length;
   return `
     <div class="p20-hub-block p21-review-bridge">
-      <h3 class="p20-hub-block__title">학생 검토함</h3>
+      <h3 class="p20-hub-block__title">찜한학생</h3>
       <p class="p19-form-section__lead">${esc(HANDOFF_DEEPLINK.reviewBridgeLead)}</p>
       <div class="p19-summary-grid" style="margin-top:var(--space-3)">
         <dl class="p19-summary-card"><dt>찜</dt><dd>${reviewCount}건</dd></dl>
@@ -474,7 +474,7 @@ function renderBasicForm(room) {
         '저장해도 바로 공개되지 않습니다.',
         `<button type="submit" class="btn btn--primary">기본정보 저장</button>
          <a href="#${studyRoomSectionPath(room.id, 'detail')}" class="btn btn--secondary" data-p20-nav="${studyRoomSectionPath(room.id, 'detail')}">상세정보로</a>
-         <a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">운영홈</a>`,
+         <a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">마이샵</a>`,
       )}
     </form>`;
 
@@ -540,10 +540,10 @@ function renderDetailForm(room) {
         </div>`,
       )}
       ${renderFormFooter(
-        '저장 후 미리보기·공개에서 공개 상태를 확인하세요.',
+        '저장 후 등록점검에서 공개 상태를 확인하세요.',
         `<button type="submit" class="btn btn--primary">상세정보 저장</button>
-         <a href="#${studyRoomSectionPath(room.id, 'publish')}" class="btn btn--secondary" data-p20-nav="${studyRoomSectionPath(room.id, 'publish')}">미리보기·공개</a>
-         <a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">운영홈</a>`,
+         <a href="#${studyRoomSectionPath(room.id, 'publish')}" class="btn btn--secondary" data-p20-nav="${studyRoomSectionPath(room.id, 'publish')}">등록점검</a>
+         <a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">마이샵</a>`,
       )}
     </form>`;
 

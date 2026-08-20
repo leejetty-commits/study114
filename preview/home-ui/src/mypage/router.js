@@ -34,20 +34,48 @@ import { studyRoomHubPath, BASE as STUDY_ROOM_BASE } from '../study-room-reg/rou
  * @typedef {object} MypageNavItem
  * @property {string} path
  * @property {string} label
+ * @property {Partial<Record<'parent'|'study_room'|'tutor', string>>} [labels] — 역할별 표시명(공부방 1차 명칭 정리)
  * @property {MypageScreenId} screenId
  * @property {string} [icon]
  * @property {Array<'parent'|'study_room'|'tutor'>} [roles] — 미설정=전 역할
+ * @property {Array<'parent'|'study_room'|'tutor'>} [emphasis]
  */
 
-/** @type {MypageNavItem[]} */
+/** @param {MypageNavItem} item @param {string} role */
+export function mypageNavLabel(item, role) {
+  return item.labels?.[role] || item.label;
+}
+
+/**
+ * 공부방 모드 좌측 메뉴 순서:
+ * 내 등록 → 찜한학생 → 쪽지함 → 최근열람 → 구매이력 → 계정설정
+ * (과외쌤·학부모 라벨은 기존 유지)
+ * @type {MypageNavItem[]}
+ */
 export const MYPAGE_NAV = [
   { path: '/mypage/home', label: '마이페이지 홈', icon: '⌂', screenId: 'P15-01', emphasis: ['parent'], roles: ['parent'] },
   { path: '/mypage/registrations', label: '내 등록', icon: '✎', screenId: 'P15-02', emphasis: ['study_room', 'tutor'], roles: ['study_room', 'tutor'] },
+  {
+    path: '/mypage/student-review',
+    label: '학생 검토함',
+    labels: { study_room: '찜한학생' },
+    icon: '☆',
+    screenId: 'P25-S10',
+    emphasis: ['study_room', 'tutor'],
+    roles: ['study_room', 'tutor'],
+  },
   { path: '/mypage/messages', label: '쪽지함', icon: '✉', screenId: 'P15-08' },
   { path: '/mypage/recent', label: '최근열람', icon: '◷', screenId: 'P15-07' },
   { path: '/mypage/wishlist', label: '찜 목록', icon: '♡', screenId: 'P15-06', emphasis: ['parent'], roles: ['parent'] },
-  { path: '/mypage/student-review', label: '학생 검토함', icon: '☆', screenId: 'P25-S10', emphasis: ['study_room', 'tutor'], roles: ['study_room', 'tutor'] },
-  { path: '/mypage/plans', label: '구매상품', icon: '◌', screenId: 'P15-09', emphasis: ['study_room', 'tutor'], roles: ['study_room', 'tutor'] },
+  {
+    path: '/mypage/plans',
+    label: '구매상품',
+    labels: { study_room: '구매이력' },
+    icon: '◌',
+    screenId: 'P15-09',
+    emphasis: ['study_room', 'tutor'],
+    roles: ['study_room', 'tutor'],
+  },
   { path: '/mypage/account', label: '계정설정', icon: '⚙', screenId: 'P15-11' },
 ];
 
@@ -120,8 +148,8 @@ export function getScreenIdForPath(path) {
   return MYPAGE_PATH_TO_SCREEN[path] || 'P15-01';
 }
 
-/** @param {MypageScreenId} screenId */
-export function screenTitle(screenId, path) {
+/** @param {MypageScreenId} screenId @param {string} [path] @param {string} [role] */
+export function screenTitle(screenId, path, role) {
   if (path) {
     const reg = parseStudentRegPath(path);
     if (reg) return studentRegScreenTitle(reg.screenId);
@@ -153,15 +181,15 @@ export function screenTitle(screenId, path) {
     'P15-06': '찜 목록',
     'P15-07': '최근열람',
     'P15-08': '쪽지함',
-    'P15-09': '구매상품',
-    'P18-04': '구매상품',
+    'P15-09': role === 'study_room' ? '구매이력' : '구매상품',
+    'P18-04': role === 'study_room' ? '구매이력' : '구매상품',
     'P18-05': '구매내역',
     'P15-10': '제출자료 상태',
     'P23-04': '제출함',
     'P23-04a': '제출 작성',
     'P23-04b': '제출 상세',
     'P15-11': '계정설정',
-    'P25-S10': '학생 검토함',
+    'P25-S10': role === 'study_room' ? '찜한학생' : '학생 검토함',
   };
   return map[screenId] || '마이페이지';
 }

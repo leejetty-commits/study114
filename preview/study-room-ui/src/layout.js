@@ -331,7 +331,7 @@ export function renderRegisterWorkTabs(activeKey) {
   `;
 }
 
-export const MESSAGE_INQUIRY_PAGE_TITLE = '쪽지와 문의';
+export const MESSAGE_INQUIRY_PAGE_TITLE = '쪽지설정';
 
 /** @param {number|string|null|undefined} roomId */
 export function messageInquiryPageUrl(roomId) {
@@ -354,7 +354,7 @@ export function offerGoToMessageInquiry(roomId) {
   const url = messageInquiryPageUrl(roomId);
   if (!url) return false;
   const go = window.confirm(
-    '입력값은 저장되었고 등록완료 되었습니다. 마이페이지에서도 추가입력이 가능합니다.\n\n사용자간의 연락은 쪽지로만 가능합니다. 쪽지 가능 여부를 꼭 설정해 주세요.\n\n지금 「쪽지와 문의」로 이동할까요?\n(마이페이지 - 내 등록 - 쪽지와 문의)',
+    '입력값은 저장되었고 등록완료 되었습니다. 마이페이지에서도 추가입력이 가능합니다.\n\n사용자간의 연락은 쪽지로만 가능합니다. 쪽지 가능 여부를 꼭 설정해 주세요.\n\n지금 「쪽지설정」로 이동할까요?\n(마이페이지 - 내 등록 - 쪽지설정)',
   );
   if (!go) return false;
   window.location.assign(url);

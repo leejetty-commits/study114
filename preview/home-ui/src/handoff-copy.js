@@ -87,7 +87,7 @@ export const HANDOFF_DEEPLINK = {
   reviewBridgeLead: '검토 중인 학생을 다시 보고 쪽지를 준비합니다.',
   reviewBridgeCta: '학생 검토함 열기',
   providerRegCtaTutor: '학생 접근·쪽지',
-  providerRegCtaStudyRoom: '쪽지와 문의',
+  providerRegCtaStudyRoom: '쪽지설정',
 };
 
 /** Provider lane — P25-S10 (UI 라벨: 학생 검토함 · 내부 경로 student-review 유지)

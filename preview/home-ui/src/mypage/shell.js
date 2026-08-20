@@ -2,7 +2,7 @@ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, ren
 import { getNavRole } from '../state.js';
 import { getAuthUser, isAdminUser } from '../auth-session.js';
 import { resolveAccountDisplayName } from '../auth/display-identity.js';
-import { MYPAGE_NAV, getScreenIdForPath, screenTitle, getStudyRoomEntryPath } from './router.js';
+import { MYPAGE_NAV, getScreenIdForPath, screenTitle, getStudyRoomEntryPath, mypageNavLabel } from './router.js';
 import { isMessagesDetailPath } from '../messages/router.js';
 import { renderMessagesProviderToolbar } from '../messages/shell.js';
 
@@ -27,7 +27,7 @@ function renderBreadcrumb(currentPath, title, role) {
   const homePath = role === 'study_room' || role === 'tutor' ? '/mypage/registrations' : '/mypage/home';
   const parts = [{ label: '마이페이지', path: homePath }];
   if (primary && primary.path !== homePath && primary.path !== '/mypage/home') {
-    parts.push({ label: primary.label, path: primary.path });
+    parts.push({ label: mypageNavLabel(primary, role), path: primary.path });
   }
   // 내 등록 하위는 breadcrumb=위치, h1=화면명으로 분리 (중복 금지)
   const skipTitleInCrumb = currentPath.startsWith('/mypage/registrations/');
@@ -58,7 +58,7 @@ function renderBreadcrumb(currentPath, title, role) {
 export function renderMypageShell(currentPath, bodyHtml) {
   const role = getNavRole();
   const screenId = getScreenIdForPath(currentPath);
-  const title = screenTitle(screenId, currentPath);
+  const title = screenTitle(screenId, currentPath, role);
   const authUser = getAuthUser();
   const roleLabel =
     role === 'parent'
@@ -91,7 +91,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
     return `
       <a href="#${href}" class="mypage-nav__link${active ? ' is-active' : ''}${emph}" data-mypage-nav="${href}">
         <span class="mypage-nav__icon" aria-hidden="true">${esc(item.icon || '•')}</span>
-        <span>${esc(item.label)}</span>
+        <span>${esc(mypageNavLabel(item, role))}</span>
       </a>`;
     })
     .join('');

@@ -1,5 +1,5 @@
 /**
- * 20장 — 공부방 운영 copy · 탭 · 쪽지와 문의 (횡단 SSOT)
+ * 20장 — 공부방 운영 copy · 탭 · 쪽지설정 (횡단 SSOT)
  * docs/ssot/20-study-room-registration-management.md · P20-05 리뉴얼
  */
 
@@ -34,8 +34,8 @@ export const FORBIDDEN_UI_PHRASES = [
 export const PHASE_STEPS = [
   { key: 'basic', label: '기본정보' },
   { key: 'detail', label: '상세정보' },
-  { key: 'publish', label: '미리보기·공개' },
-  { key: 'inquiries', label: '쪽지와 문의' },
+  { key: 'publish', label: '등록점검' },
+  { key: 'inquiries', label: '쪽지설정' },
 ];
 
 /** P20-05 OFF 사유 (운영자 선택) */
@@ -56,11 +56,11 @@ export const P20_HUB_BLOCK_TITLES = {
   readiness: '공개 준비',
   publishStatus: '현재 공개 상태',
   exposureMatrix: '노출 가능 매트릭스',
-  inquiryBoard: '쪽지와 문의',
+  inquiryBoard: '쪽지설정',
   pickPrimeNudge: '픽·프라임 노출 준비',
 };
 
-/** 운영홈·미리보기 — 픽·프라임 유도 (진행률·이탈 CTA 없음) */
+/** 마이샵·등록점검 — 픽·프라임 유도 (진행률·이탈 CTA 없음) */
 export const P20_PICK_PRIME_NUDGE = {
   title: '홍보 광고를 위해서 픽 프라임 노출을 생각하시나요?',
   lead: '베이직 검색은 기본정보만으로도 충분합니다. 홍보·광고로 더 잘 보이려면 상세정보에서 아래 항목을 채워 주세요.',
@@ -76,9 +76,9 @@ export const P20_PICK_PRIME_NUDGE = {
   detail2Items: ['경력특징', '교육청등록증', '시설·환경'],
 };
 
-/** P20-05 쪽지와 문의 — copy */
+/** P20-05 쪽지설정 — copy */
 export const P20_INQUIRY_COPY = {
-  pageTitle: '쪽지와 문의',
+  pageTitle: '쪽지설정',
   pageLead: '지금 학부모의 쪽지 문의를 받을지 관리합니다. 공개 여부와는 별개입니다.',
   summaryReceiving: '받는 중',
   summaryClosed: '안 받음',
@@ -99,7 +99,7 @@ export const P20_INQUIRY_COPY = {
   footnotes: [
     '사용자 간의 연락은 쪽지로만 가능합니다.',
     '전화번호는 외부에 공개되지 않습니다.',
-    '문의 수신 여부는 ‘쪽지와 문의’ 메뉴에서 관리합니다.',
+    '문의 수신 여부는 ‘쪽지설정’ 메뉴에서 관리합니다.',
   ],
 };
 
@@ -126,6 +126,6 @@ export const PRODUCT_APPLY = {
 
 /** P20-02 관련 CTA */
 export const P20_HUB_CTA = {
-  studentReview: '학생 검토함',
+  studentReview: '찜한학생',
   messages: '쪽지함 열기',
 };
