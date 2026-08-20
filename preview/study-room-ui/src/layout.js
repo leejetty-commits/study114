@@ -100,6 +100,65 @@ export function renderPreviewToolbar(activeScreen) {
   `;
 }
 
+/**
+ * 공부방상세정보 본문 카드 안쪽 (site-gate-wrap + register-card--wide).
+ * @param {string} content
+ * @param {{
+ *   stepKey?: string,
+ *   title?: string,
+ *   subtitle?: string,
+ *   headingActions?: string,
+ *   showSteps?: boolean,
+ *   cardAttrs?: string,
+ * }} [options]
+ */
+export function renderRegisterCardInner(content, options = {}) {
+  const {
+    stepKey = 'basic',
+    title = '공부방 등록',
+    subtitle = '',
+    headingActions = '',
+    showSteps: showStepsOpt,
+    cardAttrs = '',
+  } = options;
+  const meta = STEPS.find((s) => s.key === stepKey);
+  const showSteps = showStepsOpt ?? Boolean(meta && meta.phase);
+  const attrs = cardAttrs ? ` ${cardAttrs}` : '';
+
+  return `
+    <div class="site-gate-wrap">
+      <div class="register-card register-card--wide panel register-flow"${attrs}>
+        ${showSteps ? renderStepIndicator(stepKey) : ''}
+        ${
+          headingActions
+            ? `<div class="register-heading-row">
+        <h1 class="auth-heading">${title}</h1>
+        <div class="register-heading-row__actions">${headingActions}</div>
+      </div>`
+            : title
+              ? `<h1 class="auth-heading">${title}</h1>`
+              : ''
+        }
+        ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ''}
+        ${content}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 마이페이지 임베드용 — register-body로 폭 잠금 해제까지 포함.
+ */
+export function renderRegisterCardFrame(content, options = {}) {
+  return `
+    <div class="home-body register-body register-body--embed">
+      <div class="home-main">
+        ${renderRegisterCardInner(content, options)}
+      </div>
+    </div>
+  `;
+}
+
 export function renderRegisterShell(content, options = {}) {
   const { stepKey = 'basic', title = '공부방 등록', subtitle = '', headingActions = '' } = options;
   const showPromo = isChromeLoggedIn();
@@ -109,8 +168,6 @@ export function renderRegisterShell(content, options = {}) {
     role: getChromeNavRole(),
     activeGnbId: 'register_room',
   });
-  const meta = STEPS.find((s) => s.key === stepKey);
-  const showSteps = Boolean(meta && meta.phase);
 
   return `
     ${renderPreviewToolbar(getCurrentScreen())}
@@ -118,21 +175,7 @@ export function renderRegisterShell(content, options = {}) {
       ${header}
       <div class="home-body register-body${showPromo ? ' home-body--with-promo' : ' register-body--no-promo'}">
         <div class="home-main">
-          <div class="site-gate-wrap">
-            <div class="register-card register-card--wide panel register-flow">
-              ${showSteps ? renderStepIndicator(stepKey) : ''}
-              ${
-                headingActions
-                  ? `<div class="register-heading-row">
-              <h1 class="auth-heading">${title}</h1>
-              <div class="register-heading-row__actions">${headingActions}</div>
-            </div>`
-                  : `<h1 class="auth-heading">${title}</h1>`
-              }
-              ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ''}
-              ${content}
-            </div>
-          </div>
+          ${renderRegisterCardInner(content, { stepKey, title, subtitle, headingActions })}
         </div>
         ${showPromo ? renderSitePromoSidebar() : ''}
       </div>

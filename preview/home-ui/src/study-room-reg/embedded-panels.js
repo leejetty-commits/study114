@@ -1,25 +1,23 @@
 /**
- * 마이페이지 내 등록 — 공부방상세정보(study-room-ui) 바디 이식
+ * 마이페이지 내 등록 — 공부방상세정보(study-room-ui) 바디·카드 틀 그대로 사용
  * 조회(현황) → 상단 수정 → 저장 후 현황 복귀
  *
  * SSOT: `/api/study-room/register.php` → StudyRoomRegisterService → study_rooms DB
- * (공부방상세정보 앱과 동일 API·동일 테이블)
  */
 
-import { registerState, apiMasters, isRoomBasicComplete, PERSONAL_GENDER_OPTIONS, getRegions } from '@study-room-ui/state.js';
+import { registerState, apiMasters, isRoomBasicComplete, getRegions } from '@study-room-ui/state.js';
 import { fetchMasters, loadRoom } from '@study-room-ui/register-api.js';
 import { applyRoomToState } from '@study-room-ui/form-collect.js';
 import { saveAndNavigate, withSaving } from '@study-room-ui/save-flow.js';
 import {
-  renderStudyRoomBasicFields,
   bindStudyRoomBasicFields,
   collectStudyRoomBasicFields,
   validateStudyRoomBasicFields,
   applyStudyRoomBasicToState,
-  lessonPlaceNameLabel,
-  formatPrimaryAudienceLabel,
 } from '../../../shared/study-room-basic-form.js';
 import { bindDraggableDialog } from '../../../shared/draggable-dialog.js';
+import { renderRegisterCardFrame } from '@study-room-ui/layout.js';
+import { renderBasicOverviewBoard, renderBasicEditModal } from '@study-room-ui/screens/step-basic.js';
 import { renderLessonFormHtml, bindLessonEvents } from '@study-room-ui/screens/step-lesson.js';
 import { renderFacilityFormHtml, bindFacilityEvents } from '@study-room-ui/screens/step-facility.js';
 import {
@@ -157,10 +155,6 @@ async function afterRegisterSave(roomId, section) {
   setEditMode(roomId, section, false);
 }
 
-function genderLabel(value) {
-  return PERSONAL_GENDER_OPTIONS.find((o) => o.value === value)?.label || blank(value);
-}
-
 function opLabel(value) {
   return LESSON_OPERATION_TYPES.find((o) => o.value === value)?.label || blank(value);
 }
@@ -181,7 +175,7 @@ function overviewDl(rows) {
           return `
         <div class="register-overview__row${empty ? ' is-empty' : ''}">
           <dt>${esc(row.label)}</dt>
-          <dd><span>${valueHtml || '—'}</span></dd>
+          <dd><span>${valueHtml}</span></dd>
         </div>`;
         })
         .join('')}
@@ -194,20 +188,6 @@ function overviewToolbar(editLabel) {
       <button type="button" class="register-phase__tag is-active register-overview__edit-badge" data-embed-edit>${esc(editLabel)}</button>
       <p class="register-overview__lead">수정이 필요하면 눌러 주세요.</p>
     </div>`;
-}
-
-function basicOverviewRows() {
-  const s = registerState;
-  return [
-    { label: '교습형태', value: s.lesson_place_type === 'academy' ? '교습소' : s.lesson_place_type === 'study_room' ? '공부방' : '' },
-    { label: lessonPlaceNameLabel(s.lesson_place_type), value: s.study_room_name },
-    { label: '주대상', value: formatPrimaryAudienceLabel(s.primary_school_levels) },
-    { label: '주력과목', value: s.main_subject_note },
-    { label: '원장성별', value: genderLabel(s.gender) },
-    { label: '슬로건', value: s.slogan },
-    { label: '집주소', value: [s.home_address, s.home_address_line2].filter((x) => String(x || '').trim()).join(' ') },
-    { label: '사업장주소', value: [s.address_text, s.address_line2].filter((x) => String(x || '').trim()).join(' ') },
-  ];
 }
 
 function detail1OverviewRows() {
@@ -239,35 +219,13 @@ function detail2OverviewRows() {
   ];
 }
 
-function renderBasicEditModal() {
-  return `
-    <div class="register-edit-overlay" data-basic-edit-overlay>
-      <div class="register-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="embed-basic-edit-title">
-        <div class="register-edit-dialog__head">
-          <h2 id="embed-basic-edit-title" class="register-edit-dialog__title">기본정보 수정</h2>
-          <button type="button" class="register-edit-dialog__close" data-action="cancel-edit" aria-label="닫기">×</button>
-        </div>
-        <form data-form="basic-all" class="register-edit-dialog__body">
-          ${renderStudyRoomBasicFields({
-            values: registerState,
-            genderOptions: PERSONAL_GENDER_OPTIONS,
-          })}
-        </form>
-        <div class="register-edit-dialog__foot">
-          <button type="button" class="btn btn--secondary" data-action="cancel-edit">취소</button>
-          <button type="button" class="btn btn--primary" data-action="save-basic-all">저장</button>
-        </div>
-      </div>
-    </div>`;
-}
-
-/** 공부방상세정보와 동일 본문 폭 — register-card--wide */
-function embedCardOpen(section, roomId) {
-  return `<div class="register-card register-card--wide panel register-flow mp-room-embed" data-embed-section="${section}" data-embed-room-id="${roomId}">`;
-}
-
-function embedCardClose() {
-  return `</div>`;
+/** 공부방상세정보와 동일 카드 틀 + 임베드 식별 attrs */
+function embedFrame(section, roomId, content, frameOpts) {
+  return renderRegisterCardFrame(content, {
+    ...frameOpts,
+    showSteps: false,
+    cardAttrs: `data-embed-section="${section}" data-embed-room-id="${roomId}"`,
+  });
 }
 
 /**
@@ -276,57 +234,69 @@ function embedCardClose() {
  */
 export function renderEmbeddedPanel(room, section) {
   const editing = isEmbedEditMode();
-  // 기본정보만 팝업 — 상세1·2는 바디 인라인이라 body scroll lock 불필요
   document.body.classList.toggle('register-edit-open', editing && section === 'basic');
 
   if (section === 'basic') {
-    return `
-      ${embedCardOpen('basic', room.id)}
-        <div class="register-overview">
-          ${overviewToolbar('기본정보 수정')}
-          ${overviewDl(basicOverviewRows())}
-        </div>
-        ${editing ? renderBasicEditModal() : ''}
-      ${embedCardClose()}`;
+    const content = `
+      ${renderBasicOverviewBoard({ editAction: 'embed-edit' })}
+      ${editing ? renderBasicEditModal() : ''}
+    `;
+    return embedFrame('basic', room.id, content, {
+      stepKey: 'basic',
+      title: '공부방 기본정보 현황',
+    });
   }
 
   if (section === 'detail') {
     if (editing) {
-      return `
-        ${embedCardOpen('detail', room.id)}
-          <div class="register-embed-edit-head">
-            <h2 class="auth-heading">상세정보1 수정</h2>
-            <p class="auth-subheading">공부방상세정보와 같은 입력 화면입니다. 저장하면 현황으로 돌아갑니다.</p>
-          </div>
-          ${renderLessonFormHtml({ includeStepNav: false, includeFooterActions: true })}
-        ${embedCardClose()}`;
+      return embedFrame(
+        'detail',
+        room.id,
+        renderLessonFormHtml({ includeStepNav: false, includeFooterActions: true }),
+        {
+          stepKey: 'lesson',
+          title: '공부방·교습소 상세',
+          subtitle: '필수정보는 입력을 꼭 해주세요',
+        },
+      );
     }
-    return `
-      ${embedCardOpen('detail', room.id)}
-        <div class="register-overview">
-          ${overviewToolbar('상세정보1 수정')}
-          ${overviewDl(detail1OverviewRows())}
-        </div>
-      ${embedCardClose()}`;
+    return embedFrame(
+      'detail',
+      room.id,
+      `<div class="register-overview">${overviewToolbar('상세정보1 수정')}${overviewDl(detail1OverviewRows())}</div>`,
+      {
+        stepKey: 'lesson',
+        title: '공부방·교습소 상세',
+        subtitle: '현황을 확인한 뒤 필요하면 수정하세요',
+      },
+    );
   }
 
   if (editing) {
-    return `
-      ${embedCardOpen('detail2', room.id)}
-        <div class="register-embed-edit-head">
-          <h2 class="auth-heading">상세정보2 수정</h2>
-          <p class="auth-subheading">공부방상세정보와 같은 입력 화면입니다. 저장하면 현황으로 돌아갑니다.</p>
-        </div>
-        ${renderFacilityFormHtml({ includeStepNav: false, includePublishBlock: false, includeFooterActions: true })}
-      ${embedCardClose()}`;
+    return embedFrame(
+      'detail2',
+      room.id,
+      renderFacilityFormHtml({
+        includeStepNav: false,
+        includePublishBlock: false,
+        includeFooterActions: true,
+      }),
+      {
+        stepKey: 'facility',
+        title: '경력 · 신뢰 · 시설',
+      },
+    );
   }
-  return `
-    ${embedCardOpen('detail2', room.id)}
-      <div class="register-overview">
-        ${overviewToolbar('상세정보2 수정')}
-        ${overviewDl(detail2OverviewRows())}
-      </div>
-    ${embedCardClose()}`;
+  return embedFrame(
+    'detail2',
+    room.id,
+    `<div class="register-overview">${overviewToolbar('상세정보2 수정')}${overviewDl(detail2OverviewRows())}</div>`,
+    {
+      stepKey: 'facility',
+      title: '경력 · 신뢰 · 시설',
+      subtitle: '현황을 확인한 뒤 필요하면 수정하세요',
+    },
+  );
 }
 
 /**
@@ -339,7 +309,7 @@ export function bindEmbeddedPanelEvents(root, rerender) {
   const section = /** @type {'basic'|'detail'|'detail2'} */ (wrap.getAttribute('data-embed-section'));
   const roomId = Number(wrap.getAttribute('data-embed-room-id'));
 
-  wrap.querySelector('[data-embed-edit]')?.addEventListener('click', () => {
+  wrap.querySelector('[data-embed-edit], [data-action="embed-edit"]')?.addEventListener('click', () => {
     setEditMode(roomId, section, true);
   });
 

@@ -98,11 +98,13 @@ function overviewRows() {
   ];
 }
 
-function renderOverviewBoard() {
+/** @param {{ editAction?: string }} [opts] */
+export function renderBasicOverviewBoard(opts = {}) {
+  const editAction = opts.editAction || 'edit-basic';
   return `
     <div class="register-overview">
       <div class="register-overview__toolbar">
-        <button type="button" class="register-phase__tag is-active register-overview__edit-badge" data-action="edit-basic">기본정보 수정</button>
+        <button type="button" class="register-phase__tag is-active register-overview__edit-badge" data-action="${editAction}">기본정보 수정</button>
         <p class="register-overview__lead">수정이 필요하면 눌러 주세요.</p>
       </div>
       <dl class="register-overview__dl">
@@ -124,7 +126,7 @@ function renderOverviewBoard() {
   `;
 }
 
-function renderBasicEditModal() {
+export function renderBasicEditModal() {
   return `
     <div class="register-edit-overlay" data-basic-edit-overlay>
       <div class="register-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="basic-edit-title">
@@ -175,7 +177,7 @@ function renderBasicOverview() {
   if (isBasicEditRequested()) basicEditOpen = true;
   document.body.classList.toggle('register-edit-open', basicEditOpen);
   const content = `
-    ${renderOverviewBoard()}
+    ${renderBasicOverviewBoard()}
     ${basicEditOpen ? renderBasicEditModal() : ''}
   `;
 

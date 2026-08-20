@@ -14,6 +14,8 @@ import './styles/product-chrome.css';
 import './styles/home-marketing-banner.css';
 import './styles/plans-store.css';
 import './styles/mypage-ops.css';
+/* auth base.css 전체 import 금지(전역 reset). 폼 프리미티브만 공유 */
+import '../../shared/register-form-primitives.css';
 import '../../shared/register-flow.css';
 import '../../study-room-ui/src/styles/register.css';
 import '@search-ui/styles/search-visily.css';

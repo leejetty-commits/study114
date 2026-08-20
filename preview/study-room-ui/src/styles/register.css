@@ -1,7 +1,23 @@
 /* study-room-ui 전용 — 공통은 shared/register-flow.css */
 /* 로그인 후 폼만 본문 전체폭. 비로그인 안내는 유료상품과 동일 36rem */
-.register-body:not(.register-body--no-promo) .site-gate-wrap {
+.register-body:not(.register-body--no-promo) .site-gate-wrap,
+.register-body--embed .site-gate-wrap {
   max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.register-body--embed {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+}
+
+.register-body--embed .home-main {
+  max-width: none;
+  padding: 0;
+  margin: 0;
 }
 
 .register-overview__lead {

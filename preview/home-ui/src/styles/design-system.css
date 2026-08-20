@@ -732,6 +732,23 @@ body {
   box-shadow: none;
 }
 
+/* 마이페이지 이식·wide 카드: 좌측메뉴 제외 본문 전폭 (공부방상세정보와 동일) */
+.mypage-content .site-gate-wrap,
+.mp-room-panel .site-gate-wrap {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+}
+
+.mypage-content .register-card.register-card--wide,
+.site-gate-wrap .register-card.register-card--wide,
+.mp-room-embed.register-card--wide {
+  max-width: none !important;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .auth-body--stage .home-main {
   max-width: var(--home-max);
 }

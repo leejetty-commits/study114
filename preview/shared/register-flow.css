@@ -355,6 +355,8 @@
 
 .register-flow .form-input,
 .register-flow .form-textarea {
+  width: 100%;
+  box-sizing: border-box;
   font-size: var(--reg-body);
   border-radius: 0.6rem;
   border-color: #cbd5e1;

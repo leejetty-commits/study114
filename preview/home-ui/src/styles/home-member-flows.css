@@ -1288,15 +1288,13 @@
   width: 100%;
   box-sizing: border-box;
 }
-.mp-room-panel .mp-room-embed.register-card--wide {
-  border: 0;
-  box-shadow: none;
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
+.mp-room-panel .register-body--embed {
+  margin: 0;
 }
-.register-embed-edit-head {
-  margin-bottom: var(--space-4);
+.mp-room-panel .register-body--embed .site-gate-wrap {
+  max-width: none;
+  margin: 0;
+  width: 100%;
 }
 .register-embed-actions {
   display: flex;
@@ -1305,6 +1303,11 @@
   margin-top: var(--space-4);
   padding-top: var(--space-3);
   border-top: 1px solid var(--gray-200);
+}
+.register-edit-dialog .form-input,
+.register-edit-dialog .form-textarea {
+  width: 100%;
+  box-sizing: border-box;
 }
 .p20-messages-link { padding-top: var(--space-2); border-top: 1px dashed var(--gray-200); }
 .p20-status-board { margin-bottom: var(--space-4); }

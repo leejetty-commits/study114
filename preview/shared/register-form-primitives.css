@@ -1,0 +1,238 @@
+/**
+ * auth-ui base.css 폼 프리미티브만 추출 (전역 reset/body 제외).
+ * home-ui 마이페이지 임베드가 study-room-ui와 동일 레이아웃을 쓰도록 함.
+ */
+.register-flow .form-group,
+.register-edit-dialog .form-group {
+  margin-bottom: var(--space-4, 1rem);
+}
+
+.register-flow .form-group:last-child,
+.register-edit-dialog .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.register-flow .form-label,
+.register-edit-dialog .form-label {
+  display: block;
+  font-size: var(--text-sm, 0.875rem);
+  font-weight: 500;
+  color: var(--gray-700, #334155);
+  margin-bottom: var(--space-2, 0.5rem);
+}
+
+.register-flow .form-label--required::after,
+.register-edit-dialog .form-label--required::after {
+  content: ' *';
+  color: var(--brand-blue, #2563eb);
+}
+
+.register-flow .form-input,
+.register-flow .form-textarea,
+.register-edit-dialog .form-input,
+.register-edit-dialog .form-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--input-padding-y, 0.75rem) var(--input-padding-x, 1rem);
+  border: 1px solid var(--input-border, var(--gray-200, #e2e8f0));
+  border-radius: var(--input-radius, 0.5rem);
+  background: var(--input-bg, #fff);
+  font-size: var(--text-base, 1rem);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.register-flow .form-input::placeholder,
+.register-flow .form-textarea::placeholder,
+.register-edit-dialog .form-input::placeholder,
+.register-edit-dialog .form-textarea::placeholder {
+  color: var(--gray-400, #94a3b8);
+}
+
+.register-flow .form-input:focus,
+.register-flow .form-textarea:focus,
+.register-edit-dialog .form-input:focus,
+.register-edit-dialog .form-textarea:focus {
+  outline: none;
+  border-color: var(--brand-blue, #2563eb);
+  box-shadow: var(--input-focus-shadow, 0 0 0 3px rgba(37, 99, 235, 0.12));
+}
+
+.register-flow .form-hint,
+.register-edit-dialog .form-hint {
+  margin-top: var(--space-1, 0.25rem);
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--gray-400, #94a3b8);
+}
+
+.register-flow .form-error,
+.register-edit-dialog .form-error {
+  margin-top: var(--space-1, 0.25rem);
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--color-error, #dc2626);
+}
+
+.register-flow .form-row,
+.register-edit-dialog .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3, 0.75rem);
+}
+
+@media (max-width: 480px) {
+  .register-flow .form-row,
+  .register-edit-dialog .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.register-flow .form-radio-group,
+.register-edit-dialog .form-radio-group {
+  display: flex;
+  gap: var(--space-3, 0.75rem);
+}
+
+.register-flow .form-radio,
+.register-edit-dialog .form-radio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  flex: 1;
+  padding: var(--input-padding-y, 0.75rem) var(--input-padding-x, 1rem);
+  border: 1px solid var(--input-border, var(--gray-200, #e2e8f0));
+  border-radius: var(--input-radius, 0.5rem);
+  background: var(--input-bg, #fff);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.register-flow .form-radio:has(.form-radio__input:checked),
+.register-edit-dialog .form-radio:has(.form-radio__input:checked) {
+  border-color: var(--brand-blue, #2563eb);
+  background: var(--brand-blue-light, #eff6ff);
+}
+
+.register-flow .form-radio__input,
+.register-edit-dialog .form-radio__input {
+  accent-color: var(--brand-blue, #2563eb);
+}
+
+.register-flow .form-radio__label,
+.register-edit-dialog .form-radio__label {
+  font-size: var(--text-sm, 0.875rem);
+  font-weight: 500;
+  color: var(--gray-700, #334155);
+}
+
+.register-flow .form-address,
+.register-edit-dialog .form-address {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 0.5rem);
+}
+
+.register-flow .form-address__zip-row,
+.register-edit-dialog .form-address__zip-row {
+  display: flex;
+  gap: var(--space-2, 0.5rem);
+  align-items: stretch;
+}
+
+.register-flow .form-address__zip-row .form-input,
+.register-edit-dialog .form-address__zip-row .form-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.register-flow .form-address__zip-row .btn,
+.register-edit-dialog .form-address__zip-row .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.register-flow .form-address input[readonly],
+.register-edit-dialog .form-address input[readonly] {
+  background: var(--gray-50, #f8fafc);
+  cursor: default;
+}
+
+.register-flow .form-check,
+.register-edit-dialog .form-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 0.75rem);
+  cursor: pointer;
+}
+
+.register-flow .form-check__input,
+.register-edit-dialog .form-check__input {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.125rem;
+  accent-color: var(--brand-blue, #2563eb);
+  flex-shrink: 0;
+}
+
+.register-flow .form-check__label,
+.register-edit-dialog .form-check__label {
+  flex: 1;
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--gray-700, #334155);
+  line-height: var(--leading-relaxed, 1.625);
+}
+
+.register-flow .form-check__optional,
+.register-edit-dialog .form-check__optional {
+  color: var(--gray-400, #94a3b8);
+  font-weight: 400;
+}
+
+.register-flow .form-check__required-mark,
+.register-edit-dialog .form-check__required-mark {
+  color: var(--brand-orange-dark, #1565d8);
+  font-weight: 600;
+}
+
+.register-flow .form-group--extension,
+.register-edit-dialog .form-group--extension {
+  padding-top: var(--space-2, 0.5rem);
+  border-top: 1px dashed var(--gray-200, #e2e8f0);
+}
+
+.register-flow .chip-group,
+.register-edit-dialog .chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem);
+}
+
+.register-flow .chip,
+.register-edit-dialog .chip {
+  cursor: pointer;
+  position: relative;
+}
+
+.register-flow .chip__input,
+.register-edit-dialog .chip__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.register-flow .chip__label,
+.register-edit-dialog .chip__label {
+  display: inline-block;
+  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  border: 1px solid var(--gray-300, #cbd5e1);
+  border-radius: 999px;
+  font-size: var(--text-sm, 0.875rem);
+  background: var(--gray-50, #f8fafc);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.register-flow .chip__input:checked + .chip__label,
+.register-edit-dialog .chip__input:checked + .chip__label {
+  border-color: var(--brand-primary, var(--brand-blue, #2563eb));
+  background: color-mix(in srgb, var(--brand-primary, var(--brand-blue, #2563eb)) 12%, white);
+  color: var(--brand-primary, var(--brand-blue, #2563eb));
+  font-weight: 600;
+}
