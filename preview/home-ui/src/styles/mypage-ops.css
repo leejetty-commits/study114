@@ -1295,6 +1295,25 @@
 }
 .mp-room-embed.register-flow {
   max-width: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+/* 마이페이지 패널 안에 중첩 카드 이중 테두리 완화 */
+.mp-room-panel .mp-room-embed.register-card--wide {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+.register-embed-edit-head {
+  margin-bottom: 1rem;
+}
+.register-embed-edit-head .auth-heading {
+  margin-bottom: 0.25rem;
+}
+.register-embed-edit-head .auth-subheading {
+  margin-bottom: 0;
 }
 .register-embed-actions {
   display: flex;
@@ -1303,8 +1322,5 @@
   margin-top: 1rem;
   padding-top: 0.75rem;
   border-top: 1px solid #e2e8f0;
-}
-.register-edit-dialog--wide {
-  width: min(56rem, 100%);
 }
 

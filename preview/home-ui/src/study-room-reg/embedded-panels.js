@@ -261,42 +261,13 @@ function renderBasicEditModal() {
     </div>`;
 }
 
-function renderDetail1EditModal() {
-  return `
-    <div class="register-edit-overlay" data-detail1-edit-overlay>
-      <div class="register-edit-dialog register-edit-dialog--wide" role="dialog" aria-modal="true" aria-labelledby="embed-detail1-edit-title">
-        <div class="register-edit-dialog__head">
-          <h2 id="embed-detail1-edit-title" class="register-edit-dialog__title">상세정보1 수정</h2>
-          <button type="button" class="register-edit-dialog__close" data-action="cancel-edit" aria-label="닫기">×</button>
-        </div>
-        <div class="register-edit-dialog__body">
-          ${renderLessonFormHtml({ includeStepNav: false, includeFooterActions: false })}
-        </div>
-        <div class="register-edit-dialog__foot">
-          <button type="button" class="btn btn--secondary" data-action="cancel-edit">취소</button>
-          <button type="button" class="btn btn--primary" data-action="save">저장</button>
-        </div>
-      </div>
-    </div>`;
+/** 공부방상세정보와 동일 본문 폭 — register-card--wide */
+function embedCardOpen(section, roomId) {
+  return `<div class="register-card register-card--wide panel register-flow mp-room-embed" data-embed-section="${section}" data-embed-room-id="${roomId}">`;
 }
 
-function renderDetail2EditModal() {
-  return `
-    <div class="register-edit-overlay" data-detail2-edit-overlay>
-      <div class="register-edit-dialog register-edit-dialog--wide" role="dialog" aria-modal="true" aria-labelledby="embed-detail2-edit-title">
-        <div class="register-edit-dialog__head">
-          <h2 id="embed-detail2-edit-title" class="register-edit-dialog__title">상세정보2 수정</h2>
-          <button type="button" class="register-edit-dialog__close" data-action="cancel-edit" aria-label="닫기">×</button>
-        </div>
-        <div class="register-edit-dialog__body">
-          ${renderFacilityFormHtml({ includeStepNav: false, includePublishBlock: false, includeFooterActions: false })}
-        </div>
-        <div class="register-edit-dialog__foot">
-          <button type="button" class="btn btn--secondary" data-action="cancel-edit">취소</button>
-          <button type="button" class="btn btn--primary" data-action="save">저장</button>
-        </div>
-      </div>
-    </div>`;
+function embedCardClose() {
+  return `</div>`;
 }
 
 /**
@@ -305,38 +276,57 @@ function renderDetail2EditModal() {
  */
 export function renderEmbeddedPanel(room, section) {
   const editing = isEmbedEditMode();
-  document.body.classList.toggle('register-edit-open', editing);
+  // 기본정보만 팝업 — 상세1·2는 바디 인라인이라 body scroll lock 불필요
+  document.body.classList.toggle('register-edit-open', editing && section === 'basic');
 
   if (section === 'basic') {
     return `
-      <div class="register-flow mp-room-embed" data-embed-section="basic" data-embed-room-id="${room.id}">
+      ${embedCardOpen('basic', room.id)}
         <div class="register-overview">
           ${overviewToolbar('기본정보 수정')}
           ${overviewDl(basicOverviewRows())}
         </div>
         ${editing ? renderBasicEditModal() : ''}
-      </div>`;
+      ${embedCardClose()}`;
   }
 
   if (section === 'detail') {
+    if (editing) {
+      return `
+        ${embedCardOpen('detail', room.id)}
+          <div class="register-embed-edit-head">
+            <h2 class="auth-heading">상세정보1 수정</h2>
+            <p class="auth-subheading">공부방상세정보와 같은 입력 화면입니다. 저장하면 현황으로 돌아갑니다.</p>
+          </div>
+          ${renderLessonFormHtml({ includeStepNav: false, includeFooterActions: true })}
+        ${embedCardClose()}`;
+    }
     return `
-      <div class="register-flow mp-room-embed" data-embed-section="detail" data-embed-room-id="${room.id}">
+      ${embedCardOpen('detail', room.id)}
         <div class="register-overview">
           ${overviewToolbar('상세정보1 수정')}
           ${overviewDl(detail1OverviewRows())}
         </div>
-        ${editing ? renderDetail1EditModal() : ''}
-      </div>`;
+      ${embedCardClose()}`;
   }
 
+  if (editing) {
+    return `
+      ${embedCardOpen('detail2', room.id)}
+        <div class="register-embed-edit-head">
+          <h2 class="auth-heading">상세정보2 수정</h2>
+          <p class="auth-subheading">공부방상세정보와 같은 입력 화면입니다. 저장하면 현황으로 돌아갑니다.</p>
+        </div>
+        ${renderFacilityFormHtml({ includeStepNav: false, includePublishBlock: false, includeFooterActions: true })}
+      ${embedCardClose()}`;
+  }
   return `
-    <div class="register-flow mp-room-embed" data-embed-section="detail2" data-embed-room-id="${room.id}">
+    ${embedCardOpen('detail2', room.id)}
       <div class="register-overview">
         ${overviewToolbar('상세정보2 수정')}
         ${overviewDl(detail2OverviewRows())}
       </div>
-      ${editing ? renderDetail2EditModal() : ''}
-    </div>`;
+    ${embedCardClose()}`;
 }
 
 /**
@@ -397,42 +387,24 @@ export function bindEmbeddedPanelEvents(root, rerender) {
   }
 
   if (section === 'detail' && isEmbedEditMode()) {
-    const overlay = wrap.querySelector('[data-detail1-edit-overlay]');
-    const close = () => setEditMode(roomId, 'detail', false);
-    overlay?.addEventListener('click', (e) => {
-      if (e.target === overlay) close();
-    });
-    bindDraggableDialog(
-      overlay?.querySelector('.register-edit-dialog'),
-      overlay?.querySelector('.register-edit-dialog__head'),
-    );
-    bindLessonEvents(overlay || wrap, {
+    bindLessonEvents(wrap, {
       embed: true,
       onSaved: () => {
-        afterRegisterSave(roomId, 'detail').catch(() => close());
+        afterRegisterSave(roomId, 'detail').catch(() => setEditMode(roomId, 'detail', false));
       },
-      onCancel: close,
+      onCancel: () => setEditMode(roomId, 'detail', false),
       onRefresh: rerender,
     });
     return;
   }
 
   if (section === 'detail2' && isEmbedEditMode()) {
-    const overlay = wrap.querySelector('[data-detail2-edit-overlay]');
-    const close = () => setEditMode(roomId, 'detail2', false);
-    overlay?.addEventListener('click', (e) => {
-      if (e.target === overlay) close();
-    });
-    bindDraggableDialog(
-      overlay?.querySelector('.register-edit-dialog'),
-      overlay?.querySelector('.register-edit-dialog__head'),
-    );
-    bindFacilityEvents(overlay || wrap, {
+    bindFacilityEvents(wrap, {
       embed: true,
       onSaved: () => {
-        afterRegisterSave(roomId, 'detail2').catch(() => close());
+        afterRegisterSave(roomId, 'detail2').catch(() => setEditMode(roomId, 'detail2', false));
       },
-      onCancel: close,
+      onCancel: () => setEditMode(roomId, 'detail2', false),
       onRefresh: rerender,
     });
   }

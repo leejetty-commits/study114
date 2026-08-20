@@ -1285,6 +1285,18 @@
 
 .mp-room-embed.register-flow {
   max-width: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.mp-room-panel .mp-room-embed.register-card--wide {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+.register-embed-edit-head {
+  margin-bottom: var(--space-4);
 }
 .register-embed-actions {
   display: flex;
