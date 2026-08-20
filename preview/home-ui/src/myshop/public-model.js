@@ -1,34 +1,7 @@
 /**
  * 공개 샵 — API/캐시 item → 단일 ShopPage(renderMyshopShowcase) 입력
+ * (exposure-data 비의존 — 검증·어댑터 순수 변환)
  */
-
-import { previewState } from '../state.js';
-import { EXPOSURE_STUDY_ROOMS } from '../exposure-data.js';
-
-/**
- * @param {number} id
- * @returns {object | null}
- */
-export function resolvePublicStudyRoomItem(id) {
-  const n = Number(id);
-  if (!Number.isFinite(n) || n <= 0) return null;
-
-  const pools = [
-    previewState.parentFind?.activeResultItems,
-    previewState.studyRoomFind?.activeResultItems,
-    previewState.tutorFind?.activeResultItems,
-    previewState.parentFind?.searchExposureItems,
-    previewState.studyRoomFind?.searchExposureItems,
-    previewState.tutorFind?.searchExposureItems,
-  ];
-  for (const pool of pools) {
-    if (!Array.isArray(pool)) continue;
-    const hit = pool.find((x) => Number(x?.id) === n);
-    if (hit) return hit;
-  }
-
-  return EXPOSURE_STUDY_ROOMS.find((x) => Number(x.id) === n) || null;
-}
 
 function blank(v) {
   const s = String(v ?? '').trim();
@@ -62,6 +35,7 @@ function normalizeImages(item) {
       prime_1280_path: blank(img.prime_1280_path) || path,
       image_type: img.image_type || 'other',
       title: blank(img.title || img.caption),
+      caption: blank(img.caption || img.title),
       is_system_default: false,
     });
   };
@@ -174,7 +148,7 @@ export function toMyshopShowcaseInputs(item) {
       region_label: label,
       complex_name: '',
     })),
-    primary_school_levels: [],
+    primary_school_levels: Array.isArray(item.primary_school_levels) ? item.primary_school_levels : [],
   };
 
   const room = {

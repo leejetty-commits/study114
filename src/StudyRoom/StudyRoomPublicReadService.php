@@ -75,6 +75,11 @@ final class StudyRoomPublicReadService
 
         $extra = $this->decodeLessonExtra((string) ($row['price_description'] ?? ''));
         $classes = $this->publicClasses($extra);
+        // DB 정규화 테이블이 있으면 JSON보다 우선 (실데이터 수업상세)
+        $tableClasses = $this->loadClassesFromTable($roomId);
+        if ($tableClasses !== []) {
+            $classes = $tableClasses;
+        }
         $styleNote = trim((string) ($row['teaching_style_note'] ?? ''));
         $styleIds = [];
         if (is_array($extra)) {
@@ -356,6 +361,50 @@ final class StudyRoomPublicReadService
                 'image_path'  => $path,
                 'sort_order'  => (int) ($img['sort_order'] ?? 0),
                 'title'       => trim((string) ($img['caption'] ?? '')),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function loadClassesFromTable(int $roomId): array
+    {
+        try {
+            $rows = (new StudyRoomLessonDetailStore())->loadClasses($this->pdo, $roomId);
+        } catch (\Throwable) {
+            return [];
+        }
+        $out = [];
+        foreach ($rows as $cls) {
+            if (!is_array($cls)) {
+                continue;
+            }
+            $name = trim((string) ($cls['class_name'] ?? ''));
+            $subject = trim((string) ($cls['subject_name'] ?? $cls['subject_custom'] ?? ''));
+            $fee = trim((string) ($cls['monthly_fee'] ?? ''));
+            $note = trim((string) ($cls['lesson_note'] ?? ''));
+            if ($name === '' && $subject === '' && $fee === '' && $note === '') {
+                continue;
+            }
+            $days = $cls['attendance_days'] ?? [];
+            if (!is_array($days)) {
+                $days = [];
+            }
+            $out[] = [
+                'class_name'       => $name,
+                'school_level'     => (string) ($cls['school_level'] ?? ''),
+                'grade_band'       => (string) ($cls['grade_band'] ?? ''),
+                'subject_label'    => $subject,
+                'subject_name'     => (string) ($cls['subject_name'] ?? ''),
+                'subject_custom'   => (string) ($cls['subject_custom'] ?? ''),
+                'attendance_days'  => array_values(array_map('strval', $days)),
+                'lessons_per_week' => (string) ($cls['lessons_per_week'] ?? ''),
+                'monthly_fee'      => $fee,
+                'fee_note'         => trim((string) ($cls['fee_note'] ?? '')),
+                'lesson_note'      => $note,
             ];
         }
 

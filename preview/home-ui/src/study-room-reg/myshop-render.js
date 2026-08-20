@@ -61,6 +61,21 @@ function collectPhotos(s) {
     .filter((x) => x.src && !x.system);
 }
 
+/** 대표 → Hero, Gallery는 내부시설 → 시설 → 기타 우선 */
+function splitHeroAndGallery(photos) {
+  const list = Array.isArray(photos) ? [...photos] : [];
+  const coverIdx = list.findIndex((p) => p.type === 'cover');
+  const hero = coverIdx >= 0 ? list[coverIdx] : list[0] || null;
+  const rest = list.filter((p) => p !== hero);
+  const rank = (t) => (t === 'interior' ? 0 : t === 'facility' ? 1 : 2);
+  rest.sort((a, b) => rank(a.type) - rank(b.type));
+  return { hero, gallery: rest };
+}
+
+export function __shopTestHooks() {
+  return { collectPhotos, splitHeroAndGallery, blank, labelOf, boolOn };
+}
+
 function placeLabel(s) {
   if (s.lesson_place_type === 'academy') return '교습소';
   if (s.lesson_place_type === 'study_room') return '공부방';
@@ -204,8 +219,7 @@ export function renderMyshopShowcase(s, room) {
   const styles = teachingStyleLabels(s);
   const styleNote = blank(s.teaching_style_note);
   const photos = collectPhotos(s);
-  const hero = photos.find((p) => p.type === 'cover') || photos[0];
-  const gallery = photos.filter((p) => p !== hero);
+  const { hero, gallery } = splitHeroAndGallery(photos);
   const heroSrc = hero?.src || ROOM_DEFAULT;
   const heroIsDefault = !hero;
 
@@ -321,7 +335,7 @@ export function renderMyshopShowcase(s, room) {
       const note = blank(c.lesson_note);
       if (!title && !subj && !classFee && !note) return '';
       return `
-        <article class="shop-class">
+        <div class="shop-class">
           <header class="shop-class__head">
             <h3 class="shop-class__title">${esc(title || subj || '수업')}</h3>
             <p class="shop-class__topline">
@@ -334,7 +348,7 @@ export function renderMyshopShowcase(s, room) {
             ${feeNote ? `<div class="shop-class__span"><dt>수업료</dt><dd>${esc(feeNote)}</dd></div>` : ''}
             ${note ? `<div class="shop-class__span"><dt>참고</dt><dd>${esc(note)}</dd></div>` : ''}
           </dl>
-        </article>`;
+        </div>`;
     })
     .filter(Boolean)
     .join('');

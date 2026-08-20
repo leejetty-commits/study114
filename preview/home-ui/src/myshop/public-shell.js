@@ -7,7 +7,7 @@ import { renderHomeShell, bindLayoutEvents } from '../layout.js';
 import { parseMyshopPath } from './router.js';
 import { returnFromPublicMyshop } from './navigate.js';
 import { peekMyshopReturnSnapshot, myshopReturnLabel } from './return-snapshot.js';
-import { resolvePublicStudyRoomItem, toMyshopShowcaseInputs } from './public-model.js';
+import { resolvePublicStudyRoomItem, toMyshopShowcaseInputs } from './public-resolve.js';
 import { fetchPublicStudyRoom } from './public-api.js';
 import { renderMyshopShowcase, bindMyshopEvents } from '../study-room-reg/myshop-render.js';
 import { esc } from '../detail-decision/detail-utils.js';

@@ -29,6 +29,7 @@
 | [49-submission-role-split.md](./49-submission-role-split.md) | 제출함 **공통 개발 + 차등 운영** · 공부방 후순위 / 과외쌤 사용 | ★ 이번 버전 |
 | [50-student-myshop-routing.md](./50-student-myshop-routing.md) | 샵 **라우팅·복귀** (미니→확대→샵) | ★ |
 | [51-shop-page-redesign.md](./51-shop-page-redesign.md) | **단일 ShopPage** 구조·필드매핑·숨김·스타일 | ★ 본문 SSOT |
+| [52-shop-page-verification.md](./52-shop-page-verification.md) | ShopPage **실구현 검증 증빙** (22/22) | ★ |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
 
 ---
