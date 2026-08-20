@@ -54,8 +54,10 @@ import {
   markEmbeddedViewLoaded,
   renderEmbeddedPanel,
   bindEmbeddedPanelEvents,
+  isEmbeddedRegisterReady,
 } from './embedded-panels.js';
 import { renderMyshopShowcase, bindMyshopEvents } from './myshop-render.js';
+import { getShopCompletenessSummary } from './shop-completeness.js';
 import { registerState } from '@study-room-ui/state.js';
 import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
@@ -137,6 +139,60 @@ function renderFullChecklist(readiness, roomId) {
             ${
               item.ok
                 ? '<span class="mp-room__checklist-state">완료</span>'
+                : `<a href="#${href}" class="mp-room__checklist-link" data-p20-nav="${href}">채우기</a>`
+            }
+          </li>`;
+          })
+          .join('')}
+      </ul>
+    </div>`;
+}
+
+/**
+ * ShopPage 완성도 — 공개 필수와 별도 (샵이 비어 보이는 이유)
+ * @param {ReturnType<typeof getShopCompletenessSummary>} shop
+ * @param {number} roomId
+ */
+function renderShopCompletenessChecklist(shop, roomId) {
+  const items = shop.items || [];
+  const hubHref = studyRoomHubPath(roomId);
+  const details =
+    shop.reasonDetails?.length > 0
+      ? `<ul class="mp-room__shop-why-list">${shop.reasonDetails
+          .map((line) => `<li>${esc(line)}</li>`)
+          .join('')}</ul>`
+      : '';
+
+  return `
+    <div class="mp-room__checklist mp-room__checklist--shop${shop.weak ? ' is-weak' : ' is-strong'}" data-shop-completeness>
+      <div class="mp-room__checklist-head">
+        <h3>마이샵 완성도</h3>
+        <span>${shop.doneCount}/${shop.totalCount}</span>
+      </div>
+      <p class="mp-room__shop-why${shop.weak ? ' is-warn' : ''}" data-shop-empty-reason>${esc(shop.reasonLine)}</p>
+      ${details}
+      <p class="mp-room__checklist-lead">공개 가능해도 아래가 비면 학부모 샵 페이지가 얇아 보입니다. 채우면 마이샵에 바로 반영됩니다.</p>
+      <p class="mp-room__shop-preview-link">
+        <a href="#${hubHref}" class="mp-room__checklist-link" data-p20-nav="${hubHref}">지금 마이샵 화면 보기</a>
+      </p>
+      <ul class="mp-room__checklist-list">
+        ${items
+          .map((item) => {
+            const href = studyRoomSectionPath(roomId, item.section);
+            return `
+          <li class="mp-room__checklist-item${item.ok ? ' is-ok' : ' is-miss'}">
+            <span class="mp-room__checklist-mark" aria-hidden="true">${item.ok ? '✓' : '○'}</span>
+            <span class="mp-room__checklist-copy">
+              <span class="mp-room__checklist-label">${esc(item.label)}</span>
+              ${
+                item.ok
+                  ? `<small class="mp-room__checklist-impact">→ ${esc(item.shopImpact)}</small>`
+                  : `<small class="mp-room__checklist-why">${esc(item.emptyWhy || item.shopImpact)}</small>`
+              }
+            </span>
+            ${
+              item.ok
+                ? '<span class="mp-room__checklist-state">반영됨</span>'
                 : `<a href="#${href}" class="mp-room__checklist-link" data-p20-nav="${href}">채우기</a>`
             }
           </li>`;
@@ -333,7 +389,14 @@ function renderHub(room) {
   }
 
   markEmbeddedViewLoaded(room.id, 'hub');
-  const body = renderMyshopShowcase(registerState, room);
+  const shop = getShopCompletenessSummary(registerState, room);
+  const nudge = shop.weak
+    ? `<div class="mp-room__shop-nudge" data-shop-completeness-nudge>
+        <p class="mp-room__shop-nudge__text">${esc(shop.reasonLine)}</p>
+        <a href="#${studyRoomSectionPath(room.id, 'publish')}" class="mp-room__checklist-link" data-p20-nav="${studyRoomSectionPath(room.id, 'publish')}">등록점검에서 채우기</a>
+      </div>`
+    : '';
+  const body = `${nudge}${renderMyshopShowcase(registerState, room)}`;
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', body)}</section>`;
 }
 
@@ -539,13 +602,28 @@ function renderPublishPreviewModes(room) {
 
 /** @param {import('./store.js').StudyRoomRecord} room */
 function renderPublish(room) {
+  if (!isEmbeddedRegisterReady(room.id)) {
+    queueMicrotask(() => {
+      ensureEmbeddedRegister(room.id, { force: true })
+        .then(() => {
+          window.dispatchEvent(new Event('hashchange'));
+        })
+        .catch((err) => console.error('[publish-shop]', err));
+    });
+  }
+
   const r = getPublishReadiness(room);
+  const shop = getShopCompletenessSummary(
+    isEmbeddedRegisterReady(room.id) ? registerState : {},
+    room,
+  );
   const preview = renderPublishPreviewModes(room);
 
   const body = `
     <div class="p19-publish-body" data-p20-room-id="${room.id}">
       ${renderPickPrimeNudge()}
       ${preview}
+      ${renderShopCompletenessChecklist(shop, room.id)}
       ${renderFullChecklist(r, room.id)}
       <div class="p20-confirm-card" data-p20-room-id="${room.id}">
         <h3 class="p20-confirm-card__title">자기확인 — 학부모에게 이렇게 보입니다</h3>

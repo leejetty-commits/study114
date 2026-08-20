@@ -225,12 +225,14 @@
   border-color: var(--shop-line);
 }
 
-.shop-sec--facility {
+.shop-sec--facility,
+.shop-sec--facilities {
   background: linear-gradient(155deg, var(--shop-mint-soft), #fff 60%);
   border-color: #a7f3d0;
 }
 
-.shop-sec--area {
+.shop-sec--area,
+.shop-sec--livingArea {
   background: #fff;
   border-color: var(--shop-line);
 }

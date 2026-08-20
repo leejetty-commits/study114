@@ -80,3 +80,9 @@ alwaysApply: true
 **수정 → 빌드 → git status → commit → push → Actions 확인 → 실제 사이트 확인**
 
 닷홈 프론트 반영: `main` push 시 GitHub Actions가 `build:dothome` 실행 후 `public/`만 FTP 배포. 지도 키는 repo Variable `VITE_NAVER_MAP_CLIENT_ID`로 주입.
+
+## 9. ShopPage 게이트 (정본 54)
+
+- 정본: `docs/internal/54-shop-page-lock.md` · 레드라인 4 (섹션순서 / raw직접렌더 / owner·public분기 / 금지키)
+- 로컬·CI: `npm run verify:shop-page` — PR·`main`·배포 전 필수 (`shop-page-gate.yml` + `deploy.yml`)
+- 다음 확장: 과외쌤 일반화보다 **등록점검(마이샵 완성도)** 우선

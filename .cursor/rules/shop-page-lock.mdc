@@ -1,0 +1,27 @@
+---
+description: ShopPage 고정화 레드라인 (54 정본)
+globs:
+  - preview/home-ui/src/study-room-reg/myshop-render.js
+  - preview/home-ui/src/study-room-reg/shop-*.js
+  - preview/home-ui/src/myshop/**
+  - preview/home-ui/src/styles/myshop*.css
+  - scripts/verify-shop-page.mjs
+  - docs/internal/54-shop-page-lock.md
+alwaysApply: false
+---
+
+# ShopPage 레드라인 (정본: docs/internal/54-shop-page-lock.md)
+
+샵 페이지를 더 꾸미기보다 **포맷이 다시 안 무너지게** 잠근다.
+
+## 절대 금지 (4)
+
+1. **섹션 순서 변경 금지** — `SHOP_SECTION_ORDER`만 따른다.
+2. **raw 직접 렌더 금지** — `buildShopViewModel` → `renderShopViewModel`만.
+3. **owner/public 본문 분기 금지** — 동일 `renderMyshopShowcase`.
+4. **금지키 노출 금지** — `SHOP_FORBIDDEN_KEYS` (집주소·전화·이메일 등).
+
+## 필수
+
+- 수정 후 `npm run verify:shop-page` 통과 (CI 게이트).
+- 다음 확장은 과외쌤 일반화보다 **등록점검(마이샵 완성도)** 우선.

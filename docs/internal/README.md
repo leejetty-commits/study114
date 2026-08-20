@@ -30,6 +30,8 @@
 | [50-student-myshop-routing.md](./50-student-myshop-routing.md) | 샵 **라우팅·복귀** (미니→확대→샵) | ★ |
 | [51-shop-page-redesign.md](./51-shop-page-redesign.md) | **단일 ShopPage** 구조·필드매핑·숨김·스타일 | ★ 본문 SSOT |
 | [52-shop-page-verification.md](./52-shop-page-verification.md) | ShopPage **실구현 검증 증빙** (22/22) | ★ |
+| [53-shop-page-common-format-proof.md](./53-shop-page-common-format-proof.md) | 공통 포맷 **밀도 A/B/C·formatter·스크린샷** (36/36 YES) | ★ |
+| [54-shop-page-lock.md](./54-shop-page-lock.md) | **ShopPage 정본** · 레드라인4 · CI 게이트 · 등록점검 우선 | ★★ |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
 
 ---

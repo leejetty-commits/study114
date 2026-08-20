@@ -3,7 +3,8 @@
 **일자:** 2026-08-21  
 **커밋 대상:** 단일 ShopPage 검증 라운드  
 **자동화:** `cd preview/home-ui && npx vite-node ../../scripts/verify-shop-page.mjs`  
-**결과 산출물:** `tmp/shop-verify/report.json` · `owner.html` · `public.html` · `case-A|B|C.html`
+**결과 산출물:** `tmp/shop-verify/report.json` · `owner.html` · `public.html` · `case-A|B|C.html`  
+**후속(공통 포맷 실증):** [53-shop-page-common-format-proof.md](./53-shop-page-common-format-proof.md) — **35 PASS / YES**
 
 ---
 
@@ -11,7 +12,7 @@
 
 | 항목 | 결과 |
 | --- | --- |
-| 자동화 검증 | **22 PASS / 0 FAIL** |
+| 자동화 검증 | **22 PASS / 0 FAIL** (라운드1) · 라운드2는 53 문서 |
 | 단일 본문 함수 | **PASS** |
 | 마이페이지↔공개 본문 HTML 동일 | **PASS** (`owner.html` === `public.html`) |
 | 겉만 번지르함? | **NO** — 아래 누락을 코드로 수정 후 재검증 |

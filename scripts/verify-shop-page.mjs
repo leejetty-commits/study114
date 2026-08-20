@@ -1,5 +1,27 @@
-import { renderMyshopShowcase } from '../preview/home-ui/src/study-room-reg/myshop-render.js';
+/**
+ * ShopPage 공통 포맷 검증
+ * cd preview/home-ui && npx vite-node ../../scripts/verify-shop-page.mjs
+ */
+
+import { renderMyshopShowcase, buildShopViewModel, SHOP_SECTION_ORDER, SHOP_FALLBACK_MATRIX } from '../preview/home-ui/src/study-room-reg/myshop-render.js';
 import { toMyshopShowcaseInputs } from '../preview/home-ui/src/myshop/public-model.js';
+import {
+  splitHeroAndGallery,
+  collectShopPhotos,
+  formatCapacity,
+  formatMonthlyFeeBand,
+  formatLessonPlace,
+  formatLessonOperation,
+  formatBoolFlag,
+  formatLivingAreaSentence,
+  SHOP_FORBIDDEN_KEYS,
+} from '../preview/home-ui/src/study-room-reg/shop-formatters.js';
+import {
+  resolveHeroGalleryWithFallback,
+  resolveHeroCopy,
+  visibleShopSections,
+} from '../preview/home-ui/src/study-room-reg/shop-view-model.js';
+import { getShopCompletenessItems, getShopCompletenessSummary } from '../preview/home-ui/src/study-room-reg/shop-completeness.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,24 +37,23 @@ function ok(name, cond, detail = '') {
   else FAIL.push(`${name}${detail ? ` — ${detail}` : ''}`);
 }
 
-function stripChrome(html) {
+function stripRoot(html) {
   const m = html.match(/<article class="shop"[\s\S]*?<\/article>/);
   return m ? m[0] : html;
 }
 
-function sectionTitles(html) {
-  return [...html.matchAll(/<h2 class="shop-sec__title">[\s\S]*?<\/h2>/g)].map((m) =>
-    m[0].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(),
-  );
+function sectionIds(html) {
+  return [...html.matchAll(/data-shop-section="([^"]+)"/g)].map((m) => m[1]);
 }
 
 function countClassCards(html) {
-  return (html.match(/class="shop-class"/g) || []).length;
+  return (html.match(/data-shop-class-index="/g) || []).length;
 }
 
 function hasLeak(html) {
-  const bad = ['home_address', '집주소', 'address_text', '사업장주소', 'contact_phone', 'mailto:', '010-0000'];
-  return bad.filter((k) => html.includes(k));
+  return SHOP_FORBIDDEN_KEYS.filter((k) => html.includes(k)).concat(
+    ['집주소', '사업장주소', '010-0000', 'mailto:'].filter((k) => html.includes(k)),
+  );
 }
 
 function baseState(over = {}) {
@@ -118,15 +139,107 @@ function toPublicItem(s, room) {
   };
 }
 
-function diffHint(a, b) {
-  const la = a.split('\n');
-  const lb = b.split('\n');
-  for (let i = 0; i < Math.max(la.length, lb.length); i++) {
-    if (la[i] !== lb[i]) return `line ${i + 1}:\nA:${(la[i] || '').slice(0, 140)}\nB:${(lb[i] || '').slice(0, 140)}`;
-  }
-  return 'len';
+function wrapComparePage(blocks) {
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"/><title>ShopPage 케이스 비교</title>
+  <link rel="stylesheet" href="/assets/index-DbB1Nc3b.css"/>
+  <style>
+    body{margin:0;background:#f5f5f4;font-family:Pretendard,sans-serif}
+    .cmp{display:grid;grid-template-columns:1fr;gap:2rem;padding:1.5rem;max-width:62rem;margin:0 auto}
+    .cmp__h{margin:0 0 .5rem;font-size:1.1rem}
+    .cmp__note{color:#78716c;font-size:.85rem;margin:0 0 1rem}
+  </style></head><body><div class="cmp">${blocks}</div></body></html>`;
 }
 
+// —— formatter unit ——
+ok('fmt_원생수', formatCapacity('one_to_four') === '1~4명');
+ok('fmt_원생수_raw숨김', formatCapacity('weird_enum_key') === '');
+ok('fmt_가격', formatMonthlyFeeBand('35', null) === '월 35만원대');
+ok('fmt_교습형태', formatLessonPlace('academy') === '교습소');
+ok('fmt_수업형태', formatLessonOperation('time_slot_mixed_grade') === '타임별 무학년 수업');
+ok('fmt_bool', formatBoolFlag(true, '가능') === '가능' && formatBoolFlag(false) === '');
+ok('fmt_생활권', formatLivingAreaSentence(['대치동', '은마']) === '대치동 생활권 · 은마');
+
+// —— ViewModel shape / fallback matrix (회귀 고정) ——
+ok('VM_섹션키수', SHOP_SECTION_ORDER.length === 11);
+ok('VM_fallback문서', Boolean(SHOP_FALLBACK_MATRIX.heroImage?.length && SHOP_FALLBACK_MATRIX.classes?.length));
+{
+  const emptyPhoto = resolveHeroGalleryWithFallback([]);
+  ok('FB_사진없음', emptyPhoto.ruleId === 'no_photos' && !emptyPhoto.hero);
+  const noCover = resolveHeroGalleryWithFallback([
+    { src: '/a.jpg', type: 'interior' },
+    { src: '/b.jpg', type: 'other' },
+  ]);
+  ok('FB_cover없음_첫장Hero', noCover.ruleId === 'no_cover_first_photo' && noCover.hero?.src === '/a.jpg');
+  const withCover = resolveHeroGalleryWithFallback([
+    { src: '/c.jpg', type: 'cover' },
+    { src: '/i.jpg', type: 'interior' },
+  ]);
+  ok('FB_cover우선', withCover.ruleId === 'cover' && withCover.hero?.src === '/c.jpg');
+  ok('FB_슬로건만', resolveHeroCopy('슬로건', '').ruleId === 'slogan_only');
+  ok('FB_한줄만', resolveHeroCopy('', '한줄').ruleId === 'intro_only' && resolveHeroCopy('', '한줄').lead === '한줄');
+  ok('FB_동일문구', resolveHeroCopy('같음', '같음').ruleId === 'same' && !resolveHeroCopy('같음', '같음').lead);
+}
+{
+  const vm = buildShopViewModel(
+    baseState({
+      slogan: '',
+      intro_short: '한줄만',
+      classes: [],
+      monthly_fee_manwon: '40',
+      images: [{ image_type: 'interior', image_path: '/only.jpg' }],
+      saved_regions: [{ region_label: '대치동' }],
+    }),
+    { study_room_name: '검증 공부방', price_amount: null, grade_band: '', region_label: '', location_label: '' },
+  );
+  ok('FB_한줄_HeroLead', vm.hero.lead === '한줄만' && !vm.hero.slogan);
+  ok('FB_수업없음_가격타일', vm.classes.items.length === 0 && vm.facts.tiles.some((t) => t.label === '가격대'));
+  ok('FB_지역1_문장', vm.livingArea.labels.length === 1 && vm.hero.livingLine.includes('생활권'));
+  ok('FB_meta규칙', vm.meta.fallbacks.heroImage === 'no_cover_first_photo' && vm.meta.fallbacks.classes === 'no_classes_fee_tile');
+  ok('VM_visible에hero', visibleShopSections(vm).includes('hero') && visibleShopSections(vm).includes('facts'));
+  ok('VM_offerings여지', vm.meta.offeringsAlias === 'classes');
+}
+{
+  const items = getShopCompletenessItems(
+    baseState({
+      images: [{ image_type: 'other', image_path: '/x.jpg' }],
+      intro_short: '',
+      slogan: '',
+      classes: [],
+      teaching_style_ids: [],
+      teaching_style_note: '',
+      teaching_style: '',
+      monthly_fee_manwon: '',
+      saved_regions: [],
+      promo_regions: [],
+      region_label: '',
+    }),
+    { has_representative_image: false, price_amount: null, region_label: '', has_regions: false },
+  );
+  const miss = items.filter((i) => !i.ok).map((i) => i.id);
+  ok(
+    '완성도_누락우선',
+    ['cover', 'intro_short', 'classes', 'teaching_style', 'fee', 'living'].every((id) => miss.includes(id)),
+  );
+  const summary = getShopCompletenessSummary(
+    baseState({
+      images: [{ image_type: 'other', image_path: '/x.jpg' }],
+      intro_short: '',
+      slogan: '',
+      classes: [],
+      teaching_style_ids: [],
+      teaching_style_note: '',
+      teaching_style: '',
+      monthly_fee_manwon: '',
+      saved_regions: [],
+      promo_regions: [],
+      region_label: '',
+    }),
+    { has_representative_image: false, price_amount: null, region_label: '', has_regions: false },
+  );
+  ok('완성도_이유문장', summary.weak && /얇아 보이는 이유/.test(summary.reasonLine) && /대표사진 없음/.test(summary.reasonLine));
+}
+
+// —— 동일 본문 ——
 {
   const s = baseState({
     images: [
@@ -153,7 +266,6 @@ function diffHint(a, b) {
         attendance_days: ['tue', 'thu'],
         lessons_per_week: '3',
         monthly_fee: '48',
-        lesson_note: '',
       },
     ],
     facility_names: ['냉난방', 'CCTV/안전관리'],
@@ -165,19 +277,76 @@ function diffHint(a, b) {
     youtube_url: 'https://youtube.com/example',
   });
   const room = roomOf(s);
-  const ownerHtml = stripChrome(renderMyshopShowcase(s, room));
+  const ownerHtml = stripRoot(renderMyshopShowcase(s, room));
   const pair = toMyshopShowcaseInputs(toPublicItem(s, room));
-  const publicHtml = stripChrome(renderMyshopShowcase(pair.state, pair.room));
+  const publicHtml = stripRoot(renderMyshopShowcase(pair.state, pair.room));
   fs.writeFileSync(path.join(outDir, 'owner.html'), ownerHtml, 'utf8');
   fs.writeFileSync(path.join(outDir, 'public.html'), publicHtml, 'utf8');
-  ok('동일본문_HTML', ownerHtml === publicHtml, ownerHtml === publicHtml ? '' : diffHint(ownerHtml, publicHtml));
+  ok('동일본문_HTML', ownerHtml === publicHtml);
+  ok('동일본문_섹션ID', JSON.stringify(sectionIds(ownerHtml)) === JSON.stringify(sectionIds(publicHtml)));
+  // route 분기 정적 검사 — 렌더 소스에 경로/역할 분기 금지
+  {
+    const renderSrc = fs.readFileSync(
+      path.join(__dirname, '../preview/home-ui/src/study-room-reg/myshop-render.js'),
+      'utf8',
+    );
+    const bad = /(isPublic|isOwner|viewerRole|myshopMode|routeMode|publicOnly|ownerOnly)/.test(renderSrc);
+    ok('렌더_route분기없음', !bad);
+  }
   ok('민감정보_비노출', hasLeak(ownerHtml).length === 0, String(hasLeak(ownerHtml)));
-  ok('수업카드_2개', countClassCards(ownerHtml) === 2, `got ${countClassCards(ownerHtml)}`);
+  ok('수업카드_2개', countClassCards(ownerHtml) === 2);
   ok('raw_enum_없음', !ownerHtml.includes('one_to_four') && !ownerHtml.includes('group_by_time_slot'));
   ok('원생수_변환', ownerHtml.includes('1~4명'));
   ok('Gallery_내부우선', /shop-gallery__hero[\s\S]*room-2\.jpg/.test(ownerHtml));
+  ok('준비중문구_없음', !ownerHtml.includes('준비중') && !ownerHtml.includes('정보 없음'));
 }
 
+// —— 사진 1/3/5 ——
+{
+  const one = collectShopPhotos(
+    baseState({ images: [{ image_type: 'cover', image_path: '/p1.jpg' }] }),
+  );
+  const split1 = splitHeroAndGallery(one);
+  ok('사진1_Hero만', Boolean(split1.hero) && split1.gallery.length === 0);
+  const html1 = stripRoot(
+    renderMyshopShowcase(baseState({ images: [{ image_type: 'cover', image_path: '/p1.jpg' }] }), roomOf(baseState())),
+  );
+  ok('사진1_Gallery섹션숨김', !sectionIds(html1).includes('gallery'));
+  ok('사진1_레이아웃유지', html1.includes('shop-hero') && html1.includes('data-shop-root'));
+}
+
+{
+  const imgs = [
+    { image_type: 'cover', image_path: '/c.jpg' },
+    { image_type: 'other', image_path: '/o.jpg' },
+    { image_type: 'interior', image_path: '/i.jpg' },
+  ];
+  const split = splitHeroAndGallery(collectShopPhotos(baseState({ images: imgs })));
+  ok('사진3_Hero커버', split.hero?.src === '/c.jpg');
+  ok('사진3_Gallery내부우선', split.gallery[0]?.src === '/i.jpg' && split.gallery[1]?.src === '/o.jpg');
+  const html = stripRoot(renderMyshopShowcase(baseState({ images: imgs }), roomOf(baseState())));
+  ok('사진3_Gallery렌더', sectionIds(html).includes('gallery') && (html.match(/data-shop-thumb/g) || []).length === 2);
+}
+
+{
+  const imgs = [
+    { image_type: 'cover', image_path: '/1.jpg' },
+    { image_type: 'interior', image_path: '/2.jpg' },
+    { image_type: 'facility', image_path: '/3.jpg' },
+    { image_type: 'other', image_path: '/4.jpg' },
+    { image_type: 'other', image_path: '/5.jpg' },
+  ];
+  const split = splitHeroAndGallery(collectShopPhotos(baseState({ images: imgs })));
+  ok('사진5_Gallery4장', split.gallery.length === 4);
+  ok(
+    '사진5_정렬',
+    split.gallery.map((g) => g.type).join(',') === 'interior,facility,other,other',
+  );
+  const html = stripRoot(renderMyshopShowcase(baseState({ images: imgs }), roomOf(baseState())));
+  ok('사진5_붕괴없음', html.includes('shop-gallery__thumbs') && html.includes('shop-hero'));
+}
+
+// —— 수업 1/2/3 ——
 for (const n of [1, 2, 3]) {
   const classes = Array.from({ length: n }, (_, i) => ({
     class_name: `수업${i + 1}`,
@@ -187,131 +356,137 @@ for (const n of [1, 2, 3]) {
     attendance_days: ['mon'],
     lessons_per_week: '2',
   }));
-  const html = stripChrome(renderMyshopShowcase(baseState({ classes }), roomOf(baseState())));
-  ok(`수업반복_${n}`, countClassCards(html) === n, `got ${countClassCards(html)}`);
+  const html = stripRoot(renderMyshopShowcase(baseState({ classes }), roomOf(baseState())));
+  ok(`수업반복_${n}`, countClassCards(html) === n);
 }
 
-{
-  const caseA = baseState({
-    intro_long: '',
-    teaching_style_ids: [],
-    teaching_style_note: '',
-    feature_1: '',
-    classes: [],
-    images: [{ image_type: 'cover', image_path: '/assets/listings/room-1.jpg' }],
-    facility_names: [],
-    career_years: '',
-    university_name: '',
-    youtube_url: '',
-    education_office_registered: false,
-  });
-  const htmlA = stripChrome(renderMyshopShowcase(caseA, roomOf(caseA)));
-  const titlesA = sectionTitles(htmlA);
-  fs.writeFileSync(path.join(outDir, 'case-A.html'), htmlA, 'utf8');
-  ok('케이스A_수업숨김', !titlesA.includes('수업 안내'));
-  ok('케이스A_매력숨김', !titlesA.includes('이 공부방의 매력'));
-  ok('케이스A_Gallery숨김', !titlesA.includes('사진으로 보는 공간'));
-  ok('케이스A_소셜숨김', !titlesA.includes('소셜'));
-  ok('케이스A_경력숨김', !titlesA.includes('원장 소개 · 경력'));
-}
+// —— 밀도 A/B/C ——
+const caseA = baseState({
+  intro_long: '',
+  teaching_style_ids: [],
+  teaching_style_note: '',
+  feature_1: '',
+  classes: [],
+  images: [{ image_type: 'cover', image_path: '/assets/listings/room-1.jpg' }],
+  facility_names: [],
+  career_years: '',
+  university_name: '',
+  youtube_url: '',
+  education_office_registered: false,
+});
+const htmlA = stripRoot(renderMyshopShowcase(caseA, roomOf(caseA)));
+fs.writeFileSync(path.join(outDir, 'case-A.html'), htmlA, 'utf8');
+const idsA = sectionIds(htmlA);
+ok('케이스A_필수만', idsA.includes('hero') && idsA.includes('facts'));
+ok('케이스A_숨김', !idsA.includes('classes') && !idsA.includes('gallery') && !idsA.includes('signature') && !idsA.includes('social') && !idsA.includes('career'));
+ok('케이스A_빈제목없음', !htmlA.match(/shop-sec__title[^>]*>\s*<span[^>]*><\/span>\s*<\/h2>/));
 
-{
-  const caseB = baseState({
-    classes: [
-      { class_name: 'A반', subject_name: '수학', monthly_fee: '35', school_level: 'middle' },
-      { class_name: 'B반', subject_name: '영어', monthly_fee: '40', school_level: 'high' },
-    ],
-    facility_names: ['냉난방'],
-    facility_note: '환기 잘 됩니다',
-    education_office_registered: true,
-    images: [
-      { image_type: 'cover', image_path: '/a.jpg' },
-      { image_type: 'interior', image_path: '/b.jpg' },
-    ],
-  });
-  const htmlB = stripChrome(renderMyshopShowcase(caseB, roomOf(caseB)));
-  const titlesB = sectionTitles(htmlB);
-  fs.writeFileSync(path.join(outDir, 'case-B.html'), htmlB, 'utf8');
-  ok('케이스B_수업2', countClassCards(htmlB) === 2);
-  ok('케이스B_시설', titlesB.includes('시설 · 환경'));
-  ok('케이스B_신뢰', titlesB.includes('신뢰 정보'));
-  ok('케이스B_Gallery', titlesB.includes('사진으로 보는 공간'));
-}
+const caseB = baseState({
+  classes: [
+    { class_name: 'A반', subject_name: '수학', monthly_fee: '35', school_level: 'middle' },
+    { class_name: 'B반', subject_name: '영어', monthly_fee: '40', school_level: 'high' },
+  ],
+  facility_names: ['냉난방'],
+  facility_note: '환기 잘 됩니다',
+  education_office_registered: true,
+  images: [
+    { image_type: 'cover', image_path: '/a.jpg' },
+    { image_type: 'interior', image_path: '/b.jpg' },
+  ],
+});
+const htmlB = stripRoot(renderMyshopShowcase(caseB, roomOf(caseB)));
+fs.writeFileSync(path.join(outDir, 'case-B.html'), htmlB, 'utf8');
+const idsB = sectionIds(htmlB);
+ok('케이스B_수업2', countClassCards(htmlB) === 2);
+ok('케이스B_시설신뢰Gallery', idsB.includes('facilities') && idsB.includes('trust') && idsB.includes('gallery'));
 
-{
-  const caseC = baseState({
-    images: [
-      { image_type: 'cover', image_path: '/c1.jpg' },
-      { image_type: 'interior', image_path: '/c2.jpg' },
-      { image_type: 'facility', image_path: '/c3.jpg' },
-      { image_type: 'other', image_path: '/c4.jpg' },
-      { image_type: 'other', image_path: '/c5.jpg' },
-    ],
-    classes: [
-      { class_name: '1', subject_name: '수학', monthly_fee: '30', school_level: 'middle', attendance_days: ['mon'], lessons_per_week: '2' },
-      { class_name: '2', subject_name: '영어', monthly_fee: '32', school_level: 'middle', attendance_days: ['tue'], lessons_per_week: '2' },
-      { class_name: '3', subject_name: '과학', monthly_fee: '34', school_level: 'high', attendance_days: ['wed'], lessons_per_week: '3' },
-    ],
-    university_name: '연세대',
-    major_name: '물리',
-    career_years: '10',
-    academy_career_years: '4',
-    feature_1: 'a',
-    feature_2: 'b',
-    feature_3: 'c',
-    facility_names: ['냉난방', '환기', 'CCTV/안전관리'],
-    education_office_registered: true,
-    business_registration_available: true,
-    franchise_flag: true,
-    franchise_name: '테스트프',
-    youtube_url: 'https://youtube.com/x',
-    facebook_url: 'https://facebook.com/x',
-    instagram_url: 'https://instagram.com/x',
-  });
-  const htmlC = stripChrome(renderMyshopShowcase(caseC, roomOf(caseC)));
-  const titlesC = sectionTitles(htmlC);
-  fs.writeFileSync(path.join(outDir, 'case-C.html'), htmlC, 'utf8');
-  ok('케이스C_수업3', countClassCards(htmlC) === 3);
-  ok(
-    '케이스C_전섹션',
-    ['이 공부방의 매력', '사진으로 보는 공간', '수업 안내', '원장 소개 · 경력', '신뢰 정보', '시설 · 환경', '위치 · 생활권', '소셜'].every(
-      (t) => titlesC.includes(t),
-    ),
-  );
-  ok('케이스C_문의', htmlC.includes('shop-inquiry'));
-}
+const caseC = baseState({
+  images: [
+    { image_type: 'cover', image_path: '/c1.jpg' },
+    { image_type: 'interior', image_path: '/c2.jpg' },
+    { image_type: 'facility', image_path: '/c3.jpg' },
+    { image_type: 'other', image_path: '/c4.jpg' },
+    { image_type: 'other', image_path: '/c5.jpg' },
+  ],
+  classes: [
+    { class_name: '1', subject_name: '수학', monthly_fee: '30', school_level: 'middle', attendance_days: ['mon'], lessons_per_week: '2' },
+    { class_name: '2', subject_name: '영어', monthly_fee: '32', school_level: 'middle', attendance_days: ['tue'], lessons_per_week: '2' },
+    { class_name: '3', subject_name: '과학', monthly_fee: '34', school_level: 'high', attendance_days: ['wed'], lessons_per_week: '3' },
+  ],
+  university_name: '연세대',
+  major_name: '물리',
+  career_years: '10',
+  academy_career_years: '4',
+  feature_1: 'a',
+  feature_2: 'b',
+  feature_3: 'c',
+  facility_names: ['냉난방', '환기', 'CCTV/안전관리'],
+  education_office_registered: true,
+  business_registration_available: true,
+  franchise_flag: true,
+  franchise_name: '테스트프',
+  youtube_url: 'https://youtube.com/x',
+  facebook_url: 'https://facebook.com/x',
+  instagram_url: 'https://instagram.com/x',
+});
+const htmlC = stripRoot(renderMyshopShowcase(caseC, roomOf(caseC)));
+fs.writeFileSync(path.join(outDir, 'case-C.html'), htmlC, 'utf8');
+const idsC = sectionIds(htmlC);
+ok('케이스C_수업3', countClassCards(htmlC) === 3);
+ok(
+  '케이스C_전섹션',
+  ['hero', 'facts', 'signature', 'gallery', 'classes', 'career', 'trust', 'facilities', 'livingArea', 'social', 'inquiry'].every((id) =>
+    idsC.includes(id),
+  ),
+);
 
+// 섹션 순서 (있는 것만 단조 증가)
 {
-  const html = stripChrome(
-    renderMyshopShowcase(
-      baseState({
-        images: [
-          { image_type: 'cover', image_path: '/1.jpg' },
-          { image_type: 'interior', image_path: '/2.jpg' },
-        ],
-        classes: [{ class_name: 'X', subject_name: '수학', monthly_fee: '1' }],
-        facility_names: ['냉난방'],
-        career_years: '1',
-        education_office_registered: true,
-        youtube_url: 'https://y.t',
-      }),
-      roomOf(baseState()),
-    ),
-  );
-  const titles = sectionTitles(html);
-  const expected = ['이 공부방의 매력', '사진으로 보는 공간', '수업 안내', '원장 소개 · 경력', '신뢰 정보', '시설 · 환경', '위치 · 생활권', '소셜'];
+  const order = [...SHOP_SECTION_ORDER];
   let mono = true;
   let last = -1;
-  for (const t of expected) {
-    const idx = titles.indexOf(t);
+  for (const id of order) {
+    const idx = idsC.indexOf(id);
     if (idx < 0) continue;
     if (idx < last) mono = false;
     last = idx;
   }
-  ok('섹션순서_고정', mono, titles.join(' > '));
+  ok('섹션순서_고정', mono, idsC.join('>'));
+  ok('섹션순서_상수일치', JSON.stringify(order) === JSON.stringify(SHOP_SECTION_ORDER));
 }
 
-const report = { pass: PASS.length, fail: FAIL.length, FAIL, PASS, artifacts: outDir };
+// 비교 페이지 (스크린샷용 산출물)
+fs.writeFileSync(
+  path.join(outDir, 'compare-ABC.html'),
+  wrapComparePage(
+    [
+      `<section><h2 class="cmp__h">케이스 A — 입력 적음</h2><p class="cmp__note">섹션: ${idsA.join(', ')}</p>${htmlA}</section>`,
+      `<section><h2 class="cmp__h">케이스 B — 입력 보통</h2><p class="cmp__note">섹션: ${idsB.join(', ')} · 수업 ${countClassCards(htmlB)}</p>${htmlB}</section>`,
+      `<section><h2 class="cmp__h">케이스 C — 입력 많음</h2><p class="cmp__note">섹션: ${idsC.join(', ')} · 수업 ${countClassCards(htmlC)}</p>${htmlC}</section>`,
+    ].join('\n'),
+  ),
+  'utf8',
+);
+
+fs.writeFileSync(
+  path.join(outDir, 'compare-owner-public.html'),
+  wrapComparePage(
+    [
+      `<section><h2 class="cmp__h">마이페이지 경로 (직접 renderMyshopShowcase)</h2><p class="cmp__note">바이트 동일 여부: ${htmlA && '아래 twin 참고'}</p>${fs.readFileSync(path.join(outDir, 'owner.html'), 'utf8')}</section>`,
+      `<section><h2 class="cmp__h">공개 경로 (toMyshopShowcaseInputs → 동일 렌더)</h2><p class="cmp__note">owner≡public: ${fs.readFileSync(path.join(outDir, 'owner.html'), 'utf8') === fs.readFileSync(path.join(outDir, 'public.html'), 'utf8')}</p>${fs.readFileSync(path.join(outDir, 'public.html'), 'utf8')}</section>`,
+    ].join('\n'),
+  ),
+  'utf8',
+);
+
+const report = {
+  pass: PASS.length,
+  fail: FAIL.length,
+  FAIL,
+  PASS,
+  artifacts: outDir,
+  comparePages: ['compare-ABC.html', 'compare-owner-public.html'],
+};
 fs.writeFileSync(path.join(outDir, 'report.json'), JSON.stringify(report, null, 2), 'utf8');
 console.log(JSON.stringify(report, null, 2));
 if (FAIL.length) process.exit(1);

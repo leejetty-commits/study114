@@ -1,0 +1,37 @@
+# ShopPage CI gate — 회귀 실패 시 PR/main 머지·배포 경로 차단
+# 정본: docs/internal/54-shop-page-lock.md
+
+name: ShopPage gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: shop-page-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-shop-page:
+    name: verify:shop-page
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: preview/home-ui/package-lock.json
+
+      - name: Install home-ui deps
+        working-directory: preview/home-ui
+        run: npm ci
+
+      - name: Guard — ShopPage regression
+        run: npm run verify:shop-page
