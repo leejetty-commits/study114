@@ -91,18 +91,27 @@ final class ProviderTicketRepository
     }
 
     /** @return list<array<string, mixed>> */
-    public function listActivePositions(int $userId): array
+    public function listActivePositions(int $userId, ?string $providerType = null, ?int $providerId = null): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT id, sku_code, duration_type, duration_value, period_days,
+        $hasProvider = $this->positionHasProviderColumns();
+        $sql = 'SELECT id, sku_code, duration_type, duration_value, period_days,
                     started_on, end_exclusive_on, starts_at, ends_at,
                     DATE_SUB(end_exclusive_on, INTERVAL 1 DAY) AS ends_on,
-                    GREATEST(0, DATEDIFF(end_exclusive_on, CURDATE())) AS days_left
-             FROM provider_position_subscriptions
-             WHERE user_id = ? AND CURDATE() < end_exclusive_on
-             ORDER BY end_exclusive_on DESC'
-        );
-        $stmt->execute([$userId]);
+                    GREATEST(0, DATEDIFF(end_exclusive_on, CURDATE())) AS days_left';
+        if ($hasProvider) {
+            $sql .= ', provider_type, provider_id';
+        }
+        $sql .= ' FROM provider_position_subscriptions
+             WHERE user_id = ? AND CURDATE() < end_exclusive_on';
+        $params = [$userId];
+        if ($hasProvider && $providerType !== null && $providerId !== null && $providerId > 0) {
+            $sql .= ' AND provider_type = ? AND provider_id = ?';
+            $params[] = $providerType;
+            $params[] = $providerId;
+        }
+        $sql .= ' ORDER BY end_exclusive_on DESC';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         $rows = $stmt->fetchAll();
 
         return is_array($rows) ? $rows : [];
@@ -241,9 +250,16 @@ final class ProviderTicketRepository
      *   starts_at: string,
      *   ends_at: string
      * } $period PositionPeriodCalculator::compute|fromVariant 결과
+     * @param 'study_room'|'tutor'|null $providerType
      */
-    public function addPositionSubscription(int $userId, string $skuCode, array $period, string $source = 'payment'): void
-    {
+    public function addPositionSubscription(
+        int $userId,
+        string $skuCode,
+        array $period,
+        string $source = 'payment',
+        ?string $providerType = null,
+        ?int $providerId = null,
+    ): void {
         if (!in_array($skuCode, ['prime', 'pick'], true)) {
             throw new \InvalidArgumentException('sku_code: prime | pick');
         }
@@ -255,6 +271,36 @@ final class ProviderTicketRepository
         if ($value <= 0) {
             throw new \InvalidArgumentException('duration_value는 1 이상이어야 합니다.');
         }
+        if ($this->positionHasProviderColumns()) {
+            if ($providerType === null || $providerId === null || $providerId <= 0) {
+                throw new \InvalidArgumentException(
+                    'Prime/Pick은 provider_type·provider_id(공부방|과외쌤 계정 문맥)가 필요합니다.',
+                );
+            }
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO provider_position_subscriptions
+                 (user_id, provider_type, provider_id, sku_code, duration_type, duration_value, period_days,
+                  started_on, end_exclusive_on, starts_at, ends_at, source)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            );
+            $stmt->execute([
+                $userId,
+                $providerType,
+                $providerId,
+                $skuCode,
+                $type,
+                $value,
+                (int) $period['period_days'],
+                (string) $period['started_on'],
+                (string) $period['end_exclusive_on'],
+                (string) $period['starts_at'],
+                (string) $period['ends_at'],
+                $source,
+            ]);
+
+            return;
+        }
+
         $stmt = $this->pdo->prepare(
             'INSERT INTO provider_position_subscriptions
              (user_id, sku_code, duration_type, duration_value, period_days,
@@ -273,6 +319,25 @@ final class ProviderTicketRepository
             (string) $period['ends_at'],
             $source,
         ]);
+    }
+
+    private function positionHasProviderColumns(): bool
+    {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?
+               AND COLUMN_NAME = ?
+             LIMIT 1'
+        );
+        $stmt->execute(['provider_position_subscriptions', 'provider_type']);
+        $cache = (bool) $stmt->fetchColumn();
+
+        return $cache;
     }
 
     private function assertTicketType(string $ticketType): void

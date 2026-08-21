@@ -1097,7 +1097,10 @@ export function bindPlansScreenEvents(root, rerender) {
 
       payBtn.setAttribute('disabled', 'true');
       try {
-        const created = await createPaidCheckout(draft.productCode, draft.apiVariant);
+        const created = await createPaidCheckout(draft.productCode, draft.apiVariant, {
+          providerType: draft.providerType,
+          providerId: draft.providerId,
+        });
         const completed = await completePaidCheckout(created.order_ref);
         await hydrateProviderStatus();
         await hydrateProviderNotices();

@@ -18,7 +18,8 @@
     "verify:shop-page": "node scripts/run-verify-shop-page.mjs",
     "verify:card-visual": "cd preview/home-ui && npx --yes vite-node ../../scripts/verify-card-visual.mjs",
     "verify:card-visual:penetration": "cd preview/home-ui && npx --yes vite-node ../../scripts/verify-card-visual-penetration.mjs",
-    "smoke:paid-badges-proof": "cd preview/home-ui && npx --yes vite-node ../../scripts/smoke-paid-badges-proof.mjs"
+    "smoke:paid-badges-proof": "cd preview/home-ui && npx --yes vite-node ../../scripts/smoke-paid-badges-proof.mjs",
+    "verify:account-context": "cd preview/home-ui && npx --yes vite-node ../../scripts/verify-account-context.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0"

@@ -8,7 +8,15 @@ use InvalidArgumentException;
 use PDO;
 use Study114\Database\Connection;
 
-/** 18d — dev mock PG · 주문 → 티켓/포지션/유료배지 지급 */
+/**
+ * 18d — dev mock PG · 주문 → 티켓/포지션/유료배지 지급
+ *
+ * 잠금: 공부방 계정 ≠ 과외쌤 계정.
+ * position·badge_addon 은 구매 시 provider_type + provider_id 필수.
+ * Hot 방/쌤 fallback·공용 적용 금지.
+ *
+ * @see docs/internal/59-account-context-separation-lock.md
+ */
 final class ProviderCheckoutService
 {
     private const DUMMY_AMOUNT = 10;
@@ -38,22 +46,52 @@ final class ProviderCheckoutService
         $this->badges = $badges ?? new PaidBadgeRepository($this->pdo);
     }
 
-    /** @return array{order_ref: string, amount_won: int, status: string, product_id: string, variant_label: string} */
-    public function createOrder(int $userId, string $productId, string $variant): array
-    {
+    /**
+     * @param 'study_room'|'tutor'|null $providerType
+     * @return array<string, mixed>
+     */
+    public function createOrder(
+        int $userId,
+        string $productId,
+        string $variant,
+        ?string $providerType = null,
+        ?int $providerId = null,
+    ): array {
         $kind = $this->resolveKind($productId);
-        if ($kind === 'badge_addon') {
-            $this->assertBadgePurchaseAllowed($userId, $productId);
-            // 배지 기간은 활성 Prime/Pick에 종속 — variant는 position과 동일 표기 허용(무시) 또는 '종속'
-            if ($variant === '' || $variant === '-') {
-                $variant = '포지션종속';
+
+        if ($kind === 'position' || $kind === 'badge_addon') {
+            $this->requireProviderContext($userId, $providerType, $providerId);
+            /** @var 'study_room'|'tutor' $providerType */
+            if ($kind === 'badge_addon') {
+                $this->assertBadgePurchaseAllowed($userId, $productId, $providerType, $providerId);
+                if ($variant === '' || $variant === '-') {
+                    $variant = '포지션종속';
+                }
+            } else {
+                $this->assertVariant($productId, $kind, $variant);
             }
         } else {
             $this->assertVariant($productId, $kind, $variant);
+            // 횟수권은 user 단위 유지(쪽지권) — 배지/포지션과 별개. provider 선택 시 기록만.
+            if ($providerType !== null && $providerId !== null && $providerId > 0) {
+                $this->badges->assertOwnedProvider($userId, $providerType, $providerId);
+            } else {
+                $providerType = null;
+                $providerId = null;
+            }
         }
 
         $orderRef = 'dev-' . bin2hex(random_bytes(8));
-        $this->orders->insertPending($userId, $orderRef, $productId, $variant, $kind, self::DUMMY_AMOUNT);
+        $this->orders->insertPending(
+            $userId,
+            $orderRef,
+            $productId,
+            $variant,
+            $kind,
+            self::DUMMY_AMOUNT,
+            $providerType,
+            $providerId,
+        );
 
         return [
             'order_ref' => $orderRef,
@@ -61,6 +99,8 @@ final class ProviderCheckoutService
             'status' => 'pending',
             'product_id' => $productId,
             'variant_label' => $variant,
+            'provider_type' => $providerType,
+            'provider_id' => $providerId,
             'pg_provider' => 'dev_mock',
         ];
     }
@@ -78,6 +118,8 @@ final class ProviderCheckoutService
                 'product_id' => (string) ($row['product_id'] ?? ''),
                 'variant_label' => (string) ($row['variant_label'] ?? ''),
                 'product_kind' => (string) ($row['product_kind'] ?? ''),
+                'provider_type' => isset($row['provider_type']) ? (string) $row['provider_type'] : null,
+                'provider_id' => isset($row['provider_id']) ? (int) $row['provider_id'] : null,
                 'amount_won' => (int) ($row['amount_won'] ?? 0),
                 'status' => (string) ($row['status'] ?? ''),
                 'pg_provider' => (string) ($row['pg_provider'] ?? ''),
@@ -119,9 +161,6 @@ final class ProviderCheckoutService
         return $payload;
     }
 
-    /**
-     * 환불·취소 시 배지 회수 (주문 ref 기준)
-     */
     public function revokeBadgeForOrder(string $orderRef): int
     {
         return $this->badges->revokeByOrderRef($orderRef);
@@ -151,19 +190,42 @@ final class ProviderCheckoutService
         unset($productId);
     }
 
-    private function assertBadgePurchaseAllowed(int $userId, string $productId): void
+    /**
+     * @param 'study_room'|'tutor' $providerType
+     */
+    private function requireProviderContext(int $userId, ?string &$providerType, ?int &$providerId): void
     {
-        $positions = $this->tickets->listActivePositions($userId);
-        if ($positions === []) {
-            throw new InvalidArgumentException('광고배지는 프라임/픽(대표·추천 노출) 이용 후 구매할 수 있습니다.');
+        if ($providerType === null || $providerType === '' || $providerId === null || $providerId <= 0) {
+            throw new InvalidArgumentException(
+                'provider_type·provider_id가 필요합니다. (공부방|과외쌤 계정 문맥 — 추론/fallback 금지)',
+            );
         }
-        $target = $this->badges->resolveProviderForUser($userId, $productId);
-        if ($target === null) {
-            throw new InvalidArgumentException('배지를 붙일 공부방/과외쌤 프로필이 없습니다.');
+        if ($providerType !== 'study_room' && $providerType !== 'tutor') {
+            throw new InvalidArgumentException('provider_type은 study_room | tutor 만 허용합니다.');
         }
+        $this->badges->assertOwnedProvider($userId, $providerType, $providerId);
+    }
+
+    /**
+     * @param 'study_room'|'tutor' $providerType
+     */
+    private function assertBadgePurchaseAllowed(
+        int $userId,
+        string $productId,
+        string $providerType,
+        int $providerId,
+    ): void {
+        $this->badges->assertBadgeAllowedForProvider($providerType, $productId);
         if (!$this->badges->tableReady()) {
             throw new InvalidArgumentException('provider_paid_badges 미적용 — schema 055를 먼저 적용하세요.');
         }
+        $positions = $this->tickets->listActivePositions($userId, $providerType, $providerId);
+        if ($positions === []) {
+            throw new InvalidArgumentException(
+                '광고배지는 해당 계정 문맥의 프라임/픽 이용 후 구매할 수 있습니다.',
+            );
+        }
+        unset($userId);
     }
 
     /**
@@ -176,6 +238,10 @@ final class ProviderCheckoutService
         $variant = (string) $order['variant_label'];
         $kind = (string) $order['product_kind'];
         $orderRef = (string) ($order['order_ref'] ?? '');
+        $providerType = isset($order['provider_type']) && $order['provider_type'] !== null && $order['provider_type'] !== ''
+            ? (string) $order['provider_type']
+            : null;
+        $providerId = isset($order['provider_id']) ? (int) $order['provider_id'] : null;
 
         if ($kind === 'count') {
             $count = (int) self::COUNT_VARIANTS[$variant];
@@ -186,14 +252,25 @@ final class ProviderCheckoutService
         }
 
         if ($kind === 'position') {
+            if ($providerType === null || $providerId === null || $providerId <= 0) {
+                throw new InvalidArgumentException('포지션 주문에 provider_type·provider_id가 없습니다.');
+            }
+            $this->badges->assertOwnedProvider($userId, $providerType, $providerId);
             $period = PositionPeriodCalculator::fromVariant($variant);
-            $this->tickets->addPositionSubscription($userId, $productId, $period, 'payment');
+            $this->tickets->addPositionSubscription(
+                $userId,
+                $productId,
+                $period,
+                'payment',
+                $providerType,
+                $providerId,
+            );
 
             return null;
         }
 
         if ($kind === 'badge_addon') {
-            return $this->fulfillBadgeAddon($userId, $productId, $orderRef);
+            return $this->fulfillBadgeAddon($userId, $productId, $orderRef, $providerType, $providerId);
         }
 
         return null;
@@ -202,13 +279,23 @@ final class ProviderCheckoutService
     /**
      * @return array<string, mixed>
      */
-    private function fulfillBadgeAddon(int $userId, string $productId, string $orderRef): array
-    {
-        $positions = $this->tickets->listActivePositions($userId);
-        if ($positions === []) {
-            throw new InvalidArgumentException('활성 프라임/픽이 없어 배지를 부여할 수 없습니다.');
+    private function fulfillBadgeAddon(
+        int $userId,
+        string $productId,
+        string $orderRef,
+        ?string $providerType,
+        ?int $providerId,
+    ): array {
+        if ($providerType === null || $providerId === null || $providerId <= 0) {
+            throw new InvalidArgumentException('배지 주문에 provider_type·provider_id가 없습니다.');
         }
-        // 가장 늦게 끝나는 포지션 기간에 종속
+        $this->badges->assertOwnedProvider($userId, $providerType, $providerId);
+        $this->badges->assertBadgeAllowedForProvider($providerType, $productId);
+
+        $positions = $this->tickets->listActivePositions($userId, $providerType, $providerId);
+        if ($positions === []) {
+            throw new InvalidArgumentException('해당 계정 문맥의 활성 프라임/픽이 없어 배지를 부여할 수 없습니다.');
+        }
         usort(
             $positions,
             static fn (array $a, array $b): int => strcmp(
@@ -223,15 +310,10 @@ final class ProviderCheckoutService
             throw new InvalidArgumentException('포지션 종료일이 없습니다.');
         }
 
-        $target = $this->badges->resolveProviderForUser($userId, $productId);
-        if ($target === null) {
-            throw new InvalidArgumentException('배지를 붙일 공부방/과외쌤 프로필이 없습니다.');
-        }
-
         $code = $productId === 'picked' ? 'jjokjipge' : $productId;
         $grant = $this->badges->grantFromOrder(
-            $target['provider_type'],
-            $target['provider_id'],
+            $providerType,
+            $providerId,
             $code,
             $startsOn,
             $endExclusive,
@@ -239,8 +321,8 @@ final class ProviderCheckoutService
         );
 
         return array_merge($grant, [
-            'provider_type' => $target['provider_type'],
-            'provider_id' => $target['provider_id'],
+            'provider_type' => $providerType,
+            'provider_id' => $providerId,
             'position_end_exclusive_on' => $endExclusive,
         ]);
     }
@@ -253,6 +335,10 @@ final class ProviderCheckoutService
             'status' => (string) $order['status'],
             'product_id' => (string) $order['product_id'],
             'variant_label' => (string) $order['variant_label'],
+            'provider_type' => isset($order['provider_type']) && $order['provider_type'] !== null && $order['provider_type'] !== ''
+                ? (string) $order['provider_type']
+                : null,
+            'provider_id' => isset($order['provider_id']) ? (int) $order['provider_id'] : null,
             'amount_won' => (int) $order['amount_won'],
             'fulfilled' => $fulfilled,
             'paid_at' => $order['paid_at'] !== null ? (string) $order['paid_at'] : null,

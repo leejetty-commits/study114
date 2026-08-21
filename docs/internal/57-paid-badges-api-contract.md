@@ -87,17 +87,18 @@ provider_type + provider_id 기준. New는 **paid_badges가 아님** (published_
 
 ## 6. fulfill 매핑 · 정책
 
-| product_id | provider | badge_code |
-|------------|----------|------------|
-| hot | study_room 우선, 없으면 tutor | hot |
+| product_id | 허용 provider_type | badge_code |
+|------------|-------------------|------------|
+| hot | **구매 시 명시한** study_room **또는** tutor (각각 독립) | hot |
 | subject_track | study_room only | subject_track |
 | jjokjipge (`picked` alias) | tutor only | jjokjipge |
 | sky | tutor only | sky |
 
-- 기간: 활성 포지션 중 가장 늦은 `end_exclusive_on`에 종속  
-- 중복: 동일 활성 코드 → 기간 연장  
-- 환불/취소: `revokeByOrderRef` → `status=revoked`  
-- 만료: resolver 날짜 필터 (배치 삭제 불필요)
+**필수:** `provider_type` + `provider_id` (주문·부여 시점). user_id만으로 대상 추론·방/쌤 fallback **금지**.  
+기간: **동일 계정 문맥**의 활성 Prime/Pick `end_exclusive_on`에 종속.  
+중복: 동일 (type,id,code) 활성 → 기간 연장.  
+환불: `revokeByOrderRef` → `status=revoked`.  
+계정 분리 정본: [59-account-context-separation-lock.md](./59-account-context-separation-lock.md)
 
 ---
 

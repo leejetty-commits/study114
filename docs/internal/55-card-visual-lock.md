@@ -2,7 +2,7 @@
 
 **기준일:** 2026-08-21  
 **최우선 SSOT:** Notion「상위기획-공부방 샵 페이지·카드 연동 구현 컨셉」§18  
-**교차:** Notion 11장 §2-0 · 18장 §0-A · repo `docs/ssot/11-main-exposure-and-compare.md` §2-0  
+**교차:** Notion 상위기획 §18 · 11장 §2-0 · 18장 §0-A · repo `docs/ssot/11-main-exposure-and-compare.md` §2-0 · **계정 분리** [`59-account-context-separation-lock.md`](./59-account-context-separation-lock.md)
 **코드 SSOT:** `preview/home-ui/src/card-visual.js`  
 **검증:** `npm run verify:card-visual` · 관통감사 `npm run verify:card-visual:penetration` → `docs/internal/56-card-visual-penetration-audit.md`  
 **paid_badges 계약:** `docs/internal/57-paid-badges-api-contract.md` · API 코드 `jjokjipge`(쪽집게)  

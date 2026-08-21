@@ -79,13 +79,24 @@ export async function markProviderNoticeRead(noticeId) {
   return parseJson(res);
 }
 
-/** @param {string} productId @param {string} variant */
-export async function createPaidCheckout(productId, variant) {
+/** @param {string} productId @param {string} variant
+ * @param {{ providerType?: 'study_room'|'tutor', providerId?: string|number }} [ctx]
+ */
+export async function createPaidCheckout(productId, variant, ctx = {}) {
+  const body = {
+    action: 'create',
+    product_id: productId,
+    variant,
+  };
+  if (ctx.providerType && ctx.providerId != null && String(ctx.providerId) !== '') {
+    body.provider_type = ctx.providerType;
+    body.provider_id = Number(ctx.providerId);
+  }
   const res = await fetch(PAID_ENDPOINTS.checkout, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...CREDENTIALS,
-    body: JSON.stringify({ action: 'create', product_id: productId, variant }),
+    body: JSON.stringify(body),
   });
   return parseJson(res);
 }
