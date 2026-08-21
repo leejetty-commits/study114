@@ -45,6 +45,12 @@ final class ReviewPolicy
     public const ERR_CONSENT = 'review_consent_required';
     public const ERR_VALIDATION = 'validation';
 
+    /** 소비자(학부모/학생)만 공급자 후기를 작성·수정할 수 있다. */
+    public static function canAuthorReviews(string $roleType): bool
+    {
+        return $roleType === 'guardian_student';
+    }
+
     /** @var list<string> */
     public const STUDY_ROOM_TAGS = [
         '공간이 깔끔해요',

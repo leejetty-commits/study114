@@ -14,7 +14,6 @@ import {
 import { SECTION_HEADINGS, renderSectionHeading } from '@home-ui/section-headings.js';
 import { partitionByExposureTier } from './search-exposure-mapper.js';
 import { renderSearchZeroState } from '@home-ui/empty-state-copy.js';
-import { isProviderSelfPreviewMode } from './search-role-access.js';
 import {
   readListSortFromHash,
   renderListSortSelect,
@@ -175,13 +174,12 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
   const regionLabel = options.regionLabel || '';
   const guest = ctx.role === 'guest';
   const viewerRole = ctx.role;
-  const selfPreview = isProviderSelfPreviewMode(tab, ctx.role, ctx.homeSelf === true);
   const opts = {
     guest,
     viewerRole,
     sourceRoute: 'search',
-    showCompare: tab === 'student' ? false : !selfPreview,
-    showWish: !selfPreview,
+    showCompare: tab !== 'student',
+    showWish: true,
     serverSorted: mode === 'search',
   };
   const homeTierTag = regionLabel || (mode === 'region' ? '지역 피드' : '검색 결과');

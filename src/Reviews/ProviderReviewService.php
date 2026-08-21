@@ -185,6 +185,7 @@ final class ProviderReviewService
      */
     public function updateReview(array $auth, int $reviewId, string $body, array $tags): array
     {
+        $this->assertConsumerAuthor($auth);
         $review = $this->requireOwnLiveReview($auth, $reviewId);
         $this->assertNotReviewBlocked(
             (string) $review['provider_type'],
@@ -217,6 +218,7 @@ final class ProviderReviewService
      */
     public function unhideReview(array $auth, int $reviewId): array
     {
+        $this->assertConsumerAuthor($auth);
         $review = $this->requireOwnLiveReview($auth, $reviewId);
         if ((string) $review['review_status'] !== ReviewPolicy::STATUS_HIDDEN) {
             throw new ReviewPolicyException(ReviewPolicy::ERR_VALIDATION, '비공개 후기만 다시 공개할 수 있습니다.');
@@ -385,12 +387,26 @@ final class ProviderReviewService
 
     /**
      * @param array{user_id: int, role_type: string} $auth
+     */
+    private function assertConsumerAuthor(array $auth): void
+    {
+        $role = (string) ($auth['role_type'] ?? '');
+        if (!ReviewPolicy::canAuthorReviews($role)) {
+            throw new ReviewPolicyException(
+                ReviewPolicy::ERR_ROLE,
+                '학부모/학생 역할만 후기를 남기거나 수정할 수 있습니다.',
+            );
+        }
+    }
+
+    /**
+     * @param array{user_id: int, role_type: string} $auth
      * @return array{user_id: int}
      */
     private function assertCanCreate(array $auth, string $providerType, int $providerId): array
     {
         $role = (string) ($auth['role_type'] ?? '');
-        if ($role !== 'guardian_student') {
+        if (!ReviewPolicy::canAuthorReviews($role)) {
             throw new ReviewPolicyException(ReviewPolicy::ERR_ROLE, '학부모/학생 역할만 후기를 남길 수 있습니다.');
         }
         $userId = (int) $auth['user_id'];
@@ -491,6 +507,7 @@ final class ProviderReviewService
         $writeStatus = $this->repo->getReviewWriteStatus($providerType, $providerId);
         $empty = [
             'user_id' => null,
+            'role_type' => '',
             'can_write' => false,
             'write_blocked_reason' => 'login',
             'is_owner' => false,
@@ -518,6 +535,7 @@ final class ProviderReviewService
         if ($isOwner) {
             return [
                 'user_id' => $userId,
+                'role_type' => $role,
                 'can_write' => false,
                 'write_blocked_reason' => 'owner',
                 'is_owner' => true,
@@ -532,7 +550,7 @@ final class ProviderReviewService
 
         $reason = null;
         $canWrite = false;
-        if ($role !== 'guardian_student') {
+        if (!ReviewPolicy::canAuthorReviews($role)) {
             $reason = 'role';
         } elseif ($blocked) {
             $reason = 'blocked';
@@ -559,6 +577,7 @@ final class ProviderReviewService
 
         return [
             'user_id' => $userId,
+            'role_type' => $role,
             'can_write' => $canWrite,
             'write_blocked_reason' => $reason,
             'is_owner' => false,
@@ -593,10 +612,14 @@ final class ProviderReviewService
         ];
         if (!empty($viewer['include_status'])) {
             $mapped['review_status'] = (string) ($row['review_status'] ?? ReviewPolicy::STATUS_VISIBLE);
-            $mapped['can_edit'] = empty($viewer['is_review_blocked']) && ($mapped['review_status'] !== ReviewPolicy::STATUS_DELETED);
+            $mapped['can_edit'] = ReviewPolicy::canAuthorReviews((string) ($viewer['role_type'] ?? ''))
+                && empty($viewer['is_review_blocked'])
+                && ($mapped['review_status'] !== ReviewPolicy::STATUS_DELETED);
             $mapped['can_delete'] = true;
             $mapped['can_hide'] = $mapped['review_status'] === ReviewPolicy::STATUS_VISIBLE;
-            $mapped['can_unhide'] = $mapped['review_status'] === ReviewPolicy::STATUS_HIDDEN && empty($viewer['is_review_blocked']);
+            $mapped['can_unhide'] = $mapped['review_status'] === ReviewPolicy::STATUS_HIDDEN
+                && empty($viewer['is_review_blocked'])
+                && ReviewPolicy::canAuthorReviews((string) ($viewer['role_type'] ?? ''));
         }
         if (!empty($viewer['include_author']) || !empty($viewer['is_owner'])) {
             $mapped['author_user_id'] = (int) ($row['author_user_id'] ?? 0);

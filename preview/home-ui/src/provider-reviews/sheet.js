@@ -14,6 +14,7 @@ import {
   ctaLabel,
   reviewSnippet,
   writeBlockedMessage,
+  canOfferWriteCta,
 } from './copy.js';
 import {
   fetchReviewSummary,
@@ -53,7 +54,7 @@ function closeSheet() {
   sheetEl = null;
 }
 
-function resolveRequestedView(summary, view) {
+export function resolveRequestedView(summary, view) {
   if (view !== 'write') return view || 'consume';
   if (summary.can_write) return 'write';
   if (summary.cta_kind === 'manage') return 'manage';
@@ -75,14 +76,17 @@ function renderWriteGate(summary) {
     </div>`;
 }
 
-function renderCta(summary) {
+export function renderCta(summary) {
   const kind = summary.cta_kind || 'ineligible';
   if (kind === 'none') return '';
-  if (kind === 'write' || kind === 'ineligible' || kind === 'closed' || kind === 'blocked') {
-    return `<button type="button" class="btn btn--primary" data-review-sheet-act="write">${esc(PROVIDER_REVIEW_COPY.writeCta)}</button>`;
-  }
   if (kind === 'manage') {
     return `<button type="button" class="btn btn--primary" data-review-sheet-act="manage">${esc(PROVIDER_REVIEW_COPY.manageCta)}</button>`;
+  }
+  if (canOfferWriteCta(summary)) {
+    return `<button type="button" class="btn btn--primary" data-review-sheet-act="write">${esc(PROVIDER_REVIEW_COPY.writeCta)}</button>`;
+  }
+  if (summary.write_blocked_reason === 'role') {
+    return `<p class="review-sheet__cta-note">${esc(writeBlockedMessage('role'))}</p>`;
   }
   return `<p class="review-sheet__cta-note">${esc(ctaLabel(kind))}</p>`;
 }
@@ -112,7 +116,7 @@ function renderList(summary, expandedId) {
   return `<ul class="review-sheet__list">${reviews.map((r) => renderItem(r, expandedId)).join('')}</ul>`;
 }
 
-function renderForm(summary, { editId = null } = {}) {
+export function renderForm(summary, { editId = null } = {}) {
   const allowed = summary.allowed_tags || [];
   const editing = (summary.my_reviews || []).find((r) => Number(r.id) === Number(editId));
   const selected = new Set(editing?.point_tags || []);

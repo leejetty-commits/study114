@@ -188,11 +188,32 @@ function mapItem(r, extra = {}) {
 
 function resolveCta({ isOwner, canWrite, hasWritten, reason }) {
   if (isOwner) return 'none';
+  if (reason === 'role') return 'ineligible';
   if (hasWritten) return 'manage';
   if (canWrite) return 'write';
   if (reason === 'closed') return 'closed';
   if (reason === 'blocked') return 'blocked';
   return 'ineligible';
+}
+
+function isConsumerReviewRole(role) {
+  return role === 'parent' || role === 'guardian_student' || role === 'student';
+}
+
+function assertConsumerReviewAuthor() {
+  const auth = getAuthUser();
+  const roleType = String(auth?.role_type || '');
+  const nav = getNavRole();
+  if (
+    roleType === 'study_room_owner' ||
+    roleType === 'tutor' ||
+    nav === 'study_room' ||
+    nav === 'tutor'
+  ) {
+    const err = new Error(PROVIDER_REVIEW_COPY.providerRoleCta);
+    err.code = 'review_role';
+    throw err;
+  }
 }
 
 function resolveLocalViewer(providerType, providerId, viewer = {}) {
@@ -209,7 +230,7 @@ function resolveLocalViewer(providerType, providerId, viewer = {}) {
   let canWrite = false;
   if (role === 'guest' || userId == null) reason = 'login';
   else if (isOwner) reason = 'owner';
-  else if (role !== 'parent') reason = 'role';
+  else if (!isConsumerReviewRole(role)) reason = 'role';
   else if (blocked) reason = 'blocked';
   else if (writeStatus === 'closed') reason = 'closed';
   else if (remaining <= 0) reason = 'quota';
@@ -251,10 +272,13 @@ export function getReviewSummaryLocal(providerType, providerId, viewer = {}) {
           .map((r) =>
             mapItem(r, {
               is_mine: true,
-              can_edit: !v.is_review_blocked,
+              can_edit: isConsumerReviewRole(viewer.role || 'guest') && !v.is_review_blocked,
               can_delete: true,
               can_hide: r.review_status === 'visible',
-              can_unhide: r.review_status === 'hidden' && !v.is_review_blocked,
+              can_unhide:
+                r.review_status === 'hidden' &&
+                !v.is_review_blocked &&
+                isConsumerReviewRole(viewer.role || 'guest'),
             }),
           )
       : [];
@@ -361,6 +385,7 @@ async function postAction(action, payload) {
 
 export async function createProviderReview(payload, opts = {}) {
   if (!apiMode()) {
+    assertConsumerReviewAuthor();
     const userId = opts.userId || getAuthUser()?.user_id || 0;
     const type = payload.provider_type;
     const id = payload.provider_id;
@@ -392,6 +417,7 @@ export async function createProviderReview(payload, opts = {}) {
 
 export async function updateProviderReview(payload, opts = {}) {
   if (!apiMode()) {
+    assertConsumerReviewAuthor();
     const userId = opts.userId || getAuthUser()?.user_id || 0;
     const list = loadAll();
     const row = list.find((r) => r.id === payload.review_id);

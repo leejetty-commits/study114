@@ -5,7 +5,7 @@
 import { esc } from '../detail-decision/detail-utils.js';
 import { getAuthUser } from '../auth-session.js';
 import { fetchReviewSummary } from './store.js';
-import { PROVIDER_REVIEW_COPY, REVIEW_ORIGIN_LABELS, ctaLabel, reviewSnippet } from './copy.js';
+import { PROVIDER_REVIEW_COPY, REVIEW_ORIGIN_LABELS, ctaLabel, reviewSnippet, canOfferWriteCta } from './copy.js';
 import { openReviewSheet } from './sheet.js';
 import { reviewsArchivePath } from './store.js';
 
@@ -23,12 +23,8 @@ function formatWhen(iso) {
 export async function mountProviderReviewSection(host, providerType, providerId, item, viewer) {
   if (!host) return;
   const auth = getAuthUser();
-  const isOwner =
-    (viewer === 'study_room' && providerType === 'study_room') ||
-    (viewer === 'tutor' && providerType === 'tutor')
-      ? Number(item?.user_id || item?.owner_user_id || 0) === Number(auth?.user_id || -1) ||
-        (Number(providerId) > 0 && !item?.user_id && !item?.owner_user_id && !!auth)
-      : false;
+  const ownerId = Number(item?.user_id || item?.owner_user_id || 0);
+  const isOwner = ownerId > 0 && ownerId === Number(auth?.user_id || -1);
 
   const summary = await fetchReviewSummary(providerType, providerId, {
     role: viewer,
@@ -40,7 +36,7 @@ export async function mountProviderReviewSection(host, providerType, providerId,
   bindReviewSection(host, providerType, providerId, isOwner);
 }
 
-function renderReviewSectionMarkup(summary) {
+export function renderReviewSectionMarkup(summary) {
   const count = Number(summary.review_count) || 0;
   const tags = (summary.summary_tags || [])
     .map((t) => `<span class="p24-review-tag">${esc(t)}</span>`)
@@ -77,7 +73,7 @@ function renderReviewSectionMarkup(summary) {
     if (summary.can_write) {
       cta += `<button type="button" class="btn btn--secondary btn--sm" data-provider-review-cta="write">${esc(ctaLabel('write'))}</button>`;
     }
-  } else if (ctaKind !== 'none') {
+  } else if (canOfferWriteCta(summary)) {
     cta = `<button type="button" class="btn btn--secondary btn--sm" data-provider-review-cta="write">${esc(ctaLabel('write'))}</button>`;
   }
 

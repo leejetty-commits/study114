@@ -88,7 +88,7 @@ function resolvePrimaryCta(kind, item, viewer) {
   return { label: '닫기', action: 'close', disabled: false };
 }
 
-function renderSecondaryActions(kind, item, viewer) {
+export function renderSecondaryActions(kind, item, viewer) {
   if (viewer === 'guest') {
     if (kind === 'student') return '';
     return `

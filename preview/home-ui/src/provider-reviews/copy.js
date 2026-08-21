@@ -55,6 +55,7 @@ export const PROVIDER_REVIEW_COPY = {
   manageCta: '내 후기 관리하기',
   closedCta: '현재는 새 후기를 받지 않아요',
   ineligibleCta: '후기 작성은 쪽지(상담/문의) 경험 후 가능해요',
+  providerRoleCta: '후기는 이용자(학부모/학생)만 남길 수 있어요',
   blockedCta: '이 대상에는 더 이상 후기를 남길 수 없어요',
   moreCta: '후기 더보기',
   writeTitle: '후기 남기기',
@@ -88,6 +89,16 @@ export const PROVIDER_REVIEW_COPY = {
   quotaHint: '이 대상에는 후기를 최대 3회까지 남길 수 있어요. 삭제한 후기도 횟수에 포함됩니다.',
 };
 
+/** 후기 작성 CTA — 공급자 계정·본인 프로필은 숨김. 학부모 미자격(쪽지 없음 등)은 입구 유지 */
+export function canOfferWriteCta(summary) {
+  if (!summary || summary.is_owner) return false;
+  if (summary.can_write) return true;
+  const reason = summary.write_blocked_reason;
+  if (reason === 'role' || reason === 'owner') return false;
+  const kind = summary.cta_kind;
+  return kind === 'write' || kind === 'ineligible' || kind === 'closed' || kind === 'blocked';
+}
+
 /** 지시문 2 상태 문구 — cta_kind 매핑 */
 export function ctaLabel(ctaKind) {
   if (ctaKind === 'write') return PROVIDER_REVIEW_COPY.writeCta;
@@ -100,7 +111,8 @@ export function ctaLabel(ctaKind) {
 
 /** @param {string|null|undefined} reason */
 export function writeBlockedMessage(reason) {
-  if (reason === 'login' || reason === 'role' || reason === 'no_thread') {
+  if (reason === 'role') return PROVIDER_REVIEW_COPY.providerRoleCta;
+  if (reason === 'login' || reason === 'no_thread') {
     return PROVIDER_REVIEW_COPY.ineligibleCta;
   }
   if (reason === 'owner') return '본인 프로필에는 후기를 남길 수 없습니다.';

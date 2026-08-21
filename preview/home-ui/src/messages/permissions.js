@@ -63,7 +63,7 @@ export function checkFirstMemoPermission(ctx) {
     return { ok: true };
   }
   if (kind === 'study_room' || kind === 'tutor') {
-    if (!canGuardianMemoToProvider(role)) return { ok: false, reason: 'role' };
+    if (role === 'guest') return { ok: false, reason: 'role' };
     return { ok: true };
   }
   return { ok: false, reason: 'unknown' };

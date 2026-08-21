@@ -14,10 +14,8 @@ export function tabToKind(tab) {
 }
 
 /** @param {import('../state.js').SearchTab} tab @param {import('../state.js').ViewerRole} role @param {boolean} [homeSelf] */
-export function canUseCompare(tab, role, homeSelf = false) {
+export function canUseCompare(tab, role, _homeSelf = false) {
   if (role === 'guest') return false;
-  if (role === 'study_room' && tab === 'room') return false;
-  if (homeSelf && role === 'tutor' && tab === 'tutor') return false;
   return tab === 'room' || tab === 'tutor';
 }
 

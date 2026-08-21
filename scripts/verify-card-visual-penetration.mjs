@@ -23,6 +23,19 @@ if (typeof globalThis.sessionStorage === 'undefined') {
 if (typeof globalThis.localStorage === 'undefined') {
   globalThis.localStorage = globalThis.sessionStorage;
 }
+if (typeof globalThis.window === 'undefined') {
+  globalThis.window = globalThis;
+}
+globalThis.window.location = globalThis.window.location || {
+  hash: '',
+  href: 'http://localhost/',
+  origin: 'http://localhost',
+  pathname: '/',
+  search: '',
+};
+if (typeof globalThis.document === 'undefined') {
+  globalThis.document = { body: {}, querySelector: () => null, querySelectorAll: () => [] };
+}
 
 const {
   CARD_VISUAL_POLICY,
@@ -97,6 +110,86 @@ record(
   'P03c_no_write_in_rail',
   '레일에 ✎ 작성 없음(후기수는 게이트, 작성은 확대카드 푸터)',
 );
+
+const { renderSearchTierResults } = await import('../preview/search-ui/src/search-tier-render.js');
+const { canUseCompare } = await import('../preview/search-ui/src/search-handoff.js');
+const { checkFirstMemoPermission } = await import('../preview/home-ui/src/messages/permissions.js');
+const { canOfferWriteCta } = await import('../preview/home-ui/src/provider-reviews/copy.js');
+const { getReviewSummaryLocal } = await import('../preview/home-ui/src/provider-reviews/store.js');
+
+function railActions(html) {
+  return [...String(html).matchAll(/data-action="(recommend-toggle|open-review-sheet|wish-toggle|compare-toggle|open-detail-memo)"/g)].map(
+    (m) => m[1],
+  );
+}
+
+const roomSelfHtml = renderSearchTierResults('room', [EXPOSURE_STUDY_ROOMS[0]], { role: 'study_room', homeSelf: true }, {
+  surfaceType: 'home',
+  mode: 'region',
+});
+const tutorSelfHtml = renderSearchTierResults('tutor', [EXPOSURE_TUTORS[0]], { role: 'tutor', homeSelf: true }, {
+  surfaceType: 'home',
+  mode: 'region',
+});
+const parentRoomHtml = renderSearchTierResults('room', [EXPOSURE_STUDY_ROOMS[0]], { role: 'parent' }, {
+  surfaceType: 'home',
+  mode: 'region',
+});
+record(
+  expectedRail.every((a, i) => railActions(roomSelfHtml)[i] === a) ? 'PASS' : 'FAIL',
+  'P03d_study_room_login_full_rail',
+  railActions(roomSelfHtml).join(' → ') || '(empty)',
+);
+record(
+  expectedRail.every((a, i) => railActions(tutorSelfHtml)[i] === a) ? 'PASS' : 'FAIL',
+  'P03e_tutor_login_full_rail',
+  railActions(tutorSelfHtml).join(' → ') || '(empty)',
+);
+record(
+  expectedRail.every((a, i) => railActions(parentRoomHtml)[i] === a) ? 'PASS' : 'FAIL',
+  'P03f_parent_login_full_rail',
+  railActions(parentRoomHtml).join(' → ') || '(empty)',
+);
+record(
+  canUseCompare('room', 'study_room') && canUseCompare('tutor', 'tutor') && !canUseCompare('room', 'guest')
+    ? 'PASS'
+    : 'FAIL',
+  'P03g_provider_can_compare',
+  '공급자 로그인에서도 비교 가능 · 게스트만 불가',
+);
+record(
+  checkFirstMemoPermission({ kind: 'study_room', role: 'study_room' }).ok &&
+    checkFirstMemoPermission({ kind: 'tutor', role: 'tutor' }).ok &&
+    checkFirstMemoPermission({ kind: 'tutor', role: 'study_room' }).ok &&
+    checkFirstMemoPermission({ kind: 'study_room', role: 'parent' }).ok &&
+    !checkFirstMemoPermission({ kind: 'study_room', role: 'guest' }).ok
+    ? 'PASS'
+    : 'FAIL',
+  'P03h_provider_to_provider_memo',
+  '공급자↔공급자·학부모→공급자 쪽지 허용, 게스트 불가',
+);
+
+const providerReviewSummary = getReviewSummaryLocal('study_room', 1, { role: 'study_room', userId: 99, isOwner: false });
+record(
+  providerReviewSummary.can_write === false &&
+    providerReviewSummary.write_blocked_reason === 'role' &&
+    canOfferWriteCta(providerReviewSummary) === false
+    ? 'PASS'
+    : 'FAIL',
+  'P03i_provider_review_write_blocked',
+  `can_write=${providerReviewSummary.can_write} reason=${providerReviewSummary.write_blocked_reason} cta=${canOfferWriteCta(providerReviewSummary)}`,
+);
+const parentReviewSummary = getReviewSummaryLocal('study_room', 1, { role: 'parent', userId: 6, isOwner: false });
+record(
+  parentReviewSummary.write_blocked_reason !== 'role' ? 'PASS' : 'FAIL',
+  'P03j_parent_review_not_role_blocked',
+  `reason=${parentReviewSummary.write_blocked_reason}`,
+);
+
+fs.mkdirSync(outDir, { recursive: true });
+fs.writeFileSync(path.join(outDir, 'rail_study_room_login.html'), `<!doctype html><meta charset="utf-8"><body>${roomSelfHtml}</body>`);
+fs.writeFileSync(path.join(outDir, 'rail_tutor_login.html'), `<!doctype html><meta charset="utf-8"><body>${tutorSelfHtml}</body>`);
+fs.writeFileSync(path.join(outDir, 'rail_parent_login.html'), `<!doctype html><meta charset="utf-8"><body>${parentRoomHtml}</body>`);
 record(
   /aria-label="통계"/.test(actionsHtml) && /추천/.test(actionsHtml) ? 'PASS' : 'FAIL',
   'P04_recommend_in_stats_not_paid_badge',
