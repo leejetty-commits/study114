@@ -96,6 +96,7 @@ export function toMyshopShowcaseInputs(item) {
     : [];
 
   const state = {
+    study_room_id: Number(item.id || item.study_room_id || 0) || 0,
     study_room_name: blank(item.study_room_name),
     slogan: blank(item.slogan),
     intro_short: blank(item.intro_short),
@@ -152,6 +153,7 @@ export function toMyshopShowcaseInputs(item) {
   };
 
   const room = {
+    id: Number(item.id || item.study_room_id || 0) || 0,
     study_room_name: state.study_room_name,
     slogan: state.slogan,
     intro_short: state.intro_short,

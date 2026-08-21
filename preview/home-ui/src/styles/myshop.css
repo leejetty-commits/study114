@@ -242,6 +242,54 @@
   border-color: var(--shop-line);
 }
 
+.shop-sec--reviews {
+  background: #fff;
+  border-color: var(--shop-line);
+}
+
+.shop-review-teaser__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.shop-review-teaser__item {
+  border: 1px solid var(--shop-line);
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.shop-review-teaser__snippet,
+.shop-review-teaser__full {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.5;
+  color: var(--shop-ink);
+}
+
+.shop-review-teaser__meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: #78716c;
+}
+
+.shop-review-teaser__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #78716c;
+}
+
+.shop-review-teaser__more {
+  display: inline-block;
+  margin-top: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--shop-ink);
+}
+
 .shop-sec__title {
   display: flex;
   align-items: center;

@@ -36,9 +36,10 @@ function roleHomePath(role) {
  * @param {string} [from]
  * @param {string} [action]
  */
-export function loginUrl(from = 'site', action = '') {
+export function loginUrl(from = 'site', action = '', returnTo = '') {
   const q = new URLSearchParams({ from });
   if (action) q.set('action', action);
+  if (returnTo) q.set('return_to', returnTo);
   return `${AUTH_UI_BASE}/#/login?${q}`;
 }
 

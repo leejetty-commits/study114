@@ -33,6 +33,7 @@ import {
 } from './home-basic-live.js';
 import { toggleRecommendation } from './search-api.js';
 import { isLoggedIn } from './auth-session.js';
+import { bindProtectedGuestActions } from '../../shared/guest-gate-ui.js';
 
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
@@ -254,25 +255,7 @@ export function bindGuestSectionEvents(root, rerender) {
     });
   });
 
-  root.querySelectorAll('[data-action="login-gate"]').forEach((el) => {
-    const handler = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const gate = el.dataset.gate || 'default';
-      window.location.assign(
-        `${LOGIN_URL}?${new URLSearchParams({ from: 'guest', action: gate })}`,
-      );
-    };
-    el.addEventListener('click', handler);
-  });
-
-  root.querySelectorAll('[data-action="compare-guest-blocked"]').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      window.location.assign(`${LOGIN_URL}?from=guest&action=compare`);
-    });
-  });
+  bindProtectedGuestActions(root);
 
   bindSitePromoSidebarEvents(root);
 }

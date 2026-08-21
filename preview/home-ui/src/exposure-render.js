@@ -168,7 +168,7 @@ export function renderItemActions(opts = {}) {
 
   // B 통계층 — 추천(토글 가능)·후기(개수만). 광고배지처럼 보이지 않게 card-stats 그룹
   const recommendAttrs = guest
-    ? `data-action="login-gate" data-gate="recommend" data-gate-label="추천"`
+    ? `data-action="login-gate" data-gate="recommend" data-gate-label="추천" data-item-kind="${kind}" data-item-id="${itemId}"`
     : itemId != null
       ? `data-action="recommend-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`
       : '';
@@ -182,8 +182,9 @@ export function renderItemActions(opts = {}) {
     ? actionCountBtn('💬', rev, {
         title: `후기 ${rev}`,
         cls: 'item-actions__btn--stat',
-        attrs:
-          itemId != null
+        attrs: guest
+          ? `data-action="login-gate" data-gate="review" data-gate-label="후기" data-item-kind="${kind}" data-item-id="${itemId}"`
+          : itemId != null
             ? `data-action="open-review-sheet" data-item-kind="${kind}" data-item-id="${itemId}"`
             : '',
       })
@@ -191,7 +192,7 @@ export function renderItemActions(opts = {}) {
 
   // A 기능층 — 찜 / 쪽지 / 비교 (좋아요 제거)
   const wishAttrs = guest
-    ? `data-action="login-gate" data-gate="wish" data-gate-label="찜"`
+    ? `data-action="login-gate" data-gate="wish" data-gate-label="찜" data-item-kind="${kind}" data-item-id="${itemId}"`
     : `data-action="wish-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`;
   const wishBtn =
     !showWish
@@ -203,7 +204,7 @@ export function renderItemActions(opts = {}) {
         });
 
   const msgAttrs = guest
-    ? `data-action="login-gate" data-gate="inquire" data-gate-label="쪽지"`
+    ? `data-action="login-gate" data-gate="inquire" data-gate-label="쪽지" data-item-kind="${kind}" data-item-id="${itemId}"`
     : `data-action="open-detail-memo" data-item-kind="${kind}" data-item-id="${itemId}"`;
   const messageBtn = actionCountBtn('✉', message_count, {
     title: `쪽지 ${message_count}`,
@@ -217,7 +218,7 @@ export function renderItemActions(opts = {}) {
       ? actionCountBtn('⇄', compare_count, {
           title: `비교 ${compare_count}`,
           cls: 'item-actions__btn--action',
-          attrs: `data-action="compare-guest-blocked" data-compare-kind="${kind}"`,
+          attrs: `data-action="compare-guest-blocked" data-compare-kind="${kind}" data-item-kind="${kind}" data-item-id="${itemId}"`,
         })
       : actionCountBtn('⇄', compare_count, {
           title: `비교 ${compare_count}`,
@@ -248,7 +249,7 @@ function renderCardBadgeLayers(kind, item) {
 function renderCompareChip(kind, itemId, opts) {
   if (opts.showCompare === false) return '';
   if (opts.guest) {
-    return `<button type="button" class="expo-compare-chip" aria-pressed="false" data-action="compare-guest-blocked" data-compare-kind="${kind}"><span class="expo-compare-chip__check" aria-hidden="true"></span>비교</button>`;
+    return `<button type="button" class="expo-compare-chip" aria-pressed="false" data-action="compare-guest-blocked" data-compare-kind="${kind}" data-item-kind="${kind}" data-item-id="${itemId}"><span class="expo-compare-chip__check" aria-hidden="true"></span>비교</button>`;
   }
   const active = isInCompare(kind, itemId);
   return `<button type="button" class="expo-compare-chip${active ? ' is-active' : ''}" aria-pressed="${active ? 'true' : 'false'}" data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${itemId}"><span class="expo-compare-chip__check" aria-hidden="true">${active ? '✓' : ''}</span>비교</button>`;

@@ -9,6 +9,7 @@ import {
   shopSectionHasContent,
   SHOP_SECTION_ORDER,
 } from './shop-view-model.js';
+import { shopReviewTeaserMountHtml } from '../provider-reviews/teaser-mount.js';
 
 export {
   buildShopViewModel,
@@ -210,6 +211,15 @@ export function renderShopViewModel(vm) {
       )
     : '';
 
+  const reviewsHtml = section(
+    '후기',
+    shopReviewTeaserMountHtml({
+      providerType: vm.reviews?.providerType,
+      providerId: vm.reviews?.providerId,
+    }),
+    'reviews',
+  );
+
   const inquiryHtml = vm.inquiry.line
     ? `<footer class="shop-inquiry" role="status" data-shop-section="inquiry">
         <span class="shop-inquiry__label">문의 안내</span>
@@ -228,6 +238,7 @@ export function renderShopViewModel(vm) {
     facilities: facilitiesHtml,
     livingArea: livingHtml,
     social: socialHtml,
+    reviews: reviewsHtml,
     inquiry: inquiryHtml,
   };
 
@@ -252,6 +263,8 @@ export function renderMyshopShowcase(s, room) {
 
 /** @param {HTMLElement} root */
 export function bindMyshopEvents(root) {
+  void import('../provider-reviews/teaser.js').then((m) => m.bindShopReviewTeasers(root));
+
   const box = root.querySelector('[data-myshop-lightbox], [data-shop-lightbox]');
   const img = root.querySelector('[data-myshop-lightbox-img], [data-shop-lightbox-img]');
   if (!box || !img) return;

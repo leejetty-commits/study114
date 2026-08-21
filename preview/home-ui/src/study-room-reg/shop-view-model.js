@@ -45,6 +45,7 @@ export const SHOP_SECTION_KEYS = Object.freeze([
   'facilities',
   'livingArea',
   'social',
+  'reviews',
   'inquiry',
 ]);
 
@@ -144,6 +145,7 @@ export function resolveHeroCopy(slogan, introShort) {
  * @property {{ names: string[], note: string }} facilities
  * @property {{ labels: string[], sentence: string }} livingArea
  * @property {{ links: { label: string, href: string }[] }} social
+ * @property {{ providerType: 'study_room'|'tutor', providerId: number }} reviews
  * @property {{ line: string }} inquiry
  * @property {{ fallbacks: Record<string, string>, offeringsAlias: 'classes' }} meta
  */
@@ -291,6 +293,10 @@ export function buildShopViewModel(s, room = {}) {
     facilities: { names: facNames, note: facNote },
     livingArea: { labels: regionLabels, sentence: livingSentence },
     social: { links: socialLinks },
+    reviews: {
+      providerType: s?.provider_type === 'tutor' || room?.provider_type === 'tutor' ? 'tutor' : 'study_room',
+      providerId: Number(s?.study_room_id ?? room?.id ?? room?.study_room_id ?? 0) || 0,
+    },
     inquiry: { line: myshopInquiryStatusLine(s?.inquiry_status || room?.inquiry_status) },
     meta: {
       fallbacks: {
@@ -330,6 +336,8 @@ export function shopSectionHasContent(vm, key) {
       return vm.livingArea.labels.length > 0;
     case 'social':
       return vm.social.links.length > 0;
+    case 'reviews':
+      return true;
     case 'inquiry':
       return !!vm.inquiry.line;
     default:

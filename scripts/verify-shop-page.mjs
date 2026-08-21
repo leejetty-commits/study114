@@ -160,7 +160,7 @@ ok('fmt_bool', formatBoolFlag(true, '가능') === '가능' && formatBoolFlag(fal
 ok('fmt_생활권', formatLivingAreaSentence(['대치동', '은마']) === '대치동 생활권 · 은마');
 
 // —— ViewModel shape / fallback matrix (회귀 고정) ——
-ok('VM_섹션키수', SHOP_SECTION_ORDER.length === 11);
+ok('VM_섹션키수', SHOP_SECTION_ORDER.length === 12);
 ok('VM_fallback문서', Boolean(SHOP_FALLBACK_MATRIX.heroImage?.length && SHOP_FALLBACK_MATRIX.classes?.length));
 {
   const emptyPhoto = resolveHeroGalleryWithFallback([]);
@@ -435,9 +435,16 @@ const idsC = sectionIds(htmlC);
 ok('케이스C_수업3', countClassCards(htmlC) === 3);
 ok(
   '케이스C_전섹션',
-  ['hero', 'facts', 'signature', 'gallery', 'classes', 'career', 'trust', 'facilities', 'livingArea', 'social', 'inquiry'].every((id) =>
+  ['hero', 'facts', 'signature', 'gallery', 'classes', 'career', 'trust', 'facilities', 'livingArea', 'social', 'reviews', 'inquiry'].every((id) =>
     idsC.includes(id),
   ),
+);
+ok(
+  '후기섹션_티저placeholder',
+  htmlC.includes('data-shop-section="reviews"') &&
+    htmlC.includes('data-shop-review-teaser') &&
+    idsC.indexOf('reviews') > idsC.indexOf('social') &&
+    idsC.indexOf('reviews') < idsC.indexOf('inquiry'),
 );
 
 // 섹션 순서 (있는 것만 단조 증가)

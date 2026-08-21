@@ -74,6 +74,7 @@ import { activateContentConfigApi, deactivateContentConfigApi } from './content-
 import { mountOpsChrome } from './site-ops-chrome.js';
 import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
 import { isAuthRedirectPending, redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
+import { resumePendingDeepIntent, hasPendingDeepIntent, resetDeepIntentResumeFlag } from './resume-deep-intent.js';
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -278,8 +279,10 @@ function init() {
         deactivateContentConfigApi();
       }
       render();
+      queueMicrotask(() => resumePendingDeepIntent());
     });
     window.addEventListener('auth:logout', () => {
+      resetDeepIntentResumeFlag();
       deactivateAdminApi();
       deactivateContentConfigApi();
       render();
@@ -329,6 +332,7 @@ function init() {
           getCurrentScreen() === 'guest' &&
           !onDeep &&
           !pending &&
+          !hasPendingDeepIntent() &&
           user.role_type !== 'admin' &&
           ROLE_HOME[user.role_type]
         ) {
@@ -351,6 +355,7 @@ function init() {
           showEmailVerifyOverlay();
         }
         render();
+        if (user) queueMicrotask(() => resumePendingDeepIntent());
       })
       .catch((err) => showBootError(err));
   } catch (err) {

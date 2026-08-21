@@ -31,7 +31,7 @@
 ```
 SHOP_SECTION_ORDER =
   hero → facts → signature → gallery → classes
-  → career → trust → facilities → livingArea → social → inquiry
+  → career → trust → facilities → livingArea → social → reviews → inquiry
 ```
 
 - **매핑만:** `buildShopViewModel(raw, room)`

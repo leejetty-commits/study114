@@ -18,6 +18,7 @@ import { bindSearchPageEvents, renderSearchPage } from './screens/search-page.js
 import { syncRoleFromHash } from './state.js';
 import { initAuthSession } from '@home-ui/auth-session.js';
 import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
+import { resumePendingDeepIntent, resetDeepIntentResumeFlag } from '@home-ui/resume-deep-intent.js';
 
 function render() {
   syncRoleFromHash();
@@ -31,8 +32,17 @@ function init() {
     window.location.hash = '#/search/room';
   }
   window.addEventListener('hashchange', render);
-  initAuthSession().then(() => {
+  initAuthSession().then((user) => {
     if (isAuthRedirectPending()) return;
+    render();
+    if (user) queueMicrotask(() => resumePendingDeepIntent());
+  });
+  window.addEventListener('auth:login', () => {
+    render();
+    queueMicrotask(() => resumePendingDeepIntent());
+  });
+  window.addEventListener('auth:logout', () => {
+    resetDeepIntentResumeFlag();
     render();
   });
 }

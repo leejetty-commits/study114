@@ -5,6 +5,8 @@
 
 import { navigate } from '../state.js';
 import { myshopStudyRoomPath } from './router.js';
+import { isLoggedIn } from '../auth-session.js';
+import { openDeepAccessLoginGate } from '../../../shared/guest-gate-ui.js';
 import {
   buildMyshopReturnSnapshot,
   saveMyshopReturnSnapshot,
@@ -23,6 +25,14 @@ import {
 export function openPublicMyshop(opts) {
   const studyRoomId = Number(opts.studyRoomId);
   if (!Number.isFinite(studyRoomId) || studyRoomId <= 0) return;
+  if (!isLoggedIn()) {
+    openDeepAccessLoginGate({
+      source: 'public_myshop',
+      providerType: 'study_room',
+      providerId: studyRoomId,
+    });
+    return;
+  }
 
   const sourceRoute = opts.sourceRoute || 'search';
   const viewerRole = opts.viewerRole || 'guest';

@@ -3,6 +3,13 @@
  */
 
 import { loginUrl, signupUrl } from './route-access.js';
+import { HOME_UI_BASE } from './preview-links.js';
+import { isSafeReturnTo } from './auth-redirect.js';
+import {
+  savePendingDeepIntent,
+  clearPendingDeepIntent,
+  normalizeDeepIntentSource,
+} from './pending-deep-intent.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -93,6 +100,121 @@ export function renderRegisterIntroGate(kind) {
   });
 }
 
+const DEEP_GATE_ID = 'guest-deep-access-gate';
+
+const DEEP_ACCESS_COPY = {
+  title: '로그인하고 자세히 보기',
+  lead: '로그인 후 후기, 위치, 비교, 찜, 문의 정보를 볼 수 있어요.',
+  bullets: ['후기 보기', '정확한 위치 확인', '비교·찜·문의 가능'],
+  primaryLabel: '로그인하기',
+  laterLabel: '나중에 할게요',
+};
+
+/** @type {((e: KeyboardEvent) => void) | null} */
+let deepGateKeyHandler = null;
+
+export function closeDeepAccessLoginGate() {
+  if (deepGateKeyHandler) {
+    document.removeEventListener('keydown', deepGateKeyHandler);
+    deepGateKeyHandler = null;
+  }
+  document.getElementById(DEEP_GATE_ID)?.remove();
+}
+
+function homeReturnTo(intent) {
+  const compact = {
+    source: intent.source,
+    providerType: intent.providerType,
+    providerId: intent.providerId,
+    t: intent.t,
+  };
+  if (intent.extra && Object.keys(intent.extra).length) compact.extra = intent.extra;
+  const q = new URLSearchParams({ resume_intent: JSON.stringify(compact) });
+  try {
+    const hashRaw = (window.location.hash || '').replace(/^#/, '') || '/guest';
+    const hashPath = hashRaw.split('?')[0] || '/guest';
+    const nextHash = `${hashPath.startsWith('/') ? hashPath : `/${hashPath}`}?${q}`;
+    const target = `${window.location.origin}${window.location.pathname}${window.location.search}#${nextHash}`;
+    if (isSafeReturnTo(target)) return target;
+  } catch {
+    /* fallback */
+  }
+  return `${String(HOME_UI_BASE).replace(/\/$/, '')}/#/guest?${q}`;
+}
+
+function intentFromGateEl(el) {
+  const gate = el.dataset.gate || (el.getAttribute('data-action') === 'compare-guest-blocked' ? 'compare' : 'detail');
+  const host =
+    el.closest('[data-item-kind][data-item-id]') ||
+    el.closest('[data-provider-kind][data-provider-id]') ||
+    el;
+  const providerTypeRaw =
+    el.dataset.itemKind ||
+    el.dataset.compareKind ||
+    host?.getAttribute('data-item-kind') ||
+    host?.getAttribute('data-provider-kind') ||
+    '';
+  const providerId = Number(
+    el.dataset.itemId ||
+      host?.getAttribute('data-item-id') ||
+      host?.getAttribute('data-provider-id') ||
+      0,
+  );
+  return {
+    source: normalizeDeepIntentSource(gate),
+    providerType: providerTypeRaw === 'tutor' ? 'tutor' : providerTypeRaw === 'study_room' ? 'study_room' : '',
+    providerId,
+  };
+}
+
+/**
+ * 게스트 깊은 진입용 오버레이. 확대카드/후기/비교/찜/문의 공통.
+ * @param {string | { source?: string, providerType?: string, providerId?: number, extra?: object }} [sourceOrOpts]
+ */
+export function openDeepAccessLoginGate(sourceOrOpts = 'detail') {
+  const opts = typeof sourceOrOpts === 'string' ? { source: sourceOrOpts } : sourceOrOpts || {};
+  closeDeepAccessLoginGate();
+  const intent = savePendingDeepIntent(opts);
+  const loginHref = loginUrl('detail', intent?.source || 'detail', intent ? homeReturnTo(intent) : '');
+  const overlay = document.createElement('div');
+  overlay.id = DEEP_GATE_ID;
+  overlay.className = 'guest-deep-gate-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'guest-deep-gate-title');
+  overlay.innerHTML = `
+    <div class="guest-deep-gate-overlay__backdrop" data-deep-gate-dismiss></div>
+    <div class="guest-gate guest-gate--deep">
+      <h2 id="guest-deep-gate-title" class="guest-gate__title">${esc(DEEP_ACCESS_COPY.title)}</h2>
+      <p class="guest-gate__lead">${esc(DEEP_ACCESS_COPY.lead)}</p>
+      <ul class="guest-gate__list">${DEEP_ACCESS_COPY.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
+      <div class="guest-gate__actions">
+        <a href="${esc(loginHref)}" class="btn btn--primary" data-util-href="${esc(loginHref)}">${esc(DEEP_ACCESS_COPY.primaryLabel)}</a>
+        <button type="button" class="btn btn--secondary" data-deep-gate-dismiss>${esc(DEEP_ACCESS_COPY.laterLabel)}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const dismiss = () => {
+    clearPendingDeepIntent();
+    closeDeepAccessLoginGate();
+  };
+  overlay.querySelectorAll('[data-deep-gate-dismiss]').forEach((el) => {
+    el.addEventListener('click', dismiss);
+  });
+  overlay.querySelector('[data-util-href]')?.addEventListener('click', (e) => {
+    const href = e.currentTarget.getAttribute('data-util-href');
+    if (!href) return;
+    e.preventDefault();
+    window.location.assign(href);
+  });
+  deepGateKeyHandler = (e) => {
+    if (e.key !== 'Escape') return;
+    dismiss();
+  };
+  document.addEventListener('keydown', deepGateKeyHandler);
+}
+
 /** @param {ParentNode} root */
 export function bindGuestGateLinks(root) {
   root.querySelectorAll('[data-util-href]').forEach((el) => {
@@ -114,8 +236,7 @@ export function bindProtectedGuestActions(root) {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const gate = el.dataset.gate || 'default';
-      window.location.assign(loginUrl('guest', gate));
+      openDeepAccessLoginGate(intentFromGateEl(el));
     });
   });
 
@@ -123,7 +244,7 @@ export function bindProtectedGuestActions(root) {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      window.location.assign(loginUrl('guest', 'compare'));
+      openDeepAccessLoginGate({ ...intentFromGateEl(btn), source: 'compare' });
     });
   });
 }

@@ -1,6 +1,6 @@
 /** 로그인 성공 후 home-ui 복귀 — 프리뷰·실서비스 공용 */
 
-import { AUTH_UI_BASE, HOME_UI_BASE } from './preview-links.js';
+import { AUTH_UI_BASE, HOME_UI_BASE, SEARCH_UI_BASE } from './preview-links.js';
 
 /** @type {Record<string, string>} */
 export const ROLE_HOME_HASH = {
@@ -42,6 +42,10 @@ export function isSafeReturnTo(target) {
     if (HOME_UI_BASE) {
       const home = new URL(HOME_UI_BASE);
       if (url.origin === home.origin) return true;
+    }
+    if (SEARCH_UI_BASE) {
+      const search = new URL(SEARCH_UI_BASE);
+      if (url.origin === search.origin) return true;
     }
     return ALLOWED_RETURN_ORIGINS.has(url.origin);
   } catch {

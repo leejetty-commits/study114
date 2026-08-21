@@ -6,6 +6,7 @@ import { bindStudentReviewEvents } from '../student-review-ui.js';
 import { openDetailModal, closeDetailModal } from './detail-shell.js';
 import { AUTH_UI_BASE } from '../data.js';
 import { bindReviewSheetTriggers } from '../provider-reviews/sheet.js';
+import { guardGuestDeepAccess, canOpenDetailForViewer } from '../guest-deep-access.js';
 
 export { closeDetailModal, openDetailModal } from './detail-shell.js';
 export { showP24Toast } from './detail-utils.js';
@@ -36,14 +37,18 @@ export function resolveDetailItem(kind, id) {
  * @param {{ kind: 'study_room'|'tutor'|'student', id: number, viewer?: string, onRerender?: () => void, sourceRoute?: string, item?: object }} opts
  */
 export function openDetailDecision({ kind, id, viewer, onRerender, sourceRoute = 'search', item: itemOverride }) {
-  const item = itemOverride || resolveDetailItem(kind, id);
-  if (!item) return;
   const role = resolveViewerRole(viewer);
   // 10-6-2: 비로그인 학생 상세 차단 — 로그인 유도만
   if (kind === 'student' && role === 'guest') {
     window.location.assign(`${AUTH_UI_BASE}/#/login?from=student-detail`);
     return;
   }
+  if ((kind === 'study_room' || kind === 'tutor') && !canOpenDetailForViewer(role, kind)) {
+    guardGuestDeepAccess('card_detail', { providerType: kind, providerId: id });
+    return;
+  }
+  const item = itemOverride || resolveDetailItem(kind, id);
+  if (!item) return;
   // 29#3 · 7.18: 학생 로그인 — 다른 학생 카드·상세 시장 비교 열람 허용 (실명·연락·쪽지·민감정보 금지)
   openDetailModal({
     kind,

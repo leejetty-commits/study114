@@ -6,6 +6,7 @@
 import { esc } from '../detail-decision/detail-utils.js';
 import { getAuthUser } from '../auth-session.js';
 import { getNavRole } from '../state.js';
+import { guardGuestDeepAccess } from '../guest-deep-access.js';
 import {
   PROVIDER_REVIEW_COPY,
   REVIEW_ORIGIN_LABELS,
@@ -340,6 +341,7 @@ function bindSheet(host, summary, view, extra) {
  * @param {{ providerType: 'study_room'|'tutor', providerId: number, isOwner?: boolean, view?: 'consume'|'write'|'manage' }} opts
  */
 export async function openReviewSheet({ providerType, providerId, isOwner = false, view = 'consume' }) {
+  if (!guardGuestDeepAccess('review_sheet', { providerType, providerId })) return;
   closeSheet();
   const host = document.createElement('div');
   host.className = 'review-sheet-root';
@@ -371,6 +373,7 @@ export function bindReviewSheetTriggers(_root = document, _extra = {}) {
       const id = Number(btn.getAttribute('data-item-id') || 0);
       if (kind !== 'study_room' && kind !== 'tutor') return;
       if (!id) return;
+      if (!guardGuestDeepAccess('review_sheet', { providerType: kind, providerId: id })) return;
       void openReviewSheet({ providerType: kind, providerId: id });
     },
     true,

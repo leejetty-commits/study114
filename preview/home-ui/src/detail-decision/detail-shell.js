@@ -34,6 +34,8 @@ import { isGuestPublicPath, loginUrl } from '../../../shared/route-access.js';
 import { openPublicMyshop } from '../myshop/navigate.js';
 import { bindProviderReviewMount } from '../provider-reviews/ui.js';
 import { bindReviewSheetTriggers } from '../provider-reviews/sheet.js';
+import { isLoggedIn } from '../auth-session.js';
+import { guardGuestDeepAccess } from '../guest-deep-access.js';
 
 const MODAL_ID = 'p24-detail-modal';
 
@@ -242,6 +244,10 @@ function bindGuestRailNavigation(wrap) {
  * @param {{ kind: 'study_room'|'tutor'|'student', item: object, viewer: string, onRerender?: () => void, sourceRoute?: string }} opts
  */
 export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 'search' }) {
+  if ((kind === 'study_room' || kind === 'tutor') && !isLoggedIn()) {
+    guardGuestDeepAccess('card_detail', { providerType: kind, providerId: Number(item?.id) || 0 });
+    return;
+  }
   closeDetailModal();
 
   const title = itemTitle(kind, item);

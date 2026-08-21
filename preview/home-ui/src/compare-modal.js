@@ -1,4 +1,3 @@
-import { AUTH_UI_BASE } from './data.js';
 import { renderEmptyStateCard } from './empty-state-copy.js';
 import {
   STUDY_ROOM_COMPARE_ROWS,
@@ -6,13 +5,9 @@ import {
   COMPARE_MAX,
 } from './exposure-schema.js';
 import { resolveDisplayValue } from './exposure-format.js';
-import {
-  resolveCardVisualLayers,
-  renderPromoBadgeRow,
-  renderTrustBadgeRow,
-} from './card-visual.js';
-
-const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
+import { resolveCardVisualLayers, renderPromoBadgeRow, renderTrustBadgeRow } from './card-visual.js';
+import { isLoggedIn } from './auth-session.js';
+import { openDeepAccessLoginGate } from '../../shared/guest-gate-ui.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -26,12 +21,12 @@ function esc(s) {
  * @param {boolean} isLoggedIn
  * @param {'study_room' | 'tutor'} kind
  */
-export function promptCompareLogin(isLoggedIn, kind) {
-  if (isLoggedIn) return true;
-  alert(
-    `[6장] 비교검색은 로그인 후에만 이용할 수 있습니다.\n\n` +
-      `${kind === 'study_room' ? '공부방' : '과외쌤'} 비교 — 최대 ${COMPARE_MAX}개 · 팝업 표 형태`,
-  );
+export function promptCompareLogin(loggedIn, kind) {
+  if (loggedIn) return true;
+  openDeepAccessLoginGate({
+    source: 'compare',
+    providerType: kind === 'tutor' ? 'tutor' : 'study_room',
+  });
   return false;
 }
 
@@ -158,6 +153,10 @@ function renderCompareEmpty(kind) {
  * @param {Array<object>} [items]
  */
 export function openCompareModal(kind, items = []) {
+  if (!isLoggedIn()) {
+    openDeepAccessLoginGate({ source: 'compare', providerType: kind === 'tutor' ? 'tutor' : 'study_room' });
+    return;
+  }
   if (!items.length) {
     alert(`비교할 항목을 ⇄ 버튼으로 선택하세요 (최대 ${COMPARE_MAX}개).`);
     return;
@@ -224,8 +223,7 @@ export function bindCompareEvents(root, isLoggedIn) {
       e.stopPropagation();
       const kind = btn.dataset.compareKind || 'study_room';
       if (!promptCompareLogin(isLoggedIn, kind)) {
-        const go = confirm('로그인 화면으로 이동할까요?');
-        if (go) window.open(`${LOGIN_URL}?from=compare&kind=${kind}`, '_blank', 'noopener');
+        return;
       }
     });
   });
