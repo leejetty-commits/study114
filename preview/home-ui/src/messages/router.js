@@ -23,7 +23,8 @@ function mapLegacyPath(p) {
 
 /** @param {string} hashPath */
 export function normalizeMessagesPath(hashPath) {
-  const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const raw = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const p = raw.split('?')[0];
   const legacy = mapLegacyPath(p);
   if (legacy) return legacy;
   if (p === MESSAGES_BASE || p === `${MESSAGES_BASE}/`) return MESSAGES_BASE;
@@ -35,7 +36,9 @@ export function normalizeMessagesPath(hashPath) {
   ) {
     return p;
   }
-  if (p === `${MESSAGES_BASE}/reviews` || p === `${MESSAGES_BASE}/reviews/`) return `${MESSAGES_BASE}/reviews`;
+  if (p === `${MESSAGES_BASE}/reviews` || p === `${MESSAGES_BASE}/reviews/` || p === `${MESSAGES_BASE}/reviews/targets`) {
+    return `${MESSAGES_BASE}/reviews`;
+  }
   if (p === `${MESSAGES_BASE}/reviews/written` || p === `${MESSAGES_BASE}/reviews/received`) return p;
   const reviewTarget = p.match(/^\/mypage\/messages\/reviews\/target\/(study_room|tutor)\/(\d+)$/);
   if (reviewTarget) return p;
@@ -73,14 +76,14 @@ export function getScreenIdForPath(path) {
 /** @param {MessagesScreenId} screenId */
 export function screenTitle(screenId) {
   const map = {
-    'P16-01': '쪽지함',
+    'P16-01': '쪽지',
     'P16-02': '대화방',
     'P16-03': '첫 메모 보내기',
     'P16-04': '쪽지권 게이트',
     'P16-05': '후기함',
-    'P15-08': '쪽지',
+    'P15-08': '쪽지·후기함',
   };
-  return map[screenId] || '쪽지함';
+  return map[screenId] || '쪽지·후기함';
 }
 
 /** @param {MessagesListTab} tab */

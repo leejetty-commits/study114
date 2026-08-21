@@ -6,6 +6,8 @@
 import { getAuthUser } from '../auth-session.js';
 import { getThreads } from '../messages/thread-store.js';
 import { getNavRole } from '../state.js';
+import { getStudyRooms } from '../study-room-reg/store.js';
+import { getTutors } from '../tutor-reg/store.js';
 import {
   pointTagsForProvider,
   PROVIDER_REVIEW_COPY,
@@ -200,6 +202,22 @@ function isConsumerReviewRole(role) {
   return role === 'parent' || role === 'guardian_student' || role === 'student';
 }
 
+function localProviderLabel(providerType, providerId) {
+  try {
+    if (providerType === 'study_room') {
+      const room = getStudyRooms().find((r) => Number(r.id) === Number(providerId));
+      if (room?.study_room_name) return room.study_room_name;
+    }
+    if (providerType === 'tutor') {
+      const tutor = getTutors().find((t) => Number(t.id) === Number(providerId));
+      if (tutor?.tutor_display_name) return tutor.tutor_display_name;
+    }
+  } catch {
+    /* ignore */
+  }
+  return providerType === 'tutor' ? '과외쌤' : '공부방';
+}
+
 function assertConsumerReviewAuthor() {
   const auth = getAuthUser();
   const roleType = String(auth?.role_type || '');
@@ -343,6 +361,7 @@ export async function fetchReviewList(providerType, providerId, page = 1, viewer
       mode: 'target',
       provider_type: providerType,
       provider_id: providerId,
+      provider_label: localProviderLabel(providerType, providerId),
       review_count: all.length,
       page,
       page_size: pageSize,
@@ -351,7 +370,12 @@ export async function fetchReviewList(providerType, providerId, page = 1, viewer
       can_write: v.can_write,
       has_written: v.has_written,
       is_owner: v.is_owner,
-      items: all.slice(start, start + pageSize).map((r) => mapItem(r)),
+      items: all.slice(start, start + pageSize).map((r) =>
+        mapItem(r, {
+          author_user_id: r.author_user_id,
+          is_review_blocked: isBlocked(r.provider_type, r.provider_id, r.author_user_id),
+        }),
+      ),
     };
   }
   const qs = new URLSearchParams({
@@ -531,16 +555,96 @@ export async function createProviderReviewReply() {
   throw new Error('후기 댓글·답글은 지원하지 않습니다.');
 }
 
+function localTargetsInbox(userId, nav) {
+  const map = new Map();
+  const put = (type, id, label, owned, count) => {
+    if ((type !== 'study_room' && type !== 'tutor') || !id) return;
+    const key = `${type}:${id}`;
+    const prev = map.get(key) || {
+      provider_type: type,
+      provider_id: id,
+      label: label || '',
+      owned: false,
+      review_count: 0,
+    };
+    if (label) prev.label = label;
+    prev.owned = prev.owned || !!owned;
+    if (count > prev.review_count) prev.review_count = count;
+    map.set(key, prev);
+  };
+
+  try {
+    if (nav === 'study_room') {
+      getStudyRooms().forEach((room) => {
+        const id = Number(room?.id || 0);
+        if (!id) return;
+        put('study_room', id, room.study_room_name || room.public_display_name || '', true, getReviewCount('study_room', id));
+      });
+    }
+    if (nav === 'tutor') {
+      getTutors().forEach((tutor) => {
+        const id = Number(tutor?.id || 0);
+        if (!id) return;
+        put('tutor', id, tutor.tutor_display_name || tutor.public_display_name || '', true, getReviewCount('tutor', id));
+      });
+    }
+  } catch {
+    /* ignore */
+  }
+
+  const authorId = userId || 6;
+  const writtenCounts = {};
+  loadAll().forEach((r) => {
+    if (r.review_status !== 'visible' && r.review_status !== 'hidden') return;
+    const mine = r.author_user_id === authorId || (userId === 0 && r.author_user_id === 6);
+    if (!mine) return;
+    const key = `${r.provider_type}:${r.provider_id}`;
+    writtenCounts[key] = (writtenCounts[key] || 0) + 1;
+  });
+  Object.entries(writtenCounts).forEach(([key, count]) => {
+    const [type, id] = key.split(':');
+    put(type, Number(id), '', false, count);
+  });
+
+  const items = [...map.values()];
+  return {
+    mode: 'targets',
+    lane: 'targets',
+    label: PROVIDER_REVIEW_COPY.inboxByTarget,
+    page: 1,
+    page_size: Math.max(1, items.length),
+    total: items.length,
+    count: items.length,
+    items,
+  };
+}
+
 export async function fetchReviewInbox(lane = '', page = 1) {
   if (!apiMode()) {
     const auth = getAuthUser();
     const role = auth?.role_type || '';
     const userId = auth?.user_id || 0;
     const nav = getNavRole();
-    const useReceived = lane === 'received' || (!lane && (nav === 'tutor' || nav === 'study_room' || role === 'tutor' || role === 'study_room_owner'));
+    const isProvider = nav === 'tutor' || nav === 'study_room' || role === 'tutor' || role === 'study_room_owner';
+    if (lane === 'targets') {
+      return localTargetsInbox(userId, nav);
+    }
+    const useReceived = lane === 'received' || (!lane && isProvider);
     const all = loadAll().filter((r) => r.review_status === 'visible' || (!useReceived && r.review_status === 'hidden'));
     const pageSize = REVIEW_POLICY.pageSize;
     const start = (Math.max(1, page) - 1) * pageSize;
+    if (lane === 'received' && !isProvider) {
+      return {
+        mode: 'account',
+        lane: 'received',
+        label: PROVIDER_REVIEW_COPY.inboxReceived,
+        page,
+        page_size: pageSize,
+        total: 0,
+        count: 0,
+        items: [],
+      };
+    }
     if (useReceived) {
       const type = nav === 'tutor' ? 'tutor' : 'study_room';
       const items = all.filter((r) => r.provider_type === type && r.provider_id === 1);

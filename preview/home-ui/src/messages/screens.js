@@ -72,7 +72,7 @@ export function renderMessagesScreen(path) {
   }
   const threadId = parseThreadId(path);
   if (threadId != null) return renderThread(threadId);
-  return renderList(getListTabFromPath(path));
+  return renderList(getListTabFromPath(path === MESSAGES_BASE ? `${MESSAGES_BASE}/inbox` : path));
 }
 
 function renderMessagesHub(active) {
@@ -190,7 +190,7 @@ function renderEmptyList(role) {
   if (isProviderRole(role) && !canProviderColdMemoToStudent(role)) {
     html += `<p class="msg-note msg-note--warn">${FREE_PROVIDER_INBOX_COPY.hint}</p>`;
   }
-  html += `<p class="msg-note">쪽지가 없어도 <a href="#${REVIEWS_BASE}" data-msg-nav="${REVIEWS_BASE}">후기함</a>에서 내가 쓴 후기·관리할 후기를 모을 수 있어요.</p>`;
+  html += `<p class="msg-note">쪽지가 없어도 위 <a href="#${REVIEWS_BASE}" data-msg-nav="${REVIEWS_BASE}">후기함</a> 탭에서 대상별 후기·내가 쓴 후기·관리 후기를 볼 수 있어요.</p>`;
   return html;
 }
 
@@ -263,7 +263,7 @@ function renderThread(threadId) {
 
 
   return `
-
+    ${renderMessagesHub('messages')}
     <section class="msg-panel msg-thread">
 
       <div class="msg-thread__bar">

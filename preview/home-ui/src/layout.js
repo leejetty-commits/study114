@@ -51,7 +51,7 @@ export function renderPreviewToolbar() {
           })
           .join('')}
         <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${getDefaultMypagePath(getNavRole())}">마이페이지</button>
-        <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지함</button>
+        <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지·후기함</button>
         <button type="button" class="preview-toolbar__btn ${onCommunity ? 'is-active' : ''}" data-nav="${getDefaultCommunityPath()}">커뮤니티</button>
         <button type="button" class="preview-toolbar__btn ${onPromo ? 'is-active' : ''}" data-nav="/promo/study-room">홍보</button>
         <button type="button" class="preview-toolbar__btn ${onSupport ? 'is-active' : ''}" data-nav="/support">고객센터</button>

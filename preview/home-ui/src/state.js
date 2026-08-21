@@ -75,7 +75,7 @@ export const SCREEN_META = {
   studyRoom: { label: '공부방', role: 'study_room' },
   tutor: { label: '과외쌤', role: 'tutor' },
   mypage: { label: '마이페이지', role: 'parent' },
-  messages: { label: '쪽지함', role: 'parent' },
+  messages: { label: '쪽지·후기함', role: 'parent' },
   guide: { label: '이용안내', role: 'guest' },
   support: { label: '고객센터', role: 'guest' },
   policy: { label: '정책', role: 'guest' },

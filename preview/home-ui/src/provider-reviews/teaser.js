@@ -54,7 +54,7 @@ function renderTeaserBody(summary, providerType, providerId) {
   const moreHref = `#${reviewsArchivePath({ providerType, providerId })}`;
   return `
     <ul class="shop-review-teaser__list">${list}</ul>
-    <a class="shop-review-teaser__more" href="${esc(moreHref)}">${esc(PROVIDER_REVIEW_COPY.moreCta)}</a>`;
+    <a class="shop-review-teaser__more" href="${esc(moreHref)}" aria-label="후기함에서 이 대상의 후기 더 보기">${esc(PROVIDER_REVIEW_COPY.moreCta)}</a>`;
 }
 
 /** @param {HTMLElement} host */

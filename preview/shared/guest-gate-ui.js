@@ -25,6 +25,7 @@ function esc(s) {
  *   bullets?: string[],
  *   from?: string,
  *   action?: string,
+ *   returnTo?: string,
  *   primaryLabel?: string,
  * }} opts
  */
@@ -35,9 +36,10 @@ export function renderGuestLoginGatePanel(opts) {
     bullets = [],
     from = 'site',
     action = '',
+    returnTo = '',
     primaryLabel = '로그인하고 이어서',
   } = opts;
-  const loginHref = loginUrl(from, action);
+  const loginHref = loginUrl(from, action, returnTo);
   const signupHref = signupUrl();
   const list =
     bullets.length > 0

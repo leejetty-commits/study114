@@ -48,7 +48,7 @@ export function mypageNavLabel(item, role) {
 
 /**
  * 공부방 모드 좌측 메뉴 순서:
- * 내 등록 → 찜한학생 → 쪽지함 → 최근열람 → 구매이력 → 계정설정
+ * 내 등록 → 찜한학생 → 쪽지·후기함 → 최근열람 → 구매이력 → 계정설정
  * (과외쌤·학부모 라벨은 기존 유지)
  * @type {MypageNavItem[]}
  */
@@ -64,7 +64,7 @@ export const MYPAGE_NAV = [
     emphasis: ['study_room', 'tutor'],
     roles: ['study_room', 'tutor'],
   },
-  { path: '/mypage/messages', label: '쪽지함', icon: '✉', screenId: 'P15-08' },
+  { path: '/mypage/messages', label: '쪽지·후기함', icon: '✉', screenId: 'P15-08' },
   { path: '/mypage/recent', label: '최근열람', icon: '◷', screenId: 'P15-07' },
   { path: '/mypage/wishlist', label: '찜 목록', icon: '♡', screenId: 'P15-06', emphasis: ['parent'], roles: ['parent'] },
   {
@@ -180,7 +180,7 @@ export function screenTitle(screenId, path, role) {
     'P15-05': '과외 프로필',
     'P15-06': '찜 목록',
     'P15-07': '최근열람',
-    'P15-08': '쪽지함',
+    'P15-08': '쪽지·후기함',
     'P15-09': role === 'study_room' ? '구매이력' : '구매상품',
     'P18-04': role === 'study_room' ? '구매이력' : '구매상품',
     'P18-05': '구매내역',

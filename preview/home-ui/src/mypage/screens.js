@@ -41,8 +41,8 @@ import { formatMonthlyWon, formatTutorFeeCard } from '../exposure-format.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { notifyCompareToggle } from '../handoff-utils.js';
 import { renderEmptyStateCard } from '../empty-state-copy.js';
-import { getMessagesSummaryCounts, renderMessagesScreen } from '../messages/screens.js';
-import { isMessagesDetailPath } from '../messages/router.js';
+import { renderMessagesScreen } from '../messages/screens.js';
+import { isMessagesDetailPath, MESSAGES_BASE } from '../messages/router.js';
 import { isStudentRegPath } from '../student-reg/router.js';
 import { renderStudentRegScreen } from '../student-reg/screens.js';
 import { isStudyRoomRegPath } from '../study-room-reg/router.js';
@@ -78,7 +78,6 @@ import {
   WISHLIST_NOTE,
   RECENT_NOTE,
   STUDENT_REVIEW_NOTE,
-  MESSAGES_SUMMARY_LEAD,
   REGISTRATIONS_LEAD,
 } from './mypage-copy.js';
 
@@ -155,8 +154,7 @@ export function renderMypageScreen(path) {
   if (path === '/mypage/wishlist') return renderWishlist();
   if (path === '/mypage/recent') return renderRecent(r);
   if (path === '/mypage/student-review') return renderStudentReview(r);
-  if (isMessagesDetailPath(path)) return renderMessagesScreen(path);
-  if (path === '/mypage/messages') return renderMessagesSummary();
+  if (path === MESSAGES_BASE || isMessagesDetailPath(path)) return renderMessagesScreen(path);
   if (path === '/mypage/plans') return renderPlans(r);
   if (path === '/mypage/plans/my') return renderPlans(r);
   if (path === '/mypage/plans/history') return renderPlansHistory();
@@ -211,7 +209,7 @@ function renderHome(role, profile, counts, cta) {
         <div class="mypage-home-hero__copy">
           <span class="mypage-home-hero__role">${esc(roleLabel(role))}</span>
           <h2>${esc(homeIdentity)}님, ${esc(getHomeGreeting(role))}</h2>
-          <p>${esc(profile.regionLabel)} 기준으로 쪽지함·최근열람을 한곳에서 관리합니다.</p>
+          <p>${esc(profile.regionLabel)} 기준으로 쪽지·후기함·최근열람을 한곳에서 관리합니다.</p>
         </div>
       </section>
 
@@ -250,7 +248,7 @@ export async function hydrateMypageReviewPanel(root) {
     if (!items.length) {
       box.innerHTML = `<p class="mypage-muted">${
         snap.lane === 'received'
-          ? '아직 받은 후기가 없습니다. 쪽지함의 후기함에서 모아서 볼 수 있어요.'
+          ? '아직 받은 후기가 없습니다. 쪽지·후기함의 후기함에서 모아서 볼 수 있어요.'
           : '아직 남긴 후기가 없습니다. 카드의 후기 수에서 읽고, 자격이 되면 남길 수 있어요.'
       }</p>
       <p><a href="#${reviewsArchivePath({ lane: snap.lane === 'received' ? 'received' : 'written' })}" data-mypage-nav="${reviewsArchivePath({ lane: snap.lane === 'received' ? 'received' : 'written' })}">후기함 열기</a></p>`;
@@ -490,19 +488,6 @@ function renderRecent(role) {
               links: [{ label: '탐색하기', href: `#${homePath}` }],
             })
       }
-    </section>`;
-}
-
-function renderMessagesSummary() {
-  const { unread, active } = getMessagesSummaryCounts();
-  return `
-    <section class="mypage-panel">
-      <p class="mypage-lead">${MESSAGES_SUMMARY_LEAD}</p>
-      <div class="mypage-stats">
-        <div class="mypage-stat"><span>읽지 않음</span><strong>${unread}</strong></div>
-        <div class="mypage-stat"><span>진행중</span><strong>${active}</strong></div>
-      </div>
-      <a href="#/mypage/messages/inbox" class="btn btn--primary" data-mypage-nav="/mypage/messages/inbox">쪽지함 열기</a>
     </section>`;
 }
 

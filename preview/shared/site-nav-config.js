@@ -21,8 +21,8 @@ import {
 /**
  * 유틸 메뉴
  * - 비로그인: 이용안내 · 로그인 · 회원가입
- * - 로그인(가입완료): 이용안내 · 쪽지함 · 최근열람 · 마이페이지 · 로그아웃
- * - 로그인(메일 미확인): 이용안내 · 로그아웃만. 쪽지함·마이페이지는 숨김.
+ * - 로그인(가입완료): 이용안내 · 쪽지·후기함 · 최근열람 · 마이페이지 · 로그아웃
+ * - 로그인(메일 미확인): 이용안내 · 로그아웃만. 쪽지·후기함·마이페이지는 숨김.
  * 지역선택·고객센터는 유틸에 두지 않음
  */
 export const UTIL_MENU = {
@@ -33,7 +33,7 @@ export const UTIL_MENU = {
   ],
   loggedIn: [
     { id: 'guide', label: '이용안내', action: 'util-guide' },
-    { id: 'messages', label: '쪽지함', action: 'util-messages' },
+    { id: 'messages', label: '쪽지·후기함', action: 'util-messages' },
     { id: 'recent', label: '최근열람', action: 'util-recent' },
     { id: 'mypage', label: '마이페이지', action: 'util-mypage' },
     { id: 'logout', label: '로그아웃', action: 'util-logout' },

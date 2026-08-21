@@ -22,14 +22,17 @@ import { bindPlansScreenEvents } from '../plans/screens.js';
 
 function renderMypageLoginGate(message) {
   const role = 'guest';
+  const hash = window.location.hash.slice(1) || '';
+  const returnTo = hash.startsWith('/') ? hash.split('?')[0] : `/${hash.split('?')[0]}`;
   const panel = renderGuestLoginGatePanel({
     title: '마이페이지',
     lead: message,
     bullets: [
-      '쪽지함·최근열람·찜·등록관리·계정설정은 로그인 후 이용합니다.',
+      '쪽지·후기함·최근열람·찜·등록관리·계정설정은 로그인 후 이용합니다.',
       '비회원은 홈·찾기·고객센터·상품 안내까지 이용할 수 있습니다.',
     ],
     from: 'mypage',
+    returnTo: returnTo.startsWith('/mypage/') ? returnTo : '',
     primaryLabel: '로그인하고 마이페이지 열기',
   });
   const mainHtml = `

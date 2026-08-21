@@ -230,6 +230,83 @@ final class ProviderReviewRepository
         return $val !== false ? (int) $val : null;
     }
 
+    public function getProviderLabel(string $providerType, int $providerId): string
+    {
+        if ($providerType === 'study_room') {
+            $stmt = $this->pdo->prepare('SELECT study_room_name FROM study_rooms WHERE id = ? LIMIT 1');
+            $stmt->execute([$providerId]);
+            $name = $stmt->fetchColumn();
+            return $name ? (string) $name : '공부방';
+        }
+        if ($providerType === 'tutor') {
+            $stmt = $this->pdo->prepare('SELECT tutor_display_name FROM tutors WHERE id = ? LIMIT 1');
+            $stmt->execute([$providerId]);
+            $name = $stmt->fetchColumn();
+            return $name ? (string) $name : '과외쌤';
+        }
+
+        return '대상';
+    }
+
+    /**
+     * @return list<array{id: int, label: string}>
+     */
+    public function listOwnedProviders(int $userId, string $providerType): array
+    {
+        if ($providerType === 'study_room') {
+            $stmt = $this->pdo->prepare(
+                'SELECT id, study_room_name AS label FROM study_rooms WHERE user_id = ? ORDER BY id DESC'
+            );
+        } elseif ($providerType === 'tutor') {
+            $stmt = $this->pdo->prepare(
+                'SELECT id, tutor_display_name AS label FROM tutors WHERE user_id = ? ORDER BY id DESC'
+            );
+        } else {
+            return [];
+        }
+        $stmt->execute([$userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => (int) $row['id'],
+                'label' => (string) ($row['label'] ?? ''),
+            ],
+            $rows,
+        );
+    }
+
+    /**
+     * @return list<array{provider_type: string, provider_id: int, review_count: int}>
+     */
+    public function listWrittenTargets(int $authorUserId): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT provider_type, provider_id, COUNT(*) AS review_count
+             FROM provider_reviews
+             WHERE author_user_id = ? AND review_status IN ('visible', 'hidden')
+             GROUP BY provider_type, provider_id
+             ORDER BY MAX(created_at) DESC"
+        );
+        $stmt->execute([$authorUserId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        return array_map(
+            static fn (array $row): array => [
+                'provider_type' => (string) $row['provider_type'],
+                'provider_id' => (int) $row['provider_id'],
+                'review_count' => (int) $row['review_count'],
+            ],
+            $rows,
+        );
+    }
+
     public function getReviewWriteStatus(string $providerType, int $providerId): string
     {
         $table = $providerType === 'tutor' ? 'tutors' : 'study_rooms';

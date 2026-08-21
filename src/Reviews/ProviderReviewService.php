@@ -67,6 +67,7 @@ final class ProviderReviewService
         return [
             'provider_type' => $providerType,
             'provider_id' => $providerId,
+            'provider_label' => $this->repo->getProviderLabel($providerType, $providerId),
             'review_count' => $count,
             'review_write_status' => $viewer['review_write_status'],
             'summary_tags' => $this->repo->aggregateTags($providerType, $providerId),
@@ -116,6 +117,7 @@ final class ProviderReviewService
             'mode' => 'target',
             'provider_type' => $providerType,
             'provider_id' => $providerId,
+            'provider_label' => $this->repo->getProviderLabel($providerType, $providerId),
             'review_count' => $total,
             'page' => $page,
             'page_size' => $limit,
@@ -305,8 +307,25 @@ final class ProviderReviewService
         $limit = max(1, min(ReviewPolicy::PAGE_SIZE_MAX, $limit > 0 ? $limit : ReviewPolicy::PAGE_SIZE));
         $page = max(1, $page);
         $offset = ($page - 1) * $limit;
+        $isProvider = $role === 'study_room_owner' || $role === 'tutor';
 
-        if ($lane === 'received' || ($lane === '' && ($role === 'study_room_owner' || $role === 'tutor'))) {
+        if ($lane === 'targets') {
+            return $this->inboxTargets($auth);
+        }
+
+        if ($lane === 'received' || ($lane === '' && $isProvider)) {
+            if (!$isProvider) {
+                return [
+                    'mode' => 'account',
+                    'lane' => 'received',
+                    'label' => '내가 관리하는 후기',
+                    'page' => $page,
+                    'page_size' => $limit,
+                    'total' => 0,
+                    'count' => 0,
+                    'items' => [],
+                ];
+            }
             $type = $role === 'tutor' ? 'tutor' : 'study_room';
             $total = $this->repo->countReceivedByOwner($userId, $type);
             $items = array_map(
@@ -370,6 +389,71 @@ final class ProviderReviewService
         $lane = ($role === 'study_room_owner' || $role === 'tutor') ? 'received' : 'written';
 
         return $this->inbox($auth, $lane, 1, 10);
+    }
+
+    /**
+     * 후기함 대상별 보기 — 소유 프로필 + 내가 쓴 후기의 대상을 모은다.
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array<string, mixed>
+     */
+    private function inboxTargets(array $auth): array
+    {
+        $role = (string) ($auth['role_type'] ?? '');
+        $userId = (int) $auth['user_id'];
+        /** @var array<string, array<string, mixed>> $map */
+        $map = [];
+
+        $put = function (string $type, int $id, string $label, bool $owned, int $count) use (&$map): void {
+            if (($type !== 'study_room' && $type !== 'tutor') || $id <= 0) {
+                return;
+            }
+            $key = $type . ':' . $id;
+            $prev = $map[$key] ?? [
+                'provider_type' => $type,
+                'provider_id' => $id,
+                'label' => $label,
+                'owned' => false,
+                'review_count' => 0,
+            ];
+            if ($label !== '') {
+                $prev['label'] = $label;
+            }
+            $prev['owned'] = $prev['owned'] || $owned;
+            if ($count > (int) $prev['review_count']) {
+                $prev['review_count'] = $count;
+            }
+            $map[$key] = $prev;
+        };
+
+        if ($role === 'study_room_owner') {
+            foreach ($this->repo->listOwnedProviders($userId, 'study_room') as $row) {
+                $put('study_room', (int) $row['id'], (string) $row['label'], true, $this->repo->countVisible('study_room', (int) $row['id']));
+            }
+        }
+        if ($role === 'tutor') {
+            foreach ($this->repo->listOwnedProviders($userId, 'tutor') as $row) {
+                $put('tutor', (int) $row['id'], (string) $row['label'], true, $this->repo->countVisible('tutor', (int) $row['id']));
+            }
+        }
+
+        foreach ($this->repo->listWrittenTargets($userId) as $row) {
+            $type = (string) $row['provider_type'];
+            $id = (int) $row['provider_id'];
+            $put($type, $id, $this->repo->getProviderLabel($type, $id), false, (int) $row['review_count']);
+        }
+
+        $items = array_values($map);
+
+        return [
+            'mode' => 'targets',
+            'lane' => 'targets',
+            'label' => '대상별 보기',
+            'page' => 1,
+            'page_size' => max(1, count($items)),
+            'total' => count($items),
+            'count' => count($items),
+            'items' => $items,
+        ];
     }
 
     /**
