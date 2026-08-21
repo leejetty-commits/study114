@@ -26,6 +26,7 @@ import {
 } from '@study-room-ui/state.js';
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from '../registrations-backend.js';
 import { studyRoomSectionPath } from './router.js';
+import { RC_COPY } from './registration-check-copy.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -68,15 +69,57 @@ export function isEmbedEditMode() {
   return params.get('edit') === '1';
 }
 
+/** 등록점검 → 원본 탭 이동 시 return=registration-check */
+export function isReturnToRegistrationCheck() {
+  const hash = window.location.hash.slice(1);
+  const q = hash.indexOf('?');
+  const params = new URLSearchParams(q >= 0 ? hash.slice(q + 1) : '');
+  const ret = params.get('return') || params.get('backTo');
+  return ret === 'registration-check' || ret === 'publish';
+}
+
+/** @deprecated 이름만 유지 — isReturnToRegistrationCheck 사용 */
+export function isReturnToPublish() {
+  return isReturnToRegistrationCheck();
+}
+
 /** @param {string} basePath */
 export function withEditQuery(basePath, on) {
   const path = basePath.split('?')[0];
   return on ? `${path}?edit=1` : path;
 }
 
+/**
+ * @param {string} basePath
+ * @param {{ edit?: boolean, returnRegistrationCheck?: boolean }} [opts]
+ */
+export function withEmbedQuery(basePath, opts = {}) {
+  const path = basePath.split('?')[0];
+  const params = new URLSearchParams();
+  if (opts.edit) params.set('edit', '1');
+  if (opts.returnRegistrationCheck) params.set('return', 'registration-check');
+  const qs = params.toString();
+  return qs ? `${path}?${qs}` : path;
+}
+
 function setEditMode(roomId, section, on) {
   const base = studyRoomSectionPath(roomId, section);
-  window.location.hash = withEditQuery(base, on);
+  const returnRegistrationCheck = isReturnToRegistrationCheck();
+  window.location.hash = withEmbedQuery(base, { edit: on, returnRegistrationCheck });
+}
+
+function goRegistrationCheck(roomId) {
+  window.location.hash = studyRoomSectionPath(roomId, 'publish');
+}
+
+function renderReturnToRegistrationCheckBanner(roomId) {
+  if (!isReturnToRegistrationCheck()) return '';
+  const href = studyRoomSectionPath(roomId, 'publish');
+  return `
+    <div class="rc-return-banner" data-rc-return-banner>
+      <a href="#${esc(href)}" class="rc-return-banner__link" data-p20-nav="${esc(href)}">${esc(RC_COPY.returnBanner.label)}</a>
+      <p class="rc-return-banner__hint">${esc(RC_COPY.returnBanner.hint)}</p>
+    </div>`;
 }
 
 /**
@@ -152,6 +195,10 @@ async function afterRegisterSave(roomId, section) {
   loadedRoomId = roomId;
   await syncHubCacheFromDb();
   lastViewKey = '';
+  if (isReturnToRegistrationCheck()) {
+    goRegistrationCheck(roomId);
+    return;
+  }
   setEditMode(roomId, section, false);
 }
 
@@ -238,6 +285,7 @@ export function renderEmbeddedPanel(room, section) {
 
   if (section === 'basic') {
     const content = `
+      ${renderReturnToRegistrationCheckBanner(room.id)}
       ${renderBasicOverviewBoard({ editAction: 'embed-edit' })}
       ${editing ? renderBasicEditModal() : ''}
     `;
@@ -252,7 +300,7 @@ export function renderEmbeddedPanel(room, section) {
       return embedFrame(
         'detail',
         room.id,
-        renderLessonFormHtml({ includeStepNav: false, includeFooterActions: true }),
+        `${renderReturnToRegistrationCheckBanner(room.id)}${renderLessonFormHtml({ includeStepNav: false, includeFooterActions: true })}`,
         {
           stepKey: 'lesson',
           title: '공부방·교습소 상세',
@@ -263,7 +311,7 @@ export function renderEmbeddedPanel(room, section) {
     return embedFrame(
       'detail',
       room.id,
-      `<div class="register-overview">${overviewToolbar('상세정보1 수정')}${overviewDl(detail1OverviewRows())}</div>`,
+      `${renderReturnToRegistrationCheckBanner(room.id)}<div class="register-overview">${overviewToolbar('상세정보1 수정')}${overviewDl(detail1OverviewRows())}</div>`,
       {
         stepKey: 'lesson',
         title: '공부방·교습소 상세',
@@ -276,11 +324,11 @@ export function renderEmbeddedPanel(room, section) {
     return embedFrame(
       'detail2',
       room.id,
-      renderFacilityFormHtml({
+      `${renderReturnToRegistrationCheckBanner(room.id)}${renderFacilityFormHtml({
         includeStepNav: false,
         includePublishBlock: false,
         includeFooterActions: true,
-      }),
+      })}`,
       {
         stepKey: 'facility',
         title: '경력 · 신뢰 · 시설',
@@ -290,7 +338,7 @@ export function renderEmbeddedPanel(room, section) {
   return embedFrame(
     'detail2',
     room.id,
-    `<div class="register-overview">${overviewToolbar('상세정보2 수정')}${overviewDl(detail2OverviewRows())}</div>`,
+    `${renderReturnToRegistrationCheckBanner(room.id)}<div class="register-overview">${overviewToolbar('상세정보2 수정')}${overviewDl(detail2OverviewRows())}</div>`,
     {
       stepKey: 'facility',
       title: '경력 · 신뢰 · 시설',
@@ -311,6 +359,13 @@ export function bindEmbeddedPanelEvents(root, rerender) {
 
   wrap.querySelector('[data-embed-edit], [data-action="embed-edit"]')?.addEventListener('click', () => {
     setEditMode(roomId, section, true);
+  });
+
+  wrap.querySelectorAll('[data-p20-nav]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.hash = el.getAttribute('data-p20-nav') || '';
+    });
   });
 
   if (section === 'basic' && isEmbedEditMode()) {

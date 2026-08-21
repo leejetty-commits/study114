@@ -14,6 +14,7 @@ import './styles/product-chrome.css';
 import './styles/home-marketing-banner.css';
 import './styles/plans-store.css';
 import './styles/mypage-ops.css';
+import './styles/registration-check.css';
 import './styles/myshop.css';
 import './styles/myshop-public.css';
 /* auth base.css 전체 import 금지(전역 reset). 폼 프리미티브만 공유 */

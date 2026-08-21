@@ -60,21 +60,7 @@ export const P20_HUB_BLOCK_TITLES = {
   pickPrimeNudge: '픽·프라임 노출 준비',
 };
 
-/** 마이샵·등록점검 — 픽·프라임 유도 (진행률·이탈 CTA 없음) */
-export const P20_PICK_PRIME_NUDGE = {
-  title: '홍보 광고를 위해서 픽 프라임 노출을 생각하시나요?',
-  lead: '베이직 검색은 기본정보만으로도 충분합니다. 홍보·광고로 더 잘 보이려면 상세정보에서 아래 항목을 채워 주세요.',
-  leadHint: '상세정보1, 상세정보2 에 가면 필수입력 항목을 채워주면 됩니다',
-  detail1Title: '상세정보1에서',
-  detail1Items: [
-    '홍보사진 (카드에 보이는 대표 이미지)',
-    '한 줄 소개',
-    '수업운영방식 · 타임별 원생수',
-    '월 평균 수업료',
-  ],
-  detail2Title: '상세정보2에서',
-  detail2Items: ['경력특징', '교육청등록증', '시설·환경'],
-};
+/** 등록점검 상단 카피 정본: registration-check-copy.js */
 
 /** P20-05 쪽지설정 — copy */
 export const P20_INQUIRY_COPY = {
@@ -111,12 +97,6 @@ export const P20_LIST_HEAD = {
   notReadyBadge: '공개 준비 미완료',
   manageCta: '운영하기 →',
 };
-
-/** P20-04 미리보기 모드 */
-export const P20_PREVIEW_MODES = [
-  { key: 'basic', label: '검색 카드' },
-  { key: 'compare', label: '비교검색' },
-];
 
 /** P20-02 · hub matrix 상품 안내 */
 export const PRODUCT_APPLY = {

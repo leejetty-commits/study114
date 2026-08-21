@@ -1,16 +1,9 @@
-import {
-  LIFECYCLE_FOOTNOTE_REG,
-  LIFECYCLE_PUBLISH_CONFIRM_DIRECT,
-  LIFECYCLE_PUBLISH_CONFIRM_NOTE,
-} from '../lifecycle-copy.js';
-import { renderBrowseList } from '../exposure-render.js';
+import { LIFECYCLE_FOOTNOTE_REG } from '../lifecycle-copy.js';
 import { STUDY_ROOM_REGISTER_URL } from '../nav-config.js';
 import {
   P20_LIST_TABS,
   P20_LIST_HEAD,
-  P20_PREVIEW_MODES,
   P20_INQUIRY_COPY,
-  P20_PICK_PRIME_NUDGE,
   INQUIRY_OFF_REASONS,
 } from './study-room-reg-copy.js';
 import {
@@ -34,14 +27,12 @@ import {
   formatRoomSummaryLine,
   profileStatusLabel,
   inquiryStatusLabel,
-  roomToExposureRow,
 } from './format.js';
 import {
   getStudyRooms,
   getStudyRoomsByTab,
   getStudyRoom,
   getPublishReadiness,
-  publishStudyRoom,
   hideStudyRoom,
   deleteStudyRoom,
   setInquiryStatus,
@@ -54,56 +45,18 @@ import {
   markEmbeddedViewLoaded,
   renderEmbeddedPanel,
   bindEmbeddedPanelEvents,
-  isEmbeddedRegisterReady,
 } from './embedded-panels.js';
 import { renderMyshopShowcase, bindMyshopEvents } from './myshop-render.js';
 import { getShopCompletenessSummary } from './shop-completeness.js';
 import { registerState } from '@study-room-ui/state.js';
-import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
+import { buildRegistrationCheckModel } from './registration-check-model.js';
+import { renderRegistrationCheck } from './registration-check-render.js';
+import { bindRegistrationCheckEvents } from './registration-check-edit.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import { KOREA_SIDOS } from '../../../shared/korea-sidos.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
-}
-
-/** @param {{ label: string, ok: boolean, reason?: string | null, statusText?: string | null }[]} rows */
-function renderMatrixRows(rows) {
-  return rows
-    .map((m) => {
-      const status = m.statusText ?? (m.ok ? '가능' : m.reason || '불가');
-      return `
-    <div class="p20-matrix__row${m.ok ? ' is-ok' : ''}">
-      <span class="p20-matrix__label">${esc(m.label)}</span>
-      <span class="p20-matrix__status">${esc(status)}</span>
-    </div>`;
-    })
-    .join('');
-}
-
-/** 픽·프라임 유도 — CTA 없음 (등록점검 상단) */
-function renderPickPrimeNudge() {
-  const c = P20_PICK_PRIME_NUDGE;
-  return `
-    <div class="p20-hub-block p20-pick-prime-nudge">
-      <h3 class="p20-hub-block__title">${esc(c.title)}</h3>
-      <p class="p19-form-section__lead">${esc(c.lead)}</p>
-      <p class="p19-form-section__lead p20-pick-prime-nudge__hint">${esc(c.leadHint)}</p>
-      <div class="p20-pick-prime-nudge__cols">
-        <div>
-          <h4 class="p20-pick-prime-nudge__sub">${esc(c.detail1Title)}</h4>
-          <ul class="p20-pick-prime-nudge__list">
-            ${c.detail1Items.map((item) => `<li>${esc(item)}</li>`).join('')}
-          </ul>
-        </div>
-        <div>
-          <h4 class="p20-pick-prime-nudge__sub">${esc(c.detail2Title)}</h4>
-          <ul class="p20-pick-prime-nudge__list">
-            ${c.detail2Items.map((item) => `<li>${esc(item)}</li>`).join('')}
-          </ul>
-        </div>
-      </div>
-    </div>`;
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room @param {string} activeSection */
@@ -117,120 +70,6 @@ function renderTopTabs(room, activeSection) {
         return `<a href="#${href}" class="mp-room__tab${active ? ' is-active' : ''}" data-p20-nav="${href}">${esc(tab.label)}</a>`;
       }).join('')}
     </nav>`;
-}
-
-/** @param {import('./store.js').PublishReadiness} readiness @param {number} roomId */
-function renderFullChecklist(readiness, roomId) {
-  const items = readiness.items || [];
-  return `
-    <div class="mp-room__checklist">
-      <div class="mp-room__checklist-head">
-        <h3>공개 필수 체크리스트</h3>
-        <span>${readiness.doneCount}/${readiness.totalCount}</span>
-      </div>
-      <ul class="mp-room__checklist-list">
-        ${items
-          .map((item) => {
-            const href = studyRoomSectionPath(roomId, item.section === 'publish' ? 'basic' : item.section);
-            return `
-          <li class="mp-room__checklist-item${item.ok ? ' is-ok' : ' is-miss'}">
-            <span class="mp-room__checklist-mark" aria-hidden="true">${item.ok ? '✓' : '○'}</span>
-            <span>${esc(item.label)}</span>
-            ${
-              item.ok
-                ? '<span class="mp-room__checklist-state">완료</span>'
-                : `<a href="#${href}" class="mp-room__checklist-link" data-p20-nav="${href}">채우기</a>`
-            }
-          </li>`;
-          })
-          .join('')}
-      </ul>
-    </div>`;
-}
-
-/**
- * ShopPage 완성도 — 공개 필수와 별도 (샵이 비어 보이는 이유)
- * @param {ReturnType<typeof getShopCompletenessSummary>} shop
- * @param {number} roomId
- */
-function renderShopCompletenessChecklist(shop, roomId) {
-  const items = shop.items || [];
-  const hubHref = studyRoomHubPath(roomId);
-  const details =
-    shop.reasonDetails?.length > 0
-      ? `<ul class="mp-room__shop-why-list">${shop.reasonDetails
-          .map((line) => `<li>${esc(line)}</li>`)
-          .join('')}</ul>`
-      : '';
-
-  return `
-    <div class="mp-room__checklist mp-room__checklist--shop${shop.weak ? ' is-weak' : ' is-strong'}" data-shop-completeness>
-      <div class="mp-room__checklist-head">
-        <h3>마이샵 완성도</h3>
-        <span>${shop.doneCount}/${shop.totalCount}</span>
-      </div>
-      <p class="mp-room__shop-why${shop.weak ? ' is-warn' : ''}" data-shop-empty-reason>${esc(shop.reasonLine)}</p>
-      ${details}
-      <p class="mp-room__checklist-lead">공개 가능해도 아래가 비면 학부모 샵 페이지가 얇아 보입니다. 채우면 마이샵에 바로 반영됩니다.</p>
-      <p class="mp-room__shop-preview-link">
-        <a href="#${hubHref}" class="mp-room__checklist-link" data-p20-nav="${hubHref}">지금 마이샵 화면 보기</a>
-      </p>
-      <ul class="mp-room__checklist-list">
-        ${items
-          .map((item) => {
-            const href = studyRoomSectionPath(roomId, item.section);
-            return `
-          <li class="mp-room__checklist-item${item.ok ? ' is-ok' : ' is-miss'}">
-            <span class="mp-room__checklist-mark" aria-hidden="true">${item.ok ? '✓' : '○'}</span>
-            <span class="mp-room__checklist-copy">
-              <span class="mp-room__checklist-label">${esc(item.label)}</span>
-              ${
-                item.ok
-                  ? `<small class="mp-room__checklist-impact">→ ${esc(item.shopImpact)}</small>`
-                  : `<small class="mp-room__checklist-why">${esc(item.emptyWhy || item.shopImpact)}</small>`
-              }
-            </span>
-            ${
-              item.ok
-                ? '<span class="mp-room__checklist-state">반영됨</span>'
-                : `<a href="#${href}" class="mp-room__checklist-link" data-p20-nav="${href}">채우기</a>`
-            }
-          </li>`;
-          })
-          .join('')}
-      </ul>
-    </div>`;
-}
-
-/** @param {import('./store.js').StudyRoomRecord} room */
-function renderProgressCta(room) {
-  const readiness = getPublishReadiness(room);
-  const pct = Math.round((readiness.doneCount / readiness.totalCount) * 100);
-  const firstMiss = (readiness.items || []).find((i) => !i.ok);
-  const href = firstMiss
-    ? studyRoomSectionPath(room.id, firstMiss.section === 'publish' ? 'basic' : firstMiss.section)
-    : studyRoomSectionPath(room.id, 'publish');
-  const title = readiness.canPublish
-    ? '공개 준비가 끝났습니다'
-    : `프로필 ${readiness.doneCount}/${readiness.totalCount} 채워짐`;
-  const hint = readiness.canPublish
-    ? '미리보기 후 공개할 수 있습니다.'
-    : firstMiss
-      ? `다음: ${firstMiss.label}`
-      : '부족한 항목을 이어서 채우세요.';
-
-  return `
-    <a href="#${href}" class="mp-room__progress" data-p20-nav="${href}">
-      <div class="mp-room__progress-copy">
-        <span class="mp-room__progress-eyebrow">지금 하면 좋아요</span>
-        <strong>${esc(title)}</strong>
-        <p>${esc(hint)}</p>
-      </div>
-      <div class="mp-room__progress-meter" aria-hidden="true">
-        <span class="mp-room__progress-bar"><i style="width:${pct}%"></i></span>
-        <span class="mp-room__progress-pct">${pct}%</span>
-      </div>
-    </a>`;
 }
 
 function renderRoomShell(room, activeSection, bodyHtml) {
@@ -569,81 +408,26 @@ function renderEmbeddedSection(room, section) {
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
-function renderPublishPreviewModes(room) {
-  const row = roomToExposureRow(room);
-  const modes = P20_PREVIEW_MODES.map((m) => ({
-    ...m,
-    html: renderBrowseList(
-      'study_room',
-      [row],
-      { guest: false, showCompare: m.key === 'compare' },
-    ),
-  }));
-
-  const tabs = modes
-    .map(
-      (m, i) =>
-        `<button type="button" class="p21-preview-tab${i === 0 ? ' is-active' : ''}" data-p20-preview-tab="${m.key}">${esc(m.label)}</button>`,
-    )
-    .join('');
-
-  const panels = modes
-    .map(
-      (m, i) =>
-        `<div class="p21-preview-panel${i === 0 ? ' is-active' : ''}" data-p20-preview-panel="${m.key}">
-        <p class="p19-search-preview__label">${esc(m.label)} (11·13장)</p>
-        <div class="p19-search-preview__frame">${m.html}</div>
-      </div>`,
-    )
-    .join('');
-
-  return `<div class="p21-preview-modes" data-p20-preview-wrap><div class="p21-preview-tabs" role="tablist">${tabs}</div>${panels}</div>`;
-}
-
-/** @param {import('./store.js').StudyRoomRecord} room */
 function renderPublish(room) {
-  if (!isEmbeddedRegisterReady(room.id)) {
+  if (shouldReloadEmbeddedView(room.id, 'publish')) {
     queueMicrotask(() => {
       ensureEmbeddedRegister(room.id, { force: true })
         .then(() => {
+          markEmbeddedViewLoaded(room.id, 'publish');
           window.dispatchEvent(new Event('hashchange'));
         })
-        .catch((err) => console.error('[publish-shop]', err));
+        .catch((err) => console.error('[registration-check]', err));
     });
+    const loading = `
+      <div class="rc-page" data-p20-room-id="${room.id}">
+        <p class="p19-form-section__lead">등록 현황을 불러오는 중…</p>
+      </div>`;
+    return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'publish', loading)}</section>`;
   }
 
-  const r = getPublishReadiness(room);
-  const shop = getShopCompletenessSummary(
-    isEmbeddedRegisterReady(room.id) ? registerState : {},
-    room,
-  );
-  const preview = renderPublishPreviewModes(room);
-
-  const body = `
-    <div class="p19-publish-body" data-p20-room-id="${room.id}">
-      ${renderPickPrimeNudge()}
-      ${preview}
-      ${renderShopCompletenessChecklist(shop, room.id)}
-      ${renderFullChecklist(r, room.id)}
-      <div class="p20-confirm-card" data-p20-room-id="${room.id}">
-        <h3 class="p20-confirm-card__title">자기확인 — 학부모에게 이렇게 보입니다</h3>
-        <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="location" /> 위치·주소 공개 범위를 확인했습니다</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="contact" /> 쪽지·문의 방식 표시를 확인했습니다</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="content" /> 대상·과목·소개문 노출을 확인했습니다</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="direct" /> ${LIFECYCLE_PUBLISH_CONFIRM_DIRECT}</label>
-      </div>
-      <div class="p19-form-actions p19-form-actions--publish">
-        <button type="button" class="btn btn--primary btn--lg" data-p20-publish ${r.canPublish ? '' : 'disabled'}>공개하기 (published)</button>
-        ${
-          room.profile_status === 'hidden'
-            ? '<button type="button" class="btn btn--secondary" data-p20-publish>다시 공개</button>'
-            : ''
-        }
-      </div>
-      <p class="p19-publish-footnote">${LIFECYCLE_PUBLISH_CONFIRM_NOTE}</p>
-    </div>`;
-
-  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'publish', body)}</section>`;
+  markEmbeddedViewLoaded(room.id, 'publish');
+  const vm = buildRegistrationCheckModel(registerState, room);
+  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'publish', renderRegistrationCheck(vm))}</section>`;
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
@@ -774,6 +558,7 @@ function renderSubmissionTab(room) {
 export function bindStudyRoomRegEvents(root, rerender) {
   bindEmbeddedPanelEvents(root, rerender);
   bindMyshopEvents(root);
+  bindRegistrationCheckEvents(root, rerender);
 
   root.querySelectorAll('[data-p20-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
@@ -823,35 +608,6 @@ export function bindStudyRoomRegEvents(root, rerender) {
         alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
       } finally {
         if (btn) btn.disabled = false;
-      }
-    });
-  });
-
-  root.querySelectorAll('[data-p20-publish]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const wrap = btn.closest('[data-p20-room-id]') || btn.closest('.p19-publish-body');
-      const id = Number(wrap?.dataset.p20RoomId || root.querySelector('[data-p20-room-id]')?.dataset.p20RoomId);
-      const confirms = root.querySelectorAll('[data-p20-confirm]');
-      const allChecked = [...confirms].every((c) => /** @type {HTMLInputElement} */ (c).checked);
-      if (!allChecked) {
-        alert('자기확인 항목을 모두 체크해 주세요.');
-        return;
-      }
-      try {
-        const result = await publishStudyRoom(id);
-        if (!result.ok) {
-          alert(`공개 불가:\n${result.missing?.join('\n') || result.reason}`);
-          return;
-        }
-        alert('공개되었습니다. (profile_status: published)');
-        rerender();
-      } catch (err) {
-        console.warn('[p20]', err);
-        if (err?.code === 'email_verify_required') {
-          showEmailVerifyOverlay();
-          return;
-        }
-        alert('공개 처리에 실패했습니다.');
       }
     });
   });
@@ -960,18 +716,6 @@ export function bindStudyRoomRegEvents(root, rerender) {
         el.classList.toggle('is-selected', el.querySelector('input')?.checked);
       });
       syncInquiryFormPreview(wrap);
-    });
-  });
-
-  root.querySelectorAll('[data-p20-preview-tab]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const key = btn.getAttribute('data-p20-preview-tab');
-      const wrap = btn.closest('[data-p20-preview-wrap]');
-      if (!wrap || !key) return;
-      wrap.querySelectorAll('[data-p20-preview-tab]').forEach((t) => t.classList.toggle('is-active', t === btn));
-      wrap.querySelectorAll('[data-p20-preview-panel]').forEach((p) => {
-        p.classList.toggle('is-active', p.getAttribute('data-p20-preview-panel') === key);
-      });
     });
   });
 }
