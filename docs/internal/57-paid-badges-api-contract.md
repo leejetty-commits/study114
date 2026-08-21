@@ -75,16 +75,35 @@ provider_type + provider_id 기준. New는 **paid_badges가 아님** (published_
 | 구간 | 상태 |
 |------|------|
 | API 필드 `paid_badges` | **연결됨** (SearchService) |
-| Resolver + 055 테이블 | **계약·스키마 잠금** |
-| Checkout → 행 INSERT | **미연결** (`badge_addon` 주문은 여전히 선행 조건 throw) |
-| 운영 활성 행 데이터 | **보통 비어 있음** → 카드에 유료 배지 미표시가 정상 |
+| Resolver + 055 테이블 | **스키마 잠금** (`status`·`revoked_at` 포함 · 055b 멱등 보강) |
+| Checkout → 행 INSERT | **코드 연결됨** — `fulfillBadgeAddon` → `PaidBadgeRepository::grantFromOrder` |
+| 선행 조건 | 활성 Prime/Pick + 공급자 프로필 + 055 테이블 적용 |
+| 운영 DB 행 / HTTP 실응답 | **환경 의존** — 로컬에 PHP/DB 없으면 미증명 · `smoke-paid-badges-live.php` |
+| 렌더 관통 (API shape) | `npm run smoke:paid-badges-proof` |
 
-샘플(`exposure-data.js`)의 paid_badges는 **시각 검증용**이며 live 완료가 아님.
+샘플(`exposure-data.js`) paid_badges는 **시각 검증용** — 운영 완료 주장에 쓰지 않음.
 
 ---
 
-## 6. 설계 다음 단계 (이번 라운드 범위 밖)
+## 6. fulfill 매핑 · 정책
 
-1. 055 운영 DB 적용  
-2. checkout fulfill 시 `provider_paid_badges` INSERT (Prime/Pick 기간 종속)  
-3. 만료 job / 관리자 회수
+| product_id | provider | badge_code |
+|------------|----------|------------|
+| hot | study_room 우선, 없으면 tutor | hot |
+| subject_track | study_room only | subject_track |
+| jjokjipge (`picked` alias) | tutor only | jjokjipge |
+| sky | tutor only | sky |
+
+- 기간: 활성 포지션 중 가장 늦은 `end_exclusive_on`에 종속  
+- 중복: 동일 활성 코드 → 기간 연장  
+- 환불/취소: `revokeByOrderRef` → `status=revoked`  
+- 만료: resolver 날짜 필터 (배치 삭제 불필요)
+
+---
+
+## 7. 다음 단계 (운영 실증)
+
+1. 운영/스테이징 DB에 055(+055b) 적용  
+2. `php scripts/smoke-paid-badges-live.php --grant` 또는 checkout complete  
+3. 검색 API·Basic·확대·비교에서 동일 값 확인  
+4. Prime/Pick **슬롯 live**는 별도 과제

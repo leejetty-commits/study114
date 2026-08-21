@@ -52,12 +52,13 @@ final class PaidBadgeResolver
 
         $allowed = $providerType === 'study_room' ? self::STUDY_ROOM_CODES : self::TUTOR_CODES;
         $stmt = $this->pdo->prepare(
-            'SELECT badge_code FROM provider_paid_badges
+            "SELECT badge_code FROM provider_paid_badges
              WHERE provider_type = ?
                AND provider_id = ?
+               AND status = 'active'
                AND starts_on <= CURDATE()
                AND end_exclusive_on > CURDATE()
-             ORDER BY id ASC'
+             ORDER BY id ASC"
         );
         $stmt->execute([$providerType, $providerId]);
 
