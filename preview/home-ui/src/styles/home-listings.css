@@ -1077,8 +1077,15 @@
   padding-bottom: 0.125rem;
 }
 
-.expo-tbl__cell--actions .item-actions {
+.expo-tbl__cell--actions .card-visual__rail {
   justify-content: flex-end;
+}
+
+.p24-card-rail {
+  margin: 0.5rem 0 0.75rem;
+}
+.p24-card-rail .card-visual__rail {
+  justify-content: flex-start;
 }
 
 .expo-tbl__cell--compare {
@@ -1356,18 +1363,23 @@
   align-items: center;
 }
 
-/* 2026-08-21 카드 시각층 — 통계 / 기능 분리 */
+/* 2026-08-21 카드 시각층 — 통계 / 기능 분리, 한 행 배열 */
 .card-visual__rail {
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.375rem;
 }
 .card-stats {
   display: inline-flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   gap: 0.25rem;
   align-items: center;
+}
+.card-visual__rail .item-actions {
+  flex-wrap: nowrap;
 }
 .card-stats .item-actions__btn--stat {
   color: var(--gray-500);

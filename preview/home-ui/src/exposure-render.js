@@ -165,7 +165,7 @@ export function renderItemActions(opts = {}) {
   const rec = layers?.stats.recommend ?? (Number(recommend_count) || 0);
   const rev = layers?.stats.review ?? (Number(review_count) || 0);
 
-  // B 통계층 — 추천(토글 가능)·후기(개수만). 광고배지처럼 보이지 않게 card-stats 그룹
+  // 한 행: 통계(추천·후기) → 행동(찜·비교·쪽지). 후기남기기 CTA는 레일 밖(확대카드 푸터).
   const recommendAttrs = guest
     ? `data-action="login-gate" data-gate="recommend" data-gate-label="추천" data-item-kind="${kind}" data-item-id="${itemId}"`
     : itemId != null
@@ -186,19 +186,7 @@ export function renderItemActions(opts = {}) {
         ? `data-action="open-review-sheet" data-item-kind="${kind}" data-item-id="${itemId}"`
         : '',
   });
-  const writeAttrs = guest
-    ? `data-action="login-gate" data-gate="review_write" data-gate-label="후기 작성" data-item-kind="${kind}" data-item-id="${itemId}"`
-    : itemId != null
-      ? `data-action="open-review-sheet" data-review-view="write" data-item-kind="${kind}" data-item-id="${itemId}"`
-      : '';
-  const writeBtn =
-    itemId == null && !guest
-      ? ''
-      : `<button type="button" class="item-actions__btn item-actions__btn--action" title="후기 작성" ${writeAttrs}>
-    <span class="item-actions__icon" aria-hidden="true">✎</span><span class="item-actions__count">작성</span>
-  </button>`;
 
-  // A 기능층 — 찜 / 쪽지 / 비교 (좋아요 제거)
   const wishAttrs = guest
     ? `data-action="login-gate" data-gate="wish" data-gate-label="찜" data-item-kind="${kind}" data-item-id="${itemId}"`
     : `data-action="wish-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`;
@@ -210,15 +198,6 @@ export function renderItemActions(opts = {}) {
           cls: wished ? 'is-active item-actions__btn--action' : 'item-actions__btn--action',
           attrs: wishAttrs,
         });
-
-  const msgAttrs = guest
-    ? `data-action="login-gate" data-gate="inquire" data-gate-label="쪽지" data-item-kind="${kind}" data-item-id="${itemId}"`
-    : `data-action="open-detail-memo" data-item-kind="${kind}" data-item-id="${itemId}"`;
-  const messageBtn = actionCountBtn('✉', message_count, {
-    title: `쪽지 ${message_count}`,
-    cls: 'item-actions__btn--action',
-    attrs: msgAttrs,
-  });
 
   const compareBtn = !showCompare
     ? ''
@@ -234,10 +213,19 @@ export function renderItemActions(opts = {}) {
           attrs: `data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`,
         });
 
+  const msgAttrs = guest
+    ? `data-action="login-gate" data-gate="inquire" data-gate-label="쪽지" data-item-kind="${kind}" data-item-id="${itemId}"`
+    : `data-action="open-detail-memo" data-item-kind="${kind}" data-item-id="${itemId}"`;
+  const messageBtn = actionCountBtn('✉', message_count, {
+    title: `쪽지 ${message_count}`,
+    cls: 'item-actions__btn--action',
+    attrs: msgAttrs,
+  });
+
   return `
     <div class="card-visual__rail" data-card-visual="${esc(layers?.policyVersion || '')}">
       <div class="card-stats" aria-label="통계">${recommendStat}${reviewStat}</div>
-      <div class="item-actions card-actions" aria-label="기능">${wishBtn}${messageBtn}${writeBtn}${compareBtn}</div>
+      <div class="item-actions card-actions" aria-label="기능">${wishBtn}${compareBtn}${messageBtn}</div>
     </div>
   `;
 }
@@ -252,15 +240,6 @@ function renderCardBadgeLayers(kind, item) {
         ? renderTrustBadgeRow(item.badges, esc)
         : '';
   return `${renderPromoBadgeRow(layers.promoBadges, esc)}${trust}`;
-}
-
-function renderCompareChip(kind, itemId, opts) {
-  if (opts.showCompare === false) return '';
-  if (opts.guest) {
-    return `<button type="button" class="expo-compare-chip" aria-pressed="false" data-action="compare-guest-blocked" data-compare-kind="${kind}" data-item-kind="${kind}" data-item-id="${itemId}"><span class="expo-compare-chip__check" aria-hidden="true"></span>비교</button>`;
-  }
-  const active = isInCompare(kind, itemId);
-  return `<button type="button" class="expo-compare-chip${active ? ' is-active' : ''}" aria-pressed="${active ? 'true' : 'false'}" data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${itemId}"><span class="expo-compare-chip__check" aria-hidden="true">${active ? '✓' : ''}</span>비교</button>`;
 }
 
 /** 이미지 없을 때 브랜드 기본 카드 (가입 시 DB 자동삽입과 동일 자산) */
@@ -320,27 +299,25 @@ function listingImage(item, ratio) {
   return item.image_path_basic || item.image_path || '';
 }
 
-function renderStudyRoomMediaOverlay(item, compareHtml) {
+function renderStudyRoomMediaOverlay(item) {
   return renderMediaBlock(
     listingImage(item, 'prime'),
     item.study_room_name,
     'prime',
     {
       tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
-      br: compareHtml,
     },
     { roomDefault: true },
   );
 }
 
-function renderPickStudyRoomMedia(item, compareHtml) {
+function renderPickStudyRoomMedia(item) {
   return renderMediaBlock(
     listingImage(item, 'pick'),
     item.study_room_name,
     'pick',
     {
       tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
-      br: compareHtml,
     },
     { roomDefault: true },
   );
@@ -391,11 +368,10 @@ function renderTutorFeeOverlay(item) {
   return parts.join(', ') || '—';
 }
 
-function renderTutorMediaOverlay(item, compareHtml, ratio = 'prime') {
+function renderTutorMediaOverlay(item, ratio = 'prime') {
   return renderMediaBlock(item.image_path, item.tutor_display_name, ratio, {
     tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
     bl: renderTutorOverlayBottomGrid(item),
-    br: compareHtml,
   });
 }
 
@@ -511,41 +487,37 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
 }
 
 function renderPrimeStudyRoom(item, actions, opts) {
-  const compare = renderCompareChip('study_room', item.id, opts);
   const rows = studyRoomTableRows(item, { showIntro: true, featureMax: 3 }, actions);
   return `
     <article class="expo-card expo-card--prime expo-card--study_room" data-provider-id="${item.id}" data-provider-kind="study_room">
-      ${renderStudyRoomMediaOverlay(item, compare)}
+      ${renderStudyRoomMediaOverlay(item)}
       ${renderExpoTable(rows, 'expo-tbl--card')}
     </article>`;
 }
 
 function renderPrimeTutor(item, actions, opts) {
-  const compare = renderCompareChip('tutor', item.id, opts);
   const rows = tutorTableRows(item, { showIntro: true, featureMax: 3 }, actions);
   return `
     <article class="expo-card expo-card--prime expo-card--tutor" data-provider-id="${item.id}" data-provider-kind="tutor">
-      ${renderTutorMediaOverlay(item, compare, 'prime')}
+      ${renderTutorMediaOverlay(item, 'prime')}
       ${renderExpoTable(rows, 'expo-tbl--card')}
     </article>`;
 }
 
 function renderPickStudyRoom(item, actions, opts) {
-  const compare = renderCompareChip('study_room', item.id, opts);
   const rows = studyRoomTableRows(item, { showIntro: false, featureMax: 1, stack: true }, actions);
   return `
     <article class="expo-card expo-card--pick expo-card--study_room" data-provider-id="${item.id}" data-provider-kind="study_room">
-      ${renderPickStudyRoomMedia(item, compare)}
+      ${renderPickStudyRoomMedia(item)}
       ${renderExpoTable(rows, 'expo-tbl--card expo-tbl--compact')}
     </article>`;
 }
 
 function renderPickTutor(item, actions, opts) {
-  const compare = renderCompareChip('tutor', item.id, opts);
   const rows = tutorTableRows(item, { showIntro: false, featureMax: 1, verifyMax: 1, stack: true }, actions);
   return `
     <article class="expo-card expo-card--pick expo-card--tutor" data-provider-id="${item.id}" data-provider-kind="tutor">
-      ${renderTutorMediaOverlay(item, compare, 'pick')}
+      ${renderTutorMediaOverlay(item, 'pick')}
       ${renderExpoTable(rows, 'expo-tbl--card expo-tbl--compact')}
     </article>`;
 }
@@ -645,10 +617,6 @@ function renderBasicStudyRoomRow(item, opts) {
     showWish: opts.showWish !== false,
   });
   const actions = renderItemActions(actionOpts);
-  const compare = renderCompareChip('study_room', item.id, {
-    guest: opts.guest,
-    showCompare: opts.showCompare !== false,
-  });
   const locationLabel = opts.guest
     ? coarseRegionForGuest(item.location_label)
     : item.location_label;
@@ -661,8 +629,7 @@ function renderBasicStudyRoomRow(item, opts) {
           [
             labeled('공부방명', item.study_room_name, { cls: 'expo-tbl__cell--name' }),
             valOnly(locationLabel),
-            valOnly(formatMonthlyWon(item.price_amount), { cls: 'expo-tbl__cell--price' }),
-            { html: `<span class="expo-tbl__label">비교</span>${compare}`, cls: 'expo-tbl__cell--compare', col: 2 },
+            valOnly(formatMonthlyWon(item.price_amount), { cls: 'expo-tbl__cell--price', col: 3 }),
           ],
           [
             labeled('교습형태', optionalStudyRoomPlace(item.lesson_place_type)),
@@ -707,7 +674,6 @@ function renderBasicStudyRoomRow(item, opts) {
       <div class="expo-hcard__side">
         <div class="expo-hcard__actions">${actions}</div>
         <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="study_room" data-search-id="${item.id}">상세</button>
-        ${compare}
       </div>
     </article>`;
 }
@@ -720,10 +686,6 @@ function renderBasicTutorRow(item, opts) {
     showWish: opts.showWish !== false,
   });
   const actions = renderItemActions(actionOpts);
-  const compare = renderCompareChip('tutor', item.id, {
-    guest: opts.guest,
-    showCompare: opts.showCompare !== false,
-  });
   const schedule =
     item.lessons_per_week && item.minutes_per_lesson
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
@@ -742,7 +704,6 @@ function renderBasicTutorRow(item, opts) {
             labeled('대상', item.grade_band || '—'),
             labeled('과목', item.main_subject_note),
             valOnly(formatTutorFeeCard(item), { cls: 'expo-tbl__cell--price' }),
-            { html: `<span class="expo-tbl__label">비교</span>${compare}`, cls: 'expo-tbl__cell--compare' },
           ],
           [
             valOnly(locationLabel),
@@ -799,7 +760,6 @@ function renderBasicTutorRow(item, opts) {
       <div class="expo-hcard__side">
         <div class="expo-hcard__actions">${actions}</div>
         <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="tutor" data-search-id="${item.id}">상세</button>
-        ${compare}
       </div>
     </article>`;
 }

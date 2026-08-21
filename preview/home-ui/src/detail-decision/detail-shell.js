@@ -1,5 +1,4 @@
 import { startFirstMemoFlow } from '../messages/compose-flow.js';
-import { toggleWishlist, toggleCompare, isWishlisted, isInCompare } from '../user-actions-state.js';
 import { navigate } from '../state.js';
 import { recordRecentView, patchRecentHandoff } from '../mypage/recent-store.js';
 import { WISH_LABELS } from '../handoff-copy.js';
@@ -15,7 +14,6 @@ import {
   esc,
   buildJudgmentTokens,
   buildCompareRibbon,
-  buildCompareAwareBar,
   buildTrustStrip,
   buildContactPanel,
   microSafetyCopy,
@@ -25,8 +23,7 @@ import { renderTutorDetailBody } from './tutor-detail.js';
 import { renderStudyRoomDetailBody } from './studyroom-detail.js';
 import { AUTH_UI_BASE } from '../data.js';
 import { HOME_UI_BASE } from '../../../shared/preview-links.js';
-import { openCompareModal } from '../compare-modal.js';
-import { getCompareItems } from '../user-actions-state.js';
+import { toggleWishlist, toggleCompare, isWishlisted } from '../user-actions-state.js';
 import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
 import { renderRightRailBlock } from '../right-rail.js';
 import { maskPublicDisplayName } from '../student-blind-teaser.js';
@@ -36,6 +33,9 @@ import { bindProviderReviewMount } from '../provider-reviews/ui.js';
 import { bindReviewSheetTriggers, openReviewSheet } from '../provider-reviews/sheet.js';
 import { isLoggedIn } from '../auth-session.js';
 import { guardGuestDeepAccess } from '../guest-deep-access.js';
+import { renderItemActions } from '../exposure-render.js';
+import { bindProtectedGuestActions } from '../../../shared/guest-gate-ui.js';
+import { toggleRecommendation } from '../search-api.js';
 
 const MODAL_ID = 'p24-detail-modal';
 
@@ -106,23 +106,8 @@ function renderSecondaryActions(kind, item, viewer) {
       ${wished ? WISH_LABELS.remove : WISH_LABELS.add}
     </button>`;
   }
-  const compareKind = kind;
-  const wishOn = isWishlisted(compareKind, item.id);
-  const cmpOn = isInCompare(compareKind, item.id);
-  const reviewWrite =
-    viewer === 'parent'
-      ? `<button type="button" class="btn btn--secondary btn--sm" data-p24-action="review-write">후기 남기기</button>`
-      : '';
-  return `
-    ${reviewWrite}
-    <button type="button" class="btn btn--secondary btn--sm" data-p24-action="wish-toggle"
-      data-item-kind="${compareKind}" data-item-id="${item.id}">
-      ${wishOn ? WISH_LABELS.remove : WISH_LABELS.add}
-    </button>
-    <button type="button" class="btn btn--secondary btn--sm" data-p24-action="compare-toggle"
-      data-item-kind="${compareKind}" data-item-id="${item.id}">
-      ${cmpOn ? '비교 해제' : '비교'}
-    </button>`;
+  if (viewer !== 'parent') return '';
+  return `<button type="button" class="btn btn--secondary btn--sm" data-p24-action="review-write">후기 남기기</button>`;
 }
 
 function renderMyshopEntryCta(kind) {
@@ -280,10 +265,15 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   const primary = resolvePrimaryCta(kind, item, viewer);
   const secondary = renderSecondaryActions(kind, item, viewer);
   const entryRibbon = renderEntryContextRibbon(sourceRoute);
-  // 문의 전 체크리스트(안내형 박스) 제거 — 확대카드 길이 억제 · 1줄 안전 문구만
-  const compareKind = kind === 'tutor' ? 'tutor' : kind === 'study_room' ? 'study_room' : null;
-  const compareAware =
-    compareKind != null ? buildCompareAwareBar(compareKind, item.id, viewer) : '';
+  const actionRail =
+    kind === 'study_room' || kind === 'tutor'
+      ? `<div class="p24-card-rail">${renderItemActions({
+          guest: viewer === 'guest',
+          compareKind: kind,
+          itemId: item.id,
+          item,
+        })}</div>`
+      : '';
   const floating = viewer === 'guest';
 
   const wrap = document.createElement('div');
@@ -318,6 +308,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
           ${tokens.map((t) => `<span class="p24-judgment__token">${esc(t)}</span>`).join('')}
         </div>
         ${trust}
+        ${actionRail}
         ${bodyHtml}
         <section class="p24-section p24-section--contact">
           <h3 class="p24-section__title">접촉 가능성</h3>
@@ -327,7 +318,6 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
         ${microSafetyCopy()}
       </div>
       <footer class="modal__foot p24-modal__foot">
-        ${compareAware}
         <div class="p24-modal__foot-actions">
           ${secondary}
           ${renderMyshopEntryCta(kind)}
@@ -358,6 +348,26 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
 
   bindProviderReviewMount(wrap, kind, item, viewer);
   bindReviewSheetTriggers(wrap);
+  bindProtectedGuestActions(wrap);
+  wrap.querySelectorAll('[data-action="recommend-toggle"]').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const recKind = btn.getAttribute('data-item-kind');
+      const recId = Number(btn.getAttribute('data-item-id'));
+      if ((recKind !== 'study_room' && recKind !== 'tutor') || !recId) return;
+      try {
+        const data = await toggleRecommendation(recKind, recId);
+        const countEl = btn.querySelector('.item-actions__count');
+        if (countEl) countEl.textContent = String(data.recommend_count ?? 0);
+        btn.classList.toggle('is-active', Boolean(data.recommended));
+        btn.title = `추천 ${data.recommend_count ?? 0}`;
+      } catch (err) {
+        console.warn('[recommend]', err);
+        window.alert(err instanceof Error ? err.message : '추천 처리에 실패했습니다.');
+      }
+    });
+  });
 
   wrap.querySelectorAll('[data-p24-action="close"]').forEach((btn) => {
     btn.addEventListener('click', closeDetailModal);
@@ -401,7 +411,6 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
 
   wrap.querySelector('[data-p24-action="memo"]')?.addEventListener('click', () => {
     const memoKind = kind === 'student' ? 'student' : kind;
-    closeDetailModal();
     startFirstMemoFlow({
       kind: memoKind,
       targetId: item.id,
@@ -411,6 +420,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
         kind === 'student'
           ? `${item.grade_level || '—'} · ${item.subject_label || '—'} · ${item.location_label || '—'}`
           : `${item.main_subject_note || '—'} · ${item.location_label || '—'}`,
+      onSent: () => closeDetailModal(),
     });
   });
 
@@ -436,35 +446,49 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     });
   });
 
-  wrap.querySelectorAll('[data-p24-action="wish-toggle"]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+  wrap.querySelectorAll('[data-action="wish-toggle"]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const wishKind = btn.dataset.itemKind;
       const wasWishlisted = isWishlisted(wishKind, btn.dataset.itemId);
       toggleWishlist(wishKind, btn.dataset.itemId);
       notifyWishToggle(!wasWishlisted, { sourceRoute });
       if (!wasWishlisted) patchRecentHandoff(wishKind, btn.dataset.itemId, { lastRoute: sourceRoute, lastAction: 'wish_add' });
       onRerender?.();
-      closeDetailModal();
+      openDetailModal({ kind, item, viewer, onRerender, sourceRoute });
     });
   });
 
-  wrap.querySelectorAll('[data-p24-action="compare-open"]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const k = btn.dataset.itemKind;
-      if (k === 'study_room' || k === 'tutor') {
-        openCompareModal(k, getCompareItems(k));
-      }
-    });
-  });
-
-  wrap.querySelectorAll('[data-p24-action="compare-toggle"]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+  wrap.querySelectorAll('[data-action="compare-toggle"]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const compareKindBtn = btn.dataset.itemKind;
       const result = toggleCompare(compareKindBtn, btn.dataset.itemId);
       if (!notifyCompareToggle(result, compareKindBtn, { sourceRoute: 'detail' })) return;
       if (result.inCompare) patchRecentHandoff(compareKindBtn, btn.dataset.itemId, { lastRoute: sourceRoute, lastAction: 'compare_add' });
       onRerender?.();
-      openDetailModal({ kind, item, viewer, onRerender, sourceRoute: 'detail' });
+      openDetailModal({ kind, item, viewer, onRerender, sourceRoute });
+    });
+  });
+
+  wrap.querySelectorAll('[data-action="open-detail-memo"]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const memoKind = kind === 'student' ? 'student' : kind;
+      startFirstMemoFlow({
+        kind: memoKind,
+        targetId: item.id,
+        targetName: title,
+        student: kind === 'student' ? item : undefined,
+        structuredLine:
+          kind === 'student'
+            ? `${item.grade_level || '—'} · ${item.subject_label || '—'} · ${item.location_label || '—'}`
+            : `${item.main_subject_note || '—'} · ${item.location_label || '—'}`,
+        onSent: () => closeDetailModal(),
+      });
     });
   });
 

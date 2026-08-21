@@ -16,7 +16,7 @@ import { getStudentProtectedVisibility } from '../student-visibility.js';
  * @param {string} opts.targetName
  * @param {string} [opts.contextLabel]
  * @param {string} [opts.structuredLine]
- * @param {object} [opts.student] student row for visibility
+ * @param {(threadId: number) => void} [opts.onSent] 전송 성공 직후(쪽지함 이동 전)
  */
 export function startFirstMemoFlow(opts) {
   const role = getNavRole();
@@ -59,7 +59,10 @@ export function startFirstMemoFlow(opts) {
     showRequestInPanel: showRequest,
     requestSummary,
     structuredLine,
-    onSent: (threadId) => navigate(threadPath(threadId)),
+    onSent: (threadId) => {
+      opts.onSent?.(threadId);
+      navigate(threadPath(threadId));
+    },
   });
 }
 

@@ -237,22 +237,8 @@ export function renderCardVisualPolicyBlock(kind, item, esc) {
   const layers = resolveCardVisualLayers(kind, item);
   const promo = renderPromoBadgeRow(layers.promoBadges, esc);
   const trust = renderTrustBadgeRow(layers.trustBadges, esc);
-  const rec = layers.stats.recommend;
-  const rev = layers.stats.review;
-  const statsBits = [
-    `<span class="card-visual__stat" data-stat="recommend">추천 ${esc(String(rec))}</span>`,
-  ];
-  if (layers.stats.showReview) {
-    const id = Number(item?.id || 0);
-    statsBits.push(
-      id
-        ? `<button type="button" class="card-visual__stat card-visual__stat--btn" data-stat="review" data-action="open-review-sheet" data-item-kind="${esc(kind)}" data-item-id="${esc(String(id))}">후기 ${esc(String(rev))}</button>`
-        : `<span class="card-visual__stat" data-stat="review">후기 ${esc(String(rev))}</span>`,
-    );
-  }
-  const stats = `<div class="card-visual__stats" aria-label="통계">${statsBits.join('')}</div>`;
   const disc = `<p class="card-visual__disclaimer">플랫폼 보증 아님</p>`;
-  return `<div class="card-visual__policy-block" data-card-visual-ssot="1">${promo}${trust}${stats}${disc}</div>`;
+  return `<div class="card-visual__policy-block" data-card-visual-ssot="1">${promo}${trust}${disc}</div>`;
 }
 
 /** 정책 회귀용 — 「전문」이 유료 라벨로 쓰이면 true */

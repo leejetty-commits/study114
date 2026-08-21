@@ -85,6 +85,18 @@ record(
   'P03_stats_actions_split_html',
   '통계(.card-stats) / 기능(.card-actions) DOM 분리',
 );
+const railOrder = [...actionsHtml.matchAll(/data-action="([^"]+)"/g)].map((m) => m[1]);
+const expectedRail = ['recommend-toggle', 'open-review-sheet', 'wish-toggle', 'compare-toggle', 'open-detail-memo'];
+record(
+  expectedRail.every((a, i) => railOrder[i] === a) ? 'PASS' : 'FAIL',
+  'P03b_rail_order',
+  railOrder.join(' → ') || '(empty)',
+);
+record(
+  !/data-review-view="write"|작성/.test(actionsHtml) ? 'PASS' : 'FAIL',
+  'P03c_no_write_in_rail',
+  '레일에 ✎ 작성 없음(후기수는 게이트, 작성은 확대카드 푸터)',
+);
 record(
   /aria-label="통계"/.test(actionsHtml) && /추천/.test(actionsHtml) ? 'PASS' : 'FAIL',
   'P04_recommend_in_stats_not_paid_badge',
@@ -183,9 +195,9 @@ const strip = buildTrustStrip('study_room', {
   recommend_count: 1,
 });
 record(
-  /card-visual__policy-block/.test(strip) && /data-stat="review"/.test(strip) ? 'PASS' : 'FAIL',
+  /card-visual__policy-block/.test(strip) && !/p24-trust/.test(strip) ? 'PASS' : 'FAIL',
   'P14_detail_uses_card_visual_block',
-  '확대카드 = renderCardVisualPolicyBlock (별도 p24-trust 혼재 제거)',
+  '확대카드 배지 = renderCardVisualPolicyBlock · 추천/후기 통계는 미니와 동일 renderItemActions 레일',
 );
 
 // —— 카탈로그 vs 구문서 ——

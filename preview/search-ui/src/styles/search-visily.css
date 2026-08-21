@@ -518,9 +518,16 @@
   flex-shrink: 0;
 }
 
+.expo-hcard__actions .card-visual__rail {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
 .expo-hcard__actions .item-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   gap: 0.1rem;
 }

@@ -2190,7 +2190,7 @@
 .msg-bubble__label { display: block; font-size: var(--text-xs); color: var(--gray-500); margin-bottom: 0.25rem; }
 .msg-reply { display: flex; gap: var(--space-2); align-items: flex-end; }
 .msg-reply__input { flex: 1; padding: var(--space-2); border: 1px solid var(--gray-300); border-radius: 0.375rem; font-family: inherit; resize: vertical; }
-.msg-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(15, 23, 42, 0.45); display: flex; align-items: center; justify-content: center; padding: var(--space-4); }
+.msg-overlay { position: fixed; inset: 0; z-index: 1600; background: rgba(15, 23, 42, 0.45); display: flex; align-items: center; justify-content: center; padding: var(--space-4); }
 .msg-overlay__panel { width: 100%; max-width: 24rem; background: #fff; border-radius: 0.75rem; padding: var(--space-5); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
 .msg-overlay__screen-id { font-size: var(--text-xs); color: var(--gray-500); margin: 0 0 var(--space-2); }
 .msg-overlay__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
