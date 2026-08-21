@@ -38,7 +38,7 @@
 - 유료 배지 클라이언트 정본 = API `paid_badges[]` ([57](../internal/57-paid-badges-api-contract.md)).
 - **비교검색**은 표형이되 상단에 유료·신뢰·통계 정책축을 둔다 (`compare-modal.js`).
 - **확대카드** 배지/통계는 미니카드와 동일 `card-visual` SSOT.
-- **계정 분리:** 공부방 계정 ≠ 과외쌤 계정. Hot은 이름만 공통·권리 비공유. 방/쌤 fallback 금지 ([59](../internal/59-account-context-separation-lock.md)).
+- **계정 분리:** 공부방 계정 ≠ 과외쌤 계정. Hot은 이름만 공통일 뿐 권리는 계정별 독립. 방/쌤 fallback 금지 ([59](../internal/59-account-context-separation-lock.md)).
 | 원칙 | 내용 |
 |------|------|
 | 역할 | Prime=설득 · Pick=핵심 비교 · Basic=대량 탐색 |
