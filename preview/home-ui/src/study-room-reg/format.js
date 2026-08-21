@@ -34,8 +34,11 @@ export function formatRoomSummaryLine(room) {
   return parts.join(' · ') || '—';
 }
 
-/** @param {StudyRoomRecord} room */
-export function roomToExposureRow(room) {
+/**
+ * @param {StudyRoomRecord} room
+ * @param {{ image_path?: string, slogan?: string }} [extra]
+ */
+export function roomToExposureRow(room, extra = {}) {
   return {
     id: room.id,
     study_room_name: room.study_room_name,
@@ -44,6 +47,7 @@ export function roomToExposureRow(room) {
     grade_band: room.grade_band || '—',
     price_amount: room.price_amount,
     intro_short: room.intro_short || '',
+    slogan: extra.slogan ?? room.slogan ?? room.intro_short ?? '',
     feature_1: room.feature_1 || '',
     career_years: room.career_years,
     education_office_registered: room.education_office_registered,
@@ -54,6 +58,8 @@ export function roomToExposureRow(room) {
     facility_summary: room.facility_summary || '—',
     profile_status: room.profile_status,
     compare_eligible: room.compare_eligible,
+    image_path: extra.image_path || '',
+    inquiry_status: room.inquiry_status,
   };
 }
 

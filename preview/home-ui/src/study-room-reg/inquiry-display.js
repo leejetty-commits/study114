@@ -2,6 +2,8 @@
  * P20-05 — 쪽지 수신 2상태 · 카드 CTA 매핑 (공부방)
  */
 
+import { P20_INQUIRY_COPY } from './study-room-reg-copy.js';
+
 /** @typedef {'open'|'paused'|'capacity_full'|'waiting_only'} InquiryStatusDb */
 
 /** @param {string|null|undefined} status */
@@ -16,11 +18,26 @@ export function inquiryClosedReasonLabel(status) {
   return null;
 }
 
-/** 운영자 화면 요약 */
+/** 운영자 화면 요약 (목록 등) */
 export function operatorInquirySummary(status) {
-  if (isInquiryReceiving(status)) return '받는 중';
+  if (isInquiryReceiving(status)) return P20_INQUIRY_COPY.cardReceiving;
   const reason = inquiryClosedReasonLabel(status);
-  return reason ? `안 받음 · ${reason}` : '안 받음';
+  return reason ? `${P20_INQUIRY_COPY.cardClosed} · ${reason}` : P20_INQUIRY_COPY.cardClosed;
+}
+
+/**
+ * 쪽지설정 「홈화면 카드표시」 요약 — 2상태 + OFF일 때만 사유
+ * @param {string|null|undefined} inquiryStatus
+ * @returns {{ line: string, reasonLine: string|null }}
+ */
+export function homeCardDisplaySummary(inquiryStatus) {
+  if (isInquiryReceiving(inquiryStatus)) {
+    return { line: P20_INQUIRY_COPY.cardReceiving, reasonLine: null };
+  }
+  return {
+    line: P20_INQUIRY_COPY.cardClosed,
+    reasonLine: inquiryClosedReasonLabel(inquiryStatus) || '잠시 쉼',
+  };
 }
 
 /**
@@ -32,7 +49,7 @@ export function resolveStudyRoomCardCta(inquiryStatus) {
     return { label: '쪽지하기', disabled: false, reasonLine: null };
   }
   return {
-    label: '지금은 쪽지 안 받음',
+    label: P20_INQUIRY_COPY.cardClosed,
     disabled: true,
     reasonLine: inquiryClosedReasonLabel(inquiryStatus) || '잠시 쉼',
   };
@@ -40,7 +57,6 @@ export function resolveStudyRoomCardCta(inquiryStatus) {
 
 /**
  * 마이샵 본문용 — 이벤트 없는 읽기 전용 상태 문구 (CTA/버튼 카피 금지)
- * 톤: 짧은 상태형으로 통일
  * @param {string|null|undefined} inquiryStatus
  * @returns {string}
  */
