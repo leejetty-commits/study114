@@ -540,7 +540,7 @@ export function renderPlansHome() {
         </ul>
         <div class="plans-tip">
           <span class="plans-tip__ico" aria-hidden="true">💡</span>
-          <p>알고 계셨나요? 광고성 주목·신규·추천·쪽집게 배지는 대표·추천 노출 이용 기간에 함께 적용됩니다. (단독 핵심상품 ✕)</p>
+          <p>알고 계셨나요? Hot·단과(공부방)·쪽집게·SKY(과외쌤)는 대표·추천 노출 이용 기간에 함께 적용됩니다. New는 신규 1주 자동배지이며, 추천·후기는 통계입니다. (단독 핵심상품 ✕)</p>
         </div>
       </section>
 

@@ -350,6 +350,10 @@ final class SearchService
             : 'NULL';
         $primeImgExpr = $this->roomCoverImageExpr($pdo, 'prime');
         $basicImgExpr = $this->roomCoverImageExpr($pdo, 'basic');
+        $careerExpr = $this->columnCache($pdo, 'study_rooms', 'career_years') ? 'sr.career_years' : 'NULL';
+        $bizExpr = $this->columnCache($pdo, 'study_rooms', 'business_registration_available')
+            ? 'sr.business_registration_available'
+            : 'NULL';
 
         $sql = "
             SELECT DISTINCT sr.id, sr.study_room_name, sr.price_amount, sr.intro_short, sr.intro_long,
@@ -359,6 +363,8 @@ final class SearchService
                    sr.lesson_place_type, sr.capacity_per_time, sr.lesson_operation_type,
                    sr.facility_note, sr.inquiry_status,
                    sr.education_office_registered, sr.detail_completion_status,
+                   {$careerExpr} AS career_years,
+                   {$bizExpr} AS business_registration_available,
                    {$latExpr} AS latitude, {$lngExpr} AS longitude,
                    sr.published_at, sr.created_at,
                    {$recommendExpr} AS recommend_count,
@@ -428,6 +434,8 @@ final class SearchService
                 'facility_summary'           => trim((string) ($row['facility_note'] ?? '')),
                 'inquiry_status'             => (string) ($row['inquiry_status'] ?? ''),
                 'education_office_registered'=> (bool) ($row['education_office_registered'] ?? false),
+                'career_years'               => $row['career_years'] !== null ? (int) $row['career_years'] : null,
+                'business_registration_available' => (bool) ($row['business_registration_available'] ?? false),
                 'detail_completion_status'   => $detailStatus,
                 'prime_eligible'             => $detailStatus === 'expanded_complete',
                 'exposure_tier'              => $exposureTier,
@@ -555,6 +563,7 @@ final class SearchService
         $sql = "
             SELECT DISTINCT t.id, t.tutor_display_name, t.preferred_fee_amount,
                    t.university_name, t.major_name, t.career_year_band,
+                   t.university_status, t.proof_document_available,
                    t.lessons_per_week, t.minutes_per_lesson, t.detail_completion_status,
                    t.published_at, t.created_at,
                    {$recommendExpr} AS recommend_count,
@@ -623,6 +632,8 @@ final class SearchService
                 'main_subject_note'      => (string) ($row['subject_name'] ?? ''),
                 'university_name'        => (string) ($row['university_name'] ?? ''),
                 'major_name'             => (string) ($row['major_name'] ?? ''),
+                'university_status'      => $row['university_status'] ?? null,
+                'proof_document_available' => (bool) ($row['proof_document_available'] ?? false),
                 'career_year_band'       => $row['career_year_band'] ?? null,
                 'lessons_per_week'       => $row['lessons_per_week'] !== null ? (int) $row['lessons_per_week'] : null,
                 'minutes_per_lesson'     => $row['minutes_per_lesson'] !== null ? (int) $row['minutes_per_lesson'] : null,

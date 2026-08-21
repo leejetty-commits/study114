@@ -21,6 +21,7 @@ import {
   formatVerificationDocCountPublic,
   formatProofDocumentPublic,
 } from './lifecycle-copy.js';
+import { resolveTrustBadgeLabels } from './card-visual.js';
 
 export function formatMonthlyWon(price_amount) {
   if (price_amount == null || price_amount === '') return '—';
@@ -225,21 +226,12 @@ export function formatCareerYears(career_years) {
 }
 
 export function studyRoomBadges(r) {
-  const b = [];
-  if (r.education_office_registered) b.push('교육청등록');
-  if (r.career_years >= 10) b.push(`${r.career_years}년 경력`);
-  else if (r.career_years) b.push(`경력 ${r.career_years}년`);
-  if (r.one_on_one_available) b.push('1:1');
-  if (r.weekend_available) b.push('주말');
-  return b.slice(0, 2);
+  // 2026-08-21: 신뢰층만 — 1:1/주말은 기능칩이므로 제외
+  return resolveTrustBadgeLabels('study_room', r);
 }
 
 export function tutorBadges(t) {
-  const b = [];
-  if (t.proof_document_available) b.push('제출자료');
-  if (t.career_year_band === 'y10_plus') b.push('경력 10년+');
-  else if (t.career_year_band) b.push(`경력 ${formatCareerYearBand(t.career_year_band)}`);
-  return b.slice(0, 2);
+  return resolveTrustBadgeLabels('tutor', t);
 }
 
 const CENTER_FALLBACK = '상세 내용은 로그인 후 확인할 수 있습니다.';

@@ -181,6 +181,12 @@ function enrichStudyRoom(r) {
   const lesson_place_type =
     r.lesson_place_type === 'office' ? 'academy' : r.lesson_place_type === 'home' ? 'study_room' : r.lesson_place_type;
   const id = r.id ?? 1;
+  const paid_badges =
+    r.paid_badges ||
+    (id % 5 === 1 ? ['hot'] : id % 5 === 2 ? ['subject_track'] : id % 5 === 3 ? ['hot', 'subject_track'] : []);
+  const published_at =
+    r.published_at ||
+    (id % 4 === 0 ? new Date().toISOString() : '2025-01-01T00:00:00Z');
   return {
     ...r,
     lesson_place_type,
@@ -188,7 +194,9 @@ function enrichStudyRoom(r) {
     lesson_operation_type: r.lesson_operation_type || 'group_by_time_slot',
     slogan: r.slogan || null,
     image_path: r.image_path || ROOM_LISTING_IMAGES[(id - 1) % ROOM_LISTING_IMAGES.length],
-    badges: studyRoomBadges(r),
+    paid_badges,
+    published_at,
+    badges: studyRoomBadges({ ...r, lesson_place_type }),
     recommend_count: (id % 7) + 2,
     wish_count: (id % 15) + 3,
     message_count: id % 6,
@@ -199,12 +207,20 @@ function enrichStudyRoom(r) {
 
 function enrichTutor(t) {
   const id = t.id ?? 1;
+  const paid_badges =
+    t.paid_badges ||
+    (id % 6 === 1 ? ['hot'] : id % 6 === 2 ? ['picked'] : id % 6 === 3 ? ['sky'] : id % 6 === 4 ? ['hot', 'sky'] : []);
+  const published_at =
+    t.published_at ||
+    (id % 5 === 0 ? new Date().toISOString() : '2025-01-01T00:00:00Z');
   return {
     ...t,
     slogan: t.slogan || t.feature_1 || null,
     main_material_note: t.main_material_note || null,
     verification_doc_count: t.verification_doc_count ?? (t.proof_document_available ? 3 : 0),
     image_path: t.image_path || TUTOR_LISTING_IMAGES[(id - 1) % TUTOR_LISTING_IMAGES.length],
+    paid_badges,
+    published_at,
     badges: tutorBadges(t),
     recommend_count: (id % 9) + 1,
     wish_count: (id % 11) + 2,

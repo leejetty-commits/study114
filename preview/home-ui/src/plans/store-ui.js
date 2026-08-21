@@ -205,11 +205,12 @@ export function renderPlansFaqList(items) {
 /** 노출 종속 광고배지 안내 (단독 판매 ✕) */
 export function renderBadgeAddonSection() {
   const badges = [
-    { id: 'hot', name: '주목', desc: '광고성 주목 배지 · 추천·대표 노출 기간에 함께 적용' },
-    { id: 'new', name: '신규', desc: '광고성 주목 배지 · 신뢰·등록정보와 분리' },
-    { id: 'recommend', name: '추천', desc: '광고성 자기선언 · 지도성향 아이콘(무료)과 구분' },
-    { id: 'picked', name: '쪽집게', desc: '광고성 자기선언 · 학력 등 사실표시와 구분' },
+    { id: 'hot', name: 'Hot', desc: '광고성 주목 배지 · 추천·대표 노출 기간에 함께 적용' },
+    { id: 'subject_track', name: '단과', desc: '공부방 전용 유료 아이콘 · 「전문」아이콘 금지' },
+    { id: 'picked', name: '쪽집게', desc: '과외쌤 광고성 자기선언 · 학력 등 사실표시와 구분' },
+    { id: 'sky', name: 'SKY', desc: '과외쌤 유료 광고축 · 대학명 자동추론 아님' },
   ];
+  // New=자동부여 · 추천=통계 — 판매 배지 목록에서 제외 (2026-08-21)
   return `
     <section class="plans-section">
       <div class="plans-section__head">

@@ -15,7 +15,8 @@
     "sync:inventory:check": "node scripts/sync-screen-inventory.mjs --check",
     "build:staging": "powershell -ExecutionPolicy Bypass -File scripts/build-staging.ps1",
     "build:dothome": "powershell -ExecutionPolicy Bypass -File scripts/build-dothome.ps1",
-    "verify:shop-page": "node scripts/run-verify-shop-page.mjs"
+    "verify:shop-page": "node scripts/run-verify-shop-page.mjs",
+    "verify:card-visual": "cd preview/home-ui && npx --yes vite-node ../../scripts/verify-card-visual.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0"

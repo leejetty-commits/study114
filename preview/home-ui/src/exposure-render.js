@@ -47,6 +47,11 @@ import {
   renderListSortSelect,
   sortListItems,
 } from '../../shared/list-sort.js';
+import {
+  resolveCardVisualLayers,
+  renderPromoBadgeRow,
+  renderTrustBadgeRow,
+} from './card-visual.js';
 
 function esc(s) {
   if (s == null || s === '') return '';
@@ -109,7 +114,7 @@ function joinFeatures(item, max = 3) {
   return [item.feature_1, item.feature_2, item.feature_3].filter(Boolean).slice(0, max).join(' · ') || '—';
 }
 
-/** 11장 §2 — 추천·찜·후기·쪽지·비교 아이콘+숫자 */
+/** 11장 §2-0 / 상위기획 §18 — 통계·기능 분리 (추천·후기≠액션배지) */
 function actionCountBtn(icon, count, { title, cls = '', attrs = '', disabled = false, hideWhenZero = false } = {}) {
   const n = Number(count) || 0;
   if (hideWhenZero && n <= 0) return '';
@@ -124,6 +129,7 @@ function actionOptsFromItem(item, base = {}) {
   return {
     ...base,
     itemId: item.id,
+    item,
     recommend_count: item.recommend_count ?? 0,
     wish_count: item.wish_count ?? 0,
     review_count: item.review_count ?? 0,
@@ -133,7 +139,7 @@ function actionOptsFromItem(item, base = {}) {
 }
 
 /**
- * @param {{ guest?: boolean, compareKind?: 'study_room'|'tutor', showCompare?: boolean, itemId?: number, recommend_count?: number, wish_count?: number, review_count?: number, message_count?: number, compare_count?: number }} opts
+ * @param {{ guest?: boolean, compareKind?: 'study_room'|'tutor', showCompare?: boolean, showWish?: boolean, itemId?: number, item?: object, recommend_count?: number, wish_count?: number, review_count?: number, message_count?: number, compare_count?: number }} opts
  */
 export function renderItemActions(opts = {}) {
   const {
@@ -142,6 +148,7 @@ export function renderItemActions(opts = {}) {
     showCompare = true,
     showWish = true,
     itemId,
+    item,
     recommend_count = 0,
     wish_count = 0,
     review_count = 0,
@@ -151,19 +158,38 @@ export function renderItemActions(opts = {}) {
   const kind = compareKind;
   const wished = !guest && itemId != null && isWishlisted(kind, itemId);
   const inCompare = !guest && itemId != null && isInCompare(kind, itemId);
+  const layers =
+    item && (kind === 'study_room' || kind === 'tutor')
+      ? resolveCardVisualLayers(kind, item)
+      : null;
+  const rec = layers?.stats.recommend ?? (Number(recommend_count) || 0);
+  const rev = layers?.stats.review ?? (Number(review_count) || 0);
+  const showReview = layers ? layers.stats.showReview : rev > 0;
 
+  // B 통계층 — 추천(토글 가능)·후기(개수만). 광고배지처럼 보이지 않게 card-stats 그룹
   const recommendAttrs = guest
     ? `data-action="login-gate" data-gate="recommend" data-gate-label="추천"`
     : itemId != null
       ? `data-action="recommend-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`
       : '';
-  const recommendBtn = actionCountBtn('👍', recommend_count, {
-    title: `추천 ${recommend_count}`,
-    cls: '',
+  const recommendStat = actionCountBtn('👍', rec, {
+    title: `추천 ${rec}`,
+    cls: 'item-actions__btn--stat',
     attrs: recommendAttrs,
     disabled: !guest && itemId == null,
   });
+  const reviewStat = showReview
+    ? actionCountBtn('💬', rev, {
+        title: `후기 ${rev}`,
+        cls: 'item-actions__btn--stat',
+        attrs:
+          itemId != null
+            ? `data-action="open-detail" data-item-kind="${kind}" data-item-id="${itemId}" data-open-reviews="1"`
+            : '',
+      })
+    : '';
 
+  // A 기능층 — 찜 / 쪽지 / 비교 (좋아요 제거)
   const wishAttrs = guest
     ? `data-action="login-gate" data-gate="wish" data-gate-label="찜"`
     : `data-action="wish-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`;
@@ -172,24 +198,16 @@ export function renderItemActions(opts = {}) {
       ? ''
       : actionCountBtn(wished ? '♥' : '♡', wish_count, {
           title: `찜 ${wish_count}`,
-          cls: wished ? 'is-active' : '',
+          cls: wished ? 'is-active item-actions__btn--action' : 'item-actions__btn--action',
           attrs: wishAttrs,
         });
-
-  const reviewBtn = actionCountBtn('💬', review_count, {
-    title: `후기 ${review_count}`,
-    hideWhenZero: true,
-    attrs:
-      itemId != null
-        ? `data-action="open-detail" data-item-kind="${kind}" data-item-id="${itemId}" data-open-reviews="1"`
-        : '',
-  });
 
   const msgAttrs = guest
     ? `data-action="login-gate" data-gate="inquire" data-gate-label="쪽지"`
     : `data-action="open-detail-memo" data-item-kind="${kind}" data-item-id="${itemId}"`;
   const messageBtn = actionCountBtn('✉', message_count, {
     title: `쪽지 ${message_count}`,
+    cls: 'item-actions__btn--action',
     attrs: msgAttrs,
   });
 
@@ -198,23 +216,33 @@ export function renderItemActions(opts = {}) {
     : guest
       ? actionCountBtn('⇄', compare_count, {
           title: `비교 ${compare_count}`,
+          cls: 'item-actions__btn--action',
           attrs: `data-action="compare-guest-blocked" data-compare-kind="${kind}"`,
         })
       : actionCountBtn('⇄', compare_count, {
           title: `비교 ${compare_count}`,
-          cls: inCompare ? 'is-active' : '',
+          cls: inCompare ? 'is-active item-actions__btn--action' : 'item-actions__btn--action',
           attrs: `data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`,
         });
 
   return `
-    <div class="item-actions" aria-label="항목 액션">
-      ${recommendBtn}
-      ${wishBtn}
-      ${reviewBtn}
-      ${messageBtn}
-      ${compareBtn}
+    <div class="card-visual__rail" data-card-visual="${esc(layers?.policyVersion || '')}">
+      <div class="card-stats" aria-label="통계">${recommendStat}${reviewStat}</div>
+      <div class="item-actions card-actions" aria-label="기능">${wishBtn}${messageBtn}${compareBtn}</div>
     </div>
   `;
+}
+
+/** @param {'study_room'|'tutor'} kind @param {object} item */
+function renderCardBadgeLayers(kind, item) {
+  const layers = resolveCardVisualLayers(kind, item);
+  const trust =
+    layers.trustBadges.length > 0
+      ? renderTrustBadgeRow(layers.trustBadges, esc)
+      : item.badges?.length
+        ? renderTrustBadgeRow(item.badges, esc)
+        : '';
+  return `${renderPromoBadgeRow(layers.promoBadges, esc)}${trust}`;
 }
 
 function renderCompareChip(kind, itemId, opts) {
@@ -366,8 +394,14 @@ function renderTrustBadges(badges, max = 4) {
   if (!badges?.length) return '—';
   return badges
     .slice(0, max)
-    .map((b) => `<span class="expo-tbl__badge">${esc(b)}</span>`)
+    .map((b) => `<span class="card-visual__trust-badge expo-tbl__badge">${esc(b)}</span>`)
     .join('');
+}
+
+function trustBadgesForItem(kind, item) {
+  const layers = resolveCardVisualLayers(kind, item);
+  if (layers.trustBadges.length) return layers.trustBadges;
+  return Array.isArray(item.badges) ? item.badges : [];
 }
 
 function renderVerificationCell(item, maxDocs) {
@@ -383,10 +417,11 @@ function studyRoomPriceCell(item) {
 }
 
 function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = false }, actions = '') {
+  const badgeCell = `${renderPromoBadgeRow(resolveCardVisualLayers('study_room', item).promoBadges, esc)}${renderTrustBadges(trustBadgesForItem('study_room', item))}`;
   if (stack) {
     const rows = [
       [valOnly(item.study_room_name, { cls: 'expo-tbl__cell--name', col: 2 })],
-      [{ html: renderTrustBadges(item.badges), col: 2, cls: 'expo-tbl__cell--badges' }],
+      [{ html: badgeCell, col: 2, cls: 'expo-tbl__cell--badges' }],
       [labeled('대상', item.grade_band), studyRoomPriceCell(item)],
       [labeled('과목', item.main_subject_note, { col: 2 })],
       [labeled('교습형태', optionalStudyRoomPlace(item.lesson_place_type), { col: 2 })],
@@ -399,7 +434,7 @@ function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = fa
 
   const rows = [
     [valOnly(item.study_room_name, { cls: 'expo-tbl__cell--name', col: 2 })],
-    [{ html: renderTrustBadges(item.badges), col: 2, cls: 'expo-tbl__cell--badges' }],
+    [{ html: badgeCell, col: 2, cls: 'expo-tbl__cell--badges' }],
     [labeled('대상', item.grade_band), studyRoomPriceCell(item)],
     [labeled('과목', item.main_subject_note, { col: 2 })],
     [labeled('교습형태', optionalStudyRoomPlace(item.lesson_place_type)), labeled('원생수', item.capacity_per_time || '—')],
@@ -417,10 +452,16 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
     html: `<span class="expo-tbl__label">제출자료</span> ${renderVerificationCell(item, verifyMax === 1 ? 1 : 99)}`,
     cls: 'expo-tbl__cell--verify',
   };
+  const badgeCell = {
+    html: `${renderPromoBadgeRow(resolveCardVisualLayers('tutor', item).promoBadges, esc)}${renderTrustBadges(trustBadgesForItem('tutor', item))}`,
+    col: 2,
+    cls: 'expo-tbl__cell--badges',
+  };
 
   if (stack) {
     const rows = [
       [nameWithGenderCell(item.tutor_display_name, item.gender), verifyCell],
+      [badgeCell],
       [labeled('대상', item.grade_band || '—', { col: 2 })],
       [labeled('과목', item.main_subject_note, { col: 2 })],
       [labeled('수업장소', optionalTutorPlaces(item.lesson_places), { col: 2 })],
@@ -443,6 +484,7 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
 
   const rows = [
     [nameWithGenderCell(item.tutor_display_name, item.gender), verifyCell],
+    [badgeCell],
     [labeled('대상', item.grade_band || '—'), labeled('과목', item.main_subject_note)],
     [labeled('수업장소', optionalTutorPlaces(item.lesson_places)), labeled('원생수', formatTutorStudentTarget(item))],
     [labeled('주교재', item.main_material_note || '—'), labeled('특징', joinFeatures(item, featureMax), { cls: 'expo-tbl__cell--features' })],
@@ -629,10 +671,12 @@ function renderBasicStudyRoomRow(item, opts) {
   }
 
   const slogan = item.slogan || '';
+  const badgeLayers = renderCardBadgeLayers('study_room', item);
   return `
     <article class="expo-basic expo-basic--study_room expo-hcard" data-provider-id="${item.id}" data-provider-kind="study_room">
       <div class="expo-hcard__media-wrap">
         ${renderMedia(listingImage(item, 'list'), item.study_room_name, 'list', { roomDefault: true })}
+        ${badgeLayers}
       </div>
       <div class="expo-hcard__body">
         <div class="expo-hcard__top">
@@ -714,11 +758,13 @@ function renderBasicTutorRow(item, opts) {
   const nameLine = gender
     ? `<span class="expo-hcard__gender">${esc(gender)}</span>${esc(item.tutor_display_name || '')}`
     : esc(item.tutor_display_name || '');
+  const badgeLayers = renderCardBadgeLayers('tutor', item);
   return `
     <article class="expo-basic expo-basic--tutor expo-hcard" data-provider-id="${item.id}" data-provider-kind="tutor">
       <div class="expo-hcard__media-wrap">
         ${renderMedia(item.image_path, item.tutor_display_name, 'list')}
         ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
+        ${badgeLayers}
       </div>
       <div class="expo-hcard__body">
         <div class="expo-hcard__top">

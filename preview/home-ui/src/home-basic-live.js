@@ -29,47 +29,62 @@ const state = {
 
 function mapRoom(item) {
   const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
-  return {
+  const room = {
     id: item.id,
     study_room_name: item.title || '',
     location_label: item.region_label || '',
     price_amount: item.price_amount ?? null,
-    recommend_count: item.recommend_count ?? 0,
-    review_count: item.review_count ?? 0,
-    published_at: item.published_at || item.created_at || null,
+    recommend_count: Number(item.recommend_count) || 0,
+    review_count: Number(item.review_count) || 0,
+    published_at: item.published_at || null,
+    created_at: item.created_at || null,
     main_subject_note: item.main_subject_note || summaryLines[0] || '',
-    intro_short: summaryLines[1] || '',
+    intro_short: item.intro_short || summaryLines[1] || '',
+    education_office_registered: Boolean(item.education_office_registered),
+    career_years: item.career_years ?? null,
+    business_registration_available: Boolean(item.business_registration_available),
+    paid_badges: item.paid_badges || item.badge_codes || undefined,
     profile_status: 'published',
     compare_eligible: true,
     inquiry_status: item.inquiry_status || 'paused',
-    badges: studyRoomBadges({ main_subject_note: item.main_subject_note || summaryLines[0] || '' }),
     latitude: item.latitude ?? null,
     longitude: item.longitude ?? null,
     exposure_tier: item.exposure_tier || 'basic',
+    image_path: item.image_path || item.image_path_basic || '',
+    image_path_basic: item.image_path_basic || '',
+    image_path_prime: item.image_path_prime || '',
     _realDb: true,
   };
+  room.badges = studyRoomBadges(room);
+  return room;
 }
 
 function mapTutor(item) {
   const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
-  return {
+  const tutor = {
     id: item.id,
     tutor_display_name: item.title || '',
     location_label: item.region_label || '',
     preferred_fee_amount: item.preferred_fee_amount ?? item.price_amount ?? null,
     university_name: item.university_name || '',
     major_name: item.major_name || '',
-    recommend_count: item.recommend_count ?? 0,
-    review_count: item.review_count ?? 0,
-    published_at: item.published_at || item.created_at || null,
+    university_status: item.university_status || null,
+    career_year_band: item.career_year_band || null,
+    proof_document_available: Boolean(item.proof_document_available),
+    recommend_count: Number(item.recommend_count) || 0,
+    review_count: Number(item.review_count) || 0,
+    published_at: item.published_at || null,
+    created_at: item.created_at || null,
     main_subject_note: item.main_subject_note || summaryLines[0] || '',
-    intro_short: summaryLines[1] || '',
+    intro_short: item.intro_short || summaryLines[1] || '',
+    paid_badges: item.paid_badges || item.badge_codes || undefined,
     profile_status: 'published',
     compare_eligible: true,
-    badges: tutorBadges({ main_subject_note: item.main_subject_note || summaryLines[0] || '' }),
     exposure_tier: item.exposure_tier || 'basic',
     _realDb: true,
   };
+  tutor.badges = tutorBadges(tutor);
+  return tutor;
 }
 
 function mapStudent(item) {

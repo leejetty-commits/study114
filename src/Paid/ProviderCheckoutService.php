@@ -110,7 +110,7 @@ final class ProviderCheckoutService
         return match ($productId) {
             'prime', 'pick' => 'position',
             'memo_ticket', 'request_view' => 'count',
-            'hot', 'new', 'recommend', 'picked' => 'badge_addon',
+            'hot', 'new', 'recommend', 'picked', 'subject_track', 'sky' => 'badge_addon',
             default => throw new InvalidArgumentException('알 수 없는 상품입니다.'),
         };
     }

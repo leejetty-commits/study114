@@ -53,56 +53,53 @@ const PRODUCTS = {
   request_view: toCatalogProduct(getProductConfig('request_view')),
   hot: {
     id: 'hot',
-    name: '주목',
+    name: 'Hot',
     tagline: '추천·대표 노출 이용 기간에 함께 적용',
     kind: 'badge_addon',
     bullets: ['광고성 주목 배지', '플랫폼 인증처럼 보이지 않게', '단독 핵심상품 ✕'],
   },
-  new: {
-    id: 'new',
-    name: '신규',
-    tagline: '추천·대표 노출 이용 기간에 함께 적용',
+  subject_track: {
+    id: 'subject_track',
+    name: '단과',
+    tagline: '공부방 전용 · 추천·대표 노출 이용 기간에 함께 적용',
     kind: 'badge_addon',
-    bullets: ['광고성 주목 배지', '신뢰 배지·등록정보와 분리', '단독 핵심상품 ✕'],
-  },
-  recommend: {
-    id: 'recommend',
-    name: '추천',
-    tagline: '추천·대표 노출 이용 기간에 함께 적용',
-    kind: 'badge_addon',
-    bullets: ['광고성 자기선언 배지', '지도성향 아이콘(무료)과 구분', '단독 핵심상품 ✕'],
+    bullets: ['공부방 유료 아이콘', '「전문」아이콘 금지 — 단과로 표기', '단독 핵심상품 ✕'],
   },
   picked: {
     id: 'picked',
     name: '쪽집게',
-    tagline: '추천·대표 노출 이용 기간에 함께 적용',
+    tagline: '과외쌤 · 추천·대표 노출 이용 기간에 함께 적용',
     kind: 'badge_addon',
-    bullets: ['광고성 자기선언 배지', 'SKY·학력 등 사실표시층과 구분', '단독 핵심상품 ✕'],
+    bullets: ['광고성 자기선언 배지', 'SKY·학력 등 사실표시와 구분', '단독 핵심상품 ✕'],
+  },
+  sky: {
+    id: 'sky',
+    name: 'SKY',
+    tagline: '과외쌤 유료 광고축 · 추천·대표 노출 이용 기간에 함께 적용',
+    kind: 'badge_addon',
+    bullets: ['과외쌤 유료 주목 배지', '대학명 자동추론 배지 아님', '단독 핵심상품 ✕'],
   },
 };
 
-/** 18§4-1 공부방 우선 순서 */
+/** 2026-08-21 잠금 — New·추천 통계는 판매 배지 아님 */
 export const STUDY_ROOM_CATALOG_IDS = [
   'prime',
   'pick',
   'hot',
-  'new',
-  'recommend',
-  'picked',
+  'subject_track',
   'memo_ticket',
   'request_view',
 ];
 
-/** 18§4-1 과외쌤 우선 순서 */
+/** 2026-08-21 잠금 — Hot / 쪽집게 / SKY */
 export const TUTOR_CATALOG_IDS = [
   'memo_ticket',
   'request_view',
   'pick',
   'prime',
   'hot',
-  'new',
-  'recommend',
   'picked',
+  'sky',
 ];
 
 /** @param {'study_room'|'tutor'|string} role */
