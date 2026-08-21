@@ -164,6 +164,7 @@ function intentFromGateEl(el) {
     source: normalizeDeepIntentSource(gate),
     providerType: providerTypeRaw === 'tutor' ? 'tutor' : providerTypeRaw === 'study_room' ? 'study_room' : '',
     providerId,
+    extra: gate === 'review_write' ? { view: 'write' } : {},
   };
 }
 

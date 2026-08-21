@@ -33,7 +33,7 @@ import { maskPublicDisplayName } from '../student-blind-teaser.js';
 import { isGuestPublicPath, loginUrl } from '../../../shared/route-access.js';
 import { openPublicMyshop } from '../myshop/navigate.js';
 import { bindProviderReviewMount } from '../provider-reviews/ui.js';
-import { bindReviewSheetTriggers } from '../provider-reviews/sheet.js';
+import { bindReviewSheetTriggers, openReviewSheet } from '../provider-reviews/sheet.js';
 import { isLoggedIn } from '../auth-session.js';
 import { guardGuestDeepAccess } from '../guest-deep-access.js';
 
@@ -109,7 +109,12 @@ function renderSecondaryActions(kind, item, viewer) {
   const compareKind = kind;
   const wishOn = isWishlisted(compareKind, item.id);
   const cmpOn = isInCompare(compareKind, item.id);
+  const reviewWrite =
+    viewer === 'parent'
+      ? `<button type="button" class="btn btn--secondary btn--sm" data-p24-action="review-write">후기 남기기</button>`
+      : '';
   return `
+    ${reviewWrite}
     <button type="button" class="btn btn--secondary btn--sm" data-p24-action="wish-toggle"
       data-item-kind="${compareKind}" data-item-id="${item.id}">
       ${wishOn ? WISH_LABELS.remove : WISH_LABELS.add}
@@ -365,6 +370,15 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
 
   wrap.querySelector('[data-p24-action="login"]')?.addEventListener('click', () => {
     window.open(`${AUTH_UI_BASE}/#/login?from=detail`, '_blank', 'noopener');
+  });
+
+  wrap.querySelector('[data-p24-action="review-write"]')?.addEventListener('click', () => {
+    if (kind !== 'study_room' && kind !== 'tutor') return;
+    void openReviewSheet({
+      providerType: kind,
+      providerId: Number(item.id),
+      view: 'write',
+    });
   });
 
   wrap.querySelector('[data-p24-action="open-myshop"]')?.addEventListener('click', (e) => {

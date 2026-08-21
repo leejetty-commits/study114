@@ -106,7 +106,7 @@ SET @c_sr := (
   WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'study_rooms' AND COLUMN_NAME = 'review_write_status'
 );
 SET @s_sr := IF(@c_sr = 0,
-  'ALTER TABLE study_rooms ADD COLUMN review_write_status ENUM(''open'',''closed'') NOT NULL DEFAULT ''open'' COMMENT ''후기 신규 작성 열림/닫힘'' AFTER status',
+  'ALTER TABLE study_rooms ADD COLUMN review_write_status ENUM(''open'',''closed'') NOT NULL DEFAULT ''open'' COMMENT ''후기 신규 작성 열림/닫힘'' AFTER profile_status',
   'SELECT 1');
 PREPARE ps_sr FROM @s_sr; EXECUTE ps_sr; DEALLOCATE PREPARE ps_sr;
 

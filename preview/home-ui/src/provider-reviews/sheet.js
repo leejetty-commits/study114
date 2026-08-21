@@ -13,6 +13,7 @@ import {
   REVIEW_POLICY,
   ctaLabel,
   reviewSnippet,
+  writeBlockedMessage,
 } from './copy.js';
 import {
   fetchReviewSummary,
@@ -23,6 +24,7 @@ import {
   deleteProviderReview,
   reviewsArchivePath,
 } from './store.js';
+import { startFirstMemoFlow } from '../messages/compose-flow.js';
 
 let sheetEl = null;
 
@@ -51,10 +53,32 @@ function closeSheet() {
   sheetEl = null;
 }
 
+function resolveRequestedView(summary, view) {
+  if (view !== 'write') return view || 'consume';
+  if (summary.can_write) return 'write';
+  if (summary.cta_kind === 'manage') return 'manage';
+  return 'write_gate';
+}
+
+function renderWriteGate(summary) {
+  const reason = summary.write_blocked_reason;
+  const memoOk = reason === 'no_thread' || reason === 'login';
+  return `
+    <div class="p24-review-gate">
+      <p>${esc(writeBlockedMessage(reason))}</p>
+      ${
+        memoOk
+          ? `<button type="button" class="btn btn--primary" data-review-sheet-act="memo">${esc(PROVIDER_REVIEW_COPY.writeGateMemoCta)}</button>`
+          : ''
+      }
+      <button type="button" class="btn btn--secondary" data-review-sheet-act="back">후기 읽기</button>
+    </div>`;
+}
+
 function renderCta(summary) {
   const kind = summary.cta_kind || 'ineligible';
   if (kind === 'none') return '';
-  if (kind === 'write') {
+  if (kind === 'write' || kind === 'ineligible' || kind === 'closed' || kind === 'blocked') {
     return `<button type="button" class="btn btn--primary" data-review-sheet-act="write">${esc(PROVIDER_REVIEW_COPY.writeCta)}</button>`;
   }
   if (kind === 'manage') {
@@ -185,6 +209,7 @@ function paint(host, summary, view, extra = {}) {
   let body = '';
   if (view === 'write' || view === 'edit') body = renderForm(summary, { editId: extra.editId });
   else if (view === 'manage') body = renderManage(summary);
+  else if (view === 'write_gate') body = renderWriteGate(summary);
   else {
     body = `
       ${tags ? `<div class="p24-review-tags review-sheet__tags">${tags}</div>` : ''}
@@ -243,9 +268,17 @@ function bindSheet(host, summary, view, extra) {
     const act = btn.getAttribute('data-review-sheet-act');
     if (act === 'close') return;
     btn.addEventListener('click', () => {
-      if (act === 'write') paint(host, summary, 'write');
+      if (act === 'write') paint(host, summary, resolveRequestedView(summary, 'write'));
       if (act === 'manage') paint(host, summary, 'manage');
       if (act === 'back') paint(host, summary, 'consume');
+      if (act === 'memo') {
+        closeSheet();
+        startFirstMemoFlow({
+          kind: providerType,
+          targetId: providerId,
+          targetName: providerType === 'tutor' ? '과외쌤' : '공부방',
+        });
+      }
     });
   });
 
@@ -349,7 +382,7 @@ export async function openReviewSheet({ providerType, providerId, isOwner = fals
   sheetEl = host;
   host.innerHTML = `<div class="review-sheet"><div class="review-sheet__panel"><p class="review-sheet__empty">후기를 불러오는 중…</p></div></div>`;
   const summary = await fetchReviewSummary(providerType, providerId, viewerOpts(isOwner));
-  paint(host, summary, view);
+  paint(host, summary, resolveRequestedView(summary, view));
 }
 
 let delegatedSheetClicks = false;
@@ -373,8 +406,15 @@ export function bindReviewSheetTriggers(_root = document, _extra = {}) {
       const id = Number(btn.getAttribute('data-item-id') || 0);
       if (kind !== 'study_room' && kind !== 'tutor') return;
       if (!id) return;
-      if (!guardGuestDeepAccess('review_sheet', { providerType: kind, providerId: id })) return;
-      void openReviewSheet({ providerType: kind, providerId: id });
+      if (!guardGuestDeepAccess(
+        btn.getAttribute('data-review-view') === 'write' ? 'review_write' : 'review_sheet',
+        { providerType: kind, providerId: id, extra: btn.getAttribute('data-review-view') === 'write' ? { view: 'write' } : {} },
+      )) return;
+      void openReviewSheet({
+        providerType: kind,
+        providerId: id,
+        view: btn.getAttribute('data-review-view') === 'write' ? 'write' : 'consume',
+      });
     },
     true,
   );

@@ -164,7 +164,6 @@ export function renderItemActions(opts = {}) {
       : null;
   const rec = layers?.stats.recommend ?? (Number(recommend_count) || 0);
   const rev = layers?.stats.review ?? (Number(review_count) || 0);
-  const showReview = layers ? layers.stats.showReview : rev > 0;
 
   // B 통계층 — 추천(토글 가능)·후기(개수만). 광고배지처럼 보이지 않게 card-stats 그룹
   const recommendAttrs = guest
@@ -178,17 +177,26 @@ export function renderItemActions(opts = {}) {
     attrs: recommendAttrs,
     disabled: !guest && itemId == null,
   });
-  const reviewStat = showReview
-    ? actionCountBtn('💬', rev, {
-        title: `후기 ${rev}`,
-        cls: 'item-actions__btn--stat',
-        attrs: guest
-          ? `data-action="login-gate" data-gate="review" data-gate-label="후기" data-item-kind="${kind}" data-item-id="${itemId}"`
-          : itemId != null
-            ? `data-action="open-review-sheet" data-item-kind="${kind}" data-item-id="${itemId}"`
-            : '',
-      })
-    : '';
+  const reviewStat = actionCountBtn('💬', rev, {
+    title: `후기 ${rev}`,
+    cls: 'item-actions__btn--stat',
+    attrs: guest
+      ? `data-action="login-gate" data-gate="review" data-gate-label="후기" data-item-kind="${kind}" data-item-id="${itemId}"`
+      : itemId != null
+        ? `data-action="open-review-sheet" data-item-kind="${kind}" data-item-id="${itemId}"`
+        : '',
+  });
+  const writeAttrs = guest
+    ? `data-action="login-gate" data-gate="review_write" data-gate-label="후기 작성" data-item-kind="${kind}" data-item-id="${itemId}"`
+    : itemId != null
+      ? `data-action="open-review-sheet" data-review-view="write" data-item-kind="${kind}" data-item-id="${itemId}"`
+      : '';
+  const writeBtn =
+    itemId == null && !guest
+      ? ''
+      : `<button type="button" class="item-actions__btn item-actions__btn--action" title="후기 작성" ${writeAttrs}>
+    <span class="item-actions__icon" aria-hidden="true">✎</span><span class="item-actions__count">작성</span>
+  </button>`;
 
   // A 기능층 — 찜 / 쪽지 / 비교 (좋아요 제거)
   const wishAttrs = guest
@@ -229,7 +237,7 @@ export function renderItemActions(opts = {}) {
   return `
     <div class="card-visual__rail" data-card-visual="${esc(layers?.policyVersion || '')}">
       <div class="card-stats" aria-label="통계">${recommendStat}${reviewStat}</div>
-      <div class="item-actions card-actions" aria-label="기능">${wishBtn}${messageBtn}${compareBtn}</div>
+      <div class="item-actions card-actions" aria-label="기능">${wishBtn}${messageBtn}${writeBtn}${compareBtn}</div>
     </div>
   `;
 }

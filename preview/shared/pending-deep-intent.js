@@ -13,6 +13,7 @@ const SOURCE_MAP = {
   card_detail: 'card_detail',
   review: 'review_sheet',
   review_sheet: 'review_sheet',
+  review_write: 'review_sheet',
   compare: 'compare',
   wish: 'wishlist',
   wishlist: 'wishlist',
@@ -38,6 +39,7 @@ export function normalizeDeepIntent(raw) {
   const providerType = raw.providerType === 'tutor' ? 'tutor' : raw.providerType === 'study_room' ? 'study_room' : '';
   const providerId = Number(raw.providerId || raw.extra?.compareId || raw.extra?.myshopId || 0) || 0;
   const extra = raw.extra && typeof raw.extra === 'object' ? { ...raw.extra } : {};
+  if (String(raw.source) === 'review_write' || extra.view === 'write') extra.view = 'write';
   const t = Number(raw.t) || Date.now();
   if (Date.now() - t > MAX_AGE_MS) return null;
   return { source, providerType, providerId, extra, t };

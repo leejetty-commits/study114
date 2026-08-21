@@ -72,10 +72,13 @@ function renderReviewSectionMarkup(summary) {
 
   const ctaKind = summary.cta_kind || 'ineligible';
   let cta = '';
-  if (ctaKind === 'write' || ctaKind === 'manage') {
-    cta = `<button type="button" class="btn btn--secondary btn--sm" data-provider-review-cta="${esc(ctaKind)}">${esc(ctaLabel(ctaKind))}</button>`;
+  if (ctaKind === 'manage') {
+    cta = `<button type="button" class="btn btn--secondary btn--sm" data-provider-review-cta="manage">${esc(ctaLabel('manage'))}</button>`;
+    if (summary.can_write) {
+      cta += `<button type="button" class="btn btn--secondary btn--sm" data-provider-review-cta="write">${esc(ctaLabel('write'))}</button>`;
+    }
   } else if (ctaKind !== 'none') {
-    cta = `<p class="p24-review-hint">${esc(ctaLabel(ctaKind))}</p>`;
+    cta = `<button type="button" class="btn btn--secondary btn--sm" data-provider-review-cta="write">${esc(ctaLabel('write'))}</button>`;
   }
 
   return `
@@ -99,13 +102,15 @@ function renderReviewSectionMarkup(summary) {
 }
 
 function bindReviewSection(host, providerType, providerId, isOwner) {
-  host.querySelector('[data-provider-review-cta]')?.addEventListener('click', () => {
-    const kind = host.querySelector('[data-provider-review-cta]')?.getAttribute('data-provider-review-cta');
-    void openReviewSheet({
-      providerType,
-      providerId,
-      isOwner,
-      view: kind === 'manage' ? 'manage' : 'write',
+  host.querySelectorAll('[data-provider-review-cta]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const kind = btn.getAttribute('data-provider-review-cta');
+      void openReviewSheet({
+        providerType,
+        providerId,
+        isOwner,
+        view: kind === 'manage' ? 'manage' : 'write',
+      });
     });
   });
   host.querySelectorAll('[data-review-expand]').forEach((btn) => {

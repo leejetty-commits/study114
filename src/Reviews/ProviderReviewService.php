@@ -422,7 +422,7 @@ final class ProviderReviewService
         if (!$this->repo->hasMessageThread($providerType, $providerId, $userId)) {
             throw new ReviewPolicyException(
                 ReviewPolicy::ERR_NO_THREAD,
-                '후기 작성은 상담/이용 경험 후 가능해요.',
+                '후기 작성은 쪽지(상담/문의) 경험 후 가능해요.',
             );
         }
 

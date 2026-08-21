@@ -69,7 +69,11 @@ export function resumePendingDeepIntent() {
   try {
     if (source === 'review_sheet' && idOk) {
       showP24Toast('보려던 정보로 이어서 보여드릴게요');
-      void openReviewSheet({ providerType, providerId });
+      void openReviewSheet({
+        providerType,
+        providerId,
+        view: intent.extra?.view === 'write' ? 'write' : 'consume',
+      });
       return true;
     }
     if (source === 'public_myshop' && idOk) {
