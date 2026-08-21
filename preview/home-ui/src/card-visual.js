@@ -243,8 +243,11 @@ export function renderCardVisualPolicyBlock(kind, item, esc) {
     `<span class="card-visual__stat" data-stat="recommend">추천 ${esc(String(rec))}</span>`,
   ];
   if (layers.stats.showReview) {
+    const id = Number(item?.id || 0);
     statsBits.push(
-      `<span class="card-visual__stat" data-stat="review">후기 ${esc(String(rev))}</span>`,
+      id
+        ? `<button type="button" class="card-visual__stat card-visual__stat--btn" data-stat="review" data-action="open-review-sheet" data-item-kind="${esc(kind)}" data-item-id="${esc(String(id))}">후기 ${esc(String(rev))}</button>`
+        : `<span class="card-visual__stat" data-stat="review">후기 ${esc(String(rev))}</span>`,
     );
   }
   const stats = `<div class="card-visual__stats" aria-label="통계">${statsBits.join('')}</div>`;

@@ -39,12 +39,13 @@ import {
 
 import { isMessagesApiMode } from '../messages-backend.js';
 
-import { getListTabFromPath, tabLabel, tabPath, parseThreadId, threadPath } from './router.js';
+import { getListTabFromPath, tabLabel, tabPath, parseThreadId, threadPath, MESSAGES_BASE, REVIEWS_BASE } from './router.js';
 
 
 
 import { BLOCK_THREAD_COPY } from './messages-copy.js';
 import { getMessagesEmptyCopy, renderStateCard } from '../empty-state-copy.js';
+import { isReviewsPath, parseReviewsPath, renderReviewInboxPlaceholder, hydrateReviewInbox } from '../provider-reviews/inbox.js';
 
 /** bindMessagesScreenEvents가 매 rerender마다 재호출되어도 threadId당 1회만 자동 하이드레이션하기 위한 가드 (무한 렌더 루프 방지) */
 let lastAutoHydratedThreadId = null;
@@ -64,18 +65,24 @@ function formatRelative(iso) {
 
 
 /** @param {string} path */
-
 export function renderMessagesScreen(path) {
-
+  if (isReviewsPath(path)) {
+    const parsed = parseReviewsPath(path);
+    return `${renderMessagesHub('reviews')}${renderReviewInboxPlaceholder(parsed)}`;
+  }
   const threadId = parseThreadId(path);
-
   if (threadId != null) return renderThread(threadId);
-
   return renderList(getListTabFromPath(path));
-
 }
 
-
+function renderMessagesHub(active) {
+  const msgHref = `${MESSAGES_BASE}/inbox`;
+  const revHref = REVIEWS_BASE;
+  return `<div class="msg-hub" role="tablist" aria-label="쪽지와 후기함">
+    <a href="#${msgHref}" class="msg-hub__tab${active === 'messages' ? ' is-active' : ''}" data-msg-nav="${msgHref}">쪽지</a>
+    <a href="#${revHref}" class="msg-hub__tab${active === 'reviews' ? ' is-active' : ''}" data-msg-nav="${revHref}">후기함</a>
+  </div>`;
+}
 
 /** @param {'inbox'|'sent'|'active'} tab */
 
@@ -150,7 +157,7 @@ function renderList(tab) {
 
 
   return `
-
+    ${renderMessagesHub('messages')}
     <section class="msg-panel">
 
       <div class="msg-tabs" role="tablist">${tabs}</div>
@@ -183,6 +190,7 @@ function renderEmptyList(role) {
   if (isProviderRole(role) && !canProviderColdMemoToStudent(role)) {
     html += `<p class="msg-note msg-note--warn">${FREE_PROVIDER_INBOX_COPY.hint}</p>`;
   }
+  html += `<p class="msg-note">쪽지가 없어도 <a href="#${REVIEWS_BASE}" data-msg-nav="${REVIEWS_BASE}">후기함</a>에서 내가 쓴 후기·관리할 후기를 모을 수 있어요.</p>`;
   return html;
 }
 
@@ -319,6 +327,8 @@ export function bindMessagesScreenEvents(root, rerender) {
     });
 
   });
+
+  void hydrateReviewInbox(root, rerender);
 
 
 

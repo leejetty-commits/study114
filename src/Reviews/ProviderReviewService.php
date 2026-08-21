@@ -6,37 +6,25 @@ namespace Study114\Reviews;
 
 use InvalidArgumentException;
 use Study114\Database\Connection;
+use Throwable;
 
 final class ProviderReviewService
 {
-    public const BODY_MIN = 20;
-    public const BODY_MAX = 300;
+    public const BODY_MIN = ReviewPolicy::BODY_MIN;
+    public const BODY_MAX = ReviewPolicy::BODY_MAX;
     public const REPLY_MAX = 200;
-    public const TAGS_MIN = 1;
-    public const TAGS_MAX = 3;
-    public const LIST_LIMIT = 3;
+    public const TAGS_MIN = ReviewPolicy::TAGS_MIN;
+    public const TAGS_MAX = ReviewPolicy::TAGS_MAX;
+    public const LIST_LIMIT = ReviewPolicy::SHEET_LIMIT;
 
     /** @var list<string> */
-    public const COMMON_TAGS = [
-        '설명이 쉬워요',
-        '상담이 편해요',
-        '응답이 빨라요',
-        '아이와 잘 맞아요',
-    ];
+    public const COMMON_TAGS = [];
 
     /** @var list<string> */
-    public const STUDY_ROOM_TAGS = [
-        '동선이 편해요',
-        '분위기가 안정적이에요',
-        '관리가 꼼꼼해요',
-    ];
+    public const STUDY_ROOM_TAGS = ReviewPolicy::STUDY_ROOM_TAGS;
 
     /** @var list<string> */
-    public const TUTOR_TAGS = [
-        '개념 설명이 잘해요',
-        '숙제 관리가 좋아요',
-        '시간 약속이 정확해요',
-    ];
+    public const TUTOR_TAGS = ReviewPolicy::TUTOR_TAGS;
 
     private ProviderReviewRepository $repo;
 
@@ -48,9 +36,7 @@ final class ProviderReviewService
     /** @return list<string> */
     public function allowedTags(string $providerType): array
     {
-        $extra = $providerType === 'tutor' ? self::TUTOR_TAGS : self::STUDY_ROOM_TAGS;
-
-        return array_values(array_unique([...self::COMMON_TAGS, ...$extra]));
+        return ReviewPolicy::allowedTags($providerType);
     }
 
     /**
@@ -65,26 +51,16 @@ final class ProviderReviewService
         }
 
         $count = $this->repo->countVisible($providerType, $providerId);
-        // 공개 집계 태그(summary_tags)는 후순위 — 읽기/카드에 노출하지 않음.
-        // 태그는 작성폼 보조칩 → point_tags_json 저장 → 해당 후기 항목에서만 렌더.
         $viewer = $this->resolveViewer($auth, $providerType, $providerId);
-        $canReadBody = $viewer['can_read_body'];
         $reviews = [];
-        if ($canReadBody) {
-            foreach ($this->repo->listVisible($providerType, $providerId, self::LIST_LIMIT) as $row) {
-                $reviews[] = $this->mapReview($row, $viewer);
-            }
+        foreach ($this->repo->listVisible($providerType, $providerId, ReviewPolicy::SHEET_LIMIT) as $row) {
+            $reviews[] = $this->mapReview($row, $viewer);
         }
 
-        $consultation = 0;
-        $experience = 0;
-        if ($canReadBody) {
-            foreach ($reviews as $r) {
-                if (($r['review_origin_type'] ?? '') === 'consultation') {
-                    $consultation++;
-                } else {
-                    $experience++;
-                }
+        $mine = [];
+        if (!empty($viewer['user_id'])) {
+            foreach ($this->repo->listByAuthorOnTarget($providerType, $providerId, (int) $viewer['user_id']) as $row) {
+                $mine[] = $this->mapReview($row, $viewer + ['include_status' => true]);
             }
         }
 
@@ -92,20 +68,63 @@ final class ProviderReviewService
             'provider_type' => $providerType,
             'provider_id' => $providerId,
             'review_count' => $count,
-            'summary_tags' => [],
-            'origin_hint' => [
-                'consultation' => $consultation,
-                'experience' => $experience,
-            ],
-            'can_read_body' => $canReadBody,
+            'review_write_status' => $viewer['review_write_status'],
+            'summary_tags' => $this->repo->aggregateTags($providerType, $providerId),
+            'can_read_body' => true,
             'can_write' => $viewer['can_write'],
+            'can_manage' => $viewer['has_written'],
+            'has_written' => $viewer['has_written'],
+            'created_count' => $viewer['created_count'],
+            'remaining_creates' => $viewer['remaining_creates'],
+            'is_review_blocked' => $viewer['is_review_blocked'],
             'write_blocked_reason' => $viewer['write_blocked_reason'],
+            'cta_kind' => $viewer['cta_kind'],
             'is_owner' => $viewer['is_owner'],
             'allowed_tags' => $this->allowedTags($providerType),
             'reviews' => $reviews,
-            'guest_teaser' => !$canReadBody
-                ? '로그인 후 후기를 확인할 수 있습니다.'
-                : null,
+            'my_reviews' => $mine,
+            'guest_teaser' => null,
+        ];
+    }
+
+    /**
+     * @param array{user_id?: int, role_type?: string}|null $auth
+     * @return array<string, mixed>
+     */
+    public function listPublic(
+        string $providerType,
+        int $providerId,
+        int $page,
+        int $limit,
+        ?array $auth,
+    ): array {
+        $this->assertProviderType($providerType);
+        if ($providerId <= 0) {
+            throw new InvalidArgumentException('provider_id가 필요합니다.');
+        }
+        $limit = max(1, min(ReviewPolicy::PAGE_SIZE_MAX, $limit > 0 ? $limit : ReviewPolicy::PAGE_SIZE));
+        $page = max(1, $page);
+        $offset = ($page - 1) * $limit;
+        $total = $this->repo->countVisible($providerType, $providerId);
+        $viewer = $this->resolveViewer($auth, $providerType, $providerId);
+        $items = array_map(
+            fn (array $row) => $this->mapReview($row, $viewer),
+            $this->repo->listVisible($providerType, $providerId, $limit, $offset),
+        );
+
+        return [
+            'mode' => 'target',
+            'provider_type' => $providerType,
+            'provider_id' => $providerId,
+            'review_count' => $total,
+            'page' => $page,
+            'page_size' => $limit,
+            'total' => $total,
+            'cta_kind' => $viewer['cta_kind'],
+            'can_write' => $viewer['can_write'],
+            'has_written' => $viewer['has_written'],
+            'is_owner' => $viewer['is_owner'],
+            'items' => $items,
         ];
     }
 
@@ -121,6 +140,7 @@ final class ProviderReviewService
         string $originType,
         string $body,
         array $tags,
+        bool $publicConsent = true,
     ): array {
         $this->assertProviderType($providerType);
         if ($providerId <= 0) {
@@ -129,77 +149,213 @@ final class ProviderReviewService
         if (!in_array($originType, ['consultation', 'experience'], true)) {
             throw new InvalidArgumentException('접점 유형: consultation | experience');
         }
-        $role = (string) ($auth['role_type'] ?? '');
-        if ($role !== 'guardian_student') {
-            throw new InvalidArgumentException('학부모/학생 역할만 후기를 남길 수 있습니다.');
-        }
-        $userId = (int) $auth['user_id'];
-        $ownerId = $this->repo->getProviderOwnerUserId($providerType, $providerId);
-        if ($ownerId === null) {
-            throw new InvalidArgumentException('대상을 찾을 수 없습니다.');
-        }
-        if ($ownerId === $userId) {
-            throw new InvalidArgumentException('본인 프로필에는 후기를 남길 수 없습니다.');
-        }
-        if ($this->repo->findByAuthor($providerType, $providerId, $userId) !== null) {
-            throw new InvalidArgumentException('이미 이 대상에 후기를 남겼습니다.');
-        }
-        if (!$this->repo->hasMessageThread($providerType, $providerId, $userId)) {
-            throw new InvalidArgumentException('쪽지로 상담한 뒤에 후기를 남길 수 있습니다.');
+        if (!$publicConsent) {
+            throw new ReviewPolicyException(ReviewPolicy::ERR_CONSENT, '공개 동의 후 후기를 남길 수 있습니다.');
         }
 
-        $body = trim($body);
-        $len = mb_strlen($body);
-        if ($len < self::BODY_MIN || $len > self::BODY_MAX) {
-            throw new InvalidArgumentException('후기 본문은 ' . self::BODY_MIN . '~' . self::BODY_MAX . '자로 작성해 주세요.');
-        }
+        $gate = $this->assertCanCreate($auth, $providerType, $providerId);
+        $body = $this->normalizeBody($body);
+        $cleanTags = $this->normalizeTags($providerType, $tags);
 
-        $allowed = $this->allowedTags($providerType);
-        $cleanTags = [];
-        foreach ($tags as $tag) {
-            $t = trim((string) $tag);
-            if (in_array($t, $allowed, true) && !in_array($t, $cleanTags, true)) {
-                $cleanTags[] = $t;
-            }
+        $this->repo->begin();
+        try {
+            $this->repo->consumeQuotaOrFail($providerType, $providerId, $gate['user_id']);
+            $id = $this->repo->insertReview(
+                $providerType,
+                $providerId,
+                $gate['user_id'],
+                $originType,
+                $body,
+                $cleanTags,
+                ReviewPolicy::STATUS_VISIBLE,
+            );
+            $this->repo->commit();
+        } catch (Throwable $e) {
+            $this->repo->rollBack();
+            throw $e;
         }
-        if (count($cleanTags) < self::TAGS_MIN || count($cleanTags) > self::TAGS_MAX) {
-            throw new InvalidArgumentException('좋았던 점을 ' . self::TAGS_MIN . '~' . self::TAGS_MAX . '개 골라 주세요.');
-        }
-
-        $id = $this->repo->insertReview($providerType, $providerId, $userId, $originType, $body, $cleanTags);
 
         return $this->getSummary($providerType, $providerId, $auth) + ['created_id' => $id];
     }
 
     /**
      * @param array{user_id: int, role_type: string} $auth
+     * @param list<string> $tags
      * @return array<string, mixed>
      */
-    public function createReply(array $auth, int $reviewId, string $body): array
+    public function updateReview(array $auth, int $reviewId, string $body, array $tags): array
     {
-        $review = $this->repo->getReviewById($reviewId);
-        if ($review === null || (string) $review['review_status'] !== 'visible') {
-            throw new InvalidArgumentException('후기를 찾을 수 없습니다.');
+        $review = $this->requireOwnLiveReview($auth, $reviewId);
+        $this->assertNotReviewBlocked(
+            (string) $review['provider_type'],
+            (int) $review['provider_id'],
+            (int) $auth['user_id'],
+            'edit',
+        );
+        $body = $this->normalizeBody($body);
+        $cleanTags = $this->normalizeTags((string) $review['provider_type'], $tags);
+        $this->repo->updateReview($reviewId, $body, $cleanTags);
+
+        return $this->getSummary((string) $review['provider_type'], (int) $review['provider_id'], $auth);
+    }
+
+    /**
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array<string, mixed>
+     */
+    public function hideReview(array $auth, int $reviewId): array
+    {
+        $review = $this->requireOwnLiveReview($auth, $reviewId);
+        $this->repo->setVisibility($reviewId, ReviewPolicy::STATUS_HIDDEN);
+
+        return $this->getSummary((string) $review['provider_type'], (int) $review['provider_id'], $auth);
+    }
+
+    /**
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array<string, mixed>
+     */
+    public function unhideReview(array $auth, int $reviewId): array
+    {
+        $review = $this->requireOwnLiveReview($auth, $reviewId);
+        if ((string) $review['review_status'] !== ReviewPolicy::STATUS_HIDDEN) {
+            throw new ReviewPolicyException(ReviewPolicy::ERR_VALIDATION, '비공개 후기만 다시 공개할 수 있습니다.');
         }
-        $providerType = (string) $review['provider_type'];
-        $providerId = (int) $review['provider_id'];
-        $ownerId = $this->repo->getProviderOwnerUserId($providerType, $providerId);
-        if ($ownerId === null || $ownerId !== (int) $auth['user_id']) {
-            throw new InvalidArgumentException('본인 프로필의 후기에만 답글할 수 있습니다.');
+        $this->assertNotReviewBlocked(
+            (string) $review['provider_type'],
+            (int) $review['provider_id'],
+            (int) $auth['user_id'],
+            'edit',
+        );
+        $this->repo->setVisibility($reviewId, ReviewPolicy::STATUS_VISIBLE);
+
+        return $this->getSummary((string) $review['provider_type'], (int) $review['provider_id'], $auth);
+    }
+
+    /**
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array<string, mixed>
+     */
+    public function deleteReview(array $auth, int $reviewId): array
+    {
+        $review = $this->requireOwnLiveReview($auth, $reviewId);
+        $this->repo->softDelete($reviewId);
+
+        return $this->getSummary((string) $review['provider_type'], (int) $review['provider_id'], $auth);
+    }
+
+    /**
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array<string, mixed>
+     */
+    public function blockAuthor(array $auth, string $providerType, int $providerId, int $authorUserId): array
+    {
+        $this->assertProviderType($providerType);
+        $this->assertOwner($auth, $providerType, $providerId);
+        if ($authorUserId <= 0) {
+            throw new InvalidArgumentException('blocked_author_user_id가 필요합니다.');
         }
-        if ($this->repo->hasReply($reviewId)) {
-            throw new InvalidArgumentException('이미 답글을 남겼습니다.');
+        if ($authorUserId === (int) $auth['user_id']) {
+            throw new InvalidArgumentException('본인을 후기차단할 수 없습니다.');
         }
-        $body = trim($body);
-        if ($body === '' || mb_strlen($body) > self::REPLY_MAX) {
-            throw new InvalidArgumentException('답글은 1~' . self::REPLY_MAX . '자로 작성해 주세요.');
-        }
-        if ($this->containsContactSpam($body)) {
-            throw new InvalidArgumentException('연락처·외부 링크·직접 영업 문구는 답글에 넣을 수 없습니다.');
-        }
-        $this->repo->insertReply($reviewId, (int) $auth['user_id'], $body);
+        $this->repo->insertReviewBlock($providerType, $providerId, $authorUserId, (int) $auth['user_id']);
 
         return $this->getSummary($providerType, $providerId, $auth);
+    }
+
+    /**
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array<string, mixed>
+     */
+    public function unblockAuthor(array $auth, string $providerType, int $providerId, int $authorUserId): array
+    {
+        $this->assertProviderType($providerType);
+        $this->assertOwner($auth, $providerType, $providerId);
+        $this->repo->deleteReviewBlock($providerType, $providerId, $authorUserId);
+
+        return $this->getSummary($providerType, $providerId, $auth);
+    }
+
+    /**
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array<string, mixed>
+     */
+    public function setWriteStatus(array $auth, string $providerType, int $providerId, string $status): array
+    {
+        $this->assertProviderType($providerType);
+        $this->assertOwner($auth, $providerType, $providerId);
+        if (!in_array($status, [ReviewPolicy::WRITE_OPEN, ReviewPolicy::WRITE_CLOSED], true)) {
+            throw new InvalidArgumentException('review_write_status: open | closed');
+        }
+        $this->repo->setReviewWriteStatus($providerType, $providerId, $status);
+
+        return $this->getSummary($providerType, $providerId, $auth);
+    }
+
+    /**
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array<string, mixed>
+     */
+    public function inbox(array $auth, string $lane, int $page, int $limit): array
+    {
+        $role = (string) ($auth['role_type'] ?? '');
+        $userId = (int) $auth['user_id'];
+        $limit = max(1, min(ReviewPolicy::PAGE_SIZE_MAX, $limit > 0 ? $limit : ReviewPolicy::PAGE_SIZE));
+        $page = max(1, $page);
+        $offset = ($page - 1) * $limit;
+
+        if ($lane === 'received' || ($lane === '' && ($role === 'study_room_owner' || $role === 'tutor'))) {
+            $type = $role === 'tutor' ? 'tutor' : 'study_room';
+            $total = $this->repo->countReceivedByOwner($userId, $type);
+            $items = array_map(
+                fn (array $row) => $this->mapReview($row, [
+                    'is_owner' => true,
+                    'include_author' => true,
+                    'is_review_blocked' => $this->repo->hasReviewBlock(
+                        (string) $row['provider_type'],
+                        (int) $row['provider_id'],
+                        (int) $row['author_user_id'],
+                    ),
+                ]),
+                $this->repo->listReceivedByOwner($userId, $type, $limit, $offset),
+            );
+
+            return [
+                'mode' => 'account',
+                'lane' => 'received',
+                'label' => '내가 관리하는 후기',
+                'page' => $page,
+                'page_size' => $limit,
+                'total' => $total,
+                'count' => $total,
+                'items' => $items,
+            ];
+        }
+
+        $total = $this->repo->countWrittenByAuthor($userId, true);
+        $items = array_map(
+            fn (array $row) => $this->mapReview($row, [
+                'is_owner' => false,
+                'include_status' => true,
+                'is_review_blocked' => $this->repo->hasReviewBlock(
+                    (string) $row['provider_type'],
+                    (int) $row['provider_id'],
+                    $userId,
+                ),
+            ]),
+            $this->repo->listWrittenByAuthor($userId, $limit, $offset, true),
+        );
+
+        return [
+            'mode' => 'account',
+            'lane' => 'written',
+            'label' => '내가 쓴 후기',
+            'page' => $page,
+            'page_size' => $limit,
+            'total' => $total,
+            'count' => $total,
+            'items' => $items,
+        ];
     }
 
     /**
@@ -209,93 +365,210 @@ final class ProviderReviewService
     public function mypageSnapshot(array $auth): array
     {
         $role = (string) ($auth['role_type'] ?? '');
+        $lane = ($role === 'study_room_owner' || $role === 'tutor') ? 'received' : 'written';
+
+        return $this->inbox($auth, $lane, 1, 10);
+    }
+
+    /**
+     * @deprecated 답글은 MVP 제외. 기존 엔드포인트 호환만 유지.
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array<string, mixed>
+     */
+    public function createReply(array $auth, int $reviewId, string $body): array
+    {
+        throw new ReviewPolicyException(
+            ReviewPolicy::ERR_VALIDATION,
+            '후기 댓글·답글은 지원하지 않습니다.',
+        );
+    }
+
+    /**
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array{user_id: int}
+     */
+    private function assertCanCreate(array $auth, string $providerType, int $providerId): array
+    {
+        $role = (string) ($auth['role_type'] ?? '');
+        if ($role !== 'guardian_student') {
+            throw new ReviewPolicyException(ReviewPolicy::ERR_ROLE, '학부모/학생 역할만 후기를 남길 수 있습니다.');
+        }
         $userId = (int) $auth['user_id'];
-        if ($role === 'guardian_student') {
-            $items = array_map(fn (array $row) => $this->mapReview($row, [
-                'can_reply' => false,
-                'is_owner' => false,
-            ]), $this->repo->listWrittenByAuthor($userId, 10));
-
-            return [
-                'lane' => 'written',
-                'label' => '내가 남긴 후기',
-                'count' => count($items),
-                'items' => $items,
-            ];
+        $ownerId = $this->repo->getProviderOwnerUserId($providerType, $providerId);
+        if ($ownerId === null) {
+            throw new ReviewPolicyException(ReviewPolicy::ERR_NOT_FOUND, '대상을 찾을 수 없습니다.');
         }
-        if ($role === 'study_room_owner' || $role === 'tutor') {
-            $type = $role === 'tutor' ? 'tutor' : 'study_room';
-            $items = array_map(fn (array $row) => $this->mapReview($row, [
-                'can_reply' => empty($row['reply_body']),
-                'is_owner' => true,
-            ]), $this->repo->listReceivedByOwner($userId, $type, 10));
-
-            return [
-                'lane' => 'received',
-                'label' => '받은 후기',
-                'count' => $this->repo->countReceivedByOwner($userId, $type),
-                'items' => $items,
-                'hint' => '답글은 상세 화면에서 후기마다 1회만 남길 수 있습니다.',
-            ];
+        if ($ownerId === $userId) {
+            throw new ReviewPolicyException(ReviewPolicy::ERR_OWNER, '본인 프로필에는 후기를 남길 수 없습니다.');
+        }
+        if ($this->repo->hasReviewBlock($providerType, $providerId, $userId)) {
+            throw new ReviewPolicyException(
+                ReviewPolicy::ERR_BLOCKED,
+                '이 대상에는 더 이상 후기를 남길 수 없어요.',
+            );
+        }
+        if ($this->repo->getReviewWriteStatus($providerType, $providerId) === ReviewPolicy::WRITE_CLOSED) {
+            throw new ReviewPolicyException(
+                ReviewPolicy::ERR_CLOSED,
+                '현재는 새 후기를 받지 않아요.',
+            );
+        }
+        if ($this->repo->getCreatedCount($providerType, $providerId, $userId) >= ReviewPolicy::MAX_CREATES_PER_TARGET) {
+            throw new ReviewPolicyException(
+                ReviewPolicy::ERR_QUOTA,
+                '이 대상에는 후기를 더 남길 수 없습니다. (최대 3회)',
+            );
+        }
+        if (!$this->repo->hasMessageThread($providerType, $providerId, $userId)) {
+            throw new ReviewPolicyException(
+                ReviewPolicy::ERR_NO_THREAD,
+                '후기 작성은 상담/이용 경험 후 가능해요.',
+            );
         }
 
-        return [
-            'lane' => 'none',
-            'label' => '후기',
-            'count' => 0,
-            'items' => [],
-        ];
+        return ['user_id' => $userId];
+    }
+
+    /**
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array<string, mixed>
+     */
+    private function requireOwnLiveReview(array $auth, int $reviewId): array
+    {
+        $review = $this->repo->getReviewById($reviewId);
+        if ($review === null || (string) $review['review_status'] === ReviewPolicy::STATUS_DELETED) {
+            throw new ReviewPolicyException(ReviewPolicy::ERR_NOT_FOUND, '후기를 찾을 수 없습니다.');
+        }
+        if ((int) $review['author_user_id'] !== (int) $auth['user_id']) {
+            throw new ReviewPolicyException(ReviewPolicy::ERR_FORBIDDEN, '본인이 쓴 후기만 처리할 수 있습니다.');
+        }
+
+        return $review;
+    }
+
+    private function assertNotReviewBlocked(string $providerType, int $providerId, int $authorUserId, string $action): void
+    {
+        if (!$this->repo->hasReviewBlock($providerType, $providerId, $authorUserId)) {
+            return;
+        }
+        if (ReviewPolicy::blockedActionAllowed($action)) {
+            return;
+        }
+        throw new ReviewPolicyException(
+            ReviewPolicy::ERR_BLOCKED,
+            '후기차단 이후에는 수정할 수 없고 비공개 또는 삭제만 할 수 있어요.',
+        );
+    }
+
+    /**
+     * @param array{user_id: int, role_type: string} $auth
+     */
+    private function assertOwner(array $auth, string $providerType, int $providerId): void
+    {
+        $ownerId = $this->repo->getProviderOwnerUserId($providerType, $providerId);
+        if ($ownerId === null || $ownerId !== (int) $auth['user_id']) {
+            throw new ReviewPolicyException(ReviewPolicy::ERR_FORBIDDEN, '대상 소유자만 할 수 있습니다.');
+        }
     }
 
     /**
      * @param array{user_id?: int, role_type?: string}|null $auth
-     * @return array{can_read_body: bool, can_write: bool, write_blocked_reason: string|null, is_owner: bool, can_reply: bool}
+     * @return array{
+     *   user_id: int|null,
+     *   can_write: bool,
+     *   write_blocked_reason: string|null,
+     *   is_owner: bool,
+     *   has_written: bool,
+     *   created_count: int,
+     *   remaining_creates: int,
+     *   is_review_blocked: bool,
+     *   review_write_status: string,
+     *   cta_kind: string
+     * }
      */
     private function resolveViewer(?array $auth, string $providerType, int $providerId): array
     {
+        $writeStatus = $this->repo->getReviewWriteStatus($providerType, $providerId);
+        $empty = [
+            'user_id' => null,
+            'can_write' => false,
+            'write_blocked_reason' => 'login',
+            'is_owner' => false,
+            'has_written' => false,
+            'created_count' => 0,
+            'remaining_creates' => ReviewPolicy::MAX_CREATES_PER_TARGET,
+            'is_review_blocked' => false,
+            'review_write_status' => $writeStatus,
+            'cta_kind' => ReviewPolicy::CTA_INELIGIBLE,
+        ];
         if ($auth === null) {
-            return [
-                'can_read_body' => false,
-                'can_write' => false,
-                'write_blocked_reason' => 'login',
-                'is_owner' => false,
-                'can_reply' => false,
-            ];
+            return $empty;
         }
+
         $userId = (int) ($auth['user_id'] ?? 0);
         $role = (string) ($auth['role_type'] ?? '');
         $ownerId = $this->repo->getProviderOwnerUserId($providerType, $providerId);
         $isOwner = $ownerId !== null && $ownerId === $userId;
+        $createdCount = $this->repo->getCreatedCount($providerType, $providerId, $userId);
+        $remaining = max(0, ReviewPolicy::MAX_CREATES_PER_TARGET - $createdCount);
+        $hasLive = $this->repo->listByAuthorOnTarget($providerType, $providerId, $userId) !== [];
+        $hasWritten = $createdCount > 0;
+        $blocked = $this->repo->hasReviewBlock($providerType, $providerId, $userId);
 
         if ($isOwner) {
             return [
-                'can_read_body' => true,
+                'user_id' => $userId,
                 'can_write' => false,
                 'write_blocked_reason' => 'owner',
                 'is_owner' => true,
-                'can_reply' => true,
+                'has_written' => false,
+                'created_count' => 0,
+                'remaining_creates' => 0,
+                'is_review_blocked' => false,
+                'review_write_status' => $writeStatus,
+                'cta_kind' => ReviewPolicy::CTA_NONE,
             ];
         }
 
-        // 로그인 회원(학부모·다른 공급자)은 본문 열람 가능, 작성은 학부모+쪽지 접점만
-        $canWrite = false;
         $reason = null;
+        $canWrite = false;
         if ($role !== 'guardian_student') {
             $reason = 'role';
-        } elseif ($this->repo->findByAuthor($providerType, $providerId, $userId) !== null) {
-            $reason = 'already_written';
+        } elseif ($blocked) {
+            $reason = 'blocked';
+        } elseif ($writeStatus === ReviewPolicy::WRITE_CLOSED) {
+            $reason = 'closed';
+        } elseif ($remaining <= 0) {
+            $reason = 'quota';
         } elseif (!$this->repo->hasMessageThread($providerType, $providerId, $userId)) {
             $reason = 'no_thread';
         } else {
             $canWrite = true;
         }
 
+        $cta = ReviewPolicy::CTA_INELIGIBLE;
+        if ($hasWritten) {
+            $cta = ReviewPolicy::CTA_MANAGE;
+        } elseif ($canWrite) {
+            $cta = ReviewPolicy::CTA_WRITE;
+        } elseif ($reason === 'closed') {
+            $cta = ReviewPolicy::CTA_CLOSED;
+        } elseif ($reason === 'blocked') {
+            $cta = ReviewPolicy::CTA_BLOCKED;
+        }
+
         return [
-            'can_read_body' => true,
+            'user_id' => $userId,
             'can_write' => $canWrite,
             'write_blocked_reason' => $reason,
             'is_owner' => false,
-            'can_reply' => false,
+            'has_written' => $hasWritten,
+            'created_count' => $createdCount,
+            'remaining_creates' => $remaining,
+            'is_review_blocked' => $blocked,
+            'review_write_status' => $writeStatus,
+            'cta_kind' => $cta,
+            'has_live_reviews' => $hasLive,
         ];
     }
 
@@ -306,26 +579,67 @@ final class ProviderReviewService
         if (!is_array($tags)) {
             $tags = [];
         }
-        $replyBody = isset($row['reply_body']) && $row['reply_body'] !== null
-            ? (string) $row['reply_body']
-            : null;
-
-        return [
+        $body = (string) $row['review_body'];
+        $mapped = [
             'id' => (int) $row['id'],
             'provider_type' => (string) ($row['provider_type'] ?? ''),
             'provider_id' => (int) ($row['provider_id'] ?? 0),
             'review_origin_type' => (string) $row['review_origin_type'],
-            'review_body' => (string) $row['review_body'],
+            'review_body' => $body,
+            'snippet' => ReviewPolicy::snippet($body),
             'point_tags' => array_values(array_map('strval', $tags)),
             'created_at' => (string) $row['created_at'],
-            'reply' => $replyBody !== null
-                ? [
-                    'body' => $replyBody,
-                    'created_at' => isset($row['reply_created_at']) ? (string) $row['reply_created_at'] : null,
-                ]
-                : null,
-            'can_reply' => !empty($viewer['is_owner']) && $replyBody === null,
+            'is_mine' => isset($viewer['user_id']) && (int) $viewer['user_id'] === (int) ($row['author_user_id'] ?? 0),
         ];
+        if (!empty($viewer['include_status'])) {
+            $mapped['review_status'] = (string) ($row['review_status'] ?? ReviewPolicy::STATUS_VISIBLE);
+            $mapped['can_edit'] = empty($viewer['is_review_blocked']) && ($mapped['review_status'] !== ReviewPolicy::STATUS_DELETED);
+            $mapped['can_delete'] = true;
+            $mapped['can_hide'] = $mapped['review_status'] === ReviewPolicy::STATUS_VISIBLE;
+            $mapped['can_unhide'] = $mapped['review_status'] === ReviewPolicy::STATUS_HIDDEN && empty($viewer['is_review_blocked']);
+        }
+        if (!empty($viewer['include_author']) || !empty($viewer['is_owner'])) {
+            $mapped['author_user_id'] = (int) ($row['author_user_id'] ?? 0);
+            $mapped['is_review_blocked'] = !empty($viewer['is_review_blocked']);
+        }
+
+        return $mapped;
+    }
+
+    private function normalizeBody(string $body): string
+    {
+        $body = trim($body);
+        $len = mb_strlen($body);
+        if ($len < ReviewPolicy::BODY_MIN || $len > ReviewPolicy::BODY_MAX) {
+            throw new InvalidArgumentException(
+                '후기 본문은 ' . ReviewPolicy::BODY_MIN . '~' . ReviewPolicy::BODY_MAX . '자로 작성해 주세요.',
+            );
+        }
+
+        return $body;
+    }
+
+    /**
+     * @param list<mixed> $tags
+     * @return list<string>
+     */
+    private function normalizeTags(string $providerType, array $tags): array
+    {
+        $allowed = $this->allowedTags($providerType);
+        $cleanTags = [];
+        foreach ($tags as $tag) {
+            $t = trim((string) $tag);
+            if (in_array($t, $allowed, true) && !in_array($t, $cleanTags, true)) {
+                $cleanTags[] = $t;
+            }
+        }
+        if (count($cleanTags) < ReviewPolicy::TAGS_MIN || count($cleanTags) > ReviewPolicy::TAGS_MAX) {
+            throw new InvalidArgumentException(
+                '좋았던 점을 ' . ReviewPolicy::TAGS_MIN . '~' . ReviewPolicy::TAGS_MAX . '개 골라 주세요.',
+            );
+        }
+
+        return $cleanTags;
     }
 
     private function assertProviderType(string $providerType): void
@@ -333,20 +647,5 @@ final class ProviderReviewService
         if (!in_array($providerType, ['study_room', 'tutor'], true)) {
             throw new InvalidArgumentException('provider_type: study_room | tutor');
         }
-    }
-
-    private function containsContactSpam(string $body): bool
-    {
-        if (preg_match('/https?:\\/\\/|www\\.|[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}|@[\\w.-]+\\.[a-z]{2,}/iu', $body)) {
-            return true;
-        }
-        $banned = ['카톡', '텔레그램', '문자주세요', '전화주세요', '연락처', '오픈채팅'];
-        foreach ($banned as $word) {
-            if (mb_stripos($body, $word) !== false) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

@@ -244,20 +244,25 @@
 
 ### 11-3. 시설 체크 **~5개** + facility_note
 
-### 11-4. 후기 (1차 MVP · 2026-08)
+### 11-4. 후기 (증언 엔진 · 2026-08-22 잠금)
 
-| 포함 | 제외(1차) |
-|------|-----------|
-| 후기 텍스트 · 태그 1~3 · 접점유형 | 비추천/싫어요 · 별점 |
-| 공급자 답글 1회 | 자유댓글 · 다중 리액션 |
-| guest: 개수만 · 본문 로그인 후 | 후기 전용 페이지 · 관리센터 |
-| 작성 자격: 학부모 + 쪽지 thread | 자격 이벤트 테이블 |
-| **태그 B안:** 작성폼 보조칩만 · `point_tags_json` 저장 · 해당 후기 항목에서만 렌더 | 카드/상세 상단 집계·예시 태그 · 본문 자동 삽입 |
+공통 엔진 + 도메인별 태그/문구만 분기. **title 없음** — 리스트 헤드라인은 `review_body` snippet.
 
-DDL: `provider_reviews`, `provider_review_replies` — [040_provider_reviews.sql](../../sql/schema/040_provider_reviews.sql)
-API: `/api/reviews/index.php` · UI: `preview/home-ui/src/provider-reviews/`
-**태그 노출 규칙:** 공개 집계 태그(`summary_tags`)는 후순위(빈 배열). 읽기/카드에 「상담이 편해요」 등 예시·미연결 칩을 두지 않음. 작성 폼에서만 선택 → 저장 → 로그인 후 상세의 **해당 후기 행**에만 표시.
-**혼동 금지:** `#/mypage/student-review` = 관심 학생(검토함), 공급자 후기 아님.
+| 포함 | 제외 |
+|------|------|
+| 본문 · 태그 1~3 · 접점유형 · 공개 동의 | 제목 필드 · 댓글/한줄댓글 · 공감 |
+| 동일 사용자+대상 **누적 생성 최대 3회** (삭제해도 차감 없음) | 운영 검수 큐 · 승인 후 게시 · 진위 판정 |
+| 후기차단(`provider_review_blocks`) — 쪽지차단과 분리 | paused/pending/restricted 작성 상태 |
+| 대상 작성 상태 **open / closed** | 추천 수와 후기 수 혼합 |
+
+- 외부 카운터: **`review_count`** = `review_status='visible'` COUNT. hidden/deleted 제외.
+- 레코드 상태: `visible` \| `hidden` \| `deleted`
+- 작성 3검사: 쪽지 thread 자격 · open 여부 · 쿼터 < 3 · (추가) 후기차단 없음
+- 차단 후: **create/edit 실패**, **delete/hide 허용**. 기존 후기 자동삭제 없음.
+- DDL: [040_provider_reviews.sql](../../sql/schema/040_provider_reviews.sql) + [057_provider_review_engine.sql](../../sql/schema/057_provider_review_engine.sql)
+- API: `/api/reviews/index.php` · 코드 잠금: `src/Reviews/ReviewPolicy.php`
+- UI: `preview/home-ui/src/provider-reviews/` · 쪽지 후기함 `#/mypage/messages/reviews`
+- **혼동 금지:** `#/mypage/student-review` = 관심 학생(검토함), 공급자 후기 아님.
 
 ### 11-5. 엑셀 반영
 

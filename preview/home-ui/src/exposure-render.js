@@ -184,7 +184,7 @@ export function renderItemActions(opts = {}) {
         cls: 'item-actions__btn--stat',
         attrs:
           itemId != null
-            ? `data-action="open-detail" data-item-kind="${kind}" data-item-id="${itemId}" data-open-reviews="1"`
+            ? `data-action="open-review-sheet" data-item-kind="${kind}" data-item-id="${itemId}"`
             : '',
       })
     : '';

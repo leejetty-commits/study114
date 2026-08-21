@@ -92,6 +92,8 @@ final class ProviderReviewApi
             $fn();
         } catch (\Study114\Auth\EmailVerificationRequiredException $e) {
             self::fail(403, 'email_verify_required', $e->getMessage());
+        } catch (ReviewPolicyException $e) {
+            self::fail($e->httpStatus, $e->errorCode, $e->getMessage(), $e->extra);
         } catch (InvalidArgumentException $e) {
             self::fail(422, 'validation', $e->getMessage());
         } catch (Throwable $e) {
@@ -107,14 +109,15 @@ final class ProviderReviewApi
         exit;
     }
 
-    public static function fail(int $status, string $error, string $message): never
+    /** @param array<string, mixed> $extra */
+    public static function fail(int $status, string $error, string $message, array $extra = []): never
     {
         http_response_code($status);
         echo json_encode([
             'ok' => false,
             'error' => $error,
             'message' => $message,
-        ], JSON_UNESCAPED_UNICODE);
+        ] + $extra, JSON_UNESCAPED_UNICODE);
         exit;
     }
 }

@@ -33,6 +33,7 @@ import { maskPublicDisplayName } from '../student-blind-teaser.js';
 import { isGuestPublicPath, loginUrl } from '../../../shared/route-access.js';
 import { openPublicMyshop } from '../myshop/navigate.js';
 import { bindProviderReviewMount } from '../provider-reviews/ui.js';
+import { bindReviewSheetTriggers } from '../provider-reviews/sheet.js';
 
 const MODAL_ID = 'p24-detail-modal';
 
@@ -345,6 +346,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   }
 
   bindProviderReviewMount(wrap, kind, item, viewer);
+  bindReviewSheetTriggers(wrap);
 
   wrap.querySelectorAll('[data-p24-action="close"]').forEach((btn) => {
     btn.addEventListener('click', closeDetailModal);

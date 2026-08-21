@@ -20,8 +20,8 @@ import { getStudentReviewItems, removeStudentReview } from '../student-review-st
 import { getHandoffFromQuery, getProviderRegDeepLink } from '../handoff-link.js';
 import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
 import { STUDENT_REVIEW, studentReviewItemLabel } from '../handoff-copy.js';
-import { fetchMypageReviewSnapshot } from '../provider-reviews/store.js';
-import { REVIEW_ORIGIN_LABELS } from '../provider-reviews/copy.js';
+import { fetchMypageReviewSnapshot, reviewsArchivePath } from '../provider-reviews/store.js';
+import { REVIEW_ORIGIN_LABELS, reviewSnippet } from '../provider-reviews/copy.js';
 import {
   renderBasketLifecycleBadge,
   isBasketLifecycleMuted,
@@ -250,9 +250,10 @@ export async function hydrateMypageReviewPanel(root) {
     if (!items.length) {
       box.innerHTML = `<p class="mypage-muted">${
         snap.lane === 'received'
-          ? '아직 받은 후기가 없습니다. 상세에 노출되면 여기에 요약됩니다.'
-          : '아직 남긴 후기가 없습니다. 쪽지 상담 후 상세에서 작성할 수 있습니다.'
-      }</p>`;
+          ? '아직 받은 후기가 없습니다. 쪽지함의 후기함에서 모아서 볼 수 있어요.'
+          : '아직 남긴 후기가 없습니다. 카드의 후기 수에서 읽고, 자격이 되면 남길 수 있어요.'
+      }</p>
+      <p><a href="#${reviewsArchivePath({ lane: snap.lane === 'received' ? 'received' : 'written' })}" data-mypage-nav="${reviewsArchivePath({ lane: snap.lane === 'received' ? 'received' : 'written' })}">후기함 열기</a></p>`;
       return;
     }
     box.innerHTML = `
@@ -261,30 +262,24 @@ export async function hydrateMypageReviewPanel(root) {
           .slice(0, 5)
           .map((r) => {
             const origin = REVIEW_ORIGIN_LABELS[r.review_origin_type] || '';
-            const reply = r.reply?.body
-              ? `<small class="mypage-review-list__reply">답글: ${esc(r.reply.body)}</small>`
-              : r.can_reply
-                ? `<small class="mypage-review-list__reply">답글 가능 · 프로필 상세에서</small>`
-                : '';
             const openKind = r.provider_type || '';
             const openId = r.provider_id || 1;
             return `<li class="mypage-review-list__item">
               <button type="button" class="mypage-review-list__open" data-mypage-open-review="${esc(openKind)}" data-id="${openId}">
                 <strong>${esc(origin || '후기')}</strong>
-                <span>${esc(r.review_body || '')}</span>
-                ${reply}
+                <span>${esc(reviewSnippet(r.review_body || r.snippet || ''))}</span>
               </button>
             </li>`;
           })
           .join('')}
       </ul>
-      ${snap.hint ? `<p class="mypage-muted">${esc(snap.hint)}</p>` : ''}`;
+      <p><a href="#${reviewsArchivePath({ lane: snap.lane === 'received' ? 'received' : 'written' })}" data-mypage-nav="${reviewsArchivePath({ lane: snap.lane === 'received' ? 'received' : 'written' })}">후기함에서 전체 보기</a></p>`;
     box.querySelectorAll('[data-mypage-open-review]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const kind = btn.getAttribute('data-mypage-open-review');
         const id = Number(btn.getAttribute('data-id'));
         if (kind !== 'study_room' && kind !== 'tutor') return;
-        openDetailDecision({ kind, id, sourceRoute: 'mypage' });
+        window.location.hash = reviewsArchivePath({ providerType: kind, providerId: id });
       });
     });
   } catch {

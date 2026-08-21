@@ -7,6 +7,7 @@ export const MESSAGES_BASE = '/mypage/messages';
 
 /** @type {MessagesListTab[]} */
 export const MESSAGES_TABS = ['inbox', 'sent', 'active', 'archive'];
+export const REVIEWS_BASE = `${MESSAGES_BASE}/reviews`;
 
 /** @param {string} p */
 function mapLegacyPath(p) {
@@ -34,6 +35,10 @@ export function normalizeMessagesPath(hashPath) {
   ) {
     return p;
   }
+  if (p === `${MESSAGES_BASE}/reviews` || p === `${MESSAGES_BASE}/reviews/`) return `${MESSAGES_BASE}/reviews`;
+  if (p === `${MESSAGES_BASE}/reviews/written` || p === `${MESSAGES_BASE}/reviews/received`) return p;
+  const reviewTarget = p.match(/^\/mypage\/messages\/reviews\/target\/(study_room|tutor)\/(\d+)$/);
+  if (reviewTarget) return p;
   const threadMatch = p.match(/^\/mypage\/messages\/thread\/(\d+)$/);
   if (threadMatch) return p;
   return null;
@@ -60,6 +65,7 @@ export function getListTabFromPath(path) {
 /** @param {string} path */
 export function getScreenIdForPath(path) {
   if (path.includes('/thread/')) return 'P16-02';
+  if (path.includes('/messages/reviews')) return 'P16-05';
   if (isMessagesDetailPath(path)) return 'P16-01';
   return 'P15-08';
 }
@@ -71,6 +77,7 @@ export function screenTitle(screenId) {
     'P16-02': '대화방',
     'P16-03': '첫 메모 보내기',
     'P16-04': '쪽지권 게이트',
+    'P16-05': '후기함',
     'P15-08': '쪽지',
   };
   return map[screenId] || '쪽지함';

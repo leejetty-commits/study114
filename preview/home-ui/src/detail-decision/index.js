@@ -5,6 +5,7 @@ import { navRoleFromAuthUser } from '../nav-config.js';
 import { bindStudentReviewEvents } from '../student-review-ui.js';
 import { openDetailModal, closeDetailModal } from './detail-shell.js';
 import { AUTH_UI_BASE } from '../data.js';
+import { bindReviewSheetTriggers } from '../provider-reviews/sheet.js';
 
 export { closeDetailModal, openDetailModal } from './detail-shell.js';
 export { showP24Toast } from './detail-utils.js';
@@ -89,6 +90,8 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
     });
   });
 
+  bindReviewSheetTriggers(root);
+
   root.querySelectorAll('[data-action="open-detail"]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -97,12 +100,6 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
       const id = Number(btn.getAttribute('data-item-id'));
       if (kind !== 'study_room' && kind !== 'tutor') return;
       openDetailDecision({ kind, id, viewer: role, onRerender, sourceRoute });
-      // 후기 버튼: 상세 열린 뒤 후기 섹션으로 스크롤
-      if (btn.getAttribute('data-open-reviews') === '1') {
-        requestAnimationFrame(() => {
-          document.querySelector('[data-provider-review-root]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      }
     });
   });
 

@@ -1,14 +1,22 @@
 /**
  * 공급자 후기 store — preview sessionStorage + API
- * student-review-store(관심 학생)와 완전 분리
+ * 지시문 1 잠금: 누적 3회 · 삭제 비차감 · 후기차단 분리 · open/closed · review_count=visible
  */
 
 import { getAuthUser } from '../auth-session.js';
 import { getThreads } from '../messages/thread-store.js';
 import { getNavRole } from '../state.js';
-import { pointTagsForProvider, PROVIDER_REVIEW_COPY } from './copy.js';
+import {
+  pointTagsForProvider,
+  PROVIDER_REVIEW_COPY,
+  REVIEW_POLICY,
+  reviewSnippet,
+} from './copy.js';
 
-const KEY = 'study114-preview-provider-reviews-v1';
+const KEY = 'study114-preview-provider-reviews-v2';
+const BLOCK_KEY = 'study114-preview-review-blocks-v1';
+const WRITE_KEY = 'study114-preview-review-write-status-v1';
+const QUOTA_KEY = 'study114-preview-review-quotas-v1';
 const API = '/api/reviews/index.php';
 
 function apiMode() {
@@ -19,28 +27,25 @@ function apiMode() {
   }
 }
 
-/** @typedef {{ id: number, provider_type: 'study_room'|'tutor', provider_id: number, author_user_id: number, review_origin_type: 'consultation'|'experience', review_status: string, review_body: string, point_tags: string[], created_at: string, reply?: { body: string, created_at?: string }|null }} ProviderReview */
-
 function nowStamp() {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
 }
 
-function loadAll() {
+function loadJson(key, fallback) {
   try {
-    const raw = sessionStorage.getItem(KEY);
-    if (!raw) return seedDefaults();
-    return /** @type {ProviderReview[]} */ (JSON.parse(raw));
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return fallback();
+    return JSON.parse(raw);
   } catch {
-    return seedDefaults();
+    return fallback();
   }
 }
 
-function saveAll(list) {
-  sessionStorage.setItem(KEY, JSON.stringify(list));
+function saveJson(key, value) {
+  sessionStorage.setItem(key, JSON.stringify(value));
 }
 
 function seedDefaults() {
-  /** @type {ProviderReview[]} */
   const seed = [
     {
       id: 1,
@@ -49,10 +54,9 @@ function seedDefaults() {
       author_user_id: 6,
       review_origin_type: 'consultation',
       review_status: 'visible',
-      review_body: '상담이 부담스럽지 않았고 설명이 차분했어요.',
-      point_tags: ['상담이 편해요', '설명이 쉬워요'],
+      review_body: '상담이 부담스럽지 않았고 설명이 차분했어요. 공간이 실제 사진과 비슷했습니다.',
+      point_tags: ['상담이 친절해요', '정보가 실제와 비슷해요'],
       created_at: '2026-08-01 10:00:00',
-      reply: { body: '소중한 후기 감사합니다. 편하게 상담 이어가겠습니다.', created_at: '2026-08-01 12:00:00' },
     },
     {
       id: 2,
@@ -61,10 +65,9 @@ function seedDefaults() {
       author_user_id: 7,
       review_origin_type: 'experience',
       review_status: 'visible',
-      review_body: '위치가 익숙해서 보내기 좋았고, 아이가 처음보다 편하게 들어갔어요.',
-      point_tags: ['동선이 편해요', '아이와 잘 맞아요'],
+      review_body: '위치가 익숙해서 보내기 좋았고, 분위기가 편안해서 아이가 금방 적응했어요.',
+      point_tags: ['동네 접근이 편해요', '분위기가 편안해요'],
       created_at: '2026-08-03 11:00:00',
-      reply: null,
     },
     {
       id: 3,
@@ -74,24 +77,54 @@ function seedDefaults() {
       review_origin_type: 'experience',
       review_status: 'visible',
       review_body: '개념 설명이 차근차근이라 아이도 따라가기 쉬웠어요.',
-      point_tags: ['개념 설명이 잘해요', '아이와 잘 맞아요'],
+      point_tags: ['설명이 쉬워요', '학생을 잘 봐줘요'],
       created_at: '2026-08-02 09:30:00',
-      reply: null,
     },
   ];
-  saveAll(seed);
+  saveJson(KEY, seed);
+  const quotas = {};
+  seed.forEach((r) => {
+    const k = quotaKey(r.provider_type, r.provider_id, r.author_user_id);
+    quotas[k] = (quotas[k] || 0) + 1;
+  });
+  saveJson(QUOTA_KEY, quotas);
   return seed;
+}
+
+function loadAll() {
+  return loadJson(KEY, seedDefaults);
+}
+
+function saveAll(list) {
+  saveJson(KEY, list);
+}
+
+function loadBlocks() {
+  return loadJson(BLOCK_KEY, () => []);
+}
+
+function saveBlocks(list) {
+  saveJson(BLOCK_KEY, list);
+}
+
+function loadWriteStatus() {
+  return loadJson(WRITE_KEY, () => ({}));
+}
+
+function loadQuotas() {
+  return loadJson(QUOTA_KEY, () => ({}));
+}
+
+function quotaKey(type, id, userId) {
+  return `${type}:${id}:${userId}`;
+}
+
+function writeStatusKey(type, id) {
+  return `${type}:${id}`;
 }
 
 function nextId(list) {
   return list.reduce((m, r) => Math.max(m, r.id), 0) + 1;
-}
-
-/** @param {'study_room'|'tutor'} providerType @param {number} providerId */
-export function getReviewCount(providerType, providerId) {
-  return loadAll().filter(
-    (r) => r.provider_type === providerType && r.provider_id === providerId && r.review_status === 'visible',
-  ).length;
 }
 
 function previewHasThread(providerType, providerId) {
@@ -104,65 +137,161 @@ function previewHasThread(providerType, providerId) {
   }
 }
 
-/**
- * @param {'study_room'|'tutor'} providerType
- * @param {number} providerId
- * @param {{ role?: string, userId?: number|null, isOwner?: boolean }} [viewer]
- */
-export function getReviewSummaryLocal(providerType, providerId, viewer = {}) {
+function getCreatedCount(type, id, userId) {
+  const quotas = loadQuotas();
+  const n = Number(quotas[quotaKey(type, id, userId)] || 0);
+  if (n > 0) return n;
+  return loadAll().filter(
+    (r) => r.provider_type === type && r.provider_id === id && r.author_user_id === userId,
+  ).length;
+}
+
+function bumpQuota(type, id, userId) {
+  const quotas = loadQuotas();
+  const k = quotaKey(type, id, userId);
+  quotas[k] = (Number(quotas[k]) || 0) + 1;
+  saveJson(QUOTA_KEY, quotas);
+}
+
+function isBlocked(type, id, authorId) {
+  return loadBlocks().some(
+    (b) => b.provider_type === type && Number(b.provider_id) === Number(id) && Number(b.blocked_author_user_id) === Number(authorId),
+  );
+}
+
+function getWriteStatus(type, id) {
+  const map = loadWriteStatus();
+  return map[writeStatusKey(type, id)] === 'closed' ? 'closed' : 'open';
+}
+
+function visibleOnTarget(type, id) {
+  return loadAll()
+    .filter((r) => r.provider_type === type && r.provider_id === id && r.review_status === 'visible')
+    .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+}
+
+function mapItem(r, extra = {}) {
+  return {
+    id: r.id,
+    provider_type: r.provider_type,
+    provider_id: r.provider_id,
+    author_user_id: r.author_user_id,
+    review_origin_type: r.review_origin_type,
+    review_status: r.review_status,
+    review_body: r.review_body,
+    snippet: reviewSnippet(r.review_body),
+    point_tags: r.point_tags || [],
+    created_at: r.created_at,
+    ...extra,
+  };
+}
+
+function resolveCta({ isOwner, canWrite, hasWritten, reason }) {
+  if (isOwner) return 'none';
+  if (hasWritten) return 'manage';
+  if (canWrite) return 'write';
+  if (reason === 'closed') return 'closed';
+  if (reason === 'blocked') return 'blocked';
+  return 'ineligible';
+}
+
+function resolveLocalViewer(providerType, providerId, viewer = {}) {
   const role = viewer.role || 'guest';
   const userId = viewer.userId ?? null;
   const isOwner = !!viewer.isOwner;
-  const canReadBody = role !== 'guest';
-  const all = loadAll().filter(
-    (r) => r.provider_type === providerType && r.provider_id === providerId && r.review_status === 'visible',
-  );
-  all.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  const createdCount = userId != null ? getCreatedCount(providerType, providerId, userId) : 0;
+  const remaining = Math.max(0, REVIEW_POLICY.maxCreates - createdCount);
+  const hasWritten = createdCount > 0;
+  const blocked = userId != null && isBlocked(providerType, providerId, userId);
+  const writeStatus = getWriteStatus(providerType, providerId);
 
+  let reason = null;
   let canWrite = false;
-  let writeBlocked = null;
-  if (role === 'guest') writeBlocked = 'login';
-  else if (isOwner) writeBlocked = 'owner';
-  else if (role !== 'parent') writeBlocked = 'role';
-  else if (userId != null && all.some((r) => r.author_user_id === userId)) writeBlocked = 'already_written';
-  else if (!previewHasThread(providerType, providerId)) writeBlocked = 'no_thread';
+  if (role === 'guest' || userId == null) reason = 'login';
+  else if (isOwner) reason = 'owner';
+  else if (role !== 'parent') reason = 'role';
+  else if (blocked) reason = 'blocked';
+  else if (writeStatus === 'closed') reason = 'closed';
+  else if (remaining <= 0) reason = 'quota';
+  else if (!previewHasThread(providerType, providerId)) reason = 'no_thread';
   else canWrite = true;
 
-  const reviews = canReadBody
-    ? all.slice(0, 3).map((r) => ({
-        id: r.id,
-        provider_type: r.provider_type,
-        provider_id: r.provider_id,
-        review_origin_type: r.review_origin_type,
-        review_body: r.review_body,
-        point_tags: r.point_tags || [],
-        created_at: r.created_at,
-        reply: r.reply || null,
-        can_reply: isOwner && !r.reply,
-      }))
-    : [];
+  return {
+    user_id: userId,
+    can_write: canWrite,
+    write_blocked_reason: reason,
+    is_owner: isOwner,
+    has_written: hasWritten,
+    created_count: createdCount,
+    remaining_creates: remaining,
+    is_review_blocked: blocked,
+    review_write_status: writeStatus,
+    cta_kind: resolveCta({ isOwner, canWrite, hasWritten, reason }),
+  };
+}
+
+/** @param {'study_room'|'tutor'} providerType @param {number} providerId */
+export function getReviewCount(providerType, providerId) {
+  return visibleOnTarget(providerType, providerId).length;
+}
+
+export function getReviewSummaryLocal(providerType, providerId, viewer = {}) {
+  const v = resolveLocalViewer(providerType, providerId, viewer);
+  const all = visibleOnTarget(providerType, providerId);
+  const mine =
+    v.user_id != null
+      ? loadAll()
+          .filter(
+            (r) =>
+              r.provider_type === providerType &&
+              r.provider_id === providerId &&
+              r.author_user_id === v.user_id &&
+              (r.review_status === 'visible' || r.review_status === 'hidden'),
+          )
+          .map((r) =>
+            mapItem(r, {
+              is_mine: true,
+              can_edit: !v.is_review_blocked,
+              can_delete: true,
+              can_hide: r.review_status === 'visible',
+              can_unhide: r.review_status === 'hidden' && !v.is_review_blocked,
+            }),
+          )
+      : [];
+  const tagFreq = {};
+  all.forEach((r) => {
+    (r.point_tags || []).forEach((t) => {
+      tagFreq[t] = (tagFreq[t] || 0) + 1;
+    });
+  });
+  const summaryTags = Object.entries(tagFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([t]) => t);
 
   return {
     provider_type: providerType,
     provider_id: providerId,
     review_count: all.length,
-    // 공개 집계 태그는 후순위 — 읽기 화면에 가짜 신뢰 신호가 되지 않도록 비움
-    summary_tags: [],
-    origin_hint: {
-      consultation: reviews.filter((r) => r.review_origin_type === 'consultation').length,
-      experience: reviews.filter((r) => r.review_origin_type === 'experience').length,
-    },
-    can_read_body: canReadBody,
-    can_write: canWrite,
-    write_blocked_reason: writeBlocked,
-    is_owner: isOwner,
+    review_write_status: v.review_write_status,
+    summary_tags: summaryTags,
+    can_read_body: true,
+    can_write: v.can_write,
+    can_manage: v.has_written,
+    has_written: v.has_written,
+    created_count: v.created_count,
+    remaining_creates: v.remaining_creates,
+    is_review_blocked: v.is_review_blocked,
+    write_blocked_reason: v.write_blocked_reason,
+    cta_kind: v.cta_kind,
+    is_owner: v.is_owner,
     allowed_tags: pointTagsForProvider(providerType),
-    reviews,
-    guest_teaser: canReadBody ? null : PROVIDER_REVIEW_COPY.guestTeaser,
+    reviews: all.slice(0, REVIEW_POLICY.sheetLimit).map((r) => mapItem(r, { is_mine: r.author_user_id === v.user_id })),
+    my_reviews: mine,
+    guest_teaser: null,
   };
 }
 
-/** @param {'study_room'|'tutor'} providerType @param {number} providerId @param {object} viewer */
 export async function fetchReviewSummary(providerType, providerId, viewer = {}) {
   if (!apiMode()) return getReviewSummaryLocal(providerType, providerId, viewer);
   try {
@@ -180,114 +309,281 @@ export async function fetchReviewSummary(providerType, providerId, viewer = {}) 
   }
 }
 
-/**
- * @param {{ provider_type: string, provider_id: number, review_origin_type: string, review_body: string, point_tags: string[] }} payload
- * @param {{ userId?: number }} [opts]
- */
-export async function createProviderReview(payload, opts = {}) {
+export async function fetchReviewList(providerType, providerId, page = 1, viewer = {}) {
   if (!apiMode()) {
-    const list = loadAll();
-    const userId = opts.userId || getAuthUser()?.user_id || 0;
-    if (list.some((r) => r.provider_type === payload.provider_type && r.provider_id === payload.provider_id && r.author_user_id === userId)) {
-      throw new Error('이미 이 대상에 후기를 남겼습니다.');
-    }
-    const row = {
-      id: nextId(list),
-      provider_type: /** @type {'study_room'|'tutor'} */ (payload.provider_type),
-      provider_id: payload.provider_id,
-      author_user_id: userId,
-      review_origin_type: /** @type {'consultation'|'experience'} */ (payload.review_origin_type),
-      review_status: 'visible',
-      review_body: payload.review_body,
-      point_tags: payload.point_tags,
-      created_at: nowStamp(),
-      reply: null,
+    const all = visibleOnTarget(providerType, providerId);
+    const v = resolveLocalViewer(providerType, providerId, viewer);
+    const pageSize = REVIEW_POLICY.pageSize;
+    const start = (Math.max(1, page) - 1) * pageSize;
+    return {
+      mode: 'target',
+      provider_type: providerType,
+      provider_id: providerId,
+      review_count: all.length,
+      page,
+      page_size: pageSize,
+      total: all.length,
+      cta_kind: v.cta_kind,
+      can_write: v.can_write,
+      has_written: v.has_written,
+      is_owner: v.is_owner,
+      items: all.slice(start, start + pageSize).map((r) => mapItem(r)),
     };
-    list.unshift(row);
-    saveAll(list);
-    return getReviewSummaryLocal(row.provider_type, row.provider_id, {
-      role: 'parent',
-      userId,
-    });
   }
-  const res = await fetch(`${API}?action=create`, {
+  const qs = new URLSearchParams({
+    action: 'list',
+    provider_type: providerType,
+    provider_id: String(providerId),
+    page: String(page),
+    limit: String(REVIEW_POLICY.pageSize),
+  });
+  const res = await fetch(`${API}?${qs}`, { credentials: 'include' });
+  const data = await res.json();
+  if (!res.ok || data.ok === false) throw new Error(data.message || 'load failed');
+  return data;
+}
+
+async function postAction(action, payload) {
+  const res = await fetch(`${API}?action=${action}`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok || data.ok === false) throw new Error(data.message || '등록 실패');
+  if (!res.ok || data.ok === false) {
+    const err = new Error(data.message || '요청 실패');
+    err.code = data.error;
+    throw err;
+  }
   return data;
 }
 
-/** @param {number} reviewId @param {string} body @param {{ userId?: number, isOwner?: boolean, role?: string }} [viewer] */
-export async function createProviderReviewReply(reviewId, body, viewer = {}) {
+export async function createProviderReview(payload, opts = {}) {
   if (!apiMode()) {
+    const userId = opts.userId || getAuthUser()?.user_id || 0;
+    const type = payload.provider_type;
+    const id = payload.provider_id;
+    if (!payload.public_consent) throw new Error('공개 동의 후 후기를 남길 수 있습니다.');
+    const viewer = resolveLocalViewer(type, id, { role: 'parent', userId });
+    if (viewer.is_review_blocked) throw new Error(PROVIDER_REVIEW_COPY.blockedCta);
+    if (viewer.review_write_status === 'closed') throw new Error(PROVIDER_REVIEW_COPY.closedCta);
+    if (viewer.remaining_creates <= 0) throw new Error('이 대상에는 후기를 더 남길 수 없습니다. (최대 3회)');
+    if (!previewHasThread(type, id)) throw new Error(PROVIDER_REVIEW_COPY.ineligibleCta);
+    const list = loadAll();
+    const row = {
+      id: nextId(list),
+      provider_type: type,
+      provider_id: id,
+      author_user_id: userId,
+      review_origin_type: payload.review_origin_type || 'consultation',
+      review_status: 'visible',
+      review_body: payload.review_body,
+      point_tags: payload.point_tags || [],
+      created_at: nowStamp(),
+    };
+    list.unshift(row);
+    saveAll(list);
+    bumpQuota(type, id, userId);
+    return getReviewSummaryLocal(type, id, { role: 'parent', userId });
+  }
+  return postAction('create', payload);
+}
+
+export async function updateProviderReview(payload, opts = {}) {
+  if (!apiMode()) {
+    const userId = opts.userId || getAuthUser()?.user_id || 0;
+    const list = loadAll();
+    const row = list.find((r) => r.id === payload.review_id);
+    if (!row || row.review_status === 'deleted') throw new Error('후기를 찾을 수 없습니다.');
+    if (row.author_user_id !== userId) throw new Error('본인이 쓴 후기만 처리할 수 있습니다.');
+    if (isBlocked(row.provider_type, row.provider_id, userId)) {
+      throw new Error('후기차단 이후에는 수정할 수 없고 비공개 또는 삭제만 할 수 있어요.');
+    }
+    row.review_body = payload.review_body;
+    row.point_tags = payload.point_tags || row.point_tags;
+    saveAll(list);
+    return getReviewSummaryLocal(row.provider_type, row.provider_id, { role: 'parent', userId });
+  }
+  return postAction('update', payload);
+}
+
+export async function hideProviderReview(reviewId, opts = {}) {
+  return setLocalStatus(reviewId, 'hidden', opts, 'hide');
+}
+
+export async function unhideProviderReview(reviewId, opts = {}) {
+  return setLocalStatus(reviewId, 'visible', opts, 'unhide');
+}
+
+export async function deleteProviderReview(reviewId, opts = {}) {
+  return setLocalStatus(reviewId, 'deleted', opts, 'delete');
+}
+
+async function setLocalStatus(reviewId, status, opts, action) {
+  if (!apiMode()) {
+    const userId = opts.userId || getAuthUser()?.user_id || 0;
     const list = loadAll();
     const row = list.find((r) => r.id === reviewId);
-    if (!row) throw new Error('후기를 찾을 수 없습니다.');
-    if (row.reply) throw new Error('이미 답글을 남겼습니다.');
-    row.reply = { body, created_at: nowStamp() };
+    if (!row || row.review_status === 'deleted') throw new Error('후기를 찾을 수 없습니다.');
+    if (row.author_user_id !== userId) throw new Error('본인이 쓴 후기만 처리할 수 있습니다.');
+    if (action === 'unhide' && isBlocked(row.provider_type, row.provider_id, userId)) {
+      throw new Error('후기차단 이후에는 수정할 수 없고 비공개 또는 삭제만 할 수 있어요.');
+    }
+    row.review_status = status;
+    if (status === 'deleted') row.deleted_at = nowStamp();
     saveAll(list);
-    return getReviewSummaryLocal(row.provider_type, row.provider_id, viewer);
+    return getReviewSummaryLocal(row.provider_type, row.provider_id, { role: 'parent', userId });
   }
-  const res = await fetch(`${API}?action=reply`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ review_id: reviewId, body }),
-  });
-  const data = await res.json();
-  if (!res.ok || data.ok === false) throw new Error(data.message || '답글 실패');
-  return data;
+  return postAction(action, { review_id: reviewId });
 }
 
-export async function fetchMypageReviewSnapshot() {
+export async function blockReviewAuthor(payload) {
+  if (!apiMode()) {
+    const blocks = loadBlocks();
+    const exists = blocks.some(
+      (b) =>
+        b.provider_type === payload.provider_type &&
+        Number(b.provider_id) === Number(payload.provider_id) &&
+        Number(b.blocked_author_user_id) === Number(payload.blocked_author_user_id),
+    );
+    if (!exists) {
+      blocks.push({
+        provider_type: payload.provider_type,
+        provider_id: payload.provider_id,
+        blocked_author_user_id: payload.blocked_author_user_id,
+        blocked_by_user_id: getAuthUser()?.user_id || 0,
+      });
+      saveBlocks(blocks);
+    }
+    return getReviewSummaryLocal(payload.provider_type, payload.provider_id, {
+      role: getNavRole() === 'tutor' ? 'tutor' : 'study_room',
+      userId: getAuthUser()?.user_id,
+      isOwner: true,
+    });
+  }
+  return postAction('block', payload);
+}
+
+export async function unblockReviewAuthor(payload) {
+  if (!apiMode()) {
+    saveBlocks(
+      loadBlocks().filter(
+        (b) =>
+          !(
+            b.provider_type === payload.provider_type &&
+            Number(b.provider_id) === Number(payload.provider_id) &&
+            Number(b.blocked_author_user_id) === Number(payload.blocked_author_user_id)
+          ),
+      ),
+    );
+    return getReviewSummaryLocal(payload.provider_type, payload.provider_id, {
+      role: getNavRole() === 'tutor' ? 'tutor' : 'study_room',
+      userId: getAuthUser()?.user_id,
+      isOwner: true,
+    });
+  }
+  return postAction('unblock', payload);
+}
+
+export async function setReviewWriteStatus(payload) {
+  if (!apiMode()) {
+    const map = loadWriteStatus();
+    map[writeStatusKey(payload.provider_type, payload.provider_id)] = payload.review_write_status;
+    saveJson(WRITE_KEY, map);
+    return getReviewSummaryLocal(payload.provider_type, payload.provider_id, {
+      role: getNavRole() === 'tutor' ? 'tutor' : 'study_room',
+      userId: getAuthUser()?.user_id,
+      isOwner: true,
+    });
+  }
+  return postAction('set_write_status', payload);
+}
+
+/** @deprecated 답글 MVP 제외 */
+export async function createProviderReviewReply() {
+  throw new Error('후기 댓글·답글은 지원하지 않습니다.');
+}
+
+export async function fetchReviewInbox(lane = '', page = 1) {
   if (!apiMode()) {
     const auth = getAuthUser();
     const role = auth?.role_type || '';
     const userId = auth?.user_id || 0;
-    const all = loadAll().filter((r) => r.review_status === 'visible');
-    if (role === 'guardian_student' || (!role && getNavRole() === 'parent')) {
-      const items = all.filter((r) => r.author_user_id === userId || (userId === 0 && r.author_user_id === 6));
-      return { lane: 'written', label: '내가 남긴 후기', count: items.length, items: items.slice(0, 10) };
+    const nav = getNavRole();
+    const useReceived = lane === 'received' || (!lane && (nav === 'tutor' || nav === 'study_room' || role === 'tutor' || role === 'study_room_owner'));
+    const all = loadAll().filter((r) => r.review_status === 'visible' || (!useReceived && r.review_status === 'hidden'));
+    const pageSize = REVIEW_POLICY.pageSize;
+    const start = (Math.max(1, page) - 1) * pageSize;
+    if (useReceived) {
+      const type = nav === 'tutor' ? 'tutor' : 'study_room';
+      const items = all.filter((r) => r.provider_type === type && r.provider_id === 1);
+      return {
+        mode: 'account',
+        lane: 'received',
+        label: PROVIDER_REVIEW_COPY.inboxReceived,
+        page,
+        page_size: pageSize,
+        total: items.length,
+        count: items.length,
+        items: items.slice(start, start + pageSize).map((r) =>
+          mapItem(r, {
+            is_review_blocked: isBlocked(r.provider_type, r.provider_id, r.author_user_id),
+            author_user_id: r.author_user_id,
+          }),
+        ),
+      };
     }
-    // preview: provider sees reviews for id=1 of their type
-    const type = getNavRole() === 'tutor' ? 'tutor' : 'study_room';
-    const items = all
-      .filter((r) => r.provider_type === type && r.provider_id === 1)
-      .map((r) => ({
-        ...r,
-        can_reply: !r.reply,
-        point_tags: r.point_tags || [],
-      }));
+    const items = all.filter((r) => r.author_user_id === userId || (userId === 0 && r.author_user_id === 6));
     return {
-      lane: 'received',
-      label: '받은 후기',
+      mode: 'account',
+      lane: 'written',
+      label: PROVIDER_REVIEW_COPY.inboxWritten,
+      page,
+      page_size: pageSize,
+      total: items.length,
       count: items.length,
-      items: items.slice(0, 10),
-      hint: '답글은 상세 화면에서 후기마다 1회만 남길 수 있습니다.',
+      items: items.slice(start, start + pageSize).map((r) =>
+        mapItem(r, {
+          is_mine: true,
+          can_edit: !isBlocked(r.provider_type, r.provider_id, r.author_user_id),
+          can_delete: true,
+          can_hide: r.review_status === 'visible',
+          can_unhide: r.review_status === 'hidden',
+          review_status: r.review_status,
+        }),
+      ),
     };
   }
-  const res = await fetch(`${API}?action=mypage`, { credentials: 'include' });
+  const qs = new URLSearchParams({ action: 'inbox', lane, page: String(page), limit: String(REVIEW_POLICY.pageSize) });
+  const res = await fetch(`${API}?${qs}`, { credentials: 'include' });
   const data = await res.json();
   if (!res.ok || data.ok === false) throw new Error(data.message || 'load failed');
   return data;
 }
 
-/** exposure 카드용 — 동기 count (프리뷰) / API hydration은 별도 */
+export async function fetchMypageReviewSnapshot() {
+  return fetchReviewInbox('');
+}
+
 export function syncReviewCountForItem(kind, id) {
   if (kind !== 'study_room' && kind !== 'tutor') return 0;
   return getReviewCount(kind, id);
 }
 
-/** 마이페이지 요약용 — 프리뷰 작성 후기 수 */
 export function countWrittenReviewsPreview(authorUserId = 6) {
   return loadAll().filter((r) => r.review_status === 'visible' && r.author_user_id === authorUserId).length;
 }
 
-/** 마이페이지 요약용 — 프리뷰 받은 후기 수 (데모 provider_id=1) */
 export function countReceivedReviewsPreview(providerType) {
   return getReviewCount(providerType, 1);
+}
+
+export function reviewsArchivePath(opts = {}) {
+  if (opts.providerType && opts.providerId) {
+    return `/mypage/messages/reviews/target/${opts.providerType}/${opts.providerId}`;
+  }
+  if (opts.lane === 'received') return '/mypage/messages/reviews/received';
+  if (opts.lane === 'written') return '/mypage/messages/reviews/written';
+  return '/mypage/messages/reviews';
 }
