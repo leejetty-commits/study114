@@ -21,16 +21,9 @@ export function renderTutorDetailBody(item, viewer) {
   const locationLabel = isGuest
     ? coarseRegionForGuest(item.location_label)
     : item.location_label || '—';
-
-  const fitHint =
-    viewer === 'parent'
-      ? '<p class="p24-fit p24-fit--hint">희망 과목·지역·예산과 맞는지 확인하세요.</p>'
-      : isGuest
-        ? '<p class="p24-fit p24-fit--hint">비로그인 · 활동 지역은 동/권역만 · 쪽지는 로그인 후</p>'
-        : '';
+  const features = [item.feature_1, item.feature_2, item.feature_3].filter(Boolean).join(' · ') || '—';
 
   return `
-    ${fitHint}
     <section class="p24-section">
       <h3 class="p24-section__title">핵심 조건</h3>
       <dl class="p24-dl">
@@ -41,15 +34,9 @@ export function renderTutorDetailBody(item, viewer) {
         <dt>수업료</dt><dd>${esc(formatTutorFeeCard(item))}</dd>
         <dt>일정</dt><dd>${esc(isGuest ? '로그인 후 확인' : schedule)}</dd>
         <dt>강의스타일</dt><dd>${esc(isGuest ? '로그인 후 확인' : formatTeachingStyleBadges(item.teaching_style_badges, 3))}</dd>
-      </dl>
-    </section>
-    <section class="p24-section">
-      <h3 class="p24-section__title">소개 · 신뢰</h3>
-      <p class="p24-intro">${esc(item.intro_short || item.feature_1 || '—')}</p>
-      <dl class="p24-dl p24-dl--compact">
+        <dt>특징</dt><dd>${esc(features)}</dd>
         <dt>학력</dt><dd>${esc(isGuest ? '로그인 후 확인' : formatUniversitySummary(item))}</dd>
         <dt>경력</dt><dd>${esc(formatCareerYearBand(item.career_year_band))}</dd>
-        <dt>제출자료</dt><dd>${item.proof_document_available ? '공개' : '미공개'}</dd>
       </dl>
     </section>
     ${reviewSectionPlaceholder()}

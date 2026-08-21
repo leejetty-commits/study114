@@ -35,8 +35,9 @@ ok('actions_only_wish_compare_message', CARD_VISUAL_POLICY.actions.join(',') ===
 ok('stats_recommend_review', CARD_VISUAL_POLICY.stats.join(',') === 'recommend,review');
 ok('removed_like', CARD_VISUAL_POLICY.removed.includes('like'));
 ok('paid_room_hot_단과', CARD_VISUAL_POLICY.paidStudyRoom.join(',') === 'hot,subject_track');
-ok('paid_tutor_hot_picked_sky', CARD_VISUAL_POLICY.paidTutor.join(',') === 'hot,picked,sky');
+ok('paid_tutor_hot_jjokjipge_sky', CARD_VISUAL_POLICY.paidTutor.join(',') === 'hot,jjokjipge,sky');
 ok('label_단과', PAID_BADGE_LABELS.subject_track === '단과');
+ok('label_쪽집게', PAID_BADGE_LABELS.jjokjipge === '쪽집게');
 ok('no_전문_label', !Object.values(PAID_BADGE_LABELS).includes('전문'));
 
 const room = {
@@ -61,14 +62,15 @@ const tutor = {
   university_status: 'graduated',
   career_year_band: 'y10_plus',
   proof_document_available: true,
-  paid_badges: ['sky', 'picked'],
+  paid_badges: ['sky', 'jjokjipge'],
   university_name: '서울대학교',
   recommend_count: 2,
   review_count: 3,
 };
 const tutorLayers = resolveCardVisualLayers('tutor', tutor);
 ok('tutor_trust_졸업_경력_증빙', tutorLayers.trustBadges.includes('졸업') && tutorLayers.trustBadges.includes('경력 10년+') && tutorLayers.trustBadges.includes('증빙'));
-ok('tutor_promo_sky_picked', tutorLayers.promoBadges.some((b) => b.id === 'sky') && tutorLayers.promoBadges.some((b) => b.id === 'picked'));
+ok('tutor_promo_sky_jjokjipge', tutorLayers.promoBadges.some((b) => b.id === 'sky') && tutorLayers.promoBadges.some((b) => b.id === 'jjokjipge'));
+ok('tutor_picked_alias', resolvePaidPromoBadges('tutor', { paid_badges: ['picked'] }).some((b) => b.id === 'jjokjipge'));
 ok('tutor_no_auto_sky_from_univ', resolvePaidPromoBadges('tutor', { university_name: '서울대학교' }).length === 0);
 ok('tutor_review_shown', tutorLayers.stats.showReview === true);
 
@@ -78,6 +80,7 @@ ok('tutorBadges_uses_trust', tutorBadges(tutor).includes('졸업'));
 ok('catalog_room_no_recommend_new', !STUDY_ROOM_CATALOG_IDS.includes('recommend') && !STUDY_ROOM_CATALOG_IDS.includes('new'));
 ok('catalog_room_has_단과', STUDY_ROOM_CATALOG_IDS.includes('subject_track'));
 ok('catalog_tutor_has_sky', TUTOR_CATALOG_IDS.includes('sky'));
+ok('catalog_tutor_jjokjipge', TUTOR_CATALOG_IDS.includes('jjokjipge'));
 ok('catalog_tutor_no_recommend', !TUTOR_CATALOG_IDS.includes('recommend'));
 
 ok('new_window_7d', isWithinNewBadgeWindow(new Date().toISOString()));

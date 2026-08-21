@@ -4,7 +4,9 @@
 **최우선 SSOT:** Notion「상위기획-공부방 샵 페이지·카드 연동 구현 컨셉」§18  
 **교차:** Notion 11장 §2-0 · 18장 §0-A · repo `docs/ssot/11-main-exposure-and-compare.md` §2-0  
 **코드 SSOT:** `preview/home-ui/src/card-visual.js`  
-**검증:** `npm run verify:card-visual`
+**검증:** `npm run verify:card-visual` · 관통감사 `npm run verify:card-visual:penetration` → `docs/internal/56-card-visual-penetration-audit.md`  
+**paid_badges 계약:** `docs/internal/57-paid-badges-api-contract.md` · API 코드 `jjokjipge`(쪽집게)  
+**슬로건 분기표:** `docs/internal/58-card-copy-tier-matrix.md`
 
 ---
 
@@ -48,10 +50,12 @@
 
 ## 4. 유료 배지 데이터
 
-카드는 `item.paid_badges` | `badge_codes` | `badge_*` 플래그만 표시.  
+카드는 API `item.paid_badges[]`만 표시 (badge_codes / badge_* 플래그는 호환).  
 대학명으로 SKY 자동부여 **금지**. New만 published_at/created_at 7일 자동.
 
-엔타이틀먼트→`paid_badges` 주입은 **후순위**(포지션 종속 배지 결제 연동).
+서버: `PaidBadgeResolver` ← `provider_paid_badges` (055).  
+Checkout→행 기록은 **미연결** — 필드가 `[]`인 것이 정상일 수 있음.  
+→ [57-paid-badges-api-contract.md](./57-paid-badges-api-contract.md)
 
 ---
 

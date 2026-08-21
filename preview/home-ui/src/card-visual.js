@@ -1,8 +1,8 @@
 /**
- * 카드 이모티콘·아이콘·배지 SSOT (2026-08-21 잠금)
+ * 카드 이모티콘·아이콘·배지 SSOT (2026-08-21 잠금 · 2026-08-22 paid_badges 계약)
  *
  * 최우선: Notion「상위기획-공부방 샵 페이지·카드 연동 구현 컨셉」§18
- * 교차: 11장 §2-0 · 18장 §0-A
+ * 교차: 11장 §2-0 · 18장 §0-A · docs/internal/57-paid-badges-api-contract.md
  *
  * 층위 (섞지 않음)
  *  A 기능 = 찜 / 비교 / 쪽지
@@ -13,6 +13,7 @@
  *  F 유료 주목 = 공부방 Hot·단과 / 과외쌤 Hot·쪽집게·SKY
  *
  * 금지: 공부방 유료축에「전문」사용 · 추천/후기를 광고배지로 취급
+ * 유료 배지 정본: API paid_badges[] 만 (클라이언트 entitlement 추론 금지)
  */
 
 /** @typedef {'study_room'|'tutor'|'student'} CardKind */
@@ -24,7 +25,8 @@ export const CARD_VISUAL_POLICY = Object.freeze({
   removed: Object.freeze(['like']),
   auto: Object.freeze(['new']),
   paidStudyRoom: Object.freeze(['hot', 'subject_track']),
-  paidTutor: Object.freeze(['hot', 'picked', 'sky']),
+  /** API 정본 코드 — jjokjipge (표시: 쪽집게). picked는 구 alias */
+  paidTutor: Object.freeze(['hot', 'jjokjipge', 'sky']),
   /** 공부방 유료축에 금지 — 헤드라인 카피만 허용 */
   forbiddenPaidStudyRoomLabels: Object.freeze(['전문']),
   newBadgeDays: 7,
@@ -33,13 +35,13 @@ export const CARD_VISUAL_POLICY = Object.freeze({
 export const PAID_BADGE_LABELS = Object.freeze({
   hot: 'Hot',
   subject_track: '단과',
-  picked: '쪽집게',
+  jjokjipge: '쪽집게',
   sky: 'SKY',
   new: 'New',
 });
 
 /** @deprecated 옛 광고배지 카탈로그 id — 통계/자동부여로 이전됨 */
-export const DEPRECATED_PAID_BADGE_PRODUCT_IDS = Object.freeze(['recommend', 'new']);
+export const DEPRECATED_PAID_BADGE_PRODUCT_IDS = Object.freeze(['recommend', 'new', 'picked']);
 
 /**
  * @param {string|Date|null|undefined} dateVal
@@ -62,6 +64,26 @@ export function resolveAutoNewBadge(item, nowMs = Date.now()) {
   const dateVal = item?.published_at || item?.created_at || item?.registered_at || null;
   if (!isWithinNewBadgeWindow(dateVal, nowMs)) return null;
   return { id: 'new', label: PAID_BADGE_LABELS.new, layer: 'auto' };
+}
+
+/**
+ * API/플래그 코드를 정본 id로 정규화
+ * @param {string} raw
+ * @param {CardKind} kind
+ */
+export function normalizePaidBadgeCode(raw, kind) {
+  let id = String(raw).trim().toLowerCase();
+  if (!id || id === 'recommend' || id === 'new') return null;
+  if (id === '전문' || id === 'specialty') return null;
+  if (id === '단과' || id === 'subject') id = 'subject_track';
+  if (id === '쪽집게' || id === 'picked' || id === 'jjokjipgae') id = 'jjokjipge';
+  const allowed =
+    kind === 'study_room'
+      ? CARD_VISUAL_POLICY.paidStudyRoom
+      : kind === 'tutor'
+        ? CARD_VISUAL_POLICY.paidTutor
+        : [];
+  return allowed.includes(id) ? id : null;
 }
 
 /**
@@ -90,20 +112,17 @@ export function resolvePaidPromoBadges(kind, item) {
       const flag = item?.[`badge_${id}`] ?? item?.[id];
       if (flag === true || flag === 1 || flag === '1') codes.push(id);
     }
+    // 구 alias 플래그
+    if (kind === 'tutor' && (item?.badge_picked === true || item?.picked === true)) {
+      codes.push('jjokjipge');
+    }
   }
 
   const out = [];
   const seen = new Set();
   for (const raw of codes) {
-    let id = String(raw).trim().toLowerCase();
-    if (id === '단과' || id === 'subject' || id === 'specialty' || id === '전문') {
-      // 「전문」은 유료 아이콘 금지 → 단과로만 정규화 (전문 라벨 자체는 버림)
-      if (id === '전문') continue;
-      id = 'subject_track';
-    }
-    if (id === '쪽집게') id = 'picked';
-    if (!allowed.includes(id) || seen.has(id)) continue;
-    if (!PAID_BADGE_LABELS[id]) continue;
+    const id = normalizePaidBadgeCode(raw, kind);
+    if (!id || seen.has(id) || !PAID_BADGE_LABELS[id]) continue;
     seen.add(id);
     out.push({ id, label: PAID_BADGE_LABELS[id], layer: 'paid' });
   }
@@ -205,6 +224,32 @@ export function renderTrustBadgeRow(labels, esc) {
   return `<div class="card-visual__trust" aria-label="신뢰 배지">${labels
     .map((b) => `<span class="card-visual__trust-badge">${esc(b)}</span>`)
     .join('')}</div>`;
+}
+
+/**
+ * 확대카드·비교 상단용 — 미니카드와 동일 층위 HTML (시설/특징 혼입 금지)
+ * @param {CardKind} kind
+ * @param {object} item
+ * @param {(s: string) => string} esc
+ */
+export function renderCardVisualPolicyBlock(kind, item, esc) {
+  if (kind === 'student') return '';
+  const layers = resolveCardVisualLayers(kind, item);
+  const promo = renderPromoBadgeRow(layers.promoBadges, esc);
+  const trust = renderTrustBadgeRow(layers.trustBadges, esc);
+  const rec = layers.stats.recommend;
+  const rev = layers.stats.review;
+  const statsBits = [
+    `<span class="card-visual__stat" data-stat="recommend">추천 ${esc(String(rec))}</span>`,
+  ];
+  if (layers.stats.showReview) {
+    statsBits.push(
+      `<span class="card-visual__stat" data-stat="review">후기 ${esc(String(rev))}</span>`,
+    );
+  }
+  const stats = `<div class="card-visual__stats" aria-label="통계">${statsBits.join('')}</div>`;
+  const disc = `<p class="card-visual__disclaimer">플랫폼 보증 아님</p>`;
+  return `<div class="card-visual__policy-block" data-card-visual-ssot="1">${promo}${trust}${stats}${disc}</div>`;
 }
 
 /** 정책 회귀용 — 「전문」이 유료 라벨로 쓰이면 true */

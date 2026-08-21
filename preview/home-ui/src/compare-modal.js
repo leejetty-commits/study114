@@ -6,8 +6,21 @@ import {
   COMPARE_MAX,
 } from './exposure-schema.js';
 import { resolveDisplayValue } from './exposure-format.js';
+import {
+  resolveCardVisualLayers,
+  renderPromoBadgeRow,
+  renderTrustBadgeRow,
+} from './card-visual.js';
 
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
+
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
 /**
  * @param {boolean} isLoggedIn
@@ -23,10 +36,72 @@ export function promptCompareLogin(isLoggedIn, kind) {
 }
 
 /**
+ * 비교 상단 정책축 — card-visual SSOT 재사용
+ * 1행: 유료/자동/신뢰 · 2행: 추천·후기 통계
+ * @param {'study_room'|'tutor'} kind
+ * @param {object[]} cols
+ */
+function renderComparePolicyAxis(kind, cols) {
+  const nameCells = cols
+    .map((c) => {
+      const name = c.study_room_name || c.tutor_display_name || '—';
+      return `<th scope="col" class="compare-policy__name">${esc(name)}</th>`;
+    })
+    .join('');
+
+  const layerCells = cols
+    .map((item) => {
+      const layers = resolveCardVisualLayers(kind, item);
+      const trustShort = layers.trustBadges.slice(0, 2);
+      const promo = renderPromoBadgeRow(layers.promoBadges, esc);
+      const trust = renderTrustBadgeRow(trustShort, esc);
+      const empty =
+        !promo && !trust
+          ? '<span class="compare-policy__empty">—</span>'
+          : '';
+      return `<td class="compare-policy__layers">${promo}${trust}${empty}</td>`;
+    })
+    .join('');
+
+  const statCells = cols
+    .map((item) => {
+      const layers = resolveCardVisualLayers(kind, item);
+      const bits = [`추천 ${layers.stats.recommend}`];
+      if (layers.stats.showReview) bits.push(`후기 ${layers.stats.review}`);
+      return `<td class="compare-policy__stats">${esc(bits.join(' · '))}</td>`;
+    })
+    .join('');
+
+  return `
+    <div class="compare-policy-axis" aria-label="카드 정책 비교축">
+      <table class="compare-policy-table">
+        <thead>
+          <tr>
+            <th scope="col" class="compare-policy__row-label">대상</th>
+            ${nameCells}
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="compare-policy__row--layers">
+            <th scope="row">유료·New·신뢰</th>
+            ${layerCells}
+          </tr>
+          <tr class="compare-policy__row--stats">
+            <th scope="row">추천·후기</th>
+            ${statCells}
+          </tr>
+        </tbody>
+      </table>
+      <p class="compare-policy__note">모바일·좁은 폭: 신뢰는 최대 2개 · 액션 레일은 비교표에 복제하지 않음</p>
+    </div>`;
+}
+
+/**
  * @param {Array<object>} items
  * @param {Array<{key:string,label:string}>} rows
+ * @param {'study_room'|'tutor'} kind
  */
-function renderCompareTable(items, rows) {
+function renderCompareTable(items, rows, kind) {
   const cols = items.slice(0, COMPARE_MAX);
   const ineligible = cols.filter((c) => c.compare_eligible === false);
   const warn =
@@ -37,11 +112,12 @@ function renderCompareTable(items, rows) {
   const colHeaders = cols.map((c, i) => {
     const name =
       c.study_room_name || c.tutor_display_name || `선택 ${i + 1}`;
-    return `<th scope="col">${String(name).replace(/</g, '&lt;')}</th>`;
+    return `<th scope="col">${esc(name)}</th>`;
   });
 
   return `
     ${warn}
+    ${renderComparePolicyAxis(kind, cols)}
     <div class="compare-table-wrap">
       <table class="compare-table">
         <thead>
@@ -56,16 +132,16 @@ function renderCompareTable(items, rows) {
               const cells = cols
                 .map((item) => {
                   const val = resolveDisplayValue(item, row.key);
-                  return `<td>${val != null && val !== '' ? String(val).replace(/</g, '&lt;') : '—'}</td>`;
+                  return `<td>${val != null && val !== '' ? esc(val) : '—'}</td>`;
                 })
                 .join('');
-              return `<tr><th scope="row">${row.label}</th>${cells}</tr>`;
+              return `<tr><th scope="row">${esc(row.label)}</th>${cells}</tr>`;
             })
             .join('')}
         </tbody>
       </table>
     </div>
-    <p class="compare-modal__note">6장 · 사용자가 ⇄로 선택한 ${cols.length}건 · 표 형태 고정</p>
+    <p class="compare-modal__note">6장 · 사용자가 ⇄로 선택한 ${cols.length}건 · 상단=카드 정책축 · 하단=상세 비교표</p>
   `;
 }
 
@@ -94,8 +170,8 @@ export function openCompareModal(kind, items = []) {
   const title = kind === 'study_room' ? '공부방 비교검색' : '과외쌤 비교검색';
   const sub =
     kind === 'tutor'
-      ? '6장 · 경량 비교 · 최대 3개'
-      : '6장 · 필수 비교 · 최대 3개';
+      ? '상단 정책축(유료·신뢰·통계) + 경량 비교표 · 최대 3개'
+      : '상단 정책축(유료·신뢰·통계) + 비교표 · 최대 3개';
 
   const root = document.createElement('div');
   root.id = 'compare-modal-root';
@@ -111,7 +187,7 @@ export function openCompareModal(kind, items = []) {
         <button type="button" class="compare-modal__close" data-action="compare-close" aria-label="닫기">×</button>
       </header>
       <div class="compare-modal__body">
-        ${items.length ? renderCompareTable(items, rows) : renderCompareEmpty(kind)}
+        ${items.length ? renderCompareTable(items, rows, kind) : renderCompareEmpty(kind)}
       </div>
       <footer class="compare-modal__footer">
         <button type="button" class="btn btn--secondary btn--sm" data-action="compare-close">닫기</button>

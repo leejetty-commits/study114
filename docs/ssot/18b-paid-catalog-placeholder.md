@@ -1,7 +1,15 @@
 # 18b — 유료 카탈로그 · 수치 placeholder
 
-**상태: placeholder** (구조는 [18장 §19](18-paid-services-rough.md#19-수익모델-최신-잠금안-2026-07-07) 잠금 · **숫자·PG 미확정**)  
-**작성:** 2026-07-04 · **갱신:** 2026-07-07  
+> ## ⛔ 구버전 (배지 SKU) — 2026-08-22
+>
+> 아래 **「Hot · New · 추천 · 쪽집게」** 더미 단가는 **폐기된 판매축**입니다.  
+> New·추천은 유료 배지가 아닙니다. SKY는 유료축(`paid_badges`)이며 사실표시 자동부여가 아닙니다.
+>
+> **대체 정본:** [`docs/internal/57-paid-badges-api-contract.md`](../internal/57-paid-badges-api-contract.md) · [`55-card-visual-lock.md`](../internal/55-card-visual-lock.md)  
+> 허용 코드만: 공부방 `hot`/`subject_track` · 과외쌤 `hot`/`jjokjipge`/`sky`
+
+**상태: placeholder (배지 목록 deprecated)** (포지션·횟수권 구조는 [18장 §19](18-paid-services-rough.md#19-수익모델-최신-잠금안-2026-07-07) 참고 · **숫자·PG 미확정**)  
+**작성:** 2026-07-04 · **갱신:** 2026-07-07 · **배지축 폐기 표시:** 2026-08-22  
 **역할:** **기간형·횟수권** 더미 단가 — UX·전환 실험 후 잠금
 
 > **1차 결제 언어:** **기간형 상품 + 횟수권**만 사용. 수치는 **더미(10원)** 또는 가설.

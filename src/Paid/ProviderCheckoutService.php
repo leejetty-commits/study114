@@ -110,7 +110,12 @@ final class ProviderCheckoutService
         return match ($productId) {
             'prime', 'pick' => 'position',
             'memo_ticket', 'request_view' => 'count',
-            'hot', 'new', 'recommend', 'picked', 'subject_track', 'sky' => 'badge_addon',
+            // 정본: hot / subject_track / jjokjipge / sky
+            // picked = jjokjipge 구 alias · new/recommend 는 판매축 폐기(호환 throw 방지용 매핑만)
+            'hot', 'subject_track', 'jjokjipge', 'sky', 'picked' => 'badge_addon',
+            'new', 'recommend' => throw new InvalidArgumentException(
+                'New·추천은 유료 배지 상품이 아닙니다. (카드 자동부여/통계축)',
+            ),
             default => throw new InvalidArgumentException('알 수 없는 상품입니다.'),
         };
     }

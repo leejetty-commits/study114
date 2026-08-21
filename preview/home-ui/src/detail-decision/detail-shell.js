@@ -8,7 +8,6 @@ import { isInStudentReview, toggleStudentReview } from '../student-review-store.
 import { checkFirstMemoPermission } from '../messages/permissions.js';
 import { showPaidGateOverlay } from '../messages/overlays.js';
 import { renderEntryContextRibbon } from '../handoff-resume.js';
-import { renderPreContactChecklist } from '../handoff-sticker.js';
 import { renderStudentRequestBody } from './student-request-card.js';
 import { unlockStudentRequestView } from '../request-unlock.js';
 import { resolveStudyRoomCardCta } from '../study-room-reg/inquiry-display.js';
@@ -269,7 +268,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   const primary = resolvePrimaryCta(kind, item, viewer);
   const secondary = renderSecondaryActions(kind, item, viewer);
   const entryRibbon = renderEntryContextRibbon(sourceRoute);
-  const preContact = renderPreContactChecklist(kind, viewer, primary.disabled);
+  // 문의 전 체크리스트(안내형 박스) 제거 — 확대카드 길이 억제 · 1줄 안전 문구만
   const compareKind = kind === 'tutor' ? 'tutor' : kind === 'study_room' ? 'study_room' : null;
   const compareAware =
     compareKind != null ? buildCompareAwareBar(compareKind, item.id, viewer) : '';
@@ -312,7 +311,6 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
           <h3 class="p24-section__title">접촉 가능성</h3>
           ${contact}
         </section>
-        ${preContact}
         ${renderRightRailBlock('detail_right_rail', { guestFilter: floating })}
         ${microSafetyCopy()}
       </div>

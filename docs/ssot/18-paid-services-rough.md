@@ -1,11 +1,25 @@
 # 18장 — 유료·노출·entitlement (정책 러프)
 
-**상태: 정책 잠금 (2026-07-07)** — [Notion 18장](https://app.notion.com/p/campstory/18-09c98cb6de204eac83081e625941c7eb) §9 동기화  
+> ## ⛔ 구버전 / 부분 폐기 (2026-08-22)
+>
+> **카드 이모티콘·유료 배지·New·추천 축은 이 문서를 따르지 마세요.**  
+> 본문의 「Hot · New · 추천 · 쪽집게」판매 · 「SKY=사실표시」혼선은 **구정책**입니다.
+>
+> **최신 정본 (대체):**
+> - Notion 상위기획 §18 · 11장 §2-0 · 18장 §0-A  
+> - [`docs/ssot/11-main-exposure-and-compare.md`](./11-main-exposure-and-compare.md) §2-0  
+> - [`docs/internal/55-card-visual-lock.md`](../internal/55-card-visual-lock.md)  
+> - [`docs/internal/57-paid-badges-api-contract.md`](../internal/57-paid-badges-api-contract.md) (`paid_badges[]`: hot / subject_track / jjokjipge / sky)  
+>
+> 아래 본문은 **Prime/Pick·횟수권·ROI 등 포지션 구조** 참고용으로만 유지합니다.  
+> 배지 층위가 충돌하면 **항상 위 정본 우선**.
+
+**상태: 정책 잠금 (2026-07-07) · 배지축은 2026-08-22 정본으로 대체됨** — [Notion 18장](https://app.notion.com/p/campstory/18-09c98cb6de204eac83081e625941c7eb)  
 **작성:** 2026-07-04 · **최신 잠금:** 2026-07-07 (포지션+기간형 · 횟수권 · **1차 결제 언어 통일**)  
 **역할:** 공급자(공부방·과외) **유료등록·노출 슬롯·기능 entitlement** — **결제·PG·환불 본문은 후순위**  
 **연동:** [5장](05-study-room-db.md) · [11장](11-main-exposure-and-compare.md) · [14장](14-registration-input-flow.md) · [15장](15-mypage-structure.md) · [16장](16-messages-structure-proposal.md) · [17장](17-customer-center-and-safe-guide.md) · [23장](../internal/23-board-community-integration-draft.md)
 
-> **최신 정본:** 본 문서 **§19**가 러프(§0~§18)와 충돌할 경우 **§19 우선**. 수치·PG는 [18b](18b-paid-catalog-placeholder.md).
+> **최신 정본:** 배지·카드 시각정책은 **55/57/11§2-0**. 본 문서 **§19**는 러프(§0~§18)와 포지션 구조 충돌 시 참고. 수치·PG는 [18b](18b-paid-catalog-placeholder.md) (배지 SKU도 구버전 배너 있음).
 
 ---
 

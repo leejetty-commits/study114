@@ -3,7 +3,7 @@ import { operatorInquirySummary, resolveStudyRoomCardCta, isInquiryReceiving } f
 import { getCompareIds, isInCompare, getCompareItems } from '../user-actions-state.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { compareRibbonText, compareOpenCta } from '../handoff-copy.js';
-import { formatTrustInfoStrip, TRUST_PLATFORM_DISCLAIMER } from '../lifecycle-copy.js';
+import { TRUST_PLATFORM_DISCLAIMER } from '../lifecycle-copy.js';
 import { AUTH_UI_BASE } from '../data.js';
 import {
   renderPermissionStateCard,
@@ -11,6 +11,10 @@ import {
 import { navigate } from '../state.js';
 import { openCompareModal } from '../compare-modal.js';
 import { coarseRegionForGuest } from '../student-blind-teaser.js';
+import {
+  renderCardVisualPolicyBlock,
+  resolveTrustBadgeLabels,
+} from '../card-visual.js';
 
 export function esc(s) {
   if (s == null) return '';
@@ -32,25 +36,20 @@ export function studyRoomParentInquiryLine(status) {
   return cta.label;
 }
 
-/** @param {'study_room'|'tutor'|'student'} kind @param {object} item */
+/**
+ * 신뢰 배지 개수 — card-visual SSOT만 사용 (facility/feature 혼입 금지)
+ * @param {'study_room'|'tutor'|'student'} kind @param {object} item
+ */
 export function countTrustItems(kind, item) {
-  if (kind === 'study_room') {
-    let n = 0;
-    if (item.education_office_registered) n += 1;
-    if (item.career_years) n += 1;
-    if (item.facility_summary && item.facility_summary !== '—') n += 1;
-    if (item.feature_1) n += 1;
-    return n;
-  }
-  if (kind === 'tutor') {
-    let n = 0;
-    if (item.university_name) n += 1;
-    if (item.proof_document_available) n += 1;
-    if (item.career_year_band) n += 1;
-    if (item.feature_1) n += 1;
-    return n;
-  }
-  return 0;
+  return resolveTrustBadgeLabels(kind, item).length;
+}
+
+/**
+ * 확대카드 상단 — 미니카드와 동일 card-visual 층위 (별도 trust strip 폐기)
+ * @param {'study_room'|'tutor'|'student'} kind @param {object} item
+ */
+export function buildTrustStrip(kind, item) {
+  return renderCardVisualPolicyBlock(kind, item, esc);
 }
 
 /** @param {'study_room'|'tutor'|'student'} kind @param {object} item @param {string} viewer */
@@ -166,22 +165,6 @@ export function showP24Toast(message, opts = {}) {
   toastTimer = setTimeout(() => el.classList.remove('is-visible'), cta ? 4000 : 2200);
 }
 
-/** @param {'study_room'|'tutor'|'student'} kind @param {object} item */
-export function buildTrustStrip(kind, item) {
-  if (kind === 'student') return '';
-  const trustCount = countTrustItems(kind, item);
-  const docCount =
-    kind === 'tutor'
-      ? item.verification_doc_count ?? (item.proof_document_available ? 1 : 0)
-      : kind === 'study_room' && item.education_office_registered
-        ? 1
-        : 0;
-  const strip = formatTrustInfoStrip(trustCount, docCount);
-  const reviewCount = Number(item.review_count) || 0;
-  const reviewBit = reviewCount > 0 ? ` · 후기 ${reviewCount}` : ' · 후기 준비중';
-  return `<p class="p24-trust">${esc(strip)}${esc(reviewBit)} · 플랫폼 보증 아님</p>`;
-}
-
 /** @param {'study_room'|'tutor'|'student'} kind @param {object} item @param {string} viewer */
 export function buildContactPanel(kind, item, viewer) {
   const loginHref = `${AUTH_UI_BASE}/#/login`;
@@ -214,5 +197,5 @@ export function buildContactPanel(kind, item, viewer) {
 }
 
 export function microSafetyCopy() {
-  return `<p class="p24-safety">${esc(TRUST_PLATFORM_DISCLAIMER)} · <a href="#/guide/safety">안전 가이드</a></p>`;
+  return `<p class="p24-safety p24-safety--one-line">${esc(TRUST_PLATFORM_DISCLAIMER)}</p>`;
 }

@@ -7,10 +7,18 @@ namespace Study114\Search;
 use InvalidArgumentException;
 use PDO;
 use Study114\Database\Connection;
+use Study114\Paid\PaidBadgeResolver;
 
 final class SearchService
 {
     private const VALID_TABS = ['room', 'tutor', 'student'];
+
+    private ?PaidBadgeResolver $paidBadges = null;
+
+    private function paidBadgeResolver(): PaidBadgeResolver
+    {
+        return $this->paidBadges ??= new PaidBadgeResolver();
+    }
 
     private const SCHOOL_LEVEL_LABELS = [
         'preschool'  => '유치',
@@ -445,6 +453,10 @@ final class SearchService
                 'created_at'                 => $row['created_at'] ?? null,
                 'recommend_count'            => (int) ($row['recommend_count'] ?? 0),
                 'review_count'               => (int) ($row['review_count'] ?? 0),
+                'paid_badges'                => $this->paidBadgeResolver()->forProvider(
+                    'study_room',
+                    (int) $row['id'],
+                ),
                 'image_path_prime'           => (string) ($row['image_path_prime'] ?? ''),
                 'image_path_basic'           => (string) ($row['image_path_basic'] ?? ''),
                 'image_path'                 => $exposureTier === 'prime'
@@ -644,6 +656,10 @@ final class SearchService
                 'created_at'             => $row['created_at'] ?? null,
                 'recommend_count'        => (int) ($row['recommend_count'] ?? 0),
                 'review_count'           => (int) ($row['review_count'] ?? 0),
+                'paid_badges'            => $this->paidBadgeResolver()->forProvider(
+                    'tutor',
+                    (int) $row['id'],
+                ),
             ];
 
             $items[] = $item;

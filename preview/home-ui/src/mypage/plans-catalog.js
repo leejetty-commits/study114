@@ -65,12 +65,12 @@ const PRODUCTS = {
     kind: 'badge_addon',
     bullets: ['공부방 유료 아이콘', '「전문」아이콘 금지 — 단과로 표기', '단독 핵심상품 ✕'],
   },
-  picked: {
-    id: 'picked',
+  jjokjipge: {
+    id: 'jjokjipge',
     name: '쪽집게',
     tagline: '과외쌤 · 추천·대표 노출 이용 기간에 함께 적용',
     kind: 'badge_addon',
-    bullets: ['광고성 자기선언 배지', 'SKY·학력 등 사실표시와 구분', '단독 핵심상품 ✕'],
+    bullets: ['광고성 자기선언 배지', 'API 코드 jjokjipge (구 picked alias)', 'SKY·학력 등 사실표시와 구분', '단독 핵심상품 ✕'],
   },
   sky: {
     id: 'sky',
@@ -91,14 +91,14 @@ export const STUDY_ROOM_CATALOG_IDS = [
   'request_view',
 ];
 
-/** 2026-08-21 잠금 — Hot / 쪽집게 / SKY */
+/** 2026-08-21 잠금 — Hot / 쪽집게(jjokjipge) / SKY */
 export const TUTOR_CATALOG_IDS = [
   'memo_ticket',
   'request_view',
   'pick',
   'prime',
   'hot',
-  'picked',
+  'jjokjipge',
   'sky',
 ];
 

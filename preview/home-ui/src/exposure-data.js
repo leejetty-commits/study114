@@ -209,7 +209,7 @@ function enrichTutor(t) {
   const id = t.id ?? 1;
   const paid_badges =
     t.paid_badges ||
-    (id % 6 === 1 ? ['hot'] : id % 6 === 2 ? ['picked'] : id % 6 === 3 ? ['sky'] : id % 6 === 4 ? ['hot', 'sky'] : []);
+    (id % 6 === 1 ? ['hot'] : id % 6 === 2 ? ['jjokjipge'] : id % 6 === 3 ? ['sky'] : id % 6 === 4 ? ['hot', 'sky'] : []);
   const published_at =
     t.published_at ||
     (id % 5 === 0 ? new Date().toISOString() : '2025-01-01T00:00:00Z');

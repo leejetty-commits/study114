@@ -43,7 +43,11 @@ function mapRoom(item) {
     education_office_registered: Boolean(item.education_office_registered),
     career_years: item.career_years ?? null,
     business_registration_available: Boolean(item.business_registration_available),
-    paid_badges: item.paid_badges || item.badge_codes || undefined,
+    paid_badges: Array.isArray(item.paid_badges)
+      ? item.paid_badges
+      : Array.isArray(item.badge_codes)
+        ? item.badge_codes
+        : [],
     profile_status: 'published',
     compare_eligible: true,
     inquiry_status: item.inquiry_status || 'paused',
@@ -77,7 +81,11 @@ function mapTutor(item) {
     created_at: item.created_at || null,
     main_subject_note: item.main_subject_note || summaryLines[0] || '',
     intro_short: item.intro_short || summaryLines[1] || '',
-    paid_badges: item.paid_badges || item.badge_codes || undefined,
+    paid_badges: Array.isArray(item.paid_badges)
+      ? item.paid_badges
+      : Array.isArray(item.badge_codes)
+        ? item.badge_codes
+        : [],
     profile_status: 'published',
     compare_eligible: true,
     exposure_tier: item.exposure_tier || 'basic',
