@@ -68,7 +68,7 @@ export function bindMessagesShellEvents(root, rerender) {
   root.querySelectorAll('[data-msg-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      window.location.hash = el.getAttribute('data-msg-nav') || '/mypage/messages/inbox';
+      window.location.hash = el.getAttribute('data-msg-nav') || '/mypage/messages';
     });
   });
 }

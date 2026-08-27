@@ -14,16 +14,21 @@ use Study114\Database\Connection;
 final class MessagesService
 {
     public const ACTIVE_DAYS = 7;
+    public const IMPORTANT_MAX = 5;
 
     private MessagesRepository $repo;
     private ProviderEntitlementService $entitlements;
 
+    private MessageAttachmentService $attachments;
+
     public function __construct(
         ?MessagesRepository $repo = null,
         ?ProviderEntitlementService $entitlements = null,
+        ?MessageAttachmentService $attachments = null,
     ) {
         $this->repo = $repo ?? new MessagesRepository(Connection::get());
         $this->entitlements = $entitlements ?? new ProviderEntitlementService();
+        $this->attachments = $attachments ?? new MessageAttachmentService();
     }
 
     private function assertSignupComplete(int $userId): void
@@ -57,9 +62,10 @@ final class MessagesService
      * P16-03 첫 메모 · §6-3 thread 재사용
      *
      * @param array<string, mixed> $input
+     * @param list<array<string, mixed>> $files
      * @return array<string, mixed>
      */
-    public function composeMessage(int $userId, array $input): array
+    public function composeMessage(int $userId, array $input, array $files = []): array
     {
         $this->assertSignupComplete($userId);
 
@@ -71,8 +77,8 @@ final class MessagesService
         if ($contextId <= 0) {
             throw new InvalidArgumentException('context_id가 필요합니다.');
         }
-        if ($body === '') {
-            throw new InvalidArgumentException('본문이 필요합니다.');
+        if ($body === '' && $files === []) {
+            throw new InvalidArgumentException('본문 또는 첨부 파일이 필요합니다.');
         }
 
         $peerUserId = $this->resolvePeerUserId($contextKind, $contextId);
@@ -91,7 +97,7 @@ final class MessagesService
         if ($existing !== null) {
             $threadId = (int) $existing['id'];
             $this->assertCanSendMessage($userId, $existing, $contextKind);
-            $this->repo->insertMessage($threadId, $userId, $body);
+            $this->insertMessageWithFiles($threadId, $userId, $body, $files);
             $this->repo->upsertThreadRead($threadId, $userId);
         } else {
             $this->assertColdMemoAllowed($userId, $contextKind);
@@ -108,9 +114,9 @@ final class MessagesService
                 'request_summary'          => $input['request_summary'] ?? null,
                 'structured_line'          => (string) ($input['structured_line'] ?? ''),
                 'initiated_by_user_id'     => $userId,
-                'last_message_preview'     => mb_substr($body, 0, 120),
+                'last_message_preview'     => mb_substr($this->previewFromBodyOrFiles($body, $files), 0, 120),
             ]);
-            $this->repo->insertMessage($threadId, $userId, $body);
+            $this->insertMessageWithFiles($threadId, $userId, $body, $files);
             $this->repo->upsertThreadRead($threadId, $userId);
             if ($contextKind === 'student') {
                 $this->entitlements->consumeColdMemoTicket($userId);
@@ -125,12 +131,16 @@ final class MessagesService
         return $thread;
     }
 
-    public function replyMessage(int $userId, int $threadId, string $body): array
+    /**
+     * @param list<array<string, mixed>> $files
+     * @return array<string, mixed>
+     */
+    public function replyMessage(int $userId, int $threadId, string $body, array $files = []): array
     {
         $this->assertSignupComplete($userId);
         $body = trim($body);
-        if ($body === '') {
-            throw new InvalidArgumentException('본문이 필요합니다.');
+        if ($body === '' && $files === []) {
+            throw new InvalidArgumentException('본문 또는 첨부 파일이 필요합니다.');
         }
 
         $row = $this->repo->getThreadRow($threadId, $userId);
@@ -140,7 +150,7 @@ final class MessagesService
 
         $this->assertCanSendMessage($userId, $row, (string) $row['context_kind']);
 
-        $this->repo->insertMessage($threadId, $userId, $body);
+        $this->insertMessageWithFiles($threadId, $userId, $body, $files);
         $this->repo->upsertThreadRead($threadId, $userId);
 
         $thread = $this->getThread($userId, $threadId);
@@ -166,6 +176,20 @@ final class MessagesService
         $this->assertSignupComplete($userId);
         $this->assertThreadAccess($userId, $threadId);
         $this->repo->upsertParticipantState($threadId, $userId, ['is_archived' => $archived ? 1 : 0]);
+    }
+
+    public function setThreadImportant(int $userId, int $threadId, bool $important): void
+    {
+        $this->assertSignupComplete($userId);
+        $this->assertThreadAccess($userId, $threadId);
+        if ($important) {
+            $current = $this->repo->getParticipantState($threadId, $userId);
+            $already = (int) ($current['is_important'] ?? 0) === 1;
+            if (!$already && $this->repo->countImportantForUser($userId) >= self::IMPORTANT_MAX) {
+                throw new InvalidArgumentException('중요 표시는 최대 5개까지 할 수 있습니다.');
+            }
+        }
+        $this->repo->upsertParticipantState($threadId, $userId, ['is_important' => $important ? 1 : 0]);
     }
 
     public function blockThread(int $userId, int $threadId, string $reason = '차단됨'): void
@@ -282,6 +306,11 @@ final class MessagesService
         $readAt = $row['read_at'] ?? null;
         $lastAt = $row['last_message_at'] ?? $row['updated_at'];
         $unread = $lastSender !== $userId && ($readAt === null || strtotime((string) $readAt) < strtotime((string) $lastAt));
+        $peerReadAt = $row['peer_read_at'] ?? null;
+        $peerUnread = $lastSender === $userId && (
+            $peerReadAt === null || $peerReadAt === ''
+            || strtotime((string) $peerReadAt) < strtotime((string) $lastAt)
+        );
         $peerName = $this->resolvePeerDisplayName($row, $userId);
 
         return [
@@ -296,11 +325,20 @@ final class MessagesService
             'requestSummary'      => $row['request_summary'] !== null ? (string) $row['request_summary'] : null,
             'structuredLine'      => (string) $row['structured_line'],
             'lastPreview'         => (string) $row['last_message_preview'],
+            'firstPreview'        => mb_substr(
+                trim((string) ($row['first_message_body'] ?? '')) !== ''
+                    ? (string) $row['first_message_body']
+                    : (string) ($row['last_message_preview'] ?? ''),
+                0,
+                120,
+            ),
             'updatedAt'           => gmdate('c', strtotime((string) $row['updated_at'])),
             'unread'              => $unread,
+            'peerUnread'          => $peerUnread,
             'initiatedByMe'       => $initiatedByMe,
             'initiatedByPeer'     => !$initiatedByMe,
             'isArchived'          => (bool) ($row['is_archived'] ?? false),
+            'isImportant'         => (bool) ($row['is_important'] ?? false),
             'isBlocked'           => (bool) ($row['is_blocked'] ?? false),
             'blockReason'         => isset($row['block_reason']) ? (string) $row['block_reason'] : null,
             'reportedAt'          => isset($row['reported_at']) && $row['reported_at'] !== null
@@ -319,22 +357,93 @@ final class MessagesService
         $summary = $this->mapThreadSummary($row, $userId);
         $mappedMessages = [];
         $hasPeerMessage = false;
+        $ids = array_map(static fn (array $m): int => (int) $m['id'], $messages);
+        $attMap = [];
+        try {
+            $attMap = $this->repo->listAttachmentsByMessageIds($ids);
+        } catch (\PDOException) {
+            $attMap = [];
+        }
+        $peerReadAt = $row['peer_read_at'] ?? null;
+        $peerTs = ($peerReadAt !== null && $peerReadAt !== '') ? strtotime((string) $peerReadAt) : false;
         foreach ($messages as $m) {
             $senderUserId = (int) $m['sender_user_id'];
             if ($senderUserId !== $userId) {
                 $hasPeerMessage = true;
             }
+            $createdTs = strtotime((string) $m['created_at']);
+            $readByPeer = $senderUserId === $userId
+                && $peerTs !== false
+                && $createdTs !== false
+                && $peerTs >= $createdTs;
+            $atts = $attMap[(int) $m['id']] ?? [];
             $mappedMessages[] = [
-                'id'        => (int) $m['id'],
-                'sender'    => $senderUserId === $userId ? 'me' : 'peer',
-                'body'      => (string) $m['body'],
-                'createdAt' => gmdate('c', strtotime((string) $m['created_at'])),
+                'id'          => (int) $m['id'],
+                'sender'      => $senderUserId === $userId ? 'me' : 'peer',
+                'body'        => (string) $m['body'],
+                'createdAt'   => gmdate('c', strtotime((string) $m['created_at'])),
+                'readByPeer'  => $readByPeer,
+                'attachments' => array_map(
+                    fn (array $r) => $this->attachments->mapAttachment($r),
+                    $atts,
+                ),
             ];
         }
         $summary['messages'] = $mappedMessages;
         $summary['initiatedByPeer'] = $hasPeerMessage || !$summary['initiatedByMe'];
 
         return $summary;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $files
+     */
+    private function insertMessageWithFiles(int $threadId, int $userId, string $body, array $files): int
+    {
+        $pdo = Connection::get();
+        $pdo->beginTransaction();
+        try {
+            $messageId = $this->repo->insertMessage(
+                $threadId,
+                $userId,
+                $body,
+                $this->previewFromBodyOrFiles($body, $files),
+            );
+            if ($files !== []) {
+                try {
+                    $this->attachments->storeForMessage($threadId, $messageId, $files);
+                } catch (\PDOException $e) {
+                    if (str_contains($e->getMessage(), 'message_attachments')) {
+                        throw new InvalidArgumentException(
+                            '쪽지 첨부용 DB 테이블이 없습니다. sql/schema/059_message_attachments.sql 을 적용해 주세요.',
+                        );
+                    }
+                    throw $e;
+                }
+            }
+            $pdo->commit();
+
+            return $messageId;
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * @param list<array<string, mixed>> $files
+     */
+    private function previewFromBodyOrFiles(string $body, array $files): string
+    {
+        $trimmed = trim($body);
+        if ($trimmed !== '') {
+            return $trimmed;
+        }
+        $name = basename(str_replace('\\', '/', (string) ($files[0]['name'] ?? '첨부 파일')));
+
+        return '첨부 ' . ($name !== '' ? $name : '파일');
     }
 
     /**

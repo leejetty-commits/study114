@@ -1,15 +1,14 @@
 /**
- * 쪽지 후기함 — 대상별 보기 / 내가 쓴 후기 / 내가 관리하는 후기
+ * 쪽지 후기함 — 단일 후기 리스트
  */
 
 import { esc } from '../detail-decision/detail-utils.js';
 import { getAuthUser } from '../auth-session.js';
 import { getNavRole } from '../state.js';
-import { getStudyRoom, getStudyRooms } from '../study-room-reg/store.js';
-import { getTutor, getTutors } from '../tutor-reg/store.js';
-import { PROVIDER_REVIEW_COPY, REVIEW_ORIGIN_LABELS, ctaLabel, reviewSnippet } from './copy.js';
+import { getStudyRoom } from '../study-room-reg/store.js';
+import { getTutor } from '../tutor-reg/store.js';
+import { PROVIDER_REVIEW_COPY, reviewSnippet } from './copy.js';
 import {
-  fetchReviewList,
   fetchReviewInbox,
   fetchReviewSummary,
   blockReviewAuthor,
@@ -20,7 +19,6 @@ import {
   deleteProviderReview,
   reviewsArchivePath,
 } from './store.js';
-import { openReviewSheet } from './sheet.js';
 
 function formatWhen(iso) {
   if (!iso) return '';
@@ -29,28 +27,14 @@ function formatWhen(iso) {
   return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`;
 }
 
-function isProviderNav(role) {
-  return role === 'study_room' || role === 'tutor';
-}
-
 export function parseReviewsPath(path) {
   const raw = String(path || '');
   const pathOnly = (raw.startsWith('/') ? raw : `/${raw}`).split('?')[0];
   const query = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
   const pageNum = Number(new URLSearchParams(query).get('page') || 1);
   const page = Number.isFinite(pageNum) && pageNum > 0 ? Math.floor(pageNum) : 1;
-  const target = pathOnly.match(/^\/mypage\/messages\/reviews\/target\/(study_room|tutor)\/(\d+)$/);
-  if (target) {
-    return { mode: 'target', providerType: target[1], providerId: Number(target[2]), lane: 'targets', page };
-  }
-  if (pathOnly.endsWith('/reviews/written')) return { mode: 'account', lane: 'written', page };
-  if (pathOnly.endsWith('/reviews/received')) return { mode: 'account', lane: 'received', page };
-  if (
-    pathOnly === '/mypage/messages/reviews' ||
-    pathOnly === '/mypage/messages/reviews/' ||
-    pathOnly === '/mypage/messages/reviews/targets'
-  ) {
-    return { mode: 'targets', lane: 'targets', page: 1 };
+  if (pathOnly === '/mypage/messages/reviews' || pathOnly.startsWith('/mypage/messages/reviews/')) {
+    return { mode: 'list', lane: 'all', page };
   }
   return null;
 }
@@ -67,9 +51,18 @@ function pager(page, total, pageSize, hrefFor) {
   return `<div class="review-inbox__pager">${prev}<span>${page} / ${pages}</span>${next}</div>`;
 }
 
+function inboxKindLabel(origin) {
+  return origin === 'experience' ? PROVIDER_REVIEW_COPY.inboxKindExperience : PROVIDER_REVIEW_COPY.inboxKindConsultation;
+}
+
 function renderItem(r, { expandable = true, owner = false }) {
+  const name = r.provider_label || providerDisplayName(r.provider_type, r.provider_id);
+  const kind = inboxKindLabel(r.review_origin_type);
+  const badges = `<div class="review-inbox__badges">
+      <span class="review-inbox__tag">[${esc(name)}]</span>
+      <span class="review-inbox__tag">[${esc(kind)}]</span>
+    </div>`;
   const tags = (r.point_tags || []).map((t) => `<span class="p24-review-tag p24-review-tag--sm">${esc(t)}</span>`).join('');
-  const origin = REVIEW_ORIGIN_LABELS[r.review_origin_type] || '';
   const ownerBtns = owner
     ? `<div class="review-sheet__item-actions">
         ${
@@ -88,12 +81,13 @@ function renderItem(r, { expandable = true, owner = false }) {
     : '';
   return `
     <li class="review-sheet__item" data-review-id="${r.id}">
+      ${badges}
       ${
         expandable
           ? `<button type="button" class="review-sheet__item-btn" data-review-expand="${r.id}">
               <p class="review-sheet__headline">${esc(reviewSnippet(r.review_body))}</p>
               <p class="review-sheet__full" hidden>${esc(r.review_body || '')}</p>
-              <p class="review-sheet__meta">${esc([origin, formatWhen(r.created_at), r.review_status === 'hidden' ? '비공개' : ''].filter(Boolean).join(' · '))}</p>
+              <p class="review-sheet__meta">${esc([formatWhen(r.created_at), r.review_status === 'hidden' ? '비공개' : ''].filter(Boolean).join(' · '))}</p>
               ${tags ? `<div class="p24-review-tags">${tags}</div>` : ''}
             </button>`
           : `<p class="review-sheet__headline">${esc(reviewSnippet(r.review_body))}</p>`
@@ -122,41 +116,9 @@ function providerDisplayName(type, id) {
   return providerKindLabel(type);
 }
 
-function renderLaneTabs(parsed) {
-  const lane = parsed.lane || 'targets';
-  const targetHref = reviewsArchivePath({ lane: 'targets' });
-  const writtenHref = reviewsArchivePath({ lane: 'written' });
-  const receivedHref = reviewsArchivePath({ lane: 'received' });
-  const targetActive = lane === 'targets' || parsed.mode === 'target' || parsed.mode === 'targets';
-  return `<div class="msg-tabs review-inbox__lanes" role="tablist" aria-label="후기함 보기">
-      <a href="#${targetHref}" class="msg-tab${targetActive ? ' is-active' : ''}" data-msg-nav="${targetHref}" role="tab" aria-selected="${targetActive ? 'true' : 'false'}">${esc(PROVIDER_REVIEW_COPY.inboxByTarget)}</a>
-      <a href="#${writtenHref}" class="msg-tab${lane === 'written' ? ' is-active' : ''}" data-msg-nav="${writtenHref}" role="tab" aria-selected="${lane === 'written' ? 'true' : 'false'}">${esc(PROVIDER_REVIEW_COPY.inboxWritten)}</a>
-      <a href="#${receivedHref}" class="msg-tab${lane === 'received' ? ' is-active' : ''}" data-msg-nav="${receivedHref}" role="tab" aria-selected="${lane === 'received' ? 'true' : 'false'}">${esc(PROVIDER_REVIEW_COPY.inboxReceived)}</a>
-    </div>`;
-}
-
-export function renderReviewInboxPlaceholder(parsed) {
-  const lane = parsed.lane || 'targets';
-  const title =
-    parsed.mode === 'target'
-      ? PROVIDER_REVIEW_COPY.inboxByTargetTitle
-      : parsed.mode === 'targets' || lane === 'targets'
-        ? PROVIDER_REVIEW_COPY.inboxByTarget
-        : lane === 'received'
-          ? PROVIDER_REVIEW_COPY.inboxReceived
-          : PROVIDER_REVIEW_COPY.inboxWritten;
-  const lead =
-    parsed.mode === 'target' || parsed.mode === 'targets' || lane === 'targets'
-      ? PROVIDER_REVIEW_COPY.inboxByTargetLead
-      : PROVIDER_REVIEW_COPY.sheetSubtitle;
-
+export function renderReviewInboxPlaceholder() {
   return `
-    <section class="msg-panel review-inbox" data-review-inbox data-mode="${esc(parsed.mode)}" data-lane="${esc(lane)}" data-provider-type="${esc(parsed.providerType || '')}" data-provider-id="${parsed.providerId || ''}">
-      ${renderLaneTabs(parsed)}
-      <header class="review-inbox__head">
-        <h2>${esc(title)}</h2>
-        <p class="review-inbox__lead">${esc(lead)}</p>
-      </header>
+    <section class="msg-panel review-inbox" data-review-inbox data-mode="list" data-lane="all">
       <div data-review-inbox-body><p class="review-sheet__empty">불러오는 중…</p></div>
     </section>`;
 }
@@ -167,126 +129,33 @@ function reviewsPageFromLocation() {
   return parseReviewsPath(raw)?.page || 1;
 }
 
-function localIsOwner(providerType, providerId) {
-  try {
-    if (providerType === 'study_room') {
-      return getStudyRooms().some((room) => Number(room.id) === Number(providerId));
-    }
-    if (providerType === 'tutor') {
-      return getTutors().some((tutor) => Number(tutor.id) === Number(providerId));
-    }
-  } catch {
-    /* ignore */
-  }
-  return false;
-}
-
-function renderTargetCard(card) {
-  const type = card.providerType || card.provider_type;
-  const id = Number(card.providerId || card.provider_id || 0);
-  const href = reviewsArchivePath({ providerType: type, providerId: id });
-  const name = card.label || providerDisplayName(type, id);
-  const kind = providerKindLabel(type);
-  const count = Number(card.review_count || card.count || 0);
-  const countLine = count > 0 ? `후기 ${count}` : card.owned ? '내 프로필' : '후기 보기';
-  return `<a href="#${href}" class="review-inbox__target" data-msg-nav="${href}">
-      <strong>${esc(name)}</strong>
-      <span>${esc(kind)} · ${esc(countLine)}</span>
-      <em>${esc(PROVIDER_REVIEW_COPY.inboxByTargetOpen)}</em>
-    </a>`;
-}
-
-async function renderTargetsHub() {
-  const data = await fetchReviewInbox('targets', 1);
-  const cards = data.items || [];
-  if (!cards.length) {
-    return `<p class="review-sheet__empty">${esc(PROVIDER_REVIEW_COPY.inboxByTargetEmpty)}</p>`;
-  }
-  return `<div class="review-inbox__targets">${cards.map(renderTargetCard).join('')}</div>`;
-}
-
 export async function hydrateReviewInbox(root, rerender) {
   const host = root.querySelector('[data-review-inbox]');
   if (!host) return;
   const body = host.querySelector('[data-review-inbox-body]');
   if (!body) return;
-  const mode = host.getAttribute('data-mode');
-  const lane = host.getAttribute('data-lane') || '';
-  const providerType = host.getAttribute('data-provider-type');
-  const providerId = Number(host.getAttribute('data-provider-id') || 0);
-  const auth = getAuthUser();
-  const role = getNavRole();
   const page = reviewsPageFromLocation();
 
   try {
-    if (mode === 'target' && (providerType === 'study_room' || providerType === 'tutor') && providerId) {
-      const isOwner = localIsOwner(providerType, providerId);
-      const data = await fetchReviewList(providerType, providerId, page, {
-        role,
-        userId: auth?.user_id,
-        isOwner,
-      });
-      const summary = await fetchReviewSummary(providerType, providerId, {
-        role,
-        userId: auth?.user_id,
-        isOwner,
-      });
-      const items = data.items || [];
-      const name = data.provider_label || summary.provider_label || providerDisplayName(providerType, providerId);
-      const head = host.querySelector('.review-inbox__head h2');
-      if (head) head.textContent = `${name} 후기`;
-      const cta =
-        summary.cta_kind === 'write' || summary.cta_kind === 'manage'
-          ? `<button type="button" class="btn btn--primary btn--sm" data-review-inbox-cta="${esc(summary.cta_kind)}" data-item-kind="${esc(providerType)}" data-item-id="${providerId}">${esc(ctaLabel(summary.cta_kind))}</button>`
-          : `<p class="review-sheet__cta-note">${esc(ctaLabel(summary.cta_kind))}</p>`;
-      const hubHref = reviewsArchivePath({ lane: 'targets' });
-      body.innerHTML = `
-        <p class="review-inbox__count">후기 ${data.review_count || 0} · ${esc(providerKindLabel(providerType))}</p>
-        ${
-          items.length
-            ? `<ul class="review-sheet__list">${items.map((r) => renderItem(r, { expandable: true, owner: !!summary.is_owner })).join('')}</ul>`
-            : `<p class="review-sheet__empty">${esc(PROVIDER_REVIEW_COPY.empty)}</p>`
-        }
-        ${pager(data.page || page, data.total || 0, data.page_size || 10, (p) => `${reviewsArchivePath({ providerType, providerId })}?page=${p}`)}
-        <div class="review-sheet__cta">
-          ${cta}
-          <a class="review-inbox__back" href="#${hubHref}" data-msg-nav="${hubHref}">대상 목록</a>
-        </div>`;
-    } else if (mode === 'targets' || lane === 'targets' || lane === '') {
-      body.innerHTML = await renderTargetsHub();
-    } else {
-      const data = await fetchReviewInbox(lane, page);
-      const items = data.items || [];
-      const empty =
-        data.lane === 'received'
-          ? isProviderNav(role)
-            ? PROVIDER_REVIEW_COPY.inboxEmptyReceived
-            : PROVIDER_REVIEW_COPY.inboxEmptyReceivedOtherRole
-          : PROVIDER_REVIEW_COPY.inboxEmptyWritten;
-      const owner = data.lane === 'received' && isProviderNav(role);
-      const ownerBar = owner
-        ? '<p class="mypage-muted">후기차단은 쪽지차단과 별개입니다. 기존 후기는 자동으로 지워지지 않습니다.</p>'
-        : '';
-      body.innerHTML = `
-        ${ownerBar}
-        ${
-          items.length
-            ? `<ul class="review-sheet__list">${items.map((r) => renderItem(r, { expandable: true, owner })).join('')}</ul>`
-            : `<p class="review-sheet__empty">${esc(empty)}</p>`
-        }
-        ${pager(data.page || page, data.total || 0, data.page_size || 10, (p) => `${reviewsArchivePath({ lane: data.lane })}?page=${p}`)}
-      `;
-      if (owner && items[0]) {
-        const bar = await renderWriteStatusControl(items[0].provider_type, items[0].provider_id);
-        if (bar) body.insertAdjacentHTML('afterbegin', bar);
-      }
-    }
+    const data = await fetchReviewInbox('all', page);
+    const items = data.items || [];
+    body.innerHTML = items.length
+      ? `<ul class="review-sheet__list">${items
+          .map((r) =>
+            renderItem(r, {
+              expandable: true,
+              owner: !!r.is_owner && !r.is_mine,
+            }),
+          )
+          .join('')}</ul>
+        ${pager(data.page || page, data.total || 0, data.page_size || 10, (p) => `${reviewsArchivePath()}?page=${p}`)}`
+      : `<p class="review-sheet__empty">${esc(PROVIDER_REVIEW_COPY.inboxEmptyAll)}</p>
+        <p class="review-inbox__lead">${esc(PROVIDER_REVIEW_COPY.inboxEmptyAllLead)}</p>`;
   } catch {
     body.innerHTML = `<p class="review-sheet__empty">후기를 불러오지 못했습니다.</p>`;
   }
 
   bindInbox(host, rerender);
-  bindWriteStatusControl(host, rerender);
 }
 
 function bindInbox(host, rerender) {
@@ -299,14 +168,6 @@ function bindInbox(host, rerender) {
       full.hidden = open;
       snip.hidden = !open;
     });
-  });
-
-  host.querySelector('[data-review-inbox-cta]')?.addEventListener('click', () => {
-    const btn = host.querySelector('[data-review-inbox-cta]');
-    const kind = btn.getAttribute('data-item-kind');
-    const id = Number(btn.getAttribute('data-item-id'));
-    const view = btn.getAttribute('data-review-inbox-cta') === 'manage' ? 'manage' : 'write';
-    void openReviewSheet({ providerType: kind, providerId: id, view });
   });
 
   host.querySelectorAll('[data-review-block]').forEach((btn) => {

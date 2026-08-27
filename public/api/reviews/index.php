@@ -38,7 +38,7 @@ ProviderReviewApi::run(static function (): void {
 
     if ($method === 'GET' && $action === 'inbox') {
         $auth = ProviderReviewApi::requireAuth();
-        // lane: written | received | targets | ''(역할 기본: 공급자 received / 그 외 written)
+        // lane: all | written | received | targets | ''(all)
         $lane = ProviderReviewApi::queryString('lane', '') ?? '';
         $page = ProviderReviewApi::queryInt('page', 1);
         $limit = ProviderReviewApi::queryInt('limit', ReviewPolicy::PAGE_SIZE);

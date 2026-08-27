@@ -57,6 +57,26 @@ final class MessagesApi
         return $decoded;
     }
 
+    public static function isMultipart(): bool
+    {
+        $ct = strtolower((string) (
+            $_SERVER['CONTENT_TYPE']
+            ?? $_SERVER['HTTP_CONTENT_TYPE']
+            ?? ''
+        ));
+
+        return str_contains($ct, 'multipart/form-data');
+    }
+
+    /** @return array<string, mixed> */
+    public static function readForm(): array
+    {
+        /** @var array<string, mixed> $post */
+        $post = $_POST;
+
+        return $post;
+    }
+
     public static function method(): string
     {
         return strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');

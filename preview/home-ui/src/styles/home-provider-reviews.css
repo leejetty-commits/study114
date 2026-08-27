@@ -82,7 +82,17 @@
 .review-sheet__item-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; padding: 0 0.8rem 0.8rem; }
 .review-sheet__tags { margin-bottom: 0.75rem; }
 .review-inbox__head h2 { margin: 0 0 0.25rem; font-size: 1.05rem; }
-.review-inbox__lead { margin: 0; font-size: var(--text-sm); color: var(--gray-600); line-height: 1.45; }
+.review-inbox__lead { margin: 0.35rem 0 0; font-size: var(--text-sm); color: var(--gray-600); line-height: 1.45; }
+.review-inbox__badges { display: flex; flex-wrap: wrap; gap: 0.35rem; padding: 0.7rem 0.8rem 0; }
+.review-inbox__tag {
+  display: inline-block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: #1e3a5f;
+  background: #eef4ff;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+}
 .review-inbox__count { font-size: var(--text-sm); color: var(--gray-600); }
 .review-inbox__pager { display: flex; gap: 0.75rem; align-items: center; margin-top: 0.75rem; font-size: var(--text-sm); }
 .review-inbox__lanes { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }

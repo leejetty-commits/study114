@@ -15,6 +15,7 @@ import { REPORT_REASONS } from './messages-copy.js';
 import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 
 import { findOrCreateThread } from './thread-store.js';
+import { MESSAGE_ATTACHMENT, formatFileBytes, validateMessageFiles } from './attachment-spec.js';
 
 import { navigate } from '../state.js';
 
@@ -190,6 +191,18 @@ export function showComposeModal(opts) {
 
         </label>
 
+        <label class="msg-compose__field">
+
+          <span>${MESSAGE_ATTACHMENT.label}</span>
+
+          <input class="msg-compose__file" type="file" multiple accept="${MESSAGE_ATTACHMENT.accept}" />
+
+          <span class="msg-compose__file-hint">${MESSAGE_ATTACHMENT.hint}</span>
+
+          <span class="msg-compose__files" data-compose-file-list></span>
+
+        </label>
+
         <div class="msg-overlay__actions">
 
           <button type="button" class="btn btn--primary" data-action="compose-send">전송</button>
@@ -216,11 +229,31 @@ export function showComposeModal(opts) {
 
   });
 
+  el.querySelector('.msg-compose__file')?.addEventListener('change', (ev) => {
+    const input = ev.currentTarget;
+    const list = el.querySelector('[data-compose-file-list]');
+    const files = Array.from(input.files || []);
+    if (!list) return;
+    if (!files.length) {
+      list.textContent = '';
+      return;
+    }
+    const err = validateMessageFiles(files);
+    list.textContent = err || files.map((f) => `${f.name} (${formatFileBytes(f.size)})`).join(', ');
+  });
+
   el.querySelector('[data-action="compose-send"]')?.addEventListener('click', async () => {
 
-    const body = el.querySelector('.msg-compose__textarea')?.value?.trim();
+    const body = el.querySelector('.msg-compose__textarea')?.value?.trim() || '';
+    const fileInput = el.querySelector('.msg-compose__file');
+    const files = Array.from(fileInput?.files || []);
+    const fileErr = validateMessageFiles(files);
+    if (fileErr) {
+      alert(fileErr);
+      return;
+    }
 
-    if (!body) return;
+    if (!body && files.length === 0) return;
 
     const btn = el.querySelector('[data-action="compose-send"]');
 
@@ -249,6 +282,8 @@ export function showComposeModal(opts) {
         structuredLine: opts.structuredLine,
 
         body,
+
+        files,
 
       });
 
@@ -280,7 +315,7 @@ export function showComposeModal(opts) {
 
       } else {
 
-        alert('쪽지 전송에 실패했습니다. 로그인·API 연결을 확인해 주세요.');
+        alert(err?.message || '쪽지 전송에 실패했습니다. 로그인·API 연결을 확인해 주세요.');
 
       }
 

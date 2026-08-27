@@ -1,12 +1,6 @@
 import { getNavRole } from '../state.js';
 
-import {
-  canProviderColdMemoToStudent,
-  canReplyInThread,
-  FREE_PROVIDER_INBOX_COPY,
-  getReplyBlockedMessage,
-  isProviderRole,
-} from './permissions.js';
+import { canReplyInThread, getReplyBlockedMessage } from './permissions.js';
 
 import { showPaidGateOverlay, showReportOverlay } from './overlays.js';
 import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
@@ -34,18 +28,25 @@ import {
   setThreadBlocked,
 
   setThreadReported,
+  setThreadImportant,
 
 } from './thread-store.js';
 
 import { isMessagesApiMode } from '../messages-backend.js';
 
-import { getListTabFromPath, tabLabel, tabPath, parseThreadId, threadPath, MESSAGES_BASE, REVIEWS_BASE } from './router.js';
+import { parseThreadId, threadPath, MESSAGES_BASE, REVIEWS_BASE } from './router.js';
 
 
 
 import { BLOCK_THREAD_COPY } from './messages-copy.js';
 import { getMessagesEmptyCopy, renderStateCard } from '../empty-state-copy.js';
 import { isReviewsPath, parseReviewsPath, renderReviewInboxPlaceholder, hydrateReviewInbox } from '../provider-reviews/inbox.js';
+import {
+  MESSAGE_ATTACHMENT,
+  formatFileBytes,
+  validateMessageFiles,
+  attachmentDownloadUrl,
+} from './attachment-spec.js';
 
 /** bindMessagesScreenEvents가 매 rerender마다 재호출되어도 threadId당 1회만 자동 하이드레이션하기 위한 가드 (무한 렌더 루프 방지) */
 let lastAutoHydratedThreadId = null;
@@ -64,19 +65,62 @@ function formatRelative(iso) {
 
 
 
+/** @param {import('./thread-store.js').MessageThread} t */
+function threadTitle(t) {
+  const first = t.messages?.[0];
+  const attachName = first?.attachments?.[0]?.originalName || '';
+  const raw = first?.body || t.firstPreview || t.lastPreview || attachName || '';
+  const one = String(raw).replace(/\s+/g, ' ').trim();
+  if (!one) return t.peerDisplayName || '쪽지';
+  return one.length > 52 ? `${one.slice(0, 52)}…` : one;
+}
+
+/** @param {import('./thread-store.js').MessageThread} t */
+function readStateBadge(t) {
+  if (t.unread) return '<span class="msg-read-badge msg-read-badge--unread">안읽음</span>';
+  if (t.peerUnread) return '<span class="msg-read-badge msg-read-badge--peer">상대 안읽음</span>';
+  return '';
+}
+
+/** @param {import('./thread-store.js').ThreadMessage} m */
+function renderAttachments(m) {
+  const atts = m.attachments || [];
+  if (!atts.length) return '';
+  const items = atts
+    .map((a) => {
+      const label = `${esc(a.originalName)} (${formatFileBytes(a.sizeBytes)})`;
+      if (a.id) {
+        return `<li><a class="msg-attach" href="${attachmentDownloadUrl(a.id)}">${label}</a></li>`;
+      }
+      return `<li><span class="msg-attach">${label}</span></li>`;
+    })
+    .join('');
+  return `<ul class="msg-attach-list">${items}</ul>`;
+}
+
+/**
+ * @param {import('./thread-store.js').MessageThread} thread
+ * @param {import('./thread-store.js').ThreadMessage} m
+ */
+function isReadByPeer(thread, m) {
+  if (m.sender !== 'me') return false;
+  if (typeof m.readByPeer === 'boolean') return m.readByPeer;
+  return (thread.messages || []).some(
+    (x) => x.sender === 'peer' && new Date(x.createdAt).getTime() >= new Date(m.createdAt).getTime(),
+  );
+}
+
 /** @param {string} path */
 export function renderMessagesScreen(path) {
   if (isReviewsPath(path)) {
     const parsed = parseReviewsPath(path);
     return `${renderMessagesHub('reviews')}${renderReviewInboxPlaceholder(parsed)}`;
   }
-  const threadId = parseThreadId(path);
-  if (threadId != null) return renderThread(threadId);
-  return renderList(getListTabFromPath(path === MESSAGES_BASE ? `${MESSAGES_BASE}/inbox` : path));
+  return renderList(parseThreadId(path));
 }
 
 function renderMessagesHub(active) {
-  const msgHref = `${MESSAGES_BASE}/inbox`;
+  const msgHref = MESSAGES_BASE;
   const revHref = REVIEWS_BASE;
   return `<div class="msg-hub" role="tablist" aria-label="쪽지와 후기함">
     <a href="#${msgHref}" class="msg-hub__tab${active === 'messages' ? ' is-active' : ''}" data-msg-nav="${msgHref}">쪽지</a>
@@ -84,233 +128,148 @@ function renderMessagesHub(active) {
   </div>`;
 }
 
-/** @param {'inbox'|'sent'|'active'} tab */
-
-function renderList(tab) {
-
+/** @param {number|null} expandedId */
+function renderList(expandedId) {
   const role = getNavRole();
+  const threads = getThreadsForTab('all');
 
-  const threads = getThreadsForTab(tab);
+  if (threads.length === 0) {
+    return `
+    ${renderMessagesHub('messages')}
+    <section class="msg-panel">${renderEmptyList(role)}</section>`;
+  }
 
-  const tabs = ['inbox', 'sent', 'active', 'archive']
-
-    .map(
-
-      (t) =>
-
-        `<a href="#${tabPath(t)}" class="msg-tab${t === tab ? ' is-active' : ''}" data-msg-nav="${tabPath(t)}">${tabLabel(t)}</a>`,
-
-    )
-
-    .join('');
-
-
-
-  const rows =
-
-    threads.length === 0
-
-      ? renderEmptyList(role)
-
-      : threads
-
-          .map(
-
-            (t) => `
-
-      <a href="#${threadPath(t.id)}" class="msg-row${t.unread ? ' is-unread' : ''}" data-msg-nav="${threadPath(t.id)}">
-
-        <div class="msg-row__head">
-
-          <span class="msg-row__name">${t.unread ? '● ' : ''}${esc(t.peerDisplayName)}</span>
-
-          <span class="msg-row__time">${formatRelative(t.updatedAt)}</span>
-
-        </div>
-
-        <p class="msg-row__preview">${esc(t.lastPreview)}</p>
-
-        <div class="msg-row__chips">
-
-          <span class="msg-chip">${esc(t.contextLabel)}</span>
-
-          <span class="msg-badge msg-badge--sm">${esc(t.scopeBadge)}</span>
-
-        </div>
-
-      </a>`,
-
-          )
-
-          .join('');
-
-
-
-  const demoHint =
-
-    isProviderRole(role) && !canProviderColdMemoToStudent(role)
-
-      ? `<p class="msg-note msg-note--warn">${FREE_PROVIDER_INBOX_COPY.hint}</p>`
-
-      : '';
-
-
+  const important = threads.filter((t) => t.isImportant);
+  const rest = threads.filter((t) => !t.isImportant);
+  const sections = [];
+  if (important.length) {
+    sections.push(`<p class="msg-list__label">중요</p>${important.map((t) => renderRow(t, expandedId, role)).join('')}`);
+  }
+  if (rest.length) {
+    if (important.length) sections.push(`<p class="msg-list__label">최근</p>`);
+    sections.push(rest.map((t) => renderRow(t, expandedId, role)).join(''));
+  }
 
   return `
     ${renderMessagesHub('messages')}
     <section class="msg-panel">
-
-      <div class="msg-tabs" role="tablist">${tabs}</div>
-
-      ${demoHint}
-
-      <div class="msg-list">${rows}</div>
-
-      <p class="msg-note">16장 §4 · 검색·보관함은 후순위</p>
-
+      <div class="msg-list">${sections.join('')}</div>
     </section>`;
-
 }
 
+/**
+ * @param {import('./thread-store.js').MessageThread} t
+ * @param {number|null} expandedId
+ * @param {string} role
+ */
+function renderRow(t, expandedId, role) {
+  const open = expandedId != null && Number(expandedId) === Number(t.id);
+  const titleHref = open ? MESSAGES_BASE : threadPath(t.id);
+  return `
+    <article class="msg-row${t.unread ? ' is-unread' : ''}${t.isImportant ? ' is-important' : ''}${open ? ' is-open' : ''}">
+      <div class="msg-row__head">
+        <span class="msg-row__name">${t.unread ? '<span class="msg-row__dot" aria-label="안 읽음"></span>' : ''}${esc(t.peerDisplayName)}${readStateBadge(t)}</span>
+        <span class="msg-row__meta">
+          <button type="button" class="msg-star${t.isImportant ? ' is-on' : ''}" data-msg-action="important" data-thread-id="${t.id}" aria-pressed="${t.isImportant ? 'true' : 'false'}" aria-label="${t.isImportant ? '중요 해제' : '중요 표시'}">★</button>
+          <span class="msg-row__time">${formatRelative(t.updatedAt)}</span>
+        </span>
+      </div>
+      <a href="#${titleHref}" class="msg-row__title" data-msg-nav="${titleHref}">${esc(threadTitle(t))}</a>
+      ${open ? renderExpandedBody(t, role) : ''}
+      ${
+        open
+          ? ''
+          : `<div class="msg-row__chips">
+        <span class="msg-chip">${esc(t.contextLabel)}</span>
+        <span class="msg-badge msg-badge--sm">${esc(t.scopeBadge)}</span>
+      </div>`
+      }
+    </article>`;
+}
 
+/** @param {import('./thread-store.js').MessageThread} thread @param {string} role */
+function renderExpandedBody(thread, role) {
+  let t = thread;
+  if (isMessagesApiMode() && t.messages.length === 0 && t.lastPreview) {
+    t = {
+      ...t,
+      messages: [
+        {
+          id: 0,
+          sender: 'me',
+          body: t.lastPreview,
+          createdAt: t.updatedAt || new Date().toISOString(),
+        },
+      ],
+    };
+  } else if (isMessagesApiMode() && t.messages.length === 0) {
+    return `<p class="msg-empty">대화를 불러오는 중…</p>`;
+  }
+
+  const canReply = canReplyInThread(t, role);
+  const msgs = t.messages
+    .map((m) => {
+      const receipt =
+        m.sender === 'me'
+          ? `<span class="msg-bubble__read">${isReadByPeer(t, m) ? '읽음' : '안읽음'}</span>`
+          : '';
+      const body = String(m.body || '').trim();
+      return `<div class="msg-bubble msg-bubble--${m.sender}"><span class="msg-bubble__label">${m.sender === 'me' ? '나' : esc(t.peerDisplayName)}</span>${body ? esc(body) : ''}${renderAttachments(m)}${receipt}</div>`;
+    })
+    .join('');
+  const requestBlock =
+    t.showRequestInPanel && t.requestSummary
+      ? `<p class="msg-summary__request">요청문: "${esc(t.requestSummary)}"</p>`
+      : `<p class="msg-summary__muted">요청문 비공개</p>`;
+  const replyBlock = canReply
+    ? `<form class="msg-reply" data-msg-reply="${t.id}">
+        <textarea class="msg-reply__input" rows="2" placeholder="답장 입력"></textarea>
+        <div class="msg-reply__attach">
+          <label class="msg-reply__file-label">${MESSAGE_ATTACHMENT.label}
+            <input class="msg-reply__file" type="file" multiple accept="${MESSAGE_ATTACHMENT.accept}" />
+          </label>
+          <p class="msg-reply__attach-hint">${MESSAGE_ATTACHMENT.hint}</p>
+          <p class="msg-reply__files is-hidden" data-msg-file-list></p>
+        </div>
+        <button type="submit" class="btn btn--primary btn--sm">전송</button>
+      </form>`
+    : `<p class="msg-note msg-note--warn">${esc(getReplyBlockedMessage(t, role))}</p>`;
+
+  return `
+    <div class="msg-row__expand">
+      <div class="msg-scope">
+        <span class="msg-scope__label">공개 범위:</span>
+        <span class="msg-badge">${esc(t.scopeBadge)}</span>
+        <span class="msg-scope__hint">${esc(t.scopeHint)}</span>
+      </div>
+      <details class="msg-summary">
+        <summary>상대 요약</summary>
+        <p>${esc(t.structuredLine)}</p>
+        ${requestBlock}
+      </details>
+      <div class="msg-thread__messages">${msgs}</div>
+      ${t.isBlocked ? `<p class="msg-note msg-note--warn">${esc(t.blockReason || BLOCK_THREAD_COPY.banner)}</p>` : ''}
+      ${replyBlock}
+      <div class="msg-row__actions">
+        <button type="button" class="btn btn--secondary btn--sm" data-msg-action="report" data-thread-id="${t.id}">신고</button>
+        <button type="button" class="btn btn--secondary btn--sm" data-msg-action="archive" data-thread-id="${t.id}">${t.isArchived ? '보관 해제' : '보관'}</button>
+        <button type="button" class="btn btn--secondary btn--sm" data-msg-action="block" data-thread-id="${t.id}" ${t.isBlocked ? 'disabled' : ''}>차단</button>
+      </div>
+    </div>`;
+}
 
 /** @param {string} role */
-
 function renderEmptyList(role) {
   const copy = getMessagesEmptyCopy(role === 'parent' ? 'parent' : role);
-  const ctaHref =
-    role === 'parent' ? '#/mypage/wishlist' : '#/mypage/student-review';
-  let html = renderStateCard({
+  const ctaHref = role === 'parent' ? '#/mypage/wishlist' : '#/mypage/student-review';
+  return renderStateCard({
     title: copy.title,
     body: copy.body,
     cta: copy.cta,
     ctaHref: copy.cta ? ctaHref : undefined,
     screenId: copy.screenId,
   });
-  if (isProviderRole(role) && !canProviderColdMemoToStudent(role)) {
-    html += `<p class="msg-note msg-note--warn">${FREE_PROVIDER_INBOX_COPY.hint}</p>`;
-  }
-  html += `<p class="msg-note">쪽지가 없어도 위 <a href="#${REVIEWS_BASE}" data-msg-nav="${REVIEWS_BASE}">후기함</a> 탭에서 대상별 후기·내가 쓴 후기·관리 후기를 볼 수 있어요.</p>`;
-  return html;
 }
-
-
-
-/** @param {number} threadId */
-
-function renderThread(threadId) {
-
-  const role = getNavRole();
-
-  let thread = getThread(threadId);
-
-  if (!thread) {
-
-    return `<section class="msg-panel msg-empty">대화를 찾을 수 없습니다. <a href="#${tabPath('inbox')}" data-msg-nav="${tabPath('inbox')}">목록으로</a></section>`;
-
-  }
-
-  if (isMessagesApiMode() && thread.messages.length === 0 && thread.lastPreview) {
-    thread = {
-      ...thread,
-      messages: [
-        {
-          id: 0,
-          sender: 'me',
-          body: thread.lastPreview,
-          createdAt: thread.updatedAt || new Date().toISOString(),
-        },
-      ],
-    };
-  } else if (isMessagesApiMode() && thread.messages.length === 0) {
-
-    return `<section class="msg-panel msg-thread msg-thread--loading"><p class="msg-empty">대화를 불러오는 중…</p></section>`;
-
-  }
-
-
-
-  const canReply = canReplyInThread(thread, role);
-
-
-
-  const msgs = thread.messages
-
-    .map(
-
-      (m) =>
-
-        `<div class="msg-bubble msg-bubble--${m.sender}"><span class="msg-bubble__label">${m.sender === 'me' ? '나' : esc(thread.peerDisplayName)}</span>${esc(m.body)}</div>`,
-
-    )
-
-    .join('');
-
-
-
-  const requestBlock =
-    thread.showRequestInPanel && thread.requestSummary
-      ? `<p class="msg-summary__request">요청문: "${esc(thread.requestSummary)}"</p>`
-      : `<p class="msg-summary__muted">요청문 비공개</p>`;
-
-  const replyBlock = canReply
-    ? `<form class="msg-reply" data-msg-reply="${threadId}">
-        <textarea class="msg-reply__input" rows="2" placeholder="답장 입력"></textarea>
-        <button type="submit" class="btn btn--primary btn--sm">전송</button>
-      </form>`
-    : `<p class="msg-note msg-note--warn">${esc(getReplyBlockedMessage(thread, role))}</p>`;
-
-
-
-  return `
-    ${renderMessagesHub('messages')}
-    <section class="msg-panel msg-thread">
-
-      <div class="msg-thread__bar">
-
-        <a href="#${tabPath('inbox')}" class="msg-back" data-msg-nav="${tabPath('inbox')}">← 목록</a>
-
-        <span class="msg-thread__peer">${esc(thread.peerDisplayName)}</span>
-
-        <button type="button" class="btn btn--secondary btn--sm" data-msg-action="report" data-thread-id="${threadId}">신고</button>
-
-        <button type="button" class="btn btn--secondary btn--sm" data-msg-action="archive" data-thread-id="${threadId}">${thread.isArchived ? '보관 해제' : '보관'}</button>
-
-        <button type="button" class="btn btn--secondary btn--sm" data-msg-action="block" data-thread-id="${threadId}" ${thread.isBlocked ? 'disabled' : ''}>차단</button>
-
-      </div>
-
-      ${thread.isBlocked ? `<p class="msg-note msg-note--warn">${esc(thread.blockReason || BLOCK_THREAD_COPY.banner)}</p>` : ''}
-
-      <div class="msg-scope">
-
-        <span class="msg-scope__label">공개 범위:</span>
-
-        <span class="msg-badge">${esc(thread.scopeBadge)}</span>
-
-        <span class="msg-scope__hint">${esc(thread.scopeHint)}</span>
-
-      </div>
-
-      <details class="msg-summary" open>
-
-        <summary>상대 요약 패널</summary>
-
-        <p>${esc(thread.structuredLine)}</p>
-
-        ${requestBlock}
-
-      </details>
-
-      <div class="msg-thread__messages">${msgs}</div>
-
-      ${replyBlock}
-
-    </section>`;
-
-}
-
-
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 
@@ -322,7 +281,7 @@ export function bindMessagesScreenEvents(root, rerender) {
 
       e.preventDefault();
 
-      window.location.hash = el.getAttribute('data-msg-nav') || tabPath('inbox');
+      window.location.hash = el.getAttribute('data-msg-nav') || MESSAGES_BASE;
 
     });
 
@@ -376,6 +335,13 @@ export function bindMessagesScreenEvents(root, rerender) {
 
         }
 
+        if (action === 'important') {
+          const thread = getThread(id);
+          await setThreadImportant(id, !thread?.isImportant);
+          rerender();
+          return;
+        }
+
         if (action === 'block') {
 
           if (!confirm(BLOCK_THREAD_COPY.confirm)) return;
@@ -390,7 +356,7 @@ export function bindMessagesScreenEvents(root, rerender) {
 
         console.warn('[messages]', err);
 
-        alert('처리에 실패했습니다.');
+        alert(err?.message || '처리에 실패했습니다.');
 
       }
 
@@ -419,14 +385,19 @@ export function bindMessagesScreenEvents(root, rerender) {
       }
 
       const input = form.querySelector('.msg-reply__input');
-
-      const body = input?.value?.trim();
-
-      if (!body) return;
+      const fileInput = form.querySelector('.msg-reply__file');
+      const body = input?.value?.trim() || '';
+      const files = Array.from(fileInput?.files || []);
+      const fileErr = validateMessageFiles(files);
+      if (fileErr) {
+        alert(fileErr);
+        return;
+      }
+      if (!body && files.length === 0) return;
 
       try {
 
-        await appendMessageToThread(id, body);
+        await appendMessageToThread(id, body, files);
 
         rerender();
 
@@ -437,7 +408,7 @@ export function bindMessagesScreenEvents(root, rerender) {
         if (err?.code === 'paid_gate') showPaidGateOverlay();
         else if (err?.code === 'email_verify_required') showEmailVerifyOverlay();
 
-        else alert('답장 전송에 실패했습니다.');
+        else alert(err?.message || '답장 전송에 실패했습니다.');
 
       }
 
@@ -446,6 +417,23 @@ export function bindMessagesScreenEvents(root, rerender) {
   });
 
 
+
+  root.querySelectorAll('.msg-reply__file').forEach((input) => {
+    input.addEventListener('change', () => {
+      const list = input.closest('.msg-reply')?.querySelector('[data-msg-file-list]');
+      const files = Array.from(input.files || []);
+      if (!list) return;
+      if (!files.length) {
+        list.textContent = '';
+        list.classList.add('is-hidden');
+        return;
+      }
+      const err = validateMessageFiles(files);
+      list.textContent = err || files.map((f) => `${f.name} (${formatFileBytes(f.size)})`).join(', ');
+      list.classList.toggle('is-error', Boolean(err));
+      list.classList.remove('is-hidden');
+    });
+  });
 
   const path = window.location.hash.slice(1) || '';
 

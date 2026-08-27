@@ -689,6 +689,12 @@ export function bootstrapMypageRoute() {
     return true;
   }
 
+  const msgNorm = normalizeMessagesPath(path);
+  if (msgNorm && msgNorm !== path) {
+    window.location.replace(`#${msgNorm}${query}`);
+    return true;
+  }
+
   const studyRoomExposureLegacy = studyRoomLegacyExposureRedirect(path);
   if (studyRoomExposureLegacy) {
     window.location.replace(`#${studyRoomExposureLegacy}${query}`);

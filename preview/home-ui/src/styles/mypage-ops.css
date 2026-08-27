@@ -236,6 +236,29 @@
   box-shadow: none;
 }
 
+.mypage-panel.mypage-panel--bare {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.mypage-history-box {
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  padding: 1rem 1.25rem;
+  background: var(--mp-panel);
+}
+
+.mypage-history-box h2 {
+  margin: 0 0 0.85rem;
+  color: var(--mp-ink);
+  font-size: var(--mp-section);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .mypage-panel__title,
 .mypage-subhead {
   color: var(--mp-ink);

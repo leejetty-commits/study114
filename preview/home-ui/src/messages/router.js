@@ -11,11 +11,16 @@ export const REVIEWS_BASE = `${MESSAGES_BASE}/reviews`;
 
 /** @param {string} p */
 function mapLegacyPath(p) {
-  if (p === '/messages' || p === '/messages/') return `${MESSAGES_BASE}/inbox`;
-  if (p === '/messages/inbox') return `${MESSAGES_BASE}/inbox`;
-  if (p === '/messages/sent') return `${MESSAGES_BASE}/sent`;
-  if (p === '/messages/active') return `${MESSAGES_BASE}/active`;
-  if (p === '/messages/archive') return `${MESSAGES_BASE}/archive`;
+  if (
+    p === '/messages' ||
+    p === '/messages/' ||
+    p === '/messages/inbox' ||
+    p === '/messages/sent' ||
+    p === '/messages/active' ||
+    p === '/messages/archive'
+  ) {
+    return MESSAGES_BASE;
+  }
   const m = p.match(/^\/messages\/thread\/(\d+)$/);
   if (m) return `${MESSAGES_BASE}/thread/${m[1]}`;
   return null;
@@ -34,14 +39,11 @@ export function normalizeMessagesPath(hashPath) {
     p === `${MESSAGES_BASE}/active` ||
     p === `${MESSAGES_BASE}/archive`
   ) {
-    return p;
+    return MESSAGES_BASE;
   }
-  if (p === `${MESSAGES_BASE}/reviews` || p === `${MESSAGES_BASE}/reviews/` || p === `${MESSAGES_BASE}/reviews/targets`) {
+  if (p.startsWith(`${MESSAGES_BASE}/reviews`)) {
     return `${MESSAGES_BASE}/reviews`;
   }
-  if (p === `${MESSAGES_BASE}/reviews/written` || p === `${MESSAGES_BASE}/reviews/received`) return p;
-  const reviewTarget = p.match(/^\/mypage\/messages\/reviews\/target\/(study_room|tutor)\/(\d+)$/);
-  if (reviewTarget) return p;
   const threadMatch = p.match(/^\/mypage\/messages\/thread\/(\d+)$/);
   if (threadMatch) return p;
   return null;
@@ -54,7 +56,7 @@ export function isMessagesDetailPath(path) {
 }
 
 export function getDefaultMessagesPath() {
-  return `${MESSAGES_BASE}/inbox`;
+  return MESSAGES_BASE;
 }
 
 /** @param {string} path */

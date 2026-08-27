@@ -619,6 +619,53 @@ function localTargetsInbox(userId, nav) {
   };
 }
 
+function localAllInbox(userId, nav, page) {
+  const isProvider = nav === 'tutor' || nav === 'study_room';
+  const ownedType = nav === 'tutor' ? 'tutor' : nav === 'study_room' ? 'study_room' : null;
+  const authorId = userId || 6;
+  const byId = new Map();
+  loadAll().forEach((r) => {
+    if (r.review_status !== 'visible' && r.review_status !== 'hidden') return;
+    const mine = r.author_user_id === authorId || (userId === 0 && r.author_user_id === 6);
+    const received =
+      isProvider &&
+      ownedType &&
+      r.provider_type === ownedType &&
+      r.provider_id === 1 &&
+      r.review_status === 'visible';
+    if (!mine && !received) return;
+    byId.set(r.id, r);
+  });
+  const all = [...byId.values()].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  const pageSize = REVIEW_POLICY.pageSize;
+  const start = (Math.max(1, page) - 1) * pageSize;
+  return {
+    mode: 'account',
+    lane: 'all',
+    label: PROVIDER_REVIEW_COPY.inboxHub,
+    page,
+    page_size: pageSize,
+    total: all.length,
+    count: all.length,
+    items: all.slice(start, start + pageSize).map((r) => {
+      const mine = r.author_user_id === authorId || (userId === 0 && r.author_user_id === 6);
+      const owner = isProvider && r.provider_type === ownedType && r.provider_id === 1;
+      return mapItem(r, {
+        provider_label: localProviderLabel(r.provider_type, r.provider_id),
+        is_mine: mine,
+        is_owner: owner && !mine,
+        can_edit: mine && !isBlocked(r.provider_type, r.provider_id, r.author_user_id),
+        can_delete: mine,
+        can_hide: mine && r.review_status === 'visible',
+        can_unhide: mine && r.review_status === 'hidden',
+        review_status: r.review_status,
+        is_review_blocked: isBlocked(r.provider_type, r.provider_id, r.author_user_id),
+        author_user_id: r.author_user_id,
+      });
+    }),
+  };
+}
+
 export async function fetchReviewInbox(lane = '', page = 1) {
   if (!apiMode()) {
     const auth = getAuthUser();
@@ -626,6 +673,9 @@ export async function fetchReviewInbox(lane = '', page = 1) {
     const userId = auth?.user_id || 0;
     const nav = getNavRole();
     const isProvider = nav === 'tutor' || nav === 'study_room' || role === 'tutor' || role === 'study_room_owner';
+    if (lane === 'all' || lane === '') {
+      return localAllInbox(userId, nav, page);
+    }
     if (lane === 'targets') {
       return localTargetsInbox(userId, nav);
     }
@@ -709,11 +759,6 @@ export function countReceivedReviewsPreview(providerType) {
   return getReviewCount(providerType, 1);
 }
 
-export function reviewsArchivePath(opts = {}) {
-  if (opts.providerType && opts.providerId) {
-    return `/mypage/messages/reviews/target/${opts.providerType}/${opts.providerId}`;
-  }
-  if (opts.lane === 'received') return '/mypage/messages/reviews/received';
-  if (opts.lane === 'written') return '/mypage/messages/reviews/written';
+export function reviewsArchivePath() {
   return '/mypage/messages/reviews';
 }

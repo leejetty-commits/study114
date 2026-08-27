@@ -9,7 +9,34 @@ const CREDENTIALS = { credentials: 'include' };
 export const MESSAGES_ENDPOINTS = {
   threads: '/api/messages/threads.php',
   entitlements: '/api/messages/entitlements.php',
+  attachments: '/api/messages/attachments.php',
 };
+
+function appendPayloadToForm(fd, payload) {
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value == null) return;
+    if (typeof value === 'boolean') {
+      fd.append(key, value ? '1' : '0');
+      return;
+    }
+    fd.append(key, String(value));
+  });
+}
+
+/**
+ * @param {File[]} files
+ * @param {Record<string, unknown>} payload
+ */
+function postForm(payload, files) {
+  const fd = new FormData();
+  appendPayloadToForm(fd, payload);
+  files.forEach((file) => fd.append('files[]', file));
+  return fetch(MESSAGES_ENDPOINTS.threads, {
+    method: 'POST',
+    ...CREDENTIALS,
+    body: fd,
+  });
+}
 
 async function parseJson(res) {
   const data = await res.json().catch(() => ({}));
@@ -40,25 +67,30 @@ export async function getSummaryCounts() {
 
 /**
  * @param {object} payload
+ * @param {File[]} [files]
  * @returns {Promise<{ thread: object }>}
  */
-export async function composeMessage(payload) {
-  const res = await fetch(MESSAGES_ENDPOINTS.threads, {
-    method: 'POST',
-    headers: JSON_HEADERS,
-    ...CREDENTIALS,
-    body: JSON.stringify({ action: 'compose', ...payload }),
-  });
+export async function composeMessage(payload, files = []) {
+  const res = files.length
+    ? await postForm({ action: 'compose', ...payload }, files)
+    : await fetch(MESSAGES_ENDPOINTS.threads, {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        ...CREDENTIALS,
+        body: JSON.stringify({ action: 'compose', ...payload }),
+      });
   return parseJson(res);
 }
 
-export async function replyMessage(threadId, body) {
-  const res = await fetch(MESSAGES_ENDPOINTS.threads, {
-    method: 'POST',
-    headers: JSON_HEADERS,
-    ...CREDENTIALS,
-    body: JSON.stringify({ action: 'reply', thread_id: threadId, body }),
-  });
+export async function replyMessage(threadId, body, files = []) {
+  const res = files.length
+    ? await postForm({ action: 'reply', thread_id: threadId, body }, files)
+    : await fetch(MESSAGES_ENDPOINTS.threads, {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        ...CREDENTIALS,
+        body: JSON.stringify({ action: 'reply', thread_id: threadId, body }),
+      });
   return parseJson(res);
 }
 

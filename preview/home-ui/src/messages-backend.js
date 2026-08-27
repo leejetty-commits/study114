@@ -99,7 +99,8 @@ export async function apiFindOrCreateThread(input) {
     structured_line: input.structuredLine,
     body: input.body,
   };
-  const data = await composeMessage(payload);
+  const files = Array.isArray(input.files) ? input.files : [];
+  const data = await composeMessage(payload, files);
   const thread = data.thread;
   upsertThreadInCache(thread);
   if (input.contextKind === 'student') {
@@ -108,9 +109,9 @@ export async function apiFindOrCreateThread(input) {
   return { ...thread, messages: [...(thread.messages ?? [])] };
 }
 
-/** @param {number} id @param {string} body */
-export async function apiAppendMessage(id, body) {
-  const data = await replyMessage(id, body);
+/** @param {number} id @param {string} body @param {File[]} [files] */
+export async function apiAppendMessage(id, body, files = []) {
+  const data = await replyMessage(id, body, files);
   const thread = data.thread;
   upsertThreadInCache(thread);
   return { ...thread, messages: [...(thread.messages ?? [])] };
@@ -133,7 +134,7 @@ export async function apiHydrateThreadDetail(id) {
   return { ...thread, messages: [...(thread.messages ?? [])] };
 }
 
-/** @param {number} id @param {'archive'|'unarchive'|'block'|'report'} action @param {object} [extra] */
+/** @param {number} id @param {'archive'|'unarchive'|'block'|'report'|'important'|'unimportant'} action @param {object} [extra] */
 export async function apiThreadModeration(id, action, extra = {}) {
   const data = await patchThreadAction(id, action, extra);
   if (data.thread) upsertThreadInCache(data.thread);

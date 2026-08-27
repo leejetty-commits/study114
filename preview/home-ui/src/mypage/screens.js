@@ -17,7 +17,7 @@ import {
 } from './preview-data.js';
 import { getRecentViews } from './recent-store.js';
 import { getStudentReviewItems, removeStudentReview } from '../student-review-store.js';
-import { getHandoffFromQuery, getProviderRegDeepLink } from '../handoff-link.js';
+import { getHandoffFromQuery } from '../handoff-link.js';
 import { HANDOFF_DEEPLINK } from '../handoff-copy.js';
 import { STUDENT_REVIEW, studentReviewItemLabel } from '../handoff-copy.js';
 import { fetchMypageReviewSnapshot, reviewsArchivePath } from '../provider-reviews/store.js';
@@ -57,14 +57,8 @@ import {
 } from '../auth/display-identity.js';
 import { renderTutorRegScreen } from '../tutor-reg/screens.js';
 import { renderSubmissionBoardScreen } from '../submission-board/index.js';
-import { previewState } from '../state.js';
-import {
-  FREE_TIER_COPY,
-  PAID_TIER_COPY,
-  P18_HEADLINE,
-  P18_EXPOSURE_STATUS,
-} from './plans-catalog.js';
-import { getRoiMetrics, getPaidOperationalStatus } from '../paid-backend.js';
+import { P18_EXPOSURE_STATUS } from './plans-catalog.js';
+import { getPaidOperationalStatus } from '../paid-backend.js';
 import { renderPaidGuide, renderPaidUsage } from './paid-screens.js';
 import { renderPlansHistory } from '../plans/screens.js';
 import { getHistoryRows } from '../plans/history-mock.js';
@@ -76,8 +70,6 @@ import {
   EMPTY_ONBOARDING,
   GUARDIAN_PLANS_COPY,
   WISHLIST_NOTE,
-  RECENT_NOTE,
-  STUDENT_REVIEW_NOTE,
   REGISTRATIONS_LEAD,
 } from './mypage-copy.js';
 
@@ -251,7 +243,7 @@ export async function hydrateMypageReviewPanel(root) {
           ? '아직 받은 후기가 없습니다. 쪽지·후기함의 후기함에서 모아서 볼 수 있어요.'
           : '아직 남긴 후기가 없습니다. 카드의 후기 수에서 읽고, 자격이 되면 남길 수 있어요.'
       }</p>
-      <p><a href="#${reviewsArchivePath({ lane: snap.lane === 'received' ? 'received' : 'written' })}" data-mypage-nav="${reviewsArchivePath({ lane: snap.lane === 'received' ? 'received' : 'written' })}">후기함 열기</a></p>`;
+      <p><a href="#${reviewsArchivePath()}" data-mypage-nav="${reviewsArchivePath()}">후기함 열기</a></p>`;
       return;
     }
     box.innerHTML = `
@@ -271,13 +263,13 @@ export async function hydrateMypageReviewPanel(root) {
           })
           .join('')}
       </ul>
-      <p><a href="#${reviewsArchivePath({ lane: snap.lane === 'received' ? 'received' : 'written' })}" data-mypage-nav="${reviewsArchivePath({ lane: snap.lane === 'received' ? 'received' : 'written' })}">후기함에서 전체 보기</a></p>`;
+      <p><a href="#${reviewsArchivePath()}" data-mypage-nav="${reviewsArchivePath()}">후기함에서 전체 보기</a></p>`;
     box.querySelectorAll('[data-mypage-open-review]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const kind = btn.getAttribute('data-mypage-open-review');
         const id = Number(btn.getAttribute('data-id'));
         if (kind !== 'study_room' && kind !== 'tutor') return;
-        window.location.hash = reviewsArchivePath({ providerType: kind, providerId: id });
+        window.location.hash = reviewsArchivePath();
       });
     });
   } catch {
@@ -385,28 +377,18 @@ function renderStudentReview(role) {
       : fromHandoff === 'access'
         ? HANDOFF_DEEPLINK.reviewFromAccess
         : null;
-  const regLink = getProviderRegDeepLink(role);
 
   if (!items.length) {
-    const links = [{ label: '학생 목록 보기', href: '#/mypage/student-review' }];
-    if (regLink) {
-      links.push({
-        label: regLink.label,
-        href: `#${regLink.href}`,
-      });
-    }
     return `
-      <section class="mypage-panel mypage-empty">
+      <section class="mypage-panel mypage-panel--bare mypage-empty">
         ${fromBanner ? `<div class="handoff-deeplink-banner" role="status">${esc(fromBanner)}</div>` : ''}
-        ${renderEmptyStateCard('studentReview', { links, ctaHref: '#/mypage/student-review' })}
+        ${renderEmptyStateCard('studentReview')}
       </section>`;
   }
 
   return `
-    <section class="mypage-panel">
+    <section class="mypage-panel mypage-panel--bare">
       ${fromBanner ? `<div class="handoff-deeplink-banner" role="status">${esc(fromBanner)}</div>` : ''}
-      <p class="mypage-note">${STUDENT_REVIEW_NOTE}</p>
-      ${regLink ? `<p class="mypage-note"><a href="#${regLink.href}" data-mypage-nav="${regLink.href}">${esc(role === 'tutor' ? HANDOFF_DEEPLINK.providerRegCtaTutor : HANDOFF_DEEPLINK.providerRegCtaStudyRoom)}</a> · 쪽지 권한 확인</p>` : ''}
       <ul class="mypage-entity-list">
         ${items
           .map((item) => {
@@ -443,8 +425,7 @@ function renderRecent(role) {
   const items = getRecentViews(role);
   if (!items.length) {
     return `
-    <section class="mypage-panel">
-      <p class="mypage-note">${RECENT_NOTE}</p>
+    <section class="mypage-panel mypage-panel--bare">
       ${renderEmptyStateCard('recent', {
         ctaHref: '#/mypage/home',
         links: [{ label: '마이페이지 홈', href: '#/mypage/home' }],
@@ -452,11 +433,8 @@ function renderRecent(role) {
     </section>`;
   }
   return `
-    <section class="mypage-panel">
-      <p class="mypage-note">${RECENT_NOTE}</p>
-      ${
-        items.length
-          ? `<ul class="mypage-entity-list">
+    <section class="mypage-panel mypage-panel--bare">
+      <ul class="mypage-entity-list">
         ${items
           .map((e) => {
             const item = resolveBasketItem(e);
@@ -482,12 +460,7 @@ function renderRecent(role) {
           </li>`;
           })
           .join('')}
-      </ul>`
-          : renderEmptyStateCard('recent', {
-              ctaHref: `#${homePath}`,
-              links: [{ label: '탐색하기', href: `#${homePath}` }],
-            })
-      }
+      </ul>
     </section>`;
 }
 
@@ -504,28 +477,16 @@ function renderPlans(role) {
       </section>`;
   }
 
-  const tier = previewState.providerSubscription;
-  const tierCopy = tier === 'paid' ? PAID_TIER_COPY : FREE_TIER_COPY;
-  const metrics = getRoiMetrics();
   const ops = getPaidOperationalStatus();
   const exposure = ops?.exposure;
   const tickets = ops?.tickets;
   const positions = exposure?.positions ?? [];
   const historyRows = getHistoryRows().slice(0, 8);
-  const tierLabel = tier === 'paid' ? '유료 이용 중' : '기본 이용 중';
 
   return `
     <div class="mypage-home">
-      <section class="mypage-panel mypage-usage-overview">
-        <div class="mypage-home-section__head">
-          <div>
-            <span class="mypage-home-section__eyebrow">구매상품</span>
-            <h2>현재 이용현황</h2>
-          </div>
-          <span class="mypage-badge ${tier === 'paid' ? 'mypage-badge--published' : ''}">${esc(tierLabel)}</span>
-        </div>
-        <p class="mypage-lead">광고·노출 이용 중 상품과 잔여 혜택을 확인합니다.</p>
-        <h3 class="mypage-subhead">이용중 포지션(광고)</h3>
+      <section class="mypage-panel mypage-panel--bare mypage-usage-overview">
+        <h3 class="mypage-subhead">이용중인 노출광고</h3>
         ${
           positions.length
             ? `<ul class="plans-tier-list">${positions
@@ -545,29 +506,11 @@ function renderPlans(role) {
               </div>`
             : `<p class="mypage-muted">이용권 정보를 불러오면 표시됩니다.</p>`
         }
-        <h3 class="mypage-subhead">반응 요약</h3>
-        <div class="mypage-stats roi-metrics">
-          ${metrics
-            .map(
-              (m) => `
-            <div class="mypage-stat" title="${esc(m.hint)}">
-              <span>${esc(m.label)}</span><strong>${m.value}</strong>
-            </div>`,
-            )
-            .join('')}
-        </div>
-        <ul class="plans-tier-list" style="margin-top:1rem">${tierCopy.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
       </section>
 
-      <section class="mypage-panel">
-        <div class="mypage-home-section__head">
-          <div>
-            <span class="mypage-home-section__eyebrow">내역</span>
-            <h2>구매·결제내역</h2>
-          </div>
-          <p>${esc(P18_HEADLINE)}</p>
-        </div>
-        <table class="plans-table" aria-label="구매내역">
+      <section class="mypage-history-box">
+        <h2>구매 결제 내역</h2>
+        <table class="plans-table" aria-label="구매 결제 내역">
           <thead><tr><th>상품</th><th>금액</th><th>일시</th><th>상태</th></tr></thead>
           <tbody>
             ${
@@ -587,9 +530,6 @@ function renderPlans(role) {
             }
           </tbody>
         </table>
-        <p class="mypage-muted" style="margin-top:0.75rem">
-          <a href="#/mypage/plans/history" data-mypage-nav="/mypage/plans/history">전체 결제내역</a>
-        </p>
       </section>
     </div>`;
 }

@@ -106,20 +106,24 @@ final class MessagesRepository
         return (int) $this->pdo->lastInsertId();
     }
 
-    public function insertMessage(int $threadId, int $senderUserId, string $body): int
+    public function insertMessage(int $threadId, int $senderUserId, string $body, ?string $preview = null): int
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO messages (thread_id, sender_user_id, body) VALUES (?, ?, ?)'
         );
         $stmt->execute([$threadId, $senderUserId, $body]);
+        $id = (int) $this->pdo->lastInsertId();
 
-        $preview = mb_substr($body, 0, 120);
+        $previewText = trim((string) ($preview ?? $body));
+        if ($previewText === '') {
+            $previewText = '첨부 파일';
+        }
         $upd = $this->pdo->prepare(
             'UPDATE message_threads SET last_message_preview = ?, updated_at = NOW() WHERE id = ?'
         );
-        $upd->execute([$preview, $threadId]);
+        $upd->execute([mb_substr($previewText, 0, 120), $threadId]);
 
-        return (int) $this->pdo->lastInsertId();
+        return $id;
     }
 
     public function upsertThreadRead(int $threadId, int $userId): void
@@ -140,14 +144,18 @@ final class MessagesRepository
                     (SELECT m.sender_user_id FROM messages m WHERE m.thread_id = t.id
                      ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_sender_user_id,
                     r.read_at,
-                    ps.is_archived, ps.is_blocked, ps.block_reason, ps.reported_at, ps.report_reason
+                    (SELECT pr.read_at FROM message_thread_reads pr
+                      WHERE pr.thread_id = t.id AND pr.user_id <> ? LIMIT 1) AS peer_read_at,
+                    ps.is_archived, ps.is_blocked, ps.is_important, ps.block_reason, ps.reported_at, ps.report_reason,
+                    (SELECT m.body FROM messages m WHERE m.thread_id = t.id
+                     ORDER BY m.created_at ASC, m.id ASC LIMIT 1) AS first_message_body
              FROM message_threads t
              LEFT JOIN message_thread_reads r ON r.thread_id = t.id AND r.user_id = ?
              LEFT JOIN message_thread_participant_state ps ON ps.thread_id = t.id AND ps.user_id = ?
              WHERE t.participant_low_user_id = ? OR t.participant_high_user_id = ?
-             ORDER BY t.updated_at DESC'
+             ORDER BY COALESCE(ps.is_important, 0) DESC, t.updated_at DESC'
         );
-        $stmt->execute([$userId, $userId, $userId, $userId]);
+        $stmt->execute([$userId, $userId, $userId, $userId, $userId]);
 
         return $stmt->fetchAll();
     }
@@ -157,14 +165,21 @@ final class MessagesRepository
     {
         $stmt = $this->pdo->prepare(
             'SELECT t.*, r.read_at,
-                    ps.is_archived, ps.is_blocked, ps.block_reason, ps.reported_at, ps.report_reason
+                    (SELECT MAX(m.created_at) FROM messages m WHERE m.thread_id = t.id) AS last_message_at,
+                    (SELECT m.sender_user_id FROM messages m WHERE m.thread_id = t.id
+                     ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_sender_user_id,
+                    (SELECT pr.read_at FROM message_thread_reads pr
+                      WHERE pr.thread_id = t.id AND pr.user_id <> ? LIMIT 1) AS peer_read_at,
+                    ps.is_archived, ps.is_blocked, ps.is_important, ps.block_reason, ps.reported_at, ps.report_reason,
+                    (SELECT m.body FROM messages m WHERE m.thread_id = t.id
+                     ORDER BY m.created_at ASC, m.id ASC LIMIT 1) AS first_message_body
              FROM message_threads t
              LEFT JOIN message_thread_reads r ON r.thread_id = t.id AND r.user_id = ?
              LEFT JOIN message_thread_participant_state ps ON ps.thread_id = t.id AND ps.user_id = ?
              WHERE t.id = ? AND (t.participant_low_user_id = ? OR t.participant_high_user_id = ?)
              LIMIT 1'
         );
-        $stmt->execute([$userId, $userId, $threadId, $userId, $userId]);
+        $stmt->execute([$userId, $userId, $userId, $threadId, $userId, $userId]);
         $row = $stmt->fetch();
 
         return $row !== false ? $row : null;
@@ -180,6 +195,79 @@ final class MessagesRepository
         $stmt->execute([$threadId]);
 
         return $stmt->fetchAll();
+    }
+
+    /**
+     * @param list<int> $messageIds
+     * @return array<int, list<array<string, mixed>>>
+     */
+    public function listAttachmentsByMessageIds(array $messageIds): array
+    {
+        if ($messageIds === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($messageIds), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT id, message_id, original_name, mime_type, size_bytes
+             FROM message_attachments
+             WHERE message_id IN ($placeholders)
+             ORDER BY id ASC"
+        );
+        $stmt->execute(array_map(static fn (int $id): int => $id, $messageIds));
+        $map = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $mid = (int) $row['message_id'];
+            $map[$mid][] = $row;
+        }
+
+        return $map;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function insertAttachment(
+        int $messageId,
+        int $threadId,
+        string $originalName,
+        string $storagePath,
+        string $mimeType,
+        int $sizeBytes,
+    ): array {
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO message_attachments
+               (message_id, thread_id, original_name, storage_path, mime_type, size_bytes)
+             VALUES (?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([$messageId, $threadId, $originalName, $storagePath, $mimeType, $sizeBytes]);
+        $id = (int) $this->pdo->lastInsertId();
+
+        return [
+            'id' => $id,
+            'message_id' => $messageId,
+            'thread_id' => $threadId,
+            'original_name' => $originalName,
+            'storage_path' => $storagePath,
+            'mime_type' => $mimeType,
+            'size_bytes' => $sizeBytes,
+        ];
+    }
+
+    /** @return array<string, mixed>|null */
+    public function findAttachmentForUser(int $attachmentId, int $userId): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT a.*
+             FROM message_attachments a
+             JOIN message_threads t ON t.id = a.thread_id
+             WHERE a.id = ?
+               AND (t.participant_low_user_id = ? OR t.participant_high_user_id = ?)
+             LIMIT 1'
+        );
+        $stmt->execute([$attachmentId, $userId, $userId]);
+        $row = $stmt->fetch();
+
+        return $row !== false ? $row : null;
     }
 
     public function threadHasPeerMessage(int $threadId, int $viewerUserId): bool
@@ -203,18 +291,54 @@ final class MessagesRepository
         return $val !== false ? (string) $val : null;
     }
 
+    /** @return array<string, mixed>|null */
+    public function getParticipantState(int $threadId, int $userId): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT is_archived, is_blocked, is_important, block_reason, reported_at, report_reason
+             FROM message_thread_participant_state
+             WHERE thread_id = ? AND user_id = ?
+             LIMIT 1'
+        );
+        $stmt->execute([$threadId, $userId]);
+        $row = $stmt->fetch();
+
+        return $row !== false ? $row : null;
+    }
+
+    public function countImportantForUser(int $userId): int
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM message_thread_participant_state
+             WHERE user_id = ? AND is_important = 1'
+        );
+        $stmt->execute([$userId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
     /**
      * @param array<string, mixed> $fields
      */
     public function upsertParticipantState(int $threadId, int $userId, array $fields): void
     {
+        $current = $this->getParticipantState($threadId, $userId) ?? [
+            'is_archived' => 0,
+            'is_blocked' => 0,
+            'is_important' => 0,
+            'block_reason' => null,
+            'reported_at' => null,
+            'report_reason' => null,
+        ];
+        $merged = array_merge($current, $fields);
         $stmt = $this->pdo->prepare(
             'INSERT INTO message_thread_participant_state
-               (thread_id, user_id, is_archived, is_blocked, block_reason, reported_at, report_reason)
-             VALUES (?, ?, ?, ?, ?, ?, ?)
+               (thread_id, user_id, is_archived, is_blocked, is_important, block_reason, reported_at, report_reason)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                is_archived = VALUES(is_archived),
                is_blocked = VALUES(is_blocked),
+               is_important = VALUES(is_important),
                block_reason = VALUES(block_reason),
                reported_at = COALESCE(VALUES(reported_at), reported_at),
                report_reason = COALESCE(VALUES(report_reason), report_reason),
@@ -223,11 +347,12 @@ final class MessagesRepository
         $stmt->execute([
             $threadId,
             $userId,
-            (int) ($fields['is_archived'] ?? 0),
-            (int) ($fields['is_blocked'] ?? 0),
-            $fields['block_reason'] ?? null,
-            $fields['reported_at'] ?? null,
-            $fields['report_reason'] ?? null,
+            (int) ($merged['is_archived'] ?? 0),
+            (int) ($merged['is_blocked'] ?? 0),
+            (int) ($merged['is_important'] ?? 0),
+            $merged['block_reason'] ?? null,
+            $merged['reported_at'] ?? null,
+            $merged['report_reason'] ?? null,
         ]);
     }
 

@@ -32,6 +32,15 @@ import {
 
 /**
 
+ * @typedef {object} ThreadAttachment
+ * @property {number} id
+ * @property {string} originalName
+ * @property {number} sizeBytes
+ * @property {string} [mimeType]
+ */
+
+/**
+
  * @typedef {object} ThreadMessage
 
  * @property {number} id
@@ -41,6 +50,8 @@ import {
  * @property {string} body
 
  * @property {string} createdAt
+ * @property {boolean} [readByPeer]
+ * @property {ThreadAttachment[]} [attachments]
 
  */
 
@@ -75,7 +86,8 @@ import {
  * @property {string} updatedAt
 
  * @property {boolean} unread
-
+ * @property {boolean} [peerUnread]
+ * @property {boolean} isImportant
  * @property {boolean} initiatedByMe
 
  * @property {boolean} initiatedByPeer
@@ -103,6 +115,8 @@ function loadAll() {
       ...t,
 
       initiatedByPeer: t.initiatedByPeer ?? !t.initiatedByMe,
+      isImportant: !!t.isImportant,
+      peerUnread: t.peerUnread ?? lastMessageIsMine(t),
 
     }));
 
@@ -122,7 +136,29 @@ function saveAll(threads) {
 
 }
 
+/** @param {File[]|FileList|undefined} files */
+function localAttachmentMeta(files) {
+  return Array.from(files || []).map((file) => ({
+    id: 0,
+    originalName: file.name,
+    sizeBytes: file.size,
+    mimeType: file.type || 'application/octet-stream',
+  }));
+}
 
+/** @param {string} body @param {File[]|FileList|undefined} files */
+function previewFromBodyOrFiles(body, files) {
+  const text = String(body || '').trim();
+  if (text) return text.slice(0, 80);
+  const name = files?.[0]?.name;
+  return name ? `첨부 ${name}` : '첨부 파일';
+}
+
+function lastMessageIsMine(thread) {
+  const msgs = thread?.messages || [];
+  if (!msgs.length) return false;
+  return msgs[msgs.length - 1].sender === 'me';
+}
 
 /** @returns {MessageThread[]} */
 
@@ -207,19 +243,25 @@ export function markThreadRead(id) {
 export function getThreadsForTab(tab, activeDays = 7) {
 
   const all = isMessagesApiMode() ? getThreadsCache() : loadAll();
+  const sorted = [...all].sort((a, b) => {
+    const ia = a.isImportant ? 1 : 0;
+    const ib = b.isImportant ? 1 : 0;
+    if (ib !== ia) return ib - ia;
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+
+  if (tab === 'all' || tab === 'list') return sorted;
 
   const cutoff = Date.now() - activeDays * 86400000;
 
-  if (tab === 'archive') return all.filter((t) => t.isArchived);
+  if (tab === 'archive') return sorted.filter((t) => t.isArchived);
 
-  const visible = all.filter((t) => !t.isArchived);
+  const visible = sorted.filter((t) => !t.isArchived);
 
   if (tab === 'sent') return visible.filter((t) => t.initiatedByMe);
 
   if (tab === 'active') {
-
     return visible.filter((t) => new Date(t.updatedAt).getTime() >= cutoff);
-
   }
 
   return visible.filter((t) => !t.initiatedByMe || t.unread);
@@ -308,9 +350,13 @@ export async function findOrCreateThread(input) {
 
       createdAt: new Date().toISOString(),
 
+      readByPeer: false,
+
+      attachments: localAttachmentMeta(input.files),
+
     });
 
-    existing.lastPreview = input.body.slice(0, 80);
+    existing.lastPreview = previewFromBodyOrFiles(input.body, input.files);
 
     existing.updatedAt = new Date().toISOString();
 
@@ -319,6 +365,8 @@ export async function findOrCreateThread(input) {
     existing.initiatedByPeer = existing.messages.some((m) => m.sender === 'peer');
 
     existing.unread = false;
+
+    existing.peerUnread = true;
 
     saveAll(threads);
 
@@ -350,17 +398,30 @@ export async function findOrCreateThread(input) {
 
     structuredLine: input.structuredLine,
 
-    lastPreview: input.body.slice(0, 80),
+    lastPreview: previewFromBodyOrFiles(input.body, input.files),
+
+    firstPreview: previewFromBodyOrFiles(input.body, input.files),
 
     updatedAt: new Date().toISOString(),
 
     unread: false,
 
+    peerUnread: true,
+
+    isImportant: false,
+
     initiatedByMe: true,
 
     initiatedByPeer: false,
 
-    messages: [{ id: 1, sender: 'me', body: input.body, createdAt: new Date().toISOString() }],
+    messages: [{
+      id: 1,
+      sender: 'me',
+      body: input.body,
+      createdAt: new Date().toISOString(),
+      readByPeer: false,
+      attachments: localAttachmentMeta(input.files),
+    }],
 
   };
 
@@ -374,48 +435,30 @@ export async function findOrCreateThread(input) {
 
 
 
-/** @param {number} id @param {string} body @returns {Promise<MessageThread|null>} */
-
-export async function appendMessageToThread(id, body) {
-
+/** @param {number} id @param {string} body @param {File[]} [files] @returns {Promise<MessageThread|null>} */
+export async function appendMessageToThread(id, body, files = []) {
   if (isMessagesApiMode()) {
-
-    return apiAppendMessage(id, body);
-
+    return apiAppendMessage(id, body, files);
   }
 
-
-
   const threads = loadAll();
-
   const t = threads.find((x) => x.id === id);
-
   if (!t) return null;
-
   t.messages.push({
-
     id: t.messages.length + 1,
-
     sender: 'me',
-
     body,
-
     createdAt: new Date().toISOString(),
-
+    readByPeer: false,
+    attachments: localAttachmentMeta(files),
   });
-
-  t.lastPreview = body.slice(0, 80);
-
+  t.lastPreview = previewFromBodyOrFiles(body, files);
   t.updatedAt = new Date().toISOString();
-
   t.unread = false;
-
+  t.peerUnread = true;
   t.initiatedByMe = true;
-
   saveAll(threads);
-
   return t;
-
 }
 
 
@@ -430,6 +473,30 @@ export async function setThreadArchived(id, archived = true) {
   const t = threads.find((x) => x.id === id);
   if (!t) return null;
   t.isArchived = archived;
+  saveAll(threads);
+  return t;
+}
+
+const IMPORTANT_MAX = 5;
+
+/** @param {number} id @param {boolean} important */
+export async function setThreadImportant(id, important = true) {
+  if (isMessagesApiMode()) {
+    const data = await apiThreadModeration(id, important ? 'important' : 'unimportant');
+    return data.thread ?? getThreadFromCache(id);
+  }
+  const threads = loadAll();
+  const t = threads.find((x) => x.id === id);
+  if (!t) return null;
+  if (important && !t.isImportant) {
+    const n = threads.filter((x) => x.isImportant).length;
+    if (n >= IMPORTANT_MAX) {
+      const err = new Error('중요 표시는 최대 5개까지 할 수 있습니다.');
+      err.code = 'validation';
+      throw err;
+    }
+  }
+  t.isImportant = important;
   saveAll(threads);
   return t;
 }
@@ -597,6 +664,8 @@ export function ensureDemoThreads() {
 
       unread: false,
 
+      peerUnread: true,
+
       initiatedByMe: false,
 
       initiatedByPeer: true,
@@ -621,9 +690,13 @@ export function ensureDemoThreads() {
 
           sender: 'me',
 
-          body: '네, 주 2회 대치동 방문 가능합니다.',
+          body: '네, 주 2회 대치동 방문 가능합니다. 사업자등록증을 첨부합니다.',
 
           createdAt: new Date(now.getTime() - 82800000).toISOString(),
+
+          readByPeer: false,
+
+          attachments: [{ id: 0, originalName: '사업자등록증.pdf', sizeBytes: 420000, mimeType: 'application/pdf' }],
 
         },
 

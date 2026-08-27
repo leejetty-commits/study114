@@ -313,7 +313,11 @@ final class ProviderReviewService
             return $this->inboxTargets($auth);
         }
 
-        if ($lane === 'received' || ($lane === '' && $isProvider)) {
+        if ($lane === 'all' || $lane === '') {
+            return $this->inboxAll($auth, $page, $limit);
+        }
+
+        if ($lane === 'received') {
             if (!$isProvider) {
                 return [
                     'mode' => 'account',
@@ -389,6 +393,80 @@ final class ProviderReviewService
         $lane = ($role === 'study_room_owner' || $role === 'tutor') ? 'received' : 'written';
 
         return $this->inbox($auth, $lane, 1, 10);
+    }
+
+    /**
+     * 후기함 단일 리스트 — 내가 쓴 후기 + 내가 관리하는 후기(소유 프로필에 달린 글)
+     * @param array{user_id: int, role_type: string} $auth
+     * @return array<string, mixed>
+     */
+    private function inboxAll(array $auth, int $page, int $limit): array
+    {
+        $role = (string) ($auth['role_type'] ?? '');
+        $userId = (int) $auth['user_id'];
+        $isProvider = $role === 'study_room_owner' || $role === 'tutor';
+        $fetchLimit = 50;
+
+        $written = $this->repo->listWrittenByAuthor($userId, $fetchLimit, 0, true);
+        $received = [];
+        if ($isProvider) {
+            $type = $role === 'tutor' ? 'tutor' : 'study_room';
+            $received = $this->repo->listReceivedByOwner($userId, $type, ReviewPolicy::PAGE_SIZE_MAX, 0);
+        }
+
+        $byId = [];
+        foreach (array_merge($written, $received) as $row) {
+            $byId[(int) $row['id']] = $row;
+        }
+        $rows = array_values($byId);
+        usort(
+            $rows,
+            static fn (array $a, array $b): int => strcmp((string) ($b['created_at'] ?? ''), (string) ($a['created_at'] ?? '')),
+        );
+
+        $total = count($rows);
+        $offset = ($page - 1) * $limit;
+        $slice = array_slice($rows, $offset, $limit);
+        $items = [];
+        foreach ($slice as $row) {
+            $authorId = (int) ($row['author_user_id'] ?? 0);
+            $isMine = $authorId === $userId;
+            $ownerId = $this->repo->getProviderOwnerUserId(
+                (string) $row['provider_type'],
+                (int) $row['provider_id'],
+            );
+            $isOwner = $ownerId !== null && $ownerId === $userId;
+            $mapped = $this->mapReview($row, [
+                'user_id' => $userId,
+                'role_type' => $role,
+                'is_owner' => $isOwner && !$isMine,
+                'include_status' => $isMine,
+                'include_author' => $isOwner && !$isMine,
+                'is_review_blocked' => $this->repo->hasReviewBlock(
+                    (string) $row['provider_type'],
+                    (int) $row['provider_id'],
+                    $authorId,
+                ),
+            ]);
+            $mapped['provider_label'] = $this->repo->getProviderLabel(
+                (string) $row['provider_type'],
+                (int) $row['provider_id'],
+            );
+            $mapped['is_mine'] = $isMine;
+            $mapped['is_owner'] = $isOwner && !$isMine;
+            $items[] = $mapped;
+        }
+
+        return [
+            'mode' => 'account',
+            'lane' => 'all',
+            'label' => '후기함',
+            'page' => $page,
+            'page_size' => $limit,
+            'total' => $total,
+            'count' => $total,
+            'items' => $items,
+        ];
     }
 
     /**

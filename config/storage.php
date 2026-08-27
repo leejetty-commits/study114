@@ -18,4 +18,23 @@ return [
             'image/png',
         ],
     ],
+    /**
+     * 쪽지 첨부 (선택). 확장자 = 상세정보1 홍보사진 ∪ 제출·증빙 서류.
+     * 5MB: 사업자·교육청 등록증 스캔/사진에 충분하고, 닷홈 업로드·디스크에 무리가 적다.
+     * (홍보사진 4MB · 제출함 10MB 사이의 상담 채널 한도)
+     */
+    'message' => [
+        'max_size_bytes' => 5 * 1024 * 1024,
+        'max_files' => 3,
+        'allowed_extensions' => ['pdf', 'jpg', 'jpeg', 'png', 'webp'],
+        'allowed_mimes' => [
+            'application/pdf',
+            'application/x-pdf',
+            'image/jpeg',
+            'image/pjpeg',
+            'image/jpg',
+            'image/png',
+            'image/webp',
+        ],
+    ],
 ];
