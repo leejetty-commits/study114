@@ -136,6 +136,22 @@ function applyRoleContext(roleType) {
   if (active) setActiveRole(active);
 }
 
+/** 쪽지·등록 등 부가 API 실패가 로그인 세션을 지우지 않게 격리 */
+async function hydrateSessionDependencies() {
+  await activateProviderApis(currentUser.role_type).catch((err) => {
+    console.warn('[auth] provider hydrate skipped', err);
+  });
+  await activateMessagesApi().catch((err) => {
+    console.warn('[auth] messages hydrate skipped', err);
+  });
+  await activateRegistrationsApi().catch((err) => {
+    console.warn('[auth] registrations hydrate skipped', err);
+  });
+  await hydrateExposureBridge().catch((err) => {
+    console.warn('[auth] exposure hydrate skipped', err);
+  });
+}
+
 /** @param {boolean} [navigateHome] */
 export async function initAuthSession(navigateHome = false) {
   try {
@@ -152,10 +168,7 @@ export async function initAuthSession(navigateHome = false) {
     }
     currentUser = user;
     applyRoleContext(user.role_type);
-    await activateProviderApis(user.role_type);
-    await activateMessagesApi();
-    await activateRegistrationsApi();
-    await hydrateExposureBridge();
+    await hydrateSessionDependencies();
     if (navigateHome && ROLE_HOME[user.role_type]) {
       navigate(ROLE_HOME[user.role_type]);
     }
@@ -211,11 +224,7 @@ export async function devLogin(email, password = 'password') {
     /* ignore */
   }
   applyRoleContext(currentUser.role_type);
-  await activateHandoffApi();
-  await activateMessagesApi();
-  await activateRegistrationsApi();
-  await activateProviderApis(currentUser.role_type);
-  await hydrateExposureBridge();
+  await hydrateSessionDependencies();
   window.dispatchEvent(new CustomEvent('auth:login', { detail: currentUser }));
   return currentUser;
 }

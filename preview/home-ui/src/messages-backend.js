@@ -31,7 +31,12 @@ function resetCache() {
 
 export async function activateMessagesApi() {
   apiMode = true;
-  await hydrateMessagesCache();
+  try {
+    await hydrateMessagesCache();
+  } catch (err) {
+    warnMessages(err);
+    resetCache();
+  }
 }
 
 export function deactivateMessagesApi() {

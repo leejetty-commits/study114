@@ -9,8 +9,37 @@ use PDO;
 /** 16장 P16 — thread · message persistence (DDL 014) */
 final class MessagesRepository
 {
+    private ?bool $hasImportantColumn = null;
+
     public function __construct(private readonly PDO $pdo)
     {
+    }
+
+    /** 058 미적용 운영 DB에서도 쪽지 목록이 500 나지 않게 */
+    private function hasImportantColumn(): bool
+    {
+        if ($this->hasImportantColumn !== null) {
+            return $this->hasImportantColumn;
+        }
+        try {
+            $stmt = $this->pdo->query(
+                "SHOW COLUMNS FROM message_thread_participant_state LIKE 'is_important'"
+            );
+            $this->hasImportantColumn = $stmt !== false && $stmt->fetch() !== false;
+        } catch (\PDOException) {
+            $this->hasImportantColumn = false;
+        }
+
+        return $this->hasImportantColumn;
+    }
+
+    private function participantSelectExpr(): string
+    {
+        if ($this->hasImportantColumn()) {
+            return 'ps.is_archived, ps.is_blocked, ps.is_important, ps.block_reason, ps.reported_at, ps.report_reason';
+        }
+
+        return 'ps.is_archived, ps.is_blocked, 0 AS is_important, ps.block_reason, ps.reported_at, ps.report_reason';
     }
 
     public function getUserDisplayName(int $userId): ?string
@@ -138,22 +167,26 @@ final class MessagesRepository
     /** @return list<array<string, mixed>> */
     public function listThreadsForUser(int $userId): array
     {
+        $psCols = $this->participantSelectExpr();
+        $order = $this->hasImportantColumn()
+            ? 'ORDER BY COALESCE(ps.is_important, 0) DESC, t.updated_at DESC'
+            : 'ORDER BY t.updated_at DESC';
         $stmt = $this->pdo->prepare(
-            'SELECT t.*,
+            "SELECT t.*,
                     (SELECT MAX(m.created_at) FROM messages m WHERE m.thread_id = t.id) AS last_message_at,
                     (SELECT m.sender_user_id FROM messages m WHERE m.thread_id = t.id
                      ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_sender_user_id,
                     r.read_at,
                     (SELECT pr.read_at FROM message_thread_reads pr
                       WHERE pr.thread_id = t.id AND pr.user_id <> ? LIMIT 1) AS peer_read_at,
-                    ps.is_archived, ps.is_blocked, ps.is_important, ps.block_reason, ps.reported_at, ps.report_reason,
+                    {$psCols},
                     (SELECT m.body FROM messages m WHERE m.thread_id = t.id
                      ORDER BY m.created_at ASC, m.id ASC LIMIT 1) AS first_message_body
              FROM message_threads t
              LEFT JOIN message_thread_reads r ON r.thread_id = t.id AND r.user_id = ?
              LEFT JOIN message_thread_participant_state ps ON ps.thread_id = t.id AND ps.user_id = ?
              WHERE t.participant_low_user_id = ? OR t.participant_high_user_id = ?
-             ORDER BY COALESCE(ps.is_important, 0) DESC, t.updated_at DESC'
+             {$order}"
         );
         $stmt->execute([$userId, $userId, $userId, $userId, $userId]);
 
@@ -163,21 +196,22 @@ final class MessagesRepository
     /** @return array<string, mixed>|null */
     public function getThreadRow(int $threadId, int $userId): ?array
     {
+        $psCols = $this->participantSelectExpr();
         $stmt = $this->pdo->prepare(
-            'SELECT t.*, r.read_at,
+            "SELECT t.*, r.read_at,
                     (SELECT MAX(m.created_at) FROM messages m WHERE m.thread_id = t.id) AS last_message_at,
                     (SELECT m.sender_user_id FROM messages m WHERE m.thread_id = t.id
                      ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_sender_user_id,
                     (SELECT pr.read_at FROM message_thread_reads pr
                       WHERE pr.thread_id = t.id AND pr.user_id <> ? LIMIT 1) AS peer_read_at,
-                    ps.is_archived, ps.is_blocked, ps.is_important, ps.block_reason, ps.reported_at, ps.report_reason,
+                    {$psCols},
                     (SELECT m.body FROM messages m WHERE m.thread_id = t.id
                      ORDER BY m.created_at ASC, m.id ASC LIMIT 1) AS first_message_body
              FROM message_threads t
              LEFT JOIN message_thread_reads r ON r.thread_id = t.id AND r.user_id = ?
              LEFT JOIN message_thread_participant_state ps ON ps.thread_id = t.id AND ps.user_id = ?
              WHERE t.id = ? AND (t.participant_low_user_id = ? OR t.participant_high_user_id = ?)
-             LIMIT 1'
+             LIMIT 1"
         );
         $stmt->execute([$userId, $userId, $userId, $threadId, $userId, $userId]);
         $row = $stmt->fetch();
@@ -294,11 +328,14 @@ final class MessagesRepository
     /** @return array<string, mixed>|null */
     public function getParticipantState(int $threadId, int $userId): ?array
     {
+        $cols = $this->hasImportantColumn()
+            ? 'is_archived, is_blocked, is_important, block_reason, reported_at, report_reason'
+            : 'is_archived, is_blocked, 0 AS is_important, block_reason, reported_at, report_reason';
         $stmt = $this->pdo->prepare(
-            'SELECT is_archived, is_blocked, is_important, block_reason, reported_at, report_reason
+            "SELECT {$cols}
              FROM message_thread_participant_state
              WHERE thread_id = ? AND user_id = ?
-             LIMIT 1'
+             LIMIT 1"
         );
         $stmt->execute([$threadId, $userId]);
         $row = $stmt->fetch();
@@ -308,6 +345,9 @@ final class MessagesRepository
 
     public function countImportantForUser(int $userId): int
     {
+        if (!$this->hasImportantColumn()) {
+            return 0;
+        }
         $stmt = $this->pdo->prepare(
             'SELECT COUNT(*) FROM message_thread_participant_state
              WHERE user_id = ? AND is_important = 1'
@@ -331,14 +371,39 @@ final class MessagesRepository
             'report_reason' => null,
         ];
         $merged = array_merge($current, $fields);
+        if ($this->hasImportantColumn()) {
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO message_thread_participant_state
+                   (thread_id, user_id, is_archived, is_blocked, is_important, block_reason, reported_at, report_reason)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE
+                   is_archived = VALUES(is_archived),
+                   is_blocked = VALUES(is_blocked),
+                   is_important = VALUES(is_important),
+                   block_reason = VALUES(block_reason),
+                   reported_at = COALESCE(VALUES(reported_at), reported_at),
+                   report_reason = COALESCE(VALUES(report_reason), report_reason),
+                   updated_at = NOW()'
+            );
+            $stmt->execute([
+                $threadId,
+                $userId,
+                (int) ($merged['is_archived'] ?? 0),
+                (int) ($merged['is_blocked'] ?? 0),
+                (int) ($merged['is_important'] ?? 0),
+                $merged['block_reason'] ?? null,
+                $merged['reported_at'] ?? null,
+                $merged['report_reason'] ?? null,
+            ]);
+            return;
+        }
         $stmt = $this->pdo->prepare(
             'INSERT INTO message_thread_participant_state
-               (thread_id, user_id, is_archived, is_blocked, is_important, block_reason, reported_at, report_reason)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+               (thread_id, user_id, is_archived, is_blocked, block_reason, reported_at, report_reason)
+             VALUES (?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                is_archived = VALUES(is_archived),
                is_blocked = VALUES(is_blocked),
-               is_important = VALUES(is_important),
                block_reason = VALUES(block_reason),
                reported_at = COALESCE(VALUES(reported_at), reported_at),
                report_reason = COALESCE(VALUES(report_reason), report_reason),
@@ -349,7 +414,6 @@ final class MessagesRepository
             $userId,
             (int) ($merged['is_archived'] ?? 0),
             (int) ($merged['is_blocked'] ?? 0),
-            (int) ($merged['is_important'] ?? 0),
             $merged['block_reason'] ?? null,
             $merged['reported_at'] ?? null,
             $merged['report_reason'] ?? null,
