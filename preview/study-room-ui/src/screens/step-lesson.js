@@ -33,7 +33,7 @@ function esc(s) {
 
 function starLabel(forId, text) {
   const forAttr = forId ? ` for="${forId}"` : '';
-  return `<label class="form-label form-label--required"${forAttr}>${text}</label>`;
+  return `<label class="form-label form-label--required form-label--required-text"${forAttr}>${text}<em class="register-required-mark">필수</em></label>`;
 }
 
 function lessonSubjectOptions() {
@@ -226,15 +226,15 @@ export function renderLessonFormHtml(opts = {}) {
             ${renderSelectOptions(DAILY_LESSON_MINUTES, s.minutes_per_lesson, '선택')}
           </select>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="lessons_per_week">주당 평균 수업회수</label>
+        <div class="form-group" data-rc-field="lessons_per_week">
+          ${starLabel('lessons_per_week', '주당 평균 수업회수')}
           <select class="form-input" id="lessons_per_week" name="lessons_per_week">
             ${renderSelectOptions(WEEKLY_LESSON_COUNTS, s.lessons_per_week, '선택')}
           </select>
         </div>
       </div>
       <div class="register-grid-2">
-        <div class="form-group">
+        <div class="form-group" data-rc-field="fee">
           ${starLabel('monthly_fee_manwon', '월 평균 수업료')}
           <div class="register-fee-manwon">
             <input class="form-input" id="monthly_fee_manwon" name="monthly_fee_manwon" value="${esc(s.monthly_fee_manwon)}" placeholder="숫자" inputmode="decimal" />
@@ -255,12 +255,12 @@ export function renderLessonFormHtml(opts = {}) {
           </div>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">지도 스타일</label>
+      <div class="form-group" data-rc-field="teaching_style">
+        ${starLabel('', '지도 스타일')}
         <div class="register-check-grid">${renderStyleChecks(s.teaching_style_ids)}</div>
       </div>
-      <div class="form-group">
-        <label class="form-label" for="teaching_style_note">지도 스타일 추가설명</label>
+      <div class="form-group" data-rc-field="teaching_style_note">
+        ${starLabel('teaching_style_note', '지도 스타일 추가설명')}
         <textarea class="form-input form-textarea" id="teaching_style_note" name="teaching_style_note" rows="2" placeholder="추가로 전하고 싶은 지도 방식을 적어 주세요.">${esc(s.teaching_style_note)}</textarea>
       </div>
       <div class="form-group">
@@ -280,25 +280,29 @@ export function renderLessonFormHtml(opts = {}) {
           </label>
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group" data-rc-field="intro_short">
         ${starLabel('intro_short', '한 줄 소개')}
         <input class="form-input" id="intro_short" name="intro_short" maxlength="80" value="${esc(s.intro_short)}" placeholder="프라임 카드에 보이는 한 줄입니다." />
       </div>
-      <div class="form-group">
-        <label class="form-label" for="intro_long">공부방·교습소 소개와 자랑</label>
+      <div class="form-group" data-rc-field="intro_long">
+        ${starLabel('intro_long', '공부방·교습소 소개와 자랑')}
         <textarea class="form-input form-textarea register-intro-long" id="intro_long" name="intro_long" rows="8" placeholder="공부방·교습소를 소개하고 자랑해 주세요.">${esc(s.intro_long)}</textarea>
       </div>
 
+      <div data-rc-field="cover">
       ${starLabel('', '홍보사진')}
       <p class="register-hint">${promoPhotoHint()}</p>
       ${renderPromoPhotoGrid()}
+      </div>
 
-      ${renderSectionTitle('수업상세')}
+      <div data-rc-field="classes">
+      ${renderSectionTitle('수업상세 <em class="register-required-mark">필수</em>')}
       <p class="register-hint mb-4">수업 하나를 하나의 그룹으로 적습니다. 「+수업추가」로 아래로 늘릴 수 있습니다. 수업이 여러 개이면 접고 펼칠 수 있습니다.</p>
       <div data-classes-list>
         ${classes.map((row, i) => renderClassCard(row, i, classes.length)).join('')}
       </div>
       <button type="button" class="register-plus-btn" data-action="add-class">+수업추가</button>
+      </div>
 
       ${
         includeStepNav

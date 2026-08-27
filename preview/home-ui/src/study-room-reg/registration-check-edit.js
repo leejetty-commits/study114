@@ -14,11 +14,14 @@ import {
 } from '../../../shared/promo-image.js';
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from '../registrations-backend.js';
 import { ensureEmbeddedRegister } from './embedded-panels.js';
+import { openDetailDecision } from '../detail-decision/index.js';
+import { getStudyRoom } from './store.js';
 import { RC_COPY } from './registration-check-copy.js';
 import {
   RC_LIGHT_FIELDS,
   TEACHING_STYLE_OPTIONS,
   registrationCheckTabHref,
+  buildRegistrationCheckPreviewItem,
 } from './registration-check-model.js';
 
 function esc(s) {
@@ -311,9 +314,26 @@ export function bindRegistrationCheckEvents(root, rerender) {
     btn.addEventListener('click', () => openCoverModal(roomId, rerender));
   });
 
-  page.querySelector('[data-rc-plans]')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    const href = page.querySelector('[data-rc-plans]')?.getAttribute('href') || '#/plans';
-    window.location.hash = href.replace(/^#/, '');
+  const openExpand = () => {
+    const room = getStudyRoom(roomId) || { id: roomId };
+    const item = buildRegistrationCheckPreviewItem(registerState, room);
+    openDetailDecision({
+      kind: 'study_room',
+      id: roomId,
+      item,
+      sourceRoute: 'registration-check',
+    });
+  };
+  page.querySelectorAll('[data-rc-expand]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      openExpand();
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openExpand();
+      }
+    });
   });
 }

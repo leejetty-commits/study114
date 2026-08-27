@@ -301,6 +301,14 @@ form[data-form="facility"] select.form-input {
   padding: 0.55rem 0.9rem;
 }
 
+.register-section-title--bar .register-required-mark {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.18);
+  padding: 0.05em 0.4em;
+  border-radius: 0.25rem;
+  margin-left: 0.45rem;
+}
+
 form[data-form="facility"] > .register-section-title--bar:first-of-type,
 form[data-form="lesson"] > .register-section-title--bar:first-of-type {
   margin-top: 0.75rem;

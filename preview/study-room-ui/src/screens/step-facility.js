@@ -25,7 +25,7 @@ function esc(s) {
 /** 픽·프라임 카드 항목만 * 표시. 저장·공개는 막지 않는다. */
 function starLabel(forId, text) {
   const forAttr = forId ? ` for="${forId}"` : '';
-  return `<label class="form-label form-label--required"${forAttr}>${text}</label>`;
+  return `<label class="form-label form-label--required form-label--required-text"${forAttr}>${text}<em class="register-required-mark">필수</em></label>`;
 }
 
 function renderSubtitle(text) {
@@ -116,16 +116,16 @@ export function renderFacilityFormHtml(opts = {}) {
         <div class="register-grid-3__spacer" aria-hidden="true"></div>
       </div>
       <div class="register-grid-3">
-        <div class="form-group">
+        <div class="form-group" data-rc-field="feature_1">
           ${starLabel('feature_1', '경력특징 1')}
           <input class="form-input" id="feature_1" name="feature_1" value="${esc(s.feature_1)}" />
         </div>
         <div class="form-group">
-          ${starLabel('feature_2', '경력특징 2')}
+          <label class="form-label" for="feature_2">경력특징 2</label>
           <input class="form-input" id="feature_2" name="feature_2" value="${esc(s.feature_2)}" />
         </div>
         <div class="form-group">
-          ${starLabel('feature_3', '경력특징 3')}
+          <label class="form-label" for="feature_3">경력특징 3</label>
           <input class="form-input" id="feature_3" name="feature_3" value="${esc(s.feature_3)}" />
         </div>
       </div>
@@ -142,7 +142,7 @@ export function renderFacilityFormHtml(opts = {}) {
         <div class="form-group">
           <label class="form-check">
             <input class="form-check__input" type="checkbox" name="education_office_registered" ${s.education_office_registered ? 'checked' : ''} />
-            <span class="form-check__label form-label--required">교육청등록증</span>
+            <span class="form-check__label">교육청등록증</span>
           </label>
           <label class="form-label" for="education_office_reg_no">교육청 등록번호</label>
           <input class="form-input" id="education_office_reg_no" name="education_office_reg_no" value="${esc(s.education_office_reg_no)}" />

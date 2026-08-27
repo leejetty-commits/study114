@@ -562,6 +562,25 @@ img {
   color: var(--brand-blue);
 }
 
+.form-label--required-text::after {
+  content: none;
+}
+
+.register-required-mark {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.75em;
+  color: var(--color-error, #dc2626);
+  margin-left: 0.35rem;
+  letter-spacing: -0.02em;
+}
+
+.is-rc-focus {
+  outline: 2px solid var(--brand-blue, #2563eb);
+  outline-offset: 4px;
+  border-radius: 0.5rem;
+}
+
 .form-input {
   width: 100%;
   padding: var(--input-padding-y, 0.75rem) var(--input-padding-x, 1rem);

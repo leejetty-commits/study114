@@ -91,15 +91,57 @@ export function withEditQuery(basePath, on) {
 
 /**
  * @param {string} basePath
- * @param {{ edit?: boolean, returnRegistrationCheck?: boolean }} [opts]
+ * @param {{ edit?: boolean, returnRegistrationCheck?: boolean, focus?: string }} [opts]
  */
 export function withEmbedQuery(basePath, opts = {}) {
   const path = basePath.split('?')[0];
   const params = new URLSearchParams();
   if (opts.edit) params.set('edit', '1');
   if (opts.returnRegistrationCheck) params.set('return', 'registration-check');
+  if (opts.focus) params.set('focus', String(opts.focus));
   const qs = params.toString();
   return qs ? `${path}?${qs}` : path;
+}
+
+function embedFocusParam() {
+  const hash = window.location.hash.slice(1);
+  const q = hash.indexOf('?');
+  const params = new URLSearchParams(q >= 0 ? hash.slice(q + 1) : '');
+  return params.get('focus') || '';
+}
+
+const RC_FOCUS_SELECTORS = {
+  cover: '[data-rc-field="cover"]',
+  intro_short: '#intro_short',
+  intro_long: '#intro_long',
+  teaching_style: '[data-rc-field="teaching_style"]',
+  teaching_style_note: '#teaching_style_note',
+  classes: '[data-rc-field="classes"]',
+  fee: '#monthly_fee_manwon',
+  lessons_per_week: '#lessons_per_week',
+  feature_1: '#feature_1',
+};
+
+function scrollToRegistrationCheckFocus(root) {
+  const id = embedFocusParam();
+  if (!id) return;
+  const sel = RC_FOCUS_SELECTORS[id];
+  const el = sel ? root.querySelector(sel) : root.querySelector(`#${CSS.escape(id)}`);
+  if (!el) return;
+  requestAnimationFrame(() => {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('is-rc-focus');
+    const focusable = el.matches('input, textarea, select')
+      ? el
+      : el.querySelector('input, textarea, select, button');
+    if (focusable && typeof focusable.focus === 'function') {
+      try {
+        focusable.focus({ preventScroll: true });
+      } catch {
+        focusable.focus();
+      }
+    }
+  });
 }
 
 function setEditMode(roomId, section, on) {
@@ -219,9 +261,12 @@ function overviewDl(rows) {
           const valueHtml = row.multiline
             ? esc(blank(row.value)).replace(/\n/g, '<br />')
             : esc(blank(row.value));
+          const req = row.required
+            ? '<em class="register-required-mark">필수</em>'
+            : '';
           return `
         <div class="register-overview__row${empty ? ' is-empty' : ''}">
-          <dt>${esc(row.label)}</dt>
+          <dt>${esc(row.label)}${req}</dt>
           <dd><span>${valueHtml}</span></dd>
         </div>`;
         })
@@ -240,13 +285,21 @@ function overviewToolbar(editLabel) {
 function detail1OverviewRows() {
   const s = registerState;
   const photoCount = Array.isArray(s.images) ? s.images.length : 0;
+  const classCount = Array.isArray(s.classes)
+    ? s.classes.filter((c) => String(c?.class_name || c?.name || '').trim()).length
+    : 0;
+  const styles = Array.isArray(s.teaching_style_ids) ? s.teaching_style_ids.filter(Boolean) : [];
   return [
     { label: '수업운영방식', value: opLabel(s.lesson_operation_type) },
     { label: '타임별 원생수', value: capacityLabel(s.capacity_per_time) },
-    { label: '월 평균 수업료', value: s.monthly_fee_manwon ? `${s.monthly_fee_manwon}만원` : '' },
-    { label: '한 줄 소개', value: s.intro_short },
-    { label: '상세 소개', value: s.intro_long, multiline: true },
-    { label: '홍보사진', value: photoCount ? `${photoCount}장` : '' },
+    { label: '월 평균 수업료', value: s.monthly_fee_manwon ? `${s.monthly_fee_manwon}만원` : '', required: true },
+    { label: '주당 평균 수업회수', value: s.lessons_per_week, required: true },
+    { label: '한 줄 소개', value: s.intro_short, required: true },
+    { label: '공부방 소개 / 자랑', value: s.intro_long, multiline: true, required: true },
+    { label: '홍보사진', value: photoCount ? `${photoCount}장` : '', required: true },
+    { label: '지도 스타일', value: styles.length ? `${styles.length}개 선택` : '', required: true },
+    { label: '지도 스타일 추가설명', value: s.teaching_style_note, required: true },
+    { label: '수업상세', value: classCount ? `${classCount}개 등록` : '', required: true },
     {
       label: '옵션',
       value: [s.weekend_available ? '주말 가능' : '', s.one_on_one_available ? '1:1 가능' : ''].filter(Boolean).join(' · '),
@@ -260,7 +313,9 @@ function detail2OverviewRows() {
     { label: '출신대학', value: s.university_name },
     { label: '전공학과', value: s.major_name },
     { label: '교습경력', value: s.career_years !== '' && s.career_years != null ? `${s.career_years}년` : '' },
-    { label: '경력특징', value: [s.feature_1, s.feature_2, s.feature_3].filter(Boolean).join(' · ') },
+    { label: '경력특징 1', value: s.feature_1, required: true },
+    { label: '경력특징 2', value: s.feature_2 },
+    { label: '경력특징 3', value: s.feature_3 },
     { label: '교육청등록', value: s.education_office_registered ? '등록' : '' },
     { label: '시설 설명', value: s.facility_note, multiline: true },
   ];
@@ -420,6 +475,7 @@ export function bindEmbeddedPanelEvents(root, rerender) {
       onCancel: () => setEditMode(roomId, 'detail', false),
       onRefresh: rerender,
     });
+    scrollToRegistrationCheckFocus(wrap);
     return;
   }
 
@@ -432,5 +488,6 @@ export function bindEmbeddedPanelEvents(root, rerender) {
       onCancel: () => setEditMode(roomId, 'detail2', false),
       onRefresh: rerender,
     });
+    scrollToRegistrationCheckFocus(wrap);
   }
 }

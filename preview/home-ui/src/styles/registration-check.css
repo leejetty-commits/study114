@@ -69,6 +69,17 @@
   color: #166534;
 }
 
+.rc-stat--sentence {
+  max-width: 22rem;
+  white-space: normal;
+  line-height: 1.35;
+  align-items: flex-start;
+}
+
+.rc-stat--sentence .rc-stat__value {
+  font-weight: 650;
+}
+
 .rc-stat--warn {
   border-color: #fed7aa;
   background: #fff7ed;
@@ -387,7 +398,45 @@
 }
 
 .rc-compare__cta {
-  margin: 0.85rem 0 0;
+  display: none;
+}
+
+.rc-tier--preview {
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.rc-tier--preview:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.rc-tier--preview:hover {
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.rc-tier__live {
+  pointer-events: none;
+  user-select: none;
+  max-height: 22rem;
+  overflow: hidden;
+  border-radius: 0.45rem;
+}
+
+.rc-tier__live .browse-list {
+  margin: 0;
+}
+
+.rc-tier__live .expo-hcard__side,
+.rc-tier__live .expo-hcard__detail,
+.rc-tier__live .expo-tbl__cell--actions,
+.rc-tier__live .item-actions {
+  display: none;
+}
+
+.rc-tier__live .expo-card {
+  margin: 0;
 }
 
 .rc-link {
@@ -420,11 +469,68 @@
   color: #64748b;
 }
 
+.rc-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
 .rc-section__title {
-  margin: 0 0 0.45rem;
+  margin: 0;
   font-size: 0.8125rem;
   font-weight: 700;
   color: #334155;
+}
+
+.rc-section__edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.4rem;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.rc-section__edit:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.rc-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.rc-status--ok {
+  color: #334155;
+}
+
+.rc-status--empty {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.rc-note {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.rc-note--ok {
+  color: #2563eb;
+}
+
+.rc-note--miss {
+  color: #dc2626;
 }
 
 .rc-table-wrap {
@@ -475,9 +581,9 @@
   width: 5.5rem;
 }
 
-.rc-row__action {
-  width: 8.5rem;
-  text-align: right;
+.rc-row__note {
+  width: 4.5rem;
+  text-align: left;
 }
 
 .rc-table tbody tr:last-child th,
@@ -645,7 +751,7 @@
     width: auto;
   }
 
-  .rc-row__action {
+  .rc-row__note {
     width: auto;
   }
 }

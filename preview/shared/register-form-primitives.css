@@ -27,6 +27,27 @@
   color: var(--brand-blue, #2563eb);
 }
 
+.register-flow .form-label--required-text::after,
+.register-edit-dialog .form-label--required-text::after {
+  content: none;
+}
+
+.register-required-mark {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.75em;
+  color: #dc2626;
+  margin-left: 0.35rem;
+  letter-spacing: -0.02em;
+}
+
+.register-flow .is-rc-focus,
+.register-edit-dialog .is-rc-focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 4px;
+  border-radius: 0.5rem;
+}
+
 .register-flow .form-input,
 .register-flow .form-textarea,
 .register-edit-dialog .form-input,
