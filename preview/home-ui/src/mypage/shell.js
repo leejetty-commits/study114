@@ -26,16 +26,13 @@ function renderBreadcrumb(currentPath, title, role) {
   );
   const homePath = role === 'study_room' || role === 'tutor' ? '/mypage/registrations' : '/mypage/home';
   const parts = [{ label: '마이페이지', path: homePath }];
-  if (primary && primary.path !== homePath && primary.path !== '/mypage/home') {
+  if (primary) {
     parts.push({ label: mypageNavLabel(primary, role), path: primary.path });
-  }
-  // 내 등록 하위는 breadcrumb=위치, h1=화면명으로 분리 (중복 금지)
-  const skipTitleInCrumb = currentPath.startsWith('/mypage/registrations/');
-  if (!skipTitleInCrumb && title && title !== parts.at(-1)?.label) {
+  } else if (title && title !== '마이페이지') {
     parts.push({ label: title });
   }
 
-  // 마이페이지-내 등록 형태 (하이픈 연결)
+  // 마이페이지-내 등록 형태 (하이픈 연결). 하위 화면명(공부방명 등)은 h1만 사용.
   return `
     <nav class="mypage-breadcrumb" aria-label="현재 위치">
       ${parts

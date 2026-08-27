@@ -9,7 +9,6 @@ import {
 import {
   parseInquiryFormState,
   inquiryStatusFromForm,
-  resolveStudyRoomCardCta,
   homeCardDisplaySummary,
 } from './inquiry-display.js';
 import { isPhoneVerifiedLocal, showPhoneVerifyGateModal } from './phone-verify-gate.js';
@@ -473,15 +472,10 @@ function renderInquiryBasicPreview(room, inquiryStatus) {
     if (s.lesson_operation_type) row.lesson_operation_type = s.lesson_operation_type;
   }
   row.inquiry_status = inquiryStatus;
-  const cta = resolveStudyRoomCardCta(inquiryStatus);
   return `
     <div class="p20-inquiries-card-preview__frame" data-p20-inquiry-preview-card>
       <div class="p20-inquiries-card-preview__browse" aria-hidden="true">
         ${renderBrowseList('study_room', [row], { showCompare: false, showWish: false })}
-      </div>
-      <div class="p20-inquiries-card-preview__status">
-        <button type="button" class="btn ${cta.disabled ? 'btn--secondary' : 'btn--primary'} btn--sm" disabled data-p20-inquiry-preview-btn>${esc(cta.label)}</button>
-        <p class="p20-inquiries-card-preview__hint${cta.reasonLine ? '' : ' is-hidden'}" data-p20-inquiry-preview-hint>${esc(cta.reasonLine || '')}</p>
       </div>
     </div>`;
 }
@@ -590,7 +584,6 @@ function syncInquiryFormPreview(wrap) {
     : /** @type {'capacity_full'|'paused'} */ (reasonEl?.value || 'paused');
   const nextStatus = inquiryStatusFromForm(receiving, reason);
   const cardSummary = homeCardDisplaySummary(nextStatus);
-  const cardCta = resolveStudyRoomCardCta(nextStatus);
 
   const summaryStateEl = wrap.querySelector('[data-p20-inquiry-summary-state]');
   const summaryReasonEl = wrap.querySelector('[data-p20-inquiry-summary-reason]');
@@ -605,18 +598,6 @@ function syncInquiryFormPreview(wrap) {
   }
   if (previewHost && room) {
     previewHost.innerHTML = renderInquiryBasicPreview(room, nextStatus);
-  } else {
-    const previewBtn = wrap.querySelector('[data-p20-inquiry-preview-btn]');
-    const previewHint = wrap.querySelector('[data-p20-inquiry-preview-hint]');
-    if (previewBtn) {
-      previewBtn.textContent = cardCta.label;
-      previewBtn.classList.toggle('btn--primary', !cardCta.disabled);
-      previewBtn.classList.toggle('btn--secondary', cardCta.disabled);
-    }
-    if (previewHint) {
-      previewHint.textContent = cardCta.reasonLine || '';
-      previewHint.classList.toggle('is-hidden', !cardCta.reasonLine);
-    }
   }
   wrap.dataset.inquiryReceiving = receiving ? '1' : '0';
 }
