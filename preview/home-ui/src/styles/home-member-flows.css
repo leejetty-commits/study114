@@ -706,11 +706,18 @@
   background: transparent;
   box-shadow: none;
 }
+.mypage-usage-overview > .mypage-subhead:first-child {
+  margin-top: 0;
+}
+.mypage-plans-history > .mypage-subhead {
+  margin: 0 0 0.85rem;
+}
 .mypage-history-box {
   border: 1px solid #eee7dd;
   border-radius: 1rem;
   padding: clamp(1rem, 3vw, 1.5rem);
   background: #fff;
+  overflow-x: auto;
 }
 .mypage-history-box h2 {
   margin: 0 0 0.85rem;

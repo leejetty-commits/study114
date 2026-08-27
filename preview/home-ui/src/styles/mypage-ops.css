@@ -244,11 +244,20 @@
   box-shadow: none;
 }
 
+.mypage-usage-overview > .mypage-subhead:first-child {
+  margin-top: 0;
+}
+
+.mypage-plans-history > .mypage-subhead {
+  margin: 0 0 0.85rem;
+}
+
 .mypage-history-box {
   border: 1px solid var(--mp-line);
   border-radius: var(--mp-radius-card);
   padding: 1rem 1.25rem;
   background: var(--mp-panel);
+  overflow-x: auto;
 }
 
 .mypage-history-box h2 {

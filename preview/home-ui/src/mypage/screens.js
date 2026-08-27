@@ -495,7 +495,7 @@ function renderPlans(role) {
                     `<li><strong>${esc(String(p.sku || '').toUpperCase())}</strong> · ${p.days_left}일 남음 (~${esc(String(p.ends_on || p.ends_at || '').slice(0, 10))})</li>`,
                 )
                 .join('')}</ul>`
-            : `<div class="mypage-info-box"><p>${esc(P18_EXPOSURE_STATUS.basic)}</p></div>`
+            : `<p class="mypage-muted">${esc(P18_EXPOSURE_STATUS.basic)}</p>`
         }
         <h3 class="mypage-subhead">잔여 쪽지권</h3>
         ${
@@ -507,28 +507,30 @@ function renderPlans(role) {
         }
       </section>
 
-      <section class="mypage-history-box">
-        <h2>구매 결제 내역</h2>
-        <table class="plans-table" aria-label="구매 결제 내역">
-          <thead><tr><th>상품</th><th>금액</th><th>일시</th><th>상태</th></tr></thead>
-          <tbody>
-            ${
-              historyRows.length
-                ? historyRows
-                    .map(
-                      (r) => `
-              <tr>
-                <td>${esc(r.productName)}</td>
-                <td>${Number(r.amountKrw || 0).toLocaleString('ko-KR')}원</td>
-                <td>${esc(String(r.paidAt || '').slice(0, 16).replace('T', ' '))}</td>
-                <td>${esc(r.status || '')}</td>
-              </tr>`,
-                    )
-                    .join('')
-                : `<tr><td colspan="4" class="mypage-muted">구매내역이 없습니다.</td></tr>`
-            }
-          </tbody>
-        </table>
+      <section class="mypage-plans-history">
+        <h2 class="mypage-subhead">구매 결제 내역</h2>
+        <div class="mypage-history-box">
+          <table class="plans-table" aria-label="구매 결제 내역">
+            <thead><tr><th>상품</th><th>금액</th><th>일시</th><th>상태</th></tr></thead>
+            <tbody>
+              ${
+                historyRows.length
+                  ? historyRows
+                      .map(
+                        (r) => `
+                <tr>
+                  <td>${esc(r.productName)}</td>
+                  <td>${Number(r.amountKrw || 0).toLocaleString('ko-KR')}원</td>
+                  <td>${esc(String(r.paidAt || '').slice(0, 16).replace('T', ' '))}</td>
+                  <td>${esc(r.status || '')}</td>
+                </tr>`,
+                      )
+                      .join('')
+                  : `<tr><td colspan="4" class="mypage-muted">구매내역이 없습니다.</td></tr>`
+              }
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>`;
 }
