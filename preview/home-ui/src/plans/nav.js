@@ -5,7 +5,7 @@ import { plansScreenTitle, getPlansScreenId } from './router.js';
 export const PLANS_NAV = [
   { id: 'home', label: '상품홈', path: '/plans', screenId: 'P18-01' },
   { id: 'positions', label: '노출상품', path: '/plans/positions', screenId: 'P18-02' },
-  { id: 'access', label: '접근권상품', path: '/plans/access', screenId: 'P18-03' },
+  { id: 'access', label: '쪽지권', path: '/plans/access', screenId: 'P18-03' },
 ];
 
 /** @param {string} path */

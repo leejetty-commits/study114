@@ -7,13 +7,14 @@ import { createPaidCheckout, completePaidCheckout } from './paid-api.js';
 import { hydrateProviderStatus } from './provider-status.js';
 import { hydrateProviderNotices } from './provider-notices.js';
 import { getProductConfig } from './plans/runtime-config.js';
+import { getNavRole } from './state.js';
 
 /**
  * @param {string} productId
  * @param {string} variantLabel
  */
 function resolveApiVariant(productId, variantLabel) {
-  const cfg = getProductConfig(productId);
+  const cfg = getProductConfig(productId, getNavRole());
   const opt = cfg?.options?.find((o) => o.label === variantLabel || o.apiVariant === variantLabel);
   return opt?.apiVariant || variantLabel;
 }

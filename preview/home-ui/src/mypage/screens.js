@@ -497,12 +497,11 @@ function renderPlans(role) {
                 .join('')}</ul>`
             : `<div class="mypage-info-box"><p>${esc(P18_EXPOSURE_STATUS.basic)}</p></div>`
         }
-        <h3 class="mypage-subhead">횟수권 잔여</h3>
+        <h3 class="mypage-subhead">잔여 쪽지권</h3>
         ${
           tickets
             ? `<div class="mypage-stats roi-metrics">
                 <div class="mypage-stat"><span>${esc(tickets.memo.label)}</span><strong>${tickets.memo.remaining}</strong></div>
-                <div class="mypage-stat"><span>${esc(tickets.request_view.label)}</span><strong>${tickets.request_view.remaining}</strong></div>
               </div>`
             : `<p class="mypage-muted">이용권 정보를 불러오면 표시됩니다.</p>`
         }

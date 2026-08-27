@@ -668,7 +668,7 @@ function renderPublish(student) {
           <div><dt>장소</dt><dd>${esc(labelPlaces(student.lesson_places))}</dd></div>
           <div><dt>수업인원</dt><dd>${esc(labelLessonTarget(student))}</dd></div>
           <div><dt>스타일</dt><dd>${esc(labelTeachingStyles(student.teaching_style_badges))}</dd></div>
-          <div><dt>요청문</dt><dd>${student.request_summary_visibility === 'paid_only' ? '유료 공급자만' : '비공개'}</dd></div>
+          <div><dt>요청문</dt><dd>${student.request_summary_visibility === 'paid_only' ? '공급자 공개' : '비공개'}</dd></div>
         </dl>
       </div>
       <div class="p19-checklist-card">

@@ -91,7 +91,6 @@ function productLabel(code) {
   if (normalized.includes('pick')) return '추천 노출';
   if (normalized.includes('basic')) return '기본 노출';
   if (normalized.includes('memo')) return '쪽지권';
-  if (normalized.includes('request')) return '요청문 열람권';
   return '이용 상품';
 }
 
@@ -101,15 +100,12 @@ function renderLowCreditBanner(tickets) {
   if (isLowCredit(tickets.memo?.remaining)) {
     warns.push(`쪽지권 잔여 ${tickets.memo.remaining}회 — 재충전을 권장합니다`);
   }
-  if (isLowCredit(tickets.request_view?.remaining)) {
-    warns.push(`열람권 잔여 ${tickets.request_view.remaining}회 — 재충전을 권장합니다`);
-  }
   if (!warns.length) return '';
   return `
     <div class="mypage-info-box is-warn plans-low-credit" role="status">
       <strong>저잔량 안내</strong>
       <ul class="plans-tier-list">${warns.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
-      <a href="#/plans/access" class="btn btn--secondary btn--sm" data-plans-nav="/plans/access">접근권 충전</a>
+      <a href="#/plans/access" class="btn btn--secondary btn--sm" data-plans-nav="/plans/access">쪽지권 충전</a>
     </div>`;
 }
 
@@ -191,12 +187,19 @@ function getEligibility(profile, productCode, family = 'position') {
   let canBuy = true;
 
   if (family === 'access') {
-    if (profile.providerType !== 'tutor') {
-      return { canBuy: false, missing: ['접근권 상품은 과외쌤 전용입니다'] };
+    if (profile.providerType !== 'tutor' && profile.providerType !== 'study_room') {
+      return { canBuy: false, missing: ['쪽지권은 공부방·과외쌤만 구매할 수 있습니다'] };
     }
-    const tutor = getTutor(Number(profile.id));
-    if (!tutor) {
-      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+    if (profile.providerType === 'tutor') {
+      const tutor = getTutor(Number(profile.id));
+      if (!tutor) {
+        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+      }
+    } else {
+      const room = getStudyRoom(Number(profile.id));
+      if (!room) {
+        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+      }
     }
     return { canBuy: true, missing: [] };
   }
@@ -308,7 +311,8 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
             const priceNote = amt.testMode
               ? `${formatKrw(o.priceKrw)} (테스트 ${formatKrw(amt.chargeKrw)})`
               : formatKrw(o.priceKrw);
-            return `<option value="${esc(o.optionId)}"${i === 0 ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}</option>`;
+            const extras = [o.marketingBadge, o.discountLabel, o.bundleNote].filter(Boolean).join(' · ');
+            return `<option value="${esc(o.optionId)}"${i === 0 ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}${extras ? ` · ${esc(extras)}` : ''}</option>`;
           })
           .join('')}
       </select>
@@ -325,8 +329,9 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
          title="${buyDisabled ? '구매 조건을 확인하세요' : '결제로 이동'}">상품 구매하기 →</button>`
     : `<a href="${AUTH_UI_BASE}/#/login" class="btn btn--secondary plans-card__cta" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그인 후 구매</a>`;
 
-  const badge =
-    isPrime
+  const badge = product.cardBadge
+    ? `<span class="plans-card__badge">${esc(product.cardBadge)}</span>`
+    : isPrime
       ? `<span class="plans-card__badge">BEST</span>`
       : product.productCode === 'pick'
         ? `<span class="plans-card__badge plans-card__badge--pop">POPULAR</span>`
@@ -345,7 +350,10 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
         <p class="plans-card__hook">${esc(product.tagline)}</p>
         ${slotHtml}
         <ul class="plans-card__checks">
-          ${(product.bullets || []).map((b) => `<li>${esc(b)}</li>`).join('')}
+          ${[...(product.bullets || []), role === 'tutor' && product.family === 'position' ? '구매 완료 시 쪽지권이 함께 지급됩니다' : '']
+            .filter(Boolean)
+            .map((b) => `<li>${esc(b)}</li>`)
+            .join('')}
         </ul>
         <div class="plans-card__price-row">
           <span class="plans-card__price">${esc(price.display)}</span>
@@ -363,11 +371,11 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
  * @param {object} product
  * @param {import('./profiles.js').ProviderProfile | null} profile
  * @param {string} role
- * @param {{ memo?: number, request_view?: number }} remaining
+ * @param {{ memo?: number }} remaining
  * @param {{ primaryCta?: boolean }} [opts]
  */
 function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
-  const isTutor = role === 'tutor';
+  const isProvider = role === 'tutor' || role === 'study_room';
   const options = product.options || [];
   const price = formatCardPrice(product);
   const primaryCta = opts.primaryCta ?? product.productCode === 'memo_ticket';
@@ -375,28 +383,14 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
     ? getEligibility(profile, product.productCode, 'access')
     : { canBuy: false, missing: ['적용 프로필을 먼저 선택하세요'] };
 
-  if (role === 'study_room') {
-    return `
-      <li class="plans-card plans-card--access plans-catalog__item is-placeholder">
-        <div class="plans-card__icon ${productMediaClass(product.productCode)}" aria-hidden="true"><span>${productIcon(product.productCode)}</span></div>
-        <div class="plans-card__body">
-          <h3 class="plans-card__name">${esc(product.name)}</h3>
-          <p class="plans-card__hook">${esc(product.tagline)}</p>
-          <p class="mypage-muted">접근권은 과외쌤 전용입니다. 공부방은 노출상품을 이용해 주세요.</p>
-          <a href="#/plans/positions" class="btn btn--secondary plans-card__cta" data-plans-nav="/plans/positions">노출상품 보기</a>
-        </div>
-      </li>`;
-  }
-
-  const remainKey = product.productCode === 'memo_ticket' ? 'memo' : 'request_view';
-  const remain = remaining[remainKey];
+  const remain = remaining.memo;
   const remainHtml =
     remain != null
       ? `<p class="plans-remain">현재 잔여 <strong>${remain}회</strong>${isLowCredit(remain) ? ' · <span class="plans-remain--low">저잔량</span>' : ''}</p>`
       : '';
 
   const missingHtml =
-    isTutor && eligibility.missing.length
+    isProvider && eligibility.missing.length
       ? `<ul class="plans-eligibility">${eligibility.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`
       : '';
 
@@ -410,15 +404,16 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
             const priceNote = amt.testMode
               ? `${formatKrw(o.priceKrw)} (시험 결제 ${formatKrw(amt.chargeKrw)})`
               : formatKrw(o.priceKrw);
-            return `<option value="${esc(o.optionId)}"${i === 0 ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}</option>`;
+            const extras = [o.marketingBadge, o.discountLabel].filter(Boolean).join(' · ');
+            return `<option value="${esc(o.optionId)}"${i === 0 ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}${extras ? ` · ${esc(extras)}` : ''}</option>`;
           })
           .join('')}
       </select>
     </label>`;
 
-  const buyDisabled = !isTutor || !profile || !eligibility.canBuy;
+  const buyDisabled = !isProvider || !profile || !eligibility.canBuy;
   const ctaClass = primaryCta ? 'btn btn--primary plans-card__cta' : 'btn btn--secondary plans-card__cta';
-  const buyBtn = isTutor
+  const buyBtn = isProvider
     ? `<button type="button" class="${ctaClass}" data-plans-buy
          data-product-code="${esc(product.productCode)}"
          ${buyDisabled ? 'disabled' : ''}>지금 바로 이용하기 →</button>`
@@ -471,11 +466,10 @@ export function renderPlansHome() {
   const slots = ops?.slots ?? null;
   const providerKey = role === 'tutor' ? 'tutor' : 'study_room';
   const positionProducts = getCatalogByFamily('position', providerKey);
-  const accessProducts = getCatalogByFamily('access', 'tutor');
+  const accessProducts = getCatalogByFamily('access', providerKey);
   const tickets = ops?.tickets;
   const remaining = {
     memo: tickets?.memo?.remaining,
-    request_view: tickets?.request_view?.remaining,
   };
 
   return `
@@ -486,7 +480,7 @@ export function renderPlansHome() {
           lead: '가게 품질은 무료로, 홍보·획득은 필요할 때만 단건으로. 자동연장 없이 기간형·횟수권만 구매합니다.',
           chips: [
             { label: '노출상품', href: '/plans/positions' },
-            { label: '접근권', href: '/plans/access' },
+            { label: '쪽지권', href: '/plans/access' },
             { label: role === 'study_room' ? '공부방' : role === 'tutor' ? '과외쌤' : '소개 보기', active: true },
           ],
         })}
@@ -546,8 +540,8 @@ export function renderPlansHome() {
 
       <section class="plans-section">
         <div class="plans-section__head">
-          <h3 class="plans-section__title"><span class="plans-section__ico" aria-hidden="true">🔗</span> 매칭 및 접근 권한</h3>
-          <p class="plans-section__lead">쪽지권·요청문 열람권은 횟수권입니다. 학부모가 먼저 보낸 쪽지와 답장은 무료입니다.</p>
+          <h3 class="plans-section__title"><span class="plans-section__ico" aria-hidden="true">🔗</span> 쪽지권</h3>
+          <p class="plans-section__lead">학생에게 먼저 보내는 쪽지만 횟수권입니다. 학부모가 먼저 보낸 쪽지와 답장은 무료입니다.</p>
         </div>
         <ul class="plans-card-grid plans-card-grid--2">
           ${accessProducts
@@ -560,7 +554,7 @@ export function renderPlansHome() {
 
       ${renderPlansCtaBanner({
         title: '상품 구매에 대해 궁금한 점이 있으신가요?',
-        lead: '자주 묻는 질문에서 노출·접근권·환불 안내를 확인하세요.',
+        lead: '자주 묻는 질문에서 노출·쪽지권·환불 안내를 확인하세요.',
         secondary: { label: '자주 묻는 질문', href: '/support/faq', nav: true },
         primary: { label: '1:1 문의하기', href: '/support/contact', nav: true },
       })}
@@ -646,7 +640,7 @@ export function renderPlansPositions() {
         { q: '광고 배지는 따로 구매하나요?' },
       ])}
 
-      ${renderBadgeAddonSection()}
+      ${renderBadgeAddonSection(role, ops)}
 
       ${renderPlansCtaBanner({
         title: '맞춤형 노출 상담이 필요하신가요?',
@@ -657,26 +651,26 @@ export function renderPlansPositions() {
     </section>`;
 }
 
-/** P18-03 접근권상품 */
+/** P18-03 쪽지권 */
 export function renderPlansAccess() {
   const role = getPlansEffectiveRole();
   const query = parsePlansQuery();
-  const profile = role === 'tutor' ? resolveSelectedProfile(query, role) : null;
-  const products = getCatalogByFamily('access', 'tutor');
+  const profile = role === 'tutor' || role === 'study_room' ? resolveSelectedProfile(query, role) : null;
+  const providerKey = role === 'tutor' ? 'tutor' : 'study_room';
+  const products = getCatalogByFamily('access', providerKey);
   const ops = getPaidOperationalStatus();
   const tickets = ops?.tickets;
   const remaining = {
     memo: tickets?.memo?.remaining,
-    request_view: tickets?.request_view?.remaining,
   };
 
   return `
     <section class="mypage-panel plans-store">
       <div class="plans-hero-row">
         ${renderPlansHero({
-          title: '잠재 학생의 상세 니즈를 정확히 파악하고 연락하세요',
-          lead: '공급자→학생 선제 쪽지와 요청문 열람만 횟수권입니다. 학부모 선연락·답장은 항상 무료입니다.',
-          chips: [{ label: '과외쌤 전용 접근권', active: true }],
+          title: '학생에게 먼저 연락할 때 쓰는 쪽지권',
+          lead: '공급자→학생 선제 쪽지만 횟수권입니다. 요청문 열람과 학부모 선연락·답장은 항상 무료입니다.',
+          chips: [{ label: '쪽지권 5·10·20회', active: true }],
         })}
         ${renderGuideBox({
           title: '안전 매칭 정책',
@@ -684,8 +678,8 @@ export function renderPlansAccess() {
           variant: 'policy',
           items: [
             { icon: '✓', text: '학부모→공급자 선연락·답장은 무료' },
-            { icon: '✓', text: '쪽지권·열람권은 단건 횟수권 · 180일' },
-            { icon: '✓', text: '먼저 산 이용권부터 차감 (FIFO)' },
+            { icon: '✓', text: '요청문·특이사항은 로그인 공급자 무료 열람' },
+            { icon: '✓', text: '쪽지권은 단건 횟수권 · 180일 · FIFO 차감' },
             { icon: '✓', text: '에스크로·매칭 보장 연출 없음' },
           ],
           linkLabel: '이용권 가이드 자세히 보기',
@@ -693,20 +687,14 @@ export function renderPlansAccess() {
         })}
       </div>
 
-      ${role === 'tutor' ? renderProfileBanner(profile, role) : ''}
-      ${
-        role === 'study_room'
-          ? `<div class="mypage-info-box"><p>접근권 상품은 <strong>과외쌤 전용</strong>입니다. 공부방은 노출상품을 이용해 주세요.</p>
-        <a href="#/plans/positions" class="btn btn--secondary btn--sm" data-plans-nav="/plans/positions">노출상품으로</a></div>`
-          : ''
-      }
+      ${role === 'tutor' || role === 'study_room' ? renderProfileBanner(profile, role) : ''}
       ${role === 'guest' || role === 'parent' ? renderProfileBanner(null, role) : ''}
-      ${role === 'tutor' ? renderTestModeToggle() : ''}
-      ${role === 'tutor' ? renderLowCreditBanner(tickets) : ''}
+      ${role === 'tutor' || role === 'study_room' ? renderTestModeToggle() : ''}
+      ${role === 'tutor' || role === 'study_room' ? renderLowCreditBanner(tickets) : ''}
 
       <section class="plans-section">
         <div class="plans-section__head">
-          <h3 class="plans-section__title">접근권 상품 목록</h3>
+          <h3 class="plans-section__title">쪽지권 팩</h3>
         </div>
         <ul class="plans-card-grid plans-card-grid--2">
           ${products
@@ -723,7 +711,7 @@ export function renderPlansAccess() {
             variant: 'guide',
             items: [
               { icon: '→', text: '쪽지함에서 콜드 메모 게이트 확인' },
-              { icon: '→', text: '요청문 공개범위(paid_only) 안내' },
+              { icon: '→', text: '요청문은 공급자 로그인 후 무료' },
               { icon: '→', text: '저잔량·소진 시 충전 경로' },
             ],
             linkLabel: '고객센터로 이동',
@@ -733,7 +721,6 @@ export function renderPlansAccess() {
             <strong>이용권 잔여</strong>
             <dl>
               <div><dt>쪽지권</dt><dd>${tickets?.memo?.remaining ?? '—'}</dd></div>
-              <div><dt>열람권</dt><dd>${tickets?.request_view?.remaining ?? '—'}</dd></div>
             </dl>
           </div>
         </div>
@@ -770,7 +757,7 @@ export function renderPlansMy() {
     <section class="mypage-panel">
       <p class="mypage-lead">내 상품 이용 현황</p>
       ${renderProviderNoticeBanners()}
-      ${role === 'tutor' ? renderLowCreditBanner(tickets) : ''}
+      ${role === 'tutor' || role === 'study_room' ? renderLowCreditBanner(tickets) : ''}
       <h2 class="mypage-subhead">이용중 포지션</h2>
       ${
         positions.length
@@ -794,15 +781,14 @@ export function renderPlansMy() {
               <a href="#/plans/positions" class="btn btn--primary btn--sm" data-plans-nav="/plans/positions">노출상품 보기</a>
             </div>`
       }
-      <h2 class="mypage-subhead">횟수권 잔여</h2>
+      <h2 class="mypage-subhead">잔여 쪽지권</h2>
       ${
         tickets
           ? `<div class="mypage-stats roi-metrics">
               <div class="mypage-stat${isLowCredit(tickets.memo.remaining) ? ' is-warn' : ''}"><span>${esc(tickets.memo.label)}</span><strong>${tickets.memo.remaining}</strong></div>
-              <div class="mypage-stat${isLowCredit(tickets.request_view.remaining) ? ' is-warn' : ''}"><span>${esc(tickets.request_view.label)}</span><strong>${tickets.request_view.remaining}</strong></div>
             </div>
-            <p class="mypage-muted"><a href="#/plans/access" data-plans-nav="/plans/access">접근권 충전하기</a></p>`
-          : `<p class="mypage-muted">이용권 정보를 불러오면 표시됩니다. · <a href="#/plans/access" data-plans-nav="/plans/access">접근권 상품</a></p>`
+            <p class="mypage-muted"><a href="#/plans/access" data-plans-nav="/plans/access">쪽지권 충전하기</a></p>`
+          : `<p class="mypage-muted">이용권 정보를 불러오면 표시됩니다. · <a href="#/plans/access" data-plans-nav="/plans/access">쪽지권</a></p>`
       }
       <h2 class="mypage-subhead">반응 요약</h2>
       <div class="mypage-stats roi-metrics">
@@ -991,6 +977,7 @@ export function renderPlansResult() {
         ${result.productName ? `<p>${esc(result.productName)}${result.optionLabel ? ` · ${esc(result.optionLabel)}` : ''}</p>` : ''}
         ${result.providerLabel ? `<p>적용 프로필: ${esc(result.providerLabel)}</p>` : ''}
         ${result.chargeKrw != null ? `<p>결제금액 ${formatKrw(result.chargeKrw)}</p>` : ''}
+        ${result.memoBundleGranted > 0 ? `<p>쪽지권 ${result.memoBundleGranted}회가 함께 지급되었습니다. (180일)</p>` : ''}
         ${result.message ? `<p class="mypage-muted">${esc(result.message)}</p>` : ''}
       </div>
       <div class="mypage-actions-row">
@@ -1053,8 +1040,8 @@ export function bindPlansScreenEvents(root, rerender) {
       const itemEl = btn.closest('.plans-catalog__item');
       const select = itemEl?.querySelector('[data-plans-option]');
       const optionId = select instanceof HTMLSelectElement ? select.value : '';
-      const product = getProductConfig(productCode);
-      const option = getPriceOption(productCode, optionId);
+      const product = getProductConfig(productCode, role);
+      const option = getPriceOption(productCode, optionId, role);
       const role = getPlansEffectiveRole();
       const query = parsePlansQuery();
       const profile = resolveSelectedProfile(query, role);
@@ -1125,6 +1112,7 @@ export function bindPlansScreenEvents(root, rerender) {
           providerType: draft.providerType,
           providerId: draft.providerId,
           chargeKrw: amt.chargeKrw,
+          memoBundleGranted: Number(completed.memo_bundle_granted) || 0,
         });
         clearCheckoutDraft();
         window.location.hash = '#/plans/result';

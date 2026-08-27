@@ -29,6 +29,12 @@ final class ProviderCheckoutService
         '20회권' => '20',
     ];
 
+    /** @var array<string, list<string>> */
+    private const SELLABLE_POSITION_VARIANTS = [
+        'pick' => ['2주', '1개월', '2개월'],
+        'prime' => ['1개월', '2개월'],
+    ];
+
     private ProviderCheckoutRepository $orders;
     private ProviderTicketRepository $tickets;
     private PaidBadgeRepository $badges;
@@ -134,31 +140,50 @@ final class ProviderCheckoutService
     /** @return array<string, mixed> */
     public function completeOrder(int $userId, string $orderRef): array
     {
-        $order = $this->orders->getByRef($orderRef);
-        if ($order === null || (int) $order['user_id'] !== $userId) {
-            throw new InvalidArgumentException('주문을 찾을 수 없습니다.');
-        }
-        if ((string) $order['status'] === 'paid') {
-            return $this->buildCompletePayload($order, false);
-        }
-        if ((string) $order['status'] !== 'pending') {
-            throw new InvalidArgumentException('완료할 수 없는 주문 상태입니다.');
-        }
+        $this->pdo->beginTransaction();
+        try {
+            $order = $this->orders->getByRefForUpdate($orderRef);
+            if ($order === null || (int) $order['user_id'] !== $userId) {
+                throw new InvalidArgumentException('주문을 찾을 수 없습니다.');
+            }
+            if ((string) $order['status'] === 'paid') {
+                $this->pdo->commit();
 
-        $this->orders->markPaid($orderRef);
-        $grant = $this->fulfill($userId, $order);
+                return $this->buildCompletePayload($order, false);
+            }
+            if ((string) $order['status'] !== 'pending') {
+                throw new InvalidArgumentException('완료할 수 없는 주문 상태입니다.');
+            }
 
-        $paid = $this->orders->getByRef($orderRef);
-        if ($paid === null) {
-            throw new InvalidArgumentException('주문 갱신에 실패했습니다.');
+            $this->orders->markPaid($orderRef);
+            $grant = $this->fulfill($userId, $order);
+
+            $paid = $this->orders->getByRef($orderRef);
+            if ($paid === null) {
+                throw new InvalidArgumentException('주문 갱신에 실패했습니다.');
+            }
+
+            $payload = $this->buildCompletePayload($paid, true);
+            if (is_array($grant)) {
+                if (isset($grant['paid_badge_grant'])) {
+                    $payload['paid_badge_grant'] = $grant['paid_badge_grant'];
+                } elseif (isset($grant['badge_code'])) {
+                    $payload['paid_badge_grant'] = $grant;
+                }
+                if (isset($grant['memo_bundle_granted'])) {
+                    $payload['memo_bundle_granted'] = (int) $grant['memo_bundle_granted'];
+                }
+            }
+
+            $this->pdo->commit();
+
+            return $payload;
+        } catch (\Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
         }
-
-        $payload = $this->buildCompletePayload($paid, true);
-        if ($grant !== null) {
-            $payload['paid_badge_grant'] = $grant;
-        }
-
-        return $payload;
     }
 
     public function revokeBadgeForOrder(string $orderRef): int
@@ -170,7 +195,8 @@ final class ProviderCheckoutService
     {
         return match ($productId) {
             'prime', 'pick' => 'position',
-            'memo_ticket', 'request_view' => 'count',
+            'memo_ticket' => 'count',
+            'request_view' => throw new InvalidArgumentException('요청문 열람권은 판매가 종료되었습니다.'),
             'hot', 'subject_track', 'jjokjipge', 'sky', 'picked' => 'badge_addon',
             'new', 'recommend' => throw new InvalidArgumentException(
                 'New·추천은 유료 배지 상품이 아닙니다. (카드 자동부여/통계축)',
@@ -184,10 +210,15 @@ final class ProviderCheckoutService
         if ($kind === 'count' && !isset(self::COUNT_VARIANTS[$variant])) {
             throw new InvalidArgumentException('variant: 1회 · 5회권 · 10회권 · 20회권');
         }
-        if ($kind === 'position' && !isset(PositionPeriodCalculator::VARIANT_MAP[$variant])) {
-            throw new InvalidArgumentException('variant: 2주 · 3주 · 1·2·3개월');
+        if ($kind === 'position') {
+            if (!isset(PositionPeriodCalculator::VARIANT_MAP[$variant])) {
+                throw new InvalidArgumentException('variant: 2주 · 1개월 · 2개월');
+            }
+            $allowed = self::SELLABLE_POSITION_VARIANTS[$productId] ?? [];
+            if (!in_array($variant, $allowed, true)) {
+                throw new InvalidArgumentException('해당 상품에서 판매가 종료된 기간입니다.');
+            }
         }
-        unset($productId);
     }
 
     /**
@@ -245,8 +276,7 @@ final class ProviderCheckoutService
 
         if ($kind === 'count') {
             $count = (int) self::COUNT_VARIANTS[$variant];
-            $ticketType = $productId === 'memo_ticket' ? 'memo' : 'request_view';
-            $this->tickets->addTicketPack($userId, $ticketType, $count, 'payment');
+            $this->tickets->addTicketPack($userId, 'memo', $count, 'payment');
 
             return null;
         }
@@ -265,12 +295,18 @@ final class ProviderCheckoutService
                 $providerType,
                 $providerId,
             );
+            $bundle = TutorPositionMemoBundle::memoCount($productId, $variant, $providerType);
+            if ($bundle > 0) {
+                $this->tickets->addTicketPack($userId, 'memo', $bundle, 'position_bundle');
+            }
 
-            return null;
+            return ['memo_bundle_granted' => $bundle];
         }
 
         if ($kind === 'badge_addon') {
-            return $this->fulfillBadgeAddon($userId, $productId, $orderRef, $providerType, $providerId);
+            $badgeGrant = $this->fulfillBadgeAddon($userId, $productId, $orderRef, $providerType, $providerId);
+
+            return ['paid_badge_grant' => $badgeGrant];
         }
 
         return null;

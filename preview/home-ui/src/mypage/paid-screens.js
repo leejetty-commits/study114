@@ -15,22 +15,24 @@ import { getRoiMetrics, getPaidOperationalStatus } from '../paid-backend.js';
 import { getMemoTicketsRemaining } from '../provider-entitlement.js';
 import { renderProviderNoticeBanners } from '../provider-notices.js';
 import { GUARDIAN_PLANS_COPY } from './mypage-copy.js';
+import { badgePriceKrw, formatKrw } from '../plans/runtime-config.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
-function renderCatalogItem(item) {
-  const variants = getCatalogVariants(item);
+function renderCatalogItem(item, role) {
+  const variants = getCatalogVariants(item, role);
   const purchasable = item.kind === 'position' || item.kind === 'count';
+  const monthly = role === 'tutor' || role === 'study_room' ? badgePriceKrw(role, 1) : null;
   const variantSelect = purchasable
     ? `<label class="plans-catalog__pick">
         <span class="mypage-muted">옵션</span>
         <select data-paid-variant="${esc(item.id)}" class="student-form__select">
-          ${variants.map((v, i) => `<option value="${esc(v)}"${i === 0 ? ' selected' : ''}>${esc(formatCatalogPrice(item, v))}</option>`).join('')}
+          ${variants.map((v, i) => `<option value="${esc(v)}"${i === 0 ? ' selected' : ''}>${esc(formatCatalogPrice(item, v, role))}</option>`).join('')}
         </select>
       </label>`
-    : `<p class="mypage-muted plans-catalog__dep">대표·추천 노출 이용 중에 구매할 수 있어요.</p>`;
+    : `<p class="mypage-muted plans-catalog__dep">대표·추천 노출 이용 중에 구매할 수 있어요.${monthly ? ` 월 ${formatKrw(monthly)} · 2개월 포지션이면 ${formatKrw(monthly * 2)}` : ''}</p>`;
   const buyBtn = purchasable
     ? `<button type="button" class="btn btn--secondary btn--sm" data-paid-buy data-product-id="${esc(item.id)}" data-product-label="${esc(item.name)}">시험 구매</button>`
     : `<button type="button" class="btn btn--secondary btn--sm" disabled title="포지션 종속">구매 불가</button>`;
@@ -68,14 +70,10 @@ export function renderPaidGuide(role) {
   const roleLabel = role === 'study_room' ? '공부방' : '과외쌤';
   const ops = getPaidOperationalStatus();
   const memoRemaining = ops?.tickets?.memo?.remaining ?? getMemoTicketsRemaining();
-  const viewRemaining = ops?.tickets?.request_view?.remaining ?? 0;
   const activePositions = ops?.exposure?.positions ?? [];
   const statusBadges = [
     memoRemaining > 0
       ? `<span class="plans-status-badge" title="쪽지권 잔여">쪽지권 ${memoRemaining}회</span>`
-      : '',
-    viewRemaining > 0
-      ? `<span class="plans-status-badge" title="열람권 잔여">열람권 ${viewRemaining}회</span>`
       : '',
     ...activePositions.map(
       (p) =>
@@ -98,7 +96,7 @@ export function renderPaidGuide(role) {
       </div>
       <h2 class="mypage-subhead">상품 카탈로그 (${roleLabel} 우선순위)</h2>
       <ul class="plans-catalog">
-        ${catalog.map(renderCatalogItem).join('')}
+        ${catalog.map((item) => renderCatalogItem(item, role)).join('')}
       </ul>
       <div class="mypage-info-box">
         <strong>${esc(P18_RENEWAL_COPY.title)}</strong>
@@ -140,11 +138,6 @@ export function renderPaidUsage(role) {
           <strong>${tickets.memo.remaining}</strong>
           <span class="mypage-muted roi-metrics__period">잔여</span>
         </div>
-        <div class="mypage-stat" title="요청문 열람">
-          <span>${esc(tickets.request_view.label)}</span>
-          <strong>${tickets.request_view.remaining}</strong>
-          <span class="mypage-muted roi-metrics__period">잔여</span>
-        </div>
       </div>`
     : '';
 
@@ -159,7 +152,7 @@ export function renderPaidUsage(role) {
         ${positionRows}
         <p class="mypage-muted">${esc(P18_EXPOSURE_STATUS.note)}</p>
       </div>
-      <h2 class="mypage-subhead">횟수권 잔여</h2>
+      <h2 class="mypage-subhead">잔여 쪽지권</h2>
       ${ticketRows || '<p class="mypage-muted">이용 내역을 불러오면 여기에 표시됩니다.</p>'}
       <h2 class="mypage-subhead">무료 반응 요약 3종</h2>
       <div class="mypage-stats roi-metrics" aria-label="무료 반응 요약 3종">

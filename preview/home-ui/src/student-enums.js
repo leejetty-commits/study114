@@ -14,7 +14,7 @@ export const STUDENT_GENDER_GROUP_LABELS = {
 
 export const VISIBILITY_LABELS = {
   private: '비공개',
-  paid_only: '유료공개',
+  paid_only: '공급자 공개',
 };
 
 export const STUDENT_PLACE_LABELS = {

@@ -83,6 +83,16 @@ ok('catalog_tutor_has_sky', TUTOR_CATALOG_IDS.includes('sky'));
 ok('catalog_tutor_jjokjipge', TUTOR_CATALOG_IDS.includes('jjokjipge'));
 ok('catalog_tutor_no_recommend', !TUTOR_CATALOG_IDS.includes('recommend'));
 
+ok('api_is_new_true', resolveCardVisualLayers('tutor', { is_new: true, paid_badges: [] }).promoBadges.some((b) => b.id === 'new'));
+ok(
+  'api_is_new_false_overrides_fresh_date',
+  !resolveCardVisualLayers('tutor', {
+    is_new: false,
+    published_at: new Date().toISOString(),
+    paid_badges: [],
+  }).promoBadges.some((b) => b.id === 'new'),
+);
+
 ok('new_window_7d', isWithinNewBadgeWindow(new Date().toISOString()));
 ok('new_window_old_false', !isWithinNewBadgeWindow('2020-01-01T00:00:00Z'));
 ok('forbidden_specialty_helper', paidLabelsContainForbiddenSpecialty(['단과', '전문']) === true);

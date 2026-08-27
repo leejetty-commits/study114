@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Study114\Paid;
 
 use Study114\Database\Connection;
-use Study114\Messages\PaidGateException;
 
 /** 18b — 횟수권 FIFO · 기간형 조회 */
 final class ProviderTicketService
@@ -82,62 +81,38 @@ final class ProviderTicketService
 
     public function canViewPaidRequest(int $userId, int $studentId): bool
     {
-        if (!$this->repo->studentHasPaidOnlyFields($studentId)) {
-            return false;
-        }
+        unset($userId, $studentId);
 
-        return $this->repo->hasRequestUnlock($userId, $studentId);
+        return true;
     }
 
-    /** @return array{student_id: int, unlocked: bool, consumed: bool, request_view_tickets: int} */
+    /** 요청문 열람권 폐지 — 차감 없이 항상 열람 허용 */
     public function unlockPaidRequest(int $userId, int $studentId): array
     {
         if ($studentId <= 0) {
             throw new \InvalidArgumentException('student_id가 필요합니다.');
         }
-        if (!$this->repo->studentHasPaidOnlyFields($studentId)) {
-            throw new \InvalidArgumentException('이 학생에게 열람 가능한 paid_only 요청문이 없습니다.');
-        }
-        if ($this->repo->hasRequestUnlock($userId, $studentId)) {
-            $view = $this->getRequestViewTicketSummary($userId);
-
-            return [
-                'student_id' => $studentId,
-                'unlocked' => true,
-                'consumed' => false,
-                'request_view_tickets' => $view['remaining'],
-                'request_view' => $this->formatRequestViewBlock($view),
-            ];
-        }
-        if (!$this->repo->consumeTicket($userId, 'request_view')) {
-            throw new PaidGateException('요청문을 보려면 열람권이 필요합니다.');
-        }
-        $this->repo->recordRequestUnlock($userId, $studentId);
         $view = $this->getRequestViewTicketSummary($userId);
-        $this->notifyTicketBalanceIfNeeded($userId, 'request_view');
 
         return [
             'student_id' => $studentId,
             'unlocked' => true,
-            'consumed' => true,
+            'consumed' => false,
             'request_view_tickets' => $view['remaining'],
             'request_view' => $this->formatRequestViewBlock($view),
         ];
     }
 
-    /** @return array{student_id: int, unlocked: bool, can_unlock: bool, request_view_tickets: int, has_paid_only_fields: bool, request_view: array{remaining: int, nearest_expiry: string|null}} */
     public function getRequestAccessStatus(int $userId, int $studentId): array
     {
-        $unlocked = $this->repo->hasRequestUnlock($userId, $studentId);
         $view = $this->getRequestViewTicketSummary($userId);
-        $hasPaidOnly = $this->repo->studentHasPaidOnlyFields($studentId);
 
         return [
             'student_id' => $studentId,
-            'unlocked' => $unlocked,
-            'can_unlock' => $hasPaidOnly && !$unlocked && $view['remaining'] > 0,
+            'unlocked' => true,
+            'can_unlock' => false,
             'request_view_tickets' => $view['remaining'],
-            'has_paid_only_fields' => $hasPaidOnly,
+            'has_paid_only_fields' => true,
             'request_view' => $this->formatRequestViewBlock($view),
         ];
     }

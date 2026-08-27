@@ -4,7 +4,7 @@
  */
 
 import { FREE_TIER_COPY, PAID_TIER_COPY } from '../mypage/plans-catalog.js';
-import { formatKrw, resolveCheckoutAmount } from './runtime-config.js';
+import { formatKrw, resolveCheckoutAmount, badgePriceKrw, positionDurationMonths } from './runtime-config.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -116,7 +116,7 @@ export function renderFreePaidCompare() {
       { label: '학부모 선연락 · 답장', cells: ['무료', '무료'] },
       { label: '대표 · 추천 노출', cells: ['—', '기간형 구매'] },
       { label: '공급자→학생 선제 쪽지', cells: ['차단', '쪽지권'] },
-      { label: '요청문 상세 열람', cells: ['제한', '열람권'] },
+      { label: '요청문 상세 열람', cells: ['포함', '포함'] },
       { label: '광고성 주목 배지', cells: ['—', '노출 상품과 함께'] },
     ],
   });
@@ -125,14 +125,13 @@ export function renderFreePaidCompare() {
 /** 접근권 비교 */
 export function renderAccessCompare() {
   return renderCompareTable({
-    title: '접근권별 서비스 비교',
-    cols: ['기본', '쪽지권', '요청문 열람권'],
+    title: '쪽지권 이용 안내',
+    cols: ['기본', '쪽지권'],
     rows: [
-      { label: '학생 요약 정보', cells: ['○', '○', '○'] },
-      { label: '학부모 문의 수신 · 답장', cells: ['○', '○', '○'] },
-      { label: '학생에게 먼저 쪽지', cells: ['—', '○', '—'] },
-      { label: '요청문 상세 열람', cells: ['—', '—', '○'] },
-      { label: '사용 단위', cells: ['—', '횟수권', '횟수권'] },
+      { label: '학생 요약·요청문 열람', cells: ['○', '○'] },
+      { label: '학부모 문의 수신 · 답장', cells: ['○', '○'] },
+      { label: '학생에게 먼저 쪽지', cells: ['—', '○'] },
+      { label: '사용 단위', cells: ['—', '횟수권'] },
     ],
   });
 }
@@ -202,20 +201,33 @@ export function renderPlansFaqList(items) {
     </ul>`;
 }
 
-/** 노출 종속 광고배지 안내 (단독 판매 ✕) */
-export function renderBadgeAddonSection() {
-  const badges = [
-    { id: 'hot', name: 'Hot', desc: '광고성 주목 배지 · 추천·대표 노출 기간에 함께 적용' },
-    { id: 'subject_track', name: '단과', desc: '공부방 전용 유료 아이콘 · 「전문」아이콘 금지' },
-    { id: 'jjokjipge', name: '쪽집게', desc: '과외쌤 광고성 자기선언 · API 코드 jjokjipge · 학력 사실표시와 구분' },
-    { id: 'sky', name: 'SKY', desc: '과외쌤 유료 광고축 · 대학명 자동추론 아님' },
-  ];
-  // New=자동부여 · 추천=통계 — 판매 배지 목록에서 제외 (2026-08-21)
+/** 노출 종속 광고배지 안내 (단독 판매 ✕ · 추천=통계 · New=자동 1주) */
+export function renderBadgeAddonSection(role, ops) {
+  const providerType = role === 'tutor' ? 'tutor' : 'study_room';
+  const positions = ops?.exposure?.positions ?? [];
+  const longest = positions.reduce((best, p) => {
+    const m = positionDurationMonths(p);
+    return m > best ? m : best;
+  }, 1);
+  const monthly = badgePriceKrw(providerType, 1);
+  const attached = badgePriceKrw(providerType, longest);
+  const priceLine = `월 ${formatKrw(monthly)} · 현재 포지션 기준 ${formatKrw(attached)}`;
+  const badges =
+    providerType === 'tutor'
+      ? [
+          { id: 'hot', name: 'Hot', desc: `과외쌤 주목 배지 · ${priceLine}` },
+          { id: 'jjokjipge', name: '쪽집게', desc: `과외쌤 광고성 자기선언 · ${priceLine}` },
+          { id: 'sky', name: 'SKY', desc: `과외쌤 유료 광고축 · 대학명 자동추론 아님 · ${priceLine}` },
+        ]
+      : [
+          { id: 'hot', name: 'Hot', desc: `공부방 주목 배지 · ${priceLine}` },
+          { id: 'subject_track', name: '단과', desc: `공부방 전용 유료 아이콘 · 「전문」아이콘 금지 · ${priceLine}` },
+        ];
   return `
     <section class="plans-section">
       <div class="plans-section__head">
         <h3 class="plans-section__title">광고 부가 배지</h3>
-        <p class="plans-section__lead">단독 구매 상품이 아닙니다. 대표·추천 노출 이용 기간에 함께 적용됩니다.</p>
+        <p class="plans-section__lead">단독 구매 상품이 아닙니다. 대표·추천 노출 이용 기간에 함께 적용됩니다. 2개월 포지션이면 월 단가의 2배입니다.</p>
       </div>
       <ul class="plans-addon-grid">
         ${badges
@@ -235,7 +247,7 @@ export function renderBadgeAddonSection() {
         variant: 'policy',
         items: [
           { icon: '①', text: '적용 범위: 대표·추천 노출 이용 중인 프로필에만 표시됩니다.' },
-          { icon: '②', text: '신뢰·사실표시(SKY 등)와 UI를 분리해, 유료 배지가 인증처럼 보이지 않게 합니다.' },
+          { icon: '②', text: 'New는 첫 공개 후 1주 자동 부착이며 판매하지 않습니다. 추천·후기는 통계입니다.' },
           { icon: '③', text: '노출 만료 시 광고 배지만 내려가고 프로필·기본 노출은 유지됩니다.' },
         ],
         linkLabel: '이용 가이드 확인',

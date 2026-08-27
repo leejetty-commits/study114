@@ -6,7 +6,6 @@ import { TUTOR_REGISTER_URL, HOME_UI_BASE } from '../nav-config.js';
 import { formatTutorFeeCard } from '../exposure-format.js';
 import { tutorHubPath, tutorSectionPath } from './router.js';
 import { getPublishReadiness, isPaidProvider, getMemoCreditsRemaining } from './store.js';
-import { getRequestViewTicketsRemaining } from '../request-unlock.js';
 
 /** @typedef {import('./store.js').TutorRecord} TutorRecord */
 
@@ -246,7 +245,6 @@ export function getMatchingVisibility(tutor) {
 export function getAccessMatrix(tutor) {
   const paid = isPaidProvider();
   const memos = getMemoCreditsRemaining();
-  const viewTickets = getRequestViewTicketsRemaining();
   const published = tutor.profile_status === 'published';
 
   return [
@@ -276,9 +274,9 @@ export function getAccessMatrix(tutor) {
     },
     {
       key: 'request_doc',
-      label: '유료 전용 요청문 열람',
-      ok: viewTickets > 0,
-      reason: viewTickets <= 0 ? '열람권 필요' : null,
+      label: '학생 요청문 열람',
+      ok: published,
+      reason: !published ? '공개 필요' : null,
     },
     {
       key: 'pick',

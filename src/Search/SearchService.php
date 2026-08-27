@@ -7,6 +7,7 @@ namespace Study114\Search;
 use InvalidArgumentException;
 use PDO;
 use Study114\Database\Connection;
+use Study114\Paid\AutoNewBadge;
 use Study114\Paid\PaidBadgeResolver;
 
 final class SearchService
@@ -451,6 +452,10 @@ final class SearchService
                 'longitude'                  => $row['longitude'] !== null ? (float) $row['longitude'] : null,
                 'published_at'               => $row['published_at'] ?? null,
                 'created_at'                 => $row['created_at'] ?? null,
+                'is_new'                     => AutoNewBadge::isActive(
+                    isset($row['published_at']) ? (string) $row['published_at'] : null,
+                    isset($row['created_at']) ? (string) $row['created_at'] : null,
+                ),
                 'recommend_count'            => (int) ($row['recommend_count'] ?? 0),
                 'review_count'               => (int) ($row['review_count'] ?? 0),
                 'paid_badges'                => $this->paidBadgeResolver()->forProvider(
@@ -654,6 +659,10 @@ final class SearchService
                 'exposure_tier'          => $exposureTier,
                 'published_at'           => $row['published_at'] ?? null,
                 'created_at'             => $row['created_at'] ?? null,
+                'is_new'                 => AutoNewBadge::isActive(
+                    isset($row['published_at']) ? (string) $row['published_at'] : null,
+                    isset($row['created_at']) ? (string) $row['created_at'] : null,
+                ),
                 'recommend_count'        => (int) ($row['recommend_count'] ?? 0),
                 'review_count'           => (int) ($row['review_count'] ?? 0),
                 'paid_badges'            => $this->paidBadgeResolver()->forProvider(

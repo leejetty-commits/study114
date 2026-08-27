@@ -94,7 +94,7 @@ export const HOME_BANNER_COPY = {
     headlineLines: ['우리동네 학생 수요를', '요약으로 보고 이어서 살펴보세요'],
     lines: [
       '요청 요약 중심으로 확인하고, 필요하면 쪽지·관심 저장으로 이어가세요',
-      '학부모 과금 없이, 공급자 접근권은 필요할 때만 이용합니다',
+      '학부모 과금 없이, 공급자 쪽지권은 필요할 때만 이용합니다',
     ],
     image: '/assets/banners/connect.webp',
     imageAlt: '학생·학부모 연결 분위기',
@@ -105,7 +105,7 @@ export const HOME_BANNER_COPY = {
     eyebrow: '우동공과 · 노출·접근 상품',
     headlineLines: ['가게 품질은 무료로,', '홍보와 연결은 필요할 때만'],
     lines: [
-      '대표·추천 노출은 기간형, 쪽지권·열람권은 횟수권으로 단건 결제합니다',
+      '대표·추천 노출은 기간형, 쪽지권은 횟수권으로 단건 결제합니다',
       '자동연장 없이, 만료되면 기본 노출로 자연스럽게 돌아갑니다',
     ],
     image: '/assets/banners/plans.jpg',
@@ -199,7 +199,7 @@ const SURFACE_BANNER = {
     image: '/assets/banners/plans.jpg',
     ctas: [
       { label: '노출상품 보기', href: '#/plans/positions', nav: '/plans/positions', kind: 'primary' },
-      { label: '접근권 보기', href: '#/plans/access', nav: '/plans/access', kind: 'secondary' },
+      { label: '쪽지권 보기', href: '#/plans/access', nav: '/plans/access', kind: 'secondary' },
     ],
   },
   support: {

@@ -23,7 +23,7 @@ import {
  */
 
 /** @deprecated seed는 runtime-config — 호환용 라벨 */
-export const PERIOD_OPTIONS = ['14일', '21일', '1개월', '2개월', '3개월'];
+export const PERIOD_OPTIONS = ['2주', '1개월', '2개월'];
 export const COUNT_PACK_OPTIONS = ['5회', '10회', '20회'];
 export const DUMMY_PRICE = '10원';
 
@@ -50,7 +50,6 @@ const PRODUCTS = {
   prime: toCatalogProduct(getProductConfig('prime')),
   pick: toCatalogProduct(getProductConfig('pick')),
   memo_ticket: toCatalogProduct(getProductConfig('memo_ticket')),
-  request_view: toCatalogProduct(getProductConfig('request_view')),
   hot: {
     id: 'hot',
     name: 'Hot',
@@ -88,13 +87,11 @@ export const STUDY_ROOM_CATALOG_IDS = [
   'hot',
   'subject_track',
   'memo_ticket',
-  'request_view',
 ];
 
 /** 2026-08-21 잠금 — Hot / 쪽집게(jjokjipge) / SKY */
 export const TUTOR_CATALOG_IDS = [
   'memo_ticket',
-  'request_view',
   'pick',
   'prime',
   'hot',
@@ -108,9 +105,9 @@ export function getPaidCatalog(role) {
   return ids.map((id) => PRODUCTS[id]).filter(Boolean);
 }
 
-/** @param {CatalogProduct} item */
-export function getCatalogVariants(item) {
-  const cfg = getProductConfig(item.id);
+/** @param {CatalogProduct} item @param {'study_room'|'tutor'|string} [role] */
+export function getCatalogVariants(item, role) {
+  const cfg = getProductConfig(item.id, role);
   if (cfg?.options?.length) {
     return cfg.options.map((o) => o.label);
   }
@@ -119,16 +116,17 @@ export function getCatalogVariants(item) {
   return ['추천·대표 노출 이용 기간에 함께 적용'];
 }
 
-/** @param {CatalogProduct} item @param {string} variant */
-export function formatCatalogPrice(item, variant) {
-  const cfg = getProductConfig(item.id);
+/** @param {CatalogProduct} item @param {string} variant @param {'study_room'|'tutor'|string} [role] */
+export function formatCatalogPrice(item, variant, role) {
+  const cfg = getProductConfig(item.id, role);
   const opt = cfg?.options?.find((o) => o.label === variant);
   if (opt) {
     const amt = resolveCheckoutAmount(opt.priceKrw);
+    const extras = [opt.marketingBadge, opt.discountLabel, opt.bundleNote].filter(Boolean).join(' · ');
     if (amt.testMode) {
-      return `${variant} · ${formatKrw(opt.priceKrw)} (테스트 ${formatKrw(amt.chargeKrw)})`;
+      return `${variant} · ${formatKrw(opt.priceKrw)} (테스트 ${formatKrw(amt.chargeKrw)})${extras ? ` · ${extras}` : ''}`;
     }
-    return `${variant} · ${formatKrw(opt.priceKrw)}`;
+    return `${variant} · ${formatKrw(opt.priceKrw)}${extras ? ` · ${extras}` : ''}`;
   }
   return `${variant} · ${isPlansTestMode() ? DUMMY_PRICE : ''}`;
 }
@@ -140,14 +138,14 @@ export const FREE_TIER_COPY = {
     '상위로 올리는 별도 상품 없음 — 대표·추천 노출로 전환',
     '지도성향/수업스타일 아이콘 무료',
     '학부모가 먼저 보내는 쪽지와 답장은 무료',
-    '공급자→학생 선제 쪽지·요청문 열람은 접근권 필요',
+    '공급자→학생 선제 쪽지는 쪽지권이 필요합니다',
   ],
 };
 
 export const PAID_TIER_COPY = {
   title: '노출·접근 상품 이용 중',
   items: [
-    '대표·추천 노출 기간형 · 쪽지권/열람권 횟수권',
+    '대표·추천 노출 기간형 · 쪽지권 횟수권',
     '주목·추천 등 광고배지는 노출 상품에 함께 적용',
     '자동으로 연장되지 않으며 종료 시 기본 노출로 복귀 (프로필 유지)',
   ],
@@ -163,7 +161,7 @@ export const ROI_FREE_METRICS = [
 export const P18_HEADLINE = '가게 품질 무료 · 홍보·획득 유료';
 
 export const P18_GUIDE_LEAD =
-  '대표·추천 노출 기간형 + 쪽지권·열람권 횟수권 · 한 번씩 결제 · 자동연장 없음';
+  '대표·추천 노출 기간형 + 쪽지권 횟수권 · 한 번씩 결제 · 자동연장 없음';
 
 export const P18_USAGE_LEAD =
   '조회·찜·비교 담기는 무료입니다. 노출 만료나 횟수 소진은 안내 문구로 알려 드립니다.';

@@ -29,6 +29,7 @@ const RESULT_KEY = 'study114-plans-result';
  * @property {string} [providerLabel]
  * @property {string} [optionLabel]
  * @property {number} [chargeKrw]
+ * @property {number} [memoBundleGranted]
  * @property {string} [providerType]
  * @property {string} [providerId]
  */

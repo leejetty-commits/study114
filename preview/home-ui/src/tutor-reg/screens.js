@@ -854,7 +854,7 @@ function renderExposure(tutor) {
       </section>
       <section class="p20-exposure-section p20-plans-cta">
         <h3>추천·대표 노출</h3>
-        <p class="p19-form-section__lead">대표·추천 노출은 기간형 상품 · 쪽지권/열람권은 횟수형 상품</p>
+        <p class="p19-form-section__lead">대표·추천 노출은 기간형 상품 · 쪽지권은 횟수형 상품</p>
         <div class="p19-form-actions">
           <button type="button" class="btn btn--secondary" ${pickRow?.ok ? '' : 'disabled'}>${esc(pickRow?.statusText || '추천 노출')}</button>
           <button type="button" class="btn btn--secondary" ${primeRow?.ok ? '' : 'disabled'}>${esc(primeRow?.statusText || '대표 노출')}</button>

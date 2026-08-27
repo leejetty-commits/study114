@@ -764,6 +764,14 @@ function renderBasicTutorRow(item, opts) {
     </article>`;
 }
 
+function studentRequestPreview(item, viewerRole) {
+  const isProvider = viewerRole === 'tutor' || viewerRole === 'study_room' || viewerRole === 'admin';
+  if (!isProvider) return '—';
+  const text = String(item.request_summary || '').trim();
+  if (!text) return '—';
+  return text.length > 18 ? `${text.slice(0, 18)}…` : text;
+}
+
 function renderBasicStudentRow(item, opts) {
   const viewerRole = opts.viewerRole || (opts.guest ? 'guest' : 'parent');
   const isGuest = Boolean(opts.guest || viewerRole === 'guest');
@@ -802,9 +810,7 @@ function renderBasicStudentRow(item, opts) {
       item.lessons_per_week && item.minutes_per_lesson
         ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
         : '—';
-    const requestVis = item.request_summary_visibility || 'private';
-    const request =
-      requestVis === 'paid_only' ? '유료공개' : requestVis === 'private' ? '비공개' : '—';
+    const request = studentRequestPreview(item, viewerRole);
     return `
     <article class="expo-basic expo-basic--student" data-student-id="${item.id}" data-action="open-student-detail">
       ${renderExpoTable(
@@ -874,9 +880,7 @@ function renderBasicStudentRow(item, opts) {
     item.lessons_per_week && item.minutes_per_lesson
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
       : '—';
-  const requestVis = item.request_summary_visibility || 'private';
-  const request =
-    requestVis === 'paid_only' ? '유료공개' : requestVis === 'private' ? '비공개' : '—';
+  const request = studentRequestPreview(item, viewerRole);
 
   return `
     <article class="expo-basic expo-basic--student expo-hcard" data-student-id="${item.id}" data-action="open-student-detail">

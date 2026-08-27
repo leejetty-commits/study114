@@ -26,7 +26,7 @@ export const EMPTY_ONBOARDING = ONBOARDING_GUARD_COPY;
 /** §7 학부모 P15-09 */
 export const GUARDIAN_PLANS_COPY = {
   lead: '학부모 계정은 상품 안내를 볼 수 있으며 구매 기능은 제공하지 않아요.',
-  body: '대표 노출·추천 노출과 쪽지권·열람권은 공부방과 과외쌤을 위한 유료 서비스입니다.',
+  body: '대표 노출·추천 노출과 쪽지권은 공부방과 과외쌤을 위한 유료 서비스입니다.',
   footnote: '상품 구성과 가격은 상품 안내에서 확인할 수 있어요.',
 };
 

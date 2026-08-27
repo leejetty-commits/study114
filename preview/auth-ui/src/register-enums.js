@@ -38,7 +38,7 @@ export const SCHOOL_LEVEL_OPTIONS = [
 
 export const VISIBILITY_OPTIONS = [
   { value: 'private', label: '비공개' },
-  { value: 'paid_only', label: '유료공개' },
+  { value: 'paid_only', label: '공급자 공개' },
 ];
 
 export const CAPACITY_PER_TIME_OPTIONS = [

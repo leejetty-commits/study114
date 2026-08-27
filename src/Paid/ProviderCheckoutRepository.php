@@ -88,6 +88,18 @@ final class ProviderCheckoutRepository
         return is_array($row) ? $row : null;
     }
 
+    /** @return array<string, mixed>|null */
+    public function getByRefForUpdate(string $orderRef): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM provider_payment_orders WHERE order_ref = ? LIMIT 1 FOR UPDATE'
+        );
+        $stmt->execute([$orderRef]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $row : null;
+    }
+
     public function markPaid(string $orderRef): void
     {
         $stmt = $this->pdo->prepare(

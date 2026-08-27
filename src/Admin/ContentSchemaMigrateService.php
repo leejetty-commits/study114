@@ -430,9 +430,9 @@ final class ContentSchemaMigrateService
                 'author_role' => 'system',
                 'status' => 'published',
                 'title' => '유료 서비스는 학부모가 구매하나요?',
-                'description' => '아닙니다. 공급자(공부방·과외)용 프라임/픽·쪽지권·열람권이며, 학부모 과외비 결제와 무관합니다.',
+                'description' => '아닙니다. 공급자(공부방·과외)용 프라임/픽·쪽지권이며, 학부모 과외비 결제와 무관합니다.',
                 'category_id' => 'billing',
-                'meta_json' => json_encode(['answer' => '아닙니다. 공급자(공부방·과외)용 프라임/픽·쪽지권·열람권이며, 학부모 과외비 결제와 무관합니다.', 'sortOrder' => 40], JSON_UNESCAPED_UNICODE),
+                'meta_json' => json_encode(['answer' => '아닙니다. 공급자(공부방·과외)용 프라임/픽·쪽지권이며, 학부모 과외비 결제와 무관합니다.', 'sortOrder' => 40], JSON_UNESCAPED_UNICODE),
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [

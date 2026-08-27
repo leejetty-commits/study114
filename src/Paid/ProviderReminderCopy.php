@@ -37,14 +37,14 @@ final class ProviderReminderCopy
             ],
             str_ends_with($kind, '_remaining_1') => [
                 'title' => "{$ticketLabel} 1회 남았습니다",
-                'body' => "선제 쪽지·요청문 열람 등에 사용할 수 있는 {$ticketLabel}이 1회 남았습니다. 필요 시 추가 구매를 검토해 주세요.",
+                'body' => "선제 쪽지에 사용할 수 있는 {$ticketLabel}이 1회 남았습니다. 필요 시 추가 구매를 검토해 주세요.",
                 'email_subject' => "[우동공과] {$ticketLabel} 1회 남음",
                 'sms' => "[우동공과] {$ticketLabel} 1회 남음 · {$paidUrl}",
                 'action_href' => '/mypage/paid',
             ],
             str_ends_with($kind, '_depleted_0') => [
                 'title' => "{$ticketLabel}을(를) 모두 사용했습니다",
-                'body' => "{$ticketLabel} 잔여가 0회입니다. 선제 쪽지·paid_only 요청문 열람 등은 추가 구매 후 이용할 수 있습니다.",
+                'body' => "{$ticketLabel} 잔여가 0회입니다. 학생에게 먼저 보내는 쪽지는 추가 구매 후 이용할 수 있습니다.",
                 'email_subject' => "[우동공과] {$ticketLabel} 소진 안내",
                 'sms' => "[우동공과] {$ticketLabel} 소진 · {$paidUrl}",
                 'action_href' => '/mypage/paid',

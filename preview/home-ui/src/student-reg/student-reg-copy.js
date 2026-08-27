@@ -58,8 +58,8 @@ export const P19_DANGER_ZONE = {
 
 /** §5 · P19-05 visibility */
 export const VISIBILITY_OPTIONS = [
-  { value: 'private', label: '비공개', desc: '학생 목록·무료 상세에 표시하지 않습니다' },
-  { value: 'paid_only', label: '유료 공급자만', desc: '열람권을 보유한 공급자에게만 공개합니다' },
+  { value: 'private', label: '비공개', desc: '다른 학부모 비교 화면에 요청문을 보이지 않습니다' },
+  { value: 'paid_only', label: '공급자 공개', desc: '로그인한 공부방·과외쌤에게 요청문을 보여 줍니다' },
 ];
 
 /** P19-04 미리보기·공개 */
@@ -74,5 +74,5 @@ export const P19_PUBLISH = {
 /** P19-05 학부모 과금 안내 */
 export const P19_SETTINGS_CALLOUT = {
   title: '학부모 과금 없음',
-  body: '요청문 열람은 공급자 유료 서비스(열람권)로 운영됩니다. 학부모에게는 별도 요금이 없습니다.',
+  body: '요청문 열람은 로그인한 공부방·과외쌤에게 무료입니다. 학부모에게는 별도 요금이 없습니다.',
 };

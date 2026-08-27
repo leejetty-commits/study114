@@ -56,11 +56,18 @@ export function isWithinNewBadgeWindow(dateVal, nowMs = Date.now()) {
 }
 
 /**
- * 신규 자동배지 — published_at 우선, 없으면 created_at / registered_at
+ * 신규 자동배지 — Search API `is_new`가 있으면 서버 정본.
+ * 없으면 published_at 우선, 없으면 created_at / registered_at (7일)
  * @param {object} item
  * @param {number} [nowMs]
  */
 export function resolveAutoNewBadge(item, nowMs = Date.now()) {
+  if (item?.is_new === true) {
+    return { id: 'new', label: PAID_BADGE_LABELS.new, layer: 'auto' };
+  }
+  if (item?.is_new === false) {
+    return null;
+  }
   const dateVal = item?.published_at || item?.created_at || item?.registered_at || null;
   if (!isWithinNewBadgeWindow(dateVal, nowMs)) return null;
   return { id: 'new', label: PAID_BADGE_LABELS.new, layer: 'auto' };

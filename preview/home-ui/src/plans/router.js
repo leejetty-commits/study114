@@ -55,7 +55,7 @@ export function plansScreenTitle(screenId) {
   const map = {
     'P18-01': '상품홈',
     'P18-02': '노출상품',
-    'P18-03': '접근권상품',
+    'P18-03': '쪽지권',
     'P18-04': '내 상품',
     'P18-05': '결제내역',
     'P18-06': '결제',

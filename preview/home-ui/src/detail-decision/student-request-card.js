@@ -2,15 +2,11 @@ import {
   STUDENT_COUNT_LABELS,
   STUDENT_PLACE_LABELS,
   TEACHING_STYLE_LABELS,
-  VISIBILITY_LABELS,
   LESSON_FORMAT_LABELS,
   STUDENT_GENDER_GROUP_LABELS,
 } from '../student-enums.js';
 import {
   getStudentProtectedVisibility,
-  getRequestViewGateState,
-  REQUEST_VIEW_GATE_COPY,
-  FREE_PROVIDER_REQUEST_GATE_COPY,
   PEER_STUDENT_REQUEST_GATE_COPY,
 } from '../student-visibility.js';
 import { renderPermissionStateCard } from '../empty-state-copy.js';
@@ -33,16 +29,6 @@ function renderProtectedBlock(label, content, visible, visibility, studentId, op
     </div>`;
   }
 
-  if (visibility === 'private') {
-    const card = renderPermissionStateCard('not_public');
-    return `
-    <div class="p24-protected p24-protected--blocked">
-      <span class="p24-protected__label">${esc(label)}</span>
-      ${card}
-    </div>`;
-  }
-
-  // paid_only — 학부모 피어: 공급자 유료 게이트 대신 비교범위 안내
   if (opts.viewer === 'parent') {
     const copy = PEER_STUDENT_REQUEST_GATE_COPY;
     return `
@@ -55,37 +41,11 @@ function renderProtectedBlock(label, content, visible, visibility, studentId, op
     </div>`;
   }
 
-  // paid_only — 무료: 유료등록 게이트만 (1-A). 유료: 열람권 게이트
-  if (!opts.isPaidProvider) {
-    const copy = FREE_PROVIDER_REQUEST_GATE_COPY;
-    return `
-    <div class="p24-protected p24-protected--blocked">
-      <span class="p24-protected__label">${esc(label)}</span>
-      <div class="state-card state-card--permission">
-        <strong class="state-card__title">${esc(copy.title)}</strong>
-        <p class="state-card__body">${esc(copy.body)}</p>
-        <div class="p24-protected__actions">
-          <a href="#/mypage/plans" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/plans">${esc(copy.ctaPlans)}</a>
-        </div>
-      </div>
-    </div>`;
-  }
-
-  const gate = getRequestViewGateState();
-  const unlockBtn = gate.hasTickets
-    ? `<button type="button" class="btn btn--primary btn--sm" data-p24-action="unlock-request" data-student-id="${studentId}">${esc(REQUEST_VIEW_GATE_COPY.ctaUnlock)}</button>`
-    : '';
-  const plansLink = `<a href="#/mypage/plans" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/plans">${esc(REQUEST_VIEW_GATE_COPY.ctaPlans)}</a>`;
-
+  const card = renderPermissionStateCard('not_public');
   return `
     <div class="p24-protected p24-protected--blocked">
       <span class="p24-protected__label">${esc(label)}</span>
-      <div class="state-card state-card--permission">
-        <strong class="state-card__title">${esc(REQUEST_VIEW_GATE_COPY.title)}</strong>
-        <p class="state-card__body">${esc(REQUEST_VIEW_GATE_COPY.body)}</p>
-        <p class="mypage-muted">열람권 잔여: <strong>${gate.ticketsRemaining}</strong>회</p>
-        <div class="p24-protected__actions">${unlockBtn}${plansLink}</div>
-      </div>
+      ${card}
     </div>`;
 }
 
@@ -111,13 +71,6 @@ export function renderStudentRequestBody(student, viewer) {
         ? '<p class="p24-fit p24-fit--hint">시장 비교용 열람입니다. 표시명은 마스킹되며 쪽지·연락처는 열리지 않습니다.</p>'
         : '';
 
-  const providerHint =
-    viewer === 'tutor' || viewer === 'study_room' || viewer === 'admin'
-      ? `<p class="p24-sub-hint">요청문 ${VISIBILITY_LABELS[student.request_summary_visibility] || '비공개'}
-        · 특이요청 ${VISIBILITY_LABELS[student.special_request_visibility] || '비공개'}
-        ${vis.isPaidProvider ? `· 열람권 ${getRequestViewGateState().ticketsRemaining}회` : '· 유료등록 필요'}</p>`
-      : '';
-
   return `
     ${fitHint}
     <section class="p24-section">
@@ -142,6 +95,5 @@ export function renderStudentRequestBody(student, viewer) {
       <h3 class="p24-section__title">요청 · 특이사항</h3>
       ${renderProtectedBlock('요청문', student.request_summary, vis.requestSummary, student.request_summary_visibility || 'private', studentId, { isPaidProvider: vis.isPaidProvider, viewer })}
       ${renderProtectedBlock('특이요청사항', student.special_request_note, vis.specialRequest, student.special_request_visibility || 'private', studentId, { isPaidProvider: vis.isPaidProvider, viewer })}
-      ${providerHint}
     </section>`;
 }
