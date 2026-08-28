@@ -30,16 +30,55 @@ runs:
 
     - name: PHP syntax check
       shell: bash
-      run: bash scripts/php-syntax-check.sh
+      run: |
+        set -euo pipefail
+        bash scripts/php-syntax-check.sh | tee /tmp/php-syntax.log
 
     - name: JS Board ACL
       shell: bash
-      run: npm run verify:board-acl:js
+      run: |
+        set -euo pipefail
+        npm run verify:board-acl:js | tee /tmp/js-acl.log
 
     - name: PHP Board ACL
       shell: bash
-      run: php scripts/verify-board-channel-acl.php
+      run: |
+        set -euo pipefail
+        php scripts/verify-board-channel-acl.php | tee /tmp/php-acl.log
 
     - name: Compare JS and PHP ACL matrices
       shell: bash
-      run: node scripts/compare-board-acl-matrix.mjs
+      run: |
+        set -euo pipefail
+        node scripts/compare-board-acl-matrix.mjs | tee /tmp/acl-compare.log
+
+    - name: Publish Board ACL summary
+      shell: bash
+      run: |
+        set -euo pipefail
+        php_ver="$(php -r 'echo PHP_VERSION;')"
+        js_pass="$(grep -c '^PASS' /tmp/js-acl.log || true)"
+        php_pass="$(grep -c '^PASS' /tmp/php-acl.log || true)"
+        js_fail="$(grep -c '^FAIL' /tmp/js-acl.log || true)"
+        php_fail="$(grep -c '^FAIL' /tmp/php-acl.log || true)"
+        js_rows="$(node -e "console.log(JSON.parse(require('fs').readFileSync('tmp/board-acl-matrix-js.json','utf8')).length)")"
+        php_rows="$(node -e "console.log(JSON.parse(require('fs').readFileSync('tmp/board-acl-matrix-php.json','utf8')).length)")"
+        {
+          echo "## Board ACL CI"
+          echo
+          echo "- PHP version: \`${php_ver}\` (setup-php 8.2, extensions json+mbstring)"
+          echo "- DB: not required / not used"
+          echo "- PHP syntax: ok"
+          echo "- JS ACL: PASS=${js_pass} FAIL=${js_fail}"
+          echo "- PHP ACL: PASS=${php_pass} FAIL=${php_fail}"
+          echo "- Matrix rows: JS=${js_rows} PHP=${php_rows}"
+          echo "- Compare: \`$(tail -n 1 /tmp/acl-compare.log)\`"
+          echo
+          echo "### Commands"
+          echo "1. \`bash scripts/php-syntax-check.sh\`"
+          echo "2. \`npm run verify:board-acl:js\`"
+          echo "3. \`php scripts/verify-board-channel-acl.php\`"
+          echo "4. \`node scripts/compare-board-acl-matrix.mjs\`"
+        } | tee -a "${GITHUB_STEP_SUMMARY}"
+        echo "PHP ${php_ver} | JS PASS ${js_pass} | PHP PASS ${php_pass} | rows ${js_rows}/${php_rows}"
+
