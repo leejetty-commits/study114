@@ -46,25 +46,14 @@ function renderHeader(vm) {
 
 function renderPromoCopy(vm) {
   const c = vm.promo;
-  const col = (title, items) => `
-    <div class="rc-guide__col">
-      <h4 class="rc-guide__sub">${esc(title)}</h4>
-      <ul class="rc-guide__list">
-        ${items.map((item) => `<li>${esc(item)}</li>`).join('')}
-      </ul>
-    </div>`;
   return `
-    <div class="rc-guide">
-      <h3 class="rc-guide__title">${esc(c.title)}</h3>
-      ${c.lines.map((line) => `<p class="rc-guide__line">${esc(line)}</p>`).join('')}
-      <div class="rc-guide__cols">
-        ${col(c.detail1Title, c.detail1Items)}
-        ${col(c.detail2Title, c.detail2Items)}
-      </div>
-    </div>`;
+    <section class="rc-block" aria-label="${esc(c.title)}">
+      <h3 class="rc-block__title">${esc(c.title)}</h3>
+      ${c.lines.map((line) => `<p class="rc-block__line">${esc(line)}</p>`).join('')}
+    </section>`;
 }
 
-function renderMissingList(title, items) {
+function renderMissingList(items) {
   if (!items?.length) return '';
   const rows = items
     .map((item) => {
@@ -79,22 +68,19 @@ function renderMissingList(title, items) {
       </li>`;
     })
     .join('');
-  return `
-    <div class="rc-missing">
-      <h4 class="rc-block__sub">${esc(title)}</h4>
-      <ul class="rc-missing__list">${rows}</ul>
-    </div>`;
+  return `<ul class="rc-missing__list">${rows}</ul>`;
 }
 
-function renderMissing(vm) {
-  const pick = vm.promo.pickMissing || [];
-  const prime = vm.promo.primeMissing || [];
-  if (!pick.length && !prime.length) {
-    return `<p class="rc-missing__ok">${esc(vm.promo.allReady)}</p>`;
-  }
+function renderMissingBlock(title, items, emptyText, extraHtml = '') {
+  const body = items?.length
+    ? renderMissingList(items)
+    : `<p class="rc-missing__ok">${esc(emptyText)}</p>`;
   return `
-    ${renderMissingList(vm.promo.pickMissingTitle, pick)}
-    ${renderMissingList(vm.promo.primeMissingTitle, prime)}`;
+    <section class="rc-block">
+      <h3 class="rc-block__title">${esc(title)}</h3>
+      ${body}
+      ${extraHtml}
+    </section>`;
 }
 
 function renderPreviewTier(tier, kicker, innerHtml) {
@@ -113,10 +99,8 @@ function renderCards(vm) {
   const prime = renderExposureBox('study_room', 'prime', item, '', opts);
   return `
     <div class="rc-compare">
-      <div class="rc-compare__head">
-        <h4 class="rc-block__sub">${esc(vm.promo.cardsTitle)}</h4>
-        <p class="rc-block__hint">${esc(vm.promo.cardsLead)}</p>
-      </div>
+      <p class="rc-block__sub">${esc(vm.promo.cardsTitle)}</p>
+      <p class="rc-block__hint">${esc(vm.promo.cardsLead)}</p>
       <div class="rc-compare__grid">
         ${renderPreviewTier('basic', vm.promo.basicKicker, basic)}
         ${renderPreviewTier('pick', vm.promo.pickKicker, pick)}
@@ -145,7 +129,7 @@ function renderBoard(vm) {
       const editHref = sec.editSection ? registrationCheckTabHref(vm.roomId, sec.editSection) : '';
       const editPath = editHref.replace(/^#/, '');
       const editBtn =
-        !isPlain && editPath
+        editPath
           ? `<a class="rc-section__edit" href="#${esc(editPath)}" data-p20-nav="${esc(editPath)}" aria-label="${esc(RC_COPY.board.editAria(sec.title))}" title="수정">${editIconSvg()}</a>`
           : '';
       const head = `
@@ -205,11 +189,9 @@ export function renderRegistrationCheck(vm) {
   return `
     <div class="rc-page" data-rc-page data-p20-room-id="${esc(vm.roomId)}" data-rc-room-id="${esc(vm.roomId)}">
       ${renderHeader(vm)}
-      <section class="rc-promo" aria-label="Pick Prime 준비">
-        ${renderPromoCopy(vm)}
-        ${renderMissing(vm)}
-        ${renderCards(vm)}
-      </section>
+      ${renderPromoCopy(vm)}
+      ${renderMissingBlock(vm.promo.pickMissingTitle, vm.promo.pickMissing, vm.promo.pickReadyBody)}
+      ${renderMissingBlock(vm.promo.primeMissingTitle, vm.promo.primeMissing, vm.promo.primeReadyBody, renderCards(vm))}
       ${renderBoard(vm)}
     </div>`;
 }

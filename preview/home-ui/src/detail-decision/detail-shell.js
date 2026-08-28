@@ -109,10 +109,12 @@ export function renderSecondaryActions(kind, item, viewer) {
   return `<button type="button" class="btn btn--secondary btn--sm" data-p24-action="review-write">후기 남기기</button>`;
 }
 
-function renderMyshopEntryCta(kind) {
+function renderMyshopEntryCta(kind, item) {
   if (kind !== 'study_room') return '';
+  const id = Number(item?.id || 0);
+  if (!Number.isFinite(id) || id <= 0) return '';
   return `
-    <button type="button" class="btn btn--secondary btn--sm" data-p24-action="open-myshop">
+    <button type="button" class="btn btn--secondary btn--sm" data-p24-action="open-myshop" data-study-room-id="${id}">
       공부방 둘러보기
     </button>`;
 }
@@ -319,7 +321,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
       <footer class="modal__foot p24-modal__foot">
         <div class="p24-modal__foot-actions">
           ${secondary}
-          ${renderMyshopEntryCta(kind)}
+          ${renderMyshopEntryCta(kind, item)}
           <button type="button" class="btn btn--primary btn--sm" data-p24-action="${primary.action}"
             ${primary.disabled ? 'disabled' : ''}>${esc(primary.label)}</button>
         </div>
@@ -394,11 +396,14 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     e.preventDefault();
     e.stopPropagation();
     if (kind !== 'study_room') return;
+    const fromBtn = Number(e.currentTarget.getAttribute('data-study-room-id') || 0);
+    const studyRoomId = Number(item?.id || fromBtn || 0);
     closeDetailModal();
     openPublicMyshop({
-      studyRoomId: item.id,
+      studyRoomId,
       sourceRoute,
       viewerRole: viewer,
+      item,
     });
   });
 

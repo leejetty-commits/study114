@@ -7,6 +7,7 @@ import { navigate } from '../state.js';
 import { myshopStudyRoomPath } from './router.js';
 import { isLoggedIn } from '../auth-session.js';
 import { openDeepAccessLoginGate } from '../../../shared/guest-gate-ui.js';
+import { rememberPublicStudyRoomItem, resolvePublicStudyRoomItem } from './public-resolve.js';
 import {
   buildMyshopReturnSnapshot,
   saveMyshopReturnSnapshot,
@@ -20,11 +21,13 @@ import {
  *   studyRoomId: number,
  *   sourceRoute?: string,
  *   viewerRole?: string,
+ *   item?: object,
  * }} opts
  */
 export function openPublicMyshop(opts) {
   const studyRoomId = Number(opts.studyRoomId);
   if (!Number.isFinite(studyRoomId) || studyRoomId <= 0) return;
+  rememberPublicStudyRoomItem(opts.item || resolvePublicStudyRoomItem(studyRoomId));
   if (!isLoggedIn()) {
     openDeepAccessLoginGate({
       source: 'public_myshop',

@@ -1293,6 +1293,7 @@ a.sup-term-chip:hover {
 
 .p24-map-accordion {
   margin-top: var(--space-4);
+  margin-bottom: 1.5rem;
   border: 1px solid var(--gray-200);
   border-radius: 0.5rem;
   overflow: hidden;

@@ -58,7 +58,8 @@ export function roomToExposureRow(room, extra = {}) {
     facility_summary: room.facility_summary || '—',
     profile_status: room.profile_status,
     compare_eligible: room.compare_eligible,
-    image_path: extra.image_path || '',
+    image_path: extra.image_path || room.image_path || '',
+    image_path_basic: extra.image_path || room.image_path_basic || room.image_path || '',
     inquiry_status: room.inquiry_status,
   };
 }

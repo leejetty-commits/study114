@@ -46,10 +46,8 @@ final class StudyRoomPublicReadService
         }
         $extraSql = $selectExtra !== [] ? ', ' . implode(', ', $selectExtra) : '';
 
-        $completeClause = $this->columnExists('study_rooms', 'detail_completion_status')
-            ? "AND sr.detail_completion_status = 'expanded_complete'"
-            : '';
-
+        // 공개 샵은 공개(published)만 본다. 상세완료(expanded_complete)는
+        // 검색 노출 조건이지, 확대카드「공부방 둘러보기」진입 조건이 아니다.
         $stmt = $this->pdo->prepare(
             "SELECT sr.id, sr.study_room_name, sr.slogan, sr.intro_short, sr.intro_long,
                     sr.main_subject_note, sr.feature_1, sr.feature_2, sr.feature_3,
@@ -64,7 +62,6 @@ final class StudyRoomPublicReadService
               WHERE sr.id = ?
                 AND sr.profile_status = 'published'
                 AND sr.deleted_at IS NULL
-                {$completeClause}
               LIMIT 1"
         );
         $stmt->execute([$roomId]);

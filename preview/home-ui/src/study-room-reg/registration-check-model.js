@@ -273,6 +273,7 @@ function buildBoard(s, room, photos) {
       id: 'basic',
       title: RC_COPY.board.sections.basic,
       variant: 'plain',
+      editSection: 'basic',
       rows: [
         row('study_room_name', nameLabel, s?.study_room_name || room?.study_room_name, textStatus(s?.study_room_name || room?.study_room_name)),
         row('slogan', '슬로건', s?.slogan || room?.slogan, textStatus(s?.slogan || room?.slogan)),

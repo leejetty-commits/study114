@@ -78,8 +78,8 @@ export function bindPublicMyshopEvents(root, rerender) {
 
   fetchPublicStudyRoom(id).then((item) => {
     if (!item) {
-      if (mount.querySelector('[data-pm-loading]')) {
-        const fallback = resolvePublicStudyRoomItem(id);
+      const fallback = resolvePublicStudyRoomItem(id);
+      if (fallback && (mount.querySelector('[data-pm-loading]') || mount.querySelector('.shop--empty'))) {
         mount.innerHTML = renderShowcaseHtml(fallback);
         bindMyshopEvents(root);
       }

@@ -4,6 +4,16 @@
 
 import { previewState } from '../state.js';
 import { EXPOSURE_STUDY_ROOMS } from '../exposure-data.js';
+import { getHomeBasicPool } from '../home-basic-live.js';
+
+/** 확대카드에서 넘긴 아이템 — API 404여도 같은 카드로 샵을 연다 */
+let rememberedItem = null;
+
+/** @param {object|null|undefined} item */
+export function rememberPublicStudyRoomItem(item) {
+  const id = Number(item?.id || 0);
+  rememberedItem = Number.isFinite(id) && id > 0 ? item : null;
+}
 
 /**
  * @param {number} id
@@ -13,6 +23,8 @@ export function resolvePublicStudyRoomItem(id) {
   const n = Number(id);
   if (!Number.isFinite(n) || n <= 0) return null;
 
+  if (rememberedItem && Number(rememberedItem.id) === n) return rememberedItem;
+
   const pools = [
     previewState.parentFind?.activeResultItems,
     previewState.studyRoomFind?.activeResultItems,
@@ -20,6 +32,7 @@ export function resolvePublicStudyRoomItem(id) {
     previewState.parentFind?.searchExposureItems,
     previewState.studyRoomFind?.searchExposureItems,
     previewState.tutorFind?.searchExposureItems,
+    getHomeBasicPool('study_room'),
   ];
   for (const pool of pools) {
     if (!Array.isArray(pool)) continue;

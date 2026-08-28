@@ -30,6 +30,8 @@ export const RC_COPY = {
     primeMissingTitle: '[프라임] 노출을 위해 추가 입력해야 할 항목',
     gotoField: '입력하러 가기',
     allReady: 'Pick · Prime 핵심 항목이 채워져 있습니다. 아래 현황판에서 나머지를 확인하세요.',
+    pickReadyBody: '픽 노출에 필요한 항목이 채워져 있습니다.',
+    primeReadyBody: '프라임 노출에 필요한 항목이 채워져 있습니다. 아래 샘플에서 차이를 확인해 보세요.',
     cardsTitle: 'Basic/Pick/Prime 이렇게 달라집니다',
     cardsLead: '왼쪽은 지금 내 Basic 카드입니다. 오른쪽은 유료 노출 시 학부모에게 보이는 차이입니다. 카드를 누르면 확대카드가 열립니다.',
     basicKicker: '내 현재 Basic',
@@ -39,7 +41,7 @@ export const RC_COPY = {
   },
   board: {
     title: '전체 프로필 현황',
-    lead: '값이 비어 있으면 — 으로 표시됩니다. 상세정보1·2는 위 수정 아이콘으로 보완할 수 있습니다.',
+    lead: '값이 비어 있으면 — 으로 표시됩니다. 기본정보·상세정보1·2는 위 수정 아이콘으로 보완할 수 있습니다.',
     sections: {
       basic: '기본정보',
       detail: '상세정보1',

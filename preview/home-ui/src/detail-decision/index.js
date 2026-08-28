@@ -7,6 +7,7 @@ import { openDetailModal, closeDetailModal } from './detail-shell.js';
 import { AUTH_UI_BASE } from '../data.js';
 import { bindReviewSheetTriggers } from '../provider-reviews/sheet.js';
 import { guardGuestDeepAccess, canOpenDetailForViewer } from '../guest-deep-access.js';
+import { getHomeBasicPool } from '../home-basic-live.js';
 
 export { closeDetailModal, openDetailModal } from './detail-shell.js';
 export { showP24Toast } from './detail-utils.js';
@@ -18,15 +19,36 @@ function resolveViewerRole(explicit) {
   return getNavRole();
 }
 
+function findItemInPools(id, pools) {
+  const n = Number(id);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  for (const pool of pools) {
+    if (!Array.isArray(pool)) continue;
+    const hit = pool.find((x) => Number(x?.id) === n);
+    if (hit) return hit;
+  }
+  return null;
+}
+
 /** @param {'study_room'|'tutor'|'student'} kind @param {number} id */
 export function resolveDetailItem(kind, id) {
-  const pool =
+  const live = findItemInPools(id, [
+    previewState.parentFind?.activeResultItems,
+    previewState.studyRoomFind?.activeResultItems,
+    previewState.tutorFind?.activeResultItems,
+    previewState.parentFind?.searchExposureItems,
+    previewState.studyRoomFind?.searchExposureItems,
+    previewState.tutorFind?.searchExposureItems,
+    getHomeBasicPool(kind),
+  ]);
+  if (live) return live;
+  const seed =
     kind === 'student'
       ? EXPOSURE_STUDENTS
       : kind === 'tutor'
         ? EXPOSURE_TUTORS
         : EXPOSURE_STUDY_ROOMS;
-  return pool.find((x) => x.id === id) || null;
+  return seed.find((x) => Number(x.id) === Number(id)) || null;
 }
 
 /**
@@ -90,7 +112,8 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
       const kind = btn.getAttribute('data-search-kind');
       const id = Number(btn.getAttribute('data-search-id'));
       if (kind !== 'study_room' && kind !== 'tutor' && kind !== 'student') return;
-      const item = kind === 'student' ? getStudentItem?.(id) || resolveDetailItem('student', id) : undefined;
+      const item =
+        (kind === 'student' ? getStudentItem?.(id) : null) || resolveDetailItem(kind, id);
       openDetailDecision({ kind, id, viewer: role, onRerender, sourceRoute, item: item || undefined });
     });
   });
@@ -104,7 +127,8 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
       const kind = btn.getAttribute('data-item-kind');
       const id = Number(btn.getAttribute('data-item-id'));
       if (kind !== 'study_room' && kind !== 'tutor') return;
-      openDetailDecision({ kind, id, viewer: role, onRerender, sourceRoute });
+      const item = resolveDetailItem(kind, id);
+      openDetailDecision({ kind, id, viewer: role, onRerender, sourceRoute, item: item || undefined });
     });
   });
 
@@ -115,7 +139,8 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
       const kind = article.dataset.providerKind;
       const id = Number(article.dataset.providerId);
       if (kind !== 'study_room' && kind !== 'tutor') return;
-      openDetailDecision({ kind, id, viewer: role, onRerender, sourceRoute });
+      const item = resolveDetailItem(kind, id);
+      openDetailDecision({ kind, id, viewer: role, onRerender, sourceRoute, item: item || undefined });
     });
   });
 

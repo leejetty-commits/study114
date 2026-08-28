@@ -89,17 +89,14 @@
   color: #9a3412;
 }
 
-.rc-promo {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
+.rc-block {
   padding: 1rem 1.1rem 1.15rem;
   border: 1px solid #e2e8f0;
   border-radius: 0.75rem;
   background: #fff;
 }
 
-.rc-guide__title {
+.rc-block__title {
   margin: 0 0 0.65rem;
   font-size: 1rem;
   font-weight: 700;
@@ -107,49 +104,15 @@
   letter-spacing: -0.02em;
 }
 
-.rc-guide__line {
+.rc-block__line {
   margin: 0 0 0.2rem;
   font-size: 0.8125rem;
   line-height: 1.55;
   color: #475569;
 }
 
-.rc-guide__cols {
-  display: grid;
-  gap: 0.85rem;
-  margin-top: 0.85rem;
-}
-
-@media (min-width: 640px) {
-  .rc-guide__cols {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.rc-guide__col {
-  padding: 0.7rem 0.8rem;
-  border: 1px solid #eef2f7;
-  border-radius: 0.5rem;
-  background: #f8fafc;
-}
-
-.rc-guide__sub {
-  margin: 0 0 0.4rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #1d4ed8;
-}
-
-.rc-guide__list {
-  margin: 0;
-  padding-left: 1.05rem;
-  color: #334155;
-  font-size: 0.8125rem;
-  line-height: 1.55;
-}
-
-.rc-guide__list li + li {
-  margin-top: 0.15rem;
+.rc-block__line:last-of-type {
+  margin-bottom: 0;
 }
 
 .rc-block__sub {
@@ -201,10 +164,10 @@
 }
 
 .rc-missing__ok {
-  margin: 0;
-  padding: 0.65rem 0.75rem;
-  border-radius: 0.5rem;
-  background: #f0fdf4;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   color: #166534;
   font-size: 0.8125rem;
 }
@@ -261,6 +224,10 @@
 .rc-action--primary:hover {
   background: #1d4ed8;
   color: #fff;
+}
+
+.rc-compare {
+  margin-top: 1rem;
 }
 
 .rc-compare__grid {

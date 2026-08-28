@@ -435,10 +435,16 @@ function renderPublish(room) {
 /** @returns {string} */
 function inquiryCoverImageSrc() {
   const imgs = Array.isArray(registerState.images) ? registerState.images : [];
-  const real = imgs.filter((img) => !img?.is_system_default);
-  const pool = real.length ? real : imgs;
+  const real = imgs.filter((img) => {
+    if (!img || img.is_system_default) return false;
+    const src = String(img.basic_720_path || img.prime_1280_path || img.image_path || img.name || img.src || '');
+    if (!src) return false;
+    if (/room-card-default-(basic|pick|prime)/i.test(src)) return false;
+    if (/study114[_-]default/i.test(src)) return false;
+    return true;
+  });
   const cover =
-    pool.find((img) => String(img?.image_type || img?.type || '') === 'cover') || pool[0] || null;
+    real.find((img) => String(img?.image_type || img?.type || '') === 'cover') || real[0] || null;
   if (!cover) return '';
   return (
     cover.basic_720_path ||

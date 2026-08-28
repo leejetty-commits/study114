@@ -1540,10 +1540,10 @@
   max-width: 100%;
 }
 .p20-inquiries-card-preview__browse .expo-hcard.expo-basic--study_room {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: 4.75rem minmax(0, 1fr);
 }
 .p20-inquiries-card-preview__browse .expo-hcard__media-wrap {
-  display: none;
+  display: block;
 }
 .p20-inquiries-actions {
   margin-top: var(--space-2);
