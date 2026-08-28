@@ -185,13 +185,13 @@ function getHomeHighlights(role, counts) {
   if (role === 'study_room') {
     return [
       { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
-      { icon: '☆', label: '찜한학생', value: `${counts.studentReviewCount}명`, note: '관심 학생 저장', path: '/mypage/student-review' },
+      { icon: '♡', label: '찜 목록', value: `${counts.wishlist}개`, note: '저장해 둔 공부방·과외쌤', path: '/mypage/wishlist' },
       { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
     ];
   }
   return [
     { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
-    { icon: '☆', label: '학생 검토함', value: `${counts.studentReviewCount}명`, note: '관심 학생 저장', path: '/mypage/student-review' },
+    { icon: '♡', label: '찜 목록', value: `${counts.wishlist}개`, note: '저장해 둔 공부방·과외쌤', path: '/mypage/wishlist' },
     { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
   ];
 }
@@ -293,7 +293,7 @@ function renderRegistrationsIndex(role) {
   if (role === 'tutor') {
     links.push({ path: '/mypage/registrations/tutors', label: '과외 프로필', id: 'P15-05' });
     links.push({ path: '/mypage/submission-docs', label: '제출자료 상태', id: 'P15-10' });
-    links.push({ path: '/mypage/submission-board', label: '제출함', id: 'P23-04' });
+    links.push({ path: '/mypage/submission-board', label: '신뢰·증빙자료 제출', id: 'P23-04' });
   }
 
   const unique = [...new Map(links.map((l) => [l.path, l])).values()];
@@ -370,7 +370,10 @@ function renderWishlist() {
 
 function renderStudentReview(role) {
   if (role === 'parent') {
-    return `<section class="mypage-panel mypage-empty"><p>${EMPTY_ONBOARDING.submissionParent}</p></section>`;
+    return `<section class="mypage-panel mypage-empty">
+      <p>학생 검토함은 공부방·과외쌤 전용입니다. 일반 찜 목록에서 공부방·과외쌤을 저장할 수 있어요.</p>
+      <p><a href="#/mypage/wishlist" data-mypage-nav="/mypage/wishlist">찜 목록 보기</a></p>
+    </section>`;
   }
 
   const items = getStudentReviewItems();
@@ -655,7 +658,7 @@ function renderSubmissionDocs(role) {
       <p class="mypage-lead">${esc(SUBMISSION_DOCS_LEAD)}</p>
       <div class="p15-submission__summary">
         <span class="mypage-badge">${esc(formatSubmissionDocSummary(docs))}</span>
-        <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">제출함</a>
+        <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">신뢰·증빙자료 제출</a>
         <a href="${TUTOR_REGISTER_URL}" class="btn btn--secondary btn--sm" data-same-tab-href="${TUTOR_REGISTER_URL}">과외쌤 등록 화면에서 자료 등록</a>
       </div>
       <table class="p15-submission__table" aria-label="제출자료 상태">

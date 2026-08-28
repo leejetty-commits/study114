@@ -397,6 +397,9 @@ export function validateBoardChannelInput(input, opts = {}) {
 
   if (!preset) errors.push('프리셋 선택이 필요합니다.');
   if (!boardKey) errors.push('boardKey가 필요합니다.');
+  if (boardKey === 'concern-family') {
+    errors.push('concern-family는 별칭입니다. 정본 키 concern-parent만 사용하세요. 별도 채널로 만들 수 없습니다.');
+  }
   if (boardKey && !BOARD_KEY_RE.test(boardKey)) errors.push('boardKey는 영문 소문자/숫자/하이픈만 사용할 수 있습니다.');
   if (mode === 'create' && existing.some((row) => row.boardKey === boardKey)) {
     errors.push(`이미 존재하는 boardKey입니다: ${boardKey}`);

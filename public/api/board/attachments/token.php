@@ -30,7 +30,7 @@ BoardApi::run(static function (): void {
     }
 
     $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
-    if (!BoardChannelAcl::canDownload('submission', $boardRole) && ($auth['role_type'] ?? '') !== 'admin') {
+    if (!BoardChannelAcl::canDownload('submission', $boardRole)) {
         BoardApi::fail(403, 'forbidden', '제출함 첨부 권한이 없습니다.');
     }
 
@@ -44,14 +44,12 @@ BoardApi::run(static function (): void {
         $operatorId = (string) $auth['email'];
     } else {
         $roleType = (string) ($auth['role_type'] ?? '');
-        if ($roleType === 'study_room') {
-            $authorRole = 'study_room';
-        } elseif ($roleType === 'tutor') {
+        if ($roleType === 'tutor') {
             $authorRole = 'tutor';
         } elseif ($roleType === 'admin') {
             $authorRole = 'admin';
         } else {
-            BoardApi::fail(403, 'forbidden', '제출함은 공부방·과외쌤만 이용할 수 있습니다.');
+            BoardApi::fail(403, 'forbidden', '제출 첨부 다운로드는 과외쌤·운영자만 이용할 수 있습니다.');
         }
     }
 

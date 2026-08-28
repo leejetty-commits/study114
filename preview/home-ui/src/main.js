@@ -69,6 +69,7 @@ import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { showEmailVerifyOverlay } from './email-verify-overlay.js';
 import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
 import { activateBoardApi, deactivateBoardApi } from './board/board-backend.js';
+import { resetConcernPreviewData } from './concern/store.js';
 import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
 import { mountOpsChrome } from './site-ops-chrome.js';
@@ -283,9 +284,19 @@ function init() {
     });
     window.addEventListener('auth:logout', () => {
       resetDeepIntentResumeFlag();
+      resetConcernPreviewData();
+      deactivateBoardApi();
       deactivateAdminApi();
       deactivateContentConfigApi();
       render();
+    });
+    window.addEventListener('auth:role-change', () => {
+      resetConcernPreviewData();
+      deactivateBoardApi();
+      activateBoardApi().catch((err) => {
+        console.warn('[board] rehydrate after role-change failed', err);
+        deactivateBoardApi();
+      });
     });
     window.addEventListener('auth:profile', () => {
       render();

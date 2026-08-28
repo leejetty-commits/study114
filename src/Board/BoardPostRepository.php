@@ -69,6 +69,46 @@ final class BoardPostRepository
     }
 
     /**
+     * post_key 전역 조회. 여러 채널에 같은 키가 있으면 호출측에서 거부한다.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllByPostKey(string $postKey): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id, board_key, post_key, author_user_id, author_role, status,
+                    title, description, memo, internal_memo, category_id, file_label, meta_json,
+                    created_at, updated_at
+             FROM board_posts
+             WHERE post_key = ?
+             ORDER BY id ASC'
+        );
+        $stmt->execute([$postKey]);
+
+        return $stmt->fetchAll();
+    }
+
+    /** @return array<string, mixed>|null */
+    public function findByNumericId(int $id): ?array
+    {
+        if ($id <= 0) {
+            return null;
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT id, board_key, post_key, author_user_id, author_role, status,
+                    title, description, memo, internal_memo, category_id, file_label, meta_json,
+                    created_at, updated_at
+             FROM board_posts
+             WHERE id = ?
+             LIMIT 1'
+        );
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+
+        return $row !== false ? $row : null;
+    }
+
+    /**
      * @param array<string, mixed>|null $meta
      * @return array<string, mixed>
      */
@@ -83,6 +123,7 @@ final class BoardPostRepository
         ?string $categoryId,
         string $fileLabel,
         ?array $meta = null,
+        ?int $authorUserId = null,
     ): array {
         $postKey = $postKey !== null && $postKey !== '' ? $postKey : $boardKey . '-' . time();
         $metaJson = $meta !== null ? json_encode($meta, JSON_UNESCAPED_UNICODE) : null;
@@ -109,12 +150,13 @@ final class BoardPostRepository
         } else {
             $stmt = $this->pdo->prepare(
                 'INSERT INTO board_posts
-                 (board_key, post_key, author_role, status, title, description, memo, category_id, file_label, meta_json)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                 (board_key, post_key, author_user_id, author_role, status, title, description, memo, category_id, file_label, meta_json)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             );
             $stmt->execute([
                 $boardKey,
                 $postKey,
+                $authorUserId !== null && $authorUserId > 0 ? $authorUserId : null,
                 $authorRole,
                 $status,
                 $title,

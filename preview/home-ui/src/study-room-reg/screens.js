@@ -613,7 +613,7 @@ function renderSubmissionTab(room) {
   const body = `
     <div class="mp-room__submission">
       <p class="mypage-lead">${esc(room.study_room_name)}</p>
-      <p class="mypage-muted">공부방은 제출함을 쓰지 않습니다. 교육청 등록은 상세정보에서 체크합니다. 파일 제출함은 과외쌤 마이페이지에서 다룹니다.</p>
+      <p class="mypage-muted">공부방은 게시판 제출 기능을 쓰지 않습니다. 교육청 등록은 상세정보에서 체크합니다. 과외쌤 신뢰·증빙자료는 과외쌤 마이페이지에서 다룹니다.</p>
     </div>`;
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'submission', body)}</section>`;
 }

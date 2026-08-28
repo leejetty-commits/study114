@@ -22,7 +22,7 @@ BoardApi::run(static function (): void {
         }
         $authorRole = BoardApi::queryString('author_role');
         $postKey = BoardApi::queryString('post_key') ?? BoardApi::queryString('id');
-        BoardApi::ok(['posts' => $service->list($boardKey, $authorRole, $postKey, $auth)]);
+        BoardApi::ok($service->list($boardKey, $authorRole, $postKey, $auth));
     }
 
     if ($method === 'POST') {

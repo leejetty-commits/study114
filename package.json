@@ -19,7 +19,11 @@
     "verify:card-visual": "cd preview/home-ui && npx --yes vite-node ../../scripts/verify-card-visual.mjs",
     "verify:card-visual:penetration": "cd preview/home-ui && npx --yes vite-node ../../scripts/verify-card-visual-penetration.mjs",
     "smoke:paid-badges-proof": "cd preview/home-ui && npx --yes vite-node ../../scripts/smoke-paid-badges-proof.mjs",
-    "verify:account-context": "cd preview/home-ui && npx --yes vite-node ../../scripts/verify-account-context.mjs"
+    "verify:account-context": "cd preview/home-ui && npx --yes vite-node ../../scripts/verify-account-context.mjs",
+    "verify:board-acl": "node scripts/run-verify-board-acl.mjs",
+    "verify:board-acl:js": "npx --yes vite-node scripts/verify-board-channel-acl.mjs",
+    "verify:board-acl:php": "php scripts/verify-board-channel-acl.php && node scripts/compare-board-acl-matrix.mjs",
+    "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0"

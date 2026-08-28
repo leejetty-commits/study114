@@ -1,8 +1,10 @@
 /**
- * 고민방 프리뷰 스토어 — localStorage
- * 1차: 본체 미리보기 (댓글·공감·글쓰기). API 연동은 후속.
+ * 고민방 프리뷰 스토어 — localStorage 전용
+ * ACL 판정·화면 게이트는 구현. 작성·댓글·반응은 프리뷰만.
+ * 서버 영속 저장 API는 미구현. 운영 게시판 기능 미완료.
  */
 
+import { normalizeBoardKey } from '../board-channel-acl.js';
 import {
   listCommunityBoards,
   CONCERN_POST_TYPES,
@@ -10,6 +12,9 @@ import {
 } from './copy.js';
 
 const STORAGE_KEY = 'study114.community.v2';
+
+/** Vite가 빌드 시 상수로 치환. 함수 래핑하면 시드 배열이 운영 번들에 남을 수 있다. */
+const CONCERN_PREVIEW_SEED_ALLOWED = import.meta.env.DEV === true;
 
 /** @typedef {{
  *   id: string;
@@ -36,6 +41,7 @@ function uid(prefix) {
 
 /** @returns {ConcernPost[]} */
 function seedPosts() {
+  if (!CONCERN_PREVIEW_SEED_ALLOWED) return [];
   const t = Date.now();
   const ago = (h) => new Date(t - h * 3600_000).toISOString();
   return [
@@ -212,6 +218,9 @@ function emptyReactions() {
 }
 
 function loadState() {
+  if (!CONCERN_PREVIEW_SEED_ALLOWED) {
+    return { posts: [], myReactions: {} };
+  }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -225,6 +234,7 @@ function loadState() {
 }
 
 function saveState(state) {
+  if (!CONCERN_PREVIEW_SEED_ALLOWED) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
@@ -235,7 +245,8 @@ function saveState(state) {
 let state = loadState();
 
 export function listConcernPosts(boardKey, { type = 'all', sort = 'recent' } = {}) {
-  let rows = state.posts.filter((p) => p.boardKey === boardKey);
+  const key = normalizeBoardKey(boardKey);
+  let rows = state.posts.filter((p) => p.boardKey === key);
   if (type && type !== 'all' && CONCERN_POST_TYPES[type]) {
     rows = rows.filter((p) => p.type === type);
   }
@@ -266,6 +277,7 @@ export function getConcernPost(id) {
 }
 
 export function getHotConcernSamples({ limit = 3, preferBoardKey, boardKeys } = {}) {
+  if (Array.isArray(boardKeys) && boardKeys.length === 0) return [];
   const allowed = Array.isArray(boardKeys) && boardKeys.length ? new Set(boardKeys) : null;
   const all = listAllConcernPosts({ sort: 'hot' })
     .filter((p) => p.type !== 'community_alert')
@@ -293,6 +305,7 @@ const PRIMARY_CONCERN_BOARD_KEYS = ['concern-director', 'concern-tutor', 'concer
 
 /** 보드당 최신글 1개. 확대카드 좌측 배너용. */
 export function getLatestConcernSamples({ limit = 3, boardKeys } = {}) {
+  if (Array.isArray(boardKeys) && boardKeys.length === 0) return [];
   const allowed =
     Array.isArray(boardKeys) && boardKeys.length ? boardKeys.filter(Boolean) : PRIMARY_CONCERN_BOARD_KEYS;
   const picked = [];
@@ -369,5 +382,10 @@ export function reactionTotal(post) {
 
 export function resetConcernPreviewData() {
   state = { posts: seedPosts(), myReactions: {} };
-  saveState(state);
+  try {
+    if (!CONCERN_PREVIEW_SEED_ALLOWED) localStorage.removeItem(STORAGE_KEY);
+    else saveState(state);
+  } catch {
+    /* ignore */
+  }
 }

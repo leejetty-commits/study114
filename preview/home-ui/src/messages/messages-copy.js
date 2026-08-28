@@ -40,7 +40,7 @@ export const SCOPE_BADGE_LABELS = {
 export const FREE_PROVIDER_INBOX_COPY = {
   empty:
     '받은 문의에 답장해 보세요. 학생에게 <strong>먼저</strong> 쪽지를 보내려면 쪽지권이 필요합니다.',
-  hint: '무료 이용자도 받은 쪽지와 학부모 문의에 답장할 수 있어요. 학생에게 먼저 보내는 쪽지만 쪽지권이 필요합니다.',
+  hint: '기존 대화의 답장과 후속 메시지는 쪽지권이 없어도 보낼 수 있어요. 학생에게 새 대화를 처음 시작할 때만 쪽지권이 필요합니다.',
 };
 
 /** §7 P16-04 — 18§9-12 행동 직전 업셀 */
@@ -158,10 +158,7 @@ export function getReplyBlockedMessage(thread, role) {
   }
 
   if (isProviderRole(role) && thread.contextKind === 'student') {
-    const peerSpoke = thread.messages.some((m) => m.sender === 'peer');
-    if (!peerSpoke && !isProviderPaid()) {
-      return `${GATE_COPY.replyNote} 학생에게 먼저 보내는 쪽지는 쪽지권 구매 후 가능합니다.`;
-    }
+    return '답장할 수 없습니다.';
   }
 
   return '답장할 수 없습니다.';

@@ -70,9 +70,9 @@ export function deactivateBoardApi() {
 
 export async function hydrateBoardCache() {
   const results = await Promise.all([
-    ...LIBRARY_BOARD_KEYS.map((key) => fetchBoardPosts(key).catch(() => ({ posts: [] }))),
-    fetchBoardPosts(SUBMISSION_BOARD_KEY).catch(() => ({ posts: [] })),
-    ...OPERATIONAL_BOARD_KEYS.map((key) => fetchBoardPosts(key).catch(() => ({ posts: [] }))),
+    ...LIBRARY_BOARD_KEYS.map((key) => fetchBoardPosts(key).catch(() => ({ posts: [], access: 'blocked', intro: null }))),
+    fetchBoardPosts(SUBMISSION_BOARD_KEY).catch(() => ({ posts: [], access: 'blocked', intro: null })),
+    ...OPERATIONAL_BOARD_KEYS.map((key) => fetchBoardPosts(key).catch(() => ({ posts: [], access: 'blocked', intro: null }))),
   ]);
   LIBRARY_BOARD_KEYS.forEach((key, i) => {
     setBoardCache(key, results[i].posts ?? []);

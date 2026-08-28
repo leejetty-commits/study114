@@ -21,8 +21,10 @@ import {
   boardLoginHref,
   canCommentBoard,
   canComposeBoard,
+  canDiscoverBoard,
   canListBoard,
   getBoardAccess,
+  getChannelIntro,
   roleGateCopy,
 } from '../board-channel-acl.js';
 import { renderStateCard } from '../empty-state-copy.js';
@@ -56,7 +58,7 @@ function authorLine(post) {
   return `${esc(post.authorName)} · ${esc(post.authorRoleLabel)} · ${esc(formatTime(post.createdAt))}`;
 }
 
-function renderPostRow(post, summaryOnly = false) {
+function renderPostRow(post) {
   const board = getConcernBoardByKey(post.boardKey);
   const href = `${board?.path || getDefaultCommunityPath()}/${post.id}`;
   return `
@@ -66,11 +68,7 @@ function renderPostRow(post, summaryOnly = false) {
         <strong class="concern-row__title">${esc(post.title)}</strong>
       </div>
       <span class="concern-row__sub">${authorLine(post)}</span>
-      ${
-        summaryOnly
-          ? '<span class="concern-row__stats">로그인 후 본문·댓글을 볼 수 있어요</span>'
-          : `<span class="concern-row__stats">댓글 ${post.comments?.length || 0} · 반응 ${reactionTotal(post)}</span>`
-      }
+      <span class="concern-row__stats">댓글 ${post.comments?.length || 0} · 반응 ${reactionTotal(post)}</span>
     </a>`;
 }
 
@@ -106,12 +104,39 @@ function renderCommunityIntro(navRole) {
     </section>`;
 }
 
+function renderChannelIntroCard(board, role) {
+  const intro = getChannelIntro(board.boardKey);
+  const gate = roleGateCopy(board.boardKey, role);
+  const links =
+    role === 'guest'
+      ? [
+          { label: '로그인', href: boardLoginHref('community') },
+          { label: '다른 게시판', href: `#${getDefaultCommunityPath()}` },
+        ]
+      : [{ label: '다른 게시판', href: `#${getDefaultCommunityPath()}` }];
+  return `
+    <section class="concern-hero">
+      <p class="concern-eyebrow">${esc(board.roleHint)}</p>
+      <p class="concern-hero__lead">${esc(intro.body)}</p>
+    </section>
+    ${renderStateCard({
+      title: gate.title,
+      body: gate.body,
+      links,
+    })}`;
+}
+
 function renderList(board, query) {
   const role = getNavRole();
-  if (!canListBoard(board.boardKey, role)) {
+  if (!canDiscoverBoard(board.boardKey, role)) {
     return renderBoardBlocked(board, role);
   }
   const access = getBoardAccess(board.boardKey, role);
+  if (!access.canList) {
+    return `
+      ${renderCommunityIntro(role)}
+      ${renderChannelIntroCard(board, role)}`;
+  }
   const type = query.get('type') || 'all';
   const sort = query.get('sort') || 'recent';
   const posts = listConcernPosts(board.boardKey, { type, sort });
@@ -124,9 +149,9 @@ function renderList(board, query) {
     : role === 'guest'
       ? `<a class="guide-btn guide-btn--secondary" href="${esc(boardLoginHref('community-compose'))}">로그인 후 글쓰기</a>`
       : '';
-  const summaryNote =
-    access.access === 'summary'
-      ? `<p class="concern-note">${esc(roleGateCopy(board.boardKey).body)}</p>`
+  const readonlyNote =
+    access.canDetail && !access.canCompose
+      ? `<p class="concern-note">${esc(roleGateCopy(board.boardKey, role).body)}</p>`
       : '';
   return `
     ${renderCommunityIntro(role)}
@@ -134,7 +159,7 @@ function renderList(board, query) {
       <p class="concern-eyebrow">${esc(board.roleHint)}</p>
       ${writeBtn}
     </section>
-    ${summaryNote}
+    ${readonlyNote}
     <div class="concern-filters" role="tablist" aria-label="글 유형">
       ${filters
         .map(
@@ -153,7 +178,7 @@ function renderList(board, query) {
     <div class="concern-list">
       ${
         posts.length
-          ? posts.map((p) => renderPostRow(p, access.access === 'summary')).join('')
+          ? posts.map((p) => renderPostRow(p)).join('')
           : '<p class="concern-empty">아직 글이 없습니다. 첫 고민을 남겨보세요.</p>'
       }
     </div>`;
@@ -174,11 +199,12 @@ function renderReactions(post, enabled) {
 }
 
 function renderBoardBlocked(board, role) {
-  const gate = roleGateCopy(board.boardKey);
+  const gate = roleGateCopy(board.boardKey, role);
+  const intro = getChannelIntro(board.boardKey);
   if (role === 'guest') {
     return renderStateCard({
-      title: '로그인이 필요합니다',
-      body: gate.body || '로그인 후 본문을 볼 수 있어요.',
+      title: intro.title,
+      body: gate.body,
       links: [
         { label: '로그인', href: boardLoginHref('community') },
         { label: '다른 게시판', href: `#${getDefaultCommunityPath()}` },
@@ -186,7 +212,7 @@ function renderBoardBlocked(board, role) {
     });
   }
   return renderStateCard({
-    title: gate.title,
+    title: intro.title,
     body: gate.body,
     links: [{ label: '다른 게시판', href: `#${getDefaultCommunityPath()}` }],
   });
@@ -194,44 +220,25 @@ function renderBoardBlocked(board, role) {
 
 function renderDetail(board, postId) {
   const role = getNavRole();
-  if (!canListBoard(board.boardKey, role)) {
+  if (!canDiscoverBoard(board.boardKey, role)) {
     return renderBoardBlocked(board, role);
+  }
+  const access = getBoardAccess(board.boardKey, role);
+  if (!access.canList || !access.canDetail) {
+    return `
+      <article class="concern-detail">
+        <a class="concern-back" href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">← ${esc(board.label)}</a>
+        ${renderChannelIntroCard(board, role)}
+      </article>`;
   }
   const post = getConcernPost(postId);
   if (!post || post.boardKey !== board.boardKey) {
     return `<p class="concern-empty">글을 찾을 수 없습니다. <a href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">목록으로</a></p>`;
   }
-  const access = getBoardAccess(board.boardKey, role);
-  const gate = roleGateCopy(board.boardKey);
 
-  let bodyHtml = '';
-  if (access.canDetail) {
-    bodyHtml = `<div class="concern-detail__body">${esc(post.body)}</div>`;
-  } else if (role === 'guest') {
-    bodyHtml = `
-      <div class="concern-detail__gate">
-        ${renderStateCard({
-          title: '로그인이 필요합니다',
-          body: '로그인 후 본문을 볼 수 있어요.',
-          links: [{ label: '로그인', href: boardLoginHref('community-detail') }],
-        })}
-      </div>`;
-  } else {
-    bodyHtml = `
-      <div class="concern-detail__gate">
-        ${renderStateCard({
-          title: gate.title,
-          body: gate.body,
-          links: [{ label: '목록으로', href: `#${board.path}` }],
-        })}
-      </div>`;
-  }
-
-  const reactionsHtml = access.canDetail
-    ? renderReactions(post, access.canComment)
-    : '';
-  const commentsHtml = access.canDetail
-    ? `
+  const bodyHtml = `<div class="concern-detail__body">${esc(post.body)}</div>`;
+  const reactionsHtml = renderReactions(post, access.canComment);
+  const commentsHtml = `
       <section class="concern-comments">
         <h3 class="concern-comments__title">댓글 ${post.comments?.length || 0}</h3>
         <ul class="concern-comments__list">
@@ -255,12 +262,9 @@ function renderDetail(board, postId) {
           </label>
           <button type="submit" class="guide-btn guide-btn--primary">댓글 남기기</button>
         </form>`
-            : role === 'guest'
-              ? `<p class="concern-note"><a href="${esc(boardLoginHref('community-comment'))}">로그인 후 댓글을 남길 수 있어요</a></p>`
-              : `<p class="concern-note">이 게시판에서는 댓글 권한이 없습니다.</p>`
+            : `<p class="concern-note">${esc(roleGateCopy(board.boardKey, role).body)}</p>`
         }
-      </section>`
-    : '';
+      </section>`;
 
   return `
     <article class="concern-detail">
@@ -277,7 +281,7 @@ function renderDetail(board, postId) {
 function renderCompose(board) {
   const role = getNavRole();
   if (!canComposeBoard(board.boardKey, role)) {
-    const gate = roleGateCopy(board.boardKey);
+    const gate = roleGateCopy(board.boardKey, role);
     if (role === 'guest') {
       return `
         <section class="concern-compose">
@@ -342,7 +346,7 @@ export function renderConcernSideNav(currentPath) {
   const pathOnly = currentPath.split('?')[0];
   const role = getNavRole();
   const items = concernBoardNav(pathOnly)
-    .filter((b) => canListBoard(b.boardKey, role))
+    .filter((b) => canDiscoverBoard(b.boardKey, role))
     .map((b) => ({
       label: b.label,
       path: b.path,

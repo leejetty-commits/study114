@@ -197,9 +197,17 @@ final class BoardAttachmentService
     /** @return array<string, mixed> */
     private function assertOwnedPost(string $postKey, string $authorRole): array
     {
-        $post = $this->posts->findByKey(self::BOARD_KEY, $postKey);
-        if ($post === null) {
+        $rows = $this->posts->findAllByPostKey($postKey);
+        if ($rows === []) {
             throw new InvalidArgumentException('게시물을 찾을 수 없습니다.');
+        }
+        if (count($rows) > 1) {
+            throw new BoardAccessException(409, 'conflict', '동일한 post_key가 여러 채널에 있습니다.');
+        }
+        $post = $rows[0];
+        $actualKey = BoardChannelAcl::normalizeBoardKey((string) $post['board_key']);
+        if ($actualKey !== self::BOARD_KEY) {
+            throw new BoardAccessException(403, 'forbidden', '제출함 게시글이 아닙니다.');
         }
         if ((string) $post['author_role'] !== $authorRole) {
             throw new InvalidArgumentException('작성자 역할이 일치하지 않습니다.');

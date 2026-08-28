@@ -1,0 +1,45 @@
+name: Verify Board ACL
+description: PHP 문법·JS/PHP ACL 매트릭스 비교. DB 불필요. PHP 미설치는 실패.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup PHP 8.2
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "8.2"
+        extensions: json, mbstring
+        coverage: none
+        tools: none
+
+    - name: Show PHP version
+      shell: bash
+      run: php -v
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+        cache: npm
+        cache-dependency-path: preview/home-ui/package-lock.json
+
+    - name: Install home-ui deps
+      shell: bash
+      working-directory: preview/home-ui
+      run: npm ci
+
+    - name: PHP syntax check
+      shell: bash
+      run: bash scripts/php-syntax-check.sh
+
+    - name: JS Board ACL
+      shell: bash
+      run: npm run verify:board-acl:js
+
+    - name: PHP Board ACL
+      shell: bash
+      run: php scripts/verify-board-channel-acl.php
+
+    - name: Compare JS and PHP ACL matrices
+      shell: bash
+      run: node scripts/compare-board-acl-matrix.mjs

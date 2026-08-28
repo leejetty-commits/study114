@@ -118,7 +118,7 @@ final class MessagesService
             ]);
             $this->insertMessageWithFiles($threadId, $userId, $body, $files);
             $this->repo->upsertThreadRead($threadId, $userId);
-            if ($contextKind === 'student') {
+            if (self::requiresColdMemoTicket(true, $contextKind)) {
                 $this->entitlements->consumeColdMemoTicket($userId);
             }
         }
@@ -255,16 +255,22 @@ final class MessagesService
     }
 
     /**
+     * 쪽지권은 공급자→학생 **신규** 대화 생성에만 1회 차감.
+     * 기존 thread 후속·답장은 잔여권과 무관하게 무료.
+     */
+    public static function requiresColdMemoTicket(bool $isNewThread, string $contextKind): bool
+    {
+        return $isNewThread && $contextKind === 'student';
+    }
+
+    /**
      * @param array<string, mixed> $row
      */
     private function assertCanSendMessage(int $userId, array $row, string $contextKind): void
     {
+        unset($userId, $contextKind);
         if ((bool) ($row['is_blocked'] ?? false)) {
             throw new InvalidArgumentException('차단된 대화입니다.');
-        }
-        $threadId = (int) $row['id'];
-        if ($contextKind === 'student' && !$this->repo->threadHasPeerMessage($threadId, $userId)) {
-            $this->assertColdMemoAllowed($userId, $contextKind);
         }
     }
 

@@ -39,23 +39,35 @@ final class BoardPostService
         $this->attachments = $attachments ?? new BoardAttachmentService($this->repo);
     }
 
-    /** @return list<array<string, mixed>> */
+    /** @return array{posts: list<array<string, mixed>>, access: 'full'|'intro', intro: array<string, mixed>|null} */
     public function list(
         string $boardKey,
         ?string $authorRole = null,
         ?string $postKey = null,
         ?array $auth = null,
     ): array {
-        $this->assertBoardKey($boardKey);
         $boardKey = BoardChannelAcl::normalizeBoardKey($boardKey);
+        $this->assertBoardKey($boardKey);
         $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
-        if (!BoardChannelAcl::canList($boardKey, $boardRole)) {
+        $access = BoardChannelAcl::accessKind($boardKey, $boardRole);
+
+        if ($access === 'blocked') {
             throw new BoardAccessException(
                 $auth === null ? 401 : 403,
                 $auth === null ? 'unauthorized' : 'forbidden',
                 $auth === null ? '로그인이 필요합니다.' : '이 게시판을 볼 권한이 없습니다.',
             );
         }
+
+        if ($access === 'intro' || !BoardChannelAcl::canList($boardKey, $boardRole)) {
+            // intro: 단건 ?id= / post_key 도 DB를 조회하지 않고 posts=[] 만 반환
+            return [
+                'posts' => [],
+                'access' => 'intro',
+                'intro' => BoardChannelAcl::channelIntro($boardKey),
+            ];
+        }
+
         if ($authorRole !== null && $authorRole !== '') {
             $this->assertAuthorRole($authorRole);
         }
@@ -68,23 +80,30 @@ final class BoardPostService
             ));
         }
 
-        $canDetail = BoardChannelAcl::canDetail($boardKey, $boardRole);
-        return array_map(function (array $row) use ($canDetail): array {
-            $mapped = $this->mapPost($row);
-            if (!$canDetail) {
-                return $this->redactPostBody($mapped);
-            }
-
-            return $mapped;
-        }, $rows);
+        return [
+            'posts' => array_map(fn (array $row): array => $this->mapPost($row), $rows),
+            'access' => 'full',
+            'intro' => null,
+        ];
     }
 
     /** @param array<string, mixed> $input */
     public function save(array $input, ?array $auth = null): array
     {
-        $boardKey = trim((string) ($input['board_key'] ?? $input['boardKey'] ?? ''));
+        $requestedKey = BoardChannelAcl::normalizeBoardKey(trim((string) ($input['board_key'] ?? $input['boardKey'] ?? '')));
+        $postKey = isset($input['post_key']) ? trim((string) $input['post_key']) : (isset($input['id']) ? trim((string) $input['id']) : '');
+        $existing = $this->resolveExistingPost($requestedKey, $postKey);
+
+        if ($existing !== null) {
+            $boardKey = BoardChannelAcl::normalizeBoardKey((string) $existing['board_key']);
+            if ($requestedKey !== '' && $requestedKey !== $boardKey) {
+                throw new BoardAccessException(403, 'forbidden', '요청 게시판과 실제 게시글 채널이 다릅니다.');
+            }
+        } else {
+            $boardKey = $requestedKey;
+        }
+
         $this->assertBoardKey($boardKey);
-        $boardKey = BoardChannelAcl::normalizeBoardKey($boardKey);
         $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
 
         if ($this->isOperationalBoard($boardKey)) {
@@ -95,8 +114,9 @@ final class BoardPostService
             if (!$isAdmin && !BoardChannelAcl::canCompose($boardKey, $boardRole)) {
                 throw new BoardAccessException(403, 'forbidden', '운영형 채널 쓰기는 운영자만 허용됩니다.');
             }
-            // session role wins over client author_role for admin check
             $input['author_role'] = 'admin';
+            $input['board_key'] = $boardKey;
+            $input['post_key'] = $existing !== null ? (string) $existing['post_key'] : ($postKey !== '' ? $postKey : null);
 
             return $this->saveOperational($input, $boardKey);
         }
@@ -106,15 +126,21 @@ final class BoardPostService
                 throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
             }
             if (!BoardChannelAcl::canCompose($boardKey, $boardRole)) {
-                throw new BoardAccessException(403, 'forbidden', '제출함은 공부방·과외쌤만 이용할 수 있습니다.');
+                throw new BoardAccessException(403, 'forbidden', '제출함은 과외쌤만 이용할 수 있습니다.');
             }
             $sessionNav = $this->navRoleFromAuth($auth);
+            if ($existing !== null) {
+                $this->assertExistingPostOwnership($existing, $auth, $sessionNav);
+            }
             $input['author_role'] = $sessionNav;
+            $input['board_key'] = $boardKey;
+            if ($existing !== null) {
+                $input['post_key'] = (string) $existing['post_key'];
+            }
 
-            return $this->saveSubmission($input, $boardKey);
+            return $this->saveSubmission($input, $boardKey, $auth);
         }
 
-        // concern 등 — 서버 쓰기는 아직 미지원이지만 권한 게이트는 강제
         if ($auth === null) {
             throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
         }
@@ -126,52 +152,107 @@ final class BoardPostService
 
     public function delete(string $boardKey, string $postKey, string $authorRole, ?array $auth = null): void
     {
-        $this->assertBoardKey($boardKey);
-        $boardKey = BoardChannelAcl::normalizeBoardKey($boardKey);
+        $requestedKey = BoardChannelAcl::normalizeBoardKey($boardKey);
         if ($auth === null) {
             throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
         }
-        $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
+        $existing = $this->resolveExistingPost($requestedKey, $postKey);
+        if ($existing === null) {
+            throw new InvalidArgumentException('게시물을 찾을 수 없습니다.');
+        }
+        $actualKey = BoardChannelAcl::normalizeBoardKey((string) $existing['board_key']);
+        if ($requestedKey !== '' && $requestedKey !== $actualKey) {
+            throw new BoardAccessException(403, 'forbidden', '요청 게시판과 실제 게시글 채널이 다릅니다.');
+        }
+        $this->assertBoardKey($actualKey);
+        if (!BoardChannelAcl::canDelete($actualKey, BoardChannelAcl::boardRoleFromAuth($auth))) {
+            throw new BoardAccessException(403, 'forbidden', '이 게시판에서 삭제할 권한이 없습니다.');
+        }
         $sessionNav = $this->navRoleFromAuth($auth);
+        $actualPostKey = (string) $existing['post_key'];
 
-        if ($this->isOperationalBoard($boardKey)) {
+        if ($this->isOperationalBoard($actualKey)) {
             $isAdmin = ($auth['role_type'] ?? '') === 'admin' || !empty($auth['admin_level']);
             if (!$isAdmin) {
                 throw new BoardAccessException(403, 'forbidden', '운영형 채널 삭제는 admin만 허용됩니다.');
             }
-            $existing = $this->repo->findByKey($boardKey, $postKey);
-            if ($existing === null) {
-                throw new InvalidArgumentException('게시물을 찾을 수 없습니다.');
-            }
-            $this->repo->delete($boardKey, $postKey);
+            $this->repo->delete($actualKey, $actualPostKey);
 
             return;
         }
 
-        if ($boardKey !== 'submission') {
+        if ($actualKey !== 'submission') {
             throw new InvalidArgumentException('현재 삭제는 submission·운영형 채널만 지원합니다.');
         }
-        if (!BoardChannelAcl::canCompose($boardKey, $boardRole)) {
-            throw new BoardAccessException(403, 'forbidden', '제출함 삭제 권한이 없습니다.');
-        }
-        // author_role은 세션 기준
         $authorRole = $sessionNav;
         $this->assertAuthorRole($authorRole);
-
-        $existing = $this->repo->findByKey($boardKey, $postKey);
-        if ($existing === null) {
-            throw new InvalidArgumentException('게시물을 찾을 수 없습니다.');
-        }
-        if ((string) $existing['author_role'] !== $authorRole) {
-            throw new BoardAccessException(403, 'forbidden', '작성자만 삭제할 수 있습니다.');
-        }
+        $this->assertExistingPostOwnership($existing, $auth, $authorRole);
         $status = (string) $existing['status'];
         if ($status !== 'draft' && $status !== 'submitted') {
             throw new InvalidArgumentException('삭제할 수 없는 상태입니다.');
         }
 
-        $this->attachments->deleteForPost($boardKey, $postKey);
-        $this->repo->delete($boardKey, $postKey);
+        $this->attachments->deleteForPost($actualKey, $actualPostKey);
+        $this->repo->delete($actualKey, $actualPostKey);
+    }
+
+    /**
+     * 요청 board_key 가 아니라 DB 행의 실제 채널을 찾는다.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function resolveExistingPost(string $requestedBoardKey, string $postKey): ?array
+    {
+        if ($postKey === '') {
+            return null;
+        }
+        if (ctype_digit($postKey)) {
+            $byId = $this->repo->findByNumericId((int) $postKey);
+            if ($byId !== null) {
+                return $byId;
+            }
+        }
+        $rows = $this->repo->findAllByPostKey($postKey);
+        if ($rows === []) {
+            return null;
+        }
+        if (count($rows) > 1) {
+            throw new BoardAccessException(409, 'conflict', '동일한 post_key가 여러 채널에 있습니다.');
+        }
+        $row = $rows[0];
+        $actual = BoardChannelAcl::normalizeBoardKey((string) $row['board_key']);
+        if ($requestedBoardKey !== '' && $requestedBoardKey !== $actual) {
+            throw new BoardAccessException(403, 'forbidden', '요청 게시판과 실제 게시글 채널이 다릅니다.');
+        }
+
+        return $row;
+    }
+
+    /**
+     * 기존 글 소유권. admin 은 통과.
+     * author_user_id 가 있으면 세션 user_id 와 일치해야 하고, 없으면 author_role 로만 검사한다.
+     *
+     * @param array<string, mixed> $existing
+     * @param array{role_type?: string, user_id?: int|string, id?: int|string, admin_level?: mixed} $auth
+     */
+    private function assertExistingPostOwnership(array $existing, array $auth, string $navRole): void
+    {
+        $isAdmin = ($auth['role_type'] ?? '') === 'admin' || !empty($auth['admin_level']);
+        if ($isAdmin) {
+            return;
+        }
+        $ownerId = (int) ($existing['author_user_id'] ?? 0);
+        $sessionId = (int) ($auth['user_id'] ?? $auth['id'] ?? 0);
+        if ($ownerId > 0) {
+            if ($sessionId <= 0 || $ownerId !== $sessionId) {
+                throw new BoardAccessException(403, 'forbidden', '작성자만 수정·삭제할 수 있습니다.');
+            }
+
+            return;
+        }
+        if ((string) ($existing['author_role'] ?? '') !== $navRole) {
+            throw new BoardAccessException(403, 'forbidden', '작성자만 수정·삭제할 수 있습니다.');
+        }
     }
 
     /** @param array{role_type?: string} $auth */
@@ -181,7 +262,7 @@ final class BoardPostService
         if ($roleType === 'guardian_student' || $roleType === 'parent' || $roleType === 'student') {
             return 'parent';
         }
-        if ($roleType === 'study_room') {
+        if ($roleType === 'study_room_owner' || $roleType === 'study_room') {
             return 'study_room';
         }
         if ($roleType === 'tutor') {
@@ -194,34 +275,8 @@ final class BoardPostService
         return 'parent';
     }
 
-    /** @param array<string, mixed> $mapped @return array<string, mixed> */
-    private function redactPostBody(array $mapped): array
-    {
-        $mapped['description'] = '';
-        $mapped['memo'] = '';
-        $mapped['bodyRedacted'] = true;
-        if (isset($mapped['meta']) && is_array($mapped['meta'])) {
-            $meta = $mapped['meta'];
-            if (isset($meta['body'])) {
-                $meta['body'] = [];
-            }
-            if (isset($meta['answer'])) {
-                $meta['answer'] = '';
-            }
-            $mapped['meta'] = $meta;
-        }
-        if (isset($mapped['answer'])) {
-            $mapped['answer'] = '';
-        }
-        if (isset($mapped['body'])) {
-            $mapped['body'] = [];
-        }
-
-        return $mapped;
-    }
-
-    /** @param array<string, mixed> $input */
-    private function saveSubmission(array $input, string $boardKey): array
+    /** @param array<string, mixed> $input @param array{user_id?: int|string}|null $auth */
+    private function saveSubmission(array $input, string $boardKey, ?array $auth = null): array
     {
         $postKey = isset($input['post_key']) ? trim((string) $input['post_key']) : (isset($input['id']) ? trim((string) $input['id']) : null);
         $authorRole = trim((string) ($input['author_role'] ?? $input['authorRole'] ?? ''));
@@ -282,6 +337,7 @@ final class BoardPostService
             $categoryId,
             $fileLabel,
             null,
+            (int) ($auth['user_id'] ?? 0) > 0 ? (int) $auth['user_id'] : null,
         ));
     }
 

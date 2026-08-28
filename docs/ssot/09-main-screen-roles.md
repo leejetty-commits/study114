@@ -334,12 +334,26 @@
 | 구분 | 채널 | guest |
 |------|------|-------|
 | 공개 | notice · faq · safe-guide | full |
-| 로그인 | library · library-template | 차단 |
-| 목록만 | library-guide-pdf | 목록 ○ · download login |
-| 공급자 | submission | 차단 (room/tutor) |
-| concern | parent/director/tutor/solved | 제목·요약만 · 본문/댓글/작성 login+역할 |
+| 로그인 | library · library-template | 소개·목록은 로그인 후 · **파일 다운로드 미구현** |
+| 목록 메타 | library-guide-pdf | 목록 ○ · 다운로드 미구현 |
+| 과외쌤 | submission | 차단 (과외쌤·운영자만) |
+| concern | parent/director/tutor/solved | **소개만** (메뉴명·공간 소개). 게시글 제목·작성자 숨김 |
 
-런타임 정본 seed: `preview/home-ui/src/right-rail-store.js` `DEFAULT_RIGHT_RAIL_SLOTS` · DB seed 동기화.
+공부방·과외쌤은 세 고민방 **본문 열람** 가능. 작성·댓글·반응은 자기 역할 방만.
+
+내부 정본 키: `concern-parent`. 문서키 `concern-family`는 **호환 별칭**이며 별도 채널이 아니다.
+
+레일 `guestFilter` 정본은 **`intro_only`** (채널 소개만). 옛 저장값 `summary_only`는 별칭이며 **게시글 제목·요약을 공개하지 않는다.**
+
+| 구분 | 상태 |
+|------|------|
+| 역할별 ACL 판정 | 구현 (JS·PHP) |
+| 프리뷰 작성·댓글·반응 | 구현 (localStorage) |
+| concern 서버 저장 API | **미구현** |
+| 운영 게시판 기능 | **미완료** |
+| 해결후기 작성·댓글·반응 | **기존값 유지 / 별도 최종 정책 확인** (이번 작업에서 확대·축소 금지) |
+
+런타임 정본 seed: `preview/home-ui/src/right-rail-store.js` `DEFAULT_RIGHT_RAIL_SLOTS` · DB seed 동기화. ACL 정본: `board-channel-acl.js` · `BoardChannelAcl.php`.
 
 ---
 
@@ -347,6 +361,7 @@
 
 | 날짜 | 내용 |
 |------|------|
+| 2026-08-29 | `intro_only` 정본 · `concern-family` 별칭 · 프리뷰/서버 저장 구분 · 해결후기 작성은 기존 유지 |
 | 2026-08-10 | §14-b 채널 ACL·레일 seed 정본 |
 | 2026-07-17 | GNB §13 **hide** 정책 정렬 · 역할 전환은 계정설정 |
 | 2026-07-07 | 프리뷰: 학부모·공부방·과외쌤 홈 **2탭 통일** (`provider-home`) · 공급자 탭1=내 노출 · GNB=search-ui 탐색 · [home-ui/DOC-CHECKLIST](../../preview/home-ui/DOC-CHECKLIST.md) |

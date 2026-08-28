@@ -21,7 +21,7 @@ import { getActiveNavId } from './nav.js';
 import { renderFaqBoard, renderSingleOpenBoard, bindSingleOpenBoard } from '../../../shared/board/index.js';
 import { POLICY_PAGES, POLICY_SHORT_NOTICE, getPolicyPage } from '../policy-copy.js';
 import { LIBRARY_HEAD, LIBRARY_SECTIONS } from '../library/library-copy.js';
-import { canDownloadFromBoard, getLibraryBoardMeta, listLibraryItems } from '../library/library-store.js';
+import { getLibraryBoardMeta, libraryDownloadControlHtml, listLibraryItems } from '../library/library-store.js';
 import { BOARD_TYPES, getBoardPolicy } from '../board-engine-copy.js';
 import { renderEmptyStateCard } from '../empty-state-copy.js';
 
@@ -314,7 +314,7 @@ function renderBoardPolicyChips(boardKey, navRole) {
   const chips = [
     `<span class="lib-chip lib-chip--type">${esc(boardTypeLabel(meta.policy.boardType))}</span>`,
     `<span class="lib-chip">열람 ${meta.canRead ? '가능' : '제한'}</span>`,
-    `<span class="lib-chip">${meta.canDownload ? '다운로드 가능' : '로그인 후 다운로드'}</span>`,
+    `<span class="lib-chip">${meta.canDownload ? '다운로드 가능' : '파일 다운로드 미구현'}</span>`,
   ];
   return `<div class="lib-policy-chips" aria-label="자료 권한 안내">${chips.join('')}</div>`;
 }
@@ -326,11 +326,8 @@ function formatAudience(audience) {
 }
 
 function renderLibraryCard(item, navRole) {
-  const canDl = canDownloadFromBoard(item.boardKey, navRole);
   const policy = getBoardPolicy(item.boardKey);
-  const dlBtn = canDl
-    ? `<button type="button" class="btn btn--secondary btn--sm lib-card__dl" data-lib-download="${esc(item.id)}">다운로드 · ${esc(item.fileLabel || '파일')}</button>`
-    : `<button type="button" class="btn btn--secondary btn--sm lib-card__dl" disabled title="로그인 후 다운로드">다운로드 · 로그인 필요</button>`;
+  const dlBtn = libraryDownloadControlHtml();
 
   return `
     <article class="lib-card" data-lib-id="${esc(item.id)}">
@@ -341,6 +338,7 @@ function renderLibraryCard(item, navRole) {
       <h3 class="lib-card__title">${esc(item.title)}</h3>
       <p class="lib-card__summary">${esc(item.summary)}</p>
       <p class="lib-card__meta">${esc(formatAudience(item.audience))}</p>
+      <p class="lib-card__meta">표시 이름: ${esc(item.fileLabel || '파일')} · 실제 파일 없음</p>
       ${dlBtn}
     </article>`;
 }
@@ -373,7 +371,7 @@ function renderSupportLibrarySection(path) {
       </header>
       <div class="sup-panel-card__body">
         ${grid}
-        <p class="lib-footnote">학습·운영 참고 자료를 내려받을 수 있습니다.</p>
+        <p class="lib-footnote">${esc(LIBRARY_HEAD.footnote)}</p>
       </div>
     </section>`;
 }
@@ -395,13 +393,6 @@ export function bindSupportScreenEvents(root, path, rerender) {
   });
 
   bindSingleOpenBoard(root);
-
-  root.querySelectorAll('[data-lib-download]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-lib-download');
-      window.alert(`자료 다운로드 미리보기 — ${id}`);
-    });
-  });
 
   const form = root.querySelector('[data-sup-contact-form]');
   if (form) {
