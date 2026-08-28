@@ -15,6 +15,7 @@ import {
   buildTrustStrip,
   buildContactPanel,
   microSafetyCopy,
+  confirmLeaveDetailCard,
 } from './detail-utils.js';
 import { renderTutorDetailBody } from './tutor-detail.js';
 import { renderStudyRoomDetailBody } from './studyroom-detail.js';
@@ -117,26 +118,32 @@ function renderMyshopEntryCta(kind, item) {
     </button>`;
 }
 
+function leaveDetailThen(next) {
+  void confirmLeaveDetailCard().then((ok) => {
+    if (!ok) return;
+    closeDetailModal();
+    next();
+  });
+}
+
 function bindDetailModalHashNavigation(wrap, { guest = false } = {}) {
   wrap.addEventListener('click', (e) => {
     const a = e.target instanceof Element ? e.target.closest('a[href], a[data-nav]') : null;
     if (!a || !wrap.contains(a)) return;
+    if (a.closest('.p24-leave-confirm')) return;
     const href = a.getAttribute('href') || '';
     const navPath = a.getAttribute('data-nav') || '';
     if (/^(https?:|mailto:|tel:)/i.test(href) && !href.startsWith(window.location.origin)) return;
     const raw = String(navPath || (href.startsWith('#') ? href.slice(1) : '')).replace(/^#/, '');
     if (!raw) return;
     const hashPath = raw.startsWith('/') ? raw : `/${raw}`;
-    if (guest && !isGuestPublicPath(navPath || href || hashPath)) {
-      e.preventDefault();
-      e.stopPropagation();
-      window.location.assign(loginUrl('detail', 'rail'));
-      return;
-    }
     e.preventDefault();
     e.stopPropagation();
-    closeDetailModal();
-    goHomeHashPath(hashPath);
+    if (guest && !isGuestPublicPath(navPath || href || hashPath)) {
+      leaveDetailThen(() => window.location.assign(loginUrl('detail', 'rail')));
+      return;
+    }
+    leaveDetailThen(() => goHomeHashPath(hashPath));
   });
 }
 
@@ -386,18 +393,19 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     if (kind !== 'study_room') return;
     const fromBtn = Number(e.currentTarget.getAttribute('data-study-room-id') || 0);
     const studyRoomId = Number(item?.id || fromBtn || 0);
-    closeDetailModal();
-    openPublicMyshop({
-      studyRoomId,
-      sourceRoute,
-      viewerRole: viewer,
-      item,
+    leaveDetailThen(() => {
+      openPublicMyshop({
+        studyRoomId,
+        sourceRoute,
+        viewerRole: viewer,
+        item,
+      });
     });
   });
 
   wrap.querySelectorAll('[data-p24-action="compare-guest-blocked"]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      window.location.assign(loginUrl('detail', 'compare'));
+      leaveDetailThen(() => window.location.assign(loginUrl('detail', 'compare')));
     });
   });
 
@@ -417,13 +425,11 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   });
 
   wrap.querySelector('[data-p24-action="plans"]')?.addEventListener('click', () => {
-    closeDetailModal();
-    showPaidGateOverlay();
+    leaveDetailThen(() => showPaidGateOverlay());
   });
 
   wrap.querySelector('[data-p24-action="memo-prep"]')?.addEventListener('click', () => {
-    closeDetailModal();
-    goHomeHashPath('/mypage/plans');
+    leaveDetailThen(() => goHomeHashPath('/mypage/plans'));
   });
 
   wrap.querySelectorAll('[data-p24-action="student-review-toggle"]').forEach((btn) => {

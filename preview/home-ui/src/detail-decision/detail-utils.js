@@ -165,6 +165,63 @@ export function showP24Toast(message, opts = {}) {
   toastTimer = setTimeout(() => el.classList.remove('is-visible'), cta ? 4000 : 2200);
 }
 
+const LEAVE_CONFIRM_ID = 'p24-leave-confirm';
+/** @type {((ok: boolean) => void) | null} */
+let settleLeaveConfirm = null;
+
+/**
+ * 확대카드에서 다른 화면으로 나갈 때 안내.
+ * @returns {Promise<boolean>} 이동이면 true, 머무르면 false
+ */
+export function confirmLeaveDetailCard() {
+  document.getElementById(LEAVE_CONFIRM_ID)?.remove();
+  if (settleLeaveConfirm) {
+    const prev = settleLeaveConfirm;
+    settleLeaveConfirm = null;
+    prev(false);
+  }
+
+  return new Promise((resolve) => {
+    settleLeaveConfirm = resolve;
+    const host = document.createElement('div');
+    host.id = LEAVE_CONFIRM_ID;
+    host.className = 'p24-leave-confirm';
+    host.setAttribute('role', 'dialog');
+    host.setAttribute('aria-modal', 'true');
+    host.setAttribute('aria-labelledby', 'p24-leave-title');
+    host.innerHTML = `
+      <div class="p24-leave-confirm__panel">
+        <p class="p24-leave-confirm__eyebrow">안내</p>
+        <h3 id="p24-leave-title" class="p24-leave-confirm__title">이 카드를 벗어납니다</h3>
+        <p class="p24-leave-confirm__lead">확대카드를 닫고 선택한 화면으로 이동합니다.</p>
+        <div class="p24-leave-confirm__actions">
+          <button type="button" class="btn btn--secondary btn--sm" data-p24-leave="stay">머무르기</button>
+          <button type="button" class="btn btn--primary btn--sm" data-p24-leave="go">이동</button>
+        </div>
+      </div>`;
+    document.body.appendChild(host);
+
+    const finish = (ok) => {
+      if (settleLeaveConfirm !== resolve) return;
+      settleLeaveConfirm = null;
+      host.remove();
+      resolve(ok);
+    };
+    host.querySelector('[data-p24-leave="stay"]')?.addEventListener('click', () => finish(false));
+    host.querySelector('[data-p24-leave="go"]')?.addEventListener('click', () => finish(true));
+    host.addEventListener('click', (e) => {
+      if (e.target === host) finish(false);
+    });
+    host.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      finish(false);
+    });
+    host.querySelector('[data-p24-leave="stay"]')?.focus();
+  });
+}
+
 /** @param {'study_room'|'tutor'|'student'} kind @param {object} item @param {string} viewer */
 export function buildContactPanel(kind, item, viewer) {
   const loginHref = `${AUTH_UI_BASE}/#/login`;

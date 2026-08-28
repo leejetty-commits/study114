@@ -3,7 +3,7 @@
  * 제목 필드 없음. 본문 snippet + 태그 + 시점. 펼침. CTA는 cta_kind 잠금값.
  */
 
-import { esc } from '../detail-decision/detail-utils.js';
+import { esc, confirmLeaveDetailCard } from '../detail-decision/detail-utils.js';
 import { getAuthUser } from '../auth-session.js';
 import { getNavRole } from '../state.js';
 import { guardGuestDeepAccess } from '../guest-deep-access.js';
@@ -265,15 +265,18 @@ function bindSheet(host, summary, view, extra) {
       e.preventDefault();
       const href = a.getAttribute('href') || '';
       const path = href.replace(/^#/, '');
-      closeSheet();
-      const modal = document.getElementById('p24-detail-modal');
-      modal?.querySelectorAll('[data-naver-map-mount]').forEach((mount) => {
-        /** @type {{ destroy?: () => void }|undefined} */ (mount)._mapController?.destroy?.();
+      void confirmLeaveDetailCard().then((ok) => {
+        if (!ok) return;
+        closeSheet();
+        const modal = document.getElementById('p24-detail-modal');
+        modal?.querySelectorAll('[data-naver-map-mount]').forEach((mount) => {
+          /** @type {{ destroy?: () => void }|undefined} */ (mount)._mapController?.destroy?.();
+        });
+        modal?.remove();
+        document.body.style.overflow = '';
+        document.body.classList.remove('p24-detail-open', 'p24-detail-open--floating');
+        if (path) goHomeHashPath(path.startsWith('/') ? path : `/${path}`);
       });
-      modal?.remove();
-      document.body.style.overflow = '';
-      document.body.classList.remove('p24-detail-open', 'p24-detail-open--floating');
-      if (path) goHomeHashPath(path.startsWith('/') ? path : `/${path}`);
     });
   });
 
