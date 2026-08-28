@@ -13,12 +13,4 @@ concurrency:
 
 jobs:
   verify-board-acl:
-    name: verify:board-acl
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Guard — Board ACL (PHP + JS)
-        uses: ./.github/actions/verify-board-acl
+    uses: ./.github/workflows/board-acl-verify.yml

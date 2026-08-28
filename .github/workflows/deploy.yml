@@ -6,16 +6,27 @@ on:
       - main
 
 jobs:
-  verify:
-    name: verify (shop-page + board-acl)
+  verify-board-acl:
+    uses: ./.github/workflows/board-acl-verify.yml
+
+  verify-shop-page:
+    name: verify:shop-page
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Guard — Board ACL (PHP + JS)
-        uses: ./.github/actions/verify-board-acl
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: preview/home-ui/package-lock.json
+
+      - name: Install home-ui deps
+        working-directory: preview/home-ui
+        run: npm ci
 
       - name: Guard — ShopPage verify:shop-page
         run: npm run verify:shop-page
@@ -25,7 +36,7 @@ jobs:
 
   ftp-deploy:
     name: ftp-deploy
-    needs: verify
+    needs: [verify-board-acl, verify-shop-page]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     if: github.ref == 'refs/heads/main'

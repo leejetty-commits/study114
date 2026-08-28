@@ -1,0 +1,70 @@
+# Board ACL 단위 검증. DB 불필요. workflow_call + PR/작업 브랜치에서 직접 호출.
+name: Board ACL verify
+
+on:
+  workflow_call:
+
+jobs:
+  verify-board-acl:
+    name: verify:board-acl
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: json, mbstring
+          coverage: none
+          tools: none
+
+      - name: Show PHP version
+        run: php -v
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: preview/home-ui/package-lock.json
+
+      - name: Install home-ui deps
+        working-directory: preview/home-ui
+        run: npm ci
+
+      - name: PHP syntax check
+        run: bash scripts/php-syntax-check.sh
+
+      - name: JS Board ACL
+        run: npm run verify:board-acl:js
+
+      - name: PHP Board ACL
+        run: php scripts/verify-board-channel-acl.php
+
+      - name: Compare JS and PHP ACL matrices
+        run: node scripts/compare-board-acl-matrix.mjs
+
+      - name: Publish Board ACL summary
+        run: |
+          set -euo pipefail
+          php_ver="$(php -r 'echo PHP_VERSION;')"
+          js_rows="$(node -e "console.log(JSON.parse(require('fs').readFileSync('tmp/board-acl-matrix-js.json','utf8')).length)")"
+          php_rows="$(node -e "console.log(JSON.parse(require('fs').readFileSync('tmp/board-acl-matrix-php.json','utf8')).length)")"
+          {
+            echo "## Board ACL CI"
+            echo
+            echo "- PHP version: \`${php_ver}\` (setup-php 8.2, extensions json+mbstring)"
+            echo "- DB: not required / not used"
+            echo "- PHP syntax: ok"
+            echo "- Matrix rows: JS=${js_rows} PHP=${php_rows}"
+            echo
+            echo "### Commands"
+            echo "1. \`bash scripts/php-syntax-check.sh\`"
+            echo "2. \`npm run verify:board-acl:js\`"
+            echo "3. \`php scripts/verify-board-channel-acl.php\`"
+            echo "4. \`node scripts/compare-board-acl-matrix.mjs\`"
+          } | tee -a "${GITHUB_STEP_SUMMARY}"
+          echo "ACL_SUMMARY php=${php_ver} js_rows=${js_rows} php_rows=${php_rows}"
