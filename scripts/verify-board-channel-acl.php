@@ -78,6 +78,34 @@ ok(
     !isset(BoardChannelAcl::channelIntro('concern-director')['title_from_post'])
     && BoardChannelAcl::channelIntro('concern-director')['title'] === '공부방 고민방',
 );
+$guestIntro = BoardChannelAcl::introPayload('concern-director', 'guest');
+ok(
+    'guest_intro_is_menu_label_only',
+    $guestIntro['level'] === 'menu_only'
+    && $guestIntro['menuLabel'] === '공부방 고민방'
+    && !isset($guestIntro['body'])
+    && !isset($guestIntro['title'])
+    && !isset($guestIntro['allowedRolesLabel'])
+    && array_keys($guestIntro) === ['boardKey', 'level', 'menuLabel'],
+);
+ok(
+    'guest_menu_only_all_concern_channels',
+    BoardChannelAcl::introLevel('concern-parent', 'guest') === 'menu_only'
+    && BoardChannelAcl::introLevel('concern-tutor', 'guest') === 'menu_only'
+    && BoardChannelAcl::introLevel('concern-solved', 'guest') === 'menu_only',
+);
+ok(
+    'logged_in_restricted_role_still_gets_intro_body',
+    BoardChannelAcl::introLevel('concern-director', 'demand') === 'intro'
+    && (BoardChannelAcl::introPayload('concern-director', 'demand')['body'] ?? '') !== '',
+);
+ok(
+    'guest_cannot_write_comment_react_any_concern',
+    !BoardChannelAcl::canCompose('concern-parent', 'guest')
+    && !BoardChannelAcl::canComment('concern-parent', 'guest')
+    && !BoardChannelAcl::canReact('concern-parent', 'guest')
+    && !BoardChannelAcl::canCompose('concern-solved', 'guest'),
+);
 ok(
     'ticket_only_new_student_thread',
     MessagesService::requiresColdMemoTicket(true, 'student')

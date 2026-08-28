@@ -25,6 +25,7 @@ import {
   canListBoard,
   getBoardAccess,
   getChannelIntro,
+  boardIntroLevel,
   roleGateCopy,
 } from '../board-channel-acl.js';
 import { renderStateCard } from '../empty-state-copy.js';
@@ -107,6 +108,7 @@ function renderCommunityIntro(navRole) {
 function renderChannelIntroCard(board, role) {
   const intro = getChannelIntro(board.boardKey);
   const gate = roleGateCopy(board.boardKey, role);
+  const menuOnly = boardIntroLevel(board.boardKey, role) === 'menu_only';
   const links =
     role === 'guest'
       ? [
@@ -114,11 +116,16 @@ function renderChannelIntroCard(board, role) {
           { label: '다른 게시판', href: `#${getDefaultCommunityPath()}` },
         ]
       : [{ label: '다른 게시판', href: `#${getDefaultCommunityPath()}` }];
-  return `
+  // 비회원은 메뉴명만. 공간 소개문 문단을 렌더하지 않는다.
+  const lead = menuOnly
+    ? ''
+    : `
     <section class="concern-hero">
       <p class="concern-eyebrow">${esc(board.roleHint)}</p>
       <p class="concern-hero__lead">${esc(intro.body)}</p>
-    </section>
+    </section>`;
+  return `
+    ${lead}
     ${renderStateCard({
       title: gate.title,
       body: gate.body,

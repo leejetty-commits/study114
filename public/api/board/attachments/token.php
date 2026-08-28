@@ -59,6 +59,7 @@ BoardApi::run(static function (): void {
         $audience === 'admin' ? 'admin' : 'owner',
         $authorRole,
         $operatorId,
+        (int) ($auth['user_id'] ?? 0),
     );
     BoardApi::ok($token);
 });

@@ -64,7 +64,7 @@ final class BoardPostService
             return [
                 'posts' => [],
                 'access' => 'intro',
-                'intro' => BoardChannelAcl::channelIntro($boardKey),
+                'intro' => BoardChannelAcl::introPayload($boardKey, $boardRole),
             ];
         }
 
@@ -229,28 +229,30 @@ final class BoardPostService
     }
 
     /**
-     * 기존 글 소유권. admin 은 통과.
-     * author_user_id 가 있으면 세션 user_id 와 일치해야 하고, 없으면 author_role 로만 검사한다.
+     * 기존 글 소유권. admin 만 예외.
+     * author_user_id 가 없는 레거시 글은 소유자를 확정할 수 없으므로 일반 사용자에게 fail-closed.
+     * 같은 역할이라는 이유로 남의 글을 수정·삭제하게 두지 않는다. 추측 backfill 도 하지 않는다.
      *
      * @param array<string, mixed> $existing
      * @param array{role_type?: string, user_id?: int|string, id?: int|string, admin_level?: mixed} $auth
      */
     private function assertExistingPostOwnership(array $existing, array $auth, string $navRole): void
     {
+        unset($navRole);
         $isAdmin = ($auth['role_type'] ?? '') === 'admin' || !empty($auth['admin_level']);
         if ($isAdmin) {
             return;
         }
         $ownerId = (int) ($existing['author_user_id'] ?? 0);
-        $sessionId = (int) ($auth['user_id'] ?? $auth['id'] ?? 0);
-        if ($ownerId > 0) {
-            if ($sessionId <= 0 || $ownerId !== $sessionId) {
-                throw new BoardAccessException(403, 'forbidden', '작성자만 수정·삭제할 수 있습니다.');
-            }
-
-            return;
+        if ($ownerId <= 0) {
+            throw new BoardAccessException(
+                403,
+                'forbidden',
+                '작성자 정보가 없는 글입니다. 운영자에게 문의해 주세요.',
+            );
         }
-        if ((string) ($existing['author_role'] ?? '') !== $navRole) {
+        $sessionId = (int) ($auth['user_id'] ?? $auth['id'] ?? 0);
+        if ($sessionId <= 0 || $ownerId !== $sessionId) {
             throw new BoardAccessException(403, 'forbidden', '작성자만 수정·삭제할 수 있습니다.');
         }
     }

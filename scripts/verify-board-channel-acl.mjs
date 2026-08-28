@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  boardIntroLevel,
   canCommentBoard,
   canComposeBoard,
   canDeleteBoard,
@@ -19,6 +20,7 @@ import {
   canUploadBoard,
   dumpBoardAclMatrix,
   getBoardAccess,
+  getBoardIntroPayload,
   isAccessFailClosed,
   normalizeBoardKey,
   normalizeGuestFilter,
@@ -268,6 +270,46 @@ ok(
     { ok: true, posts: [{ title: 'secret' }] },
     { boardKey: 'concern-director', navRole: 'tutor' },
   ).posts.length === 0,
+);
+
+const guestIntroPayload = getBoardIntroPayload('concern-director', 'guest');
+ok(
+  'guest_intro_is_menu_label_only',
+  guestIntroPayload.level === 'menu_only' &&
+    guestIntroPayload.menuLabel === '공부방 고민방' &&
+    Object.keys(guestIntroPayload).sort().join(',') === 'boardKey,level,menuLabel',
+);
+ok(
+  'guest_menu_only_all_concern_channels',
+  ['concern-parent', 'concern-director', 'concern-tutor', 'concern-solved'].every(
+    (k) => boardIntroLevel(k, 'guest') === 'menu_only',
+  ),
+);
+ok(
+  'logged_in_restricted_role_still_gets_intro_body',
+  boardIntroLevel('concern-director', 'parent') === 'intro' &&
+    Boolean(getBoardIntroPayload('concern-director', 'parent').body),
+);
+ok(
+  'guest_cannot_write_comment_react_any_concern',
+  ['concern-parent', 'concern-director', 'concern-tutor', 'concern-solved'].every(
+    (k) => !canComposeBoard(k, 'guest') && !canCommentBoard(k, 'guest') && !canReactBoard(k, 'guest'),
+  ),
+);
+ok(
+  'normalize_guest_intro_never_carries_server_blurb',
+  (() => {
+    const r = normalizeBoardListResponse(
+      { ok: true, access: 'intro', posts: [], intro: { title: 'x', body: 'leak', latestTitle: 'secret' } },
+      { boardKey: 'concern-director', navRole: 'guest' },
+    );
+    return (
+      r.intro.level === 'menu_only' &&
+      r.intro.body === undefined &&
+      r.intro.latestTitle === undefined &&
+      r.posts.length === 0
+    );
+  })(),
 );
 
 ok(

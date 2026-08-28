@@ -1,4 +1,9 @@
-import { getChannelIntro, getBoardAccess, isAccessFailClosed, normalizeBoardKey } from '../board-channel-acl.js';
+import {
+  getBoardAccess,
+  getBoardIntroPayload,
+  isAccessFailClosed,
+  normalizeBoardKey,
+} from '../board-channel-acl.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
@@ -8,6 +13,7 @@ const CREDENTIALS = { credentials: 'include' };
  * 서버 access=intro|blocked 이면 무조건 posts=[].
  * 로컬 ACL 이 full 이 아니면 무조건 posts=[].
  * 보호 채널에서 access 필드가 없으면 full 로 추정하지 않고 fail closed.
+ * intro 는 서버 값을 쓰지 않고 로컬에서 다시 만든다. 구형 서버가 소개문에 글 정보를 실어도 버린다.
  *
  * @param {unknown} data
  * @param {{ boardKey?: string, navRole?: string }} [ctx]
@@ -17,17 +23,12 @@ export function normalizeBoardListResponse(data, ctx = {}) {
   const boardKey = normalizeBoardKey(ctx.boardKey || '');
   const navRole = ctx.navRole || 'guest';
   const local = boardKey ? getBoardAccess(boardKey, navRole) : null;
-  const introFallback = boardKey ? { ...getChannelIntro(boardKey), boardKey } : null;
+  const localIntro = boardKey ? getBoardIntroPayload(boardKey, navRole) : null;
 
-  const empty = (access, intro) => ({
-    posts: [],
-    access,
-    intro: intro && typeof intro === 'object' ? intro : introFallback,
-  });
+  const empty = (access) => ({ posts: [], access, intro: localIntro });
 
   let posts = [];
   let serverAccess = null;
-  let intro = null;
   if (Array.isArray(data)) {
     posts = data;
   } else {
@@ -37,30 +38,29 @@ export function normalizeBoardListResponse(data, ctx = {}) {
       serverAccess = accessRaw;
     }
     posts = Array.isArray(raw.posts) ? raw.posts : [];
-    intro = raw.intro && typeof raw.intro === 'object' ? raw.intro : null;
   }
 
   if (serverAccess === 'intro' || serverAccess === 'blocked') {
-    return empty(serverAccess, intro);
+    return empty(serverAccess);
   }
 
   if (local && local.access !== 'full') {
-    return empty(local.access, intro);
+    return empty(local.access);
   }
 
   const legacy = serverAccess === null;
   if (legacy) {
     if (!boardKey || isAccessFailClosed(boardKey) || !local || local.access !== 'full') {
       const access = local?.access && local.access !== 'full' ? local.access : 'blocked';
-      return empty(access, intro);
+      return empty(access);
     }
-    return { posts, access: 'full', intro };
+    return { posts, access: 'full', intro: null };
   }
 
   if (!local || local.access !== 'full') {
-    return empty(local?.access || 'blocked', intro);
+    return empty(local?.access || 'blocked');
   }
-  return { posts, access: 'full', intro };
+  return { posts, access: 'full', intro: null };
 }
 
 async function readJson(res) {

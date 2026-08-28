@@ -210,6 +210,41 @@ export function getChannelIntro(boardKey) {
   );
 }
 
+/**
+ * 비회원 고민방은 메뉴명만. 소개문·허용역할 문구도 주지 않는다.
+ * @param {string} boardKey
+ * @param {BoardRole|string} role
+ * @returns {'menu_only'|'intro'}
+ */
+export function boardIntroLevel(boardKey, role) {
+  const key = normalizeBoardKey(boardKey);
+  const boardRole = resolveBoardRole(role);
+  return boardRole === 'guest' && isConcernChannel(key) ? 'menu_only' : 'intro';
+}
+
+/**
+ * access=intro 응답에 실을 소개 payload. menu_only 면 메뉴명 외 필드를 만들지 않는다.
+ * @param {string} boardKey
+ * @param {BoardRole|string} role
+ */
+export function getBoardIntroPayload(boardKey, role) {
+  const key = normalizeBoardKey(boardKey);
+  const intro = getChannelIntro(key);
+  const level = boardIntroLevel(key, role);
+  if (level === 'menu_only') {
+    return { boardKey: key, level, menuLabel: intro.title };
+  }
+
+  return {
+    boardKey: key,
+    level,
+    menuLabel: intro.title,
+    title: intro.title,
+    body: intro.body,
+    allowedRolesLabel: intro.allowedRolesLabel,
+  };
+}
+
 /** @param {string} boardKey @param {BoardRole|string} role */
 export function canDiscoverBoard(boardKey, role) {
   const key = normalizeBoardKey(boardKey);
@@ -385,12 +420,16 @@ export function roleGateCopy(boardKey, navRole = 'guest') {
   const access = getBoardAccess(key, navRole);
   const boardRole = resolveBoardRole(navRole);
 
+  // 비회원 고민방은 메뉴명만. 공간 소개문·허용역할 문구도 노출하지 않는다.
   if (boardRole === 'guest' || !navRole) {
+    const menuOnly = boardIntroLevel(key, boardRole) === 'menu_only';
     return {
       kind: 'guest',
       title: intro.title,
-      body: `${intro.body} 이 공간의 소개만 볼 수 있어요. 로그인하면 역할에 맞는 글을 볼 수 있어요.`,
-      roleLabel: intro.allowedRolesLabel,
+      body: menuOnly
+        ? '로그인하면 역할에 맞는 글을 볼 수 있어요.'
+        : `${intro.body} 이 공간의 소개만 볼 수 있어요. 로그인하면 역할에 맞는 글을 볼 수 있어요.`,
+      roleLabel: menuOnly ? '' : intro.allowedRolesLabel,
     };
   }
 

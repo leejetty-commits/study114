@@ -34,10 +34,14 @@ final class BoardAttachmentService
      * @param array<string, mixed> $file $_FILES entry
      * @return array<string, mixed>
      */
-    public function uploadSubmission(string $postKey, string $authorRole, array $file): array
-    {
+    public function uploadSubmission(
+        string $postKey,
+        string $authorRole,
+        array $file,
+        ?int $sessionUserId = null,
+    ): array {
         $this->assertAuthorRole($authorRole);
-        $post = $this->assertOwnedPost($postKey, $authorRole);
+        $post = $this->assertOwnedPost($postKey, $authorRole, $sessionUserId);
         $this->assertEditableStatus((string) $post['status']);
 
         [$originalName, $mimeType, $sizeBytes, $stream] = $this->parseUploadedFile($file);
@@ -90,10 +94,11 @@ final class BoardAttachmentService
         string $audience,
         ?string $authorRole = null,
         ?string $operatorId = null,
+        ?int $sessionUserId = null,
     ): array {
         if ($audience === 'owner') {
             $this->assertAuthorRole((string) $authorRole);
-            $this->assertOwnedPost($postKey, (string) $authorRole);
+            $this->assertOwnedPost($postKey, (string) $authorRole, $sessionUserId);
         } elseif ($audience !== 'admin') {
             throw new InvalidArgumentException('audience는 owner 또는 admin이어야 합니다.');
         }
@@ -194,8 +199,13 @@ final class BoardAttachmentService
         ];
     }
 
-    /** @return array<string, mixed> */
-    private function assertOwnedPost(string $postKey, string $authorRole): array
+    /**
+     * 요청 board_key 가 아니라 DB 행의 실제 채널·소유자를 본다.
+     * author_user_id 가 없는 레거시 글은 소유자를 확정할 수 없으므로 admin 외 fail-closed.
+     *
+     * @return array<string, mixed>
+     */
+    private function assertOwnedPost(string $postKey, string $authorRole, ?int $sessionUserId = null): array
     {
         $rows = $this->posts->findAllByPostKey($postKey);
         if ($rows === []) {
@@ -211,6 +221,19 @@ final class BoardAttachmentService
         }
         if ((string) $post['author_role'] !== $authorRole) {
             throw new InvalidArgumentException('작성자 역할이 일치하지 않습니다.');
+        }
+        if ($authorRole !== 'admin') {
+            $ownerId = (int) ($post['author_user_id'] ?? 0);
+            if ($ownerId <= 0) {
+                throw new BoardAccessException(
+                    403,
+                    'forbidden',
+                    '작성자 정보가 없는 글입니다. 운영자에게 문의해 주세요.',
+                );
+            }
+            if ($sessionUserId === null || $sessionUserId <= 0 || $ownerId !== $sessionUserId) {
+                throw new BoardAccessException(403, 'forbidden', '작성자만 접근할 수 있습니다.');
+            }
         }
 
         return $post;

@@ -9,6 +9,7 @@ import { getConcernBoardByKey } from './concern/copy.js';
 import { getHotConcernSamples, getLatestConcernSamples, listConcernPosts, reactionTotal } from './concern/store.js';
 import { renderPromoRailCard } from './promo/screens.js';
 import {
+  boardIntroLevel,
   canShowBoardInRail,
   canShowBoardPostsInRail,
   getChannelIntro,
@@ -166,12 +167,14 @@ function staticFallbackItems(boardKey) {
 
 function introRailItem(boardKey) {
   const intro = getChannelIntro(boardKey);
+  // 비회원 고민방은 메뉴명만. 소개문을 레일에도 싣지 않는다.
+  const menuOnly = boardIntroLevel(boardKey, getNavRole()) === 'menu_only';
   return {
     boardKey,
     title: intro.title,
-    summary: intro.body,
+    summary: menuOnly ? '' : intro.body,
     href: boardRoute(boardKey),
-    kind: '공간 소개',
+    kind: menuOnly ? '' : '공간 소개',
     introOnly: true,
   };
 }

@@ -43,6 +43,6 @@ BoardApi::run(static function (): void {
     $service = new BoardAttachmentService();
     /** @var array<string, mixed> $file */
     $file = $_FILES['file'];
-    $attachment = $service->uploadSubmission($postKey, $authorRole, $file);
+    $attachment = $service->uploadSubmission($postKey, $authorRole, $file, (int) ($auth['user_id'] ?? 0));
     BoardApi::ok(['attachment' => $attachment]);
 });

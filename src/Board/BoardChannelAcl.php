@@ -429,6 +429,40 @@ final class BoardChannelAcl
         return $row;
     }
 
+    /** 비회원 고민방은 메뉴명만. 소개문·허용역할 문구도 주지 않는다. */
+    public static function introLevel(string $boardKey, string $boardRole): string
+    {
+        return $boardRole === 'guest' && self::isConcern($boardKey) ? 'menu_only' : 'intro';
+    }
+
+    /**
+     * access=intro 응답에 실을 소개 payload. menu_only 면 메뉴명 외 필드를 만들지 않는다.
+     *
+     * @return array<string, string>
+     */
+    public static function introPayload(string $boardKey, string $boardRole): array
+    {
+        $key = self::normalizeBoardKey($boardKey);
+        $intro = self::channelIntro($key);
+        $level = self::introLevel($key, $boardRole);
+        if ($level === 'menu_only') {
+            return [
+                'boardKey' => $key,
+                'level' => $level,
+                'menuLabel' => $intro['title'],
+            ];
+        }
+
+        return [
+            'boardKey' => $key,
+            'level' => $level,
+            'menuLabel' => $intro['title'],
+            'title' => $intro['title'],
+            'body' => $intro['body'],
+            'allowedRolesLabel' => $intro['allowedRolesLabel'],
+        ];
+    }
+
     public static function isConcern(string $boardKey): bool
     {
         return str_starts_with(self::normalizeBoardKey($boardKey), 'concern-');
