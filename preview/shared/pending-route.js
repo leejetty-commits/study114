@@ -5,11 +5,15 @@
 
 const KEY = 'study114:pending-route';
 
-/** @param {string} path e.g. `/plans` · `/support` */
+/** @param {string} path e.g. `/plans` · `/mypage/messages/reviews?provider_id=1` */
 export function setPendingRoute(path) {
   const raw = String(path || '').trim();
   if (!raw) return;
-  const normalized = (raw.startsWith('/') ? raw : `/${raw}`).split('?')[0];
+  const withSlash = raw.startsWith('/') ? raw : `/${raw}`;
+  const qIdx = withSlash.indexOf('?');
+  const pathOnly = (qIdx === -1 ? withSlash : withSlash.slice(0, qIdx)).replace(/\/$/, '') || '/';
+  const query = qIdx === -1 ? '' : withSlash.slice(qIdx);
+  const normalized = `${pathOnly}${query}`;
   try {
     sessionStorage.setItem(KEY, normalized);
   } catch {

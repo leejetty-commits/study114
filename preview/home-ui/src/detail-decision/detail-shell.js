@@ -1,5 +1,4 @@
 import { startFirstMemoFlow } from '../messages/compose-flow.js';
-import { navigate } from '../state.js';
 import { recordRecentView, patchRecentHandoff } from '../mypage/recent-store.js';
 import { WISH_LABELS } from '../handoff-copy.js';
 import { notifyCompareToggle, notifyStudentReviewToggle, notifyWishToggle } from '../handoff-utils.js';
@@ -16,18 +15,17 @@ import {
   buildTrustStrip,
   buildContactPanel,
   microSafetyCopy,
-  showP24Toast,
 } from './detail-utils.js';
 import { renderTutorDetailBody } from './tutor-detail.js';
 import { renderStudyRoomDetailBody } from './studyroom-detail.js';
 import { AUTH_UI_BASE } from '../data.js';
-import { HOME_UI_BASE } from '../../../shared/preview-links.js';
 import { toggleWishlist, toggleCompare, isWishlisted } from '../user-actions-state.js';
 import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
 import { renderRightRailBlock } from '../right-rail.js';
 import { maskPublicDisplayName } from '../student-blind-teaser.js';
 import { isGuestPublicPath, loginUrl } from '../../../shared/route-access.js';
 import { openPublicMyshop } from '../myshop/navigate.js';
+import { goHomeHashPath } from '../spa-navigation.js';
 import { bindProviderReviewMount } from '../provider-reviews/ui.js';
 import { bindReviewSheetTriggers, openReviewSheet } from '../provider-reviews/sheet.js';
 import { isLoggedIn } from '../auth-session.js';
@@ -119,13 +117,27 @@ function renderMyshopEntryCta(kind, item) {
     </button>`;
 }
 
-function isHomeSpaHost() {
-  try {
-    const home = new URL(HOME_UI_BASE, window.location.href);
-    return window.location.origin === home.origin && window.location.pathname.startsWith(home.pathname.replace(/\/$/, '') || '/');
-  } catch {
-    return false;
-  }
+function bindDetailModalHashNavigation(wrap, { guest = false } = {}) {
+  wrap.addEventListener('click', (e) => {
+    const a = e.target instanceof Element ? e.target.closest('a[href], a[data-nav]') : null;
+    if (!a || !wrap.contains(a)) return;
+    const href = a.getAttribute('href') || '';
+    const navPath = a.getAttribute('data-nav') || '';
+    if (/^(https?:|mailto:|tel:)/i.test(href) && !href.startsWith(window.location.origin)) return;
+    const raw = String(navPath || (href.startsWith('#') ? href.slice(1) : '')).replace(/^#/, '');
+    if (!raw) return;
+    const hashPath = raw.startsWith('/') ? raw : `/${raw}`;
+    if (guest && !isGuestPublicPath(navPath || href || hashPath)) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.assign(loginUrl('detail', 'rail'));
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    closeDetailModal();
+    goHomeHashPath(hashPath);
+  });
 }
 
 function bindFloatingDrag(wrap) {
@@ -203,31 +215,6 @@ function bindFloatingDrag(wrap) {
     handle.addEventListener('pointerup', onUp);
     handle.addEventListener('pointercancel', onUp);
     e.preventDefault();
-  });
-}
-
-function bindGuestRailNavigation(wrap) {
-  wrap.querySelectorAll('a[href], a[data-nav]').forEach((a) => {
-    if (!a.closest('.right-rail')) return;
-    a.addEventListener('click', (e) => {
-      const navPath = a.getAttribute('data-nav') || '';
-      const href = a.getAttribute('href') || '';
-      const path = navPath || href;
-      if (!isGuestPublicPath(path)) {
-        e.preventDefault();
-        window.location.assign(loginUrl('detail', 'rail'));
-        return;
-      }
-      e.preventDefault();
-      const normalized = String(navPath || href.replace(/^#/, '')).replace(/^#/, '');
-      const hashPath = normalized.startsWith('/') ? normalized : `/${normalized}`;
-      if (isHomeSpaHost()) {
-        navigate(hashPath);
-        showP24Toast('안내 페이지로 이동했습니다. 카드를 끌어 위치를 바꿀 수 있어요.');
-        return;
-      }
-      window.location.assign(`${HOME_UI_BASE}/#${hashPath}`);
-    });
   });
 }
 
@@ -334,9 +321,10 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     document.body.classList.add('p24-detail-open--floating');
     document.body.style.overflow = '';
     bindFloatingDrag(wrap);
-    bindGuestRailNavigation(wrap);
+    bindDetailModalHashNavigation(wrap, { guest: true });
   } else {
     document.body.style.overflow = 'hidden';
+    bindDetailModalHashNavigation(wrap, { guest: false });
   }
 
   if (kind === 'study_room' && !floating) {
@@ -435,7 +423,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
 
   wrap.querySelector('[data-p24-action="memo-prep"]')?.addEventListener('click', () => {
     closeDetailModal();
-    window.location.hash = '/mypage/plans';
+    goHomeHashPath('/mypage/plans');
   });
 
   wrap.querySelectorAll('[data-p24-action="student-review-toggle"]').forEach((btn) => {

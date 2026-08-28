@@ -26,6 +26,7 @@ import {
   reviewsArchivePath,
 } from './store.js';
 import { startFirstMemoFlow } from '../messages/compose-flow.js';
+import { goHomeHashPath } from '../spa-navigation.js';
 
 let sheetEl = null;
 
@@ -258,6 +259,22 @@ function bindSheet(host, summary, view, extra) {
   host.querySelector('[data-review-sheet-act="close"]')?.addEventListener('click', closeSheet);
   host.querySelector('.review-sheet')?.addEventListener('click', (e) => {
     if (e.target === host.querySelector('.review-sheet')) closeSheet();
+  });
+  host.querySelectorAll('.review-sheet__more').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const href = a.getAttribute('href') || '';
+      const path = href.replace(/^#/, '');
+      closeSheet();
+      const modal = document.getElementById('p24-detail-modal');
+      modal?.querySelectorAll('[data-naver-map-mount]').forEach((mount) => {
+        /** @type {{ destroy?: () => void }|undefined} */ (mount)._mapController?.destroy?.();
+      });
+      modal?.remove();
+      document.body.style.overflow = '';
+      document.body.classList.remove('p24-detail-open', 'p24-detail-open--floating');
+      if (path) goHomeHashPath(path.startsWith('/') ? path : `/${path}`);
+    });
   });
 
   host.querySelectorAll('[data-review-expand]').forEach((btn) => {

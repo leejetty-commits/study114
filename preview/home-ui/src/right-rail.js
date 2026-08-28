@@ -6,7 +6,7 @@ import { getNavRole } from './state.js';
 import { SITE_PROMO_ITEMS, renderPromoCard } from '../../shared/promo-sidebar.js';
 import { getBoardChannel, isConcernBoardKey } from './board-channel-store.js';
 import { getConcernBoardByKey } from './concern/copy.js';
-import { getHotConcernSamples, listConcernPosts, reactionTotal } from './concern/store.js';
+import { getHotConcernSamples, getLatestConcernSamples, listConcernPosts, reactionTotal } from './concern/store.js';
 import { renderPromoRailCard } from './promo/screens.js';
 import {
   canShowBoardInRail,
@@ -219,7 +219,7 @@ function liveFieldCopy(slotKey) {
   }
   if (slotKey === 'detail_right_rail') {
     return {
-      eyebrow: '판단 보조',
+      eyebrow: '',
       title: '비슷한 고민 / 사례',
       ctaLabel: '커뮤니티 열기',
       ctaHref: '#/community/director',
@@ -244,11 +244,16 @@ function liveFieldCopy(slotKey) {
 /** @param {string} slotKey @param {{ guestFilter?: boolean }} [opts] */
 function renderLiveFieldSlot(slotKey, opts = {}) {
   const copy = liveFieldCopy(slotKey);
-  const boardKeys = resolveConcernBoardKeysForSlot(slotKey, opts);
-  const samples = getHotConcernSamples({
-    limit: 3,
-    boardKeys,
-  }).filter((post) => canShowBoardInRail(post.boardKey, getNavRole(), { guestFilter: opts.guestFilter }));
+  let boardKeys = resolveConcernBoardKeysForSlot(slotKey, opts);
+  const latestMode = slotKey === 'detail_right_rail';
+  if (latestMode && !boardKeys.length) {
+    boardKeys = ['concern-director', 'concern-tutor', 'concern-parent'];
+  }
+  const samples = (
+    latestMode
+      ? getLatestConcernSamples({ limit: 3, boardKeys })
+      : getHotConcernSamples({ limit: 3, boardKeys })
+  ).filter((post) => canShowBoardInRail(post.boardKey, getNavRole(), { guestFilter: opts.guestFilter }));
   const items = samples
     .map((post) => {
       const board = getConcernBoardByKey(post.boardKey);
@@ -265,7 +270,7 @@ function renderLiveFieldSlot(slotKey, opts = {}) {
   return `
     <section class="live-rail-slot live-rail-slot--field">
       <div class="live-rail-slot__head">
-        <span class="live-rail-slot__eyebrow">${esc(copy.eyebrow)}</span>
+        ${copy.eyebrow ? `<span class="live-rail-slot__eyebrow">${esc(copy.eyebrow)}</span>` : ''}
         <strong class="live-rail-slot__title">${esc(copy.title)}</strong>
       </div>
       <div class="live-rail-slot__items">${items || '<p class="live-rail-empty">아직 올라온 고민이 없습니다.</p>'}</div>
@@ -313,7 +318,7 @@ function actionCtasForContext(slotKey) {
 }
 
 function actionGuideCopy(slotKey) {
-  if (slotKey === 'detail_right_rail') return { eyebrow: '행동 유도', title: '첫 연락 전 체크' };
+  if (slotKey === 'detail_right_rail') return { eyebrow: '', title: '사용팁' };
   if (slotKey === 'search_right_rail') return { eyebrow: '초보 가이드', title: '처음 찾는 분께' };
   if (slotKey === 'plans_right_rail') return { eyebrow: '상품 안내', title: '지금 필요한 안내' };
   return { eyebrow: '지금 필요한 안내', title: '이번 시즌 추천 행동' };
@@ -325,7 +330,7 @@ function renderActionGuideSlot(slotKey) {
   return `
     <section class="live-rail-slot live-rail-slot--action">
       <div class="live-rail-slot__head">
-        <span class="live-rail-slot__eyebrow">${esc(copy.eyebrow)}</span>
+        ${copy.eyebrow ? `<span class="live-rail-slot__eyebrow">${esc(copy.eyebrow)}</span>` : ''}
         <strong class="live-rail-slot__title">${esc(copy.title)}</strong>
       </div>
       <div class="live-rail-slot__items">

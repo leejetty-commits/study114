@@ -759,6 +759,17 @@ export function countReceivedReviewsPreview(providerType) {
   return getReviewCount(providerType, 1);
 }
 
-export function reviewsArchivePath() {
-  return '/mypage/messages/reviews';
+export function reviewsArchivePath(opts = {}) {
+  const base = '/mypage/messages/reviews';
+  const params = new URLSearchParams();
+  const type = opts.providerType;
+  const id = Number(opts.providerId);
+  if ((type === 'study_room' || type === 'tutor') && Number.isFinite(id) && id > 0) {
+    params.set('provider_type', type);
+    params.set('provider_id', String(id));
+  }
+  const page = Number(opts.page);
+  if (Number.isFinite(page) && page > 1) params.set('page', String(Math.floor(page)));
+  const q = params.toString();
+  return q ? `${base}?${q}` : base;
 }

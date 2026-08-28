@@ -289,6 +289,23 @@ export function getHotConcernSamples({ limit = 3, preferBoardKey, boardKeys } = 
   return picked.slice(0, limit);
 }
 
+const PRIMARY_CONCERN_BOARD_KEYS = ['concern-director', 'concern-tutor', 'concern-parent'];
+
+/** 보드당 최신글 1개. 확대카드 좌측 배너용. */
+export function getLatestConcernSamples({ limit = 3, boardKeys } = {}) {
+  const allowed =
+    Array.isArray(boardKeys) && boardKeys.length ? boardKeys.filter(Boolean) : PRIMARY_CONCERN_BOARD_KEYS;
+  const picked = [];
+  for (const boardKey of allowed) {
+    if (picked.length >= limit) break;
+    const hit = listConcernPosts(boardKey, { sort: 'recent' })
+      .filter((p) => p.type !== 'community_alert')
+      .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))[0];
+    if (hit) picked.push(hit);
+  }
+  return picked.slice(0, limit);
+}
+
 export function createConcernPost({ boardKey, type, title, body, authorName, authorRoleLabel }) {
   const post = {
     id: uid('post'),

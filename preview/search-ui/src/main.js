@@ -6,6 +6,7 @@ import '@home-ui/styles/home.css';
 import '@home-ui/styles/home-listings.css';
 import '@home-ui/styles/home-member-flows.css';
 import '@home-ui/styles/home-right-rail.css';
+import '@home-ui/styles/home-provider-reviews.css';
 import '@home-ui/styles/home-promo.css';
 import './styles/search.css';
 import './styles/handoff-bridge.css';

@@ -10,6 +10,7 @@ import { getTutor } from '../tutor-reg/store.js';
 import { PROVIDER_REVIEW_COPY, reviewSnippet } from './copy.js';
 import {
   fetchReviewInbox,
+  fetchReviewList,
   fetchReviewSummary,
   blockReviewAuthor,
   unblockReviewAuthor,
@@ -31,10 +32,21 @@ export function parseReviewsPath(path) {
   const raw = String(path || '');
   const pathOnly = (raw.startsWith('/') ? raw : `/${raw}`).split('?')[0];
   const query = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
-  const pageNum = Number(new URLSearchParams(query).get('page') || 1);
+  const params = new URLSearchParams(query);
+  const pageNum = Number(params.get('page') || 1);
   const page = Number.isFinite(pageNum) && pageNum > 0 ? Math.floor(pageNum) : 1;
+  const typeRaw = String(params.get('provider_type') || '');
+  const providerType = typeRaw === 'tutor' || typeRaw === 'study_room' ? typeRaw : '';
+  const providerIdNum = Number(params.get('provider_id') || 0);
+  const providerId = Number.isFinite(providerIdNum) && providerIdNum > 0 ? providerIdNum : 0;
   if (pathOnly === '/mypage/messages/reviews' || pathOnly.startsWith('/mypage/messages/reviews/')) {
-    return { mode: 'list', lane: 'all', page };
+    return {
+      mode: 'list',
+      lane: 'all',
+      page,
+      providerType: providerType || undefined,
+      providerId: providerId || undefined,
+    };
   }
   return null;
 }
@@ -123,10 +135,10 @@ export function renderReviewInboxPlaceholder() {
     </section>`;
 }
 
-function reviewsPageFromLocation() {
+function reviewsNavFromLocation() {
   const hash = typeof window === 'undefined' ? '' : window.location.hash.slice(1);
   const raw = hash.startsWith('/') ? hash : `/${hash}`;
-  return parseReviewsPath(raw)?.page || 1;
+  return parseReviewsPath(raw) || { mode: 'list', lane: 'all', page: 1 };
 }
 
 export async function hydrateReviewInbox(root, rerender) {
@@ -134,13 +146,26 @@ export async function hydrateReviewInbox(root, rerender) {
   if (!host) return;
   const body = host.querySelector('[data-review-inbox-body]');
   if (!body) return;
-  const page = reviewsPageFromLocation();
+  const nav = reviewsNavFromLocation();
+  const page = nav.page || 1;
+  const filtered = Boolean(nav.providerType && nav.providerId);
 
   try {
-    const data = await fetchReviewInbox('all', page);
+    const data = filtered
+      ? await fetchReviewList(nav.providerType, nav.providerId, page)
+      : await fetchReviewInbox('all', page);
     const items = data.items || [];
+    const archiveOpts = filtered
+      ? { providerType: nav.providerType, providerId: nav.providerId }
+      : {};
+    const emptyLead = filtered
+      ? '이 공부방·과외쌤에 공개된 후기가 여기에 모입니다.'
+      : PROVIDER_REVIEW_COPY.inboxEmptyAllLead;
+    const filterLead = filtered
+      ? `<p class="review-inbox__lead">${esc(data.provider_label || '이 대상')} 후기</p>`
+      : '';
     body.innerHTML = items.length
-      ? `<ul class="review-sheet__list">${items
+      ? `${filterLead}<ul class="review-sheet__list">${items
           .map((r) =>
             renderItem(r, {
               expandable: true,
@@ -148,9 +173,11 @@ export async function hydrateReviewInbox(root, rerender) {
             }),
           )
           .join('')}</ul>
-        ${pager(data.page || page, data.total || 0, data.page_size || 10, (p) => `${reviewsArchivePath()}?page=${p}`)}`
-      : `<p class="review-sheet__empty">${esc(PROVIDER_REVIEW_COPY.inboxEmptyAll)}</p>
-        <p class="review-inbox__lead">${esc(PROVIDER_REVIEW_COPY.inboxEmptyAllLead)}</p>`;
+        ${pager(data.page || page, data.total || 0, data.page_size || 10, (p) =>
+          reviewsArchivePath({ ...archiveOpts, page: p }),
+        )}`
+      : `${filterLead}<p class="review-sheet__empty">${esc(PROVIDER_REVIEW_COPY.inboxEmptyAll)}</p>
+        <p class="review-inbox__lead">${esc(emptyLead)}</p>`;
   } catch {
     body.innerHTML = `<p class="review-sheet__empty">후기를 불러오지 못했습니다.</p>`;
   }

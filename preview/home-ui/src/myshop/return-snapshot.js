@@ -31,6 +31,7 @@ const PENDING_KEY = 'study114:myshop-return-pending';
  * @property {number} createdAt
  * @property {string} listKey — 화면/리스트 문맥 키 (예: parent:study_room)
  * @property {string} returnHash — 복귀 해시 (`/parent` 등, # 없이)
+ * @property {'home'|'search'} [returnHost] — 찾기 SPA(`/search`)에서 왔으면 search
  * @property {string} sourceRoute
  * @property {'guest'|'parent'|'study_room'|'tutor'|string} viewerRole
  * @property {string} [activeTab]
@@ -113,12 +114,16 @@ export function buildMyshopReturnSnapshot(opts = {}) {
 
   const sortParams = new URLSearchParams(returnHash.includes('?') ? returnHash.slice(returnHash.indexOf('?') + 1) : '');
   const sort = sortParams.get('sort') || '';
+  const pathname = (typeof window !== 'undefined' ? window.location.pathname : '').replace(/\/$/, '') || '/';
+  const returnHost =
+    pathname === '/search' || pathname.startsWith('/search/') ? 'search' : 'home';
 
   return {
     v: 1,
     createdAt: Date.now(),
     listKey,
     returnHash,
+    returnHost,
     sourceRoute,
     viewerRole,
     activeTab: activeTab || undefined,

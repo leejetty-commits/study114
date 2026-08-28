@@ -14,4 +14,4 @@ export {
   suggestCommunityRouteSlug,
   isConcernChannelKey,
 } from './copy.js';
-export { getHotConcernSamples, listConcernPosts } from './store.js';
+export { getHotConcernSamples, getLatestConcernSamples, listConcernPosts } from './store.js';

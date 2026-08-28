@@ -28,6 +28,9 @@
   letter-spacing: 0.02em;
   color: var(--brand-blue);
 }
+.live-rail-slot__eyebrow:empty {
+  display: none;
+}
 .live-rail-slot__title {
   display: block;
   font-size: 1rem;

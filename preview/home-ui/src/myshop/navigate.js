@@ -4,6 +4,8 @@
  */
 
 import { navigate } from '../state.js';
+import { goHomeHashPath } from '../spa-navigation.js';
+import { SEARCH_UI_BASE } from '../../../shared/preview-links.js';
 import { myshopStudyRoomPath } from './router.js';
 import { isLoggedIn } from '../auth-session.js';
 import { openDeepAccessLoginGate } from '../../../shared/guest-gate-ui.js';
@@ -47,7 +49,7 @@ export function openPublicMyshop(opts) {
   const path = myshopStudyRoomPath(studyRoomId, { from: sourceRoute });
   if (!path) return;
   saveMyshopReturnSnapshot(snapshot);
-  navigate(path);
+  goHomeHashPath(path);
 }
 
 /**
@@ -60,6 +62,13 @@ export function returnFromPublicMyshop() {
   applyMyshopReturnSnapshotToState(snap);
   markMyshopReturnPending();
   const hash = snap.returnHash.startsWith('/') ? snap.returnHash : `/${snap.returnHash}`;
+  const toSearch =
+    snap.returnHost === 'search' || hash === '/search' || hash.startsWith('/search/');
+  if (toSearch) {
+    const base = String(SEARCH_UI_BASE || '').replace(/\/$/, '');
+    window.location.assign(`${base}/#${hash}`);
+    return true;
+  }
   navigate(hash);
   return true;
 }

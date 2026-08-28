@@ -175,6 +175,7 @@ export function isGuestPublicPath(pathOrHash) {
   if (p === '/library/guides' || p.startsWith('/library/guides/')) return true;
   if (p.startsWith('/library')) return false;
   if (p.startsWith('/guide')) return true;
+  if (p.startsWith('/policy')) return true;
   if (p.startsWith('/community') || p.startsWith('/concern')) return true;
   if (p.startsWith('/promo')) return true;
   if (p.startsWith('/search')) return true;
