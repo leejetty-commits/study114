@@ -80,7 +80,7 @@ function applyProviderStatus(data) {
     request_view: requestView,
     exposure: data.exposure ?? {
       state: 'basic',
-      label: '기본 노출 — 유료 노출 이용 안 함',
+      label: '베이직 노출 이용중 - 무료광고',
       positions: [],
     },
     slots: data.slots ?? null,

@@ -4,7 +4,7 @@ import {
   TRUST_PLATFORM_DISCLAIMER,
 } from '../lifecycle-copy.js';
 import { TUTOR_REGISTER_URL, STUDY_ROOM_REGISTER_URL } from '../nav-config.js';
-import { getNavRole } from '../state.js';
+import { getNavRole, getMypagePath } from '../state.js';
 import {
   getPreviewProfile,
   getRegistrationData,
@@ -42,7 +42,7 @@ import { COMPARE_MAX } from '../exposure-schema.js';
 import { notifyCompareToggle } from '../handoff-utils.js';
 import { renderEmptyStateCard } from '../empty-state-copy.js';
 import { renderMessagesScreen } from '../messages/screens.js';
-import { isMessagesDetailPath, MESSAGES_BASE } from '../messages/router.js';
+import { isMessagesDetailPath, MESSAGES_BASE, threadPath } from '../messages/router.js';
 import { isStudentRegPath } from '../student-reg/router.js';
 import { renderStudentRegScreen } from '../student-reg/screens.js';
 import { isStudyRoomRegPath } from '../study-room-reg/router.js';
@@ -58,12 +58,17 @@ import {
 import { renderTutorRegScreen } from '../tutor-reg/screens.js';
 import { renderSubmissionBoardScreen } from '../submission-board/index.js';
 import { P18_EXPOSURE_STATUS } from './plans-catalog.js';
-import { getPaidOperationalStatus } from '../paid-backend.js';
+import { getPaidOperationalStatus, hydratePaidCaches } from '../paid-backend.js';
+import { isMessagesApiMode, hydrateMessagesCache } from '../messages-backend.js';
+import { getMemoUsedTargets } from '../messages/thread-store.js';
+import { getStudyRoom, getStudyRooms } from '../study-room-reg/store.js';
+import { getTutor, getTutors } from '../tutor-reg/store.js';
+import { getPlanSetting } from '../plans/runtime-config.js';
+import { hydrateProviderNotices, renderProviderNoticeBanners, bindProviderNoticeEvents } from '../provider-notices.js';
 import { renderPaidGuide, renderPaidUsage } from './paid-screens.js';
 import { renderPlansHistory } from '../plans/screens.js';
-import { getHistoryRows } from '../plans/history-mock.js';
+import { getHistoryRows, loadHistoryRows } from '../plans/history-mock.js';
 import { bindPaidCatalogEvents } from '../paid-checkout.js';
-import { bindProviderNoticeEvents } from '../provider-notices.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import {
   HOME_EMPHASIS,
@@ -464,6 +469,117 @@ function renderRecent(role) {
     </section>`;
 }
 
+function formatPlanDate(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  return raw.slice(0, 10);
+}
+
+function exposureKindLabel(sku) {
+  const code = String(sku || '').toLowerCase();
+  if (code.includes('prime')) return '프라임 노출';
+  if (code.includes('pick')) return '픽 노출';
+  if (code.includes('basic')) return '베이직 노출';
+  return code ? `${String(sku).toUpperCase()} 노출` : '유료 노출';
+}
+
+function expiryAlertDays(position) {
+  if (Array.isArray(position?.expiry_alert_days) && position.expiry_alert_days.length) {
+    return position.expiry_alert_days.map(Number).filter((n) => Number.isFinite(n) && n > 0);
+  }
+  const sku = String(position?.sku || '').toLowerCase();
+  const key = sku.includes('pick') ? 'pick_expire_alert_days' : 'prime_expire_alert_days';
+  const fromSetting = getPlanSetting(key);
+  if (Array.isArray(fromSetting) && fromSetting.length) {
+    return fromSetting.map(Number).filter((n) => Number.isFinite(n) && n > 0);
+  }
+  return sku.includes('pick') ? [7, 1] : [7, 3, 1];
+}
+
+function renderExpiryGuide(position) {
+  const daysLeft = Number(position?.days_left);
+  const alerts = expiryAlertDays(position);
+  const schedule = alerts.map((d) => `${d}일`).join('·');
+  if (!Number.isFinite(daysLeft)) {
+    return `<p>종료 ${esc(schedule)} 전에 메일·문자로 안내합니다. 만료되면 베이직 노출(무료광고)로 돌아갑니다.</p>`;
+  }
+  if (daysLeft <= 0) {
+    return `<p>오늘 종료됩니다. 종료 후 베이직 노출(무료광고)로 돌아가며, 같은 조건으로 재구매할 수 있습니다.</p>`;
+  }
+  const hit = alerts.find((d) => daysLeft === d);
+  if (hit != null) {
+    return `<p>종료 ${hit}일 전 안내 대상입니다. 메일·문자로 발송됩니다. 만료되면 베이직 노출(무료광고)로 돌아갑니다.</p>`;
+  }
+  const upcoming = alerts.filter((d) => daysLeft > d);
+  if (upcoming.length) {
+    const next = Math.min(...upcoming);
+    return `<p>종료 ${esc(schedule)} 전에 메일·문자로 안내합니다. 다음 안내는 종료 ${next}일 전입니다.</p>`;
+  }
+  return `<p>종료까지 ${daysLeft}일 남았습니다. 사전안내는 ${esc(schedule)} 전에 메일·문자로 발송됩니다. 만료되면 베이직 노출(무료광고)로 돌아갑니다.</p>`;
+}
+
+/** 공부방·과외쌤 필수 1번 홍보/활동 지역 — API region_label 우선, 없으면 해당 프로필 */
+function getPrimaryPromoRegionLabel(role, position) {
+  const fromApi = String(position?.region_label || '').trim();
+  if (fromApi) return fromApi;
+  const type = position?.provider_type || role;
+  const id = Number(position?.provider_id || 0);
+  if (type === 'tutor') {
+    const tutor = (id ? getTutor(id) : null) || getTutors()[0];
+    return tutor?.primary_region_label || tutor?.location_label || '미설정';
+  }
+  const room = (id ? getStudyRoom(id) : null) || getStudyRooms()[0];
+  return room?.region_label || room?.location_label || '미설정';
+}
+
+function renderPaidExposureDetail(positions, role) {
+  const rows = positions
+    .map((p) => {
+      const started = formatPlanDate(p.purchased_on || p.started_on || p.starts_at);
+      const ends = formatPlanDate(p.ends_on || p.ends_at || p.end_exclusive_on);
+      const left = Number(p.days_left);
+      const leftText = Number.isFinite(left) ? ` · 남은 ${left}일` : '';
+      const region = getPrimaryPromoRegionLabel(role, p);
+      return `
+        <li class="plans-exposure-item">
+          <p><strong>${esc(exposureKindLabel(p.sku))}</strong></p>
+          <p>노출 위치(필수 1번 지역): ${esc(region)}</p>
+          <p>구매일 ${esc(started || '—')} · 종료일 ${esc(ends || '—')}${esc(leftText)}</p>
+          ${renderExpiryGuide(p)}
+        </li>`;
+    })
+    .join('');
+  return `
+    <ul class="plans-exposure-list">${rows}</ul>
+    <div class="plans-renewal-note">
+      <p>같은 조건으로 연장하거나 기간을 바꿔 재구매할 수 있습니다.</p>
+      <a href="#/plans/positions" class="btn btn--secondary btn--sm" data-nav="/plans/positions">노출상품 재구매</a>
+    </div>`;
+}
+
+function renderMemoUsedTargets() {
+  const targets = getMemoUsedTargets();
+  if (!targets.length) {
+    return `<p class="mypage-muted">쪽지를 사용한 대상이 없습니다.</p>`;
+  }
+  return `
+    <ul class="memo-used-list">
+      ${targets
+        .map((t) => {
+          const href = threadPath(t.threadId);
+          return `
+        <li class="memo-used-item">
+          <div>
+            <strong>${esc(t.name)}</strong>
+            ${t.contextLabel ? `<span class="mypage-muted">${esc(t.contextLabel)}</span>` : ''}
+          </div>
+          <a href="#${href}" class="mypage-badge mypage-badge--action" data-mypage-nav="${href}">쪽지상세</a>
+        </li>`;
+        })
+        .join('')}
+    </ul>`;
+}
+
 function renderPlans(role) {
   if (role === 'parent') {
     return `
@@ -479,38 +595,27 @@ function renderPlans(role) {
 
   const ops = getPaidOperationalStatus();
   const exposure = ops?.exposure;
-  const tickets = ops?.tickets;
   const positions = exposure?.positions ?? [];
-  const historyRows = getHistoryRows().slice(0, 8);
+  const historyRows = (plansHistoryRows ?? getHistoryRows()).slice(0, 8);
 
   return `
     <div class="mypage-home">
       <section class="mypage-panel mypage-panel--bare mypage-usage-overview">
+        ${renderProviderNoticeBanners()}
         <h3 class="mypage-subhead">이용중인 노출광고</h3>
         ${
           positions.length
-            ? `<ul class="plans-tier-list">${positions
-                .map(
-                  (p) =>
-                    `<li><strong>${esc(String(p.sku || '').toUpperCase())}</strong> · ${p.days_left}일 남음 (~${esc(String(p.ends_on || p.ends_at || '').slice(0, 10))})</li>`,
-                )
-                .join('')}</ul>`
+            ? renderPaidExposureDetail(positions, role)
             : `<p class="mypage-muted">${esc(P18_EXPOSURE_STATUS.basic)}</p>`
         }
-        <h3 class="mypage-subhead">잔여 쪽지권</h3>
-        ${
-          tickets
-            ? `<div class="mypage-stats roi-metrics">
-                <div class="mypage-stat"><span>${esc(tickets.memo.label)}</span><strong>${tickets.memo.remaining}</strong></div>
-              </div>`
-            : `<p class="mypage-muted">이용권 정보를 불러오면 표시됩니다.</p>`
-        }
+        <h3 class="mypage-subhead">쪽지 사용한 대상</h3>
+        ${renderMemoUsedTargets()}
       </section>
 
       <section class="mypage-plans-history">
-        <h2 class="mypage-subhead">구매 결제 내역</h2>
+        <h2 class="mypage-subhead">결제 내역</h2>
         <div class="mypage-history-box">
-          <table class="plans-table" aria-label="구매 결제 내역">
+          <table class="plans-table" aria-label="결제 내역">
             <thead><tr><th>상품</th><th>금액</th><th>일시</th><th>상태</th></tr></thead>
             <tbody>
               ${
@@ -526,7 +631,7 @@ function renderPlans(role) {
                 </tr>`,
                       )
                       .join('')
-                  : `<tr><td colspan="4" class="mypage-muted">구매내역이 없습니다.</td></tr>`
+                  : `<tr><td colspan="4" class="mypage-muted">결제 내역이 없습니다.</td></tr>`
               }
             </tbody>
           </table>
@@ -580,10 +685,7 @@ function renderSubmissionDocs(role) {
 }
 
 function renderAccount(role, profile) {
-  const authRole =
-    profile.authRole === 'admin'
-      ? '마스터 관리자'
-      : `${roleLabel(role)} · 계정설정에서 역할 전환`;
+  const authRole = profile.authRole === 'admin' ? '마스터 관리자' : roleLabel(role);
   const socialLabel =
     Array.isArray(profile.oauthProviderLabels) && profile.oauthProviderLabels.length
       ? profile.oauthProviderLabels.join(', ')
@@ -611,7 +713,7 @@ function renderAccount(role, profile) {
       <header class="account-settings__hero">
         <p class="account-settings__eyebrow">사이트에 보이는 이름</p>
         <h2 class="account-settings__name" data-display-name-current>${displayShown}</h2>
-        <p class="account-settings__lead">표시명·로그인·역할·보안을 한곳에서 관리합니다.</p>
+        <p class="account-settings__lead">표시명·로그인·보안을 한곳에서 관리합니다.</p>
         ${
           justSaved
             ? '<p class="account-settings__toast" role="status">사이트 표시명이 저장되었습니다.</p>'
@@ -652,7 +754,7 @@ function renderAccount(role, profile) {
       <article class="account-card">
         <div class="account-card__head">
           <h3 class="account-card__title">계정 정보</h3>
-          <p class="account-card__desc">로그인·연동·역할 요약입니다.</p>
+          <p class="account-card__desc">로그인·연동 요약입니다.</p>
         </div>
         <div class="account-card__body">
           <dl class="account-meta">
@@ -676,16 +778,6 @@ function renderAccount(role, profile) {
               <dd>${esc(authRole)}</dd>
             </div>
           </dl>
-        </div>
-      </article>
-
-      <article class="account-card" data-role-switch-panel>
-        <div class="account-card__head">
-          <h3 class="account-card__title">역할 전환</h3>
-          <p class="account-card__desc">현재 세션 역할은 <strong>${esc(roleLabel(role))}</strong>입니다. 다른 역할로 쓰려면 해당 계정으로 다시 로그인해 주세요.</p>
-        </div>
-        <div class="account-card__body account-card__body--actions">
-          <button type="button" class="btn btn--secondary btn--sm" data-action="util-logout">다른 계정으로 로그인</button>
         </div>
       </article>
 
@@ -1087,8 +1179,27 @@ function bindWithdrawEvents(root) {
   });
 }
 
+let plansStatusHydrateAttempted = false;
+/** @type {import('../plans/history-mock.js').HistoryRow[] | null} */
+let plansHistoryRows = null;
+
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
+  const path = getMypagePath();
+  if (!plansStatusHydrateAttempted && (path === '/mypage/plans' || path.startsWith('/mypage/plans/'))) {
+    plansStatusHydrateAttempted = true;
+    const jobs = [
+      hydratePaidCaches(),
+      hydrateProviderNotices(),
+      loadHistoryRows().then((result) => {
+        plansHistoryRows = result.rows;
+      }),
+    ];
+    if (isMessagesApiMode()) jobs.push(hydrateMessagesCache());
+    Promise.allSettled(jobs)
+      .then(() => rerender())
+      .catch((err) => console.warn('[mypage/plans] hydrate failed', err));
+  }
   bindPasswordChangeEvents(root);
   bindDisplayNameEvents(root, rerender);
   bindWithdrawEvents(root);

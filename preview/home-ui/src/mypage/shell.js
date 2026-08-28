@@ -3,8 +3,6 @@ import { getNavRole } from '../state.js';
 import { getAuthUser, isAdminUser } from '../auth-session.js';
 import { resolveAccountDisplayName } from '../auth/display-identity.js';
 import { MYPAGE_NAV, getScreenIdForPath, screenTitle, getStudyRoomEntryPath, mypageNavLabel } from './router.js';
-import { isMessagesDetailPath } from '../messages/router.js';
-import { renderMessagesProviderToolbar } from '../messages/shell.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -117,7 +115,6 @@ export function renderMypageShell(currentPath, bodyHtml) {
           ${renderBreadcrumb(currentPath, title, role)}
           <h1 class="mypage-content__title">${esc(title)}</h1>
         </header>
-        ${isMessagesDetailPath(currentPath) ? renderMessagesProviderToolbar() : ''}
         ${bodyHtml}
       </div>
     </div>

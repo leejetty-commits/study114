@@ -15,7 +15,6 @@ import { ensureStudyRoomStore, bindStudyRoomRegEvents } from '../study-room-reg/
 import { ensureTutorStore, bindTutorRegEvents } from '../tutor-reg/index.js';
 import { ensureDemoThreads } from '../messages/thread-store.js';
 import { bindMessagesScreenEvents } from '../messages/screens.js';
-import { bindMessagesProviderToolbar } from '../messages/shell.js';
 import { bindReviewSheetTriggers } from '../provider-reviews/sheet.js';
 import { bindSubmissionBoardEvents, ensureSubmissionBoardSeed } from '../submission-board/index.js';
 import { bindPlansScreenEvents } from '../plans/screens.js';
@@ -93,7 +92,6 @@ export function bindMypageEvents(root, rerender) {
   bindStudyRoomRegEvents(root, rerender);
   bindTutorRegEvents(root, rerender);
   bindMessagesScreenEvents(root, rerender);
-  bindMessagesProviderToolbar(root, rerender);
   bindReviewSheetTriggers(root);
   bindSubmissionBoardEvents(root, rerender);
   bindPlansScreenEvents(root, rerender);

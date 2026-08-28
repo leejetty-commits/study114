@@ -135,6 +135,81 @@ final class ProviderTicketRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * 공부방 is_primary / 과외쌤 is_primary 필수 1번 지역 표시명
+     */
+    public function primaryRegionLabel(string $providerType, int $providerId): string
+    {
+        if ($providerId <= 0) {
+            return '';
+        }
+        try {
+            if ($providerType === 'tutor') {
+                $stmt = $this->pdo->prepare(
+                    'SELECT r.sido_name FROM tutor_regions tr
+                     JOIN regions r ON tr.region_id = r.id
+                     WHERE tr.tutor_id = ? AND tr.is_primary = 1 LIMIT 1'
+                );
+                $stmt->execute([$providerId]);
+                $val = $stmt->fetchColumn();
+
+                return $val !== false ? (string) $val : '';
+            }
+            $stmt = $this->pdo->prepare(
+                'SELECT CONCAT(r.dong_name, IFNULL(CONCAT(" · ", c.name), ""))
+                 FROM study_room_regions srr
+                 JOIN regions r ON srr.region_id = r.id
+                 LEFT JOIN complexes c ON srr.complex_id = c.id
+                 WHERE srr.study_room_id = ? AND srr.is_primary = 1 LIMIT 1'
+            );
+            $stmt->execute([$providerId]);
+            $val = $stmt->fetchColumn();
+            if ($val !== false && $val !== '') {
+                return (string) $val;
+            }
+            $stmt = $this->pdo->prepare(
+                'SELECT CONCAT(r.dong_name, IFNULL(CONCAT(" · ", c.name), ""))
+                 FROM study_rooms sr
+                 LEFT JOIN regions r ON sr.region_id = r.id
+                 LEFT JOIN complexes c ON sr.complex_id = c.id
+                 WHERE sr.id = ? LIMIT 1'
+            );
+            $stmt->execute([$providerId]);
+            $val = $stmt->fetchColumn();
+
+            return $val !== false ? (string) $val : '';
+        } catch (\PDOException) {
+            return '';
+        }
+    }
+
+    /** 해당 포지션의 최근 결제일을 YYYY-MM-DD 로 */
+    public function latestPaidOn(int $userId, string $skuCode, ?string $providerType, ?int $providerId): ?string
+    {
+        try {
+            $sql = 'SELECT DATE(COALESCE(paid_at, created_at))
+                    FROM provider_payment_orders
+                    WHERE user_id = ? AND product_id = ? AND status = ?';
+            $params = [$userId, $skuCode, 'paid'];
+            if ($this->orderHasProviderColumns() && $providerType && $providerId && $providerId > 0) {
+                $sql .= ' AND provider_type = ? AND provider_id = ?';
+                $params[] = $providerType;
+                $params[] = $providerId;
+            }
+            $sql .= ' ORDER BY COALESCE(paid_at, created_at) DESC LIMIT 1';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $val = $stmt->fetchColumn();
+            if ($val === false || $val === null || $val === '') {
+                return null;
+            }
+
+            return (string) $val;
+        } catch (\PDOException) {
+            return null;
+        }
+    }
+
     public function decrementLegacyMemoCredits(int $userId): bool
     {
         $stmt = $this->pdo->prepare(
@@ -335,6 +410,25 @@ final class ProviderTicketRepository
              LIMIT 1'
         );
         $stmt->execute(['provider_position_subscriptions', 'provider_type']);
+        $cache = (bool) $stmt->fetchColumn();
+
+        return $cache;
+    }
+
+    private function orderHasProviderColumns(): bool
+    {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?
+               AND COLUMN_NAME = ?
+             LIMIT 1'
+        );
+        $stmt->execute(['provider_payment_orders', 'provider_type']);
         $cache = (bool) $stmt->fetchColumn();
 
         return $cache;

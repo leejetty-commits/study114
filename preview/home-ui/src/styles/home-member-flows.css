@@ -774,6 +774,40 @@
 }
 .mypage-status { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-4); font-size: var(--fs-2); }
 .mypage-badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: var(--fs-1); font-weight: 600; background: var(--gray-200); }
+.mypage-badge--action {
+  background: #dbeafe;
+  color: #1d4ed8;
+  text-decoration: none;
+}
+.mypage-badge--action:hover { background: #bfdbfe; }
+.memo-used-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.memo-used-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #eee7dd;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+.memo-used-item .mypage-muted { display: block; margin-top: 0.15rem; }
+.plans-exposure-list { list-style: none; margin: 0 0 0.85rem; padding: 0; display: grid; gap: 0.65rem; }
+.plans-exposure-item {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #eee7dd;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+.plans-exposure-item p { margin: 0 0 0.35rem; font-size: var(--text-sm); color: var(--gray-700); }
+.plans-exposure-item p:last-child { margin-bottom: 0; }
+.plans-renewal-note { margin: 0 0 1.25rem; font-size: var(--text-sm); color: var(--gray-600); }
+.plans-renewal-note p { margin: 0 0 0.5rem; }
+.msg-empty-plain {
+  margin: 1rem 0 0;
+  font-size: var(--text-sm);
+  color: var(--gray-600);
+}
 .mypage-badge--published { background: #dcfce7; color: #166534; }
 .mypage-badge--draft, .mypage-badge--pending { background: #fef3c7; color: #1e40af; }
 .mypage-badge--warn { background: #fef2f2; color: #b91c1c; }

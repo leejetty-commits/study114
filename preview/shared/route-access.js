@@ -114,7 +114,7 @@ export function guardRegisterAccess(role, kind) {
     return {
       ok: false,
       redirectUrl: homeHashUrl(roleHomePath(role)),
-      message: `현재 역할에서는 ${label}을 이용할 수 없습니다. 역할 전환은 마이페이지 · 계정설정에서 진행하세요.`,
+      message: `현재 역할에서는 ${label}을 이용할 수 없습니다. 해당 역할 계정으로 로그인해 주세요.`,
     };
   }
 

@@ -130,7 +130,7 @@ function providerDisplayName(type, id) {
 
 export function renderReviewInboxPlaceholder() {
   return `
-    <section class="msg-panel review-inbox" data-review-inbox data-mode="list" data-lane="all">
+    <section class="review-inbox" data-review-inbox data-mode="list" data-lane="all">
       <div data-review-inbox-body><p class="review-sheet__empty">불러오는 중…</p></div>
     </section>`;
 }

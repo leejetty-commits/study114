@@ -268,6 +268,28 @@ export function getThreadsForTab(tab, activeDays = 7) {
 
 }
 
+/**
+ * 쪽지권을 써서 내가 먼저 연락한 대상.
+ * 구매이력 목록용 — 쪽지함은 같은 대상과의 히스토리.
+ * @returns {Array<{ threadId: number, name: string, contextLabel: string }>}
+ */
+export function getMemoUsedTargets() {
+  const threads = getThreadsForTab('all').filter((t) => !t.isArchived && t.initiatedByMe);
+  const seen = new Set();
+  const out = [];
+  for (const t of threads) {
+    const key = `${t.contextKind}:${t.contextId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      threadId: t.id,
+      name: t.peerDisplayName || t.contextLabel || '대상',
+      contextLabel: t.contextLabel || '',
+    });
+  }
+  return out;
+}
+
 
 
 export function getUnreadCount() {

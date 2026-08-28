@@ -109,7 +109,7 @@ final class ProviderStatusService
     {
         return [
             'state' => 'basic',
-            'label' => 'Basic — 유료 노출 기간 없음',
+            'label' => '베이직 노출 이용중 - 무료광고',
             'positions' => [],
         ];
     }

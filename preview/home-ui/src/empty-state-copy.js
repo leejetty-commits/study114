@@ -121,7 +121,7 @@ export const EMPTY_COPY = {
   messages: {
     screenId: 'P16-01',
     title: '쪽지가 없습니다',
-    body: '상세·목록에서 첫 쪽지를 보내 보세요.',
+    body: '',
     cta: null,
   },
   compare: {
@@ -318,17 +318,11 @@ export function getCompareMaxCopy(max = MAX_COPY.compare.max) {
 }
 
 /** @param {'parent'|'study_room'|'tutor'|'guest'} role */
-export function getMessagesEmptyCopy(role) {
-  if (role === 'parent') {
-    return {
-      ...EMPTY_COPY.messages,
-      body: '관심 있는 공부방·과외쌤에게 메모를 보내 보세요.',
-    };
-  }
+export function getMessagesEmptyCopy(_role) {
   return {
     ...EMPTY_COPY.messages,
-    body: '검토 중인 학생을 확인하고 쪽지를 보내 보세요.',
-    cta: '찜 목록',
+    body: '',
+    cta: null,
   };
 }
 

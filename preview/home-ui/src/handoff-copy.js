@@ -96,7 +96,7 @@ export const HANDOFF_DEEPLINK = {
 export const STUDENT_REVIEW = {
   listTitle: '학생 검토함',
   addCta: '검토함에 넣기',
-  removeCta: '검토함에서 빼기',
+  removeCta: '삭제',
   itemLabelTutor: '검토 학생',
   itemLabelStudyRoom: '상담후보',
   toastAdded: '학생 검토함에 넣었습니다',

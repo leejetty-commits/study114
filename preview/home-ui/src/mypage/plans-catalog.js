@@ -176,8 +176,8 @@ export const P18_RENEWAL_COPY = {
 };
 
 export const P18_EXPOSURE_STATUS = {
-  basic: '기본 노출 — 유료 노출 이용 안 함',
-  note: '대표·추천 노출 종료 시 기본 노출로 복귀 · 프로필 유지 · 광고배지만 내려감',
+  basic: '베이직 노출 이용중 - 무료광고',
+  note: '프라임·픽 노출 종료 시 베이직 노출(무료광고)로 복귀 · 프로필 유지 · 광고배지만 내려감',
 };
 
 /** @deprecated 역할별 getPaidCatalog 사용 */

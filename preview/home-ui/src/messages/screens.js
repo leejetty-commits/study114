@@ -39,7 +39,6 @@ import { parseThreadId, threadPath, MESSAGES_BASE, REVIEWS_BASE } from './router
 
 
 import { BLOCK_THREAD_COPY } from './messages-copy.js';
-import { getMessagesEmptyCopy, renderStateCard } from '../empty-state-copy.js';
 import { isReviewsPath, parseReviewsPath, renderReviewInboxPlaceholder, hydrateReviewInbox } from '../provider-reviews/inbox.js';
 import {
   MESSAGE_ATTACHMENT,
@@ -136,7 +135,7 @@ function renderList(expandedId) {
   if (threads.length === 0) {
     return `
     ${renderMessagesHub('messages')}
-    <section class="msg-panel">${renderEmptyList(role)}</section>`;
+    <p class="msg-empty-plain">쪽지가 없습니다</p>`;
   }
 
   const important = threads.filter((t) => t.isImportant);
@@ -152,9 +151,7 @@ function renderList(expandedId) {
 
   return `
     ${renderMessagesHub('messages')}
-    <section class="msg-panel">
-      <div class="msg-list">${sections.join('')}</div>
-    </section>`;
+    <div class="msg-list">${sections.join('')}</div>`;
 }
 
 /**
@@ -258,18 +255,6 @@ function renderExpandedBody(thread, role) {
     </div>`;
 }
 
-/** @param {string} role */
-function renderEmptyList(role) {
-  const copy = getMessagesEmptyCopy(role === 'parent' ? 'parent' : role);
-  const ctaHref = role === 'parent' ? '#/mypage/wishlist' : '#/mypage/student-review';
-  return renderStateCard({
-    title: copy.title,
-    body: copy.body,
-    cta: copy.cta,
-    ctaHref: copy.cta ? ctaHref : undefined,
-    screenId: copy.screenId,
-  });
-}
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 

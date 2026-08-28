@@ -1,21 +1,14 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents } from '../layout.js';
-import { getNavRole, previewState } from '../state.js';
+import { getNavRole } from '../state.js';
 import { getScreenIdForPath, screenTitle } from './router.js';
-import { isProviderRole } from './permissions.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
-/** 공급자 구독 데모 토글 — 마이페이지 우측 본문에 삽입 */
+/** 공급자 구독 데모 토글 — 화면에서 제거. 하위 호환용 no-op */
 export function renderMessagesProviderToolbar() {
-  const role = getNavRole();
-  if (!isProviderRole(role)) return '';
-  return `<div class="msg-toolbar-demo">
-    <span>공급자 구독(데모):</span>
-    <button type="button" class="preview-toolbar__btn ${previewState.providerSubscription === 'free' ? 'is-active' : ''}" data-provider-subscription="free">무료</button>
-    <button type="button" class="preview-toolbar__btn ${previewState.providerSubscription === 'paid' ? 'is-active' : ''}" data-provider-subscription="paid">유료</button>
-  </div>`;
+  return '';
 }
 
 /**
@@ -51,14 +44,9 @@ export function renderMessagesShell(currentPath, bodyHtml) {
   `;
 }
 
-/** @param {HTMLElement} root @param {() => void} rerender */
-export function bindMessagesProviderToolbar(root, rerender) {
-  root.querySelectorAll('[data-provider-subscription]').forEach((el) => {
-    el.addEventListener('click', () => {
-      previewState.providerSubscription = el.dataset.providerSubscription;
-      rerender();
-    });
-  });
+/** @param {HTMLElement} root @param {() => void} [_rerender] */
+export function bindMessagesProviderToolbar(_root, _rerender) {
+  /* 데모 구독 토글 제거 */
 }
 
 /** @param {HTMLElement} root @param {() => void} rerender */

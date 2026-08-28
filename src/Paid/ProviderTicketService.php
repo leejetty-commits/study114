@@ -142,19 +142,30 @@ final class ProviderTicketService
         return [
             'exposure' => [
                 'state' => $exposureState,
-                'label' => $exposureState === 'active' ? '유료 노출 이용 중' : 'Basic — 유료 노출 기간 없음',
-                'positions' => array_map(static function (array $row): array {
+                'label' => $exposureState === 'active' ? '유료 노출 이용 중' : '베이직 노출 이용중 - 무료광고',
+                'positions' => array_map(function (array $row) use ($userId): array {
+                    $sku = (string) $row['sku_code'];
+                    $providerType = (string) ($row['provider_type'] ?? '');
+                    $providerId = (int) ($row['provider_id'] ?? 0);
+                    $startedOn = (string) ($row['started_on'] ?? substr((string) ($row['starts_at'] ?? ''), 0, 10));
+                    $paidOn = $this->repo->latestPaidOn($userId, $sku, $providerType ?: null, $providerId ?: null);
+
                     return [
-                        'sku' => (string) $row['sku_code'],
+                        'sku' => $sku,
+                        'provider_type' => $providerType,
+                        'provider_id' => $providerId,
+                        'region_label' => $this->repo->primaryRegionLabel($providerType, $providerId),
                         'duration_type' => (string) ($row['duration_type'] ?? 'day'),
                         'duration_value' => (int) ($row['duration_value'] ?? $row['period_days'] ?? 0),
                         'period_days' => (int) $row['period_days'],
-                        'started_on' => (string) ($row['started_on'] ?? substr((string) $row['starts_at'], 0, 10)),
+                        'purchased_on' => $paidOn ?: $startedOn,
+                        'started_on' => $startedOn,
                         'end_exclusive_on' => (string) ($row['end_exclusive_on'] ?? ''),
                         'ends_on' => (string) ($row['ends_on'] ?? ''),
                         'starts_at' => (string) $row['starts_at'],
                         'ends_at' => (string) $row['ends_at'],
                         'days_left' => (int) $row['days_left'],
+                        'expiry_alert_days' => $sku === 'pick' ? [7, 1] : [7, 3, 1],
                     ];
                 }, $positions),
             ],
