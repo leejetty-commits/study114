@@ -17,7 +17,7 @@ export const HOME_EMPHASIS = {
 export const ONBOARDING_GUARD_COPY = {
   submissionParent: '제출자료 관리는 과외쌤 계정에서 이용할 수 있어요.',
   submissionStudyRoom:
-    '공부방은 제출함을 쓰지 않습니다. 교육청 등록은 상세정보 2단계에서 체크합니다. 파일 제출함은 과외쌤 마이페이지에서 다룹니다.',
+    '공부방은 이 제출 기능을 쓰지 않습니다. 교육청 등록은 상세정보 2단계에서 체크합니다. 과외쌤 신뢰·증빙자료 제출은 과외쌤 마이페이지에서 다룹니다.',
 };
 
 /** @deprecated ONBOARDING_GUARD_COPY 사용 */
@@ -32,7 +32,7 @@ export const GUARDIAN_PLANS_COPY = {
 
 export const HOME_STATS_NOTE = '내 상태는 활동에 따라 달라져요.';
 
-export const WISHLIST_NOTE = '15장 §5 · 주 사용: 학부모 탐색 후속 · 공급자는 부기능';
+export const WISHLIST_NOTE = '찜한 공부방·과외쌤을 모아 보고, 비교에도 담을 수 있어요.';
 
 export const RECENT_NOTE = '15장 §6 [임시] · 학부모: 공부방/과외/학생(비교열람) · 공급자: 학생 의뢰 포함';
 

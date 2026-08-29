@@ -2,10 +2,10 @@ import { getNavRole, navigate } from '../state.js';
 import {
   BOARD_ENGINE_LOCK,
   BOARD_TYPES,
-  canBoardAction,
   getBoardPolicy,
   mapNavRoleToBoardRole,
 } from '../board-engine-copy.js';
+import { canComposeBoard, canListBoard } from '../board-channel-acl.js';
 import { SUBMISSION_DOC_USER_NOTICE } from '../admin-red-line-copy.js';
 import {
   SUBMISSION_BOARD,
@@ -56,8 +56,8 @@ function renderPolicyChips(navRole) {
   return `
     <div class="lib-policy-chips" aria-label="제출함 권한">
       <span class="lib-chip lib-chip--type">${esc(BOARD_TYPES.upload.label)}</span>
-      <span class="lib-chip">읽기: ${canBoardAction('submission', 'read', boardRole) ? '가능' : '불가'}</span>
-      <span class="lib-chip">올리기: ${canBoardAction('submission', 'upload', boardRole) ? '가능' : '불가'}</span>
+      <span class="lib-chip">읽기: ${canListBoard('submission', boardRole) ? '가능' : '불가'}</span>
+      <span class="lib-chip">올리기: ${canComposeBoard('submission', boardRole) ? '가능' : '불가'}</span>
     </div>`;
 }
 
@@ -255,7 +255,7 @@ function renderDetail(post, navRole) {
         <dd>${esc(post.updatedAt)}</dd>
       </dl>
       <div class="sub-board-actions sub-board-actions--foot">
-        ${renderPostActions(post, canBoardAction('submission', 'upload', mapNavRoleToBoardRole(navRole)))}
+        ${renderPostActions(post, canComposeBoard('submission', navRole))}
       </div>
     </section>`;
 }
@@ -271,14 +271,13 @@ function renderNotFound() {
 /** @param {string} path */
 export function renderSubmissionBoardScreen(path = SUBMISSION_BOARD_BASE) {
   const navRole = getNavRole();
-  const boardRole = mapNavRoleToBoardRole(navRole);
-  const canRead = canBoardAction('submission', 'read', boardRole);
-  const canUpload = canBoardAction('submission', 'upload', boardRole);
+  const canRead = canListBoard('submission', navRole);
+  const canUpload = canComposeBoard('submission', navRole);
   const parsed = parseSubmissionBoardPath(path);
 
   if (!canRead) return renderPermissionDenied();
 
-  const role = navRole === 'guest' ? 'tutor' : navRole;
+  const role = navRole;
 
   if (parsed.view === 'new') {
     return `

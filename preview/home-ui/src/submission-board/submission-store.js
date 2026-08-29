@@ -64,7 +64,7 @@ export function ensureSubmissionBoardSeed(navRole) {
   const now = new Date().toISOString().slice(0, 10);
   /** @type {SubmissionPost[]} */
   const seed = [];
-  if (navRole === 'tutor' || navRole === 'guest') {
+  if (navRole === 'tutor') {
     seed.push({
       id: 'sub-seed-1',
       title: '학력 증명서 사본',
@@ -87,20 +87,6 @@ export function ensureSubmissionBoardSeed(navRole) {
       status: 'submitted',
       authorRole: 'tutor',
       createdAt: now,
-      updatedAt: now,
-    });
-  }
-  if (navRole === 'study_room') {
-    seed.push({
-      id: 'sub-seed-room-1',
-      title: '시설 안전 점검 체크리스트',
-      description: '공부방 시설 안전 점검 기록.',
-      categoryId: 'facility',
-      fileLabel: 'safety-checklist.pdf',
-      memo: '',
-      status: 'published',
-      authorRole: 'study_room',
-      createdAt: '2026-06-15',
       updatedAt: now,
     });
   }

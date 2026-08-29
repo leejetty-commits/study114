@@ -70,7 +70,7 @@ export function checkFirstMemoPermission(ctx) {
 }
 
 /**
- * P16-02 thread 답장 — 학부모가 먼저 보낸 쪽지 thread는 free
+ * P16-02 thread 답장 — 이미 생성된 대화는 쪽지권 잔액과 무관하게 무료
  * @param {{ contextKind: MemoTargetKind, messages: { sender: 'me'|'peer' }[], initiatedByMe?: boolean } | null} thread
  * @param {NavRole} role
  */
@@ -85,9 +85,7 @@ export function canReplyInThread(thread, role) {
     return true;
   }
   if (thread.contextKind === 'student') {
-    const peerSpoke = thread.messages.some((m) => m.sender === 'peer');
-    if (peerSpoke) return true;
-    return isProviderPaid();
+    return true;
   }
   return false;
 }

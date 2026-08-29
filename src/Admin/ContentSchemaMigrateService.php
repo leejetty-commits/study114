@@ -21,6 +21,10 @@ final class ContentSchemaMigrateService
         $this->pdo = $pdo ?? Connection::get();
     }
 
+    private bool $aclDryRun = false;
+
+    private bool $aclAbortOnUnexpected = true;
+
     /** @return array<string, mixed> */
     public function status(): array
     {
@@ -35,24 +39,130 @@ final class ContentSchemaMigrateService
         ];
     }
 
-    /** @return array<string, mixed> */
-    public function apply(): array
+    /** @param array{dry_run?: bool, abort_on_unexpected?: bool} $opts */
+    public function apply(array $opts = []): array
     {
+        $this->aclDryRun = !empty($opts['dry_run']);
+        $this->aclAbortOnUnexpected = $opts['abort_on_unexpected'] ?? true;
         $before = $this->status();
         $steps = [];
 
+        if ($this->aclDryRun) {
+            return [
+                'before' => $before,
+                'after' => $before,
+                'dry_run' => true,
+                'acl_plan' => $this->planAclSeed(),
+                'steps' => [['name' => 'dry_run', 'result' => 'no writes — plan only']],
+            ];
+        }
+
         $this->pdo->exec("SET NAMES utf8mb4");
 
-        $steps[] = $this->step('create_channel_table', fn () => $this->createChannelTable());
-        $steps[] = $this->step('create_rail_table', fn () => $this->createRailTable());
-        $steps[] = $this->step('seed_operational_posts', fn () => $this->seedOperationalPosts());
-        $steps[] = $this->step('seed_channels', fn () => $this->seedChannels());
-        $steps[] = $this->step('seed_rails', fn () => $this->seedRails());
+        // DDL 은 트랜잭션 밖에서만. MySQL ALTER/CREATE 는 implicit commit.
+        $steps[] = ['name' => 'create_channel_table', 'result' => $this->createChannelTable()];
+        $steps[] = ['name' => 'create_rail_table', 'result' => $this->createRailTable()];
+        if ($this->tableExists('right_rail_slot_definitions')) {
+            $this->ensureRailGuestFilterColumn();
+        }
+
+        $aclPlan = $this->planAclSeed();
+        if (empty($aclPlan['ok'])) {
+            $steps[] = [
+                'name' => 'seed_acl',
+                'result' => 'aborted before writes: ' . json_encode($aclPlan['abort'] ?? [], JSON_UNESCAPED_UNICODE),
+            ];
+
+            return [
+                'before' => $before,
+                'after' => $this->status(),
+                'dry_run' => false,
+                'acl_plan' => $aclPlan,
+                'steps' => $steps,
+            ];
+        }
+
+        try {
+            $this->pdo->beginTransaction();
+            $steps[] = ['name' => 'seed_operational_posts', 'result' => $this->seedOperationalPosts()];
+            $steps[] = ['name' => 'seed_channels', 'result' => $this->seedChannels()];
+            $steps[] = ['name' => 'seed_rails', 'result' => $this->seedRails()];
+            $verify = $this->planAclSeed();
+            if (empty($verify['ok'])) {
+                $this->pdo->rollBack();
+                $steps[] = ['name' => 'seed_acl_verify', 'result' => 'rolled back: post-apply plan not ok'];
+
+                return [
+                    'before' => $before,
+                    'after' => $this->status(),
+                    'dry_run' => false,
+                    'acl_plan' => $verify,
+                    'steps' => $steps,
+                ];
+            }
+            $this->pdo->commit();
+            $steps[] = ['name' => 'seed_acl_verify', 'result' => 'rechecked ok'];
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            $steps[] = ['name' => 'seed_acl', 'result' => 'error rolled back: ' . $e->getMessage()];
+        }
 
         return [
             'before' => $before,
-            'after' => $this->status(),
+            'after' => $this->aclDryRun ? $before : $this->status(),
+            'dry_run' => $this->aclDryRun,
+            'acl_plan' => $this->planAclSeed(),
             'steps' => $steps,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function planAclSeed(): array
+    {
+        if (!$this->tableExists('board_channel_definitions') || !$this->tableExists('right_rail_slot_definitions')) {
+            return ['ok' => false, 'error' => 'tables_missing', 'static' => ContentAclSeedGuard::staticPlan()];
+        }
+
+        $channelPlans = [];
+        foreach (ContentAclSeedGuard::targets()['channels'] as $spec) {
+            $stmt = $this->pdo->prepare(
+                'SELECT board_key, menu_label, visibility, allowed_roles_json FROM board_channel_definitions WHERE board_key = ?'
+            );
+            $stmt->execute([$spec['board_key']]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+            $channelPlans[] = ContentAclSeedGuard::planChannel($row === false ? null : $row, $spec);
+        }
+
+        $railPlans = [];
+        foreach (ContentAclSeedGuard::targets()['rails'] as $spec) {
+            $stmt = $this->pdo->prepare(
+                'SELECT slot_key, source_board_keys_json, guest_filter, visibility_rule, role_target, mobile_behavior
+                 FROM right_rail_slot_definitions WHERE slot_key = ?'
+            );
+            $stmt->execute([$spec['slot_key']]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+            $railPlans[] = ContentAclSeedGuard::planRail($row === false ? null : $row, $spec);
+        }
+
+        $abort = array_values(array_filter(
+            [...$channelPlans, ...$railPlans],
+            static fn (array $p): bool => $p['action'] === 'abort_unexpected',
+        ));
+
+        $family = $this->planFamilyCollision();
+        if (($family['action'] ?? '') === 'abort_unexpected') {
+            $abort[] = $family;
+        }
+
+        return [
+            'ok' => $abort === [],
+            'channels' => $channelPlans,
+            'rails' => $railPlans,
+            'abort' => $abort,
+            'family_collision' => $family,
+            'static' => ContentAclSeedGuard::staticPlan(),
         ];
     }
 
@@ -80,6 +190,49 @@ final class ContentSchemaMigrateService
     private function countTable(string $table): int
     {
         return (int) $this->pdo->query('SELECT COUNT(*) FROM `' . str_replace('`', '', $table) . '`')->fetchColumn();
+    }
+
+    /**
+     * concern-family 와 concern-parent 가 동시에 있으면 자동 머지·삭제 금지.
+     *
+     * @return array<string, mixed>
+     */
+    private function planFamilyCollision(): array
+    {
+        if (!$this->tableExists('board_channel_definitions')) {
+            return ContentAclSeedGuard::planFamilyCollision(false, false, 0, 0, []);
+        }
+        $stmt = $this->pdo->query(
+            "SELECT board_key FROM board_channel_definitions WHERE board_key IN ('concern-family','concern-parent')"
+        );
+        $keys = $stmt ? $stmt->fetchAll(\PDO::FETCH_COLUMN) : [];
+        $hasFamily = in_array('concern-family', $keys, true);
+        $hasParent = in_array('concern-parent', $keys, true);
+
+        $familyPosts = 0;
+        $parentPosts = 0;
+        if ($this->tableExists('board_posts')) {
+            $c = $this->pdo->prepare('SELECT COUNT(*) FROM board_posts WHERE board_key = ?');
+            $c->execute(['concern-family']);
+            $familyPosts = (int) $c->fetchColumn();
+            $c->execute(['concern-parent']);
+            $parentPosts = (int) $c->fetchColumn();
+        }
+
+        $rails = [];
+        if ($this->tableExists('right_rail_slot_definitions')) {
+            $r = $this->pdo->query(
+                "SELECT slot_key, source_board_keys_json FROM right_rail_slot_definitions"
+            );
+            foreach ($r ? $r->fetchAll(\PDO::FETCH_ASSOC) : [] as $row) {
+                $json = (string) ($row['source_board_keys_json'] ?? '');
+                if (str_contains($json, 'concern-family')) {
+                    $rails[] = (string) $row['slot_key'];
+                }
+            }
+        }
+
+        return ContentAclSeedGuard::planFamilyCollision($hasFamily, $hasParent, $familyPosts, $parentPosts, $rails);
     }
 
     private function countBoard(string $boardKey): int
@@ -238,65 +391,118 @@ final class ContentSchemaMigrateService
 
     private function seedChannels(): string
     {
+        if ($this->aclDryRun) {
+            return 'dry-run skipped writes';
+        }
         $inserted = 0;
+        $updated = 0;
+        $skipped = 0;
+        $aborted = 0;
+        $blockGuarded = $this->aclAbortOnUnexpected && !empty($this->planAclSeed()['abort'] ?? []);
+        $specs = [];
+        foreach (ContentAclSeedGuard::targets()['channels'] as $spec) {
+            $specs[$spec['board_key']] = $spec;
+        }
         foreach ($this->channelRows() as $row) {
-            $check = $this->pdo->prepare('SELECT id FROM board_channel_definitions WHERE board_key = ?');
+            $check = $this->pdo->prepare(
+                'SELECT id, board_key, menu_label, visibility, allowed_roles_json FROM board_channel_definitions WHERE board_key = ?'
+            );
             $check->execute([$row['board_key']]);
-            if ($check->fetchColumn()) {
+            $existing = $check->fetch(\PDO::FETCH_ASSOC);
+            if (!$existing) {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO board_channel_definitions
+                     (board_key, menu_label, board_type, preset_id, section_owner, route_slug, visibility, download_policy,
+                      allowed_roles_json, allow_write, allow_comment, allow_upload, require_review, is_gnu_separated,
+                      enabled, archived, sort_order)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $row['board_key'],
+                    $row['menu_label'],
+                    $row['board_type'],
+                    $row['preset_id'],
+                    $row['section_owner'],
+                    $row['route_slug'],
+                    $row['visibility'],
+                    $row['download_policy'],
+                    $row['allowed_roles_json'],
+                    $row['allow_write'],
+                    $row['allow_comment'],
+                    $row['allow_upload'],
+                    $row['require_review'],
+                    $row['is_gnu_separated'],
+                    $row['enabled'],
+                    $row['archived'],
+                    $row['sort_order'],
+                ]);
+                $inserted++;
                 continue;
             }
-            $stmt = $this->pdo->prepare(
-                'INSERT INTO board_channel_definitions
-                 (board_key, menu_label, board_type, preset_id, section_owner, route_slug, visibility, download_policy,
-                  allowed_roles_json, allow_write, allow_comment, allow_upload, require_review, is_gnu_separated,
-                  enabled, archived, sort_order)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            $spec = $specs[$row['board_key']] ?? null;
+            if ($spec === null) {
+                $skipped++;
+                continue;
+            }
+            if ($blockGuarded) {
+                throw new \RuntimeException('acl seed aborted: unexpected channel values before writes');
+            }
+            $plan = ContentAclSeedGuard::planChannel($existing, $spec);
+            if ($plan['action'] === 'abort_unexpected' && $this->aclAbortOnUnexpected) {
+                throw new \RuntimeException('acl seed abort_unexpected: ' . (string) $row['board_key']);
+            }
+            if ($plan['action'] !== 'update') {
+                $skipped++;
+                continue;
+            }
+            $upd = $this->pdo->prepare(
+                'UPDATE board_channel_definitions
+                 SET menu_label = ?, allowed_roles_json = ?, visibility = ?, updated_at = NOW()
+                 WHERE board_key = ?'
             );
-            $stmt->execute([
+            $upd->execute([
+                $spec['fields']['menu_label'],
+                $spec['fields']['allowed_roles_json'],
+                $spec['fields']['visibility'],
                 $row['board_key'],
-                $row['menu_label'],
-                $row['board_type'],
-                $row['preset_id'],
-                $row['section_owner'],
-                $row['route_slug'],
-                $row['visibility'],
-                $row['download_policy'],
-                $row['allowed_roles_json'],
-                $row['allow_write'],
-                $row['allow_comment'],
-                $row['allow_upload'],
-                $row['require_review'],
-                $row['is_gnu_separated'],
-                $row['enabled'],
-                $row['archived'],
-                $row['sort_order'],
             ]);
-            $inserted++;
+            $updated++;
         }
 
-        return "inserted={$inserted}";
+        return "inserted={$inserted} updated={$updated} skipped={$skipped} aborted={$aborted}";
     }
 
     private function seedRails(): string
     {
-        $this->ensureRailGuestFilterColumn();
+        if ($this->aclDryRun) {
+            return 'dry-run skipped writes';
+        }
         $inserted = 0;
         $updated = 0;
+        $skipped = 0;
+        $aborted = 0;
+        $blockGuarded = $this->aclAbortOnUnexpected && !empty($this->planAclSeed()['abort'] ?? []);
+        $specs = [];
+        foreach (ContentAclSeedGuard::targets()['rails'] as $spec) {
+            $specs[$spec['slot_key']] = $spec;
+        }
         foreach ($this->railRows() as $row) {
-            $check = $this->pdo->prepare('SELECT id FROM right_rail_slot_definitions WHERE slot_key = ?');
+            $check = $this->pdo->prepare(
+                'SELECT id, slot_key, source_board_keys_json, guest_filter, visibility_rule, role_target, mobile_behavior
+                 FROM right_rail_slot_definitions WHERE slot_key = ?'
+            );
             $check->execute([$row['slot_key']]);
-            $existingId = $check->fetchColumn();
-            if ($existingId) {
-                // ACL 정본 동기화 — JS DEFAULT_RIGHT_RAIL_SLOTS 와 동일 값으로 맞춤
-                $upd = $this->pdo->prepare(
-                    'UPDATE right_rail_slot_definitions
-                     SET page_type = ?, source_type = ?, source_board_key = ?, source_board_keys_json = ?,
-                         selection_mode = ?, item_limit = ?, section_title = ?, cta_label = ?, cta_target = ?,
-                         mobile_behavior = ?, visibility_rule = ?, role_target = ?, guest_filter = ?,
-                         enabled = ?, status = ?, priority = ?, sort_order = ?, updated_at = NOW()
-                     WHERE id = ?'
+            $existing = $check->fetch(\PDO::FETCH_ASSOC);
+            if (!$existing) {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO right_rail_slot_definitions
+                     (slot_key, page_type, source_type, source_board_key, source_board_keys_json, selection_mode, item_limit,
+                      section_title, cta_label, cta_target, mobile_behavior, visibility_rule, role_target, guest_filter,
+                      enabled, status, priority, sort_order)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
                 );
-                $upd->execute([
+                $stmt->execute([
+                    $row['slot_key'],
                     $row['page_type'],
                     $row['source_type'],
                     $row['source_board_key'],
@@ -314,43 +520,46 @@ final class ContentSchemaMigrateService
                     $row['status'],
                     $row['priority'],
                     $row['sort_order'],
-                    $existingId,
                 ]);
-                $updated++;
+                $inserted++;
                 continue;
             }
-            $stmt = $this->pdo->prepare(
-                'INSERT INTO right_rail_slot_definitions
-                 (slot_key, page_type, source_type, source_board_key, source_board_keys_json, selection_mode, item_limit,
-                  section_title, cta_label, cta_target, mobile_behavior, visibility_rule, role_target, guest_filter,
-                  enabled, status, priority, sort_order)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            $spec = $specs[$row['slot_key']] ?? null;
+            if ($spec === null) {
+                $skipped++;
+                continue;
+            }
+            if ($blockGuarded) {
+                throw new \RuntimeException('acl seed aborted: unexpected rail values before writes');
+            }
+            $plan = ContentAclSeedGuard::planRail($existing, $spec);
+            if ($plan['action'] === 'abort_unexpected' && $this->aclAbortOnUnexpected) {
+                throw new \RuntimeException('acl seed abort_unexpected rail: ' . (string) $row['slot_key']);
+            }
+            if ($plan['action'] !== 'update') {
+                $skipped++;
+                continue;
+            }
+            $upd = $this->pdo->prepare(
+                'UPDATE right_rail_slot_definitions
+                 SET source_board_keys_json = ?, guest_filter = ?, visibility_rule = ?, role_target = ?,
+                     mobile_behavior = ?, updated_at = NOW()
+                 WHERE slot_key = ?'
             );
-            $stmt->execute([
+            $upd->execute([
+                $spec['fields']['source_board_keys_json'],
+                $spec['fields']['guest_filter'],
+                $spec['fields']['visibility_rule'],
+                $spec['fields']['role_target'],
+                $spec['fields']['mobile_behavior'],
                 $row['slot_key'],
-                $row['page_type'],
-                $row['source_type'],
-                $row['source_board_key'],
-                $row['source_board_keys_json'],
-                $row['selection_mode'],
-                $row['item_limit'],
-                $row['section_title'],
-                $row['cta_label'],
-                $row['cta_target'],
-                $row['mobile_behavior'],
-                $row['visibility_rule'],
-                $row['role_target'],
-                $row['guest_filter'],
-                $row['enabled'],
-                $row['status'],
-                $row['priority'],
-                $row['sort_order'],
             ]);
-            $inserted++;
+            $updated++;
         }
 
-        return "inserted={$inserted};updated={$updated}";
+        return "inserted={$inserted};updated={$updated};skipped={$skipped};aborted={$aborted}";
     }
+
 
     /** @return list<array<string, mixed>> */
     private function operationalPostRows(): array
@@ -561,7 +770,7 @@ final class ContentSchemaMigrateService
             ['board_key' => 'library', 'menu_label' => '자료실', 'board_type' => 'download', 'preset_id' => 'library', 'section_owner' => 'library', 'route_slug' => '#/support/library', 'visibility' => 'login', 'download_policy' => 'login', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 50],
             ['board_key' => 'library-template', 'menu_label' => '양식·체크리스트', 'board_type' => 'download', 'preset_id' => 'library', 'section_owner' => 'library', 'route_slug' => '#/support/library/templates', 'visibility' => 'login', 'download_policy' => 'login', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 60],
             ['board_key' => 'library-guide-pdf', 'menu_label' => '가이드 PDF', 'board_type' => 'download', 'preset_id' => 'library', 'section_owner' => 'library', 'route_slug' => '#/support/library/guides', 'visibility' => 'public', 'download_policy' => 'login', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 70],
-            ['board_key' => 'submission', 'menu_label' => '제출자료', 'board_type' => 'upload', 'preset_id' => 'submission', 'section_owner' => 'mypage', 'route_slug' => '#/mypage/submission-board', 'visibility' => 'role', 'download_policy' => 'none', 'allowed_roles_json' => $roles(['study_room', 'tutor', 'admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 1, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 80],
+            ['board_key' => 'submission', 'menu_label' => '신뢰·증빙자료 제출', 'board_type' => 'upload', 'preset_id' => 'submission', 'section_owner' => 'mypage', 'route_slug' => '#/mypage/submission-board', 'visibility' => 'role', 'download_policy' => 'none', 'allowed_roles_json' => $roles(['tutor', 'admin']), 'allow_write' => 1, 'allow_comment' => 0, 'allow_upload' => 1, 'require_review' => 0, 'is_gnu_separated' => 1, 'enabled' => 1, 'archived' => 0, 'sort_order' => 80],
             ['board_key' => 'showcase', 'menu_label' => '사례 공유', 'board_type' => 'curation', 'preset_id' => 'curation', 'section_owner' => 'community', 'route_slug' => '', 'visibility' => 'role', 'download_policy' => 'none', 'allowed_roles_json' => $roles(['admin']), 'allow_write' => 0, 'allow_comment' => 0, 'allow_upload' => 0, 'require_review' => 1, 'is_gnu_separated' => 1, 'enabled' => 0, 'archived' => 0, 'sort_order' => 90],
         ];
     }
@@ -572,9 +781,9 @@ final class ContentSchemaMigrateService
         $keys = static fn (array $k): string => json_encode($k, JSON_UNESCAPED_UNICODE);
 
         return [
-            ['slot_key' => 'home_right_rail', 'page_type' => 'home', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'concern-director', 'concern-tutor', 'concern-parent']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '오늘의 안내', 'cta_label' => '고객센터 보기', 'cta_target' => '#/support', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'guest_filter' => 'summary_only', 'enabled' => 1, 'status' => 'active', 'priority' => 10, 'sort_order' => 10],
-            ['slot_key' => 'search_right_rail', 'page_type' => 'search', 'source_type' => 'mixed', 'source_board_key' => 'faq', 'source_board_keys_json' => $keys(['faq', 'concern-parent', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '탐색 도움말', 'cta_label' => '자주 묻는 질문 보기', 'cta_target' => '#/support/faq', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'guest_filter' => 'summary_only', 'enabled' => 1, 'status' => 'active', 'priority' => 20, 'sort_order' => 20],
-            ['slot_key' => 'detail_right_rail', 'page_type' => 'detail', 'source_type' => 'mixed', 'source_board_key' => 'safe-guide', 'source_board_keys_json' => $keys(['safe-guide', 'submission', 'notice']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '상세 확인 전 안내', 'cta_label' => '안전과외 가이드', 'cta_target' => '#/guide/safety', 'mobile_behavior' => 'collapse', 'visibility_rule' => 'public', 'role_target' => 'all', 'guest_filter' => 'allow', 'enabled' => 1, 'status' => 'active', 'priority' => 30, 'sort_order' => 30],
+            ['slot_key' => 'home_right_rail', 'page_type' => 'home', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'concern-director', 'concern-tutor', 'concern-parent']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '오늘의 안내', 'cta_label' => '고객센터 보기', 'cta_target' => '#/support', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'guest_filter' => 'intro_only', 'enabled' => 1, 'status' => 'active', 'priority' => 10, 'sort_order' => 10],
+            ['slot_key' => 'search_right_rail', 'page_type' => 'search', 'source_type' => 'mixed', 'source_board_key' => 'faq', 'source_board_keys_json' => $keys(['faq', 'concern-parent', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '탐색 도움말', 'cta_label' => '자주 묻는 질문 보기', 'cta_target' => '#/support/faq', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'guest_filter' => 'intro_only', 'enabled' => 1, 'status' => 'active', 'priority' => 20, 'sort_order' => 20],
+            ['slot_key' => 'detail_right_rail', 'page_type' => 'detail', 'source_type' => 'mixed', 'source_board_key' => 'safe-guide', 'source_board_keys_json' => $keys(['safe-guide', 'notice']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '상세 확인 전 안내', 'cta_label' => '안전과외 가이드', 'cta_target' => '#/guide/safety', 'mobile_behavior' => 'collapse', 'visibility_rule' => 'public', 'role_target' => 'all', 'guest_filter' => 'allow', 'enabled' => 1, 'status' => 'active', 'priority' => 30, 'sort_order' => 30],
             ['slot_key' => 'register_right_rail', 'page_type' => 'register', 'source_type' => 'mixed', 'source_board_key' => 'library-template', 'source_board_keys_json' => $keys(['library-template', 'concern-director', 'concern-tutor']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '작성 전 체크', 'cta_label' => '서식함 보기', 'cta_target' => '#/library/templates', 'mobile_behavior' => 'stack', 'visibility_rule' => 'login', 'role_target' => 'provider', 'guest_filter' => 'block', 'enabled' => 1, 'status' => 'active', 'priority' => 40, 'sort_order' => 40],
             ['slot_key' => 'plans_right_rail', 'page_type' => 'plans', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'faq', 'safe-guide']), 'selection_mode' => 'curated', 'item_limit' => 3, 'section_title' => '상품 이용 안내', 'cta_label' => '상품 자주 묻는 질문', 'cta_target' => '#/support/faq', 'mobile_behavior' => 'collapse', 'visibility_rule' => 'public', 'role_target' => 'provider', 'guest_filter' => 'block', 'enabled' => 1, 'status' => 'active', 'priority' => 50, 'sort_order' => 50],
             ['slot_key' => 'support_right_rail', 'page_type' => 'support', 'source_type' => 'mixed', 'source_board_key' => 'notice', 'source_board_keys_json' => $keys(['notice', 'faq', 'library-guide-pdf']), 'selection_mode' => 'latest', 'item_limit' => 3, 'section_title' => '빠른 도움말', 'cta_label' => '자료실 보기', 'cta_target' => '#/library/guides', 'mobile_behavior' => 'stack', 'visibility_rule' => 'public', 'role_target' => 'all', 'guest_filter' => 'allow', 'enabled' => 1, 'status' => 'active', 'priority' => 60, 'sort_order' => 60],

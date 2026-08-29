@@ -1,0 +1,16 @@
+# Board ACL CI gate — JS/PHP 매트릭스. DB 불필요.
+# PR·작업 브랜치에서는 검증만. FTP 배포 없음.
+
+name: Board ACL gate
+
+on:
+  pull_request:
+  push:
+
+concurrency:
+  group: board-acl-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-board-acl:
+    uses: ./.github/workflows/board-acl-verify.yml

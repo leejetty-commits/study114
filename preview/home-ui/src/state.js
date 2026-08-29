@@ -139,9 +139,9 @@ export function getNavRole() {
   if (isSupportRoute()) {
     return getSupportContextRole();
   }
-  // 커뮤니티·홍보는 역할 홈이 아님 — SCREEN_META에 없어 guest로 떨어지면
+  // 커뮤니티·홍보·자료실·마이샵은 역할 홈이 아님 — SCREEN_META에 없어 guest로 떨어지면
   // 셸/레일 맥락이 깨지고 GNB·동선이 흔들린다. 저장된 활성 역할만 쓰고, 없으면 guest.
-  if (isCommunityRoute() || isPromoRoute() || isMyshopRoute()) {
+  if (isCommunityRoute() || isPromoRoute() || isMyshopRoute() || isLibraryRoute()) {
     const stored = sessionStorage.getItem(ACTIVE_ROLE_KEY);
     if (stored === 'parent' || stored === 'study_room' || stored === 'tutor') return stored;
     return 'guest';
@@ -234,8 +234,12 @@ export function isMypageRoute() {
 
 /** @param {HomeRole} role */
 export function setActiveRole(role) {
+  const prev = sessionStorage.getItem(ACTIVE_ROLE_KEY);
   if (role && role !== 'guest') {
     sessionStorage.setItem(ACTIVE_ROLE_KEY, role);
+  }
+  if (prev && role && prev !== role) {
+    window.dispatchEvent(new CustomEvent('auth:role-change', { detail: { from: prev, to: role } }));
   }
 }
 

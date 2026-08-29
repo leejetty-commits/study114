@@ -21,14 +21,14 @@ export const COPY_WRITE_ORDER = [
   '필요 시 보호/정책 안내',
 ];
 
-/** @typedef {'guest'|'role'|'paid'|'student_protection'|'not_public'} PermissionDeniedKind */
+/** @typedef {'guest'|'role'|'paid'|'student_protection'|'not_public'|'readonly'|'download'|'room_only'|'tutor_only'} PermissionDeniedKind */
 
 /** §3 권한 부족 5종 */
 export const PERMISSION_DENIED_COPY = {
   guest: {
     kind: 'guest',
     title: '로그인이 필요합니다',
-    body: '로그인 후 본문을 볼 수 있어요.',
+    body: '로그인 후 이용할 수 있어요.',
     cta: '로그인',
   },
   role: {
@@ -55,22 +55,28 @@ export const PERMISSION_DENIED_COPY = {
     body: '이 정보는 아직 공개되지 않았습니다.',
     cta: null,
   },
+  readonly: {
+    kind: 'readonly',
+    title: '읽기 전용 공간',
+    body: '글은 읽을 수 있어요. 새 글·댓글·반응은 자기 역할 고민방에서만 남길 수 있어요.',
+    cta: null,
+  },
   download: {
     kind: 'download',
     title: '자료 다운로드',
-    body: '자료 다운로드는 로그인 후 가능해요.',
+    body: '실제 파일 다운로드는 아직 준비 중입니다.',
     cta: '로그인',
   },
   room_only: {
     kind: 'room_only',
     title: '공부방 운영자 공간',
-    body: '이 공간은 공부방 운영자에게 열려 있어요.',
+    body: '이 공간의 소개만 볼 수 있어요. 공부방 역할의 고민방을 이용해 주세요.',
     cta: null,
   },
   tutor_only: {
     kind: 'tutor_only',
     title: '과외쌤 전용 공간',
-    body: '이 공간은 과외쌤 전용이에요.',
+    body: '이 공간의 소개만 볼 수 있어요. 과외쌤 역할의 고민방을 이용해 주세요.',
     cta: null,
   },
 };

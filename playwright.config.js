@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 const previewBase = process.env.STUDY114_PREVIEW_URL || 'http://127.0.0.1:5174';
 
@@ -14,5 +14,8 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
-  projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
+  projects: [
+    { name: 'chromium', use: { browserName: 'chromium' } },
+    { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
+  ],
 });

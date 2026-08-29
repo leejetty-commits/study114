@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Admin;
 
 use InvalidArgumentException;
+use Study114\Board\BoardChannelAcl;
 use Study114\Database\Connection;
 
 final class ContentConfigService
@@ -33,6 +34,9 @@ final class ContentConfigService
         $boardKey = trim((string) ($input['boardKey'] ?? $input['board_key'] ?? ''));
         if ($boardKey === '') {
             throw new InvalidArgumentException('boardKey가 필요합니다.');
+        }
+        if ($boardKey === 'concern-family') {
+            throw new InvalidArgumentException('concern-family는 별칭입니다. concern-parent만 사용하세요.');
         }
 
         $existing = $this->repo->findChannel($boardKey);
@@ -125,6 +129,10 @@ final class ContentConfigService
     {
         $keys = json_decode((string) ($row['source_board_keys_json'] ?? '[]'), true);
         $keys = is_array($keys) ? array_values(array_map('strval', $keys)) : [];
+        $keys = array_values(array_unique(array_filter(array_map(
+            static fn (string $k): string => BoardChannelAcl::normalizeBoardKey($k),
+            $keys,
+        ))));
 
         return [
             'slotKey' => (string) $row['slot_key'],
@@ -140,7 +148,7 @@ final class ContentConfigService
             'ctaTarget' => (string) ($row['cta_target'] ?? '#/support'),
             'visibilityRule' => (string) ($row['visibility_rule'] ?? 'public'),
             'roleTarget' => (string) ($row['role_target'] ?? 'all'),
-            'guestFilter' => (string) ($row['guest_filter'] ?? 'allow'),
+            'guestFilter' => \Study114\Board\BoardChannelAcl::normalizeGuestFilter((string) ($row['guest_filter'] ?? 'allow')) ?: 'allow',
             'mobileBehavior' => (string) ($row['mobile_behavior'] ?? 'stack'),
             'priority' => (int) ($row['priority'] ?? 50),
             'status' => (string) ($row['status'] ?? 'active'),

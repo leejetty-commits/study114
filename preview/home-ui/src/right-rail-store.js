@@ -4,7 +4,7 @@ import {
   getContentRailCache,
   apiPersistRightRailSlot,
 } from './content-config-backend.js';
-import { normalizeGuestFilter, resolveSlotGuestFilter } from './board-channel-acl.js';
+import { normalizeGuestFilter, resolveSlotGuestFilter, normalizeBoardKey } from './board-channel-acl.js';
 
 const RAIL_KEY = 'study114-right-rail-slot-definitions-v1';
 const RAIL_LOG_KEY = 'study114-right-rail-logs-v1';
@@ -20,8 +20,8 @@ export const RIGHT_RAIL_SLOT_KEYS = [
 
 export const RIGHT_RAIL_SELECTION_MODES = ['latest', 'pinned', 'curated', 'manual'];
 export const RIGHT_RAIL_MOBILE_BEHAVIORS = ['stack', 'collapse', 'hide'];
-/** guestFilter: allow | summary_only | block */
-export const RIGHT_RAIL_GUEST_FILTERS = ['allow', 'summary_only', 'block'];
+/** guestFilter 정본: allow | intro_only | block. summary_only 는 호환 별칭(소개만). */
+export const RIGHT_RAIL_GUEST_FILTERS = ['allow', 'intro_only', 'block'];
 
 export { normalizeGuestFilter, resolveSlotGuestFilter };
 
@@ -38,7 +38,8 @@ export const RIGHT_RAIL_PAGE_LABELS = {
  * 우측 레일 슬롯 정본 (SSOT runtime seed)
  * - preview: 이 배열이 기본
  * - API mode: DB row가 overlay · DB seed는 본 배열과 동일 값으로 동기화
- * - guestFilter: allow=게스트 노출 / summary_only=게스트 요약·진입만 / block=게스트 슬롯 숨김
+ * - guestFilter: allow=게스트 노출 / intro_only=채널 소개만(글 제목·요약 아님) / block=게스트 슬롯 숨김
+ *   옛 저장값 summary_only 는 intro_only 별칭이며 게시글 요약을 공개하지 않는다.
  */
 export const DEFAULT_RIGHT_RAIL_SLOTS = [
   {
@@ -55,7 +56,7 @@ export const DEFAULT_RIGHT_RAIL_SLOTS = [
     ctaTarget: '#/support',
     visibilityRule: 'public',
     roleTarget: 'all',
-    guestFilter: 'summary_only',
+    guestFilter: 'intro_only',
     mobileBehavior: 'stack',
     priority: 10,
     status: 'active',
@@ -74,7 +75,7 @@ export const DEFAULT_RIGHT_RAIL_SLOTS = [
     ctaTarget: '#/support/faq',
     visibilityRule: 'public',
     roleTarget: 'all',
-    guestFilter: 'summary_only',
+    guestFilter: 'intro_only',
     mobileBehavior: 'stack',
     priority: 20,
     status: 'active',
@@ -85,7 +86,7 @@ export const DEFAULT_RIGHT_RAIL_SLOTS = [
     enabled: true,
     sourceType: 'mixed',
     sourceBoardKey: 'safe-guide',
-    sourceBoardKeys: ['safe-guide', 'submission', 'notice'],
+    sourceBoardKeys: ['safe-guide', 'notice'],
     selectionMode: 'curated',
     itemLimit: 3,
     sectionTitle: '상세 확인 전 안내',
@@ -244,7 +245,12 @@ export function getRightRailSlot(slotKey) {
 
 function normalizeBoardKeys(value, fallback = '') {
   const keys = Array.isArray(value) ? value : String(value || fallback).split(',');
-  return keys.map((v) => String(v).trim()).filter(Boolean);
+  const out = [];
+  for (const raw of keys) {
+    const key = normalizeBoardKey(String(raw).trim());
+    if (key && !out.includes(key)) out.push(key);
+  }
+  return out;
 }
 
 export function validateRightRailSlotInput(input) {

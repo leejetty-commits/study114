@@ -154,13 +154,11 @@ member_external_links
 
 ### 3-1. 권한 모델 (boardKey별)
 
-**권한 축:** `read` · `download` · `write` · `comment` · `upload` · `edit_own` · `delete_own` · `moderate`
+**권한 축 (런타임 ACL):** `discover`(채널명·공간 소개) · `list`(글 목록) · `detail` · `compose` · `comment` · `react` · `download`
 
-**역할 축:** `guest` · `member` · `demand`(학부모) · `supply-room` · `supply-tutor` · `verified` · `admin`
+`list` 허용만으로 게시글 제목을 반환하지 않는다. 소개와 글 목록을 분리한다.
 
-**보드 메타 (최소):** `visibility` · `allowedRoles` · `allowComment` · `allowUpload` · `requireReview` · `downloadPolicy`
-
-코드 정본: `board-engine-copy.js` · `BOARD_REGISTRY`
+코드 정본: `board-channel-acl.js` · `BoardChannelAcl.php` (FE/서버 동일) · `BOARD_REGISTRY`는 보드 메타.
 
 ### 3-2. boardKey 목록 (권장안)
 
@@ -170,10 +168,10 @@ member_external_links
 | `faq` | FAQ | 17장 고객센터 | 운영형 | admin write / 전체 read |
 | `safe-guide` | 안전과외 | 17장 고객센터 | 운영형 | admin write / 전체 read |
 | `policy-log` | 약관 변경 이력 | 26장·푸터 | 운영형 | admin write / 전체 read · route=`#/policy/changelog` (정적 `#/policy/{terms…}` 와 분리) |
-| **`library`** | **자료·다운로드** | **`#/library` (유틸)** | **다운로드형** | admin write / 로그인 read·download |
-| `library-template` | 양식·체크리스트 | 자료실 하위 | 다운로드형 | admin write / 로그인 download |
-| `library-guide-pdf` | 가이드 PDF | 자료실·고객센터 | 다운로드형 | admin write / 공개 read · 로그인 download |
-| `submission` | **제출·업로드** | 후순위 route | **권한형 업로드** | 공급자 write/upload · guest 금지 · `#/mypage/submission-board` |
+| **`library`** | **자료·다운로드** | **`#/library` (유틸)** | **다운로드형** | 로그인 목록 · **파일 다운로드 미구현** |
+| `library-template` | 양식·체크리스트 | 자료실 하위 | 다운로드형 | 로그인 목록 · 다운로드 미구현 |
+| `library-guide-pdf` | 가이드 PDF | 자료실·고객센터 | 다운로드형 | 공개 목록 메타 · 다운로드 미구현 |
+| `submission` | **신뢰·증빙자료 제출** | `#/mypage/submission-board` | **권한형 업로드** | **과외쌤** write/upload · 공부방·학부모·guest 금지 |
 | `showcase` | 사례 공유 | 2차 후보 | 큐레이션형 | 공급자 write · 운영 검토 |
 
 ### 3-3. 「자료실」과 게시판 엔진의 관계
@@ -420,9 +418,9 @@ member_external_links
 
 | slotKey | sourceBoardKeys | guestFilter | visibility/role | mobile |
 |---------|-----------------|-------------|-----------------|--------|
-| `home_right_rail` | notice, concern-director, concern-tutor, concern-parent | summary_only | public/all | stack |
-| `search_right_rail` | faq, concern-parent, safe-guide | summary_only | public/all | stack |
-| `detail_right_rail` | safe-guide, submission, notice | allow | public/all | collapse |
+| `home_right_rail` | notice, concern-director, concern-tutor, concern-parent | intro_only | public/all | stack |
+| `search_right_rail` | faq, concern-parent, safe-guide | intro_only | public/all | stack |
+| `detail_right_rail` | safe-guide, notice | allow | public/all | collapse |
 | `register_right_rail` | library-template, concern-director, concern-tutor | block | login/provider | stack |
 | `plans_right_rail` | notice, faq, safe-guide | block | public/provider | collapse |
 | `support_right_rail` | notice, faq, library-guide-pdf | allow | public/all | stack |
@@ -430,10 +428,21 @@ member_external_links
 > **정본:** `DEFAULT_RIGHT_RAIL_SLOTS` (`right-rail-store.js`) = DB `ContentSchemaMigrateService::railRows` 와 동일.  
 > 런타임: seed → (API mode) DB overlay → admin sessionStorage.  
 > 필수 소비: `sourceBoardKeys` · `visibilityRule` · `roleTarget` · `guestFilter` · `mobileBehavior`.  
-> list/detail/compose/comment/download 분리는 `board-channel-acl.js` · `BoardChannelAcl.php`.  
-> guest concern = 목록·제목·요약만 · 본문/댓글/반응/작성 차단. Board API는 세션+boardKey 재검증. HOT 전체 보드 fallback 금지.
+> list/detail/compose/comment/reaction/download 분리는 `board-channel-acl.js` · `BoardChannelAcl.php`.  
+> guest·제한 역할 concern = **소개만** (게시글 배열 비반환). Board API는 세션+boardKey 재검증. HOT 전체 보드 fallback 금지. sourceBoardKeys가 있는 모든 슬롯은 동일 ACL.
 
-### D-3. 운영 로그
+### D-3. 키·필터·구현 상태 구분 (2026-08-29)
+
+| 항목 | 정본 |
+|------|------|
+| 학부모 고민방 키 | `concern-parent`. `concern-family`는 별칭만 (중복 채널 금지) |
+| guestFilter | `intro_only` (채널 소개만). `summary_only`는 호환 별칭이며 글 제목·요약 공개가 아님 |
+| 고민방 참여 | ACL ○ · 프리뷰 localStorage ○ · **서버 저장 미구현** · 운영 게시판 미완료 |
+| 해결후기 작성 | 기존값 유지 / 별도 최종 정책 확인. 확대 금지 |
+| 찜·비교 | 모든 로그인 역할 `#/mypage/wishlist`. **비교 전용 마이페이지 route 없음** — 찜 목록의 비교 담기만 |
+| 쪽지권 | 공급자→학생 **신규 thread만** 1회. 후속·학부모 선문의·답장은 잔여 0이어도 무료 |
+
+### D-4. 운영 로그
 
 채널 생성/수정/보관, 슬롯 수정/on/off/source 변경은 로컬 프리뷰에서 운영 로그로 남긴다. 실제 DB 전환 시 `admin_operation_logs` 또는 별도 config log 테이블로 이관한다.
 

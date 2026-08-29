@@ -10,9 +10,9 @@ import { BOARD_ENGINE_LOCK } from '../board-engine-copy.js';
 export const LIBRARY_HEAD = {
   title: '자료실',
   engineLabel: BOARD_ENGINE_LOCK.topConcept,
-  lead: '학습·운영 참고 자료(PDF·양식)를 내려받을 수 있습니다.',
+  lead: '학습·운영 참고 자료 목록입니다. 화면과 메타데이터만 있으며, 실제 파일 다운로드는 아직 없습니다.',
   footnote:
-    '자료실은 게시판 엔진의 다운로드형 채널입니다. GNU 커뮤니티와 콘텐츠를 공유하지 않습니다.',
+    '자료실은 게시판 엔진의 다운로드형 채널입니다. file_label은 표시 이름이며 실파일이 아닙니다. GNU 커뮤니티와 콘텐츠를 공유하지 않습니다.',
 };
 
 export const LIBRARY_SECTIONS = [

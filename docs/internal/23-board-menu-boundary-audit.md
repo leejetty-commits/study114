@@ -149,7 +149,7 @@
 |---------|-----------|-----------|-------------|-------------|--------|------|------|
 | `home_right_rail` | ✅ | `renderHomeShell` | `right-rail-store` seed/API | notice/library/safe-guide | stack | — | 완료 |
 | `search_right_rail` | ✅ | search-ui `layout.js` | seed/API | faq/library-template/safe-guide | stack | — | **완료(3탄)** |
-| `detail_right_rail` | ✅ | P24 detail modal inline block | seed/API | safe-guide/submission/notice | collapse | — | **완료(3탄)** |
+| `detail_right_rail` | ✅ | P24 detail modal inline block | seed/API | safe-guide/notice | collapse | — | **완료(3탄)** |
 | `register_right_rail` | ✅ | `mypage/registrations*` | seed | library-template/faq/safe-guide | stack | 등록 전용 외부 SPA 미연결 | 2차 |
 | `plans_right_rail` | ✅ | `plans` shell | seed | notice/faq/safe-guide | collapse | checkout/result는 숨김 | 완료 |
 | `support_right_rail` | ✅ | support/library/policy shell | seed | notice/faq/library-guide-pdf | stack | 없음 | 완료 |
@@ -167,9 +167,9 @@
 
 | slotKey | 기본 sourceBoardKeys | 용도 |
 |---------|----------------------|------|
-| `home_right_rail` | `notice`, `concern-director`, `concern-tutor`, `concern-parent` | summary_only · HOT detail gate |
-| `search_right_rail` | `faq`, `concern-parent`, `safe-guide` | summary_only |
-| `detail_right_rail` | `safe-guide`, `submission`, `notice` | allow · collapse |
+| `home_right_rail` | `notice`, `concern-director`, `concern-tutor`, `concern-parent` | intro_only · HOT detail gate |
+| `search_right_rail` | `faq`, `concern-parent`, `safe-guide` | intro_only |
+| `detail_right_rail` | `safe-guide`, `notice` | allow · collapse |
 | `register_right_rail` | `library-template`, `concern-director`, `concern-tutor` | block · provider |
 | `plans_right_rail` | `notice`, `faq`, `safe-guide` | block · provider |
 | `support_right_rail` | `notice`, `faq`, `library-guide-pdf` | allow |

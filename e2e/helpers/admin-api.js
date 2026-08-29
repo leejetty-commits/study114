@@ -6,6 +6,8 @@ export const DEV_PASSWORD = 'password';
 export const ACCOUNTS = {
   tutor: 'tutor-owner1@dev.local',
   admin: 'ops@dev.local',
+  parent: 'guardian1@dev.local',
+  study_room: 'room-owner1@dev.local',
 };
 
 /** @param {import('@playwright/test').APIRequestContext} request */

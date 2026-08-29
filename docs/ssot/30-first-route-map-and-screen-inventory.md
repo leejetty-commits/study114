@@ -386,8 +386,8 @@
 | P25-00/04 | Compare Bar/Modal | block/modal | global | ✅ | handoff 2차 | 로그인 | ○ | API 013 |
 | P25-S10 | 학생 검토함 | page | `#/mypage/student-review` | ✅ | 2차 ✅ | tutor/owner | ○ | P20·P21 브리지 |
 | P26-01~07 | 정책·약관 | page | `#/policy/{slug}` | ✅ | UX 1차 | 공개 | ○ | P17-06→P26 |
-| P23-01~03 | 자료실 | page | `#/library/*` | ✅ | 23장 | 공개 | ○ | boardKey |
-| P23-04 | 제출함 허브 | page | `#/mypage/submission-board` | ✅ | 23장 | 공급자 | ○ | P15-10 브리지 |
+| P23-01~03 | 자료실 | page | `#/library/*` | ✅ 화면/메타 | 23장 | 로그인(가이드는 공개 목록) | ○ | **다운로드 미구현** |
+| P23-04 | 신뢰·증빙자료 제출 | page | `#/mypage/submission-board` | ✅ | 23장 | 과외쌤 | ○ | P15-10 브리지 |
 | P23-04a/b | 제출 작성·상세 | page | …/new · …/:id | ✅ | 23장 | upload | ○ |  |
 | P17-admin | 운영 프리뷰 | admin | `#/support/admin/*` | ✅ | 17c | 내부 | △ |  |
 | A28-01 | 운영 홈 | admin | `#/admin` | △ | 28§12 | 내부 | — | RED LINE |
@@ -422,7 +422,7 @@
 | P25-S10 | tutor · study_room | **2차 ✅** · parent ✕ |
 | P26-01~07 | 공개 | footer·고객센터·회원가입 링크 |
 | P23-01~03 | 공개/로그인 | GNB 제외 · 유틸·푸터 링크 |
-| P23-04 | 공급자 · demand | P15-10 브리지 · `submission` boardKey |
+| P23-04 | 과외쌤 | P15-10 브리지 · `submission` boardKey |
 | P17-admin | 운영 프리뷰 | 심사 UX ✕ · 공지·티켓만 |
 | A28-01~08 | 내부 전용 | RED LINE · `#/admin/*` · A28-07 API ✅ |
 
@@ -495,10 +495,10 @@
 | `faq` | P17-04 | `#/support/faq` | 17 · 23 | 운영형 | 정적 FAQ |
 | `safe-guide` | P17-02/03 | `#/support/safe/{slug}` | 17 · 23 | 운영형 | support-copy G1~G7 |
 | `policy-log` | P26 변경 이력 | `#/policy/changelog` (후순위) | 26 · 23 | 운영형 | 정적 `#/policy/{terms…}` 와 **분리** · `#/policy/*` 와일드카드 금지 |
-| `library` | 자료실 (다운로드) | `#/library` | 23 | 다운로드형 | ✅ 프리뷰 · 로그인 read/download |
-| `library-template` | 양식/체크리스트 | `#/library/templates` | 23 | 다운로드형 | 자료실 하위 |
-| `library-guide-pdf` | 가이드 PDF | `#/library/guides` | 23 | 다운로드형 | 공개 read · 로그인 download |
-| `submission` | 제출·업로드 | `#/mypage/submission-board` | 23 | 권한형 업로드 | **△ 프리뷰** · P23-04 · P15-10 연동 |
+| `library` | 자료실 (목록·메타) | `#/library` | 23 | 다운로드형 | **화면/메타 · 파일 다운로드 미구현** |
+| `library-template` | 양식/체크리스트 | `#/library/templates` | 23 | 다운로드형 | 목록만 · 다운로드 미구현 |
+| `library-guide-pdf` | 가이드 PDF | `#/library/guides` | 23 | 다운로드형 | 공개 목록 메타 · 다운로드 미구현 |
+| `submission` | 신뢰·증빙자료 제출 | `#/mypage/submission-board` | 23 | 권한형 업로드 | **과외쌤 전용** · P23-04 · P15-10 |
 | `showcase` | 사례 공유 | 2차 후보 | 23 | 큐레이션형 | 공급자 write · 운영 검토 |
 
 ---
@@ -636,6 +636,7 @@
 | 2026-07-07 | **부록 F** — A28-07 QA 조합표 · §11 A28-07 행 분리 · 28§3-b 연동 |
 | 2026-07-07 | **부록 G** — 화면 갭 감사 · §5-b P18 · §8·§16 row 확장 · route ownership 잠금안 |
 | 2026-07-07 | **P18 hash** — `#/mypage/paid` · `#/mypage/paid/usage` · P15-09 허브 분리 |
+| 2026-08-29 | **ACL 재잠금** — discover/list 분리 · guest 소개만 · 공급자 세 방 전체 읽기 · 자료실 다운로드 미구현 · submission 과외쌤 전용 · 레일 submission 제거 |
 | 2026-08-10 | **채널 ACL 런타임 연결** — `board-channel-acl.js` · `BoardChannelAcl.php` · community list/detail 분리 · 레일 `visibilityRule`/`roleTarget`/`guestFilter`/`sourceBoardKeys` 적용 · Board API 세션 게이트 · guest `/library` 잠금(`/library/guides` 목록만) |
 
 ### 부록 H. channel ACL · guest list/detail · API gate (2026-08-10)
@@ -645,30 +646,30 @@
 
 | slotKey | sourceBoardKeys | guestFilter | visibility/role | mobile |
 |---------|-----------------|-------------|-----------------|--------|
-| home_right_rail | notice, concern-director, concern-tutor, concern-parent | summary_only | public/all | stack |
-| search_right_rail | faq, concern-parent, safe-guide | summary_only | public/all | stack |
-| detail_right_rail | safe-guide, submission, notice | allow | public/all | collapse |
+| home_right_rail | notice, concern-director, concern-tutor, concern-parent | intro_only | public/all | stack |
+| search_right_rail | faq, concern-parent, safe-guide | intro_only | public/all | stack |
+| detail_right_rail | safe-guide, notice | allow | public/all | collapse |
 | register_right_rail | library-template, concern-director, concern-tutor | block | login/provider | stack |
 | plans_right_rail | notice, faq, safe-guide | block | public/provider | collapse |
 | support_right_rail | notice, faq, library-guide-pdf | allow | public/all | stack |
 
-| boardKey | guest list | guest detail | full detail | compose |
-|----------|------------|--------------|-------------|---------|
+| boardKey | guest 소개 | guest 글목록 | full 목록·상세 | compose |
+|----------|------------|--------------|-----------------|---------|
 | notice/faq/safe-guide | ○ | ○ | 전체 | admin |
-| library / library-template | ✕ | ✕ | login | admin |
-| library-guide-pdf | ○ | ○(메타) | login download | admin |
-| submission | ✕ | ✕ | room/tutor | room/tutor |
-| concern-parent (family) | ○ 제목/요약 | ✕ | parent | parent |
-| concern-director | ○ 제목/요약 | ✕ | room | room |
-| concern-tutor | ○ 제목/요약 | ✕ | tutor | tutor |
-| concern-solved | ○ 제목/요약 | ✕ | login | login |
+| library / library-template | ✕ | ✕ | login 목록 · **다운로드 미구현** | admin |
+| library-guide-pdf | ○ | ○(메타) | 목록 메타 · **다운로드 미구현** | admin |
+| submission | ✕ | ✕ | tutor | tutor |
+| concern-parent (family) | ○ 소개만 | ✕ | parent + 공부방·과외쌤 읽기 | parent |
+| concern-director | ○ 소개만 | ✕ | 공부방·과외쌤 읽기 | room |
+| concern-tutor | ○ 소개만 | ✕ | 공부방·과외쌤 읽기 | tutor |
+| concern-solved | ○ 소개만 | ✕ | 로그인 전체 열람 | login (기존 유지) |
 
 | surface | gate |
 |---------|------|
-| `#/community/*` detail | FE `canReadBoardDetail` · 본문/댓글/반응 숨김 |
-| HOT/레일 카드 | list ACL + slot sourceBoardKeys만 · 클릭 후 동일 detail 게이트 |
-| `/api/board/posts.php` | session + `BoardChannelAcl` · 본문 redact |
-| attachment token/download | session + submission download ACL |
+| `#/community/*` 목록·상세 | FE `canDiscoverBoard` / `canListBoard` / `canReadBoardDetail` · 소개 카드 |
+| HOT/레일 카드 | 채널 ACL 통과분만 · 글 권한 없으면 채널명·소개 CTA |
+| `/api/board/posts.php` | `access=intro` 이면 `posts=[]` · 제목·작성자 미반환 |
+| attachment token/download | session + submission download ACL (과외쌤·admin) |
 | mobile inline rail | `renderRightRailBlock` 동일 ACL |
 
 **배포 후 체크:** guest 상세 URL · compose · API 직접 호출 · HOT 클릭 · room/tutor 역할 mismatch · library download · submission 진입.

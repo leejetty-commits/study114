@@ -165,9 +165,10 @@ export const BOARD_PERMISSION_AXES = [
  * @returns {BoardRole}
  */
 export function mapNavRoleToBoardRole(navRole) {
-  if (navRole === 'parent') return 'demand';
-  if (navRole === 'study_room') return 'supply-room';
+  if (navRole === 'parent' || navRole === 'guardian_student' || navRole === 'student') return 'demand';
+  if (navRole === 'study_room' || navRole === 'study_room_owner') return 'supply-room';
   if (navRole === 'tutor') return 'supply-tutor';
+  if (navRole === 'admin') return 'admin';
   if (navRole === 'guest') return 'guest';
   return 'member';
 }
@@ -291,7 +292,7 @@ export const BOARD_REGISTRY = [
     userFacingMenu: '자료실',
     visibility: 'login',
     readRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
-    downloadRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+    downloadRoles: [],
     writeRoles: ['admin'],
     allowComment: false,
     allowUpload: false,
@@ -312,7 +313,7 @@ export const BOARD_REGISTRY = [
     userFacingMenu: '자료실',
     visibility: 'login',
     readRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
-    downloadRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+    downloadRoles: [],
     writeRoles: ['admin'],
     allowComment: false,
     allowUpload: false,
@@ -333,7 +334,7 @@ export const BOARD_REGISTRY = [
     userFacingMenu: '자료실',
     visibility: 'public',
     readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
-    downloadRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+    downloadRoles: [],
     writeRoles: ['admin'],
     allowComment: false,
     allowUpload: false,
@@ -353,10 +354,9 @@ export const BOARD_REGISTRY = [
     sectionOwner: 'mypage-submission',
     userFacingMenu: '제출함',
     visibility: 'role',
-    // 수요자(parent)는 P15-10 상태 안내용 — 제출함 write/upload 대상 아님 (마이페이지 UX와 정합)
-    readRoles: ['supply-room', 'supply-tutor', 'admin'],
-    downloadRoles: ['admin'],
-    writeRoles: ['supply-room', 'supply-tutor'],
+    readRoles: ['supply-tutor', 'admin'],
+    downloadRoles: ['supply-tutor', 'admin'],
+    writeRoles: ['supply-tutor'],
     allowComment: false,
     allowUpload: true,
     requireReview: true,
@@ -395,9 +395,9 @@ export const BOARD_REGISTRY = [
     presetId: 'concern',
     sectionOwner: 'community',
     userFacingMenu: '공부방 고민방',
-    // list: guest 포함 · full detail/compose는 board-channel-acl.js
+    // list/detail 런타임은 board-channel-acl.js (guest는 소개만)
     visibility: 'public',
-    readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
+    readRoles: ['supply-room', 'supply-tutor'],
     downloadRoles: [],
     writeRoles: ['supply-room'],
     allowComment: true,
@@ -418,7 +418,7 @@ export const BOARD_REGISTRY = [
     sectionOwner: 'community',
     userFacingMenu: '과외쌤 고민방',
     visibility: 'public',
-    readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
+    readRoles: ['supply-room', 'supply-tutor'],
     downloadRoles: [],
     writeRoles: ['supply-tutor'],
     allowComment: true,
@@ -440,7 +440,7 @@ export const BOARD_REGISTRY = [
     userFacingMenu: '학생/학부모 고민방',
     /** 문서 concern-family ≡ concern-parent */
     visibility: 'public',
-    readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
+    readRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
     downloadRoles: [],
     writeRoles: ['demand', 'member'],
     allowComment: true,
@@ -461,9 +461,9 @@ export const BOARD_REGISTRY = [
     sectionOwner: 'community',
     userFacingMenu: '해결후기',
     visibility: 'public',
-    readRoles: ['guest', 'member', 'demand', 'supply-room', 'supply-tutor'],
+    readRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
     downloadRoles: [],
-    writeRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+    writeRoles: ['member', 'demand', 'supply-room', 'supply-tutor'], // 기존값 유지 · 별도 정책 확인. 확대 금지.
     allowComment: true,
     allowUpload: true,
     requireReview: false,

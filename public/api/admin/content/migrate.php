@@ -42,6 +42,7 @@ AdminApi::run(static function (): void {
             'dual_admin_038' => $dualAdmin->status(),
             'list_sort_041' => $listSort->status(),
             'tutor_detail_recompute' => $tutorDetail->status(),
+            'acl_seed_plan' => $content->planAclSeed(),
             'can_apply_036' => $isSuper || $needs036Bootstrap,
             'can_apply_037' => $isSuper,
             'can_apply_038' => $isSuper,
@@ -58,7 +59,8 @@ AdminApi::run(static function (): void {
             if (!$isSuper) {
                 AdminApi::fail(403, 'forbidden', '최고관리자만 034/035를 적용할 수 있습니다.');
             }
-            AdminApi::ok(['migrate' => $content->apply()]);
+            $dryRun = !empty($input['dry_run']);
+            AdminApi::ok(['migrate' => $content->apply(['dry_run' => $dryRun, 'abort_on_unexpected' => true])]);
         }
         if ($confirm === 'apply-036') {
             if (!$isSuper && !$needs036Bootstrap) {

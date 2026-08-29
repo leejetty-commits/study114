@@ -23,7 +23,7 @@ BoardApi::run(static function (): void {
 
     $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
     if (!BoardChannelAcl::canCompose('submission', $boardRole)) {
-        BoardApi::fail(403, 'forbidden', '제출함은 공부방·과외쌤만 이용할 수 있습니다.');
+        BoardApi::fail(403, 'forbidden', '신뢰·증빙자료 제출은 과외쌤만 이용할 수 있습니다.');
     }
 
     $postKey = trim((string) ($_POST['post_key'] ?? $_POST['id'] ?? ''));
@@ -35,14 +35,14 @@ BoardApi::run(static function (): void {
     }
 
     $roleType = (string) ($auth['role_type'] ?? '');
-    $authorRole = $roleType === 'tutor' ? 'tutor' : ($roleType === 'study_room' ? 'study_room' : '');
+    $authorRole = $roleType === 'tutor' ? 'tutor' : ($roleType === 'admin' ? 'admin' : '');
     if ($authorRole === '') {
-        BoardApi::fail(403, 'forbidden', '제출함은 공부방·과외쌤만 이용할 수 있습니다.');
+        BoardApi::fail(403, 'forbidden', '신뢰·증빙자료 제출은 과외쌤만 이용할 수 있습니다.');
     }
 
     $service = new BoardAttachmentService();
     /** @var array<string, mixed> $file */
     $file = $_FILES['file'];
-    $attachment = $service->uploadSubmission($postKey, $authorRole, $file);
+    $attachment = $service->uploadSubmission($postKey, $authorRole, $file, (int) ($auth['user_id'] ?? 0));
     BoardApi::ok(['attachment' => $attachment]);
 });

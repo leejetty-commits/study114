@@ -9,7 +9,10 @@ import { getConcernBoardByKey } from './concern/copy.js';
 import { getHotConcernSamples, getLatestConcernSamples, listConcernPosts, reactionTotal } from './concern/store.js';
 import { renderPromoRailCard } from './promo/screens.js';
 import {
+  boardIntroLevel,
   canShowBoardInRail,
+  canShowBoardPostsInRail,
+  getChannelIntro,
   isRailSlotVisible,
   normalizeBoardKey,
 } from './board-channel-acl.js';
@@ -162,7 +165,25 @@ function staticFallbackItems(boardKey) {
   ];
 }
 
+function introRailItem(boardKey) {
+  const intro = getChannelIntro(boardKey);
+  // 비회원 고민방은 메뉴명만. 소개문을 레일에도 싣지 않는다.
+  const menuOnly = boardIntroLevel(boardKey, getNavRole()) === 'menu_only';
+  return {
+    boardKey,
+    title: intro.title,
+    summary: menuOnly ? '' : intro.body,
+    href: boardRoute(boardKey),
+    kind: menuOnly ? '' : '공간 소개',
+    introOnly: true,
+  };
+}
+
 function itemsForBoard(boardKey, limit) {
+  const navRole = getNavRole();
+  if (!canShowBoardPostsInRail(boardKey, navRole)) {
+    return canShowBoardInRail(boardKey, navRole) ? [introRailItem(boardKey)] : [];
+  }
   if (boardKey === 'notice') return noticeItems(limit);
   if (boardKey === 'faq') return faqItems(limit);
   if (boardKey === 'safe-guide') return guideItems(limit);
@@ -192,11 +213,12 @@ function resolveConcernBoardKeysForSlot(slotKey, opts = {}) {
 
 function renderRailItem(item) {
   const href = normalizeHref(item.href);
+  const meta = item.introOnly ? '이 공간의 소개만 볼 수 있어요' : item.summary;
   return `
     <a href="${esc(href)}" class="right-rail-card"${navAttr(item.href)}>
       <span class="right-rail-card__kind">${esc(item.kind)}</span>
       <strong class="right-rail-card__title">${esc(item.title)}</strong>
-      <span class="right-rail-card__summary">${esc(item.summary)}</span>
+      <span class="right-rail-card__summary">${esc(meta)}</span>
     </a>`;
 }
 
@@ -244,17 +266,16 @@ function liveFieldCopy(slotKey) {
 /** @param {string} slotKey @param {{ guestFilter?: boolean }} [opts] */
 function renderLiveFieldSlot(slotKey, opts = {}) {
   const copy = liveFieldCopy(slotKey);
-  let boardKeys = resolveConcernBoardKeysForSlot(slotKey, opts);
+  const navRole = getNavRole();
+  const boardKeys = resolveConcernBoardKeysForSlot(slotKey, opts);
   const latestMode = slotKey === 'detail_right_rail';
-  if (latestMode && !boardKeys.length) {
-    boardKeys = ['concern-director', 'concern-tutor', 'concern-parent'];
-  }
-  const samples = (
+  const postCards = (
     latestMode
-      ? getLatestConcernSamples({ limit: 3, boardKeys })
-      : getHotConcernSamples({ limit: 3, boardKeys })
-  ).filter((post) => canShowBoardInRail(post.boardKey, getNavRole(), { guestFilter: opts.guestFilter }));
-  const items = samples
+      ? getLatestConcernSamples({ limit: 3, boardKeys: boardKeys.filter((key) => canShowBoardPostsInRail(key, navRole)) })
+      : getHotConcernSamples({ limit: 3, boardKeys: boardKeys.filter((key) => canShowBoardPostsInRail(key, navRole)) })
+  ).filter((post) => canShowBoardPostsInRail(post.boardKey, navRole));
+
+  const postHtml = postCards
     .map((post) => {
       const board = getConcernBoardByKey(post.boardKey);
       const href = `${board?.path || '/community'}/${post.id}`;
@@ -262,10 +283,27 @@ function renderLiveFieldSlot(slotKey, opts = {}) {
         <a href="#${esc(href)}" class="live-rail-card" data-nav="${esc(href)}">
           <span class="live-rail-card__board">${esc(board?.label || '커뮤니티')}</span>
           <strong class="live-rail-card__title">${esc(post.title)}</strong>
-          <span class="live-rail-card__meta">제목·요약 · 본문은 게시판에서</span>
+          <span class="live-rail-card__meta">댓글 ${post.comments?.length || 0} · 반응 ${reactionTotal(post)}</span>
         </a>`;
     })
     .join('');
+
+  const introHtml = boardKeys
+    .filter((key) => !canShowBoardPostsInRail(key, navRole) && canShowBoardInRail(key, navRole, opts))
+    .map((key) => {
+      const intro = getChannelIntro(key);
+      const board = getConcernBoardByKey(key);
+      const href = board?.path || boardRoute(key).replace(/^#/, '');
+      return `
+        <a href="#${esc(href)}" class="live-rail-card" data-nav="${esc(href)}">
+          <span class="live-rail-card__board">${esc(intro.title)}</span>
+          <strong class="live-rail-card__title">${esc(intro.title)}</strong>
+          <span class="live-rail-card__meta">이 공간의 소개만 볼 수 있어요</span>
+        </a>`;
+    })
+    .join('');
+
+  const items = `${postHtml}${introHtml}`;
 
   return `
     <section class="live-rail-slot live-rail-slot--field">
@@ -409,7 +447,7 @@ function renderRightRailMarkup(slotKey, variant = 'sidebar', opts = {}) {
         ${itemsHtml}
       </div>
       <a href="${esc(ctaHref)}" class="right-rail__cta"${navAttr(activeSlot.ctaTarget)}>${esc(activeSlot.ctaLabel)} →</a>
-      <p class="right-rail__note">본문은 각 게시판에서 확인 · 이 영역은 요약/바로가기</p>
+      <p class="right-rail__note">글 목록 권한이 있는 채널만 게시글이 보입니다. 그 외에는 공간 소개만 표시합니다.</p>
     </${tag}>`;
 }
 

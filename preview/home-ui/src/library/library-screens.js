@@ -2,7 +2,7 @@ import { getNavRole } from '../state.js';
 import { renderEmptyStateCard } from '../empty-state-copy.js';
 import { BOARD_TYPES, getBoardPolicy } from '../board-engine-copy.js';
 import { LIBRARY_HEAD, LIBRARY_SECTIONS } from './library-copy.js';
-import { canDownloadFromBoard, getLibraryBoardMeta, listLibraryItems } from './library-store.js';
+import { getLibraryBoardMeta, libraryDownloadControlHtml, listLibraryItems } from './library-store.js';
 import { getLibrarySection } from './library-router.js';
 
 function esc(s) {
@@ -19,7 +19,7 @@ function renderBoardPolicyChips(boardKey, navRole) {
   const chips = [
     `<span class="lib-chip lib-chip--type">${esc(boardTypeLabel(meta.policy.boardType))}</span>`,
     `<span class="lib-chip">열람 ${meta.canRead ? '가능' : '제한'}</span>`,
-    `<span class="lib-chip">${meta.canDownload ? '다운로드 가능' : '자료 다운로드는 로그인 후 가능해요'}</span>`,
+    `<span class="lib-chip">${meta.canDownload ? '다운로드 가능' : '파일 다운로드 미구현'}</span>`,
   ];
   if (meta.policy.requireReview) {
     chips.push('<span class="lib-chip lib-chip--muted">운영 검토 후 노출</span>');
@@ -34,11 +34,8 @@ function formatAudience(audience) {
 }
 
 function renderCard(item, navRole) {
-  const canDl = canDownloadFromBoard(item.boardKey, navRole);
   const policy = getBoardPolicy(item.boardKey);
-  const dlBtn = canDl
-    ? `<button type="button" class="btn btn--secondary btn--sm lib-card__dl" data-lib-download="${esc(item.id)}">다운로드 · ${esc(item.fileLabel || '파일')}</button>`
-    : `<button type="button" class="btn btn--secondary btn--sm lib-card__dl" disabled title="로그인 후 다운로드">다운로드 · 로그인 필요</button>`;
+  const dlBtn = libraryDownloadControlHtml();
 
   return `
     <article class="lib-card" data-lib-id="${esc(item.id)}">
@@ -49,6 +46,7 @@ function renderCard(item, navRole) {
       <h3 class="lib-card__title">${esc(item.title)}</h3>
       <p class="lib-card__summary">${esc(item.summary)}</p>
       <p class="lib-card__meta">${esc(formatAudience(item.audience))}</p>
+      <p class="lib-card__meta">표시 이름: ${esc(item.fileLabel || '파일')} · 실제 파일 없음</p>
       ${dlBtn}
     </article>`;
 }
@@ -87,12 +85,6 @@ export function bindLibraryScreenEvents(root, rerender) {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       window.location.hash = el.getAttribute('data-lib-nav') || '/library';
-    });
-  });
-  root.querySelectorAll('[data-lib-download]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-lib-download');
-      window.alert(`[23장 프리뷰] 자료 다운로드 — ${id}\n실서비스: Board Engine + 스토리지 URL`);
     });
   });
 }
