@@ -110,7 +110,7 @@ test.describe('관리자 접근 제한', () => {
     await page.request.post('/api/auth/logout.php').catch(() => {});
     await gotoHash(page, '/admin/submission-docs');
     await expect(page.getByText('운영자 전용')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Dev·운영 로그인' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '개발용 운영자 로그인' })).toBeVisible();
   });
 
   test('과외 계정은 admin API 403', async ({ page }) => {

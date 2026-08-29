@@ -7,13 +7,13 @@ const HOME = process.env.STUDY114_HOME_UI_URL || 'http://127.0.0.1:5174';
 
 export async function devLoginParent(page) {
   await page.goto(`${HOME}/#/guest`);
-  await page.getByRole('button', { name: 'Dev·학부모' }).click();
+  await page.getByRole('button', { name: '시험용·학부모' }).click();
   await page.waitForURL(/#\/parent/, { timeout: 15_000 });
 }
 
 export async function devLoginTutor(page) {
   await page.goto(`${HOME}/#/guest`);
-  await page.getByRole('button', { name: 'Dev·과외' }).click();
+  await page.getByRole('button', { name: '시험용·과외' }).click();
   await page.waitForURL(/#\/tutor/, { timeout: 15_000 });
 }
 

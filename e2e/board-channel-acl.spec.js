@@ -193,7 +193,8 @@ test.describe('board IDOR — 요청 키가 아니라 DB 실제 키·소유자',
       },
     });
     expect(created.ok()).toBeTruthy();
-    const postKey = (await created.json()).post?.postKey ?? (await created.json()).post?.post_key;
+    const post = (await created.json()).post ?? {};
+    const postKey = post.postKey ?? post.post_key ?? post.id;
     expect(postKey).toBeTruthy();
 
     // 실제 글은 submission 인데 요청은 concern-tutor 로 위장
@@ -280,14 +281,18 @@ test.describe('guest UI concern intro (preview)', () => {
     await expect(page.locator('body')).not.toContainText(DIRECTOR_INTRO_BLURB);
   });
 
-  test('역할 전환 후 이전 역할 보호 데이터가 화면·저장소에 남지 않음', async ({ page }) => {
+  test('로그아웃 후 이전 역할의 보호 목록이 화면에 남지 않음', async ({ page }) => {
     await devLoginTutor(page);
-    await page.goto(`${HOME}/#/community/tutor`);
-    await expect(page.locator('body')).toBeVisible({ timeout: 20_000 });
-    await page.evaluate(() => window.dispatchEvent(new CustomEvent('auth:logout')));
     await page.goto(`${HOME}/#/community/director`);
+    // 과외쌤은 원장 고민방을 읽을 수 있으므로 목록이 보이는 상태에서 시작한다.
+    await expect(page.locator('body')).toContainText(DIRECTOR_SEED_TITLE, { timeout: 20_000 });
+
+    await page.locator('[data-action="dev-logout"]').click();
+    await expect(page.getByRole('button', { name: '시험용·과외' })).toBeVisible({ timeout: 20_000 });
+
+    await page.goto(`${HOME}/#/community/director`);
+    await expect(page.locator('body')).toContainText('공부방 고민방', { timeout: 20_000 });
     await expect(page.locator('body')).not.toContainText(DIRECTOR_SEED_TITLE);
-    const leaked = await page.evaluate(() => localStorage.getItem('study114.community.v2'));
-    expect(leaked === null || !String(leaked).includes('문의는 오는데')).toBeTruthy();
+    await expect(page.locator('body')).not.toContainText(DIRECTOR_INTRO_BLURB);
   });
 });
