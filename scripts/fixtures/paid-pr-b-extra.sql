@@ -113,9 +113,18 @@ INSERT INTO user_roles (user_id, role_type, is_primary) VALUES
 ON DUPLICATE KEY UPDATE is_primary = VALUES(is_primary);
 
 INSERT INTO students (id, guardian_user_id, student_name, exposure_status) VALUES
-  (50, 50, '공개학생', 'published'),
-  (51, 50, '닫힌학생', 'hidden')
+  (50, 50, 'open-student', 'published'),
+  (51, 50, 'hidden-student', 'hidden'),
+  (52, 50, 'memo-paused-student', 'published')
 ON DUPLICATE KEY UPDATE exposure_status = VALUES(exposure_status);
+
+-- 063 적용 후 memo_status 보정 (CI에서 063 뒤에 재실행하거나 아래를 063 이후에 적용)
+-- UPDATE students SET memo_status = 'open' WHERE id = 50;
+-- UPDATE students SET memo_status = 'open' WHERE id = 51;
+-- UPDATE students SET memo_status = 'paused' WHERE id = 52;
+
+UPDATE users SET password_hash = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
+WHERE id IN (4, 40, 41, 42, 50, 60);
 
 INSERT INTO provider_entitlements (user_id, subscription_tier, cold_memo_allowed, memo_credits) VALUES
   (4, 'free', 0, 0),
@@ -124,5 +133,10 @@ INSERT INTO provider_entitlements (user_id, subscription_tier, cold_memo_allowed
   (42, 'free', 0, 0),
   (60, 'free', 0, 0)
 ON DUPLICATE KEY UPDATE memo_credits = 0, cold_memo_allowed = 0;
+
+-- user 4는 tutor+study_room 동시 → 062 backfill 후에도 provider_id NULL
+INSERT INTO provider_ticket_packs
+  (user_id, ticket_type, pack_size, remaining, purchased_at, expires_at, source, grant_kind)
+VALUES (4, 'memo', 2, 2, NOW(), DATE_ADD(NOW(), INTERVAL 10 DAY), 'manual', 'manual');
 
 SET FOREIGN_KEY_CHECKS = 1;

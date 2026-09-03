@@ -103,6 +103,9 @@ final class MessagesService
             if (empty($input['skip_ticket_consume'])) {
                 $this->assertColdMemoAllowed($userId, $contextKind, $input);
             }
+            if ($contextKind === 'student') {
+                (new \Study114\Paid\StudentMemoGate(Connection::get()))->assertCanContact($contextId);
+            }
             $threadId = $this->repo->createThread([
                 'participant_low_user_id'  => $low,
                 'participant_high_user_id' => $high,

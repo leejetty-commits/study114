@@ -229,24 +229,32 @@ final class ProviderCheckoutService
     /** @return array<string, mixed> */
     public function completeOrder(int $userId, string $orderRef): array
     {
-        $this->pdo->beginTransaction();
         $lockKey = null;
+        $paymentCommitted = false;
         try {
+            $this->pdo->beginTransaction();
             $order = $this->orders->getByRefForUpdate($orderRef);
             if ($order === null || (int) $order['user_id'] !== $userId) {
                 throw new InvalidArgumentException('주문을 찾을 수 없습니다.');
             }
-            if ((string) $order['status'] === 'paid') {
-                $this->pdo->commit();
 
-                return $this->buildCompletePayload($order, false);
-            }
-            if ((string) $order['status'] !== 'pending') {
+            $status = (string) $order['status'];
+            if (!in_array($status, ['pending', 'paid'], true)) {
                 throw new InvalidArgumentException('완료할 수 없는 주문 상태입니다.');
             }
 
-            if ((string) $order['product_kind'] === 'count'
-                && MemoTicketPolicy::isPaidPackVariant((string) $order['variant_label'])) {
+            $isPack = (string) $order['product_kind'] === 'count'
+                && MemoTicketPolicy::isPaidPackVariant((string) $order['variant_label']);
+            $isImmediate = (string) $order['product_kind'] === 'count'
+                && MemoTicketPolicy::isImmediateVariant((string) $order['variant_label']);
+
+            if ($status === 'paid' && $this->isFulfillmentSucceeded($order, $orderRef, $isPack, $isImmediate)) {
+                $this->pdo->commit();
+
+                return $this->buildCompletePayload($order, true);
+            }
+
+            if ($isPack) {
                 $ptype = (string) ($order['provider_type'] ?? '');
                 $pid = (int) ($order['provider_id'] ?? 0);
                 if ($ptype === '' || $pid <= 0) {
@@ -254,19 +262,79 @@ final class ProviderCheckoutService
                 }
                 $lockKey = MemoTicketPolicy::packLockKey($ptype, $pid);
                 $this->acquireMemoLock($lockKey);
-                if ($this->tickets->lockActivePaidMemoPacks($ptype, $pid) !== []) {
+                $active = $this->tickets->lockActivePaidMemoPacks($ptype, $pid);
+                if ($status === 'pending' && $active !== []) {
                     throw new PaidConflictException('이미 사용 중인 유료 묶음권이 있어 새로 구매할 수 없습니다.');
+                }
+                if ($status === 'paid'
+                    && $active !== []
+                    && !$this->tickets->packExistsForOrderRef($orderRef)) {
+                    $this->pdo->commit();
+                    $this->orders->markFulfillment(
+                        $orderRef,
+                        'failed',
+                        '다른 유료 묶음권이 먼저 활성화되어 이 주문은 지급하지 않습니다.',
+                    );
+                    $paid = $this->orders->getByRef($orderRef) ?? $order;
+                    $this->releaseMemoLock($lockKey);
+                    $lockKey = null;
+
+                    return $this->buildCompletePayload(
+                        $paid,
+                        false,
+                        '다른 유료 묶음권이 먼저 활성화되어 이 주문은 지급하지 않습니다.',
+                    );
                 }
             }
 
-            $grant = $this->fulfill($userId, $order);
-            $this->orders->markPaid($orderRef);
+            if ($status === 'pending') {
+                $this->orders->markPaid($orderRef);
+            }
+            $this->pdo->commit();
+            $paymentCommitted = true;
+
+            if ($isImmediate) {
+                $immLock = MemoTicketPolicy::immediateLockKey($orderRef);
+                $this->acquireMemoLock($immLock);
+                try {
+                    $sent = $this->fulfillImmediateMemo(
+                        $userId,
+                        $orderRef,
+                        (string) $order['provider_type'],
+                        (int) $order['provider_id'],
+                    );
+                    $this->orders->markFulfillment($orderRef, 'succeeded', null);
+                    $paid = $this->orders->getByRef($orderRef) ?? $order;
+
+                    return $this->buildCompletePayload($paid, $sent || $this->immediateAlreadySent($orderRef));
+                } catch (\Throwable $e) {
+                    $this->recordImmediateFailure($orderRef, $e);
+                    $paid = $this->orders->getByRef($orderRef) ?? $order;
+
+                    return $this->buildCompletePayload($paid, false, $e->getMessage());
+                } finally {
+                    $this->releaseMemoLock($immLock);
+                }
+            }
+
+            try {
+                $grant = $this->fulfill($userId, $order);
+                $this->orders->markFulfillment($orderRef, 'succeeded', null);
+            } catch (\Throwable $e) {
+                $this->orders->markFulfillment($orderRef, 'failed', $e->getMessage());
+                $paid = $this->orders->getByRef($orderRef) ?? $order;
+                if ($lockKey !== null) {
+                    $this->releaseMemoLock($lockKey);
+                    $lockKey = null;
+                }
+
+                return $this->buildCompletePayload($paid, false, $e->getMessage());
+            }
 
             $paid = $this->orders->getByRef($orderRef);
             if ($paid === null) {
                 throw new InvalidArgumentException('주문 갱신에 실패했습니다.');
             }
-
             $payload = $this->buildCompletePayload($paid, true);
             if (is_array($grant)) {
                 if (isset($grant['paid_badge_grant'])) {
@@ -279,34 +347,22 @@ final class ProviderCheckoutService
                 }
             }
 
-            $this->pdo->commit();
-            if ($lockKey !== null) {
-                $this->releaseMemoLock($lockKey);
-            }
-
             return $payload;
         } catch (\Throwable $e) {
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
-            if (isset($lockKey) && is_string($lockKey)) {
-                $this->releaseMemoLock($lockKey);
-            }
-            try {
+            if ($paymentCommitted && $this->immediate->tableReady()) {
                 $failed = $this->orders->getByRef($orderRef);
-                if (is_array($failed)
-                    && (string) ($failed['product_kind'] ?? '') === 'count'
-                    && MemoTicketPolicy::isImmediateVariant((string) ($failed['variant_label'] ?? ''))
-                    && $this->immediate->tableReady()) {
-                    $this->immediate->markFailed(
-                        $orderRef,
-                        $e->getMessage(),
-                        !str_contains($e->getMessage(), '쪽지닫음'),
-                    );
+                if (is_array($failed) && MemoTicketPolicy::isImmediateVariant((string) ($failed['variant_label'] ?? ''))) {
+                    $this->recordImmediateFailure($orderRef, $e);
                 }
-            } catch (\Throwable) {
             }
             throw $e;
+        } finally {
+            if (isset($lockKey) && is_string($lockKey) && $lockKey !== '') {
+                $this->releaseMemoLock($lockKey);
+            }
         }
     }
 
@@ -411,6 +467,9 @@ final class ProviderCheckoutService
             }
             if ($count <= 0) {
                 throw new InvalidArgumentException('쪽지권 수량이 올바르지 않습니다.');
+            }
+            if ($this->tickets->packExistsForOrderRef($orderRef)) {
+                return null;
             }
             $expires = MemoTicketPolicy::expireAtFromFulfill()->format('Y-m-d H:i:s');
             $this->tickets->addTicketPack(
@@ -522,11 +581,19 @@ final class ProviderCheckoutService
     }
 
     /** @param array<string, mixed> $order */
-    private function buildCompletePayload(array $order, bool $fulfilled): array
+    private function buildCompletePayload(array $order, bool $fulfilled, ?string $fulfillmentError = null): array
     {
+        $payStatus = (string) $order['status'];
+        $fulfillment = (string) ($order['fulfillment_status'] ?? ($fulfilled ? 'succeeded' : ($payStatus === 'paid' ? 'pending' : 'none')));
+        if ($fulfilled) {
+            $fulfillment = 'succeeded';
+        } elseif ($fulfillmentError !== null) {
+            $fulfillment = 'failed';
+        }
+
         return [
             'order_ref' => (string) $order['order_ref'],
-            'status' => (string) $order['status'],
+            'status' => $payStatus,
             'product_id' => (string) $order['product_id'],
             'variant_label' => (string) $order['variant_label'],
             'provider_type' => isset($order['provider_type']) && $order['provider_type'] !== null && $order['provider_type'] !== ''
@@ -536,8 +603,49 @@ final class ProviderCheckoutService
             'amount_won' => (int) $order['amount_won'],
             'catalog_version' => isset($order['catalog_version']) ? (string) $order['catalog_version'] : null,
             'fulfilled' => $fulfilled,
+            'fulfillment_status' => $fulfillment,
+            'fulfillment_error' => $fulfillmentError ?? (isset($order['fulfillment_error']) ? (string) $order['fulfillment_error'] : null),
             'paid_at' => $order['paid_at'] !== null ? (string) $order['paid_at'] : null,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $order
+     */
+    private function isFulfillmentSucceeded(array $order, string $orderRef, bool $isPack, bool $isImmediate): bool
+    {
+        if ((string) ($order['fulfillment_status'] ?? '') === 'succeeded') {
+            return true;
+        }
+        if ($isPack && $this->tickets->packExistsForOrderRef($orderRef)) {
+            return true;
+        }
+        if ($isImmediate && $this->immediateAlreadySent($orderRef)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function immediateAlreadySent(string $orderRef): bool
+    {
+        if (!$this->immediate->tableReady()) {
+            return false;
+        }
+        $intent = $this->immediate->getByOrderRef($orderRef);
+
+        return is_array($intent) && (string) ($intent['dispatch_status'] ?? '') === 'sent';
+    }
+
+    private function recordImmediateFailure(string $orderRef, \Throwable $e): void
+    {
+        $retryable = !str_contains($e->getMessage(), '쪽지를 받지')
+            && !str_contains($e->getMessage(), '공개 중이 아닌');
+        try {
+            $this->immediate->markFailed($orderRef, $e->getMessage(), $retryable);
+        } catch (\Throwable) {
+        }
+        $this->orders->markFulfillment($orderRef, 'failed', $e->getMessage());
     }
 
     /**
@@ -578,9 +686,7 @@ final class ProviderCheckoutService
         if ($studentId <= 0 || $body === '') {
             throw new InvalidArgumentException('1회 즉시권은 수신 학생과 발송할 첫 쪽지 본문이 필요합니다.');
         }
-        if (!$this->tickets->studentAcceptsMemo($studentId)) {
-            throw new InvalidArgumentException('쪽지를 닫은 학생에게는 구매·발송할 수 없습니다.');
-        }
+        $this->assertStudentContactable($studentId);
         $msgRepo = new MessagesRepository($this->pdo);
         $guardianId = $msgRepo->getStudentGuardianUserId($studentId);
         if ($guardianId === null || $guardianId <= 0) {
@@ -596,19 +702,17 @@ final class ProviderCheckoutService
     /**
      * @param 'study_room'|'tutor' $providerType
      */
-    private function fulfillImmediateMemo(int $userId, string $orderRef, string $providerType, int $providerId): void
+    private function fulfillImmediateMemo(int $userId, string $orderRef, string $providerType, int $providerId): bool
     {
         $intent = $this->immediate->getByOrderRef($orderRef);
         if ($intent === null) {
             throw new InvalidArgumentException('즉시권 발송 문맥이 없습니다.');
         }
         if ((string) $intent['dispatch_status'] === 'sent') {
-            return;
+            return true;
         }
         $studentId = (int) $intent['student_id'];
-        if (!$this->tickets->studentAcceptsMemo($studentId)) {
-            throw new InvalidArgumentException('쪽지를 닫은 학생에게는 발송할 수 없습니다.');
-        }
+        $this->assertStudentContactable($studentId);
         $thread = (new \Study114\Messages\MessagesService())->composeMessage($userId, [
             'context_kind' => 'student',
             'context_id' => $studentId,
@@ -621,13 +725,21 @@ final class ProviderCheckoutService
         ]);
         $threadId = (int) ($thread['id'] ?? $thread['thread_id'] ?? 0);
         $this->immediate->markSent($orderRef, $threadId);
+
+        return true;
+    }
+
+    private function assertStudentContactable(int $studentId): void
+    {
+        (new StudentMemoGate($this->pdo))->assertCanContact($studentId);
     }
 
     private function acquireMemoLock(string $key): void
     {
         $stmt = $this->pdo->prepare('SELECT GET_LOCK(?, 5)');
         $stmt->execute([$key]);
-        if ((int) $stmt->fetchColumn() !== 1) {
+        $got = $stmt->fetchColumn();
+        if ($got === false || $got === null || (int) $got !== 1) {
             throw new PaidConflictException('쪽지권 구매가 진행 중입니다. 잠시 후 다시 시도해 주세요.');
         }
     }

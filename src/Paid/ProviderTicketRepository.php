@@ -571,15 +571,27 @@ final class ProviderTicketRepository
         return (int) $stmt->fetchColumn();
     }
 
+    public function studentIsPublished(int $studentId): bool
+    {
+        return (new StudentMemoGate($this->pdo))->inspect($studentId)['published'];
+    }
+
     public function studentAcceptsMemo(int $studentId): bool
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT exposure_status FROM students WHERE id = ? LIMIT 1'
-        );
-        $stmt->execute([$studentId]);
-        $status = $stmt->fetchColumn();
+        return (new StudentMemoGate($this->pdo))->inspect($studentId)['can_contact'];
+    }
 
-        return $status === 'published';
+    public function packExistsForOrderRef(string $orderRef): bool
+    {
+        if (!$this->packHasProfileColumns()) {
+            return false;
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM provider_ticket_packs WHERE source_order_ref = ? LIMIT 1'
+        );
+        $stmt->execute([$orderRef]);
+
+        return (bool) $stmt->fetchColumn();
     }
 
     /**

@@ -14,7 +14,12 @@ import {
 import { getRoiMetrics, getPaidOperationalStatus } from '../paid-backend.js';
 import { renderProviderNoticeBanners, hydrateProviderNotices } from '../provider-notices.js';
 import { createPaidCheckout, completePaidCheckout } from '../paid-api.js';
-import { hydrateProviderStatus } from '../provider-status.js';
+import {
+  getProviderStatus,
+  hydrateProviderStatus,
+  hydrateProviderStatusStrict,
+  invalidateProviderStatus,
+} from '../provider-status.js';
 import { ensureStudyRoomStore } from '../study-room-reg/index.js';
 import { ensureTutorStore } from '../tutor-reg/index.js';
 import { getPublishReadiness as getRoomReadiness, getStudyRoom } from '../study-room-reg/store.js';
@@ -72,6 +77,99 @@ let historyCache = { rows: [], fromApi: false, loaded: false };
 
 /** @type {string | null} */
 let openReceiptOrderRef = null;
+
+/**
+ * #/plans/access · #/plans/my 프로필별 status 동기화 (stale 구매 방지)
+ * @type {{ key: string, phase: 'idle'|'loading'|'ready'|'error', error: string|null, route: string }}
+ */
+let plansStatusSync = { key: '', phase: 'idle', error: null, route: '' };
+
+/** 같은 hash 재렌더에서 중복 hydrate 방지. 라우트를 벗어나면 비운다. */
+let lastPlansHydratedHash = '';
+
+/** @param {import('./profiles.js').ProviderProfile | null} profile */
+export function accessProfileKey(profile) {
+  return profile ? `${profile.providerType}:${profile.id}` : '';
+}
+
+export function resetAccessStatusSync() {
+  plansStatusSync = { key: '', phase: 'idle', error: null, route: '' };
+  lastPlansHydratedHash = '';
+}
+
+/** @deprecated alias — access/my 공용 */
+export const resetPlansStatusSync = resetAccessStatusSync;
+
+/**
+ * @param {import('./profiles.js').ProviderProfile | null} profile
+ * @param {() => void} rerender
+ * @param {string} routePath '/plans/access' | '/plans/my' | '/mypage/plans/my'
+ */
+export function schedulePlansStatusHydrate(profile, rerender, routePath) {
+  if (!profile) {
+    resetPlansStatusSync();
+    return;
+  }
+  const key = accessProfileKey(profile);
+  const hash = window.location.hash;
+  if (plansStatusSync.phase === 'loading' && plansStatusSync.key === key) {
+    return;
+  }
+  if (
+    plansStatusSync.phase === 'ready' &&
+    plansStatusSync.key === key &&
+    lastPlansHydratedHash === hash &&
+    getProviderStatus()
+  ) {
+    return;
+  }
+  if (
+    plansStatusSync.phase === 'error' &&
+    plansStatusSync.key === key &&
+    lastPlansHydratedHash === hash
+  ) {
+    return;
+  }
+
+  plansStatusSync = { key, phase: 'loading', error: null, route: routePath };
+  invalidateProviderStatus();
+  rerender();
+
+  hydrateProviderStatusStrict()
+    .then(() => {
+      if (plansStatusSync.key !== key) return;
+      lastPlansHydratedHash = window.location.hash;
+      plansStatusSync = { key, phase: 'ready', error: null, route: routePath };
+      rerender();
+    })
+    .catch((err) => {
+      if (plansStatusSync.key !== key) return;
+      lastPlansHydratedHash = window.location.hash;
+      plansStatusSync = {
+        key,
+        phase: 'error',
+        error: err instanceof Error ? err.message : String(err || 'status 조회 실패'),
+        route: routePath,
+      };
+      invalidateProviderStatus();
+      rerender();
+    });
+}
+
+/** @param {import('./profiles.js').ProviderProfile | null} profile */
+export function plansStatusFlags(profile) {
+  const profileKey = accessProfileKey(profile);
+  const syncReady =
+    plansStatusSync.phase === 'ready' &&
+    plansStatusSync.key === profileKey &&
+    Boolean(getProviderStatus());
+  const syncLoading =
+    plansStatusSync.phase === 'loading' && plansStatusSync.key === profileKey;
+  const syncError =
+    plansStatusSync.phase === 'error' && plansStatusSync.key === profileKey;
+  const syncPending = Boolean(profile) && !syncReady && !syncError;
+  return { profileKey, syncReady, syncLoading, syncError, syncPending };
+}
 
 /**
  * @param {number} remaining
@@ -372,7 +470,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
  * @param {import('./profiles.js').ProviderProfile | null} profile
  * @param {string} role
  * @param {{ memo?: number }} remaining
- * @param {{ primaryCta?: boolean }} [opts]
+ * @param {{ primaryCta?: boolean, activePaidPack?: object|null, packPurchaseBlocked?: boolean }} [opts]
  */
 function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
   const isProvider = role === 'tutor' || role === 'study_room';
@@ -380,6 +478,7 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
   const price = formatCardPrice(product);
   const primaryCta = opts.primaryCta ?? product.productCode === 'memo_ticket';
   const activePaidPack = opts.activePaidPack || null;
+  const packPurchaseBlocked = Boolean(opts.packPurchaseBlocked);
   const eligibility = profile
     ? getEligibility(profile, product.productCode, 'access')
     : { canBuy: false, missing: ['적용 프로필을 먼저 선택하세요'] };
@@ -402,9 +501,9 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
               ? `${formatKrw(o.priceKrw)} (시험 결제 ${formatKrw(amt.chargeKrw)})`
               : formatKrw(o.priceKrw);
             const extras = [o.marketingBadge, o.discountLabel].filter(Boolean).join(' · ');
-            const isImmediate = o.apiVariant === '1회' || o.label === '1회';
-            const packLocked = !!activePaidPack && !isImmediate;
-            return `<option value="${esc(o.optionId)}"${packLocked ? ' disabled' : ''}${!packLocked && i === 0 ? ' selected' : ''}${isImmediate && activePaidPack ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}${extras ? ` · ${esc(extras)}` : ''}</option>`;
+            const isImmediate = o.apiVariant === '1회' || /^1회/.test(String(o.label || ''));
+            const packLocked = (!isImmediate && packPurchaseBlocked) || (!!activePaidPack && !isImmediate);
+            return `<option value="${esc(o.optionId)}"${packLocked ? ' disabled' : ''}${!packLocked && i === 0 ? ' selected' : ''}${isImmediate && packPurchaseBlocked ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}${extras ? ` · ${esc(extras)}` : ''}</option>`;
           })
           .join('')}
       </select>
@@ -656,13 +755,14 @@ export function renderPlansAccess() {
   const profile = role === 'tutor' || role === 'study_room' ? resolveSelectedProfile(query, role) : null;
   const providerKey = role === 'tutor' ? 'tutor' : 'study_room';
   const products = getCatalogByFamily('access', providerKey);
-  const ops = getPaidOperationalStatus();
+  const { syncReady, syncLoading, syncError, syncPending } = plansStatusFlags(profile);
+  const ops = syncReady ? getPaidOperationalStatus() : null;
   const tickets = ops?.tickets;
   const remaining = {
     memo: tickets?.memo?.remaining,
   };
   const packs = tickets?.memo?.packs ?? ops?.memo_packs ?? [];
-  const activePaidPack = profile
+  const activePaidPack = syncReady && profile
     ? packs.find(
         (p) =>
           p.provider_type === providerKey &&
@@ -672,6 +772,7 @@ export function renderPlansAccess() {
           (Number(p.granted_count) === 5 || Number(p.granted_count) === 10),
       )
     : null;
+  const packPurchaseBlocked = Boolean(activePaidPack) || syncLoading || syncPending || syncError;
 
   return `
     <section class="mypage-panel plans-store">
@@ -701,8 +802,18 @@ export function renderPlansAccess() {
       ${role === 'tutor' || role === 'study_room' ? renderTestModeToggle() : ''}
       ${role === 'tutor' || role === 'study_room' ? renderLowCreditBanner(tickets) : ''}
       ${
+        syncLoading || syncPending
+          ? `<p class="mypage-info-box" data-plans-access-status="loading">쪽지권 상태를 확인하는 중입니다. 5회권·10회권 구매는 잠시 후 가능합니다.</p>`
+          : ''
+      }
+      ${
+        syncError
+          ? `<p class="mypage-info-box" role="alert" data-plans-access-status="error">쪽지권 상태를 불러오지 못해 5회권·10회권 구매를 막았습니다. <button type="button" class="btn btn--secondary btn--sm" data-plans-access-retry>다시 시도</button></p>`
+          : ''
+      }
+      ${
         activePaidPack
-          ? `<p class="mypage-info-box">이 프로필에는 이미 사용 중인 유료 묶음권이 있어 5회권·10회권은 새로 살 수 없습니다. 1회 즉시권은 계속 이용할 수 있습니다.</p>`
+          ? `<p class="mypage-info-box" data-plans-access-status="active-pack">이 프로필에는 이미 사용 중인 유료 묶음권이 있어 5회권·10회권은 새로 살 수 없습니다. 1회 즉시권은 계속 이용할 수 있습니다.</p>`
           : ''
       }
 
@@ -712,7 +823,13 @@ export function renderPlansAccess() {
         </div>
         <ul class="plans-card-grid plans-card-grid--2">
           ${products
-            .map((p, i) => renderAccessCard(p, profile, role, remaining, { primaryCta: i === 0, activePaidPack }))
+            .map((p, i) =>
+              renderAccessCard(p, profile, role, remaining, {
+                primaryCta: i === 0,
+                activePaidPack,
+                packPurchaseBlocked,
+              }),
+            )
             .join('')}
         </ul>
       </section>
@@ -762,21 +879,42 @@ export function renderPlansMy() {
       </section>`;
   }
 
-  const ops = getPaidOperationalStatus();
+  const query = parsePlansQuery();
+  const profile = role === 'tutor' || role === 'study_room' ? resolveSelectedProfile(query, role) : null;
+  const providerKey = role === 'tutor' ? 'tutor' : 'study_room';
+  const { syncReady, syncLoading, syncError, syncPending } = plansStatusFlags(profile);
+  const ops = syncReady ? getPaidOperationalStatus() : null;
   const exposure = ops?.exposure;
   const tickets = ops?.tickets;
   const metrics = getRoiMetrics();
   const positions = exposure?.positions ?? [];
+  const allPacks = tickets?.memo?.packs ?? [];
+  const packs = profile
+    ? allPacks.filter(
+        (p) => p.provider_type === providerKey && String(p.provider_id) === String(profile.id),
+      )
+    : allPacks;
 
   return `
     <section class="mypage-panel">
       <p class="mypage-lead">내 상품 이용 현황</p>
       ${renderProviderNoticeBanners()}
+      ${
+        syncLoading || syncPending
+          ? `<p class="mypage-info-box" data-plans-my-status="loading">쪽지권·상품 상태를 확인하는 중입니다.</p>`
+          : ''
+      }
+      ${
+        syncError
+          ? `<p class="mypage-info-box" role="alert" data-plans-my-status="error">상품 상태를 불러오지 못했습니다. <button type="button" class="btn btn--secondary btn--sm" data-plans-my-retry>다시 시도</button></p>`
+          : ''
+      }
       ${role === 'tutor' || role === 'study_room' ? renderLowCreditBanner(tickets) : ''}
       <h2 class="mypage-subhead">이용중 포지션</h2>
       ${
-        positions.length
-          ? `<table class="plans-table" aria-label="이용중 상품">
+        syncReady
+          ? positions.length
+            ? `<table class="plans-table" aria-label="이용중 상품">
               <thead><tr><th>상품</th><th>잔여</th><th>종료일</th><th></th></tr></thead>
               <tbody>
                 ${positions
@@ -792,27 +930,31 @@ export function renderPlansMy() {
                   .join('')}
               </tbody>
             </table>`
-          : `<div class="mypage-info-box"><p>${esc(P18_EXPOSURE_STATUS.basic)}</p>
+            : `<div class="mypage-info-box"><p>${esc(P18_EXPOSURE_STATUS.basic)}</p>
               <a href="#/plans/positions" class="btn btn--primary btn--sm" data-plans-nav="/plans/positions">노출상품 보기</a>
             </div>`
+          : `<p class="mypage-muted">포지션 정보는 상태 확인 후 표시됩니다.</p>`
       }
+      ${role === 'tutor' || role === 'study_room' ? renderProfileBanner(profile, role) : ''}
       <h2 class="mypage-subhead">쪽지권</h2>
       ${
-        (tickets?.memo?.packs ?? []).length
-          ? `<table class="plans-table" aria-label="쪽지권">
+        !syncReady
+          ? `<p class="mypage-muted" data-plans-my-status="packs-pending">쪽지권 목록은 상태 확인 후 표시됩니다.</p>`
+          : packs.length
+            ? `<table class="plans-table" aria-label="쪽지권" data-plans-my-status="packs-ready">
               <thead><tr><th>프로필</th><th>상품</th><th>출처</th><th>부여</th><th>남은 횟수</th><th>부여일</th><th>사용기한</th><th>상태</th></tr></thead>
               <tbody>
-                ${(tickets.memo.packs)
+                ${packs
                   .map(
                     (p) => `
-                  <tr>
+                  <tr data-plans-pack-row data-plans-pack-grant="${esc(String(p.grant_label || ''))}" data-plans-pack-status="${esc(String(p.status || ''))}" data-plans-pack-granted="${esc(String(p.granted_count ?? ''))}" data-plans-pack-remaining="${esc(String(p.remaining ?? ''))}" data-plans-pack-provider="${esc(String(p.provider_id ?? ''))}">
                     <td>${esc(p.provider_type || '미확인')} #${esc(String(p.provider_id ?? ''))}</td>
                     <td>${esc(p.product_name || '')}</td>
                     <td>${esc(p.grant_label || '')}</td>
                     <td>${p.granted_count ?? '—'}</td>
                     <td>${p.remaining ?? '—'}</td>
                     <td>${esc(String(p.purchased_at || '').slice(0, 10))}</td>
-                    <td>${esc(String(p.expires_at || '').slice(0, 10))}</td>
+                    <td data-plans-pack-expires>${esc(String(p.expires_at || '').slice(0, 10))}</td>
                     <td>${esc(p.status || '')}</td>
                   </tr>`,
                   )
@@ -820,12 +962,7 @@ export function renderPlansMy() {
               </tbody>
             </table>
             <p class="mypage-muted"><a href="#/plans/access" data-plans-nav="/plans/access">쪽지권 충전하기</a></p>`
-          : tickets
-          ? `<div class="mypage-stats roi-metrics">
-              <div class="mypage-stat${isLowCredit(tickets.memo.remaining) ? ' is-warn' : ''}"><span>${esc(tickets.memo.label)}</span><strong>${tickets.memo.remaining}</strong></div>
-            </div>
-            <p class="mypage-muted"><a href="#/plans/access" data-plans-nav="/plans/access">쪽지권 충전하기</a></p>`
-          : `<p class="mypage-muted">이용권 정보를 불러오면 표시됩니다. · <a href="#/plans/access" data-plans-nav="/plans/access">쪽지권</a></p>`
+            : `<p class="mypage-muted" data-plans-my-status="packs-empty">이 프로필에 표시할 쪽지권이 없습니다. · <a href="#/plans/access" data-plans-nav="/plans/access">쪽지권 충전하기</a></p>`
       }
       <h2 class="mypage-subhead">반응 요약</h2>
       <div class="mypage-stats roi-metrics">
@@ -1054,6 +1191,20 @@ export function renderPlansScreen(path) {
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindPlansScreenEvents(root, rerender) {
   const path = (window.location.hash.slice(1) || '').split('?')[0];
+  if (path !== '/plans/access' && path !== '/mypage/plans/my') {
+    lastPlansHydratedHash = '';
+  }
+  if (path === '/plans/access') {
+    const role = getPlansEffectiveRole();
+    const query = parsePlansQuery();
+    const profile =
+      role === 'tutor' || role === 'study_room' ? resolveSelectedProfile(query, role) : null;
+    schedulePlansStatusHydrate(profile, rerender, path);
+    root.querySelector('[data-plans-access-retry]')?.addEventListener('click', () => {
+      resetAccessStatusSync();
+      schedulePlansStatusHydrate(profile, rerender, path);
+    });
+  }
   if ((path === '/plans/history' || path.endsWith('/history')) && !historyCache.loaded) {
     loadHistoryRows().then((result) => {
       historyCache = { rows: result.rows, fromApi: result.fromApi, loaded: true };
@@ -1088,12 +1239,21 @@ export function bindPlansScreenEvents(root, rerender) {
       const itemEl = btn.closest('.plans-catalog__item');
       const select = itemEl?.querySelector('[data-plans-option]');
       const optionId = select instanceof HTMLSelectElement ? select.value : '';
-      const product = getProductConfig(productCode, role);
-      const option = getPriceOption(productCode, optionId, role);
       const role = getPlansEffectiveRole();
       const query = parsePlansQuery();
       const profile = resolveSelectedProfile(query, role);
+      const product = getProductConfig(productCode, role);
+      const option = getPriceOption(productCode, optionId, role);
       if (!product || !option || !profile) return;
+      const isImmediate = option.apiVariant === '1회' || /^1회/.test(String(option.label || ''));
+      if (!isImmediate) {
+        const key = accessProfileKey(profile);
+        const blocked =
+          plansStatusSync.phase !== 'ready' ||
+          plansStatusSync.key !== key ||
+          !getProviderStatus();
+        if (blocked) return;
+      }
 
       setCheckoutDraft({
         productCode,
@@ -1149,7 +1309,9 @@ export function bindPlansScreenEvents(root, rerender) {
           console.warn('[plans/checkout] client price ignored', draft.priceKrw, '→', serverAmount);
         }
         const completed = await completePaidCheckout(created.order_ref);
-        await hydrateProviderStatus();
+        invalidateProviderStatus();
+        resetAccessStatusSync();
+        await hydrateProviderStatusStrict().catch(() => hydrateProviderStatus());
         await hydrateProviderNotices();
 
         appendHistoryRow({

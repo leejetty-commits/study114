@@ -9,18 +9,21 @@ cd "$ROOT"
 php -v
 
 CHANGED_PHP=(
+  src/Paid/StudentMemoGate.php
   src/Paid/MemoTicketPolicy.php
   src/Paid/PaidConflictException.php
   src/Paid/ImmediateMemoRepository.php
   src/Paid/ProviderTicketRepository.php
   src/Paid/ProviderTicketService.php
   src/Paid/ProviderCheckoutService.php
+  src/Paid/ProviderCheckoutRepository.php
   src/Paid/ProviderStatusService.php
   src/Paid/PaidApi.php
   src/Messages/MessagesService.php
   src/Messages/ProviderEntitlementService.php
   public/api/paid/checkout.php
   scripts/verify-paid-pr-b-integration.php
+  scripts/verify-paid-pr-b-legacy-report.php
 )
 
 echo
@@ -47,11 +50,17 @@ export MYSQL_PWD="${STUDY114_DB_PASS:-test}"
 MYSQL=(mysql -h"${STUDY114_DB_HOST:-127.0.0.1}" -P"${STUDY114_DB_PORT:-3306}" -u"${STUDY114_DB_USER:-study114}" --protocol=TCP)
 
 echo
-echo "=== 2) harness + 062 + extra + 061 ==="
+echo "=== 2) harness + 062 + extra + 063 + memo-status + 061 ==="
 "${MYSQL[@]}" < scripts/fixtures/paid-pr-a-temp-db.sql
 "${MYSQL[@]}" < sql/schema/062_provider_ticket_profile.sql
 "${MYSQL[@]}" < scripts/fixtures/paid-pr-b-extra.sql
+"${MYSQL[@]}" < sql/schema/063_student_memo_fulfillment.sql
+"${MYSQL[@]}" < scripts/fixtures/paid-pr-b-memo-status.sql
 "${MYSQL[@]}" < sql/schema/061_payment_catalog_snapshot.sql
+
+echo
+echo "=== 2b) 062 legacy dry-run counts ==="
+php scripts/verify-paid-pr-b-legacy-report.php
 
 echo
 echo "=== 3) PR-A regression post061 (provider required) ==="

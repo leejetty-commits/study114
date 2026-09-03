@@ -38,6 +38,11 @@ final class MemoTicketPolicy
         return substr('s114_memo_' . $providerType . '_' . $providerId, 0, 64);
     }
 
+    public static function immediateLockKey(string $orderRef): string
+    {
+        return substr('s114_imm_' . $orderRef, 0, 64);
+    }
+
     public static function grantLabel(string $grantKind): string
     {
         return match ($grantKind) {

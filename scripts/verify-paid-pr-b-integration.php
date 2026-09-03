@@ -182,7 +182,7 @@ $msgCount = (int) $pdo->query('SELECT COUNT(*) FROM messages WHERE sender_user_i
 check('t10_one_message', $msgCount === 1, (string) $msgCount);
 
 $immAgain = $svc->completeOrder(42, (string) $imm['order_ref']);
-check('t11_complete_idempotent', ($immAgain['fulfilled'] ?? true) === false);
+check('t11_complete_idempotent', ($immAgain['fulfilled'] ?? false) === true);
 $msgCount2 = (int) $pdo->query('SELECT COUNT(*) FROM messages WHERE sender_user_id=42')->fetchColumn();
 check('t11_no_dup_message', $msgCount2 === 1, (string) $msgCount2);
 
@@ -192,12 +192,56 @@ $immPacks = (int) $pdo->query(
 check('t12_no_pack_after_immediate', $immPacks === 0, (string) $immPacks);
 
 expectThrow(
-    't14_closed_student',
+    't14_unpublished_student',
     static fn () => $svc->createOrder(42, 'memo_ticket', '1회', 'tutor', 42, [
         'student_id' => 51,
-        'body' => '닫힌 학생',
+        'body' => '숨김 학생',
     ]),
 );
+expectThrow(
+    't14_memo_paused_student',
+    static fn () => $svc->createOrder(42, 'memo_ticket', '1회', 'tutor', 42, [
+        'student_id' => 52,
+        'body' => '쪽지 OFF 학생',
+    ]),
+);
+
+// 결제 성공 후 발송 실패 → paid 유지 · fulfilled 아님 · 재시도 1건
+$pdo->exec("UPDATE students SET memo_status='open' WHERE id=52");
+$failOrd = $svc->createOrder(41, 'memo_ticket', '1회', 'tutor', 41, [
+    'student_id' => 52,
+    'body' => '발송 실패 시나리오',
+]);
+$pdo->exec("UPDATE students SET memo_status='paused' WHERE id=52");
+$failDone = $svc->completeOrder(41, (string) $failOrd['order_ref']);
+check('t_fail_paid', ($failDone['status'] ?? '') === 'paid');
+check('t_fail_not_fulfilled', ($failDone['fulfilled'] ?? true) === false);
+check('t_fail_status', ($failDone['fulfillment_status'] ?? '') === 'failed');
+$failMsg = (int) $pdo->query('SELECT COUNT(*) FROM messages WHERE sender_user_id=41')->fetchColumn();
+check('t_fail_no_message', $failMsg === 0, (string) $failMsg);
+$intentFail = $pdo->prepare('SELECT dispatch_status, retryable FROM provider_immediate_memo_intents WHERE order_ref=?');
+$intentFail->execute([$failOrd['order_ref']]);
+$intentRow = $intentFail->fetch(PDO::FETCH_ASSOC);
+check('t_fail_intent_recorded', is_array($intentRow) && ($intentRow['dispatch_status'] ?? '') === 'failed');
+
+$pdo->exec("UPDATE students SET memo_status='open' WHERE id=52");
+$retryDone = $svc->completeOrder(41, (string) $failOrd['order_ref']);
+check('t_retry_fulfilled', ($retryDone['fulfilled'] ?? false) === true);
+$failMsg2 = (int) $pdo->query('SELECT COUNT(*) FROM messages WHERE sender_user_id=41')->fetchColumn();
+check('t_retry_one_message', $failMsg2 === 1, (string) $failMsg2);
+$retryAgain = $svc->completeOrder(41, (string) $failOrd['order_ref']);
+check('t_retry_idempotent', ($retryAgain['fulfilled'] ?? false) === true);
+$failMsg3 = (int) $pdo->query('SELECT COUNT(*) FROM messages WHERE sender_user_id=41')->fetchColumn();
+check('t_retry_no_dup', $failMsg3 === 1, (string) $failMsg3);
+
+$lockOther = MemoTicketPolicy::packLockKey('tutor', 999);
+$gotOwn = $pdo->prepare('SELECT GET_LOCK(?, 0)');
+$gotOwn->execute([MemoTicketPolicy::packLockKey('tutor', 40)]);
+$gotOther = $pdo2->prepare('SELECT GET_LOCK(?, 0)');
+$gotOther->execute([$lockOther]);
+check('t08_other_provider_lock_free', (int) $gotOwn->fetchColumn() === 1 && (int) $gotOther->fetchColumn() === 1);
+$pdo->prepare('SELECT RELEASE_LOCK(?)')->execute([MemoTicketPolicy::packLockKey('tutor', 40)]);
+$pdo2->prepare('SELECT RELEASE_LOCK(?)')->execute([$lockOther]);
 
 $pdo->exec(
     "INSERT INTO provider_ticket_packs
