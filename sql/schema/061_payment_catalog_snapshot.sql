@@ -1,13 +1,8 @@
-<?php
-
-declare(strict_types=1);
-
-/**
- * PR-A — provider_payment_orders 카탈로그 버전·가격 스냅샷 (제안만 · 운영 미적용)
- *
- * Apply AFTER 056_provider_account_context.sql
- * 운영 DB에는 수동 승인 전까지 적용하지 않는다.
- */
+-- =============================================================================
+-- 061 — provider_payment_orders 카탈로그 버전·가격 스냅샷 (제안만 · 운영 미적용)
+-- Apply AFTER 056_provider_account_context.sql
+-- 운영 DB에는 수동 승인 전까지 적용하지 않는다.
+-- =============================================================================
 
 USE study114;
 
