@@ -1,0 +1,73 @@
+# PR-A 유료 카탈로그 SSOT 검증. PHP 8.2 + 임시 MySQL.
+# PR·작업 브랜치에서만. FTP 배포·운영 DB 적용 없음.
+
+name: Paid catalog PR-A
+
+on:
+  pull_request:
+  push:
+    branches:
+      - feat/paid-catalog-ssot-pr-a
+
+concurrency:
+  group: paid-catalog-pr-a-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-paid-catalog:
+    name: verify:paid-pr-a
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: study114
+          MYSQL_USER: study114
+          MYSQL_PASSWORD: test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -ptest"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      STUDY114_DB_HOST: 127.0.0.1
+      STUDY114_DB_PORT: 3306
+      STUDY114_DB_NAME: study114
+      STUDY114_DB_USER: study114
+      STUDY114_DB_PASS: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: json, mbstring, pdo_mysql
+          coverage: none
+          tools: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install mysql client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client
+
+      - name: PR-A PHP / catalog / checkout / schema 061
+        run: bash scripts/verify-paid-pr-a-ci.sh
+
+      - name: Summary
+        run: |
+          {
+            echo "## Paid catalog PR-A"
+            echo
+            echo "- PHP: \`$(php -r 'echo PHP_VERSION;')\`"
+            echo "- 운영 DB 적용: 하지 않음 (임시 MySQL 서비스만)"
+            echo "- e2e p18-b/c/d: SKIP (미리보기 로그인 스택 없음)"
+          } | tee -a "${GITHUB_STEP_SUMMARY}"

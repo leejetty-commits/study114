@@ -26,6 +26,7 @@
     "verify:paid-catalog": "php scripts/verify-paid-catalog.php && node scripts/verify-paid-catalog.mjs",
     "verify:paid-pricing": "php scripts/verify-paid-pricing.php && node scripts/verify-paid-pricing.mjs",
     "verify:paid-pr-a": "node scripts/verify-paid-pr-a.mjs",
+    "verify:paid-pr-a-ci": "bash scripts/verify-paid-pr-a-ci.sh",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {
