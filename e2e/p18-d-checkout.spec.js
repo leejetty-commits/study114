@@ -18,7 +18,8 @@ test.describe('P18 18d dev PG', () => {
         action: 'create',
         product_id: 'memo_ticket',
         variant: '5회권',
-        amount_won: 10,
+        provider_type: 'tutor',
+        provider_id: 1,
       },
     });
     const createBody = await create.json();

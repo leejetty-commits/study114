@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Study114\Paid;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Study114\Database\Connection;
 
 /** 18b — 횟수권 FIFO · 기간형 조회 */
@@ -49,34 +51,72 @@ final class ProviderTicketService
         return $this->repo->countTickets($userId, 'request_view');
     }
 
-    public function canColdMemo(int $userId): bool
+    public function canColdMemo(int $userId, ?string $providerType = null, ?int $providerId = null): bool
     {
         if ($this->repo->isColdMemoBypass($userId)) {
             return true;
         }
+        try {
+            $ctx = $this->repo->resolveMemoProvider($userId, $providerType, $providerId);
+        } catch (\InvalidArgumentException) {
+            return false;
+        }
 
-        return $this->countMemoTickets($userId) > 0;
+        return $this->repo->countMemoTicketsForProvider($userId, $ctx['provider_type'], $ctx['provider_id']) > 0;
     }
 
-    /** 선제 쪽지 1건 차감 — bypass 시 소비 없음 */
-    public function consumeMemoTicket(int $userId): bool
+    /** 선제 쪽지 1건 차감 — bypass 시 소비 없음. user 전체 fallback 없음. */
+    public function consumeMemoTicket(int $userId, ?string $providerType = null, ?int $providerId = null): bool
     {
         if ($this->repo->isColdMemoBypass($userId)) {
             return true;
         }
-        if ($this->repo->consumeTicket($userId, 'memo')) {
-            $this->notifyTicketBalanceIfNeeded($userId, 'memo');
-
-            return true;
-        }
-
-        if ($this->repo->decrementLegacyMemoCredits($userId)) {
+        $ctx = $this->repo->resolveMemoProvider($userId, $providerType, $providerId);
+        if ($this->repo->consumeTicketForProvider($userId, $ctx['provider_type'], $ctx['provider_id'])) {
             $this->notifyTicketBalanceIfNeeded($userId, 'memo');
 
             return true;
         }
 
         return false;
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function listMemoPacksForApi(int $userId): array
+    {
+        $rows = $this->repo->listMemoPacks($userId);
+        $out = [];
+        foreach ($rows as $row) {
+            $expires = (string) ($row['expires_at'] ?? '');
+            $purchased = (string) ($row['purchased_at'] ?? '');
+            $grant = (string) ($row['grant_kind'] ?? $row['source'] ?? '');
+            $size = (int) ($row['pack_size'] ?? 0);
+            $remaining = (int) ($row['remaining'] ?? 0);
+            $out[] = [
+                'id' => (int) ($row['id'] ?? 0),
+                'provider_type' => isset($row['provider_type']) && $row['provider_type'] !== null && $row['provider_type'] !== ''
+                    ? (string) $row['provider_type']
+                    : null,
+                'provider_id' => isset($row['provider_id']) && $row['provider_id'] !== null
+                    ? (int) $row['provider_id']
+                    : null,
+                'product_name' => $this->memoPackProductName($size, $grant),
+                'grant_kind' => $grant,
+                'grant_label' => MemoTicketPolicy::grantLabel($grant),
+                'granted_count' => $size,
+                'remaining' => $remaining,
+                'purchased_at' => $this->toIso($purchased),
+                'expires_at' => $this->toIso($expires),
+                'status' => $expires !== '' ? MemoTicketPolicy::packStatus($remaining, $expires) : '기타',
+            ];
+        }
+
+        return $out;
+    }
+
+    public function hasActivePaidMemoPackFor(string $providerType, int $providerId): bool
+    {
+        return $this->repo->hasActivePaidMemoPack($providerType, $providerId);
     }
 
     public function canViewPaidRequest(int $userId, int $studentId): bool
@@ -189,12 +229,13 @@ final class ProviderTicketService
                 'memo' => [
                     'label' => '쪽지권',
                     'remaining' => $memo['remaining'],
-                    'nearest_expiry' => $memo['nearest_expiry'],
+                    'nearest_expiry' => $this->toIso($memo['nearest_expiry'] ?? ''),
+                    'packs' => $this->listMemoPacksForApi($userId),
                 ],
                 'request_view' => [
                     'label' => '요청문 열람권',
                     'remaining' => $view['remaining'],
-                    'nearest_expiry' => $view['nearest_expiry'],
+                    'nearest_expiry' => $this->toIso($view['nearest_expiry'] ?? ''),
                 ],
             ],
         ];
@@ -222,6 +263,34 @@ final class ProviderTicketService
             'unlocked_student_ids' => $this->listUnlockedStudentIds($userId),
             'request_view_tickets' => $view['remaining'],
         ];
+    }
+
+    private function memoPackProductName(int $packSize, string $grantKind): string
+    {
+        if (in_array($grantKind, [MemoTicketPolicy::GRANT_POSITION_BUNDLE, MemoTicketPolicy::SOURCE_BUNDLE], true)) {
+            return '노출상품 무료 쪽지 혜택';
+        }
+        if ($packSize === 5) {
+            return '쪽지 5회권';
+        }
+        if ($packSize === 10) {
+            return '쪽지 10회권';
+        }
+
+        return '쪽지권 ' . $packSize . '회';
+    }
+
+    private function toIso(string $datetime): ?string
+    {
+        $datetime = trim($datetime);
+        if ($datetime === '') {
+            return null;
+        }
+        try {
+            return (new DateTimeImmutable($datetime))->format(DateTimeInterface::ATOM);
+        } catch (\Exception) {
+            return null;
+        }
     }
 
     private function notifyTicketBalanceIfNeeded(int $userId, string $ticketType): void

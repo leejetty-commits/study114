@@ -100,7 +100,12 @@ final class MessagesService
             $this->insertMessageWithFiles($threadId, $userId, $body, $files);
             $this->repo->upsertThreadRead($threadId, $userId);
         } else {
-            $this->assertColdMemoAllowed($userId, $contextKind);
+            if (empty($input['skip_ticket_consume'])) {
+                $this->assertColdMemoAllowed($userId, $contextKind, $input);
+            }
+            if ($contextKind === 'student') {
+                (new \Study114\Paid\StudentMemoGate(Connection::get()))->assertCanContact($contextId);
+            }
             $threadId = $this->repo->createThread([
                 'participant_low_user_id'  => $low,
                 'participant_high_user_id' => $high,
@@ -118,8 +123,12 @@ final class MessagesService
             ]);
             $this->insertMessageWithFiles($threadId, $userId, $body, $files);
             $this->repo->upsertThreadRead($threadId, $userId);
-            if (self::requiresColdMemoTicket(true, $contextKind)) {
-                $this->entitlements->consumeColdMemoTicket($userId);
+            if (self::requiresColdMemoTicket(true, $contextKind) && empty($input['skip_ticket_consume'])) {
+                $this->entitlements->consumeColdMemoTicket(
+                    $userId,
+                    isset($input['provider_type']) ? (string) $input['provider_type'] : null,
+                    isset($input['provider_id']) ? (int) $input['provider_id'] : null,
+                );
             }
         }
 
@@ -274,7 +283,10 @@ final class MessagesService
         }
     }
 
-    private function assertColdMemoAllowed(int $userId, string $contextKind): void
+    /**
+     * @param array<string, mixed> $input
+     */
+    private function assertColdMemoAllowed(int $userId, string $contextKind, array $input = []): void
     {
         if ($contextKind !== 'student') {
             return;
@@ -283,7 +295,9 @@ final class MessagesService
         if (!in_array($role, ['tutor', 'study_room_owner'], true)) {
             return;
         }
-        if (!$this->entitlements->canColdMemo($userId)) {
+        $providerType = isset($input['provider_type']) ? (string) $input['provider_type'] : null;
+        $providerId = isset($input['provider_id']) ? (int) $input['provider_id'] : null;
+        if (!$this->entitlements->canColdMemo($userId, $providerType, $providerId)) {
             throw new PaidGateException('이 학생에게 먼저 쪽지를 내려면 쪽지권이 필요합니다.');
         }
     }
@@ -407,7 +421,10 @@ final class MessagesService
     private function insertMessageWithFiles(int $threadId, int $userId, string $body, array $files): int
     {
         $pdo = Connection::get();
-        $pdo->beginTransaction();
+        $ownTxn = !$pdo->inTransaction();
+        if ($ownTxn) {
+            $pdo->beginTransaction();
+        }
         try {
             $messageId = $this->repo->insertMessage(
                 $threadId,
@@ -427,11 +444,13 @@ final class MessagesService
                     throw $e;
                 }
             }
-            $pdo->commit();
+            if ($ownTxn) {
+                $pdo->commit();
+            }
 
             return $messageId;
         } catch (\Throwable $e) {
-            if ($pdo->inTransaction()) {
+            if ($ownTxn && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw $e;

@@ -99,6 +99,24 @@ function applyProviderStatus(data) {
   }
 }
 
+/** checkout 직후·프로필 전환 시 오래된 ‘구매 가능’ 캐시를 버린다 */
+export function invalidateProviderStatus() {
+  cached = null;
+  unlockedStudentIds.clear();
+}
+
+/**
+ * status.php만 사용. 실패 시 캐시를 비우고 throw (쪽지권 묶음권 fail-closed용)
+ * @param {number} [days]
+ */
+export async function hydrateProviderStatusStrict(days = 7) {
+  apiMode = true;
+  invalidateProviderStatus();
+  const data = await fetchPaidStatus(days);
+  applyProviderStatus({ ...data, is_provider: true });
+  return cached;
+}
+
 /**
  * 공급자: status.php 우선 · 실패 시 entitlements
  * @param {number} [days]

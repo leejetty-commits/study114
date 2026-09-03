@@ -15,6 +15,7 @@ import {
   renderCardVisualPolicyBlock,
   resolveTrustBadgeLabels,
 } from '../card-visual.js';
+import { studentMemoContactLabel } from '../student-memo-status.js';
 
 export function esc(s) {
   if (s == null) return '';
@@ -75,7 +76,9 @@ export function buildJudgmentTokens(kind, item, viewer) {
       : item.preferred_fee_amount;
   const budgetStr = budget != null ? `${Number(budget).toLocaleString('ko-KR')}원` : null;
   const memo =
-    viewer === 'tutor' ? (item.exposure_status === 'published' ? '메모 가능' : '접촉 불가') : null;
+    viewer === 'tutor' || viewer === 'study_room'
+      ? studentMemoContactLabel(item).label
+      : null;
   return [item.grade_level, item.subject_label, item.location_label, '대면', memo || budgetStr].filter(Boolean);
 }
 
@@ -229,12 +232,14 @@ export function buildContactPanel(kind, item, viewer) {
     return `<div class="p24-contact">${renderPermissionStateCard('guest', { loginHref })}</div>`;
   }
   if (kind === 'student' && (viewer === 'tutor' || viewer === 'study_room')) {
-    const can = item.exposure_status === 'published';
-    if (!can) {
+    const memo = studentMemoContactLabel(item);
+    if (item.exposure_status !== 'published') {
       return `<div class="p24-contact">${renderPermissionStateCard('student_protection')}</div>`;
     }
-    const label = viewer === 'tutor' ? '메모 가능' : '상담/쪽지 가능';
-    return `<ul class="p24-contact"><li class="p24-contact__item is-ok">${label}</li></ul>`;
+    if (!memo.ok) {
+      return `<ul class="p24-contact"><li class="p24-contact__item is-locked">🔒 ${esc(memo.label)}</li></ul>`;
+    }
+    return `<ul class="p24-contact"><li class="p24-contact__item is-ok">✓ ${esc(memo.label)}</li></ul>`;
   }
   if (kind === 'student' && viewer === 'parent') {
     return `<ul class="p24-contact"><li class="p24-contact__item is-locked">비교 열람만 · 쪽지·연락처 비공개</li></ul>`;

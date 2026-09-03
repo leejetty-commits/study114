@@ -67,7 +67,8 @@ export function resolveSelectedProfile(query, role) {
     const hit = profiles.find(
       (p) => p.id === String(qId) && (!qType || p.providerType === qType),
     );
-    if (hit) return hit;
+    // URL에 지정한 프로필이 없으면 다른 프로필로 조용히 대체하지 않는다
+    return hit || null;
   }
   if (profiles.length === 1) return profiles[0];
   return null;

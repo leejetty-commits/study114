@@ -427,10 +427,28 @@ ok(
   'checkout_quote_after_inherit',
   /resolveBadgePeriodFromActivePosition[\s\S]*PaidCatalog::quote/m.test(checkoutSvc),
 );
+const checkoutApi = read('public/api/paid/checkout.php');
+const createOrderCallMatch = checkoutApi.match(/->createOrder\(([^)]*)\)/);
+const createOrderArgs = createOrderCallMatch
+  ? createOrderCallMatch[1]
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+  : [];
+const expectedCreateOrderArgs = [
+  '$userId',
+  '$productId',
+  '$variant',
+  '$providerType',
+  '$providerId',
+  '$memoIntent',
+];
 ok(
   'checkout_ignores_client_amount',
-  !/createOrder\([\s\S]*\$amount/m.test(checkoutSvc) &&
-    read('public/api/paid/checkout.php').includes("createOrder($userId, $productId, $variant, $providerType, $providerId)"),
+  createOrderArgs.length === expectedCreateOrderArgs.length &&
+    expectedCreateOrderArgs.every((name, i) => createOrderArgs[i] === name) &&
+    !createOrderArgs.some((name) => name === '$amount' || /^\$amount\b/.test(name)),
+  `args=[${createOrderArgs.join(', ')}]`,
 );
 ok(
   'checkout_amount_from_quote',

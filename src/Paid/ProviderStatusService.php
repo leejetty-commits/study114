@@ -54,6 +54,7 @@ final class ProviderStatusService
         $ops = $isProvider ? $this->tickets->getOperationalStatus($userId) : null;
         $exposure = $ops['exposure'] ?? $this->emptyExposure();
         $slots = $ops['slots'] ?? null;
+        $memoPacks = $ops['tickets']['memo']['packs'] ?? [];
 
         $coldMemo = [
             'can_send' => $canColdMemo,
@@ -82,6 +83,7 @@ final class ProviderStatusService
             'memo_nearest_expiry' => $memoSummary['nearest_expiry'],
             'request_view_tickets' => $viewSummary['remaining'],
             'can_cold_memo' => $canColdMemo,
+            'memo_packs' => $memoPacks,
         ];
     }
 
@@ -94,6 +96,7 @@ final class ProviderStatusService
                     'label' => '쪽지권',
                     'remaining' => (int) $status['cold_memo']['remaining'],
                     'nearest_expiry' => $status['cold_memo']['nearest_expiry'],
+                    'packs' => $status['memo_packs'] ?? [],
                 ],
                 'request_view' => [
                     'label' => '요청문 열람권',

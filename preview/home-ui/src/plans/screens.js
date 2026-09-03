@@ -14,7 +14,12 @@ import {
 import { getRoiMetrics, getPaidOperationalStatus } from '../paid-backend.js';
 import { renderProviderNoticeBanners, hydrateProviderNotices } from '../provider-notices.js';
 import { createPaidCheckout, completePaidCheckout } from '../paid-api.js';
-import { hydrateProviderStatus } from '../provider-status.js';
+import {
+  getProviderStatus,
+  hydrateProviderStatus,
+  hydrateProviderStatusStrict,
+  invalidateProviderStatus,
+} from '../provider-status.js';
 import { ensureStudyRoomStore } from '../study-room-reg/index.js';
 import { ensureTutorStore } from '../tutor-reg/index.js';
 import { getPublishReadiness as getRoomReadiness, getStudyRoom } from '../study-room-reg/store.js';
@@ -72,6 +77,99 @@ let historyCache = { rows: [], fromApi: false, loaded: false };
 
 /** @type {string | null} */
 let openReceiptOrderRef = null;
+
+/**
+ * #/plans/access · #/plans/my 프로필별 status 동기화 (stale 구매 방지)
+ * @type {{ key: string, phase: 'idle'|'loading'|'ready'|'error', error: string|null, route: string }}
+ */
+let plansStatusSync = { key: '', phase: 'idle', error: null, route: '' };
+
+/** 같은 hash 재렌더에서 중복 hydrate 방지. 라우트를 벗어나면 비운다. */
+let lastPlansHydratedHash = '';
+
+/** @param {import('./profiles.js').ProviderProfile | null} profile */
+export function accessProfileKey(profile) {
+  return profile ? `${profile.providerType}:${profile.id}` : '';
+}
+
+export function resetAccessStatusSync() {
+  plansStatusSync = { key: '', phase: 'idle', error: null, route: '' };
+  lastPlansHydratedHash = '';
+}
+
+/** @deprecated alias — access/my 공용 */
+export const resetPlansStatusSync = resetAccessStatusSync;
+
+/**
+ * @param {import('./profiles.js').ProviderProfile | null} profile
+ * @param {() => void} rerender
+ * @param {string} routePath '/plans/access' | '/plans/my' | '/mypage/plans/my'
+ */
+export function schedulePlansStatusHydrate(profile, rerender, routePath) {
+  if (!profile) {
+    resetPlansStatusSync();
+    return;
+  }
+  const key = accessProfileKey(profile);
+  const hash = window.location.hash;
+  if (plansStatusSync.phase === 'loading' && plansStatusSync.key === key) {
+    return;
+  }
+  if (
+    plansStatusSync.phase === 'ready' &&
+    plansStatusSync.key === key &&
+    lastPlansHydratedHash === hash &&
+    getProviderStatus()
+  ) {
+    return;
+  }
+  if (
+    plansStatusSync.phase === 'error' &&
+    plansStatusSync.key === key &&
+    lastPlansHydratedHash === hash
+  ) {
+    return;
+  }
+
+  plansStatusSync = { key, phase: 'loading', error: null, route: routePath };
+  invalidateProviderStatus();
+  rerender();
+
+  hydrateProviderStatusStrict()
+    .then(() => {
+      if (plansStatusSync.key !== key) return;
+      lastPlansHydratedHash = window.location.hash;
+      plansStatusSync = { key, phase: 'ready', error: null, route: routePath };
+      rerender();
+    })
+    .catch((err) => {
+      if (plansStatusSync.key !== key) return;
+      lastPlansHydratedHash = window.location.hash;
+      plansStatusSync = {
+        key,
+        phase: 'error',
+        error: err instanceof Error ? err.message : String(err || 'status 조회 실패'),
+        route: routePath,
+      };
+      invalidateProviderStatus();
+      rerender();
+    });
+}
+
+/** @param {import('./profiles.js').ProviderProfile | null} profile */
+export function plansStatusFlags(profile) {
+  const profileKey = accessProfileKey(profile);
+  const syncReady =
+    plansStatusSync.phase === 'ready' &&
+    plansStatusSync.key === profileKey &&
+    Boolean(getProviderStatus());
+  const syncLoading =
+    plansStatusSync.phase === 'loading' && plansStatusSync.key === profileKey;
+  const syncError =
+    plansStatusSync.phase === 'error' && plansStatusSync.key === profileKey;
+  const syncPending = Boolean(profile) && !syncReady && !syncError;
+  return { profileKey, syncReady, syncLoading, syncError, syncPending };
+}
 
 /**
  * @param {number} remaining
@@ -372,22 +470,20 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
  * @param {import('./profiles.js').ProviderProfile | null} profile
  * @param {string} role
  * @param {{ memo?: number }} remaining
- * @param {{ primaryCta?: boolean }} [opts]
+ * @param {{ primaryCta?: boolean, activePaidPack?: object|null, packPurchaseBlocked?: boolean }} [opts]
  */
 function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
   const isProvider = role === 'tutor' || role === 'study_room';
   const options = product.options || [];
   const price = formatCardPrice(product);
   const primaryCta = opts.primaryCta ?? product.productCode === 'memo_ticket';
+  const activePaidPack = opts.activePaidPack || null;
+  const packPurchaseBlocked = Boolean(opts.packPurchaseBlocked);
   const eligibility = profile
     ? getEligibility(profile, product.productCode, 'access')
     : { canBuy: false, missing: ['적용 프로필을 먼저 선택하세요'] };
 
-  const remain = remaining.memo;
-  const remainHtml =
-    remain != null
-      ? `<p class="plans-remain">현재 잔여 <strong>${remain}회</strong>${isLowCredit(remain) ? ' · <span class="plans-remain--low">저잔량</span>' : ''}</p>`
-      : '';
+  const remainHtml = '';
 
   const missingHtml =
     isProvider && eligibility.missing.length
@@ -405,7 +501,9 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
               ? `${formatKrw(o.priceKrw)} (시험 결제 ${formatKrw(amt.chargeKrw)})`
               : formatKrw(o.priceKrw);
             const extras = [o.marketingBadge, o.discountLabel].filter(Boolean).join(' · ');
-            return `<option value="${esc(o.optionId)}"${i === 0 ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}${extras ? ` · ${esc(extras)}` : ''}</option>`;
+            const isImmediate = o.apiVariant === '1회' || /^1회/.test(String(o.label || ''));
+            const packLocked = (!isImmediate && packPurchaseBlocked) || (!!activePaidPack && !isImmediate);
+            return `<option value="${esc(o.optionId)}"${packLocked ? ' disabled' : ''}${!packLocked && i === 0 ? ' selected' : ''}${isImmediate && packPurchaseBlocked ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}${extras ? ` · ${esc(extras)}` : ''}</option>`;
           })
           .join('')}
       </select>
@@ -436,7 +534,6 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
         <p class="plans-card__benefits-label">주요 제공 혜택</p>
         <ul class="plans-card__checks">
           ${(product.bullets || []).map((b) => `<li>${esc(b)}</li>`).join('')}
-          <li>먼저 산 이용권부터 차감 · 사용기한 ${getPlanSetting('credit_expire_days')}일</li>
         </ul>
         ${optionSelect}
         ${missingHtml}
@@ -658,11 +755,24 @@ export function renderPlansAccess() {
   const profile = role === 'tutor' || role === 'study_room' ? resolveSelectedProfile(query, role) : null;
   const providerKey = role === 'tutor' ? 'tutor' : 'study_room';
   const products = getCatalogByFamily('access', providerKey);
-  const ops = getPaidOperationalStatus();
+  const { syncReady, syncLoading, syncError, syncPending } = plansStatusFlags(profile);
+  const ops = syncReady ? getPaidOperationalStatus() : null;
   const tickets = ops?.tickets;
   const remaining = {
     memo: tickets?.memo?.remaining,
   };
+  const packs = tickets?.memo?.packs ?? ops?.memo_packs ?? [];
+  const activePaidPack = syncReady && profile
+    ? packs.find(
+        (p) =>
+          p.provider_type === providerKey &&
+          String(p.provider_id) === String(profile.id) &&
+          (p.grant_kind === 'payment_pack' || p.grant_kind === 'payment') &&
+          p.status === '사용 중' &&
+          (Number(p.granted_count) === 5 || Number(p.granted_count) === 10),
+      )
+    : null;
+  const packPurchaseBlocked = Boolean(activePaidPack) || syncLoading || syncPending || syncError;
 
   return `
     <section class="mypage-panel plans-store">
@@ -670,7 +780,7 @@ export function renderPlansAccess() {
         ${renderPlansHero({
           title: '학생에게 먼저 연락할 때 쓰는 쪽지권',
           lead: '공급자→학생 선제 쪽지만 횟수권입니다. 요청문 열람과 학부모 선연락·답장은 항상 무료입니다.',
-          chips: [{ label: '쪽지권 5·10·20회', active: true }],
+          chips: [{ label: '쪽지권 1·5·10회', active: true }],
         })}
         ${renderGuideBox({
           title: '안전 매칭 정책',
@@ -679,7 +789,7 @@ export function renderPlansAccess() {
           items: [
             { icon: '✓', text: '학부모→공급자 선연락·답장은 무료' },
             { icon: '✓', text: '요청문·특이사항은 로그인 공급자 무료 열람' },
-            { icon: '✓', text: '쪽지권은 단건 횟수권 · 180일 · FIFO 차감' },
+            { icon: '✓', text: '5·10회권은 결제 성공부터 120일 · 프로필당 활성 묶음권 1개' },
             { icon: '✓', text: '에스크로·매칭 보장 연출 없음' },
           ],
           linkLabel: '이용권 가이드 자세히 보기',
@@ -691,6 +801,21 @@ export function renderPlansAccess() {
       ${role === 'guest' || role === 'parent' ? renderProfileBanner(null, role) : ''}
       ${role === 'tutor' || role === 'study_room' ? renderTestModeToggle() : ''}
       ${role === 'tutor' || role === 'study_room' ? renderLowCreditBanner(tickets) : ''}
+      ${
+        syncLoading || syncPending
+          ? `<p class="mypage-info-box" data-plans-access-status="loading">쪽지권 상태를 확인하는 중입니다. 5회권·10회권 구매는 잠시 후 가능합니다.</p>`
+          : ''
+      }
+      ${
+        syncError
+          ? `<p class="mypage-info-box" role="alert" data-plans-access-status="error">쪽지권 상태를 불러오지 못해 5회권·10회권 구매를 막았습니다. <button type="button" class="btn btn--secondary btn--sm" data-plans-access-retry>다시 시도</button></p>`
+          : ''
+      }
+      ${
+        activePaidPack
+          ? `<p class="mypage-info-box" data-plans-access-status="active-pack">이 프로필에는 이미 사용 중인 유료 묶음권이 있어 5회권·10회권은 새로 살 수 없습니다. 1회 즉시권은 계속 이용할 수 있습니다.</p>`
+          : ''
+      }
 
       <section class="plans-section">
         <div class="plans-section__head">
@@ -698,7 +823,13 @@ export function renderPlansAccess() {
         </div>
         <ul class="plans-card-grid plans-card-grid--2">
           ${products
-            .map((p, i) => renderAccessCard(p, profile, role, remaining, { primaryCta: i === 0 }))
+            .map((p, i) =>
+              renderAccessCard(p, profile, role, remaining, {
+                primaryCta: i === 0,
+                activePaidPack,
+                packPurchaseBlocked,
+              }),
+            )
             .join('')}
         </ul>
       </section>
@@ -718,10 +849,11 @@ export function renderPlansAccess() {
             linkNav: '/support/faq',
           })}
           <div class="plans-stat-box">
-            <strong>이용권 잔여</strong>
-            <dl>
-              <div><dt>쪽지권</dt><dd>${tickets?.memo?.remaining ?? '—'}</dd></div>
-            </dl>
+            <strong>바로가기</strong>
+            <p class="mypage-muted" style="margin:8px 0 0">
+              <a href="#/plans/my" data-plans-nav="/plans/my">내 쪽지권 보기</a>
+              · <a href="#/mypage/messages" data-nav="/mypage/messages">쪽지함 보기</a>
+            </p>
           </div>
         </div>
         ${renderAccessCompare()}
@@ -747,21 +879,42 @@ export function renderPlansMy() {
       </section>`;
   }
 
-  const ops = getPaidOperationalStatus();
+  const query = parsePlansQuery();
+  const profile = role === 'tutor' || role === 'study_room' ? resolveSelectedProfile(query, role) : null;
+  const providerKey = role === 'tutor' ? 'tutor' : 'study_room';
+  const { syncReady, syncLoading, syncError, syncPending } = plansStatusFlags(profile);
+  const ops = syncReady ? getPaidOperationalStatus() : null;
   const exposure = ops?.exposure;
   const tickets = ops?.tickets;
   const metrics = getRoiMetrics();
   const positions = exposure?.positions ?? [];
+  const allPacks = tickets?.memo?.packs ?? [];
+  const packs = profile
+    ? allPacks.filter(
+        (p) => p.provider_type === providerKey && String(p.provider_id) === String(profile.id),
+      )
+    : allPacks;
 
   return `
     <section class="mypage-panel">
       <p class="mypage-lead">내 상품 이용 현황</p>
       ${renderProviderNoticeBanners()}
+      ${
+        syncLoading || syncPending
+          ? `<p class="mypage-info-box" data-plans-my-status="loading">쪽지권·상품 상태를 확인하는 중입니다.</p>`
+          : ''
+      }
+      ${
+        syncError
+          ? `<p class="mypage-info-box" role="alert" data-plans-my-status="error">상품 상태를 불러오지 못했습니다. <button type="button" class="btn btn--secondary btn--sm" data-plans-my-retry>다시 시도</button></p>`
+          : ''
+      }
       ${role === 'tutor' || role === 'study_room' ? renderLowCreditBanner(tickets) : ''}
       <h2 class="mypage-subhead">이용중 포지션</h2>
       ${
-        positions.length
-          ? `<table class="plans-table" aria-label="이용중 상품">
+        syncReady
+          ? positions.length
+            ? `<table class="plans-table" aria-label="이용중 상품">
               <thead><tr><th>상품</th><th>잔여</th><th>종료일</th><th></th></tr></thead>
               <tbody>
                 ${positions
@@ -777,18 +930,39 @@ export function renderPlansMy() {
                   .join('')}
               </tbody>
             </table>`
-          : `<div class="mypage-info-box"><p>${esc(P18_EXPOSURE_STATUS.basic)}</p>
+            : `<div class="mypage-info-box"><p>${esc(P18_EXPOSURE_STATUS.basic)}</p>
               <a href="#/plans/positions" class="btn btn--primary btn--sm" data-plans-nav="/plans/positions">노출상품 보기</a>
             </div>`
+          : `<p class="mypage-muted">포지션 정보는 상태 확인 후 표시됩니다.</p>`
       }
-      <h2 class="mypage-subhead">잔여 쪽지권</h2>
+      ${role === 'tutor' || role === 'study_room' ? renderProfileBanner(profile, role) : ''}
+      <h2 class="mypage-subhead">쪽지권</h2>
       ${
-        tickets
-          ? `<div class="mypage-stats roi-metrics">
-              <div class="mypage-stat${isLowCredit(tickets.memo.remaining) ? ' is-warn' : ''}"><span>${esc(tickets.memo.label)}</span><strong>${tickets.memo.remaining}</strong></div>
-            </div>
+        !syncReady
+          ? `<p class="mypage-muted" data-plans-my-status="packs-pending">쪽지권 목록은 상태 확인 후 표시됩니다.</p>`
+          : packs.length
+            ? `<table class="plans-table" aria-label="쪽지권" data-plans-my-status="packs-ready">
+              <thead><tr><th>프로필</th><th>상품</th><th>출처</th><th>부여</th><th>남은 횟수</th><th>부여일</th><th>사용기한</th><th>상태</th></tr></thead>
+              <tbody>
+                ${packs
+                  .map(
+                    (p) => `
+                  <tr data-plans-pack-row data-plans-pack-grant="${esc(String(p.grant_label || ''))}" data-plans-pack-status="${esc(String(p.status || ''))}" data-plans-pack-granted="${esc(String(p.granted_count ?? ''))}" data-plans-pack-remaining="${esc(String(p.remaining ?? ''))}" data-plans-pack-provider="${esc(String(p.provider_id ?? ''))}">
+                    <td>${esc(p.provider_type || '미확인')} #${esc(String(p.provider_id ?? ''))}</td>
+                    <td>${esc(p.product_name || '')}</td>
+                    <td>${esc(p.grant_label || '')}</td>
+                    <td>${p.granted_count ?? '—'}</td>
+                    <td>${p.remaining ?? '—'}</td>
+                    <td>${esc(String(p.purchased_at || '').slice(0, 10))}</td>
+                    <td data-plans-pack-expires>${esc(String(p.expires_at || '').slice(0, 10))}</td>
+                    <td>${esc(p.status || '')}</td>
+                  </tr>`,
+                  )
+                  .join('')}
+              </tbody>
+            </table>
             <p class="mypage-muted"><a href="#/plans/access" data-plans-nav="/plans/access">쪽지권 충전하기</a></p>`
-          : `<p class="mypage-muted">이용권 정보를 불러오면 표시됩니다. · <a href="#/plans/access" data-plans-nav="/plans/access">쪽지권</a></p>`
+            : `<p class="mypage-muted" data-plans-my-status="packs-empty">이 프로필에 표시할 쪽지권이 없습니다. · <a href="#/plans/access" data-plans-nav="/plans/access">쪽지권 충전하기</a></p>`
       }
       <h2 class="mypage-subhead">반응 요약</h2>
       <div class="mypage-stats roi-metrics">
@@ -910,6 +1084,17 @@ export function renderPlansCheckout() {
         <li class="is-done"><strong>2. 상품 옵션</strong>
           <p>${esc(draft.productName)} · ${esc(draft.optionLabel)}</p>
         </li>
+        ${
+          draft.apiVariant === '1회'
+            ? `<li class="is-done"><strong>즉시 발송</strong>
+          <p class="mypage-muted">1회 즉시권은 수신 학생과 첫 쪽지 본문이 필요합니다. 대상이 없으면 구매할 수 없습니다.</p>
+          <label class="plans-card__pick"><span class="plans-card__pick-label">학생 ID</span>
+            <input type="number" data-plans-immediate-student min="1" value="${esc(String(draft.studentId || ''))}" class="student-form__select" /></label>
+          <label class="plans-card__pick"><span class="plans-card__pick-label">첫 쪽지</span>
+            <textarea data-plans-immediate-body class="student-form__select" rows="3">${esc(draft.body || '')}</textarea></label>
+        </li>`
+            : ''
+        }
         <li class="is-done"><strong>3. 금액 확인</strong>
           <p>표시가 ${formatKrw(amt.displayKrw)}
             ${amt.testMode ? ` · <em>테스트 결제 ${formatKrw(amt.chargeKrw)}</em>` : ''}</p>
@@ -1006,6 +1191,20 @@ export function renderPlansScreen(path) {
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindPlansScreenEvents(root, rerender) {
   const path = (window.location.hash.slice(1) || '').split('?')[0];
+  if (path !== '/plans/access' && path !== '/mypage/plans/my') {
+    lastPlansHydratedHash = '';
+  }
+  if (path === '/plans/access') {
+    const role = getPlansEffectiveRole();
+    const query = parsePlansQuery();
+    const profile =
+      role === 'tutor' || role === 'study_room' ? resolveSelectedProfile(query, role) : null;
+    schedulePlansStatusHydrate(profile, rerender, path);
+    root.querySelector('[data-plans-access-retry]')?.addEventListener('click', () => {
+      resetAccessStatusSync();
+      schedulePlansStatusHydrate(profile, rerender, path);
+    });
+  }
   if ((path === '/plans/history' || path.endsWith('/history')) && !historyCache.loaded) {
     loadHistoryRows().then((result) => {
       historyCache = { rows: result.rows, fromApi: result.fromApi, loaded: true };
@@ -1040,12 +1239,21 @@ export function bindPlansScreenEvents(root, rerender) {
       const itemEl = btn.closest('.plans-catalog__item');
       const select = itemEl?.querySelector('[data-plans-option]');
       const optionId = select instanceof HTMLSelectElement ? select.value : '';
-      const product = getProductConfig(productCode, role);
-      const option = getPriceOption(productCode, optionId, role);
       const role = getPlansEffectiveRole();
       const query = parsePlansQuery();
       const profile = resolveSelectedProfile(query, role);
+      const product = getProductConfig(productCode, role);
+      const option = getPriceOption(productCode, optionId, role);
       if (!product || !option || !profile) return;
+      const isImmediate = option.apiVariant === '1회' || /^1회/.test(String(option.label || ''));
+      if (!isImmediate) {
+        const key = accessProfileKey(profile);
+        const blocked =
+          plansStatusSync.phase !== 'ready' ||
+          plansStatusSync.key !== key ||
+          !getProviderStatus();
+        if (blocked) return;
+      }
 
       setCheckoutDraft({
         productCode,
@@ -1089,6 +1297,8 @@ export function bindPlansScreenEvents(root, rerender) {
         const created = await createPaidCheckout(draft.productCode, draft.apiVariant, {
           providerType: draft.providerType,
           providerId: draft.providerId,
+          studentId: Number(root.querySelector('[data-plans-immediate-student]')?.value || draft.studentId || 0),
+          body: String(root.querySelector('[data-plans-immediate-body]')?.value || draft.body || ''),
         });
         const serverAmount = Number(created.amount_won ?? created.sale_price_krw);
         if (!Number.isFinite(serverAmount) || serverAmount <= 0) {
@@ -1099,7 +1309,9 @@ export function bindPlansScreenEvents(root, rerender) {
           console.warn('[plans/checkout] client price ignored', draft.priceKrw, '→', serverAmount);
         }
         const completed = await completePaidCheckout(created.order_ref);
-        await hydrateProviderStatus();
+        invalidateProviderStatus();
+        resetAccessStatusSync();
+        await hydrateProviderStatusStrict().catch(() => hydrateProviderStatus());
         await hydrateProviderNotices();
 
         appendHistoryRow({

@@ -66,7 +66,9 @@ import { getTutor, getTutors } from '../tutor-reg/store.js';
 import { getPlanSetting, hydratePaidCatalog } from '../plans/runtime-config.js';
 import { hydrateProviderNotices, renderProviderNoticeBanners, bindProviderNoticeEvents } from '../provider-notices.js';
 import { renderPaidGuide, renderPaidUsage } from './paid-screens.js';
-import { renderPlansHistory } from '../plans/screens.js';
+import { renderPlansHistory, schedulePlansStatusHydrate, resetPlansStatusSync, plansStatusFlags } from '../plans/screens.js';
+import { parsePlansQuery } from '../plans/router.js';
+import { getPlansEffectiveRole, resolveSelectedProfile } from '../plans/profiles.js';
 import { getHistoryRows, loadHistoryRows } from '../plans/history-mock.js';
 import { bindPaidCatalogEvents } from '../paid-checkout.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
@@ -153,7 +155,7 @@ export function renderMypageScreen(path) {
   if (path === '/mypage/student-review') return renderStudentReview(r);
   if (path === MESSAGES_BASE || isMessagesDetailPath(path)) return renderMessagesScreen(path);
   if (path === '/mypage/plans') return renderPlans(r);
-  if (path === '/mypage/plans/my') return renderPlans(r);
+  if (path === '/mypage/plans/my') return renderPlansMyInventory(r);
   if (path === '/mypage/plans/history') return renderPlansHistory();
   if (path === '/mypage/paid') return renderPaidGuide(r);
   if (path === '/mypage/paid/usage') return renderPaidUsage(r);
@@ -641,6 +643,90 @@ function renderPlans(role) {
         </div>
       </section>
     </div>`;
+}
+
+/** #/mypage/plans/my — 프로필별 쪽지권 재고 (PR-B status 정본) */
+function renderPlansMyInventory(role) {
+  if (role === 'parent') {
+    return renderPlans(role);
+  }
+  const query = parsePlansQuery();
+  const plansRole = getPlansEffectiveRole();
+  const profile =
+    plansRole === 'tutor' || plansRole === 'study_room'
+      ? resolveSelectedProfile(
+          query.provider_id
+            ? query
+            : {
+                provider_type: plansRole,
+                provider_id:
+                  plansRole === 'tutor'
+                    ? String(getTutors()[0]?.id || '')
+                    : String(getStudyRooms()[0]?.id || ''),
+              },
+          plansRole,
+        )
+      : null;
+  const providerKey = plansRole === 'tutor' ? 'tutor' : 'study_room';
+  const { syncReady, syncLoading, syncError, syncPending } = plansStatusFlags(profile);
+  const ops = syncReady ? getPaidOperationalStatus() : null;
+  const tickets = ops?.tickets;
+  const allPacks = tickets?.memo?.packs ?? [];
+  const packs = profile
+    ? allPacks.filter(
+        (p) => p.provider_type === providerKey && String(p.provider_id) === String(profile.id),
+      )
+    : [];
+
+  return `
+    <section class="mypage-panel">
+      <p class="mypage-lead">내 쪽지권 · 상품</p>
+      ${renderProviderNoticeBanners()}
+      ${
+        syncLoading || syncPending
+          ? `<p class="mypage-info-box" data-plans-my-status="loading">쪽지권·상품 상태를 확인하는 중입니다.</p>`
+          : ''
+      }
+      ${
+        syncError
+          ? `<p class="mypage-info-box" role="alert" data-plans-my-status="error">상품 상태를 불러오지 못했습니다. <button type="button" class="btn btn--secondary btn--sm" data-plans-my-retry>다시 시도</button></p>`
+          : ''
+      }
+      ${
+        !profile
+          ? `<p class="mypage-muted">적용할 공부방·과외쌤 프로필을 선택하세요. · <a href="#/plans/access" data-nav="/plans/access">쪽지권</a></p>`
+          : ''
+      }
+      <h2 class="mypage-subhead">쪽지권</h2>
+      ${
+        !syncReady
+          ? `<p class="mypage-muted" data-plans-my-status="packs-pending">쪽지권 목록은 상태 확인 후 표시됩니다.</p>`
+          : packs.length
+            ? `<table class="plans-table" aria-label="쪽지권" data-plans-my-status="packs-ready">
+              <thead><tr><th>프로필</th><th>상품</th><th>출처</th><th>부여</th><th>남은 횟수</th><th>부여일</th><th>사용기한</th><th>상태</th></tr></thead>
+              <tbody>
+                ${packs
+                  .map(
+                    (p) => `
+                  <tr data-plans-pack-row data-plans-pack-grant="${esc(String(p.grant_label || ''))}" data-plans-pack-status="${esc(String(p.status || ''))}" data-plans-pack-granted="${esc(String(p.granted_count ?? ''))}" data-plans-pack-remaining="${esc(String(p.remaining ?? ''))}" data-plans-pack-provider="${esc(String(p.provider_id ?? ''))}">
+                    <td>${esc(p.provider_type || '미확인')} #${esc(String(p.provider_id ?? ''))}</td>
+                    <td>${esc(p.product_name || '')}</td>
+                    <td>${esc(p.grant_label || '')}</td>
+                    <td>${p.granted_count ?? '—'}</td>
+                    <td>${p.remaining ?? '—'}</td>
+                    <td>${esc(String(p.purchased_at || '').slice(0, 10))}</td>
+                    <td data-plans-pack-expires>${esc(String(p.expires_at || '').slice(0, 10))}</td>
+                    <td>${esc(p.status || '')}</td>
+                  </tr>`,
+                  )
+                  .join('')}
+              </tbody>
+            </table>
+            <p class="mypage-muted"><a href="#/plans/access" data-nav="/plans/access">쪽지권 충전하기</a></p>`
+            : `<p class="mypage-muted" data-plans-my-status="packs-empty">이 프로필에 표시할 쪽지권이 없습니다. · <a href="#/plans/access" data-nav="/plans/access">쪽지권 충전하기</a></p>`
+      }
+      <p class="mypage-note"><a href="#/mypage/plans" data-mypage-nav="/mypage/plans">이용 현황</a> · <a href="#/plans/access" data-nav="/plans/access">쪽지권 구매</a></p>
+    </section>`;
 }
 
 function renderSubmissionDocs(role) {
@@ -1189,7 +1275,33 @@ let plansHistoryRows = null;
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
   const path = getMypagePath();
-  if (!plansStatusHydrateAttempted && (path === '/mypage/plans' || path.startsWith('/mypage/plans/'))) {
+  if (path === '/mypage/plans/my') {
+    const plansRole = getPlansEffectiveRole();
+    const query = parsePlansQuery();
+    const profile =
+      plansRole === 'tutor' || plansRole === 'study_room'
+        ? resolveSelectedProfile(
+            {
+              ...query,
+              provider_type: query.provider_type || plansRole,
+              provider_id: query.provider_id || (plansRole === 'tutor' ? String(getTutors()[0]?.id || '') : String(getStudyRooms()[0]?.id || '')),
+            },
+            plansRole,
+          )
+        : null;
+    // URL에 provider가 없으면 기본 프로필로 hydrate (목록 표시용)
+    const hydrateProfile =
+      profile ||
+      (plansRole === 'tutor' || plansRole === 'study_room'
+        ? resolveSelectedProfile({}, plansRole)
+        : null);
+    schedulePlansStatusHydrate(hydrateProfile, rerender, path);
+    root.querySelector('[data-plans-my-retry]')?.addEventListener('click', () => {
+      resetPlansStatusSync();
+      schedulePlansStatusHydrate(hydrateProfile, rerender, path);
+    });
+  }
+  if (!plansStatusHydrateAttempted && path === '/mypage/plans') {
     plansStatusHydrateAttempted = true;
     const jobs = [
       hydratePaidCaches(),

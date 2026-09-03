@@ -1,0 +1,68 @@
+# PR-B 쪽지권 정책. PHP 8.2 + 임시 MySQL. FTP·운영 DB 없음.
+
+name: Paid ticket policy PR-B
+
+on:
+  pull_request:
+  push:
+    branches:
+      - feat/paid-ticket-policy-pr-b
+
+concurrency:
+  group: paid-ticket-pr-b-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-paid-tickets:
+    name: verify:paid-pr-b
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: study114
+          MYSQL_USER: study114
+          MYSQL_PASSWORD: test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -ptest"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      STUDY114_DB_HOST: 127.0.0.1
+      STUDY114_DB_PORT: 3306
+      STUDY114_DB_NAME: study114
+      STUDY114_DB_USER: study114
+      STUDY114_DB_PASS: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: json, mbstring, pdo_mysql
+          coverage: none
+          tools: none
+
+      - name: Install mysql client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client
+
+      - name: PR-B PHP / checkout / 062 / FIFO / immediate
+        run: bash scripts/verify-paid-pr-b-ci.sh
+
+      - name: Summary
+        run: |
+          {
+            echo "## Paid ticket PR-B"
+            echo
+            echo "- PHP: \`$(php -r 'echo PHP_VERSION;')\`"
+            echo "- 테스트: 임시 MySQL 직렬 실행 (공유 DB 경합 없음)"
+            echo "- 운영 DB schema 061/062: 적용하지 않음"
+            echo "- 실 PG / FTP: 하지 않음"
+          } | tee -a "${GITHUB_STEP_SUMMARY}"
