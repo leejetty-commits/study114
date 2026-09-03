@@ -1080,14 +1080,24 @@ export function bindPlansScreenEvents(root, rerender) {
 
       const methodEl = root.querySelector('input[name="plans_pay_method"]:checked');
       const method = methodEl instanceof HTMLInputElement ? methodEl.value : 'card';
-      const amt = resolveCheckoutAmount(draft.priceKrw);
 
       payBtn.setAttribute('disabled', 'true');
       try {
+        if (!getProductConfig(draft.productCode, draft.providerType)) {
+          throw new Error('상품 카탈로그가 준비되지 않았습니다. 새로고침 후 다시 시도해 주세요.');
+        }
         const created = await createPaidCheckout(draft.productCode, draft.apiVariant, {
           providerType: draft.providerType,
           providerId: draft.providerId,
         });
+        const serverAmount = Number(created.amount_won ?? created.sale_price_krw);
+        if (!Number.isFinite(serverAmount) || serverAmount <= 0) {
+          throw new Error('서버 결제금액이 올바르지 않습니다.');
+        }
+        // 클라이언트 draft 금액과 달라도 서버 판매가를 사용한다
+        if (Number(draft.priceKrw) !== serverAmount) {
+          console.warn('[plans/checkout] client price ignored', draft.priceKrw, '→', serverAmount);
+        }
         const completed = await completePaidCheckout(created.order_ref);
         await hydrateProviderStatus();
         await hydrateProviderNotices();
@@ -1096,7 +1106,7 @@ export function bindPlansScreenEvents(root, rerender) {
           orderRef: completed.order_ref || created.order_ref,
           productName: `${draft.productName} · ${draft.optionLabel}`,
           providerLabel: draft.providerLabel,
-          amountKrw: amt.chargeKrw,
+          amountKrw: serverAmount,
           paymentMethod: method,
           paidAt: new Date().toISOString(),
           status: 'paid',
@@ -1111,8 +1121,9 @@ export function bindPlansScreenEvents(root, rerender) {
           providerLabel: draft.providerLabel,
           providerType: draft.providerType,
           providerId: draft.providerId,
-          chargeKrw: amt.chargeKrw,
-          memoBundleGranted: Number(completed.memo_bundle_granted) || 0,
+          chargeKrw: serverAmount,
+          memoBundleGranted:
+            Number(completed.memo_bundle_granted) || Number(created.memo_bundle) || 0,
         });
         clearCheckoutDraft();
         window.location.hash = '#/plans/result';

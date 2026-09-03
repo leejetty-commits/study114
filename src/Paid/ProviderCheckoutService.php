@@ -11,30 +11,13 @@ use Study114\Database\Connection;
 /**
  * 18d — dev mock PG · 주문 → 티켓/포지션/유료배지 지급
  *
- * 잠금: 공부방 계정 ≠ 과외쌤 계정.
- * position·badge_addon 은 구매 시 provider_type + provider_id 필수.
- * Hot 방/쌤 fallback·공용 적용 금지.
+ * PR-A: 금액·SKU·기간은 PaidCatalog 서버 재계산. 클라이언트 금액 무시.
+ * PG는 계속 dev_mock.
  *
  * @see docs/internal/59-account-context-separation-lock.md
  */
 final class ProviderCheckoutService
 {
-    private const DUMMY_AMOUNT = 10;
-
-    /** @var array<string, string> */
-    private const COUNT_VARIANTS = [
-        '1회' => '1',
-        '5회권' => '5',
-        '10회권' => '10',
-        '20회권' => '20',
-    ];
-
-    /** @var array<string, list<string>> */
-    private const SELLABLE_POSITION_VARIANTS = [
-        'pick' => ['2주', '1개월', '2개월'],
-        'prime' => ['1개월', '2개월'],
-    ];
-
     private ProviderCheckoutRepository $orders;
     private ProviderTicketRepository $tickets;
     private PaidBadgeRepository $badges;
@@ -63,22 +46,40 @@ final class ProviderCheckoutService
         ?string $providerType = null,
         ?int $providerId = null,
     ): array {
-        $kind = $this->resolveKind($productId);
+        $productId = trim($productId);
+        $variant = trim($variant);
+        if ($productId === 'picked') {
+            $productId = 'jjokjipge';
+        }
+
+        // 배지: 기간은 활성 포지션에서 상속 (클라이언트 별도 기간 선택 없음)
+        $kindHint = $this->kindHint($productId);
+        if ($kindHint === 'badge_addon') {
+            $this->requireProviderContext($userId, $providerType, $providerId);
+            /** @var 'study_room'|'tutor' $providerType */
+            $this->assertBadgePurchaseAllowed($userId, $productId, $providerType, $providerId);
+            $variant = $this->resolveBadgePeriodFromActivePosition(
+                $userId,
+                $providerType,
+                $providerId,
+                $variant,
+            );
+        }
+
+        // 클라이언트 amount/discount/memo 는 받지 않음 — 서버 quote만 사용
+        $quote = PaidCatalog::quote($productId, $variant, $providerType);
+        $kind = (string) $quote['product_kind'];
+        $productId = (string) $quote['product_id'];
+        $variant = (string) $quote['variant_label'];
 
         if ($kind === 'position' || $kind === 'badge_addon') {
             $this->requireProviderContext($userId, $providerType, $providerId);
             /** @var 'study_room'|'tutor' $providerType */
             if ($kind === 'badge_addon') {
-                $this->assertBadgePurchaseAllowed($userId, $productId, $providerType, $providerId);
-                if ($variant === '' || $variant === '-') {
-                    $variant = '포지션종속';
-                }
-            } else {
-                $this->assertVariant($productId, $kind, $variant);
+                // 위에서 이미 검증·기간 상속
             }
         } else {
-            $this->assertVariant($productId, $kind, $variant);
-            // 횟수권은 user 단위 유지(쪽지권) — 배지/포지션과 별개. provider 선택 시 기록만.
+            // 횟수권은 user 단위 — provider 선택 시 소유 검증만
             if ($providerType !== null && $providerId !== null && $providerId > 0) {
                 $this->badges->assertOwnedProvider($userId, $providerType, $providerId);
             } else {
@@ -94,21 +95,84 @@ final class ProviderCheckoutService
             $productId,
             $variant,
             $kind,
-            self::DUMMY_AMOUNT,
+            (int) $quote['amount_won'],
             $providerType,
             $providerId,
+            (string) $quote['catalog_version'],
+            (int) $quote['list_price_krw'],
+            (int) $quote['discount_krw'],
+            $quote['price_snapshot'],
         );
 
         return [
             'order_ref' => $orderRef,
-            'amount_won' => self::DUMMY_AMOUNT,
+            'amount_won' => (int) $quote['amount_won'],
+            'list_price_krw' => (int) $quote['list_price_krw'],
+            'discount_krw' => (int) $quote['discount_krw'],
+            'discount_rate' => (float) $quote['discount_rate'],
+            'sale_price_krw' => (int) $quote['sale_price_krw'],
+            'catalog_version' => (string) $quote['catalog_version'],
+            'memo_bundle' => (int) $quote['memo_bundle'],
+            'ticket_kind' => $quote['ticket_kind'],
             'status' => 'pending',
             'product_id' => $productId,
             'variant_label' => $variant,
+            'product_kind' => $kind,
             'provider_type' => $providerType,
             'provider_id' => $providerId,
             'pg_provider' => 'dev_mock',
+            'price_snapshot' => $quote['price_snapshot'],
         ];
+    }
+
+    private function kindHint(string $productId): string
+    {
+        return match ($productId) {
+            'prime', 'pick' => 'position',
+            'memo_ticket' => 'count',
+            'hot', 'subject_track', 'jjokjipge', 'sky', 'picked' => 'badge_addon',
+            default => 'unknown',
+        };
+    }
+
+    /**
+     * @param 'study_room'|'tutor' $providerType
+     */
+    private function resolveBadgePeriodFromActivePosition(
+        int $userId,
+        string $providerType,
+        int $providerId,
+        string $variant,
+    ): string {
+        if (PaidCatalog::isPeriod($variant)) {
+            $this->assertBadgePeriodMatchesActivePosition($userId, $providerType, $providerId, $variant);
+
+            return $variant;
+        }
+
+        $positions = $this->tickets->listActivePositions($userId, $providerType, $providerId);
+        if ($positions === []) {
+            throw new InvalidArgumentException('활성 프라임/픽이 없어 배지를 구매할 수 없습니다.');
+        }
+        usort(
+            $positions,
+            static fn (array $a, array $b): int => strcmp(
+                (string) ($b['end_exclusive_on'] ?? ''),
+                (string) ($a['end_exclusive_on'] ?? ''),
+            ),
+        );
+        $pos = $positions[0];
+        $label = PaidCatalog::periodFromDuration(
+            (string) ($pos['duration_type'] ?? 'day'),
+            (int) ($pos['duration_value'] ?? 0),
+        );
+        if ($label === null) {
+            throw new InvalidArgumentException(
+                '이용 중인 노출상품 기간을 카탈로그 기간으로 매핑할 수 없습니다.',
+            );
+        }
+
+        return $label;
     }
 
     /**
@@ -127,6 +191,9 @@ final class ProviderCheckoutService
                 'provider_type' => isset($row['provider_type']) ? (string) $row['provider_type'] : null,
                 'provider_id' => isset($row['provider_id']) ? (int) $row['provider_id'] : null,
                 'amount_won' => (int) ($row['amount_won'] ?? 0),
+                'catalog_version' => isset($row['catalog_version']) ? (string) $row['catalog_version'] : null,
+                'list_price_won' => isset($row['list_price_won']) ? (int) $row['list_price_won'] : null,
+                'discount_won' => isset($row['discount_won']) ? (int) $row['discount_won'] : null,
                 'status' => (string) ($row['status'] ?? ''),
                 'pg_provider' => (string) ($row['pg_provider'] ?? ''),
                 'created_at' => (string) ($row['created_at'] ?? ''),
@@ -191,36 +258,6 @@ final class ProviderCheckoutService
         return $this->badges->revokeByOrderRef($orderRef);
     }
 
-    private function resolveKind(string $productId): string
-    {
-        return match ($productId) {
-            'prime', 'pick' => 'position',
-            'memo_ticket' => 'count',
-            'request_view' => throw new InvalidArgumentException('요청문 열람권은 판매가 종료되었습니다.'),
-            'hot', 'subject_track', 'jjokjipge', 'sky', 'picked' => 'badge_addon',
-            'new', 'recommend' => throw new InvalidArgumentException(
-                'New·추천은 유료 배지 상품이 아닙니다. (카드 자동부여/통계축)',
-            ),
-            default => throw new InvalidArgumentException('알 수 없는 상품입니다.'),
-        };
-    }
-
-    private function assertVariant(string $productId, string $kind, string $variant): void
-    {
-        if ($kind === 'count' && !isset(self::COUNT_VARIANTS[$variant])) {
-            throw new InvalidArgumentException('variant: 1회 · 5회권 · 10회권 · 20회권');
-        }
-        if ($kind === 'position') {
-            if (!isset(PositionPeriodCalculator::VARIANT_MAP[$variant])) {
-                throw new InvalidArgumentException('variant: 2주 · 1개월 · 2개월');
-            }
-            $allowed = self::SELLABLE_POSITION_VARIANTS[$productId] ?? [];
-            if (!in_array($variant, $allowed, true)) {
-                throw new InvalidArgumentException('해당 상품에서 판매가 종료된 기간입니다.');
-            }
-        }
-    }
-
     /**
      * @param 'study_room'|'tutor' $providerType
      */
@@ -256,7 +293,35 @@ final class ProviderCheckoutService
                 '광고배지는 해당 계정 문맥의 프라임/픽 이용 후 구매할 수 있습니다.',
             );
         }
-        unset($userId);
+    }
+
+    /**
+     * 배지 기간은 활성 포지션 기간과 일치해야 한다 (상속 계약).
+     *
+     * @param 'study_room'|'tutor' $providerType
+     */
+    private function assertBadgePeriodMatchesActivePosition(
+        int $userId,
+        string $providerType,
+        int $providerId,
+        string $period,
+    ): void {
+        $positions = $this->tickets->listActivePositions($userId, $providerType, $providerId);
+        if ($positions === []) {
+            throw new InvalidArgumentException('활성 프라임/픽이 없어 배지를 구매할 수 없습니다.');
+        }
+        foreach ($positions as $pos) {
+            $label = PaidCatalog::periodFromDuration(
+                (string) ($pos['duration_type'] ?? 'day'),
+                (int) ($pos['duration_value'] ?? $pos['period_days'] ?? 0),
+            );
+            if ($label === $period) {
+                return;
+            }
+        }
+        throw new InvalidArgumentException(
+            '배지 기간은 이용 중인 노출상품 기간과 같아야 합니다.',
+        );
     }
 
     /**
@@ -275,7 +340,12 @@ final class ProviderCheckoutService
         $providerId = isset($order['provider_id']) ? (int) $order['provider_id'] : null;
 
         if ($kind === 'count') {
-            $count = (int) self::COUNT_VARIANTS[$variant];
+            $quote = PaidCatalog::quote($productId, $variant, null);
+            $count = (int) ($quote['credit_count'] ?? 0);
+            if ($count <= 0) {
+                throw new InvalidArgumentException('쪽지권 수량이 올바르지 않습니다.');
+            }
+            // PR-B: immediate는 잔액 미보관·즉시발송. PR-A는 기존 팩 지급 골격 유지.
             $this->tickets->addTicketPack($userId, 'memo', $count, 'payment');
 
             return null;
@@ -376,6 +446,7 @@ final class ProviderCheckoutService
                 : null,
             'provider_id' => isset($order['provider_id']) ? (int) $order['provider_id'] : null,
             'amount_won' => (int) $order['amount_won'],
+            'catalog_version' => isset($order['catalog_version']) ? (string) $order['catalog_version'] : null,
             'fulfilled' => $fulfilled,
             'paid_at' => $order['paid_at'] !== null ? (string) $order['paid_at'] : null,
         ];

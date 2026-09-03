@@ -1,5 +1,5 @@
-/** 18장 2026-07-07 — P15-09 · P18-01 카탈로그
- * 가격·기간 표시는 plans/runtime-config.js seed를 우선한다.
+/** 18장 — P15-09 · P18-01 카탈로그 카피
+ * 가격·기간은 서버 PaidCatalog (runtime-config / catalog-store).
  */
 
 import {
@@ -7,7 +7,7 @@ import {
   getProductConfig,
   formatKrw,
   resolveCheckoutAmount,
-  isPlansTestMode,
+  isCatalogReady,
 } from '../plans/runtime-config.js';
 
 /** @typedef {'position'|'count'|'badge_addon'} CatalogKind */
@@ -22,10 +22,8 @@ import {
  * @property {boolean} [featured]
  */
 
-/** @deprecated seed는 runtime-config — 호환용 라벨 */
-export const PERIOD_OPTIONS = ['2주', '1개월', '2개월'];
-export const COUNT_PACK_OPTIONS = ['5회', '10회', '20회'];
-export const DUMMY_PRICE = '10원';
+export const PERIOD_OPTIONS = ['2주', '1개월', '2개월', '3개월', '6개월'];
+export const COUNT_PACK_OPTIONS = ['1회', '5회', '10회'];
 
 function familyToKind(family) {
   if (family === 'position') return 'position';
@@ -45,64 +43,78 @@ function toCatalogProduct(p) {
   };
 }
 
-/** @type {Record<string, CatalogProduct>} */
-const PRODUCTS = {
-  prime: toCatalogProduct(getProductConfig('prime')),
-  pick: toCatalogProduct(getProductConfig('pick')),
-  memo_ticket: toCatalogProduct(getProductConfig('memo_ticket')),
+/** 카탈로그 미로드 시 카피만 표시하는 최소 메타 */
+const FALLBACK_COPY = {
+  prime: {
+    id: 'prime',
+    name: 'Prime 노출',
+    tagline: '선택한 지역·과목의 대표 노출',
+    kind: /** @type {CatalogKind} */ ('position'),
+    bullets: ['기간형 단건 결제', '자동연장 없음'],
+    featured: true,
+  },
+  pick: {
+    id: 'pick',
+    name: 'Pick 노출',
+    tagline: '페이지 순환형 추천 노출',
+    kind: /** @type {CatalogKind} */ ('position'),
+    bullets: ['기간형 단건 결제', '자동연장 없음'],
+    featured: true,
+  },
+  memo_ticket: {
+    id: 'memo_ticket',
+    name: '쪽지권',
+    tagline: '학생에게 먼저 보내는 첫 쪽지 횟수권',
+    kind: /** @type {CatalogKind} */ ('count'),
+    bullets: ['선제 쪽지만 차감', '답장·후속 무료'],
+    featured: true,
+  },
   hot: {
     id: 'hot',
     name: 'Hot',
     tagline: '추천·대표 노출 이용 기간에 함께 적용',
-    kind: 'badge_addon',
-    bullets: ['광고성 주목 배지', '플랫폼 인증처럼 보이지 않게', '단독 핵심상품 ✕'],
+    kind: /** @type {CatalogKind} */ ('badge_addon'),
+    bullets: ['광고성 주목 배지', '단독 핵심상품 ✕'],
   },
   subject_track: {
     id: 'subject_track',
     name: '단과',
-    tagline: '공부방 전용 · 추천·대표 노출 이용 기간에 함께 적용',
-    kind: 'badge_addon',
-    bullets: ['공부방 유료 아이콘', '「전문」아이콘 금지 — 단과로 표기', '단독 핵심상품 ✕'],
+    tagline: '공부방 전용 · 노출상품 기간에 함께 적용',
+    kind: /** @type {CatalogKind} */ ('badge_addon'),
+    bullets: ['공부방 유료 아이콘', '단독 핵심상품 ✕'],
   },
   jjokjipge: {
     id: 'jjokjipge',
     name: '쪽집게',
-    tagline: '과외쌤 · 추천·대표 노출 이용 기간에 함께 적용',
-    kind: 'badge_addon',
-    bullets: ['광고성 자기선언 배지', 'API 코드 jjokjipge (구 picked alias)', 'SKY·학력 등 사실표시와 구분', '단독 핵심상품 ✕'],
+    tagline: '과외쌤 · 노출상품 기간에 함께 적용',
+    kind: /** @type {CatalogKind} */ ('badge_addon'),
+    bullets: ['광고성 자기선언 배지', '단독 핵심상품 ✕'],
   },
   sky: {
     id: 'sky',
     name: 'SKY',
-    tagline: '과외쌤 유료 광고축 · 추천·대표 노출 이용 기간에 함께 적용',
-    kind: 'badge_addon',
-    bullets: ['과외쌤 유료 주목 배지', '대학명 자동추론 배지 아님', '단독 핵심상품 ✕'],
+    tagline: '과외쌤 유료 광고축 · 노출상품 기간에 함께 적용',
+    kind: /** @type {CatalogKind} */ ('badge_addon'),
+    bullets: ['과외쌤 유료 주목 배지', '대학명 자동추론 배지 아님'],
   },
 };
 
-/** 2026-08-21 잠금 — New·추천 통계는 판매 배지 아님 */
-export const STUDY_ROOM_CATALOG_IDS = [
-  'prime',
-  'pick',
-  'hot',
-  'subject_track',
-  'memo_ticket',
-];
+/** @param {string} id */
+function productMeta(id) {
+  if (isCatalogReady()) {
+    const cfg = getProductConfig(id) || getProductConfig(id, 'tutor') || getProductConfig(id, 'study_room');
+    if (cfg) return toCatalogProduct(cfg);
+  }
+  return FALLBACK_COPY[id] || null;
+}
 
-/** 2026-08-21 잠금 — Hot / 쪽집게(jjokjipge) / SKY */
-export const TUTOR_CATALOG_IDS = [
-  'memo_ticket',
-  'pick',
-  'prime',
-  'hot',
-  'jjokjipge',
-  'sky',
-];
+export const STUDY_ROOM_CATALOG_IDS = ['prime', 'pick', 'hot', 'subject_track', 'memo_ticket'];
+export const TUTOR_CATALOG_IDS = ['memo_ticket', 'pick', 'prime', 'hot', 'jjokjipge', 'sky'];
 
 /** @param {'study_room'|'tutor'|string} role */
 export function getPaidCatalog(role) {
   const ids = role === 'study_room' ? STUDY_ROOM_CATALOG_IDS : TUTOR_CATALOG_IDS;
-  return ids.map((id) => PRODUCTS[id]).filter(Boolean);
+  return ids.map((id) => productMeta(id)).filter(Boolean);
 }
 
 /** @param {CatalogProduct} item @param {'study_room'|'tutor'|string} [role] */
@@ -113,22 +125,22 @@ export function getCatalogVariants(item, role) {
   }
   if (item.kind === 'position') return PERIOD_OPTIONS;
   if (item.kind === 'count') return COUNT_PACK_OPTIONS;
-  return ['추천·대표 노출 이용 기간에 함께 적용'];
+  return ['노출상품 기간에 함께 적용'];
 }
 
 /** @param {CatalogProduct} item @param {string} variant @param {'study_room'|'tutor'|string} [role] */
 export function formatCatalogPrice(item, variant, role) {
+  if (!isCatalogReady()) {
+    return `${variant} · 가격 불러오는 중…`;
+  }
   const cfg = getProductConfig(item.id, role);
-  const opt = cfg?.options?.find((o) => o.label === variant);
+  const opt = cfg?.options?.find((o) => o.label === variant || o.apiVariant === variant);
   if (opt) {
     const amt = resolveCheckoutAmount(opt.priceKrw);
-    const extras = [opt.marketingBadge, opt.discountLabel, opt.bundleNote].filter(Boolean).join(' · ');
-    if (amt.testMode) {
-      return `${variant} · ${formatKrw(opt.priceKrw)} (테스트 ${formatKrw(amt.chargeKrw)})${extras ? ` · ${extras}` : ''}`;
-    }
-    return `${variant} · ${formatKrw(opt.priceKrw)}${extras ? ` · ${extras}` : ''}`;
+    const extras = [opt.discountLabel, opt.bundleNote].filter(Boolean).join(' · ');
+    return `${variant} · ${formatKrw(amt.chargeKrw)}${extras ? ` · ${extras}` : ''}`;
   }
-  return `${variant} · ${isPlansTestMode() ? DUMMY_PRICE : ''}`;
+  return `${variant} · 가격 없음`;
 }
 
 export const FREE_TIER_COPY = {
@@ -151,7 +163,6 @@ export const PAID_TIER_COPY = {
   ],
 };
 
-/** P18-02 ROI 무료 3종 — 18§6 · API 미연동 시 fallback (0) */
 export const ROI_FREE_METRICS = [
   { id: 'views', label: '조회', value: 0, period: '최근 7일', hint: '상세·검색 카드 열람' },
   { id: 'wishlist', label: '찜', value: 0, period: '누적', hint: '학부모 찜 목록' },

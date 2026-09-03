@@ -63,7 +63,7 @@ import { isMessagesApiMode, hydrateMessagesCache } from '../messages-backend.js'
 import { getMemoUsedTargets } from '../messages/thread-store.js';
 import { getStudyRoom, getStudyRooms } from '../study-room-reg/store.js';
 import { getTutor, getTutors } from '../tutor-reg/store.js';
-import { getPlanSetting } from '../plans/runtime-config.js';
+import { getPlanSetting, hydratePaidCatalog } from '../plans/runtime-config.js';
 import { hydrateProviderNotices, renderProviderNoticeBanners, bindProviderNoticeEvents } from '../provider-notices.js';
 import { renderPaidGuide, renderPaidUsage } from './paid-screens.js';
 import { renderPlansHistory } from '../plans/screens.js';
@@ -1194,6 +1194,7 @@ export function bindMypageScreenEvents(root, rerender) {
     const jobs = [
       hydratePaidCaches(),
       hydrateProviderNotices(),
+      hydratePaidCatalog().catch((err) => console.warn('[mypage/plans] catalog hydrate failed', err)),
       loadHistoryRows().then((result) => {
         plansHistoryRows = result.rows;
       }),

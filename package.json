@@ -10,6 +10,7 @@
     "e2e:p18-c": "playwright test e2e/p18-c-request-view.spec.js",
     "e2e:p18-d": "playwright test e2e/p18-d-checkout.spec.js",
     "e2e:p18-e": "playwright test e2e/p18-e-reminders.spec.js",
+    "e2e:p18-pr-a": "playwright test --workers=1 --project=chromium e2e/p18-b-tickets.spec.js e2e/p18-d-checkout.spec.js e2e/p18-c-request-view.spec.js e2e/p18-02-roi-api.spec.js e2e/p18-pr-a-history.spec.js",
     "e2e:ui": "playwright test --ui",
     "sync:inventory": "node scripts/sync-screen-inventory.mjs",
     "sync:inventory:check": "node scripts/sync-screen-inventory.mjs --check",
@@ -23,6 +24,10 @@
     "verify:board-acl": "node scripts/run-verify-board-acl.mjs",
     "verify:board-acl:js": "npx --yes vite-node scripts/verify-board-channel-acl.mjs",
     "verify:board-acl:php": "php scripts/verify-board-channel-acl.php && node scripts/compare-board-acl-matrix.mjs",
+    "verify:paid-catalog": "php scripts/verify-paid-catalog.php && node scripts/verify-paid-catalog.mjs",
+    "verify:paid-pricing": "php scripts/verify-paid-pricing.php && node scripts/verify-paid-pricing.mjs",
+    "verify:paid-pr-a": "node scripts/verify-paid-pr-a.mjs",
+    "verify:paid-pr-a-ci": "bash scripts/verify-paid-pr-a-ci.sh",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {

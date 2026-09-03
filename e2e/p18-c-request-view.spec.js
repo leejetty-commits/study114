@@ -19,30 +19,28 @@ test.describe('P18 18c 요청문 열람권', () => {
     await logout(request);
   });
 
-  test('POST unlock — student 1 paid_only · 재열람 무차감', async ({ request }) => {
+  test('POST unlock — 열람권 폐지 후 차감 없이 허용', async ({ request }) => {
+    // 구정책(p18-c 원문): paid_only 학생 1회 차감 · 재열람 무차감.
+    // 최신 정책: 요청문 열람권 SKU는 카탈로그에서 제거(removed_skus).
+    // ProviderTicketService::unlockPaidRequest 는 "폐지 — 차감 없이 항상 열람 허용".
     prepRequestViewE2e();
     await loginAs(request, 'tutor');
 
     const before = await request.get('/api/paid/request-access.php?student_id=1');
     const beforeBody = await before.json();
-    expect(beforeBody.unlocked).toBeFalsy();
-    expect(beforeBody.can_unlock).toBeTruthy();
+    expect(before.ok()).toBeTruthy();
+    expect(beforeBody.unlocked).toBeTruthy();
+    expect(beforeBody.can_unlock).toBeFalsy();
+    const ticketsBefore = beforeBody.request_view_tickets;
 
     const unlock = await request.post('/api/paid/request-access.php', {
       data: { student_id: 1 },
     });
     const unlockBody = await unlock.json();
     expect(unlock.ok()).toBeTruthy();
-    expect(unlockBody.consumed).toBeTruthy();
-    expect(unlockBody.request_view_tickets).toBeLessThan(beforeBody.request_view_tickets);
-
-    const again = await request.post('/api/paid/request-access.php', {
-      data: { student_id: 1 },
-    });
-    const againBody = await again.json();
-    expect(againBody.consumed).toBeFalsy();
-    expect(againBody.unlocked).toBeTruthy();
-    expect(againBody.request_view_tickets).toBe(unlockBody.request_view_tickets);
+    expect(unlockBody.unlocked).toBeTruthy();
+    expect(unlockBody.consumed).toBeFalsy();
+    expect(unlockBody.request_view_tickets).toBe(ticketsBefore);
 
     await logout(request);
   });

@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * AutoNewBadge · TutorPositionMemoBundle 검증 (DB 불필요)
  * 사용: php scripts/verify-paid-pricing.php
+ * PR-A: 번들 수치는 PaidCatalog 정본(2026-09-04)을 따른다.
  */
 
 require_once dirname(__DIR__) . '/src/bootstrap.php';
@@ -47,9 +48,13 @@ check('bundle_room_zero', TutorPositionMemoBundle::memoCount('prime', '1개월',
 check('bundle_pick_2w', TutorPositionMemoBundle::memoCount('pick', '2주', 'tutor') === 1);
 check('bundle_pick_1m', TutorPositionMemoBundle::memoCount('pick', '1개월', 'tutor') === 2);
 check('bundle_pick_2m', TutorPositionMemoBundle::memoCount('pick', '2개월', 'tutor') === 4);
+check('bundle_pick_3m', TutorPositionMemoBundle::memoCount('pick', '3개월', 'tutor') === 6);
+check('bundle_pick_6m', TutorPositionMemoBundle::memoCount('pick', '6개월', 'tutor') === 12);
+check('bundle_prime_2w', TutorPositionMemoBundle::memoCount('prime', '2주', 'tutor') === 2);
 check('bundle_prime_1m', TutorPositionMemoBundle::memoCount('prime', '1개월', 'tutor') === 5);
 check('bundle_prime_2m', TutorPositionMemoBundle::memoCount('prime', '2개월', 'tutor') === 10);
-check('bundle_prime_2w_none', TutorPositionMemoBundle::memoCount('prime', '2주', 'tutor') === 0);
+check('bundle_prime_3m', TutorPositionMemoBundle::memoCount('prime', '3개월', 'tutor') === 15);
+check('bundle_prime_6m', TutorPositionMemoBundle::memoCount('prime', '6개월', 'tutor') === 30);
 
 if ($failed > 0) {
     fwrite(STDERR, "{$failed} failed\n");
