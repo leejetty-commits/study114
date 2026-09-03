@@ -301,18 +301,285 @@ final class ProviderTicketRepository
             || ($row['special_request_visibility'] ?? '') === 'paid_only';
     }
 
-    public function addTicketPack(int $userId, string $ticketType, int $count, string $source = 'payment'): void
+    public function packHasProfileColumns(): bool
     {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?
+               AND COLUMN_NAME = ?
+             LIMIT 1'
+        );
+        $stmt->execute(['provider_ticket_packs', 'provider_type']);
+        $cache = (bool) $stmt->fetchColumn();
+
+        return $cache;
+    }
+
+    /**
+     * @return list<array{provider_type: 'study_room'|'tutor', provider_id: int}>
+     */
+    public function listOwnedProviders(int $userId): array
+    {
+        $out = [];
+        $tutors = $this->pdo->prepare('SELECT id FROM tutors WHERE user_id = ? ORDER BY id ASC');
+        $tutors->execute([$userId]);
+        foreach ($tutors->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $out[] = ['provider_type' => 'tutor', 'provider_id' => (int) $row['id']];
+        }
+        $rooms = $this->pdo->prepare(
+            'SELECT id FROM study_rooms WHERE user_id = ? AND deleted_at IS NULL ORDER BY id ASC'
+        );
+        $rooms->execute([$userId]);
+        foreach ($rooms->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $out[] = ['provider_type' => 'study_room', 'provider_id' => (int) $row['id']];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return array{provider_type: 'study_room'|'tutor', provider_id: int}
+     */
+    public function resolveMemoProvider(int $userId, ?string $providerType, ?int $providerId): array
+    {
+        if ($providerType !== null && $providerType !== '' && $providerId !== null && $providerId > 0) {
+            if (!in_array($providerType, ['study_room', 'tutor'], true)) {
+                throw new \InvalidArgumentException('provider_type가 올바르지 않습니다.');
+            }
+            $owned = $this->listOwnedProviders($userId);
+            foreach ($owned as $p) {
+                if ($p['provider_type'] === $providerType && $p['provider_id'] === $providerId) {
+                    return $p;
+                }
+            }
+            throw new \InvalidArgumentException('해당 프로필의 소유자가 아닙니다.');
+        }
+
+        $owned = $this->listOwnedProviders($userId);
+        $role = '';
+        try {
+            $roleStmt = $this->pdo->prepare(
+                'SELECT role_type FROM user_roles WHERE user_id = ? AND is_primary = 1 LIMIT 1'
+            );
+            $roleStmt->execute([$userId]);
+            $role = (string) $roleStmt->fetchColumn();
+        } catch (\PDOException) {
+            $role = '';
+        }
+        $filtered = $owned;
+        if ($role === 'tutor') {
+            $filtered = array_values(array_filter(
+                $owned,
+                static fn (array $p): bool => $p['provider_type'] === 'tutor',
+            ));
+        } elseif ($role === 'study_room_owner') {
+            $filtered = array_values(array_filter(
+                $owned,
+                static fn (array $p): bool => $p['provider_type'] === 'study_room',
+            ));
+        }
+        if (count($filtered) === 1) {
+            return $filtered[0];
+        }
+        throw new \InvalidArgumentException('쪽지권은 적용 프로필(provider_type·provider_id)이 필요합니다.');
+    }
+
+    /**
+     * @param 'study_room'|'tutor'|null $providerType
+     */
+    public function addTicketPack(
+        int $userId,
+        string $ticketType,
+        int $count,
+        string $source = 'payment',
+        ?string $expiresAt = null,
+        ?string $providerType = null,
+        ?int $providerId = null,
+        ?string $sourceOrderRef = null,
+        ?string $grantKind = null,
+    ): void {
         $this->assertTicketType($ticketType);
         if ($count <= 0) {
             throw new \InvalidArgumentException('pack_size는 1 이상이어야 합니다.');
         }
+        $expires = $expiresAt ?? MemoTicketPolicy::expireAtFromFulfill()->format('Y-m-d H:i:s');
+        $kind = $grantKind ?? ($source === MemoTicketPolicy::SOURCE_BUNDLE
+            ? MemoTicketPolicy::GRANT_POSITION_BUNDLE
+            : ($source === MemoTicketPolicy::SOURCE_PAYMENT ? MemoTicketPolicy::GRANT_PAYMENT_PACK : $source));
+
+        if ($this->packHasProfileColumns()) {
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO provider_ticket_packs
+                 (user_id, provider_type, provider_id, ticket_type, pack_size, remaining, purchased_at, expires_at,
+                  source, source_order_ref, grant_kind)
+                 VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)'
+            );
+            $stmt->execute([
+                $userId,
+                $providerType,
+                $providerId,
+                $ticketType,
+                $count,
+                $count,
+                $expires,
+                $source,
+                $sourceOrderRef,
+                $kind,
+            ]);
+
+            return;
+        }
+
         $stmt = $this->pdo->prepare(
             'INSERT INTO provider_ticket_packs
              (user_id, ticket_type, pack_size, remaining, purchased_at, expires_at, source)
-             VALUES (?, ?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 6 MONTH), ?)'
+             VALUES (?, ?, ?, ?, NOW(), ?, ?)'
         );
-        $stmt->execute([$userId, $ticketType, $count, $count, $source]);
+        $stmt->execute([$userId, $ticketType, $count, $count, $expires, $source]);
+    }
+
+    /**
+     * @param 'study_room'|'tutor' $providerType
+     */
+    public function hasActivePaidMemoPack(string $providerType, int $providerId): bool
+    {
+        if (!$this->packHasProfileColumns()) {
+            return false;
+        }
+        $stmt = $this->pdo->prepare(
+            "SELECT 1 FROM provider_ticket_packs
+             WHERE provider_type = ? AND provider_id = ? AND ticket_type = 'memo'
+               AND source = ? AND remaining > 0 AND expires_at > NOW()
+               AND pack_size IN (5, 10)
+             LIMIT 1"
+        );
+        $stmt->execute([$providerType, $providerId, MemoTicketPolicy::SOURCE_PAYMENT]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+
+    /**
+     * @param 'study_room'|'tutor' $providerType
+     * @return list<array<string, mixed>>
+     */
+    public function lockActivePaidMemoPacks(string $providerType, int $providerId): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT id, remaining, expires_at, pack_size FROM provider_ticket_packs
+             WHERE provider_type = ? AND provider_id = ? AND ticket_type = 'memo'
+               AND source = ? AND remaining > 0 AND expires_at > NOW()
+               AND pack_size IN (5, 10)
+             FOR UPDATE"
+        );
+        $stmt->execute([$providerType, $providerId, MemoTicketPolicy::SOURCE_PAYMENT]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return is_array($rows) ? $rows : [];
+    }
+
+    /**
+     * @param 'study_room'|'tutor' $providerType
+     */
+    public function consumeTicketForProvider(int $userId, string $providerType, int $providerId): bool
+    {
+        $this->assertTicketType('memo');
+        $ownTxn = !$this->pdo->inTransaction();
+        if ($ownTxn) {
+            $this->pdo->beginTransaction();
+        }
+        try {
+            $sql = "SELECT id, remaining FROM provider_ticket_packs
+                 WHERE ticket_type = 'memo' AND remaining > 0 AND expires_at > NOW()";
+            $params = [];
+            if ($this->packHasProfileColumns()) {
+                $sql .= ' AND provider_type = ? AND provider_id = ?';
+                $params[] = $providerType;
+                $params[] = $providerId;
+            } else {
+                $sql .= ' AND user_id = ?';
+                $params[] = $userId;
+            }
+            $sql .= ' ORDER BY expires_at ASC, id ASC LIMIT 1 FOR UPDATE';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row === false) {
+                if ($ownTxn) {
+                    $this->pdo->rollBack();
+                }
+
+                return false;
+            }
+            $upd = $this->pdo->prepare(
+                'UPDATE provider_ticket_packs SET remaining = ? WHERE id = ?'
+            );
+            $upd->execute([(int) $row['remaining'] - 1, (int) $row['id']]);
+            if ($ownTxn) {
+                $this->pdo->commit();
+            }
+
+            return true;
+        } catch (\Throwable $e) {
+            if ($ownTxn && $this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * @param 'study_room'|'tutor'|null $providerType
+     * @return list<array<string, mixed>>
+     */
+    public function listMemoPacks(int $userId, ?string $providerType = null, ?int $providerId = null): array
+    {
+        $sql = "SELECT * FROM provider_ticket_packs WHERE user_id = ? AND ticket_type = 'memo'";
+        $params = [$userId];
+        if ($this->packHasProfileColumns() && $providerType !== null && $providerId !== null && $providerId > 0) {
+            $sql .= ' AND provider_type = ? AND provider_id = ?';
+            $params[] = $providerType;
+            $params[] = $providerId;
+        }
+        $sql .= ' ORDER BY expires_at ASC, id ASC';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return is_array($rows) ? $rows : [];
+    }
+
+    /**
+     * @param 'study_room'|'tutor' $providerType
+     */
+    public function countMemoTicketsForProvider(int $userId, string $providerType, int $providerId): int
+    {
+        if (!$this->packHasProfileColumns()) {
+            return $this->countTickets($userId, 'memo');
+        }
+        $stmt = $this->pdo->prepare(
+            "SELECT COALESCE(SUM(remaining), 0) FROM provider_ticket_packs
+             WHERE provider_type = ? AND provider_id = ? AND ticket_type = 'memo'
+               AND remaining > 0 AND expires_at > NOW()"
+        );
+        $stmt->execute([$providerType, $providerId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function studentAcceptsMemo(int $studentId): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT exposure_status FROM students WHERE id = ? LIMIT 1'
+        );
+        $stmt->execute([$studentId]);
+        $status = $stmt->fetchColumn();
+
+        return $status === 'published';
     }
 
     /**

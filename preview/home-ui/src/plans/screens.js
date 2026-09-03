@@ -379,15 +379,12 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
   const options = product.options || [];
   const price = formatCardPrice(product);
   const primaryCta = opts.primaryCta ?? product.productCode === 'memo_ticket';
+  const activePaidPack = opts.activePaidPack || null;
   const eligibility = profile
     ? getEligibility(profile, product.productCode, 'access')
     : { canBuy: false, missing: ['적용 프로필을 먼저 선택하세요'] };
 
-  const remain = remaining.memo;
-  const remainHtml =
-    remain != null
-      ? `<p class="plans-remain">현재 잔여 <strong>${remain}회</strong>${isLowCredit(remain) ? ' · <span class="plans-remain--low">저잔량</span>' : ''}</p>`
-      : '';
+  const remainHtml = '';
 
   const missingHtml =
     isProvider && eligibility.missing.length
@@ -405,7 +402,9 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
               ? `${formatKrw(o.priceKrw)} (시험 결제 ${formatKrw(amt.chargeKrw)})`
               : formatKrw(o.priceKrw);
             const extras = [o.marketingBadge, o.discountLabel].filter(Boolean).join(' · ');
-            return `<option value="${esc(o.optionId)}"${i === 0 ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}${extras ? ` · ${esc(extras)}` : ''}</option>`;
+            const isImmediate = o.apiVariant === '1회' || o.label === '1회';
+            const packLocked = !!activePaidPack && !isImmediate;
+            return `<option value="${esc(o.optionId)}"${packLocked ? ' disabled' : ''}${!packLocked && i === 0 ? ' selected' : ''}${isImmediate && activePaidPack ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}${extras ? ` · ${esc(extras)}` : ''}</option>`;
           })
           .join('')}
       </select>
@@ -436,7 +435,6 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
         <p class="plans-card__benefits-label">주요 제공 혜택</p>
         <ul class="plans-card__checks">
           ${(product.bullets || []).map((b) => `<li>${esc(b)}</li>`).join('')}
-          <li>먼저 산 이용권부터 차감 · 사용기한 ${getPlanSetting('credit_expire_days')}일</li>
         </ul>
         ${optionSelect}
         ${missingHtml}
@@ -663,6 +661,17 @@ export function renderPlansAccess() {
   const remaining = {
     memo: tickets?.memo?.remaining,
   };
+  const packs = tickets?.memo?.packs ?? ops?.memo_packs ?? [];
+  const activePaidPack = profile
+    ? packs.find(
+        (p) =>
+          p.provider_type === providerKey &&
+          String(p.provider_id) === String(profile.id) &&
+          (p.grant_kind === 'payment_pack' || p.grant_kind === 'payment') &&
+          p.status === '사용 중' &&
+          (Number(p.granted_count) === 5 || Number(p.granted_count) === 10),
+      )
+    : null;
 
   return `
     <section class="mypage-panel plans-store">
@@ -670,7 +679,7 @@ export function renderPlansAccess() {
         ${renderPlansHero({
           title: '학생에게 먼저 연락할 때 쓰는 쪽지권',
           lead: '공급자→학생 선제 쪽지만 횟수권입니다. 요청문 열람과 학부모 선연락·답장은 항상 무료입니다.',
-          chips: [{ label: '쪽지권 5·10·20회', active: true }],
+          chips: [{ label: '쪽지권 1·5·10회', active: true }],
         })}
         ${renderGuideBox({
           title: '안전 매칭 정책',
@@ -679,7 +688,7 @@ export function renderPlansAccess() {
           items: [
             { icon: '✓', text: '학부모→공급자 선연락·답장은 무료' },
             { icon: '✓', text: '요청문·특이사항은 로그인 공급자 무료 열람' },
-            { icon: '✓', text: '쪽지권은 단건 횟수권 · 180일 · FIFO 차감' },
+            { icon: '✓', text: '5·10회권은 결제 성공부터 120일 · 프로필당 활성 묶음권 1개' },
             { icon: '✓', text: '에스크로·매칭 보장 연출 없음' },
           ],
           linkLabel: '이용권 가이드 자세히 보기',
@@ -691,6 +700,11 @@ export function renderPlansAccess() {
       ${role === 'guest' || role === 'parent' ? renderProfileBanner(null, role) : ''}
       ${role === 'tutor' || role === 'study_room' ? renderTestModeToggle() : ''}
       ${role === 'tutor' || role === 'study_room' ? renderLowCreditBanner(tickets) : ''}
+      ${
+        activePaidPack
+          ? `<p class="mypage-info-box">이 프로필에는 이미 사용 중인 유료 묶음권이 있어 5회권·10회권은 새로 살 수 없습니다. 1회 즉시권은 계속 이용할 수 있습니다.</p>`
+          : ''
+      }
 
       <section class="plans-section">
         <div class="plans-section__head">
@@ -698,7 +712,7 @@ export function renderPlansAccess() {
         </div>
         <ul class="plans-card-grid plans-card-grid--2">
           ${products
-            .map((p, i) => renderAccessCard(p, profile, role, remaining, { primaryCta: i === 0 }))
+            .map((p, i) => renderAccessCard(p, profile, role, remaining, { primaryCta: i === 0, activePaidPack }))
             .join('')}
         </ul>
       </section>
@@ -718,10 +732,11 @@ export function renderPlansAccess() {
             linkNav: '/support/faq',
           })}
           <div class="plans-stat-box">
-            <strong>이용권 잔여</strong>
-            <dl>
-              <div><dt>쪽지권</dt><dd>${tickets?.memo?.remaining ?? '—'}</dd></div>
-            </dl>
+            <strong>바로가기</strong>
+            <p class="mypage-muted" style="margin:8px 0 0">
+              <a href="#/plans/my" data-plans-nav="/plans/my">내 쪽지권 보기</a>
+              · <a href="#/mypage/messages" data-nav="/mypage/messages">쪽지함 보기</a>
+            </p>
           </div>
         </div>
         ${renderAccessCompare()}
@@ -781,9 +796,31 @@ export function renderPlansMy() {
               <a href="#/plans/positions" class="btn btn--primary btn--sm" data-plans-nav="/plans/positions">노출상품 보기</a>
             </div>`
       }
-      <h2 class="mypage-subhead">잔여 쪽지권</h2>
+      <h2 class="mypage-subhead">쪽지권</h2>
       ${
-        tickets
+        (tickets?.memo?.packs ?? []).length
+          ? `<table class="plans-table" aria-label="쪽지권">
+              <thead><tr><th>프로필</th><th>상품</th><th>출처</th><th>부여</th><th>남은 횟수</th><th>부여일</th><th>사용기한</th><th>상태</th></tr></thead>
+              <tbody>
+                ${(tickets.memo.packs)
+                  .map(
+                    (p) => `
+                  <tr>
+                    <td>${esc(p.provider_type || '미확인')} #${esc(String(p.provider_id ?? ''))}</td>
+                    <td>${esc(p.product_name || '')}</td>
+                    <td>${esc(p.grant_label || '')}</td>
+                    <td>${p.granted_count ?? '—'}</td>
+                    <td>${p.remaining ?? '—'}</td>
+                    <td>${esc(String(p.purchased_at || '').slice(0, 10))}</td>
+                    <td>${esc(String(p.expires_at || '').slice(0, 10))}</td>
+                    <td>${esc(p.status || '')}</td>
+                  </tr>`,
+                  )
+                  .join('')}
+              </tbody>
+            </table>
+            <p class="mypage-muted"><a href="#/plans/access" data-plans-nav="/plans/access">쪽지권 충전하기</a></p>`
+          : tickets
           ? `<div class="mypage-stats roi-metrics">
               <div class="mypage-stat${isLowCredit(tickets.memo.remaining) ? ' is-warn' : ''}"><span>${esc(tickets.memo.label)}</span><strong>${tickets.memo.remaining}</strong></div>
             </div>
@@ -910,6 +947,17 @@ export function renderPlansCheckout() {
         <li class="is-done"><strong>2. 상품 옵션</strong>
           <p>${esc(draft.productName)} · ${esc(draft.optionLabel)}</p>
         </li>
+        ${
+          draft.apiVariant === '1회'
+            ? `<li class="is-done"><strong>즉시 발송</strong>
+          <p class="mypage-muted">1회 즉시권은 수신 학생과 첫 쪽지 본문이 필요합니다. 대상이 없으면 구매할 수 없습니다.</p>
+          <label class="plans-card__pick"><span class="plans-card__pick-label">학생 ID</span>
+            <input type="number" data-plans-immediate-student min="1" value="${esc(String(draft.studentId || ''))}" class="student-form__select" /></label>
+          <label class="plans-card__pick"><span class="plans-card__pick-label">첫 쪽지</span>
+            <textarea data-plans-immediate-body class="student-form__select" rows="3">${esc(draft.body || '')}</textarea></label>
+        </li>`
+            : ''
+        }
         <li class="is-done"><strong>3. 금액 확인</strong>
           <p>표시가 ${formatKrw(amt.displayKrw)}
             ${amt.testMode ? ` · <em>테스트 결제 ${formatKrw(amt.chargeKrw)}</em>` : ''}</p>
@@ -1089,6 +1137,8 @@ export function bindPlansScreenEvents(root, rerender) {
         const created = await createPaidCheckout(draft.productCode, draft.apiVariant, {
           providerType: draft.providerType,
           providerId: draft.providerId,
+          studentId: Number(root.querySelector('[data-plans-immediate-student]')?.value || draft.studentId || 0),
+          body: String(root.querySelector('[data-plans-immediate-body]')?.value || draft.body || ''),
         });
         const serverAmount = Number(created.amount_won ?? created.sale_price_krw);
         if (!Number.isFinite(serverAmount) || serverAmount <= 0) {

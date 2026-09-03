@@ -7,6 +7,7 @@ namespace Study114\Paid;
 use InvalidArgumentException;
 use Study114\Auth\AuthSession;
 use Study114\Messages\PaidGateException;
+use Study114\Paid\PaidConflictException;
 use Throwable;
 
 /** 18장 — JSON API 공통 (public/api/paid/*.php) */
@@ -77,6 +78,10 @@ final class PaidApi
         exit;
     }
 
+    /**
+     * JSON 오류. 활성 유료 묶음권 충돌은 409 conflict.
+     * 검증 실패는 422 validation.
+     */
     public static function fail(int $status, string $error, string $message): never
     {
         http_response_code($status);
@@ -97,6 +102,8 @@ final class PaidApi
             self::fail(403, 'email_verify_required', $e->getMessage());
         } catch (PaidGateException $e) {
             self::fail(403, 'paid_gate', $e->getMessage());
+        } catch (PaidConflictException $e) {
+            self::fail(409, 'conflict', $e->getMessage());
         } catch (InvalidArgumentException $e) {
             self::fail(422, 'validation', $e->getMessage());
         } catch (Throwable $e) {
