@@ -100,7 +100,7 @@ if ($phase === 'http') {
     $sale = null;
     if (is_array($primeRoom)) {
         foreach ($primeRoom['options'] ?? [] as $opt) {
-            if (($opt['variant'] ?? '') === '1개월') {
+            if (($opt['period'] ?? $opt['variant'] ?? $opt['api_variant'] ?? '') === '1개월') {
                 $sale = (int) ($opt['sale_price_krw'] ?? 0);
             }
         }
@@ -111,7 +111,7 @@ if ($phase === 'http') {
     $primeTutor = $find($tutor['json'], 'prime', 'tutor');
     if (is_array($primeTutor)) {
         foreach ($primeTutor['options'] ?? [] as $opt) {
-            if (($opt['variant'] ?? '') === '1개월') {
+            if (($opt['period'] ?? $opt['variant'] ?? $opt['api_variant'] ?? '') === '1개월') {
                 $bundle = (int) ($opt['memo_bundle'] ?? -1);
             }
         }
@@ -128,7 +128,7 @@ if ($phase === 'http') {
     $variants = [];
     if (is_array($memo)) {
         foreach ($memo['options'] ?? [] as $opt) {
-            $variants[] = (string) ($opt['variant'] ?? '');
+            $variants[] = (string) ($opt['api_variant'] ?? $opt['variant'] ?? $opt['label'] ?? '');
         }
     }
     check('catalog_memo_no_20', !in_array('20회권', $variants, true) && count($variants) === 3);

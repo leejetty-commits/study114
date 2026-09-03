@@ -85,12 +85,19 @@ echo "=== 5c/6) catalog + auth-gated status/history/messages HTTP ==="
 php -S 127.0.0.1:18080 -t public >/tmp/paid-pr-a-php-server.log 2>&1 &
 pid=$!
 trap 'kill "$pid" 2>/dev/null || true' EXIT
-for i in 1 2 3 4 5 6 7 8 9 10; do
+ready=0
+for i in $(seq 1 40); do
   if curl -fsS "http://127.0.0.1:18080/api/paid/catalog.php" >/dev/null; then
+    ready=1
     break
   fi
-  sleep 0.3
+  sleep 0.25
 done
+if [[ "$ready" != "1" ]]; then
+  echo "::error::php built-in server did not become ready"
+  cat /tmp/paid-pr-a-php-server.log || true
+  exit 1
+fi
 export CATALOG_BASE_URL="http://127.0.0.1:18080"
 php scripts/verify-paid-pr-a-integration.php --phase=http
 
