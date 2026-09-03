@@ -12,6 +12,7 @@ export const PAID_ENDPOINTS = {
   checkout: '/api/paid/checkout.php',
   notices: '/api/paid/notices.php',
   history: '/api/paid/history.php',
+  catalog: '/api/paid/catalog.php',
 };
 
 async function parseJson(res) {
@@ -79,6 +80,15 @@ export async function markProviderNoticeRead(noticeId) {
   return parseJson(res);
 }
 
+export async function fetchPaidCatalog(providerType) {
+  const qs =
+    providerType === 'study_room' || providerType === 'tutor'
+      ? `?provider_type=${encodeURIComponent(providerType)}`
+      : '';
+  const res = await fetch(`${PAID_ENDPOINTS.catalog}${qs}`, { ...CREDENTIALS });
+  return parseJson(res);
+}
+
 /** @param {string} productId @param {string} variant
  * @param {{ providerType?: 'study_room'|'tutor', providerId?: string|number }} [ctx]
  */
@@ -92,6 +102,7 @@ export async function createPaidCheckout(productId, variant, ctx = {}) {
     body.provider_type = ctx.providerType;
     body.provider_id = Number(ctx.providerId);
   }
+  // 클라이언트 금액·할인·무료혜택은 전송하지 않는다 (서버 PaidCatalog 재계산)
   const res = await fetch(PAID_ENDPOINTS.checkout, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

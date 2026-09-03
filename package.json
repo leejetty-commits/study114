@@ -23,6 +23,8 @@
     "verify:board-acl": "node scripts/run-verify-board-acl.mjs",
     "verify:board-acl:js": "npx --yes vite-node scripts/verify-board-channel-acl.mjs",
     "verify:board-acl:php": "php scripts/verify-board-channel-acl.php && node scripts/compare-board-acl-matrix.mjs",
+    "verify:paid-catalog": "php scripts/verify-paid-catalog.php && node scripts/verify-paid-catalog.mjs",
+    "verify:paid-pricing": "php scripts/verify-paid-pricing.php && node scripts/verify-paid-pricing.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {

@@ -32,7 +32,7 @@ function renderCatalogItem(item, role) {
           ${variants.map((v, i) => `<option value="${esc(v)}"${i === 0 ? ' selected' : ''}>${esc(formatCatalogPrice(item, v, role))}</option>`).join('')}
         </select>
       </label>`
-    : `<p class="mypage-muted plans-catalog__dep">대표·추천 노출 이용 중에 구매할 수 있어요.${monthly ? ` 월 ${formatKrw(monthly)} · 2개월 포지션이면 ${formatKrw(monthly * 2)}` : ''}</p>`;
+    : `<p class="mypage-muted plans-catalog__dep">대표·추천 노출 이용 중에 구매할 수 있어요.${monthly != null ? ` 1개월 ${formatKrw(monthly)}` : ' (가격표 로드 후 표시)'}</p>`;
   const buyBtn = purchasable
     ? `<button type="button" class="btn btn--secondary btn--sm" data-paid-buy data-product-id="${esc(item.id)}" data-product-label="${esc(item.name)}">시험 구매</button>`
     : `<button type="button" class="btn btn--secondary btn--sm" disabled title="포지션 종속">구매 불가</button>`;

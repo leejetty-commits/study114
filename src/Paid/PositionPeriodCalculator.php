@@ -21,11 +21,15 @@ final class PositionPeriodCalculator
     /** @var array<string, array{0: self::TYPE_DAY|self::TYPE_MONTH, 1: int}> */
     public const VARIANT_MAP = [
         '2주' => [self::TYPE_DAY, 14],
-        '3주' => [self::TYPE_DAY, 21],
+        '3주' => [self::TYPE_DAY, 21], // 판매 종료 · fromVariant 호환만 유지
         '1개월' => [self::TYPE_MONTH, 1],
         '2개월' => [self::TYPE_MONTH, 2],
         '3개월' => [self::TYPE_MONTH, 3],
+        '6개월' => [self::TYPE_MONTH, 6],
     ];
+
+    /** 판매 중인 기간 (PaidCatalog 정본과 동일) */
+    public const SELLABLE_VARIANTS = ['2주', '1개월', '2개월', '3개월', '6개월'];
 
     /**
      * @return array{
@@ -42,7 +46,7 @@ final class PositionPeriodCalculator
     public static function fromVariant(string $variant, ?string $startedOn = null): array
     {
         if (!isset(self::VARIANT_MAP[$variant])) {
-            throw new InvalidArgumentException('variant: 2주 · 3주 · 1·2·3개월');
+            throw new InvalidArgumentException('variant: 2주 · 1·2·3·6개월');
         }
         [$type, $value] = self::VARIANT_MAP[$variant];
 

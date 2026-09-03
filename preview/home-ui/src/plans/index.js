@@ -10,6 +10,11 @@ import { getAuthUser, isLoggedIn } from '../auth-session.js';
 import { getPlansPath, getNavRole } from '../state.js';
 import { renderPlansShell, bindPlansShellEvents } from './shell.js';
 import { renderPlansScreen, bindPlansScreenEvents } from './screens.js';
+import {
+  hydratePaidCatalog,
+  isCatalogReady,
+  getCatalogError,
+} from './runtime-config.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -51,6 +56,16 @@ function renderPlansLoginGate(message) {
   `;
 }
 
+function renderCatalogUnavailable(message) {
+  return `
+    <section class="mypage-panel" style="max-width:32rem;margin:2rem auto;padding:1.5rem;">
+      <h1>유료상품</h1>
+      <p class="mypage-note" role="alert">상품 가격표를 불러오지 못해 구매를 진행할 수 없습니다.</p>
+      <p>${esc(message || '잠시 후 다시 시도해 주세요.')}</p>
+      <p><button type="button" class="btn btn--primary" data-plans-reload-catalog>다시 불러오기</button></p>
+    </section>`;
+}
+
 export function renderPlans() {
   // 유료상품 화면이 실제로 열리면 pending 복구는 완료된 것
   clearPendingRoute();
@@ -73,6 +88,12 @@ export function renderPlans() {
   const pathGate = guardPlansPath(role, path);
   if (!pathGate.ok) {
     return renderPlansLoginGate(pathGate.message);
+  }
+
+  if (!isCatalogReady()) {
+    const err = getCatalogError() || '서버 카탈로그를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.';
+    const body = renderCatalogUnavailable(err);
+    return renderPlansShell(path, body, { role, isGuest: false });
   }
 
   const body = renderPlansScreen(path);
@@ -99,6 +120,26 @@ export function bindPlansEvents(root, rerender) {
   }
 
   bindPlansShellEvents(root, rerender);
+
+  root.querySelectorAll('[data-plans-reload-catalog]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const effective =
+        role === 'study_room_owner' || role === 'study_room' ? 'study_room' : 'tutor';
+      hydratePaidCatalog(effective, { force: true })
+        .then(() => rerender())
+        .catch(() => rerender());
+    });
+  });
+
+  if (!isCatalogReady()) {
+    const effective =
+      role === 'study_room_owner' || role === 'study_room' ? 'study_room' : 'tutor';
+    hydratePaidCatalog(effective)
+      .then(() => rerender())
+      .catch(() => rerender());
+    return;
+  }
+
   bindPlansScreenEvents(root, rerender);
 }
 

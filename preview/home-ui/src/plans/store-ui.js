@@ -211,7 +211,10 @@ export function renderBadgeAddonSection(role, ops) {
   }, 1);
   const monthly = badgePriceKrw(providerType, 1);
   const attached = badgePriceKrw(providerType, longest);
-  const priceLine = `월 ${formatKrw(monthly)} · 현재 포지션 기준 ${formatKrw(attached)}`;
+  const priceLine =
+    monthly != null && attached != null
+      ? `1개월 ${formatKrw(monthly)} · 현재 포지션 기준 ${formatKrw(attached)}`
+      : '가격표 로드 후 표시';
   const badges =
     providerType === 'tutor'
       ? [
@@ -227,7 +230,7 @@ export function renderBadgeAddonSection(role, ops) {
     <section class="plans-section">
       <div class="plans-section__head">
         <h3 class="plans-section__title">광고 부가 배지</h3>
-        <p class="plans-section__lead">단독 구매 상품이 아닙니다. 대표·추천 노출 이용 기간에 함께 적용됩니다. 2개월 포지션이면 월 단가의 2배입니다.</p>
+        <p class="plans-section__lead">단독 구매 상품이 아닙니다. 대표·추천 노출 이용 기간에 함께 적용됩니다. 배지 기간은 노출상품 기간을 상속합니다.</p>
       </div>
       <ul class="plans-addon-grid">
         ${badges
