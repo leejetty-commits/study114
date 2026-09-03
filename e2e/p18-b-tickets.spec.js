@@ -16,11 +16,14 @@ test.describe('P18-02 18b 횟수권', () => {
     expect(body.exposure).toBeTruthy();
     expect(body.tickets?.memo).toBeTruthy();
     expect(body.tickets.memo.remaining).toBe(body.cold_memo.remaining);
+    expect(body.catalog_version).toBe('2026-09-04.1');
+    expect(body.catalog_path).toBe('/api/paid/catalog.php');
     expect(typeof body.tickets.memo.remaining).toBe('number');
     await logout(request);
   });
 
   test('entitlements — 통합 cold_memo · request_view', async ({ request }) => {
+    restoreMemoGateE2e();
     await loginAs(request, 'tutor');
     const res = await request.get('/api/messages/entitlements.php');
     const body = await res.json();
@@ -37,6 +40,7 @@ test.describe('P18-02 18b 횟수권', () => {
   });
 
   test('선제 쪽지 후 memo_tickets 감소', async ({ request }) => {
+    restoreMemoGateE2e();
     prepColdMemoE2e();
     await loginAs(request, 'tutor');
     const before = await request.get('/api/messages/entitlements.php');
