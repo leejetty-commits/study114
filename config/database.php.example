@@ -11,9 +11,9 @@ return [
     'driver'    => 'mysql',
     'host'      => getenv('STUDY114_DB_HOST') ?: '127.0.0.1',
     'port'      => (int) (getenv('STUDY114_DB_PORT') ?: 3307),
-    'database'  => 'study114_dev',
-    'username'  => 'root',
-    'password'  => 'study114dev',
+    'database'  => getenv('STUDY114_DB_NAME') ?: 'study114_dev',
+    'username'  => getenv('STUDY114_DB_USER') ?: 'root',
+    'password'  => getenv('STUDY114_DB_PASS') ?: 'study114dev',
     'charset'   => 'utf8mb4',
     'collation' => 'utf8mb4_unicode_ci',
 ];

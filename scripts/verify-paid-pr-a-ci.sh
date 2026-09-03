@@ -44,12 +44,18 @@ echo
 echo "=== 3) php scripts/verify-paid-pricing.php ==="
 php scripts/verify-paid-pricing.php
 
+if [[ ! -f config/database.php ]]; then
+  cp config/database.php.example config/database.php
+  echo "copied config/database.php.example → config/database.php (gitignored)"
+fi
+
 if ! command -v mysql >/dev/null 2>&1; then
   echo "::error::mysql client not found — schema 061 / checkout DB 통합 미실행"
   exit 2
 fi
 
-MYSQL=(mysql -h"${STUDY114_DB_HOST:-127.0.0.1}" -P"${STUDY114_DB_PORT:-3306}" -u"${STUDY114_DB_USER:-study114}" -p"${STUDY114_DB_PASS:-test}" --protocol=TCP)
+export MYSQL_PWD="${STUDY114_DB_PASS:-test}"
+MYSQL=(mysql -h"${STUDY114_DB_HOST:-127.0.0.1}" -P"${STUDY114_DB_PORT:-3306}" -u"${STUDY114_DB_USER:-study114}" --protocol=TCP)
 
 echo
 echo "=== 4) temp MySQL harness + schema 061 syntax ==="
