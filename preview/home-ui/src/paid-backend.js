@@ -12,6 +12,8 @@ import {
 
   hydrateProviderStatus,
 
+  invalidateProviderStatus,
+
   resetProviderStatus,
 
   getRoiMetricsFromStatus,
@@ -21,6 +23,8 @@ import {
   isProviderStatusApiMode,
 
 } from './provider-status.js';
+
+export { invalidateProviderStatus };
 
 
 

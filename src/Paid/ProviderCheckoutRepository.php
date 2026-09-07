@@ -182,6 +182,25 @@ final class ProviderCheckoutRepository
             'UPDATE provider_payment_orders SET status = ?, paid_at = NOW() WHERE order_ref = ? AND status = ?'
         );
         $stmt->execute(['paid', $orderRef, 'pending']);
+        if ($stmt->rowCount() > 0 && $this->hasColumn('fulfillment_status')) {
+            $this->markFulfillment($orderRef, 'pending', null);
+        }
+    }
+
+    public function markFulfillment(string $orderRef, string $status, ?string $error): void
+    {
+        if (!$this->hasColumn('fulfillment_status')) {
+            return;
+        }
+        if (!in_array($status, ['none', 'pending', 'succeeded', 'failed'], true)) {
+            throw new \InvalidArgumentException('fulfillment_status가 올바르지 않습니다.');
+        }
+        $stmt = $this->pdo->prepare(
+            'UPDATE provider_payment_orders
+             SET fulfillment_status = ?, fulfillment_error = ?
+             WHERE order_ref = ?'
+        );
+        $stmt->execute([$status, $error, $orderRef]);
     }
 
     /**
@@ -196,6 +215,9 @@ final class ProviderCheckoutRepository
         }
         if ($this->hasCatalogColumns()) {
             $cols .= ', catalog_version, list_price_won, discount_won';
+        }
+        if ($this->hasColumn('fulfillment_status')) {
+            $cols .= ', fulfillment_status, fulfillment_error';
         }
         $stmt = $this->pdo->prepare(
             "SELECT {$cols}

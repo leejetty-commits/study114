@@ -43,5 +43,15 @@ PaidApi::run(static function (): void {
     $providerIdRaw = $input['provider_id'] ?? null;
     $providerId = $providerIdRaw !== null && $providerIdRaw !== '' ? (int) $providerIdRaw : null;
 
-    PaidApi::ok($service->createOrder($userId, $productId, $variant, $providerType, $providerId));
+    $memoIntent = [];
+    if (isset($input['student_id']) || isset($input['body'])) {
+        $memoIntent = [
+            'student_id' => (int) ($input['student_id'] ?? 0),
+            'body' => (string) ($input['body'] ?? ''),
+            'context_label' => (string) ($input['context_label'] ?? ''),
+            'peer_display_name' => (string) ($input['peer_display_name'] ?? ''),
+        ];
+    }
+
+    PaidApi::ok($service->createOrder($userId, $productId, $variant, $providerType, $providerId, $memoIntent));
 });

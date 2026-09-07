@@ -43,20 +43,20 @@ final class ProviderEntitlementService
         ];
     }
 
-    public function canColdMemo(int $userId): bool
+    public function canColdMemo(int $userId, ?string $providerType = null, ?int $providerId = null): bool
     {
-        return $this->tickets->canColdMemo($userId);
+        return $this->tickets->canColdMemo($userId, $providerType, $providerId);
+    }
+
+    public function consumeColdMemoTicket(int $userId, ?string $providerType = null, ?int $providerId = null): bool
+    {
+        return $this->tickets->consumeMemoTicket($userId, $providerType, $providerId);
     }
 
     /** @return array{remaining: int, nearest_expiry: string|null} */
     public function getMemoTicketSummary(int $userId): array
     {
         return $this->tickets->getMemoTicketSummary($userId);
-    }
-
-    public function consumeColdMemoTicket(int $userId): bool
-    {
-        return $this->tickets->consumeMemoTicket($userId);
     }
 
     public function getRequestViewTickets(int $userId): int

@@ -1,6 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const previewBase = process.env.STUDY114_PREVIEW_URL || 'http://127.0.0.1:5174';
+const previewFromEnv = process.env.STUDY114_E2E_HOME_URL || process.env.STUDY114_PREVIEW_URL || '';
+const previewBase =
+  !previewFromEnv || previewFromEnv.includes(':8080')
+    ? 'http://127.0.0.1:5174'
+    : previewFromEnv;
 
 export default defineConfig({
   testDir: './e2e',

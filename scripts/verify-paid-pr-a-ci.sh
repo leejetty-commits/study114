@@ -63,6 +63,11 @@ echo "=== 4) temp MySQL harness + schema 061 syntax ==="
 echo "harness applied (061 not yet)"
 
 echo
+echo "=== 4a) apply sql/schema/062_provider_ticket_profile.sql (PR-B, temp DB only) ==="
+"${MYSQL[@]}" < sql/schema/062_provider_ticket_profile.sql
+echo "062 applied"
+
+echo
 echo "=== 5a) checkout create on 061-absent DB ==="
 php scripts/verify-paid-pr-a-integration.php --phase=pre061
 

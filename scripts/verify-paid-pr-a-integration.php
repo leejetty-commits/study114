@@ -169,7 +169,7 @@ $hasCatalogCol = (bool) $pdo->query(
 if ($phase === 'pre061') {
     check('schema_061_absent', $hasCatalogCol === false);
 
-    $created = $svc->createOrder($userId, 'memo_ticket', '5회권', null, null);
+    $created = $svc->createOrder($userId, 'memo_ticket', '5회권', 'tutor', 1);
     check('checkout_memo5_amount', (int) $created['amount_won'] === 4500, (string) $created['amount_won']);
     check('checkout_memo5_pending', ($created['status'] ?? '') === 'pending');
     check('checkout_ignores_client_price_contract', !array_key_exists('client_amount', $created));
@@ -208,7 +208,7 @@ if ($phase === 'pre061') {
 
 if ($phase === 'post061') {
     check('schema_061_present', $hasCatalogCol === true);
-    $created = $svc->createOrder($userId, 'memo_ticket', '10회권', null, null);
+    $created = $svc->createOrder($userId, 'memo_ticket', '10회권', 'tutor', 1);
     check('post061_amount', (int) $created['amount_won'] === 8000);
     $row = $pdo->prepare(
         'SELECT amount_won, catalog_version, list_price_won FROM provider_payment_orders WHERE order_ref = ?'

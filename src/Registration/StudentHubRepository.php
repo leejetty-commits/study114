@@ -105,6 +105,9 @@ final class StudentHubRepository
             'gender'                        => $row['gender'] !== null ? (string) $row['gender'] : null,
             'birth_year'                    => $row['birth_year'] !== null ? (int) $row['birth_year'] : null,
             'exposure_status'               => (string) $row['exposure_status'],
+            'memo_status'                   => isset($row['memo_status'])
+                ? (string) $row['memo_status']
+                : 'open',
             'preferred_lesson_type'         => $row['preferred_lesson_type'] !== null ? (string) $row['preferred_lesson_type'] : null,
             'region_label'                  => $regionLabel,
             'subject_label'                 => $subjectLabel,

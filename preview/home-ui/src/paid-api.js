@@ -102,6 +102,12 @@ export async function createPaidCheckout(productId, variant, ctx = {}) {
     body.provider_type = ctx.providerType;
     body.provider_id = Number(ctx.providerId);
   }
+  if (ctx.studentId) {
+    body.student_id = Number(ctx.studentId);
+  }
+  if (ctx.body) {
+    body.body = String(ctx.body);
+  }
   // 클라이언트 금액·할인·무료혜택은 전송하지 않는다 (서버 PaidCatalog 재계산)
   const res = await fetch(PAID_ENDPOINTS.checkout, {
     method: 'POST',
