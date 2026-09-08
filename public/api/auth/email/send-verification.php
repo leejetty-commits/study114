@@ -42,8 +42,10 @@ try {
         'message' => !empty($result['already_verified'])
             ? '이미 이메일이 확인되었습니다.'
             : (!empty($result['sent'])
-                ? '확인 메일을 보냈습니다. 메일함에서 링크를 확인해 주세요.'
-                : '확인 메일은 잠시 후 다시 보낼 수 있습니다.'),
+                ? '확인 메일을 다시 보냈습니다. 받은편지함과 스팸함을 확인해 주세요.'
+                : ((int) ($result['resend_available_in'] ?? 0) > 0
+                    ? '최근에 확인 메일을 보냈습니다. 잠시 후 다시 시도해 주세요.'
+                    : '확인 메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.')),
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(422);
