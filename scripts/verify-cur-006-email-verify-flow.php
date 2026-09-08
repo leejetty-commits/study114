@@ -246,15 +246,22 @@ assert_true($board1['status'] === 403, '확인 전 board POST HTTP 403');
 assert_true(($board1['json']['error'] ?? '') === 'email_verify_required', '확인 전 board email_verify_required');
 
 $mailBody = is_file($mailLog) ? (string) file_get_contents($mailLog) : '';
-assert_true($mailBody !== '', 'fake mail.log 기록 존재');
+assert_true($mailBody !== '', 'fake mail.log 메타 기록 존재');
 assert_true(!str_contains($mailBody, 'RESEND_API_KEY') && !preg_match('/\bre_[A-Za-z0-9]{10,}/', $mailBody), 'mail.log에 API Key 없음');
-if (!preg_match('/verify\.php\?token=([A-Za-z0-9_\-\.]+)/', $mailBody, $m)) {
-    assert_true(false, 'mail.log에서 verify token 추출');
+assert_true(!preg_match('/verify\.php\?token=/', $mailBody), 'mail.log에 verify URL/token 없음');
+assert_true(!str_contains($mailBody, '--- plain ---') && !str_contains($mailBody, '--- html ---'), 'mail.log에 본문 구분선 없음');
+
+$outboxPath = getenv('STUDY114_MAIL_FAKE_OUTBOX') ?: ($root . '/storage/logs/mail-fake-outbox.jsonl');
+$outboxRaw = is_file($outboxPath) ? (string) file_get_contents($outboxPath) : '';
+assert_true($outboxRaw !== '', 'fake outbox 기록 존재');
+if (!preg_match('/verify\.php\?token=([A-Za-z0-9_\-\.]+)/', $outboxRaw, $m)) {
+    assert_true(false, 'fake outbox에서 verify token 추출');
     echo "\npassed={$passed} failed={$failed}\n";
     exit(1);
 }
 $token = $m[1];
 assert_true(strlen($token) >= 16, 'verify token 길이');
+assert_true(!str_contains($mailBody, $token), '운영 mail.log에 token 문자열 없음');
 
 $verify = http_get_follow($apiBase . '/api/auth/email/verify.php?token=' . rawurlencode($token), $cookieLogin);
 assert_true(in_array($verify['status'], [302, 301, 303], true), '확인 링크 HTTP redirect');

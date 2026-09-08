@@ -10,22 +10,27 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__);
 $logPath = $root . '/storage/logs/mail-cur006-test.log';
+$outboxPath = $root . '/storage/logs/mail-cur006-fake-outbox.jsonl';
 
 putenv('STUDY114_MAIL_FROM=no-reply@study114.net');
 putenv('STUDY114_MAIL_TRANSPORT=fake');
 putenv('STUDY114_MAIL_FAKE_MODE=success');
 putenv('STUDY114_MAIL_LOG_PATH=' . $logPath);
+putenv('STUDY114_MAIL_FAKE_OUTBOX=' . $outboxPath);
 $_ENV['STUDY114_MAIL_FROM'] = 'no-reply@study114.net';
 $_ENV['STUDY114_MAIL_TRANSPORT'] = 'fake';
 $_ENV['STUDY114_MAIL_LOG_PATH'] = $logPath;
+$_ENV['STUDY114_MAIL_FAKE_OUTBOX'] = $outboxPath;
 $_SERVER['STUDY114_MAIL_FROM'] = 'no-reply@study114.net';
 $_SERVER['STUDY114_MAIL_TRANSPORT'] = 'fake';
 $_SERVER['STUDY114_MAIL_LOG_PATH'] = $logPath;
+$_SERVER['STUDY114_MAIL_FAKE_OUTBOX'] = $outboxPath;
 
 require_once $root . '/src/bootstrap.php';
 
 use Study114\Auth\AuthMailer;
 use Study114\Mail\DisabledMailTransport;
+use Study114\Mail\FakeMailOutbox;
 use Study114\Mail\FakeMailTransport;
 use Study114\Mail\MailAddressMasker;
 use Study114\Mail\MailMessageSanitizer;
@@ -53,6 +58,7 @@ assert_true(PHP_VERSION_ID >= 80200 && PHP_VERSION_ID < 80300, 'PHP 8.2.x runtim
 assert_true(function_exists('curl_init'), 'curl extension');
 
 @unlink($logPath);
+@unlink($outboxPath);
 
 function authConfig(array $over = []): array
 {
@@ -68,10 +74,20 @@ function authConfig(array $over = []): array
     ], $over);
 }
 
+$secretToken = 'verify_tok_' . bin2hex(random_bytes(16));
+$secretBody = "확인 링크: https://study114.net/api/auth/email/verify.php?token={$secretToken}\n";
 $mailer = new AuthMailer(new FakeMailTransport('success'));
-assert_true($mailer->send('user@example.com', '제목', '본문') === true, 'AuthMailer→Fake 성공');
+assert_true($mailer->send('user@example.com', '[우동공과] 이메일 확인', $secretBody, '<p>' . $secretBody . '</p>') === true, 'AuthMailer→Fake 성공');
 assert_true($mailer->lastResult()?->ok === true, 'lastResult ok');
 assert_true($mailer->lastResult()?->code === 'resend_accepted', 'resend_accepted code');
+
+$outbox = FakeMailOutbox::last();
+assert_true(is_array($outbox) && str_contains((string) ($outbox['body'] ?? ''), $secretToken), 'fake outbox에만 token 본문');
+$logAfterFake = is_file($logPath) ? (string) file_get_contents($logPath) : '';
+assert_true(!str_contains($logAfterFake, $secretToken), 'fake 모드 mail.log에 token 없음');
+assert_true(!str_contains($logAfterFake, $secretBody), 'fake 모드 mail.log에 본문 없음');
+assert_true(!str_contains($logAfterFake, '--- plain ---'), 'mail.log에 plain 본문 블록 없음');
+assert_true(str_contains($logAfterFake, 'KIND=email_verify'), 'mail.log KIND=email_verify');
 
 $mailer = new AuthMailer(new FakeMailTransport('auth_failed'));
 assert_true($mailer->send('user@example.com', 't', 'body') === false, '인증 실패 → false');
@@ -143,6 +159,8 @@ assert_true(!str_contains($log, 'RESEND_API_KEY'), '로그에 RESEND_API_KEY 키
 assert_true(!str_contains($log, 're_test_'), '로그에 테스트 키 접두 없음');
 assert_true(preg_match('/pass(word)?\s*=\s*\S+/i', $log) !== 1, '로그에 password= 패턴 없음');
 assert_true(str_contains($log, '***@'), '로그 TO 마스킹');
+assert_true(!str_contains($log, 'verify.php?token='), '로그에 verify URL 없음');
+assert_true(!str_contains($log, $secretToken), '로그에 secret token 없음');
 
 $authMailerSrc = (string) file_get_contents($root . '/src/Auth/AuthMailer.php');
 $authMailerCode = preg_replace('/\/\*[\s\S]*?\*\//', '', $authMailerSrc) ?? '';
@@ -162,6 +180,34 @@ $okResult = $resendOk->send([
     'from_header' => '우동공과 <no-reply@study114.net>',
 ]);
 assert_true($okResult->ok && $okResult->code === 'resend_accepted', 'Resend mock HTTP 200');
+assert_true($okResult->providerMessageId === 'msg_mock', 'Resend message id 파싱');
+
+// production/resend 경로: 본문·토큰은 mail.log·outbox에 없음
+putenv('STUDY114_MAIL_TRANSPORT=resend');
+$_ENV['STUDY114_MAIL_TRANSPORT'] = 'resend';
+$_SERVER['STUDY114_MAIL_TRANSPORT'] = 'resend';
+$prodToken = 'reset_tok_' . bin2hex(random_bytes(12));
+$prodBody = "재설정: https://study114.net/#/reset-password?token={$prodToken}";
+@unlink($outboxPath);
+$logBeforeProd = is_file($logPath) ? (string) file_get_contents($logPath) : '';
+$mailerProd = new AuthMailer(new ResendMailTransport('re_test_mock_key_not_real', 5, $okHttp));
+assert_true(
+    $mailerProd->send('user@example.com', '[우동공과] 비밀번호 재설정', $prodBody) === true,
+    'resend 모드 AuthMailer 성공'
+);
+$logProd = is_file($logPath) ? (string) file_get_contents($logPath) : '';
+$logProdDelta = substr($logProd, strlen($logBeforeProd));
+assert_true(!str_contains($logProdDelta, $prodToken), 'resend 모드 mail.log에 reset token 없음');
+assert_true(!str_contains($logProdDelta, $prodBody), 'resend 모드 mail.log에 본문 없음');
+assert_true(!str_contains($logProdDelta, '--- html ---'), 'resend 모드 mail.log에 html 본문 없음');
+assert_true(str_contains($logProdDelta, 'KIND=password_reset'), 'resend 모드 KIND=password_reset');
+assert_true(str_contains($logProdDelta, 'MSG_ID=msg_mock'), 'resend 모드 MSG_ID만 기록');
+assert_true(!is_file($outboxPath) || trim((string) file_get_contents($outboxPath)) === '', 'resend 모드 fake outbox 미사용');
+assert_true(FakeMailOutbox::last() === null, 'resend 모드 FakeMailOutbox::last()=null');
+
+putenv('STUDY114_MAIL_TRANSPORT=fake');
+$_ENV['STUDY114_MAIL_TRANSPORT'] = 'fake';
+$_SERVER['STUDY114_MAIL_TRANSPORT'] = 'fake';
 
 $authHttp = static function () {
     return ['ok' => true, 'status' => 401, 'body' => '{}', 'errno' => 0, 'error' => ''];
@@ -237,6 +283,29 @@ $_ENV['STUDY114_MAIL_TRANSPORT'] = 'fake';
 $probe = (string) file_get_contents($root . '/public/api/auth/password/_mail-probe.php');
 assert_true(str_contains($probe, 'lastResult'), 'probe lastResult');
 assert_true(str_contains($probe, 'MailAddressMasker'), 'probe TO 마스킹');
+assert_true(str_contains($probe, 'Resend'), 'probe Resend 문구');
+assert_true(str_contains($probe, 'resend_accepted'), 'probe resend_accepted');
+assert_true(!str_contains($probe, 'smtp_accepted'), 'probe smtp_accepted 제거');
+assert_true(!preg_match('/\$_GET\[[\'"]key[\'"]\].*[\'"]key[\'"]\s*=>/', $probe), 'probe key를 JSON 키로 미노출');
+assert_true(str_contains($probe, 'details omitted'), 'probe 예외 시 key/메시지 미노출');
+
+$disabledSrc = (string) file_get_contents($root . '/src/Mail/DisabledMailTransport.php');
+assert_true(!str_contains($disabledSrc, 'SMTP configuration'), 'DisabledMailTransport SMTP 문구 제거');
+
+$deploy = (string) file_get_contents($root . '/.github/workflows/deploy.yml');
+assert_true(str_contains($deploy, 'STUDY114_RESEND_API_KEY'), 'deploy Resend Secret');
+assert_true(
+    str_contains($deploy, 'STUDY114_PHONE_OTP_PEPPER STUDY114_RESEND_API_KEY')
+    || preg_match('/required=.*STUDY114_RESEND_API_KEY/', $deploy) === 1,
+    'deploy Resend Secret 필수 required 목록'
+);
+assert_true(str_contains($deploy, 'placeholder 형식'), 'deploy placeholder 거부');
+assert_true(!str_contains($deploy, 'Resend API Key는 선택'), 'deploy Resend 선택 문구 제거');
+
+$envEx = (string) file_get_contents($root . '/config/dothome.env.example');
+assert_true(str_contains($envEx, 'STUDY114_MAIL_TRANSPORT=resend'), 'dothome.env Resend transport');
+assert_true(str_contains($envEx, 'STUDY114_RESEND_API_KEY='), 'dothome.env Resend key');
+assert_true(!str_contains($envEx, 'STUDY114_SMTP_'), 'dothome.env SMTP 제거');
 
 echo "\npassed={$passed} failed={$failed}\n";
 exit($failed > 0 ? 1 : 0);

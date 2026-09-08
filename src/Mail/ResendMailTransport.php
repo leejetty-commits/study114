@@ -96,7 +96,14 @@ final class ResendMailTransport implements MailTransport
 
         $status = $response['status'];
         if ($status >= 200 && $status < 300) {
-            return MailSendResult::success('Resend accepted the message');
+            $messageId = null;
+            $decoded = json_decode($response['body'], true);
+            if (is_array($decoded) && isset($decoded['id']) && is_string($decoded['id']) && $decoded['id'] !== '') {
+                // Resend message id만 — API Key·본문 아님
+                $messageId = preg_replace('/[^\w\-.]+/', '', $decoded['id']) ?: null;
+            }
+
+            return MailSendResult::success('Resend accepted the message', $messageId);
         }
 
         if ($status === 401 || $status === 403) {

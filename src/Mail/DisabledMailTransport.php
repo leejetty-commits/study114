@@ -11,7 +11,7 @@ final class DisabledMailTransport implements MailTransport
 {
     public function __construct(
         private readonly string $code = 'config_missing',
-        private readonly string $summary = 'SMTP configuration is incomplete',
+        private readonly string $summary = 'Mail transport is not configured',
     ) {
     }
 

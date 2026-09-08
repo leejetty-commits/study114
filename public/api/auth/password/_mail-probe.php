@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 /**
- * SMTP 발송 점검 — 운영자만 사용. 운영 실행은 별도 승인 후.
+ * Resend HTTPS API 발송 점검 — 운영자만 사용. 운영 실행은 별도 승인 후.
  *
  * 예: /api/auth/password/_mail-probe.php?key=...&to=you@example.com
+ * probe key는 응답·로그에 출력하지 않는다.
  */
 require_once dirname(__DIR__, 4) . '/src/bootstrap.php';
 
@@ -34,8 +35,8 @@ $auth = study114_config('auth');
 $from = (string) ($auth['mail_from'] ?? '');
 $mailer = new AuthMailer();
 $subject = '[우동공과] 메일 발송 테스트';
-$plain = "이 메일이 도착했다면 SMTP 발송이 정상입니다.\nFrom 설정: {$from}\n시간: " . date('c');
-$html = '<p>이 메일이 도착했다면 SMTP 발송이 정상입니다.</p>'
+$plain = "이 메일이 도착했다면 Resend HTTPS API 발송이 정상입니다.\nFrom 설정: {$from}\n시간: " . date('c');
+$html = '<p>이 메일이 도착했다면 Resend HTTPS API 발송이 정상입니다.</p>'
     . '<p>From: ' . htmlspecialchars($from, ENT_QUOTES, 'UTF-8') . '</p>'
     . '<p>' . htmlspecialchars(date('c'), ENT_QUOTES, 'UTF-8') . '</p>';
 
@@ -44,19 +45,22 @@ try {
     $result = $mailer->lastResult();
     $payload = [
         'ok'      => $sent,
-        'code'    => $result?->code ?? ($sent ? 'smtp_accepted' : 'send_failed'),
+        'code'    => $result?->code ?? ($sent ? 'resend_accepted' : 'send_failed'),
         'message' => $sent
             ? '전송 성공. 수신함·스팸함을 확인하세요.'
             : ('전송 실패: ' . ($result?->safeSummary ?? 'unknown')),
         'from'    => $from,
         'to'      => MailAddressMasker::mask($to),
     ];
+    if ($sent && $result?->providerMessageId) {
+        $payload['message_id'] = $result->providerMessageId;
+    }
     if (!$sent) {
         http_response_code(502);
     }
     echo json_encode($payload, JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
-    error_log('[mail-probe] ' . $e->getMessage());
+    error_log('[mail-probe] send failed (details omitted)');
     http_response_code(500);
     echo json_encode([
         'ok'      => false,

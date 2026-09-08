@@ -27,6 +27,7 @@ const requiredFiles = [
   'src/Mail/ResendMailTransport.php',
   'src/Mail/MailTransportFactory.php',
   'src/Mail/FakeMailTransport.php',
+  'src/Mail/FakeMailOutbox.php',
   'src/Mail/DisabledMailTransport.php',
   'src/Mail/MailAddressMasker.php',
   'src/Mail/MailMessageSanitizer.php',
@@ -51,6 +52,18 @@ assert(authMailer.includes('MailTransportFactory') || authMailer.includes('MailT
 assert(authMailer.includes('from_rejected'), 'From @study114.net 강제');
 assert(authMailer.includes('MailAddressMasker'), '수신 마스킹');
 assert(authMailer.includes('우동공과'), '발신자 표시명 우동공과');
+assert(authMailer.includes('KIND='), '운영 로그 KIND 메타');
+assert(!authMailer.includes('--- plain ---'), 'AuthMailer plain 본문 로그 제거');
+assert(!authMailer.includes('--- html ---'), 'AuthMailer html 본문 로그 제거');
+assert(!/file_put_contents\([^)]*\$body/.test(authMailer), 'AuthMailer가 body를 로그에 쓰지 않음');
+
+const outbox = read('src/Mail/FakeMailOutbox.php');
+assert(outbox.includes("=== 'fake'"), 'FakeMailOutbox는 fake transport만');
+assert(outbox.includes('mail-fake-outbox.jsonl'), 'FakeMailOutbox 기본 경로');
+
+const disabled = read('src/Mail/DisabledMailTransport.php');
+assert(!disabled.includes('SMTP configuration'), 'DisabledMailTransport SMTP 문구 제거');
+assert(disabled.includes('Mail transport'), 'DisabledMailTransport 일반 문구');
 
 const factory = read('src/Mail/MailTransportFactory.php');
 assert(factory.includes('mail_fallback_forbidden'), 'mail() fallback 금지');
@@ -75,6 +88,10 @@ const probe = read('public/api/auth/password/_mail-probe.php');
 assert(probe.includes('$sent') || probe.includes("'$sent'"), 'probe ok=전송 결과');
 assert(probe.includes('lastResult'), 'probe lastResult');
 assert(probe.includes('MailAddressMasker'), 'probe 마스킹');
+assert(probe.includes('Resend'), 'probe Resend 문구');
+assert(probe.includes('resend_accepted'), 'probe resend_accepted');
+assert(!probe.includes('smtp_accepted'), 'probe smtp_accepted 제거');
+assert(!probe.includes('SMTP 발송'), 'probe SMTP 문구 제거');
 
 const authCfg = read('config/auth.php');
 assert(authCfg.includes('STUDY114_RESEND_API_KEY'), 'auth.php Resend key');
@@ -90,8 +107,27 @@ assert(!ht.includes('study114@study114.dothome.co.kr'), 'htaccess dothome From �
 
 const deploy = read('.github/workflows/deploy.yml');
 assert(deploy.includes('STUDY114_RESEND_API_KEY'), 'deploy Resend Secret');
+assert(
+  /required=.*STUDY114_RESEND_API_KEY/.test(deploy),
+  'deploy Resend Secret 필수(required)'
+);
+assert(deploy.includes('placeholder 형식'), 'deploy placeholder 거부');
+assert(!deploy.includes('Resend API Key는 선택'), 'deploy Resend 선택 주입 제거');
 assert(!deploy.includes('STUDY114_SMTP_USERNAME'), 'deploy SMTP username 제거');
 assert(!deploy.includes('STUDY114_SMTP_PASSWORD'), 'deploy SMTP password 제거');
+
+const envEx = read('config/dothome.env.example');
+assert(envEx.includes('STUDY114_MAIL_TRANSPORT=resend'), 'dothome.env resend');
+assert(envEx.includes('STUDY114_RESEND_API_KEY='), 'dothome.env Resend key');
+assert(!envEx.includes('STUDY114_SMTP_'), 'dothome.env SMTP 제거');
+
+const wf = read('.github/workflows/cur-006-resend.yml');
+assert(wf.includes('verify:cur-006-email-sent-ui'), 'CI email-sent-ui');
+assert(wf.includes('verify:cur-006-email-verify-inventory'), 'CI inventory');
+assert(wf.includes('preview/auth-ui/**'), 'CI path preview/auth-ui');
+assert(wf.includes('public/.htaccess'), 'CI path htaccess');
+assert(wf.includes('deploy.yml'), 'CI path deploy.yml');
+assert(wf.includes('public/api/auth/email/**'), 'CI path email API');
 
 const reminder = read('src/Paid/ProviderReminderService.php');
 assert(reminder.includes('reminder_mail_excluded'), 'ProviderReminder 메일 제외');
@@ -108,6 +144,9 @@ for (const needle of [
   'header_injection',
   'Resend mock',
   'reminder_mail_excluded',
+  'fake outbox에만 token',
+  'resend 모드 mail.log에 reset token 없음',
+  'deploy Resend Secret 필수',
 ]) {
   assert(phpTest.includes(needle), `PHP mock 시나리오: ${needle}`);
 }

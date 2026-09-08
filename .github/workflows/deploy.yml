@@ -75,7 +75,7 @@ jobs:
         run: |
           set -euo pipefail
           htaccess=public/.htaccess
-          required="OAUTH_NAVER_CLIENT_ID OAUTH_NAVER_CLIENT_SECRET OAUTH_KAKAO_REST_API_KEY OAUTH_KAKAO_CLIENT_SECRET OAUTH_GOOGLE_CLIENT_ID OAUTH_GOOGLE_CLIENT_SECRET STUDY114_PHONE_OTP_PEPPER"
+          required="OAUTH_NAVER_CLIENT_ID OAUTH_NAVER_CLIENT_SECRET OAUTH_KAKAO_REST_API_KEY OAUTH_KAKAO_CLIENT_SECRET OAUTH_GOOGLE_CLIENT_ID OAUTH_GOOGLE_CLIENT_SECRET STUDY114_PHONE_OTP_PEPPER STUDY114_RESEND_API_KEY"
           missing=0
           for v in $required; do
             if [ -z "${!v:-}" ]; then
@@ -84,9 +84,16 @@ jobs:
             fi
           done
           if [ "$missing" != "0" ]; then
-            echo "::error::OAuth 시크릿 미설정 — 배포 중단 (placeholder .htaccess 업로드 방지)"
+            echo "::error::필수 시크릿 미설정 — 배포 중단 (placeholder .htaccess 업로드 방지)"
             exit 1
           fi
+          # Resend: 빈 값·placeholder 형식 거부 (값은 출력하지 않음)
+          case "${STUDY114_RESEND_API_KEY}" in
+            ''|'__STUDY114_RESEND_API_KEY__'|__*)
+              echo "::error::STUDY114_RESEND_API_KEY Secret이 비어 있거나 placeholder 형식입니다 — 배포 중단"
+              exit 1
+              ;;
+          esac
           # mail probe key 미설정 시 랜덤 (저장소·로그에 남기지 않음)
           if [ -z "${STUDY114_MAIL_PROBE_KEY:-}" ]; then
             STUDY114_MAIL_PROBE_KEY="probe_$(openssl rand -hex 12)"
@@ -101,26 +108,12 @@ jobs:
             esac
             data="${data//"$token"/"$repl"}"
           done
-          # Resend API Key는 선택 주입 — 미설정 시 placeholder 유지 → 앱은 fail-closed
-          for v in STUDY114_RESEND_API_KEY; do
-            token="__${v}__"
-            if [ -n "${!v:-}" ]; then
-              case "$data" in
-                *"$token"*) data="${data//"$token"/"${!v}"}" ;;
-              esac
-            fi
-          done
           printf '%s\n' "$data" > "$htaccess"
-          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__' "$htaccess"; then
+          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__' "$htaccess"; then
             echo "::error::치환되지 않은 placeholder가 남아 있습니다."
             exit 1
           fi
-          echo "OAuth SetEnv 주입 완료 (값은 출력하지 않음)."
-          if grep -q '__STUDY114_RESEND_API_KEY__' "$htaccess"; then
-            echo "Resend placeholder 유지 — STUDY114_RESEND_API_KEY Secret 미설정 (메일 발송 fail-closed)."
-          else
-            echo "Resend SetEnv 주입 완료 (값은 출력하지 않음)."
-          fi
+          echo "OAuth/Resend SetEnv 주입 완료 (값은 출력하지 않음)."
 
       - name: Build for dothome
         run: bash scripts/build-dothome.sh

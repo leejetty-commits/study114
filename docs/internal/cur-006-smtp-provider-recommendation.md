@@ -1,4 +1,7 @@
-# CUR-006 · SMTP 제공자 역할 재검토
+> **폐기됨 · CUR-006 Resend 결정으로 대체.**  
+> 이 문서는 역사 참고용이며 현재 정본이 아니다. 구현은 Resend HTTPS API (`src/Mail/ResendMailTransport.php`)를 따른다. SMTP 어댑터는 제거되었다.
+
+# CUR-006 · SMTP 제공자 역할 재검토 (폐기)
 
 ## SMTP_PROVIDER_RECOMMENDATION: TRANSACTIONAL_PROVIDER
 

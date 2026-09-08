@@ -1,4 +1,7 @@
-# CUR-006 · study114.net 인증 SMTP DNS 적용표
+> **폐기됨 · CUR-006 Resend 결정으로 대체.**  
+> 이 문서는 역사 참고용이며 현재 정본이 아니다. DNS·발송은 Resend 도메인 인증을 따른다. `STUDY114_SMTP_*` 설정은 사용하지 않는다.
+
+# CUR-006 · study114.net 인증 SMTP DNS 적용표 (폐기)
 
 > **실제 DNS 변경은 하지 않는다.** Cloudflare DNS 관리 화면에서 적용할 초안이다.  
 > 네임서버: Cloudflare (`study114.net`). 메일 관련 레코드는 **DNS only**(프록시 회색구름).

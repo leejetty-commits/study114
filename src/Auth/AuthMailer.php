@@ -12,6 +12,7 @@ use Study114\Mail\MailTransportFactory;
 
 /**
  * 인증·계정 메일 발송 — Resend HTTPS API (PHP native mail API 미사용).
+ * 운영 로그에는 본문·토큰·URL을 남기지 않는다.
  */
 final class AuthMailer
 {
@@ -29,7 +30,7 @@ final class AuthMailer
     public function send(string $to, string $subject, string $body, ?string $htmlBody = null): bool
     {
         $fromEmail = $this->fromEmail();
-        $this->writeLog($to, $subject, $body, $htmlBody, $fromEmail);
+        $this->writeMetaLog($to, $subject, $fromEmail);
 
         if (!$this->isAllowedFrom($fromEmail)) {
             $this->lastResult = MailSendResult::failure(
@@ -95,37 +96,29 @@ final class AuthMailer
         return $name . ' <' . $fromEmail . '>';
     }
 
-    private function writeLog(
-        string $to,
-        string $subject,
-        string $body,
-        ?string $htmlBody,
-        string $fromEmail
-    ): void {
+    /** 본문·토큰·URL 미기록 — 메타만 */
+    private function writeMetaLog(string $to, string $subject, string $fromEmail): void
+    {
         $path = (string) $this->config['mail_log_path'];
         $dir = dirname($path);
         if (!is_dir($dir)) {
             mkdir($dir, 0775, true);
         }
 
-        $format = $htmlBody !== null && $htmlBody !== '' ? 'multipart/alternative' : 'text/plain';
         $line = sprintf(
-            "[%s] TO=%s FROM=%s SUBJECT=%s FORMAT=%s\n--- plain ---\n%s\n",
+            "[%s] TO=%s FROM=%s KIND=%s SUBJECT=%s\n",
             date('Y-m-d H:i:s'),
             MailAddressMasker::mask($to),
             $fromEmail,
-            $subject,
-            $format,
-            $body
+            $this->mailKind($subject),
+            $this->safeSubject($subject)
         );
-
-        if ($htmlBody !== null && $htmlBody !== '') {
-            $line .= "--- html ---\n{$htmlBody}\n";
-        }
-
-        $line .= "---\n";
         file_put_contents($path, $line, FILE_APPEND | LOCK_EX);
-        error_log('[mail] queued TO=' . MailAddressMasker::mask($to) . ' FROM=' . $fromEmail . ' SUBJECT=' . $subject);
+        error_log(
+            '[mail] queued TO=' . MailAddressMasker::mask($to)
+            . ' FROM=' . $fromEmail
+            . ' KIND=' . $this->mailKind($subject)
+        );
     }
 
     private function appendResultLog(string $to, MailSendResult $result): void
@@ -135,17 +128,48 @@ final class AuthMailer
         if (!is_dir($dir)) {
             mkdir($dir, 0775, true);
         }
+        $ref = $result->providerMessageId !== null && $result->providerMessageId !== ''
+            ? (' MSG_ID=' . $result->providerMessageId)
+            : '';
         $line = sprintf(
-            "[%s] MAIL_RESULT=%s CODE=%s TO=%s SUMMARY=%s\n",
+            "[%s] MAIL_RESULT=%s CODE=%s TO=%s SUMMARY=%s%s\n",
             date('Y-m-d H:i:s'),
             $result->ok ? 'true' : 'false',
             $result->code,
             MailAddressMasker::mask($to),
-            $result->safeSummary
+            $result->safeSummary,
+            $ref
         );
         file_put_contents($path, $line, FILE_APPEND | LOCK_EX);
         if (!$result->ok) {
             error_log('[mail] MAIL_RESULT=false CODE=' . $result->code . ' TO=' . MailAddressMasker::mask($to));
         }
+    }
+
+    private function mailKind(string $subject): string
+    {
+        if (str_contains($subject, '이메일 확인') || str_contains($subject, '확인 메일')) {
+            return 'email_verify';
+        }
+        if (str_contains($subject, '비밀번호') || str_contains($subject, '재설정')) {
+            return 'password_reset';
+        }
+        if (str_contains($subject, '테스트') || str_contains($subject, 'probe')) {
+            return 'probe';
+        }
+
+        return 'other';
+    }
+
+    /** 제목에 토큰/쿼리가 섞이지 않도록 길이만 제한 */
+    private function safeSubject(string $subject): string
+    {
+        $subject = preg_replace('/[^\P{C}\t]/u', '', $subject) ?? '';
+        $subject = trim($subject);
+        if (strlen($subject) > 120) {
+            $subject = substr($subject, 0, 117) . '...';
+        }
+
+        return $subject;
     }
 }
