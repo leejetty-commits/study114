@@ -188,7 +188,8 @@ assert_true(str_contains($smtpSrc, 'EHLO study114.net'), 'EHLO');
 assert_true(str_contains($smtpSrc, 'AUTH LOGIN'), 'AUTH LOGIN');
 assert_true(str_contains($smtpSrc, 'AUTH PLAIN'), 'AUTH PLAIN 폴백');
 assert_true(str_contains($smtpSrc, 'dotStuff'), 'dot-stuffing');
-assert_true(str_contains($smtpSrc, "\r\n\r\n"), '헤더/본문 빈 줄(CRLF)');
+// 소스에 기록된 이스케이프 리터럴을 검사 (워크트리 LF/CRLF 줄끝과 무관)
+assert_true(str_contains($smtpSrc, '. "\\r\\n\\r\\n" .'), '헤더/본문 빈 줄(CRLF)');
 assert_true(str_contains($smtpSrc, 'smtp_temp_fail') && str_contains($smtpSrc, 'smtp_perm_fail'), '4xx/5xx 분류');
 assert_true(str_contains($smtpSrc, 'multipart/alternative'), 'HTML/text Content-Type');
 
