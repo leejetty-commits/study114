@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Study114\Auth;
 
 use Study114\Mail\MailAddressMasker;
+use Study114\Mail\MailMessageSanitizer;
 use Study114\Mail\MailSendResult;
 use Study114\Mail\MailTransport;
 use Study114\Mail\MailTransportFactory;
 
 /**
- * 인증·계정 메일 발송 — SMTP transport 전용 (PHP native mail API 미사용).
+ * 인증·계정 메일 발송 — Resend HTTPS API (PHP native mail API 미사용).
  */
 final class AuthMailer
 {
@@ -75,11 +76,10 @@ final class AuthMailer
             return false;
         }
         $lower = strtolower($fromEmail);
-        // 운영·스테이징: 인증된 study114.net 만. 로컬 더미 도메인은 fake/disabled 테스트용.
         if (str_ends_with($lower, '@study114.net')) {
             return true;
         }
-        $transport = strtolower((string) ($this->config['mail_transport'] ?? 'smtp'));
+        $transport = strtolower((string) ($this->config['mail_transport'] ?? 'resend'));
         if (in_array($transport, ['fake', 'disabled', 'off', 'none'], true)
             && str_ends_with($lower, '@study114.local')) {
             return true;
@@ -90,7 +90,7 @@ final class AuthMailer
 
     private function fromHeader(string $fromEmail): string
     {
-        $name = \Study114\Mail\SmtpMessageSanitizer::encodeHeader('우동공과');
+        $name = MailMessageSanitizer::encodeHeader('우동공과');
 
         return $name . ' <' . $fromEmail . '>';
     }

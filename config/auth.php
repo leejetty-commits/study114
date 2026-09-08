@@ -14,20 +14,16 @@ return [
     'auth_ui'                    => rtrim($authUi, '/'),
     'home_ui'                    => rtrim($homeUi, '/'),
     'api_base'                   => rtrim($apiBase, '/'),
-    /** 닷홈: SetEnv STUDY114_MAIL_FROM. 운영은 @study114.net SMTP 인증 사서함만. */
-    'mail_from'                  => study114_env('STUDY114_MAIL_FROM', 'noreply@study114.local'),
+    /** 닷홈: SetEnv STUDY114_MAIL_FROM. 운영 From: 우동공과 <no-reply@study114.net> */
+    'mail_from'                  => study114_env('STUDY114_MAIL_FROM', 'no-reply@study114.local'),
     /**
-     * smtp | fake | disabled
-     * php_mail / mail 은 허용하지 않음 (fail-closed).
+     * resend | fake | disabled
+     * smtp / php_mail / mail 은 허용하지 않음 (fail-closed).
      */
-    'mail_transport'             => study114_env('STUDY114_MAIL_TRANSPORT', 'smtp'),
+    'mail_transport'             => study114_env('STUDY114_MAIL_TRANSPORT', 'resend'),
     'mail_fake_mode'             => study114_env('STUDY114_MAIL_FAKE_MODE', 'success'),
-    'smtp_host'                  => study114_env('STUDY114_SMTP_HOST', ''),
-    'smtp_port'                  => (int) study114_env('STUDY114_SMTP_PORT', '587'),
-    'smtp_encryption'            => study114_env('STUDY114_SMTP_ENCRYPTION', 'tls'),
-    'smtp_username'              => study114_env('STUDY114_SMTP_USERNAME', ''),
-    'smtp_password'              => study114_env('STUDY114_SMTP_PASSWORD', ''),
-    'smtp_timeout'               => (int) study114_env('STUDY114_SMTP_TIMEOUT', '20'),
+    'resend_api_key'             => study114_env('STUDY114_RESEND_API_KEY', ''),
+    'resend_timeout'             => (int) study114_env('STUDY114_RESEND_TIMEOUT', '20'),
     'password_reset_ttl_minutes' => 30,
     /** 재설정 메일 재전송 최소 간격(초). 서버·클라이언트 동일 — 5분 */
     'password_reset_resend_cooldown_seconds' => 300,

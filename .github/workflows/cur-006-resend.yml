@@ -1,6 +1,6 @@
-# CUR-006 authenticated SMTP — PHP 8.2 runtime gate (no FTP / no production)
+# CUR-006 Resend HTTPS API — PHP 8.2 runtime gate (no FTP / no production send)
 
-name: cur-006-authenticated-smtp
+name: cur-006-resend
 
 on:
   push:
@@ -12,15 +12,16 @@ on:
     paths:
       - "src/Mail/**"
       - "src/Auth/AuthMailer.php"
+      - "src/Paid/ProviderReminderService.php"
       - "public/api/auth/password/_mail-probe.php"
       - "config/auth.php"
-      - "scripts/verify-cur-006-authenticated-smtp.*"
+      - "scripts/verify-cur-006-resend.*"
       - "scripts/php-syntax-check.sh"
-      - ".github/workflows/cur-006-authenticated-smtp.yml"
+      - ".github/workflows/cur-006-resend.yml"
 
 jobs:
   php82-mail-gate:
-    name: PHP 8.2 mail gate
+    name: PHP 8.2 Resend gate
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -31,32 +32,36 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: mbstring
+          extensions: mbstring, curl
           coverage: none
 
       - name: Show PHP version
         run: |
           php -v
           php -r 'echo "PHP_VERSION_ID=".PHP_VERSION_ID."\n";'
+          php -m | grep -i curl
           test "$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')" = "8.2"
 
       - name: PHP syntax check
         run: bash scripts/php-syntax-check.sh
 
-      - name: CUR-006 authenticated SMTP mock
-        run: php scripts/verify-cur-006-authenticated-smtp.php
+      - name: CUR-006 Resend mock
+        run: php scripts/verify-cur-006-resend.php
 
       - name: Node static contract
-        run: npx --yes vite-node scripts/verify-cur-006-authenticated-smtp.mjs
+        run: npx --yes vite-node scripts/verify-cur-006-resend.mjs
+
+      - name: Secret placeholder guard
+        run: bash scripts/check-no-committed-secrets.sh
 
       - name: Summary
         if: always()
         run: |
           {
-            echo "## CUR-006 PHP_RUNTIME_GATE"
+            echo "## CUR-006 Resend PHP_RUNTIME_GATE"
             echo "- PHP: \`$(php -r 'echo PHP_VERSION;')\`"
             echo "- php -l: via scripts/php-syntax-check.sh"
-            echo "- mock: scripts/verify-cur-006-authenticated-smtp.php"
-            echo "- static: scripts/verify-cur-006-authenticated-smtp.mjs"
-            echo "- deploy: not run"
+            echo "- mock: scripts/verify-cur-006-resend.php"
+            echo "- static: scripts/verify-cur-006-resend.mjs"
+            echo "- deploy / real send: not run"
           } >> "$GITHUB_STEP_SUMMARY"

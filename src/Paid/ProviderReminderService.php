@@ -6,6 +6,7 @@ namespace Study114\Paid;
 
 use Study114\Auth\AuthMailer;
 use Study114\Database\Connection;
+use Study114\Mail\DisabledMailTransport;
 
 /** 18d — 만료·소진 알림 (cron + 차감 이벤트) */
 final class ProviderReminderService
@@ -28,7 +29,10 @@ final class ProviderReminderService
         $this->repo = $repo ?? new ProviderReminderRepository(Connection::get());
         $this->copy = $copy ?? new ProviderReminderCopy();
         $this->policy = $policy ?? new ProviderReminderChannelPolicy();
-        $this->mailer = $mailer ?? new AuthMailer();
+        // CUR-006: 유료 리마인더 메일은 Resend 전환 범위 밖 — 기본 fail-closed
+        $this->mailer = $mailer ?? new AuthMailer(
+            new DisabledMailTransport('reminder_mail_excluded', 'Provider reminder email is deferred')
+        );
         $this->sms = $sms ?? new SmsLogSender();
         $this->config = study114_config('paid');
     }

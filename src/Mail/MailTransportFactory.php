@@ -6,8 +6,7 @@ namespace Study114\Mail;
 
 /**
  * STUDY114_* 환경변수 우선 · config/auth.php 보조.
- * 운영은 .htaccess SetEnv만으로도 SMTP를 선택 가능 (config/ 미배포 대비).
- * mail() fallback 없음.
+ * 기본 transport: Resend HTTPS API. SMTP·mail() 없음.
  */
 final class MailTransportFactory
 {
@@ -25,7 +24,7 @@ final class MailTransportFactory
             }
         }
 
-        $mode = strtolower(trim(self::pick($auth, 'mail_transport', 'STUDY114_MAIL_TRANSPORT', 'smtp')));
+        $mode = strtolower(trim(self::pick($auth, 'mail_transport', 'STUDY114_MAIL_TRANSPORT', 'resend')));
 
         if ($mode === 'fake') {
             $fakeMode = self::pick($auth, 'mail_fake_mode', 'STUDY114_MAIL_FAKE_MODE', 'success');
@@ -44,29 +43,24 @@ final class MailTransportFactory
             );
         }
 
-        $host = trim(self::pick($auth, 'smtp_host', 'STUDY114_SMTP_HOST', ''));
-        $port = (int) self::pick($auth, 'smtp_port', 'STUDY114_SMTP_PORT', '587');
-        $user = trim(self::pick($auth, 'smtp_username', 'STUDY114_SMTP_USERNAME', ''));
-        $pass = self::pick($auth, 'smtp_password', 'STUDY114_SMTP_PASSWORD', '');
-        $enc = strtolower(trim(self::pick($auth, 'smtp_encryption', 'STUDY114_SMTP_ENCRYPTION', 'tls')));
-        $timeout = (int) self::pick($auth, 'smtp_timeout', 'STUDY114_SMTP_TIMEOUT', '20');
+        if ($mode === 'smtp') {
+            return new DisabledMailTransport(
+                'smtp_removed',
+                'Custom SMTP transport was removed; use Resend'
+            );
+        }
+
+        $apiKey = self::pick($auth, 'resend_api_key', 'STUDY114_RESEND_API_KEY', '');
+        $timeout = (int) self::pick($auth, 'resend_timeout', 'STUDY114_RESEND_TIMEOUT', '20');
         if ($timeout < 1) {
             $timeout = 20;
         }
 
-        if ($host === '' || $port < 1 || $user === '' || $pass === '') {
-            return new DisabledMailTransport('config_missing', 'SMTP configuration is incomplete');
+        if ($apiKey === '' || $apiKey === '__STUDY114_RESEND_API_KEY__' || str_starts_with($apiKey, '__')) {
+            return new DisabledMailTransport('api_key_missing', 'Resend API key is not configured');
         }
 
-        if ($pass === '__STUDY114_SMTP_PASSWORD__' || str_starts_with($pass, '__')) {
-            return new DisabledMailTransport('config_missing', 'SMTP password placeholder is not injected');
-        }
-
-        if (!in_array($enc, ['tls', 'ssl', 'none'], true)) {
-            $enc = 'tls';
-        }
-
-        return new SmtpMailTransport($host, $port, $user, $pass, $enc, $timeout);
+        return new ResendMailTransport($apiKey, $timeout);
     }
 
     /** @param array<string, mixed> $auth */

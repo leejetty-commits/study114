@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Study114\Mail;
 
-/** 헤더 인젝션·개행 차단 */
-final class SmtpMessageSanitizer
+/** 헤더 인젝션·개행 차단 · MIME 헤더 인코딩 */
+final class MailMessageSanitizer
 {
     public static function assertSafeMailbox(string $value, string $field): ?string
     {

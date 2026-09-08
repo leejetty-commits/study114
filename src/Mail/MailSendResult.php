@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Study114\Mail;
 
-/** SMTP/전송 결과 — 비밀값·수신 원문 없음 */
+/** 전송 결과 — 비밀값·수신 원문 없음 */
 final class MailSendResult
 {
     public function __construct(
@@ -14,9 +14,9 @@ final class MailSendResult
     ) {
     }
 
-    public static function success(string $summary = 'SMTP server accepted the message'): self
+    public static function success(string $summary = 'Resend accepted the message'): self
     {
-        return new self(true, 'smtp_accepted', $summary);
+        return new self(true, 'resend_accepted', $summary);
     }
 
     public static function failure(string $code, string $safeSummary): self
