@@ -15,7 +15,7 @@
  * @property {boolean} sms_consent
  */
 
-/** @type {{ role: MemberRole | null, termsAgreed: boolean, accountAddress: string, accountDraft: AccountDraft | null, basicRegister: Record<string, object>, lastSignup: { userId: number, email: string, roleType: string } | null }} */
+/** @type {{ role: MemberRole | null, termsAgreed: boolean, accountAddress: string, accountDraft: AccountDraft | null, basicRegister: Record<string, object>, lastSignup: { userId: number, email: string, roleType: string, emailSent?: boolean } | null }} */
 export const signupState = {
   role: null,
   termsAgreed: false,
