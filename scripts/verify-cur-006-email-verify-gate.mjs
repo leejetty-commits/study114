@@ -52,6 +52,13 @@ for (const [rel, needle] of gatePaths) {
   assert(read(rel).includes(needle), `게이트 ${rel} :: ${needle}`);
 }
 
+assert(existsSync(resolve(root, 'docs/internal/cur-006-email-verify-open-apis.md')), 'OPEN 7 API 문서');
+const flow = read('scripts/verify-cur-006-email-verify-flow.php');
+assert(flow.includes("messages HTTP 200"), 'flow 긍정: messages 200');
+assert(flow.includes("error'] ?? '') === 'validation'"), 'flow 긍정: basic-register validation');
+assert(flow.includes("error'] ?? '') === 'forbidden'"), 'flow 긍정: board forbidden');
+assert(flow.includes('registrations/students'), 'flow 긍정: registrations');
+
 const boardApi = read('src/Board/BoardApi.php');
 assert(boardApi.includes('email_verify_required'), 'BoardApi 403 email_verify_required');
 assert(boardApi.includes('optionalVerifiedAuth'), 'Board GET 미확인=게스트');

@@ -204,6 +204,21 @@ assert(missing.length === 0, `보호 API 게이트 누락 0건 (got ${missing.jo
 assert(gated.length >= 25, `게이트 적용 엔드포인트 충분 (${gated.length})`);
 assert(review.length === 0, `미분류 세션 엔드포인트 0건 (got ${review.join(', ') || 'none'})`);
 
+const openDoc = join(root, 'docs/internal/cur-006-email-verify-open-apis.md');
+assert(existsSync(openDoc), 'OPEN API 문서 존재');
+const openDocText = read(openDoc);
+for (const needle of [
+  'send-verification.php',
+  'password/change.php',
+  'withdraw.php',
+  'account-contact.php',
+  'phone/send-otp.php',
+  'phone/verify-otp.php',
+  'profile.php',
+]) {
+  assert(openDocText.includes(needle), `OPEN 문서에 ${needle}`);
+}
+
 console.log(
   `\nsummary gated=${gated.length} open_intentional=${allowedOpen.length} missing=${missing.length} review=${review.length}`,
 );

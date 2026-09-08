@@ -267,19 +267,43 @@ $login2 = http_json('POST', $apiBase . '/api/auth/login.php', [
     'email' => $email,
     'password' => $password,
 ], $cookieAfter);
+assert_true($login2['status'] === 200 && ($login2['json']['ok'] ?? false) === true, '확인 후 로그인 HTTP 200 ok');
 assert_true(($login2['json']['email_verified'] ?? false) === true, '확인 후 login.email_verified=true');
 assert_true(($login2['json']['email_verify_required'] ?? true) === false, '확인 후 email_verify_required=false');
 
+$me2 = http_json('GET', $apiBase . '/api/auth/me.php', null, $cookieAfter);
+assert_true($me2['status'] === 200 && ($me2['json']['ok'] ?? false) === true, '확인 후 me HTTP 200');
+assert_true(($me2['json']['authenticated'] ?? false) === true, '확인 후 me.authenticated=true');
+assert_true(($me2['json']['email_verified'] ?? false) === true, '확인 후 me.email_verified=true');
+
+// 긍정 성공: 쪽지 목록은 student 역할로 게이트 통과 후 200 + threads
+$msg2 = http_json('GET', $apiBase . '/api/messages/threads.php', null, $cookieAfter);
+assert_true($msg2['status'] === 200, '확인 후 messages HTTP 200 (허용)');
+assert_true(($msg2['json']['ok'] ?? false) === true, '확인 후 messages ok=true');
+assert_true(is_array($msg2['json']['threads'] ?? null), '확인 후 messages.threads 배열');
+
+// 게이트 통과 후 역할·입력 한계: basic-register는 validation 422 (email_verify_required 아님)
 $basic2 = http_json('POST', $apiBase . '/api/auth/basic-register.php', [
     'role' => 'student',
     'payload' => ['display_name' => 'x'],
 ], $cookieAfter);
-assert_true(($basic2['json']['error'] ?? '') !== 'email_verify_required', '확인 후 basic-register가 email_verify_required 아님');
-assert_true($basic2['status'] !== 403 || ($basic2['json']['error'] ?? '') !== 'email_verify_required', '확인 후 basic-register 403/email_verify_required 아님');
+assert_true($basic2['status'] === 422, '확인 후 basic-register HTTP 422 (게이트 통과·입력 validation)');
+assert_true(($basic2['json']['ok'] ?? true) === false, '확인 후 basic-register ok=false');
+assert_true(($basic2['json']['error'] ?? '') === 'validation', '확인 후 basic-register error=validation');
 
-$msg2 = http_json('GET', $apiBase . '/api/messages/threads.php', null, $cookieAfter);
-assert_true(($msg2['json']['error'] ?? '') !== 'email_verify_required', '확인 후 messages가 email_verify_required 아님');
-assert_true($msg2['status'] !== 403 || ($msg2['json']['error'] ?? '') !== 'email_verify_required', '확인 후 messages 게이트 통과');
+// 게이트 통과 후 ACL: student는 submission 쓰기 불가 → forbidden (email_verify_required 아님)
+$board2 = http_json('POST', $apiBase . '/api/board/posts.php', [
+    'board_key' => 'submission',
+    'title' => 'x',
+    'body' => 'y',
+], $cookieAfter);
+assert_true($board2['status'] === 403, '확인 후 board HTTP 403 (게이트 통과·ACL)');
+assert_true(($board2['json']['error'] ?? '') === 'forbidden', '확인 후 board error=forbidden');
+
+// 등록 hub 목록: 게이트 통과 후 200
+$reg2 = http_json('GET', $apiBase . '/api/registrations/students.php', null, $cookieAfter);
+assert_true($reg2['status'] === 200, '확인 후 registrations/students HTTP 200');
+assert_true(($reg2['json']['ok'] ?? false) === true, '확인 후 registrations ok=true');
 
 // cleanup cookies
 @unlink($cookieSignup);
