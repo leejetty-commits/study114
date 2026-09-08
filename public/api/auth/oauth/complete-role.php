@@ -5,6 +5,8 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 4) . '/src/bootstrap.php';
 
 use Study114\Auth\AuthSession;
+use Study114\Auth\EmailVerificationGate;
+use Study114\Auth\EmailVerificationRequiredException;
 use Study114\Auth\OAuthRoleService;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -29,6 +31,18 @@ $user = AuthSession::user();
 if ($user === null) {
     http_response_code(401);
     echo json_encode(['ok' => false, 'error' => 'unauthenticated', 'message' => '로그인이 필요합니다.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+try {
+    (new EmailVerificationGate())->assertVerified((int) $user['user_id']);
+} catch (EmailVerificationRequiredException $e) {
+    http_response_code(403);
+    echo json_encode([
+        'ok' => false,
+        'error' => 'email_verify_required',
+        'message' => $e->getMessage(),
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
