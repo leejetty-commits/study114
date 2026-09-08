@@ -4,124 +4,95 @@ declare(strict_types=1);
 
 namespace Study114\Auth;
 
+use Study114\Mail\MailAddressMasker;
+use Study114\Mail\MailSendResult;
+use Study114\Mail\MailTransport;
+use Study114\Mail\MailTransportFactory;
+
 /**
- * 닷홈 등 공유호스팅: PHP mail() + 올바른 From/봉투발신자(-f).
- * SMTP Relay는 닷홈에서 미지원 — From는 SetEnv STUDY114_MAIL_FROM (호스팅 메일함과 일치).
+ * 인증·계정 메일 발송 — SMTP transport 전용 (PHP native mail API 미사용).
  */
 final class AuthMailer
 {
     /** @var array<string, mixed> */
     private array $config;
+    private MailTransport $transport;
+    private ?MailSendResult $lastResult = null;
 
-    public function __construct()
+    public function __construct(?MailTransport $transport = null)
     {
         $this->config = study114_config('auth');
+        $this->transport = $transport ?? MailTransportFactory::create($this->config);
     }
 
     public function send(string $to, string $subject, string $body, ?string $htmlBody = null): bool
     {
         $fromEmail = $this->fromEmail();
-        $fromHeader = $this->fromHeader($fromEmail);
-
         $this->writeLog($to, $subject, $body, $htmlBody, $fromEmail);
 
-        if (!function_exists('mail')) {
-            error_log('[mail] mail() unavailable');
-            $this->appendLogLine('MAIL_RESULT=false REASON=mail_unavailable TO=' . $to);
+        if (!$this->isAllowedFrom($fromEmail)) {
+            $this->lastResult = MailSendResult::failure(
+                'from_rejected',
+                'From address must be an authenticated @study114.net mailbox'
+            );
+            $this->appendResultLog($to, $this->lastResult);
+
             return false;
         }
 
-        $encodedSubject = $this->encodeHeader($subject);
+        $result = $this->transport->send([
+            'to' => $to,
+            'subject' => $subject,
+            'body' => $body,
+            'html_body' => $htmlBody,
+            'from_email' => $fromEmail,
+            'from_header' => $this->fromHeader($fromEmail),
+        ]);
+        $this->lastResult = $result;
+        $this->appendResultLog($to, $result);
 
-        if ($htmlBody !== null && $htmlBody !== '') {
-            $ok = $this->sendMultipart($to, $encodedSubject, $body, $htmlBody, $fromEmail, $fromHeader);
-        } else {
-            $headers = implode("\r\n", [
-                'From: ' . $fromHeader,
-                'Reply-To: ' . $fromEmail,
-                'Return-Path: ' . $fromEmail,
-                'MIME-Version: 1.0',
-                'Content-Type: text/plain; charset=UTF-8',
-                'Content-Transfer-Encoding: 8bit',
-                'X-Mailer: study114-AuthMailer',
-            ]);
-            $ok = $this->dispatch($to, $encodedSubject, $body, $headers, $fromEmail);
-        }
+        return $result->ok;
+    }
 
-        if (!$ok) {
-            error_log('[mail] mail() returned false TO=' . $to . ' FROM=' . $fromEmail);
-            $this->appendLogLine('MAIL_RESULT=false TO=' . $to . ' FROM=' . $fromEmail);
-            return false;
-        }
-        $this->appendLogLine('MAIL_RESULT=true TO=' . $to . ' FROM=' . $fromEmail);
-        return true;
+    public function lastResult(): ?MailSendResult
+    {
+        return $this->lastResult;
     }
 
     private function fromEmail(): string
     {
         $from = trim((string) ($this->config['mail_from'] ?? ''));
         if ($from === '' || !filter_var($from, FILTER_VALIDATE_EMAIL)) {
-            return 'noreply@study114.local';
+            return '';
         }
 
         return $from;
     }
 
+    private function isAllowedFrom(string $fromEmail): bool
+    {
+        if ($fromEmail === '' || !filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+        $lower = strtolower($fromEmail);
+        // 운영·스테이징: 인증된 study114.net 만. 로컬 더미 도메인은 fake/disabled 테스트용.
+        if (str_ends_with($lower, '@study114.net')) {
+            return true;
+        }
+        $transport = strtolower((string) ($this->config['mail_transport'] ?? 'smtp'));
+        if (in_array($transport, ['fake', 'disabled', 'off', 'none'], true)
+            && str_ends_with($lower, '@study114.local')) {
+            return true;
+        }
+
+        return false;
+    }
+
     private function fromHeader(string $fromEmail): string
     {
-        $name = $this->encodeHeader('우동공과');
+        $name = '=?UTF-8?B?' . base64_encode('우동공과') . '?=';
 
         return $name . ' <' . $fromEmail . '>';
-    }
-
-    private function encodeHeader(string $value): string
-    {
-        return '=?UTF-8?B?' . base64_encode($value) . '?=';
-    }
-
-    private function sendMultipart(
-        string $to,
-        string $encodedSubject,
-        string $plain,
-        string $html,
-        string $fromEmail,
-        string $fromHeader
-    ): bool {
-        $boundary = 'b_' . bin2hex(random_bytes(12));
-        $headers = implode("\r\n", [
-            'From: ' . $fromHeader,
-            'Reply-To: ' . $fromEmail,
-            'Return-Path: ' . $fromEmail,
-            'MIME-Version: 1.0',
-            'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
-            'X-Mailer: study114-AuthMailer',
-        ]);
-
-        $message = "--{$boundary}\r\n"
-            . "Content-Type: text/plain; charset=UTF-8\r\n"
-            . "Content-Transfer-Encoding: 8bit\r\n\r\n"
-            . $plain . "\r\n\r\n"
-            . "--{$boundary}\r\n"
-            . "Content-Type: text/html; charset=UTF-8\r\n"
-            . "Content-Transfer-Encoding: 8bit\r\n\r\n"
-            . $html . "\r\n\r\n"
-            . "--{$boundary}--";
-
-        return $this->dispatch($to, $encodedSubject, $message, $headers, $fromEmail);
-    }
-
-    private function dispatch(
-        string $to,
-        string $encodedSubject,
-        string $message,
-        string $headers,
-        string $fromEmail
-    ): bool {
-        // 닷홈/sendmail: 봉투 발신자(-f)가 From와 일치해야 Gmail 등에서 덜 막힘
-        $params = '-f' . $fromEmail;
-        $result = @mail($to, $encodedSubject, $message, $headers, $params);
-
-        return $result === true;
     }
 
     private function writeLog(
@@ -141,7 +112,7 @@ final class AuthMailer
         $line = sprintf(
             "[%s] TO=%s FROM=%s SUBJECT=%s FORMAT=%s\n--- plain ---\n%s\n",
             date('Y-m-d H:i:s'),
-            $to,
+            MailAddressMasker::mask($to),
             $fromEmail,
             $subject,
             $format,
@@ -154,20 +125,27 @@ final class AuthMailer
 
         $line .= "---\n";
         file_put_contents($path, $line, FILE_APPEND | LOCK_EX);
-        error_log('[mail] queued TO=' . $to . ' FROM=' . $fromEmail . ' SUBJECT=' . $subject);
+        error_log('[mail] queued TO=' . MailAddressMasker::mask($to) . ' FROM=' . $fromEmail . ' SUBJECT=' . $subject);
     }
 
-    private function appendLogLine(string $line): void
+    private function appendResultLog(string $to, MailSendResult $result): void
     {
         $path = (string) $this->config['mail_log_path'];
         $dir = dirname($path);
         if (!is_dir($dir)) {
             mkdir($dir, 0775, true);
         }
-        file_put_contents(
-            $path,
-            '[' . date('Y-m-d H:i:s') . '] ' . $line . "\n",
-            FILE_APPEND | LOCK_EX
+        $line = sprintf(
+            "[%s] MAIL_RESULT=%s CODE=%s TO=%s SUMMARY=%s\n",
+            date('Y-m-d H:i:s'),
+            $result->ok ? 'true' : 'false',
+            $result->code,
+            MailAddressMasker::mask($to),
+            $result->safeSummary
         );
+        file_put_contents($path, $line, FILE_APPEND | LOCK_EX);
+        if (!$result->ok) {
+            error_log('[mail] MAIL_RESULT=false CODE=' . $result->code . ' TO=' . MailAddressMasker::mask($to));
+        }
     }
 }

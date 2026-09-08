@@ -70,6 +70,8 @@ jobs:
           OAUTH_GOOGLE_CLIENT_SECRET: ${{ secrets.OAUTH_GOOGLE_CLIENT_SECRET }}
           STUDY114_MAIL_PROBE_KEY: ${{ secrets.STUDY114_MAIL_PROBE_KEY }}
           STUDY114_PHONE_OTP_PEPPER: ${{ secrets.STUDY114_PHONE_OTP_PEPPER }}
+          STUDY114_SMTP_USERNAME: ${{ secrets.STUDY114_SMTP_USERNAME }}
+          STUDY114_SMTP_PASSWORD: ${{ secrets.STUDY114_SMTP_PASSWORD }}
         shell: bash
         run: |
           set -euo pipefail
@@ -100,12 +102,26 @@ jobs:
             esac
             data="${data//"$token"/"$repl"}"
           done
+          # SMTP는 선택 주입 — 미설정 시 placeholder 유지 → 앱은 fail-closed
+          for v in STUDY114_SMTP_USERNAME STUDY114_SMTP_PASSWORD; do
+            token="__${v}__"
+            if [ -n "${!v:-}" ]; then
+              case "$data" in
+                *"$token"*) data="${data//"$token"/"${!v}"}" ;;
+              esac
+            fi
+          done
           printf '%s\n' "$data" > "$htaccess"
           if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__' "$htaccess"; then
             echo "::error::치환되지 않은 placeholder가 남아 있습니다."
             exit 1
           fi
           echo "OAuth SetEnv 주입 완료 (값은 출력하지 않음)."
+          if grep -q '__STUDY114_SMTP_' "$htaccess"; then
+            echo "SMTP placeholder 유지 — STUDY114_SMTP_* Secrets 미설정 (메일 발송 fail-closed)."
+          else
+            echo "SMTP SetEnv 주입 완료 (값은 출력하지 않음)."
+          fi
 
       - name: Build for dothome
         run: bash scripts/build-dothome.sh
