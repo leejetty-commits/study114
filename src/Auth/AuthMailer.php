@@ -90,7 +90,7 @@ final class AuthMailer
 
     private function fromHeader(string $fromEmail): string
     {
-        $name = '=?UTF-8?B?' . base64_encode('우동공과') . '?=';
+        $name = \Study114\Mail\SmtpMessageSanitizer::encodeHeader('우동공과');
 
         return $name . ' <' . $fromEmail . '>';
     }

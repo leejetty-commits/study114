@@ -29,10 +29,14 @@ const files = [
   'src/Mail/FakeMailTransport.php',
   'src/Mail/DisabledMailTransport.php',
   'src/Mail/MailAddressMasker.php',
+  'src/Mail/SmtpMessageSanitizer.php',
   'src/Auth/AuthMailer.php',
   'public/api/auth/password/_mail-probe.php',
   'scripts/verify-cur-006-authenticated-smtp.php',
   'docs/internal/cur-006-smtp-dns-apply-table.md',
+  'docs/internal/cur-006-config-deploy-gate.md',
+  'docs/internal/cur-006-smtp-provider-recommendation.md',
+  '.github/workflows/cur-006-authenticated-smtp.yml',
 ];
 for (const f of files) {
   assert(existsSync(resolve(root, f)), `파일 존재 ${f}`);
@@ -54,10 +58,16 @@ assert(factory.includes('FakeMailTransport'), 'fake transport');
 
 const smtp = read('src/Mail/SmtpMailTransport.php');
 assert(smtp.includes('AUTH LOGIN'), 'SMTP AUTH LOGIN');
+assert(smtp.includes('AUTH PLAIN'), 'SMTP AUTH PLAIN 폴백');
 assert(smtp.includes('STARTTLS') || smtp.includes('ssl://'), 'TLS/SSL 지원');
+assert(smtp.includes("'verify_peer' => true"), 'TLS peer 검증');
+assert(smtp.includes('header_injection'), '헤더 인젝션 차단');
 assert(smtp.includes('auth_failed'), '인증 실패 코드');
 assert(smtp.includes('connect_failed'), '연결 실패 코드');
 assert(smtp.includes('timeout'), 'timeout 코드');
+assert(smtp.includes('smtp_temp_fail') && smtp.includes('smtp_perm_fail'), '4xx/5xx 분류');
+
+assert(factory.includes('STUDY114_SMTP_HOST'), 'Factory env STUDY114_SMTP_HOST');
 
 const probe = read('public/api/auth/password/_mail-probe.php');
 assert(probe.includes("'$sent'") || probe.includes('$sent'), 'probe ok=전송 결과');
@@ -76,7 +86,7 @@ assert(!ht.includes('study114@study114.dothome.co.kr'), 'htaccess dothome From �
 
 const phpTest = read('scripts/verify-cur-006-authenticated-smtp.php');
 for (const needle of [
-  'SMTP 성공',
+  'AuthMailer→Fake 성공',
   '인증 실패',
   '연결 실패',
   'timeout',
@@ -84,6 +94,9 @@ for (const needle of [
   'mail_fallback_forbidden',
   'from_rejected',
   '이메일 마스킹',
+  'header_injection',
+  'connect_failed',
+  'verify_peer',
 ]) {
   assert(phpTest.includes(needle), `PHP mock 시나리오: ${needle}`);
 }
@@ -99,6 +112,9 @@ assert(dns.includes('SPF'), 'DNS 표 SPF');
 assert(dns.includes('DKIM'), 'DNS 표 DKIM');
 assert(dns.includes('DMARC'), 'DNS 표 DMARC');
 assert(dns.includes('병합'), 'DNS SPF 병합 안내');
+assert(read('docs/internal/cur-006-smtp-provider-recommendation.md').includes('TRANSACTIONAL_PROVIDER'), '제공자 권고 TRANSACTIONAL');
+assert(read('docs/internal/cur-006-config-deploy-gate.md').includes('SetEnv'), 'config 배포 게이트');
+assert(existsSync(resolve(root, 'docs/internal/cur-006-authmailer-callers.md')), 'AuthMailer 호출처 문서');
 
 // UI cherry-pick 존재
 assert(existsSync(resolve(root, 'preview/auth-ui/src/email-verify-send-status.js')), 'UI 커밋 통합(email_sent 헬퍼)');

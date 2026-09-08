@@ -6,10 +6,16 @@ namespace Study114\Mail;
 
 /**
  * 순수 PHP SMTP (Composer 없음 · PHP 8.2 stream sockets).
- * AUTH LOGIN + STARTTLS(587) / SMTPS(465) 지원.
+ * AUTH LOGIN(+ PLAIN 폴백) · STARTTLS/SMTPS · peer 검증 · fail ≠ success.
  */
 final class SmtpMailTransport implements MailTransport
 {
+    /** @var null|callable(string $remote, float $timeout): resource|false */
+    private $connector;
+
+    /**
+     * @param null|callable(string $remote, float $timeout): resource|false $connector
+     */
     public function __construct(
         private readonly string $host,
         private readonly int $port,
@@ -17,7 +23,9 @@ final class SmtpMailTransport implements MailTransport
         private readonly string $password,
         private readonly string $encryption = 'tls',
         private readonly int $timeoutSeconds = 20,
+        ?callable $connector = null,
     ) {
+        $this->connector = $connector;
     }
 
     public function send(array $message): MailSendResult
@@ -29,25 +37,24 @@ final class SmtpMailTransport implements MailTransport
         $body = (string) ($message['body'] ?? '');
         $htmlBody = $message['html_body'] ?? null;
 
-        if ($to === '' || $fromEmail === '' || $subject === '') {
-            return MailSendResult::failure('invalid_message', 'Message fields are incomplete');
+        foreach (
+            [
+                SmtpMessageSanitizer::assertSafeMailbox($to, 'to'),
+                SmtpMessageSanitizer::assertSafeMailbox($fromEmail, 'from'),
+                SmtpMessageSanitizer::assertSafeHeaderText($subject, 'subject'),
+                SmtpMessageSanitizer::assertSafeHeaderText($fromHeader, 'from_header'),
+            ] as $err
+        ) {
+            if ($err !== null) {
+                return MailSendResult::failure('header_injection', $err);
+            }
         }
 
         $remote = $this->remoteAddress();
-        $errno = 0;
-        $errstr = '';
-        $socket = @stream_socket_client(
-            $remote,
-            $errno,
-            $errstr,
-            $this->timeoutSeconds,
-            STREAM_CLIENT_CONNECT
-        );
+        $timeout = (float) max(1, $this->timeoutSeconds);
+        $socket = $this->openSocket($remote, $timeout);
         if ($socket === false) {
-            return MailSendResult::failure(
-                'connect_failed',
-                'Could not connect to SMTP host'
-            );
+            return MailSendResult::failure('connect_failed', 'Could not connect to SMTP host');
         }
 
         stream_set_timeout($socket, $this->timeoutSeconds);
@@ -55,41 +62,60 @@ final class SmtpMailTransport implements MailTransport
         try {
             $greeting = $this->readResponse($socket);
             if ($greeting['code'] !== 220) {
-                return MailSendResult::failure('smtp_rejected', 'SMTP greeting failed');
+                return $this->classifyReject($greeting['code'], 'SMTP greeting failed');
             }
 
-            $this->expect($socket, 'EHLO study114.net', [250]);
+            $ehlo = $this->readAfterWrite($socket, 'EHLO study114.net');
+            if ($ehlo['code'] !== 250) {
+                return $this->classifyReject($ehlo['code'], 'SMTP EHLO failed');
+            }
+            $authMechs = $this->parseAuthMechanisms($ehlo['raw']);
 
             if ($this->encryption === 'tls') {
-                $this->expect($socket, 'STARTTLS', [220]);
+                $start = $this->readAfterWrite($socket, 'STARTTLS');
+                if ($start['code'] !== 220) {
+                    return $this->classifyReject($start['code'], 'SMTP STARTTLS rejected');
+                }
                 $crypto = @stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
                 if ($crypto !== true) {
                     return MailSendResult::failure('tls_failed', 'SMTP STARTTLS negotiation failed');
                 }
-                $this->expect($socket, 'EHLO study114.net', [250]);
+                $ehlo = $this->readAfterWrite($socket, 'EHLO study114.net');
+                if ($ehlo['code'] !== 250) {
+                    return $this->classifyReject($ehlo['code'], 'SMTP EHLO after STARTTLS failed');
+                }
+                $authMechs = $this->parseAuthMechanisms($ehlo['raw']);
             }
 
-            $this->expect($socket, 'AUTH LOGIN', [334]);
-            $this->expect($socket, base64_encode($this->username), [334]);
-            $authPass = $this->readAfterWrite($socket, base64_encode($this->password));
-            if ($authPass['code'] !== 235) {
-                return MailSendResult::failure('auth_failed', 'SMTP authentication failed');
+            $authResult = $this->authenticate($socket, $authMechs);
+            if (!$authResult->ok) {
+                return $authResult;
             }
 
-            $this->expect($socket, 'MAIL FROM:<' . $fromEmail . '>', [250]);
+            $mailFrom = $this->readAfterWrite($socket, 'MAIL FROM:<' . $fromEmail . '>');
+            if ($mailFrom['code'] !== 250) {
+                return $this->classifyReject($mailFrom['code'], 'SMTP MAIL FROM rejected');
+            }
+
             $rcpt = $this->readAfterWrite($socket, 'RCPT TO:<' . $to . '>');
             if ($rcpt['code'] !== 250 && $rcpt['code'] !== 251) {
-                return MailSendResult::failure('rcpt_rejected', 'SMTP recipient was rejected');
+                return $this->classifyReject($rcpt['code'], 'SMTP recipient was rejected');
             }
 
-            $this->expect($socket, 'DATA', [354]);
+            $dataCmd = $this->readAfterWrite($socket, 'DATA');
+            if ($dataCmd['code'] !== 354) {
+                return $this->classifyReject($dataCmd['code'], 'SMTP DATA command rejected');
+            }
+
             $payload = $this->buildMime($fromHeader, $to, $subject, $body, is_string($htmlBody) ? $htmlBody : null);
+            // 헤더/본문 빈 줄은 buildMime 내부. 종료는 CRLF . CRLF
             $dataResult = $this->readAfterWrite($socket, $payload . "\r\n.");
             if ($dataResult['code'] !== 250) {
-                return MailSendResult::failure('smtp_rejected', 'SMTP server rejected message data');
+                return $this->classifyReject($dataResult['code'], 'SMTP server rejected message data');
             }
 
             @$this->writeLine($socket, 'QUIT');
+
             return MailSendResult::success('SMTP server accepted the message');
         } catch (SmtpProtocolException $e) {
             return MailSendResult::failure($e->codeKey, $e->getMessage());
@@ -102,6 +128,67 @@ final class SmtpMailTransport implements MailTransport
         }
     }
 
+    /** @param resource $socket @param list<string> $mechs */
+    private function authenticate($socket, array $mechs): MailSendResult
+    {
+        $upper = array_map('strtoupper', $mechs);
+        if ($upper === [] || in_array('LOGIN', $upper, true)) {
+            $this->expect($socket, 'AUTH LOGIN', [334]);
+            $this->expect($socket, base64_encode($this->username), [334]);
+            $authPass = $this->readAfterWrite($socket, base64_encode($this->password));
+            if ($authPass['code'] !== 235) {
+                return $this->classifyReject($authPass['code'], 'SMTP authentication failed', 'auth_failed');
+            }
+
+            return MailSendResult::success();
+        }
+
+        if (in_array('PLAIN', $upper, true)) {
+            $token = base64_encode("\0{$this->username}\0{$this->password}");
+            $authPass = $this->readAfterWrite($socket, 'AUTH PLAIN ' . $token);
+            if ($authPass['code'] !== 235) {
+                return $this->classifyReject($authPass['code'], 'SMTP authentication failed', 'auth_failed');
+            }
+
+            return MailSendResult::success();
+        }
+
+        return MailSendResult::failure('auth_unsupported', 'SMTP server has no supported AUTH mechanism');
+    }
+
+    private function classifyReject(int $code, string $summary, ?string $forceCode = null): MailSendResult
+    {
+        if ($forceCode !== null) {
+            return MailSendResult::failure($forceCode, $summary);
+        }
+        if ($code >= 400 && $code < 500) {
+            return MailSendResult::failure('smtp_temp_fail', $summary);
+        }
+        if ($code >= 500) {
+            return MailSendResult::failure('smtp_perm_fail', $summary);
+        }
+
+        return MailSendResult::failure('smtp_rejected', $summary);
+    }
+
+    /** @return list<string> */
+    private function parseAuthMechanisms(string $ehloRaw): array
+    {
+        $mechs = [];
+        foreach (preg_split("/\r\n|\n|\r/", $ehloRaw) ?: [] as $line) {
+            if (preg_match('/^250[\s-]AUTH\s+(.+)$/i', trim($line), $m) !== 1) {
+                continue;
+            }
+            foreach (preg_split('/\s+/', trim($m[1])) ?: [] as $token) {
+                if ($token !== '') {
+                    $mechs[] = strtoupper($token);
+                }
+            }
+        }
+
+        return array_values(array_unique($mechs));
+    }
+
     private function remoteAddress(): string
     {
         if ($this->encryption === 'ssl') {
@@ -111,6 +198,36 @@ final class SmtpMailTransport implements MailTransport
         return 'tcp://' . $this->host . ':' . $this->port;
     }
 
+    /** @return resource|false */
+    private function openSocket(string $remote, float $timeout)
+    {
+        if ($this->connector !== null) {
+            return ($this->connector)($remote, $timeout);
+        }
+
+        $context = stream_context_create([
+            'ssl' => [
+                'verify_peer' => true,
+                'verify_peer_name' => true,
+                'peer_name' => $this->host,
+                'SNI_enabled' => true,
+                'crypto_method' => STREAM_CRYPTO_METHOD_TLS_CLIENT,
+            ],
+        ]);
+
+        $errno = 0;
+        $errstr = '';
+
+        return @stream_socket_client(
+            $remote,
+            $errno,
+            $errstr,
+            $timeout,
+            STREAM_CLIENT_CONNECT,
+            $context
+        );
+    }
+
     private function buildMime(
         string $fromHeader,
         string $to,
@@ -118,7 +235,7 @@ final class SmtpMailTransport implements MailTransport
         string $plain,
         ?string $html
     ): string {
-        $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        $encodedSubject = SmtpMessageSanitizer::encodeHeader($subject);
         $headers = [
             'From: ' . $fromHeader,
             'To: ' . $to,
@@ -173,19 +290,20 @@ final class SmtpMailTransport implements MailTransport
         return implode("\r\n", $lines);
     }
 
-    /** @param list<int> $okCodes */
+    /** @param resource $socket @param list<int> $okCodes */
     private function expect($socket, string $command, array $okCodes): void
     {
         $result = $this->readAfterWrite($socket, $command);
         if (!in_array($result['code'], $okCodes, true)) {
-            throw new SmtpProtocolException(
-                'smtp_rejected',
-                'SMTP command was rejected'
-            );
+            $code = $result['code'] >= 400 && $result['code'] < 500 ? 'smtp_temp_fail' : 'smtp_perm_fail';
+            if ($result['code'] < 400) {
+                $code = 'smtp_rejected';
+            }
+            throw new SmtpProtocolException($code, 'SMTP command was rejected');
         }
     }
 
-    /** @return array{code: int, raw: string} */
+    /** @param resource $socket @return array{code: int, raw: string} */
     private function readAfterWrite($socket, string $command): array
     {
         $this->writeLine($socket, $command);
@@ -193,6 +311,7 @@ final class SmtpMailTransport implements MailTransport
         return $this->readResponse($socket);
     }
 
+    /** @param resource $socket */
     private function writeLine($socket, string $line): void
     {
         $written = @fwrite($socket, $line . "\r\n");
@@ -201,21 +320,22 @@ final class SmtpMailTransport implements MailTransport
         }
     }
 
-    /** @return array{code: int, raw: string} */
+    /** @param resource $socket @return array{code: int, raw: string} */
     private function readResponse($socket): array
     {
         $raw = '';
         while (($line = @fgets($socket, 515)) !== false) {
             $raw .= $line;
-            if (preg_match('/^\d{3}[\s-]/', $line) !== 1) {
-                continue;
-            }
-            if (isset($line[3]) && $line[3] === ' ') {
-                break;
-            }
             $meta = stream_get_meta_data($socket);
             if (!empty($meta['timed_out'])) {
                 throw new SmtpProtocolException('timeout', 'SMTP connection timed out');
+            }
+            // multiline: 250-... then final 250 <space>
+            if (preg_match('/^\d{3}([\s-])/', $line, $m) !== 1) {
+                continue;
+            }
+            if ($m[1] === ' ') {
+                break;
             }
         }
         if ($raw === '') {
@@ -225,8 +345,7 @@ final class SmtpMailTransport implements MailTransport
             }
             throw new SmtpProtocolException('smtp_error', 'Empty SMTP response');
         }
-        $code = (int) substr($raw, 0, 3);
 
-        return ['code' => $code, 'raw' => $raw];
+        return ['code' => (int) substr($raw, 0, 3), 'raw' => $raw];
     }
 }
