@@ -194,7 +194,7 @@ export function bindSignupRoleEvents(root) {
         emailSent,
       };
       signupState.accountDraft = null;
-      setPostVerifyTarget('basic');
+      setPostVerifyTarget('basic', selected);
       navigate(verifyEmailPathForSignupResult(emailSent));
     } catch (err) {
       showRoleError(root, err instanceof Error ? err.message : '네트워크 오류');

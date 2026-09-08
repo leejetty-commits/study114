@@ -13,13 +13,15 @@ import {
 } from '../email-verify-send-status.js';
 import {
   consumePostVerifyTarget,
+  consumePostVerifyRole,
   getLoginReturnTo,
   oauthRoleSelectionUrl,
   resolveAfterAuthUrl,
   isOnEmailVerifyWait,
+  uiRoleFromRoleType,
 } from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
-import { signupState } from '../state.js';
+import { signupState, setRole } from '../state.js';
 
 const EMAIL_VERIFY_STALE_LINK_MSG = '이미 확인되었거나 만료된 링크입니다';
 
@@ -48,13 +50,22 @@ function continueAfterVerified(me) {
   const target = consumePostVerifyTarget();
   const returnTo = getLoginReturnTo();
   if (target === 'basic') {
-    navigate('/signup/basic');
+    const roleUi =
+      consumePostVerifyRole() ||
+      uiRoleFromRoleType(me?.role_type) ||
+      (signupState.lastSignup && uiRoleFromRoleType(signupState.lastSignup.roleType)) ||
+      signupState.role ||
+      '';
+    if (roleUi) setRole(roleUi);
+    // 기존 기본등록 라우트 정본 — 역할 쿼리로 SPA 상태 유실 시에도 과외쌤/공부방/학생 폼 구분
+    navigate(roleUi ? `/signup/basic?role=${encodeURIComponent(roleUi)}` : '/signup/basic');
     return;
   }
   if (target === 'role') {
     window.location.href = oauthRoleSelectionUrl(returnTo);
     return;
   }
+  // 기본등록 완료 계정 등: 홈 또는 안전한 returnTo (기존 resolveAfterAuthUrl)
   window.location.href = resolveAfterAuthUrl(me, returnTo);
 }
 

@@ -293,7 +293,14 @@ function renderTutorBasic() {
 }
 
 export function renderSignupBasic() {
-  const role = signupState.role || 'student';
+  const qRole = parseHashQuery().role;
+  const role =
+    qRole === 'student' || qRole === 'study_room' || qRole === 'tutor'
+      ? qRole
+      : signupState.role || 'student';
+  if (role && signupState.role !== role) {
+    signupState.role = role;
+  }
   const oauthMode = parseHashQuery().from === 'oauth';
   const body =
     role === 'study_room'
@@ -360,7 +367,14 @@ export function bindSignupBasicEvents(root) {
     })
     .catch(() => navigate('/login'));
 
-  const role = signupState.role || 'student';
+  const qRole = parseHashQuery().role;
+  const role =
+    qRole === 'student' || qRole === 'study_room' || qRole === 'tutor'
+      ? qRole
+      : signupState.role || 'student';
+  if (role && signupState.role !== role) {
+    signupState.role = role;
+  }
   const form = root.querySelector('form[data-form^="basic-"]');
 
   if (role === 'tutor') {

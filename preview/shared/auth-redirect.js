@@ -101,13 +101,38 @@ export function oauthRoleSelectionUrl(returnTo = '') {
 }
 
 /**
- * @param {string} [target] basic | role | home
+ * DB role_type → auth-ui 회원구분 (기본등록 라우트 정본)
+ * @param {string} [roleType]
+ * @returns {'student'|'study_room'|'tutor'|''}
  */
-export function setPostVerifyTarget(target) {
+export function uiRoleFromRoleType(roleType) {
+  const t = String(roleType || '');
+  if (t === 'tutor') return 'tutor';
+  if (t === 'study_room_owner') return 'study_room';
+  if (t === 'guardian_student' || t === 'student') return 'student';
+  return '';
+}
+
+/**
+ * @param {string} [target] basic | role | home
+ * @param {string} [roleUi] student | study_room | tutor — basic 목표일 때 역할 보존
+ */
+export function setPostVerifyTarget(target, roleUi = '') {
   try {
     sessionStorage.setItem('study114_post_verify', target || 'home');
+    if (roleUi === 'student' || roleUi === 'study_room' || roleUi === 'tutor') {
+      sessionStorage.setItem('study114_post_verify_role', roleUi);
+    }
   } catch {
     /* ignore */
+  }
+}
+
+export function peekPostVerifyTarget() {
+  try {
+    return sessionStorage.getItem('study114_post_verify') || '';
+  } catch {
+    return '';
   }
 }
 
@@ -118,6 +143,32 @@ export function consumePostVerifyTarget() {
     return t;
   } catch {
     return 'home';
+  }
+}
+
+export function consumePostVerifyRole() {
+  try {
+    const r = sessionStorage.getItem('study114_post_verify_role') || '';
+    sessionStorage.removeItem('study114_post_verify_role');
+    return r === 'student' || r === 'study_room' || r === 'tutor' ? r : '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * 미확인 재로그인: 기존 basic|role 목표를 home으로 덮지 않음.
+ * 목표가 없으면 기본등록(basic)을 유지해 역할별 기본등록으로 이어지게 한다.
+ */
+export function ensurePostVerifyTargetForUnverifiedLogin() {
+  try {
+    const cur = sessionStorage.getItem('study114_post_verify');
+    if (cur === 'basic' || cur === 'role') {
+      return;
+    }
+    sessionStorage.setItem('study114_post_verify', 'basic');
+  } catch {
+    /* ignore */
   }
 }
 

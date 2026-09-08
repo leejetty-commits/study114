@@ -3,7 +3,7 @@ import { loginApi, fetchMeApi } from '../auth-api.js';
 import {
   getLoginReturnTo,
   resolveAfterAuthUrl,
-  setPostVerifyTarget,
+  ensurePostVerifyTargetForUnverifiedLogin,
   oauthStartUrl,
 } from '../../../shared/auth-redirect.js';
 import { renderLoginBackdrop, renderLoginStageBelow } from '../login-stage.js';
@@ -139,7 +139,8 @@ export function bindLoginEvents(root) {
       const needsVerify =
         login?.email_verify_required === true ||
         (me.authenticated && me.email_verified === false);
-      if (needsVerify) setPostVerifyTarget('home');
+      // 미확인 재로그인 시 signup의 postVerifyTarget=basic(및 역할)을 home으로 덮지 않음
+      if (needsVerify) ensurePostVerifyTargetForUnverifiedLogin();
       window.location.href = resolveAfterAuthUrl(me, returnTo);
     } catch (err) {
       const message = err instanceof Error ? err.message : '로그인에 실패했습니다.';
