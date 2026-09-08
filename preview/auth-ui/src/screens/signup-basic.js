@@ -1,7 +1,7 @@
 import { signupState } from '../state.js';
 import { PREFERRED_LESSON_TYPE_LABELS, PERSONAL_GENDER_OPTIONS } from '../register-enums.js';
 import { fetchMeApi } from '../auth-api.js';
-import { resolveAfterAuthUrl } from '../../../shared/auth-redirect.js';
+import { resolveAfterAuthUrl, uiRoleFromRoleType, resolveUiRoleForBasicRegister } from '../../../shared/auth-redirect.js';
 import {
   buildHomeStudentImportUrl,
   isReturnImportMode,
@@ -171,8 +171,9 @@ function renderStudentBasic() {
         무엇을 찾을지 정한 뒤, 기준에 맞는 지역 1개를 필수로 등록합니다.
       </p>
       <div class="form-group">
-        <span class="form-label form-label--required">무엇을 찾을까요?</span>
+        <span class="form-label form-label--required">어떤 수업을 찾고 있나요?</span>
         ${dbField('students.preferred_lesson_type')}
+        <p class="form-hint">회원 유형이 아닙니다. 탐색할 수업·제공자 유형을 고릅니다.</p>
         ${renderChips(
           'preferred_lesson_type',
           Object.entries(PREFERRED_LESSON_TYPE_LABELS).map(([value, label]) => ({ value, label })),
@@ -209,7 +210,6 @@ function renderStudentBasic() {
       </div>
       <div class="actions-stack">
         <button type="submit" class="btn btn--primary btn--block">지역 등록 · 다음</button>
-        <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
       </div>
     </form>
   `;
@@ -247,7 +247,6 @@ function renderStudyRoomBasic() {
       })}
       <div class="actions-stack">
         <button type="submit" class="btn btn--primary btn--block">저장 · 다음</button>
-        <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
       </div>
     </form>
   `;
@@ -286,7 +285,6 @@ function renderTutorBasic() {
       </div>
       <div class="actions-stack">
         <button type="submit" class="btn btn--primary btn--block">저장 · 다음</button>
-        <button type="button" class="btn btn--secondary btn--block" data-nav="/signup/role">이전</button>
       </div>
     </form>
   `;
@@ -294,6 +292,7 @@ function renderTutorBasic() {
 
 export function renderSignupBasic() {
   const qRole = parseHashQuery().role;
+  // URL role은 힌트일 뿐 — 허용값만 반영. 서버 역할은 bind에서 최종 확정.
   const role =
     qRole === 'student' || qRole === 'study_room' || qRole === 'tutor'
       ? qRole
@@ -325,8 +324,9 @@ export function renderSignupBasic() {
   return renderAuthShell(content, {
     wide: true,
     showBack: true,
-    backPath: oauthMode ? '/signup/role?from=oauth' : '/signup/role',
-    backLabel: '회원 구분',
+    // 계정 생성 후 회원구분 재선택은 금지. OAuth 역할 미선택만 role 화면으로.
+    backPath: oauthMode ? '/signup/role?from=oauth' : '/signup/verify-email',
+    backLabel: oauthMode ? '회원 구분' : '이메일 확인',
   });
 }
 
@@ -355,6 +355,13 @@ function packMainSubject(data) {
 export function bindSignupBasicEvents(root) {
   bindGlobalEvents(root);
 
+  let role =
+    parseHashQuery().role === 'student' ||
+    parseHashQuery().role === 'study_room' ||
+    parseHashQuery().role === 'tutor'
+      ? parseHashQuery().role
+      : signupState.role || 'student';
+
   fetchMeApi()
     .then((me) => {
       if (!me.authenticated) {
@@ -363,15 +370,30 @@ export function bindSignupBasicEvents(root) {
       }
       if (!me.email_verified || me.needs_account_contact) {
         window.location.href = resolveAfterAuthUrl(me);
+        return;
       }
+      const serverRole = resolveUiRoleForBasicRegister(parseHashQuery().role || '', me);
+      if (!serverRole) {
+        window.location.href = resolveAfterAuthUrl(me);
+        return;
+      }
+      const qRole = parseHashQuery().role;
+      if (qRole && qRole !== serverRole) {
+        // URL 조작 거부 — 서버 역할 화면으로 정상화
+        navigate(`/signup/basic?role=${encodeURIComponent(serverRole)}`);
+        return;
+      }
+      if (signupState.role !== serverRole || role !== serverRole) {
+        signupState.role = serverRole;
+        if (role !== serverRole) {
+          navigate(`/signup/basic?role=${encodeURIComponent(serverRole)}`);
+          return;
+        }
+      }
+      role = serverRole;
     })
     .catch(() => navigate('/login'));
 
-  const qRole = parseHashQuery().role;
-  const role =
-    qRole === 'student' || qRole === 'study_room' || qRole === 'tutor'
-      ? qRole
-      : signupState.role || 'student';
   if (role && signupState.role !== role) {
     signupState.role = role;
   }
@@ -432,6 +454,11 @@ export function bindSignupBasicEvents(root) {
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    role = signupState.role || role;
+    if (role !== 'student' && role !== 'study_room' && role !== 'tutor') {
+      alert('계정 역할을 확인할 수 없습니다. 새로고침 후 다시 시도해 주세요.');
+      return;
+    }
     let data = collectFormData(form);
 
     if (role === 'study_room') {
@@ -445,7 +472,7 @@ export function bindSignupBasicEvents(root) {
       data.region_basis = data.region_basis_type;
     } else if (role === 'student') {
       if (!data.preferred_lesson_type) {
-        alert('무엇을 찾을지 선택해 주세요.');
+        alert('희망 수업·탐색 유형을 선택해 주세요.');
         return;
       }
       if (data.preferred_lesson_type === 'study_room') {

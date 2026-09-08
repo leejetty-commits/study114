@@ -113,15 +113,23 @@ export function uiRoleFromRoleType(roleType) {
   return '';
 }
 
+const POST_VERIFY_ROLE_KEY = 'study114_post_verify_role';
+const POST_VERIFY_TARGET_KEY = 'study114_post_verify';
+const ALLOWED_UI_ROLES = new Set(['student', 'study_room', 'tutor']);
+const PRESERVED_POST_VERIFY_TARGETS = new Set(['basic', 'role', 'home']);
+
 /**
  * @param {string} [target] basic | role | home
- * @param {string} [roleUi] student | study_room | tutor — basic 목표일 때 역할 보존
+ * @param {string} [roleUi] student | study_room | tutor — basic 목표일 때만 저장
  */
 export function setPostVerifyTarget(target, roleUi = '') {
   try {
-    sessionStorage.setItem('study114_post_verify', target || 'home');
-    if (roleUi === 'student' || roleUi === 'study_room' || roleUi === 'tutor') {
-      sessionStorage.setItem('study114_post_verify_role', roleUi);
+    const t = target || 'home';
+    sessionStorage.setItem(POST_VERIFY_TARGET_KEY, t);
+    if (t === 'basic' && ALLOWED_UI_ROLES.has(roleUi)) {
+      sessionStorage.setItem(POST_VERIFY_ROLE_KEY, roleUi);
+    } else {
+      sessionStorage.removeItem(POST_VERIFY_ROLE_KEY);
     }
   } catch {
     /* ignore */
@@ -130,7 +138,16 @@ export function setPostVerifyTarget(target, roleUi = '') {
 
 export function peekPostVerifyTarget() {
   try {
-    return sessionStorage.getItem('study114_post_verify') || '';
+    return sessionStorage.getItem(POST_VERIFY_TARGET_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+export function peekPostVerifyRole() {
+  try {
+    const r = sessionStorage.getItem(POST_VERIFY_ROLE_KEY) || '';
+    return ALLOWED_UI_ROLES.has(r) ? r : '';
   } catch {
     return '';
   }
@@ -138,8 +155,8 @@ export function peekPostVerifyTarget() {
 
 export function consumePostVerifyTarget() {
   try {
-    const t = sessionStorage.getItem('study114_post_verify') || 'home';
-    sessionStorage.removeItem('study114_post_verify');
+    const t = sessionStorage.getItem(POST_VERIFY_TARGET_KEY) || 'home';
+    sessionStorage.removeItem(POST_VERIFY_TARGET_KEY);
     return t;
   } catch {
     return 'home';
@@ -148,28 +165,57 @@ export function consumePostVerifyTarget() {
 
 export function consumePostVerifyRole() {
   try {
-    const r = sessionStorage.getItem('study114_post_verify_role') || '';
-    sessionStorage.removeItem('study114_post_verify_role');
-    return r === 'student' || r === 'study_room' || r === 'tutor' ? r : '';
+    const r = peekPostVerifyRole();
+    sessionStorage.removeItem(POST_VERIFY_ROLE_KEY);
+    return r;
   } catch {
     return '';
   }
 }
 
 /**
- * 미확인 재로그인: 기존 basic|role 목표를 home으로 덮지 않음.
- * 목표가 없으면 기본등록(basic)을 유지해 역할별 기본등록으로 이어지게 한다.
+ * 미확인 재로그인: basic | role | home 기존 목표를 덮지 않음.
+ * 목표가 비어 있으면 basic(역할은 me.role_type으로 복원). home을 basic으로 바꾸지 않음.
  */
 export function ensurePostVerifyTargetForUnverifiedLogin() {
   try {
-    const cur = sessionStorage.getItem('study114_post_verify');
-    if (cur === 'basic' || cur === 'role') {
+    const cur = sessionStorage.getItem(POST_VERIFY_TARGET_KEY) || '';
+    if (PRESERVED_POST_VERIFY_TARGETS.has(cur)) {
       return;
     }
-    sessionStorage.setItem('study114_post_verify', 'basic');
+    sessionStorage.setItem(POST_VERIFY_TARGET_KEY, 'basic');
   } catch {
     /* ignore */
   }
+}
+
+/**
+ * 확인 후 기본등록 경로 — 서버 role_type 정본. URL/hint와 불일치해도 서버 역할만 사용.
+ * @param {{ role_type?: string }} me
+ * @returns {string} hash path e.g. /signup/basic?role=tutor
+ */
+export function basicRegisterPathForMe(me) {
+  const role = uiRoleFromRoleType(me?.role_type);
+  if (!role) {
+    return '/signup/basic';
+  }
+  return `/signup/basic?role=${encodeURIComponent(role)}`;
+}
+
+/**
+ * @param {string} hintRole
+ * @param {{ role_type?: string }} me
+ * @returns {'student'|'study_room'|'tutor'|''}
+ */
+export function resolveUiRoleForBasicRegister(hintRole, me) {
+  const server = uiRoleFromRoleType(me?.role_type);
+  if (!server) {
+    return '';
+  }
+  if (hintRole && hintRole !== server) {
+    return server;
+  }
+  return server;
 }
 
 const UNVERIFIED_AUTH_PATHS = new Set([
