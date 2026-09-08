@@ -9,12 +9,13 @@ final class SmtpMessageSanitizer
 {
     public static function assertSafeMailbox(string $value, string $field): ?string
     {
+        // trim 전에 CR/LF 검사 — 끝 개행만 있어도 헤더 인젝션으로 차단
+        if (preg_match('/[\r\n]/', $value) === 1) {
+            return "{$field} contains CR/LF";
+        }
         $value = trim($value);
         if ($value === '') {
             return "{$field} is empty";
-        }
-        if (preg_match('/[\r\n]/', $value) === 1) {
-            return "{$field} contains CR/LF";
         }
         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
             return "{$field} is not a valid email";

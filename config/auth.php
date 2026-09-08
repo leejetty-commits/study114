@@ -38,5 +38,6 @@ return [
     'phone_otp_resend_cooldown_seconds' => 60,
     'phone_otp_ttl_minutes'             => 3,
     'phone_otp_pepper'                  => study114_env('STUDY114_PHONE_OTP_PEPPER', 'study114-phone-otp-dev'),
-    'mail_log_path'              => $root . '/storage/logs/mail.log',
+    /** 테스트·스테이징: STUDY114_MAIL_LOG_PATH 로 분리 가능 */
+    'mail_log_path'              => study114_env('STUDY114_MAIL_LOG_PATH', $root . '/storage/logs/mail.log'),
 ];

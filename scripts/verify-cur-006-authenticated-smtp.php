@@ -9,14 +9,18 @@ declare(strict_types=1);
  */
 
 $root = dirname(__DIR__);
+$logPath = $root . '/storage/logs/mail-cur006-test.log';
 
 putenv('STUDY114_MAIL_FROM=noreply@study114.net');
 putenv('STUDY114_MAIL_TRANSPORT=fake');
 putenv('STUDY114_MAIL_FAKE_MODE=success');
+putenv('STUDY114_MAIL_LOG_PATH=' . $logPath);
 $_ENV['STUDY114_MAIL_FROM'] = 'noreply@study114.net';
 $_ENV['STUDY114_MAIL_TRANSPORT'] = 'fake';
+$_ENV['STUDY114_MAIL_LOG_PATH'] = $logPath;
 $_SERVER['STUDY114_MAIL_FROM'] = 'noreply@study114.net';
 $_SERVER['STUDY114_MAIL_TRANSPORT'] = 'fake';
+$_SERVER['STUDY114_MAIL_LOG_PATH'] = $logPath;
 
 require_once $root . '/src/bootstrap.php';
 
@@ -48,7 +52,6 @@ function assert_true(bool $cond, string $msg): void
 echo 'PHP_VERSION=' . PHP_VERSION . PHP_EOL;
 assert_true(PHP_VERSION_ID >= 80200 && PHP_VERSION_ID < 80300, 'PHP 8.2.x runtime');
 
-$logPath = $root . '/storage/logs/mail-cur006-test.log';
 @unlink($logPath);
 
 function authConfig(array $over = []): array
