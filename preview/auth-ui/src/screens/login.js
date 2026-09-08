@@ -131,12 +131,15 @@ export function bindLoginEvents(root) {
       submitBtn.textContent = '로그인 중…';
     }
     try {
-      await loginApi({
+      const login = await loginApi({
         email: String(fd.get('email') ?? ''),
         password: String(fd.get('password') ?? ''),
       });
       const me = await fetchMeApi();
-      if (me.authenticated && !me.email_verified) setPostVerifyTarget('home');
+      const needsVerify =
+        login?.email_verify_required === true ||
+        (me.authenticated && me.email_verified === false);
+      if (needsVerify) setPostVerifyTarget('home');
       window.location.href = resolveAfterAuthUrl(me, returnTo);
     } catch (err) {
       const message = err instanceof Error ? err.message : '로그인에 실패했습니다.';

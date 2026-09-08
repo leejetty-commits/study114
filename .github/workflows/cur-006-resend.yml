@@ -1,0 +1,124 @@
+# CUR-006 Resend HTTPS API — PHP 8.2 runtime gate (no FTP / no production send)
+
+name: cur-006-resend
+
+on:
+  push:
+    branches:
+      - fix/cur-006-authenticated-smtp
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/Mail/**"
+      - "src/Auth/AuthMailer.php"
+      - "src/Auth/EmailVerificationService.php"
+      - "src/Auth/PasswordResetService.php"
+      - "src/Paid/ProviderReminderService.php"
+      - "public/api/auth/password/_mail-probe.php"
+      - "public/api/auth/email/**"
+      - "public/.htaccess"
+      - "config/auth.php"
+      - "config/dothome.env.example"
+      - "src/Board/**"
+      - "public/api/board/**"
+      - "public/api/auth/login.php"
+      - "public/api/auth/oauth/complete-role.php"
+      - "public/api/study-room/promo-image.php"
+      - "preview/auth-ui/**"
+      - "scripts/verify-cur-006-email-sent-ui.*"
+      - "scripts/verify-cur-006-email-verify-gate.*"
+      - "scripts/verify-cur-006-email-verify-inventory.*"
+      - "scripts/verify-cur-006-email-verify-flow.*"
+      - "scripts/verify-cur-006-resend.*"
+      - "scripts/php-syntax-check.sh"
+      - "scripts/check-no-committed-secrets.sh"
+      - "docker/docker-compose.cur006-mail.yml"
+      - ".github/workflows/cur-006-resend.yml"
+      - ".github/workflows/deploy.yml"
+
+jobs:
+  php82-mail-gate:
+    name: PHP 8.2 Resend gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, curl
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Show PHP version
+        run: |
+          php -v
+          php -r 'echo "PHP_VERSION_ID=".PHP_VERSION_ID."\n";'
+          php -m | grep -i curl
+          test "$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')" = "8.2"
+
+      - name: PHP syntax check
+        run: bash scripts/php-syntax-check.sh
+
+      - name: CUR-006 Resend mock
+        run: php scripts/verify-cur-006-resend.php
+
+      - name: Node static contract
+        run: npm run verify:cur-006-resend
+
+      - name: Email verify gate contract
+        run: npm run verify:cur-006-email-verify-gate
+
+      - name: Email sent UI contract
+        run: npm run verify:cur-006-email-sent-ui
+
+      - name: Email verify inventory
+        run: npm run verify:cur-006-email-verify-inventory
+
+      - name: Secret placeholder guard
+        run: bash scripts/check-no-committed-secrets.sh
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## CUR-006 Resend PHP_RUNTIME_GATE"
+            echo "- PHP: \`$(php -r 'echo PHP_VERSION;')\`"
+            echo "- php -l: via scripts/php-syntax-check.sh"
+            echo "- mock: scripts/verify-cur-006-resend.php"
+            echo "- static: verify:cur-006-resend"
+            echo "- gate: verify:cur-006-email-verify-gate"
+            echo "- UI: verify:cur-006-email-sent-ui"
+            echo "- inventory: verify:cur-006-email-verify-inventory"
+            echo "- deploy / real send: not run"
+            echo ""
+            echo "### email-verify-flow (Docker 실DB)"
+            echo "CI에 MySQL+API Docker flow job은 포함하지 않음."
+            echo "사유: \`scripts/apply-schema-dev.ps1\`(Windows) 의존·스키마 시드·서비스 기동 시간이 PR gate에 비해 무겁고,"
+            echo "공유 MySQL 상태 없이 재현 가능한 Linux 스키마 적용 스크립트가 아직 CI 정본이 아님."
+            echo "로컬 재현:"
+            echo "\`\`\`"
+            echo "docker compose -f docker/docker-compose.dev.yml -f docker/docker-compose.cur006-mail.yml up -d"
+            echo ".\\scripts\\apply-schema-dev.ps1"
+            echo "docker exec study114-api-dev php scripts/verify-cur-006-email-verify-flow.php"
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  note-email-verify-flow:
+    name: note — Docker email-verify-flow (local only)
+    runs-on: ubuntu-latest
+    needs: [php82-mail-gate]
+    steps:
+      - name: Document local-only flow
+        run: |
+          echo "verify:cur-006-email-verify-flow는 Docker 실DB가 필요해 CI job으로 실행하지 않습니다."
+          echo "로컬: docker compose -f docker/docker-compose.dev.yml -f docker/docker-compose.cur006-mail.yml up -d"
+          echo "그다음: docker exec study114-api-dev php scripts/verify-cur-006-email-verify-flow.php"

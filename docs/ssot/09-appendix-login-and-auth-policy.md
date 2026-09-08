@@ -326,7 +326,7 @@
 | 구현 | `src/Auth/PasswordResetMailTemplate.php` |
 | 금지 | 마케팅 문구 · 장황한 안내 · 배너 · 버튼 2개 이상 |
 
-로컬 개발: `storage/logs/mail.log` — `--- plain ---` / `--- html ---` 구분 기록 (SMTP 대체). **Dev/QA만** plain 링크 복사로 검증.
+로컬 개발(`STUDY114_MAIL_TRANSPORT=fake`): 본문·토큰은 `storage/logs/mail-fake-outbox.jsonl` (FakeMailOutbox)만. 운영 `mail.log`에는 메타(마스킹 TO·KIND·결과 코드)만 기록 — 본문·토큰·URL 금지. **Dev/QA만** outbox에서 링크 복사로 검증.
 
 ### E-5a. validate-token API 해석 (고정)
 

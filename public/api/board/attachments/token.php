@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 4) . '/src/bootstrap.php';
 
-use Study114\Auth\AuthSession;
 use Study114\Board\BoardApi;
 use Study114\Board\BoardAttachmentService;
 use Study114\Board\BoardChannelAcl;
@@ -16,10 +15,7 @@ BoardApi::run(static function (): void {
         BoardApi::fail(405, 'method_not_allowed', 'POST만 허용됩니다.');
     }
 
-    $auth = AuthSession::user();
-    if ($auth === null) {
-        BoardApi::fail(401, 'unauthorized', '로그인이 필요합니다.');
-    }
+    $auth = BoardApi::requireAuth();
 
     $input = BoardApi::readJson();
     $postKey = trim((string) ($input['post_key'] ?? $input['id'] ?? ''));

@@ -1,0 +1,9 @@
+# Override for CUR-006 isolated mail (no real send)
+services:
+  api:
+    environment:
+      STUDY114_MAIL_TRANSPORT: fake
+      STUDY114_MAIL_FAKE_MODE: success
+      STUDY114_MAIL_FROM: no-reply@study114.local
+      STUDY114_MAIL_LOG_PATH: /app/storage/logs/mail-cur006-flow.log
+      STUDY114_MAIL_FAKE_OUTBOX: /app/storage/logs/mail-fake-outbox.jsonl

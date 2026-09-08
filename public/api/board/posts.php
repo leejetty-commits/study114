@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
-use Study114\Auth\AuthSession;
 use Study114\Board\BoardApi;
 use Study114\Board\BoardPostService;
 
@@ -13,7 +12,6 @@ BoardApi::bootstrap();
 BoardApi::run(static function (): void {
     $service = new BoardPostService();
     $method = BoardApi::method();
-    $auth = AuthSession::user();
 
     if ($method === 'GET') {
         $boardKey = BoardApi::queryString('board_key', '');
@@ -22,15 +20,18 @@ BoardApi::run(static function (): void {
         }
         $authorRole = BoardApi::queryString('author_role');
         $postKey = BoardApi::queryString('post_key') ?? BoardApi::queryString('id');
-        BoardApi::ok($service->list($boardKey, $authorRole, $postKey, $auth));
+        // 미확인 세션은 게스트 — 개인/보호 목록 메타 미노출
+        BoardApi::ok($service->list($boardKey, $authorRole, $postKey, BoardApi::optionalVerifiedAuth()));
     }
 
     if ($method === 'POST') {
+        $auth = BoardApi::requireAuth();
         $post = $service->save(BoardApi::readJson(), $auth);
         BoardApi::ok(['post' => $post]);
     }
 
     if ($method === 'DELETE') {
+        $auth = BoardApi::requireAuth();
         $boardKey = BoardApi::queryString('board_key', '');
         $postKey = BoardApi::queryString('post_key') ?? BoardApi::queryString('id');
         $authorRole = BoardApi::queryString('author_role', '');

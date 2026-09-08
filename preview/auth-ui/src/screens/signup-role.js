@@ -3,6 +3,7 @@ import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from
 import { oauthCompleteRoleApi, fetchMeApi, parseApiJson } from '../auth-api.js';
 import { getLoginReturnTo, resolvePostLoginUrl, setPostVerifyTarget } from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
+import { verifyEmailPathForSignupResult } from '../email-verify-send-status.js';
 
 const ROLES = ['student', 'study_room', 'tutor'];
 
@@ -185,14 +186,16 @@ export function bindSignupRoleEvents(root) {
         return;
       }
 
+      const emailSent = data.email_sent === true;
       signupState.lastSignup = {
         userId: data.user_id,
         email: data.email,
         roleType: data.role_type,
+        emailSent,
       };
       signupState.accountDraft = null;
       setPostVerifyTarget('basic');
-      navigate('/signup/verify-email');
+      navigate(verifyEmailPathForSignupResult(emailSent));
     } catch (err) {
       showRoleError(root, err instanceof Error ? err.message : '네트워크 오류');
       submitBtn.disabled = false;

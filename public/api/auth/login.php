@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Auth\AuthSession;
+use Study114\Auth\EmailVerificationGate;
 use Study114\Auth\LoginService;
 use Study114\Admin\AdminRoleService;
 
@@ -60,6 +61,9 @@ try {
 
     AuthSession::close();
 
+    // SSOT C-2: 세션은 허용. 미확인은 정상 가입 완료가 아님 — FE는 email_verified로 대기 화면.
+    $emailVerified = (new EmailVerificationGate())->isVerified((int) $user['user_id']);
+
     echo json_encode([
         'ok' => true,
         'user_id' => $user['user_id'],
@@ -68,6 +72,8 @@ try {
         'name' => $user['name'],
         'admin_level' => $adminLevel,
         'must_change_password' => !empty($session['must_change_password']),
+        'email_verified' => $emailVerified,
+        'email_verify_required' => !$emailVerified,
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(422);

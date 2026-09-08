@@ -139,11 +139,12 @@ final class BoardAttachmentService
             throw new InvalidArgumentException('토큰 대상이 올바르지 않습니다.');
         }
 
-        // 토큰만으로 우회 금지 — 세션 + board ACL 재검증
+        // 토큰만으로 우회 금지 — 세션 + 이메일 확인 + board ACL 재검증
         $auth = \Study114\Auth\AuthSession::user();
         if ($auth === null) {
             throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
         }
+        (new \Study114\Auth\EmailVerificationGate())->assertVerified((int) $auth['user_id']);
         $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
         $aud = (string) ($payload['aud'] ?? 'owner');
         if ($aud === 'admin') {
