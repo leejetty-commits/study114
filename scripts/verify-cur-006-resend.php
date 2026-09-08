@@ -12,15 +12,18 @@ $root = dirname(__DIR__);
 $logPath = $root . '/storage/logs/mail-cur006-test.log';
 $outboxPath = $root . '/storage/logs/mail-cur006-fake-outbox.jsonl';
 
+putenv('STUDY114_APP_ENV=local');
 putenv('STUDY114_MAIL_FROM=no-reply@study114.net');
 putenv('STUDY114_MAIL_TRANSPORT=fake');
 putenv('STUDY114_MAIL_FAKE_MODE=success');
 putenv('STUDY114_MAIL_LOG_PATH=' . $logPath);
 putenv('STUDY114_MAIL_FAKE_OUTBOX=' . $outboxPath);
+$_ENV['STUDY114_APP_ENV'] = 'local';
 $_ENV['STUDY114_MAIL_FROM'] = 'no-reply@study114.net';
 $_ENV['STUDY114_MAIL_TRANSPORT'] = 'fake';
 $_ENV['STUDY114_MAIL_LOG_PATH'] = $logPath;
 $_ENV['STUDY114_MAIL_FAKE_OUTBOX'] = $outboxPath;
+$_SERVER['STUDY114_APP_ENV'] = 'local';
 $_SERVER['STUDY114_MAIL_FROM'] = 'no-reply@study114.net';
 $_SERVER['STUDY114_MAIL_TRANSPORT'] = 'fake';
 $_SERVER['STUDY114_MAIL_LOG_PATH'] = $logPath;
@@ -88,6 +91,36 @@ assert_true(!str_contains($logAfterFake, $secretToken), 'fake 모드 mail.log에
 assert_true(!str_contains($logAfterFake, $secretBody), 'fake 모드 mail.log에 본문 없음');
 assert_true(!str_contains($logAfterFake, '--- plain ---'), 'mail.log에 plain 본문 블록 없음');
 assert_true(str_contains($logAfterFake, 'KIND=email_verify'), 'mail.log KIND=email_verify');
+
+// production + MAIL_TRANSPORT=fake → outbox 강제 차단 (파일·본문·토큰 미생성)
+$prodOutboxToken = 'prod_block_tok_' . bin2hex(random_bytes(8));
+$prodOutboxBody = "token={$prodOutboxToken}";
+@unlink($outboxPath);
+putenv('STUDY114_APP_ENV=production');
+$_ENV['STUDY114_APP_ENV'] = 'production';
+$_SERVER['STUDY114_APP_ENV'] = 'production';
+putenv('STUDY114_MAIL_TRANSPORT=fake');
+$_ENV['STUDY114_MAIL_TRANSPORT'] = 'fake';
+$_SERVER['STUDY114_MAIL_TRANSPORT'] = 'fake';
+assert_true(FakeMailOutbox::isEnabled() === false, 'production+fake → FakeMailOutbox::isEnabled=false');
+$mailerProdFake = new AuthMailer(new FakeMailTransport('success'));
+assert_true(
+    $mailerProdFake->send('user@example.com', '[우동공과] 이메일 확인', $prodOutboxBody) === true,
+    'production+fake transport send는 가능(outbox만 차단)'
+);
+assert_true(FakeMailOutbox::last() === null, 'production+fake → FakeMailOutbox::last()=null');
+assert_true(!is_file($outboxPath) || trim((string) file_get_contents($outboxPath)) === '', 'production+fake → outbox 파일 미생성');
+assert_true(
+    !is_file($outboxPath) || !str_contains((string) file_get_contents($outboxPath), $prodOutboxToken),
+    'production+fake → outbox에 token 없음'
+);
+putenv('STUDY114_APP_ENV=local');
+$_ENV['STUDY114_APP_ENV'] = 'local';
+$_SERVER['STUDY114_APP_ENV'] = 'local';
+putenv('STUDY114_MAIL_TRANSPORT=fake');
+$_ENV['STUDY114_MAIL_TRANSPORT'] = 'fake';
+$_SERVER['STUDY114_MAIL_TRANSPORT'] = 'fake';
+assert_true(FakeMailOutbox::isEnabled() === true, 'local+fake → FakeMailOutbox 허용');
 
 $mailer = new AuthMailer(new FakeMailTransport('auth_failed'));
 assert_true($mailer->send('user@example.com', 't', 'body') === false, '인증 실패 → false');
@@ -286,8 +319,22 @@ assert_true(str_contains($probe, 'MailAddressMasker'), 'probe TO 마스킹');
 assert_true(str_contains($probe, 'Resend'), 'probe Resend 문구');
 assert_true(str_contains($probe, 'resend_accepted'), 'probe resend_accepted');
 assert_true(!str_contains($probe, 'smtp_accepted'), 'probe smtp_accepted 제거');
-assert_true(!preg_match('/\$_GET\[[\'"]key[\'"]\].*[\'"]key[\'"]\s*=>/', $probe), 'probe key를 JSON 키로 미노출');
+assert_true(str_contains($probe, 'method_not_allowed'), 'probe GET→405 method_not_allowed');
+assert_true(str_contains($probe, "REQUEST_METHOD"), 'probe REQUEST_METHOD 검사');
+assert_true(str_contains($probe, 'HTTP_X_STUDY114_MAIL_PROBE_KEY'), 'probe header X-Study114-Mail-Probe-Key');
+assert_true(str_contains($probe, "php://input"), 'probe JSON body to');
+assert_true(!str_contains($probe, "\$_GET['key']") && !str_contains($probe, '$_GET["key"]'), 'probe URL key 제거');
+assert_true(!str_contains($probe, "\$_GET['to']") && !str_contains($probe, '$_GET["to"]'), 'probe URL to 제거');
+assert_true(!str_contains($probe, '?key='), 'probe URL key 예시 제거');
+assert_true(str_contains($probe, "'code' => 'forbidden'") || str_contains($probe, '"code" => "forbidden"'), 'probe 잘못된 key→403 forbidden');
 assert_true(str_contains($probe, 'details omitted'), 'probe 예외 시 key/메시지 미노출');
+assert_true(!preg_match('/error_log\([^)]*\$(key|to|expected|plain|html)/', $probe), 'probe 로그에 key/email/본문 미기록');
+
+$deployDoc = (string) file_get_contents($root . '/docs/internal/cur-006-config-deploy-gate.md');
+assert_true(str_contains($deployDoc, '운영 배포 필수'), 'deploy gate 문서 Resend 필수');
+assert_true(str_contains($deployDoc, 'build/FTP 전에 배포를 중단'), 'deploy gate 문서 fail-closed');
+assert_true(!str_contains($deployDoc, '선택 주입'), 'deploy gate 문서 선택 주입 제거');
+assert_true(!str_contains($deployDoc, 'placeholder 유지'), 'deploy gate 문서 placeholder 유지 제거');
 
 $disabledSrc = (string) file_get_contents($root . '/src/Mail/DisabledMailTransport.php');
 assert_true(!str_contains($disabledSrc, 'SMTP configuration'), 'DisabledMailTransport SMTP 문구 제거');

@@ -59,6 +59,8 @@ assert(!/file_put_contents\([^)]*\$body/.test(authMailer), 'AuthMailer가 body�
 
 const outbox = read('src/Mail/FakeMailOutbox.php');
 assert(outbox.includes("=== 'fake'"), 'FakeMailOutbox는 fake transport만');
+assert(outbox.includes("=== 'production'"), 'FakeMailOutbox production 강제 차단');
+assert(outbox.includes('STUDY114_APP_ENV'), 'FakeMailOutbox APP_ENV 검사');
 assert(outbox.includes('mail-fake-outbox.jsonl'), 'FakeMailOutbox 기본 경로');
 
 const disabled = read('src/Mail/DisabledMailTransport.php');
@@ -92,6 +94,18 @@ assert(probe.includes('Resend'), 'probe Resend 문구');
 assert(probe.includes('resend_accepted'), 'probe resend_accepted');
 assert(!probe.includes('smtp_accepted'), 'probe smtp_accepted 제거');
 assert(!probe.includes('SMTP 발송'), 'probe SMTP 문구 제거');
+assert(probe.includes('method_not_allowed'), 'probe GET 405');
+assert(probe.includes('HTTP_X_STUDY114_MAIL_PROBE_KEY'), 'probe header key');
+assert(probe.includes('php://input'), 'probe JSON body');
+assert(!probe.includes("$_GET['key']") && !probe.includes('$_GET["key"]'), 'probe URL key 제거');
+assert(!probe.includes("$_GET['to']") && !probe.includes('$_GET["to"]'), 'probe URL to 제거');
+assert(!probe.includes('?key='), 'probe URL key 예시 제거');
+assert(probe.includes("'code' => 'forbidden'") || probe.includes('"forbidden"'), 'probe 잘못된 key 403');
+
+const deployDoc = read('docs/internal/cur-006-config-deploy-gate.md');
+assert(deployDoc.includes('운영 배포 필수'), 'deploy gate 문서 Resend 필수');
+assert(!deployDoc.includes('선택 주입'), 'deploy gate 문서 선택 주입 제거');
+assert(!deployDoc.includes('placeholder 유지'), 'deploy gate 문서 placeholder 유지 제거');
 
 const authCfg = read('config/auth.php');
 assert(authCfg.includes('STUDY114_RESEND_API_KEY'), 'auth.php Resend key');
@@ -145,8 +159,11 @@ for (const needle of [
   'Resend mock',
   'reminder_mail_excluded',
   'fake outbox에만 token',
+  'production+fake → FakeMailOutbox::isEnabled=false',
   'resend 모드 mail.log에 reset token 없음',
   'deploy Resend Secret 필수',
+  'probe GET→405 method_not_allowed',
+  'probe header X-Study114-Mail-Probe-Key',
 ]) {
   assert(phpTest.includes(needle), `PHP mock 시나리오: ${needle}`);
 }

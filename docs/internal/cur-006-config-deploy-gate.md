@@ -10,4 +10,6 @@
 `config/auth.php`는 Git 추적·비밀번호 없음. FTP `config/` 전체 업로드 금지.
 `database.php`·`storage/` 미배포.
 
-`deploy.yml`은 `STUDY114_RESEND_API_KEY`를 **선택 주입**. 미설정 시 placeholder 유지 → fail-closed.
+`deploy.yml`에서 `STUDY114_RESEND_API_KEY`는 **운영 배포 필수** Secret이다.
+빈 값·`__STUDY114_RESEND_API_KEY__`·placeholder 형식이면 **build/FTP 전에 배포를 중단**한다.
+Secret 실제 값은 로그에 출력하지 않는다.

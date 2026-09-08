@@ -5,12 +5,37 @@ declare(strict_types=1);
 namespace Study114\Mail;
 
 /**
- * STUDY114_MAIL_TRANSPORT=fake 전용 outbox.
- * production/resend에서는 기록·조회하지 않는다 (본문·토큰 격리).
+ * STUDY114_MAIL_TRANSPORT=fake 전용 outbox (비운영만).
+ * STUDY114_APP_ENV=production 이면 transport와 무관하게 비활성 — 본문·토큰 파일 생성 금지.
  */
 final class FakeMailOutbox
 {
     public static function isEnabled(): bool
+    {
+        if (self::appEnv() === 'production') {
+            return false;
+        }
+
+        return self::mailTransport() === 'fake';
+    }
+
+    private static function appEnv(): string
+    {
+        $env = '';
+        if (function_exists('study114_env')) {
+            $env = strtolower(trim(study114_env('STUDY114_APP_ENV', '')));
+        }
+        if ($env === '' && isset($_ENV['STUDY114_APP_ENV'])) {
+            $env = strtolower(trim((string) $_ENV['STUDY114_APP_ENV']));
+        }
+        if ($env === '' && isset($_SERVER['STUDY114_APP_ENV'])) {
+            $env = strtolower(trim((string) $_SERVER['STUDY114_APP_ENV']));
+        }
+
+        return $env;
+    }
+
+    private static function mailTransport(): string
     {
         $mode = '';
         if (function_exists('study114_env')) {
@@ -19,8 +44,11 @@ final class FakeMailOutbox
         if ($mode === '' && isset($_ENV['STUDY114_MAIL_TRANSPORT'])) {
             $mode = strtolower(trim((string) $_ENV['STUDY114_MAIL_TRANSPORT']));
         }
+        if ($mode === '' && isset($_SERVER['STUDY114_MAIL_TRANSPORT'])) {
+            $mode = strtolower(trim((string) $_SERVER['STUDY114_MAIL_TRANSPORT']));
+        }
 
-        return $mode === 'fake';
+        return $mode;
     }
 
     public static function path(): string
