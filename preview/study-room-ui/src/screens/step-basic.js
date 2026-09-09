@@ -53,15 +53,20 @@ function complexLabel(slot) {
 function exposureLines(s) {
   const slots = Array.isArray(s.saved_regions) ? s.saved_regions.slice(0, 3) : [];
   while (slots.length < 3) slots.push({});
-  return slots.map((slot, i) => {
-    const basis = slot.region_basis_type || 'dong';
-    const text =
-      basis === 'complex'
-        ? complexLabel(slot)
-        : blank(slot.region_label) || regionLabel(slot.region_id);
-    const mark = slot.is_primary ? '대표' : `${i + 1}`;
-    return `${mark} · ${String(text || '').trim()}`;
-  });
+  return slots
+    .map((slot, i) => {
+      const basis = slot.region_basis_type || 'dong';
+      const text =
+        basis === 'complex'
+          ? complexLabel(slot)
+          : blank(slot.region_label) || regionLabel(slot.region_id);
+      const t = String(text || '').trim();
+      // 미입력 홍보지역 2·3은 미표시 (공란 합성·사업장 복제 표시 금지)
+      if (!t && i > 0) return null;
+      const mark = slot.is_primary ? '대표' : `${i + 1}`;
+      return `${mark} · ${t}`;
+    })
+    .filter((line) => line !== null);
 }
 
 let basicEditOpen = false;

@@ -421,34 +421,69 @@ final class BasicRegisterService
     }
 
     /**
+     * 홍보지역 슬롯에 의도된 입력( id / 주소 메타 )이 있는지.
+     * 비어 있으면 사업장·집주소·다른 슬롯으로 채우지 않는다.
+     *
+     * @param array<string, mixed> $slot
+     */
+    private function promoSlotHasIntent(array $slot): bool
+    {
+        if (isset($slot['region_id']) && $slot['region_id'] !== '' && (int) $slot['region_id'] > 0) {
+            return true;
+        }
+        if (isset($slot['complex_id']) && $slot['complex_id'] !== '' && (int) $slot['complex_id'] > 0) {
+            return true;
+        }
+        foreach (
+            [
+                'address_sido',
+                'address_sigungu',
+                'address_bname',
+                'address_hname',
+                'region_label',
+                'complex_name',
+                'complex_address',
+                'address_text',
+            ] as $key
+        ) {
+            if (trim((string) ($slot[$key] ?? '')) !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @param array<string, mixed> $input
      * @return list<array{slot:int,region_id:int,complex_id:?int,region_basis_type:string,is_primary:int}>
      */
     private function normalizeSignupPromoSlots(PDO $pdo, array $input, int $fallbackRegionId, ?int $fallbackComplexId, string $fallbackBasis): array
     {
+        // 사업장 fallback 인자는 홍보 슬롯에 사용하지 않음 (복제 금지)
+        unset($fallbackRegionId, $fallbackComplexId, $fallbackBasis);
+
         $raw = $input['saved_regions'] ?? null;
         $out = [];
         if (is_array($raw) && $raw !== []) {
-            $primaryAssigned = false;
             foreach (array_values($raw) as $idx => $slot) {
                 $slotNum = $idx + 1;
                 if ($slotNum > 3 || !is_array($slot)) {
+                    continue;
+                }
+                // 선택 슬롯 2·3(및 미입력 슬롯)은 매핑 없음으로 유지
+                if (!$this->promoSlotHasIntent($slot)) {
                     continue;
                 }
                 $regionId = isset($slot['region_id']) && $slot['region_id'] !== '' ? (int) $slot['region_id'] : 0;
                 $complexId = isset($slot['complex_id']) && $slot['complex_id'] !== '' ? (int) $slot['complex_id'] : null;
                 $slotBasis = isset($slot['region_basis_type']) && in_array($slot['region_basis_type'], ['dong', 'complex'], true)
                     ? $slot['region_basis_type']
-                    : $fallbackBasis;
+                    : (($complexId !== null && $complexId > 0) ? 'complex' : 'dong');
                 if ($regionId <= 0) {
                     try {
-                        $payload = $input;
-                        foreach ($slot as $key => $value) {
-                            if ($value !== '' && $value !== null) {
-                                $payload[$key] = $value;
-                            }
-                        }
-                        $regionId = (int) RegionEnsure::fromKakao($pdo, $payload)['id'];
+                        // 슬롯 자체 메타만 사용 — top-level 사업장주소($input) 폴백 금지
+                        $regionId = (int) RegionEnsure::fromKakao($pdo, $slot)['id'];
                     } catch (InvalidArgumentException $e) {
                         continue;
                     }
@@ -469,16 +504,12 @@ final class BasicRegisterService
                     $complexId = null;
                     $slotBasis = 'dong';
                 }
-                $isPrimary = $slotNum === 1 ? 1 : 0;
-                if ($isPrimary) {
-                    $primaryAssigned = true;
-                }
                 $out[] = [
                     'slot' => $slotNum,
                     'region_id' => $regionId,
                     'complex_id' => $complexId,
                     'region_basis_type' => $slotBasis,
-                    'is_primary' => $isPrimary,
+                    'is_primary' => $slotNum === 1 ? 1 : 0,
                 ];
             }
         }

@@ -27,13 +27,36 @@ function summarizeBasic(role, data) {
       .join(' · ');
   }
   if (role === 'study_room') {
-    return [data.study_room_name, data.main_subject_note, data.region_label]
+    const promo1 = Array.isArray(data.saved_regions) ? data.saved_regions[0] || {} : {};
+    const promoLabel =
+      promo1.region_label ||
+      promo1.complex_name ||
+      promo1.complex_address ||
+      (promo1.region_id ? `region#${promo1.region_id}` : '');
+    return [data.study_room_name, data.main_subject_note, promoLabel && `홍보지역1: ${promoLabel}`]
       .filter(Boolean)
       .join(' · ');
   }
   return [data.tutor_display_name, data.main_subject_note, data.region_label || data.activity_city]
     .filter(Boolean)
     .join(' · ');
+}
+
+/** 공부방 기본등록 완료 기준: 홍보지역 1 (사업장 region_id와 별개) */
+function studyRoomHasPromoSlot1(basic) {
+  const slot = Array.isArray(basic?.saved_regions) ? basic.saved_regions[0] || {} : {};
+  if (String(slot.region_id || '').trim()) return true;
+  if (String(slot.complex_id || '').trim()) return true;
+  if (String(slot.region_label || '').trim()) return true;
+  if (String(slot.address_sido || '').trim() || String(slot.address_bname || '').trim()) return true;
+  if (slot.region_basis_type === 'complex') {
+    return !!(
+      String(slot.complex_name || '').trim() ||
+      String(slot.complex_address || '').trim() ||
+      String(slot.address_text || '').trim()
+    );
+  }
+  return false;
 }
 
 export function renderSignupComplete() {
@@ -121,22 +144,32 @@ export function bindSignupCompleteEvents(root) {
   root.querySelector('[data-action="go-home"]')?.addEventListener('click', () => {
     const role = signupState.role || 'student';
     const basic = signupState.basicRegister?.[role];
+    const savedOk =
+      !!signupState.basicRegisterResult?.id &&
+      (role === 'study_room'
+        ? signupState.basicRegisterResult?.kind === 'study_room'
+        : role === 'tutor'
+          ? signupState.basicRegisterResult?.kind === 'tutor'
+          : signupState.basicRegisterResult?.kind === 'student');
     const hasSeed =
       !!basic &&
       (role === 'student'
         ? !!(basic.region_id || basic.complex_id || basic.activity_city || basic.region_label)
         : role === 'study_room'
-          ? !!(basic.region_id || basic.complex_id)
+          ? studyRoomHasPromoSlot1(basic) || savedOk
           : !!(basic.region_id || basic.activity_city));
 
-    if (!hasSeed) {
+    if (role === 'study_room' && hasSeed) {
+      // 잘못된 「지역 없음」 경고 대신 완료 안내만
+      window.alert('기본등록이 완료되었습니다. 상세등록은 마이페이지에서 이어갈 수 있습니다.');
+    } else if (!hasSeed) {
       const proceed = window.confirm(
-        '지역(기본등록) 정보가 없습니다. 그래도 홈으로 이동할까요?\n마이페이지에서 기본·상세등록을 이어갈 수 있습니다.',
+        '홍보지역(기본등록) 정보가 없습니다. 그래도 홈으로 이동할까요?\n마이페이지에서 기본·상세등록을 이어갈 수 있습니다.',
       );
       if (!proceed) return;
     }
 
-    // 지역등록만 있고 상세 미완 → 홈은 들어가되, 찾기 기본값은 seed 라벨 사용
+    // 학생 찾기 기본값 seed (공부방 홍보지역과 무관)
     try {
       if (basic?.region_label || basic?.activity_city) {
         const hope =
