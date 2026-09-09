@@ -78,23 +78,8 @@ export function validateLessonState(state) {
   if (!String(state.fee_basis_type || '').trim()) {
     return '산정방식을 선택해 주세요.';
   }
-  const basis = String(state.fee_basis_type || '');
-  if (basis === 'monthly_by_weekly_schedule') {
-    const n = Number(state.lessons_per_week);
-    if (!Number.isFinite(n) || n <= 0) {
-      return '주 횟수를 입력해 주세요.';
-    }
-  }
-  if (basis === 'monthly_by_total_sessions') {
-    const n = Number(state.monthly_session_count);
-    if (!Number.isFinite(n) || n <= 0) {
-      return '월 총 횟수를 입력해 주세요.';
-    }
-  }
-  const minutes = Number(state.minutes_per_lesson);
-  if (!Number.isFinite(minutes) || minutes <= 0) {
-    return '1회 수업 시간을 입력해 주세요.';
-  }
+  // lessons_per_week / monthly_session_count / minutes_per_lesson 는 UI 선택값 —
+  // 단계 이동 필수로 쓰지 않는다. 입력 시 payload·저장·재진입은 그대로 유지.
   if (!Array.isArray(state.lesson_places) || state.lesson_places.length === 0) {
     return '강의장소를 1개 이상 선택해 주세요.';
   }
