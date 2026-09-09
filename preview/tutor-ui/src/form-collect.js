@@ -66,6 +66,29 @@ export function syncLessonFromForm(form, state) {
   });
 }
 
+/** tutors.* SMALLINT UNSIGNED 기술 상한 (사업 최대값 아님) */
+const SMALLINT_UNSIGNED_MAX = 65535;
+
+/**
+ * 공란 허용 · 값이 있으면 양의 정수만 (1 ~ SMALLINT UNSIGNED).
+ * trim은 주력과목 등 기존 validate와 동일; syncLessonFromForm은 FormData 문자열을 그대로 둔다.
+ */
+function optionalPositiveIntMessage(value, label) {
+  const raw = String(value ?? '').trim();
+  if (raw === '') return null;
+  if (!/^\d+$/.test(raw)) {
+    return `${label}: 1 이상의 정수로 입력해 주세요.`;
+  }
+  const n = Number(raw);
+  if (!Number.isSafeInteger(n) || n < 1) {
+    return `${label}: 1 이상의 정수로 입력해 주세요.`;
+  }
+  if (n > SMALLINT_UNSIGNED_MAX) {
+    return `${label}: 1~65535 사이의 정수로 입력해 주세요.`;
+  }
+  return null;
+}
+
 /** @returns {string|null} 안내 문구. 통과면 null */
 export function validateLessonState(state) {
   if (!String(state.main_subject_note || '').trim()) {
@@ -78,22 +101,14 @@ export function validateLessonState(state) {
   if (!String(state.fee_basis_type || '').trim()) {
     return '산정방식을 선택해 주세요.';
   }
-  const basis = String(state.fee_basis_type || '');
-  if (basis === 'monthly_by_weekly_schedule') {
-    const n = Number(state.lessons_per_week);
-    if (!Number.isFinite(n) || n <= 0) {
-      return '주 횟수를 입력해 주세요.';
-    }
-  }
-  if (basis === 'monthly_by_total_sessions') {
-    const n = Number(state.monthly_session_count);
-    if (!Number.isFinite(n) || n <= 0) {
-      return '월 총 횟수를 입력해 주세요.';
-    }
-  }
-  const minutes = Number(state.minutes_per_lesson);
-  if (!Number.isFinite(minutes) || minutes <= 0) {
-    return '1회 수업 시간을 입력해 주세요.';
+  // UI 선택값: 공란이면 단계 이동 허용. 값이 있으면 양의 정수만.
+  for (const [key, label] of [
+    ['lessons_per_week', '주 횟수'],
+    ['monthly_session_count', '월 총 횟수'],
+    ['minutes_per_lesson', '1회 수업 시간'],
+  ]) {
+    const msg = optionalPositiveIntMessage(state[key], label);
+    if (msg) return msg;
   }
   if (!Array.isArray(state.lesson_places) || state.lesson_places.length === 0) {
     return '강의장소를 1개 이상 선택해 주세요.';
