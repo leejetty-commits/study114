@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - fix/cur-006-authenticated-smtp
-      - fix/study-room-basic-register-api
   pull_request:
     branches:
       - main
