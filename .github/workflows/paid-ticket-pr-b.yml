@@ -51,7 +51,10 @@ jobs:
           tools: none
 
       - name: Install mysql client
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client
+        run: |
+          sudo find /etc/apt/sources.list.d -maxdepth 1 -type f \( -name 'google-chrome*' -o -name '*chrome*.list' -o -name '*chrome*.sources' \) -delete
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mysql-client
 
       - name: PR-B PHP / checkout / 062 / FIFO / immediate
         run: bash scripts/verify-paid-pr-b-ci.sh
