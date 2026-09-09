@@ -1,6 +1,6 @@
 import { signupState } from '../state.js';
 import { PREFERRED_LESSON_TYPE_LABELS, PERSONAL_GENDER_OPTIONS } from '../register-enums.js';
-import { fetchMeApi } from '../auth-api.js';
+import { fetchMeApi, basicRegisterApi } from '../auth-api.js';
 import { resolveAfterAuthUrl, resolveUiRoleForBasicRegister } from '../../../shared/auth-redirect.js';
 import {
   buildHomeStudentImportUrl,

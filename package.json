@@ -36,6 +36,7 @@
     "verify:cur-006-email-verify-flow": "php scripts/verify-cur-006-email-verify-flow.php",
     "verify:cur-006-email-verify-inventory": "npx --yes vite-node scripts/verify-cur-006-email-verify-inventory.mjs",
     "verify:cur-006-post-verify-role": "npx --yes vite-node scripts/verify-cur-006-post-verify-role.mjs",
+    "verify:study-room-basic-register-api": "npx --yes vite-node scripts/verify-study-room-basic-register-api.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {
