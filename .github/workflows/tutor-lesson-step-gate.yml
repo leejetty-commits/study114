@@ -1,0 +1,51 @@
+# Tutor lesson step gate — 상세등록 1→2 선택값(공란 허용 · 양의 정수) 회귀
+# CUR-006 / Paid / Board / ShopPage 책임과 분리
+
+name: Tutor lesson step gate
+
+on:
+  pull_request:
+    paths:
+      - "preview/tutor-ui/**"
+      - "scripts/verify-tutor-lesson-optional-step.*"
+      - "package.json"
+      - ".github/workflows/tutor-lesson-step-gate.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "preview/tutor-ui/**"
+      - "scripts/verify-tutor-lesson-optional-step.*"
+      - "package.json"
+      - ".github/workflows/tutor-lesson-step-gate.yml"
+
+concurrency:
+  group: tutor-lesson-step-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-tutor-lesson-optional-step:
+    name: verify:tutor-lesson-optional-step
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: preview/tutor-ui/package-lock.json
+
+      - name: Install tutor-ui deps
+        working-directory: preview/tutor-ui
+        run: npm ci
+
+      - name: Guard — tutor lesson optional step
+        run: npm run verify:tutor-lesson-optional-step
+
+      - name: tutor-ui production build
+        working-directory: preview/tutor-ui
+        run: npm run build

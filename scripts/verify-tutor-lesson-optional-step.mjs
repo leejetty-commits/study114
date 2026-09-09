@@ -62,7 +62,7 @@ function base(overrides = {}) {
   assert(p.minutes_per_lesson === '', '2 monthly-basis: empty minutes in payload');
 }
 
-// —— 3) 선택값 입력 시 payload 유지
+// —— 3) 선택값 입력 시 payload 유지 + 양의 정수 PASS
 {
   const state = base({
     lessons_per_week: '2',
@@ -77,6 +77,37 @@ function base(overrides = {}) {
   assert(p.minutes_per_lesson === '90', '3 payload keeps minutes_per_lesson');
   assert(p.fee_description === '협의 가능', '3 payload keeps fee_description');
   assert(!Object.values(p).some((v) => v === 2 || v === 90), '3 payload values stay strings (no invented coercion to fill empties)');
+}
+
+// —— 3b) 선택값 형식: 0 / 음수 / 비숫자 / 소수 → FAIL · 공란·양수 → PASS
+{
+  const posMsg = '주 횟수: 1 이상의 정수로 입력해 주세요.';
+  const rangeMsg = '주 횟수: 1~65535 사이의 정수로 입력해 주세요.';
+  assert(validateLessonState(base({ lessons_per_week: '' })) === null, '3b blank weekly PASS');
+  assert(validateLessonState(base({ lessons_per_week: '   ' })) === null, '3b whitespace-only weekly PASS (trim=blank)');
+  assert(validateLessonState(base({ lessons_per_week: '3' })) === null, '3b positive weekly PASS');
+  assert(validateLessonState(base({ lessons_per_week: ' 3 ' })) === null, '3b trimmed positive weekly PASS');
+  assert(validateLessonState(base({ lessons_per_week: '0' })) === posMsg, '3b zero weekly FAIL');
+  assert(validateLessonState(base({ lessons_per_week: '-1' })) === posMsg, '3b negative weekly FAIL');
+  assert(validateLessonState(base({ lessons_per_week: 'abc' })) === posMsg, '3b non-numeric weekly FAIL');
+  assert(validateLessonState(base({ lessons_per_week: '1.5' })) === posMsg, '3b decimal weekly FAIL (SMALLINT integer)');
+  assert(
+    validateLessonState(base({ minutes_per_lesson: '0' })) ===
+      '1회 수업 시간: 1 이상의 정수로 입력해 주세요.',
+    '3b zero minutes FAIL',
+  );
+  assert(
+    validateLessonState(base({ monthly_session_count: 'x' })) ===
+      '월 총 횟수: 1 이상의 정수로 입력해 주세요.',
+    '3b non-numeric monthly FAIL',
+  );
+  // DB 기술 계약: tutors.lessons_per_week SMALLINT UNSIGNED (0..65535). 사업 상한 아님.
+  assert(validateLessonState(base({ lessons_per_week: '65535' })) === null, '3b SMALLINT UNSIGNED max PASS');
+  assert(validateLessonState(base({ lessons_per_week: '65536' })) === rangeMsg, '3b above SMALLINT UNSIGNED FAIL');
+  assert(
+    validateLessonState(base({ lessons_per_week: '9007199254740993' })) === posMsg,
+    '3b beyond Number.isSafeInteger FAIL',
+  );
 }
 
 // —— 4) 필수값 누락 → 차단
