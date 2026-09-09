@@ -21,23 +21,29 @@ export function getCityUnits(apiCities) {
  * @param {{ region_id?: string|number, is_primary?: boolean }} slot
  * @param {number} idx
  * @param {ReturnType<typeof buildCityUnitOptions>} units
- * @param {{ namePrefix?: string }} [opts]
+ * @param {{ namePrefix?: string, showPrimary?: boolean, labelPrefix?: string }} [opts]
  */
 export function renderTutorRegionSlot(slot, idx, units, opts = {}) {
   const prefix = opts.namePrefix || '';
+  const showPrimary = opts.showPrimary !== false;
+  const labelPrefix = opts.labelPrefix || '지역';
   const sel = resolveCitySelection(slot.region_id || '', units);
   const isProv = String(sel.parent).startsWith('prov:');
   const provCode = isProv ? sel.parent.slice(5) : '';
   const required = idx === 0 ? 'required' : '';
 
+  const primaryUi = showPrimary
+    ? `<label class="form-check" style="margin-left:auto;">
+          <input type="radio" name="${prefix}is_primary" value="${idx}" ${slot.is_primary ? 'checked' : ''} />
+          <span class="form-check__label">대표</span>
+        </label>`
+    : '';
+
   return `
     <div class="register-region-slot${slot.is_primary ? ' is-primary' : ''}" data-region-slot="${idx}">
       <div class="form-row register-region-slot__head">
-        <strong>지역 ${idx + 1}${idx === 0 ? ' (필수)' : ' (선택)'}</strong>
-        <label class="form-check" style="margin-left:auto;">
-          <input type="radio" name="${prefix}is_primary" value="${idx}" ${slot.is_primary ? 'checked' : ''} />
-          <span class="form-check__label">대표</span>
-        </label>
+        <strong>${labelPrefix} ${idx + 1}${idx === 0 ? ' (필수)' : ' (선택)'}</strong>
+        ${primaryUi}
       </div>
       <div class="register-region-slot__fields">
         <div class="form-group">
@@ -55,6 +61,7 @@ export function renderTutorRegionSlot(slot, idx, units, opts = {}) {
       </div>
       <input type="hidden" data-field="region_id" value="${slot.region_id || ''}" />
       <input type="hidden" data-field="scope_type" value="city" />
+      <p class="form-note form-note--error" data-field-error hidden></p>
     </div>`;
 }
 
@@ -84,11 +91,33 @@ export function bindTutorRegionSlotEvents(root, units) {
       if (hiddenId) {
         hiddenId.value = regionIdFromSelection(parent, cityLabel, units);
       }
+      clearTutorRegionSlotError(slotEl);
     };
 
     parentSel?.addEventListener('change', sync);
     citySel?.addEventListener('change', sync);
   });
+}
+
+/**
+ * @param {Element} slotEl
+ * @param {string} [msg]
+ */
+export function setTutorRegionSlotError(slotEl, msg) {
+  const err = slotEl?.querySelector('[data-field-error]');
+  if (!err) return;
+  if (msg) {
+    err.hidden = false;
+    err.textContent = msg;
+  } else {
+    err.hidden = true;
+    err.textContent = '';
+  }
+}
+
+/** @param {Element} slotEl */
+export function clearTutorRegionSlotError(slotEl) {
+  setTutorRegionSlotError(slotEl, '');
 }
 
 /**
@@ -109,4 +138,63 @@ export function collectTutorRegionSlots(root) {
     slots.push({ region_id: '', scope_type: 'city', is_primary: false });
   }
   return slots.slice(0, 3);
+}
+
+/**
+ * 숫자 region_id만 유효. 정적 metro-* 폴백 ID는 거부.
+ * @param {Array<{region_id?: string, is_primary?: boolean}>} slots
+ * @returns {{ ok: true, slots: Array<{region_id: string, scope_type: string, is_primary: boolean}> } | { ok: false, index: number, message: string }}
+ */
+export function validateTutorActivityRegions(slots) {
+  const list = Array.isArray(slots) ? slots.slice(0, 3) : [];
+  while (list.length < 3) {
+    list.push({ region_id: '', scope_type: 'city', is_primary: false });
+  }
+
+  const slot0 = String(list[0]?.region_id || '').trim();
+  if (!slot0) {
+    return { ok: false, index: 0, message: '활동지역 1을 선택해 주세요.' };
+  }
+  if (!/^\d+$/.test(slot0)) {
+    return {
+      ok: false,
+      index: 0,
+      message: '활동지역 1: 지역 목록을 다시 불러온 뒤 선택해 주세요.',
+    };
+  }
+
+  const seen = new Map();
+  /** @type {Array<{region_id: string, scope_type: string, is_primary: boolean}>} */
+  const filled = [];
+  for (let i = 0; i < 3; i += 1) {
+    const id = String(list[i]?.region_id || '').trim();
+    if (!id) continue;
+    if (!/^\d+$/.test(id)) {
+      return {
+        ok: false,
+        index: i,
+        message: `활동지역 ${i + 1}: 지역 목록을 다시 불러온 뒤 선택해 주세요.`,
+      };
+    }
+    if (seen.has(id)) {
+      return {
+        ok: false,
+        index: i,
+        message: `활동지역 ${i + 1}: 이미 선택한 지역입니다.`,
+      };
+    }
+    seen.set(id, i);
+    filled.push({
+      region_id: id,
+      scope_type: 'city',
+      is_primary: false,
+    });
+  }
+
+  // 가입 seed 계약: 활동지역 1(첫 유효 칸)이 대표
+  if (filled.length) {
+    filled[0].is_primary = true;
+  }
+
+  return { ok: true, slots: filled };
 }

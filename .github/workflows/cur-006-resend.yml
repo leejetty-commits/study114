@@ -32,9 +32,12 @@ on:
       - "scripts/verify-cur-006-email-verify-flow.*"
       - "scripts/verify-cur-006-post-verify-role.*"
       - "scripts/verify-study-room-basic-register-api.*"
+      - "scripts/verify-tutor-signup-seed.*"
       - "scripts/verify-cur-006-resend.*"
       - "preview/shared/auth-redirect.js"
       - "preview/shared/study-room-basic-form.js"
+      - "preview/shared/tutor-region-slots.js"
+      - "preview/shared/korea-sidos.js"
       - "preview/auth-ui/src/screens/login.js"
       - "preview/auth-ui/src/screens/signup-verify-email.js"
       - "preview/auth-ui/src/screens/signup-basic.js"
@@ -97,6 +100,9 @@ jobs:
       - name: Study-room basic register API import
         run: npm run verify:study-room-basic-register-api
 
+      - name: Tutor signup seed regions
+        run: npm run verify:tutor-signup-seed
+
       - name: Secret placeholder guard
         run: bash scripts/check-no-committed-secrets.sh
 
@@ -114,6 +120,7 @@ jobs:
             echo "- inventory: verify:cur-006-email-verify-inventory"
             echo "- post-verify-role: verify:cur-006-post-verify-role"
             echo "- study-room-basic-register-api: verify:study-room-basic-register-api"
+            echo "- tutor-signup-seed: verify:tutor-signup-seed"
             echo "- deploy / real send: not run"
             echo ""
             echo "### email-verify-flow (Docker 실DB)"
