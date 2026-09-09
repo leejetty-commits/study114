@@ -30,6 +30,48 @@ final class BasicRegisterService
         };
     }
 
+    /**
+     * 기본등록 미완료 여부 — 서버 role_type 대응 행 존재로만 판정 (플래그/클라 저장값 금지).
+     * tutor→tutors.user_id / study_room_owner→study_rooms.user_id / guardian_student→students.guardian_user_id
+     */
+    public function needsBasicRegister(int $userId, string $roleType): bool
+    {
+        if ($userId < 1) {
+            return false;
+        }
+        $pdo = Connection::get();
+        return match ($roleType) {
+            'tutor' => !$this->existsRow(
+                $pdo,
+                'SELECT 1 FROM tutors WHERE user_id = ? LIMIT 1',
+                [$userId]
+            ),
+            'study_room_owner' => !$this->existsRow(
+                $pdo,
+                $this->columnExists($pdo, 'study_rooms', 'deleted_at')
+                    ? 'SELECT 1 FROM study_rooms WHERE user_id = ? AND deleted_at IS NULL LIMIT 1'
+                    : 'SELECT 1 FROM study_rooms WHERE user_id = ? LIMIT 1',
+                [$userId]
+            ),
+            'guardian_student' => !$this->existsRow(
+                $pdo,
+                $this->columnExists($pdo, 'students', 'deleted_at')
+                    ? 'SELECT 1 FROM students WHERE guardian_user_id = ? AND deleted_at IS NULL LIMIT 1'
+                    : 'SELECT 1 FROM students WHERE guardian_user_id = ? LIMIT 1',
+                [$userId]
+            ),
+            default => false,
+        };
+    }
+
+    /** @param list<mixed> $params */
+    private function existsRow(PDO $pdo, string $sql, array $params): bool
+    {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn() !== false;
+    }
+
     /** @return list<array{id: int, label: string}> */
     public function listRegions(): array
     {

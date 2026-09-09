@@ -1,8 +1,8 @@
 /** 14장 — 기본등록 ENUM (DB code → UI 한글) */
 
 export const PREFERRED_LESSON_TYPE_LABELS = {
-  tutor: '과외쌤',
-  study_room: '공부방',
+  tutor: '과외쌤 찾기',
+  study_room: '공부방 찾기',
 };
 
 export const STUDENT_PLACE_OPTIONS = [

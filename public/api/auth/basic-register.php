@@ -114,6 +114,24 @@ if (!in_array($roleUi, ['student', 'study_room', 'tutor'], true)) {
 
 }
 
+// 권한 정본: 세션 role_type. 클라이언트 role 힌트와 불일치 시 거부.
+$authRoleType = (string) ($auth['role_type'] ?? '');
+$expectedRoleUi = match ($authRoleType) {
+    'tutor' => 'tutor',
+    'study_room_owner' => 'study_room',
+    'guardian_student' => 'student',
+    default => '',
+};
+if ($expectedRoleUi === '' || $roleUi !== $expectedRoleUi) {
+    http_response_code(403);
+    echo json_encode([
+        'ok' => false,
+        'error' => 'role_mismatch',
+        'message' => '계정 역할과 기본등록 유형이 일치하지 않습니다.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 
 
 /** @var array<string, mixed> $payload */

@@ -101,24 +101,121 @@ export function oauthRoleSelectionUrl(returnTo = '') {
 }
 
 /**
- * @param {string} [target] basic | role | home
+ * DB role_type → auth-ui 회원구분 (기본등록 라우트 정본)
+ * @param {string} [roleType]
+ * @returns {'student'|'study_room'|'tutor'|''}
  */
-export function setPostVerifyTarget(target) {
+export function uiRoleFromRoleType(roleType) {
+  const t = String(roleType || '');
+  if (t === 'tutor') return 'tutor';
+  if (t === 'study_room_owner') return 'study_room';
+  if (t === 'guardian_student' || t === 'student') return 'student';
+  return '';
+}
+
+const POST_VERIFY_ROLE_KEY = 'study114_post_verify_role';
+const POST_VERIFY_TARGET_KEY = 'study114_post_verify';
+const ALLOWED_UI_ROLES = new Set(['student', 'study_room', 'tutor']);
+const PRESERVED_POST_VERIFY_TARGETS = new Set(['basic', 'role', 'home']);
+
+/**
+ * @param {string} [target] basic | role | home
+ * @param {string} [roleUi] student | study_room | tutor — basic 목표일 때만 저장
+ */
+export function setPostVerifyTarget(target, roleUi = '') {
   try {
-    sessionStorage.setItem('study114_post_verify', target || 'home');
+    const t = target || 'home';
+    sessionStorage.setItem(POST_VERIFY_TARGET_KEY, t);
+    if (t === 'basic' && ALLOWED_UI_ROLES.has(roleUi)) {
+      sessionStorage.setItem(POST_VERIFY_ROLE_KEY, roleUi);
+    } else {
+      sessionStorage.removeItem(POST_VERIFY_ROLE_KEY);
+    }
   } catch {
     /* ignore */
   }
 }
 
+export function peekPostVerifyTarget() {
+  try {
+    return sessionStorage.getItem(POST_VERIFY_TARGET_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+export function peekPostVerifyRole() {
+  try {
+    const r = sessionStorage.getItem(POST_VERIFY_ROLE_KEY) || '';
+    return ALLOWED_UI_ROLES.has(r) ? r : '';
+  } catch {
+    return '';
+  }
+}
+
 export function consumePostVerifyTarget() {
   try {
-    const t = sessionStorage.getItem('study114_post_verify') || 'home';
-    sessionStorage.removeItem('study114_post_verify');
+    const t = sessionStorage.getItem(POST_VERIFY_TARGET_KEY) || 'home';
+    sessionStorage.removeItem(POST_VERIFY_TARGET_KEY);
     return t;
   } catch {
     return 'home';
   }
+}
+
+export function consumePostVerifyRole() {
+  try {
+    const r = peekPostVerifyRole();
+    sessionStorage.removeItem(POST_VERIFY_ROLE_KEY);
+    return r;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * 미확인 재로그인: basic | role | home 기존 목표를 덮지 않음.
+ * 목표가 비어 있으면 basic(역할은 me.role_type으로 복원). home을 basic으로 바꾸지 않음.
+ */
+export function ensurePostVerifyTargetForUnverifiedLogin() {
+  try {
+    const cur = sessionStorage.getItem(POST_VERIFY_TARGET_KEY) || '';
+    if (PRESERVED_POST_VERIFY_TARGETS.has(cur)) {
+      return;
+    }
+    sessionStorage.setItem(POST_VERIFY_TARGET_KEY, 'basic');
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * 확인 후 기본등록 경로 — 서버 role_type 정본. URL/hint와 불일치해도 서버 역할만 사용.
+ * @param {{ role_type?: string }} me
+ * @returns {string} hash path e.g. /signup/basic?role=tutor
+ */
+export function basicRegisterPathForMe(me) {
+  const role = uiRoleFromRoleType(me?.role_type);
+  if (!role) {
+    return '/signup/basic';
+  }
+  return `/signup/basic?role=${encodeURIComponent(role)}`;
+}
+
+/**
+ * @param {string} hintRole
+ * @param {{ role_type?: string }} me
+ * @returns {'student'|'study_room'|'tutor'|''}
+ */
+export function resolveUiRoleForBasicRegister(hintRole, me) {
+  const server = uiRoleFromRoleType(me?.role_type);
+  if (!server) {
+    return '';
+  }
+  if (hintRole && hintRole !== server) {
+    return server;
+  }
+  return server;
 }
 
 const UNVERIFIED_AUTH_PATHS = new Set([
@@ -194,7 +291,7 @@ export function redirectToEmailVerifyWait() {
 }
 
 /**
- * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, role_type?: string, admin_level?: string|null }} me
+ * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, needs_basic_register?: boolean, role_type?: string, admin_level?: string|null }} me
  * @param {string} [returnTo]
  */
 export function resolveAfterAuthUrl(me, returnTo = '') {
@@ -214,6 +311,10 @@ export function resolveAfterAuthUrl(me, returnTo = '') {
   }
   if (me.oauth_role_pending) {
     return oauthRoleSelectionUrl(returnTo);
+  }
+  // 기본등록 완료 여부는 서버 행 존재(needs_basic_register). 빈 postVerify로 추정하지 않음.
+  if (me.needs_basic_register) {
+    return authUiHref(basicRegisterPathForMe(me));
   }
   return resolvePostLoginUrl(me.role_type, returnTo);
 }

@@ -30,7 +30,13 @@ on:
       - "scripts/verify-cur-006-email-verify-gate.*"
       - "scripts/verify-cur-006-email-verify-inventory.*"
       - "scripts/verify-cur-006-email-verify-flow.*"
+      - "scripts/verify-cur-006-post-verify-role.*"
       - "scripts/verify-cur-006-resend.*"
+      - "preview/shared/auth-redirect.js"
+      - "preview/auth-ui/src/screens/login.js"
+      - "preview/auth-ui/src/screens/signup-verify-email.js"
+      - "preview/auth-ui/src/screens/signup-basic.js"
+      - "public/api/auth/basic-register.php"
       - "scripts/php-syntax-check.sh"
       - "scripts/check-no-committed-secrets.sh"
       - "docker/docker-compose.cur006-mail.yml"
@@ -82,6 +88,9 @@ jobs:
 
       - name: Email verify inventory
         run: npm run verify:cur-006-email-verify-inventory
+
+      - name: Post-verify role routing
+        run: npm run verify:cur-006-post-verify-role
 
       - name: Secret placeholder guard
         run: bash scripts/check-no-committed-secrets.sh

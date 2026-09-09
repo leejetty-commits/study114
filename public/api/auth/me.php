@@ -50,6 +50,7 @@ $oauthProviders = [];
 $oauthProviderLabels = [];
 $needsAccountContact = false;
 $phoneVerified = false;
+$needsBasicRegister = false;
 try {
     $oauthRolePending = ($user['role_type'] === 'admin')
         ? false
@@ -62,6 +63,12 @@ try {
         ->status((int) $user['user_id'])['needs_account_contact'];
     $phoneVerified = (new \Study114\Auth\PhoneVerificationService())
         ->isVerified((int) $user['user_id']);
+    if ($emailVerified && !$oauthRolePending && !$needsAccountContact) {
+        $needsBasicRegister = (new \Study114\Auth\BasicRegisterService())->needsBasicRegister(
+            (int) $user['user_id'],
+            (string) ($user['role_type'] ?? '')
+        );
+    }
 } catch (Throwable $e) {
     error_log('[me] auth flags: ' . $e->getMessage());
 }
@@ -81,4 +88,5 @@ echo json_encode([
     'oauth_provider_labels' => $oauthProviderLabels,
     'needs_account_contact' => $needsAccountContact,
     'phone_verified' => $phoneVerified,
+    'needs_basic_register' => $needsBasicRegister,
 ], JSON_UNESCAPED_UNICODE);

@@ -13,13 +13,15 @@ import {
 } from '../email-verify-send-status.js';
 import {
   consumePostVerifyTarget,
+  consumePostVerifyRole,
   getLoginReturnTo,
-  oauthRoleSelectionUrl,
   resolveAfterAuthUrl,
   isOnEmailVerifyWait,
+  basicRegisterPathForMe,
+  uiRoleFromRoleType,
 } from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
-import { signupState } from '../state.js';
+import { signupState, setRole } from '../state.js';
 
 const EMAIL_VERIFY_STALE_LINK_MSG = '이미 확인되었거나 만료된 링크입니다';
 
@@ -45,14 +47,14 @@ function maskEmail(email) {
 }
 
 function continueAfterVerified(me) {
-  const target = consumePostVerifyTarget();
+  // stale postVerify 제거 — 목적지는 서버 me(role_type + needs_basic_register) 정본
+  consumePostVerifyTarget();
+  consumePostVerifyRole();
   const returnTo = getLoginReturnTo();
-  if (target === 'basic') {
-    navigate('/signup/basic');
-    return;
-  }
-  if (target === 'role') {
-    window.location.href = oauthRoleSelectionUrl(returnTo);
+  const roleUi = uiRoleFromRoleType(me?.role_type);
+  if (roleUi) setRole(roleUi);
+  if (me?.needs_basic_register) {
+    navigate(basicRegisterPathForMe(me));
     return;
   }
   window.location.href = resolveAfterAuthUrl(me, returnTo);

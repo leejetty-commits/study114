@@ -35,6 +35,7 @@
     "verify:cur-006-email-verify-gate": "npx --yes vite-node scripts/verify-cur-006-email-verify-gate.mjs",
     "verify:cur-006-email-verify-flow": "php scripts/verify-cur-006-email-verify-flow.php",
     "verify:cur-006-email-verify-inventory": "npx --yes vite-node scripts/verify-cur-006-email-verify-inventory.mjs",
+    "verify:cur-006-post-verify-role": "npx --yes vite-node scripts/verify-cur-006-post-verify-role.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {

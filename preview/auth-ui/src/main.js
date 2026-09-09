@@ -63,7 +63,12 @@ function init() {
   }
 
   const hashQuery = parseHashQuery();
-  if (hashQuery.from === 'oauth' && hashQuery.role) {
+  // oauth·이메일 확인 후 basic 진입 모두 — ?role= 로 회원구분 복원 (auth-redirect 정본)
+  if (
+    hashQuery.role === 'student' ||
+    hashQuery.role === 'study_room' ||
+    hashQuery.role === 'tutor'
+  ) {
     signupState.role = hashQuery.role;
   }
 
