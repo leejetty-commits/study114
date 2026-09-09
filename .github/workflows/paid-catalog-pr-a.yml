@@ -57,7 +57,10 @@ jobs:
           node-version: "20"
 
       - name: Install mysql client
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome*.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mysql-client
 
       - name: PR-A PHP / catalog / checkout / schema 061
         run: bash scripts/verify-paid-pr-a-ci.sh
