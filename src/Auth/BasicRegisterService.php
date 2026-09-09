@@ -529,15 +529,15 @@ final class BasicRegisterService
     }
 
     /**
-     * 기본등록 seed: 표시명 + 활동 시 1 + 주력과목 1 (Notion 14장 §3-3-3).
+     * 가입 seed: 표시명 + 활동지역 1~3(시) + 주력과목 1.
+     * 활동지역 1 필수 · 2·3 선택 · 빈 슬롯은 저장하지 않음 · 회원주소 폴백 금지.
      *
      * @param array<string, mixed> $input
      */
     private function registerTutor(int $userId, array $input): int
     {
         $displayName = $this->requireString($input, 'tutor_display_name');
-        // 활동 시 1 — 가입 기본주소/default_region_id 폴백 금지
-        $regionId = $this->requireExplicitRegionId($input);
+        $regionIds = $this->normalizeTutorSignupRegions($input);
         $mainSubject = $this->resolveMainSubjectNote($input);
 
         if (isset($input['gender']) && (string) $input['gender'] !== '') {
@@ -562,10 +562,13 @@ final class BasicRegisterService
             ]);
             $tutorId = (int) $pdo->lastInsertId();
 
-            $pdo->prepare(
+            $ins = $pdo->prepare(
                 'INSERT INTO tutor_regions (tutor_id, region_id, scope_type, priority_order, is_primary)
-                 VALUES (?, ?, ?, 0, 1)'
-            )->execute([$tutorId, $regionId, 'city']);
+                 VALUES (?, ?, ?, ?, ?)'
+            );
+            foreach ($regionIds as $order => $regionId) {
+                $ins->execute([$tutorId, $regionId, 'city', $order, $order === 0 ? 1 : 0]);
+            }
 
             $subjectId = $this->findSubjectMasterId($pdo, $this->firstSubjectName($mainSubject));
             $pdo->prepare(
@@ -576,10 +579,69 @@ final class BasicRegisterService
             $pdo->commit();
         } catch (PDOException $e) {
             $pdo->rollBack();
-            throw new RuntimeException('과외쌤 기본등록 저장 실패: ' . $e->getMessage(), 0, $e);
+            throw new RuntimeException('과외쌤 가입정보 저장 실패: ' . $e->getMessage(), 0, $e);
         }
 
         return $tutorId;
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return list<int>
+     */
+    private function normalizeTutorSignupRegions(array $input): array
+    {
+        $pdo = Connection::get();
+        $ids = [];
+        $raw = $input['saved_regions'] ?? null;
+        if (is_array($raw)) {
+            foreach (array_values($raw) as $idx => $slot) {
+                if ($idx >= 3 || !is_array($slot)) {
+                    continue;
+                }
+                if (!isset($slot['region_id']) || $slot['region_id'] === '') {
+                    continue;
+                }
+                $id = (int) $slot['region_id'];
+                if ($id <= 0) {
+                    throw new InvalidArgumentException(
+                        $idx === 0
+                            ? '활동지역 1: 유효한 지역을 선택해 주세요.'
+                            : ('활동지역 ' . ($idx + 1) . ': 유효한 지역을 선택해 주세요.')
+                    );
+                }
+                $ids[] = ['slot' => $idx, 'id' => $id];
+            }
+        }
+
+        if ($ids === [] && isset($input['region_id']) && $input['region_id'] !== '') {
+            $id = (int) $input['region_id'];
+            if ($id > 0) {
+                $ids[] = ['slot' => 0, 'id' => $id];
+            }
+        }
+
+        if ($ids === [] || (int) $ids[0]['slot'] !== 0) {
+            throw new InvalidArgumentException('활동지역 1을 선택해 주세요.');
+        }
+
+        $seen = [];
+        $out = [];
+        foreach ($ids as $row) {
+            $id = (int) $row['id'];
+            if (isset($seen[$id])) {
+                throw new InvalidArgumentException('활동지역이 중복되었습니다. 같은 지역을 여러 칸에 넣을 수 없습니다.');
+            }
+            $seen[$id] = true;
+            $stmt = $pdo->prepare('SELECT id FROM regions WHERE id = ? AND is_active = 1');
+            $stmt->execute([$id]);
+            if (!$stmt->fetchColumn()) {
+                throw new InvalidArgumentException('활동지역: 유효하지 않은 지역입니다. 목록을 다시 불러온 뒤 선택해 주세요.');
+            }
+            $out[] = $id;
+        }
+
+        return $out;
     }
 
     /** @param list<string> $subjectNames */

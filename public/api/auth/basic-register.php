@@ -157,34 +157,20 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (InvalidArgumentException $e) {
-
-    http_response_code(422);
-
+    // 닷홈 등에서 4xx 본문이 HTML로 바뀌는 환경 대비 — validation은 200 + ok:false (regions.php와 동일)
+    http_response_code(200);
     echo json_encode([
-
         'ok'      => false,
-
         'error'   => 'validation',
-
         'message' => $e->getMessage(),
-
     ], JSON_UNESCAPED_UNICODE);
-
 } catch (Throwable $e) {
-
     error_log('[basic-register] error: ' . $e->getMessage());
-
-    http_response_code(500);
-
+    http_response_code(200);
     echo json_encode([
-
         'ok'      => false,
-
         'error'   => 'server_error',
-
-        'message' => $e->getMessage(),
-
+        'message' => '저장에 실패했습니다. 잠시 후 다시 시도해 주세요.',
     ], JSON_UNESCAPED_UNICODE);
-
 }
 

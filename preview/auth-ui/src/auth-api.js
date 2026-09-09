@@ -31,14 +31,29 @@ async function postJson(url, body, { credentials = 'include' } = {}) {
     credentials,
     body: JSON.stringify(body),
   });
-  const data = parseApiJson(await res.text());
+  const rawText = await res.text();
+  const data = parseApiJson(rawText);
   if (!res.ok || !data.ok) {
+    if (import.meta.env?.DEV) {
+      console.warn('[auth-api]', url, {
+        status: res.status,
+        error: data.error || null,
+        message: data.message || null,
+        ok: data.ok,
+        // 본문·토큰·이메일 등 개인정보는 남기지 않음
+      });
+    }
     const fallback =
-      res.status === 422 ? '입력값을 확인해 주세요.' : `서버 오류 (${res.status})`;
+      res.status === 422
+        ? '입력값을 확인해 주세요.'
+        : res.status >= 500
+          ? '저장에 실패했습니다. 잠시 후 다시 시도해 주세요.'
+          : `서버 오류 (${res.status})`;
     const err = new Error(data.message || fallback);
     if (data.error) {
       err.code = data.error;
     }
+    err.status = res.status;
     throw err;
   }
   return data;
@@ -78,12 +93,13 @@ export async function signupApi(payload) {
   return postJson('/api/auth/signup.php', payload);
 }
 
-/** @returns {Promise<{regions: Array<{id: number, label: string}>, complexes: Array<{id: number, region_id: number, label: string, address: string}>}>} */
+/** @returns {Promise<{regions: Array, complexes: Array, cities: Array}>} */
 export async function fetchRegions() {
   const data = await postJson('/api/auth/regions.php', { action: 'list' }, { credentials: 'omit' });
   return {
     regions: data.regions ?? [],
     complexes: data.complexes ?? [],
+    cities: data.cities ?? [],
   };
 }
 

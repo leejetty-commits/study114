@@ -17,6 +17,9 @@ import {
   renderTutorRegionSlot,
   bindTutorRegionSlotEvents,
   collectTutorRegionSlots,
+  validateTutorActivityRegions,
+  setTutorRegionSlotError,
+  clearTutorRegionSlotError,
 } from '../../../shared/tutor-region-slots.js';
 import {
   renderStudyRoomBasicFields,
@@ -255,15 +258,22 @@ function renderStudyRoomBasic() {
 function renderTutorBasic() {
   const d = signupState.basicRegister?.tutor || {};
   const units = getCityUnits(signupState.cities || []);
-  const slot = {
-    region_id: d.region_id || '',
+  const saved = Array.isArray(d.saved_regions) ? d.saved_regions : [];
+  const slots = [0, 1, 2].map((i) => ({
+    region_id: saved[i]?.region_id || (i === 0 ? d.region_id || '' : ''),
     scope_type: 'city',
-    is_primary: true,
-  };
+    is_primary: i === 0,
+  }));
+  const citiesReady = units.some((u) => /^\d+$/.test(String(u.id)));
   return `
     <form data-form="basic-tutor" class="basic-register">
-      <p class="auth-section-title">기본등록</p>
-      <p class="form-note mb-4">표시명 · 과외지역 · 주력과목을 받습니다. 광역시는 그 자체, 도는 시까지 선택합니다.</p>
+      <p class="auth-section-title">과외쌤 가입정보</p>
+      <p class="form-note mb-4">과외 활동을 시작하기 위한 정보를 입력해 주세요.</p>
+      ${
+        citiesReady
+          ? ''
+          : '<p class="form-note form-note--error mb-4">활동지역 목록을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.</p>'
+      }
       <div class="register-grid-2">
         <div class="register-basic-col">
           <div class="register-basic-fields">
@@ -271,20 +281,23 @@ function renderTutorBasic() {
               <label class="form-label form-label--required" for="tutor_display_name">표시명</label>
               ${dbField('tutors.tutor_display_name')}
               <input class="form-input" id="tutor_display_name" name="tutor_display_name" value="${esc(d.tutor_display_name || '')}" required />
+              <p class="form-note form-note--error" data-field-error="tutor_display_name" hidden></p>
             </div>
             <div class="form-group form-group--full">
               ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '')}
+              <p class="form-note form-note--error" data-field-error="main_subject" hidden></p>
             </div>
           </div>
         </div>
         <div class="register-basic-col">
-          <span class="form-label form-label--required">과외지역 1번</span>
+          <span class="form-label form-label--required">활동지역 (시 기준 · 최대 3곳)</span>
           ${dbField('tutor_regions.scope_type=city')}
-          ${renderTutorRegionSlot(slot, 0, units)}
+          <p class="form-note mb-2">1번은 필수, 2·3번은 선택입니다. 가입 후 마이페이지 기본등록에 그대로 표시됩니다.</p>
+          ${slots.map((slot, i) => renderTutorRegionSlot(slot, i, units, { showPrimary: false, labelPrefix: '활동지역' })).join('')}
         </div>
       </div>
       <div class="actions-stack">
-        <button type="submit" class="btn btn--primary btn--block">저장 · 다음</button>
+        <button type="submit" class="btn btn--primary btn--block">가입정보 저장</button>
       </div>
     </form>
   `;
@@ -311,9 +324,13 @@ export function renderSignupBasic() {
   const content = `
     ${oauthMode ? '' : renderStepIndicator(4, 5)}
     <div class="panel auth-shell__card--wide">
-      <h1 class="auth-heading">기본등록</h1>
+      <h1 class="auth-heading">${role === 'tutor' ? '과외쌤 가입정보 입력' : '기본등록'}</h1>
       <p class="auth-subheading mb-6">
-        검색·목록에 바로 공개되지 않습니다. 검색에 쓰이는 항목은 상세등록에서 완성합니다.
+        ${
+          role === 'tutor'
+            ? '과외 활동을 시작하기 위한 정보를 입력해 주세요.'
+            : '검색·목록에 바로 공개되지 않습니다. 검색에 쓰이는 항목은 상세등록에서 완성합니다.'
+        }
       </p>
       ${isReturnImportMode() ? '<p class="form-note form-note--highlight">자녀 추가 중입니다. 저장 후 마이페이지로 돌아갑니다.</p>' : ''}
       ${renderRoleBadge(role)}
@@ -530,27 +547,80 @@ export function bindSignupBasicEvents(root) {
     }
 
     if (role === 'tutor') {
-      data = packMainSubject(data);
-      if (!data) return;
-    }
+      const nameEl = form.querySelector('#tutor_display_name');
+      const nameErr = form.querySelector('[data-field-error="tutor_display_name"]');
+      const subjectErr = form.querySelector('[data-field-error="main_subject"]');
+      form.querySelectorAll('[data-region-slot]').forEach((el) => clearTutorRegionSlotError(el));
+      if (nameErr) {
+        nameErr.hidden = true;
+        nameErr.textContent = '';
+      }
+      if (subjectErr) {
+        subjectErr.hidden = true;
+        subjectErr.textContent = '';
+      }
 
-    if (role === 'tutor') {
-      const slots = collectTutorRegionSlots(form);
-      const primary = slots.find((s) => s.is_primary && s.region_id) || slots.find((s) => s.region_id);
-      if (!primary?.region_id) {
-        alert('과외지역을 선택해 주세요. (도는 시까지 선택)');
+      const displayName = String(data.tutor_display_name || '').trim();
+      if (!displayName) {
+        if (nameErr) {
+          nameErr.hidden = false;
+          nameErr.textContent = '표시명을 입력해 주세요.';
+        } else {
+          alert('표시명을 입력해 주세요.');
+        }
+        nameEl?.focus();
         return;
       }
+      data.tutor_display_name = displayName;
+
+      data = packMainSubject(data);
+      if (!data) {
+        if (subjectErr) {
+          subjectErr.hidden = false;
+          subjectErr.textContent = '주력과목을 선택해 주세요.';
+        }
+        return;
+      }
+
       const units = getCityUnits(signupState.cities || []);
+      if (!units.some((u) => /^\d+$/.test(String(u.id)))) {
+        alert('활동지역 목록을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+        return;
+      }
+
+      const rawSlots = collectTutorRegionSlots(form).map((s, i) => ({
+        region_id: String(s.region_id || '').trim(),
+        scope_type: 'city',
+        is_primary: i === 0,
+      }));
+      const checked = validateTutorActivityRegions(rawSlots);
+      if (!checked.ok) {
+        const slotEl = form.querySelector(`[data-region-slot="${checked.index}"]`);
+        if (slotEl) setTutorRegionSlotError(slotEl, checked.message);
+        else alert(checked.message);
+        return;
+      }
+
+      // 서버·마이페이지 계약: 빈 슬롯 포함 최대 3칸 순서 유지
+      data.saved_regions = rawSlots.map((s, i) => ({
+        region_id: /^\d+$/.test(s.region_id) ? s.region_id : '',
+        scope_type: 'city',
+        is_primary: i === 0 && /^\d+$/.test(s.region_id),
+      }));
+      const primary = checked.slots[0];
+      data.region_id = primary.region_id;
       const unit = units.find((u) => String(u.id) === String(primary.region_id));
       const label = unit
         ? unit.kind === 'metro'
           ? unit.label
           : `${unit.sido_name} ${unit.label}`
         : '';
-      data.region_id = primary.region_id;
       data.region_label = label;
       data.activity_city = label;
+    }
+
+    if (role === 'tutor') {
+      /* tutor subject/regions already validated above */
     }
 
     const submitBtn = form.querySelector('[type="submit"]');
@@ -619,12 +689,13 @@ export function bindSignupBasicEvents(root) {
           return;
         }
       } else {
-        alert(err instanceof Error ? err.message : '기본등록 실패');
+        alert(err instanceof Error ? err.message : '가입정보 저장에 실패했습니다.');
       }
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = role === 'student' ? '지역 등록 · 다음' : '저장 · 다음';
+        submitBtn.textContent =
+          role === 'tutor' ? '가입정보 저장' : role === 'student' ? '지역 등록 · 다음' : '저장 · 다음';
       }
     }
   });
