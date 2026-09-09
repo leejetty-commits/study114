@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - fix/cur-006-authenticated-smtp
+      - fix/study-room-basic-register-api
   pull_request:
     branches:
       - main
@@ -31,8 +32,10 @@ on:
       - "scripts/verify-cur-006-email-verify-inventory.*"
       - "scripts/verify-cur-006-email-verify-flow.*"
       - "scripts/verify-cur-006-post-verify-role.*"
+      - "scripts/verify-study-room-basic-register-api.*"
       - "scripts/verify-cur-006-resend.*"
       - "preview/shared/auth-redirect.js"
+      - "preview/shared/study-room-basic-form.js"
       - "preview/auth-ui/src/screens/login.js"
       - "preview/auth-ui/src/screens/signup-verify-email.js"
       - "preview/auth-ui/src/screens/signup-basic.js"
@@ -92,6 +95,9 @@ jobs:
       - name: Post-verify role routing
         run: npm run verify:cur-006-post-verify-role
 
+      - name: Study-room basic register API import
+        run: npm run verify:study-room-basic-register-api
+
       - name: Secret placeholder guard
         run: bash scripts/check-no-committed-secrets.sh
 
@@ -107,6 +113,8 @@ jobs:
             echo "- gate: verify:cur-006-email-verify-gate"
             echo "- UI: verify:cur-006-email-sent-ui"
             echo "- inventory: verify:cur-006-email-verify-inventory"
+            echo "- post-verify-role: verify:cur-006-post-verify-role"
+            echo "- study-room-basic-register-api: verify:study-room-basic-register-api"
             echo "- deploy / real send: not run"
             echo ""
             echo "### email-verify-flow (Docker 실DB)"
