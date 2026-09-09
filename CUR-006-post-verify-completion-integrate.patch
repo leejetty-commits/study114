@@ -1,0 +1,338 @@
+﻿diff --git a/preview/auth-ui/src/screens/signup-basic.js b/preview/auth-ui/src/screens/signup-basic.js
+index 97ffeb9..c124c03 100644
+--- a/preview/auth-ui/src/screens/signup-basic.js
++++ b/preview/auth-ui/src/screens/signup-basic.js
+@@ -1,7 +1,7 @@
+ import { signupState } from '../state.js';
+ import { PREFERRED_LESSON_TYPE_LABELS, PERSONAL_GENDER_OPTIONS } from '../register-enums.js';
+ import { fetchMeApi } from '../auth-api.js';
+-import { resolveAfterAuthUrl, uiRoleFromRoleType, resolveUiRoleForBasicRegister } from '../../../shared/auth-redirect.js';
++import { resolveAfterAuthUrl, resolveUiRoleForBasicRegister } from '../../../shared/auth-redirect.js';
+ import {
+   buildHomeStudentImportUrl,
+   isReturnImportMode,
+@@ -355,6 +355,7 @@ function packMainSubject(data) {
+ export function bindSignupBasicEvents(root) {
+   bindGlobalEvents(root);
+ 
++  let roleReady = false;
+   let role =
+     parseHashQuery().role === 'student' ||
+     parseHashQuery().role === 'study_room' ||
+@@ -368,7 +369,12 @@ export function bindSignupBasicEvents(root) {
+         navigate('/login');
+         return;
+       }
+-      if (!me.email_verified || me.needs_account_contact) {
++      if (!me.email_verified || me.needs_account_contact || me.oauth_role_pending) {
++        window.location.href = resolveAfterAuthUrl(me);
++        return;
++      }
++      // ?꾨즺 ???덉쑝硫?湲곕낯?깅줉 ?ъ쭊??湲덉?
++      if (!me.needs_basic_register) {
+         window.location.href = resolveAfterAuthUrl(me);
+         return;
+       }
+@@ -391,6 +397,7 @@ export function bindSignupBasicEvents(root) {
+         }
+       }
+       role = serverRole;
++      roleReady = true;
+     })
+     .catch(() => navigate('/login'));
+ 
+@@ -454,6 +461,10 @@ export function bindSignupBasicEvents(root) {
+ 
+   form?.addEventListener('submit', async (e) => {
+     e.preventDefault();
++    if (!roleReady) {
++      alert('怨꾩젙 ??븷???뺤씤?섎뒗 以묒엯?덈떎. ?좎떆 ???ㅼ떆 ?쒕룄??二쇱꽭??');
++      return;
++    }
+     role = signupState.role || role;
+     if (role !== 'student' && role !== 'study_room' && role !== 'tutor') {
+       alert('怨꾩젙 ??븷???뺤씤?????놁뒿?덈떎. ?덈줈怨좎묠 ???ㅼ떆 ?쒕룄??二쇱꽭??');
+diff --git a/preview/auth-ui/src/screens/signup-verify-email.js b/preview/auth-ui/src/screens/signup-verify-email.js
+index 775f140..28464de 100644
+--- a/preview/auth-ui/src/screens/signup-verify-email.js
++++ b/preview/auth-ui/src/screens/signup-verify-email.js
+@@ -15,7 +15,6 @@ import {
+   consumePostVerifyTarget,
+   consumePostVerifyRole,
+   getLoginReturnTo,
+-  oauthRoleSelectionUrl,
+   resolveAfterAuthUrl,
+   isOnEmailVerifyWait,
+   basicRegisterPathForMe,
+@@ -48,21 +47,16 @@ function maskEmail(email) {
+ }
+ 
+ function continueAfterVerified(me) {
+-  const target = consumePostVerifyTarget();
+-  const returnTo = getLoginReturnTo();
+-  // stale hint role ?쒓굅 ???붾㈃ ??븷? ?쒕쾭 me.role_type ?뺣낯留?+  // stale postVerify ?쒓굅 ??紐⑹쟻吏???쒕쾭 me(role_type + needs_basic_register) ?뺣낯
++  consumePostVerifyTarget();
+   consumePostVerifyRole();
+-  if (target === 'basic') {
+-    const roleUi = uiRoleFromRoleType(me?.role_type);
+-    if (roleUi) setRole(roleUi);
++  const returnTo = getLoginReturnTo();
++  const roleUi = uiRoleFromRoleType(me?.role_type);
++  if (roleUi) setRole(roleUi);
++  if (me?.needs_basic_register) {
+     navigate(basicRegisterPathForMe(me));
+     return;
+   }
+-  if (target === 'role') {
+-    window.location.href = oauthRoleSelectionUrl(returnTo);
+-    return;
+-  }
+-  // home ?? 湲곕낯?깅줉 諛섎났 ?놁씠 ??븷蹂????먮뒗 ?덉쟾 returnTo
+   window.location.href = resolveAfterAuthUrl(me, returnTo);
+ }
+ 
+diff --git a/preview/shared/auth-redirect.js b/preview/shared/auth-redirect.js
+index b891524..991391c 100644
+--- a/preview/shared/auth-redirect.js
++++ b/preview/shared/auth-redirect.js
+@@ -291,7 +291,7 @@ export function redirectToEmailVerifyWait() {
+ }
+ 
+ /**
+- * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, role_type?: string, admin_level?: string|null }} me
++ * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, needs_basic_register?: boolean, role_type?: string, admin_level?: string|null }} me
+  * @param {string} [returnTo]
+  */
+ export function resolveAfterAuthUrl(me, returnTo = '') {
+@@ -312,5 +312,9 @@ export function resolveAfterAuthUrl(me, returnTo = '') {
+   if (me.oauth_role_pending) {
+     return oauthRoleSelectionUrl(returnTo);
+   }
++  // 湲곕낯?깅줉 ?꾨즺 ?щ????쒕쾭 ??議댁옱(needs_basic_register). 鍮?postVerify濡?異붿젙?섏? ?딆쓬.
++  if (me.needs_basic_register) {
++    return authUiHref(basicRegisterPathForMe(me));
++  }
+   return resolvePostLoginUrl(me.role_type, returnTo);
+ }
+diff --git a/public/api/auth/me.php b/public/api/auth/me.php
+index 92192ec..b4f3217 100644
+--- a/public/api/auth/me.php
++++ b/public/api/auth/me.php
+@@ -50,6 +50,7 @@ $oauthProviders = [];
+ $oauthProviderLabels = [];
+ $needsAccountContact = false;
+ $phoneVerified = false;
++$needsBasicRegister = false;
+ try {
+     $oauthRolePending = ($user['role_type'] === 'admin')
+         ? false
+@@ -62,6 +63,12 @@ try {
+         ->status((int) $user['user_id'])['needs_account_contact'];
+     $phoneVerified = (new \Study114\Auth\PhoneVerificationService())
+         ->isVerified((int) $user['user_id']);
++    if ($emailVerified && !$oauthRolePending && !$needsAccountContact) {
++        $needsBasicRegister = (new \Study114\Auth\BasicRegisterService())->needsBasicRegister(
++            (int) $user['user_id'],
++            (string) ($user['role_type'] ?? '')
++        );
++    }
+ } catch (Throwable $e) {
+     error_log('[me] auth flags: ' . $e->getMessage());
+ }
+@@ -81,4 +88,5 @@ echo json_encode([
+     'oauth_provider_labels' => $oauthProviderLabels,
+     'needs_account_contact' => $needsAccountContact,
+     'phone_verified' => $phoneVerified,
++    'needs_basic_register' => $needsBasicRegister,
+ ], JSON_UNESCAPED_UNICODE);
+diff --git a/scripts/verify-cur-006-email-verify-gate.mjs b/scripts/verify-cur-006-email-verify-gate.mjs
+index 0707a4f..c977857 100644
+--- a/scripts/verify-cur-006-email-verify-gate.mjs
++++ b/scripts/verify-cur-006-email-verify-gate.mjs
+@@ -37,6 +37,7 @@ assert(login.includes('AuthSession::login'), '誘명솗?몃룄 ?몄뀡 ?덉슜(SSOT C-
+ 
+ const me = read('public/api/auth/me.php');
+ assert(me.includes('email_verified'), 'me.php email_verified');
++assert(me.includes('needs_basic_register'), 'me.php needs_basic_register');
+ 
+ const gatePaths = [
+   ['public/api/auth/basic-register.php', 'assertVerified'],
+@@ -78,9 +79,10 @@ assert(redirect.includes('uiRoleFromRoleType'), 'auth-redirect role_type?뭊I 
+ assert(redirect.includes('study114_post_verify_role'), 'auth-redirect ??븷 ?몄뀡 蹂댁〈');
+ assert(redirect.includes("'home'") || redirect.includes('"home"'), 'auth-redirect home 蹂댁〈 ???);
+ assert(redirect.includes('basicRegisterPathForMe'), 'auth-redirect ?쒕쾭 ??븷 湲곕낯?깅줉 path');
++assert(redirect.includes('needs_basic_register'), 'auth-redirect ?꾨즺??湲곕컲 遺꾧린');
+ 
+ const verifyEmail = read('preview/auth-ui/src/screens/signup-verify-email.js');
+-assert(verifyEmail.includes("target === 'basic'"), '?뺤씤 ??basic 紐⑺몴');
++assert(verifyEmail.includes('needs_basic_register'), '?뺤씤 ???쒕쾭 ?꾨즺??湲곕컲 basic');
+ assert(verifyEmail.includes('basicRegisterPathForMe'), '?뺤씤 ???쒕쾭 ??븷 湲곕낯?깅줉');
+ assert(verifyEmail.includes('uiRoleFromRoleType'), '?뺤씤 ??me.role_type');
+ 
+diff --git a/scripts/verify-cur-006-post-verify-role.mjs b/scripts/verify-cur-006-post-verify-role.mjs
+index fdc2bd0..2fabd1e 100644
+--- a/scripts/verify-cur-006-post-verify-role.mjs
++++ b/scripts/verify-cur-006-post-verify-role.mjs
+@@ -131,6 +131,50 @@ assert(redirect.peekPostVerifyRole() === '', 'F invalid role not stored');
+ redirect.setPostVerifyTarget('home', 'tutor');
+ assert(redirect.peekPostVerifyRole() === '', 'F home target strips role');
+ 
++// --- G resolveAfterAuthUrl: needs_basic_register wins over empty/home postVerify ---
++const baseMe = {
++  authenticated: true,
++  email_verified: true,
++  needs_account_contact: false,
++  oauth_role_pending: false,
++};
++for (const [roleType, pathPart] of [
++  ['tutor', 'role=tutor'],
++  ['study_room_owner', 'role=study_room'],
++  ['guardian_student', 'role=student'],
++]) {
++  const url = redirect.resolveAfterAuthUrl({
++    ...baseMe,
++    role_type: roleType,
++    needs_basic_register: true,
++  });
++  assert(
++    String(url).includes('/signup/basic') && String(url).includes(pathPart),
++    `G needs_basic ??${roleType} basic URL`,
++  );
++  const doneUrl = redirect.resolveAfterAuthUrl({
++    ...baseMe,
++    role_type: roleType,
++    needs_basic_register: false,
++  });
++  assert(
++    !String(doneUrl).includes('/signup/basic'),
++    `G completed ${roleType} skips basic`,
++  );
++}
++
++assert(
++  String(
++    redirect.resolveAfterAuthUrl({
++      ...baseMe,
++      role_type: 'tutor',
++      email_verified: false,
++      needs_basic_register: true,
++    }),
++  ).includes('verify-email'),
++  'G unverified still waits for email (not basic)',
++);
++
+ // --- static: second box is hope type (B), not member role ---
+ const basicSrc = readFileSync(resolve(root, 'preview/auth-ui/src/screens/signup-basic.js'), 'utf8');
+ assert(basicSrc.includes('preferred_lesson_type'), 'student hope field preferred_lesson_type');
+@@ -138,6 +182,8 @@ assert(basicSrc.includes('?대뼡 ?섏뾽??李얘퀬 ?덈굹??'), 'hope label not
+ assert(basicSrc.includes('?뚯썝 ?좏삎???꾨떃?덈떎'), 'hope disambiguation hint');
+ assert(!basicSrc.includes('data-nav="/signup/role"'), 'basic form no back to role reselect');
+ assert(basicSrc.includes('resolveUiRoleForBasicRegister'), 'basic binds server role align');
++assert(basicSrc.includes('needs_basic_register'), 'basic blocks completed re-entry');
++assert(basicSrc.includes('roleReady'), 'basic waits for server role before submit');
+ 
+ const enums = readFileSync(resolve(root, 'preview/auth-ui/src/register-enums.js'), 'utf8');
+ assert(enums.includes('怨쇱쇅??李얘린') && enums.includes('怨듬?諛?李얘린'), 'hope labels are find-intent');
+@@ -153,6 +199,35 @@ const verifyEmail = readFileSync(
+ );
+ assert(verifyEmail.includes('basicRegisterPathForMe'), 'verify continue uses server path');
+ assert(verifyEmail.includes('consumePostVerifyRole()'), 'verify clears stale role before navigate');
++assert(verifyEmail.includes('needs_basic_register'), 'verify continue uses server completion flag');
++
++const mePhp = readFileSync(resolve(root, 'public/api/auth/me.php'), 'utf8');
++assert(mePhp.includes('needs_basic_register'), 'me exposes needs_basic_register');
++assert(mePhp.includes('needsBasicRegister'), 'me calls BasicRegisterService::needsBasicRegister');
++
++const basicSvc = readFileSync(resolve(root, 'src/Auth/BasicRegisterService.php'), 'utf8');
++assert(basicSvc.includes('function needsBasicRegister'), 'BasicRegisterService::needsBasicRegister');
++assert(basicSvc.includes('FROM tutors WHERE user_id'), 'completion: tutors');
++assert(basicSvc.includes('FROM study_rooms WHERE user_id'), 'completion: study_rooms');
++assert(basicSvc.includes('FROM students WHERE guardian_user_id'), 'completion: students');
++
++const signupSvc = readFileSync(resolve(root, 'src/Auth/SignupService.php'), 'utf8');
++assert(signupSvc.includes("'student'    => 'guardian_student'"), 'signup map student');
++assert(signupSvc.includes("'study_room' => 'study_room_owner'"), 'signup map study_room');
++assert(signupSvc.includes("'tutor'      => 'tutor'"), 'signup map tutor');
++
++const oauthRole = readFileSync(resolve(root, 'src/Auth/OAuthRoleService.php'), 'utf8');
++assert(oauthRole.includes('needsBasicRegister'), 'oauth needs_basic uses table check');
++assert(
++  !oauthRole.includes("in_array($roleUi, ['study_room', 'tutor'], true)"),
++  'oauth no longer skips student basic',
++);
++
++const redirectSrc = readFileSync(resolve(root, 'preview/shared/auth-redirect.js'), 'utf8');
++assert(
++  redirectSrc.includes('me.needs_basic_register') && redirectSrc.includes('basicRegisterPathForMe'),
++  'resolveAfterAuthUrl routes by needs_basic_register',
++);
+ 
+ assert(existsSync(resolve(root, 'preview/shared/auth-redirect.js')), 'auth-redirect exists');
+ 
+diff --git a/src/Auth/BasicRegisterService.php b/src/Auth/BasicRegisterService.php
+index 414ca44..b813c5e 100644
+--- a/src/Auth/BasicRegisterService.php
++++ b/src/Auth/BasicRegisterService.php
+@@ -30,6 +30,48 @@ final class BasicRegisterService
+         };
+     }
+ 
++    /**
++     * 湲곕낯?깅줉 誘몄셿猷??щ? ???쒕쾭 role_type ?????議댁옱濡쒕쭔 ?먯젙 (?뚮옒洹??대씪 ??κ컪 湲덉?).
++     * tutor?뭪utors.user_id / study_room_owner?뭩tudy_rooms.user_id / guardian_student?뭩tudents.guardian_user_id
++     */
++    public function needsBasicRegister(int $userId, string $roleType): bool
++    {
++        if ($userId < 1) {
++            return false;
++        }
++        $pdo = Connection::get();
++        return match ($roleType) {
++            'tutor' => !$this->existsRow(
++                $pdo,
++                'SELECT 1 FROM tutors WHERE user_id = ? LIMIT 1',
++                [$userId]
++            ),
++            'study_room_owner' => !$this->existsRow(
++                $pdo,
++                $this->columnExists($pdo, 'study_rooms', 'deleted_at')
++                    ? 'SELECT 1 FROM study_rooms WHERE user_id = ? AND deleted_at IS NULL LIMIT 1'
++                    : 'SELECT 1 FROM study_rooms WHERE user_id = ? LIMIT 1',
++                [$userId]
++            ),
++            'guardian_student' => !$this->existsRow(
++                $pdo,
++                $this->columnExists($pdo, 'students', 'deleted_at')
++                    ? 'SELECT 1 FROM students WHERE guardian_user_id = ? AND deleted_at IS NULL LIMIT 1'
++                    : 'SELECT 1 FROM students WHERE guardian_user_id = ? LIMIT 1',
++                [$userId]
++            ),
++            default => false,
++        };
++    }
++
++    /** @param list<mixed> $params */
++    private function existsRow(PDO $pdo, string $sql, array $params): bool
++    {
++        $stmt = $pdo->prepare($sql);
++        $stmt->execute($params);
++        return $stmt->fetchColumn() !== false;
++    }
++
+     /** @return list<array{id: int, label: string}> */
+     public function listRegions(): array
+     {
+diff --git a/src/Auth/OAuthRoleService.php b/src/Auth/OAuthRoleService.php
+index ae64704..123f08b 100644
+--- a/src/Auth/OAuthRoleService.php
++++ b/src/Auth/OAuthRoleService.php
+@@ -51,7 +51,8 @@ final class OAuthRoleService
+ 
+         return [
+             'role_type'            => $roleType,
+-            'needs_basic_register' => in_array($roleUi, ['study_room', 'tutor'], true),
++            // ????븷 紐⑤몢 ??????놁쑝硫?湲곕낯?깅줉 ?꾩슂 (?숈깮???숈씪)
++            'needs_basic_register' => (new BasicRegisterService())->needsBasicRegister($userId, $roleType),
+         ];
+     }
+ 

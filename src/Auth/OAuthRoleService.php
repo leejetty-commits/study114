@@ -51,7 +51,8 @@ final class OAuthRoleService
 
         return [
             'role_type'            => $roleType,
-            'needs_basic_register' => in_array($roleUi, ['study_room', 'tutor'], true),
+            // 세 역할 모두 대응 행 없으면 기본등록 필요 (학생도 동일)
+            'needs_basic_register' => (new BasicRegisterService())->needsBasicRegister($userId, $roleType),
         ];
     }
 

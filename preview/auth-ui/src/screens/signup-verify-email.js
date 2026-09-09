@@ -15,7 +15,6 @@ import {
   consumePostVerifyTarget,
   consumePostVerifyRole,
   getLoginReturnTo,
-  oauthRoleSelectionUrl,
   resolveAfterAuthUrl,
   isOnEmailVerifyWait,
   basicRegisterPathForMe,
@@ -48,21 +47,16 @@ function maskEmail(email) {
 }
 
 function continueAfterVerified(me) {
-  const target = consumePostVerifyTarget();
-  const returnTo = getLoginReturnTo();
-  // stale hint role 제거 — 화면 역할은 서버 me.role_type 정본만
+  // stale postVerify 제거 — 목적지는 서버 me(role_type + needs_basic_register) 정본
+  consumePostVerifyTarget();
   consumePostVerifyRole();
-  if (target === 'basic') {
-    const roleUi = uiRoleFromRoleType(me?.role_type);
-    if (roleUi) setRole(roleUi);
+  const returnTo = getLoginReturnTo();
+  const roleUi = uiRoleFromRoleType(me?.role_type);
+  if (roleUi) setRole(roleUi);
+  if (me?.needs_basic_register) {
     navigate(basicRegisterPathForMe(me));
     return;
   }
-  if (target === 'role') {
-    window.location.href = oauthRoleSelectionUrl(returnTo);
-    return;
-  }
-  // home 등: 기본등록 반복 없이 역할별 홈 또는 안전 returnTo
   window.location.href = resolveAfterAuthUrl(me, returnTo);
 }
 

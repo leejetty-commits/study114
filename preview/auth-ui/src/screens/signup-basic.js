@@ -1,7 +1,7 @@
 import { signupState } from '../state.js';
 import { PREFERRED_LESSON_TYPE_LABELS, PERSONAL_GENDER_OPTIONS } from '../register-enums.js';
 import { fetchMeApi } from '../auth-api.js';
-import { resolveAfterAuthUrl, uiRoleFromRoleType, resolveUiRoleForBasicRegister } from '../../../shared/auth-redirect.js';
+import { resolveAfterAuthUrl, resolveUiRoleForBasicRegister } from '../../../shared/auth-redirect.js';
 import {
   buildHomeStudentImportUrl,
   isReturnImportMode,
@@ -355,6 +355,7 @@ function packMainSubject(data) {
 export function bindSignupBasicEvents(root) {
   bindGlobalEvents(root);
 
+  let roleReady = false;
   let role =
     parseHashQuery().role === 'student' ||
     parseHashQuery().role === 'study_room' ||
@@ -368,7 +369,12 @@ export function bindSignupBasicEvents(root) {
         navigate('/login');
         return;
       }
-      if (!me.email_verified || me.needs_account_contact) {
+      if (!me.email_verified || me.needs_account_contact || me.oauth_role_pending) {
+        window.location.href = resolveAfterAuthUrl(me);
+        return;
+      }
+      // 완료 행 있으면 기본등록 재진입 금지
+      if (!me.needs_basic_register) {
         window.location.href = resolveAfterAuthUrl(me);
         return;
       }
@@ -391,6 +397,7 @@ export function bindSignupBasicEvents(root) {
         }
       }
       role = serverRole;
+      roleReady = true;
     })
     .catch(() => navigate('/login'));
 
@@ -454,6 +461,10 @@ export function bindSignupBasicEvents(root) {
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (!roleReady) {
+      alert('계정 역할을 확인하는 중입니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
     role = signupState.role || role;
     if (role !== 'student' && role !== 'study_room' && role !== 'tutor') {
       alert('계정 역할을 확인할 수 없습니다. 새로고침 후 다시 시도해 주세요.');

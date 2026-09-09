@@ -37,6 +37,7 @@ assert(login.includes('AuthSession::login'), '미확인도 세션 허용(SSOT C-
 
 const me = read('public/api/auth/me.php');
 assert(me.includes('email_verified'), 'me.php email_verified');
+assert(me.includes('needs_basic_register'), 'me.php needs_basic_register');
 
 const gatePaths = [
   ['public/api/auth/basic-register.php', 'assertVerified'],
@@ -78,9 +79,10 @@ assert(redirect.includes('uiRoleFromRoleType'), 'auth-redirect role_type→UI �
 assert(redirect.includes('study114_post_verify_role'), 'auth-redirect 역할 세션 보존');
 assert(redirect.includes("'home'") || redirect.includes('"home"'), 'auth-redirect home 보존 대상');
 assert(redirect.includes('basicRegisterPathForMe'), 'auth-redirect 서버 역할 기본등록 path');
+assert(redirect.includes('needs_basic_register'), 'auth-redirect 완료행 기반 분기');
 
 const verifyEmail = read('preview/auth-ui/src/screens/signup-verify-email.js');
-assert(verifyEmail.includes("target === 'basic'"), '확인 후 basic 목표');
+assert(verifyEmail.includes('needs_basic_register'), '확인 후 서버 완료행 기반 basic');
 assert(verifyEmail.includes('basicRegisterPathForMe'), '확인 후 서버 역할 기본등록');
 assert(verifyEmail.includes('uiRoleFromRoleType'), '확인 후 me.role_type');
 

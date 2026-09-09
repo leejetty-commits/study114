@@ -291,7 +291,7 @@ export function redirectToEmailVerifyWait() {
 }
 
 /**
- * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, role_type?: string, admin_level?: string|null }} me
+ * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, needs_basic_register?: boolean, role_type?: string, admin_level?: string|null }} me
  * @param {string} [returnTo]
  */
 export function resolveAfterAuthUrl(me, returnTo = '') {
@@ -311,6 +311,10 @@ export function resolveAfterAuthUrl(me, returnTo = '') {
   }
   if (me.oauth_role_pending) {
     return oauthRoleSelectionUrl(returnTo);
+  }
+  // 기본등록 완료 여부는 서버 행 존재(needs_basic_register). 빈 postVerify로 추정하지 않음.
+  if (me.needs_basic_register) {
+    return authUiHref(basicRegisterPathForMe(me));
   }
   return resolvePostLoginUrl(me.role_type, returnTo);
 }

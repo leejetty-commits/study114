@@ -131,6 +131,50 @@ assert(redirect.peekPostVerifyRole() === '', 'F invalid role not stored');
 redirect.setPostVerifyTarget('home', 'tutor');
 assert(redirect.peekPostVerifyRole() === '', 'F home target strips role');
 
+// --- G resolveAfterAuthUrl: needs_basic_register wins over empty/home postVerify ---
+const baseMe = {
+  authenticated: true,
+  email_verified: true,
+  needs_account_contact: false,
+  oauth_role_pending: false,
+};
+for (const [roleType, pathPart] of [
+  ['tutor', 'role=tutor'],
+  ['study_room_owner', 'role=study_room'],
+  ['guardian_student', 'role=student'],
+]) {
+  const url = redirect.resolveAfterAuthUrl({
+    ...baseMe,
+    role_type: roleType,
+    needs_basic_register: true,
+  });
+  assert(
+    String(url).includes('/signup/basic') && String(url).includes(pathPart),
+    `G needs_basic → ${roleType} basic URL`,
+  );
+  const doneUrl = redirect.resolveAfterAuthUrl({
+    ...baseMe,
+    role_type: roleType,
+    needs_basic_register: false,
+  });
+  assert(
+    !String(doneUrl).includes('/signup/basic'),
+    `G completed ${roleType} skips basic`,
+  );
+}
+
+assert(
+  String(
+    redirect.resolveAfterAuthUrl({
+      ...baseMe,
+      role_type: 'tutor',
+      email_verified: false,
+      needs_basic_register: true,
+    }),
+  ).includes('verify-email'),
+  'G unverified still waits for email (not basic)',
+);
+
 // --- static: second box is hope type (B), not member role ---
 const basicSrc = readFileSync(resolve(root, 'preview/auth-ui/src/screens/signup-basic.js'), 'utf8');
 assert(basicSrc.includes('preferred_lesson_type'), 'student hope field preferred_lesson_type');
@@ -138,6 +182,8 @@ assert(basicSrc.includes('어떤 수업을 찾고 있나요?'), 'hope label not 
 assert(basicSrc.includes('회원 유형이 아닙니다'), 'hope disambiguation hint');
 assert(!basicSrc.includes('data-nav="/signup/role"'), 'basic form no back to role reselect');
 assert(basicSrc.includes('resolveUiRoleForBasicRegister'), 'basic binds server role align');
+assert(basicSrc.includes('needs_basic_register'), 'basic blocks completed re-entry');
+assert(basicSrc.includes('roleReady'), 'basic waits for server role before submit');
 
 const enums = readFileSync(resolve(root, 'preview/auth-ui/src/register-enums.js'), 'utf8');
 assert(enums.includes('과외쌤 찾기') && enums.includes('공부방 찾기'), 'hope labels are find-intent');
@@ -153,6 +199,35 @@ const verifyEmail = readFileSync(
 );
 assert(verifyEmail.includes('basicRegisterPathForMe'), 'verify continue uses server path');
 assert(verifyEmail.includes('consumePostVerifyRole()'), 'verify clears stale role before navigate');
+assert(verifyEmail.includes('needs_basic_register'), 'verify continue uses server completion flag');
+
+const mePhp = readFileSync(resolve(root, 'public/api/auth/me.php'), 'utf8');
+assert(mePhp.includes('needs_basic_register'), 'me exposes needs_basic_register');
+assert(mePhp.includes('needsBasicRegister'), 'me calls BasicRegisterService::needsBasicRegister');
+
+const basicSvc = readFileSync(resolve(root, 'src/Auth/BasicRegisterService.php'), 'utf8');
+assert(basicSvc.includes('function needsBasicRegister'), 'BasicRegisterService::needsBasicRegister');
+assert(basicSvc.includes('FROM tutors WHERE user_id'), 'completion: tutors');
+assert(basicSvc.includes('FROM study_rooms WHERE user_id'), 'completion: study_rooms');
+assert(basicSvc.includes('FROM students WHERE guardian_user_id'), 'completion: students');
+
+const signupSvc = readFileSync(resolve(root, 'src/Auth/SignupService.php'), 'utf8');
+assert(signupSvc.includes("'student'    => 'guardian_student'"), 'signup map student');
+assert(signupSvc.includes("'study_room' => 'study_room_owner'"), 'signup map study_room');
+assert(signupSvc.includes("'tutor'      => 'tutor'"), 'signup map tutor');
+
+const oauthRole = readFileSync(resolve(root, 'src/Auth/OAuthRoleService.php'), 'utf8');
+assert(oauthRole.includes('needsBasicRegister'), 'oauth needs_basic uses table check');
+assert(
+  !oauthRole.includes("in_array($roleUi, ['study_room', 'tutor'], true)"),
+  'oauth no longer skips student basic',
+);
+
+const redirectSrc = readFileSync(resolve(root, 'preview/shared/auth-redirect.js'), 'utf8');
+assert(
+  redirectSrc.includes('me.needs_basic_register') && redirectSrc.includes('basicRegisterPathForMe'),
+  'resolveAfterAuthUrl routes by needs_basic_register',
+);
 
 assert(existsSync(resolve(root, 'preview/shared/auth-redirect.js')), 'auth-redirect exists');
 
