@@ -1089,23 +1089,21 @@ final class StudyRoomRegisterService
                     : (($complexId !== null && $complexId > 0) ? 'complex' : 'dong');
             }
             if ($regionId <= 0) {
-                $matched = AddressRegionMatch::match(
-                    $pdo,
-                    (string) ($slot['address_sido'] ?? $input['address_sido'] ?? ''),
-                    (string) ($slot['address_sigungu'] ?? $input['address_sigungu'] ?? ''),
-                    (string) ($slot['address_bname'] ?? $slot['address_hname'] ?? $slot['region_label'] ?? '')
-                );
+                // 슬롯 자체 주소만 사용 — 사업장/집주소($input)로 빈 홍보지역 2·3을 채우지 않음
+                $sido = trim((string) ($slot['address_sido'] ?? ''));
+                $sigungu = trim((string) ($slot['address_sigungu'] ?? ''));
+                $bname = trim((string) ($slot['address_bname'] ?? $slot['address_hname'] ?? $slot['region_label'] ?? ''));
+                if ($sido === '' && $sigungu === '' && $bname === ''
+                    && trim((string) ($slot['complex_name'] ?? '')) === ''
+                    && trim((string) ($slot['complex_address'] ?? $slot['address_text'] ?? '')) === '') {
+                    continue;
+                }
+                $matched = AddressRegionMatch::match($pdo, $sido, $sigungu, $bname);
                 if ($matched !== null) {
                     $regionId = $matched;
                 } else {
                     try {
-                        $payload = $input;
-                        foreach ($slot as $key => $value) {
-                            if ($value !== '' && $value !== null) {
-                                $payload[$key] = $value;
-                            }
-                        }
-                        $regionId = (int) RegionEnsure::fromKakao($pdo, $payload)['id'];
+                        $regionId = (int) RegionEnsure::fromKakao($pdo, $slot)['id'];
                     } catch (InvalidArgumentException $e) {
                         $regionId = 0;
                     }

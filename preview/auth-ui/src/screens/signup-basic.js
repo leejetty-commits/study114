@@ -564,18 +564,24 @@ export function bindSignupBasicEvents(root) {
       signupState.basicRegister[role] = data;
       signupState.basicRegisterResult = result;
 
-      // 홈 기본값용 — 지역등록 완료 플래그
+      // 홈 기본값용 — 공부방은 홍보지역 1 (사업장 region_id와 분리)
       try {
+        const promo1 =
+          role === 'study_room' && Array.isArray(data.saved_regions) ? data.saved_regions[0] || {} : null;
         sessionStorage.setItem(
           'study114.regionRegister.seed',
           JSON.stringify({
             role,
             at: Date.now(),
             preferred_lesson_type: data.preferred_lesson_type || null,
-            region_basis: data.region_basis || null,
-            region_id: data.region_id || null,
-            complex_id: data.complex_id || null,
-            region_label: data.region_label || null,
+            region_basis: promo1
+              ? promo1.region_basis_type || data.region_basis || null
+              : data.region_basis || null,
+            region_id: promo1 ? promo1.region_id || null : data.region_id || null,
+            complex_id: promo1 ? promo1.complex_id || null : data.complex_id || null,
+            region_label: promo1
+              ? promo1.region_label || promo1.complex_name || null
+              : data.region_label || null,
             activity_city: data.activity_city || null,
           }),
         );
