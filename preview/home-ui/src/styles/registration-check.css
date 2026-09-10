@@ -722,3 +722,100 @@
     width: auto;
   }
 }
+
+/* —— 과외쌤 RC 프레임 이식: 1행 BASIC / 2행 PICK+PRIME (공부방 기존 3열 그리드와 additive 공존) —— */
+.rc-compare--stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+.rc-compare__row {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.rc-compare__row--basic {
+  grid-template-columns: minmax(0, 28rem);
+}
+
+.rc-compare__row--upgrade {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (min-width: 860px) {
+  .rc-compare__row--upgrade {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.25fr);
+  }
+}
+
+.rc-tier--basic .rc-tier__live {
+  max-height: none;
+}
+
+.rc-tier--pick .rc-tier__live {
+  max-height: 18rem;
+}
+
+.rc-tier--prime .rc-tier__live {
+  max-height: 26rem;
+}
+
+.rc-section--accordion {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.55rem;
+  background: #fff;
+  padding: 0.35rem 0.55rem 0.55rem;
+}
+
+.rc-section__summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  cursor: pointer;
+  list-style: none;
+  padding: 0.35rem 0.15rem;
+}
+
+.rc-section__summary::-webkit-details-marker {
+  display: none;
+}
+
+.rc-section__summary::before {
+  content: '▸';
+  flex-shrink: 0;
+  color: #64748b;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  margin-top: 0.1rem;
+}
+
+.rc-section--accordion[open] > .rc-section__summary::before {
+  content: '▾';
+}
+
+.rc-section__summary-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.rc-section__miss-preview {
+  font-size: 0.6875rem;
+  color: #b45309;
+  font-weight: 600;
+}
+
+.rc-section__miss-preview--ok {
+  color: #15803d;
+}
+
+.rc-section--accordion .rc-table-wrap {
+  margin-top: 0.35rem;
+}
