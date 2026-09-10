@@ -34,7 +34,8 @@ assert(!screens.includes('+ 과외 등록'), 'no multi-profile CTA + 과외 등�
 assert(screens.includes('renderEmptyNoProfile'), 'empty state without multi list');
 assert(screens.includes('tutorHubPath(tutors[0].id)'), 'list path redirects to first hub');
 
-assert(tutorRouter.includes("label: '마이샵'"), 'tab: 마이샵');
+assert(tutorRouter.includes("label: '마이프로필'"), 'tab: 마이프로필');
+assert(!tutorRouter.includes("label: '마이샵'"), 'tab: 마이샵 not used for tutor');
 assert(tutorRouter.includes("label: '쪽지설정'"), 'tab: 쪽지설정');
 assert(tutorRouter.includes("label: '등록점검'"), 'tab: 등록점검');
 assert(!tutorRouter.includes("label: '등록 현황'"), 'tab: 등록 현황 removed');
@@ -42,7 +43,8 @@ assert(!tutorRouter.includes("label: '공개하기'"), 'tab: 공개하기 rename
 
 assert(mypageRouter.includes('getTutorEntryPath'), 'entry: getTutorEntryPath');
 assert(/if \(role === 'tutor'\) return getTutorEntryPath\(\)/.test(mypageRouter), 'default path uses tutor entry');
-assert(mypageRouter.includes('tutor.tutor_display_name'), 'H1 uses display name');
+assert(mypageRouter.includes("return '내 과외 프로필'"), 'H1 fallback when display name empty');
+assert(mypageRouter.includes('tutor_display_name'), 'H1 prefers display name');
 assert(mypageRouter.includes("label: '찜한학생'"), 'nav: 찜한학생');
 assert(mypageRouter.includes("label: '구매이력'"), 'nav: 구매이력');
 assert(!mypageRouter.includes("label: '학생 검토함'"), 'nav: 학생 검토함 removed');

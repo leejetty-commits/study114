@@ -171,7 +171,9 @@ export function screenTitle(screenId, path, role) {
     if (tr) {
       if (tr.tutorId) {
         const tutor = getTutors().find((t) => t.id === tr.tutorId);
-        if (tutor?.tutor_display_name) return tutor.tutor_display_name;
+        const name = String(tutor?.tutor_display_name || '').trim();
+        if (name) return name;
+        return '내 과외 프로필';
       }
       return tutorRegScreenTitle(tr.screenId);
     }

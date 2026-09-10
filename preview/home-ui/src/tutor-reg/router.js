@@ -63,7 +63,7 @@ export function isTutorRegPath(hashPath) {
 export function tutorRegScreenTitle(screenId) {
   const map = {
     'P21-01': '내 등록',
-    'P21-02': '마이샵',
+    'P21-02': '마이프로필',
     'P21-03a': '기본정보',
     'P21-03b': '상세정보',
     'P21-04': '등록점검',
@@ -95,7 +95,7 @@ export function tutorListTabPath(tab) {
  * (상세2 없음 · exposure는 탭 밖 레거시 경로 유지)
  */
 export const TUTOR_REG_TOP_TABS = [
-  { key: 'hub', label: '마이샵' },
+  { key: 'hub', label: '마이프로필' },
   { key: 'basic', label: '기본정보' },
   { key: 'detail', label: '상세정보' },
   { key: 'inquiries', label: '쪽지설정' },
