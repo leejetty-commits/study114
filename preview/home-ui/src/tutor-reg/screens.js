@@ -3,10 +3,7 @@ import {
 } from './tutor-reg-copy.js';
 import {
   LIFECYCLE_FOOTNOTE_REG,
-  LIFECYCLE_PUBLISH_CONFIRM_DIRECT,
-  LIFECYCLE_PUBLISH_CONFIRM_NOTE,
 } from '../lifecycle-copy.js';
-import { renderBrowseList, renderExposureBox } from '../exposure-render.js';
 import {
   parseTutorRegPath,
   tutorHubPath,
@@ -17,7 +14,6 @@ import {
 import { renderUniversityNameField } from '../../../shared/korean-universities.js';
 import {
   profileStatusLabel,
-  tutorToExposureRow,
   getExposureMatrix,
   getAccessMatrix,
   getThreeGauges,
@@ -36,8 +32,13 @@ import {
   getMemoCreditsRemaining,
 } from './store.js';
 import { saveTutorBasicInline, saveTutorDetailInline } from './inline-save.js';
-import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
+import {
+  buildTutorRegistrationCheckModel,
+} from './registration-check-model.js';
+import { renderTutorRegistrationCheck } from './registration-check-render.js';
+import { bindTutorRegistrationCheckEvents } from './registration-check-edit.js';
 import { previewState } from '../state.js';
+import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import {
   renderTutorRegionSlot,
@@ -647,92 +648,14 @@ function renderDetailBridge(tutor) {
 }
 
 /** @param {import('./store.js').TutorRecord} tutor */
-function renderPublishPreviewModes(tutor) {
-  const row = tutorToExposureRow(tutor);
-  const modes = [
-    {
-      key: 'basic',
-      label: '기본 노출 목록',
-      html: renderBrowseList('tutor', [row], { guest: false, showCompare: false }),
-    },
-    {
-      key: 'pick',
-      label: '추천 노출 카드',
-      html: `<div class="expo-grid--5">${renderExposureBox('tutor', 'pick', row, '추천 노출 미리보기', { guest: false })}</div>`,
-    },
-    {
-      key: 'detail',
-      label: '상세페이지',
-      html: `<div class="expo-grid--5">${renderExposureBox('tutor', 'prime', row, '상세 미리보기', { guest: false })}</div>`,
-    },
-    {
-      key: 'compare',
-      label: '비교검색 행',
-      html: renderBrowseList('tutor', [row], { guest: false, showCompare: true }),
-    },
-  ];
-
-  const tabs = modes
-    .map(
-      (m, i) =>
-        `<button type="button" class="p21-preview-tab${i === 0 ? ' is-active' : ''}" data-p21-preview-tab="${m.key}">${esc(m.label)}</button>`,
-    )
-    .join('');
-
-  const panels = modes
-    .map(
-      (m, i) =>
-        `<div class="p21-preview-panel${i === 0 ? ' is-active' : ''}" data-p21-preview-panel="${m.key}">
-        <p class="p19-search-preview__label">${esc(m.label)} (11·13장)</p>
-        <div class="p19-search-preview__frame">${m.html}</div>
-      </div>`,
-    )
-    .join('');
-
-  return `<div class="p21-preview-modes" data-p21-preview-wrap><div class="p21-preview-tabs" role="tablist">${tabs}</div>${panels}</div>`;
-}
-
-/** @param {import('./store.js').TutorRecord} tutor */
 function renderPublish(tutor) {
   const r = getPublishReadiness(tutor);
-  const preview = renderPublishPreviewModes(tutor);
-
-  const checklist = r.missing.length
-    ? r.missing
-        .map(
-          (m) => `<li class="p19-checklist__item p19-checklist__miss">
-        <span class="p19-checklist__icon">△</span><span>${esc(m)}</span>
-        <a href="#${tutorSectionPath(tutor.id, m.includes('상세') ? 'detail' : 'basic')}" data-p21-nav="${tutorSectionPath(tutor.id, m.includes('상세') ? 'detail' : 'basic')}">확인 →</a>
-      </li>`,
-        )
-        .join('')
-    : '<li class="p19-checklist__item p19-checklist__ok"><span class="p19-checklist__icon">✓</span><span>필수 항목이 모두 충족되었습니다.</span></li>';
-
-  const body = `
-    <div class="p19-publish-body" data-p21-tutor-id="${tutor.id}">
-      ${preview}
-      <div class="p19-checklist-card">
-        <h3 class="p19-checklist-card__title">공개 필수 체크리스트</h3>
-        <ul class="p19-checklist">${checklist}</ul>
-      </div>
-      <div class="p20-confirm-card" data-p21-tutor-id="${tutor.id}">
-        <h3 class="p20-confirm-card__title">자기확인 — 학부모에게 이렇게 보입니다</h3>
-        <label class="p20-confirm-check"><input type="checkbox" data-p21-confirm="region" /> 활동 지역·과목·대상 학생군 노출을 확인했습니다</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p21-confirm="fee" /> 과외비·수업 방식 표시를 확인했습니다</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p21-confirm="trust" /> 소개문·신뢰정보(공개 선택 범위) 노출을 확인했습니다</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p21-confirm="direct" /> 외부 연락처 직접 노출 없음 · ${LIFECYCLE_PUBLISH_CONFIRM_DIRECT}</label>
-      </div>
-      <div class="p19-form-actions p19-form-actions--publish">
-        <button type="button" class="btn btn--primary btn--lg" data-p21-publish ${r.canPublish ? '' : 'disabled'}>공개하기 (published)</button>
-        ${
-          tutor.profile_status === 'hidden'
-            ? '<button type="button" class="btn btn--secondary" data-p21-publish>다시 공개</button>'
-            : ''
-        }
-      </div>
-      <p class="p19-publish-footnote">${LIFECYCLE_PUBLISH_CONFIRM_NOTE}</p>
-    </div>`;
-
+  const vm = buildTutorRegistrationCheckModel(tutor, {
+    canPublish: r.canPublish,
+    missing: r.missing,
+    profileStatus: tutor.profile_status,
+  });
+  const body = renderTutorRegistrationCheck(vm);
   return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'publish', body)}</section>`;
 }
 
@@ -861,6 +784,8 @@ export function bindTutorRegEvents(root, rerender) {
   ensureTutorCityUnits().then((loaded) => {
     if (loaded) rerender();
   });
+
+  bindTutorRegistrationCheckEvents(root);
 
   root.querySelectorAll('[data-p21-retry-cities]').forEach((btn) => {
     btn.addEventListener('click', async () => {
