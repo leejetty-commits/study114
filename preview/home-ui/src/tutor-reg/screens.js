@@ -1,5 +1,4 @@
 import {
-  P21_LIST_TABS,
   P21_ACCESS_CTA,
 } from './tutor-reg-copy.js';
 import {
@@ -8,18 +7,15 @@ import {
   LIFECYCLE_PUBLISH_CONFIRM_NOTE,
 } from '../lifecycle-copy.js';
 import { renderBrowseList, renderExposureBox } from '../exposure-render.js';
-import { TUTOR_REGISTER_URL } from '../nav-config.js';
-import { formatSubmissionDocSummary, getSubmissionDocs } from '../mypage/preview-data.js';
 import {
   parseTutorRegPath,
   tutorHubPath,
   tutorSectionPath,
-  tutorListTabPath,
   TUTOR_REG_TOP_TABS,
+  BASE as TUTOR_REG_BASE,
 } from './router.js';
 import { renderUniversityNameField } from '../../../shared/korean-universities.js';
 import {
-  formatTutorSummaryLine,
   profileStatusLabel,
   tutorToExposureRow,
   getExposureMatrix,
@@ -27,17 +23,15 @@ import {
   getThreeGauges,
   getHubCtas,
   getUnlockCards,
-  getProductApplyHint,
   getRequiredCertGauge,
 } from './format.js';
 import {
-  getTutorsByTab,
+  getTutors,
   getTutor,
   getPublishReadiness,
   publishTutor,
   hideTutor,
   deleteTutor,
-  getTutorSummaryCounts,
   isPaidProvider,
   getMemoCreditsRemaining,
 } from './store.js';
@@ -58,21 +52,26 @@ function esc(s) {
 
 /** @param {import('./store.js').TutorRecord} tutor @param {string} activeSection @param {string} bodyHtml */
 function renderTutorShell(tutor, activeSection, bodyHtml) {
-  const tabKey = ['hub', 'basic', 'detail', 'publish'].includes(activeSection)
-    ? activeSection
-    : 'hub';
+  const section =
+    activeSection === 'access' || activeSection === 'inquiries'
+      ? 'inquiries'
+      : ['hub', 'basic', 'detail', 'publish', 'inquiries'].includes(activeSection)
+        ? activeSection
+        : 'hub';
 
   const tabs = TUTOR_REG_TOP_TABS.map((t) => {
     const href =
       t.key === 'hub' ? tutorHubPath(tutor.id) : tutorSectionPath(tutor.id, /** @type {any} */ (t.key));
-    const active = tabKey === t.key ? ' is-active' : '';
-    return `<a href="#${href}" class="p21-reg-tabs__link${active}" data-p21-nav="${href}" role="tab" aria-selected="${tabKey === t.key}">${esc(t.label)}</a>`;
+    const active = section === t.key;
+    return `<a href="#${href}" class="mp-room__tab${active ? ' is-active' : ''}" data-p21-nav="${href}">${esc(t.label)}</a>`;
   }).join('');
 
   return `
-    <div class="p21-reg-frame">
-      <nav class="p21-reg-tabs" aria-label="내 등록 메뉴" role="tablist">${tabs}</nav>
-      <div class="p21-reg-frame__body">${bodyHtml}</div>
+    <div class="mp-room">
+      <header class="mp-room__head">
+        <nav class="mp-room__tabs" aria-label="과외쌤 메뉴">${tabs}</nav>
+      </header>
+      <div class="mp-room__body">${bodyHtml}</div>
     </div>`;
 }
 
@@ -81,7 +80,19 @@ export function renderTutorRegScreen(path) {
   const route = parseTutorRegPath(path);
   if (!route) return '';
 
-  if (route.screenId === 'P21-01') return renderList(route.listTab || 'all');
+  if (route.screenId === 'P21-01') {
+    const tutors = getTutors();
+    if (tutors.length) {
+      // 중간 목록 depth 제거 — 대표(첫) 과외 프로필 허브 직행 · 계정당 1프로필 정책
+      queueMicrotask(() => {
+        if (window.location.hash.includes(TUTOR_REG_BASE) && !/\/\d+/.test(window.location.hash)) {
+          window.location.hash = tutorHubPath(tutors[0].id);
+        }
+      });
+      return renderHub(tutors[0]);
+    }
+    return renderEmptyNoProfile();
+  }
   if (!route.tutorId) return renderNotFound();
 
   const tutor = getTutor(route.tutorId);
@@ -106,75 +117,18 @@ export function renderTutorRegScreen(path) {
 }
 
 function renderNotFound() {
-  return `<section class="mypage-panel p19-panel mypage-empty">
+  return `<section class="mypage-panel mp-room-panel mypage-empty">
     <p>과외 프로필을 찾을 수 없습니다.</p>
-    <a href="#/mypage/registrations/tutors" class="btn btn--secondary" data-p21-nav="/mypage/registrations/tutors">목록으로</a>
+    <a href="#/mypage/registrations" class="btn btn--secondary" data-p21-nav="/mypage/registrations">내 등록으로</a>
   </section>`;
 }
 
-/** @param {'all'|'draft'|'published'|'hidden'|'not_ready'} tab */
-function renderList(tab) {
-  const tutors = getTutorsByTab(tab);
-  const counts = getTutorSummaryCounts();
-  const docSummary = formatSubmissionDocSummary(getSubmissionDocs('tutor'));
-  const tabs = P21_LIST_TABS.map((t) => ({
-    ...t,
-    count:
-      t.key === 'all'
-        ? counts.published + counts.draft + counts.hidden
-        : t.key === 'draft'
-          ? counts.draft
-          : t.key === 'published'
-            ? counts.published
-            : t.key === 'hidden'
-              ? counts.hidden
-              : counts.notReady,
-  }));
-
-  const tabHtml = tabs
-    .map(
-      (t) =>
-        `<a href="#${tutorListTabPath(/** @type {any} */ (t.key))}" class="p19-tab${t.key === tab ? ' is-active' : ''}" data-p21-nav="${tutorListTabPath(/** @type {any} */ (t.key))}">${esc(t.label)} <span class="p19-tab__count">${t.count}</span></a>`,
-    )
-    .join('');
-
-  const cards =
-    tutors.length === 0
-      ? `<p class="mypage-empty">해당 상태의 과외 프로필이 없습니다.</p>`
-      : `<div class="p19-card-grid">
-        ${tutors
-          .map((t) => {
-            const readiness = getPublishReadiness(t);
-            const badge = readiness.canPublish
-              ? profileStatusLabel(t.profile_status)
-              : '공개 준비 미완료';
-            const badgeClass = readiness.canPublish ? t.profile_status : 'draft';
-            const boostHint = getProductApplyHint(t);
-            return `
-          <a href="#${tutorHubPath(t.id)}" class="p19-child-card" data-p21-nav="${tutorHubPath(t.id)}">
-            <div class="p19-child-card__head">
-              <strong>${esc(t.tutor_display_name)}</strong>
-              <span class="mypage-badge mypage-badge--${badgeClass}">${esc(badge)}</span>
-            </div>
-            <p class="p19-child-card__meta">${esc(formatTutorSummaryLine(t))}</p>
-            <p class="p19-child-card__meta p21-card-sub">${esc(docSummary)} · ${esc(boostHint)}</p>
-            <span class="p19-child-card__cta">운영하기 →</span>
-          </a>`;
-          })
-          .join('')}
-      </div>`;
-
+/** 프로필 0개 — 복수 등록 CTA 없음 */
+function renderEmptyNoProfile() {
   return `
-    <section class="mypage-panel p19-panel p19-panel--list">
-      <header class="p19-list-head">
-        <div>
-          <h2 class="p19-list-head__title">과외쌤 운영</h2>
-          <p class="p19-list-head__lead">프로필별로 공개·학생 접근·노출 상태를 관리합니다. 입력은 tutor-ui에서 합니다.</p>
-        </div>
-        <a href="${TUTOR_REGISTER_URL}" class="btn btn--primary btn--sm" data-same-tab-href="${TUTOR_REGISTER_URL}">+ 과외 등록</a>
-      </header>
-      <div class="p19-tabs" role="tablist">${tabHtml}</div>
-      ${cards}
+    <section class="mypage-panel mp-room-panel mypage-empty">
+      <h2 class="p19-list-head__title">과외 프로필이 없습니다</h2>
+      <p class="p19-list-head__lead">계정당 과외 프로필은 1개입니다. 기본등록을 마치면 여기에서 운영할 수 있습니다.</p>
       <p class="p19-list-footnote">${LIFECYCLE_FOOTNOTE_REG}</p>
     </section>`;
 }
@@ -355,13 +309,13 @@ function renderHub(tutor) {
           '접근·쪽지 매트릭스 상세',
           `<p class="p21-acc__note">회원 등급·공개 상태에 따른 이용 가능 여부를 확인합니다.</p>
            <div class="p20-matrix p20-matrix--soft">${renderMatrixRows(accessMatrix)}</div>
-           <p class="p21-acc__note"><a href="#${tutorSectionPath(tutor.id, 'access')}" data-p21-nav="${tutorSectionPath(tutor.id, 'access')}">학생 접근·쪽지 화면 열기 →</a></p>`,
+           <p class="p21-acc__note"><a href="#${tutorSectionPath(tutor.id, 'inquiries')}" data-p21-nav="${tutorSectionPath(tutor.id, 'inquiries')}">쪽지설정 열기 →</a></p>`,
           { hint: '이용 가능 여부 확인' },
         )}
       </div>
     </div>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--hub p19-panel--hub-ops">${renderTutorShell(tutor, 'hub', body)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'hub', body)}</section>`;
 }
 
 /** @param {string} title @param {string} [lead] @param {string} body */
@@ -537,7 +491,7 @@ function renderBasicForm(tutor) {
       )}
     </form>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderTutorShell(tutor, 'basic', formBody)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'basic', formBody)}</section>`;
 }
 
 /** @param {import('./store.js').TutorRecord} tutor */
@@ -653,7 +607,7 @@ function renderDetailForm(tutor) {
       )}
     </form>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderTutorShell(tutor, 'detail', formBody)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'detail', formBody)}</section>`;
 }
 
 function renderBasicBridge(tutor) {
@@ -751,7 +705,7 @@ function renderPublish(tutor) {
       <p class="p19-publish-footnote">${LIFECYCLE_PUBLISH_CONFIRM_NOTE}</p>
     </div>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--publish">${renderTutorShell(tutor, 'publish', body)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'publish', body)}</section>`;
 }
 
 /** @param {import('./store.js').TutorRecord} tutor */
@@ -836,7 +790,7 @@ function renderAccess(tutor) {
       ${rulesDetails}
     </div>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderTutorShell(tutor, 'access', body)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'inquiries', body)}</section>`;
 }
 
 /** @param {import('./store.js').TutorRecord} tutor */
@@ -871,7 +825,7 @@ function renderExposure(tutor) {
       </div>
     </div>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderTutorShell(tutor, 'exposure', body)}</section>`;
+  return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'exposure', body)}</section>`;
 }
 
 /** @param {HTMLElement} root @param {() => void} rerender */

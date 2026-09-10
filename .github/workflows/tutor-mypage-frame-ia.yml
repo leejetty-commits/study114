@@ -1,0 +1,54 @@
+# Tutor mypage frame IA — 과외쌤 마이페이지 1차 셸·탭·진입·1프로필
+
+name: Tutor mypage frame IA
+
+on:
+  pull_request:
+    paths:
+      - "preview/home-ui/src/mypage/**"
+      - "preview/home-ui/src/tutor-reg/**"
+      - "preview/home-ui/src/styles/mypage-ops.css"
+      - "scripts/verify-tutor-mypage-frame-ia.*"
+      - "package.json"
+      - ".github/workflows/tutor-mypage-frame-ia.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "preview/home-ui/src/mypage/**"
+      - "preview/home-ui/src/tutor-reg/**"
+      - "preview/home-ui/src/styles/mypage-ops.css"
+      - "scripts/verify-tutor-mypage-frame-ia.*"
+      - "package.json"
+      - ".github/workflows/tutor-mypage-frame-ia.yml"
+
+concurrency:
+  group: tutor-mypage-frame-ia-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-tutor-mypage-frame-ia:
+    name: verify:tutor-mypage-frame-ia
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: preview/home-ui/package-lock.json
+
+      - name: Guard — tutor mypage frame IA
+        run: npm run verify:tutor-mypage-frame-ia
+
+      - name: Install home-ui deps
+        working-directory: preview/home-ui
+        run: npm ci
+
+      - name: home-ui production build
+        working-directory: preview/home-ui
+        run: npm run build

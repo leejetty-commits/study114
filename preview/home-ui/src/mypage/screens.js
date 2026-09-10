@@ -47,15 +47,15 @@ import { isStudentRegPath } from '../student-reg/router.js';
 import { renderStudentRegScreen } from '../student-reg/screens.js';
 import { isStudyRoomRegPath } from '../study-room-reg/router.js';
 import { renderStudyRoomRegScreen } from '../study-room-reg/screens.js';
-import { getStudyRoomEntryPath } from './router.js';
+import { getStudyRoomEntryPath, getTutorEntryPath } from './router.js';
 import { isTutorRegPath } from '../tutor-reg/router.js';
+import { renderTutorRegScreen } from '../tutor-reg/screens.js';
 import { setAuthDisplayName, logout } from '../auth-session.js';
 import {
   formatLoginAccountLabel,
   isInternalAuthEmail,
   resolveAccountDisplayName,
 } from '../auth/display-identity.js';
-import { renderTutorRegScreen } from '../tutor-reg/screens.js';
 import { renderSubmissionBoardScreen } from '../submission-board/index.js';
 import { P18_EXPOSURE_STATUS } from './plans-catalog.js';
 import { getPaidOperationalStatus, hydratePaidCaches } from '../paid-backend.js';
@@ -132,7 +132,7 @@ export function renderMypageScreen(path) {
   const counts = getSummaryCounts(r);
   const cta = getPrimaryCta(r);
 
-  // 공부방: 홈·내 등록 중간페이지 → 대표 공부방 직행
+  // 공부방·과외쌤: 홈·내 등록 중간페이지 → 대표 프로필 허브 직행
   if (r === 'study_room' && (path === '/mypage/home' || path === '/mypage/registrations')) {
     const entry = getStudyRoomEntryPath();
     queueMicrotask(() => {
@@ -142,6 +142,16 @@ export function renderMypageScreen(path) {
     });
     if (isStudyRoomRegPath(entry)) return renderStudyRoomRegScreen(entry);
     return renderStudyRoomRegScreen('/mypage/registrations/study-rooms');
+  }
+  if (r === 'tutor' && (path === '/mypage/home' || path === '/mypage/registrations')) {
+    const entry = getTutorEntryPath();
+    queueMicrotask(() => {
+      if (window.location.hash === '#/mypage/home' || window.location.hash === '#/mypage/registrations') {
+        window.location.hash = entry;
+      }
+    });
+    if (isTutorRegPath(entry)) return renderTutorRegScreen(entry);
+    return renderTutorRegScreen('/mypage/registrations/tutors');
   }
 
   if (isStudentRegPath(path)) return renderStudentRegScreen(path);
@@ -293,7 +303,6 @@ function renderRegistrationsIndex(role) {
     links.push({ path: '/mypage/registrations/study-rooms', label: '공부방', id: 'P15-04' });
   }
   if (role === 'tutor') {
-    links.push({ path: '/mypage/registrations/tutors', label: '과외 프로필', id: 'P15-05' });
     links.push({ path: '/mypage/submission-docs', label: '제출자료 상태', id: 'P15-10' });
     links.push({ path: '/mypage/submission-board', label: '신뢰·증빙자료 제출', id: 'P23-04' });
   }
