@@ -84,9 +84,12 @@ export function renderTutorRegScreen(path) {
     const tutors = getTutors();
     if (tutors.length) {
       // 중간 목록 depth 제거 — 대표(첫) 과외 프로필 허브 직행 · 계정당 1프로필 정책
+      const dest = tutorHubPath(tutors[0].id);
       queueMicrotask(() => {
-        if (window.location.hash.includes(TUTOR_REG_BASE) && !/\/\d+/.test(window.location.hash)) {
-          window.location.hash = tutorHubPath(tutors[0].id);
+        const hashPath = (window.location.hash.slice(1) || '').split('?')[0];
+        const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+        if (p === TUTOR_REG_BASE || /^\/mypage\/registrations\/tutors\/tab\//.test(p)) {
+          window.location.replace(`#${dest}`);
         }
       });
       return renderHub(tutors[0]);
@@ -95,8 +98,33 @@ export function renderTutorRegScreen(path) {
   }
   if (!route.tutorId) return renderNotFound();
 
-  const tutor = getTutor(route.tutorId);
-  if (!tutor || tutor.deleted_at) return renderNotFound();
+  let tutor = getTutor(route.tutorId);
+  if (!tutor || tutor.deleted_at) {
+    const first = getTutors()[0];
+    if (first) {
+      const sec = route.section === 'access' ? 'inquiries' : route.section;
+      const dest =
+        !sec || sec === 'hub' ? tutorHubPath(first.id) : tutorSectionPath(first.id, /** @type {any} */ (sec));
+      queueMicrotask(() => {
+        const cur = (window.location.hash.slice(1) || '').split('?')[0];
+        const curPath = cur.startsWith('/') ? cur : `/${cur}`;
+        if (curPath !== dest) window.location.replace(`#${dest}`);
+      });
+      tutor = first;
+    } else {
+      return renderNotFound();
+    }
+  }
+
+  // 레거시 /access → /inquiries 정규화 (탭 URL·active 일치)
+  if (route.section === 'access') {
+    const dest = tutorSectionPath(tutor.id, 'inquiries');
+    queueMicrotask(() => {
+      const cur = (window.location.hash.slice(1) || '').split('?')[0];
+      const curPath = cur.startsWith('/') ? cur : `/${cur}`;
+      if (curPath.endsWith('/access')) window.location.replace(`#${dest}`);
+    });
+  }
 
   switch (route.screenId) {
     case 'P21-02':
@@ -843,23 +871,13 @@ export function bindTutorRegEvents(root, rerender) {
   });
 
   root.querySelectorAll('[data-p21-nav]').forEach((el) => {
-    el.addEventListener('click', async (e) => {
+    el.addEventListener('click', (e) => {
       e.preventDefault();
-      const next = el.getAttribute('data-p21-nav') || '/mypage/registrations/tutors';
-      const basicForm = root.querySelector('[data-p21-form="basic"]');
-      if (basicForm) {
-        if (!getTutorCityUnits().length) {
-          alert('과외지역 목록을 불러온 뒤 이동해 주세요.');
-          return;
-        }
-        try {
-          await persistTutorBasicForm(basicForm);
-          alert('저장되었습니다.');
-        } catch (err) {
-          alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
-          return;
-        }
-      }
+      e.stopPropagation();
+      const raw = el.getAttribute('data-p21-nav') || '/mypage/registrations/tutors';
+      const next = raw.startsWith('#') ? raw.slice(1) : raw;
+      // 라우팅 무결성 우선 — 탭/메뉴 이탈 시 persist·지역목록 validation·alert 금지.
+      // 저장/검증은 form submit(기본정보 저장 버튼)에서만 수행.
       window.location.hash = next;
     });
   });

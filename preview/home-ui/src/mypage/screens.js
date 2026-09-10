@@ -147,7 +147,7 @@ export function renderMypageScreen(path) {
     const entry = getTutorEntryPath();
     queueMicrotask(() => {
       if (window.location.hash === '#/mypage/home' || window.location.hash === '#/mypage/registrations') {
-        window.location.hash = entry;
+        window.location.replace(`#${entry}`);
       }
     });
     if (isTutorRegPath(entry)) return renderTutorRegScreen(entry);

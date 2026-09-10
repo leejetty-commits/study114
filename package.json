@@ -41,6 +41,7 @@
     "verify:tutor-lesson-optional-step": "npx --yes vite-node scripts/verify-tutor-lesson-optional-step.mjs",
     "verify:tutor-register-same-tab": "npx --yes vite-node scripts/verify-tutor-register-same-tab.mjs",
     "verify:tutor-mypage-frame-ia": "npx --yes vite-node scripts/verify-tutor-mypage-frame-ia.mjs",
+    "verify:tutor-mypage-route-integrity": "npx --yes vite-node scripts/verify-tutor-mypage-route-integrity.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {
