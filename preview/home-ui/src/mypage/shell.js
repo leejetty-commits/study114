@@ -2,7 +2,7 @@ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, ren
 import { getNavRole } from '../state.js';
 import { getAuthUser, isAdminUser } from '../auth-session.js';
 import { resolveAccountDisplayName } from '../auth/display-identity.js';
-import { MYPAGE_NAV, getScreenIdForPath, screenTitle, getStudyRoomEntryPath, mypageNavLabel } from './router.js';
+import { MYPAGE_NAV, getScreenIdForPath, screenTitle, getStudyRoomEntryPath, getTutorEntryPath, mypageNavLabel } from './router.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -80,7 +80,9 @@ export function renderMypageShell(currentPath, bodyHtml) {
     const href =
       item.path === '/mypage/registrations' && role === 'study_room'
         ? getStudyRoomEntryPath()
-        : item.path;
+        : item.path === '/mypage/registrations' && role === 'tutor'
+          ? getTutorEntryPath()
+          : item.path;
     const active = navItemIsActive(item, currentPath);
     const emph = item.emphasis?.includes(role) ? ' is-emphasis' : '';
     return `

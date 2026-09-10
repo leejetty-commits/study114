@@ -7,7 +7,7 @@
  * @property {TutorRegScreenId} screenId
  * @property {number} [tutorId]
  * @property {'all'|'draft'|'published'|'hidden'|'not_ready'} [listTab]
- * @property {'hub'|'basic'|'detail'|'publish'|'access'|'exposure'} [section]
+ * @property {'hub'|'basic'|'detail'|'publish'|'access'|'inquiries'|'exposure'} [section]
  */
 
 export const BASE = '/mypage/registrations/tutors';
@@ -30,15 +30,18 @@ export function parseTutorRegPath(hashPath) {
     return { screenId: 'P21-02', tutorId: Number(hubMatch[1]), section: 'hub' };
   }
 
-  const sectionMatch = p.match(/^\/mypage\/registrations\/tutors\/(\d+)\/(basic|detail|publish|access|exposure)$/);
+  const sectionMatch = p.match(
+    /^\/mypage\/registrations\/tutors\/(\d+)\/(basic|detail|publish|access|inquiries|exposure)$/,
+  );
   if (sectionMatch) {
     const tutorId = Number(sectionMatch[1]);
-    const sec = sectionMatch[2];
+    const sec = sectionMatch[2] === 'inquiries' ? 'inquiries' : sectionMatch[2];
     const map = {
       basic: 'P21-03a',
       detail: 'P21-03b',
       publish: 'P21-04',
       access: 'P21-05',
+      inquiries: 'P21-05',
       exposure: 'P21-06',
     };
     return {
@@ -59,12 +62,12 @@ export function isTutorRegPath(hashPath) {
 /** @param {TutorRegScreenId} screenId */
 export function tutorRegScreenTitle(screenId) {
   const map = {
-    'P21-01': '과외 프로필 목록',
-    'P21-02': '등록 현황',
+    'P21-01': '내 등록',
+    'P21-02': '마이샵',
     'P21-03a': '기본정보',
     'P21-03b': '상세정보',
-    'P21-04': '공개하기',
-    'P21-05': '학생 접근·쪽지',
+    'P21-04': '등록점검',
+    'P21-05': '쪽지설정',
     'P21-06': '노출 상품',
     'P21-07': '숨김·삭제',
   };
@@ -76,9 +79,10 @@ export function tutorHubPath(id) {
   return `${BASE}/${id}`;
 }
 
-/** @param {number} id @param {'basic'|'detail'|'publish'|'access'|'exposure'} section */
+/** @param {number} id @param {'basic'|'detail'|'publish'|'access'|'inquiries'|'exposure'} section */
 export function tutorSectionPath(id, section) {
-  return `${BASE}/${id}/${section}`;
+  const sec = section === 'access' ? 'inquiries' : section;
+  return `${BASE}/${id}/${sec}`;
 }
 
 /** @param {'all'|'draft'|'published'|'hidden'|'not_ready'} tab */
@@ -87,20 +91,21 @@ export function tutorListTabPath(tab) {
 }
 
 /**
- * 내 등록 2차 탭 (좌측 중첩 메뉴 금지 · 본문 상단만)
- * access/exposure는 등록 현황 보조 섹션·별도 경로로 유지
+ * 내 등록 2차 탭 — 공부방 STUDY_ROOM_TOP_TABS 자리·이름 정렬
+ * (상세2 없음 · exposure는 탭 밖 레거시 경로 유지)
  */
 export const TUTOR_REG_TOP_TABS = [
-  { key: 'hub', label: '등록 현황' },
+  { key: 'hub', label: '마이샵' },
   { key: 'basic', label: '기본정보' },
   { key: 'detail', label: '상세정보' },
-  { key: 'publish', label: '공개하기' },
+  { key: 'inquiries', label: '쪽지설정' },
+  { key: 'publish', label: '등록점검' },
 ];
 
 /** @deprecated 좌측 중첩 메뉴용 — 상단 탭(TUTOR_REG_TOP_TABS)으로 대체 */
 export const TUTOR_REG_MENUS = [
-  { key: 'access', label: '학생 접근·쪽지', screenId: 'P21-05' },
-  { key: 'publish', label: '공개하기', screenId: 'P21-04' },
+  { key: 'inquiries', label: '쪽지설정', screenId: 'P21-05' },
+  { key: 'publish', label: '등록점검', screenId: 'P21-04' },
   { key: 'basic', label: '기본정보', screenId: 'P21-03a' },
   { key: 'detail', label: '상세정보', screenId: 'P21-03b' },
   { key: 'exposure', label: '노출 상품', screenId: 'P21-06' },

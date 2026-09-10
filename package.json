@@ -40,6 +40,7 @@
     "verify:tutor-signup-seed": "npx --yes vite-node scripts/verify-tutor-signup-seed.mjs",
     "verify:tutor-lesson-optional-step": "npx --yes vite-node scripts/verify-tutor-lesson-optional-step.mjs",
     "verify:tutor-register-same-tab": "npx --yes vite-node scripts/verify-tutor-register-same-tab.mjs",
+    "verify:tutor-mypage-frame-ia": "npx --yes vite-node scripts/verify-tutor-mypage-frame-ia.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {
