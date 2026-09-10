@@ -39,6 +39,7 @@
     "verify:study-room-basic-register-api": "npx --yes vite-node scripts/verify-study-room-basic-register-api.mjs",
     "verify:tutor-signup-seed": "npx --yes vite-node scripts/verify-tutor-signup-seed.mjs",
     "verify:tutor-lesson-optional-step": "npx --yes vite-node scripts/verify-tutor-lesson-optional-step.mjs",
+    "verify:tutor-register-same-tab": "npx --yes vite-node scripts/verify-tutor-register-same-tab.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {

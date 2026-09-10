@@ -1,0 +1,46 @@
+# Tutor register same-tab — 과외쌤 가입·상세등록 단계 이동 시 새 창/탭 금지
+
+name: Tutor register same-tab
+
+on:
+  pull_request:
+    paths:
+      - "preview/auth-ui/src/screens/signup-complete.js"
+      - "preview/auth-ui/src/screens/signup-basic.js"
+      - "preview/auth-ui/src/screens/signup-verify-email.js"
+      - "preview/tutor-ui/**"
+      - "scripts/verify-tutor-register-same-tab.*"
+      - "package.json"
+      - ".github/workflows/tutor-register-same-tab.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "preview/auth-ui/src/screens/signup-complete.js"
+      - "preview/auth-ui/src/screens/signup-basic.js"
+      - "preview/auth-ui/src/screens/signup-verify-email.js"
+      - "preview/tutor-ui/**"
+      - "scripts/verify-tutor-register-same-tab.*"
+      - "package.json"
+      - ".github/workflows/tutor-register-same-tab.yml"
+
+concurrency:
+  group: tutor-register-same-tab-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-tutor-register-same-tab:
+    name: verify:tutor-register-same-tab
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Guard — tutor register same-tab
+        run: npm run verify:tutor-register-same-tab
