@@ -25,13 +25,17 @@ const KEY = 'study114-preview-tutors-v1';
  * @property {string} main_subject_note
  * @property {string} [grade_band]
  * @property {number} [preferred_fee_amount]
+ * @property {string} [fee_basis_type]
  * @property {number} [lessons_per_week]
+ * @property {number} [monthly_session_count]
  * @property {number} [minutes_per_lesson]
  * @property {string} [fee_description]
  * @property {string} [intro_short]
  * @property {string} [intro_long]
  * @property {string} [contact_time_note]
  * @property {string} [feature_1]
+ * @property {string} [feature_2]
+ * @property {string} [feature_3]
  * @property {string} [university_name]
  * @property {string} [major_name]
  * @property {string} [university_status]
@@ -111,6 +115,7 @@ const SEED = [
       main_subject_note: '수학',
       grade_band: '중·고',
       preferred_fee_amount: 480000,
+      fee_basis_type: 'monthly_by_weekly_schedule',
       lessons_per_week: 2,
       minutes_per_lesson: 90,
       intro_short: '중·고 수학 전문 · 대치동 거주',
@@ -164,6 +169,9 @@ const SEED = [
       primary_region_label: '서울특별시',
       main_subject_note: '영어',
       preferred_fee_amount: 440000,
+      fee_basis_type: 'monthly_by_weekly_schedule',
+      lessons_per_week: 2,
+      minutes_per_lesson: 80,
       intro_short: '회화·문법 병행',
       has_primary_region: true,
       has_primary_subject: true,
