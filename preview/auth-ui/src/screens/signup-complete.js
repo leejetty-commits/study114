@@ -135,7 +135,8 @@ export function bindSignupCompleteEvents(root) {
       return;
     }
     if (role === 'tutor') {
-      window.open(TUTOR_UI_BASE, '_blank');
+      // 과외쌤 등록 플로우: 새 탭 금지 · 같은 창에서 상세등록 이어가기 (site-chrome 정책)
+      window.location.assign(TUTOR_UI_BASE);
       return;
     }
     window.open(`${HOME_UI_BASE}/#/mypage/registrations/students`, '_blank');
@@ -191,6 +192,10 @@ export function bindSignupCompleteEvents(root) {
 
     const home =
       role === 'study_room' ? homeUiUrl('study-room') : role === 'tutor' ? homeUiUrl('tutor') : homeUiUrl('parent');
+    if (role === 'tutor') {
+      window.location.assign(home);
+      return;
+    }
     window.open(home, '_blank');
   });
 
