@@ -3,7 +3,7 @@
 /** @typedef {'study_room' | 'tutor' | 'student'} ProviderHomeTab */
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
-import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES, getStudyRoomEntryPath } from './mypage/router.js';
+import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES, getStudyRoomEntryPath, getTutorEntryPath } from './mypage/router.js';
 import { studyRoomLegacyExposureRedirect } from './study-room-reg/router.js';
 import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
 import {
@@ -685,6 +685,14 @@ export function bootstrapMypageRoute() {
     (path === '/mypage/home' || path === '/mypage/registrations')
   ) {
     window.location.replace(`#${getStudyRoomEntryPath()}`);
+    return true;
+  }
+
+  if (
+    getNavRole() === 'tutor' &&
+    (path === '/mypage/home' || path === '/mypage/registrations')
+  ) {
+    window.location.replace(`#${getTutorEntryPath()}`);
     return true;
   }
 
