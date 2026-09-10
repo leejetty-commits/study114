@@ -873,10 +873,11 @@ export function bindTutorRegEvents(root, rerender) {
   root.querySelectorAll('[data-p21-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       const raw = el.getAttribute('data-p21-nav') || '/mypage/registrations/tutors';
       const next = raw.startsWith('#') ? raw.slice(1) : raw;
-      // 라우팅 무결성 우선 — 탭/메뉴 이동을 저장 실패·지역목록 대기로 막지 않는다.
-      // (기본정보 저장은 submit 버튼으로만 강제)
+      // 라우팅 무결성 우선 — 탭/메뉴 이탈 시 persist·지역목록 validation·alert 금지.
+      // 저장/검증은 form submit(기본정보 저장 버튼)에서만 수행.
       window.location.hash = next;
     });
   });

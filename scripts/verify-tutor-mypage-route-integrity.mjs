@@ -43,6 +43,12 @@ assert(!!navHandler, 'bind: data-p21-nav handler present');
 assert(navHandler && !navHandler[0].includes('persistTutorBasicForm'), 'bind: tab nav must not gate on persistTutorBasicForm');
 assert(navHandler && !navHandler[0].includes('alert('), 'bind: tab nav must not alert/block leave');
 assert(navHandler && navHandler[0].includes('window.location.hash = next'), 'bind: tab nav sets hash immediately');
+assert(navHandler && navHandler[0].includes('stopPropagation'), 'bind: tab nav stopPropagation');
+assert(
+  !screens.includes('과외지역 목록을 불러온 뒤 이동해 주세요'),
+  'screens.js must not contain basic-leave city-units gate alert',
+);
+assert(!/basicForm[\s\S]{0,200}persistTutorBasicForm/.test(screens), 'no basicForm auto-persist near leave path');
 
 // —— B. 목록/레거시 redirect는 replace (history 오염 최소화)
 assert(screens.includes('window.location.replace(`#${dest}`)'), 'screens: hub/list redirects use replace');
