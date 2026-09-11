@@ -3,6 +3,7 @@
  * 저장은 tutors.inquiry_status PATCH. OTP 성공 후 같은 persist 경로로 이어진다.
  */
 
+import { bindInquirySampleGuides } from '../inquiry-settings/sample-ui.js';
 import { isPhoneVerifiedLocal, showPhoneVerifyGateModal } from '../study-room-reg/phone-verify-gate.js';
 import { P21_INQUIRY_COPY } from './inquiries-copy.js';
 import { tutorInquiryStatusFromPref } from './inquiries-pref.js';
@@ -51,6 +52,7 @@ function syncReasonState(page) {
 export function bindTutorInquiriesEvents(root, rerender) {
   const page = root.querySelector('[data-p21-inquiries]');
   if (!page) return;
+  bindInquirySampleGuides(page);
 
   page.querySelectorAll('[data-p21-inquiry-receiving]').forEach((input) => {
     input.addEventListener('change', () => syncReasonState(page));

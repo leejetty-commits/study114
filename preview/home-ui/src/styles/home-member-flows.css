@@ -1601,150 +1601,6 @@
   margin-top: var(--space-1);
   align-self: flex-start;
 }
-.p20-inquiries-section--samples {
-  --p20-listing-w: calc(var(--home-max) - 2 * var(--page-gutter));
-  overflow-x: auto;
-}
-.p20-inquiries-sample-lead {
-  margin: 0.3rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.45;
-  color: #64748b;
-}
-.p20-inq-samples {
-  display: flex;
-  flex-direction: column;
-  gap: 1.65rem;
-  margin-top: 0.5rem;
-}
-.p20-inq-sample {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-}
-.p20-inq-sample__kicker {
-  margin: 0 0 0.35rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: #64748b;
-}
-.p20-inq-sample--open .p20-inq-sample__kicker {
-  color: #047857;
-}
-.p20-inq-sample--closed .p20-inq-sample__kicker {
-  color: #64748b;
-}
-.p20-inq-sample__stage {
-  position: relative;
-}
-.p20-inq-sample__card {
-  width: 100%;
-  max-width: var(--p20-listing-w);
-  pointer-events: none;
-  user-select: none;
-  transform: none;
-}
-.p20-inq-sample__card .browse-list,
-.p20-inq-sample__card .expo-basic.expo-hcard {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  transform: none;
-}
-.p20-inq-sample__annotate {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: 0.45rem;
-  margin: 0.05rem 0.1rem 0;
-  padding-right: 3.35rem;
-}
-.p20-inq-sample__arrow {
-  position: relative;
-  flex: 0 0 1.15rem;
-  width: 1.15rem;
-  height: 2.45rem;
-  color: #2563eb;
-}
-.p20-inq-sample__arrow::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 0.35rem;
-  width: 2px;
-  height: 1.85rem;
-  background: currentColor;
-  transform: translateX(-50%);
-}
-.p20-inq-sample__arrow::after {
-  content: '';
-  position: absolute;
-  top: 0.15rem;
-  left: 50%;
-  width: 0.55rem;
-  height: 0.55rem;
-  border-top: 2px solid currentColor;
-  border-right: 2px solid currentColor;
-  transform: translate(-50%, 0) rotate(-45deg);
-}
-.p20-inq-sample__callout {
-  margin: 1.05rem 0 0;
-  max-width: 18.5rem;
-  font-size: 0.8125rem;
-  font-weight: 650;
-  line-height: 1.4;
-  color: #1d4ed8;
-  text-align: right;
-}
-.p20-inq-sample--closed .p20-inq-sample__arrow,
-.p20-inq-sample--closed .p20-inq-sample__callout {
-  color: #475569;
-}
-.p20-inq-sample--open .item-actions [title^='쪽지'],
-.p20-inq-sample--closed .item-actions [title^='쪽지'] {
-  position: relative;
-  z-index: 1;
-}
-.p20-inq-sample--open .item-actions [title^='쪽지']::before,
-.p20-inq-sample--closed .item-actions [title^='쪽지']::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: calc(100% + 0.12rem);
-  width: 2px;
-  height: 0.95rem;
-  background: currentColor;
-  transform: translateX(-50%);
-  pointer-events: none;
-  z-index: 2;
-}
-.p20-inq-sample--open .item-actions [title^='쪽지'] {
-  color: #2563eb;
-}
-.p20-inq-sample--open .item-actions [title^='쪽지']::after,
-.p20-inq-sample--closed .item-actions [title^='쪽지']::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 1.85rem;
-  height: 1.85rem;
-  transform: translate(-50%, -50%);
-  border-radius: 999px;
-  pointer-events: none;
-  box-sizing: border-box;
-}
-.p20-inq-sample--open .item-actions [title^='쪽지']::after {
-  border: 2px solid #2563eb;
-}
-.p20-inq-sample--closed .item-actions [title^='쪽지'] {
-  opacity: 0.38;
-  color: #64748b;
-}
-.p20-inq-sample--closed .item-actions [title^='쪽지']::after {
-  border: 2px solid #94a3b8;
-}
 .p20-inquiries-actions {
   margin-top: var(--space-2);
   padding-top: var(--space-4);
@@ -2486,12 +2342,12 @@ a.msg-attach:hover { text-decoration: underline; }
 .msg-compose__textarea { padding: var(--space-2); border: 1px solid var(--gray-300); border-radius: 0.375rem; font-family: inherit; }
 
 /* 과외쌤 쪽지설정 P21-05 — 공부방 P20 규칙과 additive, 등록점검 미수정 */
-[data-p21-inquiries].p21-inq {
-  --p21-listing-w: calc(var(--home-max) - 2 * var(--page-gutter));
+[data-p21-inquiries].p21-inq,
+[data-p20-inquiries].p21-inq {
   display: flex;
   flex-direction: column;
   gap: 1.15rem;
-  max-width: var(--p21-listing-w);
+  max-width: none;
 }
 .p21-inq__lead {
   margin: 0;
@@ -2649,139 +2505,87 @@ a.msg-attach:hover { text-decoration: underline; }
 }
 .p21-inq-block--samples {
   overflow-x: auto;
+  overflow-y: visible;
 }
-.p21-inq-samples {
+.p21-inq {
+  overflow: visible;
+}
+
+/* 홈 BASIC과 같은 .home-body + .browse-list--table 2열 문맥. 카드 폭을 scale/preview max-width로 맞추지 않음. */
+.inq-home-width-probe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+.inq-samples {
   display: flex;
   flex-direction: column;
-  gap: 1.65rem;
+  gap: 1.85rem;
   margin-top: 0.5rem;
 }
-.p21-inq-sample {
+.inq-sample {
   margin: 0;
   padding: 0;
   border: 0;
   background: transparent;
 }
-.p21-inq-sample__kicker {
+.inq-sample__kicker {
   margin: 0 0 0.35rem;
   font-size: 0.8125rem;
   font-weight: 700;
   color: #64748b;
 }
-.p21-inq-sample--open .p21-inq-sample__kicker {
+.inq-sample--open .inq-sample__kicker {
   color: #047857;
 }
-.p21-inq-sample--closed .p21-inq-sample__kicker {
+.inq-sample--closed .inq-sample__kicker {
   color: #64748b;
 }
-.p21-inq-sample__stage {
+.inq-sample__stage {
   position: relative;
+  overflow: visible;
+  width: max-content;
+  max-width: none;
 }
-.p21-inq-sample__card {
-  width: 100%;
-  max-width: var(--p21-listing-w);
+.inq-sample__home-list {
+  box-sizing: border-box;
   pointer-events: none;
   user-select: none;
-  transform: none;
 }
-.p21-inq-sample__card .browse-list,
-.p21-inq-sample__card .expo-basic.expo-hcard {
-  width: 100%;
-  max-width: none;
+.inq-sample__home-list .browse-list {
   margin: 0;
-  transform: none;
 }
-.p21-inq-sample__annotate {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: 0.45rem;
-  margin: 0.05rem 0.1rem 0;
-  padding-right: 3.35rem;
-}
-.p21-inq-sample__arrow {
-  position: relative;
-  flex: 0 0 1.15rem;
-  width: 1.15rem;
-  height: 2.45rem;
-  color: #2563eb;
-}
-.p21-inq-sample__arrow::before {
-  content: '';
+.inq-sample__guide {
   position: absolute;
-  left: 50%;
-  top: 0.35rem;
-  width: 2px;
-  height: 1.85rem;
-  background: currentColor;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2;
+}
+.inq-sample__callout {
+  position: absolute;
+  z-index: 3;
+  margin: 0;
+  max-width: 16.5rem;
   transform: translateX(-50%);
-}
-.p21-inq-sample__arrow::after {
-  content: '';
-  position: absolute;
-  top: 0.15rem;
-  left: 50%;
-  width: 0.55rem;
-  height: 0.55rem;
-  border-top: 2px solid currentColor;
-  border-right: 2px solid currentColor;
-  transform: translate(-50%, 0) rotate(-45deg);
-}
-.p21-inq-sample__callout {
-  margin: 1.05rem 0 0;
-  max-width: 18.5rem;
   font-size: 0.8125rem;
   font-weight: 650;
   line-height: 1.4;
   color: #1d4ed8;
-  text-align: right;
+  text-align: center;
+  pointer-events: none;
 }
-.p21-inq-sample--closed .p21-inq-sample__arrow,
-.p21-inq-sample--closed .p21-inq-sample__callout {
+.inq-sample--closed .inq-sample__callout {
   color: #475569;
 }
-.p21-inq-sample--open .item-actions [title^='쪽지'],
-.p21-inq-sample--closed .item-actions [title^='쪽지'] {
-  position: relative;
-  z-index: 1;
-}
-.p21-inq-sample--open .item-actions [title^='쪽지']::before,
-.p21-inq-sample--closed .item-actions [title^='쪽지']::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: calc(100% + 0.12rem);
-  width: 2px;
-  height: 0.95rem;
-  background: currentColor;
-  transform: translateX(-50%);
-  pointer-events: none;
-  z-index: 2;
-}
-.p21-inq-sample--open .item-actions [title^='쪽지'] {
-  color: #2563eb;
-}
-.p21-inq-sample--open .item-actions [title^='쪽지']::after,
-.p21-inq-sample--closed .item-actions [title^='쪽지']::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 1.85rem;
-  height: 1.85rem;
-  transform: translate(-50%, -50%);
-  border-radius: 999px;
-  pointer-events: none;
-  box-sizing: border-box;
-}
-.p21-inq-sample--open .item-actions [title^='쪽지']::after {
-  border: 2px solid #2563eb;
-}
-.p21-inq-sample--closed .item-actions [title^='쪽지'] {
+.inq-sample--closed .item-actions [title^='쪽지'] {
   opacity: 0.38;
-  color: #64748b;
-}
-.p21-inq-sample--closed .item-actions [title^='쪽지']::after {
-  border: 2px solid #94a3b8;
 }
 

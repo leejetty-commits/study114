@@ -47,6 +47,7 @@ const edit = read('preview/home-ui/src/tutor-reg/inquiries-edit.js');
 const pref = read('preview/home-ui/src/tutor-reg/inquiries-pref.js');
 const store = read('preview/home-ui/src/tutor-reg/store.js');
 const css = read('preview/home-ui/src/styles/home-member-flows.css');
+const sampleUi = read('preview/home-ui/src/inquiry-settings/sample-ui.js');
 const regsApi = read('preview/home-ui/src/registrations-api.js');
 const rcRender = read('preview/home-ui/src/tutor-reg/registration-check-render.js');
 const rcModel = read('preview/home-ui/src/tutor-reg/registration-check-model.js');
@@ -164,12 +165,19 @@ assert(htmlOrder.includes(P21_INQUIRY_COPY.editHeading), 'copy: 현재상태 수
 assert(P21_INQUIRY_COPY.contactNeededLead.includes('본인 핸드폰 인증'), 'copy: first ON requires phone');
 assert(P21_INQUIRY_COPY.contactNotice.includes('외부에 공개되지 않습니다'), 'copy: phone not public');
 assert(P21_INQUIRY_COPY.contactNotice.includes('시스템 신뢰 확인용'), 'copy: trust check');
-assert(css.includes('border-radius: 999px'), 'css: ✉ circle marker');
 assert(css.includes('pointer-events: none'), 'css: inactive blocks pointer');
-assert(css.includes('--p21-listing-w'), 'css: home listing width token');
-assert(css.includes('flex-direction: column'), 'css: samples stay vertical, no shrink pair');
-assert(!/p21-inq-sample__card[\s\S]{0,180}transform:\s*scale/.test(css), 'css: sample card is not scaled');
-assert(!/p21-inq-sample__card[\s\S]{0,400}grid-template-columns:\s*[0-9.]+rem/.test(css), 'css: sample does not override BASIC thumb columns');
+assert(css.includes('inq-sample__home-list'), 'css: home-list wrapper for BASIC 2-col context');
+assert(css.includes('inq-home-width-probe'), 'css: home BASIC width probe');
+assert(sampleUi.includes('home-body home-body--with-promo'), 'sample ui: probe uses home-body with-promo');
+assert(sampleUi.includes('browse-list browse-list--table'), 'sample ui: probe uses BASIC 2-col grid');
+assert(!sampleUi.includes('guest-browse-lists'), 'sample ui: probe does not collide with home lists');
+assert(!css.includes('--p21-listing-w'), 'css: preview listing-w token removed');
+assert(!css.includes('inq-sample__card'), 'css: preview card wrapper removed');
+assert(!/inq-sample__home-list[\s\S]{0,280}100vw/.test(css), 'css: sample list does not use 100vw');
+assert(!/inq-sample__home-list[\s\S]{0,220}transform:\s*scale/.test(css), 'css: sample card is not scaled');
+assert(!/inq-sample__home-list[\s\S]{0,400}\.expo-hcard\s*\{[^}]*width:\s*100%/.test(css), 'css: does not stretch hcard to 100%');
+assert(sampleUi.includes('data-inq-guide'), 'sample ui: SVG guide');
+assert(sampleUi.includes('item-actions [title^="쪽지"]'), 'sample ui: measures 쪽지 button');
 assert(
   existsSync(resolve(root, 'preview/home-ui/public/assets/brand/tutor-card-sample.jpg')),
   'sample: tutor-card-sample.jpg file exists',
@@ -181,11 +189,13 @@ assert(htmlOrder.includes('서울 강남구'), 'sample: location filled');
 assert(htmlOrder.includes('title="추천 18"'), 'sample: recommend count filled');
 assert(htmlOrder.includes('title="후기 7"'), 'sample: review count filled');
 assert(htmlOrder.includes('title="찜 11"'), 'sample: wish count filled');
-assert(htmlOrder.includes('p21-inq-sample__arrow'), 'sample: arrow marker present');
+assert(htmlOrder.includes('data-inq-guide'), 'sample: SVG arrow marker present');
+assert(htmlOrder.includes('data-inq-callout'), 'sample: callout present');
+assert(htmlOrder.includes('inq-sample__home-list'), 'sample: home-list context');
 assert(htmlOrder.includes(P21_INQUIRY_COPY.sampleOpenCallout), 'sample: open arrow copy');
 assert(htmlOrder.includes(P21_INQUIRY_COPY.sampleClosedCallout), 'sample: closed arrow copy');
 assert(htmlOrder.includes('여기가 쪽지 관련 표시 위치'), 'sample: callout names the message slot');
-assert((htmlOrder.match(/p21-inq-sample__callout/g) || []).length === 2, 'sample: both cards have callouts');
+assert((htmlOrder.match(/data-inq-callout/g) || []).length === 2, 'sample: both cards have callouts');
 
 // —— 라우팅 5항
 const inquiriesPath = `${BASE}/7/inquiries`;

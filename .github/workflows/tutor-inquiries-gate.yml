@@ -1,4 +1,4 @@
-# Tutor inquiries settings — 과외쌤 쪽지설정 저장·복원 게이트
+# Tutor / study-room inquiries settings — 쪽지설정 저장·복원·샘플 게이트
 
 name: Tutor inquiries settings
 
@@ -7,12 +7,19 @@ on:
     paths:
       - "preview/home-ui/src/tutor-reg/inquiries-*.js"
       - "preview/home-ui/src/tutor-reg/store.js"
+      - "preview/home-ui/src/inquiry-settings/**"
+      - "preview/home-ui/src/study-room-reg/screens.js"
+      - "preview/home-ui/src/study-room-reg/store.js"
+      - "preview/home-ui/src/study-room-reg/study-room-reg-copy.js"
+      - "preview/home-ui/src/study-room-reg/inquiry-display.js"
+      - "preview/home-ui/src/styles/home-member-flows.css"
       - "src/Registration/TutorHub*.php"
       - "src/Registration/RegistrationApi.php"
       - "src/Registration/SchemaPrerequisiteException.php"
       - "public/api/registrations/tutors.php"
       - "sql/schema/064_tutor_inquiry_status.sql"
       - "scripts/verify-tutor-inquiries-settings.mjs"
+      - "scripts/verify-study-room-inquiries-samples.mjs"
       - "package.json"
       - ".github/workflows/tutor-inquiries-gate.yml"
       - ".github/workflows/deploy.yml"
@@ -22,12 +29,19 @@ on:
     paths:
       - "preview/home-ui/src/tutor-reg/inquiries-*.js"
       - "preview/home-ui/src/tutor-reg/store.js"
+      - "preview/home-ui/src/inquiry-settings/**"
+      - "preview/home-ui/src/study-room-reg/screens.js"
+      - "preview/home-ui/src/study-room-reg/store.js"
+      - "preview/home-ui/src/study-room-reg/study-room-reg-copy.js"
+      - "preview/home-ui/src/study-room-reg/inquiry-display.js"
+      - "preview/home-ui/src/styles/home-member-flows.css"
       - "src/Registration/TutorHub*.php"
       - "src/Registration/RegistrationApi.php"
       - "src/Registration/SchemaPrerequisiteException.php"
       - "public/api/registrations/tutors.php"
       - "sql/schema/064_tutor_inquiry_status.sql"
       - "scripts/verify-tutor-inquiries-settings.mjs"
+      - "scripts/verify-study-room-inquiries-samples.mjs"
       - "package.json"
       - ".github/workflows/tutor-inquiries-gate.yml"
       - ".github/workflows/deploy.yml"
@@ -52,3 +66,6 @@ jobs:
 
       - name: Guard — tutor inquiries SSOT
         run: npm run verify:tutor-inquiries-settings
+
+      - name: Guard — study-room inquiries samples/frame
+        run: npm run verify:study-room-inquiries-samples
