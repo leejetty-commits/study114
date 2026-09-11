@@ -406,6 +406,8 @@ CREATE TABLE tutors (
   contact_time_note            VARCHAR(255)    NULL,
   default_student_feed_mode    VARCHAR(50)     NULL,
   profile_status               ENUM('draft', 'pending', 'published', 'hidden') NOT NULL DEFAULT 'draft',
+  inquiry_status               ENUM('open', 'paused', 'not_accepting') NOT NULL DEFAULT 'paused'
+    COMMENT '과외쌤 쪽지 수신: open=받는 중, paused=잠시 쉼(일시 중단), not_accepting=신규 학생 안 받음(신규 모집 닫힘)',
   created_at                   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at                   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -1630,5 +1632,10 @@ UPDATE study_rooms SET latitude = 35.1698, longitude = 129.1318 WHERE id = 3;
 -- =============================================================================
 -- study114 schema 039 — Prime/Pick day|month + end_exclusive (rest-schema는 CREATE에 반영됨)
 -- 기존 DB는 sql/schema/039_position_duration_calendar.sql 적용
+-- =============================================================================
+
+-- =============================================================================
+-- study114 schema 064 — tutors.inquiry_status (과외쌤 쪽지 수신, rest-schema는 CREATE에 반영됨)
+-- 기존 DB는 sql/schema/064_tutor_inquiry_status.sql 적용. Actions는 실행하지 않는다.
 -- =============================================================================
 

@@ -1,0 +1,54 @@
+# Tutor inquiries settings — 과외쌤 쪽지설정 저장·복원 게이트
+
+name: Tutor inquiries settings
+
+on:
+  pull_request:
+    paths:
+      - "preview/home-ui/src/tutor-reg/inquiries-*.js"
+      - "preview/home-ui/src/tutor-reg/store.js"
+      - "src/Registration/TutorHub*.php"
+      - "src/Registration/RegistrationApi.php"
+      - "src/Registration/SchemaPrerequisiteException.php"
+      - "public/api/registrations/tutors.php"
+      - "sql/schema/064_tutor_inquiry_status.sql"
+      - "scripts/verify-tutor-inquiries-settings.mjs"
+      - "package.json"
+      - ".github/workflows/tutor-inquiries-gate.yml"
+      - ".github/workflows/deploy.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "preview/home-ui/src/tutor-reg/inquiries-*.js"
+      - "preview/home-ui/src/tutor-reg/store.js"
+      - "src/Registration/TutorHub*.php"
+      - "src/Registration/RegistrationApi.php"
+      - "src/Registration/SchemaPrerequisiteException.php"
+      - "public/api/registrations/tutors.php"
+      - "sql/schema/064_tutor_inquiry_status.sql"
+      - "scripts/verify-tutor-inquiries-settings.mjs"
+      - "package.json"
+      - ".github/workflows/tutor-inquiries-gate.yml"
+      - ".github/workflows/deploy.yml"
+
+concurrency:
+  group: tutor-inquiries-settings-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-tutor-inquiries-settings:
+    name: verify:tutor-inquiries-settings
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Guard — tutor inquiries SSOT
+        run: npm run verify:tutor-inquiries-settings

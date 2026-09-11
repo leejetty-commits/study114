@@ -10,6 +10,8 @@ use Study114\Tutor\TutorDetailCompletionEvaluator;
 /** 21장 P21 — tutors 등록 허브 */
 final class TutorHubRepository
 {
+    private ?bool $hasInquiryStatusColumn = null;
+
     public function __construct(private readonly PDO $pdo)
     {
     }
@@ -44,6 +46,19 @@ final class TutorHubRepository
              WHERE id = ?'
         );
         $stmt->execute([$status, $publishedAt, $tutorId]);
+    }
+
+    public function setInquiryStatus(int $tutorId, string $status): void
+    {
+        if (!$this->hasInquiryStatusColumn()) {
+            throw new SchemaPrerequisiteException(
+                'tutors.inquiry_status 컬럼이 없습니다. 배포 전 sql/schema/064_tutor_inquiry_status.sql 을 운영 DB에 적용해야 쪽지설정을 저장할 수 있습니다.'
+            );
+        }
+        $stmt = $this->pdo->prepare(
+            'UPDATE tutors SET inquiry_status = ?, updated_at = NOW() WHERE id = ?'
+        );
+        $stmt->execute([$status, $tutorId]);
     }
 
     public function softDelete(int $tutorId): void
@@ -82,6 +97,7 @@ final class TutorHubRepository
             'id'                       => $tutorId,
             'tutor_display_name'       => (string) ($row['tutor_display_name'] ?? ''),
             'profile_status'           => $profileStatus,
+            'inquiry_status'           => $this->normalizeInquiryStatus($row['inquiry_status'] ?? null),
             'detail_completion_status' => (string) ($row['detail_completion_status'] ?? 'basic_only'),
             'detail_missing'           => $detailEval['missing'],
             'detail_checks'            => $detailEval['checks'],
@@ -122,6 +138,34 @@ final class TutorHubRepository
                 ? gmdate('c', strtotime((string) $row['published_at'])) : null,
             'deleted_at'                 => null,
         ];
+    }
+
+    public function hasInquiryStatusColumn(): bool
+    {
+        if ($this->hasInquiryStatusColumn !== null) {
+            return $this->hasInquiryStatusColumn;
+        }
+        $stmt = $this->pdo->query(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'tutors'
+               AND COLUMN_NAME = 'inquiry_status'"
+        );
+        $this->hasInquiryStatusColumn = $stmt !== false && (int) $stmt->fetchColumn() > 0;
+
+        return $this->hasInquiryStatusColumn;
+    }
+
+    /**
+     * open = 받는 중
+     * paused = 잠시 쉼 (일시 중단, 다시 열 수 있음)
+     * not_accepting = 신규 학생 안 받음 (신규 모집을 닫은 운영 상태. paused와 다름)
+     */
+    private function normalizeInquiryStatus(mixed $raw): string
+    {
+        $status = (string) ($raw ?? 'paused');
+
+        return in_array($status, ['open', 'paused', 'not_accepting'], true) ? $status : 'paused';
     }
 
     /**
