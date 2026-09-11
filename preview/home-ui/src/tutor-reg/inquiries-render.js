@@ -3,6 +3,7 @@
  */
 
 import { renderBrowseList } from '../exposure-render.js';
+import { renderInquirySampleCard } from '../inquiry-settings/sample-ui.js';
 import { isPhoneVerifiedLocal } from '../study-room-reg/phone-verify-gate.js';
 import { buildTutorSamplePreviewItem } from './registration-check-sample.js';
 import { P21_INQUIRY_COPY, P21_INQUIRY_OFF_REASONS } from './inquiries-copy.js';
@@ -42,20 +43,13 @@ function filledTutorInquirySampleItem(receiving) {
 
 function renderSampleCard(receiving) {
   const item = filledTutorInquirySampleItem(receiving);
-  const html = renderBrowseList('tutor', [item], { showCompare: true, showWish: true, guest: false });
-  const kicker = receiving ? P21_INQUIRY_COPY.sampleOpenKicker : P21_INQUIRY_COPY.sampleClosedKicker;
-  const callout = receiving ? P21_INQUIRY_COPY.sampleOpenCallout : P21_INQUIRY_COPY.sampleClosedCallout;
-  return `
-    <figure class="p21-inq-sample p21-inq-sample--${receiving ? 'open' : 'closed'}">
-      <figcaption class="p21-inq-sample__kicker">${esc(kicker)}</figcaption>
-      <div class="p21-inq-sample__stage">
-        <div class="p21-inq-sample__card">${html}</div>
-        <div class="p21-inq-sample__annotate">
-          <span class="p21-inq-sample__arrow" aria-hidden="true"></span>
-          <p class="p21-inq-sample__callout" data-p21-inq-callout>${esc(callout)}</p>
-        </div>
-      </div>
-    </figure>`;
+  const listHtml = renderBrowseList('tutor', [item], { showCompare: true, showWish: true, guest: false });
+  return renderInquirySampleCard({
+    receiving,
+    listHtml,
+    kicker: receiving ? P21_INQUIRY_COPY.sampleOpenKicker : P21_INQUIRY_COPY.sampleClosedKicker,
+    callout: receiving ? P21_INQUIRY_COPY.sampleOpenCallout : P21_INQUIRY_COPY.sampleClosedCallout,
+  });
 }
 
 /**
@@ -118,7 +112,7 @@ export function renderTutorInquiries(tutor) {
       <section class="p21-inq-block p21-inq-block--samples" aria-label="${esc(P21_INQUIRY_COPY.sampleTitle)}">
         <h3 class="p21-inq-block__title">${esc(P21_INQUIRY_COPY.sampleTitle)}</h3>
         <p class="p21-inq-block__hint">${esc(P21_INQUIRY_COPY.sampleLead)}</p>
-        <div class="p21-inq-samples">
+        <div class="inq-samples">
           ${renderSampleCard(true)}
           ${renderSampleCard(false)}
         </div>

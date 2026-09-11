@@ -96,3 +96,10 @@ export function inquiryStatusFromForm(receiving, reason) {
   if (reason === 'capacity_full') return 'capacity_full';
   return 'paused';
 }
+
+/** 과외쌤 stored line과 같은 한 줄 저장값 */
+export function studyRoomInquiryStoredLine(status) {
+  if (status === 'open') return P20_INQUIRY_COPY.storedOpen;
+  if (status === 'capacity_full') return P20_INQUIRY_COPY.storedCapacityFull;
+  return P20_INQUIRY_COPY.storedPaused;
+}

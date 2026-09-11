@@ -38,10 +38,18 @@ export const PHASE_STEPS = [
   { key: 'inquiries', label: '쪽지설정' },
 ];
 
-/** P20-05 OFF 사유 (운영자 선택) */
+/** P20-05 OFF 사유 (운영자 선택) — 정책값 유지, 화면만 과외쌤과 같은 포맷 */
 export const INQUIRY_OFF_REASONS = [
-  { value: 'capacity_full', label: '정원 마감' },
-  { value: 'paused', label: '잠시 쉼' },
+  {
+    value: 'paused',
+    label: '잠시 쉼',
+    hint: '일시 중단입니다. 나중에 다시 받을 수 있습니다.',
+  },
+  {
+    value: 'capacity_full',
+    label: '정원 마감',
+    hint: '정원이 가득 찬 상태입니다. 잠시 쉼이 아닙니다.',
+  },
 ];
 
 /** §5 상세정보 상태 */
@@ -65,22 +73,34 @@ export const P20_HUB_BLOCK_TITLES = {
 /** P20-05 쪽지설정 — copy */
 export const P20_INQUIRY_COPY = {
   pageTitle: '쪽지설정',
-  pageLead: '지금 학부모의 쪽지 문의를 받을지 관리합니다. 공개 여부와는 별개입니다.',
+  pageLead: '지금 학부모 쪽지를 받을지 확인하고, 필요하면 바꾼 뒤 저장합니다.',
   currentStatusHeading: '현재상태',
+  badgeReceiving: '지금은 쪽지 받는 중',
+  badgeClosed: '지금은 쪽지 안받음',
+  storedOpen: '저장값: 쪽지 받는 중',
+  storedPaused: '저장값: 쪽지 안받음 · 잠시 쉼',
+  storedCapacityFull: '저장값: 쪽지 안받음 · 정원 마감',
   cardDisplayTitle: '홈화면 카드표시',
-  /** 카드 요약 2상태 */
   cardReceiving: '쪽지 받는 중',
   cardClosed: '지금은 쪽지 안 받음',
+  editHeading: '현재상태 수정',
+  receiving: '쪽지 받는 중',
+  closed: '쪽지 안받음',
   switchLabel: '쪽지 받는 중',
   switchLead: '켜면 학부모가 쪽지로 문의할 수 있어요.',
-  offReasonTitle: '안 받는 이유',
+  offReasonTitle: '안받는 이유',
+  offReasonHint: '쪽지 안받음이면 이유를 고른 뒤 저장합니다. 이유마다 서버 상태값이 다릅니다.',
+  offReasonRequired: '쪽지 안받음으로 저장하려면 이유를 선택해 주세요.',
+  contactHeading: '기본 연락처 검증',
   contactBlockTitle: '기본 연락처 검증',
-  contactVerified: '본인 핸드폰 인증 완료됨',
-  contactNeeded: '본인 핸드폰 인증 필요함',
-  contactNotice:
-    '핸드폰번호는 외부에 공개되지 않으며, 우동공과 시스템 신뢰도를 강화하기 위한 인증입니다.',
-  contactVerifyCta: '인증하기',
-  verifyFirstHint: '쪽지를 받으려면 먼저 「기본 연락처 검증」에서 인증하기를 완료해 주세요.',
+  contactVerified: '인증 완료',
+  contactNeeded: '인증이 필요합니다',
+  contactVerifiedLead: '인증이 끝났습니다. 전화번호는 외부에 공개되지 않습니다.',
+  contactNeededLead: '처음 쪽지 받는 중으로 바꿀 때는 본인 핸드폰 인증이 먼저 필요합니다.',
+  contactNotice: '인증은 시스템 신뢰 확인용이며, 전화번호는 외부에 공개되지 않습니다.',
+  contactVerifyCta: '핸드폰 인증하기',
+  verifyFirstHint: '쪽지 받는 중으로 저장하려면 먼저 기본 연락처 검증을 완료해 주세요.',
+  saveFailed: '저장에 실패했습니다. 화면은 마지막 서버값으로 되돌립니다.',
   previewTitle: '쪽지 설정시 카드 샘플',
   sampleTitle: '쪽지 설정시 카드 샘플',
   sampleLead: '홈과 같은 실제 BASIC 카드입니다. 화살표가 쪽지 관련 표시 위치를 가리킵니다.',
