@@ -184,6 +184,88 @@ function remainingCount(okMap, ids) {
   return ids.filter((id) => !okMap[id]).length;
 }
 
+function firstMissingDef(okMap, ids) {
+  const id = ids.find((key) => !okMap[key]);
+  if (!id) return null;
+  return RC_PROMO_MISSING_DEFS.find((d) => d.id === id) || { id, label: id, section: 'detail' };
+}
+
+function sectionSummary(sec) {
+  const rows = Array.isArray(sec?.rows) ? sec.rows : [];
+  const total = rows.length;
+  const filled = rows.filter((r) => r.status === 'filled').length;
+  const missingRows = rows.filter((r) => r.status !== 'filled');
+  const requiredMissing = missingRows.filter((r) => r.required);
+  const missLabels = (requiredMissing.length ? requiredMissing : missingRows).slice(0, 2).map((r) => r.label);
+  return {
+    filled,
+    total,
+    missing: missingRows.length,
+    requiredMissing: requiredMissing.length,
+    missLabels,
+    line: RC_COPY.board.filledLine(filled, total, missingRows.length),
+    sub:
+      requiredMissing.length === 0 && rows.some((r) => r.required)
+        ? RC_COPY.board.allRequiredOk
+        : missLabels.length
+          ? `${RC_COPY.board.missPrefix}: ${missLabels.join(', ')}`
+          : '',
+  };
+}
+
+function flattenBoardRows(sec) {
+  if (Array.isArray(sec?.children) && sec.children.length) {
+    return sec.children.flatMap((child) => child.rows || []);
+  }
+  return Array.isArray(sec?.rows) ? sec.rows : [];
+}
+
+function withSummary(sec) {
+  const summary = sectionSummary({ ...sec, rows: flattenBoardRows(sec) });
+  const children = Array.isArray(sec.children)
+    ? sec.children.map((child) => ({ ...child, summary: sectionSummary(child) }))
+    : undefined;
+  return { ...sec, children, summary };
+}
+
+function nextAction(okMap, room, canPublish, publishItems) {
+  const status = room?.profile_status;
+  if (!canPublish) {
+    const gap = (publishItems || []).find((i) => !i.ok);
+    if (gap) {
+      const section = gap.section === 'basic' ? 'basic' : 'detail';
+      return {
+        id: gap.id,
+        label: RC_COPY.next.fill(gap.label),
+        href: registrationCheckTabHref(room.id, section, gap.id),
+      };
+    }
+  }
+  const pickMiss = firstMissingDef(okMap, RC_PICK_FIELD_IDS);
+  if (pickMiss) {
+    return {
+      id: pickMiss.id,
+      label: RC_COPY.next.fill(pickMiss.label),
+      href: registrationCheckTabHref(room.id, pickMiss.section === 'detail2' ? 'detail2' : 'detail', pickMiss.id),
+    };
+  }
+  const primeMiss = firstMissingDef(okMap, RC_PRIME_FIELD_IDS);
+  if (primeMiss) {
+    return {
+      id: primeMiss.id,
+      label: RC_COPY.next.fill(primeMiss.label),
+      href: registrationCheckTabHref(room.id, primeMiss.section === 'detail2' ? 'detail2' : 'detail', primeMiss.id),
+    };
+  }
+  if (status === 'hidden') {
+    return { id: 'republish', label: RC_COPY.next.hidden, href: '' };
+  }
+  if (status === 'published') {
+    return { id: 'live', label: RC_COPY.next.live, href: '' };
+  }
+  return { id: 'publish', label: RC_COPY.next.publish, href: '' };
+}
+
 function missingForTier(okMap, ids, roomId) {
   return RC_PROMO_MISSING_DEFS.filter((d) => ids.includes(d.id) && !okMap[d.id]).map((d) => ({
     id: d.id,
@@ -268,112 +350,124 @@ function buildBoard(s, room, photos) {
   const cap = formatCapacity(s?.capacity_per_time || room?.capacity_per_time);
   const career = s?.career_years !== '' && s?.career_years != null ? `${s.career_years}년` : '';
 
-  return [
-    {
-      id: 'basic',
-      title: RC_COPY.board.sections.basic,
-      variant: 'plain',
-      editSection: 'basic',
-      rows: [
-        row('study_room_name', nameLabel, s?.study_room_name || room?.study_room_name, textStatus(s?.study_room_name || room?.study_room_name)),
-        row('slogan', '슬로건', s?.slogan || room?.slogan, textStatus(s?.slogan || room?.slogan)),
-        row('lesson_place_type', '교습형태', place, textStatus(place)),
-        row('audience', '주대상', audience, textStatus(audience)),
-        row('main_subject', '주력과목', s?.main_subject_note || room?.main_subject_note, textStatus(s?.main_subject_note || room?.main_subject_note)),
-        row('regions', '대표 홍보지역', regions.join(' · '), regions.length ? 'filled' : 'empty'),
-      ],
-    },
-    {
-      id: 'detail',
-      title: RC_COPY.board.sections.detail,
-      variant: 'detail',
-      editSection: 'detail',
-      rows: [
-        row('intro_short', '한 줄 소개', s?.intro_short || room?.intro_short, textStatus(s?.intro_short || room?.intro_short)),
-        row('intro_long', '공부방 소개 / 자랑', s?.intro_long, textStatus(s?.intro_long)),
-        row('cover', '대표사진', photos.value, photos.status),
-        row('extra_photos', '추가 사진', extraPhotos ? `${extraPhotos}장` : '', extraPhotos ? 'filled' : 'empty'),
-        row('classes', '수업상세', classes.value, classes.status),
-        row('lesson_operation', '수업운영방식', op, textStatus(op)),
-        row('capacity', '타임별 원생수', cap, textStatus(cap)),
-        row('fee', '월 평균 수업료', fee, textStatus(fee)),
-        row('minutes', '1일 평균 수업시간', minutes, textStatus(minutes)),
-        row('lessons_per_week', '주당 평균 수업회수', weekly, textStatus(weekly)),
-        row('teaching_style', '지도 스타일', styles.join(' · '), styles.length ? 'filled' : 'empty'),
-        row('teaching_style_note', '지도 스타일 추가설명', s?.teaching_style_note, textStatus(s?.teaching_style_note)),
-        row('weekend', '주말 가능 여부', weekend.value, weekend.status),
-        row('one_on_one', '1:1 가능 여부', oneToOne.value, oneToOne.status),
-        row('card_pay', '카드결제 여부', cardPay.value, cardPay.status),
-        row('cash', '현금영수증 여부', cash.value, cash.status),
-        row('correction', '첨삭식 여부', correction.value, correction.status),
-      ],
-    },
-    {
-      id: 'detail2',
-      title: RC_COPY.board.sections.detail2,
-      variant: 'detail',
-      editSection: 'detail2',
-      rows: [
-        row('feature_1', '경력특징 1', s?.feature_1 || room?.feature_1, textStatus(s?.feature_1 || room?.feature_1)),
-        row('feature_2', '경력특징 2', s?.feature_2, textStatus(s?.feature_2)),
-        row('feature_3', '경력특징 3', s?.feature_3, textStatus(s?.feature_3)),
-        row('career_years', '교습경력', career, textStatus(career)),
-        row('university', '출신대학', [s?.university_name, s?.major_name].filter(blank).join(' · '), textStatus(s?.university_name)),
-        row('edu_office', '교육청등록증', edu.value, edu.status),
-        row('biz_reg', '사업자등록증', biz.value, biz.status),
-        row('franchise', '프랜차이즈 여부', fran.value, fran.status),
-        row('facilities', '시설 · 환경', facilities.join(' · ') || blank(s?.facility_note), facilities.length || blank(s?.facility_note) ? 'filled' : 'empty'),
-      ],
-    },
-  ];
+  const basic = {
+    id: 'basic',
+    title: RC_COPY.board.sections.basic,
+    collapsedDefault: false,
+    editSection: 'basic',
+    rows: [
+      row('study_room_name', nameLabel, s?.study_room_name || room?.study_room_name, textStatus(s?.study_room_name || room?.study_room_name)),
+      row('slogan', '슬로건', s?.slogan || room?.slogan, textStatus(s?.slogan || room?.slogan)),
+      row('lesson_place_type', '교습형태', place, textStatus(place)),
+      row('audience', '주대상', audience, textStatus(audience)),
+      row('main_subject', '주력과목', s?.main_subject_note || room?.main_subject_note, textStatus(s?.main_subject_note || room?.main_subject_note)),
+      row('regions', '대표 홍보지역', regions.join(' · '), regions.length ? 'filled' : 'empty'),
+    ],
+  };
+
+  const detail1 = {
+    id: 'detail1',
+    title: RC_COPY.board.sections.detail1,
+    editSection: 'detail',
+    rows: [
+      row('intro_short', '한 줄 소개', s?.intro_short || room?.intro_short, textStatus(s?.intro_short || room?.intro_short)),
+      row('intro_long', '공부방 소개 / 자랑', s?.intro_long, textStatus(s?.intro_long)),
+      row('cover', '대표사진', photos.value, photos.status),
+      row('extra_photos', '추가 사진', extraPhotos ? `${extraPhotos}장` : '', extraPhotos ? 'filled' : 'empty'),
+      row('classes', '수업상세', classes.value, classes.status),
+      row('lesson_operation', '수업운영방식', op, textStatus(op)),
+      row('capacity', '타임별 원생수', cap, textStatus(cap)),
+      row('fee', '월 평균 수업료', fee, textStatus(fee)),
+      row('minutes', '1일 평균 수업시간', minutes, textStatus(minutes)),
+      row('lessons_per_week', '주당 평균 수업회수', weekly, textStatus(weekly)),
+      row('teaching_style', '지도 스타일', styles.join(' · '), styles.length ? 'filled' : 'empty'),
+      row('teaching_style_note', '지도 스타일 추가설명', s?.teaching_style_note, textStatus(s?.teaching_style_note)),
+      row('weekend', '주말 가능 여부', weekend.value, weekend.status),
+      row('one_on_one', '1:1 가능 여부', oneToOne.value, oneToOne.status),
+      row('card_pay', '카드결제 여부', cardPay.value, cardPay.status),
+      row('cash', '현금영수증 여부', cash.value, cash.status),
+      row('correction', '첨삭식 여부', correction.value, correction.status),
+    ],
+  };
+
+  const detail2 = {
+    id: 'detail2',
+    title: RC_COPY.board.sections.detail2,
+    editSection: 'detail2',
+    rows: [
+      row('feature_1', '경력특징 1', s?.feature_1 || room?.feature_1, textStatus(s?.feature_1 || room?.feature_1)),
+      row('feature_2', '경력특징 2', s?.feature_2, textStatus(s?.feature_2)),
+      row('feature_3', '경력특징 3', s?.feature_3, textStatus(s?.feature_3)),
+      row('career_years', '교습경력', career, textStatus(career)),
+      row('university', '출신대학', [s?.university_name, s?.major_name].filter(blank).join(' · '), textStatus(s?.university_name)),
+      row('edu_office', '교육청등록증', edu.value, edu.status),
+      row('biz_reg', '사업자등록증', biz.value, biz.status),
+      row('franchise', '프랜차이즈 여부', fran.value, fran.status),
+      row('facilities', '시설 · 환경', facilities.join(' · ') || blank(s?.facility_note), facilities.length || blank(s?.facility_note) ? 'filled' : 'empty'),
+    ],
+  };
+
+  const detail = {
+    id: 'detail',
+    title: RC_COPY.board.sections.detail,
+    collapsedDefault: true,
+    children: [detail1, detail2],
+  };
+
+  return [basic, detail].map(withSummary);
 }
 
 /**
  * @param {object} s registerState
  * @param {import('./store.js').StudyRoomRecord} room
+ * @param {{ canPublish?: boolean, missing?: string[], items?: { id: string, label: string, section: string, ok: boolean }[], profileStatus?: string }} [readiness]
  */
-export function buildRegistrationCheckModel(s, room) {
+export function buildRegistrationCheckModel(s, room, readiness = {}) {
   const photos = photoSummary(s || {});
   const okMap = fieldOkMap(s, room, photos);
   const pickLeft = remainingCount(okMap, RC_PICK_FIELD_IDS);
   const primeLeft = remainingCount(okMap, RC_PRIME_FIELD_IDS);
   const board = buildBoard(s, room, photos);
-  const checklistRows = board.filter((sec) => sec.variant === 'detail').flatMap((sec) => sec.rows);
-  const filledRows = checklistRows.filter((r) => r.status === 'filled').length;
-  const pct = checklistRows.length ? Math.round((filledRows / checklistRows.length) * 100) : 0;
   const previewItem = buildRegistrationCheckPreviewItem(s, room, photos);
+  const publishReady = readiness.canPublish === true;
+  const status = readiness.profileStatus || room?.profile_status || 'draft';
+  const basicLeft = publishReady ? 0 : (readiness.missing || []).length;
+  const next = nextAction(okMap, room, publishReady, readiness.items || []);
+
+  let publishBadge = { id: 'publish', value: RC_COPY.badges.publishNeed, tone: 'warn' };
+  if (status === 'published') {
+    publishBadge = { id: 'publish', value: RC_COPY.badges.publishLive, tone: 'ok' };
+  } else if (status === 'hidden' && publishReady) {
+    publishBadge = { id: 'publish', value: RC_COPY.badges.publishHidden, tone: 'warn' };
+  } else if (publishReady) {
+    publishBadge = { id: 'publish', value: RC_COPY.badges.publishOk, tone: 'ok' };
+  }
 
   return {
     roomId: room.id,
     copy: RC_COPY,
     previewItem,
+    readiness: { ...readiness, canPublish: publishReady, profileStatus: status, basicLeft },
+    nextAction: next,
     header: {
       title: RC_COPY.title,
       lead: RC_COPY.lead,
       badges: [
+        publishBadge,
         {
           id: 'basic',
-          label: RC_COPY.badges.basicReg,
-          value: RC_COPY.badges.basicDone,
-          tone: 'ok',
+          value: basicLeft ? RC_COPY.badges.basicNeed(basicLeft) : RC_COPY.badges.basicOk,
+          tone: basicLeft ? 'warn' : 'ok',
         },
         {
           id: 'pick',
-          value: pickLeft ? RC_COPY.badges.pickNeed(pickLeft) : RC_COPY.badges.pickReady,
+          value: pickLeft ? RC_COPY.badges.pickNeed(pickLeft) : RC_COPY.badges.pickOk,
           tone: pickLeft ? 'warn' : 'ok',
-          layout: 'sentence',
         },
         {
           id: 'prime',
-          value: primeLeft ? RC_COPY.badges.primeNeed(primeLeft) : RC_COPY.badges.primeReady,
+          value: primeLeft ? RC_COPY.badges.primeNeed(primeLeft) : RC_COPY.badges.primeOk,
           tone: primeLeft ? 'warn' : 'ok',
-          layout: 'sentence',
-        },
-        {
-          id: 'progress',
-          label: RC_COPY.badges.progress,
-          value: `${pct}%`,
-          tone: pct >= 80 ? 'ok' : 'neutral',
         },
       ],
     },
@@ -383,8 +477,9 @@ export function buildRegistrationCheckModel(s, room) {
       primeMissing: missingForTier(okMap, RC_PRIME_FIELD_IDS, room.id),
     },
     board,
-    counts: { filledRows, totalRows: checklistRows.length, pct, pickLeft, primeLeft },
+    counts: { pickLeft, primeLeft, basicLeft, canPublish: publishReady },
     photos,
+    okMap,
   };
 }
 
