@@ -15,8 +15,9 @@ import {
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from '../registrations-backend.js';
 import { ensureEmbeddedRegister } from './embedded-panels.js';
 import { openDetailDecision } from '../detail-decision/index.js';
-import { getStudyRoom } from './store.js';
+import { getStudyRoom, publishStudyRoom } from './store.js';
 import { RC_COPY } from './registration-check-copy.js';
+import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import {
   RC_LIGHT_FIELDS,
   TEACHING_STYLE_OPTIONS,
@@ -333,6 +334,46 @@ export function bindRegistrationCheckEvents(root, rerender) {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         openExpand();
+      }
+    });
+  });
+
+  page.querySelectorAll('[data-rc-fold]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const section = btn.closest('[data-rc-section]');
+      if (!section) return;
+      const body = section.querySelector('.rc-section__body');
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+      btn.textContent = expanded ? RC_COPY.board.foldOpen : RC_COPY.board.foldClose;
+      if (body) body.hidden = expanded;
+      section.classList.toggle('is-collapsed', expanded);
+    });
+  });
+
+  page.querySelectorAll('[data-p20-publish]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const confirms = page.querySelectorAll('[data-p20-confirm]');
+      const allChecked = [...confirms].every((c) => /** @type {HTMLInputElement} */ (c).checked);
+      if (!allChecked) {
+        alert('자기확인 항목을 모두 체크해 주세요.');
+        return;
+      }
+      try {
+        const result = await publishStudyRoom(roomId);
+        if (!result.ok) {
+          alert(`공개 불가:\n${result.missing?.join('\n') || result.reason}`);
+          return;
+        }
+        alert('공개되었습니다. (profile_status: published)');
+        rerender();
+      } catch (err) {
+        console.warn('[p20-rc]', err);
+        if (err?.code === 'email_verify_required') {
+          showEmailVerifyOverlay();
+          return;
+        }
+        alert('공개 처리에 실패했습니다.');
       }
     });
   });

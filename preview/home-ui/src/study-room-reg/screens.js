@@ -428,7 +428,13 @@ function renderPublish(room) {
   }
 
   markEmbeddedViewLoaded(room.id, 'publish');
-  const vm = buildRegistrationCheckModel(registerState, room);
+  const r = getPublishReadiness(room);
+  const vm = buildRegistrationCheckModel(registerState, room, {
+    canPublish: r.canPublish,
+    missing: r.missing,
+    items: r.items,
+    profileStatus: room.profile_status,
+  });
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'publish', renderRegistrationCheck(vm))}</section>`;
 }
 
