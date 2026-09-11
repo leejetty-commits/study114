@@ -10,7 +10,6 @@
 export const P21_INQUIRY_COPY = {
   pageLead: '지금 학부모 쪽지를 받을지 확인하고, 필요하면 바꾼 뒤 저장합니다.',
   currentStatusHeading: '현재상태',
-  currentStatusHint: '학부모 카드에 보이는 쪽지 가능 여부입니다. 아래 저장값이 서버 상태입니다.',
   badgeReceiving: '지금은 쪽지 받는 중',
   badgeClosed: '지금은 쪽지 안받음',
   storedOpen: '저장값: 쪽지 받는 중',
@@ -24,10 +23,9 @@ export const P21_INQUIRY_COPY = {
   offReasonRequired: '쪽지 안받음으로 저장하려면 이유를 선택해 주세요.',
   contactHeading: '기본 연락처 검증',
   contactNeeded: '인증이 필요합니다',
-  contactNeededLead:
-    '처음 쪽지 받는 중으로 바꿀 때는 본인 핸드폰 인증이 먼저 필요합니다.',
+  contactNeededLead: '처음 쪽지 받는 중으로 바꿀 때는 본인 핸드폰 인증이 먼저 필요합니다.',
   contactVerified: '인증 완료',
-  contactVerifiedLead: '연락처 확인이 끝났습니다. 전화번호는 외부에 공개되지 않습니다.',
+  contactVerifiedLead: '인증이 끝났습니다. 전화번호는 외부에 공개되지 않습니다.',
   contactNotice: '인증은 시스템 신뢰 확인용이며, 전화번호는 외부에 공개되지 않습니다.',
   contactVerifyCta: '핸드폰 인증하기',
   verifyFirstHint: '쪽지 받는 중으로 저장하려면 먼저 기본 연락처 검증을 완료해 주세요.',
@@ -36,11 +34,11 @@ export const P21_INQUIRY_COPY = {
   saveFailed: '저장에 실패했습니다. 화면은 마지막 서버값으로 되돌립니다.',
   saveCta: '저장하기',
   sampleTitle: '쪽지 설정시 카드 샘플',
-  sampleLead: '쪽지 표시는 카드 오른쪽 기능 칸(✉)에 붙습니다. 실제 BASIC 카드와 같은 크기입니다.',
+  sampleLead: '홈과 같은 실제 BASIC 카드입니다. 화살표가 쪽지 관련 표시 위치를 가리킵니다.',
   sampleOpenKicker: '쪽지 받는 중',
   sampleClosedKicker: '쪽지 안받음',
-  sampleOpenPoint: '✉ 쪽지 버튼이 활성입니다.',
-  sampleClosedPoint: '같은 자리의 ✉가 비활성입니다.',
+  sampleOpenCallout: '여기가 쪽지 관련 표시 위치입니다. 받는 중이면 ✉가 활성입니다.',
+  sampleClosedCallout: '여기가 쪽지 관련 표시 위치입니다. 안받음이면 ✉가 비활성입니다.',
 };
 
 export const P21_INQUIRY_OFF_REASONS = [

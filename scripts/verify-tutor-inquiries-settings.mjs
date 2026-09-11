@@ -2,7 +2,7 @@
  * 과외쌤 쪽지설정 — SSOT · 상태 의미 · OTP 후 PATCH · 064 배포 전제
  */
 import './verify-dom-storage-shim.mjs';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   TUTOR_REG_TOP_TABS,
@@ -158,12 +158,34 @@ const orderMarks = [
   'data-p21-inquiry-save',
   'p21-inq-block--samples',
 ];
-let lastPos = -1;
-for (const mark of orderMarks) {
-  const pos = htmlOrder.indexOf(mark);
-  assert(pos > lastPos, `layout order: ${mark} after previous`);
-  lastPos = pos;
-}
+assert(htmlOrder.includes(P21_INQUIRY_COPY.sampleTitle), 'copy: sample title 쪽지 설정시 카드 샘플');
+assert(!htmlOrder.includes('카드 미리보기'), 'copy: no 카드 미리보기');
+assert(htmlOrder.includes(P21_INQUIRY_COPY.editHeading), 'copy: 현재상태 수정');
+assert(P21_INQUIRY_COPY.contactNeededLead.includes('본인 핸드폰 인증'), 'copy: first ON requires phone');
+assert(P21_INQUIRY_COPY.contactNotice.includes('외부에 공개되지 않습니다'), 'copy: phone not public');
+assert(P21_INQUIRY_COPY.contactNotice.includes('시스템 신뢰 확인용'), 'copy: trust check');
+assert(css.includes('border-radius: 999px'), 'css: ✉ circle marker');
+assert(css.includes('pointer-events: none'), 'css: inactive blocks pointer');
+assert(css.includes('--p21-listing-w'), 'css: home listing width token');
+assert(css.includes('flex-direction: column'), 'css: samples stay vertical, no shrink pair');
+assert(!/p21-inq-sample__card[\s\S]{0,180}transform:\s*scale/.test(css), 'css: sample card is not scaled');
+assert(!/p21-inq-sample__card[\s\S]{0,400}grid-template-columns:\s*[0-9.]+rem/.test(css), 'css: sample does not override BASIC thumb columns');
+assert(
+  existsSync(resolve(root, 'preview/home-ui/public/assets/brand/tutor-card-sample.jpg')),
+  'sample: tutor-card-sample.jpg file exists',
+);
+assert(htmlOrder.includes('tutor-card-sample.jpg'), 'sample: home BASIC portrait asset');
+assert(!htmlOrder.includes('expo-media--placeholder'), 'sample: no gray image placeholder');
+assert(htmlOrder.includes('김하린'), 'sample: name filled');
+assert(htmlOrder.includes('서울 강남구'), 'sample: location filled');
+assert(htmlOrder.includes('title="추천 18"'), 'sample: recommend count filled');
+assert(htmlOrder.includes('title="후기 7"'), 'sample: review count filled');
+assert(htmlOrder.includes('title="찜 11"'), 'sample: wish count filled');
+assert(htmlOrder.includes('p21-inq-sample__arrow'), 'sample: arrow marker present');
+assert(htmlOrder.includes(P21_INQUIRY_COPY.sampleOpenCallout), 'sample: open arrow copy');
+assert(htmlOrder.includes(P21_INQUIRY_COPY.sampleClosedCallout), 'sample: closed arrow copy');
+assert(htmlOrder.includes('여기가 쪽지 관련 표시 위치'), 'sample: callout names the message slot');
+assert((htmlOrder.match(/p21-inq-sample__callout/g) || []).length === 2, 'sample: both cards have callouts');
 
 // —— 라우팅 5항
 const inquiriesPath = `${BASE}/7/inquiries`;

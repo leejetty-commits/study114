@@ -27,17 +27,34 @@ function renderReasonRadios(pref) {
   }).join('');
 }
 
-function renderSampleCard(receiving) {
+function filledTutorInquirySampleItem(receiving) {
   const item = buildTutorSamplePreviewItem('basic');
   item.id = receiving ? 'p21-inq-open' : 'p21-inq-closed';
-  const html = renderBrowseList('tutor', [item], { showCompare: true, showWish: true, guest: true });
+  item.recommend_count = 18;
+  item.review_count = 7;
+  item.wish_count = 11;
+  item.compare_count = 2;
+  item.message_count = receiving ? 4 : 0;
+  item.published_at = '2025-11-03T09:00:00+09:00';
+  item.inquiry_status = receiving ? 'open' : 'paused';
+  return item;
+}
+
+function renderSampleCard(receiving) {
+  const item = filledTutorInquirySampleItem(receiving);
+  const html = renderBrowseList('tutor', [item], { showCompare: true, showWish: true, guest: false });
   const kicker = receiving ? P21_INQUIRY_COPY.sampleOpenKicker : P21_INQUIRY_COPY.sampleClosedKicker;
-  const point = receiving ? P21_INQUIRY_COPY.sampleOpenPoint : P21_INQUIRY_COPY.sampleClosedPoint;
+  const callout = receiving ? P21_INQUIRY_COPY.sampleOpenCallout : P21_INQUIRY_COPY.sampleClosedCallout;
   return `
     <figure class="p21-inq-sample p21-inq-sample--${receiving ? 'open' : 'closed'}">
       <figcaption class="p21-inq-sample__kicker">${esc(kicker)}</figcaption>
-      <div class="p21-inq-sample__card">${html}</div>
-      <p class="p21-inq-sample__point">${esc(point)}</p>
+      <div class="p21-inq-sample__stage">
+        <div class="p21-inq-sample__card">${html}</div>
+        <div class="p21-inq-sample__annotate">
+          <span class="p21-inq-sample__arrow" aria-hidden="true"></span>
+          <p class="p21-inq-sample__callout" data-p21-inq-callout>${esc(callout)}</p>
+        </div>
+      </div>
     </figure>`;
 }
 
@@ -60,7 +77,6 @@ export function renderTutorInquiries(tutor) {
           <h3 class="p21-inq-block__title">${esc(P21_INQUIRY_COPY.currentStatusHeading)}</h3>
           <span class="p21-inq-badge p21-inq-badge--${pref.receiving ? 'on' : 'off'}">${esc(badge)}</span>
         </div>
-        <p class="p21-inq-block__hint">${esc(P21_INQUIRY_COPY.currentStatusHint)}</p>
         <p class="p21-inq-block__hint" data-p21-inquiry-stored>${esc(stored)}</p>
       </section>
 
@@ -76,7 +92,7 @@ export function renderTutorInquiries(tutor) {
             <span>${esc(P21_INQUIRY_COPY.closed)}</span>
           </label>
         </div>
-        <div class="p21-inq-reasons${pref.receiving ? ' is-inactive' : ''}" data-p21-inquiry-reason-wrap>
+        <div class="p21-inq-reasons${pref.receiving ? ' is-inactive' : ''}" data-p21-inquiry-reason-wrap${pref.receiving ? ' aria-disabled="true"' : ''}>
           <h4 class="p21-inq-reasons__title">${esc(P21_INQUIRY_COPY.offReasonTitle)}</h4>
           <p class="p21-inq-block__hint">${esc(P21_INQUIRY_COPY.offReasonHint)}</p>
           <div class="p21-inq-reason-list">${renderReasonRadios(pref)}</div>
@@ -87,7 +103,7 @@ export function renderTutorInquiries(tutor) {
         <h3 class="p21-inq-block__title">${esc(P21_INQUIRY_COPY.contactHeading)}</h3>
         <p class="p21-inq-contact__state">${esc(phoneOk ? P21_INQUIRY_COPY.contactVerified : P21_INQUIRY_COPY.contactNeeded)}</p>
         <p class="p21-inq-contact__lead">${esc(phoneOk ? P21_INQUIRY_COPY.contactVerifiedLead : P21_INQUIRY_COPY.contactNeededLead)}</p>
-        <p class="p21-inq-contact__notice">${esc(P21_INQUIRY_COPY.contactNotice)}</p>
+        ${phoneOk ? '' : `<p class="p21-inq-contact__notice">${esc(P21_INQUIRY_COPY.contactNotice)}</p>`}
         ${
           phoneOk
             ? ''

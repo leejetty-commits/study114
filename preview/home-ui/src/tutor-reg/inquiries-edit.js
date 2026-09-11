@@ -28,6 +28,10 @@ function syncReasonState(page) {
   const receiving = selectedReceiving(page);
   const wrap = page.querySelector('[data-p21-inquiry-reason-wrap]');
   wrap?.classList.toggle('is-inactive', receiving);
+  if (wrap) {
+    if (receiving) wrap.setAttribute('aria-disabled', 'true');
+    else wrap.removeAttribute('aria-disabled');
+  }
   page.querySelectorAll('input[name="p21_inquiry_reason"]').forEach((input) => {
     input.disabled = receiving;
     input.closest('.p21-inq-reason')?.classList.toggle('is-disabled', receiving);
