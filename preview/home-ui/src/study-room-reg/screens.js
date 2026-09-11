@@ -13,6 +13,7 @@ import {
 } from './inquiry-display.js';
 import { isPhoneVerifiedLocal, showPhoneVerifyGateModal } from './phone-verify-gate.js';
 import { renderBrowseList } from '../exposure-render.js';
+import { buildStudyRoomInquirySampleItem } from './inquiries-sample.js';
 import { getAuthUser } from '../auth-session.js';
 import {
   parseStudyRoomRegPath,
@@ -28,7 +29,6 @@ import {
   formatRoomSummaryLine,
   profileStatusLabel,
   inquiryStatusLabel,
-  roomToExposureRow,
 } from './format.js';
 import {
   getStudyRooms,
@@ -438,58 +438,22 @@ function renderPublish(room) {
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'publish', renderRegistrationCheck(vm))}</section>`;
 }
 
-/** @returns {string} */
-function inquiryCoverImageSrc() {
-  const imgs = Array.isArray(registerState.images) ? registerState.images : [];
-  const real = imgs.filter((img) => {
-    if (!img || img.is_system_default) return false;
-    const src = String(img.basic_720_path || img.prime_1280_path || img.image_path || img.name || img.src || '');
-    if (!src) return false;
-    if (/room-card-default-(basic|pick|prime)/i.test(src)) return false;
-    if (/study114[_-]default/i.test(src)) return false;
-    return true;
-  });
-  const cover =
-    real.find((img) => String(img?.image_type || img?.type || '') === 'cover') || real[0] || null;
-  if (!cover) return '';
-  return (
-    cover.basic_720_path ||
-    cover.prime_1280_path ||
-    cover.image_path ||
-    cover.name ||
-    cover.src ||
-    ''
-  );
-}
-
-/**
- * @param {import('./store.js').StudyRoomRecord} room
- * @param {string} inquiryStatus
- */
-function renderInquiryBasicPreview(room, inquiryStatus) {
-  const s = Number(registerState.study_room_id) === Number(room.id) ? registerState : null;
-  const row = roomToExposureRow(room, {
-    image_path: inquiryCoverImageSrc(),
-    slogan: s?.slogan || room.slogan || s?.intro_short || room.intro_short || '',
-  });
-  if (s) {
-    if (s.study_room_name) row.study_room_name = s.study_room_name;
-    if (s.main_subject_note) row.main_subject_note = s.main_subject_note;
-    if (s.grade_band) row.grade_band = s.grade_band;
-    if (s.capacity_per_time) row.capacity_per_time = s.capacity_per_time;
-    if (s.price_amount != null && s.price_amount !== '') row.price_amount = Number(s.price_amount);
-    if (s.lesson_place_type) {
-      row.lesson_place_type = s.lesson_place_type === 'academy' ? 'office' : s.lesson_place_type;
-    }
-    if (s.lesson_operation_type) row.lesson_operation_type = s.lesson_operation_type;
-  }
-  row.inquiry_status = inquiryStatus;
+function renderInquirySampleCard(receiving) {
+  const item = buildStudyRoomInquirySampleItem(receiving);
+  const html = renderBrowseList('study_room', [item], { showCompare: true, showWish: true, guest: false });
+  const kicker = receiving ? P20_INQUIRY_COPY.sampleOpenKicker : P20_INQUIRY_COPY.sampleClosedKicker;
+  const callout = receiving ? P20_INQUIRY_COPY.sampleOpenCallout : P20_INQUIRY_COPY.sampleClosedCallout;
   return `
-    <div class="p20-inquiries-card-preview__frame" data-p20-inquiry-preview-card>
-      <div class="p20-inquiries-card-preview__browse" aria-hidden="true">
-        ${renderBrowseList('study_room', [row], { showCompare: false, showWish: false })}
+    <figure class="p20-inq-sample p20-inq-sample--${receiving ? 'open' : 'closed'}">
+      <figcaption class="p20-inq-sample__kicker">${esc(kicker)}</figcaption>
+      <div class="p20-inq-sample__stage">
+        <div class="p20-inq-sample__card">${html}</div>
+        <div class="p20-inq-sample__annotate">
+          <span class="p20-inq-sample__arrow" aria-hidden="true"></span>
+          <p class="p20-inq-sample__callout" data-p20-inq-callout>${esc(callout)}</p>
+        </div>
       </div>
-    </div>`;
+    </figure>`;
 }
 
 /** @param {import('./store.js').StudyRoomRecord} room */
@@ -570,16 +534,18 @@ function renderInquiries(room) {
           </div>
         </section>
 
-        <section class="p20-inquiries-section p20-inquiries-section--preview">
-          <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.previewTitle)}</h3>
-          <div class="p20-inquiries-card-preview" data-p20-inquiry-preview>
-            ${renderInquiryBasicPreview(room, room.inquiry_status)}
-          </div>
-        </section>
-
         <div class="p19-form-actions p20-inquiries-actions">
           <button type="button" class="btn btn--primary" data-p20-inquiry-save>${esc(P20_INQUIRY_COPY.saveCta)}</button>
         </div>
+
+        <section class="p20-inquiries-section p20-inquiries-section--samples" aria-label="${esc(P20_INQUIRY_COPY.sampleTitle)}">
+          <h3 class="p20-inquiries-section__title">${esc(P20_INQUIRY_COPY.sampleTitle)}</h3>
+          <p class="p20-inquiries-sample-lead">${esc(P20_INQUIRY_COPY.sampleLead)}</p>
+          <div class="p20-inq-samples">
+            ${renderInquirySampleCard(true)}
+            ${renderInquirySampleCard(false)}
+          </div>
+        </section>
       </div>
     </div>`;
 
@@ -599,17 +565,11 @@ function syncInquiryFormPreview(wrap) {
 
   const summaryStateEl = wrap.querySelector('[data-p20-inquiry-summary-state]');
   const summaryReasonEl = wrap.querySelector('[data-p20-inquiry-summary-reason]');
-  const previewHost = wrap.querySelector('[data-p20-inquiry-preview]');
-  const roomId = Number(wrap.dataset.p20RoomId);
-  const room = getStudyRoom(roomId);
 
   if (summaryStateEl) summaryStateEl.textContent = cardSummary.line;
   if (summaryReasonEl) {
     summaryReasonEl.textContent = cardSummary.reasonLine || '';
     summaryReasonEl.classList.toggle('is-hidden', !cardSummary.reasonLine);
-  }
-  if (previewHost && room) {
-    previewHost.innerHTML = renderInquiryBasicPreview(room, nextStatus);
   }
   wrap.dataset.inquiryReceiving = receiving ? '1' : '0';
 }
