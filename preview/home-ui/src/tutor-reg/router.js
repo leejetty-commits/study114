@@ -12,12 +12,30 @@
 
 export const BASE = '/mypage/registrations/tutors';
 
+/** hash path에서 query 제거 (예: `?return=registration-check`) */
+export function stripHashQuery(hashPath) {
+  const raw = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  return raw.split('?')[0];
+}
+
+/** @param {string} [hashPath] */
+export function tutorHashSearchParams(hashPath) {
+  const raw = hashPath == null ? (typeof window !== 'undefined' ? window.location.hash.slice(1) : '') : hashPath;
+  const q = raw.indexOf('?');
+  return new URLSearchParams(q >= 0 ? raw.slice(q + 1) : '');
+}
+
+export function isReturnToRegistrationCheck(hashPath) {
+  const ret = tutorHashSearchParams(hashPath).get('return') || '';
+  return ret === 'registration-check' || ret === 'publish';
+}
+
 /**
  * @param {string} hashPath
  * @returns {TutorRegRoute | null}
  */
 export function parseTutorRegPath(hashPath) {
-  const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  const p = stripHashQuery(hashPath);
   if (p === BASE) return { screenId: 'P21-01', listTab: 'all' };
 
   const tabMatch = p.match(/^\/mypage\/registrations\/tutors\/tab\/(all|draft|published|hidden|not_ready)$/);

@@ -819,3 +819,272 @@
 .rc-section--accordion .rc-table-wrap {
   margin-top: 0.35rem;
 }
+
+/* 과외쌤 등록점검 완성 — 공부방 기존 규칙과 additive */
+[data-trc-page] .rc-next {
+  display: inline-flex;
+  margin: 0.55rem 0 0;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+  line-height: 1.4;
+}
+
+[data-trc-page] .rc-next--static {
+  margin: 0.55rem 0 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #334155;
+  font-weight: 650;
+}
+
+[data-trc-page] .rc-head__stats .rc-stat {
+  white-space: nowrap;
+}
+
+[data-trc-page] .rc-publish {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem 1.15rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+[data-trc-page] .rc-publish__summary {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: #0f172a;
+  line-height: 1.45;
+}
+
+[data-trc-page] .rc-publish__lead {
+  margin: -0.35rem 0 0.65rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+[data-trc-page] .rc-publish .p20-confirm-card {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+[data-trc-page] .rc-publish .p19-form-actions--publish {
+  margin: 0;
+}
+
+[data-trc-page] .is-rc-focus,
+.p21-inline-form .is-rc-focus,
+.p19-form .is-rc-focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 4px;
+  border-radius: 0.5rem;
+}
+
+/* 과외쌤 RC — 홈 실카드 크기 유지 · 기본정보/상세정보 동일 레벨 */
+[data-trc-page] {
+  --rc-listing-w: calc(var(--home-max) - 2 * var(--page-gutter));
+  --rc-gap: var(--space-2);
+  max-width: var(--rc-listing-w);
+}
+
+[data-trc-page] .rc-block--compare {
+  overflow-x: auto;
+}
+
+[data-trc-page] .rc-compare__row--basic {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+[data-trc-page] .rc-compare__row--upgrade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.25rem;
+  grid-template-columns: none;
+}
+
+[data-trc-page] .rc-sample {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  min-width: 0;
+}
+
+[data-trc-page] .rc-sample__kicker {
+  margin: 0 0 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+[data-trc-page] .rc-sample--pick .rc-sample__kicker {
+  color: #c2410c;
+}
+
+[data-trc-page] .rc-sample--prime .rc-sample__kicker {
+  color: #1d4ed8;
+}
+
+[data-trc-page] .rc-sample__card {
+  pointer-events: none;
+  user-select: none;
+}
+
+[data-trc-page] .rc-sample__card .browse-list {
+  margin: 0;
+}
+
+[data-trc-page] .rc-sample__card .expo-card {
+  margin: 0;
+  height: auto;
+}
+
+[data-trc-page] .rc-sample__card--pick {
+  width: calc((var(--rc-listing-w) - var(--rc-gap)) / 2);
+}
+
+[data-trc-page] .rc-sample__card--prime {
+  width: var(--rc-listing-w);
+}
+
+[data-trc-page] .rc-sample__card--basic {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  [data-trc-page] .rc-sample__card--pick {
+    width: calc((var(--rc-listing-w) - 2 * var(--rc-gap)) / 3);
+  }
+
+  [data-trc-page] .rc-sample__card--prime {
+    width: calc((var(--rc-listing-w) - 2 * var(--rc-gap)) / 3);
+  }
+}
+
+@media (min-width: 900px) {
+  [data-trc-page] .rc-sample__card--pick {
+    width: calc((var(--rc-listing-w) - 4 * var(--rc-gap)) / 5);
+  }
+}
+
+[data-trc-page] .rc-sample__expand {
+  display: inline-flex;
+  margin-top: 0.45rem;
+  padding: 0.22rem 0.55rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  background: #fff;
+  color: #1e293b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+[data-trc-page] .rc-sample__expand:hover,
+[data-trc-page] .rc-sample__expand:focus-visible {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+[data-trc-page] .rc-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.55rem;
+  background: #fff;
+  padding: 0.7rem 0.85rem 0.85rem;
+}
+
+[data-trc-page] .rc-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.35rem;
+}
+
+[data-trc-page] .rc-section__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+[data-trc-page] .rc-section__tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+[data-trc-page] .rc-fold-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.22rem 0.6rem;
+  border: 1px solid #2563eb;
+  border-radius: 0.4rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+[data-trc-page] .rc-fold-btn:hover,
+[data-trc-page] .rc-fold-btn:focus-visible {
+  background: #dbeafe;
+}
+
+[data-trc-page] .rc-fold-btn[aria-expanded='false'] {
+  border-color: #cbd5e1;
+  background: #fff;
+  color: #334155;
+}
+
+[data-trc-page] .rc-section__summary-line {
+  margin: 0 0 0.45rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #475569;
+}
+
+[data-trc-page] .rc-section__body[hidden] {
+  display: none !important;
+}
+
+[data-trc-page] .rc-subsection {
+  margin-top: 0.75rem;
+}
+
+[data-trc-page] .rc-subsection:first-child {
+  margin-top: 0;
+}
+
+[data-trc-page] .rc-subsection__title {
+  margin: 0 0 0.2rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+[data-trc-page] .rc-subsection__summary {
+  margin: 0 0 0.35rem;
+  font-size: 0.6875rem;
+  color: #64748b;
+}
