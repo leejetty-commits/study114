@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Study114\Registration;
 
 use InvalidArgumentException;
+use Study114\Auth\PhoneVerificationService;
+use Study114\Auth\PhoneVerifyRequiredException;
 use Study114\Database\Connection;
 use Study114\Tutor\TutorDetailCompletionEvaluator;
 
@@ -31,9 +33,10 @@ final class TutorHubService
     }
 
     /**
+     * @param array<string, mixed> $input
      * @return array<string, mixed>
      */
-    public function applyAction(int $userId, int $tutorId, string $action): array
+    public function applyAction(int $userId, int $tutorId, string $action, array $input = []): array
     {
         $tutor = $this->repo->getForOwner($userId, $tutorId);
         if ($tutor === null) {
@@ -41,10 +44,11 @@ final class TutorHubService
         }
 
         return match ($action) {
-            'publish' => $this->publish($userId, $tutorId, $tutor),
-            'hide'    => $this->hide($userId, $tutorId),
-            'delete'  => $this->delete($tutorId),
-            default   => throw new InvalidArgumentException('action: publish | hide | delete'),
+            'publish'        => $this->publish($userId, $tutorId, $tutor),
+            'hide'           => $this->hide($userId, $tutorId),
+            'delete'         => $this->delete($tutorId),
+            'inquiry_status' => $this->setInquiry($userId, $tutorId, $input),
+            default          => throw new InvalidArgumentException('action: publish | hide | delete | inquiry_status'),
         };
     }
 
@@ -83,6 +87,26 @@ final class TutorHubService
         $this->repo->softDelete($tutorId);
 
         return ['deleted' => true];
+    }
+
+    /** @param array<string, mixed> $input */
+    private function setInquiry(int $userId, int $tutorId, array $input): array
+    {
+        $status = (string) ($input['inquiry_status'] ?? '');
+        if (!in_array($status, ['open', 'paused', 'not_accepting'], true)) {
+            throw new InvalidArgumentException('inquiry_status: open | paused | not_accepting');
+        }
+        if ($status === 'open') {
+            $phoneSvc = new PhoneVerificationService();
+            if (!$phoneSvc->isVerified($userId)) {
+                throw new PhoneVerifyRequiredException(
+                    '학부모의 쪽지를 받기 시작하려면 기본 연락처 확인이 필요합니다.'
+                );
+            }
+        }
+        $this->repo->setInquiryStatus($tutorId, $status);
+
+        return ['tutor' => $this->repo->getForOwner($userId, $tutorId) ?? []];
     }
 
     /**

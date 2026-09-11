@@ -44,6 +44,7 @@
     "verify:tutor-mypage-route-integrity": "npx --yes vite-node scripts/verify-tutor-mypage-route-integrity.mjs",
     "verify:tutor-registration-check-frame": "npx --yes vite-node scripts/verify-tutor-registration-check-frame.mjs",
     "verify:study-room-registration-check-frame": "npx --yes vite-node scripts/verify-study-room-registration-check-frame.mjs",
+    "verify:tutor-inquiries-settings": "npx --yes vite-node scripts/verify-tutor-inquiries-settings.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {

@@ -27,6 +27,7 @@
 |------|------|
 | `config/database.php` 없음 | `database.php.dothome.example` 복사 후 비밀번호 입력 |
 | DB 스키마 미적용 | phpMyAdmin에서 `sql/schema/*.sql` 순서대로 import |
+| `064_tutor_inquiry_status.sql` 미적용 | 과외쌤 쪽지설정 저장이 `schema_missing`으로 실패. **배포 전 phpMyAdmin 적용 필수** → [64-tutor-inquiry-status-lock.md](./64-tutor-inquiry-status-lock.md) |
 | **로컬만 빌드·수정** | GitHub에 push하지 않으면 Actions 배포 안 됨 → [§4-A GitHub Actions](#4-a-github-actions-자동배포-권장) |
 | **`VITE_NAVER_MAP_CLIENT_ID` Variable 미설정** | repo Settings → Variables → Actions에 등록 후 workflow 재실행 |
 | **빌드 산출물 gitignore** | `public/index.html`, `public/assets/index-*` 등은 Git 미추적 → **CI에서 빌드 후 FTP** |

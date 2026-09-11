@@ -5,6 +5,7 @@ import {
   isRegistrationsApiMode,
   getTutorsCache,
   apiTutorAction,
+  hydrateRegistrationsCache,
 } from '../registrations-backend.js';
 import { getMemoTicketsRemaining } from '../provider-entitlement.js';
 import { isMessagesApiMode } from '../messages-backend.js';
@@ -17,6 +18,7 @@ const KEY = 'study114-preview-tutors-v1';
  * @property {number} id
  * @property {string} tutor_display_name
  * @property {'draft'|'published'|'hidden'} profile_status
+ * @property {'open'|'paused'|'not_accepting'} [inquiry_status]
  * @property {'basic_only'|'expanded_in_progress'|'expanded_complete'} detail_completion_status
  * @property {string} location_label
  * @property {string} primary_region_label
@@ -84,6 +86,7 @@ export function getMemoCreditsRemaining() {
 /** @returns {TutorRecord} */
 function withDefaults(raw, id) {
   return {
+    inquiry_status: 'paused',
     detail_completion_status: 'basic_only',
     proof_document_available: false,
     has_primary_region: false,
@@ -295,6 +298,33 @@ export function updateTutor(id, patch) {
   tutors[idx] = { ...tutors[idx], ...patch, updated_at: new Date().toISOString() };
   saveAll(tutors);
   return tutors[idx];
+}
+
+/** @param {unknown} tutor @returns {'open'|'paused'|'not_accepting'|null} */
+function inquiryStatusFromTutor(tutor) {
+  if (!tutor || typeof tutor !== 'object' || Array.isArray(tutor)) return null;
+  const status = /** @type {{ inquiry_status?: unknown }} */ (tutor).inquiry_status;
+  return status === 'open' || status === 'paused' || status === 'not_accepting' ? status : null;
+}
+
+/** @param {number} id @param {'open'|'paused'|'not_accepting'} inquiry_status */
+export async function setTutorInquiryStatus(id, inquiry_status) {
+  if (inquiry_status !== 'open' && inquiry_status !== 'paused' && inquiry_status !== 'not_accepting') {
+    throw new Error('inquiry_status: open | paused | not_accepting');
+  }
+  if (isRegistrationsApiMode()) {
+    const data = await apiTutorAction(id, 'inquiry_status', { inquiry_status });
+    let saved = inquiryStatusFromTutor(data?.tutor);
+    if (saved !== inquiry_status) {
+      await hydrateRegistrationsCache();
+      saved = inquiryStatusFromTutor(getTutor(id));
+    }
+    if (saved !== inquiry_status) {
+      throw new Error('저장 후 서버 상태를 확인하지 못했습니다. 새로고침 후 다시 확인해 주세요.');
+    }
+    return getTutor(id);
+  }
+  return updateTutor(id, { inquiry_status });
 }
 
 /** @param {number} id */

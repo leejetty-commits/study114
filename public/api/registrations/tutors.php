@@ -35,7 +35,7 @@ RegistrationApi::run(static function (): void {
         if ($id <= 0 || $action === '') {
             RegistrationApi::fail(422, 'validation', 'id와 action이 필요합니다.');
         }
-        $result = $service->applyAction($userId, $id, $action);
+        $result = $service->applyAction($userId, $id, $action, $input);
         if (isset($result['ok']) && $result['ok'] === false) {
             RegistrationApi::ok($result);
         }

@@ -46,6 +46,13 @@ alwaysApply: true
 - 일괄 작업 목록: `docs/internal/46-domain-status-batch.md`
 - 코드 301 / www→apex / dothome 제거는 소셜 안정화 후에만.
 
+## 4-3. 과외쌤 쪽지설정 DDL (배포 전 필수)
+
+- 컬럼: `tutors.inquiry_status` (`open` | `paused` | `not_accepting`)
+- SQL: `sql/schema/064_tutor_inquiry_status.sql`
+- Actions는 SQL을 실행하지 않는다. **운영 phpMyAdmin 적용 후에만** 쪽지설정 저장이 산다.
+- 미적용 시 PATCH는 `schema_missing`. 정본: `docs/internal/64-tutor-inquiry-status-lock.md`
+
 ## 5. 네이버 지도 장애 판단 순서
 
 | 증상 | 원인 후보 |

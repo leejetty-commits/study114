@@ -1,7 +1,4 @@
 import {
-  P21_ACCESS_CTA,
-} from './tutor-reg-copy.js';
-import {
   LIFECYCLE_FOOTNOTE_REG,
 } from '../lifecycle-copy.js';
 import {
@@ -20,7 +17,6 @@ import {
   getAccessMatrix,
   getThreeGauges,
   getHubCtas,
-  getUnlockCards,
   getRequiredCertGauge,
 } from './format.js';
 import {
@@ -30,8 +26,6 @@ import {
   publishTutor,
   hideTutor,
   deleteTutor,
-  isPaidProvider,
-  getMemoCreditsRemaining,
 } from './store.js';
 import { saveTutorBasicInline, saveTutorDetailInline } from './inline-save.js';
 import {
@@ -39,6 +33,8 @@ import {
 } from './registration-check-model.js';
 import { renderTutorRegistrationCheck } from './registration-check-render.js';
 import { bindTutorRegistrationCheckEvents } from './registration-check-edit.js';
+import { renderTutorInquiries } from './inquiries-render.js';
+import { bindTutorInquiriesEvents } from './inquiries-edit.js';
 import { TRC_COPY } from './registration-check-copy.js';
 import { previewState } from '../state.js';
 import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
@@ -153,7 +149,7 @@ export function renderTutorRegScreen(path) {
     case 'P21-04':
       return renderPublish(tutor);
     case 'P21-05':
-      return renderAccess(tutor);
+      return renderInquiries(tutor);
     case 'P21-06':
       return renderExposure(tutor);
     default:
@@ -205,7 +201,7 @@ function renderExposureMatrixRows(rows) {
     .join('');
 }
 
-/** @param {NonNullable<ReturnType<typeof getUnlockCards>[number]>} card @param {number} tutorId */
+/** @param {{ label: string, missingCount: number, conditions: { ok: boolean, label: string }[], ctaExternal?: string, ctaPath?: string, ctaLabel: string }} card @param {number} tutorId */
 function renderUnlockCard(card, tutorId) {
   const steps = card.conditions
     .map(
@@ -688,87 +684,8 @@ function renderPublish(tutor) {
 }
 
 /** @param {import('./store.js').TutorRecord} tutor */
-function resolveAccessNextAction(tutor) {
-  const published = tutor.profile_status === 'published';
-  const paid = isPaidProvider();
-  const memos = getMemoCreditsRemaining();
-  const publishHref = `#${tutorSectionPath(tutor.id, 'publish')}`;
-  const reviewHref = '#/mypage/student-review';
-  const plansHref = '#/mypage/plans';
-
-  if (!published) {
-    return {
-      status: '쪽지 준비 필요',
-      reason: '프로필 공개 후 쪽지를 보낼 수 있어요',
-      label: '공개하기',
-      href: publishHref,
-      navAttr: ` data-p21-nav="${tutorSectionPath(tutor.id, 'publish')}"`,
-    };
-  }
-  if (!paid || memos <= 0) {
-    return {
-      status: '쪽지 준비 필요',
-      reason: !paid ? '유료 이용과 메모권이 필요해요' : '메모권이 부족해요. 이용권을 확인해 주세요',
-      label: P21_ACCESS_CTA.plans,
-      href: plansHref,
-      navAttr: ' data-mypage-nav="/mypage/plans"',
-    };
-  }
-  return {
-    status: '쪽지 가능',
-    reason: '검토 중인 학생에게 쪽지를 보낼 수 있어요',
-    label: '쪽지 보내기',
-    href: reviewHref,
-    navAttr: ' data-mypage-nav="/mypage/student-review"',
-  };
-}
-
-/** @param {import('./store.js').TutorRecord} tutor */
-function renderAccess(tutor) {
-  const accessMatrix = getAccessMatrix(tutor);
-  const unlockCards = getUnlockCards(tutor);
-  const paid = isPaidProvider();
-  const memos = getMemoCreditsRemaining();
-  const published = tutor.profile_status === 'published';
-  const next = resolveAccessNextAction(tutor);
-
-  const rulesDetails = `
-    <details class="p21-access-rules">
-      <summary>이용권·접근 규칙 자세히</summary>
-      ${renderProviderSubToggle()}
-      <section class="p20-exposure-section">
-        <h3>현재 이용 가능한 범위</h3>
-        <div class="p20-matrix">${renderMatrixRows(accessMatrix)}</div>
-      </section>
-      ${
-        unlockCards.length
-          ? `<section class="p20-exposure-section"><h3>잠금 해제</h3><div class="p21-unlock-grid">${unlockCards.map((c) => renderUnlockCard(c, tutor.id)).join('')}</div></section>`
-          : ''
-      }
-      <p class="p19-form-section__lead">
-        <a href="#/mypage/plans" data-mypage-nav="/mypage/plans">${esc(P21_ACCESS_CTA.plans)}</a>
-        · <a href="#/mypage/submission-docs" data-mypage-nav="/mypage/submission-docs">${esc(P21_ACCESS_CTA.submissionDocs)}</a>
-        · 학부모가 먼저 보낸 쪽지의 답장은 무료 · 학생에게 먼저 보내는 쪽지는 유료
-      </p>
-    </details>`;
-
-  const body = `
-    <div class="p21-access-body" data-p21-tutor-id="${tutor.id}">
-      <section class="p20-exposure-section">
-        <h3>쪽지 현황</h3>
-        <p class="p19-form-section__lead"><strong>${esc(next.status)}</strong> · ${esc(next.reason)}</p>
-        <div class="p19-summary-grid">
-          <dl class="p19-summary-card"><dt>공개</dt><dd>${published ? '공개중' : '미공개'}</dd></dl>
-          <dl class="p19-summary-card"><dt>남은 메모권</dt><dd>${memos}회</dd></dl>
-          <dl class="p19-summary-card"><dt>유료 이용</dt><dd>${paid ? '이용 중' : '이용 안 함'}</dd></dl>
-        </div>
-        <div class="p19-form-actions" style="margin-top:var(--space-3)">
-          <a href="${next.href}" class="btn btn--primary"${next.navAttr}>${esc(next.label)}</a>
-        </div>
-      </section>
-      ${rulesDetails}
-    </div>`;
-
+function renderInquiries(tutor) {
+  const body = renderTutorInquiries(tutor);
   return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'inquiries', body)}</section>`;
 }
 
@@ -827,6 +744,7 @@ export function bindTutorRegEvents(root, rerender) {
   });
 
   bindTutorRegistrationCheckEvents(root);
+  bindTutorInquiriesEvents(root, rerender);
   scrollToTutorRcFocus(root);
 
   root.querySelectorAll('[data-p21-retry-cities]').forEach((btn) => {
