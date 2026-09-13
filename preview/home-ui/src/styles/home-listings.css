@@ -192,7 +192,7 @@
   border-color: #9ca3af;
 }
 
-/* 베이직 — 하늘색/블루 · 좌측 · 픽/프라임보다 1단계 작게 */
+/* 베이직 — 하늘색/블루 · 좌측 · 픽/프라임보다 1단계 작게 · 아래 여백 최소화 */
 .section-heading--basic .section-heading__title,
 .section-heading--basic .section-heading__brand-text {
   color: #2563eb;
@@ -200,6 +200,16 @@
 }
 .section-heading--basic .section-heading__ornament {
   display: none;
+}
+
+.section-heading--basic {
+  margin-bottom: 0;
+  gap: 0;
+}
+
+.section-heading--basic + .section-toolbar {
+  margin: 0.1rem 0 0.2rem;
+  min-height: 0;
 }
 
 .section-heading__ornament {
@@ -251,6 +261,11 @@
 
 .list-subsection .section-heading {
   padding-top: var(--space-4);
+}
+
+.list-subsection .section-heading--basic {
+  padding-top: var(--space-3);
+  margin-bottom: 0;
 }
 
 .list-sort-bar {
