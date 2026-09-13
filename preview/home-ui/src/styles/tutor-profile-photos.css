@@ -85,16 +85,6 @@
   gap: 0.4rem;
 }
 
-.p21-photos__name {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #0f172a;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .p21-photos__ops {
   display: flex;
   flex-wrap: wrap;

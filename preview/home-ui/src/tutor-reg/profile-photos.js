@@ -334,7 +334,6 @@ export function renderTutorProfilePhotoEditor(tutor) {
           ${isCover ? '<span class="p21-photos__badge">대표</span>' : `<span class="p21-photos__badge p21-photos__badge--muted">${idx + 1}</span>`}
         </div>
         <div class="p21-photos__meta">
-          <p class="p21-photos__name">${esc(img.name || `사진 ${idx + 1}`)}</p>
           <div class="p21-photos__ops">
             <button type="button" class="btn btn--ghost btn--sm" data-photo-action="left" data-idx="${idx}" ${idx === 0 ? 'disabled' : ''}>←</button>
             <button type="button" class="btn btn--ghost btn--sm" data-photo-action="right" data-idx="${idx}" ${idx >= images.length - 1 ? 'disabled' : ''}>→</button>
