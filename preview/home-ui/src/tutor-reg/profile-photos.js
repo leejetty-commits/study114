@@ -80,7 +80,7 @@ export function tutorCardImagePaths(tutor) {
 
 export function tutorProfilePhotoHint() {
   const s = TUTOR_PROFILE_PHOTO_SPEC;
-  return `JPG · PNG · WebP / 권장 ${s.recommended} / 파일 최대 4MB · ${s.maxCount}장. ${s.minWidth}×${s.minHeight}보다 작으면 최소 크기로 확대한 뒤, 베이직 정사각(${s.basicSize}×${s.basicSize})·프라임 16:9(${s.primeWidth}×${s.primeHeight})로 맞춥니다. 왼쪽(1번)이 대표 사진입니다.`;
+  return `JPG · PNG · WebP / 권장 ${s.recommended} / 파일 최대 4MB · ${s.maxCount}장. 가로·세로가 ${s.minWidth}×${s.minHeight}에 못 미치면(예: 가로만 긴 사진) 자동으로 확대한 뒤, 베이직 정사각(${s.basicSize}×${s.basicSize})·프라임 16:9(${s.primeWidth}×${s.primeHeight})로 맞춥니다. 왼쪽(1번)이 대표 사진입니다.`;
 }
 
 function extOfName(name) {
