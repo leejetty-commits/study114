@@ -35,6 +35,14 @@
 
 DirectoryIndex index.html index.php
 
+# SPA 엔트리(HTML)는 캐시하지 않아 배포 직후 새 JS 해시로 연결되게 함
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+  </FilesMatch>
+</IfModule>
+
 # 운영 정본 URL: https://study114.net (미설정 시 127.0.0.1 폴백 → 소셜 로그인 오류 시 localhost로 튕김)
 #
 # [보안] OAuth 키·비밀값은 저장소에 커밋하지 않는다.
