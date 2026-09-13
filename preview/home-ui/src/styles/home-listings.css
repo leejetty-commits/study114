@@ -3,12 +3,12 @@
  * Rollback: git revert this commit.
  */
 
-/* 섹션 타이틀 — 단독행 · 바디 중앙 · 현재위치는 section-toolbar */
+/* 섹션 타이틀 — 단독행 · 프라임/픽 중앙 · 베이직 좌측 · 현재위치는 section-toolbar */
 .section-heading {
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
-  align-items: center;
+  align-items: stretch;
   gap: var(--space-1);
   margin: 0 0 var(--space-2);
   padding-top: var(--space-3);
@@ -25,12 +25,16 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.55rem;
-  text-align: center;
+  text-align: left;
 }
 
-.section-heading--start .section-heading__main,
+.section-heading--start .section-heading__main {
+  justify-content: flex-start;
+  text-align: left;
+}
+
 .section-heading--center .section-heading__main {
   justify-content: center;
   text-align: center;
@@ -40,8 +44,12 @@
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.45rem 0.55rem;
+}
+
+.section-heading--center .section-heading__brand {
+  justify-content: center;
 }
 
 .section-heading__brand-text {
@@ -63,6 +71,11 @@
   width: auto;
 }
 
+.section-heading--basic .section-heading__logo,
+.section-heading--start .section-heading__logo {
+  height: 1.2rem;
+}
+
 .section-heading__title {
   font-family: var(--font-serif);
   font-size: 1.25rem;
@@ -79,17 +92,22 @@
   line-height: 1.35;
   margin: 0;
   width: 100%;
+  text-align: left;
+}
+
+.section-heading--center .section-heading__desc {
   text-align: center;
 }
 
-/* 현재위치 — 정렬과 같은 toolbar 행 */
+/* 현재위치 — 정렬과 같은 toolbar 행 · 항상 정렬 앞 */
 .section-heading__loc {
   display: inline-flex;
   align-items: baseline;
   flex-wrap: wrap;
   justify-content: flex-start;
   gap: 0.3rem 0.4rem;
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  order: 1;
   text-align: left;
 }
 .section-heading__loc-label {
@@ -107,10 +125,11 @@
 
 .section-toolbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
+  justify-content: flex-start;
+  gap: 0.75rem 1rem;
   margin: 0 0 0.65rem;
   min-height: 2rem;
   width: 100%;
@@ -118,17 +137,26 @@
 
 .section-toolbar .section-heading__loc {
   margin-left: 0;
+  margin-right: 0;
+  order: 1;
+}
+
+.section-toolbar__loc-spacer {
+  display: none;
 }
 
 .section-toolbar__sort {
+  order: 2;
   margin-left: auto;
   display: flex;
   align-items: center;
+  flex: 0 0 auto;
 }
 
 .section-toolbar__sort .list-sort-bar {
   margin: 0;
   min-height: 0;
+  justify-content: flex-start;
 }
 
 /* 프라임 — 금색 · 중앙 · 좌우 장식 */
@@ -161,15 +189,14 @@
   border-color: #9ca3af;
 }
 
-/* 베이직 — 하늘색/블루 · 중앙 · 동일 크기·장식 */
+/* 베이직 — 하늘색/블루 · 좌측 · 픽/프라임보다 1단계 작게 */
 .section-heading--basic .section-heading__title,
 .section-heading--basic .section-heading__brand-text {
   color: #2563eb;
-  font-size: 1.25rem;
+  font-size: 1.125rem;
 }
 .section-heading--basic .section-heading__ornament {
-  color: #3b82f6;
-  border-color: #3b82f6;
+  display: none;
 }
 
 .section-heading__ornament {

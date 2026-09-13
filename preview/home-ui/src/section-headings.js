@@ -10,7 +10,7 @@ function esc(s) {
 const LOGO_SRC = '/assets/brand/logo-wordmark.png';
 
 /**
- * tier: prime(금·중앙·장식) | pick(은·중앙·장식) | basic(블루·중앙·장식) | plain
+ * tier: prime(금·중앙·장식) | pick(은·중앙·장식) | basic(블루·좌측) | plain
  * showLogo: 우동공과 로고 + 고유명사 (프라임/픽/베이직/학생 공통)
  */
 export const SECTION_HEADINGS = {
@@ -80,9 +80,10 @@ export function renderSectionToolbar(opts = {}) {
   const locHtml = renderLocationBesideTitle(opts.locationLabel);
   const sortHtml = String(opts.sortHtml || '').trim();
   if (!locHtml && !sortHtml) return '';
+  // DOM 순서 고정: 현재위치 → 정렬 (앞에 현재위치)
   return `
     <div class="section-toolbar">
-      ${locHtml}
+      ${locHtml || '<span class="section-toolbar__loc-spacer" aria-hidden="true"></span>'}
       ${sortHtml ? `<div class="section-toolbar__sort">${sortHtml}</div>` : ''}
     </div>`;
 }
@@ -104,8 +105,9 @@ export function renderSectionToolbar(opts = {}) {
  */
 export function renderSectionHeading(cfg) {
   const tier = cfg.tier || 'plain';
-  // 전역: 제목 단독행 · 바디 중앙
-  const alignClass = 'section-heading--center';
+  // 프라임/픽: 중앙 · 베이직(학생 포함): 좌측
+  const alignClass =
+    tier === 'prime' || tier === 'pick' ? 'section-heading--center' : 'section-heading--start';
   const tierClass = tier !== 'plain' ? ` section-heading--${tier}` : '';
   const aria = esc(cfg.ariaTitle || (cfg.brandText ? `${cfg.brandText} ${cfg.title}` : cfg.title));
 
@@ -129,7 +131,7 @@ export function renderSectionHeading(cfg) {
   }
 
   const ornaments =
-    tier === 'prime' || tier === 'pick' || tier === 'basic'
+    tier === 'prime' || tier === 'pick'
       ? `
       <span class="section-heading__ornament section-heading__ornament--left" aria-hidden="true"></span>
       <span class="section-heading__brand">${brandInner}</span>

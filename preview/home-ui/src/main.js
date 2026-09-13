@@ -1,6 +1,5 @@
 import './styles/tokens.css';
 import './styles/home.css';
-import './styles/home-listings.css';
 import './styles/home-member-flows.css';
 import './styles/home-support-guide.css';
 import './styles/home-admin.css';
@@ -10,6 +9,8 @@ import './styles/home-promo.css';
 import './styles/home-provider-reviews.css';
 import '@search-ui/styles/search.css';
 import './styles/design-system.css';
+/* listings는 design-system 뒤에 — section-heading/toolbar 정본 */
+import './styles/home-listings.css';
 import './styles/product-chrome.css';
 import './styles/home-marketing-banner.css';
 import './styles/plans-store.css';
