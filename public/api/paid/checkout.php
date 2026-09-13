@@ -60,6 +60,13 @@ PaidApi::run(static function (): void {
         }
     }
 
+    $regionInput = [];
+    foreach (['region_basis_type', 'region_basis', 'region_id', 'complex_id', 'slot_group', 'region_label'] as $rk) {
+        if (array_key_exists($rk, $input)) {
+            $regionInput[$rk] = $input[$rk];
+        }
+    }
+
     PaidApi::ok($service->createOrder(
         $userId,
         $productId,
@@ -68,5 +75,6 @@ PaidApi::run(static function (): void {
         $providerId,
         $memoIntent,
         $badgeCodes,
+        $regionInput,
     ));
 });

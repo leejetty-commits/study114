@@ -47,38 +47,38 @@ final class ProviderWaitlistService
             );
         }
 
-        $basis = trim((string) ($input['region_basis_type'] ?? 'dong'));
-        if ($basis !== 'complex' && $basis !== 'dong') {
-            $basis = 'dong';
-        }
-        $slotGroup = trim((string) ($input['slot_group'] ?? $input['region_label'] ?? ''));
-        if ($slotGroup === '') {
-            $slotGroup = $this->tickets->primaryRegionLabel('study_room', $studyRoomId);
-        }
-        if ($slotGroup === '') {
-            throw new InvalidArgumentException(
-                '적용 지역이 없어 예약대기를 등록할 수 없습니다. 상세등록에서 대표 홍보지역을 설정하세요.',
-            );
+        $scopeHelper = new PrimeRegionScope($this->pdo);
+        $scope = $scopeHelper->normalizeFromInput($input);
+        $scopeHelper->assertOwnedByStudyRoom($studyRoomId, $scope);
+
+        // 만석이 아니면 대기가 아니라 구매를 유도 (스키마 065 적용 시)
+        if ($scopeHelper->positionScopeColumnsReady()) {
+            $inv = $scopeHelper->inventoryForScope($scope);
+            if ($inv['remaining'] > 0) {
+                throw new InvalidArgumentException(
+                    '선택한 지역에 아직 구매 가능한 Prime 자리가 있습니다. 예약대기 대신 바로 구매해 주세요.',
+                );
+            }
         }
 
-        $regionId = isset($input['region_id']) && $input['region_id'] !== '' && $input['region_id'] !== null
-            ? (int) $input['region_id']
-            : null;
-        $complexId = isset($input['complex_id']) && $input['complex_id'] !== '' && $input['complex_id'] !== null
-            ? (int) $input['complex_id']
-            : null;
-        if ($regionId !== null && $regionId <= 0) {
-            $regionId = null;
-        }
-        if ($complexId !== null && $complexId <= 0) {
-            $complexId = null;
-        }
-
-        $row = $this->waitlists->register($studyRoomId, $basis, $regionId, $complexId, $slotGroup);
+        $row = $this->waitlists->register(
+            $studyRoomId,
+            $scope['region_basis_type'],
+            $scope['region_id'],
+            $scope['complex_id'],
+            $scope['slot_group'],
+        );
 
         return [
             'waitlist' => $this->publicRow($row),
             'message' => '예약대기가 등록되었습니다. 빈자리가 열리면 알려드리며, 결제가 완료되어야 확정됩니다.',
+            'prime_region' => [
+                'region_basis_type' => $scope['region_basis_type'],
+                'region_id' => $scope['region_id'],
+                'complex_id' => $scope['complex_id'],
+                'slot_group' => $scope['slot_group'],
+                'inventory_key' => $scope['inventory_key'],
+            ],
         ];
     }
 

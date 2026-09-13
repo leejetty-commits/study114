@@ -18,11 +18,11 @@ final class ProviderUsageService
         $this->status = $status ?? new ProviderStatusService();
     }
 
-    /** @return array<string, mixed> */
-    public function getFullSummary(int $providerUserId, int $days = 7): array
+    /** @param array<string, mixed> $primeRegionInput */
+    public function getFullSummary(int $providerUserId, int $days = 7, array $primeRegionInput = []): array
     {
         $roi = $this->roi->getSummary($providerUserId, $days);
-        $core = $this->status->build($providerUserId, true);
+        $core = $this->status->build($providerUserId, true, $primeRegionInput);
         $ticketBlocks = $this->status->ticketBlocksFromStatus($core);
 
         return array_merge($roi, $core, $ticketBlocks, [

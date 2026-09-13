@@ -164,7 +164,7 @@ final class ProviderTicketService
     }
 
     /** @return array<string, mixed> */
-    public function getOperationalStatus(int $userId): array
+    public function getOperationalStatus(int $userId, array $primeRegionInput = []): array
     {
         $memo = $this->getMemoTicketSummary($userId);
         $view = $this->getRequestViewTicketSummary($userId);
@@ -172,10 +172,42 @@ final class ProviderTicketService
 
         $exposureState = count($positions) > 0 ? 'active' : 'basic';
 
-        // 공부방 Prime만 재고(3). Pick은 순환형이라 매진 재고로 쓰지 않음.
-        $primeCap = 3;
-        $primeUsed = $this->repo->countActiveStudyRoomPrimes();
-        $pickUsed = 0;
+        $primeCap = PrimeRegionScope::CAPACITY;
+        $primeUsed = 0;
+        $primeRemaining = $primeCap;
+        $primeMeta = [
+            'scope' => 'study_room_prime_region',
+            'region_scoped' => true,
+            'inventory_key' => null,
+            'needs_region' => true,
+        ];
+
+        $scopeHelper = new PrimeRegionScope();
+        if ($primeRegionInput !== [] && $scopeHelper->positionScopeColumnsReady()) {
+            try {
+                $scope = $scopeHelper->normalizeFromInput($primeRegionInput);
+                $inv = $scopeHelper->inventoryForScope($scope);
+                $primeUsed = $inv['used'];
+                $primeRemaining = $inv['remaining'];
+                $primeMeta['inventory_key'] = $inv['inventory_key'];
+                $primeMeta['needs_region'] = false;
+                $primeMeta['region_basis_type'] = $scope['region_basis_type'];
+                $primeMeta['region_id'] = $scope['region_id'];
+                $primeMeta['complex_id'] = $scope['complex_id'];
+            } catch (\InvalidArgumentException) {
+                $primeMeta['needs_region'] = true;
+            }
+        } elseif (!$scopeHelper->positionScopeColumnsReady()) {
+            $primeMeta = [
+                'scope' => 'legacy_global_until_065',
+                'region_scoped' => false,
+                'inventory_key' => null,
+                'needs_region' => true,
+                'schema_missing' => '065_provider_position_region_scope',
+            ];
+            $primeUsed = $this->repo->countActiveStudyRoomPrimes();
+            $primeRemaining = max(0, $primeCap - $primeUsed);
+        }
 
         return [
             'exposure' => [
@@ -187,12 +219,18 @@ final class ProviderTicketService
                     $providerId = (int) ($row['provider_id'] ?? 0);
                     $startedOn = (string) ($row['started_on'] ?? substr((string) ($row['starts_at'] ?? ''), 0, 10));
                     $paidOn = $this->repo->latestPaidOn($userId, $sku, $providerType ?: null, $providerId ?: null);
+                    $slotGroup = (string) ($row['slot_group'] ?? '');
 
                     return [
                         'sku' => $sku,
                         'provider_type' => $providerType,
                         'provider_id' => $providerId,
-                        'region_label' => $this->repo->primaryRegionLabel($providerType, $providerId),
+                        'region_label' => $slotGroup !== ''
+                            ? $slotGroup
+                            : $this->repo->primaryRegionLabel($providerType, $providerId),
+                        'region_basis_type' => (string) ($row['region_basis_type'] ?? ''),
+                        'region_id' => isset($row['region_id']) ? (int) $row['region_id'] : null,
+                        'complex_id' => isset($row['complex_id']) ? (int) $row['complex_id'] : null,
                         'duration_type' => (string) ($row['duration_type'] ?? 'day'),
                         'duration_value' => (int) ($row['duration_value'] ?? $row['period_days'] ?? 0),
                         'period_days' => (int) $row['period_days'],
@@ -208,13 +246,12 @@ final class ProviderTicketService
                 }, $positions),
             ],
             'slots' => [
-                'region_scope_type' => 'dong',
-                'prime' => [
+                'region_scope_type' => $primeMeta['region_basis_type'] ?? 'dong',
+                'prime' => array_merge([
                     'capacity' => $primeCap,
                     'used' => $primeUsed,
-                    'remaining' => max(0, $primeCap - $primeUsed),
-                    'scope' => 'study_room_prime',
-                ],
+                    'remaining' => $primeRemaining,
+                ], $primeMeta),
                 'pick' => [
                     'capacity' => 0,
                     'used' => 0,

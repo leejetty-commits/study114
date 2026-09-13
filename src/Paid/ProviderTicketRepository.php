@@ -94,12 +94,16 @@ final class ProviderTicketRepository
     public function listActivePositions(int $userId, ?string $providerType = null, ?int $providerId = null): array
     {
         $hasProvider = $this->positionHasProviderColumns();
+        $hasRegion = $this->positionRegionScopeColumnsReady();
         $sql = 'SELECT id, sku_code, duration_type, duration_value, period_days,
                     started_on, end_exclusive_on, starts_at, ends_at,
                     DATE_SUB(end_exclusive_on, INTERVAL 1 DAY) AS ends_on,
                     GREATEST(0, DATEDIFF(end_exclusive_on, CURDATE())) AS days_left';
         if ($hasProvider) {
             $sql .= ', provider_type, provider_id';
+        }
+        if ($hasRegion) {
+            $sql .= ', region_basis_type, region_id, complex_id, slot_group';
         }
         $sql .= ' FROM provider_position_subscriptions
              WHERE user_id = ? AND CURDATE() < end_exclusive_on';
@@ -115,6 +119,45 @@ final class ProviderTicketRepository
         $rows = $stmt->fetchAll();
 
         return is_array($rows) ? $rows : [];
+    }
+
+    /**
+     * 공부방 Prime 활성 수 (전역 · 레거시).
+     * 신규 게이트는 countActiveStudyRoomPrimesInScope / PrimeRegionScope 사용.
+     * Pick·과외쌤은 호출하지 말 것.
+     * @deprecated 지역 스코프 SSOT(065) 이후 room Prime 재고 판정에 쓰지 말 것
+     */
+    public function countActiveStudyRoomPrimes(): int
+    {
+        if ($this->positionHasProviderColumns()) {
+            $stmt = $this->pdo->prepare(
+                "SELECT COUNT(*) FROM provider_position_subscriptions
+                 WHERE sku_code = 'prime' AND provider_type = 'study_room'
+                   AND CURDATE() < end_exclusive_on"
+            );
+            $stmt->execute();
+
+            return (int) $stmt->fetchColumn();
+        }
+
+        return $this->countActivePositionsBySku('prime');
+    }
+
+    public function positionRegionScopeColumnsReady(): bool
+    {
+        return (new PrimeRegionScope($this->pdo))->positionScopeColumnsReady();
+    }
+
+    /**
+     * @param array{
+     *   region_basis_type: 'dong'|'complex',
+     *   region_id: int|null,
+     *   complex_id: int|null
+     * } $scope
+     */
+    public function countActiveStudyRoomPrimesInScope(array $scope): int
+    {
+        return (new PrimeRegionScope($this->pdo))->countActiveStudyRoomPrimesInScope($scope);
     }
 
     /**
@@ -605,6 +648,12 @@ final class ProviderTicketRepository
      *   ends_at: string
      * } $period PositionPeriodCalculator::compute|fromVariant 결과
      * @param 'study_room'|'tutor'|null $providerType
+     * @param array{
+     *   region_basis_type?: 'dong'|'complex',
+     *   region_id?: int|null,
+     *   complex_id?: int|null,
+     *   slot_group?: string
+     * }|null $regionScope 공부방 Prime만 필수
      */
     public function addPositionSubscription(
         int $userId,
@@ -613,6 +662,7 @@ final class ProviderTicketRepository
         string $source = 'payment',
         ?string $providerType = null,
         ?int $providerId = null,
+        ?array $regionScope = null,
     ): void {
         if (!in_array($skuCode, ['prime', 'pick'], true)) {
             throw new \InvalidArgumentException('sku_code: prime | pick');
@@ -625,11 +675,48 @@ final class ProviderTicketRepository
         if ($value <= 0) {
             throw new \InvalidArgumentException('duration_value는 1 이상이어야 합니다.');
         }
+        $hasRegionScope = $this->positionRegionScopeColumnsReady();
+        $writeRegion =
+            $hasRegionScope
+            && $skuCode === 'prime'
+            && $providerType === 'study_room'
+            && is_array($regionScope)
+            && isset($regionScope['region_basis_type']);
+
         if ($this->positionHasProviderColumns()) {
             if ($providerType === null || $providerId === null || $providerId <= 0) {
                 throw new \InvalidArgumentException(
                     'Prime/Pick은 provider_type·provider_id(공부방|과외쌤 계정 문맥)가 필요합니다.',
                 );
+            }
+            if ($writeRegion) {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO provider_position_subscriptions
+                     (user_id, provider_type, provider_id, region_basis_type, region_id, complex_id, slot_group,
+                      sku_code, duration_type, duration_value, period_days,
+                      started_on, end_exclusive_on, starts_at, ends_at, source)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $providerType,
+                    $providerId,
+                    (string) $regionScope['region_basis_type'],
+                    $regionScope['region_id'] ?? null,
+                    $regionScope['complex_id'] ?? null,
+                    isset($regionScope['slot_group']) ? (string) $regionScope['slot_group'] : null,
+                    $skuCode,
+                    $type,
+                    $value,
+                    (int) $period['period_days'],
+                    (string) $period['started_on'],
+                    (string) $period['end_exclusive_on'],
+                    (string) $period['starts_at'],
+                    (string) $period['ends_at'],
+                    $source,
+                ]);
+
+                return;
             }
             $stmt = $this->pdo->prepare(
                 'INSERT INTO provider_position_subscriptions

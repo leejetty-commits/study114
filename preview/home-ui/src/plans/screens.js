@@ -93,6 +93,29 @@ import {
   renderAccessAuxLinks,
 } from './order-blocks.js';
 
+/** @param {ParentNode} [root] */
+function readSelectedPrimeRegion(root = document) {
+  const el = root.querySelector?.('[data-plans-apply-region]:checked') ||
+    root.querySelector?.('[data-plans-apply-region]');
+  if (!(el instanceof HTMLInputElement)) {
+    return null;
+  }
+  const basis = el.getAttribute('data-region-basis') || '';
+  const regionId = el.getAttribute('data-region-id') || '';
+  const complexId = el.getAttribute('data-complex-id') || '';
+  const label = el.value || el.nextElementSibling?.textContent || '';
+  if (basis !== 'dong' && basis !== 'complex') return null;
+  if (basis === 'complex' && !complexId) return null;
+  if (basis === 'dong' && !regionId) return null;
+  return {
+    regionBasisType: basis,
+    regionId,
+    complexId,
+    slotGroup: label,
+    regionLabel: label,
+  };
+}
+
 /** @type {{ rows: import('./history-mock.js').HistoryRow[], fromApi: boolean, loaded: boolean }} */
 let historyCache = { rows: [], fromApi: false, loaded: false };
 
@@ -156,7 +179,15 @@ export function schedulePlansStatusHydrate(profile, rerender, routePath) {
   invalidateProviderStatus();
   rerender();
 
-  hydrateProviderStatusStrict()
+  const q = parsePlansQuery();
+  const region = {
+    regionBasisType: q.region_basis_type || '',
+    regionId: q.region_id || '',
+    complexId: q.complex_id || '',
+    slotGroup: q.slot_group || '',
+  };
+
+  hydrateProviderStatusStrict(7, region)
     .then(() => {
       if (plansStatusSync.key !== key) return;
       lastPlansHydratedHash = window.location.hash;
@@ -797,6 +828,13 @@ export function renderPlansPositions() {
     .slice(0, 2);
   const providerTypeKey = role === 'tutor' ? 'tutor' : 'study_room';
   const applyReady = profile ? getApplyTargetReadiness(profile, role).regionReady : false;
+  const applyScopes = profile ? getApplyTargetReadiness(profile, role).regionScopes : [];
+  const selectedRegionScope =
+    applyScopes.find(
+      (s) =>
+        (query.region_id && String(s.region_id) === String(query.region_id)) ||
+        (query.complex_id && String(s.complex_id) === String(query.complex_id)),
+    ) || applyScopes[0] || null;
   const selectedElig =
     profile && selectedProduct
       ? getEligibility(profile, selectedProduct.productCode)
@@ -811,7 +849,10 @@ export function renderPlansPositions() {
     !selectedProduct ||
     !applyReady ||
     roomPrimeSoldOut ||
-    !selectedElig.canBuy;
+    !selectedElig.canBuy ||
+    (role === 'study_room' &&
+      selectedProduct?.productCode === 'prime' &&
+      !selectedRegionScope);
   const badgeLines = selectedBadges.map((code) => {
     const price = badgePriceKrw(providerTypeKey, undefined, code, periodLabel);
     const name =
@@ -838,6 +879,12 @@ export function renderPlansPositions() {
     { label: '적용 프로필', value: profile ? profile.label : '미선택' },
     { label: '역할', value: role === 'study_room' ? '공부방' : role === 'tutor' ? '과외쌤' : roleLabel(role) },
     { label: '상품', value: selectedProduct?.name || productLabel(selectedCode) },
+    {
+      label: '적용 지역',
+      value:
+        selectedRegionScope?.label ||
+        (role === 'tutor' ? '시·주력과목 기준(순환)' : applyReady ? '—' : '미선택'),
+    },
     { label: '기간', value: periodLabel },
     {
       label: '노출상품 표시가',
@@ -1408,8 +1455,31 @@ export function renderPlansScreen(path) {
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindPlansScreenEvents(root, rerender) {
   const path = (window.location.hash.slice(1) || '').split('?')[0];
-  if (path !== '/plans/access' && path !== '/mypage/plans/my' && path !== '/plans/my') {
+  if (path !== '/plans/access' && path !== '/mypage/plans/my' && path !== '/plans/my' && path !== '/plans/positions') {
     lastPlansHydratedHash = '';
+  }
+  if (path === '/plans/positions') {
+    const role = getPlansEffectiveRole();
+    const query = parsePlansQuery();
+    const profile =
+      role === 'tutor' || role === 'study_room' ? resolveSelectedProfile(query, role) : null;
+    schedulePlansStatusHydrate(profile, rerender, path);
+    root.querySelectorAll('[data-plans-apply-region]').forEach((el) => {
+      el.addEventListener('change', () => {
+        const region = readSelectedPrimeRegion(root);
+        const q = parsePlansQuery();
+        const next = { ...q };
+        if (region) {
+          next.region_basis_type = region.regionBasisType;
+          if (region.regionId) next.region_id = region.regionId;
+          else delete next.region_id;
+          if (region.complexId) next.complex_id = region.complexId;
+          else delete next.complex_id;
+          if (region.slotGroup) next.slot_group = region.slotGroup;
+        }
+        window.location.hash = buildPlansHref('/plans/positions', next);
+      });
+    });
   }
   if (path === '/plans/access') {
     const role = getPlansEffectiveRole();
@@ -1581,6 +1651,17 @@ export function bindPlansScreenEvents(root, rerender) {
         .map((s) => s.trim())
         .filter(Boolean)
         .slice(0, 2);
+      const region =
+        product.family === 'position' || productCode === 'prime' || productCode === 'pick'
+          ? readSelectedPrimeRegion(root)
+          : null;
+      if (
+        role === 'study_room' &&
+        productCode === 'prime' &&
+        (!region || !region.regionBasisType)
+      ) {
+        return;
+      }
       setCheckoutDraft({
         productCode,
         optionId,
@@ -1598,6 +1679,11 @@ export function bindPlansScreenEvents(root, rerender) {
               ? badgeFromDom
               : badgeFromQuery
             : [],
+        regionBasisType: region?.regionBasisType,
+        regionId: region?.regionId,
+        complexId: region?.complexId,
+        slotGroup: region?.slotGroup,
+        regionLabel: region?.regionLabel,
       });
       window.location.hash = '#/plans/checkout';
     });
@@ -1658,16 +1744,22 @@ export function bindPlansScreenEvents(root, rerender) {
       return;
     }
     const regionEl = root.querySelector('[data-plans-apply-region]:checked');
-    const regionLabel =
+    const region =
       regionEl instanceof HTMLInputElement
-        ? regionEl.value
-        : root.querySelector('.plans-region-chip span')?.textContent || '';
+        ? {
+            region_basis_type: regionEl.getAttribute('data-region-basis') || '',
+            region_id: regionEl.getAttribute('data-region-id') || '',
+            complex_id: regionEl.getAttribute('data-complex-id') || '',
+            region_label: regionEl.value,
+            slot_group: regionEl.value,
+          }
+        : null;
+    if (!region?.region_basis_type || (region.region_basis_type === 'dong' && !region.region_id) || (region.region_basis_type === 'complex' && !region.complex_id)) {
+      window.alert('적용 지역을 먼저 선택해 주세요.');
+      return;
+    }
     try {
-      const res = await registerPrimeWaitlist(profile.id, {
-        region_label: regionLabel,
-        slot_group: regionLabel,
-        region_basis_type: 'dong',
-      });
+      const res = await registerPrimeWaitlist(profile.id, region);
       window.alert(res.message || '예약대기가 등록되었습니다.');
       window.location.hash = '#/mypage/plans/my';
     } catch (err) {
@@ -1704,6 +1796,11 @@ export function bindPlansScreenEvents(root, rerender) {
           studentId: Number(root.querySelector('[data-plans-immediate-student]')?.value || draft.studentId || 0),
           body: String(root.querySelector('[data-plans-immediate-body]')?.value || draft.body || ''),
           badgeCodes: Array.isArray(draft.badgeCodes) ? draft.badgeCodes : [],
+          regionBasisType: draft.regionBasisType,
+          regionId: draft.regionId,
+          complexId: draft.complexId,
+          slotGroup: draft.slotGroup,
+          regionLabel: draft.regionLabel,
         });
         const serverAmount = Number(created.amount_won ?? created.sale_price_krw);
         if (!Number.isFinite(serverAmount) || serverAmount <= 0) {

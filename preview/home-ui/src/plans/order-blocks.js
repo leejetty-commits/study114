@@ -19,44 +19,107 @@ function roleLabel(role) {
 }
 
 /**
+ * 공부방 적용 지역 후보 — id 기반 SSOT만 허용(라벨만 있으면 구매 불가).
+ * @param {object|null|undefined} room
+ * @returns {{ label: string, region_basis_type: 'dong'|'complex', region_id: string, complex_id: string }[]}
+ */
+export function listStudyRoomApplyRegions(room) {
+  if (!room) return [];
+  /** @type {{ label: string, region_basis_type: 'dong'|'complex', region_id: string, complex_id: string }[]} */
+  const out = [];
+  const saved = Array.isArray(room.saved_regions) ? room.saved_regions : [];
+  for (const s of saved) {
+    const regionId = s?.region_id != null && String(s.region_id) !== '' ? String(s.region_id) : '';
+    const complexId = s?.complex_id != null && String(s.complex_id) !== '' ? String(s.complex_id) : '';
+    if (!regionId && !complexId) continue;
+    const basis =
+      s.region_basis_type === 'complex' || complexId
+        ? 'complex'
+        : 'dong';
+    if (basis === 'complex' && !complexId) continue;
+    if (basis === 'dong' && !regionId) continue;
+    const label =
+      String(s.region_label || s.complex_name || '').trim() ||
+      (basis === 'complex' ? `단지 #${complexId}` : `행정동 #${regionId}`);
+    out.push({
+      label,
+      region_basis_type: basis,
+      region_id: basis === 'dong' ? regionId : regionId,
+      complex_id: basis === 'complex' ? complexId : '',
+    });
+  }
+  if (out.length) return out.slice(0, 3);
+
+  const topRegionId = room.region_id != null && String(room.region_id) !== '' ? String(room.region_id) : '';
+  const topComplexId = room.complex_id != null && String(room.complex_id) !== '' ? String(room.complex_id) : '';
+  if (topComplexId) {
+    out.push({
+      label: String(room.region_label || room.complex_name || `단지 #${topComplexId}`),
+      region_basis_type: 'complex',
+      region_id: topRegionId,
+      complex_id: topComplexId,
+    });
+  } else if (topRegionId) {
+    out.push({
+      label: String(room.region_label || room.region || `행정동 #${topRegionId}`),
+      region_basis_type: 'dong',
+      region_id: topRegionId,
+      complex_id: '',
+    });
+  }
+  return out.slice(0, 3);
+}
+
+/**
  * 적용 대상 준비 여부 (지역·주력과목). 주문 CTA 가드용.
  * @param {import('./profiles.js').ProviderProfile | null} profile
  * @param {'study_room'|'tutor'|string} role
- * @returns {{ regionReady: boolean, regionOptions: string[], subjectLine: string }}
+ * @returns {{
+ *   regionReady: boolean,
+ *   regionOptions: string[],
+ *   regionScopes: { label: string, region_basis_type: 'dong'|'complex', region_id: string, complex_id: string }[],
+ *   subjectLine: string
+ * }}
  */
 export function getApplyTargetReadiness(profile, role) {
   if ((role !== 'study_room' && role !== 'tutor') || !profile) {
-    return { regionReady: false, regionOptions: [], subjectLine: '' };
+    return { regionReady: false, regionOptions: [], regionScopes: [], subjectLine: '' };
   }
-  /** @type {string[]} */
-  let regionOptions = [];
+  /** @type {{ label: string, region_basis_type: 'dong'|'complex', region_id: string, complex_id: string }[]} */
+  let regionScopes = [];
   let subjectLine = '';
   let regionReady = false;
 
   if (profile.providerType === 'study_room') {
     const room = getStudyRoom(Number(profile.id));
-    const label = room?.region_label || room?.region || '';
-    if (label) {
-      regionOptions = [String(label)];
-      regionReady = true;
-    }
-    if (Array.isArray(room?.promo_regions) && room.promo_regions.length) {
-      regionOptions = room.promo_regions.map(String).filter(Boolean).slice(0, 3);
-      regionReady = regionOptions.length > 0;
-    }
+    regionScopes = listStudyRoomApplyRegions(room);
+    regionReady = regionScopes.length > 0;
   } else {
     const tutor = getTutor(Number(profile.id));
     subjectLine = tutor?.main_subject_note || '';
     const label = tutor?.region_label || '';
-    if (label) {
-      regionOptions = [String(label)];
-      regionReady = Boolean(label && subjectLine);
+    // 과외쌤은 재고 키가 아님 — 표시/자격용 라벨만
+    if (label && subjectLine) {
+      regionScopes = [
+        {
+          label: String(label),
+          region_basis_type: 'dong',
+          region_id: '',
+          complex_id: '',
+        },
+      ];
+      regionReady = true;
     } else {
       regionReady = Boolean(subjectLine);
     }
   }
 
-  return { regionReady, regionOptions, subjectLine };
+  return {
+    regionReady,
+    regionOptions: regionScopes.map((r) => r.label),
+    regionScopes,
+    subjectLine,
+  };
 }
 
 /**
@@ -99,19 +162,24 @@ export function renderApplyTargetBlock(profile, role, page = 'positions') {
       </section>`;
   }
 
-  const { regionReady, regionOptions, subjectLine } = getApplyTargetReadiness(profile, role);
+  const { regionReady, regionScopes, subjectLine } = getApplyTargetReadiness(profile, role);
 
-  const regionHtml = regionOptions.length
+  const regionHtml = regionScopes.length
     ? `<div class="plans-apply-target__regions" role="group" aria-label="적용 지역">
-        ${regionOptions
+        ${regionScopes
           .map(
             (r, i) =>
-              `<label class="plans-region-chip"><input type="radio" name="plans-apply-region" value="${esc(r)}" data-plans-apply-region ${i === 0 ? 'checked' : ''} /> <span>${esc(r)}</span></label>`,
+              `<label class="plans-region-chip"><input type="radio" name="plans-apply-region" value="${esc(r.label)}"
+                data-plans-apply-region
+                data-region-basis="${esc(r.region_basis_type)}"
+                data-region-id="${esc(r.region_id)}"
+                data-complex-id="${esc(r.complex_id)}"
+                ${i === 0 ? 'checked' : ''} /> <span>${esc(r.label)}</span></label>`,
           )
           .join('')}
       </div>`
     : `<p class="mypage-muted plans-apply-target__warn">적용 지역이 없습니다. 상세등록에서 ${
-        profile.providerType === 'study_room' ? '대표 홍보지역' : '활동지역'
+        profile.providerType === 'study_room' ? '대표 홍보지역(행정동·단지 ID)' : '활동지역'
       }을 먼저 설정해 주세요.</p>`;
 
   const subjectHtml =

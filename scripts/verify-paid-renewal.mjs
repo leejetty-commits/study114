@@ -135,6 +135,45 @@ ok(
   !screens.includes('Pick 살펴보기'),
 );
 
+ok(
+  'PrimeRegionScope helper',
+  fs.existsSync(path.join(root, 'src/Paid/PrimeRegionScope.php')) &&
+    read('src/Paid/PrimeRegionScope.php').includes('normalizeFromInput') &&
+    read('src/Paid/PrimeRegionScope.php').includes('countActiveStudyRoomPrimesInScope'),
+);
+ok(
+  'schema 065 region scope',
+  fs.existsSync(path.join(root, 'sql/schema/065_provider_position_region_scope.sql')),
+);
+ok(
+  'checkout parses region fields',
+  read('public/api/paid/checkout.php').includes('region_basis_type') &&
+    read('public/api/paid/checkout.php').includes('regionInput'),
+);
+ok(
+  'createOrder requires room prime region',
+  checkoutSvc.includes('requireRoomPrimeRegionScope') &&
+    checkoutSvc.includes('assertRoomPrimeAvailableInScope'),
+);
+ok(
+  'global assertRoomPrimeAvailable deprecated block',
+  checkoutSvc.includes('지역별 재고로만 구매'),
+);
+ok(
+  'waitlist uses PrimeRegionScope',
+  waitlistSvc.includes('PrimeRegionScope') && waitlistSvc.includes('assertOwnedByStudyRoom'),
+);
+ok(
+  'front apply regions id-based',
+  orderBlocks.includes('listStudyRoomApplyRegions') &&
+    orderBlocks.includes('data-region-id'),
+);
+ok(
+  'checkout draft carries region',
+  screens.includes('regionBasisType: region?.regionBasisType') ||
+    screens.includes('regionBasisType: draft.regionBasisType'),
+);
+
 const outDir = path.join(root, 'tmp/paid-renewal-verify');
 fs.mkdirSync(outDir, { recursive: true });
 const report = {
