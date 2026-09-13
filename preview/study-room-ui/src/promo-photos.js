@@ -43,7 +43,6 @@ function renderPhotoCard(img, idx) {
         <select class="form-input" id="photo-type-${idx}" data-field="image_type">${typeOpts}</select>
         <label class="form-label" for="photo-caption-${idx}">간단 제목</label>
         <input class="form-input" id="photo-caption-${idx}" type="text" maxlength="80" data-field="caption" placeholder="한 줄 제목 (선택)" value="${esc(img.caption || '')}" />
-        <p class="register-hint">${esc(img.name || img.original_filename || '업로드됨')}</p>
         <button type="button" class="btn btn--ghost btn--sm" data-action="remove-photo" data-idx="${idx}">삭제</button>
       </div>
     </article>
