@@ -47,10 +47,14 @@ final class TutorProfileImageService
         if ($ext === 'jpeg') {
             $ext = 'jpg';
         }
-        $relDir = 'uploads/tutor/' . $tutorId;
+        // 공부방 홍보사진과 같은 uploads/promo 트리 사용 (닷홈 쓰기 권한·경로 검증 통과)
+        $relDir = 'uploads/promo/tutors/' . $tutorId;
         $absDir = $this->publicRoot() . '/' . $relDir;
-        if (!is_dir($absDir) && !mkdir($absDir, 0775, true) && !is_dir($absDir)) {
-            throw new RuntimeException('사진 저장 폴더를 만들 수 없습니다.');
+        if (!is_dir($absDir) && !@mkdir($absDir, 0775, true) && !is_dir($absDir)) {
+            throw new RuntimeException('사진 저장 폴더를 만들 수 없습니다: ' . $relDir);
+        }
+        if (!is_writable($absDir)) {
+            throw new RuntimeException('사진 저장 폴더에 쓸 수 없습니다: ' . $relDir);
         }
 
         $originalRel = $relDir . '/' . $token . '_orig.' . $ext;
@@ -62,11 +66,7 @@ final class TutorProfileImageService
         }
 
         $info = $this->processor->assertUpload($originalAbs, $size, $origName, $clientMime);
-        if ($info['width'] < 800 || $info['height'] < 800) {
-            @unlink($originalAbs);
-            throw new InvalidArgumentException('최소 800×800 픽셀 이상이어야 합니다.');
-        }
-
+        // PromoImageSpec 최소(800×600)만 적용 — 이미 리사이즈된 JPEG도 허용
         $dests = [
             'basic_720' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_basic_720.webp',
             'prime_1280' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_prime_1280.webp',
@@ -75,7 +75,10 @@ final class TutorProfileImageService
 
         $paths = [];
         foreach ($dests as $variant => $abs) {
-            $use = is_file($abs) ? $abs : preg_replace('/\.webp$/i', '.jpg', $abs);
+            $use = is_file($abs) ? $abs : preg_replace('/\.webp$/i', '.jpg', (string) $abs);
+            if (!is_file((string) $use)) {
+                throw new RuntimeException('파생 이미지 생성에 실패했습니다 (' . $variant . ').');
+            }
             $paths[$variant] = $this->publicUrlFromAbs((string) $use);
         }
 
@@ -99,6 +102,8 @@ final class TutorProfileImageService
             'prime_1280_path' => $paths['prime_1280'] ?? $basicPath,
             'crop_offset_x' => $cropX,
             'crop_offset_y' => $cropY,
+            'original_width' => $info['width'],
+            'original_height' => $info['height'],
         ];
     }
 
@@ -254,16 +259,9 @@ final class TutorProfileImageService
 
     private function assertTutorOwner(PDO $pdo, int $userId, int $tutorId): void
     {
-        $stmt = $pdo->prepare(
-            'SELECT 1 FROM tutors WHERE id = ? AND user_id = ? AND (deleted_at IS NULL OR deleted_at = \'0000-00-00 00:00:00\') LIMIT 1'
-        );
-        try {
-            $stmt->execute([$tutorId, $userId]);
-        } catch (\Throwable $e) {
-            // deleted_at 없는 구스키마 호환
-            $stmt = $pdo->prepare('SELECT 1 FROM tutors WHERE id = ? AND user_id = ? LIMIT 1');
-            $stmt->execute([$tutorId, $userId]);
-        }
+        // 공부방/등록 API와 동일 — deleted_at 조건 없이 user_id 소유만 확인
+        $stmt = $pdo->prepare('SELECT 1 FROM tutors WHERE id = ? AND user_id = ? LIMIT 1');
+        $stmt->execute([$tutorId, $userId]);
         if (!$stmt->fetchColumn()) {
             throw new InvalidArgumentException('이 과외 프로필의 사진을 수정할 권한이 없습니다.');
         }
@@ -277,13 +275,16 @@ final class TutorProfileImageService
     {
         $err = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
         if ($err !== UPLOAD_ERR_OK) {
-            $hint = match ($err) {
-                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => '파일 용량이 서버 제한을 초과했습니다. 4MB 이하로 줄여 주세요.',
-                UPLOAD_ERR_PARTIAL => '파일이 일부만 전송되었습니다. 다시 올려 주세요.',
-                UPLOAD_ERR_NO_FILE => '파일을 선택해 주세요.',
-                default => '파일을 받지 못했습니다. (코드 ' . $err . ')',
-            };
-            throw new InvalidArgumentException($hint);
+            if ($err === UPLOAD_ERR_INI_SIZE || $err === UPLOAD_ERR_FORM_SIZE) {
+                throw new InvalidArgumentException('파일 용량이 서버 제한을 초과했습니다. 4MB 이하로 줄여 주세요.');
+            }
+            if ($err === UPLOAD_ERR_PARTIAL) {
+                throw new InvalidArgumentException('파일이 일부만 전송되었습니다. 다시 올려 주세요.');
+            }
+            if ($err === UPLOAD_ERR_NO_FILE) {
+                throw new InvalidArgumentException('파일을 선택해 주세요.');
+            }
+            throw new InvalidArgumentException('파일을 받지 못했습니다. (코드 ' . $err . ')');
         }
         $tmp = (string) ($file['tmp_name'] ?? '');
         if ($tmp === '' || (!is_uploaded_file($tmp) && !is_file($tmp))) {

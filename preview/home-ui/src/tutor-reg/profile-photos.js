@@ -22,6 +22,8 @@ export const TUTOR_PROFILE_PHOTO_SPEC = {
   minHeight: 800,
   recommended: '1200×1200 이상',
   basicSize: 720,
+  /** 서버 업로드용 (원본 대신 보내 닷홈 메모리·용량 부담 감소) */
+  uploadSize: 1200,
   primeWidth: 1280,
   primeHeight: 720,
   jpegQuality: 0.82,
@@ -170,6 +172,15 @@ export async function processTutorProfilePhoto(file, cropX, cropY) {
       TUTOR_PROFILE_PHOTO_SPEC.basicSize,
       TUTOR_PROFILE_PHOTO_SPEC.basicSize,
     );
+    const upload = cropResizeToCanvas(
+      img,
+      sw,
+      sh,
+      cx,
+      cy,
+      TUTOR_PROFILE_PHOTO_SPEC.uploadSize,
+      TUTOR_PROFILE_PHOTO_SPEC.uploadSize,
+    );
     const prime = cropResizeToCanvas(
       img,
       sw,
@@ -180,11 +191,13 @@ export async function processTutorProfilePhoto(file, cropX, cropY) {
       TUTOR_PROFILE_PHOTO_SPEC.primeHeight,
     );
     const basicUrl = canvasToJpegDataUrl(basic, q);
+    const uploadUrl = canvasToJpegDataUrl(upload, q);
     const primeUrl = canvasToJpegDataUrl(prime, q);
     return {
       name: file.name || 'profile.jpg',
       basic_720_path: basicUrl,
       prime_1280_path: primeUrl,
+      upload_1200_path: uploadUrl,
       image_path: basicUrl,
       crop_x: cx,
       crop_y: cy,
@@ -227,7 +240,7 @@ async function readApiError(res) {
   return {
     ok: false,
     error: 'http',
-    message: `업로드 실패 (HTTP ${res.status}). 사진 용량을 줄이거나 잠시 후 다시 시도해 주세요.`,
+    message: `업로드 실패 (HTTP ${res.status}). 서버 응답을 읽지 못했습니다. 잠시 후 다시 시도해 주세요.`,
   };
 }
 
@@ -249,7 +262,8 @@ async function uploadTutorProfilePhotoApi(tutorId, file, crop) {
     body: fd,
   });
   const data = await readApiError(res);
-  if (!res.ok || !data.ok) {
+  // 닷홈은 오류도 HTTP 200 + ok:false 로 올 수 있음
+  if (!data.ok) {
     throw new Error(data.message || '프로필 사진 업로드에 실패했습니다.');
   }
   return data.image;
@@ -271,7 +285,7 @@ async function reorderTutorProfilePhotosApi(tutorId, orderedIds) {
     }),
   });
   const data = await readApiError(res);
-  if (!res.ok || !data.ok) {
+  if (!data.ok) {
     throw new Error(data.message || '사진 순서를 저장하지 못했습니다.');
   }
   return data.images || [];
@@ -293,7 +307,7 @@ async function deleteTutorProfilePhotoApi(tutorId, imageId) {
     }),
   });
   const data = await readApiError(res);
-  if (!res.ok || !data.ok) {
+  if (!data.ok) {
     throw new Error(data.message || '사진을 삭제하지 못했습니다.');
   }
 }
@@ -422,21 +436,12 @@ export function bindTutorProfilePhotos(root, opts) {
       const local = await processTutorProfilePhoto(file, crop.cropX, crop.cropY);
       let uploaded = null;
       if (isRegistrationsApiMode()) {
-        try {
-          uploaded = await uploadTutorProfilePhotoApi(tutorId, file, crop);
-        } catch (firstErr) {
-          // 원본(HEIC 등) 실패 시 리사이즈 JPEG로 재시도
-          try {
-            const jpegFile = await dataUrlToJpegFile(local.basic_720_path, local.name || 'profile.jpg');
-            uploaded = await uploadTutorProfilePhotoApi(tutorId, jpegFile, crop);
-          } catch (secondErr) {
-            const msg =
-              (secondErr instanceof Error && secondErr.message) ||
-              (firstErr instanceof Error && firstErr.message) ||
-              '프로필 사진 업로드에 실패했습니다.';
-            throw new Error(msg);
-          }
-        }
+        // 원본 2~4MB 대신 1200px JPEG만 올려 서버 GD 메모리·용량 부담을 줄인다.
+        const uploadFile = await dataUrlToJpegFile(
+          local.upload_1200_path || local.basic_720_path,
+          local.name || 'profile.jpg',
+        );
+        uploaded = await uploadTutorProfilePhotoApi(tutorId, uploadFile, crop);
       }
       const merged = [
         ...images,
@@ -455,7 +460,6 @@ export function bindTutorProfilePhotos(root, opts) {
       await persistProfileImages(tutorId, merged);
       if (isRegistrationsApiMode()) {
         await hydrateRegistrationsCache().catch(() => {});
-        // hydrate가 profile_images를 비우면(구서버) 방금 올린 값을 다시 보강
         const after = normalizeTutorProfileImages(getTutor(tutorId));
         if (!after.length && merged.length) {
           await persistProfileImages(tutorId, merged);
