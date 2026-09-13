@@ -53,5 +53,20 @@ PaidApi::run(static function (): void {
         ];
     }
 
-    PaidApi::ok($service->createOrder($userId, $productId, $variant, $providerType, $providerId, $memoIntent));
+    $badgeCodes = [];
+    if (isset($input['badge_codes']) && is_array($input['badge_codes'])) {
+        foreach ($input['badge_codes'] as $code) {
+            $badgeCodes[] = (string) $code;
+        }
+    }
+
+    PaidApi::ok($service->createOrder(
+        $userId,
+        $productId,
+        $variant,
+        $providerType,
+        $providerId,
+        $memoIntent,
+        $badgeCodes,
+    ));
 });

@@ -725,7 +725,15 @@ function renderPlansMyInventory(role) {
             <p class="mypage-muted"><a href="#/plans/access" data-nav="/plans/access">쪽지권 충전하기</a></p>`
             : `<p class="mypage-muted" data-plans-my-status="packs-empty">이 프로필에 표시할 쪽지권이 없습니다. · <a href="#/plans/access" data-nav="/plans/access">쪽지권 충전하기</a></p>`
       }
-      <p class="mypage-note"><a href="#/mypage/plans" data-mypage-nav="/mypage/plans">이용 현황</a> · <a href="#/plans/access" data-nav="/plans/access">쪽지권 구매</a></p>
+      ${
+        plansRole === 'study_room' && profile
+          ? `<h2 class="mypage-subhead">Prime 예약대기</h2>
+            <div class="plans-my-waitlist" data-plans-my-waitlist data-study-room-id="${esc(String(profile.id))}">
+              <p class="mypage-muted">예약대기 목록을 불러오는 중…</p>
+            </div>`
+          : ''
+      }
+      <p class="mypage-note"><a href="#/mypage/plans" data-mypage-nav="/mypage/plans">이용 현황</a> · <a href="#/plans/access" data-nav="/plans/access">쪽지권 구매</a> · <a href="#/plans/positions" data-nav="/plans/positions">노출상품</a></p>
     </section>`;
 }
 

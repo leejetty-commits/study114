@@ -114,7 +114,7 @@ export function renderFreePaidCompare() {
       { label: '기본 목록 노출', cells: ['포함', '포함'] },
       { label: '조회 · 찜 · 비교 담김', cells: ['포함', '포함'] },
       { label: '학부모 선연락 · 답장', cells: ['무료', '무료'] },
-      { label: '대표 · 추천 노출', cells: ['—', '기간형 구매'] },
+      { label: 'Prime · Pick 노출', cells: ['—', '기간형 구매'] },
       { label: '공급자→학생 선제 쪽지', cells: ['차단', '쪽지권'] },
       { label: '요청문 상세 열람', cells: ['포함', '포함'] },
       { label: '광고성 주목 배지', cells: ['—', '노출 상품과 함께'] },
@@ -201,57 +201,84 @@ export function renderPlansFaqList(items) {
     </ul>`;
 }
 
-/** 노출 종속 광고배지 안내 (단독 판매 ✕ · 추천=통계 · New=자동 1주) */
-export function renderBadgeAddonSection(role, ops) {
+/**
+ * 홍보 배지 장착 — Prime/Pick 종속 · 최대 2 · 단독 구매 CTA 없음
+ * @param {string} role
+ * @param {object|null} ops
+ * @param {{ selected?: string[], periodLabel?: string, selectable?: boolean }} [opts]
+ */
+export function renderBadgeAddonSection(role, ops, opts = {}) {
   const providerType = role === 'tutor' ? 'tutor' : 'study_room';
-  const positions = ops?.exposure?.positions ?? [];
-  const longest = positions.reduce((best, p) => {
-    const m = positionDurationMonths(p);
-    return m > best ? m : best;
-  }, 1);
-  const monthly = badgePriceKrw(providerType, 1);
-  const attached = badgePriceKrw(providerType, longest);
+  const selectable = opts.selectable !== false && (role === 'study_room' || role === 'tutor');
+  const selected = Array.isArray(opts.selected) ? opts.selected.map(String) : [];
+  const periodLabel = opts.periodLabel || '1개월';
+  const periodPrice = badgePriceKrw(
+    providerType,
+    undefined,
+    'hot',
+    periodLabel,
+  );
   const priceLine =
-    monthly != null && attached != null
-      ? `1개월 ${formatKrw(monthly)} · 현재 포지션 기준 ${formatKrw(attached)}`
-      : '가격표 로드 후 표시';
+    periodPrice != null ? `${periodLabel} ${formatKrw(periodPrice)}` : '가격표 로드 후 표시';
   const badges =
     providerType === 'tutor'
       ? [
           { id: 'hot', name: 'Hot', desc: `과외쌤 주목 배지 · ${priceLine}` },
           { id: 'jjokjipge', name: '쪽집게', desc: `과외쌤 광고성 자기선언 · ${priceLine}` },
-          { id: 'sky', name: 'SKY', desc: `과외쌤 유료 광고축 · 대학명 자동추론 아님 · ${priceLine}` },
+          { id: 'sky', name: 'SKY', desc: `SKY는 학교정보 기반 광고 표현이며 플랫폼 인증이 아닙니다 · ${priceLine}` },
         ]
       : [
           { id: 'hot', name: 'Hot', desc: `공부방 주목 배지 · ${priceLine}` },
-          { id: 'subject_track', name: '단과', desc: `공부방 전용 유료 아이콘 · 「전문」아이콘 금지 · ${priceLine}` },
+          { id: 'subject_track', name: '단과', desc: `공부방 전용 · ${priceLine}` },
         ];
+  const atMax = selected.length >= 2;
+
   return `
-    <section class="plans-section">
+    <section class="plans-section plans-badge-select" data-plans-badge-section>
       <div class="plans-section__head">
-        <h3 class="plans-section__title">광고 부가 배지</h3>
-        <p class="plans-section__lead">단독 구매 상품이 아닙니다. 대표·추천 노출 이용 기간에 함께 적용됩니다. 배지 기간은 노출상품 기간을 상속합니다.</p>
+        <h3 class="plans-section__title">홍보 배지 장착</h3>
+        <p class="plans-section__lead">선택한 Prime 노출 또는 Pick 노출에 배지를 추가할 수 있습니다. 배지는 선택한 노출상품과 같은 기간 동안 적용됩니다. 서로 다른 배지를 최대 2개까지, 최초 구매 또는 연장 시에만 선택·변경합니다.</p>
       </div>
-      <ul class="plans-addon-grid">
+      <ul class="plans-addon-grid" role="group" aria-label="홍보 배지 선택">
         ${badges
-          .map(
-            (b) => `
+          .map((b) => {
+            const checked = selected.includes(b.id);
+            const disabled = selectable && atMax && !checked;
+            if (!selectable) {
+              return `
           <li class="plans-addon-card">
             <span class="plans-addon-card__mark plans-addon-card__mark--${esc(b.id)}" aria-hidden="true"></span>
             <strong>${esc(b.name)}</strong>
             <p>${esc(b.desc)}</p>
-          </li>`,
-          )
+          </li>`;
+            }
+            return `
+          <li class="plans-addon-card${checked ? ' is-selected' : ''}${disabled ? ' is-disabled' : ''}">
+            <label class="plans-addon-card__label">
+              <input type="checkbox" data-plans-badge-code="${esc(b.id)}" value="${esc(b.id)}"
+                ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} />
+              <span class="plans-addon-card__mark plans-addon-card__mark--${esc(b.id)}" aria-hidden="true"></span>
+              <strong>${esc(b.name)}</strong>
+              <p>${esc(b.desc)}</p>
+            </label>
+          </li>`;
+          })
           .join('')}
       </ul>
+      ${
+        selectable && atMax
+          ? `<p class="mypage-muted plans-badge-max" role="status">최대 2개까지 선택할 수 있습니다.</p>`
+          : ''
+      }
+      <p class="mypage-muted">단독 구매·이용기간 중 추가·교체는 제공하지 않습니다. 결제 금액은 서버가 Prime/Pick과 함께 재계산합니다.</p>
       ${renderGuideBox({
         title: '광고 정책 및 안전 가이드',
         icon: '🛡',
         variant: 'policy',
         items: [
-          { icon: '①', text: '적용 범위: 대표·추천 노출 이용 중인 프로필에만 표시됩니다.' },
+          { icon: '①', text: '적용 범위: Prime 노출·Pick 노출과 같은 날 시작·종료. 서로 다른 배지 최대 2개.' },
           { icon: '②', text: 'New는 첫 공개 후 1주 자동 부착이며 판매하지 않습니다. 추천·후기는 통계입니다.' },
-          { icon: '③', text: '노출 만료 시 광고 배지만 내려가고 프로필·기본 노출은 유지됩니다.' },
+          { icon: '③', text: '이용기간 중 배지 추가·교체는 서버에서 거부됩니다.' },
         ],
         linkLabel: '이용 가이드 확인',
         linkNav: '/support/faq',

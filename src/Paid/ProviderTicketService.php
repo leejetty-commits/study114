@@ -172,12 +172,10 @@ final class ProviderTicketService
 
         $exposureState = count($positions) > 0 ? 'active' : 'basic';
 
-        // seed 기본값 — 이후 plan_runtime_settings / 관리자 설정으로 치환
-        // Prime: 지역(행정동/단지) 단위 한정. 현재는 전역 집계 seed.
+        // 공부방 Prime만 재고(3). Pick은 순환형이라 매진 재고로 쓰지 않음.
         $primeCap = 3;
-        $pickCap = 10;
-        $primeUsed = $this->repo->countActivePositionsBySku('prime');
-        $pickUsed = $this->repo->countActivePositionsBySku('pick');
+        $primeUsed = $this->repo->countActiveStudyRoomPrimes();
+        $pickUsed = 0;
 
         return [
             'exposure' => [
@@ -215,13 +213,15 @@ final class ProviderTicketService
                     'capacity' => $primeCap,
                     'used' => $primeUsed,
                     'remaining' => max(0, $primeCap - $primeUsed),
-                    'scope' => 'region',
+                    'scope' => 'study_room_prime',
                 ],
                 'pick' => [
-                    'capacity' => $pickCap,
-                    'used' => $pickUsed,
-                    'remaining' => max(0, $pickCap - $pickUsed),
-                    'set_size' => 5,
+                    'capacity' => 0,
+                    'used' => 0,
+                    'remaining' => 0,
+                    'scope' => 'circulation',
+                    'inventory' => false,
+                    'set_size' => 10,
                     'rotation_minutes' => 15,
                 ],
             ],

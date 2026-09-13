@@ -13,6 +13,7 @@ export const PAID_ENDPOINTS = {
   notices: '/api/paid/notices.php',
   history: '/api/paid/history.php',
   catalog: '/api/paid/catalog.php',
+  waitlist: '/api/paid/waitlist.php',
 };
 
 async function parseJson(res) {
@@ -108,6 +109,9 @@ export async function createPaidCheckout(productId, variant, ctx = {}) {
   if (ctx.body) {
     body.body = String(ctx.body);
   }
+  if (Array.isArray(ctx.badgeCodes) && ctx.badgeCodes.length) {
+    body.badge_codes = ctx.badgeCodes.map(String).slice(0, 2);
+  }
   // 클라이언트 금액·할인·무료혜택은 전송하지 않는다 (서버 PaidCatalog 재계산)
   const res = await fetch(PAID_ENDPOINTS.checkout, {
     method: 'POST',
@@ -133,5 +137,47 @@ export async function completePaidCheckout(orderRef) {
 export async function fetchPaidHistory(limit = 50) {
   const qs = limit > 0 ? `?limit=${limit}` : '';
   const res = await fetch(`${PAID_ENDPOINTS.history}${qs}`, { ...CREDENTIALS });
+  return parseJson(res);
+}
+
+/** @param {number|string} studyRoomId */
+export async function fetchPrimeWaitlist(studyRoomId) {
+  const qs = `?study_room_id=${encodeURIComponent(String(studyRoomId))}`;
+  const res = await fetch(`${PAID_ENDPOINTS.waitlist}${qs}`, { ...CREDENTIALS });
+  return parseJson(res);
+}
+
+/**
+ * @param {number|string} studyRoomId
+ * @param {{ slot_group?: string, region_label?: string, region_basis_type?: string }} [payload]
+ */
+export async function registerPrimeWaitlist(studyRoomId, payload = {}) {
+  const res = await fetch(PAID_ENDPOINTS.waitlist, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    ...CREDENTIALS,
+    body: JSON.stringify({
+      action: 'register',
+      provider_type: 'study_room',
+      exposure_type: 'prime',
+      study_room_id: Number(studyRoomId),
+      ...payload,
+    }),
+  });
+  return parseJson(res);
+}
+
+/** @param {number|string} studyRoomId @param {number|string} waitlistId */
+export async function cancelPrimeWaitlist(studyRoomId, waitlistId) {
+  const res = await fetch(PAID_ENDPOINTS.waitlist, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    ...CREDENTIALS,
+    body: JSON.stringify({
+      action: 'cancel',
+      study_room_id: Number(studyRoomId),
+      waitlist_id: Number(waitlistId),
+    }),
+  });
   return parseJson(res);
 }
