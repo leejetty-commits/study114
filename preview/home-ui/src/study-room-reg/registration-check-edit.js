@@ -22,8 +22,8 @@ import {
   RC_LIGHT_FIELDS,
   TEACHING_STYLE_OPTIONS,
   registrationCheckTabHref,
-  buildRegistrationCheckPreviewItem,
 } from './registration-check-model.js';
+import { buildStudyRoomSampleItem } from '../home-card-samples/presets.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -315,12 +315,11 @@ export function bindRegistrationCheckEvents(root, rerender) {
     btn.addEventListener('click', () => openCoverModal(roomId, rerender));
   });
 
-  const openExpand = () => {
-    const room = getStudyRoom(roomId) || { id: roomId };
-    const item = buildRegistrationCheckPreviewItem(registerState, room);
+  const openExpand = (tier = 'prime') => {
+    const item = buildStudyRoomSampleItem(tier);
     openDetailDecision({
       kind: 'study_room',
-      id: roomId,
+      id: 0,
       item,
       sourceRoute: 'registration-check',
     });
@@ -328,13 +327,7 @@ export function bindRegistrationCheckEvents(root, rerender) {
   page.querySelectorAll('[data-rc-expand]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      openExpand();
-    });
-    el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        openExpand();
-      }
+      openExpand(el.getAttribute('data-rc-expand-tier') || 'prime');
     });
   });
 

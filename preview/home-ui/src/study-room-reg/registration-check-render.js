@@ -4,7 +4,7 @@
  */
 
 import { RC_COPY } from './registration-check-copy.js';
-import { renderBrowseList, renderExposureBox } from '../exposure-render.js';
+import { renderRegistrationCheckCardSamples } from '../home-card-samples/render.js';
 import { registrationCheckTabHref } from './registration-check-model.js';
 import { LIFECYCLE_PUBLISH_CONFIRM_DIRECT, LIFECYCLE_PUBLISH_CONFIRM_NOTE } from '../lifecycle-copy.js';
 
@@ -83,32 +83,8 @@ function renderMissingBlock(title, items, emptyText) {
     </section>`;
 }
 
-function renderPreviewTier(tier, kicker, innerHtml) {
-  return `
-    <div class="rc-tier rc-tier--${esc(tier)} rc-tier--preview" role="button" tabindex="0" data-rc-expand data-rc-expand-tier="${esc(tier)}" aria-label="${esc(kicker)} 확대카드 보기">
-      <p class="rc-tier__kicker">${esc(kicker)}</p>
-      <div class="rc-tier__live" aria-hidden="true">${innerHtml}</div>
-    </div>`;
-}
-
 function renderCards(vm) {
-  const item = vm.previewItem;
-  const opts = { showCompare: false, showWish: false };
-  const basic = renderBrowseList('study_room', [item], opts);
-  const pick = renderExposureBox('study_room', 'pick', item, '', opts);
-  const prime = renderExposureBox('study_room', 'prime', item, '', opts);
-  return `
-    <section class="rc-block rc-block--compare" aria-label="${esc(vm.promo.cardsTitle)}">
-      <h3 class="rc-block__title">${esc(vm.promo.cardsTitle)}</h3>
-      <p class="rc-block__hint">${esc(vm.promo.cardsLead)}</p>
-      <div class="rc-compare">
-        <div class="rc-compare__grid">
-          ${renderPreviewTier('basic', vm.promo.basicKicker, basic)}
-          ${renderPreviewTier('pick', vm.promo.pickKicker, pick)}
-          ${renderPreviewTier('prime', vm.promo.primeKicker, prime)}
-        </div>
-      </div>
-    </section>`;
+  return renderRegistrationCheckCardSamples('study_room', vm.promo);
 }
 
 function statusCell(row) {

@@ -2511,7 +2511,7 @@ a.msg-attach:hover { text-decoration: underline; }
   overflow: visible;
 }
 
-/* 홈 BASIC과 같은 .home-body + .guest-browse-lists + .browse-list--table 문맥 */
+/* 쪽지설정 샘플 — 홈 BASIC 1칸 폭 + 화살표 가이드 */
 .inq-samples {
   display: flex;
   flex-direction: column;
@@ -2529,6 +2529,8 @@ a.msg-attach:hover { text-decoration: underline; }
   font-size: 0.8125rem;
   font-weight: 700;
   color: #64748b;
+  letter-spacing: normal;
+  text-transform: none;
 }
 .inq-sample--open .inq-sample__kicker {
   color: #047857;
@@ -2540,18 +2542,7 @@ a.msg-attach:hover { text-decoration: underline; }
   position: relative;
   overflow: visible;
   width: max-content;
-  max-width: none;
-}
-.inq-sample__home-context {
-  box-sizing: border-box;
-  pointer-events: none;
-  user-select: none;
-}
-.inq-sample__home-context .guest-browse-lists {
-  margin: 0;
-}
-.inq-sample__home-context .browse-list {
-  margin: 0;
+  max-width: 100%;
 }
 .inq-sample__guide {
   position: absolute;

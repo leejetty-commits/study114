@@ -1,5 +1,5 @@
-/** @deprecated import from inquiry-settings/sample-presets.js */
+/** @deprecated import from home-card-samples/presets.js */
 export {
   STUDY_ROOM_CARD_SAMPLE_IMAGE,
   buildStudyRoomInquirySampleItem,
-} from '../inquiry-settings/sample-presets.js';
+} from '../home-card-samples/presets.js';

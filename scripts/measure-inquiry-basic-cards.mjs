@@ -50,8 +50,8 @@ async function measureHomeCard(page, kind) {
 
 async function injectAndMeasureSample(page, kind) {
   return page.evaluate(async (k) => {
-    const { bindInquirySampleGuides } = await import('/src/inquiry-settings/sample-ui.js');
-    const { renderInquirySampleCard } = await import('/src/inquiry-settings/sample-cards.js');
+    const { bindInquirySampleGuides } = await import('/src/home-card-samples/guides.js');
+    const { renderInquirySampleCard } = await import('/src/home-card-samples/render.js');
 
     const host = document.createElement('div');
     host.id = `inq-measure-host-${k}`;
@@ -71,7 +71,7 @@ async function injectAndMeasureSample(page, kind) {
     const btn = host.querySelector('.item-actions [title^="쪽지"]');
     const svg = host.querySelector('[data-inq-guide]');
     const callout = host.querySelector('[data-inq-callout]');
-    const homeList = host.querySelector('.inq-sample__home-context .browse-list');
+    const homeList = host.querySelector('.hcs-sample__card--basic');
     if (!card) return { width: 0, arrow: null, selector: '[data-inq-sample] .expo-hcard' };
 
     const cr = card.getBoundingClientRect();

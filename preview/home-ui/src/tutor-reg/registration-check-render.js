@@ -4,9 +4,8 @@
  */
 
 import { TRC_COPY } from './registration-check-copy.js';
-import { renderBrowseList, renderExposureBox } from '../exposure-render.js';
+import { renderRegistrationCheckCardSamples } from '../home-card-samples/render.js';
 import { tutorRegistrationCheckTabHref } from './registration-check-model.js';
-import { buildTutorSamplePreviewItem } from './registration-check-sample.js';
 import { LIFECYCLE_PUBLISH_CONFIRM_DIRECT, LIFECYCLE_PUBLISH_CONFIRM_NOTE } from '../lifecycle-copy.js';
 
 function esc(s) {
@@ -84,37 +83,8 @@ function renderMissingBlock(title, items, emptyText) {
     </section>`;
 }
 
-function renderPreviewTier(tier, kicker, innerHtml) {
-  return `
-    <figure class="rc-sample rc-sample--${esc(tier)}">
-      <figcaption class="rc-sample__kicker">${esc(kicker)}</figcaption>
-      <div class="rc-sample__card rc-sample__card--${esc(tier)}">${innerHtml}</div>
-      <button type="button" class="rc-sample__expand" data-trc-expand data-trc-expand-tier="${esc(tier)}">${esc(TRC_COPY.promo.expandCard)}</button>
-    </figure>`;
-}
-
 function renderCards(vm) {
-  const opts = { showCompare: true, showWish: true, guest: true };
-  const basicItem = buildTutorSamplePreviewItem('basic');
-  const pickItem = buildTutorSamplePreviewItem('pick');
-  const primeItem = buildTutorSamplePreviewItem('prime');
-  const basic = renderBrowseList('tutor', [basicItem], opts);
-  const pick = renderExposureBox('tutor', 'pick', pickItem, '', opts);
-  const prime = renderExposureBox('tutor', 'prime', primeItem, '', opts);
-  return `
-    <section class="rc-block rc-block--compare" aria-label="${esc(vm.promo.cardsTitle)}">
-      <h3 class="rc-block__title">${esc(vm.promo.cardsTitle)}</h3>
-      <p class="rc-block__hint">${esc(vm.promo.cardsLead)}</p>
-      <div class="rc-compare rc-compare--stack">
-        <div class="rc-compare__row rc-compare__row--basic">
-          ${renderPreviewTier('basic', vm.promo.basicKicker, basic)}
-        </div>
-        <div class="rc-compare__row rc-compare__row--upgrade">
-          ${renderPreviewTier('pick', vm.promo.pickKicker, pick)}
-          ${renderPreviewTier('prime', vm.promo.primeKicker, prime)}
-        </div>
-      </div>
-    </section>`;
+  return renderRegistrationCheckCardSamples('tutor', vm.promo);
 }
 
 function statusCell(row) {

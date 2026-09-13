@@ -12,8 +12,8 @@ import {
   studyRoomInquiryStoredLine,
 } from './inquiry-display.js';
 import { isPhoneVerifiedLocal, showPhoneVerifyGateModal } from './phone-verify-gate.js';
-import { renderInquirySamplePair } from '../inquiry-settings/sample-cards.js';
-import { bindInquirySampleGuides } from '../inquiry-settings/sample-ui.js';
+import { renderInquirySamplePair } from '../home-card-samples/render.js';
+import { bindInquirySampleGuides } from '../home-card-samples/guides.js';
 import { getAuthUser } from '../auth-session.js';
 import {
   parseStudyRoomRegPath,

@@ -1,0 +1,151 @@
+/**
+ * 홈 카드 1칸 폭 토큰.
+ * home-main = home-max − gutters − (PC) promo 14rem − gap
+ * BASIC = (main − browse gap) / 2
+ * PICK  = (main − 4×grid gap) / 5  (≥900)
+ * PRIME = (main − 2×grid gap) / 3  (≥900)
+ */
+
+.hcs-sample {
+  --hcs-promo: 0px;
+  --hcs-promo-gap: 0px;
+  --hcs-home-main: calc(var(--home-max) - 2 * var(--page-gutter) - var(--hcs-promo) - var(--hcs-promo-gap));
+  --hcs-browse-gap: 0.75rem;
+  --hcs-grid-gap: 0.625rem;
+  --hcs-prime-gap: 0.75rem;
+  --hcs-basic-w: var(--hcs-home-main);
+  --hcs-pick-w: calc((var(--hcs-home-main) - var(--hcs-grid-gap)) / 2);
+  --hcs-prime-w: var(--hcs-home-main);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .hcs-sample {
+    --hcs-promo: 14rem;
+    --hcs-promo-gap: var(--space-2);
+  }
+}
+
+@media (min-width: 640px) {
+  .hcs-sample {
+    --hcs-pick-w: calc((var(--hcs-home-main) - 2 * var(--hcs-grid-gap)) / 3);
+    --hcs-prime-w: calc((var(--hcs-home-main) - var(--hcs-prime-gap)) / 2);
+  }
+}
+
+@media (min-width: 720px) {
+  .hcs-sample {
+    --hcs-basic-w: calc((var(--hcs-home-main) - var(--hcs-browse-gap)) / 2);
+  }
+}
+
+@media (min-width: 900px) {
+  .hcs-sample {
+    --hcs-pick-w: calc((var(--hcs-home-main) - 4 * var(--hcs-grid-gap)) / 5);
+    --hcs-prime-w: calc((var(--hcs-home-main) - 2 * var(--hcs-prime-gap)) / 3);
+  }
+}
+
+.hcs-sample__kicker {
+  margin: 0 0 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.hcs-sample--pick .hcs-sample__kicker {
+  color: #c2410c;
+}
+
+.hcs-sample--prime .hcs-sample__kicker {
+  color: #1d4ed8;
+}
+
+.hcs-sample__card {
+  box-sizing: border-box;
+  pointer-events: none;
+  user-select: none;
+  max-width: 100%;
+}
+
+.hcs-sample__card--basic {
+  width: var(--hcs-basic-w);
+}
+
+.hcs-sample__card--pick {
+  width: var(--hcs-pick-w);
+}
+
+.hcs-sample__card--prime {
+  width: var(--hcs-prime-w);
+}
+
+/* 1칸 폭 컨테이너 안에서는 2열/5열/3열로 다시 쪼개지 않음 */
+.hcs-sample__card--basic .browse-list--table {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
+.hcs-sample__card--basic .expo-basic,
+.hcs-sample__card--basic .expo-hcard {
+  width: 100%;
+  margin: 0;
+  height: auto;
+}
+
+.hcs-sample__card--pick .expo-card,
+.hcs-sample__card--prime .expo-card {
+  width: 100%;
+  margin: 0;
+  height: auto;
+}
+
+.hcs-sample__expand {
+  display: inline-flex;
+  margin-top: 0.45rem;
+  padding: 0.22rem 0.55rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  background: #fff;
+  color: #1e293b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hcs-sample__expand:hover,
+.hcs-sample__expand:focus-visible {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+/* 등록점검 스택 */
+.hcs-rc-compare.rc-compare--stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 0.35rem;
+}
+
+.hcs-rc-compare .rc-compare__row--basic {
+  display: block;
+}
+
+.hcs-rc-compare .rc-compare__row--upgrade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.rc-block--compare {
+  overflow-x: auto;
+}

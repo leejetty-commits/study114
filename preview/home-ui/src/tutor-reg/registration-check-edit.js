@@ -2,9 +2,9 @@
  * 과외쌤 등록점검 — 확대카드 · 접기/펼치기
  */
 
+import { buildTutorSampleItem } from '../home-card-samples/presets.js';
 import { openDetailDecision } from '../detail-decision/index.js';
 import { TRC_COPY } from './registration-check-copy.js';
-import { buildTutorSamplePreviewItem } from './registration-check-sample.js';
 
 /** @param {HTMLElement} root */
 export function bindTutorRegistrationCheckEvents(root) {
@@ -15,7 +15,7 @@ export function bindTutorRegistrationCheckEvents(root) {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       const tier = el.getAttribute('data-trc-expand-tier') || 'prime';
-      const item = buildTutorSamplePreviewItem(tier);
+      const item = buildTutorSampleItem(tier);
       openDetailDecision({
         kind: 'tutor',
         id: 0,

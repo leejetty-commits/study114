@@ -3,7 +3,7 @@
  * 저장은 tutors.inquiry_status PATCH. OTP 성공 후 같은 persist 경로로 이어진다.
  */
 
-import { bindInquirySampleGuides } from '../inquiry-settings/sample-ui.js';
+import { bindInquirySampleGuides } from '../home-card-samples/guides.js';
 import { isPhoneVerifiedLocal, showPhoneVerifyGateModal } from '../study-room-reg/phone-verify-gate.js';
 import { P21_INQUIRY_COPY } from './inquiries-copy.js';
 import { tutorInquiryStatusFromPref } from './inquiries-pref.js';

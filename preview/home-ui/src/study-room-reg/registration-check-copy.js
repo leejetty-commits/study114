@@ -37,11 +37,13 @@ export const RC_COPY = {
     pickReadyBody: '픽에 필요한 추가 항목이 채워져 있습니다.',
     primeReadyBody: '프라임에 필요한 추가 항목이 채워져 있습니다.',
     cardsTitle: 'Basic/Pick/Prime 이렇게 달라집니다',
-    cardsLead: '왼쪽은 지금 내 Basic 카드입니다. 오른쪽은 유료 노출 시 학부모에게 보이는 차이입니다. 카드를 누르면 확대카드가 열립니다.',
-    basicKicker: '내 현재 Basic',
-    pickKicker: 'Pick',
-    primeKicker: 'Prime',
-    expandHint: '클릭하면 확대카드가 열립니다',
+    cardsLead:
+      '샘플은 홈 실제 카드와 같은 크기·구성입니다. 1행은 베이직 목록 카드, 2행은 픽·프라임 유료 노출 카드입니다. 확대카드 보기로 상세를 엽니다.',
+    basicKicker: 'BASIC',
+    pickKicker: 'PICK',
+    primeKicker: 'PRIME',
+    expandCard: '확대카드 보기',
+    expandHint: '확대카드 보기로 상세를 엽니다',
   },
   board: {
     title: '전체 프로필 현황',

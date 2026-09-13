@@ -1,15 +1,15 @@
 /**
- * 공부방 쪽지설정 — 과외쌤과 동일 포맷 · 홈 BASIC 샘플 · SVG 화살표
+ * 공부방 쪽지설정 — 홈 BASIC 1칸 샘플 · SVG 화살표
  */
 import './verify-dom-storage-shim.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { P20_INQUIRY_COPY } from '../preview/home-ui/src/study-room-reg/study-room-reg-copy.js';
-import { renderHomeBasicInquiryList } from '../preview/home-ui/src/inquiry-settings/sample-cards.js';
+import { renderHomeBasicCardHtml } from '../preview/home-ui/src/home-card-samples/render.js';
 import {
   STUDY_ROOM_CARD_SAMPLE_IMAGE,
   buildStudyRoomInquirySampleItem,
-} from '../preview/home-ui/src/inquiry-settings/sample-presets.js';
+} from '../preview/home-ui/src/home-card-samples/presets.js';
 
 const root = process.cwd();
 let failed = 0;
@@ -32,15 +32,18 @@ const store = read('preview/home-ui/src/study-room-reg/store.js');
 assert(store.includes('hydrateRegistrationsCache'), 'store: inquiry save hydrates cache');
 assert(store.includes("apiStudyRoomAction(id, 'inquiry_status'"), 'store: PATCH inquiry_status');
 const css = read('preview/home-ui/src/styles/home-member-flows.css');
+const hcsCss = read('preview/home-ui/src/styles/home-card-samples.css');
+const hcsRender = read('preview/home-ui/src/home-card-samples/render.js');
+const guides = read('preview/home-ui/src/home-card-samples/guides.js');
 const rcRender = read('preview/home-ui/src/study-room-reg/registration-check-render.js');
 const rcModel = read('preview/home-ui/src/study-room-reg/registration-check-model.js');
-const sampleUi = read('preview/home-ui/src/inquiry-settings/sample-ui.js');
-const sampleCards = read('preview/home-ui/src/inquiry-settings/sample-cards.js');
 
 assert(screens.includes("renderInquirySamplePair('study_room'"), 'screens: shared inquiry sample pair');
-assert(sampleCards.includes("renderBrowseList(kind, [item]"), 'sample-cards: home BASIC renderBrowseList path');
-assert(sampleCards.includes('INQUIRY_SAMPLE_BUILDERS'), 'sample-cards: preset builders map');
-assert(screens.includes('data-inq-guide') || sampleUi.includes('data-inq-guide'), 'sample ui: SVG guide');
+assert(hcsRender.includes('renderBrowseList'), 'hcs: home BASIC renderBrowseList');
+assert(hcsRender.includes('INQUIRY_SAMPLE_BUILDERS'), 'hcs: inquiry preset builders');
+assert(guides.includes('data-inq-guide') || guides.includes('[data-inq-guide]'), 'guides: SVG guide');
+assert(guides.includes('item-actions [title^="쪽지"]'), 'guides: measures 쪽지 button');
+assert(!guides.includes('inq-home-width-probe'), 'guides: no width probe');
 assert(!screens.includes('renderStudyRoomInquirySample'), 'screens: local sample renderer removed');
 assert(!screens.includes('renderInquiryBasicPreview'), 'screens: live owner preview removed');
 assert(!screens.includes('inquiryCoverImageSrc'), 'screens: owner cover fallback removed');
@@ -73,21 +76,20 @@ for (const mark of orderMarks) {
 assert(P20_INQUIRY_COPY.sampleOpenCallout.includes('여기가 쪽지 관련 표시 위치'), 'copy: open callout');
 assert(P20_INQUIRY_COPY.sampleClosedCallout.includes('여기가 쪽지 관련 표시 위치'), 'copy: closed callout');
 
-assert(css.includes('inq-sample__home-context'), 'css: home-body context wrapper');
-assert(!css.includes('inq-home-width-probe'), 'css: width probe removed');
-assert(sampleUi.includes('home-body home-body--with-promo'), 'sample ui: home-body context');
-assert(sampleUi.includes('guest-browse-lists'), 'sample ui: guest-browse-lists like home');
+assert(hcsCss.includes('--hcs-basic-w'), 'css: basic 1-cell width token');
+assert(hcsCss.includes('hcs-sample__card--basic'), 'css: basic card cell');
+assert(!hcsCss.includes('inq-home-width-probe'), 'css: width probe removed');
+assert(!css.includes('inq-home-width-probe'), 'member css: width probe removed');
 assert(!css.includes('--p20-listing-w'), 'css: preview listing-w removed');
-assert(!/inq-sample__home-context[\s\S]{0,280}100vw/.test(css), 'css: sample context does not use 100vw');
+assert(!/transform:\s*scale/.test(hcsCss), 'css: sample card is not scaled');
+assert(!/100vw/.test(hcsCss), 'css: no 100vw');
 assert(!css.includes('p20-inq-sample__arrow'), 'css: old disconnected arrow removed');
-assert(!/inq-sample__home-context[\s\S]{0,220}transform:\s*scale/.test(css), 'css: sample card is not scaled');
-assert(!css.includes('p20-inquiries-card-preview__browse .expo-hcard.expo-basic--study_room'), 'css: old shrink override removed');
 
 const imgRel = 'preview/home-ui/public/assets/brand/room-card-default-basic.svg';
 assert(existsSync(resolve(root, imgRel)), 'sample: room default image exists');
 assert(STUDY_ROOM_CARD_SAMPLE_IMAGE.includes('room-card-default-basic.svg'), 'sample: image path is brand asset');
 
-const html = renderHomeBasicInquiryList('study_room', buildStudyRoomInquirySampleItem(true));
+const html = renderHomeBasicCardHtml('study_room', buildStudyRoomInquirySampleItem(true));
 assert(html.includes('room-card-default-basic.svg'), 'html: filled image');
 assert(!html.includes('expo-media--placeholder'), 'html: no gray placeholder');
 assert(html.includes('강남 수학 공부방'), 'html: name filled');

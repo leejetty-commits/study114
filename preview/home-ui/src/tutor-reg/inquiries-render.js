@@ -2,7 +2,7 @@
  * 과외쌤 쪽지설정 렌더 — 상태 확인 → 수정 → 검증 → 저장 → 카드 샘플
  */
 
-import { renderInquirySamplePair } from '../inquiry-settings/sample-cards.js';
+import { renderInquirySamplePair } from '../home-card-samples/render.js';
 import { isPhoneVerifiedLocal } from '../study-room-reg/phone-verify-gate.js';
 import { P21_INQUIRY_COPY, P21_INQUIRY_OFF_REASONS } from './inquiries-copy.js';
 import { tutorInquiryPrefFromStatus, tutorInquiryStoredLine, normalizeTutorInquiryStatus } from './inquiries-pref.js';

@@ -39,7 +39,7 @@ export const TRC_COPY = {
     cardsTitle: 'Basic/Pick/Prime 이렇게 달라집니다',
     cardsLead:
       '샘플은 홈 실제 카드와 같은 크기·구성입니다. 1행은 베이직 목록 카드, 2행은 픽·프라임 유료 노출 카드입니다. 확대카드 보기로 상세를 엽니다.',
-    basicKicker: '내 현재 BASIC',
+    basicKicker: 'BASIC',
     pickKicker: 'PICK',
     primeKicker: 'PRIME',
     expandCard: '확대카드 보기',

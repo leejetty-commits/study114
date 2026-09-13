@@ -59,14 +59,11 @@ assert(screens.includes('scrollToTutorRcFocus'), 'screens: focus scroll');
 assert(screens.includes('isReturnToRegistrationCheck'), 'screens: save return to RC');
 
 assert(render.includes('rc-block--action'), 'render: action blocks');
-assert(render.includes('rc-block--compare'), 'render: compare block separate');
-assert(render.includes('rc-compare__row--basic'), 'render: BASIC row');
-assert(render.includes('rc-compare__row--upgrade'), 'render: PICK+PRIME row');
-assert(render.includes("renderBrowseList('tutor'"), 'render: real BASIC tutor list card');
-assert(render.includes("renderExposureBox('tutor', 'pick'"), 'render: real PICK card');
-assert(render.includes("renderExposureBox('tutor', 'prime'"), 'render: real PRIME card');
-assert(render.includes('buildTutorSamplePreviewItem'), 'render: virtual sample cards');
-assert(render.includes('rc-sample__card'), 'render: pick sample cell');
+
+const hcsRender = read('preview/home-ui/src/home-card-samples/render.js');
+const hcsCss = read('preview/home-ui/src/styles/home-card-samples.css');
+assert(hcsRender.includes('rc-block--compare'), 'render: compare block separate');
+assert(render.includes("renderRegistrationCheckCardSamples('tutor'"), 'render: shared home-card samples');
 assert(render.includes('rc-fold-btn'), 'render: explicit fold button');
 assert(render.includes('data-trc-fold'), 'render: fold control');
 assert(!render.includes('rc-section--accordion'), 'render: detail1/2 not sibling accordion');
@@ -75,7 +72,16 @@ assert(copy.includes("detail1: '수업 · 가격'"), 'copy: detail1 = 수업 · 
 assert(copy.includes("detail2: '학력 · 소개 · 연락'"), 'copy: detail2 = 학력 · 소개 · 연락');
 assert(render.includes('rc-publish'), 'render: publish wrap');
 assert(render.includes('rc-next'), 'render: next action');
-assert(render.includes('data-trc-expand'), 'render: tutor expand namespace');
+assert(hcsRender.includes('data-trc-expand'), 'render: tutor expand namespace');
+assert(hcsRender.includes("renderRegistrationCheckCardSamples"), 'hcs: shared RC samples');
+assert(hcsRender.includes('rc-compare__row--basic'), 'hcs: BASIC row');
+assert(hcsRender.includes('rc-compare__row--upgrade'), 'hcs: PICK+PRIME row');
+assert(hcsRender.includes('renderBrowseList'), 'hcs: BASIC renderBrowseList');
+assert(hcsRender.includes("renderExposureBox(kind, 'pick'"), 'hcs: PICK renderExposureBox');
+assert(hcsRender.includes("renderExposureBox(kind, 'prime'"), 'hcs: PRIME renderExposureBox');
+assert(hcsCss.includes('--hcs-basic-w'), 'hcs css: basic cell');
+assert(hcsCss.includes('--hcs-pick-w'), 'hcs css: pick cell');
+assert(hcsCss.includes('--hcs-prime-w'), 'hcs css: prime cell');
 const pageFn = render.slice(render.indexOf('export function renderTutorRegistrationCheck'));
 assert(pageFn.includes('pickMissingTitle'), 'page: pick action');
 assert(pageFn.includes('primeMissingTitle'), 'page: prime action');
@@ -98,12 +104,12 @@ assert(!model.includes("row('grade_band'"), 'model: grade_band not on basic form
 assert(model.includes("row('fee_description'"), 'model: 가격 설명');
 assert(model.includes("row('major_name'"), 'model: 전공 단독');
 assert(model.includes("'monthly_session_count'"), 'model: 월 총 횟수 단독');
-assert(copy.includes("basicKicker: '내 현재 BASIC'"), 'copy: BASIC kicker');
+assert(copy.includes("basicKicker: 'BASIC'"), 'copy: BASIC kicker');
 assert(copy.includes("pickMissingTitle: '[픽] 추가 입력'"), 'copy: pick title');
 assert(copy.includes("primeMissingTitle: '[프라임] 추가 입력'"), 'copy: prime title');
 assert(!copy.includes('베이직 검색은 기본정보만으로도 가능합니다'), 'copy: no study-room basic-only claim');
 assert(css.includes('rc-compare--stack'), 'css: stack layout');
-assert(css.includes('[data-trc-page] .rc-sample__card--pick'), 'css: pick home-cell width');
+assert(hcsCss.includes('--hcs-pick-w'), 'css: pick home-cell width via hcs');
 assert(css.includes('[data-trc-page] .rc-fold-btn'), 'css: fold button');
 assert(css.includes('[data-trc-page] .rc-publish'), 'css: tutor publish scoped');
 
