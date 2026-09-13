@@ -37,6 +37,17 @@
     "verify:cur-006-email-verify-flow": "php scripts/verify-cur-006-email-verify-flow.php",
     "verify:cur-006-email-verify-inventory": "npx --yes vite-node scripts/verify-cur-006-email-verify-inventory.mjs",
     "verify:cur-006-post-verify-role": "npx --yes vite-node scripts/verify-cur-006-post-verify-role.mjs",
+    "verify:study-room-basic-register-api": "npx --yes vite-node scripts/verify-study-room-basic-register-api.mjs",
+    "verify:tutor-signup-seed": "npx --yes vite-node scripts/verify-tutor-signup-seed.mjs",
+    "verify:tutor-lesson-optional-step": "npx --yes vite-node scripts/verify-tutor-lesson-optional-step.mjs",
+    "verify:tutor-register-same-tab": "npx --yes vite-node scripts/verify-tutor-register-same-tab.mjs",
+    "verify:tutor-mypage-frame-ia": "npx --yes vite-node scripts/verify-tutor-mypage-frame-ia.mjs",
+    "verify:tutor-mypage-route-integrity": "npx --yes vite-node scripts/verify-tutor-mypage-route-integrity.mjs",
+    "verify:tutor-registration-check-frame": "npx --yes vite-node scripts/verify-tutor-registration-check-frame.mjs",
+    "verify:study-room-registration-check-frame": "npx --yes vite-node scripts/verify-study-room-registration-check-frame.mjs",
+    "verify:study-room-inquiries-samples": "npx --yes vite-node scripts/verify-study-room-inquiries-samples.mjs",
+    "verify:tutor-inquiries-settings": "npx --yes vite-node scripts/verify-tutor-inquiries-settings.mjs",
+    "verify:location-ssot": "node scripts/verify-location-ssot.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {
