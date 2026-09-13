@@ -20,7 +20,7 @@ import { renderSearchTierResults } from './search-tier-render.js';
 import { collectFiltersFromForm, searchApi } from './search-api.js';
 import { mapSearchResultsToExposure } from './search-exposure-mapper.js';
 import { renderBrowseList } from '@home-ui/exposure-render.js';
-import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from '@home-ui/section-headings.js';
+import { SECTION_HEADINGS, renderSectionTitleBar } from '@home-ui/section-headings.js';
 import {
   DEFAULT_STUDENT_HOPE_TYPE,
   renderHopeTypeGate,
@@ -519,15 +519,13 @@ function renderStudentDemandBlock(regionLabel, opts = {}) {
   if (!items.length) {
     return `
       <section class="search-student-demand" aria-label="해당 지역 학생 수요">
-        ${renderSectionHeading({ ...SECTION_HEADINGS.students })}
-        ${renderSectionToolbar({ locationLabel: regionLabel })}
+        ${renderSectionTitleBar({ ...SECTION_HEADINGS.students, locationLabel: regionLabel })}
         <p class="search-results__hint">이 지역에 표시할 학생 수요가 없습니다.</p>
       </section>`;
   }
   return `
     <section class="search-student-demand" aria-label="해당 지역 학생 수요">
-      ${renderSectionHeading({ ...SECTION_HEADINGS.students })}
-      ${renderSectionToolbar({ locationLabel: regionLabel })}
+      ${renderSectionTitleBar({ ...SECTION_HEADINGS.students, locationLabel: regionLabel })}
       <p class="search-results__hint">블라인드 · 시장 수요 참고 · 학생 간 쪽지 불가</p>
       ${renderBrowseList('student', items, {
         guest: opts.guest,

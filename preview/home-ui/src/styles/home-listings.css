@@ -207,9 +207,49 @@
   gap: 0;
 }
 
-.section-heading--basic + .section-toolbar {
-  margin: 0.1rem 0 0.2rem;
+/* 베이직: 제목(앞) + 현재위치·정렬(뒤) 한 행 */
+.section-title-bar--basic {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  margin: 0 0 0.25rem;
+  width: 100%;
+}
+
+.section-title-bar--basic .section-heading {
+  margin: 0;
+  padding-top: 0;
+  width: auto;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.section-title-bar--basic .section-heading__main {
+  width: auto;
+}
+
+.section-title-bar--basic .section-toolbar {
+  margin: 0;
+  width: auto;
+  flex: 0 1 auto;
   min-height: 0;
+  margin-left: auto;
+}
+
+.section-title-bar--basic .section-toolbar__cluster {
+  margin-left: 0;
+}
+
+.list-subsection > .section-title-bar--basic {
+  margin-top: 0;
+}
+
+.list-subsection .section-heading--basic {
+  padding-top: 0;
+  margin-bottom: 0;
 }
 
 .section-heading__ornament {
@@ -264,8 +304,12 @@
 }
 
 .list-subsection .section-heading--basic {
-  padding-top: var(--space-3);
+  padding-top: 0;
   margin-bottom: 0;
+}
+
+.list-subsection > .section-title-bar--basic {
+  padding-top: var(--space-3);
 }
 
 .list-sort-bar {

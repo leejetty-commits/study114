@@ -1,4 +1,4 @@
-import { renderSectionHeading, renderSectionToolbar } from './section-headings.js';
+import { renderSectionHeading, renderSectionToolbar, renderSectionTitleBar } from './section-headings.js';
 import {
   formatMonthlyWon,
   formatTutorFeeCard,
@@ -966,8 +966,10 @@ export function renderGuestPaginatedListBlock(kind, listId, headingCfg, allItems
 
   return `
     <div class="list-subsection" data-guest-list="${listId}">
-      ${renderSectionHeading(headingCfg)}
-      ${renderSectionToolbar({ locationLabel: headingCfg.locationLabel, sortHtml: sortBar })}
+      ${renderSectionTitleBar(headingCfg, {
+        locationLabel: headingCfg.locationLabel,
+        sortHtml: sortBar,
+      })}
       ${renderBrowseList(kind, pageItems, { guest: opts.guest ?? true, ...opts })}
       ${renderListPagination(listId, pool.length, page, basicPageSize)}
     </div>
@@ -993,8 +995,10 @@ export function renderBasicListBlock(kind, headingCfg, items, opts = {}) {
 
   return `
     <div class="list-subsection" data-guest-list="${listId}">
-      ${renderSectionHeading(headingCfg)}
-      ${renderSectionToolbar({ locationLabel: headingCfg.locationLabel, sortHtml: sortBar })}
+      ${renderSectionTitleBar(headingCfg, {
+        locationLabel: headingCfg.locationLabel,
+        sortHtml: sortBar,
+      })}
       ${renderBrowseList(kind, pageItems, opts)}
       ${usePager ? renderListPagination(listId, pool.length, page, basicPageSize) : ''}
     </div>

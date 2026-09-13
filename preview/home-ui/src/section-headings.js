@@ -1,4 +1,4 @@
-/** 섹션 타이틀 SSOT — 프라임/픽/베이직 브랜드 고유명사 · 제목 단독행 · 현재위치는 정렬과 같은 행 */
+/** 섹션 타이틀 SSOT — 프라임/픽 단독행 · 베이직은 제목+현재위치+정렬 한 행 */
 
 function esc(s) {
   return String(s ?? '')
@@ -87,6 +87,29 @@ export function renderSectionToolbar(opts = {}) {
         ${sortHtml ? `<div class="section-toolbar__sort">${sortHtml}</div>` : ''}
       </div>
     </div>`;
+}
+
+/**
+ * 베이직: 제목 + 현재위치 + 정렬을 한 행 (제목 맨 앞)
+ * 프라임/픽: 제목 단독행 + 아래 toolbar
+ * @param {Parameters<typeof renderSectionHeading>[0]} headingCfg
+ * @param {{ locationLabel?: string, sortHtml?: string, inline?: boolean }} [opts]
+ */
+export function renderSectionTitleBar(headingCfg, opts = {}) {
+  const tier = headingCfg?.tier || 'plain';
+  const locationLabel = opts.locationLabel ?? headingCfg?.locationLabel;
+  const sortHtml = opts.sortHtml || '';
+  const heading = renderSectionHeading({ ...headingCfg, locationLabel: undefined });
+  const toolbar = renderSectionToolbar({ locationLabel, sortHtml });
+  const forceInline = opts.inline === true || tier === 'basic';
+  if (forceInline) {
+    return `
+    <div class="section-title-bar section-title-bar--basic">
+      ${heading}
+      ${toolbar}
+    </div>`;
+  }
+  return `${heading}${toolbar}`;
 }
 
 /**

@@ -11,7 +11,7 @@ import {
   getPrimeOccupied,
   getPrimeCandidatePool,
 } from '@home-ui/exposure-render.js';
-import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from '@home-ui/section-headings.js';
+import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar, renderSectionTitleBar } from '@home-ui/section-headings.js';
 import { partitionByExposureTier } from './search-exposure-mapper.js';
 import { renderSearchZeroState } from '@home-ui/empty-state-copy.js';
 import {
@@ -124,29 +124,36 @@ function renderProviderFlatResults(
     return `<div class="search-flat-results search-flat-results--empty" data-surface="search-flat" data-search-phase="${mode}">${renderSearchZeroState(tab, mode)}</div>`;
   }
 
-  let headingHtml = '';
+  let titleBarHtml = '';
   if (!flatOpts.omitHeading) {
     if (mode === 'region') {
-      headingHtml = renderSectionHeading({ ...basicHeading, locationLabel: loc });
+      titleBarHtml = renderSectionTitleBar(
+        { ...basicHeading, locationLabel: loc },
+        { sortHtml: renderListSortSelect(kind, sort, { mode: 'search' }) },
+      );
     } else {
       const findLabel = kind === 'study_room' ? '공부방 찾기 결과' : '과외쌤 찾기 결과';
-      headingHtml = renderSectionHeading({
-        tier: 'basic',
-        brandText: '우동공과',
-        title: findLabel,
-        ariaTitle: `우동공과 ${findLabel}`,
-        locationLabel: loc,
-      });
+      titleBarHtml = renderSectionTitleBar(
+        {
+          tier: 'basic',
+          brandText: '우동공과',
+          title: findLabel,
+          ariaTitle: `우동공과 ${findLabel}`,
+          locationLabel: loc,
+        },
+        { sortHtml: renderListSortSelect(kind, sort, { mode: 'search' }) },
+      );
     }
+  } else {
+    titleBarHtml = renderSectionToolbar({
+      locationLabel: loc,
+      sortHtml: renderListSortSelect(kind, sort, { mode: 'search' }),
+    });
   }
 
   return `
     <div class="content-section search-flat-results" data-surface="search-flat" data-search-phase="${mode}">
-      ${headingHtml}
-      ${renderSectionToolbar({
-        locationLabel: loc,
-        sortHtml: renderListSortSelect(kind, sort, { mode: 'search' }),
-      })}
+      ${titleBarHtml}
       ${renderBrowseList(kind, ordered, { ...opts, sourceRoute: 'search' })}
     </div>`;
 }
@@ -170,11 +177,10 @@ function renderStudentTierResults(items, opts = {}, sectionTag = '', mode = 'sea
 
   return `
     <div class="content-section search-tier-results" data-surface="student-blind">
-      ${renderSectionHeading({ ...SECTION_HEADINGS.students, locationLabel: sectionTag || '' })}
-      ${renderSectionToolbar({
-        locationLabel: sectionTag || '',
-        sortHtml: renderListSortSelect('student', sort, { mode: 'search' }),
-      })}
+      ${renderSectionTitleBar(
+        { ...SECTION_HEADINGS.students, locationLabel: sectionTag || '' },
+        { sortHtml: renderListSortSelect('student', sort, { mode: 'search' }) },
+      )}
       ${renderBrowseList('student', ordered, { ...opts, sourceRoute: 'search' })}
     </div>`;
 }
