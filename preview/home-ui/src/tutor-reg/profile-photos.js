@@ -4,7 +4,6 @@
  */
 
 import {
-  validatePromoImageFile,
   openPromoCropDialog,
   readImageSize,
   PROMO_IMAGE_SPEC,
@@ -81,25 +80,80 @@ export function tutorCardImagePaths(tutor) {
 
 export function tutorProfilePhotoHint() {
   const s = TUTOR_PROFILE_PHOTO_SPEC;
-  return `JPG · PNG · WebP / 권장 ${s.recommended} / 최소 ${s.minWidth}×${s.minHeight} / 파일 최대 4MB · ${s.maxCount}장. 올리면 베이직 카드용 정사각(${s.basicSize}×${s.basicSize})과 프라임용 16:9(${s.primeWidth}×${s.primeHeight})로 자동 리사이즈합니다. 왼쪽(1번)이 대표 사진입니다.`;
+  return `JPG · PNG · WebP / 권장 ${s.recommended} / 파일 최대 4MB · ${s.maxCount}장. ${s.minWidth}×${s.minHeight}보다 작으면 최소 크기로 확대한 뒤, 베이직 정사각(${s.basicSize}×${s.basicSize})·프라임 16:9(${s.primeWidth}×${s.primeHeight})로 맞춥니다. 왼쪽(1번)이 대표 사진입니다.`;
+}
+
+function extOfName(name) {
+  const m = String(name || '')
+    .toLowerCase()
+    .match(/\.([a-z0-9]+)$/);
+  return m ? m[1] : '';
 }
 
 /**
+ * 형식·용량만 검사. 픽셀이 작아도 통과(업로드 전 최소 크기로 확대).
  * @param {File} file
  * @returns {Promise<string>} 오류 메시지. 통과면 빈 문자열.
  */
 export async function validateTutorProfilePhoto(file) {
-  const base = await validatePromoImageFile(file);
-  if (base) return base;
+  if (!file) return '파일을 선택해 주세요.';
+  const ext = extOfName(file.name);
+  const mimeOk = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type);
+  const extOk = TUTOR_PROFILE_PHOTO_SPEC.acceptExt.includes(ext);
+  if (!mimeOk && !extOk) {
+    return 'JPG, PNG, WebP 파일만 올릴 수 있습니다.';
+  }
+  if (file.size > TUTOR_PROFILE_PHOTO_SPEC.maxBytes) {
+    return '파일 용량은 4MB 이하여야 합니다.';
+  }
   try {
     const { width, height } = await readImageSize(file);
-    if (width < TUTOR_PROFILE_PHOTO_SPEC.minWidth || height < TUTOR_PROFILE_PHOTO_SPEC.minHeight) {
-      return `최소 ${TUTOR_PROFILE_PHOTO_SPEC.minWidth}×${TUTOR_PROFILE_PHOTO_SPEC.minHeight} 픽셀 이상이어야 합니다. (현재 ${width}×${height})`;
+    if (width < 1 || height < 1) {
+      return '이미지를 확인할 수 없습니다.';
     }
   } catch (err) {
     return err instanceof Error ? err.message : '이미지를 확인할 수 없습니다.';
   }
   return '';
+}
+
+/**
+ * 가로·세로가 최소보다 작으면 비율 유지한 채 확대(둘 다 최소 이상).
+ * @param {File} file
+ * @returns {Promise<File>}
+ */
+export async function ensureTutorProfilePhotoMinSize(file) {
+  const minW = TUTOR_PROFILE_PHOTO_SPEC.minWidth;
+  const minH = TUTOR_PROFILE_PHOTO_SPEC.minHeight;
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('이미지를 읽을 수 없습니다.'));
+      el.src = url;
+    });
+    const sw = img.naturalWidth || img.width;
+    const sh = img.naturalHeight || img.height;
+    if (sw >= minW && sh >= minH) {
+      return file;
+    }
+    const scale = Math.max(minW / Math.max(1, sw), minH / Math.max(1, sh));
+    const tw = Math.max(minW, Math.round(sw * scale));
+    const th = Math.max(minH, Math.round(sh * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = tw;
+    canvas.height = th;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('이미지 캔버스를 만들 수 없습니다.');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, tw, th);
+    const dataUrl = canvasToJpegDataUrl(canvas, TUTOR_PROFILE_PHOTO_SPEC.jpegQuality);
+    return dataUrlToJpegFile(dataUrl, file.name || 'profile.jpg');
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 /**
@@ -428,11 +482,18 @@ export function bindTutorProfilePhotos(root, opts) {
       alert(err);
       return;
     }
-    const crop = await openPromoCropDialog(document.body, { file });
+    let prepared = file;
+    try {
+      prepared = await ensureTutorProfilePhotoMinSize(file);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '사진을 준비하지 못했습니다.');
+      return;
+    }
+    const crop = await openPromoCropDialog(document.body, { file: prepared });
     if (!crop) return;
 
     try {
-      const local = await processTutorProfilePhoto(file, crop.cropX, crop.cropY);
+      const local = await processTutorProfilePhoto(prepared, crop.cropX, crop.cropY);
       let uploaded = null;
       if (isRegistrationsApiMode()) {
         // 원본 2~4MB 대신 1200px JPEG만 올려 서버 GD 메모리·용량 부담을 줄인다.
