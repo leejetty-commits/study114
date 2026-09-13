@@ -108,11 +108,12 @@ export function invalidateProviderStatus() {
 /**
  * status.php만 사용. 실패 시 캐시를 비우고 throw (쪽지권 묶음권 fail-closed용)
  * @param {number} [days]
+ * @param {{ regionBasisType?: string, regionId?: string|number, complexId?: string|number, slotGroup?: string }} [region]
  */
-export async function hydrateProviderStatusStrict(days = 7) {
+export async function hydrateProviderStatusStrict(days = 7, region = {}) {
   apiMode = true;
   invalidateProviderStatus();
-  const data = await fetchPaidStatus(days);
+  const data = await fetchPaidStatus(days, region);
   applyProviderStatus({ ...data, is_provider: true });
   return cached;
 }
@@ -120,11 +121,12 @@ export async function hydrateProviderStatusStrict(days = 7) {
 /**
  * 공급자: status.php 우선 · 실패 시 entitlements
  * @param {number} [days]
+ * @param {{ regionBasisType?: string, regionId?: string|number, complexId?: string|number, slotGroup?: string }} [region]
  */
-export async function hydrateProviderStatus(days = 7) {
+export async function hydrateProviderStatus(days = 7, region = {}) {
   apiMode = true;
   try {
-    const data = await fetchPaidStatus(days);
+    const data = await fetchPaidStatus(days, region);
     applyProviderStatus({ ...data, is_provider: true });
     return cached;
   } catch (statusErr) {

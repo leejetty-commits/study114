@@ -42,6 +42,8 @@ final class ProviderCheckoutService
     /**
      * @param 'study_room'|'tutor'|null $providerType
      * @param array<string, mixed> $memoIntent 1회 즉시권: student_id, body, context_label, peer_display_name
+     * @param list<string> $badgeCodes
+     * @param array<string, mixed> $regionInput 공부방 Prime: region_basis_type · region_id|complex_id · slot_group?
      * @return array<string, mixed>
      */
     public function createOrder(
@@ -51,6 +53,8 @@ final class ProviderCheckoutService
         ?string $providerType = null,
         ?int $providerId = null,
         array $memoIntent = [],
+        array $badgeCodes = [],
+        array $regionInput = [],
     ): array {
         $productId = trim($productId);
         $variant = trim($variant);
@@ -58,17 +62,12 @@ final class ProviderCheckoutService
             $productId = 'jjokjipge';
         }
 
-        // 배지: 기간은 활성 포지션에서 상속 (클라이언트 별도 기간 선택 없음)
         $kindHint = $this->kindHint($productId);
+
+        // 단독 배지 구매 금지 — Prime/Pick 최초 구매·연장에만 번들로 첨부
         if ($kindHint === 'badge_addon') {
-            $this->requireProviderContext($userId, $providerType, $providerId);
-            /** @var 'study_room'|'tutor' $providerType */
-            $this->assertBadgePurchaseAllowed($userId, $productId, $providerType, $providerId);
-            $variant = $this->resolveBadgePeriodFromActivePosition(
-                $userId,
-                $providerType,
-                $providerId,
-                $variant,
+            throw new InvalidArgumentException(
+                '이용기간 중 배지 추가·교체는 제공하지 않습니다. 홍보 배지는 Prime/Pick 최초 구매 또는 연장 시에만 함께 선택할 수 있습니다.',
             );
         }
 
@@ -78,11 +77,44 @@ final class ProviderCheckoutService
         $productId = (string) $quote['product_id'];
         $variant = (string) $quote['variant_label'];
 
+        /** @var list<string> $normalizedBadges */
+        $normalizedBadges = [];
+        $badgeQuotes = [];
+        $badgeList = 0;
+        $badgeDiscount = 0;
+        $badgeSale = 0;
+        /** @var array<string, mixed>|null $primeRegionScope */
+        $primeRegionScope = null;
+
         if ($kind === 'position' || $kind === 'badge_addon') {
             $this->requireProviderContext($userId, $providerType, $providerId);
             /** @var 'study_room'|'tutor' $providerType */
-            if ($kind === 'badge_addon') {
-                // 위에서 이미 검증·기간 상속
+            if ($kind === 'position') {
+                if ($productId === 'prime' && $providerType === 'study_room') {
+                    $primeRegionScope = $this->requireRoomPrimeRegionScope($providerId, $regionInput);
+                    $this->assertRoomPrimeAvailableInScope($primeRegionScope);
+                }
+                $normalizedBadges = $this->badges->normalizeBadgeCodesForBundle($providerType, $badgeCodes);
+                if ($normalizedBadges !== []) {
+                    if (!$this->badges->tableReady()) {
+                        throw new InvalidArgumentException(
+                            'provider_paid_badges 미적용 — schema 055를 먼저 적용하세요.',
+                        );
+                    }
+                    foreach ($normalizedBadges as $badgeCode) {
+                        $bq = PaidCatalog::quote($badgeCode, $variant, $providerType);
+                        $badgeQuotes[] = [
+                            'badge_code' => $badgeCode,
+                            'list_price_krw' => (int) $bq['list_price_krw'],
+                            'discount_krw' => (int) $bq['discount_krw'],
+                            'sale_price_krw' => (int) $bq['sale_price_krw'],
+                            'variant_label' => (string) $bq['variant_label'],
+                        ];
+                        $badgeList += (int) $bq['list_price_krw'];
+                        $badgeDiscount += (int) $bq['discount_krw'];
+                        $badgeSale += (int) $bq['sale_price_krw'];
+                    }
+                }
             }
         } elseif ($kind === 'count') {
             $this->requireProviderContext($userId, $providerType, $providerId);
@@ -97,6 +129,33 @@ final class ProviderCheckoutService
             }
         }
 
+        if ($badgeCodes !== [] && $kind !== 'position') {
+            throw new InvalidArgumentException(
+                '홍보 배지는 Prime/Pick 구매에만 함께 첨부할 수 있습니다.',
+            );
+        }
+
+        $amountWon = (int) $quote['amount_won'] + $badgeSale;
+        $listPriceWon = (int) $quote['list_price_krw'] + $badgeList;
+        $discountWon = (int) $quote['discount_krw'] + $badgeDiscount;
+        $snapshot = is_array($quote['price_snapshot'] ?? null) ? $quote['price_snapshot'] : [];
+        if ($normalizedBadges !== []) {
+            $snapshot['badge_codes'] = $normalizedBadges;
+            $snapshot['badge_lines'] = $badgeQuotes;
+            $snapshot['badge_sale_krw'] = $badgeSale;
+            $snapshot['position_sale_krw'] = (int) $quote['sale_price_krw'];
+            $snapshot['total_sale_krw'] = $amountWon;
+        }
+        if ($primeRegionScope !== null) {
+            $snapshot['prime_region'] = [
+                'region_basis_type' => $primeRegionScope['region_basis_type'],
+                'region_id' => $primeRegionScope['region_id'],
+                'complex_id' => $primeRegionScope['complex_id'],
+                'slot_group' => $primeRegionScope['slot_group'],
+                'inventory_key' => $primeRegionScope['inventory_key'],
+            ];
+        }
+
         $orderRef = 'dev-' . bin2hex(random_bytes(8));
         $this->orders->insertPending(
             $userId,
@@ -104,13 +163,13 @@ final class ProviderCheckoutService
             $productId,
             $variant,
             $kind,
-            (int) $quote['amount_won'],
+            $amountWon,
             $providerType,
             $providerId,
             (string) $quote['catalog_version'],
-            (int) $quote['list_price_krw'],
-            (int) $quote['discount_krw'],
-            $quote['price_snapshot'],
+            $listPriceWon,
+            $discountWon,
+            $snapshot,
         );
 
         if ($kind === 'count' && MemoTicketPolicy::isImmediateVariant($variant) && $providerType !== null && $providerId !== null) {
@@ -128,11 +187,11 @@ final class ProviderCheckoutService
 
         return [
             'order_ref' => $orderRef,
-            'amount_won' => (int) $quote['amount_won'],
-            'list_price_krw' => (int) $quote['list_price_krw'],
-            'discount_krw' => (int) $quote['discount_krw'],
+            'amount_won' => $amountWon,
+            'list_price_krw' => $listPriceWon,
+            'discount_krw' => $discountWon,
             'discount_rate' => (float) $quote['discount_rate'],
-            'sale_price_krw' => (int) $quote['sale_price_krw'],
+            'sale_price_krw' => $amountWon,
             'catalog_version' => (string) $quote['catalog_version'],
             'memo_bundle' => (int) $quote['memo_bundle'],
             'ticket_kind' => $quote['ticket_kind'],
@@ -143,7 +202,9 @@ final class ProviderCheckoutService
             'provider_type' => $providerType,
             'provider_id' => $providerId,
             'pg_provider' => 'dev_mock',
-            'price_snapshot' => $quote['price_snapshot'],
+            'price_snapshot' => $snapshot,
+            'badge_codes' => $normalizedBadges,
+            'badge_sale_krw' => $badgeSale,
         ];
     }
 
@@ -342,6 +403,9 @@ final class ProviderCheckoutService
                 } elseif (isset($grant['badge_code'])) {
                     $payload['paid_badge_grant'] = $grant;
                 }
+                if (isset($grant['paid_badge_grants']) && is_array($grant['paid_badge_grants'])) {
+                    $payload['paid_badge_grants'] = $grant['paid_badge_grants'];
+                }
                 if (isset($grant['memo_bundle_granted'])) {
                     $payload['memo_bundle_granted'] = (int) $grant['memo_bundle_granted'];
                 }
@@ -385,6 +449,65 @@ final class ProviderCheckoutService
             throw new InvalidArgumentException('provider_type은 study_room | tutor 만 허용합니다.');
         }
         $this->badges->assertOwnedProvider($userId, $providerType, $providerId);
+    }
+
+    /**
+     * 공부방 Prime 전용 — 선택 지역 스코프 정규화·소유 검증.
+     *
+     * @param array<string, mixed> $regionInput
+     * @return array{
+     *   region_basis_type: 'dong'|'complex',
+     *   region_id: int|null,
+     *   complex_id: int|null,
+     *   slot_group: string,
+     *   inventory_key: string
+     * }
+     */
+    private function requireRoomPrimeRegionScope(int $studyRoomId, array $regionInput): array
+    {
+        $scopeHelper = new PrimeRegionScope($this->pdo);
+        if (!$scopeHelper->positionScopeColumnsReady()) {
+            throw new InvalidArgumentException(
+                'provider_position_subscriptions 지역 스코프 미적용 — schema 065를 먼저 적용하세요.',
+            );
+        }
+        $scope = $scopeHelper->normalizeFromInput($regionInput);
+        $scopeHelper->assertOwnedByStudyRoom($studyRoomId, $scope);
+
+        return $scope;
+    }
+
+    /**
+     * @param array{
+     *   region_basis_type: 'dong'|'complex',
+     *   region_id: int|null,
+     *   complex_id: int|null,
+     *   inventory_key: string
+     * } $scope
+     */
+    private function assertRoomPrimeAvailableInScope(array $scope): void
+    {
+        $scopeHelper = new PrimeRegionScope($this->pdo);
+        $used = $scopeHelper->countActiveStudyRoomPrimesInScope($scope);
+        if ($used >= PrimeRegionScope::CAPACITY) {
+            throw new PaidConflictException(
+                '현재 선택 지역의 Prime 자리는 모두 이용 중입니다. 예약대기를 등록한 뒤 빈자리가 열릴 때 결제해 주세요. 대기 등록만으로 자리나 순번이 보장되지 않습니다.',
+            );
+        }
+    }
+
+    /**
+     * @deprecated 전역 게이트 — 065 이후 사용하지 않음. 레거시 호출 차단용.
+     * @param 'study_room'|'tutor' $providerType
+     */
+    private function assertRoomPrimeAvailable(string $productId, string $providerType): void
+    {
+        if ($productId !== 'prime' || $providerType !== 'study_room') {
+            return;
+        }
+        throw new InvalidArgumentException(
+            '적용 지역을 먼저 선택해 주세요. (공부방 Prime은 지역별 재고로만 구매할 수 있습니다)',
+        );
     }
 
     /**
@@ -493,6 +616,13 @@ final class ProviderCheckoutService
             }
             $this->badges->assertOwnedProvider($userId, $providerType, $providerId);
             $period = PositionPeriodCalculator::fromVariant($variant);
+            $snapshot = $this->decodeOrderSnapshot($order);
+            $regionScope = null;
+            if ($productId === 'prime' && $providerType === 'study_room') {
+                $primeRegion = is_array($snapshot['prime_region'] ?? null) ? $snapshot['prime_region'] : [];
+                $regionScope = $this->requireRoomPrimeRegionScope($providerId, $primeRegion);
+                $this->assertRoomPrimeAvailableInScope($regionScope);
+            }
             $this->tickets->addPositionSubscription(
                 $userId,
                 $productId,
@@ -500,6 +630,7 @@ final class ProviderCheckoutService
                 'payment',
                 $providerType,
                 $providerId,
+                $regionScope,
             );
             $bundle = TutorPositionMemoBundle::memoCount($productId, $variant, $providerType);
             if ($bundle > 0) {
@@ -517,7 +648,27 @@ final class ProviderCheckoutService
                 );
             }
 
-            return ['memo_bundle_granted' => $bundle];
+            $badgeGrants = [];
+            $codes = $snapshot['badge_codes'] ?? [];
+            if (is_array($codes) && $codes !== []) {
+                $startsOn = (string) ($period['started_on'] ?? date('Y-m-d'));
+                $endExclusive = (string) ($period['end_exclusive_on'] ?? '');
+                foreach ($codes as $code) {
+                    $badgeGrants[] = $this->badges->grantFromOrder(
+                        $providerType,
+                        $providerId,
+                        (string) $code,
+                        $startsOn,
+                        $endExclusive,
+                        $orderRef . ':' . $code,
+                    );
+                }
+            }
+
+            return [
+                'memo_bundle_granted' => $bundle,
+                'paid_badge_grants' => $badgeGrants,
+            ];
         }
 
         if ($kind === 'badge_addon') {
@@ -578,6 +729,24 @@ final class ProviderCheckoutService
             'provider_id' => $providerId,
             'position_end_exclusive_on' => $endExclusive,
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $order
+     * @return array<string, mixed>
+     */
+    private function decodeOrderSnapshot(array $order): array
+    {
+        $raw = $order['price_snapshot_json'] ?? $order['price_snapshot'] ?? null;
+        if (is_array($raw)) {
+            return $raw;
+        }
+        if (!is_string($raw) || $raw === '') {
+            return [];
+        }
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 
     /** @param array<string, mixed> $order */

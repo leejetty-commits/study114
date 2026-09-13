@@ -19,8 +19,14 @@ PaidApi::run(static function (): void {
     }
 
     $days = PaidApi::queryInt('days', 7);
+    $primeRegionInput = [];
+    foreach (['region_basis_type', 'region_id', 'complex_id', 'slot_group', 'region_label'] as $rk) {
+        if (isset($_GET[$rk]) && $_GET[$rk] !== '') {
+            $primeRegionInput[$rk] = $_GET[$rk];
+        }
+    }
     $service = new ProviderUsageService();
-    $summary = $service->getFullSummary($userId, $days > 0 ? $days : 7);
+    $summary = $service->getFullSummary($userId, $days > 0 ? $days : 7, $primeRegionInput);
 
     PaidApi::ok($summary);
 });

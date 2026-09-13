@@ -192,6 +192,73 @@ final class PaidBadgeRepository
         }
     }
 
+    /**
+     * 활성(이용 중) 서로 다른 배지 코드 목록.
+     *
+     * @param 'study_room'|'tutor' $providerType
+     * @return list<string>
+     */
+    public function listActiveDistinctCodes(string $providerType, int $providerId): array
+    {
+        if (!$this->tableReady() || $providerId <= 0) {
+            return [];
+        }
+        $this->assertProviderType($providerType);
+        $stmt = $this->pdo->prepare(
+            "SELECT DISTINCT badge_code FROM provider_paid_badges
+             WHERE provider_type = ? AND provider_id = ?
+               AND status = 'active' AND end_exclusive_on > CURDATE()
+             ORDER BY badge_code ASC"
+        );
+        $stmt->execute([$providerType, $providerId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        return array_values(array_map('strval', $rows));
+    }
+
+    /**
+     * Prime/Pick 최초 구매·연장에 첨부하는 배지 코드 검증 (최대 2 · 역할 허용 · 중복 금지).
+     *
+     * @param 'study_room'|'tutor' $providerType
+     * @param list<string> $badgeCodes
+     * @return list<string> 정규화된 코드
+     */
+    public function normalizeBadgeCodesForBundle(string $providerType, array $badgeCodes): array
+    {
+        $this->assertProviderType($providerType);
+        $normalized = [];
+        foreach ($badgeCodes as $raw) {
+            $code = trim((string) $raw);
+            if ($code === '') {
+                continue;
+            }
+            if ($code === 'picked') {
+                $code = 'jjokjipge';
+            }
+            $this->assertBadgeAllowedForProvider($providerType, $code);
+            $resolved = (new PaidBadgeResolver($this->pdo))->normalizeCode($code, $providerType);
+            if ($resolved === null) {
+                throw new InvalidArgumentException(
+                    "배지 {$code} 는 {$providerType} 전용 상품이 아닙니다.",
+                );
+            }
+            if (in_array($resolved, $normalized, true)) {
+                throw new InvalidArgumentException('같은 종류의 배지는 중복 선택할 수 없습니다.');
+            }
+            $normalized[] = $resolved;
+        }
+        if (count($normalized) > 2) {
+            throw new InvalidArgumentException(
+                '홍보 배지는 서로 다른 종류를 최대 2개까지 선택할 수 있습니다.',
+            );
+        }
+
+        return $normalized;
+    }
+
     private function assertProviderType(string $providerType): void
     {
         if ($providerType !== 'study_room' && $providerType !== 'tutor') {

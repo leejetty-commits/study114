@@ -26,6 +26,7 @@ final class ProviderStatusService
     }
 
     /**
+     * @param array<string, mixed> $primeRegionInput
      * @return array{
      *   is_provider: bool,
      *   subscription_tier: string,
@@ -40,7 +41,7 @@ final class ProviderStatusService
      *   can_cold_memo: bool
      * }
      */
-    public function build(int $userId, bool $isProvider): array
+    public function build(int $userId, bool $isProvider, array $primeRegionInput = []): array
     {
         $row = $this->entitlements->getForUser($userId);
         $tier = $row !== null ? (string) $row['subscription_tier'] : 'free';
@@ -51,7 +52,7 @@ final class ProviderStatusService
         $viewSummary = $this->tickets->getRequestViewTicketSummary($userId);
         $canColdMemo = $isProvider && $this->tickets->canColdMemo($userId);
         $unlockedIds = $isProvider ? $this->tickets->listUnlockedStudentIds($userId) : [];
-        $ops = $isProvider ? $this->tickets->getOperationalStatus($userId) : null;
+        $ops = $isProvider ? $this->tickets->getOperationalStatus($userId, $primeRegionInput) : null;
         $exposure = $ops['exposure'] ?? $this->emptyExposure();
         $slots = $ops['slots'] ?? null;
         $memoPacks = $ops['tickets']['memo']['packs'] ?? [];

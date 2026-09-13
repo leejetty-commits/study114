@@ -53,5 +53,28 @@ PaidApi::run(static function (): void {
         ];
     }
 
-    PaidApi::ok($service->createOrder($userId, $productId, $variant, $providerType, $providerId, $memoIntent));
+    $badgeCodes = [];
+    if (isset($input['badge_codes']) && is_array($input['badge_codes'])) {
+        foreach ($input['badge_codes'] as $code) {
+            $badgeCodes[] = (string) $code;
+        }
+    }
+
+    $regionInput = [];
+    foreach (['region_basis_type', 'region_basis', 'region_id', 'complex_id', 'slot_group', 'region_label'] as $rk) {
+        if (array_key_exists($rk, $input)) {
+            $regionInput[$rk] = $input[$rk];
+        }
+    }
+
+    PaidApi::ok($service->createOrder(
+        $userId,
+        $productId,
+        $variant,
+        $providerType,
+        $providerId,
+        $memoIntent,
+        $badgeCodes,
+        $regionInput,
+    ));
 });

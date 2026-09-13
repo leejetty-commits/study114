@@ -122,7 +122,7 @@ const PRODUCT_COPY = {
   },
   hot: {
     tagline: '홍보 배지 · 노출상품 기간 상속',
-    bullets: ['최대 1개', 'New·추천 판매 아님'],
+    bullets: ['서로 다른 배지 최대 2개', 'New·추천 판매 아님'],
     family: 'badge_addon',
     featured: false,
     implemented: true,

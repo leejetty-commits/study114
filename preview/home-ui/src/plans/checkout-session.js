@@ -18,6 +18,12 @@ const RESULT_KEY = 'study114-plans-result';
  * @property {string} providerId
  * @property {string} providerLabel
  * @property {number} createdAt
+ * @property {string[]} [badgeCodes]
+ * @property {string} [regionBasisType]
+ * @property {string|number} [regionId]
+ * @property {string|number} [complexId]
+ * @property {string} [slotGroup]
+ * @property {string} [regionLabel]
  */
 
 /**
