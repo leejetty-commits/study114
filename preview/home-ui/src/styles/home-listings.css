@@ -207,14 +207,14 @@
   gap: 0;
 }
 
-/* 베이직: 제목(앞) + 현재위치·정렬(뒤) 한 행 */
+/* 베이직만: 제목(앞) + 현재위치·정렬(뒤). 데스크탑 한 행, 넘치면 자연 줄바꿈 */
 .section-title-bar--basic {
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.35rem 0.65rem;
+  justify-content: flex-start;
+  gap: 0.35rem 0.75rem;
   margin: 0 0 0.25rem;
   width: 100%;
 }
@@ -223,40 +223,23 @@
   margin: 0;
   padding-top: 0;
   width: auto;
-  max-width: 48%;
-  flex: 0 1 auto;
-  min-width: 0;
+  flex: 0 0 auto;
 }
 
 .section-title-bar--basic .section-heading__main {
   width: auto;
 }
 
-.section-title-bar--basic .section-heading__title {
-  white-space: nowrap;
-}
-
 .section-title-bar--basic .section-toolbar {
-  margin: 0 0 0 0;
-  width: auto !important;
-  max-width: 52%;
+  margin: 0 0 0 auto;
+  width: auto;
   flex: 0 1 auto;
-  min-width: 0;
   min-height: 0;
-  margin-left: auto;
+  flex-wrap: wrap;
 }
 
 .section-title-bar--basic .section-toolbar__cluster {
   margin-left: 0;
-  flex-wrap: nowrap;
-  max-width: 100%;
-}
-
-.section-title-bar--basic .section-heading__loc-value {
-  max-width: 7.5rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .section-heading__ornament {
