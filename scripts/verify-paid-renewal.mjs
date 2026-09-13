@@ -77,8 +77,9 @@ ok(
   screens.includes('const roomPrimeOnly = role === \'study_room\' && product.productCode === \'prime\''),
 );
 ok(
-  'tutor 가이드: 매진·예약대기 금지 카피',
-  screens.includes('점유 슬롯·매진·예약대기는 과외쌤에 적용되지 않습니다'),
+  'tutor 가이드: 점유·예약대기 금지 카피',
+  screens.includes('점유·예약대기 UI는 과외쌤에 적용되지 않습니다') ||
+    screens.includes('재고·예약대기 UI가 없습니다'),
 );
 ok(
   'ticket service: pick inventory false',
@@ -106,6 +107,33 @@ ok('Ticket typography CSS', css.includes('.plans-ticket-card__count'));
 // --- 서버 정본 경계 카피 ---
 ok('주문요약 서버 재검증 문구', screens.includes('서버 재검증') || orderBlocks.includes('서버'));
 ok('환불 아코디언', orderBlocks.includes('renderPolicyAccordion') || screens.includes("renderPolicyAccordion('position')"));
+
+ok(
+  'apply readiness helper',
+  orderBlocks.includes('export function getApplyTargetReadiness'),
+);
+ok(
+  'order CTA guards soldOut/region',
+  screens.includes('orderCtaDisabled') &&
+    screens.includes('roomPrimeSoldOut') &&
+    screens.includes('applyReady'),
+);
+ok(
+  'buy click blocks soldout/region',
+  screens.includes("data-region-ready') === '0'") && screens.includes('is-soldout'),
+);
+ok(
+  'access pack-locked CTA guard',
+  screens.includes('selectedPackLocked'),
+);
+ok(
+  'no internal 포지션 on my heading',
+  !screens.includes('이용중 포지션') && screens.includes('이용중 노출상품'),
+);
+ok(
+  'Pick 살펴보기 CTA absent',
+  !screens.includes('Pick 살펴보기'),
+);
 
 const outDir = path.join(root, 'tmp/paid-renewal-verify');
 fs.mkdirSync(outDir, { recursive: true });

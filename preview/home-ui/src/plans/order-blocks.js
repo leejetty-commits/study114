@@ -19,6 +19,47 @@ function roleLabel(role) {
 }
 
 /**
+ * 적용 대상 준비 여부 (지역·주력과목). 주문 CTA 가드용.
+ * @param {import('./profiles.js').ProviderProfile | null} profile
+ * @param {'study_room'|'tutor'|string} role
+ * @returns {{ regionReady: boolean, regionOptions: string[], subjectLine: string }}
+ */
+export function getApplyTargetReadiness(profile, role) {
+  if ((role !== 'study_room' && role !== 'tutor') || !profile) {
+    return { regionReady: false, regionOptions: [], subjectLine: '' };
+  }
+  /** @type {string[]} */
+  let regionOptions = [];
+  let subjectLine = '';
+  let regionReady = false;
+
+  if (profile.providerType === 'study_room') {
+    const room = getStudyRoom(Number(profile.id));
+    const label = room?.region_label || room?.region || '';
+    if (label) {
+      regionOptions = [String(label)];
+      regionReady = true;
+    }
+    if (Array.isArray(room?.promo_regions) && room.promo_regions.length) {
+      regionOptions = room.promo_regions.map(String).filter(Boolean).slice(0, 3);
+      regionReady = regionOptions.length > 0;
+    }
+  } else {
+    const tutor = getTutor(Number(profile.id));
+    subjectLine = tutor?.main_subject_note || '';
+    const label = tutor?.region_label || '';
+    if (label) {
+      regionOptions = [String(label)];
+      regionReady = Boolean(label && subjectLine);
+    } else {
+      regionReady = Boolean(subjectLine);
+    }
+  }
+
+  return { regionReady, regionOptions, subjectLine };
+}
+
+/**
  * 적용 대상 (노출상품 전용 · 쪽지권은 프로필만)
  * @param {import('./profiles.js').ProviderProfile | null} profile
  * @param {'study_room'|'tutor'|string} role
@@ -58,34 +99,7 @@ export function renderApplyTargetBlock(profile, role, page = 'positions') {
       </section>`;
   }
 
-  /** @type {string[]} */
-  let regionOptions = [];
-  let subjectLine = '';
-  let regionReady = false;
-
-  if (profile.providerType === 'study_room') {
-    const room = getStudyRoom(Number(profile.id));
-    const label = room?.region_label || room?.region || '';
-    if (label) {
-      regionOptions = [String(label)];
-      regionReady = true;
-    }
-    // 대표 홍보지역 1·2·3 — 등록 데이터가 있으면 칩으로 표시 (미연동 시 안내)
-    if (Array.isArray(room?.promo_regions) && room.promo_regions.length) {
-      regionOptions = room.promo_regions.map(String).filter(Boolean).slice(0, 3);
-      regionReady = regionOptions.length > 0;
-    }
-  } else {
-    const tutor = getTutor(Number(profile.id));
-    subjectLine = tutor?.main_subject_note || '';
-    const label = tutor?.region_label || '';
-    if (label) {
-      regionOptions = [String(label)];
-      regionReady = Boolean(label && subjectLine);
-    } else {
-      regionReady = Boolean(subjectLine);
-    }
-  }
+  const { regionReady, regionOptions, subjectLine } = getApplyTargetReadiness(profile, role);
 
   const regionHtml = regionOptions.length
     ? `<div class="plans-apply-target__regions" role="group" aria-label="적용 지역">
