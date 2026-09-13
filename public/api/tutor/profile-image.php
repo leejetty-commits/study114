@@ -21,43 +21,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 study114_send_cors_headers();
 
-$user = AuthSession::user();
-if ($user === null) {
-    http_response_code(401);
-    echo json_encode(['ok' => false, 'error' => 'unauthenticated', 'message' => '로그인이 필요합니다.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
 try {
-    (new EmailVerificationGate())->assertVerified((int) $user['user_id']);
-} catch (EmailVerificationRequiredException $e) {
-    http_response_code(403);
-    echo json_encode([
-        'ok' => false,
-        'error' => 'email_verify_required',
-        'message' => $e->getMessage(),
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+    $user = AuthSession::user();
+    if ($user === null) {
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'error' => 'unauthenticated', 'message' => '로그인이 필요합니다.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
-$method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
-if ($method !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['ok' => false, 'error' => 'method_not_allowed', 'message' => 'POST만 허용됩니다.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+    try {
+        (new EmailVerificationGate())->assertVerified((int) $user['user_id']);
+    } catch (EmailVerificationRequiredException $e) {
+        http_response_code(403);
+        echo json_encode([
+            'ok' => false,
+            'error' => 'email_verify_required',
+            'message' => $e->getMessage(),
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
-$json = json_decode(file_get_contents('php://input') ?: '{}', true);
-$input = is_array($json) ? $json : [];
-$action = (string) ($_POST['action'] ?? $input['action'] ?? '');
-if ($action === '' && isset($_FILES['file'])) {
-    $action = 'upload';
-}
+    $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    if ($method !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['ok' => false, 'error' => 'method_not_allowed', 'message' => 'POST만 허용됩니다.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
-$service = new TutorProfileImageService();
-$userId = (int) $user['user_id'];
+    $json = json_decode(file_get_contents('php://input') ?: '{}', true);
+    $input = is_array($json) ? $json : [];
+    $action = (string) ($_POST['action'] ?? $input['action'] ?? '');
+    if ($action === '' && isset($_FILES['file'])) {
+        $action = 'upload';
+    }
 
-try {
+    if (!class_exists(TutorProfileImageService::class)) {
+        throw new RuntimeException('사진 처리 모듈을 불러오지 못했습니다. 배포 상태를 확인해 주세요.');
+    }
+    $service = new TutorProfileImageService();
+    $userId = (int) $user['user_id'];
+
     if ($action === 'upload') {
         $tutorId = (int) ($_POST['tutor_id'] ?? $input['tutor_id'] ?? 0);
         if ($tutorId < 1 || !isset($_FILES['file']) || !is_array($_FILES['file'])) {
@@ -113,5 +116,9 @@ try {
 } catch (Throwable $e) {
     error_log('[tutor-profile-image] ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['ok' => false, 'error' => 'server', 'message' => '사진 처리 중 오류가 발생했습니다.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode([
+        'ok' => false,
+        'error' => 'server',
+        'message' => '사진 처리 중 오류가 발생했습니다. (' . $e->getMessage() . ')',
+    ], JSON_UNESCAPED_UNICODE);
 }

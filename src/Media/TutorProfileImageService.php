@@ -255,9 +255,15 @@ final class TutorProfileImageService
     private function assertTutorOwner(PDO $pdo, int $userId, int $tutorId): void
     {
         $stmt = $pdo->prepare(
-            'SELECT 1 FROM tutors WHERE id = ? AND user_id = ? AND deleted_at IS NULL LIMIT 1'
+            'SELECT 1 FROM tutors WHERE id = ? AND user_id = ? AND (deleted_at IS NULL OR deleted_at = \'0000-00-00 00:00:00\') LIMIT 1'
         );
-        $stmt->execute([$tutorId, $userId]);
+        try {
+            $stmt->execute([$tutorId, $userId]);
+        } catch (\Throwable $e) {
+            // deleted_at 없는 구스키마 호환
+            $stmt = $pdo->prepare('SELECT 1 FROM tutors WHERE id = ? AND user_id = ? LIMIT 1');
+            $stmt->execute([$tutorId, $userId]);
+        }
         if (!$stmt->fetchColumn()) {
             throw new InvalidArgumentException('이 과외 프로필의 사진을 수정할 권한이 없습니다.');
         }
@@ -271,10 +277,16 @@ final class TutorProfileImageService
     {
         $err = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
         if ($err !== UPLOAD_ERR_OK) {
-            throw new InvalidArgumentException('파일을 받지 못했습니다.');
+            $hint = match ($err) {
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => '파일 용량이 서버 제한을 초과했습니다. 4MB 이하로 줄여 주세요.',
+                UPLOAD_ERR_PARTIAL => '파일이 일부만 전송되었습니다. 다시 올려 주세요.',
+                UPLOAD_ERR_NO_FILE => '파일을 선택해 주세요.',
+                default => '파일을 받지 못했습니다. (코드 ' . $err . ')',
+            };
+            throw new InvalidArgumentException($hint);
         }
         $tmp = (string) ($file['tmp_name'] ?? '');
-        if ($tmp === '' || !is_uploaded_file($tmp)) {
+        if ($tmp === '' || (!is_uploaded_file($tmp) && !is_file($tmp))) {
             throw new InvalidArgumentException('업로드 파일이 올바르지 않습니다.');
         }
 

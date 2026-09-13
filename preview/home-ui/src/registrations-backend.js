@@ -128,3 +128,10 @@ export async function apiTutorAction(id, action, body = {}) {
   if (data.tutor) upsertTutor(data.tutor);
   return data;
 }
+
+/** API 모드 캐시에 과외 레코드 패치 (사진 업로드 직후 UI 반영) */
+export function patchTutorInCache(id, patch) {
+  const cur = tutorsCache.find((t) => t.id === id);
+  if (!cur) return null;
+  return upsertTutor({ ...cur, ...patch });
+}

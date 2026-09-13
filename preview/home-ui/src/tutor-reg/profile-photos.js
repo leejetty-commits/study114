@@ -9,7 +9,7 @@ import {
   readImageSize,
   PROMO_IMAGE_SPEC,
 } from '../../../shared/promo-image.js';
-import { isRegistrationsApiMode, hydrateRegistrationsCache } from '../registrations-backend.js';
+import { isRegistrationsApiMode, hydrateRegistrationsCache, patchTutorInCache } from '../registrations-backend.js';
 import { getTutor, updateTutor } from './store.js';
 
 export const TUTOR_PROFILE_PHOTO_SPEC = {
@@ -204,11 +204,31 @@ async function persistProfileImages(tutorId, images) {
     sort_order: i + 1,
     image_type: i === 0 ? 'profile' : 'intro',
   }));
-  updateTutor(tutorId, {
+  const patch = {
     profile_images: next,
     has_profile_image: next.length > 0,
-  });
+  };
+  if (isRegistrationsApiMode()) {
+    patchTutorInCache(tutorId, patch);
+  } else {
+    updateTutor(tutorId, patch);
+  }
   return next;
+}
+
+async function readApiError(res) {
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    if (data && typeof data === 'object') return data;
+  } catch {
+    /* HTML ErrorDocument 등으로 JSON이 아닐 수 있음 */
+  }
+  return {
+    ok: false,
+    error: 'http',
+    message: `업로드 실패 (HTTP ${res.status}). 사진 용량을 줄이거나 잠시 후 다시 시도해 주세요.`,
+  };
 }
 
 /**
@@ -218,8 +238,9 @@ async function persistProfileImages(tutorId, images) {
  */
 async function uploadTutorProfilePhotoApi(tutorId, file, crop) {
   const fd = new FormData();
+  fd.append('action', 'upload');
   fd.append('tutor_id', String(tutorId));
-  fd.append('file', file);
+  fd.append('file', file, file.name || 'profile.jpg');
   fd.append('crop_x', String(crop.cropX));
   fd.append('crop_y', String(crop.cropY));
   const res = await fetch('/api/tutor/profile-image.php', {
@@ -227,7 +248,7 @@ async function uploadTutorProfilePhotoApi(tutorId, file, crop) {
     credentials: 'include',
     body: fd,
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await readApiError(res);
   if (!res.ok || !data.ok) {
     throw new Error(data.message || '프로필 사진 업로드에 실패했습니다.');
   }
@@ -249,7 +270,7 @@ async function reorderTutorProfilePhotosApi(tutorId, orderedIds) {
       image_ids: orderedIds,
     }),
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await readApiError(res);
   if (!res.ok || !data.ok) {
     throw new Error(data.message || '사진 순서를 저장하지 못했습니다.');
   }
@@ -271,10 +292,17 @@ async function deleteTutorProfilePhotoApi(tutorId, imageId) {
       image_id: imageId,
     }),
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await readApiError(res);
   if (!res.ok || !data.ok) {
     throw new Error(data.message || '사진을 삭제하지 못했습니다.');
   }
+}
+
+/** dataURL → File (서버가 원본 수신 실패할 때 JPEG 파생본 재시도용) */
+async function dataUrlToJpegFile(dataUrl, name) {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  return new File([blob], name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' });
 }
 
 /** @param {import('./store.js').TutorRecord} tutor */
@@ -391,36 +419,47 @@ export function bindTutorProfilePhotos(root, opts) {
     if (!crop) return;
 
     try {
+      const local = await processTutorProfilePhoto(file, crop.cropX, crop.cropY);
+      let uploaded = null;
       if (isRegistrationsApiMode()) {
-        const uploaded = await uploadTutorProfilePhotoApi(tutorId, file, crop);
-        const local = await processTutorProfilePhoto(file, crop.cropX, crop.cropY);
-        const merged = [
-          ...images,
-          {
-            id: uploaded.id,
-            name: uploaded.name || local.name,
-            image_path: uploaded.basic_720_path || uploaded.image_path || local.basic_720_path,
-            basic_720_path: uploaded.basic_720_path || uploaded.image_path || local.basic_720_path,
-            prime_1280_path: uploaded.prime_1280_path || local.prime_1280_path,
-            crop_x: crop.cropX,
-            crop_y: crop.cropY,
-            sort_order: images.length + 1,
-            image_type: images.length === 0 ? 'profile' : 'intro',
-          },
-        ];
-        await persistProfileImages(tutorId, merged);
+        try {
+          uploaded = await uploadTutorProfilePhotoApi(tutorId, file, crop);
+        } catch (firstErr) {
+          // 원본(HEIC 등) 실패 시 리사이즈 JPEG로 재시도
+          try {
+            const jpegFile = await dataUrlToJpegFile(local.basic_720_path, local.name || 'profile.jpg');
+            uploaded = await uploadTutorProfilePhotoApi(tutorId, jpegFile, crop);
+          } catch (secondErr) {
+            const msg =
+              (secondErr instanceof Error && secondErr.message) ||
+              (firstErr instanceof Error && firstErr.message) ||
+              '프로필 사진 업로드에 실패했습니다.';
+            throw new Error(msg);
+          }
+        }
+      }
+      const merged = [
+        ...images,
+        {
+          id: uploaded?.id ?? `local-${Date.now()}`,
+          name: uploaded?.name || local.name,
+          image_path: uploaded?.basic_720_path || uploaded?.image_path || local.basic_720_path,
+          basic_720_path: uploaded?.basic_720_path || uploaded?.image_path || local.basic_720_path,
+          prime_1280_path: uploaded?.prime_1280_path || local.prime_1280_path,
+          crop_x: crop.cropX,
+          crop_y: crop.cropY,
+          sort_order: images.length + 1,
+          image_type: images.length === 0 ? 'profile' : 'intro',
+        },
+      ];
+      await persistProfileImages(tutorId, merged);
+      if (isRegistrationsApiMode()) {
         await hydrateRegistrationsCache().catch(() => {});
-      } else {
-        const local = await processTutorProfilePhoto(file, crop.cropX, crop.cropY);
-        await persistProfileImages(tutorId, [
-          ...images,
-          {
-            id: `local-${Date.now()}`,
-            ...local,
-            sort_order: images.length + 1,
-            image_type: images.length === 0 ? 'profile' : 'intro',
-          },
-        ]);
+        // hydrate가 profile_images를 비우면(구서버) 방금 올린 값을 다시 보강
+        const after = normalizeTutorProfileImages(getTutor(tutorId));
+        if (!after.length && merged.length) {
+          await persistProfileImages(tutorId, merged);
+        }
       }
       refresh();
     } catch (e) {
