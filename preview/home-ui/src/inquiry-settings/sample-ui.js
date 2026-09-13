@@ -1,9 +1,6 @@
 /**
- * 쪽지설정 카드 샘플 — 홈 BASIC 실카드 + 쪽지 위치 SVG 가이드
- *
- * 폭: 홈 `.home-body.home-body--with-promo` + `.browse-list--table` 문맥을
- * 뷰포트 전체 너비 프로브로 재현한 뒤, 그 그리드 셀 폭을 샘플 리스트에 그대로 둔다.
- * 카드에 scale/zoom/preview max-width를 주지 않는다.
+ * 쪽지설정 카드 샘플 — 홈 BASIC DOM 문맥 + 쪽지 위치 SVG 가이드.
+ * 카드 마크업은 exposure-render.renderBrowseList(홈과 동일)만 사용한다.
  */
 
 function esc(s) {
@@ -13,61 +10,28 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-const PROBE_ID = 'inq-home-width-probe';
-
-function ensureHomeWidthProbe() {
-  let probe = document.getElementById(PROBE_ID);
-  if (probe) return probe;
-  probe = document.createElement('div');
-  probe.id = PROBE_ID;
-  probe.className = 'inq-home-width-probe';
-  probe.setAttribute('aria-hidden', 'true');
-  probe.innerHTML = `
-    <div class="home-body home-body--with-promo">
+function wrapHomeBasicContext(listHtml) {
+  return `
+    <div class="inq-sample__home-context home-body home-body--with-promo">
       <div class="home-main">
-        <div class="browse-list browse-list--table">
-          <article class="expo-basic expo-basic--tutor expo-hcard" data-inq-width-probe="tutor"></article>
-          <article class="expo-basic expo-basic--study_room expo-hcard" data-inq-width-probe="study_room"></article>
-        </div>
+        <section class="guest-browse-lists" aria-hidden="true">
+          ${listHtml}
+        </section>
       </div>
-      <aside class="home-sidebar home-sidebar--guest"></aside>
+      <aside class="home-sidebar home-sidebar--guest" aria-hidden="true"></aside>
     </div>`;
-  document.body.appendChild(probe);
-  return probe;
-}
-
-function sampleKind(figure) {
-  if (figure.querySelector('.expo-basic--study_room')) return 'study_room';
-  return 'tutor';
-}
-
-function syncSampleListToHomeGrid(figure) {
-  const probe = ensureHomeWidthProbe();
-  const kind = sampleKind(figure);
-  const probeList = probe.querySelector('.browse-list.browse-list--table');
-  const probeCard = probe.querySelector(`[data-inq-width-probe="${kind}"]`);
-  const homeList = figure.querySelector('.inq-sample__home-list');
-  if (!probeList || !homeList) return false;
-  const listW = probeList.getBoundingClientRect().width;
-  if (!(listW > 8)) return false;
-  homeList.style.width = `${listW}px`;
-  homeList.dataset.inqHomeListW = String(Math.round(listW * 10) / 10);
-  if (probeCard) {
-    homeList.dataset.inqHomeCardW = String(Math.round(probeCard.getBoundingClientRect().width * 10) / 10);
-  }
-  return true;
 }
 
 /**
  * @param {{ receiving: boolean, listHtml: string, kicker: string, callout: string }} opts
  */
-export function renderInquirySampleCard(opts) {
+export function renderInquirySampleFigure(opts) {
   const receiving = Boolean(opts.receiving);
   return `
     <figure class="inq-sample inq-sample--${receiving ? 'open' : 'closed'}" data-inq-sample>
       <figcaption class="inq-sample__kicker">${esc(opts.kicker)}</figcaption>
       <div class="inq-sample__stage">
-        <div class="inq-sample__home-list">${opts.listHtml}</div>
+        ${wrapHomeBasicContext(opts.listHtml)}
         <svg class="inq-sample__guide" data-inq-guide aria-hidden="true"></svg>
         <p class="inq-sample__callout" data-inq-callout>${esc(opts.callout)}</p>
       </div>
@@ -79,10 +43,8 @@ function layoutOne(figure, idx) {
   const btn = figure.querySelector('.item-actions [title^="쪽지"]');
   const svg = figure.querySelector('[data-inq-guide]');
   const callout = figure.querySelector('[data-inq-callout]');
-  const list = figure.querySelector('.inq-sample__home-list');
+  const list = figure.querySelector('.inq-sample__home-context .browse-list');
   if (!stage || !svg || !callout || !list) return false;
-
-  syncSampleListToHomeGrid(figure);
   if (!btn) return false;
 
   const sr = stage.getBoundingClientRect();
@@ -132,7 +94,6 @@ export function bindInquirySampleGuides(root) {
   if (!root.querySelector('[data-inq-sample]')) return;
 
   const paint = () => {
-    ensureHomeWidthProbe();
     [...root.querySelectorAll('[data-inq-sample]')].forEach((fig, i) => layoutOne(fig, i));
   };
 
@@ -152,7 +113,6 @@ export function bindInquirySampleGuides(root) {
   if (typeof ResizeObserver === 'function') {
     const ro = new ResizeObserver(paint);
     ro.observe(document.documentElement);
-    const probe = document.getElementById(PROBE_ID);
-    if (probe) ro.observe(probe);
+    root.querySelectorAll('.inq-sample__home-context').forEach((el) => ro.observe(el));
   }
 }

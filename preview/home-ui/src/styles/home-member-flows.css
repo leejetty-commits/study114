@@ -2511,18 +2511,7 @@ a.msg-attach:hover { text-decoration: underline; }
   overflow: visible;
 }
 
-/* 홈 BASIC과 같은 .home-body + .browse-list--table 2열 문맥. 카드 폭을 scale/preview max-width로 맞추지 않음. */
-.inq-home-width-probe {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-  pointer-events: none;
-  z-index: -1;
-}
+/* 홈 BASIC과 같은 .home-body + .guest-browse-lists + .browse-list--table 문맥 */
 .inq-samples {
   display: flex;
   flex-direction: column;
@@ -2553,12 +2542,15 @@ a.msg-attach:hover { text-decoration: underline; }
   width: max-content;
   max-width: none;
 }
-.inq-sample__home-list {
+.inq-sample__home-context {
   box-sizing: border-box;
   pointer-events: none;
   user-select: none;
 }
-.inq-sample__home-list .browse-list {
+.inq-sample__home-context .guest-browse-lists {
+  margin: 0;
+}
+.inq-sample__home-context .browse-list {
   margin: 0;
 }
 .inq-sample__guide {

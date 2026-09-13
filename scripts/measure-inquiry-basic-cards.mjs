@@ -50,32 +50,15 @@ async function measureHomeCard(page, kind) {
 
 async function injectAndMeasureSample(page, kind) {
   return page.evaluate(async (k) => {
-    const { bindInquirySampleGuides, renderInquirySampleCard } = await import(
-      '/src/inquiry-settings/sample-ui.js'
-    );
-    const { renderBrowseList } = await import('/src/exposure-render.js');
-    const { buildTutorSamplePreviewItem } = await import('/src/tutor-reg/registration-check-sample.js');
-    const { buildStudyRoomInquirySampleItem } = await import('/src/study-room-reg/inquiries-sample.js');
-
-    const listHtml =
-      k === 'study_room'
-        ? renderBrowseList('study_room', [buildStudyRoomInquirySampleItem(true)], {
-            showCompare: true,
-            showWish: true,
-            guest: false,
-          })
-        : renderBrowseList('tutor', [buildTutorSamplePreviewItem('basic')], {
-            showCompare: true,
-            showWish: true,
-            guest: false,
-          });
+    const { bindInquirySampleGuides } = await import('/src/inquiry-settings/sample-ui.js');
+    const { renderInquirySampleCard } = await import('/src/inquiry-settings/sample-cards.js');
 
     const host = document.createElement('div');
     host.id = `inq-measure-host-${k}`;
     host.style.cssText = 'width:max-content;max-width:none;padding:12px;background:#fff;';
     host.innerHTML = renderInquirySampleCard({
+      kind: k,
       receiving: true,
-      listHtml,
       kicker: '쪽지 받는 중',
       callout: '여기가 쪽지 관련 표시 위치입니다. 받는 중이면 ✉가 활성입니다.',
     });
@@ -88,7 +71,7 @@ async function injectAndMeasureSample(page, kind) {
     const btn = host.querySelector('.item-actions [title^="쪽지"]');
     const svg = host.querySelector('[data-inq-guide]');
     const callout = host.querySelector('[data-inq-callout]');
-    const homeList = host.querySelector('.inq-sample__home-list');
+    const homeList = host.querySelector('.inq-sample__home-context .browse-list');
     if (!card) return { width: 0, arrow: null, selector: '[data-inq-sample] .expo-hcard' };
 
     const cr = card.getBoundingClientRect();
@@ -125,8 +108,6 @@ async function injectAndMeasureSample(page, kind) {
       selector: `[data-inq-sample] .expo-basic--${k}.expo-hcard`,
       width: cr.width,
       listWidth: homeList?.getBoundingClientRect().width ?? null,
-      probeListW: homeList?.dataset.inqHomeListW ?? null,
-      probeCardW: homeList?.dataset.inqHomeCardW ?? null,
       transform: getComputedStyle(card).transform,
       maxWidth: getComputedStyle(card).maxWidth,
       arrow,

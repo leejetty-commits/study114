@@ -2,10 +2,8 @@
  * 과외쌤 쪽지설정 렌더 — 상태 확인 → 수정 → 검증 → 저장 → 카드 샘플
  */
 
-import { renderBrowseList } from '../exposure-render.js';
-import { renderInquirySampleCard } from '../inquiry-settings/sample-ui.js';
+import { renderInquirySamplePair } from '../inquiry-settings/sample-cards.js';
 import { isPhoneVerifiedLocal } from '../study-room-reg/phone-verify-gate.js';
-import { buildTutorSamplePreviewItem } from './registration-check-sample.js';
 import { P21_INQUIRY_COPY, P21_INQUIRY_OFF_REASONS } from './inquiries-copy.js';
 import { tutorInquiryPrefFromStatus, tutorInquiryStoredLine, normalizeTutorInquiryStatus } from './inquiries-pref.js';
 
@@ -26,30 +24,6 @@ function renderReasonRadios(pref) {
         <small class="p21-inq-block__hint">${esc(o.hint)}</small>
       </label>`;
   }).join('');
-}
-
-function filledTutorInquirySampleItem(receiving) {
-  const item = buildTutorSamplePreviewItem('basic');
-  item.id = receiving ? 'p21-inq-open' : 'p21-inq-closed';
-  item.recommend_count = 18;
-  item.review_count = 7;
-  item.wish_count = 11;
-  item.compare_count = 2;
-  item.message_count = receiving ? 4 : 0;
-  item.published_at = '2025-11-03T09:00:00+09:00';
-  item.inquiry_status = receiving ? 'open' : 'paused';
-  return item;
-}
-
-function renderSampleCard(receiving) {
-  const item = filledTutorInquirySampleItem(receiving);
-  const listHtml = renderBrowseList('tutor', [item], { showCompare: true, showWish: true, guest: false });
-  return renderInquirySampleCard({
-    receiving,
-    listHtml,
-    kicker: receiving ? P21_INQUIRY_COPY.sampleOpenKicker : P21_INQUIRY_COPY.sampleClosedKicker,
-    callout: receiving ? P21_INQUIRY_COPY.sampleOpenCallout : P21_INQUIRY_COPY.sampleClosedCallout,
-  });
 }
 
 /**
@@ -113,8 +87,7 @@ export function renderTutorInquiries(tutor) {
         <h3 class="p21-inq-block__title">${esc(P21_INQUIRY_COPY.sampleTitle)}</h3>
         <p class="p21-inq-block__hint">${esc(P21_INQUIRY_COPY.sampleLead)}</p>
         <div class="inq-samples">
-          ${renderSampleCard(true)}
-          ${renderSampleCard(false)}
+          ${renderInquirySamplePair('tutor', P21_INQUIRY_COPY)}
         </div>
       </section>
     </div>`;

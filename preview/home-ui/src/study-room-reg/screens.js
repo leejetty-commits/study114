@@ -12,9 +12,8 @@ import {
   studyRoomInquiryStoredLine,
 } from './inquiry-display.js';
 import { isPhoneVerifiedLocal, showPhoneVerifyGateModal } from './phone-verify-gate.js';
-import { renderBrowseList } from '../exposure-render.js';
-import { renderInquirySampleCard, bindInquirySampleGuides } from '../inquiry-settings/sample-ui.js';
-import { buildStudyRoomInquirySampleItem } from './inquiries-sample.js';
+import { renderInquirySamplePair } from '../inquiry-settings/sample-cards.js';
+import { bindInquirySampleGuides } from '../inquiry-settings/sample-ui.js';
 import { getAuthUser } from '../auth-session.js';
 import {
   parseStudyRoomRegPath,
@@ -439,17 +438,6 @@ function renderPublish(room) {
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'publish', renderRegistrationCheck(vm))}</section>`;
 }
 
-function renderStudyRoomInquirySample(receiving) {
-  const item = buildStudyRoomInquirySampleItem(receiving);
-  const listHtml = renderBrowseList('study_room', [item], { showCompare: true, showWish: true, guest: false });
-  return renderInquirySampleCard({
-    receiving,
-    listHtml,
-    kicker: receiving ? P20_INQUIRY_COPY.sampleOpenKicker : P20_INQUIRY_COPY.sampleClosedKicker,
-    callout: receiving ? P20_INQUIRY_COPY.sampleOpenCallout : P20_INQUIRY_COPY.sampleClosedCallout,
-  });
-}
-
 /** @param {import('./store.js').StudyRoomRecord} room */
 function renderInquiries(room) {
   if (shouldReloadEmbeddedView(room.id, 'inquiries')) {
@@ -532,8 +520,7 @@ function renderInquiries(room) {
         <h3 class="p21-inq-block__title">${esc(P20_INQUIRY_COPY.sampleTitle)}</h3>
         <p class="p21-inq-block__hint">${esc(P20_INQUIRY_COPY.sampleLead)}</p>
         <div class="inq-samples">
-          ${renderStudyRoomInquirySample(true)}
-          ${renderStudyRoomInquirySample(false)}
+          ${renderInquirySamplePair('study_room', P20_INQUIRY_COPY)}
         </div>
       </section>
     </div>`;
