@@ -5,10 +5,12 @@
  * 계약:
  * - 핀/카드: `[data-provider-id][data-provider-kind="study_room"]`
  * - `bindSearchMapPinLinks`: 핀 클릭 → 카드 강조 · 카드 hover → 핀 강조
+ * - center: CanonicalLocation lat/lng 우선
  */
 
 import { MOCK_REGIONS } from './search-schema.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
+import { normalizeLocation, logLocationDebug } from '../../shared/location-display.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -16,24 +18,27 @@ function esc(s) {
     .replace(/</g, '&lt;');
 }
 
-/** @param {string} regionLabel */
-function parseRegionParts(regionLabel) {
-  const raw = String(regionLabel || '').trim();
-  const parts = raw.split(/\s+/).filter(Boolean);
-  if (parts.length >= 3) {
-    return { city: parts[0], gu: parts[1], dong: parts.slice(2).join(' '), full: raw };
-  }
-  if (parts.length === 2) {
-    return { city: parts[0], gu: parts[1], dong: parts[1], full: raw };
-  }
-  return { city: '', gu: '', dong: raw || '우리동네', full: raw };
+/** @param {string} regionLabel @param {{ lat?: number|null, lng?: number|null }} [coords] */
+function parseRegionParts(regionLabel, coords = {}) {
+  const canonical = normalizeLocation(
+    { raw: regionLabel, lat: coords.lat, lng: coords.lng },
+    'room',
+  );
+  const dong = canonical.dong || canonical.apartmentName || canonical.city || '우리동네';
+  return {
+    city: canonical.city,
+    gu: canonical.district,
+    dong,
+    full: canonical.displayLabel || String(regionLabel || '').trim(),
+    lat: canonical.lat,
+    lng: canonical.lng,
+  };
 }
 
 /**
- * 지도 풀폭 + 기존 카피를 담은 플로팅 배너
  * @param {object} parts
  * @param {object[]} items
- * @param {{ searched: boolean, region: string, resultSource: string, countNote: string, bannerStyle: 'guest'|'provider_room'|'search' }} ctx
+ * @param {{ searched: boolean, region: string, resultSource: string, countNote: string, bannerStyle: 'guest'|'provider_room'|'search', lat?: number|null, lng?: number|null }} ctx
  */
 function renderFloatMap(parts, items, ctx) {
   const { searched, region, resultSource, countNote, bannerStyle } = ctx;
@@ -62,9 +67,13 @@ function renderFloatMap(parts, items, ctx) {
   const variant = isHero ? 'hero' : 'search';
   const extraClass = isHero ? '' : ' hero-map--search';
   const allowFallback = isHero ? ' data-allow-fallback="true"' : '';
+  const lat = ctx.lat ?? parts.lat;
+  const lng = ctx.lng ?? parts.lng;
+  const latAttr = lat != null ? ` data-map-lat="${esc(String(lat))}"` : '';
+  const lngAttr = lng != null ? ` data-map-lng="${esc(String(lng))}"` : '';
 
   return `
-    <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}" data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
+    <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}"${latAttr}${lngAttr} data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
       <div class="hero-map__canvas">
         <div class="hero-map__surface hero-map__surface--naver" aria-label="${esc(region)} 공부방 지도">
           <div class="naver-map-mount-host" data-naver-map-mount></div>
@@ -81,12 +90,12 @@ function renderFloatMap(parts, items, ctx) {
 
 /**
  * @param {object[]} [activeResultItems]
- * @param {{ searched?: boolean, regionLabel?: string, resultSource?: 'region'|'search'|null, guestHomeStyle?: boolean, bannerStyle?: 'guest'|'provider_room'|'search' }} [options]
+ * @param {{ searched?: boolean, regionLabel?: string, resultSource?: 'region'|'search'|null, guestHomeStyle?: boolean, bannerStyle?: 'guest'|'provider_room'|'search', lat?: number|null, lng?: number|null }} [options]
  */
 export function renderSearchMapBlock(activeResultItems = [], options = {}) {
   const searched = options.searched === true;
   const region = options.regionLabel || MOCK_REGIONS.room;
-  const parts = parseRegionParts(region);
+  const parts = parseRegionParts(region, { lat: options.lat, lng: options.lng });
   const items = Array.isArray(activeResultItems) ? activeResultItems : [];
   const resultSource = options.resultSource || (searched ? 'search' : 'region');
   const bannerStyle =
@@ -97,12 +106,24 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
     ? `${items.length}곳 · 하단 목록과 동일`
     : '표시할 공부방이 없습니다';
 
+  logLocationDebug('map-overlay', {
+    searched,
+    region,
+    overlayDong: parts.dong,
+    lat: options.lat ?? parts.lat,
+    lng: options.lng ?? parts.lng,
+    pinCount: items.length,
+    resultSource,
+  });
+
   return renderFloatMap(parts, items, {
     searched,
     region,
     resultSource,
     countNote,
     bannerStyle,
+    lat: options.lat ?? parts.lat,
+    lng: options.lng ?? parts.lng,
   });
 }
 
@@ -122,35 +143,20 @@ export function bindSearchMapPinLinks(root, activeResultItems = []) {
   };
 
   const focusCard = (id) => {
-    if (!id) return;
     clearFocus();
-    const card = root.querySelector(
-      `.search-results [data-provider-id="${CSS.escape(id)}"][data-provider-kind="study_room"]`,
-    );
+    const card = root.querySelector(`.search-results [data-provider-id="${CSS.escape(String(id))}"]`);
     if (card) {
       card.classList.add('is-map-focused');
       card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+    const pin = map.querySelector(`[data-map-pin-id="${CSS.escape(String(id))}"]`);
+    pin?.classList.add('is-map-focused');
   };
 
   bindStudyRoomMapSection(root, activeResultItems, {
-    onPinClick: (id) => {
-      focusCard(id);
-    },
-  }).then((controller) => {
-    if (!controller) return;
-
-    root.querySelectorAll('.search-results [data-provider-kind="study_room"][data-provider-id]').forEach((card) => {
-      card.addEventListener('mouseenter', () => {
-        const id = card.getAttribute('data-provider-id');
-        if (!id) return;
-        controller.focusPin(id);
-      });
-      card.addEventListener('click', () => {
-        const id = card.getAttribute('data-provider-id');
-        if (!id) return;
-        controller.focusPin(id);
-      });
-    });
+    regionLabel: map.getAttribute('data-region-label') || '',
+    lat: map.getAttribute('data-map-lat') != null ? Number(map.getAttribute('data-map-lat')) : null,
+    lng: map.getAttribute('data-map-lng') != null ? Number(map.getAttribute('data-map-lng')) : null,
+    onPinClick: focusCard,
   });
 }

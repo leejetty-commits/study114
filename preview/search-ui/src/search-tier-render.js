@@ -1,6 +1,6 @@
 /**
- * 홈 화면 = 대표/추천/기본 노출 배치 규칙
- * 검색 결과 surface = 순수 결과(flat) — 티어 구획 금지
+ * 홈 = 프라임/픽/베이직 티어
+ * 찾기 검색 전 = 베이직 제목(flat) · 검색 후 = 결과 flat
  */
 
 import {
@@ -95,38 +95,53 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
 }
 
 /**
- * 검색 실행 후 · 찾기 페이지 목록 — 대표/추천/기본 노출 구획 없음
+ * 검색 전(region): 베이직공부방/베이직과외쌤 — 「결과」금지
+ * 검색 후(search): 결과성 제목 허용 (부모 섹션「검색 결과」와 중복 시 생략)
  * @param {'study_room'|'tutor'} kind
  * @param {object[]} items
  * @param {object} opts
- * @param {string} sectionTag
+ * @param {string} regionLabel
  * @param {'region'|'search'} mode
+ * @param {{ omitHeading?: boolean }} [flatOpts]
  */
-/**
- * @param {'study_room'|'tutor'} kind
- * @param {object[]} items
- * @param {object} opts
- * @param {string} regionLabel — 활성 지역 (헤더 현재위치와 동일 변수)
- * @param {'region'|'search'} mode
- */
-function renderProviderFlatResults(kind, items, opts = {}, regionLabel = '', mode = 'search') {
+function renderProviderFlatResults(
+  kind,
+  items,
+  opts = {},
+  regionLabel = '',
+  mode = 'search',
+  flatOpts = {},
+) {
   const tab = kind === 'study_room' ? 'room' : 'tutor';
-  const findLabel = kind === 'study_room' ? '공부방 찾기 결과' : '과외쌤 찾기 결과';
+  const basicHeading =
+    kind === 'study_room' ? SECTION_HEADINGS.basicStudyRoom : SECTION_HEADINGS.basicTutor;
   const loc = String(regionLabel || '').trim();
   const sort = readListSortFromHash(kind, { mode: 'search' });
-  // 검색 API가 이미 정렬한 경우 그대로 · 지역 피드 등은 클라이언트 정렬
   const ordered = opts.serverSorted ? items : sortListItems(items, kind, sort);
+
   if (!items.length) {
-    return `<div class="search-flat-results search-flat-results--empty" data-surface="search-flat">${renderSearchZeroState(tab, mode)}</div>`;
+    return `<div class="search-flat-results search-flat-results--empty" data-surface="search-flat" data-search-phase="${mode}">${renderSearchZeroState(tab, mode)}</div>`;
   }
-  return `
-    <div class="content-section search-flat-results" data-surface="search-flat">
-      ${renderSectionHeading({
-        icon: kind === 'study_room' ? SECTION_HEADINGS.basicStudyRoom.icon : SECTION_HEADINGS.basicTutor.icon,
-        iconType: 'logo',
+
+  let headingHtml = '';
+  if (!flatOpts.omitHeading) {
+    if (mode === 'region') {
+      headingHtml = renderSectionHeading({ ...basicHeading, locationLabel: loc });
+    } else {
+      const findLabel = kind === 'study_room' ? '공부방 찾기 결과' : '과외쌤 찾기 결과';
+      headingHtml = renderSectionHeading({
+        tier: 'basic',
+        brandText: '우동공과',
         title: findLabel,
+        ariaTitle: `우동공과 ${findLabel}`,
         locationLabel: loc,
-      })}
+      });
+    }
+  }
+
+  return `
+    <div class="content-section search-flat-results" data-surface="search-flat" data-search-phase="${mode}">
+      ${headingHtml}
       ${renderListSortSelect(kind, sort, { mode: 'search' })}
       ${renderBrowseList(kind, ordered, { ...opts, sourceRoute: 'search' })}
     </div>`;
@@ -138,7 +153,7 @@ function renderProviderFlatResults(kind, items, opts = {}, regionLabel = '', mod
  * @param {string} [sectionTag]
  * @param {'region'|'search'} [mode]
  */
-function renderStudentTierResults(items, opts = {}, sectionTag = '검색 결과', mode = 'search') {
+function renderStudentTierResults(items, opts = {}, sectionTag = '', mode = 'search') {
   if (!items.length) {
     return `
       <div class="content-section search-tier-results search-tier-results--empty">
@@ -165,8 +180,8 @@ function renderStudentTierResults(items, opts = {}, sectionTag = '검색 결과'
  *
  * 분기:
  * - surfaceType=home + mode=region → 홈 티어 문법
- * - mode=search (검색 실행 후) → 항상 flat (홈에서 검색해도 동일)
- * - surfaceType=search + mode=region → 찾기 첫 렌더도 flat (홈 복제 금지)
+ * - mode=search → flat (결과)
+ * - surfaceType=search + mode=region → flat + 베이직 제목 (결과 문구 금지)
  */
 export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
   const mode = options.mode || 'search';
@@ -182,18 +197,22 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
     showWish: true,
     serverSorted: mode === 'search',
   };
-  const homeTierTag = regionLabel || (mode === 'region' ? '지역 피드' : '검색 결과');
+  const homeTierTag = regionLabel || (mode === 'region' ? '지역 피드' : '');
   const useHomeTierGrammar = surfaceType === 'home' && mode === 'region';
 
   if (tab === 'room') {
     return useHomeTierGrammar
       ? renderProviderTierResults('study_room', exposureItems, opts, homeTierTag, mode)
-      : renderProviderFlatResults('study_room', exposureItems, opts, regionLabel, mode);
+      : renderProviderFlatResults('study_room', exposureItems, opts, regionLabel, mode, {
+          omitHeading: mode === 'search' && surfaceType === 'search',
+        });
   }
   if (tab === 'tutor') {
     return useHomeTierGrammar
       ? renderProviderTierResults('tutor', exposureItems, opts, homeTierTag, mode)
-      : renderProviderFlatResults('tutor', exposureItems, opts, regionLabel, mode);
+      : renderProviderFlatResults('tutor', exposureItems, opts, regionLabel, mode, {
+          omitHeading: mode === 'search' && surfaceType === 'search',
+        });
   }
   return renderStudentTierResults(exposureItems, opts, homeTierTag, mode);
 }

@@ -17,6 +17,7 @@ import { bindGuestListPagination } from './list-pagination.js';
 import { bindListSortControls } from '../../shared/list-sort.js';
 import { setGuestListPage } from './state.js';
 import { SECTION_HEADINGS, renderSectionHeading } from './section-headings.js';
+import { toDisplayLabel } from '../../shared/location-display.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
 import {
   renderSitePromoSidebar,
@@ -81,7 +82,7 @@ function renderStudyRoomPrimePick() {
   const pool = EXPOSURE_STUDY_ROOMS;
   const guestOpts = { guest: true };
   const occupied = getPrimeOccupied(pool);
-  const roomLabel = GUEST_DEMO_REGIONS_BY_AXIS.room.full;
+  const roomLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.room.full, 'room');
   return `
     <div class="content-section content-section--orange">
       ${renderSectionHeading({ ...SECTION_HEADINGS.primeStudyRoom, id: 'guest-prime-room', locationLabel: roomLabel })}
@@ -95,7 +96,7 @@ function renderStudyRoomPrimePick() {
 }
 
 function renderStudyRoomBasicList() {
-  const roomLabel = GUEST_DEMO_REGIONS_BY_AXIS.room.full;
+  const roomLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.room.full, 'room');
   return renderGuestPaginatedListBlock(
     'study_room',
     'study_room',
@@ -110,7 +111,7 @@ function renderTutorPrimePick() {
   const guestOpts = { guest: true };
   /** 시 단위 후보 풀 전체 — Pick/Basic 제외·Prime 회전·페이지에 동일 사용 */
   const occupied = getPrimeCandidatePool('tutor', pool);
-  const tutorRegion = GUEST_DEMO_REGIONS_BY_AXIS.tutor.full;
+  const tutorRegion = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.tutor.full, 'tutor');
   return `
     <div class="content-section content-section--blue">
       ${renderSectionHeading({ ...SECTION_HEADINGS.primeTutor, id: 'guest-prime-tutor', locationLabel: tutorRegion })}
@@ -124,7 +125,7 @@ function renderTutorPrimePick() {
 }
 
 function renderTutorBasicList() {
-  const tutorLabel = GUEST_DEMO_REGIONS_BY_AXIS.tutor.full;
+  const tutorLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.tutor.full, 'tutor');
   const occupied = getPrimeCandidatePool('tutor', EXPOSURE_TUTORS);
   return renderGuestPaginatedListBlock(
     'tutor',
@@ -135,16 +136,16 @@ function renderTutorBasicList() {
   );
 }
 
-/** 대표·추천 노출 박스 전체 (공부방 → 과외쌤) */
+/** 프라임·픽 노출 박스 전체 (공부방 → 과외쌤) */
 export function renderGuestExposureBoxes() {
   return `${renderStudyRoomPrimePick()}${renderTutorPrimePick()}`;
 }
 
 /** 박스 아래: 우동공과 공부방 → 과외쌤 → 학생(후반) — 축별 기본 지역 라벨 */
 export function renderGuestBrowseLists() {
-  const roomLabel = GUEST_DEMO_REGIONS_BY_AXIS.room.full;
-  const tutorLabel = GUEST_DEMO_REGIONS_BY_AXIS.tutor.full;
-  const studentLabel = GUEST_DEMO_REGIONS_BY_AXIS.student.full;
+  const roomLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.room.full, 'room');
+  const tutorLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.tutor.full, 'tutor');
+  const studentLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.student.full, 'tutor');
   const live = isHomeBasicLive();
   const guest = !isLoggedIn();
   const rooms = getHomeBasicPool('study_room');

@@ -4,7 +4,6 @@ import {
   isRegistrationsApiMode,
   getStudyRoomsCache,
   apiStudyRoomAction,
-  hydrateRegistrationsCache,
 } from '../registrations-backend.js';
 
 const KEY = 'study114-preview-study-rooms-v1';
@@ -152,7 +151,7 @@ export function getPublishReadiness(room) {
   /** @type {string[]} */
   const qualityHints = [];
   if (room.detail_completion_status !== 'expanded_complete') {
-    qualityHints.push('상세정보 완료 시 대표/추천 노출 후보');
+    qualityHints.push('상세정보 완료 시 프라임/픽 노출 후보');
   }
   if (!room.intro_long?.trim()) qualityHints.push('상세 소개 보강 권장');
   if (!room.slogan?.trim()) qualityHints.push('슬로건 추가 권장');
@@ -230,15 +229,7 @@ export async function deleteStudyRoom(id) {
 /** @param {number} id @param {StudyRoomRecord['inquiry_status']} inquiry_status */
 export async function setInquiryStatus(id, inquiry_status) {
   if (isRegistrationsApiMode()) {
-    const data = await apiStudyRoomAction(id, 'inquiry_status', { inquiry_status });
-    let saved = data?.room?.inquiry_status;
-    if (saved !== inquiry_status) {
-      await hydrateRegistrationsCache();
-      saved = getStudyRoom(id)?.inquiry_status;
-    }
-    if (saved !== inquiry_status) {
-      throw new Error('저장 후 서버 상태를 확인하지 못했습니다. 새로고침 후 다시 확인해 주세요.');
-    }
+    await apiStudyRoomAction(id, 'inquiry_status', { inquiry_status });
     return getStudyRoom(id);
   }
   return updateStudyRoom(id, { inquiry_status });

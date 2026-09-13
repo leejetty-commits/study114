@@ -23,7 +23,7 @@ import {
   syncSiteHeaderOffset,
   ensureSiteHeaderOffsetListeners,
 } from '../../shared/site-chrome.js';
-import { getCurrentScreen, navigate, isRegisterEditMode, getHashQuery, basicOverviewPath } from './layout.js';
+import { getCurrentScreen, navigate, isRegisterEditMode, getHashQuery, basicOverviewPath, withRoomId } from './layout.js';
 import { renderBasic, bindBasicEvents } from './screens/step-basic.js';
 import { renderLocation, bindLocationEvents } from './screens/step-location.js';
 import { renderLesson, bindLessonEvents } from './screens/step-lesson.js';
@@ -165,6 +165,20 @@ function init() {
           sessionStorage.setItem('study114_open_basic_edit', '1');
         }
         navigate(basicOverviewPath());
+        return;
+      }
+      // 기본정보 완료 상태에서 상세정보 의도 진입 → lesson 우선 (edit 쿼리 없을 때)
+      const editQ = getHashQuery().get('edit');
+      if (
+        registerState.basicComplete &&
+        BASIC_KEYS.has(getCurrentScreen()) &&
+        !isRegisterEditMode() &&
+        editQ !== '1' &&
+        editQ !== 'basic' &&
+        editQ !== 'location' &&
+        sessionStorage.getItem('study114_open_basic_edit') !== '1'
+      ) {
+        navigate(withRoomId('/register/lesson'));
         return;
       }
       render();

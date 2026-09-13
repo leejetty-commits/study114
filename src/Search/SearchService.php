@@ -274,6 +274,17 @@ final class SearchService
                 WHERE srr.study_room_id = sr.id AND srr.region_id = :region_id
             ))';
             $params['region_id'] = $regionId;
+        } elseif ($regionLabel = $this->stringFilter($filters, 'region_label')) {
+            $this->applyRegionLabelMatch(
+                $where,
+                $params,
+                $regionLabel,
+                'room',
+                'sr.region_id',
+                'study_room_regions',
+                'study_room_id',
+                'sr.id'
+            );
         }
 
         if ($subjectId = $this->intFilter($filters, 'subject_master_id')) {
@@ -510,6 +521,22 @@ final class SearchService
                 WHERE tr.tutor_id = t.id AND tr.region_id = :tutor_region_id
             )';
             $params['tutor_region_id'] = $regionId;
+        } elseif ($regionLabel = $this->stringFilter($filters, 'tutor_region_label')) {
+            $token = $this->regionLabelToken($regionLabel);
+            if ($token !== '') {
+                $where[] = 'EXISTS (
+                    SELECT 1 FROM tutor_regions tr
+                    INNER JOIN regions r_tr ON r_tr.id = tr.region_id
+                    WHERE tr.tutor_id = t.id
+                      AND (
+                        r_tr.sido_name LIKE :tutor_region_like
+                        OR r_tr.sigungu_name LIKE :tutor_region_like
+                        OR r_tr.dong_name LIKE :tutor_region_like
+                        OR r_tr.label LIKE :tutor_region_like
+                      )
+                )';
+                $params['tutor_region_like'] = '%' . $token . '%';
+            }
         }
 
         if ($subjectId = $this->intFilter($filters, 'subject_master_id')) {
@@ -701,6 +728,31 @@ final class SearchService
             $where[] = '(s.preferred_studyroom_region_id = :preferred_region
                 OR s.preferred_tutor_region_id = :preferred_region)';
             $params['preferred_region'] = $regionId;
+        } elseif ($regionLabel = $this->stringFilter($filters, 'preferred_region_label')
+            ?: $this->nonNumericStringFilter($filters, 'preferred_region')) {
+            $token = $this->regionLabelToken($regionLabel);
+            if ($token !== '') {
+                $where[] = '(EXISTS (
+                    SELECT 1 FROM regions r_ps
+                    WHERE r_ps.id = s.preferred_studyroom_region_id
+                      AND (
+                        r_ps.dong_name LIKE :preferred_region_like
+                        OR r_ps.sigungu_name LIKE :preferred_region_like
+                        OR r_ps.sido_name LIKE :preferred_region_like
+                        OR r_ps.label LIKE :preferred_region_like
+                      )
+                ) OR EXISTS (
+                    SELECT 1 FROM regions r_pt
+                    WHERE r_pt.id = s.preferred_tutor_region_id
+                      AND (
+                        r_pt.dong_name LIKE :preferred_region_like
+                        OR r_pt.sigungu_name LIKE :preferred_region_like
+                        OR r_pt.sido_name LIKE :preferred_region_like
+                        OR r_pt.label LIKE :preferred_region_like
+                      )
+                ))';
+                $params['preferred_region_like'] = '%' . $token . '%';
+            }
         }
 
         if ($subjectId = $this->intFilter($filters, 'subject_master_id')) {
@@ -936,7 +988,12 @@ final class SearchService
             return null;
         }
 
-        return (int) $filters[$key];
+        $raw = is_array($filters[$key]) ? (string) ($filters[$key][0] ?? '') : (string) $filters[$key];
+        if (!preg_match('/^\d+$/', trim($raw))) {
+            return null;
+        }
+
+        return (int) $raw;
     }
 
     /** @param array<string, mixed> $filters */
@@ -947,6 +1004,79 @@ final class SearchService
         }
 
         return trim((string) $filters[$key]);
+    }
+
+    /** 숫자 id 가 아닌 지역 표시 문자열만 */
+    private function nonNumericStringFilter(array $filters, string $key): ?string
+    {
+        $value = $this->stringFilter($filters, $key);
+        if ($value === null || preg_match('/^\d+$/', $value)) {
+            return null;
+        }
+
+        return $value;
+    }
+
+    /** 매칭용 토큰 — 동/시/단지명 우선 */
+    private function regionLabelToken(string $label): string
+    {
+        $raw = trim($label);
+        if ($raw === '') {
+            return '';
+        }
+        if (str_contains($raw, '·')) {
+            $parts = array_values(array_filter(array_map('trim', explode('·', $raw))));
+            return $parts[0] ?? $raw;
+        }
+        if (preg_match('/(\S+동)/u', $raw, $m)) {
+            return $m[1];
+        }
+        if (preg_match('/(\S+시)/u', $raw, $m)) {
+            return $m[1];
+        }
+        $tokens = preg_split('/\s+/u', $raw) ?: [];
+        return (string) (end($tokens) ?: $raw);
+    }
+
+    /**
+     * 공부방 지역 라벨 매칭 (본인 region_id + 홍보 study_room_regions)
+     *
+     * @param list<string> $where
+     * @param array<string, mixed> $params
+     */
+    private function applyRegionLabelMatch(
+        array &$where,
+        array &$params,
+        string $regionLabel,
+        string $prefix,
+        string $ownerRegionCol,
+        string $joinTable,
+        string $joinFk,
+        string $ownerIdCol
+    ): void {
+        $token = $this->regionLabelToken($regionLabel);
+        if ($token === '') {
+            return;
+        }
+        $likeKey = $prefix . '_region_like';
+        $where[] = "({$ownerRegionCol} IN (
+                SELECT id FROM regions
+                WHERE dong_name LIKE :{$likeKey}
+                   OR sigungu_name LIKE :{$likeKey}
+                   OR sido_name LIKE :{$likeKey}
+                   OR label LIKE :{$likeKey}
+            ) OR EXISTS (
+                SELECT 1 FROM {$joinTable} srr_lbl
+                INNER JOIN regions r_lbl ON r_lbl.id = srr_lbl.region_id
+                WHERE srr_lbl.{$joinFk} = {$ownerIdCol}
+                  AND (
+                    r_lbl.dong_name LIKE :{$likeKey}
+                    OR r_lbl.sigungu_name LIKE :{$likeKey}
+                    OR r_lbl.sido_name LIKE :{$likeKey}
+                    OR r_lbl.label LIKE :{$likeKey}
+                  )
+            ))";
+        $params[$likeKey] = '%' . $token . '%';
     }
 
     /**

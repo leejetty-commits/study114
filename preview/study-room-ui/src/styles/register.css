@@ -100,8 +100,32 @@ button.register-overview__edit-badge {
   display: grid;
   grid-template-columns: 7.5rem minmax(0, 1fr);
   gap: 0.75rem;
-  padding: 0.75rem 0;
+  padding: 0.75rem 0.65rem;
   border-bottom: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.35rem;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.register-overview__row.is-filled {
+  background: var(--gray-100, #f1f5f9);
+  color: var(--gray-600, #64748b);
+}
+
+.register-overview__row.is-empty {
+  background: #fff;
+}
+
+.register-overview__row:hover,
+.register-overview__row:focus-visible {
+  background: var(--brand-blue-soft, #eff6ff);
+  box-shadow: inset 0 0 0 1px var(--brand-blue, #2563eb);
+  outline: none;
+}
+
+.register-overview__row.is-filled:hover,
+.register-overview__row.is-filled:focus-visible {
+  background: #e2e8f0;
 }
 
 .register-overview__row dt {
@@ -117,9 +141,46 @@ button.register-overview__edit-badge {
   color: var(--gray-900, #0f172a);
 }
 
+.register-overview__row.is-filled dd {
+  color: var(--gray-600, #64748b);
+}
+
 .register-overview__row.is-empty dd > span {
   color: var(--gray-400, #94a3b8);
   min-height: 1.25em;
+}
+
+.register-basic-complete-gate {
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.5rem;
+  background: var(--gray-50, #f8fafc);
+}
+
+.register-basic-complete-gate__msg {
+  margin: 0 0 0.85rem;
+  font-size: 0.9375rem;
+  color: var(--gray-700, #334155);
+  line-height: 1.45;
+}
+
+.register-basic-complete-gate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.register-overview__fold {
+  margin: 0.5rem 0 1rem;
+}
+
+.register-overview__fold > summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-600, #64748b);
+  padding: 0.35rem 0;
 }
 
 .register-edit-overlay {

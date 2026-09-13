@@ -173,29 +173,33 @@ function assignProviderTiers(items) {
 
 /**
  * @param {import('./state.js').SearchTab} tab
- * @param {{ tutorRegionIndex?: number, role?: import('./state.js').ViewerRole, homeSelf?: boolean, hopeType?: 'tutor'|'study_room' }} [ctx]
+ * @param {{ tutorRegionIndex?: number, role?: import('./state.js').ViewerRole, homeSelf?: boolean, hopeType?: 'tutor'|'study_room', regionLabel?: string }} [ctx]
  * @returns {{ items: object[], regionLabel: string }}
  */
 export function getRegionFeed(tab, ctx = {}) {
   if (ctx.role) {
     const selfFeed = getProviderSelfFeed(tab, ctx.role, { home: ctx.homeSelf === true });
     if (selfFeed) {
+      // 자기노출이어도 화면 SSOT 지역이 있으면 라벨을 맞춘다
+      if (ctx.regionLabel) {
+        return { ...selfFeed, regionLabel: String(ctx.regionLabel).trim() || selfFeed.regionLabel };
+      }
       return selfFeed;
     }
   }
 
   if (tab === 'room') {
-    const regionLabel = MOCK_REGIONS.room;
+    const regionLabel = String(ctx.regionLabel || '').trim() || MOCK_REGIONS.room;
     const pool = filterStudyRoomsByRegion(EXPOSURE_STUDY_ROOMS, regionLabel);
     return { items: assignProviderTiers(pool.slice(0, 11)), regionLabel };
   }
   if (tab === 'tutor') {
     const idx = ctx.tutorRegionIndex ?? 0;
-    const regionLabel = getTutorRegionLabel(idx);
+    const regionLabel = String(ctx.regionLabel || '').trim() || getTutorRegionLabel(idx);
     const pool = filterTutorsByRegion(EXPOSURE_TUTORS, regionLabel);
     return { items: assignProviderTiers(pool.slice(0, 11)), regionLabel };
   }
-  const regionLabel = MOCK_REGIONS.student;
+  const regionLabel = String(ctx.regionLabel || '').trim() || MOCK_REGIONS.student;
   const hopeType = ctx.hopeType || 'tutor';
   let pool = filterStudentsByRegion(EXPOSURE_STUDENTS, regionLabel);
   pool = pool.filter(

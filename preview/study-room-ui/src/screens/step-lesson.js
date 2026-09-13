@@ -193,7 +193,7 @@ export function renderLessonFormHtml(opts = {}) {
   const includeStepNav = opts.includeStepNav !== false;
   const includeFooterActions = opts.includeFooterActions ?? !includeStepNav;
   const s = registerState;
-  const classes = Array.isArray(s.classes) && s.classes.length ? s.classes : [emptyClass()];
+  const classes = Array.isArray(s.classes) ? s.classes : [];
   return `
     <form data-form="lesson">
       ${renderSectionTitle('공부방·교습소 소개')}
@@ -296,12 +296,16 @@ export function renderLessonFormHtml(opts = {}) {
       </div>
 
       <div data-rc-field="classes">
-      ${renderSectionTitle('수업상세 <em class="register-required-mark">필수</em>')}
-      <p class="register-hint mb-4">수업 하나를 하나의 그룹으로 적습니다. 「+수업추가」로 아래로 늘릴 수 있습니다. 수업이 여러 개이면 접고 펼칠 수 있습니다.</p>
+      ${renderSectionTitle('수업상세')}
+      <p class="register-hint mb-4">수업상세는 필수가 아닙니다. 수업이 준비되면 「수업 추가하기」로 등록하세요. 수업이 여러 개이면 접고 펼칠 수 있습니다.</p>
       <div data-classes-list>
-        ${classes.map((row, i) => renderClassCard(row, i, classes.length)).join('')}
+        ${
+          classes.length
+            ? classes.map((row, i) => renderClassCard(row, i, classes.length)).join('')
+            : `<p class="register-empty-classes" data-classes-empty>등록된 수업이 없습니다.</p>`
+        }
       </div>
-      <button type="button" class="register-plus-btn" data-action="add-class">+수업추가</button>
+      <button type="button" class="register-plus-btn" data-action="add-class">수업 추가하기</button>
       </div>
 
       ${
@@ -402,7 +406,6 @@ export function bindLessonEvents(root, opts = {}) {
       persistForm(form);
       const idx = Number(btn.getAttribute('data-idx'));
       registerState.classes.splice(idx, 1);
-      if (!registerState.classes.length) registerState.classes.push(emptyClass());
       const next = new Set();
       (openClassIndexes || new Set([0])).forEach((i) => {
         if (i < idx) next.add(i);

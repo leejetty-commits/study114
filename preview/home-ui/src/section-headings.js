@@ -1,4 +1,4 @@
-/** 비회원·찾기 섹션 타이틀 — 좌측 정렬 · 현재위치는 제목 우측 */
+/** 섹션 타이틀 SSOT — 프라임/픽/베이직 브랜드 고유명사 · 현재위치는 우측 */
 
 function esc(s) {
   return String(s ?? '')
@@ -7,24 +7,67 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+const LOGO_SRC = '/assets/brand/logo-wordmark.png';
+
+/**
+ * tier: prime(금·중앙·장식) | pick(은·중앙·장식) | basic(블루·좌측) | plain
+ * showLogo: 프라임/픽은 로고 + 고유명사
+ */
 export const SECTION_HEADINGS = {
-  primeStudyRoom: { icon: '🏆', iconType: 'emoji', title: '우리동네 대표 공부방' },
-  pickStudyRoom: { icon: '⭐', iconType: 'emoji', title: '추천 공부방' },
-  basicStudyRoom: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '동네 공부방' },
-  primeTutor: { icon: '🏆', iconType: 'emoji', title: '우리동네 대표 과외쌤' },
-  pickTutor: { icon: '⭐', iconType: 'emoji', title: '추천 과외쌤' },
-  basicTutor: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '동네 과외쌤' },
-  students: { icon: '/assets/brand/logo-wordmark.png', iconType: 'logo', title: '학생 학습 의뢰' },
+  primeStudyRoom: {
+    tier: 'prime',
+    showLogo: true,
+    title: '프라임공부방',
+    ariaTitle: '우동공과 프라임공부방',
+  },
+  pickStudyRoom: {
+    tier: 'pick',
+    showLogo: true,
+    title: '픽공부방',
+    ariaTitle: '우동공과 픽공부방',
+  },
+  basicStudyRoom: {
+    tier: 'basic',
+    showLogo: false,
+    brandText: '우동공과',
+    title: '베이직공부방',
+    ariaTitle: '우동공과 베이직공부방',
+  },
+  primeTutor: {
+    tier: 'prime',
+    showLogo: true,
+    title: '프라임과외쌤',
+    ariaTitle: '우동공과 프라임과외쌤',
+  },
+  pickTutor: {
+    tier: 'pick',
+    showLogo: true,
+    title: '픽과외쌤',
+    ariaTitle: '우동공과 픽과외쌤',
+  },
+  basicTutor: {
+    tier: 'basic',
+    showLogo: false,
+    brandText: '우동공과',
+    title: '베이직과외쌤',
+    ariaTitle: '우동공과 베이직과외쌤',
+  },
+  students: {
+    tier: 'basic',
+    showLogo: false,
+    brandText: '우동공과',
+    title: '학생 학습 의뢰',
+    ariaTitle: '우동공과 학생 학습 의뢰',
+  },
 };
 
 /**
- * 제목 우측 현재위치 — '현재위치' 작은글씨 + 지역명 일반크기
+ * 제목 우측 현재위치 — '현재위치' 작은글씨 + 지역명 일반크기 · 우측정렬
  * @param {string} [locationLabel]
  */
 export function renderLocationBesideTitle(locationLabel) {
   const loc = String(locationLabel || '').trim();
   if (!loc) return '';
-  // "서울 강남구 대치동" → 표시는 전체, 라벨만 작게
   return `
     <span class="section-heading__loc" aria-label="현재위치 ${esc(loc)}">
       <span class="section-heading__loc-label">현재위치</span>
@@ -34,40 +77,74 @@ export function renderLocationBesideTitle(locationLabel) {
 
 /**
  * @param {{
- *   icon: string,
- *   iconType?: 'emoji'|'logo',
+ *   tier?: 'prime'|'pick'|'basic'|'plain',
+ *   showLogo?: boolean,
+ *   brandText?: string,
  *   title: string,
+ *   ariaTitle?: string,
  *   desc?: string,
  *   locationLabel?: string,
  *   id?: string,
+ *   icon?: string,
+ *   iconType?: 'emoji'|'logo',
  * }} cfg
- * - locationLabel: 제목 우측 현재위치 (권장)
- * - desc: 레거시 보조문구. 지역 문자열이면 locationLabel로 승격
  */
 export function renderSectionHeading(cfg) {
-  const iconHtml =
-    cfg.iconType === 'logo'
-      ? `<img class="section-heading__logo" src="${cfg.icon}" alt="" width="72" height="18" />`
-      : `<span class="section-heading__emoji" aria-hidden="true">${cfg.icon}</span>`;
+  const tier = cfg.tier || 'plain';
+  const alignClass =
+    tier === 'prime' || tier === 'pick' ? 'section-heading--center' : 'section-heading--start';
+  const tierClass = tier !== 'plain' ? ` section-heading--${tier}` : '';
+  const aria = esc(cfg.ariaTitle || (cfg.brandText ? `${cfg.brandText} ${cfg.title}` : cfg.title));
+
+  let brandInner = '';
+  if (cfg.showLogo) {
+    brandInner = `
+      <img class="section-heading__logo" src="${LOGO_SRC}" alt="우동공과" width="72" height="18" />
+      <h2 class="section-heading__title">${esc(cfg.title)}</h2>`;
+  } else if (cfg.brandText) {
+    brandInner = `
+      <span class="section-heading__brand-text">${esc(cfg.brandText)}</span>
+      <h2 class="section-heading__title">${esc(cfg.title)}</h2>`;
+  } else if (cfg.iconType === 'logo' && cfg.icon) {
+    brandInner = `
+      <img class="section-heading__logo" src="${cfg.icon}" alt="" width="72" height="18" />
+      <h2 class="section-heading__title">${esc(cfg.title)}</h2>`;
+  } else if (cfg.iconType === 'emoji' && cfg.icon) {
+    brandInner = `
+      <span class="section-heading__emoji" aria-hidden="true">${cfg.icon}</span>
+      <h2 class="section-heading__title">${esc(cfg.title)}</h2>`;
+  } else {
+    brandInner = `<h2 class="section-heading__title">${esc(cfg.title)}</h2>`;
+  }
+
+  const ornaments =
+    tier === 'prime' || tier === 'pick'
+      ? `
+      <span class="section-heading__ornament section-heading__ornament--left" aria-hidden="true"></span>
+      <span class="section-heading__brand">${brandInner}</span>
+      <span class="section-heading__ornament section-heading__ornament--right" aria-hidden="true"></span>`
+      : `<span class="section-heading__brand">${brandInner}</span>`;
 
   const locFromDesc =
-    !cfg.locationLabel && cfg.desc && !/[·|]/.test(cfg.desc) && !/대표 노출|추천 노출|기본 노출|블라인드|검색/.test(cfg.desc)
+    !cfg.locationLabel &&
+    cfg.desc &&
+    !/[·|]/.test(cfg.desc) &&
+    !/프라임|픽|베이직|노출|블라인드|검색/.test(cfg.desc)
       ? cfg.desc
       : '';
   const locationLabel = cfg.locationLabel || locFromDesc;
   const locHtml = renderLocationBesideTitle(locationLabel);
 
-  // 지역은 우측 현재위치로만 — 제목 아래/desc로 중복 출력하지 않음
-  // 지역·보조문구는 제목 우측에만 — 제목 아래 위치 라벨 금지
   const descHtml =
     cfg.desc && cfg.desc !== locationLabel
       ? `<span class="section-heading__desc">${esc(cfg.desc)}</span>`
       : '';
 
   return `
-    <header class="section-heading" ${cfg.id ? `id="${cfg.id}"` : ''}>
-      ${iconHtml}
-      <h2 class="section-heading__title">${esc(cfg.title)}</h2>
+    <header class="section-heading${tierClass} ${alignClass}" ${cfg.id ? `id="${cfg.id}"` : ''} aria-label="${aria}">
+      <div class="section-heading__main">
+        ${ornaments}
+      </div>
       ${locHtml}
       ${descHtml}
     </header>

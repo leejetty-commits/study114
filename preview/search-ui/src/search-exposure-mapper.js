@@ -1,7 +1,4 @@
-/**
- * 13장 검색 API → 11장 노출 아이템 · exposure_tier 매핑
- */
-
+import { toDisplayLabel, axisFromSearchTab, logLocationDebug } from '../../shared/location-display.js';
 import { resolveDetailItem } from '@home-ui/detail-decision/index.js';
 import {
   EXPOSURE_STUDY_ROOMS,
@@ -27,6 +24,14 @@ export function resolveExposureTier(item, _index = 0) {
   return 'basic';
 }
 
+/** @param {import('./state.js').SearchTab} tab @param {unknown} raw */
+function normalizeApiRegionLabel(tab, raw) {
+  const axis = axisFromSearchTab(tab);
+  const label = toDisplayLabel(String(raw || ''), axis);
+  logLocationDebug('api-normalize', { tab, axis, raw, display: label });
+  return label;
+}
+
 /**
  * @param {import('./state.js').SearchTab} tab
  * @param {Record<string, unknown>} apiItem
@@ -47,7 +52,7 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       ...base,
       id,
       study_room_name: String(apiItem.title || base.study_room_name),
-      location_label: String(apiItem.region_label || base.location_label),
+      location_label: normalizeApiRegionLabel(tab, apiItem.region_label || base.location_label),
       price_amount: apiItem.price_amount ?? base.price_amount,
       main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,
       grade_band: apiItem.grade_band || base.grade_band,
@@ -97,7 +102,7 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       ...base,
       id,
       tutor_display_name: String(apiItem.title || base.tutor_display_name),
-      location_label: String(apiItem.region_label || base.location_label),
+      location_label: normalizeApiRegionLabel(tab, apiItem.region_label || base.location_label),
       preferred_fee_amount: apiItem.preferred_fee_amount ?? apiItem.price_amount ?? base.preferred_fee_amount,
       main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,
       intro_short: apiItem.intro_short || summaryLines[1] || base.intro_short,
@@ -131,7 +136,7 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
     grade_level: String(apiItem.grade_level || base.grade_level),
     gender: apiItem.gender || base.gender,
     subject_label: apiItem.subject_name || summaryParts[0] || base.subject_label,
-    location_label: String(apiItem.region_label || base.location_label),
+    location_label: normalizeApiRegionLabel(tab, apiItem.region_label || base.location_label),
     lesson_format: apiItem.lesson_format || base.lesson_format,
     student_gender_group: apiItem.student_gender_group || base.student_gender_group,
     preferred_student_count_group:

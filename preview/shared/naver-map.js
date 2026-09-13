@@ -107,19 +107,26 @@ export function mapStudyRoomPins(items, options = {}) {
 /**
  * @param {StudyRoomMapItem[]} items
  * @param {string} [regionLabel]
+ * @param {{ lat?: number|null, lng?: number|null }} [explicitCenter]
  */
-export function resolveMapCenter(items, regionLabel = '') {
+export function resolveMapCenter(items, regionLabel = '', explicitCenter = {}) {
+  const exLat = parseCoord(explicitCenter.lat);
+  const exLng = parseCoord(explicitCenter.lng);
+  if (exLat != null && exLng != null) {
+    return { lat: exLat, lng: exLng, zoom: 14, source: 'canonical' };
+  }
+
   const pins = mapStudyRoomPins(items, { allowRegionFallback: true });
   if (pins.length > 0) {
     const lat = pins.reduce((sum, p) => sum + p.lat, 0) / pins.length;
     const lng = pins.reduce((sum, p) => sum + p.lng, 0) / pins.length;
-    return { lat, lng, zoom: pins.length === 1 ? 16 : 14 };
+    return { lat, lng, zoom: pins.length === 1 ? 16 : 14, source: 'pins' };
   }
 
   const matched = matchRegionCenter(regionLabel);
-  if (matched) return { lat: matched.lat, lng: matched.lng, zoom: 14 };
+  if (matched) return { lat: matched.lat, lng: matched.lng, zoom: 14, source: 'region_label' };
 
-  return { lat: DEFAULT_CENTER.lat, lng: DEFAULT_CENTER.lng, zoom: 13 };
+  return { lat: DEFAULT_CENTER.lat, lng: DEFAULT_CENTER.lng, zoom: 13, source: 'default' };
 }
 
 function loadNaverMapsSdk() {
@@ -135,7 +142,7 @@ function loadNaverMapsSdk() {
   if (!sdkPromise) {
     sdkPromise = new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = `${SDK_URL}?ncpKeyId=${encodeURIComponent(clientId)}`;
+      script.src = `${SDK_URL}?ncpKeyId=${encodeURIComponent(clientId)}&submodules=geocoder`;
       script.async = true;
       script.onload = () => {
         if (window.naver?.maps) resolve(window.naver);
@@ -167,7 +174,10 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
   const allowRegionFallback = options.allowRegionFallback !== false;
   const variant = options.variant || 'search';
   const pins = mapStudyRoomPins(items, { allowRegionFallback });
-  const center = resolveMapCenter(items, regionLabel);
+  const center = resolveMapCenter(items, regionLabel, {
+    lat: options.lat,
+    lng: options.lng,
+  });
 
   /** @type {{ destroy: () => void, focusPin: (id: string) => void, getPins: () => typeof pins }|null} */
   let controller = null;
@@ -282,7 +292,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
 /**
  * @param {HTMLElement} root
  * @param {StudyRoomMapItem[]} items
- * @param {{ regionLabel?: string, onPinClick?: (id: string) => void }} [options]
+ * @param {{ regionLabel?: string, lat?: number|null, lng?: number|null, onPinClick?: (id: string) => void }} [options]
  */
 export async function bindStudyRoomMapSection(root, items, options = {}) {
   const section = root.querySelector('[data-study-room-map]');
@@ -292,9 +302,13 @@ export async function bindStudyRoomMapSection(root, items, options = {}) {
   const prev = /** @type {{ destroy?: () => void }|undefined} */ (mount._mapController);
   prev?.destroy?.();
 
+  const latAttr = section?.getAttribute('data-map-lat');
+  const lngAttr = section?.getAttribute('data-map-lng');
   const controller = await mountStudyRoomMap(mount, {
     items,
     regionLabel: options.regionLabel || section?.getAttribute('data-region-label') || '',
+    lat: options.lat ?? (latAttr != null ? Number(latAttr) : null),
+    lng: options.lng ?? (lngAttr != null ? Number(lngAttr) : null),
     allowRegionFallback: section?.getAttribute('data-allow-fallback') !== 'false',
     variant: section?.getAttribute('data-map-variant') || 'search',
     onPinClick: options.onPinClick,

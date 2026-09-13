@@ -4,7 +4,7 @@ import {
   resolveAllowedTab,
   getSearchTabLabel,
 } from '../search-role-access.js';
-import { MOCK_REGIONS, SEARCH_TABS } from '../search-schema.js';
+import { SEARCH_TABS } from '../search-schema.js';
 import {
   getCurrentTab,
   navigateTab,
@@ -32,6 +32,11 @@ import {
   renderFindFilterBar,
   renderFindResultSection,
   bindFindSurfaceEvents,
+  hydrateFindStateFromHash,
+  resolveActiveRegionLabel,
+  refreshActiveResultItems,
+  runFindSearchWithFilters,
+  bootFindGpsIfNeeded,
 } from '../search-find-surface.js';
 
 /**
@@ -62,13 +67,9 @@ function syncHomeSubscription() {
 
 function renderSearchForm(tab) {
   const heading = SEARCH_TABS[tab]?.label || getSearchTabLabel(tab, previewState.role);
-  const regionLabel =
-    previewState.activeRegionLabel ||
-    (tab === 'room'
-      ? MOCK_REGIONS.room
-      : tab === 'tutor'
-        ? MOCK_REGIONS.tutor
-        : MOCK_REGIONS.student);
+  // 헤더·지도·리스트가 같은 CanonicalLocation 을 쓰도록 먼저 정규화
+  refreshActiveResultItems(tab, previewState, previewState.role);
+  const regionLabel = resolveActiveRegionLabel(tab, previewState, previewState.role);
   const locationLine =
     tab === 'room' || tab === 'tutor' || tab === 'student'
       ? `<p class="search-header__location" data-search-current-location aria-live="polite">현재위치 <strong>${esc(regionLabel)}</strong></p>`
@@ -102,7 +103,29 @@ export function renderSearchPage() {
     navigateTab(tab);
     return '';
   }
+  hydrateFindStateFromHash(previewState, tab);
   return renderSearchShell(renderSearchForm(tab));
+}
+
+/**
+ * searched=1 복원 재검색 + GPS 부트 (렌더 후 1회)
+ * @param {() => void} rerender
+ */
+export function afterSearchPageMount(rerender) {
+  const tab = getCurrentTab();
+  if (previewState._needsSearchRestore && previewState.lastSearchFilters) {
+    const filters = /** @type {Record<string, string|string[]>} */ ({
+      ...previewState.lastSearchFilters,
+    });
+    previewState._needsSearchRestore = false;
+    queueMicrotask(() => {
+      runFindSearchWithFilters(tab, filters, previewState, previewState.role, rerender);
+    });
+    return;
+  }
+  queueMicrotask(() => {
+    bootFindGpsIfNeeded(previewState, tab, rerender).catch(() => {});
+  });
 }
 
 export function bindSearchPageEvents(root, rerender) {
@@ -143,4 +166,6 @@ export function bindSearchPageEvents(root, rerender) {
       navigateTab(nextTab);
     });
   });
+
+  afterSearchPageMount(rerender);
 }

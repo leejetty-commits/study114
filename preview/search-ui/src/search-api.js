@@ -49,7 +49,31 @@ export function collectFiltersFromForm(form, tab) {
     }
   }
 
+  promoteRegionLabelFilters(filters, tab);
   return filters;
+}
+
+/**
+ * 지역 입력값이 숫자가 아니면 id 필터 대신 label 필터로 승격
+ * @param {Record<string, string | string[]>} filters
+ * @param {import('./state.js').SearchTab} tab
+ */
+function promoteRegionLabelFilters(filters, tab) {
+  const asText = (v) => (Array.isArray(v) ? String(v[0] || '') : String(v || '')).trim();
+  const isNumericId = (v) => /^\d+$/.test(asText(v));
+
+  if (tab === 'room' && filters.region_id != null && !isNumericId(filters.region_id)) {
+    filters.region_label = asText(filters.region_id);
+    delete filters.region_id;
+  }
+  if (tab === 'tutor' && filters.tutor_region_id != null && !isNumericId(filters.tutor_region_id)) {
+    filters.tutor_region_label = asText(filters.tutor_region_id);
+    delete filters.tutor_region_id;
+  }
+  if (tab === 'student' && filters.preferred_region != null && !isNumericId(filters.preferred_region)) {
+    filters.preferred_region_label = asText(filters.preferred_region);
+    delete filters.preferred_region;
+  }
 }
 
 /**

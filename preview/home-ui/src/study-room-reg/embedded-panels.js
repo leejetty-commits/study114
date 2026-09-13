@@ -264,10 +264,11 @@ function overviewDl(rows) {
           const req = row.required
             ? '<em class="register-required-mark">필수</em>'
             : '';
+          const stateClass = empty ? ' is-empty' : ' is-filled';
           return `
-        <div class="register-overview__row${empty ? ' is-empty' : ''}">
+        <div class="register-overview__row${stateClass}" data-embed-edit role="button" tabindex="0">
           <dt>${esc(row.label)}${req}</dt>
-          <dd><span>${valueHtml}</span></dd>
+          <dd><span>${valueHtml || '—'}</span></dd>
         </div>`;
         })
         .join('')}
@@ -299,7 +300,7 @@ function detail1OverviewRows() {
     { label: '홍보사진', value: photoCount ? `${photoCount}장` : '', required: true },
     { label: '지도 스타일', value: styles.length ? `${styles.length}개 선택` : '', required: true },
     { label: '지도 스타일 추가설명', value: s.teaching_style_note, required: true },
-    { label: '수업상세', value: classCount ? `${classCount}개 등록` : '', required: true },
+    { label: '수업상세', value: classCount ? `${classCount}개 등록` : '등록된 수업이 없습니다' },
     {
       label: '옵션',
       value: [s.weekend_available ? '주말 가능' : '', s.one_on_one_available ? '1:1 가능' : ''].filter(Boolean).join(' · '),
@@ -339,14 +340,30 @@ export function renderEmbeddedPanel(room, section) {
   document.body.classList.toggle('register-edit-open', editing && section === 'basic');
 
   if (section === 'basic') {
+    const basicDone = isRoomBasicComplete(registerState);
+    const boardHtml =
+      basicDone && !editing
+        ? `
+      <div class="register-basic-complete-gate" data-basic-complete-gate>
+        <p class="register-basic-complete-gate__msg">기본정보는 모두 입력되어 있습니다. 수정이 필요하면 버튼을 눌러 주세요.</p>
+        <div class="register-basic-complete-gate__actions">
+          <button type="button" class="btn btn--secondary" data-embed-edit>기본정보 수정하기</button>
+          <a class="btn btn--primary" href="#${studyRoomSectionPath(room.id, 'detail')}" data-p20-nav="${studyRoomSectionPath(room.id, 'detail')}">상세정보로 이동</a>
+        </div>
+      </div>
+      <details class="register-overview__fold">
+        <summary>기본정보 현황 보기</summary>
+        ${renderBasicOverviewBoard({ editAction: 'embed-edit', showCompleteGate: false })}
+      </details>`
+        : renderBasicOverviewBoard({ editAction: 'embed-edit', showCompleteGate: false });
     const content = `
       ${renderReturnToRegistrationCheckBanner(room.id)}
-      ${renderBasicOverviewBoard({ editAction: 'embed-edit' })}
+      ${boardHtml}
       ${editing ? renderBasicEditModal() : ''}
     `;
     return embedFrame('basic', room.id, content, {
       stepKey: 'basic',
-      title: '공부방 기본정보 현황',
+      title: basicDone ? '공부방 기본정보' : '공부방 기본정보 현황',
     });
   }
 
@@ -412,8 +429,16 @@ export function bindEmbeddedPanelEvents(root, rerender) {
   const section = /** @type {'basic'|'detail'|'detail2'} */ (wrap.getAttribute('data-embed-section'));
   const roomId = Number(wrap.getAttribute('data-embed-room-id'));
 
-  wrap.querySelector('[data-embed-edit], [data-action="embed-edit"]')?.addEventListener('click', () => {
-    setEditMode(roomId, section, true);
+  wrap.querySelectorAll('[data-embed-edit], [data-action="embed-edit"]').forEach((el) => {
+    el.addEventListener('click', () => {
+      setEditMode(roomId, section, true);
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setEditMode(roomId, section, true);
+      }
+    });
   });
 
   wrap.querySelectorAll('[data-p20-nav]').forEach((el) => {

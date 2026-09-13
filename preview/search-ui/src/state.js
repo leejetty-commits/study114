@@ -6,7 +6,7 @@ import { parseHashQuery, parseNavRole } from '../../shared/preview-links.js';
 import { navRoleFromAuthUser } from '../../shared/site-nav-config.js';
 import { getAuthUser, isLoggedIn } from '@home-ui/auth-session.js';
 
-/** @type {{ tab: SearchTab, expanded: boolean, role: ViewerRole, subscription: ProviderSubscription, searchExecuted: boolean, searchLoading: boolean, searchError: string | null, searchTotal: number, searchRows: Array<{ left: string, center: string, right: string }>, searchItems: Array<Record<string, unknown>> }} */
+/** @type {{ tab: SearchTab, expanded: boolean, role: ViewerRole, subscription: ProviderSubscription, searchExecuted: boolean, searchLoading: boolean, searchError: string | null, searchTotal: number, searchRows: Array<{ left: string, center: string, right: string }>, searchItems: Array<Record<string, unknown>>, searchExposureItems: Array<Record<string, unknown>>, activeResultItems: Array<Record<string, unknown>>, activeResultSource: 'region'|'search'|null, activeRegionLabel: string, canonicalLocation: import('../../shared/location-display.js').CanonicalLocation|null, lastSearchFilters: Record<string, string|string[]>|null, _needsSearchRestore: boolean, _gpsBootedTab: string|null, _restoredSearchKey: string|null, studentLessonFormat: string, tutorRegionIndex: number }} */
 export const previewState = {
   tab: 'room',
   expanded: false,
@@ -20,6 +20,11 @@ export const previewState = {
   activeResultItems: [],
   activeResultSource: null,
   activeRegionLabel: '',
+  canonicalLocation: null,
+  lastSearchFilters: null,
+  _needsSearchRestore: false,
+  _gpsBootedTab: /** @type {string|null} */ (null),
+  _restoredSearchKey: /** @type {string|null} */ (null),
   role: 'guest',
   subscription: 'free',
   studentLessonFormat: 'one_on_one',
@@ -65,8 +70,27 @@ export function syncRoleFromHash() {
 /** @param {SearchTab} tab */
 export function navigateTab(tab) {
   const base = HASH_FROM_TAB[tab] || HASH_FROM_TAB.room;
-  const role = parseNavRole(parseHashQuery().role) || previewState.role;
-  window.location.hash = role ? `${base}?role=${encodeURIComponent(role)}` : base;
+  const prev = parseHashQuery();
+  const params = new URLSearchParams();
+  const role = parseNavRole(prev.role) || previewState.role;
+  if (role && role !== 'guest') params.set('role', role);
+  // 탭 전환 시 지역 SSOT 유지 (searched/filters 는 탭별이라 제거)
+  const region =
+    prev.region ||
+    previewState.canonicalLocation?.displayLabel ||
+    previewState.activeRegionLabel ||
+    '';
+  if (region) params.set('region', region);
+  const lat = prev.lat || (previewState.canonicalLocation?.lat != null
+    ? String(previewState.canonicalLocation.lat)
+    : '');
+  const lng = prev.lng || (previewState.canonicalLocation?.lng != null
+    ? String(previewState.canonicalLocation.lng)
+    : '');
+  if (lat) params.set('lat', lat);
+  if (lng) params.set('lng', lng);
+  const qs = params.toString();
+  window.location.hash = qs ? `${base}?${qs}` : base;
 }
 
 /** UI 라벨 — parent 세션은 정책상 「학생」 중심 (DB enum guardian_student는 유지) */

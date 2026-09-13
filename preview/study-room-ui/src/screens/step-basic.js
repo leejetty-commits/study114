@@ -53,20 +53,15 @@ function complexLabel(slot) {
 function exposureLines(s) {
   const slots = Array.isArray(s.saved_regions) ? s.saved_regions.slice(0, 3) : [];
   while (slots.length < 3) slots.push({});
-  return slots
-    .map((slot, i) => {
-      const basis = slot.region_basis_type || 'dong';
-      const text =
-        basis === 'complex'
-          ? complexLabel(slot)
-          : blank(slot.region_label) || regionLabel(slot.region_id);
-      const t = String(text || '').trim();
-      // 미입력 홍보지역 2·3은 미표시 (공란 합성·사업장 복제 표시 금지)
-      if (!t && i > 0) return null;
-      const mark = slot.is_primary ? '대표' : `${i + 1}`;
-      return `${mark} · ${t}`;
-    })
-    .filter((line) => line !== null);
+  return slots.map((slot, i) => {
+    const basis = slot.region_basis_type || 'dong';
+    const text =
+      basis === 'complex'
+        ? complexLabel(slot)
+        : blank(slot.region_label) || regionLabel(slot.region_id);
+    const mark = slot.is_primary ? '대표' : `${i + 1}`;
+    return `${mark} · ${String(text || '').trim()}`;
+  });
 }
 
 let basicEditOpen = false;
@@ -103,30 +98,68 @@ function overviewRows() {
   ];
 }
 
-/** @param {{ editAction?: string }} [opts] */
+/** @param {{ editAction?: string, showCompleteGate?: boolean }} [opts] */
 export function renderBasicOverviewBoard(opts = {}) {
   const editAction = opts.editAction || 'edit-basic';
+  const complete = isRoomBasicComplete(registerState);
+  const showGate = opts.showCompleteGate !== false && complete;
+
+  const gateHtml = showGate
+    ? `
+    <div class="register-basic-complete-gate" data-basic-complete-gate>
+      <p class="register-basic-complete-gate__msg">기본정보는 모두 입력되어 있습니다. 수정이 필요하면 버튼을 눌러 주세요.</p>
+      <div class="register-basic-complete-gate__actions">
+        <button type="button" class="btn btn--secondary" data-action="${editAction}">기본정보 수정하기</button>
+        <button type="button" class="btn btn--primary" data-action="to-detail">상세정보 수정하기</button>
+      </div>
+    </div>`
+    : `
+    <div class="register-overview__toolbar">
+      <button type="button" class="register-phase__tag is-active register-overview__edit-badge" data-action="${editAction}">기본정보 수정</button>
+      <p class="register-overview__lead">수정이 필요하면 눌러 주세요.</p>
+    </div>`;
+
   return `
     <div class="register-overview">
-      <div class="register-overview__toolbar">
-        <button type="button" class="register-phase__tag is-active register-overview__edit-badge" data-action="${editAction}">기본정보 수정</button>
-        <p class="register-overview__lead">수정이 필요하면 눌러 주세요.</p>
-      </div>
-      <dl class="register-overview__dl">
+      ${gateHtml}
+      <dl class="register-overview__dl"${showGate ? ' hidden' : ''}>
         ${overviewRows()
           .map((row) => {
             const empty = !String(row.value ?? '').trim();
             const valueHtml = row.multiline
               ? esc(blank(row.value)).replace(/\n/g, '<br />')
               : esc(blank(row.value));
+            const stateClass = empty ? ' is-empty' : ' is-filled';
             return `
-          <div class="register-overview__row${empty ? ' is-empty' : ''}">
+          <div class="register-overview__row${stateClass}" data-action="${editAction}" role="button" tabindex="0">
             <dt>${esc(row.label)}</dt>
-            <dd><span>${valueHtml}</span></dd>
+            <dd><span>${valueHtml || '—'}</span></dd>
           </div>`;
           })
           .join('')}
       </dl>
+      ${
+        showGate
+          ? `<details class="register-overview__fold">
+        <summary>기본정보 현황 보기</summary>
+        <dl class="register-overview__dl">
+          ${overviewRows()
+            .map((row) => {
+              const empty = !String(row.value ?? '').trim();
+              const valueHtml = row.multiline
+                ? esc(blank(row.value)).replace(/\n/g, '<br />')
+                : esc(blank(row.value));
+              return `
+            <div class="register-overview__row${empty ? ' is-empty' : ' is-filled'}" data-action="${editAction}" role="button" tabindex="0">
+              <dt>${esc(row.label)}</dt>
+              <dd><span>${valueHtml || '—'}</span></dd>
+            </div>`;
+            })
+            .join('')}
+        </dl>
+      </details>`
+          : ''
+      }
     </div>
   `;
 }
@@ -181,15 +214,18 @@ function renderBasicOverview() {
   }
   if (isBasicEditRequested()) basicEditOpen = true;
   document.body.classList.toggle('register-edit-open', basicEditOpen);
+  const complete = isRoomBasicComplete(registerState);
   const content = `
-    ${renderBasicOverviewBoard()}
+    ${renderBasicOverviewBoard({ showCompleteGate: complete && !basicEditOpen })}
     ${basicEditOpen ? renderBasicEditModal() : ''}
   `;
 
   return renderRegisterShell(content, {
     stepKey: 'basic',
-    title: '공부방 기본정보 현황',
-    headingActions: `<span class="register-heading-row__lead">이어서</span><button type="button" class="btn btn--primary" data-action="to-detail">상세정보 등록하기</button>`,
+    title: complete ? '공부방 기본정보' : '공부방 기본정보 현황',
+    headingActions: complete
+      ? `<span class="register-heading-row__lead">이어서</span><button type="button" class="btn btn--primary" data-action="to-detail">상세정보로 이동</button>`
+      : `<span class="register-heading-row__lead">이어서</span><button type="button" class="btn btn--primary" data-action="to-detail">상세정보 등록하기</button>`,
   });
 }
 
@@ -200,13 +236,23 @@ export function renderBasic() {
 export function bindBasicEvents(root) {
   bindGlobalEvents(root);
 
-  root.querySelector('[data-action="to-detail"]')?.addEventListener('click', () => {
-    registerState.basicComplete = true;
-    navigate(withRoomId('/register/lesson'));
+  root.querySelectorAll('[data-action="to-detail"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      registerState.basicComplete = true;
+      navigate(withRoomId('/register/lesson'));
+    });
   });
 
-  root.querySelector('[data-action="edit-basic"]')?.addEventListener('click', () => {
-    openBasicEdit();
+  root.querySelectorAll('[data-action="edit-basic"]').forEach((el) => {
+    el.addEventListener('click', () => {
+      openBasicEdit();
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openBasicEdit();
+      }
+    });
   });
 
   const overlay = root.querySelector('[data-basic-edit-overlay]');

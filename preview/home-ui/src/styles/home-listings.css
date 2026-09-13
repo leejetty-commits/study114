@@ -3,19 +3,51 @@
  * Rollback: git revert this commit.
  */
 
-/* ?? ?? ??? (?? ??) ?? */
+/* 섹션 타이틀 — 프라임/픽/베이직 · 현재위치 우측정렬 */
 .section-heading {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-1) var(--space-2);
-  text-align: left;
   margin: 0 0 var(--space-2);
   padding-top: var(--space-3);
+  width: 100%;
 }
 
 .section-heading:first-child {
   padding-top: 0;
+}
+
+.section-heading__main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.section-heading--start .section-heading__main {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.section-heading--center .section-heading__main {
+  justify-content: center;
+  text-align: center;
+}
+
+.section-heading__brand {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+}
+
+.section-heading__brand-text {
+  font-family: var(--font-serif);
+  font-size: 0.95em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .section-heading__emoji {
@@ -31,11 +63,13 @@
 }
 
 .section-heading__title {
+  font-family: var(--font-serif);
   font-size: var(--text-base);
   font-weight: 700;
   color: var(--gray-900);
   margin: 0;
   line-height: 1.25;
+  letter-spacing: -0.02em;
 }
 
 .section-heading__desc {
@@ -43,15 +77,19 @@
   color: var(--gray-500);
   line-height: 1.35;
   margin: 0;
+  width: 100%;
 }
 
-/* ?? ?? ???? ? ?? ???? ? ??? ??? ?? ??? */
+/* 현재위치 — 공통 우측정렬 */
 .section-heading__loc {
   display: inline-flex;
   align-items: baseline;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.3rem 0.4rem;
-  margin-left: 0.15rem;
+  margin-left: auto;
+  flex-shrink: 0;
+  text-align: right;
 }
 .section-heading__loc-label {
   font-size: var(--text-xs);
@@ -64,6 +102,90 @@
   font-weight: 700;
   color: var(--gray-900);
   line-height: 1.25;
+}
+
+/* 프라임 — 금색 · 중앙 · 좌우 장식 */
+.section-heading--prime .section-heading__title,
+.section-heading--prime .section-heading__brand-text {
+  color: #b8860b;
+  background: linear-gradient(105deg, #8b6914 0%, #d4af37 45%, #f0d78c 55%, #b8860b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.05rem;
+}
+.section-heading--prime .section-heading__ornament {
+  color: #c9a227;
+  border-color: #c9a227;
+}
+
+/* 픽 — 은색 · 중앙 · 동일 장식 구조 */
+.section-heading--pick .section-heading__title,
+.section-heading--pick .section-heading__brand-text {
+  color: #6b7280;
+  background: linear-gradient(105deg, #4b5563 0%, #9ca3af 45%, #e5e7eb 55%, #6b7280 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.05rem;
+}
+.section-heading--pick .section-heading__ornament {
+  color: #9ca3af;
+  border-color: #9ca3af;
+}
+
+/* 베이직 — 하늘색/블루 · 좌측 */
+.section-heading--basic .section-heading__title,
+.section-heading--basic .section-heading__brand-text {
+  color: #2563eb;
+  font-size: 1.05rem;
+}
+
+.section-heading__ornament {
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 0.7rem;
+  position: relative;
+  display: inline-block;
+}
+.section-heading__ornament::before,
+.section-heading__ornament::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.75;
+  transform: translateY(-50%);
+}
+.section-heading__ornament::after {
+  width: 0.45rem;
+  height: 0.45rem;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  opacity: 1;
+}
+.section-heading__ornament--left::after {
+  left: 0;
+  right: auto;
+}
+.section-heading__ornament--right::before {
+  /* mirror */
+}
+.section-heading__ornament--right::after {
+  right: 0;
+  left: auto;
+}
+.section-heading__ornament--left::before {
+  left: 0.55rem;
+  background: linear-gradient(90deg, transparent, currentColor);
+}
+.section-heading__ornament--right::before {
+  right: 0.55rem;
+  left: auto;
+  background: linear-gradient(270deg, transparent, currentColor);
 }
 
 .list-subsection .section-heading {
