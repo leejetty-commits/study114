@@ -11,14 +11,7 @@ import {
   tutorHashSearchParams,
 } from './router.js';
 import { renderUniversityNameField } from '../../../shared/korean-universities.js';
-import {
-  profileStatusLabel,
-  getExposureMatrix,
-  getAccessMatrix,
-  getThreeGauges,
-  getHubCtas,
-  getRequiredCertGauge,
-} from './format.js';
+import { getExposureMatrix } from './format.js';
 import {
   getTutors,
   getTutor,
@@ -35,8 +28,9 @@ import { renderTutorRegistrationCheck } from './registration-check-render.js';
 import { bindTutorRegistrationCheckEvents } from './registration-check-edit.js';
 import { renderTutorInquiries } from './inquiries-render.js';
 import { bindTutorInquiriesEvents } from './inquiries-edit.js';
+import { renderTutorProfileRead } from './profile-read.js';
+import { renderTutorProfilePhotoEditor, bindTutorProfilePhotos } from './profile-photos.js';
 import { TRC_COPY } from './registration-check-copy.js';
-import { previewState } from '../state.js';
 import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import {
@@ -174,19 +168,6 @@ function renderEmptyNoProfile() {
     </section>`;
 }
 
-/** @param {ReturnType<typeof getAccessMatrix>[number][]} rows */
-function renderMatrixRows(rows, lockedClass = 'p20-matrix') {
-  return rows
-    .map(
-      (m) => `
-    <div class="${lockedClass}__row${m.ok ? ' is-ok' : ' is-locked'}">
-      <span class="${lockedClass}__label">${m.ok ? '✓' : '🔒'} ${esc(m.label)}</span>
-      <span class="${lockedClass}__status">${m.ok ? '가능' : esc(m.reason || '불가')}</span>
-    </div>`,
-    )
-    .join('');
-}
-
 /** @param {ReturnType<typeof getExposureMatrix>} rows */
 function renderExposureMatrixRows(rows) {
   return rows
@@ -201,161 +182,9 @@ function renderExposureMatrixRows(rows) {
     .join('');
 }
 
-/** @param {{ label: string, missingCount: number, conditions: { ok: boolean, label: string }[], ctaExternal?: string, ctaPath?: string, ctaLabel: string }} card @param {number} tutorId */
-function renderUnlockCard(card, tutorId) {
-  const steps = card.conditions
-    .map(
-      (c) =>
-        `<li class="p21-unlock-step${c.ok ? ' is-done' : ''}"><span>${c.ok ? '✓' : '△'}</span> ${esc(c.label)}</li>`,
-    )
-    .join('');
-  let cta = '';
-  if (card.ctaExternal) {
-    cta = `<a href="${card.ctaExternal}" class="btn btn--secondary btn--sm" data-mypage-nav="${card.ctaExternal.replace('#', '')}">${esc(card.ctaLabel)}</a>`;
-  } else if (card.ctaPath) {
-    const href = tutorSectionPath(tutorId, /** @type {any} */ (card.ctaPath));
-    cta = `<a href="#${href}" class="btn btn--secondary btn--sm" data-p21-nav="${href}">${esc(card.ctaLabel)}</a>`;
-  }
-  return `
-    <div class="p21-unlock-card">
-      <strong class="p21-unlock-card__title">${esc(card.label)}</strong>
-      <p class="p21-unlock-card__remain">조건 ${card.missingCount}개 남음</p>
-      <ul class="p21-unlock-steps">${steps}</ul>
-      ${cta}
-    </div>`;
-}
-
-function renderProviderSubToggle() {
-  const freeActive = previewState.providerSubscription === 'free' ? ' is-active' : '';
-  const paidActive = previewState.providerSubscription === 'paid' ? ' is-active' : '';
-  return `
-    <div class="p21-sub-toggle msg-toolbar-demo" role="group" aria-label="유료 등급 프리뷰">
-      <span class="p21-sub-toggle__label">공급자 구독 (프리뷰)</span>
-      <button type="button" class="preview-toolbar__btn${freeActive}" data-provider-subscription="free">무료</button>
-      <button type="button" class="preview-toolbar__btn${paidActive}" data-provider-subscription="paid">유료</button>
-      <span class="p21-sub-toggle__hint">학생에게 먼저 보내는 쪽지 권한 체험</span>
-    </div>`;
-}
-
-/** @param {{ ok: boolean, label: string }[]} items */
-function renderChecklist(items) {
-  return `<ul class="p21-check-grid">${items
-    .map(
-      (i) =>
-        `<li class="p21-check-grid__item${i.ok ? ' is-done' : ''}"><span class="p21-check-grid__ico" aria-hidden="true">${i.ok ? '✓' : '○'}</span><span>${esc(i.label)}</span></li>`,
-    )
-    .join('')}</ul>`;
-}
-
-/**
- * @param {string} title
- * @param {string} bodyHtml
- * @param {{ open?: boolean, hint?: string }} [opts]
- */
-function renderAccordion(title, bodyHtml, opts = {}) {
-  return `
-    <details class="p21-acc"${opts.open ? ' open' : ''}>
-      <summary class="p21-acc__summary">
-        <span class="p21-acc__title">${esc(title)}</span>
-        ${opts.hint ? `<span class="p21-acc__hint">${esc(opts.hint)}</span>` : ''}
-      </summary>
-      <div class="p21-acc__body">${bodyHtml}</div>
-    </details>`;
-}
-
-function renderHubHeroSentence(tutor) {
-  if (tutor.profile_status === 'published') return '현재 프로필이 공개 상태입니다';
-  if (tutor.profile_status === 'hidden') return '현재 프로필이 숨김 상태입니다';
-  return '현재 프로필이 미공개 상태입니다';
-}
-
-/** @param {import('./store.js').TutorRecord} tutor */
-function renderHubCtaBlock(tutor) {
-  const ctas = getHubCtas(tutor).slice(0, 3);
-  return ctas
-    .map((c) => {
-      if (c.external) {
-        const isMypage = c.external.startsWith('#/mypage');
-        const navAttr = isMypage ? ` data-mypage-nav="${c.external.replace('#', '')}"` : '';
-        return `<a href="${c.external}" class="btn ${c.primary ? 'btn--primary' : 'btn--secondary'}"${navAttr}>${esc(c.label)}</a>`;
-      }
-      const href = tutorSectionPath(tutor.id, /** @type {any} */ (c.path));
-      return `<a href="#${href}" class="btn ${c.primary ? 'btn--primary' : 'btn--secondary'}" data-p21-nav="${href}">${esc(c.label)}</a>`;
-    })
-    .join('');
-}
-
 /** @param {import('./store.js').TutorRecord} tutor */
 function renderHub(tutor) {
-  const readiness = getPublishReadiness(tutor);
-  const gauges = getThreeGauges(tutor);
-  const certs = getRequiredCertGauge(tutor);
-  const accessMatrix = getAccessMatrix(tutor);
-  const exposureMatrix = getExposureMatrix(tutor, readiness);
-  const badge = profileStatusLabel(tutor.profile_status);
-  const readinessDone = readiness.doneCount;
-  const readinessTotal = readiness.totalCount;
-
-  const body = `
-    <div class="p21-hub p21-hub--ops">
-      <section class="p21-hero" aria-label="등록 상태 요약">
-        <span class="p21-hero__badge">${esc(badge)}</span>
-        <h2 class="p21-hero__title">${esc(renderHubHeroSentence(tutor))}</h2>
-        <div class="p21-hero__stats">
-          <p>공개 준비도: <strong>${readinessDone} / ${readinessTotal} 항목 완료</strong></p>
-          <p>필수 인증: <strong>${certs.done} / ${certs.total} 완료</strong></p>
-        </div>
-        <div class="p21-hero__actions">${renderHubCtaBlock(tutor)}</div>
-      </section>
-
-      <div class="p21-mid-grid" aria-label="진행 축 요약">
-        <article class="p21-mid-card">
-          <div class="p21-mid-card__text">
-            <h3 class="p21-mid-card__title">공개 준비도</h3>
-            <p class="p21-mid-card__desc">필수 정보 ${readinessTotal}개 중 ${readinessDone}개 입력됨</p>
-          </div>
-          <span class="p21-mid-card__ico" aria-hidden="true">◎</span>
-        </article>
-        <article class="p21-mid-card">
-          <div class="p21-mid-card__text">
-            <h3 class="p21-mid-card__title">프로필·신뢰 요약</h3>
-            <p class="p21-mid-card__desc">서류 인증 ${gauges.trustInfo.total}개 중 ${gauges.trustInfo.done}개 완료</p>
-          </div>
-          <span class="p21-mid-card__ico" aria-hidden="true">▣</span>
-        </article>
-      </div>
-
-      <div class="p21-acc-stack">
-        ${renderAccordion(
-          '프로필 완성도 상세',
-          `<div class="p21-acc__meter"><span>${gauges.completion.done}/${gauges.completion.total}</span>
-            <div class="p21-acc__bar" role="progressbar" aria-valuenow="${Math.round((gauges.completion.done / gauges.completion.total) * 100)}" aria-valuemin="0" aria-valuemax="100">
-              <i style="width:${Math.round((gauges.completion.done / gauges.completion.total) * 100)}%"></i>
-            </div>
-          </div>
-          ${renderChecklist(gauges.completion.items)}`,
-          { open: true },
-        )}
-        ${renderAccordion('신뢰정보(학력/자격 등)', renderChecklist(gauges.trustInfo.items))}
-        ${renderAccordion(
-          '노출 준비도 / 상품 연동 상태',
-          `<div class="p20-matrix p20-matrix--soft">${renderExposureMatrixRows(exposureMatrix)}</div>
-           ${
-             readiness.qualityHints.length
-               ? `<p class="p21-acc__note">${esc(readiness.qualityHints.join(' · '))}</p>`
-               : ''
-           }`,
-        )}
-        ${renderAccordion(
-          '접근·쪽지 매트릭스 상세',
-          `<p class="p21-acc__note">회원 등급·공개 상태에 따른 이용 가능 여부를 확인합니다.</p>
-           <div class="p20-matrix p20-matrix--soft">${renderMatrixRows(accessMatrix)}</div>
-           <p class="p21-acc__note"><a href="#${tutorSectionPath(tutor.id, 'inquiries')}" data-p21-nav="${tutorSectionPath(tutor.id, 'inquiries')}">쪽지설정 열기 →</a></p>`,
-          { hint: '이용 가능 여부 확인' },
-        )}
-      </div>
-    </div>`;
-
+  const body = renderTutorProfileRead(tutor);
   return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'hub', body)}</section>`;
 }
 
@@ -602,7 +431,7 @@ function renderDetailForm(tutor) {
       )}
       ${renderFormSection(
         '학력 · 소개 · 연락',
-        '프로필 사진은 상세등록에서 올리며, 공개 조건에 포함됩니다.',
+        '프로필 사진은 아래에서 최대 3장까지 올릴 수 있습니다. 1번 사진이 BASIC·PICK·PRIME 카드 대표 사진입니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <div data-trc-field="university">
@@ -641,7 +470,10 @@ function renderDetailForm(tutor) {
             <span class="p19-field__label">짧은 소개 ${reqMark()}</span>
             <textarea class="p19-input p19-textarea" name="intro_short" rows="2">${esc(tutor.intro_short || '')}</textarea>
           </label>
-          <p class="p19-field__hint" data-trc-field="profile_image" style="grid-column:1/-1;margin:0;">프로필 사진 ${reqMark()} · 상세등록에서 올립니다. 공개 전 카드에 필요합니다.</p>
+          <div class="p19-field p19-field--full" data-trc-field="profile_image">
+            <span class="p19-field__label">프로필 사진 ${reqMark()}</span>
+            ${renderTutorProfilePhotoEditor(tutor)}
+          </div>
           <label class="p19-field p19-field--full" data-trc-field="intro_long">
             <span class="p19-field__label">상세 소개 ${reqMark()}</span>
             <textarea class="p19-input p19-textarea" name="intro_long" rows="4">${esc(tutor.intro_long || '')}</textarea>
@@ -746,6 +578,14 @@ export function bindTutorRegEvents(root, rerender) {
   bindTutorRegistrationCheckEvents(root);
   bindTutorInquiriesEvents(root, rerender);
   scrollToTutorRcFocus(root);
+
+  const detailForm = root.querySelector('[data-p21-form="detail"]');
+  if (detailForm) {
+    bindTutorProfilePhotos(root, {
+      tutorId: Number(detailForm.dataset.p21TutorId || 0),
+      rerender,
+    });
+  }
 
   root.querySelectorAll('[data-p21-retry-cities]').forEach((btn) => {
     btn.addEventListener('click', async () => {

@@ -15,6 +15,8 @@ import './styles/home-marketing-banner.css';
 import './styles/plans-store.css';
 import './styles/mypage-ops.css';
 import './styles/registration-check.css';
+import './styles/tutor-profile-read.css';
+import './styles/tutor-profile-photos.css';
 import './styles/home-card-samples.css';
 import './styles/myshop.css';
 import './styles/myshop-public.css';

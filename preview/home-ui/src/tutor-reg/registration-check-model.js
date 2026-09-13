@@ -258,7 +258,11 @@ function buildBoard(tutor) {
       row(
         'profile_image',
         '프로필 사진',
-        tutor?.has_profile_image ? '등록됨' : '',
+        tutor?.has_profile_image
+          ? Array.isArray(tutor?.profile_images) && tutor.profile_images.length
+            ? `${tutor.profile_images.length}장`
+            : '등록됨'
+          : '',
         tutor?.has_profile_image ? 'filled' : 'empty',
       ),
       row('intro_long', '상세 소개', tutor?.intro_long, textStatus(tutor?.intro_long)),

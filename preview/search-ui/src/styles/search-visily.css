@@ -298,11 +298,11 @@
 
 .expo-hcard {
   display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr);
+  grid-template-columns: 6.75rem minmax(0, 1fr);
   grid-template-rows: auto auto;
   column-gap: 0.65rem;
   row-gap: 0.35rem;
-  align-items: start;
+  align-items: stretch;
   padding: 0.55rem 0.65rem;
   margin-bottom: 0;
   background: #fff;
@@ -321,16 +321,18 @@
 .expo-hcard__media-wrap {
   position: relative;
   grid-row: 1 / span 2;
-  width: 4.5rem;
-  height: 4.5rem;
+  width: 100%;
+  min-height: 0;
+  align-self: stretch;
   border-radius: 0.4rem;
   overflow: hidden;
   background: #e8eef7;
   flex-shrink: 0;
-  align-self: start;
 }
 
 .expo-hcard__media-wrap .expo-media {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   margin: 0;
@@ -564,25 +566,19 @@
   order: 0;
 }
 
-/* 과외/학생: 썸네일·메타 밀도만 미세 조정 (노출 로직 불변) */
-.expo-basic--tutor .expo-hcard__media-wrap,
-.expo-basic--student .expo-hcard__media-wrap {
-  width: 4.25rem;
-  height: 4.25rem;
-}
-
-.expo-basic--study_room .expo-hcard__media-wrap {
-  width: 4.75rem;
-  height: 4.75rem;
-}
-
-.expo-basic--study_room.expo-hcard {
-  grid-template-columns: 4.75rem minmax(0, 1fr);
-}
-
+/* 공부방·과외쌤·학생 베이직: 이미지 열 폭·높이 공통 (세로 = body+액션 전체) */
+.expo-basic--study_room.expo-hcard,
 .expo-basic--tutor.expo-hcard,
 .expo-basic--student.expo-hcard {
-  grid-template-columns: 4.25rem minmax(0, 1fr);
+  grid-template-columns: 6.75rem minmax(0, 1fr);
+}
+
+.expo-basic--tutor .expo-hcard__media-wrap,
+.expo-basic--student .expo-hcard__media-wrap,
+.expo-basic--study_room .expo-hcard__media-wrap {
+  width: 100%;
+  min-height: 0;
+  align-self: stretch;
 }
 
 /* 그리드 안 학생 티저 — 컴팩트 동일 톤 (마스킹/문구 JS 불변) */
@@ -627,7 +623,7 @@
   }
 
   .expo-hcard {
-    grid-template-columns: 4.25rem minmax(0, 1fr);
+    grid-template-columns: 5.75rem minmax(0, 1fr);
     padding: 0.55rem 0.6rem;
   }
 
@@ -635,14 +631,15 @@
   .expo-basic--study_room .expo-hcard__media-wrap,
   .expo-basic--tutor .expo-hcard__media-wrap,
   .expo-basic--student .expo-hcard__media-wrap {
-    width: 4.25rem;
-    height: 4.25rem;
+    width: 100%;
+    min-height: 0;
+    align-self: stretch;
   }
 
   .expo-basic--study_room.expo-hcard,
   .expo-basic--tutor.expo-hcard,
   .expo-basic--student.expo-hcard {
-    grid-template-columns: 4.25rem minmax(0, 1fr);
+    grid-template-columns: 5.75rem minmax(0, 1fr);
   }
 
   .expo-hcard__price {

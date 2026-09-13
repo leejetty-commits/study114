@@ -124,6 +124,7 @@ final class TutorHubRepository
             'has_primary_subject'      => $this->primarySubject($tutorId) !== '',
             'has_lesson_places'        => $lessonPlaces !== [],
             'has_profile_image'        => $this->hasProfileImage($tutorId),
+            'profile_images'           => $this->profileImages($tutorId),
             'education_doc_submitted'    => (bool) ($row['proof_document_available'] ?? false),
             'education_doc_public'       => (bool) ($row['proof_document_available'] ?? false),
             'career_doc_submitted'       => !empty($row['career_year_band']),
@@ -263,5 +264,33 @@ final class TutorHubRepository
         $stmt->execute([$tutorId]);
 
         return (bool) $stmt->fetchColumn();
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function profileImages(int $tutorId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id, image_type, image_path, sort_order
+             FROM tutor_images WHERE tutor_id = ? ORDER BY sort_order ASC, id ASC LIMIT 3'
+        );
+        $stmt->execute([$tutorId]);
+        $out = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $i => $row) {
+            $basic = (string) ($row['image_path'] ?? '');
+            $prime = str_contains($basic, '_basic_720')
+                ? str_replace('_basic_720', '_prime_1280', $basic)
+                : $basic;
+            $out[] = [
+                'id' => (int) ($row['id'] ?? 0),
+                'image_type' => (string) ($row['image_type'] ?? 'other'),
+                'image_path' => $basic,
+                'basic_720_path' => $basic,
+                'prime_1280_path' => $prime,
+                'sort_order' => (int) ($row['sort_order'] ?? $i + 1),
+                'name' => basename($basic) ?: '',
+            ];
+        }
+
+        return $out;
     }
 }

@@ -965,7 +965,7 @@ final class TutorRegisterService
 
         foreach ($images as $img) {
 
-            if (!is_array($img) || $order > 5) {
+            if (!is_array($img) || $order > 3) {
 
                 continue;
 

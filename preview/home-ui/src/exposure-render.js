@@ -369,7 +369,11 @@ function renderTutorFeeOverlay(item) {
 }
 
 function renderTutorMediaOverlay(item, ratio = 'prime') {
-  return renderMediaBlock(item.image_path, item.tutor_display_name, ratio, {
+  const src =
+    ratio === 'list' || ratio === 'pick'
+      ? item.image_path_basic || item.image_path || ''
+      : item.image_path_prime || item.image_path || item.image_path_basic || '';
+  return renderMediaBlock(src, item.tutor_display_name, ratio, {
     tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
     bl: renderTutorOverlayBottomGrid(item),
   });
@@ -732,7 +736,7 @@ function renderBasicTutorRow(item, opts) {
   return `
     <article class="expo-basic expo-basic--tutor expo-hcard" data-provider-id="${item.id}" data-provider-kind="tutor">
       <div class="expo-hcard__media-wrap">
-        ${renderMedia(item.image_path, item.tutor_display_name, 'list')}
+        ${renderMedia(item.image_path_basic || item.image_path, item.tutor_display_name, 'list')}
         ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
         ${badgeLayers}
       </div>

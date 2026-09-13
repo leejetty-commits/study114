@@ -1,0 +1,177 @@
+/**
+ * 과외쌤 프로필 사진 편집 · 마이프로필 갤러리
+ */
+
+.p21-photos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.p21-photos__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+.p21-photos__none {
+  margin: 0;
+  padding: 0.85rem 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.p21-photos__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.p21-photos__card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  background: #fff;
+  overflow: hidden;
+}
+
+.p21-photos__card.is-cover {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
+}
+
+.p21-photos__frame {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+.p21-photos__frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.p21-photos__empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.p21-photos__badge {
+  position: absolute;
+  left: 0.4rem;
+  top: 0.4rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.3rem;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.p21-photos__badge--muted {
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.p21-photos__meta {
+  padding: 0.55rem 0.6rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.p21-photos__name {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.p21-photos__ops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.p21-photos__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.p21-photos__actions label.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.p21-photos__file {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.p21-photos__count {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: #64748b;
+}
+
+.p21-profile__gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0 0 0.35rem;
+}
+
+.p21-profile__gallery-item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 0.65rem;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.p21-profile__gallery-item.is-cover {
+  border-color: #93c5fd;
+}
+
+.p21-profile__gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.p21-profile__gallery-badge {
+  position: absolute;
+  left: 0.4rem;
+  top: 0.4rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 0.3rem;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .p21-photos__grid,
+  .p21-profile__gallery {
+    grid-template-columns: 1fr;
+  }
+}

@@ -46,6 +46,7 @@ const KEY = 'study114-preview-tutors-v1';
  * @property {boolean} has_primary_subject
  * @property {boolean} has_lesson_places
  * @property {boolean} has_profile_image
+ * @property {{ id?: string|number, name?: string, image_path?: string, basic_720_path?: string, prime_1280_path?: string, sort_order?: number, image_type?: string, crop_x?: number, crop_y?: number }[]} [profile_images]
  * @property {boolean} education_doc_submitted
  * @property {boolean} education_doc_public
  * @property {boolean} career_doc_submitted
@@ -93,6 +94,7 @@ function withDefaults(raw, id) {
     has_primary_subject: false,
     has_lesson_places: false,
     has_profile_image: false,
+    profile_images: [],
     education_doc_submitted: false,
     education_doc_public: false,
     career_doc_submitted: false,
@@ -132,6 +134,17 @@ const SEED = [
       has_primary_subject: true,
       has_lesson_places: true,
       has_profile_image: true,
+      profile_images: [
+        {
+          id: 'seed-1',
+          name: 'tutor-card-sample.jpg',
+          image_path: '/assets/brand/tutor-card-sample.jpg',
+          basic_720_path: '/assets/brand/tutor-card-sample.jpg',
+          prime_1280_path: '/assets/brand/tutor-card-sample.jpg',
+          sort_order: 1,
+          image_type: 'profile',
+        },
+      ],
       education_doc_submitted: true,
       education_doc_public: true,
       career_doc_submitted: true,

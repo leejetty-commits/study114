@@ -6,6 +6,7 @@ import { TUTOR_REGISTER_URL, HOME_UI_BASE } from '../nav-config.js';
 import { formatTutorFeeCard } from '../exposure-format.js';
 import { tutorHubPath, tutorSectionPath } from './router.js';
 import { getPublishReadiness, isPaidProvider, getMemoCreditsRemaining } from './store.js';
+import { tutorCardImagePaths } from './profile-photos.js';
 
 /** @typedef {import('./store.js').TutorRecord} TutorRecord */
 
@@ -31,6 +32,7 @@ export function formatTutorSummaryLine(tutor) {
 
 /** @param {TutorRecord} tutor */
 export function tutorToExposureRow(tutor) {
+  const images = tutorCardImagePaths(tutor);
   return {
     id: tutor.id,
     tutor_display_name: tutor.tutor_display_name,
@@ -52,6 +54,9 @@ export function tutorToExposureRow(tutor) {
     teaching_style_badges: tutor.teaching_style_badges || [],
     profile_status: tutor.profile_status,
     compare_eligible: tutor.compare_eligible,
+    image_path: images.image_path,
+    image_path_basic: images.image_path_basic,
+    image_path_prime: images.image_path_prime,
   };
 }
 
