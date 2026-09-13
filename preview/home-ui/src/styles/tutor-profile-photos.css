@@ -85,6 +85,11 @@
   gap: 0.4rem;
 }
 
+/* 서버 내부 파일명(…_basic_720…) — 카드에 노출하지 않음 (구캐시 HTML 대비) */
+.p21-photos__name {
+  display: none !important;
+}
+
 .p21-photos__ops {
   display: flex;
   flex-wrap: wrap;
