@@ -99,15 +99,14 @@
   text-align: center;
 }
 
-/* 현재위치 — 정렬과 같은 toolbar 행 · 항상 정렬 앞 */
+/* 현재위치 — 정렬 바로 앞, 같은 덩어리(우측 병렬) */
 .section-heading__loc {
   display: inline-flex;
   align-items: baseline;
   flex-wrap: wrap;
   justify-content: flex-start;
   gap: 0.3rem 0.4rem;
-  flex: 0 1 auto;
-  order: 1;
+  flex: 0 0 auto;
   text-align: left;
 }
 .section-heading__loc-label {
@@ -128,26 +127,30 @@
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: flex-start;
-  gap: 0.75rem 1rem;
+  justify-content: flex-end;
+  gap: 0;
   margin: 0 0 0.65rem;
   min-height: 2rem;
   width: 100%;
 }
 
-.section-toolbar .section-heading__loc {
-  margin-left: 0;
-  margin-right: 0;
-  order: 1;
+.section-toolbar__cluster {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem 0.85rem;
+  margin-left: auto;
+  max-width: 100%;
 }
 
-.section-toolbar__loc-spacer {
-  display: none;
+.section-toolbar .section-heading__loc {
+  margin: 0;
 }
 
 .section-toolbar__sort {
-  order: 2;
-  margin-left: auto;
+  margin: 0;
   display: flex;
   align-items: center;
   flex: 0 0 auto;

@@ -73,18 +73,19 @@ export function renderLocationBesideTitle(locationLabel) {
 }
 
 /**
- * 현재위치 + 정렬 컨트롤 한 행 (제목 바로 아래)
+ * 현재위치 + 정렬을 한 덩어리로 (정렬 바로 앞 · 같은 행 우측)
  * @param {{ locationLabel?: string, sortHtml?: string }} opts
  */
 export function renderSectionToolbar(opts = {}) {
   const locHtml = renderLocationBesideTitle(opts.locationLabel);
   const sortHtml = String(opts.sortHtml || '').trim();
   if (!locHtml && !sortHtml) return '';
-  // DOM 순서 고정: 현재위치 → 정렬 (앞에 현재위치)
   return `
     <div class="section-toolbar">
-      ${locHtml || '<span class="section-toolbar__loc-spacer" aria-hidden="true"></span>'}
-      ${sortHtml ? `<div class="section-toolbar__sort">${sortHtml}</div>` : ''}
+      <div class="section-toolbar__cluster">
+        ${locHtml}
+        ${sortHtml ? `<div class="section-toolbar__sort">${sortHtml}</div>` : ''}
+      </div>
     </div>`;
 }
 
