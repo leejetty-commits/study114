@@ -3,12 +3,13 @@
  * Rollback: git revert this commit.
  */
 
-/* 섹션 타이틀 — 프라임/픽/베이직 · 현재위치 우측정렬 */
+/* 섹션 타이틀 — 단독행 · 바디 중앙 · 현재위치는 section-toolbar */
 .section-heading {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: var(--space-1) var(--space-2);
+  gap: var(--space-1);
   margin: 0 0 var(--space-2);
   padding-top: var(--space-3);
   width: 100%;
@@ -19,18 +20,17 @@
 }
 
 .section-heading__main {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  width: 100%;
   min-width: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.55rem;
+  text-align: center;
 }
 
-.section-heading--start .section-heading__main {
-  justify-content: flex-start;
-  text-align: left;
-}
-
+.section-heading--start .section-heading__main,
 .section-heading--center .section-heading__main {
   justify-content: center;
   text-align: center;
@@ -40,31 +40,32 @@
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.4rem 0.5rem;
+  justify-content: center;
+  gap: 0.45rem 0.55rem;
 }
 
 .section-heading__brand-text {
   font-family: var(--font-serif);
-  font-size: 0.95em;
+  font-size: 1.15em;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .section-heading__emoji {
-  font-size: 1.125rem;
+  font-size: 1.35rem;
   line-height: 1.2;
   flex-shrink: 0;
 }
 
 .section-heading__logo {
   flex-shrink: 0;
-  height: 1.125rem;
+  height: 1.35rem;
   width: auto;
 }
 
 .section-heading__title {
   font-family: var(--font-serif);
-  font-size: var(--text-base);
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--gray-900);
   margin: 0;
@@ -78,18 +79,18 @@
   line-height: 1.35;
   margin: 0;
   width: 100%;
+  text-align: center;
 }
 
-/* 현재위치 — 공통 우측정렬 */
+/* 현재위치 — 정렬과 같은 toolbar 행 */
 .section-heading__loc {
   display: inline-flex;
   align-items: baseline;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 0.3rem 0.4rem;
-  margin-left: auto;
   flex-shrink: 0;
-  text-align: right;
+  text-align: left;
 }
 .section-heading__loc-label {
   font-size: var(--text-xs);
@@ -104,6 +105,32 @@
   line-height: 1.25;
 }
 
+.section-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin: 0 0 0.65rem;
+  min-height: 2rem;
+  width: 100%;
+}
+
+.section-toolbar .section-heading__loc {
+  margin-left: 0;
+}
+
+.section-toolbar__sort {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.section-toolbar__sort .list-sort-bar {
+  margin: 0;
+  min-height: 0;
+}
+
 /* 프라임 — 금색 · 중앙 · 좌우 장식 */
 .section-heading--prime .section-heading__title,
 .section-heading--prime .section-heading__brand-text {
@@ -112,7 +139,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-size: 1.05rem;
+  font-size: 1.25rem;
 }
 .section-heading--prime .section-heading__ornament {
   color: #c9a227;
@@ -127,18 +154,22 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-size: 1.05rem;
+  font-size: 1.25rem;
 }
 .section-heading--pick .section-heading__ornament {
   color: #9ca3af;
   border-color: #9ca3af;
 }
 
-/* 베이직 — 하늘색/블루 · 좌측 */
+/* 베이직 — 하늘색/블루 · 중앙 · 동일 크기·장식 */
 .section-heading--basic .section-heading__title,
 .section-heading--basic .section-heading__brand-text {
   color: #2563eb;
-  font-size: 1.05rem;
+  font-size: 1.25rem;
+}
+.section-heading--basic .section-heading__ornament {
+  color: #3b82f6;
+  border-color: #3b82f6;
 }
 
 .section-heading__ornament {

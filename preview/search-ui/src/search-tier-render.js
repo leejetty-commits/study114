@@ -11,7 +11,7 @@ import {
   getPrimeOccupied,
   getPrimeCandidatePool,
 } from '@home-ui/exposure-render.js';
-import { SECTION_HEADINGS, renderSectionHeading } from '@home-ui/section-headings.js';
+import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from '@home-ui/section-headings.js';
 import { partitionByExposureTier } from './search-exposure-mapper.js';
 import { renderSearchZeroState } from '@home-ui/empty-state-copy.js';
 import {
@@ -56,10 +56,11 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
     return `<div class="search-tier-results search-tier-results--empty">${renderSearchZeroState(tab, mode)}</div>`;
   }
 
-  // 지역은 제목 우측「현재위치」만 — 제목 아래 중복 제거
+  // 지역은 제목 아래 toolbar「현재위치」(정렬과 같은 행)
   const loc = sectionTag || '';
   const primeHtml = `
       ${renderSectionHeading({ ...section.prime, locationLabel: loc })}
+      ${renderSectionToolbar({ locationLabel: loc })}
       ${renderPrimeSlotGrid(kind, occupied, {
         ...opts,
         listId: kind === 'tutor' ? section.primeListId : undefined,
@@ -142,7 +143,10 @@ function renderProviderFlatResults(
   return `
     <div class="content-section search-flat-results" data-surface="search-flat" data-search-phase="${mode}">
       ${headingHtml}
-      ${renderListSortSelect(kind, sort, { mode: 'search' })}
+      ${renderSectionToolbar({
+        locationLabel: loc,
+        sortHtml: renderListSortSelect(kind, sort, { mode: 'search' }),
+      })}
       ${renderBrowseList(kind, ordered, { ...opts, sourceRoute: 'search' })}
     </div>`;
 }
@@ -167,7 +171,10 @@ function renderStudentTierResults(items, opts = {}, sectionTag = '', mode = 'sea
   return `
     <div class="content-section search-tier-results" data-surface="student-blind">
       ${renderSectionHeading({ ...SECTION_HEADINGS.students, locationLabel: sectionTag || '' })}
-      ${renderListSortSelect('student', sort, { mode: 'search' })}
+      ${renderSectionToolbar({
+        locationLabel: sectionTag || '',
+        sortHtml: renderListSortSelect('student', sort, { mode: 'search' }),
+      })}
       ${renderBrowseList('student', ordered, { ...opts, sourceRoute: 'search' })}
     </div>`;
 }

@@ -1,4 +1,4 @@
-/** 섹션 타이틀 SSOT — 프라임/픽/베이직 브랜드 고유명사 · 현재위치는 우측 */
+/** 섹션 타이틀 SSOT — 프라임/픽/베이직 브랜드 고유명사 · 제목 단독행 · 현재위치는 정렬과 같은 행 */
 
 function esc(s) {
   return String(s ?? '')
@@ -10,8 +10,8 @@ function esc(s) {
 const LOGO_SRC = '/assets/brand/logo-wordmark.png';
 
 /**
- * tier: prime(금·중앙·장식) | pick(은·중앙·장식) | basic(블루·좌측) | plain
- * showLogo: 프라임/픽은 로고 + 고유명사
+ * tier: prime(금·중앙·장식) | pick(은·중앙·장식) | basic(블루·중앙·장식) | plain
+ * showLogo: 우동공과 로고 + 고유명사 (프라임/픽/베이직/학생 공통)
  */
 export const SECTION_HEADINGS = {
   primeStudyRoom: {
@@ -28,8 +28,7 @@ export const SECTION_HEADINGS = {
   },
   basicStudyRoom: {
     tier: 'basic',
-    showLogo: false,
-    brandText: '우동공과',
+    showLogo: true,
     title: '베이직공부방',
     ariaTitle: '우동공과 베이직공부방',
   },
@@ -47,22 +46,20 @@ export const SECTION_HEADINGS = {
   },
   basicTutor: {
     tier: 'basic',
-    showLogo: false,
-    brandText: '우동공과',
+    showLogo: true,
     title: '베이직과외쌤',
     ariaTitle: '우동공과 베이직과외쌤',
   },
   students: {
     tier: 'basic',
-    showLogo: false,
-    brandText: '우동공과',
-    title: '학생 학습 의뢰',
-    ariaTitle: '우동공과 학생 학습 의뢰',
+    showLogo: true,
+    title: '학생',
+    ariaTitle: '우동공과 학생',
   },
 };
 
 /**
- * 제목 우측 현재위치 — '현재위치' 작은글씨 + 지역명 일반크기 · 우측정렬
+ * 제목 우측이 아닌, 정렬 바와용 현재위치
  * @param {string} [locationLabel]
  */
 export function renderLocationBesideTitle(locationLabel) {
@@ -73,6 +70,21 @@ export function renderLocationBesideTitle(locationLabel) {
       <span class="section-heading__loc-label">현재위치</span>
       <span class="section-heading__loc-value">${esc(loc)}</span>
     </span>`;
+}
+
+/**
+ * 현재위치 + 정렬 컨트롤 한 행 (제목 바로 아래)
+ * @param {{ locationLabel?: string, sortHtml?: string }} opts
+ */
+export function renderSectionToolbar(opts = {}) {
+  const locHtml = renderLocationBesideTitle(opts.locationLabel);
+  const sortHtml = String(opts.sortHtml || '').trim();
+  if (!locHtml && !sortHtml) return '';
+  return `
+    <div class="section-toolbar">
+      ${locHtml}
+      ${sortHtml ? `<div class="section-toolbar__sort">${sortHtml}</div>` : ''}
+    </div>`;
 }
 
 /**
@@ -87,27 +99,26 @@ export function renderLocationBesideTitle(locationLabel) {
  *   id?: string,
  *   icon?: string,
  *   iconType?: 'emoji'|'logo',
+ *   inlineLocation?: boolean,
  * }} cfg
  */
 export function renderSectionHeading(cfg) {
   const tier = cfg.tier || 'plain';
-  const alignClass =
-    tier === 'prime' || tier === 'pick' ? 'section-heading--center' : 'section-heading--start';
+  // 전역: 제목 단독행 · 바디 중앙
+  const alignClass = 'section-heading--center';
   const tierClass = tier !== 'plain' ? ` section-heading--${tier}` : '';
   const aria = esc(cfg.ariaTitle || (cfg.brandText ? `${cfg.brandText} ${cfg.title}` : cfg.title));
 
   let brandInner = '';
-  if (cfg.showLogo) {
+  if (cfg.showLogo || cfg.iconType === 'logo') {
+    const src = cfg.iconType === 'logo' && cfg.icon ? cfg.icon : LOGO_SRC;
     brandInner = `
-      <img class="section-heading__logo" src="${LOGO_SRC}" alt="우동공과" width="72" height="18" />
+      <img class="section-heading__logo" src="${src}" alt="우동공과" width="88" height="22" />
       <h2 class="section-heading__title">${esc(cfg.title)}</h2>`;
   } else if (cfg.brandText) {
+    // 로고 미지정 시에도 동일 로고 사용 (전역 통일)
     brandInner = `
-      <span class="section-heading__brand-text">${esc(cfg.brandText)}</span>
-      <h2 class="section-heading__title">${esc(cfg.title)}</h2>`;
-  } else if (cfg.iconType === 'logo' && cfg.icon) {
-    brandInner = `
-      <img class="section-heading__logo" src="${cfg.icon}" alt="" width="72" height="18" />
+      <img class="section-heading__logo" src="${LOGO_SRC}" alt="${esc(cfg.brandText)}" width="88" height="22" />
       <h2 class="section-heading__title">${esc(cfg.title)}</h2>`;
   } else if (cfg.iconType === 'emoji' && cfg.icon) {
     brandInner = `
@@ -118,7 +129,7 @@ export function renderSectionHeading(cfg) {
   }
 
   const ornaments =
-    tier === 'prime' || tier === 'pick'
+    tier === 'prime' || tier === 'pick' || tier === 'basic'
       ? `
       <span class="section-heading__ornament section-heading__ornament--left" aria-hidden="true"></span>
       <span class="section-heading__brand">${brandInner}</span>
@@ -133,7 +144,9 @@ export function renderSectionHeading(cfg) {
       ? cfg.desc
       : '';
   const locationLabel = cfg.locationLabel || locFromDesc;
-  const locHtml = renderLocationBesideTitle(locationLabel);
+
+  // 기본: 위치는 제목에서 분리(toolbar). 구호출만 inlineLocation
+  const locHtml = cfg.inlineLocation ? renderLocationBesideTitle(locationLabel) : '';
 
   const descHtml =
     cfg.desc && cfg.desc !== locationLabel

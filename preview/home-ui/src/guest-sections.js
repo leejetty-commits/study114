@@ -16,7 +16,7 @@ import {
 import { bindGuestListPagination } from './list-pagination.js';
 import { bindListSortControls } from '../../shared/list-sort.js';
 import { setGuestListPage } from './state.js';
-import { SECTION_HEADINGS, renderSectionHeading } from './section-headings.js';
+import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from './section-headings.js';
 import { toDisplayLabel } from '../../shared/location-display.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
 import {
@@ -86,6 +86,7 @@ function renderStudyRoomPrimePick() {
   return `
     <div class="content-section content-section--orange">
       ${renderSectionHeading({ ...SECTION_HEADINGS.primeStudyRoom, id: 'guest-prime-room', locationLabel: roomLabel })}
+      ${renderSectionToolbar({ locationLabel: roomLabel })}
       ${renderPrimeSlotGrid('study_room', occupied, guestOpts)}
       ${renderPickPaginatedBlock('study_room', 'pick_study_room', { ...SECTION_HEADINGS.pickStudyRoom, locationLabel: roomLabel }, pool, {
         ...guestOpts,
@@ -115,6 +116,7 @@ function renderTutorPrimePick() {
   return `
     <div class="content-section content-section--blue">
       ${renderSectionHeading({ ...SECTION_HEADINGS.primeTutor, id: 'guest-prime-tutor', locationLabel: tutorRegion })}
+      ${renderSectionToolbar({ locationLabel: tutorRegion })}
       ${renderPrimeSlotGrid('tutor', occupied, { ...guestOpts, listId: 'prime_tutor' })}
       ${renderPickPaginatedBlock('tutor', 'pick_tutor', { ...SECTION_HEADINGS.pickTutor, locationLabel: tutorRegion }, pool, {
         ...guestOpts,
