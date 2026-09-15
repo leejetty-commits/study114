@@ -4,14 +4,21 @@
  */
 
 import { FREE_TIER_COPY, PAID_TIER_COPY } from '../mypage/plans-catalog.js';
-import { formatKrw, resolveCheckoutAmount, badgePriceKrw, positionDurationMonths } from './runtime-config.js';
+import { formatKrw, resolveCheckoutAmount } from './runtime-config.js';
+import { listBadgeOptions } from './badge-options.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 }
 
 /**
- * @param {{ title: string, lead?: string, chips?: Array<{ label: string, href?: string, active?: boolean }> }} opts
+ * @param {{
+ *   title: string,
+ *   lead?: string,
+ *   sub?: string,
+ *   eyebrow?: string,
+ *   chips?: Array<{ label: string, href?: string, active?: boolean }>
+ * }} opts
  */
 export function renderPlansHero(opts) {
   const chips = opts.chips?.length
@@ -28,8 +35,10 @@ export function renderPlansHero(opts) {
     : '';
   return `
     <div class="plans-hero">
+      ${opts.eyebrow ? `<p class="plans-hero__eyebrow">${esc(opts.eyebrow)}</p>` : ''}
       <h2 class="plans-hero__title">${esc(opts.title)}</h2>
       ${opts.lead ? `<p class="plans-hero__lead">${esc(opts.lead)}</p>` : ''}
+      ${opts.sub ? `<p class="plans-hero__sub">${esc(opts.sub)}</p>` : ''}
       ${chips}
     </div>`;
 }
@@ -208,81 +217,61 @@ export function renderPlansFaqList(items) {
  * @param {{ selected?: string[], periodLabel?: string, selectable?: boolean }} [opts]
  */
 export function renderBadgeAddonSection(role, ops, opts = {}) {
-  const providerType = role === 'tutor' ? 'tutor' : 'study_room';
   const selectable = opts.selectable !== false && (role === 'study_room' || role === 'tutor');
   const selected = Array.isArray(opts.selected) ? opts.selected.map(String) : [];
   const periodLabel = opts.periodLabel || '1개월';
-  const periodPrice = badgePriceKrw(
-    providerType,
-    undefined,
-    'hot',
-    periodLabel,
-  );
-  const priceLine =
-    periodPrice != null ? `${periodLabel} ${formatKrw(periodPrice)}` : '가격표 로드 후 표시';
-  const badges =
-    providerType === 'tutor'
-      ? [
-          { id: 'hot', name: 'Hot', desc: `과외쌤 주목 배지 · ${priceLine}` },
-          { id: 'jjokjipge', name: '쪽집게', desc: `과외쌤 광고성 자기선언 · ${priceLine}` },
-          { id: 'sky', name: 'SKY', desc: `SKY는 학교정보 기반 광고 표현이며 플랫폼 인증이 아닙니다 · ${priceLine}` },
-        ]
-      : [
-          { id: 'hot', name: 'Hot', desc: `공부방 주목 배지 · ${priceLine}` },
-          { id: 'subject_track', name: '단과', desc: `공부방 전용 · ${priceLine}` },
-        ];
+  const badges = listBadgeOptions(role, periodLabel);
   const atMax = selected.length >= 2;
+  const setLabel = badges.map((b) => b.name).join(' · ');
+  const limitId = 'plans-badge-limit';
+  const policyId = 'plans-badge-policy';
 
   return `
-    <section class="plans-section plans-badge-select" data-plans-badge-section>
+    <section class="plans-section plans-badge-select" data-plans-badge-section data-badge-count="${selected.length}">
       <div class="plans-section__head">
-        <h3 class="plans-section__title">홍보 배지 장착</h3>
-        <p class="plans-section__lead">선택한 Prime 노출 또는 Pick 노출에 배지를 추가할 수 있습니다. 배지는 선택한 노출상품과 같은 기간 동안 적용됩니다. 서로 다른 배지를 최대 2개까지, 최초 구매 또는 연장 시에만 선택·변경합니다.</p>
+        <h3 class="plans-section__title" id="plans-badge-heading">홍보 배지 선택</h3>
+        <p class="plans-section__lead">위에서 고른 Prime 또는 Pick에 붙는 홍보 표현입니다. 노출상품과 같은 기간으로 시작·종료하며, 단독 구매하지 않습니다.</p>
       </div>
-      <ul class="plans-addon-grid" role="group" aria-label="홍보 배지 선택">
-        ${badges
-          .map((b) => {
-            const checked = selected.includes(b.id);
-            const disabled = selectable && atMax && !checked;
-            if (!selectable) {
-              return `
-          <li class="plans-addon-card">
-            <span class="plans-addon-card__mark plans-addon-card__mark--${esc(b.id)}" aria-hidden="true"></span>
-            <strong>${esc(b.name)}</strong>
-            <p>${esc(b.desc)}</p>
-          </li>`;
-            }
-            return `
-          <li class="plans-addon-card${checked ? ' is-selected' : ''}${disabled ? ' is-disabled' : ''}">
-            <label class="plans-addon-card__label">
-              <input type="checkbox" data-plans-badge-code="${esc(b.id)}" value="${esc(b.id)}"
-                ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} />
-              <span class="plans-addon-card__mark plans-addon-card__mark--${esc(b.id)}" aria-hidden="true"></span>
-              <strong>${esc(b.name)}</strong>
-              <p>${esc(b.desc)}</p>
-            </label>
-          </li>`;
-          })
-          .join('')}
-      </ul>
+      <p class="plans-badge-select__meta">
+        <span>선택한 노출상품 기간 · <strong>${esc(periodLabel)}</strong></span>
+        <span class="plans-badge-select__count" data-plans-badge-count>${selected.length}/2</span>
+      </p>
+      <p class="plans-badge-select__policy" id="${policyId}">${esc(role === 'tutor' ? '과외쌤' : '공부방')} · ${esc(setLabel)} · 서로 다른 배지 최대 2개</p>
       ${
         selectable && atMax
-          ? `<p class="mypage-muted plans-badge-max" role="status">최대 2개까지 선택할 수 있습니다.</p>`
+          ? `<p class="plans-badge-select__limit" id="${limitId}" data-plans-badge-limit role="status">최대 2개까지 선택할 수 있습니다</p>`
           : ''
       }
-      <p class="mypage-muted">단독 구매·이용기간 중 추가·교체는 제공하지 않습니다. 결제 금액은 서버가 Prime/Pick과 함께 재계산합니다.</p>
-      ${renderGuideBox({
-        title: '광고 정책 및 안전 가이드',
-        icon: '🛡',
-        variant: 'policy',
-        items: [
-          { icon: '①', text: '적용 범위: Prime 노출·Pick 노출과 같은 날 시작·종료. 서로 다른 배지 최대 2개.' },
-          { icon: '②', text: 'New는 첫 공개 후 1주 자동 부착이며 판매하지 않습니다. 추천·후기는 통계입니다.' },
-          { icon: '③', text: '이용기간 중 배지 추가·교체는 서버에서 거부됩니다.' },
-        ],
-        linkLabel: '이용 가이드 확인',
-        linkNav: '/support/faq',
-      })}
+      <fieldset class="plans-badge-select__fieldset" aria-labelledby="plans-badge-heading" aria-describedby="${policyId}${selectable && atMax ? ` ${limitId}` : ''}">
+        <legend class="plans-badge-select__legend">홍보 배지 (다중 선택)</legend>
+        <ul class="plans-badge-select__options" role="group" aria-label="홍보 배지 다중 선택, 최대 2개">
+          ${badges
+            .map((b) => {
+              const checked = selected.includes(b.id);
+              const disabled = !selectable || (atMax && !checked);
+              const skyNote =
+                b.id === 'sky'
+                  ? `<span class="plans-badge-select__sky">학교정보 광고 표현 · 학교·학력 인증 아님</span>`
+                  : '';
+              return `
+            <li>
+              <label class="plans-badge-select__option${checked ? ' is-checked' : ''}${disabled && !checked ? ' is-disabled' : ''}">
+                <input type="checkbox" data-plans-badge-code="${esc(b.id)}" value="${esc(b.id)}"
+                  ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}
+                  aria-label="${esc(b.name)} 홍보 배지${b.id === 'sky' ? ', 광고 표현이며 인증 아님' : ''}" />
+                <span class="plans-badge-select__body">
+                  <span class="plans-badge-select__name">${esc(b.name)}</span>
+                  <span class="plans-badge-select__desc">${esc(b.desc)}</span>
+                  <span class="plans-badge-select__price">${esc(b.priceLine)}</span>
+                  ${skyNote}
+                </span>
+              </label>
+            </li>`;
+            })
+            .join('')}
+        </ul>
+      </fieldset>
+      <p class="mypage-muted plans-badge-select__note">이용기간 중 추가·교체·배지 단독 결제는 없습니다. 금액은 Prime/Pick과 함께 서버가 재계산합니다.</p>
     </section>`;
 }
 

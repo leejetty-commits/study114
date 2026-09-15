@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Paid;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use InvalidArgumentException;
 
 /**
@@ -30,6 +31,9 @@ final class PositionPeriodCalculator
 
     /** 판매 중인 기간 (PaidCatalog 정본과 동일) */
     public const SELLABLE_VARIANTS = ['2주', '1개월', '2개월', '3개월', '6개월'];
+
+    /** 권리 확정·화면 표시·extend/new 판정의 달력 기준 (저장이 UTC여도 이 달력을 쓴다) */
+    public const BUSINESS_TZ = 'Asia/Seoul';
 
     /**
      * @return array{
@@ -113,9 +117,30 @@ final class PositionPeriodCalculator
         return self::parseDate($today) < self::parseDate($endExclusiveOn);
     }
 
+    public static function timezone(): DateTimeZone
+    {
+        return new DateTimeZone(self::BUSINESS_TZ);
+    }
+
+    public static function now(): DateTimeImmutable
+    {
+        return new DateTimeImmutable('now', self::timezone());
+    }
+
+    /**
+     * 사업 달력일. $instant 가 UTC여도 Asia/Seoul 날짜로 변환한다.
+     */
+    public static function calendarDate(?DateTimeImmutable $instant = null): string
+    {
+        $tz = self::timezone();
+        $at = $instant === null ? self::now() : $instant->setTimezone($tz);
+
+        return $at->format('Y-m-d');
+    }
+
     public static function today(): string
     {
-        return (new DateTimeImmutable('today'))->format('Y-m-d');
+        return self::calendarDate();
     }
 
     /**
@@ -134,19 +159,19 @@ final class PositionPeriodCalculator
             $year--;
         }
 
-        $lastDay = (int) (new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month)))->format('t');
+        $lastDay = (int) (new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month), self::timezone()))->format('t');
         $clamped = $day > $lastDay;
         $useDay = min($day, $lastDay);
 
         return [
-            new DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $useDay)),
+            new DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $useDay), self::timezone()),
             $clamped,
         ];
     }
 
     private static function parseDate(string $ymd): DateTimeImmutable
     {
-        $dt = DateTimeImmutable::createFromFormat('!Y-m-d', substr($ymd, 0, 10));
+        $dt = DateTimeImmutable::createFromFormat('!Y-m-d', substr($ymd, 0, 10), self::timezone());
         if ($dt === false) {
             throw new InvalidArgumentException('날짜 형식이 올바르지 않습니다: ' . $ymd);
         }

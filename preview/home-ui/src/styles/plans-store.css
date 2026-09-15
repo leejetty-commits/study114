@@ -635,6 +635,154 @@ a.plans-chip:hover {
   line-height: 1.4;
 }
 
+/* 홍보 배지 다중 선택 (B1 · max 2 · Prime/Pick 종속) */
+.plans-badge-select {
+  margin-top: 0.15rem;
+}
+
+.plans-badge-select__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.4rem;
+  font-size: 13px;
+  color: var(--plans-muted, #766f64);
+}
+
+.plans-badge-select__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.75rem;
+  height: 1.5rem;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--plans-ink, #292823);
+  color: #fff;
+}
+
+.plans-badge-select__policy {
+  margin: 0 0 0.7rem;
+  font-size: 13px;
+  color: var(--plans-ink, #292823);
+}
+
+.plans-badge-select__limit {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: #eaf2fb;
+  color: var(--plans-primary, #266bc4);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.plans-badge-select__fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.plans-badge-select__legend {
+  padding: 0;
+  margin: 0 0 0.55rem;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--plans-ink, #292823);
+}
+
+.plans-badge-select__options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.plans-badge-select__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--plans-line, #e6dfd4);
+  border-radius: 12px;
+  background: var(--plans-surface, #fff);
+  cursor: pointer;
+}
+
+.plans-badge-select__option input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 2px 0 0;
+  flex: none;
+  accent-color: var(--plans-primary, #266bc4);
+}
+
+.plans-badge-select__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.plans-badge-select__name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--plans-ink, #292823);
+}
+
+.plans-badge-select__desc,
+.plans-badge-select__price,
+.plans-badge-select__sky {
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  color: var(--plans-muted, #766f64);
+}
+
+.plans-badge-select__price {
+  font-weight: 700;
+  color: var(--plans-ink, #292823);
+}
+
+.plans-badge-select__sky {
+  color: var(--plans-muted, #766f64);
+}
+
+.plans-badge-select__option:focus-within {
+  outline: 2px solid var(--plans-primary, #266bc4);
+  outline-offset: 2px;
+}
+  border-color: var(--plans-primary, #266bc4);
+  background: var(--plans-selected, #fbf7ef);
+}
+
+.plans-badge-select__option.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #f7f5f1;
+}
+
+.plans-badge-select__note {
+  margin-top: 0.7rem;
+}
+
+@media (max-width: 719px) {
+  .plans-badge-select__options {
+    grid-template-columns: 1fr;
+  }
+
+  .plans-badge-select__option {
+    width: 100%;
+  }
+}
+
 /* ── Compare / CTA / Access lower ── */
 .plans-compare__wrap {
   overflow-x: auto;
@@ -797,15 +945,7 @@ a.plans-chip:hover {
   margin-bottom: 0;
 }
 
-/* ── 유료상품 잠정 테마 · 전역 전파 금지 ── */
-.plans-theme[data-theme='plans'],
-.plans-store.plans-theme {
-  --plans-canvas: #f6f1e8;
-  --plans-surface: #ffffff;
-  --plans-ink: #292823;
-  --plans-primary: #266bc4;
-  --plans-selected: #fbf7ef;
-}
+/* 유료상품 잠정 토큰은 plans-theme.css (.plans-theme / [data-theme="plans"]) 정본 */
 
 .plans-basic-free {
   padding: 1rem 1.15rem;
@@ -828,72 +968,111 @@ a.plans-chip:hover {
 }
 
 .plans-prime-board {
-  margin: 0.75rem 0;
-  padding: 0.75rem;
-  border-radius: 10px;
-  background: #faf8f4;
-  border: 1px solid #ebe4d8;
+  margin: 0;
+  padding: 1rem 1.05rem 1.1rem;
+  border-radius: 12px;
+  background: #faf7f1;
+  border: 1px solid var(--plans-line, #e6dfd4);
+}
+
+.plans-prime-board__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--plans-ink, #292823);
+}
+
+.plans-prime-board__occupancy {
+  margin: 0 0 0.45rem;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--plans-ink, #292823);
 }
 
 .plans-prime-board__lead {
-  margin: 0 0 0.65rem;
+  margin: 0 0 0.75rem;
   font-size: var(--text-xs);
-  color: var(--gray-600);
+  color: var(--plans-muted, #766f64);
+  line-height: 1.45;
 }
 
 .plans-prime-board__cells {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 10px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
 .plans-prime-cell {
-  min-height: 4.25rem;
-  padding: 0.65rem;
-  border-radius: 8px;
-  border: 1px dashed #cfc6b6;
-  background: #fff;
+  min-height: 110px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--plans-line, #e6dfd4);
+  background: #faf7f1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 0.2rem;
+  gap: 6px;
+}
+
+.plans-prime-cell__label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--plans-muted, #766f64);
 }
 
 .plans-prime-cell.is-occupied {
-  border-style: solid;
-  border-color: #d4d0c8;
-  background: #f3f1ec;
+  background: #f7f4ee;
 }
 
 .plans-prime-cell.is-available {
-  border-color: #7cb87c;
-  background: #f4fbf4;
+  background: #f3f8f2;
+  border-color: #c5d8c2;
+}
+
+.plans-prime-cell.is-held {
+  background: #fff8ec;
+  border-color: #e0c48a;
 }
 
 .plans-prime-cell__status {
-  font-size: var(--text-sm);
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   color: var(--plans-ink, #292823);
 }
 
+.plans-prime-cell.is-available .plans-prime-cell__status {
+  color: var(--plans-ok, #3f7545);
+}
+
+.plans-prime-cell.is-held .plans-prime-cell__status {
+  color: var(--plans-hold, #b26828);
+}
+
 .plans-prime-cell__meta {
-  font-size: var(--text-xs);
-  color: var(--gray-600);
+  margin-top: auto;
+  font-size: 12px;
+  color: var(--plans-muted, #766f64);
+}
+
+.plans-prime-board.is-full {
+  border-color: var(--plans-warn-line, #e4b59f);
 }
 
 .plans-prime-waitlist {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #e5dfd4;
+  margin-top: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--plans-warn, #fff0e9);
+  border: 1px solid var(--plans-warn-line, #e4b59f);
 }
 
 .plans-prime-waitlist p {
-  margin: 0 0 0.5rem;
+  margin: 0 0 12px;
   font-size: var(--text-sm);
   line-height: 1.5;
+  color: var(--plans-ink, #292823);
 }
 
 .plans-apply-target__profile {
@@ -1005,8 +1184,85 @@ a.plans-chip:hover {
 .plans-access-aux__links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0 !important;
+  gap: 0.75rem 1.25rem;
+  margin: 0.15rem 0 0 !important;
+}
+
+.plans-access-aux__link {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--plans-ink, #292823);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.plans-access-aux__link:hover {
+  color: var(--plans-primary, #266bc4);
+}
+
+.plans-access-explain {
+  margin: 0 0 1rem;
+}
+
+.plans-access-explain__lead {
+  margin: 0 0 0.45rem;
+  font-size: 1.02rem;
+  line-height: 1.5;
+}
+
+.plans-access-explain__list {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--gray-700, #4a463e);
+}
+
+.plans-access-explain__list li + li {
+  margin-top: 0.2rem;
+}
+
+.plans-apply-target--compact {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--plans-line, #e6dfd4);
+  border-radius: 10px;
+  background: var(--plans-surface, #fff);
+}
+
+.plans-apply-target--compact .plans-section__head {
+  margin-bottom: 0.35rem;
+}
+
+.plans-apply-target--compact .plans-section__title {
+  font-size: 1rem;
+}
+
+.plans-apply-target--compact .plans-section__lead,
+.plans-apply-target--compact .plans-apply-target__profile {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.plans-access-hold {
+  margin: 0 0 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--plans-line, #e6dfd4);
+  background: var(--plans-surface, #fff);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.plans-access-hold p {
+  margin: 0 0 0.4rem;
+}
+
+.plans-access-hold p:last-child {
+  margin-bottom: 0;
+}
+
+.plans-access-hold__nav {
+  margin-top: 0.35rem !important;
 }
 
 .plans-card__circ {
@@ -1084,6 +1340,255 @@ a.plans-chip:hover {
   font-weight: 700;
 }
 
+/* 공부방 Pick 5×2 preview (R2) — tutor 카드 내부 preview와 분리 */
+.plans-room-pick {
+  margin: 0;
+  padding: 16px;
+  border-radius: 14px;
+  background: #fcfaf6;
+  border: 1px dashed #cfc3b3;
+}
+
+.plans-room-pick__title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--plans-ink, #292823);
+}
+
+.plans-room-pick__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plans-room-pick__tile {
+  min-height: 128px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--plans-line, #e6dfd4);
+  background: var(--plans-surface, #fff);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plans-room-pick__thumb {
+  height: 48px;
+  border-radius: 8px;
+  background: #dbe6f5;
+  display: grid;
+  place-items: center;
+  color: var(--plans-primary, #266bc4);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.plans-room-pick__name {
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--plans-ink, #292823);
+}
+
+.plans-room-pick__stats {
+  margin-top: auto;
+  font-size: 11px;
+  color: var(--plans-muted, #766f64);
+}
+
+.plans-room-pick__pager {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.plans-room-pick__pager span {
+  min-width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: var(--plans-muted, #766f64);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.plans-room-pick__pager span.is-current {
+  background: var(--plans-ink, #292823);
+  color: #fff;
+}
+
+.plans-storefront__offer--prime .plans-card-grid,
+.plans-storefront__offer--pick .plans-card-grid,
+.plans-storefront__offer--tutor-prime .plans-card-grid,
+.plans-storefront__offer--tutor-pick .plans-card-grid {
+  margin-top: 0.15rem;
+}
+
+/* 과외쌤 circulation preview (T1) — 점유판/만석/예약대기 없음 */
+.plans-tutor-circ {
+  margin: 0;
+  padding: 16px;
+  border-radius: 14px;
+  background: #fffdf8;
+  border: 1px solid var(--plans-line, #e6dfd4);
+}
+
+.plans-tutor-circ--prime {
+  background: #f7f3ea;
+  border-color: #d7c9b0;
+}
+
+.plans-tutor-circ--pick {
+  background: #fcfbf8;
+  border-style: solid;
+}
+
+.plans-tutor-circ__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.plans-tutor-circ__kicker {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--plans-primary, #266bc4);
+}
+
+.plans-tutor-circ__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 4.5rem;
+  height: 1.5rem;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--plans-ink, #292823);
+  color: #fff;
+}
+
+.plans-tutor-circ--pick .plans-tutor-circ__count {
+  background: var(--plans-primary, #266bc4);
+}
+
+.plans-tutor-circ__title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--plans-ink, #292823);
+}
+
+.plans-tutor-circ__rotate {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--plans-muted, #766f64);
+}
+
+.plans-tutor-circ--prime .plans-tutor-circ__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plans-tutor-circ--pick .plans-tutor-circ__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plans-tutor-circ__tile {
+  min-height: 128px;
+  padding: 12px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--plans-line, #e6dfd4);
+  background: var(--plans-surface, #fff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.plans-tutor-circ--prime .plans-tutor-circ__tile {
+  min-height: 148px;
+  padding: 16px 12px;
+}
+
+.plans-tutor-circ__thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: #f4e7c9;
+  color: var(--plans-ink, #292823);
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.plans-tutor-circ--prime .plans-tutor-circ__thumb {
+  width: 56px;
+  height: 56px;
+}
+
+.plans-tutor-circ__name {
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--plans-ink, #292823);
+}
+
+.plans-tutor-circ__subject {
+  font-size: 12px;
+  color: var(--plans-primary, #266bc4);
+  font-weight: 600;
+}
+
+.plans-tutor-circ__stats {
+  margin-top: auto;
+  font-size: 11px;
+  color: var(--plans-muted, #766f64);
+}
+
+.plans-tutor-circ__pager {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.plans-tutor-circ__pager span {
+  min-width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: var(--plans-muted, #766f64);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.plans-tutor-circ__pager span.is-current {
+  background: var(--plans-ink, #292823);
+  color: #fff;
+}
+
 .plans-ticket-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1091,11 +1596,18 @@ a.plans-chip:hover {
   list-style: none;
   margin: 0.75rem 0;
   padding: 0;
+  align-items: stretch;
+}
+
+.plans-ticket-card {
+  min-width: 0;
+  height: 100%;
 }
 
 .plans-ticket-card__btn {
   width: 100%;
-  min-height: 9.5rem;
+  height: 100%;
+  min-height: 10.5rem;
   padding: 0.85rem 0.7rem;
   border-radius: 12px;
   border: 1.5px solid #e5dfd4;
@@ -1105,8 +1617,8 @@ a.plans-chip:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
+  justify-content: flex-start;
+  gap: 0.2rem;
 }
 
 .plans-ticket-card.is-selected .plans-ticket-card__btn {
@@ -1115,7 +1627,7 @@ a.plans-chip:hover {
 }
 
 .plans-ticket-card.is-disabled .plans-ticket-card__btn {
-  opacity: 0.55;
+  opacity: 0.72;
   cursor: not-allowed;
 }
 
@@ -1128,18 +1640,169 @@ a.plans-chip:hover {
 }
 
 .plans-ticket-card__name {
-  font-size: var(--text-sm);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--plans-ink, #292823);
 }
 
 .plans-ticket-card__price {
+  margin-top: 0.2rem;
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--plans-ink, #292823);
 }
 
+.plans-ticket-card__save {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--plans-primary, #266bc4);
+}
+
 .plans-ticket-card__meta {
   font-size: var(--text-xs);
   color: var(--gray-600);
+}
+
+.plans-ticket-card__lock {
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.plans-period {
+  position: relative;
+  margin-top: 0.85rem;
+}
+
+.plans-period__label {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--plans-ink, #292823);
+}
+
+.plans-period-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  align-items: stretch;
+}
+
+.plans-period-card {
+  display: flex;
+  min-width: 0;
+}
+
+.plans-period-card__btn {
+  width: 100%;
+  min-height: 10.75rem;
+  height: 100%;
+  padding: 0.7rem 0.45rem 0.75rem;
+  border-radius: 12px;
+  border: 1.5px solid var(--plans-line, #e6dfd4);
+  background: #fff;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.12rem;
+  box-sizing: border-box;
+  color: inherit;
+}
+
+.plans-period-card__btn:hover:not(:disabled) {
+  border-color: var(--plans-primary, #266bc4);
+}
+
+.plans-period-card__btn:focus-visible {
+  outline: 2px solid var(--plans-primary, #266bc4);
+  outline-offset: 2px;
+}
+
+.plans-period-card.is-selected .plans-period-card__btn {
+  border-color: var(--plans-primary, #266bc4);
+  background: var(--plans-selected, #fbf7ef);
+  box-shadow: inset 0 0 0 1px var(--plans-primary, #266bc4);
+}
+
+.plans-period-card.is-disabled .plans-period-card__btn,
+.plans-period-card__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.plans-period-card__name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--plans-muted, #766f64);
+  line-height: 1.3;
+}
+
+.plans-period-card__hint {
+  min-height: 1rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--plans-primary, #266bc4);
+  line-height: 1.2;
+}
+
+.plans-period-card__list {
+  min-height: 1rem;
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  color: var(--plans-muted, #766f64);
+  text-decoration: line-through;
+  line-height: 1.2;
+}
+
+.plans-period-card__price {
+  margin-top: auto;
+  padding-top: 0.45rem;
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--plans-ink, #292823);
+}
+
+.plans-period-card__off {
+  min-height: 1rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--plans-hold, #b26828);
+  line-height: 1.2;
+}
+
+.plans-period-card__memo {
+  min-height: 1rem;
+  font-size: 0.68rem;
+  color: var(--plans-muted, #766f64);
+  line-height: 1.2;
+}
+
+.plans-period-card__test {
+  font-size: 0.65rem;
+  color: var(--plans-muted, #766f64);
+}
+
+.plans-period__reason {
+  margin: 0.45rem 0 0;
+  font-size: 0.78rem;
+  color: var(--plans-hold, #b26828);
+}
+
+.plans-period__vat {
+  margin: 0.4rem 0 0;
+  font-size: 0.72rem;
+  color: var(--plans-muted, #766f64);
 }
 
 .plans-card__pick--sr {
@@ -1170,12 +1833,32 @@ a.plans-chip:hover {
     grid-template-columns: 1fr;
   }
 
+  .plans-period-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .plans-pick-preview__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .plans-prime-board__cells {
     grid-template-columns: 1fr;
+  }
+
+  .plans-storefront__offer--prime .plans-prime-board__cells {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .plans-storefront__offer--pick .plans-room-pick__grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .plans-storefront__offer--tutor-prime .plans-tutor-circ--prime .plans-tutor-circ__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .plans-storefront__offer--tutor-pick .plans-tutor-circ--pick .plans-tutor-circ__grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
@@ -1184,7 +1867,377 @@ a.plans-chip:hover {
     height: 5.5rem;
   }
 
+  .plans-period-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .plans-addon-grid {
     grid-template-columns: 1fr;
+  }
+
+  .plans-storefront__offer--prime .plans-prime-board__cells {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .plans-storefront__offer--prime .plans-prime-cell {
+    min-height: 88px;
+    padding: 8px;
+  }
+
+  .plans-storefront__offer--pick .plans-room-pick__grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .plans-storefront__offer--pick .plans-room-pick__tile {
+    min-height: 96px;
+    padding: 6px;
+  }
+
+  .plans-storefront__offer--tutor-prime .plans-tutor-circ--prime .plans-tutor-circ__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .plans-storefront__offer--tutor-pick .plans-tutor-circ--pick .plans-tutor-circ__grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .plans-storefront__offer--tutor-prime .plans-tutor-circ__tile {
+    min-height: 120px;
+    padding: 8px 6px;
+  }
+
+  .plans-storefront__offer--tutor-pick .plans-tutor-circ__tile {
+    min-height: 96px;
+    padding: 6px;
+  }
+
+  .plans-tutor-circ__thumb {
+    width: 36px;
+    height: 36px;
+    font-size: 11px;
+  }
+
+  .plans-storefront__offer--tutor-prime .plans-tutor-circ__thumb {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* ── positions storefront IA (E2) — access 미적용 ── */
+.plans-storefront {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.plans-hero__eyebrow {
+  margin: 0 0 0.4rem;
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--gray-500);
+}
+
+.plans-storefront .plans-hero__lead {
+  white-space: pre-line;
+  max-width: 40rem;
+}
+
+.plans-hero__sub {
+  margin: 0.55rem 0 0;
+  font-size: var(--text-sm);
+  color: var(--gray-600);
+  line-height: 1.5;
+  max-width: 40rem;
+}
+
+.plans-storefront__catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.plans-storefront__offer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.plans-storefront__aux {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.plans-storefront__body {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'catalog'
+    'aux'
+    'summary';
+}
+
+.plans-storefront__catalog {
+  grid-area: catalog;
+}
+
+.plans-storefront__aux {
+  grid-area: aux;
+}
+
+.plans-storefront__summary {
+  grid-area: summary;
+}
+
+.plans-storefront__summary .plans-order-summary {
+  margin: 0;
+}
+
+.plans-storefront__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+@media (min-width: 960px) {
+  .plans-storefront__body {
+    grid-template-columns: minmax(0, 1fr) minmax(16.5rem, 20rem);
+    grid-template-areas:
+      'catalog summary'
+      'aux summary';
+    align-items: start;
+    gap: 1.5rem;
+  }
+
+  .plans-storefront__summary {
+    position: sticky;
+    top: calc(var(--preview-toolbar-h, 0px) + 5.5rem);
+  }
+}
+
+/* ── 7단계: 모바일 storefront · 정책 레일 ── */
+@media (max-width: 959px) {
+  .plans-layout .sup-nav {
+    position: static;
+    z-index: auto;
+  }
+
+  .plans-storefront__summary {
+    position: static;
+  }
+
+  .plans-order-summary__row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.25rem 0.75rem;
+  }
+
+  .plans-order-summary__row dt {
+    flex: 0 1 auto;
+  }
+
+  .plans-order-summary__row dd {
+    flex: 1 1 8rem;
+    min-width: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .plans-order-summary__total {
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+  }
+
+  .plans-order-summary__total strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .plans-order-summary__cta {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .plans-region-chip {
+    min-height: 2.75rem;
+    padding: 0.5rem 0.85rem;
+  }
+
+  .plans-badge-select__option {
+    min-height: 2.75rem;
+  }
+
+  .plans-prime-waitlist .btn {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .plans-period-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .plans-period-card__btn {
+    min-height: 9.25rem;
+    padding: 0.6rem 0.35rem 0.65rem;
+  }
+
+  .plans-period-card__price {
+    font-size: 0.98rem;
+  }
+
+  .plans-storefront__offer--prime .plans-prime-board__cells {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .plans-storefront__offer--prime .plans-prime-cell {
+    min-height: 0;
+    padding: 10px 12px;
+  }
+
+  .plans-prime-cell__label,
+  .plans-prime-cell__status,
+  .plans-prime-cell__meta {
+    overflow-wrap: anywhere;
+  }
+
+  .plans-storefront__offer--pick .plans-room-pick__grid,
+  .plans-storefront__offer--tutor-pick .plans-tutor-circ--pick .plans-tutor-circ__grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .plans-storefront__offer--pick .plans-room-pick__tile,
+  .plans-storefront__offer--tutor-pick .plans-tutor-circ--pick .plans-tutor-circ__tile {
+    min-height: 64px;
+    padding: 5px 3px 6px;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .plans-storefront__offer--pick .plans-room-pick__name,
+  .plans-storefront__offer--pick .plans-room-pick__stats,
+  .plans-storefront__offer--tutor-pick .plans-tutor-circ--pick .plans-tutor-circ__name,
+  .plans-storefront__offer--tutor-pick .plans-tutor-circ--pick .plans-tutor-circ__subject,
+  .plans-storefront__offer--tutor-pick .plans-tutor-circ--pick .plans-tutor-circ__stats {
+    display: none;
+  }
+
+  .plans-storefront__offer--pick .plans-room-pick__thumb,
+  .plans-storefront__offer--tutor-pick .plans-tutor-circ--pick .plans-tutor-circ__thumb {
+    width: 100%;
+    height: 36px;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .plans-storefront__offer--tutor-prime .plans-tutor-circ--prime .plans-tutor-circ__grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .plans-storefront__offer--tutor-prime .plans-tutor-circ__tile {
+    min-height: 0;
+    flex-direction: row;
+    text-align: left;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .plans-storefront__offer--tutor-prime .plans-tutor-circ__thumb {
+    width: 40px;
+    height: 40px;
+    margin: 0;
+  }
+}
+
+/* 유료 storefront에서만: 우측 레일을 하단 접힘 패널로 */
+.plans-rail-fold {
+  display: block;
+  width: 100%;
+  overflow-anchor: none;
+}
+
+.plans-rail-fold__summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--plans-line, #e6dfd4);
+  border-radius: 12px;
+  background: var(--plans-surface, #fff);
+}
+
+.plans-rail-fold__summary::-webkit-details-marker {
+  display: none;
+}
+
+.plans-rail-fold__summary strong {
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--plans-ink, #292823);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plans-rail-fold:not([open]) > .plans-rail-fold__panel {
+  display: none;
+}
+
+.plans-rail-fold[open] > .plans-rail-fold__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 1023px) {
+  .home-app:has(.plans-theme) > .home-body.home-body--with-promo {
+    display: flex !important;
+    flex-direction: column;
+  }
+
+  .home-app:has(.plans-theme) .home-sidebar {
+    display: flex;
+    position: static;
+    width: 100%;
+    max-width: none;
+    margin-top: 0.75rem;
+    align-self: stretch;
+  }
+
+  .home-app:has(.plans-theme) .home-sidebar.right-rail--mobile-collapse {
+    order: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .plans-rail-fold > .plans-rail-fold__summary {
+    display: none;
+  }
+
+  .plans-rail-fold:not([open]) > .plans-rail-fold__panel,
+  .plans-rail-fold > .plans-rail-fold__panel {
+    display: flex !important;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 0;
   }
 }

@@ -1,0 +1,560 @@
+/**
+ * 유료상품 전용 잠정 테마 (plans-ui-v5 theme wrapper 기준)
+ * .plans-theme / [data-theme="plans"] 하위에만 적용.
+ * 전역 body · 공통 헤더/GNB · 공통 버튼 정의는 덮어쓰지 않는다.
+ * 타이포 스케일을 새로 발명하지 않는다.
+ */
+
+.plans-theme,
+[data-theme='plans'] {
+  --plans-canvas: #f6f1e8;
+  --plans-surface: #ffffff;
+  --plans-ink: #292823;
+  --plans-primary: #266bc4;
+  --plans-selected: #fbf7ef;
+  --plans-line: #e6dfd4;
+  --plans-muted: #766f64;
+  --plans-sand: #f4e7c9;
+  --plans-sage: #e6eee4;
+  --plans-warn: #fff0e9;
+  --plans-warn-line: #e4b59f;
+  --plans-ok: #3f7545;
+  --plans-hold: #b26828;
+  --plans-shadow-soft: 0 8px 24px rgba(41, 40, 35, 0.06);
+
+  /* product-chrome 토큰을 paid scope 안에서만 재매핑 (전역 승격 금지) */
+  --product-page-bg: var(--plans-canvas);
+  --product-panel: var(--plans-surface);
+  --product-ink: var(--plans-ink);
+  --product-line: var(--plans-line);
+  --product-accent: var(--plans-primary);
+  --product-accent-dark: #1e5aa8;
+  --product-accent-soft: var(--plans-selected);
+  --surface-page: var(--plans-canvas);
+}
+
+/* 본문 컬럼만 쇼룸 캔버스. header/footer/우측 레일은 형제라 오염되지 않음 */
+.home-main > .plans-theme[data-theme='plans'] {
+  background: var(--plans-canvas);
+  color: var(--plans-ink);
+  min-height: calc(100vh - 12rem);
+  box-sizing: border-box;
+}
+
+.plans-theme .plans-layout,
+.plans-theme.plans-layout {
+  color: var(--plans-ink);
+}
+
+/* 스토어 본문은 캔버스에 바로 앉히고, 빈 상태·오류 패널은 흰 표면 카드로 */
+.plans-theme .mypage-panel.plans-store,
+.plans-theme.mypage-panel.plans-store {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--plans-ink);
+}
+
+.plans-theme .mypage-panel:not(.plans-store) {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+  box-shadow: var(--plans-shadow-soft);
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-store {
+  gap: 1.75rem;
+}
+
+/* —— 페이지 타이틀 / 서브내비 (사이트 GNB가 아님) —— */
+.plans-theme .sup-content__title {
+  color: var(--plans-ink);
+}
+
+.plans-theme .sup-content__title-suffix {
+  color: var(--plans-muted);
+}
+
+.plans-theme .sup-nav__link {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+  color: var(--plans-muted);
+}
+
+.plans-theme .sup-nav__link:hover {
+  border-color: var(--plans-primary);
+}
+
+.plans-theme .sup-nav__link.is-active {
+  border-color: var(--plans-primary);
+  background: var(--plans-selected);
+  color: var(--plans-primary);
+  box-shadow: none;
+}
+
+.plans-theme .sup-back-home {
+  color: var(--plans-muted);
+}
+
+/* —— 히어로 / 칩: 제목·본문은 Ink, 활성만 primary —— */
+.plans-theme .plans-hero__title {
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-hero__eyebrow {
+  color: var(--plans-muted);
+}
+
+.plans-theme .plans-hero__lead,
+.plans-theme .plans-hero__sub {
+  color: var(--plans-muted);
+}
+
+.plans-theme .plans-chip {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-chip.is-active,
+.plans-theme a.plans-chip:hover {
+  border-color: var(--plans-primary);
+  color: var(--plans-primary);
+  background: var(--plans-selected);
+}
+
+/* —— 안내 박스: 홈의 블루 워시를 쇼룸 톤으로 —— */
+.plans-theme .plans-guide {
+  background: var(--plans-sage);
+  border-color: #c9d8c6;
+}
+
+.plans-theme .plans-guide--policy,
+.plans-theme .plans-guide--slot {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-guide--detail {
+  background: var(--plans-selected);
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-guide__head-ico {
+  background: var(--plans-sand);
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-guide__title,
+.plans-theme .plans-guide__cols h4,
+.plans-theme .plans-section__title {
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-guide__item,
+.plans-theme .plans-guide__cols p,
+.plans-theme .plans-section__lead,
+.plans-theme .plans-hero__lead,
+.plans-theme .mypage-muted,
+.plans-theme .plans-card__circ {
+  color: var(--plans-muted);
+}
+
+.plans-theme .plans-guide__ico,
+.plans-theme .plans-guide__link {
+  color: var(--plans-primary);
+}
+
+.plans-theme .plans-tip {
+  background: var(--plans-selected);
+  border-color: var(--plans-line);
+  color: var(--plans-ink);
+}
+
+/* —— 카드 / 표면 —— */
+.plans-theme .plans-card,
+.plans-theme .plans-highlight,
+.plans-theme .plans-faq__row,
+.plans-theme .plans-addon-card,
+.plans-theme .plans-status-strip__box,
+.plans-theme .plans-stat-box,
+.plans-theme .plans-compare__wrap,
+.plans-theme .plans-access-aux,
+.plans-theme .plans-policy-acc,
+.plans-theme .plans-apply-target--compact,
+.plans-theme .plans-access-hold {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+  box-shadow: var(--plans-shadow-soft);
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-card.is-featured,
+.plans-theme .plans-card.is-primary {
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-card__name,
+.plans-theme .plans-card__price,
+.plans-theme .plans-highlight__title,
+.plans-theme .plans-faq__text,
+.plans-theme .plans-addon-card strong,
+.plans-theme .plans-stat-box dd,
+.plans-theme .plans-basic-free strong {
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-card__hook {
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-card__checks li {
+  color: var(--plans-muted);
+}
+
+.plans-theme .plans-card__checks li::before {
+  color: var(--plans-ok);
+}
+
+.plans-theme .plans-card__price-row {
+  border-top-color: var(--plans-line);
+}
+
+.plans-theme .plans-card__media {
+  background: #e8e2d6;
+}
+
+.plans-theme .plans-card__media--prime,
+.plans-theme .plans-card__media--pick,
+.plans-theme .plans-card__media--memo,
+.plans-theme .plans-card__media--view {
+  background: #e8e2d6;
+}
+
+.plans-theme .plans-card__media-ico {
+  color: var(--plans-ink);
+  opacity: 0.72;
+}
+
+.plans-theme .plans-card__badge {
+  background: var(--plans-primary);
+}
+
+.plans-theme .plans-card__icon {
+  background: var(--plans-selected);
+  color: var(--plans-primary);
+}
+
+.plans-theme .plans-addon-card.is-selected,
+.plans-theme .plans-ticket-card.is-selected .plans-ticket-card__btn,
+.plans-theme .plans-period-card.is-selected .plans-period-card__btn,
+.plans-theme .plans-region-chip:has(input:checked) {
+  border-color: var(--plans-primary);
+  background: var(--plans-selected);
+}
+
+.plans-theme .plans-badge-select {
+  background: #fcfbf8;
+  border: 1px solid var(--plans-line);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  box-shadow: none;
+}
+
+.plans-theme .plans-badge-select__option {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-badge-select__option.is-checked {
+  border-color: var(--plans-primary);
+  background: var(--plans-selected);
+}
+
+.plans-theme .plans-badge-select__limit {
+  background: #eaf2fb;
+  color: var(--plans-primary);
+}
+
+.plans-theme .plans-badge-select__count {
+  background: var(--plans-ink);
+  color: #fff;
+}
+
+.plans-theme .plans-ticket-card__btn {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-period-card__btn {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-period-card__btn:hover:not(:disabled) {
+  border-color: var(--plans-primary);
+}
+
+.plans-theme .plans-period-card.is-selected .plans-period-card__btn {
+  border-color: var(--plans-primary);
+  background: var(--plans-selected);
+}
+
+.plans-theme .plans-period-card.is-disabled .plans-period-card__btn,
+.plans-theme .plans-period-card__btn:disabled {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-ticket-card__count,
+.plans-theme .plans-ticket-card__price,
+.plans-theme .plans-period-card__price {
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-ticket-card__meta,
+.plans-theme .plans-ticket-card__name,
+.plans-theme .plans-period-card__name,
+.plans-theme .plans-period-card__memo,
+.plans-theme .plans-period-card__list,
+.plans-theme .plans-period-card__vat,
+.plans-theme .plans-period__vat {
+  color: var(--plans-muted);
+}
+
+.plans-theme .plans-faq__row:hover {
+  border-color: var(--plans-primary);
+}
+
+.plans-theme .plans-faq__q {
+  background: var(--plans-selected);
+  color: var(--plans-primary);
+}
+
+/* —— 비교표 / 주문 / 정책 —— */
+.plans-theme .plans-compare__table th,
+.plans-theme .plans-compare__table td {
+  border-bottom-color: var(--plans-line);
+}
+
+.plans-theme .plans-compare__table thead th {
+  background: var(--plans-selected);
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-compare__table tbody th {
+  background: var(--plans-selected);
+  color: var(--plans-muted);
+}
+
+.plans-theme .plans-compare__table td.is-paid {
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-order-summary__row {
+  border-bottom-color: #eee7dc;
+}
+
+.plans-theme .plans-order-summary__row dt,
+.plans-theme .plans-order-summary__note,
+.plans-theme .plans-purchase-check p {
+  color: var(--plans-muted);
+}
+
+.plans-theme .plans-order-summary__row dd,
+.plans-theme .plans-order-summary__total,
+.plans-theme .plans-order-summary__total strong {
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-storefront__offer,
+.plans-theme .plans-storefront__aux .plans-apply-target,
+.plans-theme .plans-storefront__summary .plans-order-summary {
+  background: var(--plans-surface);
+  border: 1px solid var(--plans-line);
+  border-radius: 16px;
+  padding: 1.25rem 1.2rem;
+  box-shadow: var(--plans-shadow-soft);
+}
+
+.plans-theme .plans-storefront__summary .plans-order-summary {
+  background: #fffdf8;
+}
+
+.plans-theme .plans-cta {
+  background: var(--plans-primary);
+}
+
+.plans-theme .plans-cta__btn--solid {
+  color: var(--plans-ink);
+}
+
+/* —— 점유판 / Pick 미리보기 (공부방 구조) —— */
+.plans-theme .plans-prime-board {
+  background: #faf7f1;
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-pick-preview {
+  background: #faf7f1;
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-prime-cell,
+.plans-theme .plans-pick-preview__cell {
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-prime-cell__status {
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-prime-cell.is-available {
+  background: #f3f8f2;
+  border-color: #c5d8c2;
+}
+
+.plans-theme .plans-prime-cell.is-occupied {
+  background: #f7f4ee;
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-prime-cell.is-held {
+  background: #fff8ec;
+  border-color: #e0c48a;
+}
+
+.plans-theme .plans-prime-waitlist {
+  background: var(--plans-warn);
+  border-color: var(--plans-warn-line);
+}
+
+.plans-theme .plans-room-pick {
+  background: #fcfaf6;
+  border-color: #cfc3b3;
+}
+
+.plans-theme .plans-room-pick__tile {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-room-pick__pager span.is-current {
+  background: var(--plans-ink);
+  color: #fff;
+}
+
+.plans-theme .plans-tutor-circ {
+  background: #fffdf8;
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-tutor-circ--prime {
+  background: #f7f3ea;
+  border-color: #d7c9b0;
+}
+
+.plans-theme .plans-tutor-circ--pick {
+  background: #fcfbf8;
+  border-color: var(--plans-line);
+}
+
+.plans-theme .plans-tutor-circ__kicker {
+  color: var(--plans-primary);
+}
+
+.plans-theme .plans-tutor-circ__count {
+  background: var(--plans-ink);
+  color: #fff;
+}
+
+.plans-theme .plans-tutor-circ--pick .plans-tutor-circ__count {
+  background: var(--plans-primary);
+}
+
+.plans-theme .plans-tutor-circ__tile {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-tutor-circ__pager span.is-current {
+  background: var(--plans-ink);
+  color: #fff;
+}
+
+.plans-theme .plans-pick-preview__pager span {
+  border-color: var(--plans-line);
+  color: var(--plans-muted);
+}
+
+.plans-theme .plans-pick-preview__pager span.is-current {
+  border-color: var(--plans-primary);
+  background: var(--plans-selected);
+  color: var(--plans-primary);
+}
+
+.plans-theme .plans-basic-free {
+  background: var(--plans-sage);
+  border-color: #c9d8c6;
+}
+
+.plans-theme .plans-region-chip {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+  color: var(--plans-ink);
+}
+
+/* —— 보조 박스 / 게이트 —— */
+.plans-theme .mypage-info-box,
+.plans-theme .plans-profile-banner {
+  background: var(--plans-surface);
+  border: 1px solid var(--plans-line);
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-profile-banner.is-active {
+  border-color: var(--plans-primary);
+  background: var(--plans-selected);
+}
+
+.plans-theme .mypage-info-box.is-warn {
+  background: var(--plans-warn);
+  border-color: var(--plans-warn-line);
+}
+
+.plans-theme .guest-gate {
+  background: var(--plans-surface);
+  border-color: var(--plans-line);
+  color: var(--plans-ink);
+  box-shadow: var(--plans-shadow-soft);
+}
+
+.plans-theme .plans-catalog-miss {
+  background: var(--plans-surface);
+  border: 1px solid var(--plans-line);
+  color: var(--plans-ink);
+  box-shadow: var(--plans-shadow-soft);
+  max-width: 32rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+}
+
+.plans-theme .guest-gate__title {
+  color: var(--plans-ink);
+}
+
+.plans-theme .guest-gate__lead,
+.plans-theme .guest-gate__list,
+.plans-theme .guest-gate__eyebrow {
+  color: var(--plans-muted);
+}
+
+/* 파랑은 선택·포커스·대표 CTA에만 */
+.plans-theme a:focus-visible,
+.plans-theme button:focus-visible,
+.plans-theme select:focus-visible,
+.plans-theme input:focus-visible {
+  outline: 2px solid var(--plans-primary);
+  outline-offset: 2px;
+}

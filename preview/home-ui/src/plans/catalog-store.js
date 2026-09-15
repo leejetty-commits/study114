@@ -56,6 +56,9 @@ let catalogError = null;
 /** @type {Promise<CatalogState> | null} */
 let inflight = null;
 
+/** @type {string} */
+let inflightKey = '';
+
 export function getCatalogState() {
   return catalogState;
 }
@@ -72,6 +75,13 @@ export function clearCatalogCache() {
   catalogState = null;
   catalogError = null;
   inflight = null;
+  inflightKey = '';
+}
+
+function catalogHasRole(providerType) {
+  if (!catalogState || !Array.isArray(catalogState.products)) return false;
+  if (providerType !== 'study_room' && providerType !== 'tutor') return true;
+  return catalogState.products.some((p) => p.provider_type === providerType);
 }
 
 /**
@@ -80,11 +90,13 @@ export function clearCatalogCache() {
  * @returns {Promise<CatalogState>}
  */
 export async function hydratePaidCatalog(providerType, opts = {}) {
-  if (!opts.force && catalogState && isCatalogReady()) {
+  const roleKey = providerType === 'study_room' || providerType === 'tutor' ? providerType : '';
+  if (!opts.force && catalogState && isCatalogReady() && catalogHasRole(roleKey || providerType)) {
     return catalogState;
   }
-  if (inflight) return inflight;
+  if (inflight && inflightKey === roleKey) return inflight;
 
+  inflightKey = roleKey;
   inflight = (async () => {
     catalogError = null;
     const qs =
@@ -118,7 +130,10 @@ export async function hydratePaidCatalog(providerType, opts = {}) {
   try {
     return await inflight;
   } finally {
-    inflight = null;
+    if (inflightKey === roleKey) {
+      inflight = null;
+      inflightKey = '';
+    }
   }
 }
 

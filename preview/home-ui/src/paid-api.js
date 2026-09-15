@@ -103,7 +103,7 @@ export async function fetchPaidCatalog(providerType) {
 }
 
 /** @param {string} productId @param {string} variant
- * @param {{ providerType?: 'study_room'|'tutor', providerId?: string|number, studentId?: number, body?: string, badgeCodes?: string[], regionBasisType?: string, regionId?: string|number, complexId?: string|number, slotGroup?: string, regionLabel?: string }} [ctx]
+ * @param {{ providerType?: 'study_room'|'tutor', providerId?: string|number, studentId?: number, body?: string, badgeCodes?: string[], regionBasisType?: string, regionId?: string|number, complexId?: string|number, slotGroup?: string, regionLabel?: string, cityId?: string|number, primarySubjectId?: string|number }} [ctx]
  */
 export async function createPaidCheckout(productId, variant, ctx = {}) {
   const body = {
@@ -129,6 +129,10 @@ export async function createPaidCheckout(productId, variant, ctx = {}) {
   if (ctx.complexId != null && String(ctx.complexId) !== '') body.complex_id = Number(ctx.complexId);
   if (ctx.slotGroup) body.slot_group = String(ctx.slotGroup);
   if (ctx.regionLabel) body.region_label = String(ctx.regionLabel);
+  if (ctx.cityId != null && String(ctx.cityId) !== '') body.city_id = Number(ctx.cityId);
+  if (ctx.primarySubjectId != null && String(ctx.primarySubjectId) !== '') {
+    body.primary_subject_id = Number(ctx.primarySubjectId);
+  }
   // 클라이언트 금액·할인·무료혜택은 전송하지 않는다 (서버 PaidCatalog 재계산)
   const res = await fetch(PAID_ENDPOINTS.checkout, {
     method: 'POST',

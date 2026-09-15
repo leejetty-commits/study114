@@ -26,21 +26,33 @@ import {
 export function renderPromoWithRightRail(slotKey = 'home_right_rail') {
   const navRole = getNavRole();
   const slot = getRightRailSlot(slotKey);
-  if (slot && !isRailSlotVisible(slot, navRole)) {
-    return `
-      <aside class="home-sidebar home-sidebar--guest home-sidebar--live-rail" aria-label="안내">
+  const collapse = String(slot?.mobileBehavior || '') === 'collapse';
+  const visible = Boolean(slot && isRailSlotVisible(slot, navRole));
+  const guestFilter = slot?.guestFilter || 'allow';
+  const inner = visible
+    ? `
         ${renderNoticeTopBanner()}
         ${renderPromoRailCard()}
-        ${renderActionGuideSlot(slotKey)}
-      </aside>`;
-  }
-  const guestFilter = slot?.guestFilter || 'allow';
+        ${renderLiveFieldSlot(slotKey, { guestFilter })}
+        ${renderActionGuideSlot(slotKey)}`
+    : `
+        ${renderNoticeTopBanner()}
+        ${renderPromoRailCard()}
+        ${renderActionGuideSlot(slotKey)}`;
+  const title = esc(slot?.sectionTitle || '상품 이용 안내');
+  const body = collapse
+    ? `<details class="plans-rail-fold">
+        <summary class="plans-rail-fold__summary">
+          <strong>${title}</strong>
+        </summary>
+        <div class="plans-rail-fold__panel">${inner}</div>
+      </details>`
+    : inner;
   return `
-    <aside class="home-sidebar home-sidebar--guest home-sidebar--live-rail" aria-label="현장 고민과 안내">
-      ${renderNoticeTopBanner()}
-      ${renderPromoRailCard()}
-      ${renderLiveFieldSlot(slotKey, { guestFilter })}
-      ${renderActionGuideSlot(slotKey)}
+    <aside class="home-sidebar home-sidebar--guest home-sidebar--live-rail${
+      collapse ? ' right-rail--mobile-collapse' : ''
+    }" data-right-rail-slot="${esc(slotKey)}" aria-label="${visible ? '현장 고민과 안내' : '안내'}">
+      ${body}
     </aside>`;
 }
 

@@ -43,7 +43,7 @@ final class ProviderCheckoutService
      * @param 'study_room'|'tutor'|null $providerType
      * @param array<string, mixed> $memoIntent 1회 즉시권: student_id, body, context_label, peer_display_name
      * @param list<string> $badgeCodes
-     * @param array<string, mixed> $regionInput 공부방 Prime: region_basis_type · region_id|complex_id · slot_group?
+     * @param array<string, mixed> $regionInput 공부방 Prime: region_basis_type · region_id|complex_id · slot_group? / 과외쌤: city_id
      * @return array<string, mixed>
      */
     public function createOrder(
@@ -77,6 +77,12 @@ final class ProviderCheckoutService
         $productId = (string) $quote['product_id'];
         $variant = (string) $quote['variant_label'];
 
+        if ($badgeCodes !== [] && $kind !== 'position') {
+            throw new InvalidArgumentException(
+                '홍보 배지는 Prime/Pick 구매에만 함께 첨부할 수 있습니다.',
+            );
+        }
+
         /** @var list<string> $normalizedBadges */
         $normalizedBadges = [];
         $badgeQuotes = [];
@@ -85,6 +91,11 @@ final class ProviderCheckoutService
         $badgeSale = 0;
         /** @var array<string, mixed>|null $primeRegionScope */
         $primeRegionScope = null;
+        /** @var array<string, mixed>|null $tutorAxis */
+        $tutorAxis = null;
+        $grantMode = 'new';
+        /** @var array<string, mixed>|null $activeOwn */
+        $activeOwn = null;
 
         if ($kind === 'position' || $kind === 'badge_addon') {
             $this->requireProviderContext($userId, $providerType, $providerId);
@@ -92,7 +103,25 @@ final class ProviderCheckoutService
             if ($kind === 'position') {
                 if ($productId === 'prime' && $providerType === 'study_room') {
                     $primeRegionScope = $this->requireRoomPrimeRegionScope($providerId, $regionInput);
-                    $this->assertRoomPrimeAvailableInScope($primeRegionScope);
+                    $own = (new PrimeRegionScope($this->pdo))->findActiveOwnInScope($providerId, $primeRegionScope, false);
+                    if (is_array($own)) {
+                        $grantMode = 'extend';
+                        $activeOwn = $own;
+                    } else {
+                        $this->assertRoomPrimeAvailableInScope($primeRegionScope);
+                    }
+                } elseif ($providerType === 'tutor') {
+                    $tutorAxis = (new TutorPositionAxis($this->pdo))->requireForTutor($providerId, $regionInput);
+                    $ownTutor = (new TutorPositionAxis($this->pdo))->findActiveOwn(
+                        $providerId,
+                        $productId,
+                        (int) $tutorAxis['city_id'],
+                        (int) $tutorAxis['primary_subject_id'],
+                    );
+                    if (is_array($ownTutor)) {
+                        $grantMode = 'extend';
+                        $activeOwn = $ownTutor;
+                    }
                 }
                 $normalizedBadges = $this->badges->normalizeBadgeCodesForBundle($providerType, $badgeCodes);
                 if ($normalizedBadges !== []) {
@@ -103,6 +132,11 @@ final class ProviderCheckoutService
                     }
                     foreach ($normalizedBadges as $badgeCode) {
                         $bq = PaidCatalog::quote($badgeCode, $variant, $providerType);
+                        if ((string) ($bq['variant_label'] ?? '') !== $variant) {
+                            throw new InvalidArgumentException(
+                                '배지 기간은 선택한 Prime/Pick 기간과 같아야 합니다.',
+                            );
+                        }
                         $badgeQuotes[] = [
                             'badge_code' => $badgeCode,
                             'list_price_krw' => (int) $bq['list_price_krw'],
@@ -129,16 +163,18 @@ final class ProviderCheckoutService
             }
         }
 
-        if ($badgeCodes !== [] && $kind !== 'position') {
-            throw new InvalidArgumentException(
-                '홍보 배지는 Prime/Pick 구매에만 함께 첨부할 수 있습니다.',
-            );
-        }
-
         $amountWon = (int) $quote['amount_won'] + $badgeSale;
         $listPriceWon = (int) $quote['list_price_krw'] + $badgeList;
         $discountWon = (int) $quote['discount_krw'] + $badgeDiscount;
         $snapshot = is_array($quote['price_snapshot'] ?? null) ? $quote['price_snapshot'] : [];
+        $period = null;
+        if ($kind === 'position') {
+            $period = $this->periodForGrant($variant, $grantMode, $activeOwn);
+            $snapshot['started_on'] = $period['started_on'];
+            $snapshot['ends_on'] = $period['ends_on'];
+            $snapshot['end_exclusive_on'] = $period['end_exclusive_on'];
+            $snapshot['grant_mode'] = $grantMode;
+        }
         if ($normalizedBadges !== []) {
             $snapshot['badge_codes'] = $normalizedBadges;
             $snapshot['badge_lines'] = $badgeQuotes;
@@ -153,6 +189,14 @@ final class ProviderCheckoutService
                 'complex_id' => $primeRegionScope['complex_id'],
                 'slot_group' => $primeRegionScope['slot_group'],
                 'inventory_key' => $primeRegionScope['inventory_key'],
+            ];
+        }
+        if ($tutorAxis !== null) {
+            $snapshot['tutor_axis'] = [
+                'city_id' => $tutorAxis['city_id'],
+                'primary_subject_id' => $tutorAxis['primary_subject_id'],
+                'city_label' => $tutorAxis['city_label'],
+                'subject_label' => $tutorAxis['subject_label'],
             ];
         }
 
@@ -205,6 +249,13 @@ final class ProviderCheckoutService
             'price_snapshot' => $snapshot,
             'badge_codes' => $normalizedBadges,
             'badge_sale_krw' => $badgeSale,
+            'badge_lines' => $badgeQuotes,
+            'started_on' => is_array($period) ? (string) $period['started_on'] : null,
+            'ends_on' => is_array($period) ? (string) $period['ends_on'] : null,
+            'end_exclusive_on' => is_array($period) ? (string) $period['end_exclusive_on'] : null,
+            'grant_mode' => $kind === 'position' ? $grantMode : null,
+            'city_id' => is_array($tutorAxis) ? (int) $tutorAxis['city_id'] : null,
+            'primary_subject_id' => is_array($tutorAxis) ? (int) $tutorAxis['primary_subject_id'] : null,
         ];
     }
 
@@ -351,6 +402,55 @@ final class ProviderCheckoutService
             if ($status === 'pending') {
                 $this->orders->markPaid($orderRef);
             }
+
+            $isPosition = (string) $order['product_kind'] === 'position';
+            if ($isPosition) {
+                try {
+                    $grant = $this->fulfill($userId, $order);
+                    $this->orders->markFulfillment($orderRef, 'succeeded', null);
+                } catch (\Throwable $e) {
+                    if ($this->pdo->inTransaction()) {
+                        $this->pdo->rollBack();
+                    }
+                    throw $e;
+                }
+                $this->pdo->commit();
+                $paymentCommitted = true;
+                $paid = $this->orders->getByRef($orderRef);
+                if ($paid === null) {
+                    throw new InvalidArgumentException('주문 갱신에 실패했습니다.');
+                }
+                $payload = $this->buildCompletePayload($paid, true);
+                if (is_array($grant)) {
+                    if (isset($grant['paid_badge_grants']) && is_array($grant['paid_badge_grants'])) {
+                        $payload['paid_badge_grants'] = $grant['paid_badge_grants'];
+                    }
+                    if (isset($grant['memo_bundle_granted'])) {
+                        $payload['memo_bundle_granted'] = (int) $grant['memo_bundle_granted'];
+                    }
+                    if (isset($grant['grant_mode'])) {
+                        $payload['grant_mode'] = (string) $grant['grant_mode'];
+                    }
+                    if (isset($grant['started_on'])) {
+                        $payload['started_on'] = (string) $grant['started_on'];
+                    }
+                    if (isset($grant['ends_on'])) {
+                        $payload['ends_on'] = (string) $grant['ends_on'];
+                    }
+                    if (isset($grant['end_exclusive_on'])) {
+                        $payload['end_exclusive_on'] = (string) $grant['end_exclusive_on'];
+                    }
+                    if (isset($grant['city_id'])) {
+                        $payload['city_id'] = (int) $grant['city_id'];
+                    }
+                    if (isset($grant['primary_subject_id'])) {
+                        $payload['primary_subject_id'] = (int) $grant['primary_subject_id'];
+                    }
+                }
+
+                return $payload;
+            }
+
             $this->pdo->commit();
             $paymentCommitted = true;
 
@@ -449,6 +549,44 @@ final class ProviderCheckoutService
             throw new InvalidArgumentException('provider_type은 study_room | tutor 만 허용합니다.');
         }
         $this->badges->assertOwnedProvider($userId, $providerType, $providerId);
+    }
+
+    /**
+     * @param array<string, mixed>|null $activeOwn
+     * @return array{
+     *   duration_type: 'day'|'month',
+     *   duration_value: int,
+     *   started_on: string,
+     *   end_exclusive_on: string,
+     *   ends_on: string,
+     *   period_days: int,
+     *   starts_at: string,
+     *   ends_at: string
+     * }
+     */
+    private function periodForGrant(string $variant, string $grantMode, ?array $activeOwn): array
+    {
+        if ($grantMode === 'extend' && is_array($activeOwn)) {
+            $from = (string) ($activeOwn['end_exclusive_on'] ?? '');
+            $added = PositionPeriodCalculator::fromVariant($variant, $from !== '' ? $from : null);
+            $startedOn = (string) ($activeOwn['started_on'] ?? $added['started_on']);
+            $endExclusive = (string) $added['end_exclusive_on'];
+            $startsAt = $startedOn . ' 00:00:00';
+            $periodDays = max(1, (int) (new \DateTimeImmutable($startedOn))->diff(new \DateTimeImmutable($endExclusive))->format('%a'));
+
+            return [
+                'duration_type' => $added['duration_type'],
+                'duration_value' => $added['duration_value'],
+                'started_on' => $startedOn,
+                'end_exclusive_on' => $endExclusive,
+                'ends_on' => $added['ends_on'],
+                'period_days' => $periodDays,
+                'starts_at' => $startsAt,
+                'ends_at' => $added['ends_at'],
+            ];
+        }
+
+        return PositionPeriodCalculator::fromVariant($variant);
     }
 
     /**
@@ -615,23 +753,67 @@ final class ProviderCheckoutService
                 throw new InvalidArgumentException('포지션 주문에 provider_type·provider_id가 없습니다.');
             }
             $this->badges->assertOwnedProvider($userId, $providerType, $providerId);
-            $period = PositionPeriodCalculator::fromVariant($variant);
             $snapshot = $this->decodeOrderSnapshot($order);
             $regionScope = null;
+            $tutorAxis = null;
+            $grantMode = 'new';
+            $activeOwn = null;
+
             if ($productId === 'prime' && $providerType === 'study_room') {
                 $primeRegion = is_array($snapshot['prime_region'] ?? null) ? $snapshot['prime_region'] : [];
                 $regionScope = $this->requireRoomPrimeRegionScope($providerId, $primeRegion);
-                $this->assertRoomPrimeAvailableInScope($regionScope);
+                $scopeHelper = new PrimeRegionScope($this->pdo);
+                $locked = $scopeHelper->lockActiveInScope($regionScope);
+                foreach ($locked as $row) {
+                    if ((int) ($row['provider_id'] ?? 0) === $providerId) {
+                        $activeOwn = $row;
+                        break;
+                    }
+                }
+                if (is_array($activeOwn)) {
+                    $grantMode = 'extend';
+                } elseif (count($locked) >= PrimeRegionScope::CAPACITY) {
+                    throw new PaidConflictException(
+                        '현재 선택 지역의 Prime 자리는 모두 이용 중입니다. 예약대기를 등록한 뒤 빈자리가 열릴 때 결제해 주세요. 대기 등록만으로 자리나 순번이 보장되지 않습니다.',
+                    );
+                }
+            } elseif ($providerType === 'tutor') {
+                $axisInput = is_array($snapshot['tutor_axis'] ?? null) ? $snapshot['tutor_axis'] : [];
+                $tutorAxis = (new TutorPositionAxis($this->pdo))->requireForTutor($providerId, $axisInput);
+                $activeOwn = (new TutorPositionAxis($this->pdo))->lockActiveOwn(
+                    $providerId,
+                    $productId,
+                    (int) $tutorAxis['city_id'],
+                    (int) $tutorAxis['primary_subject_id'],
+                );
+                if (is_array($activeOwn)) {
+                    $grantMode = 'extend';
+                }
             }
-            $this->tickets->addPositionSubscription(
-                $userId,
-                $productId,
-                $period,
-                'payment',
-                $providerType,
-                $providerId,
-                $regionScope,
-            );
+
+            $period = $this->periodForGrant($variant, $grantMode, $activeOwn);
+            if ($grantMode === 'extend' && is_array($activeOwn)) {
+                $this->tickets->extendPositionSubscription((int) $activeOwn['id'], $period);
+            } else {
+                $this->tickets->addPositionSubscription(
+                    $userId,
+                    $productId,
+                    $period,
+                    'payment',
+                    $providerType,
+                    $providerId,
+                    $regionScope,
+                    $tutorAxis,
+                );
+            }
+
+            if ($grantMode === 'extend' && is_array($activeOwn)) {
+                $this->tickets->expireOpenPositionBundles(
+                    $providerType,
+                    $providerId,
+                    (string) ($activeOwn['end_exclusive_on'] ?? ''),
+                );
+            }
             $bundle = TutorPositionMemoBundle::memoCount($productId, $variant, $providerType);
             if ($bundle > 0) {
                 $expires = (string) $period['end_exclusive_on'] . ' 00:00:00';
@@ -648,26 +830,35 @@ final class ProviderCheckoutService
                 );
             }
 
+            $codes = is_array($snapshot['badge_codes'] ?? null) ? $snapshot['badge_codes'] : [];
+            $normalizedCodes = [];
+            foreach ($codes as $code) {
+                $normalizedCodes[] = (string) $code;
+            }
+            $this->badges->revokeActiveNotIn($providerType, $providerId, $normalizedCodes);
             $badgeGrants = [];
-            $codes = $snapshot['badge_codes'] ?? [];
-            if (is_array($codes) && $codes !== []) {
-                $startsOn = (string) ($period['started_on'] ?? date('Y-m-d'));
-                $endExclusive = (string) ($period['end_exclusive_on'] ?? '');
-                foreach ($codes as $code) {
-                    $badgeGrants[] = $this->badges->grantFromOrder(
-                        $providerType,
-                        $providerId,
-                        (string) $code,
-                        $startsOn,
-                        $endExclusive,
-                        $orderRef . ':' . $code,
-                    );
-                }
+            $startsOn = (string) ($period['started_on'] ?? PositionPeriodCalculator::today());
+            $endExclusive = (string) ($period['end_exclusive_on'] ?? '');
+            foreach ($normalizedCodes as $code) {
+                $badgeGrants[] = $this->badges->grantFromOrder(
+                    $providerType,
+                    $providerId,
+                    $code,
+                    $startsOn,
+                    $endExclusive,
+                    $orderRef . ':' . $code,
+                );
             }
 
             return [
                 'memo_bundle_granted' => $bundle,
                 'paid_badge_grants' => $badgeGrants,
+                'grant_mode' => $grantMode,
+                'started_on' => $startsOn,
+                'ends_on' => (string) ($period['ends_on'] ?? ''),
+                'end_exclusive_on' => (string) ($period['end_exclusive_on'] ?? ''),
+                'city_id' => is_array($tutorAxis) ? (int) $tutorAxis['city_id'] : null,
+                'primary_subject_id' => is_array($tutorAxis) ? (int) $tutorAxis['primary_subject_id'] : null,
             ];
         }
 
@@ -690,45 +881,9 @@ final class ProviderCheckoutService
         ?string $providerType,
         ?int $providerId,
     ): array {
-        if ($providerType === null || $providerId === null || $providerId <= 0) {
-            throw new InvalidArgumentException('배지 주문에 provider_type·provider_id가 없습니다.');
-        }
-        $this->badges->assertOwnedProvider($userId, $providerType, $providerId);
-        $this->badges->assertBadgeAllowedForProvider($providerType, $productId);
-
-        $positions = $this->tickets->listActivePositions($userId, $providerType, $providerId);
-        if ($positions === []) {
-            throw new InvalidArgumentException('해당 계정 문맥의 활성 프라임/픽이 없어 배지를 부여할 수 없습니다.');
-        }
-        usort(
-            $positions,
-            static fn (array $a, array $b): int => strcmp(
-                (string) ($b['end_exclusive_on'] ?? ''),
-                (string) ($a['end_exclusive_on'] ?? ''),
-            ),
+        throw new InvalidArgumentException(
+            '이용기간 중 배지 추가·교체는 제공하지 않습니다. 홍보 배지는 Prime/Pick 최초 구매 또는 연장 시에만 함께 선택할 수 있습니다.',
         );
-        $period = $positions[0];
-        $startsOn = (string) ($period['started_on'] ?? date('Y-m-d'));
-        $endExclusive = (string) ($period['end_exclusive_on'] ?? '');
-        if ($endExclusive === '') {
-            throw new InvalidArgumentException('포지션 종료일이 없습니다.');
-        }
-
-        $code = $productId === 'picked' ? 'jjokjipge' : $productId;
-        $grant = $this->badges->grantFromOrder(
-            $providerType,
-            $providerId,
-            $code,
-            $startsOn,
-            $endExclusive,
-            $orderRef,
-        );
-
-        return array_merge($grant, [
-            'provider_type' => $providerType,
-            'provider_id' => $providerId,
-            'position_end_exclusive_on' => $endExclusive,
-        ]);
     }
 
     /**
@@ -760,6 +915,9 @@ final class ProviderCheckoutService
             $fulfillment = 'failed';
         }
 
+        $snap = $this->decodeOrderSnapshot($order);
+        $badgeCodes = is_array($snap['badge_codes'] ?? null) ? $snap['badge_codes'] : [];
+
         return [
             'order_ref' => (string) $order['order_ref'],
             'status' => $payStatus,
@@ -775,6 +933,17 @@ final class ProviderCheckoutService
             'fulfillment_status' => $fulfillment,
             'fulfillment_error' => $fulfillmentError ?? (isset($order['fulfillment_error']) ? (string) $order['fulfillment_error'] : null),
             'paid_at' => $order['paid_at'] !== null ? (string) $order['paid_at'] : null,
+            'badge_codes' => array_values(array_map('strval', $badgeCodes)),
+            'badge_sale_krw' => isset($snap['badge_sale_krw']) ? (int) $snap['badge_sale_krw'] : 0,
+            'badge_lines' => is_array($snap['badge_lines'] ?? null) ? $snap['badge_lines'] : [],
+            'started_on' => isset($snap['started_on']) ? (string) $snap['started_on'] : null,
+            'ends_on' => isset($snap['ends_on']) ? (string) $snap['ends_on'] : null,
+            'end_exclusive_on' => isset($snap['end_exclusive_on']) ? (string) $snap['end_exclusive_on'] : null,
+            'grant_mode' => isset($snap['grant_mode']) ? (string) $snap['grant_mode'] : null,
+            'city_id' => isset($snap['tutor_axis']['city_id']) ? (int) $snap['tutor_axis']['city_id'] : null,
+            'primary_subject_id' => isset($snap['tutor_axis']['primary_subject_id'])
+                ? (int) $snap['tutor_axis']['primary_subject_id']
+                : null,
         ];
     }
 

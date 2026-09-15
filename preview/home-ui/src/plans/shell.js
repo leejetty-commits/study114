@@ -2,6 +2,7 @@ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, ren
 import { getNavRole } from '../state.js';
 import { renderPlansPageTitle, renderPlansNav } from './nav.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
+import { isPaidStorefrontPath, wrapPaidStorefront } from './theme.js';
 
 /**
  * @param {string} currentPath
@@ -18,7 +19,7 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
   const guestCatalogOnly = Boolean(opts.isGuest);
   const banner = hideNav ? '' : renderHomeMarketingBanner('plans');
 
-  const mainHtml = `
+  const layoutHtml = `
     <div class="sup-layout plans-layout">
       ${banner}
       <header class="sup-content__head">
@@ -33,6 +34,7 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
       <a href="#${sub}" class="sup-back-home" data-nav="${sub}">← 메인 홈으로</a>
     </div>
   `;
+  const mainHtml = isPaidStorefrontPath(currentPath) ? wrapPaidStorefront(layoutHtml) : layoutHtml;
 
   return renderAppShellWithPromo({
     toolbar: renderPreviewToolbar(),
@@ -49,7 +51,10 @@ export function bindPlansShellEvents(root, rerender) {
   root.querySelectorAll('[data-plans-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      window.location.hash = el.getAttribute('data-plans-nav') || '/plans';
+      const href = el.getAttribute('href') || '';
+      const attr = el.getAttribute('data-plans-nav') || '';
+      const fromHref = href.startsWith('#') ? href.slice(1) : '';
+      window.location.hash = fromHref || attr || '/plans';
     });
   });
   root.querySelectorAll('[data-nav]').forEach((el) => {

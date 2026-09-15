@@ -6,7 +6,7 @@
 import { formatKrw, resolveCheckoutAmount } from './runtime-config.js';
 import { getStudyRoom } from '../study-room-reg/store.js';
 import { getTutor } from '../tutor-reg/store.js';
-import { buildPlansHref } from './router.js';
+import { buildPlansHref, parsePlansQuery } from './router.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -71,23 +71,57 @@ export function listStudyRoomApplyRegions(room) {
 }
 
 /**
+ * 과외쌤 적용 시 후보 — 활동지역 1·2·3의 city_id만 허용(라벨 문자열만이면 구매 불가).
+ * @param {object|null|undefined} tutor
+ * @returns {{ label: string, city_id: string }[]}
+ */
+export function listTutorApplyCities(tutor) {
+  if (!tutor) return [];
+  /** @type {{ label: string, city_id: string }[]} */
+  const out = [];
+  const saved = Array.isArray(tutor.saved_regions) ? tutor.saved_regions : [];
+  for (const s of saved) {
+    const cityId = s?.region_id != null && String(s.region_id) !== '' ? String(s.region_id) : '';
+    if (!cityId) continue;
+    const label =
+      String(s.region_label || s.label || s.sido_name || '').trim() || `시 #${cityId}`;
+    if (out.some((x) => x.city_id === cityId)) continue;
+    out.push({ label, city_id: cityId });
+  }
+  if (out.length) return out.slice(0, 3);
+  const topId = tutor.primary_region_id != null && String(tutor.primary_region_id) !== ''
+    ? String(tutor.primary_region_id)
+    : '';
+  if (topId) {
+    out.push({
+      label: String(tutor.primary_region_label || tutor.region_label || `시 #${topId}`),
+      city_id: topId,
+    });
+  }
+  return out.slice(0, 3);
+}
+
+/**
  * 적용 대상 준비 여부 (지역·주력과목). 주문 CTA 가드용.
+ * 과외쌤: 노출축(city_id + primary_subject_id)만 본다. 소개문·카드 카피 완성도는 구매 차단 사유가 아니다.
  * @param {import('./profiles.js').ProviderProfile | null} profile
  * @param {'study_room'|'tutor'|string} role
  * @returns {{
  *   regionReady: boolean,
  *   regionOptions: string[],
- *   regionScopes: { label: string, region_basis_type: 'dong'|'complex', region_id: string, complex_id: string }[],
- *   subjectLine: string
+ *   regionScopes: { label: string, region_basis_type?: 'dong'|'complex', region_id?: string, complex_id?: string, city_id?: string }[],
+ *   subjectLine: string,
+ *   primarySubjectId: string,
  * }}
  */
 export function getApplyTargetReadiness(profile, role) {
   if ((role !== 'study_room' && role !== 'tutor') || !profile) {
-    return { regionReady: false, regionOptions: [], regionScopes: [], subjectLine: '' };
+    return { regionReady: false, regionOptions: [], regionScopes: [], subjectLine: '', primarySubjectId: '' };
   }
-  /** @type {{ label: string, region_basis_type: 'dong'|'complex', region_id: string, complex_id: string }[]} */
+  /** @type {{ label: string, region_basis_type?: 'dong'|'complex', region_id?: string, complex_id?: string, city_id?: string }[]} */
   let regionScopes = [];
   let subjectLine = '';
+  let primarySubjectId = '';
   let regionReady = false;
 
   if (profile.providerType === 'study_room') {
@@ -97,21 +131,20 @@ export function getApplyTargetReadiness(profile, role) {
   } else {
     const tutor = getTutor(Number(profile.id));
     subjectLine = tutor?.main_subject_note || '';
-    const label = tutor?.region_label || '';
-    // 과외쌤은 재고 키가 아님 — 표시/자격용 라벨만
-    if (label && subjectLine) {
-      regionScopes = [
-        {
-          label: String(label),
-          region_basis_type: 'dong',
-          region_id: '',
-          complex_id: '',
-        },
-      ];
-      regionReady = true;
-    } else {
-      regionReady = Boolean(subjectLine);
-    }
+    primarySubjectId =
+      tutor?.primary_subject_id != null && String(tutor.primary_subject_id) !== ''
+        ? String(tutor.primary_subject_id)
+        : '';
+    const cities = listTutorApplyCities(tutor);
+    regionScopes = cities.map((c) => ({
+      label: c.label,
+      city_id: c.city_id,
+      region_basis_type: undefined,
+      region_id: '',
+      complex_id: '',
+    }));
+    // 주력과목 id는 서버가 기본등록에서 자동 연결. 클라이언트 id 유무로 구매를 막지 않는다.
+    regionReady = cities.length > 0 && (primarySubjectId !== '' || Boolean(tutor?.has_primary_subject));
   }
 
   return {
@@ -119,6 +152,7 @@ export function getApplyTargetReadiness(profile, role) {
     regionOptions: regionScopes.map((r) => r.label),
     regionScopes,
     subjectLine,
+    primarySubjectId,
   };
 }
 
@@ -155,38 +189,48 @@ export function renderApplyTargetBlock(profile, role, page = 'positions') {
     return `
       <section class="plans-section plans-apply-target plans-apply-target--compact" data-plans-apply>
         <div class="plans-section__head">
-          <h3 class="plans-section__title">적용 프로필</h3>
-          <p class="plans-section__lead">쪽지권은 지역 선택이 없습니다. 선택한 프로필에만 적용됩니다.</p>
+          <h3 class="plans-section__title">적용 프로필 확인</h3>
+          <p class="plans-section__lead">쪽지권은 선택한 프로필에 적용됩니다. 지역 선택은 없습니다.</p>
         </div>
         <p class="plans-apply-target__profile"><strong>${profileLine}</strong></p>
       </section>`;
   }
 
   const { regionReady, regionScopes, subjectLine } = getApplyTargetReadiness(profile, role);
+  const q = parsePlansQuery();
+  const hasQueryCity = Boolean(q.city_id);
+  const hasQueryRegion = Boolean(q.region_id || q.complex_id);
 
   const regionHtml = regionScopes.length
     ? `<div class="plans-apply-target__regions" role="group" aria-label="적용 지역">
         ${regionScopes
-          .map(
-            (r, i) =>
-              `<label class="plans-region-chip"><input type="radio" name="plans-apply-region" value="${esc(r.label)}"
+          .map((r, i) => {
+            const checked = r.city_id
+              ? (hasQueryCity ? String(q.city_id) === String(r.city_id) : i === 0)
+              : hasQueryRegion
+                ? (q.complex_id && String(r.complex_id) === String(q.complex_id)) ||
+                  (q.region_id && String(r.region_id) === String(q.region_id))
+                : i === 0;
+            return `<label class="plans-region-chip"><input type="radio" name="plans-apply-region" value="${esc(r.label)}"
                 data-plans-apply-region
-                data-region-basis="${esc(r.region_basis_type)}"
-                data-region-id="${esc(r.region_id)}"
-                data-complex-id="${esc(r.complex_id)}"
-                ${i === 0 ? 'checked' : ''} /> <span>${esc(r.label)}</span></label>`,
-          )
+                aria-label="적용 지역 ${esc(r.label)}"
+                ${r.city_id ? `data-city-id="${esc(r.city_id)}"` : ''}
+                ${r.region_basis_type ? `data-region-basis="${esc(r.region_basis_type)}"` : ''}
+                ${r.region_id ? `data-region-id="${esc(r.region_id)}"` : ''}
+                ${r.complex_id ? `data-complex-id="${esc(r.complex_id)}"` : ''}
+                ${checked ? 'checked' : ''} /> <span>${esc(r.label)}</span></label>`;
+          })
           .join('')}
       </div>`
     : `<p class="mypage-muted plans-apply-target__warn">적용 지역이 없습니다. 상세등록에서 ${
-        profile.providerType === 'study_room' ? '대표 홍보지역(행정동·단지 ID)' : '활동지역'
+        profile.providerType === 'study_room' ? '대표 홍보지역(행정동·단지 ID)' : '활동지역 시 1·2·3'
       }을 먼저 설정해 주세요.</p>`;
 
   const subjectHtml =
     profile.providerType === 'tutor'
       ? subjectLine
-        ? `<p class="plans-apply-target__subject">주력과목 · <strong>${esc(subjectLine)}</strong></p>`
-        : `<p class="mypage-muted plans-apply-target__warn">주력과목이 없습니다. 상세등록에서 주력과목을 설정해 주세요.</p>`
+        ? `<p class="plans-apply-target__subject">주력과목 · <strong>${esc(subjectLine)}</strong> · 기본등록 값으로 자동 연결됩니다</p>`
+        : `<p class="mypage-muted plans-apply-target__warn">주력과목이 없습니다. 상세등록에서 주력과목 1개를 선택해 주세요.</p>`
       : '';
 
   return `
@@ -212,7 +256,51 @@ export function renderApplyTargetBlock(profile, role, page = 'positions') {
 }
 
 /**
- * @param {{ rows: { label: string, value: string }[], totalLabel?: string, totalValue?: string, ctaDisabled?: boolean, ctaLabel?: string, family: 'position'|'access' }} opts
+ * 노출상품 주문 요약 행 — access(쪽지권)는 사용하지 않는다.
+ * @param {{
+ *   profileLabel: string,
+ *   roleText: string,
+ *   productName: string,
+ *   regionValue: string,
+ *   periodLabel: string,
+ *   positionPriceText: string,
+ *   badgeLines: { label: string, value: string }[],
+ *   badgeSumText?: string,
+ *   periodRangeText?: string,
+ *   listPriceText?: string,
+ *   discountText?: string,
+ *   memoBundleText?: string,
+ *   refundText?: string,
+ * }} opts
+ * @returns {{ label: string, value: string }[]}
+ */
+export function buildPositionOrderRows(opts) {
+  const badgeRows = opts.badgeLines.length
+    ? opts.badgeLines.map((b) => ({
+        label: `홍보 배지 · ${b.label}`,
+        value: b.value,
+      }))
+    : [{ label: '홍보 배지', value: '없음' }];
+  return [
+    { label: '적용 프로필', value: opts.profileLabel },
+    { label: '역할', value: opts.roleText },
+    { label: '상품', value: opts.productName },
+    { label: '적용 지역', value: opts.regionValue },
+    { label: '기간', value: opts.periodLabel },
+    ...(opts.periodRangeText ? [{ label: '시작일 ~ 종료일', value: opts.periodRangeText }] : []),
+    ...(opts.listPriceText ? [{ label: '정상가', value: opts.listPriceText }] : []),
+    { label: '노출상품 표시가', value: opts.positionPriceText },
+    ...(opts.discountText ? [{ label: '기간 할인', value: opts.discountText }] : []),
+    ...(opts.memoBundleText ? [{ label: '무료 쪽지', value: opts.memoBundleText }] : []),
+    ...badgeRows,
+    ...(opts.badgeLines.length && opts.badgeSumText ? [{ label: '배지 소계', value: opts.badgeSumText }] : []),
+    { label: '자동연장', value: '없음' },
+    { label: '환불기준', value: opts.refundText || '시작 전 전액 · 시작 후 일할 계산(서버 정본)' },
+  ];
+}
+
+/**
+ * @param {{ rows: { label: string, value: string }[], totalLabel?: string, totalValue?: string, ctaDisabled?: boolean, ctaLabel?: string, family: 'position'|'access', showCta?: boolean, note?: string }} opts
  */
 export function renderOrderSummaryBlock(opts) {
   const rows = opts.rows || [];
@@ -240,8 +328,14 @@ export function renderOrderSummaryBlock(opts) {
           ? `<p class="plans-order-summary__total"><span>${esc(opts.totalLabel)}</span><strong data-plans-order-total>${esc(opts.totalValue || '—')}</strong></p>`
           : ''
       }
-      <p class="mypage-muted plans-order-summary__note">자동연장 없음 · 표시가는 참고이며 결제 직전 서버가 재검증합니다.</p>
-      <button type="button" class="btn btn--primary plans-order-summary__cta" data-plans-order-cta ${ctaDisabled ? 'disabled' : ''}>${esc(ctaLabel)}</button>
+      <p class="mypage-muted plans-order-summary__note">${esc(
+        opts.note || '자동연장 없음 · 표시가는 참고이며 결제 직전 서버가 재검증합니다.',
+      )}</p>
+      ${
+        opts.showCta === false
+          ? ''
+          : `<button type="button" class="btn btn--primary plans-order-summary__cta" data-plans-order-cta aria-label="${esc(ctaLabel)}" ${ctaDisabled ? 'disabled' : ''}>${esc(ctaLabel)}</button>`
+      }
     </section>`;
 }
 
@@ -253,7 +347,6 @@ export function renderAccessPurchaseCheck() {
       </div>
       <p>5회권과 10회권은 구매일부터 120일 동안 사용할 수 있습니다. 사용 중인 유료 묶음권은 중복 구매할 수 없으니 예상 사용량을 확인하고 필요한 만큼만 구매하세요.</p>
       <p class="mypage-muted">사용기한이 지나면 남은 횟수는 소멸하며 환불·연장되지 않습니다.</p>
-      <p class="mypage-muted">보유 중인 쪽지권의 남은 횟수와 사용기한은 마이페이지의 내 상품에서 확인할 수 있습니다.</p>
     </section>`;
 }
 
@@ -269,7 +362,7 @@ export function renderPolicyAccordion(family) {
           <ul class="plans-tier-list">
             <li>1회 즉시권: 7일 이내 미발송 시 전액 · 발송 완료 또는 7일 경과 시 0원</li>
             <li>5회권·10회권: 사용 구간별 환불표는 서버·약관 정본을 따릅니다</li>
-            <li>120일 만료 시 잔여횟수 소멸 · 연장·환불 없음</li>
+            <li>120일 만료 시 남은 횟수 소멸 · 연장·환불 없음</li>
             <li>회사 귀책 발송 실패는 횟수 복구를 우선합니다</li>
           </ul>
           <p class="mypage-muted">환불 가능 여부와 금액은 프론트가 계산하지 않으며, 요청 시 서버가 확정합니다.</p>
@@ -302,10 +395,11 @@ export function renderBasicFreeRow() {
 export function renderAccessAuxLinks() {
   return `
     <div class="plans-access-aux">
+      <p>보유 중인 쪽지권의 남은 횟수와 사용기한은 마이페이지의 내 상품에서 확인할 수 있습니다.</p>
       <p>보낸 쪽지와 이어진 대화는 쪽지함에서 확인할 수 있습니다.</p>
       <p class="plans-access-aux__links">
-        <a class="btn btn--secondary btn--sm" href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 쪽지권 보기</a>
-        <a class="btn btn--secondary btn--sm" href="#/mypage/messages" data-nav="/mypage/messages">쪽지함 보기</a>
+        <a class="plans-access-aux__link" href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 쪽지권 보기</a>
+        <a class="plans-access-aux__link" href="#/mypage/messages" data-nav="/mypage/messages">쪽지함 보기</a>
       </p>
     </div>`;
 }

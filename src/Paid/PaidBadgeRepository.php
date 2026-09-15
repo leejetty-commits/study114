@@ -147,6 +147,50 @@ final class PaidBadgeRepository
     }
 
     /**
+     * 연장 시 최종 배지 조합만 남긴다. 선택되지 않은 활성 배지는 즉시 회수.
+     *
+     * @param 'study_room'|'tutor' $providerType
+     * @param list<string> $keepCodes
+     */
+    public function revokeActiveNotIn(string $providerType, int $providerId, array $keepCodes): int
+    {
+        if (!$this->tableReady()) {
+            return 0;
+        }
+        $this->assertProviderType($providerType);
+        $keep = [];
+        foreach ($keepCodes as $code) {
+            $c = trim((string) $code);
+            if ($c !== '') {
+                $keep[] = $c;
+            }
+        }
+        if ($keep === []) {
+            $stmt = $this->pdo->prepare(
+                "UPDATE provider_paid_badges
+                 SET status = 'revoked', revoked_at = NOW()
+                 WHERE provider_type = ? AND provider_id = ?
+                   AND status = 'active' AND end_exclusive_on > CURDATE()"
+            );
+            $stmt->execute([$providerType, $providerId]);
+
+            return $stmt->rowCount();
+        }
+        $placeholders = implode(',', array_fill(0, count($keep), '?'));
+        $params = array_merge([$providerType, $providerId], $keep);
+        $stmt = $this->pdo->prepare(
+            "UPDATE provider_paid_badges
+             SET status = 'revoked', revoked_at = NOW()
+             WHERE provider_type = ? AND provider_id = ?
+               AND status = 'active' AND end_exclusive_on > CURDATE()
+               AND badge_code NOT IN ({$placeholders})"
+        );
+        $stmt->execute($params);
+
+        return $stmt->rowCount();
+    }
+
+    /**
      * 로그인 user가 해당 계정 문맥(공부방/과외쌤 프로필)을 소유하는지 검증.
      * 추론·fallback 없음 — 호출측이 type+id를 반드시 넘긴다.
      *

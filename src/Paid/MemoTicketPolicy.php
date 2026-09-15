@@ -28,7 +28,7 @@ final class MemoTicketPolicy
 
     public static function expireAtFromFulfill(?DateTimeImmutable $paidAt = null): DateTimeImmutable
     {
-        $from = $paidAt ?? new DateTimeImmutable('now');
+        $from = $paidAt ?? PositionPeriodCalculator::now();
 
         return $from->modify('+' . self::PAID_EXPIRE_DAYS . ' days');
     }
@@ -56,8 +56,9 @@ final class MemoTicketPolicy
 
     public static function packStatus(int $remaining, string $expiresAt, ?DateTimeImmutable $now = null): string
     {
-        $now = $now ?? new DateTimeImmutable('now');
-        if ($now >= new DateTimeImmutable($expiresAt)) {
+        $now = $now ?? PositionPeriodCalculator::now();
+        $expires = new DateTimeImmutable($expiresAt, PositionPeriodCalculator::timezone());
+        if ($now >= $expires) {
             return '만료';
         }
         if ($remaining <= 0) {

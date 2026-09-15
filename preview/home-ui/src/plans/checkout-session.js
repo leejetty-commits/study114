@@ -14,16 +14,29 @@ const RESULT_KEY = 'study114-plans-result';
  * @property {string} optionLabel
  * @property {string} apiVariant
  * @property {number} priceKrw
+ * @property {number} [listPriceKrw]
+ * @property {number} [discountKrw]
+ * @property {string} [discountLabel]
+ * @property {number} [memoBundle]
  * @property {'study_room'|'tutor'} providerType
  * @property {string} providerId
  * @property {string} providerLabel
  * @property {number} createdAt
  * @property {string[]} [badgeCodes]
+ * @property {number} [badgeSaleKrw]
+ * @property {string} [startedOn]
+ * @property {string} [endsOn]
  * @property {string} [regionBasisType]
  * @property {string|number} [regionId]
  * @property {string|number} [complexId]
  * @property {string} [slotGroup]
  * @property {string} [regionLabel]
+ * @property {string|number} [cityId]
+ * @property {string|number} [primarySubjectId]
+ * @property {string} [orderRef]
+ * @property {number} [serverAmountWon]
+ * @property {number} [serverBadgeSaleKrw]
+ * @property {number} [serverPositionSaleKrw]
  */
 
 /**
@@ -36,8 +49,14 @@ const RESULT_KEY = 'study114-plans-result';
  * @property {string} [optionLabel]
  * @property {number} [chargeKrw]
  * @property {number} [memoBundleGranted]
+ * @property {string[]} [badgeCodes]
+ * @property {number} [badgeSaleKrw]
+ * @property {string} [startedOn]
+ * @property {string} [endsOn]
  * @property {string} [providerType]
  * @property {string} [providerId]
+ * @property {string|number} [cityId]
+ * @property {string} [regionLabel]
  */
 
 /** @param {PlansCheckoutDraft} draft */

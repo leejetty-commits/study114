@@ -654,6 +654,7 @@ final class ProviderTicketRepository
      *   complex_id?: int|null,
      *   slot_group?: string
      * }|null $regionScope 공부방 Prime만 필수
+     * @param array{city_id: int, primary_subject_id: int}|null $tutorAxis 과외쌤 Prime/Pick 필수
      */
     public function addPositionSubscription(
         int $userId,
@@ -663,6 +664,7 @@ final class ProviderTicketRepository
         ?string $providerType = null,
         ?int $providerId = null,
         ?array $regionScope = null,
+        ?array $tutorAxis = null,
     ): void {
         if (!in_array($skuCode, ['prime', 'pick'], true)) {
             throw new \InvalidArgumentException('sku_code: prime | pick');
@@ -682,12 +684,53 @@ final class ProviderTicketRepository
             && $providerType === 'study_room'
             && is_array($regionScope)
             && isset($regionScope['region_basis_type']);
+        $writeTutorAxis =
+            $providerType === 'tutor'
+            && is_array($tutorAxis)
+            && isset($tutorAxis['city_id'], $tutorAxis['primary_subject_id']);
+        if ($providerType === 'tutor') {
+            if (!(new TutorPositionAxis($this->pdo))->columnsReady()) {
+                throw new \InvalidArgumentException(
+                    'provider_position_subscriptions 과외쌤 축 미적용 — schema 066을 먼저 적용하세요.',
+                );
+            }
+            if (!$writeTutorAxis) {
+                throw new \InvalidArgumentException('과외쌤 노출상품은 city_id · primary_subject_id가 필요합니다.');
+            }
+        }
 
         if ($this->positionHasProviderColumns()) {
             if ($providerType === null || $providerId === null || $providerId <= 0) {
                 throw new \InvalidArgumentException(
                     'Prime/Pick은 provider_type·provider_id(공부방|과외쌤 계정 문맥)가 필요합니다.',
                 );
+            }
+            if ($writeTutorAxis) {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO provider_position_subscriptions
+                     (user_id, provider_type, provider_id, city_id, primary_subject_id,
+                      sku_code, duration_type, duration_value, period_days,
+                      started_on, end_exclusive_on, starts_at, ends_at, source)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $providerType,
+                    $providerId,
+                    (int) $tutorAxis['city_id'],
+                    (int) $tutorAxis['primary_subject_id'],
+                    $skuCode,
+                    $type,
+                    $value,
+                    (int) $period['period_days'],
+                    (string) $period['started_on'],
+                    (string) $period['end_exclusive_on'],
+                    (string) $period['starts_at'],
+                    (string) $period['ends_at'],
+                    $source,
+                ]);
+
+                return;
             }
             if ($writeRegion) {
                 $stmt = $this->pdo->prepare(
@@ -760,6 +803,73 @@ final class ProviderTicketRepository
             (string) $period['ends_at'],
             $source,
         ]);
+    }
+
+    /**
+     * 종료 전 결제 완료 연장 — 기존 행의 종료만 늘리고 자리는 유지한다.
+     *
+     * @param array{
+     *   duration_type: string,
+     *   duration_value: int,
+     *   started_on: string,
+     *   end_exclusive_on: string,
+     *   period_days: int,
+     *   starts_at: string,
+     *   ends_at: string
+     * } $period
+     */
+    public function extendPositionSubscription(int $subscriptionId, array $period): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE provider_position_subscriptions
+             SET duration_type = ?, duration_value = ?, period_days = ?,
+                 end_exclusive_on = ?, ends_at = ?
+             WHERE id = ? AND CURDATE() < end_exclusive_on'
+        );
+        $stmt->execute([
+            (string) $period['duration_type'],
+            (int) $period['duration_value'],
+            (int) $period['period_days'],
+            (string) $period['end_exclusive_on'],
+            (string) $period['ends_at'],
+            $subscriptionId,
+        ]);
+        if ($stmt->rowCount() < 1) {
+            throw new \InvalidArgumentException(
+                '종료시점 전 결제가 아니어서 연장할 수 없습니다. 종료 후에는 새 자리 확보로 처리됩니다.',
+            );
+        }
+    }
+
+    /**
+     * 노출상품 무료 쪽지 혜택 — 상품 종료·연장 시 잔여 즉시 리셋. 이월 없음.
+     *
+     * @param 'study_room'|'tutor' $providerType
+     */
+    public function expireOpenPositionBundles(
+        string $providerType,
+        int $providerId,
+        ?string $matchingEndExclusiveOn = null,
+    ): int {
+        if (!$this->packHasProfileColumns()) {
+            return 0;
+        }
+        $sql = "UPDATE provider_ticket_packs
+             SET remaining = 0, expires_at = NOW()
+             WHERE ticket_type = 'memo'
+               AND provider_type = ? AND provider_id = ?
+               AND source = ?
+               AND remaining > 0
+               AND expires_at > NOW()";
+        $params = [$providerType, $providerId, MemoTicketPolicy::SOURCE_BUNDLE];
+        if ($matchingEndExclusiveOn !== null && $matchingEndExclusiveOn !== '') {
+            $sql .= ' AND DATE(expires_at) = ?';
+            $params[] = substr($matchingEndExclusiveOn, 0, 10);
+        }
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->rowCount();
     }
 
     private function positionHasProviderColumns(): bool
