@@ -10,6 +10,7 @@ import { getAuthUser, isLoggedIn } from '../auth-session.js';
 import { getPlansPath, getNavRole } from '../state.js';
 import { renderPlansShell, bindPlansShellEvents } from './shell.js';
 import { renderPlansScreen, bindPlansScreenEvents } from './screens.js';
+import { isPaidStorefrontPath, wrapPaidStorefront } from './theme.js';
 import {
   hydratePaidCatalog,
   isCatalogReady,
@@ -40,15 +41,18 @@ function renderPlansLoginGate(message) {
     primaryLabel: '로그인하고 유료상품 열기',
   });
   // 비로그인 유료상품: 우측배너 없음 · 안내박스만 중앙
+  const gateInner = `
+          <div class="site-gate-wrap">
+            ${panel}
+          </div>`;
+  const gateBody = isPaidStorefrontPath(getPlansPath()) ? wrapPaidStorefront(gateInner) : gateInner;
   return `
     ${renderPreviewToolbar()}
     <div class="home-app">
       ${renderHeader(headerRole)}
       <div class="home-body home-body--no-promo">
         <div class="home-main">
-          <div class="site-gate-wrap">
-            ${panel}
-          </div>
+          ${gateBody}
         </div>
       </div>
       ${renderFooter()}
@@ -58,7 +62,7 @@ function renderPlansLoginGate(message) {
 
 function renderCatalogUnavailable(message) {
   return `
-    <section class="mypage-panel" style="max-width:32rem;margin:2rem auto;padding:1.5rem;">
+    <section class="mypage-panel plans-catalog-miss">
       <h1>유료상품</h1>
       <p class="mypage-note" role="alert">상품 가격표를 불러오지 못해 구매를 진행할 수 없습니다.</p>
       <p>${esc(message || '잠시 후 다시 시도해 주세요.')}</p>

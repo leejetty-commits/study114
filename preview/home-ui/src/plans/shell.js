@@ -2,6 +2,7 @@ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, ren
 import { getNavRole } from '../state.js';
 import { renderPlansPageTitle, renderPlansNav } from './nav.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
+import { isPaidStorefrontPath, wrapPaidStorefront } from './theme.js';
 
 /**
  * @param {string} currentPath
@@ -18,7 +19,7 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
   const guestCatalogOnly = Boolean(opts.isGuest);
   const banner = hideNav ? '' : renderHomeMarketingBanner('plans');
 
-  const mainHtml = `
+  const layoutHtml = `
     <div class="sup-layout plans-layout">
       ${banner}
       <header class="sup-content__head">
@@ -33,6 +34,7 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
       <a href="#${sub}" class="sup-back-home" data-nav="${sub}">← 메인 홈으로</a>
     </div>
   `;
+  const mainHtml = isPaidStorefrontPath(currentPath) ? wrapPaidStorefront(layoutHtml) : layoutHtml;
 
   return renderAppShellWithPromo({
     toolbar: renderPreviewToolbar(),
