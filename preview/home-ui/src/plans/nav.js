@@ -49,3 +49,29 @@ export function renderPlansNav(path, opts = {}) {
       </ul>
     </nav>`;
 }
+
+/**
+ * 유료상품 storefront 가로 내비 (positions / access 전용 · 설정형 좌측 nav 대체)
+ * @param {string} path
+ * @param {{ guestCatalogOnly?: boolean }} [opts]
+ */
+export function renderPlansStorefrontNav(path, opts = {}) {
+  const active = getActivePlansNavId(path);
+  const items = PLANS_NAV.filter((n) => n.id === 'positions' || n.id === 'access');
+  void opts;
+  return `
+    <nav class="plans-sf-nav" aria-label="유료상품 storefront">
+      <p class="plans-sf-nav__brand">유료상품</p>
+      <ul class="plans-sf-nav__list">
+        ${items
+          .map(
+            (n) => `
+          <li>
+            <a href="#${n.path}" class="plans-sf-nav__link${active === n.id ? ' is-active' : ''}"
+              data-plans-nav="${n.path}"${active === n.id ? ' aria-current="page"' : ''}>${esc(n.label)}</a>
+          </li>`,
+          )
+          .join('')}
+      </ul>
+    </nav>`;
+}

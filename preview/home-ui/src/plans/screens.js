@@ -642,7 +642,7 @@ function getEligibility(profile, productCode, family = 'position') {
  * @param {import('./profiles.js').ProviderProfile | null} profile
  * @param {string} role
  * @param {{ prime?: object, pick?: object } | null} [slots]
- * @param {{ layout?: 'store'|'compact', primaryCta?: boolean, regionReady?: boolean, embedBoard?: boolean, embedPickPreview?: boolean, selectedOptionId?: string }} [opts]
+ * @param {{ layout?: 'store'|'compact'|'storefront', primaryCta?: boolean, regionReady?: boolean, embedBoard?: boolean, embedPickPreview?: boolean, selectedOptionId?: string }} [opts]
  */
 function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const layout = opts.layout || 'store';
@@ -661,6 +661,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const primaryCta = opts.primaryCta ?? isPrime;
   const displayName =
     product.name || (isPrime ? 'Prime 노출' : isPick ? 'Pick 노출' : productLabel(product.productCode));
+  const isStorefront = layout === 'storefront' || layout === 'compact';
 
   if (!implemented) {
     return `
@@ -686,24 +687,16 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   }
   const missingHtml =
     canPurchaseUi && eligibility.missing.length
-      ? `<ul class="plans-eligibility">${eligibility.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`
+      ? `<ul class="plans-eligibility plans-eligibility--soft">${eligibility.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`
       : '';
 
   const boardHtml = embedBoard && roomPrimeOnly && inv ? renderRoomPrimeBoard(inv.prime) : '';
 
-  const circulationNote = (() => {
-    if (role === 'study_room' && isPick) {
-      return `<p class="plans-card__circ">선택 지역에서 한 페이지에 10개씩 노출되며, 15분마다 공정하게 순환합니다.</p>`;
-    }
-    if (role === 'tutor' && isPrime) {
-      return `<p class="plans-card__circ">선택 시·주력과목의 Prime 영역에 페이지당 3명씩 노출되며, 15분마다 공정하게 순환합니다.</p>`;
-    }
-    if (role === 'tutor' && isPick) {
-      return `<p class="plans-card__circ">선택 시·주력과목에서 한 페이지에 10명씩 노출되며, 15분마다 공정하게 순환합니다.</p>`;
-    }
-    if (role === 'study_room' && isPrime) {
-      return `<p class="plans-card__circ">선택한 단지·행정동의 Prime 대표 자리입니다. 지역별 3자리만 운영합니다.</p>`;
-    }
+  const footNote = (() => {
+    if (role === 'study_room' && isPick) return '선택 지역에서 10개씩 순환 노출';
+    if (role === 'tutor' && isPrime) return '선택 시·주력과목에서 3개씩 순환 노출';
+    if (role === 'tutor' && isPick) return '선택 시·주력과목에서 10개씩 순환 노출';
+    if (role === 'study_room' && isPrime) return '선택 지역의 Prime 대표 노출';
     return '';
   })();
 
@@ -725,7 +718,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const periodOptions = sortPeriodOptions(options);
   const periodReason = !regionReady ? periodDisabledReason(role) : '';
   const periodCards = periodOptions
-    .map((o, i) => {
+    .map((o) => {
       const key = periodKey(o);
       const hint = periodHint(product.productCode, key);
       const amt = resolveCheckoutAmount(o.priceKrw);
@@ -739,12 +732,12 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
             data-product-code="${esc(product.productCode)}"
             ${periodLocked ? 'disabled' : ''}
             aria-pressed="${selected ? 'true' : 'false'}">
+            <span class="plans-period-card__hint">${hint ? esc(hint) : '\u00a0'}</span>
             <span class="plans-period-card__name">${esc(key)}</span>
-            ${hint ? `<span class="plans-period-card__hint">${esc(hint)}</span>` : ''}
-            ${hasDiscount ? `<span class="plans-period-card__list">${esc(formatKrw(o.listPriceKrw))}</span>` : ''}
+            <span class="plans-period-card__list${hasDiscount ? '' : ' is-empty'}">${hasDiscount ? esc(formatKrw(o.listPriceKrw)) : '\u00a0'}</span>
             <strong class="plans-period-card__price">${esc(formatKrw(o.priceKrw))}</strong>
-            ${o.discountLabel ? `<span class="plans-period-card__off">${esc(o.discountLabel)}</span>` : ''}
-            ${memo > 0 ? `<span class="plans-period-card__memo">쪽지권 ${memo}회 포함</span>` : ''}
+            <span class="plans-period-card__off">${o.discountLabel ? esc(o.discountLabel) : '\u00a0'}</span>
+            <span class="plans-period-card__memo">${memo > 0 ? `쪽지권 ${memo}회 포함` : footNote || '\u00a0'}</span>
             ${amt.testMode ? `<span class="plans-period-card__test">시험 ${esc(formatKrw(amt.chargeKrw))}</span>` : ''}
           </button>
         </li>`;
@@ -755,7 +748,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
       <p class="plans-period__label">기간 선택</p>
       <ul class="plans-period-grid">${periodCards}</ul>
       ${periodReason ? `<p class="plans-period__reason">${esc(periodReason)}</p>` : ''}
-      <p class="plans-period__vat">표시가 · VAT 포함 예정</p>
+      <p class="plans-period__vat">표시가 · VAT 포함 예정 · 기간 카드를 누르면 주문 요약에 반영됩니다</p>
       <label class="plans-card__pick plans-card__pick--sr">
         <span class="plans-card__pick-label">기간 선택</span>
         <select data-plans-option="${esc(product.productCode)}" class="student-form__select" ${periodLocked ? 'disabled' : ''}>
@@ -769,8 +762,17 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
       </label>
     </div>`;
 
+  if (isStorefront) {
+    return `
+    <div class="plans-sf-buy plans-catalog__item${soldOut ? ' is-soldout' : ''}${primaryCta ? ' is-primary' : ''}" data-product-code="${esc(product.productCode)}">
+      ${boardHtml}
+      ${pickPreviewHtml}
+      ${optionSelect}
+      ${missingHtml}
+    </div>`;
+  }
+
   const ctaClass = primaryCta ? 'btn btn--primary plans-card__cta' : 'btn btn--secondary plans-card__cta';
-  // 카드는 상품·기간을 주문 요약에 반영. 구매 가드는 요약 CTA.
   const buyBtn = canPurchaseUi
     ? soldOut
       ? `<button type="button" class="btn btn--secondary plans-card__cta" disabled>예약대기만 가능</button>`
@@ -783,10 +785,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
     ? `<span class="plans-card__badge">${esc(product.cardBadge)}</span>`
     : '';
 
-  const media =
-    layout === 'store'
-      ? `<div class="plans-card__media ${productMediaClass(product.productCode)}" aria-hidden="true">${badge}<span class="plans-card__media-ico">${productIcon(product.productCode)}</span></div>`
-      : `<div class="plans-card__icon ${productMediaClass(product.productCode)}" aria-hidden="true">${badge || ''}<span>${productIcon(product.productCode)}</span></div>`;
+  const media = `<div class="plans-card__media ${productMediaClass(product.productCode)}" aria-hidden="true">${badge}<span class="plans-card__media-ico">${productIcon(product.productCode)}</span></div>`;
 
   return `
     <li class="plans-card plans-card--${layout} plans-catalog__item${product.featured ? ' is-featured' : ''}${soldOut ? ' is-soldout' : ''}${primaryCta ? ' is-primary' : ''}" data-product-code="${esc(product.productCode)}">
@@ -794,7 +793,6 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
       <div class="plans-card__body">
         <h3 class="plans-card__name">${esc(displayName)}</h3>
         <p class="plans-card__hook">${esc(product.tagline)}</p>
-        ${circulationNote}
         ${boardHtml}
         ${pickPreviewHtml}
         <ul class="plans-card__checks">
@@ -869,9 +867,20 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
       const selected = selectedOptionId
         ? o.optionId === selectedOptionId
         : !packLocked && (isImmediate && packPurchaseBlocked ? true : options.indexOf(o) === 0);
-      const saveNote =
-        Number(o.creditCount) === 5 ? '10% 절약' : Number(o.creditCount) === 10 ? '20% 절약' : '';
-      const meta = isImmediate ? '결제 후 바로 발송' : '구매일부터 120일';
+      const per =
+        countNum > 0 && Number.isFinite(Number(o.priceKrw))
+          ? Math.round(Number(o.priceKrw) / countNum)
+          : 0;
+      const savePct =
+        Number(o.creditCount) === 5 ? 10 : Number(o.creditCount) === 10 ? 20 : 0;
+      const saveNote = savePct
+        ? `회당 ${formatKrw(per)} · ${savePct}% 절약`
+        : isImmediate
+          ? '\u00a0'
+          : '';
+      const meta = isImmediate
+        ? '결제 후 바로 발송 · 남은 횟수로 보관되지 않습니다'
+        : '구매일부터 120일';
       const lock =
         packLocked && activePaidPack
           ? `<span class="plans-ticket-card__lock">구매할 수 없습니다. 사용 중인 묶음권의 남은 횟수를 모두 쓰거나 사용기한이 지난 뒤 구매하세요.</span>`
@@ -888,9 +897,9 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
             <span class="plans-ticket-card__count" aria-hidden="true">${esc(String(countNum))}회</span>
             <strong class="plans-ticket-card__name">${esc(name)}</strong>
             <span class="plans-ticket-card__price">${esc(priceNote)}</span>
-            ${saveNote ? `<span class="plans-ticket-card__save">${esc(saveNote)}</span>` : ''}
-            <span class="plans-ticket-card__meta">${esc(meta)}</span>
+            <span class="plans-ticket-card__save">${saveNote ? esc(saveNote) : '\u00a0'}</span>
             ${lock}
+            <span class="plans-ticket-card__meta">${esc(meta)}</span>
           </button>
         </li>`;
     })
@@ -1083,8 +1092,6 @@ export function renderPlansPositions() {
   const products = getCatalogByFamily('position', providerKey);
   const ops = getPaidOperationalStatus();
   const slots = role === 'study_room' ? ops?.slots ?? null : null;
-  const settings = getPlanRuntimeSettings();
-  const scopeLabel = settings.region_scope_type === 'complex' ? '단지' : '행정동';
   const canBuy = role === 'study_room' || role === 'tutor';
   const selectedCode = query.product || products[0]?.productCode || 'prime';
   const selectedProduct = products.find((p) => p.productCode === selectedCode) || products[0];
@@ -1163,18 +1170,6 @@ export function renderPlansPositions() {
     badgeLines,
     badgeSumText: formatKrw(badgeSum),
   });
-  const guideItems =
-    role === 'tutor'
-      ? [
-          { icon: '①', text: 'Prime 핵심 노출 · 시·주력과목 페이지당 3명 · 15분 공정 순환' },
-          { icon: '②', text: 'Pick 추천 노출 · 페이지당 10명 · 15분 공정 순환' },
-          { icon: '③', text: '둘 다 순환형입니다. 숫자 페이지로 넘기며, 자리 점유가 아닙니다. 점유·예약대기 UI는 과외쌤에 적용되지 않습니다' },
-        ]
-      : [
-          { icon: '①', text: `Prime 노출 · ${scopeLabel}별 실제 3자리 · 왼쪽부터 자동 배정` },
-          { icon: '②', text: `Pick 노출 · 페이지당 ${settings.pick_set_size || 10}개 · ${settings.pick_rotation_minutes || 15}분 순환` },
-          { icon: '③', text: '만석 시 예약대기만 · 순번·경쟁업체는 공개하지 않습니다' },
-        ];
   const primeProduct = products.find((p) => p.productCode === 'prime');
   const pickProduct = products.find((p) => p.productCode === 'pick');
   const restProducts = products.filter((p) => p.productCode !== 'prime' && p.productCode !== 'pick');
@@ -1205,30 +1200,27 @@ export function renderPlansPositions() {
           : isTutorPick
             ? renderTutorPickCirculation()
             : '';
-    const lifted = isRoomPrime || isRoomPick || isTutorPrime || isTutorPick;
     return `
-      <section class="plans-storefront__offer${offerMod} plans-section" data-plans-offer="${esc(product.productCode)}">
-        <div class="plans-section__head">
-          <h3 class="plans-section__title">${esc(name)}</h3>
-          <p class="plans-section__lead">${esc(lead)}</p>
-        </div>
-        ${structureHtml}
-        <ul class="plans-card-grid plans-card-grid--1${lifted ? '' : ' plans-card-grid--store'}">
-          ${renderPositionCard(product, profile, role, slots, {
-            layout: lifted ? 'compact' : 'store',
+      <section class="plans-storefront__offer${offerMod} plans-sf-panel" data-plans-offer="${esc(product.productCode)}">
+        <header class="plans-sf-panel__head">
+          <h2 class="plans-sf-panel__title">${esc(name)}</h2>
+          <p class="plans-sf-panel__lead">${esc(lead)}</p>
+        </header>
+        ${renderPositionCard(product, profile, role, slots, {
+            layout: 'storefront',
             primaryCta: isSelectedOffer(product, index),
             regionReady: applyReady,
-            embedBoard: !isRoomPrime && !isTutorPrime,
-            embedPickPreview: !isRoomPick && !isTutorPick,
+            embedBoard: false,
+            embedPickPreview: false,
             selectedOptionId: product.productCode === selectedCode ? selectedOption?.optionId || '' : '',
           })}
-        </ul>
+        ${structureHtml}
       </section>`;
   };
 
   return `
-    <section class="mypage-panel plans-store plans-storefront">
-      <div class="plans-storefront__intro">
+    <section class="plans-store plans-storefront plans-sf" data-plans-positions>
+      <header class="plans-sf-hero">
         ${renderPlansHero({
           eyebrow: 'PAID PRODUCTS',
           title: '노출상품',
@@ -1236,7 +1228,7 @@ export function renderPlansPositions() {
           sub: 'Prime 노출과 Pick 노출은 홈·찾기 화면에서 프로필을 더 잘 발견할 수 있도록 돕는 유료 노출상품입니다.',
         })}
         ${renderBasicFreeRow()}
-      </div>
+      </header>
 
       <div class="plans-storefront__body">
         <div class="plans-storefront__catalog">
@@ -1246,14 +1238,14 @@ export function renderPlansPositions() {
                   primeProduct,
                   role === 'tutor'
                     ? '선택한 시와 주력과목의 Prime 영역에 페이지당 3명씩 노출되며, 15분마다 공정하게 순환합니다.'
-                    : '홈과 관련 찾기 화면의 Prime 영역에서 아래 형태로 노출됩니다.',
+                    : '선택한 단지·행정동의 Prime 대표 자리를 확보하세요. Prime은 선택 지역에서 3개만 운영하는 한정 대표 노출입니다.',
                   0,
                 )}
           ${renderOffer(
             pickProduct,
             role === 'tutor'
               ? '한 페이지에 10명씩 노출되며, 15분마다 공정하게 순환합니다.'
-              : '홈과 관련 찾기 화면의 Pick 영역에서 아래 형태로 노출됩니다.',
+              : '선택한 지역의 추천 영역에서 고르게 발견되세요. 한 페이지에 10개씩 노출되며, 15분마다 공정하게 순환합니다.',
             primeProduct ? 1 : 0,
           )}
           ${restProducts
@@ -1261,7 +1253,7 @@ export function renderPlansPositions() {
               renderOffer(p, p.tagline || p.name || productLabel(p.productCode), (primeProduct ? 1 : 0) + (pickProduct ? 1 : 0) + i),
             )
             .join('')}`
-              : `<div class="mypage-info-box" role="status">표시할 노출상품이 없습니다. 카탈로그를 다시 불러와 주세요.</div>`
+              : `<div class="plans-sf-empty" role="status">표시할 노출상품이 없습니다. 카탈로그를 다시 불러와 주세요.</div>`
           }
 
           ${renderBadgeAddonSection(role, ops, {
@@ -1278,12 +1270,6 @@ export function renderPlansPositions() {
 
         <div class="plans-storefront__aux">
           ${renderApplyTargetBlock(profile, role, 'positions')}
-          ${renderGuideBox({
-            title: role === 'tutor' ? '과외쌤 노출 방식' : `공부방 Prime · ${scopeLabel}`,
-            icon: '📍',
-            variant: role === 'tutor' ? 'guide' : 'slot',
-            items: guideItems,
-          })}
         </div>
 
         <aside class="plans-storefront__summary" aria-label="주문 요약">
@@ -1367,80 +1353,87 @@ export function renderPlansAccess() {
   ];
 
   return `
-    <section class="mypage-panel plans-store" data-plans-access>
-      <div class="plans-hero-row">
+    <section class="plans-store plans-storefront plans-sf plans-sf--access" data-plans-access>
+      <header class="plans-sf-hero">
         ${renderPlansHero({
+          eyebrow: 'PAID PRODUCTS',
           title: '공부방·과외쌤 쪽지권',
-          chips: [
-            { label: '노출상품', href: '/plans/positions' },
-            { label: '쪽지권', href: '/plans/access', active: true },
-          ],
+          lead: '',
         })}
+      </header>
+
+      <div class="plans-storefront__body">
+        <div class="plans-storefront__catalog">
+          <section class="plans-access-explain" aria-label="쪽지권 핵심 안내">
+            <strong class="plans-access-explain__lead">학생에게 먼저 보내는 첫 쪽지만 차감됩니다</strong>
+            <ul class="plans-access-explain__list">
+              <li>학생에게 먼저 보내는 첫 쪽지만 차감됩니다.</li>
+              <li>같은 대화방에서 주고받는 후속 쪽지는 모두 무료입니다.</li>
+              <li>학생·학부모가 먼저 보낸 쪽지와 그에 대한 답장도 무료입니다.</li>
+            </ul>
+          </section>
+
+          ${renderAccessAuxLinks()}
+
+          ${role === 'tutor' || role === 'study_room' ? renderApplyTargetBlock(profile, role, 'access') : ''}
+          ${role === 'guest' || role === 'parent' ? renderProfileBanner(null, role) : ''}
+          ${
+            syncLoading || syncPending
+              ? `<p class="plans-sf-status" data-plans-access-status="loading">쪽지권 상태를 확인하는 중입니다. 5회권·10회권 구매는 잠시 후 가능합니다.</p>`
+              : ''
+          }
+          ${
+            syncError
+              ? `<p class="plans-sf-status plans-sf-status--error" role="alert" data-plans-access-status="error">쪽지권 상태를 불러오지 못해 5회권·10회권 구매를 막았습니다. <button type="button" class="btn btn--secondary btn--sm" data-plans-access-retry>다시 시도</button></p>`
+              : ''
+          }
+
+          <section class="plans-sf-panel plans-ticket-select">
+            <header class="plans-sf-panel__head">
+              <h2 class="plans-sf-panel__title">쪽지권 선택</h2>
+              <p class="plans-sf-panel__lead">1회 즉시권 · 5회권 · 10회권 중 필요한 만큼만 선택하세요.</p>
+            </header>
+            ${
+              activePaidPack
+                ? `<div class="plans-access-hold" data-plans-access-status="active-pack" role="status">
+              <p>사용 중인 쪽지권이 있습니다. 남은 횟수를 모두 사용하거나 사용기한이 지난 뒤 새 묶음권을 구매할 수 있습니다.</p>
+              <p>5회권과 10회권은 지금 살 수 없습니다. 1회 즉시권은 계속 구매할 수 있습니다.</p>
+              <p class="plans-access-hold__nav"><a class="plans-access-aux__link" href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 쪽지권 보기</a></p>
+            </div>`
+                : ''
+            }
+            ${products
+              .map((p) =>
+                renderAccessCard(p, profile, role, {}, {
+                  embed: 'grid',
+                  activePaidPack,
+                  packPurchaseBlocked,
+                  selectedOptionId: selectedOpt?.optionId || query.option || '',
+                }),
+              )
+              .join('')}
+            ${renderAccessPurchaseCheck()}
+          </section>
+        </div>
+
+        <aside class="plans-storefront__summary" aria-label="주문 요약">
+          ${renderOrderSummaryBlock({
+            family: 'access',
+            rows: summaryRows,
+            totalLabel: '결제 예정(표시가)',
+            totalValue: selectedOpt
+              ? formatKrw(resolveCheckoutAmount(selectedOpt.priceKrw).displayKrw)
+              : '—',
+            ctaDisabled: !canBuy,
+            ctaLabel: selectedPackLocked ? '묶음권 이용 중' : '구매하기',
+          })}
+        </aside>
       </div>
 
-      <section class="plans-section plans-access-explain" aria-label="쪽지권 핵심 안내">
-        <p class="plans-access-explain__lead"><strong>학생에게 먼저 보내는 첫 쪽지만 차감됩니다.</strong></p>
-        <ul class="plans-access-explain__list">
-          <li>같은 대화방의 후속 쪽지는 무료입니다.</li>
-          <li>학생·학부모가 먼저 보낸 쪽지와 답장은 무료입니다.</li>
-        </ul>
-      </section>
-
-      ${renderAccessAuxLinks()}
-
-      ${role === 'tutor' || role === 'study_room' ? renderApplyTargetBlock(profile, role, 'access') : ''}
-      ${role === 'guest' || role === 'parent' ? renderProfileBanner(null, role) : ''}
-      ${
-        syncLoading || syncPending
-          ? `<p class="mypage-info-box" data-plans-access-status="loading">쪽지권 상태를 확인하는 중입니다. 5회권·10회권 구매는 잠시 후 가능합니다.</p>`
-          : ''
-      }
-      ${
-        syncError
-          ? `<p class="mypage-info-box" role="alert" data-plans-access-status="error">쪽지권 상태를 불러오지 못해 5회권·10회권 구매를 막았습니다. <button type="button" class="btn btn--secondary btn--sm" data-plans-access-retry>다시 시도</button></p>`
-          : ''
-      }
-
-      <section class="plans-section plans-ticket-select">
-        <div class="plans-section__head">
-          <h3 class="plans-section__title">쪽지권 선택</h3>
-        </div>
-        ${
-          activePaidPack
-            ? `<div class="plans-access-hold" data-plans-access-status="active-pack" role="status">
-          <p>사용 중인 쪽지권이 있습니다. 남은 횟수를 모두 사용하거나 사용기한이 지난 뒤 새 묶음권을 구매할 수 있습니다.</p>
-          <p>5회권과 10회권은 지금 살 수 없습니다. 1회 즉시권은 계속 구매할 수 있습니다.</p>
-          <p class="plans-access-hold__nav"><a class="plans-access-aux__link" href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 쪽지권 보기</a></p>
-        </div>`
-            : ''
-        }
-        ${products
-          .map((p) =>
-            renderAccessCard(p, profile, role, {}, {
-              embed: 'grid',
-              activePaidPack,
-              packPurchaseBlocked,
-              selectedOptionId: selectedOpt?.optionId || query.option || '',
-            }),
-          )
-          .join('')}
-      </section>
-
-      ${renderAccessPurchaseCheck()}
-
-      ${renderOrderSummaryBlock({
-        family: 'access',
-        rows: summaryRows,
-        totalLabel: '결제 예정(표시가)',
-        totalValue: selectedOpt
-          ? formatKrw(resolveCheckoutAmount(selectedOpt.priceKrw).displayKrw)
-          : '—',
-        ctaDisabled: !canBuy,
-        ctaLabel: selectedPackLocked ? '묶음권 이용 중' : '구매하기',
-      })}
-
-      ${renderPolicyAccordion('access')}
-      ${role === 'tutor' || role === 'study_room' ? renderTestModeToggle() : ''}
+      <div class="plans-storefront__foot">
+        ${renderPolicyAccordion('access')}
+        ${role === 'tutor' || role === 'study_room' ? renderTestModeToggle() : ''}
+      </div>
     </section>`;
 }
 

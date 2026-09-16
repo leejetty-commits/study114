@@ -47,9 +47,10 @@ function renderPlansLoginGate(message) {
             ${panel}
           </div>`;
   const gateBody = isPaidStorefrontPath(getPlansPath()) ? wrapPaidStorefront(gateInner) : gateInner;
+  const appCls = isPaidStorefrontPath(getPlansPath()) ? 'home-app home-app--plans-sf' : 'home-app';
   return `
     ${renderPreviewToolbar()}
-    <div class="home-app">
+    <div class="${appCls}">
       ${renderHeader(headerRole)}
       <div class="home-body home-body--no-promo">
         <div class="home-main">

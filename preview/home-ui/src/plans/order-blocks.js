@@ -165,21 +165,21 @@ export function getApplyTargetReadiness(profile, role) {
 export function renderApplyTargetBlock(profile, role, page = 'positions') {
   if (role !== 'study_room' && role !== 'tutor') {
     return `
-      <section class="plans-section plans-apply-target" data-plans-apply>
-        <div class="plans-section__head">
-          <h3 class="plans-section__title">적용 대상</h3>
-          <p class="plans-section__lead">구매는 공급자 로그인·프로필 선택 후 진행합니다.</p>
-        </div>
+      <section class="plans-sf-panel plans-apply-target" data-plans-apply>
+        <header class="plans-sf-panel__head">
+          <h2 class="plans-sf-panel__title">적용 대상</h2>
+          <p class="plans-sf-panel__lead">구매는 공급자 로그인·프로필 선택 후 진행합니다.</p>
+        </header>
       </section>`;
   }
 
   if (!profile) {
     return `
-      <section class="plans-section plans-apply-target" data-plans-apply>
-        <div class="plans-section__head">
-          <h3 class="plans-section__title">적용 대상</h3>
-          <p class="plans-section__lead">적용할 프로필을 먼저 선택하세요. 상품 소개는 위에서 확인할 수 있습니다.</p>
-        </div>
+      <section class="plans-sf-panel plans-apply-target" data-plans-apply>
+        <header class="plans-sf-panel__head">
+          <h2 class="plans-sf-panel__title">적용 대상</h2>
+          <p class="plans-sf-panel__lead">적용할 프로필을 먼저 선택하세요. 상품 소개는 위에서 확인할 수 있습니다.</p>
+        </header>
       </section>`;
   }
 
@@ -187,11 +187,11 @@ export function renderApplyTargetBlock(profile, role, page = 'positions') {
 
   if (page === 'access') {
     return `
-      <section class="plans-section plans-apply-target plans-apply-target--compact" data-plans-apply>
-        <div class="plans-section__head">
-          <h3 class="plans-section__title">적용 프로필 확인</h3>
-          <p class="plans-section__lead">쪽지권은 선택한 프로필에 적용됩니다. 지역 선택은 없습니다.</p>
-        </div>
+      <section class="plans-sf-panel plans-apply-target plans-apply-target--compact" data-plans-apply>
+        <header class="plans-sf-panel__head">
+          <h2 class="plans-sf-panel__title">적용 프로필 확인</h2>
+          <p class="plans-sf-panel__lead">쪽지권은 선택한 프로필에 적용됩니다. 지역 선택은 없습니다.</p>
+        </header>
         <p class="plans-apply-target__profile"><strong>${profileLine}</strong></p>
       </section>`;
   }
@@ -222,7 +222,7 @@ export function renderApplyTargetBlock(profile, role, page = 'positions') {
           })
           .join('')}
       </div>`
-    : `<p class="mypage-muted plans-apply-target__warn">적용 지역이 없습니다. 상세등록에서 ${
+    : `<p class="plans-muted plans-apply-target__warn">적용 지역이 없습니다. 상세등록에서 ${
         profile.providerType === 'study_room' ? '대표 홍보지역(행정동·단지 ID)' : '활동지역 시 1·2·3'
       }을 먼저 설정해 주세요.</p>`;
 
@@ -230,26 +230,26 @@ export function renderApplyTargetBlock(profile, role, page = 'positions') {
     profile.providerType === 'tutor'
       ? subjectLine
         ? `<p class="plans-apply-target__subject">주력과목 · <strong>${esc(subjectLine)}</strong> · 기본등록 값으로 자동 연결됩니다</p>`
-        : `<p class="mypage-muted plans-apply-target__warn">주력과목이 없습니다. 상세등록에서 주력과목 1개를 선택해 주세요.</p>`
+        : `<p class="plans-muted plans-apply-target__warn">주력과목이 없습니다. 상세등록에서 주력과목 1개를 선택해 주세요.</p>`
       : '';
 
   return `
-    <section class="plans-section plans-apply-target" data-plans-apply data-region-ready="${regionReady ? '1' : '0'}">
-      <div class="plans-section__head">
-        <h3 class="plans-section__title">적용 대상</h3>
-        <p class="plans-section__lead">상품을 고른 뒤, 적용할 프로필과 지역을 확인합니다.</p>
-      </div>
+    <section class="plans-sf-panel plans-apply-target" data-plans-apply data-region-ready="${regionReady ? '1' : '0'}">
+      <header class="plans-sf-panel__head">
+        <h2 class="plans-sf-panel__title">적용 대상</h2>
+        <p class="plans-sf-panel__lead">상품을 고른 뒤, 적용할 프로필과 지역을 확인합니다.</p>
+      </header>
       <p class="plans-apply-target__profile"><strong>${profileLine}</strong></p>
       ${subjectHtml}
       ${regionHtml}
       ${
         !regionReady
-          ? `<p class="plans-eligibility"><span>지역${
+          ? `<p class="plans-eligibility plans-eligibility--soft"><span>지역${
               profile.providerType === 'tutor' ? '·주력과목' : ''
             }이 정해지기 전에는 기간 선택과 구매를 진행할 수 없습니다.</span></p>`
           : ''
       }
-      <p class="mypage-muted" style="margin-top:0.5rem">
+      <p class="plans-muted plans-apply-target__edit">
         <a href="#/mypage/registrations" data-nav="/mypage/registrations">상세등록에서 지역·과목 수정</a>
       </p>
     </section>`;
@@ -307,11 +307,11 @@ export function renderOrderSummaryBlock(opts) {
   const ctaDisabled = Boolean(opts.ctaDisabled);
   const ctaLabel = opts.ctaLabel || '구매하기';
   return `
-    <section class="plans-section plans-order-summary" data-plans-order-summary data-family="${esc(opts.family)}">
-      <div class="plans-section__head">
-        <h3 class="plans-section__title">주문 요약</h3>
-        <p class="plans-section__lead">결제 금액은 서버 카탈로그 기준으로 다시 확인됩니다.</p>
-      </div>
+    <section class="plans-sf-panel plans-order-summary" data-plans-order-summary data-family="${esc(opts.family)}">
+      <header class="plans-sf-panel__head">
+        <h2 class="plans-sf-panel__title">주문 요약</h2>
+        <p class="plans-sf-panel__lead">결제 금액은 서버 카탈로그 기준으로 다시 확인됩니다.</p>
+      </header>
       <dl class="plans-order-summary__list">
         ${rows
           .map(
@@ -328,7 +328,7 @@ export function renderOrderSummaryBlock(opts) {
           ? `<p class="plans-order-summary__total"><span>${esc(opts.totalLabel)}</span><strong data-plans-order-total>${esc(opts.totalValue || '—')}</strong></p>`
           : ''
       }
-      <p class="mypage-muted plans-order-summary__note">${esc(
+      <p class="plans-muted plans-order-summary__note">${esc(
         opts.note || '자동연장 없음 · 표시가는 참고이며 결제 직전 서버가 재검증합니다.',
       )}</p>
       ${
@@ -341,12 +341,12 @@ export function renderOrderSummaryBlock(opts) {
 
 export function renderAccessPurchaseCheck() {
   return `
-    <section class="plans-section plans-purchase-check" data-plans-purchase-check>
-      <div class="plans-section__head">
-        <h3 class="plans-section__title">구매 전 확인</h3>
-      </div>
+    <section class="plans-purchase-check" data-plans-purchase-check>
+      <header class="plans-sf-panel__head">
+        <h2 class="plans-sf-panel__title">구매 전 확인</h2>
+      </header>
       <p>5회권과 10회권은 구매일부터 120일 동안 사용할 수 있습니다. 사용 중인 유료 묶음권은 중복 구매할 수 없으니 예상 사용량을 확인하고 필요한 만큼만 구매하세요.</p>
-      <p class="mypage-muted">사용기한이 지나면 남은 횟수는 소멸하며 환불·연장되지 않습니다.</p>
+      <p class="plans-muted">사용기한이 지나면 남은 횟수는 소멸하며 환불·연장되지 않습니다.</p>
     </section>`;
 }
 
