@@ -29,7 +29,7 @@ import {
 import { ensureStudyRoomStore } from '../study-room-reg/index.js';
 import { ensureTutorStore } from '../tutor-reg/index.js';
 import { getPublishReadiness as getRoomReadiness, getStudyRoom } from '../study-room-reg/store.js';
-import { getPublishReadiness as getTutorReadiness, getTutor } from '../tutor-reg/store.js';
+import { getTutor } from '../tutor-reg/store.js';
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
 import {
   getCatalogByFamily,
@@ -74,10 +74,8 @@ import {
   renderPlansHero,
   renderGuideBox,
   renderFreePaidCompare,
-  renderAccessCompare,
   renderPlansCtaBanner,
   renderBadgeAddonSection,
-  formatCardPrice,
   productMediaClass,
   productIcon,
 } from './store-ui.js';
@@ -85,11 +83,20 @@ import {
   renderApplyTargetBlock,
   getApplyTargetReadiness,
   renderOrderSummaryBlock,
+  buildPositionOrderRows,
   renderAccessPurchaseCheck,
   renderPolicyAccordion,
   renderBasicFreeRow,
   renderAccessAuxLinks,
 } from './order-blocks.js';
+import { sanitizeBadgeCodes, applyBadgeQuery, badgeDisplayName } from './badge-options.js';
+import {
+  sortPeriodOptions,
+  periodKey,
+  periodHint,
+  previewInclusiveRange,
+  periodDisabledReason,
+} from './period-cards.js';
 
 /** @param {ParentNode} [root] */
 function readSelectedPrimeRegion(root = document) {
@@ -98,10 +105,21 @@ function readSelectedPrimeRegion(root = document) {
   if (!(el instanceof HTMLInputElement)) {
     return null;
   }
+  const cityId = el.getAttribute('data-city-id') || '';
   const basis = el.getAttribute('data-region-basis') || '';
   const regionId = el.getAttribute('data-region-id') || '';
   const complexId = el.getAttribute('data-complex-id') || '';
   const label = el.value || el.nextElementSibling?.textContent || '';
+  if (cityId) {
+    return {
+      cityId,
+      regionLabel: label,
+      slotGroup: label,
+      regionBasisType: '',
+      regionId: '',
+      complexId: '',
+    };
+  }
   if (basis !== 'dong' && basis !== 'complex') return null;
   if (basis === 'complex' && !complexId) return null;
   if (basis === 'dong' && !regionId) return null;
@@ -111,6 +129,7 @@ function readSelectedPrimeRegion(root = document) {
     complexId,
     slotGroup: label,
     regionLabel: label,
+    cityId: '',
   };
 }
 
@@ -128,6 +147,70 @@ let plansStatusSync = { key: '', phase: 'idle', error: null, route: '' };
 
 /** 같은 hash 재렌더에서 중복 hydrate 방지. 라우트를 벗어나면 비운다. */
 let lastPlansHydratedHash = '';
+
+/** checkout 진입 시 서버 quote만 받고 권리는 선점하지 않는다. */
+let checkoutQuoteKey = '';
+let checkoutQuotePhase = 'idle';
+
+function checkoutQuoteContext(draft) {
+  return {
+    providerType: draft.providerType,
+    providerId: draft.providerId,
+    badgeCodes: Array.isArray(draft.badgeCodes) ? draft.badgeCodes : [],
+    regionBasisType: draft.regionBasisType,
+    regionId: draft.regionId,
+    complexId: draft.complexId,
+    slotGroup: draft.slotGroup,
+    regionLabel: draft.regionLabel,
+    cityId: draft.cityId,
+    primarySubjectId: draft.primarySubjectId,
+  };
+}
+
+/** @param {() => void} rerender */
+function scheduleCheckoutServerQuote(rerender) {
+  const draft = getCheckoutDraft();
+  if (!draft) return;
+  const isPosition = draft.productCode === 'prime' || draft.productCode === 'pick';
+  if (!isPosition) return;
+  const key = [
+    draft.providerType,
+    draft.providerId,
+    draft.productCode,
+    draft.apiVariant,
+    (draft.badgeCodes || []).join(','),
+    draft.cityId || '',
+    draft.regionId || '',
+    draft.complexId || '',
+  ].join('|');
+  if (checkoutQuoteKey === key && checkoutQuotePhase !== 'idle') return;
+  checkoutQuoteKey = key;
+  checkoutQuotePhase = 'loading';
+  createPaidCheckout(draft.productCode, draft.apiVariant, checkoutQuoteContext(draft))
+    .then((created) => {
+      checkoutQuotePhase = 'ready';
+      const cur = getCheckoutDraft();
+      if (!cur) return;
+      const snap = created.price_snapshot && typeof created.price_snapshot === 'object' ? created.price_snapshot : {};
+      setCheckoutDraft({
+        ...cur,
+        orderRef: created.order_ref,
+        serverAmountWon: Number(created.amount_won),
+        serverBadgeSaleKrw: Number(created.badge_sale_krw || 0),
+        serverPositionSaleKrw: Number(snap.position_sale_krw != null ? snap.position_sale_krw : created.amount_won),
+        startedOn: created.started_on || '',
+        endsOn: created.ends_on || '',
+        cityId: created.city_id || cur.cityId,
+        primarySubjectId: created.primary_subject_id || cur.primarySubjectId,
+        memoBundle: created.memo_bundle != null ? Number(created.memo_bundle) : cur.memoBundle,
+      });
+      rerender();
+    })
+    .catch(() => {
+      checkoutQuoteKey = '';
+      checkoutQuotePhase = 'idle';
+    });
+}
 
 /** @param {import('./profiles.js').ProviderProfile | null} profile */
 export function accessProfileKey(profile) {
@@ -342,6 +425,78 @@ function renderRoomPickPreview() {
     </div>`;
 }
 
+/** T1 과외쌤 circulation 미리보기 (점유·만석·예약대기 없음) */
+const TUTOR_PRIME_PREVIEW_TILES = [
+  { name: '김○○', subject: '수학 · 고등학교', stats: '추천 28 · 후기 19' },
+  { name: '이○○', subject: '영어 · 고등학교', stats: '추천 21 · 후기 14' },
+  { name: '박○○', subject: '국어 · 중학교', stats: '추천 17 · 후기 11' },
+];
+
+const TUTOR_PICK_PREVIEW_TILES = [
+  { name: '김○○', subject: '수학 · 고등학교', stats: '추천 28 · 후기 19' },
+  { name: '이○○', subject: '영어 · 고등학교', stats: '추천 21 · 후기 14' },
+  { name: '박○○', subject: '국어 · 중학교', stats: '추천 17 · 후기 11' },
+  { name: '최○○', subject: '과학 · 고등학교', stats: '추천 15 · 후기 9' },
+  { name: '정○○', subject: '논술 · 고등학교', stats: '추천 24 · 후기 16' },
+  { name: '강○○', subject: '수학 · 중학교', stats: '추천 19 · 후기 12' },
+  { name: '윤○○', subject: '영어 · 중학교', stats: '추천 13 · 후기 8' },
+  { name: '장○○', subject: '사회 · 고등학교', stats: '추천 22 · 후기 15' },
+  { name: '임○○', subject: '코딩 · 고등학교', stats: '추천 18 · 후기 10' },
+  { name: '한○○', subject: '국어 · 고등학교', stats: '추천 31 · 후기 22' },
+];
+
+function renderTutorCircPager() {
+  return `<nav class="plans-tutor-circ__pager" aria-label="페이지">
+        <span class="is-current" aria-current="page">1</span><span>2</span><span>3</span>
+      </nav>`;
+}
+
+function renderTutorCircTiles(tiles, prefix) {
+  return tiles
+    .map(
+      (p, i) => `
+          <li class="plans-tutor-circ__tile" aria-label="${prefix} 미리보기 ${i + 1}">
+            <span class="plans-tutor-circ__thumb" aria-hidden="true">${prefix}${i + 1}</span>
+            <span class="plans-tutor-circ__name">${esc(p.name)}</span>
+            <span class="plans-tutor-circ__subject">${esc(p.subject)}</span>
+            <span class="plans-tutor-circ__stats">${esc(p.stats)}</span>
+          </li>`,
+    )
+    .join('');
+}
+
+function renderTutorPrimeCirculation() {
+  return `
+    <div class="plans-tutor-circ plans-tutor-circ--prime" aria-label="Prime 노출 미리보기 페이지당 3명">
+      <div class="plans-tutor-circ__head">
+        <span class="plans-tutor-circ__kicker">핵심 노출 · 순환형</span>
+        <span class="plans-tutor-circ__count">3 / page</span>
+      </div>
+      <p class="plans-tutor-circ__title">Prime 순환 미리보기 · 페이지당 3명</p>
+      <p class="plans-tutor-circ__rotate">선택 시·주력과목 앞쪽 노출 · 15분마다 공정 순환 · 페이지 넘김</p>
+      <ul class="plans-tutor-circ__grid">
+        ${renderTutorCircTiles(TUTOR_PRIME_PREVIEW_TILES, 'T')}
+      </ul>
+      ${renderTutorCircPager()}
+    </div>`;
+}
+
+function renderTutorPickCirculation() {
+  return `
+    <div class="plans-tutor-circ plans-tutor-circ--pick" aria-label="Pick 노출 미리보기 페이지당 10명">
+      <div class="plans-tutor-circ__head">
+        <span class="plans-tutor-circ__kicker">추천 노출 · 순환형</span>
+        <span class="plans-tutor-circ__count">10 / page</span>
+      </div>
+      <p class="plans-tutor-circ__title">Pick 순환 미리보기 · 페이지당 10명</p>
+      <p class="plans-tutor-circ__rotate">선택 시·주력과목 추천 노출 · 15분마다 공정 순환 · 페이지 넘김</p>
+      <ul class="plans-tutor-circ__grid">
+        ${renderTutorCircTiles(TUTOR_PICK_PREVIEW_TILES, 'P')}
+      </ul>
+      ${renderTutorCircPager()}
+    </div>`;
+}
+
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 }
@@ -472,17 +627,11 @@ function getEligibility(profile, productCode, family = 'position') {
     if (!tutor) {
       return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
     }
-    const readiness = getTutorReadiness(tutor);
     if (tutor.profile_status !== 'published') {
       missing.push('공개(published) 상태가 필요합니다');
       canBuy = false;
     }
-    if (productCode === 'prime' || productCode === 'pick') {
-      if (!readiness.canPublish) {
-        missing.push(...(readiness.missing || ['상세등록 완료가 필요합니다']));
-        canBuy = false;
-      }
-    }
+    // 과외쌤 구매 차단은 노출축(시·주력과목)만. 소개문·카드 카피 완성도는 성과 불이익.
   }
 
   return { canBuy, missing: [...new Set(missing)] };
@@ -493,7 +642,7 @@ function getEligibility(profile, productCode, family = 'position') {
  * @param {import('./profiles.js').ProviderProfile | null} profile
  * @param {string} role
  * @param {{ prime?: object, pick?: object } | null} [slots]
- * @param {{ layout?: 'store'|'compact', primaryCta?: boolean, regionReady?: boolean, embedBoard?: boolean, embedPickPreview?: boolean, selectedOptionId?: string }} [opts]
+ * @param {{ layout?: 'store'|'compact'|'storefront', primaryCta?: boolean, regionReady?: boolean, embedBoard?: boolean, embedPickPreview?: boolean, selectedOptionId?: string }} [opts]
  */
 function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const layout = opts.layout || 'store';
@@ -507,12 +656,12 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const inv = roomPrimeOnly ? resolveRoomPrimeInventory(slots) : null;
   const slot = roomPrimeOnly && inv ? getSlotForProduct(product.productCode, inv, role) : null;
   const soldOut = roomPrimeOnly && slot != null && slot.remaining <= 0;
-  const price = formatCardPrice(product);
   const isPrime = product.productCode === 'prime';
   const isPick = product.productCode === 'pick';
   const primaryCta = opts.primaryCta ?? isPrime;
   const displayName =
     product.name || (isPrime ? 'Prime 노출' : isPick ? 'Pick 노출' : productLabel(product.productCode));
+  const isStorefront = layout === 'storefront' || layout === 'compact';
 
   if (!implemented) {
     return `
@@ -538,24 +687,16 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   }
   const missingHtml =
     canPurchaseUi && eligibility.missing.length
-      ? `<ul class="plans-eligibility">${eligibility.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`
+      ? `<ul class="plans-eligibility plans-eligibility--soft">${eligibility.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`
       : '';
 
   const boardHtml = embedBoard && roomPrimeOnly && inv ? renderRoomPrimeBoard(inv.prime) : '';
 
-  const circulationNote = (() => {
-    if (role === 'study_room' && isPick) {
-      return `<p class="plans-card__circ">선택 지역에서 한 페이지에 10개씩 노출되며, 15분마다 공정하게 순환합니다.</p>`;
-    }
-    if (role === 'tutor' && isPrime) {
-      return `<p class="plans-card__circ">선택 시·주력과목의 Prime 영역에 페이지당 3명씩 노출되며, 15분마다 공정하게 순환합니다.</p>`;
-    }
-    if (role === 'tutor' && isPick) {
-      return `<p class="plans-card__circ">선택 시·주력과목에서 한 페이지에 10명씩 노출되며, 15분마다 공정하게 순환합니다.</p>`;
-    }
-    if (role === 'study_room' && isPrime) {
-      return `<p class="plans-card__circ">선택한 단지·행정동의 Prime 대표 자리입니다. 지역별 3자리만 운영합니다.</p>`;
-    }
+  const footNote = (() => {
+    if (role === 'study_room' && isPick) return '선택 지역에서 10개씩 순환 노출';
+    if (role === 'tutor' && isPrime) return '선택 시·주력과목에서 3개씩 순환 노출';
+    if (role === 'tutor' && isPick) return '선택 시·주력과목에서 10개씩 순환 노출';
+    if (role === 'study_room' && isPrime) return '선택 지역의 Prime 대표 노출';
     return '';
   })();
 
@@ -572,26 +713,66 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
       </div>`
       : '';
 
+  const regionReady = Boolean(opts.regionReady);
+  const periodLocked = soldOut || !regionReady;
+  const periodOptions = sortPeriodOptions(options);
+  const periodReason = !regionReady ? periodDisabledReason(role) : '';
+  const periodCards = periodOptions
+    .map((o) => {
+      const key = periodKey(o);
+      const hint = periodHint(product.productCode, key);
+      const amt = resolveCheckoutAmount(o.priceKrw);
+      const selected = Boolean(selectedOptionId) && o.optionId === selectedOptionId;
+      const hasDiscount = Number(o.discountKrw) > 0 && Number(o.listPriceKrw) > Number(o.priceKrw);
+      const memo = Number(o.memoBundle) || 0;
+      return `
+        <li class="plans-period-card${selected ? ' is-selected' : ''}${periodLocked ? ' is-disabled' : ''}">
+          <button type="button" class="plans-period-card__btn"
+            data-plans-period-option="${esc(o.optionId)}"
+            data-product-code="${esc(product.productCode)}"
+            ${periodLocked ? 'disabled' : ''}
+            aria-pressed="${selected ? 'true' : 'false'}">
+            <span class="plans-period-card__hint">${hint ? esc(hint) : '\u00a0'}</span>
+            <span class="plans-period-card__name">${esc(key)}</span>
+            <span class="plans-period-card__list${hasDiscount ? '' : ' is-empty'}">${hasDiscount ? esc(formatKrw(o.listPriceKrw)) : '\u00a0'}</span>
+            <strong class="plans-period-card__price">${esc(formatKrw(o.priceKrw))}</strong>
+            <span class="plans-period-card__off">${o.discountLabel ? esc(o.discountLabel) : '\u00a0'}</span>
+            <span class="plans-period-card__memo">${memo > 0 ? `쪽지권 ${memo}회 포함` : footNote || '\u00a0'}</span>
+            ${amt.testMode ? `<span class="plans-period-card__test">시험 ${esc(formatKrw(amt.chargeKrw))}</span>` : ''}
+          </button>
+        </li>`;
+    })
+    .join('');
   const optionSelect = `
-    <label class="plans-card__pick">
-      <span class="plans-card__pick-label">기간 선택</span>
-      <select data-plans-option="${esc(product.productCode)}" class="student-form__select" ${soldOut ? 'disabled' : ''}>
-        ${options
-          .map((o, i) => {
-            const amt = resolveCheckoutAmount(o.priceKrw);
-            const priceNote = amt.testMode
-              ? `${formatKrw(o.priceKrw)} (테스트 ${formatKrw(amt.chargeKrw)})`
-              : formatKrw(o.priceKrw);
-            const extras = [o.marketingBadge, o.discountLabel, o.bundleNote].filter(Boolean).join(' · ');
-            const isSelected = selectedOptionId ? o.optionId === selectedOptionId : i === 0;
-            return `<option value="${esc(o.optionId)}"${isSelected ? ' selected' : ''}>${esc(o.label)} · ${esc(priceNote)}${extras ? ` · ${esc(extras)}` : ''}</option>`;
-          })
-          .join('')}
-      </select>
-    </label>`;
+    <div class="plans-period" role="group" aria-label="기간 선택">
+      <p class="plans-period__label">기간 선택</p>
+      <ul class="plans-period-grid">${periodCards}</ul>
+      ${periodReason ? `<p class="plans-period__reason">${esc(periodReason)}</p>` : ''}
+      <p class="plans-period__vat">표시가 · VAT 포함 예정 · 기간 카드를 누르면 주문 요약에 반영됩니다</p>
+      <label class="plans-card__pick plans-card__pick--sr">
+        <span class="plans-card__pick-label">기간 선택</span>
+        <select data-plans-option="${esc(product.productCode)}" class="student-form__select" ${periodLocked ? 'disabled' : ''}>
+          ${periodOptions
+            .map((o, i) => {
+              const selected = selectedOptionId ? o.optionId === selectedOptionId : i === 0;
+              return `<option value="${esc(o.optionId)}"${selected ? ' selected' : ''}>${esc(periodKey(o))}</option>`;
+            })
+            .join('')}
+        </select>
+      </label>
+    </div>`;
+
+  if (isStorefront) {
+    return `
+    <div class="plans-sf-buy plans-catalog__item${soldOut ? ' is-soldout' : ''}${primaryCta ? ' is-primary' : ''}" data-product-code="${esc(product.productCode)}">
+      ${boardHtml}
+      ${pickPreviewHtml}
+      ${optionSelect}
+      ${missingHtml}
+    </div>`;
+  }
 
   const ctaClass = primaryCta ? 'btn btn--primary plans-card__cta' : 'btn btn--secondary plans-card__cta';
-  // 카드는 상품·기간을 주문 요약에 반영. 구매 가드는 요약 CTA.
   const buyBtn = canPurchaseUi
     ? soldOut
       ? `<button type="button" class="btn btn--secondary plans-card__cta" disabled>예약대기만 가능</button>`
@@ -604,10 +785,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
     ? `<span class="plans-card__badge">${esc(product.cardBadge)}</span>`
     : '';
 
-  const media =
-    layout === 'store'
-      ? `<div class="plans-card__media ${productMediaClass(product.productCode)}" aria-hidden="true">${badge}<span class="plans-card__media-ico">${productIcon(product.productCode)}</span></div>`
-      : `<div class="plans-card__icon ${productMediaClass(product.productCode)}" aria-hidden="true">${badge || ''}<span>${productIcon(product.productCode)}</span></div>`;
+  const media = `<div class="plans-card__media ${productMediaClass(product.productCode)}" aria-hidden="true">${badge}<span class="plans-card__media-ico">${productIcon(product.productCode)}</span></div>`;
 
   return `
     <li class="plans-card plans-card--${layout} plans-catalog__item${product.featured ? ' is-featured' : ''}${soldOut ? ' is-soldout' : ''}${primaryCta ? ' is-primary' : ''}" data-product-code="${esc(product.productCode)}">
@@ -615,20 +793,14 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
       <div class="plans-card__body">
         <h3 class="plans-card__name">${esc(displayName)}</h3>
         <p class="plans-card__hook">${esc(product.tagline)}</p>
-        ${circulationNote}
         ${boardHtml}
         ${pickPreviewHtml}
         <ul class="plans-card__checks">
-          ${[...(product.bullets || []), role === 'tutor' && product.family === 'position' ? '구매 시 기간별 무료 쪽지 혜택이 함께 제공될 수 있습니다(현금 환불가치 없음)' : '']
+          ${[...(product.bullets || [])]
             .filter(Boolean)
             .map((b) => `<li>${esc(b)}</li>`)
             .join('')}
         </ul>
-        <div class="plans-card__price-row">
-          <span class="plans-card__price">${esc(price.display)}</span>
-          <span class="plans-card__unit">${esc(price.unit)}</span>
-          <span class="plans-card__vat">${esc(price.note)}</span>
-        </div>
         ${optionSelect}
         ${missingHtml}
         ${buyBtn}
@@ -636,12 +808,35 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
     </li>`;
 }
 
+function isImmediateTicket(option) {
+  if (!option) return false;
+  if (option.ticketKind === 'immediate') return true;
+  return option.apiVariant === '1회' || /^1회/.test(String(option.label || ''));
+}
+
+function ticketCount(option) {
+  const n = Number(option?.creditCount);
+  if (n > 0) return n;
+  if (isImmediateTicket(option)) return 1;
+  const m = String(option?.label || option?.apiVariant || '').match(/(\d+)\s*회/);
+  return m ? Number(m[1]) : 0;
+}
+
+function ticketProductName(option) {
+  if (!option) return '쪽지권';
+  if (isImmediateTicket(option)) return '1회 즉시권';
+  const n = ticketCount(option);
+  if (n === 5) return '5회권';
+  if (n === 10) return '10회권';
+  return String(option.label || '쪽지권');
+}
+
 /**
  * @param {object} product
  * @param {import('./profiles.js').ProviderProfile | null} profile
  * @param {string} role
  * @param {{ memo?: number }} remaining
- * @param {{ primaryCta?: boolean, activePaidPack?: object|null, packPurchaseBlocked?: boolean }} [opts]
+ * @param {{ primaryCta?: boolean, activePaidPack?: object|null, packPurchaseBlocked?: boolean, embed?: 'grid'|'card', selectedOptionId?: string }} [opts]
  */
 function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
   const isProvider = role === 'tutor' || role === 'study_room';
@@ -665,24 +860,46 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
       const priceNote = amt.testMode
         ? `${formatKrw(o.priceKrw)} (시험 ${formatKrw(amt.chargeKrw)})`
         : formatKrw(o.priceKrw);
-      const isImmediate = o.apiVariant === '1회' || /^1회/.test(String(o.label || ''));
+      const isImmediate = isImmediateTicket(o);
       const packLocked = (!isImmediate && packPurchaseBlocked) || (!!activePaidPack && !isImmediate);
-      const countMatch = String(o.label || o.apiVariant || '').match(/(\d+)\s*회/);
-      const countNum = countMatch ? countMatch[1] : isImmediate ? '1' : '';
+      const countNum = ticketCount(o);
+      const name = ticketProductName(o);
       const selected = selectedOptionId
         ? o.optionId === selectedOptionId
         : !packLocked && (isImmediate && packPurchaseBlocked ? true : options.indexOf(o) === 0);
-      const saveNote = Number(o.creditCount) === 5 ? '10% 절약' : Number(o.creditCount) === 10 ? '20% 절약' : '';
-      const meta = isImmediate ? '결제 후 바로 발송' : '구매일부터 120일';
+      const per =
+        countNum > 0 && Number.isFinite(Number(o.priceKrw))
+          ? Math.round(Number(o.priceKrw) / countNum)
+          : 0;
+      const savePct =
+        Number(o.creditCount) === 5 ? 10 : Number(o.creditCount) === 10 ? 20 : 0;
+      const saveNote = savePct
+        ? `회당 ${formatKrw(per)} · ${savePct}% 절약`
+        : isImmediate
+          ? '\u00a0'
+          : '';
+      const meta = isImmediate
+        ? '결제 후 바로 발송 · 남은 횟수로 보관되지 않습니다'
+        : '구매일부터 120일';
+      const lock =
+        packLocked && activePaidPack
+          ? `<span class="plans-ticket-card__lock">구매할 수 없습니다. 사용 중인 묶음권의 남은 횟수를 모두 쓰거나 사용기한이 지난 뒤 구매하세요.</span>`
+          : '';
+      const aria = packLocked && activePaidPack
+        ? `${name} ${priceNote}. 사용 중인 쪽지권이 있어 구매할 수 없습니다.`
+        : `${name} ${priceNote}`;
       return `
         <li class="plans-ticket-card${selected ? ' is-selected' : ''}${packLocked ? ' is-disabled' : ''}">
           <button type="button" class="plans-ticket-card__btn" data-plans-ticket-option="${esc(o.optionId)}"
             data-product-code="${esc(product.productCode)}"
-            ${packLocked ? 'disabled' : ''} aria-pressed="${selected ? 'true' : 'false'}">
-            <span class="plans-ticket-card__count" aria-hidden="true">${esc(countNum)}회</span>
-            <strong class="plans-ticket-card__name">${esc(o.label || `${countNum}회권`)}</strong>
+            ${packLocked ? 'disabled' : ''} aria-pressed="${selected ? 'true' : 'false'}"
+            aria-label="${esc(aria)}">
+            <span class="plans-ticket-card__count" aria-hidden="true">${esc(String(countNum))}회</span>
+            <strong class="plans-ticket-card__name">${esc(name)}</strong>
             <span class="plans-ticket-card__price">${esc(priceNote)}</span>
-            <span class="plans-ticket-card__meta">${esc(meta)}${saveNote ? ` · ${esc(saveNote)}` : ''}</span>
+            <span class="plans-ticket-card__save">${saveNote ? esc(saveNote) : '\u00a0'}</span>
+            ${lock}
+            <span class="plans-ticket-card__meta">${esc(meta)}</span>
           </button>
         </li>`;
     })
@@ -693,37 +910,46 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
   const buyBtn = isProvider
     ? `<button type="button" class="${ctaClass}" data-plans-buy
          data-product-code="${esc(product.productCode)}"
-         ${buyDisabled ? 'disabled' : ''}>이 팩 선택</button>`
+         ${buyDisabled ? 'disabled' : ''}>이 상품 선택</button>`
     : role === 'guest'
       ? `<a href="${AUTH_UI_BASE}/#/login" class="btn btn--secondary plans-card__cta" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그인 후 구매</a>`
       : `<button type="button" class="btn btn--secondary plans-card__cta" disabled>구매 불가</button>`;
 
-  // 숨은 select — 주문요약/결제 핸들러 호환
   const hiddenSelect = `
     <label class="plans-card__pick plans-card__pick--sr">
-      <span class="plans-card__pick-label">팩 선택</span>
+      <span class="plans-card__pick-label">쪽지권 선택</span>
       <select data-plans-option="${esc(product.productCode)}" class="student-form__select">
         ${options
           .map((o) => {
-            const isImmediate = o.apiVariant === '1회' || /^1회/.test(String(o.label || ''));
+            const isImmediate = isImmediateTicket(o);
             const packLocked = (!isImmediate && packPurchaseBlocked) || (!!activePaidPack && !isImmediate);
             const selected = selectedOptionId
               ? o.optionId === selectedOptionId
               : !packLocked && (isImmediate && packPurchaseBlocked ? true : options.indexOf(o) === 0);
-            return `<option value="${esc(o.optionId)}"${packLocked ? ' disabled' : ''}${selected ? ' selected' : ''}>${esc(o.label)}</option>`;
+            return `<option value="${esc(o.optionId)}"${packLocked ? ' disabled' : ''}${selected ? ' selected' : ''}>${esc(ticketProductName(o))}</option>`;
           })
           .join('')}
       </select>
     </label>`;
 
+  const grid = `
+        <ul class="plans-ticket-grid">${ticketCards}</ul>
+        ${hiddenSelect}
+        ${missingHtml}`;
+
+  if (opts.embed === 'grid') {
+    return `
+    <div class="plans-card--access" data-product-code="${esc(product.productCode)}">
+      ${grid}
+    </div>`;
+  }
+
   return `
-    <li class="plans-card plans-card--access plans-catalog__item plans-card--tickets${product.featured ? ' is-featured' : ''}${primaryCta ? ' is-primary' : ''}">
+    <li class="plans-card plans-card--access plans-catalog__item plans-card--tickets${product.featured ? ' is-featured' : ''}${primaryCta ? ' is-primary' : ''}" data-product-code="${esc(product.productCode)}">
       <div class="plans-card__body">
         <h3 class="plans-card__name">${esc(product.name)}</h3>
         <p class="plans-card__hook">${esc(product.tagline)}</p>
-        <ul class="plans-ticket-grid">${ticketCards}</ul>
-        ${hiddenSelect}
-        ${missingHtml}
+        ${grid}
         ${buyBtn}
       </div>
     </li>`;
@@ -734,7 +960,7 @@ function renderTestModeToggle() {
   return `
     <label class="plans-test-mode">
       <input type="checkbox" data-plans-test-mode ${on ? 'checked' : ''} />
-      <span>시험 결제 사용 (결제 ${formatKrw(getPlanRuntimeSettings().test_amount_krw)})</span>
+      <span>시험 결제 화면 (실제 PG 연동 전 · 금액은 서버 판매가)</span>
     </label>`;
 }
 
@@ -813,7 +1039,13 @@ export function renderPlansHome() {
         </div>
         <ul class="plans-card-grid plans-card-grid--2">
           ${positionProducts
-            .map((p, i) => renderPositionCard(p, profile, role, slots, { layout: 'compact', primaryCta: i === 0 }))
+            .map((p, i) =>
+              renderPositionCard(p, profile, role, slots, {
+                layout: 'compact',
+                primaryCta: i === 0,
+                regionReady: profile ? getApplyTargetReadiness(profile, role).regionReady : false,
+              }),
+            )
             .join('')}
         </ul>
         <div class="plans-tip">
@@ -860,25 +1092,27 @@ export function renderPlansPositions() {
   const products = getCatalogByFamily('position', providerKey);
   const ops = getPaidOperationalStatus();
   const slots = role === 'study_room' ? ops?.slots ?? null : null;
-  const settings = getPlanRuntimeSettings();
-  const scopeLabel = settings.region_scope_type === 'complex' ? '단지' : '행정동';
   const canBuy = role === 'study_room' || role === 'tutor';
   const selectedCode = query.product || products[0]?.productCode || 'prime';
   const selectedProduct = products.find((p) => p.productCode === selectedCode) || products[0];
+  const selectedPeriodOptions = sortPeriodOptions(selectedProduct?.options || []);
   const selectedOption =
-    selectedProduct?.options?.find((o) => o.optionId === query.option) || selectedProduct?.options?.[0];
+    selectedPeriodOptions.find((o) => o.optionId === query.option) || selectedPeriodOptions[0];
   const periodLabel = selectedOption?.label || selectedOption?.apiVariant || '1개월';
-  const selectedBadges = String(query.badges || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .slice(0, 2);
+  const periodPreview = selectedOption ? previewInclusiveRange(selectedOption) : null;
+  const selectedBadges = sanitizeBadgeCodes(
+    role,
+    String(query.badges || '')
+      .split(',')
+      .map((s) => s.trim()),
+  );
   const providerTypeKey = role === 'tutor' ? 'tutor' : 'study_room';
   const applyReady = profile ? getApplyTargetReadiness(profile, role).regionReady : false;
   const applyScopes = profile ? getApplyTargetReadiness(profile, role).regionScopes : [];
   const selectedRegionScope =
     applyScopes.find(
       (s) =>
+        (query.city_id && String(s.city_id) === String(query.city_id)) ||
         (query.region_id && String(s.region_id) === String(query.region_id)) ||
         (query.complex_id && String(s.complex_id) === String(query.complex_id)),
     ) || applyScopes[0] || null;
@@ -902,18 +1136,8 @@ export function renderPlansPositions() {
       !selectedRegionScope);
   const badgeLines = selectedBadges.map((code) => {
     const price = badgePriceKrw(providerTypeKey, undefined, code, periodLabel);
-    const name =
-      code === 'hot'
-        ? 'Hot'
-        : code === 'subject_track'
-          ? '단과'
-          : code === 'jjokjipge'
-            ? '쪽집게'
-            : code === 'sky'
-              ? 'SKY'
-              : code;
     return {
-      label: `배지 · ${name}`,
+      label: badgeDisplayName(code),
       value: price != null ? formatKrw(price) : '—',
       priceKrw: price || 0,
     };
@@ -922,40 +1146,30 @@ export function renderPlansPositions() {
   const badgeSum = badgeLines.reduce((n, b) => n + (b.priceKrw || 0), 0);
   const displayTotal =
     positionAmt != null ? positionAmt.displayKrw + badgeSum : null;
-  const orderRows = [
-    { label: '적용 프로필', value: profile ? profile.label : '미선택' },
-    { label: '역할', value: role === 'study_room' ? '공부방' : role === 'tutor' ? '과외쌤' : roleLabel(role) },
-    { label: '상품', value: selectedProduct?.name || productLabel(selectedCode) },
-    {
-      label: '적용 지역',
-      value:
-        selectedRegionScope?.label ||
-        (role === 'tutor' ? '시·주력과목 기준(순환)' : applyReady ? '—' : '미선택'),
-    },
-    { label: '기간', value: periodLabel },
-    {
-      label: '노출상품 표시가',
-      value: positionAmt
-        ? positionAmt.testMode
-          ? `${formatKrw(selectedOption.priceKrw)} (시험 ${formatKrw(positionAmt.chargeKrw)})`
-          : formatKrw(selectedOption.priceKrw)
-        : '—',
-    },
-    ...badgeLines.map((b) => ({ label: b.label, value: b.value })),
-    { label: '자동연장', value: '없음' },
-  ];
-  const guideItems =
-    role === 'tutor'
-      ? [
-          { icon: '①', text: 'Prime 노출 · 시·주력과목 페이지당 3명 · 15분 공정 순환' },
-          { icon: '②', text: 'Pick 노출 · 페이지당 10명(5×2) · 15분 공정 순환' },
-          { icon: '③', text: '점유·예약대기 UI는 과외쌤에 적용되지 않습니다' },
-        ]
-      : [
-          { icon: '①', text: `Prime 노출 · ${scopeLabel}별 실제 3자리 · 왼쪽부터 자동 배정` },
-          { icon: '②', text: `Pick 노출 · 페이지당 ${settings.pick_set_size || 10}개 · ${settings.pick_rotation_minutes || 15}분 순환` },
-          { icon: '③', text: '만석 시 예약대기만 · 순번·경쟁업체는 공개하지 않습니다' },
-        ];
+  const orderRows = buildPositionOrderRows({
+    profileLabel: profile ? profile.label : '미선택',
+    roleText: role === 'study_room' ? '공부방' : role === 'tutor' ? '과외쌤' : roleLabel(role),
+    productName: selectedProduct?.name || productLabel(selectedCode),
+    regionValue:
+      selectedRegionScope?.label ||
+      (role === 'tutor' ? (applyReady ? '시 미선택' : '활동 시·주력과목 필요') : applyReady ? '—' : '미선택'),
+    periodLabel,
+    periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 완료 시점부터 (서버 확정)',
+    listPriceText:
+      selectedOption && Number(selectedOption.discountKrw) > 0 && Number(selectedOption.listPriceKrw) > 0
+        ? formatKrw(selectedOption.listPriceKrw)
+        : '',
+    positionPriceText: positionAmt
+      ? positionAmt.testMode
+        ? `${formatKrw(selectedOption.priceKrw)} (시험 ${formatKrw(positionAmt.chargeKrw)})`
+        : formatKrw(selectedOption.priceKrw)
+      : '—',
+    discountText: selectedOption?.discountLabel || '',
+    memoBundleText:
+      Number(selectedOption?.memoBundle) > 0 ? `쪽지권 ${selectedOption.memoBundle}회 포함` : '',
+    badgeLines,
+    badgeSumText: formatKrw(badgeSum),
+  });
   const primeProduct = products.find((p) => p.productCode === 'prime');
   const pickProduct = products.find((p) => p.productCode === 'pick');
   const restProducts = products.filter((p) => p.productCode !== 'prime' && p.productCode !== 'pick');
@@ -966,39 +1180,47 @@ export function renderPlansPositions() {
     const name = product.name || productLabel(product.productCode);
     const isRoomPrime = role === 'study_room' && product.productCode === 'prime';
     const isRoomPick = role === 'study_room' && product.productCode === 'pick';
+    const isTutorPrime = role === 'tutor' && product.productCode === 'prime';
+    const isTutorPick = role === 'tutor' && product.productCode === 'pick';
     const offerMod = isRoomPrime
       ? ' plans-storefront__offer--prime'
       : isRoomPick
         ? ' plans-storefront__offer--pick'
-        : '';
+        : isTutorPrime
+          ? ' plans-storefront__offer--tutor-prime'
+          : isTutorPick
+            ? ' plans-storefront__offer--tutor-pick'
+            : '';
     const structureHtml = isRoomPrime
       ? renderRoomPrimeBoard(resolveRoomPrimeInventory(slots).prime)
       : isRoomPick
         ? renderRoomPickPreview()
-        : '';
+        : isTutorPrime
+          ? renderTutorPrimeCirculation()
+          : isTutorPick
+            ? renderTutorPickCirculation()
+            : '';
     return `
-      <section class="plans-storefront__offer${offerMod} plans-section" data-plans-offer="${esc(product.productCode)}">
-        <div class="plans-section__head">
-          <h3 class="plans-section__title">${esc(name)}</h3>
-          <p class="plans-section__lead">${esc(lead)}</p>
-        </div>
-        ${structureHtml}
-        <ul class="plans-card-grid plans-card-grid--1${isRoomPrime || isRoomPick ? '' : ' plans-card-grid--store'}">
-          ${renderPositionCard(product, profile, role, slots, {
-            layout: isRoomPrime || isRoomPick ? 'compact' : 'store',
+      <section class="plans-storefront__offer${offerMod} plans-sf-panel" data-plans-offer="${esc(product.productCode)}">
+        <header class="plans-sf-panel__head">
+          <h2 class="plans-sf-panel__title">${esc(name)}</h2>
+          <p class="plans-sf-panel__lead">${esc(lead)}</p>
+        </header>
+        ${renderPositionCard(product, profile, role, slots, {
+            layout: 'storefront',
             primaryCta: isSelectedOffer(product, index),
             regionReady: applyReady,
-            embedBoard: !isRoomPrime,
-            embedPickPreview: !isRoomPick,
+            embedBoard: false,
+            embedPickPreview: false,
             selectedOptionId: product.productCode === selectedCode ? selectedOption?.optionId || '' : '',
           })}
-        </ul>
+        ${structureHtml}
       </section>`;
   };
 
   return `
-    <section class="mypage-panel plans-store plans-storefront">
-      <div class="plans-storefront__intro">
+    <section class="plans-store plans-storefront plans-sf" data-plans-positions>
+      <header class="plans-sf-hero">
         ${renderPlansHero({
           eyebrow: 'PAID PRODUCTS',
           title: '노출상품',
@@ -1006,37 +1228,48 @@ export function renderPlansPositions() {
           sub: 'Prime 노출과 Pick 노출은 홈·찾기 화면에서 프로필을 더 잘 발견할 수 있도록 돕는 유료 노출상품입니다.',
         })}
         ${renderBasicFreeRow()}
-      </div>
+      </header>
 
       <div class="plans-storefront__body">
         <div class="plans-storefront__catalog">
           ${
             primeProduct || pickProduct || restProducts.length
-              ? `${renderOffer(primeProduct, '홈과 관련 찾기 화면의 Prime 영역에서 아래 형태로 노출됩니다.', 0)}
-          ${renderOffer(pickProduct, '홈과 관련 찾기 화면의 Pick 영역에서 아래 형태로 노출됩니다.', primeProduct ? 1 : 0)}
+              ? `${renderOffer(
+                  primeProduct,
+                  role === 'tutor'
+                    ? '선택한 시와 주력과목의 Prime 영역에 페이지당 3명씩 노출되며, 15분마다 공정하게 순환합니다.'
+                    : '선택한 단지·행정동의 Prime 대표 자리를 확보하세요. Prime은 선택 지역에서 3개만 운영하는 한정 대표 노출입니다.',
+                  0,
+                )}
+          ${renderOffer(
+            pickProduct,
+            role === 'tutor'
+              ? '한 페이지에 10명씩 노출되며, 15분마다 공정하게 순환합니다.'
+              : '선택한 지역의 추천 영역에서 고르게 발견되세요. 한 페이지에 10개씩 노출되며, 15분마다 공정하게 순환합니다.',
+            primeProduct ? 1 : 0,
+          )}
           ${restProducts
             .map((p, i) =>
               renderOffer(p, p.tagline || p.name || productLabel(p.productCode), (primeProduct ? 1 : 0) + (pickProduct ? 1 : 0) + i),
             )
             .join('')}`
-              : `<div class="mypage-info-box" role="status">표시할 노출상품이 없습니다. 카탈로그를 다시 불러와 주세요.</div>`
+              : `<div class="plans-sf-empty" role="status">표시할 노출상품이 없습니다. 카탈로그를 다시 불러와 주세요.</div>`
           }
 
           ${renderBadgeAddonSection(role, ops, {
             selected: selectedBadges,
             periodLabel,
-            selectable: canBuy && Boolean(selectedProduct) && !roomPrimeSoldOut,
+            selectable:
+              canBuy &&
+              Boolean(query.product) &&
+              Boolean(selectedOption) &&
+              Boolean(selectedProduct) &&
+              !roomPrimeSoldOut,
           })}
+        </div>
 
-          <div class="plans-storefront__aux">
-            ${renderApplyTargetBlock(profile, role, 'positions')}
-            ${renderGuideBox({
-              title: role === 'tutor' ? '과외쌤 노출 방식' : `공부방 Prime · ${scopeLabel}`,
-              icon: '📍',
-              variant: 'slot',
-              items: guideItems,
-            })}
-          </div>
+        <div class="plans-storefront__aux">
+          ${renderApplyTargetBlock(profile, role, 'positions')}
         </div>
 
         <aside class="plans-storefront__summary" aria-label="주문 요약">
@@ -1047,6 +1280,7 @@ export function renderPlansPositions() {
             totalValue: displayTotal != null ? formatKrw(displayTotal) : '—',
             ctaDisabled: orderCtaDisabled,
             ctaLabel: roomPrimeSoldOut ? '예약대기만 가능' : '구매하기',
+            note: '시작일·종료일은 결제 완료 시 서버 확정 · 자동연장 없음 · 표시가는 참고이며 결제 직전 서버가 재검증합니다.',
           })}
         </aside>
       </div>
@@ -1083,118 +1317,123 @@ export function renderPlansAccess() {
   const packPurchaseBlocked = Boolean(activePaidPack) || syncLoading || syncPending || syncError;
   const product = products[0];
   const options = product?.options || [];
-  const isImmediateOpt = (o) =>
-    o && (o.apiVariant === '1회' || /^1회/.test(String(o.label || '')));
   const selectedOpt = (() => {
     const fromQuery = options.find((o) => o.optionId === query.option);
-    if (fromQuery && (isImmediateOpt(fromQuery) || !packPurchaseBlocked)) return fromQuery;
+    if (fromQuery && (isImmediateTicket(fromQuery) || !packPurchaseBlocked)) return fromQuery;
     if (packPurchaseBlocked) {
-      return options.find((o) => isImmediateOpt(o)) || options[0];
+      return options.find((o) => isImmediateTicket(o)) || options[0];
     }
-    return (
-      options.find((o) => isImmediateOpt(o)) ||
-      options[0]
-    );
+    return options.find((o) => isImmediateTicket(o)) || options[0];
   })();
   const selectedPackLocked =
-    Boolean(selectedOpt) && !isImmediateOpt(selectedOpt) && packPurchaseBlocked;
+    Boolean(selectedOpt) && !isImmediateTicket(selectedOpt) && packPurchaseBlocked;
   const canBuy =
     (role === 'tutor' || role === 'study_room') && profile && product && !selectedPackLocked;
+  const countN = ticketCount(selectedOpt);
+  const productName = ticketProductName(selectedOpt);
+  const priceText = selectedOpt
+    ? (() => {
+        const amt = resolveCheckoutAmount(selectedOpt.priceKrw);
+        return amt.testMode
+          ? `${formatKrw(selectedOpt.priceKrw)} (시험 ${formatKrw(amt.chargeKrw)})`
+          : formatKrw(selectedOpt.priceKrw);
+      })()
+    : '—';
+  const summaryRows = [
+    { label: '상품', value: productName },
+    { label: '횟수', value: countN ? `${countN}회` : '—' },
+    { label: '가격', value: priceText },
+    ...(isImmediateTicket(selectedOpt)
+      ? [{ label: '발송', value: '결제 후 바로 발송 · 남은 횟수로 보관되지 않습니다' }]
+      : [
+          { label: '사용기한', value: '구매일부터 120일' },
+          { label: '소멸', value: '사용기한 경과 시 남은 횟수 소멸 · 환불·연장 없음' },
+        ]),
+    { label: '적용 프로필', value: profile ? profile.label : '미선택' },
+  ];
 
   return `
-    <section class="mypage-panel plans-store">
-      <div class="plans-hero-row">
+    <section class="plans-store plans-storefront plans-sf plans-sf--access" data-plans-access>
+      <header class="plans-sf-hero">
         ${renderPlansHero({
+          eyebrow: 'PAID PRODUCTS',
           title: '공부방·과외쌤 쪽지권',
-          lead: '학생에게 먼저 보내는 첫 쪽지만 차감됩니다. 같은 대화방의 후속 쪽지와 학생·학부모가 먼저 보낸 쪽지에 대한 답장은 무료입니다.',
-          chips: [
-            { label: '노출상품', href: '/plans/positions' },
-            { label: '쪽지권', href: '/plans/access', active: true },
-          ],
+          lead: '',
         })}
-        ${renderGuideBox({
-          title: '이용 정책',
-          icon: '🛡',
-          variant: 'policy',
-          items: [
-            { icon: '✓', text: '첫 선제 쪽지만 1회 차감 · 후속·답장 무료' },
-            { icon: '✓', text: '5·10회권 120일 · 프로필당 활성 유료 묶음권 1개(서버 차단)' },
-            { icon: '✓', text: '1회 즉시권은 묶음권과 관계없이 이용 가능' },
-            { icon: '✓', text: '남은 횟수·사용기한은 내 상품에서 확인' },
-          ],
-        })}
+      </header>
+
+      <div class="plans-storefront__body">
+        <div class="plans-storefront__catalog">
+          <section class="plans-access-explain" aria-label="쪽지권 핵심 안내">
+            <strong class="plans-access-explain__lead">학생에게 먼저 보내는 첫 쪽지만 차감됩니다</strong>
+            <ul class="plans-access-explain__list">
+              <li>학생에게 먼저 보내는 첫 쪽지만 차감됩니다.</li>
+              <li>같은 대화방에서 주고받는 후속 쪽지는 모두 무료입니다.</li>
+              <li>학생·학부모가 먼저 보낸 쪽지와 그에 대한 답장도 무료입니다.</li>
+            </ul>
+          </section>
+
+          ${renderAccessAuxLinks()}
+
+          ${role === 'tutor' || role === 'study_room' ? renderApplyTargetBlock(profile, role, 'access') : ''}
+          ${role === 'guest' || role === 'parent' ? renderProfileBanner(null, role) : ''}
+          ${
+            syncLoading || syncPending
+              ? `<p class="plans-sf-status" data-plans-access-status="loading">쪽지권 상태를 확인하는 중입니다. 5회권·10회권 구매는 잠시 후 가능합니다.</p>`
+              : ''
+          }
+          ${
+            syncError
+              ? `<p class="plans-sf-status plans-sf-status--error" role="alert" data-plans-access-status="error">쪽지권 상태를 불러오지 못해 5회권·10회권 구매를 막았습니다. <button type="button" class="btn btn--secondary btn--sm" data-plans-access-retry>다시 시도</button></p>`
+              : ''
+          }
+
+          <section class="plans-sf-panel plans-ticket-select">
+            <header class="plans-sf-panel__head">
+              <h2 class="plans-sf-panel__title">쪽지권 선택</h2>
+              <p class="plans-sf-panel__lead">1회 즉시권 · 5회권 · 10회권 중 필요한 만큼만 선택하세요.</p>
+            </header>
+            ${
+              activePaidPack
+                ? `<div class="plans-access-hold" data-plans-access-status="active-pack" role="status">
+              <p>사용 중인 쪽지권이 있습니다. 남은 횟수를 모두 사용하거나 사용기한이 지난 뒤 새 묶음권을 구매할 수 있습니다.</p>
+              <p>5회권과 10회권은 지금 살 수 없습니다. 1회 즉시권은 계속 구매할 수 있습니다.</p>
+              <p class="plans-access-hold__nav"><a class="plans-access-aux__link" href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 쪽지권 보기</a></p>
+            </div>`
+                : ''
+            }
+            ${products
+              .map((p) =>
+                renderAccessCard(p, profile, role, {}, {
+                  embed: 'grid',
+                  activePaidPack,
+                  packPurchaseBlocked,
+                  selectedOptionId: selectedOpt?.optionId || query.option || '',
+                }),
+              )
+              .join('')}
+            ${renderAccessPurchaseCheck()}
+          </section>
+        </div>
+
+        <aside class="plans-storefront__summary" aria-label="주문 요약">
+          ${renderOrderSummaryBlock({
+            family: 'access',
+            rows: summaryRows,
+            totalLabel: '결제 예정(표시가)',
+            totalValue: selectedOpt
+              ? formatKrw(resolveCheckoutAmount(selectedOpt.priceKrw).displayKrw)
+              : '—',
+            ctaDisabled: !canBuy,
+            ctaLabel: selectedPackLocked ? '묶음권 이용 중' : '구매하기',
+          })}
+        </aside>
       </div>
 
-      ${renderAccessAuxLinks()}
-
-      ${role === 'tutor' || role === 'study_room' ? renderApplyTargetBlock(profile, role, 'access') : ''}
-      ${role === 'guest' || role === 'parent' ? renderProfileBanner(null, role) : ''}
-      ${role === 'tutor' || role === 'study_room' ? renderTestModeToggle() : ''}
-      ${
-        syncLoading || syncPending
-          ? `<p class="mypage-info-box" data-plans-access-status="loading">쪽지권 상태를 확인하는 중입니다. 5회권·10회권 구매는 잠시 후 가능합니다.</p>`
-          : ''
-      }
-      ${
-        syncError
-          ? `<p class="mypage-info-box" role="alert" data-plans-access-status="error">쪽지권 상태를 불러오지 못해 5회권·10회권 구매를 막았습니다. <button type="button" class="btn btn--secondary btn--sm" data-plans-access-retry>다시 시도</button></p>`
-          : ''
-      }
-      ${
-        activePaidPack
-          ? `<p class="mypage-info-box" data-plans-access-status="active-pack">사용 중인 쪽지권이 있습니다. 남은 횟수를 모두 사용하거나 사용기한이 지난 뒤 새 묶음권을 구매할 수 있습니다. 1회 즉시권은 계속 이용할 수 있습니다.</p>`
-          : ''
-      }
-
-      <section class="plans-section">
-        <div class="plans-section__head">
-          <h3 class="plans-section__title">쪽지권 팩</h3>
-          <p class="plans-section__lead">카드 숫자 · 1회 즉시권 · 5회권 · 10회권</p>
-        </div>
-        <ul class="plans-card-grid plans-card-grid--1 plans-card-grid--tickets">
-          ${products
-            .map((p, i) =>
-              renderAccessCard(p, profile, role, {}, {
-                primaryCta: i === 0,
-                activePaidPack,
-                packPurchaseBlocked,
-                selectedOptionId: selectedOpt?.optionId || query.option || '',
-              }),
-            )
-            .join('')}
-        </ul>
-      </section>
-
-      ${renderAccessPurchaseCheck()}
-
-      ${renderOrderSummaryBlock({
-        family: 'access',
-        rows: [
-          { label: '적용 프로필', value: profile ? profile.label : '미선택' },
-          { label: '상품', value: selectedOpt?.label || product?.name || '쪽지권' },
-          {
-            label: '표시가',
-            value: selectedOpt
-              ? (() => {
-                  const amt = resolveCheckoutAmount(selectedOpt.priceKrw);
-                  return amt.testMode
-                    ? `${formatKrw(selectedOpt.priceKrw)} (시험 ${formatKrw(amt.chargeKrw)})`
-                    : formatKrw(selectedOpt.priceKrw);
-                })()
-              : '—',
-          },
-          { label: '사용기한', value: isImmediateOpt(selectedOpt) ? '결제와 동시 발송' : '구매일부터 120일' },
-        ],
-        totalLabel: '결제 예정(표시가)',
-        totalValue: selectedOpt
-          ? formatKrw(resolveCheckoutAmount(selectedOpt.priceKrw).displayKrw)
-          : '—',
-        ctaDisabled: !canBuy,
-        ctaLabel: selectedPackLocked ? '묶음권 이용 중' : '구매하기',
-      })}
-
-      ${renderPolicyAccordion('access')}
-      ${renderAccessCompare()}
+      <div class="plans-storefront__foot">
+        ${renderPolicyAccordion('access')}
+        ${role === 'tutor' || role === 'study_room' ? renderTestModeToggle() : ''}
+      </div>
     </section>`;
 }
 
@@ -1411,10 +1650,74 @@ export function renderPlansCheckout() {
 
   const amt = resolveCheckoutAmount(draft.priceKrw);
   const methods = getPlanRuntimeSettings().payment_methods;
+  const isPosition = draft.productCode === 'prime' || draft.productCode === 'pick';
+  const badgeCodes = isPosition ? sanitizeBadgeCodes(draft.providerType, draft.badgeCodes || []) : [];
+  const badgeLines = badgeCodes.map((code) => {
+    const price = badgePriceKrw(draft.providerType, undefined, code, draft.optionLabel || draft.apiVariant);
+    return {
+      label: badgeDisplayName(code),
+      value: price != null ? formatKrw(price) : '—',
+      priceKrw: price || 0,
+    };
+  });
+  const badgeSum = badgeLines.reduce((n, b) => n + (b.priceKrw || 0), 0);
+  const positionDisplay =
+    draft.serverPositionSaleKrw != null ? Number(draft.serverPositionSaleKrw) : amt.displayKrw;
+  const badgeDisplay =
+    draft.serverBadgeSaleKrw != null ? Number(draft.serverBadgeSaleKrw) : badgeSum;
+  const previewTotal =
+    draft.serverAmountWon != null ? Number(draft.serverAmountWon) : positionDisplay + badgeDisplay;
+  const periodRangeText =
+    draft.startedOn && draft.endsOn
+      ? `${draft.startedOn} ~ ${draft.endsOn}`
+      : '결제 완료 시점부터 (서버 확정)';
+  const checkoutRows = isPosition
+    ? buildPositionOrderRows({
+        profileLabel: draft.providerLabel,
+        roleText: roleLabel(draft.providerType),
+        productName: draft.productName,
+        regionValue: draft.regionLabel || (draft.providerType === 'tutor' ? '시·주력과목' : '—'),
+        periodLabel: draft.optionLabel || draft.apiVariant,
+        periodRangeText,
+        listPriceText:
+          Number(draft.discountKrw) > 0 && Number(draft.listPriceKrw) > 0 ? formatKrw(draft.listPriceKrw) : '',
+        positionPriceText: formatKrw(positionDisplay),
+        discountText: draft.discountLabel || '',
+        memoBundleText: Number(draft.memoBundle) > 0 ? `쪽지권 ${draft.memoBundle}회 포함` : '',
+        badgeLines,
+        badgeSumText: formatKrw(badgeDisplay),
+      })
+    : [
+        { label: '상품', value: `${draft.productName} · ${draft.optionLabel}` },
+        { label: '표시가', value: formatKrw(amt.displayKrw) },
+        { label: '자동연장', value: '없음' },
+      ];
+  const cancelHref = isPosition
+    ? buildPlansHref(
+        '/plans/positions',
+        applyBadgeQuery(
+          {
+            product: draft.productCode,
+            option: draft.optionId,
+            badges: (draft.badgeCodes || []).join(','),
+            city_id: draft.cityId ? String(draft.cityId) : '',
+          },
+          draft.providerType,
+        ),
+      )
+    : buildPlansHref('/plans/access', { option: draft.optionId });
 
   return `
     <section class="mypage-panel plans-checkout">
       <p class="mypage-lead">결제</p>
+      ${renderOrderSummaryBlock({
+        family: isPosition ? 'position' : 'access',
+        rows: checkoutRows,
+        totalLabel: '결제 예정(표시가·서버 재검증)',
+        totalValue: formatKrw(previewTotal),
+        showCta: false,
+        note: '자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본) · 결제 직전 서버가 재검증합니다.',
+      })}
       <ol class="plans-checkout-steps">
         <li class="is-done"><strong>1. 적용 프로필</strong>
           <p>${esc(draft.providerLabel)} · ${esc(roleLabel(draft.providerType))}</p>
@@ -1434,8 +1737,9 @@ export function renderPlansCheckout() {
             : ''
         }
         <li class="is-done"><strong>3. 금액 확인</strong>
-          <p>표시가 ${formatKrw(amt.displayKrw)}
-            ${amt.testMode ? ` · <em>테스트 결제 ${formatKrw(amt.chargeKrw)}</em>` : ''}</p>
+          <p>표시가 ${formatKrw(previewTotal)}
+            ${isPosition && badgeDisplay ? ` · 노출 ${formatKrw(positionDisplay)} · 배지 소계 ${formatKrw(badgeDisplay)}` : ''}
+            ${amt.testMode ? ` · <em>시험 결제 화면</em>` : ''}</p>
         </li>
         <li>
           <strong>4. 약관 동의</strong>
@@ -1463,7 +1767,7 @@ export function renderPlansCheckout() {
           <p class="mypage-muted">현재는 시험 결제 화면이며 실제 결제 연동은 준비 중입니다.</p>
           <div class="mypage-actions-row">
             <button type="button" class="btn btn--primary" data-plans-pay>결제하기</button>
-            <a href="#/plans/positions" class="btn btn--secondary" data-plans-nav="/plans/positions">취소</a>
+            <a href="${esc(cancelHref)}" class="btn btn--secondary" data-plans-nav="${isPosition ? '/plans/positions' : '/plans/access'}">취소</a>
           </div>
           <p class="plans-checkout-error mypage-muted" data-plans-checkout-error hidden></p>
         </li>
@@ -1490,6 +1794,12 @@ export function renderPlansResult() {
     result.providerType === 'tutor'
       ? `#/mypage/registrations/tutors/${result.providerId || ''}/exposure`
       : `#/mypage/registrations/study-rooms/${result.providerId || ''}/inquiries`;
+  const resultBadges = sanitizeBadgeCodes(result.providerType || '', result.badgeCodes || []);
+  const resultBadgeLines = resultBadges.length
+    ? resultBadges
+        .map((code) => `<p>홍보 배지 · ${esc(badgeDisplayName(code))}</p>`)
+        .join('')
+    : '<p>홍보 배지 없음</p>';
 
   return `
     <section class="mypage-panel">
@@ -1499,8 +1809,13 @@ export function renderPlansResult() {
         ${result.orderRef ? `<p>주문번호 <code>${esc(result.orderRef)}</code></p>` : ''}
         ${result.productName ? `<p>${esc(result.productName)}${result.optionLabel ? ` · ${esc(result.optionLabel)}` : ''}</p>` : ''}
         ${result.providerLabel ? `<p>적용 프로필: ${esc(result.providerLabel)}</p>` : ''}
+        ${result.regionLabel ? `<p>적용 지역: ${esc(result.regionLabel)}</p>` : ''}
+        ${result.startedOn || result.endsOn ? `<p>이용 기간 ${esc(result.startedOn || '—')} ~ ${esc(result.endsOn || '—')}</p>` : ''}
+        ${resultBadgeLines}
+        ${result.badgeSaleKrw != null && resultBadges.length ? `<p>배지 소계 ${formatKrw(result.badgeSaleKrw)}</p>` : ''}
         ${result.chargeKrw != null ? `<p>결제금액 ${formatKrw(result.chargeKrw)}</p>` : ''}
-        ${result.memoBundleGranted > 0 ? `<p>쪽지권 ${result.memoBundleGranted}회가 함께 지급되었습니다. (180일)</p>` : ''}
+        <p>자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본)</p>
+        ${result.memoBundleGranted > 0 ? `<p>노출상품 무료 쪽지 ${result.memoBundleGranted}회 — 본상품과 같은 기간이며 종료 시 함께 종료됩니다.</p>` : ''}
         ${result.message ? `<p class="mypage-muted">${esc(result.message)}</p>` : ''}
       </div>
       <div class="mypage-actions-row">
@@ -1544,14 +1859,23 @@ export function bindPlansScreenEvents(root, rerender) {
         const q = parsePlansQuery();
         const next = { ...q };
         if (region) {
-          next.region_basis_type = region.regionBasisType;
-          if (region.regionId) next.region_id = region.regionId;
-          else delete next.region_id;
-          if (region.complexId) next.complex_id = region.complexId;
-          else delete next.complex_id;
-          if (region.slotGroup) next.slot_group = region.slotGroup;
+          if (region.cityId) {
+            next.city_id = region.cityId;
+            delete next.region_basis_type;
+            delete next.region_id;
+            delete next.complex_id;
+            delete next.slot_group;
+          } else {
+            delete next.city_id;
+            next.region_basis_type = region.regionBasisType;
+            if (region.regionId) next.region_id = region.regionId;
+            else delete next.region_id;
+            if (region.complexId) next.complex_id = region.complexId;
+            else delete next.complex_id;
+            if (region.slotGroup) next.slot_group = region.slotGroup;
+          }
         }
-        window.location.hash = buildPlansHref('/plans/positions', next);
+        window.location.hash = buildPlansHref('/plans/positions', applyBadgeQuery(next, role));
       });
     });
   }
@@ -1672,6 +1996,7 @@ export function bindPlansScreenEvents(root, rerender) {
           const accessItem = root.querySelector('.plans-card--access [data-plans-option]');
           const accessCard = root.querySelector('.plans-card--access');
           productCode =
+            accessCard?.getAttribute('data-product-code') ||
             accessCard?.querySelector('[data-plans-buy]')?.getAttribute('data-product-code') ||
             'memo_ticket';
           optionId = accessItem instanceof HTMLSelectElement ? accessItem.value : '';
@@ -1736,6 +2061,9 @@ export function bindPlansScreenEvents(root, rerender) {
       ) {
         return;
       }
+      if (role === 'tutor' && (product.family === 'position' || productCode === 'prime' || productCode === 'pick')) {
+        if (!region?.cityId) return;
+      }
       setCheckoutDraft({
         productCode,
         optionId,
@@ -1743,21 +2071,28 @@ export function bindPlansScreenEvents(root, rerender) {
         optionLabel: option.label,
         apiVariant: option.apiVariant,
         priceKrw: option.priceKrw,
+        listPriceKrw: option.listPriceKrw,
+        discountKrw: option.discountKrw,
+        discountLabel: option.discountLabel || '',
+        memoBundle: option.memoBundle || 0,
         providerType: profile.providerType,
         providerId: profile.id,
         providerLabel: profile.label,
         createdAt: Date.now(),
         badgeCodes:
           product.family === 'position' || productCode === 'prime' || productCode === 'pick'
-            ? badgeFromDom.length
-              ? badgeFromDom
-              : badgeFromQuery
+            ? sanitizeBadgeCodes(
+                role,
+                badgeFromDom.length ? badgeFromDom : badgeFromQuery,
+              )
             : [],
         regionBasisType: region?.regionBasisType,
         regionId: region?.regionId,
         complexId: region?.complexId,
         slotGroup: region?.slotGroup,
         regionLabel: region?.regionLabel,
+        cityId: region?.cityId,
+        primarySubjectId: getApplyTargetReadiness(profile, role).primarySubjectId || '',
       });
       window.location.hash = '#/plans/checkout';
     });
@@ -1771,11 +2106,10 @@ export function bindPlansScreenEvents(root, rerender) {
       const optionId = select instanceof HTMLSelectElement ? select.value : '';
       const role = getPlansEffectiveRole();
       const query = parsePlansQuery();
-      const next = { ...query, product: code };
+      const next = applyBadgeQuery({ ...query, product: code }, role);
       if (optionId) next.option = optionId;
       if (query.provider_id) next.provider_id = query.provider_id;
       if (query.provider_type) next.provider_type = query.provider_type;
-      if (query.badges) next.badges = query.badges;
       window.location.hash = buildPlansHref('/plans/positions', next);
     });
   });
@@ -1790,20 +2124,43 @@ export function bindPlansScreenEvents(root, rerender) {
       const next = { ...query };
       if (code) next.product = code;
       if (el.value) next.option = el.value;
-      window.location.hash = buildPlansHref(path, next);
+      if (path === '/plans/positions') {
+        window.location.hash = buildPlansHref(path, applyBadgeQuery(next, getPlansEffectiveRole()));
+      } else {
+        window.location.hash = buildPlansHref(path, next);
+      }
     });
   });
 
   root.querySelectorAll('[data-plans-badge-code]').forEach((el) => {
     el.addEventListener('change', () => {
-      const checked = [
-        ...root.querySelectorAll('[data-plans-badge-code]:checked'),
-      ].map((n) => n.getAttribute('data-plans-badge-code') || '');
+      const role = getPlansEffectiveRole();
+      const checked = sanitizeBadgeCodes(
+        role,
+        [...root.querySelectorAll('[data-plans-badge-code]:checked')].map(
+          (n) => n.getAttribute('data-plans-badge-code') || '',
+        ),
+      );
+      const query = parsePlansQuery();
+      const next = applyBadgeQuery({ ...query, badges: checked.join(',') }, role);
+      window.location.hash = buildPlansHref('/plans/positions', next);
+    });
+  });
+
+  root.querySelectorAll('[data-plans-period-option]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn instanceof HTMLButtonElement && btn.disabled) return;
+      const optionId = btn.getAttribute('data-plans-period-option') || '';
+      const code = btn.getAttribute('data-product-code') || '';
+      const select = root.querySelector(`[data-plans-option="${code}"]`);
+      if (select instanceof HTMLSelectElement && optionId) {
+        select.value = optionId;
+      }
       const query = parsePlansQuery();
       const next = { ...query };
-      if (checked.length) next.badges = checked.slice(0, 2).join(',');
-      else delete next.badges;
-      window.location.hash = buildPlansHref('/plans/positions', next);
+      if (code) next.product = code;
+      if (optionId) next.option = optionId;
+      window.location.hash = buildPlansHref('/plans/positions', applyBadgeQuery(next, getPlansEffectiveRole()));
     });
   });
 
@@ -1855,6 +2212,10 @@ export function bindPlansScreenEvents(root, rerender) {
     }
   });
 
+  if (path === '/plans/checkout') {
+    scheduleCheckoutServerQuote(rerender);
+  }
+
   const payBtn = root.querySelector('[data-plans-pay]');
   if (payBtn) {
     payBtn.addEventListener('click', async () => {
@@ -1878,18 +2239,37 @@ export function bindPlansScreenEvents(root, rerender) {
         if (!getProductConfig(draft.productCode, draft.providerType)) {
           throw new Error('상품 카탈로그가 준비되지 않았습니다. 새로고침 후 다시 시도해 주세요.');
         }
-        const created = await createPaidCheckout(draft.productCode, draft.apiVariant, {
-          providerType: draft.providerType,
-          providerId: draft.providerId,
-          studentId: Number(root.querySelector('[data-plans-immediate-student]')?.value || draft.studentId || 0),
-          body: String(root.querySelector('[data-plans-immediate-body]')?.value || draft.body || ''),
-          badgeCodes: Array.isArray(draft.badgeCodes) ? draft.badgeCodes : [],
-          regionBasisType: draft.regionBasisType,
-          regionId: draft.regionId,
-          complexId: draft.complexId,
-          slotGroup: draft.slotGroup,
-          regionLabel: draft.regionLabel,
-        });
+        let created = null;
+        if (draft.orderRef) {
+          created = {
+            order_ref: draft.orderRef,
+            amount_won: draft.serverAmountWon,
+            sale_price_krw: draft.serverAmountWon,
+            badge_codes: draft.badgeCodes,
+            badge_sale_krw: draft.serverBadgeSaleKrw,
+            started_on: draft.startedOn,
+            ends_on: draft.endsOn,
+            city_id: draft.cityId,
+            memo_bundle: 0,
+          };
+        } else {
+          created = await createPaidCheckout(draft.productCode, draft.apiVariant, {
+            providerType: draft.providerType,
+            providerId: draft.providerId,
+            studentId: Number(root.querySelector('[data-plans-immediate-student]')?.value || draft.studentId || 0),
+            body: String(root.querySelector('[data-plans-immediate-body]')?.value || draft.body || ''),
+            badgeCodes: Array.isArray(draft.badgeCodes)
+              ? sanitizeBadgeCodes(draft.providerType, draft.badgeCodes)
+              : [],
+            regionBasisType: draft.regionBasisType,
+            regionId: draft.regionId,
+            complexId: draft.complexId,
+            slotGroup: draft.slotGroup,
+            regionLabel: draft.regionLabel,
+            cityId: draft.cityId,
+            primarySubjectId: draft.primarySubjectId,
+          });
+        }
         const serverAmount = Number(created.amount_won ?? created.sale_price_krw);
         if (!Number.isFinite(serverAmount) || serverAmount <= 0) {
           throw new Error('서버 결제금액이 올바르지 않습니다.');
@@ -1924,6 +2304,16 @@ export function bindPlansScreenEvents(root, rerender) {
           providerType: draft.providerType,
           providerId: draft.providerId,
           chargeKrw: serverAmount,
+          badgeCodes: Array.isArray(created.badge_codes)
+            ? created.badge_codes
+            : Array.isArray(draft.badgeCodes)
+              ? draft.badgeCodes
+              : [],
+          badgeSaleKrw: Number(created.badge_sale_krw) || 0,
+          startedOn: completed.started_on || created.started_on || '',
+          endsOn: completed.ends_on || created.ends_on || '',
+          cityId: completed.city_id || created.city_id || draft.cityId || '',
+          regionLabel: draft.regionLabel || '',
           memoBundleGranted:
             Number(completed.memo_bundle_granted) || Number(created.memo_bundle) || 0,
         });
@@ -1939,6 +2329,7 @@ export function bindPlansScreenEvents(root, rerender) {
           providerLabel: draft.providerLabel,
           providerType: draft.providerType,
           providerId: draft.providerId,
+          badgeCodes: Array.isArray(draft.badgeCodes) ? draft.badgeCodes : [],
         });
         if (errEl) {
           errEl.hidden = false;

@@ -15,6 +15,7 @@ import {
   hydratePaidCatalog,
   isCatalogReady,
   getCatalogError,
+  getCatalogState,
 } from './runtime-config.js';
 
 function esc(s) {
@@ -46,9 +47,10 @@ function renderPlansLoginGate(message) {
             ${panel}
           </div>`;
   const gateBody = isPaidStorefrontPath(getPlansPath()) ? wrapPaidStorefront(gateInner) : gateInner;
+  const appCls = isPaidStorefrontPath(getPlansPath()) ? 'home-app home-app--plans-sf' : 'home-app';
   return `
     ${renderPreviewToolbar()}
-    <div class="home-app">
+    <div class="${appCls}">
       ${renderHeader(headerRole)}
       <div class="home-body home-body--no-promo">
         <div class="home-main">
@@ -94,7 +96,13 @@ export function renderPlans() {
     return renderPlansLoginGate(pathGate.message);
   }
 
-  if (!isCatalogReady()) {
+  const effective =
+    role === 'study_room_owner' || role === 'study_room' ? 'study_room' : 'tutor';
+  const hasRoleProducts = (getCatalogState()?.products || []).some(
+    (p) => p.provider_type === effective || p.provider_type === 'both',
+  );
+
+  if (!isCatalogReady() || !hasRoleProducts) {
     const err = getCatalogError() || '서버 카탈로그를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.';
     const body = renderCatalogUnavailable(err);
     return renderPlansShell(path, body, { role, isGuest: false });
@@ -135,13 +143,18 @@ export function bindPlansEvents(root, rerender) {
     });
   });
 
-  if (!isCatalogReady()) {
-    const effective =
-      role === 'study_room_owner' || role === 'study_room' ? 'study_room' : 'tutor';
-    hydratePaidCatalog(effective)
+  const effective =
+    role === 'study_room_owner' || role === 'study_room' ? 'study_room' : 'tutor';
+  const hasRoleProducts = (getCatalogState()?.products || []).some(
+    (p) => p.provider_type === effective || p.provider_type === 'both',
+  );
+  if (!isCatalogReady() || !hasRoleProducts) {
+    hydratePaidCatalog(effective, { force: true })
       .then(() => rerender())
       .catch(() => rerender());
-    return;
+    if (!isCatalogReady() || !hasRoleProducts) {
+      return;
+    }
   }
 
   bindPlansScreenEvents(root, rerender);

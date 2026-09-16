@@ -68,7 +68,7 @@ export const PLAN_RUNTIME_DEFAULTS = {
   region_scope_type: 'dong',
   demo_prime_filled: 1,
   demo_prime_tutor_pool: 12,
-  pick_set_size: 5,
+  pick_set_size: 10,
   pick_rotation_minutes: 15,
   pick_page_size: 5,
   basic_page_size: 20,
@@ -76,7 +76,6 @@ export const PLAN_RUNTIME_DEFAULTS = {
   message_credit_pack: [1, 5, 10],
   credit_expire_days: 120,
   low_credit_threshold: 0.2,
-  order_expire_minutes: 30,
   prime_expire_alert_days: [7, 3, 1],
   pick_expire_alert_days: [7, 1],
   recommended_first: true,
@@ -86,7 +85,7 @@ export const PLAN_RUNTIME_DEFAULTS = {
   prime_empty_title_study_room: '이 자리에 공부방을 홍보하세요',
   prime_empty_body_study_room: '우리 동네 상단 노출을 먼저 잡아보세요',
   prime_empty_title_tutor: '이 자리에 과외쌤을 홍보하세요',
-  prime_empty_body_tutor: '지금 먼저 선점하세요 · 동네 상단 노출',
+  prime_empty_body_tutor: '선택 시·주력과목 Prime 영역에 순환 노출됩니다',
 };
 
 /** @deprecated 서버 카탈로그 memo_bundle 사용 */
