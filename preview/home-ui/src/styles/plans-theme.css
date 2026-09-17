@@ -1032,6 +1032,16 @@
     display: none;
   }
 
+  .home-app.home-app--plans-sf .plans-hub-shell {
+    --plans-hub-gap-rail: 0px;
+    --plans-hub-rail: 0px;
+  }
+
+  .home-app.home-app--plans-sf .plans-hub-rail,
+  .home-app.home-app--plans-sf .plans-hub-gap-rail {
+    display: none;
+  }
+
   .home-app--plans-sf .plans-ticket-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1186,7 +1196,7 @@
 }
 
 .home-app--plans-hub .plans-hub-cinema {
-  grid-column: 1 / -1;
+  grid-column: 1 / 5;
   grid-row: 1;
   position: relative;
   z-index: 1;
@@ -1315,7 +1325,7 @@
 
 .home-app--plans-hub .plans-hub-warm {
   grid-column: 1 / 5;
-  grid-row: 2;
+  grid-row: 1 / 3;
   background: var(--paid-bg, #f6f1e8);
   border-radius: 0 16px 16px 0;
   z-index: 0;
@@ -1353,21 +1363,31 @@
   background: transparent;
 }
 
+.home-app--plans-hub .plans-hub-page.plans-sf-page {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  padding: var(--plans-sf-page-pad-y, 20px) var(--plans-sf-page-pad-x, 18px) 36px 0;
+}
+
 .home-app--plans-hub .plans-hub-page__inner {
   padding: 12px 18px 24px 10px;
 }
 
 .home-app--plans-hub .plans-hub-gap-rail {
   grid-column: 5;
-  grid-row: 2;
+  grid-row: 1 / 3;
 }
 
 .home-app--plans-hub .plans-hub-rail {
   grid-column: 6;
-  grid-row: 2;
+  grid-row: 1 / 3;
   z-index: 1;
   min-width: 0;
-  margin-top: 12px;
+  margin-top: 0;
+  background: #fff;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1375,7 +1395,21 @@
 
 .home-app--plans-hub .plans-hub-gutter-r {
   grid-column: 7;
-  grid-row: 2;
+  grid-row: 1 / 3;
+}
+
+.home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) > .plans-sf-sidenav,
+.home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) .plans-hub-page,
+.home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) .plans-hub-gutter-l,
+.home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) .plans-hub-gap-nav {
+  grid-row: 1;
+}
+
+.home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) .plans-hub-warm,
+.home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) .plans-hub-rail,
+.home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) .plans-hub-gap-rail,
+.home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) .plans-hub-gutter-r {
+  grid-row: 1;
 }
 
 .home-app--plans-hub .plans-hub-rail .home-sidebar {
@@ -1725,7 +1759,7 @@
 
   .home-app--plans-hub .plans-hub-cinema {
     grid-column: 1 / -1;
-    grid-row: auto;
+    grid-row: 1;
     height: auto;
     min-height: 200px;
     max-height: none;
@@ -1758,9 +1792,16 @@
 
   .home-app--plans-hub .plans-hub-warm {
     grid-column: 1 / -1;
-    grid-row: 2 / -1;
     border-radius: 0;
-    min-height: 100%;
+    min-height: 0;
+  }
+
+  .home-app--plans-hub .plans-hub-shell--cinema .plans-hub-warm {
+    grid-row: 2 / 4;
+  }
+
+  .home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) .plans-hub-warm {
+    grid-row: 1 / 3;
   }
 
   .home-app--plans-hub .plans-hub-gutter-l {
@@ -1773,10 +1814,27 @@
     grid-row: auto;
   }
 
-  .home-app--plans-hub .plans-hub-shell > .plans-sf-sidenav,
-  .home-app--plans-hub .plans-hub-page {
+  .home-app--plans-hub .plans-hub-shell--cinema > .plans-sf-sidenav {
     grid-column: 2;
-    grid-row: auto;
+    grid-row: 2;
+    margin: 0 0 12px;
+  }
+
+  .home-app--plans-hub .plans-hub-shell--cinema .plans-hub-page {
+    grid-column: 2;
+    grid-row: 3;
+    margin: 0 0 12px;
+  }
+
+  .home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) > .plans-sf-sidenav {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0 0 12px;
+  }
+
+  .home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) .plans-hub-page {
+    grid-column: 2;
+    grid-row: 2;
     margin: 0 0 12px;
   }
 
@@ -1787,12 +1845,19 @@
 
   .home-app--plans-hub .plans-hub-rail {
     grid-column: 2;
-    grid-row: auto;
-    margin: 0 0 12px;
     background: #fff;
     border-radius: 12px;
     position: relative;
     z-index: 1;
+    margin: 0 0 12px;
+  }
+
+  .home-app--plans-hub .plans-hub-shell--cinema .plans-hub-rail {
+    grid-row: 4;
+  }
+
+  .home-app--plans-hub .plans-hub-shell:not(.plans-hub-shell--cinema) .plans-hub-rail {
+    grid-row: 3;
   }
 
   .home-app--plans-hub .plans-hub-shell > .plans-sf-sidenav {
@@ -1806,5 +1871,11 @@
 
   .home-app--plans-hub .plans-hub-page__inner {
     padding: 8px 0 16px;
+  }
+
+  .home-app--plans-hub .plans-hub-page.plans-sf-page {
+    padding: 0.85rem 0 3.5rem;
+    border: 0;
+    background: transparent;
   }
 }

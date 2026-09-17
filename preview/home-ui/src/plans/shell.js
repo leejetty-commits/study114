@@ -3,7 +3,7 @@ import { getNavRole } from '../state.js';
 import { renderPlansPageTitle, renderPlansNav } from './nav.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { renderPromoWithRightRail } from '../right-rail.js';
-import { isPaidHubPath, isPaidStorefrontPath, wrapPaidStorefront } from './theme.js';
+import { isPaidHubPath, isPaidStorefrontPath, isPaidTrackPath, wrapPaidStorefront } from './theme.js';
 import { renderPlansHubCinema, renderPlansHubRailCard } from './hub-home.js';
 
 /**
@@ -21,23 +21,30 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
   const guestCatalogOnly = Boolean(opts.isGuest);
   const banner = hideNav ? '' : renderHomeMarketingBanner('plans');
 
-  if (isPaidHubPath(currentPath)) {
-    const hubHtml = `
-      <div class="plans-hub-shell" data-plans-hub-v21>
-        ${renderPlansHubCinema()}
+  if (isPaidTrackPath(currentPath)) {
+    const isHub = isPaidHubPath(currentPath);
+    const isSf = isPaidStorefrontPath(currentPath);
+    const trail = isHub
+      ? `<a href="#${sub}" class="plans-sf-back" data-nav="${sub}">← 메인 홈으로</a>`
+      : `<a href="#${sub}" class="plans-sf-back" data-nav="${sub}">← 메인 홈으로</a>
+              <a href="#/plans" class="plans-sf-hub" data-plans-nav="/plans">상품홈</a>`;
+    const trackHtml = `
+      <div class="plans-hub-shell${isHub ? ' plans-hub-shell--cinema' : ''}" data-plans-track${isHub ? ' data-plans-hub-v21' : ' data-plans-shell-fit'}>
+        ${isHub ? renderPlansHubCinema() : ''}
         <div class="plans-hub-warm" aria-hidden="true"></div>
         <div class="plans-hub-gutter-l" aria-hidden="true"></div>
         ${renderPlansNav(currentPath, { guestCatalogOnly, shellFit: true })}
         <div class="plans-hub-gap-nav" aria-hidden="true"></div>
-        <div class="plans-hub-page">
-          ${bodyHtml}
-          <p class="plans-hub-trail">
-            <a href="#${sub}" class="plans-sf-back" data-nav="${sub}">← 메인 홈으로</a>
+        <div class="plans-hub-page${isSf ? ' plans-sf-page' : ''}">
+          ${isSf ? banner : ''}
+          ${isSf ? `<div class="plans-sf-page__main">${bodyHtml}</div>` : bodyHtml}
+          <p class="plans-hub-trail${isSf ? ' plans-sf-page__trail' : ''}">
+            ${trail}
           </p>
         </div>
         <div class="plans-hub-gap-rail" aria-hidden="true"></div>
         <div class="plans-hub-rail">
-          ${renderPlansHubRailCard()}
+          ${isHub ? renderPlansHubRailCard() : ''}
           ${renderPromoWithRightRail('plans_right_rail')}
         </div>
         <div class="plans-hub-gutter-r" aria-hidden="true"></div>
@@ -46,37 +53,10 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
     return renderAppShellWithPromo({
       toolbar: renderPreviewToolbar(),
       headerHtml: renderHeader(headerRole),
-      mainHtml: wrapPaidStorefront(hubHtml),
+      mainHtml: wrapPaidStorefront(trackHtml),
       footerHtml: renderFooter(),
       slotKey: null,
-      appClass: 'home-app--plans-hub',
-    });
-  }
-
-  if (isPaidStorefrontPath(currentPath)) {
-    const storefrontHtml = `
-      <div class="plans-sf-shell" data-plans-shell-fit>
-        <div class="plans-sf-fit">
-          ${renderPlansNav(currentPath, { guestCatalogOnly, shellFit: true })}
-          <div class="plans-sf-page">
-            ${banner}
-            <div class="plans-sf-page__main">${bodyHtml}</div>
-            <p class="plans-sf-page__trail">
-              <a href="#${sub}" class="plans-sf-back" data-nav="${sub}">← 메인 홈으로</a>
-              <a href="#/plans" class="plans-sf-hub" data-plans-nav="/plans">상품홈</a>
-            </p>
-          </div>
-        </div>
-      </div>
-    `;
-    return renderAppShellWithPromo({
-      toolbar: renderPreviewToolbar(),
-      headerHtml: renderHeader(headerRole),
-      mainHtml: wrapPaidStorefront(storefrontHtml),
-      footerHtml: renderFooter(),
-      // 운영 Shell: 좌 메뉴(본문 안) + 본문 + 우 레일(home-body 열)
-      slotKey: 'plans_right_rail',
-      appClass: 'home-app--plans-sf',
+      appClass: isSf ? 'home-app--plans-hub home-app--plans-sf' : 'home-app--plans-hub',
     });
   }
 
