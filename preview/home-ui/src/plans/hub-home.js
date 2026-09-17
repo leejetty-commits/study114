@@ -4,7 +4,8 @@
  * 구매 UI(기간/횟수/배지 폼/주문요약)는 넣지 않는다.
  */
 
-import heroSoftUrl from './assets/hero-soft.svg?url';
+/** 노출상품·쪽지권 상단 배너와 같은 실내/서가 사진. 추상 SVG 자리채움 금지. */
+const HUB_CINEMA_IMG = '/assets/banners/plans.jpg';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -15,7 +16,7 @@ export function renderPlansHubCinema() {
   return `
     <section class="plans-hub-cinema home-cinema--soft" aria-label="유료상품 안내">
       <div class="cinema-bg" aria-hidden="true">
-        <img class="cinema-bg__img" src="${esc(heroSoftUrl)}" alt="" width="1280" height="280">
+        <img class="cinema-bg__img" src="${esc(HUB_CINEMA_IMG)}" alt="" width="1280" height="280">
         <div class="cinema-bg__overlay"></div>
       </div>
       <div class="cinema-content">
