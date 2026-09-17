@@ -341,7 +341,7 @@ img {
   max-width: var(--home-max);
   margin: 0 auto;
   width: 100%;
-  padding: var(--space-3) var(--space-4) var(--space-8);
+  padding: var(--space-3) var(--page-gutter) var(--space-8);
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-4);
