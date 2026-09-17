@@ -2,7 +2,9 @@ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, ren
 import { getNavRole } from '../state.js';
 import { renderPlansPageTitle, renderPlansNav } from './nav.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
-import { isPaidStorefrontPath, wrapPaidStorefront } from './theme.js';
+import { renderPromoWithRightRail } from '../right-rail.js';
+import { isPaidHubPath, isPaidStorefrontPath, wrapPaidStorefront } from './theme.js';
+import { renderPlansHubCinema, renderPlansHubRailCard } from './hub-home.js';
 
 /**
  * @param {string} currentPath
@@ -18,6 +20,38 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
     currentPath.startsWith('/plans/checkout') || currentPath.startsWith('/plans/result');
   const guestCatalogOnly = Boolean(opts.isGuest);
   const banner = hideNav ? '' : renderHomeMarketingBanner('plans');
+
+  if (isPaidHubPath(currentPath)) {
+    const hubHtml = `
+      <div class="plans-hub-shell" data-plans-hub-v21>
+        ${renderPlansHubCinema()}
+        <div class="plans-hub-warm" aria-hidden="true"></div>
+        <div class="plans-hub-gutter-l" aria-hidden="true"></div>
+        ${renderPlansNav(currentPath, { guestCatalogOnly, shellFit: true })}
+        <div class="plans-hub-gap-nav" aria-hidden="true"></div>
+        <div class="plans-hub-page">
+          ${bodyHtml}
+          <p class="plans-hub-trail">
+            <a href="#${sub}" class="plans-sf-back" data-nav="${sub}">← 메인 홈으로</a>
+          </p>
+        </div>
+        <div class="plans-hub-gap-rail" aria-hidden="true"></div>
+        <div class="plans-hub-rail">
+          ${renderPlansHubRailCard()}
+          ${renderPromoWithRightRail('plans_right_rail')}
+        </div>
+        <div class="plans-hub-gutter-r" aria-hidden="true"></div>
+      </div>
+    `;
+    return renderAppShellWithPromo({
+      toolbar: renderPreviewToolbar(),
+      headerHtml: renderHeader(headerRole),
+      mainHtml: wrapPaidStorefront(hubHtml),
+      footerHtml: renderFooter(),
+      slotKey: null,
+      appClass: 'home-app--plans-hub',
+    });
+  }
 
   if (isPaidStorefrontPath(currentPath)) {
     const storefrontHtml = `
