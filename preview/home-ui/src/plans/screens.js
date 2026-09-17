@@ -3,12 +3,7 @@
  * 기존 plans-catalog / paid-backend / paid-checkout 자산 재사용
  */
 
-import { previewState } from '../state.js';
 import {
-  FREE_TIER_COPY,
-  PAID_TIER_COPY,
-  P18_HEADLINE,
-  P18_RENEWAL_COPY,
   P18_EXPOSURE_STATUS,
 } from '../mypage/plans-catalog.js';
 import { getRoiMetrics, getPaidOperationalStatus } from '../paid-backend.js';
@@ -72,13 +67,11 @@ import {
 import { renderReceiptPanel, bindReceiptEvents } from './receipt.js';
 import {
   renderPlansHero,
-  renderGuideBox,
-  renderFreePaidCompare,
-  renderPlansCtaBanner,
   renderBadgeAddonSection,
   productMediaClass,
   productIcon,
 } from './store-ui.js';
+import { renderPlansHomeBody } from './hub-home.js';
 import {
   renderApplyTargetBlock,
   getApplyTargetReadiness,
@@ -964,123 +957,11 @@ function renderTestModeToggle() {
     </label>`;
 }
 
-/** P18-01 상품홈 */
+/** P18-01 상품홈 — 안내·진입 허브. 구매 UI는 상세에만. */
 export function renderPlansHome() {
-  const role = getPlansEffectiveRole();
-  const query = parsePlansQuery();
-  const profile = resolveSelectedProfile(query, role);
-  const tier = previewState.providerSubscription;
-  const tierCopy = tier === 'paid' ? PAID_TIER_COPY : FREE_TIER_COPY;
-  const ops = getPaidOperationalStatus();
-  const positions = ops?.exposure?.positions ?? [];
-  const slots = ops?.slots ?? null;
-  const providerKey = role === 'tutor' ? 'tutor' : 'study_room';
-  const positionProducts = getCatalogByFamily('position', providerKey);
-  const accessProducts = getCatalogByFamily('access', providerKey);
-  const tickets = ops?.tickets;
-  const remaining = {
-    memo: tickets?.memo?.remaining,
-  };
-
-  return `
-    <section class="mypage-panel plans-store">
-      <div class="plans-hero-row">
-        ${renderPlansHero({
-          title: '더 많은 학생과 만나는 가장 확실한 방법',
-          lead: '가게 품질은 무료로, 홍보·획득은 필요할 때만 단건으로. 자동연장 없이 기간형·횟수권만 구매합니다.',
-          chips: [
-            { label: '노출상품', href: '/plans/positions' },
-            { label: '쪽지권', href: '/plans/access' },
-            { label: role === 'study_room' ? '공부방' : role === 'tutor' ? '과외쌤' : '소개 보기', active: true },
-          ],
-        })}
-        ${renderGuideBox({
-          title: '안전 결제 안내',
-          icon: '🛡',
-          variant: 'guide',
-          items: [
-            { icon: '🔒', text: '단건 결제 · 자동연장 없음 · 만료 시 기본 노출로 복귀' },
-            { icon: '💳', text: '학부모 과금 없음 · 공급자만 구매 · 시험 결제 모드 제공' },
-          ],
-          linkLabel: '이용 가이드 및 환불 규정 확인',
-          linkNav: '/support/faq',
-        })}
-      </div>
-
-      ${renderProviderNoticeBanners()}
-      ${renderProfileBanner(profile, role)}
-      ${role === 'study_room' || role === 'tutor' ? renderTestModeToggle() : ''}
-
-      <div class="plans-status-strip">
-        <div class="plans-status-strip__box">
-          <strong>${esc(tierCopy.title)}</strong>
-          <ul class="plans-tier-list">${tierCopy.items.slice(0, 3).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
-        </div>
-        <div class="plans-status-strip__box">
-          <strong>이용중 요약</strong>
-          ${
-            positions.length
-              ? `<ul class="plans-tier-list">${positions
-                  .map((p) => `<li><strong>${esc(productLabel(p.sku))}</strong> · ${p.days_left}일 남음</li>`)
-                  .join('')}</ul>`
-              : `<p class="mypage-muted">${esc(P18_EXPOSURE_STATUS.basic)}</p>`
-          }
-          <div class="mypage-actions-row">
-            <a href="#/mypage/plans/my" class="btn btn--secondary btn--sm" data-nav="/mypage/plans/my">내 상품</a>
-            <a href="#/mypage/plans/history" class="btn btn--secondary btn--sm" data-nav="/mypage/plans/history">결제내역</a>
-          </div>
-        </div>
-      </div>
-
-      <section class="plans-section">
-        <div class="plans-section__head">
-          <h3 class="plans-section__title"><span class="plans-section__ico" aria-hidden="true">📢</span> 노출 극대화 상품</h3>
-          <p class="plans-section__lead">Prime 노출·Pick 노출은 기간형 단건 결제입니다. Basic을 위로 올리는 별도 UP 상품은 없습니다.</p>
-        </div>
-        <ul class="plans-card-grid plans-card-grid--2">
-          ${positionProducts
-            .map((p, i) =>
-              renderPositionCard(p, profile, role, slots, {
-                layout: 'compact',
-                primaryCta: i === 0,
-                regionReady: profile ? getApplyTargetReadiness(profile, role).regionReady : false,
-              }),
-            )
-            .join('')}
-        </ul>
-        <div class="plans-tip">
-          <span class="plans-tip__ico" aria-hidden="true">💡</span>
-          <p>알고 계셨나요? Hot·단과(공부방)·쪽집게·SKY(과외쌤)는 Prime·Pick 노출 이용 기간에 함께 적용됩니다. 서로 다른 배지 최대 2개 · New는 신규 1주 자동배지이며 추천·후기는 통계입니다.</p>
-        </div>
-      </section>
-
-      <section class="plans-section">
-        <div class="plans-section__head">
-          <h3 class="plans-section__title"><span class="plans-section__ico" aria-hidden="true">🔗</span> 쪽지권</h3>
-          <p class="plans-section__lead">학생에게 먼저 보내는 쪽지만 횟수권입니다. 학부모가 먼저 보낸 쪽지와 답장은 무료입니다.</p>
-        </div>
-        <ul class="plans-card-grid plans-card-grid--2">
-          ${accessProducts
-            .map((p, i) => renderAccessCard(p, profile, role, remaining, { primaryCta: i === 0 }))
-            .join('')}
-        </ul>
-      </section>
-
-      ${renderFreePaidCompare()}
-
-      ${renderPlansCtaBanner({
-        title: '상품 구매에 대해 궁금한 점이 있으신가요?',
-        lead: '자주 묻는 질문에서 노출·쪽지권·환불 안내를 확인하세요.',
-        secondary: { label: '자주 묻는 질문', href: '/support/faq', nav: true },
-        primary: { label: '1:1 문의하기', href: '/support/contact', nav: true },
-      })}
-
-      <div class="mypage-info-box plans-renewal-box">
-        <strong>${esc(P18_RENEWAL_COPY.title)}</strong>
-        <ul class="plans-tier-list">${P18_RENEWAL_COPY.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
-      </div>
-      <p class="mypage-muted plans-settings-hint">${esc(P18_HEADLINE)} · 현재 역할 <strong>${esc(roleLabel(role))}</strong></p>
-    </section>`;
+  return renderPlansHomeBody({
+    noticesHtml: renderProviderNoticeBanners(),
+  });
 }
 
 /** P18-02 노출상품 */
