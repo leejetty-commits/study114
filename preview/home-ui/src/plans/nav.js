@@ -27,20 +27,24 @@ export function renderPlansPageTitle(path) {
   return `<span class="sup-content__title-prefix">유료상품</span><span class="sup-content__title-suffix">${esc(suffix)}</span>`;
 }
 
-/** @param {string} path @param {{ guestCatalogOnly?: boolean }} [opts] */
+/** @param {string} path @param {{ guestCatalogOnly?: boolean, shellFit?: boolean }} [opts] */
 export function renderPlansNav(path, opts = {}) {
   const active = getActivePlansNavId(path);
   const items = opts.guestCatalogOnly
     ? PLANS_NAV.filter((n) => n.id === 'home' || n.id === 'positions' || n.id === 'access')
     : PLANS_NAV;
+  const shellFit = Boolean(opts.shellFit);
   return `
-    <nav class="sup-nav" aria-label="유료상품 메뉴">
+    <nav class="sup-nav${shellFit ? ' plans-sf-sidenav' : ''}" aria-label="유료상품 메뉴">
+      ${shellFit ? '<p class="plans-sf-sidenav__label">유료상품</p>' : ''}
       <ul class="sup-nav__list">
         ${items
           .map(
             (n) =>
               `<li>
-              <a href="#${n.path}" class="sup-nav__link${active === n.id ? ' is-active' : ''}" data-plans-nav="${n.path}">
+              <a href="#${n.path}" class="sup-nav__link${active === n.id ? ' is-active' : ''}" data-plans-nav="${n.path}"${
+                active === n.id ? ' aria-current="page"' : ''
+              }>
                 <span class="sup-nav__label">${esc(n.label)}${n.badge ? ` <em class="plans-nav-badge">${esc(n.badge)}</em>` : ''}</span>
               </a>
             </li>`,

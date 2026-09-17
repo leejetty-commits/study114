@@ -1,6 +1,6 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole } from '../state.js';
-import { renderPlansPageTitle, renderPlansNav, renderPlansStorefrontNav } from './nav.js';
+import { renderPlansPageTitle, renderPlansNav } from './nav.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { isPaidStorefrontPath, wrapPaidStorefront } from './theme.js';
 
@@ -21,15 +21,17 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
 
   if (isPaidStorefrontPath(currentPath)) {
     const storefrontHtml = `
-      <div class="plans-sf-shell">
-        ${banner}
-        <div class="plans-sf-page">
-          ${renderPlansStorefrontNav(currentPath, { guestCatalogOnly })}
-          <div class="plans-sf-page__main">${bodyHtml}</div>
-          <p class="plans-sf-page__trail">
-            <a href="#${sub}" class="plans-sf-back" data-nav="${sub}">← 메인 홈으로</a>
-            <a href="#/plans" class="plans-sf-hub" data-plans-nav="/plans">상품홈</a>
-          </p>
+      <div class="plans-sf-shell" data-plans-shell-fit>
+        <div class="plans-sf-fit">
+          ${renderPlansNav(currentPath, { guestCatalogOnly, shellFit: true })}
+          <div class="plans-sf-page">
+            ${banner}
+            <div class="plans-sf-page__main">${bodyHtml}</div>
+            <p class="plans-sf-page__trail">
+              <a href="#${sub}" class="plans-sf-back" data-nav="${sub}">← 메인 홈으로</a>
+              <a href="#/plans" class="plans-sf-hub" data-plans-nav="/plans">상품홈</a>
+            </p>
+          </div>
         </div>
       </div>
     `;
@@ -38,8 +40,8 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
       headerHtml: renderHeader(headerRole),
       mainHtml: wrapPaidStorefront(storefrontHtml),
       footerHtml: renderFooter(),
-      // 승인 시안: 우측 레일 없이 본문 전폭 세로 흐름
-      slotKey: null,
+      // 운영 Shell: 좌 메뉴(본문 안) + 본문 + 우 레일(home-body 열)
+      slotKey: 'plans_right_rail',
       appClass: 'home-app--plans-sf',
     });
   }
@@ -69,8 +71,16 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
   });
 }
 
+function syncPlansRailFold(root) {
+  const desktop = window.matchMedia('(min-width: 1024px)').matches;
+  root.querySelectorAll('details.plans-rail-fold').forEach((el) => {
+    el.open = desktop;
+  });
+}
+
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindPlansShellEvents(root, rerender) {
+  syncPlansRailFold(root);
   bindLayoutEvents(root, rerender);
   root.querySelectorAll('[data-plans-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {

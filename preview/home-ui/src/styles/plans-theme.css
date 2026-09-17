@@ -33,9 +33,9 @@
   --surface-page: var(--plans-canvas);
 }
 
-/* 본문 컬럼만 쇼룸 캔버스. header/footer/우측 레일은 형제라 오염되지 않음 */
+/* 토큰 스코프만 유지. ivory는 .plans-sf-page에만 칠한다 (좌메뉴·우레일 비오염) */
 .home-main > .plans-theme[data-theme='plans'] {
-  background: var(--plans-canvas);
+  background: transparent;
   color: var(--plans-ink);
   min-height: calc(100vh - 12rem);
   box-sizing: border-box;
@@ -573,17 +573,25 @@
 }
 
 /* ══════════════════════════════════════════════
-   Storefront shell (E2) — positions / access only
-   mypage/sup 골격을 쓰지 않는 독립 쇼룸 윤곽
+   Storefront shell-fit — positions / access only
+   Adopted live: nav 160 · gap 24 · body 800 · gap 8 · rail 224
+   ivory는 중앙 바디만. 좌메뉴 항목/순서는 기존 PLANS_NAV 유지.
    ══════════════════════════════════════════════ */
+
+.home-app.home-app--plans-sf {
+  --plans-sf-nav-w: 10rem; /* 160 */
+  --plans-sf-nav-gap: 1.5rem; /* 24 */
+  --plans-sf-page-pad-x: 18px;
+  --plans-sf-page-pad-y: 20px;
+}
 
 .home-app.home-app--plans-sf .home-body,
 .home-app.home-app--plans-sf .home-main {
-  background: var(--plans-canvas, #f6f1e8);
+  background: transparent;
 }
 
 .home-app.home-app--plans-sf .home-main > .plans-theme[data-theme='plans'] {
-  background: var(--plans-canvas);
+  background: transparent;
   color: var(--plans-ink);
   min-height: calc(100vh - 8rem);
   display: block;
@@ -591,15 +599,113 @@
   box-sizing: border-box;
 }
 
+.home-app.home-app--plans-sf .home-body.home-body--no-promo > .home-main > .plans-theme[data-theme='plans'] {
+  background: var(--plans-canvas);
+  border-radius: 16px;
+}
+
+.home-app.home-app--plans-sf .home-body.home-body--with-promo > .home-sidebar {
+  align-self: start;
+}
+
+@media (min-width: 1200px) {
+  /* closed <details>는 Chrome에서 자식 높이를 부모에 안 넘김. 데스크톱은 패널을 컬럼에 편입. */
+  .home-app.home-app--plans-sf details.plans-rail-fold {
+    display: contents;
+  }
+}
+
 .plans-theme .plans-sf-shell {
   width: 100%;
 }
 
-.plans-theme .plans-sf-page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 1.75rem 1.5rem 5rem;
+.plans-theme .plans-sf-fit {
+  display: grid;
+  grid-template-columns: var(--plans-sf-nav-w, 10rem) minmax(0, 1fr);
+  column-gap: var(--plans-sf-nav-gap, 1.5rem);
+  align-items: start;
+  width: 100%;
+}
+
+.plans-theme .plans-sf-sidenav {
+  position: sticky;
+  top: calc(var(--preview-toolbar-h, 0px) + var(--site-header-h, 4.75rem) + 0.5rem);
+  z-index: 10;
+  width: 100%;
+  margin: 0;
+  padding: 16px 8px 24px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
   box-sizing: border-box;
+}
+
+.plans-theme .plans-sf-sidenav__label {
+  margin: 0 0 8px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--plans-muted);
+  letter-spacing: 0.02em;
+}
+
+.plans-theme .plans-sf-sidenav .sup-nav__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.plans-theme .plans-sf-sidenav .sup-nav__link {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--plans-ink);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  box-shadow: none;
+}
+
+.plans-theme .plans-sf-sidenav .sup-nav__link:hover {
+  background: #eef4fb;
+  border-color: transparent;
+  color: var(--plans-ink);
+}
+
+.plans-theme .plans-sf-sidenav .sup-nav__link:focus-visible {
+  outline: 2px solid var(--plans-primary);
+  outline-offset: 2px;
+}
+
+.plans-theme .plans-sf-sidenav .sup-nav__link.is-active,
+.plans-theme .plans-sf-sidenav .sup-nav__link[aria-current='page'] {
+  background: #eef4fb;
+  border-color: transparent;
+  color: var(--plans-primary);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.plans-theme .plans-sf-sidenav .sup-nav__label {
+  font-size: 14px;
+  font-weight: inherit;
+}
+
+.plans-theme .plans-sf-page {
+  max-width: none;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: var(--plans-sf-page-pad-y, 20px) var(--plans-sf-page-pad-x, 18px) 36px;
+  box-sizing: border-box;
+  background: var(--plans-canvas);
+  border: 1px solid var(--plans-line);
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 .plans-theme .plans-sf-nav {
@@ -845,9 +951,142 @@
   margin-top: 16px;
 }
 
+/* Shell-fit 밀도: 기간 5칸 · 쪽지권 3칸 · 배지 전폭 · CTA 본문폭 */
+.home-app--plans-sf .plans-period {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.home-app--plans-sf .plans-ticket-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+}
+
+.home-app--plans-sf .plans-ticket-card__btn {
+  min-height: 241px;
+}
+
+.home-app--plans-sf .plans-ticket-card__count {
+  font-size: 2.75rem;
+  line-height: 1.05;
+}
+
+.home-app--plans-sf .plans-storefront__offer--prime .plans-prime-board__cells {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.home-app--plans-sf .plans-badge-select.plans-sf-panel,
+.home-app--plans-sf .plans-badge-select__options {
+  width: 100%;
+  max-width: none;
+}
+
+.home-app--plans-sf .plans-storefront__summary {
+  width: 100%;
+}
+
+.home-app--plans-sf .plans-storefront__summary .plans-order-summary {
+  margin: 0;
+}
+
+.home-app--plans-sf .plans-sf--access .plans-sf-hero {
+  margin-bottom: 0.2rem;
+}
+
+.home-app--plans-sf .plans-sf--access .plans-storefront__catalog {
+  gap: 1.15rem;
+}
+
+.home-app--plans-sf .plans-sf--access .plans-ticket-select {
+  margin-top: 0.15rem;
+}
+
+@media (min-width: 720px) {
+  .home-app--plans-sf .plans-period {
+    margin-inline: -2px;
+    padding-bottom: 6px;
+  }
+
+  .home-app--plans-sf .plans-period-grid {
+    grid-template-columns: repeat(5, minmax(112px, 1fr));
+    gap: 8px;
+    min-width: 600px;
+  }
+
+  .home-app--plans-sf .plans-period-card__btn {
+    min-height: 200px;
+    padding: 14px 12px;
+  }
+}
+
+/* 1024~1199: 우 레일 224를 유지하면 본문이 544가 되어
+   기간 5칸(minmax 112)과 쪽지권 3칸 비교 밀도가 깨진다.
+   이 구간만 레일을 접고 본문 776을 확보하는 반응형 규칙이다. 임시 회피가 아니다. */
+@media (max-width: 1199px) and (min-width: 1024px) {
+  .home-app.home-app--plans-sf > .home-body.home-body--with-promo {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .home-app.home-app--plans-sf .home-sidebar {
+    display: none;
+  }
+
+  .home-app--plans-sf .plans-ticket-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .home-app--plans-sf .plans-storefront__offer--prime .plans-prime-board__cells {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) and (min-width: 720px) {
+  .home-app--plans-sf .plans-ticket-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .home-app--plans-sf .plans-storefront__offer--prime .plans-prime-board__cells {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 719px) {
+  .plans-theme .plans-sf-fit {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.75rem;
+    column-gap: 0;
+  }
+
+  .plans-theme .plans-sf-sidenav {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+    padding: 10px 12px;
+  }
+
+  .plans-theme .plans-sf-sidenav__label {
+    width: 100%;
+    margin: 0 0 2px;
+    padding: 0;
+  }
+
+  .plans-theme .plans-sf-sidenav .sup-nav__list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .plans-theme .plans-sf-sidenav .sup-nav__link {
+    padding: 8px 10px;
+    white-space: nowrap;
+  }
+
   .plans-theme .plans-sf-page {
     padding: 0.85rem 0.85rem 3.5rem;
+    border-radius: 14px;
   }
 
   .plans-theme .plans-sf-nav {
@@ -863,5 +1102,22 @@
 
   .plans-theme .plans-sf-panel__title {
     font-size: 1.15rem;
+  }
+
+  .home-app--plans-sf .plans-ticket-grid {
+    grid-template-columns: 1fr;
+    min-width: 0;
+  }
+
+  .home-app--plans-sf .plans-period {
+    margin-inline: 0;
+  }
+
+  .home-app--plans-sf .plans-period-grid {
+    min-width: 0;
+  }
+
+  .home-app--plans-sf .plans-ticket-card__btn {
+    min-height: 220px;
   }
 }
