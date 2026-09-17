@@ -216,7 +216,7 @@ img {
 .home-header__inner {
   max-width: var(--home-max);
   margin: 0 auto;
-  padding: 0 var(--space-4);
+  padding: 0 var(--page-gutter);
   min-height: var(--header-h);
   display: flex;
   align-items: center;
