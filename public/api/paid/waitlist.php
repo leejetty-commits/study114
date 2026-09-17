@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
+use Study114\Database\Connection;
 use Study114\Paid\PaidApi;
 use Study114\Paid\ProviderWaitlistService;
 
@@ -13,7 +14,7 @@ PaidApi::run(static function (): void {
     $auth = PaidApi::requireProvider();
     $userId = (int) $auth['user_id'];
     $method = PaidApi::method();
-    $service = new ProviderWaitlistService();
+    $service = new ProviderWaitlistService(Connection::get());
 
     if ($method === 'GET') {
         $studyRoomId = (int) ($_GET['study_room_id'] ?? $_GET['provider_id'] ?? 0);
