@@ -1340,6 +1340,13 @@
   align-self: stretch;
 }
 
+/* 상품홈 desktop: warm은 body 행만. cinema margin-bottom 24px가 같은 색으로 메워지지 않게 한다. */
+@media (min-width: 1025px) {
+  .home-app--plans-hub .plans-hub-shell--cinema .plans-hub-warm {
+    grid-row: 2;
+  }
+}
+
 .home-app--plans-hub .plans-hub-gutter-l {
   grid-column: 1;
   grid-row: 2;
