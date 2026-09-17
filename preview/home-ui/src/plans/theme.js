@@ -3,6 +3,7 @@
  * 기능 로직·API와 무관.
  * 전역 body / GNB / 공통 버튼 정의에 올리지 말 것.
  * warm canvas: left gutter+nav+gap+body (1016). hero도 이 트랙만. rail/footer 제외.
+ * hub cinema 높이 280/240/208, hero→body 간격 24/20/16. 상세 nav outer top = intro outer top.
  */
 
 export const PAID_STOREFRONT_PATHS = ['/plans/positions', '/plans/access'];
