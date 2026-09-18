@@ -244,14 +244,10 @@ export function renderApplyTargetBlock(profile, role, page = 'positions', opts =
       </section>`;
   }
 
-  const profileMain = `${esc(profile.label)} · ${esc(roleLabel(profile.providerType))}`;
-  const statusRaw = String(profile.status || '').trim();
-  const statusBadge = statusRaw
-    ? `<span class="plans-apply-target__status">${esc(statusRaw)}</span>`
-    : '';
+  const namePrefix =
+    profile.providerType === 'tutor' ? '과외쌤 이름' : '공부방 이름';
   const profileHtml = `<p class="plans-apply-target__profile">
-        <span class="plans-apply-target__profile-main">${profileMain}</span>
-        ${statusBadge}
+        <span class="plans-apply-target__profile-main">${namePrefix} : ${esc(profile.label)}</span>
       </p>`;
 
   if (page === 'access') {
@@ -330,7 +326,11 @@ export function renderApplyTargetBlock(profile, role, page = 'positions', opts =
     <section class="plans-sf-panel plans-apply-target" data-plans-apply data-region-ready="${regionReady ? '1' : '0'}">
       <header class="plans-sf-panel__head">
         <h2 class="plans-sf-panel__title">적용 대상</h2>
-        <p class="plans-sf-panel__lead">상품을 고른 뒤, 적용할 프로필과 지역을 확인합니다.</p>
+        <p class="plans-sf-panel__lead">다음의 순서로 진행하면 됩니다.
+1. 홍보지역을 먼저 고릅니다.
+2. 노출상품을 선택합니다.
+3. 홍보배지를 고릅니다.
+4. 전체 주문 내역을 확인하고 결제합니다.</p>
       </header>
       ${profileHtml}
       ${subjectHtml}
