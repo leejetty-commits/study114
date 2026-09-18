@@ -28,6 +28,42 @@ try {
     $hasRegionZip = (bool) $pdo->query("SHOW COLUMNS FROM study_room_regions LIKE 'address_zip'")->fetch();
     $inqDef = $pdo->query("SHOW COLUMNS FROM study_rooms LIKE 'inquiry_status'")->fetch(PDO::FETCH_ASSOC);
 
+    $schemaFix = ['attempted' => false, 'errors' => []];
+    if (isset($_GET['apply_067']) && (string) $_GET['apply_067'] === '1') {
+        $schemaFix['attempted'] = true;
+        if (!$hasZip) {
+            try {
+                $pdo->exec(
+                    "ALTER TABLE study_rooms ADD COLUMN address_zip VARCHAR(10) NULL COMMENT 'business zip' AFTER address_text"
+                );
+                $hasZip = true;
+                $schemaFix['study_rooms.address_zip'] = 'added';
+            } catch (Throwable $e) {
+                $schemaFix['errors'][] = 'study_rooms.address_zip: ' . $e->getMessage();
+            }
+        }
+        if (!$hasRegionZip) {
+            try {
+                $pdo->exec(
+                    "ALTER TABLE study_room_regions ADD COLUMN address_zip VARCHAR(10) NULL COMMENT 'region zip' AFTER region_basis_type"
+                );
+                $hasRegionZip = true;
+                $schemaFix['study_room_regions.address_zip'] = 'added';
+            } catch (Throwable $e) {
+                $schemaFix['errors'][] = 'study_room_regions.address_zip: ' . $e->getMessage();
+            }
+        }
+        try {
+            $pdo->exec(
+                "ALTER TABLE study_rooms MODIFY COLUMN inquiry_status ENUM('open','paused','capacity_full','waiting_only') NOT NULL DEFAULT 'open'"
+            );
+            $inqDef = $pdo->query("SHOW COLUMNS FROM study_rooms LIKE 'inquiry_status'")->fetch(PDO::FETCH_ASSOC);
+            $schemaFix['inquiry_status_default'] = $inqDef['Default'] ?? null;
+        } catch (Throwable $e) {
+            $schemaFix['errors'][] = 'inquiry_status default: ' . $e->getMessage();
+        }
+    }
+
     $payload = [
         'ok'        => true,
         'message'   => 'DB connection successful — 이 파일은 삭제하세요.',
@@ -41,6 +77,7 @@ try {
             'study_room_regions.address_zip' => $hasRegionZip,
             'inquiry_status_default' => $inqDef['Default'] ?? null,
         ],
+        'schema_fix' => $schemaFix,
     ];
 
     // Optional room dump — requires STUDY114_MAIL_PROBE_KEY
