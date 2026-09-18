@@ -18,8 +18,8 @@ export const RC_COPY = {
   promo: {
     title: '홍보광고를 위하여 픽 · 프라임 노출을 고민 중이신가요?',
     lines: [
-      '베이직 검색은 기본정보만으로도 가능합니다.',
-      '더 잘 보이게 하려면 아래 항목을 추가로 채워 주세요.',
+      '베이직 검색 공개는 무료이며, 상세·쪽지와 무관합니다.',
+      '더 잘 보이게 하려면 아래 항목을 추가로 채워 주세요 (Pick/Prime 자격).',
       '필요한 정보는 상세정보1, 상세정보2에서 바로 보완할 수 있어요.',
     ],
     detail1Title: '상세정보1',
@@ -82,14 +82,13 @@ export const RC_COPY = {
 /** Pick 핵심 — 남은 수 배지용 */
 export const RC_PICK_FIELD_IDS = ['cover', 'intro_short', 'fee', 'teaching_style'];
 
-/** Prime 핵심 — Pick + 보강 */
+/** Prime 핵심 — Pick + 보강 (수업상세 classes 는 필수 아님) */
 export const RC_PRIME_FIELD_IDS = [
   'cover',
   'intro_short',
   'intro_long',
   'teaching_style',
   'teaching_style_note',
-  'classes',
   'fee',
   'lessons_per_week',
   'feature_1',
@@ -105,7 +104,7 @@ export const RC_PROMO_MISSING_DEFS = [
   { id: 'intro_long', label: '공부방 소개 / 자랑', hint: '상세 페이지에서 공부방을 설명합니다', section: 'detail' },
   { id: 'teaching_style', label: '지도 스타일', hint: '수업 결을 한눈에 보여 줍니다', section: 'detail' },
   { id: 'teaching_style_note', label: '지도 스타일 추가설명', hint: '칩만으로 부족한 설명을 보완합니다', section: 'detail' },
-  { id: 'classes', label: '수업상세', hint: '실제 수업 구성을 보여 주려면 필요합니다', section: 'detail' },
+  { id: 'classes', label: '수업상세', hint: '있으면 마이샵에 표시됩니다 (선택)', section: 'detail' },
   { id: 'fee', label: '월 평균 수업료', hint: '검색 카드 가격대에 쓰입니다', section: 'detail' },
   { id: 'lessons_per_week', label: '주당 평균 수업회수', hint: '수업 밀도를 가늠하는 값입니다', section: 'detail' },
   { id: 'feature_1', label: '경력특징 1', hint: '카드 강조 한 줄. 상세정보2「경력특징 1」과 같은 값입니다', section: 'detail2' },

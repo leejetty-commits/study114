@@ -345,6 +345,7 @@ export function buildRegistrationCheckModel(s, room) {
 
   return {
     roomId: room.id,
+    room,
     copy: RC_COPY,
     previewItem,
     header: {
@@ -354,8 +355,8 @@ export function buildRegistrationCheckModel(s, room) {
         {
           id: 'basic',
           label: RC_COPY.badges.basicReg,
-          value: RC_COPY.badges.basicDone,
-          tone: 'ok',
+          value: room.profile_status === 'published' ? '공개중' : '미공개 · 공개 가능',
+          tone: room.profile_status === 'published' ? 'ok' : 'neutral',
         },
         {
           id: 'pick',

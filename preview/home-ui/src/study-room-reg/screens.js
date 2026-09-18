@@ -34,11 +34,11 @@ import {
   getStudyRooms,
   getStudyRoomsByTab,
   getStudyRoom,
-  getPublishReadiness,
   hideStudyRoom,
   deleteStudyRoom,
   setInquiryStatus,
   getStudyRoomSummaryCounts,
+  publishStudyRoom,
 } from './store.js';
 import { saveStudyRoomBasicInline, saveStudyRoomDetailInline } from './inline-save.js';
 import {
@@ -104,7 +104,7 @@ export function renderStudyRoomRegScreen(path) {
   if (route.screenId === 'P20-01') {
     const rooms = getStudyRooms();
     if (rooms.length) {
-      // 중간 목록 depth 제거 — 대표 공부방으로 직행
+      // 중간 목록 depth 제거 — 마이샵(hub)으로 직행
       queueMicrotask(() => {
         if (window.location.hash.includes(STUDY_ROOM_BASE) && !/\/\d+/.test(window.location.hash)) {
           window.location.hash = studyRoomHubPath(rooms[0].id);
@@ -177,11 +177,8 @@ function renderList(tab) {
       : `<div class="p19-card-grid">
         ${rooms
           .map((r) => {
-            const readiness = getPublishReadiness(r);
-            const badge = readiness.canPublish
-              ? profileStatusLabel(r.profile_status)
-              : P20_LIST_HEAD.notReadyBadge;
-            const badgeClass = readiness.canPublish ? r.profile_status : 'draft';
+            const badge = profileStatusLabel(r.profile_status);
+            const badgeClass = r.profile_status;
             return `
           <a href="#${studyRoomHubPath(r.id)}" class="p19-child-card" data-p20-nav="${studyRoomHubPath(r.id)}">
             <div class="p19-child-card__head">

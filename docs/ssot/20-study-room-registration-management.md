@@ -182,31 +182,37 @@
 | `paused` | OFF · 잠시 쉼 | `지금은 쪽지 안 받음` (+ 잠시 쉼) | 차단 |
 | `waiting_only` | **운영자 선택지 ✕** (레거시) | `paused`와 동일 취급 | 차단 |
 
-**신규 공부방 기본값:** `paused` (기존 실데이터는 이번 라운드에서 **일괄 변경하지 않음**).
+**신규 공부방 기본값:** `open` (쪽지 받는 중). 사용자는 원하면 `paused`/`capacity_full`로 닫는다.  
+기존 실데이터는 **일괄 변경하지 않음**.
 
 **휴대폰 확인:** 공개 게이트 ✕ · `쪽지 받는 중` ON 저장 시도 시에만 `phone_verified_at` 확인.
 
-DDL: `study_rooms.inquiry_status` ENUM — `052_inquiry_default_paused.sql` (신규 DEFAULT `paused`).
+DDL: `study_rooms.inquiry_status` ENUM — `067_publish_inquiry_split_address_zip.sql` (신규 DEFAULT `open`).  
+`052_inquiry_default_paused.sql` 은 **폐기(옛 설계 잔재)**.
 
 ### 4-4. `detail_completion_status` (5장)
 
 | 값 | P20 연동 |
 |----|----------|
-| `basic_only` | 상세 보강 권장 · Prime 후보 △ |
+| `basic_only` | 상세 보강 권장 · Pick/Prime 자격 △ |
 | `expanded_in_progress` | 체크리스트 · 상태판 |
-| `expanded_complete` | 공개 게이트 · 노출 강화 후보 |
+| `expanded_complete` | **Pick/Prime 자격만** (공개 게이트 ✕) |
 
 ### 4-5. 프로필 완성도 % `[UI 계산 · DB 컬럼 후순위]`
 
-예: 「완성도 72% · 필수 7개 중 5개 완료」 — `detail_completion_status` · 이미지 · 소개문 길이 · 과목/지역 등 **정책 기반 계산**. DB `profile_completion_score` **1차 미도입**.
+예: 「완성도 72% · Pick/Prime 항목 N개」 — **공개와 무관**. Pick/Prime 자격·마이샵 얇음 안내 전용.
 
 ### 4-6. 노출 가능 여부 `[UI 계산 · DB 플래그 후순위]`
 
-`is_search_visible` 등 **1차 DDL 없음**. 11·13장 규칙 + `published` + 필수 필드로 **판정 결과만 표시**.
+| 축 | 조건 |
+|----|------|
+| 베이직 검색 | `profile_status = published` 만 |
+| Pick/Prime 구매 | `published` + 상세 완성(`expanded_complete`) + 홍보지역 ID |
+| 쪽지 CTA | `inquiry_status` 만 |
 
 ---
 
-## 5. P20-03 브리지 · 공개 게이트
+## 5. P20-03 브리지 · 공개 스위치
 
 ### 5-1. study-room-ui ↔ P20
 
@@ -215,41 +221,32 @@ DDL: `study_rooms.inquiry_status` ENUM — `052_inquiry_default_paused.sql` (신
 | `#/register/basic` · `location` | P20-03a |
 | `#/register/lesson` · `career` · `facility` | P20-03b |
 
-각 화면: **현재 요약** · **부족 항목** · **「수정하기」→ 딥링크** (부록 C).
+각 화면: **현재 요약** · **부족 항목** · **「수정하기」→ 딥링크** (부록 C).  
+기본정보 저장 후 **쪽지설정 안내(스킵 가능)**.
 
-### 5-2. 공개 필수 체크리스트 (시스템 조건 · 심사 ✕)
+### 5-2. 공개 스위치 (입력 완성도 ✕ · 쪽지 ✕)
 
-5장 · study-room-ui DOC-CHECKLIST 기준 **최소 후보:**
+**정본 (2026-09):** 공개는 원장이 켜는 스위치다.
 
-| 항목 |
-|------|
-| `study_room_name` |
-| `region_id` / `study_room_regions` |
-| `study_room_subject_targets` |
-| `lesson_place_type` 등 수업 방식 |
-| `detail_completion_status` 기준 `[expanded_complete 여부 — 합의 후 수치화]` |
-| 대표 이미지 1장 이상 |
-| `intro_short` 또는 `intro_long` 최소 길이 |
-| 문의·연락 방식 |
+- 입력 완성도·쪽지설정·대표사진·소개문·`contact_time_note` 로 **공개를 막지 않는다**.
+- 베이직 노출은 무료이므로 빈 상세값이 있어도 `published` 가능.
+- 입력 완성도는 **Pick/Prime 자격·등록점검 배지**에만 사용.
 
-미충족 → **공개 버튼 비활성** + 부족 항목 링크. **반려 메시지 형태 ✕**.
+미공개(`draft`) → 「공개하기」활성. **반려 메시지 형태 ✕**.
 
-### 5-2-1. 공개 게이트 · `detail_completion_status` `[프리뷰 잠금 · 2026-07-06]`
+### 5-2-1. `detail_completion_status` 와 공개 `[정본 교체 · 2026-09]`
 
 | 환경 | 정책 |
 |------|------|
-| **운영 DB (5장)** | `expanded_complete` 권장 — Prime/Pick 후보 |
-| **home-ui 프리뷰 store** | **1차:** `expanded_complete` 필수 — draft 시나리오 체험용 |
-| **완화 시** | store `getPublishReadiness`만 조정 · SSOT enum **변경 ✕** |
-
-> 「합의 후 수치화」= **DB/API 확정 전** 프리뷰는 위 표대로. 완화는 코드 store 한정.
+| 운영 · 프리뷰 | 공개 게이트에서 `expanded_complete` **제거** |
+| Pick/Prime | `expanded_complete` + 홍보지역 ID 유지 |
 
 ### 5-2-2. UI 금지 문구 (21§3-3 · 22§7 연동)
 
 | ✕ | ○ |
 |---|---|
 | Pick/Prime **후보** · 검증 완료 | Pick/Prime **신청 가능** · **조건 N개 부족** |
-| 심사·반려·검수중 | 공개 준비 미완료 · 자기확인 |
+| 심사·반려·검수중 · 공개 준비 미완료(완성도 탓) | 미공개 · 자기확인 · 공개하기 |
 
 ### 5-3. P20-04 미리보기 · 자기확인 (심사 ✕)
 

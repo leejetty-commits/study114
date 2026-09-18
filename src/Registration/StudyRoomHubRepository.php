@@ -101,10 +101,16 @@ final class StudyRoomHubRepository
             'id'                       => $roomId,
             'study_room_name'          => (string) ($row['study_room_name'] ?? ''),
             'profile_status'           => $profileStatus,
-            'inquiry_status'           => (string) ($row['inquiry_status'] ?? 'paused'),
+            'inquiry_status'           => (string) ($row['inquiry_status'] ?? 'open'),
             'owner_phone_verified'     => $ownerPhoneVerified,
             'detail_completion_status' => (string) ($row['detail_completion_status'] ?? 'basic_only'),
             'region_label'             => $regionLabel,
+            'region_id'                => !empty($row['region_id']) ? (string) (int) $row['region_id'] : '',
+            'complex_id'               => !empty($row['complex_id']) ? (string) (int) $row['complex_id'] : '',
+            'region_basis_type'        => isset($row['region_basis_type']) && in_array((string) $row['region_basis_type'], ['dong', 'complex'], true)
+                ? (string) $row['region_basis_type']
+                : (!empty($row['complex_id']) ? 'complex' : 'dong'),
+            'saved_regions'            => $this->savedRegions($roomId, $row),
             'main_subject_note'        => (string) ($row['main_subject_note'] ?? ''),
             'grade_band'               => $this->gradeBand($roomId),
             'price_amount'             => $row['price_amount'] !== null ? (int) $row['price_amount'] : null,
@@ -123,7 +129,8 @@ final class StudyRoomHubRepository
             'has_subject_targets'      => $hasSubjects,
             'has_regions'              => $hasRegions,
             'lesson_place_set'         => !empty($row['lesson_place_type']),
-            'contact_method_set'       => !empty($row['contact_time_note']),
+            // 쪽지·연락 방식은 공개 게이트가 아님. 하위 호환용 플래그만 유지.
+            'contact_method_set'       => true,
             'compare_eligible'         => $profileStatus === 'published',
             'prime_eligible'           => (string) ($row['detail_completion_status'] ?? '') === 'expanded_complete',
             'updated_at'               => gmdate('c', strtotime((string) $row['updated_at'])),
@@ -131,6 +138,81 @@ final class StudyRoomHubRepository
                 ? gmdate('c', strtotime((string) $row['published_at'])) : null,
             'deleted_at'               => null,
         ];
+    }
+
+    /**
+     * 공부방 Prime/Pick 적용 시 후보 — region_id / complex_id 선택값.
+     * study_room_regions 가 비어 있고 study_rooms.region_id|complex_id 만 있으면 1슬롯으로 합성한다.
+     *
+     * @param array<string, mixed> $roomRow
+     * @return list<array{region_id: string, complex_id: string, region_basis_type: string, region_label: string, is_primary: bool}>
+     */
+    private function savedRegions(int $roomId, array $roomRow = []): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT srr.region_id, srr.complex_id, srr.region_basis_type, srr.is_primary,
+                    r.dong_name, c.name AS complex_name
+             FROM study_room_regions srr
+             LEFT JOIN regions r ON srr.region_id = r.id
+             LEFT JOIN complexes c ON srr.complex_id = c.id
+             WHERE srr.study_room_id = ?
+             ORDER BY srr.is_primary DESC, srr.slot ASC, srr.id ASC'
+        );
+        $stmt->execute([$roomId]);
+        $out = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $regionId = isset($row['region_id']) && (int) $row['region_id'] > 0 ? (string) (int) $row['region_id'] : '';
+            $complexId = isset($row['complex_id']) && (int) $row['complex_id'] > 0 ? (string) (int) $row['complex_id'] : '';
+            $basis = (string) ($row['region_basis_type'] ?? '') === 'complex' && $complexId !== '' ? 'complex' : 'dong';
+            if ($basis === 'dong' && $regionId === '') {
+                continue;
+            }
+            if ($basis === 'complex' && $complexId === '') {
+                continue;
+            }
+            $label = $basis === 'complex'
+                ? (string) ($row['complex_name'] ?? '')
+                : (string) ($row['dong_name'] ?? '');
+            if ($label === '') {
+                $label = $basis === 'complex' ? ('단지 #' . $complexId) : ('행정동 #' . $regionId);
+            }
+            $out[] = [
+                'region_id' => $regionId,
+                'complex_id' => $complexId,
+                'region_basis_type' => $basis,
+                'region_label' => $label,
+                'is_primary' => (int) ($row['is_primary'] ?? 0) === 1,
+            ];
+        }
+
+        if ($out !== []) {
+            return $out;
+        }
+
+        $topRegionId = !empty($roomRow['region_id']) ? (string) (int) $roomRow['region_id'] : '';
+        $topComplexId = !empty($roomRow['complex_id']) ? (string) (int) $roomRow['complex_id'] : '';
+        if ($topRegionId === '' && $topComplexId === '') {
+            return [];
+        }
+        $basis = $topComplexId !== ''
+            && (string) ($roomRow['region_basis_type'] ?? '') === 'complex'
+            ? 'complex'
+            : ($topComplexId !== '' ? 'complex' : 'dong');
+        $label = $this->regionLabel($roomId, $roomRow);
+        if ($label === '') {
+            $label = $basis === 'complex' ? ('단지 #' . $topComplexId) : ('행정동 #' . $topRegionId);
+        }
+
+        return [[
+            'region_id' => $topRegionId,
+            'complex_id' => $basis === 'complex' ? $topComplexId : '',
+            'region_basis_type' => $basis,
+            'region_label' => $label,
+            'is_primary' => true,
+        ]];
     }
 
     /** @param array<string, mixed> $row */

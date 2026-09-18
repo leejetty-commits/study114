@@ -56,10 +56,7 @@ final class StudyRoomHubService
     {
         (new \Study114\Auth\EmailVerificationGate())->assertVerified($userId);
 
-        $missing = $this->publishMissing($room);
-        if ($missing !== []) {
-            return ['ok' => false, 'reason' => 'incomplete', 'missing' => $missing];
-        }
+        // 공개는 입력 완성도·쪽지 설정과 독립. 베이직 노출은 빈 상세값이 있어도 가능.
         $this->repo->setProfileStatus($roomId, 'published', date('Y-m-d H:i:s'));
 
         return ['room' => $this->repo->getForOwner($userId, $roomId) ?? $room];
@@ -100,28 +97,4 @@ final class StudyRoomHubService
         return ['room' => $this->repo->getForOwner($userId, $roomId) ?? []];
     }
 
-    /**
-     * @param array<string, mixed> $room
-     * @return list<string>
-     */
-    private function publishMissing(array $room): array
-    {
-        $missing = [];
-        $need = static function (bool $ok, string $label) use (&$missing): void {
-            if (!$ok) {
-                $missing[] = $label;
-            }
-        };
-
-        $need(!empty($room['study_room_name']), '공부방명');
-        $need($room['has_regions'] && !empty($room['region_label']), '활동 지역');
-        $need($room['has_subject_targets'] && !empty($room['main_subject_note']), '대상·과목');
-        $need($room['lesson_place_set'] && !empty($room['lesson_place_type']), '수업 방식');
-        $need($room['detail_completion_status'] === 'expanded_complete', '상세등록 완료');
-        $need($room['has_representative_image'], '대표 이미지 1장 이상');
-        $need(!empty($room['intro_short']) || !empty($room['intro_long']), '소개문');
-        $need($room['contact_method_set'], '문의·연락 방식');
-
-        return $missing;
-    }
 }

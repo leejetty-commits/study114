@@ -184,11 +184,25 @@ function renderBoard(vm) {
     </div>`;
 }
 
-/** @param {ReturnType<typeof import('./registration-check-model.js').buildRegistrationCheckModel>} vm */
 export function renderRegistrationCheck(vm) {
+  const room = vm.room || {};
+  const published = room.profile_status === 'published';
+  const publishBlock = `
+    <section class="rc-block rc-block--publish" data-rc-publish>
+      <h3 class="rc-block__title">베이직 공개</h3>
+      <p class="rc-block__line">베이직 검색 노출은 무료입니다. 상세·쪽지·Pick/Prime과 무관하게 지금 공개할 수 있습니다.</p>
+      <p class="rc-block__line">현재 상태: <strong>${esc(published ? '공개중' : '미공개(저장중)')}</strong></p>
+      ${
+        published
+          ? `<button type="button" class="btn btn--secondary" data-p20-hide="${esc(vm.roomId)}">숨기기</button>`
+          : `<button type="button" class="btn btn--primary" data-p20-publish="${esc(vm.roomId)}">공개하기</button>`
+      }
+    </section>`;
+
   return `
     <div class="rc-page" data-rc-page data-p20-room-id="${esc(vm.roomId)}" data-rc-room-id="${esc(vm.roomId)}">
       ${renderHeader(vm)}
+      ${publishBlock}
       ${renderPromoCopy(vm)}
       ${renderMissingBlock(vm.promo.pickMissingTitle, vm.promo.pickMissing, vm.promo.pickReadyBody)}
       ${renderMissingBlock(vm.promo.primeMissingTitle, vm.promo.primeMissing, vm.promo.primeReadyBody, renderCards(vm))}
