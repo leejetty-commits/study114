@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /**
- * 공부방 계정 진단 — 배포 후 1회 실측용.
- * GET /api/_room-diag.php?email=leejetty%2Broom%40gmail.com&key=...
- * key = STUDY114_MAIL_PROBE_KEY (서버 SetEnv)
+ * 공�?�?계정 진단 ??배포 ??1???�측??
+ * GET /api/room-account-diag.php?email=leejetty%2Broom%40gmail.com&key=...
+ * key = STUDY114_MAIL_PROBE_KEY (?�버 SetEnv)
  */
 
 require dirname(__DIR__, 2) . '/src/bootstrap.php';
