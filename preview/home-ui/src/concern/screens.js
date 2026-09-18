@@ -96,6 +96,7 @@ function boardVisual(board) {
 }
 
 function storyParts(post) {
+  const fallbackResult = '자세한 과정은 본문에서 확인할 수 있어요.';
   const raw = String(post.body || '').trim();
   const chunks = raw
     .split(/\n{2,}|\n|→/)
@@ -104,11 +105,18 @@ function storyParts(post) {
   if (chunks.length >= 2) {
     return { problem: chunks[0], result: chunks.slice(1).join(' ') };
   }
-  const excerpt = raw.replace(/\s+/g, ' ');
-  if (excerpt.length > 48) {
-    return { problem: `${excerpt.slice(0, 48).trim()}…`, result: excerpt.slice(48).trim() };
+  const excerpt = (chunks[0] || raw).replace(/\s+/g, ' ').trim();
+  if (!excerpt) {
+    return { problem: String(post.title || ''), result: fallbackResult };
   }
-  return { problem: excerpt || post.title, result: '자세한 과정은 본문에서 확인할 수 있어요.' };
+  const sentences = excerpt
+    .split(/(?<=[.!?。！？])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (sentences.length >= 2) {
+    return { problem: sentences[0], result: sentences.slice(1).join(' ') };
+  }
+  return { problem: excerpt, result: fallbackResult };
 }
 
 function renderCommunityHub(navRole) {
