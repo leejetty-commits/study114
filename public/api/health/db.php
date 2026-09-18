@@ -142,11 +142,59 @@ try {
         'schema_fix' => $schemaFix,
     ];
 
+    // Non-secret readiness counts for a single email (no field dumps).
+    $emailOnly = trim((string) ($_GET['email'] ?? ''));
+    if ($emailOnly !== '' && (!isset($_GET['key']) || (string) $_GET['key'] === '')) {
+        $u = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+        $u->execute([$emailOnly]);
+        $uidOnly = (int) ($u->fetchColumn() ?: 0);
+        if ($uidOnly <= 0) {
+            $payload['email_probe'] = ['exists' => false];
+        } else {
+            $rooms = $pdo->prepare(
+                'SELECT id, region_id, complex_id, profile_status, detail_completion_status, inquiry_status'
+                . ($hasZip ? ', address_zip, address_text' : ', NULL AS address_zip, address_text')
+                . ' FROM study_rooms WHERE user_id = ? AND deleted_at IS NULL'
+            );
+            $rooms->execute([$uidOnly]);
+            $summary = [];
+            foreach ($rooms->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $rid = (int) $r['id'];
+                $regs = $pdo->prepare(
+                    'SELECT region_id, complex_id, region_basis_type, is_primary FROM study_room_regions WHERE study_room_id = ?'
+                );
+                $regs->execute([$rid]);
+                $regRows = $regs->fetchAll(PDO::FETCH_ASSOC);
+                $idReady = 0;
+                foreach ($regRows as $rr) {
+                    if ((int) ($rr['region_id'] ?? 0) > 0 || (int) ($rr['complex_id'] ?? 0) > 0) {
+                        $idReady++;
+                    }
+                }
+                $topReady = (int) ($r['region_id'] ?? 0) > 0 || (int) ($r['complex_id'] ?? 0) > 0;
+                $summary[] = [
+                    'study_room_id' => $rid,
+                    'profile_status' => (string) ($r['profile_status'] ?? ''),
+                    'detail_completion_status' => (string) ($r['detail_completion_status'] ?? ''),
+                    'inquiry_status' => (string) ($r['inquiry_status'] ?? ''),
+                    'top_region_id_set' => (int) ($r['region_id'] ?? 0) > 0,
+                    'top_complex_id_set' => (int) ($r['complex_id'] ?? 0) > 0,
+                    'address_text_set' => trim((string) ($r['address_text'] ?? '')) !== '',
+                    'address_zip_set' => trim((string) ($r['address_zip'] ?? '')) !== '',
+                    'study_room_regions_rows' => count($regRows),
+                    'study_room_regions_with_id' => $idReady,
+                    'positions_region_ready' => $idReady > 0 || $topReady,
+                ];
+            }
+            $payload['email_probe'] = ['exists' => true, 'rooms' => $summary];
+        }
+    }
+
     // Optional room dump — requires STUDY114_MAIL_PROBE_KEY
     $expected = study114_env('STUDY114_MAIL_PROBE_KEY', '');
     $key = (string) ($_GET['key'] ?? '');
     $email = trim((string) ($_GET['email'] ?? ''));
-    if ($email !== '' && $expected !== '' && hash_equals($expected, $key)) {
+    if ($email !== '' && $expected !== '' && $key !== '' && hash_equals($expected, $key)) {
         $u = $pdo->prepare('SELECT id, email, role_type FROM users WHERE email = ? LIMIT 1');
         $u->execute([$email]);
         $user = $u->fetch(PDO::FETCH_ASSOC);
