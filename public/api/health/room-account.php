@@ -3,9 +3,8 @@
 declare(strict_types=1);
 
 /**
- * 공�?�?계정 진단 ??배포 ??1???�측??
- * GET /api/health/room-account.php?email=leejetty%2Broom%40gmail.com&key=...
- * key = STUDY114_MAIL_PROBE_KEY (?�버 SetEnv)
+ * Study-room account diagnostics (one-shot after deploy).
+ * GET /api/health/room-account.php?email=...&key=STUDY114_MAIL_PROBE_KEY
  */
 
 require dirname(__DIR__, 3) . '/src/bootstrap.php';
@@ -13,7 +12,6 @@ require dirname(__DIR__, 3) . '/src/bootstrap.php';
 use Study114\Database\Connection;
 use Study114\Registration\StudyRoomHubService;
 use Study114\StudyRoom\StudyRoomRegisterService;
-use Study114\Paid\PrimeRegionScope;
 
 header('Content-Type: application/json; charset=utf-8');
 
