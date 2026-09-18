@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 /**
  * 공�?�?계정 진단 ??배포 ??1???�측??
- * GET /api/room-account-diag.php?email=leejetty%2Broom%40gmail.com&key=...
+ * GET /api/health/room-account.php?email=leejetty%2Broom%40gmail.com&key=...
  * key = STUDY114_MAIL_PROBE_KEY (?�버 SetEnv)
  */
 
-require dirname(__DIR__, 2) . '/src/bootstrap.php';
+require dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Database\Connection;
 use Study114\Registration\StudyRoomHubService;
