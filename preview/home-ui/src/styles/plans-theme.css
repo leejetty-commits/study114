@@ -247,10 +247,16 @@
 
 .plans-theme .plans-addon-card.is-selected,
 .plans-theme .plans-ticket-card.is-selected .plans-ticket-card__btn,
-.plans-theme .plans-period-card.is-selected .plans-period-card__btn,
-.plans-theme .plans-region-chip:has(input:checked) {
+.plans-theme .plans-period-card.is-selected .plans-period-card__btn {
   border-color: var(--plans-primary);
   background: var(--plans-selected);
+}
+
+/* 적용 대상 지역 칩 — SPEC: border 2 #266BC4 · bg #EEF4FB */
+.plans-theme .plans-region-chip:has(input:checked) {
+  border: 2px solid #266bc4;
+  background: #eef4fb;
+  box-shadow: none;
 }
 
 .plans-theme .plans-badge-select {
