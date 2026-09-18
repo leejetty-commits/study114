@@ -33,5 +33,14 @@ AdminApi::run(static function (): void {
         AdminApi::ok($service->applyAction($auth, $input));
     }
 
-    AdminApi::fail(405, 'method_not_allowed', 'GET, PATCH만 허용됩니다.');
+    if ($method === 'POST') {
+        $action = strtolower((string) (AdminApi::queryString('action') ?? ''));
+        $input = AdminApi::readJson();
+        if ($action === 'reset_password') {
+            AdminApi::ok($service->resetPassword($auth, $input));
+        }
+        AdminApi::fail(400, 'bad_request', '지원하지 않는 action입니다.');
+    }
+
+    AdminApi::fail(405, 'method_not_allowed', 'GET, PATCH, POST만 허용됩니다.');
 });

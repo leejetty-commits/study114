@@ -163,6 +163,15 @@ try {
         if ($uidOnly <= 0) {
             $payload['email_probe'] = ['exists' => false];
         } else {
+            $uMeta = $pdo->prepare(
+                'SELECT u.status, u.email_verified_at, u.oauth_role_pending,
+                        (u.password_hash IS NOT NULL AND CHAR_LENGTH(u.password_hash) > 0) AS password_hash_set,
+                        (SELECT COUNT(*) FROM user_oauth_accounts o WHERE o.user_id = u.id) AS oauth_count,
+                        (SELECT ur.role_type FROM user_roles ur WHERE ur.user_id = u.id AND ur.is_primary = 1 AND ur.status = \'active\' LIMIT 1) AS primary_role
+                 FROM users u WHERE u.id = ? LIMIT 1'
+            );
+            $uMeta->execute([$uidOnly]);
+            $metaRow = $uMeta->fetch(PDO::FETCH_ASSOC) ?: [];
             $rooms = $pdo->prepare(
                 'SELECT id, region_id, complex_id, profile_status, detail_completion_status, inquiry_status'
                 . ($hasZip ? ', address_zip, address_text' : ', NULL AS address_zip, address_text')
@@ -198,7 +207,17 @@ try {
                     'positions_region_ready' => $idReady > 0 || $topReady,
                 ];
             }
-            $payload['email_probe'] = ['exists' => true, 'rooms' => $summary];
+            $payload['email_probe'] = [
+                'exists' => true,
+                'user_id' => $uidOnly,
+                'status' => (string) ($metaRow['status'] ?? ''),
+                'primary_role' => (string) ($metaRow['primary_role'] ?? ''),
+                'email_verified' => ($metaRow['email_verified_at'] ?? null) !== null,
+                'oauth_role_pending' => (int) ($metaRow['oauth_role_pending'] ?? 0) === 1,
+                'oauth_linked' => (int) ($metaRow['oauth_count'] ?? 0) > 0,
+                'password_hash_set' => (int) ($metaRow['password_hash_set'] ?? 0) === 1,
+                'rooms' => $summary,
+            ];
         }
     }
 

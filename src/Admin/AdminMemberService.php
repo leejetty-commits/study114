@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Study114\Admin;
 
 use InvalidArgumentException;
+use RuntimeException;
+use Study114\Auth\PasswordPolicy;
 use Study114\Database\Connection;
 
 final class AdminMemberService
@@ -194,6 +196,94 @@ final class AdminMemberService
         return [
             'member' => $this->detail($userId),
             'log' => $this->mapLog($log),
+        ];
+    }
+
+    /**
+     * 최고관리자: 회원 비밀번호 임시 초기화 (실측·접근 복구용).
+     *
+     * @param array{user_id?: int, email?: string, role_type?: string, admin_level?: ?string} $auth
+     * @param array<string, mixed> $input
+     * @return array{member: array<string, mixed>, must_change_password: bool}
+     */
+    public function resetPassword(array $auth, array $input): array
+    {
+        if (!$this->roles->isSuperAdmin($auth)) {
+            throw new InvalidArgumentException('최고관리자만 회원 비밀번호를 초기화할 수 있습니다.');
+        }
+
+        $userId = (int) ($input['user_id'] ?? $input['id'] ?? 0);
+        if ($userId <= 0) {
+            throw new InvalidArgumentException('user_id가 필요합니다.');
+        }
+
+        $before = $this->repo->findById($userId);
+        if ($before === null) {
+            throw new InvalidArgumentException('회원을 찾을 수 없습니다.');
+        }
+
+        $targetEmail = (string) ($before['email'] ?? '');
+        if ($this->roles->isMasterEmail($targetEmail)) {
+            throw new InvalidArgumentException('마스터 계정 비밀번호는 이 경로로 초기화할 수 없습니다.');
+        }
+
+        $password = (string) ($input['password'] ?? '');
+        $confirm = (string) ($input['password_confirm'] ?? $password);
+        (new PasswordPolicy())->validate($password, $confirm, [
+            'email' => $targetEmail,
+            'name' => (string) ($before['real_name'] ?? ''),
+            'phone' => (string) ($before['phone'] ?? ''),
+        ]);
+
+        $hash = password_hash($password, PASSWORD_BCRYPT);
+        if ($hash === false) {
+            throw new RuntimeException('password_hash failed');
+        }
+
+        $pdo = Connection::get();
+        $forceChange = array_key_exists('must_change_password', $input)
+            ? (bool) $input['must_change_password']
+            : true;
+        $pdo->prepare(
+            'UPDATE users SET password_hash = ?, must_change_password = ?, updated_at = NOW() WHERE id = ?'
+        )->execute([$hash, $forceChange ? 1 : 0, $userId]);
+
+        $this->logs->insert(
+            (string) ($auth['email'] ?? 'admin'),
+            'user',
+            (string) $userId,
+            'member_password_reset',
+            'member_ops',
+            'must_change_password=' . ($forceChange ? '1' : '0'),
+            true,
+            false,
+        );
+
+        return [
+            'member' => $this->mapListItemFromId($userId),
+            'must_change_password' => $forceChange,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function mapListItemFromId(int $userId): array
+    {
+        $rows = $this->repo->listMembers(['q' => (string) $userId, 'limit' => 5]);
+        foreach ($rows as $row) {
+            if ((int) ($row['id'] ?? 0) === $userId) {
+                return $this->mapListItem($row);
+            }
+        }
+        $found = $this->repo->findById($userId);
+        if ($found === null) {
+            throw new InvalidArgumentException('회원을 찾을 수 없습니다.');
+        }
+
+        return [
+            'id' => $userId,
+            'email' => (string) ($found['email'] ?? ''),
+            'name' => (string) ($found['real_name'] ?? ''),
+            'status' => (string) ($found['status'] ?? ''),
         ];
     }
 

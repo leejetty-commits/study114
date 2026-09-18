@@ -76,7 +76,9 @@ try {
         'email_verify_required' => !$emailVerified,
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
-    http_response_code(422);
+    // dothome/Apache는 422 시 PHP JSON 본문을 HTML "Unknown Reason"으로 덮어쓴다.
+    // 클라이언트가 message를 읽을 수 있도록 400을 사용한다.
+    http_response_code(400);
     echo json_encode([
         'ok'      => false,
         'error'   => 'validation',
