@@ -87,13 +87,13 @@ export function getPublishChecklistItems(room) {
 /** @returns {StudyRoomRecord} */
 function withDefaults(raw, id) {
   return {
-    inquiry_status: 'paused',
+    inquiry_status: 'open',
     detail_completion_status: 'basic_only',
     has_representative_image: false,
     has_subject_targets: false,
     has_regions: false,
     lesson_place_set: false,
-    contact_method_set: false,
+    contact_method_set: true,
     compare_eligible: false,
     education_office_registered: false,
     weekend_available: false,
