@@ -75,7 +75,7 @@ export function renderGuestHero() {
 }
 
 function guestHeroMapItems() {
-  return EXPOSURE_STUDY_ROOMS.filter((item) => item.profile_status === 'published').slice(0, 12);
+  return EXPOSURE_STUDY_ROOMS.filter((item) => !item.profile_status || item.profile_status !== 'hidden').slice(0, 12);
 }
 
 function renderStudyRoomPrimePick() {

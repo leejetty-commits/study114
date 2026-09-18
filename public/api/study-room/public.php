@@ -38,7 +38,7 @@ try {
     $item = $service->getPublishedById($id);
     if ($item === null) {
         http_response_code(404);
-        echo json_encode(['ok' => false, 'error' => 'not_found', 'message' => '공개된 공부방을 찾을 수 없습니다.'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['ok' => false, 'error' => 'not_found', 'message' => '공부방을 찾을 수 없습니다.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 

@@ -284,8 +284,7 @@ export function getPublishReadiness(tutor) {
   return {
     canPublish: missing.length === 0,
     detailRecommended: tutor.detail_completion_status !== 'expanded_complete',
-    exposureBoostReady:
-      tutor.profile_status === 'published' && tutor.detail_completion_status === 'expanded_complete',
+    exposureBoostReady: tutor.detail_completion_status === 'expanded_complete',
     doneCount,
     totalCount: checks.length,
     missing,

@@ -5,14 +5,8 @@
 
 export const RC_COPY = {
   title: '등록점검',
-  lead: '베이직 공개는 언제든 가능합니다. Pick·Prime에 더 필요한 항목만 아래에서 확인하세요',
+  lead: '입력한 값은 있는 그대로 카드에 보입니다. Pick·Prime에 더 필요한 항목만 아래에서 확인하세요.',
   badges: {
-    publishOk: '공개 가능',
-    publishLive: '공개중',
-    publishHidden: '숨김 · 다시 공개 가능',
-    publishNeed: '미공개',
-    basicOk: 'Basic 충족',
-    basicNeed: (n) => `Basic ${n}개 부족`,
     pickOk: 'Pick 추가 충족',
     pickNeed: (n) => `Pick 추가 ${n}개`,
     primeOk: 'Prime 추가 충족',
@@ -20,15 +14,13 @@ export const RC_COPY = {
   },
   next: {
     prefix: '다음',
-    publish: '자기확인 후 공개하기',
-    live: '공개 유지 중 · 현황만 확인하면 됩니다',
-    hidden: '자기확인 후 다시 공개하기',
+    done: '현황만 확인하면 됩니다',
     fill: (label) => `${label} 입력하러 가기`,
   },
   promo: {
-    title: '베이직 공개 · Pick/Prime 자격은 별개입니다',
+    title: '카드 노출 · Pick/Prime 자격은 별개입니다',
     lines: [
-      '베이직 검색 공개는 무료이며, 상세·쪽지와 무관합니다.',
+      '입력한 항목은 입력한 만큼 그대로 카드에 보입니다. 빈 항목은 빈 채로 둡니다.',
       '더 잘 보이게 하려면 아래 항목을 추가로 채워 주세요 (Pick/Prime 자격).',
       '필요한 정보는 상세정보1, 상세정보2에서 바로 보완할 수 있어요.',
     ],
@@ -36,9 +28,9 @@ export const RC_COPY = {
     primeMissingTitle: '[프라임] 추가 입력 — 유료 Prime 노출에 필요한 정보',
     gotoField: '입력하러 가기',
     pickReadyBody:
-      'Pick에 필요한 추가 항목이 채워져 있습니다. 공개(published) 상태이면 노출상품에서 Pick을 구매할 수 있습니다.',
+      'Pick에 필요한 추가 항목이 채워져 있습니다. 노출상품에서 Pick을 구매할 수 있습니다.',
     primeReadyBody:
-      'Prime에 필요한 추가 항목이 채워져 있습니다. 공개(published) 상태이면 노출상품에서 지역을 선택해 Prime을 구매할 수 있습니다.',
+      'Prime에 필요한 추가 항목이 채워져 있습니다. 노출상품에서 지역을 선택해 Prime을 구매할 수 있습니다.',
     cardsTitle: 'Basic/Pick/Prime 이렇게 달라집니다',
     cardsLead:
       '샘플은 홈 실제 카드와 같은 크기·구성입니다. 1행은 베이직 목록 카드, 2행은 픽·프라임 유료 노출 카드입니다. 확대카드 보기로 상세를 엽니다.',
@@ -74,19 +66,6 @@ export const RC_COPY = {
   status: {
     filled: 'O',
     empty: '미입력됨',
-  },
-  publish: {
-    summaryReady: '베이직 공개는 언제든 가능합니다. 아래를 확인한 뒤 공개하세요.',
-    summaryNeed: () => '베이직 공개는 언제든 가능합니다. 아래를 확인한 뒤 공개하세요.',
-    summaryLive: '현재 공개 중입니다. 내용을 바꿨다면 다시 한 번 확인해 주세요.',
-    summaryHidden: '지금은 숨김입니다. 자기확인 후 다시 공개할 수 있습니다.',
-    confirmTitle: '공개 전 자기확인',
-    confirmLead: '학부모 화면에 이렇게 보이는지 직접 확인하고 공개합니다.',
-    confirmRegion: '활동 지역·과목·대상 학생군 노출을 확인했습니다',
-    confirmFee: '수업료·수업 방식 표시를 확인했습니다',
-    confirmTrust: '소개문·시설·신뢰정보 노출을 확인했습니다',
-    publishCta: '공개하기',
-    republishCta: '다시 공개',
   },
   /** 원본 탭에서 등록점검으로 복귀 (?return=registration-check) */
   returnBanner: {

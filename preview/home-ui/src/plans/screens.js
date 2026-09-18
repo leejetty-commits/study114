@@ -594,11 +594,11 @@ function getEligibility(profile, productCode, family = 'position') {
     if (!room) {
       return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
     }
-    if (room.profile_status !== 'published') {
-      missing.push('공개(published) 상태가 필요합니다 · 등록점검에서 「공개하기」');
+    if (room.profile_status === 'hidden') {
+      missing.push('숨김 상태입니다 · 노출 중지를 해제한 뒤 구매하세요');
       canBuy = false;
     }
-    // Pick/Prime 자격만 입력 완성도를 본다. 공개·쪽지와 분리.
+    // Pick/Prime 자격만 입력 완성도를 본다. 목록 노출·쪽지와 분리.
     if (productCode === 'prime' || productCode === 'pick') {
       if (room.detail_completion_status !== 'expanded_complete') {
         missing.push(
@@ -617,8 +617,8 @@ function getEligibility(profile, productCode, family = 'position') {
     if (!tutor) {
       return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
     }
-    if (tutor.profile_status !== 'published') {
-      missing.push('공개(published) 상태가 필요합니다');
+    if (tutor.profile_status === 'hidden') {
+      missing.push('숨김 상태입니다 · 노출 중지를 해제한 뒤 구매하세요');
       canBuy = false;
     }
     // 과외쌤 구매 차단은 노출축(시·주력과목)만. 소개문·카드 카피 완성도는 성과 불이익.

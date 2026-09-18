@@ -131,7 +131,8 @@ final class StudyRoomHubRepository
             'lesson_place_set'         => !empty($row['lesson_place_type']),
             // 쪽지·연락 방식은 공개 게이트가 아님. 하위 호환용 플래그만 유지.
             'contact_method_set'       => true,
-            'compare_eligible'         => $profileStatus === 'published',
+            // 비교/목록 자격 = 숨김만 제외. 공개(published) 게이트 없음.
+            'compare_eligible'         => $profileStatus !== 'hidden',
             'prime_eligible'           => (string) ($row['detail_completion_status'] ?? '') === 'expanded_complete',
             'updated_at'               => gmdate('c', strtotime((string) $row['updated_at'])),
             'published_at'             => $row['published_at'] !== null

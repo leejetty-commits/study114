@@ -24,8 +24,13 @@ export function sortByNewestFirst(items, dateKey = 'registered_at') {
   );
 }
 
-function isPublished(item) {
-  return !item.profile_status || item.profile_status === 'published';
+/**
+ * 목록/카드 노출 후보 — 숨김(hidden)만 제외.
+ * draft도 입력값 그대로 노출. published 게이트 없음.
+ * @param {object} item
+ */
+function isListVisible(item) {
+  return !item.profile_status || item.profile_status !== 'hidden';
 }
 
 /**
@@ -36,7 +41,7 @@ function isPublished(item) {
  */
 export function getPrimeOccupied(pool, capacity) {
   const cap = capacity ?? (Number(getPlanSetting('prime_slots')) || 3);
-  const published = pool.filter(isPublished);
+  const published = pool.filter(isListVisible);
   const explicit = published.filter(
     (i) => i.exposure_tier === 'prime' || i.position_sku === 'prime' || i.sku === 'prime',
   );
@@ -69,7 +74,7 @@ export function buildPrimeSlotArray(occupied, capacity) {
  */
 export function getPickPool(pool, primeOccupied) {
   const primeIds = new Set(primeOccupied.map((i) => i.id));
-  const rest = pool.filter((i) => isPublished(i) && !primeIds.has(i.id));
+  const rest = pool.filter((i) => isListVisible(i) && !primeIds.has(i.id));
   const explicitPick = rest.filter(
     (i) => i.exposure_tier === 'pick' || i.position_sku === 'pick' || i.sku === 'pick',
   );
@@ -117,7 +122,7 @@ export function getPrimeCandidatePool(kind, pool) {
   const cap = Number(getPlanSetting('prime_slots')) || 3;
   if (kind !== 'tutor') return getPrimeOccupied(pool, cap);
 
-  const published = pool.filter(isPublished);
+  const published = pool.filter(isListVisible);
   const explicit = published.filter(
     (i) => i.exposure_tier === 'prime' || i.position_sku === 'prime' || i.sku === 'prime',
   );
@@ -137,7 +142,7 @@ export function getPrimeCandidatePool(kind, pool) {
  */
 export function getBasicPool(pool, primeOccupied, opts = {}) {
   const primeIds = new Set(primeOccupied.map((i) => i.id));
-  const filtered = pool.filter((i) => isPublished(i) && !primeIds.has(i.id));
+  const filtered = pool.filter((i) => isListVisible(i) && !primeIds.has(i.id));
   const kind = opts.kind || 'study_room';
   return sortListItems(filtered, kind, opts.sort || DEFAULT_LIST_SORT);
 }

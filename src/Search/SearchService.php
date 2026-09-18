@@ -260,13 +260,13 @@ final class SearchService
      */
     private function searchRooms(PDO $pdo, array $filters, int $limit, int $offset, string $sort): array
     {
-        // 일반 리스트/검색 = 상세등록 완료 후 (Notion 14장 §7-2)
+        // 목록/검색 노출 = 숨김(hidden)만 제외. 공개(published) 게이트·완성도 게이트 없음.
+        // Pick/Prime 후보는 detail_completion_status 로 별도 판정(prime_eligible).
         $where = [
-            'sr.profile_status = :status',
+            "sr.profile_status <> 'hidden'",
             'sr.deleted_at IS NULL',
-            "sr.detail_completion_status = 'expanded_complete'",
         ];
-        $params = ['status' => 'published'];
+        $params = [];
 
         if ($regionId = $this->intFilter($filters, 'region_id')) {
             $where[] = '(sr.region_id = :region_id OR EXISTS (
@@ -381,7 +381,7 @@ final class SearchService
                    {$audienceExpr} AS audience_label,
                    sr.feature_1, sr.feature_2, sr.feature_3, sr.slogan,
                    sr.lesson_place_type, sr.capacity_per_time, sr.lesson_operation_type,
-                   sr.facility_note, sr.inquiry_status,
+                   sr.facility_note, sr.inquiry_status, sr.profile_status,
                    sr.education_office_registered, sr.detail_completion_status,
                    {$careerExpr} AS career_years,
                    {$bizExpr} AS business_registration_available,
@@ -453,6 +453,7 @@ final class SearchService
                 'lesson_operation_type'      => $row['lesson_operation_type'] ?? null,
                 'facility_summary'           => trim((string) ($row['facility_note'] ?? '')),
                 'inquiry_status'             => (string) ($row['inquiry_status'] ?? ''),
+                'profile_status'             => (string) ($row['profile_status'] ?? 'draft'),
                 'education_office_registered'=> (bool) ($row['education_office_registered'] ?? false),
                 'career_years'               => $row['career_years'] !== null ? (int) $row['career_years'] : null,
                 'business_registration_available' => (bool) ($row['business_registration_available'] ?? false),
@@ -508,12 +509,11 @@ final class SearchService
      */
     private function searchTutors(PDO $pdo, array $filters, int $limit, int $offset, string $sort): array
     {
-        // 일반 리스트/검색 = 상세등록 완료 후 (Notion 14장 §7-2)
+        // 목록/검색 노출 = 숨김(hidden)만 제외. 공개·완성도 게이트 없음.
         $where = [
-            't.profile_status = :status',
-            "t.detail_completion_status = 'expanded_complete'",
+            "t.profile_status <> 'hidden'",
         ];
-        $params = ['status' => 'published'];
+        $params = [];
 
         if ($regionId = $this->intFilter($filters, 'tutor_region_id')) {
             $where[] = 'EXISTS (
@@ -609,7 +609,7 @@ final class SearchService
                    t.university_name, t.major_name, t.career_year_band,
                    t.university_status, t.proof_document_available,
                    t.lessons_per_week, t.minutes_per_lesson, t.detail_completion_status,
-                   t.published_at, t.created_at,
+                   t.profile_status, t.published_at, t.created_at,
                    {$recommendExpr} AS recommend_count,
                    {$reviewExpr} AS review_count,
                    tst.subject_name, r.sigungu_name, r.sido_name
@@ -682,6 +682,7 @@ final class SearchService
                 'lessons_per_week'       => $row['lessons_per_week'] !== null ? (int) $row['lessons_per_week'] : null,
                 'minutes_per_lesson'     => $row['minutes_per_lesson'] !== null ? (int) $row['minutes_per_lesson'] : null,
                 'detail_completion_status' => $detailStatus,
+                'profile_status'         => (string) ($row['profile_status'] ?? 'draft'),
                 'prime_eligible'         => $detailStatus === 'expanded_complete',
                 'exposure_tier'          => $exposureTier,
                 'published_at'           => $row['published_at'] ?? null,

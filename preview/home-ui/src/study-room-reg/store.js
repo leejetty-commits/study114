@@ -159,8 +159,7 @@ export function getPublishReadiness(room) {
     // 공개 자체는 완성도와 무관. 베이직 노출은 빈 항목이 있어도 가능.
     canPublish: true,
     detailRecommended: room.detail_completion_status !== 'expanded_complete',
-    exposureBoostReady:
-      room.profile_status === 'published' && room.detail_completion_status === 'expanded_complete',
+    exposureBoostReady: room.detail_completion_status === 'expanded_complete',
     doneCount,
     totalCount: items.length,
     missing: [],

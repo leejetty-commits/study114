@@ -93,10 +93,10 @@ export function studyRoomRegionPurchaseState(region, ctx) {
       tone: 'muted',
     };
   }
-  if (room.profile_status !== 'published') {
+  if (room.profile_status === 'hidden') {
     return {
       purchasable: false,
-      reason: '공개(published) 후 구매 가능',
+      reason: '숨김 상태 · 노출 중지 해제 후 구매 가능',
       tone: 'warn',
     };
   }

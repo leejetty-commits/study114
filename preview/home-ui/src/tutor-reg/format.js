@@ -97,7 +97,7 @@ export function getThreeGauges(tutor) {
   ];
   const paid = isPaidProvider();
   const accessItems = [
-    { ok: tutor.profile_status === 'published', label: '공개중' },
+    { ok: tutor.profile_status !== 'hidden', label: '목록 노출(숨김 아님)' },
     { ok: tutor.has_primary_subject, label: '주력과목 1순위' },
     { ok: tutor.has_primary_region, label: '대표 활동 시' },
     { ok: tutor.compare_eligible, label: '비교검색 필수값' },
@@ -121,7 +121,7 @@ export function getThreeGauges(tutor) {
 /** @param {TutorRecord} tutor */
 function countProductConditions(tutor) {
   let n = 0;
-  if (tutor.profile_status !== 'published') n++;
+  if (tutor.profile_status === 'hidden') n++;
   if (tutor.detail_completion_status !== 'expanded_complete') n++;
   return n;
 }
@@ -130,7 +130,7 @@ function countProductConditions(tutor) {
 export function getProductApplyHint(tutor) {
   const n = countProductConditions(tutor);
   const paid = isPaidProvider();
-  if (n === 0 && tutor.profile_status === 'published') {
+  if (n === 0 && tutor.profile_status !== 'hidden') {
     return paid ? PRODUCT_APPLY.pickPrimeEligiblePaid : PRODUCT_APPLY.pickEligibleUnpaid;
   }
   return PRODUCT_APPLY.pickPrimeMissing(n);
@@ -143,7 +143,7 @@ export function getProductApplyHint(tutor) {
 export function getUnlockCards(tutor) {
   const paid = isPaidProvider();
   const memos = getMemoCreditsRemaining();
-  const published = tutor.profile_status === 'published';
+  const visible = tutor.profile_status !== 'hidden';
   const expanded = tutor.detail_completion_status === 'expanded_complete';
   const matching = getMatchingVisibility(tutor);
 
@@ -167,9 +167,9 @@ export function getUnlockCards(tutor) {
       'matching',
       '학생 목록 노출',
       [
-        { label: '프로필 공개', ok: published },
+        { label: '숨김 아님', ok: visible },
         { label: '대표 활동 시', ok: tutor.has_primary_region },
-        { label: '공개 준비·필수값', ok: matching.ok },
+        { label: '필수값', ok: matching.ok },
       ],
       { label: '학생 목록 보기', external: '#/mypage/student-review' },
     ),
@@ -177,7 +177,7 @@ export function getUnlockCards(tutor) {
       'cold_memo',
       '학생에게 먼저 메모',
       [
-        { label: '프로필 공개', ok: published },
+        { label: '숨김 아님', ok: visible },
         { label: '유료 등록', ok: paid },
         { label: '메모권 잔여', ok: memos > 0 },
       ],
@@ -188,7 +188,7 @@ export function getUnlockCards(tutor) {
       '요청문 열람',
       [
         { label: '유료 등급', ok: paid },
-        { label: '프로필 공개', ok: published },
+        { label: '숨김 아님', ok: visible },
       ],
       { label: '이용권 확인', external: '#/mypage/plans' },
     ),
@@ -196,7 +196,7 @@ export function getUnlockCards(tutor) {
       'pick',
       '추천 노출 신청',
       [
-        { label: '프로필 공개', ok: published },
+        { label: '숨김 아님', ok: visible },
         { label: '상세등록 완료', ok: expanded },
       ],
       { label: '상세정보 보강', path: 'detail' },
@@ -206,7 +206,7 @@ export function getUnlockCards(tutor) {
       '대표 노출 신청',
       [
         { label: '유료 등급', ok: paid },
-        { label: '프로필 공개', ok: published },
+        { label: '숨김 아님', ok: visible },
         { label: '상세등록 완료', ok: expanded },
       ],
       { label: '이용권 확인', external: '#/mypage/plans' },
@@ -222,7 +222,7 @@ export function getStudentListUrl() {
 /** @param {TutorRecord} tutor */
 export function getMatchingVisibility(tutor) {
   const readiness = getPublishReadiness(tutor);
-  const published = tutor.profile_status === 'published';
+  const visible = tutor.profile_status !== 'hidden';
   const hasPrimary = tutor.has_primary_region && !!tutor.primary_region_label;
 
   const conditions = [
@@ -234,13 +234,13 @@ export function getMatchingVisibility(tutor) {
 
   let status = '학생 목록 노출 불가';
   let limited = true;
-  if (published && hasPrimary && readiness.canPublish) {
+  if (visible && hasPrimary && readiness.canPublish) {
     status = `${tutor.primary_region_label} · ${tutor.main_subject_note} · ${tutor.grade_band || '학생'} 학생 목록 노출 가능`;
     limited = false;
   } else if (!hasPrimary) {
     status = '대표 활동 시 미설정 — 학생 목록 기본 노출 제한';
-  } else if (!published) {
-    status = '미공개 — 학생 목록 미노출';
+  } else if (!visible) {
+    status = '숨김 — 학생 목록 미노출';
   }
 
   return { conditions, status, limited, ok: !limited };
@@ -250,7 +250,7 @@ export function getMatchingVisibility(tutor) {
 export function getAccessMatrix(tutor) {
   const paid = isPaidProvider();
   const memos = getMemoCreditsRemaining();
-  const published = tutor.profile_status === 'published';
+  const visible = tutor.profile_status !== 'hidden';
 
   return [
     {
@@ -262,14 +262,14 @@ export function getAccessMatrix(tutor) {
     {
       key: 'basic',
       label: '내 프로필 기본 노출',
-      ok: published,
-      reason: !published ? '공개 후 노출' : null,
+      ok: visible,
+      reason: !visible ? '숨김 상태' : null,
     },
     {
       key: 'student_struct',
       label: '학생 구조화 정보 열람',
-      ok: published,
-      reason: !published ? '공개 필요' : null,
+      ok: visible,
+      reason: !visible ? '숨김 상태' : null,
     },
     {
       key: 'cold_memo',
@@ -280,33 +280,38 @@ export function getAccessMatrix(tutor) {
     {
       key: 'request_doc',
       label: '학생 요청문 열람',
-      ok: published,
-      reason: !published ? '공개 필요' : null,
+      ok: visible,
+      reason: !visible ? '숨김 상태' : null,
     },
     {
       key: 'pick',
       label: '추천 노출',
-      ok: published && tutor.detail_completion_status === 'expanded_complete',
-      reason: tutor.detail_completion_status !== 'expanded_complete' ? '상세등록 완료 필요' : !published ? '미공개' : null,
+      ok: visible && tutor.detail_completion_status === 'expanded_complete',
+      reason:
+        tutor.detail_completion_status !== 'expanded_complete'
+          ? '상세등록 완료 필요'
+          : !visible
+            ? '숨김 상태'
+            : null,
     },
     {
       key: 'prime',
       label: '대표 노출 신청',
-      ok: paid && published,
-      reason: !paid ? '유료 이용 자격 필요' : !published ? '미공개' : null,
+      ok: paid && visible,
+      reason: !paid ? '유료 이용 자격 필요' : !visible ? '숨김 상태' : null,
     },
   ];
 }
 
 /** @param {TutorRecord} tutor @param {import('./store.js').PublishReadiness} readiness */
 export function getExposureMatrix(tutor, readiness) {
-  const published = tutor.profile_status === 'published';
+  const visible = tutor.profile_status !== 'hidden';
   const expanded = tutor.detail_completion_status === 'expanded_complete';
   const paid = isPaidProvider();
   const pickN = countProductConditions(tutor);
   const primeMissing = [
     !paid && '유료',
-    !published && '미공개',
+    !visible && '숨김',
     !expanded && '상세 미완료',
   ].filter(Boolean);
 
@@ -314,28 +319,28 @@ export function getExposureMatrix(tutor, readiness) {
     {
       key: 'search',
       label: '기본 검색 노출',
-      ok: published && readiness.canPublish,
-      reason: !published ? '공개 후 노출' : readiness.canPublish ? null : '필수 항목 미완료',
+      ok: visible,
+      reason: !visible ? '숨김 상태' : null,
       statusText: null,
     },
     {
       key: 'compare',
       label: '비교검색',
-      ok: published && tutor.compare_eligible && readiness.canPublish,
-      reason: !tutor.compare_eligible ? '비교 자격 미충족' : !published ? '미공개' : null,
+      ok: visible && tutor.compare_eligible !== false,
+      reason: !visible ? '숨김 상태' : tutor.compare_eligible === false ? '비교 자격 미충족' : null,
       statusText: null,
     },
     {
       key: 'pick',
       label: '추천 노출',
-      ok: published && expanded,
+      ok: visible && expanded,
       reason: pickN ? `조건 ${pickN}개 부족` : null,
       statusText: pickN === 0 ? PRODUCT_APPLY.eligible : PRODUCT_APPLY.missing(pickN),
     },
     {
       key: 'prime',
       label: '대표 노출',
-      ok: paid && published && expanded,
+      ok: paid && visible && expanded,
       reason: primeMissing.length ? `조건 ${primeMissing.length}개 부족` : null,
       statusText: primeMissing.length === 0 ? PRODUCT_APPLY.eligible : PRODUCT_APPLY.missing(primeMissing.length),
     },

@@ -15,9 +15,8 @@ import {
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from '../registrations-backend.js';
 import { ensureEmbeddedRegister } from './embedded-panels.js';
 import { openDetailDecision } from '../detail-decision/index.js';
-import { getStudyRoom, publishStudyRoom } from './store.js';
+import { getStudyRoom } from './store.js';
 import { RC_COPY } from './registration-check-copy.js';
-import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import {
   RC_LIGHT_FIELDS,
   TEACHING_STYLE_OPTIONS,
@@ -298,46 +297,6 @@ export function bindRegistrationCheckEvents(root, rerender) {
   if (!page) return;
   const roomId = Number(page.getAttribute('data-rc-room-id'));
 
-  page.querySelectorAll('[data-p20-publish]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = Number(btn.getAttribute('data-p20-publish') || roomId);
-      if (!confirm('베이직 검색에 공개할까요? 쪽지·상세 입력과 무관하게 공개됩니다.')) return;
-      btn.disabled = true;
-      try {
-        const { publishStudyRoom } = await import('./store.js');
-        const result = await publishStudyRoom(id);
-        if (result?.ok === false) {
-          alert(`공개 실패: ${(result.missing || []).join(', ') || result.reason || 'unknown'}`);
-          return;
-        }
-        alert('공개되었습니다.');
-        rerender();
-      } catch (err) {
-        alert(err instanceof Error ? err.message : '공개에 실패했습니다.');
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  });
-
-  page.querySelectorAll('[data-p20-hide]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = Number(btn.getAttribute('data-p20-hide') || roomId);
-      if (!confirm('공부방을 숨김 처리하시겠습니까?')) return;
-      btn.disabled = true;
-      try {
-        const { hideStudyRoom } = await import('./store.js');
-        await hideStudyRoom(id);
-        alert('숨김 처리되었습니다.');
-        rerender();
-      } catch (err) {
-        alert(err instanceof Error ? err.message : '숨김에 실패했습니다.');
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  });
-
   page.querySelectorAll('[data-rc-light]').forEach((btn) => {
     btn.addEventListener('click', () => {
       openDrawer(roomId, btn.getAttribute('data-rc-light') || '', rerender);
@@ -381,33 +340,6 @@ export function bindRegistrationCheckEvents(root, rerender) {
       btn.textContent = expanded ? RC_COPY.board.foldOpen : RC_COPY.board.foldClose;
       if (body) body.hidden = expanded;
       section.classList.toggle('is-collapsed', expanded);
-    });
-  });
-
-  page.querySelectorAll('[data-p20-publish]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const confirms = page.querySelectorAll('[data-p20-confirm]');
-      const allChecked = [...confirms].every((c) => /** @type {HTMLInputElement} */ (c).checked);
-      if (!allChecked) {
-        alert('자기확인 항목을 모두 체크해 주세요.');
-        return;
-      }
-      try {
-        const result = await publishStudyRoom(roomId);
-        if (!result.ok) {
-          alert(`공개 처리 실패:\n${result.missing?.join('\n') || result.reason || '알 수 없는 오류'}`);
-          return;
-        }
-        alert('공개되었습니다. (profile_status: published)');
-        rerender();
-      } catch (err) {
-        console.warn('[p20-rc]', err);
-        if (err?.code === 'email_verify_required') {
-          showEmailVerifyOverlay();
-          return;
-        }
-        alert('공개 처리에 실패했습니다.');
-      }
     });
   });
 }

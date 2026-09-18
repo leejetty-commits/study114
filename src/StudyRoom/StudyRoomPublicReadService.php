@@ -46,8 +46,8 @@ final class StudyRoomPublicReadService
         }
         $extraSql = $selectExtra !== [] ? ', ' . implode(', ', $selectExtra) : '';
 
-        // 공개 샵은 공개(published)만 본다. 상세완료(expanded_complete)는
-        // 검색 노출 조건이지, 확대카드「공부방 둘러보기」진입 조건이 아니다.
+        // 샵 상세: 숨김(hidden)·삭제만 제외. draft도 입력값 그대로 노출.
+        // 완성도(expanded_complete)는 섹션 숨김 조건이 아니다.
         $stmt = $this->pdo->prepare(
             "SELECT sr.id, sr.study_room_name, sr.slogan, sr.intro_short, sr.intro_long,
                     sr.main_subject_note, sr.feature_1, sr.feature_2, sr.feature_3,
@@ -60,7 +60,7 @@ final class StudyRoomPublicReadService
                LEFT JOIN regions r ON sr.region_id = r.id
                LEFT JOIN complexes c ON sr.complex_id = c.id
               WHERE sr.id = ?
-                AND sr.profile_status = 'published'
+                AND sr.profile_status <> 'hidden'
                 AND sr.deleted_at IS NULL
               LIMIT 1"
         );

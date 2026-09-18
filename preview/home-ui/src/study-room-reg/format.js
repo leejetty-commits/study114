@@ -81,7 +81,7 @@ export function studyRoomUiDeepLink(step, roomId, opts = {}) {
 /** @param {StudyRoomRecord} room */
 function countProductConditions(room) {
   let n = 0;
-  if (room.profile_status !== 'published') n++;
+  if (room.profile_status === 'hidden') n++;
   if (room.detail_completion_status !== 'expanded_complete') n++;
   return n;
 }
@@ -104,21 +104,21 @@ function productMatrixRow(type, room) {
 
 /** @param {StudyRoomRecord} room @param {import('./store.js').PublishReadiness} readiness */
 export function getExposureMatrix(room, readiness) {
-  const published = room.profile_status === 'published';
+  const visible = room.profile_status !== 'hidden';
 
   return [
     {
       key: 'search',
       label: '기본 검색',
-      ok: published,
-      reason: !published ? '공개 후 노출' : null,
+      ok: visible,
+      reason: !visible ? '숨김 상태' : null,
       statusText: null,
     },
     {
       key: 'compare',
       label: '비교검색',
-      ok: published && room.compare_eligible,
-      reason: !room.compare_eligible ? '비교 자격 미충족' : !published ? '미공개' : null,
+      ok: visible && room.compare_eligible !== false,
+      reason: !visible ? '숨김 상태' : room.compare_eligible === false ? '비교 자격 미충족' : null,
       statusText: null,
     },
     productMatrixRow('prime', room),
@@ -128,7 +128,7 @@ export function getExposureMatrix(room, readiness) {
 
 /** P20-05 §7-1 블록 순서용 상세 노출 행 */
 export function getExposureDetailBlocks(room, readiness) {
-  const published = room.profile_status === 'published';
+  const visible = room.profile_status !== 'hidden';
   const prime = productMatrixRow('prime', room);
   const pick = productMatrixRow('pick', room);
 
@@ -143,20 +143,20 @@ export function getExposureDetailBlocks(room, readiness) {
     {
       key: 'search',
       label: '검색 노출',
-      ok: published,
-      reason: !published ? '공개 후 노출' : null,
+      ok: visible,
+      reason: !visible ? '숨김 상태' : null,
     },
     {
       key: 'compare',
       label: '비교검색 표시',
-      ok: published && room.compare_eligible,
-      reason: !room.compare_eligible ? '비교 자격 미충족' : !published ? '미공개' : null,
+      ok: visible && room.compare_eligible !== false,
+      reason: !visible ? '숨김 상태' : room.compare_eligible === false ? '비교 자격 미충족' : null,
     },
     {
       key: 'region',
       label: '지도/지역 노출',
-      ok: published && room.has_regions,
-      reason: !room.has_regions ? '지역 미등록' : !published ? '미공개' : null,
+      ok: visible && room.has_regions,
+      reason: !room.has_regions ? '지역 미등록' : !visible ? '숨김 상태' : null,
     },
     {
       key: 'capacity',
@@ -171,18 +171,18 @@ export function getExposureDetailBlocks(room, readiness) {
 
 /** @param {StudyRoomRecord} room */
 export function getHubCtas(room) {
-  if (room.profile_status === 'draft') {
-    return [
-      { label: '공개하기', path: 'publish', primary: true },
-      { label: '쪽지설정', path: 'inquiries', primary: false },
-      { label: '상세정보', path: 'detail', primary: false },
-    ];
-  }
   if (room.profile_status === 'hidden') {
     return [
-      { label: '다시 공개', path: 'publish', primary: true },
+      { label: '등록점검', path: 'publish', primary: true },
       { label: '쪽지설정', path: 'inquiries', primary: false },
       { label: '구매이력', path: 'plans', external: '#/mypage/plans', primary: false },
+    ];
+  }
+  if (room.profile_status === 'draft') {
+    return [
+      { label: '등록점검', path: 'publish', primary: true },
+      { label: '쪽지설정', path: 'inquiries', primary: false },
+      { label: '상세정보', path: 'detail', primary: false },
     ];
   }
   return [

@@ -956,7 +956,7 @@ export function renderGuestPaginatedListBlock(kind, listId, headingCfg, allItems
   const pool = serverSorted
     ? kind === 'student'
       ? allItems.filter((i) => !i.exposure_status || i.exposure_status === 'published')
-      : allItems.filter((i) => !i.profile_status || i.profile_status === 'published')
+      : allItems.filter((i) => !i.profile_status || i.profile_status !== 'hidden')
     : kind === 'student'
       ? sortListItems(allItems, 'student', sort)
       : getBasicPool(allItems, occupied, { kind, sort });

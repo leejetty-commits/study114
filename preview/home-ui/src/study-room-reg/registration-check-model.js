@@ -228,19 +228,7 @@ function withSummary(sec) {
   return { ...sec, children, summary };
 }
 
-function nextAction(okMap, room, canPublish, publishItems) {
-  const status = room?.profile_status;
-  if (!canPublish) {
-    const gap = (publishItems || []).find((i) => !i.ok);
-    if (gap) {
-      const section = gap.section === 'basic' ? 'basic' : 'detail';
-      return {
-        id: gap.id,
-        label: RC_COPY.next.fill(gap.label),
-        href: registrationCheckTabHref(room.id, section, gap.id),
-      };
-    }
-  }
+function nextAction(okMap, room) {
   const pickMiss = firstMissingDef(okMap, RC_PICK_FIELD_IDS);
   if (pickMiss) {
     return {
@@ -257,13 +245,7 @@ function nextAction(okMap, room, canPublish, publishItems) {
       href: registrationCheckTabHref(room.id, primeMiss.section === 'detail2' ? 'detail2' : 'detail', primeMiss.id),
     };
   }
-  if (status === 'hidden') {
-    return { id: 'republish', label: RC_COPY.next.hidden, href: '' };
-  }
-  if (status === 'published') {
-    return { id: 'live', label: RC_COPY.next.live, href: '' };
-  }
-  return { id: 'publish', label: RC_COPY.next.publish, href: '' };
+  return { id: 'done', label: RC_COPY.next.done, href: '' };
 }
 
 function missingForTier(okMap, ids, roomId) {
@@ -420,7 +402,7 @@ function buildBoard(s, room, photos) {
 /**
  * @param {object} s registerState
  * @param {import('./store.js').StudyRoomRecord} room
- * @param {{ canPublish?: boolean, missing?: string[], items?: { id: string, label: string, section: string, ok: boolean }[], profileStatus?: string }} [readiness]
+ * @param {{ profileStatus?: string }} [readiness]
  */
 export function buildRegistrationCheckModel(s, room, readiness = {}) {
   const photos = photoSummary(s || {});
@@ -429,37 +411,20 @@ export function buildRegistrationCheckModel(s, room, readiness = {}) {
   const primeLeft = remainingCount(okMap, RC_PRIME_FIELD_IDS);
   const board = buildBoard(s, room, photos);
   const previewItem = buildRegistrationCheckPreviewItem(s, room, photos);
-  const publishReady = readiness.canPublish === true;
   const status = readiness.profileStatus || room?.profile_status || 'draft';
-  const basicLeft = publishReady ? 0 : (readiness.missing || []).length;
-  const next = nextAction(okMap, room, publishReady, readiness.items || []);
-
-  let publishBadge = { id: 'publish', value: RC_COPY.badges.publishNeed, tone: 'warn' };
-  if (status === 'published') {
-    publishBadge = { id: 'publish', value: RC_COPY.badges.publishLive, tone: 'ok' };
-  } else if (status === 'hidden' && publishReady) {
-    publishBadge = { id: 'publish', value: RC_COPY.badges.publishHidden, tone: 'warn' };
-  } else if (publishReady) {
-    publishBadge = { id: 'publish', value: RC_COPY.badges.publishOk, tone: 'ok' };
-  }
+  const next = nextAction(okMap, room);
 
   return {
     roomId: room.id,
     room,
     copy: RC_COPY,
     previewItem,
-    readiness: { ...readiness, canPublish: publishReady, profileStatus: status, basicLeft },
+    readiness: { ...readiness, profileStatus: status },
     nextAction: next,
     header: {
       title: RC_COPY.title,
       lead: RC_COPY.lead,
       badges: [
-        publishBadge,
-        {
-          id: 'basic',
-          value: basicLeft ? RC_COPY.badges.basicNeed(basicLeft) : RC_COPY.badges.basicOk,
-          tone: basicLeft ? 'warn' : 'ok',
-        },
         {
           id: 'pick',
           value: pickLeft ? RC_COPY.badges.pickNeed(pickLeft) : RC_COPY.badges.pickOk,
@@ -478,7 +443,7 @@ export function buildRegistrationCheckModel(s, room, readiness = {}) {
       primeMissing: missingForTier(okMap, RC_PRIME_FIELD_IDS, room.id),
     },
     board,
-    counts: { pickLeft, primeLeft, basicLeft, canPublish: publishReady },
+    counts: { pickLeft, primeLeft },
     photos,
     okMap,
   };

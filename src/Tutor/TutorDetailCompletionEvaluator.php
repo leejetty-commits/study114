@@ -12,10 +12,10 @@ use PDO;
  * 스텝 통과가 아니라 DB에 저장된 필수 필드로 판정한다.
  * - basic_only: 기본등록 수준만
  * - expanded_in_progress: 상세 필드 일부
- * - expanded_complete: 검색·공개 게이트용 상세 필수 충족
+ * - expanded_complete: Pick/Prime 자격용 상세 필수 충족
  *
- * published(공개)와 직교: 공개는 허브/contact에서 별도 처리.
- * 검색 노출 = published ∩ expanded_complete (SearchService).
+ * profile_status(hidden 옵트아웃)와 직교.
+ * 검색 노출 = profile_status <> hidden (완성도와 무관, SearchService).
  */
 final class TutorDetailCompletionEvaluator
 {

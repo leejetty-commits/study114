@@ -128,7 +128,7 @@ final class TutorHubRepository
             'education_doc_submitted'    => (bool) ($row['proof_document_available'] ?? false),
             'education_doc_public'       => (bool) ($row['proof_document_available'] ?? false),
             'career_doc_submitted'       => !empty($row['career_year_band']),
-            'compare_eligible'           => $profileStatus === 'published',
+            'compare_eligible'           => $profileStatus !== 'hidden',
             'student_gender_group'       => $row['student_gender_group'] !== null ? (string) $row['student_gender_group'] : null,
             'student_count_group'        => $row['student_count_group'] !== null ? (string) $row['student_count_group'] : null,
             'contact_time_note'          => $row['contact_time_note'] !== null ? (string) $row['contact_time_note'] : '',

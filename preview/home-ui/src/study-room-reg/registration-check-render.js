@@ -1,12 +1,12 @@
 /**
- * 등록점검 화면 렌더 — 상태 요약 → 부족 이유 → 다음 행동 → 공개 결정
+ * 등록점검 화면 렌더 — 상태 요약 → 부족 항목 → 수정 이동 → Pick·Prime 안내
  * 비교 카드 샘플(rc-tier)은 기존 렌더를 유지한다.
+ * 공개 승인/자기확인 UI는 두지 않는다. 입력값은 있는 그대로 카드에 노출된다.
  */
 
 import { RC_COPY } from './registration-check-copy.js';
 import { renderRegistrationCheckCardSamples } from '../home-card-samples/render.js';
 import { registrationCheckTabHref } from './registration-check-model.js';
-import { LIFECYCLE_PUBLISH_CONFIRM_DIRECT, LIFECYCLE_PUBLISH_CONFIRM_NOTE } from '../lifecycle-copy.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -209,37 +209,6 @@ function renderBoard(vm) {
     </div>`;
 }
 
-function publishSummaryText(vm) {
-  const status = vm.readiness?.profileStatus;
-  const canPublish = !!vm.readiness?.canPublish;
-  if (status === 'published') return RC_COPY.publish.summaryLive;
-  if (status === 'hidden' && canPublish) return RC_COPY.publish.summaryHidden;
-  if (canPublish) return RC_COPY.publish.summaryReady;
-  return RC_COPY.publish.summaryNeed(Number(vm.counts?.basicLeft || 0) || (vm.readiness?.missing || []).length || 1);
-}
-
-function renderPublishActions(vm) {
-  const canPublish = !!vm.readiness?.canPublish;
-  const hidden = vm.readiness?.profileStatus === 'hidden';
-  return `
-    <section class="rc-publish" data-p20-room-id="${esc(vm.roomId)}">
-      <p class="rc-publish__summary">${esc(publishSummaryText(vm))}</p>
-      <div class="p20-confirm-card">
-        <h3 class="p20-confirm-card__title">${esc(RC_COPY.publish.confirmTitle)}</h3>
-        <p class="rc-publish__lead">${esc(RC_COPY.publish.confirmLead)}</p>
-        <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="region" /> ${esc(RC_COPY.publish.confirmRegion)}</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="fee" /> ${esc(RC_COPY.publish.confirmFee)}</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="trust" /> ${esc(RC_COPY.publish.confirmTrust)}</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p20-confirm="direct" /> 외부 연락처 직접 노출 없음 · ${LIFECYCLE_PUBLISH_CONFIRM_DIRECT}</label>
-      </div>
-      <div class="p19-form-actions p19-form-actions--publish">
-        <button type="button" class="btn btn--primary btn--lg" data-p20-publish ${canPublish ? '' : 'disabled'}>${esc(RC_COPY.publish.publishCta)}</button>
-        ${hidden ? `<button type="button" class="btn btn--secondary" data-p20-publish>${esc(RC_COPY.publish.republishCta)}</button>` : ''}
-      </div>
-      <p class="p19-publish-footnote">${LIFECYCLE_PUBLISH_CONFIRM_NOTE}</p>
-    </section>`;
-}
-
 /** @param {ReturnType<typeof import('./registration-check-model.js').buildRegistrationCheckModel>} vm */
 export function renderRegistrationCheck(vm) {
   return `
@@ -250,6 +219,5 @@ export function renderRegistrationCheck(vm) {
       ${renderMissingBlock(vm.promo.primeMissingTitle, vm.promo.primeMissing, vm.promo.primeReadyBody)}
       ${renderCards(vm)}
       ${renderBoard(vm)}
-      ${renderPublishActions(vm)}
     </div>`;
 }

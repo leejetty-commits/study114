@@ -4,7 +4,6 @@
 
 import { EXPOSURE_STUDENTS } from './exposure-data.js';
 import { LIFECYCLE_BASKET, STUDENT_REVIEW } from './handoff-copy.js';
-import { profileStatusLabel } from './lifecycle-copy.js';
 import { inquiryStatusLabel } from './study-room-reg/format.js';
 import { getExposureItem } from './user-actions-state.js';
 
@@ -21,10 +20,10 @@ export function resolveBasketLifecycleBadge(kind, item) {
   if (!item) return null;
 
   if (kind === 'study_room') {
-    const ps = item.profile_status || 'published';
-    if (ps !== 'published') {
+    const ps = item.profile_status || 'draft';
+    if (ps === 'hidden') {
       return {
-        label: ps === 'hidden' ? LIFECYCLE_BASKET.profileStopped : profileStatusLabel(ps),
+        label: LIFECYCLE_BASKET.profileStopped,
         variant: 'warn',
         muted: true,
       };
@@ -37,10 +36,10 @@ export function resolveBasketLifecycleBadge(kind, item) {
   }
 
   if (kind === 'tutor') {
-    const ps = item.profile_status || 'published';
-    if (ps !== 'published') {
+    const ps = item.profile_status || 'draft';
+    if (ps === 'hidden') {
       return {
-        label: ps === 'hidden' ? LIFECYCLE_BASKET.profileStopped : profileStatusLabel(ps),
+        label: LIFECYCLE_BASKET.profileStopped,
         variant: 'warn',
         muted: true,
       };

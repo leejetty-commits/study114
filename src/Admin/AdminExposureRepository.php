@@ -135,7 +135,7 @@ final class AdminExposureRepository
             'statusLabel' => $this->profileStatusLabel($profileStatus),
             'secondaryStatus' => $inquiryStatus,
             'secondaryLabel' => $this->inquiryStatusLabel($inquiryStatus),
-            'searchVisible' => $profileStatus === 'published',
+            'searchVisible' => $profileStatus !== 'hidden',
             'internalMemo' => '',
             'updatedAt' => substr((string) $row['updated_at'], 0, 10),
         ];
@@ -154,7 +154,7 @@ final class AdminExposureRepository
             'statusLabel' => $this->profileStatusLabel($profileStatus),
             'secondaryStatus' => null,
             'secondaryLabel' => null,
-            'searchVisible' => $profileStatus === 'published',
+            'searchVisible' => $profileStatus !== 'hidden',
             'internalMemo' => '',
             'updatedAt' => substr((string) $row['updated_at'], 0, 10),
         ];
