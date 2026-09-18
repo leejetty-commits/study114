@@ -951,6 +951,17 @@
 .plans-theme .plans-ticket-select.plans-sf-panel,
 .plans-theme .plans-apply-target.plans-sf-panel {
   padding: 22px;
+  border-radius: 12px;
+}
+
+.plans-theme .plans-apply-target .plans-sf-panel__title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.plans-theme .plans-apply-target .plans-sf-panel__lead {
+  font-size: 14px;
+  color: var(--plans-muted);
 }
 
 .plans-theme .plans-ticket-select .plans-purchase-check {

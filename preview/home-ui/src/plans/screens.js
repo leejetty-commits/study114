@@ -1109,6 +1109,13 @@ export function renderPlansPositions() {
       </header>
 
       <div class="plans-storefront__body">
+        <div class="plans-storefront__aux">
+          ${renderApplyTargetBlock(profile, role, 'positions', {
+            productCode: selectedCode,
+            primeScopes: Array.isArray(slots?.prime_scopes) ? slots.prime_scopes : [],
+          })}
+        </div>
+
         <div class="plans-storefront__catalog">
           ${
             primeProduct || pickProduct || restProducts.length
@@ -1143,13 +1150,6 @@ export function renderPlansPositions() {
               Boolean(selectedOption) &&
               Boolean(selectedProduct) &&
               !roomPrimeSoldOut,
-          })}
-        </div>
-
-        <div class="plans-storefront__aux">
-          ${renderApplyTargetBlock(profile, role, 'positions', {
-            productCode: selectedCode,
-            primeScopes: Array.isArray(slots?.prime_scopes) ? slots.prime_scopes : [],
           })}
         </div>
 

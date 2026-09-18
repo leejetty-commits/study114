@@ -244,7 +244,15 @@ export function renderApplyTargetBlock(profile, role, page = 'positions', opts =
       </section>`;
   }
 
-  const profileLine = `${esc(profile.label)} · ${esc(roleLabel(profile.providerType))} · ${esc(profile.status || '')}`;
+  const profileMain = `${esc(profile.label)} · ${esc(roleLabel(profile.providerType))}`;
+  const statusRaw = String(profile.status || '').trim();
+  const statusBadge = statusRaw
+    ? `<span class="plans-apply-target__status">${esc(statusRaw)}</span>`
+    : '';
+  const profileHtml = `<p class="plans-apply-target__profile">
+        <span class="plans-apply-target__profile-main">${profileMain}</span>
+        ${statusBadge}
+      </p>`;
 
   if (page === 'access') {
     return `
@@ -253,7 +261,7 @@ export function renderApplyTargetBlock(profile, role, page = 'positions', opts =
           <h2 class="plans-sf-panel__title">적용 프로필 확인</h2>
           <p class="plans-sf-panel__lead">쪽지권은 선택한 프로필에 적용됩니다. 지역 선택은 없습니다.</p>
         </header>
-        <p class="plans-apply-target__profile"><strong>${profileLine}</strong></p>
+        ${profileHtml}
       </section>`;
   }
 
@@ -324,7 +332,7 @@ export function renderApplyTargetBlock(profile, role, page = 'positions', opts =
         <h2 class="plans-sf-panel__title">적용 대상</h2>
         <p class="plans-sf-panel__lead">상품을 고른 뒤, 적용할 프로필과 지역을 확인합니다.</p>
       </header>
-      <p class="plans-apply-target__profile"><strong>${profileLine}</strong></p>
+      ${profileHtml}
       ${subjectHtml}
       ${regionHtml}
       ${
