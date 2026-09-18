@@ -35,4 +35,4 @@
 
 ## 4. 진단
 
-- `GET /api/_room-diag.php?email=...&key=STUDY114_MAIL_PROBE_KEY`
+- `GET /api/room-account-diag.php?email=...&key=STUDY114_MAIL_PROBE_KEY`
