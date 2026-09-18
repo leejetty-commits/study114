@@ -33,6 +33,24 @@
 
 ---
 
-## 4. 진단
+## 5. 운영 실측 (2026-09-19)
 
-- `GET /api/health/room-account.php?email=...&key=STUDY114_MAIL_PROBE_KEY`
+`GET https://study114.net/api/health/db.php?email=leejetty%2Broom%40gmail.com`
+
+| 항목 | 실측 |
+|---|---|
+| schema `study_rooms.address_zip` | 적용 후 **true** (`apply_067=1`) |
+| schema `inquiry_status` DEFAULT | 적용 후 **open** |
+| study_room_id | **7** |
+| profile_status | `draft` |
+| detail_completion_status | `expanded_complete` |
+| inquiry_status (기존 행) | `paused` (일괄 미변경) |
+| top_region_id_set | true |
+| study_room_regions_rows | **3** |
+| study_room_regions_with_id | **3** |
+| positions_region_ready | **true** |
+| address_text_set | true |
+| address_zip_set | **false** (컬럼 신설 직후 · 재저장 필요) |
+
+배포 JS (`/assets/index-CnBvfavv.js`): `canPublish:!0` 확인.
+
