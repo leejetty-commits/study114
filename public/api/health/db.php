@@ -29,7 +29,14 @@ try {
     $inqDef = $pdo->query("SHOW COLUMNS FROM study_rooms LIKE 'inquiry_status'")->fetch(PDO::FETCH_ASSOC);
 
     $schemaFix = ['attempted' => false, 'errors' => []];
+    $probeExpected = study114_env('STUDY114_MAIL_PROBE_KEY', '');
+    $probeKey = (string) ($_GET['key'] ?? '');
+    $probeOk = $probeExpected !== '' && hash_equals($probeExpected, $probeKey);
     if (isset($_GET['apply_067']) && (string) $_GET['apply_067'] === '1') {
+        if (!$probeOk) {
+            $schemaFix['attempted'] = true;
+            $schemaFix['errors'][] = 'apply_067 requires STUDY114_MAIL_PROBE_KEY';
+        } else {
         $schemaFix['attempted'] = true;
         if (!$hasZip) {
             try {
@@ -62,10 +69,14 @@ try {
         } catch (Throwable $e) {
             $schemaFix['errors'][] = 'inquiry_status default: ' . $e->getMessage();
         }
+        } // probeOk
     }
 
     if (isset($_GET['seed_primary_regions']) && (string) $_GET['seed_primary_regions'] === '1') {
         $schemaFix['seed_primary_regions'] = ['attempted' => true, 'inserted' => 0, 'errors' => []];
+        if (!$probeOk) {
+            $schemaFix['seed_primary_regions']['errors'][] = 'seed requires STUDY114_MAIL_PROBE_KEY';
+        } else {
         try {
             $missing = $pdo->query(
                 "SELECT sr.id, sr.region_id, sr.complex_id, sr.region_basis_type, sr.address_zip
@@ -124,6 +135,7 @@ try {
         } catch (Throwable $e) {
             $schemaFix['seed_primary_regions']['errors'][] = $e->getMessage();
         }
+        } // probeOk seed
     }
 
     $payload = [

@@ -1110,19 +1110,62 @@ a.plans-chip:hover {
 
 .plans-region-chip {
   display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.7rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.45rem 0.75rem;
   border: 1px solid #e5e7eb;
-  border-radius: 999px;
+  border-radius: 12px;
   background: #fff;
   font-size: var(--text-xs);
   cursor: pointer;
+  max-width: 100%;
+}
+
+.plans-region-chip__label {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.plans-region-chip__reason {
+  color: #6b7280;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.plans-region-chip--ok {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.plans-region-chip--ok .plans-region-chip__reason {
+  color: #166534;
+}
+
+.plans-region-chip--warn {
+  border-color: #fcd34d;
+  background: #fffbeb;
+  opacity: 0.92;
+}
+
+.plans-region-chip--soldout,
+.plans-region-chip--muted,
+.plans-region-chip.is-disabled {
+  border-color: #d1d5db;
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.plans-region-chip.is-disabled .plans-region-chip__label {
+  color: #6b7280;
 }
 
 .plans-region-chip:has(input:checked) {
   border-color: var(--plans-primary, #266bc4);
   background: var(--plans-selected, #fbf7ef);
+  box-shadow: 0 0 0 1px var(--plans-primary, #266bc4);
 }
 
 .plans-order-summary__list {

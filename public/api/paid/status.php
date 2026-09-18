@@ -25,8 +25,15 @@ PaidApi::run(static function (): void {
             $primeRegionInput[$rk] = $_GET[$rk];
         }
     }
+    $studyRoomId = null;
+    if (($_GET['provider_type'] ?? '') === 'study_room') {
+        $pid = PaidApi::queryInt('provider_id', 0);
+        if ($pid > 0) {
+            $studyRoomId = $pid;
+        }
+    }
     $service = new ProviderUsageService();
-    $summary = $service->getFullSummary($userId, $days > 0 ? $days : 7, $primeRegionInput);
+    $summary = $service->getFullSummary($userId, $days > 0 ? $days : 7, $primeRegionInput, $studyRoomId);
 
     PaidApi::ok($summary);
 });

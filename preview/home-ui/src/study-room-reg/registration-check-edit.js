@@ -395,7 +395,7 @@ export function bindRegistrationCheckEvents(root, rerender) {
       try {
         const result = await publishStudyRoom(roomId);
         if (!result.ok) {
-          alert(`공개 불가:\n${result.missing?.join('\n') || result.reason}`);
+          alert(`공개 처리 실패:\n${result.missing?.join('\n') || result.reason || '알 수 없는 오류'}`);
           return;
         }
         alert('공개되었습니다. (profile_status: published)');

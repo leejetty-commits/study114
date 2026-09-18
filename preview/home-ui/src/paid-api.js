@@ -35,7 +35,7 @@ export async function fetchRoiSummary(days = 7) {
 }
 
 /** @param {number} [days]
- * @param {{ regionBasisType?: string, regionId?: string|number, complexId?: string|number, slotGroup?: string }} [region]
+ * @param {{ regionBasisType?: string, regionId?: string|number, complexId?: string|number, slotGroup?: string, providerType?: string, providerId?: string|number }} [region]
  */
 export async function fetchPaidStatus(days = 7, region = {}) {
   const params = new URLSearchParams();
@@ -48,6 +48,10 @@ export async function fetchPaidStatus(days = 7, region = {}) {
     params.set('complex_id', String(region.complexId));
   }
   if (region.slotGroup) params.set('slot_group', String(region.slotGroup));
+  if (region.providerType) params.set('provider_type', String(region.providerType));
+  if (region.providerId != null && String(region.providerId) !== '') {
+    params.set('provider_id', String(region.providerId));
+  }
   const qs = params.toString() ? `?${params.toString()}` : '';
   const res = await fetch(`${PAID_ENDPOINTS.status}${qs}`, { ...CREDENTIALS });
   return parseJson(res);

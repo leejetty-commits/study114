@@ -244,6 +244,147 @@ final class PrimeRegionScope
         ];
     }
 
+    /**
+     * 결제 확정 직전 — 스코프 내 활성 Prime 행을 FOR UPDATE 로 잠근다.
+     * 경합 시 4번째 INSERT 를 막기 위해 createOrder·grant 경로에서만 사용.
+     *
+     * @param array{
+     *   region_basis_type: 'dong'|'complex',
+     *   region_id: int|null,
+     *   complex_id: int|null
+     * } $scope
+     * @return list<array<string, mixed>>
+     */
+    public function lockActiveInScope(array $scope): array
+    {
+        if (!$this->positionScopeColumnsReady()) {
+            throw new InvalidArgumentException(
+                'provider_position_subscriptions 지역 스코프 미적용 — schema 065를 먼저 적용하세요.',
+            );
+        }
+        $basis = $scope['region_basis_type'];
+        if ($basis === 'complex') {
+            $stmt = $this->pdo->prepare(
+                "SELECT id, provider_id, sku_code, started_on, end_exclusive_on,
+                        duration_type, duration_value, period_days,
+                        region_basis_type, region_id, complex_id, slot_group
+                 FROM provider_position_subscriptions
+                 WHERE sku_code = 'prime' AND provider_type = 'study_room'
+                   AND CURDATE() < end_exclusive_on
+                   AND region_basis_type = 'complex'
+                   AND complex_id = ?
+                 ORDER BY end_exclusive_on DESC, id DESC
+                 FOR UPDATE"
+            );
+            $stmt->execute([(int) $scope['complex_id']]);
+        } else {
+            $stmt = $this->pdo->prepare(
+                "SELECT id, provider_id, sku_code, started_on, end_exclusive_on,
+                        duration_type, duration_value, period_days,
+                        region_basis_type, region_id, complex_id, slot_group
+                 FROM provider_position_subscriptions
+                 WHERE sku_code = 'prime' AND provider_type = 'study_room'
+                   AND CURDATE() < end_exclusive_on
+                   AND region_basis_type = 'dong'
+                   AND region_id = ?
+                 ORDER BY end_exclusive_on DESC, id DESC
+                 FOR UPDATE"
+            );
+            $stmt->execute([(int) $scope['region_id']]);
+        }
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return is_array($rows) ? $rows : [];
+    }
+
+    /**
+     * 동일 스코프에서 해당 공부방의 활성 Prime (연장 판정).
+     *
+     * @param array{
+     *   region_basis_type: 'dong'|'complex',
+     *   region_id: int|null,
+     *   complex_id: int|null
+     * } $scope
+     * @return array<string, mixed>|null
+     */
+    public function findActiveOwnInScope(int $studyRoomId, array $scope, bool $forUpdate = false): ?array
+    {
+        if ($studyRoomId <= 0) {
+            return null;
+        }
+        if (!$this->positionScopeColumnsReady()) {
+            return null;
+        }
+        $lock = $forUpdate ? ' FOR UPDATE' : '';
+        $basis = $scope['region_basis_type'];
+        if ($basis === 'complex') {
+            $stmt = $this->pdo->prepare(
+                "SELECT id, provider_id, sku_code, started_on, end_exclusive_on,
+                        duration_type, duration_value, period_days,
+                        region_basis_type, region_id, complex_id, slot_group
+                 FROM provider_position_subscriptions
+                 WHERE sku_code = 'prime' AND provider_type = 'study_room'
+                   AND provider_id = ?
+                   AND CURDATE() < end_exclusive_on
+                   AND region_basis_type = 'complex'
+                   AND complex_id = ?
+                 ORDER BY end_exclusive_on DESC, id DESC
+                 LIMIT 1{$lock}"
+            );
+            $stmt->execute([$studyRoomId, (int) $scope['complex_id']]);
+        } else {
+            $stmt = $this->pdo->prepare(
+                "SELECT id, provider_id, sku_code, started_on, end_exclusive_on,
+                        duration_type, duration_value, period_days,
+                        region_basis_type, region_id, complex_id, slot_group
+                 FROM provider_position_subscriptions
+                 WHERE sku_code = 'prime' AND provider_type = 'study_room'
+                   AND provider_id = ?
+                   AND CURDATE() < end_exclusive_on
+                   AND region_basis_type = 'dong'
+                   AND region_id = ?
+                 ORDER BY end_exclusive_on DESC, id DESC
+                 LIMIT 1{$lock}"
+            );
+            $stmt->execute([$studyRoomId, (int) $scope['region_id']]);
+        }
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $row : null;
+    }
+
+    /**
+     * @param list<array{region_basis_type?: string, region_id?: int|string|null, complex_id?: int|string|null, region_label?: string}> $scopes
+     * @return list<array{label: string, region_basis_type: string, region_id: int|null, complex_id: int|null, inventory_key: string, capacity: int, used: int, remaining: int}>
+     */
+    public function inventoriesForScopes(array $scopes): array
+    {
+        $out = [];
+        foreach ($scopes as $raw) {
+            if (!is_array($raw)) {
+                continue;
+            }
+            try {
+                $scope = $this->normalizeFromInput($raw);
+                $inv = $this->inventoryForScope($scope);
+                $out[] = [
+                    'label' => (string) ($raw['region_label'] ?? $raw['slot_group'] ?? $scope['slot_group']),
+                    'region_basis_type' => $scope['region_basis_type'],
+                    'region_id' => $scope['region_id'],
+                    'complex_id' => $scope['complex_id'],
+                    'inventory_key' => $inv['inventory_key'],
+                    'capacity' => $inv['capacity'],
+                    'used' => $inv['used'],
+                    'remaining' => $inv['remaining'],
+                ];
+            } catch (InvalidArgumentException) {
+                continue;
+            }
+        }
+
+        return $out;
+    }
+
     private function positiveIntOrNull(mixed $raw): ?int
     {
         if ($raw === null || $raw === '') {

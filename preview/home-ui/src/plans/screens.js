@@ -93,8 +93,9 @@ import {
 
 /** @param {ParentNode} [root] */
 function readSelectedPrimeRegion(root = document) {
-  const el = root.querySelector?.('[data-plans-apply-region]:checked') ||
-    root.querySelector?.('[data-plans-apply-region]');
+  const el =
+    root.querySelector?.('[data-plans-apply-region]:checked:not(:disabled)') ||
+    root.querySelector?.('[data-plans-apply-region]:not(:disabled)');
   if (!(el instanceof HTMLInputElement)) {
     return null;
   }
@@ -254,11 +255,15 @@ export function schedulePlansStatusHydrate(profile, rerender, routePath) {
   rerender();
 
   const q = parsePlansQuery();
+  const role = getPlansEffectiveRole();
+  const profile = resolveSelectedProfile(q, role);
   const region = {
     regionBasisType: q.region_basis_type || '',
     regionId: q.region_id || '',
     complexId: q.complex_id || '',
     slotGroup: q.slot_group || '',
+    providerType: role === 'study_room' || role === 'tutor' ? role : '',
+    providerId: profile?.id || '',
   };
 
   hydrateProviderStatusStrict(7, region)
@@ -591,18 +596,20 @@ function getEligibility(profile, productCode, family = 'position') {
       return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
     }
     if (room.profile_status !== 'published') {
-      missing.push('공개(published) 상태가 필요합니다');
+      missing.push('공개(published) 상태가 필요합니다 · 등록점검에서 「공개하기」');
       canBuy = false;
     }
     // Pick/Prime 자격만 입력 완성도를 본다. 공개·쪽지와 분리.
     if (productCode === 'prime' || productCode === 'pick') {
       if (room.detail_completion_status !== 'expanded_complete') {
-        missing.push('상세등록 완료 후 구매할 수 있습니다');
+        missing.push(
+          `${productCode === 'prime' ? 'Prime' : 'Pick'} 정보 부족 · 등록점검에서 남은 항목을 채우면 구매가 열립니다`,
+        );
         canBuy = false;
       }
       const apply = getApplyTargetReadiness(profile, 'study_room');
       if (!apply.regionReady) {
-        missing.push('대표 홍보지역(행정동·단지 ID)이 필요합니다');
+        missing.push('대표 홍보지역(행정동·단지 ID)이 필요합니다 · 기본정보에서 지역을 다시 저장하세요');
         canBuy = false;
       }
     }
@@ -1141,7 +1148,10 @@ export function renderPlansPositions() {
         </div>
 
         <div class="plans-storefront__aux">
-          ${renderApplyTargetBlock(profile, role, 'positions')}
+          ${renderApplyTargetBlock(profile, role, 'positions', {
+            productCode: selectedCode,
+            primeScopes: Array.isArray(slots?.prime_scopes) ? slots.prime_scopes : [],
+          })}
         </div>
 
         <aside class="plans-storefront__summary" aria-label="주문 요약">

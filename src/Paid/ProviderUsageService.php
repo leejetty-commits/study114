@@ -19,10 +19,14 @@ final class ProviderUsageService
     }
 
     /** @param array<string, mixed> $primeRegionInput */
-    public function getFullSummary(int $providerUserId, int $days = 7, array $primeRegionInput = []): array
-    {
+    public function getFullSummary(
+        int $providerUserId,
+        int $days = 7,
+        array $primeRegionInput = [],
+        ?int $studyRoomId = null,
+    ): array {
         $roi = $this->roi->getSummary($providerUserId, $days);
-        $core = $this->status->build($providerUserId, true, $primeRegionInput);
+        $core = $this->status->build($providerUserId, true, $primeRegionInput, $studyRoomId);
         $ticketBlocks = $this->status->ticketBlocksFromStatus($core);
 
         return array_merge($roi, $core, $ticketBlocks, [

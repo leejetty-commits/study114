@@ -164,7 +164,7 @@ final class ProviderTicketService
     }
 
     /** @return array<string, mixed> */
-    public function getOperationalStatus(int $userId, array $primeRegionInput = []): array
+    public function getOperationalStatus(int $userId, array $primeRegionInput = [], ?int $studyRoomId = null): array
     {
         $memo = $this->getMemoTicketSummary($userId);
         $view = $this->getRequestViewTicketSummary($userId);
@@ -207,6 +207,11 @@ final class ProviderTicketService
             ];
             $primeUsed = $this->repo->countActiveStudyRoomPrimes();
             $primeRemaining = max(0, $primeCap - $primeUsed);
+        }
+
+        $primeScopes = [];
+        if ($studyRoomId !== null && $studyRoomId > 0 && $scopeHelper->positionScopeColumnsReady()) {
+            $primeScopes = $this->primeInventoriesForStudyRoom($studyRoomId, $scopeHelper);
         }
 
         return [
@@ -252,6 +257,7 @@ final class ProviderTicketService
                     'used' => $primeUsed,
                     'remaining' => $primeRemaining,
                 ], $primeMeta),
+                'prime_scopes' => $primeScopes,
                 'pick' => [
                     'capacity' => 0,
                     'used' => 0,
@@ -276,6 +282,67 @@ final class ProviderTicketService
                 ],
             ],
         ];
+    }
+
+    /**
+     * @return list<array{label: string, region_basis_type: string, region_id: int|null, complex_id: int|null, inventory_key: string, capacity: int, used: int, remaining: int}>
+     */
+    private function primeInventoriesForStudyRoom(int $studyRoomId, PrimeRegionScope $scopeHelper): array
+    {
+        $pdo = Connection::get();
+        $stmt = $pdo->prepare(
+            'SELECT srr.region_id, srr.complex_id, srr.region_basis_type,
+                    r.dong_name, c.name AS complex_name
+             FROM study_room_regions srr
+             LEFT JOIN regions r ON srr.region_id = r.id
+             LEFT JOIN complexes c ON srr.complex_id = c.id
+             WHERE srr.study_room_id = ?
+             ORDER BY srr.is_primary DESC, srr.slot ASC, srr.id ASC
+             LIMIT 3'
+        );
+        $stmt->execute([$studyRoomId]);
+        $scopes = [];
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $regionId = isset($row['region_id']) && (int) $row['region_id'] > 0 ? (int) $row['region_id'] : null;
+            $complexId = isset($row['complex_id']) && (int) $row['complex_id'] > 0 ? (int) $row['complex_id'] : null;
+            $basis = (string) ($row['region_basis_type'] ?? '') === 'complex' && $complexId
+                ? 'complex'
+                : 'dong';
+            $label = $basis === 'complex'
+                ? (string) ($row['complex_name'] ?? '')
+                : (string) ($row['dong_name'] ?? '');
+            if ($label === '') {
+                $label = $basis === 'complex'
+                    ? ('단지 #' . (string) $complexId)
+                    : ('행정동 #' . (string) $regionId);
+            }
+            $scopes[] = [
+                'region_basis_type' => $basis,
+                'region_id' => $regionId,
+                'complex_id' => $complexId,
+                'region_label' => $label,
+            ];
+        }
+        if ($scopes === []) {
+            $top = $pdo->prepare(
+                'SELECT region_id, complex_id, region_basis_type FROM study_rooms WHERE id = ? AND deleted_at IS NULL LIMIT 1'
+            );
+            $top->execute([$studyRoomId]);
+            $row = $top->fetch(\PDO::FETCH_ASSOC);
+            if (is_array($row)) {
+                $scopes[] = [
+                    'region_basis_type' => (string) ($row['region_basis_type'] ?? 'dong'),
+                    'region_id' => isset($row['region_id']) ? (int) $row['region_id'] : null,
+                    'complex_id' => isset($row['complex_id']) ? (int) $row['complex_id'] : null,
+                    'region_label' => '',
+                ];
+            }
+        }
+
+        return $scopeHelper->inventoriesForScopes($scopes);
     }
 
     /** @param array{remaining: int, nearest_expiry: string|null} $view */
