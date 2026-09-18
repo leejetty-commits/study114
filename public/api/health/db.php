@@ -64,6 +64,68 @@ try {
         }
     }
 
+    if (isset($_GET['seed_primary_regions']) && (string) $_GET['seed_primary_regions'] === '1') {
+        $schemaFix['seed_primary_regions'] = ['attempted' => true, 'inserted' => 0, 'errors' => []];
+        try {
+            $missing = $pdo->query(
+                "SELECT sr.id, sr.region_id, sr.complex_id, sr.region_basis_type, sr.address_zip
+                 FROM study_rooms sr
+                 LEFT JOIN study_room_regions srr ON srr.study_room_id = sr.id
+                 WHERE sr.deleted_at IS NULL
+                   AND srr.id IS NULL
+                   AND (sr.region_id IS NOT NULL OR sr.complex_id IS NOT NULL)"
+            );
+            $ins = $pdo->prepare(
+                'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, address_zip, is_primary)
+                 VALUES (?, 1, ?, ?, ?, ?, 1)'
+            );
+            $insLegacy = $pdo->prepare(
+                'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
+                 VALUES (?, 1, ?, ?, ?, 1)'
+            );
+            while ($row = $missing->fetch(PDO::FETCH_ASSOC)) {
+                $rid = (int) $row['id'];
+                $regionId = isset($row['region_id']) ? (int) $row['region_id'] : 0;
+                $complexId = isset($row['complex_id']) && $row['complex_id'] !== null && $row['complex_id'] !== ''
+                    ? (int) $row['complex_id'] : null;
+                if ($regionId <= 0 && ($complexId === null || $complexId <= 0)) {
+                    continue;
+                }
+                $basis = isset($row['region_basis_type']) && in_array((string) $row['region_basis_type'], ['dong', 'complex'], true)
+                    ? (string) $row['region_basis_type']
+                    : (($complexId !== null && $complexId > 0) ? 'complex' : 'dong');
+                if ($basis === 'dong') {
+                    $complexId = null;
+                }
+                $zip = isset($row['address_zip']) ? (string) $row['address_zip'] : null;
+                try {
+                    $ins->execute([
+                        $rid,
+                        $regionId > 0 ? $regionId : null,
+                        $complexId,
+                        $basis,
+                        ($zip !== null && $zip !== '') ? $zip : null,
+                    ]);
+                    $schemaFix['seed_primary_regions']['inserted']++;
+                } catch (Throwable $e1) {
+                    try {
+                        $insLegacy->execute([
+                            $rid,
+                            $regionId > 0 ? $regionId : null,
+                            $complexId,
+                            $basis,
+                        ]);
+                        $schemaFix['seed_primary_regions']['inserted']++;
+                    } catch (Throwable $e2) {
+                        $schemaFix['seed_primary_regions']['errors'][] = "room {$rid}: " . $e2->getMessage();
+                    }
+                }
+            }
+        } catch (Throwable $e) {
+            $schemaFix['seed_primary_regions']['errors'][] = $e->getMessage();
+        }
+    }
+
     $payload = [
         'ok'        => true,
         'message'   => 'DB connection successful — 이 파일은 삭제하세요.',
