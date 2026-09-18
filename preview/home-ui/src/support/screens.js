@@ -18,7 +18,7 @@ import {
   getSupportLibrarySection,
 } from './router.js';
 import { getActiveNavId } from './nav.js';
-import { renderFaqBoard, renderSingleOpenBoard, bindSingleOpenBoard } from '../../../shared/board/index.js';
+import { bindSingleOpenBoard } from '../../../shared/board/index.js';
 import { POLICY_PAGES, POLICY_SHORT_NOTICE, getPolicyPage } from '../policy-copy.js';
 import { LIBRARY_HEAD, LIBRARY_SECTIONS } from '../library/library-copy.js';
 import { getLibraryBoardMeta, libraryDownloadControlHtml, listLibraryItems } from '../library/library-store.js';
@@ -46,6 +46,11 @@ function mdLite(text) {
   return esc(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 }
 
+function bodyHtml(body) {
+  const lines = Array.isArray(body) ? body : [body];
+  return lines.map((p) => `<p>${mdLite(p)}</p>`).join('');
+}
+
 /** @param {{ body: string[], checklist?: { label: string, hint?: string }[] }} article */
 function renderGuideContent(article) {
   const paras = article.body.map((p) => `<p>${mdLite(p)}</p>`).join('');
@@ -65,19 +70,6 @@ function renderGuideContent(article) {
 
 function renderAdminFooterLink() {
   return '';
-}
-
-function renderPanel(title, _screenId, bodyHtml, { lead = '' } = {}) {
-  return `
-    <section class="sup-panel-card">
-      <header class="sup-panel-card__head">
-        <div>
-          <h2 class="sup-panel-card__title">${esc(title)}</h2>
-          ${lead ? `<p class="sup-panel-card__lead">${lead}</p>` : ''}
-        </div>
-      </header>
-      <div class="sup-panel-card__body">${bodyHtml}</div>
-    </section>`;
 }
 
 function renderContactLoginGate() {
@@ -190,6 +182,19 @@ function renderFaqSection() {
   const sourceNote = isOperationalBoardApiActive()
     ? '최신 질문을 표시합니다.'
     : '자주 찾는 질문을 모았습니다.';
+  const items = posts
+    .map(
+      (post, i) => `
+        <div class="faq-item${i === 0 ? ' is-open' : ''}" data-faq-id="${esc(post.id)}">
+          <button type="button" class="faq-item__q" aria-expanded="${i === 0 ? 'true' : 'false'}">
+            <span class="faq-item__marker">Q</span>
+            <span>${esc(post.title)}</span>
+            <span class="faq-item__chev" aria-hidden="true">${i === 0 ? '−' : '+'}</span>
+          </button>
+          <div class="faq-item__a">${bodyHtml(post.body)}</div>
+        </div>`,
+    )
+    .join('');
 
   return `
     <div class="section-head">
@@ -200,7 +205,12 @@ function renderFaqSection() {
       </div>
     </div>
     <p class="section-lead">${esc(sourceNote)} 제목을 누르면 답이 펼쳐집니다. 운영문의와 쪽지는 다른 채널입니다.</p>
-    ${renderFaqBoard(posts)}`;
+    <div class="faq-list" data-support-faq>${items || '<p class="section-lead">등록된 질문이 없습니다.</p>'}</div>
+    <aside class="tip-card">
+      <h3>답이 없나요?</h3>
+      <p>FAQ에 없는 내용은 문의에서 남겨 주세요. 운영문의는 쪽지와 다른 채널입니다.</p>
+      <p class="support-tip-cta"><a class="btn btn--primary btn--sm" href="#/support/contact" data-sup-nav="/support/contact">문의</a></p>
+    </aside>`;
 }
 
 function renderNoticeSection() {
@@ -224,8 +234,26 @@ function renderNoticeSection() {
     <p class="section-lead">${
       isOperationalBoardApiActive() ? '최신 공지를 표시합니다.' : '서비스 운영 공지입니다.'
     } 제목을 누르면 본문이 펼쳐집니다.</p>
-    <div class="notice-list">
-      ${renderSingleOpenBoard(posts, { variant: 'notice' })}
+    <div class="notice-list" data-board-accordion="notice">
+      ${
+        posts.length
+          ? posts
+              .map(
+                (n) => `
+        <div class="notice-accordion__item" data-board-item="${esc(n.id)}">
+          <button type="button" class="notice-row sup-board-accordion__head sup-board-accordion__head--notice" aria-expanded="false">
+            <span class="notice-row__bar" aria-hidden="true"></span>
+            <span class="notice-row__title">${esc(n.title)}</span>
+            <span class="notice-row__date">${esc(n.date || '')}</span>
+          </button>
+          <div class="sup-accordion__panel" hidden>
+            <div class="sup-accordion__content">${bodyHtml(n.body)}</div>
+          </div>
+        </div>`,
+              )
+              .join('')
+          : '<p class="section-lead" style="padding:16px">등록된 공지가 없습니다.</p>'
+      }
     </div>
     ${renderAdminFooterLink()}`;
 }
@@ -244,32 +272,38 @@ function renderContactSection() {
   ).join('');
   const userEmail = getAuthUser()?.email || '';
 
-  return renderPanel(
-    '문의',
-    'contact',
-    `${flashHtml}
-     <form class="sup-contact-form" data-sup-contact-form>
-       <label class="sup-field">
-         <span>문의 유형</span>
-         <select name="category" required>${categoryOptions}</select>
-       </label>
-       <label class="sup-field">
-         <span>이메일</span>
-         <input type="email" name="email" placeholder="답변 받을 주소" value="${esc(userEmail)}" required />
-       </label>
-       <label class="sup-field">
-         <span>문의 내용</span>
-         <textarea name="body" rows="4" placeholder="오류·정책·계정 문의" required></textarea>
-       </label>
-       <button type="submit" class="btn btn--primary btn--sm">문의 접수</button>
-       <p class="sup-note">${esc(OPERATIONAL_CONTACT.note)}</p>
-     </form>
-     <p class="sup-contact-extra">
-       <a href="#/support/contact/tickets" class="sup-inline-link" data-sup-nav="/support/contact/tickets">내 문의 내역 보기</a>
-     </p>
-     ${renderAdminFooterLink()}`,
-    { lead: '운영팀에 직접 남기는 문의입니다. 회원 간 쪽지와 별도 채널입니다.' },
-  );
+  return `
+    <div class="section-head">
+      <div>
+        <span class="section-chip">Contact</span>
+        <h2>문의</h2>
+        <div class="section-underline"></div>
+      </div>
+    </div>
+    <p class="section-lead">운영팀에 직접 남기는 문의입니다. 회원 간 쪽지와 별도 채널입니다.</p>
+    ${flashHtml}
+    <section class="card card--accent support-contact-card">
+      <form class="sup-contact-form" data-sup-contact-form>
+        <label class="sup-field">
+          <span>문의 유형</span>
+          <select name="category" required>${categoryOptions}</select>
+        </label>
+        <label class="sup-field">
+          <span>이메일</span>
+          <input type="email" name="email" placeholder="답변 받을 주소" value="${esc(userEmail)}" required />
+        </label>
+        <label class="sup-field">
+          <span>문의 내용</span>
+          <textarea name="body" rows="4" placeholder="오류·정책·계정 문의" required></textarea>
+        </label>
+        <button type="submit" class="btn btn--primary btn--sm">문의 접수</button>
+        <p class="sup-note">${esc(OPERATIONAL_CONTACT.note)}</p>
+      </form>
+      <p class="sup-contact-extra">
+        <a href="#/support/contact/tickets" class="sup-inline-link" data-sup-nav="/support/contact/tickets">내 문의 내역 보기</a>
+      </p>
+      ${renderAdminFooterLink()}
+    </section>`;
 }
 
 function renderContactTicketsSection() {
@@ -289,17 +323,23 @@ function renderContactTicketsSection() {
     )
     .join('');
 
-  return renderPanel(
-    '내 문의 내역',
-    'contact-tickets',
-    `<p class="sup-section__lead">내가 접수한 문의 목록입니다.</p>
-     <table class="sup-admin-table sup-user-tickets">
-       <thead><tr><th>번호</th><th>유형</th><th>상태</th><th>접수일</th></tr></thead>
-       <tbody>${rows || '<tr><td colspan="4" class="sup-empty">접수 내역이 없습니다.</td></tr>'}</tbody>
-     </table>
-     <p class="sup-contact-extra"><a href="#/support/contact" class="sup-inline-link" data-sup-nav="/support/contact">← 문의 작성</a></p>`,
-    { lead: '내가 남긴 운영 문의 확인' },
-  );
+  return `
+    <div class="section-head">
+      <div>
+        <span class="section-chip">Contact</span>
+        <h2>내 문의 내역</h2>
+        <div class="section-underline"></div>
+      </div>
+    </div>
+    <p class="section-lead">내가 남긴 운영 문의 확인</p>
+    <section class="card card--accent support-contact-card">
+      <p class="sup-section__lead">내가 접수한 문의 목록입니다.</p>
+      <table class="sup-admin-table sup-user-tickets">
+        <thead><tr><th>번호</th><th>유형</th><th>상태</th><th>접수일</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="4" class="sup-empty">접수 내역이 없습니다.</td></tr>'}</tbody>
+      </table>
+      <p class="sup-contact-extra"><a href="#/support/contact" class="sup-inline-link" data-sup-nav="/support/contact">← 문의 작성</a></p>
+    </section>`;
 }
 
 /** @param {string} path */
@@ -308,7 +348,7 @@ function renderPoliciesSection(path) {
   const page = getPolicyPage(slug) || POLICY_PAGES[0];
   const tabs = POLICY_PAGES.map(
     (p) =>
-      `<a href="#/support/policies/${p.slug}" class="sup-subtab${p.slug === page.slug ? ' is-active' : ''}" data-sup-nav="/support/policies/${p.slug}">${esc(POLICY_NAV_SHORT[p.slug] || p.title)}</a>`,
+      `<a href="#/support/policies/${p.slug}" class="tab-pill${p.slug === page.slug ? ' is-active' : ''}" ${p.slug === page.slug ? 'aria-current="page"' : ''} data-sup-nav="/support/policies/${p.slug}">${esc(POLICY_NAV_SHORT[p.slug] || p.title)}</a>`,
   ).join('');
 
   const shortNotice =
@@ -327,24 +367,30 @@ function renderPoliciesSection(path) {
         ? `<ul class="sup-list sup-list--bullets">${section.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>`
         : '';
       return `
-        <section class="sup-panel-card">
-          <header class="sup-panel-card__head">
-            <div><h2 class="sup-panel-card__title">${esc(section.title)}</h2></div>
-          </header>
-          <div class="sup-panel-card__body">${body}${bullets}</div>
+        <section class="doc-section">
+          <h3>${esc(section.title)}</h3>
+          ${body}${bullets}
         </section>`;
     })
     .join('');
 
   return `
-    <div class="sup-subtabs" role="tablist" aria-label="약관·정책">${tabs}</div>
-    <section class="if-hero">
-      <span class="if-chip">문서 허브</span>
-      <h2 class="if-hero__title">${esc(page.title)}</h2>
-      <p class="if-hero__body">${esc(page.summary)}</p>
+    <div class="section-head">
+      <div>
+        <span class="section-chip">Document hub</span>
+        <h2>약관·정책</h2>
+        <div class="section-underline"></div>
+      </div>
+    </div>
+    <p class="section-lead">약관과 운영 정책을 확인합니다. 자료실은 별도 메뉴입니다.</p>
+    <div class="tab-pills" role="tablist" aria-label="약관·정책">${tabs}</div>
+    <article class="card card--accent doc-article">
+      <p class="doc-card__eyebrow">Doc</p>
+      <h2>${esc(page.title)}</h2>
+      <p>${esc(page.summary)}</p>
       ${shortNotice ? `<div class="sup-flash" role="note" style="margin-top:12px">${esc(shortNotice)}</div>` : ''}
-    </section>
-    ${sections}`;
+      ${sections}
+    </article>`;
 }
 
 function boardTypeLabel(boardType) {
@@ -373,16 +419,16 @@ function renderLibraryCard(item, navRole) {
   const dlBtn = libraryDownloadControlHtml();
 
   return `
-    <article class="lib-card" data-lib-id="${esc(item.id)}">
-      <div class="lib-card__head">
-        <div class="lib-card__format">${esc(item.format || 'FILE')}</div>
-        ${policy ? `<span class="lib-card__type">${esc(boardTypeLabel(policy.boardType))}</span>` : ''}
+    <article class="pdf-card card card--accent" data-lib-id="${esc(item.id)}">
+      <div class="pdf-card__cover"><img src="/assets/info-refresh/motif-pdf-cover.svg" alt="" /></div>
+      <div>
+        ${policy ? `<p class="doc-card__eyebrow">${esc(boardTypeLabel(policy.boardType))} · ${esc(item.format || 'FILE')}</p>` : ''}
+        <h3>${esc(item.title)}</h3>
+        <p>${esc(item.summary)}</p>
+        <p class="lib-card__meta">${esc(formatAudience(item.audience))} · 표시 이름 ${esc(item.fileLabel || '파일')} · 실제 파일 없음</p>
+        <span class="chip chip--warn">준비 중</span>
+        ${dlBtn}
       </div>
-      <h3 class="lib-card__title">${esc(item.title)}</h3>
-      <p class="lib-card__summary">${esc(item.summary)}</p>
-      <p class="lib-card__meta">${esc(formatAudience(item.audience))}</p>
-      <p class="lib-card__meta">표시 이름: ${esc(item.fileLabel || '파일')} · 실제 파일 없음</p>
-      ${dlBtn}
     </article>`;
 }
 
@@ -394,29 +440,30 @@ function renderSupportLibrarySection(path) {
   const meta = LIBRARY_SECTIONS.find((s) => s.key === section) || LIBRARY_SECTIONS[0];
   const tabs = LIBRARY_SECTIONS.map((s) => {
     const href = s.key === 'library' ? '/support/library' : `/support/library/${s.key}`;
-    return `<a href="#${href}" class="sup-subtab${s.key === section ? ' is-active' : ''}" data-sup-nav="${href}">${esc(s.label)}</a>`;
+    return `<a href="#${href}" class="tab-pill${s.key === section ? ' is-active' : ''}" ${s.key === section ? 'aria-current="page"' : ''} data-sup-nav="${href}">${esc(s.label)}</a>`;
   }).join('');
 
   const grid =
     items.length === 0
       ? renderEmptyStateCard('library', { cta: null })
-      : `<div class="lib-grid">${items.map((item) => renderLibraryCard(item, navRole)).join('')}</div>`;
+      : `<div class="pdf-grid">${items.map((item) => renderLibraryCard(item, navRole)).join('')}</div>`;
 
   return `
-    <div class="sup-subtabs" role="tablist" aria-label="자료실">${tabs}</div>
-    <section class="sup-panel-card">
-      <header class="sup-panel-card__head">
-        <div>
-          <h2 class="sup-panel-card__title">${esc(meta.label)}</h2>
-          <p class="sup-panel-card__lead">${esc(LIBRARY_HEAD.lead)}</p>
-          ${renderBoardPolicyChips(meta.boardKey, navRole)}
-        </div>
-      </header>
-      <div class="sup-panel-card__body">
-        ${grid}
-        <p class="lib-footnote">${esc(LIBRARY_HEAD.footnote)}</p>
+    <div class="section-head">
+      <div>
+        <span class="section-chip">Library</span>
+        <h2>자료실</h2>
+        <div class="section-underline"></div>
       </div>
-    </section>`;
+    </div>
+    <p class="section-lead">${esc(LIBRARY_HEAD.lead)}</p>
+    <div class="tab-pills" role="tablist" aria-label="자료실">${tabs}</div>
+    ${renderBoardPolicyChips(meta.boardKey, navRole)}
+    ${grid}
+    <aside class="tip-card" style="margin-top:4px">
+      <h3>안내</h3>
+      <p>${esc(LIBRARY_HEAD.footnote)}</p>
+    </aside>`;
 }
 
 /** @param {HTMLElement} root @param {string} path @param {() => void} [rerender] */
@@ -436,6 +483,19 @@ export function bindSupportScreenEvents(root, path, rerender) {
   });
 
   bindSingleOpenBoard(root);
+
+  root.querySelectorAll('[data-support-faq]').forEach((list) => {
+    list.addEventListener('click', (e) => {
+      const btn = e.target.closest('.faq-item__q');
+      if (!btn || !list.contains(btn)) return;
+      const item = btn.closest('.faq-item');
+      if (!item) return;
+      const open = item.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      const chev = btn.querySelector('.faq-item__chev');
+      if (chev) chev.textContent = open ? '−' : '+';
+    });
+  });
 
   const form = root.querySelector('[data-sup-contact-form]');
   if (form) {

@@ -826,3 +826,133 @@
   }
   .if-ghost { filter: blur(1.2px); }
 }
+
+.support-app a.tab-pill {
+  text-decoration: none;
+  color: inherit;
+}
+
+.support-app button.notice-row {
+  width: 100%;
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--uds-line);
+  border-radius: 0;
+}
+
+.support-app .notice-accordion__item:last-child button.notice-row {
+  border-bottom: 0;
+}
+
+.support-app .notice-accordion__item.is-open button.notice-row {
+  border-bottom: 0;
+}
+
+.support-app .notice-accordion__item .sup-accordion__content {
+  padding: 0 16px 14px 18px;
+  font-size: 14px;
+  color: var(--uds-muted);
+  line-height: 1.55;
+}
+
+.support-app .support-contact-card {
+  padding: 16px 18px;
+}
+
+.support-app .support-contact-card .sup-contact-form {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.support-app .support-tip-cta {
+  margin: 12px 0 0;
+}
+
+.support-app .doc-article {
+  padding: 16px 18px;
+}
+
+.support-app .doc-article > h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.support-app .doc-article > p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--uds-muted);
+  line-height: 1.55;
+}
+
+.support-app .doc-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--uds-line);
+}
+
+.support-app .doc-section h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.support-app .doc-section p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--uds-muted);
+  line-height: 1.6;
+}
+
+.support-app .pdf-card .chip {
+  margin: 0 8px 8px 0;
+}
+
+.support-app .pdf-card .lib-card__dl {
+  margin-top: 4px;
+}
+
+.support-app .lib-policy-chips {
+  margin: 0 0 12px;
+}
+
+.support-app .sup-user-tickets {
+  width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .support-app.uds-theme .quick-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .support-app.uds-theme .quick-grid,
+  .support-app.uds-theme .pdf-grid {
+    grid-template-columns: 1fr;
+  }
+  .support-app.uds-theme .pdf-card {
+    grid-template-columns: 1fr;
+  }
+  .support-app.uds-theme .support-hero__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .support-app.uds-theme .support-hero__actions .btn,
+  .support-app.uds-theme .support-hero__actions .btn--ghost-light {
+    justify-content: center;
+    text-align: center;
+  }
+  .support-app.uds-theme .faq-item__a {
+    padding-left: 18px;
+  }
+  .support-app.uds-theme .faq-item__q > span:nth-child(2) {
+    min-width: 0;
+  }
+}
