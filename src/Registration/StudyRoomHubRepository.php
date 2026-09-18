@@ -201,6 +201,7 @@ final class StudyRoomHubRepository
             && (string) ($roomRow['region_basis_type'] ?? '') === 'complex'
             ? 'complex'
             : ($topComplexId !== '' ? 'complex' : 'dong');
+        $this->seedPrimaryRegionIfMissing($roomId, $roomRow, $basis, $topRegionId, $topComplexId);
         $label = $this->regionLabel($roomId, $roomRow);
         if ($label === '') {
             $label = $basis === 'complex' ? ('단지 #' . $topComplexId) : ('행정동 #' . $topRegionId);
@@ -213,6 +214,47 @@ final class StudyRoomHubRepository
             'region_label' => $label,
             'is_primary' => true,
         ]];
+    }
+
+    /**
+     * Hub 조회 시 study_rooms 대표지역만 있고 study_room_regions 가 비면 1슬롯 INSERT.
+     * createOrder assertOwnedByStudyRoom 과 UI 후보를 DB 기준으로 맞춘다.
+     *
+     * @param array<string, mixed> $roomRow
+     */
+    private function seedPrimaryRegionIfMissing(
+        int $roomId,
+        array $roomRow,
+        string $basis,
+        string $topRegionId,
+        string $topComplexId,
+    ): void {
+        $countStmt = $this->pdo->prepare('SELECT COUNT(*) FROM study_room_regions WHERE study_room_id = ?');
+        $countStmt->execute([$roomId]);
+        if ((int) $countStmt->fetchColumn() > 0) {
+            return;
+        }
+        $regionId = $topRegionId !== '' ? (int) $topRegionId : null;
+        $complexId = ($basis === 'complex' && $topComplexId !== '') ? (int) $topComplexId : null;
+        if (($basis === 'dong' && ($regionId === null || $regionId <= 0))
+            || ($basis === 'complex' && ($complexId === null || $complexId <= 0))) {
+            return;
+        }
+        try {
+            $this->pdo->prepare(
+                'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
+                 VALUES (?, 1, ?, ?, ?, 1)'
+            )->execute([$roomId, $basis === 'dong' ? $regionId : $regionId, $complexId, $basis]);
+        } catch (\PDOException $e) {
+            try {
+                $this->pdo->prepare(
+                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
+                     VALUES (?, 1, ?, ?, 1)'
+                )->execute([$roomId, $regionId, $complexId]);
+            } catch (\PDOException $e2) {
+                /* race / schema */
+            }
+        }
     }
 
     /** @param array<string, mixed> $row */

@@ -125,13 +125,21 @@ final class PrimeRegionScope
                  LIMIT 1'
             );
             $stmt->execute([$studyRoomId, $complexId]);
-            if (!$stmt->fetchColumn()) {
-                throw new InvalidArgumentException(
-                    '선택한 적용 지역이 이 공부방의 대표 홍보지역이 아닙니다.',
-                );
+            if ($stmt->fetchColumn()) {
+                return;
             }
-
-            return;
+            $stmtTop = $this->pdo->prepare(
+                'SELECT 1 FROM study_rooms
+                 WHERE id = ? AND complex_id = ? AND deleted_at IS NULL
+                 LIMIT 1'
+            );
+            $stmtTop->execute([$studyRoomId, $complexId]);
+            if ($stmtTop->fetchColumn()) {
+                return;
+            }
+            throw new InvalidArgumentException(
+                '선택한 적용 지역이 이 공부방의 대표 홍보지역이 아닙니다.',
+            );
         }
 
         $regionId = (int) ($scope['region_id'] ?? 0);
@@ -152,11 +160,23 @@ final class PrimeRegionScope
              LIMIT 1'
         );
         $stmt2->execute([$studyRoomId, $regionId]);
-        if (!$stmt2->fetchColumn()) {
-            throw new InvalidArgumentException(
-                '선택한 적용 지역이 이 공부방의 대표 홍보지역이 아닙니다.',
-            );
+        if ($stmt2->fetchColumn()) {
+            return;
         }
+        // study_room_regions 미시드여도 study_rooms 대표지역과 일치하면 허용
+        $stmtTop = $this->pdo->prepare(
+            'SELECT 1 FROM study_rooms
+             WHERE id = ? AND region_id = ? AND deleted_at IS NULL
+             LIMIT 1'
+        );
+        $stmtTop->execute([$studyRoomId, $regionId]);
+        if ($stmtTop->fetchColumn()) {
+            return;
+        }
+
+        throw new InvalidArgumentException(
+            '선택한 적용 지역이 이 공부방의 대표 홍보지역이 아닙니다.',
+        );
     }
 
     /**
