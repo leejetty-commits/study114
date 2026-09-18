@@ -1,6 +1,7 @@
+// deploy-bump-7b17262
 /**
- * 34장 — 상품센터 화면 (P18-01~07)
- * 기존 plans-catalog / paid-backend / paid-checkout 자산 재사용
+ * 34?????�품?�터 ?�면 (P18-01~07)
+ * 기존 plans-catalog / paid-backend / paid-checkout ?�산 ?�사??
  */
 
 import {
@@ -134,15 +135,15 @@ let historyCache = { rows: [], fromApi: false, loaded: false };
 let openReceiptOrderRef = null;
 
 /**
- * #/plans/access · #/plans/my 프로필별 status 동기화 (stale 구매 방지)
+ * #/plans/access · #/plans/my ?�로?�별 status ?�기??(stale 구매 방�?)
  * @type {{ key: string, phase: 'idle'|'loading'|'ready'|'error', error: string|null, route: string }}
  */
 let plansStatusSync = { key: '', phase: 'idle', error: null, route: '' };
 
-/** 같은 hash 재렌더에서 중복 hydrate 방지. 라우트를 벗어나면 비운다. */
+/** 같�? hash ?�렌?�에??중복 hydrate 방�?. ?�우?��? 벗어?�면 비운?? */
 let lastPlansHydratedHash = '';
 
-/** checkout 진입 시 서버 quote만 받고 권리는 선점하지 않는다. */
+/** checkout 진입 ???�버 quote�?받고 권리???�점?��? ?�는?? */
 let checkoutQuoteKey = '';
 let checkoutQuotePhase = 'idle';
 
@@ -216,7 +217,7 @@ export function resetAccessStatusSync() {
   lastPlansHydratedHash = '';
 }
 
-/** @deprecated alias — access/my 공용 */
+/** @deprecated alias ??access/my 공용 */
 export const resetPlansStatusSync = resetAccessStatusSync;
 
 /**
@@ -279,7 +280,7 @@ export function schedulePlansStatusHydrate(profile, rerender, routePath) {
       plansStatusSync = {
         key,
         phase: 'error',
-        error: err instanceof Error ? err.message : String(err || 'status 조회 실패'),
+        error: err instanceof Error ? err.message : String(err || 'status 조회 ?�패'),
         route: routePath,
       };
       invalidateProviderStatus();
@@ -310,51 +311,51 @@ function isLowCredit(remaining) {
   const n = Number(remaining) || 0;
   if (n <= 2) return true;
   const threshold = Number(getPlanSetting('low_credit_threshold')) || 0.2;
-  // total 미제공 시 절대 잔여만 사용 (2회 이하)
+  // total 미제�????��? ?�여�??�용 (2???�하)
   return n > 0 && n <= Math.max(2, Math.ceil(10 * threshold));
 }
 
 function productLabel(code) {
   const normalized = String(code || '').toLowerCase();
-  if (normalized.includes('prime')) return 'Prime 노출';
-  if (normalized.includes('pick')) return 'Pick 노출';
-  if (normalized.includes('basic')) return 'Basic 노출';
-  if (normalized.includes('memo')) return '쪽지권';
-  return '이용 상품';
+  if (normalized.includes('prime')) return 'Prime ?�출';
+  if (normalized.includes('pick')) return 'Pick ?�출';
+  if (normalized.includes('basic')) return 'Basic ?�출';
+  if (normalized.includes('memo')) return '쪽�?�?;
+  return '?�용 ?�품';
 }
 
-/** 내 상품·홈 요약용. 구매면(#/plans/access)에서는 사용하지 않음. */
+/** ???�품·???�약?? 구매�?#/plans/access)?�서???�용?��? ?�음. */
 function renderLowCreditBanner(tickets) {
   if (!tickets) return '';
   const warns = [];
   if (isLowCredit(tickets.memo?.remaining)) {
-    warns.push(`쪽지권 남은 횟수 ${tickets.memo.remaining}회 — 내 상품에서 확인하세요`);
+    warns.push(`쪽�?�??��? ?�수 ${tickets.memo.remaining}???????�품?�서 ?�인?�세??);
   }
   if (!warns.length) return '';
   return `
     <div class="mypage-info-box is-warn plans-low-credit" role="status">
-      <strong>쪽지권 안내</strong>
+      <strong>쪽�?�??�내</strong>
       <ul class="plans-tier-list">${warns.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
-      <a href="#/mypage/plans/my" class="btn btn--secondary btn--sm" data-nav="/mypage/plans/my">내 쪽지권 보기</a>
+      <a href="#/mypage/plans/my" class="btn btn--secondary btn--sm" data-nav="/mypage/plans/my">??쪽�?�?보기</a>
     </div>`;
 }
 
-/** R2 공부방 Pick 5×2 미리보기 타일 (라이브 목록 아님 · 샘플 재사용) */
+/** R2 공�?�?Pick 5×2 미리보기 ?�??(?�이�?목록 ?�님 · ?�플 ?�사?? */
 const ROOM_PICK_PREVIEW_TILES = [
-  { name: '대치 ○○수학', stats: '추천 24 · 후기 18' },
-  { name: '역삼 ○○영어', stats: '추천 19 · 후기 12' },
-  { name: '잠실 ○○국어', stats: '추천 31 · 후기 22' },
-  { name: '삼성 ○○과학', stats: '추천 15 · 후기 9' },
-  { name: '서초 ○○논술', stats: '추천 27 · 후기 16' },
-  { name: '도곡 ○○수학', stats: '추천 21 · 후기 14' },
-  { name: '개포 ○○영어', stats: '추천 17 · 후기 11' },
-  { name: '청담 ○○미술', stats: '추천 13 · 후기 8' },
-  { name: '압구정 ○○피아노', stats: '추천 22 · 후기 15' },
-  { name: '대치 ○○코딩', stats: '추천 28 · 후기 19' },
+  { name: '?��??�○?�학', stats: '추천 24 · ?�기 18' },
+  { name: '??�� ?�○?�어', stats: '추천 19 · ?�기 12' },
+  { name: '?�실 ?�○�?��', stats: '추천 31 · ?�기 22' },
+  { name: '?�성 ?�○과학', stats: '추천 15 · ?�기 9' },
+  { name: '?�초 ?�○?�술', stats: '추천 27 · ?�기 16' },
+  { name: '?�곡 ?�○?�학', stats: '추천 21 · ?�기 14' },
+  { name: '개포 ?�○?�어', stats: '추천 17 · ?�기 11' },
+  { name: '�?�� ?�○미술', stats: '추천 13 · ?�기 8' },
+  { name: '?�구???�○?�아??, stats: '추천 22 · ?�기 15' },
+  { name: '?��??�○코딩', stats: '추천 28 · ?�기 19' },
 ];
 
 /**
- * 공부방 Prime 점유판 (3칸 · 슬롯 선택 없음 · 만석 시 예약대기만)
+ * 공�?�?Prime ?�유??(3�?· ?�롯 ?�택 ?�음 · 만석 ???�약?�기만)
  * @param {{ capacity: number, used: number, remaining: number }} prime
  */
 function renderRoomPrimeBoard(prime) {
@@ -365,24 +366,24 @@ function renderRoomPrimeBoard(prime) {
   const tone = full ? 'is-full' : used > 0 ? 'is-partial' : 'is-open';
   return `
     <div class="plans-prime-board ${tone}" data-plans-prime-board>
-      <h4 class="plans-prime-board__title">선택 지역 Prime 노출 현황</h4>
-      <p class="plans-prime-board__occupancy">3자리 중 ${used}자리 이용 중${remaining ? ` · 남은 자리 ${remaining}` : ' · 만석'}</p>
-      <p class="plans-prime-board__lead">선택 지역의 Prime 대표 노출 · 빈자리는 왼쪽부터 자동 배정됩니다. 슬롯 번호는 고르지 않습니다.</p>
-      <ul class="plans-prime-board__cells" aria-label="Prime 자리 3칸">
+      <h4 class="plans-prime-board__title">?�택 지??Prime ?�출 ?�황</h4>
+      <p class="plans-prime-board__occupancy">3?�리 �?${used}?�리 ?�용 �?{remaining ? ` · ?��? ?�리 ${remaining}` : ' · 만석'}</p>
+      <p class="plans-prime-board__lead">?�택 지??�� Prime ?�???�출 · 빈자리는 ?�쪽부???�동 배정?�니?? ?�롯 번호??고르지 ?�습?�다.</p>
+      <ul class="plans-prime-board__cells" aria-label="Prime ?�리 3�?>
         ${cells
           .map((c) => {
             const st = c.status === 'held' ? 'held' : c.status;
             const meta =
               st === 'available'
-                ? '빈자리'
+                ? '빈자�?
                 : st === 'held'
-                  ? '임시확보'
+                  ? '?�시?�보'
                   : c.endsAt
-                    ? `${c.endsAt} 종료 예정`
-                    : '이용 중';
+                    ? `${c.endsAt} 종료 ?�정`
+                    : '?�용 �?;
             return `
           <li class="plans-prime-cell is-${esc(st)}">
-            <span class="plans-prime-cell__label">Prime 자리</span>
+            <span class="plans-prime-cell__label">Prime ?�리</span>
             <span class="plans-prime-cell__status">${esc(c.label)}</span>
             <span class="plans-prime-cell__meta">${esc(meta)}</span>
           </li>`;
@@ -392,21 +393,21 @@ function renderRoomPrimeBoard(prime) {
       ${
         full
           ? `<div class="plans-prime-waitlist" data-plans-waitlist>
-              <p><strong>현재 선택 지역의 Prime 자리는 모두 이용 중입니다.</strong></p>
-              <p>예약대기를 등록하면 빈자리가 열릴 때 알려드립니다. 대기 등록만으로 자리나 순번이 보장되지는 않으며 결제가 완료되어야 확정됩니다.</p>
-              <button type="button" class="btn btn--primary" data-plans-waitlist-register>예약대기 등록</button>
-              <p class="mypage-muted" style="margin-top:0.5rem"><a href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 예약대기 보기</a></p>
+              <p><strong>?�재 ?�택 지??�� Prime ?�리??모두 ?�용 중입?�다.</strong></p>
+              <p>?�약?�기�? ?�록?�면 빈자리�? ?�릴 ???�려?�립?�다. ?��??�록만으�??�리???�번??보장?��????�으�?결제가 ?�료?�어???�정?�니??</p>
+              <button type="button" class="btn btn--primary" data-plans-waitlist-register>?�약?��??�록</button>
+              <p class="mypage-muted" style="margin-top:0.5rem"><a href="#/mypage/plans/my" data-nav="/mypage/plans/my">???�약?��?보기</a></p>
             </div>`
           : ''
       }
     </div>`;
 }
 
-/** 공부방 Pick 5×2=10 미리보기 (순환 목록·과외쌤 미사용) */
+/** 공�?�?Pick 5×2=10 미리보기 (?�환 목록·과외??미사?? */
 function renderRoomPickPreview() {
   return `
-    <div class="plans-room-pick" aria-label="Pick 노출 미리보기 5열 2행">
-      <p class="plans-room-pick__title">Pick 노출 미리보기 · 한 페이지 10명 (5열 × 2행)</p>
+    <div class="plans-room-pick" aria-label="Pick ?�출 미리보기 5??2??>
+      <p class="plans-room-pick__title">Pick ?�출 미리보기 · ???�이지 10�?(5??× 2??</p>
       <ul class="plans-room-pick__grid">
         ${ROOM_PICK_PREVIEW_TILES.map(
           (p, i) => `
@@ -417,34 +418,34 @@ function renderRoomPickPreview() {
           </li>`,
         ).join('')}
       </ul>
-      <nav class="plans-room-pick__pager" aria-label="페이지">
+      <nav class="plans-room-pick__pager" aria-label="?�이지">
         <span class="is-current" aria-current="page">1</span><span>2</span><span>3</span>
       </nav>
     </div>`;
 }
 
-/** T1 과외쌤 circulation 미리보기 (점유·만석·예약대기 없음) */
+/** T1 과외??circulation 미리보기 (?�유·만석·?�약?��??�음) */
 const TUTOR_PRIME_PREVIEW_TILES = [
-  { name: '김○○', subject: '수학 · 고등학교', stats: '추천 28 · 후기 19' },
-  { name: '이○○', subject: '영어 · 고등학교', stats: '추천 21 · 후기 14' },
-  { name: '박○○', subject: '국어 · 중학교', stats: '추천 17 · 후기 11' },
+  { name: '김?�○', subject: '?�학 · 고등?�교', stats: '추천 28 · ?�기 19' },
+  { name: '?�○??, subject: '?�어 · 고등?�교', stats: '추천 21 · ?�기 14' },
+  { name: '박○??, subject: '�?�� · 중학�?, stats: '추천 17 · ?�기 11' },
 ];
 
 const TUTOR_PICK_PREVIEW_TILES = [
-  { name: '김○○', subject: '수학 · 고등학교', stats: '추천 28 · 후기 19' },
-  { name: '이○○', subject: '영어 · 고등학교', stats: '추천 21 · 후기 14' },
-  { name: '박○○', subject: '국어 · 중학교', stats: '추천 17 · 후기 11' },
-  { name: '최○○', subject: '과학 · 고등학교', stats: '추천 15 · 후기 9' },
-  { name: '정○○', subject: '논술 · 고등학교', stats: '추천 24 · 후기 16' },
-  { name: '강○○', subject: '수학 · 중학교', stats: '추천 19 · 후기 12' },
-  { name: '윤○○', subject: '영어 · 중학교', stats: '추천 13 · 후기 8' },
-  { name: '장○○', subject: '사회 · 고등학교', stats: '추천 22 · 후기 15' },
-  { name: '임○○', subject: '코딩 · 고등학교', stats: '추천 18 · 후기 10' },
-  { name: '한○○', subject: '국어 · 고등학교', stats: '추천 31 · 후기 22' },
+  { name: '김?�○', subject: '?�학 · 고등?�교', stats: '추천 28 · ?�기 19' },
+  { name: '?�○??, subject: '?�어 · 고등?�교', stats: '추천 21 · ?�기 14' },
+  { name: '박○??, subject: '�?�� · 중학�?, stats: '추천 17 · ?�기 11' },
+  { name: '최○??, subject: '과학 · 고등?�교', stats: '추천 15 · ?�기 9' },
+  { name: '?�○??, subject: '?�술 · 고등?�교', stats: '추천 24 · ?�기 16' },
+  { name: '강○??, subject: '?�학 · 중학�?, stats: '추천 19 · ?�기 12' },
+  { name: '?�○??, subject: '?�어 · 중학�?, stats: '추천 13 · ?�기 8' },
+  { name: '?�○??, subject: '?�회 · 고등?�교', stats: '추천 22 · ?�기 15' },
+  { name: '?�○??, subject: '코딩 · 고등?�교', stats: '추천 18 · ?�기 10' },
+  { name: '?�○??, subject: '�?�� · 고등?�교', stats: '추천 31 · ?�기 22' },
 ];
 
 function renderTutorCircPager() {
-  return `<nav class="plans-tutor-circ__pager" aria-label="페이지">
+  return `<nav class="plans-tutor-circ__pager" aria-label="?�이지">
         <span class="is-current" aria-current="page">1</span><span>2</span><span>3</span>
       </nav>`;
 }
@@ -465,13 +466,13 @@ function renderTutorCircTiles(tiles, prefix) {
 
 function renderTutorPrimeCirculation() {
   return `
-    <div class="plans-tutor-circ plans-tutor-circ--prime" aria-label="Prime 노출 미리보기 페이지당 3명">
+    <div class="plans-tutor-circ plans-tutor-circ--prime" aria-label="Prime ?�출 미리보기 ?�이지??3�?>
       <div class="plans-tutor-circ__head">
-        <span class="plans-tutor-circ__kicker">핵심 노출 · 순환형</span>
+        <span class="plans-tutor-circ__kicker">?�심 ?�출 · ?�환??/span>
         <span class="plans-tutor-circ__count">3 / page</span>
       </div>
-      <p class="plans-tutor-circ__title">Prime 순환 미리보기 · 페이지당 3명</p>
-      <p class="plans-tutor-circ__rotate">선택 시·주력과목 앞쪽 노출 · 15분마다 공정 순환 · 페이지 넘김</p>
+      <p class="plans-tutor-circ__title">Prime ?�환 미리보기 · ?�이지??3�?/p>
+      <p class="plans-tutor-circ__rotate">?�택 ?�·주?�과�??�쪽 ?�출 · 15분마??공정 ?�환 · ?�이지 ?��?</p>
       <ul class="plans-tutor-circ__grid">
         ${renderTutorCircTiles(TUTOR_PRIME_PREVIEW_TILES, 'T')}
       </ul>
@@ -481,13 +482,13 @@ function renderTutorPrimeCirculation() {
 
 function renderTutorPickCirculation() {
   return `
-    <div class="plans-tutor-circ plans-tutor-circ--pick" aria-label="Pick 노출 미리보기 페이지당 10명">
+    <div class="plans-tutor-circ plans-tutor-circ--pick" aria-label="Pick ?�출 미리보기 ?�이지??10�?>
       <div class="plans-tutor-circ__head">
-        <span class="plans-tutor-circ__kicker">추천 노출 · 순환형</span>
+        <span class="plans-tutor-circ__kicker">추천 ?�출 · ?�환??/span>
         <span class="plans-tutor-circ__count">10 / page</span>
       </div>
-      <p class="plans-tutor-circ__title">Pick 순환 미리보기 · 페이지당 10명</p>
-      <p class="plans-tutor-circ__rotate">선택 시·주력과목 추천 노출 · 15분마다 공정 순환 · 페이지 넘김</p>
+      <p class="plans-tutor-circ__title">Pick ?�환 미리보기 · ?�이지??10�?/p>
+      <p class="plans-tutor-circ__rotate">?�택 ?�·주?�과�?추천 ?�출 · 15분마??공정 ?�환 · ?�이지 ?��?</p>
       <ul class="plans-tutor-circ__grid">
         ${renderTutorCircTiles(TUTOR_PICK_PREVIEW_TILES, 'P')}
       </ul>
@@ -500,9 +501,9 @@ function esc(s) {
 }
 
 function roleLabel(role) {
-  if (role === 'study_room') return '공부방';
-  if (role === 'tutor') return '과외쌤';
-  if (role === 'parent') return '학생';
+  if (role === 'study_room') return '공�?�?;
+  if (role === 'tutor') return '과외??;
+  if (role === 'parent') return '?�생';
   return '비로그인';
 }
 
@@ -511,17 +512,17 @@ function renderProfileBanner(profile, role) {
   if (role === 'guest') {
     return `
       <div class="mypage-info-box plans-profile-banner">
-        <strong>적용 대상</strong>
-        <p>비로그인 · 상품 소개만 볼 수 있습니다. 구매는 공급자 로그인 후 진행합니다.</p>
-        <a href="${AUTH_UI_BASE}/#/login" class="btn btn--primary btn--sm" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그인</a>
+        <strong>?�용 ?�??/strong>
+        <p>비로그인 · ?�품 ?�개�?�????�습?�다. 구매??공급??로그????진행?�니??</p>
+        <a href="${AUTH_UI_BASE}/#/login" class="btn btn--primary btn--sm" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그??/a>
       </div>`;
   }
   if (role === 'parent') {
     return `
       <div class="mypage-info-box plans-profile-banner">
-        <strong>적용 대상</strong>
-        <p>학생 계정은 유료상품 구매 주체가 아닙니다. FAQ에서 안내만 확인하세요.</p>
-        <a href="#/support/faq" class="btn btn--secondary btn--sm" data-nav="/support/faq">자주 묻는 질문</a>
+        <strong>?�용 ?�??/strong>
+        <p>?�생 계정?� ?�료?�품 구매 주체가 ?�닙?�다. FAQ?�서 ?�내�??�인?�세??</p>
+        <a href="#/support/faq" class="btn btn--secondary btn--sm" data-nav="/support/faq">?�주 묻는 질문</a>
       </div>`;
   }
   if (!profile) {
@@ -529,15 +530,15 @@ function renderProfileBanner(profile, role) {
     if (!profiles.length) {
       return `
         <div class="mypage-info-box plans-profile-banner is-warn">
-          <strong>적용 프로필</strong>
-          <p>등록된 ${esc(roleLabel(role))} 프로필이 없습니다. 상세등록을 먼저 완료해 주세요.</p>
-          <a href="#/mypage/registrations" class="btn btn--secondary btn--sm" data-nav="/mypage/registrations">내 등록으로</a>
+          <strong>?�용 ?�로??/strong>
+          <p>?�록??${esc(roleLabel(role))} ?�로?�이 ?�습?�다. ?�세?�록??먼�? ?�료??주세??</p>
+          <a href="#/mypage/registrations" class="btn btn--secondary btn--sm" data-nav="/mypage/registrations">???�록?�로</a>
         </div>`;
     }
     return `
       <div class="mypage-info-box plans-profile-banner">
-        <strong>적용 프로필을 선택하세요</strong>
-        <p class="mypage-muted">같은 역할의 프로필이 여러 개입니다. 적용할 프로필을 고른 뒤 상품을 선택합니다.</p>
+        <strong>?�용 ?�로?�을 ?�택?�세??/strong>
+        <p class="mypage-muted">같�? ??��???�로?�이 ?�러 개입?�다. ?�용???�로?�을 고른 ???�품???�택?�니??</p>
         <ul class="plans-profile-pick">
           ${profiles
             .map(
@@ -555,7 +556,7 @@ function renderProfileBanner(profile, role) {
   }
   return `
     <div class="mypage-info-box plans-profile-banner is-active">
-      <strong>적용 프로필</strong>
+      <strong>?�용 ?�로??/strong>
       <p><span class="plans-profile-name">${esc(profile.label)}</span>
         <span class="mypage-muted">· ${esc(roleLabel(profile.providerType))} · ${esc(profile.status || '')}</span>
       </p>
@@ -574,17 +575,17 @@ function getEligibility(profile, productCode, family = 'position') {
 
   if (family === 'access') {
     if (profile.providerType !== 'tutor' && profile.providerType !== 'study_room') {
-      return { canBuy: false, missing: ['쪽지권은 공부방·과외쌤만 구매할 수 있습니다'] };
+      return { canBuy: false, missing: ['쪽�?권�? 공�?방·과?�쌤�?구매?????�습?�다'] };
     }
     if (profile.providerType === 'tutor') {
       const tutor = getTutor(Number(profile.id));
       if (!tutor) {
-        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+        return { canBuy: false, missing: ['?�로?�을 찾을 ???�습?�다'] };
       }
     } else {
       const room = getStudyRoom(Number(profile.id));
       if (!room) {
-        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+        return { canBuy: false, missing: ['?�로?�을 찾을 ???�습?�다'] };
       }
     }
     return { canBuy: true, missing: [] };
@@ -593,36 +594,36 @@ function getEligibility(profile, productCode, family = 'position') {
   if (profile.providerType === 'study_room') {
     const room = getStudyRoom(Number(profile.id));
     if (!room) {
-      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+      return { canBuy: false, missing: ['?�로?�을 찾을 ???�습?�다'] };
     }
     if (room.profile_status !== 'published') {
-      missing.push('공개(published) 상태가 필요합니다 · 등록점검에서 「공개하기」');
+      missing.push('공개(published) ?�태가 ?�요?�니??· ?�록?��??�서 ?�공개하기�?);
       canBuy = false;
     }
-    // Pick/Prime 자격만 입력 완성도를 본다. 공개·쪽지와 분리.
+    // Pick/Prime ?�격�??�력 ?�성?��? 본다. 공개·쪽�??� 분리.
     if (productCode === 'prime' || productCode === 'pick') {
       if (room.detail_completion_status !== 'expanded_complete') {
         missing.push(
-          `${productCode === 'prime' ? 'Prime' : 'Pick'} 정보 부족 · 등록점검에서 남은 항목을 채우면 구매가 열립니다`,
+          `${productCode === 'prime' ? 'Prime' : 'Pick'} ?�보 부�?· ?�록?��??�서 ?��? ??��??채우�?구매가 ?�립?�다`,
         );
         canBuy = false;
       }
       const apply = getApplyTargetReadiness(profile, 'study_room');
       if (!apply.regionReady) {
-        missing.push('대표 홍보지역(행정동·단지 ID)이 필요합니다 · 기본정보에서 지역을 다시 저장하세요');
+        missing.push('?�???�보지???�정?�·단지 ID)???�요?�니??· 기본?�보?�서 지??�� ?�시 ?�?�하?�요');
         canBuy = false;
       }
     }
   } else {
     const tutor = getTutor(Number(profile.id));
     if (!tutor) {
-      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+      return { canBuy: false, missing: ['?�로?�을 찾을 ???�습?�다'] };
     }
     if (tutor.profile_status !== 'published') {
-      missing.push('공개(published) 상태가 필요합니다');
+      missing.push('공개(published) ?�태가 ?�요?�니??);
       canBuy = false;
     }
-    // 과외쌤 구매 차단은 노출축(시·주력과목)만. 소개문·카드 카피 완성도는 성과 불이익.
+    // 과외??구매 차단?� ?�출�??�·주?�과�?�? ?�개문·카??카피 ?�성?�는 ?�과 불이??
   }
 
   return { canBuy, missing: [...new Set(missing)] };
@@ -642,7 +643,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const selectedOptionId = opts.selectedOptionId || '';
   const canPurchaseUi = role === 'study_room' || role === 'tutor';
   const implemented = product.implemented !== false && product.family === 'position';
-  // 공부방 Prime만 재고. Pick·과외쌤은 순환형 → 매진/슬롯 UI 금지
+  // 공�?�?Prime�??�고. Pick·과외?��? ?�환????매진/?�롯 UI 금�?
   const roomPrimeOnly = role === 'study_room' && product.productCode === 'prime';
   const inv = roomPrimeOnly ? resolveRoomPrimeInventory(slots) : null;
   const slot = roomPrimeOnly && inv ? getSlotForProduct(product.productCode, inv, role) : null;
@@ -651,7 +652,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const isPick = product.productCode === 'pick';
   const primaryCta = opts.primaryCta ?? isPrime;
   const displayName =
-    product.name || (isPrime ? 'Prime 노출' : isPick ? 'Pick 노출' : productLabel(product.productCode));
+    product.name || (isPrime ? 'Prime ?�출' : isPick ? 'Pick ?�출' : productLabel(product.productCode));
   const isStorefront = layout === 'storefront' || layout === 'compact';
 
   if (!implemented) {
@@ -668,12 +669,12 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const options = product.options || [];
   const eligibility = profile
     ? getEligibility(profile, product.productCode)
-    : { canBuy: false, missing: ['적용 프로필을 먼저 선택하세요'] };
+    : { canBuy: false, missing: ['?�용 ?�로?�을 먼�? ?�택?�세??] };
   if (soldOut) {
     eligibility.canBuy = false;
     eligibility.missing = [
-      ...eligibility.missing.filter((m) => !String(m).includes('슬롯') && !String(m).includes('마감')),
-      '현재 지역 Prime 자리가 모두 이용 중입니다. 아래에서 예약대기를 등록하세요.',
+      ...eligibility.missing.filter((m) => !String(m).includes('?�롯') && !String(m).includes('마감')),
+      '?�재 지??Prime ?�리가 모두 ?�용 중입?�다. ?�래?�서 ?�약?�기�? ?�록?�세??',
     ];
   }
   const missingHtml =
@@ -684,21 +685,21 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const boardHtml = embedBoard && roomPrimeOnly && inv ? renderRoomPrimeBoard(inv.prime) : '';
 
   const footNote = (() => {
-    if (role === 'study_room' && isPick) return '선택 지역에서 10개씩 순환 노출';
-    if (role === 'tutor' && isPrime) return '선택 시·주력과목에서 3개씩 순환 노출';
-    if (role === 'tutor' && isPick) return '선택 시·주력과목에서 10개씩 순환 노출';
-    if (role === 'study_room' && isPrime) return '선택 지역의 Prime 대표 노출';
+    if (role === 'study_room' && isPick) return '?�택 지??��??10개씩 ?�환 ?�출';
+    if (role === 'tutor' && isPrime) return '?�택 ?�·주?�과목에??3개씩 ?�환 ?�출';
+    if (role === 'tutor' && isPick) return '?�택 ?�·주?�과목에??10개씩 ?�환 ?�출';
+    if (role === 'study_room' && isPrime) return '?�택 지??�� Prime ?�???�출';
     return '';
   })();
 
   const pickPreviewHtml =
     embedPickPreview && isPick
-      ? `<div class="plans-pick-preview" aria-label="Pick 노출 미리보기 5열 2행">
-        <p class="plans-pick-preview__label">Pick 노출 미리보기 · 5열 × 2행</p>
+      ? `<div class="plans-pick-preview" aria-label="Pick ?�출 미리보기 5??2??>
+        <p class="plans-pick-preview__label">Pick ?�출 미리보기 · 5??× 2??/p>
         <ul class="plans-pick-preview__grid">
           ${Array.from({ length: 10 }, (_, i) => `<li class="plans-pick-preview__cell">P${i + 1}</li>`).join('')}
         </ul>
-        <nav class="plans-pick-preview__pager" aria-label="페이지">
+        <nav class="plans-pick-preview__pager" aria-label="?�이지">
           <span class="is-current">1</span><span>2</span><span>3</span>
         </nav>
       </div>`
@@ -728,20 +729,20 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
             <span class="plans-period-card__list${hasDiscount ? '' : ' is-empty'}">${hasDiscount ? esc(formatKrw(o.listPriceKrw)) : '\u00a0'}</span>
             <strong class="plans-period-card__price">${esc(formatKrw(o.priceKrw))}</strong>
             <span class="plans-period-card__off">${o.discountLabel ? esc(o.discountLabel) : '\u00a0'}</span>
-            <span class="plans-period-card__memo">${memo > 0 ? `쪽지권 ${memo}회 포함` : footNote || '\u00a0'}</span>
-            ${amt.testMode ? `<span class="plans-period-card__test">시험 ${esc(formatKrw(amt.chargeKrw))}</span>` : ''}
+            <span class="plans-period-card__memo">${memo > 0 ? `쪽�?�?${memo}???�함` : footNote || '\u00a0'}</span>
+            ${amt.testMode ? `<span class="plans-period-card__test">?�험 ${esc(formatKrw(amt.chargeKrw))}</span>` : ''}
           </button>
         </li>`;
     })
     .join('');
   const optionSelect = `
-    <div class="plans-period" role="group" aria-label="기간 선택">
-      <p class="plans-period__label">기간 선택</p>
+    <div class="plans-period" role="group" aria-label="기간 ?�택">
+      <p class="plans-period__label">기간 ?�택</p>
       <ul class="plans-period-grid">${periodCards}</ul>
       ${periodReason ? `<p class="plans-period__reason">${esc(periodReason)}</p>` : ''}
-      <p class="plans-period__vat">표시가 · VAT 포함 예정 · 기간 카드를 누르면 주문 요약에 반영됩니다</p>
+      <p class="plans-period__vat">?�시가 · VAT ?�함 ?�정 · 기간 카드�??�르�?주문 ?�약??반영?�니??/p>
       <label class="plans-card__pick plans-card__pick--sr">
-        <span class="plans-card__pick-label">기간 선택</span>
+        <span class="plans-card__pick-label">기간 ?�택</span>
         <select data-plans-option="${esc(product.productCode)}" class="student-form__select" ${periodLocked ? 'disabled' : ''}>
           ${periodOptions
             .map((o, i) => {
@@ -766,11 +767,11 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const ctaClass = primaryCta ? 'btn btn--primary plans-card__cta' : 'btn btn--secondary plans-card__cta';
   const buyBtn = canPurchaseUi
     ? soldOut
-      ? `<button type="button" class="btn btn--secondary plans-card__cta" disabled>예약대기만 가능</button>`
+      ? `<button type="button" class="btn btn--secondary plans-card__cta" disabled>?�약?�기만 가??/button>`
       : `<button type="button" class="${ctaClass}" data-plans-select-product
          data-product-code="${esc(product.productCode)}"
-         title="이 상품을 주문 요약에 반영">이 상품 선택</button>`
-    : `<a href="${AUTH_UI_BASE}/#/login" class="btn btn--secondary plans-card__cta" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그인 후 구매</a>`;
+         title="???�품??주문 ?�약??반영">???�품 ?�택</button>`
+    : `<a href="${AUTH_UI_BASE}/#/login" class="btn btn--secondary plans-card__cta" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그????구매</a>`;
 
   const badge = product.cardBadge
     ? `<span class="plans-card__badge">${esc(product.cardBadge)}</span>`
@@ -802,24 +803,24 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
 function isImmediateTicket(option) {
   if (!option) return false;
   if (option.ticketKind === 'immediate') return true;
-  return option.apiVariant === '1회' || /^1회/.test(String(option.label || ''));
+  return option.apiVariant === '1?? || /^1??.test(String(option.label || ''));
 }
 
 function ticketCount(option) {
   const n = Number(option?.creditCount);
   if (n > 0) return n;
   if (isImmediateTicket(option)) return 1;
-  const m = String(option?.label || option?.apiVariant || '').match(/(\d+)\s*회/);
+  const m = String(option?.label || option?.apiVariant || '').match(/(\d+)\s*??);
   return m ? Number(m[1]) : 0;
 }
 
 function ticketProductName(option) {
-  if (!option) return '쪽지권';
-  if (isImmediateTicket(option)) return '1회 즉시권';
+  if (!option) return '쪽�?�?;
+  if (isImmediateTicket(option)) return '1??즉시�?;
   const n = ticketCount(option);
-  if (n === 5) return '5회권';
-  if (n === 10) return '10회권';
-  return String(option.label || '쪽지권');
+  if (n === 5) return '5?�권';
+  if (n === 10) return '10?�권';
+  return String(option.label || '쪽�?�?);
 }
 
 /**
@@ -837,7 +838,7 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
   const packPurchaseBlocked = Boolean(opts.packPurchaseBlocked);
   const eligibility = profile
     ? getEligibility(profile, product.productCode, 'access')
-    : { canBuy: false, missing: ['적용 프로필을 먼저 선택하세요'] };
+    : { canBuy: false, missing: ['?�용 ?�로?�을 먼�? ?�택?�세??] };
   const selectedOptionId = opts.selectedOptionId || '';
 
   const missingHtml =
@@ -849,7 +850,7 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
     .map((o) => {
       const amt = resolveCheckoutAmount(o.priceKrw);
       const priceNote = amt.testMode
-        ? `${formatKrw(o.priceKrw)} (시험 ${formatKrw(amt.chargeKrw)})`
+        ? `${formatKrw(o.priceKrw)} (?�험 ${formatKrw(amt.chargeKrw)})`
         : formatKrw(o.priceKrw);
       const isImmediate = isImmediateTicket(o);
       const packLocked = (!isImmediate && packPurchaseBlocked) || (!!activePaidPack && !isImmediate);
@@ -865,19 +866,19 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
       const savePct =
         Number(o.creditCount) === 5 ? 10 : Number(o.creditCount) === 10 ? 20 : 0;
       const saveNote = savePct
-        ? `회당 ${formatKrw(per)} · ${savePct}% 절약`
+        ? `?�당 ${formatKrw(per)} · ${savePct}% ?�약`
         : isImmediate
           ? '\u00a0'
           : '';
       const meta = isImmediate
-        ? '결제 후 바로 발송 · 남은 횟수로 보관되지 않습니다'
-        : '구매일부터 120일';
+        ? '결제 ??바로 발송 · ?��? ?�수�?보�??��? ?�습?�다'
+        : '구매?��???120??;
       const lock =
         packLocked && activePaidPack
-          ? `<span class="plans-ticket-card__lock">구매할 수 없습니다. 사용 중인 묶음권의 남은 횟수를 모두 쓰거나 사용기한이 지난 뒤 구매하세요.</span>`
+          ? `<span class="plans-ticket-card__lock">구매?????�습?�다. ?�용 중인 묶음권의 ?��? ?�수�?모두 ?�거???�용기한??지????구매?�세??</span>`
           : '';
       const aria = packLocked && activePaidPack
-        ? `${name} ${priceNote}. 사용 중인 쪽지권이 있어 구매할 수 없습니다.`
+        ? `${name} ${priceNote}. ?�용 중인 쪽�?권이 ?�어 구매?????�습?�다.`
         : `${name} ${priceNote}`;
       return `
         <li class="plans-ticket-card${selected ? ' is-selected' : ''}${packLocked ? ' is-disabled' : ''}">
@@ -885,7 +886,7 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
             data-product-code="${esc(product.productCode)}"
             ${packLocked ? 'disabled' : ''} aria-pressed="${selected ? 'true' : 'false'}"
             aria-label="${esc(aria)}">
-            <span class="plans-ticket-card__count" aria-hidden="true">${esc(String(countNum))}회</span>
+            <span class="plans-ticket-card__count" aria-hidden="true">${esc(String(countNum))}??/span>
             <strong class="plans-ticket-card__name">${esc(name)}</strong>
             <span class="plans-ticket-card__price">${esc(priceNote)}</span>
             <span class="plans-ticket-card__save">${saveNote ? esc(saveNote) : '\u00a0'}</span>
@@ -901,14 +902,14 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
   const buyBtn = isProvider
     ? `<button type="button" class="${ctaClass}" data-plans-buy
          data-product-code="${esc(product.productCode)}"
-         ${buyDisabled ? 'disabled' : ''}>이 상품 선택</button>`
+         ${buyDisabled ? 'disabled' : ''}>???�품 ?�택</button>`
     : role === 'guest'
-      ? `<a href="${AUTH_UI_BASE}/#/login" class="btn btn--secondary plans-card__cta" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그인 후 구매</a>`
-      : `<button type="button" class="btn btn--secondary plans-card__cta" disabled>구매 불가</button>`;
+      ? `<a href="${AUTH_UI_BASE}/#/login" class="btn btn--secondary plans-card__cta" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그????구매</a>`
+      : `<button type="button" class="btn btn--secondary plans-card__cta" disabled>구매 불�?</button>`;
 
   const hiddenSelect = `
     <label class="plans-card__pick plans-card__pick--sr">
-      <span class="plans-card__pick-label">쪽지권 선택</span>
+      <span class="plans-card__pick-label">쪽�?�??�택</span>
       <select data-plans-option="${esc(product.productCode)}" class="student-form__select">
         ${options
           .map((o) => {
@@ -951,18 +952,18 @@ function renderTestModeToggle() {
   return `
     <label class="plans-test-mode">
       <input type="checkbox" data-plans-test-mode ${on ? 'checked' : ''} />
-      <span>시험 결제 화면 (실제 PG 연동 전 · 금액은 서버 판매가)</span>
+      <span>?�험 결제 ?�면 (?�제 PG ?�동 ??· 금액?� ?�버 ?�매가)</span>
     </label>`;
 }
 
-/** P18-01 상품홈 — 안내·진입 허브. 구매 UI는 상세에만. */
+/** P18-01 ?�품?????�내·진입 ?�브. 구매 UI???�세?�만. */
 export function renderPlansHome() {
   return renderPlansHomeBody({
     noticesHtml: renderProviderNoticeBanners(),
   });
 }
 
-/** P18-02 노출상품 */
+/** P18-02 ?�출?�품 */
 export function renderPlansPositions() {
   const role = getPlansEffectiveRole();
   const query = parsePlansQuery();
@@ -1017,7 +1018,7 @@ export function renderPlansPositions() {
     const price = badgePriceKrw(providerTypeKey, undefined, code, periodLabel);
     return {
       label: badgeDisplayName(code),
-      value: price != null ? formatKrw(price) : '—',
+      value: price != null ? formatKrw(price) : '??,
       priceKrw: price || 0,
     };
   });
@@ -1026,26 +1027,26 @@ export function renderPlansPositions() {
   const displayTotal =
     positionAmt != null ? positionAmt.displayKrw + badgeSum : null;
   const orderRows = buildPositionOrderRows({
-    profileLabel: profile ? profile.label : '미선택',
-    roleText: role === 'study_room' ? '공부방' : role === 'tutor' ? '과외쌤' : roleLabel(role),
+    profileLabel: profile ? profile.label : '미선??,
+    roleText: role === 'study_room' ? '공�?�? : role === 'tutor' ? '과외?? : roleLabel(role),
     productName: selectedProduct?.name || productLabel(selectedCode),
     regionValue:
       selectedRegionScope?.label ||
-      (role === 'tutor' ? (applyReady ? '시 미선택' : '활동 시·주력과목 필요') : applyReady ? '—' : '미선택'),
+      (role === 'tutor' ? (applyReady ? '??미선?? : '?�동 ?�·주?�과�??�요') : applyReady ? '?? : '미선??),
     periodLabel,
-    periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 완료 시점부터 (서버 확정)',
+    periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 ?�료 ?�점부??(?�버 ?�정)',
     listPriceText:
       selectedOption && Number(selectedOption.discountKrw) > 0 && Number(selectedOption.listPriceKrw) > 0
         ? formatKrw(selectedOption.listPriceKrw)
         : '',
     positionPriceText: positionAmt
       ? positionAmt.testMode
-        ? `${formatKrw(selectedOption.priceKrw)} (시험 ${formatKrw(positionAmt.chargeKrw)})`
+        ? `${formatKrw(selectedOption.priceKrw)} (?�험 ${formatKrw(positionAmt.chargeKrw)})`
         : formatKrw(selectedOption.priceKrw)
-      : '—',
+      : '??,
     discountText: selectedOption?.discountLabel || '',
     memoBundleText:
-      Number(selectedOption?.memoBundle) > 0 ? `쪽지권 ${selectedOption.memoBundle}회 포함` : '',
+      Number(selectedOption?.memoBundle) > 0 ? `쪽�?�?${selectedOption.memoBundle}???�함` : '',
     badgeLines,
     badgeSumText: formatKrw(badgeSum),
   });
@@ -1102,9 +1103,9 @@ export function renderPlansPositions() {
       <header class="plans-sf-hero">
         ${renderPlansHero({
           eyebrow: 'PAID PRODUCTS',
-          title: '노출상품',
-          lead: '더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\n마이샵을 만들고 Basic 목록에 노출하는 것은 무료입니다.\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.',
-          sub: 'Prime 노출과 Pick 노출은 홈·찾기 화면에서 프로필을 더 잘 발견할 수 있도록 돕는 유료 노출상품입니다.',
+          title: '?�출?�품',
+          lead: '??좋�? ?�리?�서 ?��?모·학?�에�?발견??기회�??�공?�니??\n마이?�을 만들�?Basic 목록???�출?�는 것�? 무료?�니??\n?�요??기간�?결제?�며 ?�동?�로 ?�장?��? ?�습?�다.',
+          sub: 'Prime ?�출�?Pick ?�출?� ?�·찾�??�면?�서 ?�로?�을 ????발견?????�도�??�는 ?�료 ?�출?�품?�니??',
         })}
         ${renderBasicFreeRow()}
       </header>
@@ -1116,15 +1117,15 @@ export function renderPlansPositions() {
               ? `${renderOffer(
                   primeProduct,
                   role === 'tutor'
-                    ? '선택한 시와 주력과목의 Prime 영역에 페이지당 3명씩 노출되며, 15분마다 공정하게 순환합니다.'
-                    : '선택한 단지·행정동의 Prime 대표 자리를 확보하세요. Prime은 선택 지역에서 3개만 운영하는 한정 대표 노출입니다.',
+                    ? '?�택???��? 주력과목??Prime ?�역???�이지??3명씩 ?�출?�며, 15분마??공정?�게 ?�환?�니??'
+                    : '?�택???��?·?�정?�의 Prime ?�???�리�??�보?�세?? Prime?� ?�택 지??��??3개만 ?�영?�는 ?�정 ?�???�출?�니??',
                   0,
                 )}
           ${renderOffer(
             pickProduct,
             role === 'tutor'
-              ? '한 페이지에 10명씩 노출되며, 15분마다 공정하게 순환합니다.'
-              : '선택한 지역의 추천 영역에서 고르게 발견되세요. 한 페이지에 10개씩 노출되며, 15분마다 공정하게 순환합니다.',
+              ? '???�이지??10명씩 ?�출?�며, 15분마??공정?�게 ?�환?�니??'
+              : '?�택??지??�� 추천 ?�역?�서 고르�?발견?�세?? ???�이지??10개씩 ?�출?�며, 15분마??공정?�게 ?�환?�니??',
             primeProduct ? 1 : 0,
           )}
           ${restProducts
@@ -1132,7 +1133,7 @@ export function renderPlansPositions() {
               renderOffer(p, p.tagline || p.name || productLabel(p.productCode), (primeProduct ? 1 : 0) + (pickProduct ? 1 : 0) + i),
             )
             .join('')}`
-              : `<div class="plans-sf-empty" role="status">표시할 노출상품이 없습니다. 카탈로그를 다시 불러와 주세요.</div>`
+              : `<div class="plans-sf-empty" role="status">?�시???�출?�품???�습?�다. 카탈로그�??�시 불러?� 주세??</div>`
           }
 
           ${renderBadgeAddonSection(role, ops, {
@@ -1154,15 +1155,15 @@ export function renderPlansPositions() {
           })}
         </div>
 
-        <aside class="plans-storefront__summary" aria-label="주문 요약">
+        <aside class="plans-storefront__summary" aria-label="주문 ?�약">
           ${renderOrderSummaryBlock({
             family: 'position',
             rows: orderRows,
-            totalLabel: '결제 예정(표시가·서버 재검증)',
-            totalValue: displayTotal != null ? formatKrw(displayTotal) : '—',
+            totalLabel: '결제 ?�정(?�시가·?�버 ?��?�?',
+            totalValue: displayTotal != null ? formatKrw(displayTotal) : '??,
             ctaDisabled: orderCtaDisabled,
-            ctaLabel: roomPrimeSoldOut ? '예약대기만 가능' : '구매하기',
-            note: '시작일·종료일은 결제 완료 시 서버 확정 · 자동연장 없음 · 표시가는 참고이며 결제 직전 서버가 재검증합니다.',
+            ctaLabel: roomPrimeSoldOut ? '?�약?�기만 가?? : '구매?�기',
+            note: '?�작?�·종료일?� 결제 ?�료 ???�버 ?�정 · ?�동?�장 ?�음 · ?�시가??참고?�며 결제 직전 ?�버가 ?��?증합?�다.',
           })}
         </aside>
       </div>
@@ -1174,7 +1175,7 @@ export function renderPlansPositions() {
     </section>`;
 }
 
-/** P18-03 쪽지권 */
+/** P18-03 쪽�?�?*/
 export function renderPlansAccess() {
   const role = getPlansEffectiveRole();
   const query = parsePlansQuery();
@@ -1192,7 +1193,7 @@ export function renderPlansAccess() {
             p.provider_type === providerKey &&
             String(p.provider_id) === String(profile.id) &&
             (p.grant_kind === 'payment_pack' || p.grant_kind === 'payment') &&
-            p.status === '사용 중' &&
+            p.status === '?�용 �? &&
             (Number(p.granted_count) === 5 || Number(p.granted_count) === 10),
         )
       : null;
@@ -1217,21 +1218,21 @@ export function renderPlansAccess() {
     ? (() => {
         const amt = resolveCheckoutAmount(selectedOpt.priceKrw);
         return amt.testMode
-          ? `${formatKrw(selectedOpt.priceKrw)} (시험 ${formatKrw(amt.chargeKrw)})`
+          ? `${formatKrw(selectedOpt.priceKrw)} (?�험 ${formatKrw(amt.chargeKrw)})`
           : formatKrw(selectedOpt.priceKrw);
       })()
-    : '—';
+    : '??;
   const summaryRows = [
-    { label: '상품', value: productName },
-    { label: '횟수', value: countN ? `${countN}회` : '—' },
-    { label: '가격', value: priceText },
+    { label: '?�품', value: productName },
+    { label: '?�수', value: countN ? `${countN}?? : '?? },
+    { label: '가�?, value: priceText },
     ...(isImmediateTicket(selectedOpt)
-      ? [{ label: '발송', value: '결제 후 바로 발송 · 남은 횟수로 보관되지 않습니다' }]
+      ? [{ label: '발송', value: '결제 ??바로 발송 · ?��? ?�수�?보�??��? ?�습?�다' }]
       : [
-          { label: '사용기한', value: '구매일부터 120일' },
-          { label: '소멸', value: '사용기한 경과 시 남은 횟수 소멸 · 환불·연장 없음' },
+          { label: '?�용기한', value: '구매?��???120?? },
+          { label: '?�멸', value: '?�용기한 경과 ???��? ?�수 ?�멸 · ?�불·?�장 ?�음' },
         ]),
-    { label: '적용 프로필', value: profile ? profile.label : '미선택' },
+    { label: '?�용 ?�로??, value: profile ? profile.label : '미선?? },
   ];
 
   return `
@@ -1239,19 +1240,19 @@ export function renderPlansAccess() {
       <header class="plans-sf-hero">
         ${renderPlansHero({
           eyebrow: 'PAID PRODUCTS',
-          title: '공부방·과외쌤 쪽지권',
+          title: '공�?방·과?�쌤 쪽�?�?,
           lead: '',
         })}
       </header>
 
       <div class="plans-storefront__body">
         <div class="plans-storefront__catalog">
-          <section class="plans-access-explain" aria-label="쪽지권 핵심 안내">
-            <strong class="plans-access-explain__lead">학생에게 먼저 보내는 첫 쪽지만 차감됩니다</strong>
+          <section class="plans-access-explain" aria-label="쪽�?�??�심 ?�내">
+            <strong class="plans-access-explain__lead">?�생?�게 먼�? 보내??�?쪽�?�?차감?�니??/strong>
             <ul class="plans-access-explain__list">
-              <li>학생에게 먼저 보내는 첫 쪽지만 차감됩니다.</li>
-              <li>같은 대화방에서 주고받는 후속 쪽지는 모두 무료입니다.</li>
-              <li>학생·학부모가 먼저 보낸 쪽지와 그에 대한 답장도 무료입니다.</li>
+              <li>?�생?�게 먼�? 보내??�?쪽�?�?차감?�니??</li>
+              <li>같�? ?�?�방?�서 주고받는 ?�속 쪽�???모두 무료?�니??</li>
+              <li>?�생·?��?모�? 먼�? 보낸 쪽�??� 그에 ?�???�장??무료?�니??</li>
             </ul>
           </section>
 
@@ -1261,26 +1262,26 @@ export function renderPlansAccess() {
           ${role === 'guest' || role === 'parent' ? renderProfileBanner(null, role) : ''}
           ${
             syncLoading || syncPending
-              ? `<p class="plans-sf-status" data-plans-access-status="loading">쪽지권 상태를 확인하는 중입니다. 5회권·10회권 구매는 잠시 후 가능합니다.</p>`
+              ? `<p class="plans-sf-status" data-plans-access-status="loading">쪽�?�??�태�??�인?�는 중입?�다. 5?�권·10?�권 구매???�시 ??가?�합?�다.</p>`
               : ''
           }
           ${
             syncError
-              ? `<p class="plans-sf-status plans-sf-status--error" role="alert" data-plans-access-status="error">쪽지권 상태를 불러오지 못해 5회권·10회권 구매를 막았습니다. <button type="button" class="btn btn--secondary btn--sm" data-plans-access-retry>다시 시도</button></p>`
+              ? `<p class="plans-sf-status plans-sf-status--error" role="alert" data-plans-access-status="error">쪽�?�??�태�?불러?��? 못해 5?�권·10?�권 구매�?막았?�니?? <button type="button" class="btn btn--secondary btn--sm" data-plans-access-retry>?�시 ?�도</button></p>`
               : ''
           }
 
           <section class="plans-sf-panel plans-ticket-select">
             <header class="plans-sf-panel__head">
-              <h2 class="plans-sf-panel__title">쪽지권 선택</h2>
-              <p class="plans-sf-panel__lead">1회 즉시권 · 5회권 · 10회권 중 필요한 만큼만 선택하세요.</p>
+              <h2 class="plans-sf-panel__title">쪽�?�??�택</h2>
+              <p class="plans-sf-panel__lead">1??즉시�?· 5?�권 · 10?�권 �??�요??만큼�??�택?�세??</p>
             </header>
             ${
               activePaidPack
                 ? `<div class="plans-access-hold" data-plans-access-status="active-pack" role="status">
-              <p>사용 중인 쪽지권이 있습니다. 남은 횟수를 모두 사용하거나 사용기한이 지난 뒤 새 묶음권을 구매할 수 있습니다.</p>
-              <p>5회권과 10회권은 지금 살 수 없습니다. 1회 즉시권은 계속 구매할 수 있습니다.</p>
-              <p class="plans-access-hold__nav"><a class="plans-access-aux__link" href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 쪽지권 보기</a></p>
+              <p>?�용 중인 쪽�?권이 ?�습?�다. ?��? ?�수�?모두 ?�용?�거???�용기한??지??????묶음권을 구매?????�습?�다.</p>
+              <p>5?�권�?10?�권?� 지�??????�습?�다. 1??즉시권�? 계속 구매?????�습?�다.</p>
+              <p class="plans-access-hold__nav"><a class="plans-access-aux__link" href="#/mypage/plans/my" data-nav="/mypage/plans/my">??쪽�?�?보기</a></p>
             </div>`
                 : ''
             }
@@ -1298,16 +1299,16 @@ export function renderPlansAccess() {
           </section>
         </div>
 
-        <aside class="plans-storefront__summary" aria-label="주문 요약">
+        <aside class="plans-storefront__summary" aria-label="주문 ?�약">
           ${renderOrderSummaryBlock({
             family: 'access',
             rows: summaryRows,
-            totalLabel: '결제 예정(표시가)',
+            totalLabel: '결제 ?�정(?�시가)',
             totalValue: selectedOpt
               ? formatKrw(resolveCheckoutAmount(selectedOpt.priceKrw).displayKrw)
-              : '—',
+              : '??,
             ctaDisabled: !canBuy,
-            ctaLabel: selectedPackLocked ? '묶음권 이용 중' : '구매하기',
+            ctaLabel: selectedPackLocked ? '묶음�??�용 �? : '구매?�기',
           })}
         </aside>
       </div>
@@ -1319,13 +1320,13 @@ export function renderPlansAccess() {
     </section>`;
 }
 
-/** P18-04 내 상품 */
+/** P18-04 ???�품 */
 export function renderPlansMy() {
   const role = getPlansEffectiveRole();
   if (role === 'parent' || role === 'guest') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">내 상품</p>
+        <p class="mypage-lead">???�품</p>
         ${renderProfileBanner(null, role)}
       </section>`;
   }
@@ -1348,62 +1349,62 @@ export function renderPlansMy() {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">내 상품 이용 현황</p>
+      <p class="mypage-lead">???�품 ?�용 ?�황</p>
       ${renderProviderNoticeBanners()}
       ${
         syncLoading || syncPending
-          ? `<p class="mypage-info-box" data-plans-my-status="loading">쪽지권·상품 상태를 확인하는 중입니다.</p>`
+          ? `<p class="mypage-info-box" data-plans-my-status="loading">쪽�?권·상???�태�??�인?�는 중입?�다.</p>`
           : ''
       }
       ${
         syncError
-          ? `<p class="mypage-info-box" role="alert" data-plans-my-status="error">상품 상태를 불러오지 못했습니다. <button type="button" class="btn btn--secondary btn--sm" data-plans-my-retry>다시 시도</button></p>`
+          ? `<p class="mypage-info-box" role="alert" data-plans-my-status="error">?�품 ?�태�?불러?��? 못했?�니?? <button type="button" class="btn btn--secondary btn--sm" data-plans-my-retry>?�시 ?�도</button></p>`
           : ''
       }
       ${role === 'tutor' || role === 'study_room' ? renderLowCreditBanner(tickets) : ''}
-      <h2 class="mypage-subhead">이용중 노출상품</h2>
+      <h2 class="mypage-subhead">?�용�??�출?�품</h2>
       ${
         syncReady
           ? positions.length
-            ? `<table class="plans-table" aria-label="이용중 노출상품">
-              <thead><tr><th>상품</th><th>잔여</th><th>종료일</th><th></th></tr></thead>
+            ? `<table class="plans-table" aria-label="?�용�??�출?�품">
+              <thead><tr><th>?�품</th><th>?�여</th><th>종료??/th><th></th></tr></thead>
               <tbody>
                 ${positions
                   .map(
                     (p) => `
                   <tr>
                     <td><strong>${esc(productLabel(p.sku))}</strong></td>
-                    <td>${p.days_left}일</td>
+                    <td>${p.days_left}??/td>
                     <td>${esc(String(p.ends_on || p.ends_at || '').slice(0, 10))}</td>
-                    <td><a href="#/plans/positions" class="btn btn--secondary btn--sm" data-plans-nav="/plans/positions">재구매</a></td>
+                    <td><a href="#/plans/positions" class="btn btn--secondary btn--sm" data-plans-nav="/plans/positions">?�구�?/a></td>
                   </tr>`,
                   )
                   .join('')}
               </tbody>
             </table>`
             : `<div class="mypage-info-box"><p>${esc(P18_EXPOSURE_STATUS.basic)}</p>
-              <a href="#/plans/positions" class="btn btn--primary btn--sm" data-plans-nav="/plans/positions">노출상품 보기</a>
+              <a href="#/plans/positions" class="btn btn--primary btn--sm" data-plans-nav="/plans/positions">?�출?�품 보기</a>
             </div>`
-          : `<p class="mypage-muted">노출상품 정보는 상태 확인 후 표시됩니다.</p>`
+          : `<p class="mypage-muted">?�출?�품 ?�보???�태 ?�인 ???�시?�니??</p>`
       }
       ${role === 'tutor' || role === 'study_room' ? renderProfileBanner(profile, role) : ''}
-      <h2 class="mypage-subhead">쪽지권</h2>
+      <h2 class="mypage-subhead">쪽�?�?/h2>
       ${
         !syncReady
-          ? `<p class="mypage-muted" data-plans-my-status="packs-pending">쪽지권 목록은 상태 확인 후 표시됩니다.</p>`
+          ? `<p class="mypage-muted" data-plans-my-status="packs-pending">쪽�?�?목록?� ?�태 ?�인 ???�시?�니??</p>`
           : packs.length
-            ? `<table class="plans-table" aria-label="쪽지권" data-plans-my-status="packs-ready">
-              <thead><tr><th>프로필</th><th>상품</th><th>출처</th><th>부여</th><th>남은 횟수</th><th>부여일</th><th>사용기한</th><th>상태</th></tr></thead>
+            ? `<table class="plans-table" aria-label="쪽�?�? data-plans-my-status="packs-ready">
+              <thead><tr><th>?�로??/th><th>?�품</th><th>출처</th><th>부??/th><th>?��? ?�수</th><th>부?�일</th><th>?�용기한</th><th>?�태</th></tr></thead>
               <tbody>
                 ${packs
                   .map(
                     (p) => `
                   <tr data-plans-pack-row data-plans-pack-grant="${esc(String(p.grant_label || ''))}" data-plans-pack-status="${esc(String(p.status || ''))}" data-plans-pack-granted="${esc(String(p.granted_count ?? ''))}" data-plans-pack-remaining="${esc(String(p.remaining ?? ''))}" data-plans-pack-provider="${esc(String(p.provider_id ?? ''))}">
-                    <td>${esc(p.provider_type || '미확인')} #${esc(String(p.provider_id ?? ''))}</td>
+                    <td>${esc(p.provider_type || '미확??)} #${esc(String(p.provider_id ?? ''))}</td>
                     <td>${esc(p.product_name || '')}</td>
                     <td>${esc(p.grant_label || '')}</td>
-                    <td>${p.granted_count ?? '—'}</td>
-                    <td>${p.remaining ?? '—'}</td>
+                    <td>${p.granted_count ?? '??}</td>
+                    <td>${p.remaining ?? '??}</td>
                     <td>${esc(String(p.purchased_at || '').slice(0, 10))}</td>
                     <td data-plans-pack-expires>${esc(String(p.expires_at || '').slice(0, 10))}</td>
                     <td>${esc(p.status || '')}</td>
@@ -1412,18 +1413,18 @@ export function renderPlansMy() {
                   .join('')}
               </tbody>
             </table>
-            <p class="mypage-muted"><a href="#/plans/access" data-plans-nav="/plans/access">쪽지권 충전하기</a></p>`
-            : `<p class="mypage-muted" data-plans-my-status="packs-empty">이 프로필에 표시할 쪽지권이 없습니다. · <a href="#/plans/access" data-plans-nav="/plans/access">쪽지권 충전하기</a></p>`
+            <p class="mypage-muted"><a href="#/plans/access" data-plans-nav="/plans/access">쪽�?�?충전?�기</a></p>`
+            : `<p class="mypage-muted" data-plans-my-status="packs-empty">???�로?�에 ?�시??쪽�?권이 ?�습?�다. · <a href="#/plans/access" data-plans-nav="/plans/access">쪽�?�?충전?�기</a></p>`
       }
       ${
         role === 'study_room' && profile
-          ? `<h2 class="mypage-subhead">Prime 예약대기</h2>
+          ? `<h2 class="mypage-subhead">Prime ?�약?��?/h2>
             <div class="plans-my-waitlist" data-plans-my-waitlist data-study-room-id="${esc(String(profile.id))}">
-              <p class="mypage-muted">예약대기 목록을 불러오는 중…</p>
+              <p class="mypage-muted">?�약?��?목록??불러?�는 중�?/p>
             </div>`
           : ''
       }
-      <h2 class="mypage-subhead">반응 요약</h2>
+      <h2 class="mypage-subhead">반응 ?�약</h2>
       <div class="mypage-stats roi-metrics">
         ${metrics
           .map(
@@ -1435,19 +1436,19 @@ export function renderPlansMy() {
           .join('')}
       </div>
       <div class="mypage-actions-row">
-        <a href="#/mypage/plans/history" class="btn btn--secondary" data-nav="/mypage/plans/history">결제내역</a>
-        <a href="#/mypage/plans" class="btn btn--secondary" data-nav="/mypage/plans">이용 현황</a>
+        <a href="#/mypage/plans/history" class="btn btn--secondary" data-nav="/mypage/plans/history">결제?�역</a>
+        <a href="#/mypage/plans" class="btn btn--secondary" data-nav="/mypage/plans">?�용 ?�황</a>
       </div>
     </section>`;
 }
 
-/** P18-05 결제내역 */
+/** P18-05 결제?�역 */
 export function renderPlansHistory() {
   const role = getPlansEffectiveRole();
   if (role === 'parent' || role === 'guest') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">결제내역</p>
+        <p class="mypage-lead">결제?�역</p>
         ${renderProfileBanner(null, role)}
       </section>`;
   }
@@ -1455,28 +1456,28 @@ export function renderPlansHistory() {
   const rows = historyCache.loaded ? historyCache.rows : getHistoryRows();
   const sourceNote = historyCache.loaded
     ? historyCache.fromApi
-      ? '서버 주문 내역과 이 기기의 임시 내역을 함께 표시'
-      : '서버 연결 전 · 이 기기의 임시 내역'
-    : '불러오는 중…';
+      ? '?�버 주문 ?�역�???기기???�시 ?�역???�께 ?�시'
+      : '?�버 ?�결 ??· ??기기???�시 ?�역'
+    : '불러?�는 중�?;
   const receiptRow = openReceiptOrderRef
     ? rows.find((r) => r.orderRef === openReceiptOrderRef) || null
     : null;
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">결제내역</p>
+      <p class="mypage-lead">결제?�역</p>
       <p class="mypage-muted">${esc(sourceNote)}</p>
       <div class="plans-history-layout">
-      <table class="plans-table" aria-label="결제내역">
+      <table class="plans-table" aria-label="결제?�역">
         <thead>
           <tr>
             <th>주문번호</th>
-            <th>상품</th>
-            <th>프로필</th>
+            <th>?�품</th>
+            <th>?�로??/th>
             <th>금액</th>
-            <th>수단</th>
-            <th>일시</th>
-            <th>상태</th>
+            <th>?�단</th>
+            <th>?�시</th>
+            <th>?�태</th>
             <th></th>
           </tr>
         </thead>
@@ -1494,11 +1495,11 @@ export function renderPlansHistory() {
               <td>${esc(paymentMethodLabel(r.paymentMethod))}</td>
               <td>${esc(String(r.paidAt).slice(0, 16).replace('T', ' '))}</td>
               <td>${esc(orderStatusLabel(r.status))}</td>
-              <td><button type="button" class="btn btn--secondary btn--sm" data-plans-receipt-open="${esc(r.orderRef)}">상세</button></td>
+              <td><button type="button" class="btn btn--secondary btn--sm" data-plans-receipt-open="${esc(r.orderRef)}">?�세</button></td>
             </tr>`,
                   )
                   .join('')
-              : `<tr><td colspan="8" class="mypage-muted">내역이 없습니다.</td></tr>`
+              : `<tr><td colspan="8" class="mypage-muted">?�역???�습?�다.</td></tr>`
           }
         </tbody>
       </table>
@@ -1516,8 +1517,8 @@ export function renderPlansCheckout() {
       <section class="mypage-panel">
         <p class="mypage-lead">결제</p>
         <div class="mypage-info-box is-warn">
-          <p>결제할 상품이 없습니다. 노출상품에서 다시 선택해 주세요.</p>
-          <a href="#/plans/positions" class="btn btn--primary" data-plans-nav="/plans/positions">노출상품으로</a>
+          <p>결제???�품???�습?�다. ?�출?�품?�서 ?�시 ?�택??주세??</p>
+          <a href="#/plans/positions" class="btn btn--primary" data-plans-nav="/plans/positions">?�출?�품?�로</a>
         </div>
       </section>`;
   }
@@ -1538,7 +1539,7 @@ export function renderPlansCheckout() {
     const price = badgePriceKrw(draft.providerType, undefined, code, draft.optionLabel || draft.apiVariant);
     return {
       label: badgeDisplayName(code),
-      value: price != null ? formatKrw(price) : '—',
+      value: price != null ? formatKrw(price) : '??,
       priceKrw: price || 0,
     };
   });
@@ -1552,27 +1553,27 @@ export function renderPlansCheckout() {
   const periodRangeText =
     draft.startedOn && draft.endsOn
       ? `${draft.startedOn} ~ ${draft.endsOn}`
-      : '결제 완료 시점부터 (서버 확정)';
+      : '결제 ?�료 ?�점부??(?�버 ?�정)';
   const checkoutRows = isPosition
     ? buildPositionOrderRows({
         profileLabel: draft.providerLabel,
         roleText: roleLabel(draft.providerType),
         productName: draft.productName,
-        regionValue: draft.regionLabel || (draft.providerType === 'tutor' ? '시·주력과목' : '—'),
+        regionValue: draft.regionLabel || (draft.providerType === 'tutor' ? '?�·주?�과�? : '??),
         periodLabel: draft.optionLabel || draft.apiVariant,
         periodRangeText,
         listPriceText:
           Number(draft.discountKrw) > 0 && Number(draft.listPriceKrw) > 0 ? formatKrw(draft.listPriceKrw) : '',
         positionPriceText: formatKrw(positionDisplay),
         discountText: draft.discountLabel || '',
-        memoBundleText: Number(draft.memoBundle) > 0 ? `쪽지권 ${draft.memoBundle}회 포함` : '',
+        memoBundleText: Number(draft.memoBundle) > 0 ? `쪽�?�?${draft.memoBundle}???�함` : '',
         badgeLines,
         badgeSumText: formatKrw(badgeDisplay),
       })
     : [
-        { label: '상품', value: `${draft.productName} · ${draft.optionLabel}` },
-        { label: '표시가', value: formatKrw(amt.displayKrw) },
-        { label: '자동연장', value: '없음' },
+        { label: '?�품', value: `${draft.productName} · ${draft.optionLabel}` },
+        { label: '?�시가', value: formatKrw(amt.displayKrw) },
+        { label: '?�동?�장', value: '?�음' },
       ];
   const cancelHref = isPosition
     ? buildPlansHref(
@@ -1595,43 +1596,43 @@ export function renderPlansCheckout() {
       ${renderOrderSummaryBlock({
         family: isPosition ? 'position' : 'access',
         rows: checkoutRows,
-        totalLabel: '결제 예정(표시가·서버 재검증)',
+        totalLabel: '결제 ?�정(?�시가·?�버 ?��?�?',
         totalValue: formatKrw(previewTotal),
         showCta: false,
-        note: '자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본) · 결제 직전 서버가 재검증합니다.',
+        note: '?�동?�장 ?�음 · ?�불?� ?�작 ???�액, ?�작 ???�할 계산(?�버 ?�본) · 결제 직전 ?�버가 ?��?증합?�다.',
       })}
       <ol class="plans-checkout-steps">
-        <li class="is-done"><strong>1. 적용 프로필</strong>
+        <li class="is-done"><strong>1. ?�용 ?�로??/strong>
           <p>${esc(draft.providerLabel)} · ${esc(roleLabel(draft.providerType))}</p>
         </li>
-        <li class="is-done"><strong>2. 상품 옵션</strong>
+        <li class="is-done"><strong>2. ?�품 ?�션</strong>
           <p>${esc(draft.productName)} · ${esc(draft.optionLabel)}</p>
         </li>
         ${
-          draft.apiVariant === '1회'
+          draft.apiVariant === '1??
             ? `<li class="is-done"><strong>즉시 발송</strong>
-          <p class="mypage-muted">1회 즉시권은 수신 학생과 첫 쪽지 본문이 필요합니다. 대상이 없으면 구매할 수 없습니다.</p>
-          <label class="plans-card__pick"><span class="plans-card__pick-label">학생 ID</span>
+          <p class="mypage-muted">1??즉시권�? ?�신 ?�생�?�?쪽�? 본문???�요?�니?? ?�?�이 ?�으�?구매?????�습?�다.</p>
+          <label class="plans-card__pick"><span class="plans-card__pick-label">?�생 ID</span>
             <input type="number" data-plans-immediate-student min="1" value="${esc(String(draft.studentId || ''))}" class="student-form__select" /></label>
-          <label class="plans-card__pick"><span class="plans-card__pick-label">첫 쪽지</span>
+          <label class="plans-card__pick"><span class="plans-card__pick-label">�?쪽�?</span>
             <textarea data-plans-immediate-body class="student-form__select" rows="3">${esc(draft.body || '')}</textarea></label>
         </li>`
             : ''
         }
-        <li class="is-done"><strong>3. 금액 확인</strong>
-          <p>표시가 ${formatKrw(previewTotal)}
-            ${isPosition && badgeDisplay ? ` · 노출 ${formatKrw(positionDisplay)} · 배지 소계 ${formatKrw(badgeDisplay)}` : ''}
-            ${amt.testMode ? ` · <em>시험 결제 화면</em>` : ''}</p>
+        <li class="is-done"><strong>3. 금액 ?�인</strong>
+          <p>?�시가 ${formatKrw(previewTotal)}
+            ${isPosition && badgeDisplay ? ` · ?�출 ${formatKrw(positionDisplay)} · 배�? ?�계 ${formatKrw(badgeDisplay)}` : ''}
+            ${amt.testMode ? ` · <em>?�험 결제 ?�면</em>` : ''}</p>
         </li>
         <li>
-          <strong>4. 약관 동의</strong>
+          <strong>4. ?��? ?�의</strong>
           <label class="plans-check">
             <input type="checkbox" data-plans-agree />
-            <span>유료상품 이용약관 및 환불 안내를 확인했습니다.</span>
+            <span>?�료?�품 ?�용?��? �??�불 ?�내�??�인?�습?�다.</span>
           </label>
         </li>
         <li>
-          <strong>5. 결제수단</strong>
+          <strong>5. 결제?�단</strong>
           <div class="plans-pay-methods">
             ${(methods || [])
               .map(
@@ -1646,9 +1647,9 @@ export function renderPlansCheckout() {
         </li>
         <li>
           <strong>6. 결제 진행</strong>
-          <p class="mypage-muted">현재는 시험 결제 화면이며 실제 결제 연동은 준비 중입니다.</p>
+          <p class="mypage-muted">?�재???�험 결제 ?�면?�며 ?�제 결제 ?�동?� 준�?중입?�다.</p>
           <div class="mypage-actions-row">
-            <button type="button" class="btn btn--primary" data-plans-pay>결제하기</button>
+            <button type="button" class="btn btn--primary" data-plans-pay>결제?�기</button>
             <a href="${esc(cancelHref)}" class="btn btn--secondary" data-plans-nav="${isPosition ? '/plans/positions' : '/plans/access'}">취소</a>
           </div>
           <p class="plans-checkout-error mypage-muted" data-plans-checkout-error hidden></p>
@@ -1665,8 +1666,8 @@ export function renderPlansResult() {
       <section class="mypage-panel">
         <p class="mypage-lead">결제 결과</p>
         <div class="mypage-info-box">
-          <p>표시할 결과가 없습니다.</p>
-          <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">상품홈</a>
+          <p>?�시??결과가 ?�습?�다.</p>
+          <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">?�품??/a>
         </div>
       </section>`;
   }
@@ -1679,32 +1680,32 @@ export function renderPlansResult() {
   const resultBadges = sanitizeBadgeCodes(result.providerType || '', result.badgeCodes || []);
   const resultBadgeLines = resultBadges.length
     ? resultBadges
-        .map((code) => `<p>홍보 배지 · ${esc(badgeDisplayName(code))}</p>`)
+        .map((code) => `<p>?�보 배�? · ${esc(badgeDisplayName(code))}</p>`)
         .join('')
-    : '<p>홍보 배지 없음</p>';
+    : '<p>?�보 배�? ?�음</p>';
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">${ok ? '결제 완료' : '결제 미완료'}</p>
+      <p class="mypage-lead">${ok ? '결제 ?�료' : '결제 미완�?}</p>
       <div class="mypage-info-box ${ok ? '' : 'is-warn'}">
         <p><strong>${esc(orderStatusLabel(result.status === 'success' ? 'paid' : result.status))}</strong></p>
         ${result.orderRef ? `<p>주문번호 <code>${esc(result.orderRef)}</code></p>` : ''}
         ${result.productName ? `<p>${esc(result.productName)}${result.optionLabel ? ` · ${esc(result.optionLabel)}` : ''}</p>` : ''}
-        ${result.providerLabel ? `<p>적용 프로필: ${esc(result.providerLabel)}</p>` : ''}
-        ${result.regionLabel ? `<p>적용 지역: ${esc(result.regionLabel)}</p>` : ''}
-        ${result.startedOn || result.endsOn ? `<p>이용 기간 ${esc(result.startedOn || '—')} ~ ${esc(result.endsOn || '—')}</p>` : ''}
+        ${result.providerLabel ? `<p>?�용 ?�로?? ${esc(result.providerLabel)}</p>` : ''}
+        ${result.regionLabel ? `<p>?�용 지?? ${esc(result.regionLabel)}</p>` : ''}
+        ${result.startedOn || result.endsOn ? `<p>?�용 기간 ${esc(result.startedOn || '??)} ~ ${esc(result.endsOn || '??)}</p>` : ''}
         ${resultBadgeLines}
-        ${result.badgeSaleKrw != null && resultBadges.length ? `<p>배지 소계 ${formatKrw(result.badgeSaleKrw)}</p>` : ''}
+        ${result.badgeSaleKrw != null && resultBadges.length ? `<p>배�? ?�계 ${formatKrw(result.badgeSaleKrw)}</p>` : ''}
         ${result.chargeKrw != null ? `<p>결제금액 ${formatKrw(result.chargeKrw)}</p>` : ''}
-        <p>자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본)</p>
-        ${result.memoBundleGranted > 0 ? `<p>노출상품 무료 쪽지 ${result.memoBundleGranted}회 — 본상품과 같은 기간이며 종료 시 함께 종료됩니다.</p>` : ''}
+        <p>?�동?�장 ?�음 · ?�불?� ?�작 ???�액, ?�작 ???�할 계산(?�버 ?�본)</p>
+        ${result.memoBundleGranted > 0 ? `<p>?�출?�품 무료 쪽�? ${result.memoBundleGranted}????본상?�과 같�? 기간?�며 종료 ???�께 종료?�니??</p>` : ''}
         ${result.message ? `<p class="mypage-muted">${esc(result.message)}</p>` : ''}
       </div>
       <div class="mypage-actions-row">
-        <a href="#/mypage/plans/my" class="btn btn--primary" data-nav="/mypage/plans/my">내 상품 보기</a>
-        ${ok ? `<a href="${backOp}" class="btn btn--secondary" data-nav="${backOp.slice(1)}">운영 화면으로</a>` : ''}
-        ${!ok ? `<a href="#/plans/checkout" class="btn btn--secondary" data-plans-nav="/plans/checkout">다시 결제</a>` : ''}
-        <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">상품센터</a>
+        <a href="#/mypage/plans/my" class="btn btn--primary" data-nav="/mypage/plans/my">???�품 보기</a>
+        ${ok ? `<a href="${backOp}" class="btn btn--secondary" data-nav="${backOp.slice(1)}">?�영 ?�면?�로</a>` : ''}
+        ${!ok ? `<a href="#/plans/checkout" class="btn btn--secondary" data-plans-nav="/plans/checkout">?�시 결제</a>` : ''}
+        <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">?�품?�터</a>
       </div>
     </section>`;
 }
@@ -1790,19 +1791,19 @@ export function bindPlansScreenEvents(root, rerender) {
         .then((res) => {
           const items = Array.isArray(res?.items) ? res.items : [];
           if (!items.length) {
-            waitHost.innerHTML = `<p class="mypage-muted">등록된 Prime 예약대기가 없습니다. · <a href="#/plans/positions" data-plans-nav="/plans/positions">노출상품 보기</a></p>`;
+            waitHost.innerHTML = `<p class="mypage-muted">?�록??Prime ?�약?�기�? ?�습?�다. · <a href="#/plans/positions" data-plans-nav="/plans/positions">?�출?�품 보기</a></p>`;
             return;
           }
           waitHost.innerHTML = `
-            <table class="plans-table" aria-label="Prime 예약대기">
-              <thead><tr><th>상품</th><th>지역</th><th>상태</th><th>등록일</th><th></th></tr></thead>
+            <table class="plans-table" aria-label="Prime ?�약?��?>
+              <thead><tr><th>?�품</th><th>지??/th><th>?�태</th><th>?�록??/th><th></th></tr></thead>
               <tbody>
                 ${items
                   .map(
                     (w) => `
                   <tr>
-                    <td>${esc(w.product || 'Prime 노출')}</td>
-                    <td>${esc(w.region || '—')}</td>
+                    <td>${esc(w.product || 'Prime ?�출')}</td>
+                    <td>${esc(w.region || '??)}</td>
                     <td>${esc(w.status_label || w.status || '')}</td>
                     <td>${esc(String(w.registered_at || '').slice(0, 10))}</td>
                     <td>${
@@ -1815,7 +1816,7 @@ export function bindPlansScreenEvents(root, rerender) {
                   .join('')}
               </tbody>
             </table>
-            <p class="mypage-muted">순번·경쟁업체는 공개하지 않습니다. 결제 가능한 상태가 되면 노출상품에서 구매를 완료하세요.</p>`;
+            <p class="mypage-muted">?�번·경쟁?�체??공개?��? ?�습?�다. 결제 가?�한 ?�태가 ?�면 ?�출?�품?�서 구매�??�료?�세??</p>`;
           waitHost.querySelectorAll('[data-plans-waitlist-cancel]').forEach((btn) => {
             btn.addEventListener('click', async () => {
               const id = btn.getAttribute('data-plans-waitlist-cancel');
@@ -1824,13 +1825,13 @@ export function bindPlansScreenEvents(root, rerender) {
                 await cancelPrimeWaitlist(roomId, id);
                 rerender();
               } catch (err) {
-                window.alert(err?.message || '예약대기 취소에 실패했습니다.');
+                window.alert(err?.message || '?�약?��?취소???�패?�습?�다.');
               }
             });
           });
         })
         .catch(() => {
-          waitHost.innerHTML = `<p class="mypage-muted" role="status">예약대기 목록을 불러오지 못했습니다.</p>`;
+          waitHost.innerHTML = `<p class="mypage-muted" role="status">?�약?��?목록??불러?��? 못했?�니??</p>`;
         });
     }
   }
@@ -1909,7 +1910,7 @@ export function bindPlansScreenEvents(root, rerender) {
         if (card?.classList.contains('is-soldout')) return;
       }
 
-      const isImmediate = option.apiVariant === '1회' || /^1회/.test(String(option.label || ''));
+      const isImmediate = option.apiVariant === '1?? || /^1??.test(String(option.label || ''));
       if (!isImmediate && (productCode.includes('memo') || product.family === 'access')) {
         const key = accessProfileKey(profile);
         const blocked =
@@ -2067,7 +2068,7 @@ export function bindPlansScreenEvents(root, rerender) {
     const query = parsePlansQuery();
     const profile = resolveSelectedProfile(query, role);
     if (role !== 'study_room' || !profile) {
-      window.alert('예약대기는 공부방 프로필로만 등록할 수 있습니다.');
+      window.alert('?�약?�기는 공�?�??�로?�로�??�록?????�습?�다.');
       return;
     }
     const regionEl = root.querySelector('[data-plans-apply-region]:checked');
@@ -2082,15 +2083,15 @@ export function bindPlansScreenEvents(root, rerender) {
           }
         : null;
     if (!region?.region_basis_type || (region.region_basis_type === 'dong' && !region.region_id) || (region.region_basis_type === 'complex' && !region.complex_id)) {
-      window.alert('적용 지역을 먼저 선택해 주세요.');
+      window.alert('?�용 지??�� 먼�? ?�택??주세??');
       return;
     }
     try {
       const res = await registerPrimeWaitlist(profile.id, region);
-      window.alert(res.message || '예약대기가 등록되었습니다.');
+      window.alert(res.message || '?�약?�기�? ?�록?�었?�니??');
       window.location.hash = '#/mypage/plans/my';
     } catch (err) {
-      window.alert(err?.message || '예약대기 등록에 실패했습니다.');
+      window.alert(err?.message || '?�약?��??�록???�패?�습?�다.');
     }
   });
 
@@ -2107,7 +2108,7 @@ export function bindPlansScreenEvents(root, rerender) {
       if (!(agree instanceof HTMLInputElement) || !agree.checked) {
         if (errEl) {
           errEl.hidden = false;
-          errEl.textContent = '약관에 동의해 주세요.';
+          errEl.textContent = '?��????�의??주세??';
         }
         return;
       }
@@ -2119,7 +2120,7 @@ export function bindPlansScreenEvents(root, rerender) {
       payBtn.setAttribute('disabled', 'true');
       try {
         if (!getProductConfig(draft.productCode, draft.providerType)) {
-          throw new Error('상품 카탈로그가 준비되지 않았습니다. 새로고침 후 다시 시도해 주세요.');
+          throw new Error('?�품 카탈로그가 준비되지 ?�았?�니?? ?�로고침 ???�시 ?�도??주세??');
         }
         let created = null;
         if (draft.orderRef) {
@@ -2154,11 +2155,11 @@ export function bindPlansScreenEvents(root, rerender) {
         }
         const serverAmount = Number(created.amount_won ?? created.sale_price_krw);
         if (!Number.isFinite(serverAmount) || serverAmount <= 0) {
-          throw new Error('서버 결제금액이 올바르지 않습니다.');
+          throw new Error('?�버 결제금액???�바르�? ?�습?�다.');
         }
-        // 클라이언트 draft 금액과 달라도 서버 판매가를 사용한다
+        // ?�라?�언??draft 금액�??�라???�버 ?�매가�??�용?�다
         if (Number(draft.priceKrw) !== serverAmount) {
-          console.warn('[plans/checkout] client price ignored', draft.priceKrw, '→', serverAmount);
+          console.warn('[plans/checkout] client price ignored', draft.priceKrw, '??, serverAmount);
         }
         const completed = await completePaidCheckout(created.order_ref);
         invalidateProviderStatus();
@@ -2202,7 +2203,7 @@ export function bindPlansScreenEvents(root, rerender) {
         clearCheckoutDraft();
         window.location.hash = '#/plans/result';
       } catch (err) {
-        const msg = err instanceof Error ? err.message : '결제에 실패했습니다.';
+        const msg = err instanceof Error ? err.message : '결제???�패?�습?�다.';
         setCheckoutResult({
           status: 'failed',
           message: msg,
