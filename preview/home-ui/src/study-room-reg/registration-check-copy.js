@@ -5,12 +5,12 @@
 
 export const RC_COPY = {
   title: '등록점검',
-  lead: '공개 가능 여부와 픽·프라임에 더 필요한 항목을 한 화면에서 확인합니다',
+  lead: '베이직 공개는 언제든 가능합니다. Pick·Prime에 더 필요한 항목만 아래에서 확인하세요',
   badges: {
     publishOk: '공개 가능',
     publishLive: '공개중',
     publishHidden: '숨김 · 다시 공개 가능',
-    publishNeed: '아직 공개 불가',
+    publishNeed: '미공개',
     basicOk: 'Basic 충족',
     basicNeed: (n) => `Basic ${n}개 부족`,
     pickOk: 'Pick 추가 충족',
@@ -26,10 +26,11 @@ export const RC_COPY = {
     fill: (label) => `${label} 입력하러 가기`,
   },
   promo: {
-    title: '공개와 픽·프라임은 단계가 다릅니다',
+    title: '베이직 공개 · Pick/Prime 자격은 별개입니다',
     lines: [
-      '베이직 검색 노출은 공개 조건을 채운 뒤 공개하면 가능합니다.',
-      '픽·프라임은 그 위에 카드 정보량·신뢰를 더하는 추가 입력입니다.',
+      '베이직 검색 공개는 무료이며, 상세·쪽지와 무관합니다.',
+      '더 잘 보이게 하려면 아래 항목을 추가로 채워 주세요 (Pick/Prime 자격).',
+      '필요한 정보는 상세정보1, 상세정보2에서 바로 보완할 수 있어요.',
     ],
     pickMissingTitle: '[픽] 추가 입력',
     primeMissingTitle: '[프라임] 추가 입력',
@@ -73,10 +74,10 @@ export const RC_COPY = {
     empty: '미입력됨',
   },
   publish: {
-    summaryReady: '공개 조건이 충족되었습니다. 아래를 확인한 뒤 공개하세요.',
-    summaryNeed: (n) => `공개하려면 아직 ${n}개 항목이 부족합니다. 위에서 수정 위치를 확인하세요.`,
+    summaryReady: '베이직 공개는 언제든 가능합니다. 아래를 확인한 뒤 공개하세요.',
+    summaryNeed: () => '베이직 공개는 언제든 가능합니다. 아래를 확인한 뒤 공개하세요.',
     summaryLive: '현재 공개 중입니다. 내용을 바꿨다면 다시 한 번 확인해 주세요.',
-    summaryHidden: '지금은 숨김입니다. 조건을 확인한 뒤 다시 공개할 수 있습니다.',
+    summaryHidden: '지금은 숨김입니다. 자기확인 후 다시 공개할 수 있습니다.',
     confirmTitle: '공개 전 자기확인',
     confirmLead: '학부모 화면에 이렇게 보이는지 직접 확인하고 공개합니다.',
     confirmRegion: '활동 지역·과목·대상 학생군 노출을 확인했습니다',

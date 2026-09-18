@@ -212,11 +212,10 @@ function renderBoard(vm) {
 function publishSummaryText(vm) {
   const status = vm.readiness?.profileStatus;
   const canPublish = !!vm.readiness?.canPublish;
-  const basicLeft = Number(vm.counts?.basicLeft || 0);
   if (status === 'published') return RC_COPY.publish.summaryLive;
   if (status === 'hidden' && canPublish) return RC_COPY.publish.summaryHidden;
   if (canPublish) return RC_COPY.publish.summaryReady;
-  return RC_COPY.publish.summaryNeed(basicLeft || (vm.readiness?.missing || []).length || 1);
+  return RC_COPY.publish.summaryNeed(Number(vm.counts?.basicLeft || 0) || (vm.readiness?.missing || []).length || 1);
 }
 
 function renderPublishActions(vm) {

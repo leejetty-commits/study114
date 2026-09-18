@@ -56,7 +56,7 @@ const KEY = 'study114-preview-study-rooms-v1';
  * @property {{ id: string, label: string, ok: boolean, section: 'basic'|'detail'|'publish' }[]} items
  */
 
-/** 공개 필수 항목 — 전체 펼침용 */
+/** 공개는 입력 완성도와 독립 — Pick/Prime 자격 안내용 품질 항목만 유지 */
 export const PUBLISH_CHECKLIST_DEFS = [
   { id: 'name', label: '공부방명', section: 'basic' },
   { id: 'region', label: '활동 지역', section: 'basic' },
@@ -65,7 +65,6 @@ export const PUBLISH_CHECKLIST_DEFS = [
   { id: 'detail', label: '상세정보 완료', section: 'detail' },
   { id: 'image', label: '대표 이미지 1장 이상', section: 'detail' },
   { id: 'intro', label: '소개문', section: 'detail' },
-  { id: 'contact', label: '문의·쪽지 방식', section: 'detail' },
 ];
 
 /** @param {StudyRoomRecord} room */
@@ -78,7 +77,6 @@ export function getPublishChecklistItems(room) {
     detail: room.detail_completion_status === 'expanded_complete',
     image: !!room.has_representative_image,
     intro: !!(room.intro_short?.trim() || room.intro_long?.trim()),
-    contact: !!room.contact_method_set,
   };
   return PUBLISH_CHECKLIST_DEFS.map((d) => ({
     ...d,
@@ -146,25 +144,27 @@ export function getStudyRoom(id) {
 /** @param {StudyRoomRecord} room */
 export function getPublishReadiness(room) {
   const items = getPublishChecklistItems(room);
-  const missing = items.filter((i) => !i.ok).map((i) => i.label);
+  const qualityMissing = items.filter((i) => !i.ok).map((i) => i.label);
   const doneCount = items.filter((i) => i.ok).length;
 
   /** @type {string[]} */
   const qualityHints = [];
   if (room.detail_completion_status !== 'expanded_complete') {
-    qualityHints.push('상세정보 완료 시 대표/추천 노출 후보');
+    qualityHints.push('상세정보 완료 시 프라임/픽 노출 후보');
   }
   if (!room.intro_long?.trim()) qualityHints.push('상세 소개 보강 권장');
   if (!room.slogan?.trim()) qualityHints.push('슬로건 추가 권장');
 
   return {
-    canPublish: missing.length === 0,
+    // 공개 자체는 완성도와 무관. 베이직 노출은 빈 항목이 있어도 가능.
+    canPublish: true,
     detailRecommended: room.detail_completion_status !== 'expanded_complete',
     exposureBoostReady:
       room.profile_status === 'published' && room.detail_completion_status === 'expanded_complete',
     doneCount,
     totalCount: items.length,
-    missing,
+    missing: [],
+    qualityMissing,
     qualityHints,
     items,
   };
@@ -175,7 +175,8 @@ export function getStudyRoomsByTab(tab) {
   const all = getStudyRooms();
   if (tab === 'all') return all;
   if (tab === 'not_ready') {
-    return all.filter((r) => !getPublishReadiness(r).canPublish && r.profile_status !== 'hidden');
+    // 미공개(draft) — 공개 게이트는 없으므로 "아직 공개하지 않음"만 모은다.
+    return all.filter((r) => r.profile_status === 'draft');
   }
   return all.filter((r) => r.profile_status === tab);
 }
@@ -199,8 +200,6 @@ export async function publishStudyRoom(id) {
   }
   const room = getStudyRoom(id);
   if (!room) return { ok: false, reason: 'not_found' };
-  const r = getPublishReadiness(room);
-  if (!r.canPublish) return { ok: false, reason: 'incomplete', missing: r.missing };
   updateStudyRoom(id, {
     profile_status: 'published',
     published_at: new Date().toISOString(),
@@ -246,14 +245,11 @@ export async function setInquiryStatus(id, inquiry_status) {
 
 export function getStudyRoomSummaryCounts() {
   const list = getStudyRooms();
-  const notReady = list.filter(
-    (r) => !getPublishReadiness(r).canPublish && r.profile_status !== 'hidden',
-  ).length;
   return {
     published: list.filter((r) => r.profile_status === 'published').length,
     draft: list.filter((r) => r.profile_status === 'draft').length,
     hidden: list.filter((r) => r.profile_status === 'hidden').length,
-    notReady,
+    notReady: list.filter((r) => r.profile_status === 'draft').length,
   };
 }
 

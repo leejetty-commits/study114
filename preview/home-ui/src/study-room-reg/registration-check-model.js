@@ -445,6 +445,7 @@ export function buildRegistrationCheckModel(s, room, readiness = {}) {
 
   return {
     roomId: room.id,
+    room,
     copy: RC_COPY,
     previewItem,
     readiness: { ...readiness, canPublish: publishReady, profileStatus: status, basicLeft },

@@ -354,7 +354,7 @@ export function offerGoToMessageInquiry(roomId) {
   const url = messageInquiryPageUrl(roomId);
   if (!url) return false;
   const go = window.confirm(
-    '입력값은 저장되었고 등록완료 되었습니다. 마이페이지에서도 추가입력이 가능합니다.\n\n사용자간의 연락은 쪽지로만 가능합니다. 쪽지 가능 여부를 꼭 설정해 주세요.\n\n지금 「쪽지설정」로 이동할까요?\n(마이페이지 - 내 등록 - 쪽지설정)',
+    '입력값이 저장되었습니다.\n\n쪽지 기본값은 「받는 중」입니다. 공개와는 별개이며, 지금 설정하지 않아도 됩니다.\n\n지금 「쪽지설정」으로 이동할까요?\n(나중에 마이페이지 → 내 등록 → 쪽지설정에서 바꿀 수 있습니다)',
   );
   if (!go) return false;
   window.location.assign(url);
@@ -365,7 +365,7 @@ export function renderPublishStatusBlock(status, opts = {}) {
   const v = String(status || 'draft');
   const lead =
     opts.lead ||
-    '항목을 채운 뒤, 학부모 검색에 이 공부방을 공개할지 여기서 정합니다. 저장만 하면 검색·목록에 나오지 않습니다.';
+    '베이직 검색 공개는 무료이며, 상세·쪽지·Pick/Prime과 무관합니다. 저장만 하면 비공개, 공개를 고르면 검색에 나갑니다.';
   return `
     <section class="register-publish-block" data-publish-block>
       <h3 class="register-publish-block__title">공개 상태</h3>
@@ -374,7 +374,7 @@ export function renderPublishStatusBlock(status, opts = {}) {
         <label class="form-label" for="${opts.inputId || 'profile_status'}">지금 상태를 고르세요</label>
         <select class="form-input" id="${opts.inputId || 'profile_status'}" name="profile_status">
           <option value="draft" ${v === 'draft' || v === 'pending' ? 'selected' : ''}>저장만 (아직 비공개)</option>
-          <option value="published" ${v === 'published' ? 'selected' : ''}>공개</option>
+          <option value="published" ${v === 'published' ? 'selected' : ''}>공개 (베이직 노출)</option>
         </select>
       </div>
       ${opts.extraHtml || ''}

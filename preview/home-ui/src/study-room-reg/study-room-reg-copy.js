@@ -9,7 +9,7 @@ export const P20_LIST_TABS = [
   { key: 'draft', label: '저장' },
   { key: 'published', label: '공개중' },
   { key: 'hidden', label: '숨김' },
-  { key: 'not_ready', label: '공개 준비 미완료' },
+  { key: 'not_ready', label: '미공개' },
 ];
 
 /** §3-3 금지 UI 문구 — 22장 · pending deprecated */
@@ -126,7 +126,7 @@ export const P20_LIST_HEAD = {
   title: '공부방 운영',
   lead: '공부방별로 공개·쪽지 상태를 관리합니다.',
   registerCta: '+ 공부방 등록',
-  notReadyBadge: '공개 준비 미완료',
+  notReadyBadge: '미공개',
   manageCta: '운영하기 →',
 };
 

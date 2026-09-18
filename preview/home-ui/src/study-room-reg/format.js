@@ -110,14 +110,14 @@ export function getExposureMatrix(room, readiness) {
     {
       key: 'search',
       label: '기본 검색',
-      ok: published && readiness.canPublish,
-      reason: !published ? '공개 후 노출' : readiness.canPublish ? null : '필수 항목 미완료',
+      ok: published,
+      reason: !published ? '공개 후 노출' : null,
       statusText: null,
     },
     {
       key: 'compare',
       label: '비교검색',
-      ok: published && room.compare_eligible && readiness.canPublish,
+      ok: published && room.compare_eligible,
       reason: !room.compare_eligible ? '비교 자격 미충족' : !published ? '미공개' : null,
       statusText: null,
     },
@@ -143,13 +143,13 @@ export function getExposureDetailBlocks(room, readiness) {
     {
       key: 'search',
       label: '검색 노출',
-      ok: published && readiness.canPublish,
-      reason: !published ? '공개 후 노출' : readiness.canPublish ? null : '필수 항목 미완료',
+      ok: published,
+      reason: !published ? '공개 후 노출' : null,
     },
     {
       key: 'compare',
       label: '비교검색 표시',
-      ok: published && room.compare_eligible && readiness.canPublish,
+      ok: published && room.compare_eligible,
       reason: !room.compare_eligible ? '비교 자격 미충족' : !published ? '미공개' : null,
     },
     {
@@ -171,14 +171,11 @@ export function getExposureDetailBlocks(room, readiness) {
 
 /** @param {StudyRoomRecord} room */
 export function getHubCtas(room) {
-  const readiness = getPublishReadiness(room);
-  const incomplete = room.profile_status === 'draft' || !readiness.canPublish;
-
-  if (incomplete) {
+  if (room.profile_status === 'draft') {
     return [
-      { label: '기본정보 보강', path: 'basic', primary: true },
-      { label: '상세정보 보강', path: 'detail', primary: false },
-      { label: '등록점검', path: 'publish', primary: false },
+      { label: '공개하기', path: 'publish', primary: true },
+      { label: '쪽지설정', path: 'inquiries', primary: false },
+      { label: '상세정보', path: 'detail', primary: false },
     ];
   }
   if (room.profile_status === 'hidden') {

@@ -180,6 +180,8 @@ final class StudyRoomRegisterService
         }
         if ($step === 'basic' || $step === 'basic_all' || $step === 'location') {
             $this->ensureBusinessAddressLine2($pdo);
+            $this->ensureBusinessAddressZip($pdo);
+            $this->ensureRegionAddressZip($pdo);
             $this->ensurePrimaryAudienceTable($pdo);
         }
         if ($step === 'facility' || $step === 'career') {
@@ -368,9 +370,9 @@ final class StudyRoomRegisterService
 
         $stmt = $pdo->prepare(
 
-            'INSERT INTO study_rooms (user_id, study_room_name, lesson_place_type, profile_status, detail_completion_status)
+            'INSERT INTO study_rooms (user_id, study_room_name, lesson_place_type, profile_status, detail_completion_status, inquiry_status)
 
-             VALUES (?, ?, ?, "draft", "basic_only")'
+             VALUES (?, ?, ?, "draft", "basic_only", "open")'
 
         );
 
@@ -490,6 +492,7 @@ final class StudyRoomRegisterService
                 complex_id = ?,
                 region_basis_type = ?,
                 address_text = ?,
+                address_zip = ?,
                 latitude = ?,
                 longitude = ?
              WHERE id = ?'
@@ -501,6 +504,7 @@ final class StudyRoomRegisterService
                 $complexId,
                 $basis,
                 $addressText,
+                $this->optionalString($input, 'address_zip'),
                 $this->optionalDecimal($input, 'latitude'),
                 $this->optionalDecimal($input, 'longitude'),
                 $roomId,
@@ -519,12 +523,19 @@ final class StudyRoomRegisterService
                 $this->optionalDecimal($input, 'longitude'),
                 $roomId,
             ]);
+            try {
+                $pdo->prepare('UPDATE study_rooms SET address_zip = ? WHERE id = ?')
+                    ->execute([$this->optionalString($input, 'address_zip'), $roomId]);
+            } catch (PDOException $e2) {
+                /* address_zip 미적용 */
+            }
         }
 
         if (!isset($input['region_basis_type'])) {
             $input['region_basis_type'] = $basis;
         }
         $this->syncSavedRegions($pdo, $roomId, $input);
+        $this->ensurePrimaryRegionRow($pdo, $roomId);
         $this->saveHomeAddress($pdo, $userId, $input);
         $this->saveBusinessAddressLine2($pdo, $roomId, $input);
     }
@@ -1135,14 +1146,29 @@ final class StudyRoomRegisterService
 
             try {
                 $pdo->prepare(
-                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
-                     VALUES (?, ?, ?, ?, ?, ?)'
-                )->execute([$roomId, $slotNum, $regionId, $complexId, $slotBasis, $isPrimary]);
+                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, address_zip, is_primary)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)'
+                )->execute([
+                    $roomId,
+                    $slotNum,
+                    $regionId,
+                    $complexId,
+                    $slotBasis,
+                    $this->optionalString($slot, 'address_zip'),
+                    $isPrimary,
+                ]);
             } catch (PDOException $e) {
-                $pdo->prepare(
-                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
-                     VALUES (?, ?, ?, ?, ?)'
-                )->execute([$roomId, $slotNum, $regionId, $complexId, $isPrimary]);
+                try {
+                    $pdo->prepare(
+                        'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
+                         VALUES (?, ?, ?, ?, ?, ?)'
+                    )->execute([$roomId, $slotNum, $regionId, $complexId, $slotBasis, $isPrimary]);
+                } catch (PDOException $e2) {
+                    $pdo->prepare(
+                        'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
+                         VALUES (?, ?, ?, ?, ?)'
+                    )->execute([$roomId, $slotNum, $regionId, $complexId, $isPrimary]);
+                }
             }
         }
 
@@ -1150,6 +1176,111 @@ final class StudyRoomRegisterService
             throw new InvalidArgumentException('홍보지역 1(대표)을 선택해 주세요.');
         }
 
+    }
+
+    /** study_rooms.region_id|complex_id 는 있는데 study_room_regions 가 비면 대표 1슬롯을 보정한다. */
+    private function ensurePrimaryRegionRow(PDO $pdo, int $roomId): void
+    {
+        $countStmt = $pdo->prepare('SELECT COUNT(*) FROM study_room_regions WHERE study_room_id = ?');
+        $countStmt->execute([$roomId]);
+        if ((int) $countStmt->fetchColumn() > 0) {
+            return;
+        }
+        $rowStmt = $pdo->prepare(
+            'SELECT region_id, complex_id, region_basis_type, address_zip FROM study_rooms WHERE id = ? LIMIT 1'
+        );
+        try {
+            $rowStmt->execute([$roomId]);
+        } catch (PDOException $e) {
+            $rowStmt = $pdo->prepare(
+                'SELECT region_id, complex_id, region_basis_type FROM study_rooms WHERE id = ? LIMIT 1'
+            );
+            $rowStmt->execute([$roomId]);
+        }
+        $row = $rowStmt->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return;
+        }
+        $regionId = isset($row['region_id']) ? (int) $row['region_id'] : 0;
+        $complexId = isset($row['complex_id']) && $row['complex_id'] !== null && $row['complex_id'] !== ''
+            ? (int) $row['complex_id']
+            : null;
+        if ($regionId <= 0 && ($complexId === null || $complexId <= 0)) {
+            return;
+        }
+        $basis = isset($row['region_basis_type']) && in_array((string) $row['region_basis_type'], ['dong', 'complex'], true)
+            ? (string) $row['region_basis_type']
+            : (($complexId !== null && $complexId > 0) ? 'complex' : 'dong');
+        if ($basis === 'dong') {
+            $complexId = null;
+        }
+        if ($basis === 'dong' && $regionId <= 0) {
+            return;
+        }
+        if ($basis === 'complex' && ($complexId === null || $complexId <= 0)) {
+            return;
+        }
+        $zip = isset($row['address_zip']) ? (string) $row['address_zip'] : null;
+        try {
+            $pdo->prepare(
+                'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, address_zip, is_primary)
+                 VALUES (?, 1, ?, ?, ?, ?, 1)'
+            )->execute([$roomId, $regionId > 0 ? $regionId : null, $complexId, $basis, $zip !== '' ? $zip : null]);
+        } catch (PDOException $e) {
+            try {
+                $pdo->prepare(
+                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
+                     VALUES (?, 1, ?, ?, ?, 1)'
+                )->execute([$roomId, $regionId > 0 ? $regionId : null, $complexId, $basis]);
+            } catch (PDOException $e2) {
+                $pdo->prepare(
+                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
+                     VALUES (?, 1, ?, ?, 1)'
+                )->execute([$roomId, $regionId > 0 ? $regionId : null, $complexId]);
+            }
+        }
+    }
+
+    private function ensureBusinessAddressZip(PDO $pdo): void
+    {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+        try {
+            $chk = $pdo->query("SHOW COLUMNS FROM study_rooms LIKE 'address_zip'");
+            if ($chk && $chk->fetch()) {
+                $done = true;
+                return;
+            }
+            $pdo->exec(
+                "ALTER TABLE study_rooms ADD COLUMN address_zip VARCHAR(10) NULL COMMENT '사업장 우편번호' AFTER address_text"
+            );
+        } catch (PDOException $e) {
+            /* already exists or no ALTER privilege */
+        }
+        $done = true;
+    }
+
+    private function ensureRegionAddressZip(PDO $pdo): void
+    {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+        try {
+            $chk = $pdo->query("SHOW COLUMNS FROM study_room_regions LIKE 'address_zip'");
+            if ($chk && $chk->fetch()) {
+                $done = true;
+                return;
+            }
+            $pdo->exec(
+                "ALTER TABLE study_room_regions ADD COLUMN address_zip VARCHAR(10) NULL COMMENT '홍보지역 우편번호' AFTER region_basis_type"
+            );
+        } catch (PDOException $e) {
+            /* already exists or no ALTER privilege */
+        }
+        $done = true;
     }
 
 
@@ -1436,6 +1567,7 @@ final class StudyRoomRegisterService
                 'complex_name' => '',
                 'complex_address' => '',
                 'address_text' => '',
+                'address_zip' => '',
             ];
         };
         $savedRegions = [$emptySlot(), $emptySlot(), $emptySlot()];
@@ -1453,11 +1585,13 @@ final class StudyRoomRegisterService
                 'complex_name' => (string) ($r['complex_name'] ?? ''),
                 'complex_address' => (string) ($r['complex_address'] ?? ''),
                 'address_text' => (string) ($r['complex_address'] ?? ''),
+                'address_zip' => (string) ($r['address_zip'] ?? ''),
             ];
         };
         try {
             $regionStmt = $pdo->prepare(
                 'SELECT srr.slot, srr.region_id, srr.complex_id, srr.region_basis_type, srr.is_primary,
+                        srr.address_zip,
                         CONCAT(r.sido_name, " ", r.sigungu_name, " ", r.dong_name) AS region_label,
                         c.name AS complex_name, COALESCE(c.address, "") AS complex_address
                  FROM study_room_regions srr
@@ -1482,6 +1616,47 @@ final class StudyRoomRegisterService
                 $basis = ($r['complex_id'] !== null && $r['complex_id'] !== '') ? 'complex' : 'dong';
                 $placeSlot($r, $basis);
             }
+        }
+
+        // study_room_regions 비어 있고 study_rooms 좌표만 있으면 1슬롯 합성 (재진입·노출상품 후보용)
+        if (
+            $savedRegions[0]['region_id'] === ''
+            && $savedRegions[0]['complex_id'] === ''
+            && (!empty($row['region_id']) || !empty($row['complex_id']))
+        ) {
+            $basis = isset($row['region_basis_type']) && in_array((string) $row['region_basis_type'], ['dong', 'complex'], true)
+                ? (string) $row['region_basis_type']
+                : (!empty($row['complex_id']) ? 'complex' : 'dong');
+            $label = '';
+            if (!empty($row['region_id'])) {
+                $lab = $pdo->prepare(
+                    'SELECT CONCAT(sido_name, " ", sigungu_name, " ", dong_name) FROM regions WHERE id = ? LIMIT 1'
+                );
+                $lab->execute([(int) $row['region_id']]);
+                $label = (string) ($lab->fetchColumn() ?: '');
+            }
+            $cname = '';
+            $caddr = '';
+            if (!empty($row['complex_id'])) {
+                $cstmt = $pdo->prepare('SELECT name, COALESCE(address, "") FROM complexes WHERE id = ? LIMIT 1');
+                $cstmt->execute([(int) $row['complex_id']]);
+                $crow = $cstmt->fetch(PDO::FETCH_NUM);
+                if (is_array($crow)) {
+                    $cname = (string) ($crow[0] ?? '');
+                    $caddr = (string) ($crow[1] ?? '');
+                }
+            }
+            $savedRegions[0] = [
+                'region_id' => !empty($row['region_id']) ? (string) (int) $row['region_id'] : '',
+                'complex_id' => !empty($row['complex_id']) ? (string) (int) $row['complex_id'] : '',
+                'region_basis_type' => $basis,
+                'is_primary' => true,
+                'region_label' => $label,
+                'complex_name' => $cname,
+                'complex_address' => $caddr,
+                'address_text' => $caddr !== '' ? $caddr : (string) ($row['address_text'] ?? ''),
+                'address_zip' => (string) ($row['address_zip'] ?? ''),
+            ];
         }
 
 
@@ -1664,6 +1839,7 @@ final class StudyRoomRegisterService
                 : (($row['complex_id'] ?? null) !== null ? 'complex' : 'dong'),
 
             'address_text'             => (string) ($row['address_text'] ?? ''),
+            'address_zip'              => (string) ($row['address_zip'] ?? ''),
             'address_line2'            => (string) ($row['address_line2'] ?? ''),
 
             'latitude'                 => $row['latitude'] !== null ? (string) $row['latitude'] : '',
@@ -1732,9 +1908,9 @@ final class StudyRoomRegisterService
 
             'facility_note'            => (string) ($row['facility_note'] ?? ''),
 
-            'contact_time_note'        => '',
+            'contact_time_note'        => (string) ($row['contact_time_note'] ?? ''),
 
-            'contact_phone'            => '',
+            'contact_phone'            => (string) ($row['contact_phone'] ?? ''),
 
             'youtube_url'              => (string) ($row['youtube_url'] ?? ''),
 

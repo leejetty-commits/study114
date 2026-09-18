@@ -23,7 +23,7 @@ import {
 } from '../provider-status.js';
 import { ensureStudyRoomStore } from '../study-room-reg/index.js';
 import { ensureTutorStore } from '../tutor-reg/index.js';
-import { getPublishReadiness as getRoomReadiness, getStudyRoom } from '../study-room-reg/store.js';
+import { getStudyRoom } from '../study-room-reg/store.js';
 import { getTutor } from '../tutor-reg/store.js';
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
 import {
@@ -590,28 +590,19 @@ function getEligibility(profile, productCode, family = 'position') {
     if (!room) {
       return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
     }
-    const readiness = getRoomReadiness(room);
     if (room.profile_status !== 'published') {
       missing.push('공개(published) 상태가 필요합니다');
       canBuy = false;
     }
-    if (productCode === 'prime') {
-      if (!readiness.canPublish) {
-        missing.push(...(readiness.missing || ['상세등록 완료가 필요합니다']));
-        canBuy = false;
-      }
-      if (room.detail_completion_status !== 'expanded_complete') {
-        missing.push('상세소개(확장 완료)가 필요합니다');
-        canBuy = false;
-      }
-    }
-    if (productCode === 'pick') {
+    // Pick/Prime 자격만 입력 완성도를 본다. 공개·쪽지와 분리.
+    if (productCode === 'prime' || productCode === 'pick') {
       if (room.detail_completion_status !== 'expanded_complete') {
         missing.push('상세등록 완료 후 구매할 수 있습니다');
         canBuy = false;
       }
-      if (!readiness.canPublish) {
-        missing.push(...(readiness.missing || ['상세등록·품질 항목이 부족합니다']));
+      const apply = getApplyTargetReadiness(profile, 'study_room');
+      if (!apply.regionReady) {
+        missing.push('대표 홍보지역(행정동·단지 ID)이 필요합니다');
         canBuy = false;
       }
     }
