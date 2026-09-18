@@ -30,14 +30,14 @@
 | 22장 원칙 | 20장 적용 |
 |-----------|-----------|
 | 운영자 심사·승인·반려 없음 | 원장 **직접** `profile_status` · `inquiry_status` 전환 |
-| 공개 준비 미완료 | P20-01 탭 · **체크리스트 계산** — `pending` **아님** |
+| 공개 ≠ 완성도 | 베이직 공개는 무료 · 완성도는 Pick/Prime만 · `pending` **아님** |
 | `profile_status.pending` | **deprecated** · [5장 §4-2](05-study-room-db.md#4-2-profile_status--pending-deprecated) · UI 미사용 |
 | 자기확인 | P20-04 학부모 시점 confirm |
 | 상담 vs 공개 분리 | `profile_status` + `inquiry_status` (원장 선택) |
 | 당사자 합의 접촉 | 16장 |
 | 제출자료 | `study_room_verification_documents` — **저장·표시만** · [P15-10](15-mypage-structure.md#2-1-p15-10-제출자료-상태) **이번 버전 UI 후순위(숨김)** · 운영 분리 [49](../internal/49-submission-role-split.md) |
 
-**공부방 공개 흐름:** 원장 입력 → 체크리스트 → 자기확인 → **직접 공개** → 학부모 판단 → 당사자 합의.
+**공부방 공개 흐름:** 원장 입력 → 자기확인 → **직접 공개(베이직 무료)** → 학부모 판단 → 당사자 합의. 입력 완성도는 **Pick/Prime 자격**에만 사용.
 
 ---
 
@@ -116,10 +116,11 @@
 | 저장 | `profile_status = draft` | 화면 문구: **저장중** |
 | 공개중 | `published` | |
 | 숨김 | `hidden` | |
-| **공개 준비 미완료** | 체크리스트 미충족 **계산값** | DB 상태 ✕ · 「반려」✕ |
+| **미공개** | `draft` | 공개 CTA 활성(완성도 무관) |
+| **Pick/Prime 미충족** | 유료 자격 항목 부족 **계산값** | 상태판·노출상품만 · 공개 게이트 ✕ |
 
-> **금지 UI 문구:** 검토중 · 반려 · 보완 요청 · 심사 대기.  
-> **권장:** 「공개 준비 미완료」「필수 항목 미완료」「공개 전 확인 필요」.
+> **금지 UI 문구:** 검토중 · 반려 · 보완 요청 · 심사 대기 · 「공개 불가」「Basic N개 부족으로 공개 차단」.  
+> **권장:** 「미공개」「Pick 추가 N개」「Prime 추가 N개」.
 
 ---
 
@@ -133,7 +134,7 @@
          ┌─────────┐
   저장   │  draft  │◄── study-room-ui 임시저장
          └────┬────┘
-              │ P20-04 공개 (체크리스트 OK + 자기확인)
+              │ P20-04 공개 (자기확인만 · 완성도 게이트 ✕)
               ▼
          ┌───────────┐
    ┌────►│ published │◄────┐
@@ -157,16 +158,16 @@
 
 **`pending`:** [22장 §3](22-platform-lifecycle-principles.md#3-profile_statuspending-공부방과외--deprecated) · [5장 §4-2](05-study-room-db.md#4-2-profile_status--pending-deprecated). enum 유지 · 운영자 검수 의미 **금지** · 「공개 준비 미완료」와 **별개**.
 
-### 4-2. 공개 준비 — UI 계산값 (DB 저장 ✕)
+### 4-2. 공개·완성도 — UI 계산값 (DB 저장 ✕)
 
 | 계산 상태 | 조건 | 용도 |
 |-----------|------|------|
-| **공개 가능** | 필수 체크리스트 충족 | P20-04 버튼 활성 |
-| **공개 준비 미완료** | 필수 항목 부족 | P20-01 탭 · 상태판 안내 |
-| **상세 보강 권장** | 공개 가능하나 품질 항목 부족 | 한 줄 진단 · Prime CTA 전 |
-| **노출 강화 가능** | 상세 충분 + `published` | 18장 CTA |
+| **공개 가능** | 이메일 확인만 (완성도·쪽지 무관) | P20-04 버튼 항상 활성 |
+| **상세 보강 권장** | Pick/Prime 품질 항목 부족 | 한 줄 진단 · 유료 CTA 전 |
+| **노출 강화 가능** | 상세 충분 + `published` + 지역 ID | 18장 Pick/Prime CTA |
 
-시스템이 **자동 표시**한다. 운영자 판단·반려가 **아니다**.
+시스템이 **자동 표시**한다. 운영자 판단·반려·「공개 불가」가 **아니다**.  
+「공개 준비 미완료」계산으로 베이직 공개를 막는 옛 설계는 **폐기**.
 
 ### 4-3. 축 B — 쪽지 수신 상태 `inquiry_status` `[1차 DDL · API]`
 
@@ -275,9 +276,9 @@ DDL: `study_rooms.inquiry_status` ENUM — `067_publish_inquiry_split_address_zi
 원장이 **폼보다 먼저** 보는 화면. 줄이지 않는다.
 
 1. **한 줄 진단** — 노출·품질·상품 가능성
-2. **공개 준비** — N/M 체크리스트 (§5-2)
+2. **Pick/Prime 보강** — 유료 자격 항목만 (§5-2) · 공개 게이트 ✕
 3. **현재 공개 상태** — `profile_status` + 안내
-4. **노출 가능 매트릭스** — 기본검색 / 비교 / Prime / Pick · **불가 시 이유** (Notion §16-2)
+4. **노출 가능 매트릭스** — 기본검색 / 비교 / Prime / Pick · **유료만 불가 이유** (Notion §16-2)
 5. **쪽지 수신 요약** — `inquiry_status` (읽기 전용 · 변경은 P20-05)
 6. **빠른 이동** — P20-03~05
 
@@ -408,8 +409,8 @@ P19-06 대응. 코드·문서 **재사용**을 위해 ID 유지. 라우트 분�
 | 2 | URL | **`study-rooms`** |
 | 3 | P20-03 | **브리지** · 폼 재구현 ✕ |
 | 4 | `pending` | **deprecated** · 5장 §4-2 · 20/21 UI 미사용 · [22장 §3](22-platform-lifecycle-principles.md#3-profile_statuspending-공부방과외--deprecated) |
-| 5 | 공개 준비 미완료 | **체크리스트 계산** · DB·반려 ✕ |
-| 6 | `inquiry_status` | **1차 DDL/API** · 원장 선택 |
+| 5 | 공개 준비 미완료(옛) | **폐기** · 공개≠완성도 · Pick/Prime만 체크리스트 |
+| 6 | `inquiry_status` | **1차 DDL/API** · 원장 선택 · 기본값 `open` |
 | 7 | inquiry enum | `open` · `paused` · `capacity_full` · `waiting_only` |
 | 8 | 상태판·자기확인·딥링크 | **1차 MVP** |
 | 9 | P20-06 | 논리 ID 유지 · UI는 P20-05 흡수 가능 |
