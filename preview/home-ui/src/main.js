@@ -5,6 +5,10 @@ import './styles/home-support-guide.css';
 import './styles/home-admin.css';
 import './styles/home-right-rail.css';
 import './styles/home-community.css';
+import './styles/info-pages.css';
+import './styles/zip-bridge.css';
+import './styles/zip-guide.css';
+import './styles/zip-visual-v2.css';
 import './styles/home-promo.css';
 import './styles/home-provider-reviews.css';
 import '@search-ui/styles/search.css';
@@ -354,8 +358,7 @@ function init() {
         }
         if (pending === '/community' || pending === '/community/' || (pending && pending.startsWith('/community/'))) {
           clearPendingRoute();
-          const target =
-            pending === '/community' || pending === '/community/' ? getDefaultCommunityPath() : pending;
+          const target = pending;
           if (!isCommunityRoute()) {
             navigate(target);
             return;

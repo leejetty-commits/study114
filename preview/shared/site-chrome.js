@@ -75,7 +75,7 @@ function roleHomePathForNav(role) {
 function gnbHref(itemId, role) {
   if (itemId === 'home') return homeHashUrl(roleHomePathForNav(role));
   if (itemId === 'support') return homeHashUrl('/support/notice');
-  if (itemId === 'community' || itemId === 'concern') return homeHashUrl('/community/director');
+  if (itemId === 'community' || itemId === 'concern') return homeHashUrl('/community');
   if (itemId === 'plans') return homeHashUrl('/plans');
   const link = resolveGnbLink(itemId, role);
   if (!link) return homeHashUrl('/guest');
@@ -240,8 +240,8 @@ export function bindSiteChrome(root, handlers = {}) {
           }
           if (gnbId === 'community' || gnbId === 'concern') {
             if (navigateHome && isHomeUiHost()) {
-              setPendingRoute('/community/director');
-              navigateHome('/community/director');
+              setPendingRoute('/community');
+              navigateHome('/community');
             } else goSameTab(dest);
             return;
           }

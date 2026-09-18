@@ -82,18 +82,22 @@ function renderPanel(title, _screenId, bodyHtml, { lead = '' } = {}) {
 
 function renderContactLoginGate() {
   const href = loginUrl('support', 'contact');
-  return renderPanel(
-    '문의',
-    'contact-login',
-    `<div class="sup-contact-gate">
-       <p>문의 작성·내역 확인은 <strong>로그인 후</strong> 이용할 수 있습니다.</p>
-       <div class="sup-contact-gate__actions">
-         <a href="${esc(href)}" class="btn btn--primary btn--sm" data-sup-external="login">로그인하고 문의하기</a>
-         <a href="${esc(AUTH_UI_BASE)}/#/signup/terms" class="btn btn--secondary btn--sm" data-sup-external="login">회원가입</a>
-       </div>
-     </div>`,
-    { lead: '운영팀에 직접 남기는 문의입니다. 회원 간 쪽지와 별도 채널입니다.' },
-  );
+  return `
+    <section class="login-wall" aria-label="운영문의 로그인 안내">
+      <span class="blob blob--a" style="left:-28px;top:-18px" aria-hidden="true"></span>
+      <div class="login-wall__art"><img src="/assets/info-refresh/motif-contact.svg" alt="" /></div>
+      <h1>로그인 후 운영문의를 남길 수 있어요</h1>
+      <p>운영문의는 사이트 운영자에게 보내는 채널입니다. 공부방·과외쌤과의 첫 연락인 쪽지와는 다릅니다.</p>
+      <div class="login-wall__steps" aria-label="이용 단계">
+        <span class="step-pill"><span class="step-pill__n">1</span>로그인</span>
+        <span class="step-pill"><span class="step-pill__n">2</span>문의 작성</span>
+        <span class="step-pill"><span class="step-pill__n">3</span>내역 확인</span>
+      </div>
+      <div class="sup-contact-gate__actions" style="justify-content:center;position:relative;z-index:1;display:flex;gap:10px;flex-wrap:wrap">
+        <a href="${esc(href)}" class="btn btn--primary" data-sup-external="login">로그인하고 문의하기</a>
+        <a href="${esc(AUTH_UI_BASE)}/#/signup/terms" class="btn btn--secondary" data-sup-external="login">회원가입</a>
+      </div>
+    </section>`;
 }
 
 /** @param {string} path */
@@ -128,19 +132,53 @@ export function renderSupportScreen(path) {
 
 function renderSupportQuickCards() {
   const cards = [
-    { title: '자주 묻는 질문', desc: '가장 자주 확인하는 운영·이용 질문을 빠르게 찾을 수 있어요.', href: '/support/faq' },
-    { title: '문의하기', desc: '계정, 결제, 오류 문의를 남기고 접수 내역을 확인할 수 있어요.', href: '/support/contact' },
-    { title: '약관·정책', desc: '신고·제재, 개인정보, 플랫폼 역할 고지를 한곳에서 살펴보세요.', href: '/support/policies' },
+    { title: '자주 묻는 질문', desc: '계정·쪽지·노출 관련 FAQ', href: '/support/faq', icon: '/assets/info-refresh/motif-faq.svg', extra: '' },
+    { title: '문의', desc: '로그인 후 운영팀에 문의', href: '/support/contact', icon: '/assets/info-refresh/motif-contact.svg', extra: '' },
+    { title: '약관·정책', desc: '이용약관 · 개인정보 등', href: '/support/policies', icon: '/assets/info-refresh/motif-policy.svg', extra: 'card--accent-violet', halo: 'icon-halo--violet', tile: 'icon-tile--violet' },
+    { title: '공지사항', desc: '서비스 변경·운영 안내', href: '/support/notice', icon: '/assets/info-refresh/motif-notice.svg', extra: 'card--accent-warn', halo: 'icon-halo--warn', tile: 'icon-tile--warn' },
+    { title: '자료실', desc: '안내 자료와 양식', href: '/support/library', icon: '/assets/info-refresh/motif-library.svg', extra: 'card--accent-teal', halo: 'icon-halo--teal', tile: 'icon-tile--teal' },
+    { title: '커뮤니티', desc: '현장형 고민방·해결후기', href: '/community', icon: '/assets/info-refresh/motif-room.svg', extra: '', halo: 'icon-halo--ivory', tile: 'icon-tile--ivory' },
   ];
-  return `<div class="sup-card-grid">${cards
-    .map(
-      (card) => `<a href="#${card.href}" class="sup-card" data-sup-nav="${card.href}">
-        <span class="sup-card__title">${esc(card.title)}</span>
-        <span class="sup-card__desc">${esc(card.desc)}</span>
+  return `
+    <div class="section-head">
+      <div>
+        <span class="section-chip">Quick links</span>
+        <h2>바로가기</h2>
+        <div class="section-underline"></div>
+      </div>
+    </div>
+    <div class="quick-grid">
+      ${cards
+        .map(
+          (card) => `<a href="#${card.href}" class="quick-tile card card--accent ${card.extra || ''}" data-sup-nav="${card.href}">
+        <span class="icon-halo ${card.halo || ''}"><span class="icon-tile ${card.tile || ''}"><img src="${esc(card.icon)}" alt="" /></span></span>
+        <h3>${esc(card.title)}</h3>
+        <p>${esc(card.desc)}</p>
       </a>`,
-    )
-    .join('')}</div>
+        )
+        .join('')}
+    </div>
     <p class="sup-home-hint">이용 흐름 안내는 메인메뉴의 이용안내에서, 운영 지원은 고객센터에서 확인할 수 있습니다.</p>`;
+}
+
+function renderSupportHero() {
+  return `
+    <section class="support-hero" aria-label="고객센터 히어로">
+      <div class="support-hero__shapes" aria-hidden="true">
+        <span class="geo-circle geo-circle--1"></span>
+        <span class="geo-circle geo-circle--2"></span>
+        <span class="geo-slash"></span>
+      </div>
+      <div class="support-hero__inner">
+        <h1>필요한 답을 빠르게</h1>
+        <p>FAQ에서 먼저 찾고, 없으면 문의해 주세요. 공지·정책·자료도 한곳에서 이어집니다.</p>
+        <div class="support-hero__actions">
+          <a class="btn btn--primary" href="#/support/faq" data-sup-nav="/support/faq">자주 묻는 질문</a>
+          <a class="btn--ghost-light" href="#/support/contact" data-sup-nav="/support/contact">문의</a>
+        </div>
+      </div>
+    </section>
+    <div class="pattern-band" aria-hidden="true"></div>`;
 }
 
 function renderFaqSection() {
@@ -153,9 +191,16 @@ function renderFaqSection() {
     ? '최신 질문을 표시합니다.'
     : '자주 찾는 질문을 모았습니다.';
 
-  return renderPanel('자주 묻는 질문', 'faq', renderFaqBoard(posts), {
-    lead: `${sourceNote} 제목을 누르면 답이 펼쳐집니다.`,
-  });
+  return `
+    <div class="section-head">
+      <div>
+        <span class="section-chip">FAQ</span>
+        <h2>자주 묻는 질문</h2>
+        <div class="section-underline"></div>
+      </div>
+    </div>
+    <p class="section-lead">${esc(sourceNote)} 제목을 누르면 답이 펼쳐집니다. 운영문의와 쪽지는 다른 채널입니다.</p>
+    ${renderFaqBoard(posts)}`;
 }
 
 function renderNoticeSection() {
@@ -167,19 +212,22 @@ function renderNoticeSection() {
   }));
 
   return `
-    ${renderPanel('바로가기', 'support-quick', renderSupportQuickCards())}
-    ${renderPanel(
-      '공지사항',
-      'notice',
-      `<p class="sup-section__lead">제목을 누르면 본문이 펼쳐집니다. 다른 공지를 누르면 이전 내용은 접힙니다.</p>
-     ${renderSingleOpenBoard(posts, { variant: 'notice' })}
-     ${renderAdminFooterLink()}`,
-      {
-        lead: isOperationalBoardApiActive()
-          ? '최신 공지를 표시합니다.'
-          : '서비스 운영 공지입니다.',
-      },
-    )}`;
+    ${renderSupportHero()}
+    ${renderSupportQuickCards()}
+    <div class="section-head">
+      <div>
+        <span class="section-chip">Notices</span>
+        <h2>공지사항</h2>
+        <div class="section-underline"></div>
+      </div>
+    </div>
+    <p class="section-lead">${
+      isOperationalBoardApiActive() ? '최신 공지를 표시합니다.' : '서비스 운영 공지입니다.'
+    } 제목을 누르면 본문이 펼쳐집니다.</p>
+    <div class="notice-list">
+      ${renderSingleOpenBoard(posts, { variant: 'notice' })}
+    </div>
+    ${renderAdminFooterLink()}`;
 }
 
 function renderContactSection() {
@@ -290,16 +338,11 @@ function renderPoliciesSection(path) {
 
   return `
     <div class="sup-subtabs" role="tablist" aria-label="약관·정책">${tabs}</div>
-    <section class="sup-panel-card">
-      <header class="sup-panel-card__head">
-        <div>
-          <h2 class="sup-panel-card__title">${esc(page.title)}</h2>
-          <p class="sup-panel-card__lead">${esc(page.summary)}</p>
-        </div>
-      </header>
-      <div class="sup-panel-card__body">
-        ${shortNotice ? `<div class="sup-flash" role="note">${esc(shortNotice)}</div>` : ''}
-      </div>
+    <section class="if-hero">
+      <span class="if-chip">문서 허브</span>
+      <h2 class="if-hero__title">${esc(page.title)}</h2>
+      <p class="if-hero__body">${esc(page.summary)}</p>
+      ${shortNotice ? `<div class="sup-flash" role="note" style="margin-top:12px">${esc(shortNotice)}</div>` : ''}
     </section>
     ${sections}`;
 }

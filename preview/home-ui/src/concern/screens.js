@@ -4,6 +4,7 @@ import {
   CONCERN_HUB_LEAD,
   CONCERN_POST_TYPES,
   CONCERN_REACTIONS,
+  COMMUNITY_BOARD_VISUAL,
   getConcernBoardByKey,
 } from './copy.js';
 import { concernBoardNav, getConcernView, getDefaultCommunityPath } from './router.js';
@@ -62,15 +63,192 @@ function authorLine(post) {
 function renderPostRow(post) {
   const board = getConcernBoardByKey(post.boardKey);
   const href = `${board?.path || getDefaultCommunityPath()}/${post.id}`;
+  const initial = String(post.authorName || '?').slice(0, 1);
+  const excerpt = String(post.body || '').replace(/\s+/g, ' ').slice(0, 88);
   return `
-    <a class="concern-row" href="#${esc(href)}" data-concern-nav="${esc(href)}">
-      <div class="concern-row__head">
-        ${typeBadge(post.type)}${post.pinned ? '<span class="concern-pin">고정</span>' : ''}
-        <strong class="concern-row__title">${esc(post.title)}</strong>
-      </div>
-      <span class="concern-row__sub">${authorLine(post)}</span>
-      <span class="concern-row__stats">댓글 ${post.comments?.length || 0} · 반응 ${reactionTotal(post)}</span>
+    <a class="if-post" href="#${esc(href)}" data-concern-nav="${esc(href)}">
+      <span class="if-post__avatar" aria-hidden="true">${esc(initial)}</span>
+      <span>
+        <span class="concern-row__head">
+          ${typeBadge(post.type)}${post.pinned ? '<span class="concern-pin">고정</span>' : ''}
+        </span>
+        <strong class="if-post__title">${esc(post.title)}</strong>
+        ${excerpt ? `<span class="if-post__sub">${esc(excerpt)}${excerpt.length >= 88 ? '…' : ''}</span>` : ''}
+        <span class="if-post__stats">${authorLine(post)} · 댓글 ${post.comments?.length || 0} · 반응 ${reactionTotal(post)}</span>
+      </span>
     </a>`;
+}
+
+function boardVisual(board) {
+  return (
+    COMMUNITY_BOARD_VISUAL[board?.id || board?.slug] || {
+      kicker: 'Board',
+      icon: '/assets/info-refresh/motif-support.svg',
+      desc: board?.roleHint || '',
+      cta: '입장하기',
+      art: 'board-entry__art--room',
+      accent: '',
+      halo: '',
+      tile: '',
+      kickerColor: '',
+    }
+  );
+}
+
+function storyParts(post) {
+  const raw = String(post.body || '').trim();
+  const chunks = raw
+    .split(/\n{2,}|\n|→/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (chunks.length >= 2) {
+    return { problem: chunks[0], result: chunks.slice(1).join(' ') };
+  }
+  const excerpt = raw.replace(/\s+/g, ' ');
+  if (excerpt.length > 48) {
+    return { problem: `${excerpt.slice(0, 48).trim()}…`, result: excerpt.slice(48).trim() };
+  }
+  return { problem: excerpt || post.title, result: '자세한 과정은 본문에서 확인할 수 있어요.' };
+}
+
+function renderCommunityHub(navRole) {
+  const boards = listCommunityBoards().filter((board) => canDiscoverBoard(board.boardKey, navRole));
+  const browsePath = getDefaultCommunityPath();
+  return `
+    ${renderCommunityAlerts(navRole)}
+    <section class="hero-band" aria-label="커뮤니티 히어로">
+      <div class="hero-band__grid" aria-hidden="true"></div>
+      <span class="blob blob--a" style="top:-36px;right:32px" aria-hidden="true"></span>
+      <div class="hero-band__inner">
+        <div class="hero-band__copy">
+          <span class="section-chip">현장형 커뮤니티</span>
+          <h1>남기고 · 답하고 · 해결후기로 이어가기</h1>
+          <p>${esc(CONCERN_HUB_LEAD)}</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn btn--primary" href="#${esc(browsePath)}" data-concern-nav="${esc(browsePath)}">보드 둘러보기</a>
+            <a class="btn btn--secondary" href="#/community/solved" data-concern-nav="/community/solved">해결후기 보기</a>
+          </div>
+        </div>
+        <div class="hero-band__art" aria-hidden="true">
+          <img src="/assets/info-refresh/motif-support.svg" alt="" />
+        </div>
+      </div>
+    </section>
+    <div class="pattern-band" aria-hidden="true"></div>
+    <div class="section-head">
+      <div>
+        <span class="section-chip">4 boards</span>
+        <h2>역할별 보드로 바로 들어가기</h2>
+        <div class="section-underline"></div>
+      </div>
+    </div>
+    <div class="board-grid">
+      ${boards
+        .map((board) => {
+          const vis = boardVisual(board);
+          const color = vis.kickerColor ? ` style="color:${esc(vis.kickerColor)}"` : '';
+          return `
+            <a class="board-entry card card--accent ${esc(vis.accent)}" href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">
+              <div class="board-entry__art ${esc(vis.art)}">
+                <span class="icon-halo ${esc(vis.halo)}"><span class="icon-tile ${esc(vis.tile)}"><img src="${esc(vis.icon)}" alt="" /></span></span>
+              </div>
+              <p class="board-entry__label"${color}>${esc(vis.kicker)}</p>
+              <h2>${esc(board.label)}</h2>
+              <p>${esc(vis.desc)}</p>
+              <span class="board-entry__cta"${color}>${esc(vis.cta)} →</span>
+            </a>`;
+        })
+        .join('')}
+    </div>
+    <aside class="tip-card">
+      <h3>게스트 안내</h3>
+      <p>역할 보드 글은 로그인 후 역할에 맞게 볼 수 있습니다. 로그인 전에는 미리보기만 보여 드립니다.</p>
+    </aside>`;
+}
+
+function renderGhostPreview() {
+  return `
+    <div class="ghost-wrap">
+      <p class="ghost-veil-note">미리보기 · 실글 아님 · <span class="fake-tag" style="margin:0">가상</span></p>
+      <div class="ghost-feed" aria-hidden="true">
+        <div class="ghost-card"><div class="ghost-card__avatar"></div><div class="ghost-card__lines"><span></span><span></span></div></div>
+        <div class="ghost-card"><div class="ghost-card__avatar"></div><div class="ghost-card__lines"><span></span><span></span></div></div>
+        <div class="ghost-card"><div class="ghost-card__avatar"></div><div class="ghost-card__lines"><span></span><span></span></div></div>
+      </div>
+    </div>`;
+}
+
+function renderGuestBoardWall(board, role) {
+  const intro = getChannelIntro(board.boardKey);
+  const gate = roleGateCopy(board.boardKey, role);
+  const loginHref = boardLoginHref('community');
+  return `
+    <div class="section-head">
+      <div>
+        <span class="section-chip">Guest wall</span>
+        <h2>${esc(board.label)}</h2>
+        <div class="section-underline"></div>
+      </div>
+    </div>
+    <section class="login-wall" aria-label="로그인 안내">
+      <span class="blob blob--a" style="left:-28px;top:-18px" aria-hidden="true"></span>
+      <div class="login-wall__art"><img src="/assets/info-refresh/motif-login.svg" alt="" /></div>
+      <h1>${esc(gate.title || intro.title)}</h1>
+      <p>${esc(gate.body)} <span class="fake-tag">가상</span></p>
+      <div class="login-wall__steps" aria-label="이용 단계">
+        <span class="step-pill"><span class="step-pill__n">1</span>로그인</span>
+        <span class="step-pill"><span class="step-pill__n">2</span>역할 확인</span>
+        <span class="step-pill"><span class="step-pill__n">3</span>글 읽고 답하기</span>
+      </div>
+      <a class="btn btn--primary" href="${esc(loginHref)}">로그인하고 보드 열기</a>
+      <p style="margin:12px 0 0;font-size:13px;color:var(--uds-muted);position:relative;z-index:1">
+        또는 <a href="#/community" data-concern-nav="/community" style="color:var(--uds-primary);font-weight:600">커뮤니티 홈으로 돌아가기</a>
+      </p>
+      ${renderGhostPreview()}
+    </section>`;
+}
+
+function renderSolvedStories(board, posts) {
+  const vis = boardVisual(board);
+  if (!posts.length) {
+    return '<p class="concern-empty">아직 해결후기가 없습니다. 문제와 결과를 짧게 남겨보세요.</p>';
+  }
+  return `
+    <div class="story-grid">
+      ${posts
+        .map((post) => {
+          const href = `${board.path}/${post.id}`;
+          const parts = storyParts(post);
+          return `
+            <a class="story-card" href="#${esc(href)}" data-concern-nav="${esc(href)}">
+              <div class="story-card__head">
+                <span class="icon-halo icon-halo--green" style="width:56px;height:56px">
+                  <span class="icon-tile icon-tile--green" style="width:40px;height:40px;border-radius:10px"><img src="${esc(vis.icon)}" alt="" style="width:24px;height:24px" /></span>
+                </span>
+                <span class="chip chip--green">해결됨</span>
+                ${typeBadge(post.type)}
+              </div>
+              <div class="story-card__body">
+                <h2>${esc(post.title)}</h2>
+                <div class="story-flow">
+                  <div class="story-flow__box">
+                    <span class="story-flow__label">문제</span>
+                    <p>${esc(parts.problem)}</p>
+                  </div>
+                  <span class="story-flow__arrow" aria-hidden="true">→</span>
+                  <div class="story-flow__box story-flow__box--out">
+                    <span class="story-flow__label">결과</span>
+                    <p>${esc(parts.result)}</p>
+                  </div>
+                </div>
+                <div class="story-card__foot">
+                  <span>댓글 ${post.comments?.length || 0} · 반응 ${reactionTotal(post)}</span>
+                </div>
+              </div>
+            </a>`;
+        })
+        .join('')}
+    </div>`;
 }
 
 function renderCommunityAlerts(navRole) {
@@ -109,20 +287,17 @@ function renderChannelIntroCard(board, role) {
   const intro = getChannelIntro(board.boardKey);
   const gate = roleGateCopy(board.boardKey, role);
   const menuOnly = boardIntroLevel(board.boardKey, role) === 'menu_only';
-  const links =
-    role === 'guest'
-      ? [
-          { label: '로그인', href: boardLoginHref('community') },
-          { label: '다른 게시판', href: `#${getDefaultCommunityPath()}` },
-        ]
-      : [{ label: '다른 게시판', href: `#${getDefaultCommunityPath()}` }];
-  // 비회원은 메뉴명만. 공간 소개문 문단을 렌더하지 않는다.
+  if (role === 'guest') {
+    return renderGuestBoardWall(board, role);
+  }
+  const links = [{ label: '다른 게시판', href: `#${getDefaultCommunityPath()}` }];
   const lead = menuOnly
     ? ''
     : `
-    <section class="concern-hero">
-      <p class="concern-eyebrow">${esc(board.roleHint)}</p>
-      <p class="concern-hero__lead">${esc(intro.body)}</p>
+    <section class="if-hero">
+      <span class="if-chip">${esc(board.roleHint)}</span>
+      <h2 class="if-hero__title">${esc(board.label)}</h2>
+      <p class="if-hero__body">${esc(intro.body)}</p>
     </section>`;
   return `
     ${lead}
@@ -141,7 +316,7 @@ function renderList(board, query) {
   const access = getBoardAccess(board.boardKey, role);
   if (!access.canList) {
     return `
-      ${renderCommunityIntro(role)}
+      ${renderCommunityAlerts(role)}
       ${renderChannelIntroCard(board, role)}`;
   }
   const type = query.get('type') || 'all';
@@ -152,20 +327,53 @@ function renderList(board, query) {
     ...Object.entries(CONCERN_POST_TYPES).map(([id, meta]) => ({ id, label: meta.label })),
   ];
   const writeBtn = access.canCompose
-    ? `<a class="guide-btn guide-btn--primary" href="#${esc(board.path)}/new" data-concern-nav="${esc(board.path)}/new">글쓰기</a>`
+    ? `<a class="btn btn--primary" href="#${esc(board.path)}/new" data-concern-nav="${esc(board.path)}/new">글쓰기</a>`
     : role === 'guest'
-      ? `<a class="guide-btn guide-btn--secondary" href="${esc(boardLoginHref('community-compose'))}">로그인 후 글쓰기</a>`
+      ? `<a class="btn btn--secondary" href="${esc(boardLoginHref('community-compose'))}">로그인 후 글쓰기</a>`
       : '';
   const readonlyNote =
     access.canDetail && !access.canCompose
       ? `<p class="concern-note">${esc(roleGateCopy(board.boardKey, role).body)}</p>`
       : '';
+  const vis = boardVisual(board);
+  const isSolved = board.slug === 'solved' || board.defaultTypes?.includes('solved');
+  const listHtml = isSolved
+      ? renderSolvedStories(board, posts)
+      : `<div class="concern-list">${
+          posts.length
+            ? posts.map((p) => renderPostRow(p)).join('')
+            : '<p class="concern-empty">아직 글이 없습니다. 첫 고민을 남겨보세요.</p>'
+        }</div>`;
+  const hero = isSolved
+    ? `
+    <section class="hero-band" style="padding:22px 24px">
+      <div class="hero-band__grid" aria-hidden="true"></div>
+      <span class="blob blob--b" style="right:28px;top:8px" aria-hidden="true"></span>
+      <div class="hero-band__inner">
+        <div class="hero-band__copy">
+          <span class="section-chip" style="background:var(--uds-success-bg);border-color:var(--uds-success-line);color:var(--uds-success)">Solved stories</span>
+          <h1 style="font-size:24px">${esc(board.label)}</h1>
+          <p style="margin:0">${esc(board.roleHint)}</p>
+        </div>
+        <div class="hero-band__art" style="width:120px"><img src="${esc(vis.icon)}" alt="" /></div>
+        ${writeBtn}
+      </div>
+    </section>`
+    : `
+    <section class="hero-band" style="padding:22px 24px">
+      <div class="hero-band__grid" aria-hidden="true"></div>
+      <div class="hero-band__inner">
+        <div class="hero-band__copy">
+          <span class="section-chip">${esc(vis.kicker)}</span>
+          <h1 style="font-size:24px">${esc(board.label)}</h1>
+          <p style="margin:0">${esc(board.roleHint)}</p>
+        </div>
+        ${writeBtn}
+      </div>
+    </section>`;
   return `
-    ${renderCommunityIntro(role)}
-    <section class="concern-list-head">
-      <p class="concern-eyebrow">${esc(board.roleHint)}</p>
-      ${writeBtn}
-    </section>
+    ${renderCommunityAlerts(role)}
+    ${hero}
     ${readonlyNote}
     <div class="concern-filters" role="tablist" aria-label="글 유형">
       ${filters
@@ -182,13 +390,7 @@ function renderList(board, query) {
       <a class="concern-sort__link${sort === 'hot' ? ' is-active' : ''}" href="#${esc(board.path)}?type=${esc(type)}&sort=hot" data-concern-nav="${esc(board.path)}?type=${esc(type)}&sort=hot">공감·HOT</a>
       <a class="concern-sort__link${sort === 'comments' ? ' is-active' : ''}" href="#${esc(board.path)}?type=${esc(type)}&sort=comments" data-concern-nav="${esc(board.path)}?type=${esc(type)}&sort=comments">댓글많은</a>
     </div>
-    <div class="concern-list">
-      ${
-        posts.length
-          ? posts.map((p) => renderPostRow(p)).join('')
-          : '<p class="concern-empty">아직 글이 없습니다. 첫 고민을 남겨보세요.</p>'
-      }
-    </div>`;
+    ${listHtml}`;
 }
 
 function renderReactions(post, enabled) {
@@ -206,18 +408,13 @@ function renderReactions(post, enabled) {
 }
 
 function renderBoardBlocked(board, role) {
+  if (role === 'guest') {
+    return `
+      ${renderCommunityAlerts(role)}
+      ${renderGuestBoardWall(board, role)}`;
+  }
   const gate = roleGateCopy(board.boardKey, role);
   const intro = getChannelIntro(board.boardKey);
-  if (role === 'guest') {
-    return renderStateCard({
-      title: intro.title,
-      body: gate.body,
-      links: [
-        { label: '로그인', href: boardLoginHref('community') },
-        { label: '다른 게시판', href: `#${getDefaultCommunityPath()}` },
-      ],
-    });
-  }
   return renderStateCard({
     title: intro.title,
     body: gate.body,
@@ -267,7 +464,7 @@ function renderDetail(board, postId) {
             <span>댓글</span>
             <textarea name="body" rows="3" maxlength="500" placeholder="짧은 조언이나 경험을 남겨주세요" required></textarea>
           </label>
-          <button type="submit" class="guide-btn guide-btn--primary">댓글 남기기</button>
+          <button type="submit" class="btn btn--primary">댓글 남기기</button>
         </form>`
             : `<p class="concern-note">${esc(roleGateCopy(board.boardKey, role).body)}</p>`
         }
@@ -334,7 +531,7 @@ function renderCompose(board) {
           <textarea name="body" rows="8" maxlength="2000" required placeholder="짧은 경험이나 고민을 적어주세요"></textarea>
         </label>
         <p class="concern-compose__image-note">이미지 첨부(1~3장)는 상세에서만 크게 보이도록 후속 연결 예정입니다.</p>
-        <button type="submit" class="guide-btn guide-btn--primary">올리기</button>
+        <button type="submit" class="btn btn--primary">올리기</button>
       </form>
     </section>`;
 }
@@ -343,6 +540,7 @@ export function renderConcernScreen(path) {
   const pathOnly = path.split('?')[0];
   const query = new URLSearchParams(path.includes('?') ? path.slice(path.indexOf('?') + 1) : '');
   const view = getConcernView(pathOnly);
+  if (view.kind === 'hub') return renderCommunityHub(getNavRole());
   if (view.kind === 'compose') return renderCompose(view.board);
   if (view.kind === 'detail') return renderDetail(view.board, view.postId);
   if (!view.board) return '<p class="concern-empty">게시판을 찾을 수 없습니다.</p>';
@@ -353,14 +551,23 @@ export function renderConcernSideNav(currentPath) {
   const pathOnly = currentPath.split('?')[0];
   const role = getNavRole();
   const items = concernBoardNav(pathOnly)
-    .filter((b) => canDiscoverBoard(b.boardKey, role))
+    .filter((b) => b.id === 'hub' || canDiscoverBoard(b.boardKey, role))
     .map((b) => ({
       label: b.label,
       path: b.path,
       active: b.active,
     }));
+  const selectOptions = items
+    .map((item) => `<option value="${esc(item.path)}"${item.active ? ' selected' : ''}>${esc(item.label)}</option>`)
+    .join('');
   return `
     <nav class="concern-nav" aria-label="커뮤니티 메뉴">
+      <div class="if-nav-mobile">
+        <label class="if-nav-mobile__label" for="concern-nav-select">커뮤니티 메뉴</label>
+        <select id="concern-nav-select" class="if-nav-mobile__select" data-concern-nav-select>
+          ${selectOptions}
+        </select>
+      </div>
       ${items
         .map(
           (item) => `
@@ -385,6 +592,12 @@ export function bindConcernScreenEvents(root, rerender) {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       const target = el.getAttribute('data-concern-nav') || getDefaultCommunityPath();
+      navigate(target.startsWith('/') ? target : `/${target}`);
+    });
+  });
+  root.querySelectorAll('[data-concern-nav-select]').forEach((el) => {
+    el.addEventListener('change', () => {
+      const target = el.value || '/community';
       navigate(target.startsWith('/') ? target : `/${target}`);
     });
   });

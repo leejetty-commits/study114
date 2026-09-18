@@ -16,8 +16,18 @@ export function renderGuidePageTitle(path) {
 
 export function renderGuideNav(path) {
   const active = getGuidePageId(path);
+  const selectOptions = GUIDE_NAV_ITEMS.map((item) => {
+    const selected = active === item.id ? ' selected' : '';
+    return `<option value="${esc(item.path)}"${selected}>${esc(item.label)}</option>`;
+  }).join('');
   return `
     <nav class="guide-nav" aria-label="이용안내 메뉴">
+      <div class="if-nav-mobile">
+        <label class="if-nav-mobile__label" for="guide-nav-select">이용안내 메뉴</label>
+        <select id="guide-nav-select" class="if-nav-mobile__select" data-guide-nav-select>
+          ${selectOptions}
+        </select>
+      </div>
       <ul class="guide-nav__list">
         ${GUIDE_NAV_ITEMS.map((item) => {
           const cls = ['guide-nav__link', active === item.id ? 'is-active' : ''].filter(Boolean).join(' ');
@@ -26,4 +36,3 @@ export function renderGuideNav(path) {
       </ul>
     </nav>`;
 }
-

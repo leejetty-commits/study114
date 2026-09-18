@@ -51,6 +51,16 @@ export function renderSupportNav(path) {
   const loggedIn = isLoggedIn();
   return `
     <nav class="sup-nav" aria-label="고객센터 메뉴">
+      <div class="if-nav-mobile">
+        <label class="if-nav-mobile__label" for="support-nav-select">고객센터 메뉴</label>
+        <select id="support-nav-select" class="if-nav-mobile__select" data-sup-nav-select>
+          ${SUPPORT_NAV.map((n) => {
+            const locked = Boolean(n.requiresLogin) && !loggedIn;
+            const selected = active === n.id ? ' selected' : '';
+            return `<option value="${esc(n.path)}"${selected}${locked ? '' : ''}>${esc(n.label)}${locked ? ' (로그인)' : ''}</option>`;
+          }).join('')}
+        </select>
+      </div>
       <ul class="sup-nav__list">
         ${SUPPORT_NAV.map((n) => {
           const locked = Boolean(n.requiresLogin) && !loggedIn;

@@ -395,7 +395,12 @@ export function bootstrapGuideRoute() {
     return true;
   }
   if (GUIDE_LEGACY_SAFETY_PATHS.includes(path)) {
-    window.location.replace('#/guide/safety');
+    window.location.replace('#/guide/safe');
+    return true;
+  }
+  const aliased = normalizeGuidePath(path);
+  if (aliased && aliased !== path) {
+    window.location.replace(`#${aliased}`);
     return true;
   }
   if (path === '/guide' || path === '/guide/') {
@@ -414,7 +419,7 @@ export function bootstrapCommunityRoute() {
 
   if (!hash && pathname.startsWith('/community')) {
     const bare = pathname === '/community' || pathname === '/community/';
-    const target = bare ? getDefaultCommunityPath() : pathname;
+    const target = bare ? '/community' : pathname;
     setPendingRoute(target);
     window.location.replace(`${origin}/${search}#${target}`);
     return true;
@@ -438,8 +443,7 @@ export function bootstrapCommunityRoute() {
     return true;
   }
   if (path === '/community' || path === '/community/') {
-    window.location.replace(`#${getDefaultCommunityPath()}`);
-    return true;
+    return false;
   }
   if (path.startsWith('/community/') && !normalizeCommunityPath(path)) {
     window.location.replace(`#${getDefaultCommunityPath()}`);

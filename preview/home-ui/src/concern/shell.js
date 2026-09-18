@@ -12,6 +12,9 @@ function esc(s) {
 
 function renderCommunityPageTitle(path) {
   const view = getCommunityView(path.split('?')[0]);
+  if (view.kind === 'hub') {
+    return `<span class="sup-content__title-prefix">커뮤니티</span>`;
+  }
   const suffix = view.board?.label || '';
   if (!suffix) {
     return `<span class="sup-content__title-prefix">커뮤니티</span>`;
@@ -42,7 +45,7 @@ export function renderConcernShell(currentPath, bodyHtml) {
     mainHtml,
     footerHtml: renderFooter(),
     slotKey: 'home_right_rail',
-    appClass: 'concern-app',
+    appClass: 'concern-app uds-theme',
   });
 }
 

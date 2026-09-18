@@ -14,7 +14,6 @@ import { syncSiteHeaderOffset, ensureSiteHeaderOffsetListeners } from '../../sha
 import { renderSiteFooter } from '../../shared/site-footer.js';
 import { setPendingRoute } from '../../shared/pending-route.js';
 import { redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
-import { getDefaultCommunityPath } from './concern/router.js';
 
 export function renderPreviewToolbar() {
   if (!SHOW_PREVIEW_TOOLBAR) return '';
@@ -52,7 +51,7 @@ export function renderPreviewToolbar() {
           .join('')}
         <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${getDefaultMypagePath(getNavRole())}">마이페이지</button>
         <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지·후기함</button>
-        <button type="button" class="preview-toolbar__btn ${onCommunity ? 'is-active' : ''}" data-nav="${getDefaultCommunityPath()}">커뮤니티</button>
+        <button type="button" class="preview-toolbar__btn ${onCommunity ? 'is-active' : ''}" data-nav="/community">커뮤니티</button>
         <button type="button" class="preview-toolbar__btn ${onPromo ? 'is-active' : ''}" data-nav="/promo/study-room">홍보</button>
         <button type="button" class="preview-toolbar__btn ${onSupport ? 'is-active' : ''}" data-nav="/support">고객센터</button>
         <button type="button" class="preview-toolbar__btn ${onPlans ? 'is-active' : ''}" data-nav="/plans">유료상품</button>
@@ -159,7 +158,7 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
   } else if (item.id === 'support') {
     href = '#/support';
   } else if (item.id === 'community' || item.id === 'concern') {
-    href = `#${getDefaultCommunityPath()}`;
+    href = '#/community';
   } else if (item.id === 'plans') {
     href = '#/plans';
   } else {
@@ -487,7 +486,7 @@ export function bindLayoutEvents(root, rerender) {
         }
         if (gnbId === 'community' || gnbId === 'concern') {
           // plans와 같이 pending 보험 — 로그인 직후 역할홈 리다이렉트와 겹치면 커뮤니티가 튕긴다
-          const communityPath = getDefaultCommunityPath();
+          const communityPath = '/community';
           setPendingRoute(communityPath);
           navigate(communityPath);
           return;

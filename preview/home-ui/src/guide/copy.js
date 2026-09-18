@@ -20,42 +20,62 @@ const I = {
 
 export const GUIDE_NAV_ITEMS = [
   { id: 'home', label: '이용안내 홈', path: '/guide' },
-  { id: 'getting-started', label: '처음 이용', path: '/guide/getting-started' },
-  { id: 'registration', label: '등록방법', path: '/guide/registration' },
-  { id: 'saved-contact', label: '찜·비교·쪽지', path: '/guide/saved-contact' },
-  { id: 'safety', label: '안전과외 가이드', path: '/guide/safety' },
+  { id: 'start', label: '찾기·첫 이용', path: '/guide/start' },
+  { id: 'register', label: '등록·공개', path: '/guide/register' },
+  { id: 'compare', label: '비교·찜·쪽지', path: '/guide/compare' },
+  { id: 'safe', label: '안전이용', path: '/guide/safe' },
 ];
 
-export const GUIDE_HOME_CARDS = [
+/** 허브: 상황 3입구 */
+export const GUIDE_HOME_ENTRIES = [
   {
-    id: 'getting-started',
-    title: '처음 이용',
-    desc: '회원가입부터 찾기, 비교, 첫 연락까지 전체 흐름을 한 번에 확인해보세요.',
-    cta: '전체 흐름 보기',
-    image: '/assets/guide/getting-started/hero.webp',
+    id: 'start',
+    label: 'Find',
+    title: '찾기·첫 이용',
+    desc: '공부방이나 과외쌤을 처음 찾는 분도 검색부터 비교, 첫 연락까지 순서대로 따라올 수 있어요.',
+    cta: '찾기 시작하기',
+    path: '/guide/start',
+    icon: I.search,
   },
   {
-    id: 'registration',
-    title: '등록방법',
-    desc: '공부방·과외 등록은 어떻게 시작하고 언제 공개되는지 순서대로 알려드려요.',
+    id: 'register',
+    label: 'Register',
+    title: '등록·공개',
+    desc: '공부방·과외쌤 등록을 시작한다면, 가입과 공개의 경계를 헷갈리지 않게 순서대로 안내해요.',
     cta: '등록 순서 보기',
-    image: '/assets/guide/registration/hero.webp',
+    path: '/guide/register',
+    icon: I.filePen,
   },
   {
-    id: 'saved-contact',
-    title: '찜·비교·쪽지',
-    desc: '후보를 저장하고 비교한 뒤 첫 연락까지 이어가는 방법을 확인해보세요.',
-    cta: '판단 흐름 보기',
-    image: '/assets/guide/saved-contact/hero.webp',
-  },
-  {
-    id: 'safety',
-    title: '안전과외 가이드',
-    desc: '첫 연락, 개인정보 공유, 선입금 전 꼭 알아둘 기준을 확인해보세요.',
-    cta: '안전 기준 보기',
-    image: '/assets/guide/safety/hero.webp',
+    id: 'compare',
+    label: 'Compare',
+    title: '비교·찜·쪽지',
+    desc: '마음에 드는 후보를 저장하고, 나란히 비교한 뒤 쪽지로 첫 연락을 이어가는 흐름을 정리했어요.',
+    cta: '비교 방법 보기',
+    path: '/guide/compare',
+    icon: I.columns,
   },
 ];
+
+/** 허브: 보조 링크 2개 */
+export const GUIDE_HOME_AUX = [
+  {
+    id: 'safe',
+    title: '안전이용',
+    desc: '첫 연락·개인정보·선입금 전에 확인할 행동 가이드',
+    path: '/guide/safe',
+    icon: I.shield,
+  },
+  {
+    id: 'support',
+    title: '고객센터',
+    desc: '공지, FAQ, 운영문의, 신고·정책은 공식 도움 허브에서',
+    path: '/support',
+    icon: I.alert,
+  },
+];
+
+export const GUIDE_HOME_CARDS = GUIDE_HOME_ENTRIES;
 
 export const GUIDE_ROLE_CARDS = [
   {
@@ -63,7 +83,7 @@ export const GUIDE_ROLE_CARDS = [
     title: '공부방이나 과외쌤을 찾고 비교하려는 분',
     body: '처음 이용에서 전체 구조를 익힌 뒤, 찜·비교·쪽지 흐름으로 판단을 이어가세요.',
     ctas: [
-      { label: '처음 이용 보기', path: '/guide/getting-started' },
+      { label: '찾기·첫 이용 보기', path: '/guide/start' },
       { label: '공부방 찾기 시작', external: 'search-room' },
     ],
   },
@@ -72,7 +92,7 @@ export const GUIDE_ROLE_CARDS = [
     title: '공부방 정보를 등록하고 공개·운영하려는 분',
     body: '등록방법에서 기본등록과 상세등록의 차이를 먼저 확인하고, 이후 유료상품과 연결 여부를 판단하세요.',
     ctas: [
-      { label: '등록방법 보기', path: '/guide/registration' },
+      { label: '등록·공개 보기', path: '/guide/register' },
       { label: '공부방 등록 시작', external: 'register-room' },
     ],
   },
@@ -81,7 +101,7 @@ export const GUIDE_ROLE_CARDS = [
     title: '프로필을 만들고 학생 탐색까지 연결하려는 분',
     body: '등록방법으로 공개 흐름을 이해하고, 찜·비교·쪽지 페이지에서 첫 연락 구조를 확인해보세요.',
     ctas: [
-      { label: '등록방법 보기', path: '/guide/registration' },
+      { label: '등록·공개 보기', path: '/guide/register' },
       { label: '과외 등록 시작', external: 'register-tutor' },
     ],
   },
@@ -132,12 +152,12 @@ export const GUIDE_HOME_CTA = [
 
 /** 35-1장 플로우차트 + 단계형 안내 카피 · 비질리 아이콘 연결 */
 export const GUIDE_PAGES = {
-  'getting-started': {
-    title: '처음 이용',
+  start: {
+    title: '찾기·첫 이용',
     heroLabel: '처음 방문한 분을 위한 전체 흐름',
     image: '/assets/guide/getting-started/hero.webp',
     summary:
-      '우동공과는 학부모·학생이 공부방과 과외쌤을 찾고 비교하는 공간이자, 공부방과 과외쌤이 자기 정보를 등록하고 운영하는 공간입니다.',
+      '공부방이나 과외쌤을 처음 찾는 분도 어렵지 않게 따라올 수 있도록, 검색부터 비교와 첫 연락까지 순서대로 안내해드릴게요.',
     lead: '처음이라면 찾기 → 찜 → 비교 → 상세 확인 → 쪽지 순서로 이해하면 가장 쉽습니다.',
     flowLead: '먼저 전체 흐름을 차트로 보고, 아래 단계별 설명에서 더 상세히 확인할 수 있습니다.',
     flow: [
@@ -189,15 +209,15 @@ export const GUIDE_PAGES = {
     tip: {
       title: '이렇게 보면 더 빠릅니다',
       body: '비교 기능은 후보가 2~3개쯤 모였을 때 가장 유용합니다. 먼저 조건을 좁히고, 상세 확인 뒤 쪽지로 이어가면 훨씬 더 정확합니다.',
-      action: { label: '찜·비교·쪽지 보기', path: '/guide/saved-contact' },
+      action: { label: '비교·찜·쪽지 보기', path: '/guide/compare' },
     },
   },
-  registration: {
-    title: '등록방법',
+  register: {
+    title: '등록·공개',
     heroLabel: '공급자 등록 흐름 안내',
     image: '/assets/guide/registration/hero.webp',
     summary:
-      '가입은 가볍게, 기본등록은 최소로, 상세등록에서 실제 공개용 정보를 완성하고, 그 이후에 공개와 유료를 연결합니다.',
+      '공부방이나 과외쌤 등록을 시작하신다면, 어디까지가 가입이고 어디부터 공개되는지 헷갈리지 않게 순서대로 설명해드릴게요.',
     principles: [
       '공통가입 = 계정 생성용 최소 단계',
       '기본등록 = 초안 시작 단계',
@@ -441,8 +461,8 @@ export const GUIDE_PAGES = {
       '유료상품은 광고·홍보를 위한 강화 단계입니다. 우동공과는 업체를 선별하거나 보증하는 단계가 없습니다.',
     ],
   },
-  'saved-contact': {
-    title: '찜·비교·쪽지',
+  compare: {
+    title: '비교·찜·쪽지',
     heroLabel: '저장부터 첫 연락까지',
     image: '/assets/guide/saved-contact/hero.webp',
     summary:
@@ -579,12 +599,12 @@ export const GUIDE_PAGES = {
       { label: '마이페이지 홈 가기', path: '/mypage', hint: '찜·쪽지·활동을 한곳에서' },
     ],
   },
-  safety: {
-    title: '안전과외 가이드',
-    heroLabel: '플랫폼 보증이 아닌 행동 가이드',
+  safe: {
+    title: '안전이용',
+    heroLabel: '첫 연락 전 행동 가이드',
     image: '/assets/guide/safety/hero.webp',
     summary:
-      '안전과외는 결제 기능이 아니라 쪽지를 통해서 첫 연락을 할 때, 개인정보 보안에 관해 꼭 알아두어야 할 행동 가이드입니다.',
+      '첫 연락, 개인정보 공유, 선입금처럼 조심해야 할 순간에 무엇을 먼저 확인하면 좋은지 차분하게 안내해드릴게요.',
     lead: '첫 연락은 쪽지부터 시작하고, 개인정보 공유와 비용 협의는 충분히 확인한 뒤 진행해 주세요.',
     flowLead: '먼저 전체 흐름을 차트로 보고, 아래 단계별 설명에서 더 자세히 확인할 수 있습니다.',
     flow: [
@@ -633,7 +653,7 @@ export const GUIDE_PAGES = {
           {
             title: '쪽지 이용안내',
             body: '개인정보를 바로 공개하기보다, 우동공과 안의 쪽지로 먼저 연락하는 방법을 확인해 보세요.',
-            action: { label: '쪽지 안내 보기', path: '/guide/saved-contact' },
+            action: { label: '쪽지 안내 보기', path: '/guide/compare' },
             emphasize: true,
           },
         ],

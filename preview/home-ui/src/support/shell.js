@@ -33,6 +33,7 @@ export function renderSupportShell(currentPath, bodyHtml) {
     mainHtml,
     footerHtml: renderFooter(),
     slotKey: 'support_right_rail',
+    appClass: 'support-app uds-theme',
   });
 }
 
@@ -43,6 +44,11 @@ export function bindSupportShellEvents(root, rerender) {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       window.location.hash = el.getAttribute('data-sup-nav') || '/support/notice';
+    });
+  });
+  root.querySelectorAll('[data-sup-nav-select]').forEach((el) => {
+    el.addEventListener('change', () => {
+      window.location.hash = el.value || '/support/notice';
     });
   });
   root.querySelectorAll('[data-nav]').forEach((el) => {

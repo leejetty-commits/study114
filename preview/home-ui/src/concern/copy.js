@@ -11,7 +11,7 @@ import { listBoardChannels } from '../board-channel-store.js';
 
 export const COMMUNITY_HUB_TITLE = '커뮤니티';
 export const COMMUNITY_HUB_LEAD =
-  '공부방·과외쌤·학생/학부모의 실제 고민과 짧은 조언, 해결후기, 댓글 반응이 쌓이는 현장형 공간입니다.';
+  '공부방·과외쌤·학생/학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 보드에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다.';
 
 /** @deprecated alias */
 export const CONCERN_HUB_TITLE = COMMUNITY_HUB_TITLE;
@@ -53,6 +53,53 @@ export const SEED_COMMUNITY_BOARDS = [
     defaultTypes: ['solved'],
   },
 ];
+
+export const COMMUNITY_BOARD_VISUAL = {
+  director: {
+    kicker: 'Room',
+    icon: '/assets/info-refresh/motif-room.svg',
+    desc: '운영·모집·공간 운영 질문을 남기고 이웃 원장과 나눠 보세요.',
+    cta: '입장하기',
+    art: 'board-entry__art--room',
+    accent: '',
+    halo: '',
+    tile: '',
+    kickerColor: '',
+  },
+  tutor: {
+    kicker: 'Tutor',
+    icon: '/assets/info-refresh/motif-tutor.svg',
+    desc: '수업 준비·학부모 응대·일정 조율 등 현장 팁을 묻고 답합니다.',
+    cta: '입장하기',
+    art: 'board-entry__art--tutor',
+    accent: 'card--accent-teal',
+    halo: 'icon-halo--teal',
+    tile: 'icon-tile--teal',
+    kickerColor: 'var(--role-tutor)',
+  },
+  parent: {
+    kicker: 'Parent',
+    icon: '/assets/info-refresh/motif-parent.svg',
+    desc: '학습 계획·과외 선택·공부방 이용 경험을 구체적으로 나눠 보세요.',
+    cta: '입장하기',
+    art: 'board-entry__art--parent',
+    accent: 'card--accent-violet',
+    halo: 'icon-halo--violet',
+    tile: 'icon-tile--violet',
+    kickerColor: 'var(--role-student)',
+  },
+  solved: {
+    kicker: 'Solved',
+    icon: '/assets/info-refresh/motif-solved.svg',
+    desc: '고민이 풀린 과정을 짧게 남겨, 다음 사람에게 단서를 전합니다.',
+    cta: '후기 보기',
+    art: 'board-entry__art--solved',
+    accent: 'card--accent-green',
+    halo: 'icon-halo--green',
+    tile: 'icon-tile--green',
+    kickerColor: 'var(--uds-success)',
+  },
+};
 
 function slugFromChannel(channel) {
   const route = String(channel.routeSlug || '')
