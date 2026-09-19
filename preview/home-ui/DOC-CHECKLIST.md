@@ -192,7 +192,7 @@ http://localhost:5174 · `cd preview/home-ui && npm run dev`
 | 3 | FAQ | `#/support/faq` · `#faq` | P17-04 | ✅ |
 | 4 | 공지 | `#/support/notice` | P17-05 | ✅ 17c CMS |
 | 5 | 운영 문의 | `#/support/contact` | P17-07 | ✅ 17c 티켓 |
-| 6 | 내 문의 내역 | `#/support/contact/tickets` | P17-07 | ✅ |
+| 6 | 내 문의 내역 | `#/mypage/contact` (레거시 `#/support/contact/tickets` → 리다이렉트) | P17-07 | ✅ |
 | 7 | 안전과외 목록 | `#/support/safe` | P17-02 | ✅ |
 | 8 | 가이드 상세 | `#/support/safe/{slug}` | P17-03 · G1~G7 | ✅ 17b G5~G7 |
 | 9 | 운영 콘솔 | `#/support/admin/*` | 17c | ✅ |

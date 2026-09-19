@@ -42,6 +42,26 @@ export const MESSAGES_SUMMARY_LEAD = '새 쪽지와 진행 중인 대화를 한�
 
 export const REGISTRATIONS_LEAD = '현재 등록 상태를 확인하고 필요한 정보만 이어서 수정하세요.';
 
+/** P17-07 내 문의 내역 — 운영문의 개인 관리 (쪽지함과 분리) */
+export const CONTACT_HISTORY_COPY = {
+  lead: '고객센터에 남긴 운영문의와 답변, 진행 상태를 확인합니다.',
+  newCta: '새 운영문의 남기기',
+  newHref: '/support/contact',
+  recentNote: '최근 답변이 있는 운영문의가 있습니다.',
+  emptyTitle: '아직 남긴 운영문의가 없습니다.',
+  emptyBody: '가입, 등록, 결제, 정책, 신고 관련 도움이 필요하면 고객센터에서 운영문의를 남겨 주세요.',
+  emptyCta: '고객센터 문의하기',
+  replyYes: '운영자 답변 있음',
+  replyNo: '아직 운영자 답변 없음',
+  replyPending: '아직 운영자 답변이 등록되지 않았습니다.',
+  replyLabel: '운영자 답변',
+  mineLabel: '내가 남긴 문의',
+  typeLabel: '문의 유형',
+  receivedLabel: '접수 시각',
+  statusLabel: '상태',
+  updatedLabel: '최근 업데이트',
+};
+
 /** §2-1 P15-10 제출 상태 라벨 (22§7 · 심사 UX ✕) */
 export const SUBMISSION_STATUS_LABELS = {
   not_submitted: '미제출',

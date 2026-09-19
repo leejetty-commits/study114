@@ -47,9 +47,9 @@ import { isStudentRegPath } from '../student-reg/router.js';
 import { renderStudentRegScreen } from '../student-reg/screens.js';
 import { isStudyRoomRegPath } from '../study-room-reg/router.js';
 import { renderStudyRoomRegScreen } from '../study-room-reg/screens.js';
-import { getStudyRoomEntryPath } from './router.js';
+import { getStudyRoomEntryPath, getTutorEntryPath, CONTACT_HISTORY_PATH } from './router.js';
 import { isTutorRegPath } from '../tutor-reg/router.js';
-import { setAuthDisplayName, logout } from '../auth-session.js';
+import { setAuthDisplayName, logout, getAuthUser } from '../auth-session.js';
 import {
   formatLoginAccountLabel,
   isInternalAuthEmail,
@@ -60,6 +60,9 @@ import { renderSubmissionBoardScreen } from '../submission-board/index.js';
 import { P18_EXPOSURE_STATUS } from './plans-catalog.js';
 import { getPaidOperationalStatus, hydratePaidCaches } from '../paid-backend.js';
 import { isMessagesApiMode, hydrateMessagesCache } from '../messages-backend.js';
+import { isSupportApiMode, hydrateSupportCache } from '../support/support-backend.js';
+import { listTicketsByEmail } from '../support/ticket-store.js';
+import { TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { getMemoUsedTargets } from '../messages/thread-store.js';
 import { getStudyRoom, getStudyRooms } from '../study-room-reg/store.js';
 import { getTutor, getTutors } from '../tutor-reg/store.js';
@@ -78,6 +81,7 @@ import {
   GUARDIAN_PLANS_COPY,
   WISHLIST_NOTE,
   REGISTRATIONS_LEAD,
+  CONTACT_HISTORY_COPY,
 } from './mypage-copy.js';
 
 function esc(s) {
@@ -144,6 +148,18 @@ export function renderMypageScreen(path) {
     return renderStudyRoomRegScreen('/mypage/registrations/study-rooms');
   }
 
+  // 과외쌤: 홈·내 등록 중간페이지 → 마이프로필(hub) 직행
+  if (r === 'tutor' && (path === '/mypage/home' || path === '/mypage/registrations')) {
+    const entry = getTutorEntryPath();
+    queueMicrotask(() => {
+      if (window.location.hash === '#/mypage/home' || window.location.hash === '#/mypage/registrations') {
+        window.location.replace(`#${entry}`);
+      }
+    });
+    if (isTutorRegPath(entry)) return renderTutorRegScreen(entry);
+    return renderTutorRegScreen('/mypage/registrations/tutors');
+  }
+
   if (isStudentRegPath(path)) return renderStudentRegScreen(path);
   if (isStudyRoomRegPath(path)) return renderStudyRoomRegScreen(path);
   if (isTutorRegPath(path)) return renderTutorRegScreen(path);
@@ -153,6 +169,7 @@ export function renderMypageScreen(path) {
   if (path === '/mypage/wishlist') return renderWishlist();
   if (path === '/mypage/recent') return renderRecent(r);
   if (path === '/mypage/student-review') return renderStudentReview(r);
+  if (path === CONTACT_HISTORY_PATH) return renderContactHistory();
   if (path === MESSAGES_BASE || isMessagesDetailPath(path)) return renderMessagesScreen(path);
   if (path === '/mypage/plans') return renderPlans(r);
   if (path === '/mypage/plans/my') return renderPlansMyInventory(r);
@@ -293,7 +310,7 @@ function renderRegistrationsIndex(role) {
     links.push({ path: '/mypage/registrations/study-rooms', label: '공부방', id: 'P15-04' });
   }
   if (role === 'tutor') {
-    links.push({ path: '/mypage/registrations/tutors', label: '과외 프로필', id: 'P15-05' });
+    links.push({ path: '/mypage/registrations/tutors', label: '내 과외 프로필', id: 'P15-05' });
     links.push({ path: '/mypage/submission-docs', label: '제출자료 상태', id: 'P15-10' });
     links.push({ path: '/mypage/submission-board', label: '신뢰·증빙자료 제출', id: 'P23-04' });
   }
@@ -471,6 +488,135 @@ function renderRecent(role) {
           })
           .join('')}
       </ul>
+    </section>`;
+}
+
+function formatContactDate(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return raw.slice(0, 16).replace('T', ' ');
+  return d.toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function contactTitle(body) {
+  const text = String(body || '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!text) return '운영문의';
+  return text.length > 48 ? `${text.slice(0, 48)}…` : text;
+}
+
+function contactCategoryLabel(value) {
+  return TICKET_CATEGORIES.find((c) => c.value === value)?.label || value || '기타';
+}
+
+function contactLastActivity(ticket) {
+  return ticket.lastActivityAt || ticket.adminRepliedAt || ticket.updatedAt || ticket.createdAt;
+}
+
+function renderContactHistory() {
+  const email = getAuthUser()?.email || '';
+  const tickets = email ? listTicketsByEmail(email) : [];
+  const copy = CONTACT_HISTORY_COPY;
+  const header = `
+    <div class="mypage-contact-head">
+      <p class="mypage-lead">${esc(copy.lead)}</p>
+      <a href="#${copy.newHref}" class="btn btn--secondary btn--sm" data-nav="${copy.newHref}">${esc(copy.newCta)}</a>
+    </div>`;
+  const footer = `
+    <div class="mypage-contact-foot">
+      <a href="#${copy.newHref}" class="btn btn--secondary btn--sm" data-nav="${copy.newHref}">${esc(copy.newCta)}</a>
+    </div>`;
+
+  if (!tickets.length) {
+    return `
+    <section class="mypage-panel mypage-panel--bare mypage-contact">
+      ${header}
+      ${renderEmptyStateCard('contactHistory', {
+        ctaHref: `#${copy.newHref}`,
+      })}
+    </section>`;
+  }
+
+  const recentNote =
+    tickets.some((t) => t.adminReplyText || t.status === 'in_progress' || t.status === 'closed')
+      ? `<p class="mypage-contact-note" role="status">${esc(copy.recentNote)}</p>`
+      : '';
+
+  const items = tickets
+    .map((ticket) => {
+      const statusLabel = TICKET_STATUS_LABELS[ticket.status] || ticket.status;
+      const hasReply = Boolean(String(ticket.adminReplyText || '').trim());
+      const replyFlag = hasReply ? copy.replyYes : copy.replyNo;
+      const lastAt = contactLastActivity(ticket);
+      const replyAt = ticket.adminRepliedAt || '';
+      return `
+        <li>
+          <details class="mypage-contact-item">
+            <summary class="mypage-contact-item__summary">
+              <div class="mypage-contact-item__main">
+                <strong class="mypage-contact-item__title">${esc(contactTitle(ticket.body))}</strong>
+                <span class="mypage-contact-item__meta">
+                  <span>${esc(contactCategoryLabel(ticket.category))}</span>
+                  <span>${esc(copy.receivedLabel)} ${esc(formatContactDate(ticket.createdAt))}</span>
+                  <span>${esc(copy.updatedLabel)} ${esc(formatContactDate(lastAt))}</span>
+                </span>
+              </div>
+              <span class="mypage-badge mypage-badge--contact-${esc(ticket.status)}">${esc(statusLabel)}</span>
+              <span class="mypage-contact-item__flag">${esc(replyFlag)}</span>
+            </summary>
+            <div class="mypage-contact-item__body">
+              <dl class="mypage-contact-facts">
+                <div>
+                  <dt>${esc(copy.typeLabel)}</dt>
+                  <dd>${esc(contactCategoryLabel(ticket.category))}</dd>
+                </div>
+                <div>
+                  <dt>${esc(copy.receivedLabel)}</dt>
+                  <dd>${esc(formatContactDate(ticket.createdAt))}</dd>
+                </div>
+                <div>
+                  <dt>${esc(copy.statusLabel)}</dt>
+                  <dd>${esc(statusLabel)}</dd>
+                </div>
+                <div>
+                  <dt>${esc(copy.updatedLabel)}</dt>
+                  <dd>${esc(formatContactDate(lastAt))}</dd>
+                </div>
+              </dl>
+              <p class="mypage-muted">${esc(copy.mineLabel)}</p>
+              <p class="mypage-contact-item__text">${esc(ticket.body)}</p>
+              <div class="mypage-contact-reply">
+                <p class="mypage-contact-reply__label">${esc(copy.replyLabel)}</p>
+                ${
+                  hasReply
+                    ? `<p class="mypage-contact-item__text">${esc(ticket.adminReplyText)}</p>${
+                        replyAt
+                          ? `<p class="mypage-contact-reply__time">${esc(formatContactDate(replyAt))}</p>`
+                          : ''
+                      }`
+                    : `<p class="mypage-contact-reply__empty">${esc(copy.replyPending)}</p>`
+                }
+              </div>
+            </div>
+          </details>
+        </li>`;
+    })
+    .join('');
+
+  return `
+    <section class="mypage-panel mypage-panel--bare mypage-contact">
+      ${header}
+      ${recentNote}
+      <ul class="mypage-contact-list">${items}</ul>
+      ${footer}
     </section>`;
 }
 
@@ -1279,10 +1425,18 @@ function bindWithdrawEvents(root) {
 let plansStatusHydrateAttempted = false;
 /** @type {import('../plans/history-mock.js').HistoryRow[] | null} */
 let plansHistoryRows = null;
+let contactHistoryHydrateAttempted = false;
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
   const path = getMypagePath();
+  if (path === CONTACT_HISTORY_PATH && !contactHistoryHydrateAttempted && isSupportApiMode()) {
+    contactHistoryHydrateAttempted = true;
+    const email = getAuthUser()?.email || '';
+    hydrateSupportCache(email)
+      .then(() => rerender())
+      .catch((err) => console.warn('[mypage/contact] hydrate failed', err));
+  }
   if (path === '/mypage/plans/my') {
     const plansRole = getPlansEffectiveRole();
     const query = parsePlansQuery();

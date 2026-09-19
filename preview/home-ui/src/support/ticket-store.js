@@ -3,9 +3,9 @@
 import {
   isSupportApiMode,
   getTicketsCache,
-  getTicketsCacheByEmail,
   apiCreateTicket,
   apiUpdateTicketStatus,
+  apiUpdateTicketReply,
 } from './support-backend.js';
 
 const KEY = 'study114-support-tickets-v1';
@@ -24,7 +24,49 @@ const KEY = 'study114-support-tickets-v1';
  * @property {TicketStatus} status
  * @property {string} createdAt
  * @property {string} updatedAt
+ * @property {string|null} [adminReplyText]
+ * @property {string|null} [adminRepliedAt]
+ * @property {boolean} [hasAdminReply]
+ * @property {string} [lastActivityAt]
  */
+
+/** @param {any} raw @returns {SupportTicket} */
+export function normalizeTicket(raw) {
+  const adminReplyText = String(raw?.adminReplyText ?? raw?.admin_reply_text ?? '').trim();
+  const adminRepliedAt = raw?.adminRepliedAt ?? raw?.admin_replied_at ?? null;
+  const createdAt = String(raw?.createdAt || raw?.created_at || '');
+  const updatedAt = String(raw?.updatedAt || raw?.updated_at || createdAt);
+  const lastActivityAt = String(adminRepliedAt || updatedAt || createdAt);
+  return {
+    id: String(raw?.id || ''),
+    email: String(raw?.email || ''),
+    category: String(raw?.category || raw?.type || 'other'),
+    body: String(raw?.body || raw?.message || ''),
+    role: String(raw?.role || 'guest'),
+    status: raw?.status === 'in_progress' || raw?.status === 'closed' ? raw.status : 'open',
+    createdAt,
+    updatedAt,
+    adminReplyText: adminReplyText || null,
+    adminRepliedAt: adminRepliedAt || null,
+    hasAdminReply: Boolean(adminReplyText),
+    lastActivityAt,
+  };
+}
+
+/** @param {SupportTicket[]} tickets */
+export function sortTicketsLatest(tickets) {
+  return [...tickets].sort((a, b) => {
+    const keys = (t) => [
+      String(t.updatedAt || ''),
+      String(t.adminRepliedAt || ''),
+      String(t.createdAt || ''),
+      String(t.id || ''),
+    ];
+    const aa = keys(a);
+    const bb = keys(b);
+    return bb[0].localeCompare(aa[0]) || bb[1].localeCompare(aa[1]) || bb[2].localeCompare(aa[2]) || bb[3].localeCompare(aa[3]);
+  });
+}
 
 /** @returns {SupportTicket[]} */
 function loadAll() {
@@ -32,7 +74,7 @@ function loadAll() {
     const raw = sessionStorage.getItem(KEY);
     if (!raw) return [];
     const data = JSON.parse(raw);
-    return Array.isArray(data.tickets) ? data.tickets : [];
+    return Array.isArray(data.tickets) ? data.tickets.map(normalizeTicket) : [];
   } catch {
     return [];
   }
@@ -67,6 +109,10 @@ export async function createTicket(input) {
     status: 'open',
     createdAt: now,
     updatedAt: now,
+    adminReplyText: null,
+    adminRepliedAt: null,
+    hasAdminReply: false,
+    lastActivityAt: now,
   };
   const tickets = loadAll();
   tickets.unshift(ticket);
@@ -77,18 +123,15 @@ export async function createTicket(input) {
 /** @returns {SupportTicket[]} */
 export function listTickets() {
   if (isSupportApiMode()) {
-    return getTicketsCache();
+    return sortTicketsLatest(getTicketsCache().map(normalizeTicket));
   }
-  return loadAll().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return sortTicketsLatest(loadAll());
 }
 
 /** @param {string} email */
 export function listTicketsByEmail(email) {
-  if (isSupportApiMode()) {
-    return getTicketsCacheByEmail(email);
-  }
   const normalized = email.trim().toLowerCase();
-  return listTickets().filter((t) => t.email.toLowerCase() === normalized);
+  return sortTicketsLatest(listTickets().filter((t) => t.email.toLowerCase() === normalized));
 }
 
 /** @param {string} id @param {TicketStatus} status */
@@ -100,6 +143,28 @@ export async function updateTicketStatus(id, status) {
   const idx = tickets.findIndex((t) => t.id === id);
   if (idx < 0) return null;
   tickets[idx] = { ...tickets[idx], status, updatedAt: new Date().toISOString() };
+  tickets[idx] = normalizeTicket(tickets[idx]);
+  saveAll(tickets);
+  return tickets[idx];
+}
+
+/** @param {string} id @param {string} replyText */
+export async function updateTicketReply(id, replyText) {
+  const text = String(replyText || '').trim();
+  if (!text) return null;
+  if (isSupportApiMode()) {
+    return apiUpdateTicketReply(id, text);
+  }
+  const tickets = loadAll();
+  const idx = tickets.findIndex((t) => t.id === id);
+  if (idx < 0) return null;
+  const now = new Date().toISOString();
+  tickets[idx] = normalizeTicket({
+    ...tickets[idx],
+    adminReplyText: text,
+    adminRepliedAt: now,
+    updatedAt: now,
+  });
   saveAll(tickets);
   return tickets[idx];
 }

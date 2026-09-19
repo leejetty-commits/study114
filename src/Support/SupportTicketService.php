@@ -67,18 +67,88 @@ final class SupportTicketService
         return $row !== null ? $this->mapTicket($row) : null;
     }
 
+    /**
+     * 기존 PATCH 확장 — status와 운영자 답변을 각각 선택적으로 저장한다.
+     * 답변 저장 시 상태는 자동 변경하지 않는다.
+     *
+     * @param array<string, mixed> $input
+     */
+    public function patch(string $ticketId, array $input): ?array
+    {
+        if ($ticketId === '') {
+            throw new InvalidArgumentException('ticket id가 필요합니다.');
+        }
+
+        $status = trim((string) ($input['status'] ?? ''));
+        $hasStatus = $status !== '';
+        $hasReply = array_key_exists('admin_reply_text', $input) || array_key_exists('adminReplyText', $input);
+        if (!$hasStatus && !$hasReply) {
+            throw new InvalidArgumentException('status 또는 답변이 필요합니다.');
+        }
+
+        $row = null;
+        if ($hasStatus) {
+            if (!in_array($status, self::ALLOWED_STATUSES, true)) {
+                throw new InvalidArgumentException('status가 올바르지 않습니다.');
+            }
+            $row = $this->repo->updateStatus($ticketId, $status);
+            if ($row === null) {
+                return null;
+            }
+        }
+        if ($hasReply) {
+            $reply = trim((string) ($input['admin_reply_text'] ?? $input['adminReplyText'] ?? ''));
+            if ($reply === '') {
+                throw new InvalidArgumentException('답변 내용이 필요합니다.');
+            }
+            $row = $this->repo->updateReply($ticketId, $reply);
+            if ($row === null) {
+                return null;
+            }
+        }
+
+        return $row !== null ? $this->mapTicket($row) : null;
+    }
+
     /** @param array<string, mixed> $row @return array<string, mixed> */
     private function mapTicket(array $row): array
     {
+        $replyText = trim((string) ($row['admin_reply_text'] ?? ''));
+        $repliedAt = $this->isoDate($row['admin_replied_at'] ?? null);
+        $createdAt = $this->isoDate($row['created_at'] ?? null) ?? gmdate('c');
+        $updatedAt = $this->isoDate($row['updated_at'] ?? null) ?? $createdAt;
+        $lastActivity = $repliedAt ?? $updatedAt;
+
         return [
             'id' => (string) $row['ticket_no'],
             'email' => (string) $row['email'],
             'category' => (string) $row['category'],
+            'type' => (string) $row['category'],
             'body' => (string) $row['body'],
+            'message' => (string) $row['body'],
             'role' => (string) $row['role_type'],
             'status' => (string) $row['status'],
-            'createdAt' => gmdate('c', strtotime((string) $row['created_at'])),
-            'updatedAt' => gmdate('c', strtotime((string) $row['updated_at'])),
+            'createdAt' => $createdAt,
+            'updatedAt' => $updatedAt,
+            'created_at' => $createdAt,
+            'updated_at' => $updatedAt,
+            'adminReplyText' => $replyText !== '' ? $replyText : null,
+            'adminRepliedAt' => $repliedAt,
+            'admin_reply_text' => $replyText !== '' ? $replyText : null,
+            'admin_replied_at' => $repliedAt,
+            'hasAdminReply' => $replyText !== '',
+            'lastActivityAt' => $lastActivity,
         ];
+    }
+
+    private function isoDate(mixed $value): ?string
+    {
+        $raw = trim((string) ($value ?? ''));
+        if ($raw === '' || str_starts_with($raw, '0000-00-00')) {
+            return null;
+        }
+        $ts = strtotime($raw);
+
+        return $ts === false ? null : gmdate('c', $ts);
     }
 }

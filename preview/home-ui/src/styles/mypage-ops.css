@@ -643,6 +643,218 @@
   }
 }
 
+/* —— P17-07 내 문의 내역 —— */
+.mypage-contact {
+  min-width: 0;
+}
+
+.mypage-contact-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.mypage-contact-head .mypage-lead {
+  flex: 1 1 12rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.mypage-contact-head .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.mypage-contact-note {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--mp-accent-soft);
+  color: var(--mp-ink);
+  font-size: var(--mp-meta);
+  line-height: 1.45;
+}
+
+.mypage-contact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mypage-contact-item {
+  border: 1px solid var(--mp-line);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-panel);
+  min-width: 0;
+}
+
+.mypage-contact-item__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.mypage-contact-item__summary::-webkit-details-marker {
+  display: none;
+}
+
+.mypage-contact-item__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mypage-contact-item__title {
+  font-size: var(--mp-card-title);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--mp-ink);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.mypage-contact-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.65rem;
+  color: var(--mp-muted);
+  font-size: var(--mp-meta);
+  line-height: 1.4;
+}
+
+.mypage-contact-item__flag {
+  font-size: var(--mp-meta);
+  color: var(--mp-muted);
+  white-space: nowrap;
+}
+
+.mypage-contact-item__cta {
+  font-size: var(--mp-meta);
+  font-weight: 600;
+  color: var(--mp-accent);
+  white-space: nowrap;
+}
+
+.mypage-badge--contact-open {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.mypage-badge--contact-in_progress {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.mypage-badge--contact-closed {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.mypage-contact-item__body {
+  padding: 0 1rem 0.9rem;
+  border-top: 1px solid var(--mp-line);
+}
+
+.mypage-contact-item__body .mypage-muted {
+  margin: 0.75rem 0 0.35rem;
+}
+
+.mypage-contact-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 1rem;
+  margin: 0.75rem 0 0;
+}
+
+.mypage-contact-facts dt {
+  margin: 0;
+  font-size: var(--mp-meta);
+  color: var(--mp-muted);
+  line-height: 1.4;
+}
+
+.mypage-contact-facts dd {
+  margin: 0.15rem 0 0;
+  font-size: var(--mp-body);
+  color: var(--mp-ink);
+  overflow-wrap: anywhere;
+}
+
+.mypage-contact-reply {
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--mp-line);
+  border-radius: 0.5rem;
+  background: var(--mp-accent-soft);
+  min-width: 0;
+}
+
+.mypage-contact-reply__label {
+  margin: 0 0 0.4rem;
+  font-size: var(--mp-body);
+  font-weight: 600;
+  color: var(--mp-ink);
+}
+
+.mypage-contact-reply .mypage-contact-item__text {
+  margin: 0;
+}
+
+.mypage-contact-reply__empty {
+  margin: 0;
+  font-size: var(--mp-body);
+  color: var(--mp-muted);
+  line-height: 1.5;
+}
+
+.mypage-contact-reply__time {
+  margin: 0.4rem 0 0;
+  font-size: var(--mp-meta);
+  color: var(--mp-muted);
+}
+
+.mypage-contact-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.9rem;
+}
+
+.mypage-contact-item__text {
+  margin: 0;
+  font-size: var(--mp-body);
+  line-height: 1.55;
+  color: var(--mp-ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 639px) {
+  .mypage-contact-item__summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .mypage-contact-item__cta,
+  .mypage-contact-item__flag {
+    grid-column: 1 / -1;
+  }
+
+  .mypage-contact-facts {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* —— 과외 내 등록: 상단 탭 + 상태 허브 (Visily 등록 현황) —— */
 .p21-reg-frame {
   display: flex;

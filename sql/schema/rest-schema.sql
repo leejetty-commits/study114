@@ -1058,6 +1058,8 @@ CREATE TABLE support_tickets (
   role_type       ENUM('guest', 'parent', 'study_room', 'tutor') NOT NULL DEFAULT 'guest',
   body            TEXT NOT NULL,
   status          ENUM('open', 'in_progress', 'closed') NOT NULL DEFAULT 'open',
+  admin_reply_text TEXT NULL,
+  admin_replied_at DATETIME NULL,
   created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),

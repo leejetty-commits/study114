@@ -5,11 +5,10 @@ import { isLoggedIn, getAuthUser } from '../auth-session.js';
 import {
   OPERATIONAL_CONTACT,
   TICKET_CATEGORIES,
-  TICKET_STATUS_LABELS,
 } from './support-copy.js';
 import { listNotices } from './notice-store.js';
 import { listFaqPosts, listGuidePosts, getRelatedGuidePosts, isOperationalBoardApiActive } from '../operational-board-store.js';
-import { createTicket, listTickets, listTicketsByEmail } from './ticket-store.js';
+import { createTicket } from './ticket-store.js';
 import { renderAdminScreen } from './admin-screens.js';
 import {
   isAdminSupportPath,
@@ -17,6 +16,7 @@ import {
   getSupportPolicySlug,
   getSupportLibrarySection,
 } from './router.js';
+import { CONTACT_HISTORY_PATH } from '../mypage/router.js';
 import { getActiveNavId } from './nav.js';
 import { bindSingleOpenBoard } from '../../../shared/board/index.js';
 import { POLICY_PAGES, POLICY_SHORT_NOTICE, getPolicyPage } from '../policy-copy.js';
@@ -104,7 +104,12 @@ export function renderSupportScreen(path) {
   }
 
   if (path === '/support/contact/tickets') {
-    return renderContactTicketsSection();
+    queueMicrotask(() => {
+      if (window.location.hash === '#/support/contact/tickets') {
+        window.location.replace(`#${CONTACT_HISTORY_PATH}`);
+      }
+    });
+    return `<p class="section-lead">마이페이지의 내 문의 내역으로 이동합니다.</p>`;
   }
 
   if (path.startsWith('/support/policies')) {
@@ -150,7 +155,7 @@ function renderSupportQuickCards() {
         )
         .join('')}
     </div>
-    <p class="sup-home-hint">이용 흐름 안내는 메인메뉴의 이용안내에서, 운영 지원은 고객센터에서 확인할 수 있습니다.</p>`;
+    <p class="sup-home-hint">이용 흐름 안내는 메인메뉴의 이용안내에서, 운영 지원은 고객센터에서 확인할 수 있습니다. 이미 남긴 운영문의의 답변과 진행 상태는 마이페이지 &gt; <a href="#${CONTACT_HISTORY_PATH}" data-sup-nav="${CONTACT_HISTORY_PATH}">내 문의 내역</a>에서 확인할 수 있습니다.</p>`;
 }
 
 function renderSupportHero() {
@@ -263,7 +268,8 @@ function renderContactSection() {
   const flashHtml = flashId
     ? `<div class="sup-flash sup-flash--success" role="status">
          <strong>${esc(OPERATIONAL_CONTACT.ticketSuccessTitle)}</strong>
-         <p>문의 번호: <code>${esc(flashId)}</code> · <a href="#/support/contact/tickets" data-sup-nav="/support/contact/tickets">내 문의 내역</a></p>
+         <p>답변과 진행 상태는 마이페이지 &gt; 내 문의 내역에서 확인할 수 있습니다.</p>
+         <p>문의 번호: <code>${esc(flashId)}</code> · <a href="#${CONTACT_HISTORY_PATH}" data-sup-nav="${CONTACT_HISTORY_PATH}">내 문의 내역 보기</a></p>
        </div>`
     : '';
 
@@ -300,45 +306,9 @@ function renderContactSection() {
         <p class="sup-note">${esc(OPERATIONAL_CONTACT.note)}</p>
       </form>
       <p class="sup-contact-extra">
-        <a href="#/support/contact/tickets" class="sup-inline-link" data-sup-nav="/support/contact/tickets">내 문의 내역 보기</a>
+        이미 문의를 남기셨나요? <a href="#${CONTACT_HISTORY_PATH}" class="sup-inline-link" data-sup-nav="${CONTACT_HISTORY_PATH}">내 문의 내역 보기</a>
       </p>
       ${renderAdminFooterLink()}
-    </section>`;
-}
-
-function renderContactTicketsSection() {
-  const email = getAuthUser()?.email || '';
-  const tickets = email ? listTicketsByEmail(email) : listTickets();
-  const categoryLabel = (value) => TICKET_CATEGORIES.find((c) => c.value === value)?.label || value;
-  const rows = tickets
-    .map(
-      (t) =>
-        `<tr>
-           <td><code>${esc(t.id)}</code></td>
-           <td>${esc(categoryLabel(t.category))}</td>
-           <td><span class="sup-ticket-status sup-ticket-status--${esc(t.status)}">${esc(TICKET_STATUS_LABELS[t.status] || t.status)}</span></td>
-           <td><time>${esc(t.createdAt.slice(0, 10))}</time></td>
-         </tr>
-         <tr class="sup-ticket-detail-row"><td colspan="4">${esc(t.body)}</td></tr>`,
-    )
-    .join('');
-
-  return `
-    <div class="section-head">
-      <div>
-        <span class="section-chip">Contact</span>
-        <h2>내 문의 내역</h2>
-        <div class="section-underline"></div>
-      </div>
-    </div>
-    <p class="section-lead">내가 남긴 운영 문의 확인</p>
-    <section class="card card--accent support-contact-card">
-      <p class="sup-section__lead">내가 접수한 문의 목록입니다.</p>
-      <table class="sup-admin-table sup-user-tickets">
-        <thead><tr><th>번호</th><th>유형</th><th>상태</th><th>접수일</th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="4" class="sup-empty">접수 내역이 없습니다.</td></tr>'}</tbody>
-      </table>
-      <p class="sup-contact-extra"><a href="#/support/contact" class="sup-inline-link" data-sup-nav="/support/contact">← 문의 작성</a></p>
     </section>`;
 }
 

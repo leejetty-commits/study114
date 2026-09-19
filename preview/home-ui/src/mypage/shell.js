@@ -13,6 +13,7 @@ function navItemIsActive(item, currentPath) {
     currentPath === item.path ||
     (item.path === '/mypage/registrations' && currentPath.startsWith('/mypage/registrations')) ||
     (item.path === '/mypage/messages' && currentPath.startsWith('/mypage/messages')) ||
+    (item.path === '/mypage/contact' && currentPath.startsWith('/mypage/contact')) ||
     (item.path === '/mypage/plans' &&
       (currentPath.startsWith('/mypage/plans') || currentPath.startsWith('/mypage/paid')))
   );

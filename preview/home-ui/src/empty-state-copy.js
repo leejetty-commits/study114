@@ -148,6 +148,12 @@ export const EMPTY_COPY = {
     body: '마음에 드는 학생 의뢰를 검토함에 넣어 두고, 준비가 되면 쪽지를 이어가세요.',
     cta: null,
   },
+  contactHistory: {
+    screenId: 'P17-07',
+    title: '아직 남긴 운영문의가 없습니다.',
+    body: '가입, 등록, 결제, 정책, 신고 관련 도움이 필요하면 고객센터에서 운영문의를 남겨 주세요.',
+    cta: '고객센터 문의하기',
+  },
   students: {
     screenId: 'P19-01',
     title: '등록된 자녀가 없습니다',
@@ -283,6 +289,7 @@ export const STATE_SCREEN_BINDINGS = {
   'P24-04': { state: 'error|permission', permission: ['student_protection', 'paid'] },
   'P25-04': { state: 'empty|error|permission|max', keys: ['compare'], permission: ['guest'] },
   'P25-S10': { state: 'empty|error|permission', keys: ['studentReview'], permission: ['role'] },
+  'P17-07': { state: 'empty|error|permission', keys: ['contactHistory'], permission: ['guest'] },
 };
 
 /**
@@ -307,7 +314,7 @@ export function getErrorCopy(kind) {
 }
 
 /**
- * @param {'wishlist'|'recent'|'messages'|'compare'|'compareNeedMore'|'studentReview'|'students'|'studentsTab'} key
+ * @param {'wishlist'|'recent'|'messages'|'compare'|'compareNeedMore'|'studentReview'|'students'|'studentsTab'|'contactHistory'} key
  */
 export function getEmptyCopy(key) {
   return EMPTY_COPY[key] || { title: '항목이 없습니다', body: '', cta: null };
@@ -334,7 +341,7 @@ export function getMessagesEmptyCopy(_role) {
 
 /**
  * §2 Empty 상태 카드
- * @param {'wishlist'|'recent'|'messages'|'compare'|'compareNeedMore'|'studentReview'|'students'|'studentsTab'} key
+ * @param {'wishlist'|'recent'|'messages'|'compare'|'compareNeedMore'|'studentReview'|'students'|'studentsTab'|'contactHistory'} key
  * @param {{ ctaHref?: string, links?: Array<{label:string,href:string}> }} [opts]
  */
 export function renderEmptyStateCard(key, opts = {}) {

@@ -26,8 +26,14 @@ SupportApi::run(static function (): void {
     if ($method === 'PATCH') {
         $input = SupportApi::readJson();
         $id = trim((string) ($input['id'] ?? ''));
-        $status = trim((string) ($input['status'] ?? ''));
-        $ticket = $service->updateStatus($id, $status);
+        try {
+            $ticket = $service->patch($id, $input);
+        } catch (\RuntimeException $e) {
+            if (str_starts_with($e->getMessage(), 'schema_missing')) {
+                SupportApi::fail(503, 'schema_missing', '운영자 답변 컬럼이 없습니다. sql/schema/068_support_ticket_admin_reply.sql 을 적용해 주세요.');
+            }
+            throw $e;
+        }
         if ($ticket === null) {
             SupportApi::fail(404, 'not_found', '티켓을 찾을 수 없습니다.');
         }

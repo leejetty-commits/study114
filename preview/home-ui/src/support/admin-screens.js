@@ -4,7 +4,7 @@ import {
   TICKET_STATUS_LABELS,
 } from './support-copy.js';
 import { listNotices, upsertNotice, deleteNotice, resetNoticesToSeed } from './notice-store.js';
-import { listTickets, updateTicketStatus } from './ticket-store.js';
+import { listTickets, updateTicketStatus, updateTicketReply } from './ticket-store.js';
 import { navigate } from '../state.js';
 
 function esc(s) {
@@ -117,6 +117,27 @@ function renderNoticeAdmin() {
   );
 }
 
+function formatAdminDate(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  return raw.replace('T', ' ').slice(0, 16);
+}
+
+function renderTicketReplyForm(ticket, attrName) {
+  const repliedAt = formatAdminDate(ticket.adminRepliedAt);
+  return `
+    <form class="sup-ticket-reply" ${attrName}="${esc(ticket.id)}">
+      <p class="sup-ticket-detail-label">문의 본문</p>
+      <p class="sup-ticket-detail-body">${esc(ticket.body)}</p>
+      <label class="sup-field">
+        <span>운영자 답변 (사용자에게 공개)</span>
+        <textarea name="admin_reply_text" rows="4" required>${esc(ticket.adminReplyText || '')}</textarea>
+      </label>
+      ${repliedAt ? `<p class="sup-note">마지막 답변 ${esc(repliedAt)}</p>` : ''}
+      <button type="submit" class="btn btn--primary btn--sm">답변 저장</button>
+    </form>`;
+}
+
 function renderTicketAdmin() {
   const tickets = listTickets();
   const categoryLabel = (value) => TICKET_CATEGORIES.find((c) => c.value === value)?.label || value;
@@ -129,15 +150,19 @@ function renderTicketAdmin() {
             `<option value="${value}"${t.status === value ? ' selected' : ''}>${esc(label)}</option>`,
         )
         .join('');
+      const replyFlag = t.adminReplyText ? '답변 있음' : '답변 없음';
       return `<tr>
         <td><code>${esc(t.id)}</code></td>
         <td>${esc(categoryLabel(t.category))}</td>
         <td>${esc(t.email)}</td>
-        <td class="sup-admin-ticket-body">${esc(t.body.slice(0, 80))}${t.body.length > 80 ? '…' : ''}</td>
         <td>
           <select class="sup-admin-select" data-ticket-status="${esc(t.id)}" aria-label="상태">${options}</select>
         </td>
-        <td><time>${esc(t.createdAt.slice(0, 10))}</time></td>
+        <td>${esc(replyFlag)}</td>
+        <td><time>${esc(String(t.createdAt || '').slice(0, 10))}</time></td>
+      </tr>
+      <tr class="sup-ticket-detail-row">
+        <td colspan="6">${renderTicketReplyForm(t, 'data-ticket-reply')}</td>
       </tr>`;
     })
     .join('');
@@ -146,7 +171,7 @@ function renderTicketAdmin() {
     '티켓 관리',
     'P17-07 · admin',
     `<table class="sup-admin-table sup-admin-table--tickets">
-       <thead><tr><th>번호</th><th>유형</th><th>이메일</th><th>내용</th><th>상태</th><th>접수일</th></tr></thead>
+       <thead><tr><th>번호</th><th>유형</th><th>이메일</th><th>상태</th><th>답변</th><th>접수일</th></tr></thead>
        <tbody>${rows || '<tr><td colspan="6" class="sup-empty">접수된 티켓이 없습니다.</td></tr>'}</tbody>
      </table>`,
     { lead: ADMIN_COPY.ticketAdminLead },
@@ -222,6 +247,24 @@ export function bindAdminScreenEvents(root, path, rerender) {
         const id = sel.getAttribute('data-ticket-status');
         if (!id) return;
         await updateTicketStatus(id, sel.value);
+      });
+    });
+    root.querySelectorAll('[data-ticket-reply]').forEach((form) => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = form.getAttribute('data-ticket-reply');
+        const text = form.querySelector('[name="admin_reply_text"]')?.value || '';
+        if (!id) return;
+        try {
+          const updated = await updateTicketReply(id, text);
+          if (!updated) {
+            window.alert('답변 내용이 필요합니다.');
+            return;
+          }
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '답변 저장에 실패했습니다.');
+        }
       });
     });
   }

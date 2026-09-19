@@ -30,7 +30,7 @@ import { tutorHubPath, BASE as TUTOR_REG_BASE } from '../tutor-reg/router.js';
 
 /** 15장 P15-xx — 논리 화면 ID · hash 경로 (부록 A, 미확정) */
 
-/** @typedef {'P15-01'|'P15-02'|'P15-03'|'P15-04'|'P15-05'|'P15-06'|'P15-07'|'P15-08'|'P15-09'|'P15-10'|'P15-11'|'P18-04'|'P18-05'|'P25-S10'|'P23-04'} MypageScreenId */
+/** @typedef {'P15-01'|'P15-02'|'P15-03'|'P15-04'|'P15-05'|'P15-06'|'P15-07'|'P15-08'|'P15-09'|'P15-10'|'P15-11'|'P17-07'|'P18-04'|'P18-05'|'P25-S10'|'P23-04'} MypageScreenId */
 
 /**
  * @typedef {object} MypageNavItem
@@ -48,9 +48,12 @@ export function mypageNavLabel(item, role) {
   return item.labels?.[role] || item.label;
 }
 
+/** P17-07 내 문의 내역 — 마이페이지 개인 관리 화면 (접수 입구는 `#/support/contact`) */
+export const CONTACT_HISTORY_PATH = '/mypage/contact';
+
 /**
  * 공부방·과외쌤 좌측 메뉴 순서:
- * 내 등록 → 쪽지·후기함 → 최근열람 → 찜한학생 → 구매이력 → 계정설정
+ * 내 등록 → 쪽지·후기함 → 최근열람 → 찜한학생 → 찜 목록 → 내 문의 내역 → 구매이력 → 계정설정
  * @type {MypageNavItem[]}
  */
 export const MYPAGE_NAV = [
@@ -67,6 +70,7 @@ export const MYPAGE_NAV = [
     roles: ['study_room', 'tutor'],
   },
   { path: '/mypage/wishlist', label: '찜 목록', icon: '♡', screenId: 'P15-06', emphasis: ['parent'] },
+  { path: CONTACT_HISTORY_PATH, label: '내 문의 내역', icon: '▤', screenId: 'P17-07' },
   {
     path: '/mypage/plans',
     label: '구매이력',
@@ -89,6 +93,7 @@ export const MYPAGE_PATH_TO_SCREEN = {
   '/mypage/recent': 'P15-07',
   '/mypage/student-review': 'P25-S10',
   '/mypage/messages': 'P15-08',
+  '/mypage/contact': 'P17-07',
   '/mypage/plans': 'P15-09',
   '/mypage/plans/my': 'P18-04',
   '/mypage/plans/history': 'P18-05',
@@ -195,6 +200,7 @@ export function screenTitle(screenId, path, role) {
     'P15-06': '찜 목록',
     'P15-07': '최근열람',
     'P15-08': '쪽지·후기함',
+    'P17-07': '내 문의 내역',
     'P15-09': '구매이력',
     'P18-04': '구매이력',
     'P18-05': '구매내역',

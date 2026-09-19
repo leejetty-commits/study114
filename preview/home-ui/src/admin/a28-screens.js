@@ -911,16 +911,31 @@ function renderTicketsAdmin() {
       const options = Object.entries(TICKET_STATUS_LABELS)
         .map(([value, label]) => `<option value="${value}"${t.status === value ? ' selected' : ''}>${esc(label)}</option>`)
         .join('');
+      const replyFlag = t.adminReplyText ? '답변 있음' : '답변 없음';
+      const repliedAt = String(t.adminRepliedAt || '').replace('T', ' ').slice(0, 16);
       return `<tr><td><code>${esc(t.id)}</code></td><td>${esc(categoryLabel(t.category))}</td><td>${esc(t.email)}</td>
-        <td><select class="sup-admin-select" data-a28-ticket-status="${esc(t.id)}">${options}</select></td></tr>`;
+        <td><select class="sup-admin-select" data-a28-ticket-status="${esc(t.id)}">${options}</select></td>
+        <td>${esc(replyFlag)}</td></tr>
+        <tr class="sup-ticket-detail-row"><td colspan="5">
+          <form class="sup-ticket-reply" data-a28-ticket-reply="${esc(t.id)}">
+            <p class="sup-ticket-detail-label">문의 본문</p>
+            <p class="sup-ticket-detail-body">${esc(t.body)}</p>
+            <label class="sup-field">
+              <span>운영자 답변 (사용자에게 공개)</span>
+              <textarea name="admin_reply_text" rows="4" required>${esc(t.adminReplyText || '')}</textarea>
+            </label>
+            ${repliedAt ? `<p class="a28-help">마지막 답변 ${esc(repliedAt)}</p>` : ''}
+            <button type="submit" class="btn btn--primary btn--sm">답변 저장</button>
+          </form>
+        </td></tr>`;
     })
     .join('');
   return renderPanel(
     '문의',
     'A28-04b',
     `${renderOpsTip()}
-     <p class="a28-help">이용·정책·오류 문의입니다. 신고 처리와는 메뉴가 다릅니다.</p>
-     <table class="sup-admin-table"><thead><tr><th>번호</th><th>유형</th><th>이메일</th><th>상태</th></tr></thead><tbody>${rows || '<tr><td colspan="4" class="sup-empty">티켓 없음</td></tr>'}</tbody></table>`,
+     <p class="a28-help">이용·정책·오류 문의입니다. 신고 처리와는 메뉴가 다릅니다. 여기에 남긴 답변은 마이페이지 내 문의 내역에 보입니다.</p>
+     <table class="sup-admin-table"><thead><tr><th>번호</th><th>유형</th><th>이메일</th><th>상태</th><th>답변</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="sup-empty">티켓 없음</td></tr>'}</tbody></table>`,
   );
 }
 

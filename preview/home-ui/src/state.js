@@ -17,6 +17,7 @@ import {
   normalizeSupportPath,
   SUPPORT_TERMS_LEGACY_PATH,
   SUPPORT_TERMS_REDIRECT,
+  SUPPORT_TICKETS_REDIRECT,
 } from './support/router.js';
 import { getDefaultPolicyPath, normalizePolicyPath } from './policy-router.js';
 import { getDefaultLibraryPath, normalizeLibraryPath } from './library/library-router.js';
@@ -352,6 +353,10 @@ export function bootstrapSupportRoute() {
 
   const hashPath = hash.slice(1);
   const path = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+  if (path === '/support/contact/tickets') {
+    window.location.replace(`#${SUPPORT_TICKETS_REDIRECT}`);
+    return true;
+  }
   // 홈·이용안내 통합 — 구 `/support/guide` → `/support`
   if (path === '/support/guide' || path === '/support/guide/') {
     window.location.replace(`#${getDefaultSupportPath()}`);

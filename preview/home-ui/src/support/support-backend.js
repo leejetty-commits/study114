@@ -6,6 +6,7 @@ import {
   fetchTickets,
   submitTicket,
   patchTicketStatus,
+  patchTicketReply,
 } from './support-api.js';
 
 let apiMode = false;
@@ -68,12 +69,25 @@ function removeNoticeCache(id) {
   noticesCache = noticesCache.filter((n) => n.id !== id);
 }
 
+function ticketSortStamp(row) {
+  return [
+    String(row?.updatedAt || row?.updated_at || ''),
+    String(row?.adminRepliedAt || row?.admin_replied_at || ''),
+    String(row?.createdAt || row?.created_at || ''),
+    String(row?.id || ''),
+  ];
+}
+
 function upsertTicketCache(row) {
   const idx = ticketsCache.findIndex((t) => t.id === row.id);
   const copy = { ...row };
   if (idx >= 0) ticketsCache[idx] = copy;
   else ticketsCache.unshift(copy);
-  ticketsCache.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)) || String(b.id).localeCompare(String(a.id)));
+  ticketsCache.sort((a, b) => {
+    const aa = ticketSortStamp(a);
+    const bb = ticketSortStamp(b);
+    return bb[0].localeCompare(aa[0]) || bb[1].localeCompare(aa[1]) || bb[2].localeCompare(aa[2]) || bb[3].localeCompare(aa[3]);
+  });
   return copy;
 }
 
@@ -102,6 +116,12 @@ export async function apiCreateTicket(input) {
 
 export async function apiUpdateTicketStatus(id, status) {
   const data = await patchTicketStatus(id, status);
+  if (data.ticket) upsertTicketCache(data.ticket);
+  return data.ticket;
+}
+
+export async function apiUpdateTicketReply(id, adminReplyText) {
+  const data = await patchTicketReply(id, adminReplyText);
   if (data.ticket) upsertTicketCache(data.ticket);
   return data.ticket;
 }

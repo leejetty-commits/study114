@@ -61,3 +61,12 @@ export async function patchTicketStatus(id, status) {
   });
   return readJson(res);
 }
+
+export async function patchTicketReply(id, adminReplyText) {
+  const res = await fetch('/api/support/tickets.php', {
+    method: 'PATCH',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ id, adminReplyText }),
+  });
+  return readJson(res);
+}

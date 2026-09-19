@@ -46,6 +46,7 @@ assert(/if \(role === 'tutor'\) return getTutorEntryPath\(\)/.test(mypageRouter)
 assert(mypageRouter.includes("return '내 과외 프로필'"), 'H1 fallback when display name empty');
 assert(mypageRouter.includes('tutor_display_name'), 'H1 prefers display name');
 assert(mypageRouter.includes("label: '찜한학생'"), 'nav: 찜한학생');
+assert(mypageRouter.includes("label: '내 문의 내역'"), 'nav: 내 문의 내역');
 assert(mypageRouter.includes("label: '구매이력'"), 'nav: 구매이력');
 assert(!mypageRouter.includes("label: '학생 검토함'"), 'nav: 학생 검토함 removed');
 assert(!mypageRouter.includes("label: '구매상품'"), 'nav: 구매상품 removed');

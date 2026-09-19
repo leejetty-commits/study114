@@ -17,7 +17,7 @@ import {
   upsertGuidePost,
   deleteGuidePost,
 } from '../operational-board-store.js';
-import { listTickets, updateTicketStatus } from '../support/ticket-store.js';
+import { listTickets, updateTicketStatus, updateTicketReply } from '../support/ticket-store.js';
 import { TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { SUBMISSION_CATEGORIES } from '../submission-board/submission-copy.js';
 import { apiOpenSubmissionAttachment } from '../board/board-backend.js';
@@ -1019,6 +1019,24 @@ export function bindA28ScreenEvents(root, path, rerender) {
       sel.addEventListener('change', async () => {
         const id = sel.getAttribute('data-a28-ticket-status');
         if (id) await updateTicketStatus(id, sel.value);
+      });
+    });
+    root.querySelectorAll('[data-a28-ticket-reply]').forEach((form) => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = form.getAttribute('data-a28-ticket-reply');
+        const text = form.querySelector('[name="admin_reply_text"]')?.value || '';
+        if (!id) return;
+        try {
+          const updated = await updateTicketReply(id, text);
+          if (!updated) {
+            window.alert('답변 내용이 필요합니다.');
+            return;
+          }
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '답변 저장에 실패했습니다.');
+        }
       });
     });
   }

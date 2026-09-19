@@ -307,8 +307,8 @@ export const TICKET_STATUS_LABELS = {
 
 export const OPERATIONAL_CONTACT = {
   email: 'support@udonggong.example',
-  note: '제출하면 문의 번호가 안내됩니다. 접수한 내용은 「내 문의 내역」에서 확인할 수 있습니다.',
-  ticketSuccessTitle: '문의가 접수되었습니다',
+  note: '제출하면 문의 번호가 안내됩니다. 답변과 진행 상태는 마이페이지 > 내 문의 내역에서 확인할 수 있습니다.',
+  ticketSuccessTitle: '운영문의가 접수되었습니다',
 };
 
 /** 운영 콘솔 카피 (관리자 화면) */
@@ -316,7 +316,7 @@ export const ADMIN_COPY = {
   hubTitle: '고객센터 운영',
   hubLead: '공지와 문의 목록을 한곳에서 관리합니다.',
   noticeAdminLead: '공지 추가·수정·삭제 · 사용자 공지사항에 즉시 반영',
-  ticketAdminLead: '접수 문의 상태 변경',
+  ticketAdminLead: '접수 문의 상태 변경과 운영자 답변 등록',
   previewBadge: '운영',
 };
 

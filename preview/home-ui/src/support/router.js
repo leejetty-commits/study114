@@ -9,6 +9,8 @@ export const SUPPORT_TERMS_REDIRECT = '/support/policies/terms';
 /** 17c admin · 사용자 티켓 목록 */
 export const SUPPORT_ADMIN_PATHS = ['/support/admin', '/support/admin/notices', '/support/admin/tickets'];
 export const SUPPORT_CONTACT_PATHS = ['/support/contact/tickets'];
+/** 레거시: 고객센터 내 문의 목록 → 마이페이지 개인 관리 화면 */
+export const SUPPORT_TICKETS_REDIRECT = '/mypage/contact';
 
 const POLICY_SLUGS = ['terms', 'privacy', 'platform', 'trust', 'safety', 'student-privacy', 'reporting', 'account-contact'];
 const LIBRARY_SECTIONS = ['templates', 'guides'];

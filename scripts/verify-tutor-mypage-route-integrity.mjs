@@ -59,7 +59,7 @@ assert(
 assert(mypageScreens.includes('window.location.replace(`#${entry}`)'), 'mypage screens: tutor entry uses replace');
 
 // —— C. 좌측 메뉴 라벨·경로 계약
-const tutorNavLabels = ['내 등록', '쪽지·후기함', '최근열람', '찜한학생', '구매이력', '계정설정'];
+const tutorNavLabels = ['내 등록', '쪽지·후기함', '최근열람', '찜한학생', '내 문의 내역', '구매이력', '계정설정'];
 for (const label of tutorNavLabels) {
   assert(MYPAGE_NAV.some((n) => n.label === label), `nav label: ${label}`);
 }
@@ -71,6 +71,7 @@ const expectedMenuPaths = {
   '쪽지·후기함': '/mypage/messages',
   최근열람: '/mypage/recent',
   찜한학생: '/mypage/student-review',
+  '내 문의 내역': '/mypage/contact',
   구매이력: '/mypage/plans',
   계정설정: '/mypage/account',
 };
@@ -78,6 +79,12 @@ for (const [label, path] of Object.entries(expectedMenuPaths)) {
   const item = MYPAGE_NAV.find((n) => n.label === label);
   assert(item?.path === path, `nav path: ${label} → ${path}`);
 }
+
+const tutorNav = MYPAGE_NAV.filter((n) => !n.roles || n.roles.includes('tutor')).map((n) => n.label);
+const contactIdx = tutorNav.indexOf('내 문의 내역');
+const lastWishIdx = Math.max(tutorNav.indexOf('찜한학생'), tutorNav.indexOf('찜 목록'));
+const plansIdx = tutorNav.indexOf('구매이력');
+assert(contactIdx > lastWishIdx && contactIdx < plansIdx, 'nav order: 내 문의 내역 after 찜, before 구매이력');
 
 // —— D. 상단 탭 키·라벨·경로 1:1
 const expectedTabs = [
