@@ -291,7 +291,34 @@ export function redirectToEmailVerifyWait() {
 }
 
 /**
- * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, needs_basic_register?: boolean, role_type?: string, admin_level?: string|null }} me
+ * @param {string} [roleType]
+ * @returns {boolean}
+ */
+export function isProviderRoleType(roleType) {
+  const t = String(roleType || '');
+  return t === 'tutor' || t === 'study_room_owner';
+}
+
+/** 공급자 가입 — 이메일 확인 다음, 역할별 기본등록 직전 */
+export function providerIdentityPath() {
+  return '/signup/provider-identity';
+}
+
+/**
+ * 공급자만. 이메일 확인·계정연락처·역할 선택 이후, 기본등록 전, 서버 phone_verified가 아닐 때.
+ * 학생/학부모, 기본등록을 이미 끝낸 계정, 같은 번호로 검증된 계정은 false.
+ * @param {{ email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, needs_basic_register?: boolean, role_type?: string, phone_verified?: boolean } | null | undefined} me
+ */
+export function needsProviderIdentityGate(me) {
+  if (!me || me.email_verified !== true) return false;
+  if (me.needs_account_contact || me.oauth_role_pending) return false;
+  if (!me.needs_basic_register) return false;
+  if (!isProviderRoleType(me.role_type)) return false;
+  return me.phone_verified !== true;
+}
+
+/**
+ * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, needs_basic_register?: boolean, role_type?: string, phone_verified?: boolean, admin_level?: string|null }} me
  * @param {string} [returnTo]
  */
 export function resolveAfterAuthUrl(me, returnTo = '') {
@@ -313,7 +340,11 @@ export function resolveAfterAuthUrl(me, returnTo = '') {
     return oauthRoleSelectionUrl(returnTo);
   }
   // 기본등록 완료 여부는 서버 행 존재(needs_basic_register). 빈 postVerify로 추정하지 않음.
+  // 공급자는 이메일 확인 다음·기본등록 전에 서버 phone_verified 1회 게이트를 거친다.
   if (me.needs_basic_register) {
+    if (needsProviderIdentityGate(me)) {
+      return authUiHref(providerIdentityPath());
+    }
     return authUiHref(basicRegisterPathForMe(me));
   }
   return resolvePostLoginUrl(me.role_type, returnTo);
