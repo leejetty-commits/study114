@@ -312,7 +312,8 @@ export function resolveAfterAuthUrl(me, returnTo = '') {
   if (me.oauth_role_pending) {
     return oauthRoleSelectionUrl(returnTo);
   }
-  // 기본등록 완료 여부는 서버 행 존재(needs_basic_register). 빈 postVerify로 추정하지 않음.
+  // 목표 순서는 이메일 확인 다음 공급자 본인확인이지만, 업체 미연동 동안에는 분기하지 않는다.
+  // 판정은 서버 PhoneIdentityService. 지금은 기본등록으로 간다.
   if (me.needs_basic_register) {
     return authUiHref(basicRegisterPathForMe(me));
   }
