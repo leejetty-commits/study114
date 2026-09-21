@@ -1,9 +1,8 @@
 /**
- * 과외쌤 쪽지설정 렌더 — 상태 확인 → 수정 → 검증 → 저장 → 카드 샘플
+ * 과외쌤 쪽지설정 렌더 — 상태 확인 → 수정 → 저장 → 카드 샘플
  */
 
 import { renderInquirySamplePair } from '../home-card-samples/render.js';
-import { isPhoneVerifiedLocal } from '../study-room-reg/phone-verify-gate.js';
 import { P21_INQUIRY_COPY, P21_INQUIRY_OFF_REASONS } from './inquiries-copy.js';
 import { tutorInquiryPrefFromStatus, tutorInquiryStoredLine, normalizeTutorInquiryStatus } from './inquiries-pref.js';
 
@@ -32,7 +31,6 @@ function renderReasonRadios(pref) {
 export function renderTutorInquiries(tutor) {
   const status = normalizeTutorInquiryStatus(tutor.inquiry_status);
   const pref = tutorInquiryPrefFromStatus(status);
-  const phoneOk = isPhoneVerifiedLocal(tutor);
   const badge = pref.receiving ? P21_INQUIRY_COPY.badgeReceiving : P21_INQUIRY_COPY.badgeClosed;
   const stored = tutorInquiryStoredLine(status);
 
@@ -65,18 +63,6 @@ export function renderTutorInquiries(tutor) {
           <p class="p21-inq-block__hint">${esc(P21_INQUIRY_COPY.offReasonHint)}</p>
           <div class="p21-inq-reason-list">${renderReasonRadios(pref)}</div>
         </div>
-      </section>
-
-      <section class="p21-inq-block p21-inq-block--contact${phoneOk ? ' is-done' : ' is-need'}" aria-label="${esc(P21_INQUIRY_COPY.contactHeading)}">
-        <h3 class="p21-inq-block__title">${esc(P21_INQUIRY_COPY.contactHeading)}</h3>
-        <p class="p21-inq-contact__state">${esc(phoneOk ? P21_INQUIRY_COPY.contactVerified : P21_INQUIRY_COPY.contactNeeded)}</p>
-        <p class="p21-inq-contact__lead">${esc(phoneOk ? P21_INQUIRY_COPY.contactVerifiedLead : P21_INQUIRY_COPY.contactNeededLead)}</p>
-        ${phoneOk ? '' : `<p class="p21-inq-contact__notice">${esc(P21_INQUIRY_COPY.contactNotice)}</p>`}
-        ${
-          phoneOk
-            ? ''
-            : `<button type="button" class="btn btn--primary" data-p21-phone-verify-start>${esc(P21_INQUIRY_COPY.contactVerifyCta)}</button>`
-        }
       </section>
 
       <div class="p21-inq-save">

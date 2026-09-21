@@ -1,6 +1,6 @@
 /**
  * 과외쌤 쪽지설정(P21-05) copy
- * 수신 ON/OFF · 닫힘 사유 · 연락처 검증. 공부방 P20 copy와 파일을 섞지 않는다.
+ * 수신 ON/OFF · 닫힘 사유. 공부방 P20 copy와 파일을 섞지 않는다.
  *
  * 닫힘 사유는 표시용이 아니라 tutors.inquiry_status 값 자체다.
  * paused = 잠시 쉼 (일시 중단)
@@ -21,14 +21,6 @@ export const P21_INQUIRY_COPY = {
   offReasonTitle: '안받는 이유',
   offReasonHint: '쪽지 안받음이면 이유를 고른 뒤 저장합니다. 이유마다 서버 상태값이 다릅니다.',
   offReasonRequired: '쪽지 안받음으로 저장하려면 이유를 선택해 주세요.',
-  contactHeading: '기본 연락처 검증',
-  contactNeeded: '인증이 필요합니다',
-  contactNeededLead: '처음 쪽지 받는 중으로 바꿀 때는 본인 핸드폰 인증이 먼저 필요합니다.',
-  contactVerified: '인증 완료',
-  contactVerifiedLead: '인증이 끝났습니다. 전화번호는 외부에 공개되지 않습니다.',
-  contactNotice: '인증은 시스템 신뢰 확인용이며, 전화번호는 외부에 공개되지 않습니다.',
-  contactVerifyCta: '핸드폰 인증하기',
-  verifyFirstHint: '쪽지 받는 중으로 저장하려면 먼저 기본 연락처 검증을 완료해 주세요.',
   schemaMissing:
     '쪽지설정 저장 컬럼이 아직 운영 DB에 없습니다. 관리자가 064 SQL을 적용한 뒤 다시 저장해 주세요.',
   saveFailed: '저장에 실패했습니다. 화면은 마지막 서버값으로 되돌립니다.',

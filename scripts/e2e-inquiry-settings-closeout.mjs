@@ -2,7 +2,7 @@
  * 쪽지설정 저장·재진입·F5 + live 홈 BASIC 폭 실측
  * Usage: node scripts/e2e-inquiry-settings-closeout.mjs
  */
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright-core';
 
@@ -113,13 +113,11 @@ async function readInquiryUi(page) {
     const reasonWrap = document.querySelector('[data-p21-inquiry-reason-wrap], [data-p20-inquiry-reason-wrap]');
     const reasonInactive = Boolean(reasonWrap?.classList.contains('is-inactive'));
     const reasonPointer = reasonWrap ? getComputedStyle(reasonWrap).pointerEvents : '';
-    const contactNeed = Boolean(document.querySelector('.p21-inq-block--contact.is-need'));
-    const contactDone = Boolean(document.querySelector('.p21-inq-block--contact.is-done'));
+    const contactBlock = Boolean(document.querySelector('.p21-inq-block--contact'));
     const order = [
       'p21-inq__lead',
       'p21-inq-block--status',
       'p21-inq-block--edit',
-      'p21-inq-block--contact',
       'p21-inq-save',
       'p21-inq-block--samples',
     ].map((cls) => document.querySelector(`.${cls}`)?.getBoundingClientRect().top ?? null);
@@ -130,8 +128,7 @@ async function readInquiryUi(page) {
       reason,
       reasonInactive,
       reasonPointer,
-      contactNeed,
-      contactDone,
+      contactBlock,
       order,
       otp,
       hash: location.hash,
@@ -149,30 +146,6 @@ async function chooseReason(page, role, value) {
   const name = role === 'tutor' ? 'p21_inquiry_reason' : 'inquiry_off_reason';
   await page.locator(`input[name="${name}"][value="${value}"]`).click({ force: false });
   await page.waitForTimeout(150);
-}
-
-async function lastDevOtpCode() {
-  const logPath = resolve(process.cwd(), 'storage/logs/sms.log');
-  if (!existsSync(logPath)) return null;
-  const text = readFileSync(logPath, 'utf8');
-  const matches = [...text.matchAll(/인증번호 (\d{6})/g)];
-  return matches.at(-1)?.[1] || null;
-}
-
-async function completeOtpIfShown(page) {
-  const modal = page.locator('#p20-phone-verify-modal');
-  if (!(await modal.count())) return { shown: false };
-  await page.waitForTimeout(600);
-  const code = await lastDevOtpCode();
-  if (!code) {
-    await page.screenshot({ path: resolve(OUT, 'otp-no-code.png') });
-    throw new Error('OTP modal shown but sms.log has no 인증번호');
-  }
-  await page.fill('[data-p20-phone-otp]', code);
-  await page.click('[data-p20-phone-verify-confirm]');
-  await page.waitForTimeout(1800);
-  const still = await page.locator('#p20-phone-verify-modal').count();
-  return { shown: true, completed: still === 0 };
 }
 
 async function clickSave(page, role) {
@@ -209,9 +182,7 @@ async function persistFlow(page, role, shotPrefix) {
   await page.waitForTimeout(800);
   if (await page.locator('#p20-phone-verify-modal').count()) {
     await page.screenshot({ path: resolve(OUT, `${shotPrefix}-otp-after-open-save.png`) });
-    const otp = await completeOtpIfShown(page);
-    log.push({ step: 'otp-open', shown: otp.shown, completed: otp.completed });
-    await page.waitForTimeout(800);
+    throw new Error(`${role}: 쪽지 받는 중 저장 시 OTP 모달이 남았습니다`);
   }
   const afterOpenSave = await readInquiryUi(page);
   await page.screenshot({ path: resolve(OUT, `${shotPrefix}-02-after-open-save.png`), fullPage: true });

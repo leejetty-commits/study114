@@ -21,14 +21,13 @@ DDL: `sql/schema/064_tutor_inquiry_status.sql`
 
 배지 · 현재상태 저장값 문구 · 수신/이유 라디오 · 재진입 초기값은 **같은 `inquiry_status` 하나**만 본다. 카드 샘플 2장은 비교용이라 SSOT가 아니다.
 
-## OTP
+## 저장
 
-ON 저장 + 미검증 → OTP → **같은 `persistInquiryStatus`가 PATCH를 호출**한다. 검증만 하고 로컬에 남는 경로는 금지.
+쪽지설정은 문의 수신 상태만 저장한다. `open` 저장에 기본 연락처 검증·OTP를 요구하지 않는다.
 
 닫힘 저장 시 `paused` / `not_accepting`을 고르지 않으면 저장하지 않는다. 이유를 빼먹고 `paused`로 접히면 안 된다.
 
 실패 코드:
-- `phone_verify_required` → OTP 후 같은 persist
 - `schema_missing` → 064 미적용. 화면은 마지막 서버값으로 되돌림
 - `validation` → 저장 거부. 화면은 마지막 서버값으로 되돌림
 

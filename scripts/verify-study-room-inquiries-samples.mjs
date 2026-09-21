@@ -29,8 +29,10 @@ function read(rel) {
 
 const screens = read('preview/home-ui/src/study-room-reg/screens.js');
 const store = read('preview/home-ui/src/study-room-reg/store.js');
+const hubService = read('src/Registration/StudyRoomHubService.php');
 assert(store.includes('hydrateRegistrationsCache'), 'store: inquiry save hydrates cache');
 assert(store.includes("apiStudyRoomAction(id, 'inquiry_status'"), 'store: PATCH inquiry_status');
+assert(!hubService.includes('PhoneVerifyRequiredException'), 'api: study-room open does not require phone');
 const css = read('preview/home-ui/src/styles/home-member-flows.css');
 const hcsCss = read('preview/home-ui/src/styles/home-card-samples.css');
 const hcsRender = read('preview/home-ui/src/home-card-samples/render.js');
@@ -54,15 +56,17 @@ assert(!screens.includes('카드 미리보기'), 'screens: no 카드 미리보�
 assert(screens.includes('P20_INQUIRY_COPY.sampleTitle'), 'screens: sample title binding');
 assert(P20_INQUIRY_COPY.sampleTitle === '쪽지 설정시 카드 샘플', 'copy: sample title text');
 assert(P20_INQUIRY_COPY.editHeading === '현재상태 수정', 'copy: 현재상태 수정');
-assert(P20_INQUIRY_COPY.contactNeededLead.includes('본인 핸드폰 인증'), 'copy: first ON requires phone');
-assert(P20_INQUIRY_COPY.contactNotice.includes('외부에 공개되지 않습니다'), 'copy: phone not public');
-assert(P20_INQUIRY_COPY.contactNotice.includes('시스템 신뢰 확인용'), 'copy: trust check');
+assert(!('contactHeading' in P20_INQUIRY_COPY), 'copy: contactHeading key removed');
+assert(!('verifyFirstHint' in P20_INQUIRY_COPY), 'copy: verifyFirstHint key removed');
+assert(!screens.includes('p21-inq-block--contact'), 'screens: contact verify block removed');
+assert(!screens.includes('showPhoneVerifyGateModal'), 'screens: no OTP modal');
+assert(!screens.includes('isPhoneVerifiedLocal'), 'screens: no local phone gate');
+assert(!screens.includes('phone_verify_required'), 'screens: no phone_verify_required handling');
 
 const orderMarks = [
   'p21-inq__lead',
   'p21-inq-block--status',
   'p21-inq-block--edit',
-  'p21-inq-block--contact',
   'data-p20-inquiry-save',
   'p21-inq-block--samples',
 ];

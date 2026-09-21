@@ -192,7 +192,6 @@ async function tryRealInquiries(page, role) {
       'p21-inq__lead',
       'p21-inq-block--status',
       'p21-inq-block--edit',
-      'p21-inq-block--contact',
       'p21-inq-save',
       'p21-inq-block--samples',
     ].map((cls) => {

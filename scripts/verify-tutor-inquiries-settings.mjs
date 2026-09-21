@@ -87,13 +87,13 @@ assert(P21_INQUIRY_OFF_REASONS.some((o) => o.value === 'not_accepting' && o.hint
 
 assert(edit.includes('setTutorInquiryStatus'), 'edit: save calls store API');
 assert(edit.includes('persistInquiryStatus'), 'edit: persistInquiryStatus named path');
-assert(/onVerified:\s*persistInquiryStatus/.test(edit), 'edit: OTP success continues persistInquiryStatus');
 assert(/const persistInquiryStatus = async \(\) => \{[\s\S]*setTutorInquiryStatus\(id, nextStatus\)/.test(edit), 'edit: persist body PATCHes inquiry_status');
-assert(edit.includes('phone_verify_required'), 'edit: API phone gate retry');
+assert(!edit.includes('phone_verify_required'), 'edit: no API phone gate retry');
+assert(!edit.includes('showPhoneVerifyGateModal'), 'edit: no OTP modal');
+assert(!edit.includes('isPhoneVerifiedLocal'), 'edit: no local phone gate');
 assert(edit.includes('offReasonRequired'), 'edit: closed save requires reason');
 assert(!/el\?\.value === 'not_accepting' \? 'not_accepting' : 'paused'/.test(edit), 'edit: selectedReason does not fold to paused');
 assert(edit.includes("err?.code === 'schema_missing'"), 'edit: schema_missing handled');
-assert(edit.includes("err?.code === 'phone_verify_required'"), 'edit: phone_verify_required handled');
 assert(edit.includes('P21_INQUIRY_COPY.schemaMissing'), 'edit: schema_missing copy');
 assert(edit.includes('rerender()'), 'edit: failure restores last saved render');
 assert(!edit.includes('setTutorInquiryPref'), 'edit: sessionStorage setter removed');
@@ -104,7 +104,8 @@ assert(store.includes("apiTutorAction(id, 'inquiry_status'"), 'store: PATCH inqu
 assert(store.includes('hydrateRegistrationsCache'), 'store: PATCH 후 응답 불일치면 GET hydrate');
 assert(store.includes('saved !== inquiry_status'), 'store: 성공 응답 inquiry_status 일치 확인');
 assert(hubService.includes("'inquiry_status' => $this->setInquiry"), 'service: inquiry_status action');
-assert(hubService.includes('PhoneVerifyRequiredException'), 'service: open requires phone');
+assert(!hubService.includes('PhoneVerifyRequiredException'), 'service: open does not require phone');
+assert(!hubService.includes('PhoneVerificationService'), 'service: no phone verify on inquiry save');
 assert(hubRepo.includes('function setInquiryStatus'), 'repo: UPDATE inquiry_status');
 assert(hubRepo.includes('SchemaPrerequisiteException'), 'repo: 064 missing is explicit');
 assert(regApi.includes("'schema_missing'"), 'api: schema_missing error code');
@@ -154,22 +155,28 @@ assert(rcRender.includes('renderTutorRegistrationCheck'), 'RC render untouched m
 assert(rcModel.includes("id: 'detail'"), 'RC model untouched');
 assert(!read('src/Registration/StudyRoomHubService.php').includes('not_accepting'), 'study-room service untouched');
 
-// —— 화면 순서: 설명 → 현재상태+배지 → 수정 → 연락처 검증 → 저장 → 카드 샘플
+// —— 화면 순서: 설명 → 현재상태+배지 → 수정 → 저장 → 카드 샘플
 const htmlOrder = renderTutorInquiries({ id: 9, tutor_display_name: '테스트쌤', inquiry_status: 'paused' });
 const orderMarks = [
   'p21-inq__lead',
   'p21-inq-block--status',
   'p21-inq-block--edit',
-  'p21-inq-block--contact',
   'data-p21-inquiry-save',
   'p21-inq-block--samples',
 ];
+let lastOrder = -1;
+for (const mark of orderMarks) {
+  const idx = htmlOrder.indexOf(mark);
+  assert(idx > lastOrder, `structure order: ${mark} after previous`);
+  lastOrder = idx;
+}
 assert(htmlOrder.includes(P21_INQUIRY_COPY.sampleTitle), 'copy: sample title 쪽지 설정시 카드 샘플');
 assert(!htmlOrder.includes('카드 미리보기'), 'copy: no 카드 미리보기');
 assert(htmlOrder.includes(P21_INQUIRY_COPY.editHeading), 'copy: 현재상태 수정');
-assert(P21_INQUIRY_COPY.contactNeededLead.includes('본인 핸드폰 인증'), 'copy: first ON requires phone');
-assert(P21_INQUIRY_COPY.contactNotice.includes('외부에 공개되지 않습니다'), 'copy: phone not public');
-assert(P21_INQUIRY_COPY.contactNotice.includes('시스템 신뢰 확인용'), 'copy: trust check');
+assert(!htmlOrder.includes('p21-inq-block--contact'), 'copy: contact verify block removed');
+assert(!htmlOrder.includes('기본 연락처 검증'), 'copy: no 기본 연락처 검증 heading');
+assert(!('contactHeading' in P21_INQUIRY_COPY), 'copy: contactHeading key removed');
+assert(!('verifyFirstHint' in P21_INQUIRY_COPY), 'copy: verifyFirstHint key removed');
 assert(css.includes('pointer-events: none'), 'css: inactive blocks pointer');
 assert(hcsCss.includes('--hcs-basic-w'), 'css: basic 1-cell width token');
 assert(hcsCss.includes('hcs-sample__card--basic'), 'css: basic card cell');
@@ -248,13 +255,12 @@ assert(!screens.includes("renderReturnToRegistrationCheckBanner") || !/function 
 // —— API 5항
 assert(regsApi.includes("tutors: '/api/registrations/tutors.php'"), 'api B: PATCH endpoint tutors.php');
 assert(regsApi.includes("JSON.stringify({ id, action, ...body })"), 'api B: payload id + action + body');
-assert(hubService.includes("$status === 'open'"), 'api E: server open requires verify');
-assert(hubService.includes('PhoneVerifyRequiredException'), 'api E: server throws phone_verify_required');
-assert(regApi.includes("'phone_verify_required'"), 'api E: API maps PhoneVerifyRequiredException');
+assert(!hubService.includes("$status === 'open'"), 'api E: server open does not require verify');
+assert(!hubService.includes('PhoneVerifyRequiredException'), 'api E: server does not throw phone_verify_required');
 assert(regApi.includes("'schema_missing'"), 'api C: API maps schema_missing');
 assert(regApi.includes("'validation'"), 'api C: API maps validation');
 assert(hubRepo.includes("'inquiry_status'           => $this->normalizeInquiryStatus"), 'api D: GET hydrate inquiry_status');
-assert(edit.includes('onVerified: persistInquiryStatus'), 'api E: OTP success → persistInquiryStatus');
+assert(!edit.includes('onVerified: persistInquiryStatus'), 'api E: no OTP continuation into persist');
 assert(/const persistInquiryStatus = async \(\) => \{[\s\S]*setTutorInquiryStatus\(id, nextStatus\)/.test(edit), 'api E: persist path is PATCH');
 
 if (failed > 0) {
