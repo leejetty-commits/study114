@@ -34,10 +34,18 @@ function init() {
     window.location.hash = '#/search/room';
   }
   window.addEventListener('hashchange', render);
-  initAuthSession().then((user) => {
+  render();
+  initAuthSession(false, { hydrate: 'search' }).then((user) => {
     if (isAuthRedirectPending()) return;
     render();
     if (user) queueMicrotask(() => resumePendingDeepIntent());
+  });
+  window.addEventListener('auth:hydrated', () => {
+    const el = document.activeElement;
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA')) {
+      return;
+    }
+    render();
   });
   window.addEventListener('auth:login', () => {
     render();

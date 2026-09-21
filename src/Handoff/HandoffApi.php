@@ -39,7 +39,9 @@ final class HandoffApi
      */
     public static function optionalAuth(): ?array
     {
-        return (new \Study114\Auth\EmailVerificationGate())->optionalVerifiedUser(AuthSession::user());
+        $auth = AuthSession::user();
+        AuthSession::close();
+        return (new \Study114\Auth\EmailVerificationGate())->optionalVerifiedUser($auth);
     }
 
     /** @return array{user_id: int, email: string, role_type: string, name: string} */
@@ -47,8 +49,10 @@ final class HandoffApi
     {
         $auth = AuthSession::user();
         if ($auth === null) {
+            AuthSession::close();
             self::fail(401, 'unauthorized', '로그인이 필요합니다.');
         }
+        AuthSession::close();
         (new \Study114\Auth\EmailVerificationGate())->assertVerified((int) $auth['user_id']);
 
         return $auth;

@@ -37,8 +37,10 @@ final class MessagesApi
     {
         $auth = AuthSession::user();
         if ($auth === null) {
+            AuthSession::close();
             self::fail(401, 'unauthorized', '로그인이 필요합니다.');
         }
+        AuthSession::close();
         (new \Study114\Auth\EmailVerificationGate())->assertVerified((int) $auth['user_id']);
 
         return $auth;

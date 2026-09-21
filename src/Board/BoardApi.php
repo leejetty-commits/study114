@@ -42,8 +42,10 @@ final class BoardApi
     {
         $auth = AuthSession::user();
         if ($auth === null) {
+            AuthSession::close();
             self::fail(401, 'unauthorized', '로그인이 필요합니다.');
         }
+        AuthSession::close();
         (new EmailVerificationGate())->assertVerified((int) $auth['user_id']);
 
         return $auth;
@@ -56,7 +58,9 @@ final class BoardApi
      */
     public static function optionalVerifiedAuth(): ?array
     {
-        return (new EmailVerificationGate())->optionalVerifiedUser(AuthSession::user());
+        $auth = AuthSession::user();
+        AuthSession::close();
+        return (new EmailVerificationGate())->optionalVerifiedUser($auth);
     }
 
     /** @return array<string, mixed> */

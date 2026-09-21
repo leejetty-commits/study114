@@ -76,12 +76,10 @@ export function deactivateHandoffApi() {
 }
 
 export async function hydrateHandoffCache() {
-  const [favorites, compareSr, compareT, recent, reviews] = await Promise.all([
+  const [favorites, compareSr, compareT] = await Promise.all([
     listFavorites(),
     listCompare('study_room'),
     listCompare('tutor'),
-    listRecent(),
-    listStudentReviews().catch(() => ({ items: [] })),
   ]);
 
   userActionsCache.wishlist.study_room = [];
@@ -99,8 +97,14 @@ export async function hydrateHandoffCache() {
 
   userActionsCache.compare.study_room = (compareSr.items ?? []).map((r) => Number(r.target_id));
   userActionsCache.compare.tutor = (compareT.items ?? []).map((r) => Number(r.target_id));
-  recentCache = (recent.items ?? []).map(mapRecentRow);
-  studentReviewCache = (reviews.items ?? []).map(mapReviewRow);
+
+  void Promise.all([
+    listRecent().catch(() => ({ items: [] })),
+    listStudentReviews().catch(() => ({ items: [] })),
+  ]).then(([recent, reviews]) => {
+    recentCache = (recent.items ?? []).map(mapRecentRow);
+    studentReviewCache = (reviews.items ?? []).map(mapReviewRow);
+  });
 }
 
 export function getUserActionsCache() {

@@ -38,11 +38,14 @@ final class PaidApi
     {
         $auth = AuthSession::user();
         if ($auth === null) {
+            AuthSession::close();
             self::fail(401, 'unauthorized', '로그인이 필요합니다.');
         }
         if (!in_array($auth['role_type'], ['tutor', 'study_room_owner'], true)) {
+            AuthSession::close();
             self::fail(403, 'forbidden', '공급자(과외·공부방) 전용입니다.');
         }
+        AuthSession::close();
         (new \Study114\Auth\EmailVerificationGate())->assertVerified((int) $auth['user_id']);
 
         return $auth;
