@@ -1,6 +1,3 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
 /** @typedef {'student' | 'study_room' | 'tutor'} SignupRoleUi */
 
 const DEV_PASSWORD = 'TestPass123!';
@@ -100,35 +97,6 @@ export function buildBasicRegisterPayload(regionId, role) {
 }
 
 /**
- * 로컬 SMS 로그에서 마지막 인증번호를 읽는다. 운영 화면 우회가 아니다.
- * 코드 값은 호출자에게만 반환하고 이 함수는 로그를 찍지 않는다.
- * @param {import('@playwright/test').APIRequestContext} request
- */
-async function completeProviderPhoneOtp(request) {
-  const sendRes = await request.post('/api/auth/phone/send-otp.php', { data: {} });
-  const sendBody = await sendRes.json();
-  if (sendBody?.already_verified) return;
-  if (!sendRes.ok() || !sendBody?.ok) {
-    throw new Error(`공급자 본인인증 발송 실패: ${sendBody?.message || sendRes.status()}`);
-  }
-  const logPath = resolve(process.cwd(), 'storage/logs/sms.log');
-  if (!existsSync(logPath)) {
-    throw new Error('공급자 본인인증 코드 로그를 찾지 못했습니다.');
-  }
-  const text = readFileSync(logPath, 'utf8');
-  const matches = [...text.matchAll(/인증번호\s+(\d{6})/g)];
-  const code = matches.length ? matches[matches.length - 1][1] : '';
-  if (!/^\d{6}$/.test(code)) {
-    throw new Error('공급자 본인인증 코드를 로그에서 읽지 못했습니다.');
-  }
-  const verifyRes = await request.post('/api/auth/phone/verify-otp.php', { data: { code } });
-  const verifyBody = await verifyRes.json();
-  if (!verifyRes.ok() || !verifyBody?.ok || verifyBody.phone_verified !== true) {
-    throw new Error(`공급자 본인인증 확인 실패: ${verifyBody?.message || verifyRes.status()}`);
-  }
-}
-
-/**
  * @param {import('@playwright/test').APIRequestContext} request
  * @param {SignupRoleUi} role
  */
@@ -142,20 +110,13 @@ export async function signupAndBasicRegister(request, role) {
   }
 
   const regionId = await fetchFirstRegionId(request);
-  const basicPayload = {
-    role,
-    payload: buildBasicRegisterPayload(regionId, role),
-  };
-  let basicRes = await request.post('/api/auth/basic-register.php', { data: basicPayload });
-  let basicBody = await basicRes.json();
-  if (
-    (role === 'study_room' || role === 'tutor') &&
-    basicBody?.error === 'phone_verify_required'
-  ) {
-    await completeProviderPhoneOtp(request);
-    basicRes = await request.post('/api/auth/basic-register.php', { data: basicPayload });
-    basicBody = await basicRes.json();
-  }
+  const basicRes = await request.post('/api/auth/basic-register.php', {
+    data: {
+      role,
+      payload: buildBasicRegisterPayload(regionId, role),
+    },
+  });
+  const basicBody = await basicRes.json();
   if (!basicRes.ok() || !basicBody.ok) {
     throw new Error(`basic-register 실패: ${basicBody.message || basicRes.status()}`);
   }

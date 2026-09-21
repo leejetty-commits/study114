@@ -18,8 +18,6 @@ import {
   resolveAfterAuthUrl,
   isOnEmailVerifyWait,
   basicRegisterPathForMe,
-  needsProviderIdentityGate,
-  providerIdentityPath,
   uiRoleFromRoleType,
 } from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
@@ -49,21 +47,12 @@ function maskEmail(email) {
 }
 
 function continueAfterVerified(me) {
-  // stale postVerify 제거 — 목적지는 서버 me(role_type + needs_basic_register + phone_verified)
+  // stale postVerify 제거 — 목적지는 서버 me(role_type + needs_basic_register) 정본
   consumePostVerifyTarget();
   consumePostVerifyRole();
   const returnTo = getLoginReturnTo();
   const roleUi = uiRoleFromRoleType(me?.role_type);
   if (roleUi) setRole(roleUi);
-  if (!me?.email_verified || me?.needs_account_contact || me?.oauth_role_pending) {
-    window.location.href = resolveAfterAuthUrl(me, returnTo);
-    return;
-  }
-  // 공급자: 이메일 확인 다음은 기본등록이 아니라 본인인증 게이트
-  if (needsProviderIdentityGate(me)) {
-    navigate(providerIdentityPath());
-    return;
-  }
   if (me?.needs_basic_register) {
     navigate(basicRegisterPathForMe(me));
     return;

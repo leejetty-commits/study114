@@ -37,7 +37,6 @@
     "verify:cur-006-email-verify-flow": "php scripts/verify-cur-006-email-verify-flow.php",
     "verify:cur-006-email-verify-inventory": "npx --yes vite-node scripts/verify-cur-006-email-verify-inventory.mjs",
     "verify:cur-006-post-verify-role": "npx --yes vite-node scripts/verify-cur-006-post-verify-role.mjs",
-    "verify:cur-007-provider-identity": "npx --yes vite-node scripts/verify-cur-007-provider-identity-gate.mjs",
     "verify:study-room-basic-register-api": "npx --yes vite-node scripts/verify-study-room-basic-register-api.mjs",
     "verify:tutor-signup-seed": "npx --yes vite-node scripts/verify-tutor-signup-seed.mjs",
     "verify:tutor-lesson-optional-step": "npx --yes vite-node scripts/verify-tutor-lesson-optional-step.mjs",

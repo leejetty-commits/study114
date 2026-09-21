@@ -1,12 +1,7 @@
 import { signupState } from '../state.js';
 import { PREFERRED_LESSON_TYPE_LABELS, PERSONAL_GENDER_OPTIONS } from '../register-enums.js';
 import { fetchMeApi, basicRegisterApi } from '../auth-api.js';
-import {
-  resolveAfterAuthUrl,
-  resolveUiRoleForBasicRegister,
-  needsProviderIdentityGate,
-  providerIdentityPath,
-} from '../../../shared/auth-redirect.js';
+import { resolveAfterAuthUrl, resolveUiRoleForBasicRegister } from '../../../shared/auth-redirect.js';
 import {
   buildHomeStudentImportUrl,
   isReturnImportMode,
@@ -319,7 +314,6 @@ export function renderSignupBasic() {
     signupState.role = role;
   }
   const oauthMode = parseHashQuery().from === 'oauth';
-  const providerHold = role === 'study_room' || role === 'tutor';
   const body =
     role === 'study_room'
       ? renderStudyRoomBasic()
@@ -330,12 +324,6 @@ export function renderSignupBasic() {
   const content = `
     ${oauthMode ? '' : renderStepIndicator(4, 5)}
     <div class="panel auth-shell__card--wide">
-      ${
-        providerHold
-          ? '<p class="form-hint" data-provider-basic-hold>본인인증 상태를 확인하는 중입니다.</p>'
-          : ''
-      }
-      <div data-provider-basic-body ${providerHold ? 'hidden' : ''}>
       <h1 class="auth-heading">${role === 'tutor' ? '과외쌤 가입정보 입력' : '기본등록'}</h1>
       <p class="auth-subheading mb-6">
         ${
@@ -347,7 +335,6 @@ export function renderSignupBasic() {
       ${isReturnImportMode() ? '<p class="form-note form-note--highlight">자녀 추가 중입니다. 저장 후 마이페이지로 돌아갑니다.</p>' : ''}
       ${renderRoleBadge(role)}
       ${body}
-      </div>
     </div>
   `;
 
@@ -403,10 +390,6 @@ export function bindSignupBasicEvents(root) {
         window.location.href = resolveAfterAuthUrl(me);
         return;
       }
-      if (needsProviderIdentityGate(me)) {
-        navigate(providerIdentityPath());
-        return;
-      }
       // 완료 행 있으면 기본등록 재진입 금지
       if (!me.needs_basic_register) {
         window.location.href = resolveAfterAuthUrl(me);
@@ -418,24 +401,19 @@ export function bindSignupBasicEvents(root) {
         return;
       }
       const qRole = parseHashQuery().role;
-      const oauthQ = parseHashQuery().from === 'oauth' ? '&from=oauth' : '';
       if (qRole && qRole !== serverRole) {
         // URL 조작 거부 — 서버 역할 화면으로 정상화
-        navigate(`/signup/basic?role=${encodeURIComponent(serverRole)}${oauthQ}`);
+        navigate(`/signup/basic?role=${encodeURIComponent(serverRole)}`);
         return;
       }
       if (signupState.role !== serverRole || role !== serverRole) {
         signupState.role = serverRole;
         if (role !== serverRole) {
-          navigate(`/signup/basic?role=${encodeURIComponent(serverRole)}${oauthQ}`);
+          navigate(`/signup/basic?role=${encodeURIComponent(serverRole)}`);
           return;
         }
       }
       role = serverRole;
-      const bodyWrap = root.querySelector('[data-provider-basic-body]');
-      const hold = root.querySelector('[data-provider-basic-hold]');
-      if (bodyWrap) bodyWrap.hidden = false;
-      if (hold) hold.hidden = true;
       roleReady = true;
     })
     .catch(() => navigate('/login'));
@@ -698,10 +676,6 @@ export function bindSignupBasicEvents(root) {
       }
       navigate('/signup/complete');
     } catch (err) {
-      if (err && err.code === 'phone_verify_required' && role !== 'student') {
-        navigate(providerIdentityPath());
-        return;
-      }
       if (isReturnImportMode() && role === 'student') {
         const record = mapAuthFormToStudentRecord(data, {
           regionLabel: data.region_label,

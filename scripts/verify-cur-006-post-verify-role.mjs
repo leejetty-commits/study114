@@ -132,63 +132,34 @@ redirect.setPostVerifyTarget('home', 'tutor');
 assert(redirect.peekPostVerifyRole() === '', 'F home target strips role');
 
 // --- G resolveAfterAuthUrl: needs_basic_register wins over empty/home postVerify ---
-// CUR-007: 공급자는 phone_verified 전엔 기본등록이 아니라 본인인증 게이트.
-// 학생은 phone_verified와 무관하게 기본등록. 기본등록을 끝낸 공급자는 홈(게이트 반복 없음).
 const baseMe = {
   authenticated: true,
   email_verified: true,
   needs_account_contact: false,
   oauth_role_pending: false,
 };
-{
-  const url = redirect.resolveAfterAuthUrl({
-    ...baseMe,
-    role_type: 'guardian_student',
-    needs_basic_register: true,
-    phone_verified: false,
-  });
-  assert(
-    String(url).includes('/signup/basic') && String(url).includes('role=student'),
-    'G student needs_basic → basic (본인인증 게이트 없음)',
-  );
-  assert(
-    !String(url).includes('/signup/provider-identity'),
-    'G student URL is not provider identity',
-  );
-}
 for (const [roleType, pathPart] of [
   ['tutor', 'role=tutor'],
   ['study_room_owner', 'role=study_room'],
+  ['guardian_student', 'role=student'],
 ]) {
-  const gated = redirect.resolveAfterAuthUrl({
+  const url = redirect.resolveAfterAuthUrl({
     ...baseMe,
     role_type: roleType,
     needs_basic_register: true,
-    phone_verified: false,
   });
   assert(
-    String(gated).includes('/signup/provider-identity') && !String(gated).includes('/signup/basic'),
-    `G ${roleType} unverified phone → identity gate`,
-  );
-  const open = redirect.resolveAfterAuthUrl({
-    ...baseMe,
-    role_type: roleType,
-    needs_basic_register: true,
-    phone_verified: true,
-  });
-  assert(
-    String(open).includes('/signup/basic') && String(open).includes(pathPart),
-    `G ${roleType} verified phone → basic`,
+    String(url).includes('/signup/basic') && String(url).includes(pathPart),
+    `G needs_basic → ${roleType} basic URL`,
   );
   const doneUrl = redirect.resolveAfterAuthUrl({
     ...baseMe,
     role_type: roleType,
     needs_basic_register: false,
-    phone_verified: false,
   });
   assert(
-    !String(doneUrl).includes('/signup/basic') && !String(doneUrl).includes('/signup/provider-identity'),
-    `G completed ${roleType} skips basic and identity`,
+    !String(doneUrl).includes('/signup/basic'),
+    `G completed ${roleType} skips basic`,
   );
 }
 

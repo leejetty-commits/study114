@@ -11,7 +11,6 @@ use Study114\Auth\EmailVerificationGate;
 use Study114\Auth\EmailVerificationRequiredException;
 use Study114\Auth\EmailVerificationService;
 use Study114\Auth\LoginService;
-use Study114\Auth\PhoneVerificationService;
 use Study114\Auth\ProfileGenderSync;
 use Study114\Auth\SignupService;
 use Study114\Core\Flash;
@@ -176,7 +175,6 @@ final class AuthController
         $this->assertEmailVerifiedOrRedirect();
 
         $role = $this->resolveRoleUi();
-        $this->assertProviderPhoneVerifiedOrRedirect($role);
         $user = AuthSession::user();
         $service = new BasicRegisterService();
         View::render('auth/signup-basic', [
@@ -206,7 +204,6 @@ final class AuthController
         $this->assertEmailVerifiedOrRedirect();
 
         $role = $this->resolveRoleUi();
-        $this->assertProviderPhoneVerifiedOrRedirect($role);
 
         try {
             $result = (new BasicRegisterService())->register($user['user_id'], $role, $_POST);
@@ -280,27 +277,6 @@ final class AuthController
     {
         $home = rtrim((string) study114_config('auth')['home_ui'], '/');
         study114_redirect($home === '' ? '/' : $home . '/');
-    }
-
-    private function assertProviderPhoneVerifiedOrRedirect(string $roleUi): void
-    {
-        if ($roleUi !== 'study_room' && $roleUi !== 'tutor') {
-            return;
-        }
-        $user = AuthSession::user();
-        if ($user === null) {
-            $this->redirectAuthHash('/login');
-        }
-        $verified = false;
-        try {
-            $verified = (new PhoneVerificationService())->isVerified((int) $user['user_id']);
-        } catch (\Throwable $e) {
-            error_log('[basic-register] phone gate: ' . $e->getMessage());
-            $verified = false;
-        }
-        if (!$verified) {
-            $this->redirectAuthHash('/signup/provider-identity');
-        }
     }
 
     private function assertEmailVerifiedOrRedirect(): void
