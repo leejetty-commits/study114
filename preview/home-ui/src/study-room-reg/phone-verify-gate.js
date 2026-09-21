@@ -1,10 +1,19 @@
 /**
- * P20-05 — 쪽지 받는 중 ON 시 휴대폰 SMS OTP 게이트
+ * 공급자 휴대폰 본인확인 OTP UI — 가입단계·계정설정 재검증에서 재사용.
+ * 쪽지설정 화면에서는 호출하지 않는다.
  */
 
 import { getAuthUser } from '../auth-session.js';
 import { isRegistrationsApiMode } from '../registrations-backend.js';
-import { P20_INQUIRY_COPY } from './study-room-reg-copy.js';
+
+const OTP_COPY = {
+  title: '휴대폰 본인확인',
+  body: '등록된 휴대폰으로 인증번호를 보냅니다. 인증은 내부 확인용이며 전화번호는 외부에 공개되지 않습니다.',
+  otpLabel: '인증번호 6자리',
+  resendCta: '인증번호 다시 받기',
+  confirmCta: '확인',
+  cancelCta: '취소',
+};
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
@@ -69,19 +78,19 @@ export function showPhoneVerifyGateModal(opts) {
   overlay.setAttribute('aria-modal', 'true');
   overlay.innerHTML = `
     <div class="p20-phone-verify-modal__panel">
-      <h2 class="p20-phone-verify-modal__title">${P20_INQUIRY_COPY.phoneGateTitle}</h2>
-      <p class="p20-phone-verify-modal__body">${P20_INQUIRY_COPY.phoneGateBody}</p>
+      <h2 class="p20-phone-verify-modal__title">${OTP_COPY.title}</h2>
+      <p class="p20-phone-verify-modal__body">${OTP_COPY.body}</p>
       <p class="p20-phone-verify-modal__phone is-hidden" data-p20-phone-mask></p>
       <p class="p20-phone-verify-modal__error is-hidden" data-p20-phone-error role="alert"></p>
       <label class="p20-phone-verify-modal__field">
-        <span class="p20-phone-verify-modal__label">${P20_INQUIRY_COPY.phoneOtpLabel}</span>
+        <span class="p20-phone-verify-modal__label">${OTP_COPY.otpLabel}</span>
         <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
           class="p20-phone-verify-modal__input" data-p20-phone-otp placeholder="000000" />
       </label>
       <div class="p20-phone-verify-modal__actions">
-        <button type="button" class="btn btn--primary" data-p20-phone-verify-confirm>확인</button>
-        <button type="button" class="btn btn--secondary" disabled data-p20-phone-resend>${P20_INQUIRY_COPY.phoneResendCta}</button>
-        <button type="button" class="btn btn--ghost" data-p20-phone-verify-cancel>취소</button>
+        <button type="button" class="btn btn--primary" data-p20-phone-verify-confirm>${OTP_COPY.confirmCta}</button>
+        <button type="button" class="btn btn--secondary" disabled data-p20-phone-resend>${OTP_COPY.resendCta}</button>
+        <button type="button" class="btn btn--ghost" data-p20-phone-verify-cancel>${OTP_COPY.cancelCta}</button>
       </div>
     </div>`;
 
@@ -116,12 +125,12 @@ export function showPhoneVerifyGateModal(opts) {
     const tick = () => {
       if (left <= 0) {
         resendBtn.disabled = false;
-        resendBtn.textContent = P20_INQUIRY_COPY.phoneResendCta;
+        resendBtn.textContent = OTP_COPY.resendCta;
         resendTimer = null;
         return;
       }
       resendBtn.disabled = true;
-      resendBtn.textContent = `${P20_INQUIRY_COPY.phoneResendCta} (${left}초)`;
+      resendBtn.textContent = `${OTP_COPY.resendCta} (${left}초)`;
       left -= 1;
       resendTimer = window.setTimeout(tick, 1000);
     };
@@ -203,10 +212,4 @@ export function showPhoneVerifyGateModal(opts) {
   });
 
   void dispatchSend();
-}
-
-/** @returns {boolean} */
-export function isPhoneVerifiedLocal(room) {
-  if (room?.owner_phone_verified) return true;
-  return Boolean(getAuthUser()?.phone_verified);
 }

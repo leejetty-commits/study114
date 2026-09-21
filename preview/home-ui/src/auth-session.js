@@ -13,7 +13,7 @@ import { activateRegistrationsApi, deactivateRegistrationsApi } from './registra
 import { deactivateBoardApi } from './board/board-backend.js';
 import { resetConcernPreviewData } from './concern/store.js';
 import { navigate, setActiveRole } from './state.js';
-import { oauthRoleSelectionUrl, redirectToEmailVerifyWait, isGuidePublicPath } from '../../shared/auth-redirect.js';
+import { oauthRoleSelectionUrl, redirectToEmailVerifyWait, isGuidePublicPath, providerIdentityUrl } from '../../shared/auth-redirect.js';
 import { AUTH_UI_BASE } from '../../shared/preview-links.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
@@ -99,6 +99,9 @@ export async function fetchSession() {
         oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
         oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
         phone_verified: Boolean(data.phone_verified),
+        masked_phone: String(data.masked_phone || ''),
+        provider_identity_required: Boolean(data.provider_identity_required),
+        needs_provider_identity: Boolean(data.needs_provider_identity),
       };
     }
     redirectToEmailVerifyWait();
@@ -106,6 +109,13 @@ export async function fetchSession() {
   }
   if (data.oauth_role_pending) {
     window.location.href = oauthRoleSelectionUrl();
+    return null;
+  }
+  if (
+    data.provider_identity_required &&
+    (data.role_type === 'tutor' || data.role_type === 'study_room_owner')
+  ) {
+    window.location.replace(providerIdentityUrl());
     return null;
   }
   return {
@@ -119,6 +129,9 @@ export async function fetchSession() {
     oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
     oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
     phone_verified: Boolean(data.phone_verified),
+    masked_phone: String(data.masked_phone || ''),
+    provider_identity_required: Boolean(data.provider_identity_required),
+    needs_provider_identity: Boolean(data.needs_provider_identity),
   };
 }
 

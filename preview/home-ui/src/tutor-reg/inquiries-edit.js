@@ -1,13 +1,12 @@
 /**
- * 과외쌤 쪽지설정 — 수신 선택 · 사유 활성 · 연락처 검증 · 저장
- * 저장은 tutors.inquiry_status PATCH. OTP 성공 후 같은 persist 경로로 이어진다.
+ * 과외쌤 쪽지설정 — 수신 선택 · 사유 활성 · 저장
+ * 저장은 tutors.inquiry_status PATCH. 연락처 OTP는 이 화면에 두지 않는다.
  */
 
 import { bindInquirySampleGuides } from '../home-card-samples/guides.js';
-import { isPhoneVerifiedLocal, showPhoneVerifyGateModal } from '../study-room-reg/phone-verify-gate.js';
 import { P21_INQUIRY_COPY } from './inquiries-copy.js';
 import { tutorInquiryStatusFromPref } from './inquiries-pref.js';
-import { getTutor, setTutorInquiryStatus } from './store.js';
+import { setTutorInquiryStatus } from './store.js';
 
 function selectedReceiving(page) {
   const el = page.querySelector('input[name="p21_inquiry_receiving"]:checked');
@@ -61,15 +60,8 @@ export function bindTutorInquiriesEvents(root, rerender) {
     input.addEventListener('change', () => syncReasonState(page));
   });
 
-  page.querySelector('[data-p21-phone-verify-start]')?.addEventListener('click', () => {
-    showPhoneVerifyGateModal({
-      onVerified: () => rerender(),
-    });
-  });
-
   page.querySelector('[data-p21-inquiry-save]')?.addEventListener('click', async () => {
     const id = Number(page.dataset.p21TutorId);
-    const tutor = getTutor(id);
     const receiving = selectedReceiving(page);
     const reason = selectedReason(page);
     if (!receiving && (!hasClosedReason(page) || !reason)) {
@@ -82,41 +74,21 @@ export function bindTutorInquiriesEvents(root, rerender) {
       return;
     }
 
-    const persistInquiryStatus = async () => {
-      try {
-        await setTutorInquiryStatus(id, nextStatus);
-        alert('저장되었습니다.');
+    try {
+      await setTutorInquiryStatus(id, nextStatus);
+      alert('저장되었습니다.');
+      rerender();
+    } catch (err) {
+      console.warn('[p21-inquiries]', err);
+      if (err?.code === 'schema_missing') {
+        alert(P21_INQUIRY_COPY.schemaMissing);
         rerender();
-      } catch (err) {
-        console.warn('[p21-inquiries]', err);
-        if (err?.code === 'phone_verify_required') {
-          showPhoneVerifyGateModal({
-            onVerified: persistInquiryStatus,
-            onCancel: rerender,
-          });
-          return;
-        }
-        if (err?.code === 'schema_missing') {
-          alert(P21_INQUIRY_COPY.schemaMissing);
-          rerender();
-          return;
-        }
-        const msg =
-          err instanceof Error && err.message ? err.message : P21_INQUIRY_COPY.saveFailed;
-        alert(msg);
-        rerender();
+        return;
       }
-    };
-
-    if (receiving && !isPhoneVerifiedLocal(tutor)) {
-      alert(P21_INQUIRY_COPY.verifyFirstHint);
-      showPhoneVerifyGateModal({
-        onVerified: persistInquiryStatus,
-        onCancel: rerender,
-      });
-      return;
+      const msg =
+        err instanceof Error && err.message ? err.message : P21_INQUIRY_COPY.saveFailed;
+      alert(msg);
+      rerender();
     }
-
-    await persistInquiryStatus();
   });
 }

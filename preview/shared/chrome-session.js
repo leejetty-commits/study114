@@ -8,6 +8,8 @@ import {
   isUnverifiedAllowedAuthPath,
   isOnAuthUi,
   currentAuthHashPath,
+  providerIdentityUrl,
+  isOnProviderIdentity,
 } from './auth-redirect.js';
 
 /** @typedef {{ user_id: number, email: string, role_type: string, name: string, admin_level?: string|null, oauth_provider_labels?: string[], email_verified?: boolean }} AuthUser */
@@ -52,6 +54,14 @@ export async function initChromeSession() {
             currentUser = null;
             return null;
           }
+        } else if (
+          src.provider_identity_required &&
+          (src.role_type === 'tutor' || src.role_type === 'study_room_owner') &&
+          !isOnProviderIdentity()
+        ) {
+          window.location.replace(providerIdentityUrl());
+          currentUser = null;
+          return null;
         }
         currentUser = {
           user_id: src.user_id,

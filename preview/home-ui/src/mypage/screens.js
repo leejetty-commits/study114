@@ -75,6 +75,8 @@ import { getPlansEffectiveRole, resolveSelectedProfile } from '../plans/profiles
 import { getHistoryRows, loadHistoryRows } from '../plans/history-mock.js';
 import { bindPaidCatalogEvents } from '../paid-checkout.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
+import { formatMobile, isValidMobile } from '../../../shared/phone.js';
+import { showPhoneVerifyGateModal } from '../study-room-reg/phone-verify-gate.js';
 import {
   HOME_EMPHASIS,
   EMPTY_ONBOARDING,
@@ -927,6 +929,46 @@ function renderSubmissionDocs(role) {
     </section>`;
 }
 
+function renderProviderPhoneCard(role, profile) {
+  if (role !== 'study_room' && role !== 'tutor') return '';
+  const verified = Boolean(profile.phoneVerified);
+  const masked = profile.maskedPhone || '미등록';
+  const stateLabel = verified ? '본인확인 완료' : '번호 변경 후 다시 확인해 주세요';
+  return `
+      <article class="account-card" data-account-phone>
+        <div class="account-card__head">
+          <h3 class="account-card__title">휴대폰</h3>
+          <p class="account-card__desc">번호 변경은 이 화면에서만 합니다. 번호가 바뀌면 본인확인을 다시 합니다. 쪽지설정에서는 번호를 바꾸지 않습니다.</p>
+        </div>
+        <div class="account-card__body">
+          <dl class="account-meta">
+            <div class="account-meta__item">
+              <dt>등록 번호</dt>
+              <dd data-account-phone-mask>${esc(masked)}</dd>
+            </div>
+            <div class="account-meta__item">
+              <dt>확인 상태</dt>
+              <dd data-account-phone-state>${esc(stateLabel)}</dd>
+            </div>
+          </dl>
+          <button type="button" class="btn btn--secondary btn--sm" data-action="toggle-phone-change">번호 변경</button>
+          <div class="account-identity-edit" data-phone-change hidden>
+            <form data-form="change-phone" class="account-form" autocomplete="off">
+              <div class="form-group">
+                <label class="form-label form-label--required" for="mypage-phone">새 휴대폰 번호</label>
+                <input class="form-input" type="tel" id="mypage-phone" name="phone" placeholder="010-0000-0000" inputmode="numeric" maxlength="13" required />
+              </div>
+              <p class="form-error" data-phone-change-error hidden role="alert"></p>
+              <div class="account-form__actions">
+                <button type="submit" class="btn btn--primary btn--sm">번호 저장</button>
+                <button type="button" class="btn btn--ghost btn--sm" data-action="cancel-phone-change">취소</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </article>`;
+}
+
 function renderAccount(role, profile) {
   const authRole = profile.authRole === 'admin' ? '마스터 관리자' : roleLabel(role);
   const socialLabel =
@@ -1023,6 +1065,8 @@ function renderAccount(role, profile) {
           </dl>
         </div>
       </article>
+
+      ${renderProviderPhoneCard(role, profile)}
 
       <article class="account-card account-card--session">
         <div class="account-card__head">
@@ -1216,6 +1260,95 @@ function bindPasswordChangeEvents(root) {
         submitBtn.disabled = false;
         submitBtn.textContent = '변경 저장';
       }
+    }
+  });
+}
+
+/**
+ * @param {HTMLElement} root
+ * @param {() => void} [rerender]
+ */
+function bindPhoneChangeEvents(root, rerender) {
+  const panel = root.querySelector('[data-phone-change]');
+  const form = root.querySelector('[data-form="change-phone"]');
+  const errorEl = root.querySelector('[data-phone-change-error]');
+  if (!form) return;
+
+  const close = () => {
+    if (panel) panel.hidden = true;
+    form.reset();
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+  };
+
+  root.querySelector('[data-action="toggle-phone-change"]')?.addEventListener('click', () => {
+    if (!panel) return;
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) form.querySelector('#mypage-phone')?.focus();
+  });
+  root.querySelector('[data-action="cancel-phone-change"]')?.addEventListener('click', close);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+    const fd = new FormData(form);
+    const phone = String(fd.get('phone') ?? '').trim();
+    const phoneInput = form.querySelector('#mypage-phone');
+    if (phoneInput instanceof HTMLInputElement) {
+      phoneInput.value = formatMobile(phone) || phone;
+    }
+    if (!isValidMobile(phone)) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = '휴대폰 번호를 정확히 입력해 주세요.';
+      }
+      return;
+    }
+    const submitBtn = form.querySelector('[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+    try {
+      const res = await fetch('/api/auth/phone/update.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ phone }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || '번호 저장에 실패했습니다.');
+      }
+      const user = getAuthUser();
+      if (user) {
+        user.phone_verified = Boolean(data.phone_verified);
+        user.masked_phone = String(data.masked_phone || '');
+      }
+      close();
+      if (data.needs_reverify) {
+        showPhoneVerifyGateModal({
+          onVerified: () => {
+            const u = getAuthUser();
+            if (u) u.phone_verified = true;
+            if (typeof rerender === 'function') rerender();
+          },
+          onCancel: () => {
+            if (typeof rerender === 'function') rerender();
+          },
+        });
+        return;
+      }
+      if (typeof rerender === 'function') rerender();
+    } catch (err) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = err instanceof Error ? err.message : '번호 저장에 실패했습니다.';
+      }
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
     }
   });
 }
@@ -1480,6 +1613,7 @@ export function bindMypageScreenEvents(root, rerender) {
   }
   bindPasswordChangeEvents(root);
   bindDisplayNameEvents(root, rerender);
+  bindPhoneChangeEvents(root, rerender);
   bindWithdrawEvents(root);
   root.querySelectorAll('[data-mypage-wish-remove]').forEach((btn) => {
     btn.addEventListener('click', () => {

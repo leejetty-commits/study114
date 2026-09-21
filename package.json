@@ -47,6 +47,7 @@
     "verify:study-room-registration-check-frame": "npx --yes vite-node scripts/verify-study-room-registration-check-frame.mjs",
     "verify:study-room-inquiries-samples": "npx --yes vite-node scripts/verify-study-room-inquiries-samples.mjs",
     "verify:tutor-inquiries-settings": "npx --yes vite-node scripts/verify-tutor-inquiries-settings.mjs",
+    "verify:provider-identity-gate": "npx --yes vite-node scripts/verify-provider-identity-gate.mjs",
     "verify:location-ssot": "node scripts/verify-location-ssot.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },

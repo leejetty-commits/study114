@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Study114\Registration;
 
 use InvalidArgumentException;
-use Study114\Auth\PhoneVerificationService;
-use Study114\Auth\PhoneVerifyRequiredException;
 use Study114\Database\Connection;
 
 /** 20장 P20 — study_rooms 허브 API */
@@ -83,14 +81,6 @@ final class StudyRoomHubService
         $operatorStatuses = ['open', 'paused', 'capacity_full'];
         if (!in_array($status, $operatorStatuses, true)) {
             throw new InvalidArgumentException('inquiry_status: open | paused | capacity_full');
-        }
-        if ($status === 'open') {
-            $phoneSvc = new PhoneVerificationService();
-            if (!$phoneSvc->isVerified($userId)) {
-                throw new PhoneVerifyRequiredException(
-                    '학부모의 문의를 받기 시작하려면 기본 연락처 확인이 필요합니다.'
-                );
-            }
         }
         $this->repo->setInquiryStatus($roomId, $status);
 

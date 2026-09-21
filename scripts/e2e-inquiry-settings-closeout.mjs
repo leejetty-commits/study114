@@ -115,11 +115,11 @@ async function readInquiryUi(page) {
     const reasonPointer = reasonWrap ? getComputedStyle(reasonWrap).pointerEvents : '';
     const contactNeed = Boolean(document.querySelector('.p21-inq-block--contact.is-need'));
     const contactDone = Boolean(document.querySelector('.p21-inq-block--contact.is-done'));
+    const contactBlock = Boolean(document.querySelector('.p21-inq-block--contact'));
     const order = [
       'p21-inq__lead',
       'p21-inq-block--status',
       'p21-inq-block--edit',
-      'p21-inq-block--contact',
       'p21-inq-save',
       'p21-inq-block--samples',
     ].map((cls) => document.querySelector(`.${cls}`)?.getBoundingClientRect().top ?? null);
@@ -132,6 +132,7 @@ async function readInquiryUi(page) {
       reasonPointer,
       contactNeed,
       contactDone,
+      contactBlock,
       order,
       otp,
       hash: location.hash,
@@ -209,9 +210,7 @@ async function persistFlow(page, role, shotPrefix) {
   await page.waitForTimeout(800);
   if (await page.locator('#p20-phone-verify-modal').count()) {
     await page.screenshot({ path: resolve(OUT, `${shotPrefix}-otp-after-open-save.png`) });
-    const otp = await completeOtpIfShown(page);
-    log.push({ step: 'otp-open', shown: otp.shown, completed: otp.completed });
-    await page.waitForTimeout(800);
+    throw new Error(`${role}: 쪽지설정 저장에서 OTP 모달이 다시 열림`);
   }
   const afterOpenSave = await readInquiryUi(page);
   await page.screenshot({ path: resolve(OUT, `${shotPrefix}-02-after-open-save.png`), fullPage: true });

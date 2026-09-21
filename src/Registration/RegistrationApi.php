@@ -86,6 +86,8 @@ final class RegistrationApi
             self::fail(403, 'paid_gate', $e->getMessage());
         } catch (\Study114\Auth\EmailVerificationRequiredException $e) {
             self::fail(403, 'email_verify_required', $e->getMessage());
+        } catch (\Study114\Auth\ProviderIdentityRequiredException $e) {
+            self::fail(403, 'provider_identity_required', $e->getMessage());
         } catch (\Study114\Auth\PhoneVerifyRequiredException $e) {
             self::fail(403, 'phone_verify_required', $e->getMessage());
         } catch (SchemaPrerequisiteException $e) {

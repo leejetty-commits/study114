@@ -7,7 +7,11 @@ namespace Study114\Auth;
 use PDO;
 use Study114\Database\Connection;
 
-/** user_profiles — 쪽지 수신 ON 내부 신뢰도 점검 (SMS OTP) */
+/**
+ * user_profiles 휴대폰 검증 — 공급자 가입단계 본인확인의 현재 수단 (SMS OTP).
+ * 완료 여부: phone_verified_at + 현재 phone == phone_verified_phone.
+ * PG/제휴형 본인확인이 붙으면 method 만 확장하고 같은 컬럼을 재사용한다.
+ */
 final class PhoneVerificationService
 {
     private const CODE_TTL_SECONDS = 180;
@@ -44,6 +48,72 @@ final class PhoneVerificationService
         }
 
         return true;
+    }
+
+    /**
+     * @return array{
+     *   has_phone: bool,
+     *   masked_phone: string,
+     *   phone_verified: bool,
+     *   needs_reverify: bool
+     * }
+     */
+    public function status(int $userId): array
+    {
+        $row = $this->profileRow($userId) ?? [];
+        $phone = PhoneNormalizer::digits((string) ($row['phone'] ?? ''));
+        $hasPhone = PhoneNormalizer::isValidMobile($phone);
+        $verified = $this->isVerified($userId);
+
+        return [
+            'has_phone' => $hasPhone,
+            'masked_phone' => $hasPhone ? self::maskPhone($phone) : '',
+            'phone_verified' => $verified,
+            'needs_reverify' => $hasPhone && !$verified,
+        ];
+    }
+
+    /**
+     * 계정설정 번호 변경. 정규화 후 마지막 검증 번호와 다를 때만 검증 상태를 초기화한다.
+     *
+     * @return array{changed: bool, has_phone: bool, phone_verified: bool, masked_phone: string, needs_reverify: bool}
+     */
+    public function changePhone(int $userId, string $rawPhone): array
+    {
+        $phone = PhoneNormalizer::digits($rawPhone);
+        if (!PhoneNormalizer::isValidMobile($phone)) {
+            throw new PhoneVerificationException(
+                'phone_invalid',
+                '휴대폰 번호를 정확히 입력해 주세요. 010-0000-0000 형식이거나 숫자만 넣어 주세요.'
+            );
+        }
+
+        $pdo = Connection::get();
+        $stmt = $pdo->prepare('SELECT phone FROM user_profiles WHERE user_id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $existing = $stmt->fetchColumn();
+        $hasRow = $existing !== false;
+        $oldDigits = PhoneNormalizer::digits((string) ($existing !== false ? $existing : ''));
+        $changed = $oldDigits !== $phone;
+
+        if ($changed && $hasRow) {
+            $this->invalidateOnPhoneChange($userId, $pdo);
+        }
+
+        if ($hasRow) {
+            $pdo->prepare('UPDATE user_profiles SET phone = ?, updated_at = NOW() WHERE user_id = ?')
+                ->execute([$phone, $userId]);
+        } else {
+            $pdo->prepare(
+                'INSERT INTO user_profiles (user_id, real_name, phone, gender, address_line1) VALUES (?, ?, ?, NULL, ?)'
+            )->execute([$userId, '', $phone, '']);
+            $changed = true;
+        }
+
+        $status = $this->status($userId);
+        $status['changed'] = $changed;
+
+        return $status;
     }
 
     /**

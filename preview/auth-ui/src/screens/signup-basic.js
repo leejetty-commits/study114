@@ -386,7 +386,7 @@ export function bindSignupBasicEvents(root) {
         navigate('/login');
         return;
       }
-      if (!me.email_verified || me.needs_account_contact || me.oauth_role_pending) {
+      if (!me.email_verified || me.needs_account_contact || me.oauth_role_pending || me.provider_identity_required) {
         window.location.href = resolveAfterAuthUrl(me);
         return;
       }

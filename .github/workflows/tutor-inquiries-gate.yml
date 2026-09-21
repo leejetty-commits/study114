@@ -20,6 +20,10 @@ on:
       - "sql/schema/064_tutor_inquiry_status.sql"
       - "scripts/verify-tutor-inquiries-settings.mjs"
       - "scripts/verify-study-room-inquiries-samples.mjs"
+      - "scripts/verify-provider-identity-gate.mjs"
+      - "src/Auth/ProviderIdentityGate.php"
+      - "preview/auth-ui/src/screens/signup-identity.js"
+      - "preview/shared/auth-redirect.js"
       - "package.json"
       - ".github/workflows/tutor-inquiries-gate.yml"
       - ".github/workflows/deploy.yml"
@@ -42,6 +46,10 @@ on:
       - "sql/schema/064_tutor_inquiry_status.sql"
       - "scripts/verify-tutor-inquiries-settings.mjs"
       - "scripts/verify-study-room-inquiries-samples.mjs"
+      - "scripts/verify-provider-identity-gate.mjs"
+      - "src/Auth/ProviderIdentityGate.php"
+      - "preview/auth-ui/src/screens/signup-identity.js"
+      - "preview/shared/auth-redirect.js"
       - "package.json"
       - ".github/workflows/tutor-inquiries-gate.yml"
       - ".github/workflows/deploy.yml"
@@ -69,3 +77,6 @@ jobs:
 
       - name: Guard — study-room inquiries samples/frame
         run: npm run verify:study-room-inquiries-samples
+
+      - name: Guard — provider identity signup gate
+        run: npm run verify:provider-identity-gate

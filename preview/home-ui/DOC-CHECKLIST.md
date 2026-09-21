@@ -97,6 +97,7 @@ http://localhost:5174 · `cd preview/home-ui && npm run dev`
 체험: `#/mypage/registrations/study-rooms/2` (draft) → 상세 브리지 → 공개. study-room-ui 딥링크는 부록 C.
 
 **API (2026-07-06):** Dev 로그인 시 `study-room-reg/store.js` → `/api/registrations/study-rooms.php` · `inquiry_status` PATCH · DDL `016`.
+쪽지설정(`.../inquiries`)은 수신 스위치만. 기본 연락처 검증은 가입단계·계정설정 축.
 
 ## 22장 lifecycle 원칙 (횡단)
 
@@ -123,7 +124,7 @@ http://localhost:5174 · `cd preview/home-ui && npm run dev`
 | 3 | 기본등록 브리지 | `.../basic` | P21-03a | ✅ |
 | 4 | 상세등록 브리지 | `.../detail` | P21-03b | ✅ |
 | 5 | 4모드 미리보기·공개 | `.../publish` | P21-04 | ✅ |
-| 6 | 학생 접근·쪽지 | `.../access` | P21-05 | ✅ |
+| 6 | 학생 접근·쪽지 | `.../inquiries` · legacy `.../access` | P21-05 | ✅ 수신 스위치만. 연락처 검증 없음 |
 | 7 | 노출·부oost·숨김 | `.../exposure` | P21-06 | ✅ |
 
 **2차 보강 (2026-07-06):** P21-02 §6-1/6-2 블록 순서 · P21-05 unlock N단계 · 학생찾기 CTA · 유료 토글 · Pick/Prime **신청 가능**.

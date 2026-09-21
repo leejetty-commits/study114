@@ -15,6 +15,12 @@ RegistrationApi::run(static function (): void {
     $userId = (int) $auth['user_id'];
     $service = new StudyRoomHubService();
     $method = RegistrationApi::method();
+    if ($method !== 'GET') {
+        (new \Study114\Auth\ProviderIdentityGate())->assertMutationsAllowed(
+            $userId,
+            (string) ($auth['role_type'] ?? '')
+        );
+    }
 
     if ($method === 'GET') {
         $id = RegistrationApi::queryInt('id');

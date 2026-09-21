@@ -34,6 +34,23 @@ return [
     'phone_otp_resend_cooldown_seconds' => 60,
     'phone_otp_ttl_minutes'             => 3,
     'phone_otp_pepper'                  => study114_env('STUDY114_PHONE_OTP_PEPPER', 'study114-phone-otp-dev'),
+    /**
+     * 공급자 가입단계 본인확인 운영 모드: off | warn | required
+     * 기본 warn. 운영을 코드에서 required 로 잠그지 않는다.
+     */
+    'provider_identity_mode' => strtolower(study114_env('STUDY114_PROVIDER_IDENTITY_MODE', 'warn')),
+    /** 1 이면 mock 환경으로 본다. APP_ENV local/preview/qa 도 mock. 운영 필드 우회값 금지. */
+    'provider_identity_mock' => study114_env('STUDY114_PROVIDER_IDENTITY_MOCK', '0') === '1',
+    /**
+     * 서버 allowlist 이메일(소문자). 운영 사용자 phone_verified_* 를 건드리지 않고 required 게이트만 통과.
+     * 커밋된 실이메일 금지. 서버 env 로만 주입.
+     *
+     * @var list<string>
+     */
+    'provider_identity_allowlist' => array_values(array_filter(array_map(
+        static fn (string $e): string => strtolower(trim($e)),
+        explode(',', study114_env('STUDY114_PROVIDER_IDENTITY_ALLOWLIST', ''))
+    ))),
     /** 테스트·스테이징: STUDY114_MAIL_LOG_PATH 로 분리 가능 */
     'mail_log_path'              => study114_env('STUDY114_MAIL_LOG_PATH', $root . '/storage/logs/mail.log'),
 ];
