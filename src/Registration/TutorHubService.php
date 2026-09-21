@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Study114\Registration;
 
 use InvalidArgumentException;
+use Study114\Auth\PhoneVerificationService;
+use Study114\Auth\PhoneVerifyRequiredException;
 use Study114\Database\Connection;
 use Study114\Tutor\TutorDetailCompletionEvaluator;
 
@@ -93,6 +95,14 @@ final class TutorHubService
         $status = (string) ($input['inquiry_status'] ?? '');
         if (!in_array($status, ['open', 'paused', 'not_accepting'], true)) {
             throw new InvalidArgumentException('inquiry_status: open | paused | not_accepting');
+        }
+        if ($status === 'open') {
+            $phoneSvc = new PhoneVerificationService();
+            if (!$phoneSvc->isVerified($userId)) {
+                throw new PhoneVerifyRequiredException(
+                    '학부모의 쪽지를 받기 시작하려면 기본 연락처 확인이 필요합니다.'
+                );
+            }
         }
         $this->repo->setInquiryStatus($tutorId, $status);
 

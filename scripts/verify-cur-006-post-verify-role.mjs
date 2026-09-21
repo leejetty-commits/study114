@@ -228,30 +228,6 @@ assert(
   redirectSrc.includes('me.needs_basic_register') && redirectSrc.includes('basicRegisterPathForMe'),
   'resolveAfterAuthUrl routes by needs_basic_register',
 );
-assert(redirectSrc.includes('isProviderRoleType'), 'resolveAfterAuthUrl provider identity role guard');
-assert(
-  String(
-    redirect.resolveAfterAuthUrl({
-      ...baseMe,
-      role_type: 'tutor',
-      needs_basic_register: true,
-      needs_provider_identity: true,
-    }),
-  ).includes('/signup/identity'),
-  'G identity wins over basic for tutor',
-);
-assert(
-  String(
-    redirect.resolveAfterAuthUrl({
-      ...baseMe,
-      role_type: 'guardian_student',
-      needs_basic_register: true,
-      needs_provider_identity: true,
-      provider_identity_required: true,
-    }),
-  ).includes('/signup/basic'),
-  'G student is never sent to identity',
-);
 
 assert(existsSync(resolve(root, 'preview/shared/auth-redirect.js')), 'auth-redirect exists');
 

@@ -11,8 +11,10 @@ import {
   inquiryStatusFromForm,
   studyRoomInquiryStoredLine,
 } from './inquiry-display.js';
+import { isPhoneVerifiedLocal, showPhoneVerifyGateModal } from './phone-verify-gate.js';
 import { renderInquirySamplePair } from '../home-card-samples/render.js';
 import { bindInquirySampleGuides } from '../home-card-samples/guides.js';
+import { getAuthUser } from '../auth-session.js';
 import {
   parseStudyRoomRegPath,
   studyRoomHubPath,
@@ -445,6 +447,7 @@ function renderInquiries(room) {
   markEmbeddedViewLoaded(room.id, 'inquiries');
 
   const form = parseInquiryFormState(room.inquiry_status);
+  const phoneOk = isPhoneVerifiedLocal(room);
   const badge = form.receiving ? P20_INQUIRY_COPY.badgeReceiving : P20_INQUIRY_COPY.badgeClosed;
   const stored = studyRoomInquiryStoredLine(room.inquiry_status);
 
@@ -487,6 +490,18 @@ function renderInquiries(room) {
           <p class="p21-inq-block__hint">${esc(P20_INQUIRY_COPY.offReasonHint)}</p>
           <div class="p21-inq-reason-list">${reasonRadios}</div>
         </div>
+      </section>
+
+      <section class="p21-inq-block p21-inq-block--contact${phoneOk ? ' is-done' : ' is-need'}" aria-label="${esc(P20_INQUIRY_COPY.contactHeading)}">
+        <h3 class="p21-inq-block__title">${esc(P20_INQUIRY_COPY.contactHeading)}</h3>
+        <p class="p21-inq-contact__state">${esc(phoneOk ? P20_INQUIRY_COPY.contactVerified : P20_INQUIRY_COPY.contactNeeded)}</p>
+        <p class="p21-inq-contact__lead">${esc(phoneOk ? P20_INQUIRY_COPY.contactVerifiedLead : P20_INQUIRY_COPY.contactNeededLead)}</p>
+        ${phoneOk ? '' : `<p class="p21-inq-contact__notice">${esc(P20_INQUIRY_COPY.contactNotice)}</p>`}
+        ${
+          phoneOk
+            ? ''
+            : `<button type="button" class="btn btn--primary" data-p20-phone-verify-start>${esc(P20_INQUIRY_COPY.contactVerifyCta)}</button>`
+        }
       </section>
 
       <div class="p21-inq-save">
@@ -630,6 +645,22 @@ export function bindStudyRoomRegEvents(root, rerender) {
   const inquiriesPage = root.querySelector('[data-p20-inquiries]');
   if (inquiriesPage) bindInquirySampleGuides(inquiriesPage);
 
+  root.querySelectorAll('[data-p20-phone-verify-start]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      showPhoneVerifyGateModal({
+        onVerified: () => {
+          const user = getAuthUser();
+          if (user) user.phone_verified = true;
+          const section = btn.closest('[data-p20-room-id]');
+          const id = Number(section?.dataset.p20RoomId);
+          const room = getStudyRoom(id);
+          if (room) room.owner_phone_verified = true;
+          rerender();
+        },
+      });
+    });
+  });
+
   root.querySelectorAll('[data-p20-inquiry-receiving]').forEach((input) => {
     input.addEventListener('change', () => {
       syncStudyRoomReasonState(input.closest('[data-p20-inquiries]'));
@@ -653,15 +684,37 @@ export function bindStudyRoomRegEvents(root, rerender) {
       }
       const reason = receiving ? null : /** @type {'capacity_full'|'paused'} */ (reasonEl.value);
       const nextStatus = inquiryStatusFromForm(receiving, reason);
-      try {
-        await setInquiryStatus(id, nextStatus);
-        alert('저장되었습니다.');
-        rerender();
-      } catch (err) {
-        console.warn('[p20]', err);
-        alert(P20_INQUIRY_COPY.saveFailed);
-        rerender();
+      const room = getStudyRoom(id);
+
+      const persist = async () => {
+        try {
+          await setInquiryStatus(id, nextStatus);
+          alert('저장되었습니다.');
+          rerender();
+        } catch (err) {
+          console.warn('[p20]', err);
+          if (err?.code === 'phone_verify_required') {
+            showPhoneVerifyGateModal({
+              onVerified: persist,
+              onCancel: rerender,
+            });
+            return;
+          }
+          alert(P20_INQUIRY_COPY.saveFailed);
+          rerender();
+        }
+      };
+
+      if (receiving && !isPhoneVerifiedLocal(room)) {
+        alert(P20_INQUIRY_COPY.verifyFirstHint);
+        showPhoneVerifyGateModal({
+          onVerified: persist,
+          onCancel: rerender,
+        });
+        return;
       }
+
+      await persist();
     });
   });
 }

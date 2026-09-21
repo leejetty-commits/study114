@@ -18,7 +18,6 @@ import { renderSignupRole, bindSignupRoleEvents } from './screens/signup-role.js
 import { renderSignupForm, bindSignupFormEvents } from './screens/signup-form.js';
 import { renderSignupAccountContact, bindSignupAccountContactEvents } from './screens/signup-account-contact.js';
 import { renderSignupVerifyEmail, bindSignupVerifyEmailEvents } from './screens/signup-verify-email.js';
-import { renderSignupIdentity, bindSignupIdentityEvents } from './screens/signup-identity.js';
 import { renderSignupBasic, bindSignupBasicEvents } from './screens/signup-basic.js';
 import { renderSignupExtra, bindSignupExtraEvents } from './screens/signup-extra.js';
 import { renderSignupComplete, bindSignupCompleteEvents } from './screens/signup-complete.js';
@@ -32,7 +31,6 @@ const SCREENS = {
   signupRole: { render: renderSignupRole, bind: bindSignupRoleEvents },
   signupForm: { render: renderSignupForm, bind: bindSignupFormEvents },
   signupVerifyEmail: { render: renderSignupVerifyEmail, bind: bindSignupVerifyEmailEvents },
-  signupIdentity: { render: renderSignupIdentity, bind: bindSignupIdentityEvents },
   signupAccountContact: { render: renderSignupAccountContact, bind: bindSignupAccountContactEvents },
   signupBasic: { render: renderSignupBasic, bind: bindSignupBasicEvents },
   signupExtra: { render: renderSignupExtra, bind: bindSignupExtraEvents },

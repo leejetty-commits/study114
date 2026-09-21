@@ -54,16 +54,15 @@ assert(!screens.includes('카드 미리보기'), 'screens: no 카드 미리보�
 assert(screens.includes('P20_INQUIRY_COPY.sampleTitle'), 'screens: sample title binding');
 assert(P20_INQUIRY_COPY.sampleTitle === '쪽지 설정시 카드 샘플', 'copy: sample title text');
 assert(P20_INQUIRY_COPY.editHeading === '현재상태 수정', 'copy: 현재상태 수정');
-assert(!('contactNeededLead' in P20_INQUIRY_COPY), 'copy: no contactNeededLead');
-assert(!('contactNotice' in P20_INQUIRY_COPY), 'copy: no contactNotice');
-assert(!screens.includes('p21-inq-block--contact'), 'screens: contact verify block removed');
-assert(!screens.includes('showPhoneVerifyGateModal'), 'screens: no OTP modal on inquiries');
-assert(!screens.includes('phone_verify_required'), 'screens: inquiries save is not a phone gate');
+assert(P20_INQUIRY_COPY.contactNeededLead.includes('본인 핸드폰 인증'), 'copy: first ON requires phone');
+assert(P20_INQUIRY_COPY.contactNotice.includes('외부에 공개되지 않습니다'), 'copy: phone not public');
+assert(P20_INQUIRY_COPY.contactNotice.includes('시스템 신뢰 확인용'), 'copy: trust check');
 
 const orderMarks = [
   'p21-inq__lead',
   'p21-inq-block--status',
   'p21-inq-block--edit',
+  'p21-inq-block--contact',
   'data-p20-inquiry-save',
   'p21-inq-block--samples',
 ];

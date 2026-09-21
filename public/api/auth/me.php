@@ -50,14 +50,7 @@ $oauthProviders = [];
 $oauthProviderLabels = [];
 $needsAccountContact = false;
 $phoneVerified = false;
-$maskedPhone = '';
 $needsBasicRegister = false;
-$identityFlags = [
-    'provider_identity_mode' => 'warn',
-    'needs_provider_identity' => false,
-    'provider_identity_required' => false,
-    'provider_identity_can_skip' => false,
-];
 try {
     $oauthRolePending = ($user['role_type'] === 'admin')
         ? false
@@ -68,21 +61,14 @@ try {
     $oauthProviderLabels = \Study114\Auth\OAuthProviderLabels::labels($oauthProviders);
     $needsAccountContact = (new \Study114\Auth\AccountContactService())
         ->status((int) $user['user_id'])['needs_account_contact'];
-    $phoneStatus = (new \Study114\Auth\PhoneVerificationService())
-        ->status((int) $user['user_id']);
-    $phoneVerified = (bool) $phoneStatus['phone_verified'];
-    $maskedPhone = (string) $phoneStatus['masked_phone'];
+    $phoneVerified = (new \Study114\Auth\PhoneVerificationService())
+        ->isVerified((int) $user['user_id']);
     if ($emailVerified && !$oauthRolePending && !$needsAccountContact) {
         $needsBasicRegister = (new \Study114\Auth\BasicRegisterService())->needsBasicRegister(
             (int) $user['user_id'],
             (string) ($user['role_type'] ?? '')
         );
     }
-    $identityFlags = (new \Study114\Auth\ProviderIdentityGate())->meFlags(
-        (int) $user['user_id'],
-        (string) ($user['role_type'] ?? ''),
-        $needsBasicRegister
-    );
 } catch (Throwable $e) {
     error_log('[me] auth flags: ' . $e->getMessage());
 }
@@ -102,10 +88,5 @@ echo json_encode([
     'oauth_provider_labels' => $oauthProviderLabels,
     'needs_account_contact' => $needsAccountContact,
     'phone_verified' => $phoneVerified,
-    'masked_phone' => $maskedPhone,
     'needs_basic_register' => $needsBasicRegister,
-    'provider_identity_mode' => $identityFlags['provider_identity_mode'],
-    'needs_provider_identity' => $identityFlags['needs_provider_identity'],
-    'provider_identity_required' => $identityFlags['provider_identity_required'],
-    'provider_identity_can_skip' => $identityFlags['provider_identity_can_skip'],
 ], JSON_UNESCAPED_UNICODE);

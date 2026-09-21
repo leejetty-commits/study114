@@ -98,9 +98,6 @@ export function getPreviewProfile(role) {
     loginId: user.email || base.email,
     authRole: user.role_type || '',
     oauthProviderLabels: Array.isArray(user.oauth_provider_labels) ? user.oauth_provider_labels : [],
-    phoneVerified: Boolean(user.phone_verified),
-    maskedPhone: user.masked_phone || '',
-    roleType: user.role_type || '',
   };
 }
 

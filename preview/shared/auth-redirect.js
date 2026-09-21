@@ -113,12 +113,6 @@ export function uiRoleFromRoleType(roleType) {
   return '';
 }
 
-/** 공급자 본인확인 대상. 학생/학부모는 포함하지 않는다. */
-export function isProviderRoleType(roleType) {
-  const t = String(roleType || '');
-  return t === 'tutor' || t === 'study_room_owner';
-}
-
 const POST_VERIFY_ROLE_KEY = 'study114_post_verify_role';
 const POST_VERIFY_TARGET_KEY = 'study114_post_verify';
 const ALLOWED_UI_ROLES = new Set(['student', 'study_room', 'tutor']);
@@ -297,7 +291,7 @@ export function redirectToEmailVerifyWait() {
 }
 
 /**
- * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, needs_basic_register?: boolean, needs_provider_identity?: boolean, provider_identity_required?: boolean, role_type?: string, admin_level?: string|null }} me
+ * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, needs_basic_register?: boolean, role_type?: string, admin_level?: string|null }} me
  * @param {string} [returnTo]
  */
 export function resolveAfterAuthUrl(me, returnTo = '') {
@@ -318,21 +312,9 @@ export function resolveAfterAuthUrl(me, returnTo = '') {
   if (me.oauth_role_pending) {
     return oauthRoleSelectionUrl(returnTo);
   }
-  // 공급자(공부방·과외쌤)만. 학생/학부모 me 오염값으로 본인확인에 넣지 않는다.
-  if (isProviderRoleType(me.role_type) && (me.needs_provider_identity || me.provider_identity_required)) {
-    return providerIdentityUrl();
-  }
   // 기본등록 완료 여부는 서버 행 존재(needs_basic_register). 빈 postVerify로 추정하지 않음.
   if (me.needs_basic_register) {
     return authUiHref(basicRegisterPathForMe(me));
   }
   return resolvePostLoginUrl(me.role_type, returnTo);
-}
-
-export function providerIdentityUrl() {
-  return authUiHref('/signup/identity');
-}
-
-export function isOnProviderIdentity() {
-  return isOnAuthUi() && currentAuthHashPath() === '/signup/identity';
 }

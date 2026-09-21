@@ -53,9 +53,6 @@ async function postJson(url, body, { credentials = 'include' } = {}) {
     if (data.error) {
       err.code = data.error;
     }
-    if (data.resend_available_in != null) {
-      err.resend_available_in = Number(data.resend_available_in) || 0;
-    }
     err.status = res.status;
     throw err;
   }
@@ -112,13 +109,4 @@ export async function fetchRegions() {
  */
 export async function basicRegisterApi(roleUi, payload) {
   return postJson('/api/auth/basic-register.php', { role: roleUi, payload });
-}
-
-export async function sendPhoneOtpApi() {
-  return postJson('/api/auth/phone/send-otp.php', {});
-}
-
-/** @param {string} code */
-export async function verifyPhoneOtpApi(code) {
-  return postJson('/api/auth/phone/verify-otp.php', { code });
 }

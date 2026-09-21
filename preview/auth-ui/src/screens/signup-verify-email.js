@@ -53,10 +53,6 @@ function continueAfterVerified(me) {
   const returnTo = getLoginReturnTo();
   const roleUi = uiRoleFromRoleType(me?.role_type);
   if (roleUi) setRole(roleUi);
-  if (me?.needs_provider_identity) {
-    navigate('/signup/identity');
-    return;
-  }
   if (me?.needs_basic_register) {
     navigate(basicRegisterPathForMe(me));
     return;

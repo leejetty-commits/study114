@@ -53,9 +53,6 @@ jobs:
       - name: Guard — study-room inquiries samples/frame
         run: npm run verify:study-room-inquiries-samples
 
-      - name: Guard — provider identity signup gate
-        run: npm run verify:provider-identity-gate
-
       - name: Guard — 064 tutors.inquiry_status DDL is in tree
         run: |
           test -f sql/schema/064_tutor_inquiry_status.sql

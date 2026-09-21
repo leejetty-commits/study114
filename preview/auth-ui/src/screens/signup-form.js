@@ -110,7 +110,7 @@ export function renderSignupForm() {
             autocomplete="tel"
             required
           />
-          <p class="form-hint">휴대폰 번호는 비공개로 보관됩니다. 공부방·과외쌤은 이메일 확인 뒤 가입 단계에서 본인확인을 진행합니다.</p>
+          <p class="form-hint">휴대폰 번호는 비공개로 보관됩니다. 본인확인은 필요한 경우 내부 신뢰도 점검을 위해 진행될 수 있으며, 다른 사용자에게 공개되지 않습니다.</p>
         </div>
 
         <div class="form-group form-address" data-address-block>

@@ -92,23 +92,11 @@ if ($auth === null) {
 
 try {
     (new \Study114\Auth\EmailVerificationGate())->assertVerified((int) $auth['user_id']);
-    (new \Study114\Auth\ProviderIdentityGate())->assertMutationsAllowed(
-        (int) $auth['user_id'],
-        (string) ($auth['role_type'] ?? '')
-    );
 } catch (\Study114\Auth\EmailVerificationRequiredException $e) {
     http_response_code(403);
     echo json_encode([
         'ok'      => false,
         'error'   => 'email_verify_required',
-        'message' => $e->getMessage(),
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
-} catch (\Study114\Auth\ProviderIdentityRequiredException $e) {
-    http_response_code(403);
-    echo json_encode([
-        'ok'      => false,
-        'error'   => 'provider_identity_required',
         'message' => $e->getMessage(),
     ], JSON_UNESCAPED_UNICODE);
     exit;
