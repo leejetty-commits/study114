@@ -1,7 +1,17 @@
 /**
  * 34장 — 상품센터 화면 (P18-01~07)
  * 기존 plans-catalog / paid-backend / paid-checkout 자산 재사용
+ *
+ * GROWTH RULE: 신규 UI·헬퍼는 screens-ext-*.js 에 추가.
+ * 이 파일은 renderPlansScreen / bindPlansScreenEvents 허브로 유지.
+ * @see ./screens-ext-positions.js
+ * @see ./screens-ext-access.js
+ * @see ./screens-ext-checkout.js
  */
+
+export { SCREENS_EXT_POSITIONS } from './screens-ext-positions.js';
+export { SCREENS_EXT_ACCESS } from './screens-ext-access.js';
+export { SCREENS_EXT_CHECKOUT } from './screens-ext-checkout.js';
 
 import {
   P18_EXPOSURE_STATUS,

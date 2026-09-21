@@ -58,9 +58,25 @@ jobs:
           test -f sql/schema/064_tutor_inquiry_status.sql
           echo "::notice::운영 배포 전 필수: phpMyAdmin에서 064_tutor_inquiry_status.sql 적용. Actions는 SQL을 실행하지 않는다. 미적용 시 쪽지설정 PATCH는 schema_missing."
 
+  verify-large-file-growth-landing:
+    name: verify:large-file-growth-landing
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Guard — large-file growth landing
+        run: npm run verify:large-file-growth-landing
+
   ftp-deploy:
     name: ftp-deploy
-    needs: [verify-board-acl, verify-shop-page, verify-tutor-inquiries]
+    needs: [verify-board-acl, verify-shop-page, verify-tutor-inquiries, verify-large-file-growth-landing]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     if: github.ref == 'refs/heads/main'

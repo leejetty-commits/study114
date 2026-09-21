@@ -1,0 +1,38 @@
+---
+description: 대형 허브 파일 성장 착지 (plans screens / study-room register)
+globs:
+  - preview/home-ui/src/plans/screens.js
+  - preview/home-ui/src/plans/screens-ext-*.js
+  - src/StudyRoom/StudyRoomRegisterService.php
+  - src/StudyRoom/StudyRoomRegisterExt.php
+  - src/StudyRoom/*Store.php
+  - src/StudyRoom/*Writer.php
+alwaysApply: false
+---
+
+# 대형 허브 성장 착지
+
+아래 허브는 이미 큼. **신규 기능은 분기 파일에** 두고, 허브에는 라우팅·위임만 추가한다.
+
+## 강제 (CI)
+
+- 로컬·CI: `npm run verify:large-file-growth-landing`
+- 허브 줄 수 / `export function`·`private function` 상한, 착지 파일·GROWTH 마커 검사
+- 상한을 넘기면 분기 파일로 옮기거나, 허브 배선만 남기고 스크립트 상한을 **의도적으로** 올릴 것 (무단 팽창 금지)
+
+
+## plans
+
+- 허브: `preview/home-ui/src/plans/screens.js` (`renderPlansScreen` / `bindPlansScreenEvents`)
+- 착지:
+  - 노출상품 → `screens-ext-positions.js`
+  - 쪽지권 → `screens-ext-access.js`
+  - 결제·결과·이력 부가 → `screens-ext-checkout.js`
+- 금지: 허브에서 기존 대형 `render*` 블록을 한 번에 다른 파일로 이동
+
+## study-room register
+
+- 허브: `src/StudyRoom/StudyRoomRegisterService.php`
+- 착지: `StudyRoomRegisterExt.php` 또는 형제 `*Store` / `*Writer` (예: `StudyRoomLessonDetailStore`)
+- step 목록 SSOT: `StudyRoomRegisterExt::STEPS`
+- 금지: Service private 메서드 일괄 이관

@@ -1,0 +1,49 @@
+# Large-file growth landing — hubs must not keep absorbing new logic
+# Rule: .cursor/rules/large-file-growth-landing.mdc
+
+name: Large-file growth landing
+
+on:
+  pull_request:
+    paths:
+      - 'preview/home-ui/src/plans/screens.js'
+      - 'preview/home-ui/src/plans/screens-ext-*.js'
+      - 'src/StudyRoom/StudyRoomRegisterService.php'
+      - 'src/StudyRoom/StudyRoomRegisterExt.php'
+      - 'src/StudyRoom/*Store.php'
+      - 'src/StudyRoom/*Writer.php'
+      - 'scripts/verify-large-file-growth-landing.mjs'
+      - 'package.json'
+  push:
+    branches:
+      - main
+    paths:
+      - 'preview/home-ui/src/plans/screens.js'
+      - 'preview/home-ui/src/plans/screens-ext-*.js'
+      - 'src/StudyRoom/StudyRoomRegisterService.php'
+      - 'src/StudyRoom/StudyRoomRegisterExt.php'
+      - 'src/StudyRoom/*Store.php'
+      - 'src/StudyRoom/*Writer.php'
+      - 'scripts/verify-large-file-growth-landing.mjs'
+      - 'package.json'
+
+concurrency:
+  group: large-file-growth-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-landing:
+    name: verify:large-file-growth-landing
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Guard — growth landing
+        run: npm run verify:large-file-growth-landing

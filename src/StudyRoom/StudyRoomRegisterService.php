@@ -8,7 +8,15 @@ declare(strict_types=1);
 
 namespace Study114\StudyRoom;
 
-
+/**
+ * 공부방 등록 공개 API 허브 (getMasters / loadForUser / saveStep).
+ *
+ * GROWTH RULE: 신규 저장·hydrate·스키마 헬퍼는 StudyRoomRegisterExt
+ * 또는 형제 *Store / *Writer 에 둔다. 이 클래스에 대형 private 블록을 더 쌓지 말 것.
+ *
+ * @see StudyRoomRegisterExt
+ * @see StudyRoomLessonDetailStore
+ */
 
 use InvalidArgumentException;
 
@@ -156,9 +164,7 @@ final class StudyRoomRegisterService
 
     {
 
-        $allowedSteps = ['basic', 'basic_all', 'location', 'lesson', 'career', 'facility'];
-
-        if (!in_array($step, $allowedSteps, true)) {
+        if (!in_array($step, StudyRoomRegisterExt::STEPS, true)) {
 
             throw new InvalidArgumentException('step: 유효하지 않은 단계입니다.');
 
