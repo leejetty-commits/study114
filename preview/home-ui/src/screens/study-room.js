@@ -1,6 +1,6 @@
 import { MY_STUDY_ROOM } from '../data.js';
 import { previewState, setStudyRoomTab, resetStudyRoomFind } from '../state.js';
-import { renderHomeShell, renderAdInline, bindLayoutEvents } from '../layout.js';
+import { renderHomeShell, bindLayoutEvents } from '../layout.js';
 import { bindCompareEvents } from '../compare-modal.js';
 import { bindUserActionEvents } from '../user-actions-ui.js';
 import { bindDetailDecisionEvents } from '../detail-decision/index.js';
@@ -50,7 +50,6 @@ export function renderStudyRoom() {
       hideHead: showMyBox,
       hideSearchCrossLink: showMyBox,
     })}
-    ${renderAdInline()}
   `;
 
   return renderHomeShell('study_room', content, { showAuth: false, showRoleSwitch: false });

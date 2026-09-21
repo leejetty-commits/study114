@@ -45,7 +45,7 @@ body {
   background: var(--product-accent, var(--brand-blue)) !important;
   border-color: var(--product-accent, var(--brand-blue)) !important;
   color: #fff !important;
-  border-radius: var(--product-radius-btn, 0.625rem);
+  border-radius: var(--product-radius-btn, 0.5rem);
 }
 
 .btn--primary:hover {
@@ -57,7 +57,7 @@ body {
   background: #fff;
   color: var(--gray-700);
   border: 1px solid var(--product-line, #e5e7eb);
-  border-radius: var(--product-radius-btn, 0.625rem);
+  border-radius: var(--product-radius-btn, 0.5rem);
 }
 
 .btn--secondary:hover {
@@ -83,7 +83,7 @@ body {
 .slot-card:hover,
 .expo-card:hover {
   border-color: var(--product-accent, var(--brand-blue)) !important;
-  box-shadow: 0 6px 20px rgba(43, 127, 255, 0.08) !important;
+  box-shadow: 0 1px 0 rgba(28, 25, 23, 0.04) !important;
 }
 
 /* ── Hero / guest ── */

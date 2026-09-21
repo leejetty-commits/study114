@@ -9,6 +9,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@auth-styles': resolve(__dirname, '../auth-ui/src/styles'),
+      '@home-ui': resolve(__dirname, '../home-ui/src'),
+      '@search-ui': resolve(__dirname, '../search-ui/src'),
+      '@study-room-ui': resolve(__dirname, './src'),
     },
   },
   server: {

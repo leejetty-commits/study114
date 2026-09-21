@@ -7,20 +7,20 @@
 .home-app--mypage,
 .mypage-layout,
 .mypage-home {
-  --mp-bg: #f8fafc;
-  --mp-panel: #ffffff;
-  --mp-ink: #0f172a;
-  --mp-muted: #64748b;
-  --mp-line: #e5e7eb;
-  --mp-accent: var(--brand-blue, #2b7fff);
-  --mp-accent-soft: var(--brand-blue-light, #eef4ff);
-  --mp-radius-card: 0.75rem; /* 12px */
-  --mp-radius-btn: 0.625rem; /* 10px */
-  --mp-title: 1.5rem; /* 24px */
-  --mp-section: 1.125rem; /* 18px */
-  --mp-card-title: 1rem; /* 16px */
-  --mp-body: 0.875rem; /* 14px */
-  --mp-meta: 0.75rem; /* 12px */
+  --mp-bg: var(--product-page-bg, #f7f8fa);
+  --mp-panel: var(--product-panel, #ffffff);
+  --mp-ink: var(--product-ink, #1c1917);
+  --mp-muted: var(--product-muted, #6b7280);
+  --mp-line: var(--product-line, #e5e7eb);
+  --mp-accent: var(--brand-blue);
+  --mp-accent-soft: var(--brand-blue-light);
+  --mp-radius-card: var(--radius-surface, 0.75rem);
+  --mp-radius-btn: var(--radius-control, 0.5rem);
+  --mp-title: var(--fs-5);
+  --mp-section: var(--fs-4);
+  --mp-card-title: var(--fs-3);
+  --mp-body: var(--fs-2);
+  --mp-meta: var(--fs-1);
 }
 
 .home-app.home-app--mypage > .home-body {
@@ -347,12 +347,12 @@
 }
 
 .mypage-badge {
-  height: 1.375rem;
-  padding: 0 0.5rem;
-  border-radius: 0.5rem;
+  height: var(--badge-h, 1.25rem);
+  padding: 0 0.375rem;
+  border-radius: var(--radius-badge, 0.25rem);
   font-size: var(--mp-meta);
   font-weight: 600;
-  line-height: 1.375rem;
+  line-height: 1.25rem;
 }
 
 .mypage-emphasis {
@@ -925,8 +925,8 @@
   display: inline-flex;
   align-items: center;
   margin: 0 0 0.55rem;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-badge, 0.25rem);
   background: var(--mp-accent);
   color: #fff;
   font-size: var(--mp-meta);

@@ -44,7 +44,8 @@ export function renderConcernShell(currentPath, bodyHtml) {
     headerHtml: renderHeader(role, { activeGnbId: 'community' }),
     mainHtml,
     footerHtml: renderFooter(),
-    slotKey: 'home_right_rail',
+    slotKey: 'support_right_rail',
+    railTone: 'quiet',
     appClass: 'concern-app uds-theme',
   });
 }

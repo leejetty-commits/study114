@@ -28,6 +28,7 @@ export function renderPromoShell(currentPath, bodyHtml) {
     mainHtml,
     footerHtml: renderFooter(),
     slotKey: 'home_right_rail',
+    railTone: 'entry',
     appClass: 'promo-app',
   });
 }

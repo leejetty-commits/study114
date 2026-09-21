@@ -6,6 +6,8 @@ import '../../shared/register-flow.css';
 import './styles/register.css';
 import '../../home-ui/src/styles/design-system.css';
 import '../../home-ui/src/styles/product-chrome.css';
+import '../../home-ui/src/styles/home-right-rail.css';
+import '../../home-ui/src/styles/udx-std-apply.css';
 
 import {
   getChromeNavRole,
@@ -24,6 +26,8 @@ import {
   ensureSiteHeaderOffsetListeners,
 } from '../../shared/site-chrome.js';
 import { getCurrentScreen, navigate, isRegisterEditMode, getHashQuery, basicOverviewPath, withRoomId } from './layout.js';
+import { HOME_UI_BASE } from '../../shared/preview-links.js';
+import { renderSiteFooter } from '../../shared/site-footer.js';
 import { renderBasic, bindBasicEvents } from './screens/step-basic.js';
 import { renderLocation, bindLocationEvents } from './screens/step-location.js';
 import { renderLesson, bindLessonEvents } from './screens/step-lesson.js';
@@ -60,6 +64,7 @@ function renderIntroShell(innerHtml) {
           </div>
         </div>
       </div>
+      ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>`;
 }
 

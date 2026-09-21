@@ -4,6 +4,7 @@ import { getNavRole, navigate } from '../state.js';
 import { isLoggedIn, getAuthUser } from '../auth-session.js';
 import {
   OPERATIONAL_CONTACT,
+  OPERATIONAL_CTA,
   TICKET_CATEGORIES,
 } from './support-copy.js';
 import { listNotices } from './notice-store.js';
@@ -155,7 +156,8 @@ function renderSupportQuickCards() {
         )
         .join('')}
     </div>
-    <p class="sup-home-hint">이용 흐름 안내는 메인메뉴의 이용안내에서, 운영 지원은 고객센터에서 확인할 수 있습니다. 이미 남긴 운영문의의 답변과 진행 상태는 마이페이지 &gt; <a href="#${CONTACT_HISTORY_PATH}" data-sup-nav="${CONTACT_HISTORY_PATH}">내 문의 내역</a>에서 확인할 수 있습니다.</p>`;
+    <p class="sup-home-hint">운영 지원은 고객센터에서 확인합니다. 이용 흐름은 메인메뉴의 이용안내를 보세요.</p>
+    <p class="sup-home-hint sup-home-hint--sub">이미 남긴 운영문의의 답변과 진행 상태는 마이페이지 &gt; <a href="#${CONTACT_HISTORY_PATH}" data-sup-nav="${CONTACT_HISTORY_PATH}">내 문의 내역</a>에서 확인할 수 있습니다.</p>`;
 }
 
 function renderSupportHero() {
@@ -171,7 +173,7 @@ function renderSupportHero() {
         <p>FAQ에서 먼저 찾고, 없으면 문의해 주세요. 공지·정책·자료도 한곳에서 이어집니다.</p>
         <div class="support-hero__actions">
           <a class="btn btn--primary" href="#/support/faq" data-sup-nav="/support/faq">자주 묻는 질문</a>
-          <a class="btn--ghost-light" href="#/support/contact" data-sup-nav="/support/contact">문의</a>
+          <a class="btn btn--secondary" href="#/support/contact" data-sup-nav="/support/contact">${OPERATIONAL_CTA.buttonLabel}</a>
         </div>
       </div>
     </section>

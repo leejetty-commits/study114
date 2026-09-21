@@ -28,9 +28,9 @@
 
 .rc-head__lead {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--fs-2);
   line-height: 1.5;
-  color: #64748b;
+  color: var(--product-muted, #6b7280);
 }
 
 .rc-head__stats {

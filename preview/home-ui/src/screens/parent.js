@@ -1,7 +1,6 @@
 import { previewState, setParentTab, resetParentFind } from '../state.js';
 import {
   renderHomeShell,
-  renderAdInline,
   bindLayoutEvents,
 } from '../layout.js';
 import { renderCompareBar, bindUserActionEvents } from '../user-actions-ui.js';
@@ -24,7 +23,6 @@ export function renderParent() {
     ${renderHomeMarketingBanner('parent')}
     ${renderProviderHomeTabs('parent', tab, 'data-parent-tab')}
     ${renderProviderHomeBody('parent', tab, previewState.parentFind)}
-    ${renderAdInline()}
     ${renderCompareBar()}
   `;
   return renderHomeShell('parent', content, { showAuth: false, showRoleSwitch: false });

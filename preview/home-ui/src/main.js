@@ -28,6 +28,8 @@ import '../../shared/register-form-primitives.css';
 import '../../shared/register-flow.css';
 import '../../study-room-ui/src/styles/register.css';
 import '@search-ui/styles/search-visily.css';
+/* UDX-STD-001 오버레이는 모든 공통 CSS 이후 마지막 */
+import './styles/udx-std-apply.css';
 import { renderGuest, bindGuestEvents } from './screens/guest.js';
 import { renderParent, bindParentEvents } from './screens/parent.js';
 import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';

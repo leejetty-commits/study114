@@ -1,6 +1,6 @@
 import { MY_TUTOR } from '../data.js';
 import { previewState, setTutorTab, resetTutorFind } from '../state.js';
-import { renderHomeShell, renderAdInline, bindLayoutEvents } from '../layout.js';
+import { renderHomeShell, bindLayoutEvents } from '../layout.js';
 import { renderCompareBar, bindUserActionEvents } from '../user-actions-ui.js';
 import { bindCompareEvents } from '../compare-modal.js';
 import { bindDetailDecisionEvents } from '../detail-decision/index.js';
@@ -133,7 +133,6 @@ export function renderTutor() {
       hideSearchCrossLink: showMyBox,
       hideSelfNote: true,
     })}
-    ${renderAdInline()}
     ${isProviderHomeSelfTab('tutor', tab) ? '' : renderCompareBar()}
   `;
 

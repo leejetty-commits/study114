@@ -415,6 +415,7 @@ export function renderStateCard(opts) {
   return `
     <div class="state-card${variant}" role="status">
       ${meta}
+      <span class="state-card__mark" aria-hidden="true"></span>
       <p class="state-card__title">${esc(opts.title)}</p>
       ${opts.body ? `<p class="state-card__body">${esc(opts.body)}</p>` : ''}
       ${cta}

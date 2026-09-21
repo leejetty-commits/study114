@@ -10,11 +10,7 @@ import {
 } from '../../shared/site-chrome.js';
 import { navRoleFromAuthUser } from '../../shared/site-nav-config.js';
 import { getAuthUser, isLoggedIn, logout } from '@home-ui/auth-session.js';
-import {
-  renderSitePromoSidebar,
-  bindSitePromoSidebarEvents,
-} from '../../shared/promo-sidebar.js';
-import { renderRightRailSidebar } from '@home-ui/right-rail.js';
+import { renderRightRailSidebar, bindRightRailEvents } from '@home-ui/right-rail.js';
 import { renderSiteFooter } from '../../shared/site-footer.js';
 import { bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 
@@ -76,7 +72,11 @@ export function renderSearchShell(content) {
         <div class="home-main search-main">
           ${content}
         </div>
-        ${renderRightRailSidebar('search_right_rail')}
+        ${renderRightRailSidebar('search_right_rail', {
+          navRole: resolveChromeRole(),
+          linkMode: 'absolute',
+          homeBase: HOME_UI_BASE,
+        })}
       </div>
       ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>
@@ -96,11 +96,9 @@ export function bindGlobalEvents(root) {
     logout: () => logout(),
   });
 
-  bindSitePromoSidebarEvents(root, {
-    plansHash: `${HOME_UI_BASE}/#/plans/positions`,
-  });
-
   bindGuestGateLinks(root);
+
+  bindRightRailEvents(root);
 
   ensureSiteHeaderOffsetListeners();
   syncSiteHeaderOffset(root);

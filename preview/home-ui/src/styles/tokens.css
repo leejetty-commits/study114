@@ -1,5 +1,6 @@
 /**
- * Study114 / 우동공과 — 디자인 토큰 SSOT (32장)
+ * Study114 / 우동공과 — 디자인 토큰 SSOT
+ * 정본: UDX-STD-001 v0.3 · UDX-20 Shell
  * 모든 SPA는 이 파일을 단일 소스로 import 한다.
  */
 
@@ -9,57 +10,70 @@
   --brand-orange: #f57c00;
   --brand-orange-dark: #e65100;
   --brand-orange-light: #fff8f0;
-  --brand-blue: #2b7fff;
-  --brand-blue-dark: #1565d8;
-  --brand-blue-light: #eef4ff;
+  --brand-blue: #266bc4;
+  --brand-blue-dark: #1f5ba8;
+  --brand-blue-pressed: #184a88;
+  --brand-blue-light: #eaf2fc;
   --brand-purple: #8b5cf6;
   --brand-gray: #4a4a4a;
 
-  /* Neutrals */
-  --gray-50: #f8fafc;
+  /* Neutrals — Ink / Secondary / Muted */
+  --gray-50: #f7f8fa;
   --gray-100: #f1f5f9;
-  --gray-200: #e2e8f0;
+  --gray-200: #e5e7eb;
   --gray-300: #cbd5e1;
   --gray-400: #94a3b8;
-  --gray-500: #64748b;
-  --gray-600: #475569;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
   --gray-700: #334155;
-  --gray-800: #1e293b;
-  --gray-900: #0f172a;
+  --gray-800: #1c1917;
+  --gray-900: #1c1917;
 
-  /* Surfaces — 배경 3톤 (장식 금지, 섹션 구획용) */
-  --surface-page: #ffffff;
-  --surface-section: #f4f6f8;
-  /* 강조 면: 크림 → 제품형 soft blue (Visily / mypage 톤과 통일) */
-  --surface-emphasis: #eef4ff;
+  /* Surfaces */
+  --surface-page: #f7f8fa;
+  --surface-section: #f7f8fa;
+  --surface-emphasis: var(--brand-blue-light);
 
-  /* Product UI aliases — 공개·운영 화면 공통 accent (mypage --mp-* 와 동일 계열) */
+  /* Product UI aliases */
   --product-accent: var(--brand-blue);
   --product-accent-dark: var(--brand-blue-dark);
   --product-accent-soft: var(--brand-blue-light);
-  --product-page-bg: #f8fafc;
+  --product-page-bg: #f7f8fa;
   --product-panel: #ffffff;
   --product-line: #e5e7eb;
-  --product-ink: #0f172a;
-  --product-muted: #64748b;
-  --product-radius-card: 0.75rem;
-  --product-radius-btn: 0.625rem;
+  --product-ink: #1c1917;
+  --product-muted: #6b7280;
+  --product-radius-card: 0.75rem; /* R-Surface 12 */
+  --product-radius-btn: 0.5rem; /* R-Control 8 */
 
-  /* Semantic (auth / forms) */
-  --color-success: #16a34a;
-  --color-error: #dc2626;
+  /* Role Accent 15% — CTA는 항상 Brand Primary 유지 */
+  --role-accent-study: #266bc4;
+  --role-accent-study-soft: #eaf2fc;
+  --role-accent-tutor: #0f766e;
+  --role-accent-tutor-soft: #e7f6f3;
+  --role-accent-student: #6d5bd0;
+  --role-accent-student-soft: #f0edff;
+  --role-accent: var(--brand-blue);
+  --role-accent-soft: var(--brand-blue-light);
+
+  /* Semantic */
+  --color-success: #15803d;
+  --color-success-soft: #ecfdf3;
+  --color-warning: #b45309;
+  --color-warning-soft: #fff7ed;
+  --color-error: #b42318;
+  --color-error-soft: #fef3f2;
   --color-naver: #03c75a;
   --color-kakao: #fee500;
   --color-kakao-text: #191600;
   --color-google-border: #dadce0;
 
   /*
-   * Typography — 32장 FS-1~FS-7 (총 7단계 고정)
-   * Sans = Pretendard (UI: 제목·라벨·값·버튼) · Serif = Noto Serif KR (서술·보조설명만)
-   * 같은 위계(라벨↔값, 네비↔본문)에서 sans/serif를 섞지 않는다.
+   * Typography — UDX-STD-001 FS-1~FS-7
+   * UI는 Pretendard만. serif 토큰은 보관하되 화면 UI에 쓰지 않는다.
    */
   --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-serif: 'Noto Serif KR', 'Batang', Georgia, serif;
+  --font-serif: var(--font-sans);
   --font-family: var(--font-sans);
 
   --fs-1: 0.75rem;   /* 12px — 주석·캡션·상태 메모 */
@@ -69,6 +83,8 @@
   --fs-5: 1.375rem;  /* 22px — 섹션 제목 */
   --fs-6: 1.75rem;   /* 28px — 페이지 제목 */
   --fs-7: 2.25rem;   /* 36px — 히어로·지역 헤드라인 */
+  --fs-12: var(--fs-1);
+  --fs-14: var(--fs-2);
 
   /* legacy aliases → FS 체계에 매핑 */
   --text-xs: var(--fs-1);
@@ -97,25 +113,63 @@
   --space-8: 2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
 
-  /* Layout — 32장 가로폭 */
+  /* Layout — UDX-20 Shell */
   --home-max: 80rem; /* 1280px */
   --page-gutter: 2rem; /* 32px desktop */
   --page-gutter-tablet: 1.5rem; /* 24px */
   --page-gutter-mobile: 1rem; /* 16px */
   --grid-gap: 1.5rem; /* 24px */
   --grid-gap-tight: 1.25rem; /* 20px Pick 허용 */
-  --sidebar-width: 10rem;
+  --sidebar-width: 10rem; /* left nav 160 */
+  --nav-body-gap: 1.5rem; /* 24 */
+  --body-rail-gap: 0.5rem; /* 8 */
+  --right-rail-w: 14rem; /* 224 */
   --auth-max-width: 28rem;
   --auth-wide-max: 36rem;
 
   --header-h: 3rem;
   --preview-toolbar-h: 2.5rem;
   --site-header-h: 4.75rem;
+  --macro-header-body: 1rem; /* 16 desktop */
+  --macro-hero-body: 0.75rem; /* 12 */
+  --macro-section: 1.5rem; /* 24 */
 
-  --radius-sm: 0.375rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.875rem;
+  /* Radius 4단계 */
+  --radius-badge: 0.25rem; /* 4 */
+  --radius-chip: 0.375rem; /* 6 */
+  --radius-control: 0.5rem; /* 8 */
+  --radius-surface: 0.75rem; /* 12 */
+  --radius-sm: var(--radius-chip);
+  --radius-md: var(--radius-control);
+  --radius-lg: var(--radius-surface);
+
+  /* Control sizes */
+  --btn-h: 2.75rem; /* 44 */
+  --btn-h-compact: 2.5rem; /* 40 */
+  --btn-search-min-w: 4.5rem; /* 72 */
+  --btn-search-h: 2.5rem;
+  --btn-search-h-m: 2.75rem;
+  --btn-detail-min-w: 5.25rem; /* 84 */
+  --chip-h: 2rem; /* 32 */
+  --badge-h: 1.25rem; /* 20 */
+  --input-h: 2.75rem; /* 44 */
+
+  /* UDX alias — footer/rail 공통 외피 */
+  --uds-ink: var(--product-ink);
+  --uds-muted: var(--product-muted);
+  --uds-line: var(--product-line);
+  --uds-primary: var(--brand-blue);
+  --uds-surface: #ffffff;
+  --uds-bg: var(--surface-page);
+  --uds-info-bg: var(--brand-blue-light);
+  --uds-info-line: #c5d4e8;
+  --footer-pad-y-top: var(--space-6); /* 24 */
+  --footer-pad-y-bottom: var(--space-12); /* 48 */
+  --footer-gap: var(--space-6); /* 24 */
+  --footer-notice-max: 45rem; /* 720 */
 }
 
 @media (max-width: 899px) {
@@ -127,7 +181,10 @@
 @media (max-width: 639px) {
   :root {
     --page-gutter: var(--page-gutter-mobile);
-    --fs-7: 1.875rem; /* 모바일 히어로 축소 */
-    --fs-6: 1.5rem;
+    --fs-7: 1.75rem; /* 히어로 한 단계 ↓ = FS-6 */
+    --fs-6: 1.375rem; /* 페이지 제목 한 단계 ↓ = FS-5 */
+    --macro-header-body: 0.75rem;
+    --macro-hero-body: 0.5rem;
+    --macro-section: 1rem;
   }
 }

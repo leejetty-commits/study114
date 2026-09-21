@@ -242,7 +242,7 @@ export function renderRegionBar(showSearch = true) {
         showSearch
           ? `<div class="region-bar__actions">
               <button type="button" class="btn btn--secondary btn--sm" data-action="region-change">지역 변경</button>
-              <button type="button" class="btn btn--primary btn--sm" data-action="search">검색</button>
+              <button type="button" class="btn btn--primary btn--search btn--sm" data-action="search">검색</button>
             </div>`
           : `<div class="region-bar__actions">
               <button type="button" class="btn btn--secondary btn--sm" data-action="region-change">지역 변경 △</button>
@@ -333,23 +333,22 @@ export function renderMapBlock() {
   `;
 }
 
-import { renderSitePromoInline } from '../../shared/promo-sidebar.js';
-import { renderPromoWithRightRail } from './right-rail.js';
+import { renderPromoWithRightRail, renderRightRailBlock, bindRightRailEvents } from './right-rail.js';
 
 export function renderAdSidebar() {
   return renderPromoWithRightRail('home_right_rail');
 }
 
 export function renderAdInline() {
-  return renderSitePromoInline();
+  return renderRightRailBlock('home_right_rail', { tone: 'entry' });
 }
 
 export function renderHomeShell(role, mainContent, opts = {}) {
-  const { showAuth, showRoleSwitch, sidebarHtml, loginStrip, slotKey = 'home_right_rail' } = opts;
-  const sidebar = sidebarHtml ?? renderPromoWithRightRail(slotKey);
+  const { showAuth, showRoleSwitch, sidebarHtml, loginStrip, slotKey = 'home_right_rail', railTone } = opts;
+  const sidebar = sidebarHtml ?? renderPromoWithRightRail(slotKey, { tone: railTone });
   return `
     ${renderPreviewToolbar()}
-    <div class="home-shell">
+    <div class="home-shell home-shell--${role}">
       ${renderHeader(role, { showAuth, showRoleSwitch })}
       <div class="home-body home-body--with-promo">
         <div class="home-main">${mainContent}</div>
@@ -374,8 +373,9 @@ export function renderAppShellWithPromo(opts) {
     slotKey = 'support_right_rail',
     sidebarHtml,
     appClass = '',
+    railTone,
   } = opts;
-  const sidebar = sidebarHtml ?? (slotKey ? renderPromoWithRightRail(slotKey) : '');
+  const sidebar = sidebarHtml ?? (slotKey ? renderPromoWithRightRail(slotKey, { tone: railTone }) : '');
   const hasPromo = Boolean(String(sidebar || '').trim());
   const bodyClass = hasPromo ? 'home-body home-body--with-promo' : 'home-body home-body--no-promo';
   const appCls = ['home-app', appClass].filter(Boolean).join(' ');
@@ -393,6 +393,7 @@ export function renderAppShellWithPromo(opts) {
 }
 
 export function bindLayoutEvents(root, rerender) {
+  bindRightRailEvents(root);
   root.querySelectorAll('[data-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();

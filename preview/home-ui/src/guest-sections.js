@@ -19,11 +19,6 @@ import { setGuestListPage } from './state.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from './section-headings.js';
 import { toDisplayLabel } from '../../shared/location-display.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
-import {
-  renderSitePromoSidebar,
-  bindSitePromoSidebarEvents,
-} from '../../shared/promo-sidebar.js';
-import { renderPromoInlineCard } from './promo/screens.js';
 import { renderGuestMarketingBanner } from './home-marketing-banner.js';
 import {
   getHomeBasicPool,
@@ -185,12 +180,14 @@ export function renderGuestStudentList() {
   return renderGuestBrowseLists();
 }
 
+/** @deprecated 실렌더 미사용. 우측은 right-rail.js Quiet Rails. */
 export function renderGuestAdSidebar() {
-  return renderSitePromoSidebar();
+  return '';
 }
 
+/** @deprecated 실렌더 미사용. */
 export function renderGuestAdInline() {
-  return renderPromoInlineCard();
+  return '';
 }
 
 export function renderGuestLoginStrip() {
@@ -259,6 +256,4 @@ export function bindGuestSectionEvents(root, rerender) {
   });
 
   bindProtectedGuestActions(root);
-
-  bindSitePromoSidebarEvents(root);
 }

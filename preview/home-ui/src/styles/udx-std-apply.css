@@ -1,0 +1,693 @@
+/**
+ * UDX-STD-001 v0.3 적용 오버레이
+ * tokens.css 이후 마지막 import. 메뉴·라우트·권한은 건드리지 않는다.
+ * 공부방·과외쌤 본적용 + 공통 모듈 정합. 학생 전용 보라 액센트는 유지.
+ */
+
+/* ── Role 15% (CTA는 Brand Primary 유지) ── */
+.home-shell--study_room,
+.home-app--role-study_room {
+  --role-accent: var(--role-accent-study);
+  --role-accent-soft: var(--role-accent-study-soft);
+}
+
+.home-shell--tutor,
+.home-app--role-tutor {
+  --role-accent: var(--role-accent-tutor);
+  --role-accent-soft: var(--role-accent-tutor-soft);
+}
+
+.home-shell--parent,
+.home-app--role-parent {
+  --role-accent: var(--brand-blue);
+  --role-accent-soft: var(--brand-blue-light);
+}
+
+.home-app--role-tutor .mypage-home-hero__role,
+.home-app--role-tutor .mypage-account-card__avatar,
+.home-app--role-tutor .mypage-nav__link.is-active {
+  background: var(--role-accent-soft) !important;
+  color: var(--role-accent) !important;
+}
+
+.home-app--role-tutor .mypage-sidebar__title {
+  color: var(--product-ink);
+}
+
+/* ── Pretendard only ── */
+.text-serif,
+.auth-subheading,
+.home-section__desc,
+.section-heading__desc,
+.content-section__desc,
+.hero-map__sub,
+.mypage-lead,
+.mypage-note,
+.mypage-muted,
+.sup-home-hint,
+.login-stage__lead,
+.login-stage__sub,
+.search-shell .hero-map__hint,
+.home-shell .home-footer,
+.home-app .home-footer,
+.site-footer {
+  font-family: var(--font-sans) !important;
+}
+
+/* ── Buttons ── */
+.btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--btn-h);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-control);
+  font-family: var(--font-sans);
+  font-size: var(--fs-3);
+  font-weight: var(--fw-semibold);
+  line-height: var(--leading-normal);
+  white-space: nowrap;
+}
+
+.btn--sm,
+.btn--compact,
+.mypage-next-action .btn,
+.mypage-layout .mypage-actions-row .btn {
+  min-height: var(--btn-h-compact);
+  border-radius: var(--radius-control) !important;
+}
+
+.btn--search,
+.search-find-bar .btn--primary,
+.find-toolbar .btn--primary {
+  min-width: var(--btn-search-min-w);
+  min-height: var(--btn-search-h);
+  width: auto;
+  padding-block: 0;
+  padding-inline: 1rem;
+  aspect-ratio: auto;
+}
+
+.expo-card .btn,
+.slot-card .btn,
+.browse-row .btn,
+.btn--detail {
+  min-width: var(--btn-detail-min-w);
+  min-height: var(--btn-h-compact);
+  padding-inline: 1rem;
+  width: auto;
+  max-width: none;
+}
+
+@media (max-width: 768px) {
+  .btn,
+  .btn--sm,
+  .btn--compact,
+  .btn--search,
+  .expo-card .btn,
+  .slot-card .btn,
+  .mypage-next-action .btn {
+    min-height: var(--btn-h);
+  }
+
+  .btn--search {
+    min-height: var(--btn-search-h-m);
+  }
+}
+
+/* ── Cards / panels ── */
+.slot-card,
+.expo-card,
+.auth-shell__card,
+.search-card,
+.register-card,
+.mypage-panel:not(.mypage-panel--bare):not(.mp-room-panel),
+.mypage-quick-card,
+.mypage-home-hero,
+.mypage-home-section,
+.mypage-next-action,
+.p21-hero,
+.p21-mid-card,
+.sup-panel-card,
+.rc-section,
+.rc-board,
+.my-box--status,
+.map-block,
+.hero-map--float-rail {
+  border-radius: var(--radius-surface);
+  border-color: var(--product-line);
+  box-shadow: none;
+}
+
+.my-box--banner-panel {
+  border-radius: var(--radius-surface);
+}
+
+.mypage-panel.mypage-panel--bare,
+.mypage-panel.mp-room-panel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.slot-card:hover,
+.expo-card:hover {
+  border-color: var(--brand-blue);
+  box-shadow: 0 1px 0 rgba(28, 25, 23, 0.04) !important;
+}
+
+.mypage-quick-card:hover {
+  border-color: var(--gray-300) !important;
+  background: var(--product-page-bg) !important;
+}
+
+/* ── Badges (pill 금지) / Role tab / Filter chip ── */
+.mypage-badge,
+.p21-hero__badge,
+.p20-inquiry-badge,
+.rc-stat,
+.rc-tier__meta li,
+.if-chip,
+.uds-theme .section-chip,
+.sup-guide-row__badge,
+.sup-ticket-status,
+.lib-chip,
+.sub-board-status,
+.p24-review-tag,
+.my-box__badge,
+.msg-chip,
+.msg-badge {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  height: var(--badge-h);
+  min-height: var(--badge-h);
+  max-height: 1.375rem;
+  padding: 0 0.375rem;
+  border-radius: var(--radius-badge) !important;
+  font-size: var(--fs-1);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.p19-tab,
+.p21-preview-tab,
+.my-box__region-pill,
+.chip,
+.filter-chip,
+.tab-pill {
+  min-height: var(--chip-h);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-chip) !important;
+  font-size: var(--fs-2);
+  font-weight: 600;
+}
+
+.my-box__region-pill.is-primary,
+.p21-preview-tab.is-active {
+  border-color: var(--role-accent, var(--brand-blue));
+  color: var(--role-accent, var(--brand-blue-dark));
+  background: var(--role-accent-soft, var(--brand-blue-light));
+}
+
+@media (max-width: 768px) {
+  .p19-tab,
+  .chip,
+  .filter-chip,
+  .my-box__region-pill {
+    min-height: 2.75rem;
+  }
+}
+
+/* ── Inputs ── */
+input[type='text'],
+input[type='search'],
+input[type='email'],
+input[type='password'],
+input[type='number'],
+input[type='tel'],
+input[type='url'],
+select:not([multiple]),
+textarea,
+.form-input,
+.form-textarea,
+.student-form__input {
+  box-sizing: border-box;
+  min-height: var(--input-h);
+  border-radius: var(--radius-control);
+  font-family: var(--font-sans);
+  font-size: var(--fs-3);
+  line-height: var(--leading-normal);
+}
+
+textarea,
+.form-textarea {
+  min-height: 6.5rem;
+}
+
+.search-form--detail3 .search-field--compact .search-field__control,
+.search-form--detail3 .search-field--range.search-field--compact .search-field__control {
+  min-height: var(--btn-h-compact);
+  border-radius: var(--radius-control);
+  font-size: var(--fs-2);
+}
+
+@media (max-width: 768px) {
+  .search-form--detail3 .search-field--compact .search-field__control,
+  .search-form--detail3 .search-field--range.search-field--compact .search-field__control {
+    min-height: var(--btn-h);
+  }
+}
+
+input[type='text']:focus,
+input[type='search']:focus,
+input[type='email']:focus,
+input[type='password']:focus,
+input[type='number']:focus,
+input[type='tel']:focus,
+select:focus,
+textarea:focus,
+.form-input:focus,
+.form-textarea:focus {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+  border-color: var(--brand-blue);
+  box-shadow: none;
+}
+
+/* ── Empty / error / permission ── */
+.state-card,
+.mypage-empty,
+.expo-card--empty {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid var(--product-line);
+  border-radius: var(--radius-surface);
+  background: var(--product-panel);
+}
+
+.state-card__mark {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1.5px solid var(--gray-400);
+  border-radius: var(--radius-badge);
+}
+
+.state-card__title,
+.mypage-empty__title {
+  margin: 0;
+  font-size: var(--fs-3);
+  font-weight: 600;
+  color: var(--product-ink);
+}
+
+.state-card__body,
+.mypage-empty__body {
+  margin: 0;
+  font-size: var(--fs-2);
+  color: var(--product-muted);
+  line-height: 1.5;
+}
+
+.state-card__cta {
+  justify-self: start;
+  margin-top: var(--space-2);
+}
+
+.state-card--permission {
+  background: var(--brand-blue-light);
+  border-color: var(--brand-blue-light);
+}
+
+.state-card--protection {
+  background: var(--color-warning-soft);
+  border-color: #fed7aa;
+}
+
+/* ── Shell 기준선 · 넘침 방지 ── */
+.home-body,
+.home-main,
+.mypage-layout,
+.mypage-content,
+.guide-frame,
+.concern-frame,
+.sup-frame,
+.search-main {
+  min-width: 0;
+}
+
+.home-main,
+.mypage-content,
+.expo-card,
+.slot-card {
+  overflow-wrap: break-word;
+}
+
+img,
+svg,
+video,
+canvas,
+table {
+  max-width: 100%;
+}
+
+.mypage-layout {
+  gap: var(--nav-body-gap);
+}
+
+@media (min-width: 1024px) {
+  .home-body.home-body--with-promo,
+  .home-app > .home-body.home-body--with-promo,
+  .search-body.home-body--with-promo,
+  .register-chrome-shell .home-body.home-body--with-promo {
+    grid-template-columns: minmax(0, 1fr) var(--right-rail-w) !important;
+    gap: var(--body-rail-gap) !important;
+  }
+}
+
+.mypage-content__title {
+  font-size: var(--fs-6);
+  line-height: var(--leading-tight);
+}
+
+.home-mkt__title {
+  font-size: var(--fs-6);
+  font-weight: 700;
+}
+
+.home-mkt__cta {
+  border-radius: var(--radius-control);
+}
+
+.hero-map__dong,
+.hero-map--float-rail .hero-map__dong {
+  font-size: var(--fs-6);
+  font-weight: 800;
+}
+
+.my-box__name {
+  font-size: var(--fs-4);
+}
+
+.home-shell--tutor .my-box--status {
+  border-width: 1px;
+  border-color: var(--role-accent);
+  background: linear-gradient(165deg, var(--role-accent-soft) 0%, #fff 42%);
+}
+
+.home-shell--tutor .my-box__badge {
+  color: var(--role-accent);
+  background: var(--role-accent-soft);
+  border-color: var(--role-accent-soft);
+}
+
+.home-shell--tutor .my-box__region-pill.is-primary,
+.home-shell--tutor .my-box__region-pill.is-active {
+  border-color: var(--role-accent);
+  color: var(--role-accent);
+  background: var(--role-accent-soft);
+}
+
+.home-shell--tutor .my-box__region-pill.is-active {
+  box-shadow: 0 0 0 2px var(--role-accent-soft);
+}
+
+.mypage-home-hero h2,
+.p21-hero__title {
+  font-size: var(--fs-5) !important;
+  font-weight: 700 !important;
+}
+
+.rc-head__title {
+  font-size: var(--fs-4);
+}
+
+.rc-head__lead,
+.p21-inq-block__title {
+  font-size: var(--fs-2) !important;
+}
+
+/* ── 이용안내·커뮤니티·고객센터 미세 정합 ── */
+.if-hero__halo,
+.if-hero__grid,
+.guide-hero__grid,
+.hero-band__grid,
+.blob,
+.pattern-band,
+.support-hero__shapes {
+  display: none !important;
+}
+
+.icon-halo {
+  width: auto !important;
+  height: auto !important;
+  background: none !important;
+  border-radius: 0 !important;
+}
+
+.icon-tile {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-control);
+}
+
+.if-hero__title,
+.guide-content__title,
+.sup-content__title,
+:is(.guide-app, .concern-app, .support-app) .support-hero h1 {
+  font-size: var(--fs-6);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+:is(.guide-app, .concern-app, .support-app) .support-hero p {
+  font-size: var(--fs-2);
+}
+
+.if-hero__body,
+.sup-home-hint,
+.section-lead {
+  font-size: var(--fs-2);
+  color: var(--product-muted);
+  line-height: 1.5;
+}
+
+.sup-home-hint--sub,
+.sup-contact-extra,
+.sup-note {
+  font-size: var(--fs-1);
+  color: var(--product-muted);
+  line-height: 1.5;
+}
+
+.uds-theme .btn {
+  min-height: var(--btn-h);
+  border-radius: var(--radius-control);
+}
+
+.uds-theme .btn--sm {
+  min-height: var(--btn-h-compact);
+}
+
+@media (max-width: 768px) {
+  .uds-theme .btn,
+  .uds-theme .btn--sm {
+    min-height: var(--btn-h);
+  }
+}
+
+/* 등록 포커스 HEX 정리 */
+.register-flow .is-rc-focus,
+.register-edit-dialog .is-rc-focus,
+.rc-tier--preview:focus {
+  outline-color: var(--brand-blue);
+}
+
+.p21-gauge__fill {
+  background: var(--brand-blue);
+}
+
+.tutor-profile-read__title {
+  font-size: var(--fs-5);
+}
+
+/* 유료상품 문맥은 기존 plans-theme가 담당. 버튼 radius만 맞춤 */
+.plans-theme .btn {
+  border-radius: var(--radius-control);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Footer · FOOTER-SPEC / UDX-20 Shell ── */
+.site-footer,
+.home-footer {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin-top: var(--footer-pad-y-bottom);
+  margin-left: 0;
+  margin-right: 0;
+  padding: var(--footer-pad-y-top) 0 var(--footer-pad-y-bottom);
+  border-top: 1px solid var(--uds-line);
+  background: var(--uds-surface);
+  color: var(--uds-muted);
+  text-align: center;
+}
+
+.site-footer__inner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--home-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--page-gutter);
+  padding-right: var(--page-gutter);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--footer-gap);
+}
+
+.site-footer__links,
+.home-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  margin: 0;
+}
+
+.site-footer__links a,
+.home-footer__links a {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--btn-h);
+  padding: 0 var(--space-3);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  line-height: var(--leading-normal);
+  color: var(--uds-muted);
+  text-decoration: none;
+}
+
+.site-footer__links a:hover,
+.site-footer__links a:focus-visible,
+.home-footer__links a:hover,
+.home-footer__links a:focus-visible {
+  color: var(--uds-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--uds-primary);
+  text-underline-offset: 0.2em;
+}
+
+.site-footer__sep {
+  color: var(--uds-line);
+  font-size: var(--fs-14);
+  line-height: 1;
+  user-select: none;
+}
+
+.site-footer__notice,
+.home-footer__notice {
+  max-width: var(--footer-notice-max);
+  margin: 0;
+  font-size: var(--fs-12);
+  font-weight: var(--fw-regular);
+  line-height: 1.5;
+  color: var(--uds-muted);
+}
+
+.site-footer__company {
+  margin: 0;
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--fs-12);
+}
+
+.site-footer__company-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.site-footer__company-label {
+  margin: 0;
+  font-weight: var(--fw-medium);
+  color: var(--uds-muted);
+}
+
+.site-footer__company-value {
+  margin: 0;
+  font-weight: var(--fw-regular);
+  color: var(--uds-ink);
+}
+
+.site-footer__legal {
+  margin: 0;
+  font-size: var(--fs-12);
+  font-weight: var(--fw-regular);
+  line-height: var(--leading-normal);
+  color: var(--uds-muted);
+}
+
+@media (max-width: 639px) {
+  .site-footer__sep {
+    display: none;
+  }
+
+  .site-footer__links,
+  .home-footer__links {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .site-footer__links a,
+  .home-footer__links a {
+    width: 100%;
+    min-height: var(--btn-h);
+  }
+}
+
+/* ── Right rail Quiet Rails · UDX-20 / UDX-50 ── */
+.home-body.home-body--with-promo > .home-sidebar,
+.home-body.home-body--with-promo > .right-rail,
+.search-body.home-body--with-promo > .home-sidebar,
+.search-body.home-body--with-promo > .right-rail {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+.home-sidebar--live-rail,
+.right-rail--live-inline {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 1023px) {
+  .home-sidebar.home-sidebar--live-rail,
+  .home-sidebar.right-rail {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    order: 2;
+  }
+}

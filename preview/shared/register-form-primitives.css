@@ -24,7 +24,7 @@
 .register-flow .form-label--required::after,
 .register-edit-dialog .form-label--required::after {
   content: ' *';
-  color: var(--brand-blue, #2563eb);
+  color: var(--brand-blue, #266bc4);
 }
 
 .register-flow .form-label--required-text::after,
@@ -43,7 +43,7 @@
 
 .register-flow .is-rc-focus,
 .register-edit-dialog .is-rc-focus {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--brand-blue, #266bc4);
   outline-offset: 4px;
   border-radius: 0.5rem;
 }
@@ -54,6 +54,7 @@
 .register-edit-dialog .form-textarea {
   width: 100%;
   box-sizing: border-box;
+  min-height: var(--input-h, 2.75rem);
   padding: var(--input-padding-y, 0.75rem) var(--input-padding-x, 1rem);
   border: 1px solid var(--input-border, var(--gray-200, #e2e8f0));
   border-radius: var(--input-radius, 0.5rem);
@@ -74,8 +75,8 @@
 .register-edit-dialog .form-input:focus,
 .register-edit-dialog .form-textarea:focus {
   outline: none;
-  border-color: var(--brand-blue, #2563eb);
-  box-shadow: var(--input-focus-shadow, 0 0 0 3px rgba(37, 99, 235, 0.12));
+  border-color: var(--brand-blue, #266bc4);
+  box-shadow: var(--input-focus-shadow, 0 0 0 3px rgba(38, 107, 196, 0.12));
 }
 
 .register-flow .form-hint,
@@ -128,13 +129,13 @@
 
 .register-flow .form-radio:has(.form-radio__input:checked),
 .register-edit-dialog .form-radio:has(.form-radio__input:checked) {
-  border-color: var(--brand-blue, #2563eb);
+  border-color: var(--brand-blue, #266bc4);
   background: var(--brand-blue-light, #eff6ff);
 }
 
 .register-flow .form-radio__input,
 .register-edit-dialog .form-radio__input {
-  accent-color: var(--brand-blue, #2563eb);
+  accent-color: var(--brand-blue, #266bc4);
 }
 
 .register-flow .form-radio__label,
@@ -189,7 +190,7 @@
   width: 1.125rem;
   height: 1.125rem;
   margin-top: 0.125rem;
-  accent-color: var(--brand-blue, #2563eb);
+  accent-color: var(--brand-blue, #266bc4);
   flex-shrink: 0;
 }
 
@@ -252,8 +253,8 @@
 
 .register-flow .chip__input:checked + .chip__label,
 .register-edit-dialog .chip__input:checked + .chip__label {
-  border-color: var(--brand-primary, var(--brand-blue, #2563eb));
-  background: color-mix(in srgb, var(--brand-primary, var(--brand-blue, #2563eb)) 12%, white);
-  color: var(--brand-primary, var(--brand-blue, #2563eb));
+  border-color: var(--brand-primary, var(--brand-blue, #266bc4));
+  background: color-mix(in srgb, var(--brand-primary, var(--brand-blue, #266bc4)) 12%, white);
+  color: var(--brand-primary, var(--brand-blue, #266bc4));
   font-weight: 600;
 }

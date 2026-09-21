@@ -129,7 +129,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
     mainHtml,
     footerHtml: renderFooter(),
     slotKey: railSlotKey,
-    appClass: 'home-app--mypage',
+    appClass: `home-app--mypage home-app--role-${role}`,
   });
 }
 

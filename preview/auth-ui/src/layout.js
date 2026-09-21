@@ -13,7 +13,6 @@ import {
   chromeLogout,
 } from '../../shared/chrome-session.js';
 import { HOME_UI_BASE } from '../../shared/preview-links.js';
-import { bindSitePromoSidebarEvents } from '../../shared/promo-sidebar.js';
 import { renderSiteFooter } from '../../shared/site-footer.js';
 import { bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 
@@ -239,9 +238,6 @@ export function bindGlobalEvents(root) {
       }
       return true;
     },
-  });
-  bindSitePromoSidebarEvents(root, {
-    plansHash: `${HOME_UI_BASE}/#/plans/positions`,
   });
   bindGuestGateLinks(root);
   ensureSiteHeaderOffsetListeners();

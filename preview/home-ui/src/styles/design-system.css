@@ -23,7 +23,7 @@ body {
 .sup-home-hint,
 .login-stage__lead,
 .login-stage__sub {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
 }
 
 /* UI 메타·값·라벨은 동일 레벨에서 sans로 통일 (서술 serif와 혼용 금지) */
@@ -48,7 +48,7 @@ body {
 .home-header__util-inner,
 .home-header__inner,
 .home-body,
-.home-footer,
+.site-footer__inner,
 .site-chrome-shell .auth-shell__main,
 .mypage-layout,
 .msg-layout,
@@ -217,7 +217,7 @@ body {
 .slot-card:hover,
 .expo-card:hover {
   border-color: var(--brand-blue);
-  box-shadow: 0 6px 20px rgba(43, 127, 255, 0.08);
+  box-shadow: 0 1px 0 rgba(28, 25, 23, 0.04);
 }
 
 /* ── Hero (우리동네) ── */
@@ -745,17 +745,22 @@ body {
 }
 
 .search-chrome-shell .home-footer,
+.search-chrome-shell .site-footer,
 .register-chrome-shell .home-footer,
+.register-chrome-shell .site-footer,
 .auth-chrome-shell .home-footer,
+.auth-chrome-shell .site-footer,
 .home-shell .home-footer,
-.home-app .home-footer {
-  max-width: var(--home-max);
-  margin: 0 auto;
-  padding: var(--space-6) var(--page-gutter);
-  text-align: center;
-  font-size: var(--fs-1);
-  color: var(--gray-500);
-  font-family: var(--font-serif);
+.home-shell .site-footer,
+.home-app .home-footer,
+.home-app .site-footer {
+  max-width: none;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+  font-family: var(--font-sans);
 }
 
 /* 등록·가입 폼 카드: 본문 폭 안에 읽기용 카드 */
@@ -816,7 +821,7 @@ body {
 .my-box__label {
   font-size: var(--fs-1);
   color: var(--gray-500);
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
 }
 
 .my-box__title {
@@ -842,7 +847,7 @@ body {
 .find-surface__desc,
 .search-header .auth-subheading {
   font-size: var(--fs-2);
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   color: var(--gray-600);
   margin: 0 0 var(--space-4);
 }
@@ -1162,7 +1167,7 @@ body {
 
 /* 카드 항목 제목과 행 간격 */
 .expo-tbl__label {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   color: #756b62;
   font-weight: var(--fw-semibold);
 }

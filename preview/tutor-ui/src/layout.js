@@ -14,10 +14,7 @@ import {
   initChromeSession,
 } from '../../shared/chrome-session.js';
 import { HOME_UI_BASE } from '../../shared/preview-links.js';
-import {
-  renderSitePromoSidebar,
-  bindSitePromoSidebarEvents,
-} from '../../shared/promo-sidebar.js';
+import { renderRegisterRightRail, bindRightRailEvents } from '../../home-ui/src/right-rail.js';
 import { renderSiteFooter } from '../../shared/site-footer.js';
 import { bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 
@@ -106,7 +103,7 @@ export function renderRegisterShell(content, options = {}) {
             </div>
           </div>
         </div>
-        ${showPromo ? renderSitePromoSidebar() : ''}
+        ${showPromo ? renderRegisterRightRail({ navRole: getChromeNavRole(), homeBase: HOME_UI_BASE }) : ''}
       </div>
       ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>
@@ -177,9 +174,7 @@ export function bindGlobalEvents(root) {
     getRole: getChromeNavRole,
     logout: () => chromeLogout(),
   });
-  bindSitePromoSidebarEvents(root, {
-    plansHash: `${HOME_UI_BASE}/#/plans/positions`,
-  });
+  bindRightRailEvents(root);
   bindGuestGateLinks(root);
   ensureSiteHeaderOffsetListeners();
   syncSiteHeaderOffset(root);

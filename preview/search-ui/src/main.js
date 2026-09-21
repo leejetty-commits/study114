@@ -14,6 +14,7 @@ import '@home-ui/styles/design-system.css';
 import '@home-ui/styles/product-chrome.css';
 import '@home-ui/styles/home-marketing-banner.css';
 import './styles/search-visily.css';
+import '@home-ui/styles/udx-std-apply.css';
 
 import { bindSearchPageEvents, renderSearchPage } from './screens/search-page.js';
 import { syncRoleFromHash } from './state.js';

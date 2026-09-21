@@ -6,6 +6,8 @@ import '../../shared/register-flow.css';
 import './styles/register.css';
 import '../../home-ui/src/styles/design-system.css';
 import '../../home-ui/src/styles/product-chrome.css';
+import '../../home-ui/src/styles/home-right-rail.css';
+import '../../home-ui/src/styles/udx-std-apply.css';
 
 import {
   getChromeNavRole,
@@ -24,6 +26,8 @@ import {
   ensureSiteHeaderOffsetListeners,
 } from '../../shared/site-chrome.js';
 import { getCurrentScreen, navigate, isRegisterEditMode } from './layout.js';
+import { HOME_UI_BASE } from '../../shared/preview-links.js';
+import { renderSiteFooter } from '../../shared/site-footer.js';
 import { apiMasters, registerState, isTutorBasicComplete } from './state.js';
 import { fetchMasters, loadTutor } from './register-api.js';
 import { applyTutorToState } from './form-collect.js';
@@ -62,6 +66,7 @@ function renderIntroShell(innerHtml) {
           </div>
         </div>
       </div>
+      ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>`;
 }
 

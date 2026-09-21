@@ -1001,7 +1001,7 @@ export function renderCompactFindForm(tab, state, options = {}) {
             ${state.expanded ? '필터 접기' : '상세 필터'}
           </button>
           <button type="reset" class="btn btn--secondary">초기화</button>
-          <button type="submit" class="btn btn--primary search-form__submit">검색</button>
+          <button type="submit" class="btn btn--primary btn--search search-form__submit">검색</button>
           ${
             state.expanded
               ? `<button type="button" class="btn btn--secondary btn--sm" data-action="apply-expanded">적용</button>`

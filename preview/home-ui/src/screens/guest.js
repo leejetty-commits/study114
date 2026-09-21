@@ -4,7 +4,6 @@ import {
   renderGuestHero,
   renderGuestExposureBoxes,
   renderGuestBrowseLists,
-  renderGuestAdInline,
   renderGuestLoginStrip,
   bindGuestSectionEvents,
 } from '../guest-sections.js';
@@ -21,7 +20,6 @@ export function renderGuest() {
     ${renderGuestTempNotice()}
     ${renderGuestHero()}
     ${renderGuestExposureBoxes()}
-    ${renderGuestAdInline()}
     ${renderGuestBrowseLists()}
   `;
 
