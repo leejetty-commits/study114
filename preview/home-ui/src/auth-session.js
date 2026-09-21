@@ -47,14 +47,13 @@ const ROLE_ACTIVE = {
 const PROVIDER_ROLES = new Set(['study_room_owner', 'tutor']);
 
 async function activateProviderApis(roleType) {
-  const tasks = [activateHandoffApi()];
+  await activateHandoffApi();
   if (PROVIDER_ROLES.has(roleType)) {
-    tasks.push(hydrateProviderStatus());
-    tasks.push(hydrateProviderNotices());
+    await hydrateProviderStatus();
+    await hydrateProviderNotices();
   } else {
     deactivatePaidRoiApi();
   }
-  await Promise.all(tasks);
 }
 
 function deactivateProviderApis() {
@@ -153,46 +152,23 @@ function applyRoleContext(roleType) {
 }
 
 /** 쪽지·등록 등 부가 API 실패가 로그인 세션을 지우지 않게 격리 */
-async function hydrateSessionDependencies(mode = 'full') {
-  if (mode === 'search') {
-    await activateHandoffApi().catch((err) => {
-      console.warn('[auth] search handoff hydrate skipped', err);
-    });
-    return;
-  }
-  await Promise.all([
-    activateProviderApis(currentUser.role_type).catch((err) => {
-      console.warn('[auth] provider hydrate skipped', err);
-    }),
-    activateMessagesApi().catch((err) => {
-      console.warn('[auth] messages hydrate skipped', err);
-    }),
-    activateRegistrationsApi().catch((err) => {
-      console.warn('[auth] registrations hydrate skipped', err);
-    }),
-    hydrateExposureBridge().catch((err) => {
-      console.warn('[auth] exposure hydrate skipped', err);
-    }),
-  ]);
+async function hydrateSessionDependencies() {
+  await activateProviderApis(currentUser.role_type).catch((err) => {
+    console.warn('[auth] provider hydrate skipped', err);
+  });
+  await activateMessagesApi().catch((err) => {
+    console.warn('[auth] messages hydrate skipped', err);
+  });
+  await activateRegistrationsApi().catch((err) => {
+    console.warn('[auth] registrations hydrate skipped', err);
+  });
+  await hydrateExposureBridge().catch((err) => {
+    console.warn('[auth] exposure hydrate skipped', err);
+  });
 }
 
-function notifyHydrated() {
-  window.dispatchEvent(new CustomEvent('auth:hydrated', { detail: currentUser }));
-}
-
-/**
- * @param {boolean} [navigateHome]
- * @param {{ hydrate?: boolean | 'full' | 'search' | 'none' }} [opts]
- *   search: 찾기 SPA용 — 찜/비교만 백그라운드. 쪽지·등록·유료 status는 홈에서만.
- */
-export async function initAuthSession(navigateHome = false, opts = {}) {
-  const hydrateOpt = opts.hydrate;
-  const hydrateMode =
-    hydrateOpt === false || hydrateOpt === 'none'
-      ? 'none'
-      : hydrateOpt === 'search'
-        ? 'search'
-        : 'full';
+/** @param {boolean} [navigateHome] */
+export async function initAuthSession(navigateHome = false) {
   try {
     const user = await fetchSession();
     if (!user) {
@@ -207,13 +183,7 @@ export async function initAuthSession(navigateHome = false, opts = {}) {
     }
     currentUser = user;
     applyRoleContext(user.role_type);
-    if (hydrateMode !== 'none') {
-      void hydrateSessionDependencies(hydrateMode)
-        .catch((err) => {
-          console.warn('[auth] hydrate skipped', err);
-        })
-        .finally(notifyHydrated);
-    }
+    await hydrateSessionDependencies();
     if (navigateHome && ROLE_HOME[user.role_type]) {
       navigate(ROLE_HOME[user.role_type]);
     }

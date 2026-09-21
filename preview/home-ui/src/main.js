@@ -309,9 +309,6 @@ function init() {
     window.addEventListener('auth:profile', () => {
       render();
     });
-    window.addEventListener('auth:hydrated', () => {
-      render();
-    });
     Promise.all([
       activateSupportApi().catch((err) => {
         console.warn('[support] api disabled — sessionStorage fallback', err);
