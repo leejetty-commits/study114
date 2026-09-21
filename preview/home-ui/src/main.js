@@ -280,9 +280,11 @@ function init() {
     // 게스트·공개 화면은 me.php·board·support 완료 전에 셸을 그린다.
     // 역할 홈·마이페이지·관리자는 세션 전 guard가 해시를 옮기므로 여기서 그리지 않는다.
     let bootReady = false;
-    window.addEventListener('hashchange', () => {
+    window.addEventListener('hashchange', (event) => {
       if (!bootReady) return;
-      if (window.location.hash === paintedHash) return;
+      // 부트가 넣은 같은 주소 hashchange만 건너뛴다.
+      // 공부방 상단탭은 load 뒤에 같은 주소로 화면을 다시 그린다.
+      if (event.isTrusted && window.location.hash === paintedHash) return;
       try {
         render();
       } catch (e) {
