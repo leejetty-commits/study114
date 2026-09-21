@@ -58,6 +58,39 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
+/** load 실패 뒤 shouldReload이 같은 탭을 다시 로딩으로 넣지 않게 하는 종료 키 */
+let embeddedLoadErrorKey = '';
+
+const EMBEDDED_LOAD_ERROR_COPY = '등록 정보를 불러오지 못했습니다. 잠시 후 다시 열어 주세요.';
+
+function embeddedLoadErrorHtml() {
+  return `<p class="mypage-muted" role="alert">${esc(EMBEDDED_LOAD_ERROR_COPY)}</p>`;
+}
+
+/** @param {number} roomId @param {string} section */
+function hasEmbeddedLoadError(roomId, section) {
+  return embeddedLoadErrorKey === `${roomId}:${section}`;
+}
+
+/**
+ * @param {number} roomId
+ * @param {string} section
+ * @param {unknown} err
+ * @param {string} logLabel
+ */
+function finishEmbeddedLoadError(roomId, section, err, logLabel) {
+  console.error(logLabel, err);
+  embeddedLoadErrorKey = `${roomId}:${section}`;
+  markEmbeddedViewLoaded(roomId, section);
+  const host = document.querySelector(`[data-sr-load-pending="${roomId}:${section}"]`);
+  if (host) {
+    host.removeAttribute('data-sr-load-pending');
+    host.classList.remove('shop--loading', 'is-loading');
+    host.innerHTML = embeddedLoadErrorHtml();
+  }
+  window.dispatchEvent(new Event('hashchange'));
+}
+
 /** @param {import('./store.js').StudyRoomRecord} room @param {string} activeSection */
 function renderTopTabs(room, activeSection) {
   return `
@@ -207,17 +240,22 @@ function renderList(tab) {
 
 
 function renderHub(room) {
+  if (hasEmbeddedLoadError(room.id, 'hub')) {
+    markEmbeddedViewLoaded(room.id, 'hub');
+    return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', embeddedLoadErrorHtml())}</section>`;
+  }
   if (shouldReloadEmbeddedView(room.id, 'hub')) {
     queueMicrotask(() => {
       ensureEmbeddedRegister(room.id, { force: true })
         .then(() => {
+          if (embeddedLoadErrorKey === `${room.id}:hub`) embeddedLoadErrorKey = '';
           markEmbeddedViewLoaded(room.id, 'hub');
           window.dispatchEvent(new Event('hashchange'));
         })
-        .catch((err) => console.error('[myshop]', err));
+        .catch((err) => finishEmbeddedLoadError(room.id, 'hub', err, '[myshop]'));
     });
     const loading = `
-      <div class="shop shop--loading" data-myshop>
+      <div class="shop shop--loading" data-myshop data-sr-load-pending="${room.id}:hub">
         <p class="shop-prose">샵 페이지를 준비하고 있어요…</p>
       </div>`;
     return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', loading)}</section>`;
@@ -382,17 +420,22 @@ function renderDetailBridge(room) {
 
 /** @param {import('./store.js').StudyRoomRecord} room @param {'basic'|'detail'|'detail2'} section */
 function renderEmbeddedSection(room, section) {
+  if (hasEmbeddedLoadError(room.id, section)) {
+    markEmbeddedViewLoaded(room.id, section);
+    return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, section, embeddedLoadErrorHtml())}</section>`;
+  }
   if (shouldReloadEmbeddedView(room.id, section)) {
     queueMicrotask(() => {
       ensureEmbeddedRegister(room.id, { force: true })
         .then(() => {
+          if (embeddedLoadErrorKey === `${room.id}:${section}`) embeddedLoadErrorKey = '';
           markEmbeddedViewLoaded(room.id, section);
           window.dispatchEvent(new Event('hashchange'));
         })
-        .catch((err) => console.error('[embed register]', err));
+        .catch((err) => finishEmbeddedLoadError(room.id, section, err, '[embed register]'));
     });
     const loading = `
-      <div class="mp-room-embed is-loading">
+      <div class="mp-room-embed is-loading" data-sr-load-pending="${room.id}:${section}">
         <p class="p19-form-section__lead">등록 정보를 불러오는 중…</p>
       </div>`;
     return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, section, loading)}</section>`;
@@ -405,17 +448,22 @@ function renderEmbeddedSection(room, section) {
 
 /** @param {import('./store.js').StudyRoomRecord} room */
 function renderPublish(room) {
+  if (hasEmbeddedLoadError(room.id, 'publish')) {
+    markEmbeddedViewLoaded(room.id, 'publish');
+    return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'publish', embeddedLoadErrorHtml())}</section>`;
+  }
   if (shouldReloadEmbeddedView(room.id, 'publish')) {
     queueMicrotask(() => {
       ensureEmbeddedRegister(room.id, { force: true })
         .then(() => {
+          if (embeddedLoadErrorKey === `${room.id}:publish`) embeddedLoadErrorKey = '';
           markEmbeddedViewLoaded(room.id, 'publish');
           window.dispatchEvent(new Event('hashchange'));
         })
-        .catch((err) => console.error('[registration-check]', err));
+        .catch((err) => finishEmbeddedLoadError(room.id, 'publish', err, '[registration-check]'));
     });
     const loading = `
-      <div class="rc-page" data-p20-room-id="${room.id}">
+      <div class="rc-page" data-p20-room-id="${room.id}" data-sr-load-pending="${room.id}:publish">
         <p class="p19-form-section__lead">등록 현황을 불러오는 중…</p>
       </div>`;
     return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'publish', loading)}</section>`;
@@ -430,16 +478,21 @@ function renderPublish(room) {
 
 /** @param {import('./store.js').StudyRoomRecord} room */
 function renderInquiries(room) {
+  if (hasEmbeddedLoadError(room.id, 'inquiries')) {
+    markEmbeddedViewLoaded(room.id, 'inquiries');
+    return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'inquiries', embeddedLoadErrorHtml())}</section>`;
+  }
   if (shouldReloadEmbeddedView(room.id, 'inquiries')) {
     queueMicrotask(() => {
       ensureEmbeddedRegister(room.id, { force: true })
         .then(() => {
+          if (embeddedLoadErrorKey === `${room.id}:inquiries`) embeddedLoadErrorKey = '';
           markEmbeddedViewLoaded(room.id, 'inquiries');
           window.dispatchEvent(new Event('hashchange'));
         })
-        .catch((err) => console.error('[p20 inquiries]', err));
+        .catch((err) => finishEmbeddedLoadError(room.id, 'inquiries', err, '[p20 inquiries]'));
     });
-    const loading = `<p class="mypage-muted">쪽지설정을 준비하고 있어요…</p>`;
+    const loading = `<div data-sr-load-pending="${room.id}:inquiries"><p class="mypage-muted">쪽지설정을 준비하고 있어요…</p></div>`;
     return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'inquiries', loading)}</section>`;
   }
   markEmbeddedViewLoaded(room.id, 'inquiries');

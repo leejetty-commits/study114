@@ -1661,47 +1661,36 @@ final class StudyRoomRegisterService
 
 
 
-        $subjectStmt = $pdo->prepare(
-
-            'SELECT school_level, grade_band, subject_master_id, subject_name, is_main
-
-             FROM study_room_subject_targets WHERE study_room_id = ? ORDER BY is_main DESC, id ASC'
-
-        );
-
-        $subjectStmt->execute([$roomId]);
-
         $subjects = [];
-
-        foreach ($subjectStmt->fetchAll(PDO::FETCH_ASSOC) as $s) {
-
-            $subjects[] = [
-
-                'school_level'      => (string) $s['school_level'],
-
-                'grade_band'        => (string) ($s['grade_band'] ?? ''),
-
-                'subject_master_id' => $s['subject_master_id'] !== null ? (string) $s['subject_master_id'] : '',
-
-                'subject_name'      => (string) $s['subject_name'],
-
-                'is_main'           => (bool) $s['is_main'],
-
-            ];
-
+        try {
+            $subjectStmt = $pdo->prepare(
+                'SELECT school_level, grade_band, subject_master_id, subject_name, is_main
+                 FROM study_room_subject_targets WHERE study_room_id = ? ORDER BY is_main DESC, id ASC'
+            );
+            $subjectStmt->execute([$roomId]);
+            foreach ($subjectStmt->fetchAll(PDO::FETCH_ASSOC) as $s) {
+                $subjects[] = [
+                    'school_level'      => (string) $s['school_level'],
+                    'grade_band'        => (string) ($s['grade_band'] ?? ''),
+                    'subject_master_id' => $s['subject_master_id'] !== null ? (string) $s['subject_master_id'] : '',
+                    'subject_name'      => (string) $s['subject_name'],
+                    'is_main'           => (bool) $s['is_main'],
+                ];
+            }
+        } catch (\Throwable $e) {
+            error_log('[study-room subjects on load] ' . $e->getMessage());
         }
 
-
-
-        $facilityStmt = $pdo->prepare(
-
-            'SELECT facility_id FROM study_room_facilities WHERE study_room_id = ?'
-
-        );
-
-        $facilityStmt->execute([$roomId]);
-
-        $facilityIds = array_map('intval', $facilityStmt->fetchAll(PDO::FETCH_COLUMN));
+        $facilityIds = [];
+        try {
+            $facilityStmt = $pdo->prepare(
+                'SELECT facility_id FROM study_room_facilities WHERE study_room_id = ?'
+            );
+            $facilityStmt->execute([$roomId]);
+            $facilityIds = array_map('intval', $facilityStmt->fetchAll(PDO::FETCH_COLUMN));
+        } catch (\Throwable $e) {
+            error_log('[study-room facilities on load] ' . $e->getMessage());
+        }
 
 
 
