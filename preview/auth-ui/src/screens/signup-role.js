@@ -1,7 +1,14 @@
 import { ROLE_LABELS, ROLE_DESCRIPTIONS, ROLE_ICONS, signupState, setRole } from '../state.js';
 import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { oauthCompleteRoleApi, fetchMeApi, parseApiJson } from '../auth-api.js';
-import { getLoginReturnTo, resolvePostLoginUrl, setPostVerifyTarget } from '../../../shared/auth-redirect.js';
+import {
+  basicRegisterPathForMe,
+  getLoginReturnTo,
+  needsProviderIdentityGate,
+  providerIdentityPath,
+  resolvePostLoginUrl,
+  setPostVerifyTarget,
+} from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import { verifyEmailPathForSignupResult } from '../email-verify-send-status.js';
 
@@ -143,8 +150,16 @@ export function bindSignupRoleEvents(root) {
       submitBtn.textContent = '저장 중…';
       try {
         const data = await oauthCompleteRoleApi(selected);
-        if (data.needs_basic_register) {
-          navigate(`/signup/basic?from=oauth&role=${selected}`);
+        const me = await fetchMeApi();
+        if (needsProviderIdentityGate(me)) {
+          navigate(providerIdentityPath());
+          return;
+        }
+        if (me?.needs_basic_register || data.needs_basic_register) {
+          const pathMe = me?.role_type ? me : { role_type: data.role_type };
+          const basicPath = basicRegisterPathForMe(pathMe);
+          const join = basicPath.includes('?') ? '&' : '?';
+          navigate(`${basicPath}${join}from=oauth`);
           return;
         }
         window.location.href = resolvePostLoginUrl(data.role_type, returnTo);
@@ -194,6 +209,7 @@ export function bindSignupRoleEvents(root) {
         emailSent,
       };
       signupState.accountDraft = null;
+      // 역할은 확인 메일 이후에도 유지. 공급자 목적지는 서버 phone_verified 기준 본인인증 게이트.
       setPostVerifyTarget('basic', selected);
       navigate(verifyEmailPathForSignupResult(emailSent));
     } catch (err) {

@@ -132,6 +132,27 @@ if ($expectedRoleUi === '' || $roleUi !== $expectedRoleUi) {
     exit;
 }
 
+// 공급자 가입만. 학생 기본등록은 휴대폰 본인인증을 요구하지 않는다.
+// 완료 판정은 PhoneVerificationService(현재 번호 = 마지막 검증 번호). 클라 플래그로 통과시키지 않는다.
+if ($roleUi === 'study_room' || $roleUi === 'tutor') {
+    $phoneVerified = false;
+    try {
+        $phoneVerified = (new \Study114\Auth\PhoneVerificationService())->isVerified((int) $auth['user_id']);
+    } catch (Throwable $e) {
+        error_log('[basic-register] phone gate: ' . $e->getMessage());
+        $phoneVerified = false;
+    }
+    if (!$phoneVerified) {
+        http_response_code(403);
+        echo json_encode([
+            'ok' => false,
+            'error' => 'phone_verify_required',
+            'message' => '인증을 완료하지 않아 다음 단계로 이동할 수 없습니다.',
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
 
 
 /** @var array<string, mixed> $payload */
