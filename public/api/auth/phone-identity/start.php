@@ -56,14 +56,7 @@ try {
         exit;
     }
 
-    $state = $service->publicState(
-        (int) $user['user_id'],
-        $role,
-        true,
-        false,
-        false,
-        true,
-    );
+    $state = $service->publicState((int) $user['user_id'], $role);
     if ($state['verified'] === true) {
         echo json_encode([
             'ok' => true,

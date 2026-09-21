@@ -18,8 +18,6 @@ import {
   resolveAfterAuthUrl,
   isOnEmailVerifyWait,
   basicRegisterPathForMe,
-  needsProviderIdentityPrompt,
-  providerIdentityPath,
   uiRoleFromRoleType,
 } from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
@@ -55,10 +53,6 @@ function continueAfterVerified(me) {
   const returnTo = getLoginReturnTo();
   const roleUi = uiRoleFromRoleType(me?.role_type);
   if (roleUi) setRole(roleUi);
-  if (needsProviderIdentityPrompt(me)) {
-    navigate(providerIdentityPath());
-    return;
-  }
   if (me?.needs_basic_register) {
     navigate(basicRegisterPathForMe(me));
     return;

@@ -6,11 +6,28 @@
 
 ## 지금 상태
 
-- 운영 모드 기본값은 `off`다. 환경변수를 바꾸기 전에는 가입 화면이 바뀌지 않는다.
-- `STUDY114_PHONE_IDENTITY_MODE=warn`이면 공부방·과외쌤만, 이메일 확인 다음·기본등록 직전에 안내 화면이 뜬다. `계속`은 완료로 기록하지 않으며 기본등록을 막지 않는다.
-- `required`를 환경값으로 넣어도 이번 코드는 차단하지 않고 `warn`으로 내린다.
-- 업체 시크릿, SDK, 시작 URL, 샌드박스 자격은 저장소에 없다. `인증하기`는 `vendor_not_configured`만 반환한다.
-- 완료 기록은 `POST /api/auth/phone-identity/callback.php`의 HMAC 서명이 맞을 때만 한다.
+- 운영 모드 기본값은 `off`다. `off` / `warn` / `required` 값은 서버 판정에만 쓰인다.
+- 이메일 확인 다음 공급자도, 학생도, 지금은 기본등록으로 간다. 본인확인 화면으로 보내지 않는다.
+- `needsProviderPhoneIdentity`가 true여도 안내가 필요할 뿐이고, `canEnterProviderBasicRegistrationNow`는 가입을 막지 않는다.
+- `required`여도 지금은 차단하지 않는다. 업체 연동 및 운영 검증 완료 후 required 차단을 활성화한다.
+- 업체 시크릿, SDK, 시작 URL은 없다. 시작 API는 완료를 기록하지 않고, 콜백은 서명이 없으면 저장하지 않는다.
+
+## 판정 함수
+
+`Study114\Auth\PhoneIdentityService`
+
+- `isProviderRole` — `study_room_owner`, `tutor`만
+- `isPhoneIdentityVerified` — 완료 시각, 같은 번호, 허용 method, 거래 식별자. `sms_otp`는 완료가 아니다
+- `needsProviderPhoneIdentity` — 공급자이고 모드가 off가 아니며 미완료일 때 true. 차단이 아니다
+- `canEnterProviderBasicRegistrationNow` — 이번 단계에서는 off, warn, required 모두 기본등록 가능
+
+## 나중에 업체를 붙일 곳
+
+- `public/api/auth/phone-identity/start.php` — 시작 URL로 보내는 응답
+- `public/api/auth/phone-identity/callback.php` — 서명 검증 뒤 `recordSignedResult`
+- `STUDY114_PHONE_IDENTITY_VENDOR`, `CALLBACK_SECRET`, `START_URL`
+- `canEnterProviderBasicRegistrationNow`의 required 분기
+- 그 다음에 이메일 확인과 기본등록 사이에 안내 화면을 연결한다. 그 전에는 라우트를 넣지 않는다.
 
 ## OTP와 분리
 

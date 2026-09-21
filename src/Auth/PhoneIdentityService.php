@@ -10,7 +10,7 @@ use Study114\Database\Connection;
 
 /**
  * 공급자 가입단계 휴대폰 본인확인.
- * SMS OTP(PhoneVerificationService / phone_verified_*)와 별도 축이다.
+ * SMS OTP 수신확인 축(phone_verified_*)과 별도다.
  * sms_otp 완료값을 본인확인 완료로 보지 않는다.
  * 브라우저가 완료를 선언해도 기록하지 않는다. 서명된 업체 콜백만 기록한다.
  */
@@ -42,20 +42,77 @@ final class PhoneIdentityService
     }
 
     /**
-     * 업체 콜백이 운영에서 확인되기 전에는 required를 차단 모드로 올리지 않는다.
-     * $vendorReady 가 true여도 이번 단계의 required는 warn이다.
+     * 완료 판정. phone_verified_* / sms_otp 는 보지 않는다.
+     *
+     * @param array<string, mixed>|null $profile
      */
-    public static function effectiveMode(string $requested, bool $vendorReady): string
+    public static function isPhoneIdentityVerified(?array $profile): bool
     {
-        $mode = self::normalizeMode($requested);
-        if ($mode === 'off') {
-            return 'off';
+        if ($profile === null) {
+            return false;
         }
-        if ($mode === 'required' && $vendorReady) {
-            return 'warn';
+        $at = $profile['phone_identity_verified_at'] ?? null;
+        if ($at === null || $at === '') {
+            return false;
+        }
+        $identityPhone = PhoneNormalizer::digits((string) ($profile['phone_identity_phone'] ?? ''));
+        $current = PhoneNormalizer::digits((string) ($profile['phone'] ?? ''));
+        if ($identityPhone === '' || $current === '' || $current !== $identityPhone) {
+            return false;
+        }
+        if (!PhoneNormalizer::isValidMobile($current)) {
+            return false;
+        }
+        $method = strtolower(trim((string) ($profile['phone_identity_method'] ?? '')));
+        if (!in_array($method, self::METHODS, true)) {
+            return false;
+        }
+        $txId = trim((string) ($profile['phone_identity_tx_id'] ?? ''));
+
+        return $txId !== '';
+    }
+
+    /**
+     * 안내가 필요한지. 차단 여부가 아니다.
+     * warn에서도 true일 수 있지만, 이번 단계에서는 가입을 막지 않는다.
+     *
+     * @param array{role_type?: string} $user
+     * @param array<string, mixed>|null $profile
+     */
+    public static function needsProviderPhoneIdentity(array $user, ?array $profile, string $mode): bool
+    {
+        if (!self::isProviderRole((string) ($user['role_type'] ?? ''))) {
+            return false;
+        }
+        if (self::normalizeMode($mode) === 'off') {
+            return false;
         }
 
-        return 'warn';
+        return !self::isPhoneIdentityVerified($profile);
+    }
+
+    /**
+     * 지금 기본등록으로 들어갈 수 있는지.
+     * off와 warn은 항상 허용한다.
+     * required는 업체 연동 및 운영 검증 완료 후 required 차단 활성화.
+     * 지금은 그 분기를 켜지 않고 true만 반환한다.
+     *
+     * @param array{role_type?: string} $user
+     * @param array<string, mixed>|null $profile
+     */
+    public static function canEnterProviderBasicRegistrationNow(array $user, ?array $profile, string $mode): bool
+    {
+        if (!self::isProviderRole((string) ($user['role_type'] ?? ''))) {
+            return true;
+        }
+        $normalized = self::normalizeMode($mode);
+        if ($normalized === 'off' || $normalized === 'warn') {
+            return true;
+        }
+
+        // required: 업체 연동 및 운영 검증 완료 후 required 차단 활성화.
+        // 지금은 업체 미연동이므로 미완료여도 가입을 막지 않는다.
+        return true;
     }
 
     public function configuredMode(): string
@@ -76,58 +133,35 @@ final class PhoneIdentityService
 
     public function mode(): string
     {
-        return self::effectiveMode($this->configuredMode(), $this->vendorReady());
+        return $this->configuredMode();
     }
 
     /**
-     * @return array{mode: string, prompt: bool, verified: bool, method: ?string}
+     * 가입 화면 분기에 쓰지 않는다. 판정값만 돌려준다.
+     *
+     * @return array{mode: string, verified: bool, needs: bool, can_enter_basic: bool}
      */
-    public function publicState(
-        int $userId,
-        string $roleType,
-        bool $emailVerified,
-        bool $needsAccountContact,
-        bool $oauthRolePending,
-        bool $needsBasicRegister,
-    ): array {
+    public function publicState(int $userId, string $roleType): array
+    {
         $mode = $this->mode();
-        if ($mode === 'off') {
-            return [
-                'mode' => 'off',
-                'prompt' => false,
-                'verified' => false,
-                'method' => null,
-            ];
-        }
-
-        $verified = false;
-        $method = null;
-        try {
-            $row = $this->profileIdentity($userId);
-            if (self::rowIsVerified($row)) {
-                $verified = true;
-                $method = (string) $row['phone_identity_method'];
+        $user = ['role_type' => $roleType];
+        $profile = null;
+        if ($mode !== 'off') {
+            try {
+                $profile = $this->profileIdentity($userId);
+            } catch (PDOException $e) {
+                if (!self::isMissingColumn($e)) {
+                    throw $e;
+                }
+                error_log('[phone-identity] schema missing');
             }
-        } catch (PDOException $e) {
-            if (!self::isMissingColumn($e)) {
-                throw $e;
-            }
-            error_log('[phone-identity] schema missing');
         }
-
-        $prompt = $mode === 'warn'
-            && $emailVerified
-            && !$needsAccountContact
-            && !$oauthRolePending
-            && $needsBasicRegister
-            && self::isProviderRole($roleType)
-            && !$verified;
 
         return [
             'mode' => $mode,
-            'prompt' => $prompt,
-            'verified' => $verified,
-            'method' => $method,
+            'verified' => self::isPhoneIdentityVerified($profile),
+            'needs' => self::needsProviderPhoneIdentity($user, $profile, $mode),
+            'can_enter_basic' => self::canEnterProviderBasicRegistrationNow($user, $profile, $mode),
         ];
     }
 
@@ -216,26 +250,12 @@ final class PhoneIdentityService
     /**
      * @param array<string, mixed>|null $row
      */
+    /**
+     * @param array<string, mixed>|null $row
+     */
     public static function rowIsVerified(?array $row): bool
     {
-        if ($row === null) {
-            return false;
-        }
-        $at = $row['phone_identity_verified_at'] ?? null;
-        if ($at === null || $at === '') {
-            return false;
-        }
-        $method = strtolower(trim((string) ($row['phone_identity_method'] ?? '')));
-        if (!in_array($method, self::METHODS, true)) {
-            return false;
-        }
-        $current = PhoneNormalizer::digits((string) ($row['phone'] ?? ''));
-        $verifiedPhone = PhoneNormalizer::digits((string) ($row['phone_identity_phone'] ?? ''));
-        if (!PhoneNormalizer::isValidMobile($current) || $current !== $verifiedPhone) {
-            return false;
-        }
-
-        return true;
+        return self::isPhoneIdentityVerified($row);
     }
 
     /**
@@ -244,7 +264,7 @@ final class PhoneIdentityService
     private function profileIdentity(int $userId): ?array
     {
         $stmt = Connection::get()->prepare(
-            'SELECT phone, phone_identity_verified_at, phone_identity_phone, phone_identity_method
+            'SELECT phone, phone_identity_verified_at, phone_identity_phone, phone_identity_method, phone_identity_tx_id
              FROM user_profiles WHERE user_id = ? LIMIT 1'
         );
         $stmt->execute([$userId]);
@@ -260,7 +280,7 @@ final class PhoneIdentityService
     {
         $stmt = Connection::get()->prepare(
             'SELECT u.status, u.email_verified_at, p.phone,
-                    p.phone_identity_verified_at, p.phone_identity_phone, p.phone_identity_method,
+                    p.phone_identity_verified_at, p.phone_identity_phone, p.phone_identity_method, p.phone_identity_tx_id,
                     (
                       SELECT ur.role_type FROM user_roles ur
                       WHERE ur.user_id = u.id AND ur.status = ?

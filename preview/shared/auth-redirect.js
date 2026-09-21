@@ -189,24 +189,6 @@ export function ensurePostVerifyTargetForUnverifiedLogin() {
   }
 }
 
-export function providerIdentityPath() {
-  return '/signup/provider-identity';
-}
-
-/**
- * 서버가 phone_identity.prompt 를 준 공급자만 본인확인 안내로 보낸다.
- * phone_verified(SMS OTP) 나 프론트 저장값으로 이 단계를 열거나 통과시키지 않는다.
- * @param {{ authenticated?: boolean, email_verified?: boolean, needs_account_contact?: boolean, oauth_role_pending?: boolean, needs_basic_register?: boolean, role_type?: string, phone_identity?: { prompt?: boolean } } | null | undefined} me
- */
-export function needsProviderIdentityPrompt(me) {
-  if (!me?.authenticated || !me.email_verified) return false;
-  if (me.needs_account_contact || me.oauth_role_pending) return false;
-  if (!me.needs_basic_register) return false;
-  const role = String(me.role_type || '');
-  if (role !== 'tutor' && role !== 'study_room_owner') return false;
-  return me.phone_identity?.prompt === true;
-}
-
 /**
  * 확인 후 기본등록 경로 — 서버 role_type 정본. URL/hint와 불일치해도 서버 역할만 사용.
  * @param {{ role_type?: string }} me
@@ -330,11 +312,8 @@ export function resolveAfterAuthUrl(me, returnTo = '') {
   if (me.oauth_role_pending) {
     return oauthRoleSelectionUrl(returnTo);
   }
-  // 이메일 확인 다음, 기본등록 직전. prompt는 서버 warn 모드만 true.
-  if (needsProviderIdentityPrompt(me)) {
-    return authUiHref(providerIdentityPath());
-  }
-  // 기본등록 완료 여부는 서버 행 존재(needs_basic_register). 빈 postVerify로 추정하지 않음.
+  // 목표 순서는 이메일 확인 다음 공급자 본인확인이지만, 업체 미연동 동안에는 분기하지 않는다.
+  // 판정은 서버 PhoneIdentityService. 지금은 기본등록으로 간다.
   if (me.needs_basic_register) {
     return authUiHref(basicRegisterPathForMe(me));
   }

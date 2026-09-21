@@ -75,18 +75,14 @@ try {
 
 $phoneIdentity = [
     'mode' => 'off',
-    'prompt' => false,
     'verified' => false,
-    'method' => null,
+    'needs' => false,
+    'can_enter_basic' => true,
 ];
 try {
     $phoneIdentity = (new \Study114\Auth\PhoneIdentityService())->publicState(
         (int) $user['user_id'],
         (string) ($user['role_type'] ?? ''),
-        $emailVerified,
-        $needsAccountContact,
-        $oauthRolePending,
-        $needsBasicRegister,
     );
 } catch (Throwable $e) {
     error_log('[me] phone identity: ' . $e->getMessage());
