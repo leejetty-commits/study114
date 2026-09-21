@@ -58,6 +58,7 @@ import {
   bootstrapPlansRoute,
   isMyshopRoute,
   bootstrapMyshopRoute,
+  isMessagesRoute,
 } from './state.js';
 import { PLANS_REDIRECTS } from './plans/router.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
@@ -76,7 +77,7 @@ import { parseHashQuery } from '../../shared/preview-links.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { showEmailVerifyOverlay } from './email-verify-overlay.js';
 import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
-import { activateBoardApi, deactivateBoardApi } from './board/board-backend.js';
+import { activateBoardApi, boardKeysBlockedForRole, deactivateBoardApi, hydrateBoardCache } from './board/board-backend.js';
 import { resetConcernPreviewData } from './concern/store.js';
 import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
@@ -104,7 +105,21 @@ function applyPlansRedirects() {
   return false;
 }
 
+let paintedHash = null;
+
 function render() {
+  const hashBefore = window.location.hash;
+  renderScreen();
+  if (window.location.hash === hashBefore) paintedHash = hashBefore;
+}
+
+function shouldPaintBeforeSession() {
+  if (isAdminRoute() || isMypageRoute() || isPlansRoute() || isMessagesRoute()) return false;
+  const screen = getCurrentScreen();
+  return screen !== 'parent' && screen !== 'studyRoom' && screen !== 'tutor';
+}
+
+function renderScreen() {
   // 공개 마이샵·가이드는 미인증 로그인 유저도 열람 가능 (공통 쇼케이스)
   if (isLoggedIn() && !isEmailVerified() && !isGuideRoute() && !isMyshopRoute()) {
     redirectToEmailVerifyWait();
@@ -261,12 +276,13 @@ function init() {
     ) {
       clearPendingRoute();
     }
-    // 부팅 중 bootstrap*Route의 location.replace가 유발하는 hashchange가
-    // 세션(me.php) 로드 전에 조기 render를 일으켜 계정·관리자 콘솔이 늦게
-    // 나타나는 이중 렌더를 막는다. 세션 준비 후 첫 render부터 반영한다.
+    // bootstrap*Route가 큐에 넣은 hashchange는 방금 그린 셸과 같으면 무시한다.
+    // 게스트·공개 화면은 me.php·board·support 완료 전에 셸을 그린다.
+    // 역할 홈·마이페이지·관리자는 세션 전 guard가 해시를 옮기므로 여기서 그리지 않는다.
     let bootReady = false;
     window.addEventListener('hashchange', () => {
       if (!bootReady) return;
+      if (window.location.hash === paintedHash) return;
       try {
         render();
       } catch (e) {
@@ -309,20 +325,54 @@ function init() {
     window.addEventListener('auth:profile', () => {
       render();
     });
+    if (shouldPaintBeforeSession()) {
+      try {
+        render();
+      } catch (e) {
+        showBootError(e);
+      }
+    }
+    setTimeout(() => {
+      bootReady = true;
+      if (paintedHash !== null && window.location.hash !== paintedHash) {
+        try {
+          render();
+        } catch (e) {
+          showBootError(e);
+        }
+      }
+    }, 0);
+    const supportBoot = activateSupportApi().catch((err) => {
+      console.warn('[support] api disabled — sessionStorage fallback', err);
+      deactivateSupportApi();
+    });
+    // 게스트에게 401이 나는 library·submission은 첫 부트에서 요청하지 않는다.
+    const guestBoardBoot = activateBoardApi({ navRole: 'guest' }).catch((err) => {
+      console.warn('[board] api disabled — sessionStorage fallback', err);
+      deactivateBoardApi();
+    });
+    let followUpDone = false;
     Promise.all([
-      activateSupportApi().catch((err) => {
-        console.warn('[support] api disabled — sessionStorage fallback', err);
-        deactivateSupportApi();
-      }),
-      activateBoardApi().catch((err) => {
-        console.warn('[board] api disabled — sessionStorage fallback', err);
-        deactivateBoardApi();
-      }),
+      supportBoot,
+      guestBoardBoot,
       initAuthSession(),
     ])
       .then(async ([, , user]) => {
+        if (followUpDone) return;
+        followUpDone = true;
         if (isAuthRedirectPending()) return;
-        bootReady = true;
+        if (user) {
+          const deferred = boardKeysBlockedForRole('guest');
+          if (deferred.length) {
+            hydrateBoardCache({ onlyKeys: deferred })
+              .then(() => {
+                if (isLibraryRoute() || isMypageRoute() || isAdminRoute()) render();
+              })
+              .catch((err) => {
+                console.warn('[board] deferred hydrate failed', err);
+              });
+          }
+        }
         if (user && isAdminUser()) {
           await activateAdminApi().catch((err) => {
             console.warn('[admin] api disabled — static A28 fallback', err);

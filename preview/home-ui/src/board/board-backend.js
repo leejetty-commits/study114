@@ -6,6 +6,7 @@ import {
   requestAttachmentDownloadToken,
   attachmentDownloadUrl,
 } from './board-api.js';
+import { getBoardAccess } from '../board-channel-acl.js';
 
 const LIBRARY_BOARD_KEYS = ['library', 'library-template', 'library-guide-pdf'];
 const OPERATIONAL_BOARD_KEYS = ['notice', 'faq', 'safe-guide'];
@@ -58,9 +59,15 @@ function removePostCache(boardKey, postKey) {
   setBoardCache(boardKey, getBoardPostsCache(boardKey).filter((p) => p.id !== postKey));
 }
 
-export async function activateBoardApi() {
+/**
+ * @param {{ navRole?: string }} [opts]
+ * navRole을 주면 ACL상 blocked 보드는 요청하지 않는다.
+ * 게스트 첫 부트에서 library·submission 401을 만들지 않기 위한 옵션.
+ * 인자 없이 호출하면 기존과 같이 전 보드를 가져온다.
+ */
+export async function activateBoardApi(opts = {}) {
   apiMode = true;
-  await hydrateBoardCache();
+  await hydrateBoardCache(opts);
 }
 
 export function deactivateBoardApi() {
@@ -68,18 +75,35 @@ export function deactivateBoardApi() {
   resetCaches();
 }
 
-export async function hydrateBoardCache() {
-  const results = await Promise.all([
-    ...LIBRARY_BOARD_KEYS.map((key) => fetchBoardPosts(key).catch(() => ({ posts: [], access: 'blocked', intro: null }))),
-    fetchBoardPosts(SUBMISSION_BOARD_KEY).catch(() => ({ posts: [], access: 'blocked', intro: null })),
-    ...OPERATIONAL_BOARD_KEYS.map((key) => fetchBoardPosts(key).catch(() => ({ posts: [], access: 'blocked', intro: null }))),
-  ]);
-  LIBRARY_BOARD_KEYS.forEach((key, i) => {
-    setBoardCache(key, results[i].posts ?? []);
-  });
-  setBoardCache(SUBMISSION_BOARD_KEY, results[LIBRARY_BOARD_KEYS.length].posts ?? []);
-  OPERATIONAL_BOARD_KEYS.forEach((key, i) => {
-    setBoardCache(key, results[LIBRARY_BOARD_KEYS.length + 1 + i].posts ?? []);
+const HYDRATE_BOARD_KEYS = [
+  ...LIBRARY_BOARD_KEYS,
+  SUBMISSION_BOARD_KEY,
+  ...OPERATIONAL_BOARD_KEYS,
+];
+
+/** @param {string} navRole */
+export function boardKeysBlockedForRole(navRole) {
+  return HYDRATE_BOARD_KEYS.filter((key) => getBoardAccess(key, navRole).access === 'blocked');
+}
+
+/**
+ * @param {{ navRole?: string, onlyKeys?: string[] }} [opts]
+ * navRole이 있으면 그 역할에서 blocked인 보드는 요청하지 않는다.
+ * onlyKeys가 있으면 그 키만 갱신한다.
+ */
+export async function hydrateBoardCache(opts = {}) {
+  const navRole = opts.navRole || '';
+  const only = Array.isArray(opts.onlyKeys) ? new Set(opts.onlyKeys) : null;
+  const keys = HYDRATE_BOARD_KEYS.filter((key) => !only || only.has(key));
+  const pairs = await Promise.all(keys.map(async (key) => {
+    if (navRole && getBoardAccess(key, navRole).access === 'blocked') {
+      return [key, []];
+    }
+    const data = await fetchBoardPosts(key).catch(() => ({ posts: [] }));
+    return [key, data.posts ?? []];
+  }));
+  pairs.forEach(([key, posts]) => {
+    setBoardCache(key, posts);
   });
 }
 

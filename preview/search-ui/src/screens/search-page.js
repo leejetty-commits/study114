@@ -128,7 +128,14 @@ export function afterSearchPageMount(rerender) {
   });
 }
 
-export function bindSearchPageEvents(root, rerender) {
+/**
+ * @param {HTMLElement} root
+ * @param {() => void} rerender
+ * @param {{ allowFindBoot?: boolean }} [opts]
+ * allowFindBoot false면 GPS·복원 검색을 돌리지 않는다.
+ * 세션 전 게스트 셸은 껍데기만 그리고, 부트는 세션 확정 후 1회만 한다.
+ */
+export function bindSearchPageEvents(root, rerender, opts = {}) {
   bindGlobalEvents(root);
   const viewer = resolveSearchViewer(previewState.role);
   const sessionLoggedIn = isSearchLoggedIn();
@@ -167,5 +174,7 @@ export function bindSearchPageEvents(root, rerender) {
     });
   });
 
-  afterSearchPageMount(rerender);
+  if (opts.allowFindBoot !== false) {
+    afterSearchPageMount(rerender);
+  }
 }
