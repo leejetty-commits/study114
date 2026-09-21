@@ -1,7 +1,13 @@
 import { ROLE_LABELS, ROLE_DESCRIPTIONS, ROLE_ICONS, signupState, setRole } from '../state.js';
 import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { oauthCompleteRoleApi, fetchMeApi, parseApiJson } from '../auth-api.js';
-import { getLoginReturnTo, resolvePostLoginUrl, setPostVerifyTarget } from '../../../shared/auth-redirect.js';
+import {
+  getLoginReturnTo,
+  needsProviderIdentityPrompt,
+  providerIdentityPath,
+  resolvePostLoginUrl,
+  setPostVerifyTarget,
+} from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import { verifyEmailPathForSignupResult } from '../email-verify-send-status.js';
 
@@ -144,6 +150,11 @@ export function bindSignupRoleEvents(root) {
       try {
         const data = await oauthCompleteRoleApi(selected);
         if (data.needs_basic_register) {
+          const me = await fetchMeApi().catch(() => null);
+          if (needsProviderIdentityPrompt(me)) {
+            navigate(`${providerIdentityPath()}?from=oauth`);
+            return;
+          }
           navigate(`/signup/basic?from=oauth&role=${selected}`);
           return;
         }

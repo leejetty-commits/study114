@@ -73,6 +73,25 @@ try {
     error_log('[me] auth flags: ' . $e->getMessage());
 }
 
+$phoneIdentity = [
+    'mode' => 'off',
+    'prompt' => false,
+    'verified' => false,
+    'method' => null,
+];
+try {
+    $phoneIdentity = (new \Study114\Auth\PhoneIdentityService())->publicState(
+        (int) $user['user_id'],
+        (string) ($user['role_type'] ?? ''),
+        $emailVerified,
+        $needsAccountContact,
+        $oauthRolePending,
+        $needsBasicRegister,
+    );
+} catch (Throwable $e) {
+    error_log('[me] phone identity: ' . $e->getMessage());
+}
+
 echo json_encode([
     'ok' => true,
     'authenticated' => true,
@@ -87,6 +106,8 @@ echo json_encode([
     'oauth_providers' => $oauthProviders,
     'oauth_provider_labels' => $oauthProviderLabels,
     'needs_account_contact' => $needsAccountContact,
+    // phone_verified 는 SMS OTP 수신 확인이다. 가입단계 본인확인 완료가 아니다.
     'phone_verified' => $phoneVerified,
+    'phone_identity' => $phoneIdentity,
     'needs_basic_register' => $needsBasicRegister,
 ], JSON_UNESCAPED_UNICODE);
