@@ -166,6 +166,12 @@ jobs:
           local-dir: "./public/"
           port: 21
           protocol: ftp
+          # PASV 데이터채널 지연 대비 (기본 30s → 120s). #318 src FTP timeout 대응.
+          timeout: 120000
+
+      # public 직후 연속 PASV가 닷홈에서 끊기는 사례(#318) — 짧은 간격 후 src 업로드
+      - name: Pause before src FTP
+        run: sleep 20
 
       # PHP 앱은 html/ 형제 src/ 필요 — public/만 올리면 ProfileGenderSync 등 미반영
       - name: Deploy src/ via FTP
@@ -178,3 +184,4 @@ jobs:
           local-dir: "./src/"
           port: 21
           protocol: ftp
+          timeout: 120000
