@@ -17,9 +17,116 @@
       href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <style>
+      #register-boot-fallback {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 20vh 1.5rem 2rem;
+        box-sizing: border-box;
+        background: #f7f6f3;
+        color: #2c2a26;
+        font-family: Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+        text-align: center;
+      }
+      #register-boot-fallback[data-boot-state="done"] {
+        display: none;
+      }
+      #register-boot-fallback .register-boot-fallback__title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 500;
+        line-height: 1.5;
+      }
+      #register-boot-fallback .register-boot-fallback__hint {
+        margin: 0.5rem 0 0;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: #5c5852;
+      }
+      #register-boot-fallback .register-boot-fallback__hint[hidden] {
+        display: none;
+      }
+      #register-boot-fallback .register-boot-fallback__dots {
+        margin-top: 1rem;
+        letter-spacing: 0.35em;
+        font-size: 1.25rem;
+        color: #8a857c;
+        animation: register-boot-pulse 1.2s ease-in-out infinite;
+      }
+      #register-boot-fallback[data-boot-state="delayed"] .register-boot-fallback__dots {
+        display: none;
+      }
+      @keyframes register-boot-pulse {
+        0%, 100% { opacity: 0.35; }
+        50% { opacity: 1; }
+      }
+    </style>
   </head>
   <body data-theme="v1">
+    <div
+      id="register-boot-fallback"
+      data-boot-state="loading"
+      role="status"
+      aria-live="polite"
+    >
+      <p class="register-boot-fallback__title" id="register-boot-msg">
+        페이지를 준비하고 있습니다.
+      </p>
+      <p class="register-boot-fallback__hint" id="register-boot-hint" hidden>
+        잠시 후 다시 시도하거나 새로고침해 주세요.
+      </p>
+      <div class="register-boot-fallback__dots" aria-hidden="true">···</div>
+    </div>
+    <noscript>
+      <p style="padding:2rem;text-align:center;font-family:sans-serif;">
+        이 페이지를 열려면 브라우저에서 JavaScript가 필요합니다.
+      </p>
+    </noscript>
     <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <script>
+      (function () {
+        var DONE = false;
+        var el = document.getElementById('register-boot-fallback');
+        var msg = document.getElementById('register-boot-msg');
+        var hint = document.getElementById('register-boot-hint');
+        var WATCH_MS = 10000;
+
+        function showDelayed() {
+          if (DONE || !el) return;
+          el.setAttribute('data-boot-state', 'delayed');
+          if (msg) {
+            msg.textContent = '페이지를 여는 데 시간이 조금 걸리고 있습니다.';
+          }
+          if (hint) hint.removeAttribute('hidden');
+        }
+
+        window.__REGISTER_BOOT_DONE__ = false;
+        window.__registerBootDone = function () {
+          if (DONE) return;
+          DONE = true;
+          window.__REGISTER_BOOT_DONE__ = true;
+          if (el) {
+            el.setAttribute('data-boot-state', 'done');
+            if (el.parentNode) el.parentNode.removeChild(el);
+          }
+        };
+        window.__registerBootFail = function () {
+          showDelayed();
+        };
+
+        setTimeout(showDelayed, WATCH_MS);
+      })();
+    </script>
+    <script
+      type="module"
+      src="/src/main.js"
+      data-register-main
+      onerror="window.__registerBootFail&&window.__registerBootFail()"
+    ></script>
   </body>
 </html>

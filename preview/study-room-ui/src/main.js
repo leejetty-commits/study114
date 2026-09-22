@@ -20,6 +20,10 @@ import { guardRegisterAccess } from '../../shared/route-access.js';
 import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 import { renderRegisterIntroGate, bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 import {
+  markRegisterBootDone,
+  markRegisterBootFailed,
+} from '../../shared/register-boot-watchdog.js';
+import {
   renderSiteHeader,
   bindSiteChrome,
   syncSiteHeaderOffset,
@@ -91,7 +95,10 @@ function maybeRedirectLocationToOverview() {
 
 function render() {
   const mode = resolveRegisterMode();
-  if (mode === 'blocked') return;
+  if (mode === 'blocked') {
+    markRegisterBootDone();
+    return;
+  }
 
   document.body.classList.remove('register-edit-open');
 
@@ -108,6 +115,7 @@ function render() {
     });
     syncSiteHeaderOffset();
     ensureSiteHeaderOffsetListeners();
+    markRegisterBootDone();
     return;
   }
 
@@ -117,6 +125,7 @@ function render() {
   const screen = SCREENS[key] || SCREENS.basic;
   app.innerHTML = screen.render();
   screen.bind(app);
+  markRegisterBootDone();
 }
 
 async function initApi() {
@@ -162,7 +171,10 @@ function init() {
 
   Promise.all([initChromeSession(), initApi()])
     .then(() => {
-      if (isAuthRedirectPending()) return;
+      if (isAuthRedirectPending()) {
+        markRegisterBootDone();
+        return;
+      }
       registerState.basicComplete =
         isRoomBasicComplete(registerState) || registerState.basicComplete;
       if (getCurrentScreen() === 'location') {
@@ -188,7 +200,13 @@ function init() {
       }
       render();
     })
-    .catch(() => render());
+    .catch(() => {
+      try {
+        render();
+      } catch {
+        markRegisterBootFailed();
+      }
+    });
 }
 
 init();

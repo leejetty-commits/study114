@@ -20,6 +20,10 @@ import { guardRegisterAccess } from '../../shared/route-access.js';
 import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 import { renderRegisterIntroGate, bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
 import {
+  markRegisterBootDone,
+  markRegisterBootFailed,
+} from '../../shared/register-boot-watchdog.js';
+import {
   renderSiteHeader,
   bindSiteChrome,
   syncSiteHeaderOffset,
@@ -97,7 +101,10 @@ function maybeSkipBasicSteps() {
 
 function render() {
   const mode = resolveRegisterMode();
-  if (mode === 'blocked') return;
+  if (mode === 'blocked') {
+    markRegisterBootDone();
+    return;
+  }
 
   const app = document.getElementById('app');
   if (mode === 'intro') {
@@ -112,6 +119,7 @@ function render() {
     });
     syncSiteHeaderOffset();
     ensureSiteHeaderOffsetListeners();
+    markRegisterBootDone();
     return;
   }
 
@@ -121,6 +129,7 @@ function render() {
   const screen = SCREENS[key] || SCREENS.lesson;
   app.innerHTML = screen.render();
   screen.bind(app);
+  markRegisterBootDone();
 }
 
 async function initApi() {
@@ -152,7 +161,10 @@ function init() {
   window.addEventListener('hashchange', render);
   Promise.all([initChromeSession(), initApi()])
     .then(([, tutor]) => {
-      if (isAuthRedirectPending()) return;
+      if (isAuthRedirectPending()) {
+        markRegisterBootDone();
+        return;
+      }
       registerState.basicComplete = isTutorBasicComplete(tutor) || registerState.basicComplete;
       if (
         registerState.basicComplete &&
@@ -164,7 +176,13 @@ function init() {
       }
       render();
     })
-    .catch(() => render());
+    .catch(() => {
+      try {
+        render();
+      } catch {
+        markRegisterBootFailed();
+      }
+    });
 }
 
 init();
