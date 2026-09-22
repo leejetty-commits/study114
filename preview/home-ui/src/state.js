@@ -84,6 +84,7 @@ export const SCREEN_META = {
   admin: { label: 'A28', role: 'guest' },
   plans: { label: '유료상품', role: 'guest' },
   myshop: { label: '공개 마이샵', role: 'guest' },
+  registerIntro: { label: '등록 안내', role: 'guest' },
 };
 
 export function setParentTab(tab) {
@@ -126,8 +127,8 @@ export function getGuestListPage(listId) {
 }
 
 export function getNavRole() {
-  if (isPlansRoute()) {
-    // plans 헤더 GNB는 layout.resolveHeaderGnbRole이 세션을 우선한다.
+  if (isPlansRoute() || isRegisterIntroRoute()) {
+    // plans·등록 intro 헤더 GNB는 layout.resolveHeaderGnbRole이 세션을 우선한다.
     // 여기서 stale ACTIVE_ROLE(parent 등)을 쓰면 비로그인 GNB가 줄어든다.
     return 'guest';
   }
@@ -219,6 +220,21 @@ export function isPlansRoute() {
   const hash = window.location.hash.slice(1) || '';
   const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
   return path === '/plans' || path.startsWith('/plans/');
+}
+
+export function isRegisterIntroRoute() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
+  return path === '/register-intro/room' || path === '/register-intro/tutor';
+}
+
+/** @returns {'room'|'tutor'|null} */
+export function getRegisterIntroKind() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
+  if (path === '/register-intro/tutor') return 'tutor';
+  if (path === '/register-intro/room') return 'room';
+  return null;
 }
 
 export function isMyshopRoute() {
@@ -820,6 +836,7 @@ export function getMypagePath() {
 
 export function getCurrentScreen() {
   if (isPlansRoute()) return 'plans';
+  if (isRegisterIntroRoute()) return 'registerIntro';
   if (isMyshopRoute()) return 'myshop';
   if (isMypageRoute()) return 'mypage';
   if (isMessagesRoute()) return 'messages';

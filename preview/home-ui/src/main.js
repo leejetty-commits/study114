@@ -61,6 +61,7 @@ import {
   isMyshopRoute,
   bootstrapMyshopRoute,
   isMessagesRoute,
+  isRegisterIntroRoute,
 } from './state.js';
 import { PLANS_REDIRECTS } from './plans/router.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
@@ -73,6 +74,11 @@ import { renderPolicy, bindPolicyEvents } from './policy-index.js';
 import { renderLibrary, bindLibraryEvents } from './library/index.js';
 import { renderAdmin, bindAdminEvents } from './admin/index.js';
 import { renderPlans, bindPlansEvents } from './plans/index.js';
+import {
+  renderRegisterIntro,
+  bindRegisterIntroEvents,
+  redirectLoggedInFromRegisterIntro,
+} from './register-intro/index.js';
 import { initAuthSession, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME } from './auth-session.js';
 import { guardRoleHomeAccess } from '../../shared/route-access.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
@@ -116,7 +122,9 @@ function render() {
 }
 
 function shouldPaintBeforeSession() {
-  if (isAdminRoute() || isMypageRoute() || isPlansRoute() || isMessagesRoute()) return false;
+  if (isAdminRoute() || isMypageRoute() || isPlansRoute() || isMessagesRoute() || isRegisterIntroRoute()) {
+    return false;
+  }
   const screen = getCurrentScreen();
   return screen !== 'parent' && screen !== 'studyRoom' && screen !== 'tutor';
 }
@@ -132,6 +140,13 @@ function renderScreen() {
   if (isAdminRoute()) {
     app.innerHTML = renderAdmin();
     bindAdminEvents(app, render);
+    return;
+  }
+  if (isRegisterIntroRoute()) {
+    if (redirectLoggedInFromRegisterIntro()) return;
+    app.innerHTML = renderRegisterIntro();
+    bindRegisterIntroEvents(app, render);
+    mountOpsChrome(app);
     return;
   }
   if (isPlansRoute()) {
@@ -274,7 +289,10 @@ function init() {
       window.location.hash.slice(1).split('?')[0] === '/plans' ||
       window.location.hash.slice(1).startsWith('/plans/') ||
       window.location.hash.slice(1).split('?')[0] === '/community' ||
-      window.location.hash.slice(1).startsWith('/community/')
+      window.location.hash.slice(1).startsWith('/community/') ||
+      window.location.hash.slice(1).split('?')[0] === '/register-intro/room' ||
+      window.location.hash.slice(1).split('?')[0] === '/register-intro/tutor' ||
+      window.location.hash.slice(1).startsWith('/register-intro/')
     ) {
       clearPendingRoute();
     }
@@ -395,6 +413,7 @@ function init() {
           isCommunityRoute() ||
           isPromoRoute() ||
           isPlansRoute() ||
+          isRegisterIntroRoute() ||
           isSupportRoute() ||
           isGuideRoute() ||
           isMyshopRoute() ||
@@ -416,6 +435,18 @@ function init() {
           clearPendingRoute();
           const target = pending;
           if (!isCommunityRoute()) {
+            navigate(target);
+            return;
+          }
+        }
+        if (
+          pending === '/register-intro/room' ||
+          pending === '/register-intro/tutor' ||
+          (pending && pending.startsWith('/register-intro/'))
+        ) {
+          clearPendingRoute();
+          const target = pending;
+          if (!isRegisterIntroRoute()) {
             navigate(target);
             return;
           }

@@ -10,6 +10,8 @@ import {
   HOME_UI_BASE,
   STUDY_ROOM_REGISTER_URL,
   TUTOR_REGISTER_URL,
+  REGISTER_INTRO_ROOM_PATH,
+  REGISTER_INTRO_TUTOR_PATH,
   searchUiUrl,
   supportUiUrl,
   guideUiUrl,
@@ -248,6 +250,8 @@ export function homeHashUrl(hashPath) {
   if (
     p === '/plans' ||
     p.startsWith('/plans/') ||
+    p === '/register-intro' ||
+    p.startsWith('/register-intro/') ||
     p === '/community' ||
     p.startsWith('/community/') ||
     p === '/promo' ||
@@ -283,6 +287,8 @@ export {
   HOME_UI_BASE,
   STUDY_ROOM_REGISTER_URL,
   TUTOR_REGISTER_URL,
+  REGISTER_INTRO_ROOM_PATH,
+  REGISTER_INTRO_TUTOR_PATH,
   searchUiUrl,
   guideUiUrl,
   supportUiUrl,

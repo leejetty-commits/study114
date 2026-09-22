@@ -1,4 +1,4 @@
-import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isGuideRoute, isCommunityRoute, isPromoRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, isMyshopRoute, navigateToGuide, navigateToSupport } from './state.js';
+import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isGuideRoute, isCommunityRoute, isPromoRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, isMyshopRoute, isRegisterIntroRoute, getRegisterIntroKind, navigateToGuide, navigateToSupport } from './state.js';
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
@@ -140,13 +140,24 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
   const onSupport = isSupportRoute();
   const onCommunity = isCommunityRoute();
   const onPlans = isPlansRoute();
+  const registerIntroKind = isRegisterIntroRoute() ? getRegisterIntroKind() : null;
   const isGuideActive = item.id === 'guide' && onGuide;
   const isSupportActive = item.id === 'support' && onSupport && !window.location.hash.includes('/guide');
   const isCommunityActive = (item.id === 'community' || item.id === 'concern') && onCommunity;
   const isPlansActive = item.id === 'plans' && onPlans;
+  const isRegisterRoomActive = item.id === 'register_room' && registerIntroKind === 'room';
+  const isRegisterTutorActive = item.id === 'register_tutor' && registerIntroKind === 'tutor';
   const cls = [
     'home-gnb__item',
-    isHomeActive || isGuideActive || isSupportActive || isCommunityActive || isPlansActive ? 'is-active' : '',
+    isHomeActive ||
+    isGuideActive ||
+    isSupportActive ||
+    isCommunityActive ||
+    isPlansActive ||
+    isRegisterRoomActive ||
+    isRegisterTutorActive
+      ? 'is-active'
+      : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -502,6 +513,13 @@ export function bindLayoutEvents(root, rerender) {
         if (link.external) {
           goSameTab(link.url);
         } else {
+          if (
+            link.url === '/register-intro/room' ||
+            link.url === '/register-intro/tutor' ||
+            link.url.startsWith('/register-intro/')
+          ) {
+            setPendingRoute(link.url);
+          }
           navigate(link.url);
         }
       } else if (action === 'search') {

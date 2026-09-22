@@ -33,6 +33,10 @@ export const TUTOR_UI_BASE = envBase('VITE_TUTOR_UI_BASE', `${LOCAL_ORIGIN}:${PR
 export const STUDY_ROOM_REGISTER_URL = `${STUDY_ROOM_UI_BASE}/#/register/basic`;
 export const TUTOR_REGISTER_URL = `${TUTOR_UI_BASE}/#/register/basic`;
 
+/** home-ui 게스트 등록 안내 (풀 register SPA 로드 없이) */
+export const REGISTER_INTRO_ROOM_PATH = '/register-intro/room';
+export const REGISTER_INTRO_TUTOR_PATH = '/register-intro/tutor';
+
 /** @typedef {'guest' | 'parent' | 'study_room' | 'tutor' | 'admin'} NavRole */
 /** @typedef {'room' | 'tutor' | 'student'} SearchTab */
 
@@ -108,8 +112,11 @@ export function resolveGnbLink(gnbId, role) {
     case 'student_parent':
       return { external: true, url: searchUiUrl('student', role) };
     case 'register_room':
+      // 게스트: home 해시 intro · 로그인: 기존 register SPA
+      if (role === 'guest') return { external: false, url: REGISTER_INTRO_ROOM_PATH };
       return { external: true, url: STUDY_ROOM_REGISTER_URL };
     case 'register_tutor':
+      if (role === 'guest') return { external: false, url: REGISTER_INTRO_TUTOR_PATH };
       return { external: true, url: TUTOR_REGISTER_URL };
     case 'support':
       return { external: false, url: '/support' };

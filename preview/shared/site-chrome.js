@@ -254,7 +254,16 @@ export function bindSiteChrome(root, handlers = {}) {
           const link = resolveGnbLink(gnbId, role);
           if (!link) return;
           if (link.external) goSameTab(link.url);
-          else goHomePath(link.url);
+          else {
+            if (
+              link.url === '/register-intro/room' ||
+              link.url === '/register-intro/tutor' ||
+              link.url.startsWith('/register-intro/')
+            ) {
+              setPendingRoute(link.url);
+            }
+            goHomePath(link.url);
+          }
           return;
         }
 
