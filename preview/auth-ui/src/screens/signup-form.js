@@ -17,14 +17,13 @@ export function renderSignupForm() {
   const draft = signupState.accountDraft;
   const prefEmail = draft?.email || (isDev ? DUMMY_USER.email : '');
   const prefName = draft?.name || (isDev ? DUMMY_USER.name : '');
-  const prefGender = draft?.gender || '';
   const prefPhone = draft?.phone || (isDev ? DUMMY_USER.phone : '');
 
   const content = `
     ${renderStepIndicator(2, 5)}
     <div class="panel auth-shell__card--wide">
       <h1 class="auth-heading">회원가입</h1>
-      <p class="auth-subheading mb-6">공통 계정 정보만 입력합니다. 이메일은 로그인 및 계정 확인에 사용됩니다. 휴대폰 번호는 비공개로 보관됩니다.</p>
+      <p class="auth-subheading mb-6">가입에 필요한 공통 정보만 입력합니다. 학교, 과목, 희망 조건은 여기서 받지 않습니다. 이메일 확인이 끝나면 선택한 유형의 기본정보로 이어집니다.</p>
 
       <form data-form="signup" class="mt-8" novalidate>
         <div class="form-group">
@@ -85,20 +84,6 @@ export function renderSignupForm() {
         </div>
 
         <div class="form-group">
-          <span class="form-label form-label--required">성별</span>
-          <div class="form-radio-group">
-            <label class="form-radio">
-              <input class="form-radio__input" type="radio" name="gender" value="male"${prefGender === 'male' ? ' checked' : ''} required />
-              <span class="form-radio__label">남</span>
-            </label>
-            <label class="form-radio">
-              <input class="form-radio__input" type="radio" name="gender" value="female"${prefGender === 'female' ? ' checked' : ''} />
-              <span class="form-radio__label">여</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="form-group">
           <label class="form-label form-label--required" for="signup-phone">휴대폰</label>
           <input
             class="form-input"
@@ -110,7 +95,7 @@ export function renderSignupForm() {
             autocomplete="tel"
             required
           />
-          <p class="form-hint">휴대폰 번호는 비공개로 보관됩니다. 본인확인은 필요한 경우 내부 신뢰도 점검을 위해 진행될 수 있으며, 다른 사용자에게 공개되지 않습니다.</p>
+          <p class="form-hint">휴대폰 번호는 계정 안내에만 쓰이며, 다른 사용자에게 보이지 않습니다.</p>
         </div>
 
         <div class="form-group form-address" data-address-block>
@@ -178,7 +163,7 @@ export function renderSignupForm() {
           </p>
         </div>
 
-        <p class="form-note">역할 선택과 기본등록은 다음 단계에서 이어집니다.</p>
+        <p class="form-note">다음 화면에서 회원 구분을 고릅니다. 이메일 확인이 끝나면 그 유형의 기본정보로 이어집니다.</p>
 
         <div class="form-error" data-signup-error hidden role="alert"></div>
 
@@ -267,13 +252,6 @@ export function bindSignupFormEvents(root) {
     payload.address_zip = String(payload.address_zip ?? '').trim();
     payload.address_line2 = String(payload.address_line2 ?? '').trim();
 
-    const gender = String(payload.gender ?? '');
-    if (gender !== 'male' && gender !== 'female') {
-      showSignupError(root, '성별을 선택해 주세요.');
-      form.querySelector('input[name="gender"]')?.focus();
-      return;
-    }
-
     if (!isValidMobile(String(payload.phone ?? ''))) {
       showSignupError(root, '휴대폰 번호를 정확히 입력해 주세요.');
       form.querySelector('#signup-phone')?.focus();
@@ -309,7 +287,6 @@ export function bindSignupFormEvents(root) {
       password: String(payload.password ?? ''),
       password_confirm: String(payload.password_confirm ?? ''),
       name: String(payload.name ?? ''),
-      gender,
       phone: String(payload.phone ?? ''),
       address: payload.address,
       address_zip: payload.address_zip,
@@ -317,7 +294,6 @@ export function bindSignupFormEvents(root) {
       email_consent: true,
       sms_consent: Boolean(payload.sms_consent),
     };
-    signupState.profileGender = gender;
     const detail = payload.address_line2 ? ` ${payload.address_line2}` : '';
     signupState.accountAddress = `${payload.address}${detail}`.trim();
     navigate('/signup/role');

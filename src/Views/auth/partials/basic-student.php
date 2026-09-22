@@ -10,26 +10,28 @@ $basis = (string) study114_old($old, 'region_basis', 'dong');
 ?>
 <form method="post" action="/auth/signup/basic" class="basic-register" data-basic-form="student">
   <input type="hidden" name="role_ui" value="student">
-  <p class="auth-section-title">기본등록 · 지역 seed (10-6)</p>
-  <p class="form-note">가입 기본주소와 탐색용 지역등록은 분리됩니다. 지역 1번은 필수입니다.</p>
+  <div class="form-group">
+    <label class="form-label" for="public_display_name">표시명</label>
+    <input class="form-input" id="public_display_name" name="public_display_name" value="<?= study114_e((string) study114_old($old, 'public_display_name', '')) ?>" maxlength="40" autocomplete="nickname">
+  </div>
 
   <div class="form-group">
-    <span class="form-label form-label--required">무엇을 찾을까요?</span>
+    <span class="form-label form-label--required">희망 유형</span>
     <?= study114_chip_group('preferred_lesson_type', RegisterEnums::preferredLessonTypes(), $hope) ?>
   </div>
 
   <div class="form-group" data-student-studyroom-block <?= $hope === 'study_room' ? '' : 'hidden' ?>>
-    <span class="form-label form-label--required">지역 기준</span>
+    <span class="form-label form-label--required">희망지역</span>
     <?= study114_chip_group('region_basis', ['dong' => '행정동 기준', 'complex' => '아파트단지 기준'], $basis) ?>
     <div class="form-group" data-basis-panel="dong" <?= $basis === 'complex' ? 'hidden' : '' ?>>
-      <label class="form-label form-label--required" for="region_id">행정동 1번</label>
+      <label class="form-label form-label--required" for="region_id">행정동</label>
       <select class="form-input" id="region_id" name="region_id">
         <option value="">선택</option>
         <?= study114_select_options($regions, (string) study114_old($old, 'region_id', '')) ?>
       </select>
     </div>
     <div class="form-group" data-basis-panel="complex" <?= $basis === 'complex' ? '' : 'hidden' ?>>
-      <label class="form-label form-label--required" for="complex_id">아파트단지 1번</label>
+      <label class="form-label form-label--required" for="complex_id">아파트단지</label>
       <select class="form-input" id="complex_id" name="complex_id">
         <option value="">선택</option>
         <?php foreach ($complexes as $c): ?>
@@ -46,7 +48,7 @@ $basis = (string) study114_old($old, 'region_basis', 'dong');
   </div>
 
   <div class="form-group" data-student-tutor-block <?= $hope === 'tutor' ? '' : 'hidden' ?>>
-    <label class="form-label form-label--required" for="region_id_city">활동 시 1번</label>
+    <label class="form-label form-label--required" for="region_id_city">희망지역</label>
     <select class="form-input" id="region_id_city" name="region_id" <?= $hope === 'tutor' ? '' : 'disabled' ?>>
       <option value="">선택</option>
       <?php
@@ -65,11 +67,11 @@ $basis = (string) study114_old($old, 'region_basis', 'dong');
         <option value="<?= study114_e($cid) ?>" <?= $oldRegion === $cid ? 'selected' : '' ?>><?= study114_e($sido) ?></option>
       <?php endforeach; ?>
     </select>
-    <p class="form-note">시 단위만 · 구/동/단지 선택 없음</p>
+    <p class="form-note">시·도를 선택합니다.</p>
   </div>
 
   <div class="actions-stack">
-    <button type="submit" class="btn btn--primary btn--block">지역등록 · draft 저장</button>
+    <button type="submit" class="btn btn--primary btn--block">다음</button>
   </div>
 </form>
 <script>

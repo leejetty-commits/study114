@@ -29,7 +29,8 @@ final class SignupService
         $password = $this->requireString($input, 'password');
         $passwordConfirm = $this->requireString($input, 'password_confirm');
         $name = $this->requireString($input, 'name');
-        $gender = $this->requireString($input, 'gender');
+        $genderRaw = isset($input['gender']) ? trim((string) $input['gender']) : '';
+        $gender = $genderRaw === '' ? null : $genderRaw;
         $phone = $this->requireString($input, 'phone');
         if (!PhoneNormalizer::isValidMobile($phone)) {
             throw new InvalidArgumentException('phone: 휴대폰 번호를 정확히 입력해 주세요.');
@@ -46,7 +47,7 @@ final class SignupService
             'name'  => $name,
             'phone' => $phone,
         ]);
-        if (!in_array($gender, ['male', 'female'], true)) {
+        if ($gender !== null && !in_array($gender, ['male', 'female'], true)) {
             throw new InvalidArgumentException('성별은 남 또는 여만 선택할 수 있습니다.');
         }
         if (in_array(strtolower($roleUi), ['admin', 'super_admin', 'sub_master', 'master'], true)) {
@@ -160,7 +161,7 @@ final class SignupService
         int $userId,
         string $realName,
         string $phone,
-        string $gender,
+        ?string $gender,
         ?string $birthDate,
         ?string $addressZip,
         string $addressLine1,

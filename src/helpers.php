@@ -11,7 +11,7 @@ function study114_e(mixed $value): string
 function study114_role_labels(): array
 {
     return [
-        'student'    => '학생(학부모)',
+        'student'    => '학생',
         'study_room' => '공부방',
         'tutor'      => '과외쌤',
     ];
@@ -21,8 +21,8 @@ function study114_role_labels(): array
 function study114_role_descriptions(): array
 {
     return [
-        'student'    => '자녀의 학습 정보를 관리하고, 동네 공부방·과외를 찾아보세요.',
-        'study_room' => '우리 동네 공부방을 등록하고 학부모에게 알려보세요.',
+        'student'    => '본인 계정으로 가입합니다. 이메일 확인이 끝나면 학생 기본정보를 입력합니다.',
+        'study_room' => '우리 동네 공부방을 등록하고 학생에게 알려보세요.',
         'tutor'      => '과외 선생님으로 프로필을 등록하고 학생을 만나보세요.',
     ];
 }

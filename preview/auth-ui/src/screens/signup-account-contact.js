@@ -21,7 +21,7 @@ export function renderSignupAccountContact() {
         <div class="form-group">
           <label class="form-label form-label--required" for="account-phone">휴대폰</label>
           <input class="form-input" type="tel" id="account-phone" name="phone" placeholder="010-0000-0000" inputmode="numeric" maxlength="13" autocomplete="tel" required />
-          <p class="form-hint">휴대폰 번호는 비공개로 보관됩니다. 본인확인은 필요한 경우 내부 신뢰도 점검을 위해 진행될 수 있으며, 다른 사용자에게 공개되지 않습니다.</p>
+          <p class="form-hint">휴대폰 번호는 계정 안내에만 쓰이며, 다른 사용자에게 보이지 않습니다.</p>
         </div>
         <p class="form-error" data-contact-error hidden role="alert"></p>
         <button type="submit" class="btn btn--primary btn--block">저장하고 계속</button>

@@ -90,7 +90,7 @@ export function renderLogin() {
           <span>처음이신가요?</span>
           <a href="#/signup/terms" data-nav="/signup/terms">회원가입</a>
         </div>
-        <p class="login-stage__signup-hint">학부모·공부방·과외쌤 공통 계정으로 시작합니다.</p>
+        <p class="login-stage__signup-hint">학생·공부방·과외쌤 계정으로 시작합니다.</p>
 
         <div class="divider">또는</div>
 

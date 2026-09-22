@@ -1,15 +1,8 @@
 <?php
 $old = is_array($old ?? null) ? $old : [];
-$gender = $old['gender'] ?? 'female';
-$genderLabels = [
-    'student'    => '학부모 성별',
-    'study_room' => '원장 성별',
-    'tutor'      => '과외쌤 성별',
-];
-$genderLabel = $genderLabels[$role ?? ''] ?? '성별';
 ?>
 <h1 class="auth-heading">회원가입</h1>
-<p class="auth-subheading mb-6">공통 회원 정보를 입력해 주세요. 이메일과 휴대폰은 필수이며 다른 회원에게 공개하지 않습니다.</p>
+<p class="auth-subheading mb-6">가입에 필요한 공통 정보만 입력합니다. 학교, 과목, 희망 조건은 여기서 받지 않습니다.</p>
 
 <?php
 $steps = ['약관', '회원구분', '가입', '기본등록', '완료'];
@@ -38,19 +31,6 @@ require __DIR__ . '/../partials/errors.php';
   <div class="form-group">
     <label class="form-label form-label--required" for="signup-name">이름</label>
     <input class="form-input" type="text" id="signup-name" name="name" value="<?= study114_e($old['name'] ?? '') ?>" autocomplete="name" required>
-  </div>
-  <div class="form-group">
-    <span class="form-label form-label--required"><?= study114_e($genderLabel) ?></span>
-    <div class="form-radio-group">
-      <label class="form-radio">
-        <input class="form-radio__input" type="radio" name="gender" value="male"<?= $gender === 'male' ? ' checked' : '' ?> required>
-        <span class="form-radio__label">남</span>
-      </label>
-      <label class="form-radio">
-        <input class="form-radio__input" type="radio" name="gender" value="female"<?= $gender === 'female' ? ' checked' : '' ?>>
-        <span class="form-radio__label">여</span>
-      </label>
-    </div>
   </div>
   <div class="form-group">
     <label class="form-label form-label--required" for="signup-phone">휴대폰</label>

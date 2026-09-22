@@ -46,8 +46,42 @@ function maskEmail(email) {
   return `${keep}***${domain}`;
 }
 
+function roleUiFromMeOrDraft(me) {
+  return uiRoleFromRoleType(me?.role_type) || signupState.role || uiRoleFromRoleType(signupState.lastSignup?.roleType) || '';
+}
+
+function nextStepSentence(roleUi) {
+  if (roleUi === 'study_room') return '확인이 끝나면 공부방 가입정보로 이어집니다.';
+  if (roleUi === 'tutor') return '확인이 끝나면 과외쌤 가입정보로 이어집니다.';
+  if (roleUi === 'student') return '확인이 끝나면 학생 기본정보로 이어집니다.';
+  return '확인이 끝나면 선택한 유형의 기본정보로 이어집니다.';
+}
+
+function continueLabel(roleUi) {
+  if (roleUi === 'study_room') return '공부방 가입정보 입력';
+  if (roleUi === 'tutor') return '과외쌤 가입정보 입력';
+  if (roleUi === 'student') return '학생 기본정보 입력';
+  return '기본정보 입력';
+}
+
+function successLead(roleUi) {
+  if (roleUi === 'study_room') return '가입이 완료되었습니다. 이제 공부방 가입정보를 입력합니다.';
+  if (roleUi === 'tutor') return '가입이 완료되었습니다. 이제 과외쌤 가입정보를 입력합니다.';
+  if (roleUi === 'student') return '가입이 완료되었습니다. 이제 학생 기본정보를 입력합니다.';
+  return '가입이 완료되었습니다. 이제 기본정보를 입력합니다.';
+}
+
+function applyRoleCopy(root, roleUi) {
+  const next = root.querySelector('[data-verify-next]');
+  if (next) next.textContent = nextStepSentence(roleUi);
+  const lead = root.querySelector('[data-verify-success-lead]');
+  if (lead) lead.textContent = successLead(roleUi);
+  const btn = root.querySelector('[data-action="continue-verified"]');
+  if (btn) btn.textContent = continueLabel(roleUi);
+}
+
 function continueAfterVerified(me) {
-  // stale postVerify 제거 — 목적지는 서버 me(role_type + needs_basic_register) 정본
+  // 목적지는 서버 역할과 기본정보 필요 여부만 사용한다.
   consumePostVerifyTarget();
   consumePostVerifyRole();
   const returnTo = getLoginReturnTo();
@@ -74,8 +108,8 @@ function renderWaitBody(err) {
           확인 메일을 보냈습니다. 메일 안의 링크를 눌러야 가입이 완료됩니다.
         </p>
         <p class="form-hint" data-verify-hint-inbox>받은편지함에서 확인 메일을 열어 주세요. 보이지 않으면 <strong>스팸함·프로모션함</strong>도 확인해 주세요.</p>
-        <p class="form-hint">지메일 <code>이름+태그@gmail.com</code> 주소도 받을 수 있습니다. 일정 시간이 지나면 이 화면에서 다시 보낼 수 있습니다.</p>
-        <p class="form-hint">휴대폰 번호는 비공개로 보관됩니다. 휴대폰 본인확인은 필요한 경우 내부 신뢰도 점검을 위해 진행될 수 있으며, 다른 사용자에게 공개되지 않습니다.</p>
+        <p class="form-hint" data-verify-next>${esc(nextStepSentence(roleUiFromMeOrDraft()))}</p>
+        <p class="form-hint">메일이 바로 보이지 않으면 잠시 후 다시 확인해 주세요. 다시 보내기는 10분 뒤에 할 수 있습니다.</p>
         ${err ? `<p class="form-error" role="alert">${esc(err)}</p>` : ''}
         <p class="recovery-stage__email-hint" data-masked-email></p>
         <p class="form-error" data-verify-status hidden role="alert"></p>
@@ -112,9 +146,9 @@ export function renderSignupVerifyEmail() {
     ? `
         ${renderRecoverySuccessIcon()}
         <h1 class="auth-heading">이메일이 확인되었습니다</h1>
-        <p class="auth-subheading recovery-stage__desc">가입이 완료되었습니다. 이어서 진행합니다.</p>
-        <p class="form-hint">이메일은 로그인 및 계정 확인에 사용됩니다. 휴대폰 번호는 비공개로 보관됩니다.</p>
-        <button type="button" class="btn btn--primary btn--block" data-action="continue-verified">계속</button>
+        <p class="auth-subheading recovery-stage__desc" data-verify-success-lead>${esc(successLead(roleUiFromMeOrDraft()))}</p>
+        <p class="form-hint" data-verify-next>${esc(nextStepSentence(roleUiFromMeOrDraft()))}</p>
+        <button type="button" class="btn btn--primary btn--block" data-action="continue-verified">${esc(continueLabel(roleUiFromMeOrDraft()))}</button>
       `
     : sendFailed
       ? renderSendFailedBody()
@@ -294,6 +328,7 @@ export function bindSignupVerifyEmailEvents(root) {
         }
         return;
       }
+      applyRoleCopy(root, roleUiFromMeOrDraft(me));
       if (me.email_verified) {
         if (verifiedFromLink) return;
         continueAfterVerified(me);

@@ -47,7 +47,7 @@ function regionList() {
     : [{ id: 1, label: '서울특별시 강남구 대치동 (지역 정보 불러오는 중)' }];
 }
 
-/** 시·도 목록 — 과외지역 seed (전국 + API cities) */
+/** 시·도 목록 */
 function listSidoOptions() {
   const fromApi = buildSidoCityOptions(signupState.cities || []);
   if (fromApi.length > 0) return fromApi;
@@ -159,24 +159,21 @@ function renderBasisChips(selected = 'dong', { allowComplex = true } = {}) {
   return renderChips('region_basis', opts, { selected: allowComplex ? selected : 'dong' });
 }
 
-/** 기본등록에 필요한 최소 정보이며, 가입 주소와 별도로 대표 지역 하나를 받습니다. */
+/** 학생 기본정보 — Basic 카드에 먼저 보일 표시명·희망 유형·희망지역. */
 function renderStudentBasic() {
-  const addr = signupState.accountAddress || '가입 주소';
   const d = signupState.basicRegister?.student || {};
   const hope = d.preferred_lesson_type || 'tutor';
   const basis = d.region_basis || 'dong';
   const allowComplex = complexList().length > 0;
+  const displayName = d.public_display_name || d.student_name || '';
   return `
     <form data-form="basic-student" class="basic-register">
-      <p class="auth-section-title">기본등록 · 지역 seed</p>
-      <p class="form-note mb-4">
-        가입 기본주소(<strong>${esc(addr)}</strong>)와 <strong>탐색용 지역등록</strong>은 분리됩니다.
-        무엇을 찾을지 정한 뒤, 기준에 맞는 지역 1개를 필수로 등록합니다.
-      </p>
       <div class="form-group">
-        <span class="form-label form-label--required">어떤 수업을 찾고 있나요?</span>
-        ${dbField('students.preferred_lesson_type')}
-        <p class="form-hint">회원 유형이 아닙니다. 탐색할 수업·제공자 유형을 고릅니다.</p>
+        <label class="form-label" for="public_display_name">표시명</label>
+        <input class="form-input" id="public_display_name" name="public_display_name" value="${esc(displayName)}" maxlength="40" autocomplete="nickname" />
+      </div>
+      <div class="form-group">
+        <span class="form-label form-label--required">희망 유형</span>
         ${renderChips(
           'preferred_lesson_type',
           Object.entries(PREFERRED_LESSON_TYPE_LABELS).map(([value, label]) => ({ value, label })),
@@ -184,25 +181,22 @@ function renderStudentBasic() {
         )}
       </div>
       <div class="form-group" data-student-studyroom-block ${hope === 'study_room' ? '' : 'hidden'}>
-        <span class="form-label form-label--required">지역 기준</span>
-        ${dbField('preferred_studyroom_region_basis')}
+        <span class="form-label form-label--required">희망지역</span>
         ${renderBasisChips(basis, { allowComplex })}
-        <p class="form-note">행정동 또는 아파트단지 중 <strong>하나만</strong> 선택합니다. 섞어 저장하지 않습니다.</p>
         <div class="form-group mt-4" data-basis-panel="dong" ${basis === 'complex' && hope === 'study_room' ? 'hidden' : ''}>
-          <label class="form-label form-label--required" for="region_id">행정동 1번</label>
+          <label class="form-label form-label--required" for="region_id">행정동</label>
           ${renderRegionSelect('region_id', d.region_id, { required: false })}
         </div>
         <div class="form-group mt-4" data-basis-panel="complex" ${basis === 'complex' && hope === 'study_room' ? '' : 'hidden'}>
-          <label class="form-label form-label--required" for="complex_id">아파트단지 1번</label>
+          <label class="form-label form-label--required" for="complex_id">아파트단지</label>
           ${renderComplexSelect('complex_id', d.complex_id, { required: false })}
           <p class="form-note" data-complex-address-hint></p>
         </div>
       </div>
       <div class="form-group" data-student-tutor-block ${hope === 'tutor' ? '' : 'hidden'}>
-        <label class="form-label form-label--required" for="activity_city">과외지역 1번 (시·도)</label>
-        ${dbField('preferred_tutor_region_id · scope=city')}
+        <label class="form-label form-label--required" for="activity_city">희망지역</label>
         <select class="form-input" name="activity_city" id="activity_city">
-          <option value="">선택</option>
+          <option value="">시·도 선택</option>
           ${listSidoOptions()
             .map((s) => {
               const saved = d.activity_city || sidoFromRegionId(d.region_id) || '';
@@ -212,7 +206,7 @@ function renderStudentBasic() {
         </select>
       </div>
       <div class="actions-stack">
-        <button type="submit" class="btn btn--primary btn--block">지역 등록 · 다음</button>
+        <button type="submit" class="btn btn--primary btn--block">다음</button>
       </div>
     </form>
   `;
@@ -324,15 +318,18 @@ export function renderSignupBasic() {
   const content = `
     ${oauthMode ? '' : renderStepIndicator(4, 5)}
     <div class="panel auth-shell__card--wide">
-      <h1 class="auth-heading">${role === 'tutor' ? '과외쌤 가입정보 입력' : '기본등록'}</h1>
+      <h1 class="auth-heading">${
+        role === 'tutor' ? '과외쌤 가입정보 입력' : role === 'student' ? '학생 기본정보' : '기본등록'
+      }</h1>
       <p class="auth-subheading mb-6">
         ${
           role === 'tutor'
             ? '과외 활동을 시작하기 위한 정보를 입력해 주세요.'
-            : '검색·목록에 바로 공개되지 않습니다. 검색에 쓰이는 항목은 상세등록에서 완성합니다.'
+            : role === 'student'
+              ? '학생 Basic 카드에 먼저 보일 핵심 정보를 입력합니다.'
+              : '검색·목록에 바로 공개되지 않습니다. 검색에 쓰이는 항목은 상세등록에서 완성합니다.'
         }
       </p>
-      ${isReturnImportMode() ? '<p class="form-note form-note--highlight">자녀 추가 중입니다. 저장 후 마이페이지로 돌아갑니다.</p>' : ''}
       ${renderRoleBadge(role)}
       ${body}
     </div>
@@ -499,8 +496,13 @@ export function bindSignupBasicEvents(root) {
       data.main_subjects = [data.main_subject_note];
       data.region_basis = data.region_basis_type;
     } else if (role === 'student') {
+      const displayName = String(data.public_display_name || '').trim();
+      if (displayName) {
+        data.public_display_name = displayName;
+        data.student_name = displayName;
+      }
       if (!data.preferred_lesson_type) {
-        alert('희망 수업·탐색 유형을 선택해 주세요.');
+        alert('희망 유형을 선택해 주세요.');
         return;
       }
       if (data.preferred_lesson_type === 'study_room') {
@@ -508,7 +510,7 @@ export function bindSignupBasicEvents(root) {
         data.region_basis = basis;
         if (basis === 'dong') {
           if (!data.region_id) {
-            alert('행정동 1번을 선택해 주세요.');
+            alert('희망지역을 선택해 주세요.');
             return;
           }
           data.complex_id = '';
@@ -516,7 +518,7 @@ export function bindSignupBasicEvents(root) {
           data.region_label = region?.label || '';
         } else {
           if (!data.complex_id) {
-            alert('아파트단지 1번을 선택해 주세요.');
+            alert('희망지역을 선택해 주세요.');
             return;
           }
           const complex = complexList().find((c) => String(c.id) === String(data.complex_id));
@@ -530,7 +532,7 @@ export function bindSignupBasicEvents(root) {
       } else {
         const city = String(data.activity_city || '').trim();
         if (!city) {
-          alert('과외지역(시·도)을 선택해 주세요.');
+          alert('희망지역을 선택해 주세요.');
           return;
         }
         const regionId = regionIdForSido(city);
@@ -695,7 +697,7 @@ export function bindSignupBasicEvents(root) {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent =
-          role === 'tutor' ? '가입정보 저장' : role === 'student' ? '지역 등록 · 다음' : '저장 · 다음';
+          role === 'tutor' ? '가입정보 저장' : role === 'student' ? '다음' : '저장 · 다음';
       }
     }
   });
