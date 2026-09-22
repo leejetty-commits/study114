@@ -6,7 +6,7 @@
  * @property {string} password
  * @property {string} password_confirm
  * @property {string} name
- * @property {'male' | 'female'} gender
+ * @property {'male' | 'female' | ''} [gender]
  * @property {string} phone
  * @property {string} address
  * @property {string} address_zip
@@ -46,7 +46,7 @@ export const ROLE_LABELS = {
 };
 
 export const ROLE_DESCRIPTIONS = {
-  student: '본인 학습 조건을 등록하고, 동네 공부방·과외쌤을 찾아보세요. 같은 계정으로 형제자매 정보도 함께 등록할 수 있습니다.',
+  student: '본인 계정으로 가입합니다. 이메일 확인이 끝나면 학생 기본정보를 입력합니다.',
   study_room: '우리 동네 공부방을 등록하고 학생에게 알려보세요.',
   tutor: '과외 선생님으로 프로필을 등록하고 학생을 만나보세요.',
 };
@@ -59,7 +59,7 @@ export const ROLE_ICONS = {
 
 /** 로컬 개발 프리필용 (운영 빌드에서는 이메일·주소 미프리필 — 중복 가입 422 방지) */
 export const DUMMY_USER = {
-  email: 'parent@example.com',
+  email: 'student@example.com',
   name: '김우동',
   gender: 'female',
   phone: '010-1234-5678',

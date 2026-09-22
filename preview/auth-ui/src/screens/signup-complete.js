@@ -19,10 +19,13 @@ function maskEmail(email) {
 function summarizeBasic(role, data) {
   if (!data) return '—';
   if (role === 'student') {
-    return [
-      data.preferred_lesson_type && `희망유형: ${data.preferred_lesson_type}`,
-      data.region_label && `희망지역 seed: ${data.region_label}`,
-    ]
+    const hope =
+      data.preferred_lesson_type === 'study_room'
+        ? '공부방 찾기'
+        : data.preferred_lesson_type === 'tutor'
+          ? '과외쌤 찾기'
+          : '';
+    return [data.public_display_name || data.student_name, hope, data.region_label || data.activity_city]
       .filter(Boolean)
       .join(' · ');
   }
@@ -66,7 +69,34 @@ export function renderSignupComplete() {
   const basic = signupState.basicRegister?.[role];
   const profile = signupState.basicRegisterResult;
 
-  const content = `
+  const studentSummary = summarizeBasic('student', basic);
+  const content = role === 'student' ? `
+    ${renderStepIndicator(5, 5)}
+    <div class="panel success-message">
+      <div class="success-icon">✓</div>
+      <h1 class="auth-heading">학생 기본정보</h1>
+      <p class="auth-subheading">
+        입력한 정보는 학생 Basic 카드 기준 정보로 바로 반영됩니다.
+      </p>
+
+      <dl class="success-info">
+        <dt>로그인 계정</dt>
+        <dd>${maskEmail(saved?.email)}</dd>
+        <dt>입력한 정보</dt>
+        <dd>${studentSummary || '—'}</dd>
+      </dl>
+
+      <div class="actions-stack">
+        <button type="button" class="btn btn--primary btn--block" data-action="go-detail-register">
+          이어서 입력하기
+        </button>
+        <button type="button" class="btn btn--secondary btn--block" data-action="go-home">
+          홈으로
+        </button>
+        <button type="button" class="btn btn--ghost btn--block" data-nav="/login">로그인하기</button>
+      </div>
+    </div>
+  ` : `
     ${renderStepIndicator(5, 5)}
     <div class="panel success-message">
       <div class="success-icon">✓</div>
@@ -86,7 +116,7 @@ export function renderSignupComplete() {
         <dd>${saved?.roleType ?? '—'}</dd>
         <dt>기본등록 프로필</dt>
         <dd>${profile ? `${profile.kind} #${profile.id}` : '—'}</dd>
-        <dt>기본등록 seed</dt>
+        <dt>기본등록 요약</dt>
         <dd>${summarizeBasic(role, basic)}</dd>
       </dl>
 
@@ -165,7 +195,9 @@ export function bindSignupCompleteEvents(root) {
       window.alert('기본등록이 완료되었습니다. 상세등록은 마이페이지에서 이어갈 수 있습니다.');
     } else if (!hasSeed) {
       const proceed = window.confirm(
-        '홍보지역(기본등록) 정보가 없습니다. 그래도 홈으로 이동할까요?\n마이페이지에서 기본·상세등록을 이어갈 수 있습니다.',
+        role === 'student'
+          ? '희망지역이 없습니다. 그래도 홈으로 이동할까요?'
+          : '홍보지역(기본등록) 정보가 없습니다. 그래도 홈으로 이동할까요?\n마이페이지에서 기본·상세등록을 이어갈 수 있습니다.',
       );
       if (!proceed) return;
     }

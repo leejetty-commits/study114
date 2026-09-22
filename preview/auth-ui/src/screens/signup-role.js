@@ -65,7 +65,7 @@ export function renderSignupRole() {
         ${
           oauthMode
             ? '소셜 계정으로 가입하셨습니다.<br />주로 사용할 유형을 선택해 주세요.'
-            : '우선 사용할 유형 1개를 선택하세요.<br />기본등록 후 상세등록에서 검색·공개 항목을 완성합니다.'
+            : '사용할 유형 1개를 선택하세요.<br />계정을 만든 뒤 이메일 확인이 끝나면, 그 유형의 기본정보로 이어집니다.'
         }
       </p>
 
@@ -81,11 +81,11 @@ export function renderSignupRole() {
         data-submit-role
         ${selected ? '' : 'disabled'}
       >
-        ${oauthMode ? '시작하기' : '다음: 기본등록'}
+        ${oauthMode ? '시작하기' : '계정 만들기'}
       </button>
 
       <p class="text-center mt-6" style="font-size: var(--text-xs); color: var(--gray-400);">
-        학생은 본인이 등록 주체입니다. 같은 계정으로 형제자매 정보도 추가할 수 있습니다.
+        한 계정은 유형 1개만 사용합니다. 다른 유형은 다른 이메일로 가입합니다.
       </p>
     </div>
   `;
@@ -161,11 +161,6 @@ export function bindSignupRoleEvents(root) {
       navigate('/signup/form');
       return;
     }
-    if (draft.gender !== 'male' && draft.gender !== 'female') {
-      showRoleError(root, '성별을 선택해 주세요. 이전 화면으로 돌아가 입력해 주세요.');
-      return;
-    }
-
     submitBtn.disabled = true;
     submitBtn.textContent = '계정 생성 중…';
     try {
@@ -182,7 +177,7 @@ export function bindSignupRoleEvents(root) {
         const msg = friendlySignupError(data, res.status);
         showRoleError(root, msg);
         submitBtn.disabled = false;
-        submitBtn.textContent = '다음: 기본등록';
+        submitBtn.textContent = '계정 만들기';
         return;
       }
 
@@ -199,7 +194,7 @@ export function bindSignupRoleEvents(root) {
     } catch (err) {
       showRoleError(root, err instanceof Error ? err.message : '네트워크 오류');
       submitBtn.disabled = false;
-      submitBtn.textContent = '다음: 기본등록';
+      submitBtn.textContent = '계정 만들기';
     }
   });
 }

@@ -6,11 +6,16 @@ $authCfg = study114_config('auth');
 $homeUi = rtrim((string) ($authCfg['home_ui'] ?? ''), '/');
 $authUi = rtrim((string) ($authCfg['auth_ui'] ?? ''), '/');
 ?>
+<?php if (($role ?? '') === 'student'): ?>
+<h1 class="auth-heading">학생 기본정보</h1>
+<p class="auth-subheading mb-8">입력한 정보는 학생 Basic 카드 기준 정보로 바로 반영됩니다.</p>
+<?php else: ?>
 <h1 class="auth-heading">가입 · 기본등록 완료</h1>
 <p class="auth-subheading mb-8">
   계정과 <strong>공개 전 draft</strong>가 만들어졌습니다.<br>
   아직 검색·리스트에 공개되지 않습니다. 검색/공개 항목은 <strong>상세등록</strong>에서 완성합니다.
 </p>
+<?php endif; ?>
 
 <?php
 $steps = ['약관', '가입', '역할', '기본등록', '완료'];
@@ -24,7 +29,7 @@ require __DIR__ . '/../partials/step-indicator.php';
   <p class="form-note mb-6" role="status">
     draft 저장 완료 —
     <?php if ($basic_register['kind'] === 'student'): ?>
-      학생 ID <?= (int) $basic_register['id'] ?> (exposure_status=draft)
+      학생 기본정보를 저장했습니다.
     <?php elseif ($basic_register['kind'] === 'study_room'): ?>
       공부방 ID <?= (int) $basic_register['id'] ?> (profile_status=draft)
     <?php else: ?>
