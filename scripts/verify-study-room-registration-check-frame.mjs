@@ -69,6 +69,17 @@ assert(hcsCss.includes('--hcs-prime-w'), 'hcs css: prime 1-cell width');
 assert(hcsCss.includes('rc-compare__row--upgrade'), 'hcs css: upgrade row flex');
 assert(!hcsCss.includes('transform: scale'), 'hcs css: no scale');
 assert(!/100vw/.test(hcsCss), 'hcs css: no 100vw');
+
+const tokens = read('preview/home-ui/src/styles/tokens.css');
+assert(tokens.includes('--expo-prime-media-height-scale: 1.3'), 'tokens: prime media height ×1.3');
+assert(!tokens.includes('--expo-prime-media-ratio'), 'tokens: no aspect-ratio swap token');
+
+const listings = read('preview/home-ui/src/styles/home-listings.css');
+assert(listings.includes('var(--expo-prime-media-height-scale'), 'listings: prime uses height scale');
+assert(listings.includes('100cqw * 9 / 16'), 'listings: prime height from 16:9 base × scale');
+assert(!listings.includes('--expo-prime-media-ratio'), 'listings: no aspect-ratio swap');
+assert(listings.includes('container-name: expo-prime-media'), 'listings: prime media container for cqw');
+
 const pageFn = render.slice(render.indexOf('export function renderRegistrationCheck'));
 assert(pageFn.includes('pickMissingTitle'), 'page: pick action');
 assert(pageFn.includes('primeMissingTitle'), 'page: prime action');

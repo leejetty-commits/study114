@@ -923,8 +923,10 @@
 }
 
 .expo-media--prime {
-  aspect-ratio: 16 / 9;
+  /* 가로폭 유지 · aspect-ratio 교체 금지 · media box height = 16:9×1.3 */
   width: 100%;
+  aspect-ratio: auto;
+  height: calc(100cqw * 9 / 16 * var(--expo-prime-media-height-scale, 1.3));
   margin-bottom: 0;
   border-radius: 0.25rem;
 }
@@ -1076,6 +1078,12 @@
 .expo-media-wrap {
   position: relative;
   width: 100%;
+}
+
+/* Prime media: wrap width → cqw. 실높이만 16:9×scale */
+.expo-card--prime > .expo-media-wrap {
+  container-type: inline-size;
+  container-name: expo-prime-media;
 }
 
 .expo-media-overlay {

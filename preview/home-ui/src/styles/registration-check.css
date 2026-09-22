@@ -298,6 +298,7 @@
 }
 
 .rc-tier__media--prime {
+  /* 레거시 샘플 경로. 실카드 Prime media는 .expo-media--prime height scale */
   aspect-ratio: 16 / 9;
 }
 
