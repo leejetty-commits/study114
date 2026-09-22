@@ -35,12 +35,36 @@
 
 DirectoryIndex index.html index.php
 
-# SPA 엔트리(HTML)는 캐시하지 않아 배포 직후 새 JS 해시로 연결되게 함
+# ---------------------------------------------------------------------------
+# Cache headers (게스트 등록 SPA 접속장애 완화 1차 — 캐시 축만)
+# - 해시 Vite 번들: 장기 immutable (배포 시 파일명 변경으로 구버전 충돌 없음)
+# - HTML: 아래 운영 정책 유지. 완화 초안은 주석 블록 (미적용)
+# 대상 의도 경로: /assets/index-*.{js,css}, /register/*/assets/index-*.{js,css}
+#   (+ 동일 파일명 패턴의 /auth|/search 번들도 FilesMatch로 동일 적용)
+# 비대상: 이미지·HTML·PHP·API·비해시 *.js/*.css
+# ---------------------------------------------------------------------------
 <IfModule mod_headers.c>
+  # A. 해시 자산 — Vite 엔트리/청크 관례 `index-<hash>.js|css` 파일명만
+  <FilesMatch "^index-[A-Za-z0-9_-]+\.(js|css)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # B. SPA 엔트리 HTML — 현재 운영(유지). 배포 직후 새 JS 해시 연결 보장.
   <FilesMatch "\.(html|htm)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
   </FilesMatch>
+
+  # B'. HTML 캐시 완화 초안 (미적용 — 승인·purge 절차 후 4차에서 교체)
+  # 제안:
+  #   Cache-Control: max-age=0, s-maxage=60, stale-while-revalidate=30
+  #   (Pragma 제거 또는 생략)
+  # 적용 시 필요: 배포마다 Cloudflare에서 SPA HTML 경로 purge
+  #   (/, /index.html, /register/room/, /register/tutor/, /auth/, /search/ 등 엔트리)
+  # 레포에 CF API 키·Actions 자동화는 넣지 않음. 운영자가 대시보드/수동 purge.
+  # <FilesMatch "\.(html|htm)$">
+  #   Header set Cache-Control "max-age=0, s-maxage=60, stale-while-revalidate=30"
+  # </FilesMatch>
 </IfModule>
 
 # 운영 정본 URL: https://study114.net (미설정 시 127.0.0.1 폴백 → 소셜 로그인 오류 시 localhost로 튕김)
