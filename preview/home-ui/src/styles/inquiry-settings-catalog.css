@@ -1,0 +1,246 @@
+/**
+ * 공부방 내등록 > 쪽지설정 본문 — inquiries-receiving/paused v1
+ * 시안 메모(Cursor 구현, P20-05, enum, 잠금 세트)는 화면에 넣지 않는다.
+ * 과외쌤 [data-p21-inquiries]에는 적용하지 않는다.
+ */
+
+[data-p20-inquiries].p21-inq {
+  gap: 16px;
+}
+
+[data-p20-inquiries] .p21-inq__lead {
+  max-width: 42em;
+  margin: 0 0 8px;
+  color: #4b5563;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+[data-p20-inquiries] .p20-inq-card {
+  margin: 0;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+}
+
+[data-p20-inquiries] .p21-inq-block__title {
+  margin: 0 0 8px;
+  color: #1c1917;
+  font-size: 18px !important;
+  font-weight: 700;
+  line-height: 27px;
+}
+
+[data-p20-inquiries] .p20-inq-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+[data-p20-inquiries] .p20-inq-status-row .p21-inq-block__hint {
+  margin: 0;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 21px;
+}
+
+[data-p20-inquiries] .p21-inq-badge {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+[data-p20-inquiries] .p21-inq-badge--on {
+  border-color: #bbf7d0;
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+[data-p20-inquiries] .p21-inq-badge--off {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #b45309;
+}
+
+[data-p20-inquiries] .p20-inq-edit-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(200px, 280px);
+  gap: 16px;
+  align-items: start;
+}
+
+[data-p20-inquiries] .p21-inq-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+[data-p20-inquiries] .p21-inq-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 56px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #1c1917;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+[data-p20-inquiries] .p21-inq-choice.is-selected {
+  border-color: #266bc4;
+  background: #eaf2fc;
+  color: #1c1917;
+}
+
+[data-p20-inquiries] .p21-inq-choice input,
+[data-p20-inquiries] .p21-inq-reason input {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: #266bc4;
+}
+
+[data-p20-inquiries] .p21-inq-save {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+[data-p20-inquiries] .p21-inq-save .btn {
+  min-width: 120px;
+  min-height: 40px;
+  border-radius: 8px;
+}
+
+[data-p20-inquiries] .p20-inq-save-hint {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+[data-p20-inquiries] .p20-inq-reason-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  padding: 32px 16px;
+  border: 1px dashed #e5e7eb;
+  border-radius: 12px;
+  background: #f7f8fa;
+  text-align: center;
+}
+
+[data-p20-inquiries] .p20-inq-reason-empty strong {
+  margin-bottom: 6px;
+  color: #1c1917;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+[data-p20-inquiries] .p20-inq-reason-empty p {
+  max-width: 18em;
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+[data-p20-inquiries] .p21-inq-reasons {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f7f8fa;
+}
+
+[data-p20-inquiries] .p21-inq-reasons__title {
+  margin: 0 0 4px;
+  color: #1c1917;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+[data-p20-inquiries] .p21-inq-reasons > .p21-inq-block__hint {
+  margin: 0 0 16px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+[data-p20-inquiries] .p21-inq-reason {
+  display: block;
+  margin: 0 0 8px;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+[data-p20-inquiries] .p21-inq-reason.is-selected {
+  border-color: #266bc4;
+  background: #eaf2fc;
+}
+
+[data-p20-inquiries] .p21-inq-reason span {
+  color: #1c1917;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+[data-p20-inquiries] .p21-inq-reason .p21-inq-block__hint {
+  display: block;
+  margin: 4px 0 0 26px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+[data-p20-inquiries] .p21-inq-reasons[hidden],
+[data-p20-inquiries] .p20-inq-reason-empty[hidden] {
+  display: none !important;
+}
+
+[data-p20-inquiries] .p20-inq-sample {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+[data-p20-inquiries] .p20-inq-sample__surface {
+  padding: 28px 28px 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+[data-p20-inquiries] .p20-inq-sample__surface > .p21-inq-block__hint {
+  margin: 0 0 20px;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 21px;
+}
+
+@media (max-width: 1100px) {
+  [data-p20-inquiries] .p20-inq-edit-grid,
+  [data-p20-inquiries] .p21-inq-choices {
+    grid-template-columns: 1fr;
+  }
+}
