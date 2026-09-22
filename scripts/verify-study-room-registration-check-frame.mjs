@@ -67,8 +67,16 @@ assert(hcsCss.includes('--hcs-basic-w'), 'hcs css: basic 1-cell width');
 assert(hcsCss.includes('--hcs-pick-w'), 'hcs css: pick 1-cell width');
 assert(hcsCss.includes('--hcs-prime-w'), 'hcs css: prime 1-cell width');
 assert(hcsCss.includes('rc-compare__row--upgrade'), 'hcs css: upgrade row flex');
+assert(hcsCss.includes('--hcs-grid-gap: var(--space-2)'), 'hcs css: live expo-grid gap');
+assert(hcsCss.includes('--hcs-prime-gap: var(--space-2)'), 'hcs css: live prime grid gap');
 assert(!hcsCss.includes('transform: scale'), 'hcs css: no scale');
+assert(!hcsCss.includes('0.85fr') && !hcsCss.includes('1.25fr'), 'hcs css: no artificial pick/prime stretch');
 assert(!/100vw/.test(hcsCss), 'hcs css: no 100vw');
+const mainJs = read('preview/home-ui/src/main.js');
+assert(mainJs.includes("import './styles/home-card-samples.css'"), 'main: home-card-samples.css linked');
+assert(!css.includes('0.85fr') && !css.includes('1.25fr'), 'rc css: no artificial pick/prime stretch');
+assert(!css.includes('[data-trc-page] .rc-sample__card--prime'), 'rc css: no legacy trc rc-sample prime width');
+assert(!css.includes('minmax(0, 28rem)'), 'rc css: no 28rem basic cap');
 
 const tokens = read('preview/home-ui/src/styles/tokens.css');
 assert(tokens.includes('--expo-prime-media-height-scale: 1.3'), 'tokens: prime media height ×1.3');

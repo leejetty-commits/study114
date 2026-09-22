@@ -21,6 +21,8 @@ import './styles/plans-theme.css';
 import './styles/plans-store.css';
 import './styles/mypage-ops.css';
 import './styles/registration-check.css';
+/* 등록점검·쪽지설정 샘플: 라이브 홈/찾기 카드 outer 1칸 폭 토큰 */
+import './styles/home-card-samples.css';
 import './styles/myshop.css';
 import './styles/myshop-public.css';
 /* auth base.css 전체 import 금지(전역 reset). 폼 프리미티브만 공유 */
