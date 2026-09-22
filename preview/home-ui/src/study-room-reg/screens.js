@@ -515,42 +515,52 @@ function renderInquiries(room) {
     <div class="p21-inq p20-inq" data-p20-inquiries data-p20-room-id="${esc(room.id)}" data-inquiry-receiving="${form.receiving ? '1' : '0'}">
       <p class="p21-inq__lead">${esc(P20_INQUIRY_COPY.pageLead)}</p>
 
-      <section class="p21-inq-block p21-inq-block--status" aria-label="${esc(P20_INQUIRY_COPY.currentStatusHeading)}">
-        <div class="p21-inq-status__head">
-          <h3 class="p21-inq-block__title">${esc(P20_INQUIRY_COPY.currentStatusHeading)}</h3>
+      <section class="p21-inq-block p21-inq-block--status p20-inq-card" aria-label="${esc(P20_INQUIRY_COPY.currentStatusHeading)}">
+        <h3 class="p21-inq-block__title">${esc(P20_INQUIRY_COPY.currentStatusHeading)}</h3>
+        <div class="p20-inq-status-row">
+          <p class="p21-inq-block__hint" data-p20-inquiry-stored>${esc(stored)}</p>
           <span class="p21-inq-badge p21-inq-badge--${form.receiving ? 'on' : 'off'}">${esc(badge)}</span>
         </div>
-        <p class="p21-inq-block__hint" data-p20-inquiry-stored>${esc(stored)}</p>
       </section>
 
-      <section class="p21-inq-block p21-inq-block--edit" aria-label="${esc(P20_INQUIRY_COPY.editHeading)}">
+      <section class="p21-inq-block p21-inq-block--edit p20-inq-card" aria-label="${esc(P20_INQUIRY_COPY.editHeading)}">
         <h3 class="p21-inq-block__title">${esc(P20_INQUIRY_COPY.editHeading)}</h3>
-        <div class="p21-inq-choices" role="radiogroup" aria-label="${esc(P20_INQUIRY_COPY.editHeading)}">
-          <label class="p21-inq-choice${form.receiving ? ' is-selected' : ''}">
-            <input type="radio" name="p20_inquiry_receiving" value="1" data-p20-inquiry-receiving ${form.receiving ? 'checked' : ''} />
-            <span>${esc(P20_INQUIRY_COPY.receiving)}</span>
-          </label>
-          <label class="p21-inq-choice${!form.receiving ? ' is-selected' : ''}">
-            <input type="radio" name="p20_inquiry_receiving" value="0" data-p20-inquiry-receiving ${form.receiving ? '' : 'checked'} />
-            <span>${esc(P20_INQUIRY_COPY.closed)}</span>
-          </label>
-        </div>
-        <div class="p21-inq-reasons${form.receiving ? ' is-inactive' : ''}" data-p20-inquiry-reason-wrap${form.receiving ? ' aria-disabled="true"' : ''}>
-          <h4 class="p21-inq-reasons__title">${esc(P20_INQUIRY_COPY.offReasonTitle)}</h4>
-          <p class="p21-inq-block__hint">${esc(P20_INQUIRY_COPY.offReasonHint)}</p>
-          <div class="p21-inq-reason-list">${reasonRadios}</div>
+        <div class="p20-inq-edit-grid">
+          <div class="p20-inq-edit-main">
+            <div class="p21-inq-choices" role="radiogroup" aria-label="${esc(P20_INQUIRY_COPY.editHeading)}">
+              <label class="p21-inq-choice${form.receiving ? ' is-selected' : ''}">
+                <input type="radio" name="p20_inquiry_receiving" value="1" data-p20-inquiry-receiving ${form.receiving ? 'checked' : ''} />
+                <span>${esc(P20_INQUIRY_COPY.receiving)}</span>
+              </label>
+              <label class="p21-inq-choice${!form.receiving ? ' is-selected' : ''}">
+                <input type="radio" name="p20_inquiry_receiving" value="0" data-p20-inquiry-receiving ${form.receiving ? '' : 'checked'} />
+                <span>${esc(P20_INQUIRY_COPY.closed)}</span>
+              </label>
+            </div>
+            <div class="p21-inq-save">
+              <button type="button" class="btn btn--primary" data-p20-inquiry-save>${esc(P20_INQUIRY_COPY.saveCta)}</button>
+              <span class="p20-inq-save-hint">${esc(P20_INQUIRY_COPY.saveHint)}</span>
+            </div>
+          </div>
+          <aside class="p20-inq-reason-empty" data-p20-inquiry-reason-empty${form.receiving ? '' : ' hidden'}>
+            <strong>${esc(P20_INQUIRY_COPY.offReasonTitle)}</strong>
+            <p>${esc(P20_INQUIRY_COPY.offReasonEmpty)}</p>
+          </aside>
+          <div class="p21-inq-reasons${form.receiving ? ' is-inactive' : ''}" data-p20-inquiry-reason-wrap${form.receiving ? ' hidden aria-disabled="true"' : ''}>
+            <h4 class="p21-inq-reasons__title">${esc(P20_INQUIRY_COPY.offReasonTitle)}</h4>
+            <p class="p21-inq-block__hint">${esc(P20_INQUIRY_COPY.offReasonHint)}</p>
+            <div class="p21-inq-reason-list">${reasonRadios}</div>
+          </div>
         </div>
       </section>
 
-      <div class="p21-inq-save">
-        <button type="button" class="btn btn--primary" data-p20-inquiry-save>${esc(P20_INQUIRY_COPY.saveCta)}</button>
-      </div>
-
-      <section class="p21-inq-block p21-inq-block--samples" aria-label="${esc(P20_INQUIRY_COPY.sampleTitle)}">
-        <h3 class="p21-inq-block__title">${esc(P20_INQUIRY_COPY.sampleTitle)}</h3>
-        <p class="p21-inq-block__hint">${esc(P20_INQUIRY_COPY.sampleLead)}</p>
-        <div class="inq-samples">
-          ${renderInquirySamplePair('study_room', P20_INQUIRY_COPY)}
+      <section class="p21-inq-block p21-inq-block--samples p20-inq-sample" aria-label="${esc(P20_INQUIRY_COPY.sampleTitle)}">
+        <div class="p20-inq-sample__surface">
+          <h3 class="p21-inq-block__title">${esc(P20_INQUIRY_COPY.sampleTitle)}</h3>
+          <p class="p21-inq-block__hint">${esc(P20_INQUIRY_COPY.sampleLead)}</p>
+          <div class="inq-samples">
+            ${renderInquirySamplePair('study_room', P20_INQUIRY_COPY)}
+          </div>
         </div>
       </section>
     </div>`;
@@ -563,10 +573,20 @@ function syncStudyRoomReasonState(page) {
   if (!page) return;
   const receiving = page.querySelector('input[name="p20_inquiry_receiving"]:checked')?.value === '1';
   const wrap = page.querySelector('[data-p20-inquiry-reason-wrap]');
+  const empty = page.querySelector('[data-p20-inquiry-reason-empty]');
   wrap?.classList.toggle('is-inactive', receiving);
   if (wrap) {
-    if (receiving) wrap.setAttribute('aria-disabled', 'true');
-    else wrap.removeAttribute('aria-disabled');
+    if (receiving) {
+      wrap.setAttribute('aria-disabled', 'true');
+      wrap.setAttribute('hidden', '');
+    } else {
+      wrap.removeAttribute('aria-disabled');
+      wrap.removeAttribute('hidden');
+    }
+  }
+  if (empty) {
+    if (receiving) empty.removeAttribute('hidden');
+    else empty.setAttribute('hidden', '');
   }
   page.querySelectorAll('input[name="inquiry_off_reason"]').forEach((input) => {
     input.disabled = receiving;

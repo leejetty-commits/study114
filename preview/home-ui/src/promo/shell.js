@@ -14,7 +14,7 @@ export function renderPromoShell(currentPath, bodyHtml) {
   const mainHtml = `
     <div class="promo-layout">
       <header class="promo-layout__head">
-        <p class="promo-layout__crumb"><a href="#${sub}" data-nav="${sub}">홈</a> · 홍보</p>
+        <p class="promo-layout__crumb"><a href="#${sub}" data-nav="${sub}">홈</a> <span aria-hidden="true">›</span> <span>홍보</span></p>
         <h1 class="promo-layout__title">${title}</h1>
       </header>
       ${bodyHtml}

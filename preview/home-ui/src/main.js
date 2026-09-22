@@ -30,8 +30,11 @@ import '../../shared/register-form-primitives.css';
 import '../../shared/register-flow.css';
 import '../../study-room-ui/src/styles/register.css';
 import '@search-ui/styles/search-visily.css';
-/* UDX-STD-001 오버레이는 모든 공통 CSS 이후 마지막 */
+/* UDX-STD-001 오버레이는 공통 CSS 이후 */
 import './styles/udx-std-apply.css';
+/* 홍보랜딩·공부방 쪽지설정 본문만. 전역 헤더/다른 탭에는 선택자가 닿지 않음 */
+import './styles/promo-catalog.css';
+import './styles/inquiry-settings-catalog.css';
 import { renderGuest, bindGuestEvents } from './screens/guest.js';
 import { renderParent, bindParentEvents } from './screens/parent.js';
 import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';

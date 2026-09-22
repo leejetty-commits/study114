@@ -19,35 +19,16 @@ function registerHref() {
 
 function mockMap() {
   return `
-    <div class="promo-ui-mock promo-ui-mock--map" aria-hidden="true">
-      <div class="promo-ui-mock__map">
-        <span class="promo-ui-mock__pin" style="top:28%;left:42%"></span>
-        <span class="promo-ui-mock__pin" style="top:48%;left:58%"></span>
-        <span class="promo-ui-mock__pin" style="top:62%;left:36%"></span>
+    <div class="pcat-map" aria-hidden="true">
+      <div class="pcat-map__canvas">
+        <span class="pcat-map__pin" style="top:28%;left:42%"></span>
+        <span class="pcat-map__pin" style="top:48%;left:58%"></span>
+        <span class="pcat-map__pin" style="top:62%;left:36%"></span>
       </div>
-      <div class="promo-ui-mock__cards">
-        <div class="promo-ui-mock__card"><strong>대치 수학 공부방</strong><span>도보 8분 · 초등·중등</span></div>
-        <div class="promo-ui-mock__card"><strong>목동 영어 관리형</strong><span>1.2km · 중등 집중</span></div>
+      <div class="pcat-map__cards">
+        <div class="pcat-map__card"><strong>대치 수학 공부방</strong><span>도보 8분 · 초등·중등</span></div>
+        <div class="pcat-map__card"><strong>목동 영어 관리형</strong><span>1.2km · 중등 집중</span></div>
       </div>
-    </div>`;
-}
-
-function mockCompare() {
-  return `
-    <div class="promo-ui-mock promo-ui-mock--compare" aria-hidden="true">
-      <div class="promo-ui-mock__col"><span>위치</span><strong>생활권</strong><em>가까운 순</em></div>
-      <div class="promo-ui-mock__col"><span>과목</span><strong>수학·영어</strong><em>대상 학년</em></div>
-      <div class="promo-ui-mock__col"><span>정보</span><strong>소개·방식</strong><em>먼저 확인</em></div>
-    </div>`;
-}
-
-function mockRegister() {
-  return `
-    <div class="promo-ui-mock promo-ui-mock--register" aria-hidden="true">
-      <div class="promo-ui-mock__field"><span>공부방 이름</span><b>우리동네 공부방</b></div>
-      <div class="promo-ui-mock__field"><span>지역</span><b>서울 · 강남</b></div>
-      <div class="promo-ui-mock__field"><span>한 줄 소개</span><b>초등 루틴 관리</b></div>
-      <div class="promo-ui-mock__bar">기본 정보부터 가볍게 시작</div>
     </div>`;
 }
 
@@ -57,67 +38,95 @@ function renderStudyRoomPromo() {
   const regHref = registerHref();
 
   return `
-    <article class="promo-page">
-      <section class="promo-hero">
-        <div class="promo-hero__copy">
-          <p class="promo-eyebrow">${esc(c.meta.eyebrow)}</p>
-          <h1 class="promo-hero__title">${esc(c.hero.title)}</h1>
-          <p class="promo-hero__lead">${esc(c.hero.lead)}</p>
-          <div class="promo-cta-row">
-            <a class="promo-btn promo-btn--primary" href="${esc(findHref)}" data-promo-ext="${esc(findHref)}">${esc(c.hero.primaryCta.label)}</a>
-            <a class="promo-btn promo-btn--ghost" href="${esc(regHref)}" data-promo-ext="${esc(regHref)}">${esc(c.hero.secondaryCta.label)}</a>
+    <article class="pcat">
+      <section class="pcat-hero" aria-labelledby="pcat-hero-title">
+        <div class="pcat-hero__copy">
+          <span class="pcat-badge pcat-badge--info">${esc(c.meta.eyebrow)}</span>
+          <h2 id="pcat-hero-title" class="pcat-hero__title">${esc(c.hero.titleLine1)}<br/>${esc(c.hero.titleLine2)}</h2>
+          <p class="pcat-hero__lead">${esc(c.hero.leadBefore)}<br/>${esc(c.hero.leadAfter)}</p>
+          <div class="pcat-actions">
+            <a class="pcat-btn pcat-btn--primary" href="${esc(findHref)}" data-promo-ext="${esc(findHref)}">${esc(c.hero.primaryCta.label)}</a>
+            <a class="pcat-btn pcat-btn--secondary" href="${esc(regHref)}" data-promo-ext="${esc(regHref)}">${esc(c.hero.secondaryCta.label)}</a>
           </div>
         </div>
-        <div class="promo-hero__visual">${mockMap()}</div>
+        <div class="pcat-hero__visual">${mockMap()}</div>
       </section>
 
-      <section class="promo-split">
-        <div class="promo-split__visual">${mockMap()}</div>
-        <div class="promo-split__copy">
-          <h2 class="promo-h2">${esc(c.near.title)}</h2>
-          <p class="promo-body">${esc(c.near.body)}</p>
-          <ul class="promo-bullets">
-            ${c.near.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}
-          </ul>
+      <section class="pcat-section" aria-labelledby="pcat-near-title">
+        <article class="pcat-card pcat-near">
+          <div class="pcat-near__map">${mockMap()}</div>
+          <div class="pcat-near__copy">
+            <div class="pcat-head pcat-head--inset">
+              <span class="pcat-badge pcat-badge--muted">${esc(c.near.eyebrow)}</span>
+              <h2 id="pcat-near-title">${esc(c.near.title)}</h2>
+              <p>${esc(c.near.bodyBefore)}<br/>${esc(c.near.bodyAfter)}</p>
+            </div>
+            <ul class="pcat-bullets">
+              ${c.near.bullets.map((b) => `<li><span class="pcat-bullets__dot" aria-hidden="true"></span><span>${esc(b)}</span></li>`).join('')}
+            </ul>
+          </div>
+        </article>
+      </section>
+
+      <section class="pcat-section" aria-labelledby="pcat-compare-title">
+        <div class="pcat-head pcat-head--center">
+          <span class="pcat-badge pcat-badge--info">${esc(c.compare.eyebrow)}</span>
+          <h2 id="pcat-compare-title">${esc(c.compare.title)}</h2>
+          <p>${esc(c.compare.lead)}</p>
         </div>
-      </section>
-
-      <section class="promo-band">
-        <h2 class="promo-h2 promo-h2--center">${esc(c.compare.title)}</h2>
-        <p class="promo-lead promo-lead--center">${esc(c.compare.lead)}</p>
-        <div class="promo-compare-grid">
+        <div class="pcat-criteria">
           ${c.compare.cards
             .map(
               (card, i) => `
-            <article class="promo-feature-card">
-              <span class="promo-feature-card__num">${i + 1}</span>
+            <article class="pcat-card pcat-criteria__card">
+              <span class="pcat-criteria__num">${i + 1}</span>
               <h3>${esc(card.title)}</h3>
               <p>${esc(card.body)}</p>
             </article>`,
             )
             .join('')}
         </div>
-        <div class="promo-band__visual">${mockCompare()}</div>
-      </section>
-
-      <section class="promo-split promo-split--structure">
-        <div class="promo-split__copy">
-          <p class="promo-badge">${esc(c.structure.badge)}</p>
-          <h2 class="promo-h2">${esc(c.structure.title)}</h2>
-          <p class="promo-body">${esc(c.structure.body)}</p>
-          <a class="promo-btn promo-btn--primary" href="${esc(regHref)}" data-promo-ext="${esc(regHref)}">${esc(c.structure.cta.label)}</a>
+        <div class="pcat-strip" aria-hidden="true">
+          ${c.compare.strip
+            .map(
+              (item) => `
+            <div class="pcat-strip__item"><div class="k">${esc(item.k)}</div><div class="v">${esc(item.v)}</div><div class="c">${esc(item.c)}</div></div>`,
+            )
+            .join('')}
         </div>
-        <div class="promo-split__visual">${mockRegister()}</div>
       </section>
 
-      <section class="promo-band">
-        <h2 class="promo-h2 promo-h2--center">${esc(c.personas.title)}</h2>
-        <div class="promo-persona-grid">
+      <section class="pcat-section" aria-labelledby="pcat-start-title">
+        <article class="pcat-card pcat-start">
+          <div class="pcat-start__copy">
+            <span class="pcat-badge pcat-badge--muted">${esc(c.structure.badge)}</span>
+            <h2 id="pcat-start-title">${esc(c.structure.title)}</h2>
+            <p>${esc(c.structure.body)}</p>
+            <a class="pcat-btn pcat-btn--primary" href="${esc(regHref)}" data-promo-ext="${esc(regHref)}">${esc(c.structure.cta.label)}</a>
+          </div>
+          <div class="pcat-card pcat-form" aria-hidden="true">
+            ${c.structure.formFields
+              .map(
+                (field) => `
+              <div class="pcat-form__field"><label>${esc(field.label)}</label><div class="pcat-form__fake">${esc(field.value)}</div></div>`,
+              )
+              .join('')}
+            <span class="pcat-btn pcat-btn--secondary pcat-btn--block">${esc(c.structure.formCta)}</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="pcat-section" aria-labelledby="pcat-aud-title">
+        <div class="pcat-head pcat-head--center">
+          <span class="pcat-badge pcat-badge--muted">${esc(c.personas.eyebrow)}</span>
+          <h2 id="pcat-aud-title">${esc(c.personas.title)}</h2>
+        </div>
+        <div class="pcat-audience">
           ${c.personas.cards
             .map(
               (card) => `
-            <article class="promo-persona-card">
-              <span class="promo-persona-card__role">${esc(card.role)}</span>
+            <article class="pcat-card pcat-audience__card">
+              <span class="pcat-badge pcat-badge--info">${esc(card.role)}</span>
               <h3>${esc(card.title)}</h3>
               <p>${esc(card.body)}</p>
             </article>`,
@@ -126,27 +135,32 @@ function renderStudyRoomPromo() {
         </div>
       </section>
 
-      <section class="promo-trust">
-        <h2 class="promo-h2 promo-h2--center">${esc(c.trust.title)}</h2>
-        <div class="promo-trust-grid">
-          ${c.trust.items
-            .map(
-              (item) => `
-            <article class="promo-trust-item">
-              <h3>${esc(item.title)}</h3>
-              <p>${esc(item.body)}</p>
-            </article>`,
-            )
-            .join('')}
+      <section class="pcat-section" aria-labelledby="pcat-trust-title">
+        <div class="pcat-head pcat-head--center">
+          <span class="pcat-badge pcat-badge--info">${esc(c.trust.eyebrow)}</span>
+          <h2 id="pcat-trust-title">${esc(c.trust.title)}</h2>
+        </div>
+        <div class="pcat-card pcat-reasons">
+          <div class="pcat-reasons__grid">
+            ${c.trust.items
+              .map(
+                (item) => `
+              <div class="pcat-reasons__item">
+                <h3>${esc(item.title)}</h3>
+                <p>${esc(item.body)}</p>
+              </div>`,
+              )
+              .join('')}
+          </div>
         </div>
       </section>
 
-      <section class="promo-final">
-        <h2 class="promo-final__title">${esc(c.finalCta.title)}</h2>
-        <p class="promo-final__lead">${esc(c.finalCta.lead)}</p>
-        <div class="promo-cta-row promo-cta-row--center">
-          <a class="promo-btn promo-btn--on-dark" href="${esc(findHref)}" data-promo-ext="${esc(findHref)}">${esc(c.finalCta.primaryCta.label)}</a>
-          <a class="promo-btn promo-btn--on-dark-ghost" href="${esc(regHref)}" data-promo-ext="${esc(regHref)}">${esc(c.finalCta.secondaryCta.label)}</a>
+      <section class="pcat-close" aria-labelledby="pcat-close-title">
+        <h2 id="pcat-close-title">${esc(c.finalCta.title)}</h2>
+        <p>${esc(c.finalCta.lead)}</p>
+        <div class="pcat-actions pcat-actions--center">
+          <a class="pcat-btn pcat-btn--primary" href="${esc(findHref)}" data-promo-ext="${esc(findHref)}">${esc(c.finalCta.primaryCta.label)}</a>
+          <a class="pcat-btn pcat-btn--secondary" href="${esc(regHref)}" data-promo-ext="${esc(regHref)}">${esc(c.finalCta.secondaryCta.label)}</a>
         </div>
       </section>
     </article>`;
