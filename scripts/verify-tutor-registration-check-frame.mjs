@@ -82,6 +82,13 @@ assert(hcsRender.includes("renderExposureBox(kind, 'prime'"), 'hcs: PRIME render
 assert(hcsCss.includes('--hcs-basic-w'), 'hcs css: basic cell');
 assert(hcsCss.includes('--hcs-pick-w'), 'hcs css: pick cell');
 assert(hcsCss.includes('--hcs-prime-w'), 'hcs css: prime cell');
+assert(hcsCss.includes('--hcs-grid-gap: var(--space-2)'), 'hcs css: live expo-grid gap');
+assert(hcsCss.includes('--hcs-prime-gap: var(--space-2)'), 'hcs css: live prime grid gap');
+assert(!hcsCss.includes('0.85fr') && !hcsCss.includes('1.25fr'), 'hcs css: no artificial pick/prime stretch');
+const mainJs = read('preview/home-ui/src/main.js');
+assert(mainJs.includes("import './styles/home-card-samples.css'"), 'main: home-card-samples.css linked');
+assert(!css.includes('0.85fr') && !css.includes('1.25fr'), 'css: no artificial pick/prime stretch');
+assert(!css.includes('[data-trc-page] .rc-sample__card--prime'), 'css: no legacy trc rc-sample prime width');
 const pageFn = render.slice(render.indexOf('export function renderTutorRegistrationCheck'));
 assert(pageFn.includes('pickMissingTitle'), 'page: pick action');
 assert(pageFn.includes('primeMissingTitle'), 'page: prime action');

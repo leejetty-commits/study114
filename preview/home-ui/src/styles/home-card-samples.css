@@ -1,6 +1,8 @@
 /**
- * 홈 카드 1칸 폭 토큰.
- * home-main = home-max − gutters − (PC) promo 14rem − gap
+ * 라이브 카드 outer box 1칸 폭 토큰 (셀≠가정 금지 · 실측 역산).
+ * 기준(1440vw): home-main 984 · BASIC 486 · PICK 190.4 · PRIME 322.66
+ * home-main = home-max − gutters − (PC) promo 14rem − promo gap
+ * browse gap = 12px (0.75rem) · expo-grid gap = --space-2 (8px)
  * BASIC = (main − browse gap) / 2
  * PICK  = (main − 4×grid gap) / 5  (≥900)
  * PRIME = (main − 2×grid gap) / 3  (≥900)
@@ -10,9 +12,11 @@
   --hcs-promo: 0px;
   --hcs-promo-gap: 0px;
   --hcs-home-main: calc(var(--home-max) - 2 * var(--page-gutter) - var(--hcs-promo) - var(--hcs-promo-gap));
+  /* 라이브 .browse-list--table column-gap */
   --hcs-browse-gap: 0.75rem;
-  --hcs-grid-gap: 0.625rem;
-  --hcs-prime-gap: 0.75rem;
+  /* 라이브 .expo-grid--3 / --5 gap = var(--space-2) */
+  --hcs-grid-gap: var(--space-2);
+  --hcs-prime-gap: var(--space-2);
   --hcs-basic-w: var(--hcs-home-main);
   --hcs-pick-w: calc((var(--hcs-home-main) - var(--hcs-grid-gap)) / 2);
   --hcs-prime-w: var(--hcs-home-main);
@@ -71,7 +75,9 @@
   box-sizing: border-box;
   pointer-events: none;
   user-select: none;
-  max-width: 100%;
+  /* 마이페이지 좁은 패널에서 라이브 outer보다 줄어들지 않게 — 가로 스크롤은 .rc-block--compare */
+  max-width: none;
+  flex: 0 0 auto;
 }
 
 .hcs-sample__card--basic {
@@ -127,7 +133,7 @@
   color: #1d4ed8;
 }
 
-/* 등록점검 스택 */
+/* 등록점검 스택 — 라이브 outer 폭 유지, Pick/Prime fr 스트레치 금지 */
 .hcs-rc-compare.rc-compare--stack {
   display: flex;
   flex-direction: column;
@@ -135,14 +141,25 @@
   margin-top: 0.35rem;
 }
 
-.hcs-rc-compare .rc-compare__row--basic {
-  display: block;
-}
-
+.hcs-rc-compare .rc-compare__row,
+.hcs-rc-compare .rc-compare__row--basic,
 .hcs-rc-compare .rc-compare__row--upgrade {
   display: flex;
   flex-wrap: wrap;
+  grid-template-columns: none;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
   align-items: flex-start;
+}
+
+.hcs-rc-compare .rc-compare__row--basic {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+}
+
+.hcs-rc-compare .rc-compare__row--upgrade {
   gap: 1.25rem;
 }
 
