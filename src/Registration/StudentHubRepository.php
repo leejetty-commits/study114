@@ -71,23 +71,138 @@ final class StudentHubRepository
             'preferred_tutor_gender', 'request_summary', 'request_summary_visibility',
             'special_request_note', 'special_request_visibility',
         ];
-        $sets = [];
-        $params = [];
-        foreach ($allowed as $col) {
-            if (!array_key_exists($col, $patch)) {
-                continue;
+        $ownTx = !$this->pdo->inTransaction();
+        if ($ownTx) {
+            $this->pdo->beginTransaction();
+        }
+        try {
+            $sets = [];
+            $params = [];
+            foreach ($allowed as $col) {
+                if (!array_key_exists($col, $patch)) {
+                    continue;
+                }
+                $sets[] = "{$col} = ?";
+                $params[] = $this->normalizeStudentColumn($col, $patch[$col]);
             }
-            $sets[] = "{$col} = ?";
-            $params[] = $patch[$col];
+            if ($sets !== []) {
+                $sets[] = 'updated_at = NOW()';
+                $params[] = $studentId;
+                $sql = 'UPDATE students SET ' . implode(', ', $sets) . ' WHERE id = ?';
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute($params);
+            }
+            if (array_key_exists('lesson_places', $patch)) {
+                $this->replaceLessonPlaces($studentId, $patch['lesson_places']);
+            }
+            if (array_key_exists('teaching_style_badges', $patch)) {
+                $this->replaceStyleBadges($studentId, $patch['teaching_style_badges']);
+            }
+            if ($ownTx) {
+                $this->pdo->commit();
+            }
+        } catch (\Throwable $e) {
+            if ($ownTx && $this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
         }
-        if ($sets === []) {
-            return;
+    }
+
+    private function normalizeStudentColumn(string $col, mixed $value): mixed
+    {
+        if ($value === '') {
+            $value = null;
         }
-        $sets[] = 'updated_at = NOW()';
-        $params[] = $studentId;
-        $sql = 'UPDATE students SET ' . implode(', ', $sets) . ' WHERE id = ?';
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
+        if ($col === 'preferred_region_note') {
+            if ($value === null) {
+                return null;
+            }
+            $text = trim((string) $value);
+            if ($text === '') {
+                return null;
+            }
+            if (mb_strlen($text) > 255) {
+                throw new \InvalidArgumentException('preferred_region_note: 255자 이하로 입력해 주세요.');
+            }
+
+            return $text;
+        }
+        if ($col === 'special_request_note') {
+            if ($value === null) {
+                return null;
+            }
+            $text = trim((string) $value);
+
+            return $text === '' ? null : $text;
+        }
+        if (in_array($col, ['birth_year', 'lessons_per_week', 'minutes_per_lesson', 'preferred_fee_amount', 'preferred_studyroom_fee_amount'], true)) {
+            if ($value === null) {
+                return null;
+            }
+            if (!is_int($value) && !(is_string($value) && preg_match('/^\d+$/', $value))) {
+                throw new \InvalidArgumentException("{$col}: 숫자로 입력해 주세요.");
+            }
+            $number = (int) $value;
+            $max = $col === 'birth_year' ? 32767 : 65535;
+            if ($number < 0 || $number > $max) {
+                throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
+            }
+
+            return $number;
+        }
+        if ($col === 'gender' && $value !== null && !in_array($value, ['male', 'female'], true)) {
+            throw new \InvalidArgumentException('gender: 값을 확인해 주세요.');
+        }
+        if ($col === 'preferred_tutor_gender' && $value !== null && !in_array($value, ['male', 'female', 'any'], true)) {
+            throw new \InvalidArgumentException('preferred_tutor_gender: 값을 확인해 주세요.');
+        }
+
+        return $value;
+    }
+
+    private function replaceLessonPlaces(int $studentId, mixed $places): void
+    {
+        $allowed = ['student_home', 'study_room', 'public_place'];
+        $clean = [];
+        foreach ((array) $places as $place) {
+            $place = (string) $place;
+            if (!in_array($place, $allowed, true)) {
+                throw new \InvalidArgumentException('lesson_places: 값을 확인해 주세요.');
+            }
+            if (!in_array($place, $clean, true)) {
+                $clean[] = $place;
+            }
+        }
+        $this->pdo->prepare('DELETE FROM student_preferred_lesson_places WHERE student_id = ?')->execute([$studentId]);
+        $insert = $this->pdo->prepare(
+            'INSERT INTO student_preferred_lesson_places (student_id, place_type) VALUES (?, ?)'
+        );
+        foreach ($clean as $place) {
+            $insert->execute([$studentId, $place]);
+        }
+    }
+
+    private function replaceStyleBadges(int $studentId, mixed $badges): void
+    {
+        $allowed = ['passion', 'meticulous', 'kind', 'from_basics', 'advanced_focus', 'concept_focus', 'solution_focus'];
+        $clean = [];
+        foreach ((array) $badges as $badge) {
+            $badge = (string) $badge;
+            if (!in_array($badge, $allowed, true)) {
+                throw new \InvalidArgumentException('teaching_style_badges: 값을 확인해 주세요.');
+            }
+            if (!in_array($badge, $clean, true)) {
+                $clean[] = $badge;
+            }
+        }
+        $this->pdo->prepare('DELETE FROM student_preferred_teaching_style_badges WHERE student_id = ?')->execute([$studentId]);
+        $insert = $this->pdo->prepare(
+            'INSERT INTO student_preferred_teaching_style_badges (student_id, badge_name, display_order) VALUES (?, ?, ?)'
+        );
+        foreach ($clean as $i => $badge) {
+            $insert->execute([$studentId, $badge, $i]);
+        }
     }
 
     /** @param array<string, mixed> $row @return array<string, mixed> */
@@ -109,6 +224,7 @@ final class StudentHubRepository
                 ? (string) $row['memo_status']
                 : 'open',
             'preferred_lesson_type'         => $row['preferred_lesson_type'] !== null ? (string) $row['preferred_lesson_type'] : null,
+            'preferred_region_note'         => $row['preferred_region_note'] !== null ? (string) $row['preferred_region_note'] : null,
             'region_label'                  => $regionLabel,
             'subject_label'                 => $subjectLabel,
             'lesson_places'                 => $this->lessonPlaces($studentId),

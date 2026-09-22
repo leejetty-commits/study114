@@ -42,7 +42,6 @@ import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import {
   bindDualHopeRegionsEvents,
   collectDualHopeRegions,
-  renderDualHopeRegionsSection,
 } from './hope-regions-ui.js';
 import { ensureHopeRegionMasters } from './hope-region-masters.js';
 import {
@@ -84,7 +83,7 @@ function renderSelect(name, options, value, { required = false, empty = false } 
   </select>`;
 }
 
-function renderTextInput(name, value, { required = false, placeholder = '', type = 'text', min, max, step } = {}) {
+function renderTextInput(name, value, { required = false, placeholder = '', type = 'text', min, max, step, maxlength } = {}) {
   const attrs = [
     type !== 'text' ? `type="${type}"` : 'type="text"',
     `name="${name}"`,
@@ -94,6 +93,7 @@ function renderTextInput(name, value, { required = false, placeholder = '', type
     min != null ? `min="${min}"` : '',
     max != null ? `max="${max}"` : '',
     step != null ? `step="${step}"` : '',
+    maxlength != null ? `maxlength="${maxlength}"` : '',
     value != null && value !== '' ? `value="${esc(value)}"` : '',
   ]
     .filter(Boolean)
@@ -185,8 +185,12 @@ function renderPhaseStepper(student, activeSection) {
 
 /** @param {import('./store.js').StudentRecord} student @param {string} activeSection @param {string} bodyHtml */
 function renderStudentShell(student, activeSection, bodyHtml) {
+  const detailQuiet = activeSection === 'detail';
   const readiness = getPublishReadiness(student);
-  const navItems = STUDENT_REG_MENUS.map((m) => {
+  const menus = detailQuiet
+    ? STUDENT_REG_MENUS.filter((m) => m.key === 'basic' || m.key === 'detail')
+    : STUDENT_REG_MENUS;
+  const navItems = menus.map((m) => {
     const href = studentSectionPath(student.id, /** @type {any} */ (m.key));
     const active = activeSection === m.key ? ' is-active' : '';
     return `<a href="#${href}" class="p19-sidebar-nav__link${active}" data-p19-nav="${href}">${esc(m.label)}</a>`;
@@ -198,10 +202,10 @@ function renderStudentShell(student, activeSection, bodyHtml) {
 
   return `
     <div class="p19-frame">
-      <aside class="p19-sidebar" aria-label="자녀 관리">
+      <aside class="p19-sidebar" aria-label="${detailQuiet ? '학생 상세정보' : '자녀 관리'}">
         <div class="p19-sidebar__top">
           <a href="#/mypage/registrations/students" class="p19-back" data-p19-nav="/mypage/registrations/students">← 목록</a>
-          <span class="p19-sidebar__readiness mypage-badge${readiness.canPublish ? ' p19-readiness--ok' : ' p19-readiness--pending'}">${esc(readinessText)}</span>
+          ${detailQuiet ? '' : `<span class="p19-sidebar__readiness mypage-badge${readiness.canPublish ? ' p19-readiness--ok' : ' p19-readiness--pending'}">${esc(readinessText)}</span>`}
         </div>
         <div class="p19-student-card">
           <div class="p19-student-card__avatar" aria-hidden="true">${esc((student.public_display_name || '?').charAt(0))}</div>
@@ -211,17 +215,17 @@ function renderStudentShell(student, activeSection, bodyHtml) {
             <p class="p19-student-card__meta">${esc(summaryLine)}</p>
           </div>
         </div>
-        <nav class="p19-sidebar-nav" aria-label="자녀 등록 메뉴">
+        <nav class="p19-sidebar-nav" aria-label="${detailQuiet ? '학생 상세정보' : '자녀 등록 메뉴'}">
           <a href="#${studentHubPath(student.id)}" class="p19-sidebar-nav__link p19-sidebar-nav__link--overview${hubActive}" data-p19-nav="${studentHubPath(student.id)}">관리 홈</a>
           ${navItems}
         </nav>
-        <div class="p19-sidebar-status" aria-hidden="true">
+        ${detailQuiet ? '' : `<div class="p19-sidebar-status" aria-hidden="true">
           <span class="p19-sidebar-status__label">공개 준비</span>
           <span class="p19-sidebar-status__value${readiness.canPublish ? ' is-ready' : ''}">${esc(readinessText)}</span>
-        </div>
+        </div>`}
       </aside>
       <div class="p19-frame__body">
-        ${renderPhaseStepper(student, activeSection)}
+        ${detailQuiet ? '' : renderPhaseStepper(student, activeSection)}
         ${bodyHtml}
       </div>
     </div>`;
@@ -450,128 +454,68 @@ function renderBasicForm(student) {
   return `<section class="mypage-panel p19-panel p19-panel--form">${renderStudentShell(student, 'basic', formBody)}</section>`;
 }
 
+/** @param {string} label @param {string} hint @param {string} control */
+function renderDetailField(label, hint, control) {
+  return `
+    <div class="student-detail-field">
+      <span class="student-detail-label">${esc(label)}</span>
+      <span class="student-detail-hint">${esc(hint)}</span>
+      ${control}
+    </div>`;
+}
+
 /** @param {import('./store.js').StudentRecord} student */
 function renderDetailForm(student) {
-  const isGroup = student.lesson_format === 'group';
-  const seedSummary = [
-    student.preferred_lesson_type &&
-      `희망유형: ${FORM_OPTIONS.lessonType.find((o) => o.value === student.preferred_lesson_type)?.label || student.preferred_lesson_type}`,
-    primaryHopeRegionLabel(student) && `대표 희망지역: ${primaryHopeRegionLabel(student)}`,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-
   const formBody = `
-    <form class="p19-form" data-p19-form="detail" data-p19-student-id="${student.id}">
-      <div class="p19-inline-tip">
-        <strong>기본등록 내용</strong> ${esc(seedSummary || '—')}
-        · <a href="#${studentSectionPath(student.id, 'basic')}" data-p19-nav="${studentSectionPath(student.id, 'basic')}">기본정보 수정</a>
+    <form class="p19-form student-detail-form" data-p19-form="detail" data-p19-student-id="${student.id}">
+      <header class="student-detail-head">
+        <h2 class="student-detail-title">학생 상세정보</h2>
+        <p class="student-detail-lead">입력데이터가 맞을수록 더 적합한 과외쌤, 공부방을 만날 수 있습니다.</p>
+      </header>
+      ${renderDetailField(
+        '희망지역 추가값',
+        '기본정보에 적은 희망지역 외에 더 알리고 싶은 지역입니다.',
+        renderTextInput('preferred_region_note', student.preferred_region_note || '', {
+          placeholder: '예: 대치동 주변',
+          maxlength: 255,
+        }),
+      )}
+      ${renderDetailField(
+        '희망 수업장소',
+        '수업이 이루어지면 좋은 장소입니다.',
+        renderCheckboxGroup('lesson_places', FORM_OPTIONS.lessonPlaces, student.lesson_places),
+      )}
+      <div class="student-detail-grid">
+        ${renderDetailField(
+          '주 횟수',
+          '일주일에 원하는 수업 횟수입니다.',
+          renderTextInput('lessons_per_week', student.lessons_per_week ?? '', {
+            type: 'number',
+            min: 1,
+            placeholder: '2',
+          }),
+        )}
+        ${renderDetailField(
+          '1회 시간',
+          '한 번 수업의 길이입니다. 분 단위로 적습니다.',
+          renderTextInput('minutes_per_lesson', student.minutes_per_lesson ?? '', {
+            type: 'number',
+            min: 10,
+            step: 10,
+            placeholder: '90',
+          }),
+        )}
       </div>
-      ${renderFormSection(
-        '희망지역 (상세등록 본체)',
-        '공부방=행정동/단지 · 과외쌤=시 · 각 축 1필수+추가2 · 홈/찾기는 희망유형 축의 1번을 씁니다.',
-        renderDualHopeRegionsSection(student),
+      ${renderDetailField(
+        '희망 강의스타일',
+        '마음에 드는 수업 방식을 고릅니다.',
+        renderCheckboxGroup('teaching_style_badges', FORM_OPTIONS.teachingStyle, student.teaching_style_badges),
       )}
-      ${renderFormSection(
-        '표시 · 학년',
-        '학생 목록 검색에 쓰이는 핵심 항목입니다.',
-        `
-        <div class="p19-field-grid p19-field-grid--2">
-          <label class="p19-field p19-field--full">
-            <span class="p19-field__label">공개 표시명 <em class="p19-required">필수</em></span>
-            <span class="p19-field__hint">실명 대신 노출되는 이름입니다</span>
-            ${renderTextInput('public_display_name', student.public_display_name, { required: true, placeholder: '예: 중2 수학 여학생' })}
-          </label>
-          <label class="p19-field">
-            <span class="p19-field__label">희망 과목</span>
-            ${renderTextInput('subject_label', student.subject_label || '', { required: true, placeholder: '예: 수학 · 영어' })}
-          </label>
-          <label class="p19-field">
-            <span class="p19-field__label">학교급</span>
-            ${renderSelect('school_level', FORM_OPTIONS.schoolLevel, student.school_level || 'middle')}
-          </label>
-          <label class="p19-field">
-            <span class="p19-field__label">학년</span>
-            ${renderTextInput('grade_level', student.grade_level, { required: true, placeholder: '예: 중2' })}
-          </label>
-        </div>`,
-      )}
-      ${renderFormSection(
-        '학생 정보',
-        '관리용 · 검색에는 표시명만 노출됩니다.',
-        `
-        <div class="p19-field-grid p19-field-grid--2">
-          <label class="p19-field">
-            <span class="p19-field__label">학생 성별</span>
-            ${renderSelect('gender', [{ value: 'female', label: '여' }, { value: 'male', label: '남' }], student.gender, { required: true, empty: true })}
-          </label>
-          <label class="p19-field">
-            <span class="p19-field__label">출생연도</span>
-            ${renderTextInput('birth_year', student.birth_year || '', { type: 'number', required: true, placeholder: '2012' })}
-          </label>
-        </div>`,
-      )}
-      ${renderFormSection(
-        '수업 조건',
-        '장소·형태·횟수 등 희망 수업 조건입니다.',
-        `
-        <div class="p19-field p19-field--full">
-          <span class="p19-field__label">희망 수업장소</span>
-          ${renderCheckboxGroup('lesson_places', FORM_OPTIONS.lessonPlaces, student.lesson_places, { required: true })}
-        </div>
-        <div class="p19-field-grid p19-field-grid--2">
-          <label class="p19-field">
-            <span class="p19-field__label">수업형태</span>
-            ${renderSelect('lesson_format', FORM_OPTIONS.lessonFormat, student.lesson_format || 'one_on_one', { required: true })}
-          </label>
-          <label class="p19-field">
-            <span class="p19-field__label">희망 수업인원</span>
-            ${renderSelect('preferred_student_count_group', FORM_OPTIONS.studentCount, student.preferred_student_count_group || 'solo', { required: true })}
-          </label>
-        </div>
-        <div class="p19-field p19-field--full ${isGroup ? '' : 'is-muted'}" data-p19-group-only>
-          <span class="p19-field__label">그룹 구성</span>
-          <span class="p19-field__hint">그룹과외 선택 시에만 입력합니다</span>
-          ${renderSelect('student_gender_group', FORM_OPTIONS.genderGroup, student.student_gender_group || '', { empty: true })}
-        </div>
-        <div class="p19-field-grid p19-field-grid--2">
-          <label class="p19-field">
-            <span class="p19-field__label">주 횟수</span>
-            ${renderTextInput('lessons_per_week', student.lessons_per_week ?? 2, { type: 'number', min: 1, max: 7, required: true })}
-          </label>
-          <label class="p19-field">
-            <span class="p19-field__label">1회 시간 (분)</span>
-            ${renderTextInput('minutes_per_lesson', student.minutes_per_lesson ?? 90, { type: 'number', step: 10, required: true })}
-          </label>
-        </div>`,
-      )}
-      ${renderFormSection(
-        '스타일 · 예산 · 과외쌤',
-        '검색 비교와 매칭에 쓰입니다.',
-        `
-        <div class="p19-field p19-field--full">
-          <span class="p19-field__label">희망 강의스타일</span>
-          ${renderCheckboxGroup('teaching_style_badges', FORM_OPTIONS.teachingStyle, student.teaching_style_badges, { required: true })}
-        </div>
-        <div class="p19-field-grid p19-field-grid--2">
-          <label class="p19-field">
-            <span class="p19-field__label">수업예산 (과외)</span>
-            <div class="p19-input-wrap">
-              ${renderTextInput('preferred_fee_amount', student.preferred_fee_amount ?? '', { type: 'number', placeholder: '550000' })}
-              <span class="p19-input-suffix">원/월</span>
-            </div>
-          </label>
-          <label class="p19-field">
-            <span class="p19-field__label">수업예산 (공부방)</span>
-            <div class="p19-input-wrap">
-              ${renderTextInput('preferred_studyroom_fee_amount', student.preferred_studyroom_fee_amount ?? '', { type: 'number', placeholder: '420000' })}
-              <span class="p19-input-suffix">원/월</span>
-            </div>
-          </label>
-        </div>
-        <label class="p19-field p19-field--card">
-          <span class="p19-field__label">희망 과외쌤 성별</span>
-          ${renderSelect(
+      <div class="student-detail-grid">
+        ${renderDetailField(
+          '희망 과외쌤 성별',
+          '과외쌤 성별 선호입니다.',
+          renderSelect(
             'preferred_tutor_gender',
             [
               { value: 'female', label: '여' },
@@ -579,21 +523,45 @@ function renderDetailForm(student) {
               { value: 'any', label: '무관' },
             ],
             student.preferred_tutor_gender || '',
-            { required: true, empty: true },
-          )}
-        </label>`,
-      )}
-      <div class="p19-inline-tip">
-        요청문·노출 범위는 <a href="#${studentSectionPath(student.id, 'settings')}" data-p19-nav="${studentSectionPath(student.id, 'settings')}">공개설정</a>에서 관리합니다.
+            { empty: true },
+          ),
+        )}
+        ${renderDetailField(
+          '학생 성별',
+          '학생의 성별입니다.',
+          renderSelect(
+            'gender',
+            [
+              { value: 'female', label: '여' },
+              { value: 'male', label: '남' },
+            ],
+            student.gender || '',
+            { empty: true },
+          ),
+        )}
       </div>
-      ${renderFormFooter(
-        '상세등록을 마친 뒤 미리보기에서 학생 목록에 공개할 수 있습니다.',
-        `<button type="submit" class="btn btn--primary">상세 저장</button>
-         <a href="#${studentSectionPath(student.id, 'publish')}" class="btn btn--secondary" data-p19-nav="${studentSectionPath(student.id, 'publish')}">미리보기·공개</a>`,
+      ${renderDetailField(
+        '출생연도',
+        '태어난 해를 네 자리로 적습니다.',
+        renderTextInput('birth_year', student.birth_year || '', {
+          type: 'number',
+          min: 1900,
+          max: 2100,
+          placeholder: '2012',
+        }),
       )}
+      ${renderDetailField(
+        '특이요청사항',
+        '매칭에 도움이 되는 요청입니다.',
+        renderTextarea('special_request_note', student.special_request_note || '', {
+          rows: 3,
+          placeholder: '예: 저녁 시간, 개념부터 천천히',
+        }),
+      )}
+      ${renderFormFooter('', '<button type="submit" class="btn btn--primary">저장</button>')}
     </form>`;
 
-  return `<section class="mypage-panel p19-panel p19-panel--form">${renderStudentShell(student, 'detail', formBody)}</section>`;
+  return `<section class="mypage-panel p19-panel p19-panel--form student-detail-screen">${renderStudentShell(student, 'detail', formBody)}</section>`;
 }
 
 /** @param {import('./store.js').StudentRecord} student */
@@ -729,6 +697,10 @@ export function bindStudentRegEvents(root, rerender) {
       const id = Number(form.dataset.p19StudentId);
       const formKind = form.getAttribute('data-p19-form');
       let patch = parseStudentForm(form);
+      if (formKind === 'detail') {
+        if (!patch.lesson_places) patch.lesson_places = [];
+        if (!patch.teaching_style_badges) patch.teaching_style_badges = [];
+      }
 
       if (formKind === 'detail' && form.querySelector('[data-p19-hope-dual]')) {
         const current = getStudent(id);

@@ -1,0 +1,95 @@
+/* 학생 상세정보 화면만. UDX-STD-001 토큰. */
+
+.student-detail-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.student-detail-head {
+  margin: 0 0 8px;
+}
+
+.student-detail-title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 39px;
+  font-weight: 700;
+}
+
+.student-detail-lead {
+  margin: 12px 0 0;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.student-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.student-detail-label {
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 600;
+}
+
+.student-detail-hint {
+  font-size: 13px;
+  line-height: 20px;
+  color: #667085;
+}
+
+.student-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.student-detail-form .p19-input,
+.student-detail-form .btn {
+  min-height: 44px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.student-detail-form .p19-input:not(.p19-textarea) {
+  height: 44px;
+}
+
+.student-detail-form .p19-textarea {
+  height: auto;
+  min-height: 88px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.student-detail-form .p19-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.student-detail-form .p19-chip {
+  min-height: 44px;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.student-detail-screen {
+  overflow-x: hidden;
+}
+
+@media (max-width: 639px) {
+  .student-detail-title {
+    font-size: 22px;
+    line-height: 31px;
+  }
+
+  .student-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
