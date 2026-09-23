@@ -10,7 +10,12 @@ import {
 import { renderAuthShell, renderStepIndicator, renderRoleBadge, bindGlobalEvents, navigate } from '../layout.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import { resolvePostLoginUrl } from '../../../shared/auth-redirect.js';
-import { buildSidoCityOptions, KOREA_SIDOS } from '../../../shared/korea-sidos.js';
+import {
+  activityLabelFromRegionId,
+  buildSidoCityOptions,
+  KOREA_SIDOS,
+  regionIdFromActivityLabel,
+} from '../../../shared/korea-sidos.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import {
   getCityUnits,
@@ -63,19 +68,13 @@ function listSidoOptions() {
   })).filter((c) => c.id);
 }
 
-/** 시 라벨 → 대표 region_id */
-function regionIdForSido(sido) {
-  const city = (signupState.cities || []).find((c) => c.label === sido);
-  if (city?.id) return city.id;
-  const hit = regionList().find((r) => String(r.label || '').trim().startsWith(sido));
-  return hit?.id ?? '';
+/** 화면 라벨(경기도 의정부시) → 시 단위 region_id. 행정동 목록은 쓰지 않는다. */
+function regionIdForSido(activityLabel) {
+  return regionIdFromActivityLabel(activityLabel, getCityUnits(signupState.cities || []));
 }
 
 function sidoFromRegionId(regionId) {
-  const city = (signupState.cities || []).find((c) => String(c.id) === String(regionId));
-  if (city?.label) return city.label;
-  const hit = regionList().find((r) => String(r.id) === String(regionId));
-  return hit ? String(hit.label || '').trim().split(/\s+/)[0] : '';
+  return activityLabelFromRegionId(regionId, getCityUnits(signupState.cities || []));
 }
 
 function renderRegionSelect(name, selectedId, { required = false } = {}) {

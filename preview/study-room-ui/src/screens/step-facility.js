@@ -87,7 +87,7 @@ export function renderFacilityFormHtml(opts = {}) {
   const notes = proofNotes(s);
   return `
     <form data-form="facility">
-      ${renderGuideNotice('상세정보 2단계입니다. 비어 있어도 저장할 수 있습니다.')}
+      ${renderGuideNotice('지금 다 안 채워도 됩니다. 저장(다음)은 눌러 주세요')}
       ${renderSectionTitle('경력 · 특징')}
       <div class="register-grid-3">
         ${renderUniversityNameField({

@@ -51,6 +51,9 @@ const SCREENS = {
 
 const BASIC_KEYS = new Set(['basic', 'location']);
 
+/** 세션 확정 전 해시 변경이 게스트 소개(공부방 상세정보)를 그리지 않게 한다. */
+let chromeReady = false;
+
 function renderIntroShell(innerHtml) {
   const header = renderSiteHeader({
     user: getChromeUser(),
@@ -94,6 +97,7 @@ function maybeRedirectLocationToOverview() {
 }
 
 function render() {
+  if (!chromeReady) return;
   const mode = resolveRegisterMode();
   if (mode === 'blocked') {
     markRegisterBootDone();
@@ -171,6 +175,7 @@ function init() {
 
   Promise.all([initChromeSession(), initApi()])
     .then(() => {
+      chromeReady = true;
       if (isAuthRedirectPending()) {
         markRegisterBootDone();
         return;
@@ -201,6 +206,7 @@ function init() {
       render();
     })
     .catch(() => {
+      chromeReady = true;
       try {
         render();
       } catch {

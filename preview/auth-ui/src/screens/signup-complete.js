@@ -108,12 +108,8 @@ export function renderSignupComplete() {
       </p>
 
       <dl class="success-info">
-        <dt>회원 ID (DB)</dt>
-        <dd>${saved?.userId ?? '—'}</dd>
         <dt>로그인 계정</dt>
         <dd>${maskEmail(saved?.email)}</dd>
-        <dt>역할 (DB role_type)</dt>
-        <dd>${saved?.roleType ?? '—'}</dd>
         <dt>기본등록 프로필</dt>
         <dd>${profile ? `${profile.kind} #${profile.id}` : '—'}</dd>
         <dt>기본등록 요약</dt>
@@ -160,16 +156,16 @@ export function bindSignupCompleteEvents(root) {
 
   root.querySelector('[data-action="go-detail-register"]')?.addEventListener('click', () => {
     const role = signupState.role || 'student';
+    // 가입 이어가기: 새 탭 금지. 과외쌤과 같이 같은 창에서 연다.
     if (role === 'study_room') {
-      window.open(STUDY_ROOM_UI_BASE, '_blank');
+      window.location.assign(STUDY_ROOM_UI_BASE);
       return;
     }
     if (role === 'tutor') {
-      // 과외쌤 등록 플로우: 새 탭 금지 · 같은 창에서 상세등록 이어가기 (site-chrome 정책)
       window.location.assign(TUTOR_UI_BASE);
       return;
     }
-    window.open(`${HOME_UI_BASE}/#/mypage/registrations/students`, '_blank');
+    window.location.assign(`${HOME_UI_BASE}/#/mypage/registrations/students`);
   });
 
   root.querySelector('[data-action="go-home"]')?.addEventListener('click', () => {
@@ -224,11 +220,7 @@ export function bindSignupCompleteEvents(root) {
 
     const home =
       role === 'study_room' ? homeUiUrl('study-room') : role === 'tutor' ? homeUiUrl('tutor') : homeUiUrl('parent');
-    if (role === 'tutor') {
-      window.location.assign(home);
-      return;
-    }
-    window.open(home, '_blank');
+    window.location.assign(home);
   });
 
   root.querySelector('[data-nav="/login"]')?.addEventListener('click', () => {

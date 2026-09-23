@@ -196,11 +196,17 @@ export function buildCityUnitOptions(apiCities = []) {
   return out.length ? out : buildStaticCityUnitOptions();
 }
 
+/** 시 단위 화면 라벨. 광역은 그 이름, 도는 「경기도 의정부시」 */
+export function activityLabelForUnit(unit) {
+  if (!unit) return '';
+  return unit.kind === 'metro' ? unit.label : `${unit.sido_name} ${unit.label}`;
+}
+
 /** @deprecated use buildCityUnitOptions */
 export function buildSidoCityOptions(apiCities = []) {
   return buildCityUnitOptions(apiCities).map((c) => ({
     id: c.id,
-    label: c.kind === 'metro' ? c.label : `${c.sido_name} ${c.label}`,
+    label: activityLabelForUnit(c),
     code: c.sido_code,
   }));
 }
@@ -292,14 +298,47 @@ export function regionIdFromSelection(parent, cityLabel, units) {
   if (parent.startsWith('metro:')) {
     const code = parent.slice(6);
     const hit = (units || []).find((u) => u.kind === 'metro' && u.sido_code === code);
-    return hit?.id || '';
+    return numericRegionId(hit?.id);
   }
   if (parent.startsWith('prov:')) {
     const code = parent.slice(5);
     const hit = (units || []).find(
       (u) => u.kind === 'city' && u.sido_code === code && u.label === cityLabel,
     );
-    return hit?.id || '';
+    return numericRegionId(hit?.id);
   }
   return '';
+}
+
+/**
+ * 화면 라벨(「경기도 의정부시」·광역시명) → 시 단위 region_id.
+ * 행정동 라벨은 쓰지 않는다.
+ * @param {string} activityLabel
+ * @param {ReturnType<typeof buildCityUnitOptions>} units
+ */
+export function regionIdFromActivityLabel(activityLabel, units) {
+  const text = String(activityLabel || '').trim();
+  if (!text) return '';
+  const list = units || [];
+  const full = list.find((u) => activityLabelForUnit(u) === text);
+  const fullId = numericRegionId(full?.id);
+  if (fullId) return fullId;
+  const bare = list.filter((u) => u.label === text && numericRegionId(u.id));
+  return bare.length === 1 ? String(bare[0].id) : '';
+}
+
+/**
+ * region_id → 화면 라벨(「경기도 의정부시」)
+ * @param {string|number} regionId
+ * @param {ReturnType<typeof buildCityUnitOptions>} units
+ */
+export function activityLabelFromRegionId(regionId, units) {
+  const hit = (units || []).find((u) => String(u.id) === String(regionId));
+  return activityLabelForUnit(hit);
+}
+
+/** 정적 프리뷰 id(city-41-2)는 저장용이 아니다 */
+function numericRegionId(id) {
+  const text = String(id ?? '').trim();
+  return /^\d+$/.test(text) ? text : '';
 }

@@ -4,6 +4,7 @@
  * 필수: 교습형태 · 이름 · 주대상 1개 이상 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1곳
  * 선택: 홍보 2·3
  * 주소칸은 카카오 우편번호(더미 단지 목록 없이 호출).
+ * 개설주소(사업장) 확정 시 홍보지역 1만 채운다. 홍보1을 직접 고치면 다시 덮지 않는다.
  */
 
 export const PRIMARY_AUDIENCE_OPTIONS = [
@@ -230,6 +231,7 @@ function renderPromoSlot(slot, idx) {
           ? (basis === 'complex' ? '아파트단지' : '행정동') + ' · ' + slotDisplay(slot)
           : '',
       )}</p>
+      ${idx === 0 ? '<p class="form-hint form-hint--accent" data-promo1-mismatch hidden></p>' : ''}
     </div>`;
 }
 
@@ -476,6 +478,93 @@ function slotBasisOf(slotEl) {
   return slotEl.querySelector('input[name^="slot_basis_"]:checked')?.value || 'dong';
 }
 
+const PROMO1_MISMATCH_COPY =
+  '수업은 개설주소에서만 진행됩니다. 지금 바꾼 건 홍보·찾기 대표 지역입니다.';
+
+function readSlotFields(slotEl) {
+  const field = (name) => slotEl.querySelector(`[data-field="${name}"]`)?.value || '';
+  return {
+    region_id: field('region_id'),
+    complex_id: field('complex_id'),
+    region_basis_type: slotBasisOf(slotEl),
+    complex_name: field('complex_name'),
+    complex_address: field('complex_address'),
+    region_label: field('region_label'),
+    address_text: field('address_text'),
+    address_sido: field('address_sido'),
+    address_bname: field('address_bname'),
+    address_hname: field('address_hname'),
+  };
+}
+
+function openingBasisOf(form) {
+  return form.querySelector('[name="region_basis_type"]')?.value === 'complex' ? 'complex' : 'dong';
+}
+
+/** 개설주소와 홍보1의 노출 단위(동/단지)가 다른지. 홍보1이 비어 있으면 안내하지 않는다. */
+function openingDiffersFromPromo1(form) {
+  if (!blank(form.querySelector('[name="address_text"]')?.value)) return false;
+  const slotEl = form.querySelector('[data-region-slot="0"]');
+  if (!slotEl) return false;
+  const slot = readSlotFields(slotEl);
+  if (!slotFilled(slot)) return false;
+
+  const openBasis = openingBasisOf(form);
+  const slotBasis = slot.region_basis_type === 'complex' ? 'complex' : 'dong';
+  if (openBasis !== slotBasis) return true;
+
+  if (openBasis === 'complex') {
+    const openId = blank(form.querySelector('[name="complex_id"]')?.value);
+    const slotId = blank(slot.complex_id);
+    if (openId && slotId) return openId !== slotId;
+    const openName = blank(form.querySelector('[name="complex_name"]')?.value);
+    const slotName = blank(slot.complex_name);
+    if (openName || slotName) return openName !== slotName;
+    const openAddr = blank(form.querySelector('[name="complex_address"]')?.value);
+    const slotAddr = blank(slot.complex_address) || blank(slot.address_text);
+    return openAddr !== slotAddr;
+  }
+
+  const openId = blank(form.querySelector('[name="region_id"]')?.value);
+  const slotId = blank(slot.region_id);
+  if (openId && slotId) return openId !== slotId;
+  const openLabel = dongOnlyLabel(
+    {
+      hname: form.querySelector('[name="address_hname"]')?.value,
+      bname: form.querySelector('[name="address_bname"]')?.value,
+      sigungu: form.querySelector('[name="address_sigungu"]')?.value,
+    },
+    null,
+  );
+  const slotLabel = blank(slot.region_label);
+  if (openLabel && slotLabel) return openLabel !== slotLabel;
+  return Boolean(openId) !== Boolean(slotId);
+}
+
+function refreshPromo1Mismatch(form) {
+  const hint = form.querySelector('[data-promo1-mismatch]');
+  if (!hint) return;
+  const differ = openingDiffersFromPromo1(form);
+  hint.hidden = !differ;
+  hint.textContent = differ ? PROMO1_MISMATCH_COPY : '';
+}
+
+/** 홍보1을 직접 고치지 않았을 때만 개설주소 확정값을 대표 슬롯에 넣는다. */
+function fillPromo1FromOpening(form, result, region) {
+  const slotEl = form.querySelector('[data-region-slot="0"]');
+  if (!slotEl) return;
+  if (form.getAttribute('data-promo1-manual') === '1') {
+    refreshPromo1Mismatch(form);
+    return;
+  }
+  const basis = openingBasisOf(form);
+  const radio = slotEl.querySelector(`input[name="slot_basis_0"][value="${basis}"]`);
+  if (radio) radio.checked = true;
+  syncSlotSearchPanels(slotEl);
+  applySlotResult(slotEl, result, region, basis);
+  refreshPromo1Mismatch(form);
+}
+
 /**
  * @param {HTMLElement} root
  * @param {{ regions?: Array<{id:number,label:string}>, getRegions?: () => Array<{id:number,label:string}>, onRegion?: (region: object) => void }} opts
@@ -501,11 +590,13 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
       }
       if (kind === 'business') {
         applyBusinessResult(form, result, null);
+        fillPromo1FromOpening(form, result, null);
         try {
           const region = await resolveRegion(result);
           applyBusinessResult(form, result, region);
+          fillPromo1FromOpening(form, result, region);
         } catch {
-          /* 주소는 이미 넣음. 동 코드는 저장 API가 추가한다. */
+          refreshPromo1Mismatch(form);
         }
         return;
       }
@@ -513,6 +604,7 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
       if (!m) return;
       const slotEl = form.querySelector(`[data-region-slot="${m[1]}"]`);
       if (!slotEl) return;
+      if (m[1] === '0') form.setAttribute('data-promo1-manual', '1');
       const basis = slotBasisOf(slotEl);
       applySlotResult(slotEl, result, null, basis);
       try {
@@ -521,6 +613,7 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
       } catch {
         /* 칸은 이미 채움. 동 코드는 저장 API가 추가한다. */
       }
+      if (m[1] === '0') refreshPromo1Mismatch(form);
     });
   }
 
@@ -539,10 +632,15 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
       const slotEl = el.closest('[data-region-slot]');
       if (!slotEl) return;
       syncSlotSearchPanels(slotEl);
-      if (slotBasisOf(slotEl) !== 'dong') return;
-      const query = slotEl.querySelector('[data-field="dong_query"]');
-      const label = slotEl.querySelector('[data-field="region_label"]');
-      if (query && !String(query.value || '').trim() && label?.value) query.value = label.value;
+      if (slotEl.getAttribute('data-region-slot') === '0') {
+        form.setAttribute('data-promo1-manual', '1');
+      }
+      if (slotBasisOf(slotEl) === 'dong') {
+        const query = slotEl.querySelector('[data-field="dong_query"]');
+        const label = slotEl.querySelector('[data-field="region_label"]');
+        if (query && !String(query.value || '').trim() && label?.value) query.value = label.value;
+      }
+      if (slotEl.getAttribute('data-region-slot') === '0') refreshPromo1Mismatch(form);
     });
   });
 
@@ -552,6 +650,9 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
       if (labelEl) labelEl.textContent = lessonPlaceNameLabel(el.value);
     });
   });
+
+  if (openingDiffersFromPromo1(form)) form.setAttribute('data-promo1-manual', '1');
+  refreshPromo1Mismatch(form);
 }
 
 /**

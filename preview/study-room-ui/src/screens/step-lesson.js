@@ -330,7 +330,7 @@ export function renderLesson() {
   return renderRegisterShell(renderLessonFormHtml({ includeStepNav: true }), {
     stepKey: 'lesson',
     title: '공부방·교습소 상세',
-    subtitle: '필수정보는 입력을 꼭 해주세요',
+    subtitle: '지금 다 안 채워도 됩니다. 저장(다음)은 눌러 주세요',
   });
 }
 
