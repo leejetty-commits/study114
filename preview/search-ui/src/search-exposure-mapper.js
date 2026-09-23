@@ -149,8 +149,16 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
     minutes_per_lesson: apiItem.minutes_per_lesson ?? base.minutes_per_lesson,
     lesson_places: apiItem.lesson_places || base.lesson_places,
     teaching_style_badges: apiItem.teaching_style_badges || base.teaching_style_badges,
+    request_summary: Object.prototype.hasOwnProperty.call(apiItem, 'request_summary')
+      ? String(apiItem.request_summary || '')
+      : '',
+    special_request_note: Object.prototype.hasOwnProperty.call(apiItem, 'special_request_note')
+      ? String(apiItem.special_request_note || '')
+      : '',
     request_summary_visibility:
-      apiItem.request_summary_visibility || base.request_summary_visibility,
+      apiItem.request_summary_visibility || 'private',
+    special_request_visibility:
+      apiItem.special_request_visibility || 'private',
     published_at: apiItem.published_at ?? base.published_at,
     created_at: apiItem.created_at ?? base.created_at,
     exposure_status: 'published',

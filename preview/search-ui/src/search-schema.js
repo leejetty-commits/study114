@@ -72,6 +72,7 @@ export const SEARCH_TABS = {
       { key: 'budget_amount', label: '수업예산(월)', tier: 'basic', basicRow: 2, db: 'preferred_fee_amount / preferred_studyroom_fee_amount', input: 'range' },
       { key: 'place_type', label: '희망 수업장소', tier: 'basic', basicRow: 2, db: 'student_preferred_lesson_places', input: 'chips', optionsKey: 'student_place' },
       { key: 'preferred_student_count_group', label: '희망 수업인원', tier: 'basic', basicRow: 2, db: 'students.preferred_student_count_group', input: 'select', optionsKey: 'student_count' },
+      { key: 'has_request_summary', label: '한 줄 요청문 있음', tier: 'basic', basicRow: 2, db: 'students.request_summary', input: 'toggle' },
       { key: 'lessons_per_week', label: '주 횟수', tier: 'expanded', db: 'students.lessons_per_week', input: 'text' },
       { key: 'minutes_per_lesson', label: '1회 시간(분)', tier: 'expanded', db: 'students.minutes_per_lesson', input: 'text' },
       { key: 'lesson_format', label: '수업형태', tier: 'expanded', db: 'students.lesson_format', input: 'select', optionsKey: 'lesson_format' },

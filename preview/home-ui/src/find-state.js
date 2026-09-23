@@ -34,4 +34,5 @@ export function resetFindState(findState) {
   findState.tutorRegionIndex = 0;
   findState.studentLessonFormat = 'one_on_one';
   findState.homeSelf = false;
+  findState.hasRequestSummary = false;
 }

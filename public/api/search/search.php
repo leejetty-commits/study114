@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
+use Study114\Auth\AuthSession;
 use Study114\Search\SearchService;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -42,8 +43,20 @@ $limit = isset($input['limit']) ? (int) $input['limit'] : 20;
 $sort = isset($input['sort']) ? (string) $input['sort'] : 'latest';
 
 try {
+    $includeStudentRequestText = false;
+    if ($tab === 'student') {
+        $sessionCookie = session_name();
+        $hasSession = session_status() === PHP_SESSION_ACTIVE
+            || (isset($_COOKIE[$sessionCookie]) && $_COOKIE[$sessionCookie] !== '');
+        if ($hasSession) {
+            $auth = AuthSession::user();
+            $roleType = is_array($auth) ? (string) ($auth['role_type'] ?? '') : '';
+            $includeStudentRequestText = in_array($roleType, ['tutor', 'study_room_owner', 'admin'], true);
+        }
+    }
+
     $service = new SearchService();
-    $result = $service->search($tab, $filters, $page, $limit, $sort);
+    $result = $service->search($tab, $filters, $page, $limit, $sort, $includeStudentRequestText);
 
     echo json_encode([
         'ok'    => true,

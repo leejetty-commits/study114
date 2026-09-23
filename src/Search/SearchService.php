@@ -67,7 +67,14 @@ final class SearchService
      * @param array<string, mixed> $filters
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>, sort: string}
      */
-    public function search(string $tab, array $filters, int $page = 1, int $limit = 20, string $sort = 'latest'): array
+    public function search(
+        string $tab,
+        array $filters,
+        int $page = 1,
+        int $limit = 20,
+        string $sort = 'latest',
+        bool $includeStudentRequestText = false,
+    ): array
     {
         if (!in_array($tab, self::VALID_TABS, true)) {
             throw new InvalidArgumentException('tab: room, tutor, student 중 하나여야 합니다.');
@@ -83,7 +90,7 @@ final class SearchService
         $result = match ($tab) {
             'room'    => $this->searchRooms($pdo, $filters, $limit, $offset, $sort),
             'tutor'   => $this->searchTutors($pdo, $filters, $limit, $offset, $sort),
-            'student' => $this->searchStudents($pdo, $filters, $limit, $offset, $sort),
+            'student' => $this->searchStudents($pdo, $filters, $limit, $offset, $sort, $includeStudentRequestText),
         };
         $result['sort'] = $sort;
 
@@ -715,7 +722,14 @@ final class SearchService
      * @param array<string, mixed> $filters
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
      */
-    private function searchStudents(PDO $pdo, array $filters, int $limit, int $offset, string $sort): array
+    private function searchStudents(
+        PDO $pdo,
+        array $filters,
+        int $limit,
+        int $offset,
+        string $sort,
+        bool $includeStudentRequestText = false,
+    ): array
     {
         $where = ['s.exposure_status = :status', 's.deleted_at IS NULL'];
         $params = ['status' => 'published'];
@@ -818,6 +832,10 @@ final class SearchService
             $params[$key] = $badge;
         }
 
+        if ($this->isEnabledFilter($filters, 'has_request_summary')) {
+            $where[] = "s.request_summary IS NOT NULL AND TRIM(s.request_summary) <> ''";
+        }
+
         $whereSql = implode(' AND ', $where);
         $budgetExpr = 'COALESCE(s.preferred_fee_amount, s.preferred_studyroom_fee_amount)';
         $orderBy = $this->orderByForStudent($sort, 's', $budgetExpr);
@@ -832,6 +850,8 @@ final class SearchService
                    s.lesson_format, s.student_gender_group, s.preferred_student_count_group,
                    s.preferred_fee_amount, s.preferred_studyroom_fee_amount,
                    s.preferred_lesson_type,
+                   s.request_summary, s.request_summary_visibility,
+                   s.special_request_note, s.special_request_visibility,
                    s.published_at, s.created_at,
                    {$budgetExpr} AS budget_amount,
                    r.dong_name, r.sigungu_name, c.name AS complex_name,
@@ -910,6 +930,14 @@ final class SearchService
                 'published_at' => $row['published_at'] ?? null,
                 'created_at' => $row['created_at'] ?? null,
                 'exposure_tier' => 'basic',
+                'request_summary' => $includeStudentRequestText && $row['request_summary'] !== null
+                    ? (string) $row['request_summary']
+                    : '',
+                'request_summary_visibility' => (string) ($row['request_summary_visibility'] ?? 'private'),
+                'special_request_note' => $includeStudentRequestText && $row['special_request_note'] !== null
+                    ? (string) $row['special_request_note']
+                    : '',
+                'special_request_visibility' => (string) ($row['special_request_visibility'] ?? 'private'),
             ];
 
             $items[] = $item;
@@ -980,6 +1008,26 @@ final class SearchService
 
         $where[] = "{$column} = :{$key}";
         $params[$key] = $value ? 1 : 0;
+    }
+
+    /**
+     * 체크박스 필터가 켜져 있을 때만 true.
+     * 학생찾기 `has_request_summary`처럼 컬럼 boolean이 아닌 조건에 쓴다.
+     *
+     * @param array<string, mixed> $filters
+     */
+    private function isEnabledFilter(array $filters, string $key): bool
+    {
+        if (!array_key_exists($key, $filters) || $filters[$key] === '' || $filters[$key] === null) {
+            return false;
+        }
+
+        $raw = $filters[$key];
+        if (is_array($raw)) {
+            $raw = $raw[0] ?? '';
+        }
+
+        return filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) === true;
     }
 
     /** @param array<string, mixed> $filters */
