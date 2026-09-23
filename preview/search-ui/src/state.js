@@ -29,6 +29,8 @@ export const previewState = {
   subscription: 'free',
   studentLessonFormat: 'one_on_one',
   tutorRegionIndex: 0,
+  /** 학생찾기 기본필터 — 한 줄 요청문 있음. 재렌더 후에도 체크 유지 */
+  hasRequestSummary: false,
 };
 
 const TAB_FROM_HASH = {

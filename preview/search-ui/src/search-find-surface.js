@@ -47,6 +47,12 @@ import { openKakaoPostcode } from '../../shared/kakao-postcode.js';
 const FILTERS_STORAGE_KEY = 'study114-find-filters-v1';
 const CANONICAL_STORAGE_KEY = 'study114-find-canonical-v1';
 
+/** 학생찾기 기본필터 `has_request_summary` — 체크박스 on/1/true */
+function isRequestSummaryFilterOn(value) {
+  if (Array.isArray(value)) return isRequestSummaryFilterOn(value[0]);
+  return value === true || value === 1 || value === '1' || value === 'on' || value === 'true';
+}
+
 /** @param {Record<string, unknown>} filters */
 function encodeFiltersForUrl(filters) {
   try {
@@ -275,6 +281,9 @@ export function hydrateFindStateFromHash(state, tab) {
     if (state._restoredSearchKey !== restoreKey) {
       state._needsSearchRestore = true;
       needsSearchRestore = true;
+      if (tab === 'student') {
+        state.hasRequestSummary = isRequestSummaryFilterOn(filters.has_request_summary);
+      }
     } else {
       state._needsSearchRestore = false;
     }
@@ -285,6 +294,7 @@ export function hydrateFindStateFromHash(state, tab) {
     if (state.searchExecuted && !state.searchLoading) {
       state.searchExecuted = false;
       state.lastSearchFilters = null;
+      state.hasRequestSummary = false;
       state.searchExposureItems = [];
       state.searchTotal = 0;
       state.searchError = null;
@@ -381,6 +391,7 @@ export async function bootFindGpsIfNeeded(state, tab, rerender) {
  * @property {boolean} [hopeTypeResolved] — 희망 유형 선택/복원 완료
  * @property {import('../../shared/location-display.js').CanonicalLocation|null} [canonicalLocation]
  * @property {Record<string, string|string[]>|null} [lastSearchFilters]
+ * @property {boolean} [hasRequestSummary] — 학생찾기 기본필터 한 줄 요청문 있음
  * @property {boolean} [_needsSearchRestore]
  * @property {string|null} [_gpsBootedTab]
  * @property {import('./state.js').ViewerRole} [role]
@@ -617,6 +628,7 @@ export function resetFindSurface(state, form, options = {}) {
   state.activeResultItems = [];
   state.activeResultSource = null;
   state.lastSearchFilters = null;
+  state.hasRequestSummary = false;
   state._needsSearchRestore = false;
   state._restoredSearchKey = null;
   // 지역 SSOT는 유지 — 검색만 초기화
@@ -722,10 +734,12 @@ function renderField(field, state, opts = {}) {
   }
 
   if (field.input === 'toggle') {
+    const checked = field.key === 'has_request_summary' && state.hasRequestSummary ? ' checked' : '';
+    const valueAttr = field.key === 'has_request_summary' ? ' value="1"' : '';
     return `
       <label class="search-field search-field--toggle${compact ? ' search-field--compact' : ''}">
         <span class="search-field__label">${esc(field.label)} ${dbHint}</span>
-        <input type="checkbox" class="search-field__toggle" name="${esc(name)}" />
+        <input type="checkbox" class="search-field__toggle" name="${esc(name)}"${valueAttr}${checked} />
       </label>`;
   }
 
@@ -1157,6 +1171,9 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
   state.searchLoading = true;
   state.searchError = null;
   state.lastSearchFilters = { ...filters };
+  if (tab === 'student') {
+    state.hasRequestSummary = isRequestSummaryFilterOn(filters.has_request_summary);
+  }
   writeStoredFilters(tab, state.lastSearchFilters);
 
   const regionText = regionLabelFromFilters(tab, filters, state);
@@ -1394,6 +1411,12 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
       rerender();
     });
   }
+
+  root.querySelectorAll('input[name="f_has_request_summary"]').forEach((input) => {
+    input.addEventListener('change', () => {
+      state().hasRequestSummary = input instanceof HTMLInputElement && input.checked;
+    });
+  });
 
   const hopeTypeSelect = root.querySelector('[data-preferred-lesson-type]');
   if (hopeTypeSelect) {
