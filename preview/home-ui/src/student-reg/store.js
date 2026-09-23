@@ -333,13 +333,20 @@ export function getStudentSummaryCounts() {
   };
 }
 
-/** hash `?student_import=` 소비 → 신규 draft 자녀 추가 */
+/** hash `?student_import=` 소비. 활성 학생이 이미 있으면 추가하지 않는다. */
 export function consumeStudentImportFromHash() {
   const q = parseHashQuery();
   const raw = q[STUDENT_IMPORT_PARAM];
   if (!raw) return null;
   const payload = decodeStudentImport(decodeURIComponent(raw));
   if (!payload) return null;
+  const active = getStudents().filter((s) => s && s.exposure_status !== 'deleted');
+  if (active.length >= 1) {
+    const hash = window.location.hash.slice(1);
+    const pathOnly = hash.split('?')[0] || '/mypage/registrations/students';
+    window.location.replace(`${window.location.pathname}#${pathOnly}`);
+    return null;
+  }
 
   const student = addStudent(payload);
   const hash = window.location.hash.slice(1);

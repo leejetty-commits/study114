@@ -1,0 +1,218 @@
+/**
+ * 학생 마이페이지·내 등록 Stage5B.
+ * .home-app--role-parent 안에서만. 홈·공부방·과외쌤에는 닿지 않는다.
+ * Primary #266BC4는 내 등록의 대표 저장 버튼만.
+ */
+
+.home-app--role-parent .mypage-layout {
+  --s5-ink: #1c1917;
+  --s5-muted: #4b5563;
+  --s5-bg: #f7f8fa;
+  --s5-surface: #ffffff;
+  --s5-line: #e5e7eb;
+  --s5-primary: #266bc4;
+  --s5-role: #5b4bd6;
+  --s5-role-soft: #f0eefb;
+  --s5-role-line: #d4cff0;
+}
+
+.home-app--role-parent .mypage-sidebar__title,
+.home-app--role-parent .mypage-content:has(.mp-room) .mypage-content__title {
+  color: var(--s5-ink);
+  font-size: 28px;
+  line-height: 1.3;
+}
+
+.home-app--role-parent .mypage-breadcrumb {
+  color: var(--s5-muted);
+  font-size: 12px;
+}
+
+.home-app--role-parent .mypage-nav__link {
+  border-radius: 8px;
+  color: var(--s5-muted);
+  font-size: 14px;
+}
+
+.home-app--role-parent .mypage-nav__link.is-active {
+  background: var(--s5-role-soft) !important;
+  color: var(--s5-role) !important;
+  box-shadow: inset 3px 0 0 var(--s5-role) !important;
+}
+
+.home-app--role-parent .mypage-nav__icon {
+  color: var(--s5-role);
+  font-size: 14px;
+}
+
+.home-app--role-parent .mp-room__head {
+  border-bottom-color: var(--s5-line);
+}
+
+.home-app--role-parent .mp-room__tab {
+  color: var(--s5-muted);
+  font-size: 14px;
+  background: transparent;
+}
+
+.home-app--role-parent .mp-room__tab.is-active {
+  color: var(--s5-role);
+  background: transparent;
+}
+
+.home-app--role-parent .mp-room__tab.is-active::after {
+  background: var(--s5-role);
+}
+
+.home-app--role-parent .mp-room .btn.btn--primary {
+  background: var(--s5-primary);
+  border-color: var(--s5-primary);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.home-app--role-parent .mp-room .p19-form-section,
+.home-app--role-parent .mp-room .p21-profile__section,
+.home-app--role-parent .mp-room .student-detail-form {
+  background: var(--s5-surface);
+}
+
+.home-app--role-parent .mp-room .p19-form-section {
+  border: 1px solid var(--s5-line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.home-app--role-parent .mp-room .p19-form-section__title,
+.home-app--role-parent .mp-room .p21-profile__section-title {
+  color: var(--s5-ink);
+  font-size: 18px;
+}
+
+.home-app--role-parent .mp-room .p19-form-section__lead,
+.home-app--role-parent .mp-room .p21-profile__lead,
+.home-app--role-parent .mp-room .student-detail-lead {
+  color: var(--s5-muted);
+  font-size: 16px;
+}
+
+.home-app--role-parent .mp-room .p19-field__label,
+.home-app--role-parent .mp-room .student-detail-label,
+.home-app--role-parent .mp-room .p21-profile__label {
+  color: var(--s5-ink);
+  font-size: 14px;
+}
+
+.home-app--role-parent .mp-room .p21-profile__label {
+  font-size: 12px;
+  color: var(--s5-muted);
+}
+
+.home-app--role-parent .mp-room .p19-input,
+.home-app--role-parent .mp-room .p19-select,
+.home-app--role-parent .mp-room .p19-textarea {
+  border: 1px solid var(--s5-line);
+  border-radius: 8px;
+  background: var(--s5-surface);
+  color: var(--s5-ink);
+  font-size: 16px;
+}
+
+.home-app--role-parent .mp-room .p19-chip {
+  border-radius: 6px;
+  border-color: var(--s5-line);
+  font-size: 14px;
+  background: var(--s5-surface);
+}
+
+.home-app--role-parent .mp-room .p19-chip.is-checked {
+  background: var(--s5-role-soft);
+  border-color: var(--s5-role-line);
+  color: var(--s5-role);
+}
+
+.home-app--role-parent .mp-room .p21-profile {
+  max-width: 720px;
+}
+
+.home-app--role-parent .mp-room .p21-profile__kicker {
+  color: var(--s5-muted);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.home-app--role-parent .mp-room .p21-profile__name {
+  color: var(--s5-ink);
+  font-size: 22px;
+}
+
+.home-app--role-parent .mp-room .p21-profile__section {
+  border-color: var(--s5-line);
+  border-radius: 12px;
+}
+
+.home-app--role-parent .mp-room .p21-profile__value {
+  color: var(--s5-ink);
+  font-size: 14px;
+}
+
+.home-app--role-parent .mp-room .p21-profile__value.is-empty {
+  background: var(--s5-bg);
+  border-radius: 4px;
+  color: transparent;
+}
+
+.home-app--role-parent .mp-room .p21-profile__edit {
+  color: var(--s5-role);
+  font-size: 14px;
+  background: transparent;
+}
+
+.home-app--role-parent .mp-room .expo-hcard__badge,
+.home-app--role-parent .mp-room .expo-basic__badge {
+  border-radius: 4px;
+}
+
+.home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq__lead {
+  color: var(--s5-ink);
+  font-size: 16px;
+}
+
+.home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choice {
+  border-radius: 8px;
+  border-color: var(--s5-line);
+  background: var(--s5-surface);
+  color: var(--s5-ink);
+  font-size: 14px;
+}
+
+.home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choice.is-selected {
+  background: var(--s5-role-soft);
+  border-color: var(--s5-role-line);
+  color: var(--s5-role);
+}
+
+.home-app--role-parent .mypage-empty {
+  color: var(--s5-muted);
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  .home-app--role-parent .mypage-content:has(.mp-room) .mypage-content__title,
+  .home-app--role-parent .mypage-sidebar__title {
+    font-size: 22px;
+  }
+
+  .home-app--role-parent .mp-room__tabs {
+    gap: 0;
+  }
+
+  .home-app--role-parent .mp-room__tab {
+    flex: 1 1 40%;
+    padding: 10px 8px;
+    font-size: 14px;
+    text-align: center;
+  }
+}

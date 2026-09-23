@@ -65,10 +65,12 @@ final class StudentHubRepository
         $allowed = [
             'public_display_name', 'grade_level', 'gender', 'birth_year',
             'preferred_lesson_type', 'preferred_region_note',
+            'preferred_tutor_region_id', 'preferred_studyroom_region_id',
+            'preferred_studyroom_complex_id', 'preferred_studyroom_region_basis',
             'preferred_fee_amount', 'preferred_studyroom_fee_amount',
             'lessons_per_week', 'minutes_per_lesson', 'lesson_format',
             'student_gender_group', 'preferred_student_count_group',
-            'preferred_tutor_gender', 'request_summary', 'request_summary_visibility',
+            'preferred_tutor_gender', 'memo_status', 'request_summary', 'request_summary_visibility',
             'special_request_note', 'special_request_visibility',
         ];
         $ownTx = !$this->pdo->inTransaction();
@@ -97,6 +99,16 @@ final class StudentHubRepository
             }
             if (array_key_exists('teaching_style_badges', $patch)) {
                 $this->replaceStyleBadges($studentId, $patch['teaching_style_badges']);
+            }
+            if (array_key_exists('subject_label', $patch) || array_key_exists('subject_names', $patch)) {
+                $subjectName = trim((string) ($patch['subject_label'] ?? $patch['subject_names'] ?? ''));
+                $schoolLevel = isset($patch['school_level']) ? (string) $patch['school_level'] : '';
+                if ($schoolLevel === '') {
+                    $schoolLevel = (string) ($this->inferSchoolLevel(
+                        isset($patch['grade_level']) ? (string) $patch['grade_level'] : null
+                    ) ?? '');
+                }
+                $this->replacePrimarySubject($studentId, $subjectName, $schoolLevel);
             }
             if ($ownTx) {
                 $this->pdo->commit();
@@ -144,7 +156,9 @@ final class StudentHubRepository
                 throw new \InvalidArgumentException("{$col}: 숫자로 입력해 주세요.");
             }
             $number = (int) $value;
-            $max = $col === 'birth_year' ? 32767 : 65535;
+            $max = $col === 'birth_year'
+                ? 32767
+                : (in_array($col, ['preferred_fee_amount', 'preferred_studyroom_fee_amount'], true) ? 4294967295 : 65535);
             if ($number < 0 || $number > $max) {
                 throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
             }
@@ -157,8 +171,60 @@ final class StudentHubRepository
         if ($col === 'preferred_tutor_gender' && $value !== null && !in_array($value, ['male', 'female', 'any'], true)) {
             throw new \InvalidArgumentException('preferred_tutor_gender: 값을 확인해 주세요.');
         }
+        if ($col === 'memo_status' && !in_array($value, ['open', 'paused'], true)) {
+            throw new \InvalidArgumentException('memo_status: 값을 확인해 주세요.');
+        }
+        if (in_array($col, ['preferred_tutor_region_id', 'preferred_studyroom_region_id', 'preferred_studyroom_complex_id'], true)) {
+            if ($value === null) {
+                return null;
+            }
+            if (!is_int($value) && !(is_string($value) && preg_match('/^\d+$/', $value))) {
+                throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
+            }
+
+            return (int) $value;
+        }
+        if ($col === 'preferred_studyroom_region_basis' && $value !== null && !in_array($value, ['dong', 'complex'], true)) {
+            throw new \InvalidArgumentException('preferred_studyroom_region_basis: 값을 확인해 주세요.');
+        }
+        if ($col === 'request_summary' && $value !== null && mb_strlen((string) $value) > 200) {
+            throw new \InvalidArgumentException('request_summary: 200자 이하로 입력해 주세요.');
+        }
 
         return $value;
+    }
+
+    private function replacePrimarySubject(int $studentId, string $name, string $schoolLevel): void
+    {
+        $levels = ['preschool', 'elementary', 'middle', 'high', 'n_su', 'general', 'other'];
+        if (!in_array($schoolLevel, $levels, true)) {
+            $schoolLevel = 'middle';
+        }
+        $existing = $this->pdo->prepare(
+            'SELECT id FROM student_subject_targets WHERE student_id = ? AND is_primary = 1 ORDER BY id ASC LIMIT 1'
+        );
+        $existing->execute([$studentId]);
+        $id = $existing->fetchColumn();
+        if ($name === '') {
+            if ($id !== false) {
+                $this->pdo->prepare('DELETE FROM student_subject_targets WHERE id = ?')->execute([(int) $id]);
+            }
+
+            return;
+        }
+        if (mb_strlen($name) > 50) {
+            throw new \InvalidArgumentException('subject_label: 과목명을 확인해 주세요.');
+        }
+        if ($id !== false) {
+            $this->pdo->prepare(
+                'UPDATE student_subject_targets SET subject_name = ?, school_level = ? WHERE id = ?'
+            )->execute([$name, $schoolLevel, (int) $id]);
+
+            return;
+        }
+        $this->pdo->prepare(
+            'INSERT INTO student_subject_targets (student_id, subject_name, school_level, is_primary) VALUES (?, ?, ?, 1)'
+        )->execute([$studentId, $name, $schoolLevel]);
     }
 
     private function replaceLessonPlaces(int $studentId, mixed $places): void
@@ -224,6 +290,10 @@ final class StudentHubRepository
                 ? (string) $row['memo_status']
                 : 'open',
             'preferred_lesson_type'         => $row['preferred_lesson_type'] !== null ? (string) $row['preferred_lesson_type'] : null,
+            'preferred_tutor_region_id'     => $row['preferred_tutor_region_id'] !== null ? (int) $row['preferred_tutor_region_id'] : null,
+            'preferred_studyroom_region_id' => $row['preferred_studyroom_region_id'] !== null ? (int) $row['preferred_studyroom_region_id'] : null,
+            'preferred_studyroom_complex_id'=> $row['preferred_studyroom_complex_id'] !== null ? (int) $row['preferred_studyroom_complex_id'] : null,
+            'preferred_studyroom_region_basis' => $row['preferred_studyroom_region_basis'] !== null ? (string) $row['preferred_studyroom_region_basis'] : null,
             'preferred_region_note'         => $row['preferred_region_note'] !== null ? (string) $row['preferred_region_note'] : null,
             'region_label'                  => $regionLabel,
             'subject_label'                 => $subjectLabel,

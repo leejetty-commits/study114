@@ -40,6 +40,8 @@ export function studentToExposureRow(s) {
     preferred_studyroom_fee_amount: s.preferred_studyroom_fee_amount,
     request_summary: s.request_summary,
     request_summary_visibility: s.request_summary_visibility,
+    special_request_note: s.special_request_note,
+    special_request_visibility: s.special_request_visibility,
   };
 }
 

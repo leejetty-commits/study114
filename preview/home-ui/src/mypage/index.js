@@ -1,4 +1,5 @@
 import { getMypagePath, getNavRole } from '../state.js';
+import { getDefaultMypagePath } from './router.js';
 import { isLoggedIn } from '../auth-session.js';
 import { guardMypageAccess } from '../../../shared/route-access.js';
 import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/guest-gate-ui.js';
@@ -63,6 +64,20 @@ export function renderMypage() {
   consumeStudentImportFromHash();
   ensureDemoThreads();
   ensureSubmissionBoardSeed(getNavRole() === 'guest' ? 'tutor' : getNavRole());
+  if (getNavRole() === 'parent') {
+    const raw = (window.location.hash.slice(1) || '').split('?')[0];
+    const bare = raw.startsWith('/') ? raw : `/${raw}`;
+    if (bare === '/mypage' || bare === '/mypage/') {
+      const dest = getDefaultMypagePath('parent');
+      if (dest && dest !== '/mypage' && dest !== '/mypage/') {
+        queueMicrotask(() => {
+          const cur = (window.location.hash.slice(1) || '').split('?')[0];
+          const p = cur.startsWith('/') ? cur : `/${cur}`;
+          if (p === '/mypage' || p === '/mypage/') window.location.replace(`#${dest}`);
+        });
+      }
+    }
+  }
   const path = getMypagePath();
   const body = renderMypageScreen(path);
   return renderMypageShell(path, body);

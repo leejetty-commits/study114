@@ -25,6 +25,8 @@ import {
 import { isPaidPath, parsePaidPath, paidScreenTitle } from './paid-router.js';
 import { getStudyRooms } from '../study-room-reg/store.js';
 import { studyRoomHubPath, BASE as STUDY_ROOM_BASE } from '../study-room-reg/router.js';
+import { getStudents } from '../student-reg/store.js';
+import { studentHubPath } from '../student-reg/router.js';
 import { getTutors } from '../tutor-reg/store.js';
 import { tutorHubPath, BASE as TUTOR_REG_BASE } from '../tutor-reg/router.js';
 
@@ -54,12 +56,19 @@ export const CONTACT_HISTORY_PATH = '/mypage/contact';
 /**
  * 공부방·과외쌤 좌측 메뉴 순서:
  * 내 등록 → 쪽지·후기함 → 최근열람 → 찜한학생 → 찜 목록 → 내 문의 내역 → 구매이력 → 계정설정
+ * 학생(parent) 순서는 PARENT_NAV_PATHS.
  * @type {MypageNavItem[]}
  */
 export const MYPAGE_NAV = [
-  { path: '/mypage/home', label: '마이페이지 홈', icon: '⌂', screenId: 'P15-01', emphasis: ['parent'], roles: ['parent'] },
-  { path: '/mypage/registrations', label: '내 등록', icon: '✎', screenId: 'P15-02', emphasis: ['study_room', 'tutor'], roles: ['study_room', 'tutor'] },
-  { path: '/mypage/messages', label: '쪽지·후기함', icon: '✉', screenId: 'P15-08' },
+  {
+    path: '/mypage/registrations',
+    label: '내 등록',
+    icon: '✎',
+    screenId: 'P15-02',
+    emphasis: ['parent', 'study_room', 'tutor'],
+    roles: ['parent', 'study_room', 'tutor'],
+  },
+  { path: '/mypage/messages', label: '쪽지·후기함', icon: '✉', screenId: 'P15-08', labels: { parent: '쪽지' } },
   { path: '/mypage/recent', label: '최근열람', icon: '◷', screenId: 'P15-07' },
   {
     path: '/mypage/student-review',
@@ -69,8 +78,8 @@ export const MYPAGE_NAV = [
     emphasis: ['study_room', 'tutor'],
     roles: ['study_room', 'tutor'],
   },
-  { path: '/mypage/wishlist', label: '찜 목록', icon: '♡', screenId: 'P15-06', emphasis: ['parent'] },
-  { path: CONTACT_HISTORY_PATH, label: '내 문의 내역', icon: '▤', screenId: 'P17-07' },
+  { path: '/mypage/wishlist', label: '찜 목록', icon: '♡', screenId: 'P15-06', labels: { parent: '찜·비교' }, emphasis: ['parent'] },
+  { path: CONTACT_HISTORY_PATH, label: '내 문의 내역', icon: '▤', screenId: 'P17-07', roles: ['study_room', 'tutor'] },
   {
     path: '/mypage/plans',
     label: '구매이력',
@@ -123,6 +132,41 @@ export function normalizeMypagePath(hashPath) {
   return MYPAGE_PATH_TO_SCREEN[p] ? p : null;
 }
 
+/** 학생 1차 메뉴 순서. 공부방·과외쌤 배열 순서는 바꾸지 않는다. */
+export const PARENT_NAV_PATHS = [
+  '/mypage/registrations',
+  '/mypage/wishlist',
+  '/mypage/recent',
+  '/mypage/messages',
+  '/mypage/account',
+];
+
+/**
+ * 학생 계정에서 메뉴에서 빼고, 직접 열면 마이프로필로 보내는 경로.
+ * 내 문의 내역은 기존 화면을 유지하고 메뉴만 뺀다.
+ * @param {string} path
+ */
+export function isParentLockedMypagePath(path) {
+  const p = String(path || '').split('?')[0];
+  if (p === '/mypage/home' || p === '/mypage/registrations') return true;
+  if (p === '/mypage/student-review' || p.startsWith('/mypage/student-review/')) return true;
+  if (p === '/mypage/plans' || p.startsWith('/mypage/plans/')) return true;
+  if (p === '/mypage/paid' || p.startsWith('/mypage/paid/')) return true;
+  if (p === '/mypage/submission-docs' || p === '/mypage/verification') return true;
+  if (p === '/mypage/submission-board' || p.startsWith('/mypage/submission-board/')) return true;
+  return false;
+}
+
+/**
+ * 현재 계정 학생 1명의 마이프로필.
+ * 0명 또는 2명 이상이면 null. 임의로 고르지 않는다.
+ */
+export function getParentStudentProfilePath() {
+  const active = getStudents().filter((s) => s && s.exposure_status !== 'deleted' && s.id);
+  if (active.length !== 1) return null;
+  return studentHubPath(active[0].id);
+}
+
 /** 공부방 대표(첫) 등록 허브 경로 — 없으면 목록 */
 export function getStudyRoomEntryPath() {
   const rooms = getStudyRooms();
@@ -141,7 +185,7 @@ export function getTutorEntryPath() {
 export function getDefaultMypagePath(role) {
   if (role === 'study_room') return getStudyRoomEntryPath();
   if (role === 'tutor') return getTutorEntryPath();
-  return '/mypage/home';
+  return getParentStudentProfilePath() || '/mypage/registrations/students';
 }
 
 /** @param {string} path */
@@ -183,6 +227,7 @@ export function screenTitle(screenId, path, role) {
       return tutorRegScreenTitle(tr.screenId);
     }
     if (path === MESSAGES_BASE || isMessagesDetailPath(path)) {
+      if (role === 'parent' && path === MESSAGES_BASE) return '쪽지';
       return messagesScreenTitle(getMessagesScreenId(path));
     }
     if (isSubmissionBoardPath(path)) {
@@ -194,10 +239,10 @@ export function screenTitle(screenId, path, role) {
   const map = {
     'P15-01': '마이페이지 홈',
     'P15-02': '내 등록',
-    'P15-03': '자녀(학생) 목록',
+    'P15-03': '학생',
     'P15-04': '공부방 목록',
     'P15-05': '과외 프로필',
-    'P15-06': '찜 목록',
+    'P15-06': role === 'parent' ? '찜·비교' : '찜 목록',
     'P15-07': '최근열람',
     'P15-08': '쪽지·후기함',
     'P17-07': '내 문의 내역',

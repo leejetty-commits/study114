@@ -55,12 +55,12 @@ export function isStudentRegPath(hashPath) {
 /** @param {StudentRegScreenId} screenId */
 export function studentRegScreenTitle(screenId) {
   const map = {
-    'P19-01': '자녀(학생) 목록',
-    'P19-02': '자녀 관리',
-    'P19-03a': '기본등록',
-    'P19-03b': '상세등록',
-    'P19-04': '미리보기·공개',
-    'P19-05': '공개설정',
+    'P19-01': '마이프로필',
+    'P19-02': '마이프로필',
+    'P19-03a': '기본정보',
+    'P19-03b': '상세정보',
+    'P19-04': '마이프로필',
+    'P19-05': '쪽지설정',
     'P19-06': '숨김·삭제',
   };
   return map[screenId] || '학생 의뢰 관리';
@@ -81,9 +81,27 @@ export function studentListTabPath(tab) {
   return tab === 'all' ? BASE : `${BASE}/tab/${tab}`;
 }
 
-export const STUDENT_REG_MENUS = [
-  { key: 'basic', label: '기본등록', screenId: 'P19-03a' },
-  { key: 'detail', label: '상세등록', screenId: 'P19-03b' },
-  { key: 'settings', label: '공개설정', screenId: 'P19-05' },
-  { key: 'publish', label: '미리보기', screenId: 'P19-04' },
+/**
+ * 내 등록 상단 탭. 과외쌤 TUTOR_REG_TOP_TABS에서 등록점검(publish)만 뺀다.
+ * publish URL은 파싱만 하고 마이프로필로 보낸다.
+ */
+export const STUDENT_REG_TOP_TABS = [
+  { key: 'hub', label: '마이프로필' },
+  { key: 'basic', label: '기본정보' },
+  { key: 'detail', label: '상세정보' },
+  { key: 'settings', label: '쪽지설정' },
 ];
+
+/** @deprecated 좌측 메뉴. 상단 탭(STUDENT_REG_TOP_TABS)을 쓴다. */
+export const STUDENT_REG_MENUS = [
+  { key: 'basic', label: '기본정보', screenId: 'P19-03a' },
+  { key: 'detail', label: '상세정보', screenId: 'P19-03b' },
+  { key: 'settings', label: '쪽지설정', screenId: 'P19-05' },
+];
+
+/** 목록·탭·미리보기(공개) — 마이프로필로 보내는 구 경로 */
+export function isStudentLegacyEntryPath(hashPath) {
+  const route = parseStudentRegPath(hashPath);
+  if (!route) return false;
+  return route.screenId === 'P19-01' || route.screenId === 'P19-04';
+}

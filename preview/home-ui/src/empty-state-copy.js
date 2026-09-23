@@ -156,14 +156,14 @@ export const EMPTY_COPY = {
   },
   students: {
     screenId: 'P19-01',
-    title: '등록된 자녀가 없습니다',
-    body: '자녀별로 희망 조건을 등록하고 학생 목록에 공개할 수 있습니다.',
-    cta: '+ 자녀 추가',
+    title: '등록된 학생이 없습니다',
+    body: '학생은 계정당 1명입니다.',
+    cta: null,
   },
   studentsTab: {
     screenId: 'P19-01',
-    title: '해당 상태의 자녀가 없습니다',
-    body: '다른 탭을 선택하거나 자녀를 추가해 보세요.',
+    title: '해당 상태의 학생이 없습니다',
+    body: '다른 상태를 확인해 보세요.',
     cta: null,
   },
   library: {

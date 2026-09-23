@@ -10,7 +10,6 @@ import { getStudentReviewIds } from '../student-review-store.js';
 import { getRecentViews } from './recent-store.js';
 import { getMessagesSummaryCounts } from '../messages/screens.js';
 import { getStudents, getStudentSummaryCounts } from '../student-reg/store.js';
-import { studentSectionPath } from '../student-reg/router.js';
 import { studyRoomSectionPath } from '../study-room-reg/router.js';
 import { tutorSectionPath, tutorHubPath } from '../tutor-reg/router.js';
 import { getTutors, getTutorSummaryCounts, getPublishReadiness as getTutorPublishReadiness, getMemoCreditsRemaining } from '../tutor-reg/store.js';
@@ -178,22 +177,11 @@ export function getPrimaryCta(role) {
   const counts = getSummaryCounts(role);
 
   if (role === 'parent') {
-    if (reg.students.length === 0) {
-      return {
-        text: '자녀 기본등록 이어하기',
-        hint: '아이의 학년과 희망 조건부터 천천히 등록해 보세요.',
-        path: '/mypage/registrations/students',
-      };
-    }
-    const draft = reg.students.find((s) => s.exposure_status === 'draft');
-    if (draft) {
-      return {
-        text: `「${draft.public_display_name}」 의뢰 공개하기`,
-        hint: '저장해 둔 내용을 확인하고 공개하면 알맞은 선생님을 만날 수 있어요.',
-        path: studentSectionPath(draft.id, 'publish'),
-      };
-    }
-    return { text: '희망 조건 살펴보기', hint: '달라진 조건이 있다면 언제든 편하게 고칠 수 있어요.', path: '/mypage/registrations/students' };
+    return {
+      text: '희망 조건 살펴보기',
+      hint: '달라진 조건이 있다면 언제든 편하게 고칠 수 있어요.',
+      path: '/mypage/registrations/students',
+    };
   }
 
   if (role === 'study_room') {

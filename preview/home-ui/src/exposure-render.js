@@ -781,8 +781,9 @@ function studentSpecialRequestPreview(item, viewerRole) {
 }
 
 function renderBasicStudentRow(item, opts) {
-  const viewerRole = opts.viewerRole || (opts.guest ? 'guest' : 'parent');
-  const isGuest = Boolean(opts.guest || viewerRole === 'guest');
+  const selfView = Boolean(opts.selfView);
+  const viewerRole = selfView ? 'parent' : opts.viewerRole || (opts.guest ? 'guest' : 'parent');
+  const isGuest = !selfView && Boolean(opts.guest || viewerRole === 'guest');
   const maskedName = maskPublicDisplayName(item.public_display_name);
   const locationLabel = isGuest
     ? coarseRegionForGuest(item.location_label)
@@ -818,7 +819,7 @@ function renderBasicStudentRow(item, opts) {
       item.lessons_per_week && item.minutes_per_lesson
         ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
         : '—';
-    const request = studentRequestPreview(item, viewerRole);
+    const request = studentRequestPreview(item, selfView ? 'tutor' : viewerRole);
     const specialRequest = studentSpecialRequestPreview(item, viewerRole);
     return `
     <article class="expo-basic expo-basic--student" data-student-id="${item.id}" data-action="open-student-detail">
@@ -892,11 +893,18 @@ function renderBasicStudentRow(item, opts) {
     item.lessons_per_week && item.minutes_per_lesson
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
       : '—';
-  const request = studentRequestPreview(item, viewerRole);
+  const request = studentRequestPreview(item, selfView ? 'tutor' : viewerRole);
   const specialRequest = studentSpecialRequestPreview(item, viewerRole);
 
+  const side = selfView
+    ? ''
+    : `<div class="expo-hcard__side">
+        <div class="expo-hcard__actions">${actions}</div>
+        <button type="button" class="expo-hcard__detail" data-action="open-student-detail" data-student-id="${item.id}">상세</button>
+      </div>`;
+
   return `
-    <article class="expo-basic expo-basic--student expo-hcard" data-student-id="${item.id}" data-action="open-student-detail">
+    <article class="expo-basic expo-basic--student expo-hcard" data-student-id="${item.id}"${selfView ? '' : ' data-action="open-student-detail"'}>
       <div class="expo-hcard__media-wrap">
         ${renderMedia(item.image_path, maskedName || '학생', 'list')}
         ${item.grade_level ? `<span class="expo-hcard__badge">${esc(item.grade_level)}</span>` : ''}
@@ -919,11 +927,13 @@ function renderBasicStudentRow(item, opts) {
           ${renderHcardMetaItem('강의스타일', formatTeachingStyleBadges(item.teaching_style_badges, 2))}
         </ul>
       </div>
-      <div class="expo-hcard__side">
-        <div class="expo-hcard__actions">${actions}</div>
-        <button type="button" class="expo-hcard__detail" data-action="open-student-detail" data-student-id="${item.id}">상세</button>
-      </div>
+      ${side}
     </article>`;
+}
+
+/** 학생 마이프로필 상단 — 홈 Basic 카드와 같은 실측. 상세·게이트·공급자 CTA 없음 */
+export function renderStudentBasicSelfCard(item) {
+  return renderBasicStudentRow(item, { selfView: true });
 }
 
 function renderBasicRow(kind, item, opts) {

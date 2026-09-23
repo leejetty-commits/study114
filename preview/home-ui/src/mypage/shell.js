@@ -2,7 +2,16 @@ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, ren
 import { getNavRole } from '../state.js';
 import { getAuthUser, isAdminUser } from '../auth-session.js';
 import { resolveAccountDisplayName } from '../auth/display-identity.js';
-import { MYPAGE_NAV, getScreenIdForPath, screenTitle, getStudyRoomEntryPath, getTutorEntryPath, mypageNavLabel } from './router.js';
+import {
+  MYPAGE_NAV,
+  PARENT_NAV_PATHS,
+  getScreenIdForPath,
+  screenTitle,
+  getStudyRoomEntryPath,
+  getTutorEntryPath,
+  getParentStudentProfilePath,
+  mypageNavLabel,
+} from './router.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -23,7 +32,10 @@ function renderBreadcrumb(currentPath, title, role) {
   const primary = MYPAGE_NAV.filter((item) => !item.roles || item.roles.includes(role)).find((item) =>
     navItemIsActive(item, currentPath),
   );
-  const homePath = role === 'study_room' || role === 'tutor' ? '/mypage/registrations' : '/mypage/home';
+  const homePath =
+    role === 'parent'
+      ? getParentStudentProfilePath() || '/mypage/registrations/students'
+      : '/mypage/registrations';
   const parts = [{ label: '마이페이지', path: homePath }];
   if (primary) {
     parts.push({ label: mypageNavLabel(primary, role), path: primary.path });
@@ -76,10 +88,17 @@ export function renderMypageShell(currentPath, bodyHtml) {
         ? 'detail_right_rail'
         : 'support_right_rail';
 
-  const navItems = MYPAGE_NAV.filter((item) => !item.roles || item.roles.includes(role))
+  const visibleNav = MYPAGE_NAV.filter((item) => !item.roles || item.roles.includes(role));
+  const orderedNav =
+    role === 'parent'
+      ? PARENT_NAV_PATHS.map((path) => visibleNav.find((item) => item.path === path)).filter(Boolean)
+      : visibleNav;
+  const navItems = orderedNav
     .map((item) => {
     const href =
-      item.path === '/mypage/registrations' && role === 'study_room'
+      item.path === '/mypage/registrations' && role === 'parent'
+        ? getParentStudentProfilePath() || item.path
+        : item.path === '/mypage/registrations' && role === 'study_room'
         ? getStudyRoomEntryPath()
         : item.path === '/mypage/registrations' && role === 'tutor'
           ? getTutorEntryPath()

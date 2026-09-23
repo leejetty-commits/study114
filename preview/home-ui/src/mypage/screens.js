@@ -44,10 +44,16 @@ import { renderEmptyStateCard } from '../empty-state-copy.js';
 import { renderMessagesScreen } from '../messages/screens.js';
 import { isMessagesDetailPath, MESSAGES_BASE, threadPath } from '../messages/router.js';
 import { isStudentRegPath } from '../student-reg/router.js';
-import { renderStudentRegScreen } from '../student-reg/screens.js';
+import { renderStudentRegScreen, renderStudentCountHalt } from '../student-reg/screens.js';
 import { isStudyRoomRegPath } from '../study-room-reg/router.js';
 import { renderStudyRoomRegScreen } from '../study-room-reg/screens.js';
-import { getStudyRoomEntryPath, getTutorEntryPath, CONTACT_HISTORY_PATH } from './router.js';
+import {
+  getStudyRoomEntryPath,
+  getTutorEntryPath,
+  getParentStudentProfilePath,
+  isParentLockedMypagePath,
+  CONTACT_HISTORY_PATH,
+} from './router.js';
 import { isTutorRegPath } from '../tutor-reg/router.js';
 import { setAuthDisplayName, logout, getAuthUser } from '../auth-session.js';
 import {
@@ -158,6 +164,17 @@ export function renderMypageScreen(path) {
     });
     if (isTutorRegPath(entry)) return renderTutorRegScreen(entry);
     return renderTutorRegScreen('/mypage/registrations/tutors');
+  }
+
+  if (r === 'parent' && isParentLockedMypagePath(path)) {
+    const dest = getParentStudentProfilePath();
+    if (!dest) return renderStudentCountHalt();
+    queueMicrotask(() => {
+      const hashPath = (window.location.hash.slice(1) || '').split('?')[0];
+      const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+      if (isParentLockedMypagePath(p)) window.location.replace(`#${dest}`);
+    });
+    return renderStudentRegScreen(dest);
   }
 
   if (isStudentRegPath(path)) return renderStudentRegScreen(path);
@@ -304,7 +321,7 @@ export async function hydrateMypageReviewPanel(root) {
 function renderRegistrationsIndex(role) {
   const links = [];
   if (role === 'parent') {
-    links.push({ path: '/mypage/registrations/students', label: '자녀(학생)', id: 'P15-03' });
+    links.push({ path: '/mypage/registrations/students', label: '학생', id: 'P15-03' });
   }
   if (role === 'study_room') {
     links.push({ path: '/mypage/registrations/study-rooms', label: '공부방', id: 'P15-04' });
