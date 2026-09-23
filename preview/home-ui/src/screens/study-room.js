@@ -1,4 +1,3 @@
-import { MY_STUDY_ROOM } from '../data.js';
 import { previewState, setStudyRoomTab, resetStudyRoomFind } from '../state.js';
 import { renderHomeShell, bindLayoutEvents } from '../layout.js';
 import { bindCompareEvents } from '../compare-modal.js';
@@ -13,30 +12,41 @@ import {
 } from '../provider-home.js';
 import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
-import { STUDY_ROOM_REGISTER_URL } from '../../../shared/preview-links.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
+import { applyStudyRoomHomePromo, bootStudyRoomHome, readStudyRoomMemberBox } from '../study-room-home-seed.js';
+
+function esc(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;');
+}
 
 function renderMyStudyRoomBox() {
+  const box = readStudyRoomMemberBox();
+  const views = box.views == null ? '—' : String(box.views);
+  const unread = `${box.unread}개 미확인`;
   return `
     <aside class="my-box my-box--banner-panel" aria-label="내 공부방 박스">
       <div class="my-box__label">내 공부방 박스</div>
-      <div class="my-box__title">${MY_STUDY_ROOM.name}</div>
+      <div class="my-box__title">${esc(box.name)}</div>
       <div class="my-box__stats">
-        <span>상태 <strong>${MY_STUDY_ROOM.status}</strong></span>
-        <span>조회 <strong>${MY_STUDY_ROOM.views}</strong></span>
-        <span>문의 <strong>${MY_STUDY_ROOM.inquiries}</strong></span>
-        <span>등록 <strong>${MY_STUDY_ROOM.registered}</strong></span>
+        <span>수업지역 <strong>${esc(box.region)}</strong></span>
+        <span>쪽지 <strong>${esc(box.inquiry)}</strong> · ${esc(unread)}</span>
+        <span>조회 <strong>${esc(views)}</strong></span>
+        <span>등록 <strong>${esc(box.registered)}</strong></span>
       </div>
       <div class="my-box__banner-actions">
-        <button type="button" class="btn btn--primary btn--sm" data-action="edit-room" data-href="${STUDY_ROOM_REGISTER_URL}">공부방 수정</button>
-        <button type="button" class="btn btn--secondary btn--sm" data-action="manage-room">등록 관리</button>
+        <a href="#/mypage/messages/reviews" class="my-box__link my-box__link--quiet" data-nav="/mypage/messages/reviews">쪽지 후기함 바로가기</a>
+        <a href="#/mypage" class="btn btn--primary btn--sm" data-nav="/mypage">마이페이지</a>
       </div>
     </aside>
   `;
 }
 
 export function renderStudyRoom() {
+  applyStudyRoomHomePromo(previewState.studyRoomFind);
   const tab = previewState.studyRoomTab;
   const showMyBox = isProviderHomeSelfTab('study_room', tab);
 
@@ -57,6 +67,7 @@ export function renderStudyRoom() {
 
 export function bindStudyRoomEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
+  bootStudyRoomHome(rerender);
 
   bindProviderHomeTabEvents(root, rerender, {
     role: 'study_room',

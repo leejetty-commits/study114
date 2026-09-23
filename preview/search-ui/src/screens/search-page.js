@@ -38,6 +38,7 @@ import {
   runFindSearchWithFilters,
   bootFindGpsIfNeeded,
 } from '../search-find-surface.js';
+import { bootStudyRoomHome } from '@home-ui/study-room-home-seed.js';
 
 /**
  * 찾기 페이지 바디 탭·역할 셀렉트 제거 — 이동은 GNB만.
@@ -113,6 +114,9 @@ export function renderSearchPage() {
  */
 export function afterSearchPageMount(rerender) {
   const tab = getCurrentTab();
+  if (previewState.role === 'study_room' && tab === 'room') {
+    bootStudyRoomHome(rerender);
+  }
   if (previewState._needsSearchRestore && previewState.lastSearchFilters) {
     const filters = /** @type {Record<string, string|string[]>} */ ({
       ...previewState.lastSearchFilters,

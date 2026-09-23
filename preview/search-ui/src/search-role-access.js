@@ -55,7 +55,10 @@ export function getSearchTabLabel(tab, role) {
  * @param {boolean} [homeSelf]
  */
 export function isProviderSelfPreviewMode(tab, role, homeSelf = false) {
-  if (role === 'study_room' && tab === 'room') return true;
+  if (role === 'study_room' && tab === 'room') {
+    // 홈·찾기 모두 홍보1 지역 목록. 자기 방만 끼워 넣지 않는다.
+    return false;
+  }
   return homeSelf === true && role === 'tutor' && tab === 'tutor';
 }
 

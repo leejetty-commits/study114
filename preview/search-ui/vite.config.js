@@ -12,6 +12,7 @@ export default defineConfig({
       '@home-enums': resolve(__dirname, '../home-ui/src/student-enums.js'),
       '@home-visibility': resolve(__dirname, '../home-ui/src/student-visibility.js'),
       '@home-ui': resolve(__dirname, '../home-ui/src'),
+      '@search-ui': resolve(__dirname, './src'),
     },
   },
   server: {

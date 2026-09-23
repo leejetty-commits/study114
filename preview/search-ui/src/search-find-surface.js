@@ -14,6 +14,10 @@ import {
 export { getTutorRegionLabel, MOCK_TUTOR_REGIONS } from './search-schema.js';
 import { getRegionFeed, getStudentDemandForRegion } from './search-region-feed.js';
 import { filterToProviderSelf } from './search-provider-self.js';
+import {
+  getStudyRoomHomeLiveItems,
+  peekStudyRoomPromo1,
+} from '@home-ui/study-room-home-seed.js';
 import { isProviderSelfPreviewMode } from './search-role-access.js';
 import { renderSearchMapBlock, bindSearchMapPinLinks } from './search-map.js';
 import { renderSearchTierResults } from './search-tier-render.js';
@@ -134,7 +138,9 @@ function readStoredCanonical(tab, axis) {
 export function applyCanonicalLocation(state, canonical, tab) {
   state.canonicalLocation = canonical;
   state.activeRegionLabel = canonical.displayLabel;
-  if (tab) writeStoredCanonical(tab, canonical);
+  // 홍보1 기본값(source=saved)은 게스트 찾기 대치동 저장값을 덮지 않는다.
+  const promoSeed = canonical.source === 'saved' && state.role === 'study_room' && tab === 'room';
+  if (tab && state.studyRoomHome !== true && !promoSeed) writeStoredCanonical(tab, canonical);
   logLocationDebug('apply-canonical', {
     source: canonical.source,
     displayLabel: canonical.displayLabel,
@@ -221,6 +227,12 @@ export function hydrateFindStateFromHash(state, tab) {
     tab === 'room' ? MOCK_REGIONS.room : tab === 'tutor' ? MOCK_REGIONS.tutor : MOCK_REGIONS.student;
 
   const storedCanon = readStoredCanonical(tab, axis);
+  const viewerRole = state.role || 'guest';
+  const promo = viewerRole === 'study_room' && tab === 'room' ? peekStudyRoomPromo1() : '';
+  const urlPinned = Boolean(String(q.region || '').trim());
+  const addressPinned =
+    state.canonicalLocation?.source === 'address' || storedCanon?.source === 'address';
+  const promoDefault = Boolean(promo) && !urlPinned && !addressPinned;
   /** @type {Partial<import('../../shared/location-display.js').CanonicalLocation>|string|null} */
   let sessionSelected = null;
   if (q.region) {
@@ -230,18 +242,28 @@ export function hydrateFindStateFromHash(state, tab) {
       lng: q.lng != null && q.lng !== '' ? Number(q.lng) : null,
       source: 'url',
     };
-  } else if (state.canonicalLocation?.displayLabel) {
+  } else if (addressPinned) {
+    sessionSelected =
+      state.canonicalLocation?.source === 'address' ? state.canonicalLocation : storedCanon;
+  } else if (!promoDefault && state.canonicalLocation?.displayLabel) {
     sessionSelected = { ...state.canonicalLocation, source: state.canonicalLocation.source || 'session' };
-  } else if (storedCanon?.source === 'session' || storedCanon?.source === 'address' || storedCanon?.source === 'gps') {
+  } else if (
+    !promoDefault &&
+    (storedCanon?.source === 'session' || storedCanon?.source === 'gps')
+  ) {
     sessionSelected = storedCanon;
   }
 
   const canonical = resolveLocationByPriority(
     {
       sessionSelected,
-      savedDefault: storedCanon?.source === 'saved' ? storedCanon : savedLabel || null,
+      savedDefault: promoDefault
+        ? { raw: promo, source: 'saved' }
+        : storedCanon?.source === 'saved'
+          ? storedCanon
+          : savedLabel || null,
       gps: null,
-      fallback,
+      fallback: promoDefault ? promo : fallback,
     },
     axis,
   );
@@ -410,7 +432,13 @@ function resolveTutorRegionIndex(state) {
 
 /** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} role */
 function regionFeedContext(tab, state, role) {
-  const ctx = { role, homeSelf: state.homeSelf === true };
+  const ctx = { role, homeSelf: state.homeSelf === true, studyRoomHome: state.studyRoomHome === true };
+  const promoFind = role === 'study_room' && tab === 'room' && state.studyRoomHome !== true;
+  if ((ctx.studyRoomHome || promoFind) && tab === 'room') {
+    const live = getStudyRoomHomeLiveItems();
+    ctx.liveItems = Array.isArray(live) ? live : [];
+    ctx.promoFind = promoFind;
+  }
   if (tab === 'tutor') {
     ctx.tutorRegionIndex = resolveTutorRegionIndex(state);
   }
@@ -472,8 +500,49 @@ function canonicalRegionLabel(label, tab, state) {
   return canonical.displayLabel;
 }
 
-/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} [_role] */
-export function resolveActiveRegionLabel(tab, state, _role) {
+/** 로그인 공부방 찾기 기본 지역. 개설 region_label·대치 목업은 쓰지 않는다. */
+function seedStudyRoomPromoLabel(state, tab) {
+  const promo = peekStudyRoomPromo1();
+  if (!promo) return '';
+  const canonical = normalizeLocation({ raw: promo, source: 'saved' }, 'room');
+  canonical.source = 'saved';
+  applyCanonicalLocation(state, canonical, tab);
+  return canonical.displayLabel;
+}
+
+/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} [role] */
+export function resolveActiveRegionLabel(tab, state, role) {
+  const viewer = role || state.role || 'guest';
+  const promoFind =
+    viewer === 'study_room' &&
+    tab === 'room' &&
+    state.studyRoomHome !== true &&
+    !state.searchExecuted;
+  if (promoFind) {
+    const pinned =
+      state.canonicalLocation?.source === 'address' || state.canonicalLocation?.source === 'url';
+    if (!pinned) {
+      const seeded = seedStudyRoomPromoLabel(state, tab);
+      if (seeded) return seeded;
+    }
+  }
+  const promoHome =
+    state.studyRoomHome === true &&
+    !state.searchExecuted &&
+    (tab === 'room' || tab === 'student');
+  if (promoHome) {
+    const pinned =
+      state.canonicalLocation?.source === 'address' || state.canonicalLocation?.source === 'url';
+    const promo = peekStudyRoomPromo1();
+    if (!pinned && promo) {
+      return canonicalRegionLabel(promo, tab, state);
+    }
+    if (!pinned && tab === 'room') {
+      const kept =
+        state.activeRegionLabel && !/대치/.test(state.activeRegionLabel) ? state.activeRegionLabel : '';
+      return canonicalRegionLabel(kept, tab, state);
+    }
+  }
   // 세션/URL에서 이미 잡힌 값이 있으면 최우선 (MOCK으로 덮지 않음)
   if (state.activeRegionLabel) {
     return canonicalRegionLabel(state.activeRegionLabel, tab, state);
@@ -502,7 +571,10 @@ function regionLabelFromFilters(tab, filters, state) {
     raw = String(filters.tutor_region_id || filters.tutor_region_label || '').trim();
     if (!raw) raw = getTutorRegionLabel(resolveTutorRegionIndex(state));
   } else if (tab === 'room') {
-    raw = String(filters.region_label || filters.region_id || '').trim() || MOCK_REGIONS.room;
+    raw =
+      String(filters.region_label || filters.region_id || '').trim() ||
+      (state.role === 'study_room' ? peekStudyRoomPromo1() : '') ||
+      MOCK_REGIONS.room;
   } else {
     raw = String(
       filters.preferred_region_label || filters.preferred_region || filters.region_label || '',
@@ -1032,6 +1104,12 @@ export function renderCompactFindForm(tab, state, options = {}) {
 
   const mapBannerStyle =
     role === 'study_room' ? 'provider_room' : role === 'guest' ? 'guest' : 'search';
+  const studyRoomPromoMap = role === 'study_room' && tab === 'room';
+  const mapRegion = studyRoomPromoMap
+    ? variant === 'search' && state.searchExecuted
+      ? state.activeRegionLabel || peekStudyRoomPromo1()
+      : peekStudyRoomPromo1()
+    : state.activeRegionLabel || MOCK_REGIONS.room;
 
   return `
     ${renderProviderSelfNote(tab, role, homeSelfFlag, hideSelfNote)}
@@ -1039,11 +1117,12 @@ export function renderCompactFindForm(tab, state, options = {}) {
     ${showMap
       ? renderSearchMapBlock(activeItems, {
           searched: state.searchExecuted,
-          regionLabel: state.activeRegionLabel || MOCK_REGIONS.room,
+          regionLabel: mapRegion,
           resultSource: resolveResultSource(state),
           bannerStyle: mapBannerStyle,
-          lat: state.canonicalLocation?.lat ?? null,
-          lng: state.canonicalLocation?.lng ?? null,
+          providerHome: studyRoomPromoMap,
+          lat: studyRoomPromoMap ? null : state.canonicalLocation?.lat ?? null,
+          lng: studyRoomPromoMap ? null : state.canonicalLocation?.lng ?? null,
         })
       : ''}
     ${formHtml}`;
@@ -1239,9 +1318,15 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
 
   const applyReset = () => {
     const form = getForm();
+    const tab = ctx.getTab();
     resetFindSurface(state(), form instanceof HTMLFormElement ? form : undefined);
-    refreshActiveResultItems(ctx.getTab(), state(), ctx.role);
-    syncFindHashState(state(), ctx.getTab());
+    if (ctx.role === 'study_room' && tab === 'room') {
+      state().canonicalLocation = null;
+      state().activeRegionLabel = '';
+      seedStudyRoomPromoLabel(state(), tab);
+    }
+    refreshActiveResultItems(tab, state(), ctx.role);
+    syncFindHashState(state(), tab);
     rerender();
   };
 

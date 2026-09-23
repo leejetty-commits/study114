@@ -15,12 +15,15 @@ import { tabToKind } from './search-handoff.js';
  * @param {number} index
  * @returns {ExposureTier}
  */
+function paidPositionSku(item) {
+  const sku = item?.position_sku || item?.sku;
+  return sku === 'prime' || sku === 'pick' ? sku : '';
+}
+
 export function resolveExposureTier(item, _index = 0) {
-  const t = item.exposure_tier;
-  if (t === 'prime' || t === 'pick' || t === 'basic') return t;
-  // 점유는 구독 sku 기준 — 인덱스/eligible로 Prime 슬롯을 채우지 않음
-  if (item.position_sku === 'prime' || item.sku === 'prime') return 'prime';
-  if (item.position_sku === 'pick' || item.sku === 'pick') return 'pick';
+  // sku 없으면 basic. 서버 exposure_tier 만으로 프라임을 올리지 않는다.
+  const sku = paidPositionSku(item);
+  if (sku === 'prime' || sku === 'pick') return sku;
   return 'basic';
 }
 
@@ -72,6 +75,7 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
         apiItem.education_office_registered ?? base.education_office_registered,
       detail_completion_status: apiItem.detail_completion_status || base.detail_completion_status,
       prime_eligible: apiItem.prime_eligible ?? base.prime_eligible,
+      position_sku: paidPositionSku(apiItem) || null,
       latitude: apiItem.latitude ?? base.latitude ?? null,
       longitude: apiItem.longitude ?? base.longitude ?? null,
       profile_status: 'published',
@@ -112,6 +116,7 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       lessons_per_week: apiItem.lessons_per_week ?? base.lessons_per_week,
       minutes_per_lesson: apiItem.minutes_per_lesson ?? base.minutes_per_lesson,
       detail_completion_status: apiItem.detail_completion_status || base.detail_completion_status,
+      position_sku: paidPositionSku(apiItem) || null,
       profile_status: 'published',
       compare_eligible: apiItem.compare_eligible !== false,
       published_at: apiItem.published_at ?? base.published_at ?? base.registered_at,

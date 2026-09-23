@@ -134,6 +134,9 @@ final class StudyRoomHubRepository
             // 비교/목록 자격 = 숨김만 제외. 공개(published) 게이트 없음.
             'compare_eligible'         => $profileStatus !== 'hidden',
             'prime_eligible'           => (string) ($row['detail_completion_status'] ?? '') === 'expanded_complete',
+            'created_at'               => !empty($row['created_at'])
+                ? substr((string) $row['created_at'], 0, 10)
+                : null,
             'updated_at'               => gmdate('c', strtotime((string) $row['updated_at'])),
             'published_at'             => $row['published_at'] !== null
                 ? gmdate('c', strtotime((string) $row['published_at'])) : null,
@@ -152,7 +155,7 @@ final class StudyRoomHubRepository
     {
         $stmt = $this->pdo->prepare(
             'SELECT srr.region_id, srr.complex_id, srr.region_basis_type, srr.is_primary,
-                    r.dong_name, c.name AS complex_name
+                    r.dong_name, r.sigungu_name, r.sido_name, c.name AS complex_name
              FROM study_room_regions srr
              LEFT JOIN regions r ON srr.region_id = r.id
              LEFT JOIN complexes c ON srr.complex_id = c.id
@@ -174,9 +177,10 @@ final class StudyRoomHubRepository
             if ($basis === 'complex' && $complexId === '') {
                 continue;
             }
+            $dong = (string) ($row['dong_name'] ?? '');
             $label = $basis === 'complex'
                 ? (string) ($row['complex_name'] ?? '')
-                : (string) ($row['dong_name'] ?? '');
+                : $dong;
             if ($label === '') {
                 $label = $basis === 'complex' ? ('단지 #' . $complexId) : ('행정동 #' . $regionId);
             }
@@ -185,6 +189,13 @@ final class StudyRoomHubRepository
                 'complex_id' => $complexId,
                 'region_basis_type' => $basis,
                 'region_label' => $label,
+                'promo_label' => $this->promoLabel(
+                    (string) ($row['sido_name'] ?? ''),
+                    (string) ($row['sigungu_name'] ?? ''),
+                    $dong,
+                    (string) ($row['complex_name'] ?? ''),
+                    $basis,
+                ),
                 'is_primary' => (int) ($row['is_primary'] ?? 0) === 1,
             ];
         }
@@ -208,11 +219,14 @@ final class StudyRoomHubRepository
             $label = $basis === 'complex' ? ('단지 #' . $topComplexId) : ('행정동 #' . $topRegionId);
         }
 
+        $promo = $this->promoLabelFromRoom($roomId, $basis);
+
         return [[
             'region_id' => $topRegionId,
             'complex_id' => $basis === 'complex' ? $topComplexId : '',
             'region_basis_type' => $basis,
             'region_label' => $label,
+            'promo_label' => $promo !== '' ? $promo : $label,
             'is_primary' => true,
         ]];
     }
@@ -256,6 +270,48 @@ final class StudyRoomHubRepository
                 /* race / schema */
             }
         }
+    }
+
+    private function promoLabel(string $sido, string $sigungu, string $dong, string $complex, string $basis): string
+    {
+        $parts = [];
+        foreach ([$sido, $sigungu, $dong] as $part) {
+            $part = trim($part);
+            if ($part !== '') {
+                $parts[] = $part;
+            }
+        }
+        $base = implode(' ', $parts);
+        $complex = trim($complex);
+        if ($basis === 'complex' && $complex !== '') {
+            return $base !== '' ? ($base . ' · ' . $complex) : $complex;
+        }
+
+        return $base;
+    }
+
+    private function promoLabelFromRoom(int $roomId, string $basis): string
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT r.sido_name, r.sigungu_name, r.dong_name, c.name AS complex_name
+             FROM study_rooms sr
+             LEFT JOIN regions r ON sr.region_id = r.id
+             LEFT JOIN complexes c ON sr.complex_id = c.id
+             WHERE sr.id = ? LIMIT 1'
+        );
+        $stmt->execute([$roomId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return '';
+        }
+
+        return $this->promoLabel(
+            (string) ($row['sido_name'] ?? ''),
+            (string) ($row['sigungu_name'] ?? ''),
+            (string) ($row['dong_name'] ?? ''),
+            (string) ($row['complex_name'] ?? ''),
+            $basis,
+        );
     }
 
     /** @param array<string, mixed> $row */

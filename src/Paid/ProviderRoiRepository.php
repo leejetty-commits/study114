@@ -49,6 +49,32 @@ final class ProviderRoiRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * 멤버박스 조회 — 로그인 공부방 1건.
+     * target_type=study_room AND target_id=그 방. 소유 공부방 전체·tutor 합산 없음.
+     * 본인 열람은 기존과 같이 제외. 본인 방이 아니면 0.
+     */
+    public function countLifetimeViewsForProvider(int $providerUserId, int $studyRoomId): int
+    {
+        if ($providerUserId <= 0 || $studyRoomId <= 0) {
+            return 0;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM provider_profile_views pv
+             INNER JOIN study_rooms sr
+               ON sr.id = pv.target_id
+              AND sr.user_id = ?
+              AND sr.deleted_at IS NULL
+             WHERE pv.target_type = \'study_room\'
+               AND pv.target_id = ?
+               AND (pv.viewer_user_id IS NULL OR pv.viewer_user_id <> ?)'
+        );
+        $stmt->execute([$providerUserId, $studyRoomId, $providerUserId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
     public function countFavoritesForProvider(int $providerUserId): int
     {
         $stmt = $this->pdo->prepare(

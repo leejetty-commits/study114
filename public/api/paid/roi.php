@@ -19,8 +19,13 @@ PaidApi::run(static function (): void {
     }
 
     $days = PaidApi::queryInt('days', 7);
+    $studyRoomId = PaidApi::queryInt('study_room_id', 0);
     $service = new ProviderRoiService();
-    $summary = $service->getSummary($userId, $days > 0 ? $days : 7);
+    $summary = $service->getSummary(
+        $userId,
+        $days > 0 ? $days : 7,
+        $studyRoomId > 0 ? $studyRoomId : null,
+    );
 
     PaidApi::ok($summary);
 });

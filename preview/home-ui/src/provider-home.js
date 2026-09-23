@@ -144,7 +144,9 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
   findState.homeSelf = homeSelf;
 
   const showMap = searchTab === 'room';
-  const hideSearchForm = homeSelf && role === 'tutor' && tabId === 'tutor';
+  const hideSearchForm =
+    homeSelf &&
+    ((role === 'tutor' && tabId === 'tutor') || (role === 'study_room' && tabId === 'study_room'));
   const hideHead = opts.hideHead === true;
   const hideSearchCross = opts.hideSearchCrossLink === true;
   const showCross =

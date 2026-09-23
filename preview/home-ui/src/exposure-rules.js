@@ -33,19 +33,30 @@ function isListVisible(item) {
   return !item.profile_status || item.profile_status !== 'hidden';
 }
 
+function isRealDbPool(pool) {
+  return pool.some((i) => i && i._realDb === true);
+}
+
+function paidSku(item) {
+  const sku = item?.position_sku || item?.sku;
+  return sku === 'prime' || sku === 'pick' ? sku : '';
+}
+
 /**
- * 유료 Prime 점유자 (명시 tier 우선). 없으면 demo_prime_filled 만큼만 점유로 시뮬레이션
- * → 빈 슬롯 홍보카드가 보이도록 함.
+ * 유료 Prime 점유자.
+ * 로그인 실데이터(_realDb)는 position_sku=prime 만. demo_prime_filled 는 게스트 시드 전용.
  * @param {object[]} pool
  * @param {number} [capacity]
  */
 export function getPrimeOccupied(pool, capacity) {
   const cap = capacity ?? (Number(getPlanSetting('prime_slots')) || 3);
   const published = pool.filter(isListVisible);
-  const explicit = published.filter(
-    (i) => i.exposure_tier === 'prime' || i.position_sku === 'prime' || i.sku === 'prime',
+  const real = isRealDbPool(published);
+  const explicit = published.filter((i) =>
+    real ? paidSku(i) === 'prime' : i.exposure_tier === 'prime' || paidSku(i) === 'prime',
   );
   if (explicit.length) return explicit.slice(0, cap);
+  if (real) return [];
 
   const demoFilled = Number(getPlanSetting('demo_prime_filled'));
   const fill = Number.isFinite(demoFilled) ? Math.max(0, Math.min(cap, demoFilled)) : 1;
@@ -75,11 +86,13 @@ export function buildPrimeSlotArray(occupied, capacity) {
 export function getPickPool(pool, primeOccupied) {
   const primeIds = new Set(primeOccupied.map((i) => i.id));
   const rest = pool.filter((i) => isListVisible(i) && !primeIds.has(i.id));
-  const explicitPick = rest.filter(
-    (i) => i.exposure_tier === 'pick' || i.position_sku === 'pick' || i.sku === 'pick',
+  const real = isRealDbPool(pool);
+  const explicitPick = rest.filter((i) =>
+    real ? paidSku(i) === 'pick' : i.exposure_tier === 'pick' || paidSku(i) === 'pick',
   );
-  const base = explicitPick.length ? explicitPick : rest;
-  return sortByNewestFirst(base);
+  if (explicitPick.length) return sortByNewestFirst(explicitPick);
+  if (real) return [];
+  return sortByNewestFirst(rest);
 }
 
 /**

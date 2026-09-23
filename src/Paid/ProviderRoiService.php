@@ -23,8 +23,11 @@ final class ProviderRoiService
         $this->entitlements = $entitlements ?? new ProviderEntitlementRepository($pdo);
     }
 
-    /** @return array<string, mixed> */
-    public function getSummary(int $providerUserId, int $days = 7): array
+    /**
+     * @return array<string, mixed>
+     * lifetime_views 는 studyRoomId 1건만. 없으면 null (전체 합산하지 않음).
+     */
+    public function getSummary(int $providerUserId, int $days = 7, ?int $studyRoomId = null): array
     {
         if ($days < 1 || $days > 90) {
             throw new InvalidArgumentException('days는 1~90이어야 합니다.');
@@ -34,12 +37,16 @@ final class ProviderRoiService
         $tier = $ent !== null ? (string) $ent['subscription_tier'] : 'free';
 
         $views = $this->roi->countViewsForProvider($providerUserId, $days);
+        $lifetimeViews = ($studyRoomId !== null && $studyRoomId > 0)
+            ? $this->roi->countLifetimeViewsForProvider($providerUserId, $studyRoomId)
+            : null;
         $wishlist = $this->roi->countFavoritesForProvider($providerUserId);
         $compare = $this->roi->countCompareForProvider($providerUserId);
 
         return [
             'tier' => $tier,
             'days' => $days,
+            'lifetime_views' => $lifetimeViews,
             'metrics' => [
                 $this->metric('views', '조회', $views, "최근 {$days}일", '상세·검색 카드 열람'),
                 $this->metric('wishlist', '찜', $wishlist, '누적', '학부모 찜 목록'),

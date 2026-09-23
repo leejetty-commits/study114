@@ -16,6 +16,9 @@ final class SearchService
 
     private ?PaidBadgeResolver $paidBadges = null;
 
+    /** @var array<string, 'prime'|'pick'|null> */
+    private array $positionSkuCache = [];
+
     private function paidBadgeResolver(): PaidBadgeResolver
     {
         return $this->paidBadges ??= new PaidBadgeResolver();
@@ -278,9 +281,10 @@ final class SearchService
         if ($regionId = $this->intFilter($filters, 'region_id')) {
             $where[] = '(sr.region_id = :region_id OR EXISTS (
                 SELECT 1 FROM study_room_regions srr
-                WHERE srr.study_room_id = sr.id AND srr.region_id = :region_id
+                WHERE srr.study_room_id = sr.id AND srr.region_id = :region_id_promo
             ))';
             $params['region_id'] = $regionId;
+            $params['region_id_promo'] = $regionId;
         } elseif ($regionLabel = $this->stringFilter($filters, 'region_label')) {
             $this->applyRegionLabelMatch(
                 $where,
@@ -423,7 +427,6 @@ final class SearchService
         $items = [];
         $rows = [];
 
-        $i = 0;
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $regionLabel = $this->promoRegionLabel($row);
 
@@ -435,7 +438,8 @@ final class SearchService
             $center = implode("\n", $centerParts);
 
             $detailStatus = (string) ($row['detail_completion_status'] ?? '');
-            $exposureTier = $this->resolveExposureTier($i, $detailStatus);
+            $exposureTier = $this->resolveExposureTier('study_room', (int) $row['id']);
+            $positionSku = $exposureTier === 'basic' ? null : $exposureTier;
 
             $item = [
                 'id'                         => (int) $row['id'],
@@ -466,6 +470,7 @@ final class SearchService
                 'business_registration_available' => (bool) ($row['business_registration_available'] ?? false),
                 'detail_completion_status'   => $detailStatus,
                 'prime_eligible'             => $detailStatus === 'expanded_complete',
+                'position_sku'               => $positionSku,
                 'exposure_tier'              => $exposureTier,
                 'latitude'                   => $row['latitude'] !== null ? (float) $row['latitude'] : null,
                 'longitude'                  => $row['longitude'] !== null ? (float) $row['longitude'] : null,
@@ -494,7 +499,6 @@ final class SearchService
                 'center' => $center,
                 'right'  => $item['price_label'] . "\n" . strtoupper($exposureTier),
             ];
-            $i++;
         }
 
         $galleryMap = $this->loadRoomGalleryMap($pdo, array_map(static fn (array $it): int => (int) $it['id'], $items));
@@ -640,7 +644,6 @@ final class SearchService
         $items = [];
         $rows = [];
 
-        $i = 0;
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $regionLabel = trim(($row['sido_name'] ?? '') . ' ' . ($row['sigungu_name'] ?? ''));
             $subjectLine = $row['subject_name'] ?: '';
@@ -657,7 +660,8 @@ final class SearchService
             }
 
             $detailStatus = (string) ($row['detail_completion_status'] ?? '');
-            $exposureTier = $this->resolveExposureTier($i, $detailStatus);
+            $exposureTier = $this->resolveExposureTier('tutor', (int) $row['id']);
+            $positionSku = $exposureTier === 'basic' ? null : $exposureTier;
 
             $schedule = [];
             if ($row['lessons_per_week']) {
@@ -691,6 +695,7 @@ final class SearchService
                 'detail_completion_status' => $detailStatus,
                 'profile_status'         => (string) ($row['profile_status'] ?? 'draft'),
                 'prime_eligible'         => $detailStatus === 'expanded_complete',
+                'position_sku'           => $positionSku,
                 'exposure_tier'          => $exposureTier,
                 'published_at'           => $row['published_at'] ?? null,
                 'created_at'             => $row['created_at'] ?? null,
@@ -712,7 +717,6 @@ final class SearchService
                 'center' => $center,
                 'right'  => $right,
             ];
-            $i++;
         }
 
         return ['tab' => 'tutor', 'total' => $total, 'rows' => $rows, 'items' => $items];
@@ -1107,25 +1111,28 @@ final class SearchService
         if ($token === '') {
             return;
         }
-        $likeKey = $prefix . '_region_like';
+        $like = '%' . $token . '%';
+        $clauses = [];
+        foreach (['dong_name', 'sigungu_name', 'sido_name'] as $i => $col) {
+            $key = $prefix . '_region_like_a' . $i;
+            $params[$key] = $like;
+            $clauses[] = "{$col} LIKE :{$key}";
+        }
+        $slotClauses = [];
+        foreach (['dong_name', 'sigungu_name', 'sido_name'] as $i => $col) {
+            $key = $prefix . '_region_like_b' . $i;
+            $params[$key] = $like;
+            $slotClauses[] = "r_lbl.{$col} LIKE :{$key}";
+        }
         $where[] = "({$ownerRegionCol} IN (
                 SELECT id FROM regions
-                WHERE dong_name LIKE :{$likeKey}
-                   OR sigungu_name LIKE :{$likeKey}
-                   OR sido_name LIKE :{$likeKey}
-                   OR label LIKE :{$likeKey}
+                WHERE " . implode(' OR ', $clauses) . "
             ) OR EXISTS (
                 SELECT 1 FROM {$joinTable} srr_lbl
                 INNER JOIN regions r_lbl ON r_lbl.id = srr_lbl.region_id
                 WHERE srr_lbl.{$joinFk} = {$ownerIdCol}
-                  AND (
-                    r_lbl.dong_name LIKE :{$likeKey}
-                    OR r_lbl.sigungu_name LIKE :{$likeKey}
-                    OR r_lbl.sido_name LIKE :{$likeKey}
-                    OR r_lbl.label LIKE :{$likeKey}
-                  )
+                  AND (" . implode(' OR ', $slotClauses) . ")
             ))";
-        $params[$likeKey] = '%' . $token . '%';
     }
 
     /**
@@ -1176,16 +1183,66 @@ final class SearchService
         return number_format($won) . '원';
     }
 
-    private function resolveExposureTier(int $index, string $detailStatus): string
+    /**
+     * 점유 티어는 유효한 기간형 구독만.
+     * 목록 인덱스·상세완료·published 는 결제 증명이 아니다.
+     *
+     * @param 'study_room'|'tutor' $providerType
+     * @return 'prime'|'pick'|'basic'
+     */
+    private function resolveExposureTier(string $providerType, int $providerId): string
     {
-        if ($index < 3 && $detailStatus === 'expanded_complete') {
-            return 'prime';
+        $sku = $this->activePositionSku($providerType, $providerId);
+
+        return $sku ?? 'basic';
+    }
+
+    /**
+     * provider_position_subscriptions: 대상 provider + prime|pick + 기간 안.
+     * prime 이 pick 보다 우선. 컬럼·행이 없으면 점유 없음.
+     *
+     * @param 'study_room'|'tutor' $providerType
+     * @return 'prime'|'pick'|null
+     */
+    private function activePositionSku(string $providerType, int $providerId): ?string
+    {
+        if ($providerId <= 0 || ($providerType !== 'study_room' && $providerType !== 'tutor')) {
+            return null;
         }
-        if ($index < 8) {
-            return 'pick';
+        $cacheKey = $providerType . ':' . $providerId;
+        if (array_key_exists($cacheKey, $this->positionSkuCache)) {
+            return $this->positionSkuCache[$cacheKey];
         }
 
-        return 'basic';
+        $pdo = Connection::get();
+        $table = 'provider_position_subscriptions';
+        if (
+            !$this->tableExists($pdo, $table)
+            || !$this->columnCache($pdo, $table, 'provider_type')
+            || !$this->columnCache($pdo, $table, 'provider_id')
+            || !$this->columnCache($pdo, $table, 'end_exclusive_on')
+            || !$this->columnCache($pdo, $table, 'sku_code')
+        ) {
+            return $this->positionSkuCache[$cacheKey] = null;
+        }
+
+        $startedSql = $this->columnCache($pdo, $table, 'started_on')
+            ? ' AND (started_on IS NULL OR started_on <= CURDATE())'
+            : '';
+        $stmt = $pdo->prepare(
+            "SELECT sku_code FROM {$table}
+             WHERE provider_type = ? AND provider_id = ?
+               AND sku_code IN ('prime', 'pick')
+               AND CURDATE() < end_exclusive_on
+               {$startedSql}
+             ORDER BY CASE sku_code WHEN 'prime' THEN 0 ELSE 1 END, end_exclusive_on DESC
+             LIMIT 1"
+        );
+        $stmt->execute([$providerType, $providerId]);
+        $sku = $stmt->fetchColumn();
+        $resolved = ($sku === 'prime' || $sku === 'pick') ? $sku : null;
+
+        return $this->positionSkuCache[$cacheKey] = $resolved;
     }
 
     /** 전화번호·이메일은 검색 SELECT에 넣지 않는다. 홍보사진 파생본만. */

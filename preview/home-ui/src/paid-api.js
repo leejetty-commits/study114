@@ -27,9 +27,16 @@ async function parseJson(res) {
   return data;
 }
 
-/** @param {number} [days] */
-export async function fetchRoiSummary(days = 7) {
-  const qs = days > 0 ? `?days=${days}` : '';
+/**
+ * @param {number} [days]
+ * @param {number|string|null} [studyRoomId] 멤버박스 조회는 이 공부방 1건만
+ */
+export async function fetchRoiSummary(days = 7, studyRoomId = null) {
+  const params = new URLSearchParams();
+  if (days > 0) params.set('days', String(days));
+  const roomId = Number(studyRoomId);
+  if (Number.isFinite(roomId) && roomId > 0) params.set('study_room_id', String(roomId));
+  const qs = params.toString() ? `?${params.toString()}` : '';
   const res = await fetch(`${PAID_ENDPOINTS.roi}${qs}`, { ...CREDENTIALS });
   return parseJson(res);
 }

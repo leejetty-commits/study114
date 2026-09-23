@@ -177,6 +177,11 @@ function assignProviderTiers(items) {
  * @returns {{ items: object[], regionLabel: string }}
  */
 export function getRegionFeed(tab, ctx = {}) {
+  if (tab === 'room' && (ctx.studyRoomHome || ctx.promoFind)) {
+    const items = Array.isArray(ctx.liveItems) ? ctx.liveItems : [];
+    return { items, regionLabel: String(ctx.regionLabel || '').trim() };
+  }
+
   if (ctx.role) {
     const selfFeed = getProviderSelfFeed(tab, ctx.role, { home: ctx.homeSelf === true });
     if (selfFeed) {

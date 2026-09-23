@@ -11,6 +11,9 @@
 import { MOCK_REGIONS } from './search-schema.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
 import { normalizeLocation, logLocationDebug } from '../../shared/location-display.js';
+import { peekStudyRoomPromo1 } from '@home-ui/study-room-home-seed.js';
+import { getBasicPool, getPrimeOccupied } from '@home-ui/exposure-render.js';
+import { readListSortFromHash, sortListItems } from '../../shared/list-sort.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -36,9 +39,25 @@ function parseRegionParts(regionLabel, coords = {}) {
 }
 
 /**
+ * 하단 베이직공부방 pagination total.
+ * renderBasicListBlock 과 같은 식: prime 점유가 있으면 getBasicPool, 없으면 정렬한 전체.
+ * 현재 페이지 행 수(items.length)는 쓰지 않는다.
+ * @param {object[]} items
+ */
+function basicListTotal(items) {
+  const list = Array.isArray(items) ? items : [];
+  const occupied = getPrimeOccupied(list);
+  const sort = readListSortFromHash('study_room', { mode: 'home' });
+  const pool = occupied.length
+    ? getBasicPool(list, occupied, { kind: 'study_room', sort })
+    : sortListItems(list, 'study_room', sort);
+  return pool.length;
+}
+
+/**
  * @param {object} parts
  * @param {object[]} items
- * @param {{ searched: boolean, region: string, resultSource: string, countNote: string, bannerStyle: 'guest'|'provider_room'|'search', lat?: number|null, lng?: number|null }} ctx
+ * @param {{ searched: boolean, region: string, resultSource: string, countNote: string, bannerStyle: 'guest'|'provider_room'|'search', providerHome?: boolean, roomCount?: number, lat?: number|null, lng?: number|null }} ctx
  */
 function renderFloatMap(parts, items, ctx) {
   const { searched, region, resultSource, countNote, bannerStyle } = ctx;
@@ -55,6 +74,12 @@ function renderFloatMap(parts, items, ctx) {
           <div><dt>상태</dt><dd>${searched ? '검색' : '지역'}</dd></div>
         </dl>`;
     hint = countNote;
+  } else if (bannerStyle === 'provider_room' && ctx.providerHome) {
+    sub = parts.dong ? `${parts.dong} 공부방 현황입니다` : '';
+    statsHtml = `<dl class="hero-map__stats">
+          <div><dt>공부방</dt><dd>${ctx.roomCount}</dd></div>
+        </dl>`;
+    hint = "우리동네의 공부방은 하단의 '우동공과 베이직공부방' 목록입니다";
   } else if (bannerStyle === 'provider_room') {
     sub = [parts.gu, '검색·지역 결과가 반영된 공부방 현황입니다'].filter(Boolean).join(' · ');
     statsHtml = `<dl class="hero-map__stats">
@@ -90,12 +115,15 @@ function renderFloatMap(parts, items, ctx) {
 
 /**
  * @param {object[]} [activeResultItems]
- * @param {{ searched?: boolean, regionLabel?: string, resultSource?: 'region'|'search'|null, guestHomeStyle?: boolean, bannerStyle?: 'guest'|'provider_room'|'search', lat?: number|null, lng?: number|null }} [options]
+ * @param {{ searched?: boolean, regionLabel?: string, resultSource?: 'region'|'search'|null, guestHomeStyle?: boolean, bannerStyle?: 'guest'|'provider_room'|'search', providerHome?: boolean, lat?: number|null, lng?: number|null }} [options]
  */
 export function renderSearchMapBlock(activeResultItems = [], options = {}) {
   const searched = options.searched === true;
-  const region = options.regionLabel || MOCK_REGIONS.room;
-  const parts = parseRegionParts(region, { lat: options.lat, lng: options.lng });
+  const providerHome = options.providerHome === true;
+  const requested = String(options.regionLabel || '').trim();
+  const promo = providerHome ? peekStudyRoomPromo1() : '';
+  const region = providerHome ? requested || promo : requested || MOCK_REGIONS.room;
+  const parts = parseRegionParts(region, providerHome ? {} : { lat: options.lat, lng: options.lng });
   const items = Array.isArray(activeResultItems) ? activeResultItems : [];
   const resultSource = options.resultSource || (searched ? 'search' : 'region');
   const bannerStyle =
@@ -122,8 +150,10 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
     resultSource,
     countNote,
     bannerStyle,
-    lat: options.lat ?? parts.lat,
-    lng: options.lng ?? parts.lng,
+    providerHome,
+    roomCount: providerHome ? basicListTotal(items) : items.length,
+    lat: providerHome ? parts.lat : (options.lat ?? parts.lat),
+    lng: providerHome ? parts.lng : (options.lng ?? parts.lng),
   });
 }
 
