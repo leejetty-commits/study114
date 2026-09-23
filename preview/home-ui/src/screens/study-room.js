@@ -14,7 +14,12 @@ import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
-import { applyStudyRoomHomePromo, bootStudyRoomHome, readStudyRoomMemberBox } from '../study-room-home-seed.js';
+import {
+  applyStudyRoomHomePromo,
+  bootStudyRoomHome,
+  bootStudyRoomStudentDemand,
+  readStudyRoomMemberBox,
+} from '../study-room-home-seed.js';
 
 function esc(value) {
   return String(value ?? '')
@@ -68,6 +73,7 @@ export function renderStudyRoom() {
 export function bindStudyRoomEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
   bootStudyRoomHome(rerender);
+  bootStudyRoomStudentDemand(rerender);
 
   bindProviderHomeTabEvents(root, rerender, {
     role: 'study_room',

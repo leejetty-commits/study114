@@ -10,6 +10,7 @@ import {
 } from '@home-ui/exposure-data.js';
 import { MOCK_REGIONS, getTutorRegionLabel } from './search-schema.js';
 import { getProviderSelfFeed } from './search-provider-self.js';
+import { mapSearchResultsToExposure } from './search-exposure-mapper.js';
 
 /** 시드 데이터가 시 접두어 없이 동/구만 가진 경우 — 서울시 스코프 매칭용 */
 const SEOUL_METRO_HINTS = [
@@ -180,6 +181,17 @@ export function getRegionFeed(tab, ctx = {}) {
   if (tab === 'room' && (ctx.studyRoomHome || ctx.promoFind)) {
     const items = Array.isArray(ctx.liveItems) ? ctx.liveItems : [];
     return { items, regionLabel: String(ctx.regionLabel || '').trim() };
+  }
+
+  if (tab === 'student' && ctx.promoStudent) {
+    const regionLabel = String(ctx.regionLabel || '').trim();
+    if (!Array.isArray(ctx.liveStudentItems)) {
+      return { items: [], regionLabel, pending: true };
+    }
+    return {
+      items: mapSearchResultsToExposure('student', ctx.liveStudentItems),
+      regionLabel,
+    };
   }
 
   if (ctx.role) {

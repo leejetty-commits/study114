@@ -744,33 +744,34 @@ final class SearchService
         }
 
         if ($regionId = $this->intFilter($filters, 'preferred_region')) {
-            $where[] = '(s.preferred_studyroom_region_id = :preferred_region
-                OR s.preferred_tutor_region_id = :preferred_region)';
-            $params['preferred_region'] = $regionId;
+            $where[] = '(s.preferred_studyroom_region_id = :preferred_region_ps
+                OR s.preferred_tutor_region_id = :preferred_region_pt)';
+            $params['preferred_region_ps'] = $regionId;
+            $params['preferred_region_pt'] = $regionId;
         } elseif ($regionLabel = $this->stringFilter($filters, 'preferred_region_label')
             ?: $this->nonNumericStringFilter($filters, 'preferred_region')) {
             $token = $this->regionLabelToken($regionLabel);
             if ($token !== '') {
+                $like = '%' . $token . '%';
+                $params['preferred_region_like_ps'] = $like;
+                $params['preferred_region_like_pt'] = $like;
                 $where[] = '(EXISTS (
                     SELECT 1 FROM regions r_ps
                     WHERE r_ps.id = s.preferred_studyroom_region_id
                       AND (
-                        r_ps.dong_name LIKE :preferred_region_like
-                        OR r_ps.sigungu_name LIKE :preferred_region_like
-                        OR r_ps.sido_name LIKE :preferred_region_like
-                        OR r_ps.label LIKE :preferred_region_like
+                        r_ps.dong_name LIKE :preferred_region_like_ps
+                        OR r_ps.sigungu_name LIKE :preferred_region_like_ps
+                        OR r_ps.sido_name LIKE :preferred_region_like_ps
                       )
                 ) OR EXISTS (
                     SELECT 1 FROM regions r_pt
                     WHERE r_pt.id = s.preferred_tutor_region_id
                       AND (
-                        r_pt.dong_name LIKE :preferred_region_like
-                        OR r_pt.sigungu_name LIKE :preferred_region_like
-                        OR r_pt.sido_name LIKE :preferred_region_like
-                        OR r_pt.label LIKE :preferred_region_like
+                        r_pt.dong_name LIKE :preferred_region_like_pt
+                        OR r_pt.sigungu_name LIKE :preferred_region_like_pt
+                        OR r_pt.sido_name LIKE :preferred_region_like_pt
                       )
                 ))';
-                $params['preferred_region_like'] = '%' . $token . '%';
             }
         }
 

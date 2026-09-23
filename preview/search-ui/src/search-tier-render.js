@@ -13,7 +13,7 @@ import {
 } from '@home-ui/exposure-render.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar, renderSectionTitleBar } from '@home-ui/section-headings.js';
 import { partitionByExposureTier } from './search-exposure-mapper.js';
-import { renderSearchZeroState } from '@home-ui/empty-state-copy.js';
+import { renderSearchZeroState, renderStateCard } from '@home-ui/empty-state-copy.js';
 import {
   readListSortFromHash,
   renderListSortSelect,
@@ -166,9 +166,19 @@ function renderProviderFlatResults(
  */
 function renderStudentTierResults(items, opts = {}, sectionTag = '', mode = 'search') {
   if (!items.length) {
+    const place = String(sectionTag || '').trim();
+    const promoEmpty =
+      opts.viewerRole === 'study_room' && place && mode === 'region'
+        ? renderStateCard({
+            title: `${place}에 공개 중인 학생이 없습니다`,
+            body: '조건을 바꾸려면 학생찾기에서 검색해 보세요.',
+            variant: 'empty',
+            screenId: 'P13-zero',
+          })
+        : renderSearchZeroState('student', mode);
     return `
       <div class="content-section search-tier-results search-tier-results--empty">
-        ${renderSearchZeroState('student', mode)}
+        ${promoEmpty}
       </div>`;
   }
 

@@ -3,6 +3,7 @@
  */
 
 import { searchUiUrl } from '../../shared/preview-links.js';
+import { peekStudyRoomPromo1, studyRoomPromo1Dong } from './study-room-home-seed.js';
 import {
   renderCompactFindForm,
   renderFindFilterBar,
@@ -144,9 +145,11 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
   findState.homeSelf = homeSelf;
 
   const showMap = searchTab === 'room';
+  const studentSnap = role === 'study_room' && tabId === 'student';
   const hideSearchForm =
-    homeSelf &&
-    ((role === 'tutor' && tabId === 'tutor') || (role === 'study_room' && tabId === 'study_room'));
+    studentSnap ||
+    (homeSelf &&
+      ((role === 'tutor' && tabId === 'tutor') || (role === 'study_room' && tabId === 'study_room')));
   const hideHead = opts.hideHead === true;
   const hideSearchCross = opts.hideSearchCrossLink === true;
   const showCross =
@@ -154,7 +157,7 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
 
   return `
     <div class="parent-home-body">
-      ${hideHead ? '' : renderProviderHomeHead(role, tabId)}
+      ${studentSnap ? renderStudentDemandSnapshot() : hideHead ? '' : renderProviderHomeHead(role, tabId)}
       ${showCross ? renderSearchCrossLink(role, searchTab) : ''}
       ${renderCompactFindForm(searchTab, findState, {
         showMap,
@@ -168,6 +171,29 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
       ${renderFindFilterBar(searchTab, findState)}
       ${renderFindResultSection(searchTab, findState, role, { surfaceType: 'home' })}
     </div>`;
+}
+
+function escSnap(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;');
+}
+
+function renderStudentDemandSnapshot() {
+  const full = peekStudyRoomPromo1();
+  const dong = studyRoomPromo1Dong() || full || '우리동네';
+  const place = full || dong;
+  const findUrl = searchUiUrl('student', 'study_room');
+  return `
+    <header class="parent-home-head student-demand-snap">
+      <p class="parent-home-head__desc">우리동네 학생 수요</p>
+      <h1 class="parent-home-head__title">${escSnap(dong)} 학생</h1>
+      <p class="parent-home-head__desc">${escSnap(place)}에서 지금 공개 중인 학생입니다. 조건을 바꾸려면 학생찾기에서 검색하세요.</p>
+      <p class="provider-home-search-link">
+        <a href="${findUrl}" class="btn btn--primary btn--sm" data-same-tab-href="${findUrl}">학생찾기에서 더 찾아보기</a>
+      </p>
+    </header>`;
 }
 
 export { createFindState, resetFindState } from './find-state.js';

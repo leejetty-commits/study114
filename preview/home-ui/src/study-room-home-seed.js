@@ -12,6 +12,11 @@ import { normalizeLocation } from '../../shared/location-display.js';
 
 /** @type {object[]|null} */
 let liveItems = null;
+/** @type {object[]|null} null = 학생 수요 조회 전 */
+let studentLive = null;
+let studentKey = '';
+/** @type {Promise<void>|null} */
+let studentBoot = null;
 /** @type {string} */
 let liveKey = '';
 /** @type {Promise<void>|null} */
@@ -51,9 +56,60 @@ export function peekStudyRoomPromo1() {
   return studyRoomPromo1Label(pickOwnStudyRoom());
 }
 
+/** 홍보1 행정동 id. 개설 region_id 로 대체하지 않는다. */
+export function studyRoomPromo1RegionId() {
+  const id = Number(primarySavedRegion(pickOwnStudyRoom())?.region_id);
+  return Number.isFinite(id) && id > 0 ? String(id) : '';
+}
+
+/** 현재위치용 동. 시 이름만 반환하지 않는다. */
+export function studyRoomPromo1Dong() {
+  const full = peekStudyRoomPromo1();
+  if (!full) return '';
+  const dong = normalizeLocation({ raw: full }, 'room').dong;
+  return String(dong || '').trim();
+}
+
 /** @returns {object[]|null} null = 아직 조회 전 */
 export function getStudyRoomHomeLiveItems() {
   return liveItems;
+}
+
+/** 홍보1 + 희망유형 공부방. null 이면 로딩. */
+export function getStudyRoomStudentLiveItems() {
+  return studentLive;
+}
+
+/**
+ * 홈 우리동네 학생과 학생찾기 진입이 같은 목록을 쓴다.
+ * @param {() => void} [rerender]
+ */
+export function bootStudyRoomStudentDemand(rerender) {
+  const room = pickOwnStudyRoom();
+  const promo = studyRoomPromo1Label(room);
+  const regionId = studyRoomPromo1RegionId();
+  const key = `${room?.id || 0}|${regionId}|${promo}`;
+  if (studentBoot && studentKey === key) return studentBoot;
+  studentKey = key;
+  studentLive = null;
+  studentBoot = (async () => {
+    /** @type {Record<string, string>} */
+    const filters = { preferred_lesson_type: 'study_room' };
+    if (regionId) filters.preferred_region = regionId;
+    else if (promo) filters.preferred_region_label = promo;
+    if (!filters.preferred_region && !filters.preferred_region_label) {
+      studentLive = [];
+    } else {
+      try {
+        const result = await searchApi('student', filters, { limit: 20, sort: 'latest' });
+        studentLive = Array.isArray(result.items) ? result.items : [];
+      } catch {
+        studentLive = [];
+      }
+    }
+    if (typeof rerender === 'function') rerender();
+  })();
+  return studentBoot;
 }
 
 function formatRegistered(value) {
@@ -93,6 +149,11 @@ export function readStudyRoomMemberBox() {
 export function applyStudyRoomHomePromo(state) {
   if (!state) return '';
   state.studyRoomHome = true;
+  state.role = 'study_room';
+  if (!state.searchExecuted) {
+    state.studentHopeType = 'study_room';
+    state.hopeTypeResolved = true;
+  }
   if (state.searchExecuted) return peekStudyRoomPromo1();
   const source = state.canonicalLocation?.source;
   if (source === 'address' || source === 'url') {

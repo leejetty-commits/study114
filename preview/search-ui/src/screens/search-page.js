@@ -34,11 +34,12 @@ import {
   bindFindSurfaceEvents,
   hydrateFindStateFromHash,
   resolveActiveRegionLabel,
+  studentCurrentPlace,
   refreshActiveResultItems,
   runFindSearchWithFilters,
   bootFindGpsIfNeeded,
 } from '../search-find-surface.js';
-import { bootStudyRoomHome } from '@home-ui/study-room-home-seed.js';
+import { bootStudyRoomHome, bootStudyRoomStudentDemand } from '@home-ui/study-room-home-seed.js';
 
 /**
  * 찾기 페이지 바디 탭·역할 셀렉트 제거 — 이동은 GNB만.
@@ -71,9 +72,13 @@ function renderSearchForm(tab) {
   // 헤더·지도·리스트가 같은 CanonicalLocation 을 쓰도록 먼저 정규화
   refreshActiveResultItems(tab, previewState, previewState.role);
   const regionLabel = resolveActiveRegionLabel(tab, previewState, previewState.role);
+  const locationText =
+    tab === 'student' && previewState.role === 'study_room'
+      ? studentCurrentPlace(regionLabel)
+      : regionLabel;
   const locationLine =
     tab === 'room' || tab === 'tutor' || tab === 'student'
-      ? `<p class="search-header__location" data-search-current-location aria-live="polite">현재위치 <strong>${esc(regionLabel)}</strong></p>`
+      ? `<p class="search-header__location" data-search-current-location aria-live="polite">현재위치 <strong>${esc(locationText)}</strong></p>`
       : '';
 
   return `
@@ -116,6 +121,9 @@ export function afterSearchPageMount(rerender) {
   const tab = getCurrentTab();
   if (previewState.role === 'study_room' && tab === 'room') {
     bootStudyRoomHome(rerender);
+  }
+  if (previewState.role === 'study_room' && tab === 'student') {
+    bootStudyRoomStudentDemand(rerender);
   }
   if (previewState._needsSearchRestore && previewState.lastSearchFilters) {
     const filters = /** @type {Record<string, string|string[]>} */ ({
