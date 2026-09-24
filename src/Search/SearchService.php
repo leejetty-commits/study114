@@ -562,7 +562,7 @@ final class SearchService
             if ($token !== '') {
                 $like = '%' . $token . '%';
                 $clauses = [];
-                foreach (['sido_name', 'sigungu_name', 'dong_name', 'label'] as $i => $col) {
+                foreach (['sido_name', 'sigungu_name', 'dong_name'] as $i => $col) {
                     $key = 'tutor_region_like_a' . $i;
                     $params[$key] = $like;
                     $clauses[] = "r_tr.{$col} LIKE :{$key}";
