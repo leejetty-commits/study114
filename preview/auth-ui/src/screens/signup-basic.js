@@ -31,6 +31,9 @@ import {
   bindStudyRoomBasicFields,
   collectStudyRoomBasicFields,
   validateStudyRoomBasicFields,
+  renderStudentHopeRegion,
+  bindStudentHopeRegion,
+  readStudentHopeRegion,
 } from '../../../shared/study-room-basic-form.js';
 
 function esc(s) {
@@ -77,21 +80,6 @@ function sidoFromRegionId(regionId) {
   return activityLabelFromRegionId(regionId, getCityUnits(signupState.cities || []));
 }
 
-function renderRegionSelect(name, selectedId, { required = false } = {}) {
-  const regions = regionList();
-  const sel = selectedId || '';
-  return `
-    <select class="form-input" name="${name}" id="${name}" ${required ? 'required' : ''}>
-      <option value="">선택</option>
-      ${regions
-        .map(
-          (r) =>
-            `<option value="${r.id}" ${String(sel) === String(r.id) ? 'selected' : ''}>${esc(r.label)}</option>`,
-        )
-        .join('')}
-    </select>`;
-}
-
 function renderChips(name, options, { selected = [] } = {}) {
   const sel = Array.isArray(selected) ? selected : [selected].filter(Boolean);
   return `
@@ -123,47 +111,10 @@ function renderMainSubjectOne(selected = '') {
   `;
 }
 
-function complexList() {
-  return signupState.complexes.length > 0
-    ? signupState.complexes
-    : [
-        { id: 1, region_id: 1, label: '은마아파트', address: '서울특별시 강남구 대치동 316' },
-        { id: 2, region_id: 1, label: '대치래미안', address: '서울특별시 강남구 대치동 888' },
-      ];
-}
-
-function renderComplexSelect(name, selectedId, { required = false, regionId = '' } = {}) {
-  let list = complexList();
-  if (regionId) {
-    list = list.filter((c) => String(c.region_id) === String(regionId));
-  }
-  const sel = selectedId || '';
-  return `
-    <select class="form-input" name="${name}" id="${name}" ${required ? 'required' : ''} data-complex-select>
-      <option value="">단지 선택</option>
-      ${list
-        .map((c) => {
-          const addr = c.address ? ` — ${c.address}` : '';
-          return `<option value="${c.id}" data-region-id="${c.region_id}" data-address="${esc(c.address || '')}" ${String(sel) === String(c.id) ? 'selected' : ''}>${esc(c.label)}${esc(addr)}</option>`;
-        })
-        .join('')}
-    </select>`;
-}
-
-function renderBasisChips(selected = 'dong', { allowComplex = true } = {}) {
-  const opts = [{ value: 'dong', label: '행정동 기준' }];
-  if (allowComplex && complexList().length > 0) {
-    opts.push({ value: 'complex', label: '아파트단지 기준' });
-  }
-  return renderChips('region_basis', opts, { selected: allowComplex ? selected : 'dong' });
-}
-
 /** 학생 기본정보 — Basic 카드에 먼저 보일 표시명·희망 유형·희망지역. */
 function renderStudentBasic() {
   const d = signupState.basicRegister?.student || {};
   const hope = d.preferred_lesson_type || 'tutor';
-  const basis = d.region_basis || 'dong';
-  const allowComplex = complexList().length > 0;
   const displayName = d.public_display_name || d.student_name || '';
   return `
     <form data-form="basic-student" class="basic-register">
@@ -180,17 +131,8 @@ function renderStudentBasic() {
         )}
       </div>
       <div class="form-group" data-student-studyroom-block ${hope === 'study_room' ? '' : 'hidden'}>
-        <span class="form-label form-label--required">희망지역</span>
-        ${renderBasisChips(basis, { allowComplex })}
-        <div class="form-group mt-4" data-basis-panel="dong" ${basis === 'complex' && hope === 'study_room' ? 'hidden' : ''}>
-          <label class="form-label form-label--required" for="region_id">행정동</label>
-          ${renderRegionSelect('region_id', d.region_id, { required: false })}
-        </div>
-        <div class="form-group mt-4" data-basis-panel="complex" ${basis === 'complex' && hope === 'study_room' ? '' : 'hidden'}>
-          <label class="form-label form-label--required" for="complex_id">아파트단지</label>
-          ${renderComplexSelect('complex_id', d.complex_id, { required: false })}
-          <p class="form-note" data-complex-address-hint></p>
-        </div>
+        ${renderStudentHopeRegion(d)}
+        <p class="form-hint">주소 검색으로 행정동 또는 아파트단지를 고릅니다.</p>
       </div>
       <div class="form-group" data-student-tutor-block ${hope === 'tutor' ? '' : 'hidden'}>
         <label class="form-label form-label--required" for="activity_city">희망지역</label>
@@ -434,13 +376,14 @@ export function bindSignupBasicEvents(root) {
     });
   }
 
-  function syncBasisPanels() {
-    const basis = form?.querySelector('input[name="region_basis"]:checked')?.value || 'dong';
-    form?.querySelectorAll('[data-basis-panel]').forEach((panel) => {
-      const match = panel.getAttribute('data-basis-panel') === basis;
-      panel.toggleAttribute('hidden', !match);
+  if (role === 'student') {
+    bindStudentHopeRegion(form || root, {
+      onRegion(region) {
+        if (!signupState.regions.some((r) => String(r.id) === String(region.id))) {
+          signupState.regions.push(region);
+        }
+      },
     });
-    updateComplexAddressHint();
   }
 
   function syncStudentHopeBlocks() {
@@ -449,28 +392,13 @@ export function bindSignupBasicEvents(root) {
     const tutor = form?.querySelector('[data-student-tutor-block]');
     study?.toggleAttribute('hidden', hope !== 'study_room');
     tutor?.toggleAttribute('hidden', hope !== 'tutor');
-    if (hope === 'study_room') syncBasisPanels();
-  }
-
-  function updateComplexAddressHint() {
-    const sel = form?.querySelector('[data-complex-select]');
-    const hint = form?.querySelector('[data-complex-address-hint]');
-    if (!sel || !hint) return;
-    const opt = sel.selectedOptions?.[0];
-    const addr = opt?.dataset?.address || '';
-    hint.textContent = addr ? `단지 주소: ${addr}` : '단지 선택 시 주소가 표시됩니다.';
   }
 
   form?.querySelectorAll('input[name="preferred_lesson_type"]').forEach((el) => {
     el.addEventListener('change', syncStudentHopeBlocks);
   });
-  form?.querySelectorAll('input[name="region_basis"]').forEach((el) => {
-    el.addEventListener('change', syncBasisPanels);
-  });
-  form?.querySelector('[data-complex-select]')?.addEventListener('change', updateComplexAddressHint);
 
   syncStudentHopeBlocks();
-  syncBasisPanels();
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -505,28 +433,29 @@ export function bindSignupBasicEvents(root) {
         return;
       }
       if (data.preferred_lesson_type === 'study_room') {
-        const basis = data.region_basis || 'dong';
+        const hopeRegion = readStudentHopeRegion(form);
+        const basis = hopeRegion?.region_basis === 'complex' ? 'complex' : 'dong';
         data.region_basis = basis;
+        data.region_id = hopeRegion?.region_id || '';
+        data.region_label = hopeRegion?.region_label || '';
+        data.complex_id = '';
+        data.complex_address = '';
+        data.complex_label = '';
+        data.complex_name = '';
         if (basis === 'dong') {
           if (!data.region_id) {
-            alert('희망지역을 선택해 주세요.');
+            alert('행정동을 찾지 못했습니다. 주소 검색으로 다시 선택해 주세요.');
             return;
           }
-          data.complex_id = '';
-          const region = regionList().find((r) => String(r.id) === String(data.region_id));
-          data.region_label = region?.label || '';
         } else {
-          if (!data.complex_id) {
-            alert('희망지역을 선택해 주세요.');
+          const place = String(hopeRegion?.complex_name || '').trim();
+          if (!place) {
+            alert('아파트·단지 이름이 있는 주소로 다시 검색해 주세요.');
             return;
           }
-          const complex = complexList().find((c) => String(c.id) === String(data.complex_id));
-          data.region_id = complex ? String(complex.region_id) : '';
-          data.region_label = complex
-            ? `${complex.label}${complex.address ? ` · ${complex.address}` : ''}`
-            : '';
-          data.complex_label = complex?.label || '';
-          data.complex_address = complex?.address || '';
+          data.complex_label = place;
+          data.complex_name = place;
+          data.region_label = place;
         }
       } else {
         const city = String(data.activity_city || '').trim();
