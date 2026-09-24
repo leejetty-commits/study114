@@ -13,6 +13,13 @@ const HIDE_PREFIX = 'udg.homePopup.hide.';
 /** @type {{ path: string, type: string, family: 'a' | 'b', id: string | null } | null} */
 let closedView = null;
 
+/** @type {Record<string, unknown> | false | null} */
+let previewRow = null;
+/** @type {string} */
+let previewForId = '';
+/** @type {Promise<void> | null} */
+let previewPromise = null;
+
 /** @type {Array<Record<string, unknown>> | null} */
 let publicCatalog = null;
 /** @type {Promise<void> | null} */
@@ -74,6 +81,31 @@ export function isHomePopupPreview() {
   return isAdminUser() && hasPopupDemoQuery();
 }
 
+export function readPopupPreviewId() {
+  const raw = new URLSearchParams(window.location.search).get('popupPreviewId') || '';
+  return /^\d+$/.test(raw) ? raw : '';
+}
+
+function loadPreviewRow(id) {
+  if (previewPromise && previewForId === id) return previewPromise;
+  previewForId = id;
+  previewRow = null;
+  previewPromise = fetch(`/api/admin/home-popups.php?id=${encodeURIComponent(id)}`, {
+    credentials: 'include',
+  })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      previewRow = data && data.ok === true && data.popup ? data.popup : false;
+    })
+    .catch(() => {
+      previewRow = false;
+    })
+    .then(() => {
+      if (onCatalogReady) onCatalogReady(pendingRoot);
+    });
+  return previewPromise;
+}
+
 /** @param {string} id */
 export function isPopupHiddenToday(id) {
   try {
@@ -125,8 +157,35 @@ function audienceSurface() {
  */
 export function resolveHomePopup() {
   if (!isHomePopupSurface()) return null;
+  if (isAdminUser()) {
+    const previewId = readPopupPreviewId();
+    if (previewId) {
+      if (previewForId !== previewId || previewRow === null) {
+        loadPreviewRow(previewId);
+        return null;
+      }
+      if (previewRow) {
+        const content = previewRow.content && typeof previewRow.content === 'object' ? previewRow.content : {};
+        const choice = {
+          mode: 'preview',
+          previewKind: 'row',
+          type: String(previewRow.type),
+          family: previewRow.family === 'b' ? 'b' : 'a',
+          id: String(previewRow.id),
+          content,
+        };
+        return isChoiceClosed(choice) ? null : choice;
+      }
+    }
+  }
   if (isHomePopupPreview()) {
-    const choice = { mode: 'preview', type: readPopupDemo(), family: readPopupFamily(), id: null };
+    const choice = {
+      mode: 'preview',
+      previewKind: 'demo',
+      type: readPopupDemo(),
+      family: readPopupFamily(),
+      id: null,
+    };
     return isChoiceClosed(choice) ? null : choice;
   }
   if (publicCatalog === null) {

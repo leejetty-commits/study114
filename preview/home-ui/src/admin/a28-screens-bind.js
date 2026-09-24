@@ -103,17 +103,14 @@ import {
 import {
   getSiteSettings,
   saveSiteSettings,
-  listPopups,
-  savePopup,
-  deletePopup,
   getLegalDocs,
   saveLegalDoc,
   resetSiteSettingsSeed,
   JOIN_FIELD_OPTIONS,
   JOIN_ROLES,
-  POPUP_SURFACES,
   listSiteSettingsLogs,
 } from './site-settings-store.js';
+import { deleteHomePopup, ensureHomePopups, peekHomePopups, saveHomePopup } from './home-popup-api.js';
 import {
   getMarketplaceLab,
   setReviewStatus,
@@ -1130,8 +1127,6 @@ export function bindA28ScreenEvents(root, path, rerender) {
   }
 
   if (path.startsWith('/admin/settings')) {
-    const toLocal = (v) => String(v || '').replace(' ', 'T').slice(0, 16);
-
     root.querySelector('[data-settings-basic]')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const form = e.currentTarget;
@@ -1197,52 +1192,184 @@ export function bindA28ScreenEvents(root, path, rerender) {
     });
 
     const popupForm = root.querySelector('[data-popup-form]');
+    if (popupForm instanceof HTMLFormElement) {
+    if (peekHomePopups().rows === null) {
+      ensureHomePopups().then(() => rerender());
+    }
+    const showPopupError = (message) => {
+      const box = root.querySelector('[data-home-popup-form-error]');
+      if (!(box instanceof HTMLElement)) return;
+      box.textContent = message || '';
+      box.hidden = !message;
+    };
+    const syncPopupType = () => {
+      if (!(popupForm instanceof HTMLFormElement)) return;
+      const type = popupForm.querySelector('[name="type"]:checked')?.value || 'notice';
+      popupForm.querySelectorAll('[data-popup-fields]').forEach((el) => {
+        if (!(el instanceof HTMLElement)) return;
+        const on = el.getAttribute('data-popup-fields') === type;
+        el.hidden = !on;
+        el.style.display = on ? '' : 'none';
+      });
+    };
+    const syncPopupAudience = () => {
+      if (!(popupForm instanceof HTMLFormElement)) return;
+      const all = popupForm.querySelector('[name="audience"][value="all"]');
+      const others = [...popupForm.querySelectorAll('[name="audience"]')].filter(
+        (el) => el instanceof HTMLInputElement && el.value !== 'all',
+      );
+      const allOn = all instanceof HTMLInputElement && all.checked;
+      others.forEach((el) => {
+        if (!(el instanceof HTMLInputElement)) return;
+        if (allOn) el.checked = false;
+        el.disabled = allOn;
+      });
+    };
+    const syncPopupLive = () => {
+      if (!(popupForm instanceof HTMLFormElement)) return;
+      const on = popupForm.querySelector('[name="published"]:checked')?.value === '1';
+      const hint = root.querySelector('[data-home-popup-live]');
+      if (hint instanceof HTMLElement) hint.hidden = !on;
+    };
+    const resetPopupForm = () => {
+      if (!(popupForm instanceof HTMLFormElement)) return;
+      popupForm.reset();
+      const idInput = popupForm.querySelector('[name="id"]');
+      if (idInput instanceof HTMLInputElement) idInput.value = '';
+      const sort = popupForm.querySelector('[name="sortOrder"]');
+      if (sort instanceof HTMLInputElement) sort.value = '0';
+      showPopupError('');
+      syncPopupType();
+      syncPopupAudience();
+      syncPopupLive();
+    };
+    popupForm?.querySelectorAll('[name="type"]').forEach((el) => el.addEventListener('change', syncPopupType));
+    popupForm?.querySelectorAll('[name="audience"]').forEach((el) => el.addEventListener('change', syncPopupAudience));
+    popupForm?.querySelectorAll('[name="published"]').forEach((el) => el.addEventListener('change', syncPopupLive));
+    syncPopupType();
+    syncPopupAudience();
+    syncPopupLive();
+    const fieldValue = (type, name) => {
+      if (!(popupForm instanceof HTMLFormElement)) return '';
+      const box = popupForm.querySelector(`[data-popup-fields="${type}"] [name="${name}"]`);
+      if (box instanceof HTMLInputElement || box instanceof HTMLTextAreaElement) return box.value.trim();
+      return '';
+    };
+    const setField = (type, name, value) => {
+      if (!(popupForm instanceof HTMLFormElement)) return;
+      const box = popupForm.querySelector(`[data-popup-fields="${type}"] [name="${name}"]`);
+      if (box instanceof HTMLInputElement || box instanceof HTMLTextAreaElement) box.value = value;
+    };
     root.querySelectorAll('[data-popup-edit]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-popup-edit');
-        const row = listPopups().find((p) => p.id === id);
+        const row = (peekHomePopups().rows || []).find((item) => String(item.id) === id);
         if (!row || !(popupForm instanceof HTMLFormElement)) return;
-        popupForm.querySelector('[name="id"]').value = row.id;
-        popupForm.querySelector('[name="title"]').value = row.title;
-        popupForm.querySelector('[name="body"]').value = row.body;
-        popupForm.querySelector('[name="surface"]').value = row.surface;
-        popupForm.querySelector('[name="startAt"]').value = toLocal(row.startAt);
-        popupForm.querySelector('[name="endAt"]').value = toLocal(row.endAt);
-        popupForm.querySelector('[name="dismissHours"]').value = String(row.dismissHours ?? 24);
-        popupForm.querySelector('[name="enabled"]').checked = Boolean(row.enabled);
+        resetPopupForm();
+        const idInput = popupForm.querySelector('[name="id"]');
+        if (idInput instanceof HTMLInputElement) idInput.value = String(row.id);
+        const type = popupForm.querySelector(`[name="type"][value="${row.type}"]`);
+        if (type instanceof HTMLInputElement) type.checked = true;
+        const family = popupForm.querySelector(`[name="family"][value="${row.family}"]`);
+        if (family instanceof HTMLInputElement) family.checked = true;
+        const audience = Array.isArray(row.audience) ? row.audience : [];
+        popupForm.querySelectorAll('[name="audience"]').forEach((el) => {
+          if (el instanceof HTMLInputElement) el.checked = audience.includes(el.value);
+        });
+        const start = popupForm.querySelector('[name="startAt"]');
+        const end = popupForm.querySelector('[name="endAt"]');
+        const sort = popupForm.querySelector('[name="sortOrder"]');
+        const published = popupForm.querySelector(`[name="published"][value="${row.published ? '1' : '0'}"]`);
+        if (start instanceof HTMLInputElement) start.value = String(row.startAt || '');
+        if (end instanceof HTMLInputElement) end.value = String(row.endAt || '');
+        if (sort instanceof HTMLInputElement) sort.value = String(row.sortOrder ?? 0);
+        if (published instanceof HTMLInputElement) published.checked = true;
+        const content = row.content && typeof row.content === 'object' ? row.content : {};
+        const typeId = String(row.type || 'notice');
+        Object.entries(content).forEach(([key, value]) => {
+          if (key === 'bullets' && Array.isArray(value)) setField(typeId, key, value.join('\n'));
+          else if (typeof value === 'string') setField(typeId, key, value);
+        });
+        syncPopupType();
+        syncPopupAudience();
+        syncPopupLive();
         popupForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
     root.querySelectorAll('[data-popup-delete]').forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-popup-delete');
         if (!id || !window.confirm('이 팝업을 삭제할까요?')) return;
-        deletePopup(id);
-        rerender();
+        try {
+          await deleteHomePopup(id);
+          rerender();
+        } catch (err) {
+          showPopupError(err instanceof Error ? err.message : '삭제하지 못했습니다.');
+        }
+      });
+    });
+    root.querySelectorAll('[data-popup-preview]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-popup-preview');
+        const row = (peekHomePopups().rows || []).find((item) => String(item.id) === id);
+        if (!id || !row) return;
+        const audience = Array.isArray(row.audience) ? row.audience : [];
+        let hash = '#/guest';
+        if (audience.length === 1 && audience[0] === 'studyRoom') hash = '#/study-room';
+        else if (audience.length === 1 && audience[0] === 'tutor') hash = '#/tutor';
+        else if (audience.length === 1 && audience[0] === 'student') hash = '#/parent';
+        window.open(`/?popupPreviewId=${encodeURIComponent(id)}${hash}`, '_blank');
       });
     });
     root.querySelector('[data-popup-reset]')?.addEventListener('click', () => {
-      if (!(popupForm instanceof HTMLFormElement)) return;
-      popupForm.reset();
-      popupForm.querySelector('[name="id"]').value = '';
-      popupForm.querySelector('[name="dismissHours"]').value = '24';
+      resetPopupForm();
     });
-    popupForm?.addEventListener('submit', (e) => {
+    popupForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!(popupForm instanceof HTMLFormElement)) return;
-      const fd = new FormData(popupForm);
-      savePopup({
-        id: String(fd.get('id') || ''),
-        title: String(fd.get('title') || ''),
-        body: String(fd.get('body') || ''),
-        surface: String(fd.get('surface') || 'guest_home'),
-        startAt: String(fd.get('startAt') || '').replace('T', ' '),
-        endAt: String(fd.get('endAt') || '').replace('T', ' '),
-        dismissHours: Number(fd.get('dismissHours') || 24),
-        enabled: fd.get('enabled') === 'on',
+      const audience = [...popupForm.querySelectorAll('[name="audience"]')]
+        .filter((el) => el instanceof HTMLInputElement && el.checked && !el.disabled)
+        .map((el) => (el instanceof HTMLInputElement ? el.value : ''))
+        .filter(Boolean);
+      if (!audience.length) {
+        showPopupError('대상을 하나 이상 고르세요');
+        return;
+      }
+      const type = popupForm.querySelector('[name="type"]:checked')?.value || 'notice';
+      const keys =
+        type === 'event'
+          ? ['kicker', 'title', 'chip', 'body', 'period', 'note', 'cta', 'ctaHref']
+          : type === 'ad'
+            ? ['chip', 'title', 'body', 'aside', 'primary', 'primaryHref', 'secondary', 'secondaryHref']
+            : ['date', 'title', 'body', 'bullets', 'cta', 'ctaHref'];
+      const content = {};
+      keys.forEach((key) => {
+        const value = fieldValue(type, key);
+        if (!value) return;
+        if (key === 'bullets') content.bullets = value.split('\n').map((line) => line.trim()).filter(Boolean).slice(0, 4);
+        else content[key] = value;
       });
-      rerender();
+      const id = String(popupForm.querySelector('[name="id"]')?.value || '');
+      const payload = {
+        type,
+        family: popupForm.querySelector('[name="family"]:checked')?.value || 'a',
+        audience,
+        content,
+        startAt: String(popupForm.querySelector('[name="startAt"]')?.value || '') || null,
+        endAt: String(popupForm.querySelector('[name="endAt"]')?.value || '') || null,
+        published: popupForm.querySelector('[name="published"]:checked')?.value === '1' ? 1 : 0,
+        sortOrder: Number(popupForm.querySelector('[name="sortOrder"]')?.value || 0),
+      };
+      if (id) payload.id = Number(id);
+      try {
+        await saveHomePopup(payload);
+        showPopupError('');
+        rerender();
+      } catch (err) {
+        showPopupError(err instanceof Error ? err.message : '저장하지 못했습니다.');
+      }
     });
+    }
 
     root.querySelectorAll('[data-legal-form]').forEach((form) => {
       form.addEventListener('submit', (e) => {

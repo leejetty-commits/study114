@@ -198,7 +198,7 @@ export function mountHomePopup(appRoot) {
   root.innerHTML = `
     <div class="home-popup__backdrop" data-home-popup-close></div>
     <div class="home-popup__frame">
-      ${choice.mode === 'preview' ? renderSwitch(type, family) : ''}
+      ${choice.mode === 'preview' && choice.previewKind !== 'row' ? renderSwitch(type, family) : ''}
       ${renderCard(type, family, choice.content)}
     </div>`;
   appRoot.appendChild(root);

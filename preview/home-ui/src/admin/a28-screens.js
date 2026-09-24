@@ -99,15 +99,11 @@ import {
 import {
   getSiteSettings,
   saveSiteSettings,
-  listPopups,
-  savePopup,
-  deletePopup,
   getLegalDocs,
   saveLegalDoc,
   resetSiteSettingsSeed,
   JOIN_FIELD_OPTIONS,
   JOIN_ROLES,
-  POPUP_SURFACES,
   listSiteSettingsLogs,
 } from './site-settings-store.js';
 import {
@@ -179,6 +175,7 @@ import {
   sectionOwnerLabel,
   selected,
 } from './a28-screens-shared.js';
+import { peekHomePopups } from './home-popup-api.js';
 import {
   renderAddons,
   renderMarketLab,
@@ -1455,10 +1452,152 @@ function renderLogs() {
   );
 }
 
+const HOME_POPUP_TYPES = [
+  { id: 'notice', label: '공지' },
+  { id: 'event', label: '이벤트' },
+  { id: 'ad', label: '광고' },
+];
+const HOME_POPUP_FAMILIES = [
+  { id: 'a', label: 'set-a' },
+  { id: 'b', label: 'set-b' },
+];
+const HOME_POPUP_AUDIENCE = [
+  { id: 'all', label: '전체' },
+  { id: 'guest', label: '비회원' },
+  { id: 'studyRoom', label: '공부방 회원' },
+  { id: 'tutor', label: '과외쌤 회원' },
+  { id: 'student', label: '학생 회원' },
+];
+
+function homePopupTitle(row) {
+  const content = row?.content && typeof row.content === 'object' ? row.content : {};
+  return String(content.title || '').trim() || '—';
+}
+
+function homePopupAudienceLabel(audience) {
+  const list = Array.isArray(audience) ? audience : [];
+  if (!list.length) return '—';
+  return list
+    .map((id) => HOME_POPUP_AUDIENCE.find((item) => item.id === id)?.label || id)
+    .join(', ');
+}
+
+function homePopupFields(type, fields) {
+  return fields
+    .map((field) => {
+      if (field.kind === 'lines') {
+        return `<label class="sup-field" data-popup-fields="${type}"${type === 'notice' ? '' : ' style="display:none"'}><span>${esc(field.label)}</span><textarea name="${esc(field.name)}" rows="4" placeholder="한 줄에 하나, 최대 4줄"></textarea></label>`;
+      }
+      if (field.kind === 'area') {
+        return `<label class="sup-field" data-popup-fields="${type}"${type === 'notice' ? '' : ' style="display:none"'}><span>${esc(field.label)}</span><textarea name="${esc(field.name)}" rows="3"></textarea></label>`;
+      }
+      return `<label class="sup-field" data-popup-fields="${type}"${type === 'notice' ? '' : ' style="display:none"'}><span>${esc(field.label)}</span><input name="${esc(field.name)}" /></label>`;
+    })
+    .join('');
+}
+
+function renderHomePopupSettings() {
+  const { rows, loadError } = peekHomePopups();
+  const typeLabel = (id) => HOME_POPUP_TYPES.find((item) => item.id === id)?.label || id;
+  const familyLabel = (id) => HOME_POPUP_FAMILIES.find((item) => item.id === id)?.label || id;
+  const bodyRows = !rows
+    ? '<tr><td colspan="9" class="sup-empty">불러오는 중…</td></tr>'
+    : rows.length
+      ? rows
+          .map((row) => {
+            const period = row.startAt || row.endAt ? `${row.startAt || '—'} ~ ${row.endAt || '—'}` : '제한 없음';
+            const updated = String(row.updatedAt || '').replace('T', ' ').slice(0, 16);
+            return `<tr>
+              <td>${esc(typeLabel(row.type))}</td>
+              <td>${esc(familyLabel(row.family))}</td>
+              <td>${esc(homePopupTitle(row))}</td>
+              <td>${esc(homePopupAudienceLabel(row.audience))}</td>
+              <td>${esc(period)}</td>
+              <td>${row.published ? '켜짐' : '꺼짐'}</td>
+              <td>${esc(row.sortOrder)}</td>
+              <td>${esc(updated || '—')}</td>
+              <td class="sup-admin-actions">
+                <button type="button" class="btn btn--secondary btn--sm" data-popup-edit="${esc(row.id)}">수정</button>
+                <button type="button" class="btn btn--secondary btn--sm" data-popup-delete="${esc(row.id)}">삭제</button>
+                <button type="button" class="btn btn--secondary btn--sm" data-popup-preview="${esc(row.id)}">홈에서 미리보기</button>
+              </td>
+            </tr>`;
+          })
+          .join('')
+      : '<tr><td colspan="9" class="sup-empty">팝업 없음</td></tr>';
+  const typeRadios = HOME_POPUP_TYPES.map(
+    (item, index) =>
+      `<label class="a28-check"><input type="radio" name="type" value="${item.id}"${index === 0 ? ' checked' : ''} /> ${esc(item.label)}</label>`,
+  ).join('');
+  const familyRadios = HOME_POPUP_FAMILIES.map(
+    (item, index) =>
+      `<label class="a28-check"><input type="radio" name="family" value="${item.id}"${index === 0 ? ' checked' : ''} /> ${esc(item.label)}</label>`,
+  ).join('');
+  const audienceChecks = HOME_POPUP_AUDIENCE.map(
+    (item) =>
+      `<label class="a28-check"><input type="checkbox" name="audience" value="${item.id}" /> ${esc(item.label)}</label>`,
+  ).join('');
+  const noticeFields = homePopupFields('notice', [
+    { name: 'date', label: '날짜 문구' },
+    { name: 'title', label: '제목' },
+    { name: 'body', label: '본문', kind: 'area' },
+    { name: 'bullets', label: '목록', kind: 'lines' },
+    { name: 'cta', label: '버튼 글자' },
+    { name: 'ctaHref', label: '버튼 링크' },
+  ]);
+  const eventFields = homePopupFields('event', [
+    { name: 'kicker', label: '윗글(작은 제목)' },
+    { name: 'title', label: '제목' },
+    { name: 'chip', label: '표시칩' },
+    { name: 'body', label: '본문', kind: 'area' },
+    { name: 'period', label: '기간 문구' },
+    { name: 'note', label: '안내 문구' },
+    { name: 'cta', label: '버튼 글자' },
+    { name: 'ctaHref', label: '버튼 링크' },
+  ]);
+  const adFields = homePopupFields('ad', [
+    { name: 'chip', label: '표시칩' },
+    { name: 'title', label: '제목' },
+    { name: 'body', label: '본문', kind: 'area' },
+    { name: 'aside', label: '옆 패널 문구' },
+    { name: 'primary', label: '주 버튼 글자' },
+    { name: 'primaryHref', label: '주 버튼 링크' },
+    { name: 'secondary', label: '보조 버튼 글자' },
+    { name: 'secondaryHref', label: '보조 버튼 링크' },
+  ]);
+  return `
+    <p class="a28-help" data-home-popup-error${loadError ? '' : ' hidden'}>${esc(loadError)}</p>
+    <table class="sup-admin-table">
+      <thead><tr><th>유형</th><th>모양</th><th>제목</th><th>대상</th><th>기간</th><th>공개</th><th>순서</th><th>수정일</th><th></th></tr></thead>
+      <tbody>${bodyRows}</tbody>
+    </table>
+    <form class="sup-admin-form" data-popup-form>
+      <h4 class="sup-admin-form__title">팝업 작성 · 수정</h4>
+      <p class="a28-help" data-home-popup-form-error hidden></p>
+      <input type="hidden" name="id" value="" />
+      <div class="a28-checkbox-grid"><span>유형</span>${typeRadios}</div>
+      <div class="a28-checkbox-grid"><span>모양</span>${familyRadios}</div>
+      <div class="a28-checkbox-grid" data-popup-audience><span>대상</span>${audienceChecks}</div>
+      <label class="sup-field"><span>시작일</span><input name="startAt" type="date" /></label>
+      <label class="sup-field"><span>종료일</span><input name="endAt" type="date" /></label>
+      <div class="a28-checkbox-grid">
+        <span>공개 표시</span>
+        <label class="a28-check"><input type="radio" name="published" value="0" checked /> 꺼짐</label>
+        <label class="a28-check"><input type="radio" name="published" value="1" /> 켜짐</label>
+      </div>
+      <p class="a28-help" data-home-popup-live hidden>저장하면 대상 홈에 바로 보입니다(동시 1개, 공지&gt;이벤트&gt;광고).</p>
+      <label class="sup-field"><span>순서</span><input name="sortOrder" type="number" value="0" /></label>
+      ${noticeFields}${eventFields}${adFields}
+      <div class="sup-admin-form__actions">
+        <button type="submit" class="btn btn--primary btn--sm">저장</button>
+        <button type="button" class="btn btn--secondary btn--sm" data-popup-reset>취소</button>
+      </div>
+    </form>`;
+}
+
 /** @param {string} [section] basic|join|notify|popups|legal */
 function renderSettings(section = 'basic') {
   const s = getSiteSettings();
-  const popups = listPopups();
   const legal = getLegalDocs();
   const settingsLogs = listSiteSettingsLogs().slice(0, 8);
 
@@ -1474,23 +1613,6 @@ function renderSettings(section = 'basic') {
     return `<tr><th scope="row">${esc(role.label)}</th>${cells}</tr>`;
   }).join('');
 
-  const popupRows = popups
-    .map(
-      (p) => `<tr>
-        <td>${esc(p.title)}</td>
-        <td>${esc(POPUP_SURFACES.find((x) => x.id === p.surface)?.label || p.surface)}</td>
-        <td>${p.enabled ? '사용' : '끔'}</td>
-        <td>${esc(p.startAt || '—')} ~ ${esc(p.endAt || '—')}</td>
-        <td>${p.dismissHours}시간</td>
-        <td class="sup-admin-actions">
-          <button type="button" class="btn btn--secondary btn--sm" data-popup-edit="${esc(p.id)}">수정</button>
-          <button type="button" class="btn btn--secondary btn--sm" data-popup-delete="${esc(p.id)}">삭제</button>
-        </td>
-      </tr>`,
-    )
-    .join('');
-
-  const surfaceOpts = POPUP_SURFACES.map((x) => `<option value="${esc(x.id)}">${esc(x.label)}</option>`).join('');
   const logRows = settingsLogs
     .map(
       (l) =>
@@ -1509,7 +1631,7 @@ function renderSettings(section = 'basic') {
     basic: '서비스 이름·연락처·점검 안내·게스트 배너를 정합니다. 저장하면 회원 화면에 바로 반영됩니다.',
     join: '회원가입·공부방/과외 등록 접수를 켜고, 역할별 안내 항목을 표시/강조합니다. (승인 대기열이 아닙니다)',
     notify: '새 신고·문의·등록이 오면 받을 이메일과 알림 사용 여부를 고릅니다.',
-    popups: '기간과 노출 화면을 정해 안내 팝업을 띄웁니다. 「다시 안 보기」시간은 시간 단위입니다.',
+    popups: '홈 팝업을 만들고 공개하면 대상 홈에 한 건만 뜹니다. 공지, 이벤트, 광고 순입니다.',
     legal: '이용약관·개인정보처리방침 글을 고칩니다. 자주 묻는 질문·가이드는 게시판관리 메뉴를 쓰세요.',
   };
 
@@ -1564,26 +1686,7 @@ function renderSettings(section = 'basic') {
          <button type="submit" class="btn btn--primary btn--sm">알림 설정 저장</button>
        </form>`;
   } else if (section === 'popups') {
-    body = `
-       <table class="sup-admin-table">
-         <thead><tr><th>제목</th><th>노출</th><th>상태</th><th>기간</th><th>다시 안 보기</th><th></th></tr></thead>
-         <tbody>${popupRows || '<tr><td colspan="6" class="sup-empty">팝업 없음</td></tr>'}</tbody>
-       </table>
-       <form class="sup-admin-form" data-popup-form>
-         <h4 class="sup-admin-form__title">팝업 작성 · 수정</h4>
-         <input type="hidden" name="id" value="" />
-         <label class="sup-field"><span>제목</span><input name="title" required /></label>
-         <label class="sup-field"><span>본문</span><textarea name="body" rows="3" required></textarea></label>
-         <label class="sup-field"><span>어디에 보일까</span><select name="surface">${surfaceOpts}</select></label>
-         <label class="sup-field"><span>시작</span><input name="startAt" type="datetime-local" /></label>
-         <label class="sup-field"><span>종료</span><input name="endAt" type="datetime-local" /></label>
-         <label class="sup-field"><span>다시 안 보기 (시간)</span><input name="dismissHours" type="number" min="0" value="24" /></label>
-         <label class="a28-check"><input type="checkbox" name="enabled" /> 사용</label>
-         <div class="sup-admin-form__actions">
-           <button type="submit" class="btn btn--primary btn--sm">팝업 저장</button>
-           <button type="button" class="btn btn--secondary btn--sm" data-popup-reset>새 팝업</button>
-         </div>
-       </form>`;
+    body = renderHomePopupSettings();
   } else {
     body = `
        <form class="sup-admin-form" data-legal-form="terms">
