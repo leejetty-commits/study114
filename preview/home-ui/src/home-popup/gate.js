@@ -4,7 +4,6 @@
  */
 import { isAdminUser } from '../auth-session.js';
 import { getCurrentScreen } from '../state.js';
-import { HOME_POPUPS } from './content.js';
 import { pickHomePopup, seoulToday } from './engine.js';
 
 const HOME_SCREENS = new Set(['guest', 'parent', 'studyRoom', 'tutor']);
@@ -13,6 +12,47 @@ const HIDE_PREFIX = 'udg.homePopup.hide.';
 
 /** @type {{ path: string, type: string, family: 'a' | 'b', id: string | null } | null} */
 let closedView = null;
+
+/** @type {Array<Record<string, unknown>> | null} */
+let publicCatalog = null;
+/** @type {Promise<void> | null} */
+let catalogPromise = null;
+/** @type {HTMLElement | null} */
+let pendingRoot = null;
+/** @type {((root: HTMLElement | null) => void) | null} */
+let onCatalogReady = null;
+
+/** @param {(root: HTMLElement | null) => void} fn */
+export function setHomePopupRemount(fn) {
+  onCatalogReady = fn;
+}
+
+/** @param {HTMLElement | null} root */
+export function noteHomePopupRoot(root) {
+  pendingRoot = root;
+}
+
+function loadPublicCatalog() {
+  if (catalogPromise) return catalogPromise;
+  catalogPromise = fetch('/api/home-popups.php', { credentials: 'same-origin' })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      const rows = data && data.ok === true && Array.isArray(data.popups) ? data.popups : [];
+      publicCatalog = rows.map((row) => ({
+        ...row,
+        id: String(row.id),
+        published: true,
+      }));
+    })
+    .catch(() => {
+      publicCatalog = [];
+    })
+    .then(() => {
+      const root = pendingRoot;
+      if (onCatalogReady) onCatalogReady(root);
+    });
+  return catalogPromise;
+}
 
 export function homePopupPath() {
   const hash = window.location.hash.slice(1) || '/guest';
@@ -89,17 +129,23 @@ export function resolveHomePopup() {
     const choice = { mode: 'preview', type: readPopupDemo(), family: readPopupFamily(), id: null };
     return isChoiceClosed(choice) ? null : choice;
   }
-  const picked = pickHomePopup(HOME_POPUPS, {
+  if (publicCatalog === null) {
+    loadPublicCatalog();
+    return null;
+  }
+  const picked = pickHomePopup(publicCatalog, {
     surface: audienceSurface(),
     today: seoulToday(),
     isHidden: isPopupHiddenToday,
   });
   if (!picked) return null;
+  const content = picked.content && typeof picked.content === 'object' ? picked.content : {};
   const choice = {
     mode: 'public',
     type: String(picked.type),
     family: picked.family === 'b' ? 'b' : 'a',
     id: String(picked.id),
+    content,
   };
   return isChoiceClosed(choice) ? null : choice;
 }

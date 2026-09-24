@@ -2,7 +2,9 @@ import { LOCKUP_SRC, POPUP_FAMILIES, POPUP_TYPES, SET_A, WORDMARK_SRC } from './
 import {
   hidePopupForToday,
   markHomePopupClosed,
+  noteHomePopupRoot,
   resolveHomePopup,
+  setHomePopupRemount,
   writePopupDemo,
   writePopupFamily,
 } from './gate.js';
@@ -111,10 +113,29 @@ function renderAd(card, family) {
     </article>`;
 }
 
-function renderCard(type, family) {
-  if (type === 'event') return renderEvent(SET_A.event, family);
-  if (type === 'ad') return renderAd(SET_A.ad, family);
-  return renderNotice(SET_A.notice, family);
+function fillCard(type, content) {
+  const base = SET_A[type] || SET_A.notice;
+  const src = content && typeof content === 'object' ? content : {};
+  const card = { ...base };
+  for (const key of Object.keys(base)) {
+    if (key === 'id' || key === 'bullets') continue;
+    const value = src[key];
+    if (typeof value === 'string' && value.trim() !== '') card[key] = value;
+  }
+  if (Array.isArray(base.bullets)) {
+    const lines = Array.isArray(src.bullets)
+      ? src.bullets.filter((line) => String(line ?? '').trim() !== '')
+      : [];
+    card.bullets = lines.length ? lines : base.bullets;
+  }
+  return card;
+}
+
+function renderCard(type, family, content) {
+  const card = fillCard(type, content);
+  if (type === 'event') return renderEvent(card, family);
+  if (type === 'ad') return renderAd(card, family);
+  return renderNotice(card, family);
 }
 
 function renderSwitch(type, family) {
@@ -155,7 +176,12 @@ function closePopup(choice, root) {
 /**
  * @param {HTMLElement | null} appRoot
  */
+setHomePopupRemount((root) => {
+  mountHomePopup(root);
+});
+
 export function mountHomePopup(appRoot) {
+  noteHomePopupRoot(appRoot || null);
   document.querySelectorAll('[data-home-popup]').forEach((el) => el.remove());
   detachKey();
   if (!appRoot) return;
@@ -173,7 +199,7 @@ export function mountHomePopup(appRoot) {
     <div class="home-popup__backdrop" data-home-popup-close></div>
     <div class="home-popup__frame">
       ${choice.mode === 'preview' ? renderSwitch(type, family) : ''}
-      ${renderCard(type, family)}
+      ${renderCard(type, family, choice.content)}
     </div>`;
   appRoot.appendChild(root);
 
