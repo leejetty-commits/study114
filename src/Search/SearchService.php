@@ -67,6 +67,31 @@ final class SearchService
     private const SORT_STUDENT = ['latest', 'budget_asc', 'budget_desc', 'price_asc', 'price_desc'];
 
     /**
+     * 게스트 지도 박스 실수.
+     * 손님 검색 LIST와 같은 필터의 total만 사용한다. 유료 티어만 세지 않는다.
+     * 축은 고정: 공부방=대치동, 과외쌤=서울시, 학생=서울시.
+     *
+     * @return array{studyRooms: int, tutors: int, studentRequests: int, axes: array{room: string, tutor: string, student: string}}
+     */
+    public function guestAxisCounts(): array
+    {
+        $room = $this->search('room', ['region_label' => '대치동'], 1, 1);
+        $tutor = $this->search('tutor', ['tutor_region_label' => '서울시'], 1, 1);
+        $student = $this->search('student', ['preferred_region_label' => '서울시'], 1, 1);
+
+        return [
+            'studyRooms' => (int) $room['total'],
+            'tutors' => (int) $tutor['total'],
+            'studentRequests' => (int) $student['total'],
+            'axes' => [
+                'room' => '대치동',
+                'tutor' => '서울시',
+                'student' => '서울시',
+            ],
+        ];
+    }
+
+    /**
      * @param array<string, mixed> $filters
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>, sort: string}
      */

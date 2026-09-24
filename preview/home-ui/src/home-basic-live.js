@@ -54,6 +54,7 @@ function mapRoom(item) {
     latitude: item.latitude ?? null,
     longitude: item.longitude ?? null,
     exposure_tier: item.exposure_tier || 'basic',
+    position_sku: item.position_sku || (item.exposure_tier === 'prime' || item.exposure_tier === 'pick' ? item.exposure_tier : ''),
     image_path: item.image_path || item.image_path_basic || '',
     image_path_basic: item.image_path_basic || '',
     image_path_prime: item.image_path_prime || '',
@@ -89,6 +90,7 @@ function mapTutor(item) {
     profile_status: 'published',
     compare_eligible: true,
     exposure_tier: item.exposure_tier || 'basic',
+    position_sku: item.position_sku || (item.exposure_tier === 'prime' || item.exposure_tier === 'pick' ? item.exposure_tier : ''),
     _realDb: true,
   };
   tutor.badges = tutorBadges(tutor);

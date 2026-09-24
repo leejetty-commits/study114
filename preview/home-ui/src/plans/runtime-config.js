@@ -205,11 +205,38 @@ function mapServerProduct(serverProduct) {
   };
 }
 
+/** 게스트 홈 렌더 동안에만. 로그인 홈 기본값은 그대로다. */
+let guestRuntimeOverride = false;
+
+/**
+ * @template T
+ * @param {() => T} run
+ * @returns {T}
+ */
+export function withGuestPlanOverride(run) {
+  const prev = guestRuntimeOverride;
+  guestRuntimeOverride = true;
+  try {
+    return run();
+  } finally {
+    guestRuntimeOverride = prev;
+  }
+}
+
 /** @returns {typeof PLAN_RUNTIME_DEFAULTS} */
 export function getPlanRuntimeSettings() {
   const state = getCatalogState();
   const expire = state?.memo_pack_expire_days || PLAN_RUNTIME_DEFAULTS.credit_expire_days;
-  return { ...PLAN_RUNTIME_DEFAULTS, credit_expire_days: expire };
+  const base = { ...PLAN_RUNTIME_DEFAULTS, credit_expire_days: expire };
+  if (!guestRuntimeOverride) return base;
+  return {
+    ...base,
+    demo_prime_filled: 0,
+    demo_prime_tutor_pool: 0,
+    basic_page_size: 10,
+    pick_set_size: 10,
+    pick_page_size: 10,
+  };
 }
 
 /** @param {string} key */

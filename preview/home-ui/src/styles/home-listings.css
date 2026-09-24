@@ -923,10 +923,10 @@
 }
 
 .expo-media--prime {
-  /* 가로폭 유지 · aspect-ratio 교체 금지 · media box height = 16:9×1.3 */
+  /* cqw는 첫 프레임 컨테이너 폭이 0이라 높이가 붕괴한다. 16:9×1.3 = 160/117 */
   width: 100%;
-  aspect-ratio: auto;
-  height: calc(100cqw * 9 / 16 * var(--expo-prime-media-height-scale, 1.3));
+  aspect-ratio: 160 / 117;
+  height: auto;
   margin-bottom: 0;
   border-radius: 0.25rem;
 }
@@ -1080,10 +1080,28 @@
   width: 100%;
 }
 
-/* Prime media: wrap width → cqw. 실높이만 16:9×scale */
-.expo-card--prime > .expo-media-wrap {
-  container-type: inline-size;
-  container-name: expo-prime-media;
+.expo-sample-stamp {
+  position: absolute;
+  top: 0.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.2rem;
+  background: #111827;
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.expo-hcard__media-wrap {
+  position: relative;
+}
+
+.expo-hcard__media-wrap > .expo-sample-stamp {
+  left: 0.15rem;
+  transform: none;
 }
 
 .expo-media-overlay {

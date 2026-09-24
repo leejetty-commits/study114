@@ -58,13 +58,6 @@ export const REGIONS = {
   },
 };
 
-export const GUEST_REGION_STATS = {
-  studyRooms: 47,
-  tutors: 62,
-  studentRequests: 128,
-  updated: '2026-06-01',
-};
-
 export const DUMMY_STUDENTS = [
   { id: 1, name: '김민준', grade: '초5', school: '대치초', parent: '김우동' },
   { id: 2, name: '김서연', grade: '중1', school: '대치중', parent: '김우동' },

@@ -10,18 +10,19 @@ import {
 import { bindDetailDecisionEvents } from '../detail-decision/index.js';
 import { isLoggedIn } from '../auth-session.js';
 import { hydrateHomeBasicFromSearch, isHomeBasicLive } from '../home-basic-live.js';
+import { withGuestPlanOverride } from '../plans/runtime-config.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
 
 let homeBasicHydrateStarted = false;
 
 export function renderGuest() {
   const loggedIn = isLoggedIn();
-  const content = `
+  const content = withGuestPlanOverride(() => `
     ${renderGuestTempNotice()}
     ${renderGuestHero()}
     ${renderGuestExposureBoxes()}
     ${renderGuestBrowseLists()}
-  `;
+  `);
 
   return renderHomeShell('guest', content, {
     showAuth: !loggedIn,

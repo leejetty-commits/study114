@@ -8,6 +8,7 @@ import {
   renderPickPaginatedBlock,
   renderBasicListBlock,
   renderBrowseList,
+  renderGuestVacantBasicList,
   getPrimeOccupied,
   getPrimeCandidatePool,
 } from '@home-ui/exposure-render.js';
@@ -131,6 +132,14 @@ function renderProviderFlatResults(
   const sort = readListSortFromHash(kind, { mode: 'search' });
   const ordered = opts.serverSorted ? items : sortListItems(items, kind, sort);
 
+  if (opts.guest === true && mode === 'region') {
+    return `
+    <div class="content-section search-flat-results" data-surface="search-flat" data-search-phase="region" data-guest-landing="1">
+      ${renderSectionTitleBar({ ...basicHeading, locationLabel: loc })}
+      ${renderGuestVacantBasicList(kind)}
+    </div>`;
+  }
+
   if (!items.length) {
     return `<div class="search-flat-results search-flat-results--empty" data-surface="search-flat" data-search-phase="${mode}">${renderSearchZeroState(tab, mode)}</div>`;
   }
@@ -176,6 +185,14 @@ function renderProviderFlatResults(
  * @param {'region'|'search'} [mode]
  */
 function renderStudentTierResults(items, opts = {}, sectionTag = '', mode = 'search') {
+  if (opts.guest === true && mode === 'region') {
+    return `
+      <div class="content-section search-tier-results" data-surface="student-blind" data-guest-landing="1">
+        ${renderSectionTitleBar({ ...SECTION_HEADINGS.students, locationLabel: sectionTag || '' })}
+        ${renderGuestVacantBasicList('student')}
+      </div>`;
+  }
+
   if (!items.length) {
     const place = String(sectionTag || '').trim();
     const promoEmpty =

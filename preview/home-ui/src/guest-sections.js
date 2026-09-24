@@ -2,16 +2,13 @@ import {
   AUTH_UI_BASE,
   GUEST_DEMO_REGION,
   GUEST_DEMO_REGIONS_BY_AXIS,
-  GUEST_REGION_STATS,
 } from './data.js';
 import { SEARCH_UI_URL } from './nav-config.js';
-import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS, EXPOSURE_STUDENTS } from './exposure-data.js';
 import {
   renderPrimeSlotGrid,
   renderGuestPaginatedListBlock,
   renderPickPaginatedBlock,
   getPrimeOccupied,
-  getPrimeCandidatePool,
 } from './exposure-render.js';
 import { bindGuestListPagination } from './list-pagination.js';
 import { bindListSortControls } from '../../shared/list-sort.js';
@@ -44,7 +41,6 @@ export function renderGuestTempNotice() {
 }
 
 export function renderGuestHero() {
-  const s = GUEST_REGION_STATS;
   const r = GUEST_DEMO_REGION;
   return `
     <section class="hero-map hero-map--float-rail" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${r.full}" data-allow-fallback="true">
@@ -60,9 +56,9 @@ export function renderGuestHero() {
           ${r.dong} 공부방·과외쌤 찾기
         </a>
         <dl class="hero-map__stats">
-          <div><dt>공부방</dt><dd>${s.studyRooms}</dd></div>
-          <div><dt>과외쌤</dt><dd>${s.tutors}</dd></div>
-          <div><dt>학생</dt><dd>${s.studentRequests}</dd></div>
+          <div><dt>공부방</dt><dd data-guest-axis-count="studyRooms">—</dd></div>
+          <div><dt>과외쌤</dt><dd data-guest-axis-count="tutors">—</dd></div>
+          <div><dt>학생</dt><dd data-guest-axis-count="studentRequests">—</dd></div>
         </dl>
       </aside>
     </section>
@@ -70,12 +66,14 @@ export function renderGuestHero() {
 }
 
 function guestHeroMapItems() {
-  return EXPOSURE_STUDY_ROOMS.filter((item) => !item.profile_status || item.profile_status !== 'hidden').slice(0, 12);
+  return getHomeBasicPool('study_room')
+    .filter((item) => item.latitude != null && item.longitude != null)
+    .slice(0, 12);
 }
 
 function renderStudyRoomPrimePick() {
-  const pool = EXPOSURE_STUDY_ROOMS;
-  const guestOpts = { guest: true };
+  const pool = getHomeBasicPool('study_room');
+  const guestOpts = { guest: true, vacantSamples: true };
   const occupied = getPrimeOccupied(pool);
   const roomLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.room.full, 'room');
   return `
@@ -97,16 +95,19 @@ function renderStudyRoomBasicList() {
     'study_room',
     'study_room',
     { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel },
-    EXPOSURE_STUDY_ROOMS,
+    getHomeBasicPool('study_room'),
     { guest: true },
   );
 }
 
+function guestPaid(pool, sku) {
+  return pool.filter((item) => item && (item.position_sku === sku || item.exposure_tier === sku));
+}
+
 function renderTutorPrimePick() {
-  const pool = EXPOSURE_TUTORS;
+  const pool = getHomeBasicPool('tutor');
   const guestOpts = { guest: true };
-  /** 시 단위 후보 풀 전체 — Pick/Basic 제외·Prime 회전·페이지에 동일 사용 */
-  const occupied = getPrimeCandidatePool('tutor', pool);
+  const occupied = guestPaid(pool, 'prime');
   const tutorRegion = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.tutor.full, 'tutor');
   return `
     <div class="content-section content-section--blue">
@@ -115,6 +116,7 @@ function renderTutorPrimePick() {
       ${renderPrimeSlotGrid('tutor', occupied, { ...guestOpts, listId: 'prime_tutor' })}
       ${renderPickPaginatedBlock('tutor', 'pick_tutor', { ...SECTION_HEADINGS.pickTutor, locationLabel: tutorRegion }, pool, {
         ...guestOpts,
+        vacantSamples: true,
         primeOccupied: occupied,
       })}
     </div>
@@ -123,12 +125,12 @@ function renderTutorPrimePick() {
 
 function renderTutorBasicList() {
   const tutorLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.tutor.full, 'tutor');
-  const occupied = getPrimeCandidatePool('tutor', EXPOSURE_TUTORS);
+  const occupied = guestPaid(getHomeBasicPool('tutor'), 'prime');
   return renderGuestPaginatedListBlock(
     'tutor',
     'tutor',
     { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel },
-    EXPOSURE_TUTORS,
+    getHomeBasicPool('tutor'),
     { guest: true, primeOccupied: occupied },
   );
 }
@@ -158,11 +160,11 @@ export function renderGuestBrowseLists() {
   return `
     ${loadingHint}
     <section class="guest-browse-lists" aria-label="우동공과 리스트">
-      ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel }, rooms, { guest, serverSorted: live })}
-      ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel }, tutors, { guest, serverSorted: live })}
+      ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel }, rooms, { guest, vacantSamples: guest, serverSorted: live })}
+      ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel }, tutors, { guest, vacantSamples: guest, serverSorted: live })}
     </section>
     <section class="guest-browse-lists guest-browse-lists--students" aria-label="학생 학습 의뢰">
-      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', locationLabel: studentLabel }, students, { guest, serverSorted: live })}
+      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', locationLabel: studentLabel }, students, { guest, vacantSamples: guest, serverSorted: live })}
     </section>
   `;
 }
@@ -206,6 +208,25 @@ export function renderGuestStudyAndTutorSections() {
   return `${renderGuestExposureBoxes()}${renderGuestBrowseLists()}`;
 }
 
+/** 실패해도 더미 숫자를 넣지 않는다. */
+export async function hydrateGuestRegionStats(root) {
+  try {
+    const res = await fetch('/api/search/region-stats.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.ok !== true) return;
+    for (const key of ['studyRooms', 'tutors', 'studentRequests']) {
+      const el = root.querySelector(`[data-guest-axis-count="${key}"]`);
+      if (el && Number.isFinite(Number(data[key]))) el.textContent = String(data[key]);
+    }
+  } catch {
+    /* 대시 유지 */
+  }
+}
+
 export function bindGuestSectionEvents(root, rerender) {
   if (rerender) bindGuestListPagination(root, rerender);
   if (rerender) {
@@ -230,6 +251,7 @@ export function bindGuestSectionEvents(root, rerender) {
   bindStudyRoomMapSection(root, guestHeroMapItems(), {
     regionLabel: GUEST_DEMO_REGION.full,
   });
+  hydrateGuestRegionStats(root);
 
   root.querySelectorAll('.item-actions__btn').forEach((btn) => {
     btn.addEventListener('click', (e) => e.stopPropagation());
