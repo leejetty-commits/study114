@@ -560,18 +560,19 @@ final class SearchService
         } elseif ($regionLabel = $this->stringFilter($filters, 'tutor_region_label')) {
             $token = $this->regionLabelToken($regionLabel);
             if ($token !== '') {
+                $like = '%' . $token . '%';
+                $clauses = [];
+                foreach (['sido_name', 'sigungu_name', 'dong_name', 'label'] as $i => $col) {
+                    $key = 'tutor_region_like_a' . $i;
+                    $params[$key] = $like;
+                    $clauses[] = "r_tr.{$col} LIKE :{$key}";
+                }
                 $where[] = 'EXISTS (
                     SELECT 1 FROM tutor_regions tr
                     INNER JOIN regions r_tr ON r_tr.id = tr.region_id
                     WHERE tr.tutor_id = t.id
-                      AND (
-                        r_tr.sido_name LIKE :tutor_region_like
-                        OR r_tr.sigungu_name LIKE :tutor_region_like
-                        OR r_tr.dong_name LIKE :tutor_region_like
-                        OR r_tr.label LIKE :tutor_region_like
-                      )
+                      AND (' . implode(' OR ', $clauses) . ')
                 )';
-                $params['tutor_region_like'] = '%' . $token . '%';
             }
         }
 
@@ -778,24 +779,26 @@ final class SearchService
             $token = $this->regionLabelToken($regionLabel);
             if ($token !== '') {
                 $like = '%' . $token . '%';
-                $params['preferred_region_like_ps'] = $like;
-                $params['preferred_region_like_pt'] = $like;
+                $psClauses = [];
+                foreach (['dong_name', 'sigungu_name', 'sido_name'] as $i => $col) {
+                    $key = 'preferred_region_like_ps_a' . $i;
+                    $params[$key] = $like;
+                    $psClauses[] = "r_ps.{$col} LIKE :{$key}";
+                }
+                $ptClauses = [];
+                foreach (['dong_name', 'sigungu_name', 'sido_name'] as $i => $col) {
+                    $key = 'preferred_region_like_pt_a' . $i;
+                    $params[$key] = $like;
+                    $ptClauses[] = "r_pt.{$col} LIKE :{$key}";
+                }
                 $where[] = '(EXISTS (
                     SELECT 1 FROM regions r_ps
                     WHERE r_ps.id = s.preferred_studyroom_region_id
-                      AND (
-                        r_ps.dong_name LIKE :preferred_region_like_ps
-                        OR r_ps.sigungu_name LIKE :preferred_region_like_ps
-                        OR r_ps.sido_name LIKE :preferred_region_like_ps
-                      )
+                      AND (' . implode(' OR ', $psClauses) . ')
                 ) OR EXISTS (
                     SELECT 1 FROM regions r_pt
                     WHERE r_pt.id = s.preferred_tutor_region_id
-                      AND (
-                        r_pt.dong_name LIKE :preferred_region_like_pt
-                        OR r_pt.sigungu_name LIKE :preferred_region_like_pt
-                        OR r_pt.sido_name LIKE :preferred_region_like_pt
-                      )
+                      AND (' . implode(' OR ', $ptClauses) . ')
                 ))';
             }
         }
