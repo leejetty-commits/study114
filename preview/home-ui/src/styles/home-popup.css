@@ -54,6 +54,10 @@
   color: #9a5418;
 }
 
+.home-popup__switch-gap {
+  width: 8px;
+}
+
 .home-popup__card {
   position: relative;
   box-sizing: border-box;
@@ -305,6 +309,7 @@
 }
 
 .home-popup__event-body {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -438,4 +443,30 @@
   .home-popup__ad-aside {
     min-height: 220px;
   }
+}
+
+.home-popup__watermark {
+  position: absolute;
+  right: 18px;
+  z-index: 1;
+  height: 38px;
+  width: auto;
+  opacity: 0.11;
+  transform: rotate(-8deg);
+  pointer-events: none;
+  user-select: none;
+}
+
+.home-popup__card--notice .home-popup__watermark {
+  bottom: 86px;
+}
+
+.home-popup__event-body .home-popup__watermark {
+  right: 10px;
+  bottom: 58px;
+}
+
+.home-popup__ad-main .home-popup__watermark {
+  right: 12px;
+  bottom: 4px;
 }

@@ -1,9 +1,11 @@
-import { LOCKUP_SRC, POPUP_TYPES, SET_A } from './content.js';
+import { LOCKUP_SRC, POPUP_FAMILIES, POPUP_TYPES, SET_A, WORDMARK_SRC } from './content.js';
 import {
   markHomePopupClosed,
   readPopupDemo,
+  readPopupFamily,
   shouldShowHomePopup,
   writePopupDemo,
+  writePopupFamily,
 } from './gate.js';
 
 function esc(s) {
@@ -29,7 +31,12 @@ function closeButton() {
   return `<button type="button" class="home-popup__x" data-home-popup-close aria-label="닫기">×</button>`;
 }
 
-function renderNotice(card) {
+function watermark(family) {
+  if (family !== 'b') return '';
+  return `<img class="home-popup__watermark" src="${WORDMARK_SRC}" alt="" aria-hidden="true" />`;
+}
+
+function renderNotice(card, family) {
   const bullets = card.bullets.map((line) => `<li>${esc(line)}</li>`).join('');
   return `
     <article class="home-popup__card home-popup__card--notice" role="dialog" aria-modal="true" aria-labelledby="home-popup-title">
@@ -48,11 +55,12 @@ function renderNotice(card) {
           <button type="button" class="home-popup__text-close" data-home-popup-close>닫기</button>
         </div>
       </div>
+      ${watermark(family)}
       ${dayHide()}
     </article>`;
 }
 
-function renderEvent(card) {
+function renderEvent(card, family) {
   return `
     <article class="home-popup__card home-popup__card--event" role="dialog" aria-modal="true" aria-labelledby="home-popup-title">
       <div class="home-popup__hero">
@@ -71,12 +79,13 @@ function renderEvent(card) {
           <p class="home-popup__note">${esc(card.note)}</p>
           <a class="home-popup__cta home-popup__cta--coral" href="${esc(card.ctaHref)}">${esc(card.cta)}</a>
         </div>
+        ${watermark(family)}
         ${dayHide()}
       </div>
     </article>`;
 }
 
-function renderAd(card) {
+function renderAd(card, family) {
   const body = esc(card.body).replace(/\n/g, '<br>');
   const aside = esc(card.aside).replace(/\n/g, '<br>');
   return `
@@ -97,24 +106,30 @@ function renderAd(card) {
             <a class="home-popup__cta home-popup__cta--ghost" href="${esc(card.secondaryHref)}">${esc(card.secondary)}</a>
           </div>
         </div>
+        ${watermark(family)}
       </div>
       ${dayHide()}
     </article>`;
 }
 
-function renderCard(type) {
-  if (type === 'event') return renderEvent(SET_A.event);
-  if (type === 'ad') return renderAd(SET_A.ad);
-  return renderNotice(SET_A.notice);
+function renderCard(type, family) {
+  if (type === 'event') return renderEvent(SET_A.event, family);
+  if (type === 'ad') return renderAd(SET_A.ad, family);
+  return renderNotice(SET_A.notice, family);
 }
 
-function renderSwitch(type) {
+function renderSwitch(type, family) {
+  const families = POPUP_FAMILIES.map((item) => {
+    const pressed = item.id === family ? 'true' : 'false';
+    const current = item.id === family ? ' is-current' : '';
+    return `<button type="button" class="home-popup__switch-btn${current}" data-home-popup-family="${item.id}" aria-pressed="${pressed}">${item.label}</button>`;
+  }).join('');
   const buttons = POPUP_TYPES.map((item) => {
     const pressed = item.id === type ? 'true' : 'false';
     const current = item.id === type ? ' is-current' : '';
     return `<button type="button" class="home-popup__switch-btn${current}" data-home-popup-demo="${item.id}" aria-pressed="${pressed}">${item.label}</button>`;
   }).join('');
-  return `<div class="home-popup__switch" role="group" aria-label="팝업 유형">${buttons}</div>`;
+  return `<div class="home-popup__switch" role="group" aria-label="팝업 패밀리와 유형">${families}<span class="home-popup__switch-gap" aria-hidden="true"></span>${buttons}</div>`;
 }
 
 /** @type {((event: KeyboardEvent) => void) | null} */
@@ -141,16 +156,18 @@ export function mountHomePopup(appRoot) {
   if (!appRoot) return;
 
   const type = readPopupDemo();
+  const family = readPopupFamily();
   if (!shouldShowHomePopup(type)) return;
 
   const root = document.createElement('div');
   root.className = 'home-popup';
   root.setAttribute('data-home-popup', type);
+  root.setAttribute('data-home-popup-family', family);
   root.innerHTML = `
     <div class="home-popup__backdrop"></div>
     <div class="home-popup__frame">
-      ${renderSwitch(type)}
-      ${renderCard(type)}
+      ${renderSwitch(type, family)}
+      ${renderCard(type, family)}
     </div>`;
   appRoot.appendChild(root);
 
@@ -163,6 +180,15 @@ export function mountHomePopup(appRoot) {
       if (next !== 'notice' && next !== 'event' && next !== 'ad') return;
       if (next === type) return;
       writePopupDemo(next);
+      mountHomePopup(appRoot);
+    });
+  });
+  root.querySelectorAll('[data-home-popup-family]').forEach((el) => {
+    el.addEventListener('click', () => {
+      const next = el.getAttribute('data-home-popup-family');
+      if (next !== 'a' && next !== 'b') return;
+      if (next === family) return;
+      writePopupFamily(next);
       mountHomePopup(appRoot);
     });
   });

@@ -1,11 +1,17 @@
 /** set-a 카드 카피. 대상 엔진·API 없음. */
 
 export const LOCKUP_SRC = '/assets/brand/logo-lockup-pencil-wordmark.png';
+export const WORDMARK_SRC = '/assets/brand/logo-wordmark.png';
 
 export const POPUP_TYPES = [
   { id: 'notice', label: '공지' },
   { id: 'event', label: '이벤트' },
   { id: 'ad', label: '광고' },
+];
+
+export const POPUP_FAMILIES = [
+  { id: 'a', label: 'set-a' },
+  { id: 'b', label: 'set-b' },
 ];
 
 export const SET_A = {

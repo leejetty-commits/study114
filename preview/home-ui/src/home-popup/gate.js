@@ -7,7 +7,7 @@ import { getCurrentScreen } from '../state.js';
 
 const HOME_SCREENS = new Set(['guest', 'parent', 'studyRoom', 'tutor']);
 
-/** @type {{ path: string, type: string } | null} */
+/** @type {{ path: string, type: string, family: 'a' | 'b' } | null} */
 let closedView = null;
 
 export function homePopupPath() {
@@ -23,12 +23,16 @@ export function isHomePopupSurface() {
 /** 미리보기에서는 「오늘 하루 보지 않기」를 저장하지 않는다. 경로가 바뀌면 다시 연다. */
 export function isHomePopupClosed(type) {
   if (!closedView) return false;
-  return closedView.path === homePopupPath() && closedView.type === type;
+  return (
+    closedView.path === homePopupPath() &&
+    closedView.type === type &&
+    closedView.family === readPopupFamily()
+  );
 }
 
 /** @param {string} type */
 export function markHomePopupClosed(type) {
-  closedView = { path: homePopupPath(), type };
+  closedView = { path: homePopupPath(), type, family: readPopupFamily() };
 }
 
 export function shouldShowHomePopup(type) {
@@ -56,5 +60,18 @@ export function readPopupDemo() {
 export function writePopupDemo(type) {
   const url = new URL(window.location.href);
   url.searchParams.set('popupDemo', type);
+  window.history.replaceState(null, '', url);
+}
+
+/** 페이지 쿼리만. 해시 쿼리는 읽지도 쓰지도 않는다. 기본 a. */
+export function readPopupFamily() {
+  const raw = new URLSearchParams(window.location.search).get('popupFamily');
+  return raw === 'b' ? 'b' : 'a';
+}
+
+/** @param {'a'|'b'} family */
+export function writePopupFamily(family) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('popupFamily', family === 'b' ? 'b' : 'a');
   window.history.replaceState(null, '', url);
 }
