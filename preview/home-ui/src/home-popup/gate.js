@@ -4,10 +4,14 @@
  */
 import { isAdminUser } from '../auth-session.js';
 import { getCurrentScreen } from '../state.js';
+import { HOME_POPUPS } from './content.js';
+import { pickHomePopup, seoulToday } from './engine.js';
 
 const HOME_SCREENS = new Set(['guest', 'parent', 'studyRoom', 'tutor']);
 
-/** @type {{ path: string, type: string, family: 'a' | 'b' } | null} */
+const HIDE_PREFIX = 'udg.homePopup.hide.';
+
+/** @type {{ path: string, type: string, family: 'a' | 'b', id: string | null } | null} */
 let closedView = null;
 
 export function homePopupPath() {
@@ -20,28 +24,89 @@ export function isHomePopupSurface() {
   return HOME_SCREENS.has(getCurrentScreen());
 }
 
-/** 미리보기에서는 「오늘 하루 보지 않기」를 저장하지 않는다. 경로가 바뀌면 다시 연다. */
-export function isHomePopupClosed(type) {
-  if (!closedView) return false;
-  return (
-    closedView.path === homePopupPath() &&
-    closedView.type === type &&
-    closedView.family === readPopupFamily()
-  );
+/** 페이지 쿼리에 popupDemo가 있을 때만 관리자 미리보기. 없으면 엔진. */
+export function hasPopupDemoQuery() {
+  const raw = new URLSearchParams(window.location.search).get('popupDemo');
+  return raw === 'notice' || raw === 'event' || raw === 'ad';
 }
 
-/** @param {string} type */
-export function markHomePopupClosed(type) {
-  closedView = { path: homePopupPath(), type, family: readPopupFamily() };
+export function isHomePopupPreview() {
+  return isAdminUser() && hasPopupDemoQuery();
 }
 
-export function shouldShowHomePopup(type) {
-  return isAdminUser() && isHomePopupSurface() && !isHomePopupClosed(type);
+/** @param {string} id */
+export function isPopupHiddenToday(id) {
+  try {
+    return localStorage.getItem(HIDE_PREFIX + id) === seoulToday();
+  } catch {
+    return false;
+  }
 }
 
-/** 시안 모달이 뜰 자리에서는 납작 예약 팝업을 같이 그리지 않는다. 배너는 유지. */
+/** @param {string} id */
+export function hidePopupForToday(id) {
+  try {
+    localStorage.setItem(HIDE_PREFIX + id, seoulToday());
+  } catch {
+    /* 저장 불가 */
+  }
+}
+
+/**
+ * @param {{ type: string, family: string, id?: string | null }} choice
+ */
+function isChoiceClosed(choice) {
+  if (!closedView || closedView.path !== homePopupPath()) return false;
+  if (choice.id) return closedView.id === choice.id;
+  return closedView.type === choice.type && closedView.family === choice.family;
+}
+
+/**
+ * @param {{ type: string, family: string, id?: string | null }} choice
+ */
+export function markHomePopupClosed(choice) {
+  closedView = {
+    path: homePopupPath(),
+    type: choice.type,
+    family: choice.family,
+    id: choice.id || null,
+  };
+}
+
+/** 홈 코드. parent 홈은 학생(student) 대상. */
+function audienceSurface() {
+  const screen = getCurrentScreen();
+  if (screen === 'parent') return 'student';
+  return screen;
+}
+
+/**
+ * @returns {{ mode: 'preview' | 'public', type: string, family: 'a' | 'b', id: string | null } | null}
+ */
+export function resolveHomePopup() {
+  if (!isHomePopupSurface()) return null;
+  if (isHomePopupPreview()) {
+    const choice = { mode: 'preview', type: readPopupDemo(), family: readPopupFamily(), id: null };
+    return isChoiceClosed(choice) ? null : choice;
+  }
+  const picked = pickHomePopup(HOME_POPUPS, {
+    surface: audienceSurface(),
+    today: seoulToday(),
+    isHidden: isPopupHiddenToday,
+  });
+  if (!picked) return null;
+  const choice = {
+    mode: 'public',
+    type: String(picked.type),
+    family: picked.family === 'b' ? 'b' : 'a',
+    id: String(picked.id),
+  };
+  return isChoiceClosed(choice) ? null : choice;
+}
+
+/** 미리보기 또는 엔진이 팝업을 띄울 때 납작 팝업을 숨긴다. 배너는 유지. */
 export function shouldSuppressOpsPopup() {
-  return shouldShowHomePopup(readPopupDemo());
+  return resolveHomePopup() !== null;
 }
 
 /** `?popupDemo=` 는 해시가 아니라 페이지 쿼리. 해시 쿼리는 역할 홈 경로를 깨뜨린다. */

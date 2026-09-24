@@ -51,3 +51,40 @@ export const SET_A = {
     secondaryHref: '#/guide',
   },
 };
+
+/** 공개 카탈로그. 커밋본은 published false — 손님·회원 화면에 뜨지 않는다. 카피는 SET_A[type]. */
+export const HOME_POPUPS = [
+  {
+    id: 'hp-notice-maint',
+    type: 'notice',
+    family: 'a',
+    audience: ['all'],
+    startAt: null,
+    endAt: null,
+    published: false,
+    sortOrder: 10,
+    updatedAt: '2026-09-22T01:00:00.000Z',
+  },
+  {
+    id: 'hp-event-autumn',
+    type: 'event',
+    family: 'b',
+    audience: ['guest', 'student'],
+    startAt: '2026-09-23',
+    endAt: '2026-10-07',
+    published: false,
+    sortOrder: 20,
+    updatedAt: '2026-09-23T01:00:00.000Z',
+  },
+  {
+    id: 'hp-ad-match',
+    type: 'ad',
+    family: 'a',
+    audience: ['studyRoom', 'tutor'],
+    startAt: null,
+    endAt: null,
+    published: false,
+    sortOrder: 30,
+    updatedAt: '2026-09-24T01:00:00.000Z',
+  },
+];

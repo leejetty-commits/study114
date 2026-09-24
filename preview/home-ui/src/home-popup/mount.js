@@ -1,9 +1,8 @@
 import { LOCKUP_SRC, POPUP_FAMILIES, POPUP_TYPES, SET_A, WORDMARK_SRC } from './content.js';
 import {
+  hidePopupForToday,
   markHomePopupClosed,
-  readPopupDemo,
-  readPopupFamily,
-  shouldShowHomePopup,
+  resolveHomePopup,
   writePopupDemo,
   writePopupFamily,
 } from './gate.js';
@@ -141,9 +140,15 @@ function detachKey() {
   onKey = null;
 }
 
-function closePopup(type) {
-  markHomePopupClosed(type);
-  document.querySelector('[data-home-popup]')?.remove();
+/**
+ * @param {{ mode: 'preview' | 'public', type: string, family: 'a' | 'b', id: string | null }} choice
+ * @param {HTMLElement} root
+ */
+function closePopup(choice, root) {
+  const checked = Boolean(root.querySelector('[data-home-popup-day]')?.checked);
+  if (choice.mode === 'public' && checked && choice.id) hidePopupForToday(choice.id);
+  markHomePopupClosed(choice);
+  root.remove();
   detachKey();
 }
 
@@ -155,24 +160,25 @@ export function mountHomePopup(appRoot) {
   detachKey();
   if (!appRoot) return;
 
-  const type = readPopupDemo();
-  const family = readPopupFamily();
-  if (!shouldShowHomePopup(type)) return;
+  const choice = resolveHomePopup();
+  if (!choice) return;
+  const { type, family } = choice;
 
   const root = document.createElement('div');
   root.className = 'home-popup';
   root.setAttribute('data-home-popup', type);
   root.setAttribute('data-home-popup-family', family);
+  root.setAttribute('data-home-popup-mode', choice.mode);
   root.innerHTML = `
-    <div class="home-popup__backdrop"></div>
+    <div class="home-popup__backdrop" data-home-popup-close></div>
     <div class="home-popup__frame">
-      ${renderSwitch(type, family)}
+      ${choice.mode === 'preview' ? renderSwitch(type, family) : ''}
       ${renderCard(type, family)}
     </div>`;
   appRoot.appendChild(root);
 
   root.querySelectorAll('[data-home-popup-close]').forEach((el) => {
-    el.addEventListener('click', () => closePopup(type));
+    el.addEventListener('click', () => closePopup(choice, root));
   });
   root.querySelectorAll('[data-home-popup-demo]').forEach((el) => {
     el.addEventListener('click', () => {
@@ -195,7 +201,7 @@ export function mountHomePopup(appRoot) {
 
   onKey = (event) => {
     if (event.key !== 'Escape') return;
-    closePopup(type);
+    closePopup(choice, root);
   };
   document.addEventListener('keydown', onKey);
 }
