@@ -1,5 +1,5 @@
 /**
- * 과외지역 슬롯 UI — 광역시 단독 / 도→시 캐스케이드
+ * 과외지역 슬롯 UI — 광역시 단독 / 도→시·군 캐스케이드
  */
 
 import {
@@ -53,9 +53,9 @@ export function renderTutorRegionSlot(slot, idx, units, opts = {}) {
           </select>
         </div>
         <div class="form-group" data-city-wrap ${isProv ? '' : 'hidden'}>
-          <label class="form-label" for="${prefix}region_city_${idx}">시</label>
+          <label class="form-label" for="${prefix}region_city_${idx}">시·군</label>
           <select class="form-input" id="${prefix}region_city_${idx}" data-field="region_city" data-slot="${idx}">
-            ${isProv ? renderProvinceCityOptions(provCode, sel.cityLabel, units) : '<option value="">시 선택</option>'}
+            ${isProv ? renderProvinceCityOptions(provCode, sel.cityLabel, units) : '<option value="">시·군 선택</option>'}
           </select>
         </div>
       </div>
@@ -85,7 +85,7 @@ export function bindTutorRegionSlotEvents(root, units) {
         const prev = citySel.value;
         citySel.innerHTML = renderProvinceCityOptions(code, prev, units);
       } else if (citySel) {
-        citySel.innerHTML = '<option value="">시 선택</option>';
+        citySel.innerHTML = '<option value="">시·군 선택</option>';
       }
       const cityLabel = isProv ? citySel?.value || '' : '';
       if (hiddenId) {

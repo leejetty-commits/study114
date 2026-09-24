@@ -15,6 +15,7 @@ import {
 import { HOME_UI_BASE } from '../../shared/preview-links.js';
 import { renderSiteFooter } from '../../shared/site-footer.js';
 import { bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
+import { mailTabMustStayOnVerify } from '../../shared/email-verify-tab.js';
 
 const ROUTES = {
   '/login': 'login',
@@ -91,7 +92,14 @@ export function renderPreviewToolbar(activeScreen) {
 }
 
 export function renderAuthShell(content, options = {}) {
-  const { wide = false, showBack = false, backPath = '/login', backLabel = '뒤로', hideDefaultCard = false } = options;
+  const {
+    wide = false,
+    showBack = false,
+    backPath = '/login',
+    backLabel = '뒤로',
+    hideDefaultCard = false,
+    cardClass = '',
+  } = options;
   const loggedIn = isChromeLoggedIn();
   const header = renderSiteHeader({
     user: getChromeUser(),
@@ -122,7 +130,7 @@ export function renderAuthShell(content, options = {}) {
       <div class="home-body auth-body auth-body--no-promo">
         <div class="home-main">
           <div class="site-gate-wrap">
-            <div class="auth-shell__card panel ${wide ? 'auth-shell__card--wide' : ''}">
+            <div class="auth-shell__card panel ${wide ? 'auth-shell__card--wide' : ''}${cardClass ? ` ${cardClass}` : ''}">
               ${showBack ? `<a href="#${backPath}" class="back-link" data-nav="${backPath}">← ${backLabel}</a>` : ''}
               ${content}
             </div>
@@ -208,6 +216,11 @@ export function renderRoleBadge(role) {
 }
 
 export function bindGlobalEvents(root) {
+  if (mailTabMustStayOnVerify(getCurrentPath())) {
+    navigate('/signup/verify-email?verified=1');
+    return;
+  }
+
   root.querySelectorAll('[data-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();

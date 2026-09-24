@@ -47,14 +47,14 @@ function study114_redirect(string $path, int $code = 302): never
  * @param list<array{value: string, label: string}> $options
  * @param string|list<string>|null $selected
  */
-function study114_chip_group(string $name, array $options, string|array|null $selected = null, bool $multiple = false): string
+function study114_chip_group(string $name, array $options, string|array|null $selected = null, bool $multiple = false, bool $required = true): string
 {
     $selectedList = is_array($selected) ? $selected : ($selected !== null && $selected !== '' ? [$selected] : []);
     $type = $multiple ? 'checkbox' : 'radio';
     $html = '<div class="chip-group">';
     foreach ($options as $i => $opt) {
         $isOn = in_array($opt['value'], $selectedList, true);
-        $req = !$multiple && $i === 0 ? ' required' : '';
+        $req = $required && !$multiple && $i === 0 ? ' required' : '';
         $html .= sprintf(
             '<label class="chip"><input type="%s" name="%s%s" value="%s" class="chip__input"%s%s><span class="chip__label">%s</span></label>',
             $type,

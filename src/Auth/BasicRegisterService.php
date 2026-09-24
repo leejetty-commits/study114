@@ -72,6 +72,28 @@ final class BasicRegisterService
         return $stmt->fetchColumn() !== false;
     }
 
+    /** 같은 계정의 동시 기본등록을 한 줄로 직렬화. 스키마 변경 없음. */
+    private function lockUserRow(PDO $pdo, int $userId): void
+    {
+        $stmt = $pdo->prepare('SELECT id FROM users WHERE id = ? FOR UPDATE');
+        $stmt->execute([$userId]);
+    }
+
+    /**
+     * 이미 있으면 그 id. 두 번째 INSERT는 하지 않는다.
+     */
+    private function lockedExistingId(PDO $pdo, int $userId, string $sql): ?int
+    {
+        $this->lockUserRow($pdo, $userId);
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$userId]);
+        $id = $stmt->fetchColumn();
+        if ($id === false) {
+            return null;
+        }
+        return (int) $id;
+    }
+
     /** @return list<array{id: int, label: string}> */
     public function listRegions(): array
     {
@@ -154,58 +176,115 @@ final class BasicRegisterService
             $tutorRegionId = $this->requireExplicitRegionId($input);
         }
 
+        $gradeLevel = $this->optionalBoundedString($input, 'grade_level', 20);
+        $schoolLevel = $this->optionalEnum($input, 'school_level', [
+            'preschool', 'elementary', 'middle', 'high', 'n_su', 'general', 'other',
+        ]);
+        $subjects = $this->optionalSubjectNames($input);
+        if ($subjects !== [] && $schoolLevel === null) {
+            $schoolLevel = $this->schoolLevelFromGradeText($gradeLevel);
+        }
+        if ($subjects !== [] && $schoolLevel === null) {
+            throw new InvalidArgumentException('school_level: 학교급을 선택해 주세요.');
+        }
+        $lessonFormat = $this->optionalEnum($input, 'lesson_format', ['one_on_one', 'group']);
+        $countGroup = $this->optionalEnum($input, 'preferred_student_count_group', ['solo', 'two', 'three', 'four_plus']);
+        if ($lessonFormat === 'one_on_one') {
+            $countGroup = 'solo';
+        }
+        $tutorFee = null;
+        $studyroomFee = null;
+        if ($preferredLessonType === 'tutor') {
+            $tutorFee = $this->optionalUnsignedInt($input, 'preferred_fee_amount');
+        } else {
+            $studyroomFee = $this->optionalUnsignedInt($input, 'preferred_studyroom_fee_amount');
+        }
+        $requestSummary = $this->optionalBoundedString($input, 'request_summary', 200);
+
         $pdo = Connection::get();
         $pdo->beginTransaction();
         try {
+            $existingStudentId = $this->lockedExistingId(
+                $pdo,
+                $userId,
+                $this->columnExists($pdo, 'students', 'deleted_at')
+                    ? 'SELECT id FROM students WHERE guardian_user_id = ? AND deleted_at IS NULL ORDER BY id ASC LIMIT 1'
+                    : 'SELECT id FROM students WHERE guardian_user_id = ? ORDER BY id ASC LIMIT 1'
+            );
+            if ($existingStudentId !== null) {
+                $pdo->commit();
+                return $existingStudentId;
+            }
             $hasBasisCol = $this->columnExists($pdo, 'students', 'preferred_studyroom_region_basis');
             if ($hasBasisCol) {
                 $stmt = $pdo->prepare(
                     'INSERT INTO students (
-                        guardian_user_id, student_name, public_display_name,
+                        guardian_user_id, student_name, public_display_name, grade_level,
                         preferred_lesson_type,
                         preferred_studyroom_region_id, preferred_studyroom_complex_id,
                         preferred_studyroom_region_basis,
                         preferred_tutor_region_id,
+                        preferred_student_count_group,
+                        preferred_fee_amount, preferred_studyroom_fee_amount,
+                        lesson_format, request_summary,
                         request_summary_visibility,
                         exposure_status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
                 );
                 $stmt->execute([
                     $userId,
                     $studentName,
                     $publicName,
+                    $gradeLevel,
                     $preferredLessonType,
                     $studyroomRegionId,
                     $studyroomComplexId,
                     $studyroomBasis,
                     $tutorRegionId,
+                    $countGroup,
+                    $tutorFee,
+                    $studyroomFee,
+                    $lessonFormat,
+                    $requestSummary,
                     'private',
                     'draft',
                 ]);
             } else {
                 $stmt = $pdo->prepare(
                     'INSERT INTO students (
-                        guardian_user_id, student_name, public_display_name,
+                        guardian_user_id, student_name, public_display_name, grade_level,
                         preferred_lesson_type,
                         preferred_studyroom_region_id, preferred_studyroom_complex_id,
                         preferred_tutor_region_id,
+                        preferred_student_count_group,
+                        preferred_fee_amount, preferred_studyroom_fee_amount,
+                        lesson_format, request_summary,
                         request_summary_visibility,
                         exposure_status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
                 );
                 $stmt->execute([
                     $userId,
                     $studentName,
                     $publicName,
+                    $gradeLevel,
                     $preferredLessonType,
                     $studyroomRegionId,
                     $studyroomComplexId,
                     $tutorRegionId,
+                    $countGroup,
+                    $tutorFee,
+                    $studyroomFee,
+                    $lessonFormat,
+                    $requestSummary,
                     'private',
                     'draft',
                 ]);
             }
             $studentId = (int) $pdo->lastInsertId();
+            if ($subjects !== [] && $schoolLevel !== null) {
+                $this->insertStudentSubjects($pdo, $studentId, $subjects, $schoolLevel);
+            }
 
             $pdo->commit();
         } catch (PDOException $e) {
@@ -272,10 +351,12 @@ final class BasicRegisterService
             $existStmt = $pdo->prepare(
                 'SELECT id FROM study_rooms WHERE user_id = ? AND deleted_at IS NULL ORDER BY id ASC LIMIT 1'
             );
+            $this->lockUserRow($pdo, $userId);
             $existStmt->execute([$userId]);
             $existingId = $existStmt->fetchColumn();
             if ($existingId !== false) {
-                throw new InvalidArgumentException('공부방은 계정당 1개만 등록할 수 있습니다.');
+                $pdo->commit();
+                return (int) $existingId;
             }
 
             $hasBasisCol = $this->columnExists($pdo, 'study_rooms', 'region_basis_type');
@@ -547,6 +628,15 @@ final class BasicRegisterService
         $pdo = Connection::get();
         $pdo->beginTransaction();
         try {
+            $existingTutorId = $this->lockedExistingId(
+                $pdo,
+                $userId,
+                'SELECT id FROM tutors WHERE user_id = ? ORDER BY id ASC LIMIT 1'
+            );
+            if ($existingTutorId !== null) {
+                $pdo->commit();
+                return $existingTutorId;
+            }
             $stmt = $pdo->prepare(
                 'INSERT INTO tutors (
                     user_id, tutor_display_name, main_subject_note,
@@ -911,6 +1001,87 @@ final class BasicRegisterService
             return null;
         }
         return trim((string) $input[$key]);
+    }
+
+    /** @param array<string, mixed> $input */
+    private function optionalBoundedString(array $input, string $key, int $max): ?string
+    {
+        $value = $this->optionalString($input, $key);
+        if ($value === null) {
+            return null;
+        }
+        if (mb_strlen($value) > $max) {
+            throw new InvalidArgumentException("{$key}: {$max}자 이하로 입력해 주세요.");
+        }
+        return $value;
+    }
+
+    /** @param array<string, mixed> $input */
+    private function optionalUnsignedInt(array $input, string $key): ?int
+    {
+        if (!isset($input[$key]) || trim((string) $input[$key]) === '') {
+            return null;
+        }
+        $raw = trim((string) $input[$key]);
+        if (!preg_match('/^\d+$/', $raw)) {
+            throw new InvalidArgumentException("{$key}: 0 이상의 숫자로 입력해 주세요.");
+        }
+        $value = (int) $raw;
+        if ($value < 0 || $value > 4294967295) {
+            throw new InvalidArgumentException("{$key}: 0 이상의 숫자로 입력해 주세요.");
+        }
+        return $value;
+    }
+
+    /**
+     * 기존 입력 키 subject_names. 비어 있으면 저장하지 않는다.
+     *
+     * @param array<string, mixed> $input
+     * @return list<string>
+     */
+    private function optionalSubjectNames(array $input): array
+    {
+        $raw = trim((string) ($input['subject_names'] ?? ''));
+        if ($raw === '') {
+            return [];
+        }
+        $parts = preg_split('/[,·\/]/u', $raw) ?: [];
+        $out = [];
+        foreach ($parts as $part) {
+            $name = trim((string) $part);
+            if ($name === '') {
+                continue;
+            }
+            if (mb_strlen($name) > 50) {
+                throw new InvalidArgumentException('subject_names: 과목명을 확인해 주세요.');
+            }
+            $out[] = $name;
+        }
+        return array_values(array_unique($out));
+    }
+
+    /** grade_level 표기(중2·초5·고1·N수)에서 기존 school_level code만 읽는다. 불명확하면 null. */
+    private function schoolLevelFromGradeText(?string $gradeLevel): ?string
+    {
+        if ($gradeLevel === null || $gradeLevel === '') {
+            return null;
+        }
+        if (str_contains($gradeLevel, '미취학')) {
+            return 'preschool';
+        }
+        if (str_contains($gradeLevel, 'N수') || str_contains($gradeLevel, 'n수')) {
+            return 'n_su';
+        }
+        if (str_contains($gradeLevel, '초')) {
+            return 'elementary';
+        }
+        if (str_contains($gradeLevel, '중')) {
+            return 'middle';
+        }
+        if (str_contains($gradeLevel, '고')) {
+            return 'high';
+        }
+        return null;
     }
 
     /**

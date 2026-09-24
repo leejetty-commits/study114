@@ -1,5 +1,11 @@
 import { signupState } from '../state.js';
-import { PREFERRED_LESSON_TYPE_LABELS, PERSONAL_GENDER_OPTIONS } from '../register-enums.js';
+import {
+  PREFERRED_LESSON_TYPE_LABELS,
+  PERSONAL_GENDER_OPTIONS,
+  SCHOOL_LEVEL_OPTIONS,
+  LESSON_FORMAT_OPTIONS,
+  STUDENT_COUNT_OPTIONS,
+} from '../register-enums.js';
 import { fetchMeApi, basicRegisterApi } from '../auth-api.js';
 import { resolveAfterAuthUrl, resolveUiRoleForBasicRegister } from '../../../shared/auth-redirect.js';
 import {
@@ -11,10 +17,14 @@ import { renderAuthShell, renderStepIndicator, renderRoleBadge, bindGlobalEvents
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import { resolvePostLoginUrl } from '../../../shared/auth-redirect.js';
 import {
+  activityLabelForUnit,
   activityLabelFromRegionId,
-  buildSidoCityOptions,
-  KOREA_SIDOS,
+  KOREA_METROS,
+  KOREA_PROVINCES,
   regionIdFromActivityLabel,
+  renderProvinceCityOptions,
+  renderRegionParentOptions,
+  resolveCitySelection,
 } from '../../../shared/korea-sidos.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import {
@@ -49,26 +59,22 @@ function dbField(name) {
   return '';
 }
 
-function regionList() {
-  return signupState.regions.length > 0
-    ? signupState.regions
-    : [{ id: 1, label: '서울특별시 강남구 대치동 (지역 정보 불러오는 중)' }];
-}
-
-/** 시·도 목록 */
-function listSidoOptions() {
-  const fromApi = buildSidoCityOptions(signupState.cities || []);
-  if (fromApi.length > 0) return fromApi;
-  // cities 미응답 시 regions 라벨에서 시·도 추출
-  const byLabel = new Map();
-  regionList().forEach((r) => {
-    const sido = String(r.label || '').trim().split(/\s+/)[0];
-    if (sido && !byLabel.has(sido)) byLabel.set(sido, String(r.id));
-  });
-  return KOREA_SIDOS.map((s) => ({
-    id: byLabel.get(s.label) || '',
-    label: s.label,
-  })).filter((c) => c.id);
+/** 저장된 과외 희망지역 → 1차(광역|도)와 2차(시·군) */
+function savedTutorParent(draft) {
+  const units = getCityUnits(signupState.cities || []);
+  const byId = resolveCitySelection(draft?.region_id || '', units);
+  if (byId.parent) return byId;
+  const label = String(draft?.activity_city || '').trim();
+  const hit = units.find((u) => activityLabelForUnit(u) === label);
+  if (hit) return resolveCitySelection(hit.id, units);
+  const parts = label.split(/\s+/);
+  if (parts.length >= 2) {
+    const prov = KOREA_PROVINCES.find((p) => p.label === parts[0]);
+    if (prov) return { parent: `prov:${prov.code}`, cityLabel: parts.slice(1).join(' ') };
+  }
+  const metro = KOREA_METROS.find((m) => m.label === label);
+  if (metro) return { parent: `metro:${metro.code}`, cityLabel: metro.label };
+  return { parent: '', cityLabel: '' };
 }
 
 /** 화면 라벨(경기도 의정부시) → 시 단위 region_id. 행정동 목록은 쓰지 않는다. */
@@ -80,7 +86,7 @@ function sidoFromRegionId(regionId) {
   return activityLabelFromRegionId(regionId, getCityUnits(signupState.cities || []));
 }
 
-function renderChips(name, options, { selected = [] } = {}) {
+function renderChips(name, options, { selected = [], required = true } = {}) {
   const sel = Array.isArray(selected) ? selected : [selected].filter(Boolean);
   return `
     <div class="chip-group" data-chip-group="${name}">
@@ -88,7 +94,7 @@ function renderChips(name, options, { selected = [] } = {}) {
         .map(
           (opt) => `
         <label class="chip">
-          <input type="radio" name="${name}" value="${opt.value}" class="chip__input" ${sel.includes(opt.value) ? 'checked' : ''} required />
+          <input type="radio" name="${name}" value="${opt.value}" class="chip__input" ${sel.includes(opt.value) ? 'checked' : ''} ${required ? 'required' : ''} />
           <span class="chip__label">${esc(opt.label)}</span>
         </label>`,
         )
@@ -111,42 +117,96 @@ function renderMainSubjectOne(selected = '') {
   `;
 }
 
-/** 학생 기본정보 — Basic 카드에 먼저 보일 표시명·희망 유형·희망지역. */
+/** 학생 기본정보 9축. 저장 필드는 students·student_subject_targets 기존 컬럼만. */
 function renderStudentBasic() {
   const d = signupState.basicRegister?.student || {};
   const hope = d.preferred_lesson_type || 'tutor';
   const displayName = d.public_display_name || d.student_name || '';
+  const lessonFormat = d.lesson_format || '';
+  const count = lessonFormat === 'one_on_one' ? 'solo' : d.preferred_student_count_group || '';
+  const hopeParent = savedTutorParent(d);
+  const savedTutor = {
+    hope: hopeParent,
+    isProv: String(hopeParent.parent).startsWith('prov:'),
+    provCode: String(hopeParent.parent).startsWith('prov:') ? hopeParent.parent.slice(5) : '',
+    label: d.activity_city || sidoFromRegionId(d.region_id) || '',
+  };
   return `
-    <form data-form="basic-student" class="basic-register">
-      <div class="form-group">
+    <form data-form="basic-student" class="basic-register student-basic">
+      <div class="student-basic__field">
         <label class="form-label" for="public_display_name">표시명</label>
         <input class="form-input" id="public_display_name" name="public_display_name" value="${esc(displayName)}" maxlength="40" autocomplete="nickname" />
+        <p class="form-hint">Basic 카드에 보이는 이름입니다.</p>
       </div>
-      <div class="form-group">
+      <div class="student-basic__field">
+        <span class="form-label">학교급 / 학년</span>
+        ${renderChips('school_level', SCHOOL_LEVEL_OPTIONS, { selected: d.school_level || '', required: false })}
+        <div class="student-basic__sub">
+          <label class="form-label" for="grade_level">학년</label>
+          <input class="form-input" id="grade_level" name="grade_level" value="${esc(d.grade_level || '')}" maxlength="20" placeholder="예: 중2" />
+        </div>
+        <p class="form-hint">학교급을 고르고, 학년은 중2처럼 적습니다.</p>
+      </div>
+      <div class="student-basic__field">
         <span class="form-label form-label--required">희망 유형</span>
         ${renderChips(
           'preferred_lesson_type',
           Object.entries(PREFERRED_LESSON_TYPE_LABELS).map(([value, label]) => ({ value, label })),
           { selected: hope },
         )}
+        <p class="form-hint">과외쌤과 공부방 중 먼저 찾을 쪽을 고릅니다.</p>
       </div>
-      <div class="form-group" data-student-studyroom-block ${hope === 'study_room' ? '' : 'hidden'}>
+      <div class="student-basic__field" data-student-studyroom-block ${hope === 'study_room' ? '' : 'hidden'}>
         ${renderStudentHopeRegion(d)}
         <p class="form-hint">주소 검색으로 행정동 또는 아파트단지를 고릅니다.</p>
       </div>
-      <div class="form-group" data-student-tutor-block ${hope === 'tutor' ? '' : 'hidden'}>
-        <label class="form-label form-label--required" for="activity_city">희망지역</label>
-        <select class="form-input" name="activity_city" id="activity_city">
-          <option value="">시·도 선택</option>
-          ${listSidoOptions()
-            .map((s) => {
-              const saved = d.activity_city || sidoFromRegionId(d.region_id) || '';
-              return `<option value="${esc(s.label)}" ${s.label === saved ? 'selected' : ''}>${esc(s.label)}</option>`;
-            })
-            .join('')}
+      <div class="student-basic__field" data-student-tutor-block ${hope === 'tutor' ? '' : 'hidden'}>
+        <label class="form-label form-label--required" for="activity_parent">희망지역</label>
+        <select class="form-input" id="activity_parent" data-student-activity-parent>
+          ${renderRegionParentOptions(savedTutor.hope.parent)}
         </select>
+        <div class="student-basic__sub" data-student-city-wrap ${savedTutor.isProv ? '' : 'hidden'}>
+          <label class="form-label form-label--required" for="activity_locality">시·군</label>
+          <select class="form-input" id="activity_locality" data-student-activity-locality>
+            ${savedTutor.isProv ? renderProvinceCityOptions(savedTutor.provCode, savedTutor.hope.cityLabel, getCityUnits(signupState.cities || [])) : '<option value="">시·군 선택</option>'}
+          </select>
+        </div>
+        <input type="hidden" name="activity_city" id="activity_city" value="${esc(savedTutor.label)}" />
+        <p class="form-hint">광역시는 그 선택으로 끝납니다. 도는 시·군까지 고릅니다.</p>
       </div>
-      <div class="actions-stack">
+      <div class="student-basic__field">
+        <label class="form-label" for="subject_names">희망과목</label>
+        <select class="form-input" id="subject_names" name="subject_names">
+          ${renderMainSubjectSelect(d.subject_names || '', { emptyLabel: '과목 선택' })}
+        </select>
+        <p class="form-hint">Basic 카드에 먼저 보일 과목입니다.</p>
+      </div>
+      <div class="student-basic__field">
+        <span class="form-label">수업형태</span>
+        ${renderChips('lesson_format', LESSON_FORMAT_OPTIONS, { selected: lessonFormat, required: false })}
+        <p class="form-hint">단독과외와 그룹과외 중 고릅니다. 단독과외는 수업인원이 단독으로 저장됩니다.</p>
+      </div>
+      <div class="student-basic__field">
+        <span class="form-label">수업인원</span>
+        ${renderChips('preferred_student_count_group', STUDENT_COUNT_OPTIONS, { selected: count, required: false })}
+        <p class="form-hint">함께 수업할 인원입니다.</p>
+      </div>
+      <div class="student-basic__field" data-student-tutor-budget ${hope === 'tutor' ? '' : 'hidden'}>
+        <label class="form-label" for="preferred_fee_amount">예산</label>
+        <input class="form-input" id="preferred_fee_amount" name="preferred_fee_amount" type="number" min="0" step="1" inputmode="numeric" value="${esc(d.preferred_fee_amount ?? '')}" ${hope === 'tutor' ? '' : 'disabled'} />
+        <p class="form-hint">과외쌤 수업의 월 예산입니다.</p>
+      </div>
+      <div class="student-basic__field" data-student-studyroom-budget ${hope === 'study_room' ? '' : 'hidden'}>
+        <label class="form-label" for="preferred_studyroom_fee_amount">예산</label>
+        <input class="form-input" id="preferred_studyroom_fee_amount" name="preferred_studyroom_fee_amount" type="number" min="0" step="1" inputmode="numeric" value="${esc(d.preferred_studyroom_fee_amount ?? '')}" ${hope === 'study_room' ? '' : 'disabled'} />
+        <p class="form-hint">공부방 수업의 월 예산입니다.</p>
+      </div>
+      <div class="student-basic__field">
+        <label class="form-label" for="request_summary">한 줄 요청문</label>
+        <input class="form-input" id="request_summary" name="request_summary" maxlength="200" value="${esc(d.request_summary || '')}" />
+        <p class="form-hint">카드에 한 줄로 보일 요청입니다.</p>
+      </div>
+      <div class="student-basic__actions">
         <button type="submit" class="btn btn--primary btn--block">다음</button>
       </div>
     </form>
@@ -256,19 +316,33 @@ export function renderSignupBasic() {
         ? renderTutorBasic()
         : renderStudentBasic();
 
+  const shellOptions = {
+    wide: true,
+    showBack: true,
+    // 계정 생성 후 회원구분 재선택은 금지. OAuth 역할 미선택만 role 화면으로.
+    backPath: oauthMode ? '/signup/role?from=oauth' : '/signup/verify-email',
+    backLabel: oauthMode ? '회원 구분' : '이메일 확인',
+  };
+
+  if (role === 'student') {
+    const content = `
+      ${oauthMode ? '' : renderStepIndicator(4, 5)}
+      <h1 class="auth-heading">학생 기본정보</h1>
+      <p class="auth-subheading">학생 Basic 카드에 먼저 보일 핵심 정보를 입력합니다.</p>
+      ${body}
+    `;
+    return renderAuthShell(content, { ...shellOptions, cardClass: 'student-basic-panel' });
+  }
+
   const content = `
     ${oauthMode ? '' : renderStepIndicator(4, 5)}
     <div class="panel auth-shell__card--wide">
-      <h1 class="auth-heading">${
-        role === 'tutor' ? '과외쌤 가입정보 입력' : role === 'student' ? '학생 기본정보' : '기본등록'
-      }</h1>
+      <h1 class="auth-heading">${role === 'tutor' ? '과외쌤 가입정보 입력' : '기본등록'}</h1>
       <p class="auth-subheading mb-6">
         ${
           role === 'tutor'
             ? '과외 활동을 시작하기 위한 정보를 입력해 주세요.'
-            : role === 'student'
-              ? '학생 Basic 카드에 먼저 보일 핵심 정보를 입력합니다.'
-              : '검색·목록에 바로 공개되지 않습니다. 검색에 쓰이는 항목은 상세등록에서 완성합니다.'
+            : '검색·목록에 바로 공개되지 않습니다. 검색에 쓰이는 항목은 상세등록에서 완성합니다.'
         }
       </p>
       ${renderRoleBadge(role)}
@@ -276,13 +350,7 @@ export function renderSignupBasic() {
     </div>
   `;
 
-  return renderAuthShell(content, {
-    wide: true,
-    showBack: true,
-    // 계정 생성 후 회원구분 재선택은 금지. OAuth 역할 미선택만 role 화면으로.
-    backPath: oauthMode ? '/signup/role?from=oauth' : '/signup/verify-email',
-    backLabel: oauthMode ? '회원 구분' : '이메일 확인',
-  });
+  return renderAuthShell(content, shellOptions);
 }
 
 function collectFormData(form) {
@@ -392,13 +460,65 @@ export function bindSignupBasicEvents(root) {
     const tutor = form?.querySelector('[data-student-tutor-block]');
     study?.toggleAttribute('hidden', hope !== 'study_room');
     tutor?.toggleAttribute('hidden', hope !== 'tutor');
+    const tutorBudget = form?.querySelector('[data-student-tutor-budget]');
+    const studyBudget = form?.querySelector('[data-student-studyroom-budget]');
+    tutorBudget?.toggleAttribute('hidden', hope !== 'tutor');
+    studyBudget?.toggleAttribute('hidden', hope !== 'study_room');
+    tutorBudget?.querySelector('input')?.toggleAttribute('disabled', hope !== 'tutor');
+    studyBudget?.querySelector('input')?.toggleAttribute('disabled', hope !== 'study_room');
+  }
+
+  function syncLessonCountLock() {
+    const format = form?.querySelector('input[name="lesson_format"]:checked')?.value || '';
+    const solo = format === 'one_on_one';
+    form?.querySelectorAll('input[name="preferred_student_count_group"]').forEach((el) => {
+      const lock = solo && el.value !== 'solo';
+      el.disabled = lock;
+      if (solo && el.value === 'solo') el.checked = true;
+    });
   }
 
   form?.querySelectorAll('input[name="preferred_lesson_type"]').forEach((el) => {
     el.addEventListener('change', syncStudentHopeBlocks);
   });
+  form?.querySelectorAll('input[name="lesson_format"]').forEach((el) => {
+    el.addEventListener('change', syncLessonCountLock);
+  });
+
+  function syncStudentTutorLocality() {
+    const parentSel = form?.querySelector('[data-student-activity-parent]');
+    const citySel = form?.querySelector('[data-student-activity-locality]');
+    const wrap = form?.querySelector('[data-student-city-wrap]');
+    const hidden = form?.querySelector('#activity_city');
+    if (!parentSel || !hidden) return;
+    const parent = parentSel.value || '';
+    const isProv = parent.startsWith('prov:');
+    if (wrap) wrap.hidden = !isProv;
+    const units = getCityUnits(signupState.cities || []);
+    if (isProv && citySel) {
+      const prev = citySel.value;
+      citySel.innerHTML = renderProvinceCityOptions(parent.slice(5), prev, units);
+    }
+    const cityLabel = isProv ? citySel?.value || '' : '';
+    if (parent.startsWith('metro:')) {
+      const metro = KOREA_METROS.find((m) => m.code === parent.slice(6));
+      hidden.value = metro?.label || '';
+      return;
+    }
+    if (isProv && cityLabel) {
+      const prov = KOREA_PROVINCES.find((p) => p.code === parent.slice(5));
+      hidden.value = prov ? `${prov.label} ${cityLabel}` : '';
+      return;
+    }
+    hidden.value = '';
+  }
+
+  form?.querySelector('[data-student-activity-parent]')?.addEventListener('change', syncStudentTutorLocality);
+  form?.querySelector('[data-student-activity-locality]')?.addEventListener('change', syncStudentTutorLocality);
+  syncStudentTutorLocality();
 
   syncStudentHopeBlocks();
+  syncLessonCountLock();
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -465,7 +585,7 @@ export function bindSignupBasicEvents(root) {
         }
         const regionId = regionIdForSido(city);
         if (!regionId) {
-          alert('선택한 시에 매핑된 지역이 없습니다.');
+          alert('선택한 시·군에 매핑된 지역이 없습니다.');
           return;
         }
         data.region_id = regionId;
