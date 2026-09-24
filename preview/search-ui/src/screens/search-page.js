@@ -35,6 +35,7 @@ import {
   hydrateFindStateFromHash,
   resolveActiveRegionLabel,
   studentCurrentPlace,
+  tutorRepresentativeRegionLabel,
   refreshActiveResultItems,
   runFindSearchWithFilters,
   bootFindGpsIfNeeded,
@@ -75,7 +76,9 @@ function renderSearchForm(tab) {
   const locationText =
     tab === 'student' && previewState.role === 'study_room'
       ? studentCurrentPlace(regionLabel)
-      : regionLabel;
+      : tab === 'student' && previewState.role === 'tutor'
+        ? tutorRepresentativeRegionLabel()
+        : regionLabel;
   const locationLine =
     tab === 'room' || tab === 'tutor' || tab === 'student'
       ? `<p class="search-header__location" data-search-current-location aria-live="polite">현재위치 <strong>${esc(locationText)}</strong></p>`

@@ -226,6 +226,16 @@ export function hydrateFindStateFromHash(state, tab) {
       state.hopeTypeResolved = true;
     }
   }
+  if (viewerRoleEarly === 'tutor' && tab === 'student') {
+    const qHope = String(q.hope || q.preferred_lesson_type || '').trim();
+    if (qHope === 'study_room') {
+      state.studentHopeType = 'study_room';
+      state.hopeTypeResolved = true;
+    } else if (!state.hopeTypeResolved) {
+      state.studentHopeType = 'tutor';
+      state.hopeTypeResolved = true;
+    }
+  }
   const hope =
     state.studentHopeType === 'study_room' || state.studentHopeType === 'tutor'
       ? state.studentHopeType
@@ -247,11 +257,16 @@ export function hydrateFindStateFromHash(state, tab) {
   const viewerRole = state.role || 'guest';
   const promo =
     viewerRole === 'study_room' && (tab === 'room' || tab === 'student') ? peekStudyRoomPromo1() : '';
+  const tutorSaved =
+    viewerRole === 'tutor' && tab === 'student' ? tutorRepresentativeRegionLabel() : '';
   const urlPinned = Boolean(String(q.region || '').trim());
+  const ignoreStoredAddress =
+    tab === 'student' && (viewerRole === 'study_room' || viewerRole === 'tutor');
   const addressPinned =
     state.canonicalLocation?.source === 'address' ||
-    ((tab !== 'student' || viewerRole !== 'study_room') && storedCanon?.source === 'address');
-  const promoDefault = Boolean(promo) && !urlPinned && !addressPinned;
+    (!ignoreStoredAddress && storedCanon?.source === 'address');
+  const savedPin = promo || tutorSaved;
+  const promoDefault = Boolean(savedPin) && !urlPinned && !addressPinned;
   /** @type {Partial<import('../../shared/location-display.js').CanonicalLocation>|string|null} */
   let sessionSelected = null;
   if (q.region) {
@@ -277,12 +292,12 @@ export function hydrateFindStateFromHash(state, tab) {
     {
       sessionSelected,
       savedDefault: promoDefault
-        ? { raw: promo, source: 'saved' }
+        ? { raw: savedPin, source: 'saved' }
         : storedCanon?.source === 'saved'
           ? storedCanon
           : savedLabel || null,
       gps: null,
-      fallback: promoDefault ? promo : fallback,
+      fallback: promoDefault ? savedPin : fallback,
     },
     axis,
   );
@@ -449,6 +464,12 @@ function resolveTutorRegionIndex(state) {
   return idx >= 0 && idx < MOCK_TUTOR_REGIONS.length ? idx : 0;
 }
 
+/** 과외쌤 로그인 지역대표(활동지역1). 현재위치 문구만 이 값을 쓴다. */
+export function tutorRepresentativeRegionLabel() {
+  const primary = MOCK_TUTOR_REGIONS.find((region) => region.primary);
+  return primary?.label || MOCK_TUTOR_REGIONS[0]?.label || '';
+}
+
 /** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} role */
 function regionFeedContext(tab, state, role) {
   const ctx = { role, homeSelf: state.homeSelf === true, studyRoomHome: state.studyRoomHome === true };
@@ -463,7 +484,7 @@ function regionFeedContext(tab, state, role) {
     ctx.liveStudentItems = getStudyRoomStudentLiveItems();
     ctx.hopeType = 'study_room';
   }
-  if (tab === 'student' && role === 'tutor' && state.homeSelf !== true && !state.searchExecuted) {
+  if (tab === 'student' && role === 'tutor' && state.tutorStudentSnap === true && !state.searchExecuted) {
     ctx.promoStudent = true;
     ctx.hopeType = 'tutor';
   }
@@ -668,6 +689,17 @@ export function ensureStudentHopeType(state) {
       state.hopeTypeResolved = true;
     }
     return state.studentHopeType === 'tutor' ? 'tutor' : 'study_room';
+  }
+  if (state.role === 'tutor') {
+    const qHope = String(parseHashQuery().hope || parseHashQuery().preferred_lesson_type || '').trim();
+    if (qHope === 'study_room') {
+      state.studentHopeType = 'study_room';
+      state.hopeTypeResolved = true;
+    } else if (!state.hopeTypeResolved) {
+      state.studentHopeType = 'tutor';
+      state.hopeTypeResolved = true;
+    }
+    return state.studentHopeType === 'study_room' ? 'study_room' : 'tutor';
   }
   if (state.hopeTypeResolved && (state.studentHopeType === 'tutor' || state.studentHopeType === 'study_room')) {
     return state.studentHopeType;
@@ -1230,14 +1262,17 @@ export function renderFindResultSection(tab, state, role, options = {}) {
     }
   }
 
+  state.tutorStudentSnap = role === 'tutor' && tab === 'student' && surfaceType === 'home';
   const activeItems = refreshActiveResultItems(tab, state, role);
   let regionLabel = state.activeRegionLabel || resolveActiveRegionLabel(tab, state, role);
   if (tab === 'student' && role === 'study_room') {
     regionLabel = studentCurrentPlace(regionLabel);
   }
+  if (role === 'tutor' && tab === 'student' && surfaceType === 'search') {
+    regionLabel = tutorRepresentativeRegionLabel() || regionLabel;
+  }
   if (role === 'tutor' && surfaceType === 'home' && !state.searchExecuted) {
-    const primary = MOCK_TUTOR_REGIONS.find((region) => region.primary);
-    regionLabel = primary?.label || MOCK_TUTOR_REGIONS[0]?.label || regionLabel;
+    regionLabel = tutorRepresentativeRegionLabel() || regionLabel;
   }
 
   if (tab === 'student' && role === 'study_room' && !state.searchExecuted && state.studentDemandPending) {
