@@ -17,6 +17,7 @@ import './styles/design-system.css';
 import './styles/home-listings.css';
 import './styles/product-chrome.css';
 import './styles/home-marketing-banner.css';
+import './styles/home-popup.css';
 import './styles/plans-theme.css';
 import './styles/plans-store.css';
 import './styles/mypage-ops.css';
@@ -96,6 +97,7 @@ import { resetConcernPreviewData } from './concern/store.js';
 import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
 import { mountOpsChrome } from './site-ops-chrome.js';
+import { mountHomePopup } from './home-popup/mount.js';
 import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
 import { isAuthRedirectPending, redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, hasPendingDeepIntent, resetDeepIntentResumeFlag } from './resume-deep-intent.js';
@@ -146,6 +148,7 @@ function renderScreen() {
   if (isAdminRoute()) {
     app.innerHTML = renderAdmin();
     bindAdminEvents(app, render);
+    mountHomePopup(app);
     return;
   }
   if (isRegisterIntroRoute()) {
@@ -153,60 +156,70 @@ function renderScreen() {
     app.innerHTML = renderRegisterIntro();
     bindRegisterIntroEvents(app, render);
     mountOpsChrome(app);
+    mountHomePopup(app);
     return;
   }
   if (isPlansRoute()) {
     app.innerHTML = renderPlans();
     bindPlansEvents(app, render);
     mountOpsChrome(app);
+    mountHomePopup(app);
     return;
   }
   if (isLibraryRoute()) {
     app.innerHTML = renderLibrary();
     bindLibraryEvents(app, render);
     mountOpsChrome(app);
+    mountHomePopup(app);
     return;
   }
   if (isSupportRoute()) {
     app.innerHTML = renderSupport();
     bindSupportEvents(app, render);
     mountOpsChrome(app);
+    mountHomePopup(app);
     return;
   }
   if (isGuideRoute()) {
     app.innerHTML = renderGuide();
     bindGuideEvents(app, render);
     mountOpsChrome(app);
+    mountHomePopup(app);
     return;
   }
   if (isCommunityRoute()) {
     app.innerHTML = renderConcern();
     bindConcernEvents(app, render);
     mountOpsChrome(app);
+    mountHomePopup(app);
     return;
   }
   if (isPromoRoute()) {
     app.innerHTML = renderPromo();
     bindPromoEvents(app, render);
     mountOpsChrome(app);
+    mountHomePopup(app);
     return;
   }
   if (isPolicyRoute()) {
     app.innerHTML = renderPolicy();
     bindPolicyEvents(app, render);
     mountOpsChrome(app);
+    mountHomePopup(app);
     return;
   }
   if (isMyshopRoute()) {
     app.innerHTML = renderPublicMyshop();
     bindPublicMyshopEvents(app, render);
     mountOpsChrome(app);
+    mountHomePopup(app);
     return;
   }
   if (isMypageRoute()) {
     app.innerHTML = renderMypage();
     bindMypageEvents(app, render);
     mountOpsChrome(app);
+    mountHomePopup(app);
     return;
   }
   const key = getCurrentScreen();
@@ -221,6 +234,7 @@ function renderScreen() {
   app.innerHTML = screen.render();
   screen.bind(app, render);
   mountOpsChrome(app);
+  mountHomePopup(app);
 }
 
 function showBootError(err) {

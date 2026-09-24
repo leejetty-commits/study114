@@ -8,6 +8,7 @@ import {
   dismissPopup,
 } from './admin/site-settings-store.js';
 import { getCurrentScreen, isAdminRoute, isMypageRoute, isMessagesRoute } from './state.js';
+import { shouldSuppressOpsPopup } from './home-popup/gate.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -98,7 +99,7 @@ export function mountOpsChrome(appRoot) {
     surface === 'guest_home' || getCurrentScreen() === 'guest' ? getActiveGuestBanner() : null;
   const popups = listActivePopupsForSurface(surface);
   // surface=all 페이지에서도 all 팝업만; guest_home 전용은 guest에서만
-  const showPopups = popups.slice(0, 1); // 한 번에 하나
+  const showPopups = shouldSuppressOpsPopup() ? [] : popups.slice(0, 1);
 
   const bannerParts = [];
   if (maintenance) bannerParts.push(renderMaintenanceBanner(maintenance));
