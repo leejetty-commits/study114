@@ -75,6 +75,29 @@ final class ProviderRoiRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * 멤버박스 조회 — study_room_id 없을 때 소유 과외쌤 프로필 누적.
+     * 기간 필터 없음. 본인 열람 제외. 행이 없으면 0.
+     */
+    public function countLifetimeViewsForTutor(int $providerUserId): int
+    {
+        if ($providerUserId <= 0) {
+            return 0;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM provider_profile_views pv
+             INNER JOIN tutors t
+               ON t.id = pv.target_id
+              AND t.user_id = ?
+             WHERE pv.target_type = \'tutor\'
+               AND (pv.viewer_user_id IS NULL OR pv.viewer_user_id <> ?)'
+        );
+        $stmt->execute([$providerUserId, $providerUserId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
     public function countFavoritesForProvider(int $providerUserId): int
     {
         $stmt = $this->pdo->prepare(

@@ -25,7 +25,7 @@ final class ProviderRoiService
 
     /**
      * @return array<string, mixed>
-     * lifetime_views 는 studyRoomId 1건만. 없으면 null (전체 합산하지 않음).
+     * lifetime_views: studyRoomId 있으면 그 공부방 1건. 없으면 소유 과외쌤 프로필 누적(0 포함).
      */
     public function getSummary(int $providerUserId, int $days = 7, ?int $studyRoomId = null): array
     {
@@ -39,7 +39,7 @@ final class ProviderRoiService
         $views = $this->roi->countViewsForProvider($providerUserId, $days);
         $lifetimeViews = ($studyRoomId !== null && $studyRoomId > 0)
             ? $this->roi->countLifetimeViewsForProvider($providerUserId, $studyRoomId)
-            : null;
+            : $this->roi->countLifetimeViewsForTutor($providerUserId);
         $wishlist = $this->roi->countFavoritesForProvider($providerUserId);
         $compare = $this->roi->countCompareForProvider($providerUserId);
 

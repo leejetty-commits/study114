@@ -18,6 +18,7 @@ import { MOCK_TUTOR_REGIONS } from '@search-ui/search-schema.js';
 import { renderTutorActivityBars } from '../tutor-activity-chart.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
+import { bootTutorHome, readTutorLifetimeViews } from '../tutor-home-seed.js';
 
 /**
  * 시트(임시.cell) 행=가로줄:
@@ -82,7 +83,7 @@ function renderMyTutorStatusBox() {
       statCell('상태', `쪽지 받음 · ${MY_TUTOR.memoInbox ?? 0}개 미확인`),
     ].join(''),
     statsRow2: [
-      statCell('조회', MY_TUTOR.views),
+      statCell('조회', readTutorLifetimeViews() == null ? '—' : String(readTutorLifetimeViews())),
       statCell('등록', MY_TUTOR.registered),
     ].join(''),
   });
@@ -137,6 +138,7 @@ export function renderTutor() {
 
 export function bindTutorEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
+  bootTutorHome(rerender);
 
   bindProviderHomeTabEvents(root, rerender, {
     role: 'tutor',
