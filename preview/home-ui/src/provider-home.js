@@ -4,6 +4,7 @@
 
 import { searchUiUrl } from '../../shared/preview-links.js';
 import { peekStudyRoomPromo1, studyRoomPromo1Dong } from './study-room-home-seed.js';
+import { MOCK_TUTOR_REGIONS } from '@search-ui/search-schema.js';
 import {
   renderCompactFindForm,
   renderFindFilterBar,
@@ -145,7 +146,7 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
   findState.homeSelf = homeSelf;
 
   const showMap = searchTab === 'room';
-  const studentSnap = role === 'study_room' && tabId === 'student';
+  const studentSnap = tabId === 'student' && (role === 'study_room' || role === 'tutor');
   const hideSearchForm =
     studentSnap ||
     (homeSelf &&
@@ -157,7 +158,7 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
 
   return `
     <div class="parent-home-body">
-      ${studentSnap ? renderStudentDemandSnapshot() : hideHead ? '' : renderProviderHomeHead(role, tabId)}
+      ${studentSnap ? renderStudentDemandSnapshot(role) : hideHead ? '' : renderProviderHomeHead(role, tabId)}
       ${showCross ? renderSearchCrossLink(role, searchTab) : ''}
       ${renderCompactFindForm(searchTab, findState, {
         showMap,
@@ -180,11 +181,16 @@ function escSnap(value) {
     .replace(/"/g, '&quot;');
 }
 
-function renderStudentDemandSnapshot() {
-  const full = peekStudyRoomPromo1();
-  const dong = studyRoomPromo1Dong() || full || '우리동네';
-  const place = full || dong;
-  const findUrl = searchUiUrl('student', 'study_room');
+function tutorPrimaryPlace() {
+  return MOCK_TUTOR_REGIONS.find((region) => region.primary)?.label || MOCK_TUTOR_REGIONS[0]?.label || '우리동네';
+}
+
+function renderStudentDemandSnapshot(role = 'study_room') {
+  const tutorSnap = role === 'tutor';
+  const full = tutorSnap ? '' : peekStudyRoomPromo1();
+  const dong = tutorSnap ? tutorPrimaryPlace() : studyRoomPromo1Dong() || full || '우리동네';
+  const place = tutorSnap ? dong : full || dong;
+  const findUrl = searchUiUrl('student', tutorSnap ? 'tutor' : 'study_room');
   return `
     <header class="parent-home-head student-demand-snap">
       <p class="parent-home-head__desc">우리동네 학생 수요</p>

@@ -52,7 +52,7 @@ import {
   renderPromoBadgeRow,
   renderTrustBadgeRow,
 } from './card-visual.js';
-import { buildStudyRoomSampleItem } from './home-card-samples/presets.js';
+import { buildStudyRoomSampleItem, buildTutorSampleItem } from './home-card-samples/presets.js';
 
 function esc(s) {
   if (s == null || s === '') return '';
@@ -328,6 +328,16 @@ function vacantStudyRoomSample(tier) {
   return item;
 }
 
+/** 로그인 과외쌤 홈 실점유 0 전용. 풀에 넣지 않는다. */
+function vacantTutorSample(tier) {
+  const item = buildTutorSampleItem(tier);
+  item.id = `vacant-tutor-sample-${tier}`;
+  item._vacantSample = true;
+  item.tutor_display_name = '샘플 과외쌤';
+  item.location_label = '가상';
+  return item;
+}
+
 function cardIdentityAttrs(item, kind) {
   if (isVacantSample(item)) return 'data-expo-sample="1" data-expo-virtual="1"';
   return `data-provider-id="${item.id}" data-provider-kind="${kind}"`;
@@ -407,6 +417,7 @@ function renderTutorFeeOverlay(item) {
 function renderTutorMediaOverlay(item, ratio = 'prime') {
   return renderMediaBlock(item.image_path, item.tutor_display_name, ratio, {
     tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
+    mid: isVacantSample(item) ? sampleStampHtml() : '',
     bl: renderTutorOverlayBottomGrid(item),
   });
 }
@@ -534,7 +545,7 @@ function renderPrimeStudyRoom(item, actions, opts) {
 function renderPrimeTutor(item, actions, opts) {
   const rows = tutorTableRows(item, { showIntro: true, featureMax: 3 }, actions);
   return `
-    <article class="expo-card expo-card--prime expo-card--tutor" data-provider-id="${item.id}" data-provider-kind="tutor">
+    <article class="expo-card expo-card--prime expo-card--tutor${isVacantSample(item) ? ' expo-card--sample' : ''}" ${cardIdentityAttrs(item, 'tutor')}>
       ${renderTutorMediaOverlay(item, 'prime')}
       ${renderExpoTable(rows, 'expo-tbl--card')}
     </article>`;
@@ -552,7 +563,7 @@ function renderPickStudyRoom(item, actions, opts) {
 function renderPickTutor(item, actions, opts) {
   const rows = tutorTableRows(item, { showIntro: false, featureMax: 1, verifyMax: 1, stack: true }, actions);
   return `
-    <article class="expo-card expo-card--pick expo-card--tutor" data-provider-id="${item.id}" data-provider-kind="tutor">
+    <article class="expo-card expo-card--pick expo-card--tutor${isVacantSample(item) ? ' expo-card--sample' : ''}" ${cardIdentityAttrs(item, 'tutor')}>
       ${renderTutorMediaOverlay(item, 'pick')}
       ${renderExpoTable(rows, 'expo-tbl--card expo-tbl--compact')}
     </article>`;
@@ -625,7 +636,7 @@ export function renderEmptyPickPromo(kind) {
 export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
   const { primeSlots, pickRotationMinutes } = getExposurePageSizes();
 
-  if (kind === 'tutor') {
+  if (kind === 'tutor' && opts.vacantSamples !== true) {
     const pool = occupiedItems;
     const rotated = rotateSetPool(pool, primeSlots, pickRotationMinutes);
     const listId = opts.listId || 'prime_tutor';
@@ -643,7 +654,7 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
 
   const slots = buildPrimeSlotArray(occupiedItems, primeSlots);
   if (opts.vacantSamples === true && occupiedItems.length === 0) {
-    slots[0] = vacantStudyRoomSample('prime');
+    slots[0] = kind === 'tutor' ? vacantTutorSample('prime') : vacantStudyRoomSample('prime');
   }
   const cards = slots
     .map((item) => {
@@ -1012,12 +1023,14 @@ export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opt
   const pickPool = rotatePickPool(getPickPool(allItems, occupied));
   const page = opts.page ?? getGuestListPage(listId);
   const pageItems = slicePage(pickPool, page, pickSetSize);
-  const vacantPick = opts.vacantSamples === true && kind === 'study_room' && pickPool.length === 0;
+  const vacantPick =
+    opts.vacantSamples === true && (kind === 'study_room' || kind === 'tutor') && pickPool.length === 0;
   const pickRowSlots = 5;
+  const vacantPickSample = kind === 'tutor' ? vacantTutorSample('pick') : vacantStudyRoomSample('pick');
   const cards = vacantPick
     ? Array.from({ length: pickRowSlots }, (_, index) =>
         index === 0
-          ? renderExposureBox(kind, 'pick', vacantStudyRoomSample('pick'), '', opts)
+          ? renderExposureBox(kind, 'pick', vacantPickSample, '', opts)
           : renderEmptyPickPromo(kind),
       ).join('')
     : pageItems.map((item) => renderExposureBox(kind, 'pick', item, '', opts)).join('');

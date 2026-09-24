@@ -15,17 +15,16 @@ import {
 import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
 import { MOCK_TUTOR_REGIONS } from '@search-ui/search-schema.js';
-import { TUTOR_REGISTER_URL } from '../../../shared/preview-links.js';
 import { renderTutorActivityBars } from '../tutor-activity-chart.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
 
 /**
  * 시트(임시.cell) 행=가로줄:
- * 1행 김우동 | 과외쌤 박스 | 마이페이지 | 과외등록
+ * 1행 김우동 | 과외쌤 박스 | 쪽지 후기함 | 마이페이지
  * 2행 활동지역 | 서울시 대표 | 부산시 | 인천시
- * 3행 과목 | 상태 | 조회
- * 4행 메모 | 보낸메모 | 등록
+ * 3행 과목 | 쪽지 받음/안받음 · N개 미확인
+ * 4행 조회 | 등록
  */
 
 function renderTutorRegionPills(activeIndex = 0) {
@@ -75,17 +74,15 @@ function renderMyTutorStatusBox() {
     label: '과외쌤 박스',
     title: MY_TUTOR.name,
     actionsHtml: `
-      <a href="#/mypage/home" class="btn btn--primary btn--sm" data-nav="/mypage/home">마이페이지</a>
-      <a href="${TUTOR_REGISTER_URL}" class="btn btn--secondary btn--sm" data-util-href="${TUTOR_REGISTER_URL}">과외등록</a>`,
+      <a href="#/mypage/messages" class="btn btn--secondary btn--sm" data-nav="/mypage/messages">쪽지 후기함</a>
+      <a href="#/mypage/home" class="btn btn--primary btn--sm" data-nav="/mypage/home">마이페이지</a>`,
     regionsHtml: renderTutorRegionPills(activeIdx),
     statsRow1: [
       statCell('과목', MY_TUTOR.subject),
-      statCell('상태', MY_TUTOR.status),
-      statCell('조회', MY_TUTOR.views),
+      statCell('상태', `쪽지 받음 · ${MY_TUTOR.memoInbox ?? 0}개 미확인`),
     ].join(''),
     statsRow2: [
-      statCell('메모', MY_TUTOR.memoInbox ?? '—'),
-      statCell('보낸메모', MY_TUTOR.memoSent ?? '—'),
+      statCell('조회', MY_TUTOR.views),
       statCell('등록', MY_TUTOR.registered),
     ].join(''),
   });
@@ -101,7 +98,6 @@ function renderTutorActivityPanel() {
     <aside class="my-box my-box--status my-box--activity" aria-label="활동지역 분포">
       <div class="my-box__row my-box__row--1">
         <strong class="my-box__name">활동지역 분포</strong>
-        <span class="my-box__badge">활동형</span>
         <div class="my-box__actions my-box__actions--row">
           ${renderSearchCrossLink('tutor', 'tutor', { inline: true })}
         </div>

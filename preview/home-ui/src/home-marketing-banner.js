@@ -252,8 +252,12 @@ export function renderHomeMarketingBanner(surface) {
   const copy = HOME_BANNER_COPY[cfg.copyId];
   if (!copy) return '';
 
-  const titleHtml = copy.headlineLines?.length
-    ? copy.headlineLines.map((line) => accentBrandWords(line)).join('<br />')
+  const headlineLines =
+    surface === 'tutor'
+      ? ['광고만 보는 곳이 아니라, 비교하고 판단하는', '우리동네 교육플랫폼']
+      : copy.headlineLines;
+  const titleHtml = headlineLines?.length
+    ? headlineLines.map((line) => accentBrandWords(line)).join('<br />')
     : accentBrandWords(copy.headline || '');
   const lines = (copy.lines || [])
     .map((line) => `<p class="home-mkt__line">${accentBrandWords(line)}</p>`)

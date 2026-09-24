@@ -463,6 +463,10 @@ function regionFeedContext(tab, state, role) {
     ctx.liveStudentItems = getStudyRoomStudentLiveItems();
     ctx.hopeType = 'study_room';
   }
+  if (tab === 'student' && role === 'tutor' && state.homeSelf !== true && !state.searchExecuted) {
+    ctx.promoStudent = true;
+    ctx.hopeType = 'tutor';
+  }
   if (tab === 'tutor') {
     ctx.tutorRegionIndex = resolveTutorRegionIndex(state);
   }
@@ -1230,6 +1234,10 @@ export function renderFindResultSection(tab, state, role, options = {}) {
   let regionLabel = state.activeRegionLabel || resolveActiveRegionLabel(tab, state, role);
   if (tab === 'student' && role === 'study_room') {
     regionLabel = studentCurrentPlace(regionLabel);
+  }
+  if (role === 'tutor' && surfaceType === 'home' && !state.searchExecuted) {
+    const primary = MOCK_TUTOR_REGIONS.find((region) => region.primary);
+    regionLabel = primary?.label || MOCK_TUTOR_REGIONS[0]?.label || regionLabel;
   }
 
   if (tab === 'student' && role === 'study_room' && !state.searchExecuted && state.studentDemandPending) {

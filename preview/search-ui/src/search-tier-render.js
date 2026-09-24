@@ -19,6 +19,11 @@ import {
   renderListSortSelect,
   sortListItems,
 } from '../../shared/list-sort.js';
+import { MOCK_TUTOR_REGIONS } from './search-schema.js';
+
+function tutorPrimaryRegionLabel() {
+  return MOCK_TUTOR_REGIONS.find((region) => region.primary)?.label || MOCK_TUTOR_REGIONS[0]?.label || '';
+}
 
 /**
  * @param {'study_room'|'tutor'} kind
@@ -57,8 +62,12 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
   }
 
   // 지역은 제목 아래 toolbar「현재위치」(정렬과 같은 행)
-  const loc = sectionTag || '';
-  const vacantSamples = kind === 'study_room' && opts.guest !== true && opts.viewerRole === 'study_room';
+  const loc =
+    opts.viewerRole === 'tutor' && opts.pinTutorPrimary ? tutorPrimaryRegionLabel() : sectionTag || '';
+  const vacantSamples =
+    opts.guest !== true &&
+    ((kind === 'study_room' && opts.viewerRole === 'study_room') ||
+      (kind === 'tutor' && opts.viewerRole === 'tutor' && opts.pinTutorPrimary === true));
   const primeHtml = `
       ${renderSectionHeading({ ...section.prime, locationLabel: loc })}
       ${renderSectionToolbar({ locationLabel: loc })}
@@ -170,7 +179,7 @@ function renderStudentTierResults(items, opts = {}, sectionTag = '', mode = 'sea
   if (!items.length) {
     const place = String(sectionTag || '').trim();
     const promoEmpty =
-      opts.viewerRole === 'study_room' && place && mode === 'region'
+      (opts.viewerRole === 'study_room' || opts.viewerRole === 'tutor') && place && mode === 'region'
         ? renderStateCard({
             title: `${place}에 공개 중인 학생이 없습니다`,
             body: '조건을 바꾸려면 학생찾기에서 검색해 보세요.',
@@ -222,7 +231,11 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
     showWish: true,
     serverSorted: mode === 'search',
   };
-  const homeTierTag = regionLabel || (mode === 'region' ? '지역 피드' : '');
+  const pinTutorPrimary = viewerRole === 'tutor' && surfaceType === 'home' && mode === 'region';
+  const homeTierTag = pinTutorPrimary
+    ? tutorPrimaryRegionLabel()
+    : regionLabel || (mode === 'region' ? '지역 피드' : '');
+  opts.pinTutorPrimary = pinTutorPrimary;
   const useHomeTierGrammar = surfaceType === 'home' && mode === 'region';
 
   if (tab === 'room') {
