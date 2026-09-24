@@ -599,6 +599,20 @@ export function renderEmptyPrimePromo(kind) {
     </article>`;
 }
 
+/** 픽 빈 슬롯 — 실픽 카드와 같은 줄. 샘플로 채우지 않는다. */
+export function renderEmptyPickPromo(kind) {
+  const copy = getPrimeEmptyCopy(kind);
+  const tone = kind === 'tutor' ? 'tutor' : 'study_room';
+  return `
+    <article class="expo-card expo-card--pick expo-card--empty expo-card--${tone}" data-pick-empty="1">
+      <div class="expo-empty-prime">
+        <p class="expo-empty-prime__title">${esc(copy.title)}</p>
+        <p class="expo-empty-prime__body">${esc(copy.body)}</p>
+        <a href="#/plans/positions" class="btn btn--primary btn--sm" data-nav="/plans/positions">${esc(copy.cta)}</a>
+      </div>
+    </article>`;
+}
+
 /**
  * Prime 슬롯
  * — study_room: 항상 prime_slots 칸 고정 · null은 EMPTY 카드 (회전·페이지 없음)
@@ -1001,8 +1015,10 @@ export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opt
   const vacantPick = opts.vacantSamples === true && kind === 'study_room' && pickPool.length === 0;
   const pickRowSlots = 5;
   const cards = vacantPick
-    ? Array.from({ length: Math.min(pickSetSize, pickRowSlots) }, () =>
-        renderExposureBox(kind, 'pick', vacantStudyRoomSample('pick'), '', opts),
+    ? Array.from({ length: pickRowSlots }, (_, index) =>
+        index === 0
+          ? renderExposureBox(kind, 'pick', vacantStudyRoomSample('pick'), '', opts)
+          : renderEmptyPickPromo(kind),
       ).join('')
     : pageItems.map((item) => renderExposureBox(kind, 'pick', item, '', opts)).join('');
   const emptyNote = cards ? '' : '<p class="mypage-muted">픽 노출 후보가 없습니다.</p>';

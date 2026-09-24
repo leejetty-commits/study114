@@ -737,6 +737,18 @@ img {
   line-height: var(--leading-relaxed);
 }
 
+.form-note--accent {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid #fdba74;
+  border-radius: 0.5rem;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: var(--text-sm, 0.95rem);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
 .hope-region-axis {
   margin: var(--space-6) 0;
   padding: var(--space-4);

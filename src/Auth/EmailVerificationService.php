@@ -61,7 +61,7 @@ final class EmailVerificationService
         $sent = $this->mailer->send(
             $email,
             '[우동공과] 이메일 확인',
-            "안녕하세요.\n\n가입을 완료하려면 아래 링크를 눌러 이메일을 확인해 주세요.\n\n{$link}\n\n이 메일은 로그인 및 계정 확인에 사용됩니다."
+            "안녕하세요.\n\n가입을 완료하려면 아래 링크를 눌러 이메일을 확인해 주세요.\n링크를 누르면 새 창(또는 새 탭)이 열리고, 가입은 그 창에서 이어집니다.\n\n{$link}\n\n이 메일은 로그인 및 계정 확인에 사용됩니다."
         );
         if (!$sent) {
             $this->tokens->invalidatePurpose($userId, 'email_verify');

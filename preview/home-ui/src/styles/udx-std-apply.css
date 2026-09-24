@@ -315,6 +315,32 @@ textarea:focus,
   align-self: center;
 }
 
+/* 픽 EMPTY는 실픽 칸과 같은 높이. 유료상품 보기는 칸 중앙. */
+.expo-grid--5 > .expo-card.expo-card--pick.expo-card--empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 100%;
+  padding: var(--space-3);
+  text-align: center;
+}
+
+.expo-grid--5 > .expo-card.expo-card--pick.expo-card--empty .expo-empty-prime {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: center;
+}
+
+.expo-grid--5 > .expo-card.expo-card--pick.expo-card--empty .btn {
+  align-self: center;
+}
+
 .expo-sample-stamp {
   display: inline-flex;
   align-items: center;

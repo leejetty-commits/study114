@@ -152,15 +152,22 @@ function renderAddressBlock({
     </div>`;
 }
 
-function renderPromoSlot(slot, idx) {
+function renderPromoSlot(slot, idx, opts = {}) {
   const basis = slot.region_basis_type === 'complex' ? 'complex' : 'dong';
   const req = idx === 0;
   const dongLabel = blank(slot.region_label);
+  const hope = opts.hope === true;
+  const heading = opts.heading || `홍보지역 ${idx + 1}${req ? ' (필수)' : ' (선택)'}`;
+  const complexShown = hope
+    ? blank(slot.complex_name)
+    : basis === 'complex'
+      ? slotDisplay(slot)
+      : '';
   return `
     <div class="register-region-slot${slot.is_primary ? ' is-primary' : ''}" data-region-slot="${idx}">
       <div class="register-region-slot__toolbar">
-        <strong>홍보지역 ${idx + 1}${req ? ' (필수)' : ' (선택)'}</strong>
-        ${req ? '<span class="register-region-slot__primary-mark">대표지역</span>' : ''}
+        <strong>${esc(heading)}</strong>
+        ${req && !hope ? '<span class="register-region-slot__primary-mark">대표지역</span>' : ''}
       </div>
       <div class="chip-group register-region-slot__basis" data-slot-basis-group>
         <label class="chip">
@@ -205,7 +212,7 @@ function renderPromoSlot(slot, idx) {
             class="form-input"
             type="text"
             data-field="address_display"
-            value="${esc(basis === 'complex' ? slotDisplay(slot) : '')}"
+            value="${esc(complexShown)}"
             placeholder="${req ? '도로명 주소 (검색으로 입력)' : '도로명 주소 (선택)'}"
             readonly
           />
@@ -217,9 +224,9 @@ function renderPromoSlot(slot, idx) {
       <input type="hidden" data-field="complex_id" value="${esc(slot.complex_id || '')}" />
       <input type="hidden" data-field="region_basis_type" value="${esc(basis)}" />
       <input type="hidden" data-field="complex_name" value="${esc(slot.complex_name || '')}" />
-      <input type="hidden" data-field="complex_address" value="${esc(slot.complex_address || slot.address_text || '')}" />
+      <input type="hidden" data-field="complex_address" value="${esc(hope ? '' : slot.complex_address || '')}" />
       <input type="hidden" data-field="region_label" value="${esc(slot.region_label || '')}" />
-      <input type="hidden" data-field="address_text" value="${esc(basis === 'complex' ? slot.address_text || '' : '')}" />
+      <input type="hidden" data-field="address_text" value="${esc(hope ? '' : basis === 'complex' ? slot.address_text || '' : '')}" />
       <input type="hidden" data-field="address_sido" value="${esc(slot.address_sido || '')}" />
       <input type="hidden" data-field="address_sigungu" value="${esc(slot.address_sigungu || '')}" />
       <input type="hidden" data-field="address_bname" value="${esc(slot.address_bname || '')}" />
@@ -228,10 +235,10 @@ function renderPromoSlot(slot, idx) {
       <input type="hidden" data-field="address_sigungu_code" value="${esc(slot.address_sigungu_code || '')}" />
       <p class="form-hint" data-slot-resolved>${esc(
         slotDisplay(slot)
-          ? (basis === 'complex' ? '아파트단지' : '행정동') + ' · ' + slotDisplay(slot)
+          ? (basis === 'complex' ? '아파트단지' : '행정동') + ' · ' + (hope ? blank(slot.complex_name) || slotDisplay(slot) : slotDisplay(slot))
           : '',
       )}</p>
-      ${idx === 0 ? '<p class="form-hint form-hint--accent" data-promo1-mismatch hidden></p>' : ''}
+      ${idx === 0 && !hope ? '<p class="form-hint form-hint--accent" data-promo1-mismatch hidden></p>' : ''}
     </div>`;
 }
 
@@ -424,6 +431,48 @@ function setSlotMeta(slotEl, result) {
   set('address_hname', result.hname || '');
   set('address_bcode', result.bcode || '');
   set('address_sigungu_code', result.sigunguCode || '');
+}
+
+function complexPlaceLabel(name) {
+  const label = blank(name);
+  if (!label) return '';
+  if (/(아파트|단지)/.test(label)) return label;
+  return '';
+}
+
+/** 학생 희망지역. 도로명 번지·호는 칸에 남기지 않는다. */
+function applyStudentHopeResult(slotEl, result, region, basis) {
+  if (basis !== 'complex') {
+    applySlotResult(slotEl, result, region, 'dong');
+    return;
+  }
+  const place = complexPlaceLabel(result?.buildingName);
+  const regionId = slotEl.querySelector('[data-field="region_id"]');
+  const complexId = slotEl.querySelector('[data-field="complex_id"]');
+  const basisEl = slotEl.querySelector('[data-field="region_basis_type"]');
+  const complexName = slotEl.querySelector('[data-field="complex_name"]');
+  const complexAddress = slotEl.querySelector('[data-field="complex_address"]');
+  const regionLabel = slotEl.querySelector('[data-field="region_label"]');
+  const addressText = slotEl.querySelector('[data-field="address_text"]');
+  const zip = slotEl.querySelector('[data-field="address_zip"]');
+  const display = slotEl.querySelector('[data-field="address_display"]');
+  const resolved = slotEl.querySelector('[data-slot-resolved]');
+  const dongText = dongOnlyLabel(result, region);
+  if (basisEl) basisEl.value = 'complex';
+  if (regionId) regionId.value = region ? String(region.id) : '';
+  if (regionLabel) regionLabel.value = dongText;
+  setSlotMeta(slotEl, result);
+  if (zip) zip.value = '';
+  if (addressText) addressText.value = '';
+  if (complexAddress) complexAddress.value = '';
+  if (complexId) complexId.value = '';
+  if (complexName) complexName.value = place;
+  if (display) display.value = place;
+  if (resolved) {
+    resolved.textContent = place
+      ? `아파트단지 · ${place}`
+      : '아파트·단지 이름이 없는 주소입니다. 단지 이름으로 다시 검색해 주세요.';
+  }
 }
 
 function applySlotResult(slotEl, result, region, basis) {
@@ -777,6 +826,66 @@ export function validateStudyRoomBasicFields(data) {
 
   data.saved_regions = slots.map((s, i) => ({ ...s, is_primary: i === 0 }));
   return null;
+}
+
+export function renderStudentHopeRegion(values = {}) {
+  const slot = {
+    region_id: values.region_id || '',
+    complex_id: '',
+    region_basis_type: values.region_basis === 'complex' || values.region_basis_type === 'complex' ? 'complex' : 'dong',
+    complex_name: values.complex_name || values.complex_label || '',
+    region_label: values.region_label || '',
+    is_primary: true,
+  };
+  return `<div data-hope-region>${renderPromoSlot(slot, 0, { heading: '희망지역', hope: true })}</div>`;
+}
+
+export function readStudentHopeRegion(root) {
+  const slotEl = root.querySelector('[data-hope-region] [data-region-slot]');
+  if (!slotEl) return null;
+  const field = (name) => slotEl.querySelector(`[data-field="${name}"]`)?.value || '';
+  const basis = slotBasisOf(slotEl) === 'complex' ? 'complex' : 'dong';
+  return {
+    region_basis: basis,
+    region_id: field('region_id'),
+    region_label: field('region_label'),
+    complex_id: '',
+    complex_name: field('complex_name'),
+    complex_label: field('complex_name'),
+    complex_address: '',
+  };
+}
+
+export function bindStudentHopeRegion(root, opts = {}) {
+  const scope = root.querySelector('[data-hope-region]') || root;
+  loadKakaoPostcode().catch(() => {});
+  scope.querySelectorAll('[data-address-search]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try {
+        await openKakaoPostcode(async (result) => {
+          const slotEl = scope.querySelector('[data-region-slot]');
+          if (!slotEl) return;
+          const basis = slotBasisOf(slotEl);
+          applyStudentHopeResult(slotEl, result, null, basis);
+          try {
+            const region = await ensureRegionFromKakao(result);
+            opts.onRegion?.(region);
+            applyStudentHopeResult(slotEl, result, region, basis);
+          } catch {
+            /* 동 이름은 이미 표시. 코드는 저장 시 보완 */
+          }
+        });
+      } catch (err) {
+        alert(err instanceof Error ? err.message : '주소 검색을 열 수 없습니다.');
+      }
+    });
+  });
+  scope.querySelectorAll('input[name^="slot_basis_"]').forEach((el) => {
+    el.addEventListener('change', () => {
+      const slotEl = el.closest('[data-region-slot]');
+      if (slotEl) syncSlotSearchPanels(slotEl);
+    });
+  });
 }
 
 export function applyStudyRoomBasicToState(state, data) {

@@ -107,7 +107,7 @@ function renderWaitBody(err) {
         <p class="auth-subheading recovery-stage__desc" data-verify-lead>
           확인 메일을 보냈습니다. 메일 안의 링크를 눌러야 가입이 완료됩니다.
         </p>
-        <p class="form-hint" data-verify-hint-inbox>받은편지함에서 확인 메일을 열어 주세요. 보이지 않으면 <strong>스팸함·프로모션함</strong>도 확인해 주세요.</p>
+        <p class="form-note form-note--accent" data-verify-new-tab>메일 안의 링크를 누르면 새 창(또는 새 탭)이 열립니다. 가입은 그 새 창에서 이어서 진행하세요. 이 화면(탭)은 닫아도 됩니다. 메일이 보이지 않으면 스팸함·프로모션함도 확인해 주세요.</p>
         <p class="form-hint" data-verify-next>${esc(nextStepSentence(roleUiFromMeOrDraft()))}</p>
         <p class="form-hint">메일이 바로 보이지 않으면 잠시 후 다시 확인해 주세요. 다시 보내기는 10분 뒤에 할 수 있습니다.</p>
         ${err ? `<p class="form-error" role="alert">${esc(err)}</p>` : ''}
@@ -147,6 +147,7 @@ export function renderSignupVerifyEmail() {
         ${renderRecoverySuccessIcon()}
         <h1 class="auth-heading">이메일이 확인되었습니다</h1>
         <p class="auth-subheading recovery-stage__desc" data-verify-success-lead>${esc(successLead(roleUiFromMeOrDraft()))}</p>
+        <p class="form-note form-note--accent">이 창에서 기본정보를 이어서 입력하세요.</p>
         <p class="form-hint" data-verify-next>${esc(nextStepSentence(roleUiFromMeOrDraft()))}</p>
         <button type="button" class="btn btn--primary btn--block" data-action="continue-verified">${esc(continueLabel(roleUiFromMeOrDraft()))}</button>
       `
@@ -198,6 +199,16 @@ function applyWaitCopyAfterSuccessfulResend(root) {
     hint.innerHTML =
       '받은편지함에서 확인 메일을 열어 주세요. 보이지 않으면 <strong>스팸함·프로모션함</strong>도 확인해 주세요.';
   }
+  const tabCopy =
+    '메일 안의 링크를 누르면 새 창(또는 새 탭)이 열립니다. 가입은 그 새 창에서 이어서 진행하세요. 이 화면(탭)은 닫아도 됩니다. 메일이 보이지 않으면 스팸함·프로모션함도 확인해 주세요.';
+  let tabNote = root.querySelector('[data-verify-new-tab]');
+  if (!tabNote && lead) {
+    tabNote = document.createElement('p');
+    tabNote.className = 'form-note form-note--accent';
+    tabNote.setAttribute('data-verify-new-tab', '');
+    lead.insertAdjacentElement('afterend', tabNote);
+  }
+  if (tabNote) tabNote.textContent = tabCopy;
   markHashSendSuccess();
 }
 
