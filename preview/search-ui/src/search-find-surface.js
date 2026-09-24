@@ -1179,8 +1179,8 @@ export function renderCompactFindForm(tab, state, options = {}) {
           resultSource: resolveResultSource(state),
           bannerStyle: mapBannerStyle,
           providerHome: studyRoomPromoMap,
-          lat: studyRoomPromoMap ? null : state.canonicalLocation?.lat ?? null,
-          lng: studyRoomPromoMap ? null : state.canonicalLocation?.lng ?? null,
+          lat: state.canonicalLocation?.lat ?? null,
+          lng: state.canonicalLocation?.lng ?? null,
         })
       : ''}
     ${formHtml}`;

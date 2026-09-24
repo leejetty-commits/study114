@@ -52,6 +52,7 @@ import {
   renderPromoBadgeRow,
   renderTrustBadgeRow,
 } from './card-visual.js';
+import { buildStudyRoomSampleItem } from './home-card-samples/presets.js';
 
 function esc(s) {
   if (s == null || s === '') return '';
@@ -154,7 +155,17 @@ export function renderItemActions(opts = {}) {
     review_count = 0,
     message_count = 0,
     compare_count = 0,
+    inert = false,
   } = opts;
+  if (inert) {
+    const rail = ['👍', '💬', '♡', '⇄', '✉']
+      .map(
+        (icon) =>
+          `<button type="button" class="item-actions__btn" disabled aria-disabled="true" tabindex="-1"><span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count">0</span></button>`,
+      )
+      .join('');
+    return `<div class="card-visual__rail" data-expo-sample-rail="1" aria-hidden="true"><div class="card-stats">${rail}</div></div>`;
+  }
   const kind = compareKind;
   const wished = !guest && itemId != null && isWishlisted(kind, itemId);
   const inCompare = !guest && itemId != null && isInCompare(kind, itemId);
@@ -299,6 +310,29 @@ function listingImage(item, ratio) {
   return item.image_path_basic || item.image_path || '';
 }
 
+function isVacantSample(item) {
+  return item?._vacantSample === true;
+}
+
+function sampleStampHtml() {
+  return `<span class="expo-sample-stamp">샘플</span>`;
+}
+
+/** 로그인 공부방 홈 실점유 0 전용. 풀에 넣지 않는다. */
+function vacantStudyRoomSample(tier) {
+  const item = buildStudyRoomSampleItem(tier);
+  item.id = `vacant-sample-${tier}`;
+  item._vacantSample = true;
+  item.study_room_name = '샘플 공부방';
+  item.location_label = '가상';
+  return item;
+}
+
+function cardIdentityAttrs(item, kind) {
+  if (isVacantSample(item)) return 'data-expo-sample="1" data-expo-virtual="1"';
+  return `data-provider-id="${item.id}" data-provider-kind="${kind}"`;
+}
+
 function renderStudyRoomMediaOverlay(item) {
   return renderMediaBlock(
     listingImage(item, 'prime'),
@@ -306,6 +340,7 @@ function renderStudyRoomMediaOverlay(item) {
     'prime',
     {
       tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
+      mid: isVacantSample(item) ? sampleStampHtml() : '',
     },
     { roomDefault: true },
   );
@@ -318,6 +353,7 @@ function renderPickStudyRoomMedia(item) {
     'pick',
     {
       tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
+      mid: isVacantSample(item) ? sampleStampHtml() : '',
     },
     { roomDefault: true },
   );
@@ -489,7 +525,7 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
 function renderPrimeStudyRoom(item, actions, opts) {
   const rows = studyRoomTableRows(item, { showIntro: true, featureMax: 3 }, actions);
   return `
-    <article class="expo-card expo-card--prime expo-card--study_room" data-provider-id="${item.id}" data-provider-kind="study_room">
+    <article class="expo-card expo-card--prime expo-card--study_room${isVacantSample(item) ? ' expo-card--sample' : ''}" ${cardIdentityAttrs(item, 'study_room')}>
       ${renderStudyRoomMediaOverlay(item)}
       ${renderExpoTable(rows, 'expo-tbl--card')}
     </article>`;
@@ -507,7 +543,7 @@ function renderPrimeTutor(item, actions, opts) {
 function renderPickStudyRoom(item, actions, opts) {
   const rows = studyRoomTableRows(item, { showIntro: false, featureMax: 1, stack: true }, actions);
   return `
-    <article class="expo-card expo-card--pick expo-card--study_room" data-provider-id="${item.id}" data-provider-kind="study_room">
+    <article class="expo-card expo-card--pick expo-card--study_room${isVacantSample(item) ? ' expo-card--sample' : ''}" ${cardIdentityAttrs(item, 'study_room')}>
       ${renderPickStudyRoomMedia(item)}
       ${renderExpoTable(rows, 'expo-tbl--card expo-tbl--compact')}
     </article>`;
@@ -527,11 +563,13 @@ function renderPickTutor(item, actions, opts) {
  * @param {'prime' | 'pick'} tier
  */
 export function renderExposureBox(kind, tier, item, slotLabel, opts = {}) {
+  const sample = isVacantSample(item);
   const actionOpts = actionOptsFromItem(item, {
     guest: opts.guest,
     compareKind: kind,
-    showCompare: opts.showCompare !== false,
-    showWish: opts.showWish !== false,
+    showCompare: opts.showCompare !== false && !sample,
+    showWish: opts.showWish !== false && !sample,
+    inert: sample,
   });
   const actions = renderItemActions(actionOpts);
   if (tier === 'prime') {
@@ -590,6 +628,9 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
   }
 
   const slots = buildPrimeSlotArray(occupiedItems, primeSlots);
+  if (opts.vacantSamples === true && occupiedItems.length === 0) {
+    slots[0] = vacantStudyRoomSample('prime');
+  }
   const cards = slots
     .map((item) => {
       if (!item) return renderEmptyPrimePromo(kind);
@@ -957,15 +998,20 @@ export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opt
   const pickPool = rotatePickPool(getPickPool(allItems, occupied));
   const page = opts.page ?? getGuestListPage(listId);
   const pageItems = slicePage(pickPool, page, pickSetSize);
-  const cards = pageItems
-    .map((item) => renderExposureBox(kind, 'pick', item, '', opts))
-    .join('');
+  const vacantPick = opts.vacantSamples === true && kind === 'study_room' && pickPool.length === 0;
+  const pickRowSlots = 5;
+  const cards = vacantPick
+    ? Array.from({ length: Math.min(pickSetSize, pickRowSlots) }, () =>
+        renderExposureBox(kind, 'pick', vacantStudyRoomSample('pick'), '', opts),
+      ).join('')
+    : pageItems.map((item) => renderExposureBox(kind, 'pick', item, '', opts)).join('');
+  const emptyNote = cards ? '' : '<p class="mypage-muted">픽 노출 후보가 없습니다.</p>';
 
   return `
     <div class="list-subsection" data-guest-list="${listId}">
       ${renderSectionHeading(headingCfg)}
       ${renderSectionToolbar({ locationLabel: headingCfg.locationLabel })}
-      <div class="expo-grid--5">${cards || '<p class="mypage-muted">픽 노출 후보가 없습니다.</p>'}</div>
+      <div class="expo-grid--5">${cards || emptyNote}</div>
       ${renderListPagination(listId, pickPool.length, page, pickSetSize)}
     </div>
   `;

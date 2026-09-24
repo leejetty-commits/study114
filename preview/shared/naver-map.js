@@ -11,6 +11,8 @@
 
 /** @type {Array<{ test: RegExp, center: RegionCenter }>} */
 const REGION_CENTER_FALLBACKS = [
+  { test: /가능동/, center: { lat: 37.749, lng: 127.044, label: '가능동' } },
+  { test: /논현/, center: { lat: 37.5115, lng: 127.0289, label: '논현1동' } },
   { test: /대치/, center: { lat: 37.4946, lng: 127.0626, label: '대치동' } },
   { test: /도곡/, center: { lat: 37.4882, lng: 127.0465, label: '도곡동' } },
   { test: /개포/, center: { lat: 37.4892, lng: 127.0661, label: '개포동' } },
@@ -188,11 +190,6 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
 
   if (!getNaverMapClientId()) {
     showStatus('[설정 필요] VITE_NAVER_MAP_CLIENT_ID · 네이버 지도 API 키를 .env에 추가하세요.', 'config');
-    return null;
-  }
-
-  if (pins.length === 0) {
-    showStatus('표시할 위치 정보가 없습니다 · 목록은 그대로 유지됩니다.', 'empty');
     return null;
   }
 

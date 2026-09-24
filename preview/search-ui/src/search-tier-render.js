@@ -58,11 +58,13 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
 
   // 지역은 제목 아래 toolbar「현재위치」(정렬과 같은 행)
   const loc = sectionTag || '';
+  const vacantSamples = kind === 'study_room' && opts.guest !== true && opts.viewerRole === 'study_room';
   const primeHtml = `
       ${renderSectionHeading({ ...section.prime, locationLabel: loc })}
       ${renderSectionToolbar({ locationLabel: loc })}
       ${renderPrimeSlotGrid(kind, occupied, {
         ...opts,
+        vacantSamples,
         listId: kind === 'tutor' ? section.primeListId : undefined,
       })}`;
 
@@ -71,7 +73,7 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
     section.pickListId,
     { ...section.pick, locationLabel: loc, desc: undefined },
     items,
-    { ...opts, primeOccupied: occupied },
+    { ...opts, primeOccupied: occupied, vacantSamples },
   );
 
   const basicHtml = renderBasicListBlock(

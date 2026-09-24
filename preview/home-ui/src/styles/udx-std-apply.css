@@ -289,6 +289,46 @@ textarea:focus,
   background: var(--product-panel);
 }
 
+/* 프라임 EMPTY는 실프라임 칸과 같은 높이. 유료상품 보기는 칸 중앙. */
+.expo-grid--3 > .expo-card.expo-card--prime.expo-card--empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 100%;
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.expo-grid--3 > .expo-card.expo-card--prime.expo-card--empty .expo-empty-prime {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: center;
+}
+
+.expo-grid--3 > .expo-card.expo-card--prime.expo-card--empty .btn {
+  align-self: center;
+}
+
+.expo-sample-stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.25rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.25rem;
+  background: rgba(15, 23, 42, 0.72);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
 .state-card__mark {
   width: 1.25rem;
   height: 1.25rem;

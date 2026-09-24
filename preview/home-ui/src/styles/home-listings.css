@@ -1101,6 +1101,14 @@
   pointer-events: auto;
 }
 
+.expo-media-overlay__mid {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
 .expo-media-overlay__bl {
   position: absolute;
   bottom: 0.375rem;

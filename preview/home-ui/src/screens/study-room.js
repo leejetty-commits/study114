@@ -43,7 +43,7 @@ function renderMyStudyRoomBox() {
         <span>등록 <strong>${esc(box.registered)}</strong></span>
       </div>
       <div class="my-box__banner-actions">
-        <a href="#/mypage/messages/reviews" class="my-box__link my-box__link--quiet" data-nav="/mypage/messages/reviews">쪽지 후기함 바로가기</a>
+        <a href="#/mypage/messages/reviews" class="my-box__review-badge" data-nav="/mypage/messages/reviews">쪽지 후기함</a>
         <a href="#/mypage" class="btn btn--primary btn--sm" data-nav="/mypage">마이페이지</a>
       </div>
     </aside>

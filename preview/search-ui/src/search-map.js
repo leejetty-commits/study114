@@ -123,7 +123,7 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
   const requested = String(options.regionLabel || '').trim();
   const promo = providerHome ? peekStudyRoomPromo1() : '';
   const region = providerHome ? requested || promo : requested || MOCK_REGIONS.room;
-  const parts = parseRegionParts(region, providerHome ? {} : { lat: options.lat, lng: options.lng });
+  const parts = parseRegionParts(region, { lat: options.lat, lng: options.lng });
   const items = Array.isArray(activeResultItems) ? activeResultItems : [];
   const resultSource = options.resultSource || (searched ? 'search' : 'region');
   const bannerStyle =
@@ -152,8 +152,8 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
     bannerStyle,
     providerHome,
     roomCount: providerHome ? basicListTotal(items) : items.length,
-    lat: providerHome ? parts.lat : (options.lat ?? parts.lat),
-    lng: providerHome ? parts.lng : (options.lng ?? parts.lng),
+    lat: options.lat ?? parts.lat,
+    lng: options.lng ?? parts.lng,
   });
 }
 
