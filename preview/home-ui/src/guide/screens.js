@@ -90,8 +90,8 @@ function renderGuideHome() {
       <a class="situation-card card card--accent card--accent-teal" href="#/guide/register" data-guide-nav="/guide/register">
         <span class="icon-halo icon-halo--teal"><span class="icon-tile icon-tile--teal" aria-hidden="true"><img src="${A}/tile-register.svg" alt="" width="56" height="56" /></span></span>
         <h3>등록하려고요</h3>
-        <p>공부방·과외쌤으로 등록하고 공개하는 방법을 안내합니다.</p>
-        <span class="situation-card__cta">등록·공개 보기 →</span>
+        <p>공부방·과외쌤으로 등록하고 노출하는 방법을 안내합니다.</p>
+        <span class="situation-card__cta">등록·노출 보기 →</span>
       </a>
       <a class="situation-card card card--accent card--accent-violet" href="#/guide/compare" data-guide-nav="/guide/compare">
         <span class="icon-halo icon-halo--violet"><span class="icon-tile icon-tile--violet" aria-hidden="true"><img src="${A}/tile-compare.svg" alt="" width="56" height="56" /></span></span>
@@ -163,23 +163,23 @@ function renderGuideStart() {
 function renderGuideRegister() {
   return `
     ${guideHero({
-      label: '등록·공개 소개',
-      title: '등록·공개',
-      p1: '공부방이나 과외쌤으로 등록을 시작하신다면, 어디까지가 가입이고 어디부터 공개되는지 순서대로 안내해 드릴게요.',
-      p2: '기본 정보를 입력한 뒤 상세 등록을 보완하고, 공개 가능한 상태를 확인하면 됩니다.',
+      label: '등록·노출 소개',
+      title: '등록·노출',
+      p1: '가입 필수정보를 입력하면 기본 노출이 시작됩니다. 상세등록은 카드와 상세 페이지에 보여줄 추가 정보를 보완하는 단계입니다.',
+      p2: '노출을 위한 운영자 심사·승인 절차는 없습니다.',
       art: `${A}/motif-register.svg`,
     })}
     ${sectionHead('Playbook', '등록 순서')}
-    <p class="section-lead">가입부터 공개까지 공통으로 따르는 다섯 단계입니다.</p>
+    <p class="section-lead">가입 필수정보 입력 후 기본 노출이 시작되는 흐름입니다.</p>
     ${stepList([
       { icon: `${A}/step-login.svg`, title: '회원가입·로그인', body: '등록하려면 먼저 회원으로 로그인해 주세요.' },
-      { icon: `${A}/step-form.svg`, title: '기본 정보 등록', body: '이름(상호)·지역·연락 가능 시간 등 기본 항목을 채웁니다.' },
-      { icon: `${A}/step-edit.svg`, title: '상세 등록', body: '소개·수업 과목·대상·사진 등 상세 정보를 보강합니다. 메뉴의 상세등록으로 이어집니다.' },
-      { icon: `${A}/step-publish.svg`, title: '공개하기', body: '필수 항목이 채워지면 공개 상태로 전환해 검색에 노출됩니다.' },
+      { icon: `${A}/step-form.svg`, title: '필수정보 입력', body: '이름(상호)·지역 등 가입 필수정보를 입력하면 기본 노출이 시작됩니다.' },
+      { icon: `${A}/step-publish.svg`, title: '기본 노출', body: '필수정보를 입력하면 검색·리스트에 기본 노출됩니다. 운영자 심사·승인 절차는 없습니다.' },
+      { icon: `${A}/step-edit.svg`, title: '상세 등록', body: '카드와 상세 페이지에 보여줄 추가 정보를 보완합니다. 기본 노출의 필수 조건은 아닙니다.' },
       {
         icon: `${A}/step-paid.svg`,
         title: '(선택) 유료상품 살펴보기',
-        body: '등록·공개가 끝난 뒤, 더 눈에 띄게 하고 싶다면 유료상품을 살펴볼 수 있어요. 필수는 아니며 자동 결제되지 않습니다.',
+        body: '기본 노출이 시작된 뒤, 더 눈에 띄게 하고 싶다면 유료상품을 살펴볼 수 있어요. 필수는 아니며 자동 결제되지 않습니다.',
       },
     ])}
     ${sectionHead('Checklist', '역할별 체크')}
@@ -196,7 +196,7 @@ function renderGuideRegister() {
       <li>시설/운영 형태</li>
       <li>대표 사진 — 대표 사진이 있으면 프로필을 더 쉽게 이해할 수 있어요</li>
       <li>소개</li>
-      <li>공개 전 필수 항목 누락 없는지 확인</li>
+      <li>가입 필수정보가 입력되어 기본 노출 중인지 확인</li>
     </ul>
     <ul class="checklist" id="panel-tutor" role="tabpanel" aria-labelledby="tab-tutor" hidden>
       <li>표시명</li>
@@ -206,9 +206,9 @@ function renderGuideRegister() {
       <li>수업 방식</li>
       <li>경력/소개</li>
       <li>대표 사진 — 대표 사진이 있으면 프로필을 더 쉽게 이해할 수 있어요</li>
-      <li>공개 전 필수 항목 누락 없는지 확인</li>
+      <li>가입 필수정보가 입력되어 기본 노출 중인지 확인</li>
     </ul>
-    ${sectionHead('After', '공개 후 선택')}
+    ${sectionHead('After', '기본 노출 이후 선택')}
     <div class="cta-row">
       ${extLink(STUDY_ROOM_REGISTER_URL, 'btn btn--primary', '공부방 등록')}
       ${extLink(TUTOR_REGISTER_URL, 'btn btn--secondary', '과외쌤 등록')}
