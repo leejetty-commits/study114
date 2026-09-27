@@ -44,11 +44,11 @@ export const SHOP_COMPLETENESS_DEFS = Object.freeze([
   },
   {
     id: 'teaching_style',
-    label: '지도 스타일',
+    label: '수업 스타일',
     section: 'detail',
     shopImpact: '매력(Signature) 칩',
-    emptyShort: '지도 스타일 없음',
-    emptyWhy: '지도 스타일이 없어 「이 공부방의 매력」이 약하거나 숨겨집니다',
+    emptyShort: '수업 스타일 없음',
+    emptyWhy: '수업 스타일이 없어 「이 공부방의 매력」이 약하거나 숨겨집니다',
   },
   {
     id: 'fee',
@@ -115,7 +115,7 @@ export function getShopCompletenessSummary(s, room) {
   const reasonLine =
     miss.length > 0
       ? `지금 샵이 얇아 보이는 이유: ${miss.map((m) => m.emptyShort).join(' · ')}`
-      : '마이샵에 핵심 항목이 채워져 있습니다. 미리보기로 확인해 보세요.';
+      : '프로필에 핵심 항목이 채워져 있습니다. 미리보기로 확인해 보세요.';
 
   return {
     items: sorted,

@@ -116,12 +116,14 @@ function joinFeatures(item, max = 3) {
 }
 
 /** 11장 §2-0 / 상위기획 §18 — 통계·기능 분리 (추천·후기≠액션배지) */
-function actionCountBtn(icon, count, { title, cls = '', attrs = '', disabled = false, hideWhenZero = false } = {}) {
+function actionCountBtn(icon, count, { title, aria, cls = '', attrs = '', disabled = false, hideWhenZero = false } = {}) {
   const n = Number(count) || 0;
   if (hideWhenZero && n <= 0) return '';
   const dis = disabled ? ' disabled aria-disabled="true"' : '';
-  return `<button type="button" class="item-actions__btn${cls ? ` ${cls}` : ''}" title="${esc(title)}" ${attrs}${dis}>
-    <span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count">${n}</span>
+  const label = aria || title;
+  const countHtml = n > 0 ? String(n) : '<span class="item-actions__count-empty">없음</span>';
+  return `<button type="button" class="item-actions__btn${cls ? ` ${cls}` : ''}" title="${esc(title)}" aria-label="${esc(label)}" ${attrs}${dis}>
+    <span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count">${countHtml}</span>
   </button>`;
 }
 
@@ -161,7 +163,7 @@ export function renderItemActions(opts = {}) {
     const rail = ['👍', '💬', '♡', '⇄', '✉']
       .map(
         (icon) =>
-          `<button type="button" class="item-actions__btn" disabled aria-disabled="true" tabindex="-1"><span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count">0</span></button>`,
+          `<button type="button" class="item-actions__btn" disabled aria-disabled="true" tabindex="-1" title="예시"><span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count"><span class="item-actions__count-empty">없음</span></span></button>`,
       )
       .join('');
     return `<div class="card-visual__rail" data-expo-sample-rail="1" aria-hidden="true"><div class="card-stats">${rail}</div></div>`;
@@ -183,13 +185,15 @@ export function renderItemActions(opts = {}) {
       ? `data-action="recommend-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`
       : '';
   const recommendStat = actionCountBtn('👍', rec, {
-    title: `추천 ${rec}`,
+    title: '추천하기',
+    aria: '추천',
     cls: 'item-actions__btn--stat',
     attrs: recommendAttrs,
     disabled: !guest && itemId == null,
   });
   const reviewStat = actionCountBtn('💬', rev, {
-    title: `후기 ${rev}`,
+    title: '후기 보기',
+    aria: '후기',
     cls: 'item-actions__btn--stat',
     attrs: guest
       ? `data-action="login-gate" data-gate="review" data-gate-label="후기" data-item-kind="${kind}" data-item-id="${itemId}"`
@@ -205,7 +209,8 @@ export function renderItemActions(opts = {}) {
     !showWish
       ? ''
       : actionCountBtn(wished ? '♥' : '♡', wish_count, {
-          title: `찜 ${wish_count}`,
+          title: '찜하기',
+          aria: '찜',
           cls: wished ? 'is-active item-actions__btn--action' : 'item-actions__btn--action',
           attrs: wishAttrs,
         });
@@ -214,12 +219,14 @@ export function renderItemActions(opts = {}) {
     ? ''
     : guest
       ? actionCountBtn('⇄', compare_count, {
-          title: `비교 ${compare_count}`,
+          title: '비교하기',
+          aria: '비교',
           cls: 'item-actions__btn--action',
           attrs: `data-action="compare-guest-blocked" data-compare-kind="${kind}" data-item-kind="${kind}" data-item-id="${itemId}"`,
         })
       : actionCountBtn('⇄', compare_count, {
-          title: `비교 ${compare_count}`,
+          title: '비교하기',
+          aria: '비교',
           cls: inCompare ? 'is-active item-actions__btn--action' : 'item-actions__btn--action',
           attrs: `data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`,
         });
@@ -228,7 +235,8 @@ export function renderItemActions(opts = {}) {
     ? `data-action="login-gate" data-gate="inquire" data-gate-label="쪽지" data-item-kind="${kind}" data-item-id="${itemId}"`
     : `data-action="open-detail-memo" data-item-kind="${kind}" data-item-id="${itemId}"`;
   const messageBtn = actionCountBtn('✉', message_count, {
-    title: `쪽지 ${message_count}`,
+    title: '쪽지 보내기',
+    aria: '쪽지',
     cls: 'item-actions__btn--action',
     attrs: msgAttrs,
   });
@@ -404,7 +412,10 @@ function optionalStudentPlaces(lesson_places) {
 }
 
 function appendSloganAndActions(rows, item, actions, { showIntro = true } = {}) {
-  rows.push([labeled('슬로건', item.slogan || '—', { col: 2, cls: 'expo-tbl__cell--slogan' })]);
+  const slogan = distinctSlogan(item);
+  if (slogan || !String(item?.slogan || '').trim()) {
+    rows.push([labeled('슬로건', slogan || '—', { col: 2, cls: 'expo-tbl__cell--slogan' })]);
+  }
   rows.push([{ html: actions, col: 2, cls: 'expo-tbl__cell--actions' }]);
   return rows;
 }
@@ -726,6 +737,14 @@ function featureTagList(item, max = 3) {
   return [item.feature_1, item.feature_2, item.feature_3].filter(Boolean).slice(0, max);
 }
 
+/** 특징 칩과 같은 문구(예: IELTS)를 슬로건에 한 번 더 붙이지 않는다. */
+function distinctSlogan(item) {
+  const slogan = String(item?.slogan || '').trim();
+  if (!slogan) return '';
+  const features = [item.feature_1, item.feature_2, item.feature_3].map((v) => String(v || '').trim());
+  return features.includes(slogan) ? '' : slogan;
+}
+
 function renderHcardMetaItem(label, value) {
   const v = blankDash(value || '');
   if (!v) return '';
@@ -841,7 +860,7 @@ function renderBasicTutorRow(item, opts) {
             valOnly(schedule),
             labeled('특징', item.feature_1 || '—'),
           ],
-          [labeled('슬로건', item.slogan || item.feature_1 || '—', { col: 5 })],
+          ...(distinctSlogan(item) ? [[labeled('슬로건', distinctSlogan(item), { col: 5 })]] : []),
           [{ html: actions, col: 5, cls: 'expo-tbl__cell--actions' }],
         ],
         'expo-tbl--basic expo-tbl--card',
@@ -852,7 +871,7 @@ function renderBasicTutorRow(item, opts) {
   const tags = featureTagList(item)
     .map((t) => `<span class="expo-hcard__tag">${esc(t)}</span>`)
     .join('');
-  const slogan = item.slogan || item.feature_1 || '';
+  const slogan = distinctSlogan(item);
   const gender = item.gender && item.gender !== '—' ? formatGender(item.gender) : '';
   const nameLine = gender
     ? `<span class="expo-hcard__gender">${esc(gender)}</span>${esc(item.tutor_display_name || '')}`

@@ -8,6 +8,7 @@ export {
   GNB_MUTED_TITLE,
   navRoleFromAuthUser,
   roleHomeHashPath,
+  memberHomeHashPath,
   AUTH_UI_BASE,
   HOME_UI_BASE,
   STUDY_ROOM_REGISTER_URL,

@@ -298,8 +298,8 @@ function detail1OverviewRows() {
     { label: '한 줄 소개', value: s.intro_short, required: true },
     { label: '공부방 소개 / 자랑', value: s.intro_long, multiline: true, required: true },
     { label: '홍보사진', value: photoCount ? `${photoCount}장` : '', required: true },
-    { label: '지도 스타일', value: styles.length ? `${styles.length}개 선택` : '', required: true },
-    { label: '지도 스타일 추가설명', value: s.teaching_style_note, required: true },
+    { label: '수업 스타일', value: styles.length ? `${styles.length}개 선택` : '', required: true },
+    { label: '수업 스타일 추가설명', value: s.teaching_style_note, required: true },
     { label: '수업상세', value: classCount ? `${classCount}개 등록` : '등록된 수업이 없습니다' },
     {
       label: '옵션',

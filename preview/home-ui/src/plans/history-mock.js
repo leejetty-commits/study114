@@ -121,7 +121,7 @@ export function orderStatusLabel(status) {
     paid: '결제완료',
     failed: '실패',
     canceled: '취소',
-    pending: '대기',
+    pending: '결제 대기',
   };
   return map[status] || status;
 }

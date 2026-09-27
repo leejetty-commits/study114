@@ -4,7 +4,8 @@
  */
 
 import { AUTH_UI_BASE } from './data.js';
-import { searchUiUrl, HOME_UI_BASE } from './nav-config.js';
+import { searchUiUrl, HOME_UI_BASE, memberHomeHashPath } from './nav-config.js';
+import { getAuthUser } from './auth-session.js';
 
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
 const HOME_GUEST = `${HOME_UI_BASE}/#/guest`;
@@ -262,7 +263,14 @@ export function renderHomeMarketingBanner(surface) {
   const lines = (copy.lines || [])
     .map((line) => `<p class="home-mkt__line">${accentBrandWords(line)}</p>`)
     .join('');
-  const actions = (cfg.ctas || []).map((c) => renderCta(c)).join('');
+  const actions = (cfg.ctas || [])
+    .map((c) => {
+      if (c.label !== '홈으로') return renderCta(c);
+      const path = memberHomeHashPath(getAuthUser());
+      const href = `${String(HOME_UI_BASE).replace(/\/$/, '')}/#${path}`;
+      return renderCta({ ...c, href });
+    })
+    .join('');
 
   return `
     <section class="home-mkt home-mkt--${esc(cfg.layout)} home-mkt--${esc(copy.id)}" aria-label="소개 배너">

@@ -620,7 +620,7 @@ export function ensureDemoThreads() {
 
       contextId: 1,
 
-      contextLabel: '학생 의뢰',
+      contextLabel: '등록',
 
       peerDisplayName: '맑은하늘',
 

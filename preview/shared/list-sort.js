@@ -1,7 +1,7 @@
 /**
  * 찾기결과·Basic 리스트 정렬 SSOT (1차)
  * — Prime/Pick 비적용 · 지역 필터 이후 · URL ?sort= 유지
- * — SKY 우선(과외쌤만): isSkyUniversityName(university_name)
+ * — 주요 대학 출신 우선(과외쌤만): isSkyUniversityName(university_name)
  *   · 그룹 내부 2차=추천순 · 3차=최신순 · 비SKY 제외하지 않음
  *   · university_note / 대학원 문구 / sky_flag 미사용
  */
@@ -23,7 +23,7 @@ export const LIST_SORT_LABELS = {
   price_desc: '높은 가격순',
   budget_asc: '낮은 예산순',
   budget_desc: '높은 예산순',
-  sky: 'SKY 우선',
+  sky: '주요 대학 출신 우선',
 };
 
 /**

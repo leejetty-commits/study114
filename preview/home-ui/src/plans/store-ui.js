@@ -123,7 +123,7 @@ export function renderFreePaidCompare() {
       { label: '기본 목록 노출', cells: ['포함', '포함'] },
       { label: '조회 · 찜 · 비교 담김', cells: ['포함', '포함'] },
       { label: '학부모 선연락 · 답장', cells: ['무료', '무료'] },
-      { label: 'Prime · Pick 노출', cells: ['—', '기간형 구매'] },
+      { label: '프라임 · 픽', cells: ['—', '기간형 구매'] },
       { label: '공급자→학생 선제 쪽지', cells: ['차단', '쪽지권'] },
       { label: '요청문 상세 열람', cells: ['포함', '포함'] },
       { label: '광고성 주목 배지', cells: ['—', '노출 상품과 함께'] },
@@ -230,7 +230,7 @@ export function renderBadgeAddonSection(role, ops, opts = {}) {
     <section class="plans-sf-panel plans-badge-select" data-plans-badge-section data-badge-count="${selected.length}">
       <header class="plans-sf-panel__head">
         <h2 class="plans-sf-panel__title" id="plans-badge-heading">홍보 배지 (다중 선택)</h2>
-        <p class="plans-sf-panel__lead">노출상품과 같은 기간 동안 카드에 홍보 표현을 최대 2개까지 추가할 수 있습니다. 배지는 Prime/Pick 최초 구매 또는 연장 시에만 선택·변경할 수 있으며, 선택한 노출상품과 같은 날 시작·종료합니다.</p>
+        <p class="plans-sf-panel__lead">노출상품과 같은 기간 동안 카드에 홍보 표현을 최대 2개까지 추가할 수 있습니다. 배지는 프라임/픽 최초 구매 또는 연장 시에만 선택·변경할 수 있으며, 선택한 노출상품과 같은 날 시작·종료합니다.</p>
       </header>
       <p class="plans-badge-select__meta">
         <span>선택한 노출상품 기간 · <strong>${esc(periodLabel)}</strong></span>
@@ -271,7 +271,7 @@ export function renderBadgeAddonSection(role, ops, opts = {}) {
             .join('')}
         </ul>
       </fieldset>
-      <p class="plans-muted plans-badge-select__note">이용기간 중 추가·교체·배지 단독 결제는 없습니다. 금액은 Prime/Pick과 함께 서버가 재계산합니다.</p>
+      <p class="plans-muted plans-badge-select__note">이용기간 중 추가·교체·배지 단독 결제는 없습니다. 금액은 프라임/픽과 함께 서버가 재계산합니다.</p>
     </section>`;
 }
 

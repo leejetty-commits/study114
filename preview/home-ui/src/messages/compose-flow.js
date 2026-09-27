@@ -53,7 +53,7 @@ export function startFirstMemoFlow(opts) {
     kind: opts.kind,
     targetId: opts.targetId,
     targetName: opts.targetName,
-    contextLabel: opts.contextLabel || (opts.kind === 'student' ? '학생 의뢰' : '상세'),
+    contextLabel: opts.contextLabel || (opts.kind === 'student' ? '등록' : '상세'),
     scopeBadge: badge.label,
     scopeHint: badge.hint,
     showRequestInPanel: showRequest,

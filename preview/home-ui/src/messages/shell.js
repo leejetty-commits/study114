@@ -1,5 +1,7 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents } from '../layout.js';
 import { getNavRole } from '../state.js';
+import { getAuthUser } from '../auth-session.js';
+import { memberHomeHashPath } from '../nav-config.js';
 import { getScreenIdForPath, screenTitle } from './router.js';
 
 function esc(s) {
@@ -20,7 +22,7 @@ export function renderMessagesShell(currentPath, bodyHtml) {
   const role = getNavRole();
   const screenId = getScreenIdForPath(currentPath);
   const title = screenTitle(screenId);
-  const sub = role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
+  const sub = memberHomeHashPath(getAuthUser());
 
   return `
     ${renderPreviewToolbar()}

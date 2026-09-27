@@ -145,7 +145,7 @@ export const EMPTY_COPY = {
   studentReview: {
     screenId: 'P25-S10',
     title: '검토 중인 학생이 없습니다',
-    body: '마음에 드는 학생 의뢰를 검토함에 넣어 두고, 준비가 되면 쪽지를 이어가세요.',
+    body: '마음에 드는 등록을 검토함에 넣어 두고, 준비가 되면 쪽지를 이어가세요.',
     cta: null,
   },
   contactHistory: {
@@ -399,7 +399,14 @@ export function renderStateCard(opts) {
     String(s ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;');
+  const ctaHref = String(opts.ctaHref || '');
+  const ctaLabel = String(opts.cta || '');
   const links = (opts.links || [])
+    .filter((l) => {
+      if (!l?.href) return false;
+      if (ctaHref && l.href === ctaHref && (!ctaLabel || l.label === ctaLabel)) return false;
+      return true;
+    })
     .map((l) => `<a href="${esc(l.href)}" class="state-card__link">${esc(l.label)}</a>`)
     .join('');
   const cta =

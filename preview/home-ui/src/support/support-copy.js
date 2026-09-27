@@ -113,7 +113,7 @@ export const GUIDE_ARTICLES = [
   },
   {
     slug: 'parent-check',
-    title: '학부모·학생 의뢰 체크리스트',
+    title: '학부모·학생 등록 체크리스트',
     priority: 'secondary',
     audience: '학부모',
     related: ['provider-check', 'prepay', 'privacy'],

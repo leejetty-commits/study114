@@ -181,6 +181,19 @@ export function normalizeLocation(input = {}, axis = 'room') {
   return canonical;
 }
 
+/** 같은 시·구·동 토큰이 이어 붙으며 「서울특별시 서울특별시」처럼 반복되는 표시를 접는다. */
+function dedupeAddressTokens(text) {
+  const parts = String(text || '').split(/\s+/).filter(Boolean);
+  const out = [];
+  const seen = new Set();
+  for (const part of parts) {
+    if (seen.has(part)) continue;
+    seen.add(part);
+    out.push(part);
+  }
+  return out.join(' ');
+}
+
 /**
  * @param {CanonicalLocation|Partial<CanonicalLocation>|string} loc
  * @param {LocationAxis} [axis]
@@ -202,12 +215,13 @@ export function formatLocationDisplay(loc, axis = 'room') {
   }
 
   if (apartmentName) return dong ? `${dong} · ${apartmentName}` : apartmentName;
-  if (dong && district && city) return `${city} ${district} ${dong}`;
-  if (dong && city) return `${city} ${dong}`;
-  if (dong) return dong;
-  if (district && city) return `${city} ${district}`;
+  if (dong && city && String(dong).startsWith(city)) return dedupeAddressTokens(dong);
+  if (dong && district && city) return dedupeAddressTokens(`${city} ${district} ${dong}`);
+  if (dong && city) return dedupeAddressTokens(`${city} ${dong}`);
+  if (dong) return dedupeAddressTokens(dong);
+  if (district && city) return dedupeAddressTokens(`${city} ${district}`);
   if (city) return city;
-  return raw || '위치 확인 중';
+  return dedupeAddressTokens(raw) || '위치 확인 중';
 }
 
 /** @param {string} label */

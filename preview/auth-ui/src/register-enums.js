@@ -33,7 +33,7 @@ export const SCHOOL_LEVEL_OPTIONS = [
   { value: 'elementary', label: '초등' },
   { value: 'middle', label: '중등' },
   { value: 'high', label: '고등' },
-  { value: 'n_su', label: 'N수' },
+  { value: 'n_su', label: '대입 준비(재수 이상)' },
 ];
 
 export const VISIBILITY_OPTIONS = [

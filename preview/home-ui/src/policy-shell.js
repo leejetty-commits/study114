@@ -1,5 +1,7 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from './layout.js';
 import { getNavRole } from './state.js';
+import { getAuthUser } from './auth-session.js';
+import { memberHomeHashPath } from './nav-config.js';
 import { renderPolicyNav } from './policy-screens.js';
 import { getPolicySlug } from './policy-router.js';
 
@@ -7,17 +9,14 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
-function getRoleHomePath(role) {
-  if (role === 'guest') return '/guest';
-  if (role === 'parent') return '/parent';
-  if (role === 'study_room') return '/study-room';
-  return '/tutor';
+function getRoleHomePath() {
+  return memberHomeHashPath(getAuthUser());
 }
 
 export function renderPolicyShell(title, path, bodyHtml) {
   const role = getNavRole();
   const slug = getPolicySlug(path);
-  const homePath = getRoleHomePath(role);
+  const homePath = getRoleHomePath();
   const mainHtml = `
     <div class="sup-layout">
       <header class="sup-content__head">

@@ -10,6 +10,7 @@ import {
   listTutors,
   patchTutor,
 } from './registrations-api.js';
+import { authRoleType } from './auth-role.js';
 
 let apiMode = false;
 
@@ -40,15 +41,38 @@ export function deactivateRegistrationsApi() {
   resetCaches();
 }
 
+/**
+ * GET 허용 역할만 호출한다. 게스트·다른 역할은 요청 자체를 만들지 않는다.
+ * students=guardian_student · study-rooms=study_room_owner · tutors=tutor
+ * @param {string} roleType
+ * @returns {'students'|'studyRooms'|'tutors'|''}
+ */
+function registrationListForRole(roleType) {
+  if (roleType === 'guardian_student') return 'students';
+  if (roleType === 'study_room_owner') return 'studyRooms';
+  if (roleType === 'tutor') return 'tutors';
+  return '';
+}
+
 export async function hydrateRegistrationsCache() {
-  const [studentsRes, roomsRes, tutorsRes] = await Promise.all([
-    listStudents().catch(() => ({ students: [] })),
-    listStudyRooms().catch(() => ({ rooms: [] })),
-    listTutors().catch(() => ({ tutors: [] })),
-  ]);
-  studentsCache = (studentsRes.students ?? []).map((s) => ({ ...s }));
-  studyRoomsCache = (roomsRes.rooms ?? []).map((r) => ({ ...r }));
-  tutorsCache = (tutorsRes.tutors ?? []).map((t) => ({ ...t }));
+  const kind = registrationListForRole(authRoleType());
+  if (kind !== 'students') studentsCache = [];
+  if (kind !== 'studyRooms') studyRoomsCache = [];
+  if (kind !== 'tutors') tutorsCache = [];
+  if (kind === 'students') {
+    const studentsRes = await listStudents().catch(() => ({ students: [] }));
+    studentsCache = (studentsRes.students ?? []).map((s) => ({ ...s }));
+    return;
+  }
+  if (kind === 'studyRooms') {
+    const roomsRes = await listStudyRooms().catch(() => ({ rooms: [] }));
+    studyRoomsCache = (roomsRes.rooms ?? []).map((r) => ({ ...r }));
+    return;
+  }
+  if (kind === 'tutors') {
+    const tutorsRes = await listTutors().catch(() => ({ tutors: [] }));
+    tutorsCache = (tutorsRes.tutors ?? []).map((t) => ({ ...t }));
+  }
 }
 
 export function getStudentsCache() {

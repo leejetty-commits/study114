@@ -87,6 +87,6 @@ export function renderTutorActivityBars(opts = {}) {
       <div class="act-bars__list" role="list">
         ${body}
       </div>
-      <p class="act-bars__note">시드 노출 데이터 기준 · 과목 필터 미반영</p>
+      <p class="act-bars__note">지금은 예시 지역 기준으로 보여 드려요. 과목 필터는 아직 반영되지 않았어요.</p>
     </div>`;
 }

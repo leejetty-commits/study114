@@ -1,5 +1,7 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole } from '../state.js';
+import { getAuthUser } from '../auth-session.js';
+import { memberHomeHashPath } from '../nav-config.js';
 import { renderPlansPageTitle, renderPlansNav } from './nav.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { renderPromoWithRightRail } from '../right-rail.js';
@@ -14,8 +16,7 @@ import { renderPlansHubCinema, renderPlansHubRailCard } from './hub-home.js';
 export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
   const role = opts.role || getNavRole();
   const headerRole = opts.headerRole || role;
-  const sub =
-    role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
+  const sub = memberHomeHashPath(getAuthUser());
   const hideNav =
     currentPath.startsWith('/plans/checkout') || currentPath.startsWith('/plans/result');
   const guestCatalogOnly = Boolean(opts.isGuest);

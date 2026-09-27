@@ -56,7 +56,7 @@ export const SEED_COMMUNITY_BOARDS = [
 
 export const COMMUNITY_BOARD_VISUAL = {
   director: {
-    kicker: 'Room',
+    kicker: '공부방',
     icon: '/assets/info-refresh/motif-room.svg',
     desc: '운영·모집·공간 운영 질문을 남기고 이웃 원장과 나눠 보세요.',
     cta: '입장하기',
@@ -67,7 +67,7 @@ export const COMMUNITY_BOARD_VISUAL = {
     kickerColor: '',
   },
   tutor: {
-    kicker: 'Tutor',
+    kicker: '과외쌤',
     icon: '/assets/info-refresh/motif-tutor.svg',
     desc: '수업 준비·학부모 응대·일정 조율 등 현장 팁을 묻고 답합니다.',
     cta: '입장하기',
@@ -78,7 +78,7 @@ export const COMMUNITY_BOARD_VISUAL = {
     kickerColor: 'var(--role-tutor)',
   },
   parent: {
-    kicker: 'Parent',
+    kicker: '학생·학부모',
     icon: '/assets/info-refresh/motif-parent.svg',
     desc: '학습 계획·과외 선택·공부방 이용 경험을 구체적으로 나눠 보세요.',
     cta: '입장하기',
@@ -89,7 +89,7 @@ export const COMMUNITY_BOARD_VISUAL = {
     kickerColor: 'var(--role-student)',
   },
   solved: {
-    kicker: 'Solved',
+    kicker: '해결됨',
     icon: '/assets/info-refresh/motif-solved.svg',
     desc: '고민이 풀린 과정을 짧게 남겨, 다음 사람에게 단서를 전합니다.',
     cta: '후기 보기',

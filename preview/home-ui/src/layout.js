@@ -49,7 +49,7 @@ export function renderPreviewToolbar() {
             return `<button type="button" class="preview-toolbar__btn ${active ? 'is-active' : ''}" data-nav="${path}">${meta.label}</button>`;
           })
           .join('')}
-        <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${getDefaultMypagePath(getNavRole())}">마이페이지</button>
+        <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${mypageEntryForSession()}">마이페이지</button>
         <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지·후기함</button>
         <button type="button" class="preview-toolbar__btn ${onCommunity ? 'is-active' : ''}" data-nav="/community">커뮤니티</button>
         <button type="button" class="preview-toolbar__btn ${onPromo ? 'is-active' : ''}" data-nav="/promo/study-room">홍보</button>
@@ -177,6 +177,11 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
     if (link) href = link.external ? link.url : `#${link.url}`;
   }
   return `<a href="${href}" class="${cls}" data-action="gnb-${item.id}">${label}</a>`;
+}
+
+function mypageEntryForSession() {
+  if (navRoleFromAuthUser(getAuthUser()) === 'study_room') return getDefaultMypagePath('study_room');
+  return getDefaultMypagePath(getNavRole());
 }
 
 /** @returns {'/guest'|'/parent'|'/study-room'|'/tutor'} */
@@ -526,7 +531,7 @@ export function bindLayoutEvents(root, rerender) {
         const role = getNavRole();
         goSameTab(searchUiUrl(defaultSearchTabForRole(role), role));
       } else if (action === 'util-mypage') {
-        navigate(getDefaultMypagePath(getNavRole()));
+        navigate(mypageEntryForSession());
       } else if (action === 'util-messages') {
         navigate(getDefaultMessagesPath());
       } else if (action === 'util-recent') {

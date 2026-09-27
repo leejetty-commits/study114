@@ -1,5 +1,7 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole } from '../state.js';
+import { getAuthUser } from '../auth-session.js';
+import { memberHomeHashPath } from '../nav-config.js';
 import { LIBRARY_HEAD, LIBRARY_SECTIONS } from './library-copy.js';
 import { getLibrarySection } from './library-router.js';
 
@@ -7,11 +9,8 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
-function getRoleHomePath(role) {
-  if (role === 'guest') return '/guest';
-  if (role === 'parent') return '/parent';
-  if (role === 'study_room') return '/study-room';
-  return '/tutor';
+function getRoleHomePath() {
+  return memberHomeHashPath(getAuthUser());
 }
 
 /** @param {string} path */
@@ -53,7 +52,7 @@ function renderLibraryTitle(path) {
  */
 export function renderLibraryShell(path, bodyHtml) {
   const role = getNavRole();
-  const homePath = getRoleHomePath(role);
+  const homePath = getRoleHomePath();
   const mainHtml = `
     <div class="sup-layout">
       <header class="sup-content__head">

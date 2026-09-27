@@ -20,9 +20,9 @@ export function renderPlansHubCinema() {
         <div class="cinema-bg__overlay"></div>
       </div>
       <div class="cinema-content">
-        <div class="cinema-eyebrow">PAID · GUIDE HUB</div>
+        <div class="cinema-eyebrow">유료 안내</div>
         <h1>무료로 시작하고,<br>필요할 때만 올린다</h1>
-        <p class="cinema-lead">마이샵 꾸미기와 Basic 노출은 무료입니다. 더 자주 보이고 싶을 때는 노출상품, 먼저 연락하고 싶을 때는 쪽지권을 선택하세요.</p>
+        <p class="cinema-lead">프로필 꾸미기와 베이직카드 노출은 무료입니다. 더 자주 보이고 싶을 때는 노출상품, 먼저 연락하고 싶을 때는 쪽지권을 선택하세요.</p>
         <div class="cinema-actions">
           <a class="btn-cinema-primary" href="#/plans/positions" data-plans-nav="/plans/positions">노출상품 자세히 보기</a>
           <a class="btn-cinema-ghost" href="#/plans/access" data-plans-nav="/plans/access">쪽지권 자세히 보기</a>
@@ -67,13 +67,13 @@ export function renderPlansHomeBody(opts = {}) {
 
       <div class="entry-grid" role="list">
         <a class="entry-card" href="#/plans/positions" data-plans-nav="/plans/positions" role="listitem">
-          <span class="entry-kicker">EXPOSURE</span>
+          <span class="entry-kicker">노출</span>
           <h3 class="entry-title">노출상품</h3>
-          <p class="entry-desc">Prime·Pick으로 더 자주 발견되게 만듭니다. 홈·추천 영역에서 보이는 기회를 기간제로 올립니다.</p>
+          <p class="entry-desc">프라임·픽으로 더 자주 발견되게 만듭니다. 홈·추천 영역에서 보이는 기회를 기간제로 올립니다.</p>
           <span class="entry-cta">상세에서 기간 선택 →</span>
         </a>
         <a class="entry-card" href="#/plans/access" data-plans-nav="/plans/access" role="listitem">
-          <span class="entry-kicker">MESSAGE</span>
+          <span class="entry-kicker">쪽지</span>
           <h3 class="entry-title">쪽지권</h3>
           <p class="entry-desc">학생에게 먼저 보내는 첫 쪽지 기회를 선택합니다. 같은 대화의 후속 응답은 무료입니다.</p>
           <span class="entry-cta">상세에서 횟수 선택 →</span>
@@ -98,7 +98,7 @@ export function renderPlansHomeBody(opts = {}) {
           <li>목록·추천에서 더 자주 보이고 싶을 때 → <strong>노출상품</strong></li>
           <li>관심 학생에게 먼저 쪽지를 보내고 싶을 때 → <strong>쪽지권</strong></li>
           <li>노출상품에 짧은 강조 표시를 더하고 싶을 때 → <strong>홍보 배지</strong>(노출과 함께·최대 2개)</li>
-          <li>마이샵 꾸미기·Basic 노출만으로 충분할 때는 유료 없이 이용해도 됩니다</li>
+          <li>프로필 꾸미기·베이직카드 노출만으로 충분할 때는 유료 없이 이용해도 됩니다</li>
         </ul>
       </section>
 
@@ -107,11 +107,11 @@ export function renderPlansHomeBody(opts = {}) {
         <div class="free-paid-grid">
           <div class="fp-cell">
             <strong>무료</strong>
-            <span>마이샵 꾸미기 · Basic 목록 노출 · 받은 쪽지에 답장</span>
+            <span>프로필 꾸미기 · 베이직카드 목록 노출 · 받은 쪽지에 답장</span>
           </div>
           <div class="fp-cell">
             <strong>선택 유료</strong>
-            <span>노출상품(Prime/Pick) · 쪽지권 · 홍보 배지(노출상품과 함께)</span>
+            <span>노출상품(프라임/픽) · 쪽지권 · 홍보 배지(노출상품과 함께)</span>
           </div>
         </div>
       </section>

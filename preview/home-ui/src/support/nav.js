@@ -12,10 +12,10 @@ export const SUPPORT_NAV = [
 
 /** @param {string} path */
 export function getActiveNavId(path) {
+  if (path === '/support' || path === '/support/') return 'hub';
   if (path.startsWith('/support/policies')) return 'policies';
   if (path.startsWith('/support/library')) return 'library';
   if (path === '/support/contact/tickets') return 'contact';
-  if (path === '/support' || path === '/support/') return 'notice';
   const hit = SUPPORT_NAV.find((n) => path === n.path);
   if (hit) return hit.id;
   return 'notice';
@@ -54,6 +54,7 @@ export function renderSupportNav(path) {
       <div class="if-nav-mobile">
         <label class="if-nav-mobile__label" for="support-nav-select">고객센터 메뉴</label>
         <select id="support-nav-select" class="if-nav-mobile__select" data-sup-nav-select>
+          ${active === 'hub' ? `<option value="/support" selected>고객센터</option>` : ''}
           ${SUPPORT_NAV.map((n) => {
             const locked = Boolean(n.requiresLogin) && !loggedIn;
             const selected = active === n.id ? ' selected' : '';

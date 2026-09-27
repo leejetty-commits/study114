@@ -4,6 +4,7 @@
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
 import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES, getStudyRoomEntryPath, getTutorEntryPath } from './mypage/router.js';
+import { isStudyRoomAuth } from './auth-role.js';
 import { studyRoomLegacyExposureRedirect } from './study-room-reg/router.js';
 import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
 import {
@@ -379,8 +380,11 @@ export function bootstrapSupportRoute() {
     return true;
   }
   if (path === '/support' || path === '/support/') {
-    window.location.replace(`#${getDefaultSupportPath()}`);
-    return true;
+    const hub = getDefaultSupportPath();
+    if (hub !== '/support' && hub !== '/support/') {
+      window.location.replace(`#${hub}`);
+      return true;
+    }
   }
 
   // 레거시 약관 경로 → 고객센터 약관·정책
@@ -674,6 +678,27 @@ export function bootstrapPlansRoute() {
 }
 
 /**
+ * 공부방 세션의 마이페이지 기본 진입.
+ * /mypage · home · registrations · registrations/students 는 학생 목록으로 보내지 않는다.
+ * @param {string} path
+ * @returns {string | null}
+ */
+function studyRoomMypageEntry(path) {
+  if (!isStudyRoomAuth()) return null;
+  const p = String(path || '').split('?')[0];
+  if (
+    p === '/mypage' ||
+    p === '/mypage/' ||
+    p === '/mypage/home' ||
+    p === '/mypage/registrations' ||
+    p === '/mypage/registrations/students'
+  ) {
+    return getStudyRoomEntryPath();
+  }
+  return null;
+}
+
+/**
  * Path URL(`/mypage/...`) 또는 bare `#/mypage`를 hash 라우트로 정규화.
  * SSOT 부록 A의 PHP 경로로 접속해도 프리뷰가 열리도록 한다.
  * @returns {boolean} location.replace를 호출했으면 true
@@ -683,7 +708,7 @@ export function bootstrapMypageRoute() {
 
   if (!hash && pathname.startsWith('/mypage')) {
     const bare = pathname === '/mypage' || pathname === '/mypage/';
-    const target = bare ? getDefaultMypagePath(getActiveRole()) : pathname;
+    const target = bare ? studyRoomMypageEntry('/mypage') || getDefaultMypagePath(getActiveRole()) : pathname;
     window.location.replace(`${origin}/${search}#${target}`);
     return true;
   }
@@ -701,7 +726,13 @@ export function bootstrapMypageRoute() {
   }
 
   if (path === '/mypage' || path === '/mypage/') {
-    window.location.replace(`#${getDefaultMypagePath(getNavRole())}`);
+    window.location.replace(`#${studyRoomMypageEntry(path) || getDefaultMypagePath(getNavRole())}`);
+    return true;
+  }
+
+  const roomEntry = studyRoomMypageEntry(path);
+  if (roomEntry) {
+    window.location.replace(`#${roomEntry}`);
     return true;
   }
 
@@ -739,7 +770,7 @@ export function bootstrapMypageRoute() {
   }
 
   if (path.startsWith('/mypage/') && !normalizeMypagePath(path)) {
-    window.location.replace(`#${getDefaultMypagePath(getNavRole())}`);
+    window.location.replace(`#${studyRoomMypageEntry(path) || getDefaultMypagePath(getNavRole())}`);
     return true;
   }
 
@@ -829,9 +860,11 @@ export function getMypagePath() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
   const pathOnly = path.split('?')[0];
+  const roomEntry = studyRoomMypageEntry(pathOnly);
+  if (roomEntry) return roomEntry;
   const normalized = normalizeMypagePath(pathOnly);
   if (normalized) return normalized;
-  return getDefaultMypagePath(getNavRole());
+  return studyRoomMypageEntry('/mypage') || getDefaultMypagePath(getNavRole());
 }
 
 export function getCurrentScreen() {

@@ -438,7 +438,7 @@ function renderDetailForm(tutor) {
       )}
       ${renderFormSection(
         '학력 · 소개 · 연락',
-        '프로필 사진은 아래에서 최대 3장까지 올릴 수 있습니다. 1번 사진이 BASIC·PICK·PRIME 카드 대표 사진입니다.',
+        '프로필 사진은 아래에서 최대 3장까지 올릴 수 있습니다. 1번 사진이 베이직카드·픽·프라임 카드 대표 사진입니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <div data-trc-field="university">

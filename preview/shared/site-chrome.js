@@ -72,9 +72,14 @@ function roleHomePathForNav(role) {
   return '/guest';
 }
 
+/** 검색 등 home 밖 GNB — 공지 직행 없이 고객센터 허브 `#/support` */
+function supportHubUrl() {
+  return `${String(HOME_UI_BASE).replace(/\/$/, '')}/#/support`;
+}
+
 function gnbHref(itemId, role) {
   if (itemId === 'home') return homeHashUrl(roleHomePathForNav(role));
-  if (itemId === 'support') return homeHashUrl('/support/notice');
+  if (itemId === 'support') return supportHubUrl();
   if (itemId === 'community' || itemId === 'concern') return homeHashUrl('/community');
   if (itemId === 'plans') return homeHashUrl('/plans');
   const link = resolveGnbLink(itemId, role);
@@ -235,7 +240,7 @@ export function bindSiteChrome(root, handlers = {}) {
           }
           if (gnbId === 'support') {
             if (navigateHome && isHomeUiHost()) navigateHome('/support');
-            else goSameTab(dest);
+            else goSameTab(supportHubUrl());
             return;
           }
           if (gnbId === 'community' || gnbId === 'concern') {

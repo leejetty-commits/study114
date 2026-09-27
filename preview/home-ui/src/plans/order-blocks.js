@@ -104,7 +104,7 @@ export function studyRoomRegionPurchaseState(region, ctx) {
     if (room.detail_completion_status !== 'expanded_complete') {
       return {
         purchasable: false,
-        reason: productCode === 'prime' ? 'Prime 정보 부족 · 등록점검에서 확인' : 'Pick 정보 부족 · 등록점검에서 확인',
+        reason: productCode === 'prime' ? '프라임 정보 부족 · 등록점검에서 확인' : '픽 정보 부족 · 등록점검에서 확인',
         tone: 'warn',
       };
     }
@@ -469,7 +469,7 @@ export function renderPolicyAccordion(family) {
         <ul class="plans-tier-list">
           <li>시작 전: 전액 환불</li>
           <li>시작 후: 요청일 다음 날부터 남은 미사용 기간을 실제 결제금액 기준 일할 계산</li>
-          <li>만료 후 Basic(기본 노출)으로 복귀 · 마이샵·프로필은 유지</li>
+          <li>만료 후 베이직카드(기본 노출)로 복귀 · 프로필 꾸미기는 유지</li>
           <li>자동연장 없음</li>
         </ul>
         <p class="mypage-muted">환불 금액은 서버 정본으로 산정합니다. 화면 안내는 참고용입니다.</p>
@@ -480,7 +480,7 @@ export function renderPolicyAccordion(family) {
 export function renderBasicFreeRow() {
   return `
     <div class="plans-basic-free" data-plans-basic-free>
-      <strong>마이샵 꾸미기와 Basic 노출은 무료입니다.</strong>
+      <strong>프로필 꾸미기와 베이직카드 노출은 무료입니다.</strong>
       <p>별도의 끌어올리기(UP) 상품은 제공하지 않습니다. 더 좋은 자리가 필요하면 노출상품을 선택하세요.</p>
     </div>`;
 }

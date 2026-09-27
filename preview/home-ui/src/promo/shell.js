@@ -1,5 +1,7 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole, getPromoPath } from '../state.js';
+import { getAuthUser } from '../auth-session.js';
+import { memberHomeHashPath } from '../nav-config.js';
 import { renderPromoScreen, bindPromoScreenEvents } from './screens.js';
 import { getPromoView } from './router.js';
 import { getPromoLandingByPath } from './catalog.js';
@@ -9,7 +11,7 @@ export function renderPromoShell(currentPath, bodyHtml) {
   const role = getNavRole();
   const landing = getPromoLandingByPath(currentPath);
   const title = landing?.title || STUDY_ROOM_PROMO.meta.title;
-  const sub = role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
+  const sub = memberHomeHashPath(getAuthUser());
 
   const mainHtml = `
     <div class="promo-layout">

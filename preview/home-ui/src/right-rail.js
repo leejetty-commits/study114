@@ -20,10 +20,14 @@ const RAIL_MEDIA_TEASER = {
   eyebrow: '브랜드 소개',
   title: '우동공과는 어떤 분위기의 서비스일까요',
   caption: '서비스 분위기를 짧게 먼저 느껴보세요',
-  landingPath: '/promo/study-room',
-  landingLabel: '소개 페이지에서 보기',
   videoUrl: '',
 };
+
+/** 공부방 소개는 공부방·게스트만. 과외쌤·학생에는 붙이지 않는다. */
+function studyRoomTeaserLanding(role) {
+  if (role === 'tutor' || role === 'parent') return null;
+  return { path: '/promo/study-room', label: '공부방 소개 보기' };
+}
 
 /**
  * @typedef {{
@@ -299,7 +303,7 @@ function actionCtasForContext(slotKey, ctx) {
     const paid = slotKey === 'plans_right_rail';
     return [
       paid
-        ? { title: '유료 노출 안내', desc: '상세등록 이후 Prime/Pick', href: '#/plans', cta: '유료상품', tone: 'paid' }
+        ? { title: '유료 노출 안내', desc: '상세등록 이후 프라임/픽', href: '#/plans', cta: '유료상품', tone: 'paid' }
         : { title: '3분 등록부터', desc: '기본등록으로 가볍게 시작', href: '#/guide/registration', cta: '등록방법' },
       { title: '시즌 모집 준비', desc: '소개문·사진 보완 포인트', href: '#/community/director', cta: '공부방 고민방' },
     ];
@@ -308,6 +312,12 @@ function actionCtasForContext(slotKey, ctx) {
     return [
       { title: '프로필 보완', desc: '문의 전환을 높이는 소개 흐름', href: '#/guide/registration', cta: '등록방법' },
       { title: '학생 접근 흐름', desc: '요청문·쪽지 전 확인', href: '#/community/tutor', cta: '과외쌤 고민방' },
+    ];
+  }
+  if (role === 'parent') {
+    return [
+      { title: '찜·비교·쪽지', desc: '첫 연락은 쪽지로 안전하게', href: '#/guide/saved-contact', cta: '이용 흐름' },
+      { title: '안전과외 가이드', desc: '개인정보 공유 전 행동 요령', href: '#/guide/safety', cta: '가이드 보기' },
     ];
   }
   const promo = STUDY_ROOM_PROMO.railCard;
@@ -364,9 +374,11 @@ function renderActionItem(item, featured, ctx) {
 }
 
 function renderMediaTeaserSlot(ctx) {
+  const landingSpec = studyRoomTeaserLanding(ctx.navRole);
+  if (!landingSpec) return '';
   const media = RAIL_MEDIA_TEASER;
   const videoUrl = String(media.videoUrl || '').trim();
-  const landing = railAnchor(media.landingPath, 'live-rail-slot__cta', ctx, esc(media.landingLabel));
+  const landing = railAnchor(landingSpec.path, 'live-rail-slot__cta', ctx, esc(landingSpec.label));
   if (!videoUrl) {
     return `
     <section class="live-rail-slot live-rail-slot--media" data-rail-media="idle">

@@ -3,8 +3,9 @@ import {
   SUBMISSION_DOCS_LEAD,
   TRUST_PLATFORM_DISCLAIMER,
 } from '../lifecycle-copy.js';
-import { TUTOR_REGISTER_URL, STUDY_ROOM_REGISTER_URL } from '../nav-config.js';
+import { TUTOR_REGISTER_URL, STUDY_ROOM_REGISTER_URL, navRoleFromAuthUser } from '../nav-config.js';
 import { getNavRole, getMypagePath } from '../state.js';
+import { isStudyRoomAuth } from '../auth-role.js';
 import {
   getPreviewProfile,
   getRegistrationData,
@@ -136,20 +137,29 @@ function renderCtaBlock(cta) {
 /** @param {string} path */
 export function renderMypageScreen(path) {
   const role = getNavRole();
+  const sessionRole = navRoleFromAuthUser(getAuthUser());
   /** @type {'parent'|'study_room'|'tutor'} */
-  const r = role === 'guest' ? 'parent' : role;
+  const r =
+    sessionRole === 'study_room' || isStudyRoomAuth()
+      ? 'study_room'
+      : role === 'guest'
+        ? 'parent'
+        : role;
   const profile = getPreviewProfile(r);
   const counts = getSummaryCounts(r);
   const cta = getPrimaryCta(r);
 
-  // 공부방: 홈·내 등록 중간페이지 → 마이샵(hub) 직행
-  if (r === 'study_room' && (path === '/mypage/home' || path === '/mypage/registrations')) {
+  // 공부방: 홈·내 등록·학생 목록 URL이어도 학생 화면을 그리지 않고 등록 허브로 바로 그린다.
+  if (
+    r === 'study_room' &&
+    (path === '/mypage/home' ||
+      path === '/mypage/registrations' ||
+      path === '/mypage/registrations/students')
+  ) {
     const entry = getStudyRoomEntryPath();
-    queueMicrotask(() => {
-      if (window.location.hash === '#/mypage/home' || window.location.hash === '#/mypage/registrations') {
-        window.location.hash = entry;
-      }
-    });
+    const cur = (window.location.hash.slice(1) || '').split('?')[0];
+    const p = cur.startsWith('/') ? cur : `/${cur}`;
+    if (p !== entry) window.location.replace(`#${entry}`);
     if (isStudyRoomRegPath(entry)) return renderStudyRoomRegScreen(entry);
     return renderStudyRoomRegScreen('/mypage/registrations/study-rooms');
   }

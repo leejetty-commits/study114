@@ -126,6 +126,10 @@ export function renderSupportScreen(path) {
     return renderSupportLibrarySection(path);
   }
 
+  if (path === '/support' || path === '/support/') {
+    return `${renderSupportHero()}${renderSupportQuickCards()}`;
+  }
+
   const navId = getActiveNavId(path);
   if (navId === 'faq') return renderFaqSection();
   if (navId === 'notice') return renderNoticeSection();

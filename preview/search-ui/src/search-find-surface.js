@@ -1609,8 +1609,15 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
         'student',
         state(),
       );
-      const base = '#/search/student';
-      window.location.hash = `${base}?hope=${encodeURIComponent(hope)}`;
+      const raw = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+      const qIdx = raw.indexOf('?');
+      const params = new URLSearchParams(qIdx === -1 ? '' : raw.slice(qIdx + 1));
+      params.set('hope', hope);
+      if (!params.get('role')) {
+        const role = state().role;
+        if (role && role !== 'guest') params.set('role', role);
+      }
+      window.location.hash = `#/search/student?${params.toString()}`;
       rerender();
     });
   });

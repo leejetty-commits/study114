@@ -1,6 +1,7 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole } from '../state.js';
 import { getAuthUser, isAdminUser } from '../auth-session.js';
+import { navRoleFromAuthUser } from '../nav-config.js';
 import { resolveAccountDisplayName } from '../auth/display-identity.js';
 import {
   MYPAGE_NAV,
@@ -64,7 +65,8 @@ function renderBreadcrumb(currentPath, title, role) {
  * @param {string} bodyHtml
  */
 export function renderMypageShell(currentPath, bodyHtml) {
-  const role = getNavRole();
+  const sessionRole = navRoleFromAuthUser(getAuthUser());
+  const role = sessionRole === 'study_room' ? 'study_room' : getNavRole();
   const screenId = getScreenIdForPath(currentPath);
   const title = screenTitle(screenId, currentPath, role);
   const authUser = getAuthUser();

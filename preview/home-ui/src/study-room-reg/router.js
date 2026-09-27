@@ -78,7 +78,7 @@ export function studyRoomLegacyExposureRedirect(hashPath) {
 export function studyRoomRegScreenTitle(screenId) {
   const map = {
     'P20-01': '공부방 목록',
-    'P20-02': '마이샵',
+    'P20-02': '프로필 꾸미기',
     'P20-03a': '기본정보',
     'P20-03b': '상세정보1',
     'P20-03c': '상세정보2',
@@ -107,7 +107,7 @@ export function studyRoomListTabPath(tab) {
 
 /** 바디 상단 가로 탭 — 필/라운드 박스 금지, 밑줄형 */
 export const STUDY_ROOM_TOP_TABS = [
-  { key: 'hub', label: '마이샵' },
+  { key: 'hub', label: '프로필 꾸미기' },
   { key: 'basic', label: '기본정보' },
   { key: 'detail', label: '상세정보1' },
   { key: 'detail2', label: '상세정보2' },

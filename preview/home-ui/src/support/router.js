@@ -19,7 +19,7 @@ const LIBRARY_SECTIONS = ['templates', 'guides'];
 export function normalizeSupportPath(hashPath) {
   const raw = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
   const p = raw.split('?')[0];
-  if (p === '/support' || p === '/support/') return '/support/notice';
+  if (p === '/support' || p === '/support/') return '/support';
   if (p === SUPPORT_TERMS_LEGACY_PATH || p === `${SUPPORT_TERMS_LEGACY_PATH}/`) return null;
   if (['faq', 'notice', 'contact'].some((s) => p === `/support/${s}`)) return p;
   if (p === '/support/contact/tickets') return p;
@@ -40,7 +40,7 @@ export function isAdminSupportPath(path) {
 }
 
 export function getDefaultSupportPath() {
-  return '/support/notice';
+  return '/support';
 }
 
 /** @param {string} path */

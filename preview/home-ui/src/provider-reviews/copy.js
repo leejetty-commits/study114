@@ -80,7 +80,7 @@ export const PROVIDER_REVIEW_COPY = {
   inboxHub: '후기함',
   inboxByTarget: '대상별 보기',
   inboxByTargetTitle: '이 대상의 후기',
-  inboxByTargetLead: '마이샵이나 상세에서 후기 더보기를 누르면 해당 공부방·과외쌤 후기가 여기에 모입니다.',
+  inboxByTargetLead: '프로필이나 상세에서 후기 더보기를 누르면 해당 공부방·과외쌤 후기가 여기에 모입니다.',
   inboxByTargetEmpty: '아직 연결된 대상이 없어요. 공개 프로필의 후기 더보기에서 바로 들어올 수 있어요.',
   inboxByTargetOpen: '이 대상의 후기 보기',
   inboxWritten: '내가 쓴 후기',

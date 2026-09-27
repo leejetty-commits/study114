@@ -7,6 +7,7 @@ import {
   attachmentDownloadUrl,
 } from './board-api.js';
 import { getBoardAccess } from '../board-channel-acl.js';
+import { authRoleType } from '../auth-role.js';
 
 const LIBRARY_BOARD_KEYS = ['library', 'library-template', 'library-guide-pdf'];
 const OPERATIONAL_BOARD_KEYS = ['notice', 'faq', 'safe-guide'];
@@ -87,16 +88,27 @@ export function boardKeysBlockedForRole(navRole) {
 }
 
 /**
+ * 명시 navRole이 없으면 세션 role_type. 비로그인은 guest.
+ * blocked 보드(submission 은 과외쌤·운영만)는 GET 하지 않는다.
+ * @param {string} [explicit]
+ */
+function resolveHydrateNavRole(explicit) {
+  const given = String(explicit || '').trim();
+  if (given) return given;
+  return authRoleType() || 'guest';
+}
+
+/**
  * @param {{ navRole?: string, onlyKeys?: string[] }} [opts]
- * navRole이 있으면 그 역할에서 blocked인 보드는 요청하지 않는다.
+ * navRole(또는 세션 역할)에서 blocked인 보드는 요청하지 않는다.
  * onlyKeys가 있으면 그 키만 갱신한다.
  */
 export async function hydrateBoardCache(opts = {}) {
-  const navRole = opts.navRole || '';
+  const navRole = resolveHydrateNavRole(opts.navRole);
   const only = Array.isArray(opts.onlyKeys) ? new Set(opts.onlyKeys) : null;
   const keys = HYDRATE_BOARD_KEYS.filter((key) => !only || only.has(key));
   const pairs = await Promise.all(keys.map(async (key) => {
-    if (navRole && getBoardAccess(key, navRole).access === 'blocked') {
+    if (getBoardAccess(key, navRole).access === 'blocked') {
       return [key, []];
     }
     const data = await fetchBoardPosts(key).catch(() => ({ posts: [] }));

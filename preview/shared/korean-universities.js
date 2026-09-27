@@ -52,7 +52,7 @@ export const KOREAN_UNIVERSITY_OPTIONS = KOREAN_UNIVERSITY_NAMES.map((label) => 
   label,
 }));
 
-/** SKY 우선 — 학부 정식명 + 짧은 표기만 (university_note·대학원 문구 파싱 금지) */
+/** 주요 대학 출신 우선 — 학부 정식명 + 짧은 표기만 (university_note·대학원 문구 파싱 금지) */
 export const SKY_UNIVERSITY_NAMES = Object.freeze(['서울대학교', '연세대학교', '고려대학교']);
 
 /** @type {ReadonlySet<string>} */

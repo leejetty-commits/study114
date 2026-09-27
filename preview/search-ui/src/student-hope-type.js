@@ -48,7 +48,7 @@ export const DEFAULT_STUDENT_HOPE_TYPE = /** @type {StudentHopeType} */ ('tutor'
 export function renderHopeTypeGate() {
   return `
     <section class="search-hope-gate" aria-label="희망 유형 선택">
-      <h2 class="search-hope-gate__title">어떤 학생 의뢰를 볼까요?</h2>
+      <h2 class="search-hope-gate__title">어떤 학생 등록을 볼까요?</h2>
       <p class="search-hope-gate__desc">시장 비교용 블라인드 리스트입니다. 실명·연락처·쪽지는 제공되지 않습니다.</p>
       <div class="search-hope-gate__actions">
         <button type="button" class="btn btn--primary" data-action="pick-hope-type" data-hope="tutor">과외 희망 학생</button>

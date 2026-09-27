@@ -63,7 +63,7 @@ export function studentRegScreenTitle(screenId) {
     'P19-05': '쪽지설정',
     'P19-06': '삭제',
   };
-  return map[screenId] || '학생 의뢰 관리';
+  return map[screenId] || '등록';
 }
 
 /** @param {number} id */

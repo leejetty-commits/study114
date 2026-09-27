@@ -315,9 +315,9 @@ function isLowCredit(remaining) {
 
 function productLabel(code) {
   const normalized = String(code || '').toLowerCase();
-  if (normalized.includes('prime')) return 'Prime 노출';
-  if (normalized.includes('pick')) return 'Pick 노출';
-  if (normalized.includes('basic')) return 'Basic 노출';
+  if (normalized.includes('prime')) return '프라임';
+  if (normalized.includes('pick')) return '픽';
+  if (normalized.includes('basic')) return '베이직카드';
   if (normalized.includes('memo')) return '쪽지권';
   return '이용 상품';
 }
@@ -364,10 +364,10 @@ function renderRoomPrimeBoard(prime) {
   const tone = full ? 'is-full' : used > 0 ? 'is-partial' : 'is-open';
   return `
     <div class="plans-prime-board ${tone}" data-plans-prime-board>
-      <h4 class="plans-prime-board__title">선택 지역 Prime 노출 현황</h4>
+      <h4 class="plans-prime-board__title">선택 지역 프라임 노출 현황</h4>
       <p class="plans-prime-board__occupancy">3자리 중 ${used}자리 이용 중${remaining ? ` · 남은 자리 ${remaining}` : ' · 만석'}</p>
-      <p class="plans-prime-board__lead">선택 지역의 Prime 대표 노출 · 빈자리는 왼쪽부터 자동 배정됩니다. 슬롯 번호는 고르지 않습니다.</p>
-      <ul class="plans-prime-board__cells" aria-label="Prime 자리 3칸">
+      <p class="plans-prime-board__lead">선택 지역의 프라임 대표 노출 · 빈자리는 왼쪽부터 자동 배정됩니다. 슬롯 번호는 고르지 않습니다.</p>
+      <ul class="plans-prime-board__cells" aria-label="프라임 자리 3칸">
         ${cells
           .map((c) => {
             const st = c.status === 'held' ? 'held' : c.status;
@@ -381,7 +381,7 @@ function renderRoomPrimeBoard(prime) {
                     : '이용 중';
             return `
           <li class="plans-prime-cell is-${esc(st)}">
-            <span class="plans-prime-cell__label">Prime 자리</span>
+            <span class="plans-prime-cell__label">프라임 자리</span>
             <span class="plans-prime-cell__status">${esc(c.label)}</span>
             <span class="plans-prime-cell__meta">${esc(meta)}</span>
           </li>`;
@@ -391,7 +391,7 @@ function renderRoomPrimeBoard(prime) {
       ${
         full
           ? `<div class="plans-prime-waitlist" data-plans-waitlist>
-              <p><strong>현재 선택 지역의 Prime 자리는 모두 이용 중입니다.</strong></p>
+              <p><strong>현재 선택 지역의 프라임 자리는 모두 이용 중입니다.</strong></p>
               <p>예약대기를 등록하면 빈자리가 열릴 때 알려드립니다. 대기 등록만으로 자리나 순번이 보장되지는 않으며 결제가 완료되어야 확정됩니다.</p>
               <button type="button" class="btn btn--primary" data-plans-waitlist-register>예약대기 등록</button>
               <p class="mypage-muted" style="margin-top:0.5rem"><a href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 예약대기 보기</a></p>
@@ -404,12 +404,12 @@ function renderRoomPrimeBoard(prime) {
 /** 공부방 Pick 5×2=10 미리보기 (순환 목록·과외쌤 미사용) */
 function renderRoomPickPreview() {
   return `
-    <div class="plans-room-pick" aria-label="Pick 노출 미리보기 5열 2행">
-      <p class="plans-room-pick__title">Pick 노출 미리보기 · 한 페이지 10명 (5열 × 2행)</p>
+    <div class="plans-room-pick" aria-label="픽 노출 미리보기 5열 2행">
+      <p class="plans-room-pick__title">픽 노출 미리보기 · 한 페이지 10명 (5열 × 2행)</p>
       <ul class="plans-room-pick__grid">
         ${ROOM_PICK_PREVIEW_TILES.map(
           (p, i) => `
-          <li class="plans-room-pick__tile" aria-label="Pick 미리보기 ${i + 1}">
+          <li class="plans-room-pick__tile" aria-label="픽 미리보기 ${i + 1}">
             <span class="plans-room-pick__thumb" aria-hidden="true">P${i + 1}</span>
             <span class="plans-room-pick__name">${esc(p.name)}</span>
             <span class="plans-room-pick__stats">${esc(p.stats)}</span>
@@ -464,12 +464,12 @@ function renderTutorCircTiles(tiles, prefix) {
 
 function renderTutorPrimeCirculation() {
   return `
-    <div class="plans-tutor-circ plans-tutor-circ--prime" aria-label="Prime 노출 미리보기 페이지당 3명">
+    <div class="plans-tutor-circ plans-tutor-circ--prime" aria-label="프라임 노출 미리보기 페이지당 3명">
       <div class="plans-tutor-circ__head">
         <span class="plans-tutor-circ__kicker">핵심 노출 · 순환형</span>
         <span class="plans-tutor-circ__count">3 / page</span>
       </div>
-      <p class="plans-tutor-circ__title">Prime 순환 미리보기 · 페이지당 3명</p>
+      <p class="plans-tutor-circ__title">프라임 순환 미리보기 · 페이지당 3명</p>
       <p class="plans-tutor-circ__rotate">선택 시·주력과목 앞쪽 노출 · 15분마다 공정 순환 · 페이지 넘김</p>
       <ul class="plans-tutor-circ__grid">
         ${renderTutorCircTiles(TUTOR_PRIME_PREVIEW_TILES, 'T')}
@@ -480,12 +480,12 @@ function renderTutorPrimeCirculation() {
 
 function renderTutorPickCirculation() {
   return `
-    <div class="plans-tutor-circ plans-tutor-circ--pick" aria-label="Pick 노출 미리보기 페이지당 10명">
+    <div class="plans-tutor-circ plans-tutor-circ--pick" aria-label="픽 노출 미리보기 페이지당 10명">
       <div class="plans-tutor-circ__head">
         <span class="plans-tutor-circ__kicker">추천 노출 · 순환형</span>
         <span class="plans-tutor-circ__count">10 / page</span>
       </div>
-      <p class="plans-tutor-circ__title">Pick 순환 미리보기 · 페이지당 10명</p>
+      <p class="plans-tutor-circ__title">픽 순환 미리보기 · 페이지당 10명</p>
       <p class="plans-tutor-circ__rotate">선택 시·주력과목 추천 노출 · 15분마다 공정 순환 · 페이지 넘김</p>
       <ul class="plans-tutor-circ__grid">
         ${renderTutorCircTiles(TUTOR_PICK_PREVIEW_TILES, 'P')}
@@ -602,7 +602,7 @@ function getEligibility(profile, productCode, family = 'position') {
     if (productCode === 'prime' || productCode === 'pick') {
       if (room.detail_completion_status !== 'expanded_complete') {
         missing.push(
-          `${productCode === 'prime' ? 'Prime' : 'Pick'} 정보 부족 · 등록점검에서 남은 항목을 채우면 구매가 열립니다`,
+          `${productCode === 'prime' ? '프라임' : '픽'} 정보 부족 · 등록점검에서 남은 항목을 채우면 구매가 열립니다`,
         );
         canBuy = false;
       }
@@ -650,7 +650,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const isPick = product.productCode === 'pick';
   const primaryCta = opts.primaryCta ?? isPrime;
   const displayName =
-    product.name || (isPrime ? 'Prime 노출' : isPick ? 'Pick 노출' : productLabel(product.productCode));
+    product.name || (isPrime ? '프라임' : isPick ? '픽' : productLabel(product.productCode));
   const isStorefront = layout === 'storefront' || layout === 'compact';
 
   if (!implemented) {
@@ -672,7 +672,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
     eligibility.canBuy = false;
     eligibility.missing = [
       ...eligibility.missing.filter((m) => !String(m).includes('슬롯') && !String(m).includes('마감')),
-      '현재 지역 Prime 자리가 모두 이용 중입니다. 아래에서 예약대기를 등록하세요.',
+      '현재 지역 프라임 자리가 모두 이용 중입니다. 아래에서 예약대기를 등록하세요.',
     ];
   }
   const missingHtml =
@@ -686,14 +686,14 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
     if (role === 'study_room' && isPick) return '선택 지역에서 10개씩 순환 노출';
     if (role === 'tutor' && isPrime) return '선택 시·주력과목에서 3개씩 순환 노출';
     if (role === 'tutor' && isPick) return '선택 시·주력과목에서 10개씩 순환 노출';
-    if (role === 'study_room' && isPrime) return '선택 지역의 Prime 대표 노출';
+    if (role === 'study_room' && isPrime) return '선택 지역의 프라임 대표 노출';
     return '';
   })();
 
   const pickPreviewHtml =
     embedPickPreview && isPick
-      ? `<div class="plans-pick-preview" aria-label="Pick 노출 미리보기 5열 2행">
-        <p class="plans-pick-preview__label">Pick 노출 미리보기 · 5열 × 2행</p>
+      ? `<div class="plans-pick-preview" aria-label="픽 노출 미리보기 5열 2행">
+        <p class="plans-pick-preview__label">픽 노출 미리보기 · 5열 × 2행</p>
         <ul class="plans-pick-preview__grid">
           ${Array.from({ length: 10 }, (_, i) => `<li class="plans-pick-preview__cell">P${i + 1}</li>`).join('')}
         </ul>
@@ -1100,10 +1100,10 @@ export function renderPlansPositions() {
     <section class="plans-store plans-storefront plans-sf" data-plans-positions>
       <header class="plans-sf-hero">
         ${renderPlansHero({
-          eyebrow: 'PAID PRODUCTS',
+          eyebrow: '유료 안내',
           title: '노출상품',
-          lead: '더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\n마이샵을 만들고 Basic 목록에 노출하는 것은 무료입니다.\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.',
-          sub: 'Prime 노출과 Pick 노출은 홈·찾기 화면에서 프로필을 더 잘 발견할 수 있도록 돕는 유료 노출상품입니다.',
+          lead: '더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\n프로필 꾸미기와 베이직카드 목록 노출은 무료입니다.\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.',
+          sub: '프라임과 픽은 홈·찾기 화면에서 프로필을 더 잘 발견할 수 있도록 돕는 유료 노출상품입니다.',
         })}
         ${renderBasicFreeRow()}
       </header>
@@ -1122,8 +1122,8 @@ export function renderPlansPositions() {
               ? `${renderOffer(
                   primeProduct,
                   role === 'tutor'
-                    ? '선택한 시와 주력과목의 Prime 영역에 페이지당 3명씩 노출되며, 15분마다 공정하게 순환합니다.'
-                    : '선택한 단지·행정동의 Prime 대표 자리를 확보하세요. Prime은 선택 지역에서 3개만 운영하는 한정 대표 노출입니다.',
+                    ? '선택한 시와 주력과목의 프라임 영역에 페이지당 3명씩 노출되며, 15분마다 공정하게 순환합니다.'
+                    : '선택한 단지·행정동의 프라임 대표 자리를 확보하세요. 프라임은 선택 지역에서 3개만 운영하는 한정 대표 노출입니다.',
                   0,
                 )}
           ${renderOffer(
@@ -1237,7 +1237,7 @@ export function renderPlansAccess() {
     <section class="plans-store plans-storefront plans-sf plans-sf--access" data-plans-access>
       <header class="plans-sf-hero">
         ${renderPlansHero({
-          eyebrow: 'PAID PRODUCTS',
+          eyebrow: '유료 안내',
           title: '공부방·과외쌤 쪽지권',
           lead: '',
         })}
@@ -1416,7 +1416,7 @@ export function renderPlansMy() {
       }
       ${
         role === 'study_room' && profile
-          ? `<h2 class="mypage-subhead">Prime 예약대기</h2>
+          ? `<h2 class="mypage-subhead">프라임 예약대기</h2>
             <div class="plans-my-waitlist" data-plans-my-waitlist data-study-room-id="${esc(String(profile.id))}">
               <p class="mypage-muted">예약대기 목록을 불러오는 중…</p>
             </div>`
@@ -1789,18 +1789,18 @@ export function bindPlansScreenEvents(root, rerender) {
         .then((res) => {
           const items = Array.isArray(res?.items) ? res.items : [];
           if (!items.length) {
-            waitHost.innerHTML = `<p class="mypage-muted">등록된 Prime 예약대기가 없습니다. · <a href="#/plans/positions" data-plans-nav="/plans/positions">노출상품 보기</a></p>`;
+            waitHost.innerHTML = `<p class="mypage-muted">등록된 프라임 예약대기가 없습니다. · <a href="#/plans/positions" data-plans-nav="/plans/positions">노출상품 보기</a></p>`;
             return;
           }
           waitHost.innerHTML = `
-            <table class="plans-table" aria-label="Prime 예약대기">
+            <table class="plans-table" aria-label="프라임 예약대기">
               <thead><tr><th>상품</th><th>지역</th><th>상태</th><th>등록일</th><th></th></tr></thead>
               <tbody>
                 ${items
                   .map(
                     (w) => `
                   <tr>
-                    <td>${esc(w.product || 'Prime 노출')}</td>
+                    <td>${esc(w.product || '프라임')}</td>
                     <td>${esc(w.region || '—')}</td>
                     <td>${esc(w.status_label || w.status || '')}</td>
                     <td>${esc(String(w.registered_at || '').slice(0, 10))}</td>

@@ -47,7 +47,7 @@ function toCatalogProduct(p) {
 const FALLBACK_COPY = {
   prime: {
     id: 'prime',
-    name: 'Prime 노출',
+    name: '프라임',
     tagline: '선택한 지역·과목의 대표 노출',
     kind: /** @type {CatalogKind} */ ('position'),
     bullets: ['기간형 단건 결제', '자동연장 없음'],
@@ -55,7 +55,7 @@ const FALLBACK_COPY = {
   },
   pick: {
     id: 'pick',
-    name: 'Pick 노출',
+    name: '픽',
     tagline: '페이지 순환형 추천 노출',
     kind: /** @type {CatalogKind} */ ('position'),
     bullets: ['기간형 단건 결제', '자동연장 없음'],
@@ -71,7 +71,7 @@ const FALLBACK_COPY = {
   },
   hot: {
     id: 'hot',
-    name: 'Hot',
+    name: '주목',
     tagline: '추천·대표 노출 이용 기간에 함께 적용',
     kind: /** @type {CatalogKind} */ ('badge_addon'),
     bullets: ['광고성 주목 배지', '단독 핵심상품 ✕'],
@@ -92,7 +92,7 @@ const FALLBACK_COPY = {
   },
   sky: {
     id: 'sky',
-    name: 'SKY',
+    name: '주요 대학',
     tagline: '과외쌤 유료 광고축 · 노출상품 기간에 함께 적용',
     kind: /** @type {CatalogKind} */ ('badge_addon'),
     bullets: ['과외쌤 유료 주목 배지', '대학명 자동추론 배지 아님'],

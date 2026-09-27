@@ -236,6 +236,15 @@ export function roleHomeHashPath(user) {
 }
 
 /**
+ * 「메인 홈으로」「홈으로」. roleHomeHashPath와 같다.
+ * 비로그인 /guest, 공부방 /study-room, 과외 /tutor, 학생 /parent, 관리자 /admin.
+ * @param {{ role_type?: string } | null | undefined} user
+ */
+export function memberHomeHashPath(user) {
+  return roleHomeHashPath(user);
+}
+
+/**
  * home-ui 딥링크 URL.
  * 고객센터·마이페이지 등은 pathname으로 연다 — 등록/검색 SPA에서 `/#/path`로 이동 시
  * 리다이렉트 때문에 fragment가 떨어져 `#/guest`로 떨어지는 문제를 막는다.

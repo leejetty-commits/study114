@@ -13,6 +13,7 @@ import { activateRegistrationsApi, deactivateRegistrationsApi } from './registra
 import { deactivateBoardApi } from './board/board-backend.js';
 import { resetConcernPreviewData } from './concern/store.js';
 import { navigate, setActiveRole } from './state.js';
+import { noteAuthRoleType } from './auth-role.js';
 import { oauthRoleSelectionUrl, redirectToEmailVerifyWait, isGuidePublicPath } from '../../shared/auth-redirect.js';
 import { AUTH_UI_BASE } from '../../shared/preview-links.js';
 
@@ -134,8 +135,13 @@ export function setAuthDisplayName(name) {
 }
 
 function applyRoleContext(roleType) {
+  noteAuthRoleType(roleType);
   const active = ROLE_ACTIVE[roleType];
   if (active) setActiveRole(active);
+}
+
+function clearAuthRole() {
+  noteAuthRoleType('');
 }
 
 /** 쪽지·등록 등 부가 API 실패가 로그인 세션을 지우지 않게 격리 */
@@ -160,6 +166,7 @@ export async function initAuthSession(navigateHome = false) {
     const user = await fetchSession();
     if (!user) {
       currentUser = null;
+      clearAuthRole();
       deactivateProviderApis();
       deactivateMessagesApi();
       deactivateRegistrationsApi();
@@ -178,6 +185,7 @@ export async function initAuthSession(navigateHome = false) {
   } catch (err) {
     console.warn('[auth] session check skipped — sessionStorage fallback', err);
     currentUser = null;
+    clearAuthRole();
     deactivateProviderApis();
     deactivateMessagesApi();
     deactivateRegistrationsApi();
@@ -255,6 +263,7 @@ export async function logout() {
     console.warn('[auth] logout', err);
   }
   currentUser = null;
+  clearAuthRole();
   deactivateProviderApis();
   deactivateMessagesApi();
   deactivateRegistrationsApi();

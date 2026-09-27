@@ -124,6 +124,7 @@ function applyPlansRedirects() {
 let paintedHash = null;
 
 function render() {
+  if (isMypageRoute()) bootstrapMypageRoute();
   const hashBefore = window.location.hash;
   renderScreen();
   if (window.location.hash === hashBefore) paintedHash = hashBefore;

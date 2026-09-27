@@ -256,11 +256,11 @@ export function renderLessonFormHtml(opts = {}) {
         </div>
       </div>
       <div class="form-group" data-rc-field="teaching_style">
-        ${starLabel('', '지도 스타일')}
+        ${starLabel('', '수업 스타일')}
         <div class="register-check-grid">${renderStyleChecks(s.teaching_style_ids)}</div>
       </div>
       <div class="form-group" data-rc-field="teaching_style_note">
-        ${starLabel('teaching_style_note', '지도 스타일 추가설명')}
+        ${starLabel('teaching_style_note', '수업 스타일 추가설명')}
         <textarea class="form-input form-textarea" id="teaching_style_note" name="teaching_style_note" rows="2" placeholder="추가로 전하고 싶은 지도 방식을 적어 주세요.">${esc(s.teaching_style_note)}</textarea>
       </div>
       <div class="form-group">

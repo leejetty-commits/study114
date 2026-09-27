@@ -360,7 +360,7 @@ export function renderPublishStatusBlock(status, opts = {}) {
   const v = String(status || 'draft');
   const lead =
     opts.lead ||
-    '베이직 검색 공개는 무료이며, 상세·쪽지·Pick/Prime과 무관합니다. 저장만 하면 비공개, 공개를 고르면 검색에 나갑니다.';
+    '베이직 검색 공개는 무료이며, 상세·쪽지·픽/프라임과 무관합니다. 저장만 하면 비공개, 공개를 고르면 검색에 나갑니다.';
   return `
     <section class="register-publish-block" data-publish-block>
       <h3 class="register-publish-block__title">공개 상태</h3>

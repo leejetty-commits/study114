@@ -58,7 +58,7 @@ export function renderLoginPurposeChips() {
  * @param {{ returnTo?: string, lead?: string }} [opts]
  */
 export function renderLoginStageBelow(opts = {}) {
-  const guestUrl = `${HOME_UI_BASE}#/guest`;
+  const guestUrl = `${String(HOME_UI_BASE).replace(/\/$/, '')}/#/guest`;
   const lead =
     opts.lead ||
     (opts.returnTo

@@ -1,5 +1,5 @@
 /**
- * 19장 — 학생 의뢰 copy · 탭 · visibility · 허브 라벨 (횡단 SSOT)
+ * 19장 — 학생 등록 copy · 탭 · visibility · 허브 라벨 (횡단 SSOT)
  * docs/ssot/19-student-registration-management.md §3 · §4 · §5
  */
 

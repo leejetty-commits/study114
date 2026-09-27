@@ -34,7 +34,7 @@ export const HOME_STATS_NOTE = '내 상태는 활동에 따라 달라져요.';
 
 export const WISHLIST_NOTE = '찜한 공부방·과외쌤을 모아 보고, 비교에도 담을 수 있어요.';
 
-export const RECENT_NOTE = '15장 §6 [임시] · 학부모: 공부방/과외/학생(비교열람) · 공급자: 학생 의뢰 포함';
+export const RECENT_NOTE = '15장 §6 [임시] · 학부모: 공부방/과외/학생(비교열람) · 공급자: 등록 포함';
 
 export const STUDENT_REVIEW_NOTE = '관심 있는 학생을 저장해 두고, 준비가 되었을 때 쪽지를 이어가세요.';
 

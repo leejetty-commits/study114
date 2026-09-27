@@ -145,7 +145,7 @@ function renderCommunityHub(navRole) {
     <div class="pattern-band" aria-hidden="true"></div>
     <div class="section-head">
       <div>
-        <span class="section-chip">4 boards</span>
+        <span class="section-chip">게시판 4곳</span>
         <h2>역할별 보드로 바로 들어가기</h2>
         <div class="section-underline"></div>
       </div>
@@ -359,7 +359,7 @@ function renderList(board, query) {
       <span class="blob blob--b" style="right:28px;top:8px" aria-hidden="true"></span>
       <div class="hero-band__inner">
         <div class="hero-band__copy">
-          <span class="section-chip" style="background:var(--uds-success-bg);border-color:var(--uds-success-line);color:var(--uds-success)">Solved stories</span>
+          <span class="section-chip" style="background:var(--uds-success-bg);border-color:var(--uds-success-line);color:var(--uds-success)">해결됨</span>
           <h1 style="font-size:24px">${esc(board.label)}</h1>
           <p style="margin:0">${esc(board.roleHint)}</p>
         </div>

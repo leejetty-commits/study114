@@ -1,5 +1,7 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole, getCommunityPath } from '../state.js';
+import { getAuthUser } from '../auth-session.js';
+import { memberHomeHashPath } from '../nav-config.js';
 import { renderConcernScreen, renderConcernSideNav, bindConcernScreenEvents } from './screens.js';
 import { getCommunityView } from './router.js';
 
@@ -24,7 +26,7 @@ function renderCommunityPageTitle(path) {
 
 export function renderConcernShell(currentPath, bodyHtml) {
   const role = getNavRole();
-  const sub = role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
+  const sub = memberHomeHashPath(getAuthUser());
 
   const mainHtml = `
     <div class="concern-layout">
