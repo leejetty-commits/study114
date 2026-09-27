@@ -61,7 +61,7 @@ export function studentRegScreenTitle(screenId) {
     'P19-03b': '상세정보',
     'P19-04': '마이프로필',
     'P19-05': '쪽지설정',
-    'P19-06': '숨김·삭제',
+    'P19-06': '삭제',
   };
   return map[screenId] || '학생 의뢰 관리';
 }

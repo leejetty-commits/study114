@@ -42,10 +42,9 @@ final class StudyRoomHubService
 
         return match ($action) {
             'publish'        => $this->publish($userId, $roomId, $room),
-            'hide'           => $this->hide($userId, $roomId),
             'delete'         => $this->delete($roomId),
             'inquiry_status' => $this->setInquiry($userId, $roomId, $input),
-            default          => throw new InvalidArgumentException('action: publish | hide | delete | inquiry_status'),
+            default          => throw new InvalidArgumentException('action: publish | delete | inquiry_status'),
         };
     }
 
@@ -58,13 +57,6 @@ final class StudyRoomHubService
         $this->repo->setProfileStatus($roomId, 'published', date('Y-m-d H:i:s'));
 
         return ['room' => $this->repo->getForOwner($userId, $roomId) ?? $room];
-    }
-
-    private function hide(int $userId, int $roomId): array
-    {
-        $this->repo->setProfileStatus($roomId, 'hidden');
-
-        return ['room' => $this->repo->getForOwner($userId, $roomId) ?? []];
     }
 
     private function delete(int $roomId): array

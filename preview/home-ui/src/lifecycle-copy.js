@@ -9,7 +9,8 @@
 export const PROFILE_STATUS_LABELS = {
   draft: '저장중',
   published: '공개중',
-  hidden: '숨김',
+  /** 회원 배지. 관리자 화면 라벨(숨김)은 AdminExposure·a28 copy가 따로 가진다. */
+  hidden: '비공개',
   /** @deprecated 22§3 */
   pending: '저장중',
 };
@@ -17,7 +18,8 @@ export const PROFILE_STATUS_LABELS = {
 export const EXPOSURE_STATUS_LABELS = {
   draft: '저장중',
   published: '공개중',
-  hidden: '숨김',
+  /** 회원 배지. 관리자 화면 라벨(숨김)은 AdminExposure·a28 copy가 따로 가진다. */
+  hidden: '비공개',
   deleted: '삭제',
 };
 

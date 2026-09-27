@@ -12,7 +12,7 @@ import { getParentStudentProfilePath } from '../mypage/router.js';
 import { FORM_OPTIONS, studentToExposureRow } from './format.js';
 import { ensureHopeRegionMasters, getHopeRegionMasters, labelForRegionId, listAllComplexes, listCityOptions } from './hope-region-masters.js';
 import { SCHOOL_LEVEL_LABELS } from '../student-enums.js';
-import { getStudents, getStudent, hideStudent, deleteStudent, updateStudent } from './store.js';
+import { getStudents, getStudent, deleteStudent, updateStudent } from './store.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -560,20 +560,6 @@ export function bindStudentRegEvents(root, rerender) {
           el.classList.toggle('is-selected', el.querySelector('input')?.checked);
         });
       });
-    });
-  });
-
-  root.querySelectorAll('[data-p19-hide]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = Number(btn.closest('[data-p19-student-id]')?.dataset.p19StudentId);
-      if (!confirm('노출을 철회(숨김)하시겠습니까?')) return;
-      try {
-        await hideStudent(id);
-        rerender();
-      } catch (err) {
-        console.warn('[p19]', err);
-        alert('숨김 처리에 실패했습니다.');
-      }
     });
   });
 

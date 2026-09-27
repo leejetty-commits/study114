@@ -87,7 +87,7 @@ export function tutorRegScreenTitle(screenId) {
     'P21-04': '등록점검',
     'P21-05': '쪽지설정',
     'P21-06': '노출 상품',
-    'P21-07': '숨김·삭제',
+    'P21-07': '삭제',
   };
   return map[screenId] || '내 등록';
 }

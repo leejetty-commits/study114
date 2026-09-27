@@ -14,7 +14,7 @@ import { bindGuestListPagination } from './list-pagination.js';
 import { bindListSortControls } from '../../shared/list-sort.js';
 import { setGuestListPage } from './state.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from './section-headings.js';
-import { toDisplayLabel } from '../../shared/location-display.js';
+import { coordsFromLabel, toDisplayLabel } from '../../shared/location-display.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
 import { renderGuestMarketingBanner } from './home-marketing-banner.js';
 import {
@@ -31,6 +31,43 @@ import { bindProtectedGuestActions } from '../../shared/guest-gate-ui.js';
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
 
+/** REGION_COORDS 대치동. 라벨 매칭 실패 시에도 같은 중심 */
+const daechiCoords = coordsFromLabel(GUEST_DEMO_REGION.full);
+const GUEST_MAP_CENTER = {
+  lat: daechiCoords?.lat ?? 37.4946,
+  lng: daechiCoords?.lng ?? 127.0626,
+};
+/** 대치동 동네. 부산(약 320km) 등 타 지역 좌표는 핀에서 제외 */
+const GUEST_MAP_RADIUS_KM = 2.2;
+const OTHER_DONG = /부산|센텀|해운대|우동|도곡|개포|역삼|서초|송파|잠실|논현|가능/;
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const toRad = (d) => (d * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+/** 손님 홈 지도 핀만. 카드 목록 풀은 건드리지 않는다. */
+export function filterGuestDaechiMapItems(items) {
+  const list = Array.isArray(items) ? items : [];
+  return list.filter((item) => {
+    const lat = Number(item?.latitude);
+    const lng = Number(item?.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat === 0 || lng === 0) return false;
+    const label = String(item.location_label || item.region_label || '');
+    const near =
+      haversineKm(lat, lng, GUEST_MAP_CENTER.lat, GUEST_MAP_CENTER.lng) <= GUEST_MAP_RADIUS_KM;
+    if (/대치/.test(label)) return near;
+    if (OTHER_DONG.test(label)) return false;
+    return near;
+  });
+}
+
 function loginGateAttrs(action, label) {
   return `data-action="login-gate" data-gate="${action}" data-gate-label="${label}" tabindex="0" role="button"`;
 }
@@ -43,7 +80,7 @@ export function renderGuestTempNotice() {
 export function renderGuestHero() {
   const r = GUEST_DEMO_REGION;
   return `
-    <section class="hero-map hero-map--float-rail" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${r.full}" data-allow-fallback="true">
+    <section class="hero-map hero-map--float-rail" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${r.full}" data-map-lat="${GUEST_MAP_CENTER.lat}" data-map-lng="${GUEST_MAP_CENTER.lng}" data-fit-bounds="false" data-allow-fallback="true">
       <div class="hero-map__canvas">
         <div class="hero-map__surface hero-map__surface--naver" aria-label="${r.gu} ${r.dong} 공부방 지도">
           <div class="naver-map-mount-host" data-naver-map-mount></div>
@@ -66,9 +103,7 @@ export function renderGuestHero() {
 }
 
 function guestHeroMapItems() {
-  return getHomeBasicPool('study_room')
-    .filter((item) => item.latitude != null && item.longitude != null)
-    .slice(0, 12);
+  return filterGuestDaechiMapItems(getHomeBasicPool('study_room')).slice(0, 12);
 }
 
 function renderStudyRoomPrimePick() {
@@ -250,6 +285,9 @@ export function bindGuestSectionEvents(root, rerender) {
 
   bindStudyRoomMapSection(root, guestHeroMapItems(), {
     regionLabel: GUEST_DEMO_REGION.full,
+    lat: GUEST_MAP_CENTER.lat,
+    lng: GUEST_MAP_CENTER.lng,
+    fitBounds: false,
   });
   hydrateGuestRegionStats(root);
 

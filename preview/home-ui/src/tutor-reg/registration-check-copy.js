@@ -9,7 +9,7 @@ export const TRC_COPY = {
   badges: {
     publishOk: '공개 가능',
     publishLive: '공개중',
-    publishHidden: '숨김 · 다시 공개 가능',
+    publishHidden: '비공개 · 관리자 설정',
     publishNeed: '아직 공개 불가',
     basicOk: 'Basic 충족',
     basicNeed: (n) => `Basic ${n}개 부족`,
@@ -22,7 +22,7 @@ export const TRC_COPY = {
     prefix: '다음',
     publish: '자기확인 후 공개하기',
     live: '공개 유지 중 · 현황만 확인하면 됩니다',
-    hidden: '자기확인 후 다시 공개하기',
+    hidden: '관리자가 비공개로 두었습니다. 회원은 직접 다시 켤 수 없습니다',
     fill: (label) => `${label} 입력하러 가기`,
   },
   promo: {
@@ -75,14 +75,13 @@ export const TRC_COPY = {
     summaryReady: '공개 조건이 충족되었습니다. 아래를 확인한 뒤 공개하세요.',
     summaryNeed: (n) => `공개하려면 아직 ${n}개 항목이 부족합니다. 위에서 수정 위치를 확인하세요.`,
     summaryLive: '현재 공개 중입니다. 내용을 바꿨다면 다시 한 번 확인해 주세요.',
-    summaryHidden: '지금은 숨김입니다. 조건을 확인한 뒤 다시 공개할 수 있습니다.',
+    summaryHidden: '관리자가 비공개로 두었습니다. 회원은 직접 다시 켤 수 없습니다.',
     confirmTitle: '공개 전 자기확인',
     confirmLead: '학부모 화면에 이렇게 보이는지 직접 확인하고 공개합니다.',
     confirmRegion: '활동 지역·과목·대상 학생군 노출을 확인했습니다',
     confirmFee: '과외비·수업 방식 표시를 확인했습니다',
     confirmTrust: '소개문·신뢰정보(공개 선택 범위) 노출을 확인했습니다',
     publishCta: '공개하기',
-    republishCta: '다시 공개',
   },
   returnBanner: {
     label: '← 등록점검으로 돌아가기',

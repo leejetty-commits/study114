@@ -216,6 +216,11 @@ function publishSummaryText(vm) {
 function renderPublishActions(vm) {
   const canPublish = !!vm.readiness?.canPublish;
   const hidden = vm.readiness?.profileStatus === 'hidden';
+  const publishBtn = hidden
+    ? ''
+    : `<div class="p19-form-actions p19-form-actions--publish">
+        <button type="button" class="btn btn--primary btn--lg" data-p21-publish ${canPublish ? '' : 'disabled'}>${esc(TRC_COPY.publish.publishCta)}</button>
+      </div>`;
   return `
     <section class="rc-publish" data-p21-tutor-id="${esc(vm.tutorId)}">
       <p class="rc-publish__summary">${esc(publishSummaryText(vm))}</p>
@@ -227,10 +232,7 @@ function renderPublishActions(vm) {
         <label class="p20-confirm-check"><input type="checkbox" data-p21-confirm="trust" /> ${esc(TRC_COPY.publish.confirmTrust)}</label>
         <label class="p20-confirm-check"><input type="checkbox" data-p21-confirm="direct" /> 외부 연락처 직접 노출 없음 · ${LIFECYCLE_PUBLISH_CONFIRM_DIRECT}</label>
       </div>
-      <div class="p19-form-actions p19-form-actions--publish">
-        <button type="button" class="btn btn--primary btn--lg" data-p21-publish ${canPublish ? '' : 'disabled'}>${esc(TRC_COPY.publish.publishCta)}</button>
-        ${hidden ? `<button type="button" class="btn btn--secondary" data-p21-publish>${esc(TRC_COPY.publish.republishCta)}</button>` : ''}
-      </div>
+      ${publishBtn}
       <p class="p19-publish-footnote">${LIFECYCLE_PUBLISH_CONFIRM_NOTE}</p>
     </section>`;
 }

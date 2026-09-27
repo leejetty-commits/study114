@@ -42,10 +42,9 @@ final class StudentHubService
 
         return match ($action) {
             'publish' => $this->publish($guardianUserId, $studentId, $student),
-            'hide'    => $this->hide($guardianUserId, $studentId),
             'delete'  => $this->delete($guardianUserId, $studentId),
             'update'  => $this->update($guardianUserId, $studentId, $input),
-            default   => throw new InvalidArgumentException('action: publish | hide | delete | update'),
+            default   => throw new InvalidArgumentException('action: publish | delete | update'),
         };
     }
 
@@ -62,14 +61,6 @@ final class StudentHubService
         $updated = $this->repo->getForGuardian($guardianUserId, $studentId);
 
         return ['student' => $updated ?? $student];
-    }
-
-    private function hide(int $guardianUserId, int $studentId): array
-    {
-        $this->repo->updateExposureStatus($studentId, 'hidden');
-        $updated = $this->repo->getForGuardian($guardianUserId, $studentId);
-
-        return ['student' => $updated ?? []];
     }
 
     private function delete(int $guardianUserId, int $studentId): array

@@ -307,15 +307,6 @@ export async function publishStudent(id) {
 }
 
 /** @param {number} id */
-export async function hideStudent(id) {
-  if (isRegistrationsApiMode()) {
-    await apiStudentAction(id, 'hide');
-    return getStudent(id);
-  }
-  return updateStudent(id, { exposure_status: 'hidden' });
-}
-
-/** @param {number} id */
 export async function deleteStudent(id) {
   if (isRegistrationsApiMode()) {
     await apiStudentAction(id, 'delete');

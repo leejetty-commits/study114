@@ -8,7 +8,6 @@ export const P21_LIST_TABS = [
   { key: 'all', label: '전체' },
   { key: 'draft', label: '저장' },
   { key: 'published', label: '공개중' },
-  { key: 'hidden', label: '숨김' },
   { key: 'not_ready', label: '공개 준비 미완료' },
 ];
 

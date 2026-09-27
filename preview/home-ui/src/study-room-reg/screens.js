@@ -32,7 +32,6 @@ import {
   getStudyRooms,
   getStudyRoomsByTab,
   getStudyRoom,
-  hideStudyRoom,
   deleteStudyRoom,
   setInquiryStatus,
   getStudyRoomSummaryCounts,
@@ -133,6 +132,15 @@ export function renderStudyRoomRegScreen(path) {
 
   if (route.screenId === 'P20-01') {
     const rooms = getStudyRooms();
+    if (route.listTab === 'hidden') {
+      const dest = rooms.length ? studyRoomHubPath(rooms[0].id) : STUDY_ROOM_BASE;
+      queueMicrotask(() => {
+        const hashPath = stripHashQuery(window.location.hash.slice(1) || '');
+        if (parseStudyRoomRegPath(hashPath)?.listTab === 'hidden') {
+          window.location.replace(`#${dest}`);
+        }
+      });
+    }
     if (rooms.length) {
       // 중간 목록 depth 제거 — 마이샵(hub)으로 직행
       queueMicrotask(() => {
@@ -142,7 +150,7 @@ export function renderStudyRoomRegScreen(path) {
       });
       return renderHub(rooms[0]);
     }
-    return renderList(route.listTab || 'all');
+    return renderList(route.listTab === 'hidden' ? 'all' : route.listTab || 'all');
   }
   if (!route.roomId) return renderNotFound();
 
@@ -189,9 +197,7 @@ function renderList(tab) {
           ? counts.draft
           : t.key === 'published'
             ? counts.published
-            : t.key === 'hidden'
-              ? counts.hidden
-              : counts.notReady,
+            : counts.notReady,
   }));
 
   const tabHtml = tabs
@@ -667,20 +673,6 @@ export function bindStudyRoomRegEvents(root, rerender) {
         alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
       } finally {
         if (btn) btn.disabled = false;
-      }
-    });
-  });
-
-  root.querySelectorAll('[data-p20-hide]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = Number(btn.closest('[data-p20-room-id]')?.dataset.p20RoomId);
-      if (!confirm('공부방을 숨김 처리하시겠습니까?')) return;
-      try {
-        await hideStudyRoom(id);
-        rerender();
-      } catch (err) {
-        console.warn('[p20]', err);
-        alert('숨김 처리에 실패했습니다.');
       }
     });
   });

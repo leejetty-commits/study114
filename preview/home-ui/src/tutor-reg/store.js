@@ -359,15 +359,6 @@ export async function publishTutor(id) {
 }
 
 /** @param {number} id */
-export async function hideTutor(id) {
-  if (isRegistrationsApiMode()) {
-    await apiTutorAction(id, 'hide');
-    return getTutor(id);
-  }
-  return updateTutor(id, { profile_status: 'hidden' });
-}
-
-/** @param {number} id */
 export async function deleteTutor(id) {
   if (isRegistrationsApiMode()) {
     await apiTutorAction(id, 'delete');

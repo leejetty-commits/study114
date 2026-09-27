@@ -84,7 +84,7 @@ export function studyRoomRegScreenTitle(screenId) {
     'P20-03c': '상세정보2',
     'P20-04': '등록점검',
     'P20-05': '쪽지설정',
-    'P20-06': '숨김·삭제',
+    'P20-06': '삭제',
     'P23-04': '제출함',
   };
   return map[screenId] || '공부방';

@@ -43,10 +43,9 @@ final class TutorHubService
 
         return match ($action) {
             'publish'        => $this->publish($userId, $tutorId, $tutor),
-            'hide'           => $this->hide($userId, $tutorId),
             'delete'         => $this->delete($tutorId),
             'inquiry_status' => $this->setInquiry($userId, $tutorId, $input),
-            default          => throw new InvalidArgumentException('action: publish | hide | delete | inquiry_status'),
+            default          => throw new InvalidArgumentException('action: publish | delete | inquiry_status'),
         };
     }
 
@@ -71,13 +70,6 @@ final class TutorHubService
         $this->repo->setProfileStatus($tutorId, 'published', date('Y-m-d H:i:s'));
 
         return ['tutor' => $this->repo->getForOwner($userId, $tutorId) ?? $tutor];
-    }
-
-    private function hide(int $userId, int $tutorId): array
-    {
-        $this->repo->setProfileStatus($tutorId, 'hidden');
-
-        return ['tutor' => $this->repo->getForOwner($userId, $tutorId) ?? []];
     }
 
     private function delete(int $tutorId): array

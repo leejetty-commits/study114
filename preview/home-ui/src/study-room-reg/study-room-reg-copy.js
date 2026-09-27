@@ -8,7 +8,6 @@ export const P20_LIST_TABS = [
   { key: 'all', label: '전체' },
   { key: 'draft', label: '저장' },
   { key: 'published', label: '공개중' },
-  { key: 'hidden', label: '숨김' },
   { key: 'not_ready', label: '미공개' },
 ];
 

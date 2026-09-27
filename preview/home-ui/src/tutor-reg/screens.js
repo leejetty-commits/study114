@@ -17,7 +17,6 @@ import {
   getTutor,
   getPublishReadiness,
   publishTutor,
-  hideTutor,
   deleteTutor,
 } from './store.js';
 import { saveTutorBasicInline, saveTutorDetailInline } from './inline-save.js';
@@ -89,6 +88,14 @@ export function renderTutorRegScreen(path) {
 
   if (route.screenId === 'P21-01') {
     const tutors = getTutors();
+    if (route.listTab === 'hidden') {
+      const dest = tutors.length ? tutorHubPath(tutors[0].id) : TUTOR_REG_BASE;
+      queueMicrotask(() => {
+        const hashPath = (window.location.hash.slice(1) || '').split('?')[0];
+        const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+        if (/\/tab\/hidden$/.test(p)) window.location.replace(`#${dest}`);
+      });
+    }
     if (tutors.length) {
       // 중간 목록 depth 제거 — 대표(첫) 과외 프로필 허브 직행 · 계정당 1프로필 정책
       const dest = tutorHubPath(tutors[0].id);
@@ -544,10 +551,9 @@ function renderExposure(tutor) {
         </div>
       </section>
       <div class="p19-danger-zone" data-p21-tutor-id="${tutor.id}">
-        <h3 class="p19-danger-zone__title">공개 중단·삭제</h3>
-        <p class="p19-danger-zone__lead">숨김은 검색 미노출 · 삭제는 복구 불가(soft delete)</p>
+        <h3 class="p19-danger-zone__title">삭제</h3>
+        <p class="p19-danger-zone__lead">삭제는 복구 불가(soft delete)</p>
         <div class="p19-danger-zone__actions">
-          <button type="button" class="btn btn--secondary btn--sm" data-p21-hide ${tutor.profile_status === 'hidden' ? 'disabled' : ''}>숨김</button>
           <button type="button" class="btn btn--ghost btn--sm p19-btn-danger" data-p21-delete>삭제</button>
         </div>
       </div>
@@ -702,20 +708,6 @@ export function bindTutorRegEvents(root, rerender) {
           return;
         }
         alert('공개 처리에 실패했습니다.');
-      }
-    });
-  });
-
-  root.querySelectorAll('[data-p21-hide]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = Number(btn.closest('[data-p21-tutor-id]')?.dataset.p21TutorId);
-      if (!confirm('과외 프로필을 숨김 처리하시겠습니까?')) return;
-      try {
-        await hideTutor(id);
-        rerender();
-      } catch (err) {
-        console.warn('[p21]', err);
-        alert('숨김 처리에 실패했습니다.');
       }
     });
   });

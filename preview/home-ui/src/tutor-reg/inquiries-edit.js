@@ -27,10 +27,20 @@ function hasClosedReason(page) {
 function syncReasonState(page) {
   const receiving = selectedReceiving(page);
   const wrap = page.querySelector('[data-p21-inquiry-reason-wrap]');
+  const empty = page.querySelector('[data-p21-inquiry-reason-empty]');
   wrap?.classList.toggle('is-inactive', receiving);
   if (wrap) {
-    if (receiving) wrap.setAttribute('aria-disabled', 'true');
-    else wrap.removeAttribute('aria-disabled');
+    if (receiving) {
+      wrap.setAttribute('aria-disabled', 'true');
+      wrap.setAttribute('hidden', '');
+    } else {
+      wrap.removeAttribute('aria-disabled');
+      wrap.removeAttribute('hidden');
+    }
+  }
+  if (empty) {
+    if (receiving) empty.removeAttribute('hidden');
+    else empty.setAttribute('hidden', '');
   }
   page.querySelectorAll('input[name="p21_inquiry_reason"]').forEach((input) => {
     input.disabled = receiving;

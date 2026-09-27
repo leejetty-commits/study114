@@ -208,15 +208,6 @@ export async function publishStudyRoom(id) {
 }
 
 /** @param {number} id */
-export async function hideStudyRoom(id) {
-  if (isRegistrationsApiMode()) {
-    await apiStudyRoomAction(id, 'hide');
-    return getStudyRoom(id);
-  }
-  return updateStudyRoom(id, { profile_status: 'hidden' });
-}
-
-/** @param {number} id */
 export async function deleteStudyRoom(id) {
   if (isRegistrationsApiMode()) {
     await apiStudyRoomAction(id, 'delete');

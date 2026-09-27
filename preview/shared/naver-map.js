@@ -158,12 +158,20 @@ function loadNaverMapsSdk() {
   return sdkPromise;
 }
 
+/** 손님 홈처럼 fitBounds를 끌 때 동네 줌(13–15)으로 고정 */
+function clampNeighborhoodZoom(zoom) {
+  const z = Number(zoom);
+  if (!Number.isFinite(z)) return 14;
+  return Math.min(15, Math.max(13, z));
+}
+
 /**
  * @param {HTMLElement} mountEl
  * @param {{
  *   items?: StudyRoomMapItem[],
  *   regionLabel?: string,
  *   allowRegionFallback?: boolean,
+ *   fitBounds?: boolean,
  *   variant?: 'hero'|'search'|'detail',
  *   onPinClick?: (id: string) => void,
  * }} [options]
@@ -174,6 +182,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
   const items = Array.isArray(options.items) ? options.items : [];
   const regionLabel = options.regionLabel || '';
   const allowRegionFallback = options.allowRegionFallback !== false;
+  const fitBounds = options.fitBounds !== false;
   const variant = options.variant || 'search';
   const pins = mapStudyRoomPins(items, { allowRegionFallback });
   const center = resolveMapCenter(items, regionLabel, {
@@ -243,10 +252,13 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
       markerById.set(pin.id, { marker, pin });
     }
 
-    if (pins.length > 1) fitToPins();
-    else if (pins.length === 1) {
+    if (fitBounds && pins.length > 1) fitToPins();
+    else if (fitBounds && pins.length === 1) {
       map.setCenter(new naver.maps.LatLng(pins[0].lat, pins[0].lng));
       map.setZoom(16);
+    } else if (!fitBounds) {
+      map.setCenter(new naver.maps.LatLng(center.lat, center.lng));
+      map.setZoom(clampNeighborhoodZoom(center.zoom));
     }
 
     const clearFocus = () => {
@@ -289,7 +301,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
 /**
  * @param {HTMLElement} root
  * @param {StudyRoomMapItem[]} items
- * @param {{ regionLabel?: string, lat?: number|null, lng?: number|null, onPinClick?: (id: string) => void }} [options]
+ * @param {{ regionLabel?: string, lat?: number|null, lng?: number|null, fitBounds?: boolean, onPinClick?: (id: string) => void }} [options]
  */
 export async function bindStudyRoomMapSection(root, items, options = {}) {
   const section = root.querySelector('[data-study-room-map]');
@@ -301,12 +313,19 @@ export async function bindStudyRoomMapSection(root, items, options = {}) {
 
   const latAttr = section?.getAttribute('data-map-lat');
   const lngAttr = section?.getAttribute('data-map-lng');
+  const fitBounds =
+    options.fitBounds === false
+      ? false
+      : options.fitBounds === true
+        ? true
+        : section?.getAttribute('data-fit-bounds') !== 'false';
   const controller = await mountStudyRoomMap(mount, {
     items,
     regionLabel: options.regionLabel || section?.getAttribute('data-region-label') || '',
     lat: options.lat ?? (latAttr != null ? Number(latAttr) : null),
     lng: options.lng ?? (lngAttr != null ? Number(lngAttr) : null),
     allowRegionFallback: section?.getAttribute('data-allow-fallback') !== 'false',
+    fitBounds,
     variant: section?.getAttribute('data-map-variant') || 'search',
     onPinClick: options.onPinClick,
   });
