@@ -44,7 +44,12 @@ function esc(s) {
 }
 
 function mdLite(text) {
-  return esc(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  return esc(text)
+    .replace(/\[([^\]]+)\]\(#(\/[^)]+)\)/g, (_, label, path) => {
+      const safe = path.replace(/[^a-z0-9/_-]/gi, '');
+      return `<a href="#${safe}" data-sup-nav="${safe}">${label}</a>`;
+    })
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 }
 
 function bodyHtml(body) {
@@ -80,14 +85,14 @@ function renderContactLoginGate() {
       <span class="blob blob--a" style="left:-28px;top:-18px" aria-hidden="true"></span>
       <div class="login-wall__art"><img src="/assets/info-refresh/motif-contact.svg" alt="" /></div>
       <h1>로그인 후 운영문의를 남길 수 있어요</h1>
-      <p>운영문의는 사이트 운영자에게 보내는 채널입니다. 공부방·과외쌤과의 첫 연락인 쪽지와는 다릅니다.</p>
+      <p>운영문의는 운영팀에 보내는 채널입니다. 오류·정책·계정 문제를 남기세요. 수업 상담은 쪽지입니다. 접수한 뒤에는 마이페이지의 내 문의 내역에서 확인합니다.</p>
       <div class="login-wall__steps" aria-label="이용 단계">
         <span class="step-pill"><span class="step-pill__n">1</span>로그인</span>
         <span class="step-pill"><span class="step-pill__n">2</span>문의 작성</span>
         <span class="step-pill"><span class="step-pill__n">3</span>내역 확인</span>
       </div>
       <div class="sup-contact-gate__actions" style="justify-content:center;position:relative;z-index:1;display:flex;gap:10px;flex-wrap:wrap">
-        <a href="${esc(href)}" class="btn btn--primary" data-sup-external="login">로그인하고 문의하기</a>
+        <a href="${esc(href)}" class="btn btn--primary" data-sup-external="login">운영문의 남기기</a>
         <a href="${esc(AUTH_UI_BASE)}/#/signup/terms" class="btn btn--secondary" data-sup-external="login">회원가입</a>
       </div>
     </section>`;
@@ -130,11 +135,13 @@ export function renderSupportScreen(path) {
 
 function renderSupportQuickCards() {
   const cards = [
-    { title: '자주 묻는 질문', desc: '계정·쪽지·노출 관련 FAQ', href: '/support/faq', icon: '/assets/info-refresh/motif-faq.svg', extra: '' },
-    { title: '문의', desc: '로그인 후 운영팀에 문의', href: '/support/contact', icon: '/assets/info-refresh/motif-contact.svg', extra: '' },
+    { title: '자주 묻는 질문', desc: '자주 묻는 질문에서 먼저', href: '/support/faq', icon: '/assets/info-refresh/motif-faq.svg', extra: '' },
+    { title: '운영문의', desc: '운영팀 · 오류·정책·계정', href: '/support/contact', icon: '/assets/info-refresh/motif-contact.svg', extra: '' },
+    { title: '이용안내', desc: '찾기·등록·찜·쪽지', href: '/guide', icon: '/assets/info-refresh/motif-room.svg', extra: '' },
+    { title: '안전과외', desc: '약관·정책의 안전과외', href: '/support/policies/safety', icon: '/assets/info-refresh/motif-policy.svg', extra: 'card--accent-violet', halo: 'icon-halo--violet', tile: 'icon-tile--violet' },
     { title: '약관·정책', desc: '이용약관 · 개인정보 등', href: '/support/policies', icon: '/assets/info-refresh/motif-policy.svg', extra: 'card--accent-violet', halo: 'icon-halo--violet', tile: 'icon-tile--violet' },
     { title: '공지사항', desc: '서비스 변경·운영 안내', href: '/support/notice', icon: '/assets/info-refresh/motif-notice.svg', extra: 'card--accent-warn', halo: 'icon-halo--warn', tile: 'icon-tile--warn' },
-    { title: '자료실', desc: '안내 자료와 양식', href: '/support/library', icon: '/assets/info-refresh/motif-library.svg', extra: 'card--accent-teal', halo: 'icon-halo--teal', tile: 'icon-tile--teal' },
+    { title: '자료실', desc: '안내 자료·양식', href: '/support/library', icon: '/assets/info-refresh/motif-library.svg', extra: 'card--accent-teal', halo: 'icon-halo--teal', tile: 'icon-tile--teal' },
     { title: '커뮤니티', desc: '현장형 고민방·해결후기', href: '/community', icon: '/assets/info-refresh/motif-room.svg', extra: '', halo: 'icon-halo--ivory', tile: 'icon-tile--ivory' },
   ];
   return `
@@ -170,7 +177,7 @@ function renderSupportHero() {
       </div>
       <div class="support-hero__inner">
         <h1>필요한 답을 빠르게</h1>
-        <p>FAQ에서 먼저 찾고, 없으면 문의해 주세요. 공지·정책·자료도 한곳에서 이어집니다.</p>
+        <p>자주 묻는 질문에서 먼저 찾아 보세요. 쓰는 방법은 이용안내, 운영팀에 보낼 내용은 운영문의입니다. 쪽지와 운영문의는 다릅니다.</p>
         <div class="support-hero__actions">
           <a class="btn btn--primary" href="#/support/faq" data-sup-nav="/support/faq">자주 묻는 질문</a>
           <a class="btn btn--secondary" href="#/support/contact" data-sup-nav="/support/contact">${OPERATIONAL_CTA.buttonLabel}</a>
@@ -215,8 +222,8 @@ function renderFaqSection() {
     <div class="faq-list" data-support-faq>${items || '<p class="section-lead">등록된 질문이 없습니다.</p>'}</div>
     <aside class="tip-card">
       <h3>답이 없나요?</h3>
-      <p>FAQ에 없는 내용은 문의에서 남겨 주세요. 운영문의는 쪽지와 다른 채널입니다.</p>
-      <p class="support-tip-cta"><a class="btn btn--primary btn--sm" href="#/support/contact" data-sup-nav="/support/contact">문의</a></p>
+      <p>FAQ에 없는 내용은 운영문의에서 남겨 주세요. 운영문의는 쪽지와 다른 채널입니다.</p>
+      <p class="support-tip-cta"><a class="btn btn--primary btn--sm" href="#/support/contact" data-sup-nav="/support/contact">운영문의 남기기</a></p>
     </aside>`;
 }
 
@@ -284,11 +291,11 @@ function renderContactSection() {
     <div class="section-head">
       <div>
         <span class="section-chip">Contact</span>
-        <h2>문의</h2>
+        <h2>운영문의</h2>
         <div class="section-underline"></div>
       </div>
     </div>
-    <p class="section-lead">운영팀에 직접 남기는 문의입니다. 회원 간 쪽지와 별도 채널입니다.</p>
+    <p class="section-lead">운영문의는 운영팀에 보내는 채널입니다. 오류·정책·계정 문제를 남기세요. 수업 상담은 쪽지입니다. 접수한 뒤에는 마이페이지의 내 문의 내역에서 확인합니다.</p>
     ${flashHtml}
     <section class="card card--accent support-contact-card">
       <form class="sup-contact-form" data-sup-contact-form>
@@ -304,7 +311,7 @@ function renderContactSection() {
           <span>문의 내용</span>
           <textarea name="body" rows="4" placeholder="오류·정책·계정 문의" required></textarea>
         </label>
-        <button type="submit" class="btn btn--primary btn--sm">문의 접수</button>
+        <button type="submit" class="btn btn--primary btn--sm">운영문의 남기기</button>
         <p class="sup-note">${esc(OPERATIONAL_CONTACT.note)}</p>
       </form>
       <p class="sup-contact-extra">
@@ -428,7 +435,7 @@ function renderSupportLibrarySection(path) {
         <div class="section-underline"></div>
       </div>
     </div>
-    <p class="section-lead">${esc(LIBRARY_HEAD.lead)}</p>
+    <p class="section-lead">안내 자료와 양식입니다. 일부는 로그인 후에 볼 수 있습니다. 이용 방법은 이용안내를 먼저 보세요.</p>
     <div class="tab-pills" role="tablist" aria-label="자료실">${tabs}</div>
     ${renderBoardPolicyChips(meta.boardKey, navRole)}
     ${grid}

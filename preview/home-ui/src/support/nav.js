@@ -7,7 +7,7 @@ export const SUPPORT_NAV = [
   { id: 'faq', label: '자주 묻는 질문', path: '/support/faq', titleSuffix: '자주 묻는 질문' },
   { id: 'policies', label: '약관·정책', path: '/support/policies', titleSuffix: '약관·정책' },
   { id: 'library', label: '자료실', path: '/support/library', titleSuffix: '자료실' },
-  { id: 'contact', label: '문의', path: '/support/contact', titleSuffix: '문의', requiresLogin: true },
+  { id: 'contact', label: '운영문의', path: '/support/contact', titleSuffix: '운영문의', requiresLogin: true },
 ];
 
 /** @param {string} path */

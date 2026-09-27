@@ -51,6 +51,21 @@ function guideHero({ label, title, p1, p2, art }) {
     <div class="pattern-band" aria-hidden="true"></div>`;
 }
 
+function faqBlock(items) {
+  return `
+    <div class="guide-faq-list">
+      ${items
+        .map(
+          (item) => `
+        <details class="guide-faq-item">
+          <summary class="guide-faq-item__q">${esc(item.q)}</summary>
+          <div class="guide-faq-item__a"><p class="guide-faq-item__a-body">${esc(item.a)}</p></div>
+        </details>`,
+        )
+        .join('')}
+    </div>`;
+}
+
 function stepList(steps) {
   return `
     <ol class="step-list" style="list-style:none;padding:0;margin:0">
@@ -102,10 +117,31 @@ function renderGuideHome() {
     </div>
     <div class="aux-links" role="navigation" aria-label="보조 링크">
       <span class="aux-links__label">더 알아보기</span>
+      <a href="#/guide/start" data-guide-nav="/guide/start">학생·학부모예요. 요청 등록과 학생찾기 흐름을 안내합니다.</a>
+      <span class="aux-links__sep" aria-hidden="true">·</span>
       <a href="#/guide/safe" data-guide-nav="/guide/safe">안전이용 보기</a>
       <span class="aux-links__sep" aria-hidden="true">·</span>
       <a href="#/support" data-guide-nav="/support">고객센터 보기</a>
     </div>
+    ${sectionHead('FAQ', '자주 묻는 질문')}
+    ${faqBlock([
+      {
+        q: '이용안내와 고객센터는 같은 곳인가요?',
+        a: '아니요. 이용안내는 처음 쓰는 흐름을 안내하고, 고객센터는 공지·FAQ·운영문의·정책을 보는 곳입니다.',
+      },
+      {
+        q: '어디부터 보면 되나요?',
+        a: '공부방·과외쌤을 찾으면 「찾기·첫 이용」, 등록하면 「등록·노출」, 찜과 비교와 쪽지는 「비교·찜·쪽지」입니다. 학생·학부모의 요청 등록과 학생찾기는 보조 안내에서 이어집니다.',
+      },
+      {
+        q: '로그인 전에도 볼 수 있나요?',
+        a: '목록·상세는 로그인 전에도 볼 수 있고, 찜·쪽지는 로그인 후입니다.',
+      },
+      {
+        q: '쪽지와 운영문의는 같은가요?',
+        a: '아니요. 쪽지는 회원끼리 첫 연락이고, 운영문의는 운영자에게 보내는 문의입니다.',
+      },
+    ])}
     ${sectionHead('Go use', '바로 이용하기')}
     <div class="slim-cta">
       <span class="slim-cta__label">실이용으로</span>
@@ -120,11 +156,12 @@ function renderGuideStart() {
       label: '찾기·첫 이용 소개',
       title: '찾기·첫 이용',
       p1: '공부방·과외쌤을 찾는 분들을 위한 첫 이용 안내입니다.',
-      p2: '검색부터 비교·찜, 상세 확인, 첫 쪽지까지 순서대로 따라가 보세요.',
+      p2: '찾기 → 조건 → 상세 → 찜 → 비교 → 로그인 → 쪽지 순서로 따라가 보세요. 비교는 필요할 때 쓰면 됩니다.',
       art: `${A}/motif-search.svg`,
     })}
     ${sectionHead('Playbook', '이용 순서')}
-    <p class="section-lead">한 번에 다 외울 필요 없어요. 아래 다섯 단계만 따라가면 됩니다.</p>
+    <p class="section-lead">한 번에 다 외울 필요 없어요. 찾기 → 조건 → 상세 → 찜 → 비교 → 로그인 → 쪽지 순서로 따라가면 됩니다.</p>
+    <p class="section-lead">목록·상세는 로그인 전에도 볼 수 있고, 찜·쪽지는 로그인 후입니다.</p>
     ${stepList([
       {
         icon: `${A}/step-pick.svg`,
@@ -137,19 +174,53 @@ function renderGuideStart() {
         body: '지역·과목·대상 학년 등 필터로 후보를 좁혀 보세요. 너무 좁히면 결과가 적을 수 있어요.',
       },
       {
-        icon: `${A}/step-bookmark.svg`,
-        title: '마음에 드는 후보를 비교·찜으로 모아두기',
-        body: '마음에 드는 곳을 찜해 두고, 필요한 만큼 비교해 보세요. 자세한 방법은 「비교·찜·쪽지」에서 이어집니다.',
+        icon: `${A}/step-detail.svg`,
+        title: '상세 페이지 확인하기',
+        body: '소개·수업 방식·위치·시간대와 회원이 올려 둔 신뢰정보를 천천히 읽어 보세요. 신뢰정보는 참고 표시이며, 플랫폼의 인증·보증이 아닙니다.',
       },
       {
-        icon: `${A}/step-detail.svg`,
-        title: '상세 정보 확인하기',
-        body: '소개·수업 방식·위치·시간대 등을 천천히 읽어 보세요. 궁금한 점은 쪽지로 물어보면 됩니다.',
+        icon: `${A}/step-bookmark.svg`,
+        title: '마음에 드는 후보를 찜하기',
+        body: '마음에 드는 곳을 찜해 두세요. 지금 바로 결정하지 않아도 나중에 다시 볼 수 있어요.',
+      },
+      {
+        icon: `${A}/step-compare.svg`,
+        title: '필요할 때 비교하기',
+        body: '후보가 몇 개 모이면 그중 2~3개를 비교해 보세요. 자세한 방법은 「비교·찜·쪽지」에서 이어집니다.',
+      },
+      {
+        icon: `${A}/step-login.svg`,
+        title: '로그인하기',
+        body: '찜을 이어서 보거나 쪽지를 보내려면 로그인해 주세요. 계정이 없으면 회원가입(계정 만들기)으로 시작해요.',
       },
       {
         icon: `${A}/step-message.svg`,
-        title: '로그인 후 첫 쪽지 보내기',
-        body: '쪽지는 로그인 후 이용할 수 있으며, 운영팀에 보내는 운영문의와는 다릅니다.',
+        title: '쪽지로 회원끼리 첫 연락',
+        body: '쪽지는 로그인 후 회원끼리 첫 연락을 하는 통로예요. 운영팀에 보내는 운영문의와는 다릅니다.',
+      },
+    ])}
+    ${sectionHead('Students', '학생찾기 (공부방·과외쌤용)')}
+    <p class="section-lead">학생찾기는 공부방·과외쌤이 근처에 올라온 학생·학부모 요청을 찾아보는 화면입니다.</p>
+    <p class="section-lead">학부모가 공부방·과외쌤을 찾는 「공부방찾기」「과외쌤찾기」와는 방향이 반대예요.</p>
+    <p class="section-lead">기본으로 내 홍보 지역의 요청이 보이고, 조건을 바꿔 더 넓게 검색할 수 있습니다.</p>
+    <p class="section-lead">홈의 「우리동네 학생」은 잠깐 훑는 동네 미리보기이고, 자세히 찾으려면 학생찾기로 가면 됩니다.</p>
+    ${sectionHead('FAQ', '자주 묻는 질문')}
+    ${faqBlock([
+      {
+        q: '학생찾기는 누구를 위한 화면인가요?',
+        a: '공부방·과외쌤용입니다. 학부모가 공부방·과외쌤을 찾는 「공부방찾기」「과외쌤찾기」와는 방향이 반대예요. 학생은 찜·비교 대상이 아닙니다.',
+      },
+      {
+        q: '게스트도 목록과 상세를 볼 수 있나요?',
+        a: '목록·상세는 로그인 전에도 볼 수 있고, 찜·쪽지는 로그인 후입니다.',
+      },
+      {
+        q: '홈의 우리동네 학생과 학생찾기는 같은가요?',
+        a: '아니요. 홈의 「우리동네 학생」은 잠깐 훑는 동네 미리보기이고, 자세히 찾으려면 학생찾기로 가면 됩니다.',
+      },
+      {
+        q: '추천 순서는 무엇인가요?',
+        a: '찾기 → 조건 → 상세 → 찜 → 비교 → 로그인 → 쪽지입니다. 후보를 고른 뒤에는 찜 → 비교 → 쪽지 순서가 좋습니다.',
       },
     ])}
     ${sectionHead('Next', '다음으로')}
@@ -170,9 +241,9 @@ function renderGuideRegister() {
       art: `${A}/motif-register.svg`,
     })}
     ${sectionHead('Playbook', '등록 순서')}
-    <p class="section-lead">가입 필수정보 입력 후 기본 노출이 시작되는 흐름입니다.</p>
+    <p class="section-lead">회원가입(계정 만들기) 뒤 필수정보를 입력하면 기본 노출이 시작됩니다. 증빙자료는 심사하거나 보증하지 않습니다. 신뢰정보는 회원이 올려 둔 참고 표시이며, 플랫폼의 인증·보증이 아닙니다.</p>
     ${stepList([
-      { icon: `${A}/step-login.svg`, title: '회원가입·로그인', body: '등록하려면 먼저 회원으로 로그인해 주세요.' },
+      { icon: `${A}/step-login.svg`, title: '회원가입(계정 만들기)', body: '공통가입은 계정을 만드는 단계예요. 계정을 만든 뒤 로그인해 주세요.' },
       { icon: `${A}/step-form.svg`, title: '필수정보 입력', body: '이름(상호)·지역 등 가입 필수정보를 입력하면 기본 노출이 시작됩니다.' },
       { icon: `${A}/step-publish.svg`, title: '기본 노출', body: '필수정보를 입력하면 검색·리스트에 기본 노출됩니다. 운영자 심사·승인 절차는 없습니다.' },
       { icon: `${A}/step-edit.svg`, title: '상세 등록', body: '카드와 상세 페이지에 보여줄 추가 정보를 보완합니다. 기본 노출의 필수 조건은 아닙니다.' },
@@ -200,7 +271,7 @@ function renderGuideRegister() {
     </ul>
     <ul class="checklist" id="panel-tutor" role="tabpanel" aria-labelledby="tab-tutor" hidden>
       <li>표시명</li>
-      <li>활동 지역</li>
+      <li>활동 시·군 1개</li>
       <li>대상 학생군</li>
       <li>과목</li>
       <li>수업 방식</li>
@@ -208,6 +279,30 @@ function renderGuideRegister() {
       <li>대표 사진 — 대표 사진이 있으면 프로필을 더 쉽게 이해할 수 있어요</li>
       <li>가입 필수정보가 입력되어 기본 노출 중인지 확인</li>
     </ul>
+    ${sectionHead('Students', '학생 등록')}
+    <p class="section-lead">학생·학부모도 회원가입 후 기본 정보를 입력하면, 요청이 학생찾기 등에 기본으로 노출될 수 있습니다.</p>
+    <p class="section-lead">운영자 심사·승인을 기다리지 않습니다.</p>
+    <p class="section-lead">상세 정보는 나중에 보완해도 됩니다. (저장을 눌러야 이어집니다 — 창만 닫으면 저장되지 않아요.)</p>
+    <p class="section-lead">한 줄 요청문·희망 지역·과목 등 찾는 분이 바로 이해하는 정보를 먼저 채우면 좋습니다.</p>
+    ${sectionHead('FAQ', '자주 묻는 질문')}
+    ${faqBlock([
+      {
+        q: '기본 정보를 입력하면 바로 노출되나요?',
+        a: '가입 필수정보를 입력하면 기본 노출이 시작됩니다. 운영자 심사·승인 절차는 없습니다.',
+      },
+      {
+        q: '상세 정보는 언제 보완하나요?',
+        a: '상세등록은 카드와 상세 페이지에 보여줄 추가 정보를 보완하는 단계입니다. 기본 노출의 필수 조건은 아닙니다.',
+      },
+      {
+        q: '창을 닫아도 저장되나요?',
+        a: '저장을 눌러야 이어집니다. 창만 닫으면 저장되지 않아요.',
+      },
+      {
+        q: '학생 등록은 공부방·과외쌤 등록과 같나요?',
+        a: '별도입니다. 학생·학부모도 회원가입 후 기본 정보를 입력하면, 요청이 학생찾기 등에 기본으로 노출될 수 있습니다. 운영자 심사·승인을 기다리지 않습니다. 학생은 찜·비교 대상이 아닙니다.',
+      },
+    ])}
     ${sectionHead('After', '기본 노출 이후 선택')}
     <div class="cta-row">
       ${extLink(STUDY_ROOM_REGISTER_URL, 'btn btn--primary', '공부방 등록')}
@@ -228,22 +323,22 @@ function renderGuideCompare() {
       art: `${A}/motif-compare.svg`,
     })}
     <div class="note-callout" role="note">
-      <strong>채널 구분:</strong> 쪽지 = 회원(공급↔수요) 간 메시지 · 운영문의 = 운영자에게 보내는 문의(폼/메일). 같은 “문의”로 묶지 마세요.
+      <strong>채널 구분:</strong> 쪽지 = 회원끼리 첫 연락 · 운영문의 = 운영자에게 보내는 문의(폼/메일). 같은 “문의”로 묶지 마세요.
     </div>
     ${sectionHead('Features', '세 가지 기능')}
-    <div class="chip-row" aria-label="비교 · 찜 · 쪽지">
-      <div class="feat-chip">
-        <span class="feat-chip__icon" aria-hidden="true"><img src="${A}/step-compare.svg" alt="" width="40" height="40" /></span>
-        <div>
-          <strong>비교</strong>
-          <span>후보를 나란히 놓고 조건 확인</span>
-        </div>
-      </div>
+    <div class="chip-row" aria-label="찜 · 비교 · 쪽지">
       <div class="feat-chip">
         <span class="feat-chip__icon feat-chip__icon--teal" aria-hidden="true"><img src="${A}/step-bookmark.svg" alt="" width="40" height="40" /></span>
         <div>
           <strong>찜</strong>
           <span>나중에 다시 볼 곳을 저장</span>
+        </div>
+      </div>
+      <div class="feat-chip">
+        <span class="feat-chip__icon" aria-hidden="true"><img src="${A}/step-compare.svg" alt="" width="40" height="40" /></span>
+        <div>
+          <strong>비교</strong>
+          <span>후보를 나란히 놓고 조건 확인</span>
         </div>
       </div>
       <div class="feat-chip">
@@ -255,13 +350,28 @@ function renderGuideCompare() {
       </div>
     </div>
     ${sectionHead('Playbook', '이용 순서')}
-    <p class="section-lead">비교 → 찜 → 쪽지 순으로 한 번만 따라가 보세요.</p>
+    <p class="section-lead">찜 → 비교 → 쪽지 순으로 한 번만 따라가 보세요.</p>
     ${stepList([
       { icon: `${A}/step-pick.svg`, title: '검색 결과에서 후보 고르기', body: '공부방·과외쌤 목록에서 관심 있는 곳을 골라 둡니다.' },
-      { icon: `${A}/step-compare.svg`, title: '비교로 조건 맞춰 보기', body: '지역·과목·시간·비용 등 내가 중요하게 보는 기준으로 나란히 확인합니다.' },
       { icon: `${A}/step-bookmark.svg`, title: '마음에 드는 곳을 찜', body: '당장 연락하지 않아도 괜찮아요. 찜 목록에 모아 두면 나중에 다시 볼 수 있어요.' },
-      { icon: `${A}/step-message.svg`, title: '상세를 읽은 뒤 쪽지 보내기', body: '짧은 인사와 궁금한 점만 적어서 보내 보세요. 쪽지는 회원 간 연결 통로입니다.' },
+      { icon: `${A}/step-compare.svg`, title: '비교로 조건 맞춰 보기', body: '찜해 둔 곳 중 2~3개를, 지역·과목·시간·비용 등 내가 중요하게 보는 기준으로 나란히 확인합니다.' },
+      { icon: `${A}/step-message.svg`, title: '상세 페이지를 읽은 뒤 쪽지 보내기', body: '짧은 인사와 궁금한 점만 적어서 보내 보세요. 쪽지는 회원끼리 첫 연락을 하는 통로입니다.' },
       { icon: `${A}/step-inbox.svg`, title: '쪽지함에서 이어가기', body: '받은·보낸 쪽지는 쪽지함에서 확인할 수 있어요. (로그인 필요)' },
+    ])}
+    ${sectionHead('FAQ', '자주 묻는 질문')}
+    ${faqBlock([
+      {
+        q: '비교는 최대 몇 개인가요?',
+        a: '비교는 공부방끼리 또는 과외쌤끼리, 최대 3개까지 나란히 보는 기능이에요. 찜은 더 담을 수 있어요. 더 비교하려면 지금 담은 것 중 일부를 비교에서 내린 뒤 다른 후보를 담으세요.',
+      },
+      {
+        q: '학생도 찜하거나 비교할 수 있나요?',
+        a: '아니요. 학생은 찜·비교 대상이 아니에요.',
+      },
+      {
+        q: '어떤 순서로 쓰면 되나요?',
+        a: '찜 → 비교 → 쪽지 순으로 따라가 보세요. 비교는 판단을 돕는 단계예요. 상세 페이지를 본 다음, 쪽지로 회원끼리 첫 연락을 이어가세요.',
+      },
     ])}
     ${sectionHead('Tip', '쪽지 보내기 전')}
     <ul class="checklist">
@@ -287,6 +397,8 @@ function renderGuideSafe() {
     })}
     ${sectionHead('Do & Don\'t', '이렇게 하세요 · 하지 마세요')}
     <p class="section-lead">가이드는 행동 수칙입니다. 정책 전문·신고 접수는 고객센터에 있습니다.</p>
+    <p class="section-lead">노출된 신뢰정보는 상대가 프로필에 보여 둔 소개·자료이며, 플랫폼이 확인·인증했다는 뜻이 아닙니다.</p>
+    <p class="section-lead">학생·학부모도 첫 연락, 개인정보, 선입금에서 같은 주의를 따르세요.</p>
     <div class="do-dont">
       <div class="do-dont__panel do-dont__panel--do">
         <h3><img src="${A}/icon-do.svg" alt="" width="32" height="32" aria-hidden="true" /> 이렇게 하세요</h3>
@@ -307,6 +419,21 @@ function renderGuideSafe() {
         </ul>
       </div>
     </div>
+    ${sectionHead('FAQ', '자주 묻는 질문')}
+    ${faqBlock([
+      {
+        q: '노출된 신뢰정보는 인증인가요?',
+        a: '노출된 신뢰정보는 상대가 프로필에 보여 둔 소개·자료이며, 플랫폼이 확인·인증했다는 뜻이 아닙니다.',
+      },
+      {
+        q: '선입금은 어떻게 해야 하나요?',
+        a: '비용, 환불 조건, 수업 방식이 충분히 정리되지 않았다면 선입금이나 외부 결제에 바로 응하지 마세요.',
+      },
+      {
+        q: '학생·학부모도 같은 주의를 하나요?',
+        a: '네. 학생·학부모도 첫 연락, 개인정보, 선입금에서 같은 주의를 따르세요.',
+      },
+    ])}
     ${sectionHead('Help', '도움이 필요할 때')}
     <div class="help-block">
       <h3><img src="${A}/icon-help.svg" alt="" width="32" height="32" aria-hidden="true" /> 고객센터로 이어가기</h3>
