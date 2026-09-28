@@ -238,7 +238,7 @@ function renderStudyRoomBasic() {
   return `
     <form data-form="basic-study-room" class="basic-register">
       <p class="auth-section-title">기본등록</p>
-      <p class="form-note mb-4">교습형태 · 이름 · 주대상 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1번은 필수입니다. 홍보 2·3번은 선택입니다.</p>
+      <p class="form-note mb-4">교습형태 · 이름 · 대상 학교급 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1번은 필수입니다. 홍보 2·3번은 선택입니다.</p>
       ${renderStudyRoomBasicFields({
         values,
         genderOptions: PERSONAL_GENDER_OPTIONS,

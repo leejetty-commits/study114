@@ -143,7 +143,7 @@ export function buildRoomInputSummary(room) {
       rows: [
         { label: '교습형태', value: s.lesson_place_type === 'academy' ? '교습소' : s.lesson_place_type === 'study_room' ? '공부방' : '' },
         { label: lessonPlaceNameLabel(s.lesson_place_type), value: str(s.study_room_name) },
-        { label: '주대상', value: formatPrimaryAudienceLabel(s.primary_school_levels) },
+        { label: '대상 학교급', value: formatPrimaryAudienceLabel(s.primary_school_levels) },
         { label: '주력과목', value: str(s.main_subject_note) },
         { label: '원장성별', value: labelOf(PERSONAL_GENDER_OPTIONS, s.gender) },
         { label: '슬로건', value: str(s.slogan) },

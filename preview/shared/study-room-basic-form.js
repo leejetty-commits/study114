@@ -1,7 +1,7 @@
 /**
  * 공부방 기본정보 입력 — 가입 기본등록과 현황 수정 팝업이 같은 레이아웃을 쓴다.
  *
- * 필수: 교습형태 · 이름 · 주대상 1개 이상 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1곳
+ * 필수: 교습형태 · 이름 · 대상 학교급 1개 이상 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1곳
  * 선택: 홍보 2·3
  * 주소칸은 카카오 우편번호(더미 단지 목록 없이 호출).
  * 개설주소(사업장) 확정 시 홍보지역 1만 채운다. 홍보1을 직접 고치면 다시 덮지 않는다.
@@ -12,7 +12,7 @@ export const PRIMARY_AUDIENCE_OPTIONS = [
   { value: 'elementary', label: '초등' },
   { value: 'middle', label: '중등' },
   { value: 'high', label: '고등' },
-  { value: 'n_su', label: '대입 준비(재수 이상)' },
+  { value: 'n_su', label: 'N수' },
 ];
 
 export const LESSON_PLACE_TYPE_OPTIONS = [
@@ -289,8 +289,8 @@ export function renderStudyRoomBasicFields(opts = {}) {
         <input class="form-input" id="study_room_name" name="study_room_name" value="${esc(v.study_room_name || '')}" required />
       </div>
       <div class="form-group form-group--full">
-        <span class="form-label form-label--required">주대상</span>
-        <p class="form-hint">학교급을 1개 이상 고르세요. 카드 「대상」에 나갑니다.</p>
+        <span class="form-label form-label--required">대상 학교급</span>
+        <p class="form-hint">대상 학교급을 1개 이상 고르세요. 카드 「대상」에 나갑니다.</p>
         <div class="register-check-grid register-check-grid--five">${audienceChecks}</div>
       </div>
       <div class="form-group">
@@ -788,7 +788,7 @@ export function validateStudyRoomBasicFields(data) {
   const levels = (Array.isArray(data.primary_school_levels) ? data.primary_school_levels : [])
     .map(String)
     .filter((v) => allowedLevels.includes(v));
-  if (!levels.length) return '주대상을 1개 이상 선택해 주세요.';
+  if (!levels.length) return '대상 학교급을 1개 이상 선택해 주세요.';
   data.primary_school_levels = levels;
   if (!blank(data.main_subject_note)) return '주력과목을 선택해 주세요.';
   if (!['male', 'female'].includes(blank(data.gender))) return '원장성별을 선택해 주세요.';

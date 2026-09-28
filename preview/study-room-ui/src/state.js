@@ -30,7 +30,7 @@ export const SCHOOL_LEVELS = [
   { value: 'elementary', label: '초등' },
   { value: 'middle', label: '중등' },
   { value: 'high', label: '고등' },
-  { value: 'n_su', label: '대입 준비(재수 이상)' },
+  { value: 'n_su', label: 'N수' },
   { value: 'general', label: '일반' },
   { value: 'other', label: '기타' },
 ];
@@ -60,7 +60,7 @@ export const GRADE_OPTIONS = [
   { value: '4학년', label: '4학년' },
   { value: '5학년', label: '5학년' },
   { value: '6학년', label: '6학년' },
-  { value: 'N수', label: '대입 준비(재수 이상)' },
+  { value: 'N수', label: 'N수' },
 ];
 
 export const WEEKDAY_OPTIONS = [

@@ -51,7 +51,7 @@ export const SCHOOL_LEVEL_LABELS = {
   elementary: '초등',
   middle: '중등',
   high: '고등',
-  n_su: '대입 준비(재수 이상)',
+  n_su: 'N수',
   general: '일반',
   other: '기타',
 };

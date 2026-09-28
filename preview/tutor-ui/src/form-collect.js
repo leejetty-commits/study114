@@ -117,7 +117,7 @@ export function validateLessonState(state) {
     const name = String(sub.subject_name || '').trim();
     const grade = String(sub.grade_band || '').trim();
     if (grade && !name) {
-      return '학년대를 선택했다면 과목명도 입력해 주세요. (예: 미적분2, 확률과 통계)';
+      return '학년을 선택했다면 과목명도 입력해 주세요. (예: 미적분2, 확률과 통계)';
     }
   }
   return null;

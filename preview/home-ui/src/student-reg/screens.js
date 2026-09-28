@@ -11,7 +11,8 @@ import {
 import { getParentStudentProfilePath } from '../mypage/router.js';
 import { FORM_OPTIONS, studentToExposureRow } from './format.js';
 import { ensureHopeRegionMasters, getHopeRegionMasters, labelForRegionId, listAllComplexes, listCityOptions } from './hope-region-masters.js';
-import { SCHOOL_LEVEL_LABELS } from '../student-enums.js';
+import { MAIN_SUBJECT_OPTIONS } from '../../../shared/main-subjects.js';
+import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, isGradeSelectDisabled } from '../../../shared/school-grade.js';
 import { getStudents, getStudent, deleteStudent, updateStudent } from './store.js';
 
 function esc(s) {
@@ -199,12 +200,6 @@ function renderHub(student) {
   return `<section class="mypage-panel mp-room-panel">${renderStudentShell(student, 'hub', body)}</section>`;
 }
 
-const BASIC_SUBJECTS = [
-  '국어', '영어', '수학', '과학', '사회', '국영수', '국영수사과', '과학탐구', '사회탐구',
-  '물리', '화학', '생명과학', '지구과학', '한국사', '한문', '일본어', '중국어', '독일어',
-  '프랑스어', '스페인어', '코딩', '논술', '예체능', '기타',
-];
-
 /** @param {string|number|null|undefined} selectedId @param {string} [selectedLabel] */
 function basicRegionOptions(selectedId, selectedLabel) {
   const id = selectedId != null && selectedId !== '' ? String(selectedId) : '';
@@ -224,12 +219,14 @@ function basicRegionOptions(selectedId, selectedLabel) {
 function renderBasicForm(student) {
   const hope = student.preferred_lesson_type === 'study_room' ? 'study_room' : 'tutor';
   const basis = student.preferred_studyroom_region_basis === 'complex' ? 'complex' : 'dong';
-  const subjectValue = BASIC_SUBJECTS.includes(student.subject_label) ? student.subject_label : student.subject_label || '';
-  const subjectOptions = BASIC_SUBJECTS.map((name) => ({ value: name, label: name }));
-  if (subjectValue && !BASIC_SUBJECTS.includes(subjectValue)) {
+  const subjectNames = MAIN_SUBJECT_OPTIONS.map((o) => o.value);
+  const subjectValue = subjectNames.includes(student.subject_label) ? student.subject_label : student.subject_label || '';
+  const subjectOptions = MAIN_SUBJECT_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
+  if (subjectValue && !subjectNames.includes(subjectValue)) {
     subjectOptions.unshift({ value: subjectValue, label: subjectValue });
   }
-  const schoolOptions = Object.entries(SCHOOL_LEVEL_LABELS).map(([value, label]) => ({ value, label }));
+  const schoolOptions = SCHOOL_LEVEL_FORM_OPTIONS;
+  const grade = gradeOptionHtml(student.school_level || '', student.grade_level || '');
   const tutorRegion = basicRegionOptions(student.preferred_tutor_region_id, student.region_label);
   const studyRegion = basicRegionOptions(student.preferred_studyroom_region_id, student.region_label);
   const complexes = listAllComplexes().map((c) => ({
@@ -256,7 +253,7 @@ function renderBasicForm(student) {
         </label>
         <label class="p19-field">
           <span class="p19-field__label">학년</span>
-          ${renderTextInput('grade_level', student.grade_level || '', { maxlength: 20, placeholder: '예: 중2' })}
+          <select name="grade_level" class="p19-input p19-select" ${grade.disabled ? 'disabled' : ''}>${grade.html}</select>
         </label>
         <label class="p19-field">
           <span class="p19-field__label">희망 유형</span>
@@ -505,6 +502,14 @@ export function bindStudentRegEvents(root, rerender) {
       form.querySelector('[name="preferred_lesson_type"]')?.addEventListener('change', syncBasic);
       form.querySelector('[name="preferred_studyroom_region_basis"]')?.addEventListener('change', syncBasic);
       form.querySelector('[name="lesson_format"]')?.addEventListener('change', syncBasic);
+      const schoolLevel = form.querySelector('[name="school_level"]');
+      const gradeLevel = form.querySelector('[name="grade_level"]');
+      schoolLevel?.addEventListener('change', () => {
+        if (!(schoolLevel instanceof HTMLSelectElement) || !(gradeLevel instanceof HTMLSelectElement)) return;
+        const next = gradeOptionHtml(schoolLevel.value, '');
+        gradeLevel.disabled = next.disabled;
+        gradeLevel.innerHTML = next.html;
+      });
       syncBasic();
     }
 
@@ -523,6 +528,9 @@ export function bindStudentRegEvents(root, rerender) {
       }
       if (formKind === 'basic' && patch.lesson_format === 'one_on_one') {
         patch.preferred_student_count_group = 'solo';
+      }
+      if (formKind === 'basic' && isGradeSelectDisabled(String(patch.school_level || ''))) {
+        patch.grade_level = '';
       }
       if (formKind === 'detail') {
         if (!patch.lesson_places) patch.lesson_places = [];

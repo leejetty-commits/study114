@@ -6,7 +6,6 @@ import { OPTION_LABELS } from './search-enums.js';
 import {
   GUEST_DEFAULT_REGIONS,
   MOCK_REGIONS,
-  MOCK_SUBJECTS,
   SEARCH_TABS,
   getTutorRegionLabel,
   MOCK_TUTOR_REGIONS,
@@ -37,6 +36,8 @@ import {
 import { resolveFindDefaultRegion, writeStoredHopeRegion } from '../../shared/student-hope-regions.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
 import { bindListSortControls, readListSortFromHash } from '../../shared/list-sort.js';
+import { MAIN_SUBJECT_OPTIONS } from '../../shared/main-subjects.js';
+import { gradeOptionHtml } from '../../shared/school-grade.js';
 import { setGuestListPage } from '@home-ui/state.js';
 import { renderUniversityNameField } from '../../shared/korean-universities.js';
 import {
@@ -921,13 +922,24 @@ function renderField(field, state, opts = {}) {
       </div>`;
   }
 
+  if (field.input === 'grade') {
+    const grade = gradeOptionHtml('', '');
+    return `
+      <label class="search-field${compact ? ' search-field--compact' : ''}">
+        <span class="search-field__label">${esc(field.label)} ${dbHint}</span>
+        <select class="search-field__control" name="${esc(name)}" data-grade-depends="${esc(field.dependsOn || 'school_level')}"${grade.disabled ? ' disabled' : ''}>
+          ${grade.html}
+        </select>
+      </label>`;
+  }
+
   if (field.input === 'subject') {
     return `
       <label class="search-field${compact ? ' search-field--compact' : ''}">
         <span class="search-field__label">${esc(field.label)} ${dbHint}</span>
         <select class="search-field__control" name="${esc(name)}">
           <option value="">과목 선택</option>
-          ${MOCK_SUBJECTS.map((s) => `<option value="${esc(s)}">${esc(s)}</option>`).join('')}
+          ${MAIN_SUBJECT_OPTIONS.map((s) => `<option value="${esc(s.value)}">${esc(s.label)}</option>`).join('')}
         </select>
       </label>`;
   }
@@ -1620,6 +1632,20 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
       window.location.hash = `#/search/student?${params.toString()}`;
       rerender();
     });
+  });
+
+  root.querySelectorAll('[data-grade-depends]').forEach((grade) => {
+    if (!(grade instanceof HTMLSelectElement)) return;
+    const key = grade.getAttribute('data-grade-depends') || 'school_level';
+    const form = grade.closest('form') || root;
+    const level = form.querySelector(`[name="f_${key}"]`);
+    if (!(level instanceof HTMLSelectElement)) return;
+    const sync = () => {
+      const next = gradeOptionHtml(level.value, '');
+      grade.disabled = next.disabled;
+      grade.innerHTML = next.html;
+    };
+    level.addEventListener('change', sync);
   });
 
   const lessonFormatSelect = root.querySelector('[data-lesson-format-select]');

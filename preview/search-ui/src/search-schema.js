@@ -26,7 +26,8 @@ export const SEARCH_TABS = {
     fields: [
       { key: 'region_id', label: '지역(동/단지)', tier: 'basic', basicRow: 1, db: 'study_rooms.region_id · study_room_regions', input: 'region' },
       { key: 'subject_master_id', label: '주력과목', tier: 'basic', basicRow: 1, db: 'study_room_subject_targets · main_subject_note', input: 'subject' },
-      { key: 'school_level', label: '주대상', tier: 'basic', basicRow: 1, db: 'study_room_primary_audiences.school_level', input: 'select', optionsKey: 'school_level' },
+      { key: 'school_level', label: '대상 학교급', tier: 'basic', basicRow: 1, db: 'study_room_primary_audiences.school_level', input: 'select', optionsKey: 'school_level' },
+      { key: 'grade_band', label: '대상 학년', tier: 'basic', basicRow: 1, db: 'study_room_subject_targets.grade_band', input: 'grade', dependsOn: 'school_level' },
       { key: 'price_amount', label: '가격대(월)', tier: 'basic', basicRow: 1, db: 'study_rooms.price_amount', input: 'range' },
       { key: 'lesson_place_type', label: '교습형태', tier: 'basic', basicRow: 2, db: 'study_rooms.lesson_place_type', input: 'select', optionsKey: 'study_room_place' },
       { key: 'lesson_operation_type', label: '수업운영방식', tier: 'basic', basicRow: 2, db: 'study_rooms.lesson_operation_type', input: 'select', optionsKey: 'lesson_operation' },
@@ -47,7 +48,8 @@ export const SEARCH_TABS = {
     fields: [
       { key: 'tutor_region_id', label: '활동 지역(시)', tier: 'basic', basicRow: 1, db: 'tutor_regions.region_id', input: 'city' },
       { key: 'subject_master_id', label: '주력과목', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets · is_primary', input: 'subject' },
-      { key: 'school_level', label: '대상 학생군/학년', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets.school_level', input: 'select', optionsKey: 'school_level' },
+      { key: 'school_level', label: '지도 학교급', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets.school_level', input: 'select', optionsKey: 'school_level' },
+      { key: 'grade_band', label: '지도 학년', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets.grade_band', input: 'grade', dependsOn: 'school_level' },
       { key: 'preferred_fee_amount', label: '대표 과외비(월)', tier: 'basic', basicRow: 1, db: 'tutors.preferred_fee_amount', input: 'range' },
       { key: 'university_name', label: '학교명', tier: 'basic', basicRow: 2, db: 'tutors.university_name', input: 'university' },
       { key: 'career_year_band', label: '경력구간', tier: 'basic', basicRow: 2, db: 'tutors.career_year_band', input: 'select', optionsKey: 'career_year_band' },
@@ -68,7 +70,8 @@ export const SEARCH_TABS = {
       { key: 'preferred_lesson_type', label: '희망 유형', tier: 'basic', basicRow: 1, db: 'students.preferred_lesson_type', input: 'select', optionsKey: 'preferred_lesson_type' },
       { key: 'preferred_region', label: '희망 지역', tier: 'basic', basicRow: 1, db: 'preferred_studyroom_region/complex · preferred_tutor_region', input: 'region' },
       { key: 'subject_master_id', label: '희망 과목', tier: 'basic', basicRow: 1, db: 'student_subject_targets', input: 'subject' },
-      { key: 'grade_level', label: '학교급/학년', tier: 'basic', basicRow: 1, db: 'students.grade_level', input: 'text' },
+      { key: 'school_level', label: '학교급', tier: 'basic', basicRow: 1, db: 'students.school_level', input: 'select', optionsKey: 'school_level' },
+      { key: 'grade_level', label: '학년', tier: 'basic', basicRow: 1, db: 'students.grade_level', input: 'grade', dependsOn: 'school_level' },
       { key: 'budget_amount', label: '수업예산(월)', tier: 'basic', basicRow: 2, db: 'preferred_fee_amount / preferred_studyroom_fee_amount', input: 'range' },
       { key: 'place_type', label: '희망 수업장소', tier: 'basic', basicRow: 2, db: 'student_preferred_lesson_places', input: 'chips', optionsKey: 'student_place' },
       { key: 'preferred_student_count_group', label: '희망 수업인원', tier: 'basic', basicRow: 2, db: 'students.preferred_student_count_group', input: 'select', optionsKey: 'student_count' },
@@ -82,8 +85,6 @@ export const SEARCH_TABS = {
     ],
   },
 };
-
-export const MOCK_SUBJECTS = ['수학', '영어', '국어', '과학', '사회'];
 
 /**
  * 비로그인·프리뷰 기본 지역 (축별 분리 · 7.18 확정)

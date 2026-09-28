@@ -1,3 +1,4 @@
+import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml } from '../../shared/school-grade.js';
 import {
   STUDENT_COUNT_LABELS,
   STUDENT_PLACE_LABELS,
@@ -36,6 +37,7 @@ export function renderStudentRegisterForm(student = {}) {
     request_summary: student.request_summary || '',
     special_request_note: student.special_request_note || '',
     preferred_lesson_type: student.preferred_lesson_type || 'tutor',
+    school_level: student.school_level || '',
     grade_level: student.grade_level || '',
     preferred_fee_amount: student.preferred_fee_amount ?? '',
     preferred_studyroom_fee_amount: student.preferred_studyroom_fee_amount ?? '',
@@ -53,8 +55,17 @@ export function renderStudentRegisterForm(student = {}) {
           </select>
         </label>
         <label class="student-form__field">
-          <span class="student-form__label">학교급/학년</span>
-          <input name="grade_level" class="student-form__input" value="${esc(v.grade_level)}" placeholder="예: 중2" />
+          <span class="student-form__label">학교급</span>
+          <select name="school_level" class="student-form__select">
+            <option value="">선택</option>
+            ${SCHOOL_LEVEL_FORM_OPTIONS.map((o) => `<option value="${esc(o.value)}" ${v.school_level === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
+          </select>
+        </label>
+        <label class="student-form__field">
+          <span class="student-form__label">학년</span>
+          <select name="grade_level" class="student-form__select"${gradeOptionHtml(v.school_level, v.grade_level).disabled ? ' disabled' : ''}>
+            ${gradeOptionHtml(v.school_level, v.grade_level).html}
+          </select>
         </label>
         <label class="student-form__field">
           <span class="student-form__label">수업예산 (과외)</span>

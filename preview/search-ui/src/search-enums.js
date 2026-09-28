@@ -1,3 +1,4 @@
+import { SCHOOL_LEVEL_FORM_LABELS } from '../../shared/school-grade.js';
 import {
   SCHOOL_LEVEL_LABELS,
   STUDENT_COUNT_LABELS,
@@ -95,7 +96,7 @@ export const PREFERRED_TUTOR_GENDER_LABELS = {
 };
 
 export const OPTION_LABELS = {
-  school_level: SCHOOL_LEVEL_LABELS,
+  school_level: SCHOOL_LEVEL_FORM_LABELS,
   study_room_place: STUDY_ROOM_PLACE_LABELS,
   lesson_operation: LESSON_OPERATION_LABELS,
   capacity: CAPACITY_LABELS,

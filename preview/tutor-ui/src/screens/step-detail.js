@@ -3,8 +3,6 @@
  */
 import {
   registerState,
-  SCHOOL_LEVELS,
-  GRADE_BAND_OPTIONS,
   FEE_BASIS_OPTIONS,
   TUTOR_PLACE_OPTIONS,
   GENDER_GROUP_OPTIONS,
@@ -16,6 +14,7 @@ import {
   emptySubject,
 } from '../state.js';
 import { syncLessonFromForm, syncCareerFromForm, syncContactFromForm, validateLessonState, validateCareerState, validateIntroState } from '../form-collect.js';
+import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, bindSchoolGradePairs } from '../../../shared/school-grade.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
@@ -42,19 +41,20 @@ function radios(name, options, selected) {
 }
 
 function subjectRow(sub, idx) {
-  const levels = SCHOOL_LEVELS.map(
+  const levels = SCHOOL_LEVEL_FORM_OPTIONS.map(
     (l) => `<option value="${l.value}" ${sub.school_level === l.value ? 'selected' : ''}>${l.label}</option>`,
   ).join('');
-  const grades = [
-    `<option value="">학년대</option>`,
-    ...GRADE_BAND_OPTIONS.map(
-      (g) => `<option value="${g.value}" ${sub.grade_band === g.value ? 'selected' : ''}>${g.label}</option>`,
-    ),
-  ].join('');
+  const grade = gradeOptionHtml(sub.school_level, sub.grade_band);
   return `
-    <div class="register-subject-row" data-subject-idx="${idx}">
-      <select class="form-input" data-field="school_level">${levels}</select>
-      <select class="form-input" data-field="grade_band">${grades}</select>
+    <div class="register-subject-row" data-subject-idx="${idx}" data-school-grade-pair>
+      <label class="form-group">
+        <span class="form-label">지도 학교급</span>
+        <select class="form-input" data-field="school_level">${levels}</select>
+      </label>
+      <label class="form-group">
+        <span class="form-label">지도 학년</span>
+        <select class="form-input" data-field="grade_band"${grade.disabled ? ' disabled' : ''}>${grade.html}</select>
+      </label>
       <input class="form-input" data-field="subject_name" value="${sub.subject_name}" placeholder="예: 미적분2, 확률과 통계" />
       <label class="form-check"><input type="checkbox" data-field="is_primary" ${sub.is_primary ? 'checked' : ''} /> 주력</label>
     </div>`;
@@ -217,6 +217,7 @@ export function renderDetail() {
 
 export function bindDetailEvents(root) {
   bindGlobalEvents(root);
+  bindSchoolGradePairs(root);
   root.querySelector('[data-action="back-mypage"]')?.addEventListener('click', () => returnToMypage());
   root.querySelector('[data-action="add-subject"]')?.addEventListener('click', () => {
     registerState.subjects.push(emptySubject());

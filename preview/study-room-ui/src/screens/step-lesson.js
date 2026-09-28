@@ -1,7 +1,5 @@
 import {
   registerState,
-  SCHOOL_LEVELS,
-  GRADE_OPTIONS,
   WEEKDAY_OPTIONS,
   TEACHING_STYLE_OPTIONS,
   LESSON_OPERATION_TYPES,
@@ -12,6 +10,7 @@ import {
   getSubjectOptions,
 } from '../state.js';
 import { syncLessonFromForm } from '../form-collect.js';
+import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, bindSchoolGradePairs } from '../../../shared/school-grade.js';
 import { saveAndNavigate, saveCurrentStep, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
@@ -120,21 +119,21 @@ function renderClassCard(row, idx, total) {
           : ''
       }
       <div class="register-class-card__body">
-        <div class="register-grid-3">
+        <div class="register-grid-3" data-school-grade-pair>
           <div class="form-group">
             <label class="form-label register-class-card__name-label">수업명</label>
             <input class="form-input" data-field="class_name" value="${esc(row.class_name)}" placeholder="예: 중등 수학 정규" />
           </div>
           <div class="form-group">
-            <label class="form-label">대상</label>
+            <label class="form-label">대상 학교급</label>
             <select class="form-input" data-field="school_level">
-              ${renderSelectOptions(SCHOOL_LEVELS, row.school_level, '대상 선택')}
+              ${renderSelectOptions(SCHOOL_LEVEL_FORM_OPTIONS, row.school_level, '선택')}
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">학년</label>
-            <select class="form-input" data-field="grade_band">
-              ${renderSelectOptions(GRADE_OPTIONS, row.grade_band, '학년 선택')}
+            <label class="form-label">대상 학년</label>
+            <select class="form-input" data-field="grade_band"${gradeOptionHtml(row.school_level, row.grade_band).disabled ? ' disabled' : ''}>
+              ${gradeOptionHtml(row.school_level, row.grade_band).html}
             </select>
           </div>
         </div>
@@ -347,6 +346,7 @@ function persistForm(form) {
  */
 export function bindLessonEvents(root, opts = {}) {
   if (!opts.embed) bindGlobalEvents(root);
+  bindSchoolGradePairs(root);
   const form = root.querySelector('[data-form="lesson"]');
   const nextBtn = root.querySelector('[data-action="next"]');
   const prevBtn = root.querySelector('[data-action="prev"]');
