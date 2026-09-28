@@ -1,7 +1,7 @@
 /**
  * notice · faq · safe-guide — board_posts 운영 정본 + static seed fallback
  */
-import { FAQ_ITEMS, GUIDE_ARTICLES, NOTICES as SEED_NOTICES } from './support/support-copy.js';
+import { FAQ_ITEMS, FAQ_TABS, GUIDE_ARTICLES, NOTICES as SEED_NOTICES } from './support/support-copy.js';
 import {
   isBoardApiMode,
   getOperationalPostsCache,
@@ -63,12 +63,14 @@ function noticeSeed() {
   return SEED_NOTICES.map((n) => ({ ...n, body: [...n.body] }));
 }
 
+const FAQ_TAB_SLUGS = new Set(FAQ_TABS.map((t) => t.slug));
+
 function faqSeed() {
   return FAQ_ITEMS.map((f, i) => ({
     id: `faq-${i + 1}`,
     q: f.q,
     a: f.a,
-    category: 'general',
+    category: FAQ_TAB_SLUGS.has(f.category) ? f.category : 'join',
     sortOrder: (i + 1) * 10,
   }));
 }
@@ -129,6 +131,17 @@ export function listNoticePosts() {
 /** @returns {ReturnType<typeof mapFaqPost>[]} */
 export function listFaqPosts() {
   return sortFaq(faqSource());
+}
+
+/** 분류에 없는 추가 질문은 가입·로그인에 두어 목록에서 빠지지 않게 한다. */
+function faqTabOf(category) {
+  return FAQ_TAB_SLUGS.has(category) ? category : 'join';
+}
+
+/** @param {string} slug */
+export function listFaqPostsByTab(slug) {
+  const tab = faqTabOf(slug);
+  return listFaqPosts().filter((f) => faqTabOf(f.category) === tab);
 }
 
 /** @returns {ReturnType<typeof mapGuidePost>[]} */

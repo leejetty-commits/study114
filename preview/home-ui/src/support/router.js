@@ -1,5 +1,7 @@
 /** 고객센터 hash 경로 */
 
+import { FAQ_TABS } from './support-copy.js';
+
 /** @typedef {'P17-01'} SupportScreenId */
 
 /** 레거시: 약관이 고객센터 하위에 있던 시절 → 약관·정책 메뉴로 이관 */
@@ -13,6 +15,7 @@ export const SUPPORT_CONTACT_PATHS = ['/support/contact/tickets'];
 export const SUPPORT_TICKETS_REDIRECT = '/mypage/contact';
 
 const POLICY_SLUGS = ['terms', 'privacy', 'platform', 'trust', 'safety', 'student-privacy', 'reporting', 'account-contact'];
+const FAQ_SLUGS = FAQ_TABS.map((t) => t.slug);
 const LIBRARY_SECTIONS = ['templates', 'guides'];
 
 /** @param {string} hashPath */
@@ -21,7 +24,10 @@ export function normalizeSupportPath(hashPath) {
   const p = raw.split('?')[0];
   if (p === '/support' || p === '/support/') return '/support';
   if (p === SUPPORT_TERMS_LEGACY_PATH || p === `${SUPPORT_TERMS_LEGACY_PATH}/`) return null;
-  if (['faq', 'notice', 'contact'].some((s) => p === `/support/${s}`)) return p;
+  if (['notice', 'contact'].some((s) => p === `/support/${s}`)) return p;
+  if (p === '/support/faq' || p === '/support/faq/') return '/support/faq';
+  const faqMatch = p.match(/^\/support\/faq\/([a-z0-9-]+)$/);
+  if (faqMatch && FAQ_SLUGS.includes(faqMatch[1])) return p;
   if (p === '/support/contact/tickets') return p;
   if (p === '/support/admin' || p === '/support/admin/') return '/support/admin';
   if (p === '/support/admin/notices' || p === '/support/admin/tickets') return p;
@@ -52,6 +58,14 @@ export function getScreenIdForPath(path) {
 export function getSectionFromPath(path) {
   const m = path.match(/^\/support\/(faq|notice|contact)$/);
   return m ? m[1] : null;
+}
+
+/** @param {string} path */
+export function getSupportFaqSlug(path) {
+  if (path === '/support/faq' || path === '/support/faq/') return 'join';
+  const m = path.match(/^\/support\/faq\/([a-z0-9-]+)$/);
+  if (m && FAQ_SLUGS.includes(m[1])) return m[1];
+  return 'join';
 }
 
 /** @param {string} path */

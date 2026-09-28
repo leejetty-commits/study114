@@ -13,6 +13,7 @@ export const SUPPORT_NAV = [
 /** @param {string} path */
 export function getActiveNavId(path) {
   if (path === '/support' || path === '/support/') return 'hub';
+  if (path.startsWith('/support/faq')) return 'faq';
   if (path.startsWith('/support/policies')) return 'policies';
   if (path.startsWith('/support/library')) return 'library';
   if (path === '/support/contact/tickets') return 'contact';

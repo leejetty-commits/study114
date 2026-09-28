@@ -3,17 +3,19 @@ import { loginUrl } from '../../../shared/route-access.js';
 import { getNavRole, navigate } from '../state.js';
 import { isLoggedIn, getAuthUser } from '../auth-session.js';
 import {
+  FAQ_TABS,
   OPERATIONAL_CONTACT,
   OPERATIONAL_CTA,
   TICKET_CATEGORIES,
 } from './support-copy.js';
 import { listNotices } from './notice-store.js';
-import { listFaqPosts, listGuidePosts, getRelatedGuidePosts, isOperationalBoardApiActive } from '../operational-board-store.js';
+import { listFaqPostsByTab, listGuidePosts, getRelatedGuidePosts, isOperationalBoardApiActive } from '../operational-board-store.js';
 import { createTicket } from './ticket-store.js';
 import { renderAdminScreen } from './admin-screens.js';
 import {
   isAdminSupportPath,
   getSectionFromPath,
+  getSupportFaqSlug,
   getSupportPolicySlug,
   getSupportLibrarySection,
 } from './router.js';
@@ -131,7 +133,7 @@ export function renderSupportScreen(path) {
   }
 
   const navId = getActiveNavId(path);
-  if (navId === 'faq') return renderFaqSection();
+  if (navId === 'faq') return renderFaqSection(path);
   if (navId === 'notice') return renderNoticeSection();
   if (navId === 'contact') return renderContactSection();
   return renderNoticeSection();
@@ -191,8 +193,10 @@ function renderSupportHero() {
     <div class="pattern-band" aria-hidden="true"></div>`;
 }
 
-function renderFaqSection() {
-  const posts = listFaqPosts().map((f) => ({
+/** @param {string} path */
+function renderFaqSection(path) {
+  const slug = getSupportFaqSlug(path);
+  const posts = listFaqPostsByTab(slug).map((f) => ({
     id: f.id,
     title: f.q,
     body: f.a,
@@ -200,6 +204,11 @@ function renderFaqSection() {
   const sourceNote = isOperationalBoardApiActive()
     ? '최신 질문을 표시합니다.'
     : '자주 찾는 질문을 모았습니다.';
+  const tabs = FAQ_TABS.map((t) => {
+    const href = `/support/faq/${t.slug}`;
+    const active = t.slug === slug;
+    return `<a href="#${href}" class="tab-pill${active ? ' is-active' : ''}" ${active ? 'aria-current="page"' : ''} data-sup-nav="${href}">${esc(t.label)}</a>`;
+  }).join('');
   const items = posts
     .map(
       (post, i) => `
@@ -223,6 +232,7 @@ function renderFaqSection() {
       </div>
     </div>
     <p class="section-lead">${esc(sourceNote)} 제목을 누르면 답이 펼쳐집니다. 운영문의와 쪽지는 다른 채널입니다.</p>
+    <div class="tab-pills" role="tablist" aria-label="자주 묻는 질문">${tabs}</div>
     <div class="faq-list" data-support-faq>${items || '<p class="section-lead">등록된 질문이 없습니다.</p>'}</div>
     <aside class="tip-card">
       <h3>답이 없나요?</h3>
