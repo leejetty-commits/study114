@@ -8,6 +8,9 @@ $complexes = is_array($complexes ?? null) ? $complexes : [];
 $hope = (string) study114_old($old, 'preferred_lesson_type', 'tutor');
 $basis = (string) study114_old($old, 'region_basis', 'dong');
 $schoolLevel = (string) study114_old($old, 'school_level', '');
+$gradeLevel = (string) study114_old($old, 'grade_level', '');
+$gradeOptions = RegisterEnums::gradesForSchoolLevel($schoolLevel);
+$gradeDisabled = RegisterEnums::isGradeDisabled($schoolLevel);
 $lessonFormat = (string) study114_old($old, 'lesson_format', '');
 $countGroup = $lessonFormat === 'one_on_one'
     ? 'solo'
@@ -23,14 +26,24 @@ $subjectSelected = (string) study114_old($old, 'subject_names', '');
     <p class="form-hint">Basic 카드에 보이는 이름입니다.</p>
   </div>
 
-  <div class="student-basic__field">
-    <span class="form-label">학교급 / 학년</span>
-    <?= study114_chip_group('school_level', RegisterEnums::schoolLevels(), $schoolLevel, false, false) ?>
+  <div class="student-basic__field" data-school-grade-pair>
+    <label class="form-label" for="school_level">학교급</label>
+    <select class="form-input" id="school_level" name="school_level">
+      <option value="">선택</option>
+      <?php foreach (RegisterEnums::schoolLevels() as $level): ?>
+        <option value="<?= study114_e($level['value']) ?>" <?= $schoolLevel === $level['value'] ? 'selected' : '' ?>><?= study114_e($level['label']) ?></option>
+      <?php endforeach; ?>
+    </select>
     <div class="student-basic__sub">
       <label class="form-label" for="grade_level">학년</label>
-      <input class="form-input" id="grade_level" name="grade_level" value="<?= study114_e((string) study114_old($old, 'grade_level', '')) ?>" maxlength="20" placeholder="예: 중2">
+      <select class="form-input" id="grade_level" name="grade_level" <?= $gradeDisabled ? 'disabled' : '' ?>>
+        <option value="">학년 선택</option>
+        <?php foreach ($gradeOptions as $grade): ?>
+          <option value="<?= study114_e($grade['value']) ?>" <?= $gradeLevel === $grade['value'] ? 'selected' : '' ?>><?= study114_e($grade['label']) ?></option>
+        <?php endforeach; ?>
+      </select>
     </div>
-    <p class="form-hint">학교급을 고르고, 학년은 중2처럼 적습니다.</p>
+    <p class="form-hint">학교급을 고르면 학년이 따라 열립니다. 미취학은 학년을 고르지 않습니다.</p>
   </div>
 
   <div class="student-basic__field">
@@ -180,6 +193,22 @@ $subjectSelected = (string) study114_old($old, 'subject_names', '');
       panel.querySelectorAll('select,input').forEach(function (el) { el.disabled = !on; });
     });
   }
+  var gradeMatrix = <?= json_encode(RegisterEnums::gradeMatrix(), JSON_UNESCAPED_UNICODE) ?>;
+  var schoolLevel = form.querySelector('#school_level');
+  var gradeLevel = form.querySelector('#grade_level');
+  function fillGrade() {
+    if (!schoolLevel || !gradeLevel) return;
+    var level = schoolLevel.value || '';
+    var list = gradeMatrix[level] || [];
+    var html = '<option value="">학년 선택</option>';
+    list.forEach(function (item) {
+      html += '<option value="' + String(item.value).replace(/"/g, '&quot;') + '">' + item.label + '</option>';
+    });
+    gradeLevel.innerHTML = html;
+    gradeLevel.disabled = level === '' || level === 'preschool';
+    gradeLevel.value = '';
+  }
+  if (schoolLevel) schoolLevel.addEventListener('change', fillGrade);
   form.querySelectorAll('input[name="preferred_lesson_type"], input[name="region_basis"], input[name="lesson_format"]').forEach(function (el) {
     el.addEventListener('change', sync);
   });

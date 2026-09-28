@@ -1,4 +1,4 @@
-/** 학교급·학년 입력 공통. 가입 PHP(basic-student.php)는 이 파일을 쓰지 않는다. */
+/** 학교급·학년 입력 공통. PHP RegisterEnums::gradeMatrix() 는 이 목록과 같아야 한다. */
 
 export const SCHOOL_LEVEL_FORM_OPTIONS = [
   { value: 'preschool', label: '미취학' },

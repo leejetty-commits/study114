@@ -2,7 +2,6 @@ import { signupState } from '../state.js';
 import {
   PREFERRED_LESSON_TYPE_LABELS,
   PERSONAL_GENDER_OPTIONS,
-  SCHOOL_LEVEL_OPTIONS,
   LESSON_FORMAT_OPTIONS,
   STUDENT_COUNT_OPTIONS,
 } from '../register-enums.js';
@@ -27,6 +26,7 @@ import {
   resolveCitySelection,
 } from '../../../shared/korea-sidos.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
+import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, bindSchoolGradePairs } from '../../../shared/school-grade.js';
 import {
   getCityUnits,
   renderTutorRegionSlot,
@@ -138,14 +138,22 @@ function renderStudentBasic() {
         <input class="form-input" id="public_display_name" name="public_display_name" value="${esc(displayName)}" maxlength="40" autocomplete="nickname" />
         <p class="form-hint">Basic 카드에 보이는 이름입니다.</p>
       </div>
-      <div class="student-basic__field">
-        <span class="form-label">학교급 / 학년</span>
-        ${renderChips('school_level', SCHOOL_LEVEL_OPTIONS, { selected: d.school_level || '', required: false })}
+      <div class="student-basic__field" data-school-grade-pair>
+        <label class="form-label" for="school_level">학교급</label>
+        <select class="form-input" id="school_level" name="school_level">
+          <option value="">선택</option>
+          ${SCHOOL_LEVEL_FORM_OPTIONS.map(
+            (o) =>
+              `<option value="${esc(o.value)}"${d.school_level === o.value ? ' selected' : ''}>${esc(o.label)}</option>`,
+          ).join('')}
+        </select>
         <div class="student-basic__sub">
           <label class="form-label" for="grade_level">학년</label>
-          <input class="form-input" id="grade_level" name="grade_level" value="${esc(d.grade_level || '')}" maxlength="20" placeholder="예: 중2" />
+          <select class="form-input" id="grade_level" name="grade_level"${gradeOptionHtml(d.school_level || '', d.grade_level || '').disabled ? ' disabled' : ''}>
+            ${gradeOptionHtml(d.school_level || '', d.grade_level || '').html}
+          </select>
         </div>
-        <p class="form-hint">학교급을 고르고, 학년은 중2처럼 적습니다.</p>
+        <p class="form-hint">학교급을 고르면 학년이 따라 열립니다. 미취학은 학년을 고르지 않습니다.</p>
       </div>
       <div class="student-basic__field">
         <span class="form-label form-label--required">희망 유형</span>
@@ -445,6 +453,7 @@ export function bindSignupBasicEvents(root) {
   }
 
   if (role === 'student') {
+    bindSchoolGradePairs(form || root);
     bindStudentHopeRegion(form || root, {
       onRegion(region) {
         if (!signupState.regions.some((r) => String(r.id) === String(region.id))) {

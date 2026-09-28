@@ -19,6 +19,42 @@ final class RegisterEnums
         ];
     }
 
+    /**
+     * preview/shared/school-grade.js gradeOptionsForSchoolLevel 과 같은 값.
+     *
+     * @return array<string, list<array{value: string, label: string}>>
+     */
+    public static function gradeMatrix(): array
+    {
+        $years = [];
+        for ($n = 1; $n <= 6; $n++) {
+            $years[] = ['value' => $n . '학년', 'label' => $n . '학년'];
+        }
+        $midHigh = array_slice($years, 0, 3);
+        $nSu = [];
+        foreach (['재수', '삼수', '사수', '오수', 'N수'] as $label) {
+            $nSu[] = ['value' => $label, 'label' => $label];
+        }
+
+        return [
+            'elementary' => $years,
+            'middle' => $midHigh,
+            'high' => $midHigh,
+            'n_su' => $nSu,
+        ];
+    }
+
+    /** @return list<array{value: string, label: string}> */
+    public static function gradesForSchoolLevel(string $level): array
+    {
+        return self::gradeMatrix()[$level] ?? [];
+    }
+
+    public static function isGradeDisabled(string $level): bool
+    {
+        return $level === '' || $level === 'preschool';
+    }
+
     /** @return list<array{value: string, label: string}> */
     public static function studentPlaces(): array
     {

@@ -78,7 +78,8 @@
 | 1 | 희망 유형 | 기본 | `preferred_lesson_type` | |
 | 2 | 희망 지역 | 기본 | `preferred_studyroom_region/complex` · `preferred_tutor_region` | |
 | 3 | 희망 과목 | 기본 | `student_subject_targets` | |
-| 4 | 학교급/학년 | 기본 | `grade_level` · `school_level` | |
+| 4 | 학교급 | 기본 | `students.school_level` | |
+| 4 | 학년 | 기본 | `students.grade_level` | 학교급에 종속. 미취학은 비활성 |
 | 5 | 수업예산 | 기본 | `preferred_fee_amount` · `preferred_studyroom_fee_amount` | 라벨 **수업예산** |
 | 6 | 희망 수업장소 | 기본 | `student_preferred_lesson_places` | |
 | 7 | 희망 수업인원 | 기본 | `preferred_student_count_group` | **`원생수` 금지** |
