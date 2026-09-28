@@ -238,6 +238,20 @@ function renderGuideStart() {
 }
 
 function renderGuideRegister() {
+  const hidePlans = getNavRole() === 'parent';
+  const steps = [
+    { icon: `${A}/step-login.svg`, title: '회원가입(계정 만들기)', body: '공통가입은 계정을 만드는 단계예요. 계정을 만든 뒤 로그인해 주세요.' },
+    { icon: `${A}/step-form.svg`, title: '필수정보 입력', body: '이름(상호)·지역 등 가입 필수정보를 입력하면 기본 노출이 시작됩니다.' },
+    { icon: `${A}/step-publish.svg`, title: '기본 노출', body: '필수정보를 입력하면 검색·리스트에 기본 노출됩니다. 운영자 심사·승인 절차는 없습니다.' },
+    { icon: `${A}/step-edit.svg`, title: '상세 등록', body: '카드와 상세 페이지에 보여줄 추가 정보를 보완합니다. 기본 노출의 필수 조건은 아닙니다.' },
+  ];
+  if (!hidePlans) {
+    steps.push({
+      icon: `${A}/step-paid.svg`,
+      title: '(선택) 유료상품 살펴보기',
+      body: '기본 노출이 시작된 뒤, 더 눈에 띄게 하고 싶다면 유료상품을 살펴볼 수 있어요. 필수는 아니며 자동 결제되지 않습니다.',
+    });
+  }
   return `
     ${guideHero({
       label: '등록·노출 소개',
@@ -248,17 +262,7 @@ function renderGuideRegister() {
     })}
     ${sectionHead('순서', '등록 순서')}
     <p class="section-lead">회원가입(계정 만들기) 뒤 필수정보를 입력하면 기본 노출이 시작됩니다. 증빙자료는 심사하거나 보증하지 않습니다. 신뢰정보는 회원이 올려 둔 참고 표시이며, 플랫폼의 인증·보증이 아닙니다.</p>
-    ${stepList([
-      { icon: `${A}/step-login.svg`, title: '회원가입(계정 만들기)', body: '공통가입은 계정을 만드는 단계예요. 계정을 만든 뒤 로그인해 주세요.' },
-      { icon: `${A}/step-form.svg`, title: '필수정보 입력', body: '이름(상호)·지역 등 가입 필수정보를 입력하면 기본 노출이 시작됩니다.' },
-      { icon: `${A}/step-publish.svg`, title: '기본 노출', body: '필수정보를 입력하면 검색·리스트에 기본 노출됩니다. 운영자 심사·승인 절차는 없습니다.' },
-      { icon: `${A}/step-edit.svg`, title: '상세 등록', body: '카드와 상세 페이지에 보여줄 추가 정보를 보완합니다. 기본 노출의 필수 조건은 아닙니다.' },
-      {
-        icon: `${A}/step-paid.svg`,
-        title: '(선택) 유료상품 살펴보기',
-        body: '기본 노출이 시작된 뒤, 더 눈에 띄게 하고 싶다면 유료상품을 살펴볼 수 있어요. 필수는 아니며 자동 결제되지 않습니다.',
-      },
-    ])}
+    ${stepList(steps)}
     ${sectionHead('점검', '역할별 체크')}
     <p class="section-lead">공부방과 과외쌤은 세부 항목이 조금 달라요. 탭을 바꿔 확인해 보세요.</p>
     <div class="role-tabs" role="tablist" aria-label="역할 선택">
@@ -313,7 +317,7 @@ function renderGuideRegister() {
     <div class="cta-row">
       ${extLink(STUDY_ROOM_REGISTER_URL, 'btn btn--primary', '공부방 등록')}
       ${extLink(TUTOR_REGISTER_URL, 'btn btn--secondary', '과외쌤 등록')}
-      ${hashLink('/plans', 'btn btn--ghost', '유료상품 안내 →')}
+      ${hidePlans ? '' : hashLink('/plans', 'btn btn--ghost', '유료상품 안내 →')}
     </div>`;
 }
 

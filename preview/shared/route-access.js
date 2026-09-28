@@ -49,7 +49,7 @@ export function signupUrl() {
 
 /**
  * 유료상품 허브 — guest는 메뉴만 보이고 실사용은 로그인 게이트.
- * parent 등은 FAQ로.
+ * parent(학생)는 학생 홈으로 보낸다.
  * @param {import('./site-nav-config.js').NavRole} role
  * @returns {{ ok: true } | { ok: false, redirect?: string, message: string, mode?: 'login_gate'|'role_blocked' }}
  */
@@ -62,6 +62,14 @@ export function guardPlansAccess(role) {
     };
   }
   if (canAccessPlansHub(role)) return { ok: true };
+  if (role === 'parent') {
+    return {
+      ok: false,
+      redirect: '/parent',
+      message: '유료상품은 공부방·과외쌤 회원용입니다.',
+      mode: 'role_blocked',
+    };
+  }
   return {
     ok: false,
     redirect: '/support/faq',
@@ -108,7 +116,7 @@ export function guardPlansPath(role, path) {
  */
 export function guardRegisterAccess(role, kind) {
   const menuOk = kind === 'room' ? canAccessRegisterRoom(role) : canAccessRegisterTutor(role);
-  const label = kind === 'room' ? '공부방상세정보' : '과외쌤상세등록';
+  const label = kind === 'room' ? '공부방상세등록' : '과외쌤상세등록';
 
   if (!menuOk) {
     return {

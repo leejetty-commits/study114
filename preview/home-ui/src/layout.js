@@ -2,7 +2,7 @@ import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRo
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
 import { REGIONS } from './data.js';
-import { GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVisible, resolveUtilMenuItems } from './nav-config.js';
+import { GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVisible, canAccessPlansHub, resolveUtilMenuItems } from './nav-config.js';
 import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
 import { getAuthUser, isLoggedIn, isAdminUser, isEmailVerified, devLoginAs, logout } from './auth-session.js';
 import { resolveAccountDisplayName } from './auth/display-identity.js';
@@ -63,7 +63,11 @@ export function renderPreviewToolbar() {
         <button type="button" class="preview-toolbar__btn ${onCommunity ? 'is-active' : ''}" data-nav="/community">커뮤니티</button>
         <button type="button" class="preview-toolbar__btn ${onPromo ? 'is-active' : ''}" data-nav="${promoToolbarPath()}">홍보</button>
         <button type="button" class="preview-toolbar__btn ${onSupport ? 'is-active' : ''}" data-nav="/support">고객센터</button>
-        <button type="button" class="preview-toolbar__btn ${onPlans ? 'is-active' : ''}" data-nav="/plans">유료상품</button>
+        ${
+          canAccessPlansHub(isLoggedIn() ? navRoleFromAuthUser(getAuthUser()) : 'guest')
+            ? `<button type="button" class="preview-toolbar__btn ${onPlans ? 'is-active' : ''}" data-nav="/plans">유료상품</button>`
+            : ''
+        }
         <button type="button" class="preview-toolbar__btn" data-nav="/support/library">자료실</button>
         <button type="button" class="preview-toolbar__btn" data-nav="/support/policies">약관·정책</button>
         <button type="button" class="preview-toolbar__btn ${onAdmin ? 'is-active' : ''}" data-nav="/admin">관리자</button>

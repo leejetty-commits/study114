@@ -28,25 +28,14 @@ function plansHeaderRole() {
   return 'guest';
 }
 
-/** 학생 #/plans — GNB·푸터는 유지하고 유료상품 메뉴는 열지 않는다. */
-function renderPlansStudentNotice() {
-  const headerRole = plansHeaderRole();
-  return `
-    ${renderPreviewToolbar()}
-    <div class="home-app">
-      ${renderHeader(headerRole)}
-      <div class="home-body home-body--no-promo">
-        <div class="home-main">
-          <section class="mypage-panel" style="max-width:32rem;margin:2rem auto;padding:1.5rem;">
-            <h1>유료상품</h1>
-            <p>유료상품은 공부방·과외쌤 회원용이에요.</p>
-            <p><a href="#/parent" class="btn btn--primary" data-nav="/parent">학생 홈으로 이동</a></p>
-          </section>
-        </div>
-      </div>
-      ${renderFooter()}
-    </div>
-  `;
+/** 학생 #/plans — 상품 화면을 그리지 않고 학생 홈으로 보낸다. */
+function redirectParentOffPlans() {
+  queueMicrotask(() => {
+    const path = (window.location.hash.slice(1) || '').split('?')[0];
+    if (path === '/plans' || path.startsWith('/plans/')) {
+      window.location.replace('#/parent');
+    }
+  });
 }
 
 function renderPlansLoginGate(message) {
@@ -103,7 +92,8 @@ export function renderPlans() {
       return renderPlansLoginGate(hubGate.message);
     }
     if (role === 'parent') {
-      return renderPlansStudentNotice();
+      redirectParentOffPlans();
+      return '';
     }
     return `
       <section class="mypage-panel" style="max-width:32rem;margin:2rem auto;padding:1.5rem;">
