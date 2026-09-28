@@ -98,10 +98,10 @@ assert(html.includes('room-card-default-basic.svg'), 'html: filled image');
 assert(!html.includes('expo-media--placeholder'), 'html: no gray placeholder');
 assert(html.includes('강남 수학 공부방'), 'html: name filled');
 assert(html.includes('서울 강남구'), 'html: location filled');
-assert(html.includes('title="추천 22"'), 'html: recommend filled');
-assert(html.includes('title="후기 9"'), 'html: review filled');
-assert(html.includes('title="찜 14"'), 'html: wish filled');
-assert(html.includes('title="쪽지 5"'), 'html: message count filled');
+assert(html.includes('title="추천하기"') && html.includes('item-actions__count">22'), 'html: recommend filled');
+assert(html.includes('title="후기 보기"') && html.includes('item-actions__count">9'), 'html: review filled');
+assert(html.includes('title="찜하기"') && html.includes('item-actions__count">14'), 'html: wish filled');
+assert(html.includes('title="쪽지 보내기"') && html.includes('item-actions__count">5'), 'html: message count filled');
 assert(html.includes('expo-basic--study_room'), 'html: BASIC study_room card');
 assert(html.includes('expo-hcard'), 'html: home hcard structure');
 

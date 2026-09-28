@@ -197,9 +197,9 @@ assert(htmlOrder.includes('tutor-card-sample.jpg'), 'sample: home BASIC portrait
 assert(!htmlOrder.includes('expo-media--placeholder'), 'sample: no gray image placeholder');
 assert(htmlOrder.includes('김하린'), 'sample: name filled');
 assert(htmlOrder.includes('서울 강남구'), 'sample: location filled');
-assert(htmlOrder.includes('title="추천 18"'), 'sample: recommend count filled');
-assert(htmlOrder.includes('title="후기 7"'), 'sample: review count filled');
-assert(htmlOrder.includes('title="찜 11"'), 'sample: wish count filled');
+assert(htmlOrder.includes('title="추천하기"') && htmlOrder.includes('item-actions__count">18'), 'sample: recommend count filled');
+assert(htmlOrder.includes('title="후기 보기"') && htmlOrder.includes('item-actions__count">7'), 'sample: review count filled');
+assert(htmlOrder.includes('title="찜하기"') && htmlOrder.includes('item-actions__count">11'), 'sample: wish count filled');
 assert(htmlOrder.includes('data-inq-guide'), 'sample: SVG arrow marker present');
 assert(htmlOrder.includes('data-inq-callout'), 'sample: callout present');
 assert(htmlOrder.includes('hcs-sample__card--basic'), 'sample: basic 1-cell card');
