@@ -12,6 +12,9 @@ import { getParentStudentProfilePath } from '../mypage/router.js';
 import { FORM_OPTIONS, studentToExposureRow } from './format.js';
 import { ensureHopeRegionMasters, getHopeRegionMasters, labelForRegionId, listAllComplexes, listCityOptions } from './hope-region-masters.js';
 import { MAIN_SUBJECT_OPTIONS } from '../../../shared/main-subjects.js';
+import { cheonwonInputToWon, wonToCheonwonInput } from '../../../shared/fee-cheonwon.js';
+import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
+import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, isGradeSelectDisabled } from '../../../shared/school-grade.js';
 import { getStudents, getStudent, deleteStudent, updateStudent } from './store.js';
 
@@ -35,10 +38,11 @@ function renderCheckboxGroup(name, options, selected = [], { required = false } 
 }
 
 function renderSelect(name, options, value, { required = false, empty = false } = {}) {
+  const current = String(value ?? '');
   return `<select name="${name}" class="p19-input p19-select" ${required ? 'required' : ''}>
     ${empty ? '<option value="">선택</option>' : ''}
     ${options
-      .map((o) => `<option value="${esc(o.value)}" ${value === o.value ? 'selected' : ''}>${esc(o.label)}</option>`)
+      .map((o) => `<option value="${esc(o.value)}" ${current === String(o.value) ? 'selected' : ''}>${esc(o.label)}</option>`)
       .join('')}
   </select>`;
 }
@@ -120,9 +124,9 @@ function parseStudentForm(form) {
   if (patch.birth_year) patch.birth_year = Number(patch.birth_year);
   if (patch.lessons_per_week) patch.lessons_per_week = Number(patch.lessons_per_week);
   if (patch.minutes_per_lesson) patch.minutes_per_lesson = Number(patch.minutes_per_lesson);
-  if (patch.preferred_fee_amount) patch.preferred_fee_amount = Number(patch.preferred_fee_amount);
+  if (patch.preferred_fee_amount) patch.preferred_fee_amount = Number(cheonwonInputToWon(patch.preferred_fee_amount));
   if (patch.preferred_studyroom_fee_amount) {
-    patch.preferred_studyroom_fee_amount = Number(patch.preferred_studyroom_fee_amount);
+    patch.preferred_studyroom_fee_amount = Number(cheonwonInputToWon(patch.preferred_studyroom_fee_amount));
   }
   if (patch.lesson_format === 'one_on_one') {
     patch.preferred_student_count_group = 'solo';
@@ -265,8 +269,8 @@ function renderBasicForm(student) {
             ${renderSelect('preferred_tutor_region_id', tutorRegion, student.preferred_tutor_region_id != null ? String(student.preferred_tutor_region_id) : '', { empty: true })}
           </label>
           <label class="p19-field">
-            <span class="p19-field__label">예산</span>
-            ${renderTextInput('preferred_fee_amount', student.preferred_fee_amount ?? '', { type: 'number', min: 0, step: 1 })}
+            <span class="p19-field__label">예산 (천원)</span>
+            ${renderTextInput('preferred_fee_amount', wonToCheonwonInput(student.preferred_fee_amount), { type: 'number', min: 0, step: 1 })}
           </label>
         </div>
         <div data-p19-hope-panel="study_room" ${hope === 'study_room' ? '' : 'hidden'}>
@@ -286,8 +290,8 @@ function renderBasicForm(student) {
             ${renderSelect('preferred_studyroom_complex_id', complexes, student.preferred_studyroom_complex_id != null ? String(student.preferred_studyroom_complex_id) : '', { empty: true })}
           </label>
           <label class="p19-field">
-            <span class="p19-field__label">예산</span>
-            ${renderTextInput('preferred_studyroom_fee_amount', student.preferred_studyroom_fee_amount ?? '', { type: 'number', min: 0, step: 1 })}
+            <span class="p19-field__label">예산 (천원)</span>
+            ${renderTextInput('preferred_studyroom_fee_amount', wonToCheonwonInput(student.preferred_studyroom_fee_amount), { type: 'number', min: 0, step: 1 })}
           </label>
         </div>
         <label class="p19-field">
@@ -346,23 +350,14 @@ function renderDetailForm(student) {
       )}
       <div class="student-detail-grid">
         ${renderDetailField(
-          '주 횟수',
+          '주 회수',
           '일주일에 원하는 수업 횟수입니다.',
-          renderTextInput('lessons_per_week', student.lessons_per_week ?? '', {
-            type: 'number',
-            min: 1,
-            placeholder: '2',
-          }),
+          renderSelect('lessons_per_week', lessonWeeklyOptions(student.lessons_per_week), lessonWeeklySelectValue(student.lessons_per_week), { empty: true }),
         )}
         ${renderDetailField(
-          '1회 시간',
-          '한 번 수업의 길이입니다. 분 단위로 적습니다.',
-          renderTextInput('minutes_per_lesson', student.minutes_per_lesson ?? '', {
-            type: 'number',
-            min: 10,
-            step: 10,
-            placeholder: '90',
-          }),
+          '1회 수업시간',
+          '한 번 수업의 길이입니다.',
+          renderSelect('minutes_per_lesson', lessonDurationOptions(student.minutes_per_lesson), lessonDurationSelectValue(student.minutes_per_lesson), { empty: true }),
         )}
       </div>
       ${renderDetailField(

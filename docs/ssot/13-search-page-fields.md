@@ -67,7 +67,7 @@
 | 13 | 성별(튜터) | 확장 | `user_profiles.gender` 조인 | 기존 |
 | 14 | 강의스타일 | 확장 | `tutor_teaching_style_badges` | SSOT 반영 |
 
-카드·검색: **월 금액 + 주 횟수 + 1회 시간** (§10-2)
+카드·검색: **월 금액(천원) + 주 회수 + 1회 수업시간** (§10-2)
 
 ---
 
@@ -80,11 +80,11 @@
 | 3 | 희망 과목 | 기본 | `student_subject_targets` | |
 | 4 | 학교급 | 기본 | `students.school_level` | |
 | 4 | 학년 | 기본 | `students.grade_level` | 학교급에 종속. 미취학은 비활성 |
-| 5 | 수업예산 | 기본 | `preferred_fee_amount` · `preferred_studyroom_fee_amount` | 라벨 **수업예산** |
+| 5 | 수업예산 | 기본 | `preferred_fee_amount` · `preferred_studyroom_fee_amount` | 화면은 천원, DB는 원 |
 | 6 | 희망 수업장소 | 기본 | `student_preferred_lesson_places` | |
 | 7 | 희망 수업인원 | 기본 | `preferred_student_count_group` | **`원생수` 금지** |
-| 8 | 주 횟수 | 확장 | `lessons_per_week` | |
-| 9 | 1회 시간 | 확장 | `minutes_per_lesson` | |
+| 8 | 주 회수 | 확장 | `lessons_per_week` | 1~7회 + 기타 |
+| 9 | 1회 수업시간 | 확장 | `minutes_per_lesson` | 20~120분 + 기타 |
 | 10 | 수업형태 | 확장 | `lesson_format` | 단독/그룹과외 |
 | 11 | 그룹 구성 | 확장 | `student_gender_group` | **그룹과외만** · [011](../../sql/schema/011_student_gender_group.sql) |
 | 12 | 희망 강의스타일 | 확장 | `student_preferred_teaching_style_badges` | |

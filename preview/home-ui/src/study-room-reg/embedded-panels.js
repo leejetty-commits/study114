@@ -16,6 +16,7 @@ import {
   applyStudyRoomBasicToState,
 } from '../../../shared/study-room-basic-form.js';
 import { bindDraggableDialog } from '../../../shared/draggable-dialog.js';
+import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
 import { renderRegisterCardInner } from '@study-room-ui/layout.js';
 import { renderBasicOverviewBoard, renderBasicEditModal } from '@study-room-ui/screens/step-basic.js';
 import { renderLessonFormHtml, bindLessonEvents } from '@study-room-ui/screens/step-lesson.js';
@@ -293,8 +294,8 @@ function detail1OverviewRows() {
   return [
     { label: '수업운영방식', value: opLabel(s.lesson_operation_type) },
     { label: '타임별 원생수', value: capacityLabel(s.capacity_per_time) },
-    { label: '월 평균 수업료', value: s.monthly_fee_manwon ? `${s.monthly_fee_manwon}만원` : '', required: true },
-    { label: '주당 평균 수업회수', value: s.lessons_per_week, required: true },
+    { label: '월 평균 수업료', value: s.monthly_fee_manwon ? `${s.monthly_fee_manwon}천원` : '', required: true },
+    { label: '주 회수', value: lessonWeeklyLabel(s.lessons_per_week), required: true },
     { label: '한 줄 소개', value: s.intro_short, required: true },
     { label: '공부방 소개 / 자랑', value: s.intro_long, multiline: true, required: true },
     { label: '홍보사진', value: photoCount ? `${photoCount}장` : '', required: true },

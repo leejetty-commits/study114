@@ -1,4 +1,6 @@
 import { SCHOOL_LEVEL_FORM_LABELS } from '../../shared/school-grade.js';
+import { LESSON_DURATION_LABELS } from '../../shared/lesson-duration-options.js';
+import { LESSON_WEEKLY_LABELS } from '../../shared/lesson-weekly-options.js';
 import {
   SCHOOL_LEVEL_LABELS,
   STUDENT_COUNT_LABELS,
@@ -113,6 +115,8 @@ export const OPTION_LABELS = {
   lesson_format: LESSON_FORMAT_LABELS,
   student_gender_group: STUDENT_GENDER_GROUP_LABELS,
   preferred_tutor_gender: PREFERRED_TUTOR_GENDER_LABELS,
+  lesson_duration: LESSON_DURATION_LABELS,
+  lesson_weekly: LESSON_WEEKLY_LABELS,
   detail_completion: {
     basic_only: '기본만',
     expanded_in_progress: '상세 진행중',

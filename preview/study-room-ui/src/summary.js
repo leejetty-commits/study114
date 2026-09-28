@@ -9,10 +9,10 @@ import {
   CAPACITY_PER_TIME_OPTIONS,
   PERSONAL_GENDER_OPTIONS,
   IMAGE_TYPES,
-  DAILY_LESSON_MINUTES,
-  WEEKLY_LESSON_COUNTS,
   WEEKDAY_OPTIONS,
 } from './state.js';
+import { lessonDurationLabel } from '../../shared/lesson-duration-options.js';
+import { lessonWeeklyLabel } from '../../shared/lesson-weekly-options.js';
 import { formatPrimaryAudienceLabel, lessonPlaceNameLabel } from '../../shared/study-room-basic-form.js';
 
 function str(v) {
@@ -76,7 +76,7 @@ function classRows(s) {
       { label: `${prefix}학년`, value: str(row?.grade_band) },
       { label: `${prefix}과목`, value: str(row?.subject_name) },
       { label: `${prefix}출석요일`, value: weekdayLabel(row?.attendance_days) },
-      { label: `${prefix}주횟수`, value: labelOf(WEEKLY_LESSON_COUNTS, row?.lessons_per_week) },
+      { label: `${prefix}주 회수`, value: lessonWeeklyLabel(row?.lessons_per_week) },
       { label: `${prefix}월 수업료`, value: str(row?.monthly_fee) },
       { label: `${prefix}수업료 설명`, value: str(row?.fee_note) },
       { label: `${prefix}수업 참고사항`, value: str(row?.lesson_note) },
@@ -162,9 +162,9 @@ export function buildRoomInputSummary(room) {
       rows: [
         { label: '수업운영방식', value: labelOf(LESSON_OPERATION_TYPES, s.lesson_operation_type) },
         { label: '타임별 원생수', value: labelOf(CAPACITY_PER_TIME_OPTIONS, s.capacity_per_time) },
-        { label: '1일 평균 수업시간', value: labelOf(DAILY_LESSON_MINUTES, s.minutes_per_lesson) },
-        { label: '주당 평균 수업회수', value: labelOf(WEEKLY_LESSON_COUNTS, s.lessons_per_week) },
-        { label: '월 평균 수업료', value: str(s.monthly_fee_manwon) ? `${str(s.monthly_fee_manwon)}만원` : '' },
+        { label: '1회 수업시간', value: lessonDurationLabel(s.minutes_per_lesson) },
+        { label: '주 회수', value: lessonWeeklyLabel(s.lessons_per_week) },
+        { label: '월 평균 수업료', value: str(s.monthly_fee_manwon) ? `${str(s.monthly_fee_manwon)}천원` : '' },
         { label: '카드결제 여부', value: yn(s.card_payment_available) },
         { label: '현금영수증 여부', value: yn(s.cash_receipt_available) },
         { label: '수업 스타일', value: str(s.teaching_style) },

@@ -8,14 +8,14 @@ import {
   CAPACITY_PER_TIME_OPTIONS,
   TEACHING_STYLE_OPTIONS,
   WEEKDAY_OPTIONS,
-  DAILY_LESSON_MINUTES,
-  WEEKLY_LESSON_COUNTS,
   IMAGE_TYPES,
   FACILITY_OPTIONS,
   SCHOOL_LEVELS,
   getFacilityOptions,
 } from '@study-room-ui/state.js';
 import { formatPrimaryAudienceLabel } from '../../../shared/study-room-basic-form.js';
+import { lessonDurationLabel } from '../../../shared/lesson-duration-options.js';
+import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
 
 export const ROOM_DEFAULT_BASIC = '/assets/brand/room-card-default-basic.svg';
 
@@ -73,15 +73,18 @@ export function formatCapacity(capacityPerTime) {
   return t;
 }
 
-/** 월 가격 — 만원 / 만원대 */
-export function formatMonthlyFeeBand(monthlyFeeManwon, priceAmount) {
-  if (monthlyFeeManwon !== '' && monthlyFeeManwon != null) {
-    const n = blank(monthlyFeeManwon).replace(/만원.*$/, '');
-    return n ? `월 ${n}만원대` : '';
-  }
+/** 월 가격 — 천원 / 천원대. price_amount(원)가 있으면 그 값을 우선한다. */
+export function formatMonthlyFeeBand(monthlyFeeCheonwon, priceAmount) {
   if (priceAmount) {
-    const man = Math.round(Number(priceAmount) / 10000);
-    if (man > 0) return `월 ${man}만원대`;
+    const cheon = Math.round(Number(priceAmount) / 1000);
+    if (cheon > 0) return `월 ${cheon}천원대`;
+  }
+  if (monthlyFeeCheonwon !== '' && monthlyFeeCheonwon != null) {
+    const text = blank(monthlyFeeCheonwon);
+    const man = text.match(/(\d+(?:\.\d+)?)\s*만/);
+    if (man) return `월 ${Math.round(Number(man[1]) * 10)}천원대`;
+    const n = text.replace(/천원.*$/, '').replace(/[^\d.]/g, '');
+    return n ? `월 ${n}천원대` : '';
   }
   return '';
 }
@@ -89,16 +92,20 @@ export function formatMonthlyFeeBand(monthlyFeeManwon, priceAmount) {
 export function formatClassFee(raw) {
   const t = blank(raw);
   if (!t) return '';
-  if (/만원/.test(t)) return `월 ${t.replace(/^월\s*/, '')}`;
-  return `월 ${t}만원`;
+  const man = t.match(/(\d+(?:\.\d+)?)\s*만/);
+  if (man) return `월 ${Math.round(Number(man[1]) * 10)}천원`;
+  if (/천원/.test(t)) return t.startsWith('월') ? t : `월 ${t}`;
+  const n = t.replace(/[^\d.]/g, '');
+  return n ? `월 ${n}천원` : '';
 }
 
 export function formatMinutesPerLesson(v) {
-  return labelOf(DAILY_LESSON_MINUTES, v) || (blank(v) && /^\d+$/.test(blank(v)) ? `${blank(v)}분` : '');
+  return lessonDurationLabel(v);
 }
 
 export function formatWeeklyCount(v) {
-  return labelOf(WEEKLY_LESSON_COUNTS, v) || (blank(v) ? `주 ${blank(v)}회` : '');
+  const label = lessonWeeklyLabel(v);
+  return label === '' ? '' : label.endsWith('회') && label !== '기타' ? `주 ${label}` : label;
 }
 
 export function formatSchoolLevel(v) {

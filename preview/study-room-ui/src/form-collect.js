@@ -11,10 +11,12 @@ const LESSON_EXTRA_MARK = 'lesson_extra';
 export function parseFeeAmount(text) {
   const raw = String(text || '').trim();
   if (!raw) return 0;
+  const cheon = raw.match(/(\d+(?:\.\d+)?)\s*천/);
+  if (cheon) return Math.round(Number(cheon[1]) * 1000);
   const man = raw.match(/(\d+(?:\.\d+)?)\s*만/);
   if (man) return Math.round(Number(man[1]) * 10000);
   const digits = raw.replace(/[^\d]/g, '');
-  return digits ? Number(digits) : 0;
+  return digits ? Math.round(Number(digits) * 1000) : 0;
 }
 
 /**
@@ -190,12 +192,12 @@ function unionAttendanceDays(classes) {
   return [...set];
 }
 
-function manwonToPriceAmount(text) {
+function cheonwonToPriceAmount(text) {
   const raw = String(text || '').trim();
   if (!raw) return '';
   const n = Number(raw.replace(/[^\d.]/g, ''));
   if (!Number.isFinite(n) || n <= 0) return '';
-  return String(Math.round(n * 10000));
+  return String(Math.round(n * 1000));
 }
 
 function teachingStyleLabel(ids) {
@@ -285,7 +287,7 @@ export function syncLessonFromForm(form, state) {
   state.lessons_per_week = String(fd.get('lessons_per_week') ?? '');
   state.minutes_per_lesson = String(fd.get('minutes_per_lesson') ?? '');
   state.monthly_fee_manwon = String(fd.get('monthly_fee_manwon') ?? '');
-  state.price_amount = manwonToPriceAmount(state.monthly_fee_manwon);
+  state.price_amount = cheonwonToPriceAmount(state.monthly_fee_manwon);
   state.intro_short = String(fd.get('intro_short') ?? '');
   state.intro_long = String(fd.get('intro_long') ?? '');
 
@@ -556,10 +558,10 @@ export function applyRoomToState(target, room) {
       });
     });
   }
-  if (!target.monthly_fee_manwon && target.price_amount) {
+  if (target.price_amount) {
     const won = Number(target.price_amount);
     if (Number.isFinite(won) && won > 0) {
-      target.monthly_fee_manwon = String(Math.round(won / 10000));
+      target.monthly_fee_manwon = String(Math.round(won / 1000));
     }
   }
   if (room.card_payment_available != null) {

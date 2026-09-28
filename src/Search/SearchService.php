@@ -1190,12 +1190,12 @@ final class SearchService
         }
 
         $won = (int) $amount;
-        if ($won >= 10000) {
-            $man = (int) round($won / 10000);
-            return '월 ' . number_format($man) . '만원';
+        if ($won <= 0) {
+            return '가격 협의';
         }
+        $cheon = (int) round($won / 1000);
 
-        return '월 ' . number_format($won) . '원';
+        return '월 ' . number_format($cheon) . '천원';
     }
 
     private function formatBudget(mixed $amount): string
@@ -1205,11 +1205,11 @@ final class SearchService
         }
 
         $won = (int) $amount;
-        if ($won >= 10000) {
-            return number_format((int) round($won / 10000)) . '만';
+        if ($won <= 0) {
+            return '협의';
         }
 
-        return number_format($won) . '원';
+        return number_format((int) round($won / 1000)) . '천원';
     }
 
     /**

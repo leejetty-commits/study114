@@ -113,7 +113,7 @@ export const RC_PROMO_MISSING_DEFS = [
   { id: 'teaching_style_note', label: '수업 스타일 추가설명', hint: '칩만으로 부족한 설명을 보완합니다', section: 'detail' },
   { id: 'classes', label: '수업상세', hint: '있으면 프로필에 표시됩니다 (선택)', section: 'detail' },
   { id: 'fee', label: '월 평균 수업료', hint: '검색 카드 가격대에 쓰입니다', section: 'detail' },
-  { id: 'lessons_per_week', label: '주당 평균 수업회수', hint: '수업 밀도를 가늠하는 값입니다', section: 'detail' },
+  { id: 'lessons_per_week', label: '주 회수', hint: '수업 밀도를 가늠하는 값입니다', section: 'detail' },
   { id: 'feature_1', label: '경력특징 1', hint: '카드 강조 한 줄. 상세정보2「경력특징 1」과 같은 값입니다', section: 'detail2' },
 ];
 

@@ -915,9 +915,9 @@ function renderField(field, state, opts = {}) {
       <div class="search-field search-field--range${compact ? ' search-field--compact' : ''}">
         <span class="search-field__label">${esc(field.label)} ${dbHint}</span>
         <div class="search-range">
-          <input type="number" class="search-field__control" name="${esc(name)}_min" placeholder="최소(원)" min="0" step="10000" />
+          <input type="number" class="search-field__control" name="${esc(name)}_min" placeholder="최소(천원)" min="0" step="1" />
           <span class="search-range__sep">~</span>
-          <input type="number" class="search-field__control" name="${esc(name)}_max" placeholder="최대(원)" min="0" step="10000" />
+          <input type="number" class="search-field__control" name="${esc(name)}_max" placeholder="최대(천원)" min="0" step="1" />
         </div>
       </div>`;
   }

@@ -3,6 +3,7 @@
  */
 
 import { HOME_UI_BASE, AUTH_UI_BASE, parseHashQuery } from './preview-links.js';
+import { cheonwonInputToWon } from './fee-cheonwon.js';
 
 export const STUDENT_IMPORT_PARAM = 'student_import';
 
@@ -88,8 +89,8 @@ export function mapAuthFormToStudentRecord(data, meta = {}) {
     lessons_per_week: Number(data.lessons_per_week) || undefined,
     minutes_per_lesson: Number(data.minutes_per_lesson) || undefined,
     teaching_style_badges: teachingBadges,
-    preferred_fee_amount: Number(data.preferred_fee_amount) || undefined,
-    preferred_studyroom_fee_amount: Number(data.preferred_studyroom_fee_amount) || undefined,
+    preferred_fee_amount: Number(cheonwonInputToWon(data.preferred_fee_amount)) || undefined,
+    preferred_studyroom_fee_amount: Number(cheonwonInputToWon(data.preferred_studyroom_fee_amount)) || undefined,
     preferred_tutor_gender: '',
     request_summary: String(data.request_summary || ''),
     request_summary_visibility:

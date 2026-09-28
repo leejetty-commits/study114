@@ -15,6 +15,9 @@ import {
 } from '../state.js';
 import { syncLessonFromForm, syncCareerFromForm, syncContactFromForm, validateLessonState, validateCareerState, validateIntroState } from '../form-collect.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, bindSchoolGradePairs } from '../../../shared/school-grade.js';
+import { wonToCheonwonInput } from '../../../shared/fee-cheonwon.js';
+import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
+import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
@@ -69,6 +72,16 @@ function returnToMypage() {
   window.location.assign(`${HOME_UI_BASE}/#/mypage/registrations`);
 }
 
+function renderLessonSelect(options, selected) {
+  const current = String(selected ?? '');
+  return [
+    '<option value="">선택</option>',
+    ...options.map(
+      (o) => `<option value="${o.value}" ${current === o.value ? 'selected' : ''}>${o.label}</option>`,
+    ),
+  ].join('');
+}
+
 export function renderDetail() {
   const s = registerState;
   const places = TUTOR_PLACE_OPTIONS.map(
@@ -116,8 +129,8 @@ export function renderDetail() {
       <button type="button" class="btn btn--secondary btn--sm" data-action="add-subject">+ 과목 추가</button>
       <div class="register-grid-2" style="margin-top:var(--space-4);">
         <div class="form-group">
-          <label class="form-label form-label--required" for="preferred_fee_amount">월 대표 과외비</label>
-          <input class="form-input" type="number" id="preferred_fee_amount" name="preferred_fee_amount" value="${s.preferred_fee_amount}" min="1" />
+          <label class="form-label form-label--required" for="preferred_fee_amount">월 대표 과외비 (천원)</label>
+          <input class="form-input" type="number" id="preferred_fee_amount" name="preferred_fee_amount" value="${wonToCheonwonInput(s.preferred_fee_amount)}" min="1" />
         </div>
         <div class="form-group">
           <span class="form-label form-label--required">산정방식</span>
@@ -125,9 +138,9 @@ export function renderDetail() {
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">주 횟수</label><input class="form-input" name="lessons_per_week" value="${s.lessons_per_week}" /></div>
+        <div class="form-group"><label class="form-label">주 회수</label><select class="form-input" name="lessons_per_week">${renderLessonSelect(lessonWeeklyOptions(s.lessons_per_week), lessonWeeklySelectValue(s.lessons_per_week))}</select></div>
         <div class="form-group"><label class="form-label">월 총 횟수</label><input class="form-input" name="monthly_session_count" value="${s.monthly_session_count}" /></div>
-        <div class="form-group"><label class="form-label">1회(분)</label><input class="form-input" name="minutes_per_lesson" value="${s.minutes_per_lesson}" /></div>
+        <div class="form-group"><label class="form-label">1회 수업시간</label><select class="form-input" name="minutes_per_lesson">${renderLessonSelect(lessonDurationOptions(s.minutes_per_lesson), lessonDurationSelectValue(s.minutes_per_lesson))}</select></div>
       </div>
       <div class="form-group">
         <label class="form-label" for="fee_description">가격 설명</label>

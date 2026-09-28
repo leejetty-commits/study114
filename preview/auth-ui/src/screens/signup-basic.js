@@ -200,14 +200,14 @@ function renderStudentBasic() {
         <p class="form-hint">함께 수업할 인원입니다.</p>
       </div>
       <div class="student-basic__field" data-student-tutor-budget ${hope === 'tutor' ? '' : 'hidden'}>
-        <label class="form-label" for="preferred_fee_amount">예산</label>
+        <label class="form-label" for="preferred_fee_amount">예산 (천원)</label>
         <input class="form-input" id="preferred_fee_amount" name="preferred_fee_amount" type="number" min="0" step="1" inputmode="numeric" value="${esc(d.preferred_fee_amount ?? '')}" ${hope === 'tutor' ? '' : 'disabled'} />
-        <p class="form-hint">과외쌤 수업의 월 예산입니다.</p>
+        <p class="form-hint">과외쌤 수업의 월 예산입니다. 천원 단위로 적습니다.</p>
       </div>
       <div class="student-basic__field" data-student-studyroom-budget ${hope === 'study_room' ? '' : 'hidden'}>
-        <label class="form-label" for="preferred_studyroom_fee_amount">예산</label>
+        <label class="form-label" for="preferred_studyroom_fee_amount">예산 (천원)</label>
         <input class="form-input" id="preferred_studyroom_fee_amount" name="preferred_studyroom_fee_amount" type="number" min="0" step="1" inputmode="numeric" value="${esc(d.preferred_studyroom_fee_amount ?? '')}" ${hope === 'study_room' ? '' : 'disabled'} />
-        <p class="form-hint">공부방 수업의 월 예산입니다.</p>
+        <p class="form-hint">공부방 수업의 월 예산입니다. 천원 단위로 적습니다.</p>
       </div>
       <div class="student-basic__field">
         <label class="form-label" for="request_summary">한 줄 요청문</label>

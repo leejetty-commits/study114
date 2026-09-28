@@ -153,7 +153,7 @@ function wrapComparePage(blocks) {
 // —— formatter unit ——
 ok('fmt_원생수', formatCapacity('one_to_four') === '1~4명');
 ok('fmt_원생수_raw숨김', formatCapacity('weird_enum_key') === '');
-ok('fmt_가격', formatMonthlyFeeBand('35', null) === '월 35만원대');
+ok('fmt_가격', formatMonthlyFeeBand('35', null) === '월 35천원대');
 ok('fmt_교습형태', formatLessonPlace('academy') === '교습소');
 ok('fmt_수업형태', formatLessonOperation('time_slot_mixed_grade') === '타임별 무학년 수업');
 ok('fmt_bool', formatBoolFlag(true, '가능') === '가능' && formatBoolFlag(false) === '');

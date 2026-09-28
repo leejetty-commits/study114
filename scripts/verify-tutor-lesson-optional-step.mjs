@@ -81,8 +81,8 @@ function base(overrides = {}) {
 
 // —— 3b) 선택값 형식: 0 / 음수 / 비숫자 / 소수 → FAIL · 공란·양수 → PASS
 {
-  const posMsg = '주 횟수: 1 이상의 정수로 입력해 주세요.';
-  const rangeMsg = '주 횟수: 1~65535 사이의 정수로 입력해 주세요.';
+  const posMsg = '주 회수: 1 이상의 정수로 입력해 주세요.';
+  const rangeMsg = '주 회수: 1~65535 사이의 정수로 입력해 주세요.';
   assert(validateLessonState(base({ lessons_per_week: '' })) === null, '3b blank weekly PASS');
   assert(validateLessonState(base({ lessons_per_week: '   ' })) === null, '3b whitespace-only weekly PASS (trim=blank)');
   assert(validateLessonState(base({ lessons_per_week: '3' })) === null, '3b positive weekly PASS');
@@ -93,7 +93,7 @@ function base(overrides = {}) {
   assert(validateLessonState(base({ lessons_per_week: '1.5' })) === posMsg, '3b decimal weekly FAIL (SMALLINT integer)');
   assert(
     validateLessonState(base({ minutes_per_lesson: '0' })) ===
-      '1회 수업 시간: 1 이상의 정수로 입력해 주세요.',
+      '1회 수업시간: 1 이상의 정수로 입력해 주세요.',
     '3b zero minutes FAIL',
   );
   assert(
@@ -144,7 +144,7 @@ assert(
     base({
       subjects: [{ school_level: 'middle', grade_band: 'm1_m2', subject_name: '', is_primary: false }],
     }),
-  ) === '학년대를 선택했다면 과목명도 입력해 주세요. (예: 미적분2, 확률과 통계)',
+  ) === '학년을 선택했다면 과목명도 입력해 주세요. (예: 미적분2, 확률과 통계)',
   '5 incomplete subject row blocked',
 );
 assert(
@@ -163,14 +163,14 @@ assert(
   const lesson = readFileSync(resolve(root, 'preview/tutor-ui/src/screens/step-lesson.js'), 'utf8');
   assert(lesson.includes("saveAndNavigate(registerState, 'lesson', '/register/contact')"), 'step-lesson saveAndNavigate unchanged');
   assert(lesson.includes('validateLessonState'), 'step-lesson still calls validateLessonState');
-  assert(lesson.includes('<label class="form-label">주 횟수</label>'), 'UI optional mark for weekly unchanged');
+  assert(lesson.includes('<label class="form-label">주 회수</label>'), 'UI weekly label is 주 회수');
   assert(lesson.includes('form-label--required') && lesson.includes('월 대표 과외비'), 'UI required fee mark unchanged');
 }
 
 // —— 범위: home-ui / evaluator 미수정 가드 (동작 계약이 남아 있음)
 {
   const inline = readFileSync(resolve(root, 'preview/home-ui/src/tutor-reg/inline-save.js'), 'utf8');
-  assert(inline.includes('주 횟수를 입력해 주세요.'), 'scope: home-ui inline-save untouched');
+  assert(inline.includes('주 회수를 입력해 주세요.'), 'scope: home-ui inline-save weekly label');
   const evaluator = readFileSync(resolve(root, 'src/Tutor/TutorDetailCompletionEvaluator.php'), 'utf8');
   assert(evaluator.includes('schedule_count') && evaluator.includes('scheduleOk'), 'scope: evaluator untouched');
   const saveLesson = readFileSync(resolve(root, 'src/Tutor/TutorRegisterService.php'), 'utf8');

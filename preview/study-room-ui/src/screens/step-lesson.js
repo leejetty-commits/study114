@@ -4,13 +4,13 @@ import {
   TEACHING_STYLE_OPTIONS,
   LESSON_OPERATION_TYPES,
   CAPACITY_PER_TIME_OPTIONS,
-  DAILY_LESSON_MINUTES,
-  WEEKLY_LESSON_COUNTS,
   emptyClass,
   getSubjectOptions,
 } from '../state.js';
 import { syncLessonFromForm } from '../form-collect.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, bindSchoolGradePairs } from '../../../shared/school-grade.js';
+import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
+import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
 import { saveAndNavigate, saveCurrentStep, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
@@ -156,14 +156,14 @@ function renderClassCard(row, idx, total) {
         </div>
         <div class="register-grid-3">
           <div class="form-group">
-            <label class="form-label">주횟수</label>
+            <label class="form-label">주 회수</label>
             <select class="form-input" data-field="lessons_per_week">
-              ${renderSelectOptions(WEEKLY_LESSON_COUNTS, row.lessons_per_week, '선택')}
+              ${renderSelectOptions(lessonWeeklyOptions(row.lessons_per_week), lessonWeeklySelectValue(row.lessons_per_week), '선택')}
             </select>
           </div>
           <div class="form-group">
             <label class="form-label">월 수업료</label>
-            <input class="form-input" data-field="monthly_fee" value="${esc(row.monthly_fee)}" placeholder="예: 35만원" />
+            <input class="form-input" data-field="monthly_fee" value="${esc(row.monthly_fee)}" placeholder="예: 350천원" />
           </div>
           <div class="register-grid-3__spacer" aria-hidden="true"></div>
         </div>
@@ -220,15 +220,15 @@ export function renderLessonFormHtml(opts = {}) {
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label" for="minutes_per_lesson">1일 평균 수업시간</label>
+          <label class="form-label" for="minutes_per_lesson">1회 수업시간</label>
           <select class="form-input" id="minutes_per_lesson" name="minutes_per_lesson">
-            ${renderSelectOptions(DAILY_LESSON_MINUTES, s.minutes_per_lesson, '선택')}
+            ${renderSelectOptions(lessonDurationOptions(s.minutes_per_lesson), lessonDurationSelectValue(s.minutes_per_lesson), '선택')}
           </select>
         </div>
         <div class="form-group" data-rc-field="lessons_per_week">
-          ${starLabel('lessons_per_week', '주당 평균 수업회수')}
+          ${starLabel('lessons_per_week', '주 회수')}
           <select class="form-input" id="lessons_per_week" name="lessons_per_week">
-            ${renderSelectOptions(WEEKLY_LESSON_COUNTS, s.lessons_per_week, '선택')}
+            ${renderSelectOptions(lessonWeeklyOptions(s.lessons_per_week), lessonWeeklySelectValue(s.lessons_per_week), '선택')}
           </select>
         </div>
       </div>
@@ -237,7 +237,7 @@ export function renderLessonFormHtml(opts = {}) {
           ${starLabel('monthly_fee_manwon', '월 평균 수업료')}
           <div class="register-fee-manwon">
             <input class="form-input" id="monthly_fee_manwon" name="monthly_fee_manwon" value="${esc(s.monthly_fee_manwon)}" placeholder="숫자" inputmode="decimal" />
-            <span class="register-fee-manwon__unit">만원</span>
+            <span class="register-fee-manwon__unit">천원</span>
           </div>
         </div>
         <div class="form-group">

@@ -88,7 +88,7 @@ export function renderStudentRequestBody(student, viewer) {
             : `<dt>희망 수업인원</dt><dd>단독</dd>`
         }
         <dt>희망 강의스타일</dt><dd>${esc(styles || '—')}</dd>
-        <dt>수업예산</dt><dd>${budget != null ? `${Number(budget).toLocaleString('ko-KR')}원` : '—'}</dd>
+        <dt>수업예산</dt><dd>${budget != null && Number(budget) > 0 ? `월 ${Math.round(Number(budget) / 1000).toLocaleString('ko-KR')}천원` : '—'}</dd>
       </dl>
     </section>
     <section class="p24-section">

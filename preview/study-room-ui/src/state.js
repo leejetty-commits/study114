@@ -73,27 +73,8 @@ export const WEEKDAY_OPTIONS = [
   { value: 'sun', label: '일' },
 ];
 
-/** 소개 구간 · 1일 평균 수업시간 */
-export const DAILY_LESSON_MINUTES = [
-  { value: '30', label: '30분' },
-  { value: '60', label: '60분' },
-  { value: '90', label: '90분' },
-  { value: '120', label: '120분' },
-  { value: '150', label: '150분' },
-  { value: '180', label: '180분' },
-  { value: 'over_180', label: '3시간 초과' },
-];
-
-/** 소개 구간 · 주당 평균 수업회수 / 수업 그룹 주횟수 */
-export const WEEKLY_LESSON_COUNTS = [
-  { value: '1', label: '1회' },
-  { value: '2', label: '2회' },
-  { value: '3', label: '3회' },
-  { value: '4', label: '4회' },
-  { value: '5', label: '5회' },
-  { value: '6', label: '6회' },
-  { value: '7', label: '7회 이상' },
-];
+export { LESSON_DURATION_OPTIONS as DAILY_LESSON_MINUTES } from '../../shared/lesson-duration-options.js';
+export { LESSON_WEEKLY_OPTIONS as WEEKLY_LESSON_COUNTS } from '../../shared/lesson-weekly-options.js';
 
 /** 수업 스타일 — 복수 선택 */
 export const TEACHING_STYLE_OPTIONS = [

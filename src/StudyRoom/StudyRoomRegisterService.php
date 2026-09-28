@@ -2300,10 +2300,10 @@ final class StudyRoomRegisterService
      */
     private function priceAmountFromLesson(array $input, array $extra): ?int
     {
-        $man = trim((string) ($input['monthly_fee_manwon'] ?? ($extra['monthly_fee_manwon'] ?? '')));
-        if ($man !== '') {
-            if (preg_match('/(\d+(?:\.\d+)?)/', $man, $m)) {
-                $won = (int) round((float) $m[1] * 10000);
+        $cheon = trim((string) ($input['monthly_fee_manwon'] ?? ($extra['monthly_fee_manwon'] ?? '')));
+        if ($cheon !== '') {
+            if (preg_match('/(\d+(?:\.\d+)?)/', $cheon, $m)) {
+                $won = (int) round((float) $m[1] * 1000);
                 return $won > 0 ? $won : null;
             }
         }
@@ -2320,6 +2320,9 @@ final class StudyRoomRegisterService
         if ($text === '') {
             return null;
         }
+        if (preg_match('/(\d+(?:\.\d+)?)\s*천/u', $text, $m)) {
+            return (int) round((float) $m[1] * 1000);
+        }
         if (preg_match('/(\d+(?:\.\d+)?)\s*만/u', $text, $m)) {
             return (int) round((float) $m[1] * 10000);
         }
@@ -2327,7 +2330,7 @@ final class StudyRoomRegisterService
         if ($digits === null || $digits === '') {
             return null;
         }
-        return (int) $digits;
+        return (int) $digits * 1000;
     }
 
     /**

@@ -4,6 +4,8 @@
  */
 
 import { formatTutorFeeCard } from '../exposure-format.js';
+import { lessonDurationLabel } from '../../../shared/lesson-duration-options.js';
+import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
 import { TUTOR_PLACE_LABELS, UNIVERSITY_STATUS_LABELS } from '../tutor-enums.js';
 import { tutorSectionPath, tutorHubPath } from './router.js';
 import { tutorToExposureRow } from './format.js';
@@ -64,7 +66,7 @@ function introOk(tutor) {
 
 function feeBasisLabel(tutor) {
   if (blank(tutor?.fee_basis_type) === 'monthly_by_total_sessions') return '월 총 횟수 기준';
-  if (blank(tutor?.fee_basis_type) === 'monthly_by_weekly_schedule') return '주 횟수 기준';
+  if (blank(tutor?.fee_basis_type) === 'monthly_by_weekly_schedule') return '주 회수 기준';
   return '';
 }
 
@@ -173,7 +175,7 @@ function sectionSummary(sec) {
 }
 
 function weeklyLabel(tutor) {
-  return Number(tutor?.lessons_per_week) > 0 ? `주 ${tutor.lessons_per_week}회` : '';
+  return lessonWeeklyLabel(tutor?.lessons_per_week);
 }
 
 function monthlyLabel(tutor) {
@@ -201,7 +203,7 @@ function buildBoard(tutor) {
   const fee = Number(tutor?.preferred_fee_amount) > 0 ? formatTutorFeeCard(tutor) : '';
   const uniStatus = UNIVERSITY_STATUS_LABELS[tutor?.university_status] || '';
   const basis = feeBasisLabel(tutor);
-  const minutes = minutesOk(tutor) ? `${tutor.minutes_per_lesson}분` : '';
+  const minutes = minutesOk(tutor) ? lessonDurationLabel(tutor.minutes_per_lesson) : '';
   const gender = GENDER_GROUP_LABELS[tutor?.student_gender_group] || '';
   const count = STUDENT_COUNT_LABELS[tutor?.student_count_group] || '';
   const weekly = weeklyLabel(tutor);
@@ -230,14 +232,14 @@ function buildBoard(tutor) {
     rows: [
       row('fee', '월 과외비', fee, textStatus(fee)),
       row('fee_basis', '산정방식', basis, textStatus(basis)),
-      row('lessons_per_week', '주 횟수', weekly, Number(tutor?.lessons_per_week) > 0 ? 'filled' : 'empty'),
+      row('lessons_per_week', '주 회수', weekly, Number(tutor?.lessons_per_week) > 0 ? 'filled' : 'empty'),
       row(
         'monthly_session_count',
         '월 총 횟수',
         monthly,
         Number(tutor?.monthly_session_count) > 0 ? 'filled' : 'empty',
       ),
-      row('minutes', '1회(분)', minutes, textStatus(minutes)),
+      row('minutes', '1회 수업시간', minutes, textStatus(minutes)),
       row('student_gender_group', '지도 대상 성별', gender, textStatus(gender)),
       row('student_count_group', '수업인원', count, textStatus(count)),
       row('lesson_places', '강의장소', places, textStatus(places)),

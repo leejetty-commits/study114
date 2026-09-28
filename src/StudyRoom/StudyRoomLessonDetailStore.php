@@ -187,7 +187,7 @@ final class StudyRoomLessonDetailStore
         } elseif (empty($extra['monthly_fee_manwon']) && isset($row['price_amount']) && $row['price_amount'] !== null) {
             $won = (int) $row['price_amount'];
             if ($won > 0) {
-                $extra['monthly_fee_manwon'] = (string) (int) round($won / 10000);
+                $extra['monthly_fee_manwon'] = (string) (int) round($won / 1000);
             }
         }
         if (array_key_exists('card_payment_available', $row) && $row['card_payment_available'] !== null) {
@@ -445,12 +445,17 @@ final class StudyRoomLessonDetailStore
         if ($s === '' || $s === '0') {
             return null;
         }
-        if ($s === 'over_180' || $s === (string) self::MINUTES_OVER_180) {
+        if ($s === 'over_180' || $s === 'other' || $s === (string) self::MINUTES_OVER_180) {
             return self::MINUTES_OVER_180;
         }
-        $allowed = [30, 60, 90, 120, 150, 180];
         $n = (int) $s;
-        return in_array($n, $allowed, true) ? $n : null;
+        if ($n >= 20 && $n <= 120 && $n % 10 === 0) {
+            return $n;
+        }
+        if ($n === 150 || $n === 180) {
+            return $n;
+        }
+        return null;
     }
 
     private function minutesFromDb(mixed $v): string
@@ -464,8 +469,12 @@ final class StudyRoomLessonDetailStore
 
     private function weeklyToDb(mixed $v): ?int
     {
+        $s = trim((string) $v);
+        if ($s === 'other') {
+            return 8;
+        }
         $n = (int) $v;
-        return ($n >= 1 && $n <= 7) ? $n : null;
+        return ($n >= 1 && $n <= 8) ? $n : null;
     }
 
     /** @param mixed $days */

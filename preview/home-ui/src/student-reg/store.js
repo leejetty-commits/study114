@@ -269,8 +269,8 @@ export function getPublishReadiness(student) {
   } else {
     need(!!student.preferred_student_count_group, '희망 수업인원 (상세등록)');
   }
-  need(!!student.lessons_per_week, '주 횟수 (상세등록)');
-  need(!!student.minutes_per_lesson, '1회 시간 (상세등록)');
+  need(!!student.lessons_per_week, '주 회수 (상세등록)');
+  need(!!student.minutes_per_lesson, '1회 수업시간 (상세등록)');
   need(Array.isArray(student.teaching_style_badges) && student.teaching_style_badges.length > 0, '희망 강의스타일 (상세등록)');
   if (student.preferred_lesson_type === 'study_room') {
     need(!!student.preferred_studyroom_fee_amount, '수업예산 공부방 (상세등록)');

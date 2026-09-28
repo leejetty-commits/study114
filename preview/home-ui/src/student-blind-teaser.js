@@ -73,17 +73,17 @@ export function coarseRegionForGuest(locationLabel) {
 }
 
 /**
- * 예산 구간형 (만원) — 예: 40~60만원
+ * 예산 구간형 (천원) — 예: 400~600천원
  * @param {number | null | undefined} amountWon
  */
 export function budgetBandLabel(amountWon) {
   const n = Number(amountWon);
   if (!Number.isFinite(n) || n <= 0) return '—';
-  const man = Math.round(n / 10000);
-  const low = Math.floor(man / 20) * 20;
-  const high = low + 20;
-  if (low <= 0) return `~${high}만원`;
-  return `${low}~${high}만원`;
+  const cheon = Math.round(n / 1000);
+  const low = Math.floor(cheon / 200) * 200;
+  const high = low + 200;
+  if (low <= 0) return `~${high}천원`;
+  return `${low}~${high}천원`;
 }
 
 /**
@@ -109,7 +109,7 @@ export function oneLessonHopeChip(item) {
 
 /**
  * 비로그인 티저 한 줄
- * 예: 김○○ · 중등 · 수학 · 대치동 · 40~60만원
+ * 예: 김○○ · 중등 · 수학 · 대치동 · 400~600천원
  * @param {object} item
  */
 export function formatGuestStudentTeaserLine(item) {

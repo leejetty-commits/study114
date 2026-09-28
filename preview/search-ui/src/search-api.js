@@ -2,6 +2,8 @@
  * 13장 — 검색 API 클라이언트 (study114_dev @ :8080)
  */
 
+import { scaleCheonwonRangeFilters } from '../../shared/fee-cheonwon.js';
+
 /**
  * @param {HTMLFormElement} form
  * @param {import('./state.js').SearchTab} tab
@@ -50,6 +52,7 @@ export function collectFiltersFromForm(form, tab) {
   }
 
   promoteRegionLabelFilters(filters, tab);
+  scaleCheonwonRangeFilters(filters);
   return filters;
 }
 

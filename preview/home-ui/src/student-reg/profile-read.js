@@ -8,6 +8,8 @@ import { primaryHopeRegionLabel } from '../../../shared/student-hope-regions.js'
 import { studentSectionPath } from './router.js';
 import { LESSON_FORMAT_LABELS } from '../student-enums.js';
 import { labelBudget, labelLessonTarget, labelPlaces, labelTeachingStyles } from './format.js';
+import { lessonDurationLabel } from '../../../shared/lesson-duration-options.js';
+import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
 
 const LESSON_TYPE_LABELS = { tutor: '과외', study_room: '공부방' };
 const TUTOR_GENDER_LABELS = { female: '여', male: '남', any: '무관' };
@@ -27,13 +29,11 @@ function display(v) {
 }
 
 function weeklyLabel(student) {
-  const n = Number(student?.lessons_per_week);
-  return n > 0 ? `주 ${n}회` : '';
+  return lessonWeeklyLabel(student?.lessons_per_week);
 }
 
 function minutesLabel(student) {
-  const n = Number(student?.minutes_per_lesson);
-  return n > 0 ? `${n}분` : '';
+  return lessonDurationLabel(student?.minutes_per_lesson);
 }
 
 function lessonShapeLabel(student) {
@@ -71,8 +71,8 @@ export function buildStudentProfileReadSections(student) {
       rows: [
         { label: '희망지역 추가값', value: display(s.preferred_region_note) },
         { label: '희망 수업장소', value: display(labelPlaces(s.lesson_places)) },
-        { label: '주 횟수', value: weeklyLabel(s) },
-        { label: '1회 시간', value: minutesLabel(s) },
+        { label: '주 회수', value: weeklyLabel(s) },
+        { label: '1회 수업시간', value: minutesLabel(s) },
         { label: '희망 강의스타일', value: display(labelTeachingStyles(s.teaching_style_badges)) },
         { label: '희망 과외쌤 성별', value: TUTOR_GENDER_LABELS[s.preferred_tutor_gender] || '' },
         { label: '학생 성별', value: STUDENT_GENDER_LABELS[s.gender] || '' },

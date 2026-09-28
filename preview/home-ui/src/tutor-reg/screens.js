@@ -11,6 +11,9 @@ import {
   tutorHashSearchParams,
 } from './router.js';
 import { renderUniversityNameField } from '../../../shared/korean-universities.js';
+import { wonToCheonwonInput, cheonwonInputToWon } from '../../../shared/fee-cheonwon.js';
+import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
+import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
 import { getExposureMatrix } from './format.js';
 import {
   getTutors,
@@ -38,6 +41,16 @@ import {
   collectTutorRegionSlots,
 } from '../../../shared/tutor-region-slots.js';
 import { ensureTutorCityUnits, getTutorCityUnits, tutorCityUnitsError } from './city-units.js';
+
+function lessonSelectHtml(options, selected) {
+  const current = String(selected ?? '');
+  return [
+    '<option value="">선택</option>',
+    ...options.map(
+      (o) => `<option value="${esc(o.value)}" ${current === o.value ? 'selected' : ''}>${esc(o.label)}</option>`,
+    ),
+  ].join('');
+}
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -393,8 +406,8 @@ function renderDetailForm(tutor) {
         `
         <div class="p19-field-grid p19-field-grid--2">
           <label class="p19-field" data-trc-field="fee">
-            <span class="p19-field__label">월 과외비 ${reqMark()}</span>
-            <input class="p19-input" type="number" name="preferred_fee_amount" value="${esc(tutor.preferred_fee_amount || '')}" required min="1" />
+            <span class="p19-field__label">월 과외비 (천원) ${reqMark()}</span>
+            <input class="p19-input" type="number" name="preferred_fee_amount" value="${esc(wonToCheonwonInput(tutor.preferred_fee_amount))}" required min="1" />
           </label>
           <label class="p19-field" data-trc-field="fee_basis">
             <span class="p19-field__label">산정방식 ${reqMark()}</span>
@@ -403,16 +416,16 @@ function renderDetailForm(tutor) {
             </select>
           </label>
           <label class="p19-field" data-trc-field="schedule">
-            <span class="p19-field__label">주 횟수 ${reqMark()}</span>
-            <input class="p19-input" name="lessons_per_week" value="${esc(tutor.lessons_per_week || '')}" />
+            <span class="p19-field__label">주 회수 ${reqMark()}</span>
+            <select class="p19-input" name="lessons_per_week">${lessonSelectHtml(lessonWeeklyOptions(tutor.lessons_per_week), lessonWeeklySelectValue(tutor.lessons_per_week))}</select>
           </label>
           <label class="p19-field" data-trc-field="monthly_session_count">
             <span class="p19-field__label">월 총 횟수</span>
             <input class="p19-input" name="monthly_session_count" value="${esc(tutor.monthly_session_count || '')}" />
           </label>
           <label class="p19-field" data-trc-field="minutes">
-            <span class="p19-field__label">1회(분) ${reqMark()}</span>
-            <input class="p19-input" name="minutes_per_lesson" value="${esc(tutor.minutes_per_lesson || '')}" />
+            <span class="p19-field__label">1회 수업시간 ${reqMark()}</span>
+            <select class="p19-input" name="minutes_per_lesson">${lessonSelectHtml(lessonDurationOptions(tutor.minutes_per_lesson), lessonDurationSelectValue(tutor.minutes_per_lesson))}</select>
           </label>
           <label class="p19-field" data-trc-field="student_target">
             <span class="p19-field__label">지도 대상 성별 ${reqMark()}</span>
@@ -637,7 +650,7 @@ export function bindTutorRegEvents(root, rerender) {
           const current = getTutor(id) || {};
           await saveTutorDetailInline(id, {
             main_subject_note: String(current.main_subject_note || ''),
-            preferred_fee_amount: Number(fd.get('preferred_fee_amount') || 0),
+            preferred_fee_amount: Number(cheonwonInputToWon(fd.get('preferred_fee_amount')) || 0),
             fee_basis_type: String(fd.get('fee_basis_type') || ''),
             lessons_per_week: String(fd.get('lessons_per_week') || ''),
             monthly_session_count: String(fd.get('monthly_session_count') || ''),

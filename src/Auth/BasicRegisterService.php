@@ -195,9 +195,9 @@ final class BasicRegisterService
         $tutorFee = null;
         $studyroomFee = null;
         if ($preferredLessonType === 'tutor') {
-            $tutorFee = $this->optionalUnsignedInt($input, 'preferred_fee_amount');
+            $tutorFee = $this->cheonwonInputToWon($this->optionalUnsignedInt($input, 'preferred_fee_amount'));
         } else {
-            $studyroomFee = $this->optionalUnsignedInt($input, 'preferred_studyroom_fee_amount');
+            $studyroomFee = $this->cheonwonInputToWon($this->optionalUnsignedInt($input, 'preferred_studyroom_fee_amount'));
         }
         $requestSummary = $this->optionalBoundedString($input, 'request_summary', 200);
 
@@ -1014,6 +1014,19 @@ final class BasicRegisterService
             throw new InvalidArgumentException("{$key}: {$max}자 이하로 입력해 주세요.");
         }
         return $value;
+    }
+
+    /** 가입 화면 예산은 천원. DB는 원. */
+    private function cheonwonInputToWon(?int $cheonwon): ?int
+    {
+        if ($cheonwon === null) {
+            return null;
+        }
+        $won = $cheonwon * 1000;
+        if ($won > 4294967295) {
+            throw new InvalidArgumentException('예산: 값을 확인해 주세요.');
+        }
+        return $won;
     }
 
     /** @param array<string, mixed> $input */

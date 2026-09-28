@@ -7,6 +7,8 @@ import { formatTutorFeeCard } from '../exposure-format.js';
 import { formatTeachingStyleBadges } from '../exposure-format.js';
 import { CAREER_YEAR_BAND_LABELS, TUTOR_PLACE_LABELS, UNIVERSITY_STATUS_LABELS } from '../tutor-enums.js';
 import { tutorSectionPath } from './router.js';
+import { lessonDurationLabel } from '../../../shared/lesson-duration-options.js';
+import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
 import { normalizeTutorProfileImages, tutorPhotoPreviewSrc } from './profile-photos.js';
 
 const GENDER_GROUP_LABELS = { male: '남학생', female: '여학생', mixed: '혼성' };
@@ -35,7 +37,7 @@ function lessonPlacesLabel(tutor) {
 
 function feeBasisLabel(tutor) {
   if (blank(tutor?.fee_basis_type) === 'monthly_by_total_sessions') return '월 총 횟수 기준';
-  if (blank(tutor?.fee_basis_type) === 'monthly_by_weekly_schedule') return '주 횟수 기준';
+  if (blank(tutor?.fee_basis_type) === 'monthly_by_weekly_schedule') return '주 회수 기준';
   return '';
 }
 
@@ -44,8 +46,7 @@ function feeLabel(tutor) {
 }
 
 function weeklyLabel(tutor) {
-  const n = Number(tutor?.lessons_per_week);
-  return n > 0 ? `주 ${n}회` : '';
+  return lessonWeeklyLabel(tutor?.lessons_per_week);
 }
 
 function monthlyLabel(tutor) {
@@ -54,8 +55,7 @@ function monthlyLabel(tutor) {
 }
 
 function minutesLabel(tutor) {
-  const n = Number(tutor?.minutes_per_lesson);
-  return n > 0 ? `${n}분` : '';
+  return lessonDurationLabel(tutor?.minutes_per_lesson);
 }
 
 function yesNoBlank(flag, yes = '등록됨') {
@@ -95,9 +95,9 @@ export function buildTutorProfileReadSections(tutor) {
       rows: [
         { label: '월 과외비', value: feeLabel(t) },
         { label: '산정방식', value: feeBasisLabel(t) },
-        { label: '주 횟수', value: weeklyLabel(t) },
+        { label: '주 회수', value: weeklyLabel(t) },
         { label: '월 총 횟수', value: monthlyLabel(t) },
-        { label: '1회(분)', value: minutesLabel(t) },
+        { label: '1회 수업시간', value: minutesLabel(t) },
         { label: '지도 대상 성별', value: GENDER_GROUP_LABELS[t.student_gender_group] || '' },
         { label: '수업인원', value: STUDENT_COUNT_LABELS[t.student_count_group] || '' },
         { label: '강의장소', value: lessonPlacesLabel(t) },

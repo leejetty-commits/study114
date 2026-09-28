@@ -22,21 +22,24 @@ import {
   formatProofDocumentPublic,
 } from './lifecycle-copy.js';
 import { resolveTrustBadgeLabels } from './card-visual.js';
+import { lessonDurationLabel } from '../../shared/lesson-duration-options.js';
+import { lessonWeeklyLabel } from '../../shared/lesson-weekly-options.js';
 
 export function formatMonthlyWon(price_amount) {
   if (price_amount == null || price_amount === '') return '—';
   const n = Number(price_amount);
   if (Number.isNaN(n)) return String(price_amount);
-  if (n >= 10000) return `월 ${Math.round(n / 10000)}만원~`;
-  return `월 ${n.toLocaleString('ko-KR')}원~`;
+  if (n <= 0) return '—';
+  const cheon = Math.round(n / 1000);
+  return `월 ${cheon.toLocaleString('ko-KR')}천원~`;
 }
 
 export function formatHourlyWon(preferred_fee_amount) {
   if (preferred_fee_amount == null) return '—';
   const n = Number(preferred_fee_amount);
-  if (Number.isNaN(n)) return '—';
-  if (n >= 10000) return `시간당 ${Math.round(n / 10000)}만원~`;
-  return `시간당 ${(n / 10000).toFixed(1)}만원~`;
+  if (Number.isNaN(n) || n <= 0) return '—';
+  const cheon = Math.round(n / 1000);
+  return `시간당 ${cheon.toLocaleString('ko-KR')}천원~`;
 }
 
 /** 8장 · 13장 — 월 과외비 + 주횟수 + 1회시간 */
@@ -45,8 +48,10 @@ export function formatTutorFeeCard(item) {
   const parts = [];
   const monthly = formatMonthlyWon(item.preferred_fee_amount);
   if (monthly !== '—') parts.push(monthly);
-  if (item.lessons_per_week) parts.push(`주${item.lessons_per_week}회`);
-  if (item.minutes_per_lesson) parts.push(`${item.minutes_per_lesson}분`);
+  const weekly = lessonWeeklyLabel(item.lessons_per_week);
+  if (weekly) parts.push(weekly === '기타' ? '주 회수 기타' : `주${weekly}`);
+  const minutes = lessonDurationLabel(item.minutes_per_lesson);
+  if (minutes) parts.push(minutes === '기타' ? '1회 수업시간 기타' : minutes);
   return parts.length ? parts.join(' · ') : '—';
 }
 
@@ -125,8 +130,10 @@ export function formatStudentBudgetCard(item) {
   const parts = [];
   const monthly = formatMonthlyWon(amount);
   if (monthly !== '—') parts.push(monthly.replace('~', ''));
-  if (item.lessons_per_week) parts.push(`주${item.lessons_per_week}회`);
-  if (item.minutes_per_lesson) parts.push(`${item.minutes_per_lesson}분`);
+  const weekly = lessonWeeklyLabel(item.lessons_per_week);
+  if (weekly) parts.push(weekly === '기타' ? '주 회수 기타' : `주${weekly}`);
+  const minutes = lessonDurationLabel(item.minutes_per_lesson);
+  if (minutes) parts.push(minutes === '기타' ? '1회 수업시간 기타' : minutes);
   return parts.length ? parts.join(' · ') : '—';
 }
 

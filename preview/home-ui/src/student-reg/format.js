@@ -74,11 +74,11 @@ export function labelLessonTarget(s) {
 export function labelBudget(s) {
   if (s.preferred_lesson_type === 'study_room') {
     return s.preferred_studyroom_fee_amount
-      ? `월 ${Number(s.preferred_studyroom_fee_amount).toLocaleString('ko-KR')}원`
+      ? `월 ${Math.round(Number(s.preferred_studyroom_fee_amount) / 1000).toLocaleString('ko-KR')}천원`
       : '—';
   }
   return s.preferred_fee_amount
-    ? `월 ${Number(s.preferred_fee_amount).toLocaleString('ko-KR')}원`
+    ? `월 ${Math.round(Number(s.preferred_fee_amount) / 1000).toLocaleString('ko-KR')}천원`
     : '—';
 }
 

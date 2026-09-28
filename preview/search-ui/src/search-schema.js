@@ -76,8 +76,8 @@ export const SEARCH_TABS = {
       { key: 'place_type', label: '희망 수업장소', tier: 'basic', basicRow: 2, db: 'student_preferred_lesson_places', input: 'chips', optionsKey: 'student_place' },
       { key: 'preferred_student_count_group', label: '희망 수업인원', tier: 'basic', basicRow: 2, db: 'students.preferred_student_count_group', input: 'select', optionsKey: 'student_count' },
       { key: 'has_request_summary', label: '한 줄 요청문 있음', tier: 'basic', basicRow: 2, db: 'students.request_summary', input: 'toggle' },
-      { key: 'lessons_per_week', label: '주 횟수', tier: 'expanded', db: 'students.lessons_per_week', input: 'text' },
-      { key: 'minutes_per_lesson', label: '1회 시간(분)', tier: 'expanded', db: 'students.minutes_per_lesson', input: 'text' },
+      { key: 'lessons_per_week', label: '주 회수', tier: 'expanded', db: 'students.lessons_per_week', input: 'select', optionsKey: 'lesson_weekly' },
+      { key: 'minutes_per_lesson', label: '1회 수업시간', tier: 'expanded', db: 'students.minutes_per_lesson', input: 'select', optionsKey: 'lesson_duration' },
       { key: 'lesson_format', label: '수업형태', tier: 'expanded', db: 'students.lesson_format', input: 'select', optionsKey: 'lesson_format' },
       { key: 'student_gender_group', label: '그룹 구성', tier: 'expanded', groupOnly: true, db: 'students.student_gender_group', input: 'select', optionsKey: 'student_gender_group' },
       { key: 'teaching_style', label: '희망 강의스타일', tier: 'expanded', db: 'student_preferred_teaching_style_badges', input: 'chips', optionsKey: 'teaching_style' },
@@ -118,16 +118,16 @@ export const MOCK_REGIONS = {
 /** §8-4 결과 행 더미 */
 export const MOCK_RESULT_ROWS = {
   room: [
-    { left: '대치 대표 노출 수학 공부방\n대치동', center: '중등·고등 수학\n소수정예 · 숙제관리', right: '월 48만원\n찜 · 비교 · 상세' },
-    { left: '우동 추천 노출 영어 공부방\n해운대', center: '초등·중등 영어\n발음교정', right: '월 32만원\n찜 · 비교 · 상세' },
-    { left: '센텀 기본 노출 국어 공부방\n센텀동', center: '초등·중등 국어\n독해 중심', right: '월 22만원\n찜 · 비교 · 상세' },
+    { left: '대치 대표 노출 수학 공부방\n대치동', center: '중등·고등 수학\n소수정예 · 숙제관리', right: '월 480천원\n찜 · 비교 · 상세' },
+    { left: '우동 추천 노출 영어 공부방\n해운대', center: '초등·중등 영어\n발음교정', right: '월 320천원\n찜 · 비교 · 상세' },
+    { left: '센텀 기본 노출 국어 공부방\n센텀동', center: '초등·중등 국어\n독해 중심', right: '월 220천원\n찜 · 비교 · 상세' },
   ],
   tutor: [
-    { left: '대치 대표 노출 수학\n강남구', center: '중·고 수학 · 서울대 수학과\n경력 7~10년', right: '월 60만원 · 주2 · 90분\n찜 · 비교 · 상세' },
-    { left: '우동 추천 노출 영어\n해운대', center: '초·중 영어 · 연세대\n아이엘츠', right: '월 40만원 · 주2 · 60분\n찜 · 비교 · 상세' },
+    { left: '대치 대표 노출 수학\n강남구', center: '중·고 수학 · 서울대 수학과\n경력 7~10년', right: '월 600천원 · 주2 · 90분\n찜 · 비교 · 상세' },
+    { left: '우동 추천 노출 영어\n해운대', center: '초·중 영어 · 연세대\n아이엘츠', right: '월 400천원 · 주2 · 60분\n찜 · 비교 · 상세' },
   ],
   student: [
-    { left: '맑은하늘\n중2 · 남', center: '수학·영어 · 학생자택\n단독과외', right: '수업예산 55만\n메모 보내기' },
-    { left: '초등왕\n초5 · 여', center: '종합 · 공부방\n그룹과외 · 남여 · 2명', right: '수업예산 38만\n메모 보내기' },
+    { left: '맑은하늘\n중2 · 남', center: '수학·영어 · 학생자택\n단독과외', right: '수업예산 550천원\n메모 보내기' },
+    { left: '초등왕\n초5 · 여', center: '종합 · 공부방\n그룹과외 · 남여 · 2명', right: '수업예산 380천원\n메모 보내기' },
   ],
 };

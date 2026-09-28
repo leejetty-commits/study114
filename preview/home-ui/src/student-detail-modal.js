@@ -1,4 +1,5 @@
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml } from '../../shared/school-grade.js';
+import { wonToCheonwonInput } from '../../shared/fee-cheonwon.js';
 import {
   STUDENT_COUNT_LABELS,
   STUDENT_PLACE_LABELS,
@@ -68,13 +69,13 @@ export function renderStudentRegisterForm(student = {}) {
           </select>
         </label>
         <label class="student-form__field">
-          <span class="student-form__label">수업예산 (과외)</span>
-          <input name="preferred_fee_amount" type="number" class="student-form__input" value="${esc(String(v.preferred_fee_amount))}" />
+          <span class="student-form__label">수업예산 (과외, 천원)</span>
+          <input name="preferred_fee_amount" type="number" class="student-form__input" value="${esc(wonToCheonwonInput(v.preferred_fee_amount))}" />
           <span class="student-form__db">과외 희망 예산</span>
         </label>
         <label class="student-form__field">
-          <span class="student-form__label">수업예산 (공부방)</span>
-          <input name="preferred_studyroom_fee_amount" type="number" class="student-form__input" value="${esc(String(v.preferred_studyroom_fee_amount))}" />
+          <span class="student-form__label">수업예산 (공부방, 천원)</span>
+          <input name="preferred_studyroom_fee_amount" type="number" class="student-form__input" value="${esc(wonToCheonwonInput(v.preferred_studyroom_fee_amount))}" />
           <span class="student-form__db">공부방 희망 예산</span>
         </label>
       </div>

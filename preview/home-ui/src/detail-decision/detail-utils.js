@@ -74,7 +74,9 @@ export function buildJudgmentTokens(kind, item, viewer) {
     item.preferred_lesson_type === 'study_room'
       ? item.preferred_studyroom_fee_amount
       : item.preferred_fee_amount;
-  const budgetStr = budget != null ? `${Number(budget).toLocaleString('ko-KR')}원` : null;
+  const budgetStr = budget != null && Number(budget) > 0
+    ? `월 ${Math.round(Number(budget) / 1000).toLocaleString('ko-KR')}천원`
+    : null;
   const memo =
     viewer === 'tutor' || viewer === 'study_room'
       ? studentMemoContactLabel(item).label

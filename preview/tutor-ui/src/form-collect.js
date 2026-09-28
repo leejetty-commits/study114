@@ -1,4 +1,5 @@
 import { normalizeUniversityNameInput } from '../../shared/korean-universities.js';
+import { cheonwonInputToWon } from '../../shared/fee-cheonwon.js';
 
 export function syncBasicFromForm(form, state) {
   if (!form) return;
@@ -47,7 +48,7 @@ export function syncLessonFromForm(form, state) {
   if (fd.has('age_band')) {
     state.age_band = String(fd.get('age_band') ?? '');
   }
-  state.preferred_fee_amount = String(fd.get('preferred_fee_amount') ?? '');
+  state.preferred_fee_amount = cheonwonInputToWon(fd.get('preferred_fee_amount'));
   state.fee_basis_type = String(fd.get('fee_basis_type') ?? 'monthly_by_weekly_schedule');
   state.lessons_per_week = String(fd.get('lessons_per_week') ?? '');
   state.monthly_session_count = String(fd.get('monthly_session_count') ?? '');
@@ -103,9 +104,9 @@ export function validateLessonState(state) {
   }
   // UI 선택값: 공란이면 단계 이동 허용. 값이 있으면 양의 정수만.
   for (const [key, label] of [
-    ['lessons_per_week', '주 횟수'],
+    ['lessons_per_week', '주 회수'],
     ['monthly_session_count', '월 총 횟수'],
-    ['minutes_per_lesson', '1회 수업 시간'],
+    ['minutes_per_lesson', '1회 수업시간'],
   ]) {
     const msg = optionalPositiveIntMessage(state[key], label);
     if (msg) return msg;

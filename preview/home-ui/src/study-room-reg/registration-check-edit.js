@@ -67,7 +67,7 @@ function readLightPatch(field, form) {
     const patch = { [field]: n };
     if (field === 'monthly_fee_manwon' && n) {
       const man = Number(n);
-      if (Number.isFinite(man) && man > 0) patch.price_amount = man * 10000;
+      if (Number.isFinite(man) && man > 0) patch.price_amount = man * 1000;
     }
     return patch;
   }
