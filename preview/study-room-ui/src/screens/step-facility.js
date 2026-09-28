@@ -1,6 +1,6 @@
 import { registerState, getFacilityOptions, emptyProofNote } from '../state.js';
 import { validatePromoUrls } from '../../../shared/promo-links.js';
-import { renderUniversityNameField } from '../../../shared/korean-universities.js';
+import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
 import { syncFacilityFromForm, syncCareerFromForm } from '../form-collect.js';
 import { saveCurrentStep, withSaving } from '../save-flow.js';
 import {
@@ -95,8 +95,7 @@ export function renderFacilityFormHtml(opts = {}) {
           name: 'university_name',
           value: s.university_name,
           id: 'room_univ_facility',
-          label: '출신대학',
-          hint: '한국 대학교명 목록에서 선택·검색하세요. 학부 대학명 1개만 저장됩니다.',
+          label: '대학/대학원',
         })}
         <div class="form-group">
           <label class="form-label" for="major_name">전공학과</label>
@@ -225,8 +224,14 @@ export function renderFacility() {
  * @param {HTMLElement} root
  * @param {{ onSaved?: () => void, onCancel?: () => void, onRefresh?: () => void, embed?: boolean }} [opts]
  */
+/** 188 재선택. 클릭 비우기·blur 복원은 공유 바인더가 유지한다. */
+function bindUniversityNameReselect(root) {
+  bindUniversityNameField(root);
+}
+
 export function bindFacilityEvents(root, opts = {}) {
   if (!opts.embed) bindGlobalEvents(root);
+  bindUniversityNameReselect(root);
   const form = root.querySelector('[data-form="facility"]');
   const prevBtn = root.querySelector('[data-action="prev"]');
   const nextBtn = root.querySelector('[data-action="next"]');

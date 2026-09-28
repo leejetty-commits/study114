@@ -88,7 +88,7 @@ export function getThreeGauges(tutor) {
     { ok: tutor.has_profile_image, label: '프로필 사진' },
   ];
   const trustItems = [
-    { ok: !!tutor.university_name, label: '학교명' },
+    { ok: !!tutor.university_name, label: '대학/대학원' },
     { ok: !!tutor.major_name, label: '학과명' },
     { ok: !!tutor.university_status, label: '학적상태' },
     { ok: tutor.education_doc_submitted, label: '학력 제출자료' },
@@ -376,7 +376,7 @@ export function getHubCtas(tutor) {
 /** 히어로용 필수 인증 축 (신뢰정보 중 핵심 4) */
 export function getRequiredCertGauge(tutor) {
   const items = [
-    { ok: !!tutor.university_name, label: '학교명' },
+    { ok: !!tutor.university_name, label: '대학/대학원' },
     { ok: !!tutor.university_status, label: '학적상태' },
     { ok: tutor.education_doc_submitted, label: '학력 제출자료' },
     { ok: tutor.career_doc_submitted, label: '경력 제출자료' },

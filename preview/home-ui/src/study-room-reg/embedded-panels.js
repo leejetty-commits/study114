@@ -312,7 +312,7 @@ function detail1OverviewRows() {
 function detail2OverviewRows() {
   const s = registerState;
   return [
-    { label: '출신대학', value: s.university_name },
+    { label: '대학/대학원', value: s.university_name },
     { label: '전공학과', value: s.major_name },
     { label: '교습경력', value: s.career_years !== '' && s.career_years != null ? `${s.career_years}년` : '' },
     { label: '경력특징 1', value: s.feature_1, required: true },

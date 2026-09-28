@@ -185,7 +185,7 @@ export function buildRoomInputSummary(room) {
       title: '상세정보 2단계 · 경력·신뢰·시설',
       key: 'facility',
       rows: [
-        { label: '출신대학', value: str(s.university_name) },
+        { label: '대학/대학원', value: str(s.university_name) },
         { label: '전공학과', value: str(s.major_name) },
         { label: '교습 경력(년)', value: str(s.career_years) },
         { label: '학원 경력(년)', value: str(s.academy_career_years) },

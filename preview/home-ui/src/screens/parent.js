@@ -21,7 +21,8 @@ import { bindNeighborhoodGreetingRail, renderNeighborhoodGreetingRail } from '..
 export function renderParent() {
   const tab = previewState.parentTab;
   const content = `
-    ${renderHomeMarketingBanner('parent', null, renderNeighborhoodGreetingRail('parent'))}
+    ${renderHomeMarketingBanner('parent')}
+    ${renderNeighborhoodGreetingRail('parent')}
     ${renderProviderHomeTabs('parent', tab, 'data-parent-tab')}
     ${renderProviderHomeBody('parent', tab, previewState.parentFind)}
     ${renderCompareBar()}

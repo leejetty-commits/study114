@@ -251,7 +251,7 @@ function buildBoard(tutor) {
     id: 'detail2',
     title: TRC_COPY.board.sections.detail2,
     rows: [
-      row('university_name', '출신대학', tutor?.university_name, textStatus(tutor?.university_name)),
+      row('university_name', '대학/대학원', tutor?.university_name, textStatus(tutor?.university_name)),
       row('major_name', '전공', tutor?.major_name, textStatus(tutor?.major_name)),
       row('university_status', '학적상태', uniStatus, textStatus(uniStatus)),
       row('feature_1', '특징 1', tutor?.feature_1, textStatus(tutor?.feature_1)),
@@ -317,12 +317,12 @@ function nextAction(okMap, tutor, canPublish, basicIds) {
     };
   }
   if (status === 'hidden') {
-    return { id: 'republish', label: TRC_COPY.next.hidden, href: '' };
+    return { id: 'exposure', label: TRC_COPY.next.hidden, href: '' };
   }
   if (status === 'published') {
-    return { id: 'live', label: TRC_COPY.next.live, href: '' };
+    return { id: 'exposure', label: TRC_COPY.next.live, href: '' };
   }
-  return { id: 'publish', label: TRC_COPY.next.publish, href: '' };
+  return null;
 }
 
 /**
@@ -336,7 +336,7 @@ export function buildTutorRegistrationCheckModel(tutor, readiness = {}) {
   const basicLeft = remainingCount(okMap, basicIds);
   const pickLeft = remainingCount(okMap, TRC_PICK_FIELD_IDS);
   const primeLeft = remainingCount(okMap, TRC_PRIME_FIELD_IDS);
-  /** 공개 CTA 정본은 getPublishReadiness. 헤더 Basic 배지는 필드 집계. */
+  /** 헤더 노출 배지는 getPublishReadiness. Basic 배지는 필드 집계. */
   const publishReady = readiness.canPublish === true;
   const board = buildBoard(t);
   const status = readiness.profileStatus || t.profile_status || 'draft';

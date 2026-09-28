@@ -29,7 +29,7 @@ import {
 } from '../layout.js';
 import { validatePromoUrls } from '../../../shared/promo-links.js';
 import { HOME_UI_BASE } from '../../../shared/preview-links.js';
-import { renderUniversityNameField } from '../../../shared/korean-universities.js';
+import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
 
 function radios(name, options, selected) {
   return options
@@ -159,6 +159,7 @@ export function renderDetail() {
             name: 'university_name',
             value: s.university_name,
             id: 'tutor_univ_detail',
+            label: '대학/대학원',
           })}
           <div class="form-group"><label class="form-label">전공</label><input class="form-input" name="major_name" value="${s.major_name}" placeholder="학과명 (서술형)" /></div>
         </div>
@@ -228,8 +229,14 @@ export function renderDetail() {
   });
 }
 
+/** 188 재선택. 클릭 비우기·blur 복원은 공유 바인더가 유지한다. */
+function bindUniversityNameReselect(root) {
+  bindUniversityNameField(root);
+}
+
 export function bindDetailEvents(root) {
   bindGlobalEvents(root);
+  bindUniversityNameReselect(root);
   bindSchoolGradePairs(root);
   root.querySelector('[data-action="back-mypage"]')?.addEventListener('click', () => returnToMypage());
   root.querySelector('[data-action="add-subject"]')?.addEventListener('click', () => {

@@ -14,46 +14,119 @@
 
 .ng-rail__list {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.35rem;
   margin: 0;
   padding: 0;
   list-style: none;
-  overflow-x: auto;
 }
 
-.ng-rail__item {
-  flex: 0 0 auto;
-  max-width: 16rem;
-}
-
-.ng-rail__btn {
+.ng-rail__line {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.1rem;
-  width: 100%;
-  padding: 0.35rem 0.5rem;
-  border: 1px solid rgba(28, 25, 23, 0.12);
-  border-radius: 0.4rem;
-  background: #fff;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
+  align-items: baseline;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
 .ng-rail__kind,
 .ng-rail__name {
+  flex: 0 0 auto;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.ng-rail__name,
+.ng-rail__text,
+.ng-feed__name {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ng-rail__name,
+.ng-feed__name {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.ng-rail__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  text-align: left;
+  text-overflow: ellipsis;
+}
+
+.ng-rail__more {
+  margin-top: 0.5rem;
+}
+
+.ng-feed {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(28, 25, 23, 0.35);
+}
+
+.ng-feed__card {
+  width: min(28rem, 100%);
+  max-height: min(32rem, calc(100% - 2rem));
+  overflow: auto;
+  padding: 1.25rem 1.25rem 1rem;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #1c1917;
+}
+
+.ng-feed__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.ng-feed__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.ng-feed__who {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  margin: 0 0 0.2rem;
+}
+
+.ng-feed__kind {
   font-size: 0.75rem;
   font-weight: 700;
 }
 
-.ng-rail__text {
-  max-width: 14rem;
-  overflow: hidden;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.ng-feed__body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.ng-feed__pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .ng-editor {
@@ -69,13 +142,23 @@
 }
 
 .ng-editor__note,
-.ng-editor__error {
+.ng-editor__error,
+.ng-editor__status {
   margin: 0 0 0.5rem;
   font-size: 0.8125rem;
 }
 
 .ng-editor__error {
   color: #b91c1c;
+}
+
+.ng-editor__status {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #a7f3d0;
+  border-radius: 0.5rem;
+  background: #ecfdf5;
+  color: #047857;
+  font-weight: 600;
 }
 
 .ng-editor__input {

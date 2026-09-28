@@ -40,33 +40,59 @@ export function viewerNeighborhood(viewer) {
   return GUEST_DEMO_REGION.dong;
 }
 
-/** @param {'guest'|'parent'|'study_room'|'tutor'} viewer */
-export function renderNeighborhoodGreetingRail(viewer) {
+const PAGE_SIZE = 5;
+
+/**
+ * @param {'guest'|'parent'|'study_room'|'tutor'} viewer
+ * @returns {Array<{ providerType: 'study_room'|'tutor', registrationId: number, name: string, summary: string, full: string, kindLabel: string }>}
+ */
+function greetingRows(viewer) {
   const neighborhood = viewerNeighborhood(viewer);
   const loggedIn = isLoggedIn();
-  const items = readGreetings()
+  return readGreetings()
     .filter((row) => row.status === 'up' && sameNeighborhood(row.neighborhood, neighborhood) && (row.body || row.teaser))
-    .sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt));
-  if (!items.length) return '';
-  const cards = items
+    .sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt))
     .map((row) => {
-      const name = loggedIn ? row.displayName || maskGreetingName(row.maskedName) : row.maskedName || maskGreetingName(row.displayName);
-      const text = loggedIn ? row.body || row.teaser || '' : row.teaser || greetingTeaser(row.body);
-      const kindLabel = row.providerType === 'tutor' ? '과외쌤' : '공부방';
-      return `
+      const full = loggedIn ? row.body || row.teaser || '' : row.teaser || greetingTeaser(row.body);
+      return {
+        providerType: row.providerType === 'tutor' ? 'tutor' : 'study_room',
+        registrationId: Number(row.registrationId),
+        name: loggedIn
+          ? row.displayName || maskGreetingName(row.maskedName)
+          : row.maskedName || maskGreetingName(row.displayName),
+        summary: greetingTeaser(full),
+        full,
+        kindLabel: row.providerType === 'tutor' ? '과외쌤' : '공부방',
+      };
+    });
+}
+
+/** @param {'guest'|'parent'|'study_room'|'tutor'} viewer */
+export function renderNeighborhoodGreetingRail(viewer) {
+  const rows = greetingRows(viewer);
+  if (!rows.length) return '';
+  const lines = rows
+    .slice(0, PAGE_SIZE)
+    .map(
+      (row, index) => `
         <li class="ng-rail__item">
-          <button type="button" class="ng-rail__btn" data-ng-open data-ng-kind="${esc(row.providerType)}" data-ng-reg="${Number(row.registrationId)}">
-            <span class="ng-rail__kind">${kindLabel}</span>
-            <span class="ng-rail__name">${esc(name)}</span>
-            <span class="ng-rail__text">${esc(text)}</span>
-          </button>
-        </li>`;
-    })
+          <div class="ng-rail__line">
+            <span class="ng-rail__kind">${esc(row.kindLabel)}</span>
+            <button type="button" class="ng-rail__name" data-ng-name data-ng-kind="${esc(row.providerType)}" data-ng-reg="${row.registrationId}">${esc(row.name)}</button>
+            <button type="button" class="ng-rail__text" data-ng-line data-ng-index="${index}">${esc(row.summary)}</button>
+          </div>
+        </li>`,
+    )
     .join('');
+  const more =
+    rows.length > PAGE_SIZE
+      ? '<button type="button" class="btn btn--secondary btn--sm ng-rail__more" data-ng-more>더보기</button>'
+      : '';
   return `
-    <section class="ng-rail" aria-label="우리 동네에 새로 왔어요">
+    <section class="ng-rail" data-ng-rail aria-label="우리 동네에 새로 왔어요">
       <h2 class="ng-rail__title">우리 동네에 새로 왔어요</h2>
-      <ul class="ng-rail__list">${cards}</ul>
+      <ul class="ng-rail__list">${lines}</ul>
+      ${more}
     </section>`;
 }
 
@@ -75,20 +101,120 @@ export function renderNeighborhoodGreetingRail(viewer) {
  * @param {{ viewer?: string, onRerender?: () => void, sourceRoute?: string }} [opts]
  */
 export function bindNeighborhoodGreetingRail(root, opts = {}) {
-  root.querySelectorAll('[data-ng-open]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const kind = btn.getAttribute('data-ng-kind') === 'tutor' ? 'tutor' : 'study_room';
-      const id = Number(btn.getAttribute('data-ng-reg') || 0);
-      void openGreetingTarget({
-        loggedIn: isLoggedIn(),
-        kind,
-        id,
-        viewer: opts.viewer || 'guest',
-        onRerender: opts.onRerender,
-        sourceRoute: opts.sourceRoute || 'home',
-      });
+  const rail = root.querySelector('[data-ng-rail]');
+  if (!rail) return;
+  const viewer = opts.viewer || 'guest';
+  /** @param {string | null} kind @param {number} id */
+  const openCard = (kind, id) => {
+    void openGreetingTarget({
+      loggedIn: isLoggedIn(),
+      kind: kind === 'tutor' ? 'tutor' : 'study_room',
+      id,
+      viewer,
+      onRerender: opts.onRerender,
+      sourceRoute: opts.sourceRoute || 'home',
     });
+  };
+  rail.addEventListener('click', (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+    const nameBtn = target.closest('[data-ng-name]');
+    if (nameBtn && rail.contains(nameBtn)) {
+      openCard(nameBtn.getAttribute('data-ng-kind'), Number(nameBtn.getAttribute('data-ng-reg') || 0));
+      return;
+    }
+    const lineBtn = target.closest('[data-ng-line]');
+    if (lineBtn && rail.contains(lineBtn)) {
+      const index = Number(lineBtn.getAttribute('data-ng-index') || 0);
+      openGreetingFeed({ viewer, page: Math.floor(index / PAGE_SIZE), openCard });
+      return;
+    }
+    if (target.closest('[data-ng-more]')) openGreetingFeed({ viewer, page: 0, openCard });
   });
+}
+
+/**
+ * @param {{ viewer: string, page: number, openCard: (kind: string | null, id: number) => void }} opts
+ */
+function openGreetingFeed(opts) {
+  const rows = greetingRows(opts.viewer);
+  if (!rows.length) return;
+  const pages = Math.ceil(rows.length / PAGE_SIZE);
+  let current = Math.min(Math.max(0, opts.page), pages - 1);
+  document.getElementById('ng-feed')?.dispatchEvent(new Event('ng-feed-dismiss'));
+  const el = document.createElement('div');
+  el.id = 'ng-feed';
+  el.className = 'ng-feed';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('aria-labelledby', 'ng-feed-title');
+
+  const close = () => {
+    document.removeEventListener('keydown', onKey);
+    el.remove();
+  };
+  el.addEventListener('ng-feed-dismiss', close);
+  const paint = () => {
+    const slice = rows.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE);
+    const items = slice
+      .map(
+        (row) => `
+        <li class="ng-feed__item">
+          <p class="ng-feed__who">
+            <span class="ng-feed__kind">${esc(row.kindLabel)}</span>
+            <button type="button" class="ng-feed__name" data-ng-feed-name data-ng-kind="${esc(row.providerType)}" data-ng-reg="${row.registrationId}">${esc(row.name)}</button>
+          </p>
+          <p class="ng-feed__body">${esc(row.full)}</p>
+        </li>`,
+      )
+      .join('');
+    const pager =
+      pages > 1
+        ? `<div class="ng-feed__pager">
+            <button type="button" class="btn btn--secondary btn--sm" data-ng-feed-prev ${current === 0 ? 'disabled' : ''}>이전</button>
+            <span>${current + 1} / ${pages}</span>
+            <button type="button" class="btn btn--secondary btn--sm" data-ng-feed-next ${current === pages - 1 ? 'disabled' : ''}>다음</button>
+          </div>`
+        : '';
+    el.innerHTML = `
+      <div class="ng-feed__card" role="document">
+        <h2 id="ng-feed-title" class="ng-feed__title">우리 동네에 새로 왔어요</h2>
+        <ul class="ng-feed__list">${items}</ul>
+        ${pager}
+        <button type="button" class="btn btn--secondary" data-ng-feed-close>닫기</button>
+      </div>`;
+  };
+  const onKey = (event) => {
+    if (event.key !== 'Escape') return;
+    if (document.querySelector('.p24-overlay, #ng-login-gate, #ng-card-unavailable')) return;
+    close();
+  };
+  el.addEventListener('click', (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+    if (target === el || target.closest('[data-ng-feed-close]')) {
+      close();
+      return;
+    }
+    if (target.closest('[data-ng-feed-prev]')) {
+      if (current <= 0) return;
+      current -= 1;
+      paint();
+      return;
+    }
+    if (target.closest('[data-ng-feed-next]')) {
+      if (current >= pages - 1) return;
+      current += 1;
+      paint();
+      return;
+    }
+    const nameBtn = target.closest('[data-ng-feed-name]');
+    if (!nameBtn) return;
+    opts.openCard(nameBtn.getAttribute('data-ng-kind'), Number(nameBtn.getAttribute('data-ng-reg') || 0));
+  });
+  document.addEventListener('keydown', onKey);
+  paint();
+  document.body.appendChild(el);
 }
 
 /**
@@ -135,6 +261,7 @@ export function renderNeighborhoodGreetingEditor(opts) {
       <h3 class="ng-editor__title">동네 인사</h3>
       <p class="ng-editor__note">한 줄, 80자. 전화·카톡·주소는 넣지 않아요.</p>
       <textarea class="form-input ng-editor__input" maxlength="80" rows="2" data-ng-body>${esc(body)}</textarea>
+      <p class="ng-editor__status" data-ng-status role="status" hidden></p>
       <p class="ng-editor__error" data-ng-error hidden></p>
       <div class="ng-editor__actions">
         <button type="button" class="btn btn--secondary" data-ng-save>${up ? '수정' : '올리기'}</button>
@@ -143,46 +270,110 @@ export function renderNeighborhoodGreetingEditor(opts) {
     </section>`;
 }
 
-/** @param {HTMLElement} root @param {() => void} rerender */
-export function bindNeighborhoodGreetingEditor(root, rerender) {
+const STATUS_HIDE_MS = 4000;
+
+/** @param {HTMLElement} root @param {() => void} [_rerender] 성공 뒤에는 호출하지 않는다. 폼을 갈아끼우면 안내가 사라진다. */
+export function bindNeighborhoodGreetingEditor(root, _rerender) {
   const editor = root.querySelector('[data-ng-editor]');
   if (!editor) return;
   const errorEl = editor.querySelector('[data-ng-error]');
+  const statusEl = editor.querySelector('[data-ng-status]');
+  /** @type {number} */
+  let statusTimer = 0;
+
+  const hideStatus = () => {
+    if (statusTimer) {
+      window.clearTimeout(statusTimer);
+      statusTimer = 0;
+    }
+    if (!statusEl) return;
+    statusEl.hidden = true;
+    statusEl.textContent = '';
+  };
+
   const showError = (message) => {
+    hideStatus();
     if (!errorEl) return;
     errorEl.hidden = !message;
     errorEl.textContent = message || '';
   };
-  editor.querySelector('[data-ng-save]')?.addEventListener('click', async () => {
-    const text = editor.querySelector('[data-ng-body]')?.value || '';
-    const error = greetingError(text);
-    if (error) {
-      showError(error);
-      return;
+
+  const showStatus = (message) => {
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
     }
-    const saved = await publishGreeting({
-      providerType: editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room',
-      registrationId: Number(editor.getAttribute('data-ng-id') || 0),
-      body: text,
-      neighborhood: editor.getAttribute('data-ng-area') || '',
-      displayName: editor.getAttribute('data-ng-name') || '',
-    });
-    if (!saved.ok) {
-      showError(saved.error);
-      return;
-    }
-    rerender();
+    if (!statusEl) return;
+    statusEl.hidden = false;
+    statusEl.textContent = message;
+    if (statusTimer) window.clearTimeout(statusTimer);
+    statusTimer = window.setTimeout(() => {
+      statusTimer = 0;
+      if (!statusEl.isConnected) return;
+      statusEl.hidden = true;
+      statusEl.textContent = '';
+    }, STATUS_HIDE_MS);
+  };
+
+  editor.querySelector('[data-ng-body]')?.addEventListener('input', () => {
+    hideStatus();
   });
-  editor.querySelector('[data-ng-down]')?.addEventListener('click', async () => {
-    const saved = await unpublishGreeting(
-      editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room',
-      Number(editor.getAttribute('data-ng-id') || 0),
-    );
+
+  /** @param {boolean} up */
+  const syncActions = (up) => {
+    const saveBtn = editor.querySelector('[data-ng-save]');
+    if (saveBtn) saveBtn.textContent = up ? '수정' : '올리기';
+    const downBtn = editor.querySelector('[data-ng-down]');
+    if (up) {
+      if (downBtn) return;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn--secondary';
+      btn.setAttribute('data-ng-down', '');
+      btn.textContent = '내리기';
+      editor.querySelector('.ng-editor__actions')?.appendChild(btn);
+      return;
+    }
+    downBtn?.remove();
+    const bodyEl = editor.querySelector('[data-ng-body]');
+    if (bodyEl instanceof HTMLTextAreaElement) bodyEl.value = '';
+  };
+
+  editor.addEventListener('click', async (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+    const providerType = editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room';
+    const registrationId = Number(editor.getAttribute('data-ng-id') || 0);
+    if (target.closest('[data-ng-save]')) {
+      const text = editor.querySelector('[data-ng-body]')?.value || '';
+      const error = greetingError(text);
+      if (error) {
+        showError(error);
+        return;
+      }
+      const saved = await publishGreeting({
+        providerType,
+        registrationId,
+        body: text,
+        neighborhood: editor.getAttribute('data-ng-area') || '',
+        displayName: editor.getAttribute('data-ng-name') || '',
+      });
+      if (!saved.ok) {
+        showError(saved.error);
+        return;
+      }
+      syncActions(true);
+      showStatus('저장되었습니다');
+      return;
+    }
+    if (!target.closest('[data-ng-down]')) return;
+    const saved = await unpublishGreeting(providerType, registrationId);
     if (!saved.ok) {
       showError(saved.error);
       return;
     }
-    rerender();
+    syncActions(false);
+    showStatus('내렸습니다');
   });
 }
 

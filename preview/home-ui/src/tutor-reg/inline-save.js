@@ -106,7 +106,7 @@ export async function saveTutorDetailInline(tutorId, detail) {
   if (feeBasis === 'monthly_by_total_sessions' && (!monthlySessions || monthlySessions <= 0)) {
     throw new Error('월 총 횟수를 입력해 주세요.');
   }
-  if (!university) throw new Error('학교명을 입력해 주세요.');
+  if (!university) throw new Error('대학/대학원을 입력해 주세요.');
   if (!introShort && !introLong) throw new Error('소개문을 입력해 주세요.');
 
   if (isRegistrationsApiMode()) {

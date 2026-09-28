@@ -55,6 +55,7 @@ function renderGreetingModal() {
         <p class="ng-prompt-modal__lead">같은 동네 학생에게 한 줄만 보여요. 건너뛰어도 바로 쓸 수 있어요.</p>
         <label class="form-label" for="ng-body">한 줄</label>
         <textarea class="form-input" id="ng-body" maxlength="80" rows="2" data-ng-body></textarea>
+        <p class="ng-prompt-modal__status" data-ng-status role="status" hidden></p>
         <p class="form-note form-note--error" data-ng-error hidden></p>
         <div class="ng-prompt-modal__actions">
           <button type="button" class="btn btn--secondary" data-ng-publish>인사 올리기</button>
@@ -206,11 +207,36 @@ export function bindSignupCompleteEvents(root) {
     markPromptDone();
     window.location.assign(roleHomeUrl(roleNow));
   };
+  const prompt = document.querySelector('[data-ng-prompt]');
+  const errorEl = prompt?.querySelector('[data-ng-error]');
+  const statusEl = prompt?.querySelector('[data-ng-status]');
+  const hideStatus = () => {
+    if (!statusEl) return;
+    statusEl.hidden = true;
+    statusEl.textContent = '';
+  };
+  const showError = (message) => {
+    hideStatus();
+    if (!errorEl) return;
+    errorEl.hidden = !message;
+    errorEl.textContent = message || '';
+  };
+  const showStatus = (message) => {
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+    if (!statusEl) return;
+    statusEl.hidden = false;
+    statusEl.textContent = message;
+  };
+  prompt?.querySelector('[data-ng-body]')?.addEventListener('input', () => {
+    hideStatus();
+  });
   document.querySelector('[data-ng-skip]')?.addEventListener('click', () => {
     goRoleHome();
   });
   document.querySelector('[data-ng-publish]')?.addEventListener('click', async () => {
-    const errorEl = document.querySelector('[data-ng-error]');
     const saved = await publishGreeting({
       providerType: roleNow === 'tutor' ? 'tutor' : 'study_room',
       registrationId: Number(signupState.basicRegisterResult?.id || 0),
@@ -219,13 +245,10 @@ export function bindSignupCompleteEvents(root) {
       displayName: providerDisplayName(roleNow, basicNow),
     });
     if (!saved.ok) {
-      if (errorEl) {
-        errorEl.hidden = false;
-        errorEl.textContent = saved.error;
-      }
+      showError(saved.error);
       return;
     }
-    goRoleHome();
+    showStatus('저장되었습니다');
   });
 
   fetchMeApi()

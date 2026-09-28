@@ -126,7 +126,7 @@ export function validateLessonState(state) {
 
 export function validateCareerState(state) {
   if (!String(state.university_name || '').trim()) {
-    return '학교명을 입력해 주세요.';
+    return '대학/대학원을 입력해 주세요.';
   }
   return null;
 }

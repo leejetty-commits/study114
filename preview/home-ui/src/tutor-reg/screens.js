@@ -10,7 +10,7 @@ import {
   isReturnToRegistrationCheck,
   tutorHashSearchParams,
 } from './router.js';
-import { renderUniversityNameField } from '../../../shared/korean-universities.js';
+import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
 import { wonToCheonwonInput, cheonwonInputToWon } from '../../../shared/fee-cheonwon.js';
 import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
@@ -19,7 +19,6 @@ import {
   getTutors,
   getTutor,
   getPublishReadiness,
-  publishTutor,
   deleteTutor,
 } from './store.js';
 import { saveTutorBasicInline, saveTutorDetailInline } from './inline-save.js';
@@ -33,7 +32,6 @@ import { bindTutorInquiriesEvents } from './inquiries-edit.js';
 import { renderTutorProfileRead } from './profile-read.js';
 import { renderTutorProfilePhotoEditor, bindTutorProfilePhotos } from './profile-photos.js';
 import { TRC_COPY } from './registration-check-copy.js';
-import { showEmailVerifyOverlay } from '../email-verify-overlay.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import {
   renderTutorRegionSlot,
@@ -397,7 +395,7 @@ function renderBasicForm(tutor) {
       <p class="p21-save-feedback" data-p21-save-feedback role="status" ${saveFlash ? '' : 'hidden'} style="margin:0 0 0.75rem;padding:0.5rem 0.75rem;border-radius:0.5rem;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-weight:600;">${saveFlash ? esc(saveFlash) : ''}</p>
       <p class="p19-field__hint" data-p21-dirty-hint hidden>변경된 내용이 있습니다. 기본정보 저장을 눌러 주세요.</p>
       ${renderFormFooter(
-        '저장해도 바로 공개되지 않습니다. 공개는 등록점검에서 합니다.',
+        '저장해도 검색 노출이 바로 바뀌지는 않습니다. 부족한 항목은 등록점검에서 확인합니다.',
         `<button type="submit" class="btn btn--primary" ${units.length ? '' : 'disabled'}>기본정보 저장</button>
          <a href="#${tutorSectionPath(tutor.id, 'detail')}" class="btn btn--secondary" data-p21-nav="${tutorSectionPath(tutor.id, 'detail')}">상세정보로</a>
          <a href="#${tutorSectionPath(tutor.id, 'publish')}" class="btn btn--ghost" data-p21-nav="${tutorSectionPath(tutor.id, 'publish')}">등록점검</a>`,
@@ -483,7 +481,7 @@ function renderDetailForm(tutor) {
             name: 'university_name',
             value: tutor.university_name || '',
             id: `p21_univ_${tutor.id || 'new'}`,
-            label: '출신대학',
+            label: '대학/대학원',
             required: true,
           })}
           </div>
@@ -528,7 +526,7 @@ function renderDetailForm(tutor) {
         </div>`,
       )}
       ${renderFormFooter(
-        '저장 후 등록점검에서 공개 상태를 확인하세요.',
+        '저장 후 등록점검에서 입력 현황을 확인하세요.',
         `<button type="submit" class="btn btn--primary">상세정보 저장</button>
          <a href="#${tutorSectionPath(tutor.id, 'publish')}" class="btn btn--secondary" data-p21-nav="${tutorSectionPath(tutor.id, 'publish')}">등록점검</a>
          <a href="#${tutorHubPath(tutor.id)}" class="btn btn--ghost" data-p21-nav="${tutorHubPath(tutor.id)}">마이프로필</a>`,
@@ -650,6 +648,11 @@ function markTutorBasicClean(form) {
   if (hint) hint.hidden = true;
 }
 
+/** 188 재선택. 클릭 비우기·blur 복원은 공유 바인더가 유지한다. */
+function bindUniversityNameReselect(root) {
+  bindUniversityNameField(root);
+}
+
 function bindTutorBasicFieldChrome(form) {
   const fields = form.querySelectorAll('input, textarea, select');
   const markDirty = () => {
@@ -687,6 +690,7 @@ export function bindTutorRegEvents(root, rerender) {
   bindTutorInquiriesEvents(root, rerender);
   scrollToTutorRcFocus(root);
 
+  bindUniversityNameReselect(root);
   const detailForm = root.querySelector('[data-p21-form="detail"]');
   if (detailForm) {
     bindTutorProfilePhotos(root, {
@@ -796,35 +800,6 @@ export function bindTutorRegEvents(root, rerender) {
       wrap.querySelectorAll('[data-p21-preview-panel]').forEach((p) => {
         p.classList.toggle('is-active', p.getAttribute('data-p21-preview-panel') === key);
       });
-    });
-  });
-
-  root.querySelectorAll('[data-p21-publish]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const wrap = btn.closest('[data-p21-tutor-id]') || btn.closest('.p19-publish-body');
-      const id = Number(wrap?.dataset.p21TutorId || root.querySelector('[data-p21-tutor-id]')?.dataset.p21TutorId);
-      const confirms = root.querySelectorAll('[data-p21-confirm]');
-      const allChecked = [...confirms].every((c) => /** @type {HTMLInputElement} */ (c).checked);
-      if (!allChecked) {
-        alert('자기확인 항목을 모두 체크해 주세요.');
-        return;
-      }
-      try {
-        const result = await publishTutor(id);
-        if (!result.ok) {
-          alert(`공개 불가:\n${result.missing?.join('\n') || result.reason}`);
-          return;
-        }
-        alert('공개되었습니다. (profile_status: published)');
-        rerender();
-      } catch (err) {
-        console.warn('[p21]', err);
-        if (err?.code === 'email_verify_required') {
-          showEmailVerifyOverlay();
-          return;
-        }
-        alert('공개 처리에 실패했습니다.');
-      }
     });
   });
 

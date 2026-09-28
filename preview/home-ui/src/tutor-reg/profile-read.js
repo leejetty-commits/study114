@@ -109,7 +109,7 @@ export function buildTutorProfileReadSections(tutor) {
       title: '학력 · 자격',
       editSection: 'detail',
       rows: [
-        { label: '출신대학', value: display(t.university_name) },
+        { label: '대학/대학원', value: display(t.university_name) },
         { label: '전공', value: display(t.major_name) },
         { label: '학적상태', value: UNIVERSITY_STATUS_LABELS[t.university_status] || '' },
       ],

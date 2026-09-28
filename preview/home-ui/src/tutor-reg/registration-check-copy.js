@@ -5,12 +5,12 @@
 
 export const TRC_COPY = {
   title: '등록점검',
-  lead: '공개 가능 여부와 픽·프라임에 더 필요한 항목을 한 화면에서 확인합니다',
+  lead: '필수 입력과 픽·프라임에 더 필요한 항목을 한 화면에서 확인합니다',
   badges: {
-    publishOk: '공개 가능',
-    publishLive: '공개중',
-    publishHidden: '비공개 · 관리자 설정',
-    publishNeed: '아직 공개 불가',
+    publishOk: '노출 조건 충족',
+    publishLive: '노출 중',
+    publishHidden: '노출 중지 · 관리자 설정',
+    publishNeed: '노출 조건 부족',
     basicOk: '베이직카드 충족',
     basicNeed: (n) => `베이직카드 ${n}개 부족`,
     pickOk: '픽 추가 충족',
@@ -20,15 +20,14 @@ export const TRC_COPY = {
   },
   next: {
     prefix: '다음',
-    publish: '자기확인 후 공개하기',
-    live: '공개 유지 중 · 현황만 확인하면 됩니다',
-    hidden: '관리자가 비공개로 두었습니다. 회원은 직접 다시 켤 수 없습니다',
+    live: '검색에 노출 중입니다. 현황만 확인하면 됩니다',
+    hidden: '관리자가 노출을 꺼 두었습니다. 회원은 직접 다시 켤 수 없습니다',
     fill: (label) => `${label} 입력하러 가기`,
   },
   promo: {
-    title: '공개와 픽·프라임은 단계가 다릅니다',
+    title: '베이직 노출과 픽·프라임은 단계가 다릅니다',
     lines: [
-      '베이직 검색 노출은 공개 조건을 채운 뒤 공개하면 가능합니다.',
+      '베이직 검색 노출은 필수 항목이 채워지면 따라옵니다.',
       '픽·프라임은 그 위에 카드 정보량·신뢰를 더하는 추가 입력입니다.',
     ],
     pickMissingTitle: '[픽] 추가 입력',
@@ -70,18 +69,6 @@ export const TRC_COPY = {
   status: {
     filled: 'O',
     empty: '미입력됨',
-  },
-  publish: {
-    summaryReady: '공개 조건이 충족되었습니다. 아래를 확인한 뒤 공개하세요.',
-    summaryNeed: (n) => `공개하려면 아직 ${n}개 항목이 부족합니다. 위에서 수정 위치를 확인하세요.`,
-    summaryLive: '현재 공개 중입니다. 내용을 바꿨다면 다시 한 번 확인해 주세요.',
-    summaryHidden: '관리자가 비공개로 두었습니다. 회원은 직접 다시 켤 수 없습니다.',
-    confirmTitle: '공개 전 자기확인',
-    confirmLead: '학부모 화면에 이렇게 보이는지 직접 확인하고 공개합니다.',
-    confirmRegion: '활동 지역·과목·대상 학생군 노출을 확인했습니다',
-    confirmFee: '과외비·수업 방식 표시를 확인했습니다',
-    confirmTrust: '소개문·신뢰정보(공개 선택 범위) 노출을 확인했습니다',
-    publishCta: '공개하기',
   },
   returnBanner: {
     label: '← 등록점검으로 돌아가기',
@@ -137,7 +124,7 @@ export const TRC_BOARD_DETAIL1_FIELDS = [
 ];
 
 export const TRC_BOARD_DETAIL2_FIELDS = [
-  { id: 'university_name', label: '출신대학', required: true },
+  { id: 'university_name', label: '대학/대학원', required: true },
   { id: 'major_name', label: '전공', required: false },
   { id: 'university_status', label: '학적상태', required: false },
   { id: 'feature_1', label: '특징 1', required: true },
@@ -165,8 +152,8 @@ export const TRC_PROMO_MISSING_DEFS = [
   { id: 'schedule', label: '주 회수/월 총 횟수', hint: '산정방식에 맞는 횟수가 필요합니다', section: 'detail' },
   { id: 'minutes', label: '1회 수업 시간', hint: '1회 수업 분량을 보여 줍니다', section: 'detail' },
   { id: 'intro', label: '소개문', hint: '짧은 소개 또는 상세 소개 중 하나가 필요합니다', section: 'detail' },
-  { id: 'university', label: '출신대학', hint: '상세등록 완료·검색 노출 조건입니다', section: 'detail' },
-  { id: 'profile_image', label: '프로필 사진', hint: '공개 전 카드 신뢰에 필요합니다', section: 'detail' },
+  { id: 'university', label: '대학/대학원', hint: '상세등록 완료·검색 노출 조건입니다', section: 'detail' },
+  { id: 'profile_image', label: '프로필 사진', hint: '검색 카드 신뢰에 필요합니다', section: 'detail' },
   { id: 'feature_1', label: '경력특징 1', hint: '픽 카드 강조 한 줄입니다', section: 'detail' },
   { id: 'student_target', label: '학생구성', hint: '지도 대상 성별·인원을 보여 줍니다', section: 'detail' },
   { id: 'intro_long', label: '상세 소개', hint: '프라임 상세에서 과외를 설명합니다', section: 'detail' },

@@ -1,12 +1,11 @@
 /**
- * 과외쌤 등록점검 렌더 — 공개 허브 + Pick/Prime 차등 안내
+ * 과외쌤 등록점검 렌더 — 필수 입력 현황 + Pick/Prime 노출 안내
  * 비교 카드만 실노출 tutor 카드 HTML을 쓴다.
  */
 
 import { TRC_COPY } from './registration-check-copy.js';
 import { renderRegistrationCheckCardSamples } from '../home-card-samples/render.js';
 import { tutorRegistrationCheckTabHref } from './registration-check-model.js';
-import { LIFECYCLE_PUBLISH_CONFIRM_DIRECT, LIFECYCLE_PUBLISH_CONFIRM_NOTE } from '../lifecycle-copy.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -203,42 +202,6 @@ function renderBoard(vm) {
     </div>`;
 }
 
-function publishSummaryText(vm) {
-  const status = vm.readiness?.profileStatus;
-  const canPublish = !!vm.readiness?.canPublish;
-  const basicLeft = Number(vm.counts?.basicLeft || 0);
-  if (status === 'published') return TRC_COPY.publish.summaryLive;
-  if (status === 'hidden' && canPublish) return TRC_COPY.publish.summaryHidden;
-  if (canPublish) return TRC_COPY.publish.summaryReady;
-  const left = basicLeft || (vm.readiness?.missing || []).length;
-  if (!left) return TRC_COPY.badges.publishNeed;
-  return TRC_COPY.publish.summaryNeed(left);
-}
-
-function renderPublishActions(vm) {
-  const canPublish = !!vm.readiness?.canPublish;
-  const hidden = vm.readiness?.profileStatus === 'hidden';
-  const publishBtn = hidden
-    ? ''
-    : `<div class="p19-form-actions p19-form-actions--publish">
-        <button type="button" class="btn btn--primary btn--lg" data-p21-publish ${canPublish ? '' : 'disabled'}>${esc(TRC_COPY.publish.publishCta)}</button>
-      </div>`;
-  return `
-    <section class="rc-publish" data-p21-tutor-id="${esc(vm.tutorId)}">
-      <p class="rc-publish__summary">${esc(publishSummaryText(vm))}</p>
-      <div class="p20-confirm-card">
-        <h3 class="p20-confirm-card__title">${esc(TRC_COPY.publish.confirmTitle)}</h3>
-        <p class="rc-publish__lead">${esc(TRC_COPY.publish.confirmLead)}</p>
-        <label class="p20-confirm-check"><input type="checkbox" data-p21-confirm="region" /> ${esc(TRC_COPY.publish.confirmRegion)}</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p21-confirm="fee" /> ${esc(TRC_COPY.publish.confirmFee)}</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p21-confirm="trust" /> ${esc(TRC_COPY.publish.confirmTrust)}</label>
-        <label class="p20-confirm-check"><input type="checkbox" data-p21-confirm="direct" /> 외부 연락처 직접 노출 없음 · ${LIFECYCLE_PUBLISH_CONFIRM_DIRECT}</label>
-      </div>
-      ${publishBtn}
-      <p class="p19-publish-footnote">${LIFECYCLE_PUBLISH_CONFIRM_NOTE}</p>
-    </section>`;
-}
-
 /** @param {ReturnType<typeof import('./registration-check-model.js').buildTutorRegistrationCheckModel>} vm */
 export function renderTutorRegistrationCheck(vm) {
   return `
@@ -249,6 +212,5 @@ export function renderTutorRegistrationCheck(vm) {
       ${renderMissingBlock(vm.promo.primeMissingTitle, vm.promo.primeMissing, vm.promo.primeReadyBody)}
       ${renderCards(vm)}
       ${renderBoard(vm)}
-      ${renderPublishActions(vm)}
     </div>`;
 }

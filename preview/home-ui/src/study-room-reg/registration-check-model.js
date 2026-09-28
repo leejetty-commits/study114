@@ -383,7 +383,7 @@ function buildBoard(s, room, photos) {
       row('feature_2', '경력특징 2', s?.feature_2, textStatus(s?.feature_2)),
       row('feature_3', '경력특징 3', s?.feature_3, textStatus(s?.feature_3)),
       row('career_years', '교습경력', career, textStatus(career)),
-      row('university', '출신대학', [s?.university_name, s?.major_name].filter(blank).join(' · '), textStatus(s?.university_name)),
+      row('university', '대학/대학원', [s?.university_name, s?.major_name].filter(blank).join(' · '), textStatus(s?.university_name)),
       row('edu_office', '교육청등록증', edu.value, edu.status),
       row('biz_reg', '사업자등록증', biz.value, biz.status),
       row('franchise', '프랜차이즈 여부', fran.value, fran.status),

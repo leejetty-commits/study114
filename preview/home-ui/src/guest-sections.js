@@ -73,9 +73,9 @@ function loginGateAttrs(action, label) {
   return `data-action="login-gate" data-gate="${action}" data-gate-label="${label}" tabindex="0" role="button"`;
 }
 
-/** 홈 상단 — 역할 공통 작은 배너 3칸 */
+/** 홈 상단 — 역할 공통 작은 배너 3칸, 그 바로 아래 동네 인사 */
 export function renderGuestTempNotice() {
-  return renderHomeMarketingBanner('guest', null, renderNeighborhoodGreetingRail('guest'));
+  return `${renderHomeMarketingBanner('guest')}${renderNeighborhoodGreetingRail('guest')}`;
 }
 
 export function renderGuestHero() {

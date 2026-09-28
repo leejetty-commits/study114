@@ -40,7 +40,7 @@ import { bindListSortControls, readListSortFromHash } from '../../shared/list-so
 import { MAIN_SUBJECT_OPTIONS } from '../../shared/main-subjects.js';
 import { gradeOptionHtml } from '../../shared/school-grade.js';
 import { setGuestListPage } from '@home-ui/state.js';
-import { renderUniversityNameField } from '../../shared/korean-universities.js';
+import { renderUniversityNameField, bindUniversityNameField } from '../../shared/korean-universities.js';
 import {
   axisFromSearchTab,
   logLocationDebug,
@@ -980,7 +980,7 @@ function renderField(field, state, opts = {}) {
       name,
       id: `search_${field.key}`,
       listId: `search_${field.key}_list`,
-      labelHtml: `${esc(field.label)} ${dbHint}`,
+      label: '대학/대학원',
       className: compact ? 'search-field--compact' : '',
     });
   }
@@ -1487,6 +1487,7 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
  * @param {{ getTab: () => import('./state.js').SearchTab, getState: () => FindSurfaceState, role: import('./state.js').ViewerRole, formSelector?: string }} ctx
  */
 export function bindFindSurfaceEvents(root, rerender, ctx) {
+  bindUniversityNameField(root);
   const formSelector = ctx.formSelector || '[data-search-form]';
   const state = () => ctx.getState();
   const getForm = () => root.querySelector(formSelector);

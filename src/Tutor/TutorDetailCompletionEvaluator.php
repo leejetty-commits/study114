@@ -89,7 +89,7 @@ final class TutorDetailCompletionEvaluator
             'schedule_count' => '주 횟수/월 총 횟수',
             'minutes_per_lesson' => '1회 수업 시간',
             'intro' => '소개문',
-            'university_name' => '학교명',
+            'university_name' => '대학/대학원',
         ];
 
         $missing = [];

@@ -13,6 +13,7 @@ import {
 import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
+import { bindNeighborhoodGreetingRail, renderNeighborhoodGreetingRail } from '../neighborhood-greeting-ui.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
 import {
   applyStudyRoomHomePromo,
@@ -58,6 +59,7 @@ export function renderStudyRoom() {
   const content = `
     <div class="home-mkt-wrap${showMyBox ? ' home-mkt-wrap--with-panel' : ''}">
       ${renderHomeMarketingBanner('study_room')}
+      ${renderNeighborhoodGreetingRail('study_room')}
       ${showMyBox ? `<div class="home-mkt-wrap__panel">${renderMyStudyRoomBox()}</div>` : ''}
     </div>
     ${renderProviderHomeTabs('study_room', tab)}
@@ -72,6 +74,7 @@ export function renderStudyRoom() {
 
 export function bindStudyRoomEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
+  bindNeighborhoodGreetingRail(root, { viewer: 'study_room', onRerender: rerender, sourceRoute: 'study_room' });
   bootStudyRoomHome(rerender);
   bootStudyRoomStudentDemand(rerender);
 
