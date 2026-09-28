@@ -16,7 +16,8 @@ import { setGuestListPage } from './state.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from './section-headings.js';
 import { coordsFromLabel, toDisplayLabel } from '../../shared/location-display.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
-import { renderGuestMarketingBanner } from './home-marketing-banner.js';
+import { renderHomeMarketingBanner } from './home-marketing-banner.js';
+import { renderNeighborhoodGreetingRail } from './neighborhood-greeting-ui.js';
 import {
   getHomeBasicPool,
   isHomeBasicLive,
@@ -74,7 +75,7 @@ function loginGateAttrs(action, label) {
 
 /** 홈 상단 마케팅 배너 (3안 · cinema) */
 export function renderGuestTempNotice() {
-  return renderGuestMarketingBanner();
+  return renderHomeMarketingBanner('guest', null, renderNeighborhoodGreetingRail('guest'));
 }
 
 export function renderGuestHero() {

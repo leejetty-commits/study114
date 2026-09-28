@@ -16,11 +16,12 @@ import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
+import { bindNeighborhoodGreetingRail, renderNeighborhoodGreetingRail } from '../neighborhood-greeting-ui.js';
 
 export function renderParent() {
   const tab = previewState.parentTab;
   const content = `
-    ${renderHomeMarketingBanner('parent')}
+    ${renderHomeMarketingBanner('parent', null, renderNeighborhoodGreetingRail('parent'))}
     ${renderProviderHomeTabs('parent', tab, 'data-parent-tab')}
     ${renderProviderHomeBody('parent', tab, previewState.parentFind)}
     ${renderCompareBar()}
@@ -49,6 +50,8 @@ export function bindParentEvents(root, rerender) {
   });
 
   bindGuestListPagination(root, rerender);
+
+  bindNeighborhoodGreetingRail(root, { viewer: 'parent', onRerender: rerender, sourceRoute: 'parent' });
 
   bindDetailDecisionEvents(root, {
     onRerender: rerender,

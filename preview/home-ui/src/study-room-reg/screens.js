@@ -51,6 +51,10 @@ import { buildRegistrationCheckModel } from './registration-check-model.js';
 import { renderRegistrationCheck } from './registration-check-render.js';
 import { bindRegistrationCheckEvents } from './registration-check-edit.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
+import {
+  bindNeighborhoodGreetingEditor,
+  renderNeighborhoodGreetingEditor,
+} from '../neighborhood-greeting-ui.js';
 import { KOREA_SIDOS } from '../../../shared/korea-sidos.js';
 
 function esc(s) {
@@ -268,6 +272,12 @@ function renderHub(room) {
   }
 
   markEmbeddedViewLoaded(room.id, 'hub');
+  const greeting = renderNeighborhoodGreetingEditor({
+    providerType: 'study_room',
+    registrationId: Number(room.id),
+    neighborhood: room.region_label || room.location_label || '',
+    displayName: room.study_room_name || '공부방',
+  });
   const shop = getShopCompletenessSummary(registerState, room);
   const nudge = shop.weak
     ? `<div class="mp-room__shop-nudge" data-shop-completeness-nudge>
@@ -275,7 +285,7 @@ function renderHub(room) {
         <a href="#${studyRoomSectionPath(room.id, 'publish')}" class="mp-room__checklist-link" data-p20-nav="${studyRoomSectionPath(room.id, 'publish')}">등록점검에서 채우기</a>
       </div>`
     : '';
-  const body = `${nudge}${renderMyshopShowcase(registerState, room)}`;
+  const body = `${greeting}${nudge}${renderMyshopShowcase(registerState, room)}`;
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', body)}</section>`;
 }
 
@@ -621,6 +631,7 @@ function renderSubmissionTab(room) {
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindStudyRoomRegEvents(root, rerender) {
+  bindNeighborhoodGreetingEditor(root, rerender);
   bindEmbeddedPanelEvents(root, rerender);
   bindMyshopEvents(root);
   bindRegistrationCheckEvents(root, rerender);

@@ -1,0 +1,112 @@
+.ng-rail {
+  margin: 0.75rem 0 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.94);
+  color: #1c1917;
+}
+
+.ng-rail__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.ng-rail__list {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.ng-rail__item {
+  flex: 0 0 auto;
+  max-width: 16rem;
+}
+
+.ng-rail__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.4rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ng-rail__kind,
+.ng-rail__name {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ng-rail__text {
+  max-width: 14rem;
+  overflow: hidden;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ng-editor {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.5rem;
+}
+
+.ng-editor__title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.ng-editor__note,
+.ng-editor__error {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.ng-editor__error {
+  color: #b91c1c;
+}
+
+.ng-editor__input {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.ng-editor__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ng-unavailable {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(28, 25, 23, 0.35);
+}
+
+.ng-unavailable__card {
+  min-width: 16rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.75rem;
+  background: #fff;
+  text-align: center;
+}
+
+.ng-unavailable__card p {
+  margin: 0 0 0.75rem;
+  font-weight: 700;
+}

@@ -12,6 +12,7 @@ import { isLoggedIn } from '../auth-session.js';
 import { hydrateHomeBasicFromSearch, isHomeBasicLive } from '../home-basic-live.js';
 import { withGuestPlanOverride } from '../plans/runtime-config.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
+import { bindNeighborhoodGreetingRail } from '../neighborhood-greeting-ui.js';
 
 let homeBasicHydrateStarted = false;
 
@@ -36,6 +37,7 @@ export function bindGuestEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
   bindGuestSectionEvents(root, rerender);
   bindDetailDecisionEvents(root, { onRerender: rerender, viewer: 'guest', sourceRoute: 'guest' });
+  bindNeighborhoodGreetingRail(root, { viewer: 'guest', onRerender: rerender, sourceRoute: 'guest' });
 
   restoreMyshopScrollAndFocusIfPending();
 

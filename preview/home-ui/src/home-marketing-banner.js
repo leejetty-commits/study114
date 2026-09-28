@@ -248,7 +248,7 @@ function renderCta(cta) {
  * @param {string} surface guest|parent|study_room|tutor|search_room|search_tutor|search_student|plans|support
  * @param {BannerCta[] | null} [ctaOverride]
  */
-export function renderHomeMarketingBanner(surface, ctaOverride = null) {
+export function renderHomeMarketingBanner(surface, ctaOverride = null, beforeActions = '') {
   const cfg = SURFACE_BANNER[surface];
   if (!cfg) return '';
   const copy = HOME_BANNER_COPY[cfg.copyId];
@@ -283,6 +283,7 @@ export function renderHomeMarketingBanner(surface, ctaOverride = null) {
         <p class="home-mkt__eyebrow">${accentBrandWords(copy.eyebrow)}</p>
         <h2 class="home-mkt__title">${titleHtml}</h2>
         <div class="home-mkt__sub">${lines}</div>
+        ${beforeActions}
         <div class="home-mkt__actions">${actions}</div>
       </div>
     </section>`;

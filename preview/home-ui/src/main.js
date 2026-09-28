@@ -17,6 +17,7 @@ import './styles/design-system.css';
 import './styles/home-listings.css';
 import './styles/product-chrome.css';
 import './styles/home-marketing-banner.css';
+import './styles/neighborhood-greeting.css';
 import './styles/home-popup.css';
 import './styles/plans-theme.css';
 import './styles/plans-store.css';
@@ -87,6 +88,7 @@ import {
   redirectLoggedInFromRegisterIntro,
 } from './register-intro/index.js';
 import { initAuthSession, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME } from './auth-session.js';
+import { importNeighborhoodGreetingHandoff, pullNeighborhoodGreetings } from './neighborhood-greeting-ui.js';
 import { guardRoleHomeAccess } from '../../shared/route-access.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
@@ -254,6 +256,7 @@ function showBootError(err) {
 
 function init() {
   try {
+    importNeighborhoodGreetingHandoff();
     if (!SHOW_PREVIEW_TOOLBAR) {
       document.documentElement.style.setProperty('--preview-toolbar-h', '0px');
     }
@@ -403,6 +406,11 @@ function init() {
       .then(async ([, , user]) => {
         if (followUpDone) return;
         followUpDone = true;
+        pullNeighborhoodGreetings()
+          .then((changed) => {
+            if (changed) render();
+          })
+          .catch(() => {});
         if (isAuthRedirectPending()) return;
         if (user) {
           const deferred = boardKeysBlockedForRole('guest');

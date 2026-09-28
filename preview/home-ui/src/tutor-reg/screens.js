@@ -41,6 +41,10 @@ import {
   collectTutorRegionSlots,
 } from '../../../shared/tutor-region-slots.js';
 import { ensureTutorCityUnits, getTutorCityUnits, tutorCityUnitsError } from './city-units.js';
+import {
+  bindNeighborhoodGreetingEditor,
+  renderNeighborhoodGreetingEditor,
+} from '../neighborhood-greeting-ui.js';
 
 function lessonSelectHtml(options, selected) {
   const current = String(selected ?? '');
@@ -204,7 +208,13 @@ function renderExposureMatrixRows(rows) {
 
 /** @param {import('./store.js').TutorRecord} tutor */
 function renderHub(tutor) {
-  const body = renderTutorProfileRead(tutor);
+  const greeting = renderNeighborhoodGreetingEditor({
+    providerType: 'tutor',
+    registrationId: Number(tutor.id),
+    neighborhood: tutor.primary_region_label || tutor.location_label || '',
+    displayName: tutor.tutor_display_name || '과외쌤',
+  });
+  const body = `${greeting}${renderTutorProfileRead(tutor)}`;
   return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'hub', body)}</section>`;
 }
 
@@ -590,6 +600,7 @@ function scrollToTutorRcFocus(root) {
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindTutorRegEvents(root, rerender) {
+  bindNeighborhoodGreetingEditor(root, rerender);
   ensureTutorCityUnits().then((loaded) => {
     if (loaded) rerender();
   });
