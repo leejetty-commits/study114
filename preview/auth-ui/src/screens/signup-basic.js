@@ -12,7 +12,7 @@ import {
   isReturnImportMode,
   mapAuthFormToStudentRecord,
 } from '../../../shared/student-auth-bridge.js';
-import { renderAuthShell, renderStepIndicator, renderRoleBadge, bindGlobalEvents, navigate } from '../layout.js';
+import { renderAuthShell, renderBrandHero, renderStepIndicator, renderRoleBadge, bindGlobalEvents, navigate } from '../layout.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import { resolvePostLoginUrl } from '../../../shared/auth-redirect.js';
 import {
@@ -335,6 +335,7 @@ export function renderSignupBasic() {
   if (role === 'student') {
     const content = `
       ${oauthMode ? '' : renderStepIndicator(4, 5)}
+      ${renderBrandHero()}
       <h1 class="auth-heading">학생 기본정보</h1>
       <p class="auth-subheading">학생 Basic 카드에 먼저 보일 핵심 정보를 입력합니다.</p>
       ${body}
@@ -345,6 +346,7 @@ export function renderSignupBasic() {
   const content = `
     ${oauthMode ? '' : renderStepIndicator(4, 5)}
     <div class="panel auth-shell__card--wide">
+      ${renderBrandHero()}
       <h1 class="auth-heading">${role === 'tutor' ? '과외쌤 가입정보 입력' : '기본등록'}</h1>
       <p class="auth-subheading mb-6">
         ${

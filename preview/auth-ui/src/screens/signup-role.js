@@ -1,5 +1,5 @@
 import { ROLE_LABELS, ROLE_DESCRIPTIONS, ROLE_ICONS, signupState, setRole } from '../state.js';
-import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
+import { renderAuthShell, renderBrandHero, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { oauthCompleteRoleApi, fetchMeApi, parseApiJson } from '../auth-api.js';
 import { getLoginReturnTo, resolvePostLoginUrl, setPostVerifyTarget } from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
@@ -60,6 +60,7 @@ export function renderSignupRole() {
   const content = `
     ${oauthMode ? '' : renderStepIndicator(3, 5)}
     <div class="panel">
+      ${renderBrandHero()}
       <h1 class="auth-heading">${oauthMode ? '가입 유형 선택' : '회원 구분 선택'}</h1>
       <p class="auth-subheading mb-8">
         ${
