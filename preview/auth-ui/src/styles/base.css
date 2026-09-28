@@ -1393,3 +1393,39 @@ img {
 .extra-region-slot:last-of-type {
   border-bottom: none;
 }
+
+.ng-prompt-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(28, 25, 23, 0.35);
+}
+
+.ng-prompt-modal__card {
+  width: min(24rem, 100%);
+  padding: 1.25rem 1.25rem 1rem;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.ng-prompt-modal__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+}
+
+.ng-prompt-modal__lead {
+  margin: 0 0 0.75rem;
+}
+
+.ng-prompt-modal__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ng-prompt-modal__actions .btn {
+  flex: 1 1 0;
+}

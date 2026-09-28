@@ -16,7 +16,6 @@ import { GUEST_DEMO_REGION } from './data.js';
 import { openDetailModal, resolveDetailItem } from './detail-decision/index.js';
 import { getStudents } from './student-reg/store.js';
 import { primaryHopeRegionLabel } from '../../shared/student-hope-regions.js';
-import { openDeepAccessLoginGate } from '../../shared/guest-gate-ui.js';
 
 export function importNeighborhoodGreetingHandoff() {
   return importGreetingHandoff();
@@ -80,7 +79,7 @@ export function bindNeighborhoodGreetingRail(root, opts = {}) {
     btn.addEventListener('click', () => {
       const kind = btn.getAttribute('data-ng-kind') === 'tutor' ? 'tutor' : 'study_room';
       const id = Number(btn.getAttribute('data-ng-reg') || 0);
-      openGreetingTarget({
+      void openGreetingTarget({
         loggedIn: isLoggedIn(),
         kind,
         id,
@@ -95,19 +94,24 @@ export function bindNeighborhoodGreetingRail(root, opts = {}) {
 /**
  * @param {{ loggedIn: boolean, kind: 'study_room'|'tutor', id: number, viewer?: string, onRerender?: () => void, sourceRoute?: string }} opts
  */
-export function openGreetingTarget(opts) {
+export async function openGreetingTarget(opts) {
   if (!opts.loggedIn) {
-    openDeepAccessLoginGate({
-      source: 'detail',
-      providerType: opts.kind,
-      providerId: opts.id,
-    });
+    openGreetingLoginGate();
     return 'gate';
   }
-  const item = resolveDetailItem(opts.kind, opts.id);
-  if (!item) {
+  const looked = await fetchBasicCard(opts.kind, opts.id);
+  if (looked.status === 'closed') {
     showCardUnavailable();
     return 'unavailable';
+  }
+  let item = looked.status === 'open' ? looked.item : null;
+  if (!item) {
+    const local = resolveDetailItem(opts.kind, opts.id);
+    if (!local || isClosedCard(local)) {
+      showCardCheckFailed();
+      return 'error';
+    }
+    item = local;
   }
   openDetailModal({
     kind: opts.kind,
@@ -149,14 +153,14 @@ export function bindNeighborhoodGreetingEditor(root, rerender) {
     errorEl.hidden = !message;
     errorEl.textContent = message || '';
   };
-  editor.querySelector('[data-ng-save]')?.addEventListener('click', () => {
+  editor.querySelector('[data-ng-save]')?.addEventListener('click', async () => {
     const text = editor.querySelector('[data-ng-body]')?.value || '';
     const error = greetingError(text);
     if (error) {
       showError(error);
       return;
     }
-    const saved = publishGreeting({
+    const saved = await publishGreeting({
       providerType: editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room',
       registrationId: Number(editor.getAttribute('data-ng-id') || 0),
       body: text,
@@ -169,16 +173,84 @@ export function bindNeighborhoodGreetingEditor(root, rerender) {
     }
     rerender();
   });
-  editor.querySelector('[data-ng-down]')?.addEventListener('click', () => {
-    unpublishGreeting(
+  editor.querySelector('[data-ng-down]')?.addEventListener('click', async () => {
+    const saved = await unpublishGreeting(
       editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room',
       Number(editor.getAttribute('data-ng-id') || 0),
     );
+    if (!saved.ok) {
+      showError(saved.error);
+      return;
+    }
     rerender();
   });
 }
 
+function openGreetingLoginGate() {
+  document.getElementById('ng-login-gate')?.remove();
+  const el = document.createElement('div');
+  el.id = 'ng-login-gate';
+  el.className = 'ng-unavailable';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.innerHTML = `
+    <div class="ng-unavailable__card">
+      <p>로그인하면 카드를 볼 수 있어요</p>
+    </div>`;
+  const close = () => el.remove();
+  el.addEventListener('click', (event) => {
+    if (event.target === el) close();
+  });
+  const onKey = (event) => {
+    if (event.key !== 'Escape') return;
+    document.removeEventListener('keydown', onKey);
+    close();
+  };
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(el);
+}
+
+/** @param {object | null | undefined} item */
+function isClosedCard(item) {
+  if (!item) return true;
+  if (item.deleted_at) return true;
+  const status = String(item.profile_status || '');
+  return status === 'hidden' || status === 'deleted';
+}
+
+/**
+ * @param {'study_room'|'tutor'} kind
+ * @param {number} id
+ * @returns {Promise<{ status: 'open', item: object } | { status: 'closed' } | { status: 'error' }>}
+ */
+async function fetchBasicCard(kind, id) {
+  try {
+    const params = new URLSearchParams({
+      provider_type: kind,
+      registration_id: String(id),
+    });
+    const res = await fetch(`/api/neighborhood-greeting-card.php?${params}`, { credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 404 || data.error === 'unavailable') return { status: 'closed' };
+    if (!res.ok || !data.item || isClosedCard(data.item)) {
+      return !res.ok ? { status: 'error' } : { status: 'closed' };
+    }
+    return { status: 'open', item: data.item };
+  } catch {
+    return { status: 'error' };
+  }
+}
+
+function showCardCheckFailed() {
+  showNotice('카드를 확인하지 못했어요');
+}
+
 function showCardUnavailable() {
+  showNotice('카드를 볼 수 없어요');
+}
+
+/** @param {string} message */
+function showNotice(message) {
   document.getElementById('ng-card-unavailable')?.remove();
   const el = document.createElement('div');
   el.id = 'ng-card-unavailable';
@@ -187,7 +259,7 @@ function showCardUnavailable() {
   el.setAttribute('aria-modal', 'true');
   el.innerHTML = `
     <div class="ng-unavailable__card">
-      <p>카드를 볼 수 없어요</p>
+      <p>${esc(message)}</p>
       <button type="button" class="btn btn--secondary" data-ng-unavailable-close>닫기</button>
     </div>`;
   el.querySelector('[data-ng-unavailable-close]')?.addEventListener('click', () => el.remove());

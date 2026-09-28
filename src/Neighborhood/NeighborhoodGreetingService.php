@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Neighborhood;
 
 use Study114\Database\Connection;
+use Study114\StudyRoom\StudyRoomPublicReadService;
 
 /** 동네 인사 1차. 파일 저장. 랭킹 가산 없음. */
 final class NeighborhoodGreetingService
@@ -156,27 +157,79 @@ final class NeighborhoodGreetingService
         return implode('', array_slice($chars, 0, self::TEASER)) . '…';
     }
 
+    /**
+     * 베이직카드. 없거나 비공개(hidden)·삭제면 null.
+     * draft·published 는 연다.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function basicCard(string $providerType, int $registrationId): ?array
+    {
+        if ($registrationId < 1) {
+            return null;
+        }
+        $pdo = Connection::get();
+        if ($providerType === 'tutor') {
+            return $this->tutorBasicCard($pdo, $registrationId);
+        }
+        return (new StudyRoomPublicReadService($pdo))->getPublishedById($registrationId);
+    }
+
+    /** @return array<string, mixed>|null */
+    private function tutorBasicCard(\PDO $pdo, int $registrationId): ?array
+    {
+        $stmt = $pdo->prepare(
+            'SELECT t.id, t.tutor_display_name, t.main_subject_note, t.profile_status,
+                    t.preferred_fee_amount, t.lessons_per_week, t.minutes_per_lesson,
+                    t.feature_1, t.feature_2, t.feature_3, t.university_name, t.major_name,
+                    t.career_year_band, t.intro_short,
+                    r.dong_name, r.sigungu_name, r.sido_name
+               FROM tutors t
+               LEFT JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.is_primary = 1
+               LEFT JOIN regions r ON r.id = tr.region_id
+              WHERE t.id = ?
+                AND t.profile_status <> \'hidden\'
+              LIMIT 1'
+        );
+        $stmt->execute([$registrationId]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$row) {
+            return null;
+        }
+        $place = trim(implode(' ', array_filter([
+            (string) ($row['sido_name'] ?? ''),
+            (string) ($row['sigungu_name'] ?? ''),
+            (string) ($row['dong_name'] ?? ''),
+        ])));
+        return [
+            'id' => (int) $row['id'],
+            'tutor_display_name' => (string) ($row['tutor_display_name'] ?? ''),
+            'main_subject_note' => (string) ($row['main_subject_note'] ?? ''),
+            'profile_status' => (string) ($row['profile_status'] ?? ''),
+            'preferred_fee_amount' => $row['preferred_fee_amount'] !== null ? (int) $row['preferred_fee_amount'] : null,
+            'lessons_per_week' => $row['lessons_per_week'] !== null ? (int) $row['lessons_per_week'] : null,
+            'minutes_per_lesson' => $row['minutes_per_lesson'] !== null ? (int) $row['minutes_per_lesson'] : null,
+            'feature_1' => (string) ($row['feature_1'] ?? ''),
+            'feature_2' => (string) ($row['feature_2'] ?? ''),
+            'feature_3' => (string) ($row['feature_3'] ?? ''),
+            'university_name' => (string) ($row['university_name'] ?? ''),
+            'major_name' => (string) ($row['major_name'] ?? ''),
+            'career_year_band' => $row['career_year_band'] ?? null,
+            'intro_short' => (string) ($row['intro_short'] ?? ''),
+            'location_label' => $place,
+        ];
+    }
+
     private function assertOwns(int $userId, string $providerType, int $registrationId): void
     {
-        try {
-            $pdo = Connection::get();
-        } catch (\Throwable) {
-            return;
-        }
+        $pdo = Connection::get();
         $sql = $providerType === 'tutor'
             ? 'SELECT user_id FROM tutors WHERE id = ? LIMIT 1'
-            : 'SELECT user_id FROM study_rooms WHERE id = ? LIMIT 1';
-        try {
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$registrationId]);
-            $owner = $stmt->fetchColumn();
-        } catch (\Throwable) {
-            return;
-        }
-        if ($owner === false) {
-            return;
-        }
-        if ((int) $owner !== $userId) {
+            : 'SELECT user_id FROM study_rooms WHERE id = ? AND deleted_at IS NULL LIMIT 1';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$registrationId]);
+        $owner = $stmt->fetchColumn();
+        if ($owner === false || (int) $owner !== $userId) {
             throw new \InvalidArgumentException('이 등록에는 인사를 올릴 수 없어요.');
         }
     }

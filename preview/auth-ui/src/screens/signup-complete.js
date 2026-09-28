@@ -8,7 +8,7 @@ import {
   TUTOR_UI_BASE,
   homeUiUrl,
 } from '../../../shared/preview-links.js';
-import { publishGreeting, withGreetingHandoff } from '../../../shared/neighborhood-greeting-store.js';
+import { publishGreeting } from '../../../shared/neighborhood-greeting-store.js';
 
 const PROMPT_DONE_KEY = 'study114-ng-prompt-done';
 
@@ -41,17 +41,25 @@ function providerDisplayName(role, basic) {
   return basic?.tutor_display_name || '과외쌤';
 }
 
-function renderGreetingPrompt() {
-  if (promptDone()) return '';
+function roleHomeUrl(role) {
+  if (role === 'study_room') return homeUiUrl('study-room');
+  if (role === 'tutor') return homeUiUrl('tutor');
+  return homeUiUrl('parent');
+}
+
+function renderGreetingModal() {
   return `
-    <div class="ng-prompt" data-ng-prompt>
-      <p class="auth-section-title">동네에 인사할까요?</p>
-      <label class="form-label" for="ng-body">한 줄 인사 (80자, 선택)</label>
-      <textarea class="form-input" id="ng-body" maxlength="80" rows="2" data-ng-body></textarea>
-      <p class="form-note form-note--error" data-ng-error hidden></p>
-      <div class="actions-stack">
-        <button type="button" class="btn btn--secondary btn--block" data-ng-publish>올리기</button>
-        <button type="button" class="btn btn--secondary btn--block" data-ng-skip>건너뛰기</button>
+    <div class="ng-prompt-modal" data-ng-prompt role="dialog" aria-modal="true" aria-labelledby="ng-prompt-title">
+      <div class="ng-prompt-modal__card">
+        <h2 id="ng-prompt-title" class="ng-prompt-modal__title">동네에 인사할까요?</h2>
+        <p class="ng-prompt-modal__lead">같은 동네 학생에게 한 줄만 보여요. 건너뛰어도 바로 쓸 수 있어요.</p>
+        <label class="form-label" for="ng-body">한 줄</label>
+        <textarea class="form-input" id="ng-body" maxlength="80" rows="2" data-ng-body></textarea>
+        <p class="form-note form-note--error" data-ng-error hidden></p>
+        <div class="ng-prompt-modal__actions">
+          <button type="button" class="btn btn--secondary" data-ng-publish>인사 올리기</button>
+          <button type="button" class="btn btn--secondary" data-ng-skip>건너뛰기</button>
+        </div>
       </div>
     </div>`;
 }
@@ -163,8 +171,6 @@ export function renderSignupComplete() {
         <dd>${summarizeBasic(role, basic)}</dd>
       </dl>
 
-      ${renderGreetingPrompt()}
-
       <div class="detail-cta panel panel--muted mt-6">
         <p class="auth-section-title">다음 · 상세등록 (선택)</p>
         <p class="form-note">
@@ -190,19 +196,25 @@ export function renderSignupComplete() {
 
 export function bindSignupCompleteEvents(root) {
   bindGlobalEvents(root);
-  let postedGreeting = null;
   const roleNow = signupState.role || 'student';
   const basicNow = signupState.basicRegister?.[roleNow];
-  root.querySelector('[data-ng-skip]')?.addEventListener('click', () => {
+  document.querySelectorAll('[data-ng-prompt]').forEach((el) => el.remove());
+  if ((roleNow === 'study_room' || roleNow === 'tutor') && !promptDone()) {
+    document.body.insertAdjacentHTML('beforeend', renderGreetingModal());
+  }
+  const goRoleHome = () => {
     markPromptDone();
-    root.querySelector('[data-ng-prompt]')?.remove();
+    window.location.assign(roleHomeUrl(roleNow));
+  };
+  document.querySelector('[data-ng-skip]')?.addEventListener('click', () => {
+    goRoleHome();
   });
-  root.querySelector('[data-ng-publish]')?.addEventListener('click', () => {
-    const errorEl = root.querySelector('[data-ng-error]');
-    const saved = publishGreeting({
+  document.querySelector('[data-ng-publish]')?.addEventListener('click', async () => {
+    const errorEl = document.querySelector('[data-ng-error]');
+    const saved = await publishGreeting({
       providerType: roleNow === 'tutor' ? 'tutor' : 'study_room',
       registrationId: Number(signupState.basicRegisterResult?.id || 0),
-      body: root.querySelector('[data-ng-body]')?.value || '',
+      body: document.querySelector('[data-ng-body]')?.value || '',
       neighborhood: providerNeighborhood(roleNow, basicNow),
       displayName: providerDisplayName(roleNow, basicNow),
     });
@@ -213,12 +225,8 @@ export function bindSignupCompleteEvents(root) {
       }
       return;
     }
-    postedGreeting = saved.record;
-    markPromptDone();
-    const prompt = root.querySelector('[data-ng-prompt]');
-    if (prompt) prompt.innerHTML = '<p class="auth-section-title">인사를 올렸어요.</p>';
+    goRoleHome();
   });
-  const assignWithGreeting = (url) => window.location.assign(withGreetingHandoff(url, postedGreeting));
 
   fetchMeApi()
     .then((me) => {
@@ -236,11 +244,11 @@ export function bindSignupCompleteEvents(root) {
     const role = signupState.role || 'student';
     // 가입 이어가기: 새 탭 금지. 과외쌤과 같이 같은 창에서 연다.
     if (role === 'study_room') {
-      assignWithGreeting(STUDY_ROOM_UI_BASE);
+      window.location.assign(STUDY_ROOM_UI_BASE);
       return;
     }
     if (role === 'tutor') {
-      assignWithGreeting(TUTOR_UI_BASE);
+      window.location.assign(TUTOR_UI_BASE);
       return;
     }
     window.location.assign(`${HOME_UI_BASE}/#/mypage/registrations/students`);
@@ -298,7 +306,7 @@ export function bindSignupCompleteEvents(root) {
 
     const home =
       role === 'study_room' ? homeUiUrl('study-room') : role === 'tutor' ? homeUiUrl('tutor') : homeUiUrl('parent');
-    assignWithGreeting(home);
+    window.location.assign(home);
   });
 
   root.querySelector('[data-nav="/login"]')?.addEventListener('click', () => {
