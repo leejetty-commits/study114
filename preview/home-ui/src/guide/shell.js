@@ -1,12 +1,11 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
-import { getNavRole } from '../state.js';
+import { getNavRole, sessionMainHomePath } from '../state.js';
 import { getAuthUser } from '../auth-session.js';
-import { memberHomeHashPath } from '../nav-config.js';
 import { renderGuidePageTitle, renderGuideNav } from './nav.js';
 
 export function renderGuideShell(currentPath, bodyHtml) {
   const role = getNavRole();
-  const sub = memberHomeHashPath(getAuthUser());
+  const sub = sessionMainHomePath(getAuthUser());
 
   const mainHtml = `
     <div class="guide-layout">

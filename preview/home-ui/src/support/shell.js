@@ -1,7 +1,6 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
-import { getNavRole } from '../state.js';
+import { getNavRole, sessionMainHomePath } from '../state.js';
 import { getAuthUser } from '../auth-session.js';
-import { memberHomeHashPath } from '../nav-config.js';
 import { renderPageTitle, renderSupportNav } from './nav.js';
 
 /**
@@ -10,7 +9,7 @@ import { renderPageTitle, renderSupportNav } from './nav.js';
  */
 export function renderSupportShell(currentPath, bodyHtml) {
   const role = getNavRole();
-  const sub = memberHomeHashPath(getAuthUser());
+  const sub = sessionMainHomePath(getAuthUser());
 
   const mainHtml = `
     <div class="sup-layout">

@@ -4,7 +4,8 @@
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
 import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES, getStudyRoomEntryPath, getTutorEntryPath } from './mypage/router.js';
-import { isStudyRoomAuth } from './auth-role.js';
+import { authRoleType, isStudyRoomAuth } from './auth-role.js';
+import { roleHomeHashPath } from './nav-config.js';
 import { studyRoomLegacyExposureRedirect } from './study-room-reg/router.js';
 import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
 import {
@@ -127,6 +128,28 @@ export function getGuestListPage(listId) {
   return previewState.guestListPages[listId] || 1;
 }
 
+/** 로그인 스냅. 없으면 ''. guide/support context·ACTIVE_ROLE보다 우선. */
+function sessionNavRole() {
+  const roleType = authRoleType();
+  if (!roleType) return '';
+  if (roleType === 'admin') return 'admin';
+  if (roleType === 'study_room_owner') return 'study_room';
+  if (roleType === 'tutor') return 'tutor';
+  return 'parent';
+}
+
+/**
+ * 가이드·고객센터 「메인 홈으로」.
+ * 실세션(user 또는 auth 스냅)만 사용한다. stale guest/타역할 context는 쓰지 않는다.
+ * @param {{ role_type?: string } | null | undefined} user
+ */
+export function sessionMainHomePath(user) {
+  if (user?.role_type) return roleHomeHashPath(user);
+  const snap = authRoleType();
+  if (snap) return roleHomeHashPath({ role_type: snap });
+  return '/guest';
+}
+
 export function getNavRole() {
   if (isPlansRoute() || isRegisterIntroRoute()) {
     // plans·등록 intro 헤더 GNB는 layout.resolveHeaderGnbRole이 세션을 우선한다.
@@ -136,15 +159,19 @@ export function getNavRole() {
   if (isMypageRoute() || isMessagesRoute()) {
     return getActiveRole();
   }
-  if (isGuideRoute()) {
-    return getGuideContextRole();
+  if (isGuideRoute() || isSupportRoute()) {
+    const live = sessionNavRole();
+    if (live) return live;
+    return isGuideRoute() ? getGuideContextRole() : getSupportContextRole();
   }
-  if (isSupportRoute()) {
-    return getSupportContextRole();
+  // 비로그인 커뮤니티·홍보는 stale ACTIVE_ROLE(parent 등)로 #/parent를 타지 않는다.
+  if (isCommunityRoute() || isPromoRoute()) {
+    const live = sessionNavRole();
+    return live || 'guest';
   }
-  // 커뮤니티·홍보·자료실·마이샵은 역할 홈이 아님 — SCREEN_META에 없어 guest로 떨어지면
+  // 자료실·마이샵은 역할 홈이 아님 — SCREEN_META에 없어 guest로 떨어지면
   // 셸/레일 맥락이 깨지고 GNB·동선이 흔들린다. 저장된 활성 역할만 쓰고, 없으면 guest.
-  if (isCommunityRoute() || isPromoRoute() || isMyshopRoute() || isLibraryRoute()) {
+  if (isMyshopRoute() || isLibraryRoute()) {
     const stored = sessionStorage.getItem(ACTIVE_ROLE_KEY);
     if (stored === 'parent' || stored === 'study_room' || stored === 'tutor') return stored;
     return 'guest';

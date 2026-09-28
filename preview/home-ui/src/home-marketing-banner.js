@@ -4,11 +4,11 @@
  */
 
 import { AUTH_UI_BASE } from './data.js';
-import { searchUiUrl, HOME_UI_BASE, memberHomeHashPath } from './nav-config.js';
+import { searchUiUrl, HOME_UI_BASE } from './nav-config.js';
+import { homeHashUrl, roleHomeHashPath } from '../../shared/site-nav-config.js';
 import { getAuthUser } from './auth-session.js';
 
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
-const HOME_GUEST = `${HOME_UI_BASE}/#/guest`;
 const HOME_MESSAGES = `${HOME_UI_BASE}/#/mypage/messages`;
 const HOME_PLANS = `${HOME_UI_BASE}/#/plans`;
 
@@ -173,7 +173,7 @@ const SURFACE_BANNER = {
     image: '/assets/banners/room.webp',
     ctas: [
       { label: '우리동네 과외쌤 찾기', href: searchUiUrl('tutor'), external: true, kind: 'primary' },
-      { label: '홈으로', href: HOME_GUEST, external: true, kind: 'secondary' },
+      { label: '홈으로', href: '', external: true, kind: 'secondary' },
     ],
   },
   search_tutor: {
@@ -182,7 +182,7 @@ const SURFACE_BANNER = {
     image: '/assets/banners/explore.webp',
     ctas: [
       { label: '우리동네 공부방 찾기', href: searchUiUrl('room'), external: true, kind: 'primary' },
-      { label: '홈으로', href: HOME_GUEST, external: true, kind: 'secondary' },
+      { label: '홈으로', href: '', external: true, kind: 'secondary' },
     ],
   },
   search_student: {
@@ -267,9 +267,7 @@ export function renderHomeMarketingBanner(surface, ctaOverride = null, beforeAct
   const actions = (ctaOverride || cfg.ctas || [])
     .map((c) => {
       if (c.label !== '홈으로') return renderCta(c);
-      const path = memberHomeHashPath(getAuthUser());
-      const href = `${String(HOME_UI_BASE).replace(/\/$/, '')}/#${path}`;
-      return renderCta({ ...c, href });
+      return renderCta({ ...c, href: homeHashUrl(roleHomeHashPath(getAuthUser())), external: true });
     })
     .join('');
 
