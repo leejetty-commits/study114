@@ -39,8 +39,13 @@ assert(
   'complete: tutor detail CTA must not window.open(TUTOR_UI_BASE, _blank)',
 );
 assert(
-  /if \(role === 'tutor'\) \{\s*window\.location\.assign\(home\);\s*return;/.test(complete),
-  'complete: tutor home CTA uses location.assign(home) then return',
+  complete.includes('window.location.assign(home)') &&
+    !/if \(role === 'tutor'\) \{\s*window\.location\.assign\(home\);\s*return;/.test(complete),
+  'complete: shared location.assign(home) for all roles (no tutor-only branch)',
+);
+assert(
+  !complete.includes('window.open(home') && !complete.includes("window.open(home"),
+  'complete: home CTA must not window.open',
 );
 
 // —— 이메일 확인 후 / 기본등록: 같은 탭 이동 (window.open 없음)
