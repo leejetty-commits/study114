@@ -238,7 +238,7 @@ export function screenTitle(screenId, path, role) {
     if (paidId) return paidScreenTitle(paidId);
   }
   const map = {
-    'P15-01': '마이페이지 홈',
+    'P15-01': '내 등록',
     'P15-02': '내 등록',
     'P15-03': '학생',
     'P15-04': '공부방 목록',

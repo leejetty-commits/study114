@@ -8,9 +8,7 @@ import {
   PARENT_NAV_PATHS,
   getScreenIdForPath,
   screenTitle,
-  getStudyRoomEntryPath,
-  getTutorEntryPath,
-  getParentStudentProfilePath,
+  getDefaultMypagePath,
   mypageNavLabel,
 } from './router.js';
 
@@ -33,10 +31,7 @@ function renderBreadcrumb(currentPath, title, role) {
   const primary = MYPAGE_NAV.filter((item) => !item.roles || item.roles.includes(role)).find((item) =>
     navItemIsActive(item, currentPath),
   );
-  const homePath =
-    role === 'parent'
-      ? getParentStudentProfilePath() || '/mypage/registrations/students'
-      : '/mypage/registrations';
+  const homePath = getDefaultMypagePath(role);
   const parts = [{ label: '마이페이지', path: homePath }];
   if (primary) {
     parts.push({ label: mypageNavLabel(primary, role), path: primary.path });
@@ -66,7 +61,13 @@ function renderBreadcrumb(currentPath, title, role) {
  */
 export function renderMypageShell(currentPath, bodyHtml) {
   const sessionRole = navRoleFromAuthUser(getAuthUser());
-  const role = sessionRole === 'study_room' ? 'study_room' : getNavRole();
+  const navRole = getNavRole();
+  const role =
+    sessionRole === 'study_room' || sessionRole === 'tutor' || sessionRole === 'parent'
+      ? sessionRole
+      : navRole === 'study_room' || navRole === 'tutor' || navRole === 'parent'
+        ? navRole
+        : 'parent';
   const screenId = getScreenIdForPath(currentPath);
   const title = screenTitle(screenId, currentPath, role);
   const authUser = getAuthUser();
@@ -97,14 +98,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
       : visibleNav;
   const navItems = orderedNav
     .map((item) => {
-    const href =
-      item.path === '/mypage/registrations' && role === 'parent'
-        ? getParentStudentProfilePath() || item.path
-        : item.path === '/mypage/registrations' && role === 'study_room'
-        ? getStudyRoomEntryPath()
-        : item.path === '/mypage/registrations' && role === 'tutor'
-          ? getTutorEntryPath()
-          : item.path;
+    const href = item.path === '/mypage/registrations' ? getDefaultMypagePath(role) : item.path;
     const active = navItemIsActive(item, currentPath);
     const emph = item.emphasis?.includes(role) ? ' is-emphasis' : '';
     return `

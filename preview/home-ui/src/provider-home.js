@@ -4,7 +4,7 @@
 
 import { searchUiUrl } from '../../shared/preview-links.js';
 import { peekStudyRoomPromo1, studyRoomPromo1Dong } from './study-room-home-seed.js';
-import { MOCK_TUTOR_REGIONS } from '@search-ui/search-schema.js';
+import { tutorHomePrimaryLabel } from './tutor-home-seed.js';
 import {
   renderCompactFindForm,
   renderFindFilterBar,
@@ -182,7 +182,7 @@ function escSnap(value) {
 }
 
 function tutorPrimaryPlace() {
-  return MOCK_TUTOR_REGIONS.find((region) => region.primary)?.label || MOCK_TUTOR_REGIONS[0]?.label || '우리동네';
+  return tutorHomePrimaryLabel() || '서울시';
 }
 
 function renderStudentDemandSnapshot(role = 'study_room') {

@@ -752,7 +752,7 @@ export function bootstrapMypageRoute() {
     return true;
   }
 
-  if (path === '/mypage' || path === '/mypage/') {
+  if (path === '/mypage' || path === '/mypage/' || path === '/mypage/home') {
     window.location.replace(`#${studyRoomMypageEntry(path) || getDefaultMypagePath(getNavRole())}`);
     return true;
   }
@@ -889,6 +889,9 @@ export function getMypagePath() {
   const pathOnly = path.split('?')[0];
   const roomEntry = studyRoomMypageEntry(pathOnly);
   if (roomEntry) return roomEntry;
+  if (pathOnly === '/mypage/home') {
+    return getDefaultMypagePath(getNavRole());
+  }
   const normalized = normalizeMypagePath(pathOnly);
   if (normalized) return normalized;
   return studyRoomMypageEntry('/mypage') || getDefaultMypagePath(getNavRole());

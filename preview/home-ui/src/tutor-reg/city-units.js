@@ -12,7 +12,7 @@ let loadPromise = null;
 let lastError = '';
 
 export function tutorCityUnitsReady() {
-  return cities.length > 0;
+  return getTutorCityUnits().length > 0;
 }
 
 export function tutorCityUnitsError() {
@@ -21,7 +21,15 @@ export function tutorCityUnitsError() {
 
 export function getTutorCityUnits() {
   if (!cities.length) return [];
-  return getCityUnits(cities);
+  return getCityUnits(cities).filter((u) => /^\d+$/.test(String(u.id || '')));
+}
+
+/** 실패 뒤 「다시 불러오기」. 이전 빈 캐시를 지우고 다시 요청한다. */
+export function retryTutorCityUnits() {
+  cities = [];
+  lastError = '';
+  loadPromise = null;
+  return ensureTutorCityUnits();
 }
 
 function applyCities(list) {
@@ -33,22 +41,63 @@ function applyCities(list) {
     sido_name: String(c.sido_name || c.label || ''),
     kind: c.kind === 'metro' || c.kind === 'city' ? c.kind : undefined,
   }));
-  return cities.length > 0;
+  if (!getTutorCityUnits().length) {
+    cities = [];
+    return false;
+  }
+  return true;
+}
+
+async function readCitiesPayload(res) {
+  const text = await res.text();
+  const body = text.trim();
+  if (!body.startsWith('{')) return null;
+  try {
+    return JSON.parse(body);
+  } catch {
+    return null;
+  }
 }
 
 async function fetchCitiesOnce() {
-  const res = await fetch('/api/auth/regions.php?action=cities', {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-    credentials: 'omit',
-  });
-  const data = await res.json().catch(() => ({}));
-  const list = Array.isArray(data.cities) ? data.cities : [];
-  if (data.ok !== false && applyCities(list)) {
-    lastError = '';
-    return;
+  const calls = [
+    () =>
+      fetch('/api/auth/regions.php?action=cities', {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        credentials: 'omit',
+      }),
+    () =>
+      fetch('/api/auth/regions.php', {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        credentials: 'omit',
+        body: JSON.stringify({ action: 'cities' }),
+      }),
+    () =>
+      fetch('/api/auth/regions.php', {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        credentials: 'omit',
+        body: JSON.stringify({ action: 'list' }),
+      }),
+  ];
+  let last = new Error('과외지역 목록을 불러오지 못했습니다.');
+  for (const call of calls) {
+    try {
+      const res = await call();
+      const data = await readCitiesPayload(res);
+      const list = Array.isArray(data?.cities) ? data.cities : [];
+      if (data && data.ok !== false && applyCities(list)) {
+        lastError = '';
+        return;
+      }
+      last = new Error(data?.message || '과외지역 목록을 불러오지 못했습니다.');
+    } catch (err) {
+      last = err instanceof Error ? err : last;
+    }
   }
-  throw new Error(data.message || '과외지역 목록을 불러오지 못했습니다.');
+  throw last;
 }
 
 /** @returns {Promise<boolean>} true면 이번에 새로 불러와 재렌더가 필요 */

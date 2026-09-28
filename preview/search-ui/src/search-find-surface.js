@@ -20,6 +20,7 @@ import {
   studyRoomPromo1Dong,
   studyRoomPromo1RegionId,
 } from '@home-ui/study-room-home-seed.js';
+import { tutorHomePrimaryLabel, tutorHomeRegionLabel, tutorHomeRegionsReady, readTutorHomeRegions } from '@home-ui/tutor-home-seed.js';
 import { isProviderSelfPreviewMode } from './search-role-access.js';
 import { renderSearchMapBlock, bindSearchMapPinLinks } from './search-map.js';
 import { renderSearchTierResults } from './search-tier-render.js';
@@ -249,7 +250,7 @@ export function hydrateFindStateFromHash(state, tab) {
           hope === 'study_room' ? GUEST_DEFAULT_REGIONS.room : GUEST_DEFAULT_REGIONS.student,
         )
       : tab === 'tutor'
-        ? getTutorRegionLabel(resolveTutorRegionIndex(state))
+        ? (viewerRoleEarly === 'tutor' ? tutorHomeRegionLabel(resolveTutorRegionIndex(state)) : getTutorRegionLabel(resolveTutorRegionIndex(state)))
         : resolveFindDefaultRegion('study_room', GUEST_DEFAULT_REGIONS.room);
   const fallback =
     tab === 'room' ? MOCK_REGIONS.room : tab === 'tutor' ? MOCK_REGIONS.tutor : MOCK_REGIONS.student;
@@ -462,13 +463,30 @@ export async function bootFindGpsIfNeeded(state, tab, rerender) {
 /** @param {FindSurfaceState} state */
 function resolveTutorRegionIndex(state) {
   const idx = state.tutorRegionIndex ?? 0;
-  return idx >= 0 && idx < MOCK_TUTOR_REGIONS.length ? idx : 0;
+  const count = tutorHomeRegionsReady() ? 3 : MOCK_TUTOR_REGIONS.length;
+  return idx >= 0 && idx < count ? idx : 0;
+}
+
+function isTutorMockCityLabel(label) {
+  const text = String(label || '').trim();
+  return text === '서울시' || text === '부산시' || text === '인천시';
+}
+
+/** 과외쌤 홈 칩·지역 라벨. saved_regions[idx].label. MOCK 시 이름은 쓰지 않는다. */
+function tutorSavedSlotLabel(state) {
+  return tutorHomeRegionLabel(resolveTutorRegionIndex(state));
+}
+
+function readTutorHomeRegionsForTabs() {
+  const loaded = readTutorHomeRegions();
+  const slots = Array.isArray(loaded) ? loaded.slice(0, 3) : [];
+  while (slots.length < 3) slots.push({ label: '', primary: false });
+  return slots;
 }
 
 /** 과외쌤 로그인 지역대표(활동지역1). 현재위치 문구만 이 값을 쓴다. */
 export function tutorRepresentativeRegionLabel() {
-  const primary = MOCK_TUTOR_REGIONS.find((region) => region.primary);
-  return primary?.label || MOCK_TUTOR_REGIONS[0]?.label || '';
+  return tutorHomePrimaryLabel();
 }
 
 /** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} role */
@@ -599,11 +617,16 @@ export function resolveActiveRegionLabel(tab, state, role) {
     }
   }
   // 세션/URL에서 이미 잡힌 값이 있으면 최우선 (MOCK으로 덮지 않음)
-  if (state.activeRegionLabel) {
+  if (viewer === 'tutor' && tab === 'tutor') {
+    const kept = isTutorMockCityLabel(state.activeRegionLabel) ? '' : String(state.activeRegionLabel || '').trim();
+    return canonicalRegionLabel(kept || tutorSavedSlotLabel(state), tab, state);
+  }
+  if (state.activeRegionLabel && !(viewer === 'tutor' && isTutorMockCityLabel(state.activeRegionLabel))) {
     return canonicalRegionLabel(state.activeRegionLabel, tab, state);
   }
   if (tab === 'tutor') {
-    return canonicalRegionLabel(getTutorRegionLabel(resolveTutorRegionIndex(state)), tab, state);
+    const label = viewer === 'tutor' ? tutorSavedSlotLabel(state) : getTutorRegionLabel(resolveTutorRegionIndex(state));
+    return canonicalRegionLabel(label, tab, state);
   }
   if (tab === 'room') return canonicalRegionLabel(MOCK_REGIONS.room, tab, state);
   const hope =
@@ -620,11 +643,14 @@ export function resolveActiveRegionLabel(tab, state, role) {
  * @param {Record<string, unknown>} filters
  * @param {FindSurfaceState} state
  */
-function regionLabelFromFilters(tab, filters, state) {
+function regionLabelFromFilters(tab, filters, state, role) {
+  const viewer = role || state.role || 'guest';
   let raw = '';
   if (tab === 'tutor') {
     raw = String(filters.tutor_region_id || filters.tutor_region_label || '').trim();
-    if (!raw) raw = getTutorRegionLabel(resolveTutorRegionIndex(state));
+    if (!raw || (viewer === 'tutor' && isTutorMockCityLabel(raw))) {
+      raw = viewer === 'tutor' ? tutorSavedSlotLabel(state) : getTutorRegionLabel(resolveTutorRegionIndex(state));
+    }
   } else if (tab === 'room') {
     raw =
       String(filters.region_label || filters.region_id || '').trim() ||
@@ -634,6 +660,7 @@ function regionLabelFromFilters(tab, filters, state) {
     raw = String(
       filters.preferred_region_label || filters.preferred_region || filters.region_label || '',
     ).trim();
+    if (viewer === 'tutor' && isTutorMockCityLabel(raw)) raw = tutorHomePrimaryLabel();
     if (!raw) {
       const promo = state.role === 'study_room' ? peekStudyRoomPromo1() : '';
       if (promo) {
@@ -728,8 +755,11 @@ export function refreshActiveResultItems(tab, state, role) {
     state.studentDemandPending = feed.pending === true;
     state.activeResultItems = items;
     state.activeResultSource = 'region';
-    // feed가 돌려준 라벨과 동일 축으로 정규화 — MOCK 덮어쓰기 금지
-    state.activeRegionLabel = canonicalRegionLabel(feedLabel || regionLabel, tab, state);
+    let nextLabel = feedLabel || regionLabel;
+    if (role === 'tutor' && isTutorMockCityLabel(nextLabel)) {
+      nextLabel = tutorSavedSlotLabel(state);
+    }
+    state.activeRegionLabel = canonicalRegionLabel(nextLabel, tab, state);
     logLocationDebug('list-fetch', {
       tab,
       mode: 'region',
@@ -1046,11 +1076,16 @@ function renderBasicRows(fields, state, compact = false) {
  */
 function renderTutorRegionTabs(state, options = {}) {
   const variant = options.variant || 'search';
+  const role = options.role || state.role || 'parent';
   const activeIdx = resolveTutorRegionIndex(state);
-  const tabs = MOCK_TUTOR_REGIONS.map((region, idx) => {
+  const saved = role === 'tutor' ? readTutorHomeRegionsForTabs() : null;
+  if (role === 'tutor' && !saved.some((region) => region.label)) return '';
+  const regions = saved || MOCK_TUTOR_REGIONS.map((region) => ({ label: region.label, primary: region.primary }));
+  const tabs = regions.map((region, idx) => {
     const cls = ['tutor-region-tabs__btn', idx === activeIdx ? 'is-active' : ''].filter(Boolean).join(' ');
     const primaryMark = region.primary ? '<span class="tutor-region-tabs__primary">대표</span>' : '';
-    return `<button type="button" class="${cls}" data-tutor-region="${idx}" role="tab" aria-selected="${idx === activeIdx}">${esc(region.label)}${primaryMark}</button>`;
+    const text = region.label || '미선택';
+    return `<button type="button" class="${cls}" data-tutor-region="${idx}" role="tab" aria-selected="${idx === activeIdx}">${esc(text)}${primaryMark}</button>`;
   }).join('');
 
   const label = variant === 'home' ? '희망 지역' : '활동 지역 (3)';
@@ -1094,22 +1129,24 @@ export function renderCompactRegionBar(tab, state, options = {}) {
         </div>`;
     }
     if (variant === 'home') {
+      const tabs = renderTutorRegionTabs(state, { variant, role });
+      if (role === 'tutor' && !tabs) return '';
       const badge = role === 'tutor' ? '활동 지역' : '희망 지역';
       return `
         <div class="parent-home-region parent-home-region--tutor" aria-label="${esc(badge)}">
           <span class="parent-home-region__badge">${esc(badge)}</span>
-          ${renderTutorRegionTabs(state, { variant })}
+          ${tabs}
         </div>`;
     }
     return `
       <div class="search-region-auto search-region-auto--compact search-region-auto--tutor">
-        ${renderTutorRegionTabs(state, { variant })}
+        ${renderTutorRegionTabs(state, { variant, role })}
         ${renderTutorRegionHint(role)}
       </div>`;
   }
 
   const regionKey = tab === 'room' ? 'room' : 'student';
-  const regionLabel = resolveActiveRegionLabel(tab, state) || MOCK_REGIONS[regionKey];
+  const regionLabel = resolveActiveRegionLabel(tab, state, role) || MOCK_REGIONS[regionKey];
   if (variant === 'home') {
     const badge = tab === 'room' ? '우리동네' : '탐색 지역';
     const changeBtn =
@@ -1281,10 +1318,12 @@ export function renderFindResultSection(tab, state, role, options = {}) {
     regionLabel = studentCurrentPlace(regionLabel);
   }
   if (role === 'tutor' && tab === 'student' && surfaceType === 'search') {
-    regionLabel = tutorRepresentativeRegionLabel() || regionLabel;
+    const saved = tutorRepresentativeRegionLabel();
+    if (saved) regionLabel = saved;
   }
   if (role === 'tutor' && surfaceType === 'home' && !state.searchExecuted) {
-    regionLabel = tutorRepresentativeRegionLabel() || regionLabel;
+    const slot = tutorHomeRegionLabel(resolveTutorRegionIndex(state));
+    regionLabel = slot || (tutorHomeRegionsReady() ? tutorRepresentativeRegionLabel() : '');
   }
 
   if (tab === 'student' && role === 'study_room' && !state.searchExecuted && state.studentDemandPending) {
@@ -1391,7 +1430,7 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
   }
   writeStoredFilters(tab, state.lastSearchFilters);
 
-  const regionText = regionLabelFromFilters(tab, filters, state);
+  const regionText = regionLabelFromFilters(tab, filters, state, role);
   const axis = locationAxisForState(tab, state);
   applyCanonicalLocation(
     state,
@@ -1481,12 +1520,12 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
     btn.addEventListener('click', () => {
       const idx = Number(btn.dataset.tutorRegion);
       if (Number.isNaN(idx) || resolveTutorRegionIndex(state()) === idx) return;
+      const slotLabel = ctx.role === 'tutor' ? tutorHomeRegionLabel(idx) : getTutorRegionLabel(idx);
       state().tutorRegionIndex = idx;
-      state().activeRegionLabel = canonicalRegionLabel(getTutorRegionLabel(idx), 'tutor', state());
+      state().activeRegionLabel = canonicalRegionLabel(slotLabel, 'tutor', state());
       const form = getForm();
       resetFindSurface(state(), form instanceof HTMLFormElement ? form : undefined, { keepTutorRegion: true });
-      // reset clears activeRegionLabel — restore tutor tab label
-      state().activeRegionLabel = canonicalRegionLabel(getTutorRegionLabel(idx), 'tutor', state());
+      state().activeRegionLabel = canonicalRegionLabel(slotLabel, 'tutor', state());
       refreshActiveResultItems(ctx.getTab(), state(), ctx.role);
       syncFindHashState(state(), ctx.getTab());
       rerender();

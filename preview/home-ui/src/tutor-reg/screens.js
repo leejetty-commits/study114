@@ -39,8 +39,17 @@ import {
   renderTutorRegionSlot,
   bindTutorRegionSlotEvents,
   collectTutorRegionSlots,
+  syncTutorRegionSlotIds,
+  validateTutorActivityRegions,
 } from '../../../shared/tutor-region-slots.js';
-import { ensureTutorCityUnits, getTutorCityUnits, tutorCityUnitsError } from './city-units.js';
+import { activityLabelFromRegionId } from '../../../shared/korea-sidos.js';
+import {
+  ensureTutorCityUnits,
+  getTutorCityUnits,
+  retryTutorCityUnits,
+  tutorCityUnitsError,
+  tutorCityUnitsReady,
+} from './city-units.js';
 import {
   bindNeighborhoodGreetingEditor,
   renderNeighborhoodGreetingEditor,
@@ -275,36 +284,37 @@ function tutorRegionSlotsFromRecord(tutor) {
   ];
 }
 
-function displayLabelForRegionId(regionId, units) {
-  const u = (units || []).find((x) => String(x.id) === String(regionId));
-  if (!u) return '';
-  return u.kind === 'metro' ? u.label : `${u.sido_name} ${u.label}`;
+let basicSaveFlash = '';
+
+function takeBasicSaveFlash() {
+  const message = basicSaveFlash;
+  basicSaveFlash = '';
+  return message;
 }
 
-function numericRegionSlots(slots) {
-  return (slots || [])
-    .filter((s) => /^\d+$/.test(String(s?.region_id || '')))
-    .map((s) => ({
-      region_id: String(s.region_id),
-      scope_type: 'city',
-      is_primary: !!s.is_primary,
-    }));
-}
-
-/** 기본정보 폼 → DB 저장. 성공 후 허브 재조회로 기록값을 읽는다. */
+/** 기본정보 폼 → DB 저장. 도시 목록이 없거나 숫자 region_id가 없으면 저장하지 않는다. */
 async function persistTutorBasicForm(form) {
+  if (!tutorCityUnitsReady()) {
+    throw new Error(
+      tutorCityUnitsError() || '과외지역 목록을 불러오지 못했습니다. 다시 불러온 뒤 저장해 주세요.',
+    );
+  }
   const id = Number(form.dataset.p21TutorId);
   const fd = new FormData(form);
   const units = getTutorCityUnits();
-  const slots = numericRegionSlots(collectTutorRegionSlots(form));
+  syncTutorRegionSlotIds(form, units);
+  const checked = validateTutorActivityRegions(collectTutorRegionSlots(form));
+  if (!checked.ok) throw new Error(checked.message);
+  const slots = checked.slots;
   const primary = slots.find((s) => s.is_primary) || slots[0];
-  if (!primary?.region_id) {
-    throw new Error('과외지역을 1곳 이상 선택해 주세요. (도는 시까지 선택)');
+  const label = activityLabelFromRegionId(primary.region_id, units);
+  if (!label) {
+    throw new Error('과외지역 목록을 다시 불러온 뒤 지역 1을 선택해 주세요.');
   }
   await saveTutorBasicInline(id, {
     tutor_display_name: String(fd.get('tutor_display_name') || ''),
     main_subject_note: String(fd.get('main_subject_note') || ''),
-    primary_region_label: displayLabelForRegionId(primary.region_id, units),
+    primary_region_label: label,
     primary_region_id: primary.region_id,
     saved_regions: slots,
   });
@@ -347,11 +357,12 @@ function renderBasicForm(tutor) {
   const units = getTutorCityUnits();
   const slots = tutorRegionSlotsFromRecord(tutor);
   const cityErr = tutorCityUnitsError();
+  const saveFlash = takeBasicSaveFlash();
   const regionHint = units.length
     ? ''
     : cityErr
       ? `<p class="p19-field__hint">${esc(cityErr)} <button type="button" class="btn btn--ghost btn--sm" data-p21-retry-cities>다시 불러오기</button></p>`
-      : '<p class="p19-field__hint">시 목록을 연결하는 중입니다. 광역시·도는 먼저 선택할 수 있습니다.</p>';
+      : '<p class="p19-field__hint">시 목록을 연결하는 중입니다.</p>';
   const regionSlotsHtml = `${slots
     .map((slot, i) => renderTutorRegionSlot(slot, i, units, { namePrefix: 'p21_' }))
     .join('')}${regionHint}`;
@@ -378,14 +389,16 @@ function renderBasicForm(tutor) {
           </div>
           <div class="register-basic-col" data-trc-field="primary_region">
             <p class="p19-field__label" style="margin:0 0 var(--space-2);">과외지역 ${reqMark()}</p>
-            <p class="p19-field__hint" style="margin-bottom:var(--space-3);">최대 3곳 · 대표 1곳. 기본 단위는 「시」입니다.</p>
+            <p class="p19-field__hint" style="margin-bottom:var(--space-3);">지역 1이 대표입니다. 지역 2·3은 선택입니다. 기본 단위는 「시」입니다.</p>
             ${regionSlotsHtml}
           </div>
         </div>`,
       )}
+      <p class="p21-save-feedback" data-p21-save-feedback role="status" ${saveFlash ? '' : 'hidden'} style="margin:0 0 0.75rem;padding:0.5rem 0.75rem;border-radius:0.5rem;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-weight:600;">${saveFlash ? esc(saveFlash) : ''}</p>
+      <p class="p19-field__hint" data-p21-dirty-hint hidden>변경된 내용이 있습니다. 기본정보 저장을 눌러 주세요.</p>
       ${renderFormFooter(
         '저장해도 바로 공개되지 않습니다. 공개는 등록점검에서 합니다.',
-        `<button type="submit" class="btn btn--primary">기본정보 저장</button>
+        `<button type="submit" class="btn btn--primary" ${units.length ? '' : 'disabled'}>기본정보 저장</button>
          <a href="#${tutorSectionPath(tutor.id, 'detail')}" class="btn btn--secondary" data-p21-nav="${tutorSectionPath(tutor.id, 'detail')}">상세정보로</a>
          <a href="#${tutorSectionPath(tutor.id, 'publish')}" class="btn btn--ghost" data-p21-nav="${tutorSectionPath(tutor.id, 'publish')}">등록점검</a>`,
       )}
@@ -598,6 +611,71 @@ function scrollToTutorRcFocus(root) {
   });
 }
 
+function tutorBasicFieldEmpty(el) {
+  if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement)) {
+    return true;
+  }
+  if (el.type === 'hidden' || el.type === 'radio' || el.type === 'checkbox') return true;
+  return !String(el.value || '').trim();
+}
+
+function paintTutorBasicField(el) {
+  if (!(el instanceof HTMLElement)) return;
+  if (tutorBasicFieldEmpty(el)) {
+    el.style.background = '#fff';
+    return;
+  }
+  el.style.background = document.activeElement === el ? '#fff' : '#f3f4f6';
+}
+
+function showTutorBasicFeedback(form, kind, message) {
+  const box = form.querySelector('[data-p21-save-feedback]');
+  if (!box) return;
+  box.hidden = false;
+  box.textContent = message;
+  if (kind === 'error') {
+    box.style.background = '#fef2f2';
+    box.style.border = '1px solid #fecaca';
+    box.style.color = '#b91c1c';
+  } else {
+    box.style.background = '#ecfdf5';
+    box.style.border = '1px solid #a7f3d0';
+    box.style.color = '#047857';
+  }
+}
+
+function markTutorBasicClean(form) {
+  form.dataset.p21Dirty = '';
+  const hint = form.querySelector('[data-p21-dirty-hint]');
+  if (hint) hint.hidden = true;
+}
+
+function bindTutorBasicFieldChrome(form) {
+  const fields = form.querySelectorAll('input, textarea, select');
+  const markDirty = () => {
+    form.dataset.p21Dirty = '1';
+    const hint = form.querySelector('[data-p21-dirty-hint]');
+    if (hint) hint.hidden = false;
+  };
+  fields.forEach((el) => {
+    paintTutorBasicField(el);
+    el.addEventListener('input', () => {
+      paintTutorBasicField(el);
+      markDirty();
+    });
+    el.addEventListener('change', () => {
+      paintTutorBasicField(el);
+      markDirty();
+    });
+    el.addEventListener('focus', () => {
+      if (el instanceof HTMLElement && el.type !== 'hidden' && el.type !== 'radio' && el.type !== 'checkbox') {
+        el.style.background = '#fff';
+      }
+    });
+    el.addEventListener('blur', () => paintTutorBasicField(el));
+  });
+}
+
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindTutorRegEvents(root, rerender) {
   bindNeighborhoodGreetingEditor(root, rerender);
@@ -619,9 +697,14 @@ export function bindTutorRegEvents(root, rerender) {
 
   root.querySelectorAll('[data-p21-retry-cities]').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      const ok = await ensureTutorCityUnits();
-      if (ok) rerender();
-      else alert(tutorCityUnitsError() || '과외지역 목록을 불러오지 못했습니다.');
+      btn.disabled = true;
+      const ok = await retryTutorCityUnits();
+      btn.disabled = false;
+      if (!ok) {
+        const note = btn.closest('.p19-field__hint');
+        if (note) note.childNodes[0].textContent = `${tutorCityUnitsError() || '과외지역 목록을 불러오지 못했습니다.'} `;
+      }
+      rerender();
     });
   });
 
@@ -640,6 +723,7 @@ export function bindTutorRegEvents(root, rerender) {
   root.querySelectorAll('[data-p21-form]').forEach((form) => {
     if (form.getAttribute('data-p21-form') === 'basic') {
       bindTutorRegionSlotEvents(form, getTutorCityUnits());
+      bindTutorBasicFieldChrome(form);
     }
     form.querySelectorAll('.p19-chip input[type="checkbox"]').forEach((input) => {
       input.addEventListener('change', () => {
@@ -657,6 +741,8 @@ export function bindTutorRegEvents(root, rerender) {
       try {
         if (kind === 'basic') {
           await persistTutorBasicForm(form);
+          basicSaveFlash = '저장되었습니다.';
+          markTutorBasicClean(form);
         } else if (kind === 'detail') {
           const current = getTutor(id) || {};
           await saveTutorDetailInline(id, {
@@ -681,16 +767,22 @@ export function bindTutorRegEvents(root, rerender) {
             contact_time_note: String(fd.get('contact_time_note') || ''),
           });
         }
-        alert('저장되었습니다.');
+        if (kind !== 'basic') alert('저장되었습니다.');
         if (isReturnToRegistrationCheck()) {
+          basicSaveFlash = '';
           window.location.hash = tutorSectionPath(id, 'publish');
           return;
         }
         rerender();
       } catch (err) {
-        alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
+        if (kind === 'basic') {
+          basicSaveFlash = '';
+          showTutorBasicFeedback(form, 'error', err instanceof Error ? err.message : '저장에 실패했습니다.');
+        } else {
+          alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
+        }
       } finally {
-        if (btn) btn.disabled = false;
+        if (btn && (kind !== 'basic' || tutorCityUnitsReady())) btn.disabled = false;
       }
     });
   });

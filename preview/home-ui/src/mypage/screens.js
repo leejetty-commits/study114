@@ -3,14 +3,11 @@ import {
   SUBMISSION_DOCS_LEAD,
   TRUST_PLATFORM_DISCLAIMER,
 } from '../lifecycle-copy.js';
-import { TUTOR_REGISTER_URL, STUDY_ROOM_REGISTER_URL, navRoleFromAuthUser } from '../nav-config.js';
+import { TUTOR_REGISTER_URL, navRoleFromAuthUser } from '../nav-config.js';
 import { getNavRole, getMypagePath } from '../state.js';
 import { isStudyRoomAuth } from '../auth-role.js';
 import {
   getPreviewProfile,
-  getRegistrationData,
-  getSummaryCounts,
-  getPrimaryCta,
   getSubmissionDocs,
   submissionDocStatusLabel,
   submissionDocVisibilityLabel,
@@ -52,6 +49,7 @@ import {
   getStudyRoomEntryPath,
   getTutorEntryPath,
   getParentStudentProfilePath,
+  getDefaultMypagePath,
   isParentLockedMypagePath,
   CONTACT_HISTORY_PATH,
 } from './router.js';
@@ -83,7 +81,6 @@ import { getHistoryRows, loadHistoryRows } from '../plans/history-mock.js';
 import { bindPaidCatalogEvents } from '../paid-checkout.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import {
-  HOME_EMPHASIS,
   EMPTY_ONBOARDING,
   GUARDIAN_PLANS_COPY,
   WISHLIST_NOTE,
@@ -100,40 +97,6 @@ function roleLabel(role) {
   return map[role] || role;
 }
 
-function renderCtaBlock(cta) {
-  if (cta.externalRegister) {
-    const url = cta.kind === 'tutor' ? TUTOR_REGISTER_URL : STUDY_ROOM_REGISTER_URL;
-    return `
-      <div class="mypage-next-action">
-        <div>
-          <span class="mypage-next-action__eyebrow">지금 하면 좋아요</span>
-          <strong class="mypage-next-action__title">${esc(cta.text)}</strong>
-          <p class="mypage-next-action__hint">${esc(cta.hint || '등록 내용을 차근차근 이어서 완성해 보세요.')}</p>
-        </div>
-        <a href="${url}" class="btn btn--primary" data-same-tab-href="${url}">이어하기</a>
-      </div>`;
-  }
-  if (cta.path) {
-    return `
-      <div class="mypage-next-action">
-        <div>
-          <span class="mypage-next-action__eyebrow">지금 하면 좋아요</span>
-          <strong class="mypage-next-action__title">${esc(cta.text)}</strong>
-          <p class="mypage-next-action__hint">${esc(cta.hint || '필요한 내용을 확인하고 다음 단계로 이어가세요.')}</p>
-        </div>
-        <a href="#${cta.path}" class="btn btn--primary" data-mypage-nav="${cta.path}">바로 확인</a>
-      </div>`;
-  }
-  return `
-    <div class="mypage-next-action">
-      <div>
-        <span class="mypage-next-action__eyebrow">오늘의 안내</span>
-        <strong class="mypage-next-action__title">${esc(cta.text)}</strong>
-        <p class="mypage-next-action__hint">${esc(cta.hint || '')}</p>
-      </div>
-    </div>`;
-}
-
 /** @param {string} path */
 export function renderMypageScreen(path) {
   const role = getNavRole();
@@ -142,14 +105,16 @@ export function renderMypageScreen(path) {
   const r =
     sessionRole === 'study_room' || isStudyRoomAuth()
       ? 'study_room'
-      : role === 'guest'
-        ? 'parent'
-        : role;
+      : sessionRole === 'tutor' || sessionRole === 'parent'
+        ? sessionRole
+        : role === 'guest'
+          ? 'parent'
+          : role;
   const profile = getPreviewProfile(r);
-  const counts = getSummaryCounts(r);
-  const cta = getPrimaryCta(r);
 
-  // 공부방: 홈·내 등록·학생 목록 URL이어도 학생 화면을 그리지 않고 등록 허브로 바로 그린다.
+  if (path === '/mypage/home') {
+    return renderMypageScreen(getDefaultMypagePath(r));
+  }
   if (
     r === 'study_room' &&
     (path === '/mypage/home' ||
@@ -176,6 +141,11 @@ export function renderMypageScreen(path) {
     return renderTutorRegScreen('/mypage/registrations/tutors');
   }
 
+  if (r === 'parent' && path === '/mypage/registrations') {
+    const dest = getDefaultMypagePath('parent');
+    if (dest !== path) return renderMypageScreen(dest);
+  }
+
   if (r === 'parent' && isParentLockedMypagePath(path)) {
     const dest = getParentStudentProfilePath();
     if (!dest) return renderStudentCountHalt();
@@ -191,7 +161,6 @@ export function renderMypageScreen(path) {
   if (isStudyRoomRegPath(path)) return renderStudyRoomRegScreen(path);
   if (isTutorRegPath(path)) return renderTutorRegScreen(path);
 
-  if (path === '/mypage/home') return renderHome(r, profile, counts, cta);
   if (path === '/mypage/registrations') return renderRegistrationsIndex(r);
   if (path === '/mypage/wishlist') return renderWishlist();
   if (path === '/mypage/recent') return renderRecent(r);
@@ -209,79 +178,12 @@ export function renderMypageScreen(path) {
     return renderSubmissionBoardScreen(path);
   }
   if (path === '/mypage/account') return renderAccount(r, profile);
-  return renderHome(r, profile, counts, cta);
+  const dest = getDefaultMypagePath(r);
+  if (dest && dest !== path) return renderMypageScreen(dest);
+  return renderRegistrationsIndex(r);
 }
 
-function getHomeGreeting(role) {
-  if (role === 'parent') return '아이에게 맞는 배움, 천천히 살펴보세요';
-  if (role === 'study_room') return '우리 공부방의 오늘을 편안하게 관리하세요';
-  return '과외 활동과 학생 소식을 한곳에서 살펴보세요';
-}
-
-function getHomeHighlights(role, counts) {
-  const registrationState =
-    counts.published > 0 ? `${counts.published}개 공개 중` : counts.draft > 0 ? '작성 이어가기' : '첫 등록 필요';
-  if (role === 'parent') {
-    return [
-      { icon: '♡', label: '찜한 곳', value: `${counts.wishlist}개`, note: '나중에 다시 볼 수 있어요', path: '/mypage/wishlist' },
-      { icon: '◷', label: '최근열람', value: `${counts.recentCount}개`, note: '보던 곳부터 이어보세요', path: '/mypage/recent' },
-      { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '답장이 필요한 소식이에요', path: '/mypage/messages' },
-    ];
-  }
-  if (role === 'study_room') {
-    return [
-      { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
-      { icon: '♡', label: '찜한 공부방·과외쌤', value: `${counts.wishlist}개`, note: '저장해 둔 공부방·과외쌤', path: '/mypage/wishlist' },
-      { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
-    ];
-  }
-  return [
-    { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
-    { icon: '♡', label: '찜한 공부방·과외쌤', value: `${counts.wishlist}개`, note: '저장해 둔 공부방·과외쌤', path: '/mypage/wishlist' },
-    { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
-  ];
-}
-
-function renderHome(role, profile, counts, cta) {
-  const homeIdentity = profile.displayName || profile.name || '회원';
-  const highlights = getHomeHighlights(role, counts);
-
-  return `
-    <div class="mypage-home">
-      <section class="mypage-home-hero">
-        <div class="mypage-home-hero__copy">
-          <span class="mypage-home-hero__role">${esc(roleLabel(role))}</span>
-          <h2>${esc(homeIdentity)}님, ${esc(getHomeGreeting(role))}</h2>
-          <p>${esc(profile.regionLabel)} 기준으로 쪽지·후기함·최근열람을 한곳에서 관리합니다.</p>
-        </div>
-      </section>
-
-      <section class="mypage-home-section" aria-labelledby="mypage-today-title">
-        <div class="mypage-home-section__head">
-          <div>
-            <span class="mypage-home-section__eyebrow">현황</span>
-            <h2 id="mypage-today-title">내 상태</h2>
-          </div>
-          <p>${esc(HOME_EMPHASIS[role] || '')}</p>
-        </div>
-        <div class="mypage-status-strip" aria-label="현황 요약">
-          ${highlights
-            .map(
-              (item) => `
-            <a href="#${item.path}" class="mypage-status-strip__item" data-mypage-nav="${item.path}">
-              <em>${esc(item.label)}</em>
-              <strong>${esc(item.value)}</strong>
-            </a>`,
-            )
-            .join('')}
-        </div>
-      </section>
-
-      ${renderCtaBlock(cta)}
-    </div>`;
-}
-
-/** 마이페이지 홈 후기 패널 hydrate (별도 관리센터 아님) */
+/** 쪽지·후기함 후기 요약. 마이페이지 첫 화면이 아니다. */
 export async function hydrateMypageReviewPanel(root) {
   const box = root?.querySelector?.('[data-mypage-review-list]');
   if (!box) return;
@@ -481,8 +383,8 @@ function renderRecent(role) {
     return `
     <section class="mypage-panel mypage-panel--bare">
       ${renderEmptyStateCard('recent', {
-        ctaHref: '#/mypage/home',
-        links: [{ label: '마이페이지 홈', href: '#/mypage/home' }],
+        ctaHref: `#${getDefaultMypagePath(role)}`,
+        links: [{ label: '내 등록', href: `#${getDefaultMypagePath(role)}` }],
       })}
     </section>`;
   }

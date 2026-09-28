@@ -193,7 +193,10 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
 }
 
 function mypageEntryForSession() {
-  if (navRoleFromAuthUser(getAuthUser()) === 'study_room') return getDefaultMypagePath('study_room');
+  const session = navRoleFromAuthUser(getAuthUser());
+  if (session === 'study_room' || session === 'tutor' || session === 'parent') {
+    return getDefaultMypagePath(session);
+  }
   return getDefaultMypagePath(getNavRole());
 }
 

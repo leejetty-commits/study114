@@ -35,8 +35,12 @@ export async function saveTutorBasicInline(tutorId, basic) {
   const name = String(basic.tutor_display_name || '').trim();
   const subject = String(basic.main_subject_note || '').trim();
   const regionLabel = String(basic.primary_region_label || '').trim();
+  const slots = Array.isArray(basic.saved_regions)
+    ? basic.saved_regions.filter((s) => /^\d+$/.test(String(s.region_id || '')))
+    : [];
   if (!name) throw new Error('표시명을 입력해 주세요.');
   if (!subject) throw new Error('주력과목을 선택해 주세요.');
+  if (!slots.length) throw new Error('과외지역을 1곳 이상 선택해 주세요. (도는 시까지 선택)');
   if (!regionLabel) throw new Error('과외지역(시·도)을 선택해 주세요.');
 
   if (isRegistrationsApiMode()) {
@@ -52,20 +56,13 @@ export async function saveTutorBasicInline(tutorId, basic) {
       age_band: current.age_band || '',
       gender: basic.gender || current.gender || 'male',
     });
-    const slots = Array.isArray(basic.saved_regions)
-      ? basic.saved_regions.filter((s) => /^\d+$/.test(String(s.region_id || '')))
-      : null;
-    if (slots?.length) {
-      await postRegisterSave('regions', tutorId, {
-        saved_regions: slots.map((s) => ({
-          region_id: String(s.region_id),
-          scope_type: 'city',
-          is_primary: !!s.is_primary,
-        })),
-      });
-    } else {
-      throw new Error('과외지역을 1곳 이상 선택해 주세요. (도는 시까지 선택)');
-    }
+    await postRegisterSave('regions', tutorId, {
+      saved_regions: slots.map((s) => ({
+        region_id: String(s.region_id),
+        scope_type: 'city',
+        is_primary: !!s.is_primary,
+      })),
+    });
     await hydrateRegistrationsCache();
     return getTutor(tutorId);
   }

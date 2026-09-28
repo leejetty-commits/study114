@@ -32,12 +32,10 @@ export function renderTutorRegionSlot(slot, idx, units, opts = {}) {
   const provCode = isProv ? sel.parent.slice(5) : '';
   const required = idx === 0 ? 'required' : '';
 
-  const primaryUi = showPrimary
-    ? `<label class="form-check" style="margin-left:auto;">
-          <input type="radio" name="${prefix}is_primary" value="${idx}" ${slot.is_primary ? 'checked' : ''} />
-          <span class="form-check__label">대표</span>
-        </label>`
-    : '';
+  const primaryUi =
+    showPrimary && idx === 0
+      ? `<span class="register-region-slot__badge" style="margin-left:auto;">대표</span>`
+      : '';
 
   return `
     <div class="register-region-slot${slot.is_primary ? ' is-primary' : ''}" data-region-slot="${idx}">
@@ -121,22 +119,38 @@ export function clearTutorRegionSlotError(slotEl) {
 }
 
 /**
+ * 화면의 광역시/도·시 선택을 hidden region_id에 다시 맞춘다.
+ * @param {ParentNode} root
+ * @param {ReturnType<typeof buildCityUnitOptions>} units
+ */
+export function syncTutorRegionSlotIds(root, units) {
+  root.querySelectorAll('[data-region-slot]').forEach((slotEl) => {
+    const parent = slotEl.querySelector('[data-field="region_parent"]')?.value || '';
+    const cityLabel = slotEl.querySelector('[data-field="region_city"]')?.value || '';
+    const hiddenId = slotEl.querySelector('[data-field="region_id"]');
+    if (hiddenId) hiddenId.value = regionIdFromSelection(parent, cityLabel, units);
+  });
+}
+
+/**
  * @param {ParentNode} root
  * @returns {Array<{region_id: string, scope_type: string, is_primary: boolean}>}
  */
 export function collectTutorRegionSlots(root) {
-  const primaryIdx = Number(root.querySelector('input[name$="is_primary"]:checked')?.value ?? 0);
   const slots = [];
   root.querySelectorAll('[data-region-slot]').forEach((slotEl, idx) => {
     slots.push({
       region_id: slotEl.querySelector('[data-field="region_id"]')?.value ?? '',
       scope_type: 'city',
-      is_primary: idx === primaryIdx,
+      is_primary: idx === 0,
     });
   });
   while (slots.length < 3) {
     slots.push({ region_id: '', scope_type: 'city', is_primary: false });
   }
+  if (slots[0]) slots[0].is_primary = true;
+  slots[1].is_primary = false;
+  slots[2].is_primary = false;
   return slots.slice(0, 3);
 }
 

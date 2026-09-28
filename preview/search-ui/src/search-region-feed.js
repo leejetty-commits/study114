@@ -8,7 +8,7 @@ import {
   EXPOSURE_TUTORS,
   EXPOSURE_STUDENTS,
 } from '@home-ui/exposure-data.js';
-import { MOCK_REGIONS, getTutorRegionLabel } from './search-schema.js';
+import { MOCK_REGIONS } from './search-schema.js';
 import { getProviderSelfFeed } from './search-provider-self.js';
 import { mapSearchResultsToExposure } from './search-exposure-mapper.js';
 
@@ -211,8 +211,8 @@ export function getRegionFeed(tab, ctx = {}) {
     return { items: assignProviderTiers(pool.slice(0, 11)), regionLabel };
   }
   if (tab === 'tutor') {
-    const idx = ctx.tutorRegionIndex ?? 0;
-    const regionLabel = String(ctx.regionLabel || '').trim() || getTutorRegionLabel(idx);
+    const regionLabel = String(ctx.regionLabel || '').trim();
+    if (!regionLabel) return { items: [], regionLabel: '' };
     const pool = filterTutorsByRegion(EXPOSURE_TUTORS, regionLabel);
     return { items: assignProviderTiers(pool.slice(0, 11)), regionLabel };
   }

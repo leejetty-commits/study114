@@ -20,10 +20,10 @@ import {
   renderListSortSelect,
   sortListItems,
 } from '../../shared/list-sort.js';
-import { MOCK_TUTOR_REGIONS } from './search-schema.js';
+import { tutorHomePrimaryLabel } from '@home-ui/tutor-home-seed.js';
 
 function tutorPrimaryRegionLabel() {
-  return MOCK_TUTOR_REGIONS.find((region) => region.primary)?.label || MOCK_TUTOR_REGIONS[0]?.label || '';
+  return tutorHomePrimaryLabel() || '서울시';
 }
 
 /**

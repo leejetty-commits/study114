@@ -1,14 +1,10 @@
 /**
- * 과외쌤 활동형 시각화 — 지도 대신 활동지역 1~3 공급/수요 막대
- * 데이터: 프론트 시드 EXPOSURE_* + filterTutorsByRegion / filterStudentsByRegion
+ * 과외쌤 홈 활동지역 분포.
+ * 집계: 검색 노출 카드 total. 과외쌤=tutor_region_label, 학생수요=preferred_region_label. 키=활동지역 시·군 라벨.
  */
 
-import { EXPOSURE_TUTORS, EXPOSURE_STUDENTS } from './exposure-data.js';
-import { MOCK_TUTOR_REGIONS } from '@search-ui/search-schema.js';
-import {
-  filterTutorsByRegion,
-  filterStudentsByRegion,
-} from '@search-ui/search-region-feed.js';
+import { searchApi } from '@search-ui/search-api.js';
+import { readTutorHomeRegions } from './tutor-home-seed.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -18,63 +14,115 @@ function esc(s) {
 }
 
 /**
- * @param {{ hopeType?: 'tutor'|'study_room'|null }} [opts]
- * @returns {Array<{ index: number, id: string, label: string, primary: boolean, tutorCount: number, studentCount: number }>}
+ * @typedef {{ index: number, label: string, primary: boolean, tutorCount: number, studentCount: number }} ActivityRow
  */
-export function getTutorActivityRegionStats(opts = {}) {
-  const hopeType = opts.hopeType ?? 'tutor';
-  return MOCK_TUTOR_REGIONS.map((region, index) => {
-    const tutors = filterTutorsByRegion(EXPOSURE_TUTORS, region.label);
-    let students = filterStudentsByRegion(EXPOSURE_STUDENTS, region.label);
-    if (hopeType === 'tutor' || hopeType === 'study_room') {
-      students = students.filter(
-        (s) =>
-          s.preferred_lesson_type === hopeType || s.preferred_lesson_type === 'both',
-      );
-    }
-    return {
+
+/** @type {ActivityRow[]} */
+let rows = [];
+let readyKey = '';
+let bootGen = 0;
+
+function citySlots() {
+  const loaded = readTutorHomeRegions();
+  const slots = Array.isArray(loaded) ? loaded : [];
+  return slots
+    .map((slot, index) => ({
       index,
-      id: region.id,
-      label: region.label,
-      primary: Boolean(region.primary),
-      tutorCount: tutors.length,
-      studentCount: students.length,
-    };
-  });
+      label: String(slot?.label || '').trim(),
+      primary: !!slot?.primary && !!String(slot?.label || '').trim(),
+    }))
+    .filter((slot) => slot.label);
+}
+
+function slotKey(slots) {
+  return slots.map((slot) => `${slot.index}:${slot.label}:${slot.primary ? 1 : 0}`).join('|');
+}
+
+/** @param {'tutor'|'student'} tab @param {string} cityLabel */
+async function countExposedCards(tab, cityLabel) {
+  const filters =
+    tab === 'tutor'
+      ? { tutor_region_label: cityLabel }
+      : { preferred_region_label: cityLabel };
+  const data = await searchApi(tab, filters, { page: 1, limit: 1 });
+  const total = Number(data.total);
+  return Number.isFinite(total) && total > 0 ? total : 0;
+}
+
+/**
+ * @param {() => void} [rerender]
+ */
+export function bootTutorActivityCounts(rerender) {
+  const slots = citySlots();
+  const key = slotKey(slots);
+  if (key === readyKey) return;
+  const gen = ++bootGen;
+  return (async () => {
+    /** @type {ActivityRow[]} */
+    const next = [];
+    for (const slot of slots) {
+      let tutorCount = 0;
+      let studentCount = 0;
+      try {
+        [tutorCount, studentCount] = await Promise.all([
+          countExposedCards('tutor', slot.label),
+          countExposedCards('student', slot.label),
+        ]);
+      } catch {
+        tutorCount = 0;
+        studentCount = 0;
+      }
+      next.push({
+        index: slot.index,
+        label: slot.label,
+        primary: slot.primary,
+        tutorCount,
+        studentCount,
+      });
+    }
+    if (gen !== bootGen) return;
+    rows = next;
+    readyKey = key;
+    if (typeof rerender === 'function') rerender();
+  })();
 }
 
 /**
  * @param {{ activeIndex?: number, interactive?: boolean }} [opts]
  */
 export function renderTutorActivityBars(opts = {}) {
-  const activeIndex = Number.isFinite(opts.activeIndex) ? Number(opts.activeIndex) : 0;
-  const interactive = opts.interactive !== false;
-  const rows = getTutorActivityRegionStats({ hopeType: 'tutor' });
-  const maxVal = Math.max(1, ...rows.flatMap((r) => [r.tutorCount, r.studentCount]));
+  void opts;
+  const slots = citySlots();
+  const key = slotKey(slots);
+  const pending = key !== readyKey;
+  const source = pending
+    ? slots.map((slot) => ({ ...slot, tutorCount: 0, studentCount: 0 }))
+    : rows;
+  const maxVal = Math.max(
+    1,
+    ...source.flatMap((row) => [row.tutorCount, row.studentCount]),
+  );
 
-  const body = rows
+  const body = source
     .map((row) => {
-      const tPct = Math.round((row.tutorCount / maxVal) * 100);
-      const sPct = Math.round((row.studentCount / maxVal) * 100);
-      const active = row.index === activeIndex ? ' is-active' : '';
-      const tag = interactive ? 'button' : 'div';
-      const attrs = interactive
-        ? `type="button" data-tutor-region="${row.index}"`
-        : `role="listitem"`;
+      const tPct = pending ? 0 : Math.round((row.tutorCount / maxVal) * 100);
+      const sPct = pending ? 0 : Math.round((row.studentCount / maxVal) * 100);
+      const tutorText = pending ? '…' : String(row.tutorCount);
+      const studentText = pending ? '…' : String(row.studentCount);
       return `
-      <${tag} class="act-bars__row${active}" ${attrs} aria-pressed="${row.index === activeIndex}">
+      <div class="act-bars__row" role="listitem">
         <span class="act-bars__region">${esc(row.label)}${row.primary ? '<em>대표</em>' : ''}</span>
         <span class="act-bars__pair">
           <span class="act-bars__metric" title="과외쌤">
             <span class="act-bars__track"><span class="act-bars__fill act-bars__fill--tutor" style="width:${tPct}%"></span></span>
-            <span class="act-bars__num"><span class="act-bars__key">과외쌤</span> ${row.tutorCount}</span>
+            <span class="act-bars__num"><span class="act-bars__key">과외쌤</span> ${esc(tutorText)}</span>
           </span>
           <span class="act-bars__metric" title="학생수요">
             <span class="act-bars__track"><span class="act-bars__fill act-bars__fill--student" style="width:${sPct}%"></span></span>
-            <span class="act-bars__num"><span class="act-bars__key">학생수요</span> ${row.studentCount}</span>
+            <span class="act-bars__num"><span class="act-bars__key">학생수요</span> ${esc(studentText)}</span>
           </span>
         </span>
-      </${tag}>`;
+      </div>`;
     })
     .join('');
 
@@ -87,6 +135,5 @@ export function renderTutorActivityBars(opts = {}) {
       <div class="act-bars__list" role="list">
         ${body}
       </div>
-      <p class="act-bars__note">지금은 예시 지역 기준으로 보여 드려요. 과목 필터는 아직 반영되지 않았어요.</p>
     </div>`;
 }
