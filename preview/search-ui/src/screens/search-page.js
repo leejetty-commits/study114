@@ -85,7 +85,7 @@ function renderSearchForm(tab) {
       : '';
 
   return `
-    ${renderSearchMarketingBanner(tab)}
+    ${renderSearchMarketingBanner(tab, previewState.role)}
     ${renderDevPreviewControls()}
     <header class="search-header search-header--compact">
       <div class="search-header__title-row">

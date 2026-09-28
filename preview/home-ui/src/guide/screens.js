@@ -21,6 +21,14 @@ function extLink(href, className, label) {
   return `<a class="${className}" href="${esc(href)}" data-same-tab-href="${esc(href)}">${label}</a>`;
 }
 
+/** 공부방 역할은 과외쌤찾기 CTA를 숨긴다. 가이드 본문 역할 분기는 146 후속. */
+function finderStartLinks(roomClass, tutorClass) {
+  const role = getNavRole();
+  const room = extLink(searchHref('room'), roomClass, '공부방 찾기 시작');
+  if (role === 'study_room') return room;
+  return `${room}${extLink(searchHref('tutor'), tutorClass, '과외쌤 찾기 시작')}`;
+}
+
 function sectionHead(chip, title) {
   return `
     <div class="section-head">
@@ -145,8 +153,7 @@ function renderGuideHome() {
     ${sectionHead('바로 이용해 보기', '바로 이용하기')}
     <div class="slim-cta">
       <span class="slim-cta__label">실이용으로</span>
-      ${extLink(searchHref('room'), 'btn btn--primary', '공부방 찾기 시작')}
-      ${extLink(searchHref('tutor'), 'btn btn--secondary', '과외쌤 찾기 시작')}
+      ${finderStartLinks('btn btn--primary', 'btn btn--secondary')}
     </div>`;
 }
 
@@ -225,8 +232,7 @@ function renderGuideStart() {
     ])}
     ${sectionHead('다음', '다음으로')}
     <div class="cta-row">
-      ${extLink(searchHref('room'), 'btn btn--primary', '공부방 찾기 시작')}
-      ${extLink(searchHref('tutor'), 'btn btn--secondary', '과외쌤 찾기 시작')}
+      ${finderStartLinks('btn btn--primary', 'btn btn--secondary')}
       ${hashLink('/guide/compare', 'btn btn--ghost', '비교·찜·쪽지 안내 보기 →')}
     </div>`;
 }
@@ -353,7 +359,7 @@ function renderGuideCompare() {
     <p class="section-lead">찜 → 비교 → 쪽지 순으로 한 번만 따라가 보세요.</p>
     ${stepList([
       { icon: `${A}/step-pick.svg`, title: '검색 결과에서 후보 고르기', body: '공부방·과외쌤 목록에서 관심 있는 곳을 골라 둡니다.' },
-      { icon: `${A}/step-bookmark.svg`, title: '마음에 드는 곳을 찜', body: '당장 연락하지 않아도 괜찮아요. 찜 목록에 모아 두면 나중에 다시 볼 수 있어요.' },
+      { icon: `${A}/step-bookmark.svg`, title: '마음에 드는 곳을 찜', body: '당장 연락하지 않아도 괜찮아요. 찜한 공부방·과외쌤에 모아 두면 나중에 다시 볼 수 있어요.' },
       { icon: `${A}/step-compare.svg`, title: '비교로 조건 맞춰 보기', body: '찜해 둔 곳 중 2~3개를, 지역·과목·시간·비용 등 내가 중요하게 보는 기준으로 나란히 확인합니다.' },
       { icon: `${A}/step-message.svg`, title: '상세 페이지를 읽은 뒤 쪽지 보내기', body: '짧은 인사와 궁금한 점만 적어서 보내 보세요. 쪽지는 회원끼리 첫 연락을 하는 통로입니다.' },
       { icon: `${A}/step-inbox.svg`, title: '쪽지함에서 이어가기', body: '받은·보낸 쪽지는 쪽지함에서 확인할 수 있어요. (로그인 필요)' },
@@ -381,7 +387,7 @@ function renderGuideCompare() {
       <li>운영·신고·계정 문제는 쪽지가 아니라 고객센터·운영문의로</li>
     </ul>
     <div class="cta-row" style="margin-top:8px">
-      ${hashLink(wishlistPath, 'btn btn--primary', '찜 목록 보기')}
+      ${hashLink(wishlistPath, 'btn btn--primary', '찜한 공부방·과외쌤 보기')}
       ${hashLink(messagesPath, 'btn btn--secondary', '쪽지함 보기')}
     </div>`;
 }

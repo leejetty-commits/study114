@@ -55,7 +55,7 @@ export const CONTACT_HISTORY_PATH = '/mypage/contact';
 
 /**
  * 공부방·과외쌤 좌측 메뉴 순서:
- * 내 등록 → 쪽지·후기함 → 최근열람 → 찜한학생 → 찜 목록 → 내 문의 내역 → 구매이력 → 계정설정
+ * 내 등록 → 쪽지·후기함 → 최근열람 → 관심 학생 → 찜한 공부방·과외쌤 → 내 문의 내역 → 구매이력 → 계정설정
  * 학생(parent) 순서는 PARENT_NAV_PATHS.
  * @type {MypageNavItem[]}
  */
@@ -72,14 +72,14 @@ export const MYPAGE_NAV = [
   { path: '/mypage/recent', label: '최근열람', icon: '◷', screenId: 'P15-07' },
   {
     path: '/mypage/student-review',
-    label: '찜한학생',
+    label: '관심 학생',
     icon: '☆',
     screenId: 'P25-S10',
     emphasis: ['study_room', 'tutor'],
     roles: ['study_room', 'tutor'],
   },
-  { path: '/mypage/wishlist', label: '찜 목록', icon: '♡', screenId: 'P15-06', labels: { parent: '찜·비교' }, emphasis: ['parent'] },
-  { path: CONTACT_HISTORY_PATH, label: '내 문의 내역', icon: '▤', screenId: 'P17-07', roles: ['study_room', 'tutor'] },
+  { path: '/mypage/wishlist', label: '찜한 공부방·과외쌤', icon: '♡', screenId: 'P15-06', labels: { parent: '찜·비교' }, emphasis: ['parent'] },
+  { path: CONTACT_HISTORY_PATH, label: '내 문의 내역', icon: '▤', screenId: 'P17-07', roles: ['parent', 'study_room', 'tutor'] },
   {
     path: '/mypage/plans',
     label: '구매이력',
@@ -138,12 +138,13 @@ export const PARENT_NAV_PATHS = [
   '/mypage/wishlist',
   '/mypage/recent',
   '/mypage/messages',
+  CONTACT_HISTORY_PATH,
   '/mypage/account',
 ];
 
 /**
  * 학생 계정에서 메뉴에서 빼고, 직접 열면 마이프로필로 보내는 경로.
- * 내 문의 내역은 기존 화면을 유지하고 메뉴만 뺀다.
+ * 내 문의 내역(#/mypage/contact)은 기존 화면을 메뉴에 둔다.
  * @param {string} path
  */
 export function isParentLockedMypagePath(path) {
@@ -242,7 +243,7 @@ export function screenTitle(screenId, path, role) {
     'P15-03': '학생',
     'P15-04': '공부방 목록',
     'P15-05': '과외 프로필',
-    'P15-06': role === 'parent' ? '찜·비교' : '찜 목록',
+    'P15-06': role === 'parent' ? '찜·비교' : '찜한 공부방·과외쌤',
     'P15-07': '최근열람',
     'P15-08': '쪽지·후기함',
     'P17-07': '내 문의 내역',
@@ -254,7 +255,7 @@ export function screenTitle(screenId, path, role) {
     'P23-04a': '제출 작성',
     'P23-04b': '제출 상세',
     'P15-11': '계정설정',
-    'P25-S10': '찜한학생',
+    'P25-S10': '관심 학생',
   };
   return map[screenId] || '마이페이지';
 }

@@ -188,7 +188,7 @@ export function getHubCtas(room) {
   return [
     { label: '쪽지설정', path: 'inquiries', primary: true },
     { label: '등록점검', path: 'publish', primary: false },
-    { label: '찜한학생', external: '#/mypage/student-review?from=exposure', primary: false },
+    { label: '관심 학생', external: '#/mypage/student-review?from=exposure', primary: false },
     { label: '구매이력', path: 'plans', external: '#/mypage/plans', primary: false },
   ];
 }

@@ -154,20 +154,21 @@ function sectionSummary(sec) {
   const filled = rows.filter((r) => r.status === 'filled').length;
   const missingRows = rows.filter((r) => r.status !== 'filled');
   const requiredMissing = missingRows.filter((r) => r.required);
-  const missLabels = (requiredMissing.length ? requiredMissing : missingRows).slice(0, 2).map((r) => r.label);
+  const shortage = requiredMissing.length;
+  const missLabels = requiredMissing.slice(0, 2).map((r) => r.label);
+  const requiredComplete = shortage === 0 && rows.some((r) => r.required);
   return {
     filled,
     total,
-    missing: missingRows.length,
-    requiredMissing: requiredMissing.length,
+    missing: shortage,
+    requiredMissing: shortage,
     missLabels,
-    line: TRC_COPY.board.filledLine(filled, total, missingRows.length),
-    sub:
-      requiredMissing.length === 0 && rows.some((r) => r.required)
+    line: shortage > 0 ? TRC_COPY.board.filledLine(filled, total, shortage) : `완료 ${filled}/${total}`,
+    sub: shortage > 0
+      ? (missLabels.length ? `${TRC_COPY.board.missPrefix}: ${missLabels.join(', ')}` : '')
+      : requiredComplete
         ? TRC_COPY.board.allRequiredOk
-        : missLabels.length
-          ? `${TRC_COPY.board.missPrefix}: ${missLabels.join(', ')}`
-          : '',
+        : '',
   };
 }
 

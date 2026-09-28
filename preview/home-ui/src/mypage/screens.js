@@ -231,13 +231,13 @@ function getHomeHighlights(role, counts) {
   if (role === 'study_room') {
     return [
       { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
-      { icon: '♡', label: '찜 목록', value: `${counts.wishlist}개`, note: '저장해 둔 공부방·과외쌤', path: '/mypage/wishlist' },
+      { icon: '♡', label: '찜한 공부방·과외쌤', value: `${counts.wishlist}개`, note: '저장해 둔 공부방·과외쌤', path: '/mypage/wishlist' },
       { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
     ];
   }
   return [
     { icon: '✓', label: '내 등록 상태', value: registrationState, note: '공개 정보와 부족한 내용을 확인하세요', path: '/mypage/registrations' },
-    { icon: '♡', label: '찜 목록', value: `${counts.wishlist}개`, note: '저장해 둔 공부방·과외쌤', path: '/mypage/wishlist' },
+    { icon: '♡', label: '찜한 공부방·과외쌤', value: `${counts.wishlist}개`, note: '저장해 둔 공부방·과외쌤', path: '/mypage/wishlist' },
     { icon: '✉', label: '새 쪽지', value: `${counts.unreadMessages}개`, note: '새로운 문의와 답장을 확인하세요', path: '/mypage/messages' },
   ];
 }
@@ -417,8 +417,8 @@ function renderWishlist() {
 function renderStudentReview(role) {
   if (role === 'parent') {
     return `<section class="mypage-panel mypage-empty">
-      <p>학생 검토함은 공부방·과외쌤 전용입니다. 일반 찜 목록에서 공부방·과외쌤을 저장할 수 있어요.</p>
-      <p><a href="#/mypage/wishlist" data-mypage-nav="/mypage/wishlist">찜 목록 보기</a></p>
+      <p>학생 검토함은 공부방·과외쌤 전용입니다. 공부방·과외쌤은 찜한 공부방·과외쌤에 저장할 수 있어요.</p>
+      <p><a href="#/mypage/wishlist" data-mypage-nav="/mypage/wishlist">찜한 공부방·과외쌤 보기</a></p>
     </section>`;
   }
 

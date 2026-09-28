@@ -1,6 +1,6 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole, getCommunityPath } from '../state.js';
-import { getAuthUser } from '../auth-session.js';
+import { getAuthUser, isLoggedIn } from '../auth-session.js';
 import { memberHomeHashPath } from '../nav-config.js';
 import { renderConcernScreen, renderConcernSideNav, bindConcernScreenEvents } from './screens.js';
 import { getCommunityView } from './router.js';
@@ -26,6 +26,8 @@ function renderCommunityPageTitle(path) {
 
 export function renderConcernShell(currentPath, bodyHtml) {
   const role = getNavRole();
+  // 비로그인 #/community는 #/guest와 같은 GNB (공부방찾기·공부방상세정보 포함). 로그인 역할은 유지.
+  const headerRole = isLoggedIn() ? role : 'guest';
   const sub = memberHomeHashPath(getAuthUser());
 
   const mainHtml = `
@@ -43,7 +45,7 @@ export function renderConcernShell(currentPath, bodyHtml) {
 
   return renderAppShellWithPromo({
     toolbar: renderPreviewToolbar(),
-    headerHtml: renderHeader(role, { activeGnbId: 'community' }),
+    headerHtml: renderHeader(headerRole, { activeGnbId: 'community' }),
     mainHtml,
     footerHtml: renderFooter(),
     slotKey: 'support_right_rail',

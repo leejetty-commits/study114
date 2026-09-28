@@ -23,7 +23,7 @@ export function compareOpenCta(count, max) {
 
 /** Source Route return CTA 라벨 (25§4-4 · §6 2차) */
 export const RETURN_CTA = {
-  wishlist: '찜 목록으로',
+  wishlist: '찜한 공부방·과외쌤으로',
   studentReview: '학생 검토함 열기',
 };
 
@@ -115,7 +115,7 @@ export const RESUME_ROUTE_LABELS = {
   search: '검색에서',
   parent: '학부모 홈에서',
   detail: '상세에서',
-  wishlist: '찜 목록에서',
+  wishlist: '찜한 공부방·과외쌤에서',
   mypage: '마이페이지에서',
   'student-review': '학생 검토함에서',
 };

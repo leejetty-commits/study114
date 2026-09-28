@@ -165,7 +165,7 @@ export const PAID_TIER_COPY = {
 
 export const ROI_FREE_METRICS = [
   { id: 'views', label: '조회', value: 0, period: '최근 7일', hint: '상세·검색 카드 열람' },
-  { id: 'wishlist', label: '찜', value: 0, period: '누적', hint: '학부모 찜 목록' },
+  { id: 'wishlist', label: '찜', value: 0, period: '누적', hint: '학부모 찜한 공부방·과외쌤' },
   { id: 'compare', label: '비교 담김', value: 0, period: '누적', hint: '비교 후보함 (≤3)' },
 ];
 

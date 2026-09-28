@@ -76,6 +76,8 @@ function renderIntroShell(innerHtml) {
 
 /** @returns {'blocked'|'intro'|'form'} */
 function resolveRegisterMode() {
+  // 비로그인은 빈 화면·알림 대신 소개+로그인/회원가입. 폼은 열지 않는다.
+  if (!isChromeLoggedIn()) return 'intro';
   const role = getChromeNavRole();
   const gate = guardRegisterAccess(role, 'tutor');
   if (!gate.ok) {

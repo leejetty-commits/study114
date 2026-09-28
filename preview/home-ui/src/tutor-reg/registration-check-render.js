@@ -210,7 +210,9 @@ function publishSummaryText(vm) {
   if (status === 'published') return TRC_COPY.publish.summaryLive;
   if (status === 'hidden' && canPublish) return TRC_COPY.publish.summaryHidden;
   if (canPublish) return TRC_COPY.publish.summaryReady;
-  return TRC_COPY.publish.summaryNeed(basicLeft || (vm.readiness?.missing || []).length || 1);
+  const left = basicLeft || (vm.readiness?.missing || []).length;
+  if (!left) return TRC_COPY.badges.publishNeed;
+  return TRC_COPY.publish.summaryNeed(left);
 }
 
 function renderPublishActions(vm) {

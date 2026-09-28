@@ -246,8 +246,9 @@ function renderCta(cta) {
 
 /**
  * @param {string} surface guest|parent|study_room|tutor|search_room|search_tutor|search_student|plans|support
+ * @param {BannerCta[] | null} [ctaOverride]
  */
-export function renderHomeMarketingBanner(surface) {
+export function renderHomeMarketingBanner(surface, ctaOverride = null) {
   const cfg = SURFACE_BANNER[surface];
   if (!cfg) return '';
   const copy = HOME_BANNER_COPY[cfg.copyId];
@@ -263,7 +264,7 @@ export function renderHomeMarketingBanner(surface) {
   const lines = (copy.lines || [])
     .map((line) => `<p class="home-mkt__line">${accentBrandWords(line)}</p>`)
     .join('');
-  const actions = (cfg.ctas || [])
+  const actions = (ctaOverride || cfg.ctas || [])
     .map((c) => {
       if (c.label !== '홈으로') return renderCta(c);
       const path = memberHomeHashPath(getAuthUser());
@@ -287,8 +288,14 @@ export function renderHomeMarketingBanner(surface) {
     </section>`;
 }
 
-/** @param {'room'|'tutor'|'student'|string} tab */
-export function renderSearchMarketingBanner(tab) {
+/** @param {'room'|'tutor'|'student'|string} tab @param {string} [role] */
+export function renderSearchMarketingBanner(tab, role) {
+  if (tab === 'student' && role === 'parent') {
+    const ctas = (SURFACE_BANNER.search_student.ctas || []).filter(
+      (c) => !String(c.label || '').includes('유료상품'),
+    );
+    return renderHomeMarketingBanner('search_student', ctas);
+  }
   if (tab === 'tutor') return renderHomeMarketingBanner('search_tutor');
   if (tab === 'student') return renderHomeMarketingBanner('search_student');
   return renderHomeMarketingBanner('search_room');

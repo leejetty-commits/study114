@@ -130,6 +130,6 @@ export const PRODUCT_APPLY = {
 
 /** P20-02 관련 CTA */
 export const P20_HUB_CTA = {
-  studentReview: '찜한학생',
+  studentReview: '관심 학생',
   messages: '쪽지함 열기',
 };
