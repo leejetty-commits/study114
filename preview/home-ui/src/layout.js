@@ -15,6 +15,15 @@ import { renderSiteFooter } from '../../shared/site-footer.js';
 import { setPendingRoute } from '../../shared/pending-route.js';
 import { redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
 
+/** 상단 홍보. 로그인 세션 우선. 게스트·등록 중은 공부방 소개. */
+function promoToolbarPath() {
+  if (isRegisterIntroRoute()) return '/promo/study-room';
+  const role = isLoggedIn() ? navRoleFromAuthUser(getAuthUser()) : getNavRole();
+  if (role === 'tutor') return '/promo/tutor';
+  if (role === 'parent') return '/promo/parent';
+  return '/promo/study-room';
+}
+
 export function renderPreviewToolbar() {
   if (!SHOW_PREVIEW_TOOLBAR) return '';
   const current = getCurrentScreen();
@@ -52,7 +61,7 @@ export function renderPreviewToolbar() {
         <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${mypageEntryForSession()}">마이페이지</button>
         <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지·후기함</button>
         <button type="button" class="preview-toolbar__btn ${onCommunity ? 'is-active' : ''}" data-nav="/community">커뮤니티</button>
-        <button type="button" class="preview-toolbar__btn ${onPromo ? 'is-active' : ''}" data-nav="/promo/study-room">홍보</button>
+        <button type="button" class="preview-toolbar__btn ${onPromo ? 'is-active' : ''}" data-nav="${promoToolbarPath()}">홍보</button>
         <button type="button" class="preview-toolbar__btn ${onSupport ? 'is-active' : ''}" data-nav="/support">고객센터</button>
         <button type="button" class="preview-toolbar__btn ${onPlans ? 'is-active' : ''}" data-nav="/plans">유료상품</button>
         <button type="button" class="preview-toolbar__btn" data-nav="/support/library">자료실</button>

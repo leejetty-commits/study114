@@ -1,5 +1,8 @@
 import { STUDY_ROOM_PROMO } from './study-room-content.js';
-import { searchUiUrl, STUDY_ROOM_REGISTER_URL } from '../../../shared/preview-links.js';
+import { TUTOR_PROMO } from './tutor-content.js';
+import { PARENT_PROMO } from './parent-content.js';
+import { searchUiUrl, STUDY_ROOM_REGISTER_URL, TUTOR_REGISTER_URL } from '../../../shared/preview-links.js';
+import { signupUrl } from '../../../shared/route-access.js';
 import { getNavRole } from '../state.js';
 
 function esc(s) {
@@ -9,12 +12,26 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-function findRoomHref() {
-  return searchUiUrl('room', getNavRole());
+function isGuestViewer() {
+  return getNavRole() === 'guest';
 }
 
-function registerHref() {
-  return STUDY_ROOM_REGISTER_URL;
+/** 게스트 찾기 CTA는 검색을 열지 않고 가입 게이트로 보낸다. */
+function findHref(tab) {
+  if (isGuestViewer()) return signupUrl();
+  const role = getNavRole();
+  return searchUiUrl(tab, role === 'guest' ? '' : role);
+}
+
+function ctaAnchor(label, href, className) {
+  const raw = String(href || '');
+  const external = /^https?:/i.test(raw);
+  if (!external) {
+    const path = raw.replace(/^#/, '');
+    const hash = path.startsWith('/') ? path : `/${path}`;
+    return `<a class="${className}" href="#${esc(hash)}" data-nav="${esc(hash)}">${esc(label)}</a>`;
+  }
+  return `<a class="${className}" href="${esc(raw)}" data-promo-ext="${esc(raw)}">${esc(label)}</a>`;
 }
 
 function mockMap() {
@@ -32,11 +49,11 @@ function mockMap() {
     </div>`;
 }
 
-function renderStudyRoomPromo() {
-  const c = STUDY_ROOM_PROMO;
-  const findHref = findRoomHref();
-  const regHref = registerHref();
-
+/**
+ * @param {typeof STUDY_ROOM_PROMO} c
+ * @param {{ heroPrimary: string, heroSecondary: string, structure: string, finalPrimary: string, finalSecondary: string }} links
+ */
+function renderPromoLanding(c, links) {
   return `
     <article class="pcat">
       <section class="pcat-hero" aria-labelledby="pcat-hero-title">
@@ -45,8 +62,8 @@ function renderStudyRoomPromo() {
           <h2 id="pcat-hero-title" class="pcat-hero__title">${esc(c.hero.titleLine1)}<br/>${esc(c.hero.titleLine2)}</h2>
           <p class="pcat-hero__lead">${esc(c.hero.leadBefore)}<br/>${esc(c.hero.leadAfter)}</p>
           <div class="pcat-actions">
-            <a class="pcat-btn pcat-btn--primary" href="${esc(findHref)}" data-promo-ext="${esc(findHref)}">${esc(c.hero.primaryCta.label)}</a>
-            <a class="pcat-btn pcat-btn--secondary" href="${esc(regHref)}" data-promo-ext="${esc(regHref)}">${esc(c.hero.secondaryCta.label)}</a>
+            ${ctaAnchor(c.hero.primaryCta.label, links.heroPrimary, 'pcat-btn pcat-btn--primary')}
+            ${ctaAnchor(c.hero.secondaryCta.label, links.heroSecondary, 'pcat-btn pcat-btn--secondary')}
           </div>
         </div>
         <div class="pcat-hero__visual">${mockMap()}</div>
@@ -102,7 +119,7 @@ function renderStudyRoomPromo() {
             <span class="pcat-badge pcat-badge--muted">${esc(c.structure.badge)}</span>
             <h2 id="pcat-start-title">${esc(c.structure.title)}</h2>
             <p>${esc(c.structure.body)}</p>
-            <a class="pcat-btn pcat-btn--primary" href="${esc(regHref)}" data-promo-ext="${esc(regHref)}">${esc(c.structure.cta.label)}</a>
+            ${ctaAnchor(c.structure.cta.label, links.structure, 'pcat-btn pcat-btn--primary')}
           </div>
           <div class="pcat-card pcat-form" aria-hidden="true">
             ${c.structure.formFields
@@ -159,27 +176,66 @@ function renderStudyRoomPromo() {
         <h2 id="pcat-close-title">${esc(c.finalCta.title)}</h2>
         <p>${esc(c.finalCta.lead)}</p>
         <div class="pcat-actions pcat-actions--center">
-          <a class="pcat-btn pcat-btn--primary" href="${esc(findHref)}" data-promo-ext="${esc(findHref)}">${esc(c.finalCta.primaryCta.label)}</a>
-          <a class="pcat-btn pcat-btn--secondary" href="${esc(regHref)}" data-promo-ext="${esc(regHref)}">${esc(c.finalCta.secondaryCta.label)}</a>
+          ${ctaAnchor(c.finalCta.primaryCta.label, links.finalPrimary, 'pcat-btn pcat-btn--primary')}
+          ${ctaAnchor(c.finalCta.secondaryCta.label, links.finalSecondary, 'pcat-btn pcat-btn--secondary')}
         </div>
       </section>
     </article>`;
 }
 
+function renderStudyRoomPromo() {
+  const find = findHref('room');
+  const reg = STUDY_ROOM_REGISTER_URL;
+  return renderPromoLanding(STUDY_ROOM_PROMO, {
+    heroPrimary: find,
+    heroSecondary: reg,
+    structure: reg,
+    finalPrimary: find,
+    finalSecondary: reg,
+  });
+}
+
+function renderTutorPromo() {
+  const reg = TUTOR_REGISTER_URL;
+  const guide = '/guide/registration';
+  return renderPromoLanding(TUTOR_PROMO, {
+    heroPrimary: reg,
+    heroSecondary: guide,
+    structure: reg,
+    finalPrimary: reg,
+    finalSecondary: guide,
+  });
+}
+
+function renderParentPromo() {
+  const start = isGuestViewer() ? signupUrl() : findHref('room');
+  const safety = '/guide/safety';
+  return renderPromoLanding(PARENT_PROMO, {
+    heroPrimary: start,
+    heroSecondary: safety,
+    structure: start,
+    finalPrimary: start,
+    finalSecondary: safety,
+  });
+}
+
+function railIntroCard() {
+  const role = getNavRole();
+  if (role === 'tutor') return TUTOR_PROMO.railCard;
+  if (role === 'parent') return PARENT_PROMO.railCard;
+  return STUDY_ROOM_PROMO.railCard;
+}
+
 export function renderPromoScreen(path) {
   const id = path.replace(/^\/promo\//, '').split('?')[0];
-  if (id === 'study-room') return renderStudyRoomPromo();
-  return `
-    <section class="promo-planned">
-      <h1>준비 중인 홍보 페이지입니다</h1>
-      <p>곧 연결됩니다. 지금은 공부방 소개를 먼저 확인해 주세요.</p>
-      <a class="promo-btn promo-btn--primary" href="#/promo/study-room" data-nav="/promo/study-room">공부방 소개 보기</a>
-    </section>`;
+  if (id === 'tutor') return renderTutorPromo();
+  if (id === 'parent') return renderParentPromo();
+  return renderStudyRoomPromo();
 }
 
 /** 우측 레일 · 모바일 인라인 짧은 카드 */
 export function renderPromoRailCard() {
-  const card = STUDY_ROOM_PROMO.railCard;
+  const card = railIntroCard();
   return `
     <a class="promo-rail-card" href="#${esc(card.path)}" data-nav="${esc(card.path)}">
       <span class="promo-rail-card__label">소개</span>
@@ -190,7 +246,7 @@ export function renderPromoRailCard() {
 }
 
 export function renderPromoInlineCard() {
-  const card = STUDY_ROOM_PROMO.railCard;
+  const card = railIntroCard();
   return `
     <aside class="promo-inline-card" aria-label="서비스 소개">
       <div>

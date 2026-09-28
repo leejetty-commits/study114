@@ -23,10 +23,12 @@ const RAIL_MEDIA_TEASER = {
   videoUrl: '',
 };
 
-/** 공부방 소개는 공부방·게스트만. 과외쌤·학생에는 붙이지 않는다. */
+/** 역할별 소개. 게스트·역할 없음은 공부방 소개(빈 planned 페이지로 보내지 않음). */
 function studyRoomTeaserLanding(role) {
-  if (role === 'tutor' || role === 'parent') return null;
-  return { path: '/promo/study-room', label: '공부방 소개 보기' };
+  if (role === 'tutor') return { path: '/promo/tutor', label: '과외쌤 소개 보기' };
+  if (role === 'parent') return { path: '/promo/parent', label: '서비스 소개 보기' };
+  if (role === 'study_room') return { path: '/promo/study-room', label: '공부방 소개 보기' };
+  return { path: '/promo/study-room', label: '서비스 소개' };
 }
 
 /**
