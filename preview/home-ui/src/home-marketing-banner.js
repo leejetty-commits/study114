@@ -205,11 +205,29 @@ function renderCta(cta) {
   return `<a class="${cls}" href="#${esc(nav)}" data-nav="${esc(nav)}">${accentBrandWords(cta.label)}</a>`;
 }
 
-/** 게스트·역할 홈 공통. 자기 칸을 숨기지 않는다. 로그인 없이 소개 페이지만. */
+/** 게스트·역할 홈 공통. 180 B-1/B-2/B-3 문구. 자기 칸을 숨기지 않는다. */
 const HOME_PROMO_TRIO = [
-  { label: '내가 찾는 공부방', path: '/promo/study-room' },
-  { label: '나의 과외쌤은 어디에?', path: '/promo/tutor' },
-  { label: '학생, 인재로 만들기', path: '/promo/parent' },
+  {
+    tone: 'study',
+    eyebrow: '우리동네 공부방',
+    title: '내가 찾는 공부방',
+    sub: '가까운 곳부터 비교하고, 등록은 가볍게 시작하세요',
+    path: '/promo/study-room',
+  },
+  {
+    tone: 'tutor',
+    eyebrow: '우리동네 과외쌤',
+    title: '나의 과외쌤은 어디에?',
+    sub: '활동 지역·주력 과목으로 프로필을 분명하게',
+    path: '/promo/tutor',
+  },
+  {
+    tone: 'parent',
+    eyebrow: '학생 · 학부모 보조',
+    title: '학생, 인재로 만들기',
+    sub: '가까운 곳부터 비교하고, 쪽지로 시작하세요',
+    path: '/promo/parent',
+  },
 ];
 
 const HOME_TRIO_SURFACES = new Set(['guest', 'parent', 'study_room', 'tutor']);
@@ -217,7 +235,11 @@ const HOME_TRIO_SURFACES = new Set(['guest', 'parent', 'study_room', 'tutor']);
 function renderHomePromoTrio(beforeActions = '') {
   const cards = HOME_PROMO_TRIO.map(
     (card) => `
-      <a class="home-promo-trio__card" href="#${esc(card.path)}" data-nav="${esc(card.path)}">${esc(card.label)}</a>`,
+      <a class="home-promo-trio__card home-promo-trio__card--${esc(card.tone)}" href="#${esc(card.path)}" data-nav="${esc(card.path)}">
+        <span class="home-promo-trio__eyebrow">${esc(card.eyebrow)}</span>
+        <span class="home-promo-trio__title">${esc(card.title)}</span>
+        <span class="home-promo-trio__sub">${esc(card.sub)}</span>
+      </a>`,
   ).join('');
   return `
     ${beforeActions || ''}
