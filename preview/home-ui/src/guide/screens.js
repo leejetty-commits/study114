@@ -1,7 +1,10 @@
 import { getGuidePageId } from './router.js';
 import { STUDY_ROOM_REGISTER_URL, TUTOR_REGISTER_URL, searchUiUrl } from '../nav-config.js';
 import { getNavRole, navigate } from '../state.js';
-import { getDefaultMessagesPath } from '../messages/router.js';
+import { isLoggedIn } from '../auth-session.js';
+import { openDeepAccessLoginGate, closeDeepAccessLoginGate } from '../../../shared/guest-gate-ui.js';
+import { getWishlistItems } from '../user-actions-state.js';
+import { getUnreadCount } from '../messages/thread-store.js';
 
 const A = '/assets/guide-refresh';
 
@@ -322,8 +325,6 @@ function renderGuideRegister() {
 }
 
 function renderGuideCompare() {
-  const wishlistPath = '/mypage/wishlist';
-  const messagesPath = getDefaultMessagesPath();
   return `
     ${guideHero({
       label: '비교·찜·쪽지 소개',
@@ -391,9 +392,100 @@ function renderGuideCompare() {
       <li>운영·신고·계정 문제는 쪽지가 아니라 고객센터·운영문의로</li>
     </ul>
     <div class="cta-row" style="margin-top:8px">
-      ${hashLink(wishlistPath, 'btn btn--primary', '찜한 공부방·과외쌤 보기')}
-      ${hashLink(messagesPath, 'btn btn--secondary', '쪽지함 보기')}
+      <button type="button" class="btn btn--primary" data-guide-peek="wishlist">찜한 공부방·과외쌤 보기</button>
+      <button type="button" class="btn btn--secondary" data-guide-peek="messages">쪽지함 보기</button>
     </div>`;
+}
+
+const GUIDE_PEEK_ID = 'guide-peek-overlay';
+
+function wishLabel(item) {
+  return item?.study_room_name || item?.tutor_display_name || item?.public_display_name || '';
+}
+
+function closeGuidePeek() {
+  document.getElementById(GUIDE_PEEK_ID)?.remove();
+  document.removeEventListener('keydown', onGuidePeekKey);
+}
+
+/** @param {KeyboardEvent} e */
+function onGuidePeekKey(e) {
+  if (e.key !== 'Escape') return;
+  closeGuidePeek();
+}
+
+function guideReturnTo() {
+  try {
+    return window.location.href;
+  } catch {
+    return '';
+  }
+}
+
+/** @param {'wishlist'|'messages'} kind */
+function openGuideMemberPeek(kind) {
+  closeDeepAccessLoginGate();
+  closeGuidePeek();
+  const isWish = kind === 'wishlist';
+  const rooms = isWish ? getWishlistItems('study_room') : [];
+  const tutors = isWish ? getWishlistItems('tutor') : [];
+  const names = [...rooms, ...tutors].map(wishLabel).filter(Boolean).slice(0, 3);
+  const unread = isWish ? 0 : getUnreadCount();
+  const title = isWish ? '찜해 둔 후보' : '쪽지함';
+  const lead = isWish
+    ? rooms.length + tutors.length
+      ? `공부방 ${rooms.length}곳 · 과외쌤 ${tutors.length}명을 저장해 두었습니다.`
+      : '아직 찜한 공부방·과외쌤이 없습니다. 찾기에서 마음에 드는 곳을 저장해 두세요.'
+    : unread
+      ? `안 읽은 쪽지가 ${unread}통 있습니다.`
+      : '안 읽은 쪽지는 없습니다. 받은·보낸 대화는 이 안내에서 나가지 않고 상태만 확인합니다.';
+  const list = names.length
+    ? `<ul class="guest-gate__list">${names.map((name) => `<li>${esc(name)}</li>`).join('')}</ul>`
+    : '';
+  const overlay = document.createElement('div');
+  overlay.id = GUIDE_PEEK_ID;
+  overlay.className = 'guest-deep-gate-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'guide-peek-title');
+  overlay.innerHTML = `
+    <div class="guest-deep-gate-overlay__backdrop" data-guide-peek-dismiss></div>
+    <div class="guest-gate guest-gate--deep">
+      <h2 id="guide-peek-title" class="guest-gate__title">${esc(title)}</h2>
+      <p class="guest-gate__lead">${esc(lead)}</p>
+      ${list}
+      <div class="guest-gate__actions">
+        <button type="button" class="btn btn--primary" data-guide-peek-dismiss>닫기</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelectorAll('[data-guide-peek-dismiss]').forEach((el) => {
+    el.addEventListener('click', closeGuidePeek);
+  });
+  document.addEventListener('keydown', onGuidePeekKey);
+}
+
+/** @param {'wishlist'|'messages'} kind */
+function openGuidePeek(kind) {
+  if (!isLoggedIn()) {
+    closeGuidePeek();
+    const wish = kind === 'wishlist';
+    openDeepAccessLoginGate({
+      source: wish ? 'wishlist' : 'message',
+      from: 'guide',
+      returnTo: guideReturnTo(),
+      title: wish ? '로그인하고 찜 목록 보기' : '로그인하고 쪽지함 보기',
+      lead: wish
+        ? '로그인 후 저장해 둔 공부방·과외쌤을 이어서 볼 수 있어요.'
+        : '로그인 후 받은·보낸 쪽지를 이어서 볼 수 있어요.',
+      bullets: wish
+        ? ['찜해 둔 후보 확인', '비교에 담기', '쪽지로 첫 연락']
+        : ['받은 쪽지 확인', '보낸 쪽지 이어가기', '운영문의와는 다른 회원 연락'],
+      primaryLabel: '로그인하기',
+    });
+    return;
+  }
+  openGuideMemberPeek(kind);
 }
 
 function renderGuideSafe() {
@@ -500,6 +592,14 @@ export function renderGuideScreen(path) {
 }
 
 export function bindGuideScreenEvents(root) {
+  root.querySelectorAll('[data-guide-peek]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const kind = el.getAttribute('data-guide-peek') === 'messages' ? 'messages' : 'wishlist';
+      openGuidePeek(kind);
+    });
+  });
+
   root.querySelectorAll('[data-guide-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();

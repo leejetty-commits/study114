@@ -178,7 +178,16 @@ export function openDeepAccessLoginGate(sourceOrOpts = 'detail') {
   const opts = typeof sourceOrOpts === 'string' ? { source: sourceOrOpts } : sourceOrOpts || {};
   closeDeepAccessLoginGate();
   const intent = savePendingDeepIntent(opts);
-  const loginHref = loginUrl('detail', intent?.source || 'detail', intent ? homeReturnTo(intent) : '');
+  const loginHref = loginUrl(
+    opts.from || 'detail',
+    intent?.source || opts.source || 'detail',
+    intent ? homeReturnTo(intent) : opts.returnTo || '',
+  );
+  const title = opts.title || DEEP_ACCESS_COPY.title;
+  const lead = opts.lead || DEEP_ACCESS_COPY.lead;
+  const bullets = Array.isArray(opts.bullets) ? opts.bullets : DEEP_ACCESS_COPY.bullets;
+  const primaryLabel = opts.primaryLabel || DEEP_ACCESS_COPY.primaryLabel;
+  const laterLabel = opts.laterLabel || DEEP_ACCESS_COPY.laterLabel;
   const overlay = document.createElement('div');
   overlay.id = DEEP_GATE_ID;
   overlay.className = 'guest-deep-gate-overlay';
@@ -188,12 +197,12 @@ export function openDeepAccessLoginGate(sourceOrOpts = 'detail') {
   overlay.innerHTML = `
     <div class="guest-deep-gate-overlay__backdrop" data-deep-gate-dismiss></div>
     <div class="guest-gate guest-gate--deep">
-      <h2 id="guest-deep-gate-title" class="guest-gate__title">${esc(DEEP_ACCESS_COPY.title)}</h2>
-      <p class="guest-gate__lead">${esc(DEEP_ACCESS_COPY.lead)}</p>
-      <ul class="guest-gate__list">${DEEP_ACCESS_COPY.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
+      <h2 id="guest-deep-gate-title" class="guest-gate__title">${esc(title)}</h2>
+      <p class="guest-gate__lead">${esc(lead)}</p>
+      <ul class="guest-gate__list">${bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
       <div class="guest-gate__actions">
-        <a href="${esc(loginHref)}" class="btn btn--primary" data-util-href="${esc(loginHref)}">${esc(DEEP_ACCESS_COPY.primaryLabel)}</a>
-        <button type="button" class="btn btn--secondary" data-deep-gate-dismiss>${esc(DEEP_ACCESS_COPY.laterLabel)}</button>
+        <a href="${esc(loginHref)}" class="btn btn--primary" data-util-href="${esc(loginHref)}">${esc(primaryLabel)}</a>
+        <button type="button" class="btn btn--secondary" data-deep-gate-dismiss>${esc(laterLabel)}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);

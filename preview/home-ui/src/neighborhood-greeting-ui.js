@@ -14,7 +14,10 @@ import {
 import { getAuthUser, isLoggedIn } from './auth-session.js';
 import { GUEST_DEMO_REGION } from './data.js';
 import { openDetailModal, resolveDetailItem } from './detail-decision/index.js';
+import { primarySavedRegion, studyRoomPromo1Label } from './study-room-home-seed.js';
+import { getStudyRooms } from './study-room-reg/store.js';
 import { getStudents } from './student-reg/store.js';
+import { getTutors } from './tutor-reg/store.js';
 import { primaryHopeRegionLabel } from '../../shared/student-hope-regions.js';
 
 export function importNeighborhoodGreetingHandoff() {
@@ -25,19 +28,86 @@ export function pullNeighborhoodGreetings() {
   return pullGreetingsFromApi();
 }
 
-/** @param {'guest'|'parent'|'study_room'|'tutor'} viewer */
-export function viewerNeighborhood(viewer) {
-  if (viewer === 'parent') {
-    try {
-      const label = getStudents()
-        .map((student) => primaryHopeRegionLabel(student) || student.region_label || '')
-        .find(Boolean);
-      if (label) return String(label);
-    } catch {
-      /* 희망지역이 없으면 게스트 데모 동네 */
+/** @param {string[]} labels @param {unknown} value */
+function pushArea(labels, value) {
+  const text = String(value ?? '').trim();
+  if (!text || text === '—' || text === '-' || text === '미설정') return;
+  if (!labels.includes(text)) labels.push(text);
+}
+
+/** 학생 희망지역. 없으면 빈 목록. 데모동으로 대체하지 않는다. */
+function parentHopeLabels() {
+  /** @type {string[]} */
+  const labels = [];
+  try {
+    for (const student of getStudents()) {
+      pushArea(labels, primaryHopeRegionLabel(student) || student?.region_label || '');
     }
+  } catch {
+    /* 희망지역이 없으면 레일을 데모동에 묶지 않는다 */
   }
-  return GUEST_DEMO_REGION.dong;
+  return labels;
+}
+
+/** 과외쌤 활동·대표 지역. */
+function tutorActivityLabels() {
+  /** @type {string[]} */
+  const labels = [];
+  try {
+    for (const tutor of getTutors()) {
+      if (!tutor || tutor.deleted_at) continue;
+      pushArea(labels, tutor.primary_region_label);
+      pushArea(labels, tutor.location_label);
+      const saved = Array.isArray(tutor.saved_regions) ? tutor.saved_regions : [];
+      for (const slot of saved) {
+        pushArea(labels, slot?.region_label);
+        pushArea(labels, slot?.promo_label);
+      }
+    }
+  } catch {
+    /* 등록 캐시가 없으면 동네 목록은 비운다 */
+  }
+  return labels;
+}
+
+/** 공부방 등록 주소·대표 동네. */
+function studyRoomAreaLabels() {
+  /** @type {string[]} */
+  const labels = [];
+  try {
+    for (const room of getStudyRooms()) {
+      if (!room || room.deleted_at) continue;
+      pushArea(labels, studyRoomPromo1Label(room));
+      pushArea(labels, room.region_label);
+      pushArea(labels, room.location_label);
+      const slot = primarySavedRegion(room);
+      pushArea(labels, slot?.promo_label);
+      pushArea(labels, slot?.region_label);
+    }
+  } catch {
+    /* 등록 캐시가 없으면 동네 목록은 비운다 */
+  }
+  return labels;
+}
+
+/**
+ * 게스트만 데모동. 공급자·학생 홈은 각자 동네. 없으면 빈 문자열.
+ * @param {'guest'|'parent'|'study_room'|'tutor'} viewer
+ */
+export function viewerNeighborhood(viewer) {
+  if (viewer === 'guest') return GUEST_DEMO_REGION.dong;
+  const labels =
+    viewer === 'parent' ? parentHopeLabels() : viewer === 'tutor' ? tutorActivityLabels() : viewer === 'study_room' ? studyRoomAreaLabels() : [];
+  return labels[0] || '';
+}
+
+/** @param {'guest'|'parent'|'study_room'|'tutor'} viewer @returns {string[]} */
+function viewerAreas(viewer) {
+  if (viewer === 'guest') return [GUEST_DEMO_REGION.dong];
+  if (viewer === 'parent') return parentHopeLabels();
+  if (viewer === 'tutor') return tutorActivityLabels();
+  if (viewer === 'study_room') return studyRoomAreaLabels();
+  return [];
 }
 
 const PAGE_SIZE = 5;
@@ -47,10 +117,16 @@ const PAGE_SIZE = 5;
  * @returns {Array<{ providerType: 'study_room'|'tutor', registrationId: number, name: string, summary: string, full: string, kindLabel: string }>}
  */
 function greetingRows(viewer) {
-  const neighborhood = viewerNeighborhood(viewer);
+  const areas = viewerAreas(viewer);
   const loggedIn = isLoggedIn();
   return readGreetings()
-    .filter((row) => row.status === 'up' && sameNeighborhood(row.neighborhood, neighborhood) && (row.body || row.teaser))
+    .filter((row) => {
+      if (row.status !== 'up' || !(row.body || row.teaser)) return false;
+      if (!areas.length) return false;
+      const area = String(row.neighborhood || '').trim();
+      if (!area) return false;
+      return areas.some((label) => sameNeighborhood(area, label));
+    })
     .sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt))
     .map((row) => {
       const full = loggedIn ? row.body || row.teaser || '' : row.teaser || greetingTeaser(row.body);

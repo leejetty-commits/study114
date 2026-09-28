@@ -630,9 +630,8 @@ export const GUIDE_PAGES = {
     note:
       '찜·비교는 공부방·과외쌤 후보를 저장하고 판단하는 기능입니다. 학생은 찜·비교 대상이 아니며, 공부방·과외쌤이 학생 요청을 다시 볼 때는 별도 ‘학생 검토함’으로 이어집니다.',
     actionCards: [
-      { label: '찜한 공부방·과외쌤 보기', path: '/mypage/wishlist', hint: '저장해 둔 공부방·과외쌤 후보' },
-      { label: '쪽지함 보기', path: '/mypage/messages', hint: '첫 연락과 이어가는 대화' },
-      { label: '마이페이지 홈 가기', path: '/mypage', hint: '찜·쪽지·활동을 한곳에서' },
+      { label: '찜한 공부방·과외쌤 보기', peek: 'wishlist', hint: '저장해 둔 공부방·과외쌤 후보' },
+      { label: '쪽지함 보기', peek: 'messages', hint: '첫 연락과 이어가는 대화' },
     ],
   },
   safe: {
