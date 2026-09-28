@@ -17,6 +17,7 @@ import { ensureEmbeddedRegister } from './embedded-panels.js';
 import { openDetailDecision } from '../detail-decision/index.js';
 import { getStudyRoom } from './store.js';
 import { RC_COPY } from './registration-check-copy.js';
+import { cheonwonInputToWon } from '../../../shared/fee-cheonwon.js';
 import {
   RC_LIGHT_FIELDS,
   TEACHING_STYLE_OPTIONS,
@@ -66,8 +67,8 @@ function readLightPatch(field, form) {
     const n = String(form.querySelector(`[name="${field}"]`)?.value || '').trim();
     const patch = { [field]: n };
     if (field === 'monthly_fee_manwon' && n) {
-      const man = Number(n);
-      if (Number.isFinite(man) && man > 0) patch.price_amount = man * 1000;
+      const won = Number(cheonwonInputToWon(n));
+      if (Number.isFinite(won) && won > 0) patch.price_amount = won;
     }
     return patch;
   }

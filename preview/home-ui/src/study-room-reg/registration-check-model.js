@@ -9,6 +9,7 @@ import {
   TEACHING_STYLE_OPTIONS,
 } from '@study-room-ui/state.js';
 import { formatPrimaryAudienceLabel, lessonPlaceNameLabel } from '../../../shared/study-room-basic-form.js';
+import { cheonwonInputToWon } from '../../../shared/fee-cheonwon.js';
 import {
   blank,
   formatLessonPlace,
@@ -259,10 +260,10 @@ function missingForTier(okMap, ids, roomId) {
 }
 
 function priceWon(s, room) {
+  const fromCheonwon = Number(cheonwonInputToWon(s?.monthly_fee_manwon));
+  if (Number.isFinite(fromCheonwon) && fromCheonwon > 0) return fromCheonwon;
   const raw = Number(s?.price_amount || room?.price_amount || 0);
   if (Number.isFinite(raw) && raw > 0) return raw;
-  const manwon = Number(s?.monthly_fee_manwon);
-  if (Number.isFinite(manwon) && manwon > 0) return manwon * 10000;
   return 0;
 }
 
