@@ -3,12 +3,10 @@
  * 카피·레이아웃·CTA를 surface(페이지) 단위로 분배한다.
  */
 
-import { AUTH_UI_BASE } from './data.js';
 import { searchUiUrl, HOME_UI_BASE } from './nav-config.js';
 import { homeHashUrl, roleHomeHashPath } from '../../shared/site-nav-config.js';
 import { getAuthUser } from './auth-session.js';
 
-const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
 const HOME_MESSAGES = `${HOME_UI_BASE}/#/mypage/messages`;
 const HOME_PLANS = `${HOME_UI_BASE}/#/plans`;
 
@@ -130,43 +128,6 @@ export const HOME_BANNER_COPY = {
  * @type {Record<string, { copyId: BannerCopyId, layout: BannerLayout, image?: string, ctas: BannerCta[] }>}
  */
 const SURFACE_BANNER = {
-  guest: {
-    copyId: 'discover',
-    layout: 'cinema',
-    image: '/assets/banners/discover.jpg',
-    ctas: [
-      { label: '우리동네 공부방 찾기', href: searchUiUrl('room'), external: true, kind: 'primary' },
-      { label: '우리동네 과외쌤 찾기', href: searchUiUrl('tutor'), external: true, kind: 'secondary' },
-      { label: '회원가입', href: SIGNUP_URL, external: true, kind: 'secondary' },
-    ],
-  },
-  parent: {
-    copyId: 'compare',
-    layout: 'cinema',
-    image: '/assets/banners/compare.jpg',
-    ctas: [
-      { label: '우리동네 공부방 찾기', href: searchUiUrl('room', 'parent'), external: true, kind: 'primary' },
-      { label: '우리동네 과외쌤 찾기', href: searchUiUrl('tutor', 'parent'), external: true, kind: 'secondary' },
-    ],
-  },
-  study_room: {
-    copyId: 'trust',
-    layout: 'cinema',
-    image: '/assets/banners/trust.jpg',
-    ctas: [
-      { label: '우리동네 학생 보기', href: searchUiUrl('student', 'study_room'), external: true, kind: 'primary' },
-      { label: '유료상품 알아보기', href: '#/plans', nav: '/plans', kind: 'secondary' },
-    ],
-  },
-  tutor: {
-    copyId: 'trust',
-    layout: 'cinema',
-    image: '/assets/banners/tutor.webp',
-    ctas: [
-      { label: '학생 수요 보기', href: searchUiUrl('student', 'tutor'), external: true, kind: 'primary' },
-      { label: '유료상품 알아보기', href: '#/plans', nav: '/plans', kind: 'secondary' },
-    ],
-  },
   search_room: {
     copyId: 'compare',
     layout: 'cinema',
@@ -244,11 +205,31 @@ function renderCta(cta) {
   return `<a class="${cls}" href="#${esc(nav)}" data-nav="${esc(nav)}">${accentBrandWords(cta.label)}</a>`;
 }
 
+/** 게스트·역할 홈 공통. 자기 칸을 숨기지 않는다. 로그인 없이 소개 페이지만. */
+const HOME_PROMO_TRIO = [
+  { label: '내가 찾는 공부방', path: '/promo/study-room' },
+  { label: '나의 과외쌤은 어디에?', path: '/promo/tutor' },
+  { label: '학생, 인재로 만들기', path: '/promo/parent' },
+];
+
+const HOME_TRIO_SURFACES = new Set(['guest', 'parent', 'study_room', 'tutor']);
+
+function renderHomePromoTrio(beforeActions = '') {
+  const cards = HOME_PROMO_TRIO.map(
+    (card) => `
+      <a class="home-promo-trio__card" href="#${esc(card.path)}" data-nav="${esc(card.path)}">${esc(card.label)}</a>`,
+  ).join('');
+  return `
+    ${beforeActions || ''}
+    <nav class="home-promo-trio" aria-label="홈 안내">${cards}</nav>`;
+}
+
 /**
  * @param {string} surface guest|parent|study_room|tutor|search_room|search_tutor|search_student|plans|support
  * @param {BannerCta[] | null} [ctaOverride]
  */
 export function renderHomeMarketingBanner(surface, ctaOverride = null, beforeActions = '') {
+  if (HOME_TRIO_SURFACES.has(surface)) return renderHomePromoTrio(beforeActions);
   const cfg = SURFACE_BANNER[surface];
   if (!cfg) return '';
   const copy = HOME_BANNER_COPY[cfg.copyId];

@@ -113,10 +113,62 @@
   min-height: clamp(15rem, 28vw, 19rem);
 }
 
-/* 공부방 롤홈: 배너 우측 내 공부방 박스 업포 */
+/* 홈 공통 3칸 — 공부방 카탈로그와 같은 종이·남색 계열. 시네마 한 칸이 아님. */
+.home-promo-trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 var(--space-5, 1.25rem);
+}
+
+.home-promo-trio__card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 4.75rem;
+  padding: 16px 16px 16px 20px;
+  border: 1px solid #e6dfd4;
+  border-radius: 12px;
+  background: #f6f1e8;
+  color: #1c1917;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.home-promo-trio__card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: 2px;
+  background: #266bc4;
+}
+
+.home-promo-trio__card:hover {
+  border-color: #c5d9f2;
+  background: #eaf2fc;
+  color: #266bc4;
+}
+
+@media (max-width: 720px) {
+  .home-promo-trio {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 공부방 롤홈: 3칸 아래 내 공부방 박스. 칸을 가리지 않는다. */
 .home-mkt-wrap {
   position: relative;
   margin-bottom: var(--space-5, 1.25rem);
+}
+
+.home-mkt-wrap .home-promo-trio {
+  margin-bottom: 0;
 }
 
 .home-mkt-wrap > .home-mkt {
@@ -128,13 +180,16 @@
   padding-right: 1rem;
 }
 
+.home-mkt-wrap--with-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .home-mkt-wrap__panel {
-  position: absolute;
+  position: static;
   z-index: 2;
-  top: 50%;
-  right: clamp(0.75rem, 2vw, 1.35rem);
-  transform: translateY(-50%);
-  width: min(16.5rem, 42%);
+  width: 100%;
 }
 
 .home-mkt-wrap .my-box--banner-panel {

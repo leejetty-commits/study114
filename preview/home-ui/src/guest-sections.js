@@ -73,7 +73,7 @@ function loginGateAttrs(action, label) {
   return `data-action="login-gate" data-gate="${action}" data-gate-label="${label}" tabindex="0" role="button"`;
 }
 
-/** 홈 상단 마케팅 배너 (3안 · cinema) */
+/** 홈 상단 — 역할 공통 작은 배너 3칸 */
 export function renderGuestTempNotice() {
   return renderHomeMarketingBanner('guest', null, renderNeighborhoodGreetingRail('guest'));
 }
