@@ -1,12 +1,22 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
 import { getNavRole } from '../state.js';
 import { getAuthUser } from '../auth-session.js';
-import { memberHomeHashPath } from '../nav-config.js';
+import { memberHomeHashPath, navRoleFromAuthUser } from '../nav-config.js';
 import { renderPlansPageTitle, renderPlansNav } from './nav.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { renderPromoWithRightRail } from '../right-rail.js';
 import { isPaidHubPath, isPaidStorefrontPath, isPaidTrackPath, wrapPaidStorefront } from './theme.js';
 import { renderPlansHubCinema, renderPlansHubRailCard } from './hub-home.js';
+
+/**
+ * plans 라우트의 getNavRole()은 guest로 고정된다.
+ * 우측 레일만 실세션(study_room/tutor/parent/guest)을 쓴다.
+ */
+function plansRailNavRole() {
+  const live = navRoleFromAuthUser(getAuthUser());
+  if (live === 'study_room' || live === 'tutor' || live === 'parent' || live === 'guest') return live;
+  return 'guest';
+}
 
 /**
  * @param {string} currentPath
@@ -46,7 +56,7 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
         <div class="plans-hub-gap-rail" aria-hidden="true"></div>
         <div class="plans-hub-rail">
           ${isHub ? renderPlansHubRailCard() : ''}
-          ${renderPromoWithRightRail('plans_right_rail')}
+          ${renderPromoWithRightRail('plans_right_rail', { navRole: plansRailNavRole() })}
         </div>
         <div class="plans-hub-gutter-r" aria-hidden="true"></div>
       </div>
