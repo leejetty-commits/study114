@@ -22,7 +22,7 @@ import { renderStudyRoomDetailBody } from './studyroom-detail.js';
 import { AUTH_UI_BASE } from '../data.js';
 import { toggleWishlist, toggleCompare, isWishlisted } from '../user-actions-state.js';
 import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
-import { renderRightRailBlock } from '../right-rail.js';
+import { renderRightRailBlock, bindRightRailEvents } from '../right-rail.js';
 import { maskPublicDisplayName } from '../student-blind-teaser.js';
 import { isGuestPublicPath, loginUrl } from '../../../shared/route-access.js';
 import { openPublicMyshop } from '../myshop/navigate.js';
@@ -323,6 +323,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     </div>`;
 
   document.body.appendChild(wrap);
+  bindRightRailEvents(wrap);
   document.body.classList.add('p24-detail-open');
   if (floating) {
     document.body.classList.add('p24-detail-open--floating');

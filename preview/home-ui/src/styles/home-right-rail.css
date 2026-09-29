@@ -120,6 +120,15 @@
   color: inherit;
 }
 
+button.live-rail-action {
+  width: 100%;
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+}
+
 .live-rail-card:hover,
 .live-rail-action:hover,
 .live-rail-card:focus-visible,
