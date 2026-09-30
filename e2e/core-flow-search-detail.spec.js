@@ -50,21 +50,28 @@ test.describe('[4단계] guest 홈 → 검색 → 상세', () => {
     await expect(page.locator('#p24-detail-modal')).toHaveCount(0);
   });
 
-  test('search-ui region feed → 카드 상세 · guest 로그인 CTA', async ({ page }) => {
+  test('search-ui 게스트는 가입·로그인 카드만 본다', async ({ page }) => {
     await page.goto(`${SEARCH}/#/search/room?role=guest`);
-    await page.waitForSelector('.search-results', { timeout: 30_000 });
-    await openFirstStudyRoomDetail(page);
-    await expect(page.getByRole('button', { name: '로그인하고 문의하기' })).toBeVisible();
+    const gate = page.locator('.guest-gate');
+    await expect(gate.getByRole('heading', { name: '찾기는 가입·로그인 후 이용할 수 있어요' })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(gate.getByRole('link', { name: '로그인' })).toBeVisible();
+    await expect(gate.getByRole('link', { name: '가입하기' })).toBeVisible();
+    await expect(page.locator('[data-search-form]')).toHaveCount(0);
+    await expect(page.locator('[data-provider-kind]')).toHaveCount(0);
   });
 
-  test('search-ui 검색 실행 → 결과 유지 → reset', async ({ page }) => {
-    await page.goto(`${SEARCH}/#/search/room?role=guest`);
-    await page.waitForSelector('[data-search-form]', { timeout: 30_000 });
-    const form = page.locator('[data-search-form]');
-    await form.locator('button[type="submit"]').click();
-    await expect(page.locator('.search-results--executed')).toBeVisible({ timeout: 15_000 });
-    await page.locator('[data-action="reset-filters"]').click();
-    await expect(page.locator('.search-results--pre')).toBeVisible({ timeout: 10_000 });
+  test('search-ui 게스트는 ?role=parent 여도 가입·로그인 카드', async ({ page }) => {
+    await page.goto(`${SEARCH}/#/search/room?role=parent`);
+    const gate = page.locator('.guest-gate');
+    await expect(gate.getByRole('heading', { name: '찾기는 가입·로그인 후 이용할 수 있어요' })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(gate.getByRole('link', { name: '로그인' })).toBeVisible();
+    await expect(gate.getByRole('link', { name: '가입하기' })).toBeVisible();
+    await expect(page.locator('[data-search-form]')).toHaveCount(0);
+    await expect(page.locator('[data-provider-kind]')).toHaveCount(0);
   });
 });
 
@@ -105,6 +112,16 @@ test.describe('[4단계] parent 홈 → 검색 → 상세 · 행동', () => {
     await expect(memoBtn).toBeVisible();
     await memoBtn.click();
     await expect(page.locator('[data-overlay="compose"]')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('search-ui 검색 실행 → 결과 유지 → reset', async ({ page }) => {
+    await page.goto(`${SEARCH}/#/search/room?role=parent`);
+    await page.waitForSelector('[data-search-form]', { timeout: 30_000 });
+    const form = page.locator('[data-search-form]');
+    await form.locator('button[type="submit"]').click();
+    await expect(page.locator('.search-results--executed')).toBeVisible({ timeout: 15_000 });
+    await page.locator('[data-action="reset-filters"]').click();
+    await expect(page.locator('.search-results--pre')).toBeVisible({ timeout: 10_000 });
   });
 
   test('search-ui parent 역할 · 상세 · 최근열람 기록', async ({ page }) => {

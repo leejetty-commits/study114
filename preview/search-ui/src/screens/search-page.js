@@ -21,8 +21,10 @@ import {
   resolveSearchViewer,
   isSearchLoggedIn,
 } from '../search-handoff.js';
+import { isEmailVerified } from '@home-ui/auth-session.js';
 import { bindGuestListPagination } from '@home-ui/list-pagination.js';
-import { bindProtectedGuestActions } from '../../../shared/guest-gate-ui.js';
+import { bindProtectedGuestActions, renderGuestLoginGatePanel } from '../../../shared/guest-gate-ui.js';
+import { isSafeReturnTo } from '../../../shared/auth-redirect.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../../shared/preview-flags.js';
 import { renderSearchMarketingBanner } from '@home-ui/home-marketing-banner.js';
 import {
@@ -104,8 +106,45 @@ function renderSearchForm(tab) {
     ${renderFindResultSection(tab, previewState, previewState.role, { surfaceType: 'search' })}`;
 }
 
-export function renderSearchPage() {
+/** 로그인했고 이메일 인증까지 끝난 회원만 찾기를 연다. role 쿼리는 보지 않는다. */
+function canUseFind() {
+  return isSearchLoggedIn() && isEmailVerified();
+}
+
+/** 상세 게이트와 같이, 현재 찾기 주소 전체를 return_to 로 넣는다. */
+function searchLoginReturnTo() {
+  try {
+    const hashRaw = (window.location.hash || '').replace(/^#/, '') || '/search/room';
+    const hash = hashRaw.startsWith('/') ? hashRaw : `/${hashRaw}`;
+    const target = `${window.location.origin}${window.location.pathname}${window.location.search}#${hash}`;
+    return isSafeReturnTo(target) ? target : '';
+  } catch {
+    return '';
+  }
+}
+
+function renderFindLoginGate() {
+  return `
+    <div class="site-gate-wrap">
+      ${renderGuestLoginGatePanel({
+        title: '찾기는 가입·로그인 후 이용할 수 있어요',
+        lead: '공부방·과외쌤·학생 찾기는 회원만 이용할 수 있습니다. 가입하거나 로그인해 주세요.',
+        from: 'search',
+        returnTo: searchLoginReturnTo(),
+        primaryLabel: '로그인',
+        signupLabel: '가입하기',
+      })}
+    </div>`;
+}
+
+/**
+ * @param {{ sessionReady?: boolean }} [opts]
+ * sessionReady 전: 헤더·푸터·레일만. 이후 비로그인·미인증: 가입·로그인 카드.
+ */
+export function renderSearchPage(opts = {}) {
   syncRoleFromHash();
+  if (!opts.sessionReady) return renderSearchShell('');
+  if (!canUseFind()) return renderSearchShell(renderFindLoginGate());
   const rawTab = getCurrentTab();
   const tab = resolveAllowedTab(rawTab, previewState.role);
   if (tab !== rawTab) {
@@ -117,10 +156,13 @@ export function renderSearchPage() {
 }
 
 /**
- * searched=1 복원 재검색 + GPS 부트 (렌더 후 1회)
+ * searched=1 복원 재검색 + GPS 부트 (렌더 후 1회).
+ * 세션 전·비로그인·미인증이면 검색 API를 호출하지 않는다.
  * @param {() => void} rerender
+ * @param {{ allowFindBoot?: boolean }} [opts]
  */
-export function afterSearchPageMount(rerender) {
+export function afterSearchPageMount(rerender, opts = {}) {
+  if (opts.allowFindBoot === false || !canUseFind()) return;
   const tab = getCurrentTab();
   if (previewState.role === 'study_room' && tab === 'room') {
     bootStudyRoomHome(rerender);
@@ -152,6 +194,7 @@ export function afterSearchPageMount(rerender) {
  */
 export function bindSearchPageEvents(root, rerender, opts = {}) {
   bindGlobalEvents(root);
+  if (opts.allowFindBoot !== true || !canUseFind()) return;
   const viewer = resolveSearchViewer(previewState.role);
   const sessionLoggedIn = isSearchLoggedIn();
   const loggedIn = sessionLoggedIn;
@@ -189,7 +232,5 @@ export function bindSearchPageEvents(root, rerender, opts = {}) {
     });
   });
 
-  if (opts.allowFindBoot !== false) {
-    afterSearchPageMount(rerender);
-  }
+  afterSearchPageMount(rerender, opts);
 }

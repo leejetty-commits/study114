@@ -27,6 +27,7 @@ function esc(s) {
  *   action?: string,
  *   returnTo?: string,
  *   primaryLabel?: string,
+ *   signupLabel?: string,
  * }} opts
  */
 export function renderGuestLoginGatePanel(opts) {
@@ -38,6 +39,7 @@ export function renderGuestLoginGatePanel(opts) {
     action = '',
     returnTo = '',
     primaryLabel = '로그인하고 이어서',
+    signupLabel = '회원가입',
   } = opts;
   const loginHref = loginUrl(from, action, returnTo);
   const signupHref = signupUrl();
@@ -64,7 +66,7 @@ export function renderGuestLoginGatePanel(opts) {
       ${list}
       <div class="guest-gate__actions">
         <a href="${esc(loginHref)}" class="btn btn--primary" data-util-href="${esc(loginHref)}">${esc(primaryLabel)}</a>
-        <a href="${esc(signupHref)}" class="btn btn--secondary" data-util-href="${esc(signupHref)}">회원가입</a>
+        <a href="${esc(signupHref)}" class="btn btn--secondary" data-util-href="${esc(signupHref)}">${esc(signupLabel)}</a>
       </div>
     </section>
   `;

@@ -16,9 +16,9 @@ import '@home-ui/styles/home-marketing-banner.css';
 import './styles/search-visily.css';
 import '@home-ui/styles/udx-std-apply.css';
 
-import { afterSearchPageMount, bindSearchPageEvents, renderSearchPage } from './screens/search-page.js';
+import { bindSearchPageEvents, renderSearchPage } from './screens/search-page.js';
 import { syncRoleFromHash } from './state.js';
-import { initAuthSession } from '@home-ui/auth-session.js';
+import { initAuthSession, isEmailVerified } from '@home-ui/auth-session.js';
 import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, resetDeepIntentResumeFlag } from '@home-ui/resume-deep-intent.js';
 
@@ -31,7 +31,7 @@ function render() {
   const hashBefore = window.location.hash;
   syncRoleFromHash();
   const app = document.getElementById('app');
-  const html = renderSearchPage();
+  const html = renderSearchPage({ sessionReady: allowFindBoot });
   if (window.location.hash !== hashBefore) return;
   app.innerHTML = html;
   bindSearchPageEvents(app, render, { allowFindBoot });
@@ -64,17 +64,15 @@ function init() {
     sessionFollowUpDone = true;
     if (isAuthRedirectPending()) return;
     allowFindBoot = true;
-    if (user) {
-      render();
+    render();
+    if (user && isEmailVerified()) {
       queueMicrotask(() => resumePendingDeepIntent());
-      return;
     }
-    afterSearchPageMount(render);
   });
   window.addEventListener('auth:login', () => {
     allowFindBoot = true;
     render();
-    queueMicrotask(() => resumePendingDeepIntent());
+    if (isEmailVerified()) queueMicrotask(() => resumePendingDeepIntent());
   });
   window.addEventListener('auth:logout', () => {
     resetDeepIntentResumeFlag();
