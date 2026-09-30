@@ -13,6 +13,51 @@ async function devLoginParent(page) {
   });
 }
 
+async function dismissFindLoginPopup(page, returnIncludes) {
+  const gate = page.locator('#guest-deep-access-gate');
+  await expect(gate).toBeVisible();
+  const href = await gate.locator('a[data-util-href]').getAttribute('data-util-href');
+  expect(decodeURIComponent(href || '')).toContain(returnIncludes);
+  await gate.getByRole('button', { name: '나중에 할게요' }).click();
+  await expect(gate).toHaveCount(0);
+}
+
+async function expectGuestFindBrowse(page, url) {
+  const searchCalls = [];
+  page.on('request', (req) => {
+    if (req.url().includes('/api/search/search.php')) searchCalls.push(req.url());
+  });
+  await page.goto(url);
+  await expect(page.locator('[data-search-form]')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('heading', { name: '찾기는 가입·로그인 후 이용할 수 있어요' })).toHaveCount(0);
+
+  const returnIncludes = url.includes('role=parent') ? 'role=parent' : '#/search/room';
+  await page.locator('[data-search-form] input, [data-search-form] select, [data-search-form] textarea').first().focus();
+  await dismissFindLoginPopup(page, returnIncludes);
+
+  await page.locator('[data-search-form] button[type="submit"]').click();
+  await dismissFindLoginPopup(page, returnIncludes);
+
+  await page.locator('[data-search-form] button[type="reset"]').click();
+  await dismissFindLoginPopup(page, returnIncludes);
+
+  await page.locator('[data-search-form] select').first().selectOption({ index: 1 }, { force: true });
+  await dismissFindLoginPopup(page, returnIncludes);
+
+  await page.locator('[data-list-sort]').first().selectOption({ index: 1 });
+  await dismissFindLoginPopup(page, returnIncludes);
+
+  const card = page.locator('[data-surface="student-demand"] [data-student-id]').first();
+  await expect(card).toBeVisible();
+  await expect(card.locator('.expo-hcard__name')).toContainText('○○');
+  await expect(card).not.toContainText('초등왕');
+  await expect(card).not.toContainText('수학집중');
+  await card.locator('.expo-hcard__name').click();
+  await expect(page.locator('#p24-detail-modal')).toHaveCount(0);
+  await dismissFindLoginPopup(page, returnIncludes);
+  expect(searchCalls).toEqual([]);
+}
+
 async function openFirstStudyRoomDetail(page) {
   const card = page.locator('[data-provider-kind="study_room"][data-provider-id]').first();
   await expect(card).toBeVisible({ timeout: 15_000 });
@@ -50,28 +95,42 @@ test.describe('[4단계] guest 홈 → 검색 → 상세', () => {
     await expect(page.locator('#p24-detail-modal')).toHaveCount(0);
   });
 
-  test('search-ui 게스트는 가입·로그인 카드만 본다', async ({ page }) => {
-    await page.goto(`${SEARCH}/#/search/room?role=guest`);
-    const gate = page.locator('.guest-gate');
-    await expect(gate.getByRole('heading', { name: '찾기는 가입·로그인 후 이용할 수 있어요' })).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect(gate.getByRole('link', { name: '로그인' })).toBeVisible();
-    await expect(gate.getByRole('link', { name: '가입하기' })).toBeVisible();
-    await expect(page.locator('[data-search-form]')).toHaveCount(0);
-    await expect(page.locator('[data-provider-kind]')).toHaveCount(0);
+  test('search-ui 게스트는 검색 폼을 보고 조작하면 로그인 팝업', async ({ page }) => {
+    await expectGuestFindBrowse(page, `${SEARCH}/#/search/room?role=guest`);
   });
 
-  test('search-ui 게스트는 ?role=parent 여도 가입·로그인 카드', async ({ page }) => {
-    await page.goto(`${SEARCH}/#/search/room?role=parent`);
-    const gate = page.locator('.guest-gate');
-    await expect(gate.getByRole('heading', { name: '찾기는 가입·로그인 후 이용할 수 있어요' })).toBeVisible({
-      timeout: 30_000,
+  test('search-ui 비로그인은 role=parent 쿼리여도 검색 폼과 로그인 팝업', async ({ page }) => {
+    await expectGuestFindBrowse(page, `${SEARCH}/#/search/room?role=parent`);
+  });
+
+  test('search-ui 인증 전 로그인은 이메일 인증 대기로 이동', async ({ page }) => {
+    await page.route(/5173\//, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/html',
+        body: '<!doctype html><title>verify</title>',
+      });
     });
-    await expect(gate.getByRole('link', { name: '로그인' })).toBeVisible();
-    await expect(gate.getByRole('link', { name: '가입하기' })).toBeVisible();
-    await expect(page.locator('[data-search-form]')).toHaveCount(0);
-    await expect(page.locator('[data-provider-kind]')).toHaveCount(0);
+    await page.route('**/api/auth/me.php', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          authenticated: true,
+          email_verified: false,
+          user_id: 99,
+          email: 'unverified-find@dev.local',
+          role_type: 'guardian_student',
+          name: '미인증',
+        }),
+      });
+    });
+    await page.goto(`${SEARCH}/#/search/room`, { waitUntil: 'commit' });
+    await page.waitForURL(/signup\/verify-email/, { timeout: 30_000 });
+    await page.waitForTimeout(600);
+    expect(page.url()).toMatch(/signup\/verify-email/);
+    expect(page.url()).not.toMatch(/#\/search\//);
   });
 });
 

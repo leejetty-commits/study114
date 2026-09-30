@@ -32,7 +32,7 @@ function render() {
   syncRoleFromHash();
   const app = document.getElementById('app');
   const html = renderSearchPage({ sessionReady: allowFindBoot });
-  if (window.location.hash !== hashBefore) return;
+  if (window.location.hash !== hashBefore || isAuthRedirectPending()) return;
   app.innerHTML = html;
   bindSearchPageEvents(app, render, { allowFindBoot });
   paintedHash = hashBefore;

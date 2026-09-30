@@ -180,10 +180,11 @@ export function openDeepAccessLoginGate(sourceOrOpts = 'detail') {
   const opts = typeof sourceOrOpts === 'string' ? { source: sourceOrOpts } : sourceOrOpts || {};
   closeDeepAccessLoginGate();
   const intent = savePendingDeepIntent(opts);
+  const explicitReturn = typeof opts.returnTo === 'string' ? opts.returnTo.trim() : '';
   const loginHref = loginUrl(
     opts.from || 'detail',
     intent?.source || opts.source || 'detail',
-    intent ? homeReturnTo(intent) : opts.returnTo || '',
+    explicitReturn || (intent ? homeReturnTo(intent) : ''),
   );
   const title = opts.title || DEEP_ACCESS_COPY.title;
   const lead = opts.lead || DEEP_ACCESS_COPY.lead;

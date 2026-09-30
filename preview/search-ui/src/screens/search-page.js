@@ -23,7 +23,8 @@ import {
 } from '../search-handoff.js';
 import { isEmailVerified } from '@home-ui/auth-session.js';
 import { bindGuestListPagination } from '@home-ui/list-pagination.js';
-import { bindProtectedGuestActions, renderGuestLoginGatePanel } from '../../../shared/guest-gate-ui.js';
+import { bindProtectedGuestActions, openDeepAccessLoginGate } from '../../../shared/guest-gate-ui.js';
+import { redirectToEmailVerifyWait } from '../../../shared/auth-redirect.js';
 import { isSafeReturnTo } from '../../../shared/auth-redirect.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../../shared/preview-flags.js';
 import { renderSearchMarketingBanner } from '@home-ui/home-marketing-banner.js';
@@ -43,6 +44,9 @@ import {
   bootFindGpsIfNeeded,
 } from '../search-find-surface.js';
 import { bootStudyRoomHome, bootStudyRoomStudentDemand } from '@home-ui/study-room-home-seed.js';
+import { renderBrowseList } from '@home-ui/exposure-render.js';
+import { getStudentDemandForRegion } from '../search-region-feed.js';
+import { renderListSortSelect } from '../../../shared/list-sort.js';
 
 /**
  * 찾기 페이지 바디 탭·역할 셀렉트 제거 — 이동은 GNB만.
@@ -102,8 +106,33 @@ function renderSearchForm(tab) {
       hideRegionBar: true,
     })}
     ${renderFindFilterBar(tab, previewState)}
+    ${renderGuestListSort(tab)}
     ${canUseCompare(tab, previewState.role) ? renderCompareBar() : ''}
-    ${renderFindResultSection(tab, previewState, previewState.role, { surfaceType: 'search' })}`;
+    ${renderFindResultSection(tab, previewState, previewState.role, { surfaceType: 'search' })}
+    ${renderGuestStudentStrip(tab)}`;
+}
+
+/** 비로그인 구경 목록의 정렬. 값을 바꾸면 검색 대신 로그인 팝업. */
+function renderGuestListSort(tab) {
+  if (isSearchLoggedIn()) return '';
+  const kind = tab === 'tutor' ? 'tutor' : tab === 'student' ? 'student' : 'study_room';
+  return renderListSortSelect(kind, 'latest', { mode: 'search' });
+}
+
+/** 비로그인 구경: 검색 전 지역 피드 아래에 학생 카드를 블라인드 이름으로만 붙인다. */
+function renderGuestStudentStrip(tab) {
+  if (isSearchLoggedIn()) return '';
+  if (tab !== 'room' && tab !== 'tutor') return '';
+  const regionLabel = resolveActiveRegionLabel(tab, previewState, 'guest');
+  const items = getStudentDemandForRegion(regionLabel, {
+    hopeType: tab === 'tutor' ? 'tutor' : 'study_room',
+    limit: 6,
+  });
+  if (!items.length) return '';
+  return `
+    <section class="content-section search-student-demand" data-surface="student-demand" aria-label="학생">
+      ${renderBrowseList('student', items, { guest: true, viewerRole: 'guest', sourceRoute: 'search' })}
+    </section>`;
 }
 
 /** 로그인했고 이메일 인증까지 끝난 회원만 찾기를 연다. role 쿼리는 보지 않는다. */
@@ -123,28 +152,20 @@ function searchLoginReturnTo() {
   }
 }
 
-function renderFindLoginGate() {
-  return `
-    <div class="site-gate-wrap">
-      ${renderGuestLoginGatePanel({
-        title: '찾기는 가입·로그인 후 이용할 수 있어요',
-        lead: '공부방·과외쌤·학생 찾기는 회원만 이용할 수 있습니다. 가입하거나 로그인해 주세요.',
-        from: 'search',
-        returnTo: searchLoginReturnTo(),
-        primaryLabel: '로그인',
-        signupLabel: '가입하기',
-      })}
-    </div>`;
-}
-
 /**
  * @param {{ sessionReady?: boolean }} [opts]
- * sessionReady 전: 헤더·푸터·레일만. 이후 비로그인·미인증: 가입·로그인 카드.
+ * sessionReady 전: 헤더·푸터·레일만.
+ * 로그인했지만 이메일 미인증: 인증 대기 화면으로 이동.
+ * 비로그인: 검색 폼·결과. 조작은 로그인 팝업.
  */
 export function renderSearchPage(opts = {}) {
   syncRoleFromHash();
   if (!opts.sessionReady) return renderSearchShell('');
-  if (!canUseFind()) return renderSearchShell(renderFindLoginGate());
+  if (isSearchLoggedIn() && !isEmailVerified()) {
+    redirectToEmailVerifyWait();
+    return '';
+  }
+  if (!isSearchLoggedIn()) previewState.role = 'guest';
   const rawTab = getCurrentTab();
   const tab = resolveAllowedTab(rawTab, previewState.role);
   if (tab !== rawTab) {
@@ -185,6 +206,113 @@ export function afterSearchPageMount(rerender, opts = {}) {
   });
 }
 
+function openFindGuestLogin() {
+  openDeepAccessLoginGate({
+    from: 'search',
+    source: 'search',
+    returnTo: searchLoginReturnTo(),
+  });
+}
+
+/**
+ * 비로그인 찾기: 목록 클릭은 기존 상세 가드, 검색·필터·정렬·학생 카드는 로그인 팝업.
+ * 검색 API를 부르는 bindFindSurfaceEvents / afterSearchPageMount 는 붙이지 않는다.
+ * @param {HTMLElement} root
+ * @param {() => void} rerender
+ */
+function bindGuestFindBrowse(root, rerender) {
+  syncHomeSubscription();
+  bindUserActionEvents(root, rerender, { sourceRoute: 'search' });
+  bindCompareEvents(root, false);
+  bindDetailDecisionEvents(root, {
+    onRerender: rerender,
+    viewer: 'guest',
+    sourceRoute: 'search',
+    getStudentItem: (id) => previewState.searchExposureItems.find((x) => x.id === id),
+  });
+  bindProtectedGuestActions(root);
+  bindGuestListPagination(root, rerender);
+
+  const form = root.querySelector('[data-search-form]');
+  if (form) {
+    const gate = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openFindGuestLogin();
+    };
+    form.addEventListener(
+      'focusin',
+      (e) => {
+        const field = e.target instanceof Element ? e.target.closest('input, textarea, select') : null;
+        if (!field || !form.contains(field)) return;
+        gate(e);
+      },
+      true,
+    );
+    form.addEventListener('input', gate, true);
+    form.addEventListener('change', gate, true);
+    form.addEventListener('submit', gate, true);
+    form.addEventListener('reset', gate, true);
+    form.addEventListener(
+      'click',
+      (e) => {
+        const btn = e.target instanceof Element ? e.target.closest('button') : null;
+        if (!btn || !form.contains(btn)) return;
+        if (btn.getAttribute('data-action') === 'toggle-expanded') return;
+        gate(e);
+      },
+      true,
+    );
+  }
+
+  root.querySelector('[data-action="toggle-expanded"]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    previewState.expanded = !previewState.expanded;
+    rerender();
+  });
+
+  root.addEventListener(
+    'click',
+    (e) => {
+      const el = e.target instanceof Element ? e.target : null;
+      if (!el) return;
+      if (el.closest('[data-action="reset-filters"], [data-action="pick-hope-type"], [data-action="change-region"], [data-tutor-region], [data-action="apply-expanded"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        openFindGuestLogin();
+        return;
+      }
+      if (el.closest('[data-action="open-student-detail"], [data-student-id]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        openFindGuestLogin();
+      }
+    },
+    true,
+  );
+
+  root.addEventListener(
+    'change',
+    (e) => {
+      const el = e.target instanceof Element ? e.target : null;
+      if (!el?.closest('[data-list-sort], [data-preferred-lesson-type], [data-lesson-format-select]')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openFindGuestLogin();
+    },
+    true,
+  );
+
+  root.querySelectorAll('[data-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const nextTab = /** @type {import('../state.js').SearchTab} */ (btn.dataset.tab);
+      if (!canShowSearchTab(nextTab, previewState.role)) return;
+      resetFindSurface(previewState);
+      navigateTab(nextTab);
+    });
+  });
+}
+
 /**
  * @param {HTMLElement} root
  * @param {() => void} rerender
@@ -194,7 +322,12 @@ export function afterSearchPageMount(rerender, opts = {}) {
  */
 export function bindSearchPageEvents(root, rerender, opts = {}) {
   bindGlobalEvents(root);
-  if (opts.allowFindBoot !== true || !canUseFind()) return;
+  if (opts.allowFindBoot !== true) return;
+  if (!isSearchLoggedIn()) {
+    bindGuestFindBrowse(root, rerender);
+    return;
+  }
+  if (!isEmailVerified()) return;
   const viewer = resolveSearchViewer(previewState.role);
   const sessionLoggedIn = isSearchLoggedIn();
   const loggedIn = sessionLoggedIn;
