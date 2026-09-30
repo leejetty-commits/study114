@@ -100,13 +100,12 @@ import {
 } from './a28-copy.js';
 import {
   getSiteSettings,
-  saveSiteSettings,
   getLegalDocs,
-  saveLegalDoc,
-  resetSiteSettingsSeed,
   JOIN_FIELD_OPTIONS,
   JOIN_ROLES,
   listSiteSettingsLogs,
+  isAdminSettingsReady,
+  getSettingsError,
 } from './site-settings-store.js';
 import {
   getMarketplaceLab,
@@ -791,14 +790,14 @@ function renderNoticesAdmin(section = 'channels') {
     rails: '우측 배너',
     posts: '공지사항',
     faq: '자주 묻는 질문',
-    guide: '안전과외 가이드',
+    guide: '이용안내',
   };
   const helps = {
-    channels: '공지·자주 묻는 질문 같은 글이 어디에 보일지 「채널」로 묶습니다. 소속 그룹으로 비슷한 채널을 모을 수 있어요.',
-    rails: '화면 오른쪽 요약·추천·바로가기 자리를 고릅니다. 게시판 본문과는 별개입니다.',
+    channels: '고객센터·자료실 같은 메뉴에 붙는 글 칸입니다.',
+    rails: '홈·찾기·상세 화면 오른쪽에 붙는 안내 칸입니다.',
     posts: '사이트에 올릴 공지글을 작성·수정합니다.',
     faq: '자주 묻는 질문과 답변을 관리합니다.',
-    guide: '안전과외 안내글을 관리합니다.',
+    guide: '이용안내 글을 고칩니다.',
   };
 
   let body = '';
@@ -827,7 +826,7 @@ function renderNoticesAdmin(section = 'channels') {
   }
 
   return renderPanel(
-    titles[section] || '게시판관리',
+    titles[section] || '공지·안내 글',
     'A28-05',
     `${renderOpsTip()}
      <p class="a28-help">${esc(helps[section] || '')}</p>
@@ -882,9 +881,9 @@ function renderGuideCmsPanel() {
   return `
      <p class="a28-help">주소 키는 영문·숫자·하이픈만 씁니다. 예: safe-prepay</p>
      ${renderOperationalApiHint()}
-     <table class="sup-admin-table"><thead><tr><th>주소 키</th><th>제목</th><th>위치</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="4" class="sup-empty">가이드 없음</td></tr>'}</tbody></table>
+     <table class="sup-admin-table"><thead><tr><th>주소 키</th><th>제목</th><th>위치</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="4" class="sup-empty">이용안내 없음</td></tr>'}</tbody></table>
      <form class="sup-admin-form" data-a28-guide-form>
-       <h3 class="sup-admin-form__title">가이드 작성 · 수정</h3>
+       <h3 class="sup-admin-form__title">이용안내 작성 · 수정</h3>
        <input type="hidden" name="originalSlug" value="" />
        <label class="sup-field"><span>주소 키 <small>(영문·숫자·하이픈)</small></span><input type="text" name="slug" pattern="[a-z0-9\\-]+" placeholder="safe-prepay" required /></label>
        <label class="sup-field"><span>제목</span><input type="text" name="title" required /></label>
@@ -899,7 +898,7 @@ function renderGuideCmsPanel() {
        <label class="sup-field"><span>체크리스트 <small>(줄 단위, 선택)</small></span><textarea name="checklist" rows="3"></textarea></label>
        <div class="sup-admin-form__actions">
          <button type="submit" class="btn btn--primary btn--sm">저장</button>
-         <button type="button" class="btn btn--secondary btn--sm" data-a28-guide-reset>새 가이드</button>
+         <button type="button" class="btn btn--secondary btn--sm" data-a28-guide-reset>새 이용안내</button>
        </div>
      </form>`;
 }
@@ -999,6 +998,14 @@ function memberAccountLink(userId, email) {
   }
   const href = `/admin/members?q=${encodeURIComponent(String(email || ''))}`;
   return `<a href="#${href}" data-a28-nav="${href}">${label}</a>`;
+}
+
+/** 삭제된 회원 결제는 이름만 보이고 회원 상세로 가지 않는다. */
+function memberAccountCell(row) {
+  if (row?.deleted_member) {
+    return esc(row.account_label || '삭제된 회원(○○○)');
+  }
+  return memberAccountLink(row?.user_id, row?.user_email);
 }
 
 function exposureRouteParams() {
@@ -1143,7 +1150,7 @@ function renderCommerce() {
         : '<span class="a28-muted">마스터 전용</span>';
       return `<tr>
         <td><code>${p.id}</code></td>
-        <td>${memberAccountLink(p.user_id, p.user_email)}</td>
+        <td>${memberAccountCell(p)}</td>
         <td><strong>${esc(adminProductLabel(p.sku_code))}</strong></td>
         <td>${p.days_left}일</td>
         <td title="포함 종료일">${esc(p.ends_on || String(p.ends_at || '').slice(0, 10))}</td>
@@ -1163,7 +1170,7 @@ function renderCommerce() {
         : '<span class="a28-muted">마스터 전용</span>';
       return `<tr>
         <td><code>${t.id}</code></td>
-        <td>${memberAccountLink(t.user_id, t.user_email)}</td>
+        <td>${memberAccountCell(t)}</td>
         <td>${esc(ticketTypeLabel(t.ticket_type))}</td>
         <td>${t.remaining}/${t.pack_size}</td>
         <td>${esc(t.expires_at)}</td>
@@ -1176,7 +1183,7 @@ function renderCommerce() {
     .map(
       (o) => `<tr>
         <td><code>${esc(o.order_ref)}</code></td>
-        <td>${memberAccountLink(o.user_id, o.user_email)}</td>
+        <td>${memberAccountCell(o)}</td>
         <td>${esc(adminProductLabel(o.product_id))} · ${esc(o.variant_label)}</td>
         <td>${esc(ORDER_STATUS_KO[o.status] || '상태 확인 필요')}</td>
         <td>${Number(o.amount_won || 0).toLocaleString()}원</td>
@@ -1193,6 +1200,7 @@ function renderCommerce() {
           `order-${o.order_ref}`,
           `주문 ${o.order_ref}`,
           `<dl class="admin-detail-dl">
+            <dt>계정</dt><dd>${memberAccountCell(o)}</dd>
             <dt>상품</dt><dd>${esc(adminProductLabel(o.product_id))}</dd>
             <dt>옵션</dt><dd>${esc(o.variant_label)}</dd>
             <dt>결제</dt><dd>${esc(ORDER_STATUS_KO[o.status] || '상태 확인 필요')} · ${esc(o.pg_provider)}</dd>
@@ -1244,13 +1252,17 @@ function renderMembers() {
     </button>`;
   };
 
+  const selfId = Number(getAuthUser()?.user_id || 0);
   const rows = members
     .map((m) => {
       const role = A28_MEMBER_ROLE_LABELS[m.primaryRole] || m.primaryRole || '—';
       const status = A28_MEMBER_STATUS_LABELS[m.status] || m.status;
       const tier = A28_MEMBER_TIER_LABELS[m.subscriptionTier] || '확인 필요';
+      const protectedAccount =
+        m.isOperatorAccount === true || m.isMaster === true || Number(m.id) === selfId;
+      const label = encodeURIComponent(m.name || m.email || `회원 #${m.id}`);
       return `<tr>
-        <td class="td-chk"><input type="checkbox" name="member_chk" value="${m.id}" data-member-chk ${m.isMaster ? 'disabled' : ''} /></td>
+        <td class="td-chk"><input type="checkbox" name="member_chk" value="${m.id}" data-member-chk data-member-label="${label}" ${protectedAccount ? 'disabled' : ''} /></td>
         <td><code>${m.id}</code></td>
         <td>${esc(m.name || '—')}<br><small>${esc(m.email)}</small></td>
         <td>${esc(m.phone || '—')}</td>
@@ -1294,7 +1306,7 @@ function renderMembers() {
     const canRestore = detail.status === 'blocked' && !detail.isMaster;
     const canWithdraw = master && detail.status !== 'withdrawn' && !detail.isMaster;
     const selfId = Number(getAuthUser()?.user_id || 0);
-    const canDelete = canWithdraw && detail.id !== selfId;
+    const canDelete = canWithdraw && detail.id !== selfId && detail.isOperatorAccount !== true;
     const sourceNote =
       detail._source === 'api'
         ? '서버 조회 결과'
@@ -1407,6 +1419,7 @@ function renderMembers() {
        <input type="text" class="admin-input admin-input--sm" data-member-bulk-memo placeholder="일괄 조치 메모 (선택)" />
        <button type="button" class="btn btn--secondary btn--sm" data-member-bulk="block">선택 정지</button>
        <button type="button" class="btn btn--primary btn--sm" data-member-bulk="restore">선택 다시 활성</button>
+       ${master ? '<button type="button" class="btn btn--danger btn--sm" data-member-bulk="delete" title="최대 6명">선택 삭제</button>' : ''}
      </div>
      <table class="sup-admin-table">
        <thead><tr><th></th><th>식별번호</th><th>회원</th><th>휴대폰</th><th>대표 역할</th><th>상태</th><th>유료</th><th>소셜</th><th>최근 로그인</th><th></th></tr></thead>
@@ -1656,7 +1669,7 @@ function renderHomePopupSettings() {
   return `
     <p class="a28-help" data-home-popup-error${loadError ? '' : ' hidden'}>${esc(loadError)}</p>
     <table class="sup-admin-table">
-      <thead><tr><th>유형</th><th>모양</th><th>제목</th><th>대상</th><th>기간</th><th>공개</th><th>순서</th><th>수정일</th><th></th></tr></thead>
+      <thead><tr><th>유형</th><th>모양</th><th>제목</th><th>대상</th><th>기간</th><th>노출</th><th>순서</th><th>수정일</th><th></th></tr></thead>
       <tbody>${bodyRows}</tbody>
     </table>
     <form class="sup-admin-form" data-popup-form>
@@ -1669,7 +1682,7 @@ function renderHomePopupSettings() {
       <label class="sup-field"><span>시작일</span><input name="startAt" type="date" /></label>
       <label class="sup-field"><span>종료일</span><input name="endAt" type="date" /></label>
       <div class="a28-checkbox-grid">
-        <span>공개 표시</span>
+        <span>노출</span>
         <label class="a28-check"><input type="radio" name="published" value="0" checked /> 꺼짐</label>
         <label class="a28-check"><input type="radio" name="published" value="1" /> 켜짐</label>
       </div>
@@ -1716,11 +1729,11 @@ function renderSettings(section = 'basic') {
     legal: '약관·개인정보',
   };
   const helps = {
-    basic: '서비스 이름·연락처·점검 안내·게스트 배너를 정합니다. 저장하면 회원 화면에 바로 반영됩니다.',
-    join: '회원가입·공부방/과외 등록 접수를 켜고, 역할별 안내 항목을 표시/강조합니다. (승인 대기열이 아닙니다)',
+    basic: '서비스 이름·연락처·점검 안내·게스트 배너를 정합니다. 저장에 성공하면 손님 화면에도 반영됩니다. 점검 중에는 가입 같은 쓰기가 잠시 멈춥니다.',
+    join: '가입 차단 메일·금지어를 적고, 역할별 안내 항목을 표시하거나 강조합니다.',
     notify: '새 신고·문의·등록이 오면 받을 이메일과 알림 사용 여부를 고릅니다.',
-    popups: '홈 팝업을 만들고 공개하면 대상 홈에 한 건만 뜹니다. 공지, 이벤트, 광고 순입니다.',
-    legal: '이용약관·개인정보처리방침 글을 고칩니다. 자주 묻는 질문·가이드는 게시판관리 메뉴를 쓰세요.',
+    popups: '홈 팝업을 만들고 노출하면 대상 홈에 한 건만 뜹니다. 공지, 이벤트, 광고 순입니다.',
+    legal: '이용약관·개인정보처리방침 글을 고칩니다. 자주 묻는 질문·이용안내는 공지·안내 글 메뉴를 쓰세요.',
   };
 
   let body = '';
@@ -1747,11 +1760,6 @@ function renderSettings(section = 'basic') {
   } else if (section === 'join') {
     body = `
        <form class="sup-admin-form" data-settings-join>
-         <div class="a28-checkbox-grid">
-           <label><input type="checkbox" name="signupOpen"${checked(s.signupOpen)} /> 회원가입 접수</label>
-           <label><input type="checkbox" name="studyRoomRegisterOpen"${checked(s.studyRoomRegisterOpen)} /> 공부방 등록 접수</label>
-           <label><input type="checkbox" name="tutorRegisterOpen"${checked(s.tutorRegisterOpen)} /> 과외쌤 등록 접수</label>
-         </div>
          <label class="sup-field"><span>가입 차단 이메일/도메인 (줄바꿈)</span><textarea name="bannedEmails" rows="3" placeholder="spam@example.com">${esc(s.bannedEmails)}</textarea></label>
          <label class="sup-field"><span>금지어 (쉼표)</span><input name="bannedWords" value="${esc(s.bannedWords)}" placeholder="욕설,광고성문구" /></label>
          <div class="a28-join-matrix-wrap">
@@ -1791,11 +1799,17 @@ function renderSettings(section = 'basic') {
        </form>`;
   }
 
+  if (section !== 'popups' && !isAdminSettingsReady()) {
+    body = `<p class="a28-help" role="status">서버 설정을 불러오는 중입니다.</p>`;
+  }
+  const settingsError = section === 'popups' ? '' : getSettingsError();
+
   return renderPanel(
-    titles[section] || '환경설정',
+    titles[section] || '사이트 기본',
     'A28-09',
     `${renderOpsTip()}
      <p class="a28-help">${esc(helps[section] || '')}</p>
+     ${settingsError ? `<p class="a28-help" role="alert">${esc(settingsError)}</p>` : ''}
      ${body}`,
   );
 }

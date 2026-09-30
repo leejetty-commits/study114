@@ -327,7 +327,7 @@ export function renderNotifyLab(section = 'settings') {
 
        </form>
 
-       <p class="a28-help"><a href="#/admin/settings/notify" data-a28-nav="/admin/settings/notify">→ 환경설정 · 운영 알림</a></p>`,
+       <p class="a28-help"><a href="#/admin/settings/notify" data-a28-nav="/admin/settings/notify">→ 사이트 기본 · 운영 알림</a></p>`,
 
     );
 

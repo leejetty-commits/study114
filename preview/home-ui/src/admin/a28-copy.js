@@ -76,8 +76,8 @@ export const A28_MENU = [
   {
     // Youngcart menu100 환경설정
     id: 'grp-config',
-    label: '환경설정',
-    help: '사이트 이름, 가입, 팝업, 약관, 관리자 권한',
+    label: '사이트 기본',
+    help: '이름·점검·약관 글·운영자',
     children: [
       {
         id: 'settings-basic',
@@ -94,7 +94,7 @@ export const A28_MENU = [
         label: '가입·등록',
         path: '/admin/settings/join',
         masterOnly: true,
-        help: '회원가입·공부방/과외 등록 접수와 안내 항목을 켭니다.',
+        help: '가입 차단 메일·금지어와 역할별 안내 항목을 고릅니다.',
         screenId: 'A28-09',
       },
       {
@@ -154,15 +154,15 @@ export const A28_MENU = [
   {
     // Youngcart menu300 게시판관리 (+ 내용·FAQ)
     id: 'grp-board',
-    label: '게시판관리',
-    help: '채널·우측 배너·공지·자주 묻는 질문·가이드',
+    label: '공지·안내 글',
+    help: '공지·자주 묻는 질문·이용안내 글을 고칩니다',
     children: [
       {
         id: 'notices-channels',
         menuId: 'notices',
         label: '게시판 채널',
         path: '/admin/notices/channels',
-        help: '공지·자주 묻는 질문 등 게시판이 어디에 보일지 채널로 묶습니다.',
+        help: '고객센터·자료실 같은 메뉴에 붙는 글 칸입니다.',
         screenId: 'A28-05',
       },
       {
@@ -170,7 +170,7 @@ export const A28_MENU = [
         menuId: 'notices',
         label: '우측 배너',
         path: '/admin/notices/rails',
-        help: '화면 오른쪽 요약·바로가기 자리를 고릅니다.',
+        help: '홈·찾기·상세 화면 오른쪽에 붙는 안내 칸입니다.',
         screenId: 'A28-05',
       },
       {
@@ -192,9 +192,9 @@ export const A28_MENU = [
       {
         id: 'notices-guide',
         menuId: 'notices',
-        label: '안전과외 가이드',
+        label: '이용안내',
         path: '/admin/notices/guide',
-        help: '안전과외 안내글을 관리합니다.',
+        help: '이용안내 글을 고칩니다.',
         screenId: 'A28-05',
       },
     ],
@@ -429,10 +429,10 @@ export const A28_NAV = flattenAdminNav();
 export const A28_MENU_ID_LABELS = {
   hub: '운영 홈',
   promo: '홍보 런치',
-  settings: '환경설정',
+  settings: '사이트 기본',
   permissions: '권한·계정',
   members: '회원관리',
-  notices: '게시판관리',
+  notices: '공지·안내 글',
   commerce: '마켓·결제',
   exposure: '홈·찾기 노출',
   notify: '알림·문자',
@@ -534,8 +534,8 @@ export const A28_ACTION_LABELS = {
   account_restore: '복구',
   account_withdraw: '탈퇴 처리',
   account_delete: '회원 삭제',
-  site_settings_save: '환경설정 저장',
-  site_settings_reset: '환경설정 초기값 복원',
+  site_settings_save: '사이트 기본 저장',
+  site_settings_reset: '사이트 기본 초기값 복원',
   popup_create: '팝업 생성',
   popup_update: '팝업 수정',
   popup_delete: '팝업 삭제',
@@ -565,7 +565,7 @@ export const A28_LOG_TARGET_TYPE_LABELS = {
   ticket_pack: '횟수권 묶음',
   board_channel: '게시판 채널',
   right_rail_slot: '우측 배너',
-  site_settings: '환경설정',
+  site_settings: '사이트 기본',
 };
 
 /** 제출자료 큐 조치 (A28-06) */

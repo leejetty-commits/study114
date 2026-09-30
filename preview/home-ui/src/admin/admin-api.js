@@ -168,6 +168,17 @@ export async function deleteAdminMember(input) {
   return readJson(res);
 }
 
+/** @param {{ ids: number[], confirmPhrase: string }} input */
+export async function bulkDeleteAdminMembers(input) {
+  const res = await fetch('/api/admin/members-bulk-delete.php', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    ...CREDENTIALS,
+    body: JSON.stringify(input),
+  });
+  return readJson(res);
+}
+
 export async function resetAdminOperatorPassword(input) {
   const res = await fetch('/api/admin/operators.php?action=reset_password', {
     method: 'POST',

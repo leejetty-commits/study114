@@ -318,7 +318,20 @@ final class AdminMemberService
             'lastLoginAt' => (string) ($row['last_login_at'] ?? ''),
             'createdAt' => (string) ($row['created_at'] ?? ''),
             'isMaster' => $this->roles->isMasterEmail($email),
+            'isOperatorAccount' => $this->isOperatorAccount($email, $row['admin_level'] ?? null),
         ];
+    }
+
+    private function isOperatorAccount(string $email, mixed $adminLevel): bool
+    {
+        $email = strtolower(trim($email));
+        if ($this->roles->isMasterEmail($email) || in_array($email, $this->roles->listSubMasterEmails(), true)) {
+            return true;
+        }
+        $level = $this->roles->normalizeLevel($adminLevel);
+
+        return $level === AdminRoleService::LEVEL_SUPER_ADMIN
+            || $level === AdminRoleService::LEVEL_SUB_MASTER;
     }
 
     /** @param array<string, mixed> $row */
@@ -378,6 +391,7 @@ final class AdminMemberService
             ],
             'hasPayment' => $this->repo->hasPayment($userId),
             'isMaster' => $this->roles->isMasterEmail((string) $row['email']),
+            'isOperatorAccount' => $this->isOperatorAccount((string) $row['email'], $row['admin_level'] ?? null),
         ];
     }
 

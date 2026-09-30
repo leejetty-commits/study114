@@ -6,6 +6,7 @@ import {
   getActiveGuestBanner,
   listActivePopupsForSurface,
   dismissPopup,
+  ensurePublicSettings,
 } from './admin/site-settings-store.js';
 import { getCurrentScreen, isAdminRoute, isMypageRoute, isMessagesRoute } from './state.js';
 import { shouldSuppressOpsPopup } from './home-popup/gate.js';
@@ -87,6 +88,16 @@ function renderPopupLayer(popup) {
  */
 export function mountOpsChrome(appRoot) {
   if (!appRoot) return;
+  paintOpsChrome(appRoot);
+  ensurePublicSettings().then((changed) => {
+    if (changed && appRoot.isConnected) paintOpsChrome(appRoot);
+  });
+}
+
+/**
+ * @param {HTMLElement} appRoot
+ */
+function paintOpsChrome(appRoot) {
 
   // 이전 마운트 제거
   appRoot.querySelectorAll('[data-ops-chrome]').forEach((el) => el.remove());

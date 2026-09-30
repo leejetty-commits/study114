@@ -26,7 +26,7 @@ final class AdminMemberRepository
         $limit = max(1, min(200, (int) ($filters['limit'] ?? 50)));
         [$where, $params] = $this->buildListWhere($filters, true);
 
-        $sql = 'SELECT u.id, u.email, u.status, u.email_verified_at, u.oauth_role_pending,
+        $sql = 'SELECT u.id, u.email, u.status, u.admin_level, u.email_verified_at, u.oauth_role_pending,
                        u.last_login_at, u.created_at, u.deleted_at,
                        p.real_name, p.phone,
                        (
@@ -182,7 +182,7 @@ final class AdminMemberRepository
     public function findById(int $userId): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT u.id, u.email, u.status, u.email_verified_at, u.oauth_role_pending,
+            'SELECT u.id, u.email, u.status, u.admin_level, u.email_verified_at, u.oauth_role_pending,
                     u.last_login_at, u.created_at, u.updated_at, u.deleted_at,
                     p.real_name, p.phone, p.gender, p.birth_date,
                     p.address_line1, p.sms_opt_in, p.email_opt_in

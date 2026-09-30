@@ -82,7 +82,7 @@ import {
   apiPatchOperator,
   apiResetOperatorPassword,
 } from './admin-backend.js';
-import { deleteAdminMember } from './admin-api.js';
+import { bulkDeleteAdminMembers, deleteAdminMember } from './admin-api.js';
 import { isMasterAdmin } from './admin-guard.js';
 import {
   canAccessAdminMenu,
@@ -114,6 +114,8 @@ import {
   JOIN_FIELD_OPTIONS,
   JOIN_ROLES,
   listSiteSettingsLogs,
+  isAdminSettingsReady,
+  ensureAdminSettings,
 } from './site-settings-store.js';
 import { deleteHomePopup, ensureHomePopups, peekHomePopups, saveHomePopup } from './home-popup-api.js';
 import {
@@ -213,6 +215,133 @@ function decodeAttr(btn, name) {
   }
 }
 
+function selectedMemberDeletes(root) {
+  return [...root.querySelectorAll('[data-member-chk]:checked')]
+    .filter((el) => el instanceof HTMLInputElement && !el.disabled)
+    .map((el) => {
+      const id = Number(el.value);
+      let name = '';
+      try {
+        name = decodeURIComponent(el.getAttribute('data-member-label') || '');
+      } catch {
+        name = el.getAttribute('data-member-label') || '';
+      }
+      return { id, name: name || `회원 #${id}` };
+    })
+    .filter((row) => row.id > 0);
+}
+
+function bulkDeleteSummary(data) {
+  const ok = Number(data?.ok_count || 0);
+  const fail = Number(data?.fail_count || 0);
+  const reasons = [
+    ...new Set(
+      (data?.results || [])
+        .filter((row) => row && row.ok === false)
+        .map((row) => String(row.message || '실패'))
+        .filter(Boolean),
+    ),
+  ];
+  if (fail > 0) return `${ok}명 삭제, ${fail}명 실패(${reasons.join(' · ')})`;
+  return `${ok}명 삭제`;
+}
+
+/** 선택 삭제. 이름 목록을 보여주고 「삭제」를 입력해야 한다. */
+function openMemberBulkDelete(root, rerender) {
+  const picked = selectedMemberDeletes(root);
+  if (!picked.length) {
+    window.alert('회원을 선택해 주세요.');
+    return;
+  }
+  if (picked.length > 6) {
+    window.alert('한 번에 6명까지 삭제할 수 있습니다.');
+    return;
+  }
+  if (!isAdminApiMode()) {
+    window.alert('미리보기에서는 회원 삭제를 쓸 수 없습니다.');
+    return;
+  }
+
+  document.querySelector('[data-member-delete-modal]')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay member-delete-modal';
+  overlay.setAttribute('data-member-delete-modal', '');
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  const head = document.createElement('div');
+  head.className = 'modal__head';
+  const title = document.createElement('h3');
+  title.textContent = '선택 삭제';
+  head.append(title);
+  const body = document.createElement('div');
+  body.className = 'modal__body';
+  const list = document.createElement('ul');
+  list.className = 'a28-lists';
+  picked.forEach((row) => {
+    const li = document.createElement('li');
+    li.textContent = row.name;
+    list.append(li);
+  });
+  const notice = document.createElement('p');
+  notice.textContent = '결제 기록은 남고 계정은 복구할 수 없습니다';
+  const label = document.createElement('label');
+  label.className = 'a28-help';
+  label.textContent = '확인을 위해 삭제 라고 입력하세요';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'admin-input';
+  input.autocomplete = 'off';
+  input.spellcheck = false;
+  label.append(input);
+  const error = document.createElement('p');
+  error.className = 'member-delete-modal__error';
+  error.hidden = true;
+  body.append(list, notice, label, error);
+  const foot = document.createElement('div');
+  foot.className = 'modal__foot';
+  const close = () => overlay.remove();
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.className = 'btn btn--secondary btn--sm';
+  cancel.textContent = '취소';
+  cancel.addEventListener('click', close);
+  const confirmBtn = document.createElement('button');
+  confirmBtn.type = 'button';
+  confirmBtn.className = 'btn btn--danger btn--sm';
+  confirmBtn.textContent = '삭제';
+  confirmBtn.disabled = true;
+  input.addEventListener('input', () => {
+    confirmBtn.disabled = input.value !== '삭제';
+  });
+  confirmBtn.addEventListener('click', async () => {
+    if (input.value !== '삭제') return;
+    confirmBtn.disabled = true;
+    error.hidden = true;
+    try {
+      const data = await bulkDeleteAdminMembers({
+        ids: picked.map((row) => row.id),
+        confirmPhrase: '삭제',
+      });
+      close();
+      a28Ui.openMemberId = null;
+      await hydrateMembersCache(a28Ui.memberFilters);
+      rerender();
+      window.alert(bulkDeleteSummary(data));
+    } catch (err) {
+      error.hidden = false;
+      error.textContent = err instanceof Error ? err.message : '선택 삭제에 실패했습니다.';
+      confirmBtn.disabled = input.value !== '삭제';
+    }
+  });
+  foot.append(cancel, confirmBtn);
+  modal.append(head, body, foot);
+  overlay.append(modal);
+  document.body.append(overlay);
+  input.focus();
+}
+
 /** 회원 삭제 2단계. window.confirm을 쓰지 않는다. */
 function openMemberDeleteModal(btn, rerender) {
   const id = Number(btn.getAttribute('data-member-delete'));
@@ -220,7 +349,6 @@ function openMemberDeleteModal(btn, rerender) {
   const role = decodeAttr(btn, 'data-delete-role');
   const cards = decodeAttr(btn, 'data-delete-cards');
   const hasPayment = btn.getAttribute('data-delete-payment') === '1';
-  const alreadyHidden = btn.getAttribute('data-delete-hidden') === '1';
   if (!id || !email) return;
 
   document.querySelector('[data-member-delete-modal]')?.remove();
@@ -258,7 +386,6 @@ function openMemberDeleteModal(btn, rerender) {
       ['역할', role || '—'],
       ['등록 카드 수', cards || '공부방 0 · 과외쌤 0 · 학생 0'],
       ['결제', hasPayment ? '결제 있음' : '결제 없음'],
-      ['홈·찾기', alreadyHidden ? '지금 홈·찾기에서 안 보여요' : '삭제하면 바로 안 보여요'],
     ];
     const dl = document.createElement('dl');
     dl.className = 'admin-detail-dl';
@@ -270,9 +397,7 @@ function openMemberDeleteModal(btn, rerender) {
       dl.append(dt, dd);
     });
     const result = document.createElement('p');
-    result.textContent = hasPayment
-      ? '홈·찾기에서 즉시 사라지고, 결제 기록은 남아요'
-      : '모든 정보가 즉시 완전히 삭제되고 되돌릴 수 없어요';
+    result.textContent = '결제 기록은 남고 계정은 복구할 수 없습니다';
     body.append(dl, result);
     const benefitNotice = memberBenefitEndNotice({
       ...(getMemberDetailCache(id) || {}),
@@ -623,6 +748,10 @@ export function bindA28ScreenEvents(root, path, rerender) {
     root.querySelectorAll('[data-member-bulk]').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const action = btn.getAttribute('data-member-bulk');
+        if (action === 'delete') {
+          openMemberBulkDelete(root, rerender);
+          return;
+        }
         if (action !== 'block' && action !== 'restore') return;
         const ids = [...root.querySelectorAll('[data-member-chk]:checked')]
           .map((el) => Number(el instanceof HTMLInputElement ? el.value : 0))
@@ -1211,7 +1340,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           await deleteGuidePost(slug);
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '가이드 삭제 실패');
+          window.alert(err instanceof Error ? err.message : '이용안내 삭제 실패');
         }
       });
     });
@@ -1250,7 +1379,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         guideForm.querySelector('[name="originalSlug"]').value = '';
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '가이드 저장 실패');
+        window.alert(err instanceof Error ? err.message : '이용안내 저장 실패');
       }
     });
   }
@@ -1450,27 +1579,38 @@ export function bindA28ScreenEvents(root, path, rerender) {
   }
 
   if (path.startsWith('/admin/settings')) {
-    root.querySelector('[data-settings-basic]')?.addEventListener('submit', (e) => {
+    if (!isAdminSettingsReady()) {
+      ensureAdminSettings().then(() => rerender());
+    }
+    const showSettingsError = (message) => {
+      window.alert(message);
+    };
+    root.querySelector('[data-settings-basic]')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.currentTarget;
       if (!(form instanceof HTMLFormElement)) return;
       const fd = new FormData(form);
-      saveSiteSettings({
-        siteName: String(fd.get('siteName') || ''),
-        operatorEmail: String(fd.get('operatorEmail') || ''),
-        operatorPhone: String(fd.get('operatorPhone') || ''),
-        supportHours: String(fd.get('supportHours') || ''),
-        maintenanceEnabled: fd.get('maintenanceEnabled') === 'on',
-        maintenanceMessage: String(fd.get('maintenanceMessage') || ''),
-        maintenanceUntil: String(fd.get('maintenanceUntil') || '').replace('T', ' '),
-        guestBannerEnabled: fd.get('guestBannerEnabled') === 'on',
-        guestBannerText: String(fd.get('guestBannerText') || ''),
-      });
-      rerender();
-      window.alert('사이트 설정을 저장했습니다.');
+      try {
+        await saveSiteSettings({
+          siteName: String(fd.get('siteName') || ''),
+          operatorEmail: String(fd.get('operatorEmail') || ''),
+          operatorPhone: String(fd.get('operatorPhone') || ''),
+          supportHours: String(fd.get('supportHours') || ''),
+          maintenanceEnabled: fd.get('maintenanceEnabled') === 'on',
+          maintenanceMessage: String(fd.get('maintenanceMessage') || ''),
+          maintenanceUntil: String(fd.get('maintenanceUntil') || '').replace('T', ' '),
+          guestBannerEnabled: fd.get('guestBannerEnabled') === 'on',
+          guestBannerText: String(fd.get('guestBannerText') || ''),
+        });
+        rerender();
+        window.alert('사이트 설정을 저장했습니다.');
+      } catch (err) {
+        showSettingsError(err instanceof Error ? err.message : '사이트 기본을 저장하지 못했습니다.');
+        rerender();
+      }
     });
 
-    root.querySelector('[data-settings-join]')?.addEventListener('submit', (e) => {
+    root.querySelector('[data-settings-join]')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.currentTarget;
       if (!(form instanceof HTMLFormElement)) return;
@@ -1487,31 +1627,38 @@ export function bindA28ScreenEvents(root, path, rerender) {
         const [role, field] = String(el.getAttribute('data-join-emph') || '').split(':');
         if (joinPolicy[role]?.[field]) joinPolicy[role][field].emphasize = el.checked;
       });
-      saveSiteSettings({
-        signupOpen: fd.get('signupOpen') === 'on',
-        studyRoomRegisterOpen: fd.get('studyRoomRegisterOpen') === 'on',
-        tutorRegisterOpen: fd.get('tutorRegisterOpen') === 'on',
-        bannedEmails: String(fd.get('bannedEmails') || ''),
-        bannedWords: String(fd.get('bannedWords') || ''),
-        joinPolicy,
-      });
-      rerender();
-      window.alert('가입·등록 정책을 저장했습니다.');
+      try {
+        await saveSiteSettings({
+          bannedEmails: String(fd.get('bannedEmails') || ''),
+          bannedWords: String(fd.get('bannedWords') || ''),
+          joinPolicy,
+        });
+        rerender();
+        window.alert('가입·등록 정책을 저장했습니다.');
+      } catch (err) {
+        showSettingsError(err instanceof Error ? err.message : '가입·등록 정책을 저장하지 못했습니다.');
+        rerender();
+      }
     });
 
-    root.querySelector('[data-settings-notify]')?.addEventListener('submit', (e) => {
+    root.querySelector('[data-settings-notify]')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.currentTarget;
       if (!(form instanceof HTMLFormElement)) return;
       const fd = new FormData(form);
-      saveSiteSettings({
-        notifyOnReport: fd.get('notifyOnReport') === 'on',
-        notifyOnTicket: fd.get('notifyOnTicket') === 'on',
-        notifyOnNewProvider: fd.get('notifyOnNewProvider') === 'on',
-        notifyEmails: String(fd.get('notifyEmails') || ''),
-      });
-      rerender();
-      window.alert('알림 설정을 저장했습니다.');
+      try {
+        await saveSiteSettings({
+          notifyOnReport: fd.get('notifyOnReport') === 'on',
+          notifyOnTicket: fd.get('notifyOnTicket') === 'on',
+          notifyOnNewProvider: fd.get('notifyOnNewProvider') === 'on',
+          notifyEmails: String(fd.get('notifyEmails') || ''),
+        });
+        rerender();
+        window.alert('알림 설정을 저장했습니다.');
+      } catch (err) {
+        showSettingsError(err instanceof Error ? err.message : '알림 설정을 저장하지 못했습니다.');
+        rerender();
+      }
     });
 
     const popupForm = root.querySelector('[data-popup-form]');
@@ -1695,25 +1842,35 @@ export function bindA28ScreenEvents(root, path, rerender) {
     }
 
     root.querySelectorAll('[data-legal-form]').forEach((form) => {
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!(form instanceof HTMLFormElement)) return;
         const key = form.getAttribute('data-legal-form');
         if (key !== 'terms' && key !== 'privacy') return;
         const fd = new FormData(form);
-        saveLegalDoc(key, {
-          title: String(fd.get('title') || ''),
-          body: String(fd.get('body') || ''),
-        });
-        rerender();
-        window.alert('문서를 저장했습니다.');
+        try {
+          await saveLegalDoc(key, {
+            title: String(fd.get('title') || ''),
+            body: String(fd.get('body') || ''),
+          });
+          rerender();
+          window.alert('문서를 저장했습니다.');
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '문서를 저장하지 못했습니다.');
+          rerender();
+        }
       });
     });
 
-    root.querySelector('[data-settings-reset-seed]')?.addEventListener('click', () => {
-      if (!window.confirm('환경설정을 초기값으로 되돌릴까요?')) return;
-      resetSiteSettingsSeed();
-      rerender();
+    root.querySelector('[data-settings-reset-seed]')?.addEventListener('click', async () => {
+      if (!window.confirm('사이트 기본을 초기값으로 되돌릴까요?')) return;
+      try {
+        await resetSiteSettingsSeed();
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '초기값으로 되돌리지 못했습니다.');
+        rerender();
+      }
     });
   }
 

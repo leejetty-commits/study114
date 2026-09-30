@@ -6,6 +6,7 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Auth\AuthSession;
 use Study114\Auth\SignupService;
+use Study114\Site\SiteSettingsMaintenanceException;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -59,6 +60,13 @@ try {
         'email_verified' => false,
         'email_sent' => !empty($verify['sent']),
         'resend_available_in' => (int) ($verify['resend_available_in'] ?? 0),
+    ], JSON_UNESCAPED_UNICODE);
+} catch (SiteSettingsMaintenanceException $e) {
+    http_response_code(503);
+    echo json_encode([
+        'ok' => false,
+        'error' => 'maintenance',
+        'message' => $e->getMessage(),
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     error_log('[signup] validation: ' . $e->getMessage());

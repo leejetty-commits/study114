@@ -9,6 +9,7 @@ use PDO;
 use PDOException;
 use RuntimeException;
 use Study114\Database\Connection;
+use Study114\Site\SiteSettingsService;
 
 final class SignupService
 {
@@ -25,7 +26,10 @@ final class SignupService
      */
     public function register(array $input): array
     {
+        $settings = new SiteSettingsService();
+        $settings->assertWritesOpen();
         $email = EmailNormalizer::normalize($this->requireString($input, 'email'));
+        $settings->assertSignupEmailAllowed($email);
         $password = $this->requireString($input, 'password');
         $passwordConfirm = $this->requireString($input, 'password_confirm');
         $name = $this->requireString($input, 'name');

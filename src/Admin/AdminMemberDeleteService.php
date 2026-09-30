@@ -12,7 +12,7 @@ use Throwable;
 
 /**
  * 관리자 회원 삭제. 탈퇴(applyAction withdraw)와 별도.
- * 결제 없음: 회원 행까지 삭제. 결제 있음: 행을 남기고 숨김.
+ * 결제 유무와 관계없이 계정을 지우고, 결제·구독 이력만 익명으로 남긴다.
  */
 final class AdminMemberDeleteService
 {
@@ -40,6 +40,70 @@ final class AdminMemberDeleteService
      */
     public function delete(array $auth, array $input): array
     {
+        return $this->perform($auth, $input, false);
+    }
+
+    /**
+     * 선택 삭제. 회원마다 perform 을 호출하고, 한 명 실패해도 나머지는 계속한다.
+     *
+     * @param array{user_id?: int, email?: string, role_type?: string, admin_level?: ?string} $auth
+     * @param array<string, mixed> $input
+     * @return array{results: list<array<string, mixed>>, ok_count: int, fail_count: int}
+     */
+    public function deleteMany(array $auth, array $input): array
+    {
+        if (!$this->roles->isMaster($auth)) {
+            throw new InvalidArgumentException('회원 삭제는 마스터만 할 수 있습니다.');
+        }
+        $phrase = trim((string) ($input['confirmPhrase'] ?? $input['confirm_phrase'] ?? ''));
+        if ($phrase !== '삭제') {
+            throw new InvalidArgumentException('확인 문구가 일치하지 않습니다.');
+        }
+        $ids = $this->normalizeIds($input['ids'] ?? $input['user_ids'] ?? []);
+        if ($ids === []) {
+            throw new InvalidArgumentException('삭제할 회원을 선택해 주세요.');
+        }
+        if (count($ids) > 6) {
+            throw new InvalidArgumentException('한 번에 6명까지 삭제할 수 있습니다.');
+        }
+
+        $results = [];
+        $ok = 0;
+        $fail = 0;
+        foreach ($ids as $userId) {
+            try {
+                $one = $this->perform($auth, ['user_id' => $userId], true);
+                $results[] = [
+                    'user_id' => $userId,
+                    'ok' => true,
+                    'mode' => $one['mode'],
+                    'message' => $one['message'],
+                ];
+                $ok++;
+            } catch (Throwable $e) {
+                $results[] = [
+                    'user_id' => $userId,
+                    'ok' => false,
+                    'message' => $e->getMessage(),
+                ];
+                $fail++;
+            }
+        }
+
+        return [
+            'results' => $results,
+            'ok_count' => $ok,
+            'fail_count' => $fail,
+        ];
+    }
+
+    /**
+     * @param array{user_id?: int, email?: string, role_type?: string, admin_level?: ?string} $auth
+     * @param array<string, mixed> $input
+     * @return array{user_id: int, mode: string, has_payment: bool, message: string, log: array<string, mixed>}
+     */
+    private function perform(array $auth, array $input, bool $skipEmailConfirm): array
+    {
         if (!$this->roles->isMaster($auth)) {
             throw new InvalidArgumentException('회원 삭제는 마스터만 할 수 있습니다.');
         }
@@ -53,9 +117,13 @@ final class AdminMemberDeleteService
         }
 
         $confirmEmail = (string) ($input['confirmEmail'] ?? $input['confirm_email'] ?? '');
+        $this->assertPaymentAnonReady();
+
         $uploadPaths = [];
         $uploadRooms = [];
         $uploadTutors = [];
+        $hasPayment = false;
+        $log = [];
 
         $this->pdo->beginTransaction();
         try {
@@ -64,79 +132,52 @@ final class AdminMemberDeleteService
                 throw new InvalidArgumentException('회원을 찾을 수 없습니다.');
             }
             $email = (string) ($row['email'] ?? '');
-            if ($this->roles->isMasterEmail($email)) {
-                throw new InvalidArgumentException('마스터 계정은 삭제할 수 없습니다.');
+            if ($this->isProtectedOperator($row)) {
+                throw new InvalidArgumentException('마스터·부마스터 계정은 삭제할 수 없습니다.');
             }
             if ((string) ($row['status'] ?? '') === 'withdrawn') {
                 throw new InvalidArgumentException('이미 탈퇴 처리된 계정입니다.');
             }
-            if ($confirmEmail !== $email) {
+            if (!$skipEmailConfirm && $confirmEmail !== $email) {
                 throw new InvalidArgumentException('확인 이메일이 일치하지 않습니다.');
             }
 
-            $hasPayment = $this->lockHasPayment($userId);
+            $paymentCount = $this->lockPaymentCount($userId);
+            $hasPayment = $paymentCount > 0;
             $roomIds = $this->idsFor('SELECT id FROM study_rooms WHERE user_id = ?', $userId);
             $tutorIds = $this->idsFor('SELECT id FROM tutors WHERE user_id = ?', $userId);
             $studentIds = $this->idsFor('SELECT id FROM students WHERE guardian_user_id = ?', $userId);
             $name = trim((string) ($row['real_name'] ?? ''));
+            $displayName = AccountWithdrawService::maskDisplayName($name);
             $memo = sprintf(
-                '삭제 전 이메일 %s · 이름 %s · 역할 %s · 공부방 %d · 과외쌤 %d · 학생 %d · %s · %s',
+                '삭제 전 이메일 %s · 이름 %s · 역할 %s · 공부방 %d · 과외쌤 %d · 학생 %d · 결제 %d건 · 계정 삭제 · 결제 기록 익명 보존',
                 $email,
                 $name !== '' ? $name : '—',
                 $this->roleLabel($userId),
                 count($roomIds),
                 count($tutorIds),
                 count($studentIds),
-                $hasPayment ? '결제 있음' : '결제 없음',
-                $hasPayment ? '홈·찾기에서 숨김' : '완전 삭제',
+                $paymentCount,
             );
 
+            (new AccountWithdrawService())->endActivePositionSubscriptions($this->pdo, $userId);
+            $this->anonymizePaymentHistory($userId, $displayName);
             $this->deleteImmediate($userId, $roomIds, $tutorIds, $studentIds);
-
-            if ($hasPayment) {
-                $log = $this->logs->insert(
-                    (string) ($auth['email'] ?? 'admin'),
-                    'user',
-                    (string) $userId,
-                    'account_delete',
-                    'member_ops',
-                    $memo,
-                    false,
-                    false,
-                );
-                $this->pdo->prepare(
-                    'UPDATE users
-                     SET status = \'withdrawn\', deleted_at = COALESCE(deleted_at, NOW()), updated_at = NOW()
-                     WHERE id = ?'
-                )->execute([$userId]);
-                $this->pdo->prepare(
-                    'UPDATE user_roles SET status = \'inactive\' WHERE user_id = ?'
-                )->execute([$userId]);
-                $withdraw = new AccountWithdrawService();
-                $withdraw->releaseLoginIdentifiers($this->pdo, $userId);
-                $withdraw->endActivePositionSubscriptions($this->pdo, $userId);
-                $mode = 'hidden_hold';
-                $message = '홈·찾기에서 사라졌고, 결제 기록은 남아요';
-            } else {
-                $uploadPaths = $this->collectCardUploadPaths($roomIds, $tutorIds);
-                $uploadRooms = $roomIds;
-                $uploadTutors = $tutorIds;
-                $this->deleteCards($userId, $roomIds);
-                $log = $this->logs->insert(
-                    (string) ($auth['email'] ?? 'admin'),
-                    'user',
-                    (string) $userId,
-                    'account_delete',
-                    'member_ops',
-                    $memo,
-                    false,
-                    false,
-                );
-                $this->pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$userId]);
-                $mode = 'full_delete';
-                $message = '모든 정보가 삭제됐어요';
-            }
-
+            $uploadPaths = $this->collectCardUploadPaths($roomIds, $tutorIds);
+            $uploadRooms = $roomIds;
+            $uploadTutors = $tutorIds;
+            $this->deleteCards($userId, $roomIds);
+            $log = $this->logs->insert(
+                (string) ($auth['email'] ?? 'admin'),
+                'user',
+                (string) $userId,
+                'account_delete',
+                'member_ops',
+                $memo,
+                false,
+                false,
+            );
+            $this->pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$userId]);
             $this->pdo->commit();
         } catch (Throwable $e) {
             if ($this->pdo->inTransaction()) {
@@ -146,23 +187,84 @@ final class AdminMemberDeleteService
         }
 
         $mapped = $this->mapLog($log);
-        if ($mode === 'full_delete') {
-            $mapped['detailMemo'] = $this->appendUploadResult(
-                (string) ($log['log_key'] ?? ''),
-                (string) ($mapped['detailMemo'] ?? ''),
-                $uploadPaths,
-                $uploadRooms,
-                $uploadTutors,
-            );
-        }
+        $mapped['detailMemo'] = $this->appendUploadResult(
+            (string) ($log['log_key'] ?? ''),
+            (string) ($mapped['detailMemo'] ?? ''),
+            $uploadPaths,
+            $uploadRooms,
+            $uploadTutors,
+        );
 
         return [
             'user_id' => $userId,
-            'mode' => $mode,
+            'mode' => 'full_delete',
             'has_payment' => $hasPayment,
-            'message' => $message,
+            'message' => '계정을 삭제했습니다. 결제 기록은 남고 계정은 복구할 수 없습니다.',
             'log' => $mapped,
         ];
+    }
+
+    /** @param mixed $raw @return list<int> */
+    private function normalizeIds(mixed $raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+        $ids = [];
+        foreach ($raw as $id) {
+            $n = (int) $id;
+            if ($n > 0) {
+                $ids[$n] = $n;
+            }
+        }
+
+        return array_values($ids);
+    }
+
+    /** @param array<string, mixed> $row */
+    private function isProtectedOperator(array $row): bool
+    {
+        $email = strtolower(trim((string) ($row['email'] ?? '')));
+        if ($this->roles->isMasterEmail($email)) {
+            return true;
+        }
+        if (in_array($email, $this->roles->listSubMasterEmails(), true)) {
+            return true;
+        }
+        $level = $this->roles->normalizeLevel($row['admin_level'] ?? null);
+
+        return $level === AdminRoleService::LEVEL_SUPER_ADMIN
+            || $level === AdminRoleService::LEVEL_SUB_MASTER;
+    }
+
+    private function assertPaymentAnonReady(): void
+    {
+        foreach (['provider_payment_orders', 'provider_position_subscriptions'] as $table) {
+            if (!$this->columnExists($table, 'deleted_user_ref') || !$this->columnExists($table, 'deleted_display_name')) {
+                throw new InvalidArgumentException(
+                    '결제 기록 보존 컬럼이 없습니다. sql/schema/071_member_delete_payment_anon.sql 을 적용해 주세요.'
+                );
+            }
+            if (!$this->userIdNullable($table)) {
+                throw new InvalidArgumentException(
+                    '결제 기록의 회원 번호가 비울 수 없습니다. sql/schema/071_member_delete_payment_anon.sql 을 적용해 주세요.'
+                );
+            }
+        }
+    }
+
+    private function anonymizePaymentHistory(int $userId, string $displayName): void
+    {
+        $this->pdo->prepare(
+            'UPDATE provider_payment_orders
+             SET user_id = NULL, deleted_user_ref = ?, deleted_display_name = ?
+             WHERE user_id = ?'
+        )->execute([$userId, $displayName, $userId]);
+        $this->pdo->prepare(
+            'UPDATE provider_position_subscriptions
+             SET user_id = NULL, deleted_user_ref = ?, deleted_display_name = ?
+             WHERE user_id = ?'
+        )->execute([$userId, $displayName, $userId]);
     }
 
     /**
@@ -279,7 +381,7 @@ final class AdminMemberDeleteService
     private function lockUser(int $userId): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT u.id, u.email, u.status, p.real_name
+            'SELECT u.id, u.email, u.status, u.admin_level, p.real_name
              FROM users u
              LEFT JOIN user_profiles p ON p.user_id = u.id
              WHERE u.id = ?
@@ -291,20 +393,54 @@ final class AdminMemberDeleteService
         return is_array($row) ? $row : null;
     }
 
-    /** AdminMemberRepository::hasPayment 과 같은 조건. 트랜잭션 안에서 행을 잠근 뒤 계산한다. */
-    private function lockHasPayment(int $userId): bool
+    /** 결제 행을 잠그고 건수를 센다. paid·refunded 만 결제 있음으로 본다. */
+    private function lockPaymentCount(int $userId): int
     {
         $stmt = $this->pdo->prepare(
             'SELECT status FROM provider_payment_orders WHERE user_id = ? FOR UPDATE'
         );
         $stmt->execute([$userId]);
+        $paid = 0;
         foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $status) {
             if (in_array((string) $status, ['paid', 'refunded'], true)) {
-                return true;
+                $paid++;
             }
         }
 
-        return false;
+        return $paid;
+    }
+
+    private function columnExists(string $table, string $column): bool
+    {
+        $allowed = [
+            'provider_payment_orders' => ['deleted_user_ref', 'deleted_display_name', 'user_id'],
+            'provider_position_subscriptions' => ['deleted_user_ref', 'deleted_display_name', 'user_id'],
+        ];
+        if (!in_array($column, $allowed[$table] ?? [], true)) {
+            return false;
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+        );
+        $stmt->execute([$table, $column]);
+
+        return $stmt->fetchColumn() !== false;
+    }
+
+    private function userIdNullable(string $table): bool
+    {
+        if (!in_array($table, ['provider_payment_orders', 'provider_position_subscriptions'], true)) {
+            return false;
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT IS_NULLABLE FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = \'user_id\''
+        );
+        $stmt->execute([$table]);
+        $flag = $stmt->fetchColumn();
+
+        return is_string($flag) && strtoupper($flag) === 'YES';
     }
 
     /** @return list<int> */

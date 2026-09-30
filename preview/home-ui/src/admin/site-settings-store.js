@@ -1,6 +1,6 @@
 /**
- * 영카트 config_form / newwin / content 경량판 — 우동공과 운영 설정
- * sessionStorage Lab (배포·실서비스 ACL과 분리)
+ * 사이트 기본 — 서버 site_settings가 원본.
+ * sessionStorage는 마지막 성공 응답의 읽기 캐시만 둔다.
  */
 
 const SETTINGS_KEY = 'study114-site-settings-v1';
@@ -78,7 +78,7 @@ function appendLog(action, target, detailMemo = '') {
 }
 
 export function listSiteSettingsLogs() {
-  return loadJson(LOG_KEY, []);
+  return adminLogs;
 }
 
 function defaultJoinPolicy() {
@@ -114,9 +114,6 @@ function defaultSettings() {
     maintenanceUntil: '',
     guestBannerEnabled: false,
     guestBannerText: '',
-    signupOpen: true,
-    studyRoomRegisterOpen: true,
-    tutorRegisterOpen: true,
     bannedEmails: '',
     bannedWords: '',
     notifyOnReport: true,
@@ -159,22 +156,156 @@ function defaultPopups() {
   ];
 }
 
+const ADMIN_CACHE_KEY = 'study114-site-settings-server-cache-v1';
+
+/** @type {Record<string, unknown>|null} */
+let adminBundle = null;
+/** @type {Array<{ action: string, target: string, at: string }>} */
+let adminLogs = [];
+let adminReady = false;
+let adminError = '';
+/** @type {Promise<void>|null} */
+let adminInflight = null;
+
+/** @type {Record<string, unknown>|null} */
+let publicSnapshot = null;
+let publicSettled = false;
+/** @type {Promise<boolean>|null} */
+let publicInflight = null;
+
+function cacheAdmin(bundle, logs) {
+  adminBundle = bundle;
+  adminLogs = Array.isArray(logs) ? logs : [];
+  adminReady = true;
+  adminError = '';
+  saveJson(ADMIN_CACHE_KEY, { bundle, logs: adminLogs });
+  syncPublicFromAdmin(bundle);
+}
+
+function syncPublicFromAdmin(bundle) {
+  const termsBody = String(bundle?.terms?.body || '').trim();
+  const privacyBody = String(bundle?.privacy?.body || '').trim();
+  publicSnapshot = {
+    siteName: String(bundle?.siteName || ''),
+    maintenanceEnabled: Boolean(bundle?.maintenanceEnabled),
+    maintenanceMessage: String(bundle?.maintenanceMessage || ''),
+    maintenanceUntil: String(bundle?.maintenanceUntil || ''),
+    guestBannerEnabled: Boolean(bundle?.guestBannerEnabled),
+    guestBannerText: String(bundle?.guestBannerText || ''),
+    terms: termsBody ? { title: String(bundle.terms.title || ''), body: termsBody } : null,
+    privacy: privacyBody ? { title: String(bundle.privacy.title || ''), body: privacyBody } : null,
+  };
+  publicSettled = true;
+}
+
+function applyPublicPayload(data) {
+  publicSnapshot = {
+    siteName: String(data?.siteName || ''),
+    maintenanceEnabled: Boolean(data?.maintenanceEnabled),
+    maintenanceMessage: String(data?.maintenanceMessage || ''),
+    maintenanceUntil: String(data?.maintenanceUntil || ''),
+    guestBannerEnabled: Boolean(data?.guestBannerEnabled),
+    guestBannerText: String(data?.guestBannerText || ''),
+    terms: data?.terms?.body ? { title: String(data.terms.title || ''), body: String(data.terms.body) } : null,
+    privacy: data?.privacy?.body ? { title: String(data.privacy.title || ''), body: String(data.privacy.body) } : null,
+  };
+  publicSettled = true;
+}
+
+async function readApiError(res) {
+  const data = await res.json().catch(() => ({}));
+  const message = String(data?.message || '').trim();
+  if (message) return message;
+  if (res.status === 403) return '최고관리자만 사이트 기본을 저장할 수 있습니다.';
+  return '사이트 기본을 저장하지 못했습니다.';
+}
+
+export function isAdminSettingsReady() {
+  return adminReady;
+}
+
+export function getSettingsError() {
+  return adminError;
+}
+
+export function ensureAdminSettings() {
+  if (adminReady) return Promise.resolve();
+  if (!adminInflight) {
+    adminInflight = fetch('/api/admin/site-settings.php', { credentials: 'include' })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(await readApiError(res));
+        const data = await res.json();
+        if (!data?.ok || !data.settings) throw new Error(data?.message || '사이트 기본을 읽지 못했습니다.');
+        cacheAdmin(data.settings, data.logs);
+      })
+      .catch((err) => {
+        adminReady = true;
+        adminError = err instanceof Error ? err.message : '사이트 기본을 읽지 못했습니다.';
+        const cached = loadJson(ADMIN_CACHE_KEY, null);
+        if (cached?.bundle && typeof cached.bundle === 'object') {
+          adminBundle = cached.bundle;
+          adminLogs = Array.isArray(cached.logs) ? cached.logs : [];
+        }
+      })
+      .finally(() => {
+        adminInflight = null;
+      });
+  }
+  return adminInflight;
+}
+
+/** 손님 화면용. 실패하면 false이고 점검·배너·약관 덮어쓰기를 하지 않는다. @returns {Promise<boolean>} */
+export function ensurePublicSettings() {
+  if (publicSettled) return Promise.resolve(false);
+  if (!publicInflight) {
+    publicInflight = fetch('/api/site/public-settings.php', { credentials: 'include' })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('public settings');
+        const data = await res.json();
+        if (!data?.ok) throw new Error('public settings');
+        applyPublicPayload(data);
+        return true;
+      })
+      .catch(() => false)
+      .finally(() => {
+        publicInflight = null;
+      });
+  }
+  return publicInflight;
+}
+
+export function peekPublicSettings() {
+  return publicSnapshot;
+}
+
 export function getSiteSettings() {
-  const saved = loadJson(SETTINGS_KEY, null);
-  return { ...defaultSettings(), ...(saved && typeof saved === 'object' ? saved : {}) };
+  const base = defaultSettings();
+  const saved = adminBundle && typeof adminBundle === 'object' ? adminBundle : null;
+  const joinPolicy = saved?.joinPolicy && typeof saved.joinPolicy === 'object' ? saved.joinPolicy : base.joinPolicy;
+  return { ...base, ...(saved || {}), joinPolicy };
 }
 
 /** @param {Record<string, unknown>} patch */
-export function saveSiteSettings(patch) {
-  const next = {
-    ...getSiteSettings(),
-    ...patch,
-    joinPolicy: patch.joinPolicy || getSiteSettings().joinPolicy,
-    updatedAt: nowStamp(),
-  };
-  saveJson(SETTINGS_KEY, next);
-  appendLog('site_settings_save', 'site', next.siteName || '');
-  return clone(next);
+export async function saveSiteSettings(patch) {
+  const res = await fetch('/api/admin/site-settings.php', {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) {
+    const message = await readApiError(res);
+    adminError = message;
+    throw new Error(message);
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!data?.ok || !data.settings) {
+    const message = String(data?.message || '사이트 기본을 저장하지 못했습니다.');
+    adminError = message;
+    throw new Error(message);
+  }
+  cacheAdmin(data.settings, data.logs);
+  return clone(getSiteSettings());
 }
 
 export function listPopups() {
@@ -214,32 +345,65 @@ export function deletePopup(id) {
 }
 
 export function getLegalDocs() {
-  const saved = loadJson(LEGAL_KEY, null);
-  return { ...defaultLegal(), ...(saved && typeof saved === 'object' ? saved : {}) };
+  const saved = adminBundle && typeof adminBundle === 'object' ? adminBundle : null;
+  const seed = defaultLegal();
+  const terms = saved?.terms && typeof saved.terms === 'object' ? saved.terms : {};
+  const privacy = saved?.privacy && typeof saved.privacy === 'object' ? saved.privacy : {};
+  return {
+    terms: {
+      title: String(terms.title || seed.terms.title),
+      body: String(terms.body || seed.terms.body),
+      updatedAt: String(terms.updatedAt || ''),
+    },
+    privacy: {
+      title: String(privacy.title || seed.privacy.title),
+      body: String(privacy.body || seed.privacy.body),
+      updatedAt: String(privacy.updatedAt || ''),
+    },
+  };
 }
 
 /**
  * @param {'terms'|'privacy'} key
  * @param {{ title?: string, body?: string }} input
  */
-export function saveLegalDoc(key, input) {
+export async function saveLegalDoc(key, input) {
   if (key !== 'terms' && key !== 'privacy') throw new Error('지원하지 않는 문서입니다.');
-  const all = getLegalDocs();
-  all[key] = {
-    title: String(input.title || all[key].title).trim(),
+  const current = getLegalDocs();
+  const doc = {
+    title: String(input.title || current[key].title).trim(),
     body: String(input.body || '').trim(),
-    updatedAt: nowStamp(),
   };
-  saveJson(LEGAL_KEY, all);
-  appendLog('legal_save', key, all[key].title);
-  return clone(all[key]);
+  await saveSiteSettings({ [key]: doc });
+  return clone(getLegalDocs()[key]);
 }
 
-export function resetSiteSettingsSeed() {
+export async function resetSiteSettingsSeed() {
   sessionStorage.removeItem(SETTINGS_KEY);
-  sessionStorage.removeItem(POPUPS_KEY);
   sessionStorage.removeItem(LEGAL_KEY);
-  appendLog('site_settings_reset', 'all', 'seed 복원');
+  await saveSiteSettings({ reset: true });
+}
+
+/** @returns {{ enabled: boolean, message: string, until: string }|null} */
+export function getActiveMaintenance() {
+  if (!publicSnapshot?.maintenanceEnabled) return null;
+  if (publicSnapshot.maintenanceUntil) {
+    const until = parseOpsTime(String(publicSnapshot.maintenanceUntil));
+    if (until && new Date() > until) return null;
+  }
+  return {
+    enabled: true,
+    message: String(publicSnapshot.maintenanceMessage || '시스템 점검 중입니다.'),
+    until: String(publicSnapshot.maintenanceUntil || ''),
+  };
+}
+
+/** @returns {{ text: string }|null} */
+export function getActiveGuestBanner() {
+  if (!publicSnapshot?.guestBannerEnabled) return null;
+  const text = String(publicSnapshot.guestBannerText || '').trim();
+  if (!text) return null;
+  return { text };
 }
 
 /** @param {string} [raw] ISO-ish or datetime-local */
@@ -260,30 +424,6 @@ export function isWithinSchedule(row, now = new Date()) {
   if (start && now < start) return false;
   if (end && now > end) return false;
   return true;
-}
-
-/** @returns {{ enabled: boolean, message: string, until: string }|null} */
-export function getActiveMaintenance() {
-  const s = getSiteSettings();
-  if (!s.maintenanceEnabled) return null;
-  if (s.maintenanceUntil) {
-    const until = parseOpsTime(s.maintenanceUntil);
-    if (until && new Date() > until) return null;
-  }
-  return {
-    enabled: true,
-    message: s.maintenanceMessage || '시스템 점검 중입니다.',
-    until: s.maintenanceUntil || '',
-  };
-}
-
-/** @returns {{ text: string }|null} */
-export function getActiveGuestBanner() {
-  const s = getSiteSettings();
-  if (!s.guestBannerEnabled) return null;
-  const text = String(s.guestBannerText || '').trim();
-  if (!text) return null;
-  return { text };
 }
 
 const DISMISS_PREFIX = 'study114-popup-dismiss:';

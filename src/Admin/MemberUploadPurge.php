@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Study114\Admin;
 
 /**
- * 결제 없는 회원 삭제 커밋 뒤에만 호출한다.
+ * 회원 삭제 커밋 뒤에 호출한다.
  * public/uploads 안 파일만 지운다.
  */
 final class MemberUploadPurge

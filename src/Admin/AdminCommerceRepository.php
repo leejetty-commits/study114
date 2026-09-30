@@ -21,9 +21,10 @@ final class AdminCommerceRepository
                     p.started_on, p.end_exclusive_on,
                     DATE_SUB(p.end_exclusive_on, INTERVAL 1 DAY) AS ends_on,
                     p.starts_at, p.ends_at, p.source, p.created_at,
-                    GREATEST(0, DATEDIFF(p.end_exclusive_on, CURDATE())) AS days_left
+                    GREATEST(0, DATEDIFF(p.end_exclusive_on, CURDATE())) AS days_left'
+            . $this->anonColumns('provider_position_subscriptions', 'p') . '
              FROM provider_position_subscriptions p
-             INNER JOIN users u ON u.id = p.user_id
+             LEFT JOIN users u ON u.id = p.user_id
              WHERE CURDATE() < p.end_exclusive_on';
         $params = [];
         if ($userId !== null && $userId > 0) {
@@ -35,7 +36,7 @@ final class AdminCommerceRepository
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return is_array($rows) ? $rows : [];
+        return $this->withAccount(is_array($rows) ? $rows : []);
     }
 
     /** @return list<array<string, mixed>> */
@@ -45,7 +46,7 @@ final class AdminCommerceRepository
         $sql = 'SELECT t.id, t.user_id, u.email AS user_email, t.ticket_type, t.pack_size,
                     t.remaining, t.purchased_at, t.expires_at, t.source
              FROM provider_ticket_packs t
-             INNER JOIN users u ON u.id = t.user_id
+             LEFT JOIN users u ON u.id = t.user_id
              WHERE t.remaining > 0 AND t.expires_at > NOW()';
         $params = [];
         if ($userId !== null && $userId > 0) {
@@ -57,7 +58,7 @@ final class AdminCommerceRepository
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return is_array($rows) ? $rows : [];
+        return $this->withAccount(is_array($rows) ? $rows : []);
     }
 
     /** @return list<array<string, mixed>> */
@@ -66,9 +67,10 @@ final class AdminCommerceRepository
         $limit = max(1, min(200, $limit));
         $sql = 'SELECT o.id, o.user_id, u.email AS user_email, o.order_ref, o.product_id,
                     o.variant_label, o.product_kind, o.amount_won, o.status, o.pg_provider,
-                    o.created_at, o.paid_at
+                    o.created_at, o.paid_at'
+            . $this->anonColumns('provider_payment_orders', 'o') . '
              FROM provider_payment_orders o
-             INNER JOIN users u ON u.id = o.user_id';
+             LEFT JOIN users u ON u.id = o.user_id';
         $params = [];
         if ($userId !== null && $userId > 0) {
             $sql .= ' WHERE o.user_id = ?';
@@ -79,7 +81,7 @@ final class AdminCommerceRepository
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return is_array($rows) ? $rows : [];
+        return $this->withAccount(is_array($rows) ? $rows : []);
     }
 
     public function countActivePositionsBySku(string $sku): int
@@ -176,5 +178,64 @@ final class AdminCommerceRepository
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return is_array($row) ? $row : null;
+    }
+
+    private function anonColumns(string $table, string $alias): string
+    {
+        if (!$this->columnExists($table, 'deleted_display_name')) {
+            return '';
+        }
+
+        return ', ' . $alias . '.deleted_display_name, ' . $alias . '.deleted_user_ref';
+    }
+
+    /**
+     * 회원 행이 없으면 결제 줄은 오류 없이 익명 표시만 한다. 회원 상세 링크용 이메일은 비운다.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
+    private function withAccount(array $rows): array
+    {
+        $out = [];
+        foreach ($rows as $row) {
+            $email = trim((string) ($row['user_email'] ?? ''));
+            $userId = $row['user_id'] ?? null;
+            $live = $email !== '' && $userId !== null && (int) $userId > 0;
+            if ($live) {
+                $row['deleted_member'] = false;
+                $out[] = $row;
+                continue;
+            }
+            $name = trim((string) ($row['deleted_display_name'] ?? ''));
+            if ($name === '') {
+                $name = '○○○';
+            }
+            $row['user_id'] = null;
+            $row['user_email'] = '';
+            $row['deleted_member'] = true;
+            $row['deleted_display_name'] = $name;
+            $row['account_label'] = '삭제된 회원(' . $name . ')';
+            $out[] = $row;
+        }
+
+        return $out;
+    }
+
+    private function columnExists(string $table, string $column): bool
+    {
+        if (
+            !in_array($table, ['provider_payment_orders', 'provider_position_subscriptions'], true)
+            || $column !== 'deleted_display_name'
+        ) {
+            return false;
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+        );
+        $stmt->execute([$table, $column]);
+
+        return $stmt->fetchColumn() !== false;
     }
 }

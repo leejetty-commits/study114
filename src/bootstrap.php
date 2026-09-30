@@ -188,3 +188,5 @@ function study114_session_save_path(): ?string
 
     return $dir;
 }
+
+\Study114\Site\SiteSettingsService::rejectWriteIfActive();
