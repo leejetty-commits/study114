@@ -27,7 +27,7 @@ import {
 } from './home-basic-live.js';
 import { toggleRecommendation } from './search-api.js';
 import { isLoggedIn } from './auth-session.js';
-import { bindProtectedGuestActions } from '../../shared/guest-gate-ui.js';
+import { bindProtectedGuestActions, bindGuestEmptyCardLoginGate } from '../../shared/guest-gate-ui.js';
 
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
@@ -317,4 +317,5 @@ export function bindGuestSectionEvents(root, rerender) {
   });
 
   bindProtectedGuestActions(root);
+  bindGuestEmptyCardLoginGate(root);
 }

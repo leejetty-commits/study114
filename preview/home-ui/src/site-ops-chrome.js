@@ -9,7 +9,45 @@ import {
   ensurePublicSettings,
 } from './admin/site-settings-store.js';
 import { getCurrentScreen, isAdminRoute, isMypageRoute, isMessagesRoute } from './state.js';
+import { isLoggedIn } from './auth-session.js';
 import { shouldSuppressOpsPopup } from './home-popup/gate.js';
+
+/** @type {ResizeObserver|null} */
+let bannerResizeObserver = null;
+
+function clearOpsChromeOffset() {
+  bannerResizeObserver?.disconnect();
+  bannerResizeObserver = null;
+  document.documentElement.style.setProperty('--ops-chrome-h', '0px');
+}
+
+/** 배너·점검 띠 높이만 헤더와 본문을 민다. 팝업은 높이에 넣지 않는다. */
+function bindOpsChromeOffset(wrap) {
+  bannerResizeObserver?.disconnect();
+  bannerResizeObserver = null;
+  const banners = wrap.querySelector('.ops-chrome__banners');
+  const apply = () => {
+    const h = banners && banners.isConnected
+      ? Math.ceil(banners.getBoundingClientRect().height)
+      : 0;
+    document.documentElement.style.setProperty('--ops-chrome-h', `${h}px`);
+  };
+  if (!banners) {
+    document.documentElement.style.setProperty('--ops-chrome-h', '0px');
+    return;
+  }
+  apply();
+  if (typeof ResizeObserver !== 'undefined') {
+    bannerResizeObserver = new ResizeObserver(apply);
+    bannerResizeObserver.observe(banners);
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('hashchange', () => {
+    if (isAdminRoute()) clearOpsChromeOffset();
+  });
+}
 
 function esc(s) {
   return String(s ?? '')
@@ -103,11 +141,13 @@ function paintOpsChrome(appRoot) {
   appRoot.querySelectorAll('[data-ops-chrome]').forEach((el) => el.remove());
 
   const surface = resolveOpsSurface();
-  if (surface === null) return;
+  if (surface === null) {
+    clearOpsChromeOffset();
+    return;
+  }
 
   const maintenance = getActiveMaintenance();
-  const guestBanner =
-    surface === 'guest_home' || getCurrentScreen() === 'guest' ? getActiveGuestBanner() : null;
+  const guestBanner = !isLoggedIn() ? getActiveGuestBanner() : null;
   const popups = listActivePopupsForSurface(surface);
   // surface=all 페이지에서도 all 팝업만; guest_home 전용은 guest에서만
   const showPopups = shouldSuppressOpsPopup() ? [] : popups.slice(0, 1);
@@ -133,6 +173,8 @@ function paintOpsChrome(appRoot) {
   } else {
     appRoot.prepend(wrap);
   }
+
+  bindOpsChromeOffset(wrap);
 
   wrap.querySelectorAll('[data-ops-popup-dismiss]').forEach((el) => {
     el.addEventListener('click', () => {

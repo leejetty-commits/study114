@@ -23,7 +23,7 @@ import {
 } from '../search-handoff.js';
 import { isEmailVerified } from '@home-ui/auth-session.js';
 import { bindGuestListPagination } from '@home-ui/list-pagination.js';
-import { bindProtectedGuestActions, openDeepAccessLoginGate } from '../../../shared/guest-gate-ui.js';
+import { bindProtectedGuestActions, bindGuestEmptyCardLoginGate, openDeepAccessLoginGate } from '../../../shared/guest-gate-ui.js';
 import { redirectToEmailVerifyWait } from '../../../shared/auth-redirect.js';
 import { isSafeReturnTo } from '../../../shared/auth-redirect.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../../shared/preview-flags.js';
@@ -47,6 +47,7 @@ import { bootStudyRoomHome, bootStudyRoomStudentDemand } from '@home-ui/study-ro
 import { renderBrowseList } from '@home-ui/exposure-render.js';
 import { getStudentDemandForRegion } from '../search-region-feed.js';
 import { renderListSortSelect } from '../../../shared/list-sort.js';
+import { placeCaption } from '../../../shared/location-display.js';
 
 /**
  * 찾기 페이지 바디 탭·역할 셀렉트 제거 — 이동은 GNB만.
@@ -74,17 +75,43 @@ function syncHomeSubscription() {
   homePreviewState.providerSubscription = previewState.subscription;
 }
 
+function visibleCurrentPlace(tab, role, regionLabel) {
+  if (role === 'guest') return tab === 'room' ? '대치동' : '서울시';
+  if (tab === 'student' && role === 'study_room') {
+    return studentCurrentPlace(regionLabel) || placeCaption(regionLabel, 'room') || '';
+  }
+  if (tab === 'student' && role === 'tutor') {
+    const saved = tutorRepresentativeRegionLabel();
+    return placeCaption(saved || regionLabel, 'tutor') || '';
+  }
+  if (tab === 'room') return placeCaption(regionLabel, 'room') || '';
+  return placeCaption(regionLabel, 'tutor') || '';
+}
+
+function fillGuestMapStats(root) {
+  if (!root.querySelector('[data-guest-axis-count]')) return;
+  fetch('/api/search/region-stats.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{}',
+  })
+    .then(async (res) => {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok !== true) return;
+      for (const key of ['studyRooms', 'tutors', 'studentRequests']) {
+        const el = root.querySelector(`[data-guest-axis-count="${key}"]`);
+        if (el && Number.isFinite(Number(data[key]))) el.textContent = String(data[key]);
+      }
+    })
+    .catch(() => {});
+}
+
 function renderSearchForm(tab) {
   const heading = SEARCH_TABS[tab]?.label || getSearchTabLabel(tab, previewState.role);
   // 헤더·지도·리스트가 같은 CanonicalLocation 을 쓰도록 먼저 정규화
   refreshActiveResultItems(tab, previewState, previewState.role);
   const regionLabel = resolveActiveRegionLabel(tab, previewState, previewState.role);
-  const locationText =
-    tab === 'student' && previewState.role === 'study_room'
-      ? studentCurrentPlace(regionLabel)
-      : tab === 'student' && previewState.role === 'tutor'
-        ? tutorRepresentativeRegionLabel()
-        : regionLabel;
+  const locationText = visibleCurrentPlace(tab, previewState.role, regionLabel);
   const locationLine =
     tab === 'room' || tab === 'tutor' || tab === 'student'
       ? `<p class="search-header__location" data-search-current-location aria-live="polite">현재위치 <strong>${esc(locationText)}</strong></p>`
@@ -231,6 +258,8 @@ function bindGuestFindBrowse(root, rerender) {
     getStudentItem: (id) => previewState.searchExposureItems.find((x) => x.id === id),
   });
   bindProtectedGuestActions(root);
+  bindGuestEmptyCardLoginGate(root);
+  fillGuestMapStats(root);
   bindGuestListPagination(root, rerender);
 
   const form = root.querySelector('[data-search-form]');

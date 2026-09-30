@@ -46,7 +46,7 @@
 /* —— 사이드바 —— */
 .mypage-sidebar {
   position: sticky;
-  top: calc(var(--site-header-h, 4.75rem) + 0.75rem);
+  top: calc(var(--ops-chrome-h, 0px) + var(--site-header-h, 4.75rem) + 0.75rem);
   width: 100%;
   box-sizing: border-box;
   padding: 1rem 0.75rem;

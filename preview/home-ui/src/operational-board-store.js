@@ -48,8 +48,10 @@ function mapFaqPost(post) {
 
 /** @param {any} post */
 function mapGuidePost(post) {
+  const slug = String(post.slug || post.id || '').trim();
   return {
-    slug: post.slug || post.id,
+    id: String(post.id || slug),
+    slug,
     title: post.title,
     priority: post.priority || 'primary',
     audience: post.audience || '전체',
@@ -77,6 +79,7 @@ function faqSeed() {
 
 function guideSeed() {
   return GUIDE_ARTICLES.map((g) => ({
+    id: g.slug,
     slug: g.slug,
     title: g.title,
     priority: g.priority,
@@ -95,32 +98,52 @@ function noticeSource() {
   return noticeSeed();
 }
 
-function faqSource() {
-  // 시드 FAQ(faq-1~)는 프론트 SSOT를 우선 — 운영 DB 옛 카피가 남아도 JS 배포로 반영
-  const seed = faqSeed();
-  const seedIds = new Set(seed.map((f) => f.id));
-  if (isBoardApiMode()) {
-    const apiRows = getOperationalPostsCache('faq').map(mapFaqPost);
-    if (apiRows.length) {
-      const extras = apiRows.filter((r) => !seedIds.has(r.id));
-      return [...seed, ...extras];
-    }
+/**
+ * 같은 키의 서버 글이 있으면 시드를 덮는다. 서버에 없는 시드는 남긴다.
+ * 서버 목록이 비었거나 API가 꺼져 있으면 시드만 쓴다.
+ *
+ * @template T
+ * @param {T[]} seedRows
+ * @param {T[]} apiRows
+ * @param {(row: T) => string} keyOf
+ */
+function overlayByKey(seedRows, apiRows, keyOf) {
+  const map = new Map();
+  for (const row of seedRows) {
+    map.set(keyOf(row), row);
   }
-  return seed;
+  const extras = [];
+  for (const row of apiRows) {
+    const key = keyOf(row);
+    if (!key) continue;
+    if (map.has(key)) map.set(key, row);
+    else extras.push(row);
+  }
+  return [...map.values(), ...extras];
+}
+
+function faqSource() {
+  const seed = faqSeed();
+  if (!isBoardApiMode()) return seed;
+  const apiRows = getOperationalPostsCache('faq').map(mapFaqPost);
+  if (!apiRows.length) return seed;
+  return overlayByKey(seed, apiRows, (row) => row.id);
 }
 
 function guideSource() {
-  // 시드 안전과외 가이드를 프론트 SSOT로 우선
   const seed = guideSeed();
-  const seedSlugs = new Set(seed.map((g) => g.slug));
-  if (isBoardApiMode()) {
-    const apiRows = getOperationalPostsCache('safe-guide').map(mapGuidePost);
-    if (apiRows.length) {
-      const extras = apiRows.filter((r) => !seedSlugs.has(r.slug));
-      return [...seed, ...extras];
-    }
-  }
-  return seed;
+  if (!isBoardApiMode()) return seed;
+  const apiRows = getOperationalPostsCache('safe-guide').map(mapGuidePost);
+  if (!apiRows.length) return seed;
+  return overlayByKey(seed, apiRows, (row) => row.slug);
+}
+
+export function isSeedFaqId(id) {
+  return faqSeed().some((row) => row.id === id);
+}
+
+export function isSeedGuideSlug(slug) {
+  return guideSeed().some((row) => row.slug === slug);
 }
 
 /** @returns {ReturnType<typeof mapNoticePost>[]} */
@@ -197,17 +220,26 @@ export async function upsertFaqPost(input) {
   if (!isBoardApiMode()) {
     throw new Error('board_posts API가 활성화되지 않았습니다. (관리자 로그인 필요)');
   }
-  return mapFaqPost(
-    await apiSaveOperationalPost('faq', {
-      id: input.id,
-      title: input.q,
-      answer: input.a,
-      category_id: input.category || 'general',
-      sortOrder: Number(input.sortOrder || 0),
-      status: 'published',
-      author_role: 'admin',
-    }),
-  );
+  const id = String(input.id || '').trim();
+  const cached = id
+    ? getOperationalPostsCache('faq').find((row) => row.id === id)
+    : null;
+  const payload = {
+    title: input.q,
+    answer: input.a,
+    category_id: input.category || cached?.categoryId || cached?.category || 'join',
+    sortOrder: Number(input.sortOrder || 0),
+    status: 'published',
+    author_role: 'admin',
+  };
+  if (cached?.id) {
+    payload.id = cached.id;
+    payload.post_key = cached.id;
+  } else if (id) {
+    payload.id = id;
+    payload.post_key = id;
+  }
+  return mapFaqPost(await apiSaveOperationalPost('faq', payload));
 }
 
 /** @param {string} id */
@@ -217,33 +249,41 @@ export async function deleteFaqPost(id) {
   }
 }
 
-/** @param {{ slug?: string, title: string, priority?: string, audience?: string, body: string[], checklist?: any[] }} input */
+/** @param {{ id?: string, slug?: string, title: string, priority?: string, audience?: string, body: string[], checklist?: any[] }} input */
 export async function upsertGuidePost(input) {
   if (!isBoardApiMode()) {
     throw new Error('board_posts API가 활성화되지 않았습니다. (관리자 로그인 필요)');
   }
   const slug = String(input.slug || '').trim();
-  return mapGuidePost(
-    await apiSaveOperationalPost('safe-guide', {
-      id: slug || undefined,
-      post_key: slug || undefined,
-      slug,
-      title: input.title,
-      priority: input.priority || 'primary',
-      audience: input.audience || '전체',
-      body: input.body,
-      checklist: Array.isArray(input.checklist) ? input.checklist : [],
-      status: 'published',
-      author_role: 'admin',
-    }),
+  const requestedId = String(input.id || '').trim();
+  const cached = getOperationalPostsCache('safe-guide').find(
+    (row) =>
+      (requestedId && (row.id === requestedId || row.slug === requestedId)) ||
+      (slug && (row.slug === slug || row.id === slug)),
   );
+  const payload = {
+    slug,
+    title: input.title,
+    priority: input.priority || 'primary',
+    audience: input.audience || '전체',
+    body: input.body,
+    checklist: Array.isArray(input.checklist) ? input.checklist : [],
+    status: 'published',
+    author_role: 'admin',
+  };
+  if (cached?.id) {
+    payload.id = cached.id;
+    payload.post_key = cached.id;
+  }
+  return mapGuidePost(await apiSaveOperationalPost('safe-guide', payload));
 }
 
 /** @param {string} slug */
 export async function deleteGuidePost(slug) {
-  if (isBoardApiMode()) {
-    await apiDeleteOperationalPost('safe-guide', slug, 'admin');
-  }
+  if (!isBoardApiMode()) return;
+  const key = String(slug || '').trim();
+  const cached = getOperationalPostsCache('safe-guide').find((row) => row.id === key || row.slug === key);
+  await apiDeleteOperationalPost('safe-guide', cached?.id || key, 'admin');
 }
 
 export function isOperationalBoardApiActive() {

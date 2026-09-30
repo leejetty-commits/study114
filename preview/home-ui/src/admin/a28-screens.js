@@ -15,7 +15,7 @@ import {
 } from '../operational-board-store.js';
 import { listTickets, updateTicketStatus } from '../support/ticket-store.js';
 import { getTicketLoadError } from '../support/support-backend.js';
-import { TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
+import { FAQ_TABS, TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { SUBMISSION_CATEGORIES } from '../submission-board/submission-copy.js';
 import { apiOpenSubmissionAttachment } from '../board/board-backend.js';
 import {
@@ -851,7 +851,7 @@ function renderFaqCmsPanel() {
     )
     .join('');
   return `
-     <p class="a28-help">질문 순서 숫자가 작을수록 위에 보입니다.</p>
+     <p class="a28-help">질문 순서 숫자가 작을수록 위에 보입니다. 기본 질문은 지울 수 없고 내용만 고칩니다. 분류를 바꾸면 손님 화면의 그 탭에 나옵니다.</p>
      ${renderOperationalApiHint()}
      <table class="sup-admin-table"><thead><tr><th>순서</th><th>질문</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="3" class="sup-empty">등록된 질문 없음</td></tr>'}</tbody></table>
      <form class="sup-admin-form" data-a28-faq-form>
@@ -859,6 +859,11 @@ function renderFaqCmsPanel() {
        <input type="hidden" name="id" value="" />
        <label class="sup-field"><span>질문</span><input type="text" name="q" required /></label>
        <label class="sup-field"><span>답변</span><textarea name="a" rows="4" required></textarea></label>
+       <label class="sup-field"><span>분류</span>
+         <select name="category">
+           ${FAQ_TABS.map((tab) => `<option value="${esc(tab.slug)}">${esc(tab.label)}</option>`).join('')}
+         </select>
+       </label>
        <label class="sup-field"><span>정렬 순서</span><input type="number" name="sortOrder" value="0" step="10" /></label>
        <div class="sup-admin-form__actions">
          <button type="submit" class="btn btn--primary btn--sm">저장</button>
@@ -879,12 +884,13 @@ function renderGuideCmsPanel() {
     )
     .join('');
   return `
-     <p class="a28-help">주소 키는 영문·숫자·하이픈만 씁니다. 예: safe-prepay</p>
+     <p class="a28-help">주소 키는 영문·숫자·하이픈만 씁니다. 예: safe-prepay. 기본 글은 지울 수 없고 내용만 고칩니다.</p>
      ${renderOperationalApiHint()}
      <table class="sup-admin-table"><thead><tr><th>주소 키</th><th>제목</th><th>위치</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="4" class="sup-empty">이용안내 없음</td></tr>'}</tbody></table>
      <form class="sup-admin-form" data-a28-guide-form>
        <h3 class="sup-admin-form__title">이용안내 작성 · 수정</h3>
        <input type="hidden" name="originalSlug" value="" />
+       <input type="hidden" name="serverId" value="" />
        <label class="sup-field"><span>주소 키 <small>(영문·숫자·하이픈)</small></span><input type="text" name="slug" pattern="[a-z0-9\\-]+" placeholder="safe-prepay" required /></label>
        <label class="sup-field"><span>제목</span><input type="text" name="title" required /></label>
        <label class="sup-field"><span>우선순위</span>

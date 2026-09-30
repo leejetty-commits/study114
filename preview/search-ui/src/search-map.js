@@ -27,7 +27,7 @@ function parseRegionParts(regionLabel, coords = {}) {
     { raw: regionLabel, lat: coords.lat, lng: coords.lng },
     'room',
   );
-  const dong = canonical.dong || canonical.apartmentName || canonical.city || '우리동네';
+  const dong = canonical.dong || canonical.apartmentName || '우리동네';
   return {
     city: canonical.city,
     gu: canonical.district,
@@ -68,12 +68,13 @@ function renderFloatMap(parts, items, ctx) {
   let hint = `${searched ? '검색 결과 · ' : '내 지역 · '}${countNote}`;
 
   if (bannerStyle === 'guest') {
-    sub = [parts.gu, '공부방·과외쌤을 한눈에 비교하세요'].filter(Boolean).join(' · ');
+    sub = [parts.gu, '우리동네 공부방·과외를 쪽지로 연결하세요'].filter(Boolean).join(' · ');
     statsHtml = `<dl class="hero-map__stats">
-          <div><dt>목록</dt><dd>${items.length}</dd></div>
-          <div><dt>상태</dt><dd>${searched ? '검색' : '지역'}</dd></div>
+          <div><dt>공부방</dt><dd data-guest-axis-count="studyRooms">—</dd></div>
+          <div><dt>과외쌤</dt><dd data-guest-axis-count="tutors">—</dd></div>
+          <div><dt>학생</dt><dd data-guest-axis-count="studentRequests">—</dd></div>
         </dl>`;
-    hint = countNote;
+    hint = '';
   } else if (bannerStyle === 'provider_room' && ctx.providerHome) {
     sub = parts.dong ? `${parts.dong} 공부방 현황입니다` : '';
     statsHtml = `<dl class="hero-map__stats">
@@ -108,7 +109,7 @@ function renderFloatMap(parts, items, ctx) {
         <h2 class="hero-map__dong">${esc(parts.dong)}</h2>
         <p class="hero-map__sub">${esc(sub)}</p>
         ${statsHtml}
-        <p class="hero-map__hint">${esc(hint)}</p>
+        ${hint ? `<p class="hero-map__hint">${esc(hint)}</p>` : ''}
       </aside>
     </section>`;
 }

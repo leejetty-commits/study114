@@ -1,5 +1,6 @@
 import { GUIDE_NAV_ITEMS, GUIDE_PAGES } from './copy.js';
-import { getGuidePageId } from './router.js';
+import { getGuidePost } from '../operational-board-store.js';
+import { getGuidePageId, guideArticleSlugFromPath } from './router.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -9,6 +10,10 @@ export function renderGuidePageTitle(path) {
   const id = getGuidePageId(path);
   if (id === 'home') {
     return '<span class="guide-content__title-prefix">이용안내</span>';
+  }
+  if (id === 'article') {
+    const post = getGuidePost(guideArticleSlugFromPath(path));
+    return `<span class="guide-content__title-prefix">이용안내</span><span class="guide-content__title-suffix">${esc(post?.title || '안내 글')}</span>`;
   }
   const page = GUIDE_PAGES[id];
   return `<span class="guide-content__title-prefix">이용안내</span><span class="guide-content__title-suffix">${esc(page?.title || '이용안내')}</span>`;

@@ -50,6 +50,7 @@ import {
   tryBrowserGps,
   serializeCanonical,
   deserializeCanonical,
+  placeCaption,
 } from '../../shared/location-display.js';
 import { openKakaoPostcode } from '../../shared/kakao-postcode.js';
 
@@ -148,7 +149,9 @@ export function applyCanonicalLocation(state, canonical, tab) {
     canonical.source === 'saved' &&
     state.role === 'study_room' &&
     (tab === 'room' || tab === 'student');
-  if (tab && state.studyRoomHome !== true && !promoSeed) writeStoredCanonical(tab, canonical);
+  if (tab && state.studyRoomHome !== true && !promoSeed && state.role !== 'guest') {
+    writeStoredCanonical(tab, canonical);
+  }
   logLocationDebug('apply-canonical', {
     source: canonical.source,
     displayLabel: canonical.displayLabel,
@@ -216,6 +219,17 @@ function syncFindHashState(state, tab) {
  * @returns {{ needsSearchRestore: boolean }}
  */
 export function hydrateFindStateFromHash(state, tab) {
+  if ((state.role || 'guest') === 'guest') {
+    const raw = tab === 'room' ? '서울 강남구 대치동' : '서울시';
+    const axis = tab === 'room' ? 'room' : 'tutor';
+    const canonical = normalizeLocation({ raw, source: 'fallback' }, axis);
+    canonical.source = 'fallback';
+    applyCanonicalLocation(state, canonical, tab);
+    state._needsSearchRestore = false;
+    state.searchExecuted = false;
+    state.lastSearchFilters = null;
+    return { needsSearchRestore: false };
+  }
   const q = parseHashQuery();
   const viewerRoleEarly = state.role || 'guest';
   if (viewerRoleEarly === 'study_room' && tab === 'student') {
@@ -378,6 +392,11 @@ export function hydrateFindStateFromHash(state, tab) {
  * URL/직접선택(session/address)보다 우선하지 않음
  */
 export async function bootFindGpsIfNeeded(state, tab, rerender) {
+  if ((state.role || 'guest') === 'guest') {
+    state._gpsBootedTab = tab;
+    logLocationDebug('gps-skip', { reason: 'guest-fixed' });
+    return;
+  }
   if (state._gpsBootedTab === tab) return;
   state._gpsBootedTab = tab;
   const source = state.canonicalLocation?.source;
@@ -406,6 +425,10 @@ export async function bootFindGpsIfNeeded(state, tab, rerender) {
       : null;
   const axis = axisFromSearchTab(tab, hope);
   const geo = await reverseGeocodeCoords(coords.lat, coords.lng, axis);
+  if (!geo?.displayLabel) {
+    logLocationDebug('gps-skip', { reason: 'broad-region-only' });
+    return;
+  }
   const curSource = state.canonicalLocation?.source;
   if (
     curSource === 'url' ||
@@ -557,6 +580,12 @@ function canonicalRegionLabel(label, tab, state) {
     axis,
   );
   // 같은 라벨이면 기존 좌표·source 유지
+  if (!canonical.displayLabel) {
+    const alt = memberRepresentativeRaw(tab, state);
+    if (alt && alt !== String(label || '').trim()) {
+      return canonicalRegionLabel(alt, tab, state);
+    }
+  }
   if (prev && prev.displayLabel === canonical.displayLabel) {
     canonical.lat = prev.lat ?? canonical.lat;
     canonical.lng = prev.lng ?? canonical.lng;
@@ -855,6 +884,20 @@ function renderChips(optionsKey, name) {
  * @param {FindSurfaceState} state
  * @returns {'tutor'|'study_room'}
  */
+/** 광역만 남았을 때 회원이 돌아가 쓸 대표 지역. */
+function memberRepresentativeRaw(tab, state) {
+  const role = state.role || 'guest';
+  if (role === 'study_room') {
+    const promo = peekStudyRoomPromo1();
+    if (promo) return promo;
+  }
+  if (role === 'tutor') {
+    const saved = tutorRepresentativeRegionLabel();
+    if (saved) return saved;
+  }
+  return tab === 'room' ? MOCK_REGIONS.room : '서울시';
+}
+
 /** 공부방 로그인 현재위치. 시 이름만 두지 않고 동을 쓴다. */
 export function studentCurrentPlace(label) {
   const text = String(label || '').trim();
@@ -862,7 +905,9 @@ export function studentCurrentPlace(label) {
   const promoDong = studyRoomPromo1Dong();
   if (promoDong && (!text || text === promo || text.includes(promoDong))) return promoDong;
   const parsed = normalizeLocation({ raw: text }, 'room').dong;
-  return String(parsed || text).trim();
+  if (parsed) return String(parsed).trim();
+  if (promoDong) return promoDong;
+  return '';
 }
 
 function resolveStudentSearchHope(state) {
@@ -1321,9 +1366,17 @@ export function renderFindResultSection(tab, state, role, options = {}) {
     const saved = tutorRepresentativeRegionLabel();
     if (saved) regionLabel = saved;
   }
+  if (role === 'guest') {
+    regionLabel = tab === 'room' ? '대치동' : '서울시';
+  }
   if (role === 'tutor' && surfaceType === 'home' && !state.searchExecuted) {
     const slot = tutorHomeRegionLabel(resolveTutorRegionIndex(state));
     regionLabel = slot || (tutorHomeRegionsReady() ? tutorRepresentativeRegionLabel() : '');
+  }
+  if (role !== 'guest' && regionLabel) {
+    const axis = tab === 'room' || (tab === 'student' && role === 'study_room') ? 'room' : 'tutor';
+    const caption = placeCaption(regionLabel, axis);
+    if (caption) regionLabel = caption;
   }
 
   if (tab === 'student' && role === 'study_room' && !state.searchExecuted && state.studentDemandPending) {

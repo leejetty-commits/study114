@@ -373,7 +373,12 @@ final class BoardPostService
 
         if ($postKey !== null && $postKey !== '') {
             $existing = $this->repo->findByKey($boardKey, $postKey);
-            if ($existing === null) {
+            // 시드 FAQ(faq-숫자)는 DB에 행이 없어도 그 post_key로 새로 만든다.
+            // 그 외 보드·키는 없는 글을 지정하면 거절한다.
+            $seedFaqInsert = $boardKey === 'faq'
+                && $authorRole === 'admin'
+                && preg_match('/^faq-[0-9]+$/', $postKey) === 1;
+            if ($existing === null && !$seedFaqInsert) {
                 throw new InvalidArgumentException('게시물을 찾을 수 없습니다.');
             }
         }

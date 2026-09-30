@@ -45,6 +45,61 @@ const REGION_COORDS = [
 
 const CITY_SUFFIX = /(특별자치시|특별시|광역시|특별자치도|자치도|시|도)$/;
 
+/** 시·군·동 없이 광역만 있는 표기. 「서울시」는 시 단위라 여기 넣지 않는다. */
+const BROAD_REGION_ONLY = new Set([
+  '서울',
+  '서울특별시',
+  '부산',
+  '부산광역시',
+  '대구',
+  '대구광역시',
+  '인천',
+  '인천광역시',
+  '광주',
+  '광주광역시',
+  '대전',
+  '대전광역시',
+  '울산',
+  '울산광역시',
+  '세종',
+  '세종특별자치시',
+  '경기',
+  '경기도',
+  '강원',
+  '강원도',
+  '강원특별자치도',
+  '충북',
+  '충청북도',
+  '충남',
+  '충청남도',
+  '전북',
+  '전라북도',
+  '전남',
+  '전라남도',
+  '경북',
+  '경상북도',
+  '경남',
+  '경상남도',
+  '제주',
+  '제주도',
+  '제주특별자치도',
+]);
+
+/** @param {string} token */
+function isBroadRegionOnly(token) {
+  const text = blank(token).replace(/\s+/g, '');
+  if (!text) return false;
+  if (BROAD_REGION_ONLY.has(text)) return true;
+  return /도$/.test(text) && !/시$/.test(text);
+}
+
+/** 시 또는 군. 광역 단독(경기도·서울)은 제외. */
+function isSiOrGun(token) {
+  const text = blank(token).replace(/\s+/g, '');
+  if (!text || isBroadRegionOnly(text)) return false;
+  return /시$/.test(text) || /군$/.test(text);
+}
+
 /** @param {unknown} value */
 function blank(value) {
   return String(value ?? '').trim();
@@ -84,7 +139,10 @@ function parseKoreanAddressParts(raw) {
     if (/동$/.test(only)) {
       return { province: '', city: '', district: '', dong: only, apartmentName: '' };
     }
-    if (CITY_SUFFIX.test(only) || /시$/.test(only)) {
+    if (isBroadRegionOnly(only)) {
+      return { province: only, city: '', district: '', dong: '', apartmentName: '' };
+    }
+    if (CITY_SUFFIX.test(only) || /시$/.test(only) || /군$/.test(only)) {
       return { province: '', city: only, district: '', dong: '', apartmentName: '' };
     }
     return { province: '', city: '', district: '', dong: '', apartmentName: only };
@@ -209,19 +267,43 @@ export function formatLocationDisplay(loc, axis = 'room') {
   const raw = blank(loc.raw || loc.displayLabel);
 
   if (axis === 'tutor') {
-    if (city) return city;
-    if (raw) return raw.split(/\s+/)[0] || raw;
-    return '위치 확인 중';
+    const tokens = [];
+    for (const part of [city, district, dong, raw]) {
+      for (const token of blank(part).split(/\s+/)) {
+        if (token) tokens.push(token);
+      }
+    }
+    return tokens.find((token) => isSiOrGun(token)) || '';
   }
 
-  if (apartmentName) return dong ? `${dong} · ${apartmentName}` : apartmentName;
+  if (apartmentName && !isBroadRegionOnly(apartmentName)) {
+    return dong && !isBroadRegionOnly(dong) ? `${dong} · ${apartmentName}` : apartmentName;
+  }
   if (dong && city && String(dong).startsWith(city)) return dedupeAddressTokens(dong);
   if (dong && district && city) return dedupeAddressTokens(`${city} ${district} ${dong}`);
   if (dong && city) return dedupeAddressTokens(`${city} ${dong}`);
   if (dong) return dedupeAddressTokens(dong);
-  if (district && city) return dedupeAddressTokens(`${city} ${district}`);
-  if (city) return city;
-  return dedupeAddressTokens(raw) || '위치 확인 중';
+  return '';
+}
+
+/**
+ * 현재위치 한 줄. 공부방은 동·아파트, 과외쌤·학생은 시·군.
+ * 광역만 있으면 빈 문자열.
+ * @param {CanonicalLocation|Partial<CanonicalLocation>|string} loc
+ * @param {LocationAxis|'student'} [axis]
+ */
+export function placeCaption(loc, axis = 'room') {
+  const useTutor = axis === 'tutor' || axis === 'student';
+  const canonical =
+    typeof loc === 'string' || loc == null
+      ? normalizeLocation({ raw: loc || '' }, useTutor ? 'tutor' : 'room')
+      : loc;
+  if (useTutor) return formatLocationDisplay(canonical, 'tutor');
+  const apt = blank(canonical.apartmentName);
+  const dong = blank(canonical.dong);
+  if (apt && !isBroadRegionOnly(apt)) return dong && !isBroadRegionOnly(dong) ? `${dong} · ${apt}` : apt;
+  if (dong && !isBroadRegionOnly(dong)) return dong;
+  return '';
 }
 
 /** @param {string} label */

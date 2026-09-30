@@ -17,6 +17,7 @@ import './styles/search-visily.css';
 import '@home-ui/styles/udx-std-apply.css';
 
 import { bindSearchPageEvents, renderSearchPage } from './screens/search-page.js';
+import { mountOpsChrome } from '@home-ui/site-ops-chrome.js';
 import { syncRoleFromHash } from './state.js';
 import { initAuthSession, isEmailVerified } from '@home-ui/auth-session.js';
 import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
@@ -35,6 +36,7 @@ function render() {
   if (window.location.hash !== hashBefore || isAuthRedirectPending()) return;
   app.innerHTML = html;
   bindSearchPageEvents(app, render, { allowFindBoot });
+  mountOpsChrome(app);
   paintedHash = hashBefore;
 }
 

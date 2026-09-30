@@ -17,11 +17,13 @@ import {
   listGuidePosts,
   upsertGuidePost,
   deleteGuidePost,
+  isSeedFaqId,
+  isSeedGuideSlug,
 } from '../operational-board-store.js';
 import { listTickets, updateTicketStatus, updateTicketReply } from '../support/ticket-store.js';
 import { hydrateSupportCache, isSupportApiMode } from '../support/support-backend.js';
 import { getAuthUser } from '../auth-session.js';
-import { TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
+import { FAQ_TABS, TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { SUBMISSION_CATEGORIES } from '../submission-board/submission-copy.js';
 import { apiOpenSubmissionAttachment } from '../board/board-backend.js';
 import {
@@ -1280,12 +1282,21 @@ export function bindA28ScreenEvents(root, path, rerender) {
         faqForm.querySelector('[name="q"]').value = item.q;
         faqForm.querySelector('[name="a"]').value = item.a;
         faqForm.querySelector('[name="sortOrder"]').value = String(item.sortOrder || 0);
+        const category = faqForm.querySelector('[name="category"]');
+        if (category) {
+          category.value = FAQ_TABS.some((tab) => tab.slug === item.category) ? item.category : 'join';
+        }
       });
     });
     root.querySelectorAll('[data-a28-faq-delete]').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-a28-faq-delete');
-        if (!id || !window.confirm('삭제할까요?')) return;
+        if (!id) return;
+        if (isSeedFaqId(id)) {
+          window.alert('기본 질문은 지울 수 없습니다. 내용을 수정해 주세요.');
+          return;
+        }
+        if (!window.confirm('삭제할까요?')) return;
         try {
           await deleteFaqPost(id);
           rerender();
@@ -1306,6 +1317,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           id: String(fd.get('id') || '').trim() || undefined,
           q: String(fd.get('q')),
           a: String(fd.get('a')),
+          category: String(fd.get('category') || 'join'),
           sortOrder: Number(fd.get('sortOrder') || 0),
         });
         faqForm.reset();
@@ -1322,6 +1334,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         const item = listGuidePosts().find((g) => g.slug === btn.getAttribute('data-a28-guide-edit'));
         if (!item || !guideForm) return;
         guideForm.querySelector('[name="originalSlug"]').value = item.slug;
+        guideForm.querySelector('[name="serverId"]').value = item.id || '';
         guideForm.querySelector('[name="slug"]').value = item.slug;
         guideForm.querySelector('[name="title"]').value = item.title;
         guideForm.querySelector('[name="priority"]').value = item.priority || 'primary';
@@ -1335,7 +1348,12 @@ export function bindA28ScreenEvents(root, path, rerender) {
     root.querySelectorAll('[data-a28-guide-delete]').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const slug = btn.getAttribute('data-a28-guide-delete');
-        if (!slug || !window.confirm('삭제할까요?')) return;
+        if (!slug) return;
+        if (isSeedGuideSlug(slug)) {
+          window.alert('기본 글은 지울 수 없습니다. 내용을 수정해 주세요.');
+          return;
+        }
+        if (!window.confirm('삭제할까요?')) return;
         try {
           await deleteGuidePost(slug);
           rerender();
@@ -1347,6 +1365,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
     guideForm?.querySelector('[data-a28-guide-reset]')?.addEventListener('click', () => {
       guideForm.reset();
       guideForm.querySelector('[name="originalSlug"]').value = '';
+      guideForm.querySelector('[name="serverId"]').value = '';
       guideForm.querySelector('[name="priority"]').value = 'primary';
       guideForm.querySelector('[name="audience"]').value = '전체';
     });
@@ -1362,9 +1381,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
           return { label: label.trim(), hint: rest.join('|').trim() };
         });
       const slug = String(fd.get('slug') || '').trim();
-      const originalSlug = String(fd.get('originalSlug') || '').trim();
       try {
         await upsertGuidePost({
+          id: String(fd.get('serverId') || '').trim(),
           slug,
           title: String(fd.get('title')),
           priority: String(fd.get('priority') || 'primary'),
@@ -1372,11 +1391,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
           body: String(fd.get('body')).split('\n').map((l) => l.trim()).filter(Boolean),
           checklist,
         });
-        if (originalSlug && originalSlug !== slug) {
-          await deleteGuidePost(originalSlug);
-        }
         guideForm.reset();
         guideForm.querySelector('[name="originalSlug"]').value = '';
+        guideForm.querySelector('[name="serverId"]').value = '';
         rerender();
       } catch (err) {
         window.alert(err instanceof Error ? err.message : '이용안내 저장 실패');

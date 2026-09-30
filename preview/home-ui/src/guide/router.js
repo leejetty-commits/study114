@@ -19,6 +19,13 @@ export const GUIDE_PATH_ALIASES = {
   '/support/safe/': '/guide/safe',
 };
 
+/** @param {string} path */
+export function guideArticleSlugFromPath(path) {
+  const p = String(path || '').split('?')[0].replace(/\/$/, '');
+  const match = p.match(/^\/guide\/a\/([a-z0-9-]+)$/);
+  return match ? match[1] : '';
+}
+
 export function normalizeGuidePath(hashPath) {
   const raw = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
   const p = raw.split('?')[0];
@@ -26,6 +33,8 @@ export function normalizeGuidePath(hashPath) {
   if (p === '/guide' || p === '/guide/') return '/guide';
   if (p === '/support/guide' || p === '/support/guide/') return '/guide';
   if (p === '/support/safe' || p === '/support/safe/') return '/guide/safe';
+  const articleSlug = guideArticleSlugFromPath(p);
+  if (articleSlug) return `/guide/a/${articleSlug}`;
   const item = GUIDE_NAV_ITEMS.find((nav) => nav.path === p);
   return item ? item.path : null;
 }
@@ -36,6 +45,7 @@ export function getDefaultGuidePath() {
 
 export function getGuidePageId(path) {
   const normalized = normalizeGuidePath(path) || path;
+  if (guideArticleSlugFromPath(normalized)) return 'article';
   if (normalized === '/guide' || normalized === '/guide/') return 'home';
   const item = GUIDE_NAV_ITEMS.find((nav) => nav.path === normalized);
   return item?.id || 'home';

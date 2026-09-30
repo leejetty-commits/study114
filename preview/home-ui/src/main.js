@@ -151,6 +151,7 @@ function renderScreen() {
   if (isAdminRoute()) {
     app.innerHTML = renderAdmin();
     bindAdminEvents(app, render);
+    mountOpsChrome(app);
     mountHomePopup(app);
     return;
   }

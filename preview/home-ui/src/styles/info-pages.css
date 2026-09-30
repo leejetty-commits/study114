@@ -71,7 +71,7 @@
 .concern-nav,
 .support-app .sup-nav {
   position: sticky;
-  top: calc(var(--preview-toolbar-h, 0px) + 5.5rem);
+  top: calc(var(--preview-toolbar-h, 0px) + var(--ops-chrome-h, 0px) + 5.5rem);
   z-index: 10;
   background: var(--if-surface);
   border: 1px solid var(--if-line);

@@ -55,8 +55,11 @@ function mdLite(text) {
 }
 
 function bodyHtml(body) {
-  const lines = Array.isArray(body) ? body : [body];
-  return lines.map((p) => `<p>${mdLite(p)}</p>`).join('');
+  const lines = (Array.isArray(body) ? body : [body]).flatMap((line) => String(line ?? '').split(/\r?\n/));
+  return lines
+    .filter((line) => line.trim())
+    .map((line) => `<p>${mdLite(line)}</p>`)
+    .join('');
 }
 
 /** @param {{ body: string[], checklist?: { label: string, hint?: string }[] }} article */

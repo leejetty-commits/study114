@@ -263,3 +263,31 @@ export function bindProtectedGuestActions(root) {
     });
   });
 }
+
+const GUEST_EMPTY_CARD_SELECTOR =
+  '[data-prime-empty], [data-basic-empty], [data-pick-empty], [data-expo-sample]';
+
+/**
+ * 손님 빈카드·샘플 카드 전체 클릭 → 로그인 유도.
+ * 이미 팝업을 띄우는 찜·쪽지 버튼은 그대로 둔다.
+ * @param {ParentNode} root
+ */
+export function bindGuestEmptyCardLoginGate(root) {
+  if (!(root instanceof Element)) return;
+  if (root.getAttribute('data-guest-empty-card-gate') === '1') return;
+  root.setAttribute('data-guest-empty-card-gate', '1');
+  root.addEventListener(
+    'click',
+    (e) => {
+      const el = e.target instanceof Element ? e.target : null;
+      if (!el) return;
+      const card = el.closest(GUEST_EMPTY_CARD_SELECTOR);
+      if (!card || !root.contains(card)) return;
+      if (el.closest('[data-action="login-gate"], [data-action="compare-guest-blocked"]')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openDeepAccessLoginGate({ from: 'detail', source: 'detail' });
+    },
+    true,
+  );
+}

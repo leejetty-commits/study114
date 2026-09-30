@@ -1,4 +1,5 @@
-import { getGuidePageId } from './router.js';
+import { getGuidePageId, guideArticleSlugFromPath } from './router.js';
+import { getGuidePost, getRelatedGuidePosts, listGuidePosts } from '../operational-board-store.js';
 import { STUDY_ROOM_REGISTER_URL, TUTOR_REGISTER_URL, searchUiUrl } from '../nav-config.js';
 import { getNavRole, navigate } from '../state.js';
 import { isLoggedIn } from '../auth-session.js';
@@ -10,6 +11,71 @@ const A = '/assets/guide-refresh';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+}
+
+/** 서버 글은 이스케이프한 뒤 문단으로만 그린다. */
+function guideRich(text) {
+  return esc(text)
+    .replace(/\[([^\]]+)\]\(#(\/[^)]+)\)/g, (_, label, path) => {
+      const safe = path.replace(/[^a-z0-9/_-]/gi, '');
+      return `<a href="#${safe}" data-guide-nav="${safe}">${label}</a>`;
+    })
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+function guideParas(body) {
+  const lines = (Array.isArray(body) ? body : [body]).flatMap((line) => String(line ?? '').split(/\r?\n/));
+  return lines
+    .filter((line) => line.trim())
+    .map((line) => `<p>${guideRich(line)}</p>`)
+    .join('');
+}
+
+function renderGuideArticleList() {
+  const items = listGuidePosts()
+    .map((post) => {
+      const href = `/guide/a/${encodeURIComponent(post.slug)}`;
+      return `<a class="situation-card card card--accent" href="#${href}" data-guide-nav="${esc(href)}">
+        <h3>${esc(post.title)}</h3>
+        <p>${esc(post.audience || '전체')}</p>
+        <span class="situation-card__cta">본문 보기 →</span>
+      </a>`;
+    })
+    .join('');
+  return `
+    ${sectionHead('안내 글', '읽어 볼 글')}
+    <div class="situation-grid">${items}</div>`;
+}
+
+function renderGuideArticle(path) {
+  const slug = guideArticleSlugFromPath(path);
+  const post = slug ? getGuidePost(slug) : null;
+  if (!post) {
+    return `
+      ${sectionHead('안내 글', '글을 찾지 못했습니다')}
+      <p class="section-lead">이 주소의 안내 글이 없습니다.</p>
+      ${hashLink('/guide', 'btn btn--secondary', '이용안내 홈')}`;
+  }
+  const checks = (post.checklist || [])
+    .map(
+      (item) =>
+        `<li><strong>${esc(item.label)}</strong>${item.hint ? ` ${esc(item.hint)}` : ''}</li>`,
+    )
+    .join('');
+  const related = getRelatedGuidePosts(post.slug)
+    .map((item) => {
+      const href = `/guide/a/${encodeURIComponent(item.slug)}`;
+      return hashLink(href, 'btn btn--ghost', item.title);
+    })
+    .join('');
+  return `
+    ${sectionHead(post.audience || '전체', post.title)}
+    ${guideParas(post.body)}
+    ${checks ? `<ul class="checklist">${checks}</ul>` : ''}
+    <div class="cta-row" style="margin-top:4px">
+      ${hashLink('/guide', 'btn btn--secondary', '이용안내 홈')}
+      ${related}
+    </div>`;
 }
 
 function searchHref(kind) {
@@ -134,6 +200,7 @@ function renderGuideHome() {
       <span class="aux-links__sep" aria-hidden="true">·</span>
       <a href="#/support" data-guide-nav="/support">고객센터 보기</a>
     </div>
+    ${renderGuideArticleList()}
     ${sectionHead('질문', '자주 묻는 질문')}
     ${faqBlock([
       {
@@ -588,6 +655,7 @@ const GUIDE_SCREENS = {
 
 export function renderGuideScreen(path) {
   const id = getGuidePageId(path);
+  if (id === 'article') return renderGuideArticle(path);
   return (GUIDE_SCREENS[id] || renderGuideHome)();
 }
 

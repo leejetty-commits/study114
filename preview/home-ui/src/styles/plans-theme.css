@@ -641,7 +641,7 @@
 
 .plans-theme .plans-sf-sidenav {
   position: sticky;
-  top: calc(var(--preview-toolbar-h, 0px) + var(--site-header-h, 4.75rem) + 0.5rem);
+  top: calc(var(--preview-toolbar-h, 0px) + var(--ops-chrome-h, 0px) + var(--site-header-h, 4.75rem) + 0.5rem);
   z-index: 10;
   width: 100%;
   margin: 0;
