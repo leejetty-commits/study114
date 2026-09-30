@@ -174,10 +174,17 @@ final class AdminMemberService
             if ($beforeStatus === 'withdrawn') {
                 throw new InvalidArgumentException('이미 탈퇴 처리된 계정입니다.');
             }
-            if (!$this->repo->updateStatus($userId, 'withdrawn', date('Y-m-d H:i:s'))) {
-                throw new InvalidArgumentException('탈퇴 처리에 실패했습니다.');
+            $pdo = Connection::get();
+            $pdo->beginTransaction();
+            try {
+                (new \Study114\Auth\AccountWithdrawService())->purgeWithdrawnAccount($pdo, $userId);
+                $pdo->commit();
+            } catch (\Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                throw $e;
             }
-            (new \Study114\Auth\AccountWithdrawService())->releaseLoginIdentifiers(Connection::get(), $userId);
             $actionKind = 'account_withdraw';
             $afterNote = 'status: ' . $beforeStatus . ' → withdrawn';
         }
@@ -370,6 +377,7 @@ final class AdminMemberService
                 'tutors' => (int) ($counts['tutor_count'] ?? 0),
                 'students' => (int) ($counts['student_count'] ?? 0),
             ],
+            'hasPayment' => $this->repo->hasPayment($userId),
             'isMaster' => $this->roles->isMasterEmail((string) $row['email']),
         ];
     }

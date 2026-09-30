@@ -190,7 +190,7 @@ final class AdminMemberRepository
     public function listRoles(int $userId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, role_type, is_primary, status, granted_at
+            'SELECT id, role_type, is_primary, status, created_at AS granted_at
              FROM user_roles
              WHERE user_id = ?
              ORDER BY is_primary DESC, id ASC'
@@ -269,6 +269,20 @@ final class AdminMemberRepository
             'tickets' => $tickets,
             'orders' => $orders,
         ];
+    }
+
+    /** 결제 유무. 목록 LIMIT와 무관하게 paid·refunded 주문이 있으면 true. */
+    public function hasPayment(int $userId): bool
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT EXISTS(
+                SELECT 1 FROM provider_payment_orders
+                WHERE user_id = ? AND status IN ('paid', 'refunded')
+            )"
+        );
+        $stmt->execute([$userId]);
+
+        return (int) $stmt->fetchColumn() === 1;
     }
 
     public function updateStatus(int $userId, string $status, ?string $deletedAt = null): bool

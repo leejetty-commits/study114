@@ -1010,3 +1010,6 @@
   overflow-wrap: break-word;
 }
 
+.modal-overlay.member-delete-modal { z-index: 1400; }
+.member-delete-modal__error { color: #991b1b; margin: 0.75rem 0 0; }
+

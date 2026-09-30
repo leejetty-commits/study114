@@ -77,6 +77,7 @@ import {
   apiPatchOperator,
   apiResetOperatorPassword,
 } from './admin-backend.js';
+import { deleteAdminMember } from './admin-api.js';
 import { isMasterAdmin } from './admin-guard.js';
 import {
   canAccessAdminMenu,
@@ -186,6 +187,155 @@ import {
   renderNotifyLab,
 } from './a28-screens-labs.js';
 
+
+const MEMBER_ACTION_CONFIRM = {
+  block: '정지하면 이 회원은 로그인할 수 없어요. 정지할까요?',
+  restore: '다시 활성하면 이 회원은 다시 로그인할 수 있어요. 진행할까요?',
+  withdraw: '탈퇴 처리하면 로그인할 수 없고, 올려 둔 등록은 홈·찾기에서 바로 안 보여요. 쪽지의 이름은 성+○○로 보여요. 탈퇴 처리할까요?',
+};
+
+/** @param {string} action @param {number} [count] */
+function memberActionConfirm(action, count) {
+  const text = MEMBER_ACTION_CONFIRM[action] || `${action} 할까요?`;
+  if (count == null) return text;
+  return `선택한 ${count}명 ${text}`;
+}
+
+function decodeAttr(btn, name) {
+  try {
+    return decodeURIComponent(btn.getAttribute(name) || '');
+  } catch {
+    return btn.getAttribute(name) || '';
+  }
+}
+
+/** 회원 삭제 2단계. window.confirm을 쓰지 않는다. */
+function openMemberDeleteModal(btn, rerender) {
+  const id = Number(btn.getAttribute('data-member-delete'));
+  const email = decodeAttr(btn, 'data-delete-email');
+  const role = decodeAttr(btn, 'data-delete-role');
+  const cards = decodeAttr(btn, 'data-delete-cards');
+  const hasPayment = btn.getAttribute('data-delete-payment') === '1';
+  const alreadyHidden = btn.getAttribute('data-delete-hidden') === '1';
+  if (!id || !email) return;
+
+  document.querySelector('[data-member-delete-modal]')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay member-delete-modal';
+  overlay.setAttribute('data-member-delete-modal', '');
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'member-delete-title');
+  const head = document.createElement('div');
+  head.className = 'modal__head';
+  const title = document.createElement('h3');
+  title.id = 'member-delete-title';
+  title.textContent = '회원 삭제';
+  head.append(title);
+  const body = document.createElement('div');
+  body.className = 'modal__body';
+  const foot = document.createElement('div');
+  foot.className = 'modal__foot';
+  const error = document.createElement('p');
+  error.className = 'member-delete-modal__error';
+  error.hidden = true;
+
+  const close = () => overlay.remove();
+
+  function showStep1() {
+    body.replaceChildren();
+    foot.replaceChildren();
+    error.hidden = true;
+    error.textContent = '';
+    const lines = [
+      ['이메일', email],
+      ['역할', role || '—'],
+      ['등록 카드 수', cards || '공부방 0 · 과외쌤 0 · 학생 0'],
+      ['결제', hasPayment ? '결제 있음' : '결제 없음'],
+      ['홈·찾기', alreadyHidden ? '지금 홈·찾기에서 안 보여요' : '삭제하면 바로 안 보여요'],
+    ];
+    const dl = document.createElement('dl');
+    dl.className = 'admin-detail-dl';
+    lines.forEach(([label, value]) => {
+      const dt = document.createElement('dt');
+      dt.textContent = label;
+      const dd = document.createElement('dd');
+      dd.textContent = value;
+      dl.append(dt, dd);
+    });
+    const result = document.createElement('p');
+    result.textContent = hasPayment
+      ? '홈·찾기에서 즉시 사라지고, 결제 기록은 남아요'
+      : '모든 정보가 즉시 완전히 삭제되고 되돌릴 수 없어요';
+    body.append(dl, result, error);
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'btn btn--secondary btn--sm';
+    cancel.textContent = '취소';
+    cancel.addEventListener('click', close);
+    const next = document.createElement('button');
+    next.type = 'button';
+    next.className = 'btn btn--primary btn--sm';
+    next.textContent = '다음';
+    next.addEventListener('click', showStep2);
+    foot.append(cancel, next);
+  }
+
+  function showStep2() {
+    body.replaceChildren();
+    foot.replaceChildren();
+    error.hidden = true;
+    error.textContent = '';
+    const label = document.createElement('label');
+    label.className = 'a28-help';
+    label.textContent = '확인을 위해 이 회원의 이메일을 그대로 입력하세요';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'admin-input';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    label.append(input);
+    body.append(label, error);
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'btn btn--secondary btn--sm';
+    cancel.textContent = '취소';
+    cancel.addEventListener('click', close);
+    const confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.className = 'btn btn--danger btn--sm';
+    confirmBtn.textContent = '회원 삭제';
+    confirmBtn.disabled = true;
+    input.addEventListener('input', () => {
+      confirmBtn.disabled = input.value !== email;
+    });
+    confirmBtn.addEventListener('click', async () => {
+      if (input.value !== email) return;
+      confirmBtn.disabled = true;
+      error.hidden = true;
+      try {
+        await deleteAdminMember({ user_id: id, confirmEmail: input.value });
+        close();
+        a28Ui.openMemberId = null;
+        await hydrateMembersCache(a28Ui.memberFilters);
+        rerender();
+      } catch (err) {
+        error.hidden = false;
+        error.textContent = err instanceof Error ? err.message : '회원 삭제에 실패했습니다.';
+        confirmBtn.disabled = input.value !== email;
+      }
+    });
+    foot.append(cancel, confirmBtn);
+    input.focus();
+  }
+
+  showStep1();
+  modal.append(head, body, foot);
+  overlay.append(modal);
+  document.body.append(overlay);
+}
 
 export function bindA28ScreenEvents(root, path, rerender) {
   bindDetailDrawer(root);
@@ -375,8 +525,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         const action = btn.getAttribute('data-member-action');
         const id = Number(btn.getAttribute('data-member-id'));
         if (!id || !action) return;
-        const labels = { block: '이용 제한', restore: '복구', withdraw: '탈퇴 처리' };
-        if (!window.confirm(`${labels[action] || action} 할까요?`)) return;
+        if (!window.confirm(memberActionConfirm(action))) return;
         const memoInput = root.querySelector(`[data-member-memo="${id}"]`);
         const memo = memoInput instanceof HTMLInputElement ? memoInput.value.trim() : '';
         try {
@@ -409,8 +558,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           window.alert('회원을 선택해 주세요.');
           return;
         }
-        const labels = { block: '이용 제한', restore: '복구' };
-        if (!window.confirm(`선택한 ${ids.length}명에게 ${labels[action]} 할까요?`)) return;
+        if (!window.confirm(memberActionConfirm(action, ids.length))) return;
         const memoEl = root.querySelector('[data-member-bulk-memo]');
         const memo = memoEl instanceof HTMLInputElement ? memoEl.value.trim() : '';
         if (!isAdminApiMode()) {
@@ -428,6 +576,15 @@ export function bindA28ScreenEvents(root, path, rerender) {
         } catch (err) {
           window.alert(err instanceof Error ? err.message : '일괄 조치 실패');
         }
+      });
+    });
+    root.querySelectorAll('[data-member-delete]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (!isAdminApiMode()) {
+          window.alert('미리보기에서는 회원 삭제를 쓸 수 없습니다.');
+          return;
+        }
+        openMemberDeleteModal(btn, rerender);
       });
     });
   }

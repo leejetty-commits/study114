@@ -13,6 +13,9 @@ final class AccountWithdrawService
 {
     public const CONFIRM_TEXT = '탈퇴합니다';
 
+    /** @var array<string, array<string, array{nullable: bool}>> */
+    private array $columnCache = [];
+
     /**
      * @return array{user_id: int, status: string}
      */
@@ -28,41 +31,36 @@ final class AccountWithdrawService
         $pdo = Connection::get();
         $stmt = $pdo->prepare('SELECT id, status FROM users WHERE id = ? LIMIT 1');
         $stmt->execute([$userId]);
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$row) {
             throw new RuntimeException('계정을 찾을 수 없습니다.');
         }
 
-        if ((string) ($row['status'] ?? '') === 'withdrawn') {
-            $this->releaseLoginIdentifiers($pdo, $userId);
-            return [
-                'user_id' => $userId,
-                'status' => 'withdrawn',
-            ];
-        }
-
-        $pdo->beginTransaction();
-        try {
-            $upd = $pdo->prepare(
-                'UPDATE users SET status = ?, deleted_at = ?, updated_at = NOW() WHERE id = ? AND status <> ? LIMIT 1'
-            );
-            $ok = $upd->execute(['withdrawn', date('Y-m-d H:i:s'), $userId, 'withdrawn']);
-            if (!$ok || $upd->rowCount() < 1) {
-                throw new RuntimeException('탈퇴 처리에 실패했습니다.');
-            }
-            $this->releaseLoginIdentifiers($pdo, $userId);
-            $pdo->commit();
-        } catch (\Throwable $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            throw $e;
-        }
+        $this->runPurge($pdo, $userId);
 
         return [
             'user_id' => $userId,
             'status' => 'withdrawn',
         ];
+    }
+
+    /**
+     * 자진 탈퇴·관리자 탈퇴가 같이 부르는 정리.
+     * 호출한 쪽이 트랜잭션을 연다.
+     */
+    public function purgeWithdrawnAccount(PDO $pdo, int $userId): void
+    {
+        if ($userId < 1) {
+            throw new InvalidArgumentException('회원을 찾을 수 없습니다.');
+        }
+
+        $maskedName = $this->maskDisplayName($this->readProfileName($pdo, $userId));
+        $this->markWithdrawn($pdo, $userId);
+        $this->releaseLoginIdentifiers($pdo, $userId);
+        $this->anonymizeProfile($pdo, $userId, $maskedName);
+        $this->deactivateRoles($pdo, $userId);
+        $this->anonymizeStudents($pdo, $userId);
+        $this->deletePersonalRows($pdo, $userId);
     }
 
     /**
@@ -92,6 +90,277 @@ final class AccountWithdrawService
             (new AuthTokenRepository($pdo))->invalidateAll($userId);
         } catch (\Throwable $e) {
             error_log('[withdraw] tokens: ' . $e->getMessage());
+        }
+    }
+
+    public static function maskDisplayName(?string $name): string
+    {
+        $name = trim((string) $name);
+        if ($name === '') {
+            return '○○○';
+        }
+        $first = mb_substr($name, 0, 1, 'UTF-8');
+        if ($first === '' || $first === '○') {
+            return '○○○';
+        }
+
+        return $first . '○○';
+    }
+
+    private function runPurge(PDO $pdo, int $userId): void
+    {
+        $pdo->beginTransaction();
+        try {
+            $this->purgeWithdrawnAccount($pdo, $userId);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    private function markWithdrawn(PDO $pdo, int $userId): void
+    {
+        $cols = $this->columnMeta($pdo, 'users');
+        $sets = [
+            'status = ?',
+            'deleted_at = COALESCE(deleted_at, ?)',
+            'password_hash = ?',
+            'updated_at = NOW()',
+        ];
+        $params = ['withdrawn', date('Y-m-d H:i:s'), $this->invalidPasswordHash()];
+        if (isset($cols['email_verified_at'])) {
+            $sets[] = 'email_verified_at = NULL';
+        }
+        if (isset($cols['oauth_role_pending'])) {
+            $sets[] = 'oauth_role_pending = 0';
+        }
+        if (isset($cols['must_change_password'])) {
+            $sets[] = 'must_change_password = 0';
+        }
+        $params[] = $userId;
+        $sql = 'UPDATE users SET ' . implode(', ', $sets) . ' WHERE id = ? LIMIT 1';
+        $ok = $pdo->prepare($sql)->execute($params);
+        if (!$ok) {
+            throw new RuntimeException('탈퇴 처리에 실패했습니다.');
+        }
+    }
+
+    /** bcrypt가 아닌 값이라 password_verify가 실패한다. */
+    private function invalidPasswordHash(): string
+    {
+        return 'withdrawn:' . bin2hex(random_bytes(16));
+    }
+
+    private function readProfileName(PDO $pdo, int $userId): string
+    {
+        $cols = $this->columnMeta($pdo, 'user_profiles');
+        $nameCol = isset($cols['real_name']) ? 'real_name' : (isset($cols['name']) ? 'name' : '');
+        if ($nameCol === '') {
+            return '';
+        }
+        $stmt = $pdo->prepare("SELECT {$nameCol} FROM user_profiles WHERE user_id = ? LIMIT 1");
+        $stmt->execute([$userId]);
+        $name = $stmt->fetchColumn();
+
+        return $name === false ? '' : (string) $name;
+    }
+
+    private function anonymizeProfile(PDO $pdo, int $userId, string $maskedName): void
+    {
+        $cols = $this->columnMeta($pdo, 'user_profiles');
+        if ($cols === []) {
+            return;
+        }
+        $sets = [];
+        $params = [];
+        $put = function (string $column, mixed $value) use (&$sets, &$params, $cols): void {
+            if (!isset($cols[$column])) {
+                return;
+            }
+            $sets[] = $column . ' = ?';
+            $params[] = $value;
+        };
+        $clear = function (string $column) use ($put, $cols): void {
+            if (!isset($cols[$column])) {
+                return;
+            }
+            $put($column, $cols[$column]['nullable'] ? null : '');
+        };
+
+        $put(isset($cols['real_name']) ? 'real_name' : 'name', $maskedName);
+        foreach ([
+            'phone',
+            'phone_verified_at',
+            'phone_verified_method',
+            'phone_verified_phone',
+            'phone_verification_code_hash',
+            'phone_verification_expires_at',
+            'phone_verification_requested_at',
+            'gender',
+            'birth_date',
+            'address_line1',
+            'address',
+            'address_zip',
+            'address_line2',
+            'home_address_detail',
+            'activity_address_detail',
+        ] as $column) {
+            $clear($column);
+        }
+        foreach (['default_region_id', 'default_complex_id', 'home_region_id', 'home_complex_id', 'activity_region_id', 'activity_complex_id'] as $column) {
+            $clear($column);
+        }
+        foreach (['phone_verification_attempts', 'sms_opt_in', 'email_opt_in', 'safe_number_opt_in', 'sms_consent', 'email_consent', 'safe_number_use'] as $column) {
+            $put($column, 0);
+        }
+        if ($sets === []) {
+            return;
+        }
+        $params[] = $userId;
+        $pdo->prepare(
+            'UPDATE user_profiles SET ' . implode(', ', $sets) . ' WHERE user_id = ? LIMIT 1'
+        )->execute($params);
+    }
+
+    private function deactivateRoles(PDO $pdo, int $userId): void
+    {
+        $cols = $this->columnMeta($pdo, 'user_roles');
+        if (!isset($cols['status'])) {
+            return;
+        }
+        $pdo->prepare(
+            "UPDATE user_roles SET status = 'inactive' WHERE user_id = ?"
+        )->execute([$userId]);
+    }
+
+    private function anonymizeStudents(PDO $pdo, int $userId): void
+    {
+        $cols = $this->columnMeta($pdo, 'students');
+        $ownerCol = isset($cols['guardian_user_id']) ? 'guardian_user_id' : (isset($cols['user_id']) ? 'user_id' : '');
+        $nameCol = isset($cols['student_name']) ? 'student_name' : (isset($cols['name']) ? 'name' : '');
+        if ($ownerCol === '' || $nameCol === '') {
+            return;
+        }
+        $stmt = $pdo->prepare("SELECT id, {$nameCol} AS student_name FROM students WHERE {$ownerCol} = ?");
+        $stmt->execute([$userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        foreach ($rows as $row) {
+            $masked = self::maskDisplayName((string) ($row['student_name'] ?? ''));
+            $sets = [$nameCol . ' = ?'];
+            $params = [$masked];
+            if (isset($cols['public_display_name'])) {
+                $sets[] = 'public_display_name = ?';
+                $params[] = $masked;
+            }
+            foreach (['gender', 'birth_year', 'contact_time_note', 'school_name'] as $column) {
+                if (!isset($cols[$column])) {
+                    continue;
+                }
+                $sets[] = $column . ' = ?';
+                $params[] = $cols[$column]['nullable'] ? null : '';
+            }
+            $params[] = (int) $row['id'];
+            $pdo->prepare(
+                'UPDATE students SET ' . implode(', ', $sets) . ' WHERE id = ? LIMIT 1'
+            )->execute($params);
+        }
+    }
+
+    private function deletePersonalRows(PDO $pdo, int $userId): void
+    {
+        $this->deleteByUser($pdo, 'user_favorites', $userId);
+        $this->deleteByUser($pdo, 'user_recent_views', $userId);
+        $this->deleteByUser($pdo, 'user_compare_items', $userId);
+        $this->deleteRecommendations($pdo, $userId);
+    }
+
+    private function deleteRecommendations(PDO $pdo, int $userId): void
+    {
+        if ($this->columnMeta($pdo, 'user_recommendations') === []) {
+            return;
+        }
+        try {
+            $stmt = $pdo->prepare(
+                'SELECT target_type, target_id FROM user_recommendations WHERE user_id = ?'
+            );
+            $stmt->execute([$userId]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            foreach ($rows as $row) {
+                $type = (string) ($row['target_type'] ?? '');
+                $table = $type === 'tutor' ? 'tutors' : ($type === 'study_room' ? 'study_rooms' : '');
+                $targetId = (int) ($row['target_id'] ?? 0);
+                if ($table === '' || $targetId < 1 || !isset($this->columnMeta($pdo, $table)['recommend_count'])) {
+                    continue;
+                }
+                $pdo->prepare(
+                    "UPDATE {$table}
+                     SET recommend_count = IF(recommend_count > 0, recommend_count - 1, 0)
+                     WHERE id = ?"
+                )->execute([$targetId]);
+            }
+            $pdo->prepare('DELETE FROM user_recommendations WHERE user_id = ?')->execute([$userId]);
+        } catch (\Throwable $e) {
+            error_log('[withdraw] recommendations: ' . $e->getMessage());
+        }
+    }
+
+    private function deleteByUser(PDO $pdo, string $table, int $userId): void
+    {
+        if (!in_array($table, ['user_favorites', 'user_recent_views', 'user_compare_items'], true)) {
+            return;
+        }
+        if ($this->columnMeta($pdo, $table) === []) {
+            return;
+        }
+        try {
+            $pdo->prepare("DELETE FROM {$table} WHERE user_id = ?")->execute([$userId]);
+        } catch (\Throwable $e) {
+            error_log('[withdraw] ' . $table . ': ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * @return array<string, array{nullable: bool}>
+     */
+    private function columnMeta(PDO $pdo, string $table): array
+    {
+        if (isset($this->columnCache[$table])) {
+            return $this->columnCache[$table];
+        }
+        $allowed = [
+            'users',
+            'user_profiles',
+            'user_roles',
+            'students',
+            'user_favorites',
+            'user_recent_views',
+            'user_compare_items',
+            'user_recommendations',
+            'study_rooms',
+            'tutors',
+        ];
+        if (!in_array($table, $allowed, true)) {
+            return $this->columnCache[$table] = [];
+        }
+        try {
+            $stmt = $pdo->query('SHOW COLUMNS FROM ' . $table);
+            $meta = [];
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $col) {
+                $name = (string) ($col['Field'] ?? '');
+                if ($name === '') {
+                    continue;
+                }
+                $meta[$name] = ['nullable' => strtoupper((string) ($col['Null'] ?? '')) === 'YES'];
+            }
+
+            return $this->columnCache[$table] = $meta;
+        } catch (\Throwable $e) {
+            error_log('[withdraw] columns ' . $table . ': ' . $e->getMessage());
+
+            return $this->columnCache[$table] = [];
         }
     }
 }

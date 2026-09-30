@@ -476,14 +476,45 @@ final class MessagesService
      */
     private function resolvePeerDisplayName(array $row, int $userId): string
     {
-        $initiatedByMe = (int) $row['initiated_by_user_id'] === $userId;
-        if ($initiatedByMe) {
-            return (string) $row['peer_display_name'];
-        }
-        $otherUserId = (int) $row['participant_low_user_id'] === $userId
+        $otherIsHigh = (int) $row['participant_low_user_id'] === $userId;
+        $otherUserId = $otherIsHigh
             ? (int) $row['participant_high_user_id']
             : (int) $row['participant_low_user_id'];
 
-        return $this->repo->getUserDisplayName($otherUserId) ?? '상대';
+        if ($this->otherUserStatus($row, $otherIsHigh, $otherUserId) === 'withdrawn') {
+            $live = trim((string) ($this->otherUserRealName($row, $otherIsHigh, $otherUserId) ?? ''));
+
+            return $live !== '' ? $live : '○○○';
+        }
+
+        if ((int) $row['initiated_by_user_id'] === $userId) {
+            return (string) ($row['peer_display_name'] ?? '');
+        }
+
+        return $this->otherUserRealName($row, $otherIsHigh, $otherUserId) ?? '상대';
+    }
+
+    /** @param array<string, mixed> $row */
+    private function otherUserStatus(array $row, bool $otherIsHigh, int $otherUserId): string
+    {
+        $key = $otherIsHigh ? 'participant_high_status' : 'participant_low_status';
+        if (array_key_exists($key, $row)) {
+            return (string) ($row[$key] ?? '');
+        }
+
+        return (string) ($this->repo->getUserStatus($otherUserId) ?? '');
+    }
+
+    /** @param array<string, mixed> $row */
+    private function otherUserRealName(array $row, bool $otherIsHigh, int $otherUserId): ?string
+    {
+        $key = $otherIsHigh ? 'participant_high_real_name' : 'participant_low_real_name';
+        if (array_key_exists($key, $row)) {
+            $value = $row[$key];
+
+            return $value === null ? null : (string) $value;
+        }
+
+        return $this->repo->getUserDisplayName($otherUserId);
     }
 }

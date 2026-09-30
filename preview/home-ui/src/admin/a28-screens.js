@@ -74,6 +74,7 @@ import {
   apiResetOperatorPassword,
 } from './admin-backend.js';
 import { isMasterAdmin } from './admin-guard.js';
+import { getAuthUser } from '../auth-session.js';
 import {
   canAccessAdminMenu,
   ADMIN_LEVEL_LABELS,
@@ -235,6 +236,7 @@ function buildMemberDetail(id, apiDetail = null) {
         orders: [],
       },
       profileCounts: { studyRooms: 0, tutors: 0, students: 0 },
+      hasPayment: false,
       _source: 'empty-dummy',
     };
   }
@@ -307,6 +309,7 @@ function buildMemberDetail(id, apiDetail = null) {
       tutors: src.profileCounts?.tutors ?? src.tutorCount ?? 0,
       students: src.profileCounts?.students ?? src.studentCount ?? 0,
     },
+    hasPayment: src.hasPayment === true,
     _source: fromApi ? 'api' : 'seed-dummy',
   };
 }
@@ -1234,6 +1237,8 @@ function renderMembers() {
     const canBlock = detail.status !== 'blocked' && detail.status !== 'withdrawn' && !detail.isMaster;
     const canRestore = detail.status === 'blocked' && !detail.isMaster;
     const canWithdraw = master && detail.status !== 'withdrawn' && !detail.isMaster;
+    const selfId = Number(getAuthUser()?.user_id || 0);
+    const canDelete = canWithdraw && detail.id !== selfId;
     const sourceNote =
       detail._source === 'api'
         ? '서버 조회 결과'
@@ -1242,14 +1247,24 @@ function renderMembers() {
           : '기본 더미(포맷 확인용)';
 
     const smsPath = `/admin/notify/send?phone=${encodeURIComponent(detail.phone || '')}&name=${encodeURIComponent(detail.name || '')}`;
+    const primaryRole = (detail.roles || []).find((r) => r.isPrimary) || (detail.roles || [])[0];
+    const roleLabel = primaryRole
+      ? A28_MEMBER_ROLE_LABELS[primaryRole.roleType] || '역할 확인 필요'
+      : A28_MEMBER_ROLE_LABELS[detail.primaryRole] || '—';
+    const cardCountLabel = `공부방 ${detail.profileCounts?.studyRooms || 0} · 과외쌤 ${detail.profileCounts?.tutors || 0} · 학생 ${detail.profileCounts?.students || 0}`;
+    const paymentLabel = detail.hasPayment ? '결제 있음' : '결제 없음';
 
     detailHtml = renderDetailDrawer(
       `member-${detail.id}`,
       `회원 #${detail.id}`,
       `<p class="a28-help">${esc(sourceNote)}</p>
         <dl class="admin-detail-dl">
-          <dt>계정</dt><dd>${esc(detail.name || '—')} · ${esc(detail.email)}</dd>
+          <dt>이메일</dt><dd>${esc(detail.email || '—')}</dd>
+          <dt>이름</dt><dd>${esc(detail.name || '—')}</dd>
+          <dt>역할</dt><dd>${esc(roleLabel)}</dd>
           <dt>상태</dt><dd>${esc(A28_MEMBER_STATUS_LABELS[detail.status] || detail.status)}</dd>
+          <dt>등록 카드 수</dt><dd>${esc(cardCountLabel)}</dd>
+          <dt>결제</dt><dd>${esc(paymentLabel)}</dd>
           <dt>전화</dt><dd>${esc(detail.phone || '—')}</dd>
           <dt>이메일 인증</dt><dd>${detail.emailVerified ? '완료' : '미완료'}</dd>
           <dt>성별</dt><dd>${esc(genderLabel(detail.gender))}</dd>
@@ -1258,7 +1273,6 @@ function renderMembers() {
           <dt>수신동의</dt><dd>문자 ${detail.smsOptIn ? '예' : '아니오'} · 이메일 ${detail.emailOptIn ? '예' : '아니오'}</dd>
           <dt>가입</dt><dd>${esc(detail.createdAt)}</dd>
           <dt>최근 로그인</dt><dd>${esc(detail.lastLoginAt || '—')}</dd>
-          <dt>프로필 수</dt><dd>공부방 ${detail.profileCounts?.studyRooms || 0} · 과외 ${detail.profileCounts?.tutors || 0} · 자녀 ${detail.profileCounts?.students || 0}</dd>
           <dt>유료 이용</dt><dd>${esc(A28_MEMBER_TIER_LABELS[detail.paid?.subscriptionTier] || '확인 필요')}</dd>
         </dl>
         <h4 class="admin-section-title">역할</h4>
@@ -1274,9 +1288,10 @@ function renderMembers() {
         </label>
         <div class="admin-actions">
           <a class="btn btn--secondary btn--sm" href="#${esc(smsPath)}" data-a28-nav="${esc(smsPath)}">문자 미리보기</a>
-          ${canBlock ? `<button type="button" class="btn btn--secondary btn--sm" data-member-action="block" data-member-id="${detail.id}">이용 제한</button>` : ''}
-          ${canRestore ? `<button type="button" class="btn btn--primary btn--sm" data-member-action="restore" data-member-id="${detail.id}">복구</button>` : ''}
+          ${canBlock ? `<button type="button" class="btn btn--secondary btn--sm" data-member-action="block" data-member-id="${detail.id}">정지</button>` : ''}
+          ${canRestore ? `<button type="button" class="btn btn--primary btn--sm" data-member-action="restore" data-member-id="${detail.id}">다시 활성</button>` : ''}
           ${canWithdraw ? `<button type="button" class="btn btn--secondary btn--sm" data-member-action="withdraw" data-member-id="${detail.id}">탈퇴 처리</button>` : ''}
+          ${canDelete ? `<button type="button" class="btn btn--danger btn--sm" data-member-delete="${detail.id}" data-delete-email="${encodeURIComponent(detail.email || '')}" data-delete-role="${encodeURIComponent(roleLabel)}" data-delete-cards="${encodeURIComponent(cardCountLabel)}" data-delete-payment="${detail.hasPayment ? '1' : '0'}" data-delete-hidden="${detail.status === 'withdrawn' ? '1' : '0'}">회원 삭제</button>` : ''}
           ${detail.isMaster ? '<p class="a28-help">마스터 계정은 제한/탈퇴 불가</p>' : ''}
         </div>`,
     );
@@ -1286,12 +1301,12 @@ function renderMembers() {
     '회원/역할 검색',
     'A28-02',
     `${renderOpsTip()}
-     <p class="a28-help">회원 조회와 이용 제한·복구, 유료 이용·역할 확인을 제공합니다. 다른 회원으로 대신 로그인하거나 역할을 부여하는 기능은 없습니다.</p>
+     <p class="a28-help">회원 조회와 정지·다시 활성·탈퇴 처리, 유료 이용·역할 확인을 제공합니다. 다른 회원으로 대신 로그인하거나 역할을 부여하는 기능은 없습니다.</p>
      <div class="admin-ov" role="group" aria-label="회원 상태 집계">
        ${chip('all', '전체')}
        ${chip('active', '정상')}
        ${chip('pending', '대기')}
-       ${chip('blocked', '이용 제한')}
+       ${chip('blocked', '정지')}
        ${chip('withdrawn', '탈퇴')}
      </div>
      <form class="admin-filter-bar" data-member-filter>
@@ -1300,7 +1315,7 @@ function renderMembers() {
          <option value="all"${filters.status === 'all' ? ' selected' : ''}>상태 전체</option>
          <option value="active"${filters.status === 'active' ? ' selected' : ''}>정상</option>
          <option value="pending"${filters.status === 'pending' ? ' selected' : ''}>대기</option>
-         <option value="blocked"${filters.status === 'blocked' ? ' selected' : ''}>이용 제한</option>
+         <option value="blocked"${filters.status === 'blocked' ? ' selected' : ''}>정지</option>
          <option value="withdrawn"${filters.status === 'withdrawn' ? ' selected' : ''}>탈퇴</option>
        </select>
        <select name="role_type" class="admin-input--sm">
@@ -1317,8 +1332,8 @@ function renderMembers() {
      <div class="admin-bulk-bar" data-member-bulk-bar>
        <label class="admin-bulk-bar__chk"><input type="checkbox" data-member-chkall /> 전체 선택</label>
        <input type="text" class="admin-input admin-input--sm" data-member-bulk-memo placeholder="일괄 조치 메모 (선택)" />
-       <button type="button" class="btn btn--secondary btn--sm" data-member-bulk="block">선택 이용 제한</button>
-       <button type="button" class="btn btn--primary btn--sm" data-member-bulk="restore">선택 복구</button>
+       <button type="button" class="btn btn--secondary btn--sm" data-member-bulk="block">선택 정지</button>
+       <button type="button" class="btn btn--primary btn--sm" data-member-bulk="restore">선택 다시 활성</button>
      </div>
      <table class="sup-admin-table">
        <thead><tr><th></th><th>식별번호</th><th>회원</th><th>휴대폰</th><th>대표 역할</th><th>상태</th><th>유료</th><th>소셜</th><th>최근 로그인</th><th></th></tr></thead>

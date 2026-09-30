@@ -9,6 +9,7 @@ use PDO;
 use Study114\Database\Connection;
 use Study114\Paid\AutoNewBadge;
 use Study114\Paid\PaidBadgeResolver;
+use Study114\Visibility\WithdrawnOwnerSql;
 
 final class SearchService
 {
@@ -300,6 +301,7 @@ final class SearchService
         $where = [
             "sr.profile_status <> 'hidden'",
             'sr.deleted_at IS NULL',
+            WithdrawnOwnerSql::notWithdrawn('sr.user_id'),
         ];
         $params = [];
 
@@ -548,6 +550,7 @@ final class SearchService
         // 목록/검색 노출 = 숨김(hidden)만 제외. 공개·완성도 게이트 없음.
         $where = [
             "t.profile_status <> 'hidden'",
+            WithdrawnOwnerSql::notWithdrawn('t.user_id'),
         ];
         $params = [];
 
@@ -761,7 +764,11 @@ final class SearchService
         bool $includeStudentRequestText = false,
     ): array
     {
-        $where = ['s.exposure_status = :status', 's.deleted_at IS NULL'];
+        $where = [
+            's.exposure_status = :status',
+            's.deleted_at IS NULL',
+            WithdrawnOwnerSql::notWithdrawn('s.guardian_user_id'),
+        ];
         $params = ['status' => 'published'];
 
         if ($lessonType = $this->stringFilter($filters, 'preferred_lesson_type')) {

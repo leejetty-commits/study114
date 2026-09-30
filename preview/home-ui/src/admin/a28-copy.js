@@ -146,7 +146,7 @@ export const A28_MENU = [
         menuId: 'members',
         label: '회원 목록',
         path: '/admin/members',
-        help: '이메일·이름·휴대폰으로 찾고, 이용 제한·복구를 합니다.',
+        help: '이메일·이름·휴대폰으로 찾고, 정지·다시 활성·탈퇴 처리를 합니다.',
         screenId: 'A28-02',
       },
     ],
@@ -448,7 +448,7 @@ export const A28_MENU_ID_LABELS = {
 export const A28_MEMBER_STATUS_LABELS = {
   active: '정상',
   pending: '대기',
-  blocked: '이용 제한',
+  blocked: '정지',
   withdrawn: '탈퇴',
 };
 
@@ -517,6 +517,7 @@ export const A28_ACTION_LABELS = {
   account_block: '이용 제한',
   account_restore: '복구',
   account_withdraw: '탈퇴 처리',
+  account_delete: '회원 삭제',
   site_settings_save: '환경설정 저장',
   site_settings_reset: '환경설정 초기값 복원',
   popup_create: '팝업 생성',

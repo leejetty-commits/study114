@@ -6,6 +6,7 @@ namespace Study114\StudyRoom;
 
 use PDO;
 use Study114\Media\StudyRoomDefaultImageService;
+use Study114\Visibility\WithdrawnOwnerSql;
 
 /**
  * 공개 샵 페이지용 공부방 읽기 — 기본·상세1·상세2 입력값.
@@ -48,6 +49,7 @@ final class StudyRoomPublicReadService
 
         // 샵 상세: 숨김(hidden)·삭제만 제외. draft도 입력값 그대로 노출.
         // 완성도(expanded_complete)는 섹션 숨김 조건이 아니다.
+        $ownerSql = WithdrawnOwnerSql::notWithdrawn('sr.user_id');
         $stmt = $this->pdo->prepare(
             "SELECT sr.id, sr.study_room_name, sr.slogan, sr.intro_short, sr.intro_long,
                     sr.main_subject_note, sr.feature_1, sr.feature_2, sr.feature_3,
@@ -62,6 +64,7 @@ final class StudyRoomPublicReadService
               WHERE sr.id = ?
                 AND sr.profile_status <> 'hidden'
                 AND sr.deleted_at IS NULL
+                AND {$ownerSql}
               LIMIT 1"
         );
         $stmt->execute([$roomId]);

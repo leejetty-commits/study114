@@ -53,6 +53,31 @@ final class MessagesRepository
         return $val !== false ? (string) $val : null;
     }
 
+    public function getUserStatus(int $userId): ?string
+    {
+        $stmt = $this->pdo->prepare('SELECT status FROM users WHERE id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $val = $stmt->fetchColumn();
+
+        return $val !== false ? (string) $val : null;
+    }
+
+    private function peerIdentitySelect(): string
+    {
+        return 'u_low.status AS participant_low_status,
+                u_high.status AS participant_high_status,
+                p_low.real_name AS participant_low_real_name,
+                p_high.real_name AS participant_high_real_name';
+    }
+
+    private function peerIdentityJoin(): string
+    {
+        return 'LEFT JOIN users u_low ON u_low.id = t.participant_low_user_id
+                LEFT JOIN users u_high ON u_high.id = t.participant_high_user_id
+                LEFT JOIN user_profiles p_low ON p_low.user_id = t.participant_low_user_id
+                LEFT JOIN user_profiles p_high ON p_high.user_id = t.participant_high_user_id';
+    }
+
     public function getStudyRoomOwnerUserId(int $studyRoomId): ?int
     {
         $stmt = $this->pdo->prepare('SELECT user_id FROM study_rooms WHERE id = ? LIMIT 1');
@@ -181,10 +206,12 @@ final class MessagesRepository
                       WHERE pr.thread_id = t.id AND pr.user_id <> ? LIMIT 1) AS peer_read_at,
                     {$psCols},
                     (SELECT m.body FROM messages m WHERE m.thread_id = t.id
-                     ORDER BY m.created_at ASC, m.id ASC LIMIT 1) AS first_message_body
+                     ORDER BY m.created_at ASC, m.id ASC LIMIT 1) AS first_message_body,
+                    {$this->peerIdentitySelect()}
              FROM message_threads t
              LEFT JOIN message_thread_reads r ON r.thread_id = t.id AND r.user_id = ?
              LEFT JOIN message_thread_participant_state ps ON ps.thread_id = t.id AND ps.user_id = ?
+             {$this->peerIdentityJoin()}
              WHERE t.participant_low_user_id = ? OR t.participant_high_user_id = ?
              {$order}"
         );
@@ -206,10 +233,12 @@ final class MessagesRepository
                       WHERE pr.thread_id = t.id AND pr.user_id <> ? LIMIT 1) AS peer_read_at,
                     {$psCols},
                     (SELECT m.body FROM messages m WHERE m.thread_id = t.id
-                     ORDER BY m.created_at ASC, m.id ASC LIMIT 1) AS first_message_body
+                     ORDER BY m.created_at ASC, m.id ASC LIMIT 1) AS first_message_body,
+                    {$this->peerIdentitySelect()}
              FROM message_threads t
              LEFT JOIN message_thread_reads r ON r.thread_id = t.id AND r.user_id = ?
              LEFT JOIN message_thread_participant_state ps ON ps.thread_id = t.id AND ps.user_id = ?
+             {$this->peerIdentityJoin()}
              WHERE t.id = ? AND (t.participant_low_user_id = ? OR t.participant_high_user_id = ?)
              LIMIT 1"
         );

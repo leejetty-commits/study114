@@ -6,6 +6,7 @@ namespace Study114\Neighborhood;
 
 use Study114\Database\Connection;
 use Study114\StudyRoom\StudyRoomPublicReadService;
+use Study114\Visibility\WithdrawnOwnerSql;
 
 /** 동네 인사 1차. 파일 저장. 랭킹 가산 없음. */
 final class NeighborhoodGreetingService
@@ -47,6 +48,7 @@ final class NeighborhoodGreetingService
             }
             $items[] = $item;
         }
+        $items = $this->withoutWithdrawnOwners($items);
         usort($items, static fn (array $a, array $b): int => ($b['updated_at'] <=> $a['updated_at']));
         return $items;
     }
@@ -178,6 +180,7 @@ final class NeighborhoodGreetingService
     /** @return array<string, mixed>|null */
     private function tutorBasicCard(\PDO $pdo, int $registrationId): ?array
     {
+        $ownerSql = WithdrawnOwnerSql::notWithdrawn('t.user_id');
         $stmt = $pdo->prepare(
             'SELECT t.id, t.tutor_display_name, t.main_subject_note, t.profile_status,
                     t.preferred_fee_amount, t.lessons_per_week, t.minutes_per_lesson,
@@ -189,6 +192,7 @@ final class NeighborhoodGreetingService
                LEFT JOIN regions r ON r.id = tr.region_id
               WHERE t.id = ?
                 AND t.profile_status <> \'hidden\'
+                AND ' . $ownerSql . '
               LIMIT 1'
         );
         $stmt->execute([$registrationId]);
@@ -218,6 +222,67 @@ final class NeighborhoodGreetingService
             'intro_short' => (string) ($row['intro_short'] ?? ''),
             'location_label' => $place,
         ];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $items
+     * @return list<array<string, mixed>>
+     */
+    private function withoutWithdrawnOwners(array $items): array
+    {
+        if ($items === []) {
+            return [];
+        }
+        $roomIds = [];
+        $tutorIds = [];
+        foreach ($items as $item) {
+            $id = (int) ($item['registration_id'] ?? 0);
+            if ($id < 1) {
+                continue;
+            }
+            if (($item['provider_type'] ?? '') === 'tutor') {
+                $tutorIds[] = $id;
+            } else {
+                $roomIds[] = $id;
+            }
+        }
+        $aliveRooms = $this->idsWithActiveOwner('study_rooms', 'sr', 'sr.user_id', $roomIds);
+        $aliveTutors = $this->idsWithActiveOwner('tutors', 't', 't.user_id', $tutorIds);
+        $kept = [];
+        foreach ($items as $item) {
+            $id = (int) ($item['registration_id'] ?? 0);
+            $alive = ($item['provider_type'] ?? '') === 'tutor' ? $aliveTutors : $aliveRooms;
+            if (isset($alive[$id])) {
+                $kept[] = $item;
+            }
+        }
+        return $kept;
+    }
+
+    /**
+     * @param list<int> $ids
+     * @return array<int, true>
+     */
+    private function idsWithActiveOwner(string $table, string $alias, string $userIdColumn, array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(
+            array_map(static fn ($id): int => (int) $id, $ids),
+            static fn (int $id): bool => $id > 0,
+        )));
+        if ($ids === [] || !in_array($table, ['study_rooms', 'tutors'], true)) {
+            return [];
+        }
+        $ownerSql = WithdrawnOwnerSql::notWithdrawn($userIdColumn);
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = Connection::get()->prepare(
+            "SELECT {$alias}.id FROM {$table} {$alias} WHERE {$alias}.id IN ({$placeholders}) AND {$ownerSql}"
+        );
+        $stmt->execute($ids);
+        $alive = [];
+        foreach ($stmt->fetchAll(\PDO::FETCH_COLUMN) as $id) {
+            $alive[(int) $id] = true;
+        }
+        return $alive;
     }
 
     private function assertOwns(int $userId, string $providerType, int $registrationId): void

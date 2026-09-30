@@ -153,6 +153,17 @@ export async function patchAdminOperator(input) {
 }
 
 /** @param {Record<string, unknown>} input */
+/** @param {{ user_id: number, confirmEmail: string }} input */
+export async function deleteAdminMember(input) {
+  const res = await fetch('/api/admin/members.php?action=delete', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    ...CREDENTIALS,
+    body: JSON.stringify(input),
+  });
+  return readJson(res);
+}
+
 export async function resetAdminOperatorPassword(input) {
   const res = await fetch('/api/admin/operators.php?action=reset_password', {
     method: 'POST',

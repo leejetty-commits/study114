@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Admin\AdminApi;
+use Study114\Admin\AdminMemberDeleteService;
 use Study114\Admin\AdminMemberService;
 
 AdminApi::bootstrap();
@@ -38,6 +39,9 @@ AdminApi::run(static function (): void {
         $input = AdminApi::readJson();
         if ($action === 'reset_password') {
             AdminApi::ok($service->resetPassword($auth, $input));
+        }
+        if ($action === 'delete') {
+            AdminApi::ok((new AdminMemberDeleteService())->delete($auth, $input));
         }
         AdminApi::fail(400, 'bad_request', '지원하지 않는 action입니다.');
     }
