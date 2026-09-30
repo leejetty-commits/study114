@@ -16,7 +16,7 @@ AdminApi::run(static function (): void {
 
     if ($method === 'GET') {
         $limit = AdminApi::queryInt('limit', 50);
-        AdminApi::ok($service->overview($auth, $limit));
+        AdminApi::ok($service->overview($auth, $limit, commerceUserIdFilter()));
     }
 
     if ($method === 'PATCH') {
@@ -26,3 +26,20 @@ AdminApi::run(static function (): void {
 
     AdminApi::fail(405, 'method_not_allowed', 'GET, PATCH만 허용됩니다.');
 });
+
+/** 비우면 전체. 숫자가 아니면 400. */
+function commerceUserIdFilter(): ?int
+{
+    if (!array_key_exists('user_id', $_GET)) {
+        return null;
+    }
+    $raw = trim((string) $_GET['user_id']);
+    if ($raw === '') {
+        return null;
+    }
+    if (!preg_match('/^[1-9][0-9]*$/', $raw)) {
+        AdminApi::fail(400, 'invalid_user_id', 'user_id는 숫자여야 합니다.');
+    }
+
+    return (int) $raw;
+}

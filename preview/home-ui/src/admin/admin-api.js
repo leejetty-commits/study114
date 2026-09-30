@@ -51,19 +51,23 @@ export async function patchAdminReport(input) {
   return readJson(res);
 }
 
-/** @param {string} [targetType] @param {string} [status] */
-export async function fetchExposureTargets(targetType = 'all', status = '') {
+/** @param {string} [targetType] @param {string} [status] @param {number|string} [userId] */
+export async function fetchExposureTargets(targetType = 'study_room', status = '', userId = '') {
   const params = new URLSearchParams();
   if (targetType) params.set('target_type', targetType);
   if (status) params.set('status', status);
+  if (userId) params.set('user_id', String(userId));
   const qs = params.toString();
   const res = await fetch(`/api/admin/exposure.php${qs ? `?${qs}` : ''}`, CREDENTIALS);
   return readJson(res);
 }
 
-/** @param {number} [limit] */
-export async function fetchCommerceOverview(limit = 50) {
-  const res = await fetch(`/api/admin/commerce.php?limit=${limit}`, CREDENTIALS);
+/** @param {number} [limit] @param {number|string} [userId] */
+export async function fetchCommerceOverview(limit = 50, userId = '') {
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+  if (userId) params.set('user_id', String(userId));
+  const res = await fetch(`/api/admin/commerce.php?${params}`, CREDENTIALS);
   return readJson(res);
 }
 

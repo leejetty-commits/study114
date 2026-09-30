@@ -25,12 +25,13 @@ final class AdminCommerceService
     }
 
     /** @param array{email: string, role_type: string} $auth */
-    public function overview(array $auth, int $limit = 50): array
+    public function overview(array $auth, int $limit = 50, ?int $userId = null): array
     {
         $primeCap = 3;
         $pickCap = 10;
         $primeUsed = $this->repo->countActivePositionsBySku('prime');
         $pickUsed = $this->repo->countActivePositionsBySku('pick');
+        $filterUserId = ($userId !== null && $userId > 0) ? $userId : null;
 
         return [
             'admin_level' => $this->roles->resolveLevel($auth),
@@ -56,9 +57,10 @@ final class AdminCommerceService
                 'pick_rotation_minutes' => 15,
                 'basic_page_size' => 20,
             ],
-            'positions' => $this->repo->listActivePositions($limit),
-            'tickets' => $this->repo->listTicketPacks($limit),
-            'orders' => $this->repo->listRecentOrders($limit),
+            'filter_user_id' => $filterUserId,
+            'positions' => $this->repo->listActivePositions($limit, $filterUserId),
+            'tickets' => $this->repo->listTicketPacks($limit, $filterUserId),
+            'orders' => $this->repo->listRecentOrders($limit, $filterUserId),
         ];
     }
 

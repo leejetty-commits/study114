@@ -19,7 +19,6 @@ import {
   getTutors,
   getTutor,
   getPublishReadiness,
-  deleteTutor,
 } from './store.js';
 import { saveTutorBasicInline, saveTutorDetailInline } from './inline-save.js';
 import {
@@ -584,13 +583,6 @@ function renderExposure(tutor) {
           <a href="#/plans/positions?provider_type=tutor&provider_id=${tutor.id}" class="btn btn--primary" data-nav="/plans/positions?provider_type=tutor&provider_id=${tutor.id}">유료상품 · 노출</a>
         </div>
       </section>
-      <div class="p19-danger-zone" data-p21-tutor-id="${tutor.id}">
-        <h3 class="p19-danger-zone__title">삭제</h3>
-        <p class="p19-danger-zone__lead">삭제는 복구 불가(soft delete)</p>
-        <div class="p19-danger-zone__actions">
-          <button type="button" class="btn btn--ghost btn--sm p19-btn-danger" data-p21-delete>삭제</button>
-        </div>
-      </div>
     </div>`;
 
   return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'exposure', body)}</section>`;
@@ -800,21 +792,6 @@ export function bindTutorRegEvents(root, rerender) {
       wrap.querySelectorAll('[data-p21-preview-panel]').forEach((p) => {
         p.classList.toggle('is-active', p.getAttribute('data-p21-preview-panel') === key);
       });
-    });
-  });
-
-  root.querySelectorAll('[data-p21-delete]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = Number(btn.closest('[data-p21-tutor-id]')?.dataset.p21TutorId);
-      if (!confirm('삭제하시겠습니까? (deleted_at)')) return;
-      try {
-        await deleteTutor(id);
-        window.location.hash = '/mypage/registrations/tutors';
-        rerender();
-      } catch (err) {
-        console.warn('[p21]', err);
-        alert('삭제에 실패했습니다.');
-      }
     });
   });
 

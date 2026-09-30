@@ -21,7 +21,7 @@ test.describe('A28-07 운영 스모크', () => {
     expect(body.ok).toBeTruthy();
   });
 
-  test('#/admin/exposure — submitted 제출 row publish 미노출 · A28-06 안내', async ({ page }) => {
+  test('#/admin/exposure — 탭 3개 · 제출 드롭다운 없음', async ({ page }) => {
     await page.request.post('/api/auth/login.php', {
       data: { email: ACCOUNTS.admin, password: 'password' },
     });
@@ -30,25 +30,11 @@ test.describe('A28-07 운영 스모크', () => {
     await page.evaluate(() => {
       window.location.hash = '#/admin/exposure';
     });
-    await page.waitForSelector('[data-a28-exp-filter]', { timeout: 15_000 });
-
-    const filterForm = page.locator('[data-a28-exp-filter]');
-    await filterForm.locator('select[name="target_type"]').selectOption('submission');
-    await filterForm.locator('select[name="status"]').selectOption('submitted');
-    await filterForm.locator('button[type="submit"]').click();
-    await page.waitForTimeout(500);
-
-    const submittedRow = page.locator('tr[data-a28-exp-row="submission:sub-seed-2"]');
-    const hasSeed = (await submittedRow.count()) > 0;
-    if (hasSeed) {
-      await expect(submittedRow.locator('[data-a28-exp-action="publish"]')).toHaveCount(0);
-      await expect(submittedRow.getByRole('link', { name: '→ A28-06 노출 반영' })).toBeVisible();
-    } else {
-      test.info().annotations.push({
-        type: 'note',
-        description: 'sub-seed-2가 submitted가 아님 — API 경계 테스트로 대체',
-      });
-    }
+    await page.waitForSelector('[data-a28-exp-tab="study_room"]', { timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /홈·찾기 노출/ })).toBeVisible();
+    await expect(page.locator('[data-a28-exp-tab="tutor"]')).toBeVisible();
+    await expect(page.locator('[data-a28-exp-tab="student"]')).toBeVisible();
+    await expect(page.locator('select[name="target_type"]')).toHaveCount(0);
   });
 
   test('submitted 제출 A28-07 publish → 422 메시지', async ({ request }) => {

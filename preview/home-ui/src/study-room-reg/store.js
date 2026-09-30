@@ -207,15 +207,6 @@ export async function publishStudyRoom(id) {
   return { ok: true };
 }
 
-/** @param {number} id */
-export async function deleteStudyRoom(id) {
-  if (isRegistrationsApiMode()) {
-    await apiStudyRoomAction(id, 'delete');
-    return null;
-  }
-  return updateStudyRoom(id, { deleted_at: new Date().toISOString(), profile_status: 'hidden' });
-}
-
 /** @param {number} id @param {StudyRoomRecord['inquiry_status']} inquiry_status */
 export async function setInquiryStatus(id, inquiry_status) {
   if (isRegistrationsApiMode()) {

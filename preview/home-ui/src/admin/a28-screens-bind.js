@@ -2,6 +2,7 @@
  * A28 admin event binders — extracted from a28-screens.js
  * Rollback: git revert this commit.
  */
+import { memberBenefitEndNotice } from './a28-copy.js';
 import {
   ALLOWED_OPERATOR_ACTIONS,
   FORBIDDEN_OPERATOR_ACTIONS,
@@ -18,6 +19,8 @@ import {
   deleteGuidePost,
 } from '../operational-board-store.js';
 import { listTickets, updateTicketStatus, updateTicketReply } from '../support/ticket-store.js';
+import { hydrateSupportCache, isSupportApiMode } from '../support/support-backend.js';
+import { getAuthUser } from '../auth-session.js';
 import { TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { SUBMISSION_CATEGORIES } from '../submission-board/submission-copy.js';
 import { apiOpenSubmissionAttachment } from '../board/board-backend.js';
@@ -61,6 +64,8 @@ import {
   apiUpdateAdminReport,
   getExposureCache,
   hydrateExposureCache,
+  chooseExposureTab,
+  getExposureStatusFilter,
   apiApplyExposureCorrection,
   getCommerceCache,
   hydrateCommerceCache,
@@ -95,7 +100,6 @@ import {
   A28_SUBMISSION_QUEUE_ACTIONS,
   A28_REPORT_STATUS_LABELS,
   A28_EXPOSURE_ACTIONS,
-  A28_EXPOSURE_TARGET_LABELS,
   A28_INQUIRY_STATUS_LABELS,
   A28_MEMBER_STATUS_LABELS,
   A28_MEMBER_ROLE_LABELS,
@@ -269,7 +273,17 @@ function openMemberDeleteModal(btn, rerender) {
     result.textContent = hasPayment
       ? '홈·찾기에서 즉시 사라지고, 결제 기록은 남아요'
       : '모든 정보가 즉시 완전히 삭제되고 되돌릴 수 없어요';
-    body.append(dl, result, error);
+    body.append(dl, result);
+    const benefitNotice = memberBenefitEndNotice({
+      ...(getMemberDetailCache(id) || {}),
+      hasPayment,
+    });
+    if (benefitNotice) {
+      const notice = document.createElement('p');
+      notice.textContent = benefitNotice;
+      body.append(notice);
+    }
+    body.append(error);
     const cancel = document.createElement('button');
     cancel.type = 'button';
     cancel.className = 'btn btn--secondary btn--sm';
@@ -335,6 +349,42 @@ function openMemberDeleteModal(btn, rerender) {
   modal.append(head, body, foot);
   overlay.append(modal);
   document.body.append(overlay);
+}
+
+let lastExposureLoad = '';
+let exposureLoadBusy = false;
+let lastCommerceLoad = '';
+let lastMembersHash = '';
+let ticketAdminLoadedFor = '';
+
+function numericHashUser() {
+  const raw = window.location.hash.replace(/^#/, '');
+  const q = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
+  const userRaw = new URLSearchParams(q).get('user') || '';
+  return /^[1-9][0-9]*$/.test(userRaw) ? userRaw : '';
+}
+
+function readMembersHash() {
+  const raw = window.location.hash.replace(/^#/, '');
+  const q = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
+  const params = new URLSearchParams(q);
+  return {
+    userId: numericHashUser(),
+    q: (params.get('q') || '').trim(),
+  };
+}
+
+function readExposureRoute() {
+  const raw = window.location.hash.replace(/^#/, '');
+  const q = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
+  const params = new URLSearchParams(q);
+  const tab = params.get('tab');
+  const userRaw = params.get('user') || '';
+  return {
+    tab: tab === 'tutor' || tab === 'student' || tab === 'study_room' ? tab : 'study_room',
+    userId: /^[1-9][0-9]*$/.test(userRaw) ? userRaw : '',
+    hasTab: params.has('tab'),
+  };
 }
 
 export function bindA28ScreenEvents(root, path, rerender) {
@@ -460,8 +510,27 @@ export function bindA28ScreenEvents(root, path, rerender) {
   }
 
   if (path === '/admin/members') {
-    // 최초 진입 시 목록 로드
-    if (isAdminApiMode() && !getMembersCache()) {
+    const memberRoute = readMembersHash();
+    const memberHashKey = memberRoute.userId || memberRoute.q ? `user:${memberRoute.userId}|q:${memberRoute.q}` : '';
+    if (memberHashKey && lastMembersHash !== memberHashKey && isAdminApiMode()) {
+      lastMembersHash = memberHashKey;
+      if (memberRoute.q) {
+        a28Ui.memberFilters = { ...a28Ui.memberFilters, q: memberRoute.q };
+      }
+      if (memberRoute.userId) {
+        a28Ui.openMemberId = Number(memberRoute.userId);
+      }
+      void (async () => {
+        try {
+          await hydrateMembersCache(a28Ui.memberFilters);
+          if (memberRoute.userId) await hydrateMemberDetail(memberRoute.userId).catch(() => null);
+          rerender();
+        } catch (err) {
+          lastMembersHash = '';
+          window.alert(err instanceof Error ? err.message : '회원을 불러오지 못했습니다.');
+        }
+      })();
+    } else if (isAdminApiMode() && !getMembersCache()) {
       hydrateMembersCache(a28Ui.memberFilters)
         .then(() => rerender())
         .catch(() => {});
@@ -525,7 +594,11 @@ export function bindA28ScreenEvents(root, path, rerender) {
         const action = btn.getAttribute('data-member-action');
         const id = Number(btn.getAttribute('data-member-id'));
         if (!id || !action) return;
-        if (!window.confirm(memberActionConfirm(action))) return;
+        const benefitNotice = action === 'withdraw' ? memberBenefitEndNotice(getMemberDetailCache(id)) : '';
+        const confirmText = benefitNotice
+          ? `${memberActionConfirm(action)}\n${benefitNotice}`
+          : memberActionConfirm(action);
+        if (!window.confirm(confirmText)) return;
         const memoInput = root.querySelector(`[data-member-memo="${id}"]`);
         const memo = memoInput instanceof HTMLInputElement ? memoInput.value.trim() : '';
         try {
@@ -590,9 +663,31 @@ export function bindA28ScreenEvents(root, path, rerender) {
   }
 
   if (path === '/admin/commerce') {
+    const commerceUserId = numericHashUser();
+    const commerceLoadKey = commerceUserId || 'all';
+    if (isAdminApiMode() && lastCommerceLoad !== commerceLoadKey) {
+      lastCommerceLoad = commerceLoadKey;
+      void (async () => {
+        try {
+          await hydrateCommerceCache(commerceUserId);
+          if (commerceUserId && !getMemberDetailCache(commerceUserId)) {
+            await hydrateMemberDetail(commerceUserId).catch(() => null);
+          }
+          rerender();
+        } catch (err) {
+          lastCommerceLoad = '';
+          window.alert(err instanceof Error ? err.message : '결제 목록을 불러오지 못했습니다.');
+        }
+      })();
+    }
+    root.querySelector('[data-a28-commerce-clear-user]')?.addEventListener('click', () => {
+      lastCommerceLoad = '';
+      window.location.hash = '/admin/commerce';
+    });
     root.querySelector('[data-commerce-refresh]')?.addEventListener('click', async () => {
       try {
-        await hydrateCommerceCache();
+        await hydrateCommerceCache(numericHashUser());
+        lastCommerceLoad = numericHashUser() || 'all';
         rerender();
       } catch (err) {
         window.alert(err instanceof Error ? err.message : '새로고침 실패');
@@ -1015,8 +1110,12 @@ export function bindA28ScreenEvents(root, path, rerender) {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-a28-notice-delete');
         if (!id || !window.confirm('삭제할까요?')) return;
-        await deleteNotice(id);
-        rerender();
+        try {
+          await deleteNotice(id);
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '공지를 삭제하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+        }
       });
     });
     form?.querySelector('[data-a28-notice-reset]')?.addEventListener('click', () => {
@@ -1027,12 +1126,17 @@ export function bindA28ScreenEvents(root, path, rerender) {
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form);
-      await upsertNotice({
-        id: String(fd.get('id') || '').trim() || undefined,
-        date: String(fd.get('date')),
-        title: String(fd.get('title')),
-        body: String(fd.get('body')).split('\n').map((l) => l.trim()).filter(Boolean),
-      });
+      try {
+        await upsertNotice({
+          id: String(fd.get('id') || '').trim() || undefined,
+          date: String(fd.get('date')),
+          title: String(fd.get('title')),
+          body: String(fd.get('body')).split('\n').map((l) => l.trim()).filter(Boolean),
+        });
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '공지를 저장하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+        return;
+      }
       form.reset();
       form.querySelector('[name="id"]').value = '';
       rerender();
@@ -1169,10 +1273,23 @@ export function bindA28ScreenEvents(root, path, rerender) {
   }
 
   if (path === '/admin/tickets') {
+    const ticketViewer = getAuthUser()?.email || 'guest';
+    if (isSupportApiMode() && ticketAdminLoadedFor !== ticketViewer) {
+      ticketAdminLoadedFor = ticketViewer;
+      void hydrateSupportCache('')
+        .then(() => rerender())
+        .catch(() => rerender());
+    }
     root.querySelectorAll('[data-a28-ticket-status]').forEach((sel) => {
       sel.addEventListener('change', async () => {
         const id = sel.getAttribute('data-a28-ticket-status');
-        if (id) await updateTicketStatus(id, sel.value);
+        if (!id) return;
+        try {
+          await updateTicketStatus(id, sel.value);
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '상태를 바꾸지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+          rerender();
+        }
       });
     });
     root.querySelectorAll('[data-a28-ticket-reply]').forEach((form) => {
@@ -1231,12 +1348,60 @@ export function bindA28ScreenEvents(root, path, rerender) {
   }
 
   if (path === '/admin/exposure') {
+    const route = readExposureRoute();
+    const loadKey = `${route.userId}|${route.tab}|${getExposureStatusFilter()}|${route.hasTab ? '1' : '0'}`;
+    if (isAdminApiMode() && !exposureLoadBusy && lastExposureLoad !== loadKey) {
+      exposureLoadBusy = true;
+      lastExposureLoad = loadKey;
+      void (async () => {
+        try {
+          let tab = route.tab;
+          if (route.userId && !route.hasTab) {
+            tab = await chooseExposureTab(route.userId);
+            if (tab !== route.tab) {
+              lastExposureLoad = '';
+              exposureLoadBusy = false;
+              window.location.hash = `/admin/exposure?user=${encodeURIComponent(route.userId)}&tab=${tab}`;
+              return;
+            }
+          }
+          await hydrateExposureCache(tab, getExposureStatusFilter(), route.userId);
+          if (route.userId && !getMemberDetailCache(route.userId)) {
+            await hydrateMemberDetail(route.userId).catch(() => null);
+          }
+          rerender();
+        } catch (err) {
+          lastExposureLoad = '';
+          window.alert(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
+        } finally {
+          exposureLoadBusy = false;
+        }
+      })();
+    }
+
+    root.querySelectorAll('[data-a28-exp-tab]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const next = btn.getAttribute('data-a28-exp-tab');
+        if (!next || next === route.tab) return;
+        const params = new URLSearchParams();
+        if (route.userId) params.set('user', route.userId);
+        params.set('tab', next);
+        window.location.hash = `/admin/exposure?${params.toString()}`;
+      });
+    });
+
+    root.querySelector('[data-a28-exp-clear-user]')?.addEventListener('click', () => {
+      window.location.hash = `/admin/exposure?tab=${route.tab}`;
+    });
+
     const filterForm = root.querySelector('[data-a28-exp-filter]');
     filterForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(filterForm);
+      const status = String(fd.get('status') || '');
       try {
-        await hydrateExposureCache(String(fd.get('target_type') || 'all'), String(fd.get('status') || ''));
+        await hydrateExposureCache(route.tab, status, route.userId);
+        lastExposureLoad = `${route.userId}|${route.tab}|${status}|${route.hasTab ? '1' : '0'}`;
         rerender();
       } catch (err) {
         window.alert(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
@@ -1262,9 +1427,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
         const confirmMsg =
           action === 'hide'
-            ? '이 항목을 숨김 처리할까요?'
+            ? '이 카드를 홈·찾기에서 숨길까요? 주인은 마이페이지에서 그대로 볼 수 있어요.'
             : action === 'publish'
-              ? '이 항목을 공개중(검색 노출) 상태로 보정할까요?'
+              ? '이 카드를 홈·찾기에 다시 보이게 할까요?'
               : '상담 상태를 보정할까요?';
         if (!window.confirm(confirmMsg)) return;
 
@@ -1275,6 +1440,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
             /** @type {'hide'|'publish'|'inquiry_status'} */ (action),
             { internalMemo, inquiryStatus, reasonCategory: 'internal_review' },
           );
+          lastExposureLoad = '';
           rerender();
         } catch (err) {
           window.alert(err instanceof Error ? err.message : '보정에 실패했습니다.');

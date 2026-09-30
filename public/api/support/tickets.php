@@ -15,6 +15,14 @@ SupportApi::run(static function (): void {
 
     if ($method === 'GET') {
         $email = SupportApi::queryString('email');
+        if ($email === null || $email === '') {
+            SupportApi::requireAdmin();
+            SupportApi::ok(['tickets' => $service->list(null)]);
+        }
+        $auth = SupportApi::requireUser();
+        if (strcasecmp((string) $auth['email'], $email) !== 0) {
+            SupportApi::fail(403, 'forbidden', '본인 문의만 볼 수 있습니다.');
+        }
         SupportApi::ok(['tickets' => $service->list($email)]);
     }
 
@@ -24,6 +32,7 @@ SupportApi::run(static function (): void {
     }
 
     if ($method === 'PATCH') {
+        SupportApi::requireAdmin();
         $input = SupportApi::readJson();
         $id = trim((string) ($input['id'] ?? ''));
         try {

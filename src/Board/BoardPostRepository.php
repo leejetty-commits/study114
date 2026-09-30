@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Board;
 
 use PDO;
+use Study114\Visibility\WithdrawnOwnerSql;
 
 final class BoardPostRepository
 {
@@ -45,7 +46,8 @@ final class BoardPostRepository
                        title, description, memo, internal_memo, category_id, file_label, meta_json,
                        created_at, updated_at
                 FROM board_posts
-                WHERE board_key = ?';
+                WHERE board_key = ? AND '
+            . WithdrawnOwnerSql::unlessWithdrawn('board_posts.author_user_id');
         $params = [$boardKey];
 
         if ($status !== null && $status !== '' && $status !== 'all') {

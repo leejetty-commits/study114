@@ -32,7 +32,6 @@ import {
   getStudyRooms,
   getStudyRoomsByTab,
   getStudyRoom,
-  deleteStudyRoom,
   setInquiryStatus,
   getStudyRoomSummaryCounts,
 } from './store.js';
@@ -684,21 +683,6 @@ export function bindStudyRoomRegEvents(root, rerender) {
         alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
       } finally {
         if (btn) btn.disabled = false;
-      }
-    });
-  });
-
-  root.querySelectorAll('[data-p20-delete]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = Number(btn.closest('[data-p20-room-id]')?.dataset.p20RoomId);
-      if (!confirm('삭제하시겠습니까? (deleted_at)')) return;
-      try {
-        await deleteStudyRoom(id);
-        window.location.hash = '/mypage/registrations';
-        rerender();
-      } catch (err) {
-        console.warn('[p20]', err);
-        alert('삭제에 실패했습니다.');
       }
     });
   });

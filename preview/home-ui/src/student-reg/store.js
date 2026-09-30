@@ -306,15 +306,6 @@ export async function publishStudent(id) {
   return { ok: true };
 }
 
-/** @param {number} id */
-export async function deleteStudent(id) {
-  if (isRegistrationsApiMode()) {
-    await apiStudentAction(id, 'delete');
-    return null;
-  }
-  return updateStudent(id, { exposure_status: 'deleted' });
-}
-
 export function getStudentSummaryCounts() {
   const list = getStudents();
   return {

@@ -68,14 +68,6 @@ final class StudyRoomHubRepository
         $stmt->execute([$status, $roomId]);
     }
 
-    public function softDelete(int $roomId): void
-    {
-        $stmt = $this->pdo->prepare(
-            'UPDATE study_rooms SET deleted_at = NOW(), profile_status = "hidden", updated_at = NOW() WHERE id = ?'
-        );
-        $stmt->execute([$roomId]);
-    }
-
     /** @param array<string, mixed> $row @return array<string, mixed> */
     private function hydrateRoomRow(int $roomId, array $row, bool $ownerPhoneVerified = false): array
     {

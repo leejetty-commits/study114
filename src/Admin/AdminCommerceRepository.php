@@ -13,11 +13,10 @@ final class AdminCommerceRepository
     }
 
     /** @return list<array<string, mixed>> */
-    public function listActivePositions(int $limit = 50): array
+    public function listActivePositions(int $limit = 50, ?int $userId = null): array
     {
         $limit = max(1, min(200, $limit));
-        $stmt = $this->pdo->prepare(
-            'SELECT p.id, p.user_id, u.email AS user_email, p.sku_code,
+        $sql = 'SELECT p.id, p.user_id, u.email AS user_email, p.sku_code,
                     p.duration_type, p.duration_value, p.period_days,
                     p.started_on, p.end_exclusive_on,
                     DATE_SUB(p.end_exclusive_on, INTERVAL 1 DAY) AS ends_on,
@@ -25,49 +24,59 @@ final class AdminCommerceRepository
                     GREATEST(0, DATEDIFF(p.end_exclusive_on, CURDATE())) AS days_left
              FROM provider_position_subscriptions p
              INNER JOIN users u ON u.id = p.user_id
-             WHERE CURDATE() < p.end_exclusive_on
-             ORDER BY p.end_exclusive_on ASC, p.id DESC
-             LIMIT ' . $limit
-        );
-        $stmt->execute();
+             WHERE CURDATE() < p.end_exclusive_on';
+        $params = [];
+        if ($userId !== null && $userId > 0) {
+            $sql .= ' AND p.user_id = ?';
+            $params[] = $userId;
+        }
+        $sql .= ' ORDER BY p.end_exclusive_on ASC, p.id DESC LIMIT ' . $limit;
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return is_array($rows) ? $rows : [];
     }
 
     /** @return list<array<string, mixed>> */
-    public function listTicketPacks(int $limit = 50): array
+    public function listTicketPacks(int $limit = 50, ?int $userId = null): array
     {
         $limit = max(1, min(200, $limit));
-        $stmt = $this->pdo->prepare(
-            'SELECT t.id, t.user_id, u.email AS user_email, t.ticket_type, t.pack_size,
+        $sql = 'SELECT t.id, t.user_id, u.email AS user_email, t.ticket_type, t.pack_size,
                     t.remaining, t.purchased_at, t.expires_at, t.source
              FROM provider_ticket_packs t
              INNER JOIN users u ON u.id = t.user_id
-             WHERE t.remaining > 0 AND t.expires_at > NOW()
-             ORDER BY t.expires_at ASC, t.id DESC
-             LIMIT ' . $limit
-        );
-        $stmt->execute();
+             WHERE t.remaining > 0 AND t.expires_at > NOW()';
+        $params = [];
+        if ($userId !== null && $userId > 0) {
+            $sql .= ' AND t.user_id = ?';
+            $params[] = $userId;
+        }
+        $sql .= ' ORDER BY t.expires_at ASC, t.id DESC LIMIT ' . $limit;
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return is_array($rows) ? $rows : [];
     }
 
     /** @return list<array<string, mixed>> */
-    public function listRecentOrders(int $limit = 50): array
+    public function listRecentOrders(int $limit = 50, ?int $userId = null): array
     {
         $limit = max(1, min(200, $limit));
-        $stmt = $this->pdo->prepare(
-            'SELECT o.id, o.user_id, u.email AS user_email, o.order_ref, o.product_id,
+        $sql = 'SELECT o.id, o.user_id, u.email AS user_email, o.order_ref, o.product_id,
                     o.variant_label, o.product_kind, o.amount_won, o.status, o.pg_provider,
                     o.created_at, o.paid_at
              FROM provider_payment_orders o
-             INNER JOIN users u ON u.id = o.user_id
-             ORDER BY COALESCE(o.paid_at, o.created_at) DESC, o.id DESC
-             LIMIT ' . $limit
-        );
-        $stmt->execute();
+             INNER JOIN users u ON u.id = o.user_id';
+        $params = [];
+        if ($userId !== null && $userId > 0) {
+            $sql .= ' WHERE o.user_id = ?';
+            $params[] = $userId;
+        }
+        $sql .= ' ORDER BY COALESCE(o.paid_at, o.created_at) DESC, o.id DESC LIMIT ' . $limit;
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return is_array($rows) ? $rows : [];

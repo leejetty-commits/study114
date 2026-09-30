@@ -218,7 +218,7 @@ export const A28_MENU = [
         menuId: 'commerce',
         label: '공부방·과외 목록',
         path: '/admin/market/listings',
-        help: '등록된 공부방·과외쌤을 보고 노출 보정으로 이어갑니다. (영카트 상품관리)',
+        help: '등록된 공부방·과외쌤을 보고 홈·찾기 노출로 이어갑니다. (영카트 상품관리)',
         screenId: 'A28-07a',
       },
       {
@@ -232,7 +232,7 @@ export const A28_MENU = [
       {
         id: 'exposure',
         menuId: 'exposure',
-        label: '노출 보정',
+        label: '홈·찾기 노출',
         path: '/admin/exposure',
         help: '검색에 보이거나 숨기도록 수동으로 맞춥니다. (영카트 상품유형·노출)',
         screenId: 'A28-07a',
@@ -434,7 +434,7 @@ export const A28_MENU_ID_LABELS = {
   members: '회원관리',
   notices: '게시판관리',
   commerce: '마켓·결제',
-  exposure: '노출 보정',
+  exposure: '홈·찾기 노출',
   notify: '알림·문자',
   addons: '부가서비스',
   reports: '신고 처리',
@@ -443,6 +443,21 @@ export const A28_MENU_ID_LABELS = {
   logs: '운영 로그',
   system: '시스템',
 };
+
+/** 탈퇴·삭제 확인. 결제 있음 또는 활성 노출 구독이 있을 때만 붙인다. */
+export const A28_MEMBER_BENEFIT_END_NOTICE =
+  '이용 중인 노출·이용권 혜택은 모두 종료되며, 환불은 환불규정에 따라서 조치를 해 드립니다.';
+
+/**
+ * @param {{ hasPayment?: boolean, activePositions?: number, paid?: { positions?: unknown[] } } | null | undefined} member
+ */
+export function memberBenefitEndNotice(member) {
+  const positions = member?.paid?.positions;
+  const activeSub =
+    (Array.isArray(positions) && positions.length > 0) || Number(member?.activePositions) > 0;
+  if (member?.hasPayment !== true && !activeSub) return '';
+  return A28_MEMBER_BENEFIT_END_NOTICE;
+}
 
 /** 회원 상태 — 승인·반려 용어 금지 (A28-02) */
 export const A28_MEMBER_STATUS_LABELS = {
@@ -480,14 +495,15 @@ export const A28_REPORT_SEED = [
 
 /** 노출 보정 조치 (A28-07) */
 export const A28_EXPOSURE_ACTIONS = {
-  hide: { label: '숨김', hint: '검색·목록에서 빼기' },
-  publish: { label: '공개중', hint: '다시 검색에 보이게' },
+  hide: { label: '홈·찾기에서 숨김', hint: '홈과 찾기에서 빼기' },
+  publish: { label: '다시 보이기', hint: '홈과 찾기에 다시 보이게' },
   inquiry_status: { label: '상담 상태 보정', hint: '공부방 상담 상태만 바꾸기' },
 };
 
 export const A28_EXPOSURE_TARGET_LABELS = {
   study_room: '공부방',
   tutor: '과외쌤',
+  student: '학생',
   submission: '제출',
 };
 
@@ -542,6 +558,7 @@ export const A28_ACTION_LABELS = {
 export const A28_LOG_TARGET_TYPE_LABELS = {
   study_room: '공부방',
   tutor: '과외쌤',
+  student: '학생',
   board_post: '제출',
   user: '회원',
   position_subscription: '노출 상품 이용권',

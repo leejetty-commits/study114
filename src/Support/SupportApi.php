@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Study114\Support;
 
 use InvalidArgumentException;
+use Study114\Admin\AdminApi;
+use Study114\Auth\EmailVerificationRequiredException;
 use Throwable;
 
 /** P17 고객센터 JSON API 공통 */
@@ -46,6 +48,30 @@ final class SupportApi
     public static function method(): string
     {
         return strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+    }
+
+    /**
+     * 운영자 세션. 미인증 401, 권한 없음·가입 메일 미확인 403.
+     *
+     * @return array{user_id: int, email: string, role_type: string, name: string}
+     */
+    public static function requireAdmin(): array
+    {
+        try {
+            return AdminApi::requireAdmin();
+        } catch (EmailVerificationRequiredException $e) {
+            self::fail(403, 'email_verify_required', $e->getMessage());
+        }
+    }
+
+    /**
+     * 로그인 세션. 없으면 401.
+     *
+     * @return array{user_id: int, email: string, role_type: string, name: string}
+     */
+    public static function requireUser(): array
+    {
+        return AdminApi::requireAuth();
     }
 
     public static function queryInt(string $key, int $default = 0): int

@@ -61,14 +61,6 @@ final class TutorHubRepository
         $stmt->execute([$status, $tutorId]);
     }
 
-    public function softDelete(int $tutorId): void
-    {
-        $stmt = $this->pdo->prepare(
-            'UPDATE tutors SET profile_status = "hidden", updated_at = NOW() WHERE id = ?'
-        );
-        $stmt->execute([$tutorId]);
-    }
-
     /** @param array<string, mixed> $row @return array<string, mixed> */
     private function hydrateTutorRow(int $tutorId, array $row): array
     {

@@ -43,9 +43,9 @@ final class TutorHubService
 
         return match ($action) {
             'publish'        => $this->publish($userId, $tutorId, $tutor),
-            'delete'         => $this->delete($tutorId),
             'inquiry_status' => $this->setInquiry($userId, $tutorId, $input),
-            default          => throw new InvalidArgumentException('action: publish | delete | inquiry_status'),
+            'delete'         => throw new InvalidArgumentException('지원하지 않는 요청입니다.'),
+            default          => throw new InvalidArgumentException('지원하지 않는 요청입니다.'),
         };
     }
 
@@ -70,13 +70,6 @@ final class TutorHubService
         $this->repo->setProfileStatus($tutorId, 'published', date('Y-m-d H:i:s'));
 
         return ['tutor' => $this->repo->getForOwner($userId, $tutorId) ?? $tutor];
-    }
-
-    private function delete(int $tutorId): array
-    {
-        $this->repo->softDelete($tutorId);
-
-        return ['deleted' => true];
     }
 
     /** @param array<string, mixed> $input */

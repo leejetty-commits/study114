@@ -358,15 +358,6 @@ export async function publishTutor(id) {
   return { ok: true };
 }
 
-/** @param {number} id */
-export async function deleteTutor(id) {
-  if (isRegistrationsApiMode()) {
-    await apiTutorAction(id, 'delete');
-    return null;
-  }
-  return updateTutor(id, { deleted_at: new Date().toISOString(), profile_status: 'hidden' });
-}
-
 export function getTutorSummaryCounts() {
   const list = getTutors();
   const notReady = list.filter(

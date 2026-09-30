@@ -14,12 +14,30 @@ final class WithdrawnOwnerSql
 {
     public static function notWithdrawn(string $userIdColumn): string
     {
-        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/', $userIdColumn)) {
-            throw new InvalidArgumentException('owner column');
-        }
+        self::assertUserIdColumn($userIdColumn);
 
         return 'EXISTS (SELECT 1 FROM users owner_user WHERE owner_user.id = '
             . $userIdColumn
             . " AND owner_user.status <> 'withdrawn')";
+    }
+
+    /**
+     * users 행이 있고 status 가 withdrawn 일 때만 제외한다.
+     * 식별자가 NULL 이거나 users 행이 없으면 남긴다.
+     */
+    public static function unlessWithdrawn(string $userIdColumn): string
+    {
+        self::assertUserIdColumn($userIdColumn);
+
+        return 'NOT EXISTS (SELECT 1 FROM users owner_user WHERE owner_user.id = '
+            . $userIdColumn
+            . " AND owner_user.status = 'withdrawn')";
+    }
+
+    private static function assertUserIdColumn(string $userIdColumn): void
+    {
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/', $userIdColumn)) {
+            throw new InvalidArgumentException('owner column');
+        }
     }
 }

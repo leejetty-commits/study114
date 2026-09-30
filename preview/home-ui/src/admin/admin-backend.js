@@ -68,7 +68,7 @@ export async function hydrateAdminCache() {
     fetchSubmissionQueue('submitted').catch(() => ({ queue: [] })),
     fetchOperationLogs(50).catch(() => ({ logs: [] })),
     fetchAdminReports().catch(() => ({ reports: [] })),
-    fetchExposureTargets('all', '').catch(() => ({ items: [] })),
+    fetchExposureTargets('study_room', '').catch(() => ({ items: [] })),
     fetchCommerceOverview(50).catch(() => null),
   ]);
   submissionQueueCache = (queueRes.queue ?? []).map((item) => ({ ...item }));
@@ -94,14 +94,32 @@ export function getExposureCache() {
   return exposureCache.map((item) => ({ ...item }));
 }
 
+let exposureStatusFilter = '';
+
+export function getExposureStatusFilter() {
+  return exposureStatusFilter;
+}
+
 /**
  * @param {string} [targetType]
  * @param {string} [status]
+ * @param {number|string} [userId]
  */
-export async function hydrateExposureCache(targetType = 'all', status = '') {
-  const data = await fetchExposureTargets(targetType, status);
+export async function hydrateExposureCache(targetType = 'study_room', status = '', userId = '') {
+  exposureStatusFilter = status;
+  const data = await fetchExposureTargets(targetType, status, userId);
   exposureCache = (data.items ?? []).map((item) => ({ ...item }));
   return exposureCache;
+}
+
+/** @param {number|string} userId */
+export async function chooseExposureTab(userId) {
+  const order = ['study_room', 'tutor', 'student'];
+  for (const tab of order) {
+    const data = await fetchExposureTargets(tab, '', userId);
+    if ((data.items ?? []).length > 0) return tab;
+  }
+  return 'study_room';
 }
 
 function upsertExposureItem(row) {
@@ -176,10 +194,23 @@ export function getCommerceCache() {
   return commerceCache ? { ...commerceCache } : null;
 }
 
-export async function hydrateCommerceCache() {
-  const data = await fetchCommerceOverview(50);
+let commerceFetchToken = 0;
+
+/** @param {number|string} [userId] */
+export async function hydrateCommerceCache(userId = '') {
+  const token = ++commerceFetchToken;
+  const data = await fetchCommerceOverview(50, userId);
+  if (token !== commerceFetchToken) return commerceCache;
   commerceCache = { ...data };
   return commerceCache;
+}
+
+function commerceUserIdFromLocation() {
+  if (typeof window === 'undefined') return '';
+  const raw = window.location.hash.replace(/^#/, '');
+  const q = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
+  const user = new URLSearchParams(q).get('user') || '';
+  return /^[1-9][0-9]*$/.test(user) ? user : '';
 }
 
 /**
@@ -283,7 +314,7 @@ export async function apiApplyMemberBulkAction(userIds, action, opts = {}) {
 export async function apiApplyCommerceCorrection(input) {
   const data = await patchCommerceCorrection(input);
   if (data.log) prependLog(data.log);
-  await hydrateCommerceCache().catch(() => {});
+  await hydrateCommerceCache(commerceUserIdFromLocation()).catch(() => {});
   return data;
 }
 

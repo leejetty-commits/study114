@@ -112,7 +112,9 @@ final class AdminMemberDeleteService
                 $this->pdo->prepare(
                     'UPDATE user_roles SET status = \'inactive\' WHERE user_id = ?'
                 )->execute([$userId]);
-                (new AccountWithdrawService())->releaseLoginIdentifiers($this->pdo, $userId);
+                $withdraw = new AccountWithdrawService();
+                $withdraw->releaseLoginIdentifiers($this->pdo, $userId);
+                $withdraw->endActivePositionSubscriptions($this->pdo, $userId);
                 $mode = 'hidden_hold';
                 $message = '홈·찾기에서 사라졌고, 결제 기록은 남아요';
             } else {

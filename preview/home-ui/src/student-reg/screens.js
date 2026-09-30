@@ -16,7 +16,7 @@ import { cheonwonInputToWon, wonToCheonwonInput } from '../../../shared/fee-cheo
 import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, isGradeSelectDisabled } from '../../../shared/school-grade.js';
-import { getStudents, getStudent, deleteStudent, updateStudent } from './store.js';
+import { getStudents, getStudent, updateStudent } from './store.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -566,18 +566,4 @@ export function bindStudentRegEvents(root, rerender) {
     });
   });
 
-  root.querySelectorAll('[data-p19-delete]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = Number(btn.closest('[data-p19-student-id]')?.dataset.p19StudentId);
-      if (!confirm('삭제하시겠습니까? (deleted)')) return;
-      try {
-        await deleteStudent(id);
-        window.location.hash = '/mypage/registrations/students';
-        rerender();
-      } catch (err) {
-        console.warn('[p19]', err);
-        alert('삭제에 실패했습니다.');
-      }
-    });
-  });
 }

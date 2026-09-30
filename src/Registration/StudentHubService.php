@@ -42,9 +42,9 @@ final class StudentHubService
 
         return match ($action) {
             'publish' => $this->publish($guardianUserId, $studentId, $student),
-            'delete'  => $this->delete($guardianUserId, $studentId),
             'update'  => $this->update($guardianUserId, $studentId, $input),
-            default   => throw new InvalidArgumentException('action: publish | delete | update'),
+            'delete'  => throw new InvalidArgumentException('지원하지 않는 요청입니다.'),
+            default   => throw new InvalidArgumentException('지원하지 않는 요청입니다.'),
         };
     }
 
@@ -61,13 +61,6 @@ final class StudentHubService
         $updated = $this->repo->getForGuardian($guardianUserId, $studentId);
 
         return ['student' => $updated ?? $student];
-    }
-
-    private function delete(int $guardianUserId, int $studentId): array
-    {
-        $this->repo->softDelete($studentId);
-
-        return ['deleted' => true];
     }
 
     /** @param array<string, mixed> $input */

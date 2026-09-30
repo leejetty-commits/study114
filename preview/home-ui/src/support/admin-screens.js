@@ -5,7 +5,11 @@ import {
 } from './support-copy.js';
 import { listNotices, upsertNotice, deleteNotice, resetNoticesToSeed } from './notice-store.js';
 import { listTickets, updateTicketStatus, updateTicketReply } from './ticket-store.js';
+import { getTicketLoadError, hydrateSupportCache, isSupportApiMode } from './support-backend.js';
+import { getAuthUser } from '../auth-session.js';
 import { navigate } from '../state.js';
+
+let supportTicketAdminLoadedFor = '';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -140,6 +144,7 @@ function renderTicketReplyForm(ticket, attrName) {
 
 function renderTicketAdmin() {
   const tickets = listTickets();
+  const loadError = getTicketLoadError();
   const categoryLabel = (value) => TICKET_CATEGORIES.find((c) => c.value === value)?.label || value;
 
   const rows = tickets
@@ -170,9 +175,10 @@ function renderTicketAdmin() {
   return renderAdminPanel(
     '티켓 관리',
     'P17-07 · admin',
-    `<table class="sup-admin-table sup-admin-table--tickets">
+    `${loadError ? `<p class="sup-note" role="alert">${esc(loadError)}</p>` : ''}
+     <table class="sup-admin-table sup-admin-table--tickets">
        <thead><tr><th>번호</th><th>유형</th><th>이메일</th><th>상태</th><th>답변</th><th>접수일</th></tr></thead>
-       <tbody>${rows || '<tr><td colspan="6" class="sup-empty">접수된 티켓이 없습니다.</td></tr>'}</tbody>
+       <tbody>${rows || `<tr><td colspan="6" class="sup-empty">${loadError ? esc(loadError) : '접수된 티켓이 없습니다.'}</td></tr>`}</tbody>
      </table>`,
     { lead: ADMIN_COPY.ticketAdminLead },
   );
@@ -208,8 +214,12 @@ export function bindAdminScreenEvents(root, path, rerender) {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-notice-delete');
         if (!id || !window.confirm('이 공지를 삭제할까요?')) return;
-        await deleteNotice(id);
-        rerender();
+        try {
+          await deleteNotice(id);
+          rerender();
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '공지를 삭제하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+        }
       });
     });
 
@@ -221,19 +231,28 @@ export function bindAdminScreenEvents(root, path, rerender) {
 
     form?.querySelector('[data-notice-seed-reset]')?.addEventListener('click', async () => {
       if (!window.confirm('공지를 초기 시드 데이터로 되돌릴까요?')) return;
-      await resetNoticesToSeed();
-      rerender();
+      try {
+        await resetNoticesToSeed();
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '공지를 되돌리지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+      }
     });
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form);
-      await upsertNotice({
-        id: String(fd.get('id') || '').trim() || undefined,
-        date: String(fd.get('date')),
-        title: String(fd.get('title')),
-        body: String(fd.get('body')).split('\n').map((l) => l.trim()).filter(Boolean),
-      });
+      try {
+        await upsertNotice({
+          id: String(fd.get('id') || '').trim() || undefined,
+          date: String(fd.get('date')),
+          title: String(fd.get('title')),
+          body: String(fd.get('body')).split('\n').map((l) => l.trim()).filter(Boolean),
+        });
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '공지를 저장하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+        return;
+      }
       form.reset();
       form.querySelector('[name="id"]').value = '';
       form.querySelector('[name="date"]').value = new Date().toISOString().slice(0, 10);
@@ -242,11 +261,23 @@ export function bindAdminScreenEvents(root, path, rerender) {
   }
 
   if (path === '/support/admin/tickets') {
+    const ticketViewer = getAuthUser()?.email || 'guest';
+    if (isSupportApiMode() && supportTicketAdminLoadedFor !== ticketViewer) {
+      supportTicketAdminLoadedFor = ticketViewer;
+      void hydrateSupportCache('')
+        .then(() => rerender())
+        .catch(() => rerender());
+    }
     root.querySelectorAll('[data-ticket-status]').forEach((sel) => {
       sel.addEventListener('change', async () => {
         const id = sel.getAttribute('data-ticket-status');
         if (!id) return;
-        await updateTicketStatus(id, sel.value);
+        try {
+          await updateTicketStatus(id, sel.value);
+        } catch (err) {
+          window.alert(err instanceof Error ? err.message : '상태를 바꾸지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+          rerender();
+        }
       });
     });
     root.querySelectorAll('[data-ticket-reply]').forEach((form) => {

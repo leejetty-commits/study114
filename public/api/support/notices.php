@@ -18,11 +18,13 @@ SupportApi::run(static function (): void {
     }
 
     if ($method === 'POST') {
+        SupportApi::requireAdmin();
         $notice = $service->save(SupportApi::readJson());
         SupportApi::ok(['notice' => $notice]);
     }
 
     if ($method === 'DELETE') {
+        SupportApi::requireAdmin();
         $id = SupportApi::queryString('id', '');
         if ($id === '') {
             SupportApi::fail(422, 'validation', 'id가 필요합니다.');
@@ -32,6 +34,7 @@ SupportApi::run(static function (): void {
     }
 
     if ($method === 'PATCH') {
+        SupportApi::requireAdmin();
         $input = SupportApi::readJson();
         $action = (string) ($input['action'] ?? '');
         if ($action !== 'reset_seed') {

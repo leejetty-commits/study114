@@ -7,8 +7,13 @@ namespace Study114\Admin;
 use InvalidArgumentException;
 use Study114\Board\BoardPostRepository;
 use Study114\Database\Connection;
+use Study114\Registration\StudentHubRepository;
 use Study114\Registration\StudyRoomHubRepository;
 use Study114\Registration\TutorHubRepository;
+
+final class ExposureDraftPublishException extends \RuntimeException
+{
+}
 
 final class AdminExposureService
 {
@@ -17,6 +22,7 @@ final class AdminExposureService
     private AdminExposureRepository $targets;
   private StudyRoomHubRepository $studyRooms;
   private TutorHubRepository $tutors;
+  private StudentHubRepository $students;
   private BoardPostRepository $posts;
   private AdminOperationLogRepository $logs;
 
@@ -26,33 +32,38 @@ final class AdminExposureService
       ?TutorHubRepository $tutors = null,
       ?BoardPostRepository $posts = null,
       ?AdminOperationLogRepository $logs = null,
+      ?StudentHubRepository $students = null,
   ) {
       $pdo = Connection::get();
       $this->targets = $targets ?? new AdminExposureRepository($pdo);
       $this->studyRooms = $studyRooms ?? new StudyRoomHubRepository($pdo);
       $this->tutors = $tutors ?? new TutorHubRepository($pdo);
+      $this->students = $students ?? new StudentHubRepository($pdo);
       $this->posts = $posts ?? new BoardPostRepository($pdo);
       $this->logs = $logs ?? new AdminOperationLogRepository($pdo);
   }
 
   /** @return list<array<string, mixed>> */
-  public function list(?string $targetType = null, ?string $status = null): array
+  public function list(?string $targetType = null, ?string $status = null, ?int $userId = null): array
   {
       $type = $targetType !== null && $targetType !== '' ? $targetType : 'all';
       $items = [];
 
       if ($type === 'all' || $type === 'study_room') {
-          $items = array_merge($items, $this->targets->listStudyRooms($status));
+          $items = array_merge($items, $this->targets->listStudyRooms($status, $userId));
       }
       if ($type === 'all' || $type === 'tutor') {
-          $items = array_merge($items, $this->targets->listTutors($status));
+          $items = array_merge($items, $this->targets->listTutors($status, $userId));
+      }
+      if ($type === 'all' || $type === 'student') {
+          $items = array_merge($items, $this->targets->listStudents($status, $userId));
       }
       if ($type === 'all' || $type === 'submission') {
           $items = array_merge($items, $this->targets->listSubmissions($status));
       }
 
-      if ($type !== 'all' && $type !== 'study_room' && $type !== 'tutor' && $type !== 'submission') {
-          throw new InvalidArgumentException('target_type은 study_room, tutor, submission 중 하나여야 합니다.');
+      if (!in_array($type, ['all', 'study_room', 'tutor', 'student', 'submission'], true)) {
+          throw new InvalidArgumentException('target_type은 study_room, tutor, student, submission 중 하나여야 합니다.');
       }
 
       usort($items, static fn (array $a, array $b) => strcmp((string) $b['updatedAt'], (string) $a['updatedAt']));
@@ -81,6 +92,7 @@ final class AdminExposureService
       return match ($targetType) {
           'study_room' => $this->correctStudyRoom($targetId, $action, $inquiryStatus, $operatorId, $reasonCategory, $internalMemo),
           'tutor' => $this->correctTutor($targetId, $action, $operatorId, $reasonCategory, $internalMemo),
+          'student' => $this->correctStudent($targetId, $action, $operatorId, $reasonCategory, $internalMemo),
           'submission' => $this->correctSubmission($targetId, $action, $operatorId, $reasonCategory, $internalMemo),
           default => throw new InvalidArgumentException('지원하지 않는 target_type입니다.'),
       };
@@ -111,6 +123,10 @@ final class AdminExposureService
           'inquiry_status' => ['exposure_correction', false],
           default => throw new InvalidArgumentException('action은 hide, publish, inquiry_status 중 하나여야 합니다.'),
       };
+
+      if ($action === 'publish') {
+          $this->rejectDraftPublish((string) ($existing['status'] ?? ''));
+      }
 
       if ($action === 'hide') {
           $this->studyRooms->setProfileStatus($roomId, 'hidden');
@@ -164,6 +180,11 @@ final class AdminExposureService
           default => throw new InvalidArgumentException('action은 hide 또는 publish만 허용됩니다.'),
       };
 
+      $existing = $this->targets->findTutor($tutorId);
+      if ($action === 'publish') {
+          $this->rejectDraftPublish((string) ($existing['status'] ?? ''));
+      }
+
       if ($action === 'hide') {
           $this->tutors->setProfileStatus($tutorId, 'hidden');
       } else {
@@ -186,6 +207,62 @@ final class AdminExposureService
           'item' => $snapshot,
           'log' => $this->mapLog($log),
       ];
+  }
+
+  /** @return array<string, mixed> */
+  private function correctStudent(
+      string $targetId,
+      string $action,
+      string $operatorId,
+      string $reasonCategory,
+      string $internalMemo,
+  ): array {
+      $studentId = (int) $targetId;
+      if ($studentId <= 0) {
+          throw new InvalidArgumentException('target_id가 올바르지 않습니다.');
+      }
+
+      $existing = $this->targets->findStudent($studentId);
+      if ($existing === null) {
+          throw new InvalidArgumentException('카드를 찾을 수 없습니다.');
+      }
+
+      [$actionKind, $userNotified] = match ($action) {
+          'hide' => ['hide_profile', true],
+          'publish' => ['exposure_correction', false],
+          default => throw new InvalidArgumentException('action은 hide 또는 publish만 허용됩니다.'),
+      };
+
+      if ($action === 'publish') {
+          $this->rejectDraftPublish((string) ($existing['status'] ?? ''));
+          $this->students->updateExposureStatus($studentId, 'published', date('Y-m-d H:i:s'));
+      } else {
+          $this->students->updateExposureStatus($studentId, 'hidden');
+      }
+
+      $snapshot = $this->targets->findStudent($studentId);
+      $log = $this->logs->insert(
+          $operatorId,
+          'student',
+          (string) $studentId,
+          $actionKind,
+          $reasonCategory !== '' ? $reasonCategory : null,
+          $internalMemo !== '' ? $internalMemo : null,
+          true,
+          $userNotified,
+      );
+
+      return [
+          'item' => $snapshot,
+          'log' => $this->mapLog($log),
+      ];
+  }
+
+  private function rejectDraftPublish(string $status): void
+  {
+      if ($status === 'draft' || $status === 'pending') {
+          throw new ExposureDraftPublishException('작성 중인 카드는 홈·찾기에 올릴 수 없어요.');
+      }
   }
 
   /** @return array<string, mixed> */

@@ -344,8 +344,7 @@ final class AdminMemberService
         }, $this->repo->listOauth($userId));
 
         $paid = $this->repo->paidSnapshot($userId);
-        $listExtra = $this->repo->listMembers(['q' => (string) $userId, 'limit' => 1]);
-        $counts = $listExtra[0] ?? [];
+        $counts = $this->repo->profileCounts($userId);
 
         return [
             'id' => $userId,
@@ -373,9 +372,9 @@ final class AdminMemberService
                 'orders' => $paid['orders'],
             ],
             'profileCounts' => [
-                'studyRooms' => (int) ($counts['study_room_count'] ?? 0),
-                'tutors' => (int) ($counts['tutor_count'] ?? 0),
-                'students' => (int) ($counts['student_count'] ?? 0),
+                'studyRooms' => (int) ($counts['studyRooms'] ?? 0),
+                'tutors' => (int) ($counts['tutors'] ?? 0),
+                'students' => (int) ($counts['students'] ?? 0),
             ],
             'hasPayment' => $this->repo->hasPayment($userId),
             'isMaster' => $this->roles->isMasterEmail((string) $row['email']),

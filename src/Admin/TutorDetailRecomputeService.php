@@ -6,6 +6,7 @@ namespace Study114\Admin;
 
 use Study114\Database\Connection;
 use Study114\Tutor\TutorDetailCompletionEvaluator;
+use Study114\Visibility\WithdrawnOwnerSql;
 
 /**
  * tutors.detail_completion_status 전수 재계산.
@@ -37,9 +38,15 @@ final class TutorDetailRecomputeService
     public function status(): array
     {
         $pdo = Connection::get();
-        $total = (int) $pdo->query('SELECT COUNT(*) FROM tutors')->fetchColumn();
+        $alive = WithdrawnOwnerSql::notWithdrawn('t.user_id');
+        $total = (int) $pdo->query(
+            'SELECT COUNT(*) FROM tutors t WHERE ' . $alive
+        )->fetchColumn();
         $rows = $pdo->query(
-            'SELECT detail_completion_status AS s, COUNT(*) AS n FROM tutors GROUP BY detail_completion_status'
+            'SELECT t.detail_completion_status AS s, COUNT(*) AS n
+             FROM tutors t
+             WHERE ' . $alive . '
+             GROUP BY t.detail_completion_status'
         )->fetchAll();
         $by = [
             'basic_only' => 0,

@@ -61,6 +61,23 @@ final class AccountWithdrawService
         $this->deactivateRoles($pdo, $userId);
         $this->anonymizeStudents($pdo, $userId);
         $this->deletePersonalRows($pdo, $userId);
+        $this->endActivePositionSubscriptions($pdo, $userId);
+    }
+
+    /**
+     * 활성 노출 구독(Prime/Pick)을 오늘 자로 종료한다. 행은 지우지 않는다.
+     * 활성은 CURDATE() < end_exclusive_on. 종료는 그 반개구간을 오늘로 당긴다.
+     */
+    public function endActivePositionSubscriptions(PDO $pdo, int $userId): void
+    {
+        if ($userId < 1) {
+            return;
+        }
+        $pdo->prepare(
+            'UPDATE provider_position_subscriptions
+             SET end_exclusive_on = CURDATE(), ends_at = TIMESTAMP(CURDATE())
+             WHERE user_id = ? AND CURDATE() < end_exclusive_on'
+        )->execute([$userId]);
     }
 
     /**

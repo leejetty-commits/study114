@@ -14,6 +14,7 @@ import {
   deleteGuidePost,
 } from '../operational-board-store.js';
 import { listTickets, updateTicketStatus } from '../support/ticket-store.js';
+import { getTicketLoadError } from '../support/support-backend.js';
 import { TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { SUBMISSION_CATEGORIES } from '../submission-board/submission-copy.js';
 import { apiOpenSubmissionAttachment } from '../board/board-backend.js';
@@ -56,6 +57,7 @@ import {
   getReportsCache,
   apiUpdateAdminReport,
   getExposureCache,
+  getExposureStatusFilter,
   hydrateExposureCache,
   apiApplyExposureCorrection,
   getCommerceCache,
@@ -91,7 +93,6 @@ import {
   A28_SUBMISSION_QUEUE_ACTIONS,
   A28_REPORT_STATUS_LABELS,
   A28_EXPOSURE_ACTIONS,
-  A28_EXPOSURE_TARGET_LABELS,
   A28_INQUIRY_STATUS_LABELS,
   A28_MEMBER_STATUS_LABELS,
   A28_MEMBER_ROLE_LABELS,
@@ -905,6 +906,7 @@ function renderGuideCmsPanel() {
 
 function renderTicketsAdmin() {
   const tickets = listTickets();
+  const loadError = getTicketLoadError();
   const categoryLabel = (value) => TICKET_CATEGORIES.find((c) => c.value === value)?.label || value;
   const rows = tickets
     .map((t) => {
@@ -935,7 +937,8 @@ function renderTicketsAdmin() {
     'A28-04b',
     `${renderOpsTip()}
      <p class="a28-help">이용·정책·오류 문의입니다. 신고 처리와는 메뉴가 다릅니다. 여기에 남긴 답변은 마이페이지 내 문의 내역에 보입니다.</p>
-     <table class="sup-admin-table"><thead><tr><th>번호</th><th>유형</th><th>이메일</th><th>상태</th><th>답변</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="sup-empty">티켓 없음</td></tr>'}</tbody></table>`,
+     ${loadError ? `<p class="a28-help" role="alert">${esc(loadError)}</p>` : ''}
+     <table class="sup-admin-table"><thead><tr><th>번호</th><th>유형</th><th>이메일</th><th>상태</th><th>답변</th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="sup-empty">${loadError ? esc(loadError) : '티켓 없음'}</td></tr>`}</tbody></table>`,
   );
 }
 
@@ -979,20 +982,64 @@ function renderSubmissionDocs() {
      <p class="a28-help">${isAdminApiMode() ? '조치하면 운영 로그에 남습니다.' : '미리보기 모드입니다.'}</p>`,
   );
 }
+function commerceUserFromHash() {
+  const raw = window.location.hash.replace(/^#/, '');
+  const q = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
+  const userRaw = new URLSearchParams(q).get('user') || '';
+  return /^[1-9][0-9]*$/.test(userRaw) ? userRaw : '';
+}
+
+/** 결제 줄의 계정 → 회원 상세 드로어. 식별번호가 없으면 이메일 검색. */
+function memberAccountLink(userId, email) {
+  const id = String(userId || '');
+  const label = esc(email || (id ? `회원 #${id}` : '—'));
+  if (/^[1-9][0-9]*$/.test(id)) {
+    const href = `/admin/members?user=${encodeURIComponent(id)}`;
+    return `<a href="#${href}" data-a28-nav="${href}">${label}</a>`;
+  }
+  const href = `/admin/members?q=${encodeURIComponent(String(email || ''))}`;
+  return `<a href="#${href}" data-a28-nav="${href}">${label}</a>`;
+}
+
+function exposureRouteParams() {
+  const raw = window.location.hash.replace(/^#/, '');
+  const q = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
+  const params = new URLSearchParams(q);
+  const tab = params.get('tab');
+  const userRaw = params.get('user') || '';
+  return {
+    tab: tab === 'tutor' || tab === 'student' || tab === 'study_room' ? tab : 'study_room',
+    userId: /^[1-9][0-9]*$/.test(userRaw) ? userRaw : '',
+    hasTab: params.has('tab'),
+  };
+}
+
 function renderExposure() {
-  const items = isAdminApiMode() ? getExposureCache() : [];
+  const route = exposureRouteParams();
+  const tab = route.tab;
+  const userId = route.userId;
+  const statusFilter = getExposureStatusFilter();
+  const items = (isAdminApiMode() ? getExposureCache() : []).filter((item) => item.targetType === tab);
+  const member = userId ? getMemberDetailCache(userId) : null;
+  const memberName = member?.name || (userId ? `회원 #${userId}` : '');
+
   const rows = items
     .map((item) => {
-      const typeLabel = A28_EXPOSURE_TARGET_LABELS[item.targetType] || item.targetType;
-      const secondary =
-        item.targetType === 'study_room' && item.secondaryLabel
-          ? `<br><span class="a28-help">상담: ${esc(item.secondaryLabel)}</span>`
-          : item.targetType === 'submission'
-            ? `<br><span class="a28-help">역할: ${esc(item.secondaryLabel)}</span>`
-            : '';
-      const inquirySelect =
-        item.targetType === 'study_room'
-          ? `<select class="a28-inquiry-select" data-a28-exp-inquiry="${esc(item.targetType)}:${esc(item.targetId)}">
+      const compound = `${item.targetType}:${item.targetId}`;
+      const status = item.status === 'pending' ? 'draft' : item.status;
+      const hideBtn =
+        status === 'published'
+          ? `<button type="button" class="btn btn--secondary btn--sm" data-a28-exp-action="hide" data-a28-exp-id="${esc(compound)}">${esc(A28_EXPOSURE_ACTIONS.hide.label)}</button>`
+          : '';
+      const showBtn =
+        status === 'hidden'
+          ? `<button type="button" class="btn btn--primary btn--sm" data-a28-exp-action="publish" data-a28-exp-id="${esc(compound)}">${esc(A28_EXPOSURE_ACTIONS.publish.label)}</button>`
+          : '';
+      const inquiryCell =
+        tab === 'study_room'
+          ? `<td>${
+              item.secondaryStatus
+                ? `<select class="a28-inquiry-select" data-a28-exp-inquiry="${esc(compound)}">
               ${Object.entries(A28_INQUIRY_STATUS_LABELS)
                 .map(
                   ([val, label]) =>
@@ -1000,62 +1047,64 @@ function renderExposure() {
                 )
                 .join('')}
             </select>`
-          : '—';
+                : '—'
+            }</td>`
+          : '';
+      const inquiryBtn =
+        tab === 'study_room' && item.secondaryStatus
+          ? `<button type="button" class="btn btn--secondary btn--sm" data-a28-exp-action="inquiry_status" data-a28-exp-id="${esc(compound)}" title="${esc(A28_EXPOSURE_ACTIONS.inquiry_status.hint)}">상담 보정</button>`
+          : '';
 
-      return `<tr data-a28-exp-row="${esc(item.targetType)}:${esc(item.targetId)}">
-        <td>${esc(typeLabel)}</td>
+      return `<tr data-a28-exp-row="${esc(compound)}">
         <td><code>${esc(item.targetId)}</code></td>
-        <td>${esc(item.label)}${secondary}</td>
-        <td><span class="sub-board-status sub-board-status--${esc(item.status)}">${esc(item.statusLabel)}</span>
-          ${item.searchVisible ? '' : ' <span class="a28-help">(검색 제외)</span>'}</td>
-        <td>${inquirySelect}</td>
+        <td>${esc(item.label)}</td>
+        <td>${esc(item.regionLabel || '—')}</td>
+        <td><span class="sub-board-status sub-board-status--${esc(status)}">${esc(item.statusLabel)}</span></td>
         <td>${esc(item.updatedAt)}</td>
-        <td><textarea class="a28-memo" rows="2" data-a28-exp-memo="${esc(item.targetType)}:${esc(item.targetId)}" placeholder="내부 메모">${esc(item.internalMemo || '')}</textarea></td>
-        <td class="sub-board-actions">
-          <button type="button" class="btn btn--secondary btn--sm" data-a28-exp-action="hide" data-a28-exp-id="${esc(item.targetType)}:${esc(item.targetId)}" title="${esc(A28_EXPOSURE_ACTIONS.hide.hint)}">${esc(A28_EXPOSURE_ACTIONS.hide.label)}</button>
-          ${
-            item.targetType === 'submission' && item.status === 'submitted'
-              ? `<a href="#/admin/submission-docs" class="a28-hint a28-queue-link" title="제출됨 상태는 제출자료 확인 메뉴에서만 노출 반영 가능">→ 제출자료에서 노출 반영</a>`
-              : `<button type="button" class="btn btn--primary btn--sm" data-a28-exp-action="publish" data-a28-exp-id="${esc(item.targetType)}:${esc(item.targetId)}" title="${esc(A28_EXPOSURE_ACTIONS.publish.hint)}">${esc(A28_EXPOSURE_ACTIONS.publish.label)}</button>`
-          }
-          ${
-            item.targetType === 'study_room'
-              ? `<button type="button" class="btn btn--secondary btn--sm" data-a28-exp-action="inquiry_status" data-a28-exp-id="${esc(item.targetType)}:${esc(item.targetId)}" title="${esc(A28_EXPOSURE_ACTIONS.inquiry_status.hint)}">상담 보정</button>`
-              : ''
-          }
-        </td>
+        ${inquiryCell}
+        <td><textarea class="a28-memo" rows="2" data-a28-exp-memo="${esc(compound)}" placeholder="내부 메모">${esc(item.internalMemo || '')}</textarea></td>
+        <td class="sub-board-actions">${hideBtn}${showBtn}${inquiryBtn}</td>
       </tr>`;
     })
     .join('');
 
+  const inquiryHead = tab === 'study_room' ? '<th>상담</th>' : '';
+  const colSpan = tab === 'study_room' ? 8 : 7;
+  const tabs = [
+    ['study_room', '공부방'],
+    ['tutor', '과외쌤'],
+    ['student', '학생'],
+  ]
+    .map(
+      ([id, label]) =>
+        `<button type="button" class="btn btn--sm ${tab === id ? 'btn--primary' : 'btn--secondary'}" data-a28-exp-tab="${id}" aria-pressed="${tab === id ? 'true' : 'false'}">${label}</button>`,
+    )
+    .join(' ');
+
+  const banner = userId
+    ? `<p class="a28-help" data-a28-exp-user="${esc(userId)}">${esc(memberName)} 회원의 카드만 보는 중 · <button type="button" class="btn btn--secondary btn--sm" data-a28-exp-clear-user>전체 보기</button></p>`
+    : '';
+
   return renderPanel(
-    '노출·권한 수동 보정',
+    '홈·찾기 노출',
     'A28-07a',
-    `${renderOpsTip()}
-     <p class="a28-help">검색/노출 상태 보정 · 승인/반려 용어 사용 금지 · 조치 시 운영 로그 기록</p>
+    `${banner}
+     <div class="a28-row-actions" data-a28-exp-tabs>${tabs}</div>
      <form class="a28-filter-form" data-a28-exp-filter>
-       <label>대상 유형
-         <select name="target_type">
-           <option value="all">전체</option>
-           <option value="study_room">공부방</option>
-           <option value="tutor">과외쌤</option>
-           <option value="submission">제출</option>
-         </select>
-       </label>
-       <label>상태 필터
+       <label>상태
          <select name="status">
-           <option value="">전체</option>
-           <option value="published">공개중/게시중</option>
-           <option value="hidden">숨김/비공개</option>
-           <option value="draft">비공개(저장)</option>
-           <option value="submitted">제출됨</option>
+           <option value=""${statusFilter === '' ? ' selected' : ''}>전체</option>
+           <option value="published"${statusFilter === 'published' ? ' selected' : ''}>보임</option>
+           <option value="hidden"${statusFilter === 'hidden' ? ' selected' : ''}>홈·찾기에서 숨김</option>
+           <option value="draft"${statusFilter === 'draft' ? ' selected' : ''}>작성 중</option>
          </select>
        </label>
-       <button type="submit" class="btn btn--secondary btn--sm">목록 갱신</button>
+       <button type="submit" class="btn btn--secondary btn--sm">조회</button>
      </form>
+     <p class="a28-help">홈과 찾기에서 카드를 숨기거나 다시 보이게 합니다. 작성 중인 카드는 여기서 공개로 바꾸지 않습니다.</p>
      <table class="sup-admin-table">
-       <thead><tr><th>유형</th><th>식별번호</th><th>이름</th><th>노출</th><th>상담</th><th>갱신</th><th>내부 메모</th><th>조치</th></tr></thead>
-       <tbody>${rows || '<tr><td colspan="8" class="mypage-muted">표시할 항목이 없습니다.</td></tr>'}</tbody>
+       <thead><tr><th>식별번호</th><th>이름</th><th>지역</th><th>상태</th><th>갱신</th>${inquiryHead}<th>내부 메모</th><th></th></tr></thead>
+       <tbody>${rows || `<tr><td colspan="${colSpan}" class="mypage-muted">조건에 맞는 카드가 없습니다.</td></tr>`}</tbody>
      </table>
      <p class="a28-help">${isAdminApiMode() ? '조치하면 운영 로그에 남습니다.' : '미리보기 — 운영자 로그인이 필요합니다.'}</p>`,
   );
@@ -1063,6 +1112,12 @@ function renderExposure() {
 
 function renderCommerce() {
   const data = isAdminApiMode() ? getCommerceCache() : null;
+  const userId = commerceUserFromHash();
+  const member = userId ? getMemberDetailCache(userId) : null;
+  const memberName = member?.name || (userId ? `회원 #${userId}` : '');
+  const banner = userId
+    ? `<p class="a28-help" data-a28-commerce-user="${esc(userId)}">${esc(memberName)} 회원의 결제만 보는 중 · <button type="button" class="btn btn--secondary btn--sm" data-a28-commerce-clear-user>전체 보기</button></p>`
+    : '';
   const master = isMasterAdmin();
   const slots = data?.slots;
   const settings = data?.settings_readonly;
@@ -1088,7 +1143,7 @@ function renderCommerce() {
         : '<span class="a28-muted">마스터 전용</span>';
       return `<tr>
         <td><code>${p.id}</code></td>
-        <td>${esc(p.user_email)}</td>
+        <td>${memberAccountLink(p.user_id, p.user_email)}</td>
         <td><strong>${esc(adminProductLabel(p.sku_code))}</strong></td>
         <td>${p.days_left}일</td>
         <td title="포함 종료일">${esc(p.ends_on || String(p.ends_at || '').slice(0, 10))}</td>
@@ -1108,7 +1163,7 @@ function renderCommerce() {
         : '<span class="a28-muted">마스터 전용</span>';
       return `<tr>
         <td><code>${t.id}</code></td>
-        <td>${esc(t.user_email)}</td>
+        <td>${memberAccountLink(t.user_id, t.user_email)}</td>
         <td>${esc(ticketTypeLabel(t.ticket_type))}</td>
         <td>${t.remaining}/${t.pack_size}</td>
         <td>${esc(t.expires_at)}</td>
@@ -1121,7 +1176,7 @@ function renderCommerce() {
     .map(
       (o) => `<tr>
         <td><code>${esc(o.order_ref)}</code></td>
-        <td>${esc(o.user_email)}</td>
+        <td>${memberAccountLink(o.user_id, o.user_email)}</td>
         <td>${esc(adminProductLabel(o.product_id))} · ${esc(o.variant_label)}</td>
         <td>${esc(ORDER_STATUS_KO[o.status] || '상태 확인 필요')}</td>
         <td>${Number(o.amount_won || 0).toLocaleString()}원</td>
@@ -1153,6 +1208,7 @@ function renderCommerce() {
     '상품·노출·결제 조회',
     'A28-07b',
     `${renderOpsTip()}
+     ${banner}
      <p class="a28-help">가격표·노출 자리 수·순환 간격은 이 화면에서 직접 바꿀 수 없습니다. 조회와 마스터의 최소 보정만 제공합니다.</p>
      ${slotHtml}
      ${settings ? `<p class="a28-help">대표 노출 ${settings.prime_slots}자리 · 추천 노출 ${settings.pick_set_size}개씩 · 기본 노출 ${settings.basic_page_size}개/페이지</p>` : ''}
@@ -1252,7 +1308,24 @@ function renderMembers() {
       ? A28_MEMBER_ROLE_LABELS[primaryRole.roleType] || '역할 확인 필요'
       : A28_MEMBER_ROLE_LABELS[detail.primaryRole] || '—';
     const cardCountLabel = `공부방 ${detail.profileCounts?.studyRooms || 0} · 과외쌤 ${detail.profileCounts?.tutors || 0} · 학생 ${detail.profileCounts?.students || 0}`;
+    const cardTotal =
+      (detail.profileCounts?.studyRooms || 0) +
+      (detail.profileCounts?.tutors || 0) +
+      (detail.profileCounts?.students || 0);
+    const cardAside =
+      cardTotal > 0
+        ? ` · <a href="#/admin/exposure?user=${encodeURIComponent(detail.id)}" data-a28-nav="/admin/exposure?user=${encodeURIComponent(detail.id)}">이 회원 카드 → 홈·찾기 노출</a>`
+        : ` · ${esc('등록한 카드가 없어요')}`;
     const paymentLabel = detail.hasPayment ? '결제 있음' : '결제 없음';
+    const payPositions = apiDetail?.paid?.positions;
+    const showPayLink = apiDetail
+      ? apiDetail.hasPayment === true ||
+        (Array.isArray(payPositions) && payPositions.length > 0) ||
+        Number(apiDetail.activePositions) > 0
+      : false;
+    const payAside = showPayLink
+      ? ` · <a href="#/admin/commerce?user=${encodeURIComponent(detail.id)}" data-a28-nav="/admin/commerce?user=${encodeURIComponent(detail.id)}">이 회원 결제·주문 보기</a>`
+      : ` · ${esc('결제 기록이 없어요')}`;
 
     detailHtml = renderDetailDrawer(
       `member-${detail.id}`,
@@ -1263,8 +1336,8 @@ function renderMembers() {
           <dt>이름</dt><dd>${esc(detail.name || '—')}</dd>
           <dt>역할</dt><dd>${esc(roleLabel)}</dd>
           <dt>상태</dt><dd>${esc(A28_MEMBER_STATUS_LABELS[detail.status] || detail.status)}</dd>
-          <dt>등록 카드 수</dt><dd>${esc(cardCountLabel)}</dd>
-          <dt>결제</dt><dd>${esc(paymentLabel)}</dd>
+          <dt>등록 카드 수</dt><dd>${esc(cardCountLabel)}${cardAside}</dd>
+          <dt>결제</dt><dd>${esc(paymentLabel)}${payAside}</dd>
           <dt>전화</dt><dd>${esc(detail.phone || '—')}</dd>
           <dt>이메일 인증</dt><dd>${detail.emailVerified ? '완료' : '미완료'}</dd>
           <dt>성별</dt><dd>${esc(genderLabel(detail.gender))}</dd>

@@ -14,6 +14,12 @@ let apiMode = false;
 let noticesCache = [];
 /** @type {any[]} */
 let ticketsCache = [];
+/** 전체 목록·본인 목록을 401·403으로 못 읽었을 때의 안내 */
+let ticketLoadError = '';
+
+export function getTicketLoadError() {
+  return ticketLoadError;
+}
 
 export function isSupportApiMode() {
   return apiMode;
@@ -35,9 +41,19 @@ export function deactivateSupportApi() {
 }
 
 export async function hydrateSupportCache(ticketEmail = '') {
+  ticketLoadError = '';
   const [noticeRes, ticketRes] = await Promise.all([
     fetchNotices().catch(() => ({ notices: [] })),
-    fetchTickets(ticketEmail).catch(() => ({ tickets: [] })),
+    fetchTickets(ticketEmail).catch((err) => {
+      const status = Number(err?.status || 0);
+      if (status === 401 || status === 403) {
+        ticketLoadError =
+          err instanceof Error && err.message
+            ? err.message
+            : '문의 목록을 불러오지 못했습니다. 로그인 상태를 확인해 주세요.';
+      }
+      return { tickets: [] };
+    }),
   ]);
   noticesCache = (noticeRes.notices ?? []).map((n) => ({ ...n, body: [...(n.body ?? [])] }));
   ticketsCache = (ticketRes.tickets ?? []).map((t) => ({ ...t }));

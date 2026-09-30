@@ -45,7 +45,7 @@ export function renderMarketLab(section = 'overview') {
          <div class="admin-kpi"><span>후기 대기</span><strong>${k.reviewsPending}</strong><small><a href="#/admin/market/reviews" data-a28-nav="/admin/market/reviews">후기</a></small></div>
          <div class="admin-kpi"><span>관심(찜)</span><strong>${k.bookmarks}</strong></div>
        </div>
-       <p class="a28-help"><a href="#/admin/commerce" data-a28-nav="/admin/commerce">→ 결제·주문 상세</a> · <a href="#/admin/exposure" data-a28-nav="/admin/exposure">→ 노출 보정</a></p>
+       <p class="a28-help"><a href="#/admin/commerce" data-a28-nav="/admin/commerce">→ 결제·주문 상세</a> · <a href="#/admin/exposure" data-a28-nav="/admin/exposure">→ 홈·찾기 노출</a></p>
        <button type="button" class="btn btn--secondary btn--sm" data-market-reset>예시 데이터 초기화</button>`,
     );
   }
@@ -58,7 +58,7 @@ export function renderMarketLab(section = 'overview') {
           <td>${esc(r.name)}</td>
           <td>${esc(r.region)}</td>
           <td>${esc(statusKo[r.status] || r.status)}</td>
-          <td><a class="btn btn--secondary btn--sm" href="#/admin/exposure" data-a28-nav="/admin/exposure">노출 보정</a></td>
+          <td><a class="btn btn--secondary btn--sm" href="#/admin/exposure" data-a28-nav="/admin/exposure">홈·찾기 노출</a></td>
         </tr>`,
       )
       .join('');
@@ -66,7 +66,7 @@ export function renderMarketLab(section = 'overview') {
       '공부방·과외 목록',
       'A28-07a',
       `${renderOpsTip()}
-       <p class="a28-help">등록된 공부방·과외쌤 목록입니다. 숨기거나 다시 보이게 하려면 「노출 보정」으로 가세요.</p>
+       <p class="a28-help">등록된 공부방·과외쌤 목록입니다. 숨기거나 다시 보이게 하려면 「홈·찾기 노출」로 가세요.</p>
        <table class="sup-admin-table"><thead><tr><th>구분</th><th>이름</th><th>지역</th><th>상태</th><th></th></tr></thead>
        <tbody>${rows || '<tr><td colspan="5" class="sup-empty">목록 없음</td></tr>'}</tbody></table>`,
     );

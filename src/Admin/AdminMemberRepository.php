@@ -46,14 +46,20 @@ final class AdminMemberRepository
                          WHERE pps.user_id = u.id AND CURDATE() < pps.end_exclusive_on
                        ) AS active_positions,
                        (
-                         SELECT COUNT(*) FROM study_rooms sr
-                         WHERE sr.user_id = u.id AND (sr.deleted_at IS NULL)
+                         CASE WHEN u.status = \'withdrawn\' THEN 0 ELSE (
+                           SELECT COUNT(*) FROM study_rooms sr
+                           WHERE sr.user_id = u.id AND (sr.deleted_at IS NULL)
+                         ) END
                        ) AS study_room_count,
                        (
-                         SELECT COUNT(*) FROM tutors t WHERE t.user_id = u.id
+                         CASE WHEN u.status = \'withdrawn\' THEN 0 ELSE (
+                           SELECT COUNT(*) FROM tutors t WHERE t.user_id = u.id
+                         ) END
                        ) AS tutor_count,
                        (
-                         SELECT COUNT(*) FROM students s WHERE s.guardian_user_id = u.id
+                         CASE WHEN u.status = \'withdrawn\' THEN 0 ELSE (
+                           SELECT COUNT(*) FROM students s WHERE s.guardian_user_id = u.id
+                         ) END
                        ) AS student_count
                 FROM users u
                 LEFT JOIN user_profiles p ON p.user_id = u.id
@@ -89,6 +95,7 @@ final class AdminMemberRepository
 
     /**
      * 상태별 집계 칩용. q·role_type만 반영하고 status 필터는 무시 (영카트 local_ov 패턴).
+     * all 은 withdrawn 을 빼서, 상태 전체 목록 합계와 맞춘다.
      *
      * @param array{q?: string, role_type?: string} $filters
      * @return array{all: int, active: int, pending: int, blocked: int, withdrawn: int}
@@ -118,7 +125,9 @@ final class AdminMemberRepository
         foreach ($rows as $row) {
             $status = (string) ($row['status'] ?? '');
             $cnt = (int) ($row['cnt'] ?? 0);
-            $out['all'] += $cnt;
+            if ($status !== 'withdrawn') {
+                $out['all'] += $cnt;
+            }
             if (array_key_exists($status, $out)) {
                 $out[$status] = $cnt;
             }
@@ -148,7 +157,9 @@ final class AdminMemberRepository
 
         if ($includeStatus) {
             $status = trim((string) ($filters['status'] ?? ''));
-            if ($status !== '' && $status !== 'all') {
+            if ($status === '' || $status === 'all') {
+                $where[] = "u.status <> 'withdrawn'";
+            } else {
                 $where[] = 'u.status = ?';
                 $params[] = $status;
             }
@@ -184,6 +195,42 @@ final class AdminMemberRepository
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return is_array($row) ? $row : null;
+    }
+
+    /**
+     * 회원 번호로만 카드 수를 센다. 탈퇴 회원이면 0.
+     *
+     * @return array{studyRooms: int, tutors: int, students: int}
+     */
+    public function profileCounts(int $userId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT u.status,
+                    (
+                      SELECT COUNT(*) FROM study_rooms sr
+                      WHERE sr.user_id = u.id AND sr.deleted_at IS NULL
+                    ) AS study_room_count,
+                    (
+                      SELECT COUNT(*) FROM tutors t WHERE t.user_id = u.id
+                    ) AS tutor_count,
+                    (
+                      SELECT COUNT(*) FROM students s WHERE s.guardian_user_id = u.id
+                    ) AS student_count
+             FROM users u
+             WHERE u.id = ?
+             LIMIT 1'
+        );
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row) || (string) ($row['status'] ?? '') === 'withdrawn') {
+            return ['studyRooms' => 0, 'tutors' => 0, 'students' => 0];
+        }
+
+        return [
+            'studyRooms' => (int) ($row['study_room_count'] ?? 0),
+            'tutors' => (int) ($row['tutor_count'] ?? 0),
+            'students' => (int) ($row['student_count'] ?? 0),
+        ];
     }
 
     /** @return list<array<string, mixed>> */

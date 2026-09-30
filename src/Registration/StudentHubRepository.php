@@ -49,14 +49,6 @@ final class StudentHubRepository
         $stmt->execute([$status, $publishedAt, $studentId]);
     }
 
-    public function softDelete(int $studentId): void
-    {
-        $stmt = $this->pdo->prepare(
-            'UPDATE students SET exposure_status = "deleted", deleted_at = NOW(), updated_at = NOW() WHERE id = ?'
-        );
-        $stmt->execute([$studentId]);
-    }
-
     /**
      * @param array<string, mixed> $patch
      */

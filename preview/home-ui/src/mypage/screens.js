@@ -65,7 +65,7 @@ import { renderSubmissionBoardScreen } from '../submission-board/index.js';
 import { P18_EXPOSURE_STATUS } from './plans-catalog.js';
 import { getPaidOperationalStatus, hydratePaidCaches } from '../paid-backend.js';
 import { isMessagesApiMode, hydrateMessagesCache } from '../messages-backend.js';
-import { isSupportApiMode, hydrateSupportCache } from '../support/support-backend.js';
+import { isSupportApiMode, hydrateSupportCache, getTicketLoadError } from '../support/support-backend.js';
 import { listTicketsByEmail } from '../support/ticket-store.js';
 import { TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { getMemoUsedTargets } from '../messages/thread-store.js';
@@ -463,6 +463,15 @@ function renderContactHistory() {
     <div class="mypage-contact-foot">
       <a href="#${copy.newHref}" class="btn btn--secondary btn--sm" data-nav="${copy.newHref}">${esc(copy.newCta)}</a>
     </div>`;
+
+  const loadError = getTicketLoadError();
+  if (!tickets.length && loadError) {
+    return `
+    <section class="mypage-panel mypage-panel--bare mypage-contact">
+      ${header}
+      <p class="mypage-lead" role="alert">${esc(loadError)}</p>
+    </section>`;
+  }
 
   if (!tickets.length) {
     return `
@@ -1006,6 +1015,7 @@ function renderAccount(role, profile) {
             <li>탈퇴 후 동일 계정으로 즉시 재가입·복구되지 않을 수 있습니다.</li>
             <li>진행 중인 문의·쪽지 대화는 더 이상 확인할 수 없습니다.</li>
             <li>유료 이용 중이라면 잔여 기간·횟수도 함께 종료됩니다.</li>
+            <li>환불은 환불규정에 따라서 조치를 해 드립니다.</li>
           </ul>
           <form data-form="withdraw-account" class="account-form" autocomplete="off">
             <label class="account-check">

@@ -1007,7 +1007,7 @@ final class StudyRoomRegisterService
 
     {
 
-        $profileStatus = $this->optionalEnum($input, 'profile_status', ['draft', 'pending', 'published', 'hidden'])
+        $profileStatus = $this->optionalEnum($input, 'profile_status', ['draft', 'pending', 'published'])
             ?? 'draft';
 
 
