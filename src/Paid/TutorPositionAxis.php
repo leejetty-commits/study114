@@ -163,7 +163,13 @@ final class TutorPositionAxis
     private function cityLabel(int $cityId): string
     {
         $stmt = $this->pdo->prepare(
-            'SELECT COALESCE(NULLIF(sido_name, ""), NULLIF(sigungu_name, ""), NULLIF(dong_name, ""), CAST(id AS CHAR))
+            'SELECT CASE
+                WHEN NULLIF(TRIM(sigungu_name), "") IS NOT NULL
+                 AND TRIM(sigungu_name) <> TRIM(COALESCE(sido_name, ""))
+                    THEN TRIM(CONCAT_WS(" ", NULLIF(TRIM(sido_name), ""), TRIM(sigungu_name)))
+                WHEN NULLIF(TRIM(sigungu_name), "") IS NOT NULL THEN TRIM(sigungu_name)
+                ELSE COALESCE(NULLIF(TRIM(sido_name), ""), NULLIF(TRIM(dong_name), ""), CAST(id AS CHAR))
+             END
              FROM regions WHERE id = ? LIMIT 1'
         );
         $stmt->execute([$cityId]);

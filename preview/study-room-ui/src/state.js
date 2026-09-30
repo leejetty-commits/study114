@@ -114,33 +114,6 @@ export const PERSONAL_GENDER_OPTIONS = [
   { value: 'female', label: '여' },
 ];
 
-export const DUMMY_REGIONS = [
-  { id: 1, label: '서울특별시 강남구 대치동' },
-  { id: 2, label: '서울특별시 서초구 반포동' },
-  { id: 3, label: '부산광역시 해운대구 우동' },
-  { id: 4, label: '대구광역시 수성구 범어동' },
-  { id: 5, label: '인천광역시 연수구 송도동' },
-  { id: 6, label: '광주광역시 서구 치평동' },
-  { id: 7, label: '대전광역시 유성구 봉명동' },
-  { id: 8, label: '울산광역시 남구 삼산동' },
-  { id: 9, label: '세종특별자치시 한솔동' },
-  { id: 10, label: '경기도 성남시 분당구 정자동' },
-  { id: 11, label: '강원특별자치도 춘천시 효자동' },
-  { id: 12, label: '충청북도 청주시 흥덕구 복대동' },
-  { id: 13, label: '충청남도 천안시 서북구 불당동' },
-  { id: 14, label: '전북특별자치도 전주시 완산구 효자동' },
-  { id: 15, label: '전라남도 여수시 학동' },
-  { id: 16, label: '경상북도 포항시 북구 장성동' },
-  { id: 17, label: '경상남도 창원시 성산구 상남동' },
-  { id: 18, label: '제주특별자치도 제주시 노형동' },
-];
-
-export const DUMMY_COMPLEXES = [
-  { id: 1, region_id: 1, label: '래미안대치팰리스', address: '서울특별시 강남구 대치동 1027' },
-  { id: 2, region_id: 1, label: '대치아이파크', address: '서울특별시 강남구 대치동 950' },
-  { id: 3, region_id: 3, label: '해운대두산위브', address: '부산광역시 해운대구 우동 1514' },
-];
-
 /** API 마스터 (init 시 채움) */
 export const apiMasters = {
   regions: /** @type {Array<{id: number, label: string}>} */ ([]),

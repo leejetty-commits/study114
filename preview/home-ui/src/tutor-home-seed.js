@@ -51,11 +51,11 @@ export function readTutorHomeRegions() {
   return homeRegions;
 }
 
-/** 대표 활동지역 표시. 저장된 대표가 없으면 「서울시」. */
+/** 대표 활동지역 표시. 저장된 대표가 없으면 비운다. */
 export function tutorHomePrimaryLabel() {
   const slots = Array.isArray(homeRegions) ? homeRegions : [];
   const primary = slots.find((s) => s.primary && s.label) || null;
-  return String(primary?.label || '').trim() || '서울시';
+  return String(primary?.label || '').trim();
 }
 
 /** saved_regions[idx] 화면 라벨. 없거나 MOCK이면 빈 문자열. */

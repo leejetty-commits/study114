@@ -98,19 +98,8 @@ const SEED = [
       exposure_status: 'published',
       preferred_lesson_type: 'tutor',
       preferred_tutor_gender: 'female',
-      preferred_tutor_regions: [
-        { region_id: '1', region_label: '서울특별시', scope_type: 'city', is_primary: true },
-      ],
-      preferred_studyroom_regions: [
-        {
-          region_id: '1',
-          region_label: '서울특별시 강남구 대치동',
-          complex_id: 'c1',
-          complex_label: '은마아파트',
-          scope_type: 'dong',
-          is_primary: true,
-        },
-      ],
+      preferred_tutor_regions: [],
+      preferred_studyroom_regions: [],
       request_summary: '주 2회 수학 집중',
       request_summary_visibility: 'paid_only',
       published_at: new Date().toISOString(),
@@ -131,8 +120,6 @@ const SEED = [
       lesson_format: 'one_on_one',
       subject_label: '영어',
       preferred_studyroom_fee_amount: 380000,
-      // 레거시 seed 시뮬레이션: region_label만 → 공부방 축 1번에만 매핑
-      region_label: '서울특별시 강남구 대치동',
     },
     2,
   ),
@@ -147,17 +134,8 @@ const SEED = [
       exposure_status: 'hidden',
       preferred_lesson_type: 'tutor',
       preferred_tutor_gender: 'any',
-      preferred_tutor_regions: [
-        { region_id: '5', region_label: '부산광역시', scope_type: 'city', is_primary: true },
-      ],
-      preferred_studyroom_regions: [
-        {
-          region_id: '5',
-          region_label: '부산광역시 해운대구 우동',
-          scope_type: 'dong',
-          is_primary: true,
-        },
-      ],
+      preferred_tutor_regions: [],
+      preferred_studyroom_regions: [],
     },
     3,
   ),

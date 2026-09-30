@@ -268,11 +268,7 @@ function tutorRegionSlotsFromRecord(tutor) {
   const label = String(tutor.primary_region_label || tutor.location_label || '').trim();
   let regionId = tutor.primary_region_id || '';
   if (!regionId && label) {
-    const hit =
-      units.find((u) => u.label === label) ||
-      units.find((u) => `${u.sido_name} ${u.label}` === label) ||
-      units.find((u) => label.includes(u.label));
-    regionId = hit?.id || '';
+    regionId = units.find((u) => activityLabelFromRegionId(u.id, units) === label)?.id || '';
   }
   return [
     { region_id: regionId, scope_type: 'city', is_primary: true },
@@ -367,7 +363,7 @@ function renderBasicForm(tutor) {
     <form class="p19-form p21-inline-form" data-p21-form="basic" data-p21-tutor-id="${tutor.id}">
       ${renderFormSection(
         '기본정보 · 과외지역',
-        '표시명·주력과목과 과외지역(시 단위)을 한 화면에서 수정합니다. 광역시는 그 자체, 도는 시까지 선택합니다.',
+        '표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.',
         `
         <div class="register-grid-2">
           <div class="register-basic-col">
@@ -386,7 +382,7 @@ function renderBasicForm(tutor) {
           </div>
           <div class="register-basic-col" data-trc-field="primary_region">
             <p class="p19-field__label" style="margin:0 0 var(--space-2);">과외지역 ${reqMark()}</p>
-            <p class="p19-field__hint" style="margin-bottom:var(--space-3);">지역 1이 대표입니다. 지역 2·3은 선택입니다. 기본 단위는 「시」입니다.</p>
+            <p class="p19-field__hint" style="margin-bottom:var(--space-3);">지역 1이 대표입니다. 지역 2·3은 선택입니다. 구가 있는 곳은 구까지 고릅니다.</p>
             ${regionSlotsHtml}
           </div>
         </div>`,

@@ -11,6 +11,13 @@ import {
 import { getParentStudentProfilePath } from '../mypage/router.js';
 import { FORM_OPTIONS, studentToExposureRow } from './format.js';
 import { ensureHopeRegionMasters, getHopeRegionMasters, labelForRegionId, listAllComplexes, listCityOptions } from './hope-region-masters.js';
+import { renderRegionCascade, bindRegionCascades, REGION_LIST_ERROR } from '../../../shared/region-cascade.js';
+import {
+  ensureTutorCityUnits,
+  getTutorCityUnits,
+  tutorCityUnitsError,
+  tutorCityUnitsReady,
+} from '../tutor-reg/city-units.js';
 import { MAIN_SUBJECT_OPTIONS } from '../../../shared/main-subjects.js';
 import { cheonwonInputToWon, wonToCheonwonInput } from '../../../shared/fee-cheonwon.js';
 import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
@@ -231,7 +238,17 @@ function renderBasicForm(student) {
   }
   const schoolOptions = SCHOOL_LEVEL_FORM_OPTIONS;
   const grade = gradeOptionHtml(student.school_level || '', student.grade_level || '');
-  const tutorRegion = basicRegionOptions(student.preferred_tutor_region_id, student.region_label);
+  const tutorUnits = getTutorCityUnits();
+  const tutorRegionHtml = tutorCityUnitsReady()
+    ? renderRegionCascade({
+        idPrefix: `p19_tutor_region_${student.id}`,
+        units: tutorUnits,
+        regionId: student.preferred_tutor_region_id,
+        selectClass: 'p19-input p19-select',
+        hiddenName: 'preferred_tutor_region_id',
+      })
+    : `<p class="p19-field__hint">${esc(tutorCityUnitsError() || '지역 목록을 불러오는 중입니다.')}</p>
+       <input type="hidden" name="preferred_tutor_region_id" value="" />`;
   const studyRegion = basicRegionOptions(student.preferred_studyroom_region_id, student.region_label);
   const complexes = listAllComplexes().map((c) => ({
     value: String(c.id),
@@ -264,10 +281,10 @@ function renderBasicForm(student) {
           ${renderSelect('preferred_lesson_type', FORM_OPTIONS.lessonType, hope, { required: true })}
         </label>
         <div data-p19-hope-panel="tutor" ${hope === 'tutor' ? '' : 'hidden'}>
-          <label class="p19-field">
+          <div class="p19-field">
             <span class="p19-field__label">희망지역</span>
-            ${renderSelect('preferred_tutor_region_id', tutorRegion, student.preferred_tutor_region_id != null ? String(student.preferred_tutor_region_id) : '', { empty: true })}
-          </label>
+            ${tutorRegionHtml}
+          </div>
           <label class="p19-field">
             <span class="p19-field__label">예산 (천원)</span>
             ${renderTextInput('preferred_fee_amount', wonToCheonwonInput(student.preferred_fee_amount), { type: 'number', min: 0, step: 1 })}
@@ -445,6 +462,9 @@ function renderSettings(student) {
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindStudentRegEvents(root, rerender) {
   ensureHopeRegionMasters();
+  ensureTutorCityUnits().then((loaded) => {
+    if (loaded) rerender();
+  });
 
   root.querySelectorAll('[data-p19-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
@@ -506,6 +526,8 @@ export function bindStudentRegEvents(root, rerender) {
         gradeLevel.innerHTML = next.html;
       });
       syncBasic();
+      const tutorPanel = form.querySelector('[data-p19-hope-panel="tutor"]');
+      if (tutorPanel) bindRegionCascades(tutorPanel, getTutorCityUnits());
     }
 
     form.addEventListener('submit', async (e) => {
@@ -520,6 +542,19 @@ export function bindStudentRegEvents(root, rerender) {
           return;
         }
         patch = { memo_status: picked };
+      }
+      if (formKind === 'basic' && String(patch.preferred_lesson_type || '') !== 'study_room') {
+        if (!tutorCityUnitsReady()) {
+          alert(tutorCityUnitsError() || REGION_LIST_ERROR);
+          return;
+        }
+        const regionId = String(patch.preferred_tutor_region_id || '').trim();
+        const picker = form.querySelector('[data-p19-hope-panel="tutor"] [data-region-cascade]');
+        const started = Boolean(picker?.querySelector('[data-field="region_sido"]')?.value);
+        if (!/^\d+$/.test(regionId)) {
+          alert(started ? '희망지역을 끝까지 선택해 주세요.' : '희망지역을 선택해 주세요.');
+          return;
+        }
       }
       if (formKind === 'basic' && patch.lesson_format === 'one_on_one') {
         patch.preferred_student_count_group = 'solo';

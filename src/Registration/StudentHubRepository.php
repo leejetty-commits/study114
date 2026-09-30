@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Registration;
 
 use PDO;
+use Study114\Region\SidoRegionEnsure;
 
 /** 19장 P19 — students 등록 허브 */
 final class StudentHubRepository
@@ -166,7 +167,19 @@ final class StudentHubRepository
         if ($col === 'memo_status' && !in_array($value, ['open', 'paused'], true)) {
             throw new \InvalidArgumentException('memo_status: 값을 확인해 주세요.');
         }
-        if (in_array($col, ['preferred_tutor_region_id', 'preferred_studyroom_region_id', 'preferred_studyroom_complex_id'], true)) {
+        if ($col === 'preferred_tutor_region_id') {
+            if ($value === null) {
+                return null;
+            }
+            if (!is_int($value) && !(is_string($value) && preg_match('/^\d+$/', $value))) {
+                throw new \InvalidArgumentException('preferred_tutor_region_id: 값을 확인해 주세요.');
+            }
+            $regionId = (int) $value;
+            SidoRegionEnsure::assertSelectable($this->pdo, $regionId);
+
+            return $regionId;
+        }
+        if (in_array($col, ['preferred_studyroom_region_id', 'preferred_studyroom_complex_id'], true)) {
             if ($value === null) {
                 return null;
             }

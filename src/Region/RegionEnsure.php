@@ -162,6 +162,7 @@ final class RegionEnsure
             'SELECT id, sido_name, sigungu_name, dong_name, dong_code
              FROM regions
              WHERE is_active = 1
+               AND unit_level = \'dong\'
                AND dong_name = ?
                AND dong_name <> \'시 대표\'
                AND sido_name = ?
@@ -177,14 +178,15 @@ final class RegionEnsure
 
         if ($dongCode !== '') {
             $stmt = $pdo->prepare(
-                'SELECT id, sido_name, sigungu_name, dong_name, dong_code
+                'SELECT id, sido_name, sigungu_name, dong_name, dong_code, unit_level
                  FROM regions
                  WHERE dong_code = ? AND dong_name = ? AND is_active = 1
+                   AND unit_level = \'dong\' AND dong_name <> \'시 대표\'
                  LIMIT 1'
             );
             $stmt->execute([$dongCode, $dongName]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (is_array($row) && (string) ($row['dong_name'] ?? '') !== '시 대표') {
+            if (is_array($row) && (string) ($row['unit_level'] ?? '') === 'dong' && (string) ($row['dong_name'] ?? '') !== '시 대표') {
                 return self::hydrate($row);
             }
         }

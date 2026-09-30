@@ -10,6 +10,7 @@ final class AddressRegionMatch
 {
     public static function compactSido(string $value): string
     {
+        $value = RegionAlias::canonicalSido($value);
         $out = preg_replace('/특별자치시|특별자치도|특별시|광역시|자치도/u', '', $value) ?? $value;
         $out = preg_replace('/도$/u', '', $out) ?? $out;
 
@@ -34,18 +35,19 @@ final class AddressRegionMatch
         }
 
         $stmt = $pdo->prepare(
-            'SELECT id, sido_name, sigungu_name, dong_name
+            'SELECT id, sido_name, sigungu_name, dong_name, unit_level
              FROM regions
-             WHERE is_active = 1 AND dong_name = ?
+             WHERE is_active = 1 AND unit_level = \'dong\' AND dong_name <> \'시 대표\' AND dong_name = ?
              ORDER BY id ASC'
         );
         $stmt->execute([$dong]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         if ($rows === []) {
             $stmt = $pdo->prepare(
-                'SELECT id, sido_name, sigungu_name, dong_name
+                'SELECT id, sido_name, sigungu_name, dong_name, unit_level
                  FROM regions
-                 WHERE is_active = 1 AND (dong_name LIKE ? OR ? LIKE CONCAT(dong_name, "%"))
+                 WHERE is_active = 1 AND unit_level = \'dong\' AND dong_name <> \'시 대표\'
+                   AND (dong_name LIKE ? OR ? LIKE CONCAT(dong_name, "%"))
                  ORDER BY id ASC
                  LIMIT 20'
             );
@@ -57,7 +59,8 @@ final class AddressRegionMatch
         }
         $rows = array_values(array_filter(
             $rows,
-            static fn (array $row): bool => (string) ($row['dong_name'] ?? '') !== '시 대표'
+            static fn (array $row): bool => (string) ($row['unit_level'] ?? '') === 'dong'
+                && (string) ($row['dong_name'] ?? '') !== '시 대표'
         ));
         if ($rows === []) {
             return null;

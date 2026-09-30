@@ -16,11 +16,21 @@ final class AdminExposureRepository
     {
     }
 
+    /** 동 이름이 있으면 동, 없으면 시도+시·군(구). */
+    private function regionDisplayExpr(string $alias): string
+    {
+        return 'CASE
+            WHEN NULLIF(TRIM(' . $alias . '.dong_name), \'\') IS NOT NULL THEN ' . $alias . '.dong_name
+            ELSE TRIM(CONCAT_WS(\' \', NULLIF(TRIM(' . $alias . '.sido_name), \'\'), NULLIF(TRIM(' . $alias . '.sigungu_name), \'\')))
+        END';
+    }
+
     /** @return list<array<string, mixed>> */
     public function listStudyRooms(?string $status = null, ?int $userId = null): array
     {
+        $regionExpr = $this->regionDisplayExpr('r');
         $sql = 'SELECT id, user_id, study_room_name, profile_status, inquiry_status, published_at, updated_at,
-                       (SELECT r.dong_name
+                       (SELECT ' . $regionExpr . '
                           FROM study_room_regions srr
                           INNER JOIN regions r ON r.id = srr.region_id
                          WHERE srr.study_room_id = study_rooms.id
@@ -47,8 +57,9 @@ final class AdminExposureRepository
     /** @return list<array<string, mixed>> */
     public function listTutors(?string $status = null, ?int $userId = null): array
     {
+        $regionExpr = $this->regionDisplayExpr('r');
         $sql = 'SELECT id, user_id, tutor_display_name, profile_status, published_at, updated_at,
-                       (SELECT r.dong_name
+                       (SELECT ' . $regionExpr . '
                           FROM tutor_regions tr
                           INNER JOIN regions r ON r.id = tr.region_id
                          WHERE tr.tutor_id = tutors.id
@@ -73,11 +84,12 @@ final class AdminExposureRepository
     /** @return list<array<string, mixed>> */
     public function listStudents(?string $status = null, ?int $userId = null): array
     {
+        $regionExpr = $this->regionDisplayExpr('r');
         $sql = 'SELECT s.id, s.guardian_user_id, s.public_display_name, s.student_name,
                        s.exposure_status, s.updated_at,
                        COALESCE(
-                         (SELECT r.dong_name FROM regions r WHERE r.id = s.preferred_studyroom_region_id LIMIT 1),
-                         (SELECT r.dong_name FROM regions r WHERE r.id = s.preferred_tutor_region_id LIMIT 1),
+                         (SELECT ' . $regionExpr . ' FROM regions r WHERE r.id = s.preferred_studyroom_region_id LIMIT 1),
+                         (SELECT ' . $regionExpr . ' FROM regions r WHERE r.id = s.preferred_tutor_region_id LIMIT 1),
                          NULLIF(TRIM(s.preferred_region_note), \'\')
                        ) AS region_label
                 FROM students s
@@ -151,12 +163,13 @@ final class AdminExposureRepository
     /** @return array<string, mixed>|null */
     public function findStudent(int $id): ?array
     {
+        $regionExpr = $this->regionDisplayExpr('r');
         $stmt = $this->pdo->prepare(
             'SELECT s.id, s.guardian_user_id, s.public_display_name, s.student_name,
                     s.exposure_status, s.updated_at,
                     COALESCE(
-                      (SELECT r.dong_name FROM regions r WHERE r.id = s.preferred_studyroom_region_id LIMIT 1),
-                      (SELECT r.dong_name FROM regions r WHERE r.id = s.preferred_tutor_region_id LIMIT 1),
+                      (SELECT ' . $regionExpr . ' FROM regions r WHERE r.id = s.preferred_studyroom_region_id LIMIT 1),
+                      (SELECT ' . $regionExpr . ' FROM regions r WHERE r.id = s.preferred_tutor_region_id LIMIT 1),
                       NULLIF(TRIM(s.preferred_region_note), \'\')
                     ) AS region_label
              FROM students s

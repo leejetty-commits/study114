@@ -1,8 +1,4 @@
-import {
-  AUTH_UI_BASE,
-  GUEST_DEMO_REGION,
-  GUEST_DEMO_REGIONS_BY_AXIS,
-} from './data.js';
+import { AUTH_UI_BASE } from './data.js';
 import { SEARCH_UI_URL } from './nav-config.js';
 import {
   renderPrimeSlotGrid,
@@ -14,8 +10,8 @@ import { bindGuestListPagination } from './list-pagination.js';
 import { bindListSortControls } from '../../shared/list-sort.js';
 import { setGuestListPage } from './state.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from './section-headings.js';
-import { coordsFromLabel, toDisplayLabel } from '../../shared/location-display.js';
-import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
+import { loadGuestBaseline, readGuestBaseline, GUEST_PLACE_PROMPT } from '../../shared/location-display.js';
+import { bindStudyRoomMapSection, GUEST_MAP_CENTER } from '../../shared/naver-map.js';
 import { renderHomeMarketingBanner } from './home-marketing-banner.js';
 import { renderNeighborhoodGreetingRail } from './neighborhood-greeting-ui.js';
 import {
@@ -32,15 +28,15 @@ import { bindProtectedGuestActions, bindGuestEmptyCardLoginGate } from '../../sh
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
 
-/** REGION_COORDS 대치동. 라벨 매칭 실패 시에도 같은 중심 */
-const daechiCoords = coordsFromLabel(GUEST_DEMO_REGION.full);
-const GUEST_MAP_CENTER = {
-  lat: daechiCoords?.lat ?? 37.4946,
-  lng: daechiCoords?.lng ?? 127.0626,
-};
-/** 대치동 동네. 부산(약 320km) 등 타 지역 좌표는 핀에서 제외 */
+/** 게스트 지도 중심 반경. 중심 좌표는 naver-map.js GUEST_MAP_CENTER 한 곳. */
 const GUEST_MAP_RADIUS_KM = 2.2;
-const OTHER_DONG = /부산|센텀|해운대|우동|도곡|개포|역삼|서초|송파|잠실|논현|가능/;
+let guestHomeBaselineBooted = false;
+
+function guestAxisText(axis) {
+  const base = readGuestBaseline();
+  const label = axis === 'room' ? base.room : base.tutor;
+  return label || GUEST_PLACE_PROMPT;
+}
 
 function haversineKm(lat1, lng1, lat2, lng2) {
   const toRad = (d) => (d * Math.PI) / 180;
@@ -60,12 +56,7 @@ export function filterGuestDaechiMapItems(items) {
     const lat = Number(item?.latitude);
     const lng = Number(item?.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat === 0 || lng === 0) return false;
-    const label = String(item.location_label || item.region_label || '');
-    const near =
-      haversineKm(lat, lng, GUEST_MAP_CENTER.lat, GUEST_MAP_CENTER.lng) <= GUEST_MAP_RADIUS_KM;
-    if (/대치/.test(label)) return near;
-    if (OTHER_DONG.test(label)) return false;
-    return near;
+    return haversineKm(lat, lng, GUEST_MAP_CENTER.lat, GUEST_MAP_CENTER.lng) <= GUEST_MAP_RADIUS_KM;
   });
 }
 
@@ -79,19 +70,25 @@ export function renderGuestTempNotice() {
 }
 
 export function renderGuestHero() {
-  const r = GUEST_DEMO_REGION;
+  const room = readGuestBaseline().room;
+  const tutor = readGuestBaseline().tutor;
+  const dong = room || GUEST_PLACE_PROMPT;
+  const sub = tutor
+    ? `${tutor} · 우리동네 공부방·과외를 쪽지로 연결하세요`
+    : '우리동네 공부방·과외를 쪽지로 연결하세요';
+  const cta = room ? `${room} 공부방·과외쌤 찾기` : '공부방·과외쌤 찾기';
   return `
-    <section class="hero-map hero-map--float-rail" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${r.full}" data-map-lat="${GUEST_MAP_CENTER.lat}" data-map-lng="${GUEST_MAP_CENTER.lng}" data-fit-bounds="false" data-allow-fallback="true">
+    <section class="hero-map hero-map--float-rail" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${room}" data-map-lat="${GUEST_MAP_CENTER.lat}" data-map-lng="${GUEST_MAP_CENTER.lng}" data-fit-bounds="false" data-allow-fallback="true">
       <div class="hero-map__canvas">
-        <div class="hero-map__surface hero-map__surface--naver" aria-label="${r.gu} ${r.dong} 공부방 지도">
+        <div class="hero-map__surface hero-map__surface--naver" aria-label="${dong} 공부방 지도">
           <div class="naver-map-mount-host" data-naver-map-mount></div>
         </div>
       </div>
       <aside class="hero-map__banner" aria-label="지역 요약">
-        <h1 class="hero-map__dong">${r.dong}</h1>
-        <p class="hero-map__sub">${r.gu} · 우리동네 공부방·과외를 쪽지로 연결하세요</p>
+        <h1 class="hero-map__dong">${dong}</h1>
+        <p class="hero-map__sub">${sub}</p>
         <a href="${SEARCH_UI_URL}" class="btn btn--primary hero-map__cta" data-util-href="${SEARCH_UI_URL}">
-          ${r.dong} 공부방·과외쌤 찾기
+          ${cta}
         </a>
         <dl class="hero-map__stats">
           <div><dt>공부방</dt><dd data-guest-axis-count="studyRooms">—</dd></div>
@@ -111,7 +108,7 @@ function renderStudyRoomPrimePick() {
   const pool = getHomeBasicPool('study_room');
   const guestOpts = { guest: true, vacantSamples: true };
   const occupied = getPrimeOccupied(pool);
-  const roomLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.room.full, 'room');
+  const roomLabel = guestAxisText('room');
   return `
     <div class="content-section content-section--orange">
       ${renderSectionHeading({ ...SECTION_HEADINGS.primeStudyRoom, id: 'guest-prime-room', locationLabel: roomLabel })}
@@ -126,7 +123,7 @@ function renderStudyRoomPrimePick() {
 }
 
 function renderStudyRoomBasicList() {
-  const roomLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.room.full, 'room');
+  const roomLabel = guestAxisText('room');
   return renderGuestPaginatedListBlock(
     'study_room',
     'study_room',
@@ -144,7 +141,7 @@ function renderTutorPrimePick() {
   const pool = getHomeBasicPool('tutor');
   const guestOpts = { guest: true };
   const occupied = guestPaid(pool, 'prime');
-  const tutorRegion = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.tutor.full, 'tutor');
+  const tutorRegion = guestAxisText('tutor');
   return `
     <div class="content-section content-section--blue">
       ${renderSectionHeading({ ...SECTION_HEADINGS.primeTutor, id: 'guest-prime-tutor', locationLabel: tutorRegion })}
@@ -160,7 +157,7 @@ function renderTutorPrimePick() {
 }
 
 function renderTutorBasicList() {
-  const tutorLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.tutor.full, 'tutor');
+  const tutorLabel = guestAxisText('tutor');
   const occupied = guestPaid(getHomeBasicPool('tutor'), 'prime');
   return renderGuestPaginatedListBlock(
     'tutor',
@@ -178,9 +175,9 @@ export function renderGuestExposureBoxes() {
 
 /** 박스 아래: 우동공과 공부방 → 과외쌤 → 학생(후반) — 축별 기본 지역 라벨 */
 export function renderGuestBrowseLists() {
-  const roomLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.room.full, 'room');
-  const tutorLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.tutor.full, 'tutor');
-  const studentLabel = toDisplayLabel(GUEST_DEMO_REGIONS_BY_AXIS.student.full, 'tutor');
+  const roomLabel = guestAxisText('room');
+  const tutorLabel = guestAxisText('tutor');
+  const studentLabel = guestAxisText('tutor');
   const live = isHomeBasicLive();
   const guest = !isLoggedIn();
   const rooms = getHomeBasicPool('study_room');
@@ -264,6 +261,12 @@ export async function hydrateGuestRegionStats(root) {
 }
 
 export function bindGuestSectionEvents(root, rerender) {
+  if (rerender && !guestHomeBaselineBooted) {
+    guestHomeBaselineBooted = true;
+    loadGuestBaseline().then((base) => {
+      if (base.room || base.tutor) rerender();
+    });
+  }
   if (rerender) bindGuestListPagination(root, rerender);
   if (rerender) {
     bindListSortControls(root, rerender, {
@@ -285,7 +288,7 @@ export function bindGuestSectionEvents(root, rerender) {
   }
 
   bindStudyRoomMapSection(root, guestHeroMapItems(), {
-    regionLabel: GUEST_DEMO_REGION.full,
+    regionLabel: readGuestBaseline().room || '',
     lat: GUEST_MAP_CENTER.lat,
     lng: GUEST_MAP_CENTER.lng,
     fitBounds: false,

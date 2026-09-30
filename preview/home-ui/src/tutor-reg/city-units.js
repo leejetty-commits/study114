@@ -1,8 +1,9 @@
 /**
- * 마이페이지 과외지역 — DB cities 마스터 (tutor-ui getCities와 동일 축)
- * getCityUnits([]) 정적 id(metro-11)는 저장 시 int 캐스팅되어 지역이 비워진다.
+ * 마이페이지 과외·학생 희망지역 — /api/auth/regions.php?action=cities
+ * 실패·빈 목록이면 정적 목록으로 대체하지 않는다.
  */
 
+import { REGION_LIST_ERROR } from '../../../shared/region-cascade.js';
 import { getCityUnits } from '../../../shared/tutor-region-slots.js';
 
 /** @type {Array<{id: string, label: string, sido_code?: string, sido_name?: string, kind?: string}>} */
@@ -34,17 +35,11 @@ export function retryTutorCityUnits() {
 
 function applyCities(list) {
   if (!Array.isArray(list) || !list.length) return false;
-  cities = list.map((c) => ({
-    id: String(c.id),
-    label: String(c.label || ''),
-    sido_code: c.sido_code != null ? String(c.sido_code) : '',
-    sido_name: String(c.sido_name || c.label || ''),
-    kind: c.kind === 'metro' || c.kind === 'city' ? c.kind : undefined,
-  }));
-  if (!getTutorCityUnits().length) {
+  if (!getCityUnits(list).length) {
     cities = [];
     return false;
   }
+  cities = list;
   return true;
 }
 
@@ -82,7 +77,7 @@ async function fetchCitiesOnce() {
         body: JSON.stringify({ action: 'list' }),
       }),
   ];
-  let last = new Error('과외지역 목록을 불러오지 못했습니다.');
+  let last = new Error(REGION_LIST_ERROR);
   for (const call of calls) {
     try {
       const res = await call();
@@ -92,7 +87,7 @@ async function fetchCitiesOnce() {
         lastError = '';
         return;
       }
-      last = new Error(data?.message || '과외지역 목록을 불러오지 못했습니다.');
+      last = new Error(data?.message || REGION_LIST_ERROR);
     } catch (err) {
       last = err instanceof Error ? err : last;
     }
@@ -115,7 +110,7 @@ export function ensureTutorCityUnits() {
         await new Promise((r) => setTimeout(r, 350 * (i + 1)));
       }
     }
-    lastError = last instanceof Error ? last.message : '과외지역 목록을 불러오지 못했습니다.';
+    lastError = last instanceof Error ? last.message : REGION_LIST_ERROR;
     return false;
   })().finally(() => {
     loadPromise = null;

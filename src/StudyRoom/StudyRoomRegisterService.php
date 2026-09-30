@@ -46,7 +46,7 @@ final class StudyRoomRegisterService
                 'SELECT id, sido_name, sigungu_name, dong_name,
                         CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
                  FROM regions
-                 WHERE is_active = 1 AND dong_name <> \'시 대표\'
+                 WHERE is_active = 1 AND unit_level = \'dong\' AND dong_name <> \'시 대표\'
                  ORDER BY id ASC'
             )->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Throwable $e) {

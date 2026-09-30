@@ -95,9 +95,8 @@ export function bootStudyRoomStudentDemand(rerender) {
   studentBoot = (async () => {
     /** @type {Record<string, string>} */
     const filters = { preferred_lesson_type: 'study_room' };
-    if (regionId) filters.preferred_region = regionId;
-    else if (promo) filters.preferred_region_label = promo;
-    if (!filters.preferred_region && !filters.preferred_region_label) {
+    if (regionId) filters.preferred_studyroom_region_id = regionId;
+    if (!filters.preferred_studyroom_region_id) {
       studentLive = [];
     } else {
       try {

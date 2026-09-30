@@ -47,7 +47,7 @@ import { bootStudyRoomHome, bootStudyRoomStudentDemand } from '@home-ui/study-ro
 import { renderBrowseList } from '@home-ui/exposure-render.js';
 import { getStudentDemandForRegion } from '../search-region-feed.js';
 import { renderListSortSelect } from '../../../shared/list-sort.js';
-import { placeCaption } from '../../../shared/location-display.js';
+import { placeCaption, readGuestBaseline, GUEST_PLACE_PROMPT } from '../../../shared/location-display.js';
 
 /**
  * 찾기 페이지 바디 탭·역할 셀렉트 제거 — 이동은 GNB만.
@@ -76,13 +76,22 @@ function syncHomeSubscription() {
 }
 
 function visibleCurrentPlace(tab, role, regionLabel) {
-  if (role === 'guest') return tab === 'room' ? '대치동' : '서울시';
+  if (role === 'guest') {
+    const base = readGuestBaseline();
+    const studyRoom =
+      tab === 'room' || (tab === 'student' && previewState.studentHopeType === 'study_room');
+    return (studyRoom ? base.room : base.tutor) || GUEST_PLACE_PROMPT;
+  }
   if (tab === 'student' && role === 'study_room') {
     return studentCurrentPlace(regionLabel) || placeCaption(regionLabel, 'room') || '';
   }
   if (tab === 'student' && role === 'tutor') {
     const saved = tutorRepresentativeRegionLabel();
     return placeCaption(saved || regionLabel, 'tutor') || '';
+  }
+  if (tab === 'student') {
+    const axis = previewState.studentHopeType === 'study_room' ? 'room' : 'tutor';
+    return placeCaption(regionLabel, axis) || '';
   }
   if (tab === 'room') return placeCaption(regionLabel, 'room') || '';
   return placeCaption(regionLabel, 'tutor') || '';

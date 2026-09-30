@@ -1,7 +1,7 @@
 import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isGuideRoute, isCommunityRoute, isPromoRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, isMyshopRoute, isRegisterIntroRoute, getRegisterIntroKind, navigateToGuide, navigateToSupport } from './state.js';
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
-import { REGIONS } from './data.js';
+import { readGuestBaseline, GUEST_PLACE_PROMPT } from '../../shared/location-display.js';
 import { GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVisible, canAccessPlansHub, resolveUtilMenuItems } from './nav-config.js';
 import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
 import { getAuthUser, isLoggedIn, isAdminUser, isEmailVerified, devLoginAs, logout } from './auth-session.js';
@@ -81,7 +81,7 @@ export function renderPreviewToolbar() {
         <span class="preview-toolbar__divider"></span>
         ${
           isGuest
-            ? `<span class="preview-toolbar__hint">비회원: 대치동 고정</span>`
+            ? `<span class="preview-toolbar__hint">비회원: ${readGuestBaseline().room || GUEST_PLACE_PROMPT}</span>`
             : `<button type="button" class="preview-toolbar__btn ${region === 'complex' ? 'is-active' : ''}" data-region="complex" title="미리보기: 아파트단지 기준 지역">단지 기준</button>
                <button type="button" class="preview-toolbar__btn ${region === 'dong' ? 'is-active' : ''}" data-region="dong" title="미리보기: 행정동 기준 지역">행정동 기준</button>`
         }
@@ -262,13 +262,11 @@ export function renderFooter() {
 }
 
 export function renderRegionBar(showSearch = true) {
-  const region = REGIONS[previewState.regionKey];
+  const label = readGuestBaseline().room || GUEST_PLACE_PROMPT;
   return `
     <div class="region-bar">
       <div>
-        <div class="region-bar__title">${region.label}</div>
-        <div class="region-bar__meta">${region.sub}</div>
-        <span class="region-bar__policy">${region.policy}</span>
+        <div class="region-bar__title">${label}</div>
       </div>
       ${
         showSearch
@@ -354,7 +352,7 @@ export function renderBottomList(title, items) {
 export function renderMapBlock() {
   return `
     <div class="map-block">
-      <div class="map-block__head">📍 공부방 지도 · ${REGIONS[previewState.regionKey].label}</div>
+      <div class="map-block__head">📍 공부방 지도 · ${readGuestBaseline().room || GUEST_PLACE_PROMPT}</div>
       <div class="map-block__body">
         <span>[프리뷰] 공부방 지도 영역</span>
         <span class="map-block__pin"></span>

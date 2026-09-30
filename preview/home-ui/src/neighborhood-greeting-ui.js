@@ -12,7 +12,7 @@ import {
   unpublishGreeting,
 } from '../../shared/neighborhood-greeting-store.js';
 import { getAuthUser, isLoggedIn } from './auth-session.js';
-import { GUEST_DEMO_REGION } from './data.js';
+import { readGuestBaseline } from '../../shared/location-display.js';
 import { openDetailModal, resolveDetailItem } from './detail-decision/index.js';
 import { primarySavedRegion, studyRoomPromo1Label } from './study-room-home-seed.js';
 import { getStudyRooms } from './study-room-reg/store.js';
@@ -95,7 +95,7 @@ function studyRoomAreaLabels() {
  * @param {'guest'|'parent'|'study_room'|'tutor'} viewer
  */
 export function viewerNeighborhood(viewer) {
-  if (viewer === 'guest') return GUEST_DEMO_REGION.dong;
+  if (viewer === 'guest') return readGuestBaseline().room || '';
   const labels =
     viewer === 'parent' ? parentHopeLabels() : viewer === 'tutor' ? tutorActivityLabels() : viewer === 'study_room' ? studyRoomAreaLabels() : [];
   return labels[0] || '';
@@ -103,7 +103,10 @@ export function viewerNeighborhood(viewer) {
 
 /** @param {'guest'|'parent'|'study_room'|'tutor'} viewer @returns {string[]} */
 function viewerAreas(viewer) {
-  if (viewer === 'guest') return [GUEST_DEMO_REGION.dong];
+  if (viewer === 'guest') {
+    const room = readGuestBaseline().room;
+    return room ? [room] : [];
+  }
   if (viewer === 'parent') return parentHopeLabels();
   if (viewer === 'tutor') return tutorActivityLabels();
   if (viewer === 'study_room') return studyRoomAreaLabels();

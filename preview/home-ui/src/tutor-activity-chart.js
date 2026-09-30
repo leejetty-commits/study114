@@ -1,6 +1,6 @@
 /**
  * 과외쌤 홈 활동지역 분포.
- * 집계: 검색 노출 카드 total. 과외쌤=tutor_region_label, 학생수요=preferred_region_label. 키=활동지역 시·군 라벨.
+ * 집계: 검색 노출 카드 total. 과외쌤=tutor_region_id, 학생수요=preferred_region_id.
  */
 
 import { searchApi } from '@search-ui/search-api.js';
@@ -14,7 +14,7 @@ function esc(s) {
 }
 
 /**
- * @typedef {{ index: number, label: string, primary: boolean, tutorCount: number, studentCount: number }} ActivityRow
+ * @typedef {{ index: number, label: string, regionId: string, primary: boolean, tutorCount: number|null, studentCount: number|null }} ActivityRow
  */
 
 /** @type {ActivityRow[]} */
@@ -29,24 +29,26 @@ function citySlots() {
     .map((slot, index) => ({
       index,
       label: String(slot?.label || '').trim(),
+      regionId: String(slot?.regionId || '').trim(),
       primary: !!slot?.primary && !!String(slot?.label || '').trim(),
     }))
-    .filter((slot) => slot.label);
+    .filter((slot) => slot.label || slot.regionId);
 }
 
 function slotKey(slots) {
-  return slots.map((slot) => `${slot.index}:${slot.label}:${slot.primary ? 1 : 0}`).join('|');
+  return slots.map((slot) => `${slot.index}:${slot.regionId}:${slot.label}:${slot.primary ? 1 : 0}`).join('|');
 }
 
-/** @param {'tutor'|'student'} tab @param {string} cityLabel */
-async function countExposedCards(tab, cityLabel) {
+/** 선택 단위 id가 아니면 null. 숫자를 만들지 않는다. @param {'tutor'|'student'} tab @param {string} regionId */
+async function countExposedCards(tab, regionId) {
+  if (!/^\d+$/.test(regionId)) return null;
   const filters =
     tab === 'tutor'
-      ? { tutor_region_label: cityLabel }
-      : { preferred_region_label: cityLabel };
+      ? { tutor_region_id: regionId }
+      : { preferred_region_id: regionId };
   const data = await searchApi(tab, filters, { page: 1, limit: 1 });
   const total = Number(data.total);
-  return Number.isFinite(total) && total > 0 ? total : 0;
+  return Number.isFinite(total) && total >= 0 ? total : null;
 }
 
 /**
@@ -61,16 +63,16 @@ export function bootTutorActivityCounts(rerender) {
     /** @type {ActivityRow[]} */
     const next = [];
     for (const slot of slots) {
-      let tutorCount = 0;
-      let studentCount = 0;
+      let tutorCount = null;
+      let studentCount = null;
       try {
         [tutorCount, studentCount] = await Promise.all([
-          countExposedCards('tutor', slot.label),
-          countExposedCards('student', slot.label),
+          countExposedCards('tutor', slot.regionId),
+          countExposedCards('student', slot.regionId),
         ]);
       } catch {
-        tutorCount = 0;
-        studentCount = 0;
+        tutorCount = null;
+        studentCount = null;
       }
       next.push({
         index: slot.index,
@@ -96,19 +98,21 @@ export function renderTutorActivityBars(opts = {}) {
   const key = slotKey(slots);
   const pending = key !== readyKey;
   const source = pending
-    ? slots.map((slot) => ({ ...slot, tutorCount: 0, studentCount: 0 }))
+    ? slots.map((slot) => ({ ...slot, tutorCount: null, studentCount: null }))
     : rows;
   const maxVal = Math.max(
     1,
-    ...source.flatMap((row) => [row.tutorCount, row.studentCount]),
+    ...source.flatMap((row) => [row.tutorCount || 0, row.studentCount || 0]),
   );
 
   const body = source
     .map((row) => {
-      const tPct = pending ? 0 : Math.round((row.tutorCount / maxVal) * 100);
-      const sPct = pending ? 0 : Math.round((row.studentCount / maxVal) * 100);
-      const tutorText = pending ? '…' : String(row.tutorCount);
-      const studentText = pending ? '…' : String(row.studentCount);
+      const tutorKnown = !pending && row.tutorCount != null;
+      const studentKnown = !pending && row.studentCount != null;
+      const tPct = tutorKnown ? Math.round((row.tutorCount / maxVal) * 100) : 0;
+      const sPct = studentKnown ? Math.round((row.studentCount / maxVal) * 100) : 0;
+      const tutorText = pending ? '…' : tutorKnown ? String(row.tutorCount) : '—';
+      const studentText = pending ? '…' : studentKnown ? String(row.studentCount) : '—';
       return `
       <div class="act-bars__row" role="listitem">
         <span class="act-bars__region">${esc(row.label)}${row.primary ? '<em>대표</em>' : ''}</span>

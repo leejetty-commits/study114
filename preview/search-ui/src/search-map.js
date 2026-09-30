@@ -8,9 +8,8 @@
  * - center: CanonicalLocation lat/lng 우선
  */
 
-import { MOCK_REGIONS } from './search-schema.js';
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
-import { normalizeLocation, logLocationDebug } from '../../shared/location-display.js';
+import { normalizeLocation, logLocationDebug, GUEST_PLACE_PROMPT } from '../../shared/location-display.js';
 import { peekStudyRoomPromo1 } from '@home-ui/study-room-home-seed.js';
 import { getBasicPool, getPrimeOccupied } from '@home-ui/exposure-render.js';
 import { readListSortFromHash, sortListItems } from '../../shared/list-sort.js';
@@ -27,7 +26,7 @@ function parseRegionParts(regionLabel, coords = {}) {
     { raw: regionLabel, lat: coords.lat, lng: coords.lng },
     'room',
   );
-  const dong = canonical.dong || canonical.apartmentName || '우리동네';
+  const dong = canonical.dong || canonical.apartmentName || '';
   return {
     city: canonical.city,
     gu: canonical.district,
@@ -106,7 +105,7 @@ function renderFloatMap(parts, items, ctx) {
         </div>
       </div>
       <aside class="hero-map__banner" aria-label="지역 요약">
-        <h2 class="hero-map__dong">${esc(parts.dong)}</h2>
+        <h2 class="hero-map__dong">${esc(parts.dong || GUEST_PLACE_PROMPT)}</h2>
         <p class="hero-map__sub">${esc(sub)}</p>
         ${statsHtml}
         ${hint ? `<p class="hero-map__hint">${esc(hint)}</p>` : ''}
@@ -123,7 +122,7 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
   const providerHome = options.providerHome === true;
   const requested = String(options.regionLabel || '').trim();
   const promo = providerHome ? peekStudyRoomPromo1() : '';
-  const region = providerHome ? requested || promo : requested || MOCK_REGIONS.room;
+  const region = providerHome ? requested || promo : requested;
   const parts = parseRegionParts(region, { lat: options.lat, lng: options.lng });
   const items = Array.isArray(activeResultItems) ? activeResultItems : [];
   const resultSource = options.resultSource || (searched ? 'search' : 'region');

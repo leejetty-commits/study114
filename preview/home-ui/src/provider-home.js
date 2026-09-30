@@ -182,7 +182,7 @@ function escSnap(value) {
 }
 
 function tutorPrimaryPlace() {
-  return tutorHomePrimaryLabel() || '서울시';
+  return tutorHomePrimaryLabel();
 }
 
 function renderStudentDemandSnapshot(role = 'study_room') {

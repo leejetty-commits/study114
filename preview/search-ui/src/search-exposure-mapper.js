@@ -27,11 +27,17 @@ export function resolveExposureTier(item, _index = 0) {
   return 'basic';
 }
 
-/** @param {import('./state.js').SearchTab} tab @param {unknown} raw */
-function normalizeApiRegionLabel(tab, raw) {
-  const axis = axisFromSearchTab(tab);
+/** @param {import('./state.js').SearchTab} tab @param {unknown} raw @param {Record<string, unknown>} [apiItem] */
+function normalizeApiRegionLabel(tab, raw, apiItem) {
+  const hope =
+    apiItem?.preferred_lesson_type === 'study_room'
+      ? 'study_room'
+      : apiItem?.preferred_lesson_type === 'tutor'
+        ? 'tutor'
+        : null;
+  const axis = tab === 'student' ? axisFromSearchTab(tab, hope || 'tutor') : axisFromSearchTab(tab);
   const label = toDisplayLabel(String(raw || ''), axis);
-  logLocationDebug('api-normalize', { tab, axis, raw, display: label });
+  logLocationDebug('api-normalize', { tab, axis, hope, raw, display: label });
   return label;
 }
 
@@ -55,7 +61,7 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       ...base,
       id,
       study_room_name: String(apiItem.title || base.study_room_name),
-      location_label: normalizeApiRegionLabel(tab, apiItem.region_label || base.location_label),
+      location_label: normalizeApiRegionLabel(tab, apiItem.region_label || '', apiItem),
       price_amount: apiItem.price_amount ?? base.price_amount,
       main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,
       grade_band: apiItem.grade_band || base.grade_band,
@@ -76,8 +82,8 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       detail_completion_status: apiItem.detail_completion_status || base.detail_completion_status,
       prime_eligible: apiItem.prime_eligible ?? base.prime_eligible,
       position_sku: paidPositionSku(apiItem) || null,
-      latitude: apiItem.latitude ?? base.latitude ?? null,
-      longitude: apiItem.longitude ?? base.longitude ?? null,
+      latitude: apiItem.latitude ?? null,
+      longitude: apiItem.longitude ?? null,
       profile_status: 'published',
       compare_eligible: apiItem.compare_eligible !== false,
       published_at: apiItem.published_at ?? base.published_at ?? base.registered_at,
@@ -106,7 +112,7 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       ...base,
       id,
       tutor_display_name: String(apiItem.title || base.tutor_display_name),
-      location_label: normalizeApiRegionLabel(tab, apiItem.region_label || base.location_label),
+      location_label: normalizeApiRegionLabel(tab, apiItem.region_label || '', apiItem),
       preferred_fee_amount: apiItem.preferred_fee_amount ?? apiItem.price_amount ?? base.preferred_fee_amount,
       main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,
       intro_short: apiItem.intro_short || summaryLines[1] || base.intro_short,
@@ -141,7 +147,7 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
     grade_level: String(apiItem.grade_level || base.grade_level),
     gender: apiItem.gender || base.gender,
     subject_label: apiItem.subject_name || summaryParts[0] || base.subject_label,
-    location_label: normalizeApiRegionLabel(tab, apiItem.region_label || base.location_label),
+    location_label: normalizeApiRegionLabel(tab, apiItem.region_label || '', apiItem),
     lesson_format: apiItem.lesson_format || base.lesson_format,
     student_gender_group: apiItem.student_gender_group || base.student_gender_group,
     preferred_student_count_group:

@@ -121,9 +121,7 @@ export const apiMasters = {
 };
 
 export function getRegions() {
-  return apiMasters.regions.length
-    ? apiMasters.regions
-    : [{ id: 1, label: '서울특별시 강남구 대치동' }];
+  return apiMasters.regions.length ? apiMasters.regions : [];
 }
 
 export function getCities() {

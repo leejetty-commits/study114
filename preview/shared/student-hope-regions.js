@@ -40,14 +40,9 @@ export function normalizeHopeSlots(saved, count = 3) {
   }));
 }
 
-/** @param {string} label */
+/** 과외 희망지역 라벨. 시·구까지 포함한 문장을 그대로 둔다. */
 export function cityLabelFromRegionLabel(label) {
-  const first = String(label || '')
-    .trim()
-    .split(/\s+/)[0];
-  if (!first) return '';
-  // 표시는 「서울시」형으로 통일 가능하나, 마스터는 서울특별시 등 — 원문 시·도 유지
-  return first;
+  return String(label || '').trim();
 }
 
 /**

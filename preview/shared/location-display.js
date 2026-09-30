@@ -28,24 +28,12 @@
  * @property {LocationSource} [source]
  */
 
-/** @type {Array<{ test: RegExp, lat: number, lng: number, label: string, city?: string, dong?: string }>} */
-const REGION_COORDS = [
-  { test: /대치/, lat: 37.4946, lng: 127.0626, label: '서울 강남구 대치동', city: '서울', dong: '대치동' },
-  { test: /도곡/, lat: 37.4882, lng: 127.0465, label: '서울 강남구 도곡동', city: '서울', dong: '도곡동' },
-  { test: /개포/, lat: 37.4892, lng: 127.0661, label: '서울 강남구 개포동', city: '서울', dong: '개포동' },
-  { test: /역삼/, lat: 37.5007, lng: 127.0365, label: '서울 강남구 역삼동', city: '서울', dong: '역삼동' },
-  { test: /서초/, lat: 37.4837, lng: 127.0324, label: '서울 서초구', city: '서울', dong: '' },
-  { test: /송파|잠실/, lat: 37.5145, lng: 127.1059, label: '서울 송파구', city: '서울', dong: '' },
-  { test: /센텀/, lat: 35.1695, lng: 129.131, label: '부산 해운대구 센텀동', city: '부산', dong: '센텀동' },
-  { test: /해운대/, lat: 35.1631, lng: 129.1634, label: '부산 해운대구', city: '부산', dong: '' },
-  { test: /강남/, lat: 37.4979, lng: 127.0276, label: '서울 강남구', city: '서울', dong: '' },
-  { test: /서울/, lat: 37.5665, lng: 126.978, label: '서울시', city: '서울시', dong: '' },
-  { test: /부산/, lat: 35.1796, lng: 129.0756, label: '부산시', city: '부산시', dong: '' },
-];
-
 const CITY_SUFFIX = /(특별자치시|특별시|광역시|특별자치도|자치도|시|도)$/;
 
-/** 시·군·동 없이 광역만 있는 표기. 「서울시」는 시 단위라 여기 넣지 않는다. */
+/**
+ * GPS로 받은 넓은 지역 이름을 구 이름으로 쓰지 않기 위한 집합.
+ * 회원이 저장한 광역 이름(예: 서울특별시) 표시에는 쓰지 않는다.
+ */
 const BROAD_REGION_ONLY = new Set([
   '서울',
   '서울특별시',
@@ -93,11 +81,19 @@ function isBroadRegionOnly(token) {
   return /도$/.test(text) && !/시$/.test(text);
 }
 
-/** 시 또는 군. 광역 단독(경기도·서울)은 제외. */
-function isSiOrGun(token) {
+/** GPS가 구 없이 광역·광역시 줄임만 준 경우. 저장값 표시에는 쓰지 않는다. */
+function isGpsBroadToken(token) {
   const text = blank(token).replace(/\s+/g, '');
-  if (!text || isBroadRegionOnly(text)) return false;
-  return /시$/.test(text) || /군$/.test(text);
+  if (!text || isBroadRegionOnly(text)) return Boolean(text);
+  return (
+    text === '서울시' ||
+    text === '부산시' ||
+    text === '대구시' ||
+    text === '인천시' ||
+    text === '광주시' ||
+    text === '대전시' ||
+    text === '울산시'
+  );
 }
 
 /** @param {unknown} value */
@@ -139,6 +135,9 @@ function parseKoreanAddressParts(raw) {
     if (/동$/.test(only)) {
       return { province: '', city: '', district: '', dong: only, apartmentName: '' };
     }
+    if (/구$/.test(only)) {
+      return { province: '', city: '', district: only, dong: '', apartmentName: '' };
+    }
     if (isBroadRegionOnly(only)) {
       return { province: only, city: '', district: '', dong: '', apartmentName: '' };
     }
@@ -156,11 +155,17 @@ function parseKoreanAddressParts(raw) {
       apartmentName: '',
     };
   }
+  const guTail = [];
+  const dongTail = [];
+  for (const token of parts.slice(2)) {
+    if (/구$/.test(token) && !/동$/.test(token)) guTail.push(token);
+    else dongTail.push(token);
+  }
   return {
     province: '',
     city: parts[0],
-    district: parts[1],
-    dong: parts.slice(2).join(' '),
+    district: [parts[1], ...guTail].join(' '),
+    dong: dongTail.join(' '),
     apartmentName: '',
   };
 }
@@ -253,6 +258,31 @@ function dedupeAddressTokens(text) {
 }
 
 /**
+ * 과외 축 표시. 시도·시·군·구를 유지하고 동은 뺀다.
+ * GPS이고 토큰이 전부 광역이면 빈 값. 저장값은 광역 이름만 있어도 그대로 둔다.
+ * @param {Partial<CanonicalLocation>} loc
+ */
+function tutorAxisLabel(loc) {
+  const tokens = [];
+  const push = (value) => {
+    for (const token of blank(value).split(/\s+/)) {
+      if (!token || tokens.includes(token)) continue;
+      if (/동$/.test(token) && !/구$/.test(token)) continue;
+      tokens.push(token);
+    }
+  };
+  push(loc.province);
+  push(loc.city);
+  push(loc.district);
+  push(loc.dong);
+  if (!tokens.length) push(loc.raw || loc.displayLabel);
+  if (loc.source === 'gps' && tokens.length > 0 && tokens.every((token) => isGpsBroadToken(token))) {
+    return '';
+  }
+  return tokens.join(' ');
+}
+
+/**
  * @param {CanonicalLocation|Partial<CanonicalLocation>|string} loc
  * @param {LocationAxis} [axis]
  */
@@ -267,13 +297,7 @@ export function formatLocationDisplay(loc, axis = 'room') {
   const raw = blank(loc.raw || loc.displayLabel);
 
   if (axis === 'tutor') {
-    const tokens = [];
-    for (const part of [city, district, dong, raw]) {
-      for (const token of blank(part).split(/\s+/)) {
-        if (token) tokens.push(token);
-      }
-    }
-    return tokens.find((token) => isSiOrGun(token)) || '';
+    return tutorAxisLabel(loc);
   }
 
   if (apartmentName && !isBroadRegionOnly(apartmentName)) {
@@ -306,61 +330,20 @@ export function placeCaption(loc, axis = 'room') {
   return '';
 }
 
-/** @param {string} label */
-export function coordsFromLabel(label) {
-  const text = blank(label);
-  if (!text) return null;
-  for (const row of REGION_COORDS) {
-    if (row.test.test(text)) {
-      return { lat: row.lat, lng: row.lng, matchedLabel: row.label };
-    }
-  }
+/** 지역 이름만으로 좌표를 만들지 않는다. regions 에 좌표가 없다. */
+export function coordsFromLabel() {
   return null;
 }
 
 /**
- * @param {number} lat
- * @param {number} lng
- */
-function haversineKm(lat1, lng1, lat2, lng2) {
-  const toRad = (d) => (d * Math.PI) / 180;
-  const R = 6371;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
-/**
- * GPS 좌표 → 가장 가까운 시드 지역 (역지오코딩 실패 시 fallback)
+ * 역지오코딩이 실패하면 좌표만 남기고 지역 이름은 비운다.
  * @param {number} lat
  * @param {number} lng
  * @param {LocationAxis} [axis]
  * @returns {CanonicalLocation}
  */
 export function nearestRegionByCoords(lat, lng, axis = 'room') {
-  let best = REGION_COORDS[0];
-  let bestDist = Infinity;
-  for (const row of REGION_COORDS) {
-    const d = haversineKm(lat, lng, row.lat, row.lng);
-    if (d < bestDist) {
-      bestDist = d;
-      best = row;
-    }
-  }
-  return normalizeLocation(
-    {
-      raw: best.label,
-      city: best.city,
-      dong: best.dong,
-      lat,
-      lng,
-      source: 'gps',
-    },
-    axis,
-  );
+  return normalizeLocation({ raw: '', lat, lng, source: 'gps' }, axis);
 }
 
 /**
@@ -471,12 +454,9 @@ export function resolveLocationByPriority(sources, axis = 'room') {
     }
   }
   const empty = normalizeLocation({ raw: '', source: 'fallback' }, axis);
-  empty.displayLabel = axis === 'tutor' ? '서울시' : '위치 확인 중';
-  const fbCoords = coordsFromLabel(empty.displayLabel);
-  if (fbCoords) {
-    empty.lat = fbCoords.lat;
-    empty.lng = fbCoords.lng;
-  }
+  empty.displayLabel = '';
+  empty.lat = null;
+  empty.lng = null;
   logLocationDebug('resolve-fallback', { axis, canonical: empty });
   return empty;
 }
@@ -566,5 +546,72 @@ export function logLocationDebug(event, payload) {
     console.debug(`[location:${event}]`, payload);
   } catch {
     /* ignore */
+  }
+}
+
+/** 게스트 과외 기준 구. 프런트에 두는 지역 코드는 이 문자열 한 곳이다. */
+export const GUEST_BASE_GU_OFFICIAL_CODE = '1168000000';
+
+export const GUEST_PLACE_PROMPT = '위치를 선택해 주세요';
+
+/** 게스트 기본 위치 표시만. 회원 저장 라벨·검색 요청값은 바꾸지 않는다. */
+export function guestSidoShort(sidoName) {
+  const text = blank(sidoName);
+  if (text === '서울특별시') return '서울시';
+  return text;
+}
+
+/** @type {{ room: string, tutor: string, student: string }} */
+let guestBaseline = { room: '', tutor: '', student: '' };
+/** @type {Promise<{ room: string, tutor: string, student: string }> | null} */
+let guestBaselinePromise = null;
+
+export function readGuestBaseline() {
+  return guestBaseline;
+}
+
+/**
+ * 공부방 이름은 region-stats axes.room, 과외 문구는 cities의 기준 구 행에서만 만든다.
+ * 행을 못 찾으면 빈 문자열. 이름을 기억으로 채우지 않는다.
+ */
+export function loadGuestBaseline() {
+  if (guestBaselinePromise) return guestBaselinePromise;
+  guestBaselinePromise = Promise.all([
+    fetchGuestJson('/api/search/region-stats.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: '{}',
+    }),
+    fetchGuestJson('/api/auth/regions.php?action=cities'),
+  ])
+    .then(([stats, citiesBody]) => {
+      const axes = stats && stats.ok && stats.axes && typeof stats.axes === 'object' ? stats.axes : {};
+      const cities = citiesBody && Array.isArray(citiesBody.cities) ? citiesBody.cities : [];
+      const gu = cities.find((row) => String(row?.official_code || '') === GUEST_BASE_GU_OFFICIAL_CODE);
+      const room = blank(axes.room);
+      let tutor = '';
+      if (gu) {
+        const guName = blank(gu.gu_name || gu.city_name);
+        const sido = blank(gu.sido_name);
+        if (guName && sido) tutor = `${guestSidoShort(sido)} ${guName}`;
+      }
+      guestBaseline = { room, tutor, student: tutor };
+      return guestBaseline;
+    })
+    .catch(() => {
+      guestBaseline = { room: '', tutor: '', student: '' };
+      return guestBaseline;
+    });
+  return guestBaselinePromise;
+}
+
+/** @param {string} url @param {RequestInit} [init] */
+async function fetchGuestJson(url, init) {
+  try {
+    const res = await fetch(url, init || { headers: { Accept: 'application/json' } });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
   }
 }

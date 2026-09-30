@@ -57,7 +57,35 @@ export function collectFiltersFromForm(form, tab) {
 }
 
 /**
- * 지역 입력값이 숫자가 아니면 id 필터 대신 label 필터로 승격
+ * 학생 탭에서 preferred_studyroom_region_id 숫자만 남긴다.
+ * 공부방 희망이 아니면 이 키를 보내지 않는다.
+ * 공부방 희망이고 동 id가 있으면 과외 희망 지역 키는 함께 보내지 않는다.
+ * @param {Record<string, string | string[]>} filters
+ */
+export function settleStudentStudyroomRegionFilter(filters) {
+  const asText = (v) => (Array.isArray(v) ? String(v[0] || '') : String(v || '')).trim();
+  const isNumericId = (v) => /^\d+$/.test(asText(v));
+  const lesson = asText(filters.preferred_lesson_type);
+  if (lesson && lesson !== 'study_room') {
+    delete filters.preferred_studyroom_region_id;
+    return;
+  }
+  if (!isNumericId(filters.preferred_studyroom_region_id)) {
+    delete filters.preferred_studyroom_region_id;
+    return;
+  }
+  filters.preferred_studyroom_region_id = asText(filters.preferred_studyroom_region_id);
+  if (lesson === 'study_room') {
+    delete filters.preferred_region;
+    delete filters.preferred_region_id;
+    delete filters.preferred_region_label;
+  }
+}
+
+/**
+ * 공부방은 숫자가 아니면 region_label로 올린다.
+ * 과외쌤·학생 과외 희망은 선택 단위 숫자 id만 남긴다. 라벨과 문자 지역은 보내지 않는다.
+ * 학생 공부방 희망은 preferred_studyroom_region_id 숫자를 남긴다.
  * @param {Record<string, string | string[]>} filters
  * @param {import('./state.js').SearchTab} tab
  */
@@ -69,13 +97,23 @@ function promoteRegionLabelFilters(filters, tab) {
     filters.region_label = asText(filters.region_id);
     delete filters.region_id;
   }
-  if (tab === 'tutor' && filters.tutor_region_id != null && !isNumericId(filters.tutor_region_id)) {
-    filters.tutor_region_label = asText(filters.tutor_region_id);
-    delete filters.tutor_region_id;
+  if (tab === 'tutor') {
+    delete filters.tutor_region_label;
+    if (filters.tutor_region_id != null && !isNumericId(filters.tutor_region_id)) {
+      delete filters.tutor_region_id;
+    }
   }
-  if (tab === 'student' && filters.preferred_region != null && !isNumericId(filters.preferred_region)) {
-    filters.preferred_region_label = asText(filters.preferred_region);
+  if (tab === 'student') {
+    delete filters.preferred_region_label;
+    const id = isNumericId(filters.preferred_region_id)
+      ? asText(filters.preferred_region_id)
+      : isNumericId(filters.preferred_region)
+        ? asText(filters.preferred_region)
+        : '';
     delete filters.preferred_region;
+    if (id) filters.preferred_region_id = id;
+    else delete filters.preferred_region_id;
+    settleStudentStudyroomRegionFilter(filters);
   }
 }
 

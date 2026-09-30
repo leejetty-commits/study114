@@ -40,7 +40,9 @@ final class TutorRegisterService
             $regions = $this->intIdRows(
                 $pdo->query(
                     'SELECT id, CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
-                     FROM regions WHERE is_active = 1 ORDER BY id ASC'
+                     FROM regions
+                     WHERE is_active = 1 AND unit_level = \'dong\' AND dong_name <> \'시 대표\'
+                     ORDER BY id ASC'
                 )->fetchAll(PDO::FETCH_ASSOC)
             );
         } catch (\Throwable $e) {
@@ -449,6 +451,8 @@ final class TutorRegisterService
                 continue;
 
             }
+
+            SidoRegionEnsure::assertSelectable($pdo, $regionId);
 
             $scope = $this->optionalEnum($slot, 'scope_type', ['city', 'district', 'metro']) ?? 'city';
 

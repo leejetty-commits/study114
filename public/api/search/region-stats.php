@@ -8,13 +8,14 @@ declare(strict_types=1);
  * POST /api/search/region-stats.php
  * req: {}
  *   축은 서버 고정. 본문 지역값은 받지 않는다.
- *   공부방 region_label=대치동
- *   과외쌤 tutor_region_label=서울시
- *   학생 preferred_region_label=서울시
- *   각 축은 SearchService::search() 목록 필터의 total (유료만 아님).
+ *   공부방: dong_code 11680101 행 id (study_rooms.region_id 또는 홍보 study_room_regions.region_id)
+ *   과외쌤: official_code 1168000000 이고 is_selectable=1 인 행 id (tutor_regions.region_id)
+ *   학생: 그 구 id(preferred_tutor_region_id) 또는 그 구 소속 동 id(preferred_studyroom_region_id)
+ *   각 축은 기존 목록 노출 조건의 total (유료만 아님).
+ *   axes 문자열은 그 행의 dong_name / sigungu_name. 기준 행이 없으면 빈 문자열.
  * res 200:
  *   { "ok": true, "studyRooms": 0, "tutors": 0, "studentRequests": 0,
- *     "axes": { "room": "대치동", "tutor": "서울시", "student": "서울시" } }
+ *     "axes": { "room": "", "tutor": "", "student": "" } }
  * res 405: { "ok": false, "error": "method_not_allowed" }
  * res 500: { "ok": false, "error": "server_error", "message": "..." }
  * 실패 시 클라이언트는 더미 숫자를 넣지 않는다.

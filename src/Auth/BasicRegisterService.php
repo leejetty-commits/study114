@@ -103,7 +103,7 @@ final class BasicRegisterService
             'SELECT id, sido_name, sigungu_name, dong_name,
                     CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label
              FROM regions
-             WHERE is_active = 1 AND dong_name <> \'시 대표\'
+             WHERE is_active = 1 AND unit_level = \'dong\' AND dong_name <> \'시 대표\'
              ORDER BY id ASC'
         );
         /** @var list<array{id: int, label: string}> $rows */
@@ -111,7 +111,18 @@ final class BasicRegisterService
         return $rows;
     }
 
-    /** @return list<array{id: int, label: string}> */
+    /**
+     * @return list<array{
+     *   id: int,
+     *   label: string,
+     *   sido_code: string,
+     *   sido_name: string,
+     *   official_code: string,
+     *   city_name: string,
+     *   gu_name: ?string,
+     *   kind: string
+     * }>
+     */
     public function listCities(): array
     {
         return SidoRegionEnsure::ensureAndListCities(Connection::get());
@@ -172,8 +183,9 @@ final class BasicRegisterService
                 $studyroomRegionId = $this->regionIdForComplex($studyroomComplexId);
             }
         } else {
-            // 과외쌤 찾기 — 시 기준 region_id 필수 (가입 기본주소 폴백 금지)
+            // 과외쌤 찾기 — 선택 단위(is_selectable) region_id 필수 (가입 기본주소 폴백 금지)
             $tutorRegionId = $this->requireExplicitRegionId($input);
+            SidoRegionEnsure::assertSelectable(Connection::get(), $tutorRegionId);
         }
 
         $gradeLevel = $this->optionalBoundedString($input, 'grade_level', 20);
@@ -723,11 +735,7 @@ final class BasicRegisterService
                 throw new InvalidArgumentException('활동지역이 중복되었습니다. 같은 지역을 여러 칸에 넣을 수 없습니다.');
             }
             $seen[$id] = true;
-            $stmt = $pdo->prepare('SELECT id FROM regions WHERE id = ? AND is_active = 1');
-            $stmt->execute([$id]);
-            if (!$stmt->fetchColumn()) {
-                throw new InvalidArgumentException('활동지역: 유효하지 않은 지역입니다. 목록을 다시 불러온 뒤 선택해 주세요.');
-            }
+            SidoRegionEnsure::assertSelectable($pdo, $id);
             $out[] = $id;
         }
 

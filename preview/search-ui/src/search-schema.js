@@ -46,7 +46,7 @@ export const SEARCH_TABS = {
     defaultRegionHint: '내 기본 시 자동 적용',
     mapEnabled: false,
     fields: [
-      { key: 'tutor_region_id', label: '활동 지역(시)', tier: 'basic', basicRow: 1, db: 'tutor_regions.region_id', input: 'city' },
+      { key: 'tutor_region_id', label: '활동 지역', tier: 'basic', basicRow: 1, db: 'tutor_regions.region_id', input: 'city' },
       { key: 'subject_master_id', label: '주력과목', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets · is_primary', input: 'subject' },
       { key: 'school_level', label: '지도 학교급', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets.school_level', input: 'select', optionsKey: 'school_level' },
       { key: 'grade_band', label: '지도 학년', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets.grade_band', input: 'grade', dependsOn: 'school_level' },
@@ -84,50 +84,4 @@ export const SEARCH_TABS = {
       { key: 'preferred_tutor_gender', label: '희망 과외쌤 성별', tier: 'expanded', db: 'students.preferred_tutor_gender', input: 'select', optionsKey: 'preferred_tutor_gender' },
     ],
   },
-};
-
-/**
- * 비로그인·프리뷰 기본 지역 (축별 분리 · 7.18 확정)
- * - 공부방: 행정동 · 과외쌤/학생: 시
- * 로그인 후에는 계정 노출/활동/희망 슬롯으로 대체한다.
- */
-export const GUEST_DEFAULT_REGIONS = {
-  room: '서울 강남구 대치동',
-  tutor: '서울시',
-  student: '서울시',
-};
-
-/** 과외 활동/희망 시 — 최대 3 · 대표 1 (시 단위만) */
-export const MOCK_TUTOR_REGIONS = [
-  { id: 'seoul', label: '서울시', primary: true },
-  { id: 'busan', label: '부산시', primary: false },
-  { id: 'incheon', label: '인천시', primary: false },
-];
-
-/** @param {number} [index] */
-export function getTutorRegionLabel(index = 0) {
-  return MOCK_TUTOR_REGIONS[index]?.label || MOCK_TUTOR_REGIONS[0].label;
-}
-
-export const MOCK_REGIONS = {
-  room: GUEST_DEFAULT_REGIONS.room,
-  tutor: GUEST_DEFAULT_REGIONS.tutor,
-  student: GUEST_DEFAULT_REGIONS.student,
-};
-
-/** §8-4 결과 행 더미 */
-export const MOCK_RESULT_ROWS = {
-  room: [
-    { left: '대치 대표 노출 수학 공부방\n대치동', center: '중등·고등 수학\n소수정예 · 숙제관리', right: '월 480천원\n찜 · 비교 · 상세' },
-    { left: '우동 추천 노출 영어 공부방\n해운대', center: '초등·중등 영어\n발음교정', right: '월 320천원\n찜 · 비교 · 상세' },
-    { left: '센텀 기본 노출 국어 공부방\n센텀동', center: '초등·중등 국어\n독해 중심', right: '월 220천원\n찜 · 비교 · 상세' },
-  ],
-  tutor: [
-    { left: '대치 대표 노출 수학\n강남구', center: '중·고 수학 · 서울대 수학과\n경력 7~10년', right: '월 600천원 · 주2 · 90분\n찜 · 비교 · 상세' },
-    { left: '우동 추천 노출 영어\n해운대', center: '초·중 영어 · 연세대\n아이엘츠', right: '월 400천원 · 주2 · 60분\n찜 · 비교 · 상세' },
-  ],
-  student: [
-    { left: '맑은하늘\n중2 · 남', center: '수학·영어 · 학생자택\n단독과외', right: '수업예산 550천원\n메모 보내기' },
-    { left: '초등왕\n초5 · 여', center: '종합 · 공부방\n그룹과외 · 남여 · 2명', right: '수업예산 380천원\n메모 보내기' },
-  ],
 };

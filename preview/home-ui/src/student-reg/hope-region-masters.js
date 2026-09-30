@@ -4,24 +4,10 @@
  */
 
 /** @type {Array<{id:string,label:string}>} */
-const FALLBACK_REGIONS = [
-  { id: '1', label: '서울특별시 강남구 대치동' },
-  { id: '2', label: '서울특별시 강남구 역삼동' },
-  { id: '3', label: '서울특별시 서초구 서초동' },
-  { id: '4', label: '서울특별시 송파구 잠실동' },
-  { id: '5', label: '부산광역시 해운대구 우동' },
-  { id: '6', label: '부산광역시 해운대구 좌동' },
-  { id: '7', label: '인천광역시 연수구 송도동' },
-  { id: '8', label: '경기도 성남시 분당구 정자동' },
-];
+const FALLBACK_REGIONS = [];
 
 /** @type {Array<{id:string,region_id:string,label:string,address:string}>} */
-const FALLBACK_COMPLEXES = [
-  { id: 'c1', region_id: '1', label: '은마아파트', address: '서울특별시 강남구 대치동 316' },
-  { id: 'c2', region_id: '1', label: '대치래미안', address: '서울특별시 강남구 대치동 888' },
-  { id: 'c3', region_id: '4', label: '잠실주공', address: '서울특별시 송파구 잠실동 22' },
-  { id: 'c4', region_id: '5', label: '해운대아이파크', address: '부산광역시 해운대구 우동 1408' },
-];
+const FALLBACK_COMPLEXES = [];
 
 /** @type {Array<{id:string,label:string}>|null} */
 let cachedRegions = null;
@@ -95,9 +81,7 @@ export function listCityOptions() {
     if (!sido || seen.has(sido)) return;
     seen.set(sido, { id: String(r.id), label: sido });
   });
-  if (!seen.size) {
-    seen.set('서울특별시', { id: '1', label: '서울특별시' });
-  }
+  if (!seen.size) return [];
   return [...seen.values()];
 }
 

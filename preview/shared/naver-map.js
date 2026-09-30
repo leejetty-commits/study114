@@ -9,22 +9,11 @@
 
 /** @typedef {{ lat: number, lng: number, label?: string }} RegionCenter */
 
-/** @type {Array<{ test: RegExp, center: RegionCenter }>} */
-const REGION_CENTER_FALLBACKS = [
-  { test: /가능동/, center: { lat: 37.749, lng: 127.044, label: '가능동' } },
-  { test: /논현/, center: { lat: 37.5115, lng: 127.0289, label: '논현1동' } },
-  { test: /대치/, center: { lat: 37.4946, lng: 127.0626, label: '대치동' } },
-  { test: /도곡/, center: { lat: 37.4882, lng: 127.0465, label: '도곡동' } },
-  { test: /개포/, center: { lat: 37.4892, lng: 127.0661, label: '개포동' } },
-  { test: /센텀/, center: { lat: 35.1695, lng: 129.131, label: '센텀동' } },
-  { test: /우동/, center: { lat: 35.1631, lng: 129.1634, label: '우동' } },
-  { test: /해운대/, center: { lat: 35.1631, lng: 129.1634, label: '해운대구' } },
-  { test: /강남/, center: { lat: 37.4979, lng: 127.0276, label: '강남구' } },
-  { test: /서울/, center: { lat: 37.5665, lng: 126.978, label: '서울' } },
-  { test: /부산/, center: { lat: 35.1796, lng: 129.0756, label: '부산' } },
-];
+/** 대치역, 위키데이터 Q100860 P625, 조회일 2026-10-01. 카카오 장소검색 교차 확인은 최종검수 */
+export const GUEST_MAP_CENTER = { lat: 37.494511, lng: 127.063369 };
 
-const DEFAULT_CENTER = { lat: 37.4946, lng: 127.0626, label: '대치동' };
+/** 네이버 신규 타일 최대 줌 21 − 4 (공식 문서 NaverStyleMapTypeOptions) */
+export const MAP_DEFAULT_ZOOM = 17;
 const SDK_URL = 'https://oapi.map.naver.com/openapi/v3/maps.js';
 
 /** @type {Promise<typeof naver>|null} */
@@ -49,12 +38,7 @@ function parseCoord(value) {
  * @param {string} label
  * @returns {RegionCenter|null}
  */
-export function matchRegionCenter(label) {
-  const text = String(label || '').trim();
-  if (!text) return null;
-  for (const { test, center } of REGION_CENTER_FALLBACKS) {
-    if (test.test(text)) return center;
-  }
+export function matchRegionCenter() {
   return null;
 }
 
@@ -115,20 +99,20 @@ export function resolveMapCenter(items, regionLabel = '', explicitCenter = {}) {
   const exLat = parseCoord(explicitCenter.lat);
   const exLng = parseCoord(explicitCenter.lng);
   if (exLat != null && exLng != null) {
-    return { lat: exLat, lng: exLng, zoom: 14, source: 'canonical' };
+    return { lat: exLat, lng: exLng, zoom: MAP_DEFAULT_ZOOM, source: 'canonical' };
   }
 
   const pins = mapStudyRoomPins(items, { allowRegionFallback: true });
   if (pins.length > 0) {
     const lat = pins.reduce((sum, p) => sum + p.lat, 0) / pins.length;
     const lng = pins.reduce((sum, p) => sum + p.lng, 0) / pins.length;
-    return { lat, lng, zoom: pins.length === 1 ? 16 : 14, source: 'pins' };
+    return { lat, lng, zoom: MAP_DEFAULT_ZOOM, source: 'pins' };
   }
 
   const matched = matchRegionCenter(regionLabel);
-  if (matched) return { lat: matched.lat, lng: matched.lng, zoom: 14, source: 'region_label' };
+  if (matched) return { lat: matched.lat, lng: matched.lng, zoom: MAP_DEFAULT_ZOOM, source: 'region_label' };
 
-  return { lat: DEFAULT_CENTER.lat, lng: DEFAULT_CENTER.lng, zoom: 13, source: 'default' };
+  return { lat: GUEST_MAP_CENTER.lat, lng: GUEST_MAP_CENTER.lng, zoom: MAP_DEFAULT_ZOOM, source: 'default' };
 }
 
 function loadNaverMapsSdk() {
@@ -158,11 +142,11 @@ function loadNaverMapsSdk() {
   return sdkPromise;
 }
 
-/** 손님 홈처럼 fitBounds를 끌 때 동네 줌(13–15)으로 고정 */
+/** 비어 있으면 기본 줌. 들어온 줌은 자르지 않는다. */
 function clampNeighborhoodZoom(zoom) {
   const z = Number(zoom);
-  if (!Number.isFinite(z)) return 14;
-  return Math.min(15, Math.max(13, z));
+  if (!Number.isFinite(z)) return MAP_DEFAULT_ZOOM;
+  return z;
 }
 
 /**
@@ -255,7 +239,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
     if (fitBounds && pins.length > 1) fitToPins();
     else if (fitBounds && pins.length === 1) {
       map.setCenter(new naver.maps.LatLng(pins[0].lat, pins[0].lng));
-      map.setZoom(16);
+      map.setZoom(MAP_DEFAULT_ZOOM);
     } else if (!fitBounds) {
       map.setCenter(new naver.maps.LatLng(center.lat, center.lng));
       map.setZoom(clampNeighborhoodZoom(center.zoom));

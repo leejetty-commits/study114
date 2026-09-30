@@ -23,7 +23,7 @@ import {
 import { tutorHomePrimaryLabel } from '@home-ui/tutor-home-seed.js';
 
 function tutorPrimaryRegionLabel() {
-  return tutorHomePrimaryLabel() || '서울시';
+  return tutorHomePrimaryLabel();
 }
 
 /**

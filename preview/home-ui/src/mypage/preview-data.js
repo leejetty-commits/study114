@@ -26,7 +26,7 @@ import { countWrittenReviewsPreview, countReceivedReviewsPreview } from '../prov
 const PREVIEW_PROFILE = {
   email: 'parent@example.com',
   name: '김우동',
-  regionLabel: '서울특별시 강남구 대치동',
+  regionLabel: '',
 };
 
 /** @type {Record<MypageRole, { students: object[], studyRooms: object[], tutors: object[] }>} */
