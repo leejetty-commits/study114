@@ -131,6 +131,7 @@ final class MessagesService
             if ($ownTxn) {
                 $pdo->beginTransaction();
             }
+            $storedPaths = [];
             try {
                 if (self::requiresColdMemoTicket(true, $contextKind) && !$skipTicketConsume) {
                     if (!$this->entitlements->consumeColdMemoTicket($userId, $providerType, $providerId, true)) {
@@ -152,7 +153,7 @@ final class MessagesService
                     'initiated_by_user_id'     => $userId,
                     'last_message_preview'     => mb_substr($this->previewFromBodyOrFiles($body, $files), 0, 120),
                 ]);
-                $this->insertMessageWithFiles($threadId, $userId, $body, $files);
+                $this->insertMessageWithFiles($threadId, $userId, $body, $files, $storedPaths);
                 $this->repo->upsertThreadRead($threadId, $userId);
                 if ($ownTxn) {
                     $pdo->commit();
@@ -161,6 +162,9 @@ final class MessagesService
                 $this->entitlements->discardColdMemoBalanceNotice($userId);
                 if ($ownTxn && $pdo->inTransaction()) {
                     $pdo->rollBack();
+                }
+                if ($ownTxn) {
+                    $this->attachments->deleteStoredFiles($storedPaths);
                 }
                 throw $e;
             }
@@ -528,9 +532,16 @@ final class MessagesService
 
     /**
      * @param list<array<string, mixed>> $files
+     * @param list<string> $storedPaths 성공 시 이번 호출이 디스크에 쓴 첨부 경로. 실패 시 이미 지우고 비운다.
      */
-    private function insertMessageWithFiles(int $threadId, int $userId, string $body, array $files): int
-    {
+    private function insertMessageWithFiles(
+        int $threadId,
+        int $userId,
+        string $body,
+        array $files,
+        array &$storedPaths = [],
+    ): int {
+        $storedPaths = [];
         $pdo = Connection::get();
         $ownTxn = !$pdo->inTransaction();
         if ($ownTxn) {
@@ -546,6 +557,7 @@ final class MessagesService
             if ($files !== []) {
                 try {
                     $this->attachments->storeForMessage($threadId, $messageId, $files);
+                    $storedPaths = $this->attachments->lastStoredPaths();
                 } catch (\PDOException $e) {
                     if (str_contains($e->getMessage(), 'message_attachments')) {
                         throw new InvalidArgumentException(
@@ -564,6 +576,8 @@ final class MessagesService
             if ($ownTxn && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
+            $this->attachments->deleteStoredFiles($storedPaths);
+            $storedPaths = [];
             throw $e;
         }
     }

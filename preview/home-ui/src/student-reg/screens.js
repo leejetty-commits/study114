@@ -24,6 +24,12 @@ import { lessonDurationOptions, lessonDurationSelectValue } from '../../../share
 import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, isGradeSelectDisabled } from '../../../shared/school-grade.js';
 import { getStudents, getStudent, updateStudent } from './store.js';
+import { STUDENT_COUNT_HALT_COPY } from './student-reg-copy.js';
+import { getAuthUser } from '../auth-session.js';
+import { basicRegisterPathForMe } from '../../../shared/auth-redirect.js';
+import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
+
+const SUPPORT_CONTACT_PATH = '/support/contact';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -174,10 +180,23 @@ export function renderStudentRegScreen(path) {
   }
 }
 
+/** 학생 0명 → 기본정보 입력, 2명 이상 → 운영문의. 임의로 한 명을 골라 열지 않는다. */
 export function renderStudentCountHalt() {
   const count = getStudents().filter((s) => s && s.exposure_status !== 'deleted').length;
-  return `<section class="mypage-panel p19-panel mypage-empty">
-    <p>이 계정의 학생이 ${count}명이라 내 등록을 열지 않았습니다. 학생은 1명이어야 합니다.</p>
+  if (count === 0) {
+    const copy = STUDENT_COUNT_HALT_COPY.zero;
+    const basicHref = `${String(AUTH_UI_BASE).replace(/\/$/, '')}/#${basicRegisterPathForMe(getAuthUser())}`;
+    return `<section class="mypage-panel p19-panel mypage-empty" data-student-count-halt="zero">
+    <p class="mypage-empty__title">${esc(copy.title)}</p>
+    <p class="mypage-empty__body">${esc(copy.body)}</p>
+    <a href="${esc(basicHref)}" class="btn btn--primary state-card__cta">${esc(copy.cta)}</a>
+  </section>`;
+  }
+  const copy = STUDENT_COUNT_HALT_COPY.many;
+  return `<section class="mypage-panel p19-panel mypage-empty" data-student-count-halt="many">
+    <p class="mypage-empty__title">${esc(copy.title(count))}</p>
+    <p class="mypage-empty__body">${esc(copy.body)}</p>
+    <a href="#${SUPPORT_CONTACT_PATH}" class="btn btn--primary state-card__cta" data-p19-nav="${SUPPORT_CONTACT_PATH}">${esc(copy.cta)}</a>
   </section>`;
 }
 

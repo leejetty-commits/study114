@@ -10,6 +10,8 @@ import {
   clearPendingDeepIntent,
   normalizeDeepIntentSource,
 } from './pending-deep-intent.js';
+import { isChromeLoggedIn } from './chrome-session.js';
+import { authRoleType } from '../home-ui/src/auth-role.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -268,7 +270,15 @@ const GUEST_EMPTY_CARD_SELECTOR =
   '[data-prime-empty], [data-basic-empty], [data-pick-empty], [data-expo-sample]';
 
 /**
- * 손님 빈카드·샘플 카드 전체 클릭 → 로그인 유도.
+ * home·search 는 auth-session 이 auth-role 에, 공부방·과외·인증 UI 는 chrome-session 에 로그인 상태를 둔다.
+ * auth-session 을 직접 import 하면 auth-ui 번들에 home-ui state·API 모듈이 딸려 들어간다.
+ */
+function isViewerLoggedIn() {
+  return isChromeLoggedIn() || authRoleType() !== '';
+}
+
+/**
+ * 손님 빈카드·샘플 카드 전체 클릭 → 로그인 유도. 로그인 사용자는 그대로 통과시킨다.
  * 이미 팝업을 띄우는 찜·쪽지 버튼은 그대로 둔다.
  * @param {ParentNode} root
  */
@@ -279,6 +289,7 @@ export function bindGuestEmptyCardLoginGate(root) {
   root.addEventListener(
     'click',
     (e) => {
+      if (isViewerLoggedIn()) return;
       const el = e.target instanceof Element ? e.target : null;
       if (!el) return;
       const card = el.closest(GUEST_EMPTY_CARD_SELECTOR);

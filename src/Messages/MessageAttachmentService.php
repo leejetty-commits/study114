@@ -13,6 +13,8 @@ final class MessageAttachmentService
     private AttachmentStorage $storage;
     /** @var array<string, mixed> */
     private array $rules;
+    /** @var list<string> */
+    private array $lastStoredPaths = [];
 
     public function __construct(?AttachmentStorage $storage = null)
     {
@@ -79,6 +81,7 @@ final class MessageAttachmentService
      */
     public function storeForMessage(int $threadId, int $messageId, array $files): array
     {
+        $this->lastStoredPaths = [];
         if ($files === []) {
             return [];
         }
@@ -112,17 +115,38 @@ final class MessageAttachmentService
                 $stored[] = $this->mapAttachment($row);
             }
         } catch (\Throwable $e) {
-            foreach ($paths as $path) {
-                try {
-                    $this->storage->delete($path);
-                } catch (InvalidArgumentException) {
-                    // ignore
-                }
-            }
+            $this->deleteStoredFiles($paths);
             throw $e;
         }
+        $this->lastStoredPaths = $paths;
 
         return $stored;
+    }
+
+    /**
+     * 직전 storeForMessage 호출이 디스크에 새로 쓴 상대경로. DB 롤백 시 호출자가 정리한다.
+     *
+     * @return list<string>
+     */
+    public function lastStoredPaths(): array
+    {
+        return $this->lastStoredPaths;
+    }
+
+    /**
+     * 삭제 실패는 무시한다 — 롤백 경로에서 원래 예외를 가리면 안 된다.
+     *
+     * @param list<string> $paths
+     */
+    public function deleteStoredFiles(array $paths): void
+    {
+        foreach ($paths as $path) {
+            try {
+                $this->storage->delete($path);
+            } catch (\Throwable) {
+                // ignore
+            }
+        }
     }
 
     public function streamDownload(int $userId, int $attachmentId): never
