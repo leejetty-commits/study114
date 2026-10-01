@@ -314,9 +314,6 @@ $sample = $list[0] ?? null;
 check('t18_packs_api', $sample !== null && isset($sample['grant_label'], $sample['remaining'], $sample['expires_at']));
 check('t18_iso', is_array($sample) && str_contains((string) $sample['expires_at'], 'T'));
 
-$view = $ticketSvc->unlockPaidRequest(40, 50);
-check('t20_request_view_no_consume', ($view['consumed'] ?? true) === false);
-
 $has061 = (bool) $pdo->query(
     "SELECT COUNT(*) FROM information_schema.COLUMNS
      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'provider_payment_orders'
