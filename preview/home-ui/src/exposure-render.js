@@ -20,6 +20,8 @@ import {
   renderListPagination,
 } from './list-pagination.js';
 import { getGuestListPage } from './state.js';
+import { getAuthUser } from './auth-session.js';
+import { navRoleFromAuthUser } from './nav-config.js';
 import { isWishlisted, isInCompare } from './user-actions-state.js';
 import {
   renderStudentProviderActions,
@@ -53,6 +55,7 @@ import {
   renderTrustBadgeRow,
 } from './card-visual.js';
 import { buildStudyRoomSampleItem, buildTutorSampleItem } from './home-card-samples/presets.js';
+import { readGuestBaseline } from '../../shared/location-display.js';
 
 function esc(s) {
   if (s == null || s === '') return '';
@@ -329,23 +332,23 @@ function sampleStampHtml() {
   return `<span class="expo-sample-stamp">샘플</span>`;
 }
 
-/** 로그인 공부방 홈 실점유 0 전용. 풀에 넣지 않는다. */
-function vacantStudyRoomSample(tier) {
+/** 실점유 0 전용. 풀에 넣지 않는다. 게스트 샘플 지역은 게스트 기준 지역과 같다. */
+function vacantStudyRoomSample(tier, guest = false) {
   const item = buildStudyRoomSampleItem(tier);
   item.id = `vacant-sample-${tier}`;
   item._vacantSample = true;
   item.study_room_name = '샘플 공부방';
-  item.location_label = '가상';
+  item.location_label = guest ? readGuestBaseline().room : '가상';
   return item;
 }
 
-/** 로그인 과외쌤 홈 실점유 0 전용. 풀에 넣지 않는다. */
-function vacantTutorSample(tier) {
+/** 실점유 0 전용. 풀에 넣지 않는다. 게스트 샘플 지역은 게스트 기준 지역과 같다. */
+function vacantTutorSample(tier, guest = false) {
   const item = buildTutorSampleItem(tier);
   item.id = `vacant-tutor-sample-${tier}`;
   item._vacantSample = true;
   item.tutor_display_name = '샘플 과외쌤';
-  item.location_label = '가상';
+  item.location_label = guest ? readGuestBaseline().tutor : '가상';
   return item;
 }
 
@@ -357,7 +360,7 @@ function vacantStudentSample() {
     public_display_name: '김민수',
     grade_level: '중2',
     subject_label: '수학',
-    location_label: '강남권',
+    location_label: readGuestBaseline().student,
     preferred_lesson_type: 'tutor',
     preferred_fee_amount: 500000,
     budget_amount: 500000,
@@ -655,8 +658,8 @@ export function renderGuestVacantBasicList(kind) {
     kind === 'student'
       ? vacantStudentSample()
       : kind === 'tutor'
-        ? vacantTutorSample('basic')
-        : vacantStudyRoomSample('basic');
+        ? vacantTutorSample('basic', true)
+        : vacantStudyRoomSample('basic', true);
   return `
     <div class="browse-list browse-list--table" role="list">
       ${renderBasicRow(kind, sample, { guest: true })}
@@ -700,7 +703,7 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
       opts.guest === true ? Math.max(0, primeSlots - pageItems.length) : 0;
     let cards;
     if (!pageItems.length && opts.guest === true) {
-      const sample = vacantTutorSample('prime');
+      const sample = vacantTutorSample('prime', true);
       cards = [
         renderExposureBox(kind, 'prime', sample, '', opts),
         ...Array.from({ length: primeSlots - 1 }, () => renderEmptyPrimePromo(kind)),
@@ -722,7 +725,8 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
 
   const slots = buildPrimeSlotArray(occupiedItems, primeSlots);
   if (opts.vacantSamples === true && occupiedItems.length === 0) {
-    slots[0] = kind === 'tutor' ? vacantTutorSample('prime') : vacantStudyRoomSample('prime');
+    const guest = opts.guest === true;
+    slots[0] = kind === 'tutor' ? vacantTutorSample('prime', guest) : vacantStudyRoomSample('prime', guest);
   }
   const cards = slots
     .map((item) => {
@@ -761,7 +765,7 @@ function renderBasicStudyRoomRow(item, opts) {
     inert: sampleRow,
   });
   const actions = sampleRow ? '' : renderItemActions(actionOpts);
-  const locationLabel = opts.guest
+  const locationLabel = opts.guest && !sampleRow
     ? coarseRegionForGuest(item.location_label)
     : item.location_label;
 
@@ -838,7 +842,7 @@ function renderBasicTutorRow(item, opts) {
     item.lessons_per_week && item.minutes_per_lesson
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
       : '—';
-  const locationLabel = opts.guest
+  const locationLabel = opts.guest && !sampleRow
     ? coarseRegionForGuest(item.location_label)
     : item.location_label;
 
@@ -932,16 +936,20 @@ function studentSpecialRequestPreview(item, viewerRole) {
 
 function renderBasicStudentRow(item, opts) {
   const selfView = Boolean(opts.selfView);
-  const viewerRole = selfView ? 'parent' : opts.viewerRole || (opts.guest ? 'guest' : 'parent');
+  const viewerRole = selfView
+    ? 'parent'
+    : opts.viewerRole || (opts.guest ? 'guest' : navRoleFromAuthUser(getAuthUser()));
   const isGuest = !selfView && Boolean(opts.guest || viewerRole === 'guest');
   const maskedName = maskPublicDisplayName(item.public_display_name);
-  const locationLabel = isGuest
+  const sampleRow = isVacantSample(item);
+  const locationLabel = isGuest && !sampleRow
     ? coarseRegionForGuest(item.location_label)
     : item.location_label;
 
   if (opts.layout === 'table') {
     if (isGuest) {
       const t = guestStudentTeaserFields(item);
+      if (sampleRow) t.region = item.location_label;
       const meta = [t.band, t.subject, t.region, t.budget].filter((x) => x && x !== '—').join(' · ');
       const hopeLine = t.hope || t.chip;
       return `
@@ -1112,7 +1120,9 @@ export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opt
   const vacantPick =
     opts.vacantSamples === true && (kind === 'study_room' || kind === 'tutor') && pickPool.length === 0;
   const pickRowSlots = 5;
-  const vacantPickSample = kind === 'tutor' ? vacantTutorSample('pick') : vacantStudyRoomSample('pick');
+  const guest = opts.guest === true;
+  const vacantPickSample =
+    kind === 'tutor' ? vacantTutorSample('pick', guest) : vacantStudyRoomSample('pick', guest);
   const cards = vacantPick
     ? Array.from({ length: pickRowSlots }, (_, index) =>
         index === 0

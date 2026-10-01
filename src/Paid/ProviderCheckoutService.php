@@ -1057,10 +1057,9 @@ final class ProviderCheckoutService
             'body' => (string) $intent['body'],
             'context_label' => (string) ($intent['context_label'] ?? ''),
             'peer_display_name' => (string) ($intent['peer_display_name'] ?? ''),
-            'skip_ticket_consume' => true,
             'provider_type' => $providerType,
             'provider_id' => $providerId,
-        ]);
+        ], [], true);
         $threadId = (int) ($thread['id'] ?? $thread['thread_id'] ?? 0);
         $this->immediate->markSent($orderRef, $threadId);
 

@@ -7,6 +7,7 @@ import {
 } from '../student-enums.js';
 import {
   getStudentProtectedVisibility,
+  EXPOSURE_PROVIDER_REQUEST_GATE_COPY,
   PEER_STUDENT_REQUEST_GATE_COPY,
 } from '../student-visibility.js';
 import { renderPermissionStateCard } from '../empty-state-copy.js';
@@ -21,7 +22,8 @@ import { esc } from './detail-utils.js';
  * @param {{ isPaidProvider?: boolean, viewer?: string }} [opts]
  */
 function renderProtectedBlock(label, content, visible, visibility, studentId, opts = {}) {
-  if (visible) {
+  const lockedForProvider = opts.viewer === 'tutor' || opts.viewer === 'study_room';
+  if (visible && (content || !lockedForProvider)) {
     return `
     <div class="p24-protected p24-protected--open">
       <span class="p24-protected__label">${esc(label)}</span>
@@ -29,8 +31,8 @@ function renderProtectedBlock(label, content, visible, visibility, studentId, op
     </div>`;
   }
 
-  if (opts.viewer === 'parent') {
-    const copy = PEER_STUDENT_REQUEST_GATE_COPY;
+  if (opts.viewer === 'parent' || lockedForProvider) {
+    const copy = lockedForProvider ? EXPOSURE_PROVIDER_REQUEST_GATE_COPY : PEER_STUDENT_REQUEST_GATE_COPY;
     return `
     <div class="p24-protected p24-protected--blocked">
       <span class="p24-protected__label">${esc(label)}</span>

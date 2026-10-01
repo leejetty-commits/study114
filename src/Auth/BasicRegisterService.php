@@ -13,6 +13,8 @@ use Study114\Region\AddressRegionMatch;
 use Study114\Region\ComplexEnsure;
 use Study114\Region\RegionEnsure;
 use Study114\Region\SidoRegionEnsure;
+use Study114\Registration\StudentBasicCompleteness;
+use Study114\Registration\StudentHubRepository;
 
 final class BasicRegisterService
 {
@@ -53,15 +55,31 @@ final class BasicRegisterService
                     : 'SELECT 1 FROM study_rooms WHERE user_id = ? LIMIT 1',
                 [$userId]
             ),
-            'guardian_student' => !$this->existsRow(
-                $pdo,
-                $this->columnExists($pdo, 'students', 'deleted_at')
-                    ? 'SELECT 1 FROM students WHERE guardian_user_id = ? AND deleted_at IS NULL LIMIT 1'
-                    : 'SELECT 1 FROM students WHERE guardian_user_id = ? LIMIT 1',
-                [$userId]
-            ),
+            'guardian_student' => $this->studentNeedsBasicInfo($pdo, $userId),
             default => false,
         };
+    }
+
+    /**
+     * 학생은 행이 없거나, 행이 draft 이면서 기본정보가 비어 있으면 기본정보부터 다시 채운다.
+     * hidden(관리자 조치)은 되돌려 보내지 않는다.
+     */
+    private function studentNeedsBasicInfo(PDO $pdo, int $userId): bool
+    {
+        if (!$this->existsRow(
+            $pdo,
+            'SELECT 1 FROM students WHERE guardian_user_id = ? AND deleted_at IS NULL LIMIT 1',
+            [$userId]
+        )) {
+            return true;
+        }
+        $student = (new StudentHubRepository($pdo))->findFirstForGuardian($userId);
+        if ($student === null) {
+            return true;
+        }
+
+        return ($student['exposure_status'] ?? '') === 'draft'
+            && !StudentBasicCompleteness::isComplete($student);
     }
 
     /** @param list<mixed> $params */
@@ -155,8 +173,8 @@ final class BasicRegisterService
     }
 
     /**
-     * 기본등록 = draft seed 최소 (Notion 14장).
-     * 검색/공개 본체는 상세등록에서 완성한다.
+     * 학생 기본정보 저장. 여덟 칸(StudentBasicCompleteness)이 차면 같은 트랜잭션에서 바로 노출(published),
+     * 아니면 draft 로 남긴다. 기존 draft 행이 있으면 이번 입력으로 다시 쓴다(이어쓰기 없음).
      *
      * @param array<string, mixed> $input
      */
@@ -164,9 +182,9 @@ final class BasicRegisterService
     {
         $preferredLessonType = $this->requireEnum($input, 'preferred_lesson_type', ['tutor', 'study_room']);
 
-        $publicName = $this->optionalString($input, 'public_display_name')
-            ?: ($this->optionalString($input, 'student_name') ?: '학생');
-        $studentName = $this->optionalString($input, 'student_name') ?: $publicName;
+        // 표시명은 기본정보 필수 칸이다. 비어 있으면 기본값으로 채우지 않는다.
+        $publicName = $this->optionalBoundedString($input, 'public_display_name', 40);
+        $studentName = $this->optionalBoundedString($input, 'student_name', 50) ?? $publicName ?? '학생';
 
         $studyroomRegionId = null;
         $studyroomComplexId = null;
@@ -178,9 +196,16 @@ final class BasicRegisterService
             if ($studyroomBasis === 'dong') {
                 $studyroomRegionId = $this->requireExplicitRegionId($input);
                 $studyroomComplexId = null;
-            } else {
+            } elseif (isset($input['complex_id']) && (string) $input['complex_id'] !== '') {
                 $studyroomComplexId = $this->requireComplexId($input);
                 $studyroomRegionId = $this->regionIdForComplex($studyroomComplexId);
+            } else {
+                // 가입 화면은 주소 검색 결과(행정동 region_id + 단지 이름)만 보낸다. 단지 행은 이름으로 찾거나 만든다.
+                $studyroomRegionId = $this->requireExplicitRegionId($input);
+                $studyroomComplexId = $this->resolveStudyRoomComplexId(Connection::get(), $input, $studyroomRegionId, '');
+                if ($studyroomComplexId === null) {
+                    throw new InvalidArgumentException('complex_id: 아파트단지를 선택해 주세요.');
+                }
             }
         } else {
             // 과외쌤 찾기 — 선택 단위(is_selectable) region_id 필수 (가입 기본주소 폴백 금지)
@@ -213,95 +238,103 @@ final class BasicRegisterService
         }
         $requestSummary = $this->optionalBoundedString($input, 'request_summary', 200);
 
+        $complete = StudentBasicCompleteness::isComplete([
+            'public_display_name'            => $publicName,
+            'grade_level'                    => $gradeLevel,
+            'school_level'                   => $subjects !== [] ? $schoolLevel : null,
+            'preferred_lesson_type'          => $preferredLessonType,
+            'preferred_studyroom_region_basis' => $studyroomBasis,
+            'preferred_studyroom_region_id'  => $studyroomRegionId,
+            'preferred_studyroom_complex_id' => $studyroomComplexId,
+            'preferred_tutor_region_id'      => $tutorRegionId,
+            'subject_label'                  => $subjects[0] ?? '',
+            'lesson_format'                  => $lessonFormat,
+            'preferred_student_count_group'  => $countGroup,
+            'preferred_fee_amount'           => $tutorFee,
+            'preferred_studyroom_fee_amount' => $studyroomFee,
+        ]);
+        $exposureStatus = $complete ? 'published' : 'draft';
+        $publishedAt = $complete ? date('Y-m-d H:i:s') : null;
+
+        $basicValues = [
+            'student_name'                   => $studentName,
+            'public_display_name'            => $publicName,
+            'grade_level'                    => $gradeLevel,
+            'preferred_lesson_type'          => $preferredLessonType,
+            'preferred_studyroom_region_id'  => $studyroomRegionId,
+            'preferred_studyroom_complex_id' => $studyroomComplexId,
+            'preferred_tutor_region_id'      => $tutorRegionId,
+            'preferred_student_count_group'  => $countGroup,
+            'preferred_fee_amount'           => $tutorFee,
+            'preferred_studyroom_fee_amount' => $studyroomFee,
+            'lesson_format'                  => $lessonFormat,
+            'request_summary'                => $requestSummary,
+        ];
+
         $pdo = Connection::get();
         $pdo->beginTransaction();
         try {
+            if ($this->columnExists($pdo, 'students', 'preferred_studyroom_region_basis')) {
+                $basicValues['preferred_studyroom_region_basis'] = $studyroomBasis;
+            }
             $existingStudentId = $this->lockedExistingId(
                 $pdo,
                 $userId,
-                $this->columnExists($pdo, 'students', 'deleted_at')
-                    ? 'SELECT id FROM students WHERE guardian_user_id = ? AND deleted_at IS NULL ORDER BY id ASC LIMIT 1'
-                    : 'SELECT id FROM students WHERE guardian_user_id = ? ORDER BY id ASC LIMIT 1'
+                'SELECT id FROM students WHERE guardian_user_id = ? AND deleted_at IS NULL ORDER BY id ASC LIMIT 1'
             );
             if ($existingStudentId !== null) {
+                $statusStmt = $pdo->prepare('SELECT exposure_status FROM students WHERE id = ? FOR UPDATE');
+                $statusStmt->execute([$existingStudentId]);
+                // published·hidden 행은 기본정보 화면에서 다시 쓰지 않는다(수정은 마이페이지).
+                if ((string) $statusStmt->fetchColumn() !== 'draft') {
+                    $pdo->commit();
+                    return $existingStudentId;
+                }
+                $sets = [];
+                $params = [];
+                foreach ($basicValues as $col => $value) {
+                    $sets[] = "{$col} = ?";
+                    $params[] = $value;
+                }
+                $params[] = $exposureStatus;
+                $params[] = $publishedAt;
+                $params[] = $existingStudentId;
+                $pdo->prepare(
+                    'UPDATE students SET ' . implode(', ', $sets) . ',
+                        exposure_status = ?, published_at = COALESCE(?, published_at), updated_at = NOW()
+                     WHERE id = ? AND exposure_status = \'draft\''
+                )->execute($params);
+                $pdo->prepare('DELETE FROM student_subject_targets WHERE student_id = ?')->execute([$existingStudentId]);
+                if ($subjects !== [] && $schoolLevel !== null) {
+                    $this->insertStudentSubjects($pdo, $existingStudentId, $subjects, $schoolLevel);
+                }
                 $pdo->commit();
                 return $existingStudentId;
             }
-            $hasBasisCol = $this->columnExists($pdo, 'students', 'preferred_studyroom_region_basis');
-            if ($hasBasisCol) {
-                $stmt = $pdo->prepare(
-                    'INSERT INTO students (
-                        guardian_user_id, student_name, public_display_name, grade_level,
-                        preferred_lesson_type,
-                        preferred_studyroom_region_id, preferred_studyroom_complex_id,
-                        preferred_studyroom_region_basis,
-                        preferred_tutor_region_id,
-                        preferred_student_count_group,
-                        preferred_fee_amount, preferred_studyroom_fee_amount,
-                        lesson_format, request_summary,
-                        request_summary_visibility,
-                        exposure_status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-                );
-                $stmt->execute([
-                    $userId,
-                    $studentName,
-                    $publicName,
-                    $gradeLevel,
-                    $preferredLessonType,
-                    $studyroomRegionId,
-                    $studyroomComplexId,
-                    $studyroomBasis,
-                    $tutorRegionId,
-                    $countGroup,
-                    $tutorFee,
-                    $studyroomFee,
-                    $lessonFormat,
-                    $requestSummary,
-                    'private',
-                    'draft',
-                ]);
-            } else {
-                $stmt = $pdo->prepare(
-                    'INSERT INTO students (
-                        guardian_user_id, student_name, public_display_name, grade_level,
-                        preferred_lesson_type,
-                        preferred_studyroom_region_id, preferred_studyroom_complex_id,
-                        preferred_tutor_region_id,
-                        preferred_student_count_group,
-                        preferred_fee_amount, preferred_studyroom_fee_amount,
-                        lesson_format, request_summary,
-                        request_summary_visibility,
-                        exposure_status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-                );
-                $stmt->execute([
-                    $userId,
-                    $studentName,
-                    $publicName,
-                    $gradeLevel,
-                    $preferredLessonType,
-                    $studyroomRegionId,
-                    $studyroomComplexId,
-                    $tutorRegionId,
-                    $countGroup,
-                    $tutorFee,
-                    $studyroomFee,
-                    $lessonFormat,
-                    $requestSummary,
-                    'private',
-                    'draft',
-                ]);
-            }
+
+            $insertValues = ['guardian_user_id' => $userId] + $basicValues + [
+                'request_summary_visibility' => 'private',
+                'exposure_status'            => $exposureStatus,
+                'published_at'               => $publishedAt,
+            ];
+            $pdo->prepare(
+                'INSERT INTO students (' . implode(', ', array_keys($insertValues)) . ')
+                 VALUES (' . implode(', ', array_fill(0, count($insertValues), '?')) . ')'
+            )->execute(array_values($insertValues));
             $studentId = (int) $pdo->lastInsertId();
             if ($subjects !== [] && $schoolLevel !== null) {
                 $this->insertStudentSubjects($pdo, $studentId, $subjects, $schoolLevel);
             }
 
             $pdo->commit();
-        } catch (PDOException $e) {
-            $pdo->rollBack();
-            throw new RuntimeException('학생 기본등록 저장 실패: ' . $e->getMessage(), 0, $e);
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            if ($e instanceof PDOException) {
+                throw new RuntimeException('학생 기본등록 저장 실패: ' . $e->getMessage(), 0, $e);
+            }
+            throw $e;
         }
 
         return $studentId;

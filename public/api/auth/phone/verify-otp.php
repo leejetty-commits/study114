@@ -41,7 +41,7 @@ $code = is_array($decoded) ? (string) ($decoded['code'] ?? '') : '';
 
 try {
     $result = (new PhoneVerificationService())->verifyOtp((int) $user['user_id'], $code);
-    echo json_encode(['ok' => true] + $result, JSON_UNESCAPED_UNICODE);
+    echo json_encode(array_merge(['ok' => true], $result), JSON_UNESCAPED_UNICODE);
 } catch (PhoneVerificationException $e) {
     http_response_code(422);
     echo json_encode([

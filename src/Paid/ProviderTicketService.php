@@ -13,6 +13,9 @@ final class ProviderTicketService
 {
     private ProviderTicketRepository $repo;
 
+    /** @var array<int, true> */
+    private array $deferredMemoNotice = [];
+
     public function __construct(?ProviderTicketRepository $repo = null)
     {
         $this->repo = $repo ?? new ProviderTicketRepository(Connection::get());
@@ -65,20 +68,46 @@ final class ProviderTicketService
         return $this->repo->countMemoTicketsForProvider($userId, $ctx['provider_type'], $ctx['provider_id']) > 0;
     }
 
-    /** 선제 쪽지 1건 차감 — bypass 시 소비 없음. user 전체 fallback 없음. */
-    public function consumeMemoTicket(int $userId, ?string $providerType = null, ?int $providerId = null): bool
-    {
+    /**
+     * 선제 쪽지 1건 차감 — bypass 시 소비 없음. user 전체 fallback 없음.
+     * $deferBalanceNotice: 호출자 트랜잭션 커밋 후 notifyMemoBalance() 를 직접 부른다.
+     */
+    public function consumeMemoTicket(
+        int $userId,
+        ?string $providerType = null,
+        ?int $providerId = null,
+        bool $deferBalanceNotice = false,
+    ): bool {
         if ($this->repo->isColdMemoBypass($userId)) {
             return true;
         }
         $ctx = $this->repo->resolveMemoProvider($userId, $providerType, $providerId);
         if ($this->repo->consumeTicketForProvider($userId, $ctx['provider_type'], $ctx['provider_id'])) {
-            $this->notifyTicketBalanceIfNeeded($userId, 'memo');
+            if ($deferBalanceNotice) {
+                $this->deferredMemoNotice[$userId] = true;
+            } else {
+                $this->notifyTicketBalanceIfNeeded($userId, 'memo');
+            }
 
             return true;
         }
 
         return false;
+    }
+
+    /** 실제 차감이 있었던 경우에만 알림 — 커밋 후 호출 */
+    public function notifyMemoBalance(int $userId): void
+    {
+        if (empty($this->deferredMemoNotice[$userId])) {
+            return;
+        }
+        unset($this->deferredMemoNotice[$userId]);
+        $this->notifyTicketBalanceIfNeeded($userId, 'memo');
+    }
+
+    public function discardDeferredMemoNotice(int $userId): void
+    {
+        unset($this->deferredMemoNotice[$userId]);
     }
 
     /** @return list<array<string, mixed>> */

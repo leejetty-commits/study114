@@ -93,15 +93,16 @@ final class RegistrationApi
         } catch (InvalidArgumentException $e) {
             self::fail(422, 'validation', $e->getMessage());
         } catch (Throwable $e) {
-            error_log('[registration] ' . $e->getMessage());
-            self::fail(500, 'server_error', $e->getMessage());
+            // 예상하지 못한 예외는 내부 메시지를 응답에 싣지 않는다. 상세는 서버 로그에만.
+            error_log('[registration] ' . get_class($e) . ': ' . $e->getMessage());
+            self::fail(500, 'server_error', '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.');
         }
     }
 
     /** @param array<string, mixed> $data */
     public static function ok(array $data = []): never
     {
-        echo json_encode(['ok' => true] + $data, JSON_UNESCAPED_UNICODE);
+        echo json_encode(array_merge(['ok' => true], $data), JSON_UNESCAPED_UNICODE);
         exit;
     }
 

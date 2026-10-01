@@ -9,7 +9,12 @@
  */
 
 import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
-import { normalizeLocation, logLocationDebug, GUEST_PLACE_PROMPT } from '../../shared/location-display.js';
+import {
+  normalizeLocation,
+  logLocationDebug,
+  GUEST_PLACE_PROMPT,
+  readGuestBaseline,
+} from '../../shared/location-display.js';
 import { peekStudyRoomPromo1 } from '@home-ui/study-room-home-seed.js';
 import { getBasicPool, getPrimeOccupied } from '@home-ui/exposure-render.js';
 import { readListSortFromHash, sortListItems } from '../../shared/list-sort.js';
@@ -105,7 +110,7 @@ function renderFloatMap(parts, items, ctx) {
         </div>
       </div>
       <aside class="hero-map__banner" aria-label="지역 요약">
-        <h2 class="hero-map__dong">${esc(parts.dong || GUEST_PLACE_PROMPT)}</h2>
+        <h2 class="hero-map__dong">${esc(parts.dong || (bannerStyle === 'guest' ? readGuestBaseline().room : GUEST_PLACE_PROMPT))}</h2>
         <p class="hero-map__sub">${esc(sub)}</p>
         ${statsHtml}
         ${hint ? `<p class="hero-map__hint">${esc(hint)}</p>` : ''}

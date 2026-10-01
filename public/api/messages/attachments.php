@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
-use InvalidArgumentException;
 use Study114\Auth\AuthSession;
 use Study114\Messages\MessageAttachmentService;
 use Study114\Messages\MessagesApi;

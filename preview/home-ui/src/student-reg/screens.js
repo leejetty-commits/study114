@@ -131,9 +131,12 @@ function parseStudentForm(form) {
   if (patch.birth_year) patch.birth_year = Number(patch.birth_year);
   if (patch.lessons_per_week) patch.lessons_per_week = Number(patch.lessons_per_week);
   if (patch.minutes_per_lesson) patch.minutes_per_lesson = Number(patch.minutes_per_lesson);
-  if (patch.preferred_fee_amount) patch.preferred_fee_amount = Number(cheonwonInputToWon(patch.preferred_fee_amount));
-  if (patch.preferred_studyroom_fee_amount) {
-    patch.preferred_studyroom_fee_amount = Number(cheonwonInputToWon(patch.preferred_studyroom_fee_amount));
+  // 예산 0은 미입력이다. cheonwonInputToWon 이 0 이하를 ''로 돌려주므로 빈칸으로 보낸다(Number('') = 0 금지).
+  for (const key of ['preferred_fee_amount', 'preferred_studyroom_fee_amount']) {
+    if (key in patch) {
+      const won = cheonwonInputToWon(patch[key]);
+      patch[key] = won === '' ? '' : Number(won);
+    }
   }
   if (patch.lesson_format === 'one_on_one') {
     patch.preferred_student_count_group = 'solo';
@@ -287,7 +290,7 @@ function renderBasicForm(student) {
           </div>
           <label class="p19-field">
             <span class="p19-field__label">예산 (천원)</span>
-            ${renderTextInput('preferred_fee_amount', wonToCheonwonInput(student.preferred_fee_amount), { type: 'number', min: 0, step: 1 })}
+            ${renderTextInput('preferred_fee_amount', wonToCheonwonInput(student.preferred_fee_amount), { type: 'number', min: 1, step: 1 })}
           </label>
         </div>
         <div data-p19-hope-panel="study_room" ${hope === 'study_room' ? '' : 'hidden'}>
@@ -308,7 +311,7 @@ function renderBasicForm(student) {
           </label>
           <label class="p19-field">
             <span class="p19-field__label">예산 (천원)</span>
-            ${renderTextInput('preferred_studyroom_fee_amount', wonToCheonwonInput(student.preferred_studyroom_fee_amount), { type: 'number', min: 0, step: 1 })}
+            ${renderTextInput('preferred_studyroom_fee_amount', wonToCheonwonInput(student.preferred_studyroom_fee_amount), { type: 'number', min: 1, step: 1 })}
           </label>
         </div>
         <label class="p19-field">
@@ -514,6 +517,13 @@ export function bindStudentRegEvents(root, rerender) {
         const count = form.querySelector('[name="preferred_student_count_group"]');
         if (count && solo) count.value = 'solo';
       };
+      // min=1 위반(0 입력)은 브라우저 말풍선 대신 「예산」 이름으로 안내한다.
+      form.querySelectorAll('[name="preferred_fee_amount"], [name="preferred_studyroom_fee_amount"]').forEach((el) => {
+        el.addEventListener('invalid', (ev) => {
+          ev.preventDefault();
+          alert('예산은 1천원 이상으로 입력해 주세요. 0은 입력하지 않은 것으로 봅니다.');
+        });
+      });
       form.querySelector('[name="preferred_lesson_type"]')?.addEventListener('change', syncBasic);
       form.querySelector('[name="preferred_studyroom_region_basis"]')?.addEventListener('change', syncBasic);
       form.querySelector('[name="lesson_format"]')?.addEventListener('change', syncBasic);
@@ -570,7 +580,12 @@ export function bindStudentRegEvents(root, rerender) {
       try {
         const saved = await updateStudent(id, patch);
         if (formKind === 'detail' && saved) persistFindDefaultsFromStudent(saved);
-        alert('저장되었습니다.');
+        const basicMissing = Array.isArray(saved?.basic_missing) ? saved.basic_missing : [];
+        if (saved?.exposure_status === 'draft' && basicMissing.length) {
+          alert(`저장되었습니다. 기본정보에 빈 칸이 있어 카드가 노출되지 않습니다: ${basicMissing.join(', ')}`);
+        } else {
+          alert('저장되었습니다.');
+        }
         rerender();
       } catch (err) {
         console.warn('[p19]', err);

@@ -41,6 +41,42 @@ final class StudentHubRepository
         return $row !== false ? $this->hydrateStudentRow($studentId, $row) : null;
     }
 
+    /** 보호자 확인 없이 id로 읽는다. 관리자·CLI·기본정보 완료 판정용. @return array<string, mixed>|null */
+    public function findById(int $studentId): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT s.* FROM students s WHERE s.id = ? AND s.deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([$studentId]);
+        $row = $stmt->fetch();
+
+        return $row !== false ? $this->hydrateStudentRow($studentId, $row) : null;
+    }
+
+    /** 보호자 계정의 첫 학생(기본등록이 쓰는 행과 같은 정렬). @return array<string, mixed>|null */
+    public function findFirstForGuardian(int $guardianUserId): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT s.* FROM students s
+             WHERE s.guardian_user_id = ? AND s.deleted_at IS NULL
+             ORDER BY s.id ASC LIMIT 1'
+        );
+        $stmt->execute([$guardianUserId]);
+        $row = $stmt->fetch();
+
+        return $row !== false ? $this->hydrateStudentRow((int) $row['id'], $row) : null;
+    }
+
+    /** @return list<int> */
+    public function listDraftIds(): array
+    {
+        $stmt = $this->pdo->query(
+            "SELECT id FROM students WHERE exposure_status = 'draft' AND deleted_at IS NULL ORDER BY id ASC"
+        );
+
+        return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+    }
+
     public function updateExposureStatus(int $studentId, string $status, ?string $publishedAt = null): void
     {
         $stmt = $this->pdo->prepare(
@@ -51,21 +87,87 @@ final class StudentHubRepository
     }
 
     /**
+     * 현재 상태가 $from 일 때만 바꾼다. 관리자가 그사이 hidden 으로 내린 행은 건드리지 않는다.
+     */
+    public function transitionExposureStatus(int $studentId, string $from, string $to, ?string $publishedAt = null): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE students SET exposure_status = ?, published_at = COALESCE(?, published_at), updated_at = NOW()
+             WHERE id = ? AND exposure_status = ? AND deleted_at IS NULL'
+        );
+        $stmt->execute([$to, $publishedAt, $studentId, $from]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * @template T
+     * @param callable(): T $fn
+     * @return T
+     */
+    public function transaction(callable $fn): mixed
+    {
+        if ($this->pdo->inTransaction()) {
+            return $fn();
+        }
+        $this->pdo->beginTransaction();
+        try {
+            $result = $fn();
+            $this->pdo->commit();
+
+            return $result;
+        } catch (\Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    private const PATCH_COLUMNS = [
+        'public_display_name', 'grade_level', 'gender', 'birth_year',
+        'preferred_lesson_type', 'preferred_region_note',
+        'preferred_tutor_region_id', 'preferred_studyroom_region_id',
+        'preferred_studyroom_complex_id', 'preferred_studyroom_region_basis',
+        'preferred_fee_amount', 'preferred_studyroom_fee_amount',
+        'lessons_per_week', 'minutes_per_lesson', 'lesson_format',
+        'student_gender_group', 'preferred_student_count_group',
+        'preferred_tutor_gender', 'memo_status', 'request_summary', 'request_summary_visibility',
+        'special_request_note', 'special_request_visibility',
+    ];
+
+    /** students 컬럼이 아닌 연결 테이블·보조 입력 */
+    private const PATCH_RELATION_KEYS = [
+        'lesson_places', 'teaching_style_badges', 'subject_label', 'subject_names', 'school_level',
+    ];
+
+    private const SCHOOL_LEVELS = ['preschool', 'elementary', 'middle', 'high', 'n_su', 'general', 'other'];
+
+    /**
      * @param array<string, mixed> $patch
      */
     public function patchStudent(int $studentId, array $patch): void
     {
-        $allowed = [
-            'public_display_name', 'grade_level', 'gender', 'birth_year',
-            'preferred_lesson_type', 'preferred_region_note',
-            'preferred_tutor_region_id', 'preferred_studyroom_region_id',
-            'preferred_studyroom_complex_id', 'preferred_studyroom_region_basis',
-            'preferred_fee_amount', 'preferred_studyroom_fee_amount',
-            'lessons_per_week', 'minutes_per_lesson', 'lesson_format',
-            'student_gender_group', 'preferred_student_count_group',
-            'preferred_tutor_gender', 'memo_status', 'request_summary', 'request_summary_visibility',
-            'special_request_note', 'special_request_visibility',
-        ];
+        foreach (array_keys($patch) as $key) {
+            if (!in_array($key, self::PATCH_COLUMNS, true) && !in_array($key, self::PATCH_RELATION_KEYS, true)) {
+                throw new \InvalidArgumentException("{$key}: 저장할 수 없는 항목입니다.");
+            }
+        }
+        foreach (['lesson_places', 'teaching_style_badges'] as $listKey) {
+            if (array_key_exists($listKey, $patch) && !is_array($patch[$listKey])) {
+                throw new \InvalidArgumentException("{$listKey}: 값을 확인해 주세요.");
+            }
+        }
+        foreach (['subject_label', 'subject_names', 'school_level'] as $textKey) {
+            if (array_key_exists($textKey, $patch) && $patch[$textKey] !== null && !is_string($patch[$textKey])) {
+                throw new \InvalidArgumentException("{$textKey}: 값을 확인해 주세요.");
+            }
+        }
+        $patchSchoolLevel = isset($patch['school_level']) ? trim((string) $patch['school_level']) : '';
+        if ($patchSchoolLevel !== '' && !in_array($patchSchoolLevel, self::SCHOOL_LEVELS, true)) {
+            throw new \InvalidArgumentException('school_level: 값을 확인해 주세요.');
+        }
+
         $ownTx = !$this->pdo->inTransaction();
         if ($ownTx) {
             $this->pdo->beginTransaction();
@@ -73,12 +175,20 @@ final class StudentHubRepository
         try {
             $sets = [];
             $params = [];
-            foreach ($allowed as $col) {
+            $values = [];
+            foreach (self::PATCH_COLUMNS as $col) {
                 if (!array_key_exists($col, $patch)) {
                     continue;
                 }
+                $values[$col] = $this->normalizeStudentColumn($col, $patch[$col]);
+            }
+            // 단지 기준이면 단지가 속한 행정동을 공부방 희망지역으로 함께 저장한다(가입 기본정보와 같은 규칙).
+            if (isset($values['preferred_studyroom_complex_id']) && !array_key_exists('preferred_studyroom_region_id', $values)) {
+                $values['preferred_studyroom_region_id'] = $this->complexRegionId((int) $values['preferred_studyroom_complex_id']);
+            }
+            foreach ($values as $col => $value) {
                 $sets[] = "{$col} = ?";
-                $params[] = $this->normalizeStudentColumn($col, $patch[$col]);
+                $params[] = $value;
             }
             if ($sets !== []) {
                 $sets[] = 'updated_at = NOW()';
@@ -95,7 +205,7 @@ final class StudentHubRepository
             }
             if (array_key_exists('subject_label', $patch) || array_key_exists('subject_names', $patch)) {
                 $subjectName = trim((string) ($patch['subject_label'] ?? $patch['subject_names'] ?? ''));
-                $schoolLevel = isset($patch['school_level']) ? (string) $patch['school_level'] : '';
+                $schoolLevel = $patchSchoolLevel;
                 if ($schoolLevel === '') {
                     $schoolLevel = (string) ($this->inferSchoolLevel(
                         isset($patch['grade_level']) ? (string) $patch['grade_level'] : null
@@ -114,10 +224,52 @@ final class StudentHubRepository
         }
     }
 
+    private const PATCH_ENUMS = [
+        'preferred_lesson_type'          => ['tutor', 'study_room'],
+        'lesson_format'                  => ['one_on_one', 'group'],
+        'preferred_student_count_group'  => ['solo', 'two', 'three', 'four_plus'],
+        'student_gender_group'           => ['male', 'female', 'mixed'],
+        'request_summary_visibility'     => ['private', 'paid_only'],
+        'special_request_visibility'     => ['private', 'paid_only'],
+    ];
+
+    /** DB NOT NULL 이라 비울 수 없는 컬럼 */
+    private const PATCH_NOT_NULL = ['memo_status', 'request_summary_visibility', 'special_request_visibility'];
+
     private function normalizeStudentColumn(string $col, mixed $value): mixed
     {
+        if ($value !== null && !is_string($value) && !is_int($value)) {
+            throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
+        }
+        if (is_string($value)) {
+            $value = trim($value);
+        }
         if ($value === '') {
             $value = null;
+        }
+        if ($value === null && in_array($col, self::PATCH_NOT_NULL, true)) {
+            throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
+        }
+        if (isset(self::PATCH_ENUMS[$col])) {
+            if ($value !== null && !in_array($value, self::PATCH_ENUMS[$col], true)) {
+                throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
+            }
+
+            return $value;
+        }
+        if ($col === 'public_display_name') {
+            if ($value !== null && mb_strlen((string) $value) > 40) {
+                throw new \InvalidArgumentException('public_display_name: 40자 이하로 입력해 주세요.');
+            }
+
+            return $value === null ? null : (string) $value;
+        }
+        if ($col === 'grade_level') {
+            if ($value !== null && mb_strlen((string) $value) > 20) {
+                throw new \InvalidArgumentException('grade_level: 값을 확인해 주세요.');
+            }
+
+            return $value === null ? null : (string) $value;
         }
         if ($col === 'preferred_region_note') {
             if ($value === null) {
@@ -137,9 +289,13 @@ final class StudentHubRepository
             if ($value === null) {
                 return null;
             }
-            $text = trim((string) $value);
+            $text = (string) $value;
+            // TEXT 컬럼 한도(65,535바이트)
+            if (strlen($text) > 65535) {
+                throw new \InvalidArgumentException('special_request_note: 내용이 너무 깁니다.');
+            }
 
-            return $text === '' ? null : $text;
+            return $text;
         }
         if (in_array($col, ['birth_year', 'lessons_per_week', 'minutes_per_lesson', 'preferred_fee_amount', 'preferred_studyroom_fee_amount'], true)) {
             if ($value === null) {
@@ -186,8 +342,15 @@ final class StudentHubRepository
             if (!is_int($value) && !(is_string($value) && preg_match('/^\d+$/', $value))) {
                 throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
             }
+            $id = (int) $value;
+            $table = $col === 'preferred_studyroom_region_id' ? 'regions' : 'complexes';
+            $stmt = $this->pdo->prepare("SELECT 1 FROM {$table} WHERE id = ? AND is_active = 1 LIMIT 1");
+            $stmt->execute([$id]);
+            if ($id <= 0 || !$stmt->fetchColumn()) {
+                throw new \InvalidArgumentException('희망지역을 목록에서 다시 선택해 주세요.');
+            }
 
-            return (int) $value;
+            return $id;
         }
         if ($col === 'preferred_studyroom_region_basis' && $value !== null && !in_array($value, ['dong', 'complex'], true)) {
             throw new \InvalidArgumentException('preferred_studyroom_region_basis: 값을 확인해 주세요.');
@@ -197,6 +360,18 @@ final class StudentHubRepository
         }
 
         return $value;
+    }
+
+    private function complexRegionId(int $complexId): int
+    {
+        $stmt = $this->pdo->prepare('SELECT region_id FROM complexes WHERE id = ? AND is_active = 1 LIMIT 1');
+        $stmt->execute([$complexId]);
+        $regionId = $stmt->fetchColumn();
+        if (!$regionId) {
+            throw new \InvalidArgumentException('희망지역을 목록에서 다시 선택해 주세요.');
+        }
+
+        return (int) $regionId;
     }
 
     private function replacePrimarySubject(int $studentId, string $name, string $schoolLevel): void
@@ -280,14 +455,19 @@ final class StudentHubRepository
     private function hydrateStudentRow(int $studentId, array $row): array
     {
         $regionLabel = $this->resolveStudentRegionLabel($row);
-        $subjectLabel = $this->primarySubjectName($studentId);
+        $subject = $this->primarySubject($studentId);
+        $subjectLabel = $subject['name'];
+        // 학교급은 students 컬럼이 없어 희망과목 행에 저장된다. 없을 때만 학년 글자로 추정한다.
+        $schoolLevel = in_array($subject['school_level'], self::SCHOOL_LEVELS, true)
+            ? $subject['school_level']
+            : $this->inferSchoolLevel($row['grade_level'] ?? null);
 
-        return [
+        $out = [
             'id'                            => $studentId,
             'student_name'                  => (string) $row['student_name'],
             'public_display_name'           => (string) ($row['public_display_name'] ?? ''),
             'grade_level'                   => $row['grade_level'] !== null ? (string) $row['grade_level'] : null,
-            'school_level'                  => $this->inferSchoolLevel($row['grade_level'] ?? null),
+            'school_level'                  => $schoolLevel,
             'gender'                        => $row['gender'] !== null ? (string) $row['gender'] : null,
             'birth_year'                    => $row['birth_year'] !== null ? (int) $row['birth_year'] : null,
             'exposure_status'               => (string) $row['exposure_status'],
@@ -322,6 +502,9 @@ final class StudentHubRepository
             'api_student_id'                => $studentId,
             'api_registered'                => true,
         ];
+        $out['basic_missing'] = StudentBasicCompleteness::missingLabels($out);
+
+        return $out;
     }
 
     /** @param array<string, mixed> $row */
@@ -340,16 +523,23 @@ final class StudentHubRepository
         return $label !== false ? (string) $label : (string) ($row['preferred_region_note'] ?? '');
     }
 
-    private function primarySubjectName(int $studentId): string
+    /** @return array{name: string, school_level: string} */
+    private function primarySubject(int $studentId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT subject_name FROM student_subject_targets
+            'SELECT subject_name, school_level FROM student_subject_targets
              WHERE student_id = ? ORDER BY is_primary DESC, id ASC LIMIT 1'
         );
         $stmt->execute([$studentId]);
-        $val = $stmt->fetchColumn();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return ['name' => '', 'school_level' => ''];
+        }
 
-        return $val !== false ? (string) $val : '';
+        return [
+            'name'         => (string) ($row['subject_name'] ?? ''),
+            'school_level' => (string) ($row['school_level'] ?? ''),
+        ];
     }
 
     /** @return list<string> */

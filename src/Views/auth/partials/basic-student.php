@@ -134,13 +134,13 @@ $subjectSelected = (string) study114_old($old, 'subject_names', '');
 
   <div class="student-basic__field" data-student-tutor-budget <?= $hope === 'tutor' ? '' : 'hidden' ?>>
     <label class="form-label" for="preferred_fee_amount">예산 (천원)</label>
-    <input class="form-input" id="preferred_fee_amount" name="preferred_fee_amount" type="number" min="0" step="1" inputmode="numeric" value="<?= study114_e((string) study114_old($old, 'preferred_fee_amount', '')) ?>" <?= $hope === 'tutor' ? '' : 'disabled' ?>>
+    <input class="form-input" id="preferred_fee_amount" name="preferred_fee_amount" type="number" min="1" step="1" inputmode="numeric" value="<?= study114_e((string) study114_old($old, 'preferred_fee_amount', '')) ?>" <?= $hope === 'tutor' ? '' : 'disabled' ?>>
     <p class="form-hint">과외쌤 수업의 월 예산입니다. 천원 단위로 적습니다.</p>
   </div>
 
   <div class="student-basic__field" data-student-studyroom-budget <?= $hope === 'study_room' ? '' : 'hidden' ?>>
     <label class="form-label" for="preferred_studyroom_fee_amount">예산 (천원)</label>
-    <input class="form-input" id="preferred_studyroom_fee_amount" name="preferred_studyroom_fee_amount" type="number" min="0" step="1" inputmode="numeric" value="<?= study114_e((string) study114_old($old, 'preferred_studyroom_fee_amount', '')) ?>" <?= $hope === 'study_room' ? '' : 'disabled' ?>>
+    <input class="form-input" id="preferred_studyroom_fee_amount" name="preferred_studyroom_fee_amount" type="number" min="1" step="1" inputmode="numeric" value="<?= study114_e((string) study114_old($old, 'preferred_studyroom_fee_amount', '')) ?>" <?= $hope === 'study_room' ? '' : 'disabled' ?>>
     <p class="form-hint">공부방 수업의 월 예산입니다. 천원 단위로 적습니다.</p>
   </div>
 

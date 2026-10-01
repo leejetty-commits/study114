@@ -175,6 +175,9 @@ final class AuthController
         $this->assertEmailVerifiedOrRedirect();
 
         $role = $this->resolveRoleUi();
+        if ($role === '') {
+            $this->redirectHomeUi();
+        }
         $user = AuthSession::user();
         $service = new BasicRegisterService();
         View::render('auth/signup-basic', [
@@ -259,7 +262,7 @@ final class AuthController
             return AuthSession::signupRole() ?? 'student';
         }
 
-        return $map[$user['role_type']] ?? 'student';
+        return $map[(string) ($user['role_type'] ?? '')] ?? '';
     }
 
     private function authUiBase(): string

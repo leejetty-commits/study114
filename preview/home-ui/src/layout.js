@@ -1,7 +1,7 @@
 import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isGuideRoute, isCommunityRoute, isPromoRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, isMyshopRoute, isRegisterIntroRoute, getRegisterIntroKind, navigateToGuide, navigateToSupport } from './state.js';
 import { getDefaultMypagePath } from './mypage/router.js';
 import { getDefaultMessagesPath } from './messages/router.js';
-import { readGuestBaseline, GUEST_PLACE_PROMPT } from '../../shared/location-display.js';
+import { readGuestBaseline } from '../../shared/location-display.js';
 import { GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVisible, canAccessPlansHub, resolveUtilMenuItems } from './nav-config.js';
 import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
 import { getAuthUser, isLoggedIn, isAdminUser, isEmailVerified, devLoginAs, logout } from './auth-session.js';
@@ -81,7 +81,7 @@ export function renderPreviewToolbar() {
         <span class="preview-toolbar__divider"></span>
         ${
           isGuest
-            ? `<span class="preview-toolbar__hint">비회원: ${readGuestBaseline().room || GUEST_PLACE_PROMPT}</span>`
+            ? `<span class="preview-toolbar__hint">비회원: ${readGuestBaseline().room}</span>`
             : `<button type="button" class="preview-toolbar__btn ${region === 'complex' ? 'is-active' : ''}" data-region="complex" title="미리보기: 아파트단지 기준 지역">단지 기준</button>
                <button type="button" class="preview-toolbar__btn ${region === 'dong' ? 'is-active' : ''}" data-region="dong" title="미리보기: 행정동 기준 지역">행정동 기준</button>`
         }
@@ -207,7 +207,8 @@ function roleHomePath() {
   if (user.role_type === 'admin') return '/guest';
   if (user.role_type === 'study_room_owner') return '/study-room';
   if (user.role_type === 'tutor') return '/tutor';
-  return '/parent';
+  if (user.role_type === 'guardian_student') return '/parent';
+  return '/guest';
 }
 
 /** 같은 탭에서 URL로 이동 (검색·등록·auth SPA) */
@@ -262,7 +263,7 @@ export function renderFooter() {
 }
 
 export function renderRegionBar(showSearch = true) {
-  const label = readGuestBaseline().room || GUEST_PLACE_PROMPT;
+  const label = readGuestBaseline().room;
   return `
     <div class="region-bar">
       <div>
@@ -352,7 +353,7 @@ export function renderBottomList(title, items) {
 export function renderMapBlock() {
   return `
     <div class="map-block">
-      <div class="map-block__head">📍 공부방 지도 · ${readGuestBaseline().room || GUEST_PLACE_PROMPT}</div>
+      <div class="map-block__head">📍 공부방 지도 · ${readGuestBaseline().room}</div>
       <div class="map-block__body">
         <span>[프리뷰] 공부방 지도 영역</span>
         <span class="map-block__pin"></span>

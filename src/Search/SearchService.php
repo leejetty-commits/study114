@@ -79,8 +79,9 @@ final class SearchService
      * 공부방은 GUEST_BASE_DONG_CODE 행 id, 과외쌤·학생은 GUEST_BASE_GU_OFFICIAL_CODE 행 id.
      * 목록 노출·비삭제·탈퇴 제외는 기존 검색과 같다. 유료 티어만 세지 않는다.
      * 기준 행이 없으면 그 축은 0이고 로그 한 줄만 남긴다.
+     * regionIds 는 게스트 목록이 같은 행으로 search 필터를 걸 때 쓴다. 기준 행이 없으면 null.
      *
-     * @return array{studyRooms: int, tutors: int, studentRequests: int, axes: array{room: string, tutor: string, student: string}}
+     * @return array{studyRooms: int, tutors: int, studentRequests: int, axes: array{room: string, tutor: string, student: string}, regionIds: array{room: ?int, tutor: ?int, student: ?int}}
      */
     public function guestAxisCounts(): array
     {
@@ -112,6 +113,11 @@ final class SearchService
             'tutors' => $tutors,
             'studentRequests' => $studentRequests,
             'axes' => $this->guestAxisLabels($pdo, $dongId, $guId),
+            'regionIds' => [
+                'room' => $dongId,
+                'tutor' => $guId,
+                'student' => $guId,
+            ],
         ];
     }
 

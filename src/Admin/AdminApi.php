@@ -126,7 +126,7 @@ final class AdminApi
     /** @param array<string, mixed> $data */
     public static function ok(array $data = []): never
     {
-        echo json_encode(['ok' => true] + $data, JSON_UNESCAPED_UNICODE);
+        echo json_encode(array_merge(['ok' => true], $data), JSON_UNESCAPED_UNICODE);
         exit;
     }
 

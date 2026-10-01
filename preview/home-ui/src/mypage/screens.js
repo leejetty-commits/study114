@@ -3,7 +3,7 @@ import {
   SUBMISSION_DOCS_LEAD,
   TRUST_PLATFORM_DISCLAIMER,
 } from '../lifecycle-copy.js';
-import { TUTOR_REGISTER_URL, navRoleFromAuthUser } from '../nav-config.js';
+import { TUTOR_REGISTER_URL, navRoleFromAuthUser, roleHomeHashPath } from '../nav-config.js';
 import { getNavRole, getMypagePath } from '../state.js';
 import { isStudyRoomAuth } from '../auth-role.js';
 import {
@@ -100,17 +100,16 @@ function roleLabel(role) {
 
 /** @param {string} path */
 export function renderMypageScreen(path) {
-  const role = getNavRole();
   const sessionRole = navRoleFromAuthUser(getAuthUser());
+  if (sessionRole !== 'study_room' && sessionRole !== 'tutor' && sessionRole !== 'parent' && !isStudyRoomAuth()) {
+    const home = roleHomeHashPath(getAuthUser());
+    queueMicrotask(() => {
+      if ((window.location.hash.slice(1) || '').startsWith('/mypage')) window.location.replace(`#${home}`);
+    });
+    return '';
+  }
   /** @type {'parent'|'study_room'|'tutor'} */
-  const r =
-    sessionRole === 'study_room' || isStudyRoomAuth()
-      ? 'study_room'
-      : sessionRole === 'tutor' || sessionRole === 'parent'
-        ? sessionRole
-        : role === 'guest'
-          ? 'parent'
-          : role;
+  const r = sessionRole === 'study_room' || isStudyRoomAuth() ? 'study_room' : sessionRole;
   const profile = getPreviewProfile(r);
   const _entryPath = getDefaultMypagePath(r);
   const _withNotice = (html, renderedPath) =>

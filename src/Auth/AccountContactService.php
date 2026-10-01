@@ -118,7 +118,7 @@ final class AccountContactService
     {
         $pdo = Connection::get();
         $stmt = $pdo->prepare(
-            'SELECT u.id, u.email, IFNULL(p.real_name, \'\') AS name, IFNULL(r.role_type, \'guardian_student\') AS role_type
+            'SELECT u.id, u.email, IFNULL(p.real_name, \'\') AS name, IFNULL(r.role_type, \'\') AS role_type
                FROM users u
                LEFT JOIN user_profiles p ON p.user_id = u.id
                LEFT JOIN user_roles r ON r.user_id = u.id AND r.is_primary = 1 AND r.status = ?

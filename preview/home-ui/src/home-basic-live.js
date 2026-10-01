@@ -12,7 +12,13 @@ const PAGE_LIMIT = 50;
 /** 홈 Basic이 한 번에 끌어올 최대 페이지(전체 정렬 근사) */
 const MAX_PAGES = 4;
 
-/** @type {{ study_room: object[]|null, tutor: object[]|null, student: object[]|null, live: boolean, attempted: boolean, error: string|null, sorts: Record<string,string> }} */
+/**
+ * scope: null이면 지역 조건 없이 부른다.
+ * 객체면 kind별 search.php 필터. kind 값이 null이면 그 kind는 부르지 않고 빈 목록으로 둔다.
+ * @typedef {{ study_room: Record<string,string>|null, tutor: Record<string,string>|null, student: Record<string,string>|null }} HomeBasicScope
+ */
+
+/** @type {{ study_room: object[]|null, tutor: object[]|null, student: object[]|null, live: boolean, attempted: boolean, error: string|null, sorts: Record<string,string>, scope: HomeBasicScope|null }} */
 const state = {
   study_room: null,
   tutor: null,
@@ -25,7 +31,14 @@ const state = {
     tutor: DEFAULT_LIST_SORT,
     student: DEFAULT_LIST_SORT,
   },
+  scope: null,
 };
+
+/** @param {'study_room'|'tutor'|'student'} kind @returns {Record<string,string>|null} */
+function scopeFilters(kind) {
+  if (!state.scope) return {};
+  return state.scope[kind] || null;
+}
 
 function mapRoom(item) {
   const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
@@ -115,13 +128,15 @@ function mapStudent(item) {
 /**
  * @param {'room'|'tutor'|'student'} tab
  * @param {string} sort
+ * @param {Record<string,string>|null} filters null이면 부르지 않는다.
  */
-async function fetchAllSorted(tab, sort) {
+async function fetchAllSorted(tab, sort, filters) {
   /** @type {object[]} */
   const items = [];
+  if (filters === null) return items;
   let total = Infinity;
   for (let page = 1; page <= MAX_PAGES && items.length < total; page++) {
-    const data = await searchPreviewTab(tab, PAGE_LIMIT, sort, page);
+    const data = await searchPreviewTab(tab, PAGE_LIMIT, sort, page, filters);
     total = Number(data.total) || 0;
     const batch = data.items || [];
     items.push(...batch);
@@ -157,19 +172,24 @@ export function getHomeBasicLiveError() {
 
 /**
  * @param {Partial<Record<'study_room'|'tutor'|'student', string>>} [sorts]
+ * @param {{ scope?: HomeBasicScope|null }} [opts] scope를 주면 이후 정렬 재조회도 같은 필터를 쓴다.
  */
-export async function hydrateHomeBasicFromSearch(sorts = {}) {
+export async function hydrateHomeBasicFromSearch(sorts = {}, opts = {}) {
   const roomSort = sorts.study_room || readListSortFromHash('study_room', { mode: 'home' });
   const tutorSort = sorts.tutor || readListSortFromHash('tutor', { mode: 'home' });
   const studentSort = sorts.student || readListSortFromHash('student', { mode: 'home' });
+  if ('scope' in opts) state.scope = opts.scope ?? null;
   state.attempted = true;
   state.error = null;
 
   try {
+    if (state.scope && !state.scope.study_room && !state.scope.tutor && !state.scope.student) {
+      throw new Error('기준 지역을 불러오지 못했습니다.');
+    }
     const [rooms, tutors, students] = await Promise.all([
-      fetchAllSorted('room', roomSort),
-      fetchAllSorted('tutor', tutorSort),
-      fetchAllSorted('student', studentSort),
+      fetchAllSorted('room', roomSort, scopeFilters('study_room')),
+      fetchAllSorted('tutor', tutorSort, scopeFilters('tutor')),
+      fetchAllSorted('student', studentSort, scopeFilters('student')),
     ]);
     state.study_room = rooms.map(mapRoom);
     state.tutor = tutors.map(mapTutor);
@@ -200,7 +220,7 @@ export async function hydrateHomeBasicFromSearch(sorts = {}) {
 export async function refetchHomeBasicKind(kind, sort) {
   const tab = kind === 'study_room' ? 'room' : kind;
   try {
-    const items = await fetchAllSorted(tab, sort);
+    const items = await fetchAllSorted(tab, sort, scopeFilters(kind));
     if (kind === 'study_room') state.study_room = items.map(mapRoom);
     else if (kind === 'tutor') state.tutor = items.map(mapTutor);
     else state.student = items.map(mapStudent);
@@ -222,4 +242,5 @@ export function resetHomeBasicLive() {
   state.live = false;
   state.attempted = false;
   state.error = null;
+  state.scope = null;
 }

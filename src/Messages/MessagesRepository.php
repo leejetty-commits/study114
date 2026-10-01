@@ -11,6 +11,8 @@ final class MessagesRepository
 {
     private ?bool $hasImportantColumn = null;
 
+    private ?bool $hasStudentRequestSummaryColumn = null;
+
     public function __construct(private readonly PDO $pdo)
     {
     }
@@ -103,6 +105,44 @@ final class MessagesRepository
         $val = $stmt->fetchColumn();
 
         return $val !== false ? (int) $val : null;
+    }
+
+    /** students.request_summary 없는 DB(PR-B CI 픽스처 등)에서도 쪽지 조회가 500 나지 않게 */
+    private function hasStudentRequestSummaryColumn(): bool
+    {
+        if ($this->hasStudentRequestSummaryColumn !== null) {
+            return $this->hasStudentRequestSummaryColumn;
+        }
+        try {
+            $stmt = $this->pdo->query("SHOW COLUMNS FROM students LIKE 'request_summary'");
+            $this->hasStudentRequestSummaryColumn = $stmt !== false && $stmt->fetch() !== false;
+        } catch (\PDOException) {
+            $this->hasStudentRequestSummaryColumn = false;
+        }
+
+        return $this->hasStudentRequestSummaryColumn;
+    }
+
+    private function studentRequestSummarySelect(): string
+    {
+        if (!$this->hasStudentRequestSummaryColumn()) {
+            return 'NULL AS student_request_summary';
+        }
+
+        return "(SELECT st.request_summary FROM students st
+                  WHERE t.context_kind = 'student' AND st.id = t.context_id LIMIT 1) AS student_request_summary";
+    }
+
+    public function getStudentRequestSummary(int $studentId): ?string
+    {
+        if (!$this->hasStudentRequestSummaryColumn()) {
+            return null;
+        }
+        $stmt = $this->pdo->prepare('SELECT request_summary FROM students WHERE id = ? LIMIT 1');
+        $stmt->execute([$studentId]);
+        $val = $stmt->fetchColumn();
+
+        return $val !== false && $val !== null ? (string) $val : null;
     }
 
   /**
@@ -207,6 +247,8 @@ final class MessagesRepository
                     {$psCols},
                     (SELECT m.body FROM messages m WHERE m.thread_id = t.id
                      ORDER BY m.created_at ASC, m.id ASC LIMIT 1) AS first_message_body,
+                    {$this->studentRequestSummarySelect()},
+                    {$this->anyParticipantBlockedSelect()},
                     {$this->peerIdentitySelect()}
              FROM message_threads t
              LEFT JOIN message_thread_reads r ON r.thread_id = t.id AND r.user_id = ?
@@ -234,6 +276,8 @@ final class MessagesRepository
                     {$psCols},
                     (SELECT m.body FROM messages m WHERE m.thread_id = t.id
                      ORDER BY m.created_at ASC, m.id ASC LIMIT 1) AS first_message_body,
+                    {$this->studentRequestSummarySelect()},
+                    {$this->anyParticipantBlockedSelect()},
                     {$this->peerIdentitySelect()}
              FROM message_threads t
              LEFT JOIN message_thread_reads r ON r.thread_id = t.id AND r.user_id = ?
@@ -331,6 +375,24 @@ final class MessagesRepository
         $row = $stmt->fetch();
 
         return $row !== false ? $row : null;
+    }
+
+    /** 차단은 차단한 사람 본인 participant_state 행에만 저장된다 — 참여자 둘의 행을 모두 본다 */
+    public function isThreadBlockedByAnyParticipant(int $threadId): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM message_thread_participant_state
+             WHERE thread_id = ? AND is_blocked = 1 LIMIT 1'
+        );
+        $stmt->execute([$threadId]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+
+    private function anyParticipantBlockedSelect(): string
+    {
+        return '(SELECT COALESCE(MAX(bs.is_blocked), 0) FROM message_thread_participant_state bs
+                  WHERE bs.thread_id = t.id) AS any_participant_blocked';
     }
 
     public function threadHasPeerMessage(int $threadId, int $viewerUserId): bool

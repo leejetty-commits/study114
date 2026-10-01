@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 4) . '/src/bootstrap.php';
 
-use InvalidArgumentException;
 use Study114\Board\BoardAccessException;
 use Study114\Board\BoardAttachmentService;
 use Study114\Board\BoardApi;

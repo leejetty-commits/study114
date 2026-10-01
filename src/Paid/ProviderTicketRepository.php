@@ -56,6 +56,17 @@ final class ProviderTicketRepository
         ];
     }
 
+    /** 잔여 > 0 일 때만 1 감소 — 영향 행 1이 아니면 false */
+    private function decrementPackRemaining(int $packId): bool
+    {
+        $upd = $this->pdo->prepare(
+            'UPDATE provider_ticket_packs SET remaining = remaining - 1 WHERE id = ? AND remaining > 0'
+        );
+        $upd->execute([$packId]);
+
+        return $upd->rowCount() === 1;
+    }
+
     public function consumeTicket(int $userId, string $ticketType): bool
     {
         $this->assertTicketType($ticketType);
@@ -74,11 +85,11 @@ final class ProviderTicketRepository
 
                 return false;
             }
-            $newRemaining = (int) $row['remaining'] - 1;
-            $upd = $this->pdo->prepare(
-                'UPDATE provider_ticket_packs SET remaining = ? WHERE id = ?'
-            );
-            $upd->execute([$newRemaining, (int) $row['id']]);
+            if (!$this->decrementPackRemaining((int) $row['id'])) {
+                $this->pdo->rollBack();
+
+                return false;
+            }
             $this->pdo->commit();
 
             return true;
@@ -558,10 +569,13 @@ final class ProviderTicketRepository
 
                 return false;
             }
-            $upd = $this->pdo->prepare(
-                'UPDATE provider_ticket_packs SET remaining = ? WHERE id = ?'
-            );
-            $upd->execute([(int) $row['remaining'] - 1, (int) $row['id']]);
+            if (!$this->decrementPackRemaining((int) $row['id'])) {
+                if ($ownTxn) {
+                    $this->pdo->rollBack();
+                }
+
+                return false;
+            }
             if ($ownTxn) {
                 $this->pdo->commit();
             }

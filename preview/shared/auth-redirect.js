@@ -64,7 +64,7 @@ export function resolvePostLoginUrl(roleType, returnTo = '') {
     }
     return returnTo;
   }
-  const hash = ROLE_HOME_HASH[roleType] || ROLE_HOME_HASH.guardian_student;
+  const hash = ROLE_HOME_HASH[roleType] || '/guest';
   return `${HOME_UI_BASE}#${hash}`;
 }
 

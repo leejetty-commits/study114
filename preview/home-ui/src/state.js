@@ -135,7 +135,8 @@ function sessionNavRole() {
   if (roleType === 'admin') return 'admin';
   if (roleType === 'study_room_owner') return 'study_room';
   if (roleType === 'tutor') return 'tutor';
-  return 'parent';
+  if (roleType === 'guardian_student') return 'parent';
+  return 'guest';
 }
 
 /**
@@ -293,7 +294,7 @@ export function getActiveRole() {
   if (stored === 'parent' || stored === 'study_room' || stored === 'tutor') {
     return stored;
   }
-  return 'parent';
+  return 'guest';
 }
 
 /** @returns {'guest' | 'parent' | 'study_room' | 'tutor'} */

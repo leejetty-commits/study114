@@ -342,8 +342,13 @@ export async function setTutorInquiryStatus(id, inquiry_status) {
 /** @param {number} id */
 export async function publishTutor(id) {
   if (isRegistrationsApiMode()) {
-    const data = await apiTutorAction(id, 'publish');
-    if (data.ok === false) return { ok: false, reason: data.reason, missing: data.missing };
+    try {
+      await apiTutorAction(id, 'publish');
+    } catch (err) {
+      const data = err?.payload;
+      if (data?.ok === false && data.reason) return { ok: false, reason: data.reason, missing: data.missing };
+      throw err;
+    }
     return { ok: true };
   }
   const tutor = getTutor(id);

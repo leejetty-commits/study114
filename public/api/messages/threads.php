@@ -52,13 +52,7 @@ MessagesApi::run(static function (): void {
             MessagesApi::ok(['thread' => $thread]);
         }
 
-        if ($multipart) {
-            $input['show_request_in_panel'] = in_array(
-                (string) ($input['show_request_in_panel'] ?? '0'),
-                ['1', 'true', 'on'],
-                true,
-            );
-        }
+        unset($input['skip_ticket_consume'], $input['show_request_in_panel'], $input['request_summary']);
 
         $thread = $service->composeMessage($userId, $input, $files);
         MessagesApi::ok(['thread' => $thread]);

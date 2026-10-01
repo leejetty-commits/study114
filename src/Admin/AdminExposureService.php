@@ -7,6 +7,7 @@ namespace Study114\Admin;
 use InvalidArgumentException;
 use Study114\Board\BoardPostRepository;
 use Study114\Database\Connection;
+use Study114\Registration\StudentBasicCompleteness;
 use Study114\Registration\StudentHubRepository;
 use Study114\Registration\StudyRoomHubRepository;
 use Study114\Registration\TutorHubRepository;
@@ -235,6 +236,15 @@ final class AdminExposureService
 
       if ($action === 'publish') {
           $this->rejectDraftPublish((string) ($existing['status'] ?? ''));
+          $full = $this->students->findById($studentId);
+          $missing = $full !== null
+              ? StudentBasicCompleteness::missingLabels($full)
+              : array_values(StudentBasicCompleteness::LABELS);
+          if ($missing !== []) {
+              throw new ExposureDraftPublishException(
+                  '기본정보가 다 채워지지 않아 홈·찾기에 올릴 수 없어요. 빈 항목: ' . implode(', ', $missing)
+              );
+          }
           $this->students->updateExposureStatus($studentId, 'published', date('Y-m-d H:i:s'));
       } else {
           $this->students->updateExposureStatus($studentId, 'hidden');

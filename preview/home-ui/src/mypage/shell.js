@@ -1,5 +1,4 @@
 import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
-import { getNavRole } from '../state.js';
 import { getAuthUser, isAdminUser } from '../auth-session.js';
 import { navRoleFromAuthUser } from '../nav-config.js';
 import { resolveAccountDisplayName } from '../auth/display-identity.js';
@@ -61,13 +60,10 @@ function renderBreadcrumb(currentPath, title, role) {
  */
 export function renderMypageShell(currentPath, bodyHtml) {
   const sessionRole = navRoleFromAuthUser(getAuthUser());
-  const navRole = getNavRole();
   const role =
     sessionRole === 'study_room' || sessionRole === 'tutor' || sessionRole === 'parent'
       ? sessionRole
-      : navRole === 'study_room' || navRole === 'tutor' || navRole === 'parent'
-        ? navRole
-        : 'parent';
+      : 'guest';
   const screenId = getScreenIdForPath(currentPath);
   const title = screenTitle(screenId, currentPath, role);
   const authUser = getAuthUser();

@@ -53,11 +53,19 @@ final class StudentHubService
     {
         (new \Study114\Auth\EmailVerificationGate())->assertVerified($guardianUserId);
 
-        $missing = $this->publishMissing($student);
+        $status = (string) ($student['exposure_status'] ?? '');
+        if ($status === 'published') {
+            return ['student' => $student];
+        }
+        // 관리자가 내린 카드(hidden)는 학생 요청으로 되살리지 않는다.
+        if ($status !== 'draft') {
+            return ['ok' => false, 'reason' => 'not_allowed'];
+        }
+        $missing = StudentBasicCompleteness::missingLabels($student);
         if ($missing !== []) {
             return ['ok' => false, 'reason' => 'incomplete', 'missing' => $missing];
         }
-        $this->repo->updateExposureStatus($studentId, 'published', date('Y-m-d H:i:s'));
+        $this->repo->transitionExposureStatus($studentId, 'draft', 'published', date('Y-m-d H:i:s'));
         $updated = $this->repo->getForGuardian($guardianUserId, $studentId);
 
         return ['student' => $updated ?? $student];
@@ -66,61 +74,39 @@ final class StudentHubService
     /** @param array<string, mixed> $input */
     private function update(int $guardianUserId, int $studentId, array $input): array
     {
-        /** @var array<string, mixed> $patch */
-        $patch = isset($input['patch']) && is_array($input['patch']) ? $input['patch'] : $input;
-        $this->repo->patchStudent($studentId, $patch);
+        if (isset($input['patch']) && is_array($input['patch'])) {
+            /** @var array<string, mixed> $patch */
+            $patch = $input['patch'];
+        } else {
+            $patch = $input;
+            unset($patch['id'], $patch['action']);
+        }
+
+        $this->repo->transaction(function () use ($guardianUserId, $studentId, $patch): void {
+            $this->repo->patchStudent($studentId, $patch);
+            $this->rejudgeExposure($guardianUserId, $studentId);
+        });
         $updated = $this->repo->getForGuardian($guardianUserId, $studentId);
 
         return ['student' => $updated ?? []];
     }
 
     /**
-     * @param array<string, mixed> $s
-     * @return list<string>
+     * 수정 직후 기본정보 완료 기준으로 노출 상태를 다시 맞춘다.
+     * published + 빈칸 → draft, draft + 완료 → published. hidden·deleted 는 그대로 둔다.
      */
-    private function publishMissing(array $s): array
+    private function rejudgeExposure(int $guardianUserId, int $studentId): void
     {
-        $missing = [];
-        $need = static function (bool $ok, string $label) use (&$missing): void {
-            if (!$ok) {
-                $missing[] = $label;
-            }
-        };
-
-        $need(!empty($s['preferred_lesson_type']), '희망 유형 (기본등록)');
-        $need(!empty($s['public_display_name']), '공개 표시명 (상세등록)');
-        $need(!empty($s['grade_level']), '학년 (상세등록)');
-        $need(!empty($s['gender']), '학생 성별 (상세등록)');
-        $need(!empty($s['birth_year']), '출생연도 (상세등록)');
-        $studyHopeOk = !empty($s['preferred_studyroom_region_id'])
-            || (!empty($s['preferred_studyroom_regions']) && is_array($s['preferred_studyroom_regions'])
-                && !empty($s['preferred_studyroom_regions'][0]['region_id'] ?? $s['preferred_studyroom_regions'][0]['region_label'] ?? null));
-        $tutorHopeOk = !empty($s['preferred_tutor_region_id'])
-            || (!empty($s['preferred_tutor_regions']) && is_array($s['preferred_tutor_regions'])
-                && !empty($s['preferred_tutor_regions'][0]['region_id'] ?? $s['preferred_tutor_regions'][0]['region_label'] ?? null));
-        // 레거시 단일 region_label만 있는 경우: 희망유형 축 1번으로만 인정
-        if (!$studyHopeOk && !$tutorHopeOk && !empty($s['region_label'])) {
-            if (($s['preferred_lesson_type'] ?? '') === 'study_room') {
-                $studyHopeOk = true;
-            } else {
-                $tutorHopeOk = true;
-            }
+        $current = $this->repo->getForGuardian($guardianUserId, $studentId);
+        if ($current === null) {
+            return;
         }
-        $need($studyHopeOk, '공부방 희망지역 1번 (상세등록)');
-        $need($tutorHopeOk, '과외쌤 희망지역 1번 (상세등록)');
-        $need(!empty($s['subject_label']), '희망 과목 (상세등록)');
-        $need(is_array($s['lesson_places']) && $s['lesson_places'] !== [], '희망 수업장소 (상세등록)');
-        $need(!empty($s['lesson_format']), '수업형태 (상세등록)');
-        $need(!empty($s['lessons_per_week']), '주 횟수 (상세등록)');
-        $need(!empty($s['minutes_per_lesson']), '1회 시간 (상세등록)');
-        $need(is_array($s['teaching_style_badges']) && $s['teaching_style_badges'] !== [], '희망 강의스타일 (상세등록)');
-        if (($s['preferred_lesson_type'] ?? '') === 'study_room') {
-            $need(!empty($s['preferred_studyroom_fee_amount']), '수업예산 공부방 (상세등록)');
-        } else {
-            $need(!empty($s['preferred_fee_amount']), '수업예산 과외 (상세등록)');
+        $status = (string) ($current['exposure_status'] ?? '');
+        $complete = StudentBasicCompleteness::isComplete($current);
+        if ($status === 'published' && !$complete) {
+            $this->repo->transitionExposureStatus($studentId, 'published', 'draft');
+        } elseif ($status === 'draft' && $complete) {
+            $this->repo->transitionExposureStatus($studentId, 'draft', 'published', date('Y-m-d H:i:s'));
         }
-        $need(!empty($s['preferred_tutor_gender']), '희망 과외쌤 성별 (상세등록)');
-
-        return $missing;
     }
 }

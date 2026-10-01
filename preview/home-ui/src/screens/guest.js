@@ -13,8 +13,26 @@ import { hydrateHomeBasicFromSearch, isHomeBasicLive } from '../home-basic-live.
 import { withGuestPlanOverride } from '../plans/runtime-config.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
 import { bindNeighborhoodGreetingRail } from '../neighborhood-greeting-ui.js';
+import { loadGuestBaseline, guestScopeFilters } from '../../../shared/location-display.js';
 
 let homeBasicHydrateStarted = false;
+
+/** 비로그인은 대치동(공부방)·서울시 강남구(과외쌤·학생) 기준 행으로만 부른다. 다른 지역으로 채우지 않는다. */
+function hydrateHomeBasicForViewer() {
+  if (isLoggedIn()) return hydrateHomeBasicFromSearch();
+  return loadGuestBaseline().then(() =>
+    hydrateHomeBasicFromSearch(
+      {},
+      {
+        scope: {
+          study_room: guestScopeFilters('room'),
+          tutor: guestScopeFilters('tutor'),
+          student: guestScopeFilters('student'),
+        },
+      },
+    ),
+  );
+}
 
 export function renderGuest() {
   const loggedIn = isLoggedIn();
@@ -43,7 +61,7 @@ export function bindGuestEvents(root, rerender) {
 
   if (!homeBasicHydrateStarted && !isHomeBasicLive()) {
     homeBasicHydrateStarted = true;
-    hydrateHomeBasicFromSearch().then(() => {
+    hydrateHomeBasicForViewer().then(() => {
       rerender();
     });
   }

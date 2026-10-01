@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
-use InvalidArgumentException;
 use Study114\Auth\BasicRegisterService;
 use Study114\Database\Connection;
 use Study114\Region\RegionEnsure;

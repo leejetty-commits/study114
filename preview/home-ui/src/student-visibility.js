@@ -62,6 +62,12 @@ export const FREE_PROVIDER_REQUEST_GATE_COPY = {
   ctaPlans: '유료 서비스 안내',
 };
 
+/** 무료 공급자 — 서버가 요청문·특이요청 원문을 빈 문자열로 보낼 때 */
+export const EXPOSURE_PROVIDER_REQUEST_GATE_COPY = {
+  title: '요청문은 노출 상품 이용 중인 공부방·과외쌤에게 보여요',
+  body: '픽·프라임을 이용하면 학생이 남긴 요청문과 특이요청을 볼 수 있어요',
+};
+
 /** 학부모·학생 피어 열람 — 구조화 조건만, 요청문 비공개 규칙 유지 */
 export const PEER_STUDENT_REQUEST_GATE_COPY = {
   title: '요청문은 비교 열람 범위가 아닙니다',

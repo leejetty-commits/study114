@@ -6,6 +6,7 @@ namespace Study114\Messages;
 
 use InvalidArgumentException;
 use Study114\Database\Connection;
+use Study114\Paid\StudentRequestTextAccess;
 
 /**
  * 16장 P16 — 쪽지 thread API surface
@@ -15,11 +16,14 @@ final class MessagesService
 {
     public const ACTIVE_DAYS = 7;
     public const IMPORTANT_MAX = 5;
+    private const COMPOSE_TARGET_DENIED = '보낼 수 없는 대상입니다';
 
     private MessagesRepository $repo;
     private ProviderEntitlementService $entitlements;
 
     private MessageAttachmentService $attachments;
+
+    private ?StudentRequestTextAccess $requestTextAccess = null;
 
     public function __construct(
         ?MessagesRepository $repo = null,
@@ -61,11 +65,12 @@ final class MessagesService
     /**
      * P16-03 첫 메모 · §6-3 thread 재사용
      *
-     * @param array<string, mixed> $input
+     * @param array<string, mixed> $input skip_ticket_consume·show_request_in_panel·request_summary 키는 읽지 않는다
      * @param list<array<string, mixed>> $files
+     * @param bool $skipTicketConsume 서버 내부 호출(결제 직후 즉시권 발송)만 true
      * @return array<string, mixed>
      */
-    public function composeMessage(int $userId, array $input, array $files = []): array
+    public function composeMessage(int $userId, array $input, array $files = [], bool $skipTicketConsume = false): array
     {
         $this->assertSignupComplete($userId);
 
@@ -89,8 +94,6 @@ final class MessagesService
             throw new InvalidArgumentException('자기 자신에게는 보낼 수 없습니다.');
         }
 
-        $this->assertComposeDirection($contextKind, $userId, $peerUserId);
-
         [$low, $high] = $this->canonicalParticipants($userId, $peerUserId);
         $existing = $this->repo->findThreadByContext($contextKind, $contextId, $low, $high);
 
@@ -100,35 +103,71 @@ final class MessagesService
             $this->insertMessageWithFiles($threadId, $userId, $body, $files);
             $this->repo->upsertThreadRead($threadId, $userId);
         } else {
-            if (empty($input['skip_ticket_consume'])) {
+            $this->assertComposeDirection($contextKind, $userId);
+            if (!$skipTicketConsume) {
                 $this->assertColdMemoAllowed($userId, $contextKind, $input);
             }
             if ($contextKind === 'student') {
                 (new \Study114\Paid\StudentMemoGate(Connection::get()))->assertCanContact($contextId);
             }
-            $threadId = $this->repo->createThread([
-                'participant_low_user_id'  => $low,
-                'participant_high_user_id' => $high,
-                'context_kind'             => $contextKind,
-                'context_id'               => $contextId,
-                'context_label'            => (string) ($input['context_label'] ?? ''),
-                'peer_display_name'        => (string) ($input['peer_display_name'] ?? ''),
-                'scope_badge'              => (string) ($input['scope_badge'] ?? ''),
-                'scope_hint'               => (string) ($input['scope_hint'] ?? ''),
-                'show_request_in_panel'    => (bool) ($input['show_request_in_panel'] ?? false),
-                'request_summary'          => $input['request_summary'] ?? null,
-                'structured_line'          => (string) ($input['structured_line'] ?? ''),
-                'initiated_by_user_id'     => $userId,
-                'last_message_preview'     => mb_substr($this->previewFromBodyOrFiles($body, $files), 0, 120),
-            ]);
-            $this->insertMessageWithFiles($threadId, $userId, $body, $files);
-            $this->repo->upsertThreadRead($threadId, $userId);
-            if (self::requiresColdMemoTicket(true, $contextKind) && empty($input['skip_ticket_consume'])) {
-                $this->entitlements->consumeColdMemoTicket(
-                    $userId,
-                    isset($input['provider_type']) ? (string) $input['provider_type'] : null,
-                    isset($input['provider_id']) ? (int) $input['provider_id'] : null,
-                );
+            $requestSummary = null;
+            if ($contextKind === 'student') {
+                $requestSummary = $this->repo->getStudentRequestSummary($contextId);
+                if ($requestSummary !== null && trim($requestSummary) === '') {
+                    $requestSummary = null;
+                }
+            }
+            $providerType = isset($input['provider_type']) ? (string) $input['provider_type'] : null;
+            $providerId = isset($input['provider_id']) ? (int) $input['provider_id'] : null;
+            $scope = $this->resolveScopeBadge(
+                $userId,
+                $contextKind,
+                $requestSummary !== null,
+                $skipTicketConsume || $this->entitlements->canColdMemo($userId, $providerType, $providerId),
+            );
+
+            $pdo = Connection::get();
+            $ownTxn = !$pdo->inTransaction();
+            if ($ownTxn) {
+                $pdo->beginTransaction();
+            }
+            try {
+                if (self::requiresColdMemoTicket(true, $contextKind) && !$skipTicketConsume) {
+                    if (!$this->entitlements->consumeColdMemoTicket($userId, $providerType, $providerId, true)) {
+                        throw new PaidGateException('이 학생에게 먼저 쪽지를 내려면 쪽지권이 필요합니다.');
+                    }
+                }
+                $threadId = $this->repo->createThread([
+                    'participant_low_user_id'  => $low,
+                    'participant_high_user_id' => $high,
+                    'context_kind'             => $contextKind,
+                    'context_id'               => $contextId,
+                    'context_label'            => $contextKind === 'student' ? '등록' : '상세',
+                    'peer_display_name'        => (string) ($input['peer_display_name'] ?? ''),
+                    'scope_badge'              => $scope['label'],
+                    'scope_hint'               => $scope['hint'],
+                    'show_request_in_panel'    => $requestSummary !== null,
+                    'request_summary'          => $requestSummary,
+                    'structured_line'          => self::sanitizeDisplayLine((string) ($input['structured_line'] ?? ''), 255),
+                    'initiated_by_user_id'     => $userId,
+                    'last_message_preview'     => mb_substr($this->previewFromBodyOrFiles($body, $files), 0, 120),
+                ]);
+                $this->insertMessageWithFiles($threadId, $userId, $body, $files);
+                $this->repo->upsertThreadRead($threadId, $userId);
+                if ($ownTxn) {
+                    $pdo->commit();
+                }
+            } catch (\Throwable $e) {
+                $this->entitlements->discardColdMemoBalanceNotice($userId);
+                if ($ownTxn && $pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                throw $e;
+            }
+            if ($ownTxn) {
+                $this->entitlements->notifyColdMemoBalance($userId);
+            } else {
+                $this->entitlements->discardColdMemoBalanceNotice($userId);
             }
         }
 
@@ -245,6 +284,54 @@ final class MessagesService
         return ['unread' => $unread, 'active' => $active];
     }
 
+    /**
+     * 공개 범위 배지·힌트 — preview/home-ui/src/messages/messages-copy.js getScopeBadge 규칙·문구 그대로
+     *
+     * @return array{label: string, hint: string}
+     */
+    private function resolveScopeBadge(int $userId, string $contextKind, bool $hasRequestText, bool $canColdMemo): array
+    {
+        $role = (string) ($this->repo->getUserPrimaryRole($userId) ?? '');
+        $isProvider = $role === 'tutor' || $role === 'study_room_owner';
+
+        if ($contextKind === 'student' && $isProvider) {
+            if (!$canColdMemo) {
+                return ['label' => '구조화 항목만', 'hint' => '요청문 비공개 · 콜드 메모 차단'];
+            }
+            $paidOnlyVisible = $hasRequestText && $this->canReceiveStudentRequestText($userId);
+
+            return [
+                'label' => '구조화 항목 + 유료 전용 요청문',
+                'hint' => $paidOnlyVisible ? '요청문 일부 공개' : '요청문 비공개',
+            ];
+        }
+        if ($contextKind === 'study_room' || $contextKind === 'tutor') {
+            return [
+                'label' => '공개 프로필',
+                'hint' => $isProvider ? '먼저 온 쪽지의 답장은 무료' : '공급자 상세 공개 범위',
+            ];
+        }
+
+        return ['label' => '—', 'hint' => ''];
+    }
+
+    /** 태그·줄바꿈·제어문자 제거 후 컬럼 길이로 자름 */
+    private static function sanitizeDisplayLine(string $value, int $maxLength): string
+    {
+        $text = strip_tags($value);
+        $text = (string) preg_replace('/[\x00-\x1F\x7F]+/u', ' ', $text);
+        $text = trim((string) preg_replace('/\s{2,}/u', ' ', $text));
+
+        return mb_substr($text, 0, $maxLength);
+    }
+
+    private function canReceiveStudentRequestText(int $userId): bool
+    {
+        $this->requestTextAccess ??= new StudentRequestTextAccess();
+
+        return $this->requestTextAccess->canReceive($userId, (string) ($this->repo->getUserPrimaryRole($userId) ?? ''));
+    }
+
     private function resolvePeerUserId(string $contextKind, int $contextId): ?int
     {
         return match ($contextKind) {
@@ -255,12 +342,28 @@ final class MessagesService
         };
     }
 
-    private function assertComposeDirection(string $contextKind, int $senderUserId, int $peerUserId): void
+    /**
+     * 새 대화 첫 쪽지 방향 (16§1-2 · 18§4) — 기존 대화 후속·replyMessage 에는 적용하지 않는다.
+     * 공급자→공급자(study_room·tutor 대상)는 정본에 없으나 현재 화면 흐름이 허용하므로 막지 않는다.
+     */
+    private function assertComposeDirection(string $contextKind, int $senderUserId): void
     {
-        unset($senderUserId, $peerUserId);
-        if ($contextKind === 'student' || $contextKind === 'study_room' || $contextKind === 'tutor') {
+        $role = (string) ($this->repo->getUserPrimaryRole($senderUserId) ?? '');
+        $isGuardian = in_array($role, ['guardian_student', 'parent', 'student'], true);
+        $isProviderOrAdmin = in_array($role, ['tutor', 'study_room_owner', 'admin'], true);
+        if ($contextKind === 'student') {
+            if ($isProviderOrAdmin) {
+                return;
+            }
+            if ($isGuardian) {
+                throw new InvalidArgumentException('학부모는 공급자에게만 쪽지를 보낼 수 있습니다.');
+            }
+            throw new InvalidArgumentException(self::COMPOSE_TARGET_DENIED);
+        }
+        if (($contextKind === 'study_room' || $contextKind === 'tutor') && ($isGuardian || $isProviderOrAdmin)) {
             return;
         }
+        throw new InvalidArgumentException(self::COMPOSE_TARGET_DENIED);
     }
 
     /**
@@ -278,7 +381,7 @@ final class MessagesService
     private function assertCanSendMessage(int $userId, array $row, string $contextKind): void
     {
         unset($userId, $contextKind);
-        if ((bool) ($row['is_blocked'] ?? false)) {
+        if ((bool) ($row['is_blocked'] ?? false) || $this->repo->isThreadBlockedByAnyParticipant((int) $row['id'])) {
             throw new InvalidArgumentException('차단된 대화입니다.');
         }
     }
@@ -332,6 +435,14 @@ final class MessagesService
             || strtotime((string) $peerReadAt) < strtotime((string) $lastAt)
         );
         $peerName = $this->resolvePeerDisplayName($row, $userId);
+        $requestSummary = null;
+        if ((string) $row['context_kind'] === 'student') {
+            $studentText = $row['student_request_summary'] ?? null;
+            $requestSummary = $studentText !== null && trim((string) $studentText) !== '' ? (string) $studentText : null;
+            if ($requestSummary !== null && $initiatedByMe && !$this->canReceiveStudentRequestText($userId)) {
+                $requestSummary = '';
+            }
+        }
 
         return [
             'id'                  => (int) $row['id'],
@@ -341,8 +452,8 @@ final class MessagesService
             'peerDisplayName'     => $peerName,
             'scopeBadge'          => (string) $row['scope_badge'],
             'scopeHint'           => (string) $row['scope_hint'],
-            'showRequestInPanel'  => (bool) $row['show_request_in_panel'],
-            'requestSummary'      => $row['request_summary'] !== null ? (string) $row['request_summary'] : null,
+            'showRequestInPanel'  => $requestSummary !== null && $requestSummary !== '',
+            'requestSummary'      => $requestSummary,
             'structuredLine'      => (string) $row['structured_line'],
             'lastPreview'         => (string) $row['last_message_preview'],
             'firstPreview'        => mb_substr(
@@ -359,7 +470,7 @@ final class MessagesService
             'initiatedByPeer'     => !$initiatedByMe,
             'isArchived'          => (bool) ($row['is_archived'] ?? false),
             'isImportant'         => (bool) ($row['is_important'] ?? false),
-            'isBlocked'           => (bool) ($row['is_blocked'] ?? false),
+            'isBlocked'           => (bool) ($row['is_blocked'] ?? false) || (bool) ($row['any_participant_blocked'] ?? false),
             'blockReason'         => isset($row['block_reason']) ? (string) $row['block_reason'] : null,
             'reportedAt'          => isset($row['reported_at']) && $row['reported_at'] !== null
                 ? gmdate('c', strtotime((string) $row['reported_at'])) : null,

@@ -24,7 +24,7 @@ if ($key === '' || !hash_equals((string) $config['cron_key'], $key)) {
 
 try {
     $result = (new ProviderReminderService())->processScheduledReminders();
-    echo json_encode(['ok' => true] + $result, JSON_UNESCAPED_UNICODE);
+    echo json_encode(array_merge(['ok' => true], $result), JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     error_log('[cron/paid-reminders] ' . $e->getMessage());
     http_response_code(500);

@@ -36,4 +36,4 @@ try {
     $payload = $service->emptyPublicPayload();
 }
 
-echo json_encode(['ok' => true] + $payload, JSON_UNESCAPED_UNICODE);
+echo json_encode(array_merge(['ok' => true], $payload), JSON_UNESCAPED_UNICODE);

@@ -42,15 +42,16 @@ export function listProviderProfiles(role) {
 
 /**
  * 세션 역할 → 상품센터용 provider 역할
- * @returns {'study_room'|'tutor'|'guest'|'parent'}
+ * @returns {'study_room'|'tutor'|'guest'|'parent'|'admin'}
  */
 export function getPlansRole() {
   const user = getAuthUser();
   if (!user) return 'guest';
   if (user.role_type === 'study_room_owner') return 'study_room';
   if (user.role_type === 'tutor') return 'tutor';
-  if (user.role_type === 'admin') return 'parent';
-  return 'parent';
+  if (user.role_type === 'admin') return 'admin';
+  if (user.role_type === 'guardian_student') return 'parent';
+  return 'guest';
 }
 
 /**
@@ -80,6 +81,7 @@ export function getPlansEffectiveRole() {
   if (authRole === 'study_room' || authRole === 'tutor' || authRole === 'parent') {
     return authRole;
   }
+  if (getAuthUser()) return 'guest';
   const active = getActiveRole();
   if (active === 'study_room' || active === 'tutor') return active;
   return 'guest';

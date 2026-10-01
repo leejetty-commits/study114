@@ -48,9 +48,23 @@ final class ProviderEntitlementService
         return $this->tickets->canColdMemo($userId, $providerType, $providerId);
     }
 
-    public function consumeColdMemoTicket(int $userId, ?string $providerType = null, ?int $providerId = null): bool
+    public function consumeColdMemoTicket(
+        int $userId,
+        ?string $providerType = null,
+        ?int $providerId = null,
+        bool $deferBalanceNotice = false,
+    ): bool {
+        return $this->tickets->consumeMemoTicket($userId, $providerType, $providerId, $deferBalanceNotice);
+    }
+
+    public function notifyColdMemoBalance(int $userId): void
     {
-        return $this->tickets->consumeMemoTicket($userId, $providerType, $providerId);
+        $this->tickets->notifyMemoBalance($userId);
+    }
+
+    public function discardColdMemoBalanceNotice(int $userId): void
+    {
+        $this->tickets->discardDeferredMemoNotice($userId);
     }
 
     /** @return array{remaining: int, nearest_expiry: string|null} */

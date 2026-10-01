@@ -321,7 +321,7 @@ export async function openGreetingTarget(opts) {
   openDetailModal({
     kind: opts.kind,
     item,
-    viewer: loggedInViewer(opts.viewer),
+    viewer: loggedInViewer(),
     onRerender: opts.onRerender,
     sourceRoute: opts.sourceRoute || 'home',
   });
@@ -539,13 +539,13 @@ function showNotice(message) {
   document.body.appendChild(el);
 }
 
-/** @param {string} [viewer] */
-function loggedInViewer(viewer) {
+function loggedInViewer() {
   const role = getAuthUser()?.role_type;
   if (role === 'tutor') return 'tutor';
   if (role === 'study_room_owner') return 'study_room';
   if (role === 'guardian_student') return 'parent';
-  return viewer && viewer !== 'guest' ? viewer : 'parent';
+  if (role === 'admin') return 'admin';
+  return 'guest';
 }
 
 /** @param {unknown} value */

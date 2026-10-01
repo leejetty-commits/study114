@@ -78,6 +78,7 @@ export function canReplyInThread(thread, role) {
   if (!thread) return false;
   if (thread.isBlocked) return false;
   if (role === 'parent') {
+    if (thread.contextKind === 'student') return thread.initiatedByMe !== true;
     return thread.contextKind === 'study_room' || thread.contextKind === 'tutor';
   }
   if (!isProviderRole(role)) return false;

@@ -42,12 +42,18 @@ import {
   refreshActiveResultItems,
   runFindSearchWithFilters,
   bootFindGpsIfNeeded,
+  bootGuestFindSurface,
 } from '../search-find-surface.js';
 import { bootStudyRoomHome, bootStudyRoomStudentDemand } from '@home-ui/study-room-home-seed.js';
 import { renderBrowseList } from '@home-ui/exposure-render.js';
 import { getStudentDemandForRegion } from '../search-region-feed.js';
 import { renderListSortSelect } from '../../../shared/list-sort.js';
-import { placeCaption, readGuestBaseline, GUEST_PLACE_PROMPT } from '../../../shared/location-display.js';
+import {
+  placeCaption,
+  readGuestBaseline,
+  loadGuestBaseline,
+  readGuestAxisCounts,
+} from '../../../shared/location-display.js';
 
 /**
  * 찾기 페이지 바디 탭·역할 셀렉트 제거 — 이동은 GNB만.
@@ -78,9 +84,7 @@ function syncHomeSubscription() {
 function visibleCurrentPlace(tab, role, regionLabel) {
   if (role === 'guest') {
     const base = readGuestBaseline();
-    const studyRoom =
-      tab === 'room' || (tab === 'student' && previewState.studentHopeType === 'study_room');
-    return (studyRoom ? base.room : base.tutor) || GUEST_PLACE_PROMPT;
+    return tab === 'room' ? base.room : base.tutor;
   }
   if (tab === 'student' && role === 'study_room') {
     return studentCurrentPlace(regionLabel) || placeCaption(regionLabel, 'room') || '';
@@ -97,22 +101,17 @@ function visibleCurrentPlace(tab, role, regionLabel) {
   return placeCaption(regionLabel, 'tutor') || '';
 }
 
+/** 기준 위치와 같은 region-stats 응답의 실수만 넣는다. 실패하면 대시 유지. */
 function fillGuestMapStats(root) {
   if (!root.querySelector('[data-guest-axis-count]')) return;
-  fetch('/api/search/region-stats.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: '{}',
-  })
-    .then(async (res) => {
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.ok !== true) return;
-      for (const key of ['studyRooms', 'tutors', 'studentRequests']) {
-        const el = root.querySelector(`[data-guest-axis-count="${key}"]`);
-        if (el && Number.isFinite(Number(data[key]))) el.textContent = String(data[key]);
-      }
-    })
-    .catch(() => {});
+  loadGuestBaseline().then(() => {
+    const counts = readGuestAxisCounts();
+    if (!counts) return;
+    for (const key of ['studyRooms', 'tutors', 'studentRequests']) {
+      const el = root.querySelector(`[data-guest-axis-count="${key}"]`);
+      if (el) el.textContent = String(counts[key]);
+    }
+  });
 }
 
 function renderSearchForm(tab) {
@@ -268,6 +267,7 @@ function bindGuestFindBrowse(root, rerender) {
   });
   bindProtectedGuestActions(root);
   bindGuestEmptyCardLoginGate(root);
+  bootGuestFindSurface(getCurrentTab(), rerender);
   fillGuestMapStats(root);
   bindGuestListPagination(root, rerender);
 

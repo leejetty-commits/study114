@@ -14,13 +14,18 @@ import { deactivateBoardApi } from './board/board-backend.js';
 import { resetConcernData } from './concern/store.js';
 import { navigate, setActiveRole } from './state.js';
 import { noteAuthRoleType } from './auth-role.js';
-import { oauthRoleSelectionUrl, redirectToEmailVerifyWait, isGuidePublicPath } from '../../shared/auth-redirect.js';
+import {
+  basicRegisterPathForMe,
+  oauthRoleSelectionUrl,
+  redirectToEmailVerifyWait,
+  isGuidePublicPath,
+} from '../../shared/auth-redirect.js';
 import { AUTH_UI_BASE } from '../../shared/preview-links.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
 
-/** @typedef {{ user_id: number, email: string, role_type: string, name: string, email_verified?: boolean, phone_verified?: boolean, admin_level?: string|null, must_change_password?: boolean, oauth_providers?: string[], oauth_provider_labels?: string[] }} AuthUser */
+/** @typedef {{ user_id: number, email: string, role_type: string, name: string, email_verified?: boolean, oauth_role_pending?: boolean, phone_verified?: boolean, admin_level?: string|null, must_change_password?: boolean, oauth_providers?: string[], oauth_provider_labels?: string[] }} AuthUser */
 
 /** @type {AuthUser|null} */
 let currentUser = null;
@@ -95,6 +100,7 @@ export async function fetchSession() {
         role_type: data.role_type,
         name: data.name,
         email_verified: false,
+        oauth_role_pending: data.oauth_role_pending === true,
         admin_level: data.admin_level ?? null,
         must_change_password: Boolean(data.must_change_password),
         oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
@@ -107,6 +113,11 @@ export async function fetchSession() {
   }
   if (data.oauth_role_pending) {
     window.location.href = oauthRoleSelectionUrl();
+    return null;
+  }
+  // 학생 행이 없거나 draft 인데 기본정보가 비어 있으면(서버 판정) 기본정보 화면부터 다시 채운다.
+  if (data.needs_basic_register && data.role_type === 'guardian_student' && !isGuidePublicPath()) {
+    window.location.replace(`${String(AUTH_UI_BASE).replace(/\/$/, '')}/#${basicRegisterPathForMe(data)}`);
     return null;
   }
   return {
@@ -176,10 +187,11 @@ export async function initAuthSession(navigateHome = false) {
       return null;
     }
     currentUser = user;
-    applyRoleContext(user.role_type);
+    const contextRoleType = user.oauth_role_pending === true ? '' : user.role_type;
+    applyRoleContext(contextRoleType);
     await hydrateSessionDependencies();
-    if (navigateHome && ROLE_HOME[user.role_type]) {
-      navigate(ROLE_HOME[user.role_type]);
+    if (navigateHome && ROLE_HOME[contextRoleType]) {
+      navigate(ROLE_HOME[contextRoleType]);
     }
     return user;
   } catch (err) {

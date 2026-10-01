@@ -381,7 +381,7 @@ final class BoardPostService
             return 'admin';
         }
 
-        return 'parent';
+        return 'guest';
     }
 
     /**

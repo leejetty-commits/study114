@@ -5,7 +5,6 @@ import {
   STUDENT_IMPORT_PARAM,
 } from '../../../shared/student-auth-bridge.js';
 import {
-  dualHopeRegionsReady,
   hydrateDualHopeRegions,
   primaryHopeRegionLabel,
 } from '../../../shared/student-hope-regions.js';
@@ -215,65 +214,56 @@ export function addStudent(record) {
   return row;
 }
 
-/** @param {StudentRecord} student */
+/**
+ * 노출 조건 = 기본정보 여덟 칸(한 줄 요청문 제외). 정본은 서버 StudentBasicCompleteness 이고,
+ * API 모드에서는 서버가 내려준 basic_missing 을 그대로 쓴다. 상세 항목은 조건이 아니다.
+ * @param {StudentRecord} student
+ */
 export function getPublishReadiness(student) {
+  if (Array.isArray(student.basic_missing)) {
+    const missing = student.basic_missing.map(String);
+    return { basicOk: missing.length === 0, detailOk: true, canPublish: missing.length === 0, missing };
+  }
   const missing = [];
   const need = (ok, label) => {
     if (!ok) missing.push(label);
   };
+  const isId = (v) => /^[1-9]\d*$/.test(String(v ?? ''));
+  const isAmount = (v) => v !== null && v !== undefined && /^\d+$/.test(String(v)) && Number(v) >= 1;
+  const study = student.preferred_lesson_type === 'study_room';
+  const tutor = student.preferred_lesson_type === 'tutor';
 
-  // 기본등록 seed (Notion 14장) — 공개 전제 아님
-  need(!!student.preferred_lesson_type, '희망 유형 (기본등록)');
+  need(String(student.public_display_name || '').trim() !== '', '표시명');
+  need(String(student.grade_level || '').trim() !== '' || student.school_level === 'preschool', '학교급·학년');
+  need(study || tutor, '희망 유형');
+  need(
+    study
+      ? isId(student.preferred_studyroom_region_id)
+          || (student.preferred_studyroom_region_basis === 'complex' && isId(student.preferred_studyroom_complex_id))
+      : tutor && isId(student.preferred_tutor_region_id),
+    '희망지역',
+  );
+  need(String(student.subject_label || '').trim() !== '', '희망과목');
+  need(student.lesson_format === 'one_on_one' || student.lesson_format === 'group', '수업형태');
+  need(student.lesson_format === 'one_on_one' || !!student.preferred_student_count_group, '수업인원');
+  need(
+    study ? isAmount(student.preferred_studyroom_fee_amount) : tutor && isAmount(student.preferred_fee_amount),
+    '예산',
+  );
 
-  // 상세등록 = 검색/공개 본체
-  need(!!student.public_display_name, '공개 표시명 (상세등록)');
-  need(!!student.grade_level, '학년 (상세등록)');
-  need(!!student.gender, '학생 성별 (상세등록)');
-  need(!!student.birth_year, '출생연도 (상세등록)');
-  {
-    const hope = dualHopeRegionsReady(student);
-    if (student.preferred_lesson_type === 'study_room') {
-      need(hope.studyOk, '공부방 희망지역 1번 (상세등록)');
-    } else {
-      need(hope.tutorOk, '과외쌤 희망지역 1번 (상세등록)');
-    }
-  }
-  need(!!student.subject_label, '희망 과목 (상세등록)');
-  need(Array.isArray(student.lesson_places) && student.lesson_places.length > 0, '희망 수업장소 (상세등록)');
-  need(!!student.lesson_format, '수업형태 (상세등록)');
-  if (student.lesson_format === 'group') {
-    need(!!student.student_gender_group, '그룹 구성 (상세등록)');
-    need(!!student.preferred_student_count_group && student.preferred_student_count_group !== 'solo', '희망 수업인원 (상세등록)');
-  } else {
-    need(!!student.preferred_student_count_group, '희망 수업인원 (상세등록)');
-  }
-  need(!!student.lessons_per_week, '주 회수 (상세등록)');
-  need(!!student.minutes_per_lesson, '1회 수업시간 (상세등록)');
-  need(Array.isArray(student.teaching_style_badges) && student.teaching_style_badges.length > 0, '희망 강의스타일 (상세등록)');
-  if (student.preferred_lesson_type === 'study_room') {
-    need(!!student.preferred_studyroom_fee_amount, '수업예산 공부방 (상세등록)');
-  } else {
-    need(!!student.preferred_fee_amount, '수업예산 과외 (상세등록)');
-  }
-  need(!!student.preferred_tutor_gender, '희망 과외쌤 성별 (상세등록)');
-
-  const basicMissing = missing.filter((m) => m.includes('기본등록'));
-  const detailMissing = missing.filter((m) => m.includes('상세등록'));
-
-  return {
-    basicOk: basicMissing.length === 0,
-    detailOk: detailMissing.length === 0,
-    /** 일반 리스트/검색 등록 = 상세등록 완료 후 */
-    canPublish: detailMissing.length === 0 && basicMissing.length === 0,
-    missing,
-  };
+  return { basicOk: missing.length === 0, detailOk: true, canPublish: missing.length === 0, missing };
 }
 
 /** @param {number} id */
 export async function publishStudent(id) {
   if (isRegistrationsApiMode()) {
-    const data = await apiStudentAction(id, 'publish');
-    if (data.ok === false) return { ok: false, reason: data.reason, missing: data.missing };
+    try {
+      await apiStudentAction(id, 'publish');
+    } catch (err) {
+      const data = err?.payload;
+      if (data?.ok === false && data.reason) return { ok: false, reason: data.reason, missing: data.missing };
+      throw err;
+    }
     return { ok: true };
   }
   const s = getStudent(id);

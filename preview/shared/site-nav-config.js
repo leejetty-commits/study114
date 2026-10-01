@@ -212,27 +212,29 @@ export function visibleSearchTabsForRole(role) {
 }
 
 /**
- * @param {{ role_type?: string } | null | undefined} user
+ * @param {{ role_type?: string, oauth_role_pending?: boolean } | null | undefined} user
  * @returns {NavRole}
  */
 export function navRoleFromAuthUser(user) {
-  if (!user) return 'guest';
+  if (!user || user.oauth_role_pending === true) return 'guest';
   if (user.role_type === 'admin') return 'admin';
   if (user.role_type === 'study_room_owner') return 'study_room';
   if (user.role_type === 'tutor') return 'tutor';
-  return 'parent';
+  if (user.role_type === 'guardian_student') return 'parent';
+  return 'guest';
 }
 
 /**
- * @param {{ role_type?: string } | null | undefined} user
+ * @param {{ role_type?: string, oauth_role_pending?: boolean } | null | undefined} user
  * @returns {string} home hash path
  */
 export function roleHomeHashPath(user) {
-  if (!user) return '/guest';
+  if (!user || user.oauth_role_pending === true) return '/guest';
   if (user.role_type === 'study_room_owner') return '/study-room';
   if (user.role_type === 'tutor') return '/tutor';
   if (user.role_type === 'admin') return '/admin';
-  return '/parent';
+  if (user.role_type === 'guardian_student') return '/parent';
+  return '/guest';
 }
 
 /**

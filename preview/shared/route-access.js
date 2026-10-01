@@ -147,15 +147,40 @@ export function guardMypageAccess(loggedIn) {
   };
 }
 
+/** 역할 홈 화면 키 → 그 홈을 볼 수 있는 navRole */
+const ROLE_HOME_SCREEN_ROLE = {
+  parent: 'parent',
+  studyRoom: 'study_room',
+  tutor: 'tutor',
+};
+
 /**
- * 역할 홈(#/parent|#/study-room|#/tutor) — 비로그인은 guest 홈만.
- * @param {'guest'|'parent'|'studyRoom'|'tutor'} screenKey
- * @param {boolean} loggedIn
+ * navRole → 자기 홈 해시. site-nav-config roleHomeHashPath와 같은 표다.
+ * @type {Record<import('./site-nav-config.js').NavRole, string>}
  */
-export function guardRoleHomeAccess(screenKey, loggedIn) {
+const NAV_ROLE_HOME_HASH = {
+  parent: '#/parent',
+  study_room: '#/study-room',
+  tutor: '#/tutor',
+  admin: '#/admin',
+  guest: '#/guest',
+};
+
+/**
+ * 역할 홈(#/parent|#/study-room|#/tutor) — 각 역할은 자기 홈만, 비로그인·역할 대기는 guest 홈만.
+ * 다른 역할 홈이면 자기 홈으로 보낸다(관리자 #/admin).
+ * @param {string} screenKey getCurrentScreen() 결과
+ * @param {boolean} loggedIn
+ * @param {import('./site-nav-config.js').NavRole} [navRole] navRoleFromAuthUser(user)
+ * @returns {{ ok: true } | { ok: false, redirectHash: string }}
+ */
+export function guardRoleHomeAccess(screenKey, loggedIn, navRole = 'guest') {
   if (screenKey === 'guest') return { ok: true };
-  if (loggedIn) return { ok: true };
-  return { ok: false, redirectHash: '#/guest' };
+  if (!loggedIn) return { ok: false, redirectHash: '#/guest' };
+  const homeRole = ROLE_HOME_SCREEN_ROLE[screenKey];
+  if (!homeRole) return { ok: true };
+  if (navRole === homeRole) return { ok: true };
+  return { ok: false, redirectHash: NAV_ROLE_HOME_HASH[navRole] || '#/guest' };
 }
 
 /**

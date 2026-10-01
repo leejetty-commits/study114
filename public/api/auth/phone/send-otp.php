@@ -36,7 +36,7 @@ AuthSession::close();
 
 try {
     $result = (new PhoneVerificationService())->sendOtp((int) $user['user_id']);
-    echo json_encode(['ok' => true] + $result, JSON_UNESCAPED_UNICODE);
+    echo json_encode(array_merge(['ok' => true], $result), JSON_UNESCAPED_UNICODE);
 } catch (PhoneVerificationException $e) {
     $status = $e->errorCode() === 'resend_cooldown' ? 429 : 422;
     http_response_code($status);

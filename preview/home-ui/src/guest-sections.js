@@ -10,7 +10,7 @@ import { bindGuestListPagination } from './list-pagination.js';
 import { bindListSortControls } from '../../shared/list-sort.js';
 import { setGuestListPage } from './state.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from './section-headings.js';
-import { loadGuestBaseline, readGuestBaseline, GUEST_PLACE_PROMPT } from '../../shared/location-display.js';
+import { loadGuestBaseline, readGuestBaseline, readGuestAxisCounts } from '../../shared/location-display.js';
 import { bindStudyRoomMapSection, GUEST_MAP_CENTER } from '../../shared/naver-map.js';
 import { renderHomeMarketingBanner } from './home-marketing-banner.js';
 import { renderNeighborhoodGreetingRail } from './neighborhood-greeting-ui.js';
@@ -34,8 +34,7 @@ let guestHomeBaselineBooted = false;
 
 function guestAxisText(axis) {
   const base = readGuestBaseline();
-  const label = axis === 'room' ? base.room : base.tutor;
-  return label || GUEST_PLACE_PROMPT;
+  return axis === 'room' ? base.room : base.tutor;
 }
 
 function haversineKm(lat1, lng1, lat2, lng2) {
@@ -72,11 +71,9 @@ export function renderGuestTempNotice() {
 export function renderGuestHero() {
   const room = readGuestBaseline().room;
   const tutor = readGuestBaseline().tutor;
-  const dong = room || GUEST_PLACE_PROMPT;
-  const sub = tutor
-    ? `${tutor} · 우리동네 공부방·과외를 쪽지로 연결하세요`
-    : '우리동네 공부방·과외를 쪽지로 연결하세요';
-  const cta = room ? `${room} 공부방·과외쌤 찾기` : '공부방·과외쌤 찾기';
+  const dong = room;
+  const sub = `${tutor} · 우리동네 공부방·과외를 쪽지로 연결하세요`;
+  const cta = `${room} 공부방·과외쌤 찾기`;
   return `
     <section class="hero-map hero-map--float-rail" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${room}" data-map-lat="${GUEST_MAP_CENTER.lat}" data-map-lng="${GUEST_MAP_CENTER.lng}" data-fit-bounds="false" data-allow-fallback="true">
       <div class="hero-map__canvas">
@@ -241,30 +238,23 @@ export function renderGuestStudyAndTutorSections() {
   return `${renderGuestExposureBoxes()}${renderGuestBrowseLists()}`;
 }
 
-/** 실패해도 더미 숫자를 넣지 않는다. */
+/** 기준 위치와 같은 region-stats 응답의 실수만 넣는다. 실패해도 더미 숫자를 넣지 않는다. */
 export async function hydrateGuestRegionStats(root) {
-  try {
-    const res = await fetch('/api/search/region-stats.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: '{}',
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.ok !== true) return;
-    for (const key of ['studyRooms', 'tutors', 'studentRequests']) {
-      const el = root.querySelector(`[data-guest-axis-count="${key}"]`);
-      if (el && Number.isFinite(Number(data[key]))) el.textContent = String(data[key]);
-    }
-  } catch {
-    /* 대시 유지 */
+  await loadGuestBaseline();
+  const counts = readGuestAxisCounts();
+  if (!counts) return;
+  for (const key of ['studyRooms', 'tutors', 'studentRequests']) {
+    const el = root.querySelector(`[data-guest-axis-count="${key}"]`);
+    if (el) el.textContent = String(counts[key]);
   }
 }
 
 export function bindGuestSectionEvents(root, rerender) {
   if (rerender && !guestHomeBaselineBooted) {
     guestHomeBaselineBooted = true;
+    const before = readGuestBaseline();
     loadGuestBaseline().then((base) => {
-      if (base.room || base.tutor) rerender();
+      if (base.room !== before.room || base.tutor !== before.tutor) rerender();
     });
   }
   if (rerender) bindGuestListPagination(root, rerender);

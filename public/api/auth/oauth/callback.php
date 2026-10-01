@@ -62,7 +62,8 @@ try {
         'admin'            => '/guest',
         'study_room_owner' => '/study-room',
         'tutor'            => '/tutor',
-        default            => '/parent',
+        'guardian_student' => '/parent',
+        default            => '/guest',
     };
 
     $isAdmin = $user['role_type'] === 'admin';

@@ -13,9 +13,12 @@ declare(strict_types=1);
  *   학생: 그 구 id(preferred_tutor_region_id) 또는 그 구 소속 동 id(preferred_studyroom_region_id)
  *   각 축은 기존 목록 노출 조건의 total (유료만 아님).
  *   axes 문자열은 그 행의 dong_name / sigungu_name. 기준 행이 없으면 빈 문자열.
+ *   regionIds 는 같은 기준 행 id. 게스트 목록이 search.php 필터
+ *   (region_id / tutor_region_id / preferred_region_id)로 그대로 보낸다. 기준 행이 없으면 null.
  * res 200:
  *   { "ok": true, "studyRooms": 0, "tutors": 0, "studentRequests": 0,
- *     "axes": { "room": "", "tutor": "", "student": "" } }
+ *     "axes": { "room": "", "tutor": "", "student": "" },
+ *     "regionIds": { "room": null, "tutor": null, "student": null } }
  * res 405: { "ok": false, "error": "method_not_allowed" }
  * res 500: { "ok": false, "error": "server_error", "message": "..." }
  * 실패 시 클라이언트는 더미 숫자를 넣지 않는다.
@@ -51,6 +54,7 @@ try {
         'tutors' => $counts['tutors'],
         'studentRequests' => $counts['studentRequests'],
         'axes' => $counts['axes'],
+        'regionIds' => $counts['regionIds'],
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     error_log('[region-stats] error: ' . $e->getMessage());

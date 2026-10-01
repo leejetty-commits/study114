@@ -51,6 +51,38 @@ function dbField(name) {
   return '';
 }
 
+/** 서버 src/Registration/StudentBasicCompleteness.php LABELS 와 같은 문구·순서. 한 줄 요청문은 선택. */
+const STUDENT_BASIC_LABELS = {
+  public_display_name: '표시명',
+  grade_level: '학교급·학년',
+  preferred_lesson_type: '희망 유형',
+  preferred_region: '희망지역',
+  subject: '희망과목',
+  lesson_format: '수업형태',
+  preferred_student_count_group: '수업인원',
+  budget: '예산',
+};
+
+/** 희망지역은 제출 전에 따로 검사한다. 나머지 일곱 칸의 빈 항목 이름. */
+function studentBasicMissing(data) {
+  const text = (v) => String(v ?? '').trim();
+  const hope = data.preferred_lesson_type;
+  const format = text(data.lesson_format);
+  const budget = text(hope === 'study_room' ? data.preferred_studyroom_fee_amount : data.preferred_fee_amount);
+  const ok = {
+    public_display_name: text(data.public_display_name) !== '',
+    grade_level: text(data.grade_level) !== '' || data.school_level === 'preschool',
+    preferred_lesson_type: hope === 'tutor' || hope === 'study_room',
+    subject: text(data.subject_names) !== '',
+    lesson_format: format === 'one_on_one' || format === 'group',
+    preferred_student_count_group: format === 'one_on_one' || text(data.preferred_student_count_group) !== '',
+    budget: /^\d+$/.test(budget) && Number(budget) >= 1,
+  };
+  return Object.keys(STUDENT_BASIC_LABELS)
+    .filter((key) => key in ok && !ok[key])
+    .map((key) => STUDENT_BASIC_LABELS[key]);
+}
+
 /** 저장된 과외 희망지역 id. 라벨만 있으면 서버 목록에서 다시 찾는다. */
 function savedStudentTutorRegionId(draft) {
   const units = getCityUnits(signupState.cities || []);
@@ -108,12 +140,12 @@ function renderStudentBasic() {
   return `
     <form data-form="basic-student" class="basic-register student-basic">
       <div class="student-basic__field">
-        <label class="form-label" for="public_display_name">표시명</label>
+        <label class="form-label form-label--required" for="public_display_name">표시명</label>
         <input class="form-input" id="public_display_name" name="public_display_name" value="${esc(displayName)}" maxlength="40" autocomplete="nickname" />
         <p class="form-hint">Basic 카드에 보이는 이름입니다.</p>
       </div>
       <div class="student-basic__field" data-school-grade-pair>
-        <label class="form-label" for="school_level">학교급</label>
+        <label class="form-label form-label--required" for="school_level">학교급</label>
         <select class="form-input" id="school_level" name="school_level">
           <option value="">선택</option>
           ${SCHOOL_LEVEL_FORM_OPTIONS.map(
@@ -154,36 +186,36 @@ function renderStudentBasic() {
         <p class="form-hint">구가 있는 곳은 구까지, 없는 곳은 시·군까지 고릅니다. 세종은 시 선택으로 끝납니다.</p>
       </div>
       <div class="student-basic__field">
-        <label class="form-label" for="subject_names">희망과목</label>
+        <label class="form-label form-label--required" for="subject_names">희망과목</label>
         <select class="form-input" id="subject_names" name="subject_names">
           ${renderMainSubjectSelect(d.subject_names || '', { emptyLabel: '과목 선택' })}
         </select>
         <p class="form-hint">Basic 카드에 먼저 보일 과목입니다.</p>
       </div>
       <div class="student-basic__field">
-        <span class="form-label">수업형태</span>
+        <span class="form-label form-label--required">수업형태</span>
         ${renderChips('lesson_format', LESSON_FORMAT_OPTIONS, { selected: lessonFormat, required: false })}
         <p class="form-hint">단독과외와 그룹과외 중 고릅니다. 단독과외는 수업인원이 단독으로 저장됩니다.</p>
       </div>
       <div class="student-basic__field">
-        <span class="form-label">수업인원</span>
+        <span class="form-label form-label--required">수업인원</span>
         ${renderChips('preferred_student_count_group', STUDENT_COUNT_OPTIONS, { selected: count, required: false })}
         <p class="form-hint">함께 수업할 인원입니다.</p>
       </div>
       <div class="student-basic__field" data-student-tutor-budget ${hope === 'tutor' ? '' : 'hidden'}>
-        <label class="form-label" for="preferred_fee_amount">예산 (천원)</label>
-        <input class="form-input" id="preferred_fee_amount" name="preferred_fee_amount" type="number" min="0" step="1" inputmode="numeric" value="${esc(d.preferred_fee_amount ?? '')}" ${hope === 'tutor' ? '' : 'disabled'} />
+        <label class="form-label form-label--required" for="preferred_fee_amount">예산 (천원)</label>
+        <input class="form-input" id="preferred_fee_amount" name="preferred_fee_amount" type="number" min="1" step="1" inputmode="numeric" value="${esc(d.preferred_fee_amount ?? '')}" ${hope === 'tutor' ? '' : 'disabled'} />
         <p class="form-hint">과외쌤 수업의 월 예산입니다. 천원 단위로 적습니다.</p>
       </div>
       <div class="student-basic__field" data-student-studyroom-budget ${hope === 'study_room' ? '' : 'hidden'}>
-        <label class="form-label" for="preferred_studyroom_fee_amount">예산 (천원)</label>
-        <input class="form-input" id="preferred_studyroom_fee_amount" name="preferred_studyroom_fee_amount" type="number" min="0" step="1" inputmode="numeric" value="${esc(d.preferred_studyroom_fee_amount ?? '')}" ${hope === 'study_room' ? '' : 'disabled'} />
+        <label class="form-label form-label--required" for="preferred_studyroom_fee_amount">예산 (천원)</label>
+        <input class="form-input" id="preferred_studyroom_fee_amount" name="preferred_studyroom_fee_amount" type="number" min="1" step="1" inputmode="numeric" value="${esc(d.preferred_studyroom_fee_amount ?? '')}" ${hope === 'study_room' ? '' : 'disabled'} />
         <p class="form-hint">공부방 수업의 월 예산입니다. 천원 단위로 적습니다.</p>
       </div>
       <div class="student-basic__field">
         <label class="form-label" for="request_summary">한 줄 요청문</label>
         <input class="form-input" id="request_summary" name="request_summary" maxlength="200" value="${esc(d.request_summary || '')}" />
-        <p class="form-hint">카드에 한 줄로 보일 요청입니다.</p>
+        <p class="form-hint">카드에 한 줄로 보일 요청입니다. 이 칸만 비워도 됩니다.</p>
       </div>
       <div class="student-basic__actions">
         <button type="submit" class="btn btn--primary btn--block">다음</button>
@@ -472,6 +504,14 @@ export function bindSignupBasicEvents(root) {
     bindRegionCascades(studentTutorBlock, getCityUnits(signupState.cities || []));
   }
 
+  // min=1 위반(0 입력)은 브라우저 말풍선 대신 서버와 같은 「예산」 안내로 막는다.
+  form?.querySelectorAll('#preferred_fee_amount, #preferred_studyroom_fee_amount').forEach((el) => {
+    el.addEventListener('invalid', (e) => {
+      e.preventDefault();
+      alert(`기본정보를 모두 채워 주세요: ${STUDENT_BASIC_LABELS.budget}`);
+    });
+  });
+
   syncStudentHopeBlocks();
   syncLessonCountLock();
 
@@ -507,6 +547,11 @@ export function bindSignupBasicEvents(root) {
         alert('희망 유형을 선택해 주세요.');
         return;
       }
+      const missing = studentBasicMissing(data);
+      if (missing.length) {
+        alert(`기본정보를 모두 채워 주세요: ${missing.join(', ')}`);
+        return;
+      }
       if (data.preferred_lesson_type === 'study_room') {
         const hopeRegion = readStudentHopeRegion(form);
         const basis = hopeRegion?.region_basis === 'complex' ? 'complex' : 'dong';
@@ -524,6 +569,10 @@ export function bindSignupBasicEvents(root) {
           }
         } else {
           const place = String(hopeRegion?.complex_name || '').trim();
+          if (!data.region_id) {
+            alert('주소 검색으로 아파트·단지를 다시 선택해 주세요.');
+            return;
+          }
           if (!place) {
             alert('아파트·단지 이름이 있는 주소로 다시 검색해 주세요.');
             return;

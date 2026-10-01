@@ -87,9 +87,10 @@ import {
   bindRegisterIntroEvents,
   redirectLoggedInFromRegisterIntro,
 } from './register-intro/index.js';
-import { initAuthSession, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME } from './auth-session.js';
+import { initAuthSession, getAuthUser, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME } from './auth-session.js';
 import { importNeighborhoodGreetingHandoff, pullNeighborhoodGreetings } from './neighborhood-greeting-ui.js';
 import { guardRoleHomeAccess } from '../../shared/route-access.js';
+import { navRoleFromAuthUser } from './nav-config.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { showEmailVerifyOverlay } from './email-verify-overlay.js';
@@ -129,6 +130,8 @@ function applyPlansRedirects() {
 }
 
 let paintedHash = null;
+/** me.php 확인 전에는 역할 홈을 그리지도, 가드로 판정하지도 않는다. */
+let sessionChecked = false;
 
 function render() {
   if (isMypageRoute()) bootstrapMypageRoute();
@@ -232,7 +235,8 @@ function renderScreen() {
     return;
   }
   const key = getCurrentScreen();
-  const roleGate = guardRoleHomeAccess(key, isLoggedIn());
+  if (!sessionChecked && SCREENS[key] && key !== 'guest') return;
+  const roleGate = guardRoleHomeAccess(key, isLoggedIn(), navRoleFromAuthUser(getAuthUser()));
   if (!roleGate.ok) {
     if (window.location.hash !== roleGate.redirectHash) {
       window.location.replace(roleGate.redirectHash);
@@ -342,6 +346,7 @@ function init() {
       }
     });
     window.addEventListener('auth:login', async () => {
+      sessionChecked = true;
       if (isAdminUser()) {
         await activateAdminApi().catch((err) => {
           console.warn('[admin] api disabled — static A28 fallback', err);
@@ -360,6 +365,7 @@ function init() {
       queueMicrotask(() => resumePendingDeepIntent());
     });
     window.addEventListener('auth:logout', () => {
+      sessionChecked = true;
       resetDeepIntentResumeFlag();
       resetConcernData();
       deactivateBoardApi();
@@ -416,6 +422,7 @@ function init() {
       .then(async ([, , user]) => {
         if (followUpDone) return;
         followUpDone = true;
+        sessionChecked = true;
         pullNeighborhoodGreetings()
           .then((changed) => {
             if (changed) render();

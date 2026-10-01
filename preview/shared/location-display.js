@@ -554,15 +554,37 @@ export const GUEST_BASE_GU_OFFICIAL_CODE = '1168000000';
 
 export const GUEST_PLACE_PROMPT = '위치를 선택해 주세요';
 
-/** 게스트 기본 위치 표시만. 회원 저장 라벨·검색 요청값은 바꾸지 않는다. */
-export function guestSidoShort(sidoName) {
+/** 게스트 확정 표기. 서버 기준 행 이름을 못 받았거나 다르게 받아도 이 문구만 쓴다. */
+export const GUEST_BASE_ROOM_LABEL = '대치동';
+export const GUEST_BASE_TUTOR_LABEL = '서울시 강남구';
+
+/** 게스트 표기 전용. 회원 저장 라벨·검색 요청값에는 쓰지 않는다. */
+function guestSidoShort(sidoName) {
   const text = blank(sidoName);
-  if (text === '서울특별시') return '서울시';
-  return text;
+  return text === '서울특별시' ? '서울시' : text;
+}
+
+/**
+ * 시도+구를 「서울시 강남구」로 조합한다. 시도가 없거나 조합 결과가 확정 표기와 다르면 확정 표기.
+ * @param {unknown} sidoName @param {unknown} guName
+ */
+function guestTutorLabel(sidoName, guName) {
+  const sido = guestSidoShort(sidoName);
+  const gu = blank(guName);
+  const label = sido && gu ? `${sido} ${gu}` : '';
+  return label === GUEST_BASE_TUTOR_LABEL ? label : GUEST_BASE_TUTOR_LABEL;
 }
 
 /** @type {{ room: string, tutor: string, student: string }} */
-let guestBaseline = { room: '', tutor: '', student: '' };
+let guestBaseline = {
+  room: GUEST_BASE_ROOM_LABEL,
+  tutor: GUEST_BASE_TUTOR_LABEL,
+  student: GUEST_BASE_TUTOR_LABEL,
+};
+/** @type {{ room: number|null, tutor: number|null, student: number|null }} */
+let guestBaseIds = { room: null, tutor: null, student: null };
+/** @type {{ studyRooms: number, tutors: number, studentRequests: number } | null} */
+let guestAxisCounts = null;
 /** @type {Promise<{ room: string, tutor: string, student: string }> | null} */
 let guestBaselinePromise = null;
 
@@ -570,9 +592,39 @@ export function readGuestBaseline() {
   return guestBaseline;
 }
 
+/** region-stats 실수. 받지 못했으면 null (화면은 대시 유지). */
+export function readGuestAxisCounts() {
+  return guestAxisCounts;
+}
+
 /**
- * 공부방 이름은 region-stats axes.room, 과외 문구는 cities의 기준 구 행에서만 만든다.
- * 행을 못 찾으면 빈 문자열. 이름을 기억으로 채우지 않는다.
+ * 게스트 목록 search.php 필터. guestAxisCounts 와 같은 기준 행 id.
+ * id를 못 받았으면 null — 그 축은 지역 조건 없이 부르지 않는다.
+ * @param {'room'|'study_room'|'tutor'|'student'} tab
+ * @returns {Record<string, string>|null}
+ */
+export function guestScopeFilters(tab) {
+  if (tab === 'room' || tab === 'study_room') {
+    return guestBaseIds.room ? { region_id: String(guestBaseIds.room) } : null;
+  }
+  if (tab === 'tutor') {
+    return guestBaseIds.tutor ? { tutor_region_id: String(guestBaseIds.tutor) } : null;
+  }
+  if (tab === 'student') {
+    return guestBaseIds.student ? { preferred_region_id: String(guestBaseIds.student) } : null;
+  }
+  return null;
+}
+
+/** @param {unknown} value */
+function positiveId(value) {
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+/**
+ * 표기는 확정 문구만 낸다. 공부방은 「대치동」, 과외 문구는 cities 기준 구 행의 시도+구 → 「서울시 강남구」.
+ * axes.tutor 는 구 이름뿐이라 표기에 쓰지 않는다. 기준 행 id는 region-stats regionIds, 구 id는 cities 행으로도 보충한다.
  */
 export function loadGuestBaseline() {
   if (guestBaselinePromise) return guestBaselinePromise;
@@ -585,23 +637,27 @@ export function loadGuestBaseline() {
     fetchGuestJson('/api/auth/regions.php?action=cities'),
   ])
     .then(([stats, citiesBody]) => {
-      const axes = stats && stats.ok && stats.axes && typeof stats.axes === 'object' ? stats.axes : {};
+      const statsOk = Boolean(stats && stats.ok === true);
+      const ids = statsOk && stats.regionIds && typeof stats.regionIds === 'object' ? stats.regionIds : {};
       const cities = citiesBody && Array.isArray(citiesBody.cities) ? citiesBody.cities : [];
       const gu = cities.find((row) => String(row?.official_code || '') === GUEST_BASE_GU_OFFICIAL_CODE);
-      const room = blank(axes.room);
-      let tutor = '';
-      if (gu) {
-        const guName = blank(gu.gu_name || gu.city_name);
-        const sido = blank(gu.sido_name);
-        if (guName && sido) tutor = `${guestSidoShort(sido)} ${guName}`;
+      const tutor = guestTutorLabel(gu?.sido_name, gu?.gu_name || gu?.city_name);
+      const guId = positiveId(ids.tutor) ?? positiveId(gu?.id);
+      guestBaseIds = {
+        room: positiveId(ids.room),
+        tutor: guId,
+        student: positiveId(ids.student) ?? guId,
+      };
+      if (statsOk) {
+        const counts = [stats.studyRooms, stats.tutors, stats.studentRequests].map(Number);
+        guestAxisCounts = counts.every((n) => Number.isFinite(n))
+          ? { studyRooms: counts[0], tutors: counts[1], studentRequests: counts[2] }
+          : null;
       }
-      guestBaseline = { room, tutor, student: tutor };
+      guestBaseline = { room: GUEST_BASE_ROOM_LABEL, tutor, student: tutor };
       return guestBaseline;
     })
-    .catch(() => {
-      guestBaseline = { room: '', tutor: '', student: '' };
-      return guestBaseline;
-    });
+    .catch(() => guestBaseline);
   return guestBaselinePromise;
 }
 

@@ -10,7 +10,7 @@ import {
   currentAuthHashPath,
 } from './auth-redirect.js';
 
-/** @typedef {{ user_id: number, email: string, role_type: string, name: string, admin_level?: string|null, oauth_provider_labels?: string[], email_verified?: boolean }} AuthUser */
+/** @typedef {{ user_id: number, email: string, role_type: string, name: string, admin_level?: string|null, oauth_provider_labels?: string[], email_verified?: boolean, oauth_role_pending?: boolean }} AuthUser */
 
 /** @type {AuthUser|null} */
 let currentUser = null;
@@ -60,6 +60,7 @@ export async function initChromeSession() {
           name: src.name,
           admin_level: src.admin_level ?? null,
           email_verified: Boolean(src.email_verified),
+          oauth_role_pending: src.oauth_role_pending === true,
           oauth_provider_labels: Array.isArray(src.oauth_provider_labels)
             ? src.oauth_provider_labels
             : [],

@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Auth\AuthSession;
+use Study114\Paid\StudentRequestTextAccess;
 use Study114\Search\SearchService;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -51,7 +52,8 @@ try {
         if ($hasSession) {
             $auth = AuthSession::user();
             $roleType = is_array($auth) ? (string) ($auth['role_type'] ?? '') : '';
-            $includeStudentRequestText = in_array($roleType, ['tutor', 'study_room_owner', 'admin'], true);
+            $authUserId = is_array($auth) ? (int) ($auth['user_id'] ?? 0) : 0;
+            $includeStudentRequestText = (new StudentRequestTextAccess())->canReceive($authUserId, $roleType);
         }
     }
 

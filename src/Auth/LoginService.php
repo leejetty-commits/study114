@@ -78,7 +78,7 @@ final class LoginService
         return [
             'user_id' => (int) $row['id'],
             'email' => (string) $row['email'],
-            'role_type' => (string) ($row['role_type'] ?? 'guardian_student'),
+            'role_type' => (string) ($row['role_type'] ?? ''),
             'name' => (string) $row['real_name'],
             'admin_level' => $adminLevel,
             'must_change_password' => (int) ($row['must_change_password'] ?? 0) === 1,

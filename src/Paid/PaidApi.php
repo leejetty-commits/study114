@@ -74,7 +74,7 @@ final class PaidApi
     /** @param array<string, mixed> $payload */
     public static function ok(array $payload): never
     {
-        echo json_encode(['ok' => true] + $payload, JSON_UNESCAPED_UNICODE);
+        echo json_encode(array_merge(['ok' => true], $payload), JSON_UNESCAPED_UNICODE);
         exit;
     }
 
