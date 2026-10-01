@@ -5,7 +5,9 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Board\BoardApi;
+use Study114\Board\BoardChannelAcl;
 use Study114\Board\BoardPostService;
+use Study114\Board\ConcernService;
 
 BoardApi::bootstrap();
 
@@ -20,8 +22,20 @@ BoardApi::run(static function (): void {
         }
         $authorRole = BoardApi::queryString('author_role');
         $postKey = BoardApi::queryString('post_key') ?? BoardApi::queryString('id');
-        // 미확인 세션은 게스트 — 개인/보호 목록 메타 미노출
-        BoardApi::ok($service->list($boardKey, $authorRole, $postKey, BoardApi::optionalVerifiedAuth()));
+        $view = BoardApi::queryString('view');
+        $limitRaw = BoardApi::queryString('limit');
+        if (BoardChannelAcl::isConcern($boardKey)) {
+            // 고민방: sort(recent|hot|comments) · type · limit(기본 20, 상한 50) · offset
+            $concernQuery = ConcernService::parseListQuery(
+                BoardApi::queryString('sort'),
+                BoardApi::queryString('type'),
+                $limitRaw,
+                BoardApi::queryString('offset'),
+            );
+            BoardApi::ok($service->list($boardKey, $authorRole, $postKey, BoardApi::optionalVerifiedAuth(), $view, null, $concernQuery));
+        }
+        $limit = ($limitRaw !== null && $limitRaw !== '') ? max(1, min((int) $limitRaw, 20)) : null;
+        BoardApi::ok($service->list($boardKey, $authorRole, $postKey, BoardApi::optionalVerifiedAuth(), $view, $limit));
     }
 
     if ($method === 'POST') {

@@ -64,13 +64,13 @@ export function renderLoginStageBelow(opts = {}) {
     (opts.returnTo
       ? '로그인하면 방금 보던 화면으로 돌아갑니다.'
       : '저장한 탐색 조건과 최근 본 후보를 이어서 확인할 수 있습니다.');
+  // 화면에서 제거: · 대치동 데모
   return `
     <div class="login-stage__below">
       ${renderLoginPurposeChips()}
       <p class="login-stage__lead">${lead}</p>
       <p class="login-stage__guest">
         <a href="${guestUrl}" class="login-stage__guest-link">로그인 없이 둘러보기</a>
-        <span class="login-stage__guest-hint">· 대치동 데모</span>
       </p>
     </div>`;
 }

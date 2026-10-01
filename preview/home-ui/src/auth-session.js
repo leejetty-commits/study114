@@ -11,7 +11,7 @@ import { hydrateProviderNotices, resetProviderNotices } from './provider-notices
 import { hydrateExposureBridge, resetExposureBridge } from './exposure-bridge.js';
 import { activateRegistrationsApi, deactivateRegistrationsApi } from './registrations-backend.js';
 import { deactivateBoardApi } from './board/board-backend.js';
-import { resetConcernPreviewData } from './concern/store.js';
+import { resetConcernData } from './concern/store.js';
 import { navigate, setActiveRole } from './state.js';
 import { noteAuthRoleType } from './auth-role.js';
 import { oauthRoleSelectionUrl, redirectToEmailVerifyWait, isGuidePublicPath } from '../../shared/auth-redirect.js';
@@ -271,6 +271,6 @@ export async function logout() {
   resetProviderNotices();
   resetExposureBridge();
   deactivateBoardApi();
-  resetConcernPreviewData();
+  resetConcernData();
   window.dispatchEvent(new CustomEvent('auth:logout'));
 }

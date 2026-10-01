@@ -1,4 +1,4 @@
-/** 커뮤니티 라우터 — path /community/* (동적 보드 slug) */
+/** 커뮤니티 라우터 — path /community/* (동적 게시판 slug) */
 
 import { listCommunityBoards, getCommunityBoardBySlug } from './copy.js';
 

@@ -57,7 +57,7 @@ export const SUBMISSION_FORM = {
 };
 
 export const SUBMISSION_PERMISSION_DENIED = {
-  title: '이 보드에 접근할 수 없습니다',
+  title: '이 게시판에 접근할 수 없습니다',
   body: '제출함은 과외쌤 계정에서 이용할 수 있습니다. 공개 자료실은 유틸 메뉴의 「자료실」을 이용해 주세요.',
 };
 

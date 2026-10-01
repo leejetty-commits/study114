@@ -39,6 +39,36 @@ final class BoardPostRepository
         return $stmt->fetchAll();
     }
 
+    /**
+     * 고민방 목록 후보. 작성 시각 최신순(정렬·종류 필터·페이징은 ConcernService::listPage).
+     *
+     * @param list<string> $statuses
+     * @return list<array<string, mixed>>
+     */
+    public function listConcernRows(string $boardKey, array $statuses, ?string $postKey = null): array
+    {
+        if ($statuses === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($statuses), '?'));
+        $sql = "SELECT id, board_key, post_key, author_user_id, author_role, status,
+                       title, description, meta_json, created_at, updated_at
+                FROM board_posts
+                WHERE board_key = ? AND status IN ({$placeholders})";
+        $params = [$boardKey, ...$statuses];
+
+        if ($postKey !== null && $postKey !== '') {
+            $sql .= ' AND post_key = ?';
+            $params[] = $postKey;
+        }
+
+        $sql .= ' ORDER BY created_at DESC, id DESC';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
     /** @return list<array<string, mixed>> */
     public function listSubmissionQueue(string $boardKey, ?string $status = 'submitted'): array
     {

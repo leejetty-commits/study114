@@ -34,7 +34,8 @@ export function normalizeBoardKey(boardKey) {
 }
 
 /**
- * 채널명·공간 소개만 노출 (게시글 파생 정보 없음)
+ * 채널 진입(discover) 권한. 읽기 권한이 없으면 일반 채널은 채널명·공간 소개만,
+ * 고민방은 제목 항목(제목·방 이름·날짜·반응 합계·댓글 수, 본문·작성자 없음)까지 받는다.
  * @type {Record<string, BoardRole[]>}
  */
 const DISCOVER_ROLES = {
@@ -52,7 +53,7 @@ const DISCOVER_ROLES = {
 };
 
 /**
- * 실제 글 목록(제목·요약·작성자·시각·ID)
+ * 전체 글 목록(제목·요약·작성자·시각·ID). 고민방은 이 권한이 없어도 discover 로 제목 항목을 받는다.
  * @type {Record<string, BoardRole[]>}
  */
 const LIST_ROLES = {
@@ -255,7 +256,7 @@ export function canDiscoverBoard(boardKey, role) {
 }
 
 /**
- * 실제 글 목록 권한 (제목·작성자 등 게시글 파생 정보)
+ * 전체 글 목록 권한 (본문·작성자까지). 고민방 제목 항목은 이 권한 없이 discover 로도 받는다.
  * @param {string} boardKey
  * @param {BoardRole|string} role
  */
@@ -427,7 +428,7 @@ export function roleGateCopy(boardKey, navRole = 'guest') {
       kind: 'guest',
       title: intro.title,
       body: menuOnly
-        ? '로그인하면 역할에 맞는 글을 볼 수 있어요.'
+        ? '아직 올라온 고민이 없습니다. 제목은 누구나 볼 수 있어요. 로그인하면 전체 내용을 볼 수 있어요.'
         : `${intro.body} 이 공간의 소개만 볼 수 있어요. 로그인하면 역할에 맞는 글을 볼 수 있어요.`,
       roleLabel: menuOnly ? '' : intro.allowedRolesLabel,
     };
@@ -446,7 +447,7 @@ export function roleGateCopy(boardKey, navRole = 'guest') {
     return {
       kind: 'role',
       title: intro.title,
-      body: `${intro.body} 이 공간의 소개만 볼 수 있어요. ${intro.allowedRolesLabel} 역할의 고민방을 이용해 주세요.`,
+      body: `아직 올라온 고민이 없습니다. 이 게시판은 ${intro.allowedRolesLabel} 회원에게 열려 있어요. 제목은 볼 수 있어요.`,
       roleLabel: intro.allowedRolesLabel,
     };
   }
@@ -478,8 +479,9 @@ export function boardLoginHref(from = 'community') {
 
 /**
  * guestFilter 정본: allow | intro_only | block
- * `summary_only` 는 DB·옛 seed 호환 별칭일 뿐이며 **게시글 제목·요약 공개가 아니다**.
- * 런타임은 항상 intro_only 로 정규화한다. (채널명·공간 소개만)
+ * intro_only 는 글 카드를 막는 값이 아니라, 고민방이 걸린 칸에 값이 비었을 때 기본값으로 쓰이는 값이다.
+ * 게스트 판정에서는 allow 와 같고, 게스트에게 칸을 숨기는 값은 block 뿐이다.
+ * `summary_only` 등 옛 저장값은 intro_only 로 정규화한다.
  */
 export const GUEST_FILTER_INTRO_ONLY = 'intro_only';
 
@@ -562,7 +564,9 @@ export function canShowBoardInRail(boardKey, navRole, opts = {}) {
 }
 
 /**
- * 레일에 게시글 행을 넣을 수 있는지 (제목 노출)
+ * 그 방 읽기 권한이 있는지(guestFilter 는 보지 않는다).
+ * 레일에서는 서버가 항목을 주지 않은 방에 소개 카드를 띄울지 고르는 데만 쓴다.
+ * 서버가 준 제목 항목은 이 값과 상관없이 카드로 그린다.
  * @param {string} boardKey
  * @param {string} navRole
  */

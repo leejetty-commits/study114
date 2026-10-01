@@ -1,391 +1,553 @@
 /**
- * 고민방 프리뷰 스토어 — localStorage 전용
- * ACL 판정·화면 게이트는 구현. 작성·댓글·반응은 프리뷰만.
- * 서버 영속 저장 API는 미구현. 운영 게시판 기능 미완료.
+ * 고민방 서버 연동 스토어.
+ * 모든 데이터는 서버 API를 통해 읽고 쓴다.
+ * localStorage·시드·로컬 저장 없음.
+ * 서버 글 항목(목록·단건·인기·베스트)은 normalizeConcernItem() 한 곳만 거친다.
  */
 
-import { normalizeBoardKey } from '../board-channel-acl.js';
-import {
-  listCommunityBoards,
-  CONCERN_POST_TYPES,
-  CONCERN_REACTIONS,
-} from './copy.js';
+import { fetchBoardPosts } from '../board/board-api.js';
+import { getNavRole } from '../state.js';
+import { CONCERN_POST_TYPE_KEYS, CONCERN_DEFAULT_POST_TYPE } from './copy.js';
 
-const STORAGE_KEY = 'study114.community.v2';
+const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
-/** Vite가 빌드 시 상수로 치환. 함수 래핑하면 시드 배열이 운영 번들에 남을 수 있다. */
-const CONCERN_PREVIEW_SEED_ALLOWED = import.meta.env.DEV === true;
+export const CONCERN_PAGE_SIZE = 20;
+export const CONCERN_SORTS = ['recent', 'hot', 'comments'];
 
-/** @typedef {{
- *   id: string;
- *   boardKey: string;
- *   type: string;
- *   title: string;
- *   body: string;
- *   authorName: string;
- *   authorRoleLabel: string;
- *   createdAt: string;
- *   reactions: Record<string, number>;
- *   comments: { id: string; authorName: string; body: string; createdAt: string }[];
- *   pinned?: boolean;
- *   imageCount?: number;
- * }} ConcernPost */
+/** 방별 목록 캐시 { query, posts, access, total, hasMore } — 한 방에 지금 보는 정렬·종류 한 벌만 */
+const _lists = new Map();
+/** 단건 캐시 `${boardKey}\n${postId}` → { post|null, access } */
+const _details = new Map();
 
-function nowIso() {
-  return new Date().toISOString();
+/** 레일·베스트 캐시를 다시 받기 전까지 쓰는 시간 */
+const RAIL_CACHE_TTL_MS = 3 * 60 * 1000;
+export const RAIL_LATEST_LIMIT = 3;
+export const RAIL_HOT_LIMIT = 10;
+
+/**
+ * concern-hot.php 한 갈래(hot·latest·best) 캐시.
+ * 진행 중 요청은 하나만 두고 같이 기다린다. 다른 역할·계정으로 받은 값은 없는 것으로 본다.
+ * @template T
+ * @param {() => Promise<T>} load
+ * @param {T} emptyValue 실패했을 때 담는 값
+ */
+function createRailLoader(load, emptyValue) {
+  let data = null;
+  let owner = '';
+  let loadedAt = 0;
+  let pending = null;
+  let pendingOwner = '';
+  let generation = 0;
+  return {
+    /** @param {string} who */
+    peek(who) {
+      return data !== null && owner === who ? data : null;
+    },
+    /** @param {string} who */
+    isFresh(who) {
+      return data !== null && owner === who && Date.now() - loadedAt < RAIL_CACHE_TTL_MS;
+    },
+    /** @param {string} who @returns {Promise<T>} */
+    ensure(who) {
+      if (this.isFresh(who)) return Promise.resolve(data);
+      if (pending && pendingOwner === who) return pending;
+      const gen = ++generation;
+      pendingOwner = who;
+      pending = load()
+        .catch(() => emptyValue)
+        .then((result) => {
+          if (gen === generation) {
+            data = result;
+            owner = who;
+            loadedAt = Date.now();
+            pending = null;
+          }
+          return result;
+        });
+      return pending;
+    },
+    reset() {
+      data = null;
+      owner = '';
+      loadedAt = 0;
+      pending = null;
+      pendingOwner = '';
+      generation += 1;
+    },
+  };
 }
 
-function uid(prefix) {
-  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+/* ── 정규화 ── */
+
+/**
+ * 목록 조건 정규화. 서버가 받지 않는 값은 기본값으로 돌린다.
+ * @param {{ sort?: string|null, type?: string|null }} [q]
+ * @returns {{ sort: string, type: string }}
+ */
+export function normalizeListQuery(q = {}) {
+  const sort = CONCERN_SORTS.includes(String(q.sort || '')) ? String(q.sort) : 'recent';
+  const type = CONCERN_POST_TYPE_KEYS.includes(String(q.type || '')) ? String(q.type) : '';
+  return { sort, type };
 }
 
-/** @returns {ConcernPost[]} */
-function seedPosts() {
-  if (!CONCERN_PREVIEW_SEED_ALLOWED) return [];
-  const t = Date.now();
-  const ago = (h) => new Date(t - h * 3600_000).toISOString();
-  return [
-    {
-      id: 'cd1',
-      boardKey: 'concern-director',
-      type: 'worry',
-      title: '문의는 오는데 등록까지 이어지지 않아요',
-      body: '상담 문의는 꾸준한데 마지막에 다 빠져요. 원장님들은 어디서부터 손보시나요?',
-      authorName: '대치동원장',
-      authorRoleLabel: '공부방',
-      createdAt: ago(2),
-      reactions: { empathy: 27, helpful: 8, surprise: 3, worry: 5 },
-      comments: [
-        { id: 'c1', authorName: '분당원장', body: '소개문 첫 문장에 대상·과목을 명확히 하니 달라졌어요.', createdAt: ago(1) },
-        { id: 'c2', authorName: '송파원장', body: '상담 후 쪽지로 체크리스트를 보내보니 이탈이 줄었습니다.', createdAt: ago(0.5) },
-      ],
-      pinned: false,
-      imageCount: 0,
-    },
-    {
-      id: 'cd2',
-      boardKey: 'concern-director',
-      type: 'worry',
-      title: '방학 모집, 어디서부터 손봐야 할까요',
-      body: '사진과 소개문은 있는데 시즌 톤이 약해 보여요. 체크 포인트 공유 부탁드려요.',
-      authorName: '목동원장',
-      authorRoleLabel: '공부방',
-      createdAt: ago(8),
-      reactions: { empathy: 14, helpful: 11, surprise: 1, worry: 2 },
-      comments: [{ id: 'c3', authorName: '중계원장', body: '방학 특화 한 줄 + 상담 가능 시간을 먼저 올려보세요.', createdAt: ago(6) }],
-    },
-    {
-      id: 'cd3',
-      boardKey: 'concern-director',
-      type: 'solved',
-      title: '소개글 한 줄 바꿨더니 상담 톤이 달라졌어요',
-      body: '학부모가 먼저 보는 정보 순서로 소개문을 다시 썼더니 문의 질문이 구체화됐습니다.',
-      authorName: '일산원장',
-      authorRoleLabel: '공부방',
-      createdAt: ago(20),
-      reactions: { empathy: 9, helpful: 22, surprise: 4, worry: 0 },
-      comments: [],
-    },
-    {
-      id: 'ct1',
-      boardKey: 'concern-tutor',
-      type: 'worry',
-      title: '프로필은 있는데 왜 반응이 없을까요',
-      body: '활동 지역·과목은 넣었는데 조회만 있고 쪽지가 없어요. 어디를 먼저 보완할까요?',
-      authorName: '수학튜터K',
-      authorRoleLabel: '과외쌤',
-      createdAt: ago(3),
-      reactions: { empathy: 18, helpful: 6, surprise: 2, worry: 4 },
-      comments: [
-        { id: 'c4', authorName: '영어튜터M', body: '첫 문단에 “누구를 돕는지”를 쓰면 전환이 나아졌어요.', createdAt: ago(2) },
-      ],
-    },
-    {
-      id: 'ct2',
-      boardKey: 'concern-tutor',
-      type: 'advice',
-      title: '첫 수업 전 상담에서 꼭 물어봐야 할 것',
-      body: '목표 성적보다 현재 루틴·숙제 습관·학부모 기대치를 먼저 맞춰보세요.',
-      authorName: '국어튜터S',
-      authorRoleLabel: '과외쌤',
-      createdAt: ago(12),
-      reactions: { empathy: 7, helpful: 31, surprise: 5, worry: 1 },
-      comments: [
-        { id: 'c5', authorName: '과학튜터J', body: '시범수업 가능 여부와 교재 범위도 초반에 확인하면 좋아요.', createdAt: ago(10) },
-        { id: 'c6', authorName: '수학튜터K', body: '쪽지로 체크리스트 공유하니 상담이 짧아졌어요.', createdAt: ago(9) },
-      ],
-    },
-    {
-      id: 'ct3',
-      boardKey: 'concern-tutor',
-      type: 'worry',
-      title: '시범수업 뒤에 끊기는 이유가 뭘까요',
-      body: '시범은 괜찮다는 반응인데 이후 연락이 없어요. 비슷한 경험 있으신가요?',
-      authorName: '사회튜터H',
-      authorRoleLabel: '과외쌤',
-      createdAt: ago(28),
-      reactions: { empathy: 21, helpful: 9, surprise: 2, worry: 6 },
-      comments: [],
-    },
-    {
-      id: 'cp1',
-      boardKey: 'concern-parent',
-      type: 'worry',
-      title: '공부방이 맞을지 과외가 맞을지 모르겠어요',
-      body: '초5 아이인데 숙제 루틴이 약해요. 공부방 관리형과 1:1 과외 중 어디서부터 보면 좋을까요?',
-      authorName: '강남학부모',
-      authorRoleLabel: '학부모',
-      createdAt: ago(4),
-      reactions: { empathy: 33, helpful: 12, surprise: 1, worry: 8 },
-      comments: [
-        { id: 'c7', authorName: '분당학부모', body: '루틴이 약하면 관리형부터 보고, 과목만 무너지면 과외를 봤어요.', createdAt: ago(3) },
-      ],
-    },
-    {
-      id: 'cp2',
-      boardKey: 'concern-parent',
-      type: 'worry',
-      title: '초등 고학년부터 갑자기 수학이 무너져요',
-      body: '초6인데 개념은 되는데 응용에서 막혀요. 비슷한 시기 어떻게 보셨나요?',
-      authorName: '마포학부모',
-      authorRoleLabel: '학부모',
-      createdAt: ago(7),
-      reactions: { empathy: 25, helpful: 14, surprise: 3, worry: 7 },
-      comments: [
-        { id: 'c8', authorName: '서초학부모', body: '숙제량보다 오답 루틴부터 잡으니 안정됐어요.', createdAt: ago(5) },
-        { id: 'c9', authorName: '양천학부모', body: '찜해둔 후보를 비교로 2~3개로 줄인 뒤 쪽지했어요.', createdAt: ago(4.5) },
-      ],
-    },
-    {
-      id: 'cp3',
-      boardKey: 'concern-parent',
-      type: 'advice',
-      title: '첫 연락은 쪽지로 시작하는 편이 안전합니다',
-      body: '개인 연락처보다 플랫폼 쪽지로 조건을 먼저 정리해 보세요. 안전과외 가이드도 함께 보면 좋아요.',
-      authorName: '우동공과',
-      authorRoleLabel: '운영',
-      createdAt: ago(40),
-      reactions: { empathy: 11, helpful: 28, surprise: 2, worry: 0 },
-      comments: [],
-    },
-    {
-      id: 'ca1',
-      boardKey: 'concern-director',
-      type: 'community_alert',
-      title: '댓글·글쓰기는 짧게, 개인정보는 빼 주세요',
-      body: '커뮤니티는 현장 고민과 짧은 조언이 오가는 공간입니다. 실명·연락처·얼굴 사진은 올리지 말아 주세요.',
-      authorName: '우동공과',
-      authorRoleLabel: '운영',
-      createdAt: ago(1),
-      reactions: { empathy: 3, helpful: 12, surprise: 0, worry: 0 },
-      comments: [],
-      pinned: true,
-    },
-    {
-      id: 'cs1',
-      boardKey: 'concern-solved',
-      type: 'solved',
-      title: '소개문 첫 줄만 바꿨는데 상담 질문이 구체화됐어요',
-      body: '학부모가 먼저 보는 정보 순서로 소개문을 다시 썼더니 “몇 학년·어떤 과목” 문의가 늘었습니다.',
-      authorName: '일산원장',
-      authorRoleLabel: '공부방',
-      createdAt: ago(5),
-      reactions: { empathy: 11, helpful: 24, surprise: 2, worry: 0 },
-      comments: [
-        { id: 'c10', authorName: '분당원장', body: '가격·대상·시간대를 한 줄에 넣으니 좋았어요.', createdAt: ago(4) },
-      ],
-    },
-    {
-      id: 'cs2',
-      boardKey: 'concern-solved',
-      type: 'solved',
-      title: '쪽지로 조건 정리하고 첫 연락하니 부담이 줄었어요',
-      body: '학부모 입장에서도 쪽지로 과목·거리·희망 시간을 먼저 정리하니 대화가 빨리 좁혀졌습니다.',
-      authorName: '강남학부모',
-      authorRoleLabel: '학부모',
-      createdAt: ago(9),
-      reactions: { empathy: 19, helpful: 17, surprise: 1, worry: 0 },
-      comments: [],
-    },
-  ];
+function sameQuery(a, b) {
+  return a.sort === b.sort && a.type === b.type;
 }
 
-function emptyReactions() {
-  return Object.keys(CONCERN_REACTIONS).reduce((acc, key) => {
-    acc[key] = 0;
-    return acc;
-  }, /** @type {Record<string, number>} */ ({}));
+function toReactions(raw) {
+  const r = raw && typeof raw === 'object' ? raw : {};
+  return {
+    empathy: Number(r.empathy) || 0,
+    helpful: Number(r.helpful) || 0,
+    cheer: Number(r.cheer) || 0,
+    score: Number(r.score) || 0,
+  };
 }
 
-function loadState() {
-  if (!CONCERN_PREVIEW_SEED_ALLOWED) {
-    return { posts: [], myReactions: {} };
+/**
+ * 서버 글 항목 → 화면용 글. 제목 목록(titles) 항목에는 본문·작성자 필드를 만들지 않는다.
+ * @param {any} raw
+ * @param {string} [access] 응답 access. 모르면 _numericId 유무로 판단.
+ */
+export function normalizeConcernItem(raw, access) {
+  const src = raw && typeof raw === 'object' ? raw : {};
+  const titlesOnly = access === 'titles' || src._numericId == null;
+  const base = {
+    id: String(src.id ?? ''),
+    boardKey: String(src.boardKey || ''),
+    boardLabel: String(src.boardLabel || ''),
+    title: String(src.title || ''),
+    type: CONCERN_POST_TYPE_KEYS.includes(src.type) ? src.type : CONCERN_DEFAULT_POST_TYPE,
+    createdAt: String(src.createdAt || ''),
+    reactionTotal: Number(src.reactionTotal) || 0,
+    commentCount: Number(src.commentCount) || 0,
+    titlesOnly,
+  };
+  if (titlesOnly) return base;
+  const reactions = toReactions(src.reactions);
+  return {
+    ...base,
+    _numericId: Number(src._numericId) || 0,
+    description: String(src.description || ''),
+    status: String(src.status || ''),
+    authorDisplayName: String(src.authorDisplayName || ''),
+    authorUserId: Number(src.authorUserId) || 0,
+    reactions,
+    myReaction: src.myReaction || null,
+    updatedAt: String(src.updatedAt || src.createdAt || ''),
+    edited: Boolean(src.edited),
+  };
+}
+
+/* ── 캐시 ── */
+
+export function resetConcernData() {
+  _lists.clear();
+  _details.clear();
+  _hotLoader.reset();
+  _latestLoader.reset();
+  _bestLoader.reset();
+}
+
+function detailKey(boardKey, postId) {
+  return `${boardKey}\n${postId}`;
+}
+
+/**
+ * 지금 조건(sort·type)과 같은 목록 캐시만 돌려준다. 없으면 null.
+ * @returns {{ query: {sort:string,type:string}, posts: any[], access: string, total: number, hasMore: boolean }|null}
+ */
+export function getConcernList(boardKey, query) {
+  const entry = _lists.get(boardKey);
+  if (!entry) return null;
+  return sameQuery(entry.query, normalizeListQuery(query)) ? entry : null;
+}
+
+/** 목록 캐시 버리기 (댓글 수·새 글 반영용). 다음 방문 때 서버에서 다시 읽는다. */
+export function invalidateConcernList(boardKey) {
+  _lists.delete(boardKey);
+}
+
+function replaceInCaches(boardKey, post) {
+  const entry = _lists.get(boardKey);
+  if (entry) {
+    const posts = entry.posts.map((p) => (p.id === post.id ? { ...p, ...post } : p));
+    _lists.set(boardKey, { ...entry, posts });
   }
+  const dk = detailKey(boardKey, post.id);
+  const detail = _details.get(dk);
+  if (detail?.post) _details.set(dk, { ...detail, post: { ...detail.post, ...post } });
+}
+
+/* ── 목록 (GET /api/board/posts.php?sort&type&limit&offset) ── */
+
+function toListEntry(data, query, prevPosts = []) {
+  const access = data.access || 'full';
+  const fresh = (data.posts ?? []).map((p) => normalizeConcernItem(p, access));
+  const seen = new Set(prevPosts.map((p) => p.id));
+  const posts = [...prevPosts, ...fresh.filter((p) => !seen.has(p.id))];
+  const total = Number.isFinite(data.total) ? data.total : posts.length;
+  const hasMore = typeof data.hasMore === 'boolean' ? data.hasMore : posts.length < total;
+  return { query, posts, access, total, hasMore };
+}
+
+/**
+ * 첫 페이지를 서버에서 가져와 캐시에 저장한다.
+ * @param {string} boardKey
+ * @param {{ sort?: string, type?: string }} [query]
+ */
+export async function fetchConcernPosts(boardKey, query = {}) {
+  const q = normalizeListQuery(query);
+  const data = await fetchBoardPosts(boardKey, {
+    navRole: getNavRole(),
+    sort: q.sort,
+    type: q.type || undefined,
+    limit: CONCERN_PAGE_SIZE,
+  });
+  const entry = toListEntry(data, q);
+  _lists.set(boardKey, entry);
+  return entry;
+}
+
+/** 「더 보기」: 지금 목록 조건 그대로 다음 페이지를 붙인다. */
+export async function fetchMoreConcernPosts(boardKey) {
+  const entry = _lists.get(boardKey);
+  if (!entry || !entry.hasMore) return entry ?? null;
+  const data = await fetchBoardPosts(boardKey, {
+    navRole: getNavRole(),
+    sort: entry.query.sort,
+    type: entry.query.type || undefined,
+    limit: CONCERN_PAGE_SIZE,
+    offset: entry.posts.length,
+  });
+  if (_lists.get(boardKey) !== entry) return _lists.get(boardKey) ?? null;
+  const next = toListEntry(data, entry.query, entry.posts);
+  _lists.set(boardKey, next);
+  return next;
+}
+
+/* ── 단건 (GET /api/board/posts.php?post_key) ── */
+
+/** 서버에서 글 하나를 가져온다. 없으면 post=null 로 캐시해 다시 묻지 않는다. */
+export async function fetchConcernPost(boardKey, postId) {
+  const data = await fetchBoardPosts(boardKey, { navRole: getNavRole(), postKey: postId, limit: 1 });
+  const access = data.access || 'full';
+  const raw = (data.posts ?? []).find((p) => String(p.id) === String(postId)) ?? null;
+  const entry = { post: raw ? normalizeConcernItem(raw, access) : null, access };
+  _details.set(detailKey(boardKey, postId), entry);
+  return entry;
+}
+
+/**
+ * 단건 캐시 → 목록 캐시 순으로 찾는다.
+ * @returns {{ post: any|null, access: string }|null}
+ */
+export function findConcernPost(boardKey, postId) {
+  const detail = _details.get(detailKey(boardKey, postId));
+  if (detail) return detail;
+  const entry = _lists.get(boardKey);
+  const post = entry?.posts.find((p) => p.id === postId);
+  return post ? { post, access: entry.access } : null;
+}
+
+/* ── 글쓰기·수정 (POST /api/board/posts.php) ── */
+
+/**
+ * postKey 가 있으면 본인 글 수정, 없으면 새 글.
+ * @param {{ boardKey: string, postKey?: string, title: string, body: string, type?: string }} input
+ * @returns {Promise<object>} 서버가 돌려준 글(정규화)
+ */
+export async function saveConcernPost(input) {
+  const payload = {
+    board_key: input.boardKey,
+    title: input.title,
+    body: input.body,
+  };
+  if (input.postKey) payload.post_key = input.postKey;
+  if (input.type) payload.type = input.type;
+  const res = await fetch('/api/board/posts.php', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.message || '글 저장에 실패했습니다.');
+  }
+  const post = normalizeConcernItem(data.post, 'full');
+  _details.set(detailKey(input.boardKey, post.id), { post, access: 'full' });
+  if (input.postKey) replaceInCaches(input.boardKey, post);
+  else invalidateConcernList(input.boardKey);
+  return post;
+}
+
+/* ── 글 삭제 (DELETE /api/board/posts.php) ── */
+
+/**
+ * @param {string} boardKey
+ * @param {string} postKey
+ * @returns {Promise<void>}
+ */
+export async function deleteConcernPost(boardKey, postKey) {
+  const params = new URLSearchParams({ board_key: boardKey, post_key: postKey });
+  const res = await fetch(`/api/board/posts.php?${params}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.message || '삭제에 실패했습니다.');
+  }
+  _details.delete(detailKey(boardKey, postKey));
+  invalidateConcernList(boardKey);
+}
+
+/** 반응 토글 결과를 캐시에 반영 (다시 읽지 않음) */
+export function applyPostReaction(boardKey, postKey, result) {
+  const reactions = toReactions(result?.reactions);
+  replaceInCaches(boardKey, {
+    id: postKey,
+    reactions,
+    myReaction: result?.kind || null,
+    reactionTotal: reactions.empathy + reactions.helpful + reactions.cheer,
+  });
+}
+
+/* ── 댓글 (GET/POST/DELETE /api/board/comments.php) ── */
+
+/**
+ * @param {number} postId (_numericId)
+ * @returns {Promise<any[]>} 2단계 트리
+ */
+export async function fetchComments(postId) {
+  const params = new URLSearchParams({ post_id: String(postId) });
+  const res = await fetch(`/api/board/comments.php?${params}`, { credentials: 'include' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.message || '댓글을 불러오지 못했습니다.');
+  }
+  return data.comments ?? [];
+}
+
+/**
+ * @param {number} postId
+ * @param {{ body: string, parentCommentId?: number }} input
+ * @returns {Promise<object>}
+ */
+export async function addComment(postId, input) {
+  const res = await fetch('/api/board/comments.php', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    credentials: 'include',
+    body: JSON.stringify({
+      post_id: postId,
+      body: input.body,
+      ...(input.parentCommentId ? { parent_comment_id: input.parentCommentId } : {}),
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.message || '댓글 작성에 실패했습니다.');
+  }
+  return data.comment;
+}
+
+/**
+ * @param {number} commentId
+ * @returns {Promise<void>}
+ */
+export async function deleteComment(commentId) {
+  const params = new URLSearchParams({ comment_id: String(commentId) });
+  const res = await fetch(`/api/board/comments.php?${params}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.message || '댓글 삭제에 실패했습니다.');
+  }
+}
+
+/* ── 반응 (POST /api/board/reactions.php) ── */
+
+/**
+ * @param {number} postId
+ * @param {string} kind  empathy|helpful|cheer
+ * @param {number|null} [commentId]
+ * @returns {Promise<{ action: string, kind: string|null, reactions: object }>}
+ */
+export async function toggleReaction(postId, kind, commentId = null) {
+  const body = { post_id: postId, kind };
+  if (commentId) body.comment_id = commentId;
+  const res = await fetch('/api/board/reactions.php', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    credentials: 'include',
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.message || '반응 처리에 실패했습니다.');
+  }
+  return data;
+}
+
+/* ── 신고 (POST /api/board/reports.php) ── */
+
+/**
+ * @param {number} postId
+ * @param {string} reason
+ * @param {number|null} [commentId]
+ * @returns {Promise<{ reported: boolean, autoHidden: boolean }>}
+ */
+export async function reportContent(postId, reason, commentId = null) {
+  const body = { post_id: postId, reason };
+  if (commentId) body.comment_id = commentId;
+  const res = await fetch('/api/board/reports.php', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    credentials: 'include',
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.message || '신고 처리에 실패했습니다.');
+  }
+  return data;
+}
+
+/* ── 인기·베스트 (GET /api/board/concern-hot.php) ── */
+
+async function fetchConcernHotView(params) {
+  const res = await fetch(`/api/board/concern-hot.php?${new URLSearchParams(params)}`, {
+    credentials: 'include',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) throw new Error(data.message || 'concern-hot');
+  return data;
+}
+
+function normalizeItemList(list) {
+  return (Array.isArray(list) ? list : []).map((p) => normalizeConcernItem(p)).filter((p) => p.id && p.title);
+}
+
+export async function fetchHotPosts(limit = RAIL_HOT_LIMIT) {
+  const data = await fetchConcernHotView({ view: 'hot', limit: String(limit) });
+  return normalizeItemList(data.posts);
+}
+
+export async function fetchLatestPosts(limit = RAIL_LATEST_LIMIT) {
+  const data = await fetchConcernHotView({ view: 'latest', limit: String(limit) });
+  return normalizeItemList(data.posts);
+}
+
+export async function fetchBestPosts() {
+  const data = await fetchConcernHotView({ view: 'best' });
+  /** @type {Record<string, any[]>} */
+  const boards = {};
+  Object.entries(data.boards ?? {}).forEach(([boardKey, posts]) => {
+    const items = normalizeItemList(posts);
+    if (items.length) boards[boardKey] = items;
+  });
+  return boards;
+}
+
+const _hotLoader = createRailLoader(() => fetchHotPosts(RAIL_HOT_LIMIT), []);
+const _latestLoader = createRailLoader(() => fetchLatestPosts(RAIL_LATEST_LIMIT), []);
+const _bestLoader = createRailLoader(() => fetchBestPosts(), {});
+
+/* ── 레일·베스트 띠용 helper ── */
+
+/** @type {() => string} */
+let railOwnerResolver = () => 'guest';
+
+/**
+ * 세션 주인(계정·역할) 키를 알려 주는 함수를 건다. 서버 응답은 세션 기준이라
+ * 이 값이 바뀌면 받은 값을 버리고 다시 받는다. 이 모듈은 auth-session을 직접 부르지 않는다.
+ * @param {() => string} resolver
+ */
+export function setConcernRailOwnerResolver(resolver) {
+  if (typeof resolver === 'function') railOwnerResolver = resolver;
+}
+
+function railOwnerKey() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed?.posts) && parsed.posts.length) return parsed;
-    }
+    return String(railOwnerResolver() || 'guest');
   } catch {
-    /* seed */
-  }
-  return { posts: seedPosts(), myReactions: {} };
-}
-
-function saveState(state) {
-  if (!CONCERN_PREVIEW_SEED_ALLOWED) return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    /* ignore quota */
+    return 'guest';
   }
 }
 
-let state = loadState();
-
-export function listConcernPosts(boardKey, { type = 'all', sort = 'recent' } = {}) {
-  const key = normalizeBoardKey(boardKey);
-  let rows = state.posts.filter((p) => p.boardKey === key);
-  if (type && type !== 'all' && CONCERN_POST_TYPES[type]) {
-    rows = rows.filter((p) => p.type === type);
-  }
-  const score = (p) =>
-    Object.values(p.reactions || {}).reduce((a, n) => a + Number(n || 0), 0) + (p.comments?.length || 0) * 2;
-  if (sort === 'hot') {
-    rows = [...rows].sort((a, b) => score(b) - score(a) || b.createdAt.localeCompare(a.createdAt));
-  } else if (sort === 'comments') {
-    rows = [...rows].sort(
-      (a, b) => (b.comments?.length || 0) - (a.comments?.length || 0) || b.createdAt.localeCompare(a.createdAt),
-    );
-  } else {
-    rows = [...rows].sort((a, b) => {
-      if (a.pinned && !b.pinned) return -1;
-      if (!a.pinned && b.pinned) return 1;
-      return b.createdAt.localeCompare(a.createdAt);
-    });
-  }
-  return rows;
+/** @param {'hot'|'latest'} mode */
+function railLoader(mode) {
+  return mode === 'latest' ? _latestLoader : _hotLoader;
 }
 
-export function listAllConcernPosts(opts = {}) {
-  return listCommunityBoards().flatMap((b) => listConcernPosts(b.boardKey, opts));
+/** 레일 칸 데이터를 받은 적이 있는지(0건도 받은 것). @param {'hot'|'latest'} mode */
+export function isRailConcernReady(mode) {
+  return railLoader(mode).peek(railOwnerKey()) !== null;
 }
 
-export function getConcernPost(id) {
-  return state.posts.find((p) => p.id === id) || null;
+/** 다시 받을 때가 됐는지. @param {'hot'|'latest'} mode */
+export function isRailConcernFresh(mode) {
+  return railLoader(mode).isFresh(railOwnerKey());
 }
 
-export function getHotConcernSamples({ limit = 3, preferBoardKey, boardKeys } = {}) {
-  if (Array.isArray(boardKeys) && boardKeys.length === 0) return [];
-  const allowed = Array.isArray(boardKeys) && boardKeys.length ? new Set(boardKeys) : null;
-  const all = listAllConcernPosts({ sort: 'hot' })
-    .filter((p) => p.type !== 'community_alert')
-    .filter((p) => !allowed || allowed.has(p.boardKey));
-  const boards = allowed
-    ? listCommunityBoards().filter((b) => allowed.has(b.boardKey))
-    : listCommunityBoards();
-  const ordered = preferBoardKey
-    ? [...boards.filter((b) => b.boardKey === preferBoardKey), ...boards.filter((b) => b.boardKey !== preferBoardKey)]
-    : boards;
-  const picked = [];
-  for (const board of ordered) {
-    if (picked.length >= limit) break;
-    const hit = all.find((p) => p.boardKey === board.boardKey);
-    if (hit) picked.push(hit);
+/**
+ * 레일 칸 데이터를 받는다. 진행 중 요청이 있으면 그 요청을 같이 기다린다.
+ * @param {'hot'|'latest'} mode
+ */
+export function ensureRailConcernPosts(mode) {
+  return railLoader(mode).ensure(railOwnerKey());
+}
+
+/** 레일 HOT 카드용. 받은 값만 동기로 돌려준다. */
+export function getHotConcernSamples({ limit = 3, boardKeys } = {}) {
+  if (Array.isArray(boardKeys) && !boardKeys.length) return [];
+  let posts = _hotLoader.peek(railOwnerKey()) || [];
+  if (Array.isArray(boardKeys)) {
+    const set = new Set(boardKeys);
+    posts = posts.filter((p) => set.has(p.boardKey));
   }
-  for (const p of all) {
-    if (picked.length >= limit) break;
-    if (!picked.includes(p)) picked.push(p);
-  }
-  return picked.slice(0, limit);
+  return posts.slice(0, limit);
 }
 
-const PRIMARY_CONCERN_BOARD_KEYS = ['concern-director', 'concern-tutor', 'concern-parent'];
-
-/** 보드당 최신글 1개. 확대카드 좌측 배너용. */
+/** 레일 최신 카드용. 서버 최신순 응답에서 방마다 가장 새 글 하나씩, boardKeys 순서로. */
 export function getLatestConcernSamples({ limit = 3, boardKeys } = {}) {
-  if (Array.isArray(boardKeys) && boardKeys.length === 0) return [];
-  const allowed =
-    Array.isArray(boardKeys) && boardKeys.length ? boardKeys.filter(Boolean) : PRIMARY_CONCERN_BOARD_KEYS;
+  if (Array.isArray(boardKeys) && !boardKeys.length) return [];
+  const posts = _latestLoader.peek(railOwnerKey()) || [];
+  const allowed = Array.isArray(boardKeys) ? boardKeys : ['concern-director', 'concern-tutor', 'concern-parent'];
   const picked = [];
-  for (const boardKey of allowed) {
+  for (const bk of allowed) {
     if (picked.length >= limit) break;
-    const hit = listConcernPosts(boardKey, { sort: 'recent' })
-      .filter((p) => p.type !== 'community_alert')
-      .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))[0];
-    if (hit) picked.push(hit);
+    const first = posts.find((p) => p.boardKey === bk);
+    if (first) picked.push(first);
   }
-  return picked.slice(0, limit);
+  return picked;
 }
 
-export function createConcernPost({ boardKey, type, title, body, authorName, authorRoleLabel }) {
-  const post = {
-    id: uid('post'),
-    boardKey,
-    type: CONCERN_POST_TYPES[type] ? type : 'worry',
-    title: String(title || '').trim(),
-    body: String(body || '').trim(),
-    authorName: authorName || '회원',
-    authorRoleLabel: authorRoleLabel || '회원',
-    createdAt: nowIso(),
-    reactions: emptyReactions(),
-    comments: [],
-    imageCount: 0,
-  };
-  state.posts.unshift(post);
-  saveState(state);
-  return post;
+export function isBestConcernReady() {
+  return _bestLoader.peek(railOwnerKey()) !== null;
 }
 
-export function addConcernComment(postId, { authorName, body }) {
-  const post = getConcernPost(postId);
-  if (!post) return null;
-  const comment = {
-    id: uid('cmt'),
-    authorName: authorName || '회원',
-    body: String(body || '').trim(),
-    createdAt: nowIso(),
-  };
-  if (!comment.body) return null;
-  post.comments = [...(post.comments || []), comment];
-  saveState(state);
-  return comment;
+export function isBestConcernFresh() {
+  return _bestLoader.isFresh(railOwnerKey());
 }
 
-export function toggleConcernReaction(postId, reactionKey) {
-  if (!CONCERN_REACTIONS[reactionKey]) return null;
-  const post = getConcernPost(postId);
-  if (!post) return null;
-  const myKey = `${postId}:${reactionKey}`;
-  const mine = { ...(state.myReactions || {}) };
-  post.reactions = { ...emptyReactions(), ...(post.reactions || {}) };
-  if (mine[myKey]) {
-    post.reactions[reactionKey] = Math.max(0, Number(post.reactions[reactionKey] || 0) - 1);
-    delete mine[myKey];
-  } else {
-    post.reactions[reactionKey] = Number(post.reactions[reactionKey] || 0) + 1;
-    mine[myKey] = true;
-  }
-  state.myReactions = mine;
-  saveState(state);
-  return post;
+export function ensureBestConcernPosts() {
+  return _bestLoader.ensure(railOwnerKey());
 }
 
-export function hasMyReaction(postId, reactionKey) {
-  return Boolean(state.myReactions?.[`${postId}:${reactionKey}`]);
+/** 이달의 베스트. 받은 적 없으면 null, 0건이면 {}. @returns {Record<string, any[]>|null} */
+export function getBestConcernBoards() {
+  return _bestLoader.peek(railOwnerKey());
 }
 
+/** 글 반응 합계 */
 export function reactionTotal(post) {
-  return Object.values(post?.reactions || {}).reduce((a, n) => a + Number(n || 0), 0);
-}
-
-export function resetConcernPreviewData() {
-  state = { posts: seedPosts(), myReactions: {} };
-  try {
-    if (!CONCERN_PREVIEW_SEED_ALLOWED) localStorage.removeItem(STORAGE_KEY);
-    else saveState(state);
-  } catch {
-    /* ignore */
-  }
+  if (post?.reactionTotal != null) return Number(post.reactionTotal) || 0;
+  const r = post?.reactions;
+  if (!r) return 0;
+  return (Number(r.empathy) || 0) + (Number(r.helpful) || 0) + (Number(r.cheer) || 0);
 }

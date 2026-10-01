@@ -395,7 +395,7 @@ export const BOARD_REGISTRY = [
     presetId: 'concern',
     sectionOwner: 'community',
     userFacingMenu: '공부방 고민방',
-    // list/detail 런타임은 board-channel-acl.js (guest는 소개만)
+    // list/detail 런타임은 board-channel-acl.js (게스트·읽기 권한 없는 사람은 제목만)
     visibility: 'public',
     readRoles: ['supply-room', 'supply-tutor'],
     downloadRoles: [],

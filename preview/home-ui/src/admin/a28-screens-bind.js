@@ -1233,6 +1233,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         if (!notice || !form) return;
         form.querySelector('[name="id"]').value = notice.id;
         form.querySelector('[name="date"]').value = notice.date;
+        form.querySelector('[name="target_role"]').value = notice.targetRole || 'all';
         form.querySelector('[name="title"]').value = notice.title;
         form.querySelector('[name="body"]').value = notice.body.join('\n');
       });
@@ -1253,6 +1254,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
       form.reset();
       form.querySelector('[name="id"]').value = '';
       form.querySelector('[name="date"]').value = new Date().toISOString().slice(0, 10);
+      form.querySelector('[name="target_role"]').value = 'all';
     });
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1263,6 +1265,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           date: String(fd.get('date')),
           title: String(fd.get('title')),
           body: String(fd.get('body')).split('\n').map((l) => l.trim()).filter(Boolean),
+          target_role: String(fd.get('target_role') || 'all'),
         });
       } catch (err) {
         window.alert(err instanceof Error ? err.message : '공지를 저장하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');

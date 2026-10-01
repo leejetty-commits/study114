@@ -8,7 +8,7 @@ import {
   OPERATIONAL_CTA,
   TICKET_CATEGORIES,
 } from './support-copy.js';
-import { listNotices } from './notice-store.js';
+import { listNoticesForCenter, noticeTargetLabel } from './notice-store.js';
 import { listFaqPostsByTab, listGuidePosts, getRelatedGuidePosts, isOperationalBoardApiActive } from '../operational-board-store.js';
 import { createTicket } from './ticket-store.js';
 import { renderAdminScreen } from './admin-screens.js';
@@ -146,12 +146,9 @@ function renderSupportQuickCards() {
   const cards = [
     { title: '자주 묻는 질문', desc: '자주 묻는 질문에서 먼저', href: '/support/faq', icon: '/assets/info-refresh/motif-faq.svg', extra: '' },
     { title: '운영문의', desc: '운영팀 · 오류·정책·계정', href: '/support/contact', icon: '/assets/info-refresh/motif-contact.svg', extra: '' },
-    { title: '이용안내', desc: '찾기·등록·찜·쪽지', href: '/guide', icon: '/assets/info-refresh/motif-room.svg', extra: '' },
-    { title: '안전과외', desc: '약관·정책의 안전과외', href: '/support/policies/safety', icon: '/assets/info-refresh/motif-policy.svg', extra: 'card--accent-violet', halo: 'icon-halo--violet', tile: 'icon-tile--violet' },
     { title: '약관·정책', desc: '이용약관 · 개인정보 등', href: '/support/policies', icon: '/assets/info-refresh/motif-policy.svg', extra: 'card--accent-violet', halo: 'icon-halo--violet', tile: 'icon-tile--violet' },
     { title: '공지사항', desc: '서비스 변경·운영 안내', href: '/support/notice', icon: '/assets/info-refresh/motif-notice.svg', extra: 'card--accent-warn', halo: 'icon-halo--warn', tile: 'icon-tile--warn' },
     { title: '자료실', desc: '안내 자료·양식', href: '/support/library', icon: '/assets/info-refresh/motif-library.svg', extra: 'card--accent-teal', halo: 'icon-halo--teal', tile: 'icon-tile--teal' },
-    { title: '커뮤니티', desc: '현장형 고민방·해결후기', href: '/community', icon: '/assets/info-refresh/motif-room.svg', extra: '', halo: 'icon-halo--ivory', tile: 'icon-tile--ivory' },
   ];
   return `
     <div class="section-head">
@@ -245,7 +242,7 @@ function renderFaqSection(path) {
 }
 
 function renderNoticeSection() {
-  const posts = listNotices().map((n) => ({
+  const posts = listNoticesForCenter().map((n) => ({
     id: n.id,
     title: n.title,
     date: n.date,
@@ -274,6 +271,7 @@ function renderNoticeSection() {
         <div class="notice-accordion__item" data-board-item="${esc(n.id)}">
           <button type="button" class="notice-row sup-board-accordion__head sup-board-accordion__head--notice" aria-expanded="false">
             <span class="notice-row__bar" aria-hidden="true"></span>
+            <span class="notice-row__badge">${esc(noticeTargetLabel(n))}</span>
             <span class="notice-row__title">${esc(n.title)}</span>
             <span class="notice-row__date">${esc(n.date || '')}</span>
           </button>

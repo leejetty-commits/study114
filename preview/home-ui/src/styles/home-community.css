@@ -208,16 +208,21 @@
 }
 .concern-row__title { font-size: 1rem; color: var(--gray-900); font-weight: 600; }
 .concern-type {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--gray-500);
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--gray-200);
+  background: var(--gray-50, #f8fafc);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--gray-600);
+  vertical-align: 0.1em;
 }
-.concern-type::after {
-  content: '?';
-  margin-left: 0.35rem;
-  font-weight: 400;
-  color: var(--gray-400);
-}
+.concern-type--advice { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; }
+.concern-type--solved { border-color: #bbf7d0; background: #f0fdf4; color: #15803d; }
+.concern-type--request { border-color: #fde68a; background: #fffbeb; color: #b45309; }
 .concern-pin {
   font-size: 0.6875rem;
   font-weight: 600;
@@ -227,7 +232,8 @@
 .concern-row__stats,
 .concern-detail__author,
 .concern-empty { color: var(--gray-500); font-size: 0.8125rem; }
-.concern-detail__meta .concern-type::after { content: none; }
+.concern-detail__meta { margin-bottom: 0.35rem; }
+.concern-edited { color: var(--gray-500); }
 .concern-detail__body {
   margin: 1rem 0;
   white-space: pre-line;
@@ -282,4 +288,74 @@
   font-size: 0.875rem;
 }
 .concern-comment-form { margin-top: 1rem; }
+
+/* 화면 안 안내 영역 */
+.concern-flash {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 0.875rem;
+}
+.concern-flash--success { border-color: #bbf7d0; background: #f0fdf4; color: #14532d; }
+.concern-flash--error { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+.concern-flash__text { margin: 0; line-height: 1.55; }
+.concern-flash__close {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* 화면 안 확인 패널 (삭제·신고) */
+.concern-confirm {
+  margin: 0.75rem 0;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--gray-200);
+  background: #f8fafc;
+}
+.concern-confirm--danger { border-color: #fecaca; background: #fff7f7; }
+.concern-confirm__title { margin: 0; font-weight: 700; color: var(--gray-900); }
+.concern-confirm__body { margin: 0.35rem 0 0; color: var(--gray-600); font-size: 0.875rem; line-height: 1.6; }
+.concern-confirm__field { margin: 0.75rem 0 0; }
+.concern-confirm__error,
+.concern-compose__error,
+.concern-comment-form__error,
+.concern-more__error,
+.concern-error {
+  margin: 0.5rem 0 0;
+  color: #b91c1c;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+.concern-confirm__actions,
+.concern-compose__actions,
+.concern-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.concern-compose__type { margin: 0 0 0.9rem; font-size: 0.8125rem; font-weight: 700; color: var(--gray-700); }
+
+/* 더 보기 */
+.concern-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.concern-more__count { color: var(--gray-500); font-size: 0.8125rem; }
 

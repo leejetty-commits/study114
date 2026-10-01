@@ -9,6 +9,13 @@ use Study114\Database\Connection;
 
 final class BoardPostService
 {
+    private const TARGET_ROLE_LABELS = [
+        'all' => '전체',
+        'study_room' => '공부방',
+        'tutor' => '과외쌤',
+        'student' => '학생',
+    ];
+
     /** @var list<string> */
     private const ALLOWED_BOARD_KEYS = [
         'notice',
@@ -39,12 +46,20 @@ final class BoardPostService
         $this->attachments = $attachments ?? new BoardAttachmentService($this->repo);
     }
 
-    /** @return array{posts: list<array<string, mixed>>, access: 'full'|'intro', intro: array<string, mixed>|null} */
+    /**
+     * @param string|null $viewMode  null=전체(관리자), 'center'=고객센터, 'home'=홈 3줄
+     * @param int|null    $limit     home 뷰일 때 최대 건수
+     * @param array{sort: string, type: string|null, limit: int, offset: int}|null $concernQuery 고민방 정렬·종류·페이징
+     * @return array<string, mixed> posts·access·intro (+ 고민방이면 total·limit·offset·sort·type·hasMore)
+     */
     public function list(
         string $boardKey,
         ?string $authorRole = null,
         ?string $postKey = null,
         ?array $auth = null,
+        ?string $viewMode = null,
+        ?int $limit = null,
+        ?array $concernQuery = null,
     ): array {
         $boardKey = BoardChannelAcl::normalizeBoardKey($boardKey);
         $this->assertBoardKey($boardKey);
@@ -59,8 +74,16 @@ final class BoardPostService
             );
         }
 
+        $isConcern = BoardChannelAcl::isConcern($boardKey);
+        if ($isConcern && $concernQuery === null) {
+            $concernQuery = ConcernService::parseListQuery(null, null, null, null);
+        }
+
+        if ($access === 'titles' && $isConcern) {
+            return $this->listConcernTitles($boardKey, $boardRole, $postKey, $concernQuery);
+        }
+
         if ($access === 'intro' || !BoardChannelAcl::canList($boardKey, $boardRole)) {
-            // intro: 단건 ?id= / post_key 도 DB를 조회하지 않고 posts=[] 만 반환
             return [
                 'posts' => [],
                 'access' => 'intro',
@@ -72,6 +95,22 @@ final class BoardPostService
             $this->assertAuthorRole($authorRole);
         }
 
+        if ($isConcern) {
+            $isAdmin = $auth !== null
+                && (($auth['role_type'] ?? '') === 'admin' || !empty($auth['admin_level']));
+            $currentUserId = $auth !== null ? (int) ($auth['user_id'] ?? 0) : null;
+            $page = (new ConcernService())->listPage(
+                $boardKey,
+                $isAdmin ? ['published', 'hidden'] : ['published'],
+                $postKey,
+                $concernQuery,
+                $currentUserId,
+                false,
+            );
+
+            return $page + ['access' => 'full', 'intro' => null];
+        }
+
         $rows = $this->repo->listByBoard($boardKey, $authorRole, $postKey);
         if ($this->isOperationalBoard($boardKey)) {
             $rows = array_values(array_filter(
@@ -80,11 +119,67 @@ final class BoardPostService
             ));
         }
 
+        $posts = array_map(fn (array $row): array => $this->mapPost($row), $rows);
+
+        if ($boardKey === 'notice') {
+            $effectiveView = $viewMode;
+            if ($effectiveView === null) {
+                $isAdmin = $auth !== null
+                    && (($auth['role_type'] ?? '') === 'admin' || !empty($auth['admin_level']));
+                $effectiveView = $isAdmin ? null : 'center';
+            }
+            if ($effectiveView !== null) {
+                $posts = $this->filterNoticesByRole($posts, $auth, $effectiveView);
+                if ($limit !== null && $limit > 0) {
+                    $posts = array_slice($posts, 0, $limit);
+                }
+            }
+        }
+
         return [
-            'posts' => array_map(fn (array $row): array => $this->mapPost($row), $rows),
+            'posts' => $posts,
             'access' => 'full',
             'intro' => null,
         ];
+    }
+
+    /**
+     * 세션 역할 기반 공지 필터.
+     * center: 공부방·과외쌤·관리자→전부, 학생/학부모→all+student, 게스트→all.
+     * home:   공부방→all+study_room, 과외쌤→all+tutor, 학부모→all+student, 게스트→all, 관리자→전부.
+     *
+     * @param list<array<string, mixed>> $posts
+     * @return list<array<string, mixed>>
+     */
+    private function filterNoticesByRole(array $posts, ?array $auth, string $viewMode): array
+    {
+        $navRole = $this->noticeNavRole($auth);
+
+        if ($viewMode === 'center') {
+            $allowed = match ($navRole) {
+                'admin', 'study_room', 'tutor' => null,
+                'parent'                       => ['all', 'student'],
+                default                        => ['all'],
+            };
+        } else {
+            $allowed = match ($navRole) {
+                'admin'      => null,
+                'study_room' => ['all', 'study_room'],
+                'tutor'      => ['all', 'tutor'],
+                'parent'     => ['all', 'student'],
+                default      => ['all'],
+            };
+        }
+
+        if ($allowed === null) {
+            return $posts;
+        }
+
+        $set = array_flip($allowed);
+        return array_values(array_filter(
+            $posts,
+            static fn (array $p): bool => isset($set[$p['targetRole'] ?? 'all']),
+        ));
     }
 
     /** @param array<string, mixed> $input */
@@ -147,7 +242,13 @@ final class BoardPostService
         if (!BoardChannelAcl::canCompose($boardKey, $boardRole)) {
             throw new BoardAccessException(403, 'forbidden', '이 게시판에 글을 쓸 권한이 없습니다.');
         }
-        throw new InvalidArgumentException('현재 쓰기는 submission·운영형 채널만 지원합니다.');
+
+        if (BoardChannelAcl::isConcern($boardKey)) {
+            $concernService = new ConcernService();
+            return $concernService->savePost($input, $auth);
+        }
+
+        throw new InvalidArgumentException('현재 쓰기는 submission·운영형·고민방 채널만 지원합니다.');
     }
 
     public function delete(string $boardKey, string $postKey, string $authorRole, ?array $auth = null): void
@@ -181,8 +282,14 @@ final class BoardPostService
             return;
         }
 
+        if (BoardChannelAcl::isConcern($actualKey)) {
+            $concernService = new ConcernService();
+            $concernService->deletePost($actualKey, $actualPostKey, $auth);
+            return;
+        }
+
         if ($actualKey !== 'submission') {
-            throw new InvalidArgumentException('현재 삭제는 submission·운영형 채널만 지원합니다.');
+            throw new InvalidArgumentException('현재 삭제는 submission·운영형·고민방 채널만 지원합니다.');
         }
         $authorRole = $sessionNav;
         $this->assertAuthorRole($authorRole);
@@ -275,6 +382,26 @@ final class BoardPostService
         }
 
         return 'parent';
+    }
+
+    /**
+     * 공지 필터 전용 역할 판별.
+     * 비로그인(null)·이메일 미인증(빈 auth)·알 수 없는 role_type → 'guest'.
+     * navRoleFromAuth()와 달리 submission 경로에 쓰이지 않는다.
+     */
+    private function noticeNavRole(?array $auth): string
+    {
+        if ($auth === null || $auth === []) {
+            return 'guest';
+        }
+        $roleType = (string) ($auth['role_type'] ?? '');
+        return match ($roleType) {
+            'guardian_student', 'parent', 'student' => 'parent',
+            'study_room_owner', 'study_room'        => 'study_room',
+            'tutor'                                  => 'tutor',
+            'admin'                                  => 'admin',
+            default                                  => 'guest',
+        };
     }
 
     /** @param array<string, mixed> $input @param array{user_id?: int|string}|null $auth */
@@ -408,10 +535,15 @@ final class BoardPostService
             if (is_string($body)) {
                 $body = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $body) ?: [])));
             }
+            $targetRole = (string) ($input['target_role'] ?? $input['targetRole'] ?? $meta['targetRole'] ?? 'all');
+            if (!isset(self::TARGET_ROLE_LABELS[$targetRole])) {
+                $targetRole = 'all';
+            }
             return [
                 'body' => is_array($body) ? array_values(array_map('strval', $body)) : [],
                 'displayDate' => (string) ($input['date'] ?? $input['displayDate'] ?? $meta['displayDate'] ?? date('Y-m-d')),
                 'pinned' => (bool) ($input['pinned'] ?? $meta['pinned'] ?? false),
+                'targetRole' => $targetRole,
             ];
         }
 
@@ -439,6 +571,24 @@ final class BoardPostService
         }
 
         return $meta;
+    }
+
+    /**
+     * 고민방 제목만 보기: canList=false이지만 canDiscover=true인 호출자용.
+     * description·authorDisplayName·authorUserId·meta·myReaction 절대 포함하지 않는다.
+     * 정렬·종류 필터·페이징은 full 목록과 같다.
+     *
+     * @param array{sort: string, type: string|null, limit: int, offset: int} $concernQuery
+     * @return array<string, mixed>
+     */
+    private function listConcernTitles(string $boardKey, string $boardRole, ?string $postKey, array $concernQuery): array
+    {
+        $page = (new ConcernService())->listPage($boardKey, ['published'], $postKey, $concernQuery, null, true);
+
+        return $page + [
+            'access' => 'titles',
+            'intro' => BoardChannelAcl::introPayload($boardKey, $boardRole),
+        ];
     }
 
     private function isOperationalBoard(string $boardKey): bool
@@ -490,6 +640,7 @@ final class BoardPostService
 
         return [
             'id' => $postKey,
+            '_numericId' => (int) $row['id'],
             'boardKey' => $boardKey,
             'title' => (string) $row['title'],
             'description' => (string) ($row['description'] ?? ''),
@@ -501,6 +652,8 @@ final class BoardPostService
             'hasAttachment' => $attachment !== null,
             'status' => (string) $row['status'],
             'authorRole' => (string) $row['author_role'],
+            'authorUserId' => (int) ($row['author_user_id'] ?? 0),
+            'meta' => $meta,
             'createdAt' => substr($created, 0, 10),
             'updatedAt' => substr($updated, 0, 10),
             'format' => isset($meta['format']) ? (string) $meta['format'] : null,
@@ -542,11 +695,14 @@ final class BoardPostService
             $body = isset($meta['body']) && is_array($meta['body'])
                 ? array_values(array_map('strval', $meta['body']))
                 : [];
+            $targetRole = (string) ($meta['targetRole'] ?? 'all');
 
             return $base + [
                 'date' => $displayDate,
                 'body' => $body,
                 'pinned' => (bool) ($meta['pinned'] ?? false),
+                'targetRole' => $targetRole,
+                'targetLabel' => self::TARGET_ROLE_LABELS[$targetRole] ?? '전체',
             ];
         }
 

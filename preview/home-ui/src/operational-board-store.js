@@ -7,6 +7,8 @@ import {
   getOperationalPostsCache,
   apiSaveOperationalPost,
   apiDeleteOperationalPost,
+  getNoticeCenterPosts,
+  getNoticeHomePosts,
 } from './board/board-backend.js';
 
 function sortNotices(rows) {
@@ -24,14 +26,20 @@ function guideSort(a, b) {
   return pa - pb || String(a.slug).localeCompare(String(b.slug));
 }
 
+const TARGET_ROLE_LABELS = { all: '전체', study_room: '공부방', tutor: '과외쌤', student: '학생' };
+
 /** @param {any} post */
 function mapNoticePost(post) {
+  const meta = post.meta && typeof post.meta === 'object' ? post.meta : {};
+  const targetRole = post.targetRole || meta.targetRole || 'all';
   return {
     id: post.id,
     date: post.date || post.createdAt,
     title: post.title,
     body: Array.isArray(post.body) ? post.body : [],
     pinned: Boolean(post.pinned),
+    targetRole,
+    targetLabel: TARGET_ROLE_LABELS[targetRole] || '전체',
   };
 }
 
@@ -190,7 +198,7 @@ export function getRelatedGuidePosts(slug) {
   return listGuidePosts().filter((g) => g.slug !== slug && g.priority === current.priority).slice(0, 3);
 }
 
-/** @param {Omit<ReturnType<typeof mapNoticePost>, 'id'> & { id?: string }} input */
+/** @param {Omit<ReturnType<typeof mapNoticePost>, 'id'> & { id?: string, target_role?: string }} input */
 export async function upsertNoticePost(input) {
   if (isBoardApiMode()) {
     return mapNoticePost(
@@ -199,13 +207,15 @@ export async function upsertNoticePost(input) {
         title: input.title,
         date: input.date,
         body: input.body,
+        target_role: input.target_role || input.targetRole || 'all',
         status: 'published',
         author_role: 'admin',
       }),
     );
   }
   const id = input.id || `notice-${Date.now()}`;
-  return { id, date: input.date, title: input.title.trim(), body: input.body.filter(Boolean), pinned: false };
+  const targetRole = input.target_role || input.targetRole || 'all';
+  return { id, date: input.date, title: input.title.trim(), body: input.body.filter(Boolean), pinned: false, targetRole, targetLabel: TARGET_ROLE_LABELS[targetRole] || '전체' };
 }
 
 /** @param {string} id */
@@ -284,6 +294,18 @@ export async function deleteGuidePost(slug) {
   const key = String(slug || '').trim();
   const cached = getOperationalPostsCache('safe-guide').find((row) => row.id === key || row.slug === key);
   await apiDeleteOperationalPost('safe-guide', cached?.id || key, 'admin');
+}
+
+/** 고객센터용 (서버 세션 역할 필터 적용 결과) */
+export function listNoticeCenterPosts() {
+  if (!isBoardApiMode()) return [];
+  return sortNotices(getNoticeCenterPosts().map(mapNoticePost));
+}
+
+/** 홈 3줄용 (서버 세션 역할 필터 + limit 적용 결과) */
+export function listNoticeHomePosts() {
+  if (!isBoardApiMode()) return [];
+  return getNoticeHomePosts().map(mapNoticePost);
 }
 
 export function isOperationalBoardApiActive() {

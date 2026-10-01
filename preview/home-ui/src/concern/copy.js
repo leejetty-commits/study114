@@ -1,24 +1,27 @@
 /**
  * 커뮤니티 SSOT — 노션 상위메뉴·고민방·해결후기 결정문
  * path: /community/* (legacy /concern → redirect)
- * 보드 목록: 시드 + 관리자 채널(프리셋 concern) 병합
+ * 게시판 목록: 기본 방 정의(COMMUNITY_BOARD_DEFS) + 관리자 채널(프리셋 concern) 병합
  */
 
 import { listBoardChannels } from '../board-channel-store.js';
 
-/** @typedef {'worry'|'advice'|'solved'|'request'|'community_alert'} CommunityPostType */
-/** @typedef {'empathy'|'helpful'|'surprise'|'worry'} CommunityReaction */
+/** @typedef {'worry'|'advice'|'solved'|'request'} CommunityPostType */
+/** @typedef {'empathy'|'helpful'|'cheer'} CommunityReaction */
 
 export const COMMUNITY_HUB_TITLE = '커뮤니티';
 export const COMMUNITY_HUB_LEAD =
-  '공부방·과외쌤·학생/학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 보드에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다.';
+  '공부방·과외쌤·학생/학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 게시판에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다.';
 
 /** @deprecated alias */
 export const CONCERN_HUB_TITLE = COMMUNITY_HUB_TITLE;
 export const CONCERN_HUB_LEAD = COMMUNITY_HUB_LEAD;
 
-/** @type {{ id: string; boardKey: string; slug: string; label: string; roleHint: string; path: string; defaultTypes?: string[] }[]} */
-export const SEED_COMMUNITY_BOARDS = [
+/**
+ * 기본 방 정의(메뉴 이름·경로·안내 문구). 글 데이터가 아니다.
+ * @type {{ id: string; boardKey: string; slug: string; label: string; roleHint: string; path: string; defaultTypes?: string[] }[]}
+ */
+export const COMMUNITY_BOARD_DEFS = [
   {
     id: 'director',
     boardKey: 'concern-director',
@@ -113,29 +116,29 @@ function slugFromChannel(channel) {
 }
 
 function roleHintFor(channel, slug) {
-  const seed = SEED_COMMUNITY_BOARDS.find((b) => b.boardKey === channel.boardKey || b.slug === slug);
-  if (seed) return seed.roleHint;
+  const def = COMMUNITY_BOARD_DEFS.find((b) => b.boardKey === channel.boardKey || b.slug === slug);
+  if (def) return def.roleHint;
   return '현장 고민 · 짧은 조언 · 댓글 반응';
 }
 
 function channelToBoard(channel) {
   const slug = slugFromChannel(channel);
-  const seed = SEED_COMMUNITY_BOARDS.find((b) => b.boardKey === channel.boardKey || b.slug === slug);
+  const def = COMMUNITY_BOARD_DEFS.find((b) => b.boardKey === channel.boardKey || b.slug === slug);
   const isSolved = slug === 'solved' || channel.boardKey.includes('solved');
   return {
     id: slug,
     boardKey: channel.boardKey,
     slug,
-    label: channel.menuLabel || seed?.label || channel.boardKey,
+    label: channel.menuLabel || def?.label || channel.boardKey,
     roleHint: roleHintFor(channel, slug),
     path: `/community/${slug}`,
-    ...(isSolved || seed?.defaultTypes ? { defaultTypes: seed?.defaultTypes || ['solved'] } : {}),
+    ...(isSolved || def?.defaultTypes ? { defaultTypes: def?.defaultTypes || ['solved'] } : {}),
   };
 }
 
 /**
- * 활성 커뮤니티 보드 = 관리자 채널(preset concern) ∪ 시드 보정
- * @returns {typeof SEED_COMMUNITY_BOARDS}
+ * 활성 커뮤니티 게시판 = 관리자 채널(preset concern) ∪ 기본 방 정의 보정
+ * @returns {typeof COMMUNITY_BOARD_DEFS}
  */
 export function listCommunityBoards() {
   const channels = listBoardChannels().filter(
@@ -145,13 +148,13 @@ export function listCommunityBoards() {
       ch.status !== 'hidden' &&
       ch.enabled !== false,
   );
-  if (!channels.length) return SEED_COMMUNITY_BOARDS.map((b) => ({ ...b }));
+  if (!channels.length) return COMMUNITY_BOARD_DEFS.map((b) => ({ ...b }));
 
   const byKey = new Map();
-  SEED_COMMUNITY_BOARDS.forEach((seed) => {
-    const live = channels.find((ch) => ch.boardKey === seed.boardKey);
-    if (live) byKey.set(seed.boardKey, channelToBoard(live));
-    else byKey.set(seed.boardKey, { ...seed });
+  COMMUNITY_BOARD_DEFS.forEach((def) => {
+    const live = channels.find((ch) => ch.boardKey === def.boardKey);
+    if (live) byKey.set(def.boardKey, channelToBoard(live));
+    else byKey.set(def.boardKey, { ...def });
   });
   channels.forEach((ch) => {
     if (!byKey.has(ch.boardKey)) byKey.set(ch.boardKey, channelToBoard(ch));
@@ -159,17 +162,20 @@ export function listCommunityBoards() {
   return [...byKey.values()];
 }
 
-/** @deprecated 시드 스냅샷 — 런타임은 listCommunityBoards() 사용 */
-export const COMMUNITY_BOARDS = SEED_COMMUNITY_BOARDS;
+/** @deprecated 기본 방 정의 별칭 — 런타임은 listCommunityBoards() 사용 */
+export const COMMUNITY_BOARDS = COMMUNITY_BOARD_DEFS;
 export const CONCERN_BOARDS = COMMUNITY_BOARDS;
+
+/** 서버 ConcernService::POST_TYPES 와 같은 순서·값. 값이 없는 기존 글은 'worry'. */
+export const CONCERN_POST_TYPE_KEYS = ['worry', 'advice', 'solved', 'request'];
+export const CONCERN_DEFAULT_POST_TYPE = 'worry';
 
 /** @type {Record<CommunityPostType, { label: string }>} */
 export const COMMUNITY_POST_TYPES = {
   worry: { label: '고민' },
-  advice: { label: '한줄조언' },
-  solved: { label: '해결후기' },
-  request: { label: '요청/모집' },
-  community_alert: { label: '알림' },
+  advice: { label: '조언' },
+  solved: { label: '해결' },
+  request: { label: '부탁' },
 };
 
 export const CONCERN_POST_TYPES = COMMUNITY_POST_TYPES;
@@ -178,8 +184,7 @@ export const CONCERN_POST_TYPES = COMMUNITY_POST_TYPES;
 export const COMMUNITY_REACTIONS = {
   empathy: { emoji: '❤️', label: '공감해요' },
   helpful: { emoji: '👍', label: '도움됐어요' },
-  surprise: { emoji: '😮', label: '몰랐어요' },
-  worry: { emoji: '😢', label: '걱정돼요' },
+  cheer: { emoji: '🎉', label: '응원해요' },
 };
 
 export const CONCERN_REACTIONS = COMMUNITY_REACTIONS;

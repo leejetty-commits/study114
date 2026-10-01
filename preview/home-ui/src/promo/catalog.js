@@ -18,7 +18,7 @@ export const PROMO_LANDINGS = [
   {
     id: 'study-room',
     path: '/promo/study-room',
-    title: '공부방 홍보 랜딩',
+    title: '공부방 카달로그',
     audience: '학부모 · 원장',
     status: 'live',
     railHint: '홈/검색 우측 CTA · 게스트 본문 인라인',
@@ -27,7 +27,7 @@ export const PROMO_LANDINGS = [
   {
     id: 'tutor',
     path: '/promo/tutor',
-    title: '과외쌤 소개',
+    title: '과외쌤 카달로그',
     audience: '과외쌤',
     status: 'live',
     railHint: '과외쌤 우측 소개',
@@ -36,7 +36,7 @@ export const PROMO_LANDINGS = [
   {
     id: 'parent',
     path: '/promo/parent',
-    title: '학생 안내',
+    title: '학생 카달로그',
     audience: '학생 · 학부모(보조)',
     status: 'live',
     railHint: '학생 우측 소개',

@@ -20,7 +20,7 @@ export const RIGHT_RAIL_SLOT_KEYS = [
 
 export const RIGHT_RAIL_SELECTION_MODES = ['latest', 'pinned', 'curated', 'manual'];
 export const RIGHT_RAIL_MOBILE_BEHAVIORS = ['stack', 'collapse', 'hide'];
-/** guestFilter 정본: allow | intro_only | block. summary_only 는 호환 별칭(소개만). */
+/** guestFilter 정본: allow | intro_only | block. summary_only 는 intro_only 의 호환 별칭. */
 export const RIGHT_RAIL_GUEST_FILTERS = ['allow', 'intro_only', 'block'];
 
 export { normalizeGuestFilter, resolveSlotGuestFilter };
@@ -38,8 +38,9 @@ export const RIGHT_RAIL_PAGE_LABELS = {
  * 우측 레일 슬롯 정본 (SSOT runtime seed)
  * - preview: 이 배열이 기본
  * - API mode: DB row가 overlay · DB seed는 본 배열과 동일 값으로 동기화
- * - guestFilter: allow=게스트 노출 / intro_only=채널 소개만(글 제목·요약 아님) / block=게스트 슬롯 숨김
- *   옛 저장값 summary_only 는 intro_only 별칭이며 게시글 요약을 공개하지 않는다.
+ * - guestFilter: allow=게스트 노출 / intro_only=고민방이 걸린 칸에 값이 비었을 때 쓰는 기본값
+ *   (글 카드를 막지 않음, 게스트 판정은 allow 와 같음) / block=게스트 슬롯 숨김
+ *   옛 저장값 summary_only 는 intro_only 별칭이다.
  */
 export const DEFAULT_RIGHT_RAIL_SLOTS = [
   {

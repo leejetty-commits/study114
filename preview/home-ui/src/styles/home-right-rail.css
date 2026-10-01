@@ -54,6 +54,16 @@
   display: none;
 }
 
+.live-rail-slot__band {
+  margin: var(--space-2) calc(-1 * var(--space-4)) 0;
+  padding: var(--space-2) var(--space-4);
+  background: var(--uds-primary, #3b82f6);
+}
+
+.live-rail-slot__band .live-rail-slot__title {
+  color: #fff;
+}
+
 .live-rail-slot__title {
   display: block;
   font-size: var(--fs-14);
@@ -378,4 +388,91 @@ button.live-rail-action {
 
 body.is-rail-media-open {
   overflow: hidden;
+}
+
+/* 홈 「이달의 베스트 고민」 가로 띠 */
+.concern-best-strip {
+  box-sizing: border-box;
+  min-width: 0;
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-surface);
+  border: 1px solid var(--uds-line);
+  background: var(--uds-surface);
+}
+
+.concern-best-strip__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.concern-best-strip__title {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--uds-ink);
+}
+
+.concern-best-strip__more {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  color: var(--uds-primary);
+  text-decoration: none;
+}
+
+.concern-best-strip__more:hover,
+.concern-best-strip__more:focus-visible {
+  text-decoration: underline;
+}
+
+.concern-best-strip__track {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-bottom: var(--space-1);
+}
+
+.concern-best-card {
+  display: flex;
+  flex: 0 0 13.5rem;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--uds-line);
+  background: var(--uds-surface);
+  color: inherit;
+  text-decoration: none;
+  scroll-snap-align: start;
+}
+
+.concern-best-card:hover,
+.concern-best-card:focus-visible {
+  border-color: var(--uds-primary);
+}
+
+.concern-best-card__board,
+.concern-best-card__meta {
+  font-size: var(--fs-12);
+  color: var(--uds-muted);
+}
+
+.concern-best-card__board {
+  font-weight: var(--fw-medium);
+}
+
+.concern-best-card__title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  line-height: var(--leading-normal);
+  color: var(--uds-ink);
+  overflow-wrap: anywhere;
 }

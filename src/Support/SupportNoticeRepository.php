@@ -12,11 +12,13 @@ final class SupportNoticeRepository
     {
     }
 
+    private const COLS = 'id, notice_key, notice_date, title, body_json, created_at, updated_at';
+
     /** @return list<array<string, mixed>> */
     public function listAll(): array
     {
         $stmt = $this->pdo->query(
-            'SELECT id, notice_key, notice_date, title, body_json, created_at, updated_at
+            'SELECT ' . self::COLS . '
              FROM support_notices
              ORDER BY notice_date DESC, id DESC'
         );
@@ -28,7 +30,7 @@ final class SupportNoticeRepository
     public function findByKey(string $noticeKey): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, notice_key, notice_date, title, body_json, created_at, updated_at
+            'SELECT ' . self::COLS . '
              FROM support_notices WHERE notice_key = ? LIMIT 1'
         );
         $stmt->execute([$noticeKey]);

@@ -1692,3 +1692,78 @@
   box-sizing: border-box;
 }
 
+/* ── 마이페이지 「내 공지」 카드 ── */
+.mypage-notice {
+  margin: 0 0 var(--space-4, 16px);
+  border: 1px solid var(--uds-line, #e2e8f0);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: var(--uds-surface, #fff);
+}
+.mypage-notice__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  background: var(--uds-primary, #3b82f6);
+  color: #fff;
+}
+.mypage-notice__label {
+  font-size: var(--fs-14, 14px);
+  font-weight: var(--fw-semibold, 600);
+}
+.mypage-notice__more {
+  font-size: var(--fs-12, 12px);
+  color: #fff;
+  opacity: 0.85;
+  text-decoration: none;
+}
+.mypage-notice__more:hover { opacity: 1; text-decoration: underline; }
+.mypage-notice__row {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto auto;
+  gap: var(--space-2, 8px);
+  align-items: center;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-top: 1px solid var(--uds-line, #e2e8f0);
+  font-size: var(--fs-14, 14px);
+  color: var(--uds-ink, #1e293b);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.mypage-notice__row:first-of-type { border-top: 0; }
+.mypage-notice__row:hover { background: var(--uds-hover, #f8fafc); }
+.mypage-notice__badge {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  font-size: var(--fs-11, 11px);
+  font-weight: var(--fw-semibold, 600);
+  border-radius: 3px;
+  background: var(--uds-muted-bg, #f1f5f9);
+  color: var(--uds-muted, #64748b);
+  white-space: nowrap;
+}
+.mypage-notice__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.mypage-notice__new {
+  flex-shrink: 0;
+  padding: 0 4px;
+  font-size: var(--fs-11, 11px);
+  font-weight: 700;
+  color: var(--uds-primary, #3b82f6);
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  line-height: 1.5;
+}
+.mypage-notice__date {
+  flex-shrink: 0;
+  font-size: var(--fs-12, 12px);
+  color: var(--uds-muted, #64748b);
+  white-space: nowrap;
+}
+

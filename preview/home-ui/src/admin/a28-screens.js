@@ -574,7 +574,7 @@ function renderRightRailForm(slot = null) {
   return `
     <form class="sup-admin-form a28-config-form" data-rail-form>
       <h3 class="sup-admin-form__title">우측 배너 자리 설정</h3>
-      <p class="a28-help">게시판 본문이 아니라, 화면 오른쪽의 요약·추천·바로가기 자리입니다. 커뮤니티 채널을 추가 채널에 넣으면 홈 우측 「현장 고민 HOT」이 그 보드 글을 우선 보여줍니다.</p>
+      <p class="a28-help">게시판 본문이 아니라, 화면 오른쪽의 요약·추천·바로가기 자리입니다. 커뮤니티 채널을 추가 채널에 넣으면 홈 우측 「현장 고민 HOT」이 그 게시판 글을 우선 보여줍니다.</p>
       <label class="sup-field"><span>배너 자리</span><select name="slotKey">${slotOptions}</select></label>
       <label class="sup-field"><span>페이지 종류</span><input name="pageType" value="${esc(current?.pageType || 'home')}" required /></label>
       <label class="sup-field"><span>구역 제목</span><input name="sectionTitle" value="${esc(current?.sectionTitle || '')}" required /></label>
@@ -777,7 +777,7 @@ function renderNoticesAdmin(section = 'channels') {
   const rows = notices
     .map(
       (n) =>
-        `<tr data-notice-row="${esc(n.id)}"><td>${esc(n.date)}</td><td>${esc(n.title)}</td>
+        `<tr data-notice-row="${esc(n.id)}"><td>${esc(n.date)}</td><td>${esc(n.targetLabel || '전체')}</td><td>${esc(n.title)}</td>
          <td class="sup-admin-actions">
            <button type="button" class="btn btn--secondary btn--sm" data-a28-notice-edit="${esc(n.id)}">수정</button>
            <button type="button" class="btn btn--secondary btn--sm" data-a28-notice-delete="${esc(n.id)}">삭제</button>
@@ -807,11 +807,19 @@ function renderNoticesAdmin(section = 'channels') {
     body = `${renderRightRailTable()}${renderRightRailForm()}`;
   } else if (section === 'posts') {
     body = `
-       <table class="sup-admin-table"><thead><tr><th>날짜</th><th>제목</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="3" class="sup-empty">공지 없음</td></tr>'}</tbody></table>
+       <table class="sup-admin-table"><thead><tr><th>날짜</th><th>대상</th><th>제목</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="4" class="sup-empty">공지 없음</td></tr>'}</tbody></table>
        <form class="sup-admin-form" data-a28-notice-form>
          <h3 class="sup-admin-form__title">공지 작성 · 수정</h3>
          <input type="hidden" name="id" value="" />
          <label class="sup-field"><span>날짜</span><input type="date" name="date" required /></label>
+         <label class="sup-field"><span>대상</span>
+           <select name="target_role">
+             <option value="all" selected>전체</option>
+             <option value="study_room">공부방</option>
+             <option value="tutor">과외쌤</option>
+             <option value="student">학생</option>
+           </select>
+         </label>
          <label class="sup-field"><span>제목</span><input type="text" name="title" required /></label>
          <label class="sup-field"><span>본문</span><textarea name="body" rows="4" required></textarea></label>
          <div class="sup-admin-form__actions">

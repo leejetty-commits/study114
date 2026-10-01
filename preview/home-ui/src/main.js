@@ -94,8 +94,13 @@ import { parseHashQuery } from '../../shared/preview-links.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { showEmailVerifyOverlay } from './email-verify-overlay.js';
 import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
-import { activateBoardApi, boardKeysBlockedForRole, deactivateBoardApi, hydrateBoardCache } from './board/board-backend.js';
-import { resetConcernPreviewData } from './concern/store.js';
+
+function hydrateNotices() {
+  hydrateNoticeCenter().catch(() => {});
+  hydrateNoticeHome().catch(() => {});
+}
+import { activateBoardApi, boardKeysBlockedForRole, deactivateBoardApi, hydrateBoardCache, hydrateNoticeCenter, hydrateNoticeHome, resetNoticeCaches } from './board/board-backend.js';
+import { resetConcernData } from './concern/store.js';
 import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
 import { mountOpsChrome } from './site-ops-chrome.js';
@@ -350,21 +355,24 @@ function init() {
         deactivateAdminApi();
         deactivateContentConfigApi();
       }
+      hydrateNotices();
       render();
       queueMicrotask(() => resumePendingDeepIntent());
     });
     window.addEventListener('auth:logout', () => {
       resetDeepIntentResumeFlag();
-      resetConcernPreviewData();
+      resetConcernData();
       deactivateBoardApi();
       deactivateAdminApi();
       deactivateContentConfigApi();
+      resetNoticeCaches();
+      hydrateNotices();
       render();
     });
     window.addEventListener('auth:role-change', () => {
-      resetConcernPreviewData();
+      resetConcernData();
       deactivateBoardApi();
-      activateBoardApi().catch((err) => {
+      activateBoardApi().then(() => hydrateNotices()).catch((err) => {
         console.warn('[board] rehydrate after role-change failed', err);
         deactivateBoardApi();
       });
@@ -393,6 +401,7 @@ function init() {
       console.warn('[support] api disabled — sessionStorage fallback', err);
       deactivateSupportApi();
     });
+    hydrateNotices();
     // 게스트에게 401이 나는 library·submission은 첫 부트에서 요청하지 않는다.
     const guestBoardBoot = activateBoardApi({ navRole: 'guest' }).catch((err) => {
       console.warn('[board] api disabled — sessionStorage fallback', err);
@@ -414,6 +423,7 @@ function init() {
           .catch(() => {});
         if (isAuthRedirectPending()) return;
         if (user) {
+          hydrateNotices();
           const deferred = boardKeysBlockedForRole('guest');
           if (deferred.length) {
             hydrateBoardCache({ onlyKeys: deferred })

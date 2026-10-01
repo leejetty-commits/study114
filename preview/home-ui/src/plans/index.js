@@ -45,7 +45,7 @@ function renderPlansLoginGate(message) {
     lead: message,
     bullets: [
       '유료상품·노출·쪽지권·결제는 로그인 후 이용할 수 있습니다.',
-      '공부방·과외쌤 계정으로 로그인하면 상품센터가 열립니다.',
+      '공부방·과외쌤 계정으로 로그인하면 유료상품 페이지가 열립니다.',
     ],
     from: 'plans',
     action: 'plans',

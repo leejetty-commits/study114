@@ -103,8 +103,9 @@ final class BoardChannelAcl
     }
 
     /**
-     * guestFilter 정본 intro_only.
-     * summary_only 는 호환 별칭이며 게시글 제목·요약 공개가 아니다.
+     * guestFilter 정본: allow | intro_only | block.
+     * intro_only 는 글 카드를 막는 값이 아니라, 고민방이 걸린 칸에 값이 비었을 때 기본값으로 쓰이는 값이다.
+     * summary_only 등 옛 저장값은 intro_only 로 정규화한다.
      */
     public static function normalizeGuestFilter(string $value): string
     {
@@ -308,7 +309,6 @@ final class BoardChannelAcl
 
     /**
      * 채널 단위 삭제 권한. 실제 삭제는 소유권·상태 재검사.
-     * concern 서버 삭제는 미구현.
      */
     public static function canDelete(string $boardKey, string $boardRole): bool
     {
@@ -321,6 +321,9 @@ final class BoardChannelAcl
         }
         if ($key === 'submission') {
             return self::canCompose($key, $boardRole);
+        }
+        if (self::isConcern($key)) {
+            return self::canCompose($key, $boardRole) || $boardRole === 'admin';
         }
 
         return false;
@@ -349,6 +352,9 @@ final class BoardChannelAcl
     {
         if (self::canList($boardKey, $boardRole) && self::canDetail($boardKey, $boardRole)) {
             return 'full';
+        }
+        if (self::isConcern($boardKey) && self::canDiscover($boardKey, $boardRole)) {
+            return 'titles';
         }
         if (self::canDiscover($boardKey, $boardRole)) {
             return 'intro';

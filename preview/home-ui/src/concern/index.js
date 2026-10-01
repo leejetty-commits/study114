@@ -6,6 +6,7 @@ export {
   normalizeConcernPath,
 } from './router.js';
 export {
+  COMMUNITY_BOARD_DEFS,
   COMMUNITY_BOARDS,
   COMMUNITY_HUB_TITLE,
   CONCERN_BOARDS,
@@ -14,4 +15,10 @@ export {
   suggestCommunityRouteSlug,
   isConcernChannelKey,
 } from './copy.js';
-export { getHotConcernSamples, getLatestConcernSamples, listConcernPosts } from './store.js';
+export {
+  getHotConcernSamples,
+  getLatestConcernSamples,
+  reactionTotal,
+  resetConcernData,
+  fetchHotPosts,
+} from './store.js';

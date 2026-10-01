@@ -17,6 +17,12 @@ let apiMode = false;
 /** @type {Map<string, any[]>} */
 const postsByBoard = new Map();
 
+/** 고객센터·홈용 세션 역할 필터 캐시 (board API view 파라미터) */
+/** @type {any[]} */
+let noticeCenterPosts = [];
+/** @type {any[]} */
+let noticeHomePosts = [];
+
 export function isBoardApiMode() {
   return apiMode;
 }
@@ -74,6 +80,7 @@ export async function activateBoardApi(opts = {}) {
 export function deactivateBoardApi() {
   apiMode = false;
   resetCaches();
+  resetNoticeCaches();
 }
 
 const HYDRATE_BOARD_KEYS = [
@@ -132,6 +139,7 @@ export async function apiSaveOperationalPost(boardKey, input) {
   const payload = { board_key: boardKey, author_role: 'admin', ...input, boardKey: undefined };
   const data = await saveBoardPost(payload);
   if (data.post) upsertPostCache(boardKey, data.post);
+  if (boardKey === 'notice') resetNoticeCaches();
   return data.post;
 }
 
@@ -145,6 +153,7 @@ export async function apiDeleteSubmissionPost(postKey, authorRole) {
 export async function apiDeleteOperationalPost(boardKey, postKey, authorRole = 'admin') {
   await removeBoardPost(boardKey, postKey, authorRole);
   removePostCache(boardKey, postKey);
+  if (boardKey === 'notice') resetNoticeCaches();
 }
 
 /** @param {string} postKey @param {string} authorRole @param {File} file */
@@ -161,4 +170,35 @@ export async function apiUploadSubmissionAttachment(postKey, authorRole, file) {
 export async function apiOpenSubmissionAttachment(postKey, opts = {}) {
   const data = await requestAttachmentDownloadToken(postKey, opts);
   window.open(attachmentDownloadUrl(data.token), '_blank', 'noopener,noreferrer');
+}
+
+export function resetNoticeCaches() {
+  noticeCenterPosts = [];
+  noticeHomePosts = [];
+}
+
+export async function hydrateNoticeCenter() {
+  try {
+    const data = await fetchBoardPosts('notice', { view: 'center' });
+    noticeCenterPosts = (data.posts ?? []).map((p) => ({ ...p }));
+  } catch {
+    noticeCenterPosts = [];
+  }
+}
+
+export async function hydrateNoticeHome() {
+  try {
+    const data = await fetchBoardPosts('notice', { view: 'home', limit: 3 });
+    noticeHomePosts = (data.posts ?? []).map((p) => ({ ...p }));
+  } catch {
+    noticeHomePosts = [];
+  }
+}
+
+export function getNoticeCenterPosts() {
+  return noticeCenterPosts.map((p) => ({ ...p }));
+}
+
+export function getNoticeHomePosts() {
+  return noticeHomePosts.map((p) => ({ ...p }));
 }

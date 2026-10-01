@@ -6,7 +6,7 @@
 export const STUDY_ROOM_PROMO = {
   meta: {
     path: '/promo/study-room',
-    title: '공부방 홍보 랜딩',
+    title: '공부방 카달로그',
     eyebrow: '우리동네 공부방·과외 연결 플랫폼',
   },
   hero: {
