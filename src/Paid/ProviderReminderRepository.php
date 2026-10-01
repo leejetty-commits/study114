@@ -43,7 +43,8 @@ final class ProviderReminderRepository
             "SELECT id, user_id, ticket_type, remaining, expires_at,
                     DATEDIFF(DATE(expires_at), CURDATE()) AS days_left
              FROM provider_ticket_packs
-             WHERE remaining > 0
+             WHERE ticket_type = 'memo'
+               AND remaining > 0
                AND expires_at > NOW()
                AND DATEDIFF(DATE(expires_at), CURDATE()) IN ({$placeholders})"
         );

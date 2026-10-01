@@ -17,11 +17,9 @@ import { esc } from './detail-utils.js';
  * @param {string} label
  * @param {string} content
  * @param {boolean} visible
- * @param {string} visibility
- * @param {number} studentId
  * @param {{ isPaidProvider?: boolean, viewer?: string }} [opts]
  */
-function renderProtectedBlock(label, content, visible, visibility, studentId, opts = {}) {
+function renderProtectedBlock(label, content, visible, opts = {}) {
   const lockedForProvider = opts.viewer === 'tutor' || opts.viewer === 'study_room';
   if (visible && (content || !lockedForProvider)) {
     return `
@@ -54,7 +52,6 @@ function renderProtectedBlock(label, content, visible, visibility, studentId, op
 /** @param {object} student @param {string} viewer */
 export function renderStudentRequestBody(student, viewer) {
   const vis = getStudentProtectedVisibility(student, { viewer });
-  const studentId = student.id;
   const places = (student.lesson_places || [])
     .map((p) => STUDENT_PLACE_LABELS[p] || p)
     .join(' · ');
@@ -95,7 +92,7 @@ export function renderStudentRequestBody(student, viewer) {
     </section>
     <section class="p24-section">
       <h3 class="p24-section__title">요청 · 특이사항</h3>
-      ${renderProtectedBlock('요청문', student.request_summary, vis.requestSummary, student.request_summary_visibility || 'private', studentId, { isPaidProvider: vis.isPaidProvider, viewer })}
-      ${renderProtectedBlock('특이요청사항', student.special_request_note, vis.specialRequest, student.special_request_visibility || 'private', studentId, { isPaidProvider: vis.isPaidProvider, viewer })}
+      ${renderProtectedBlock('요청문', student.request_summary, vis.requestSummary, { isPaidProvider: vis.isPaidProvider, viewer })}
+      ${renderProtectedBlock('특이요청사항', student.special_request_note, vis.specialRequest, { isPaidProvider: vis.isPaidProvider, viewer })}
     </section>`;
 }

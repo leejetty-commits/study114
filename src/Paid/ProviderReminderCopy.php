@@ -61,6 +61,8 @@ final class ProviderReminderCopy
 
     public function ticketLabel(string $ticketType): string
     {
-        return $ticketType === 'request_view' ? '요청문 열람권' : '쪽지권';
+        unset($ticketType);
+
+        return '쪽지권';
     }
 }

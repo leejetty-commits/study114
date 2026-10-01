@@ -8,7 +8,9 @@ import { notifyStudentReviewToggle } from './handoff-utils.js';
 import { toggleStudentReview, isInStudentReview } from './student-review-store.js';
 import { startFirstMemoFlow } from './messages/compose-flow.js';
 import { checkFirstMemoPermission } from './messages/permissions.js';
+import { ADMIN_STUDENT_MEMO_BLOCKED_COPY, resolveMemoRole } from './messages/messages-copy.js';
 import { showPaidGateOverlay } from './messages/overlays.js';
+import { showP24Toast } from './detail-decision/detail-utils.js';
 import { PAID_GATE_MESSAGE } from './student-visibility.js';
 import { getProviderRegDeepLink } from './handoff-link.js';
 
@@ -20,16 +22,19 @@ export function renderStudentProviderActions(item, opts = {}) {
   const { guest = false, viewerRole = 'guest', sourceRoute = 'search' } = opts;
   const itemId = item?.id ?? opts.itemId;
   const wished = !guest && itemId != null && isInStudentReview(itemId);
+  const memoRole = guest ? 'guest' : resolveMemoRole(viewerRole);
   const memoCheck = guest
     ? { ok: false, reason: 'role' }
-    : checkFirstMemoPermission({ kind: 'student', role: viewerRole });
+    : checkFirstMemoPermission({ kind: 'student', role: memoRole });
   const memoReady = memoCheck.ok;
   const memoLabel = memoReady ? '쪽지 보내기' : '쪽지 준비';
   const memoTitle =
     memoCheck.reason === 'paid_gate'
       ? PAID_GATE_MESSAGE
       : memoCheck.reason === 'role'
-        ? '로그인 필요'
+        ? memoRole === 'admin'
+          ? ADMIN_STUDENT_MEMO_BLOCKED_COPY
+          : '로그인 필요'
         : '쪽지를 보내려면 준비가 필요합니다';
 
   if (guest) {
@@ -91,10 +96,15 @@ export function bindStudentReviewEvents(root, rerender, opts = {}) {
       e.stopPropagation();
       const id = Number(btn.dataset.studentId);
       const item = resolveItem(id);
-      const check = checkFirstMemoPermission({ kind: 'student', role: providerRole || role });
+      const memoRole = resolveMemoRole(providerRole || role);
+      const check = checkFirstMemoPermission({ kind: 'student', role: memoRole });
       if (!check.ok) {
         if (check.reason === 'paid_gate') {
           showPaidGateOverlay();
+          return;
+        }
+        if (check.reason === 'role' && memoRole === 'admin') {
+          showP24Toast(ADMIN_STUDENT_MEMO_BLOCKED_COPY);
           return;
         }
         const deep = getProviderRegDeepLink(providerRole || role);

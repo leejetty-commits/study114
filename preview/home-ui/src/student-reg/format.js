@@ -9,9 +9,6 @@ import {
   STUDENT_PLACE_LABELS,
   TEACHING_STYLE_LABELS,
 } from '../student-enums.js';
-import { VISIBILITY_OPTIONS } from './student-reg-copy.js';
-
-export { VISIBILITY_OPTIONS };
 
 const LESSON_TYPE_LABELS = {
   tutor: '과외',
@@ -39,9 +36,7 @@ export function studentToExposureRow(s) {
     preferred_fee_amount: s.preferred_fee_amount,
     preferred_studyroom_fee_amount: s.preferred_studyroom_fee_amount,
     request_summary: s.request_summary,
-    request_summary_visibility: s.request_summary_visibility,
     special_request_note: s.special_request_note,
-    special_request_visibility: s.special_request_visibility,
   };
 }
 
@@ -97,8 +92,4 @@ export const FORM_OPTIONS = {
     { value: 'tutor', label: '과외' },
     { value: 'study_room', label: '공부방' },
   ],
-  visibility: VISIBILITY_OPTIONS.map((o) => ({
-    value: o.value,
-    label: o.value === 'private' ? '비공개 (리스트 미노출)' : '유료 공급자만 (13§8 · 18장)',
-  })),
 };

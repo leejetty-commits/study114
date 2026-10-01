@@ -8,7 +8,6 @@ const CREDENTIALS = { credentials: 'include' };
 export const PAID_ENDPOINTS = {
   roi: '/api/paid/roi.php',
   status: '/api/paid/status.php',
-  requestAccess: '/api/paid/request-access.php',
   checkout: '/api/paid/checkout.php',
   notices: '/api/paid/notices.php',
   history: '/api/paid/history.php',
@@ -61,30 +60,6 @@ export async function fetchPaidStatus(days = 7, region = {}) {
   }
   const qs = params.toString() ? `?${params.toString()}` : '';
   const res = await fetch(`${PAID_ENDPOINTS.status}${qs}`, { ...CREDENTIALS });
-  return parseJson(res);
-}
-
-export async function fetchRequestAccessList() {
-  const res = await fetch(PAID_ENDPOINTS.requestAccess, { ...CREDENTIALS });
-  return parseJson(res);
-}
-
-/** @param {number} studentId */
-export async function fetchRequestAccessStatus(studentId) {
-  const res = await fetch(`${PAID_ENDPOINTS.requestAccess}?student_id=${studentId}`, {
-    ...CREDENTIALS,
-  });
-  return parseJson(res);
-}
-
-/** @param {number} studentId */
-export async function unlockStudentRequest(studentId) {
-  const res = await fetch(PAID_ENDPOINTS.requestAccess, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    ...CREDENTIALS,
-    body: JSON.stringify({ student_id: studentId }),
-  });
   return parseJson(res);
 }
 

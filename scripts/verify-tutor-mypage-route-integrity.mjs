@@ -1,9 +1,11 @@
 /**
  * 과외쌤 마이페이지 2차 — 탭/메뉴 라우팅 무결성
  * (정적 계약 + parseTutorRegPath 동적 매트릭스)
+ * 실행: cd preview/home-ui && npx --yes vite-node ../../scripts/verify-tutor-mypage-route-integrity.mjs
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   parseTutorRegPath,
   tutorHubPath,
@@ -13,7 +15,7 @@ import {
 } from '../preview/home-ui/src/tutor-reg/router.js';
 import { MYPAGE_NAV } from '../preview/home-ui/src/mypage/router.js';
 
-const root = process.cwd();
+const root = fileURLToPath(new URL('..', import.meta.url));
 let failed = 0;
 
 function assert(cond, msg) {
@@ -59,18 +61,27 @@ assert(
 assert(mypageScreens.includes('window.location.replace(`#${entry}`)'), 'mypage screens: tutor entry uses replace');
 
 // —— C. 좌측 메뉴 라벨·경로 계약
-const tutorNavLabels = ['내 등록', '쪽지·후기함', '최근열람', '찜한학생', '내 문의 내역', '구매이력', '계정설정'];
+const tutorNavLabels = ['내 등록', '쪽지·후기함', '최근열람', '관심 학생', '내 문의 내역', '구매이력', '계정설정'];
 for (const label of tutorNavLabels) {
   assert(MYPAGE_NAV.some((n) => n.label === label), `nav label: ${label}`);
 }
-assert(shell.includes('getTutorEntryPath()'), 'shell: 내 등록 href → getTutorEntryPath');
+assert(
+  /item\.path === '\/mypage\/registrations' \? getDefaultMypagePath\(role\)/.test(shell),
+  'shell: 내 등록 href → getDefaultMypagePath(role)',
+);
+assert(
+  /export function getDefaultMypagePath\(role\) \{[\s\S]*?if \(role === 'tutor'\) return getTutorEntryPath\(\);[\s\S]*?\n\}/.test(
+    mypageRouter,
+  ),
+  'router: getDefaultMypagePath(tutor) → getTutorEntryPath()',
+);
 assert(mypageRouter.includes('export function getTutorEntryPath'), 'router: getTutorEntryPath exported');
 
 const expectedMenuPaths = {
   '내 등록': '/mypage/registrations',
   '쪽지·후기함': '/mypage/messages',
   최근열람: '/mypage/recent',
-  찜한학생: '/mypage/student-review',
+  '관심 학생': '/mypage/student-review',
   '내 문의 내역': '/mypage/contact',
   구매이력: '/mypage/plans',
   계정설정: '/mypage/account',
@@ -82,7 +93,7 @@ for (const [label, path] of Object.entries(expectedMenuPaths)) {
 
 const tutorNav = MYPAGE_NAV.filter((n) => !n.roles || n.roles.includes('tutor')).map((n) => n.label);
 const contactIdx = tutorNav.indexOf('내 문의 내역');
-const lastWishIdx = Math.max(tutorNav.indexOf('찜한학생'), tutorNav.indexOf('찜 목록'));
+const lastWishIdx = Math.max(tutorNav.indexOf('관심 학생'), tutorNav.indexOf('찜한 공부방·과외쌤'));
 const plansIdx = tutorNav.indexOf('구매이력');
 assert(contactIdx > lastWishIdx && contactIdx < plansIdx, 'nav order: 내 문의 내역 after 찜, before 구매이력');
 

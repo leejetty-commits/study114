@@ -36,11 +36,6 @@ export const SCHOOL_LEVEL_OPTIONS = [
   { value: 'n_su', label: '대입 준비(재수 이상)' },
 ];
 
-export const VISIBILITY_OPTIONS = [
-  { value: 'private', label: '비공개' },
-  { value: 'paid_only', label: '공급자 공개' },
-];
-
 export const CAPACITY_PER_TIME_OPTIONS = [
   { value: 'one_to_four', label: '1~4명' },
   { value: 'five_to_eight', label: '5~8명' },

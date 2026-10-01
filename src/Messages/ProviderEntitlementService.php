@@ -72,26 +72,4 @@ final class ProviderEntitlementService
     {
         return $this->tickets->getMemoTicketSummary($userId);
     }
-
-    public function getRequestViewTickets(int $userId): int
-    {
-        return $this->tickets->countRequestViewTickets($userId);
-    }
-
-    public function canViewPaidRequest(int $userId, int $studentId): bool
-    {
-        return $this->tickets->canViewPaidRequest($userId, $studentId);
-    }
-
-    /** @return array{student_id: int, unlocked: bool, consumed: bool, request_view_tickets: int} */
-    public function unlockPaidRequest(int $userId, int $studentId): array
-    {
-        return $this->tickets->unlockPaidRequest($userId, $studentId);
-    }
-
-    /** @return list<int> */
-    public function listUnlockedStudentIds(int $userId): array
-    {
-        return $this->tickets->listUnlockedStudentIds($userId);
-    }
 }

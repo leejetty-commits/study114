@@ -6,8 +6,18 @@
 import { threadPath } from './router.js';
 import { getNavRole, navigate, previewState } from '../state.js';
 import { checkFirstMemoPermission, getScopeBadge } from './permissions.js';
+import { ADMIN_STUDENT_MEMO_BLOCKED_COPY, MEMO_TARGET_BLOCKED_COPY, resolveMemoRole } from './messages-copy.js';
 import { showPaidGateOverlay, showComposeModal } from './overlays.js';
 import { getStudentProtectedVisibility } from '../student-visibility.js';
+
+/**
+ * 첫 쪽지 불가 안내
+ * @param {MemoTargetKind} kind
+ * @param {string} role
+ */
+export function memoBlockedMessage(kind, role) {
+  return role === 'admin' && kind === 'student' ? ADMIN_STUDENT_MEMO_BLOCKED_COPY : MEMO_TARGET_BLOCKED_COPY;
+}
 
 /**
  * @param {object} opts
@@ -19,14 +29,14 @@ import { getStudentProtectedVisibility } from '../student-visibility.js';
  * @param {(threadId: number) => void} [opts.onSent] 전송 성공 직후(쪽지함 이동 전)
  */
 export function startFirstMemoFlow(opts) {
-  const role = getNavRole();
+  const role = resolveMemoRole(getNavRole());
   const check = checkFirstMemoPermission({ kind: opts.kind, role });
   if (!check.ok) {
     if (check.reason === 'paid_gate') {
       showPaidGateOverlay();
       return;
     }
-    alert('[16장] 이 역할·대상 조합에서는 메모를 보낼 수 없습니다.');
+    alert(memoBlockedMessage(opts.kind, role));
     return;
   }
 

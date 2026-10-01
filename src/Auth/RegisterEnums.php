@@ -138,15 +138,6 @@ final class RegisterEnums
     }
 
     /** @return list<array{value: string, label: string}> */
-    public static function visibilities(): array
-    {
-        return [
-            ['value' => 'private', 'label' => '비공개'],
-            ['value' => 'paid_only', 'label' => '공급자 공개'],
-        ];
-    }
-
-    /** @return list<array{value: string, label: string}> */
     public static function studyRoomPlaces(): array
     {
         return [

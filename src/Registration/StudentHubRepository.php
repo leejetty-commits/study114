@@ -132,8 +132,7 @@ final class StudentHubRepository
         'preferred_fee_amount', 'preferred_studyroom_fee_amount',
         'lessons_per_week', 'minutes_per_lesson', 'lesson_format',
         'student_gender_group', 'preferred_student_count_group',
-        'preferred_tutor_gender', 'memo_status', 'request_summary', 'request_summary_visibility',
-        'special_request_note', 'special_request_visibility',
+        'preferred_tutor_gender', 'memo_status', 'request_summary', 'special_request_note',
     ];
 
     /** students 컬럼이 아닌 연결 테이블·보조 입력 */
@@ -229,12 +228,10 @@ final class StudentHubRepository
         'lesson_format'                  => ['one_on_one', 'group'],
         'preferred_student_count_group'  => ['solo', 'two', 'three', 'four_plus'],
         'student_gender_group'           => ['male', 'female', 'mixed'],
-        'request_summary_visibility'     => ['private', 'paid_only'],
-        'special_request_visibility'     => ['private', 'paid_only'],
     ];
 
     /** DB NOT NULL 이라 비울 수 없는 컬럼 */
-    private const PATCH_NOT_NULL = ['memo_status', 'request_summary_visibility', 'special_request_visibility'];
+    private const PATCH_NOT_NULL = ['memo_status'];
 
     private function normalizeStudentColumn(string $col, mixed $value): mixed
     {
@@ -493,9 +490,7 @@ final class StudentHubRepository
             'preferred_studyroom_fee_amount'=> $row['preferred_studyroom_fee_amount'] !== null ? (int) $row['preferred_studyroom_fee_amount'] : null,
             'preferred_tutor_gender'        => $row['preferred_tutor_gender'] !== null ? (string) $row['preferred_tutor_gender'] : null,
             'request_summary'               => $row['request_summary'] !== null ? (string) $row['request_summary'] : null,
-            'request_summary_visibility'    => (string) ($row['request_summary_visibility'] ?? 'private'),
             'special_request_note'          => $row['special_request_note'] !== null ? (string) $row['special_request_note'] : null,
-            'special_request_visibility'    => (string) ($row['special_request_visibility'] ?? 'private'),
             'updated_at'                    => gmdate('c', strtotime((string) $row['updated_at'])),
             'published_at'                  => $row['published_at'] !== null
                 ? gmdate('c', strtotime((string) $row['published_at'])) : null,

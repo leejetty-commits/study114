@@ -31,13 +31,11 @@ final class ProviderStatusService
      *   is_provider: bool,
      *   subscription_tier: string,
      *   cold_memo: array{can_send: bool, bypass: bool, remaining: int, legacy_credits: int, nearest_expiry: string|null},
-     *   request_view: array{remaining: int, nearest_expiry: string|null, unlocked_student_ids: list<int>},
      *   exposure: array{state: string, label: string, positions: list<array<string, mixed>>},
      *   cold_memo_allowed: bool,
      *   memo_credits: int,
      *   memo_tickets: int,
      *   memo_nearest_expiry: string|null,
-     *   request_view_tickets: int,
      *   can_cold_memo: bool
      * }
      */
@@ -49,9 +47,7 @@ final class ProviderStatusService
         $bypass = $row !== null && (bool) $row['cold_memo_allowed'];
 
         $memoSummary = $this->tickets->getMemoTicketSummary($userId);
-        $viewSummary = $this->tickets->getRequestViewTicketSummary($userId);
         $canColdMemo = $isProvider && $this->tickets->canColdMemo($userId);
-        $unlockedIds = $isProvider ? $this->tickets->listUnlockedStudentIds($userId) : [];
         $ops = $isProvider ? $this->tickets->getOperationalStatus($userId, $primeRegionInput, $studyRoomId) : null;
         $exposure = $ops['exposure'] ?? $this->emptyExposure();
         $slots = $ops['slots'] ?? null;
@@ -65,24 +61,16 @@ final class ProviderStatusService
             'nearest_expiry' => $memoSummary['nearest_expiry'],
         ];
 
-        $requestView = [
-            'remaining' => $viewSummary['remaining'],
-            'nearest_expiry' => $viewSummary['nearest_expiry'],
-            'unlocked_student_ids' => $unlockedIds,
-        ];
-
         return [
             'is_provider' => $isProvider,
             'subscription_tier' => $tier,
             'cold_memo' => $coldMemo,
-            'request_view' => $requestView,
             'exposure' => $exposure,
             'slots' => $slots,
             'cold_memo_allowed' => $bypass,
             'memo_credits' => $legacyCredits,
             'memo_tickets' => $memoSummary['remaining'],
             'memo_nearest_expiry' => $memoSummary['nearest_expiry'],
-            'request_view_tickets' => $viewSummary['remaining'],
             'can_cold_memo' => $canColdMemo,
             'memo_packs' => $memoPacks,
         ];
@@ -98,11 +86,6 @@ final class ProviderStatusService
                     'remaining' => (int) $status['cold_memo']['remaining'],
                     'nearest_expiry' => $status['cold_memo']['nearest_expiry'],
                     'packs' => $status['memo_packs'] ?? [],
-                ],
-                'request_view' => [
-                    'label' => '요청문 열람권',
-                    'remaining' => (int) $status['request_view']['remaining'],
-                    'nearest_expiry' => $status['request_view']['nearest_expiry'],
                 ],
             ],
         ];

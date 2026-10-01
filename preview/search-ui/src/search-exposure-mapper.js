@@ -166,10 +166,6 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
     special_request_note: Object.prototype.hasOwnProperty.call(apiItem, 'special_request_note')
       ? String(apiItem.special_request_note || '')
       : '',
-    request_summary_visibility:
-      apiItem.request_summary_visibility || 'private',
-    special_request_visibility:
-      apiItem.special_request_visibility || 'private',
     published_at: apiItem.published_at ?? base.published_at,
     created_at: apiItem.created_at ?? base.created_at,
     exposure_status: 'published',

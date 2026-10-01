@@ -17,6 +17,8 @@ final class MessagesService
     public const ACTIVE_DAYS = 7;
     public const IMPORTANT_MAX = 5;
     private const COMPOSE_TARGET_DENIED = '보낼 수 없는 대상입니다';
+    private const ADMIN_TO_STUDENT_DENIED = '관리자 계정은 학생에게 쪽지를 보낼 수 없습니다. 운영 안내는 공지를 이용해 주세요.';
+    private const STUDENT_SIDE_ROLES = ['guardian_student', 'parent', 'student'];
 
     private MessagesRepository $repo;
     private ProviderEntitlementService $entitlements;
@@ -347,20 +349,24 @@ final class MessagesService
     }
 
     /**
-     * 새 대화 첫 쪽지 방향 (16§1-2 · 18§4) — 기존 대화 후속·replyMessage 에는 적용하지 않는다.
-     * 공급자→공급자(study_room·tutor 대상)는 정본에 없으나 현재 화면 흐름이 허용하므로 막지 않는다.
+     * 새 대화 첫 쪽지 방향 (16§1-2 · 18§4) — 기존 대화 후속·답장은 assertFollowUpDirection 이 본다.
+     * 공급자끼리 첫 쪽지(study_room·tutor 대상)는 상호 무료로 허용한다.
+     * 쪽지권 검사·차감보다 먼저 호출되어야 한다(composeMessage).
      */
     private function assertComposeDirection(string $contextKind, int $senderUserId): void
     {
         $role = (string) ($this->repo->getUserPrimaryRole($senderUserId) ?? '');
-        $isGuardian = in_array($role, ['guardian_student', 'parent', 'student'], true);
+        $isGuardian = in_array($role, self::STUDENT_SIDE_ROLES, true);
         $isProviderOrAdmin = in_array($role, ['tutor', 'study_room_owner', 'admin'], true);
         if ($contextKind === 'student') {
+            if ($role === 'admin') {
+                throw new InvalidArgumentException(self::ADMIN_TO_STUDENT_DENIED);
+            }
             if ($isProviderOrAdmin) {
                 return;
             }
             if ($isGuardian) {
-                throw new InvalidArgumentException('학부모는 공급자에게만 쪽지를 보낼 수 있습니다.');
+                throw new InvalidArgumentException('학생은 공급자에게만 쪽지를 보낼 수 있습니다.');
             }
             throw new InvalidArgumentException(self::COMPOSE_TARGET_DENIED);
         }
@@ -384,9 +390,32 @@ final class MessagesService
      */
     private function assertCanSendMessage(int $userId, array $row, string $contextKind): void
     {
-        unset($userId, $contextKind);
         if ((bool) ($row['is_blocked'] ?? false) || $this->repo->isThreadBlockedByAnyParticipant((int) $row['id'])) {
             throw new InvalidArgumentException('차단된 대화입니다.');
+        }
+        $this->assertFollowUpDirection($userId, $row, $contextKind);
+    }
+
+    /**
+     * 기존 대화 후속·답장 방향 (16§1-2) — 관리자가 학생 쪽 참가자에게 보내는 쪽만 막는다.
+     * 학생·공급자의 후속, 관리자→공급자 후속은 허용. 읽기·목록·기존 기록은 건드리지 않는다.
+     *
+     * @param array<string, mixed> $row
+     */
+    private function assertFollowUpDirection(int $senderUserId, array $row, string $contextKind): void
+    {
+        if ($contextKind !== 'student') {
+            return;
+        }
+        if ($this->repo->getUserPrimaryRole($senderUserId) !== 'admin') {
+            return;
+        }
+        $low = (int) ($row['participant_low_user_id'] ?? 0);
+        $high = (int) ($row['participant_high_user_id'] ?? 0);
+        $peerUserId = $low === $senderUserId ? $high : $low;
+        $peerRole = (string) ($this->repo->getUserPrimaryRole($peerUserId) ?? '');
+        if (in_array($peerRole, self::STUDENT_SIDE_ROLES, true)) {
+            throw new InvalidArgumentException(self::ADMIN_TO_STUDENT_DENIED);
         }
     }
 

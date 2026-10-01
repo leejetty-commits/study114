@@ -152,7 +152,7 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
   });
 }
 
-/** @deprecated student-detail-modal.js 호환 */
+/** @deprecated bindDetailDecisionEvents 를 직접 쓴다 */
 export function bindStudentDetailEvents(root, opts = {}) {
   return bindDetailDecisionEvents(root, opts);
 }

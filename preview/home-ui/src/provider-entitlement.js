@@ -22,8 +22,6 @@ export {
 
   getMemoNearestExpiry,
 
-  getRequestViewTicketsRemaining as getRequestViewTicketsFromEntitlement,
-
   getMemoGateState,
 
   getProviderStatus,

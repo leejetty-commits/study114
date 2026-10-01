@@ -9,7 +9,6 @@ import {
 } from './tutor-enums.js';
 import {
   TEACHING_STYLE_LABELS,
-  VISIBILITY_LABELS,
   STUDENT_COUNT_LABELS,
   STUDENT_PLACE_LABELS,
   LESSON_FORMAT_LABELS,
@@ -135,12 +134,6 @@ export function formatStudentBudgetCard(item) {
   const minutes = lessonDurationLabel(item.minutes_per_lesson);
   if (minutes) parts.push(minutes === '기타' ? '1회 수업시간 기타' : minutes);
   return parts.length ? parts.join(' · ') : '—';
-}
-
-export function formatVisibilitySummary(item) {
-  const req = VISIBILITY_LABELS[item.request_summary_visibility] || '비공개';
-  const spec = VISIBILITY_LABELS[item.special_request_visibility] || '비공개';
-  return `요청 ${req}`;
 }
 
 export function formatVerificationDocCount(item) {
@@ -328,8 +321,6 @@ export function resolveDisplayValue(item, key) {
       return formatTeachingStyleBadges(item.teaching_style_badges);
     case 'budget_card_label':
       return formatStudentBudgetCard(item);
-    case 'visibility_summary_label':
-      return formatVisibilitySummary(item);
     case 'verification_count_label':
       return formatVerificationDocCount(item);
     case 'trust_badges':

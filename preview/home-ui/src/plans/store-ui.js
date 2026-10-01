@@ -299,7 +299,6 @@ export function productMediaClass(code) {
   if (code === 'prime') return 'plans-card__media--prime';
   if (code === 'pick') return 'plans-card__media--pick';
   if (code === 'memo_ticket') return 'plans-card__media--memo';
-  if (code === 'request_view') return 'plans-card__media--view';
   return 'plans-card__media--default';
 }
 
@@ -307,7 +306,6 @@ export function productIcon(code) {
   if (code === 'prime') return '◆';
   if (code === 'pick') return '★';
   if (code === 'memo_ticket') return '✉';
-  if (code === 'request_view') return '📄';
   return '○';
 }
 

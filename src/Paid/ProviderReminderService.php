@@ -89,7 +89,7 @@ final class ProviderReminderService
 
     public function onTicketBalance(int $userId, string $ticketType, int $remaining): void
     {
-        if (!in_array($ticketType, ['memo', 'request_view'], true)) {
+        if ($ticketType !== 'memo') {
             return;
         }
         if ($remaining > 1) {

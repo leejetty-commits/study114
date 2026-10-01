@@ -298,63 +298,6 @@ final class ProviderTicketRepository
         return $val !== false && (bool) $val;
     }
 
-    public function hasRequestUnlock(int $providerUserId, int $studentId): bool
-    {
-        $stmt = $this->pdo->prepare(
-            'SELECT 1 FROM provider_request_unlocks
-             WHERE provider_user_id = ? AND student_id = ? LIMIT 1'
-        );
-        $stmt->execute([$providerUserId, $studentId]);
-
-        return (bool) $stmt->fetchColumn();
-    }
-
-    /** @return list<int> */
-    public function listUnlockedStudentIds(int $providerUserId): array
-    {
-        $stmt = $this->pdo->prepare(
-            'SELECT student_id FROM provider_request_unlocks WHERE provider_user_id = ? ORDER BY student_id'
-        );
-        $stmt->execute([$providerUserId]);
-        $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-        return array_map('intval', is_array($rows) ? $rows : []);
-    }
-
-    public function recordRequestUnlock(int $providerUserId, int $studentId): void
-    {
-        $stmt = $this->pdo->prepare(
-            'INSERT INTO provider_request_unlocks (provider_user_id, student_id)
-             VALUES (?, ?)
-             ON DUPLICATE KEY UPDATE unlocked_at = unlocked_at'
-        );
-        $stmt->execute([$providerUserId, $studentId]);
-    }
-
-    /** @return array{request_summary_visibility: string, special_request_visibility: string}|null */
-    public function getStudentVisibility(int $studentId): ?array
-    {
-        $stmt = $this->pdo->prepare(
-            'SELECT request_summary_visibility, special_request_visibility
-             FROM students WHERE id = ? LIMIT 1'
-        );
-        $stmt->execute([$studentId]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return is_array($row) ? $row : null;
-    }
-
-    public function studentHasPaidOnlyFields(int $studentId): bool
-    {
-        $row = $this->getStudentVisibility($studentId);
-        if ($row === null) {
-            return false;
-        }
-
-        return ($row['request_summary_visibility'] ?? '') === 'paid_only'
-            || ($row['special_request_visibility'] ?? '') === 'paid_only';
-    }
-
     public function packHasProfileColumns(): bool
     {
         static $cache = null;
@@ -926,8 +869,8 @@ final class ProviderTicketRepository
 
     private function assertTicketType(string $ticketType): void
     {
-        if (!in_array($ticketType, ['memo', 'request_view'], true)) {
-            throw new \InvalidArgumentException('ticket_type: memo | request_view');
+        if ($ticketType !== 'memo') {
+            throw new \InvalidArgumentException('ticket_type: memo');
         }
     }
 }

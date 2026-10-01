@@ -38,7 +38,7 @@ import { parseThreadId, threadPath, MESSAGES_BASE, REVIEWS_BASE } from './router
 
 
 
-import { BLOCK_THREAD_COPY } from './messages-copy.js';
+import { BLOCK_THREAD_COPY, resolveMemoRole } from './messages-copy.js';
 import { isReviewsPath, parseReviewsPath, renderReviewInboxPlaceholder, hydrateReviewInbox } from '../provider-reviews/inbox.js';
 import {
   MESSAGE_ATTACHMENT,
@@ -129,7 +129,7 @@ function renderMessagesHub(active) {
 
 /** @param {number|null} expandedId */
 function renderList(expandedId) {
-  const role = getNavRole();
+  const role = resolveMemoRole(getNavRole());
   const threads = getThreadsForTab('all');
 
   if (threads.length === 0) {
@@ -276,7 +276,7 @@ export function bindMessagesScreenEvents(root, rerender) {
 
 
 
-  const role = getNavRole();
+  const role = resolveMemoRole(getNavRole());
 
 
 

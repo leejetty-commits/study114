@@ -29,9 +29,3 @@ export const STUDENT_COUNT_HALT_COPY = {
     cta: '운영문의',
   },
 };
-
-/** §5 · 요청문 노출 값. 학생 화면의 공개설정 탭은 쓰지 않는다. */
-export const VISIBILITY_OPTIONS = [
-  { value: 'private', label: '비공개', desc: '다른 학부모 비교 화면에 요청문을 보이지 않습니다' },
-  { value: 'paid_only', label: '공급자 공개', desc: '로그인한 공부방·과외쌤에게 요청문을 보여 줍니다' },
-];

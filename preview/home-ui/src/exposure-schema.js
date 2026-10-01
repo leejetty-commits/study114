@@ -139,21 +139,4 @@ export const TUTOR_COMPARE_ROWS = [
   { key: 'features_joined', label: '특징', db: 'tutors.feature_1~3' },
 ];
 
-/** 학생 리스트 — 11장 §6-0 (비교 대상 아님) */
-export const STUDENT_LIST_FIELDS = [
-  { key: 'public_display_name', db: 'students.public_display_name' },
-  { key: 'grade_level', db: 'students.grade_level' },
-  { key: 'gender', db: 'students.gender' },
-  { key: 'location_label', db: 'preferred_studyroom_region/complex · preferred_tutor_region' },
-  { key: 'subject_label', db: 'student_subject_targets' },
-  { key: 'teaching_style_label', db: 'student_preferred_teaching_style_badges' },
-  { key: 'budget_card_label', db: 'preferred_fee_amount / preferred_studyroom_fee_amount + lessons_per_week + minutes_per_lesson' },
-  { key: 'lesson_places_label', db: 'student_preferred_lesson_places' },
-  { key: 'student_lesson_target_label', label: '수업형태/인원', db: 'lesson_format · student_gender_group · preferred_student_count_group' },
-  { key: 'preferred_student_count_group', label: '희망 수업인원', db: 'students.preferred_student_count_group' },
-  { key: 'lesson_format', db: 'students.lesson_format' },
-  { key: 'student_gender_group', db: 'students.student_gender_group' },
-  { key: 'visibility_summary_label', db: 'request_summary_visibility / special_request_visibility' },
-];
-
 export const COMPARE_MAX = 3;

@@ -1,5 +1,6 @@
 /**
  * 과외쌤 마이페이지 1차 프레임 IA — 공부방 셸·탭·진입·1프로필 정책
+ * 실행(repo 루트): node scripts/verify-tutor-mypage-frame-ia.mjs
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -54,7 +55,15 @@ assert(!mypageRouter.includes("label: '구매상품'"), 'nav: 구매상품 remov
 
 assert(mypageScreens.includes('getTutorEntryPath()'), 'screens: tutor hub redirect');
 assert(!mypageScreens.includes("label: '과외 프로필'"), 'index: no 과외 프로필 multi card');
-assert(shell.includes('getTutorEntryPath()'), 'shell: 내 등록 → tutor entry');
+assert(
+  /item\.path === '\/mypage\/registrations' \? getDefaultMypagePath\(role\)/.test(shell),
+  'shell: 내 등록 href → getDefaultMypagePath(role)',
+);
+const defaultPathFn = mypageRouter.match(/export function getDefaultMypagePath\(role\) \{[\s\S]*?\n\}/);
+assert(
+  !!defaultPathFn && /if \(role === 'tutor'\) return getTutorEntryPath\(\);/.test(defaultPathFn[0]),
+  'router: getDefaultMypagePath(tutor) → getTutorEntryPath()',
+);
 
 // deep links still parse
 assert(/access\|inquiries\|exposure/.test(tutorRouter), 'legacy access/inquiries/exposure paths still parsed');

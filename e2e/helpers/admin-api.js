@@ -193,13 +193,6 @@ export function ensurePositionDurationSchemaE2e() {
   );
 }
 
-/** P18c E2E — student 1 열람 잠금 초기화 */
-export function prepRequestViewE2e() {
-  devSql(
-    "DELETE FROM provider_request_unlocks WHERE provider_user_id=4 AND student_id=1",
-  );
-}
-
 /** H-1 E2E — guardian1 · study_room 1 thread 차단 상태 초기화 (재실행 누적 방지) */
 export function prepBlockThreadE2e() {
   devSql(

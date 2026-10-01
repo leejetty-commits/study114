@@ -4,6 +4,7 @@ import { WISH_LABELS } from '../handoff-copy.js';
 import { notifyCompareToggle, notifyStudentReviewToggle, notifyWishToggle } from '../handoff-utils.js';
 import { isInStudentReview, toggleStudentReview } from '../student-review-store.js';
 import { checkFirstMemoPermission } from '../messages/permissions.js';
+import { ADMIN_STUDENT_MEMO_BLOCKED_COPY } from '../messages/messages-copy.js';
 import { showPaidGateOverlay } from '../messages/overlays.js';
 import { renderEntryContextRibbon } from '../handoff-resume.js';
 import { renderStudentRequestBody } from './student-request-card.js';
@@ -53,13 +54,21 @@ function itemTitle(kind, item) {
   return item.study_room_name || '공부방';
 }
 
-function resolvePrimaryCta(kind, item, viewer) {
+export function resolvePrimaryCta(kind, item, viewer) {
   if (viewer === 'guest') {
     return { label: '로그인하고 문의하기', action: 'login', disabled: false };
   }
   if (kind === 'student' && (viewer === 'tutor' || viewer === 'study_room' || viewer === 'admin')) {
     const canPublish = item.exposure_status === 'published';
-    const memoCheck = checkFirstMemoPermission({ kind: 'student', role: viewer === 'admin' ? 'tutor' : viewer });
+    const memoCheck = checkFirstMemoPermission({ kind: 'student', role: viewer });
+    if (viewer === 'admin' && !memoCheck.ok) {
+      return {
+        label: '쪽지 보내기',
+        action: 'memo-blocked',
+        disabled: true,
+        title: ADMIN_STUDENT_MEMO_BLOCKED_COPY,
+      };
+    }
     if (!canPublish) {
       return { label: '쪽지 준비', action: 'memo-prep', disabled: true };
     }
@@ -317,6 +326,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
           ${secondary}
           ${renderMyshopEntryCta(kind, item)}
           <button type="button" class="btn btn--primary btn--sm" data-p24-action="${primary.action}"
+            ${primary.title ? `title="${esc(primary.title)}"` : ''}
             ${primary.disabled ? 'disabled' : ''}>${esc(primary.label)}</button>
         </div>
       </footer>

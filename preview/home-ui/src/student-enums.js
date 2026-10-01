@@ -12,11 +12,6 @@ export const STUDENT_GENDER_GROUP_LABELS = {
   mixed: '남여',
 };
 
-export const VISIBILITY_LABELS = {
-  private: '비공개',
-  paid_only: '공급자 공개',
-};
-
 export const STUDENT_PLACE_LABELS = {
   student_home: '학생자택',
   study_room: '공부방',

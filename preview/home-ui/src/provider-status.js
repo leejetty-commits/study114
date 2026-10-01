@@ -1,5 +1,5 @@
 /**
- * 18§ 통합 — 공급자 entitlement 단일 캐시 (status · entitlements · request-access)
+ * 18§ 통합 — 공급자 entitlement 단일 캐시 (status · entitlements)
  */
 
 import { previewState } from './state.js';
@@ -10,7 +10,6 @@ import { fetchEntitlements } from './messages-api.js';
  *   is_provider: boolean,
  *   subscription_tier: string,
  *   cold_memo: { can_send: boolean, bypass: boolean, remaining: number, legacy_credits: number, nearest_expiry: string|null },
- *   request_view: { remaining: number, nearest_expiry: string|null, unlocked_student_ids: number[] },
  *   exposure: { state: string, label: string, positions: object[] },
  *   slots?: { prime: { capacity: number, used: number, remaining: number }, pick: { capacity: number, used: number, remaining: number } },
  *   metrics?: object[],
@@ -20,9 +19,6 @@ import { fetchEntitlements } from './messages-api.js';
 
 /** @type {ProviderStatusCache|null} */
 let cached = null;
-
-/** @type {Set<number>} */
-const unlockedStudentIds = new Set();
 
 let apiMode = false;
 
@@ -49,35 +45,13 @@ function normalizeColdMemo(data) {
   };
 }
 
-function normalizeRequestView(data) {
-  if (data.request_view) {
-    const rv = data.request_view;
-    return {
-      remaining: Number(rv.remaining ?? 0),
-      nearest_expiry: rv.nearest_expiry ? String(rv.nearest_expiry) : null,
-      unlocked_student_ids: (rv.unlocked_student_ids ?? []).map(Number),
-    };
-  }
-  return {
-    remaining: Number(
-      data.request_view_tickets ?? data.tickets?.request_view?.remaining ?? 0,
-    ),
-    nearest_expiry: data.tickets?.request_view?.nearest_expiry
-      ? String(data.tickets.request_view.nearest_expiry)
-      : null,
-    unlocked_student_ids: (data.unlocked_student_ids ?? []).map(Number),
-  };
-}
-
 /** @param {object} data */
 function applyProviderStatus(data) {
   const coldMemo = normalizeColdMemo(data);
-  const requestView = normalizeRequestView(data);
   cached = {
     is_provider: !!data.is_provider,
     subscription_tier: String(data.subscription_tier ?? data.tier ?? 'free'),
     cold_memo: coldMemo,
-    request_view: requestView,
     exposure: data.exposure ?? {
       state: 'basic',
       label: '베이직 노출 이용중 - 무료광고',
@@ -89,11 +63,6 @@ function applyProviderStatus(data) {
     tickets: data.tickets,
   };
 
-  unlockedStudentIds.clear();
-  for (const id of requestView.unlocked_student_ids) {
-    unlockedStudentIds.add(id);
-  }
-
   if (cached.is_provider) {
     previewState.providerSubscription = coldMemo.can_send ? 'paid' : 'free';
   }
@@ -102,7 +71,6 @@ function applyProviderStatus(data) {
 /** checkout 직후·프로필 전환 시 오래된 ‘구매 가능’ 캐시를 버린다 */
 export function invalidateProviderStatus() {
   cached = null;
-  unlockedStudentIds.clear();
 }
 
 /**
@@ -138,7 +106,6 @@ export async function hydrateProviderStatus(days = 7, region = {}) {
     } catch (entErr) {
       console.warn('[provider-status] entitlements hydrate failed', entErr);
       cached = null;
-      unlockedStudentIds.clear();
       return null;
     }
   }
@@ -154,7 +121,6 @@ export async function hydrateProviderEntitlementOnly() {
   } catch (err) {
     console.warn('[provider-status] entitlement-only failed', err);
     cached = null;
-    unlockedStudentIds.clear();
     return null;
   }
 }
@@ -162,7 +128,6 @@ export async function hydrateProviderEntitlementOnly() {
 export function resetProviderStatus() {
   apiMode = false;
   cached = null;
-  unlockedStudentIds.clear();
 }
 
 export function isProviderStatusApiMode() {
@@ -193,47 +158,6 @@ export function getMemoTicketsRemaining() {
 
 export function getMemoNearestExpiry() {
   return cached?.cold_memo.nearest_expiry ?? null;
-}
-
-export function getRequestViewTicketsRemaining() {
-  return cached?.request_view.remaining ?? 0;
-}
-
-export function getRequestViewNearestExpiry() {
-  return cached?.request_view.nearest_expiry ?? null;
-}
-
-export function isStudentRequestUnlocked(studentId) {
-  return unlockedStudentIds.has(Number(studentId));
-}
-
-export function markStudentRequestUnlocked(studentId) {
-  unlockedStudentIds.add(Number(studentId));
-  if (cached) {
-    const id = Number(studentId);
-    if (!cached.request_view.unlocked_student_ids.includes(id)) {
-      cached.request_view.unlocked_student_ids.push(id);
-    }
-  }
-}
-
-/** unlock POST 응답 반영 */
-export function applyRequestViewUnlockResponse(data) {
-  if (data.unlocked) {
-    markStudentRequestUnlocked(data.student_id);
-  }
-  const remaining = Number(
-    data.request_view?.remaining ?? data.request_view_tickets ?? getRequestViewTicketsRemaining(),
-  );
-  if (cached) {
-    cached.request_view.remaining = remaining;
-    if (data.request_view?.nearest_expiry) {
-      cached.request_view.nearest_expiry = String(data.request_view.nearest_expiry);
-    }
-    if (cached.tickets?.request_view) {
-      cached.tickets.request_view.remaining = remaining;
-    }
-  }
 }
 
 export function getMemoGateState() {
@@ -272,11 +196,6 @@ export function getPaidOperationalStatusFromCache() {
         label: '쪽지권',
         remaining: cached.cold_memo.remaining,
         nearest_expiry: cached.cold_memo.nearest_expiry,
-      },
-      request_view: {
-        label: '요청문 열람권',
-        remaining: cached.request_view.remaining,
-        nearest_expiry: cached.request_view.nearest_expiry,
       },
     },
   };

@@ -93,11 +93,7 @@ export function mapAuthFormToStudentRecord(data, meta = {}) {
     preferred_studyroom_fee_amount: Number(cheonwonInputToWon(data.preferred_studyroom_fee_amount)) || undefined,
     preferred_tutor_gender: '',
     request_summary: String(data.request_summary || ''),
-    request_summary_visibility:
-      data.request_summary_visibility === 'paid_only' ? 'paid_only' : 'private',
     special_request_note: String(data.special_request_note || ''),
-    special_request_visibility:
-      data.special_request_visibility === 'paid_only' ? 'paid_only' : 'private',
     exposure_status: 'draft',
     api_student_id: meta.studentId,
     api_registered: !!meta.apiOk,

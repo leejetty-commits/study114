@@ -55,17 +55,6 @@ export const TUTOR_COMPARE_FIELDS = [
   'feature_1',
 ];
 
-/** 8장 — 학생 열람권 후보 (구현 보류) */
-export const TUTOR_VIEW_PASS_CANDIDATE = {
-  scope: 'tutor_only',
-  model: 'count_and_validity',
-  examples: [
-    { views: 10, days: 30 },
-    { views: 20, days: 60 },
-  ],
-  phase1: 'design_only',
-};
-
 /** 1차 UI에 노출하지 않는 메뉴 ID */
 export const MENU_EXCLUDED_PHASE1 = ['quick_match', 'app_download', 'library_portal'];
 

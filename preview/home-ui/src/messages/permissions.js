@@ -14,8 +14,9 @@ export {
   getReplyBlockedMessage,
 } from './messages-copy.js';
 
+/** 관리자는 공급자가 아니다 — 학생에게는 쪽지 불가(운영 안내는 공지), 공부방·과외쌤에게는 가능 */
 export function isProviderRole(role) {
-  return role === 'study_room' || role === 'tutor' || role === 'admin';
+  return role === 'study_room' || role === 'tutor';
 }
 
 export function isProviderPaid() {
@@ -28,8 +29,7 @@ export function isProviderPaid() {
 }
 /** @param {NavRole | 'admin'} role */
 export function canProviderColdMemoToStudent(role) {
-  if (role === 'admin') return true;
-  return (role === 'study_room' || role === 'tutor') && isProviderPaid();
+  return isProviderRole(role) && isProviderPaid();
 }
 
 /** @deprecated alias */
@@ -45,7 +45,7 @@ export function canGuardianMemoToProvider(role) {
 /**
  * 공급자→학생 **콜드** 첫 메모 여부 (16§1-2)
  * @param {MemoTargetKind} kind
- * @param {NavRole} role
+ * @param {NavRole | 'admin'} role
  */
 export function isColdOutreach(kind, role) {
   return kind === 'student' && isProviderRole(role);
@@ -53,11 +53,12 @@ export function isColdOutreach(kind, role) {
 
 /**
  * P16-03 첫 메모 — 콜드만 paid_gate
- * @param {{ kind: MemoTargetKind, role: NavRole }} ctx
+ * @param {{ kind: MemoTargetKind, role: NavRole | 'admin' }} ctx
  * @returns {{ ok: true } | { ok: false, reason: 'paid_gate'|'role'|'unknown' }}
  */
 export function checkFirstMemoPermission(ctx) {
   const { kind, role } = ctx;
+  if (role === 'admin' && kind === 'student') return { ok: false, reason: 'role' };
   if (isColdOutreach(kind, role)) {
     if (!isProviderPaid()) return { ok: false, reason: 'paid_gate' };
     return { ok: true };
@@ -72,13 +73,16 @@ export function checkFirstMemoPermission(ctx) {
 /**
  * P16-02 thread 답장 — 이미 생성된 대화는 쪽지권 잔액과 무관하게 무료
  * @param {{ contextKind: MemoTargetKind, messages: { sender: 'me'|'peer' }[], initiatedByMe?: boolean } | null} thread
- * @param {NavRole} role
+ * @param {NavRole | 'admin'} role
  */
 export function canReplyInThread(thread, role) {
   if (!thread) return false;
   if (thread.isBlocked) return false;
   if (role === 'parent') {
     if (thread.contextKind === 'student') return thread.initiatedByMe !== true;
+    return thread.contextKind === 'study_room' || thread.contextKind === 'tutor';
+  }
+  if (role === 'admin') {
     return thread.contextKind === 'study_room' || thread.contextKind === 'tutor';
   }
   if (!isProviderRole(role)) return false;

@@ -1,8 +1,9 @@
 /**
  * 학생 요청문/특이요청 열람 권한
  *
- * 2026-08 정책: 로그인한 공급자(과외쌤·원장)는 요청문·특이사항을 결제 없이 열람.
- * 블라인드(실명·전화·상세주소)는 유지. 학부모 피어는 비교범위(구조화)만.
+ * 요청문·특이요청 원문은 유료 공급자(픽·프라임 등)·관리자·학생 본인만 본다.
+ * 그 외에는 서버가 원문을 빈 문자열로 내려보낸다. 블라인드(실명·전화·상세주소)는 유지.
+ * 학생 피어는 비교범위(구조화)만.
  */
 
 import { PERMISSION_DENIED_COPY } from './empty-state-copy.js';
@@ -23,19 +24,7 @@ function isProviderViewer(viewer) {
 }
 
 /**
- * @param {'private' | 'paid_only' | string} visibility
- * @param {number} [studentId]
- * @param {{ isPaidProvider?: boolean, viewer?: string }} [opts]
- */
-export function canViewProtectedStudentField(visibility, studentId, opts = {}) {
-  if (isProviderViewer(opts.viewer)) {
-    return true;
-  }
-  return false;
-}
-
-/**
- * @param {{ id?: number, request_summary_visibility?: string, special_request_visibility?: string }} student
+ * @param {{ id?: number }} student
  * @param {{ viewer?: string }} [opts]
  */
 export function getStudentProtectedVisibility(student, opts = {}) {
@@ -48,37 +37,16 @@ export function getStudentProtectedVisibility(student, opts = {}) {
   };
 }
 
-/** @deprecated 요청문 열람권 폐지 — 잔여 참조 호환 */
-export const REQUEST_VIEW_GATE_COPY = {
-  title: '요청문 열람',
-  body: '로그인한 공부방·과외쌤은 요청문을 무료로 볼 수 있습니다.',
-  ctaUnlock: '',
-  ctaPlans: '유료 서비스 안내',
-};
-
-export const FREE_PROVIDER_REQUEST_GATE_COPY = {
-  title: '요청문 열람',
-  body: '로그인한 공부방·과외쌤은 요청문·특이요청사항을 무료로 볼 수 있습니다.',
-  ctaPlans: '유료 서비스 안내',
-};
-
 /** 무료 공급자 — 서버가 요청문·특이요청 원문을 빈 문자열로 보낼 때 */
 export const EXPOSURE_PROVIDER_REQUEST_GATE_COPY = {
   title: '요청문은 노출 상품 이용 중인 공부방·과외쌤에게 보여요',
   body: '픽·프라임을 이용하면 학생이 남긴 요청문과 특이요청을 볼 수 있어요',
 };
 
-/** 학부모·학생 피어 열람 — 구조화 조건만, 요청문 비공개 규칙 유지 */
+/** 학생 피어 열람 — 구조화 조건만 */
 export const PEER_STUDENT_REQUEST_GATE_COPY = {
   title: '요청문은 비교 열람 범위가 아닙니다',
-  body: '다른 학생의 요청문·특이요청사항은 기존 공개 규칙에 따라 공급자 열람 대상입니다. 금액·지역·과목 등 구조화 조건만 비교하세요.',
+  body: '다른 학생의 요청문·특이요청사항은 노출 상품을 이용 중인 공부방·과외쌤만 볼 수 있어요. 금액·지역·과목 등 구조화 조건만 비교하세요.',
 };
-
-export function getRequestViewGateState() {
-  return {
-    hasTickets: false,
-    ticketsRemaining: 0,
-  };
-}
 
 export const PAID_GATE_MESSAGE = PERMISSION_DENIED_COPY.paid.body;

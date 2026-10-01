@@ -12,7 +12,6 @@ test.describe('P18-02 18b 횟수권', () => {
     expect(res.status()).toBe(200);
     expect(body.ok).toBeTruthy();
     expect(body.cold_memo).toBeTruthy();
-    expect(body.request_view).toBeTruthy();
     expect(body.exposure).toBeTruthy();
     expect(body.tickets?.memo).toBeTruthy();
     expect(body.tickets.memo.remaining).toBe(body.cold_memo.remaining);
@@ -22,7 +21,7 @@ test.describe('P18-02 18b 횟수권', () => {
     await logout(request);
   });
 
-  test('entitlements — 통합 cold_memo · request_view', async ({ request }) => {
+  test('entitlements — 통합 cold_memo', async ({ request }) => {
     restoreMemoGateE2e();
     await loginAs(request, 'tutor');
     const res = await request.get('/api/messages/entitlements.php');
@@ -30,9 +29,7 @@ test.describe('P18-02 18b 횟수권', () => {
     expect(res.status()).toBe(200);
     expect(body.ok).toBeTruthy();
     expect(body.cold_memo).toBeTruthy();
-    expect(body.request_view).toBeTruthy();
     expect(body.memo_tickets).toBe(body.cold_memo.remaining);
-    expect(body.request_view_tickets).toBe(body.request_view.remaining);
     expect(body.memo_tickets).toBeGreaterThan(0);
     expect(body.can_cold_memo).toBe(body.cold_memo.can_send);
     expect(body.memo_nearest_expiry).toBeTruthy();

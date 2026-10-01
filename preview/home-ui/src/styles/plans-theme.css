@@ -226,8 +226,7 @@
 
 .plans-theme .plans-card__media--prime,
 .plans-theme .plans-card__media--pick,
-.plans-theme .plans-card__media--memo,
-.plans-theme .plans-card__media--view {
+.plans-theme .plans-card__media--memo {
   background: #e8e2d6;
 }
 

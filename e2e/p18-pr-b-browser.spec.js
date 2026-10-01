@@ -148,7 +148,7 @@ test.describe('PR-B browser plans/access', () => {
     await logout(page.request);
   });
 
-  test('9-13 쪽지 OFF 차단·즉시권 발송 1건·멱등·request_view 미차감', async ({ page }) => {
+  test('9-13 쪽지 OFF 차단·즉시권 발송 1건·멱등', async ({ page }) => {
     restoreMemoGateE2e();
     try {
       devSql(
@@ -213,14 +213,6 @@ test.describe('PR-B browser plans/access', () => {
     await page.goto('/#/mypage/messages');
     await expect(page).toHaveURL(/mypage\/messages|messages/);
     await expect(page.getByText(/쪽지|대화|메시지/).first()).toBeVisible({ timeout: 20_000 });
-
-    const unlock = await page.request.post('/api/paid/request-access.php', {
-      data: { student_id: 9053 },
-    });
-    if (unlock.ok()) {
-      const unlockBody = await unlock.json();
-      expect(unlockBody.consumed ?? false).toBeFalsy();
-    }
 
     await logout(page.request);
   });

@@ -443,11 +443,15 @@ const expectedCreateOrderArgs = [
   '$providerId',
   '$memoIntent',
 ];
+// 인자 개수는 고정하지 않는다 — badge_codes·region 등 비금액 인자는 뒤에 추가될 수 있다.
+const clientMoneyArg = /^\$(amount|price|discount|sale|total)/i;
+const clientMoneyInput = /\$input\[\s*['"](amount|amount_won|price|discount|sale_price)['"]\s*\]/;
 ok(
   'checkout_ignores_client_amount',
-  createOrderArgs.length === expectedCreateOrderArgs.length &&
+  createOrderArgs.length >= expectedCreateOrderArgs.length &&
     expectedCreateOrderArgs.every((name, i) => createOrderArgs[i] === name) &&
-    !createOrderArgs.some((name) => name === '$amount' || /^\$amount\b/.test(name)),
+    !createOrderArgs.some((name) => clientMoneyArg.test(name)) &&
+    !clientMoneyInput.test(checkoutApi),
   `args=[${createOrderArgs.join(', ')}]`,
 );
 ok(

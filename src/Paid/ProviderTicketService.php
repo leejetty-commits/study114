@@ -43,17 +43,6 @@ final class ProviderTicketService
         return $memo;
     }
 
-    /** @return array{remaining: int, nearest_expiry: string|null} */
-    public function getRequestViewTicketSummary(int $userId): array
-    {
-        return $this->repo->ticketSummary($userId, 'request_view');
-    }
-
-    public function countRequestViewTickets(int $userId): int
-    {
-        return $this->repo->countTickets($userId, 'request_view');
-    }
-
     public function canColdMemo(int $userId, ?string $providerType = null, ?int $providerId = null): bool
     {
         if ($this->repo->isColdMemoBypass($userId)) {
@@ -148,55 +137,10 @@ final class ProviderTicketService
         return $this->repo->hasActivePaidMemoPack($providerType, $providerId);
     }
 
-    public function canViewPaidRequest(int $userId, int $studentId): bool
-    {
-        unset($userId, $studentId);
-
-        return true;
-    }
-
-    /** 요청문 열람권 폐지 — 차감 없이 항상 열람 허용 */
-    public function unlockPaidRequest(int $userId, int $studentId): array
-    {
-        if ($studentId <= 0) {
-            throw new \InvalidArgumentException('student_id가 필요합니다.');
-        }
-        $view = $this->getRequestViewTicketSummary($userId);
-
-        return [
-            'student_id' => $studentId,
-            'unlocked' => true,
-            'consumed' => false,
-            'request_view_tickets' => $view['remaining'],
-            'request_view' => $this->formatRequestViewBlock($view),
-        ];
-    }
-
-    public function getRequestAccessStatus(int $userId, int $studentId): array
-    {
-        $view = $this->getRequestViewTicketSummary($userId);
-
-        return [
-            'student_id' => $studentId,
-            'unlocked' => true,
-            'can_unlock' => false,
-            'request_view_tickets' => $view['remaining'],
-            'has_paid_only_fields' => true,
-            'request_view' => $this->formatRequestViewBlock($view),
-        ];
-    }
-
-    /** @return list<int> */
-    public function listUnlockedStudentIds(int $userId): array
-    {
-        return $this->repo->listUnlockedStudentIds($userId);
-    }
-
     /** @return array<string, mixed> */
     public function getOperationalStatus(int $userId, array $primeRegionInput = [], ?int $studyRoomId = null): array
     {
         $memo = $this->getMemoTicketSummary($userId);
-        $view = $this->getRequestViewTicketSummary($userId);
         $positions = $this->repo->listActivePositions($userId);
 
         $exposureState = count($positions) > 0 ? 'active' : 'basic';
@@ -304,11 +248,6 @@ final class ProviderTicketService
                     'nearest_expiry' => $this->toIso($memo['nearest_expiry'] ?? ''),
                     'packs' => $this->listMemoPacksForApi($userId),
                 ],
-                'request_view' => [
-                    'label' => '요청문 열람권',
-                    'remaining' => $view['remaining'],
-                    'nearest_expiry' => $this->toIso($view['nearest_expiry'] ?? ''),
-                ],
             ],
         ];
     }
@@ -374,30 +313,6 @@ final class ProviderTicketService
         return $scopeHelper->inventoriesForScopes($scopes);
     }
 
-    /** @param array{remaining: int, nearest_expiry: string|null} $view */
-    private function formatRequestViewBlock(array $view): array
-    {
-        return [
-            'remaining' => $view['remaining'],
-            'nearest_expiry' => $view['nearest_expiry'],
-        ];
-    }
-
-    /** @return array<string, mixed> */
-    public function getRequestAccessList(int $userId): array
-    {
-        $view = $this->getRequestViewTicketSummary($userId);
-
-        return [
-            'request_view' => array_merge(
-                $this->formatRequestViewBlock($view),
-                ['unlocked_student_ids' => $this->listUnlockedStudentIds($userId)],
-            ),
-            'unlocked_student_ids' => $this->listUnlockedStudentIds($userId),
-            'request_view_tickets' => $view['remaining'],
-        ];
-    }
-
     private function memoPackProductName(int $packSize, string $grantKind): string
     {
         if (in_array($grantKind, [MemoTicketPolicy::GRANT_POSITION_BUNDLE, MemoTicketPolicy::SOURCE_BUNDLE], true)) {
@@ -429,9 +344,7 @@ final class ProviderTicketService
     private function notifyTicketBalanceIfNeeded(int $userId, string $ticketType): void
     {
         try {
-            $remaining = $ticketType === 'memo'
-                ? $this->countMemoTickets($userId)
-                : $this->countRequestViewTickets($userId);
+            $remaining = $this->countMemoTickets($userId);
             (new ProviderReminderService())->onTicketBalance($userId, $ticketType, $remaining);
         } catch (\Throwable $e) {
             error_log('[paid-reminder] ' . $e->getMessage());

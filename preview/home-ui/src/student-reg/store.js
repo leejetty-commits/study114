@@ -50,9 +50,7 @@ const KEY = 'study114-preview-students-v3';
  * @property {number} [preferred_studyroom_fee_amount]
  * @property {string} [preferred_tutor_gender]
  * @property {string} [request_summary]
- * @property {'private'|'paid_only'} [request_summary_visibility]
  * @property {string} [special_request_note]
- * @property {'private'|'paid_only'} [special_request_visibility]
  * @property {string} [updated_at]
  * @property {string} [published_at]
  * @property {number} [api_student_id]
@@ -70,8 +68,6 @@ function withDefaults(raw, id) {
     minutes_per_lesson: 90,
     preferred_fee_amount: 550000,
     preferred_studyroom_fee_amount: 420000,
-    request_summary_visibility: 'private',
-    special_request_visibility: 'private',
     school_level: 'middle',
     subject_label: '수학',
     ...raw,
@@ -100,7 +96,6 @@ const SEED = [
       preferred_tutor_regions: [],
       preferred_studyroom_regions: [],
       request_summary: '주 2회 수학 집중',
-      request_summary_visibility: 'paid_only',
       published_at: new Date().toISOString(),
     },
     1,

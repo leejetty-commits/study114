@@ -40,7 +40,8 @@ ok(
 );
 ok(
   'positions: 주문요약·적용대상',
-  screens.includes('renderOrderSummaryBlock') && screens.includes("renderApplyTargetBlock(profile, role, 'positions')"),
+  screens.includes('renderOrderSummaryBlock') &&
+    /renderApplyTargetBlock\(\s*profile,\s*role,\s*'positions'\s*[,)]/.test(screens),
 );
 ok(
   'access: 구매 전 확인·aux 링크',
@@ -76,10 +77,14 @@ ok(
   'positions: 점유판은 roomPrimeOnly',
   screens.includes('const roomPrimeOnly = role === \'study_room\' && product.productCode === \'prime\''),
 );
+// 정책(65-paid-renewal-checklist 26·27)은 과외쌤에 매진·예약대기 카피 자체를 금지한다.
+// 부정문 존재가 아니라 순환형 카피 + 점유/만석 분기가 공부방 Prime에 묶여 있는지로 본다.
 ok(
   'tutor 가이드: 점유·예약대기 금지 카피',
-  screens.includes('점유·예약대기 UI는 과외쌤에 적용되지 않습니다') ||
-    screens.includes('재고·예약대기 UI가 없습니다'),
+  screens.includes('renderTutorPickCirculation') &&
+    screens.includes('15분마다 공정하게 순환합니다') &&
+    /const roomPrimeOnly = role === 'study_room'/.test(screens) &&
+    /const soldOut = roomPrimeOnly &&/.test(screens),
 );
 ok(
   'ticket service: pick inventory false',

@@ -10,6 +10,22 @@
 import { previewState } from '../state.js';
 import { isMessagesApiMode } from '../messages-backend.js';
 import { getMemoGateState } from '../provider-entitlement.js';
+import { authRoleType } from '../auth-role.js';
+
+/** 관리자→학생 쪽지 불가 안내 (서버 MessagesService 와 같은 정책) */
+export const ADMIN_STUDENT_MEMO_BLOCKED_COPY =
+  '관리자 계정은 학생에게 쪽지를 보낼 수 없습니다. 운영 안내는 공지를 이용해 주세요.';
+
+export const MEMO_TARGET_BLOCKED_COPY = '이 대상에게는 쪽지를 보낼 수 없습니다.';
+
+/**
+ * getNavRole()은 홈·쪽지함에서 관리자를 'admin'으로 주지 않는다(guest·저장된 활성 역할).
+ * 로그인 세션이 관리자면 화면 역할과 무관하게 'admin'.
+ * @param {string} role
+ */
+export function resolveMemoRole(role) {
+  return authRoleType() === 'admin' ? 'admin' : role;
+}
 
 function isProviderRole(role) {
   return role === 'study_room' || role === 'tutor';
@@ -146,14 +162,16 @@ export function getScopeBadge(ctx) {
 /**
  * P16-02 답장 불가 사유 (§1-2 · §8)
  * @param {{ contextKind: MemoTargetKind, messages: { sender: 'me'|'peer' }[] } | null} thread
- * @param {NavRole} role
+ * @param {NavRole | 'admin'} navRole
  */
-export function getReplyBlockedMessage(thread, role) {
+export function getReplyBlockedMessage(thread, navRole) {
   if (!thread) return '대화를 찾을 수 없습니다.';
+  const role = resolveMemoRole(navRole);
+  if (role === 'admin' && thread.contextKind === 'student') return ADMIN_STUDENT_MEMO_BLOCKED_COPY;
   if (role === 'guest') return '로그인 후 답장할 수 있습니다.';
 
   if (role === 'parent') {
-    if (thread.contextKind === 'student') return '학부모는 공급자에게만 쪽지를 보낼 수 있습니다.';
+    if (thread.contextKind === 'student') return '학생은 공급자에게만 쪽지를 보낼 수 있습니다.';
     return '답장할 수 없습니다.';
   }
 

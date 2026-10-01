@@ -320,10 +320,6 @@ a.plans-chip:hover {
   background: linear-gradient(135deg, #dbeafe, #eff6ff);
 }
 
-.plans-card__media--view {
-  background: linear-gradient(135deg, #e0e7ff, #f8fafc);
-}
-
 .plans-card__media-ico {
   font-size: 2rem;
   color: #fff;

@@ -189,12 +189,12 @@ function adminProductLabel(code) {
   if (normalized.includes('pick')) return '추천 노출';
   if (normalized.includes('basic')) return '기본 노출';
   if (normalized.includes('memo')) return '쪽지권';
-  if (normalized.includes('request')) return '요청문 열람권';
+  if (normalized.includes('request')) return '요청문 열람권(폐지)';
   return '기타 상품';
 }
 
 function ticketTypeLabel(type) {
-  return String(type || '').includes('memo') ? '쪽지권' : '요청문 열람권';
+  return String(type || '').includes('memo') ? '쪽지권' : '요청문 열람권(폐지)';
 }
 
 
@@ -1419,7 +1419,7 @@ function renderMembers() {
        </select>
        <select name="role_type" class="admin-input--sm">
          <option value="all"${filters.role_type === 'all' ? ' selected' : ''}>역할 포함 · 전체</option>
-         <option value="guardian_student"${filters.role_type === 'guardian_student' ? ' selected' : ''}>학부모 포함</option>
+         <option value="guardian_student"${filters.role_type === 'guardian_student' ? ' selected' : ''}>학생 포함</option>
          <option value="study_room_owner"${filters.role_type === 'study_room_owner' ? ' selected' : ''}>공부방 포함</option>
          <option value="tutor"${filters.role_type === 'tutor' ? ' selected' : ''}>과외쌤 포함</option>
          <option value="admin"${filters.role_type === 'admin' ? ' selected' : ''}>운영자 포함</option>

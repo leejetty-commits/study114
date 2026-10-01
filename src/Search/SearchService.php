@@ -961,8 +961,7 @@ final class SearchService
                    s.lesson_format, s.student_gender_group, s.preferred_student_count_group,
                    s.preferred_fee_amount, s.preferred_studyroom_fee_amount,
                    s.preferred_lesson_type,
-                   s.request_summary, s.request_summary_visibility,
-                   s.special_request_note, s.special_request_visibility,
+                   s.request_summary, s.special_request_note,
                    s.published_at, s.created_at,
                    {$budgetExpr} AS budget_amount,
                    r.dong_name, r.sigungu_name, r.sido_name, c.name AS complex_name,
@@ -1051,11 +1050,9 @@ final class SearchService
                 'request_summary' => $includeStudentRequestText && $row['request_summary'] !== null
                     ? (string) $row['request_summary']
                     : '',
-                'request_summary_visibility' => (string) ($row['request_summary_visibility'] ?? 'private'),
                 'special_request_note' => $includeStudentRequestText && $row['special_request_note'] !== null
                     ? (string) $row['special_request_note']
                     : '',
-                'special_request_visibility' => (string) ($row['special_request_visibility'] ?? 'private'),
             ];
 
             $items[] = $item;
