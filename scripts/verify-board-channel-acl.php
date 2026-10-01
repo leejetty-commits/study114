@@ -26,10 +26,11 @@ function ok(string $name, bool $cond, string $detail = ''): void
 }
 
 ok(
-    'guest_director_intro',
+    'guest_director_titles',
     BoardChannelAcl::canDiscover('concern-director', 'guest')
     && !BoardChannelAcl::canList('concern-director', 'guest')
-    && BoardChannelAcl::accessKind('concern-director', 'guest') === 'intro',
+    && !BoardChannelAcl::canDetail('concern-director', 'guest')
+    && BoardChannelAcl::accessKind('concern-director', 'guest') === 'titles',
 );
 ok(
     'guest_solved_intro',
@@ -128,7 +129,7 @@ ok(
 ok(
     'auth_guardian_is_demand',
     BoardChannelAcl::boardRoleFromAuth(['role_type' => 'guardian_student']) === 'demand'
-    && BoardChannelAcl::accessKind('concern-director', BoardChannelAcl::boardRoleFromAuth(['role_type' => 'guardian_student'])) === 'intro',
+    && BoardChannelAcl::accessKind('concern-director', BoardChannelAcl::boardRoleFromAuth(['role_type' => 'guardian_student'])) === 'titles',
 );
 ok(
     'intro_only_canonical',
@@ -138,7 +139,67 @@ ok(
 ok(
     'summary_only_not_list',
     !BoardChannelAcl::canList('concern-director', 'guest')
-    && BoardChannelAcl::accessKind('concern-director', 'guest') === 'intro',
+    && !BoardChannelAcl::canDetail('concern-director', 'guest')
+    && BoardChannelAcl::accessKind('concern-director', 'guest') === 'titles',
+);
+
+$concernKeys = ['concern-parent', 'concern-director', 'concern-tutor', 'concern-solved'];
+$titlesCases = [
+    ['guest', 'concern-parent'],
+    ['guest', 'concern-director'],
+    ['guest', 'concern-tutor'],
+    ['guest', 'concern-solved'],
+    ['demand', 'concern-director'],
+    ['demand', 'concern-tutor'],
+];
+$titlesOk = true;
+$titlesDetail = '';
+foreach ($titlesCases as [$role, $key]) {
+    if (
+        BoardChannelAcl::accessKind($key, $role) !== 'titles'
+        || BoardChannelAcl::canList($key, $role)
+        || BoardChannelAcl::canDetail($key, $role)
+        || BoardChannelAcl::canCompose($key, $role)
+        || BoardChannelAcl::canComment($key, $role)
+        || BoardChannelAcl::canReact($key, $role)
+    ) {
+        $titlesOk = false;
+        $titlesDetail = "{$role}|{$key}=" . BoardChannelAcl::accessKind($key, $role);
+        break;
+    }
+}
+ok('concern_no_read_gets_titles_no_write', $titlesOk, $titlesDetail);
+
+$fullCases = [
+    ['demand', 'concern-parent'],
+    ['demand', 'concern-solved'],
+    ['supply-room', 'concern-director'],
+    ['supply-tutor', 'concern-tutor'],
+    ['supply-room', 'concern-solved'],
+    ['supply-tutor', 'concern-solved'],
+];
+foreach ($concernKeys as $key) {
+    $fullCases[] = ['admin', $key];
+}
+$fullOk = true;
+$fullDetail = '';
+foreach ($fullCases as [$role, $key]) {
+    if (BoardChannelAcl::accessKind($key, $role) !== 'full') {
+        $fullOk = false;
+        $fullDetail = "{$role}|{$key}=" . BoardChannelAcl::accessKind($key, $role);
+        break;
+    }
+}
+ok('concern_readers_get_full', $fullOk, $fullDetail);
+
+ok(
+    'solved_providers_write_comment_react',
+    BoardChannelAcl::canCompose('concern-solved', 'supply-room')
+    && BoardChannelAcl::canComment('concern-solved', 'supply-room')
+    && BoardChannelAcl::canReact('concern-solved', 'supply-room')
+    && BoardChannelAcl::canCompose('concern-solved', 'supply-tutor')
+    && BoardChannelAcl::canComment('concern-solved', 'supply-tutor')
+    && BoardChannelAcl::canReact('concern-solved', 'supply-tutor'),
 );
 
 $matrix = BoardChannelAcl::dumpMatrix();

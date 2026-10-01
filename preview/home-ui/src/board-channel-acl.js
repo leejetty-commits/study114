@@ -328,7 +328,7 @@ export function canUploadBoard(boardKey, role) {
 }
 
 /**
- * 채널 단위 삭제. concern 서버 삭제는 미구현.
+ * 채널 단위 삭제. 실제 삭제는 서버가 소유권·상태를 다시 검사한다.
  * 운영형(notice/faq/safe-guide)은 admin 만. 일반 댓글과 혼동하지 않음.
  */
 export function canDeleteBoard(boardKey, role) {
@@ -337,6 +337,7 @@ export function canDeleteBoard(boardKey, role) {
   if (boardRole === 'guest') return false;
   if (key === 'notice' || key === 'faq' || key === 'safe-guide') return boardRole === 'admin';
   if (key === 'submission') return canComposeBoard(key, role);
+  if (isConcernChannel(key)) return canComposeBoard(key, boardRole) || boardRole === 'admin';
   return false;
 }
 
@@ -379,8 +380,9 @@ export function canDownloadBoard(boardKey, role) {
  *   canUpload: boolean,
  *   canDelete: boolean,
  *   canModerate: boolean,
- *   access: 'full'|'intro'|'blocked'
+ *   access: 'full'|'titles'|'intro'|'blocked'
  * }}
+ * 고민방은 읽기 권한이 없어도 discover 가 있으면 'titles'(제목 항목만, 본문·작성자 없음).
  */
 export function getBoardAccess(boardKey, role) {
   const canDiscover = canDiscoverBoard(boardKey, role);
@@ -395,6 +397,7 @@ export function getBoardAccess(boardKey, role) {
   const canModerate = canModerateBoard(boardKey, role);
   let access = 'blocked';
   if (canList && canDetail) access = 'full';
+  else if (isConcernChannel(boardKey) && canDiscover) access = 'titles';
   else if (canDiscover) access = 'intro';
   return {
     canDiscover,
@@ -443,7 +446,7 @@ export function roleGateCopy(boardKey, navRole = 'guest') {
     };
   }
 
-  if (access.access === 'intro') {
+  if (access.access === 'intro' || access.access === 'titles') {
     return {
       kind: 'role',
       title: intro.title,
@@ -468,7 +471,7 @@ export function permissionKindForBoard(boardKey, navRole) {
     return null;
   }
   if (navRole === 'guest' || !navRole) return 'guest';
-  if (access.access === 'intro') return 'role';
+  if (access.access === 'intro' || access.access === 'titles') return 'role';
   return navRole === 'guest' ? 'guest' : 'role';
 }
 

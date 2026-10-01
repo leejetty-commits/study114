@@ -61,8 +61,9 @@ ok(
 );
 ok(
   'guest_concern_parent_no_post_fields',
-  getBoardAccess('concern-parent', 'guest').access === 'intro' &&
-    getBoardAccess('concern-parent', 'guest').canList === false,
+  getBoardAccess('concern-parent', 'guest').access === 'titles' &&
+    getBoardAccess('concern-parent', 'guest').canList === false &&
+    getBoardAccess('concern-parent', 'guest').canDetail === false,
 );
 ok(
   'guest_solved_intro_only',
@@ -171,7 +172,7 @@ ok(
 ok(
   'auth_alias_guardian_student',
   mapNavRoleToBoardRole('guardian_student') === 'demand' &&
-    getBoardAccess('concern-director', 'guardian_student').access === 'intro',
+    getBoardAccess('concern-director', 'guardian_student').access === 'titles',
 );
 ok('route_concern_legacy', normalizeConcernPath('/concern/director/abc') === '/community/director/abc');
 ok('route_community_new', normalizeCommunityPath('/community/parent/new') === '/community/parent/new');
@@ -195,7 +196,40 @@ ok(
   'summary_only_is_not_post_summary_public',
   !canListBoard('concern-director', 'guest') &&
     !canShowBoardPostsInRail('concern-director', 'guest') &&
-    getBoardAccess('concern-director', 'guest').access === 'intro',
+    getBoardAccess('concern-director', 'guest').access === 'titles',
+);
+
+const titlesCases = [
+  ['guest', 'concern-parent'],
+  ['guest', 'concern-director'],
+  ['guest', 'concern-tutor'],
+  ['guest', 'concern-solved'],
+  ['parent', 'concern-director'],
+  ['parent', 'concern-tutor'],
+];
+const titlesMiss = titlesCases.find(([role, key]) => {
+  const a = getBoardAccess(key, role);
+  return a.access !== 'titles' || a.canList || a.canDetail || a.canCompose || a.canComment || a.canReact;
+});
+ok('concern_no_read_gets_titles_no_write', !titlesMiss, titlesMiss ? titlesMiss.join('|') : '');
+
+const fullCases = [
+  ['parent', 'concern-parent'],
+  ['parent', 'concern-solved'],
+  ['study_room', 'concern-director'],
+  ['tutor', 'concern-tutor'],
+  ['study_room', 'concern-solved'],
+  ['tutor', 'concern-solved'],
+  ...['concern-parent', 'concern-director', 'concern-tutor', 'concern-solved'].map((k) => ['admin', k]),
+];
+const fullMiss = fullCases.find(([role, key]) => getBoardAccess(key, role).access !== 'full');
+ok('concern_readers_get_full', !fullMiss, fullMiss ? fullMiss.join('|') : '');
+
+ok(
+  'solved_providers_write_comment_react',
+  ['study_room', 'tutor'].every(
+    (r) => canComposeBoard('concern-solved', r) && canCommentBoard('concern-solved', r) && canReactBoard('concern-solved', r),
+  ),
 );
 
 ok('family_normalizes_to_parent', normalizeBoardKey('concern-family') === 'concern-parent');
@@ -339,7 +373,8 @@ ok(
   'submission_upload_axes',
   canUploadBoard('submission', 'tutor') &&
     !canUploadBoard('library', 'parent') &&
-    !canDeleteBoard('concern-parent', 'parent') &&
+    !canDeleteBoard('concern-parent', 'guest') &&
+    !canDeleteBoard('concern-parent', 'study_room') &&
     isAccessFailClosed('concern-director'),
 );
 
