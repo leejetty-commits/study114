@@ -9,7 +9,6 @@ import {
 import { getBoardAccess } from '../board-channel-acl.js';
 import { authRoleType } from '../auth-role.js';
 
-const LIBRARY_BOARD_KEYS = ['library', 'library-template', 'library-guide-pdf'];
 const OPERATIONAL_BOARD_KEYS = ['notice', 'faq', 'safe-guide'];
 const SUBMISSION_BOARD_KEY = 'submission';
 
@@ -47,10 +46,6 @@ export function getSubmissionPostsCache(authorRole) {
   return getBoardPostsCache(SUBMISSION_BOARD_KEY).filter((p) => p.authorRole === authorRole);
 }
 
-export function getLibraryPostsCache() {
-  return LIBRARY_BOARD_KEYS.flatMap((key) => getBoardPostsCache(key));
-}
-
 function upsertPostCache(boardKey, row) {
   const list = getBoardPostsCache(boardKey);
   const idx = list.findIndex((p) => p.id === row.id);
@@ -69,7 +64,7 @@ function removePostCache(boardKey, postKey) {
 /**
  * @param {{ navRole?: string }} [opts]
  * navRole을 주면 ACL상 blocked 보드는 요청하지 않는다.
- * 게스트 첫 부트에서 library·submission 401을 만들지 않기 위한 옵션.
+ * 게스트 첫 부트에서 submission 401을 만들지 않기 위한 옵션.
  * 인자 없이 호출하면 기존과 같이 전 보드를 가져온다.
  */
 export async function activateBoardApi(opts = {}) {
@@ -84,7 +79,6 @@ export function deactivateBoardApi() {
 }
 
 const HYDRATE_BOARD_KEYS = [
-  ...LIBRARY_BOARD_KEYS,
   SUBMISSION_BOARD_KEY,
   ...OPERATIONAL_BOARD_KEYS,
 ];

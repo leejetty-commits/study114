@@ -75,13 +75,6 @@ export function getSupportPolicySlug(path) {
   return m ? m[1] : 'terms';
 }
 
-/** @param {string} path */
-export function getSupportLibrarySection(path) {
-  if (path === '/support/library' || path === '/support/library/') return 'library';
-  const m = path.match(/^\/support\/library\/([a-z0-9-]+)$/);
-  return m?.[1] || 'library';
-}
-
 /** @param {SupportScreenId} screenId */
 export function screenTitle(screenId) {
   const map = {

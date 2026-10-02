@@ -902,14 +902,6 @@
   line-height: 1.6;
 }
 
-.support-app .pdf-card .chip {
-  margin: 0 8px 8px 0;
-}
-
-.support-app .pdf-card .lib-card__dl {
-  margin-top: 4px;
-}
-
 .support-app .lib-policy-chips {
   margin: 0 0 12px;
 }
@@ -926,11 +918,7 @@
 }
 
 @media (max-width: 480px) {
-  .support-app.uds-theme .quick-grid,
-  .support-app.uds-theme .pdf-grid {
-    grid-template-columns: 1fr;
-  }
-  .support-app.uds-theme .pdf-card {
+  .support-app.uds-theme .quick-grid {
     grid-template-columns: 1fr;
   }
   .support-app.uds-theme .support-hero__actions {

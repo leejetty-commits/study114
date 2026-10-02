@@ -166,12 +166,6 @@ export const EMPTY_COPY = {
     body: '다른 상태를 확인해 보세요.',
     cta: null,
   },
-  library: {
-    screenId: 'P23-01',
-    title: '등록된 자료가 없습니다',
-    body: '다른 카테고리를 선택하거나 나중에 다시 확인해 주세요.',
-    cta: null,
-  },
 };
 
 /** §5 0건 — 검색·지역 피드 결과 없음 (13장 · 29장 톤) */

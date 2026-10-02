@@ -6,16 +6,23 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Board\BoardApi;
 use Study114\Board\ConcernService;
+use Study114\Board\InfoBoardService;
 
 BoardApi::bootstrap();
 
 BoardApi::run(static function (): void {
-    $service = new ConcernService();
     $method = BoardApi::method();
 
     if ($method === 'POST') {
         $auth = BoardApi::requireAuth();
         $json = BoardApi::readJson();
+        $boardKey = trim((string) ($json['board_key'] ?? ''));
+        if ($boardKey !== '' && InfoBoardService::isInfoBoard($boardKey)) {
+            // 학생 꿀팁 가이드 「응원해요」 — 고민방 반응과 다른 경로
+            $postKey = trim((string) ($json['post_key'] ?? ''));
+            BoardApi::ok((new InfoBoardService())->toggleCheer($boardKey, $postKey, $auth));
+        }
+        $service = new ConcernService();
         $postId = (int) ($json['post_id'] ?? 0);
         if ($postId <= 0) {
             BoardApi::fail(422, 'validation', 'post_id가 필요합니다.');

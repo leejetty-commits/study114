@@ -500,27 +500,6 @@
 :is(.guide-app, .concern-app, .support-app) .doc-card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; }
 :is(.guide-app, .concern-app, .support-app) .doc-card p { margin: 0; font-size: 13px; color: var(--uds-muted); }
 
-:is(.guide-app, .concern-app, .support-app) .pdf-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-:is(.guide-app, .concern-app, .support-app) .pdf-card {
-  display: grid;
-  grid-template-columns: 88px minmax(0,1fr);
-  gap: 14px;
-  padding: 14px 14px 14px 16px;
-  align-items: center;
-}
-:is(.guide-app, .concern-app, .support-app) .pdf-card__cover {
-  width: 88px; height: 108px; border-radius: 8px; overflow: hidden;
-  border: 1px solid var(--uds-line);
-  background: var(--uds-primary-subtle);
-}
-:is(.guide-app, .concern-app, .support-app) .pdf-card__cover img { width: 100%; height: 100%; object-fit: cover; }
-:is(.guide-app, .concern-app, .support-app) .pdf-card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; }
-:is(.guide-app, .concern-app, .support-app) .pdf-card p { margin: 0 0 10px; font-size: 13px; color: var(--uds-muted); }
-
 :is(.guide-app, .concern-app, .support-app) .hub-split {
   display: grid;
   grid-template-columns: 1fr;
@@ -565,7 +544,6 @@
   :is(.guide-app, .concern-app, .support-app) .layout-shell--b { grid-template-columns: var(--left-nav-width) minmax(0,1fr); }
   :is(.guide-app, .concern-app, .support-app) .layout-rail { display: none; }
   :is(.guide-app, .concern-app, .support-app) .board-grid, :is(.guide-app, .concern-app, .support-app) .quick-grid, :is(.guide-app, .concern-app, .support-app) .doc-grid { grid-template-columns: 1fr 1fr; }
-  :is(.guide-app, .concern-app, .support-app) .pdf-grid { grid-template-columns: 1fr; }
   :is(.guide-app, .concern-app, .support-app) .story-flow { grid-template-columns: 1fr; }
   :is(.guide-app, .concern-app, .support-app) .story-flow__arrow { transform: rotate(90deg); justify-self: center; }
 }
