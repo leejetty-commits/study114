@@ -198,6 +198,141 @@
   }
 }
 
+/* 홈 [공지 | 동네 인사] 2단 박스. 3칸 바로 아래·내 박스 위. 「더보기」(12px)는 칸 제목(15px)보다 작게. */
+.home-news-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 var(--space-5, 1.25rem);
+}
+
+.home-mkt-wrap .home-news-row {
+  margin-bottom: 0;
+}
+
+.home-news-row__cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #e6dfd4;
+  border-radius: 12px;
+  background: #fff;
+  color: #1c1917;
+}
+
+.home-news-row__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.home-news-row__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  color: #1c1917;
+}
+
+.home-news-row__more {
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.home-news-row__more:hover,
+.home-news-row__more:focus-visible {
+  color: #266bc4;
+  text-decoration: underline;
+}
+
+.home-news-row__body {
+  min-width: 0;
+}
+
+.home-news-row__state {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+.home-news-row__state--failed {
+  color: #b45309;
+}
+
+.home-news-row__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-news-row__notice {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.home-news-row__badge {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #f6f1e8;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b4f2a;
+}
+
+.home-news-row__notice-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.home-news-row__date {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.home-news-row__notice:hover .home-news-row__notice-title,
+.home-news-row__notice:focus-visible .home-news-row__notice-title {
+  color: #266bc4;
+  text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+  .home-news-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 공부방 롤홈: 3칸 아래 내 공부방 박스. 칸을 가리지 않는다. */
 .home-mkt-wrap {
   position: relative;

@@ -5,23 +5,18 @@ declare(strict_types=1);
 namespace Study114\Paid;
 
 use PDO;
-use PDOException;
-use Study114\Database\Connection;
 
 /**
  * 학생 요청문·특이요청 원문 수신 판단 (단일 기준)
- * 유료 공급자 = 18§ exposure.state 'active' (기간 내 Prime/Pick 포지션 ≥ 1, ProviderTicketService::getOperationalStatus 와 동일)
+ * 유료 공급자 판정은 PaidProviderGate 한 곳.
  */
 final class StudentRequestTextAccess
 {
-    /** @var array<int, bool> */
-    private array $cache = [];
-
-    private ProviderTicketRepository $repo;
+    private PaidProviderGate $gate;
 
     public function __construct(?PDO $pdo = null)
     {
-        $this->repo = new ProviderTicketRepository($pdo ?? Connection::get());
+        $this->gate = new PaidProviderGate($pdo);
     }
 
     public function canReceive(int $userId, string $roleType): bool
@@ -41,14 +36,6 @@ final class StudentRequestTextAccess
 
     public function isPaidProvider(int $userId): bool
     {
-        if (!array_key_exists($userId, $this->cache)) {
-            try {
-                $this->cache[$userId] = $this->repo->listActivePositions($userId) !== [];
-            } catch (PDOException) {
-                $this->cache[$userId] = false;
-            }
-        }
-
-        return $this->cache[$userId];
+        return $this->gate->isPaidProvider($userId);
     }
 }

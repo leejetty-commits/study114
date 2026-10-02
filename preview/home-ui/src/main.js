@@ -61,6 +61,7 @@ import {
   isPolicyRoute,
   bootstrapPolicyRoute,
   isLibraryRoute,
+  isInfoBoardRoute,
   bootstrapLibraryRoute,
   isAdminRoute,
   bootstrapAdminRoute,
@@ -141,7 +142,7 @@ function render() {
 }
 
 function shouldPaintBeforeSession() {
-  if (isAdminRoute() || isMypageRoute() || isPlansRoute() || isMessagesRoute() || isRegisterIntroRoute()) {
+  if (isAdminRoute() || isMypageRoute() || isPlansRoute() || isMessagesRoute() || isRegisterIntroRoute() || isInfoBoardRoute()) {
     return false;
   }
   const screen = getCurrentScreen();

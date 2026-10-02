@@ -6,6 +6,7 @@ import {
   FAQ_TABS,
   OPERATIONAL_CONTACT,
   OPERATIONAL_CTA,
+  SUPPORT_HOME_CARDS,
   TICKET_CATEGORIES,
 } from './support-copy.js';
 import { listNoticesForCenter, noticeTargetLabel } from './notice-store.js';
@@ -17,16 +18,13 @@ import {
   getSectionFromPath,
   getSupportFaqSlug,
   getSupportPolicySlug,
-  getSupportLibrarySection,
 } from './router.js';
 import { CONTACT_HISTORY_PATH } from '../mypage/router.js';
-import { getActiveNavId } from './nav.js';
+import { SUPPORT_NAV, getActiveNavId } from './nav.js';
 import { bindSingleOpenBoard } from '../../../shared/board/index.js';
 import { POLICY_PAGES, POLICY_SHORT_NOTICE, getPolicyPage } from '../policy-copy.js';
-import { LIBRARY_HEAD, LIBRARY_SECTIONS } from '../library/library-copy.js';
-import { getLibraryBoardMeta, libraryDownloadControlHtml, listLibraryItems } from '../library/library-store.js';
-import { BOARD_TYPES, getBoardPolicy } from '../board-engine-copy.js';
-import { renderEmptyStateCard } from '../empty-state-copy.js';
+import { LIBRARY_ENTRY_COPY } from '../library/library-copy.js';
+import { renderLibraryBoardCards, bindInfoBoardEntry } from '../library/info-board-screens.js';
 
 const TICKET_FLASH_KEY = 'study114-support-ticket-flash';
 
@@ -128,7 +126,7 @@ export function renderSupportScreen(path) {
   }
 
   if (path.startsWith('/support/library')) {
-    return renderSupportLibrarySection(path);
+    return renderSupportLibrarySection();
   }
 
   if (path === '/support' || path === '/support/') {
@@ -143,13 +141,17 @@ export function renderSupportScreen(path) {
 }
 
 function renderSupportQuickCards() {
-  const cards = [
-    { title: '자주 묻는 질문', desc: '자주 묻는 질문에서 먼저', href: '/support/faq', icon: '/assets/info-refresh/motif-faq.svg', extra: '' },
-    { title: '운영문의', desc: '운영팀 · 오류·정책·계정', href: '/support/contact', icon: '/assets/info-refresh/motif-contact.svg', extra: '' },
-    { title: '약관·정책', desc: '이용약관 · 개인정보 등', href: '/support/policies', icon: '/assets/info-refresh/motif-policy.svg', extra: 'card--accent-violet', halo: 'icon-halo--violet', tile: 'icon-tile--violet' },
-    { title: '공지사항', desc: '서비스 변경·운영 안내', href: '/support/notice', icon: '/assets/info-refresh/motif-notice.svg', extra: 'card--accent-warn', halo: 'icon-halo--warn', tile: 'icon-tile--warn' },
-    { title: '자료실', desc: '안내 자료·양식', href: '/support/library', icon: '/assets/info-refresh/motif-library.svg', extra: 'card--accent-teal', halo: 'icon-halo--teal', tile: 'icon-tile--teal' },
-  ];
+  const cards = SUPPORT_NAV.filter((n) => SUPPORT_HOME_CARDS[n.id]).map((n) => {
+    const card = SUPPORT_HOME_CARDS[n.id];
+    const accent = card.accent;
+    return {
+      ...card,
+      href: n.path,
+      extra: accent ? `card--accent-${accent}` : '',
+      halo: accent ? `icon-halo--${accent}` : '',
+      tile: accent ? `icon-tile--${accent}` : '',
+    };
+  });
   return `
     <div class="section-head">
       <div>
@@ -387,61 +389,7 @@ function renderPoliciesSection(path) {
     </article>`;
 }
 
-function boardTypeLabel(boardType) {
-  return BOARD_TYPES[boardType]?.label || boardType || '자료';
-}
-
-function renderBoardPolicyChips(boardKey, navRole) {
-  const meta = getLibraryBoardMeta(boardKey, navRole);
-  if (!meta) return '';
-  const chips = [
-    `<span class="lib-chip lib-chip--type">${esc(boardTypeLabel(meta.policy.boardType))}</span>`,
-    `<span class="lib-chip">열람 ${meta.canRead ? '가능' : '제한'}</span>`,
-    `<span class="lib-chip">${meta.canDownload ? '다운로드 가능' : '파일 다운로드 미구현'}</span>`,
-  ];
-  return `<div class="lib-policy-chips" aria-label="자료 권한 안내">${chips.join('')}</div>`;
-}
-
-function formatAudience(audience) {
-  const aud = Array.isArray(audience) ? audience : ['all'];
-  if (aud.includes('all')) return '전체';
-  return aud.join(' · ');
-}
-
-function renderLibraryCard(item, navRole) {
-  const policy = getBoardPolicy(item.boardKey);
-  const dlBtn = libraryDownloadControlHtml();
-
-  return `
-    <article class="pdf-card card card--accent" data-lib-id="${esc(item.id)}">
-      <div class="pdf-card__cover"><img src="/assets/info-refresh/motif-pdf-cover.svg" alt="" /></div>
-      <div>
-        ${policy ? `<p class="doc-card__eyebrow">${esc(boardTypeLabel(policy.boardType))} · ${esc(item.format || 'FILE')}</p>` : ''}
-        <h3>${esc(item.title)}</h3>
-        <p>${esc(item.summary)}</p>
-        <p class="lib-card__meta">${esc(formatAudience(item.audience))} · 표시 이름 ${esc(item.fileLabel || '파일')} · 실제 파일 없음</p>
-        <span class="chip chip--warn">준비 중</span>
-        ${dlBtn}
-      </div>
-    </article>`;
-}
-
-/** @param {string} path */
-function renderSupportLibrarySection(path) {
-  const section = getSupportLibrarySection(path);
-  const navRole = getNavRole();
-  const items = listLibraryItems(section, navRole);
-  const meta = LIBRARY_SECTIONS.find((s) => s.key === section) || LIBRARY_SECTIONS[0];
-  const tabs = LIBRARY_SECTIONS.map((s) => {
-    const href = s.key === 'library' ? '/support/library' : `/support/library/${s.key}`;
-    return `<a href="#${href}" class="tab-pill${s.key === section ? ' is-active' : ''}" ${s.key === section ? 'aria-current="page"' : ''} data-sup-nav="${href}">${esc(s.label)}</a>`;
-  }).join('');
-
-  const grid =
-    items.length === 0
-      ? renderEmptyStateCard('library', { cta: null })
-      : `<div class="pdf-grid">${items.map((item) => renderLibraryCard(item, navRole)).join('')}</div>`;
-
+function renderSupportLibrarySection() {
   return `
     <div class="section-head">
       <div>
@@ -450,14 +398,8 @@ function renderSupportLibrarySection(path) {
         <div class="section-underline"></div>
       </div>
     </div>
-    <p class="section-lead">안내 자료와 양식입니다. 일부는 로그인 후에 볼 수 있습니다. 이용 방법은 이용안내를 먼저 보세요.</p>
-    <div class="tab-pills" role="tablist" aria-label="자료실">${tabs}</div>
-    ${renderBoardPolicyChips(meta.boardKey, navRole)}
-    ${grid}
-    <aside class="tip-card" style="margin-top:4px">
-      <h3>안내</h3>
-      <p>${esc(LIBRARY_HEAD.footnote)}</p>
-    </aside>`;
+    <p class="section-lead">${esc(LIBRARY_ENTRY_COPY.lead)}</p>
+    ${renderLibraryBoardCards()}`;
 }
 
 /** @param {HTMLElement} root @param {string} path @param {() => void} [rerender] */
@@ -477,6 +419,7 @@ export function bindSupportScreenEvents(root, path, rerender) {
   });
 
   bindSingleOpenBoard(root);
+  if (path.startsWith('/support/library')) bindInfoBoardEntry(root, rerender);
 
   root.querySelectorAll('[data-support-faq]').forEach((list) => {
     list.addEventListener('click', (e) => {

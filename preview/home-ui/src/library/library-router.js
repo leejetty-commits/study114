@@ -1,6 +1,40 @@
-/** 23장 — 자료실 hash 라우트 (boardKey: library · library-template · library-guide-pdf) */
+/** 자료실 hash 라우트 + 정보 게시판(info-room · info-tutor · info-student). 예전 하위 주소(templates · guides)도 자료실 입구로 받는다. */
 
 const LIBRARY_SECTIONS = ['', 'templates', 'guides'];
+
+/** 정보 게시판 주소 → boardKey. #/library/<slug>[/new | /<postKey> | /<postKey>/edit] */
+export const INFO_BOARD_SLUGS = Object.freeze({
+  'room-info': 'info-room',
+  'tutor-tips': 'info-tutor',
+  'student-tips': 'info-student',
+});
+
+const POST_KEY_RE = /^[a-z0-9][a-z0-9-]*$/;
+
+/** @typedef {{ slug: string, boardKey: string, basePath: string, view: 'list'|'detail'|'new'|'edit', postKey: string }} InfoBoardRoute */
+
+/** @param {string} hashPath @returns {InfoBoardRoute|null} */
+export function parseInfoBoardPath(hashPath) {
+  const p = String(hashPath || '').startsWith('/') ? String(hashPath) : `/${hashPath || ''}`;
+  const parts = p.split('/').filter(Boolean);
+  if (parts[0] !== 'library' || parts.length < 2 || parts.length > 4) return null;
+  const slug = parts[1];
+  const boardKey = INFO_BOARD_SLUGS[slug];
+  if (!boardKey) return null;
+  const basePath = `/library/${slug}`;
+  if (parts.length === 2) return { slug, boardKey, basePath, view: 'list', postKey: '' };
+  const second = parts[2];
+  if (parts.length === 3 && second === 'new') return { slug, boardKey, basePath, view: 'new', postKey: '' };
+  if (second === 'new' || !POST_KEY_RE.test(second)) return null;
+  if (parts.length === 3) return { slug, boardKey, basePath, view: 'detail', postKey: second };
+  if (parts[3] === 'edit') return { slug, boardKey, basePath, view: 'edit', postKey: second };
+  return null;
+}
+
+/** @param {string} hashPath */
+export function isInfoBoardPath(hashPath) {
+  return parseInfoBoardPath(hashPath) !== null;
+}
 
 /** @param {string} hashPath */
 export function normalizeLibraryPath(hashPath) {
@@ -10,29 +44,10 @@ export function normalizeLibraryPath(hashPath) {
   if (parts[0] !== 'library') return null;
   if (parts.length === 1) return '/library';
   if (parts.length === 2 && LIBRARY_SECTIONS.includes(parts[1])) return `/library/${parts[1]}`;
+  if (isInfoBoardPath(p)) return `/${parts.join('/')}`;
   return null;
 }
 
 export function getDefaultLibraryPath() {
   return '/library';
-}
-
-/** @param {string} path */
-export function getLibrarySection(path) {
-  const normalized = normalizeLibraryPath(path);
-  if (!normalized || normalized === '/library') return 'library';
-  return normalized.split('/')[2];
-}
-
-/** @typedef {'library'|'templates'|'guides'} LibrarySection */
-
-/** @param {string} path @returns {{ screenId: string, section: LibrarySection }} */
-export function parseLibraryPath(path) {
-  const section = getLibrarySection(path);
-  const map = {
-    library: 'P23-01',
-    templates: 'P23-02',
-    guides: 'P23-03',
-  };
-  return { screenId: map[section], section };
 }

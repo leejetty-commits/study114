@@ -24,6 +24,20 @@ final class BoardChannelAcl
     /** @var list<string> */
     private const PROVIDERS = ['supply-room', 'supply-tutor', 'admin'];
 
+    /**
+     * 서버 저장 정보 게시판. info-room·info-tutor(공급자 전용): 게스트 제목만, 학생·member 차단.
+     * info-student(학생 꿀팁 가이드): 게스트·member 제목만, 학생·공부방·과외쌤·관리자 읽기.
+     */
+    public const INFO_BOARD_KEYS = ['info-room', 'info-tutor', 'info-student'];
+
+    public const STUDENT_TIPS_BOARD_KEY = 'info-student';
+
+    /** @var list<string> */
+    private const INFO_DISCOVER = ['guest', 'supply-room', 'supply-tutor', 'admin'];
+
+    /** @var list<string> */
+    private const STUDENT_TIPS_READERS = ['demand', 'supply-room', 'supply-tutor', 'admin'];
+
     public const LIBRARY_FILE_DOWNLOAD_IMPLEMENTED = false;
 
     /** @var array<string, list<string>> */
@@ -39,6 +53,9 @@ final class BoardChannelAcl
         'concern-tutor' => self::ALL_ROLES,
         'concern-parent' => self::ALL_ROLES,
         'concern-solved' => self::ALL_ROLES,
+        'info-room' => self::INFO_DISCOVER,
+        'info-tutor' => self::INFO_DISCOVER,
+        'info-student' => self::ALL_ROLES,
     ];
 
     /** @var array<string, list<string>> */
@@ -54,6 +71,9 @@ final class BoardChannelAcl
         'concern-tutor' => self::PROVIDERS,
         'concern-parent' => ['demand', 'member', 'supply-room', 'supply-tutor', 'admin'],
         'concern-solved' => self::LOGGED_IN,
+        'info-room' => self::PROVIDERS,
+        'info-tutor' => self::PROVIDERS,
+        'info-student' => self::STUDENT_TIPS_READERS,
     ];
 
     /** @var array<string, list<string>> */
@@ -69,6 +89,9 @@ final class BoardChannelAcl
         'concern-tutor' => self::PROVIDERS,
         'concern-parent' => ['demand', 'member', 'supply-room', 'supply-tutor', 'admin'],
         'concern-solved' => self::LOGGED_IN,
+        'info-room' => self::PROVIDERS,
+        'info-tutor' => self::PROVIDERS,
+        'info-student' => self::STUDENT_TIPS_READERS,
     ];
 
     /** @var array<string, list<string>> */
@@ -85,6 +108,11 @@ final class BoardChannelAcl
         'concern-parent' => ['demand', 'member'],
         // 해결후기 작성·댓글: 기존값 유지 · 별도 최종 정책 확인 대상. 이번 작업에서 확대·축소 금지.
         'concern-solved' => ['member', 'demand', 'supply-room', 'supply-tutor'],
+        // 채널 단위. 공급자는 PaidProviderGate(유료) 를 InfoBoardService 가 다시 본다.
+        'info-room' => self::PROVIDERS,
+        'info-tutor' => self::PROVIDERS,
+        // 학생은 그대로, 공급자는 PaidProviderGate(유료) 를 InfoBoardService 가 다시 본다.
+        'info-student' => self::STUDENT_TIPS_READERS,
     ];
 
     /** @var array<string, list<string>> */
@@ -147,6 +175,9 @@ final class BoardChannelAcl
             'library-template',
             'library-guide-pdf',
             'submission',
+            'info-room',
+            'info-tutor',
+            'info-student',
         ];
         $rows = [];
         foreach ($roles as $role) {
@@ -256,6 +287,9 @@ final class BoardChannelAcl
         'library-template',
         'library-guide-pdf',
         'submission',
+        'info-room',
+        'info-tutor',
+        'info-student',
     ];
 
     public static function canComment(string $boardKey, string $boardRole): bool
@@ -277,8 +311,15 @@ final class BoardChannelAcl
         return self::canCompose($key, $boardRole);
     }
 
+    /** 반응 — 댓글과 같은 축. 학생 꿀팁 가이드만 댓글 없이 「응원해요」 하나를 읽기 권한자에게 연다. */
     public static function canReact(string $boardKey, string $boardRole): bool
     {
+        if (self::normalizeBoardKey($boardKey) === self::STUDENT_TIPS_BOARD_KEY) {
+            return $boardRole !== 'guest'
+                && self::canList($boardKey, $boardRole)
+                && self::canDetail($boardKey, $boardRole);
+        }
+
         return self::canComment($boardKey, $boardRole);
     }
 
@@ -325,6 +366,9 @@ final class BoardChannelAcl
         if (self::isConcern($key)) {
             return self::canCompose($key, $boardRole) || $boardRole === 'admin';
         }
+        if (self::isInfoBoard($key)) {
+            return self::canCompose($key, $boardRole);
+        }
 
         return false;
     }
@@ -345,7 +389,8 @@ final class BoardChannelAcl
         return str_starts_with($key, 'concern-')
             || $key === 'submission'
             || $key === 'library'
-            || $key === 'library-template';
+            || $key === 'library-template'
+            || self::isInfoBoard($key);
     }
 
     public static function accessKind(string $boardKey, string $boardRole): string
@@ -353,7 +398,7 @@ final class BoardChannelAcl
         if (self::canList($boardKey, $boardRole) && self::canDetail($boardKey, $boardRole)) {
             return 'full';
         }
-        if (self::isConcern($boardKey) && self::canDiscover($boardKey, $boardRole)) {
+        if ((self::isConcern($boardKey) || self::isInfoBoard($boardKey)) && self::canDiscover($boardKey, $boardRole)) {
             return 'titles';
         }
         if (self::canDiscover($boardKey, $boardRole)) {
@@ -423,6 +468,21 @@ final class BoardChannelAcl
                 'body' => '과외쌤이 학력·경력 등 신뢰 증빙자료를 제출하는 공간입니다. 공개 자료실과는 다릅니다.',
                 'allowedRolesLabel' => '과외쌤',
             ],
+            'info-room' => [
+                'title' => '공부방 쏙쏙정보',
+                'body' => '공부방 운영에 도움이 되는 정보를 나누는 게시판입니다.',
+                'allowedRolesLabel' => '공부방·과외쌤',
+            ],
+            'info-tutor' => [
+                'title' => '과외쌤 따끈 팁가이드',
+                'body' => '과외 수업·상담에 도움이 되는 팁을 나누는 게시판입니다.',
+                'allowedRolesLabel' => '공부방·과외쌤',
+            ],
+            'info-student' => [
+                'title' => '학생 꿀팁 가이드',
+                'body' => '공부·시험·진로에 도움이 되는 꿀팁을 나누는 게시판입니다.',
+                'allowedRolesLabel' => '전체',
+            ],
         ];
 
         $row = $map[$key] ?? [
@@ -472,6 +532,11 @@ final class BoardChannelAcl
     public static function isConcern(string $boardKey): bool
     {
         return str_starts_with(self::normalizeBoardKey($boardKey), 'concern-');
+    }
+
+    public static function isInfoBoard(string $boardKey): bool
+    {
+        return in_array(self::normalizeBoardKey($boardKey), self::INFO_BOARD_KEYS, true);
     }
 
     /** @return list<string> */

@@ -360,6 +360,18 @@ export const NOTICES = [
   },
 ];
 
+/**
+ * 고객센터 홈 바로가기 박스 — SUPPORT_NAV 항목 id 별 제목·설명·아이콘.
+ * 박스 순서와 주소는 SUPPORT_NAV(nav.js)가 정한다. 여기에는 순서·주소를 두지 않는다.
+ */
+export const SUPPORT_HOME_CARDS = {
+  notice: { title: '공지사항', desc: '서비스 변경·운영 안내', icon: '/assets/info-refresh/motif-notice.svg', accent: 'warn' },
+  faq: { title: '자주 묻는 질문', desc: '자주 묻는 질문에서 먼저', icon: '/assets/info-refresh/motif-faq.svg', accent: '' },
+  policies: { title: '약관·정책', desc: '이용약관 · 개인정보 등', icon: '/assets/info-refresh/motif-policy.svg', accent: 'violet' },
+  library: { title: '자료실', desc: '역할별 팁 게시판 모음', icon: '/assets/info-refresh/motif-library.svg', accent: 'teal' },
+  contact: { title: '운영문의', desc: '운영팀 · 오류·정책·계정', icon: '/assets/info-refresh/motif-contact.svg', accent: '' },
+};
+
 /** 약관·정책 링크 (고객센터 내) */
 export const TERMS_LINKS = [
   { label: '이용약관', href: '/support/policies/terms' },

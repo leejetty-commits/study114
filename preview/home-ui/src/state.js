@@ -22,7 +22,7 @@ import {
   SUPPORT_TICKETS_REDIRECT,
 } from './support/router.js';
 import { getDefaultPolicyPath, normalizePolicyPath } from './policy-router.js';
-import { getDefaultLibraryPath, normalizeLibraryPath } from './library/library-router.js';
+import { getDefaultLibraryPath, isInfoBoardPath, normalizeLibraryPath } from './library/library-router.js';
 import { getDefaultAdminPath, normalizeAdminPath, getAdminLegacyRedirect } from './admin/router.js';
 import {
   getDefaultPlansPath,
@@ -601,11 +601,22 @@ export function bootstrapPolicyRoute() {
   return false;
 }
 
+/** 정보 게시판(#/library/room-info · #/library/tutor-tips …)은 자료실 고객센터 이전 대상이 아니다. */
+export function isInfoBoardRoute() {
+  const hash = window.location.hash.slice(1) || '';
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
+  return isInfoBoardPath(path);
+}
+
 export function bootstrapLibraryRoute() {
   const { pathname, hash, origin, search } = window.location;
 
   if (!hash && pathname.startsWith('/library')) {
     const bare = pathname === '/library' || pathname === '/library/';
+    if (!bare && isInfoBoardPath(pathname.replace(/\/$/, ''))) {
+      window.location.replace(`${origin}/${search}#${pathname.replace(/\/$/, '')}`);
+      return true;
+    }
     const target = bare ? '/support/library' : pathname.replace(/^\/library/, '/support/library');
     window.location.replace(`${origin}/${search}#${target}`);
     return true;
@@ -621,6 +632,7 @@ export function bootstrapLibraryRoute() {
   }
 
   if (path.startsWith('/library/')) {
+    if (isInfoBoardPath(path.split('?')[0])) return false;
     const rest = path.slice('/library/'.length);
     window.location.replace(`#/support/library/${rest}`);
     return true;

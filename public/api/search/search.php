@@ -44,20 +44,45 @@ $limit = isset($input['limit']) ? (int) $input['limit'] : 20;
 $sort = isset($input['sort']) ? (string) $input['sort'] : 'latest';
 
 try {
-    $includeStudentRequestText = false;
-    if ($tab === 'student') {
-        $sessionCookie = session_name();
-        $hasSession = session_status() === PHP_SESSION_ACTIVE
-            || (isset($_COOKIE[$sessionCookie]) && $_COOKIE[$sessionCookie] !== '');
-        if ($hasSession) {
-            $auth = AuthSession::user();
-            $roleType = is_array($auth) ? (string) ($auth['role_type'] ?? '') : '';
-            $authUserId = is_array($auth) ? (int) ($auth['user_id'] ?? 0) : 0;
-            $includeStudentRequestText = (new StudentRequestTextAccess())->canReceive($authUserId, $roleType);
+    $authUser = null;
+    $sessionCookie = session_name();
+    $hasSession = session_status() === PHP_SESSION_ACTIVE
+        || (isset($_COOKIE[$sessionCookie]) && $_COOKIE[$sessionCookie] !== '');
+    if ($hasSession) {
+        $auth = AuthSession::user();
+        AuthSession::close();
+        if (is_array($auth) && (int) ($auth['user_id'] ?? 0) > 0) {
+            $authUser = $auth;
         }
     }
 
     $service = new SearchService();
+
+    // 비로그인: 게스트 기준 지역(공부방 대치동 · 과외쌤·학생 서울시 강남구) 밖의 카드는 응답하지 않는다.
+    if ($authUser === null) {
+        $scoped = $service->guestScopedFilters($tab, $filters);
+        if ($scoped === null) {
+            echo json_encode([
+                'ok'    => true,
+                'tab'   => $tab,
+                'sort'  => $sort,
+                'total' => 0,
+                'rows'  => [],
+                'items' => [],
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $filters = $scoped;
+    }
+
+    $includeStudentRequestText = false;
+    if ($tab === 'student' && $authUser !== null) {
+        $includeStudentRequestText = (new StudentRequestTextAccess())->canReceive(
+            (int) $authUser['user_id'],
+            (string) ($authUser['role_type'] ?? '')
+        );
+    }
+
     $result = $service->search($tab, $filters, $page, $limit, $sort, $includeStudentRequestText);
 
     echo json_encode([

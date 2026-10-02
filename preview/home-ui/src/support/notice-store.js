@@ -1,6 +1,14 @@
 /** 공지 — board_posts(notice) 정본. 대상 역할 필터는 서버 세션으로만 판단한다. */
 
-import { listNoticePosts, upsertNoticePost, deleteNoticePost, listNoticeCenterPosts, listNoticeHomePosts } from '../operational-board-store.js';
+import {
+  listNoticePosts,
+  upsertNoticePost,
+  deleteNoticePost,
+  listNoticeCenterPosts,
+  listNoticeHomePosts,
+  mapNoticeRows,
+} from '../operational-board-store.js';
+import { fetchBoardPosts } from '../board/board-api.js';
 import {
   isSupportApiMode,
   getNoticesCache,
@@ -65,6 +73,17 @@ export function listNoticesForCenter() {
 export function listNoticesForHome() {
   if (isBoardApiMode()) return listNoticeHomePosts();
   return [];
+}
+
+/**
+ * 홈 공지 칸·공지 팝업용. GET /api/board/posts.php?board_key=notice&view=home 를 바로 읽는다(캐시·폴백 없음).
+ * 역할 필터(전체 공지는 모두, 학생 전용은 학생만, 공부방·과외쌤은 전체+자기 역할)와 정렬은 서버가 정한다.
+ * 실패하면 예외를 그대로 던진다(0건과 구분).
+ * @param {number} [limit] 없으면 서버가 거른 전체 목록
+ */
+export async function fetchHomeViewNotices(limit) {
+  const data = await fetchBoardPosts('notice', limit ? { view: 'home', limit } : { view: 'home' });
+  return mapNoticeRows(data.posts);
 }
 
 /** @param {Omit<SupportNotice, 'id'> & { id?: string }} input */

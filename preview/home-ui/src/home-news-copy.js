@@ -1,0 +1,22 @@
+/** 홈 [공지 | 동네 인사] 2단 박스·공지 팝업·동네 인사 팝업 문구. 화면 파일은 이 상수만 쓴다. */
+export const HOME_NEWS_COPY = {
+  rowLabel: '공지와 동네 인사',
+  noticeTitle: '공지',
+  greetingTitle: '우리 동네에 새로 왔어요',
+  more: '더보기',
+  noticeMoreLabel: '공지 더보기',
+  greetingMoreLabel: '동네 인사 더보기',
+  loading: '소식을 불러오는 중이에요',
+  noticeEmpty: '오늘은 조용한 날이에요. 새 소식이 생기면 가장 먼저 여기에 걸어 둘게요',
+  greetingEmptyProvider: '우리 동네에 아직 인사가 도착하지 않았어요. 올려 주시면 이웃들이 반가워할 거예요',
+  greetingEmptyDemand: '이웃 공부방과 과외쌤의 첫 인사를 기다리고 있어요',
+  loadFailed: '소식을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요',
+  noticePopupTitle: '공지',
+  noticeNotFound: '공지를 찾을 수 없어요. 내려간 공지일 수 있어요',
+  goBoard: '게시판에서 보기',
+  popupClose: '닫기',
+  popupList: '공지 목록',
+  popupPager: '페이지 이동',
+  popupPrev: '이전',
+  popupNext: '다음',
+};

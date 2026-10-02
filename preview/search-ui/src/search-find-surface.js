@@ -103,10 +103,17 @@ function bootGuestPlaceBaseline(rerender) {
 const guestFeeds = { room: undefined, tutor: undefined, student: undefined };
 const GUEST_FEED_PAGE_LIMIT = 50;
 const GUEST_FEED_MAX_PAGES = 4;
+const GUEST_FEED_LOADING = '목록을 불러오는 중입니다.';
+const GUEST_FEED_ERROR = '목록을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.';
 
 /** @param {import('./state.js').SearchTab} tab */
 function guestFeedItems(tab) {
   return guestFeeds[tab]?.items || [];
+}
+
+/** 아직 부르지 않았으면 loading. 샘플은 ready 이고 0건일 때만 그린다. */
+function guestFeedStatus(tab) {
+  return guestFeeds[tab]?.status || 'loading';
 }
 
 /** @param {import('./state.js').SearchTab} tab @param {Record<string, string>} filters */
@@ -137,11 +144,12 @@ function bootGuestFeed(tab, rerender) {
     })
     .then((raw) => {
       guestFeeds[tab] = { status: 'ready', items: mapSearchResultsToExposure(tab, raw) };
-      if (raw.length) rerender();
+      rerender();
     })
     .catch((err) => {
       console.warn('[guest-find-feed]', tab, err);
       guestFeeds[tab] = { status: 'error', items: [] };
+      rerender();
     });
 }
 
@@ -1818,6 +1826,13 @@ export function renderFindResultSection(tab, state, role, options = {}) {
   }
   if (role === 'guest') {
     regionLabel = guestServerPlace(tab);
+    const status = guestFeedStatus(tab);
+    if (!state.searchExecuted && status !== 'ready') {
+      return `
+      <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}">
+        <p class="search-results__hint"${status === 'error' ? ' role="alert"' : ''}>${status === 'error' ? GUEST_FEED_ERROR : GUEST_FEED_LOADING}</p>
+      </section>`;
+    }
     if (!state.searchExecuted && activeItems.length) {
       return `
       <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}">

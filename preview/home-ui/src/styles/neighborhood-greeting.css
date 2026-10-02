@@ -1,17 +1,4 @@
-.ng-rail {
-  margin: 0.75rem 0 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  background: rgba(255, 255, 255, 0.94);
-  color: #1c1917;
-}
-
-.ng-rail__title {
-  margin: 0 0 0.35rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
-}
-
+/* 홈 2단 박스 동네 인사 칸 줄(칸·제목·더보기는 home-marketing-banner.css .home-news-row) */
 .ng-rail__list {
   display: flex;
   flex-direction: column;
@@ -60,10 +47,6 @@
   white-space: nowrap;
   text-align: left;
   text-overflow: ellipsis;
-}
-
-.ng-rail__more {
-  margin-top: 0.5rem;
 }
 
 .ng-feed {

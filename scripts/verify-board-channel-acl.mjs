@@ -378,6 +378,46 @@ ok(
     isAccessFailClosed('concern-director'),
 );
 
+const INFO_KEYS = ['info-room', 'info-tutor'];
+ok(
+  'info_guest_titles_only',
+  INFO_KEYS.every((k) => {
+    const a = getBoardAccess(k, 'guest');
+    return a.access === 'titles' && !a.canList && !a.canDetail && !a.canCompose;
+  }),
+);
+ok(
+  'info_student_member_blocked',
+  INFO_KEYS.every((k) =>
+    ['parent', 'guardian_student', 'member'].every(
+      (r) => getBoardAccess(k, r).access === 'blocked' && !canDiscoverBoard(k, r),
+    ),
+  ),
+);
+ok(
+  'info_providers_admin_full_compose_delete',
+  INFO_KEYS.every((k) =>
+    ['study_room', 'tutor', 'admin'].every((r) => {
+      const a = getBoardAccess(k, r);
+      return a.access === 'full' && a.canCompose && a.canDelete;
+    }),
+  ),
+);
+ok(
+  'info_no_comment_react_download_upload',
+  INFO_KEYS.every((k) =>
+    ['guest', 'parent', 'member', 'study_room', 'tutor', 'admin'].every(
+      (r) => !canCommentBoard(k, r) && !canReactBoard(k, r) && !canDownloadBoard(k, r) && !canUploadBoard(k, r),
+    ),
+  ),
+);
+ok('info_fail_closed', INFO_KEYS.every((k) => isAccessFailClosed(k)));
+ok('info_matrix_rows', matrix.filter((r) => INFO_KEYS.includes(r.channel)).length === 10);
+ok(
+  'info_not_in_rail_slots',
+  DEFAULT_RIGHT_RAIL_SLOTS.every((s) => !(s.sourceBoardKeys || []).some((k) => INFO_KEYS.includes(k))),
+);
+
 const tmpDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'tmp');
 mkdirSync(tmpDir, { recursive: true });
 writeFileSync(join(tmpDir, 'board-acl-matrix-js.json'), JSON.stringify(matrix, null, 2));

@@ -16,7 +16,7 @@ import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
 import { renderTutorActivityBars, bootTutorActivityCounts } from '../tutor-activity-chart.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
-import { bindNeighborhoodGreetingRail, renderNeighborhoodGreetingRail } from '../neighborhood-greeting-ui.js';
+import { bindHomeNewsRow, renderHomeNewsRow } from '../home-news-row.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
 import { bootTutorHome, readTutorLifetimeViews, readTutorHomeRegions } from '../tutor-home-seed.js';
 import { getDefaultMypagePath } from '../mypage/router.js';
@@ -132,7 +132,7 @@ export function renderTutor() {
 
   const content = `
     ${renderHomeMarketingBanner('tutor')}
-    ${renderNeighborhoodGreetingRail('tutor')}
+    ${renderHomeNewsRow('tutor')}
     ${renderProviderHomeTabs('tutor', tab)}
     ${showMyBox ? renderTutorSelfHero() : ''}
     ${renderProviderHomeBody('tutor', tab, previewState.tutorFind, {
@@ -149,7 +149,7 @@ export function renderTutor() {
 
 export function bindTutorEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
-  bindNeighborhoodGreetingRail(root, { viewer: 'tutor', onRerender: rerender, sourceRoute: 'tutor' });
+  bindHomeNewsRow(root, { viewer: 'tutor', onRerender: rerender, sourceRoute: 'tutor' });
   bootTutorHome(rerender);
   bootTutorActivityCounts(rerender);
 

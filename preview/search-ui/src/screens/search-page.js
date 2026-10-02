@@ -44,6 +44,7 @@ import {
   bootFindGpsIfNeeded,
   bootGuestFindSurface,
 } from '../search-find-surface.js';
+import { bindSearchMapPinLinks } from '../search-map.js';
 import { bootStudyRoomHome, bootStudyRoomStudentDemand } from '@home-ui/study-room-home-seed.js';
 import { renderBrowseList } from '@home-ui/exposure-render.js';
 import { getStudentDemandForRegion } from '../search-region-feed.js';
@@ -268,6 +269,9 @@ function bindGuestFindBrowse(root, rerender) {
   bindProtectedGuestActions(root);
   bindGuestEmptyCardLoginGate(root);
   bootGuestFindSurface(getCurrentTab(), rerender);
+  if (getCurrentTab() === 'room') {
+    bindSearchMapPinLinks(root, refreshActiveResultItems('room', previewState, 'guest'));
+  }
   fillGuestMapStats(root);
   bindGuestListPagination(root, rerender);
 

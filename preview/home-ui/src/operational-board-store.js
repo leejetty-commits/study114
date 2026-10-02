@@ -308,6 +308,11 @@ export function listNoticeHomePosts() {
   return getNoticeHomePosts().map(mapNoticePost);
 }
 
+/** 서버가 준 공지 글 항목을 화면용으로 바꾼다. 순서는 서버 응답 그대로. @param {any[]} posts */
+export function mapNoticeRows(posts) {
+  return (Array.isArray(posts) ? posts : []).filter((p) => p && p.id && p.title).map(mapNoticePost);
+}
+
 export function isOperationalBoardApiActive() {
   return (
     isBoardApiMode() &&

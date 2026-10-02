@@ -92,23 +92,28 @@ export function bootStudyRoomStudentDemand(rerender) {
   if (studentBoot && studentKey === key) return studentBoot;
   studentKey = key;
   studentLive = null;
-  studentBoot = (async () => {
-    /** @type {Record<string, string>} */
-    const filters = { preferred_lesson_type: 'study_room' };
-    if (regionId) filters.preferred_studyroom_region_id = regionId;
-    if (!filters.preferred_studyroom_region_id) {
-      studentLive = [];
-    } else {
-      try {
-        const result = await searchApi('student', filters, { limit: 20, sort: 'latest' });
-        studentLive = Array.isArray(result.items) ? result.items : [];
-      } catch {
-        studentLive = [];
-      }
-    }
+  // rerender 는 .then 안에서만 부른다. 지역이 없어 요청이 없는 경로도 studentBoot 대입이 끝난 뒤에 다시 그린다
+  // (같은 틱에 부르면 다시 그리기가 이 함수를 다시 불러 가드를 지나 무한 반복한다).
+  studentBoot = loadStudentDemand(regionId).then((items) => {
+    studentLive = items;
     if (typeof rerender === 'function') rerender();
-  })();
+  });
   return studentBoot;
+}
+
+/** @param {string} regionId @returns {Promise<object[]>} */
+async function loadStudentDemand(regionId) {
+  if (!regionId) return [];
+  try {
+    const result = await searchApi(
+      'student',
+      { preferred_lesson_type: 'study_room', preferred_studyroom_region_id: regionId },
+      { limit: 20, sort: 'latest' },
+    );
+    return Array.isArray(result.items) ? result.items : [];
+  } catch {
+    return [];
+  }
 }
 
 function formatRegistered(value) {

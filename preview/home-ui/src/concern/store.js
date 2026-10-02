@@ -24,9 +24,12 @@ const RAIL_CACHE_TTL_MS = 3 * 60 * 1000;
 export const RAIL_LATEST_LIMIT = 3;
 export const RAIL_HOT_LIMIT = 10;
 
+/** @typedef {'loading'|'ready'|'failed'} RailLoadStatus 받는 중 · 받음(0건 포함) · 실패 */
+
 /**
  * concern-hot.php 한 갈래(hot·latest·best) 캐시.
  * 진행 중 요청은 하나만 두고 같이 기다린다. 다른 역할·계정으로 받은 값은 없는 것으로 본다.
+ * 실패는 emptyValue 를 담되 failed 로 따로 표시해 0건과 구분한다. 실패한 값은 다음 그리기 때 다시 받는다.
  * @template T
  * @param {() => Promise<T>} load
  * @param {T} emptyValue 실패했을 때 담는 값
@@ -35,6 +38,7 @@ function createRailLoader(load, emptyValue) {
   let data = null;
   let owner = '';
   let loadedAt = 0;
+  let failed = false;
   let pending = null;
   let pendingOwner = '';
   let generation = 0;
@@ -45,7 +49,12 @@ function createRailLoader(load, emptyValue) {
     },
     /** @param {string} who */
     isFresh(who) {
-      return data !== null && owner === who && Date.now() - loadedAt < RAIL_CACHE_TTL_MS;
+      return data !== null && owner === who && !failed && Date.now() - loadedAt < RAIL_CACHE_TTL_MS;
+    },
+    /** @param {string} who @returns {RailLoadStatus} */
+    status(who) {
+      if (data === null || owner !== who) return 'loading';
+      return failed ? 'failed' : 'ready';
     },
     /** @param {string} who @returns {Promise<T>} */
     ensure(who) {
@@ -54,12 +63,16 @@ function createRailLoader(load, emptyValue) {
       const gen = ++generation;
       pendingOwner = who;
       pending = load()
-        .catch(() => emptyValue)
-        .then((result) => {
+        .then(
+          (result) => ({ ok: true, result }),
+          () => ({ ok: false, result: emptyValue }),
+        )
+        .then(({ ok, result }) => {
           if (gen === generation) {
             data = result;
             owner = who;
             loadedAt = Date.now();
+            failed = !ok;
             pending = null;
           }
           return result;
@@ -70,6 +83,7 @@ function createRailLoader(load, emptyValue) {
       data = null;
       owner = '';
       loadedAt = 0;
+      failed = false;
       pending = null;
       pendingOwner = '';
       generation += 1;
@@ -224,6 +238,34 @@ export async function fetchMoreConcernPosts(boardKey) {
   const next = toListEntry(data, entry.query, entry.posts);
   _lists.set(boardKey, next);
   return next;
+}
+
+/**
+ * 레일 읽기 팝업 목록 한 페이지(서버 최신순). 방 목록 캐시는 건드리지 않는다.
+ * 읽기 권한이 없는 역할·게스트는 서버가 제목 항목(access=titles)만 준다.
+ * @param {string} boardKey
+ * @param {number} offset
+ * @param {number} limit
+ * @param {string} navRole
+ * @returns {Promise<{ posts: any[], access: string, total: number }>}
+ */
+export async function fetchConcernRailPage(boardKey, offset, limit, navRole) {
+  const data = await fetchBoardPosts(boardKey, { navRole, sort: 'recent', limit, offset });
+  const access = data.access || 'full';
+  const posts = (data.posts ?? []).map((p) => normalizeConcernItem(p, access)).filter((p) => p.id && p.title);
+  const total = Number.isFinite(data.total) ? Number(data.total) : posts.length;
+  return { posts, access, total };
+}
+
+/**
+ * 레일 읽기 팝업 본문용 글 하나. 단건 캐시에 넣지 않는다(로그인 전후로 다른 응답이 섞이지 않게).
+ * @returns {Promise<{ post: any|null, access: string }>}
+ */
+export async function fetchConcernRailPost(boardKey, postId, navRole) {
+  const data = await fetchBoardPosts(boardKey, { navRole, postKey: postId, limit: 1 });
+  const access = data.access || 'full';
+  const raw = (data.posts ?? []).find((p) => String(p.id) === String(postId)) ?? null;
+  return { post: raw ? normalizeConcernItem(raw, access) : null, access };
 }
 
 /* ── 단건 (GET /api/board/posts.php?post_key) ── */
@@ -494,6 +536,17 @@ export function isRailConcernFresh(mode) {
   return railLoader(mode).isFresh(railOwnerKey());
 }
 
+/** 레일 칸 상태(받는 중·받음·실패). @param {'hot'|'latest'} mode @returns {RailLoadStatus} */
+export function getRailConcernStatus(mode) {
+  return railLoader(mode).status(railOwnerKey());
+}
+
+/** 레일 방 배너용. 서버 최신순 응답에서 그 방 글만 limit 개. 받은 값만 동기로 돌려준다. */
+export function getLatestConcernPostsForBoard(boardKey, limit = RAIL_LATEST_LIMIT) {
+  const posts = _latestLoader.peek(railOwnerKey()) || [];
+  return posts.filter((p) => p.boardKey === boardKey).slice(0, limit);
+}
+
 /**
  * 레일 칸 데이터를 받는다. 진행 중 요청이 있으면 그 요청을 같이 기다린다.
  * @param {'hot'|'latest'} mode
@@ -533,6 +586,11 @@ export function isBestConcernReady() {
 
 export function isBestConcernFresh() {
   return _bestLoader.isFresh(railOwnerKey());
+}
+
+/** @returns {RailLoadStatus} */
+export function getBestConcernStatus() {
+  return _bestLoader.status(railOwnerKey());
 }
 
 export function ensureBestConcernPosts() {

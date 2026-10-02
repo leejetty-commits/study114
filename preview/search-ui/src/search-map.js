@@ -8,7 +8,7 @@
  * - center: CanonicalLocation lat/lng 우선
  */
 
-import { bindStudyRoomMapSection } from '../../shared/naver-map.js';
+import { bindStudyRoomMapSection, GUEST_MAP_CENTER } from '../../shared/naver-map.js';
 import {
   normalizeLocation,
   logLocationDebug,
@@ -97,20 +97,23 @@ function renderFloatMap(parts, items, ctx) {
   const variant = isHero ? 'hero' : 'search';
   const extraClass = isHero ? '' : ' hero-map--search';
   const allowFallback = isHero ? ' data-allow-fallback="true"' : '';
-  const lat = ctx.lat ?? parts.lat;
-  const lng = ctx.lng ?? parts.lng;
+  /* 게스트는 홈 지도와 같은 중심(대치역)·줌. 핀 영역 맞춤(fitBounds)으로 줌이 바뀌지 않게 한다. */
+  const guestMap = bannerStyle === 'guest';
+  const lat = guestMap ? GUEST_MAP_CENTER.lat : ctx.lat ?? parts.lat;
+  const lng = guestMap ? GUEST_MAP_CENTER.lng : ctx.lng ?? parts.lng;
   const latAttr = lat != null ? ` data-map-lat="${esc(String(lat))}"` : '';
   const lngAttr = lng != null ? ` data-map-lng="${esc(String(lng))}"` : '';
+  const fitAttr = guestMap ? ' data-fit-bounds="false"' : '';
 
   return `
-    <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}"${latAttr}${lngAttr} data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
+    <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}"${latAttr}${lngAttr}${fitAttr} data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
       <div class="hero-map__canvas">
         <div class="hero-map__surface hero-map__surface--naver" aria-label="${esc(region)} 공부방 지도">
           <div class="naver-map-mount-host" data-naver-map-mount></div>
         </div>
       </div>
       <aside class="hero-map__banner" aria-label="지역 요약">
-        <h2 class="hero-map__dong">${esc(parts.dong || (bannerStyle === 'guest' ? readGuestBaseline().room : GUEST_PLACE_PROMPT))}</h2>
+        <h2 class="hero-map__dong">${esc(guestMap ? readGuestBaseline().room : parts.dong || GUEST_PLACE_PROMPT)}</h2>
         <p class="hero-map__sub">${esc(sub)}</p>
         ${statsHtml}
         ${hint ? `<p class="hero-map__hint">${esc(hint)}</p>` : ''}

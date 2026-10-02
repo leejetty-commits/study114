@@ -1,6 +1,5 @@
 import { renderHomeShell, bindLayoutEvents } from '../layout.js';
 import {
-  renderGuestTempNotice,
   renderGuestHero,
   renderGuestExposureBoxes,
   renderGuestBrowseLists,
@@ -12,7 +11,8 @@ import { isLoggedIn } from '../auth-session.js';
 import { hydrateHomeBasicFromSearch, isHomeBasicLive } from '../home-basic-live.js';
 import { withGuestPlanOverride } from '../plans/runtime-config.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
-import { bindNeighborhoodGreetingRail } from '../neighborhood-greeting-ui.js';
+import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
+import { bindHomeNewsRow, renderHomeNewsRow } from '../home-news-row.js';
 import { loadGuestBaseline, guestScopeFilters } from '../../../shared/location-display.js';
 
 let homeBasicHydrateStarted = false;
@@ -37,7 +37,8 @@ function hydrateHomeBasicForViewer() {
 export function renderGuest() {
   const loggedIn = isLoggedIn();
   const content = withGuestPlanOverride(() => `
-    ${renderGuestTempNotice()}
+    ${renderHomeMarketingBanner('guest')}
+    ${renderHomeNewsRow('guest')}
     ${renderGuestHero()}
     ${renderGuestExposureBoxes()}
     ${renderGuestBrowseLists()}
@@ -55,7 +56,7 @@ export function bindGuestEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
   bindGuestSectionEvents(root, rerender);
   bindDetailDecisionEvents(root, { onRerender: rerender, viewer: 'guest', sourceRoute: 'guest' });
-  bindNeighborhoodGreetingRail(root, { viewer: 'guest', onRerender: rerender, sourceRoute: 'guest' });
+  bindHomeNewsRow(root, { viewer: 'guest', onRerender: rerender, sourceRoute: 'guest' });
 
   restoreMyshopScrollAndFocusIfPending();
 

@@ -9,7 +9,10 @@
 
 /** @typedef {{ lat: number, lng: number, label?: string }} RegionCenter */
 
-/** 대치역, 위키데이터 Q100860 P625, 조회일 2026-10-01. 카카오 장소검색 교차 확인은 최종검수 */
+/**
+ * 대치역, 위키데이터 Q100860 P625(조회 2026-10-01).
+ * 2026-10-02 한국어 위키백과 좌표 37.49444, 127.06333 과 약 9m 차이. 카카오 장소검색은 REST 키가 없어 대조하지 못했다.
+ */
 export const GUEST_MAP_CENTER = { lat: 37.494511, lng: 127.063369 };
 
 /** 네이버 신규 타일 최대 줌 21 − 4 (공식 문서 NaverStyleMapTypeOptions) */

@@ -1,29 +1,32 @@
-import { getBoardPolicy } from './board-engine-copy.js';
 import { getRightRailSlot } from './right-rail-store.js';
 import { getNavRole } from './state.js';
 import { getAuthUser, isAdminUser, isEmailVerified, isLoggedIn } from './auth-session.js';
-import { getBoardChannel, isConcernBoardKey } from './board-channel-store.js';
-import { getConcernBoardByKey } from './concern/copy.js';
+import { isConcernBoardKey } from './board-channel-store.js';
+import { CONCERN_RAIL_COPY, getConcernBoardByKey } from './concern/copy.js';
 import {
   ensureBestConcernPosts,
   ensureRailConcernPosts,
   getBestConcernBoards,
+  getBestConcernStatus,
   getHotConcernSamples,
-  getLatestConcernSamples,
+  getLatestConcernPostsForBoard,
+  getRailConcernStatus,
   isBestConcernFresh,
   isBestConcernReady,
   isRailConcernFresh,
   isRailConcernReady,
+  RAIL_LATEST_LIMIT,
   setConcernRailOwnerResolver,
 } from './concern/store.js';
 import { HOME_UI_BASE } from '../../shared/preview-links.js';
 import {
   canShowBoardInRail,
-  canShowBoardPostsInRail,
   getChannelIntro,
   isRailSlotVisible,
   normalizeBoardKey,
 } from './board-channel-acl.js';
+import { bindInfoRailEvents, renderInfoRailBanners } from './library/info-rail.js';
+import { bestPostsForBoard, bindConcernRailEvents } from './concern/rail-concern-popup.js';
 
 let railOwnerResolverSet = false;
 
@@ -37,16 +40,6 @@ function ensureRailOwnerResolver() {
     return `${user.user_id ?? ''}:${user.role_type || ''}:${user.admin_level || ''}`;
   });
 }
-
-/** 공부방·과외쌤 최신정보 박스. href가 비어 있으면 박스를 렌더링하지 않는다. */
-const RAIL_PROVIDER_INFO = {
-  eyebrow: '쏙쏙 최신정보',
-  title: '공부방 과외쌤을 위한 쏙쏙 최신정보',
-  desc: '창업 준비부터 교육청 신고, 운영 팁까지 꼭 필요한 소식만 쏙쏙 모았어요',
-  href: '',
-  cta: '바로가기',
-};
-
 
 /**
  * @typedef {{
@@ -184,16 +177,6 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 }
 
-function boardRoute(boardKey) {
-  const channel = getBoardChannel(boardKey);
-  if (channel?.routeSlug) return channel.routeSlug;
-  const policy = getBoardPolicy(boardKey);
-  if (policy?.routeSlug) return policy.routeSlug;
-  const community = getConcernBoardByKey(boardKey);
-  if (community) return `#${community.path}`;
-  return '#/support';
-}
-
 function orderBoardKeysForRole(keys, role) {
   const prefer =
     role === 'study_room' ? 'concern-director' : role === 'tutor' ? 'concern-tutor' : 'concern-parent';
@@ -264,50 +247,90 @@ function railCardLimit(navRole) {
 /** 레일 현장 칸 표식. 응답이 오면 이 표식이 붙은 칸만 바꾼다. */
 const LIVE_FIELD_ATTR = 'data-rail-live-field';
 let liveFieldSeq = 0;
-/** @type {Map<string, { slotKey: string, ctx: any, mode: 'hot'|'latest' }>} */
+/** @typedef {'hot'|'latest'|'best'} LiveMode */
+/** @type {Map<string, { mode: LiveMode, build: (liveId: string) => string }>} */
 const pendingLiveFields = new Map();
-/** @type {Set<'hot'|'latest'>} */
+/** @type {Set<LiveMode>} */
 const refreshingLiveModes = new Set();
 
-/** @returns {'hot'|'latest'} */
-function liveFieldMode(slotKey) {
-  return slotKey === 'detail_right_rail' ? 'latest' : 'hot';
+/** @param {LiveMode} mode */
+function liveStatus(mode) {
+  return mode === 'best' ? getBestConcernStatus() : getRailConcernStatus(mode);
+}
+
+/** @param {LiveMode} mode */
+function liveFresh(mode) {
+  return mode === 'best' ? isBestConcernFresh() : isRailConcernFresh(mode);
+}
+
+/** @param {LiveMode} mode */
+function liveReady(mode) {
+  return mode === 'best' ? isBestConcernReady() : isRailConcernReady(mode);
+}
+
+/** @param {LiveMode} mode */
+function liveEnsure(mode) {
+  return mode === 'best' ? ensureBestConcernPosts() : ensureRailConcernPosts(mode);
 }
 
 /**
- * 받은 값이 없거나 오래됐으면 서버에서 받고, 받은 뒤 표식 칸만 다시 그린다.
- * 받은 값이 없을 때는 보이지 않는 표식만 두고, 실패·0건이면 표식을 지운다.
+ * 받은 값이 없거나 오래됐거나 실패했으면 서버에서 다시 받고, 받은 뒤 표식 칸만 다시 그린다.
+ * 칸은 받는 중·0건·실패에도 제목과 함께 그대로 둔다.
+ * @param {LiveMode} mode
+ * @param {(liveId: string) => string} build
+ */
+function renderLiveTracked(mode, build) {
+  if (liveStatus(mode) === 'ready' && liveFresh(mode)) return build('');
+  const id = `rlf${++liveFieldSeq}`;
+  pendingLiveFields.set(id, { mode, build });
+  scheduleLiveFieldRefresh(mode);
+  return build(id);
+}
+
+/**
+ * 베스트·방 배너가 여는 레일 읽기 팝업에 넘길 값. 찾기·상세·등록 레일(다른 번들·absolute)은
+ * 팝업의 게시판 이동 링크를 홈 주소 새 탭으로 연다.
+ */
+function concernRailAttrs(slotKey, ctx) {
+  const leave = ctx.linkMode === 'absolute' || isBlankConcernRail(slotKey) ? 'blank' : 'hash';
+  return ` data-concern-rail-nav="${esc(ctx.navRole)}" data-concern-rail-guest="${esc(ctx.guestFilter)}" data-concern-rail-home="${esc(
+    ctx.homeBase,
+  )}" data-concern-rail-leave="${leave}"`;
+}
+
+/**
+ * 「이달의 베스트」(맨 위) + 고민방 배너 블럭(방마다 하나, 서버 최신순) + 「지금 고민 HOT」.
+ * 방 목록은 슬롯 sourceBoardKeys 중 그 역할 레일에 올릴 수 있는 고민방이다. 고민방이 없는 슬롯은 이 층이 없다.
  */
 function renderLiveFieldSlot(slotKey, ctx) {
   ensureRailOwnerResolver();
   const boardKeys = resolveConcernBoardKeysForSlot(slotKey, ctx);
   if (!boardKeys.length) return '';
-  const mode = liveFieldMode(slotKey);
-  const ready = isRailConcernReady(mode);
-  if (ready && isRailConcernFresh(mode)) return renderLiveFieldSection(slotKey, ctx, boardKeys, mode, '');
-
-  const id = `rlf${++liveFieldSeq}`;
-  pendingLiveFields.set(id, { slotKey, ctx, mode });
-  scheduleLiveFieldRefresh(mode);
-  const current = ready ? renderLiveFieldSection(slotKey, ctx, boardKeys, mode, id) : '';
-  return current || `<div class="live-rail-slot-pending" ${LIVE_FIELD_ATTR}="${id}" hidden></div>`;
+  if (typeof document !== 'undefined') bindConcernRailEvents();
+  const attrs = concernRailAttrs(slotKey, ctx);
+  const best = renderLiveTracked('best', (liveId) => renderBestSection(boardKeys, attrs, liveId));
+  const rooms = boardKeys
+    .map((boardKey) => renderLiveTracked('latest', (liveId) => renderRoomBlock(boardKey, attrs, liveId)))
+    .join('');
+  const hot = renderLiveTracked('hot', (liveId) => renderHotSection(slotKey, ctx, boardKeys, liveId));
+  return `${best}${rooms}${hot}`;
 }
 
-/** @param {'hot'|'latest'} mode */
+/** @param {LiveMode} mode */
 function scheduleLiveFieldRefresh(mode) {
   if (refreshingLiveModes.has(mode)) return;
   refreshingLiveModes.add(mode);
-  ensureRailConcernPosts(mode).then(() => {
+  liveEnsure(mode).then(() => {
     refreshingLiveModes.delete(mode);
     redrawLiveFields(mode);
   });
 }
 
-/** @param {'hot'|'latest'} mode */
+/** @param {LiveMode} mode */
 function redrawLiveFields(mode) {
   const entries = [...pendingLiveFields].filter(([, entry]) => entry.mode === mode);
   if (!entries.length) return;
-  if (!isRailConcernReady(mode)) {
+  if (!liveReady(mode)) {
     // 받는 사이 로그아웃·역할 변경으로 값이 버려졌다. 지금 세션으로 다시 받는다.
     scheduleLiveFieldRefresh(mode);
     return;
@@ -317,18 +340,29 @@ function redrawLiveFields(mode) {
     if (typeof document === 'undefined') continue;
     const el = document.querySelector(`[${LIVE_FIELD_ATTR}="${id}"]`);
     if (!el) continue;
-    const boardKeys = resolveConcernBoardKeysForSlot(entry.slotKey, entry.ctx);
-    const html = boardKeys.length ? renderLiveFieldSection(entry.slotKey, entry.ctx, boardKeys, mode, '') : '';
-    if (html) el.outerHTML = html;
-    else el.remove();
+    el.outerHTML = entry.build('');
   }
 }
 
-/** @param {'hot'|'latest'} mode */
-function liveFieldSamples(mode, limit, boardKeys) {
-  return mode === 'latest'
-    ? getLatestConcernSamples({ limit, boardKeys })
-    : getHotConcernSamples({ limit, boardKeys });
+/**
+ * 받는 중이면 빈 값(블럭·제목만), 실패·0건이면 문구, 글이 있으면 null.
+ * @param {'loading'|'ready'|'failed'} status
+ * @param {number} count
+ * @param {string} emptyCopy
+ */
+function railStateBody(status, count, emptyCopy) {
+  if (status === 'loading') return '';
+  if (status === 'failed') {
+    return `<p class="live-rail-empty live-rail-empty--failed" role="status">${esc(CONCERN_RAIL_COPY.loadFailed)}</p>`;
+  }
+  if (!count) return `<p class="live-rail-empty">${esc(emptyCopy)}</p>`;
+  return null;
+}
+
+/** @param {'loading'|'ready'|'failed'} status @param {number} count */
+function railStateName(status, count) {
+  if (status !== 'ready') return status;
+  return count ? 'posts' : 'empty';
 }
 
 /** 서버 글 항목 카드. 제목·방·댓글 수·반응 합계만 읽는다(본문·작성자는 읽지 않는다). */
@@ -346,51 +380,106 @@ function renderLivePostCard(post, ctx, slotKey) {
   );
 }
 
+function concernBoardLabel(boardKey) {
+  return getConcernBoardByKey(boardKey)?.label || getChannelIntro(boardKey).title;
+}
+
+/** 방 배너 글 제목 한 줄. 누르면 레일 읽기 팝업(그 글 선택). 제목만 읽는다. */
+function renderRoomPostLink(boardKey, post) {
+  return `<li><button type="button" class="live-rail-room__link" data-concern-rail-open="${esc(boardKey)}" data-concern-rail-post="${esc(
+    post.id,
+  )}">${esc(post.title)}</button></li>`;
+}
+
 /**
- * @param {'hot'|'latest'} mode
+ * 고민방 배너 블럭. 제목(방 이름)·「더보기」는 받는 중·0건·실패에도 항상 그린다.
+ * @param {string} attrs 레일 읽기 팝업 값(concernRailAttrs)
  * @param {string} liveId 다시 그릴 표식. 빈 값이면 표식 없이 그린다.
  */
-function renderLiveFieldSection(slotKey, ctx, boardKeys, mode, liveId) {
+function renderRoomBlock(boardKey, attrs, liveId) {
+  const title = concernBoardLabel(boardKey);
+  const status = getRailConcernStatus('latest');
+  const posts = status === 'ready' ? getLatestConcernPostsForBoard(boardKey, RAIL_LATEST_LIMIT) : [];
+  const stateBody = railStateBody(status, posts.length, CONCERN_RAIL_COPY.roomEmpty);
+  const body =
+    stateBody ?? `<ul class="live-rail-room__list">${posts.map((post) => renderRoomPostLink(boardKey, post)).join('')}</ul>`;
+  const liveAttr = liveId ? ` ${LIVE_FIELD_ATTR}="${esc(liveId)}"` : '';
+  return `
+    <section class="live-rail-slot live-rail-slot--room" data-rail-room="${esc(boardKey)}" data-rail-state="${railStateName(
+      status,
+      posts.length,
+    )}"${attrs}${liveAttr}>
+      <div class="live-rail-slot__band"><strong class="live-rail-slot__title">${esc(title)}</strong></div>
+      ${body}
+      <div class="live-rail-room__foot">
+        <button type="button" class="live-rail-room__more" data-concern-rail-open="${esc(boardKey)}" data-concern-rail-more aria-label="${esc(
+          `${title} ${CONCERN_RAIL_COPY.more}`,
+        )}">${esc(CONCERN_RAIL_COPY.more)}</button>
+      </div>
+    </section>`;
+}
+
+/** 이달의 베스트 한 줄(방별 1위). 누르면 그 방 베스트 최대 3개를 담은 레일 읽기 팝업. */
+function renderBestItem(boardKey, post) {
+  return `<li><button type="button" class="live-rail-best__item" data-concern-best-open="${esc(boardKey)}" data-concern-best-post="${esc(
+    post.id,
+  )}">
+      <span class="live-rail-best__board">${esc(concernBoardLabel(boardKey))}</span>
+      <span class="live-rail-best__title">${esc(post.title)}</span>
+      <span class="live-rail-best__meta">${esc(CONCERN_RAIL_COPY.reaction)} ${Number(post.reactionTotal) || 0}</span>
+    </button></li>`;
+}
+
+/**
+ * 「이달의 베스트」(레일 맨 위). 이 레일에 올라간 고민방마다 1개(최대 3개).
+ * 서버 규칙 그대로(이번 달 · 방별 · 반응 합계 많은 순 · 합계 5 미만 제외). 제목은 받는 중·0건·실패에도 그린다.
+ * @param {string[]} boardKeys 이 역할 레일에 올릴 수 있는 고민방(학생은 학생·학부모 방만)
+ * @param {string} attrs
+ * @param {string} liveId
+ */
+function renderBestSection(boardKeys, attrs, liveId) {
+  const status = getBestConcernStatus();
+  const boards = status === 'ready' ? getBestConcernBoards() : null;
+  const items = boards
+    ? boardKeys.map((key) => ({ key, post: bestPostsForBoard(boards, key)[0] })).filter((item) => item.post)
+    : [];
+  const stateBody = railStateBody(status, items.length, CONCERN_RAIL_COPY.bestEmpty);
+  const body =
+    stateBody ?? `<ul class="live-rail-best__list">${items.map((item) => renderBestItem(item.key, item.post)).join('')}</ul>`;
+  const liveAttr = liveId ? ` ${LIVE_FIELD_ATTR}="${esc(liveId)}"` : '';
+  return `
+    <section class="live-rail-slot live-rail-slot--best" data-rail-best data-rail-state="${railStateName(
+      status,
+      items.length,
+    )}"${attrs}${liveAttr}>
+      <div class="live-rail-slot__band"><strong class="live-rail-slot__title">${esc(CONCERN_RAIL_COPY.bestTitle)}</strong></div>
+      ${body}
+    </section>`;
+}
+
+/**
+ * 「지금 고민 HOT」. 구역과 제목은 받는 중·0건·실패에도 항상 그린다.
+ * @param {string} liveId 다시 그릴 표식. 빈 값이면 표식 없이 그린다.
+ */
+function renderHotSection(slotKey, ctx, boardKeys, liveId) {
   const copy = liveFieldCopy(slotKey, ctx);
-  const navRole = ctx.navRole;
-  const limit = railCardLimit(navRole);
-  const postCards = liveFieldSamples(mode, limit, boardKeys);
-  if (!postCards.length) return '';
-
-  const servedBoards = new Set(liveFieldSamples(mode, Number.MAX_SAFE_INTEGER, boardKeys).map((post) => post.boardKey));
-  const postHtml = postCards.map((post) => renderLivePostCard(post, ctx, slotKey)).join('');
-
-  const introHtml = boardKeys
-    .filter(
-      (key) => !servedBoards.has(key) && !canShowBoardPostsInRail(key, navRole) && canShowBoardInRail(key, navRole, ctx),
-    )
-    .slice(0, Math.max(0, limit - postCards.length))
-    .map((key) => {
-      const intro = getChannelIntro(key);
-      const board = getConcernBoardByKey(key);
-      const href = board?.path || boardRoute(key).replace(/^#/, '');
-      return railSlotAnchor(
-        href,
-        'live-rail-card',
-        ctx,
-        `<span class="live-rail-card__board">${esc(board?.label || intro.title)}</span>
-          <strong class="live-rail-card__title">${esc(intro.body)}</strong>
-          <span class="live-rail-card__meta">이 공간의 소개만 볼 수 있어요</span>`,
-        slotKey,
-      );
-    })
-    .join('');
-
-  const items = `${postHtml}${introHtml}`;
+  const status = getRailConcernStatus('hot');
+  const posts = status === 'ready' ? getHotConcernSamples({ limit: railCardLimit(ctx.navRole), boardKeys }) : [];
+  const stateBody = railStateBody(status, posts.length, CONCERN_RAIL_COPY.hotEmpty);
+  const body =
+    stateBody ?? `<div class="live-rail-slot__items">${posts.map((post) => renderLivePostCard(post, ctx, slotKey)).join('')}</div>`;
   const liveAttr = liveId ? ` ${LIVE_FIELD_ATTR}="${esc(liveId)}"` : '';
 
   return `
-    <section class="live-rail-slot live-rail-slot--field"${liveAttr}>
+    <section class="live-rail-slot live-rail-slot--field" data-rail-hot data-rail-state="${railStateName(
+      status,
+      posts.length,
+    )}"${liveAttr}>
       <div class="live-rail-slot__head">
         ${copy.eyebrow ? `<span class="live-rail-slot__eyebrow">${esc(copy.eyebrow)}</span>` : ''}
       </div>
       <div class="live-rail-slot__band"><strong class="live-rail-slot__title">${esc(copy.title)}</strong></div>
-      <div class="live-rail-slot__items">${items}</div>
+      ${body}
       ${railSlotAnchor(copy.ctaHref, 'live-rail-slot__cta', ctx, esc(copy.ctaLabel), slotKey)}
     </section>`;
 }
@@ -505,19 +594,13 @@ function renderActionItem(item, featured, ctx, slotKey) {
   return railSlotAnchor(item.href, cls, ctx, inner, slotKey);
 }
 
-function renderMediaTeaserSlot(_slotKey, _ctx) {
-  const info = RAIL_PROVIDER_INFO;
-  const href = String(info.href || '').trim();
-  if (!href) return '';
-  return `
-    <section class="live-rail-slot live-rail-slot--media">
-      <div class="live-rail-slot__head">
-        <span class="live-rail-slot__eyebrow">${esc(info.eyebrow)}</span>
-      </div>
-      <div class="live-rail-slot__band"><strong class="live-rail-slot__title">${esc(info.title)}</strong></div>
-      <p class="live-rail-media__caption live-rail-media__caption--idle">${esc(info.desc)}</p>
-      <a href="${esc(href)}" class="live-rail-slot__cta" target="_blank" rel="noopener">${esc(info.cta)}</a>
-    </section>`;
+/** 정보 게시판 배너(볼 수 있는 게시판만, 학생은 info-student 하나). 글은 팝업으로 읽고, 팝업의 게시판 이동 링크는 찾기·상세·등록 레일과 다른 번들에서 새 탭. */
+function renderMediaTeaserSlot(slotKey, ctx) {
+  return renderInfoRailBanners({
+    navRole: ctx.navRole,
+    homeBase: ctx.homeBase,
+    leaveInNewTab: ctx.linkMode === 'absolute' || isBlankConcernRail(slotKey),
+  });
 }
 
 const RAIL_GUIDE_PEEK_ID = 'rail-guide-peek-overlay';
@@ -601,6 +684,8 @@ function bindRailGuidePeekEvents(root) {
 
 export function bindRightRailEvents(root) {
   if (!root) return;
+  bindInfoRailEvents();
+  bindConcernRailEvents();
   bindRailGuidePeekEvents(root);
   const dialog = root.querySelector('.live-rail-media-dialog');
   const openers = root.querySelectorAll('[data-rail-media-open]');
@@ -634,88 +719,6 @@ export function bindRightRailEvents(root) {
       close();
     });
   });
-}
-
-/* ── 홈 「이달의 베스트 고민」 띠 ── */
-
-/** 띠에 놓는 방 순서. 응답에 있는 다른 방은 뒤에 붙는다. */
-const BEST_STRIP_BOARD_ORDER = ['concern-director', 'concern-tutor', 'concern-parent', 'concern-solved'];
-const BEST_STRIP_PER_BOARD = 3;
-const BEST_STRIP_MIN_REACTIONS = 5;
-const BEST_STRIP_ATTR = 'data-concern-best-strip';
-let bestStripRefreshing = false;
-
-/** @param {Record<string, any[]>|null} boards */
-function collectBestStripItems(boards) {
-  if (!boards) return [];
-  const keys = [
-    ...BEST_STRIP_BOARD_ORDER.filter((key) => boards[key]),
-    ...Object.keys(boards).filter((key) => !BEST_STRIP_BOARD_ORDER.includes(key)),
-  ];
-  return keys.flatMap((key) =>
-    (boards[key] || [])
-      .filter((post) => post?.id && post.title && (Number(post.reactionTotal) || 0) >= BEST_STRIP_MIN_REACTIONS)
-      .slice(0, BEST_STRIP_PER_BOARD),
-  );
-}
-
-/** 카드는 제목·방·반응 합계·댓글 수만 읽는다(본문·작성자는 읽지 않는다). */
-function renderBestStripCard(post) {
-  const board = getConcernBoardByKey(post.boardKey);
-  const path = `${board?.path || '/community'}/${encodeURIComponent(post.id)}`;
-  return `<a class="concern-best-card" href="#${esc(path)}" data-nav="${esc(path)}">
-      <span class="concern-best-card__board">${esc(board?.label || post.boardLabel || '커뮤니티')}</span>
-      <strong class="concern-best-card__title">${esc(post.title)}</strong>
-      <span class="concern-best-card__meta">반응 ${Number(post.reactionTotal) || 0} · 댓글 ${Number(post.commentCount) || 0}</span>
-    </a>`;
-}
-
-/** @param {Record<string, any[]>|null} boards */
-function buildBestStripHtml(boards) {
-  const items = collectBestStripItems(boards);
-  if (!items.length) return '';
-  return `
-    <section class="concern-best-strip" ${BEST_STRIP_ATTR} aria-label="이달의 베스트 고민">
-      <div class="concern-best-strip__head">
-        <strong class="concern-best-strip__title">이달의 베스트 고민</strong>
-        <a class="concern-best-strip__more" href="#/community" data-nav="/community">커뮤니티 더 보기</a>
-      </div>
-      <div class="concern-best-strip__track">${items.map(renderBestStripCard).join('')}</div>
-    </section>`;
-}
-
-function scheduleBestStripRefresh() {
-  if (bestStripRefreshing) return;
-  bestStripRefreshing = true;
-  ensureBestConcernPosts().then(() => {
-    bestStripRefreshing = false;
-    if (typeof document === 'undefined') return;
-    const targets = document.querySelectorAll(`[${BEST_STRIP_ATTR}]`);
-    if (!targets.length) return;
-    if (!isBestConcernReady()) {
-      // 받는 사이 로그아웃·역할 변경으로 값이 버려졌다. 지금 세션으로 다시 받는다.
-      scheduleBestStripRefresh();
-      return;
-    }
-    const html = buildBestStripHtml(getBestConcernBoards());
-    targets.forEach((el) => {
-      if (html) el.outerHTML = html;
-      else el.remove();
-    });
-  });
-}
-
-/**
- * 홈 「이달의 베스트 고민」 가로 띠. 0건이면 아무것도 만들지 않는다.
- * 받은 값이 없을 때는 보이지 않는 표식만 두고, 응답이 오면 그 자리만 바꾼다.
- */
-export function renderConcernBestStrip() {
-  ensureRailOwnerResolver();
-  const ready = isBestConcernReady();
-  if (!ready || !isBestConcernFresh()) scheduleBestStripRefresh();
-  const html = ready ? buildBestStripHtml(getBestConcernBoards()) : '';
-  if (html) return html;
-  return bestStripRefreshing ? `<div class="concern-best-strip-pending" ${BEST_STRIP_ATTR} hidden></div>` : '';
 }
 
 export function renderRightRailSidebar(slotKey = 'home_right_rail', opts = {}) {

@@ -6,8 +6,6 @@
 import { searchUiUrl, HOME_UI_BASE } from './nav-config.js';
 import { homeHashUrl, roleHomeHashPath } from '../../shared/site-nav-config.js';
 import { getAuthUser } from './auth-session.js';
-import { listNoticesForHome, noticeTargetLabel } from './support/notice-store.js';
-import { renderConcernBestStrip } from './right-rail.js';
 
 const HOME_MESSAGES = `${HOME_UI_BASE}/#/mypage/messages`;
 const HOME_PLANS = `${HOME_UI_BASE}/#/plans`;
@@ -234,37 +232,8 @@ const HOME_PROMO_TRIO = [
 
 const HOME_TRIO_SURFACES = new Set(['guest', 'parent', 'study_room', 'tutor']);
 
-export function renderHomeNoticeStrip(_surface) {
-  const notices = listNoticesForHome();
-  if (!notices.length) return '';
-  const rows = notices
-    .map(
-      (n) =>
-        `<a class="home-notice-strip__row" href="#/support/notice" data-nav="/support/notice">
-          <span class="home-notice-strip__badge">${esc(noticeTargetLabel(n))}</span>
-          <span class="home-notice-strip__title">${esc(n.title)}</span>
-        </a>`,
-    )
-    .join('');
-  return `
-    <section class="home-notice-strip" aria-label="공지">
-      <div class="home-notice-strip__head">
-        <strong class="home-notice-strip__label">공지</strong>
-        <a class="home-notice-strip__more" href="#/support/notice" data-nav="/support/notice">더 보기</a>
-      </div>
-      ${rows}
-    </section>`;
-}
-
-/**
- * 「이달의 베스트 고민」 띠 위치(홈 안내 3칸 기준).
- * 'after_trio' 바로 아래 · 'before_trio' 바로 위 · 'none' 두지 않음
- * @type {'after_trio'|'before_trio'|'none'}
- */
-export const HOME_BEST_STRIP_PLACEMENT = 'after_trio';
-
+/** 홈 안내 3칸. 공지·동네 인사는 그 바로 아래 home-news-row.js, 이달의 베스트는 우측 레일 맨 위. */
 function renderHomePromoTrio(beforeActions = '') {
-  const bestStrip = HOME_BEST_STRIP_PLACEMENT === 'none' ? '' : renderConcernBestStrip();
   const cards = HOME_PROMO_TRIO.map(
     (card) => `
       <a class="home-promo-trio__card home-promo-trio__card--${esc(card.tone)}" href="#${esc(card.path)}" data-nav="${esc(card.path)}">
@@ -273,10 +242,9 @@ function renderHomePromoTrio(beforeActions = '') {
         <span class="home-promo-trio__sub">${esc(card.sub)}</span>
       </a>`,
   ).join('');
-  const trio = `<nav class="home-promo-trio" aria-label="홈 안내">${cards}</nav>`;
   return `
     ${beforeActions || ''}
-    ${HOME_BEST_STRIP_PLACEMENT === 'before_trio' ? `${bestStrip}${trio}` : `${trio}${bestStrip}`}`;
+    <nav class="home-promo-trio" aria-label="홈 안내">${cards}</nav>`;
 }
 
 /**
@@ -284,10 +252,7 @@ function renderHomePromoTrio(beforeActions = '') {
  * @param {BannerCta[] | null} [ctaOverride]
  */
 export function renderHomeMarketingBanner(surface, ctaOverride = null, beforeActions = '') {
-  if (HOME_TRIO_SURFACES.has(surface)) {
-    const noticeStrip = renderHomeNoticeStrip(surface);
-    return renderHomePromoTrio(`${noticeStrip}${beforeActions}`);
-  }
+  if (HOME_TRIO_SURFACES.has(surface)) return renderHomePromoTrio(beforeActions);
   const cfg = SURFACE_BANNER[surface];
   if (!cfg) return '';
   const copy = HOME_BANNER_COPY[cfg.copyId];

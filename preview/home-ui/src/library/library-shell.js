@@ -2,8 +2,10 @@ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, ren
 import { getNavRole } from '../state.js';
 import { getAuthUser } from '../auth-session.js';
 import { memberHomeHashPath } from '../nav-config.js';
-import { LIBRARY_HEAD, LIBRARY_SECTIONS } from './library-copy.js';
-import { getLibrarySection } from './library-router.js';
+import { LIBRARY_ENTRY_COPY } from './library-copy.js';
+import { isInfoBoardPath } from './library-router.js';
+import { renderInfoBoardNavLinks, infoBoardTitleFor } from './info-board-screens.js';
+import { currentInfoViewer } from './info-board-store.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -15,18 +17,16 @@ function getRoleHomePath() {
 
 /** @param {string} path */
 function renderLibraryNav(path) {
-  const section = getLibrarySection(path);
+  const entryActive = !isInfoBoardPath(path);
   return `
     <nav class="sup-nav" aria-label="자료실 메뉴">
       <ul class="sup-nav__list">
-        ${LIBRARY_SECTIONS.map(
-          (s) =>
-            `<li>
-              <a href="#${s.path}" class="sup-nav__link${s.key === section ? ' is-active' : ''}" data-lib-nav="${s.path}">
-                <span class="sup-nav__label">${esc(s.label)}</span>
-              </a>
-            </li>`,
-        ).join('')}
+        <li>
+          <a href="#/library" class="sup-nav__link${entryActive ? ' is-active' : ''}" data-lib-nav="/library"${entryActive ? ' aria-current="page"' : ''}>
+            <span class="sup-nav__label">${esc(LIBRARY_ENTRY_COPY.navEntry)}</span>
+          </a>
+        </li>
+        ${renderInfoBoardNavLinks(path, currentInfoViewer().boardRole)}
         <li>
           <a href="#/support" class="sup-nav__link" data-lib-nav="/support">
             <span class="sup-nav__label">← 고객센터</span>
@@ -38,12 +38,12 @@ function renderLibraryNav(path) {
 
 /** @param {string} path */
 function renderLibraryTitle(path) {
-  const section = getLibrarySection(path);
-  if (section === 'library') {
-    return `<span class="sup-content__title-prefix">자료실</span>`;
+  if (isInfoBoardPath(path)) {
+    const label = infoBoardTitleFor(path, currentInfoViewer().boardRole);
+    const suffix = label ? `<span class="sup-content__title-suffix">${esc(label)}</span>` : '';
+    return `<span class="sup-content__title-prefix">자료실</span>${suffix}`;
   }
-  const meta = LIBRARY_SECTIONS.find((s) => s.key === section) || LIBRARY_SECTIONS[0];
-  return `<span class="sup-content__title-prefix">자료실</span><span class="sup-content__title-suffix">${esc(meta.label)}</span>`;
+  return `<span class="sup-content__title-prefix">자료실</span>`;
 }
 
 /**

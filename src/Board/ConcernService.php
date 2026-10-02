@@ -20,6 +20,9 @@ final class ConcernService
         'concern-solved',
     ];
 
+    /** 인기·최신·베스트 묶음(concern-hot.php)에서 학생·학부모(demand)에게 내려보내지 않는 방. 게시판 접근 규칙과 별개. */
+    private const DEMAND_HIDDEN_FEED_KEYS = ['concern-director', 'concern-tutor'];
+
     /** 글 종류. board_posts.meta_json.type 에 저장. 값이 없던 기존 글은 DEFAULT_POST_TYPE 로 읽는다. */
     public const POST_TYPES = ['worry', 'advice', 'solved', 'request'];
     public const DEFAULT_POST_TYPE = 'worry';
@@ -542,6 +545,9 @@ final class ConcernService
         $fullKeys = [];
         $titleOnlyKeys = [];
         foreach (self::CONCERN_BOARD_KEYS as $k) {
+            if (self::isHiddenFromFeed($k, $boardRole)) {
+                continue;
+            }
             if (BoardChannelAcl::canList($k, $boardRole)) {
                 $fullKeys[] = $k;
             } elseif (BoardChannelAcl::canDiscover($k, $boardRole)) {
@@ -615,6 +621,9 @@ final class ConcernService
         $fullKeys = [];
         $titleOnlyKeys = [];
         foreach (self::CONCERN_BOARD_KEYS as $k) {
+            if (self::isHiddenFromFeed($k, $boardRole)) {
+                continue;
+            }
             if (BoardChannelAcl::canList($k, $boardRole)) {
                 $fullKeys[] = $k;
             } elseif (BoardChannelAcl::canDiscover($k, $boardRole)) {
@@ -696,6 +705,9 @@ final class ConcernService
         $titleOnlySet = [];
         $visibleKeys = [];
         foreach (self::CONCERN_BOARD_KEYS as $k) {
+            if (self::isHiddenFromFeed($k, $boardRole)) {
+                continue;
+            }
             if (BoardChannelAcl::canList($k, $boardRole)) {
                 $visibleKeys[] = $k;
             } elseif (BoardChannelAcl::canDiscover($k, $boardRole)) {
@@ -875,6 +887,11 @@ final class ConcernService
         }
 
         return $post;
+    }
+
+    private static function isHiddenFromFeed(string $boardKey, string $boardRole): bool
+    {
+        return $boardRole === 'demand' && in_array($boardKey, self::DEMAND_HIDDEN_FEED_KEYS, true);
     }
 
     /**

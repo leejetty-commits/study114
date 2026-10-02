@@ -29,6 +29,9 @@ final class BoardPostService
         'concern-tutor',
         'concern-parent',
         'concern-solved',
+        'info-room',
+        'info-tutor',
+        'info-student',
     ];
 
     /** @var list<string> */
@@ -39,17 +42,28 @@ final class BoardPostService
 
     private BoardPostRepository $repo;
     private BoardAttachmentService $attachments;
+    private ?InfoBoardService $info;
 
-    public function __construct(?BoardPostRepository $repo = null, ?BoardAttachmentService $attachments = null)
-    {
+    public function __construct(
+        ?BoardPostRepository $repo = null,
+        ?BoardAttachmentService $attachments = null,
+        ?InfoBoardService $info = null,
+    ) {
         $this->repo = $repo ?? new BoardPostRepository(Connection::get());
         $this->attachments = $attachments ?? new BoardAttachmentService($this->repo);
+        $this->info = $info;
+    }
+
+    private function infoService(): InfoBoardService
+    {
+        return $this->info ??= new InfoBoardService();
     }
 
     /**
      * @param string|null $viewMode  null=전체(관리자), 'center'=고객센터, 'home'=홈 3줄
      * @param int|null    $limit     home 뷰일 때 최대 건수
      * @param array{sort: string, type: string|null, limit: int, offset: int}|null $concernQuery 고민방 정렬·종류·페이징
+     * @param array{category: string|null, limit: int, offset: int}|null $infoQuery 정보 게시판 분류·페이징
      * @return array<string, mixed> posts·access·intro (+ 고민방이면 total·limit·offset·sort·type·hasMore)
      */
     public function list(
@@ -60,9 +74,13 @@ final class BoardPostService
         ?string $viewMode = null,
         ?int $limit = null,
         ?array $concernQuery = null,
+        ?array $infoQuery = null,
     ): array {
         $boardKey = BoardChannelAcl::normalizeBoardKey($boardKey);
         $this->assertBoardKey($boardKey);
+        if (BoardChannelAcl::isInfoBoard($boardKey)) {
+            return $this->infoService()->list($boardKey, $auth, $postKey, $infoQuery);
+        }
         $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
         $access = BoardChannelAcl::accessKind($boardKey, $boardRole);
 
@@ -201,6 +219,15 @@ final class BoardPostService
         $this->assertBoardKey($boardKey);
         $boardRole = BoardChannelAcl::boardRoleFromAuth($auth);
 
+        if (BoardChannelAcl::isInfoBoard($boardKey)) {
+            $input['board_key'] = $boardKey;
+            if ($existing !== null) {
+                $input['post_key'] = (string) $existing['post_key'];
+            }
+
+            return $this->infoService()->save($input, $auth);
+        }
+
         if ($this->isOperationalBoard($boardKey)) {
             if ($auth === null) {
                 throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
@@ -266,6 +293,11 @@ final class BoardPostService
             throw new BoardAccessException(403, 'forbidden', '요청 게시판과 실제 게시글 채널이 다릅니다.');
         }
         $this->assertBoardKey($actualKey);
+        if (BoardChannelAcl::isInfoBoard($actualKey)) {
+            $this->infoService()->delete($actualKey, (string) $existing['post_key'], $auth);
+
+            return;
+        }
         if (!BoardChannelAcl::canDelete($actualKey, BoardChannelAcl::boardRoleFromAuth($auth))) {
             throw new BoardAccessException(403, 'forbidden', '이 게시판에서 삭제할 권한이 없습니다.');
         }

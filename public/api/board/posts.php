@@ -8,6 +8,7 @@ use Study114\Board\BoardApi;
 use Study114\Board\BoardChannelAcl;
 use Study114\Board\BoardPostService;
 use Study114\Board\ConcernService;
+use Study114\Board\InfoBoardService;
 
 BoardApi::bootstrap();
 
@@ -24,6 +25,16 @@ BoardApi::run(static function (): void {
         $postKey = BoardApi::queryString('post_key') ?? BoardApi::queryString('id');
         $view = BoardApi::queryString('view');
         $limitRaw = BoardApi::queryString('limit');
+        if (InfoBoardService::isInfoBoard($boardKey)) {
+            // 정보 게시판: category · limit(기본·상한 20) · offset
+            $infoQuery = InfoBoardService::parseListQuery(
+                $boardKey,
+                BoardApi::queryString('category'),
+                $limitRaw,
+                BoardApi::queryString('offset'),
+            );
+            BoardApi::ok($service->list($boardKey, null, $postKey, BoardApi::optionalVerifiedAuth(), null, null, null, $infoQuery));
+        }
         if (BoardChannelAcl::isConcern($boardKey)) {
             // 고민방: sort(recent|hot|comments) · type · limit(기본 20, 상한 50) · offset
             $concernQuery = ConcernService::parseListQuery(

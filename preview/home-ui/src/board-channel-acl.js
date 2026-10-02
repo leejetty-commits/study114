@@ -23,6 +23,15 @@ const LOGGED_IN = ['member', 'demand', 'supply-room', 'supply-tutor', 'admin'];
 const PROVIDERS = ['supply-room', 'supply-tutor', 'admin'];
 const DEMAND = ['demand', 'member', 'admin'];
 
+/**
+ * 서버 저장 정보 게시판. info-room·info-tutor(공급자 전용): 게스트 제목만, 학생·member 차단.
+ * info-student(학생 꿀팁 가이드): 게스트·member 제목만, 학생·공부방·과외쌤·관리자 읽기.
+ */
+export const INFO_BOARD_KEYS = Object.freeze(['info-room', 'info-tutor', 'info-student']);
+export const STUDENT_TIPS_BOARD_KEY = 'info-student';
+const INFO_DISCOVER = ['guest', 'supply-room', 'supply-tutor', 'admin'];
+const STUDENT_TIPS_READERS = ['demand', 'supply-room', 'supply-tutor', 'admin'];
+
 /** 내부 정본. `concern-family`는 호환 별칭만. 별도 채널로 생성 금지. */
 export const CANONICAL_CONCERN_PARENT = 'concern-parent';
 export const BOARD_KEY_ALIASES = Object.freeze({ 'concern-family': CANONICAL_CONCERN_PARENT });
@@ -50,6 +59,9 @@ const DISCOVER_ROLES = {
   'concern-tutor': ALL_ROLES,
   'concern-parent': ALL_ROLES,
   'concern-solved': ALL_ROLES,
+  'info-room': INFO_DISCOVER,
+  'info-tutor': INFO_DISCOVER,
+  'info-student': ALL_ROLES,
 };
 
 /**
@@ -68,6 +80,9 @@ const LIST_ROLES = {
   'concern-tutor': PROVIDERS,
   'concern-parent': [...DEMAND, 'supply-room', 'supply-tutor'],
   'concern-solved': LOGGED_IN,
+  'info-room': PROVIDERS,
+  'info-tutor': PROVIDERS,
+  'info-student': STUDENT_TIPS_READERS,
 };
 
 /**
@@ -86,6 +101,9 @@ const DETAIL_ROLES = {
   'concern-tutor': PROVIDERS,
   'concern-parent': [...DEMAND, 'supply-room', 'supply-tutor'],
   'concern-solved': LOGGED_IN,
+  'info-room': PROVIDERS,
+  'info-tutor': PROVIDERS,
+  'info-student': STUDENT_TIPS_READERS,
 };
 
 /**
@@ -105,6 +123,11 @@ const COMPOSE_ROLES = {
   'concern-parent': ['demand', 'member'],
   // 해결후기 작성·댓글: 기존값 유지 · 별도 최종 정책 확인 대상. 이번 작업에서 확대·축소 금지.
   'concern-solved': ['member', 'demand', 'supply-room', 'supply-tutor'],
+  // 채널 단위. 공급자 실제 저장은 서버 PaidProviderGate(유료)가 다시 본다.
+  'info-room': PROVIDERS,
+  'info-tutor': PROVIDERS,
+  // 학생은 그대로, 공급자는 서버 PaidProviderGate(유료)가 다시 본다.
+  'info-student': STUDENT_TIPS_READERS,
 };
 
 /** 실파일 연결 전 library 계열 다운로드 역할 없음 */
@@ -168,11 +191,31 @@ const CHANNEL_INTRO = {
     body: '과외쌤이 학력·경력 등 신뢰 증빙자료를 제출하는 공간입니다. 공개 자료실과는 다릅니다.',
     allowedRolesLabel: '과외쌤',
   },
+  'info-room': {
+    title: '공부방 쏙쏙정보',
+    body: '공부방 운영에 도움이 되는 정보를 나누는 게시판입니다.',
+    allowedRolesLabel: '공부방·과외쌤',
+  },
+  'info-tutor': {
+    title: '과외쌤 따끈 팁가이드',
+    body: '과외 수업·상담에 도움이 되는 팁을 나누는 게시판입니다.',
+    allowedRolesLabel: '공부방·과외쌤',
+  },
+  'info-student': {
+    title: '학생 꿀팁 가이드',
+    body: '공부·시험·진로에 도움이 되는 꿀팁을 나누는 게시판입니다.',
+    allowedRolesLabel: '전체',
+  },
 };
 
 /** @param {string} boardKey */
 export function isConcernChannel(boardKey) {
   return normalizeBoardKey(boardKey).startsWith('concern-');
+}
+
+/** @param {string} boardKey */
+export function isInfoBoardChannel(boardKey) {
+  return INFO_BOARD_KEYS.includes(normalizeBoardKey(boardKey));
 }
 
 /** @param {string} navRole @returns {BoardRole} */
@@ -304,6 +347,7 @@ export function canCommentBoard(boardKey, role) {
   const key = normalizeBoardKey(boardKey);
   const boardRole = resolveBoardRole(role);
   if (boardRole === 'guest') return false;
+  if (isInfoBoardChannel(key)) return false;
   const policy = getBoardPolicy(key);
   if (policy && policy.allowComment === false) return false;
   if (COMPOSE_ROLES[key]) {
@@ -315,8 +359,12 @@ export function canCommentBoard(boardKey, role) {
   return canBoardAction(key, 'comment', boardRole);
 }
 
-/** 반응 — 댓글과 동일 축 */
+/** 반응 — 댓글과 동일 축. 학생 꿀팁 가이드만 댓글 없이 「응원해요」 하나를 읽기 권한자에게 연다. */
 export function canReactBoard(boardKey, role) {
+  if (normalizeBoardKey(boardKey) === STUDENT_TIPS_BOARD_KEY) {
+    const boardRole = resolveBoardRole(role);
+    return boardRole !== 'guest' && canListBoard(boardKey, boardRole) && canReadBoardDetail(boardKey, boardRole);
+  }
   return canCommentBoard(boardKey, role);
 }
 
@@ -338,6 +386,7 @@ export function canDeleteBoard(boardKey, role) {
   if (key === 'notice' || key === 'faq' || key === 'safe-guide') return boardRole === 'admin';
   if (key === 'submission') return canComposeBoard(key, role);
   if (isConcernChannel(key)) return canComposeBoard(key, boardRole) || boardRole === 'admin';
+  if (isInfoBoardChannel(key)) return canComposeBoard(key, boardRole);
   return false;
 }
 
@@ -350,7 +399,13 @@ export function canModerateBoard(boardKey, role) {
 /** 레거시 API 응답을 full 로 추정하면 안 되는 채널 */
 export function isAccessFailClosed(boardKey) {
   const key = normalizeBoardKey(boardKey);
-  return key.startsWith('concern-') || key === 'submission' || key === 'library' || key === 'library-template';
+  return (
+    key.startsWith('concern-') ||
+    key === 'submission' ||
+    key === 'library' ||
+    key === 'library-template' ||
+    isInfoBoardChannel(key)
+  );
 }
 
 /** @param {string} boardKey @param {BoardRole|string} role */
@@ -397,7 +452,7 @@ export function getBoardAccess(boardKey, role) {
   const canModerate = canModerateBoard(boardKey, role);
   let access = 'blocked';
   if (canList && canDetail) access = 'full';
-  else if (isConcernChannel(boardKey) && canDiscover) access = 'titles';
+  else if ((isConcernChannel(boardKey) || isInfoBoardChannel(boardKey)) && canDiscover) access = 'titles';
   else if (canDiscover) access = 'intro';
   return {
     canDiscover,
@@ -550,9 +605,12 @@ export function isRailSlotVisible(slot, navRole) {
   return true;
 }
 
+/** 학생·학부모(demand) 레일에는 올리지 않는 고민방. 게시판 자체 discover 권한과는 별개다. */
+const RAIL_HIDDEN_FOR_DEMAND = ['concern-director', 'concern-tutor'];
+
 /**
- * 레일 카드용 — sourceBoardKey + guestFilter + channel ACL
- * 소개 권한이 있으면 슬롯에 올리고, 글 카드 vs 소개 CTA는 렌더러가 구분한다.
+ * 레일 방 배너용 — sourceBoardKey + guestFilter + channel ACL
+ * 학생·학부모 레일은 학생/학부모 고민방만. 그 밖의 역할은 소개(discover) 권한이 있으면 올린다.
  * @param {string} boardKey
  * @param {string} navRole
  * @param {{ guestFilter?: string, slotGuestFilter?: string }} [opts]
@@ -562,14 +620,14 @@ export function canShowBoardInRail(boardKey, navRole, opts = {}) {
   const guestFilter = normalizeGuestFilter(opts.guestFilter || opts.slotGuestFilter) || 'allow';
 
   if (navRole === 'guest' && guestFilter === 'block') return false;
+  if (resolveBoardRole(navRole) === 'demand' && RAIL_HIDDEN_FOR_DEMAND.includes(key)) return false;
 
   return canListBoard(key, navRole) || canDiscoverBoard(key, navRole);
 }
 
 /**
  * 그 방 읽기 권한이 있는지(guestFilter 는 보지 않는다).
- * 레일에서는 서버가 항목을 주지 않은 방에 소개 카드를 띄울지 고르는 데만 쓴다.
- * 서버가 준 제목 항목은 이 값과 상관없이 카드로 그린다.
+ * 레일은 소개 카드를 쓰지 않으며, 서버가 준 제목 항목은 이 값과 상관없이 방 배너에 그린다.
  * @param {string} boardKey
  * @param {string} navRole
  */
@@ -591,6 +649,9 @@ export const ACL_MATRIX_CHANNELS = [
   'library-template',
   'library-guide-pdf',
   'submission',
+  'info-room',
+  'info-tutor',
+  'info-student',
 ];
 
 export const ACL_MATRIX_ROLES = ['guest', 'demand', 'supply-room', 'supply-tutor', 'admin'];

@@ -12,8 +12,6 @@ import { setGuestListPage } from './state.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from './section-headings.js';
 import { loadGuestBaseline, readGuestBaseline, readGuestAxisCounts } from '../../shared/location-display.js';
 import { bindStudyRoomMapSection, GUEST_MAP_CENTER } from '../../shared/naver-map.js';
-import { renderHomeMarketingBanner } from './home-marketing-banner.js';
-import { renderNeighborhoodGreetingRail } from './neighborhood-greeting-ui.js';
 import {
   getHomeBasicPool,
   isHomeBasicLive,
@@ -48,24 +46,25 @@ function haversineKm(lat1, lng1, lat2, lng2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-/** 손님 홈 지도 핀만. 카드 목록 풀은 건드리지 않는다. */
+function hasMapCoords(item) {
+  const lat = Number(item?.latitude);
+  const lng = Number(item?.longitude);
+  return Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0;
+}
+
+/** 로그인 상태로 이 화면을 볼 때의 지도 핀만. 카드 목록 풀은 건드리지 않는다. */
 export function filterGuestDaechiMapItems(items) {
   const list = Array.isArray(items) ? items : [];
-  return list.filter((item) => {
-    const lat = Number(item?.latitude);
-    const lng = Number(item?.longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat === 0 || lng === 0) return false;
-    return haversineKm(lat, lng, GUEST_MAP_CENTER.lat, GUEST_MAP_CENTER.lng) <= GUEST_MAP_RADIUS_KM;
-  });
+  return list.filter(
+    (item) =>
+      hasMapCoords(item) &&
+      haversineKm(Number(item.latitude), Number(item.longitude), GUEST_MAP_CENTER.lat, GUEST_MAP_CENTER.lng) <=
+        GUEST_MAP_RADIUS_KM,
+  );
 }
 
 function loginGateAttrs(action, label) {
   return `data-action="login-gate" data-gate="${action}" data-gate-label="${label}" tabindex="0" role="button"`;
-}
-
-/** 홈 상단 — 역할 공통 작은 배너 3칸, 그 바로 아래 동네 인사 */
-export function renderGuestTempNotice() {
-  return `${renderHomeMarketingBanner('guest')}${renderNeighborhoodGreetingRail('guest')}`;
 }
 
 export function renderGuestHero() {
@@ -97,8 +96,11 @@ export function renderGuestHero() {
   `;
 }
 
+/** 비로그인 핀 = 기준 지역(대치동) 공부방 목록 전체. 반경·개수로 거르지 않는다. */
 function guestHeroMapItems() {
-  return filterGuestDaechiMapItems(getHomeBasicPool('study_room')).slice(0, 12);
+  const pool = getHomeBasicPool('study_room');
+  if (isLoggedIn()) return filterGuestDaechiMapItems(pool).slice(0, 12);
+  return pool.filter(hasMapCoords);
 }
 
 function renderStudyRoomPrimePick() {
@@ -190,11 +192,11 @@ export function renderGuestBrowseLists() {
   return `
     ${loadingHint}
     <section class="guest-browse-lists" aria-label="우동공과 리스트">
-      ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel }, rooms, { guest, vacantSamples: guest, serverSorted: live })}
-      ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel }, tutors, { guest, vacantSamples: guest, serverSorted: live })}
+      ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel }, rooms, { guest, vacantSamples: guest && live, serverSorted: live })}
+      ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel }, tutors, { guest, vacantSamples: guest && live, serverSorted: live })}
     </section>
     <section class="guest-browse-lists guest-browse-lists--students" aria-label="학생 학습 의뢰">
-      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', locationLabel: studentLabel }, students, { guest, vacantSamples: guest, serverSorted: live })}
+      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', locationLabel: studentLabel }, students, { guest, vacantSamples: guest && live, serverSorted: live })}
     </section>
   `;
 }

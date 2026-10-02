@@ -1,112 +1,140 @@
 /**
- * 23장 — 자료실 UI copy (게시판 엔진 · 다운로드형 boardKey 묶음)
- * SSOT: board-engine-copy.js · docs/internal/23-board-community-integration-draft.md
+ * 자료실 UI copy — 자료실 입구(역할별 팁 게시판 카드) · 정보 게시판 화면 · 우측 레일 배너
  */
 
-import { BOARD_ENGINE_LOCK } from '../board-engine-copy.js';
-
-/** @typedef {'all'|'parent'|'study_room'|'tutor'} LibraryAudience */
-
-export const LIBRARY_HEAD = {
-  title: '자료실',
-  engineLabel: BOARD_ENGINE_LOCK.topConcept,
-  lead: '학습·운영 참고 자료 목록입니다. 화면과 메타데이터만 있으며, 실제 파일 다운로드는 아직 없습니다.',
-  footnote:
-    '자료실은 게시판 엔진의 다운로드형 채널입니다. file_label은 표시 이름이며 실파일이 아닙니다. GNU 커뮤니티와 콘텐츠를 공유하지 않습니다.',
+/** 자료실 입구(#/support/library · #/library) — 역할별 팁 게시판 카드 목록 */
+export const LIBRARY_ENTRY_COPY = {
+  lead: '역할별 팁 게시판을 모았어요. 게시판을 골라 들어가 보세요.',
+  listLabel: '자료실 게시판',
+  categoriesLabel: '분류',
+  enter: '들어가기',
+  navEntry: '자료실 입구',
+  loading: '게시판을 불러오는 중이에요',
+  loadFailed: '길이 막혔어요. 잠시 후 다시 확인해 주세요',
+  retry: '다시 시도',
 };
 
-export const LIBRARY_SECTIONS = [
+/**
+ * 공급자 정보 게시판 2개 — 서버 저장 게시판(board_posts). 학생·member 에게는 보이지 않는다.
+ * 분류 key 는 서버 InfoBoardService::CATEGORIES 와 같아야 한다.
+ */
+export const INFO_BOARDS = [
   {
-    key: 'library',
-    label: '전체 자료',
-    path: '/library',
-    screenId: 'P23-01',
-    boardKey: 'library',
-    boardType: 'download',
+    slug: 'room-info',
+    boardKey: 'info-room',
+    label: '공부방 쏙쏙정보',
+    path: '/library/room-info',
+    lead: '공부방 운영에 바로 쓰는 정보를 나눠요.',
+    categories: [
+      { key: 'know-how', label: '운영 노하우' },
+      { key: 'recruit', label: '학생 모집·홍보' },
+      { key: 'admin-tax', label: '시설·행정·세무' },
+      { key: 'edu-news', label: '입시·교육 소식' },
+    ],
   },
   {
-    key: 'templates',
-    label: '양식·체크리스트',
-    path: '/library/templates',
-    screenId: 'P23-02',
-    boardKey: 'library-template',
-    boardType: 'download',
-  },
-  {
-    key: 'guides',
-    label: '가이드 PDF',
-    path: '/library/guides',
-    screenId: 'P23-03',
-    boardKey: 'library-guide-pdf',
-    boardType: 'download',
-  },
-];
-
-/** @type {Array<{ id: string, boardKey: string, title: string, summary: string, format: string, audience: LibraryAudience[], section: 'library'|'templates'|'guides', fileLabel: string }>} */
-export const LIBRARY_SEED = [
-  {
-    id: 'lib-1',
-    boardKey: 'library',
-    title: '안전과외 체크리스트 (학부모용)',
-    summary: '첫 상담 전 확인할 질문 목록',
-    format: 'PDF',
-    audience: ['all', 'parent'],
-    section: 'library',
-    fileLabel: 'safe-prep-checklist.pdf',
-  },
-  {
-    id: 'lib-2',
-    boardKey: 'library',
-    title: '공부방 상담 수용 안내 템플릿',
-    summary: '상담 가능·정원 마감 안내 문구 예시',
-    format: 'DOCX',
-    audience: ['study_room'],
-    section: 'library',
-    fileLabel: 'room-inquiry-template.docx',
-  },
-  {
-    id: 'tpl-1',
-    boardKey: 'library-template',
-    title: '과외 첫 수업 안내 양식',
-    summary: '학부모·학생에게 보낼 첫 안내 메모',
-    format: 'HWP',
-    audience: ['tutor'],
-    section: 'templates',
-    fileLabel: 'tutor-first-lesson.hwp',
-  },
-  {
-    id: 'tpl-2',
-    boardKey: 'library-template',
-    title: '학습 요청 조건 정리표',
-    summary: '자녀 등록 전 희망 조건 메모용',
-    format: 'XLSX',
-    audience: ['parent'],
-    section: 'templates',
-    fileLabel: 'student-request-sheet.xlsx',
-  },
-  {
-    id: 'pdf-1',
-    boardKey: 'library-guide-pdf',
-    title: '안전과외 가이드 — 선지급 주의 (PDF)',
-    summary: '안전한 선입금 안내 요약본',
-    format: 'PDF',
-    audience: ['all'],
-    section: 'guides',
-    fileLabel: 'safe-prepay-guide.pdf',
-  },
-  {
-    id: 'pdf-2',
-    boardKey: 'library-guide-pdf',
-    title: '제출자료 안내 — 발급기관 재확인',
-    summary: '22·28장 톤 · 플랫폼 인증 아님',
-    format: 'PDF',
-    audience: ['study_room', 'tutor'],
-    section: 'guides',
-    fileLabel: 'submission-doc-notice.pdf',
+    slug: 'tutor-tips',
+    boardKey: 'info-tutor',
+    label: '과외쌤 따끈 팁가이드',
+    path: '/library/tutor-tips',
+    lead: '과외 수업·상담에 바로 쓰는 팁을 나눠요.',
+    categories: [
+      { key: 'lesson', label: '수업 노하우' },
+      { key: 'consult-match', label: '상담·학생 매칭' },
+      { key: 'contract-tax', label: '계약·정산·세무' },
+      { key: 'edu-news', label: '입시·교육 소식' },
+    ],
   },
 ];
 
-export const LIBRARY_EMPTY = {
-  title: '등록된 자료가 없습니다',
-  body: '다른 카테고리를 선택하거나 나중에 다시 확인해 주세요.',
+/** 학생 꿀팁 가이드 — 서버 저장 게시판(board_posts, info-student). 모든 역할에게 보인다(게스트는 제목만). */
+export const STUDENT_TIPS_BOARD = {
+  slug: 'student-tips',
+  boardKey: 'info-student',
+  label: '학생 꿀팁 가이드',
+  path: '/library/student-tips',
+  lead: '공부·시험·진로에 도움이 되는 꿀팁을 나눠요.',
+  categories: [
+    { key: 'study-howto', label: '공부 노하우' },
+    { key: 'exam-school', label: '시험·내신' },
+    { key: 'admission-career', label: '입시·진로' },
+    { key: 'habit-mind', label: '습관·마음관리' },
+    { key: 'choose-provider', label: '과외쌤·공부방 고르기' },
+    { key: 'senior-story', label: '선배 이야기' },
+  ],
+};
+
+/** 자료실 게시판 전체(입구 카드·화면·레일 배너 순서). 역할별 노출은 board-channel-acl 이 정한다. */
+export const LIBRARY_BOARDS = [...INFO_BOARDS, STUDENT_TIPS_BOARD];
+
+/** 학생 꿀팁 가이드에만 쓰는 문구 — 「응원해요」 하나, 연락처 차단 안내 */
+export const STUDENT_TIPS_COPY = {
+  cheer: '응원해요',
+  cheerEmoji: '🎉',
+  cheerLogin: '로그인하면 응원할 수 있어요',
+  cheerFailed: '응원을 전하지 못했어요. 잠시 후 다시 시도해 주세요',
+  freeProviderCompose: '공부방·과외쌤 글쓰기는 픽·프라임을 이용 중일 때 할 수 있어요',
+  contactNotice: '연락처·카톡·외부 링크는 올릴 수 없어요',
+  fieldBodyPlaceholder: '친구·후배에게 알려 주고 싶은 꿀팁을 적어 주세요',
+};
+
+export const INFO_BOARD_COPY = {
+  empty: '아직 글이 도착하지 않았어요. 첫 정보를 기다려요',
+  loadFailed: '글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요',
+  freeProviderCompose: '글쓰기는 픽·프라임을 이용 중인 공부방·과외쌤이 할 수 있어요',
+  guestDetail: '로그인하면 전체 내용을 볼 수 있어요',
+  blocked: '볼 수 없는 게시판이에요',
+  navHeading: '정보 게시판',
+  allTab: '전체',
+  loading: '글을 불러오는 중이에요',
+  retry: '다시 불러오기',
+  more: '더 보기',
+  moreLoading: '불러오는 중…',
+  composeCta: '글쓰기',
+  loginCta: '로그인',
+  loginToWrite: '로그인한 뒤 글을 쓸 수 있어요',
+  backToList: '← 목록으로',
+  newTitle: '새 글 쓰기',
+  editTitle: '글 고치기',
+  fieldCategory: '분류',
+  fieldCategoryPlaceholder: '분류를 골라 주세요',
+  fieldTitle: '제목',
+  fieldTitlePlaceholder: '한눈에 알 수 있는 제목',
+  fieldBody: '본문',
+  fieldBodyPlaceholder: '나누고 싶은 정보를 적어 주세요',
+  submitNew: '올리기',
+  submitEdit: '저장하기',
+  saving: '저장하는 중…',
+  saveFailed: '저장하지 못했어요. 잠시 후 다시 시도해 주세요',
+  edit: '고치기',
+  delete: '지우기',
+  deleteConfirmTitle: '이 글을 지울까요?',
+  deleteConfirmBody: '지운 글은 다시 볼 수 없어요.',
+  cancel: '취소',
+  deleteFailed: '지우지 못했어요. 잠시 후 다시 시도해 주세요',
+  savedNew: '글을 올렸어요',
+  savedEdit: '글을 고쳤어요',
+  deleted: '글을 지웠어요',
+  notFound: '글을 찾을 수 없어요',
+  editNotAllowed: '이 글은 고칠 수 없어요',
+  edited: '수정됨',
+  flashClose: '닫기',
+};
+
+/** 우측 레일 정보 게시판 배너 · 레일 읽기 팝업 문구. 배너 제목은 LIBRARY_BOARDS 의 label 을 쓴다. */
+export const INFO_RAIL_COPY = {
+  empty: INFO_BOARD_COPY.empty,
+  loadFailed: INFO_BOARD_COPY.loadFailed,
+  loading: INFO_BOARD_COPY.loading,
+  more: '더보기',
+  guestDetail: INFO_BOARD_COPY.guestDetail,
+  loginCta: INFO_BOARD_COPY.loginCta,
+  notFound: INFO_BOARD_COPY.notFound,
+  blocked: INFO_BOARD_COPY.blocked,
+  goBoard: '게시판에서 보기',
+  popupClose: '닫기',
+  popupList: '글 목록',
+  popupPager: '페이지 이동',
+  popupPrev: '이전',
+  popupNext: '다음',
 };

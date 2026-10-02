@@ -1,5 +1,6 @@
 /**
- * 홈 레일·마이 수정. 게스트는 이름 가림·20자·로그인 게이트만.
+ * 홈 [공지 | 동네 인사] 2단 박스의 동네 인사 칸·마이 수정. 게스트는 이름 가림·20자·로그인 게이트만.
+ * 칸·팝업 목록은 GET /api/neighborhood-greetings.php 응답(메모리 캐시)만 쓴다.
  */
 
 import { greetingError, greetingTeaser, maskGreetingName, sameNeighborhood } from '../../shared/neighborhood-greeting.js';
@@ -8,10 +9,11 @@ import {
   importGreetingHandoff,
   publishGreeting,
   pullGreetingsFromApi,
-  readGreetings,
   unpublishGreeting,
 } from '../../shared/neighborhood-greeting-store.js';
 import { getAuthUser, isLoggedIn } from './auth-session.js';
+import { HOME_NEWS_COPY as COPY } from './home-news-copy.js';
+import { createNewsLoader } from './home-news-loader.js';
 import { readGuestBaseline } from '../../shared/location-display.js';
 import { openDetailModal, resolveDetailItem } from './detail-decision/index.js';
 import { primarySavedRegion, studyRoomPromo1Label } from './study-room-home-seed.js';
@@ -113,7 +115,74 @@ function viewerAreas(viewer) {
   return [];
 }
 
+/** 팝업 한 페이지 */
 const PAGE_SIZE = 5;
+/** 홈 칸 줄 수 */
+export const GREETING_HOME_LINES = 3;
+const GREETING_TTL_MS = 60 * 1000;
+
+/** @param {Record<string, unknown>} row */
+function fromApi(row) {
+  const providerType = row.provider_type === 'tutor' ? 'tutor' : 'study_room';
+  return {
+    providerType,
+    registrationId: Number(row.registration_id),
+    body: String(row.body || ''),
+    neighborhood: String(row.neighborhood || ''),
+    displayName: String(row.display_name || ''),
+    status: row.status === 'down' ? 'down' : 'up',
+    updatedAt: Number(row.updated_at) || 0,
+    teaser: String(row.teaser || ''),
+    maskedName: String(row.masked_name || ''),
+  };
+}
+
+async function fetchGreetings() {
+  const res = await fetch('/api/neighborhood-greetings.php', { credentials: 'include' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data?.ok || !Array.isArray(data.items)) throw new Error('neighborhood-greetings');
+  return data.items.map(fromApi).filter((row) => row.registrationId > 0);
+}
+
+const greetingLoader = createNewsLoader(fetchGreetings, /** @type {ReturnType<typeof fromApi>[]} */ ([]), GREETING_TTL_MS);
+
+function greetingOwner() {
+  const user = getAuthUser();
+  if (!user) return 'guest';
+  return `${user.user_id ?? ''}:${user.role_type || ''}:${user.admin_level || ''}`;
+}
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  ['auth:login', 'auth:logout', 'auth:role-change'].forEach((name) => {
+    window.addEventListener(name, () => {
+      greetingLoader.reset();
+      closeGreetingFeed();
+    });
+  });
+}
+
+/** @returns {import('./home-news-loader.js').NewsLoadStatus} */
+export function greetingLoadStatus() {
+  return greetingLoader.status(greetingOwner());
+}
+
+export function isGreetingFresh() {
+  return greetingLoader.isFresh(greetingOwner());
+}
+
+/** 받는 사이 세션이 바뀌어 값이 버려졌으면 false. */
+export function isGreetingReady() {
+  return greetingLoader.peek(greetingOwner()) !== null;
+}
+
+export function ensureGreetings() {
+  return greetingLoader.ensure(greetingOwner());
+}
+
+/** 올리기·내리기 뒤 다음 홈 그리기에서 서버 값을 다시 받게 한다. */
+export function invalidateGreetings() {
+  greetingLoader.reset();
+}
 
 /**
  * @param {'guest'|'parent'|'study_room'|'tutor'} viewer
@@ -122,7 +191,7 @@ const PAGE_SIZE = 5;
 function greetingRows(viewer) {
   const areas = viewerAreas(viewer);
   const loggedIn = isLoggedIn();
-  return readGreetings()
+  return (greetingLoader.peek(greetingOwner()) || [])
     .filter((row) => {
       if (row.status !== 'up' || !(row.body || row.teaser)) return false;
       if (!areas.length) return false;
@@ -146,12 +215,39 @@ function greetingRows(viewer) {
     });
 }
 
-/** @param {'guest'|'parent'|'study_room'|'tutor'} viewer */
-export function renderNeighborhoodGreetingRail(viewer) {
+/** 0건 문구는 보는 사람 기준. 올리지 않아도 불이익이 없다는 원칙이라 가입·작성을 재촉하지 않는다. @param {string} viewer */
+function greetingEmptyCopy(viewer) {
+  return viewer === 'study_room' || viewer === 'tutor' ? COPY.greetingEmptyProvider : COPY.greetingEmptyDemand;
+}
+
+/** 받는 중·0건·실패 문구. @param {string} viewer */
+function greetingStateCopy(viewer) {
+  const status = greetingLoadStatus();
+  if (status === 'loading') return COPY.loading;
+  if (status === 'failed') return COPY.loadFailed;
+  return greetingEmptyCopy(viewer);
+}
+
+/**
+ * 동네 인사 칸 본문. 받는 중 · 0건 · 실패 · 글 있음을 서로 다르게 그린다. 홈에서는 최신 3줄까지.
+ * @param {'guest'|'parent'|'study_room'|'tutor'} viewer
+ * @returns {{ state: 'loading'|'failed'|'empty'|'posts', html: string }}
+ */
+export function greetingCellBody(viewer) {
+  const status = greetingLoadStatus();
+  if (status === 'loading') {
+    return { state: 'loading', html: `<p class="home-news-row__state" role="status">${esc(COPY.loading)}</p>` };
+  }
+  if (status === 'failed') {
+    return {
+      state: 'failed',
+      html: `<p class="home-news-row__state home-news-row__state--failed" role="status">${esc(COPY.loadFailed)}</p>`,
+    };
+  }
   const rows = greetingRows(viewer);
-  if (!rows.length) return '';
+  if (!rows.length) return { state: 'empty', html: `<p class="home-news-row__state">${esc(greetingEmptyCopy(viewer))}</p>` };
   const lines = rows
-    .slice(0, PAGE_SIZE)
+    .slice(0, GREETING_HOME_LINES)
     .map(
       (row, index) => `
         <li class="ng-rail__item">
@@ -163,15 +259,22 @@ export function renderNeighborhoodGreetingRail(viewer) {
         </li>`,
     )
     .join('');
-  const more =
-    rows.length > PAGE_SIZE
-      ? '<button type="button" class="btn btn--secondary btn--sm ng-rail__more" data-ng-more>더보기</button>'
-      : '';
+  return { state: 'posts', html: `<ul class="home-news-row__list ng-rail__list">${lines}</ul>` };
+}
+
+/**
+ * 2단 박스의 동네 인사 칸. 제목·「더보기」는 받는 중·0건·실패에도 항상 그린다.
+ * @param {'guest'|'parent'|'study_room'|'tutor'} viewer
+ */
+export function renderNeighborhoodGreetingRail(viewer) {
+  const { state, html } = greetingCellBody(viewer);
   return `
-    <section class="ng-rail" data-ng-rail aria-label="우리 동네에 새로 왔어요">
-      <h2 class="ng-rail__title">우리 동네에 새로 왔어요</h2>
-      <ul class="ng-rail__list">${lines}</ul>
-      ${more}
+    <section class="home-news-row__cell home-news-row__cell--greeting" data-ng-rail data-home-news="greeting" data-home-news-state="${state}" aria-labelledby="home-news-greeting-title">
+      <div class="home-news-row__head">
+        <h2 class="home-news-row__title" id="home-news-greeting-title" aria-label="${esc(COPY.greetingTitle)}">${esc(COPY.greetingTitle)}</h2>
+        <button type="button" class="home-news-row__more" data-ng-more aria-label="${esc(COPY.greetingMoreLabel)}">${esc(COPY.more)}</button>
+      </div>
+      <div class="home-news-row__body" data-home-news-body>${html}</div>
     </section>`;
 }
 
@@ -205,22 +308,28 @@ export function bindNeighborhoodGreetingRail(root, opts = {}) {
     const lineBtn = target.closest('[data-ng-line]');
     if (lineBtn && rail.contains(lineBtn)) {
       const index = Number(lineBtn.getAttribute('data-ng-index') || 0);
-      openGreetingFeed({ viewer, page: Math.floor(index / PAGE_SIZE), openCard });
+      openGreetingFeed({ viewer, page: Math.floor(index / PAGE_SIZE), openCard, opener: /** @type {HTMLElement} */ (lineBtn) });
       return;
     }
-    if (target.closest('[data-ng-more]')) openGreetingFeed({ viewer, page: 0, openCard });
+    const moreBtn = target.closest('[data-ng-more]');
+    if (moreBtn) openGreetingFeed({ viewer, page: 0, openCard, opener: /** @type {HTMLElement} */ (moreBtn) });
   });
 }
 
+function closeGreetingFeed() {
+  if (typeof document === 'undefined') return;
+  document.getElementById('ng-feed')?.dispatchEvent(new Event('ng-feed-dismiss'));
+}
+
 /**
- * @param {{ viewer: string, page: number, openCard: (kind: string | null, id: number) => void }} opts
+ * 동네 인사 팝업(한 페이지 5개). 글이 없으면 칸과 같은 받는 중·0건·실패 문구를 보인다.
+ * @param {{ viewer: string, page: number, openCard: (kind: string | null, id: number) => void, opener?: HTMLElement | null }} opts
  */
 function openGreetingFeed(opts) {
-  const rows = greetingRows(opts.viewer);
-  if (!rows.length) return;
-  const pages = Math.ceil(rows.length / PAGE_SIZE);
+  const rows = greetingRows(/** @type {any} */ (opts.viewer));
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   let current = Math.min(Math.max(0, opts.page), pages - 1);
-  document.getElementById('ng-feed')?.dispatchEvent(new Event('ng-feed-dismiss'));
+  closeGreetingFeed();
   const el = document.createElement('div');
   el.id = 'ng-feed';
   el.className = 'ng-feed';
@@ -231,6 +340,7 @@ function openGreetingFeed(opts) {
   const close = () => {
     document.removeEventListener('keydown', onKey);
     el.remove();
+    if (opts.opener?.isConnected) opts.opener.focus({ preventScroll: true });
   };
   el.addEventListener('ng-feed-dismiss', close);
   const paint = () => {
@@ -255,10 +365,13 @@ function openGreetingFeed(opts) {
             <button type="button" class="btn btn--secondary btn--sm" data-ng-feed-next ${current === pages - 1 ? 'disabled' : ''}>다음</button>
           </div>`
         : '';
+    const list = rows.length
+      ? `<ul class="ng-feed__list">${items}</ul>`
+      : `<p class="ng-feed__state" role="status">${esc(greetingStateCopy(opts.viewer))}</p>`;
     el.innerHTML = `
       <div class="ng-feed__card" role="document">
-        <h2 id="ng-feed-title" class="ng-feed__title">우리 동네에 새로 왔어요</h2>
-        <ul class="ng-feed__list">${items}</ul>
+        <h2 id="ng-feed-title" class="ng-feed__title">${esc(COPY.greetingTitle)}</h2>
+        ${list}
         ${pager}
         <button type="button" class="btn btn--secondary" data-ng-feed-close>닫기</button>
       </div>`;
@@ -294,6 +407,7 @@ function openGreetingFeed(opts) {
   document.addEventListener('keydown', onKey);
   paint();
   document.body.appendChild(el);
+  /** @type {HTMLElement|null} */ (el.querySelector('[data-ng-feed-close]'))?.focus({ preventScroll: true });
 }
 
 /**
@@ -441,6 +555,7 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
         showError(saved.error);
         return;
       }
+      invalidateGreetings();
       syncActions(true);
       showStatus('저장되었습니다');
       return;
@@ -451,6 +566,7 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
       showError(saved.error);
       return;
     }
+    invalidateGreetings();
     syncActions(false);
     showStatus('내렸습니다');
   });

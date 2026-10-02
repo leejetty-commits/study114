@@ -76,7 +76,7 @@ final class SearchService
 
     /**
      * 게스트 지도 박스 실수. 로그인 후 화면은 이 함수를 쓰지 않는다.
-     * 공부방은 GUEST_BASE_DONG_CODE 행 id, 과외쌤·학생은 GUEST_BASE_GU_OFFICIAL_CODE 행 id.
+     * 공부방은 RegionGuLink::guestBaseDongId() 행 id, 과외쌤·학생은 GUEST_BASE_GU_OFFICIAL_CODE 행 id.
      * 목록 노출·비삭제·탈퇴 제외는 기존 검색과 같다. 유료 티어만 세지 않는다.
      * 기준 행이 없으면 그 축은 0이고 로그 한 줄만 남긴다.
      * regionIds 는 게스트 목록이 같은 행으로 search 필터를 걸 때 쓴다. 기준 행이 없으면 null.
@@ -86,7 +86,7 @@ final class SearchService
     public function guestAxisCounts(): array
     {
         $pdo = Connection::get();
-        $dongId = RegionGuLink::dongIdByDongCode(RegionGuLink::GUEST_BASE_DONG_CODE);
+        $dongId = RegionGuLink::guestBaseDongId();
         $guId = RegionGuLink::guIdByOfficialCode(RegionGuLink::GUEST_BASE_GU_OFFICIAL_CODE);
 
         $studyRooms = 0;
@@ -94,7 +94,8 @@ final class SearchService
         $studentRequests = 0;
 
         if ($dongId === null) {
-            error_log('[guestAxisCounts] base dong row missing dong_code=' . RegionGuLink::GUEST_BASE_DONG_CODE);
+            error_log('[guestAxisCounts] base dong row missing 서울 강남구 ' . RegionGuLink::GUEST_BASE_DONG_NAME
+                . ' dong_code=' . RegionGuLink::GUEST_BASE_DONG_CODE . '|' . RegionGuLink::GUEST_BASE_DONG_OFFICIAL_CODE);
         } else {
             $room = $this->search('room', ['region_id' => $dongId], 1, 1);
             $studyRooms = (int) $room['total'];
@@ -119,6 +120,46 @@ final class SearchService
                 'student' => $guId,
             ],
         ];
+    }
+
+    /**
+     * 비로그인 search.php 요청. 지역 조건은 게스트 기준 행으로 덮고 요청한 지역은 버린다.
+     * 공부방은 guestBaseDongId(), 과외쌤·학생은 GUEST_BASE_GU_OFFICIAL_CODE 행. guestAxisCounts 와 같은 행이다.
+     * 기준 행이 없으면 null. 호출부는 지역 조건 없이 검색하지 않고 빈 결과를 낸다.
+     *
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed>|null
+     */
+    public function guestScopedFilters(string $tab, array $filters): ?array
+    {
+        foreach ([
+            'region_id', 'region_label', 'tutor_region_id', 'tutor_region_label',
+            'preferred_region_id', 'preferred_region', 'preferred_region_label', 'preferred_studyroom_region_id',
+        ] as $key) {
+            unset($filters[$key]);
+        }
+
+        if ($tab === 'room') {
+            $dongId = RegionGuLink::guestBaseDongId();
+            if ($dongId === null) {
+                return null;
+            }
+            $filters['region_id'] = $dongId;
+
+            return $filters;
+        }
+
+        if ($tab === 'tutor' || $tab === 'student') {
+            $guId = RegionGuLink::guIdByOfficialCode(RegionGuLink::GUEST_BASE_GU_OFFICIAL_CODE);
+            if ($guId === null) {
+                return null;
+            }
+            $filters[$tab === 'tutor' ? 'tutor_region_id' : 'preferred_region_id'] = $guId;
+
+            return $filters;
+        }
+
+        return $filters;
     }
 
     /**
