@@ -7,6 +7,10 @@
  * (c) 작성자: 서버가 준 가린 이름만 그린다. 클라이언트는 이름 원문 필드를 다루지 않는다
  * (d) 「응원해요」 🎉: reactions.php 에 board_key·post_key 로만 보낸다(고민방 post_id·kind 와 다른 몸), 게스트는 로그인 안내
  * (e) 연락처·외부 링크: 서버 422 메시지를 그대로 보여 준다, 글쓰기 화면에 안내
+ * (e2) 사이트오류-7: 공급자 정보 게시판(info-room · info-tutor)도 같은 422 문구·같은 안내(공용 문구 한 곳), 실패 시 입력 유지,
+ *      정상 글 저장 → 새로고침 → 그대로, 기존 저장 글(연락처 포함)은 목록·상세에서 그대로 읽힌다
+ * (e3) 사이트오류-7b: 정부·교육기관 주소(.go.kr · .ac.kr) 인용은 세 게시판 모두 저장·재조회, 그 외 링크·위장·섞임은 422.
+ *      가짜 서버 판정은 PHP findBlockedContact 와 입력별로 대조한다. 글쓰기 안내에 인용 허용 한 문장
  * (f) 노출: 자료실 입구 카드·메뉴·우측 레일 배너(학생은 이 게시판만, 공급자 게시판 DOM 없음), 0건·실패 구분(상자·제목 유지)
  * (g) 저장 → 새로고침(메모리 캐시 버림) → 서버에서 다시 받아 그대로 있음, 실패 ≠ 0건
  * (h) 입구: 역할 확인 전 불러오는 중 상자, me.php 실패 시 실패 상자 + 다시 시도
@@ -86,7 +90,7 @@ const MASKED = { 31: '최진○', 32: '김○' };
 const requests = [];
 const session = { me: null, meFail: false };
 const server = { mode: 'posts', nextFail: null };
-const db = { posts: [], cheers: new Set() };
+const db = { posts: [], cheers: new Set(), provider: { 'info-room': [], 'info-tutor': [] } };
 let seq = 0;
 
 function json(status, body) {
@@ -126,8 +130,102 @@ function viewOf(p, me, access) {
     canCheer: roleOf(me) !== 'guest' && roleOf(me) !== 'member',
   };
 }
-function blockedContact(s) {
-  return /카톡|kakao|오픈채팅|https?:\/\/|www\.|01[016789][-\s]?\d{3,4}[-\s]?\d{4}|@\w+\./i.test(s);
+/**
+ * 서버 InfoBoardService::findBlockedContact 를 그대로 옮긴 판정(사유 키 또는 null). PHP /u 의 \w·\b(한글 포함)는 \p{L}\p{N}_ 로 맞춘다.
+ * 아래 (e3) 에서 PHP 결과와 입력별로 대조한다.
+ */
+function findBlockedContact(text) {
+  if (text === '') return null;
+  if (/카카오|카톡|오픈채팅|오픈톡|kakao|텔레그램|telegram/iu.test(text)) return 'messenger';
+  const urlHits = [...text.matchAll(/https?:\/\/|www\./giu)];
+  const domainHits = [...text.matchAll(/(?<![\p{L}\p{N}_])[\p{L}\p{N}_-]+\.(com|kr|net|me|io|co|org|ly|link|site)(?![\p{L}\p{N}_])/giu)];
+  if (urlHits.length || domainHits.length) {
+    for (const m of [...urlHits, ...domainHits]) {
+      if (!isAllowedCitationHost(citationHostAt(text, m[0], m.index))) return urlHits.length ? 'url' : 'domain';
+    }
+  }
+  if (/[\p{L}\p{N}_.+-]+@[\p{L}\p{N}_-]+(\.[\p{L}\p{N}_-]+)+/u.test(text)) return 'email';
+  const compact = text.replace(/[\s().\-]/gu, '');
+  if (/01[016789]\d{7,8}/.test(compact) || /0(?:2|[3-6]\d)\d{7,8}/.test(compact)) return 'phone';
+  return null;
+}
+function citationHostAt(text, hit, offset) {
+  const after = text.slice(offset + hit.length);
+  if (/^https?:\/\//i.test(hit)) {
+    const raw = after.match(/^[^\s/?#\\]*/u)[0];
+    return raw.includes('@') ? null : normalizeCitationHost(raw);
+  }
+  const left = text.slice(0, offset).match(/[\p{L}\p{N}_.-]*$/u)[0];
+  const right = after.match(/^[\p{L}\p{N}_.-]*/u)[0];
+  const start = offset - left.length;
+  if (start > 0 && text[start - 1] === '@') return null;
+  return normalizeCitationHost(left + hit + right);
+}
+function normalizeCitationHost(raw) {
+  const s = raw.replace(/^[^A-Za-z0-9]+/u, '');
+  const ascii = s.match(/^[A-Za-z0-9.-]*/)[0];
+  const rest = s.slice(ascii.length);
+  if (rest && /^[\p{L}\p{N}_]/u.test(rest) && (ascii.endsWith('.') || rest.includes('.'))) return null;
+  return ascii.replace(/[.-]+$/, '').toLowerCase();
+}
+function isAllowedCitationHost(host) {
+  return host !== null && /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:go|ac)\.kr$/.test(host);
+}
+function blockedContact(body) {
+  return findBlockedContact(String(body.title ?? '')) !== null || findBlockedContact(String(body.body ?? '')) !== null;
+}
+/** 공급자 정보 게시판(info-room · info-tutor) 서버 계약: 유료 공급자·관리자만 쓰기, 연락처 422(info-student 와 같은 몸) */
+function providerBoard(boardKey, method, url, body, me, role) {
+  const posts = db.provider[boardKey];
+  const access = role === 'guest' ? 'titles' : 'full';
+  const canWriteHere = role === 'admin' || ((role === 'supply-room' || role === 'supply-tutor') && PAID.has(me.user_id));
+  const view = (p) => {
+    const base = { id: p.id, title: p.title, categoryId: p.categoryId, createdAt: p.createdAt };
+    if (access !== 'full') return base;
+    const mine = me && me.user_id === p.authorId;
+    return { ...base, body: p.body, authorLabel: authorLabelOf(p), updatedAt: p.createdAt, edited: Boolean(p.edited), canEdit: role === 'admin' || (mine && canWriteHere), canDelete: role === 'admin' || mine };
+  };
+  if (method === 'GET') {
+    const live = posts.filter((p) => p.status === 'published').sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    const postKey = url.searchParams.get('post_key');
+    if (postKey) {
+      const p = live.find((x) => x.id === postKey);
+      return p ? json(200, { ok: true, access, boardKey, post: view(p) }) : json(404, { ok: false, error: 'not_found', message: '글을 찾을 수 없습니다.' });
+    }
+    return json(200, { ok: true, access, boardKey, posts: live.slice(0, 20).map(view), total: live.length, hasMore: live.length > 20, canCompose: access === 'full' && canWriteHere });
+  }
+  if (method === 'POST') {
+    if (!me) return json(401, { ok: false, error: 'unauthorized', message: '로그인이 필요합니다.' });
+    if (!canWriteHere) return json(403, { ok: false, error: 'forbidden', message: '글쓰기는 픽·프라임을 이용 중인 공부방·과외쌤이 할 수 있어요.' });
+    if (blockedContact(body)) return json(422, { ok: false, error: 'validation', message: BLOCKED_MSG });
+    if (body.post_key) {
+      const p = posts.find((x) => x.id === body.post_key);
+      if (!p || (p.authorId !== me.user_id && role !== 'admin')) return json(403, { ok: false, error: 'forbidden', message: '작성자만 수정할 수 있습니다.' });
+      Object.assign(p, { title: body.title, body: body.body, categoryId: body.category, edited: true });
+      return json(200, { ok: true, post: view(p) });
+    }
+    seq += 1;
+    const p = {
+      id: `${boardKey}-${1790000000 + seq}-p${seq}`,
+      title: body.title,
+      body: body.body,
+      categoryId: body.category,
+      createdAt: `2026-10-02T10:${String(seq).padStart(2, '0')}:00`,
+      authorId: me.user_id,
+      authorRole: { 'supply-room': 'study_room', 'supply-tutor': 'tutor', admin: 'admin' }[role],
+      status: 'published',
+    };
+    posts.push(p);
+    return json(200, { ok: true, post: view(p) });
+  }
+  if (method === 'DELETE') {
+    const p = posts.find((x) => x.id === url.searchParams.get('post_key'));
+    if (!me) return json(401, { ok: false, message: 'x' });
+    if (!p || (p.authorId !== me.user_id && role !== 'admin')) return json(403, { ok: false, message: '작성자만 삭제할 수 있습니다.' });
+    p.status = 'deleted';
+    return json(200, { ok: true, deleted: true });
+  }
+  return json(405, { ok: false });
 }
 
 globalThis.fetch = async (input, init = {}) => {
@@ -156,6 +254,7 @@ globalThis.fetch = async (input, init = {}) => {
   if (boardKey !== KEY) {
     // 공급자 정보 게시판: 학생·member 거절(기존 계약)
     if (role === 'demand' || role === 'member') return json(403, { ok: false, error: 'forbidden', message: 'forbidden' });
+    if (db.provider[boardKey]) return providerBoard(boardKey, method, url, body, me, role);
     return json(200, { ok: true, access: role === 'guest' ? 'titles' : 'full', boardKey, posts: [], total: 0, hasMore: false, canCompose: false });
   }
   if (server.nextFail) {
@@ -194,7 +293,7 @@ globalThis.fetch = async (input, init = {}) => {
   if (method === 'POST') {
     if (!me) return json(401, { ok: false, error: 'unauthorized', message: '로그인이 필요합니다.' });
     if (!canWrite(me)) return json(403, { ok: false, error: 'forbidden', message: '공부방·과외쌤 글쓰기는 픽·프라임 이용 중에 할 수 있어요. 학생 계정은 바로 쓸 수 있어요.' });
-    if (blockedContact(`${body.title}\n${body.body}`)) return json(422, { ok: false, error: 'validation', message: BLOCKED_MSG });
+    if (blockedContact(body)) return json(422, { ok: false, error: 'validation', message: BLOCKED_MSG });
     if (body.post_key) {
       const p = db.posts.find((x) => x.id === body.post_key);
       if (!p || (p.authorId !== me.user_id && roleOf(me) !== 'admin')) return json(403, { ok: false, error: 'forbidden', message: '작성자만 수정할 수 있습니다.' });
@@ -560,6 +659,293 @@ await okAsync('contact_block_message_in_form_error', async () => {
   const html = screens.renderInfoBoardScreen(`${PATH}/new`, viewer);
   return html.includes('data-info-form-error') && html.includes(TIPS.contactNotice) && screensSrc.includes("err.message !== 'board api error' ? err.message");
 });
+
+/* ══════ (e2) 사이트오류-7 · 공급자 정보 게시판 2곳 연락처 차단 ══════ */
+const PROVIDER = {
+  'info-room': { who: 'room_paid', path: '/library/room-info', cat: 'recruit', uid: 11, authorRole: 'study_room' },
+  'info-tutor': { who: 'tutor_paid', path: '/library/tutor-tips', cat: 'lesson', uid: 21, authorRole: 'tutor' },
+};
+const PROVIDER_BLOCKED = {
+  contact: '상담은 010-1234-5678 로',
+  url: '자료는 https://example.com/room 에',
+  email: '문의 room@example.com',
+  phone: '01098765432 문자 주세요',
+  kakao: '카카오 채널로 문의 주세요',
+};
+const LEGACY_BODY = '예전 글: 상담 010-5555-6666 / https://old.example.com';
+for (const [b, cfg] of Object.entries(PROVIDER)) {
+  db.provider[b].push({ id: `${b}-legacy-contact`, title: '예전 카톡 상담 안내', body: LEGACY_BODY, categoryId: cfg.cat, createdAt: '2026-09-01T08:00:00', authorId: cfg.uid, authorRole: cfg.authorRole, status: 'published' });
+}
+/** bindInfoBoardEvents 의 글쓰기 submit 만 부르는 가짜 root. 폼 값은 그대로 두고, 다시 그리기·이동 여부를 센다. */
+function fakeFormRoot(boardKey, postKey, fields) {
+  const submitBtn = { disabled: false, textContent: COPY.submitNew };
+  const errorEl = { hidden: true, textContent: '' };
+  let onSubmit = null;
+  const form = {
+    fields,
+    getAttribute: (n) => (n === 'data-info-post-key' ? postKey : n === 'data-info-form' ? boardKey : null),
+    querySelector: (sel) => (sel === 'button[type="submit"]' ? submitBtn : sel === '[data-info-form-error]' ? errorEl : null),
+    addEventListener: (ev, fn) => {
+      if (ev === 'submit') onSubmit = fn;
+    },
+  };
+  return {
+    root: { querySelector: (sel) => (sel === 'form[data-info-form]' ? form : null), querySelectorAll: () => [] },
+    form,
+    submitBtn,
+    errorEl,
+    submit: async () => {
+      const RealFormData = globalThis.FormData;
+      globalThis.FormData = class {
+        constructor(f) {
+          this.f = f.fields;
+        }
+        get(k) {
+          return this.f[k] ?? null;
+        }
+      };
+      try {
+        await onSubmit?.({ preventDefault() {} });
+      } finally {
+        globalThis.FormData = RealFormData;
+      }
+      return Boolean(onSubmit);
+    },
+  };
+}
+ok('provider_contact_notice_single_copy', () => {
+  const copySrc = src('preview/home-ui/src/library/library-copy.js');
+  return COPY.contactNotice === '연락처·카톡·외부 링크는 올릴 수 없어요. 정부·교육기관 주소(.go.kr, .ac.kr)는 인용할 수 있어요' && TIPS.contactNotice === COPY.contactNotice
+    && copySrc.split(COPY.contactNotice).length === 2 && !screensSrc.includes(COPY.contactNotice) && screensSrc.includes('COPY.contactNotice');
+});
+for (const [b, cfg] of Object.entries(PROVIDER)) {
+  const count = () => db.provider[b].length;
+  await okAsync(`provider_${b}_compose_form_contact_notice`, async () => {
+    const viewer = await signIn(cfg.who);
+    await store.loadInfoList(viewer, b, '');
+    const html = screens.renderInfoBoardScreen(`${cfg.path}/new`, viewer);
+    return html.includes(`data-info-form="${b}"`) && html.includes('data-info-contact-notice') && html.includes(COPY.contactNotice) && html.includes('data-info-form-error');
+  });
+  for (const [name, text] of Object.entries(PROVIDER_BLOCKED)) {
+    await okAsync(`provider_${b}_block_${name}_422_server_message`, async () => {
+      const viewer = store.currentInfoViewer();
+      const before = count();
+      try {
+        await store.saveInfoPost(viewer, { boardKey: b, title: '운영 팁', body: text, category: cfg.cat });
+        return false;
+      } catch (e) {
+        return e.status === 422 && e.message === BLOCKED_MSG && count() === before;
+      }
+    });
+  }
+  await okAsync(`provider_${b}_form_submit_blocked_keeps_input`, async () => {
+    const viewer = store.currentInfoViewer();
+    await store.loadInfoList(viewer, b, '');
+    const fields = { title: '연락 주세요', body: '카톡 아이디 남겨요', category: cfg.cat };
+    const f = fakeFormRoot(b, '', fields);
+    let redraw = 0;
+    globalThis.location.hash = `#${cfg.path}/new`;
+    screens.bindInfoBoardEvents(f.root, () => {
+      redraw += 1;
+    }, `${cfg.path}/new`);
+    const before = count();
+    const bound = await f.submit();
+    const hash = globalThis.location.hash;
+    globalThis.location.hash = '#/guest';
+    return bound && f.errorEl.hidden === false && f.errorEl.textContent === BLOCKED_MSG && redraw === 0 && hash === `#${cfg.path}/new`
+      && f.submitBtn.disabled === false && f.submitBtn.textContent === COPY.submitNew
+      && f.form.fields.title === '연락 주세요' && f.form.fields.body === '카톡 아이디 남겨요' && count() === before;
+  });
+  let cleanId = '';
+  await okAsync(`provider_${b}_form_submit_clean_saves_and_navigates`, async () => {
+    const viewer = store.currentInfoViewer();
+    const f = fakeFormRoot(b, '', { title: '첫 상담 체크리스트', body: '1. 목표 듣기\n2. 주 2회 일정 맞추기', category: cfg.cat });
+    globalThis.location.hash = `#${cfg.path}/new`;
+    screens.bindInfoBoardEvents(f.root, () => {}, `${cfg.path}/new`);
+    const before = count();
+    await f.submit();
+    const hash = globalThis.location.hash;
+    globalThis.location.hash = '#/guest';
+    cleanId = db.provider[b][db.provider[b].length - 1]?.id || '';
+    return count() === before + 1 && hash === `#${cfg.path}` && f.errorEl.hidden === true && cleanId.startsWith(`${b}-`);
+  });
+  await okAsync(`provider_${b}_clean_save_reload_still_present`, async () => {
+    const viewer = store.currentInfoViewer();
+    store.resetInfoBoardData();
+    const cleared = store.getInfoList(viewer, b) === null && store.getInfoPost(viewer, b, cleanId) === null;
+    const list = await store.loadInfoList(viewer, b, '');
+    const detail = await store.loadInfoPost(viewer, b, cleanId);
+    const html = screens.renderInfoBoardScreen(cfg.path, viewer);
+    return cleared && list.status === 'ready' && list.posts.some((p) => p.id === cleanId) && detail.post?.body === '1. 목표 듣기\n2. 주 2회 일정 맞추기'
+      && html.includes('첫 상담 체크리스트');
+  });
+  await okAsync(`provider_${b}_block_on_edit_422`, async () => {
+    const viewer = store.currentInfoViewer();
+    try {
+      await store.saveInfoPost(viewer, { boardKey: b, postKey: cleanId, title: '고침', body: 'www.myroom.org 참고', category: cfg.cat });
+      return false;
+    } catch (e) {
+      return e.status === 422 && e.message === BLOCKED_MSG && db.provider[b].find((p) => p.id === cleanId)?.title === '첫 상담 체크리스트';
+    }
+  });
+  await okAsync(`provider_${b}_legacy_contact_post_readable`, async () => {
+    const viewer = store.currentInfoViewer();
+    store.resetInfoBoardData();
+    const list = await store.loadInfoList(viewer, b, '');
+    const detail = await store.loadInfoPost(viewer, b, `${b}-legacy-contact`);
+    const listHtml = screens.renderInfoBoardScreen(cfg.path, viewer);
+    const detailHtml = screens.renderInfoBoardScreen(`${cfg.path}/${b}-legacy-contact`, viewer);
+    return list.posts.some((p) => p.id === `${b}-legacy-contact` && p.body === LEGACY_BODY) && detail.post?.body === LEGACY_BODY
+      && listHtml.includes('예전 카톡 상담 안내') && detailHtml.includes(LEGACY_BODY);
+  });
+  await okAsync(`provider_${b}_student_still_blocked`, async () => {
+    const viewer = await signIn('student');
+    const before = requests.length;
+    const entry = await store.loadInfoList(viewer, b, '');
+    const html = screens.renderInfoBoardScreen(`${cfg.path}/new`, viewer);
+    return entry.status === 'blocked' && requests.length === before && html.includes(COPY.blocked) && !html.includes('data-info-form') && !html.includes(COPY.contactNotice);
+  });
+}
+await okAsync('student_tips_block_unchanged_after_provider', async () => {
+  const viewer = await signIn('student');
+  await store.loadInfoList(viewer, KEY, '');
+  const html = screens.renderInfoBoardScreen(`${PATH}/new`, viewer);
+  try {
+    await store.saveInfoPost(viewer, { boardKey: KEY, title: '연락 주세요', body: '010-1234-5678', category: 'study-howto' });
+    return false;
+  } catch (e) {
+    return e.status === 422 && e.message === BLOCKED_MSG && html.includes(TIPS.contactNotice) && html.includes('data-info-contact-notice');
+  }
+});
+
+/* ══════ (e3) 사이트오류-7b · 정부·교육기관 주소(.go.kr · .ac.kr) 인용 허용, 세 게시판 공통 ══════ */
+const CITE_ALLOWED = {
+  hometax_paren: '홈택스(hometax.go.kr)에서 신고',
+  sen_www: '교육청 공지 www.sen.go.kr',
+  hometax_https: 'https://www.hometax.go.kr/ 참고',
+  snu_ac: 'snu.ac.kr 입시요강',
+};
+const CITE_BLOCKED = {
+  adiga: 'adiga.kr',
+  blog_naver: 'blog.naver.com',
+  co_kr: 'abc.co.kr',
+  example_org: 'example.org',
+  spoof_suffix: 'hometax.go.kr.evil.com',
+  spoof_glued: 'evilgo.kr',
+  email_gov: 'a@hometax.go.kr',
+  kakaomap: '카카오맵으로 위치 확인',
+  tax_office_phone: '세무서 02-123-4567',
+  mixed: 'hometax.go.kr 그리고 adiga.kr',
+};
+const CITE_EXTRA = [
+  'go.kr.example.com', 'xgo.kr', 'go.kr', 'hometax.go.kr.한국', 'https://sen.go.kr한글.xyz', 'https://hometax.go.kr@evil.xyz',
+  'https://hometax.go.kr&@evil.xyz', 'https://www.hometax.go.kr/?r=evil.com', 'www.sen.go.kr에서 확인', '(https://www.hometax.go.kr)에서',
+  'https://x.co', 'www.example.org 참고', 'mytips.kr 에 정리해 둠', '메일 tips@example.com', 'a@b.xyz', 'hometax.go.kr 010-1234-5678',
+  '010-1234-5678', '카톡 주세요', '수학 3등급에서 1등급까지 올린 방법', '2026년 3월 모의고사 82점 → 6월 91점', '1. 목표 듣기\n2. 주 2회 일정 맞추기',
+];
+ok('cite_contact_notice_mentions_gov_edu', () =>
+  COPY.contactNotice.startsWith('연락처·카톡·외부 링크는 올릴 수 없어요') && COPY.contactNotice.includes('정부·교육기관 주소(.go.kr, .ac.kr)는 인용할 수 있어요'),
+);
+{
+  const inputs = [...Object.values(CITE_ALLOWED), ...Object.values(CITE_BLOCKED), ...CITE_EXTRA];
+  const php = [process.env.PHP_BIN, 'D:\\php8.2\\php.exe', 'php'].filter(Boolean).find((bin) => {
+    try {
+      return spawnSync(bin, ['-v'], { encoding: 'utf8' }).status === 0;
+    } catch {
+      return false;
+    }
+  });
+  if (php) {
+    const code = `require '${join(root, 'src', 'bootstrap.php').replace(/\\/g, '/')}'; echo json_encode(array_map(fn($t) => Study114\\Board\\InfoBoardService::findBlockedContact($t), json_decode(stream_get_contents(STDIN), true)));`;
+    const out = spawnSync(php, ['-r', code], { encoding: 'utf8', input: JSON.stringify(inputs) });
+    let phpReasons = [];
+    try {
+      phpReasons = JSON.parse(out.stdout || '[]');
+    } catch {
+      phpReasons = [];
+    }
+    const jsReasons = inputs.map(findBlockedContact);
+    const diff = inputs.filter((_, i) => phpReasons[i] !== jsReasons[i]);
+    ok('cite_fake_server_equals_php_judgement', phpReasons.length === inputs.length && diff.length === 0, diff.join(' | '));
+  } else {
+    console.log('INFO  cite_fake_server_equals_php_judgement — php 실행 파일 없음, verify-student-tips-board.php 로 확인');
+  }
+}
+ok('cite_fake_allowed_and_blocked', () =>
+  Object.values(CITE_ALLOWED).every((t) => findBlockedContact(t) === null) && Object.values(CITE_BLOCKED).every((t) => findBlockedContact(t) !== null),
+);
+
+const CITE_BOARDS = {
+  [KEY]: { who: 'student', path: PATH, cat: 'study-howto' },
+  'info-room': { who: 'room_paid', path: '/library/room-info', cat: 'recruit' },
+  'info-tutor': { who: 'tutor_paid', path: '/library/tutor-tips', cat: 'lesson' },
+};
+const rowsOf = (b) => (b === KEY ? db.posts : db.provider[b]);
+for (const [b, cfg] of Object.entries(CITE_BOARDS)) {
+  const saved = {};
+  await okAsync(`cite_${b}_compose_notice_shows_gov_edu`, async () => {
+    const viewer = await signIn(cfg.who);
+    await store.loadInfoList(viewer, b, '');
+    const html = screens.renderInfoBoardScreen(`${cfg.path}/new`, viewer);
+    return html.includes('data-info-contact-notice') && html.includes('정부·교육기관 주소(.go.kr, .ac.kr)는 인용할 수 있어요');
+  });
+  for (const [name, text] of Object.entries(CITE_ALLOWED)) {
+    await okAsync(`cite_${b}_allow_${name}_saved_and_reloaded`, async () => {
+      const viewer = store.currentInfoViewer();
+      const p = await store.saveInfoPost(viewer, { boardKey: b, title: '공식 안내 인용', body: text, category: cfg.cat });
+      saved[name] = p.id;
+      store.resetInfoBoardData();
+      const list = await store.loadInfoList(viewer, b, '');
+      const detail = await store.loadInfoPost(viewer, b, p.id);
+      return Boolean(p.id) && list.status === 'ready' && list.posts.some((x) => x.id === p.id) && detail.post?.body === text;
+    });
+  }
+  await okAsync(`cite_${b}_form_submit_allowed_saves`, async () => {
+    const viewer = store.currentInfoViewer();
+    await store.loadInfoList(viewer, b, '');
+    const f = fakeFormRoot(b, '', { title: '홈택스(hometax.go.kr) 신고 순서', body: '교육청 공지 www.sen.go.kr', category: cfg.cat });
+    globalThis.location.hash = `#${cfg.path}/new`;
+    screens.bindInfoBoardEvents(f.root, () => {}, `${cfg.path}/new`);
+    const before = rowsOf(b).length;
+    await f.submit();
+    const hash = globalThis.location.hash;
+    globalThis.location.hash = '#/guest';
+    return rowsOf(b).length === before + 1 && f.errorEl.hidden === true && hash === `#${cfg.path}`;
+  });
+  for (const [name, text] of Object.entries(CITE_BLOCKED)) {
+    await okAsync(`cite_${b}_block_${name}_422`, async () => {
+      const viewer = store.currentInfoViewer();
+      const before = rowsOf(b).length;
+      try {
+        await store.saveInfoPost(viewer, { boardKey: b, title: '운영 팁', body: text, category: cfg.cat });
+        return false;
+      } catch (e) {
+        return e.status === 422 && e.message === BLOCKED_MSG && rowsOf(b).length === before;
+      }
+    });
+  }
+  await okAsync(`cite_${b}_edit_allow_saved_and_reloaded`, async () => {
+    const viewer = store.currentInfoViewer();
+    const body = '교육청 공지 www.sen.go.kr 와 https://www.hometax.go.kr/ 참고';
+    const p = await store.saveInfoPost(viewer, { boardKey: b, postKey: saved.snu_ac, title: '입시요강 인용(보강)', body, category: cfg.cat });
+    store.resetInfoBoardData();
+    const detail = await store.loadInfoPost(viewer, b, saved.snu_ac);
+    return p.edited === true && detail.post?.body === body;
+  });
+  await okAsync(`cite_${b}_edit_block_keeps_post`, async () => {
+    const viewer = store.currentInfoViewer();
+    for (const text of Object.values(CITE_BLOCKED)) {
+      try {
+        await store.saveInfoPost(viewer, { boardKey: b, postKey: saved.hometax_paren, title: '고침', body: text, category: cfg.cat });
+        return false;
+      } catch (e) {
+        if (e.status !== 422 || e.message !== BLOCKED_MSG) return false;
+      }
+    }
+    const p = rowsOf(b).find((x) => x.id === saved.hometax_paren);
+    return p?.title === '공식 안내 인용' && p?.body === CITE_ALLOWED.hometax_paren;
+  });
+}
 
 /* ══════ (d) 「응원해요」 ══════ */
 await okAsync('cheer_posts_board_key_only', async () => {

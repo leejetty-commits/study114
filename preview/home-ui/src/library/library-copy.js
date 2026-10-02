@@ -67,17 +67,6 @@ export const STUDENT_TIPS_BOARD = {
 /** 자료실 게시판 전체(입구 카드·화면·레일 배너 순서). 역할별 노출은 board-channel-acl 이 정한다. */
 export const LIBRARY_BOARDS = [...INFO_BOARDS, STUDENT_TIPS_BOARD];
 
-/** 학생 꿀팁 가이드에만 쓰는 문구 — 「응원해요」 하나, 연락처 차단 안내 */
-export const STUDENT_TIPS_COPY = {
-  cheer: '응원해요',
-  cheerEmoji: '🎉',
-  cheerLogin: '로그인하면 응원할 수 있어요',
-  cheerFailed: '응원을 전하지 못했어요. 잠시 후 다시 시도해 주세요',
-  freeProviderCompose: '공부방·과외쌤 글쓰기는 픽·프라임을 이용 중일 때 할 수 있어요',
-  contactNotice: '연락처·카톡·외부 링크는 올릴 수 없어요',
-  fieldBodyPlaceholder: '친구·후배에게 알려 주고 싶은 꿀팁을 적어 주세요',
-};
-
 export const INFO_BOARD_COPY = {
   empty: '아직 글이 도착하지 않았어요. 첫 정보를 기다려요',
   loadFailed: '글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요',
@@ -102,6 +91,7 @@ export const INFO_BOARD_COPY = {
   fieldTitlePlaceholder: '한눈에 알 수 있는 제목',
   fieldBody: '본문',
   fieldBodyPlaceholder: '나누고 싶은 정보를 적어 주세요',
+  contactNotice: '연락처·카톡·외부 링크는 올릴 수 없어요. 정부·교육기관 주소(.go.kr, .ac.kr)는 인용할 수 있어요',
   submitNew: '올리기',
   submitEdit: '저장하기',
   saving: '저장하는 중…',
@@ -119,6 +109,17 @@ export const INFO_BOARD_COPY = {
   editNotAllowed: '이 글은 고칠 수 없어요',
   edited: '수정됨',
   flashClose: '닫기',
+};
+
+/** 학생 꿀팁 가이드에만 쓰는 문구 — 「응원해요」 하나. 연락처 차단 안내는 세 게시판 공용(INFO_BOARD_COPY) */
+export const STUDENT_TIPS_COPY = {
+  cheer: '응원해요',
+  cheerEmoji: '🎉',
+  cheerLogin: '로그인하면 응원할 수 있어요',
+  cheerFailed: '응원을 전하지 못했어요. 잠시 후 다시 시도해 주세요',
+  freeProviderCompose: '공부방·과외쌤 글쓰기는 픽·프라임을 이용 중일 때 할 수 있어요',
+  contactNotice: INFO_BOARD_COPY.contactNotice,
+  fieldBodyPlaceholder: '친구·후배에게 알려 주고 싶은 꿀팁을 적어 주세요',
 };
 
 /** 우측 레일 정보 게시판 배너 · 레일 읽기 팝업 문구. 배너 제목은 LIBRARY_BOARDS 의 label 을 쓴다. */

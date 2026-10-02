@@ -8,7 +8,10 @@ declare(strict_types=1);
  * (b) 계정 7종(게스트·학생·무료 공부방·유료 공부방·무료 과외쌤·유료 과외쌤·관리자) × 읽기·쓰기·수정·삭제 (서버 서비스 호출)
  * (c) 작성자 가리기: 3자 이상 「최진○」, 2자 「최○」, 1자 「○」. 응답 어디에도 이름 원문 없음, 학교·학년·연락처 키 없음
  * (d) 「응원해요」: 계정당 글마다 1회 토글, 게스트·member 불가, 고민방 반응 API·이달의 베스트 합계와 분리
- * (e) 연락처·외부 링크 차단(서버 판정, 422). 공급자 정보 게시판 동작은 그대로
+ * (e) 연락처·외부 링크 차단(서버 판정, 422)
+ * (e2) 사이트오류-7: 공급자 정보 게시판(info-room · info-tutor)도 같은 함수·같은 422 로 작성·수정을 막는다.
+ *      정상 글은 저장·재조회 후 남고, 기존 저장 글은 목록·상세에서 그대로 읽히며 삭제도 막지 않는다. 권한 응답(403)은 그대로
+ * (e3) 사이트오류-7b: 정부·교육기관 주소(*.go.kr · *.ac.kr)만 인용 허용(세 게시판 공통). 일반 도메인·위장 호스트·섞임·이메일·메신저·전화는 422
  * (f) 시드·샘플 글 없음, DB 스키마 변경 없음(기존 ENUM 값만 사용)
  * Connection 에 메모리 가짜 PDO(board_posts · board_post_reactions · students 흉내)를 주입한다. 실제 DB 에 접속하지 않는다.
  * 실행: D:\php8.2\php.exe scripts/verify-student-tips-board.php
@@ -845,8 +848,275 @@ foreach ([
     ok("contact_allow_{$name}", static fn (): bool => statusOf(static fn () => saveVia($auth['student'], $tip('허용 확인', 'study-howto', $text))) === 200);
 }
 ok('contact_filter_single_function', substr_count($infoSrc, 'self::findBlockedContact(') === 2 && str_contains($infoSrc, 'public static function findBlockedContact('));
-ok('contact_provider_boards_unchanged', static fn (): bool =>
-    statusOf(static fn () => infoSvc($GLOBALS['pdo'])->save(['board_key' => 'info-room', 'title' => '문의', 'body' => '010-1234-5678', 'category' => 'recruit'], $auth['room_paid'])) === 200);
+// 사이트오류-7: 공급자 정보 게시판도 막는다(이전 기대값 200 → 정책 변경으로 422)
+ok('contact_provider_boards_blocked_too', static fn (): bool =>
+    statusOf(static fn () => infoSvc($GLOBALS['pdo'])->save(['board_key' => 'info-room', 'title' => '문의', 'body' => '010-1234-5678', 'category' => 'recruit'], $auth['room_paid'])) === 422);
+ok('contact_block_admin_student_tips', static fn (): bool => statusOf(static fn () => saveVia($auth['admin'], $tip('운영 안내', 'study-howto', '문의는 help@example.com'))) === 422);
+
+// ── (e2) 사이트오류-7 · 공급자 정보 게시판 2곳 연락처·외부 링크 차단 ──
+$providerBoards = [
+    'info-room' => ['who' => 'room_paid', 'uid' => 11, 'role' => 'study_room', 'cat' => 'recruit', 'cat2' => 'know-how', 'other' => 'tutor_paid'],
+    'info-tutor' => ['who' => 'tutor_paid', 'uid' => 21, 'role' => 'tutor', 'cat' => 'lesson', 'cat2' => 'consult-match', 'other' => 'room_paid'],
+];
+$providerBlocked = [
+    'phone_dash' => '상담 문의 010-1234-5678',
+    'phone_plain' => '01098765432 로 연락 주세요',
+    'landline' => '학원 대표번호 031-123-4567',
+    'url_https' => '자세한 건 https://example.com/room 참고',
+    'url_www' => 'www.myroom.org 에 정리',
+    'domain' => 'myroom.kr 에서 확인',
+    'email' => '문의 room@example.com',
+    'kakao' => '카카오 채널로 문의 주세요',
+    'kakaotalk' => '카톡 아이디 남겨요',
+    'openchat' => '오픈채팅방 링크 드려요',
+    'telegram' => 'telegram 으로 연락',
+];
+$pSave = static fn (string $board, ?array $who, array $input): array => boardSvc($GLOBALS['pdo'])->save($input + ['board_key' => $board], $who);
+$pList = static fn (string $board, ?array $who, ?string $postKey = null): array => boardSvc($GLOBALS['pdo'])->list($board, null, $postKey, $who, null, null, null, null);
+$boardRows = static fn (string $board): array => array_values(array_filter($GLOBALS['pdo']->posts, static fn (array $r): bool => $r['board_key'] === $board));
+$blockedMessageOf = static function (callable $fn): string {
+    try {
+        $fn();
+    } catch (InvalidArgumentException $e) {
+        return $e->getMessage();
+    }
+
+    return '';
+};
+
+foreach ($providerBoards as $board => $cfg) {
+    $writer = $auth[$cfg['who']];
+    $post = static fn (string $title, string $body, ?string $cat = null): array => ['title' => $title, 'body' => $body, 'category' => $cat ?? $cfg['cat']];
+
+    // 작성: 본문·제목 차단, 사유 = info-student 와 같은 메시지, 저장 행 없음
+    $before = count($boardRows($board));
+    foreach ($providerBlocked as $name => $text) {
+        ok("provider_{$board}_block_body_{$name}", static fn (): bool => statusOf(static fn () => $pSave($board, $writer, $post('운영 팁', $text))) === 422);
+    }
+    ok("provider_{$board}_block_title", static fn (): bool => statusOf(static fn () => $pSave($board, $writer, $post('카톡 010-9999-8888', '본문'))) === 422);
+    ok("provider_{$board}_block_no_row_written", static fn (): bool => count($boardRows($board)) === $before);
+    ok("provider_{$board}_block_same_message", static fn (): bool =>
+        $blockedMessageOf(static fn () => $pSave($board, $writer, $post('t', '카카오 문의'))) === InfoBoardService::BLOCKED_CONTACT_MESSAGE
+        && $blockedMessageOf(static fn () => saveVia($writer, $tip('t', 'study-howto', '카카오 문의'))) === InfoBoardService::BLOCKED_CONTACT_MESSAGE);
+    ok("provider_{$board}_block_admin", static fn (): bool => statusOf(static fn () => $pSave($board, $auth['admin'], $post('운영 안내', 'https://study114.net/notice'))) === 422);
+
+    // 정상 글: 저장 → 새 서비스로 재조회(목록·상세) 후 남음, 수정도 저장·재조회
+    $clean = [];
+    ok("provider_{$board}_clean_saved_and_reloaded", static function () use ($board, $writer, $post, $pSave, $pList, $cfg, $auth, &$clean): bool {
+        $clean = $pSave($board, $writer, $post('첫 상담 체크리스트', "1. 목표 듣기\n2. 주 2회 일정 맞추기", $cfg['cat2']));
+        $list = $pList($board, $writer);
+        $detail = $pList($board, $auth['admin'], (string) ($clean['id'] ?? ''));
+        $row = rowOf($GLOBALS['pdo'], (string) ($clean['id'] ?? ''));
+
+        return ($clean['id'] ?? '') !== ''
+            && in_array($clean['id'], array_column($list['posts'] ?? [], 'id'), true)
+            && ($detail['post']['body'] ?? '') === "1. 목표 듣기\n2. 주 2회 일정 맞추기"
+            && ($row['status'] ?? '') === 'published' && (int) ($row['author_user_id'] ?? 0) === $cfg['uid'];
+    });
+    ok("provider_{$board}_clean_edit_saved_and_reloaded", static function () use ($board, $writer, $post, $pSave, $pList, &$clean): bool {
+        $pk = (string) ($clean['id'] ?? '');
+        $p = $pSave($board, $writer, ['post_key' => $pk] + $post('첫 상담 체크리스트(보강)', '목표·일정·숙제량 순서로 묻기'));
+        $detail = $pList($board, $writer, $pk);
+
+        return ($p['edited'] ?? false) === true && ($detail['post']['title'] ?? '') === '첫 상담 체크리스트(보강)'
+            && ($detail['post']['body'] ?? '') === '목표·일정·숙제량 순서로 묻기';
+    });
+    ok("provider_{$board}_block_on_edit_keeps_row", static function () use ($board, $writer, $post, $pSave, &$clean): bool {
+        $pk = (string) ($clean['id'] ?? '');
+        $status = statusOf(static fn () => $pSave($board, $writer, ['post_key' => $pk] + $post('고침', '문의 010-2222-3333')));
+        $row = rowOf($GLOBALS['pdo'], $pk);
+
+        return $status === 422 && ($row['title'] ?? '') === '첫 상담 체크리스트(보강)' && ($row['description'] ?? '') === '목표·일정·숙제량 순서로 묻기';
+    });
+
+    // 차단 도입 전에 저장된 글(연락처 포함): 목록·상세 그대로, 게스트 제목만, 수정은 막고, 삭제는 막지 않는다
+    $legacyKey = "{$board}-legacy-contact";
+    $legacyBody = '예전 글: 상담은 010-5555-6666 / https://old.example.com';
+    $GLOBALS['pdo']->run(
+        'INSERT INTO board_posts (board_key, post_key, author_user_id, author_role, status, title, description, memo, category_id, file_label, meta_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [$board, $legacyKey, $cfg['uid'], $cfg['role'], 'published', '예전 카톡 상담 안내', $legacyBody, '', $cfg['cat'], '', null],
+    );
+    ok("provider_{$board}_legacy_list_detail_readable", static function () use ($board, $pList, $auth, $cfg, $legacyKey, $legacyBody): bool {
+        foreach ([$cfg['who'], $cfg['other'], 'room_free', 'tutor_free', 'admin'] as $who) {
+            $list = $pList($board, $auth[$who]);
+            $detail = $pList($board, $auth[$who], $legacyKey);
+            $hit = array_values(array_filter($list['posts'] ?? [], static fn (array $p): bool => $p['id'] === $legacyKey))[0] ?? [];
+            if (($hit['body'] ?? '') !== $legacyBody || ($detail['post']['body'] ?? '') !== $legacyBody || ($detail['post']['title'] ?? '') !== '예전 카톡 상담 안내') {
+                return false;
+            }
+        }
+
+        return true;
+    });
+    ok("provider_{$board}_legacy_guest_titles", static function () use ($board, $pList, $legacyKey): bool {
+        $list = $pList($board, null);
+        $hit = array_values(array_filter($list['posts'] ?? [], static fn (array $p): bool => $p['id'] === $legacyKey))[0] ?? [];
+
+        return ($list['access'] ?? '') === 'titles' && ($hit['title'] ?? '') === '예전 카톡 상담 안내' && !array_key_exists('body', $hit);
+    });
+    ok("provider_{$board}_legacy_edit_with_contact_blocked", static function () use ($board, $writer, $post, $pSave, $legacyKey, $legacyBody): bool {
+        $status = statusOf(static fn () => $pSave($board, $writer, ['post_key' => $legacyKey] + $post('예전 카톡 상담 안내', $legacyBody)));
+
+        return $status === 422 && (rowOf($GLOBALS['pdo'], $legacyKey)['description'] ?? '') === $legacyBody;
+    });
+    ok("provider_{$board}_legacy_delete_not_blocked", static function () use ($board, $writer, $legacyKey): bool {
+        $status = statusOf(static fn () => boardSvc($GLOBALS['pdo'])->delete($board, $legacyKey, '', $writer));
+
+        return $status === 200 && (rowOf($GLOBALS['pdo'], $legacyKey)['status'] ?? '') === 'deleted';
+    });
+
+    // 권한 응답은 그대로: 학생·무료 공급자는 연락처가 있어도 403(내용 판정보다 먼저)
+    ok("provider_{$board}_student_still_403", static fn (): bool =>
+        statusOf(static fn () => $pSave($board, $auth['student'], $post('t', '010-1234-5678'))) === 403
+        && statusOf(static fn () => $pSave($board, $auth['student'], $post('t', '본문'))) === 403
+        && statusOf(static fn () => $pList($board, $auth['student'])) === 403);
+    ok("provider_{$board}_free_provider_still_403", static fn (): bool =>
+        statusOf(static fn () => $pSave($board, $auth['room_free'], $post('t', 'https://x.com'))) === 403
+        && statusOf(static fn () => $pSave($board, $auth['tutor_free'], $post('t', '본문'))) === 403);
+}
+$apiSrc = (string) file_get_contents(ROOT . '/src/Board/BoardApi.php');
+$postsSrc = (string) file_get_contents(ROOT . '/public/api/board/posts.php');
+ok('provider_block_same_422_validation_key', (bool) preg_match("/catch \\(InvalidArgumentException \\\$e\\) \\{\\s*self::fail\\(422, 'validation', \\\$e->getMessage\\(\\)\\);/", $apiSrc)
+    && str_contains($postsSrc, 'BoardApi::run(') && str_contains($postsSrc, '$service->save(BoardApi::readJson(), $auth)'));
+ok('provider_block_only_in_save_path', static function () use ($infoSrc): bool {
+    $saveAt = strpos($infoSrc, 'public function save(');
+    $nextAt = strpos($infoSrc, 'public function toggleCheer(');
+    $first = strpos($infoSrc, 'self::findBlockedContact(');
+    $last = strrpos($infoSrc, 'self::findBlockedContact(');
+
+    return $saveAt !== false && $nextAt !== false && $first > $saveAt && $last < $nextAt
+        && !preg_match('/isStudentTipsBoard\(\$boardKey\)\s*&&\s*\(self::findBlockedContact/', $infoSrc);
+});
+
+// ── (e3) 사이트오류-7b · 정부·교육기관 주소(.go.kr · .ac.kr) 인용 허용. 세 게시판 공통, url·domain 판정에만 ──
+$citeAllowed = [
+    'hometax_paren' => '홈택스(hometax.go.kr)에서 신고',
+    'sen_www' => '교육청 공지 www.sen.go.kr',
+    'hometax_https' => 'https://www.hometax.go.kr/ 참고',
+    'snu_ac' => 'snu.ac.kr 입시요강',
+];
+$citeBlocked = [
+    'adiga' => ['adiga.kr', 'domain'],
+    'blog_naver' => ['blog.naver.com', 'domain'],
+    'co_kr' => ['abc.co.kr', 'domain'],
+    'example_org' => ['example.org', 'domain'],
+    'spoof_suffix' => ['hometax.go.kr.evil.com', 'domain'],
+    'spoof_glued' => ['evilgo.kr', 'domain'],
+    'email_gov' => ['a@hometax.go.kr', 'domain'],
+    'kakaomap' => ['카카오맵으로 위치 확인', 'messenger'],
+    'tax_office_phone' => ['세무서 02-123-4567', 'phone'],
+    'mixed' => ['hometax.go.kr 그리고 adiga.kr', 'domain'],
+];
+ok('cite_fn_allowed_null', static function () use ($citeAllowed): bool {
+    foreach ($citeAllowed as $text) {
+        if (InfoBoardService::findBlockedContact($text) !== null) {
+            return false;
+        }
+    }
+
+    return true;
+});
+ok('cite_fn_blocked_reason_keys', static function () use ($citeBlocked): bool {
+    foreach ($citeBlocked as [$text, $reason]) {
+        if (InfoBoardService::findBlockedContact($text) !== $reason) {
+            return false;
+        }
+    }
+
+    return true;
+});
+ok('cite_fn_host_spoofs_blocked', static function (): bool {
+    foreach ([
+        'go.kr.example.com', 'xgo.kr', 'go.kr', 'hometax.go.kr.한국', 'https://sen.go.kr한글.xyz',
+        'https://hometax.go.kr@evil.xyz', 'https://hometax.go.kr&@evil.xyz', 'https://www.hometax.go.kr/?r=evil.com',
+        'www.sen.go.kr 와 www.example.org', 'https://www.hometax.go.kr/ 그리고 https://x.co',
+    ] as $text) {
+        if (!in_array(InfoBoardService::findBlockedContact($text), ['url', 'domain'], true)) {
+            return false;
+        }
+    }
+
+    return true;
+});
+ok('cite_fn_other_rules_unchanged', static fn (): bool =>
+    InfoBoardService::findBlockedContact('https://x.co') === 'url'
+    && InfoBoardService::findBlockedContact('www.example.org 참고') === 'url'
+    && InfoBoardService::findBlockedContact('mytips.kr 에 정리해 둠') === 'domain'
+    && InfoBoardService::findBlockedContact('메일 tips@example.com') === 'domain'
+    && InfoBoardService::findBlockedContact('a@b.xyz') === 'email'
+    && InfoBoardService::findBlockedContact('hometax.go.kr 메일 tax@b.xyz') === 'email'
+    && InfoBoardService::findBlockedContact('hometax.go.kr 010-1234-5678') === 'phone'
+    && InfoBoardService::findBlockedContact('snu.ac.kr 카톡 주세요') === 'messenger'
+    && InfoBoardService::findBlockedContact('kakao www.sen.go.kr') === 'messenger');
+ok('cite_single_impl_no_board_branch', static function () use ($infoSrc): bool {
+    $fn = new ReflectionMethod(InfoBoardService::class, 'findBlockedContact');
+
+    return $fn->getNumberOfParameters() === 1 && substr_count($infoSrc, '(?:go|ac)\.kr') === 1
+        && substr_count($infoSrc, 'self::findBlockedContact(') === 2;
+});
+
+$citeBoards = [
+    KEY => ['who' => 'student', 'cat' => 'study-howto'],
+    'info-room' => ['who' => 'room_paid', 'cat' => 'know-how'],
+    'info-tutor' => ['who' => 'tutor_paid', 'cat' => 'lesson'],
+];
+foreach ($citeBoards as $board => $cfg) {
+    $writer = $auth[$cfg['who']];
+    $in = static fn (string $title, string $body, ?string $pk = null): array => ($pk !== null ? ['post_key' => $pk] : []) + ['title' => $title, 'body' => $body, 'category' => $cfg['cat']];
+    $savedCite = [];
+
+    // 허용: 저장 → 새 서비스로 목록·상세 재조회 후 그대로 남음
+    foreach ($citeAllowed as $name => $text) {
+        ok("cite_{$board}_allow_{$name}_saved_and_reloaded", static function () use ($board, $writer, $in, $text, $name, $pSave, $pList, $auth, &$savedCite): bool {
+            $p = $pSave($board, $writer, $in('공식 안내 인용', $text));
+            $pk = (string) ($p['id'] ?? '');
+            $savedCite[$name] = $pk;
+            $list = $pList($board, $writer);
+            $detail = $pList($board, $auth['admin'], $pk);
+            $row = rowOf($GLOBALS['pdo'], $pk);
+
+            return $pk !== '' && in_array($pk, array_column($list['posts'] ?? [], 'id'), true)
+                && ($detail['post']['body'] ?? '') === $text
+                && ($row['description'] ?? '') === $text && ($row['status'] ?? '') === 'published';
+        });
+    }
+    ok("cite_{$board}_allow_in_title", static function () use ($board, $writer, $in, $pSave, $pList): bool {
+        $p = $pSave($board, $writer, $in('홈택스(hometax.go.kr) 신고 순서', '메뉴에서 신고를 고르면 돼요.'));
+
+        return ($pList($board, $writer, (string) ($p['id'] ?? ''))['post']['title'] ?? '') === '홈택스(hometax.go.kr) 신고 순서';
+    });
+
+    // 차단: 422 · 같은 메시지 · 저장 행 없음
+    $before = count($boardRows($board));
+    foreach ($citeBlocked as $name => [$text]) {
+        ok("cite_{$board}_block_{$name}_422", static fn (): bool => statusOf(static fn () => $pSave($board, $writer, $in('운영 팁', $text))) === 422);
+    }
+    ok("cite_{$board}_block_in_title_422", static fn (): bool => statusOf(static fn () => $pSave($board, $writer, $in('adiga.kr 정리', '본문'))) === 422);
+    ok("cite_{$board}_block_no_row_written", static fn (): bool => count($boardRows($board)) === $before);
+    ok("cite_{$board}_block_same_message", static fn (): bool =>
+        $blockedMessageOf(static fn () => $pSave($board, $writer, $in('t', 'hometax.go.kr 그리고 adiga.kr'))) === InfoBoardService::BLOCKED_CONTACT_MESSAGE);
+
+    // 수정 경로도 같은 판정
+    ok("cite_{$board}_edit_allow_saved_and_reloaded", static function () use ($board, $writer, $in, $pSave, $pList, &$savedCite): bool {
+        $pk = (string) ($savedCite['snu_ac'] ?? '');
+        $body = '교육청 공지 www.sen.go.kr 와 https://www.hometax.go.kr/ 참고';
+        $p = $pSave($board, $writer, $in('입시요강 인용(보강)', $body, $pk));
+        $detail = $pList($board, $writer, $pk);
+
+        return $pk !== '' && ($p['edited'] ?? false) === true && ($detail['post']['body'] ?? '') === $body;
+    });
+    ok("cite_{$board}_edit_block_keeps_row", static function () use ($board, $writer, $in, $pSave, $citeBlocked, &$savedCite): bool {
+        $pk = (string) ($savedCite['hometax_paren'] ?? '');
+        foreach ($citeBlocked as [$text]) {
+            if (statusOf(static fn () => $pSave($board, $writer, $in('고침', $text, $pk))) !== 422) {
+                return false;
+            }
+        }
+        $row = rowOf($GLOBALS['pdo'], $pk);
+
+        return $pk !== '' && ($row['title'] ?? '') === '공식 안내 인용' && ($row['description'] ?? '') === '홈택스(hometax.go.kr)에서 신고';
+    });
+}
 
 // ── (f) 시드 없음 · DB 스키마 변경 없음 ──
 ok('no_seed_in_sql_dir', static function (): bool {

@@ -17,7 +17,8 @@ use Study114\Paid\PaidProviderGate;
  * - 「학생 꿀팁 가이드」(info-student)
  *   읽기: 학생·공부방·과외쌤·관리자 전체, 게스트·member 제목만.
  *   쓰기: 학생 + 관리자 + 유료 공급자. 반응은 「응원해요」 하나(계정당 글마다 1회 토글). 댓글·첨부 없음.
- *   연락처·외부 링크 차단, 학생 작성자 이름은 응답 직전에 서버에서 가린다.
+ *   학생 작성자 이름은 응답 직전에 서버에서 가린다.
+ * 세 게시판 공통: 글 작성·수정 때 제목·본문의 연락처·외부 링크를 막는다(관리자 포함). 읽기·삭제는 막지 않는다.
  * 수정: 작성자 본인이면서 지금 쓸 수 있는 계정, 관리자. 삭제: 작성자 본인, 관리자.
  */
 final class InfoBoardService
@@ -90,6 +91,7 @@ final class InfoBoardService
     /**
      * 연락처·외부 링크 판정. 걸리면 사유 키, 아니면 null.
      * NeighborhoodGreetingService::validate 의 연락처 패턴 + 이메일·텔레그램.
+     * url·domain 후보가 모두 정부·교육기관 호스트(*.go.kr · *.ac.kr)면 그 두 판정만 통과한다.
      */
     public static function findBlockedContact(string $text): ?string
     {
@@ -99,11 +101,15 @@ final class InfoBoardService
         if (preg_match('/카카오|카톡|오픈채팅|오픈톡|kakao|텔레그램|telegram/iu', $text)) {
             return 'messenger';
         }
-        if (preg_match('/https?:\/\/|www\./iu', $text)) {
-            return 'url';
-        }
-        if (preg_match('/\b[\w-]+\.(com|kr|net|me|io|co|org|ly|link|site)\b/iu', $text)) {
-            return 'domain';
+        $hasUrl = preg_match_all('/https?:\/\/|www\./iu', $text, $urlHits, PREG_OFFSET_CAPTURE) > 0;
+        $hasDomain = preg_match_all('/\b[\w-]+\.(com|kr|net|me|io|co|org|ly|link|site)\b/iu', $text, $domainHits, PREG_OFFSET_CAPTURE) > 0;
+        if ($hasUrl || $hasDomain) {
+            $hits = array_merge($hasUrl ? $urlHits[0] : [], $hasDomain ? $domainHits[0] : []);
+            foreach ($hits as [$hit, $offset]) {
+                if (!self::isAllowedCitationHost(self::citationHostAt($text, $hit, $offset))) {
+                    return $hasUrl ? 'url' : 'domain';
+                }
+            }
         }
         if (preg_match('/[\w.+-]+@[\w-]+(\.[\w-]+)+/u', $text)) {
             return 'email';
@@ -114,6 +120,56 @@ final class InfoBoardService
         }
 
         return null;
+    }
+
+    /**
+     * url·domain 판정에 걸린 자리($offset, 바이트)의 호스트. 사용자 정보(@)가 붙었거나 호스트를 정할 수 없으면 null.
+     * https?:// 는 뒤따르는 authority, www.·도메인은 그 자리를 품은 [\w.-] 덩어리 전체를 본다.
+     */
+    private static function citationHostAt(string $text, string $hit, int $offset): ?string
+    {
+        $after = substr($text, $offset + strlen($hit));
+        if (preg_match('/^https?:\/\//i', $hit)) {
+            preg_match('/^[^\s\/?#\\\\]*/u', $after, $authority);
+            $raw = $authority[0] ?? '';
+            if (str_contains($raw, '@')) {
+                return null;
+            }
+
+            return self::normalizeCitationHost($raw);
+        }
+        preg_match('/[\w.-]*$/u', substr($text, 0, $offset), $left);
+        preg_match('/^[\w.-]*/u', $after, $right);
+        $start = $offset - strlen($left[0] ?? '');
+        if ($start > 0 && $text[$start - 1] === '@') {
+            return null;
+        }
+
+        return self::normalizeCitationHost(($left[0] ?? '') . $hit . ($right[0] ?? ''));
+    }
+
+    /**
+     * 앞쪽 비영숫자(한글·괄호·점)를 떼고 ASCII 호스트 부분만 남긴다. 「hometax.go.kr에서」처럼 조사가 붙은 경우는 떼되,
+     * 「…go.kr.한국」「…go.kr한글.xyz」처럼 뒤에 다른 라벨이 이어질 수 있으면 null.
+     */
+    private static function normalizeCitationHost(string $raw): ?string
+    {
+        $s = (string) preg_replace('/^[^A-Za-z0-9]+/u', '', $raw);
+        preg_match('/^[A-Za-z0-9.-]*/', $s, $m);
+        $ascii = $m[0] ?? '';
+        $rest = substr($s, strlen($ascii));
+        if ($rest !== '' && preg_match('/^[\p{L}\p{N}_]/u', $rest) && (str_ends_with($ascii, '.') || str_contains($rest, '.'))) {
+            return null;
+        }
+
+        return strtolower(rtrim($ascii, '.-'));
+    }
+
+    /** 정부·교육기관 호스트만: 라벨 하나 이상 + 정확히 .go.kr / .ac.kr 로 끝남(서브도메인 포함). */
+    private static function isAllowedCitationHost(?string $host): bool
+    {
+        return $host !== null
+            && preg_match('/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:go|ac)\.kr$/', $host) === 1;
     }
 
     public static function isInfoBoard(string $boardKey): bool
@@ -265,8 +321,7 @@ final class InfoBoardService
             $boardKey,
             trim((string) ($input['category'] ?? $input['category_id'] ?? $input['categoryId'] ?? '')),
         );
-        if (self::isStudentTipsBoard($boardKey)
-            && (self::findBlockedContact($title) !== null || self::findBlockedContact($body) !== null)) {
+        if (self::findBlockedContact($title) !== null || self::findBlockedContact($body) !== null) {
             throw new InvalidArgumentException(self::BLOCKED_CONTACT_MESSAGE);
         }
 
