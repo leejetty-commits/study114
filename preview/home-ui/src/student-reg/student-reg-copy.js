@@ -29,3 +29,29 @@ export const STUDENT_COUNT_HALT_COPY = {
     cta: '운영문의',
   },
 };
+
+/**
+ * 학생 분기(교습형태) 문구 한곳. 학생 홈 두 탭 · 찾기 링크배지 · 마이페이지 분기 변경 확인창 · 저장 후 새로고침 안내.
+ * 용어: 「학생」(「학부모」 금지).
+ */
+export const STUDENT_BRANCH_COPY = {
+  home: {
+    /** 「우리동네 학생」 탭 0건 */
+    studentEmptyTitle: (place) => `${place}에는 아직 함께 공부할 친구가 보이지 않아요`,
+    studentEmptyBody: '새 친구가 오면 여기에 먼저 보여 드릴게요.',
+    /** 하단 링크배지 — 탭별 찾기 페이지 */
+    findMore: {
+      room: '공부방찾기에서 더 찾아보기',
+      tutor: '과외쌤찾기에서 더 찾아보기',
+      student: '학생찾기에서 더 찾아보기',
+    },
+  },
+  mypage: {
+    changeConfirm:
+      '교습형태를 바꾸면 지역설정이 초기화돼요.\n새 지역을 다시 입력해 주세요.\n\n바꿀까요?',
+    savedRefresh: '저장했어요.\n상단 메뉴와 카드에 바로 반영되도록 새로고침해 주세요.',
+    branchSavedRefresh: '교습형태를 바꿨어요.\n상단 메뉴가 새 교습형태로 바뀌도록 새로고침해 주세요.',
+    regionEmptyHint: '지금은 지역이 비어 있어 카드가 잠시 쉬고 있어요. 지역을 입력하면 다시 보여요.',
+    draftMissing: (labels) => `기본정보에 빈 칸이 있어 카드가 잠시 쉬고 있어요: ${labels}`,
+  },
+};

@@ -1,5 +1,5 @@
 /** @typedef {'guest' | 'parent' | 'study_room' | 'tutor'} HomeRole */
-/** @typedef {'study_room' | 'tutor' | 'student'} ParentTab */
+/** @typedef {'study_room' | 'tutor' | 'student' | null} ParentTab 학생 홈 탭. null 이면 가입 분기의 첫 탭 */
 /** @typedef {'study_room' | 'tutor' | 'student'} ProviderHomeTab */
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
@@ -41,7 +41,7 @@ const SUPPORT_CTX_KEY = 'study114-preview-support-context';
 
 /** @type {{ parentTab: ParentTab, tutorTab: ProviderHomeTab, studyRoomTab: ProviderHomeTab, regionKey: 'complex' | 'dong', guestListPages: Record<string, number>, providerSubscription: ProviderSubscription, parentFind: import('@search-ui/search-find-surface.js').FindSurfaceState & { searchRows: object[], searchItems: object[] }, tutorFind: import('@search-ui/search-find-surface.js').FindSurfaceState & { searchRows: object[], searchItems: object[] }, studyRoomFind: import('@search-ui/search-find-surface.js').FindSurfaceState & { searchRows: object[], searchItems: object[] } }} */
 export const previewState = {
-  parentTab: 'study_room',
+  parentTab: null,
   tutorTab: 'tutor',
   studyRoomTab: 'study_room',
   regionKey: 'dong',
@@ -74,7 +74,7 @@ export const ROUTES = {
 
 export const SCREEN_META = {
   guest: { label: '비회원', role: 'guest' },
-  parent: { label: '학부모', role: 'parent' },
+  parent: { label: '학생', role: 'parent' },
   studyRoom: { label: '공부방', role: 'study_room' },
   tutor: { label: '과외쌤', role: 'tutor' },
   mypage: { label: '마이페이지', role: 'parent' },
@@ -101,7 +101,7 @@ export function setStudyRoomTab(tab) {
   previewState.studyRoomTab = tab;
 }
 
-/** 학부모 홈 — 탭 전환 시 검색 상태 초기화 */
+/** 학생 홈 — 탭 전환 시 검색 상태 초기화 */
 export function resetParentFind() {
   resetFindState(previewState.parentFind);
 }

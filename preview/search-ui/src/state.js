@@ -77,20 +77,23 @@ export function navigateTab(tab) {
   const role = parseNavRole(prev.role) || previewState.role;
   if (role && role !== 'guest') params.set('role', role);
   // 탭 전환 시 지역 SSOT 유지 (searched/filters 는 탭별이라 제거)
-  const region =
-    prev.region ||
-    previewState.canonicalLocation?.displayLabel ||
-    previewState.activeRegionLabel ||
-    '';
-  if (region) params.set('region', region);
-  const lat = prev.lat || (previewState.canonicalLocation?.lat != null
-    ? String(previewState.canonicalLocation.lat)
-    : '');
-  const lng = prev.lng || (previewState.canonicalLocation?.lng != null
-    ? String(previewState.canonicalLocation.lng)
-    : '');
-  if (lat) params.set('lat', lat);
-  if (lng) params.set('lng', lng);
+  // 학생은 탭마다 서버 저장 지역이 기준이라, 한 탭에서 고른 위치를 다른 탭으로 옮기지 않는다.
+  if (role !== 'parent') {
+    const region =
+      prev.region ||
+      previewState.canonicalLocation?.displayLabel ||
+      previewState.activeRegionLabel ||
+      '';
+    if (region) params.set('region', region);
+    const lat = prev.lat || (previewState.canonicalLocation?.lat != null
+      ? String(previewState.canonicalLocation.lat)
+      : '');
+    const lng = prev.lng || (previewState.canonicalLocation?.lng != null
+      ? String(previewState.canonicalLocation.lng)
+      : '');
+    if (lat) params.set('lat', lat);
+    if (lng) params.set('lng', lng);
+  }
   const qs = params.toString();
   window.location.hash = qs ? `${base}?${qs}` : base;
 }

@@ -175,6 +175,7 @@ final class StudentHubRepository
             $sets = [];
             $params = [];
             $values = [];
+            $branchChanged = $this->dropOppositeBranchRegion($studentId, $patch);
             foreach (self::PATCH_COLUMNS as $col) {
                 if (!array_key_exists($col, $patch)) {
                     continue;
@@ -184,6 +185,12 @@ final class StudentHubRepository
             // 단지 기준이면 단지가 속한 행정동을 공부방 희망지역으로 함께 저장한다(가입 기본정보와 같은 규칙).
             if (isset($values['preferred_studyroom_complex_id']) && !array_key_exists('preferred_studyroom_region_id', $values)) {
                 $values['preferred_studyroom_region_id'] = $this->complexRegionId((int) $values['preferred_studyroom_complex_id']);
+            }
+            // 분기가 바뀌면 지역설정을 초기화한다. 이번 요청이 보낸 새 분기 지역만 남는다.
+            if ($branchChanged) {
+                foreach ([...self::TUTOR_REGION_COLUMNS, ...self::STUDYROOM_REGION_COLUMNS] as $col) {
+                    $values[$col] = $values[$col] ?? null;
+                }
             }
             foreach ($values as $col => $value) {
                 $sets[] = "{$col} = ?";
@@ -221,6 +228,41 @@ final class StudentHubRepository
             }
             throw $e;
         }
+    }
+
+    /** 과외 분기 지역(시·군·구) */
+    private const TUTOR_REGION_COLUMNS = ['preferred_tutor_region_id'];
+
+    /** 공부방 분기 지역(동·단지·기준) */
+    private const STUDYROOM_REGION_COLUMNS = [
+        'preferred_studyroom_region_id', 'preferred_studyroom_complex_id', 'preferred_studyroom_region_basis',
+    ];
+
+    /**
+     * 학생은 분기(preferred_lesson_type) 하나만 가진다. 요청의 반대 분기 지역 값은 버린다(서버 강제).
+     * 같은 트랜잭션에서 현재 분기를 잠가 읽는다.
+     *
+     * @param array<string, mixed> $patch 요청 patch(참조로 고친다). 반대 분기 값은 검증 전에 버린다.
+     * @return bool 분기가 바뀌는 요청인지
+     */
+    private function dropOppositeBranchRegion(int $studentId, array &$patch): bool
+    {
+        $stmt = $this->pdo->prepare('SELECT preferred_lesson_type FROM students WHERE id = ? LIMIT 1 FOR UPDATE');
+        $stmt->execute([$studentId]);
+        $current = $stmt->fetchColumn();
+        $current = is_string($current) ? $current : null;
+        $branch = array_key_exists('preferred_lesson_type', $patch)
+            ? $this->normalizeStudentColumn('preferred_lesson_type', $patch['preferred_lesson_type'])
+            : $current;
+        if ($branch !== 'tutor' && $branch !== 'study_room') {
+            return false;
+        }
+        $opposite = $branch === 'tutor' ? self::STUDYROOM_REGION_COLUMNS : self::TUTOR_REGION_COLUMNS;
+        foreach ($opposite as $col) {
+            unset($patch[$col]);
+        }
+
+        return $current !== $branch;
     }
 
     private const PATCH_ENUMS = [
@@ -451,7 +493,9 @@ final class StudentHubRepository
     /** @param array<string, mixed> $row @return array<string, mixed> */
     private function hydrateStudentRow(int $studentId, array $row): array
     {
-        $regionLabel = $this->resolveStudentRegionLabel($row);
+        $tutorRegion = $this->officialRegion($row['preferred_tutor_region_id'] ?? null);
+        $studyroomRegion = $this->officialRegion($row['preferred_studyroom_region_id'] ?? null);
+        $regionLabel = $this->resolveStudentRegionLabel($row, $tutorRegion, $studyroomRegion);
         $subject = $this->primarySubject($studentId);
         $subjectLabel = $subject['name'];
         // 학교급은 students 컬럼이 없어 희망과목 행에 저장된다. 없을 때만 학년 글자로 추정한다.
@@ -477,6 +521,8 @@ final class StudentHubRepository
             'preferred_studyroom_complex_id'=> $row['preferred_studyroom_complex_id'] !== null ? (int) $row['preferred_studyroom_complex_id'] : null,
             'preferred_studyroom_region_basis' => $row['preferred_studyroom_region_basis'] !== null ? (string) $row['preferred_studyroom_region_basis'] : null,
             'preferred_region_note'         => $row['preferred_region_note'] !== null ? (string) $row['preferred_region_note'] : null,
+            'preferred_tutor_region_label'  => $tutorRegion['label'] ?? null,
+            'preferred_studyroom_region_label' => $studyroomRegion['label'] ?? null,
             'region_label'                  => $regionLabel,
             'subject_label'                 => $subjectLabel,
             'lesson_places'                 => $this->lessonPlaces($studentId),
@@ -502,20 +548,24 @@ final class StudentHubRepository
         return $out;
     }
 
-    /** @param array<string, mixed> $row */
-    private function resolveStudentRegionLabel(array $row): string
+    /**
+     * 가입 분기(preferred_lesson_type)의 지역 라벨만 쓴다. 분기 지역이 비면 빈 문자열(반대 축·메모로 채우지 않는다).
+     *
+     * @param array<string, mixed> $row
+     * @param array{label: string, sigungu_id: ?int, sigungu_label: ?string}|null $tutorRegion
+     * @param array{label: string, sigungu_id: ?int, sigungu_label: ?string}|null $studyroomRegion
+     */
+    private function resolveStudentRegionLabel(array $row, ?array $tutorRegion, ?array $studyroomRegion): string
     {
-        $regionId = $row['preferred_studyroom_region_id'] ?? $row['preferred_tutor_region_id'] ?? null;
-        if ($regionId === null) {
-            return (string) ($row['preferred_region_note'] ?? '');
-        }
-        $stmt = $this->pdo->prepare(
-            'SELECT CONCAT(sido_name, " ", sigungu_name, " ", dong_name) AS label FROM regions WHERE id = ? LIMIT 1'
-        );
-        $stmt->execute([(int) $regionId]);
-        $label = $stmt->fetchColumn();
+        $region = ($row['preferred_lesson_type'] ?? null) === 'study_room' ? $studyroomRegion : $tutorRegion;
 
-        return $label !== false ? (string) $label : (string) ($row['preferred_region_note'] ?? '');
+        return $region['label'] ?? '';
+    }
+
+    /** @return array{label: string, sigungu_id: ?int, sigungu_label: ?string}|null */
+    private function officialRegion(mixed $regionId): ?array
+    {
+        return (new OfficialRegionLabel($this->pdo))->resolve($regionId);
     }
 
     /** @return array{name: string, school_level: string} */

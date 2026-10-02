@@ -1,4 +1,4 @@
-import { persistFindDefaultsFromStudent } from '../../../shared/student-hope-regions.js';
+import { syncStoredHopeRegionsFromStudent } from '@search-ui/student-saved-region.js';
 import { renderStudentBasicSelfCard } from '../exposure-render.js';
 import { renderStudentProfileRead } from './profile-read.js';
 import {
@@ -24,7 +24,7 @@ import { lessonDurationOptions, lessonDurationSelectValue } from '../../../share
 import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, isGradeSelectDisabled } from '../../../shared/school-grade.js';
 import { getStudents, getStudent, updateStudent } from './store.js';
-import { STUDENT_COUNT_HALT_COPY } from './student-reg-copy.js';
+import { STUDENT_BRANCH_COPY, STUDENT_COUNT_HALT_COPY } from './student-reg-copy.js';
 import { getAuthUser } from '../auth-session.js';
 import { basicRegisterPathForMe } from '../../../shared/auth-redirect.js';
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
@@ -248,6 +248,20 @@ function basicRegionOptions(selectedId, selectedLabel) {
   return merged;
 }
 
+/** 과외 희망지역(시·군·구) 선택칸. @param {number} studentId @param {string|number|null|undefined} regionId */
+function renderTutorRegionField(studentId, regionId) {
+  return tutorCityUnitsReady()
+    ? renderRegionCascade({
+        idPrefix: `p19_tutor_region_${studentId}`,
+        units: getTutorCityUnits(),
+        regionId,
+        selectClass: 'p19-input p19-select',
+        hiddenName: 'preferred_tutor_region_id',
+      })
+    : `<p class="p19-field__hint">${esc(tutorCityUnitsError() || '지역 목록을 불러오는 중입니다.')}</p>
+       <input type="hidden" name="preferred_tutor_region_id" value="" />`;
+}
+
 /** @param {import('./store.js').StudentRecord} student */
 function renderBasicForm(student) {
   const hope = student.preferred_lesson_type === 'study_room' ? 'study_room' : 'tutor';
@@ -260,17 +274,7 @@ function renderBasicForm(student) {
   }
   const schoolOptions = SCHOOL_LEVEL_FORM_OPTIONS;
   const grade = gradeOptionHtml(student.school_level || '', student.grade_level || '');
-  const tutorUnits = getTutorCityUnits();
-  const tutorRegionHtml = tutorCityUnitsReady()
-    ? renderRegionCascade({
-        idPrefix: `p19_tutor_region_${student.id}`,
-        units: tutorUnits,
-        regionId: student.preferred_tutor_region_id,
-        selectClass: 'p19-input p19-select',
-        hiddenName: 'preferred_tutor_region_id',
-      })
-    : `<p class="p19-field__hint">${esc(tutorCityUnitsError() || '지역 목록을 불러오는 중입니다.')}</p>
-       <input type="hidden" name="preferred_tutor_region_id" value="" />`;
+  const tutorRegionHtml = renderTutorRegionField(student.id, student.preferred_tutor_region_id);
   const studyRegion = basicRegionOptions(student.preferred_studyroom_region_id, student.region_label);
   const complexes = listAllComplexes().map((c) => ({
     value: String(c.id),
@@ -281,7 +285,7 @@ function renderBasicForm(student) {
     : student.preferred_student_count_group || '';
 
   const formBody = `
-    <form class="p19-form" data-p19-form="basic" data-p19-basic data-p19-student-id="${student.id}">
+    <form class="p19-form" data-p19-form="basic" data-p19-basic data-p19-student-id="${student.id}" data-p19-saved-hope="${hope}">
       ${renderFormSection(
         '기본정보',
         '카드에 보이는 기본 항목입니다.',
@@ -305,7 +309,7 @@ function renderBasicForm(student) {
         <div data-p19-hope-panel="tutor" ${hope === 'tutor' ? '' : 'hidden'}>
           <div class="p19-field">
             <span class="p19-field__label">희망지역</span>
-            ${tutorRegionHtml}
+            <div data-p19-tutor-region-slot>${tutorRegionHtml}</div>
           </div>
           <label class="p19-field">
             <span class="p19-field__label">예산 (천원)</span>
@@ -481,6 +485,70 @@ function renderSettings(student) {
   return `<section class="mypage-panel mp-room-panel">${renderStudentShell(student, 'settings', body)}</section>`;
 }
 
+const STUDYROOM_REGION_FIELDS = [
+  'preferred_studyroom_region_basis',
+  'preferred_studyroom_region_id',
+  'preferred_studyroom_complex_id',
+];
+
+/**
+ * 교습형태(분기) 변경. 저장된 분기와 다른 쪽으로 바꾸면 확인창을 띄우고, 동의하면 새 분기 지역칸을 비운다.
+ * 취소하면 이전 선택으로 되돌린다. 저장된 분기로 돌아오면 저장된 지역을 다시 채운다.
+ * 반대 분기 패널은 syncBasic 이 disabled 로 둬 전송하지 않는다.
+ * @param {HTMLFormElement} form @param {() => void} syncBasic
+ */
+function bindLessonTypeChange(form, syncBasic) {
+  const select = form.querySelector('[name="preferred_lesson_type"]');
+  if (!(select instanceof HTMLSelectElement)) return;
+  const studentId = Number(form.dataset.p19StudentId);
+  const savedHope = form.getAttribute('data-p19-saved-hope') === 'study_room' ? 'study_room' : 'tutor';
+  const savedTutorRegion = form.querySelector('[name="preferred_tutor_region_id"]')?.value || '';
+  const savedStudy = Object.fromEntries(
+    STUDYROOM_REGION_FIELDS.map((name) => [name, form.querySelector(`[name="${name}"]`)?.value || '']),
+  );
+  let shownHope = savedHope;
+
+  const fillBranchRegion = (hope, restore) => {
+    if (hope === 'tutor') {
+      const slot = form.querySelector('[data-p19-tutor-region-slot]');
+      if (!slot) return;
+      slot.innerHTML = renderTutorRegionField(studentId, restore ? savedTutorRegion : '');
+      bindRegionCascades(slot, getTutorCityUnits());
+      return;
+    }
+    STUDYROOM_REGION_FIELDS.forEach((name) => {
+      const el = form.querySelector(`[name="${name}"]`);
+      if (!el) return;
+      el.value = restore ? savedStudy[name] : name === 'preferred_studyroom_region_basis' ? 'dong' : '';
+    });
+  };
+
+  select.addEventListener('change', () => {
+    const next = select.value === 'study_room' ? 'study_room' : 'tutor';
+    if (next === shownHope) return;
+    if (next !== savedHope && !window.confirm(STUDENT_BRANCH_COPY.mypage.changeConfirm)) {
+      select.value = shownHope;
+      return;
+    }
+    shownHope = next;
+    fillBranchRegion(next, next === savedHope);
+    syncBasic();
+  });
+}
+
+/**
+ * 기본정보·상세정보 저장 후 안내. 카드·상단 메뉴 반영은 새로고침 뒤라 항상 새로고침을 권한다.
+ * @param {boolean} branchChanged @param {Record<string, unknown>|null} saved
+ */
+function savedNotice(branchChanged, saved) {
+  const copy = STUDENT_BRANCH_COPY.mypage;
+  const missing = Array.isArray(saved?.basic_missing) ? saved.basic_missing.map(String) : [];
+  const lines = [branchChanged ? copy.branchSavedRefresh : copy.savedRefresh];
+  if (saved?.exposure_status === 'draft' && missing.length) lines.push(copy.draftMissing(missing.join(', ')));
+  if (missing.includes('희망지역')) lines.push(copy.regionEmptyHint);
+  return lines.join('\n\n');
+}
+
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindStudentRegEvents(root, rerender) {
   ensureHopeRegionMasters();
@@ -543,7 +611,7 @@ export function bindStudentRegEvents(root, rerender) {
           alert('예산은 1천원 이상으로 입력해 주세요. 0은 입력하지 않은 것으로 봅니다.');
         });
       });
-      form.querySelector('[name="preferred_lesson_type"]')?.addEventListener('change', syncBasic);
+      bindLessonTypeChange(form, syncBasic);
       form.querySelector('[name="preferred_studyroom_region_basis"]')?.addEventListener('change', syncBasic);
       form.querySelector('[name="lesson_format"]')?.addEventListener('change', syncBasic);
       const schoolLevel = form.querySelector('[name="school_level"]');
@@ -596,15 +664,15 @@ export function bindStudentRegEvents(root, rerender) {
         if (!patch.teaching_style_badges) patch.teaching_style_badges = [];
       }
 
+      const branchChanged =
+        formKind === 'basic' &&
+        Boolean(patch.preferred_lesson_type) &&
+        patch.preferred_lesson_type !== form.getAttribute('data-p19-saved-hope');
+
       try {
         const saved = await updateStudent(id, patch);
-        if (formKind === 'detail' && saved) persistFindDefaultsFromStudent(saved);
-        const basicMissing = Array.isArray(saved?.basic_missing) ? saved.basic_missing : [];
-        if (saved?.exposure_status === 'draft' && basicMissing.length) {
-          alert(`저장되었습니다. 기본정보에 빈 칸이 있어 카드가 노출되지 않습니다: ${basicMissing.join(', ')}`);
-        } else {
-          alert('저장되었습니다.');
-        }
+        if ((formKind === 'basic' || formKind === 'detail') && saved) syncStoredHopeRegionsFromStudent(saved);
+        alert(formKind === 'settings' ? '저장되었습니다.' : savedNotice(branchChanged, saved));
         rerender();
       } catch (err) {
         console.warn('[p19]', err);

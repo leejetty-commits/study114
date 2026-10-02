@@ -128,13 +128,14 @@ function shouldSkipGps(source, searchExecuted) {
   return null;
 }
 
+// 현행 정책(location-display.js coordsFromLabel): 지역 이름만으로 좌표를 만들지 않는다 → 라벨만 준 위치는 좌표 null.
 check('CanonicalLocation fields + coords from label', () => {
   const c = normalizeLocation({ raw: '서울 강남구 대치동', source: 'url' }, 'room');
   assert.equal(c.displayLabel, '서울 강남구 대치동');
   assert.ok(c.regionKey);
   assert.equal(c.source, 'url');
-  assert.ok(Number.isFinite(c.lat));
-  assert.ok(Number.isFinite(c.lng));
+  assert.equal(c.lat, null);
+  assert.equal(c.lng, null);
 });
 
 check('serialize/deserialize roundtrip keeps lat/lng/source', () => {
@@ -149,17 +150,18 @@ check('serialize/deserialize roundtrip keeps lat/lng/source', () => {
   assert.equal(back.source, 'address');
 });
 
+// 현행 정책(formatLocationDisplay): 공부방(room) 축 표시는 동까지 있어야 한다. 시·구만 있는 라벨은 빈 표시라 우선순위에서 건너뛴다.
 check('priority: URL wins over saved', () => {
   const c = resolveLocationByPriority(
     {
-      sessionSelected: { raw: '서울 송파구', lat: 37.51, lng: 127.1, source: 'url' },
-      savedDefault: { raw: '부산 해운대구', source: 'saved' },
+      sessionSelected: { raw: '서울 송파구 잠실동', lat: 37.51, lng: 127.1, source: 'url' },
+      savedDefault: { raw: '부산 해운대구 우동', source: 'saved' },
       fallback: '대치동',
     },
     'room',
   );
   assert.equal(c.source, 'url');
-  assert.match(c.displayLabel, /송파/);
+  assert.match(c.displayLabel, /잠실/);
   assert.equal(c.lat, 37.51);
 });
 
@@ -167,14 +169,14 @@ check('priority: saved wins over fallback (GPS slot empty)', () => {
   const c = resolveLocationByPriority(
     {
       sessionSelected: null,
-      savedDefault: { raw: '부산 해운대구', source: 'saved' },
+      savedDefault: { raw: '부산 해운대구 우동', source: 'saved' },
       gps: null,
       fallback: '서울 강남구 대치동',
     },
     'room',
   );
   assert.equal(c.source, 'saved');
-  assert.match(c.displayLabel, /부산|해운대/);
+  assert.match(c.displayLabel, /우동/);
 });
 
 check('GPS skip when saved/url/address present', () => {
@@ -222,7 +224,7 @@ check('searched=1 without f → region from canonical not stale storage', () => 
 });
 
 check('no searched → clear search keep region concept', () => {
-  const canonical = normalizeLocation({ raw: '서울 송파구', source: 'session' }, 'room');
+  const canonical = normalizeLocation({ raw: '서울 송파구 잠실동', source: 'session' }, 'room');
   const state = {
     searchExecuted: true,
     lastSearchFilters: { region_label: 'x' },
@@ -256,16 +258,17 @@ check('toDisplayLabel normalizes raw region_label', () => {
 
 check('map center coords prefer explicit canonical', () => {
   const c = normalizeLocation({ raw: '서울 강남구 대치동', lat: 37.4946, lng: 127.0626 }, 'room');
-  const fromLabel = coordsFromLabel(c.displayLabel);
-  assert.ok(fromLabel);
+  // 라벨만으로는 좌표가 없다(coordsFromLabel = null). 지도 중심은 명시 좌표만 쓴다.
+  assert.equal(coordsFromLabel(c.displayLabel), null);
   assert.equal(c.lat, 37.4946);
   assert.equal(c.lng, 127.0626);
 });
 
+// 현행 정책(nearestRegionByCoords): 역지오코딩이 실패하면 좌표만 남기고 지역 이름은 비운다(근처 시드 이름으로 채우지 않음).
 await checkAsync('reverseGeocodeCoords nearest fallback (no naver SDK)', async () => {
   const geo = await reverseGeocodeCoords(37.5665, 126.978, 'room');
   assert.equal(geo.source, 'gps');
-  assert.ok(geo.displayLabel);
+  assert.equal(geo.displayLabel, '');
   assert.equal(geo.lat, 37.5665);
   assert.equal(geo.lng, 126.978);
 });

@@ -11,6 +11,7 @@ import {
   renderProviderHomeBody,
   bindProviderHomeTabEvents,
   getProviderHomeMode,
+  resolveParentHomeTab,
 } from '../provider-home.js';
 import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
@@ -19,7 +20,11 @@ import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.
 import { bindHomeNewsRow, renderHomeNewsRow } from '../home-news-row.js';
 
 export function renderParent() {
-  const tab = previewState.parentTab;
+  const tab = resolveParentHomeTab(previewState.parentTab);
+  if (previewState.parentTab !== tab) {
+    setParentTab(tab);
+    resetParentFind();
+  }
   const content = `
     ${renderHomeMarketingBanner('parent')}
     ${renderHomeNewsRow('parent')}
@@ -35,7 +40,7 @@ export function bindParentEvents(root, rerender) {
 
   bindProviderHomeTabEvents(root, rerender, {
     role: 'parent',
-    getTab: () => previewState.parentTab,
+    getTab: () => resolveParentHomeTab(previewState.parentTab),
     setTab: setParentTab,
     resetFind: resetParentFind,
     tabAttr: 'data-parent-tab',
@@ -45,7 +50,7 @@ export function bindParentEvents(root, rerender) {
   bindUserActionEvents(root, rerender, { sourceRoute: 'parent' });
 
   bindFindSurfaceEvents(root, rerender, {
-    getTab: () => getProviderHomeMode('parent', previewState.parentTab).searchTab,
+    getTab: () => getProviderHomeMode('parent', resolveParentHomeTab(previewState.parentTab)).searchTab,
     getState: () => previewState.parentFind,
     role: 'parent',
   });

@@ -9,9 +9,16 @@ import {
   renderBasicListBlock,
   renderBrowseList,
   renderGuestVacantBasicList,
+  renderExposureBox,
+  renderEmptyPrimePromo,
+  renderEmptyPickPromo,
+  renderEmptyBasicPromo,
   getPrimeOccupied,
   getPrimeCandidatePool,
 } from '@home-ui/exposure-render.js';
+import { getExposurePageSizes } from '@home-ui/exposure-rules.js';
+import { buildStudyRoomSampleItem, buildTutorSampleItem } from '@home-ui/home-card-samples/presets.js';
+import { STUDENT_BRANCH_COPY } from '@home-ui/student-reg/student-reg-copy.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar, renderSectionTitleBar } from '@home-ui/section-headings.js';
 import { partitionByExposureTier } from './search-exposure-mapper.js';
 import { renderSearchZeroState, renderStateCard } from '@home-ui/empty-state-copy.js';
@@ -24,6 +31,72 @@ import { tutorHomePrimaryLabel } from '@home-ui/tutor-home-seed.js';
 
 function tutorPrimaryRegionLabel() {
   return tutorHomePrimaryLabel();
+}
+
+/** 학생 홈 0건 전용 샘플. 지역 라벨 = 학생 저장 지역. 목록 풀에 넣지 않는다. */
+function studentHomeSample(kind, tier, place) {
+  const item = kind === 'tutor' ? buildTutorSampleItem(tier) : buildStudyRoomSampleItem(tier);
+  item.id = `student-home-sample-${kind}-${tier}`;
+  item._vacantSample = true;
+  if (kind === 'tutor') item.tutor_display_name = '샘플 과외쌤';
+  else item.study_room_name = '샘플 공부방';
+  item.location_label = place;
+  return item;
+}
+
+/**
+ * 학생 홈 0건 — 공부방 홈 빈 자리와 같은 방식: 티어마다 샘플 1장 + 나머지 빈 카드 박스.
+ * @param {'study_room'|'tutor'} kind
+ * @param {string} place
+ * @param {object} opts
+ */
+function renderStudentHomeVacantTiers(kind, place, opts) {
+  const { primeSlots } = getExposurePageSizes();
+  const pickRowSlots = 5;
+  const section =
+    kind === 'study_room'
+      ? { prime: SECTION_HEADINGS.primeStudyRoom, pick: SECTION_HEADINGS.pickStudyRoom, basic: SECTION_HEADINGS.basicStudyRoom, color: 'content-section--orange' }
+      : { prime: SECTION_HEADINGS.primeTutor, pick: SECTION_HEADINGS.pickTutor, basic: SECTION_HEADINGS.basicTutor, color: 'content-section--blue' };
+  const boxOpts = { ...opts, guest: false };
+  const prime = [
+    renderExposureBox(kind, 'prime', studentHomeSample(kind, 'prime', place), '', boxOpts),
+    ...Array.from({ length: Math.max(0, primeSlots - 1) }, () => renderEmptyPrimePromo(kind)),
+  ].join('');
+  const pick = [
+    renderExposureBox(kind, 'pick', studentHomeSample(kind, 'pick', place), '', boxOpts),
+    ...Array.from({ length: pickRowSlots - 1 }, () => renderEmptyPickPromo(kind)),
+  ].join('');
+  return `
+    <div class="content-section ${section.color} search-tier-results" data-surface="home-tier" data-student-home-vacant="${kind}">
+      ${renderSectionHeading({ ...section.prime, locationLabel: place })}
+      ${renderSectionToolbar({ locationLabel: place })}
+      <div class="expo-grid--3">${prime}</div>
+      <div class="list-subsection">
+        ${renderSectionHeading({ ...section.pick, locationLabel: place, desc: undefined })}
+        ${renderSectionToolbar({ locationLabel: place })}
+        <div class="expo-grid--5">${pick}</div>
+      </div>
+      <div class="list-subsection">
+        ${renderSectionTitleBar({ ...section.basic, locationLabel: place, desc: undefined })}
+        ${renderBrowseList(kind, [studentHomeSample(kind, 'basic', place)], boxOpts)}
+        <div class="browse-list browse-list--table" role="list">${renderEmptyBasicPromo()}</div>
+      </div>
+    </div>`;
+}
+
+/** 학생 홈 「우리동네 학생」 0건. @param {string} place */
+function renderStudentHomeNoStudents(place) {
+  const copy = STUDENT_BRANCH_COPY.home;
+  return `
+    <div class="content-section search-tier-results search-tier-results--empty" data-student-home-empty="student">
+      ${renderSectionTitleBar({ ...SECTION_HEADINGS.students, locationLabel: place })}
+      ${renderStateCard({
+        title: copy.studentEmptyTitle(place),
+        body: copy.studentEmptyBody,
+        variant: 'empty',
+        screenId: 'P13-zero',
+      })}
+    </div>`;
 }
 
 /**
@@ -254,6 +327,14 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
     : regionLabel || (mode === 'region' ? '지역 피드' : '');
   opts.pinTutorPrimary = pinTutorPrimary;
   const useHomeTierGrammar = surfaceType === 'home' && mode === 'region';
+
+  // 학생 홈: 저장 지역 조회가 끝났는데 0건일 때만. 조기 0건 안내(renderProviderTierResults)보다 먼저 본다.
+  const place = String(regionLabel || '').trim();
+  if (viewerRole === 'parent' && useHomeTierGrammar && ctx.studentHomeReady === true && !exposureItems.length && place) {
+    if (tab === 'room') return renderStudentHomeVacantTiers('study_room', place, opts);
+    if (tab === 'tutor') return renderStudentHomeVacantTiers('tutor', place, opts);
+    return renderStudentHomeNoStudents(place);
+  }
 
   if (tab === 'room') {
     return useHomeTierGrammar

@@ -12,7 +12,7 @@ import { bindStudyRoomMapSection, GUEST_MAP_CENTER } from '../../shared/naver-ma
 import {
   normalizeLocation,
   logLocationDebug,
-  GUEST_PLACE_PROMPT,
+  memberPlacePrompt,
   readGuestBaseline,
 } from '../../shared/location-display.js';
 import { peekStudyRoomPromo1 } from '@home-ui/study-room-home-seed.js';
@@ -61,7 +61,7 @@ function basicListTotal(items) {
 /**
  * @param {object} parts
  * @param {object[]} items
- * @param {{ searched: boolean, region: string, resultSource: string, countNote: string, bannerStyle: 'guest'|'provider_room'|'search', providerHome?: boolean, roomCount?: number, lat?: number|null, lng?: number|null }} ctx
+ * @param {{ searched: boolean, region: string, resultSource: string, countNote: string, bannerStyle: 'guest'|'provider_room'|'search', providerHome?: boolean, roomCount?: number, lat?: number|null, lng?: number|null, viewerRole?: string, regionLevel?: string }} ctx
  */
 function renderFloatMap(parts, items, ctx) {
   const { searched, region, resultSource, countNote, bannerStyle } = ctx;
@@ -104,16 +104,24 @@ function renderFloatMap(parts, items, ctx) {
   const latAttr = lat != null ? ` data-map-lat="${esc(String(lat))}"` : '';
   const lngAttr = lng != null ? ` data-map-lng="${esc(String(lng))}"` : '';
   const fitAttr = guestMap ? ' data-fit-bounds="false"' : '';
+  /* 학생 지도는 좌표가 없으면 저장 지역 라벨을 지오코딩한다(구 13 · 동 15). */
+  const student = !guestMap && ctx.viewerRole === 'parent';
+  const geocodeAttr = student
+    ? ` data-geocode-region="true" data-map-zoom="${ctx.regionLevel === 'district' ? 13 : 15}"`
+    : '';
+  const heading = guestMap
+    ? readGuestBaseline().room
+    : parts.dong || (student ? region : '') || memberPlacePrompt(ctx.viewerRole);
 
   return `
-    <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}"${latAttr}${lngAttr}${fitAttr} data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
+    <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}"${latAttr}${lngAttr}${fitAttr}${geocodeAttr} data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
       <div class="hero-map__canvas">
         <div class="hero-map__surface hero-map__surface--naver" aria-label="${esc(region)} 공부방 지도">
           <div class="naver-map-mount-host" data-naver-map-mount></div>
         </div>
       </div>
       <aside class="hero-map__banner" aria-label="지역 요약">
-        <h2 class="hero-map__dong">${esc(guestMap ? readGuestBaseline().room : parts.dong || GUEST_PLACE_PROMPT)}</h2>
+        <h2 class="hero-map__dong">${esc(heading)}</h2>
         <p class="hero-map__sub">${esc(sub)}</p>
         ${statsHtml}
         ${hint ? `<p class="hero-map__hint">${esc(hint)}</p>` : ''}
@@ -123,7 +131,7 @@ function renderFloatMap(parts, items, ctx) {
 
 /**
  * @param {object[]} [activeResultItems]
- * @param {{ searched?: boolean, regionLabel?: string, resultSource?: 'region'|'search'|null, guestHomeStyle?: boolean, bannerStyle?: 'guest'|'provider_room'|'search', providerHome?: boolean, lat?: number|null, lng?: number|null }} [options]
+ * @param {{ searched?: boolean, regionLabel?: string, resultSource?: 'region'|'search'|null, guestHomeStyle?: boolean, bannerStyle?: 'guest'|'provider_room'|'search', providerHome?: boolean, lat?: number|null, lng?: number|null, viewerRole?: string, regionLevel?: string }} [options]
  */
 export function renderSearchMapBlock(activeResultItems = [], options = {}) {
   const searched = options.searched === true;
@@ -162,6 +170,8 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
     roomCount: providerHome ? basicListTotal(items) : items.length,
     lat: options.lat ?? parts.lat,
     lng: options.lng ?? parts.lng,
+    viewerRole: options.viewerRole,
+    regionLevel: options.regionLevel,
   });
 }
 

@@ -396,8 +396,17 @@ console.log('##### 프런트 (화면 소스·옵션) #####');
 }
 {
   const fm = fnBody(SRC.searchMap, 'renderFloatMap');
-  ok('P11 찾기 지도 제목(게스트) = 기준 표기, 안내문으로 떨어지지 않음', /guestMap \? readGuestBaseline\(\)\.room : parts\.dong \|\| GUEST_PLACE_PROMPT/.test(fm));
-  ok('P11 찾기 지역 막대(게스트) = guestServerPlace', /role === 'guest' \? guestServerPlace\(tab\) : GUEST_PLACE_PROMPT/.test(SRC.findSurface));
+  // 사이트오류-9: 회원의 빈 지역 문구는 게스트 안내문(GUEST_PLACE_PROMPT) 대신 지역 등록 유도(memberPlacePrompt). 게스트 분기는 그대로.
+  ok(
+    'P11 찾기 지도 제목(게스트) = 기준 표기, 안내문으로 떨어지지 않음',
+    /guestMap\s*\?\s*readGuestBaseline\(\)\.room\s*:\s*parts\.dong \|\| \(student \? region : ''\) \|\| memberPlacePrompt\(ctx\.viewerRole\)/.test(fm) &&
+      !/GUEST_PLACE_PROMPT/.test(SRC.searchMap),
+  );
+  ok(
+    'P11 찾기 지역 막대(게스트) = guestServerPlace',
+    /role === 'guest' \? guestServerPlace\(tab\) : memberPlacePrompt\(role\)/.test(SRC.findSurface) &&
+      !/GUEST_PLACE_PROMPT/.test(SRC.findSurface),
+  );
   const promptUses = [SRC.guestSections, SRC.guestScreen, SRC.searchPage].filter((s) => /GUEST_PLACE_PROMPT|위치를 선택해 주세요/.test(s));
   ok('P11 홈·찾기 게스트 화면 파일에 안내문 직접 사용 없음', promptUses.length === 0);
 }

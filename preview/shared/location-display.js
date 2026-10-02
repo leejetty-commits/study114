@@ -554,6 +554,42 @@ export const GUEST_BASE_GU_OFFICIAL_CODE = '1168000000';
 
 export const GUEST_PLACE_PROMPT = '위치를 선택해 주세요';
 
+/** 로그인 회원에게 저장 지역이 정말 없을 때만. 게스트 안내문은 쓰지 않는다. */
+export const STUDENT_PLACE_PROMPT = '마이페이지에서 희망지역을 등록해 주세요';
+export const MEMBER_PLACE_PROMPT = '마이페이지에서 지역을 등록해 주세요';
+
+/** @param {string} [role] */
+export function memberPlacePrompt(role) {
+  return role === 'parent' ? STUDENT_PLACE_PROMPT : MEMBER_PLACE_PROMPT;
+}
+
+/** 카카오 우편번호 result.sido 약칭 → 시·도 정식 이름. */
+const KAKAO_SIDO_FULL = {
+  서울: '서울특별시',
+  부산: '부산광역시',
+  대구: '대구광역시',
+  인천: '인천광역시',
+  광주: '광주광역시',
+  대전: '대전광역시',
+  울산: '울산광역시',
+  세종: '세종특별자치시',
+  경기: '경기도',
+  강원: '강원특별자치도',
+  충북: '충청북도',
+  충남: '충청남도',
+  전북: '전북특별자치도',
+  전남: '전라남도',
+  경북: '경상북도',
+  경남: '경상남도',
+  제주: '제주특별자치도',
+};
+
+/** @param {unknown} sido */
+export function expandKakaoSido(sido) {
+  const text = blank(sido);
+  return KAKAO_SIDO_FULL[text] || text;
+}
+
 /** 게스트 확정 표기. 서버 기준 행 이름을 못 받았거나 다르게 받아도 이 문구만 쓴다. */
 export const GUEST_BASE_ROOM_LABEL = '대치동';
 export const GUEST_BASE_TUTOR_LABEL = '서울시 강남구';

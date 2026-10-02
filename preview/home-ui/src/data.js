@@ -14,29 +14,6 @@ export {
   DUMMY_STUDENT_REQUESTS,
 } from './exposure-data.js';
 
-export const DUMMY_STUDENTS = [
-  { id: 1, name: '김민준', grade: '초5', school: '대치초', parent: '김우동' },
-  { id: 2, name: '김서연', grade: '중1', school: '대치중', parent: '김우동' },
-];
-
-export const MY_STUDY_ROOM = {
-  name: '우동공부방 대치점',
-  status: '운영중',
-  views: 128,
-  inquiries: 5,
-  registered: '2026-04-10',
-};
-
-export const MY_TUTOR = {
-  name: '김우동',
-  subject: '수학·영어',
-  status: '프로필공개',
-  views: 64,
-  memoInbox: 3,
-  memoSent: 1,
-  registered: '2026-04-15',
-};
-
 export const SLOT_PRIME = ['대표 노출 1', '대표 노출 2', '대표 노출 3'];
 export const SLOT_PICK_ROW = ['추천 노출 1', '추천 노출 2', '추천 노출 3', '추천 노출 4', '추천 노출 5'];
 export const SLOT_TOP = SLOT_PRIME;

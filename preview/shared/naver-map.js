@@ -145,6 +145,40 @@ function loadNaverMapsSdk() {
   return sdkPromise;
 }
 
+/**
+ * 지역 라벨 → 중심 좌표(네이버 geocoder submodule). 못 찾으면 null. 대치역으로 대신하지 않는다.
+ * @param {typeof naver} naverNs
+ * @param {string} label
+ * @returns {Promise<{ lat: number, lng: number }|null>}
+ */
+export function geocodeRegionCenter(naverNs, label) {
+  return new Promise((resolve) => {
+    const service = naverNs?.maps?.Service;
+    const query = String(label || '').trim();
+    if (!query || typeof service?.geocode !== 'function') {
+      resolve(null);
+      return;
+    }
+    try {
+      service.geocode({ query }, (status, response) => {
+        if (status !== service.Status?.OK) {
+          resolve(null);
+          return;
+        }
+        const addr = response?.v2?.addresses?.[0];
+        const lat = parseCoord(addr?.y);
+        const lng = parseCoord(addr?.x);
+        resolve(lat != null && lng != null ? { lat, lng } : null);
+      });
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+export const REGION_PROMPT_MAP_STATUS = '희망지역을 등록하면 지도가 그 지역으로 이동합니다.';
+export const REGION_GEOCODE_FAIL_STATUS = '지도에서 지역 위치를 찾지 못했습니다 · 리스트는 계속 이용할 수 있습니다.';
+
 /** 비어 있으면 기본 줌. 들어온 줌은 자르지 않는다. */
 function clampNeighborhoodZoom(zoom) {
   const z = Number(zoom);
@@ -160,6 +194,8 @@ function clampNeighborhoodZoom(zoom) {
  *   allowRegionFallback?: boolean,
  *   fitBounds?: boolean,
  *   variant?: 'hero'|'search'|'detail',
+ *   geocodeRegion?: boolean,
+ *   regionZoom?: number|null,
  *   onPinClick?: (id: string) => void,
  * }} [options]
  */
@@ -172,7 +208,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
   const fitBounds = options.fitBounds !== false;
   const variant = options.variant || 'search';
   const pins = mapStudyRoomPins(items, { allowRegionFallback });
-  const center = resolveMapCenter(items, regionLabel, {
+  let center = resolveMapCenter(items, regionLabel, {
     lat: options.lat,
     lng: options.lng,
   });
@@ -191,6 +227,19 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
 
   try {
     const naver = await loadNaverMapsSdk();
+    // 지역 기준 지도(학생): 좌표·핀이 없으면 대치역 기본값 대신 지역 라벨을 지오코딩한다.
+    if (options.geocodeRegion && center.source === 'default') {
+      if (!regionLabel) {
+        showStatus(REGION_PROMPT_MAP_STATUS, 'info');
+        return null;
+      }
+      const found = await geocodeRegionCenter(naver, regionLabel);
+      if (!found) {
+        showStatus(REGION_GEOCODE_FAIL_STATUS, 'error');
+        return null;
+      }
+      center = { ...found, zoom: clampNeighborhoodZoom(options.regionZoom ?? MAP_DEFAULT_ZOOM), source: 'geocode' };
+    }
     mountEl.innerHTML = '';
     mountEl.classList.add('naver-map-mount', `naver-map-mount--${variant}`);
 
@@ -314,6 +363,8 @@ export async function bindStudyRoomMapSection(root, items, options = {}) {
     allowRegionFallback: section?.getAttribute('data-allow-fallback') !== 'false',
     fitBounds,
     variant: section?.getAttribute('data-map-variant') || 'search',
+    geocodeRegion: section?.getAttribute('data-geocode-region') === 'true',
+    regionZoom: section?.getAttribute('data-map-zoom') != null ? Number(section.getAttribute('data-map-zoom')) : null,
     onPinClick: options.onPinClick,
   });
 

@@ -202,16 +202,28 @@ export function dualHopeRegionsReady(student) {
   return { studyOk: true, tutorOk, ok: tutorOk, activeHope: hope };
 }
 
-/** 찾기 A→B→C — 희망유형별 1번 슬롯 기억 */
+/** 찾기 A→B→C — 희망유형별 1번 슬롯 기억. 값은 화면 라벨 문자열만. region id 숫자는 넣지 않는다. */
 const FIND_REGION_KEY = 'study114.studentFind.lastRegionByHope';
 
-/** @returns {{ tutor?: string, study_room?: string }} */
+/** 라벨로 쓸 수 있는 값. 숫자만 있는 문자열(region id)은 라벨이 아니다. */
+export function isHopeRegionLabel(value) {
+  const text = String(value ?? '').trim();
+  return text !== '' && !/^\d+$/.test(text);
+}
+
+/** @returns {{ tutor?: string, study_room?: string }} 숫자 id 로 남은 옛 값은 뺀다. */
 export function readStoredHopeRegions() {
   try {
     const raw = localStorage.getItem(FIND_REGION_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    if (!parsed || typeof parsed !== 'object') return {};
+    /** @type {{ tutor?: string, study_room?: string }} */
+    const out = {};
+    for (const key of /** @type {const} */ (['tutor', 'study_room'])) {
+      if (isHopeRegionLabel(parsed[key])) out[key] = String(parsed[key]).trim();
+    }
+    return out;
   } catch {
     return {};
   }
@@ -223,7 +235,7 @@ export function readStoredHopeRegions() {
  */
 export function writeStoredHopeRegion(hopeType, regionLabel) {
   const label = String(regionLabel || '').trim();
-  if (!label || (hopeType !== 'tutor' && hopeType !== 'study_room')) return;
+  if (!isHopeRegionLabel(label) || (hopeType !== 'tutor' && hopeType !== 'study_room')) return;
   try {
     const prev = readStoredHopeRegions();
     prev[hopeType] = label;
@@ -239,19 +251,32 @@ export function writeStoredHopeRegion(hopeType, regionLabel) {
  */
 export function resolveFindDefaultRegion(hopeType, guestFallback = '') {
   const stored = readStoredHopeRegions()[hopeType];
-  if (stored) return stored;
+  if (isHopeRegionLabel(stored)) return stored;
   return guestFallback;
 }
 
 /**
- * 저장 후 찾기 기본값 갱신 — 양축 1번
+ * 저장 후 찾기 기본값 갱신 — 가입 분기 축 1번만. 반대 축 임시값은 지운다.
  * @param {object} student
  */
 export function persistFindDefaultsFromStudent(student) {
-  const { preferred_studyroom_regions: study, preferred_tutor_regions: tutor } =
-    hydrateDualHopeRegions(student || {});
-  const studyLabel = formatHopeSlotLabel(study[0], 'studyroom');
-  const tutorLabel = formatHopeSlotLabel(tutor[0], 'tutor');
-  if (studyLabel) writeStoredHopeRegion('study_room', studyLabel);
-  if (tutorLabel) writeStoredHopeRegion('tutor', tutorLabel);
+  const hope = student?.preferred_lesson_type === 'study_room' ? 'study_room' : 'tutor';
+  replaceStoredHopeRegions({ [hope]: primaryHopeRegionLabel(student || {}) });
+}
+
+/**
+ * 서버에 저장된 희망지역 라벨로 임시값 두 축을 통째로 바꾼다. 라벨이 없는 축은 지운다.
+ * @param {{ tutor?: string|null, study_room?: string|null }} labels
+ */
+export function replaceStoredHopeRegions(labels) {
+  try {
+    /** @type {{ tutor?: string, study_room?: string }} */
+    const next = {};
+    if (isHopeRegionLabel(labels?.tutor)) next.tutor = String(labels.tutor).trim();
+    if (isHopeRegionLabel(labels?.study_room)) next.study_room = String(labels.study_room).trim();
+    const json = JSON.stringify(next);
+    if (localStorage.getItem(FIND_REGION_KEY) !== json) localStorage.setItem(FIND_REGION_KEY, json);
+  } catch {
+    /* ignore */
+  }
 }

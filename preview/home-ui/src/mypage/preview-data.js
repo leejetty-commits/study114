@@ -25,7 +25,7 @@ import { countWrittenReviewsPreview, countReceivedReviewsPreview } from '../prov
 
 const PREVIEW_PROFILE = {
   email: 'parent@example.com',
-  name: '김우동',
+  name: '',
   regionLabel: '',
 };
 

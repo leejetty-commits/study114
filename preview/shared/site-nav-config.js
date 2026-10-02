@@ -133,6 +133,33 @@ export const GNB_VISIBILITY = {
   },
 };
 
+/**
+ * 학생(parent)은 가입 분기(preferred_lesson_type) 하나만 가진다. 반대 분기 찾기 메뉴는 숨긴다.
+ * 과외 분기: 과외쌤찾기·학생찾기 / 공부방 분기: 공부방찾기·학생찾기
+ * @type {Record<'tutor'|'study_room', string[]>}
+ */
+export const PARENT_BRANCH_HIDDEN_GNB = {
+  tutor: ['find_room'],
+  study_room: ['find_tutor'],
+};
+
+/** @type {() => ('tutor'|'study_room'|null)} */
+let parentBranchSource = () => null;
+
+/**
+ * 학생 가입 분기를 읽는 함수를 등록한다. 등록 캐시(students API)를 가진 모듈이 부른다.
+ * @param {() => ('tutor'|'study_room'|null)} fn
+ */
+export function registerParentBranchSource(fn) {
+  if (typeof fn === 'function') parentBranchSource = fn;
+}
+
+/** @returns {'tutor'|'study_room'|null} */
+export function parentBranch() {
+  const branch = parentBranchSource();
+  return branch === 'tutor' || branch === 'study_room' ? branch : null;
+}
+
 /** @deprecated limited 정책 폐지 — 하위 호환용 문구만 유지 */
 export const GNB_MUTED_TITLE = '현재 역할에서는 이용할 수 없습니다';
 
@@ -142,6 +169,10 @@ export const GNB_MUTED_TITLE = '현재 역할에서는 이용할 수 없습니�
  * @returns {'show' | 'hide'}
  */
 export function getGnbVisibility(role, itemId) {
+  if (role === 'parent') {
+    const hidden = PARENT_BRANCH_HIDDEN_GNB[parentBranch() || ''] || [];
+    if (hidden.includes(itemId)) return 'hide';
+  }
   return GNB_VISIBILITY[role]?.[itemId] ?? 'show';
 }
 

@@ -93,7 +93,7 @@ final class TutorHubRepository
             'detail_completion_status' => (string) ($row['detail_completion_status'] ?? 'basic_only'),
             'detail_missing'           => $detailEval['missing'],
             'detail_checks'            => $detailEval['checks'],
-            'location_label'           => $primaryRegion !== '' ? $primaryRegion : '—',
+            'location_label'           => $primaryRegion,
             'primary_region_label'     => $primaryRegion,
             'primary_region_id'        => $primaryRegionId,
             'saved_regions'            => $savedRegions,
@@ -112,7 +112,7 @@ final class TutorHubRepository
             'major_name'               => $row['major_name'] !== null ? (string) $row['major_name'] : null,
             'university_status'        => $row['university_status'] !== null ? (string) $row['university_status'] : null,
             'proof_document_available' => (bool) ($row['proof_document_available'] ?? false),
-            'has_primary_region'       => $primaryRegion !== '',
+            'has_primary_region'       => $primaryRegion !== null,
             'has_primary_subject'      => $this->primarySubject($tutorId) !== '',
             'has_lesson_places'        => $lessonPlaces !== [],
             'has_profile_image'        => $this->hasProfileImage($tutorId),
@@ -126,6 +126,9 @@ final class TutorHubRepository
             'contact_time_note'          => $row['contact_time_note'] !== null ? (string) $row['contact_time_note'] : '',
             'lesson_places'              => $lessonPlaces,
             'teaching_style_badges'      => $badges,
+            'created_at'                 => !empty($row['created_at'])
+                ? substr((string) $row['created_at'], 0, 10)
+                : null,
             'updated_at'                 => gmdate('c', strtotime((string) $row['updated_at'])),
             'published_at'               => !empty($row['published_at'])
                 ? gmdate('c', strtotime((string) $row['published_at'])) : null,
@@ -186,17 +189,18 @@ final class TutorHubRepository
         return array_slice($slots, 0, 3);
     }
 
-    private function primaryRegionLabel(int $tutorId): string
+    /** 대표(is_primary) 활동지역 「시도 시군구」. 대표 지역이 없으면 null. */
+    private function primaryRegionLabel(int $tutorId): ?string
     {
         $stmt = $this->pdo->prepare(
-            'SELECT r.sido_name FROM tutor_regions tr
-             JOIN regions r ON tr.region_id = r.id
-             WHERE tr.tutor_id = ? AND tr.is_primary = 1 LIMIT 1'
+            'SELECT tr.region_id FROM tutor_regions tr
+             WHERE tr.tutor_id = ? AND tr.is_primary = 1
+             ORDER BY tr.priority_order ASC, tr.id ASC LIMIT 1'
         );
         $stmt->execute([$tutorId]);
-        $val = $stmt->fetchColumn();
+        $regionId = $stmt->fetchColumn();
 
-        return $val !== false ? (string) $val : '';
+        return $regionId !== false ? (new OfficialRegionLabel($this->pdo))->sigunguLabel($regionId) : null;
     }
 
     private function primarySubject(int $tutorId): string

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Paid;
 
 use PDO;
+use Study114\Registration\OfficialRegionLabel;
 
 /** 18b — 횟수권 · 기간형 포지션 */
 final class ProviderTicketRepository
@@ -191,23 +192,24 @@ final class ProviderTicketRepository
 
     /**
      * 공부방 is_primary / 과외쌤 is_primary 필수 1번 지역 표시명
+     * 과외쌤은 「시도 시군구」, 대표 지역이 없으면 null.
      */
-    public function primaryRegionLabel(string $providerType, int $providerId): string
+    public function primaryRegionLabel(string $providerType, int $providerId): ?string
     {
         if ($providerId <= 0) {
-            return '';
+            return $providerType === 'tutor' ? null : '';
         }
         try {
             if ($providerType === 'tutor') {
                 $stmt = $this->pdo->prepare(
-                    'SELECT r.sido_name FROM tutor_regions tr
-                     JOIN regions r ON tr.region_id = r.id
-                     WHERE tr.tutor_id = ? AND tr.is_primary = 1 LIMIT 1'
+                    'SELECT tr.region_id FROM tutor_regions tr
+                     WHERE tr.tutor_id = ? AND tr.is_primary = 1
+                     ORDER BY tr.priority_order ASC, tr.id ASC LIMIT 1'
                 );
                 $stmt->execute([$providerId]);
-                $val = $stmt->fetchColumn();
+                $regionId = $stmt->fetchColumn();
 
-                return $val !== false ? (string) $val : '';
+                return $regionId !== false ? (new OfficialRegionLabel($this->pdo))->sigunguLabel($regionId) : null;
             }
             $stmt = $this->pdo->prepare(
                 'SELECT CONCAT(r.dong_name, IFNULL(CONCAT(" · ", c.name), ""))
@@ -233,7 +235,7 @@ final class ProviderTicketRepository
 
             return $val !== false ? (string) $val : '';
         } catch (\PDOException) {
-            return '';
+            return $providerType === 'tutor' ? null : '';
         }
     }
 

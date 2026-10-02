@@ -147,6 +147,20 @@ export function guardMypageAccess(loggedIn) {
   };
 }
 
+/**
+ * 학생 찾기 탭 — 가입 분기의 탭(과외 분기 tutor·student / 공부방 분기 room·student)만 연다.
+ * 반대 분기 탭 주소로 들어오면 분기 탭으로 보낸다.
+ * @param {'room'|'tutor'|'student'} tab
+ * @param {'tutor'|'study_room'} branch
+ * @returns {{ ok: true } | { ok: false, redirectTab: 'room'|'tutor' }}
+ */
+export function guardParentFindTab(tab, branch) {
+  const own = branch === 'study_room' ? 'room' : 'tutor';
+  const other = own === 'room' ? 'tutor' : 'room';
+  if (tab === other) return { ok: false, redirectTab: own };
+  return { ok: true };
+}
+
 /** 역할 홈 화면 키 → 그 홈을 볼 수 있는 navRole */
 const ROLE_HOME_SCREEN_ROLE = {
   parent: 'parent',

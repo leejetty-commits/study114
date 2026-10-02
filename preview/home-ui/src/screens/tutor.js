@@ -1,4 +1,3 @@
-import { MY_TUTOR } from '../data.js';
 import { previewState, setTutorTab, resetTutorFind } from '../state.js';
 import { renderHomeShell, bindLayoutEvents } from '../layout.js';
 import { renderCompareBar, bindUserActionEvents } from '../user-actions-ui.js';
@@ -18,12 +17,12 @@ import { renderTutorActivityBars, bootTutorActivityCounts } from '../tutor-activ
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { bindHomeNewsRow, renderHomeNewsRow } from '../home-news-row.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
-import { bootTutorHome, readTutorLifetimeViews, readTutorHomeRegions } from '../tutor-home-seed.js';
+import { bootTutorHome, readTutorMemberBox, readTutorHomeRegions } from '../tutor-home-seed.js';
 import { getDefaultMypagePath } from '../mypage/router.js';
 
 /**
  * 시트(임시.cell) 행=가로줄:
- * 1행 김우동 | 과외쌤 박스 | 쪽지 후기함 | 마이페이지
+ * 1행 표시명 | 과외쌤 박스 | 쪽지 후기함 | 마이페이지
  * 2행 활동지역 | 저장된 지역 1~3 (지역 1이 대표)
  * 3행 과목 | 쪽지 받음/안받음 · N개 미확인
  * 4행 조회 | 등록
@@ -80,22 +79,23 @@ function statCell(label, value) {
 /** 좌측: 내 현황 (시트 4행 가로) */
 function renderMyTutorStatusBox() {
   const mypagePath = getDefaultMypagePath('tutor');
+  const box = readTutorMemberBox();
   return renderStatusBoxShell({
     label: '과외쌤 박스',
-    title: MY_TUTOR.name,
+    title: escTutor(box.name),
     actionsHtml: `
       <a href="#/mypage/messages" class="btn btn--secondary btn--sm" data-nav="/mypage/messages">쪽지 후기함</a>
       <a href="#${mypagePath}" class="btn btn--primary btn--sm" data-nav="${mypagePath}">마이페이지</a>`,
     regionsHtml: `${renderTutorRegionPills()}
       <p class="my-box__guide">활동지역을 수정하려면 '마이페이지-내 등록-기본등록'에서 해 주세요.</p>`,
     statsRow1: [
-      statCell('과목', MY_TUTOR.subject),
-      statCell('상태', `쪽지 받음 · ${MY_TUTOR.memoInbox ?? 0}개 미확인`),
+      statCell('과목', escTutor(box.subject)),
+      statCell('상태', escTutor(`${box.inquiry} · ${box.unread}개 미확인`)),
       `<p class="my-box__guide">쪽지설정을 수정하려면 마이페이지-내 등록-쪽지설정에서 해 주세요. 쪽지는 '쪽지 후기함'에서 확인하세요.</p>`,
     ].join(''),
     statsRow2: [
-      statCell('조회', readTutorLifetimeViews() == null ? '—' : String(readTutorLifetimeViews())),
-      statCell('등록', MY_TUTOR.registered),
+      statCell('조회', escTutor(box.views)),
+      statCell('등록', escTutor(box.registered)),
     ].join(''),
   });
 }

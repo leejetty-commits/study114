@@ -1,5 +1,5 @@
 /**
- * 공급자·학부모 홈 — 2모드 탭 + search-find-surface 공용
+ * 공급자·학생 홈 — 2모드 탭 + search-find-surface 공용
  */
 
 import { searchUiUrl } from '../../shared/preview-links.js';
@@ -10,19 +10,32 @@ import {
   renderFindFilterBar,
   renderFindResultSection,
 } from '@search-ui/search-find-surface.js';
+import { studentBranch } from '@search-ui/student-saved-region.js';
+import { STUDENT_BRANCH_COPY } from './student-reg/student-reg-copy.js';
 
 /** @typedef {'parent'|'study_room'|'tutor'} ProviderHomeRole */
 /** @typedef {'study_room'|'tutor'|'student'} ProviderHomeTabId */
+/** @typedef {{ id: ProviderHomeTabId, label: string, searchTab: import('@search-ui/state.js').SearchTab, homeSelf?: boolean }} ProviderHomeMode */
 
 /**
- * @type {Record<ProviderHomeRole, Array<{ id: ProviderHomeTabId, label: string, searchTab: import('@search-ui/state.js').SearchTab, homeSelf?: boolean }>>}
+ * 학생 홈 — 가입 분기(preferred_lesson_type)별 탭 2개. 첫 탭(분기 서비스 탭)이 기본.
+ * @type {Record<'tutor'|'study_room', ProviderHomeMode[]>}
  */
-export const PROVIDER_HOME_MODES = {
-  parent: [
-    { id: 'study_room', label: '우리동네 공부방', searchTab: 'room' },
+export const PARENT_HOME_MODES = {
+  tutor: [
     { id: 'tutor', label: '우리동네 과외쌤', searchTab: 'tutor' },
     { id: 'student', label: '우리동네 학생', searchTab: 'student' },
   ],
+  study_room: [
+    { id: 'study_room', label: '우리동네 공부방', searchTab: 'room' },
+    { id: 'student', label: '우리동네 학생', searchTab: 'student' },
+  ],
+};
+
+/**
+ * @type {Record<'study_room'|'tutor', ProviderHomeMode[]>}
+ */
+export const PROVIDER_HOME_MODES = {
   study_room: [
     { id: 'study_room', label: '우리동네 공부방', searchTab: 'room', homeSelf: true },
     { id: 'student', label: '우리동네 학생', searchTab: 'student' },
@@ -71,12 +84,24 @@ const HOME_HEAD_COPY = {
   },
 };
 
+/** @param {ProviderHomeRole} role @returns {ProviderHomeMode[]} */
+export function providerHomeModes(role) {
+  return role === 'parent' ? PARENT_HOME_MODES[studentBranch()] : PROVIDER_HOME_MODES[role];
+}
+
+/** 학생 홈 탭. 분기에 없는 탭(이전 상태·복원 스냅샷)이면 첫 탭. @param {ProviderHomeTabId|null|undefined} tabId */
+export function resolveParentHomeTab(tabId) {
+  const modes = providerHomeModes('parent');
+  return modes.some((m) => m.id === tabId) ? /** @type {ProviderHomeTabId} */ (tabId) : modes[0].id;
+}
+
 /**
  * @param {ProviderHomeRole} role
  * @param {ProviderHomeTabId} tabId
  */
 export function getProviderHomeMode(role, tabId) {
-  return PROVIDER_HOME_MODES[role].find((m) => m.id === tabId) || PROVIDER_HOME_MODES[role][0];
+  const modes = providerHomeModes(role);
+  return modes.find((m) => m.id === tabId) || modes[0];
 }
 
 /**
@@ -87,7 +112,7 @@ export function getProviderHomeMode(role, tabId) {
 export function renderProviderHomeTabs(role, activeTabId, tabAttr = 'data-provider-tab') {
   return `
     <div class="parent-tabs provider-home-tabs" role="tablist">
-      ${PROVIDER_HOME_MODES[role]
+      ${providerHomeModes(role)
         .map(
           (m) => `
         <button type="button" class="parent-tabs__btn ${m.id === activeTabId ? 'is-active' : ''}" ${tabAttr}="${m.id}" role="tab">${m.label}</button>`,
@@ -147,7 +172,9 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
 
   const showMap = searchTab === 'room';
   const studentSnap = tabId === 'student' && (role === 'study_room' || role === 'tutor');
+  const parentHome = role === 'parent';
   const hideSearchForm =
+    parentHome ||
     studentSnap ||
     (homeSelf &&
       ((role === 'tutor' && tabId === 'tutor') || (role === 'study_room' && tabId === 'study_room')));
@@ -169,9 +196,20 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
         hideRegionBar: opts.hideRegionBar === true,
         hideSelfNote: opts.hideSelfNote !== false && hideHead,
       })}
-      ${renderFindFilterBar(searchTab, findState)}
+      ${parentHome ? '' : renderFindFilterBar(searchTab, findState)}
       ${renderFindResultSection(searchTab, findState, role, { surfaceType: 'home' })}
+      ${parentHome ? renderParentFindMoreLink(searchTab) : ''}
     </div>`;
+}
+
+/** 학생 홈 탭 하단 — 찾기 페이지로 보내는 링크배지(공부방 홈 학생 탭과 같은 버튼). 검색은 찾기에서만. */
+function renderParentFindMoreLink(searchTab) {
+  const url = searchUiUrl(searchTab, 'parent');
+  const label = STUDENT_BRANCH_COPY.home.findMore[searchTab];
+  return `
+    <p class="provider-home-search-link" data-parent-find-more="${searchTab}">
+      <a href="${url}" class="btn btn--primary btn--sm" data-same-tab-href="${url}">${label}</a>
+    </p>`;
 }
 
 function escSnap(value) {

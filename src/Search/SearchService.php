@@ -133,7 +133,7 @@ final class SearchService
     public function guestScopedFilters(string $tab, array $filters): ?array
     {
         foreach ([
-            'region_id', 'region_label', 'tutor_region_id', 'tutor_region_label',
+            'region_id', 'region_label', 'sigungu_region_id', 'tutor_region_id', 'tutor_region_label',
             'preferred_region_id', 'preferred_region', 'preferred_region_label', 'preferred_studyroom_region_id',
         ] as $key) {
             unset($filters[$key]);
@@ -467,6 +467,27 @@ final class SearchService
                 'study_room_id',
                 'sr.id'
             );
+        }
+
+        // 시·군·구 전체. 선택 단위(is_selectable) id → 그 구 소속 동(RegionGuLink) 의 본인 지역·홍보지역.
+        if ($sigunguId = $this->selectableRegionId($pdo, $filters, 'sigungu_region_id')) {
+            $dongIds = RegionGuLink::dongIdsUnderGu($sigunguId);
+            if ($dongIds === []) {
+                $where[] = '1 = 0';
+            } else {
+                $own = [];
+                $promo = [];
+                foreach (array_values($dongIds) as $i => $dongId) {
+                    $params['sg_dong_' . $i] = $dongId;
+                    $params['sg_promo_' . $i] = $dongId;
+                    $own[] = ':sg_dong_' . $i;
+                    $promo[] = ':sg_promo_' . $i;
+                }
+                $where[] = '(sr.region_id IN (' . implode(', ', $own) . ') OR EXISTS (
+                    SELECT 1 FROM study_room_regions srr_sg
+                    WHERE srr_sg.study_room_id = sr.id AND srr_sg.region_id IN (' . implode(', ', $promo) . ')
+                ))';
+            }
         }
 
         if ($subjectId = $this->intFilter($filters, 'subject_master_id')) {
@@ -1008,8 +1029,9 @@ final class SearchService
                    r.dong_name, r.sigungu_name, r.sido_name, c.name AS complex_name,
                    sst.subject_name
             FROM students s
-            LEFT JOIN regions r ON COALESCE(s.preferred_studyroom_region_id, s.preferred_tutor_region_id) = r.id
-            LEFT JOIN complexes c ON s.preferred_studyroom_complex_id = c.id
+            LEFT JOIN regions r ON r.id = CASE WHEN s.preferred_lesson_type = 'study_room'
+                THEN s.preferred_studyroom_region_id ELSE s.preferred_tutor_region_id END
+            LEFT JOIN complexes c ON s.preferred_lesson_type = 'study_room' AND s.preferred_studyroom_complex_id = c.id
             LEFT JOIN student_subject_targets sst ON sst.student_id = s.id AND sst.is_primary = 1
             WHERE {$whereSql}
             ORDER BY {$orderBy}

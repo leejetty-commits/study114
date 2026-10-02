@@ -6,6 +6,8 @@
 import { fetchRoiSummary } from './paid-api.js';
 import { getTutors } from './tutor-reg/store.js';
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from './registrations-backend.js';
+import { isMessagesApiMode } from './messages-backend.js';
+import { getUnreadCount } from './messages/thread-store.js';
 import { ensureTutorCityUnits, getTutorCityUnits } from './tutor-reg/city-units.js';
 import { activityLabelFromRegionId } from '../../shared/korea-sidos.js';
 
@@ -13,7 +15,7 @@ import { activityLabelFromRegionId } from '../../shared/korea-sidos.js';
 let lifetimeViews = null;
 let viewsLoaded = false;
 
-/** @returns {number|null} 없거나 실패면 null */
+/** @returns {number|null} 서버 호출 실패(또는 조회 전)면 null. 응답했는데 값이 없으면 0 */
 export function readTutorLifetimeViews() {
   return lifetimeViews;
 }
@@ -22,16 +24,74 @@ async function ensureLifetimeViews() {
   if (viewsLoaded && lifetimeViews != null) return;
   try {
     const data = await fetchRoiSummary(7);
-    if (data?.lifetime_views == null || data.lifetime_views === '') {
-      lifetimeViews = null;
-    } else {
-      const n = Number(data.lifetime_views);
-      lifetimeViews = Number.isFinite(n) ? n : null;
-    }
+    const n = Number(data?.lifetime_views);
+    lifetimeViews = Number.isFinite(n) ? n : 0;
   } catch {
     lifetimeViews = null;
   }
   viewsLoaded = true;
+}
+
+/** 조회 칸 문구. 불러오는 중 …, 서버 호출 실패 — */
+function tutorViewsText() {
+  if (!viewsLoaded) return '…';
+  return lifetimeViews == null ? '—' : String(lifetimeViews);
+}
+
+/** 서버 등록 캐시의 내 과외 프로필. sessionStorage 시드는 쓰지 않는다. */
+function pickOwnTutor() {
+  if (!isRegistrationsApiMode()) return null;
+  return getTutors().find((row) => !row?.deleted_at) || null;
+}
+
+function formatRegistered(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '—';
+  const day = raw.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : '—';
+}
+
+function inquiryText(status) {
+  if (status === 'open') return '쪽지 받음';
+  if (status === 'paused' || status === 'not_accepting') return '쪽지 안받음';
+  return '—';
+}
+
+function readUnread() {
+  if (!isMessagesApiMode()) return 0;
+  try {
+    const n = Number(getUnreadCount());
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * 과외쌤 홈 내 박스. 이름·과목·쪽지상태·등록일은 등록 API, 미확인은 쪽지 API, 조회는 ROI.
+ * @returns {{ name: string, subject: string, inquiry: string, unread: number, views: string, registered: string }}
+ */
+export function readTutorMemberBox() {
+  try {
+    const tutor = pickOwnTutor();
+    return {
+      name: String(tutor?.tutor_display_name || '').trim() || '내 과외 프로필',
+      subject: String(tutor?.main_subject_note || '').trim() || '미등록',
+      inquiry: inquiryText(tutor?.inquiry_status),
+      unread: readUnread(),
+      views: tutorViewsText(),
+      registered: formatRegistered(tutor?.created_at),
+    };
+  } catch {
+    return {
+      name: '내 과외 프로필',
+      subject: '미등록',
+      inquiry: '—',
+      unread: 0,
+      views: tutorViewsText(),
+      registered: '—',
+    };
+  }
 }
 
 /** @type {Array<{label: string, primary: boolean, regionId: string}>|null} */
@@ -107,10 +167,15 @@ async function ensureHomeRegions() {
 export function bootTutorHome(rerender) {
   const gen = ++regionBoot;
   return (async () => {
+    // 값이 바뀐 경우에만 다시 그린다. 다시 그린 뒤의 boot 는 같은 값이라 멈춘다.
+    const prev = tutorHomeSignature();
     await ensureLifetimeViews();
-    const prev = JSON.stringify(homeRegions);
     await ensureHomeRegions();
     if (gen !== regionBoot) return;
-    if (JSON.stringify(homeRegions) !== prev && typeof rerender === 'function') rerender();
+    if (tutorHomeSignature() !== prev && typeof rerender === 'function') rerender();
   })();
+}
+
+function tutorHomeSignature() {
+  return JSON.stringify([homeRegions, readTutorMemberBox()]);
 }

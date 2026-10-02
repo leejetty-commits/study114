@@ -45,12 +45,15 @@ import {
   bootGuestFindSurface,
 } from '../search-find-surface.js';
 import { bindSearchMapPinLinks } from '../search-map.js';
+import { studentBranch } from '../student-saved-region.js';
+import { guardParentFindTab } from '../../../shared/route-access.js';
 import { bootStudyRoomHome, bootStudyRoomStudentDemand } from '@home-ui/study-room-home-seed.js';
 import { renderBrowseList } from '@home-ui/exposure-render.js';
 import { getStudentDemandForRegion } from '../search-region-feed.js';
 import { renderListSortSelect } from '../../../shared/list-sort.js';
 import {
   placeCaption,
+  STUDENT_PLACE_PROMPT,
   readGuestBaseline,
   loadGuestBaseline,
   readGuestAxisCounts,
@@ -87,6 +90,8 @@ function visibleCurrentPlace(tab, role, regionLabel) {
     const base = readGuestBaseline();
     return tab === 'room' ? base.room : base.tutor;
   }
+  // 학생: 서버 저장 지역 라벨(또는 직접 고른 위치) 그대로. 동만 잘라 보이지 않는다.
+  if (role === 'parent') return regionLabel || STUDENT_PLACE_PROMPT;
   if (tab === 'student' && role === 'study_room') {
     return studentCurrentPlace(regionLabel) || placeCaption(regionLabel, 'room') || '';
   }
@@ -203,6 +208,14 @@ export function renderSearchPage(opts = {}) {
   }
   if (!isSearchLoggedIn()) previewState.role = 'guest';
   const rawTab = getCurrentTab();
+  if (previewState.role === 'parent') {
+    const branchGuard = guardParentFindTab(rawTab, studentBranch());
+    if (!branchGuard.ok) {
+      resetFindSurface(previewState);
+      navigateTab(branchGuard.redirectTab);
+      return '';
+    }
+  }
   const tab = resolveAllowedTab(rawTab, previewState.role);
   if (tab !== rawTab) {
     navigateTab(tab);
