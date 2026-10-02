@@ -360,7 +360,7 @@ function renderCheer(post) {
       </div>`;
 }
 
-/* ── 글쓰기 · 수정 ── */
+/* ── 글쓰기 · 수정 (연락처 차단은 서버가 422 로 판정하고, 실패하면 폼을 다시 그리지 않아 입력이 남는다) ── */
 
 function renderForm(board, post) {
   const isEdit = Boolean(post);
@@ -385,7 +385,7 @@ function renderForm(board, post) {
           <span>${esc(COPY.fieldBody)}</span>
           <textarea name="body" rows="12" maxlength="5000" required placeholder="${esc(isStudentTips(board) ? TIPS.fieldBodyPlaceholder : COPY.fieldBodyPlaceholder)}">${esc(post?.body || '')}</textarea>
         </label>
-        ${isStudentTips(board) ? `<p class="info-board__notice" data-info-contact-notice>${esc(TIPS.contactNotice)}</p>` : ''}
+        <p class="info-board__notice" data-info-contact-notice>${esc(COPY.contactNotice)}</p>
         <div class="concern-compose__error" data-info-form-error role="alert" hidden></div>
         <div class="info-board__actions">
           <button type="submit" class="btn btn--primary">${esc(isEdit ? COPY.submitEdit : COPY.submitNew)}</button>
