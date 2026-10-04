@@ -138,4 +138,10 @@ export function syncStoredHopeRegionsFromStudent(row) {
   else persistFindDefaultsFromStudent(row);
 }
 
-registerParentBranchSource(() => studentBranch());
+// GNB 정본은 공용 저장소(me.php student_branch)다.
+// 이 등록은 응답에 student_branch 키가 없을 때만 쓰인다.
+// 캐시에 명시 분기가 없으면 null. 기본 tutor 를 넘기지 않는다.
+registerParentBranchSource(() => {
+  const lessonType = readStudentSavedRegion()?.lessonType;
+  return lessonType === 'tutor' || lessonType === 'study_room' ? lessonType : null;
+});

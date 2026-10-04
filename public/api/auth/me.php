@@ -2,6 +2,56 @@
 
 declare(strict_types=1);
 
+/**
+ * 로그인 학생의 가입 분기.
+ * 학생(guardian_student)이고 삭제되지 않은 학생 행이 있을 때만 tutor|study_room.
+ * 행이 여러 개면 클라이언트 pickStudentRecord 와 같이 id 오름차순 첫 행.
+ * 그 외(다른 역할, 행 없음, 유형 없음)는 null.
+ */
+function study114_auth_me_student_branch(PDO $pdo, string $roleType, int $userId): ?string
+{
+    if ($roleType !== 'guardian_student' || $userId < 1) {
+        return null;
+    }
+    $stmt = $pdo->prepare(
+        'SELECT id, preferred_lesson_type, exposure_status, deleted_at
+         FROM students
+         WHERE guardian_user_id = ?'
+    );
+    $stmt->execute([$userId]);
+    $rows = $stmt->fetchAll();
+    if (!is_array($rows)) {
+        return null;
+    }
+    $list = [];
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        if (($row['exposure_status'] ?? null) === 'deleted') {
+            continue;
+        }
+        if (!empty($row['deleted_at'])) {
+            continue;
+        }
+        $list[] = $row;
+    }
+    usort(
+        $list,
+        static fn (array $a, array $b): int => ((int) ($a['id'] ?? 0)) <=> ((int) ($b['id'] ?? 0))
+    );
+    if ($list === []) {
+        return null;
+    }
+    $type = $list[0]['preferred_lesson_type'] ?? null;
+
+    return $type === 'tutor' || $type === 'study_room' ? $type : null;
+}
+
+if (defined('STUDY114_AUTH_ME_LIBRARY')) {
+    return;
+}
+
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Auth\AuthSession;
@@ -73,6 +123,20 @@ try {
     error_log('[me] auth flags: ' . $e->getMessage());
 }
 
+$studentBranch = null;
+if ((string) ($user['role_type'] ?? '') === 'guardian_student') {
+    try {
+        $studentBranch = study114_auth_me_student_branch(
+            \Study114\Database\Connection::get(),
+            'guardian_student',
+            (int) $user['user_id']
+        );
+    } catch (Throwable $e) {
+        error_log('[me] student_branch: ' . $e->getMessage());
+        $studentBranch = null;
+    }
+}
+
 echo json_encode([
     'ok' => true,
     'authenticated' => true,
@@ -89,4 +153,5 @@ echo json_encode([
     'needs_account_contact' => $needsAccountContact,
     'phone_verified' => $phoneVerified,
     'needs_basic_register' => $needsBasicRegister,
+    'student_branch' => $studentBranch,
 ], JSON_UNESCAPED_UNICODE);

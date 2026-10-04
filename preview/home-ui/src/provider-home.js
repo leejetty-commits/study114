@@ -9,6 +9,7 @@ import {
   renderCompactFindForm,
   renderFindFilterBar,
   renderFindResultSection,
+  tutorStudentRegionLabel,
 } from '@search-ui/search-find-surface.js';
 import { studentBranch } from '@search-ui/student-saved-region.js';
 import { STUDENT_BRANCH_COPY } from './student-reg/student-reg-copy.js';
@@ -185,7 +186,7 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
 
   return `
     <div class="parent-home-body">
-      ${studentSnap ? renderStudentDemandSnapshot(role) : hideHead ? '' : renderProviderHomeHead(role, tabId)}
+      ${studentSnap ? renderStudentDemandSnapshot(role, findState) : hideHead ? '' : renderProviderHomeHead(role, tabId)}
       ${showCross ? renderSearchCrossLink(role, searchTab) : ''}
       ${renderCompactFindForm(searchTab, findState, {
         showMap,
@@ -198,7 +199,7 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
       })}
       ${parentHome ? '' : renderFindFilterBar(searchTab, findState)}
       ${renderFindResultSection(searchTab, findState, role, { surfaceType: 'home' })}
-      ${parentHome ? renderParentFindMoreLink(searchTab) : ''}
+      ${parentHome && searchTab !== 'tutor' ? renderParentFindMoreLink(searchTab) : ''}
     </div>`;
 }
 
@@ -219,14 +220,15 @@ function escSnap(value) {
     .replace(/"/g, '&quot;');
 }
 
-function tutorPrimaryPlace() {
-  return tutorHomePrimaryLabel();
+/** 과외쌤 홈 학생 탭이 고른 활동지역(없으면 대표). @param {object} [findState] */
+function tutorPrimaryPlace(findState) {
+  return (findState ? tutorStudentRegionLabel(findState) : '') || tutorHomePrimaryLabel();
 }
 
-function renderStudentDemandSnapshot(role = 'study_room') {
+function renderStudentDemandSnapshot(role = 'study_room', findState = null) {
   const tutorSnap = role === 'tutor';
   const full = tutorSnap ? '' : peekStudyRoomPromo1();
-  const dong = tutorSnap ? tutorPrimaryPlace() : studyRoomPromo1Dong() || full || '우리동네';
+  const dong = tutorSnap ? tutorPrimaryPlace(findState) : studyRoomPromo1Dong() || full || '우리동네';
   const place = tutorSnap ? dong : full || dong;
   const findUrl = searchUiUrl('student', tutorSnap ? 'tutor' : 'study_room');
   return `

@@ -11,13 +11,21 @@ import {
   isProviderHomeSelfTab,
   renderSearchCrossLink,
 } from '../provider-home.js';
-import { bindFindSurfaceEvents } from '@search-ui/search-find-surface.js';
+import {
+  bindFindSurfaceEvents,
+  resolveTutorStudentRegionIndex,
+} from '@search-ui/search-find-surface.js';
 import { bindGuestListPagination } from '../list-pagination.js';
 import { renderTutorActivityBars, bootTutorActivityCounts } from '../tutor-activity-chart.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { bindHomeNewsRow, renderHomeNewsRow } from '../home-news-row.js';
 import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.js';
-import { bootTutorHome, readTutorMemberBox, readTutorHomeRegions } from '../tutor-home-seed.js';
+import {
+  bootTutorHome,
+  bootTutorStudentDemand,
+  readTutorMemberBox,
+  readTutorHomeRegions,
+} from '../tutor-home-seed.js';
 import { getDefaultMypagePath } from '../mypage/router.js';
 
 /**
@@ -152,6 +160,9 @@ export function bindTutorEvents(root, rerender) {
   bindHomeNewsRow(root, { viewer: 'tutor', onRerender: rerender, sourceRoute: 'tutor' });
   bootTutorHome(rerender);
   bootTutorActivityCounts(rerender);
+  if (previewState.tutorTab === 'student') {
+    bootTutorStudentDemand(resolveTutorStudentRegionIndex(previewState.tutorFind), rerender);
+  }
 
   bindProviderHomeTabEvents(root, rerender, {
     role: 'tutor',

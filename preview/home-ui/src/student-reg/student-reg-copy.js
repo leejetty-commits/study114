@@ -55,3 +55,17 @@ export const STUDENT_BRANCH_COPY = {
     draftMissing: (labels) => `기본정보에 빈 칸이 있어 카드가 잠시 쉬고 있어요: ${labels}`,
   },
 };
+
+/**
+ * 과외쌤 홈 「우리동네 학생」 탭 문구 한곳.
+ * 조회 중 · 조회 실패 · 활동지역 없음 · 조회 끝 0건을 서로 다른 문구로 구분한다.
+ * 용어: 「학생」(「학부모」 금지).
+ */
+export const TUTOR_HOME_STUDENT_COPY = {
+  loading: '우리동네 학생을 불러오는 중입니다.',
+  error: '학생을 불러오지 못했어요. 잠시 후 다시 확인해 주세요.',
+  noRegion: '활동지역을 등록하면 학생이 보여요.',
+  /** @param {string} place */
+  emptyTitle: (place) => `${place}에는 아직 함께 공부할 학생이 보이지 않아요`,
+  emptyBody: '새 학생이 오면 여기에 먼저 보여 드릴게요.',
+};

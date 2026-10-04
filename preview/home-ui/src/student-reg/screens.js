@@ -1,4 +1,5 @@
 import { syncStoredHopeRegionsFromStudent } from '@search-ui/student-saved-region.js';
+import { setStoredStudentBranch } from '../../../shared/student-branch-store.js';
 import { renderStudentBasicSelfCard } from '../exposure-render.js';
 import { renderStudentProfileRead } from './profile-read.js';
 import {
@@ -671,6 +672,7 @@ export function bindStudentRegEvents(root, rerender) {
 
       try {
         const saved = await updateStudent(id, patch);
+        if (saved) setStoredStudentBranch(saved.preferred_lesson_type);
         if ((formKind === 'basic' || formKind === 'detail') && saved) syncStoredHopeRegionsFromStudent(saved);
         alert(formKind === 'settings' ? '저장되었습니다.' : savedNotice(branchChanged, saved));
         rerender();

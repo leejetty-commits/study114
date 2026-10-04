@@ -78,8 +78,10 @@ function renderStudentHomeVacantTiers(kind, place, opts) {
       </div>
       <div class="list-subsection">
         ${renderSectionTitleBar({ ...section.basic, locationLabel: place, desc: undefined })}
-        ${renderBrowseList(kind, [studentHomeSample(kind, 'basic', place)], boxOpts)}
-        <div class="browse-list browse-list--table" role="list">${renderEmptyBasicPromo()}</div>
+        ${renderBrowseList(kind, [studentHomeSample(kind, 'basic', place)], {
+          ...boxOpts,
+          tailHtml: renderEmptyBasicPromo(),
+        })}
       </div>
     </div>`;
 }
@@ -321,7 +323,9 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
     showWish: true,
     serverSorted: mode === 'search',
   };
-  const pinTutorPrimary = viewerRole === 'tutor' && surfaceType === 'home' && mode === 'region';
+  // 학생 탭은 고른 활동지역 탭을 따라가므로 대표로 고정하지 않는다.
+  const pinTutorPrimary =
+    viewerRole === 'tutor' && surfaceType === 'home' && mode === 'region' && tab !== 'student';
   const homeTierTag = pinTutorPrimary
     ? tutorPrimaryRegionLabel()
     : regionLabel || (mode === 'region' ? '지역 피드' : '');

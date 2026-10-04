@@ -1102,11 +1102,16 @@ function renderBasicRow(kind, item, opts) {
   return renderBasicStudyRoomRow(item, opts);
 }
 
-/** @param {'study_room'|'tutor'|'student'} kind */
+/**
+ * @param {'study_room'|'tutor'|'student'} kind
+ * @param {object[]} items
+ * @param {{ tailHtml?: string }} [opts]
+ * tailHtml 는 같은 그리드의 뒤 칸(샘플 오른쪽 빈카드 등). 목록 앞에 두지 않는다.
+ */
 export function renderBrowseList(kind, items, opts = {}) {
   return `
     <div class="browse-list browse-list--table" role="list">
-      ${items.map((item) => renderBasicRow(kind, item, opts)).join('')}
+      ${items.map((item) => renderBasicRow(kind, item, opts)).join('')}${opts.tailHtml || ''}
     </div>
   `;
 }

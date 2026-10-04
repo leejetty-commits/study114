@@ -2,6 +2,11 @@
  * study-room-ui / tutor-ui 공통 크롬 세션 (home-ui state 비의존)
  */
 import { navRoleFromAuthUser } from './site-nav-config.js';
+import {
+  clearStoredStudentBranch,
+  failStudentBranchSession,
+  noteSessionStudentBranch,
+} from './student-branch-store.js';
 import { AUTH_UI_BASE } from './preview-links.js';
 import {
   redirectToEmailVerifyWait,
@@ -35,6 +40,11 @@ export async function initChromeSession() {
   try {
     const res = await fetch('/api/auth/me.php', { credentials: 'include' });
     const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      failStudentBranchSession();
+    } else {
+      noteSessionStudentBranch(data);
+    }
     if (res.ok && data.ok && data.authenticated) {
       const src = data.user && typeof data.user === 'object' ? data.user : data;
       if (src.role_type) {
@@ -69,7 +79,7 @@ export async function initChromeSession() {
       }
     }
   } catch {
-    /* ignore */
+    failStudentBranchSession();
   }
   currentUser = null;
   return null;
@@ -82,4 +92,5 @@ export async function chromeLogout() {
     /* ignore */
   }
   currentUser = null;
+  clearStoredStudentBranch();
 }

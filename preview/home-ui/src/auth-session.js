@@ -21,6 +21,11 @@ import {
   isGuidePublicPath,
 } from '../../shared/auth-redirect.js';
 import { AUTH_UI_BASE } from '../../shared/preview-links.js';
+import {
+  clearStoredStudentBranch,
+  failStudentBranchSession,
+  noteSessionStudentBranch,
+} from '../../shared/student-branch-store.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
@@ -82,9 +87,21 @@ export function isAdminUser() {
 
 /** @returns {Promise<AuthUser|null>} */
 export async function fetchSession() {
-  const res = await fetch('/api/auth/me.php', CREDENTIALS);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data.ok || !data.authenticated) {
+  let res;
+  let data = {};
+  try {
+    res = await fetch('/api/auth/me.php', CREDENTIALS);
+    data = await res.json().catch(() => ({}));
+  } catch (err) {
+    failStudentBranchSession();
+    throw err;
+  }
+  if (!res.ok) {
+    failStudentBranchSession();
+    return null;
+  }
+  noteSessionStudentBranch(data);
+  if (!data.ok || !data.authenticated) {
     return null;
   }
   if (data.needs_account_contact) {
@@ -196,6 +213,7 @@ export async function initAuthSession(navigateHome = false) {
     return user;
   } catch (err) {
     console.warn('[auth] session check skipped — sessionStorage fallback', err);
+    failStudentBranchSession();
     currentUser = null;
     clearAuthRole();
     deactivateProviderApis();
@@ -236,14 +254,15 @@ export async function devLogin(email, password = 'password') {
   try {
     const me = await fetch('/api/auth/me.php', CREDENTIALS);
     const meData = await me.json().catch(() => ({}));
-    if (meData.ok && meData.authenticated) {
+    if (me.ok && meData.ok && meData.authenticated) {
+      noteSessionStudentBranch(meData);
       currentUser.email_verified = Boolean(meData.email_verified);
       currentUser.admin_level = meData.admin_level ?? currentUser.admin_level;
       currentUser.must_change_password = Boolean(meData.must_change_password);
       currentUser.phone_verified = Boolean(meData.phone_verified);
     }
   } catch {
-    /* ignore */
+    failStudentBranchSession();
   }
   applyRoleContext(currentUser.role_type);
   await hydrateSessionDependencies();
@@ -276,6 +295,7 @@ export async function logout() {
   }
   currentUser = null;
   clearAuthRole();
+  clearStoredStudentBranch();
   deactivateProviderApis();
   deactivateMessagesApi();
   deactivateRegistrationsApi();

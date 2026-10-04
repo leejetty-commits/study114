@@ -393,6 +393,14 @@ const CITIES = [
   { id: 117, label: '도봉구', sido_code: '11', sido_name: '서울특별시', official_code: '1132000000', city_name: '도봉구', gu_name: '', kind: 'gu' },
 ];
 const server = { students: [ROWS.tutor_uijeongbu], searchBodies: [] };
+function firstStudentBranch(students) {
+  const list = (Array.isArray(students) ? students : []).filter(
+    (row) => row && typeof row === 'object' && row.exposure_status !== 'deleted' && !row.deleted_at,
+  );
+  list.sort((a, b) => Number(a.id) - Number(b.id));
+  const type = list[0]?.preferred_lesson_type;
+  return type === 'tutor' || type === 'study_room' ? type : null;
+}
 function json(status, body) {
   return { ok: status >= 200 && status < 300, status, json: async () => body };
 }
@@ -404,7 +412,9 @@ globalThis.fetch = async (input, init = {}) => {
   } catch {
     body = null;
   }
-  if (url.pathname.endsWith('/api/auth/me.php')) return json(200, { ok: true, authenticated: true, ...ME });
+  if (url.pathname.endsWith('/api/auth/me.php')) {
+    return json(200, { ok: true, authenticated: true, ...ME, student_branch: firstStudentBranch(server.students) });
+  }
   if (url.pathname.endsWith('/api/registrations/students.php')) return json(200, { ok: true, students: server.students });
   if (url.pathname.endsWith('/api/auth/regions.php')) return json(200, { ok: true, cities: CITIES });
   if (url.pathname.endsWith('/api/search/search.php')) {
@@ -426,6 +436,9 @@ const navConfig = await import('../preview/shared/site-nav-config.js');
 const routeAccess = await import('../preview/shared/route-access.js');
 const regCopy = await import('../preview/home-ui/src/student-reg/student-reg-copy.js');
 const loc = await import('../preview/shared/location-display.js');
+const branchStore = await import('../preview/shared/student-branch-store.js');
+const chromeSession = await import('../preview/shared/chrome-session.js');
+const siteChrome = await import('../preview/shared/site-chrome.js');
 
 const tick = (ms = 20) => new Promise((r) => setTimeout(r, ms));
 
@@ -526,7 +539,14 @@ async function checkBranch(cfg) {
     ok(`(b) ${tag} 홈 ${ownTab} 빈칸 박스(프라임·픽·베이직)`, html.includes('data-prime-empty="1"') && html.includes('data-pick-empty="1"') && html.includes('data-basic-empty="1"'));
     ok(`(b) ${tag} 홈 ${ownTab} 샘플 카드 = 티어마다 1장(프라임·픽·베이직 3장)`, (html.match(/data-vacant-sample|expo-sample-stamp|샘플 공부방|샘플 과외쌤/g) || []).length >= 3);
     ok(`(b) ${tag} 홈 ${ownTab} 샘플 지역 = 내 지역`, html.includes(`>${place}<`) && !text.includes('서울 강남구') && !text.includes('가상'));
-    ok(`(b) ${tag} 홈 ${ownTab} 링크배지 「${regCopy.STUDENT_BRANCH_COPY.home.findMore[ownSearch]}」`, html.includes(`data-parent-find-more="${ownSearch}"`) && text.includes(regCopy.STUDENT_BRANCH_COPY.home.findMore[ownSearch]));
+    if (ownSearch === 'tutor') {
+      ok(
+        `(b) ${tag} 홈 ${ownTab} 링크배지 없음`,
+        !html.includes('data-parent-find-more="tutor"') && !text.includes(regCopy.STUDENT_BRANCH_COPY.home.findMore.tutor),
+      );
+    } else {
+      ok(`(b) ${tag} 홈 ${ownTab} 링크배지 「${regCopy.STUDENT_BRANCH_COPY.home.findMore[ownSearch]}」`, html.includes(`data-parent-find-more="${ownSearch}"`) && text.includes(regCopy.STUDENT_BRANCH_COPY.home.findMore[ownSearch]));
+    }
   }
   {
     server.searchBodies = [];
@@ -650,6 +670,223 @@ for (const rel of touched) ok(`「학부모」 없음 · ${rel}`, !/학부모/.t
 }
 ok('홈 3탭 정의·parentTab study_room 고정 제거', !/parent:\s*\[\s*\{\s*id: 'study_room'/.test(read('preview/home-ui/src/provider-home.js')) && /parentTab: null/.test(read('preview/home-ui/src/state.js')));
 ok('찾기 링크배지·학생 0건 문구 = student-reg-copy 한곳', /findMore/.test(read('preview/home-ui/src/student-reg/student-reg-copy.js')) && !/더 찾아보기'/.test(read('preview/home-ui/src/provider-home.js')));
+
+/* ══════════════════════ 3부: 세션 분기 (사이트오류-13) ══════════════════════ */
+
+console.log('\n##### 3부 세션 분기 (공용 저장소) #####');
+
+const PHP_BRANCH = String.raw`<?php
+declare(strict_types=1);
+define('STUDY114_AUTH_ME_LIBRARY', true);
+require getcwd() . '/public/api/auth/me.php';
+
+final class BranchStmt
+{
+    public array $params = [];
+    public function __construct(private array $rows) {}
+    public function execute(?array $params = null): bool { $this->params = $params ?? []; return true; }
+    public function fetchAll(mixed ...$a): array
+    {
+        $uid = (int) ($this->params[0] ?? 0);
+        $out = [];
+        foreach ($this->rows as $row) {
+            if ((int) ($row['guardian_user_id'] ?? 0) === $uid) $out[] = $row;
+        }
+        return $out;
+    }
+}
+final class BranchPdo extends PDO
+{
+    public function __construct(private array $rows) {}
+    #[\ReturnTypeWillChange] public function prepare(string $q, array $o = []): BranchStmt { return new BranchStmt($this->rows); }
+}
+function ok(string $name, bool $cond, string $detail = ''): void
+{
+    echo ($cond ? 'PASS ' : 'FAIL ') . $name . ($cond || $detail === '' ? '' : ' — ' . $detail) . "\n";
+}
+$rows = [
+    ['id' => 9, 'guardian_user_id' => 21, 'preferred_lesson_type' => 'tutor', 'exposure_status' => 'published', 'deleted_at' => null],
+    ['id' => 3, 'guardian_user_id' => 21, 'preferred_lesson_type' => 'study_room', 'exposure_status' => 'draft', 'deleted_at' => null],
+    ['id' => 1, 'guardian_user_id' => 21, 'preferred_lesson_type' => 'tutor', 'exposure_status' => 'deleted', 'deleted_at' => null],
+    ['id' => 2, 'guardian_user_id' => 21, 'preferred_lesson_type' => 'tutor', 'exposure_status' => 'published', 'deleted_at' => '2026-01-01 00:00:00'],
+    ['id' => 4, 'guardian_user_id' => 99, 'preferred_lesson_type' => 'tutor', 'exposure_status' => 'published', 'deleted_at' => null],
+];
+$pdo = new BranchPdo($rows);
+ok('(e) 여러 행 → id 오름차순 첫 살아 있는 행(3 study_room)', study114_auth_me_student_branch($pdo, 'guardian_student', 21) === 'study_room');
+ok('(e) 더 작은 id 가 삭제면 다음 행', study114_auth_me_student_branch(new BranchPdo([
+    ['id' => 8, 'guardian_user_id' => 21, 'preferred_lesson_type' => 'study_room', 'exposure_status' => 'published', 'deleted_at' => null],
+    ['id' => 5, 'guardian_user_id' => 21, 'preferred_lesson_type' => 'tutor', 'exposure_status' => 'deleted', 'deleted_at' => null],
+]), 'guardian_student', 21) === 'study_room');
+ok('(e) 학생 행 없음 → null', study114_auth_me_student_branch(new BranchPdo([]), 'guardian_student', 21) === null);
+ok('(e) 공급자 역할 → null', study114_auth_me_student_branch($pdo, 'tutor', 21) === null);
+ok('(e) 공부방 공급자 역할 → null', study114_auth_me_student_branch($pdo, 'study_room_owner', 21) === null);
+ok('(e) 유형이 없는 첫 행 → null', study114_auth_me_student_branch(new BranchPdo([
+    ['id' => 1, 'guardian_user_id' => 21, 'preferred_lesson_type' => null, 'exposure_status' => 'draft', 'deleted_at' => null],
+    ['id' => 2, 'guardian_user_id' => 21, 'preferred_lesson_type' => 'tutor', 'exposure_status' => 'published', 'deleted_at' => null],
+]), 'guardian_student', 21) === null);
+$meSrc = file_get_contents(getcwd() . '/public/api/auth/me.php');
+ok('(e) 인증 응답에 student_branch 키', str_contains($meSrc, "'student_branch' => \$studentBranch"));
+ok('(e) 학생 행 조회는 guardian_user_id', str_contains($meSrc, 'WHERE guardian_user_id = ?'));
+`;
+
+console.log('=== (e) me.php 학생 행 선택 ===');
+const phpBranch = spawnSync(phpBin(), [], { cwd: ROOT, input: PHP_BRANCH, encoding: 'utf8' });
+for (const line of `${phpBranch.stdout || ''}`.split(/\r?\n/)) {
+  if (line.startsWith('PASS ')) {
+    passed += 1;
+    console.log(line);
+  } else if (line.startsWith('FAIL ')) {
+    failed += 1;
+    console.error(line);
+  } else if (line.trim()) {
+    console.log(line);
+  }
+}
+if (phpBranch.status !== 0 || phpBranch.stderr) console.error(phpBranch.stderr || `php exit ${phpBranch.status}`);
+ok('(e) php 학생 행 선택 실행', phpBranch.status === 0 && !phpBranch.stderr, `exit ${phpBranch.status} ${phpBranch.stderr || ''}`);
+
+function gnbPair(role) {
+  return {
+    room: navConfig.getGnbVisibility(role, 'find_room'),
+    tutor: navConfig.getGnbVisibility(role, 'find_tutor'),
+    student: navConfig.getGnbVisibility(role, 'student_parent'),
+    registerRoom: navConfig.getGnbVisibility(role, 'register_room'),
+    registerTutor: navConfig.getGnbVisibility(role, 'register_tutor'),
+    plans: navConfig.getGnbVisibility(role, 'plans'),
+  };
+}
+
+function headerFindIds(role, user) {
+  const html = siteChrome.renderSiteHeader({ user, loggedIn: Boolean(user), role });
+  return [...html.matchAll(/data-action="gnb-(find_room|find_tutor)"/g)].map((m) => m[1]);
+}
+
+const baseFetch = globalThis.fetch;
+const savedPath = location.pathname;
+const savedHash = location.hash;
+
+console.log('=== (a) 분기 모름 · 로드 실패 ===');
+branchStore.resetStudentBranchSession();
+ok('(a) 세션 확인 전 parentBranch = null', navConfig.parentBranch() === null);
+ok('(a) 세션 확인 전 find_room·find_tutor 둘 다 hide', navConfig.getGnbVisibility('parent', 'find_room') === 'hide' && navConfig.getGnbVisibility('parent', 'find_tutor') === 'hide');
+ok('(a) 세션 확인 전 학생찾기·홈은 그대로', navConfig.isGnbItemVisible('parent', 'student_parent') && navConfig.isGnbItemVisible('parent', 'home'));
+ok('(a) 세션 확인 전 공급자 메뉴는 숨기지 않음', navConfig.getGnbVisibility('tutor', 'find_tutor') === 'show' && navConfig.getGnbVisibility('study_room', 'find_room') === 'show' && navConfig.getGnbVisibility('guest', 'find_room') === 'show');
+
+globalThis.fetch = async () => {
+  throw new Error('me.php down');
+};
+let thrown = false;
+try {
+  await auth.fetchSession();
+} catch {
+  thrown = true;
+}
+ok('(a) fetchSession 로드 실패는 예외', thrown);
+ok('(a) 로드 실패 후 세션 확인 완료·분기 null', branchStore.isStudentBranchSessionChecked() && branchStore.isStudentBranchAuthoritative() && branchStore.getStoredStudentBranch() === null);
+ok('(a) 로드 실패 시 학생 찾기 둘 다 hide', navConfig.getGnbVisibility('parent', 'find_room') === 'hide' && navConfig.getGnbVisibility('parent', 'find_tutor') === 'hide');
+ok('(a) 로드 실패여도 게스트 메뉴는 그대로', JSON.stringify(gnbPair('guest')) === JSON.stringify({ room: 'show', tutor: 'show', student: 'show', registerRoom: 'show', registerTutor: 'show', plans: 'show' }));
+globalThis.fetch = baseFetch;
+
+branchStore.noteSessionStudentBranch({ ok: true, authenticated: true, role_type: 'guardian_student', student_branch: null });
+ok('(a) student_branch null 확정 → 둘 다 hide', navConfig.parentBranch() === null && navConfig.getGnbVisibility('parent', 'find_room') === 'hide' && navConfig.getGnbVisibility('parent', 'find_tutor') === 'hide');
+
+console.log('=== (b) 번들별 공부방·과외 학생 ===');
+const bundleSources = {
+  'auth-ui': read('preview/auth-ui/src/main.js'),
+  'study-room-ui': read('preview/study-room-ui/src/main.js'),
+  'tutor-ui': read('preview/tutor-ui/src/main.js'),
+  'home-ui': read('preview/home-ui/src/auth-session.js'),
+  'search-ui': read('preview/search-ui/src/main.js'),
+};
+ok('(b) auth-ui·study-room-ui·tutor-ui 는 initChromeSession', /initChromeSession/.test(bundleSources['auth-ui']) && /initChromeSession/.test(bundleSources['study-room-ui']) && /initChromeSession/.test(bundleSources['tutor-ui']));
+ok('(b) home-ui 는 fetchSession, search-ui 는 initAuthSession', /export async function fetchSession/.test(bundleSources['home-ui']) && /initAuthSession/.test(bundleSources['search-ui']));
+ok('(b) 공용 저장소는 preview/shared 한 파일', existsSync(join(ROOT, 'preview/shared/student-branch-store.js')));
+for (const rel of ['preview/auth-ui', 'preview/study-room-ui', 'preview/tutor-ui', 'preview/home-ui', 'preview/search-ui']) {
+  ok(`(b) ${rel} 에 저장소 복제 없음`, !existsSync(join(ROOT, rel, 'src/student-branch-store.js')));
+}
+
+async function chromeAs(branch, students) {
+  server.students = students;
+  ME.role_type = 'guardian_student';
+  ME.email_verified = true;
+  location.pathname = '/';
+  location.hash = '#/parent';
+  await chromeSession.initChromeSession();
+}
+async function fetchAs(branch, students) {
+  server.students = students;
+  ME.role_type = 'guardian_student';
+  ME.email_verified = true;
+  location.pathname = '/';
+  location.hash = '#/parent';
+  await auth.fetchSession();
+}
+
+const roomStudents = [ROWS.room_singok];
+const tutorStudents = [ROWS.tutor_uijeongbu];
+const parentUser = { role_type: 'guardian_student', email_verified: true, name: '학생' };
+
+await chromeAs('study_room', roomStudents);
+ok('(b) auth-ui·study-room-ui·tutor-ui chrome 공부방 학생 저장소', branchStore.getStoredStudentBranch() === 'study_room' && branchStore.isStudentBranchAuthoritative());
+{
+  const ids = headerFindIds('parent', parentUser);
+  ok('(b) auth-ui·study-room-ui·tutor-ui 공부방 학생: find_room 보이고 find_tutor 없음', ids.includes('find_room') && !ids.includes('find_tutor'), JSON.stringify(ids));
+}
+await chromeAs('tutor', tutorStudents);
+{
+  const ids = headerFindIds('parent', parentUser);
+  ok('(b) auth-ui·study-room-ui·tutor-ui chrome 과외 학생: find_tutor 보이고 find_room 없음', ids.includes('find_tutor') && !ids.includes('find_room'), JSON.stringify(ids));
+}
+
+await fetchAs('study_room', roomStudents);
+ok('(b) home-ui·search-ui fetchSession 공부방 학생 저장소', branchStore.getStoredStudentBranch() === 'study_room');
+ok('(b) home-ui·search-ui 공부방 학생 GNB', navConfig.getGnbVisibility('parent', 'find_tutor') === 'hide' && navConfig.isGnbItemVisible('parent', 'find_room') && navConfig.isGnbItemVisible('parent', 'student_parent'));
+await fetchAs('tutor', tutorStudents);
+ok('(b) home-ui·search-ui 과외 학생 GNB', navConfig.getGnbVisibility('parent', 'find_room') === 'hide' && navConfig.isGnbItemVisible('parent', 'find_tutor') && navConfig.isGnbItemVisible('parent', 'student_parent'));
+
+sessionStorage.setItem('study114-preview-active-role', 'parent');
+const mypageSrc = read('preview/home-ui/src/main.js');
+const mypageBlock = mypageSrc.slice(mypageSrc.indexOf('if (isMypageRoute())'), mypageSrc.indexOf('const key = getCurrentScreen()'));
+ok('(b) 마이페이지는 sessionChecked 전에 renderMypage 를 부르지 않음', /if \(!sessionChecked\) \{\s*app\.innerHTML = '';\s*return;\s*\}/.test(mypageBlock) && mypageBlock.indexOf('if (!sessionChecked)') < mypageBlock.indexOf('renderMypage()'));
+branchStore.resetStudentBranchSession();
+ok('(b) 마이페이지 확인 전 저장 역할 parent 여도 분기는 null·찾기 둘 다 hide', sessionStorage.getItem('study114-preview-active-role') === 'parent' && navConfig.parentBranch() === null && navConfig.getGnbVisibility('parent', 'find_room') === 'hide' && navConfig.getGnbVisibility('parent', 'find_tutor') === 'hide');
+await fetchAs('study_room', roomStudents);
+ok('(b) 마이페이지 확인 후 공부방 학생은 find_tutor 만 hide', navConfig.getGnbVisibility('parent', 'find_tutor') === 'hide' && navConfig.isGnbItemVisible('parent', 'find_room'));
+await fetchAs('tutor', tutorStudents);
+ok('(b) 마이페이지 확인 후 과외 학생은 find_room 만 hide', navConfig.getGnbVisibility('parent', 'find_room') === 'hide' && navConfig.isGnbItemVisible('parent', 'find_tutor'));
+
+console.log('=== (c) 공급자·게스트·관리자·이메일 인증 대기 ===');
+const staticGuest = { ...navConfig.GNB_VISIBILITY.guest };
+const staticAdmin = { ...navConfig.GNB_VISIBILITY.admin };
+const staticRoom = { ...navConfig.GNB_VISIBILITY.study_room };
+const staticTutor = { ...navConfig.GNB_VISIBILITY.tutor };
+branchStore.noteSessionStudentBranch({ ok: true, authenticated: true, student_branch: 'study_room' });
+function sameMap(role, expected) {
+  return navConfig.GNB_MAIN.every((item) => navConfig.getGnbVisibility(role, item.id) === expected[item.id]);
+}
+ok('(c) 공부방 공급자 메뉴 불변', sameMap('study_room', staticRoom));
+ok('(c) 과외쌤 공급자 메뉴 불변', sameMap('tutor', staticTutor));
+ok('(c) 게스트 메뉴 불변', sameMap('guest', staticGuest));
+ok('(c) 관리자 메뉴 불변', sameMap('admin', staticAdmin));
+location.pathname = '/auth';
+location.hash = '#/signup/verify-email';
+const verifyFinds = [navConfig.getGnbVisibility('parent', 'find_room'), navConfig.getGnbVisibility('parent', 'find_tutor')];
+ok('(c) 이메일 인증 대기 화면은 분기 숨김을 적용하지 않음', verifyFinds[0] === 'show' && verifyFinds[1] === 'show', JSON.stringify(verifyFinds));
+ok('(c) 이메일 인증 대기에서도 공급자 메뉴 불변', sameMap('study_room', staticRoom) && sameMap('tutor', staticTutor));
+location.pathname = savedPath;
+location.hash = savedHash;
+
+console.log('=== (d) 공용 저장소 갱신 후 메뉴 ===');
+branchStore.noteSessionStudentBranch({ ok: true, authenticated: true, student_branch: 'tutor' });
+ok('(d) 갱신 전 과외 학생은 find_room hide', navConfig.getGnbVisibility('parent', 'find_room') === 'hide' && navConfig.isGnbItemVisible('parent', 'find_tutor'));
+branchStore.setStoredStudentBranch('study_room');
+ok('(d) preferred_lesson_type 반영 후 find_tutor hide · find_room show', branchStore.getStoredStudentBranch() === 'study_room' && navConfig.getGnbVisibility('parent', 'find_tutor') === 'hide' && navConfig.isGnbItemVisible('parent', 'find_room'));
+ok('(d) 저장 안내 문구는 그대로', /새로고침해 주세요/.test(regCopy.STUDENT_BRANCH_COPY.mypage.savedRefresh) && /새로고침해 주세요/.test(regCopy.STUDENT_BRANCH_COPY.mypage.branchSavedRefresh));
+ok('(d) screens.js 가 저장 응답 분기로 저장소를 갱신', /setStoredStudentBranch\(saved\.preferred_lesson_type\)/.test(read('preview/home-ui/src/student-reg/screens.js')));
+ok('(d) 잘못된 값으로는 저장소를 지우지 않음', () => {
+  branchStore.setStoredStudentBranch('nope');
+  return branchStore.getStoredStudentBranch() === 'study_room';
+});
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

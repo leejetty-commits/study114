@@ -229,6 +229,11 @@ function renderScreen() {
     return;
   }
   if (isMypageRoute()) {
+    // 세션 확인 전에는 ACTIVE_ROLE·기본 분기로 상단 메뉴를 그리지 않는다.
+    if (!sessionChecked) {
+      app.innerHTML = '';
+      return;
+    }
     app.innerHTML = renderMypage();
     bindMypageEvents(app, render);
     mountOpsChrome(app);

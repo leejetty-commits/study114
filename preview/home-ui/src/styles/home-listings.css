@@ -302,6 +302,29 @@
   padding-top: var(--space-3);
 }
 
+/* 학생 홈 「우리동네 과외쌤」만.
+   희망 지역 아래 선이 두 줄인 이유:
+   .parent-home-region border-bottom (home.css) 과
+   .search-results border-top (search.css, .search-results--pre 의 border-top:none 을 같은 특이도로 덮음).
+   이 탭에서는 결과 구역의 border-top 만 끈다. 지역 표시의 border-bottom 이 한 줄로 남는다. */
+.home-shell--parent .parent-home-region--tutor + .search-results.search-results--pre {
+  border-top: none;
+}
+
+/* 픽·베이직이 위 블록과 떨어지는 간격. 변수 하나, 사용처 둘.
+   이전: 픽 padding-top var(--space-4)=1rem, 베이직 padding-top var(--space-3)=0.75rem. */
+.home-shell--parent .content-section--blue {
+  --tier-section-gap: 1.25rem;
+}
+
+.home-shell--parent .content-section--blue .list-subsection .section-heading--pick {
+  padding-top: var(--tier-section-gap);
+}
+
+.home-shell--parent .content-section--blue .list-subsection > .section-title-bar--basic {
+  padding-top: var(--tier-section-gap);
+}
+
 .list-sort-bar {
   display: flex;
   justify-content: flex-end;

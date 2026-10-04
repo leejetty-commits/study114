@@ -4,6 +4,8 @@
  */
 
 import { fetchRoiSummary } from './paid-api.js';
+// 저장소 루트에서 도는 verify 는 @search-ui 별칭을 못 읽는다. 상대경로로 둔다.
+import { searchApi } from '../../search-ui/src/search-api.js';
 import { getTutors } from './tutor-reg/store.js';
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from './registrations-backend.js';
 import { isMessagesApiMode } from './messages-backend.js';
@@ -126,8 +128,88 @@ export function tutorHomeRegionLabel(index = 0) {
   return String(slots[idx]?.label || '').trim();
 }
 
+/** saved_regions[idx] 지역 id(선택 단위 = 시·군·구). 없으면 빈 문자열. */
+export function tutorHomeRegionId(index = 0) {
+  const slots = Array.isArray(homeRegions) ? homeRegions : [];
+  const idx = Number(index);
+  if (!Number.isFinite(idx) || idx < 0 || idx >= slots.length) return '';
+  return String(slots[idx]?.regionId || '').trim();
+}
+
+/** 대표 활동지역 슬롯 번호. 대표가 없으면 0. */
+export function tutorHomePrimaryIndex() {
+  const slots = Array.isArray(homeRegions) ? homeRegions : [];
+  const idx = slots.findIndex((slot) => slot?.primary && slot?.label);
+  return idx >= 0 ? idx : 0;
+}
+
 export function tutorHomeRegionsReady() {
   return homeRegions !== null;
+}
+
+/** @type {object[]|null} null = 아직 조회 전 */
+let studentLive = null;
+let studentKey = '';
+/** @type {'idle'|'loading'|'ready'|'error'|'no-region'} */
+let studentStatus = 'idle';
+/** @type {Promise<void>|null} */
+let studentBoot = null;
+
+/** 홈 「우리동네 학생」 탭 목록. null 이면 아직 조회 전. */
+export function getTutorStudentLiveItems() {
+  return studentLive;
+}
+
+/** @returns {'idle'|'loading'|'ready'|'error'|'no-region'} */
+export function getTutorStudentFeedStatus() {
+  return studentStatus;
+}
+
+/**
+ * 활동지역 regionId 기준 과외 분기 학생 조회.
+ * 지역 기준은 활동지역과 같은 선택 단위(시·군·구) id — tutor_regions.region_id 와
+ * students.preferred_tutor_region_id 가 둘 다 SidoRegionEnsure::assertSelectable 을 지난 값이다.
+ * @param {string} regionId
+ * @returns {Promise<{ items: object[]|null, status: 'ready'|'error'|'no-region' }>}
+ */
+async function loadTutorStudentDemand(regionId) {
+  if (!regionId) return { items: null, status: 'no-region' };
+  try {
+    const result = await searchApi(
+      'student',
+      { preferred_lesson_type: 'tutor', preferred_region_id: regionId },
+      { limit: 20, sort: 'latest' },
+    );
+    return { items: Array.isArray(result.items) ? result.items : [], status: 'ready' };
+  } catch {
+    return { items: null, status: 'error' };
+  }
+}
+
+/**
+ * 홈 「우리동네 학생」 탭 조회. 선택한 활동지역 탭(기본 대표)이 바뀌면 다시 조회한다.
+ * 활동지역 조회(bootTutorHome)가 끝나기 전에는 요청하지 않는다 — 그 boot 의 rerender 가 여기를 다시 부른다.
+ * rerender 는 .then 안에서만 부른다(같은 틱에 부르면 다시 그리기가 이 함수를 다시 불러 반복한다).
+ * @param {number} index 활동지역 슬롯 0~2
+ * @param {() => void} [rerender]
+ */
+export function bootTutorStudentDemand(index, rerender) {
+  if (!tutorHomeRegionsReady()) return null;
+  const raw = Number(index);
+  const idx = Number.isInteger(raw) && raw >= 0 && raw <= 2 ? raw : tutorHomePrimaryIndex();
+  const regionId = tutorHomeRegionId(idx);
+  const key = `${idx}|${regionId}`;
+  if (studentBoot && studentKey === key) return studentBoot;
+  studentKey = key;
+  studentLive = null;
+  studentStatus = regionId ? 'loading' : 'no-region';
+  studentBoot = loadTutorStudentDemand(regionId).then((result) => {
+    if (studentKey !== key) return;
+    studentLive = result.items;
+    studentStatus = result.status;
+    if (typeof rerender === 'function') rerender();
+  });
+  return studentBoot;
 }
 
 async function ensureHomeRegions() {

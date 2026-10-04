@@ -5,6 +5,7 @@
  * 역할별 노출: 6장 메뉴 구조 + Cursor GNB 정책 (로그인 후 비해당 메뉴는 muted 대신 hide)
  */
 
+import { isOnEmailVerifyWait } from './auth-redirect.js';
 import {
   AUTH_UI_BASE,
   HOME_UI_BASE,
@@ -17,6 +18,11 @@ import {
   guideUiUrl,
   resolveGnbLink,
 } from './preview-links.js';
+import {
+  getStoredStudentBranch,
+  isStudentBranchAuthoritative,
+  isStudentBranchSessionChecked,
+} from './student-branch-store.js';
 
 /** @typedef {'guest' | 'parent' | 'study_room' | 'tutor' | 'admin'} NavRole */
 
@@ -143,21 +149,39 @@ export const PARENT_BRANCH_HIDDEN_GNB = {
   study_room: ['find_tutor'],
 };
 
-/** @type {() => ('tutor'|'study_room'|null)} */
-let parentBranchSource = () => null;
+/**
+ * 등록 캐시가 명시 분기를 돌려주는 함수.
+ * 우선순위는 parentBranch() 주석. 세션이 분기를 확정하면 이 함수는 쓰지 않는다.
+ * @type {null | (() => ('tutor'|'study_room'|null))}
+ */
+let registeredParentBranchSource = null;
 
 /**
- * 학생 가입 분기를 읽는 함수를 등록한다. 등록 캐시(students API)를 가진 모듈이 부른다.
+ * 학생 가입 분기를 읽는 함수를 등록한다.
+ * me.php 가 student_branch 를 확정한 뒤에는 이 함수로 덮지 않는다.
  * @param {() => ('tutor'|'study_room'|null)} fn
  */
 export function registerParentBranchSource(fn) {
-  if (typeof fn === 'function') parentBranchSource = fn;
+  if (typeof fn === 'function') registeredParentBranchSource = fn;
 }
 
-/** @returns {'tutor'|'study_room'|null} */
+/**
+ * 학생 분기.
+ * 1. 세션 확인 전 → null. 등록 출처·학생 캐시·기본 tutor 를 쓰지 않는다.
+ * 2. me.php 가 student_branch 를 줬거나 로드 실패·비로그인으로 확정 → 공용 저장소만.
+ *    등록된 registerParentBranchSource 는 호출하지 않는다.
+ * 3. 로그인 응답에 student_branch 키가 없을 때만 등록 함수를 본다.
+ *    그 함수가 tutor|study_room 이 아니면 null. 기본 tutor 로 채우지 않는다.
+ * @returns {'tutor'|'study_room'|null}
+ */
 export function parentBranch() {
-  const branch = parentBranchSource();
-  return branch === 'tutor' || branch === 'study_room' ? branch : null;
+  if (!isStudentBranchSessionChecked()) return null;
+  if (isStudentBranchAuthoritative()) {
+    const branch = getStoredStudentBranch();
+    return branch === 'tutor' || branch === 'study_room' ? branch : null;
+  }
+  const fromRegistered = registeredParentBranchSource?.();
+  return fromRegistered === 'tutor' || fromRegistered === 'study_room' ? fromRegistered : null;
 }
 
 /** @deprecated limited 정책 폐지 — 하위 호환용 문구만 유지 */
@@ -169,9 +193,14 @@ export const GNB_MUTED_TITLE = '현재 역할에서는 이용할 수 없습니�
  * @returns {'show' | 'hide'}
  */
 export function getGnbVisibility(role, itemId) {
-  if (role === 'parent') {
-    const hidden = PARENT_BRANCH_HIDDEN_GNB[parentBranch() || ''] || [];
-    if (hidden.includes(itemId)) return 'hide';
+  if (role === 'parent' && !isOnEmailVerifyWait()) {
+    const branch = parentBranch();
+    if (branch !== 'tutor' && branch !== 'study_room') {
+      if (itemId === 'find_room' || itemId === 'find_tutor') return 'hide';
+    } else {
+      const hidden = PARENT_BRANCH_HIDDEN_GNB[branch] || [];
+      if (hidden.includes(itemId)) return 'hide';
+    }
   }
   return GNB_VISIBILITY[role]?.[itemId] ?? 'show';
 }

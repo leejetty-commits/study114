@@ -14,7 +14,15 @@ import {
   peekStudyRoomPromo1,
   studyRoomPromo1Dong,
 } from '@home-ui/study-room-home-seed.js';
-import { tutorHomePrimaryLabel, tutorHomeRegionLabel, tutorHomeRegionsReady, readTutorHomeRegions } from '@home-ui/tutor-home-seed.js';
+import {
+  tutorHomePrimaryLabel,
+  tutorHomePrimaryIndex,
+  tutorHomeRegionLabel,
+  tutorHomeRegionsReady,
+  readTutorHomeRegions,
+  getTutorStudentLiveItems,
+  getTutorStudentFeedStatus,
+} from '@home-ui/tutor-home-seed.js';
 import { isProviderSelfPreviewMode } from './search-role-access.js';
 import { renderSearchMapBlock, bindSearchMapPinLinks } from './search-map.js';
 import { renderSearchTierResults } from './search-tier-render.js';
@@ -22,6 +30,8 @@ import { collectFiltersFromForm, searchApi, settleStudentStudyroomRegionFilter }
 import { mapSearchResultsToExposure } from './search-exposure-mapper.js';
 import { renderBrowseList, renderGuestPaginatedListBlock } from '@home-ui/exposure-render.js';
 import { SECTION_HEADINGS, renderSectionTitleBar } from '@home-ui/section-headings.js';
+import { renderStateCard } from '@home-ui/empty-state-copy.js';
+import { TUTOR_HOME_STUDENT_COPY } from '@home-ui/student-reg/student-reg-copy.js';
 import {
   DEFAULT_STUDENT_HOPE_TYPE,
   renderHopeTypeGate,
@@ -1071,6 +1081,7 @@ export async function bootFindGpsIfNeeded(state, tab, rerender) {
  * @property {'region'|'search'|null} [activeResultSource]
  * @property {string} [activeRegionLabel]
  * @property {number} [tutorRegionIndex] — 희망 과외 지역 0~2
+ * @property {number} [tutorStudentRegionIndex] — 과외쌤 홈 학생 탭이 고른 활동지역 0~2 (없으면 대표)
  * @property {string} [studentLessonFormat]
  * @property {object[]} [searchRows]
  * @property {object[]} [searchItems]
@@ -1101,6 +1112,22 @@ function resolveTutorRegionIndex(state) {
   const idx = state.tutorRegionIndex ?? 0;
   const count = tutorHomeRegionsReady() ? 3 : 0;
   return idx >= 0 && idx < count ? idx : 0;
+}
+
+/**
+ * 과외쌤 홈 「우리동네 학생」 탭이 보는 활동지역 슬롯. 탭을 누르기 전에는 대표 지역.
+ * 과외쌤 탭(tutorRegionIndex)과 따로 둔다.
+ * @param {FindSurfaceState} state
+ */
+export function resolveTutorStudentRegionIndex(state) {
+  const picked = Number(state?.tutorStudentRegionIndex);
+  if (Number.isInteger(picked) && picked >= 0 && picked <= 2) return picked;
+  return tutorHomePrimaryIndex();
+}
+
+/** 과외쌤 홈 학생 탭 지역 라벨(선택 탭 → 없으면 대표). @param {FindSurfaceState} state */
+export function tutorStudentRegionLabel(state) {
+  return tutorHomeRegionLabel(resolveTutorStudentRegionIndex(state)) || tutorHomePrimaryLabel();
 }
 
 function isTutorMockCityLabel(label) {
@@ -1142,6 +1169,7 @@ function regionFeedContext(tab, state, role) {
   if (tab === 'student' && role === 'tutor' && state.tutorStudentSnap === true && !state.searchExecuted) {
     ctx.promoStudent = true;
     ctx.hopeType = 'tutor';
+    ctx.liveStudentItems = getTutorStudentLiveItems();
   }
   if (tab === 'tutor') {
     ctx.tutorRegionIndex = resolveTutorRegionIndex(state);
@@ -1917,12 +1945,12 @@ function renderBasicRows(fields, state, compact = false, role = state.role) {
 
 /**
  * @param {FindSurfaceState} state
- * @param {{ variant?: 'search' | 'home' }} [options]
+ * @param {{ variant?: 'search' | 'home', role?: import('./state.js').ViewerRole, activeIndex?: number }} [options]
  */
 function renderTutorRegionTabs(state, options = {}) {
   const variant = options.variant || 'search';
   const role = options.role || state.role || 'guest';
-  const activeIdx = resolveTutorRegionIndex(state);
+  const activeIdx = options.activeIndex ?? resolveTutorRegionIndex(state);
   const saved = role === 'tutor' ? readTutorHomeRegionsForTabs() : null;
   if (!saved || !saved.some((region) => region.label)) return '';
   const regions = saved;
@@ -2002,6 +2030,21 @@ export function renderCompactRegionBar(tab, state, options = {}) {
       <div class="search-region-auto search-region-auto--compact search-region-auto--tutor">
         ${renderTutorRegionTabs(state, { variant, role })}
         ${renderTutorRegionHint(role)}
+      </div>`;
+  }
+
+  // 과외쌤 홈 학생 탭 — 과외쌤 탭과 같은 활동지역 3탭으로 조회 지역을 고른다.
+  if (tab === 'student' && role === 'tutor' && variant === 'home') {
+    const tabs = renderTutorRegionTabs(state, {
+      variant,
+      role,
+      activeIndex: resolveTutorStudentRegionIndex(state),
+    });
+    if (!tabs) return '';
+    return `
+      <div class="parent-home-region parent-home-region--tutor" aria-label="활동 지역">
+        <span class="parent-home-region__badge">활동 지역</span>
+        ${tabs}
       </div>`;
   }
 
@@ -2197,7 +2240,8 @@ export function renderFindResultSection(tab, state, role, options = {}) {
     }
   }
   if (role === 'tutor' && surfaceType === 'home' && !state.searchExecuted) {
-    const slot = tutorHomeRegionLabel(resolveTutorRegionIndex(state));
+    const idx = tab === 'student' ? resolveTutorStudentRegionIndex(state) : resolveTutorRegionIndex(state);
+    const slot = tutorHomeRegionLabel(idx);
     regionLabel = slot || (tutorHomeRegionsReady() ? tutorRepresentativeRegionLabel() : '');
   }
   if (role !== 'guest' && role !== 'parent' && regionLabel) {
@@ -2240,6 +2284,34 @@ export function renderFindResultSection(tab, state, role, options = {}) {
       <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}">
         <p class="search-results__hint">학생 목록을 불러오는 중입니다.</p>
       </section>`;
+  }
+
+  /* 과외쌤 홈 학생 탭 — 활동지역 없음 / 조회 중 / 조회 실패 / 조회 끝 0건을 서로 다르게 그린다. */
+  if (tab === 'student' && role === 'tutor' && surfaceType === 'home' && !state.searchExecuted) {
+    const status = getTutorStudentFeedStatus();
+    const wrap = (inner) => `
+      <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}" data-tutor-student-feed="${esc(status)}">
+        ${inner}
+      </section>`;
+    if (status === 'no-region') {
+      return wrap(`<p class="search-results__hint">${esc(TUTOR_HOME_STUDENT_COPY.noRegion)}</p>`);
+    }
+    if (status === 'error') {
+      return wrap(`<p class="search-results__hint" role="alert">${esc(TUTOR_HOME_STUDENT_COPY.error)}</p>`);
+    }
+    if (status !== 'ready' || state.studentDemandPending) {
+      return wrap(`<p class="search-results__hint">${esc(TUTOR_HOME_STUDENT_COPY.loading)}</p>`);
+    }
+    if (!activeItems.length) {
+      return wrap(
+        renderStateCard({
+          title: TUTOR_HOME_STUDENT_COPY.emptyTitle(regionLabel),
+          body: TUTOR_HOME_STUDENT_COPY.emptyBody,
+          variant: 'empty',
+          screenId: 'P13-zero',
+        }),
+      );
+    }
   }
 
   if (!state.searchExecuted) {
@@ -2510,7 +2582,16 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
   root.querySelectorAll('[data-tutor-region]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const idx = Number(btn.dataset.tutorRegion);
-      if (Number.isNaN(idx) || resolveTutorRegionIndex(state()) === idx) return;
+      if (Number.isNaN(idx)) return;
+      // 과외쌤 홈 학생 탭 — 슬롯만 바꾸고, 그 지역 학생 재조회는 홈 boot(bootTutorStudentDemand)가 한다.
+      if (ctx.role === 'tutor' && ctx.getTab() === 'student') {
+        if (resolveTutorStudentRegionIndex(state()) === idx) return;
+        state().tutorStudentRegionIndex = idx;
+        state().activeRegionLabel = canonicalRegionLabel(tutorHomeRegionLabel(idx), 'student', state());
+        rerender();
+        return;
+      }
+      if (resolveTutorRegionIndex(state()) === idx) return;
       const slotLabel = ctx.role === 'tutor' ? tutorHomeRegionLabel(idx) : '';
       state().tutorRegionIndex = idx;
       state().activeRegionLabel = canonicalRegionLabel(slotLabel, 'tutor', state());
