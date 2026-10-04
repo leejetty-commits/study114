@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Registration;
 
 use PDO;
+use Study114\Region\ComplexEnsure;
 use Study114\Region\SidoRegionEnsure;
 
 /** 19장 P19 — students 등록 허브 */
@@ -135,9 +136,13 @@ final class StudentHubRepository
         'preferred_tutor_gender', 'memo_status', 'request_summary', 'special_request_note',
     ];
 
-    /** students 컬럼이 아닌 연결 테이블·보조 입력 */
+    /**
+     * students 컬럼이 아닌 연결 테이블·보조 입력.
+     * complex_name 은 가입과 같이 단지 id 대신 받고, 서버가 ComplexEnsure 로 id 를 만든다.
+     */
     private const PATCH_RELATION_KEYS = [
         'lesson_places', 'teaching_style_badges', 'subject_label', 'subject_names', 'school_level',
+        'complex_name', 'complex_address',
     ];
 
     private const SCHOOL_LEVELS = ['preschool', 'elementary', 'middle', 'high', 'n_su', 'general', 'other'];
@@ -157,10 +162,16 @@ final class StudentHubRepository
                 throw new \InvalidArgumentException("{$listKey}: 값을 확인해 주세요.");
             }
         }
-        foreach (['subject_label', 'subject_names', 'school_level'] as $textKey) {
+        foreach (['subject_label', 'subject_names', 'school_level', 'complex_name', 'complex_address'] as $textKey) {
             if (array_key_exists($textKey, $patch) && $patch[$textKey] !== null && !is_string($patch[$textKey])) {
                 throw new \InvalidArgumentException("{$textKey}: 값을 확인해 주세요.");
             }
+        }
+        if (isset($patch['complex_name']) && is_string($patch['complex_name']) && self::charLength(trim($patch['complex_name'])) > 100) {
+            throw new \InvalidArgumentException('complex_name: 100자 이하로 입력해 주세요.');
+        }
+        if (isset($patch['complex_address']) && is_string($patch['complex_address']) && self::charLength(trim($patch['complex_address'])) > 255) {
+            throw new \InvalidArgumentException('complex_address: 255자 이하로 입력해 주세요.');
         }
         $patchSchoolLevel = isset($patch['school_level']) ? trim((string) $patch['school_level']) : '';
         if ($patchSchoolLevel !== '' && !in_array($patchSchoolLevel, self::SCHOOL_LEVELS, true)) {
@@ -175,16 +186,24 @@ final class StudentHubRepository
             $sets = [];
             $params = [];
             $values = [];
-            $branchChanged = $this->dropOppositeBranchRegion($studentId, $patch);
+            $branch = null;
+            $branchChanged = $this->dropOppositeBranchRegion($studentId, $patch, $branch);
             foreach (self::PATCH_COLUMNS as $col) {
                 if (!array_key_exists($col, $patch)) {
                     continue;
                 }
                 $values[$col] = $this->normalizeStudentColumn($col, $patch[$col]);
             }
-            // 단지 기준이면 단지가 속한 행정동을 공부방 희망지역으로 함께 저장한다(가입 기본정보와 같은 규칙).
+            // 가입과 같이 단지 이름만 오면 이 트랜잭션 안에서 단지 id 를 만들거나 찾는다.
+            // 과외 분기(반대 지역은 위에서 이미 버렸음)에서는 호출하지 않는다.
+            $this->applyNamedStudyRoomComplex($branch, $patch, $values);
+            // 단지 id 만 있고 행정동이 없으면 단지가 속한 동을 함께 저장한다(가입 기본정보와 같은 규칙).
             if (isset($values['preferred_studyroom_complex_id']) && !array_key_exists('preferred_studyroom_region_id', $values)) {
                 $values['preferred_studyroom_region_id'] = $this->complexRegionId((int) $values['preferred_studyroom_complex_id']);
+            }
+            // 행정동 기준 저장은 단지 id 를 비운다. 이전 단지가 남지 않게 한다.
+            if (($values['preferred_studyroom_region_basis'] ?? null) === 'dong') {
+                $values['preferred_studyroom_complex_id'] = null;
             }
             // 분기가 바뀌면 지역설정을 초기화한다. 이번 요청이 보낸 새 분기 지역만 남는다.
             if ($branchChanged) {
@@ -243,9 +262,10 @@ final class StudentHubRepository
      * 같은 트랜잭션에서 현재 분기를 잠가 읽는다.
      *
      * @param array<string, mixed> $patch 요청 patch(참조로 고친다). 반대 분기 값은 검증 전에 버린다.
+     * @param-out ?string $activeBranch 이번 요청의 분기. tutor|study_room 이 아니면 null.
      * @return bool 분기가 바뀌는 요청인지
      */
-    private function dropOppositeBranchRegion(int $studentId, array &$patch): bool
+    private function dropOppositeBranchRegion(int $studentId, array &$patch, ?string &$activeBranch): bool
     {
         $stmt = $this->pdo->prepare('SELECT preferred_lesson_type FROM students WHERE id = ? LIMIT 1 FOR UPDATE');
         $stmt->execute([$studentId]);
@@ -254,6 +274,7 @@ final class StudentHubRepository
         $branch = array_key_exists('preferred_lesson_type', $patch)
             ? $this->normalizeStudentColumn('preferred_lesson_type', $patch['preferred_lesson_type'])
             : $current;
+        $activeBranch = ($branch === 'tutor' || $branch === 'study_room') ? $branch : null;
         if ($branch !== 'tutor' && $branch !== 'study_room') {
             return false;
         }
@@ -263,6 +284,42 @@ final class StudentHubRepository
         }
 
         return $current !== $branch;
+    }
+
+    /**
+     * 공부방 분기이고 단지 기준인데 단지 id 가 없고 이름만 있으면 ComplexEnsure 로 id 를 만든다.
+     * 이름이 없으면 id 를 지어내지 않는다. 이미 id 가 있으면 그 id 를 유지한다.
+     *
+     * @param array<string, mixed> $patch
+     * @param array<string, mixed> $values
+     */
+    private function applyNamedStudyRoomComplex(?string $branch, array $patch, array &$values): void
+    {
+        if ($branch !== 'study_room') {
+            return;
+        }
+        if (($values['preferred_studyroom_region_basis'] ?? null) !== 'complex') {
+            return;
+        }
+        $existing = $values['preferred_studyroom_complex_id'] ?? null;
+        if (is_int($existing) && $existing > 0) {
+            return;
+        }
+        $name = trim((string) ($patch['complex_name'] ?? ''));
+        if ($name === '') {
+            return;
+        }
+        $regionId = $values['preferred_studyroom_region_id'] ?? null;
+        if (!is_int($regionId) || $regionId <= 0) {
+            throw new \InvalidArgumentException('희망지역을 주소 검색으로 다시 선택해 주세요.');
+        }
+        $addr = trim((string) ($patch['complex_address'] ?? ''));
+        $values['preferred_studyroom_complex_id'] = ComplexEnsure::ensure(
+            $this->pdo,
+            $regionId,
+            $name,
+            $addr !== '' ? $addr : null
+        );
     }
 
     private const PATCH_ENUMS = [
@@ -523,6 +580,7 @@ final class StudentHubRepository
             'preferred_region_note'         => $row['preferred_region_note'] !== null ? (string) $row['preferred_region_note'] : null,
             'preferred_tutor_region_label'  => $tutorRegion['label'] ?? null,
             'preferred_studyroom_region_label' => $studyroomRegion['label'] ?? null,
+            'preferred_studyroom_complex_label' => $this->complexLabel($row['preferred_studyroom_complex_id'] ?? null),
             'region_label'                  => $regionLabel,
             'subject_label'                 => $subjectLabel,
             'lesson_places'                 => $this->lessonPlaces($studentId),
@@ -560,6 +618,37 @@ final class StudentHubRepository
         $region = ($row['preferred_lesson_type'] ?? null) === 'study_room' ? $studyroomRegion : $tutorRegion;
 
         return $region['label'] ?? '';
+    }
+
+    /** VARCHAR 글자 수. CLI 에 mbstring 이 없어도 한글 단지 이름을 같은 기준으로 센다. */
+    private static function charLength(string $value): int
+    {
+        if (function_exists('mb_strlen')) {
+            return mb_strlen($value);
+        }
+        $count = preg_match_all('/./u', $value, $unused);
+
+        return $count === false ? 0 : $count;
+    }
+
+    private function complexLabel(mixed $complexId): ?string
+    {
+        if ($complexId === null || $complexId === '') {
+            return null;
+        }
+        $id = (int) $complexId;
+        if ($id <= 0) {
+            return null;
+        }
+        $stmt = $this->pdo->prepare('SELECT name FROM complexes WHERE id = ? AND is_active = 1 LIMIT 1');
+        $stmt->execute([$id]);
+        $name = $stmt->fetchColumn();
+        if (!is_string($name)) {
+            return null;
+        }
+        $name = trim($name);
+
+        return $name === '' ? null : $name;
     }
 
     /** @return array{label: string, sigungu_id: ?int, sigungu_label: ?string}|null */

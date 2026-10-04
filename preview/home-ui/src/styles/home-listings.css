@@ -311,17 +311,23 @@
   border-top: none;
 }
 
-/* 픽·베이직이 위 블록과 떨어지는 간격. 변수 하나, 사용처 둘.
-   이전: 픽 padding-top var(--space-4)=1rem, 베이직 padding-top var(--space-3)=0.75rem. */
+/* 학생 홈 「우리동네 과외쌤」 픽·베이직 구분선.
+   선 위(위 블록과 선) = margin-top, 선 아래(선과 제목) = padding-top.
+   변수는 --tier-section-gap 하나. 1.25rem(20px)은 선 없는 한쪽 여백이라 좁다.
+   2rem(32px)은 루트 16px의 --space-8과 같고, 선 양쪽에 같은 값을 둔다. */
 .home-shell--parent .content-section--blue {
-  --tier-section-gap: 1.25rem;
+  --tier-section-gap: 2rem;
 }
 
 .home-shell--parent .content-section--blue .list-subsection .section-heading--pick {
+  margin-top: var(--tier-section-gap);
+  border-top: 1px solid var(--gray-200);
   padding-top: var(--tier-section-gap);
 }
 
 .home-shell--parent .content-section--blue .list-subsection > .section-title-bar--basic {
+  margin-top: var(--tier-section-gap);
+  border-top: 1px solid var(--gray-200);
   padding-top: var(--tier-section-gap);
 }
 

@@ -11,8 +11,12 @@ import {
 } from './router.js';
 import { getParentStudentProfilePath } from '../mypage/router.js';
 import { FORM_OPTIONS, studentToExposureRow } from './format.js';
-import { ensureHopeRegionMasters, getHopeRegionMasters, labelForRegionId, listAllComplexes, listCityOptions } from './hope-region-masters.js';
 import { renderRegionCascade, bindRegionCascades, REGION_LIST_ERROR } from '../../../shared/region-cascade.js';
+import {
+  bindStudentHopeRegion,
+  readStudentHopeRegion,
+  renderStudentHopeRegion,
+} from '../../../shared/study-room-basic-form.js';
 import {
   ensureTutorCityUnits,
   getTutorCityUnits,
@@ -29,6 +33,7 @@ import { STUDENT_BRANCH_COPY, STUDENT_COUNT_HALT_COPY } from './student-reg-copy
 import { getAuthUser } from '../auth-session.js';
 import { basicRegisterPathForMe } from '../../../shared/auth-redirect.js';
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
+import './student-basic-fill.css';
 
 const SUPPORT_CONTACT_PATH = '/support/contact';
 
@@ -151,6 +156,9 @@ function parseStudentForm(form) {
       patch.student_gender_group = '';
     }
   }
+  Object.keys(patch).forEach((key) => {
+    if (key.startsWith('slot_basis_')) delete patch[key];
+  });
   return patch;
 }
 
@@ -234,19 +242,24 @@ function renderHub(student) {
   return `<section class="mypage-panel mp-room-panel">${renderStudentShell(student, 'hub', body)}</section>`;
 }
 
-/** @param {string|number|null|undefined} selectedId @param {string} [selectedLabel] */
-function basicRegionOptions(selectedId, selectedLabel) {
-  const id = selectedId != null && selectedId !== '' ? String(selectedId) : '';
-  const options = listCityOptions().map((c) => ({ value: String(c.id), label: c.label }));
-  const regions = getHopeRegionMasters().regions.map((r) => ({ value: String(r.id), label: r.label }));
-  const merged = [...options];
-  regions.forEach((r) => {
-    if (!merged.some((o) => o.value === r.value)) merged.push(r);
-  });
-  if (id && !merged.some((o) => o.value === id)) {
-    merged.unshift({ value: id, label: selectedLabel || labelForRegionId(id) || id });
-  }
-  return merged;
+/** 저장된 공부방 희망지역을 가입과 같은 카카오 주소검색 칸에 채운다. */
+function hopeRegionValues(student) {
+  const basis = student.preferred_studyroom_region_basis === 'complex' ? 'complex' : 'dong';
+  const slots = Array.isArray(student.preferred_studyroom_regions) ? student.preferred_studyroom_regions : [];
+  const slot = slots[0] || {};
+  const regionLabel = String(student.preferred_studyroom_region_label || slot.region_label || '').trim();
+  const complexName = basis === 'complex'
+    ? String(student.preferred_studyroom_complex_label || slot.complex_label || '').trim()
+    : '';
+  return {
+    region_id: student.preferred_studyroom_region_id != null && student.preferred_studyroom_region_id !== ''
+      ? String(student.preferred_studyroom_region_id)
+      : '',
+    region_basis: basis,
+    region_label: regionLabel,
+    complex_name: complexName,
+    complex_label: complexName,
+  };
 }
 
 /** 과외 희망지역(시·군·구) 선택칸. @param {number} studentId @param {string|number|null|undefined} regionId */
@@ -266,7 +279,6 @@ function renderTutorRegionField(studentId, regionId) {
 /** @param {import('./store.js').StudentRecord} student */
 function renderBasicForm(student) {
   const hope = student.preferred_lesson_type === 'study_room' ? 'study_room' : 'tutor';
-  const basis = student.preferred_studyroom_region_basis === 'complex' ? 'complex' : 'dong';
   const subjectNames = MAIN_SUBJECT_OPTIONS.map((o) => o.value);
   const subjectValue = subjectNames.includes(student.subject_label) ? student.subject_label : student.subject_label || '';
   const subjectOptions = MAIN_SUBJECT_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
@@ -276,11 +288,6 @@ function renderBasicForm(student) {
   const schoolOptions = SCHOOL_LEVEL_FORM_OPTIONS;
   const grade = gradeOptionHtml(student.school_level || '', student.grade_level || '');
   const tutorRegionHtml = renderTutorRegionField(student.id, student.preferred_tutor_region_id);
-  const studyRegion = basicRegionOptions(student.preferred_studyroom_region_id, student.region_label);
-  const complexes = listAllComplexes().map((c) => ({
-    value: String(c.id),
-    label: c.address ? `${c.label} — ${c.address}` : c.label,
-  }));
   const countValue = student.lesson_format === 'one_on_one'
     ? 'solo'
     : student.preferred_student_count_group || '';
@@ -318,21 +325,7 @@ function renderBasicForm(student) {
           </label>
         </div>
         <div data-p19-hope-panel="study_room" ${hope === 'study_room' ? '' : 'hidden'}>
-          <label class="p19-field">
-            <span class="p19-field__label">희망지역 기준</span>
-            ${renderSelect('preferred_studyroom_region_basis', [
-              { value: 'dong', label: '행정동 기준' },
-              { value: 'complex', label: '아파트단지 기준' },
-            ], basis)}
-          </label>
-          <label class="p19-field" data-p19-basis-panel="dong" ${basis === 'dong' ? '' : 'hidden'}>
-            <span class="p19-field__label">희망지역</span>
-            ${renderSelect('preferred_studyroom_region_id', studyRegion, student.preferred_studyroom_region_id != null ? String(student.preferred_studyroom_region_id) : '', { empty: true })}
-          </label>
-          <label class="p19-field" data-p19-basis-panel="complex" ${basis === 'complex' ? '' : 'hidden'}>
-            <span class="p19-field__label">희망지역</span>
-            ${renderSelect('preferred_studyroom_complex_id', complexes, student.preferred_studyroom_complex_id != null ? String(student.preferred_studyroom_complex_id) : '', { empty: true })}
-          </label>
+          <div class="p19-field" data-p19-hope-region-slot>${renderStudentHopeRegion(hopeRegionValues(student))}</div>
           <label class="p19-field">
             <span class="p19-field__label">예산 (천원)</span>
             ${renderTextInput('preferred_studyroom_fee_amount', wonToCheonwonInput(student.preferred_studyroom_fee_amount), { type: 'number', min: 1, step: 1 })}
@@ -486,11 +479,91 @@ function renderSettings(student) {
   return `<section class="mypage-panel mp-room-panel">${renderStudentShell(student, 'settings', body)}</section>`;
 }
 
-const STUDYROOM_REGION_FIELDS = [
-  'preferred_studyroom_region_basis',
-  'preferred_studyroom_region_id',
-  'preferred_studyroom_complex_id',
-];
+/* basic-fill:start */
+const BASIC_FILL_SKIP_TYPES = new Set(['hidden', 'radio', 'checkbox', 'button', 'submit', 'reset', 'file', 'image', 'range', 'color']);
+
+/** text·number·select·textarea. 라디오·체크·숨김은 제외. */
+function isBasicFillControl(el) {
+  const tag = String(el?.tagName || '').toUpperCase();
+  if (tag === 'SELECT' || tag === 'TEXTAREA') return true;
+  if (tag !== 'INPUT') return false;
+  const type = String(el.type || 'text').toLowerCase();
+  return !BASIC_FILL_SKIP_TYPES.has(type);
+}
+
+function basicFillState(el) {
+  return String(el.value ?? '').trim() !== '' ? 'filled' : 'empty';
+}
+
+/** 기본정보 칸의 data-fill. 색은 student-basic-fill.css 한곳. 포커스 흰색은 :focus 가 맡는다. */
+function paintBasicFillChrome(root) {
+  if (!root || typeof root.querySelectorAll !== 'function') return;
+  root.querySelectorAll('input, select, textarea').forEach((el) => {
+    if (!isBasicFillControl(el)) {
+      el.removeAttribute('data-fill');
+      return;
+    }
+    el.setAttribute('data-fill', basicFillState(el));
+  });
+}
+
+/**
+ * 입력·선택은 즉시, 분기 교체·지역 하위칸 갱신은 change 버블에서 폼 전체를 다시 칠한다.
+ * 대상 요소의 change 리스너(분기 교체, 시·도 연쇄)가 먼저 값을 바꾼 뒤 이 버블이 돈다.
+ */
+function bindBasicFillChrome(root) {
+  root.addEventListener('input', (e) => {
+    const el = e.target;
+    if (!isBasicFillControl(el)) return;
+    el.setAttribute('data-fill', basicFillState(el));
+  });
+  root.addEventListener('change', () => {
+    paintBasicFillChrome(root);
+  });
+  paintBasicFillChrome(root);
+}
+/* basic-fill:end */
+
+/** @param {HTMLElement} slot @param {Record<string, unknown>} [values] */
+function mountStudentHopeRegion(slot, values) {
+  slot.innerHTML = renderStudentHopeRegion(values || {});
+  bindStudentHopeRegionChrome(slot);
+}
+
+/** @param {HTMLElement} slot */
+function bindStudentHopeRegionChrome(slot) {
+  const paint = () => paintBasicFillChrome(slot.closest('form') || slot);
+  bindStudentHopeRegion(slot, {
+    onApplied() {
+      paint();
+    },
+  });
+  paint();
+}
+
+/**
+ * 주소검색이 비었거나 동·단지 코드가 없으면 null(저장 가능, 빈칸 안내는 저장 후 문구).
+ * 검색은 했는데 동·단지를 확정하지 못하면 copy 한곳의 실패 문구를 반환한다. 가짜 id 는 만들지 않는다.
+ * @param {ReturnType<typeof readStudentHopeRegion>} hopeRegion
+ * @returns {string|null}
+ */
+function studyRoomHopeIssue(hopeRegion) {
+  const copy = STUDENT_BRANCH_COPY.mypage;
+  const basis = hopeRegion?.region_basis === 'complex' ? 'complex' : 'dong';
+  const regionId = String(hopeRegion?.region_id || '').trim();
+  const label = String(hopeRegion?.region_label || '').trim();
+  const place = String(hopeRegion?.complex_name || '').trim();
+  const hasRegionId = /^[1-9]\d*$/.test(regionId);
+  if (basis === 'dong') {
+    if (!hasRegionId && !label) return null;
+    if (!hasRegionId) return copy.hopeRegionDongMissing;
+    return null;
+  }
+  if (!hasRegionId && !place) return null;
+  if (!hasRegionId) return copy.hopeRegionComplexMissing;
+  if (!place) return copy.hopeRegionComplexNameMissing;
+  return null;
+}
 
 /**
  * 교습형태(분기) 변경. 저장된 분기와 다른 쪽으로 바꾸면 확인창을 띄우고, 동의하면 새 분기 지역칸을 비운다.
@@ -504,9 +577,7 @@ function bindLessonTypeChange(form, syncBasic) {
   const studentId = Number(form.dataset.p19StudentId);
   const savedHope = form.getAttribute('data-p19-saved-hope') === 'study_room' ? 'study_room' : 'tutor';
   const savedTutorRegion = form.querySelector('[name="preferred_tutor_region_id"]')?.value || '';
-  const savedStudy = Object.fromEntries(
-    STUDYROOM_REGION_FIELDS.map((name) => [name, form.querySelector(`[name="${name}"]`)?.value || '']),
-  );
+  const savedHopeRegion = readStudentHopeRegion(form) || {};
   let shownHope = savedHope;
 
   const fillBranchRegion = (hope, restore) => {
@@ -517,11 +588,9 @@ function bindLessonTypeChange(form, syncBasic) {
       bindRegionCascades(slot, getTutorCityUnits());
       return;
     }
-    STUDYROOM_REGION_FIELDS.forEach((name) => {
-      const el = form.querySelector(`[name="${name}"]`);
-      if (!el) return;
-      el.value = restore ? savedStudy[name] : name === 'preferred_studyroom_region_basis' ? 'dong' : '';
-    });
+    const slot = form.querySelector('[data-p19-hope-region-slot]');
+    if (!slot) return;
+    mountStudentHopeRegion(slot, restore ? savedHopeRegion : {});
   };
 
   select.addEventListener('change', () => {
@@ -552,7 +621,6 @@ function savedNotice(branchChanged, saved) {
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindStudentRegEvents(root, rerender) {
-  ensureHopeRegionMasters();
   ensureTutorCityUnits().then((loaded) => {
     if (loaded) rerender();
   });
@@ -589,15 +657,7 @@ export function bindStudentRegEvents(root, rerender) {
         form.querySelectorAll('[data-p19-hope-panel]').forEach((panel) => {
           const on = panel.getAttribute('data-p19-hope-panel') === hope;
           panel.hidden = !on;
-          panel.querySelectorAll('select,input').forEach((el) => {
-            el.disabled = !on;
-          });
-        });
-        const basis = form.querySelector('[name="preferred_studyroom_region_basis"]')?.value || 'dong';
-        form.querySelectorAll('[data-p19-basis-panel]').forEach((panel) => {
-          const on = hope === 'study_room' && panel.getAttribute('data-p19-basis-panel') === basis;
-          panel.hidden = !on;
-          panel.querySelectorAll('select,input').forEach((el) => {
+          panel.querySelectorAll('select, input, textarea').forEach((el) => {
             el.disabled = !on;
           });
         });
@@ -613,7 +673,6 @@ export function bindStudentRegEvents(root, rerender) {
         });
       });
       bindLessonTypeChange(form, syncBasic);
-      form.querySelector('[name="preferred_studyroom_region_basis"]')?.addEventListener('change', syncBasic);
       form.querySelector('[name="lesson_format"]')?.addEventListener('change', syncBasic);
       const schoolLevel = form.querySelector('[name="school_level"]');
       const gradeLevel = form.querySelector('[name="grade_level"]');
@@ -626,6 +685,9 @@ export function bindStudentRegEvents(root, rerender) {
       syncBasic();
       const tutorPanel = form.querySelector('[data-p19-hope-panel="tutor"]');
       if (tutorPanel) bindRegionCascades(tutorPanel, getTutorCityUnits());
+      const hopeSlot = form.querySelector('[data-p19-hope-region-slot]');
+      if (hopeSlot) bindStudentHopeRegionChrome(hopeSlot);
+      bindBasicFillChrome(form);
     }
 
     form.addEventListener('submit', async (e) => {
@@ -641,7 +703,27 @@ export function bindStudentRegEvents(root, rerender) {
         }
         patch = { memo_status: picked };
       }
-      if (formKind === 'basic' && String(patch.preferred_lesson_type || '') !== 'study_room') {
+      if (formKind === 'basic' && String(patch.preferred_lesson_type || '') === 'study_room') {
+        const hopeRegion = readStudentHopeRegion(form);
+        const issue = studyRoomHopeIssue(hopeRegion);
+        if (issue) {
+          alert(issue);
+          return;
+        }
+        const basis = hopeRegion?.region_basis === 'complex' ? 'complex' : 'dong';
+        const regionId = String(hopeRegion?.region_id || '').trim();
+        const place = String(hopeRegion?.complex_name || '').trim();
+        patch.preferred_studyroom_region_basis = basis;
+        patch.preferred_studyroom_region_id = regionId;
+        delete patch.complex_name;
+        delete patch.complex_address;
+        delete patch.preferred_studyroom_complex_id;
+        if (basis === 'complex' && place) {
+          patch.complex_name = place;
+        } else {
+          patch.preferred_studyroom_complex_id = '';
+        }
+      } else if (formKind === 'basic') {
         if (!tutorCityUnitsReady()) {
           alert(tutorCityUnitsError() || REGION_LIST_ERROR);
           return;

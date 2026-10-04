@@ -867,10 +867,12 @@ export function bindStudentHopeRegion(root, opts = {}) {
           if (!slotEl) return;
           const basis = slotBasisOf(slotEl);
           applyStudentHopeResult(slotEl, result, null, basis);
+          opts.onApplied?.(slotEl);
           try {
             const region = await ensureRegionFromKakao(result);
             opts.onRegion?.(region);
             applyStudentHopeResult(slotEl, result, region, basis);
+            opts.onApplied?.(slotEl);
           } catch {
             /* 동 이름은 이미 표시. 코드는 저장 시 보완 */
           }

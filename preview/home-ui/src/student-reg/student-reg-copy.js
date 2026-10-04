@@ -52,6 +52,10 @@ export const STUDENT_BRANCH_COPY = {
     savedRefresh: '저장했어요.\n상단 메뉴와 카드에 바로 반영되도록 새로고침해 주세요.',
     branchSavedRefresh: '교습형태를 바꿨어요.\n상단 메뉴가 새 교습형태로 바뀌도록 새로고침해 주세요.',
     regionEmptyHint: '지금은 지역이 비어 있어 카드가 잠시 쉬고 있어요. 지역을 입력하면 다시 보여요.',
+    /** 가입 화면과 같은 주소검색 실패 안내. 마이페이지 공부방 희망지역도 이 문구만 쓴다. */
+    hopeRegionDongMissing: '행정동을 찾지 못했습니다. 주소 검색으로 다시 선택해 주세요.',
+    hopeRegionComplexMissing: '주소 검색으로 아파트·단지를 다시 선택해 주세요.',
+    hopeRegionComplexNameMissing: '아파트·단지 이름이 있는 주소로 다시 검색해 주세요.',
     draftMissing: (labels) => `기본정보에 빈 칸이 있어 카드가 잠시 쉬고 있어요: ${labels}`,
   },
 };
