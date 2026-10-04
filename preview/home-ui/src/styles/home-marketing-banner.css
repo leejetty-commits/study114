@@ -333,7 +333,7 @@
   }
 }
 
-/* 공부방 롤홈: 3칸 아래 내 공부방 박스. 칸을 가리지 않는다. */
+/* 홈 3칸·뉴스 행을 한 덩어리로 둔다. 내 박스는 탭 아래 분할에 있다. */
 .home-mkt-wrap {
   position: relative;
   margin-bottom: var(--space-5, 1.25rem);
@@ -345,115 +345,6 @@
 
 .home-mkt-wrap > .home-mkt {
   margin-bottom: 0;
-}
-
-.home-mkt-wrap--with-panel > .home-mkt .home-mkt__inner {
-  max-width: min(40rem, calc(100% - 17.5rem));
-  padding-right: 1rem;
-}
-
-.home-mkt-wrap--with-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.home-mkt-wrap__panel {
-  position: static;
-  z-index: 2;
-  width: 100%;
-}
-
-.home-mkt-wrap .my-box--banner-panel {
-  position: relative;
-  overflow: hidden;
-  margin: 0;
-  padding: 0.85rem 1rem 0.85rem 1.15rem;
-  border: 1px solid #93c5fd;
-  border-radius: 0.75rem;
-  background: linear-gradient(180deg, #f3f8ff 0%, #ffffff 58%);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.9) inset,
-    0 12px 28px -8px rgba(15, 23, 42, 0.38),
-    0 2px 8px rgba(15, 23, 42, 0.14);
-  color: var(--gray-800, #1e293b);
-}
-
-.home-mkt-wrap .my-box--banner-panel::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--role-accent-study, #266bc4);
-}
-
-.home-mkt-wrap .my-box--banner-panel .my-box__label {
-  margin-bottom: 0.25rem;
-  font-size: 0.6875rem;
-  color: var(--brand-blue, #2563eb);
-}
-
-.home-mkt-wrap .my-box--banner-panel .my-box__title {
-  margin: 0 0 0.45rem;
-  font-size: 1rem;
-  line-height: 1.35;
-  color: var(--gray-900, #0f172a);
-}
-
-.home-mkt-wrap .my-box--banner-panel .my-box__stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.2rem 0.65rem;
-  margin-top: 0;
-  font-size: 0.75rem;
-  color: var(--gray-600, #475569);
-}
-
-.home-mkt-wrap .my-box--banner-panel .my-box__banner-actions {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 0.45rem;
-  margin-top: 0.65rem;
-}
-
-.home-mkt-wrap .my-box--banner-panel .my-box__review-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  min-height: 1.75rem;
-  padding: 0 0.55rem;
-  border: 1px solid #93c5fd;
-  border-radius: 999px;
-  background: #e8f2ff;
-  color: var(--role-accent-study, #266bc4);
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.home-mkt-wrap .my-box--banner-panel .my-box__review-badge:hover {
-  background: #dbeafe;
-  border-color: var(--role-accent-study, #266bc4);
-}
-
-@media (max-width: 860px) {
-  .home-mkt-wrap--with-panel > .home-mkt .home-mkt__inner {
-    max-width: none;
-    padding-right: clamp(1.5rem, 3.5vw, 2.35rem);
-  }
-
-  .home-mkt-wrap__panel {
-    position: static;
-    transform: none;
-    width: 100%;
-    margin-top: 0.75rem;
-  }
 }
 
 @media (max-width: 720px) {

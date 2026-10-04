@@ -140,10 +140,6 @@
   box-shadow: none;
 }
 
-.my-box--banner-panel {
-  border-radius: var(--radius-surface);
-}
-
 .mypage-panel.mypage-panel--bare,
 .mypage-panel.mp-room-panel {
   border: 0;
@@ -479,6 +475,33 @@ table {
 
 .home-shell--tutor .my-box__region-pill.is-active {
   box-shadow: 0 0 0 2px var(--role-accent-soft);
+}
+
+.home-shell--study_room .my-box--status {
+  border-width: 1px;
+  border-color: var(--role-accent-study);
+  background: linear-gradient(165deg, var(--role-accent-study-soft) 0%, #fff 42%);
+}
+
+.home-shell--study_room .my-box__badge {
+  color: var(--role-accent-study);
+  background: var(--role-accent-study-soft);
+  border-color: var(--role-accent-study-soft);
+}
+
+.home-shell--study_room .my-box__region-pill.is-primary,
+.home-shell--study_room .my-box__region-pill.is-active {
+  border-color: var(--role-accent-study);
+  color: var(--role-accent-study);
+  background: var(--role-accent-study-soft);
+}
+
+.home-shell--study_room .my-box__region-pill.is-active {
+  box-shadow: 0 0 0 2px var(--role-accent-study-soft);
+}
+
+.home-shell--study_room .my-box__region-pill .tutor-region-tabs__primary {
+  color: var(--role-accent-study);
 }
 
 .mypage-home-hero h2,

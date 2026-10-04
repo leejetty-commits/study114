@@ -2165,6 +2165,7 @@ export function renderCompactFindForm(tab, state, options = {}) {
           resultSource: resolveResultSource(state),
           bannerStyle: mapBannerStyle,
           providerHome: studyRoomPromoMap,
+          hideMapBanner: variant === 'home' && studyRoomPromoMap,
           lat: studyRoomPromoMap ? null : state.canonicalLocation?.lat ?? null,
           lng: studyRoomPromoMap ? null : state.canonicalLocation?.lng ?? null,
           viewerRole: role,

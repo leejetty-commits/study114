@@ -38,6 +38,27 @@ export function primarySavedRegion(room) {
 }
 
 /**
+ * 홍보2·3. 대표 슬롯을 빼고 region_label 이 있는 슬롯만, 저장 순서대로 최대 2개.
+ * 빈 슬롯은 넣지 않는다. room 을 생략하면 내 공부방.
+ * @param {object|null|undefined} [room]
+ * @returns {object[]}
+ */
+export function studyRoomSecondaryPromoRegions(room) {
+  const own = room === undefined ? pickOwnStudyRoom() : room;
+  const slots = Array.isArray(own?.saved_regions) ? own.saved_regions : [];
+  const primary = primarySavedRegion(own);
+  const out = [];
+  for (const slot of slots) {
+    if (!slot || slot === primary) continue;
+    const label = String(slot.region_label ?? '').trim();
+    if (!label) continue;
+    out.push(slot);
+    if (out.length >= 2) break;
+  }
+  return out;
+}
+
+/**
  * 홍보1 표시라벨. primary 슬롯의 promo_label만.
  * 슬롯 region_label·공부방 개설 region_label 로는 대체하지 않는다. 없으면 빈 문자열(화면은 —).
  * @param {object|null|undefined} room

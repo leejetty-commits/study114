@@ -133,3 +133,15 @@ export const P20_HUB_CTA = {
   studentReview: '관심 학생',
   messages: '쪽지함 열기',
 };
+
+/** 공부방 홈 내 박스 안내. 화면 파일에 문장 리터럴로 두지 않는다. */
+export const STUDY_ROOM_HOME_BOX_COPY = {
+  badge: '공부방 박스',
+  regionLabel: '홍보지역',
+  regionGuide: "홍보지역을 수정하려면 '마이페이지-내 등록-기본등록'에서 해 주세요.",
+  /** 마이페이지 상단 탭에 쪽지설정이 있을 때 3행 */
+  inquiryGuide:
+    "쪽지설정을 수정하려면 마이페이지-내 등록-쪽지설정에서 해 주세요. 쪽지는 '쪽지 후기함'에서 확인하세요.",
+  /** 쪽지설정 메뉴가 없을 때 3행 */
+  messagesGuide: "쪽지는 '쪽지 후기함'에서 확인하세요.",
+};

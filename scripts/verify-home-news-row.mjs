@@ -648,10 +648,10 @@ async function launchChromium(chromium) {
 }
 
 const NEXT_BOX = {
-  guest: '.hero-map',
-  parent: '.provider-home-tabs',
-  study_room: '.home-mkt-wrap__panel, .provider-home-tabs',
-  tutor: '.provider-home-tabs',
+  guest: { sel: '.hero-map' },
+  parent: { sel: '.provider-home-tabs' },
+  study_room: { sel: '.provider-home-tabs', boxAfterTabs: '.tutor-home-split' },
+  tutor: { sel: '.provider-home-tabs' },
 };
 const domOrder = {};
 const steadyLog = [];
@@ -766,18 +766,24 @@ try {
         );
     ok(`${B}home_row_loaded_${tag}`, ready, `${where} errors=${pageErrors.slice(0, 3).join(' | ')}`);
 
-    // 순서: 3칸 → 2단 → 내 박스
-    const order = await ev((nextSel) => {
+    // 순서: 3칸 → 2단 → (공부방·과외쌤은 탭 다음 내 박스)
+    const order = await ev((spec) => {
+      const nextSel = spec.sel;
       const trio = document.querySelector('.home-promo-trio');
       const row = document.querySelector('[data-home-news-row]');
       const next = document.querySelector(nextSel);
       const before = (a, b) => Boolean(a && b && a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+      const tabs = document.querySelector('.provider-home-tabs');
+      const box = spec.boxAfterTabs ? document.querySelector(spec.boxAfterTabs) : null;
+      const tabThenBox = spec.boxAfterTabs ? before(tabs, box) : true;
       const siblings = row?.parentElement
         ? [...row.parentElement.children].map((el) => (el.getAttribute('class') || el.tagName).split(' ')[0]).slice(0, 6)
         : [];
       return {
         trioThenRow: trio?.nextElementSibling === row,
         rowBeforeNext: before(row, next),
+        tabThenBox,
+        boxAfterTabs: spec.boxAfterTabs ? Boolean(box) : true,
         nextFound: Boolean(next),
         rows: document.querySelectorAll('[data-home-news-row]').length,
         siblings,
@@ -791,7 +797,11 @@ try {
       };
     }, NEXT_BOX[viewer]);
     domOrder[viewer] = Array.isArray(order?.siblings) ? order.siblings.join(' > ') : String(order);
-    ok(`${B}order_trio_row_mybox_${tag}`, order.trioThenRow && order.rowBeforeNext && order.rows === 1, JSON.stringify(order));
+    ok(
+      `${B}order_trio_row_mybox_${tag}`,
+      order.trioThenRow && order.rowBeforeNext && order.tabThenBox && order.boxAfterTabs && order.rows === 1,
+      JSON.stringify(order),
+    );
     ok(`${B}notice_three_lines_${tag}`, order.noticeLines === 3, String(order.noticeLines));
     ok(
       `${B}notice_exposure_${tag}`,

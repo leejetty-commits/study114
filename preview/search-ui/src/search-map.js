@@ -59,9 +59,31 @@ function basicListTotal(items) {
 }
 
 /**
+ * 공부방 홈 현황 카드와 지도 배너(provider_room + providerHome)가 같이 쓰는 값.
+ * 제목은 동. 동이 없으면 memberPlacePrompt(viewerRole).
+ * parts 를 넘기면 그 동을 쓰고, 없으면 regionLabel 또는 홍보1으로 다시 읽는다.
+ * @param {{ items?: object[], parts?: { dong?: string }, regionLabel?: string, lat?: number|null, lng?: number|null, viewerRole?: string }} [input]
+ */
+export function readStudyRoomProviderHomeBanner(input = {}) {
+  const items = Array.isArray(input.items) ? input.items : [];
+  const requested = String(input.regionLabel || '').trim();
+  const parts =
+    input.parts ||
+    parseRegionParts(requested || peekStudyRoomPromo1(), { lat: input.lat, lng: input.lng });
+  const dong = parts.dong || '';
+  return {
+    heading: dong || memberPlacePrompt(input.viewerRole),
+    sub: dong ? `${dong} 공부방 현황입니다` : '',
+    hint: "우리동네의 공부방은 하단의 '우동공과 베이직공부방' 목록입니다",
+    roomCount: basicListTotal(items),
+    dong,
+  };
+}
+
+/**
  * @param {object} parts
  * @param {object[]} items
- * @param {{ searched: boolean, region: string, resultSource: string, countNote: string, bannerStyle: 'guest'|'provider_room'|'search', providerHome?: boolean, roomCount?: number, lat?: number|null, lng?: number|null, viewerRole?: string, regionLevel?: string }} ctx
+ * @param {{ searched: boolean, region: string, resultSource: string, countNote: string, bannerStyle: 'guest'|'provider_room'|'search', providerHome?: boolean, providerBanner?: { sub: string, hint: string, roomCount: number }|null, hideMapBanner?: boolean, roomCount?: number, lat?: number|null, lng?: number|null, viewerRole?: string, regionLevel?: string }} ctx
  */
 function renderFloatMap(parts, items, ctx) {
   const { searched, region, resultSource, countNote, bannerStyle } = ctx;
@@ -80,11 +102,14 @@ function renderFloatMap(parts, items, ctx) {
         </dl>`;
     hint = '';
   } else if (bannerStyle === 'provider_room' && ctx.providerHome) {
-    sub = parts.dong ? `${parts.dong} 공부방 현황입니다` : '';
+    const banner =
+      ctx.providerBanner ||
+      readStudyRoomProviderHomeBanner({ parts, items, viewerRole: ctx.viewerRole });
+    sub = banner.sub;
     statsHtml = `<dl class="hero-map__stats">
-          <div><dt>공부방</dt><dd>${ctx.roomCount}</dd></div>
+          <div><dt>공부방</dt><dd>${banner.roomCount}</dd></div>
         </dl>`;
-    hint = "우리동네의 공부방은 하단의 '우동공과 베이직공부방' 목록입니다";
+    hint = banner.hint;
   } else if (bannerStyle === 'provider_room') {
     sub = [parts.gu, '검색·지역 결과가 반영된 공부방 현황입니다'].filter(Boolean).join(' · ');
     statsHtml = `<dl class="hero-map__stats">
@@ -117,25 +142,29 @@ function renderFloatMap(parts, items, ctx) {
     ? readGuestBaseline().room
     : parts.dong || (student ? region : '') || memberPlacePrompt(ctx.viewerRole);
 
+  const bannerAside = ctx.hideMapBanner === true
+    ? ''
+    : `
+      <aside class="hero-map__banner" aria-label="지역 요약">
+        <h2 class="hero-map__dong">${esc(heading)}</h2>
+        <p class="hero-map__sub">${esc(sub)}</p>
+        ${statsHtml}
+        ${hint ? `<p class="hero-map__hint">${esc(hint)}</p>` : ''}
+      </aside>`;
+
   return `
     <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}"${latAttr}${lngAttr}${fitAttr}${geocodeAttr} data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
       <div class="hero-map__canvas">
         <div class="hero-map__surface hero-map__surface--naver" aria-label="${esc(region)} 공부방 지도">
           <div class="naver-map-mount-host" data-naver-map-mount></div>
         </div>
-      </div>
-      <aside class="hero-map__banner" aria-label="지역 요약">
-        <h2 class="hero-map__dong">${esc(heading)}</h2>
-        <p class="hero-map__sub">${esc(sub)}</p>
-        ${statsHtml}
-        ${hint ? `<p class="hero-map__hint">${esc(hint)}</p>` : ''}
-      </aside>
+      </div>${bannerAside}
     </section>`;
 }
 
 /**
  * @param {object[]} [activeResultItems]
- * @param {{ searched?: boolean, regionLabel?: string, resultSource?: 'region'|'search'|null, guestHomeStyle?: boolean, bannerStyle?: 'guest'|'provider_room'|'search', providerHome?: boolean, lat?: number|null, lng?: number|null, viewerRole?: string, regionLevel?: string }} [options]
+ * @param {{ searched?: boolean, regionLabel?: string, resultSource?: 'region'|'search'|null, guestHomeStyle?: boolean, bannerStyle?: 'guest'|'provider_room'|'search', providerHome?: boolean, hideMapBanner?: boolean, lat?: number|null, lng?: number|null, viewerRole?: string, regionLevel?: string }} [options]
  */
 export function renderSearchMapBlock(activeResultItems = [], options = {}) {
   const searched = options.searched === true;
@@ -164,6 +193,10 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
     resultSource,
   });
 
+  const providerBanner = providerHome
+    ? readStudyRoomProviderHomeBanner({ parts, items, viewerRole: options.viewerRole })
+    : null;
+
   return renderFloatMap(parts, items, {
     searched,
     region,
@@ -171,7 +204,9 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
     countNote,
     bannerStyle,
     providerHome,
-    roomCount: providerHome ? basicListTotal(items) : items.length,
+    providerBanner,
+    hideMapBanner: options.hideMapBanner === true,
+    roomCount: providerHome ? providerBanner.roomCount : items.length,
     lat: options.lat ?? parts.lat,
     lng: options.lng ?? parts.lng,
     viewerRole: options.viewerRole,
