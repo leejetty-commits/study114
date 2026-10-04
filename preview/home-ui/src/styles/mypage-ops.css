@@ -1696,6 +1696,7 @@
 .mypage-notice {
   margin: 0 0 var(--space-4, 16px);
   border: 1px solid var(--uds-line, #e2e8f0);
+  border-bottom: 2px solid var(--gray-300);
   border-radius: 0.5rem;
   overflow: hidden;
   background: var(--uds-surface, #fff);

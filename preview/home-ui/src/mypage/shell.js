@@ -10,6 +10,7 @@ import {
   getDefaultMypagePath,
   mypageNavLabel,
 } from './router.js';
+import { renderMypageNoticeStrip } from './mypage-notice-strip.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -129,6 +130,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
           ${renderBreadcrumb(currentPath, title, role)}
           <h1 class="mypage-content__title">${esc(title)}</h1>
         </header>
+        ${role === 'guest' ? '' : renderMypageNoticeStrip()}
         ${bodyHtml}
       </div>
     </div>

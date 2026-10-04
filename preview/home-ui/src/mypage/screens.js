@@ -39,7 +39,6 @@ import { formatMonthlyWon, formatTutorFeeCard } from '../exposure-format.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { notifyCompareToggle } from '../handoff-utils.js';
 import { renderEmptyStateCard } from '../empty-state-copy.js';
-import { renderMypageNoticeStrip } from './mypage-notice-strip.js';
 import { renderMessagesScreen } from '../messages/screens.js';
 import { isMessagesDetailPath, MESSAGES_BASE, threadPath } from '../messages/router.js';
 import { isStudentRegPath } from '../student-reg/router.js';
@@ -111,9 +110,6 @@ export function renderMypageScreen(path) {
   /** @type {'parent'|'study_room'|'tutor'} */
   const r = sessionRole === 'study_room' || isStudyRoomAuth() ? 'study_room' : sessionRole;
   const profile = getPreviewProfile(r);
-  const _entryPath = getDefaultMypagePath(r);
-  const _withNotice = (html, renderedPath) =>
-    renderedPath === _entryPath ? renderMypageNoticeStrip() + html : html;
 
   if (path === '/mypage/home') {
     return renderMypageScreen(getDefaultMypagePath(r));
@@ -128,8 +124,8 @@ export function renderMypageScreen(path) {
     const cur = (window.location.hash.slice(1) || '').split('?')[0];
     const p = cur.startsWith('/') ? cur : `/${cur}`;
     if (p !== entry) window.location.replace(`#${entry}`);
-    if (isStudyRoomRegPath(entry)) return renderMypageNoticeStrip() + renderStudyRoomRegScreen(entry);
-    return renderMypageNoticeStrip() + renderStudyRoomRegScreen('/mypage/registrations/study-rooms');
+    if (isStudyRoomRegPath(entry)) return renderStudyRoomRegScreen(entry);
+    return renderStudyRoomRegScreen('/mypage/registrations/study-rooms');
   }
 
   // 과외쌤: 홈·내 등록 중간페이지 → 마이프로필(hub) 직행
@@ -140,8 +136,8 @@ export function renderMypageScreen(path) {
         window.location.replace(`#${entry}`);
       }
     });
-    if (isTutorRegPath(entry)) return renderMypageNoticeStrip() + renderTutorRegScreen(entry);
-    return renderMypageNoticeStrip() + renderTutorRegScreen('/mypage/registrations/tutors');
+    if (isTutorRegPath(entry)) return renderTutorRegScreen(entry);
+    return renderTutorRegScreen('/mypage/registrations/tutors');
   }
 
   if (r === 'parent' && path === '/mypage/registrations') {
@@ -157,12 +153,12 @@ export function renderMypageScreen(path) {
       const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
       if (isParentLockedMypagePath(p)) window.location.replace(`#${dest}`);
     });
-    return renderMypageNoticeStrip() + renderStudentRegScreen(dest);
+    return renderStudentRegScreen(dest);
   }
 
-  if (isStudentRegPath(path)) return _withNotice(renderStudentRegScreen(path), path);
-  if (isStudyRoomRegPath(path)) return _withNotice(renderStudyRoomRegScreen(path), path);
-  if (isTutorRegPath(path)) return _withNotice(renderTutorRegScreen(path), path);
+  if (isStudentRegPath(path)) return renderStudentRegScreen(path);
+  if (isStudyRoomRegPath(path)) return renderStudyRoomRegScreen(path);
+  if (isTutorRegPath(path)) return renderTutorRegScreen(path);
 
   if (path === '/mypage/registrations') return renderRegistrationsIndex(r);
   if (path === '/mypage/wishlist') return renderWishlist();

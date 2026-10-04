@@ -99,9 +99,22 @@ import { activateSupportApi, deactivateSupportApi } from './support/support-back
 
 function hydrateNotices() {
   hydrateNoticeCenter().catch(() => {});
-  hydrateNoticeHome().catch(() => {});
+  // 공지 캐시는 첫 그리기보다 늦게 채워질 수 있다. 마이페이지에 블록이 아직 없을 때만 다시 그린다.
+  hydrateNoticeHome()
+    .then(() => {
+      try {
+        if (!sessionChecked || !isMypageRoute()) return;
+        if (!isBoardApiMode() || getNoticeHomePosts().length === 0) return;
+        const app = document.getElementById('app');
+        if (!app || app.querySelector('.mypage-notice')) return;
+        render();
+      } catch (err) {
+        console.warn('[notice] mypage repaint skipped', err);
+      }
+    })
+    .catch(() => {});
 }
-import { activateBoardApi, boardKeysBlockedForRole, deactivateBoardApi, hydrateBoardCache, hydrateNoticeCenter, hydrateNoticeHome, resetNoticeCaches } from './board/board-backend.js';
+import { activateBoardApi, boardKeysBlockedForRole, deactivateBoardApi, hydrateBoardCache, hydrateNoticeCenter, hydrateNoticeHome, resetNoticeCaches, isBoardApiMode, getNoticeHomePosts } from './board/board-backend.js';
 import { resetConcernData } from './concern/store.js';
 import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
