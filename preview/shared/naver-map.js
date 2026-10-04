@@ -7,6 +7,8 @@
 
 /** @typedef {{ id: string|number, study_room_name?: string, title?: string, latitude?: string|number|null, longitude?: string|number|null, location_label?: string, region_label?: string, profile_status?: string }} StudyRoomMapItem */
 
+import { STUDY_ROOM_MAP_COPY } from '../home-ui/src/empty-state-copy.js';
+
 /** @typedef {{ lat: number, lng: number, label?: string }} RegionCenter */
 
 /**
@@ -98,18 +100,21 @@ export function mapStudyRoomPins(items, options = {}) {
  * @param {string} [regionLabel]
  * @param {{ lat?: number|null, lng?: number|null }} [explicitCenter]
  */
-export function resolveMapCenter(items, regionLabel = '', explicitCenter = {}) {
+export function resolveMapCenter(items, regionLabel = '', explicitCenter = {}, options = {}) {
   const exLat = parseCoord(explicitCenter.lat);
   const exLng = parseCoord(explicitCenter.lng);
   if (exLat != null && exLng != null) {
     return { lat: exLat, lng: exLng, zoom: MAP_DEFAULT_ZOOM, source: 'canonical' };
   }
 
-  const pins = mapStudyRoomPins(items, { allowRegionFallback: true });
-  if (pins.length > 0) {
-    const lat = pins.reduce((sum, p) => sum + p.lat, 0) / pins.length;
-    const lng = pins.reduce((sum, p) => sum + p.lng, 0) / pins.length;
-    return { lat, lng, zoom: MAP_DEFAULT_ZOOM, source: 'pins' };
+  // 공부방 홈·찾기는 usePins:false. 핀은 사업장 좌표라 홍보1 중심을 정하지 않는다.
+  if (options.usePins !== false) {
+    const pins = mapStudyRoomPins(items, { allowRegionFallback: true });
+    if (pins.length > 0) {
+      const lat = pins.reduce((sum, p) => sum + p.lat, 0) / pins.length;
+      const lng = pins.reduce((sum, p) => sum + p.lng, 0) / pins.length;
+      return { lat, lng, zoom: MAP_DEFAULT_ZOOM, source: 'pins' };
+    }
   }
 
   const matched = matchRegionCenter(regionLabel);
@@ -207,11 +212,13 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
   const allowRegionFallback = options.allowRegionFallback !== false;
   const fitBounds = options.fitBounds !== false;
   const variant = options.variant || 'search';
+  const pinAnchorsCenter = options.pinAnchorsCenter !== false;
+  const memberMap = options.memberMap === true;
   const pins = mapStudyRoomPins(items, { allowRegionFallback });
   let center = resolveMapCenter(items, regionLabel, {
     lat: options.lat,
     lng: options.lng,
-  });
+  }, { usePins: pinAnchorsCenter });
 
   /** @type {{ destroy: () => void, focusPin: (id: string) => void, getPins: () => typeof pins }|null} */
   let controller = null;
@@ -220,25 +227,34 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
     mountEl.innerHTML = `<p class="naver-map-status naver-map-status--${kind}" role="status">${message}</p>`;
   };
 
-  if (!getNaverMapClientId()) {
+  if (!options.naver && !getNaverMapClientId()) {
     showStatus('[설정 필요] VITE_NAVER_MAP_CLIENT_ID · 네이버 지도 API 키를 .env에 추가하세요.', 'config');
     return null;
   }
 
   try {
-    const naver = await loadNaverMapsSdk();
+    const naver = options.naver || await loadNaverMapsSdk();
+    const promptStatus = memberMap ? STUDY_ROOM_MAP_COPY.unplaced : REGION_PROMPT_MAP_STATUS;
+    const failStatus = memberMap ? STUDY_ROOM_MAP_COPY.notFound : REGION_GEOCODE_FAIL_STATUS;
+    // 빈 문자열은 명시적이다. 단지 주소가 없을 때 홍보 라벨로 바꾸지 않는다.
+    const geocodeQuery = options.geocodeQuery != null ? String(options.geocodeQuery).trim() : String(regionLabel || '').trim();
     // 지역 기준 지도(학생): 좌표·핀이 없으면 대치역 기본값 대신 지역 라벨을 지오코딩한다.
     if (options.geocodeRegion && center.source === 'default') {
-      if (!regionLabel) {
-        showStatus(REGION_PROMPT_MAP_STATUS, 'info');
+      if (!geocodeQuery) {
+        showStatus(promptStatus, 'info');
         return null;
       }
-      const found = await geocodeRegionCenter(naver, regionLabel);
+      const found = await geocodeRegionCenter(naver, geocodeQuery);
       if (!found) {
-        showStatus(REGION_GEOCODE_FAIL_STATUS, 'error');
+        showStatus(failStatus, 'error');
         return null;
       }
       center = { ...found, zoom: clampNeighborhoodZoom(options.regionZoom ?? MAP_DEFAULT_ZOOM), source: 'geocode' };
+    }
+    // 로그인 회원 지도(공부방 홈·찾기·상세)는 대치역 기본 중심으로 열지 않는다.
+    if (memberMap && center.source === 'default') {
+      showStatus(promptStatus, 'info');
+      return null;
     }
     mountEl.innerHTML = '';
     mountEl.classList.add('naver-map-mount', `naver-map-mount--${variant}`);
@@ -288,11 +304,14 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
       markerById.set(pin.id, { marker, pin });
     }
 
-    if (fitBounds && pins.length > 1) fitToPins();
-    else if (fitBounds && pins.length === 1) {
+    if (pinAnchorsCenter && fitBounds && pins.length > 1) fitToPins();
+    else if (pinAnchorsCenter && fitBounds && pins.length === 1) {
       map.setCenter(new naver.maps.LatLng(pins[0].lat, pins[0].lng));
       map.setZoom(MAP_DEFAULT_ZOOM);
     } else if (!fitBounds) {
+      map.setCenter(new naver.maps.LatLng(center.lat, center.lng));
+      map.setZoom(clampNeighborhoodZoom(center.zoom));
+    } else if (!pinAnchorsCenter) {
       map.setCenter(new naver.maps.LatLng(center.lat, center.lng));
       map.setZoom(clampNeighborhoodZoom(center.zoom));
     }
@@ -363,8 +382,16 @@ export async function bindStudyRoomMapSection(root, items, options = {}) {
     allowRegionFallback: section?.getAttribute('data-allow-fallback') !== 'false',
     fitBounds,
     variant: section?.getAttribute('data-map-variant') || 'search',
-    geocodeRegion: section?.getAttribute('data-geocode-region') === 'true',
+    geocodeRegion: options.geocodeRegion === true || section?.getAttribute('data-geocode-region') === 'true',
+    geocodeQuery: options.geocodeQuery !== undefined
+      ? options.geocodeQuery
+      : section?.hasAttribute?.('data-geocode-query')
+        ? section.getAttribute('data-geocode-query')
+        : undefined,
+    memberMap: options.memberMap === true || section?.getAttribute('data-member-map') === 'true',
+    pinAnchorsCenter: options.pinAnchorsCenter === false || section?.getAttribute('data-pin-center') === 'false' ? false : true,
     regionZoom: section?.getAttribute('data-map-zoom') != null ? Number(section.getAttribute('data-map-zoom')) : null,
+    naver: options.naver,
     onPinClick: options.onPinClick,
   });
 

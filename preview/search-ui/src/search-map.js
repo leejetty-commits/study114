@@ -99,16 +99,20 @@ function renderFloatMap(parts, items, ctx) {
   const allowFallback = isHero ? ' data-allow-fallback="true"' : '';
   /* 게스트는 홈 지도와 같은 중심(대치역)·줌. 핀 영역 맞춤(fitBounds)으로 줌이 바뀌지 않게 한다. */
   const guestMap = bannerStyle === 'guest';
-  const lat = guestMap ? GUEST_MAP_CENTER.lat : ctx.lat ?? parts.lat;
-  const lng = guestMap ? GUEST_MAP_CENTER.lng : ctx.lng ?? parts.lng;
+  /* 학생 지도는 좌표가 없으면 저장 지역 라벨을 지오코딩한다(구 13 · 동 15). */
+  const student = !guestMap && ctx.viewerRole === 'parent';
+  /* 공부방 로그인은 저장 좌표·핀 평균으로 중심을 잡지 않고 홍보1 질의를 지오코딩한다. */
+  const studyRoom = !guestMap && !student && ctx.viewerRole === 'study_room';
+  const lat = guestMap ? GUEST_MAP_CENTER.lat : studyRoom ? null : ctx.lat ?? parts.lat;
+  const lng = guestMap ? GUEST_MAP_CENTER.lng : studyRoom ? null : ctx.lng ?? parts.lng;
   const latAttr = lat != null ? ` data-map-lat="${esc(String(lat))}"` : '';
   const lngAttr = lng != null ? ` data-map-lng="${esc(String(lng))}"` : '';
   const fitAttr = guestMap ? ' data-fit-bounds="false"' : '';
-  /* 학생 지도는 좌표가 없으면 저장 지역 라벨을 지오코딩한다(구 13 · 동 15). */
-  const student = !guestMap && ctx.viewerRole === 'parent';
   const geocodeAttr = student
     ? ` data-geocode-region="true" data-map-zoom="${ctx.regionLevel === 'district' ? 13 : 15}"`
-    : '';
+    : studyRoom
+      ? ` data-geocode-region="true" data-member-map="true" data-pin-center="false" data-geocode-query="${esc(String(ctx.geocodeQuery ?? '')).replace(/"/g, '&quot;')}"`
+      : '';
   const heading = guestMap
     ? readGuestBaseline().room
     : parts.dong || (student ? region : '') || memberPlacePrompt(ctx.viewerRole);
@@ -172,6 +176,7 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
     lng: options.lng ?? parts.lng,
     viewerRole: options.viewerRole,
     regionLevel: options.regionLevel,
+    geocodeQuery: options.geocodeQuery,
   });
 }
 

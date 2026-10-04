@@ -20,7 +20,7 @@ export function renderStudyRoomDetailBody(item, viewer) {
 
   const mapBlock = isGuest
     ? `<p class="p24-map-guest-note">위치 핀은 로그인 후 · 현재 ${esc(locationLabel)}</p>`
-    : `<details class="p24-map-accordion" data-study-room-map data-map-variant="detail" data-region-label="${esc(item.location_label || '')}" data-allow-fallback="true">
+    : `<details class="p24-map-accordion" data-study-room-map data-map-variant="detail" data-region-label="${esc(item.location_label || '')}" data-geocode-region="true" data-member-map="true" data-allow-fallback="true">
       <summary class="p24-map-accordion__summary">위치 지도</summary>
       <div class="p24-map-accordion__body">
         <div class="naver-map-mount-host naver-map-mount-host--detail" data-naver-map-mount data-detail-map-for="${esc(String(item.id ?? ''))}"></div>

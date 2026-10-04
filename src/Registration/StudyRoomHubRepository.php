@@ -141,13 +141,13 @@ final class StudyRoomHubRepository
      * 사업장 region_id 로 홍보1을 만들지 않고, 이름을 못 찾으면 라벨은 빈 값이다.
      *
      * @param array<string, mixed> $roomRow
-     * @return list<array{region_id: string, complex_id: string, region_basis_type: string, region_label: string, is_primary: bool}>
+     * @return list<array{region_id: string, complex_id: string, region_basis_type: string, region_label: string, complex_name: ?string, complex_address: ?string, promo_label: string, is_primary: bool}>
      */
     private function savedRegions(int $roomId, array $roomRow = []): array
     {
         $stmt = $this->pdo->prepare(
             'SELECT srr.region_id, srr.complex_id, srr.region_basis_type, srr.is_primary,
-                    r.dong_name, r.sigungu_name, r.sido_name, c.name AS complex_name
+                    r.dong_name, r.sigungu_name, r.sido_name, c.name AS complex_name, c.address AS complex_address
              FROM study_room_regions srr
              LEFT JOIN regions r ON srr.region_id = r.id
              LEFT JOIN complexes c ON srr.complex_id = c.id
@@ -173,11 +173,22 @@ final class StudyRoomHubRepository
             $label = $basis === 'complex'
                 ? (string) ($row['complex_name'] ?? '')
                 : $dong;
+            // 동 기준 슬롯은 단지 필드를 비운다. 단지 기준만 저장된 이름·도로명 주소를 싣는다.
+            $complexName = null;
+            $complexAddress = null;
+            if ($basis === 'complex') {
+                $name = trim((string) ($row['complex_name'] ?? ''));
+                $addr = trim((string) ($row['complex_address'] ?? ''));
+                $complexName = $name !== '' ? $name : null;
+                $complexAddress = $addr !== '' ? $addr : null;
+            }
             $out[] = [
                 'region_id' => $regionId,
                 'complex_id' => $complexId,
                 'region_basis_type' => $basis,
                 'region_label' => $label,
+                'complex_name' => $complexName,
+                'complex_address' => $complexAddress,
                 'promo_label' => $this->promoLabel(
                     (string) ($row['sido_name'] ?? ''),
                     (string) ($row['sigungu_name'] ?? ''),

@@ -239,6 +239,15 @@ export function renderSearchZeroState(tab, mode = 'search') {
   });
 }
 
+/**
+ * 로그인 회원의 공부방 지도가 중심을 못 잡을 때.
+ * 대치역 좌표로 대신 열지 않는다. 「위치를 선택해 주세요」는 게스트 문구라 여기 쓰지 않는다.
+ */
+export const STUDY_ROOM_MAP_COPY = {
+  unplaced: '보여 드릴 동네가 아직 없어요. 홍보지역이 채워지면 지도가 그곳으로 열려요.',
+  notFound: '지도에서 이 동네를 아직 찾지 못했어요. 목록은 그대로 보실 수 있어요.',
+};
+
 /** §5 Max — 상한 도달 */
 export const MAX_COPY = {
   compare: {

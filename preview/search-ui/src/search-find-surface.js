@@ -12,6 +12,7 @@ import {
   getStudyRoomHomeLiveItems,
   getStudyRoomStudentLiveItems,
   peekStudyRoomPromo1,
+  resolveStudyRoomMapQuery,
   studyRoomPromo1Dong,
 } from '@home-ui/study-room-home-seed.js';
 import {
@@ -2147,10 +2148,11 @@ export function renderCompactFindForm(tab, state, options = {}) {
   const mapBannerStyle =
     role === 'study_room' ? 'provider_room' : role === 'guest' ? 'guest' : 'search';
   const studyRoomPromoMap = role === 'study_room' && tab === 'room';
-  const mapRegion = studyRoomPromoMap
-    ? variant === 'search' && state.searchExecuted
-      ? state.activeRegionLabel || peekStudyRoomPromo1()
-      : peekStudyRoomPromo1()
+  const studyRoomMap = studyRoomPromoMap ? resolveStudyRoomMapQuery(state, variant) : null;
+  const mapRegion = studyRoomMap
+    ? studyRoomMap.picked
+      ? studyRoomMap.query
+      : studyRoomMap.promo_label
     : state.activeRegionLabel || '';
 
   return `
@@ -2163,10 +2165,12 @@ export function renderCompactFindForm(tab, state, options = {}) {
           resultSource: resolveResultSource(state),
           bannerStyle: mapBannerStyle,
           providerHome: studyRoomPromoMap,
-          lat: state.canonicalLocation?.lat ?? null,
-          lng: state.canonicalLocation?.lng ?? null,
+          lat: studyRoomPromoMap ? null : state.canonicalLocation?.lat ?? null,
+          lng: studyRoomPromoMap ? null : state.canonicalLocation?.lng ?? null,
           viewerRole: role,
           regionLevel: state.canonicalLocation?.level || '',
+          geocodeQuery: studyRoomMap ? studyRoomMap.query : undefined,
+          memberMap: studyRoomPromoMap,
         })
       : ''}
     ${formHtml}`;

@@ -56,6 +56,78 @@ export function peekStudyRoomPromo1() {
   return studyRoomPromo1Label(pickOwnStudyRoom());
 }
 
+/**
+ * 대표 슬롯의 지도 질의 재료. 저장된 region_basis_type 을 그대로 싣는다.
+ * 동 기준의 complex_address 는 null. 단지 기준은 비어 있으면 null(다른 라벨로 채우지 않음).
+ * @param {object|null|undefined} [room] 생략하면 내 공부방
+ * @returns {{ basis: 'dong'|'complex'|'', promo_label: string, complex_address: string|null }}
+ */
+export function peekStudyRoomPromo1MapSlot(room) {
+  const slot = primarySavedRegion(room === undefined ? pickOwnStudyRoom() : room);
+  if (!slot) return { basis: '', promo_label: '', complex_address: null };
+  const basis = String(slot.region_basis_type || '') === 'complex' ? 'complex' : 'dong';
+  const promo = String(slot.promo_label || '').trim();
+  if (basis !== 'complex') return { basis, promo_label: promo, complex_address: null };
+  const raw = slot.complex_address == null ? '' : String(slot.complex_address).trim();
+  return { basis, promo_label: promo, complex_address: raw || null };
+}
+
+/** 단지 주소가 없거나 미등록 표식이면 다른 값으로 대체하지 않는다. */
+export function complexAddressMissing(value) {
+  const text = String(value ?? '').trim();
+  return text === '' || text.startsWith('(주소 미등록)');
+}
+
+/**
+ * 저장된 기준 그대로의 지오코딩 질의.
+ * dong → promo_label, complex → complex_address. 단지는 동 라벨로 폴백하지 않는다.
+ * @param {{ basis?: string, promo_label?: string, complex_address?: string|null }} slot
+ * @returns {{ query: string, blocked: boolean }}
+ */
+export function studyRoomGeocodeQuery(slot) {
+  if (slot?.basis === 'complex') {
+    if (complexAddressMissing(slot.complex_address)) return { query: '', blocked: true };
+    return { query: String(slot.complex_address).trim(), blocked: false };
+  }
+  const label = String(slot?.promo_label || '').trim();
+  return { query: label, blocked: !label };
+}
+
+/**
+ * 홈 지도는 항상 대표 슬롯. 찾기만 URL·직접 고른 주소·다른 지역 검색을 그 라벨로 지오코딩한다.
+ * @param {object} [state]
+ * @param {'home'|'search'} [variant]
+ */
+export function resolveStudyRoomMapQuery(state = {}, variant = 'home') {
+  const slot = peekStudyRoomPromo1MapSlot();
+  const source = String(state?.canonicalLocation?.source || '');
+  const active = String(state?.activeRegionLabel || '').trim();
+  const display = String(state?.canonicalLocation?.displayLabel || '').trim();
+  const onFind = variant === 'search';
+  const urlOrAddress = source === 'url' || source === 'address';
+  const searchedElsewhere = state?.searchExecuted === true && active !== '' && active !== slot.promo_label;
+  if (onFind && (urlOrAddress || searchedElsewhere)) {
+    const label = active || display;
+    return {
+      basis: slot.basis,
+      promo_label: slot.promo_label,
+      complex_address: slot.complex_address,
+      query: label,
+      blocked: label === '',
+      picked: true,
+    };
+  }
+  const built = studyRoomGeocodeQuery(slot);
+  return {
+    basis: slot.basis,
+    promo_label: slot.promo_label,
+    complex_address: slot.complex_address,
+    query: built.query,
+    blocked: built.blocked,
+    picked: false,
+  };
+}
+
 /** 홍보1 행정동 id. 개설 region_id 로 대체하지 않는다. */
 export function studyRoomPromo1RegionId() {
   const id = Number(primarySavedRegion(pickOwnStudyRoom())?.region_id);
