@@ -58,7 +58,7 @@ final class SidoRegionEnsure
         );
         $stmt->execute([$regionId]);
         if (!$stmt->fetchColumn()) {
-            throw new InvalidArgumentException('활동지역은 목록에서 구(시·군)까지 선택해 주세요.');
+            throw new InvalidArgumentException('과외지역은 목록에서 구(시·군)까지 선택해 주세요.');
         }
     }
 

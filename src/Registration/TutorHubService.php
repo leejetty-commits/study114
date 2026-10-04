@@ -98,7 +98,7 @@ final class TutorHubService
         };
 
         $need(!empty($tutor['tutor_display_name']), '표시명');
-        $need($tutor['has_primary_region'] && !empty($tutor['primary_region_label']), '대표 활동 시');
+        $need($tutor['has_primary_region'] && !empty($tutor['primary_region_label']), '대표 과외지역');
         $need($tutor['has_primary_subject'] && !empty($tutor['main_subject_note']), '주력과목');
         $need($tutor['has_lesson_places'], '강의장소');
         $need(!empty($tutor['preferred_fee_amount']), '과외비');

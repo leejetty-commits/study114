@@ -67,8 +67,8 @@ function renderStatusBoxShell({ label, title, actionsHtml, regionsHtml, statsRow
         <span class="my-box__badge">${label}</span>
         <div class="my-box__actions my-box__actions--row">${actionsHtml}</div>
       </div>
-      <div class="my-box__row my-box__row--2" aria-label="활동 지역">
-        <span class="my-box__regions-label">활동지역</span>
+      <div class="my-box__row my-box__row--2" aria-label="과외지역">
+        <span class="my-box__regions-label">과외지역</span>
         <div class="my-box__regions-pills">${regionsHtml}</div>
       </div>
       <div class="my-box__row my-box__row--3 my-box__stats-row">
@@ -95,7 +95,7 @@ function renderMyTutorStatusBox() {
       <a href="#/mypage/messages" class="btn btn--secondary btn--sm" data-nav="/mypage/messages">쪽지 후기함</a>
       <a href="#${mypagePath}" class="btn btn--primary btn--sm" data-nav="${mypagePath}">마이페이지</a>`,
     regionsHtml: `${renderTutorRegionPills()}
-      <p class="my-box__guide">활동지역을 수정하려면 '마이페이지-내 등록-기본등록'에서 해 주세요.</p>`,
+      <p class="my-box__guide">과외지역을 수정하려면 '마이페이지-내 등록-기본등록'에서 해 주세요.</p>`,
     statsRow1: [
       statCell('과목', escTutor(box.subject)),
       statCell('상태', escTutor(`${box.inquiry} · ${box.unread}개 미확인`)),
@@ -114,14 +114,14 @@ function renderMyTutorStatusBox() {
  */
 function renderTutorActivityPanel() {
   return `
-    <aside class="my-box my-box--status my-box--activity" aria-label="활동지역 분포">
+    <aside class="my-box my-box--status my-box--activity" aria-label="과외지역 분포">
       <div class="my-box__row my-box__row--1">
-        <strong class="my-box__name">활동지역 분포</strong>
+        <strong class="my-box__name">과외지역 분포</strong>
         <div class="my-box__actions my-box__actions--row">
           ${renderSearchCrossLink('tutor', 'tutor', { inline: true })}
         </div>
       </div>
-      <p class="act-panel__lead">현재 활동지역별 과외쌤 등록과 학생 수요를 한눈에 확인하세요.</p>
+      <p class="act-panel__lead">현재 과외지역별 과외쌤 등록과 학생 수요를 한눈에 확인하세요.</p>
       ${renderTutorActivityBars({ interactive: false })}
     </aside>`;
 }

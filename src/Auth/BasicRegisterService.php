@@ -33,8 +33,10 @@ final class BasicRegisterService
     }
 
     /**
-     * 기본등록 미완료 여부 — 서버 role_type 대응 행 존재로만 판정 (플래그/클라 저장값 금지).
-     * tutor→tutors.user_id / study_room_owner→study_rooms.user_id / guardian_student→students.guardian_user_id
+     * 기본등록 미완료 여부.
+     * tutor / study_room_owner 는 행이 있고 대표지역 1이 있을 때만 완료.
+     * 대표1 = tutor_regions.priority_order=0(지역 값 있음) / study_room_regions.slot=1(region_id 있음).
+     * guardian_student 는 기존 학생 기본정보 판정.
      */
     public function needsBasicRegister(int $userId, string $roleType): bool
     {
@@ -43,21 +45,75 @@ final class BasicRegisterService
         }
         $pdo = Connection::get();
         return match ($roleType) {
-            'tutor' => !$this->existsRow(
-                $pdo,
-                'SELECT 1 FROM tutors WHERE user_id = ? LIMIT 1',
-                [$userId]
-            ),
-            'study_room_owner' => !$this->existsRow(
-                $pdo,
-                $this->columnExists($pdo, 'study_rooms', 'deleted_at')
-                    ? 'SELECT 1 FROM study_rooms WHERE user_id = ? AND deleted_at IS NULL LIMIT 1'
-                    : 'SELECT 1 FROM study_rooms WHERE user_id = ? LIMIT 1',
-                [$userId]
-            ),
+            'tutor' => !$this->tutorAccountHasSlot1($pdo, $userId),
+            'study_room_owner' => !$this->studyRoomAccountHasPromoSlot1($pdo, $userId),
             'guardian_student' => $this->studentNeedsBasicInfo($pdo, $userId),
             default => false,
         };
+    }
+
+    private function tutorAccountHasSlot1(PDO $pdo, int $userId): bool
+    {
+        return $this->existsRow(
+            $pdo,
+            'SELECT 1 FROM tutors t
+             WHERE t.user_id = ?
+               AND EXISTS (
+                 SELECT 1 FROM tutor_regions tr
+                 WHERE tr.tutor_id = t.id
+                   AND tr.priority_order = 0
+                   AND tr.region_id IS NOT NULL
+                   AND tr.region_id <> 0
+               )
+             LIMIT 1',
+            [$userId]
+        );
+    }
+
+    private function studyRoomAccountHasPromoSlot1(PDO $pdo, int $userId): bool
+    {
+        $alive = $this->columnExists($pdo, 'study_rooms', 'deleted_at')
+            ? 'sr.deleted_at IS NULL'
+            : '1 = 1';
+
+        return $this->existsRow(
+            $pdo,
+            'SELECT 1 FROM study_rooms sr
+             WHERE sr.user_id = ? AND ' . $alive . '
+               AND EXISTS (
+                 SELECT 1 FROM study_room_regions srr
+                 WHERE srr.study_room_id = sr.id
+                   AND srr.slot = 1
+                   AND srr.region_id IS NOT NULL
+                   AND srr.region_id <> 0
+               )
+             LIMIT 1',
+            [$userId]
+        );
+    }
+
+    private function tutorRowHasSlot1(PDO $pdo, int $tutorId): bool
+    {
+        return $this->existsRow(
+            $pdo,
+            'SELECT 1 FROM tutor_regions
+             WHERE tutor_id = ? AND priority_order = 0
+               AND region_id IS NOT NULL AND region_id <> 0
+             LIMIT 1',
+            [$tutorId]
+        );
+    }
+
+    private function studyRoomRowHasPromoSlot1(PDO $pdo, int $roomId): bool
+    {
+        return $this->existsRow(
+            $pdo,
+            'SELECT 1 FROM study_room_regions
+             WHERE study_room_id = ? AND slot = 1
+               AND region_id IS NOT NULL AND region_id <> 0
+             LIMIT 1',
+            [$roomId]
+        );
     }
 
     /**
@@ -399,13 +455,53 @@ final class BasicRegisterService
             $this->lockUserRow($pdo, $userId);
             $existStmt->execute([$userId]);
             $existingId = $existStmt->fetchColumn();
-            if ($existingId !== false) {
-                $pdo->commit();
-                return (int) $existingId;
-            }
-
             $hasBasisCol = $this->columnExists($pdo, 'study_rooms', 'region_basis_type');
-            if ($hasBasisCol) {
+            if ($existingId !== false) {
+                $roomId = (int) $existingId;
+                if ($this->studyRoomRowHasPromoSlot1($pdo, $roomId)) {
+                    $pdo->commit();
+                    return $roomId;
+                }
+                if ($hasBasisCol) {
+                    $stmt = $pdo->prepare(
+                        'UPDATE study_rooms SET
+                            study_room_name = ?, main_subject_note = ?, region_id = ?, complex_id = ?,
+                            region_basis_type = ?, address_text = ?
+                         WHERE id = ?'
+                    );
+                    $stmt->execute([
+                        $name,
+                        $mainSubject,
+                        $regionId,
+                        $complexId,
+                        $basis,
+                        $addressText,
+                        $roomId,
+                    ]);
+                } else {
+                    $stmt = $pdo->prepare(
+                        'UPDATE study_rooms SET
+                            study_room_name = ?, main_subject_note = ?, region_id = ?, complex_id = ?,
+                            address_text = ?
+                         WHERE id = ?'
+                    );
+                    $stmt->execute([
+                        $name,
+                        $mainSubject,
+                        $regionId,
+                        $complexId,
+                        $addressText,
+                        $roomId,
+                    ]);
+                }
+                $pdo->prepare('DELETE FROM study_room_regions WHERE study_room_id = ?')->execute([$roomId]);
+                $pdo->prepare('DELETE FROM study_room_subject_targets WHERE study_room_id = ?')->execute([$roomId]);
+                try {
+                    $pdo->prepare('DELETE FROM study_room_primary_audiences WHERE study_room_id = ?')->execute([$roomId]);
+                } catch (PDOException $e) {
+                    /* 대상 테이블이 없으면 아래 저장에서 만든다 */
+                }
+            } elseif ($hasBasisCol) {
                 $stmt = $pdo->prepare(
                     'INSERT INTO study_rooms (
                         user_id, study_room_name, main_subject_note, region_id, complex_id, region_basis_type,
@@ -423,6 +519,7 @@ final class BasicRegisterService
                     'draft',
                     'basic_only',
                 ]);
+                $roomId = (int) $pdo->lastInsertId();
             } else {
                 $stmt = $pdo->prepare(
                     'INSERT INTO study_rooms (
@@ -440,8 +537,8 @@ final class BasicRegisterService
                     'draft',
                     'basic_only',
                 ]);
+                $roomId = (int) $pdo->lastInsertId();
             }
-            $roomId = (int) $pdo->lastInsertId();
 
             $pdo->prepare('UPDATE study_rooms SET lesson_place_type = ?, slogan = ? WHERE id = ?')
                 ->execute([$lessonPlace, $slogan, $roomId]);
@@ -679,6 +776,27 @@ final class BasicRegisterService
                 'SELECT id FROM tutors WHERE user_id = ? ORDER BY id ASC LIMIT 1'
             );
             if ($existingTutorId !== null) {
+                if ($this->tutorRowHasSlot1($pdo, $existingTutorId)) {
+                    $pdo->commit();
+                    return $existingTutorId;
+                }
+                $pdo->prepare(
+                    'UPDATE tutors SET tutor_display_name = ?, main_subject_note = ? WHERE id = ?'
+                )->execute([$displayName, $mainSubject, $existingTutorId]);
+                $pdo->prepare('DELETE FROM tutor_regions WHERE tutor_id = ?')->execute([$existingTutorId]);
+                $ins = $pdo->prepare(
+                    'INSERT INTO tutor_regions (tutor_id, region_id, scope_type, priority_order, is_primary)
+                     VALUES (?, ?, ?, ?, ?)'
+                );
+                foreach ($regionIds as $order => $regionId) {
+                    $ins->execute([$existingTutorId, $regionId, 'city', $order, $order === 0 ? 1 : 0]);
+                }
+                $pdo->prepare('DELETE FROM tutor_subject_targets WHERE tutor_id = ?')->execute([$existingTutorId]);
+                $subjectId = $this->findSubjectMasterId($pdo, $this->firstSubjectName($mainSubject));
+                $pdo->prepare(
+                    'INSERT INTO tutor_subject_targets (tutor_id, subject_name, school_level, subject_master_id, is_primary)
+                     VALUES (?, ?, ?, ?, 1)'
+                )->execute([$existingTutorId, $this->firstSubjectName($mainSubject), 'middle', $subjectId]);
                 $pdo->commit();
                 return $existingTutorId;
             }
@@ -741,8 +859,8 @@ final class BasicRegisterService
                 if ($id <= 0) {
                     throw new InvalidArgumentException(
                         $idx === 0
-                            ? '활동지역 1: 유효한 지역을 선택해 주세요.'
-                            : ('활동지역 ' . ($idx + 1) . ': 유효한 지역을 선택해 주세요.')
+                            ? '과외지역 1: 유효한 지역을 선택해 주세요.'
+                            : ('과외지역 ' . ($idx + 1) . ': 유효한 지역을 선택해 주세요.')
                     );
                 }
                 $ids[] = ['slot' => $idx, 'id' => $id];
@@ -757,7 +875,7 @@ final class BasicRegisterService
         }
 
         if ($ids === [] || (int) $ids[0]['slot'] !== 0) {
-            throw new InvalidArgumentException('활동지역 1을 선택해 주세요.');
+            throw new InvalidArgumentException('과외지역 1을 선택해 주세요.');
         }
 
         $seen = [];
@@ -765,7 +883,7 @@ final class BasicRegisterService
         foreach ($ids as $row) {
             $id = (int) $row['id'];
             if (isset($seen[$id])) {
-                throw new InvalidArgumentException('활동지역이 중복되었습니다. 같은 지역을 여러 칸에 넣을 수 없습니다.');
+                throw new InvalidArgumentException('과외지역이 중복되었습니다. 같은 지역을 여러 칸에 넣을 수 없습니다.');
             }
             $seen[$id] = true;
             SidoRegionEnsure::assertSelectable($pdo, $id);

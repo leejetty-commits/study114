@@ -64,6 +64,7 @@ final class TutorHubRepository
     /** @param array<string, mixed> $row @return array<string, mixed> */
     private function hydrateTutorRow(int $tutorId, array $row): array
     {
+        $slot1RegionId = $this->slot1RegionId($tutorId);
         $primaryRegion = $this->primaryRegionLabel($tutorId);
         $lessonPlaces = $this->lessonPlaces($tutorId);
         $badges = $this->styleBadges($tutorId);
@@ -74,17 +75,7 @@ final class TutorHubRepository
 
         $detailEval = (new TutorDetailCompletionEvaluator())->evaluate($this->pdo, $tutorId);
         $savedRegions = $this->savedRegions($tutorId);
-        $primaryRegionId = '';
-        foreach ($savedRegions as $slot) {
-            if (!empty($slot['is_primary']) && $slot['region_id'] !== '') {
-                $primaryRegionId = $slot['region_id'];
-                break;
-            }
-        }
-        if ($primaryRegionId === '' && $savedRegions !== [] && $savedRegions[0]['region_id'] !== '') {
-            $primaryRegionId = $savedRegions[0]['region_id'];
-        }
-
+        $primaryRegionId = ($primaryRegion !== null && $slot1RegionId !== null) ? (string) $slot1RegionId : '';
         return [
             'id'                       => $tutorId,
             'tutor_display_name'       => (string) ($row['tutor_display_name'] ?? ''),
@@ -189,18 +180,34 @@ final class TutorHubRepository
         return array_slice($slots, 0, 3);
     }
 
-    /** 대표(is_primary) 활동지역 「시도 시군구」. 대표 지역이 없으면 null. */
+    /**
+     * 슬롯 1(priority_order=0)의 공식 시·군·구 라벨.
+     * 지역 행이 없거나 공식 이름을 풀 수 없으면 null.
+     */
     private function primaryRegionLabel(int $tutorId): ?string
     {
+        $regionId = $this->slot1RegionId($tutorId);
+        if ($regionId === null) {
+            return null;
+        }
+        $label = (new OfficialRegionLabel($this->pdo))->sigunguLabel($regionId);
+
+        return ($label !== null && $label !== '') ? $label : null;
+    }
+
+    /** 슬롯 1(priority_order=0) 지역 id. 없으면 null. */
+    private function slot1RegionId(int $tutorId): ?int
+    {
         $stmt = $this->pdo->prepare(
-            'SELECT tr.region_id FROM tutor_regions tr
-             WHERE tr.tutor_id = ? AND tr.is_primary = 1
-             ORDER BY tr.priority_order ASC, tr.id ASC LIMIT 1'
+            'SELECT region_id FROM tutor_regions
+             WHERE tutor_id = ? AND priority_order = 0
+               AND region_id IS NOT NULL AND region_id <> 0
+             LIMIT 1'
         );
         $stmt->execute([$tutorId]);
         $regionId = $stmt->fetchColumn();
 
-        return $regionId !== false ? (new OfficialRegionLabel($this->pdo))->sigunguLabel($regionId) : null;
+        return $regionId !== false ? (int) $regionId : null;
     }
 
     private function primarySubject(int $tutorId): string

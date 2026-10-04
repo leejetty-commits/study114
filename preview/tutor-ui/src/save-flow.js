@@ -1,7 +1,11 @@
 export async function saveAndNavigate(state, step, nextPath) {
-  const { saveStep } = await import('./register-api.js');
+  const { saveStep, saveBasicWithRegions } = await import('./register-api.js');
   const { payloadForStep } = await import('./form-collect.js');
-  const result = await saveStep(step, payloadForStep(step, state), state.tutor_id ?? null);
+  const payload = payloadForStep(step, state);
+  const tutorId = state.tutor_id ?? null;
+  const result = step === 'basic'
+    ? await saveBasicWithRegions(payload, tutorId)
+    : await saveStep(step, payload, tutorId);
   state.tutor_id = result.tutor_id;
   state.profile_status = result.profile_status;
   state.detail_completion_status = result.detail_completion_status;

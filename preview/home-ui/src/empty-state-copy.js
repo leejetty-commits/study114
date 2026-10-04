@@ -208,7 +208,7 @@ export function getSearchZeroResultCopy(tab, mode = 'search') {
     },
     tutor: {
       title: '조건에 맞는 과외쌤이 없습니다',
-      body: '다른 활동 지역 탭을 선택하거나 필터를 넓혀 보세요.',
+      body: '다른 과외지역 탭을 선택하거나 필터를 넓혀 보세요.',
       cta: '조건 초기화',
       ctaAction: 'reset-filters',
     },

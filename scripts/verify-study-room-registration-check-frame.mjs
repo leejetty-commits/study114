@@ -143,7 +143,7 @@ assert(!edit.includes('publishStudyRoom'), 'edit: no publishStudyRoom action');
 assert(store.includes('export function getPublishChecklistItems'), 'store: publish checklist SSOT');
 assert(store.includes('export function getPublishReadiness'), 'store: publish readiness SSOT');
 assert(store.includes("id: 'name', label: '공부방명'"), 'store: publish policy fields kept');
-assert(store.includes("id: 'region', label: '활동 지역'"), 'store: region item kept');
+assert(store.includes("id: 'region', label: '대표 홍보지역'"), 'store: region item kept');
 assert(!store.includes("id: 'contact', label: '문의·쪽지 방식'"), 'store: contact publish item removed');
 
 assert(tutorRender.includes('renderTutorRegistrationCheck'), 'tutor render untouched marker');

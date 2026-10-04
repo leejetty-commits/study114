@@ -296,10 +296,10 @@ function renderTutorBasic() {
           </div>
         </div>
         <div class="register-basic-col">
-          <span class="form-label form-label--required">활동지역 (시 기준 · 최대 3곳)</span>
+          <span class="form-label form-label--required">과외지역 (시 기준 · 최대 3곳)</span>
           ${dbField('tutor_regions.scope_type=city')}
           <p class="form-note mb-2">1번은 필수, 2·3번은 선택입니다. 구가 있는 곳은 구까지 고릅니다.</p>
-          ${slots.map((slot, i) => renderTutorRegionSlot(slot, i, units, { showPrimary: false, labelPrefix: '활동지역' })).join('')}
+          ${slots.map((slot, i) => renderTutorRegionSlot(slot, i, units, { showPrimary: false, labelPrefix: '과외지역' })).join('')}
         </div>
       </div>
       <div class="actions-stack">
@@ -388,6 +388,50 @@ function packMainSubject(data) {
   return data;
 }
 
+async function loadIncompleteBasicDraft(role) {
+  const url = role === 'tutor' ? '/api/tutor/register.php' : '/api/study-room/register.php';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ action: 'load' }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) return null;
+  if (role === 'tutor') {
+    const tutor = data.tutor;
+    if (!tutor) return null;
+    return {
+      tutor_display_name: tutor.tutor_display_name || '',
+      main_subject_note: tutor.main_subject_note || '',
+      main_subjects: tutor.main_subject_note ? [tutor.main_subject_note] : [],
+      saved_regions: Array.isArray(tutor.saved_regions) ? tutor.saved_regions : [],
+      gender: tutor.gender || '',
+    };
+  }
+  const room = data.room;
+  if (!room) return null;
+  return {
+    lesson_place_type: room.lesson_place_type || '',
+    study_room_name: room.study_room_name || '',
+    primary_school_levels: room.primary_school_levels || [],
+    main_subject_note: room.main_subject_note || '',
+    gender: room.gender || '',
+    slogan: room.slogan || '',
+    home_address: room.home_address || '',
+    home_address_zip: room.home_address_zip || '',
+    home_address_line2: room.home_address_line2 || '',
+    address_text: room.address_text || '',
+    address_zip: room.address_zip || '',
+    address_line2: room.address_line2 || '',
+    region_id: room.region_id || '',
+    complex_id: room.complex_id || '',
+    region_basis_type: room.region_basis_type || 'dong',
+    complex_name: room.complex_name || '',
+    saved_regions: Array.isArray(room.saved_regions) ? room.saved_regions : [],
+  };
+}
+
 export function bindSignupBasicEvents(root) {
   bindGlobalEvents(root);
 
@@ -400,7 +444,7 @@ export function bindSignupBasicEvents(root) {
       : signupState.role || 'student';
 
   fetchMeApi()
-    .then((me) => {
+    .then(async (me) => {
       if (!me.authenticated) {
         navigate('/login');
         return;
@@ -409,7 +453,7 @@ export function bindSignupBasicEvents(root) {
         window.location.href = resolveAfterAuthUrl(me);
         return;
       }
-      // 완료 행 있으면 기본등록 재진입 금지
+      // 완료(행+대표1)면 재진입 금지. 불완전 행은 needs_basic_register 가 참이라 들어온다.
       if (!me.needs_basic_register) {
         window.location.href = resolveAfterAuthUrl(me);
         return;
@@ -433,6 +477,23 @@ export function bindSignupBasicEvents(root) {
         }
       }
       role = serverRole;
+      if (!signupState.basicDraftHydrated && (serverRole === 'tutor' || serverRole === 'study_room')) {
+        signupState.basicDraftHydrated = true;
+        const draft = await loadIncompleteBasicDraft(serverRole).catch(() => null);
+        if (draft) {
+          if (!signupState.basicRegister) signupState.basicRegister = {};
+          signupState.basicRegister[serverRole] = {
+            ...(signupState.basicRegister[serverRole] || {}),
+            ...draft,
+          };
+          const app = document.getElementById('app');
+          if (app) {
+            app.innerHTML = renderSignupBasic();
+            bindSignupBasicEvents(app);
+          }
+          return;
+        }
+      }
       roleReady = true;
     })
     .catch(() => navigate('/login'));
@@ -672,7 +733,7 @@ export function bindSignupBasicEvents(root) {
       data.region_id = primary.region_id;
       const label = activityLabelFromRegionId(primary.region_id, units);
       if (!label) {
-        alert('활동지역 1을 다시 선택해 주세요.');
+        alert('과외지역 1을 다시 선택해 주세요.');
         return;
       }
       data.region_label = label;

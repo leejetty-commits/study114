@@ -46,7 +46,7 @@ export const SEARCH_TABS = {
     defaultRegionHint: '내 기본 시 자동 적용',
     mapEnabled: false,
     fields: [
-      { key: 'tutor_region_id', label: '활동 지역', tier: 'basic', basicRow: 1, db: 'tutor_regions.region_id', input: 'city' },
+      { key: 'tutor_region_id', label: '과외지역', tier: 'basic', basicRow: 1, db: 'tutor_regions.region_id', input: 'city' },
       { key: 'subject_master_id', label: '주력과목', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets · is_primary', input: 'subject' },
       { key: 'school_level', label: '지도 학교급', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets.school_level', input: 'select', optionsKey: 'school_level' },
       { key: 'grade_band', label: '지도 학년', tier: 'basic', basicRow: 1, db: 'tutor_subject_targets.grade_band', input: 'grade', dependsOn: 'school_level' },

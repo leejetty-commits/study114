@@ -39,8 +39,8 @@ assert(slotsUi.includes('showPrimary'), 'primary UI optional');
 
 const svc = readFileSync(resolve(root, 'src/Auth/BasicRegisterService.php'), 'utf8');
 assert(svc.includes('normalizeTutorSignupRegions'), 'server normalizes tutor signup regions');
-assert(svc.includes('활동지역 1을 선택해 주세요'), 'server requires activity region 1');
-assert(svc.includes('활동지역이 중복되었습니다'), 'server rejects duplicate regions');
+assert(svc.includes('과외지역 1을 선택해 주세요'), 'server requires activity region 1');
+assert(svc.includes('과외지역이 중복되었습니다'), 'server rejects duplicate regions');
 assert(svc.includes('$order === 0 ? 1 : 0'), 'server marks first saved region primary');
 
 const endpoint = readFileSync(resolve(root, 'public/api/auth/basic-register.php'), 'utf8');

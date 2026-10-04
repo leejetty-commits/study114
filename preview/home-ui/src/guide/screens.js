@@ -351,7 +351,7 @@ function renderGuideRegister() {
     </ul>
     <ul class="checklist" id="panel-tutor" role="tabpanel" aria-labelledby="tab-tutor" hidden>
       <li>표시명</li>
-      <li>활동 시·군 1개</li>
+      <li>과외지역 1개</li>
       <li>대상 학생군</li>
       <li>과목</li>
       <li>수업 방식</li>

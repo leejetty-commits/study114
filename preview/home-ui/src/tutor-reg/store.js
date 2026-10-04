@@ -247,7 +247,7 @@ export function getPublishReadiness(tutor) {
   };
 
   need(!!tutor.tutor_display_name?.trim(), '표시명');
-  need(tutor.has_primary_region && !!tutor.primary_region_label, '대표 활동 시');
+  need(tutor.has_primary_region && !!tutor.primary_region_label, '대표 과외지역');
   need(tutor.has_primary_subject && !!tutor.main_subject_note, '주력과목');
   need(tutor.has_lesson_places, '강의장소');
   need(!!tutor.preferred_fee_amount, '과외비');

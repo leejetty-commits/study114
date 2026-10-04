@@ -31,7 +31,7 @@ export const PROMO_LANDINGS = [
     audience: '과외쌤',
     status: 'live',
     railHint: '과외쌤 우측 소개',
-    shareText: '활동 지역과 주력 과목으로, 프로필을 분명하게 보여 주세요 — 우동공과',
+    shareText: '과외지역과 주력 과목으로, 프로필을 분명하게 보여 주세요 — 우동공과',
   },
   {
     id: 'parent',

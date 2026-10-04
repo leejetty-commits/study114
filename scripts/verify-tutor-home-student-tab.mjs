@@ -109,7 +109,7 @@ ok(
 );
 ok(
   '(b) search-find-surface 안에 과외쌤 학생 탭 문구 하드코딩 없음',
-  !/활동지역을 등록하면/.test(surfaceSrc) && !/불러오지 못했어요/.test(surfaceSrc),
+  !/과외지역을 등록하면/.test(surfaceSrc) && !/불러오지 못했어요/.test(surfaceSrc),
 );
 
 /* (c) 3탭 전환 */
@@ -322,7 +322,7 @@ server.tutors = [tutorRow([])];
 server.searchBodies = [];
 {
   const { html, text } = await renderStudentTab();
-  ok('(b) 활동지역 없음 → 「활동지역을 등록하면 학생이 보여요」', text.includes(COPY.noRegion), text.slice(0, 160));
+  ok('(b) 활동지역 없음 → 「과외지역을 등록하면 학생이 보여요」', text.includes(COPY.noRegion), text.slice(0, 160));
   ok('(b) 활동지역 없음 → data-tutor-student-feed="no-region"', html.includes('data-tutor-student-feed="no-region"'));
   ok('(b) 활동지역 없음 → 조회하지 않는다', lastStudentBody() === null, JSON.stringify(server.searchBodies));
   ok('(b) 활동지역 없음 → 0건 감성 카피를 쓰지 않는다', !text.includes(COPY.emptyBody));

@@ -59,7 +59,7 @@ const KEY = 'study114-preview-study-rooms-v1';
 /** 공개는 입력 완성도와 독립 — Pick/Prime 자격 안내용 품질 항목만 유지 */
 export const PUBLISH_CHECKLIST_DEFS = [
   { id: 'name', label: '공부방명', section: 'basic' },
-  { id: 'region', label: '활동 지역', section: 'basic' },
+  { id: 'region', label: '대표 홍보지역', section: 'basic' },
   { id: 'subject', label: '대상·과목', section: 'basic' },
   { id: 'place', label: '수업 방식', section: 'basic' },
   { id: 'detail', label: '상세정보 완료', section: 'detail' },

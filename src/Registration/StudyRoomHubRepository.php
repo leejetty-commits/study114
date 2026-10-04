@@ -137,8 +137,8 @@ final class StudyRoomHubRepository
     }
 
     /**
-     * 공부방 Prime/Pick 적용 시 후보 — region_id / complex_id 선택값.
-     * study_room_regions 가 비어 있고 study_rooms.region_id|complex_id 만 있으면 1슬롯으로 합성한다.
+     * 홍보지역 슬롯. study_room_regions 행만 반환한다.
+     * 사업장 region_id 로 홍보1을 만들지 않고, 이름을 못 찾으면 라벨은 빈 값이다.
      *
      * @param array<string, mixed> $roomRow
      * @return list<array{region_id: string, complex_id: string, region_basis_type: string, region_label: string, is_primary: bool}>
@@ -173,9 +173,6 @@ final class StudyRoomHubRepository
             $label = $basis === 'complex'
                 ? (string) ($row['complex_name'] ?? '')
                 : $dong;
-            if ($label === '') {
-                $label = $basis === 'complex' ? ('단지 #' . $complexId) : ('행정동 #' . $regionId);
-            }
             $out[] = [
                 'region_id' => $regionId,
                 'complex_id' => $complexId,
@@ -192,76 +189,7 @@ final class StudyRoomHubRepository
             ];
         }
 
-        if ($out !== []) {
-            return $out;
-        }
-
-        $topRegionId = !empty($roomRow['region_id']) ? (string) (int) $roomRow['region_id'] : '';
-        $topComplexId = !empty($roomRow['complex_id']) ? (string) (int) $roomRow['complex_id'] : '';
-        if ($topRegionId === '' && $topComplexId === '') {
-            return [];
-        }
-        $basis = $topComplexId !== ''
-            && (string) ($roomRow['region_basis_type'] ?? '') === 'complex'
-            ? 'complex'
-            : ($topComplexId !== '' ? 'complex' : 'dong');
-        $this->seedPrimaryRegionIfMissing($roomId, $roomRow, $basis, $topRegionId, $topComplexId);
-        $label = $this->regionLabel($roomId, $roomRow);
-        if ($label === '') {
-            $label = $basis === 'complex' ? ('단지 #' . $topComplexId) : ('행정동 #' . $topRegionId);
-        }
-
-        $promo = $this->promoLabelFromRoom($roomId, $basis);
-
-        return [[
-            'region_id' => $topRegionId,
-            'complex_id' => $basis === 'complex' ? $topComplexId : '',
-            'region_basis_type' => $basis,
-            'region_label' => $label,
-            'promo_label' => $promo !== '' ? $promo : $label,
-            'is_primary' => true,
-        ]];
-    }
-
-    /**
-     * Hub 조회 시 study_rooms 대표지역만 있고 study_room_regions 가 비면 1슬롯 INSERT.
-     * createOrder assertOwnedByStudyRoom 과 UI 후보를 DB 기준으로 맞춘다.
-     *
-     * @param array<string, mixed> $roomRow
-     */
-    private function seedPrimaryRegionIfMissing(
-        int $roomId,
-        array $roomRow,
-        string $basis,
-        string $topRegionId,
-        string $topComplexId,
-    ): void {
-        $countStmt = $this->pdo->prepare('SELECT COUNT(*) FROM study_room_regions WHERE study_room_id = ?');
-        $countStmt->execute([$roomId]);
-        if ((int) $countStmt->fetchColumn() > 0) {
-            return;
-        }
-        $regionId = $topRegionId !== '' ? (int) $topRegionId : null;
-        $complexId = ($basis === 'complex' && $topComplexId !== '') ? (int) $topComplexId : null;
-        if (($basis === 'dong' && ($regionId === null || $regionId <= 0))
-            || ($basis === 'complex' && ($complexId === null || $complexId <= 0))) {
-            return;
-        }
-        try {
-            $this->pdo->prepare(
-                'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
-                 VALUES (?, 1, ?, ?, ?, 1)'
-            )->execute([$roomId, $basis === 'dong' ? $regionId : $regionId, $complexId, $basis]);
-        } catch (\PDOException $e) {
-            try {
-                $this->pdo->prepare(
-                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
-                     VALUES (?, 1, ?, ?, 1)'
-                )->execute([$roomId, $regionId, $complexId]);
-            } catch (\PDOException $e2) {
-                /* race / schema */
-            }
-        }
+        return $out;
     }
 
     private function promoLabel(string $sido, string $sigungu, string $dong, string $complex, string $basis): string
@@ -280,30 +208,6 @@ final class StudyRoomHubRepository
         }
 
         return $base;
-    }
-
-    private function promoLabelFromRoom(int $roomId, string $basis): string
-    {
-        $stmt = $this->pdo->prepare(
-            'SELECT r.sido_name, r.sigungu_name, r.dong_name, c.name AS complex_name
-             FROM study_rooms sr
-             LEFT JOIN regions r ON sr.region_id = r.id
-             LEFT JOIN complexes c ON sr.complex_id = c.id
-             WHERE sr.id = ? LIMIT 1'
-        );
-        $stmt->execute([$roomId]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!is_array($row)) {
-            return '';
-        }
-
-        return $this->promoLabel(
-            (string) ($row['sido_name'] ?? ''),
-            (string) ($row['sigungu_name'] ?? ''),
-            (string) ($row['dong_name'] ?? ''),
-            (string) ($row['complex_name'] ?? ''),
-            $basis,
-        );
     }
 
     /** @param array<string, mixed> $row */

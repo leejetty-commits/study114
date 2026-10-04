@@ -81,7 +81,7 @@ export function getThreeGauges(tutor) {
   const completionItems = [
     { ok: !!tutor.tutor_display_name, label: '표시명' },
     { ok: tutor.has_primary_subject, label: '주력과목' },
-    { ok: tutor.has_primary_region, label: '활동 시' },
+    { ok: tutor.has_primary_region, label: '과외지역' },
     { ok: tutor.has_lesson_places, label: '강의장소' },
     { ok: !!tutor.preferred_fee_amount, label: '과외비' },
     { ok: !!(tutor.intro_short?.trim() || tutor.intro_long?.trim()), label: '소개문' },
@@ -99,7 +99,7 @@ export function getThreeGauges(tutor) {
   const accessItems = [
     { ok: tutor.profile_status !== 'hidden', label: '목록 노출(숨김 아님)' },
     { ok: tutor.has_primary_subject, label: '주력과목 1순위' },
-    { ok: tutor.has_primary_region, label: '대표 활동 시' },
+    { ok: tutor.has_primary_region, label: '대표 과외지역' },
     { ok: tutor.compare_eligible, label: '비교검색 필수값' },
     { ok: paid, label: '유료·메모 권한' },
     { ok: tutor.detail_completion_status === 'expanded_complete', label: '상세등록 완료' },
@@ -168,7 +168,7 @@ export function getUnlockCards(tutor) {
       '학생 목록 노출',
       [
         { label: '숨김 아님', ok: visible },
-        { label: '대표 활동 시', ok: tutor.has_primary_region },
+        { label: '대표 과외지역', ok: tutor.has_primary_region },
         { label: '필수값', ok: matching.ok },
       ],
       { label: '학생 목록 보기', external: '#/mypage/student-review' },
@@ -226,7 +226,7 @@ export function getMatchingVisibility(tutor) {
   const hasPrimary = tutor.has_primary_region && !!tutor.primary_region_label;
 
   const conditions = [
-    tutor.primary_region_label || '대표 활동 시 미설정',
+    tutor.primary_region_label || '대표 과외지역 미설정',
     tutor.main_subject_note || '주력과목 미설정',
     tutor.grade_band || '대상 학생군',
     tutor.has_lesson_places ? '강의장소 설정됨' : '강의장소 미설정',
@@ -238,7 +238,7 @@ export function getMatchingVisibility(tutor) {
     status = `${tutor.primary_region_label} · ${tutor.main_subject_note} · ${tutor.grade_band || '학생'} 학생 목록 노출 가능`;
     limited = false;
   } else if (!hasPrimary) {
-    status = '대표 활동 시 미설정 — 학생 목록 기본 노출 제한';
+    status = '대표 과외지역 미설정 — 학생 목록 기본 노출 제한';
   } else if (!visible) {
     status = '숨김 — 학생 목록 미노출';
   }

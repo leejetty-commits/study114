@@ -18,6 +18,7 @@ import {
   renderTutorRegionSlot,
   bindTutorRegionSlotEvents,
   collectTutorRegionSlots,
+  validateTutorActivityRegions,
 } from '../../../shared/tutor-region-slots.js';
 
 function radios(name, options, selected) {
@@ -120,14 +121,13 @@ export function bindBasicEvents(root) {
       }
 
       registerState.saved_regions = collectTutorRegionSlots(root);
-      const filled = registerState.saved_regions.filter((s) => s.region_id);
-      if (!filled.length) {
-        alert('과외지역을 1곳 이상 선택해 주세요. (도는 시까지 선택)');
+      const checked = validateTutorActivityRegions(registerState.saved_regions);
+      if (!checked.ok) {
+        alert(checked.message);
         return;
       }
 
       await saveAndNavigate(registerState, 'basic', null);
-      await saveAndNavigate(registerState, 'regions', null);
       registerState.basicComplete = true;
 
       if (isRegisterEditMode()) {

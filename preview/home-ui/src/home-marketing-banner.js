@@ -80,7 +80,7 @@ export const HOME_BANNER_COPY = {
     eyebrow: '우동공과 · 우리동네 과외쌤',
     headlineLines: ['우리동네 과외쌤,', '수업 방식과 강점까지 비교해 보세요'],
     lines: [
-      '활동 지역·과목·스타일을 모아 보고 찜·비교로 후보를 좁혀 보세요',
+      '과외지역·과목·스타일을 모아 보고 찜·비교로 후보를 좁혀 보세요',
       '궁금한 점은 공식 쪽지로 이어갈 수 있어요',
     ],
     image: '/assets/banners/tutor.webp',
@@ -218,7 +218,7 @@ const HOME_PROMO_TRIO = [
     tone: 'tutor',
     eyebrow: '과외쌤 카달로그',
     title: '나의 과외쌤은 어디에?',
-    sub: '활동 지역·주력 과목으로 프로필을 분명하게',
+    sub: '과외지역·주력 과목으로 프로필을 분명하게',
     path: '/promo/tutor',
   },
   {

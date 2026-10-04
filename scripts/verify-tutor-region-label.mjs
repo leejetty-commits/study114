@@ -187,6 +187,15 @@ function resolver(array $regions, array $slots): callable
             return ['rows' => ((int) $p[0] === TUTOR_ID && (int) $p[1] === USER_ID) ? [tutorRow()] : []];
         }
         if (str_contains($sql, 'SELECT * FROM tutors WHERE id = ? LIMIT 1')) { return ['rows' => [tutorRow()]]; }
+        if (str_contains($sql, 'priority_order = 0')) {
+            $slot1 = false;
+            foreach ($ordered as $s) {
+                if ((int) $s['priority_order'] === 0 && (int) $s['region_id'] > 0) { $slot1 = (int) $s['region_id']; break; }
+            }
+            if ((int) ($p[0] ?? 0) !== TUTOR_ID) { return ['column' => false]; }
+            if (str_contains($sql, 'SELECT 1 FROM tutor_regions')) { return ['column' => $slot1 !== false ? 1 : false]; }
+            return ['column' => $slot1];
+        }
         if (str_contains($sql, 'SELECT tr.region_id FROM tutor_regions tr WHERE tr.tutor_id = ? AND tr.is_primary = 1')) {
             return ['column' => (int) $p[0] === TUTOR_ID ? $primaryId : false];
         }
@@ -256,13 +265,13 @@ ok('PHP 실행', php.status === 0 && !!line, `${php.error?.message || ''} ${php.
 /** @type {Record<string, any>} */
 const R = line ? JSON.parse(line.slice(5)) : {};
 
-function expectLabel(key, want, title) {
+function expectLabel(key, want, title, ticketWant = want) {
   const r = R[key] || {};
   ok(`${title} · 오류 없음`, !r.error, r.error || '');
   ok(`${title} · primary_region_label = ${JSON.stringify(want)}`, r.primary_region_label === want, JSON.stringify(r.primary_region_label));
   ok(`${title} · location_label = ${JSON.stringify(want)}`, r.location_label === want, JSON.stringify(r.location_label));
   ok(`${title} · has_primary_region = ${want !== null}`, r.has_primary_region === (want !== null), JSON.stringify(r.has_primary_region));
-  ok(`${title} · 이용권 primaryRegionLabel('tutor') = ${JSON.stringify(want)}`, r.ticket === want, JSON.stringify(r.ticket));
+  ok(`${title} · 이용권 primaryRegionLabel('tutor') = ${JSON.stringify(ticketWant)}`, r.ticket === ticketWant, JSON.stringify(r.ticket));
   ok(`${title} · 옛 sido_name 단독 쿼리 미실행`, r.legacy_sql === false);
   if (want !== null) {
     ok(`${title} · 라벨에 숫자(id) 없음`, !/\d/.test(String(r.primary_region_label)), String(r.primary_region_label));
@@ -275,15 +284,23 @@ expectLabel('sejong', '세종특별자치시', 'C3 세종(반복 제거)');
 ok('C3 세종 · 「세종특별자치시 세종특별자치시」 아님', R.sejong?.primary_region_label !== '세종특별자치시 세종특별자치시');
 expectLabel('yeongtong', '경기도 수원시 영통구', 'C4 구가 있는 시(수원시 영통구)');
 expectLabel('none', null, 'C5 활동지역 없음');
-expectLabel('no_primary', null, 'C5b 활동지역은 있으나 대표(is_primary) 없음');
+{
+  const r = R.no_primary || {};
+  ok('C5b 슬롯1만 있고 is_primary 아님 · 오류 없음', !r.error, r.error || '');
+  ok('C5b 슬롯1만 있고 is_primary 아님 · primary_region_label = "경기도 양주시"', r.primary_region_label === '경기도 양주시', JSON.stringify(r.primary_region_label));
+  ok('C5b 슬롯1만 있고 is_primary 아님 · location_label = "경기도 양주시"', r.location_label === '경기도 양주시', JSON.stringify(r.location_label));
+  ok('C5b 슬롯1만 있고 is_primary 아님 · has_primary_region = true', r.has_primary_region === true, JSON.stringify(r.has_primary_region));
+  ok('C5b 슬롯1만 있고 is_primary 아님 · 이용권은 is_primary 행이 없어 null', r.ticket === null, JSON.stringify(r.ticket));
+  ok('C5b 슬롯1만 있고 is_primary 아님 · 옛 sido_name 단독 쿼리 미실행', r.legacy_sql === false);
+}
 expectLabel('missing_row', null, 'C5c 대표 region_id 행이 regions 에 없음');
 ok('C5c · 라벨에 region_id 777777 이 새지 않음', !String(R.missing_row?.primary_region_label ?? '').includes('777777') && !String(R.missing_row?.ticket ?? '').includes('777777'));
 expectLabel('dong_okjeong', '경기도 양주시', 'C6 동 행(경기 양주시 옥정동) → 상위 시군구');
 ok('C6 · 동 이름(옥정동) 미포함 · 약칭(경기) 펴짐', !String(R.dong_okjeong?.primary_region_label).includes('옥정동') && String(R.dong_okjeong?.primary_region_label).startsWith('경기도 '));
 expectLabel('dong_maetan', '경기도 수원시 영통구', 'C6b 동 행(수원시 영통구 매탄동) → 상위 구');
 expectLabel('dong_city_rep', '경기도 양주시', 'C6c 시 대표 동 행 → 상위 시');
-expectLabel('second_slot_primary', '경기도 수원시 영통구', 'C7 대표가 2번 칸이면 1번 칸이 아니라 대표 칸 라벨');
-ok('C7 · primary_region_id = 대표 칸 id', R.second_slot_primary?.primary_region_id === String(YEONGTONG.id), JSON.stringify(R.second_slot_primary?.primary_region_id));
+expectLabel('second_slot_primary', '경기도 양주시', 'C7 대표는 슬롯1', '경기도 수원시 영통구');
+ok('C7 · primary_region_id = 슬롯1 id', R.second_slot_primary?.primary_region_id === String(YANGJU.id), JSON.stringify(R.second_slot_primary?.primary_region_id));
 ok("Z1 이용권 providerId 0 (tutor) = null", R._ticket_zero === null, JSON.stringify(R._ticket_zero));
 ok('Z2 이용권 공부방 분기 = 홍보1 라벨 그대로', R._ticket_room === '대치동 · 은마', JSON.stringify(R._ticket_room));
 
@@ -304,8 +321,46 @@ const clientFiles = [
   'preview/home-ui/src/tutor-reg/format.js',
   'preview/home-ui/src/tutor-reg/inline-save.js',
 ];
-const diff = spawnSync('git', ['diff', '--name-only', 'HEAD', '--', ...clientFiles], { cwd: ROOT, encoding: 'utf8' });
-ok('클라이언트 라벨 코드 무변경(겉만 맞추기 없음)', diff.status === 0 && String(diff.stdout).trim() === '', String(diff.stdout).trim());
+/** 용어 정정만 같은 줄로 본다. 「대표 활동 시」를 먼저 바꿔 「활동 시」 치환이 앞부분을 건드리지 않게 한다. */
+function normalizeRegionTerm(line) {
+  return line
+    .replace(/대표 활동 시/g, '대표 과외지역')
+    .replace(/활동지역/g, '과외지역')
+    .replace(/활동 지역/g, '과외지역')
+    .replace(/활동 시/g, '과외지역');
+}
+function termOnlyClientDiff(stdout) {
+  const removed = [];
+  const added = [];
+  for (const raw of String(stdout).split('\n')) {
+    const line = raw.endsWith('\r') ? raw.slice(0, -1) : raw;
+    if (
+      line.startsWith('diff ')
+      || line.startsWith('index ')
+      || line.startsWith('--- ')
+      || line.startsWith('+++ ')
+      || line.startsWith('@@')
+    ) {
+      continue;
+    }
+    if (line.startsWith('-')) removed.push(normalizeRegionTerm(line.slice(1)));
+    else if (line.startsWith('+')) added.push(normalizeRegionTerm(line.slice(1)));
+  }
+  if (removed.length !== added.length) {
+    return { ok: false, detail: `변경 줄 수 ${removed.length}−/${added.length}+` };
+  }
+  for (let i = 0; i < removed.length; i += 1) {
+    if (removed[i] !== added[i]) {
+      return { ok: false, detail: `용어 정정 외 변경: ${added[i].trim().slice(0, 160)}` };
+    }
+  }
+  return { ok: true, detail: '' };
+}
+const diff = spawnSync('git', ['diff', '-U0', 'HEAD', '--', ...clientFiles], { cwd: ROOT, encoding: 'utf8' });
+const termDiff = diff.status === 0
+  ? termOnlyClientDiff(diff.stdout)
+  : { ok: false, detail: `git diff 실패 ${diff.status}` };
+ok('클라이언트 라벨은 용어 정정만 허용(로직·값 변경 금지)', termDiff.ok, termDiff.detail);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

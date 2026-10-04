@@ -13,6 +13,11 @@ import {
   submissionDocVisibilityLabel,
   formatSubmissionDocSummary,
 } from './preview-data.js';
+import {
+  accountRegionPresentation,
+  ensureAccountRegionLabel,
+  paintAccountRegionLabel,
+} from './account-region-label.js';
 import { getRecentViews } from './recent-store.js';
 import { getStudentReviewItems, removeStudentReview } from '../student-review-store.js';
 import { getHandoffFromQuery } from '../handoff-link.js';
@@ -97,18 +102,25 @@ function roleLabel(role) {
   return map[role] || role;
 }
 
-/** @param {string} path */
-export function renderMypageScreen(path) {
+/** @returns {'parent'|'study_room'|'tutor'|''} */
+function sessionMypageRole() {
   const sessionRole = navRoleFromAuthUser(getAuthUser());
   if (sessionRole !== 'study_room' && sessionRole !== 'tutor' && sessionRole !== 'parent' && !isStudyRoomAuth()) {
+    return '';
+  }
+  return sessionRole === 'study_room' || isStudyRoomAuth() ? 'study_room' : sessionRole;
+}
+
+/** @param {string} path */
+export function renderMypageScreen(path) {
+  const r = sessionMypageRole();
+  if (!r) {
     const home = roleHomeHashPath(getAuthUser());
     queueMicrotask(() => {
       if ((window.location.hash.slice(1) || '').startsWith('/mypage')) window.location.replace(`#${home}`);
     });
     return '';
   }
-  /** @type {'parent'|'study_room'|'tutor'} */
-  const r = sessionRole === 'study_room' || isStudyRoomAuth() ? 'study_room' : sessionRole;
   const profile = getPreviewProfile(r);
 
   if (path === '/mypage/home') {
@@ -865,6 +877,7 @@ function renderSubmissionDocs(role) {
 }
 
 function renderAccount(role, profile) {
+  const regionView = accountRegionPresentation(role);
   const authRole = profile.authRole === 'admin' ? '마스터 관리자' : roleLabel(role);
   const socialLabel =
     Array.isArray(profile.oauthProviderLabels) && profile.oauthProviderLabels.length
@@ -951,7 +964,7 @@ function renderAccount(role, profile) {
             </div>
             <div class="account-meta__item">
               <dt>대표 지역</dt>
-              <dd>${esc(profile.regionLabel)}</dd>
+              <dd data-account-region-label${regionView.pending ? ' data-pending="1"' : ''}>${esc(regionView.pending ? '' : regionView.text)}</dd>
             </div>
             <div class="account-meta__item">
               <dt>역할</dt>
@@ -1368,6 +1381,14 @@ let contactHistoryHydrateAttempted = false;
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
   const path = getMypagePath();
+  if (path === '/mypage/account') {
+    const role = sessionMypageRole();
+    if (role) {
+      ensureAccountRegionLabel(role)
+        .then(() => paintAccountRegionLabel(root, role))
+        .catch(() => paintAccountRegionLabel(root, role));
+    }
+  }
   if (path === CONTACT_HISTORY_PATH && !contactHistoryHydrateAttempted && isSupportApiMode()) {
     contactHistoryHydrateAttempted = true;
     const email = getAuthUser()?.email || '';

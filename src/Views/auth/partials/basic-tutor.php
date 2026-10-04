@@ -20,8 +20,8 @@ $oldRegion = (string) study114_old($old, 'region_id', '');
 ?>
 <form method="post" action="/auth/signup/basic" class="basic-register">
   <input type="hidden" name="role_ui" value="tutor">
-  <p class="auth-section-title">기본등록 · 활동 시 seed (10-6)</p>
-  <p class="form-note">표시명 · 활동 시 1 · 주력과목 1. 행정동/단지 선택 없음.</p>
+  <p class="auth-section-title">기본등록 · 과외지역 seed (10-6)</p>
+  <p class="form-note">표시명 · 과외지역 1 · 주력과목 1. 행정동/단지 선택 없음.</p>
 
   <div class="form-group">
     <label class="form-label form-label--required" for="tutor_display_name">표시명</label>
@@ -29,7 +29,7 @@ $oldRegion = (string) study114_old($old, 'region_id', '');
   </div>
 
   <div class="form-group">
-    <label class="form-label form-label--required" for="region_id">활동 시 1번</label>
+    <label class="form-label form-label--required" for="region_id">과외지역 1번</label>
     <select class="form-input" id="region_id" name="region_id" required>
       <option value="">선택</option>
       <?php foreach ($cities as $city): ?>

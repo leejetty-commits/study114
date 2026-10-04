@@ -55,7 +55,7 @@ final class TutorPositionAxis
         $cityId = $this->positiveIntOrNull($input['city_id'] ?? null);
         if ($cityId === null) {
             throw new InvalidArgumentException(
-                '활동지역 시 1개를 선택해 주세요. (city_id)',
+                '과외지역 1개를 선택해 주세요. (city_id)',
             );
         }
         $this->assertOwnedCity($tutorId, $cityId);
@@ -128,7 +128,7 @@ final class TutorPositionAxis
         $stmt->execute([$tutorId, $cityId]);
         if (!$stmt->fetchColumn()) {
             throw new InvalidArgumentException(
-                '선택한 시는 이 과외쌤의 활동지역 1·2·3에 없습니다.',
+                '선택한 시는 이 과외쌤의 과외지역 1·2·3에 없습니다.',
             );
         }
     }
@@ -175,7 +175,7 @@ final class TutorPositionAxis
         $stmt->execute([$cityId]);
         $val = $stmt->fetchColumn();
 
-        return $val !== false ? (string) $val : ('시 #' . $cityId);
+        return $val !== false && (string) $val !== '' ? (string) $val : '';
     }
 
     private function positiveIntOrNull(mixed $raw): ?int

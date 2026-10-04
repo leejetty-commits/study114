@@ -1030,7 +1030,7 @@ export function renderPlansPositions() {
     productName: selectedProduct?.name || productLabel(selectedCode),
     regionValue:
       selectedRegionScope?.label ||
-      (role === 'tutor' ? (applyReady ? '시 미선택' : '활동 시·주력과목 필요') : applyReady ? '—' : '미선택'),
+      (role === 'tutor' ? (applyReady ? '시 미선택' : '과외지역·주력과목 필요') : applyReady ? '—' : '미선택'),
     periodLabel,
     periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 완료 시점부터 (서버 확정)',
     listPriceText:

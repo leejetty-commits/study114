@@ -34,6 +34,11 @@ export async function saveStep(step, payload, tutorId = null) {
   return postJson({ action: 'save', step, tutor_id: tutorId, payload });
 }
 
+/** 기본정보와 과외지역 1을 한 요청으로 저장한다. tutor_id 가 없으면 지역 1 없이 행을 만들지 않는다. */
+export async function saveBasicWithRegions(payload, tutorId = null) {
+  return saveStep('basic', payload, tutorId);
+}
+
 export async function devLogin(email = 'tutor-owner1@dev.local', password = 'password') {
   const res = await fetch('/api/auth/login.php', {
     method: 'POST',

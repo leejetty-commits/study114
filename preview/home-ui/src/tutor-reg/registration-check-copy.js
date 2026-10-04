@@ -145,7 +145,7 @@ export const TRC_BOARD_REQUIRED_IDS = new Set(
 export const TRC_PROMO_MISSING_DEFS = [
   { id: 'display_name', label: '표시명', hint: '검색·카드에 바로 보입니다', section: 'basic' },
   { id: 'main_subject', label: '주력과목', hint: '과외 매칭의 첫 조건입니다', section: 'basic' },
-  { id: 'primary_region', label: '대표 활동 시', hint: '지역 검색 노출에 필요합니다', section: 'basic' },
+  { id: 'primary_region', label: '대표 과외지역', hint: '지역 검색 노출에 필요합니다', section: 'basic' },
   { id: 'lesson_places', label: '강의장소', hint: '방문·공공장소 등 수업 방식을 보여 줍니다', section: 'detail' },
   { id: 'fee', label: '과외비', hint: '검색 카드 가격대에 쓰입니다', section: 'detail' },
   { id: 'fee_basis', label: '과외비 산정방식', hint: '주 회수 또는 월 총 횟수 기준을 정합니다', section: 'detail' },

@@ -49,6 +49,7 @@ final class NeighborhoodGreetingService
             $items[] = $item;
         }
         $items = $this->withoutWithdrawnOwners($items);
+        $items = $this->withoutMissingPrimaryRegion($items);
         usort($items, static fn (array $a, array $b): int => ($b['updated_at'] <=> $a['updated_at']));
         return $items;
     }
@@ -174,6 +175,9 @@ final class NeighborhoodGreetingService
         if ($providerType === 'tutor') {
             return $this->tutorBasicCard($pdo, $registrationId);
         }
+        if (!$this->roomHasPromoSlot1($pdo, $registrationId)) {
+            return null;
+        }
         return (new StudyRoomPublicReadService($pdo))->getPublishedById($registrationId);
     }
 
@@ -193,6 +197,13 @@ final class NeighborhoodGreetingService
               WHERE t.id = ?
                 AND t.profile_status <> \'hidden\'
                 AND ' . $ownerSql . '
+                AND EXISTS (
+                  SELECT 1 FROM tutor_regions tr_gate
+                  WHERE tr_gate.tutor_id = t.id
+                    AND tr_gate.priority_order = 0
+                    AND tr_gate.region_id IS NOT NULL
+                    AND tr_gate.region_id <> 0
+                )
               LIMIT 1'
         );
         $stmt->execute([$registrationId]);
@@ -222,6 +233,59 @@ final class NeighborhoodGreetingService
             'intro_short' => (string) ($row['intro_short'] ?? ''),
             'location_label' => $place,
         ];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $items
+     * @return list<array<string, mixed>>
+     */
+    private function withoutMissingPrimaryRegion(array $items): array
+    {
+        if ($items === []) {
+            return [];
+        }
+        $pdo = Connection::get();
+        $kept = [];
+        foreach ($items as $item) {
+            $id = (int) ($item['registration_id'] ?? 0);
+            if ($id < 1) {
+                continue;
+            }
+            $ok = ($item['provider_type'] ?? '') === 'tutor'
+                ? $this->tutorHasSlot1($pdo, $id)
+                : $this->roomHasPromoSlot1($pdo, $id);
+            if ($ok) {
+                $kept[] = $item;
+            }
+        }
+
+        return $kept;
+    }
+
+    private function tutorHasSlot1(\PDO $pdo, int $tutorId): bool
+    {
+        $stmt = $pdo->prepare(
+            'SELECT 1 FROM tutor_regions
+             WHERE tutor_id = ? AND priority_order = 0
+               AND region_id IS NOT NULL AND region_id <> 0
+             LIMIT 1'
+        );
+        $stmt->execute([$tutorId]);
+
+        return $stmt->fetchColumn() !== false;
+    }
+
+    private function roomHasPromoSlot1(\PDO $pdo, int $roomId): bool
+    {
+        $stmt = $pdo->prepare(
+            'SELECT 1 FROM study_room_regions
+             WHERE study_room_id = ? AND slot = 1
+               AND region_id IS NOT NULL AND region_id <> 0
+             LIMIT 1'
+        );
+        $stmt->execute([$roomId]);
+
+        return $stmt->fetchColumn() !== false;
     }
 
     /**

@@ -159,5 +159,12 @@ export function previewInclusiveRange(option, startedOn = kstTodayYmd()) {
  * @returns {string}
  */
 export function periodDisabledReason(role) {
-  return role === 'tutor' ? '활동시를 먼저 선택하세요.' : '지역을 먼저 선택하세요.';
+  return role === 'tutor' ? '과외지역을 먼저 선택하세요.' : '지역을 먼저 선택하세요.';
+}
+
+/** 적용 지역 후보가 0개일 때 이용권 화면 한 줄. */
+export function applyRegionEmptyCopy(role) {
+  return role === 'tutor'
+    ? '과외지역 1을 먼저 등록하면 이용권을 쓸 수 있어요'
+    : '홍보지역 1을 먼저 등록하면 이용권을 쓸 수 있어요';
 }

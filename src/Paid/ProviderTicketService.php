@@ -282,11 +282,6 @@ final class ProviderTicketService
             $label = $basis === 'complex'
                 ? (string) ($row['complex_name'] ?? '')
                 : (string) ($row['dong_name'] ?? '');
-            if ($label === '') {
-                $label = $basis === 'complex'
-                    ? ('단지 #' . (string) $complexId)
-                    : ('행정동 #' . (string) $regionId);
-            }
             $scopes[] = [
                 'region_basis_type' => $basis,
                 'region_id' => $regionId,

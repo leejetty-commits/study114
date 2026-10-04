@@ -130,6 +130,8 @@ final class TutorRegisterService
 
         try {
 
+            $createdNow = false;
+
             if ($tutorId === null) {
 
                 if ($step !== 'basic') {
@@ -138,7 +140,15 @@ final class TutorRegisterService
 
                 }
 
+                if (!$this->inputHasTutorSlot1($input)) {
+
+                    throw new InvalidArgumentException('과외지역 1을 선택해 주세요.');
+
+                }
+
                 $tutorId = $this->insertDraft($pdo, $userId, $input);
+
+                $createdNow = true;
 
             } else {
 
@@ -161,6 +171,12 @@ final class TutorRegisterService
                 'contact'  => $this->saveContact($pdo, $tutorId, $input),
 
             };
+
+            if ($step === 'basic' && ($createdNow || array_key_exists('saved_regions', $input))) {
+
+                $this->saveRegions($pdo, $tutorId, $input);
+
+            }
 
             if ($step === 'basic') {
                 \Study114\Auth\ProfileGenderSync::sync($userId, $input);
@@ -412,84 +428,76 @@ final class TutorRegisterService
 
 
 
-    /** @param array<string, mixed> $input */
-
-    private function saveRegions(PDO $pdo, int $tutorId, array $input): void
-
+    /**
+     * 신규 행은 과외지역 1이 같은 요청에 있을 때만 만든다.
+     *
+     * @param array<string, mixed> $input
+     */
+    private function inputHasTutorSlot1(array $input): bool
     {
-
-        $slots = $input['saved_regions'] ?? [];
-
-        if (!is_array($slots)) {
-
-            $slots = [];
-
+        $slots = $input['saved_regions'] ?? null;
+        if (!is_array($slots) || !isset($slots[0]) || !is_array($slots[0])) {
+            return false;
+        }
+        $regionId = $slots[0]['region_id'] ?? '';
+        if ($regionId === '' || $regionId === null) {
+            return false;
         }
 
+        return (int) $regionId > 0;
+    }
 
+    /**
+     * 과외지역 1(배열 0번)이 비면 저장하지 않는다. 2·3번만 있어도 대표로 올리지 않는다.
+     * 대표는 슬롯 1의 is_primary 한 행이다. 거부 시 DELETE 전에 예외를 던져 기존 행을 유지한다.
+     *
+     * @param array<string, mixed> $input
+     */
+    private function saveRegions(PDO $pdo, int $tutorId, array $input): void
+    {
+        $slots = $input['saved_regions'] ?? [];
+        if (!is_array($slots)) {
+            $slots = [];
+        }
+
+        $parsed = [];
+        $index = 0;
+        foreach ($slots as $slot) {
+            if ($index >= 3) {
+                break;
+            }
+            if (is_array($slot)) {
+                $regionId = isset($slot['region_id']) && $slot['region_id'] !== '' ? (int) $slot['region_id'] : 0;
+                if ($regionId > 0) {
+                    $parsed[] = ['slot' => $index, 'region_id' => $regionId, 'raw' => $slot];
+                }
+            }
+            $index++;
+        }
+
+        if ($parsed === [] || (int) $parsed[0]['slot'] !== 0) {
+            throw new InvalidArgumentException('과외지역 1을 선택해 주세요.');
+        }
+
+        foreach ($parsed as $i => $row) {
+            $regionId = (int) $row['region_id'];
+            SidoRegionEnsure::assertSelectable($pdo, $regionId);
+            $parsed[$i]['scope'] = $this->optionalEnum($row['raw'], 'scope_type', ['city', 'district', 'metro']) ?? 'city';
+        }
 
         $pdo->prepare('DELETE FROM tutor_regions WHERE tutor_id = ?')->execute([$tutorId]);
 
-
-
+        $insert = $pdo->prepare(
+            'INSERT INTO tutor_regions (tutor_id, region_id, scope_type, priority_order, is_primary)
+             VALUES (?, ?, ?, ?, ?)'
+        );
         $order = 0;
-
-        $primaryAssigned = false;
-
-        foreach ($slots as $slot) {
-
-            if (!is_array($slot) || $order >= 3) {
-
-                continue;
-
-            }
-
-            $regionId = isset($slot['region_id']) && $slot['region_id'] !== '' ? (int) $slot['region_id'] : 0;
-
-            if ($regionId <= 0) {
-
-                continue;
-
-            }
-
-            SidoRegionEnsure::assertSelectable($pdo, $regionId);
-
-            $scope = $this->optionalEnum($slot, 'scope_type', ['city', 'district', 'metro']) ?? 'city';
-
-            $isPrimary = !empty($slot['is_primary']) ? 1 : 0;
-
-            if ($isPrimary) {
-
-                $primaryAssigned = true;
-
-            }
-
-
-
-            $pdo->prepare(
-
-                'INSERT INTO tutor_regions (tutor_id, region_id, scope_type, priority_order, is_primary)
-
-                 VALUES (?, ?, ?, ?, ?)'
-
-            )->execute([$tutorId, $regionId, $scope, $order, $isPrimary]);
-
+        foreach ($parsed as $row) {
+            $regionId = (int) $row['region_id'];
+            $isPrimary = (int) $row['slot'] === 0 ? 1 : 0;
+            $insert->execute([$tutorId, $regionId, $row['scope'], $order, $isPrimary]);
             $order++;
-
         }
-
-
-
-        if (!$primaryAssigned && $order > 0) {
-
-            $pdo->prepare(
-
-                'UPDATE tutor_regions SET is_primary = 1 WHERE tutor_id = ? AND priority_order = 0'
-
-            )->execute([$tutorId]);
-
-        }
-
     }
 
 

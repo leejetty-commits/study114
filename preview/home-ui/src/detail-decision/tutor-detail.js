@@ -28,7 +28,7 @@ export function renderTutorDetailBody(item, viewer) {
       <h3 class="p24-section__title">핵심 조건</h3>
       <dl class="p24-dl">
         <dt>과목</dt><dd>${esc(item.main_subject_note || '—')}</dd>
-        <dt>활동 지역</dt><dd>${esc(locationLabel)}</dd>
+        <dt>과외지역</dt><dd>${esc(locationLabel)}</dd>
         <dt>수업장소</dt><dd>${esc(formatTutorLessonPlaces(item.lesson_places))}</dd>
         <dt>대상</dt><dd>${esc(formatTutorStudentTarget(item))}</dd>
         <dt>수업료</dt><dd>${esc(formatTutorFeeCard(item))}</dd>

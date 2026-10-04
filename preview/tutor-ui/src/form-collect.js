@@ -176,6 +176,7 @@ export function payloadForStep(step, state) {
         student_gender_group: state.student_gender_group,
         student_count_group: state.student_count_group,
         age_band: state.age_band,
+        saved_regions: state.saved_regions,
       };
     case 'regions':
       return { saved_regions: state.saved_regions };

@@ -81,7 +81,7 @@ final class TutorDetailCompletionEvaluator
 
         $labels = [
             'tutor_display_name' => '표시명',
-            'primary_region' => '대표 활동 시',
+            'primary_region' => '대표 과외지역',
             'primary_subject' => '주력과목',
             'lesson_places' => '강의장소',
             'preferred_fee_amount' => '과외비',
@@ -218,7 +218,10 @@ final class TutorDetailCompletionEvaluator
     private function hasPrimaryRegion(PDO $pdo, int $tutorId): bool
     {
         $stmt = $pdo->prepare(
-            'SELECT 1 FROM tutor_regions WHERE tutor_id = ? AND is_primary = 1 LIMIT 1'
+            'SELECT 1 FROM tutor_regions
+             WHERE tutor_id = ? AND priority_order = 0
+               AND region_id IS NOT NULL AND region_id <> 0
+             LIMIT 1'
         );
         $stmt->execute([$tutorId]);
 

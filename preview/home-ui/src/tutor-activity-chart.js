@@ -131,7 +131,7 @@ export function renderTutorActivityBars(opts = {}) {
     .join('');
 
   return `
-    <div class="act-bars" data-tutor-activity-bars aria-label="활동지역별 과외쌤·학생 수요">
+    <div class="act-bars" data-tutor-activity-bars aria-label="과외지역별 과외쌤·학생 수요">
       <div class="act-bars__legend" aria-hidden="true">
         <span class="act-bars__swatch act-bars__swatch--tutor"></span>과외쌤
         <span class="act-bars__swatch act-bars__swatch--student"></span>학생수요

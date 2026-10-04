@@ -1961,7 +1961,7 @@ function renderTutorRegionTabs(state, options = {}) {
     return `<button type="button" class="${cls}" data-tutor-region="${idx}" role="tab" aria-selected="${idx === activeIdx}">${esc(text)}${primaryMark}</button>`;
   }).join('');
 
-  const label = variant === 'home' ? '희망 지역' : '활동 지역 (3)';
+  const label = variant === 'home' ? '희망 지역' : '과외지역 (3)';
   return `
     <nav class="tutor-region-tabs" aria-label="${esc(label)}" role="tablist">
       ${tabs}
@@ -1970,7 +1970,7 @@ function renderTutorRegionTabs(state, options = {}) {
 
 function renderTutorRegionHint(role) {
   if (role === 'tutor') {
-    return `<p class="tutor-region-hint">등록한 활동 지역 탭을 선택한 뒤, 아래 조건으로 경쟁 과외쌤을 검색할 수 있습니다.</p>`;
+    return `<p class="tutor-region-hint">등록한 과외지역 탭을 선택한 뒤, 아래 조건으로 경쟁 과외쌤을 검색할 수 있습니다.</p>`;
   }
   return `<p class="tutor-region-hint">희망 지역 탭을 선택하면 해당 시·구의 과외쌤 목록이 표시됩니다.</p>`;
 }
@@ -1990,8 +1990,8 @@ export function renderCompactRegionBar(tab, state, options = {}) {
       const label = resolveActiveRegionLabel(tab, state, 'guest');
       if (variant === 'home') {
         return `
-          <div class="parent-home-region parent-home-region--tutor" aria-label="활동 지역">
-            <span class="parent-home-region__badge">활동 지역</span>
+          <div class="parent-home-region parent-home-region--tutor" aria-label="과외지역">
+            <span class="parent-home-region__badge">과외지역</span>
             <strong class="parent-home-region__label">${esc(label)}</strong>
           </div>`;
       }
@@ -2019,7 +2019,7 @@ export function renderCompactRegionBar(tab, state, options = {}) {
     if (variant === 'home') {
       const tabs = renderTutorRegionTabs(state, { variant, role });
       if (role === 'tutor' && !tabs) return '';
-      const badge = role === 'tutor' ? '활동 지역' : '희망 지역';
+      const badge = role === 'tutor' ? '과외지역' : '희망 지역';
       return `
         <div class="parent-home-region parent-home-region--tutor" aria-label="${esc(badge)}">
           <span class="parent-home-region__badge">${esc(badge)}</span>
@@ -2042,8 +2042,8 @@ export function renderCompactRegionBar(tab, state, options = {}) {
     });
     if (!tabs) return '';
     return `
-      <div class="parent-home-region parent-home-region--tutor" aria-label="활동 지역">
-        <span class="parent-home-region__badge">활동 지역</span>
+      <div class="parent-home-region parent-home-region--tutor" aria-label="과외지역">
+        <span class="parent-home-region__badge">과외지역</span>
         ${tabs}
       </div>`;
   }

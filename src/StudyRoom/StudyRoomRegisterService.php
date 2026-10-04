@@ -203,7 +203,13 @@ final class StudyRoomRegisterService
 
             if ($roomId === null) {
 
-                if ($step !== 'basic' && $step !== 'basic_all') {
+                if ($step === 'basic') {
+
+                    throw new InvalidArgumentException('홍보지역 1(대표)을 선택해 주세요.');
+
+                }
+
+                if ($step !== 'basic_all') {
 
                     throw new InvalidArgumentException('study_room_id: 먼저 기본정보를 저장해 주세요.');
 
@@ -535,7 +541,6 @@ final class StudyRoomRegisterService
             $input['region_basis_type'] = $basis;
         }
         $this->syncSavedRegions($pdo, $roomId, $input);
-        $this->ensurePrimaryRegionRow($pdo, $roomId);
         $this->saveHomeAddress($pdo, $userId, $input);
         $this->saveBusinessAddressLine2($pdo, $roomId, $input);
     }
@@ -1178,69 +1183,6 @@ final class StudyRoomRegisterService
 
     }
 
-    /** study_rooms.region_id|complex_id 는 있는데 study_room_regions 가 비면 대표 1슬롯을 보정한다. */
-    private function ensurePrimaryRegionRow(PDO $pdo, int $roomId): void
-    {
-        $countStmt = $pdo->prepare('SELECT COUNT(*) FROM study_room_regions WHERE study_room_id = ?');
-        $countStmt->execute([$roomId]);
-        if ((int) $countStmt->fetchColumn() > 0) {
-            return;
-        }
-        $rowStmt = $pdo->prepare(
-            'SELECT region_id, complex_id, region_basis_type, address_zip FROM study_rooms WHERE id = ? LIMIT 1'
-        );
-        try {
-            $rowStmt->execute([$roomId]);
-        } catch (PDOException $e) {
-            $rowStmt = $pdo->prepare(
-                'SELECT region_id, complex_id, region_basis_type FROM study_rooms WHERE id = ? LIMIT 1'
-            );
-            $rowStmt->execute([$roomId]);
-        }
-        $row = $rowStmt->fetch(PDO::FETCH_ASSOC);
-        if (!is_array($row)) {
-            return;
-        }
-        $regionId = isset($row['region_id']) ? (int) $row['region_id'] : 0;
-        $complexId = isset($row['complex_id']) && $row['complex_id'] !== null && $row['complex_id'] !== ''
-            ? (int) $row['complex_id']
-            : null;
-        if ($regionId <= 0 && ($complexId === null || $complexId <= 0)) {
-            return;
-        }
-        $basis = isset($row['region_basis_type']) && in_array((string) $row['region_basis_type'], ['dong', 'complex'], true)
-            ? (string) $row['region_basis_type']
-            : (($complexId !== null && $complexId > 0) ? 'complex' : 'dong');
-        if ($basis === 'dong') {
-            $complexId = null;
-        }
-        if ($basis === 'dong' && $regionId <= 0) {
-            return;
-        }
-        if ($basis === 'complex' && ($complexId === null || $complexId <= 0)) {
-            return;
-        }
-        $zip = isset($row['address_zip']) ? (string) $row['address_zip'] : null;
-        try {
-            $pdo->prepare(
-                'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, address_zip, is_primary)
-                 VALUES (?, 1, ?, ?, ?, ?, 1)'
-            )->execute([$roomId, $regionId > 0 ? $regionId : null, $complexId, $basis, $zip !== '' ? $zip : null]);
-        } catch (PDOException $e) {
-            try {
-                $pdo->prepare(
-                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, region_basis_type, is_primary)
-                     VALUES (?, 1, ?, ?, ?, 1)'
-                )->execute([$roomId, $regionId > 0 ? $regionId : null, $complexId, $basis]);
-            } catch (PDOException $e2) {
-                $pdo->prepare(
-                    'INSERT INTO study_room_regions (study_room_id, slot, region_id, complex_id, is_primary)
-                     VALUES (?, 1, ?, ?, 1)'
-                )->execute([$roomId, $regionId > 0 ? $regionId : null, $complexId]);
-            }
-        }
-    }
-
     private function ensureBusinessAddressZip(PDO $pdo): void
     {
         static $done = false;
@@ -1618,46 +1560,7 @@ final class StudyRoomRegisterService
             }
         }
 
-        // study_room_regions 비어 있고 study_rooms 좌표만 있으면 1슬롯 합성 (재진입·노출상품 후보용)
-        if (
-            $savedRegions[0]['region_id'] === ''
-            && $savedRegions[0]['complex_id'] === ''
-            && (!empty($row['region_id']) || !empty($row['complex_id']))
-        ) {
-            $basis = isset($row['region_basis_type']) && in_array((string) $row['region_basis_type'], ['dong', 'complex'], true)
-                ? (string) $row['region_basis_type']
-                : (!empty($row['complex_id']) ? 'complex' : 'dong');
-            $label = '';
-            if (!empty($row['region_id'])) {
-                $lab = $pdo->prepare(
-                    'SELECT CONCAT(sido_name, " ", sigungu_name, " ", dong_name) FROM regions WHERE id = ? LIMIT 1'
-                );
-                $lab->execute([(int) $row['region_id']]);
-                $label = (string) ($lab->fetchColumn() ?: '');
-            }
-            $cname = '';
-            $caddr = '';
-            if (!empty($row['complex_id'])) {
-                $cstmt = $pdo->prepare('SELECT name, COALESCE(address, "") FROM complexes WHERE id = ? LIMIT 1');
-                $cstmt->execute([(int) $row['complex_id']]);
-                $crow = $cstmt->fetch(PDO::FETCH_NUM);
-                if (is_array($crow)) {
-                    $cname = (string) ($crow[0] ?? '');
-                    $caddr = (string) ($crow[1] ?? '');
-                }
-            }
-            $savedRegions[0] = [
-                'region_id' => !empty($row['region_id']) ? (string) (int) $row['region_id'] : '',
-                'complex_id' => !empty($row['complex_id']) ? (string) (int) $row['complex_id'] : '',
-                'region_basis_type' => $basis,
-                'is_primary' => true,
-                'region_label' => $label,
-                'complex_name' => $cname,
-                'complex_address' => $caddr,
-                'address_text' => $caddr !== '' ? $caddr : (string) ($row['address_text'] ?? ''),
-                'address_zip' => (string) ($row['address_zip'] ?? ''),
-            ];
-        }
+        // 홍보지역이 없으면 빈 슬롯이다. 사업장 region_id·complex_id 로 홍보1을 만들지 않는다.
 
 
 

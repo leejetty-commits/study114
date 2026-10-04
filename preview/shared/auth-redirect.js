@@ -312,7 +312,7 @@ export function resolveAfterAuthUrl(me, returnTo = '') {
   if (me.oauth_role_pending) {
     return oauthRoleSelectionUrl(returnTo);
   }
-  // 기본등록 완료 여부는 서버 행 존재(needs_basic_register). 빈 postVerify로 추정하지 않음.
+  // 기본등록 완료 여부는 서버 needs_basic_register(행과 대표지역 1). 빈 postVerify로 추정하지 않음.
   if (me.needs_basic_register) {
     return authUiHref(basicRegisterPathForMe(me));
   }

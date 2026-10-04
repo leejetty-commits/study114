@@ -136,19 +136,20 @@ export function validateTutorActivityRegions(slots) {
 
   for (let i = 0; i < 3; i += 1) {
     if (list[i]?.partial) {
-      return { ok: false, index: i, message: `활동지역 ${i + 1}을 끝까지 선택해 주세요.` };
+      return { ok: false, index: i, message: `과외지역 ${i + 1}을 끝까지 선택해 주세요.` };
     }
   }
 
+  // 1번이 비면 2·3번만 있어도 거부한다. 나중 슬롯을 대표로 올리지 않는다.
   const slot0 = String(list[0]?.region_id || '').trim();
   if (!slot0) {
-    return { ok: false, index: 0, message: '활동지역 1을 선택해 주세요.' };
+    return { ok: false, index: 0, message: '과외지역 1을 선택해 주세요.' };
   }
   if (!/^\d+$/.test(slot0)) {
     return {
       ok: false,
       index: 0,
-      message: '활동지역 1: 지역 목록을 다시 불러온 뒤 선택해 주세요.',
+      message: '과외지역 1: 지역 목록을 다시 불러온 뒤 선택해 주세요.',
     };
   }
 
@@ -162,26 +163,22 @@ export function validateTutorActivityRegions(slots) {
       return {
         ok: false,
         index: i,
-        message: `활동지역 ${i + 1}: 지역 목록을 다시 불러온 뒤 선택해 주세요.`,
+        message: `과외지역 ${i + 1}: 지역 목록을 다시 불러온 뒤 선택해 주세요.`,
       };
     }
     if (seen.has(id)) {
       return {
         ok: false,
         index: i,
-        message: `활동지역 ${i + 1}: 이미 선택한 지역입니다.`,
+        message: `과외지역 ${i + 1}: 이미 선택한 지역입니다.`,
       };
     }
     seen.set(id, i);
     filled.push({
       region_id: id,
       scope_type: 'city',
-      is_primary: false,
+      is_primary: i === 0,
     });
-  }
-
-  if (filled.length) {
-    filled[0].is_primary = true;
   }
 
   return { ok: true, slots: filled };

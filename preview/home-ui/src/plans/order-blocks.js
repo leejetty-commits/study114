@@ -3,6 +3,7 @@
  * 금액·환불액은 서버 정본 표시용. 프론트에서 확정 계산하지 않음.
  */
 
+import { applyRegionEmptyCopy } from './period-cards.js';
 import { formatKrw, resolveCheckoutAmount } from './runtime-config.js';
 import { getStudyRoom } from '../study-room-reg/store.js';
 import { getTutor } from '../tutor-reg/store.js';
@@ -18,9 +19,16 @@ function roleLabel(role) {
   return '공급자';
 }
 
+/** 번호 라벨(행정동 #, 단지 #, 시 #)은 이름이 아니다. */
+function usableRegionName(raw) {
+  const label = String(raw || '').trim();
+  if (!label) return '';
+  if (/^(행정동|단지|시)\s*#\s*\d+$/.test(label)) return '';
+  return label;
+}
+
 /**
- * 공부방 적용 지역 후보 — 마이페이지 홍보지역 1~3을 항상 반환한다.
- * ID가 없어도 숨기지 않는다(구매 불가로 표시).
+ * 공부방 적용 지역 후보 — 홍보지역 행의 이름만. 사업장 region_id 로는 만들지 않는다.
  * @param {object|null|undefined} room
  * @returns {{ label: string, region_basis_type: 'dong'|'complex'|'', region_id: string, complex_id: string, has_scope_id: boolean, slot: number }[]}
  */
@@ -38,38 +46,18 @@ export function listStudyRoomApplyRegions(room) {
         : regionId
           ? 'dong'
           : '';
-    const label =
-      String(s?.region_label || s?.complex_name || '').trim() ||
-      (basis === 'complex' && complexId
-        ? `단지 #${complexId}`
-        : regionId
-          ? `행정동 #${regionId}`
-          : `홍보지역 ${idx + 1}`);
+    const label = usableRegionName(s?.region_label || s?.complex_name || s?.promo_label || '');
+    const hasScope = Boolean((basis === 'complex' && complexId) || (basis === 'dong' && regionId));
+    if (!label || !hasScope) return;
     out.push({
       label,
       region_basis_type: basis,
       region_id: regionId,
       complex_id: basis === 'complex' ? complexId : '',
-      has_scope_id: Boolean((basis === 'complex' && complexId) || (basis === 'dong' && regionId)),
+      has_scope_id: true,
       slot: idx + 1,
     });
   });
-  if (out.length) return out.slice(0, 3);
-
-  const topRegionId = room.region_id != null && String(room.region_id) !== '' ? String(room.region_id) : '';
-  const topComplexId = room.complex_id != null && String(room.complex_id) !== '' ? String(room.complex_id) : '';
-  const topLabel = String(room.region_label || room.region || room.complex_name || '').trim();
-  if (topComplexId || topRegionId || topLabel) {
-    const basis = topComplexId ? 'complex' : topRegionId ? 'dong' : '';
-    out.push({
-      label: topLabel || (basis === 'complex' ? `단지 #${topComplexId}` : topRegionId ? `행정동 #${topRegionId}` : '홍보지역 1'),
-      region_basis_type: basis,
-      region_id: topRegionId,
-      complex_id: basis === 'complex' ? topComplexId : '',
-      has_scope_id: Boolean((basis === 'complex' && topComplexId) || (basis === 'dong' && topRegionId)),
-      slot: 1,
-    });
-  }
   return out.slice(0, 3);
 }
 
@@ -142,8 +130,8 @@ export function listTutorApplyCities(tutor) {
   for (const s of saved) {
     const cityId = s?.region_id != null && String(s.region_id) !== '' ? String(s.region_id) : '';
     if (!cityId) continue;
-    const label =
-      String(s.region_label || s.label || s.sido_name || '').trim() || `시 #${cityId}`;
+    const label = usableRegionName(s.region_label || s.label || s.sido_name || '');
+    if (!label) continue;
     if (out.some((x) => x.city_id === cityId)) continue;
     out.push({ label, city_id: cityId });
   }
@@ -151,9 +139,10 @@ export function listTutorApplyCities(tutor) {
   const topId = tutor.primary_region_id != null && String(tutor.primary_region_id) !== ''
     ? String(tutor.primary_region_id)
     : '';
-  if (topId) {
+  const topLabel = usableRegionName(tutor.primary_region_label || tutor.region_label || '');
+  if (topId && topLabel) {
     out.push({
-      label: String(tutor.primary_region_label || tutor.region_label || `시 #${topId}`),
+      label: topLabel,
       city_id: topId,
     });
   }
@@ -311,9 +300,7 @@ export function renderApplyTargetBlock(profile, role, page = 'positions', opts =
           .join('')}
       </div>`;
       })()
-    : `<p class="plans-muted plans-apply-target__warn">적용 지역이 없습니다. 상세등록에서 ${
-        profile.providerType === 'study_room' ? '대표 홍보지역 1~3' : '활동지역 시 1·2·3'
-      }을 먼저 설정해 주세요.</p>`;
+    : `<p class="plans-muted plans-apply-target__warn">${esc(applyRegionEmptyCopy(profile.providerType === 'tutor' ? 'tutor' : 'study_room'))}</p>`;
 
   const subjectHtml =
     profile.providerType === 'tutor'

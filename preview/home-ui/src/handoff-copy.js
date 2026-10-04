@@ -138,7 +138,7 @@ export const DECISION_STICKER = {
 export const PRE_CONTACT_CHECKLIST = {
   title: '문의 전 확인',
   study_room_parent: ['상담 수용 상태를 확인했습니다', '비용·학년대를 다시 봤습니다'],
-  tutor_parent: ['과외비·수업 방식을 확인했습니다', '활동 지역을 맞췄습니다'],
+  tutor_parent: ['과외비·수업 방식을 확인했습니다', '과외지역을 맞췄습니다'],
   student_tutor: ['찜·요청 조건을 확인했습니다', '메모권·잔여 횟수를 확인했습니다'],
   student_study_room: ['찜·요청 조건을 확인했습니다', '상담 수용 상태를 확인했습니다'],
 };

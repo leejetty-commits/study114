@@ -53,10 +53,27 @@ final class StudyRoomHubService
     {
         (new \Study114\Auth\EmailVerificationGate())->assertVerified($userId);
 
+        if (!$this->hasPromoSlot1($roomId)) {
+            throw new InvalidArgumentException('홍보지역 1(대표)을 선택해 주세요.');
+        }
+
         // 공개는 입력 완성도·쪽지 설정과 독립. 베이직 노출은 빈 상세값이 있어도 가능.
         $this->repo->setProfileStatus($roomId, 'published', date('Y-m-d H:i:s'));
 
         return ['room' => $this->repo->getForOwner($userId, $roomId) ?? $room];
+    }
+
+    private function hasPromoSlot1(int $roomId): bool
+    {
+        $stmt = Connection::get()->prepare(
+            'SELECT 1 FROM study_room_regions
+             WHERE study_room_id = ? AND slot = 1
+               AND region_id IS NOT NULL AND region_id <> 0
+             LIMIT 1'
+        );
+        $stmt->execute([$roomId]);
+
+        return $stmt->fetchColumn() !== false;
     }
 
     /** @param array<string, mixed> $input */

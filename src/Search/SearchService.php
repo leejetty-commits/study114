@@ -293,6 +293,26 @@ final class SearchService
         return in_array($key, self::SORT_PROVIDER, true) ? $key : 'latest';
     }
 
+    /** 목록·카운트 공통. 홍보지역 1(slot=1, region_id 있음)이 있는 공부방만. */
+    private function roomPromoSlot1Sql(string $alias): string
+    {
+        return 'EXISTS (SELECT 1 FROM study_room_regions srr_gate'
+            . " WHERE srr_gate.study_room_id = {$alias}.id"
+            . ' AND srr_gate.slot = 1'
+            . ' AND srr_gate.region_id IS NOT NULL'
+            . ' AND srr_gate.region_id <> 0)';
+    }
+
+    /** 목록·카운트 공통. 과외지역 1(priority_order=0, 지역 값 있음)이 있는 과외쌤만. */
+    private function tutorSlot1Sql(string $alias): string
+    {
+        return 'EXISTS (SELECT 1 FROM tutor_regions tr_gate'
+            . " WHERE tr_gate.tutor_id = {$alias}.id"
+            . ' AND tr_gate.priority_order = 0'
+            . ' AND tr_gate.region_id IS NOT NULL'
+            . ' AND tr_gate.region_id <> 0)';
+    }
+
     /**
      * 카드 「위치」= 홍보지역 1(대표). 사업장주소는 핀만.
      *
@@ -446,6 +466,7 @@ final class SearchService
             "sr.profile_status <> 'hidden'",
             'sr.deleted_at IS NULL',
             WithdrawnOwnerSql::notWithdrawn('sr.user_id'),
+            $this->roomPromoSlot1Sql('sr'),
         ];
         $params = [];
 
@@ -716,6 +737,7 @@ final class SearchService
         $where = [
             "t.profile_status <> 'hidden'",
             WithdrawnOwnerSql::notWithdrawn('t.user_id'),
+            $this->tutorSlot1Sql('t'),
         ];
         $params = [];
 
