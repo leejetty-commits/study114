@@ -15,7 +15,8 @@
  * 2부(실제 브라우저: Vite 개발 서버 + Playwright chromium. API 는 page.route 로 흉내 낸다)
  *   글 제목 클릭 → 팝업·hash 불변, role="dialog"·aria-modal·aria-labelledby, 닫기 버튼 포커스, Tab 이 밖으로 안 나감,
  *   페이지 번호 이동(offset/limit), 목록 클릭 시 본문 교체, ESC·배경·닫기 후 포커스 복귀·스크롤 잠금 해제·스크롤 위치 유지,
- *   「더보기」는 최신 글 선택, 0건 문구, 게스트 팝업 본문 없음·로그인 안내, 「게시판에서 보기」, 찾기 레일(absolute) 팝업,
+ *   「더보기」는 최신 글 선택, 0건 문구, 게스트 팝업 본문 없음·로그인 안내, 「게시판에서 보기」,
+ *   찾기·등록 레일은 「게시판에서 보기」를 인페이지로 이어 보고(새 탭 홈 이탈 없음), 홈 레일은 hash 이동,
  *   세션 변경(로그아웃·다른 역할 로그인) 시 팝업 닫힘·캐시 버림, 모바일 시트
  * DB·PHP 서버에 접속하지 않는다.
  */
@@ -451,6 +452,34 @@ ok(
   [infoRailSrc, popupSrc, storeSrc].every((s) => s !== '' && !/localStorage|sessionStorage|indexedDB/.test(s)),
 );
 
+const leaveOf = (html) => [...String(html).matchAll(/data-info-rail-leave="([^"]+)"/g)].map((m) => m[1]);
+const studySlots = renderSlots('study_room');
+const mypageRegister = rail?.renderPromoWithRightRail?.('register_right_rail', { navRole: 'tutor' }) ?? '';
+ok(
+  'leave_search_register_inpage',
+  leaveOf(studySlots.search).length > 0 &&
+    leaveOf(studySlots.search).every((v) => v === 'inpage') &&
+    leaveOf(studySlots.register).every((v) => v === 'inpage') &&
+    leaveOf(mypageRegister).every((v) => v === 'inpage') &&
+    studySlots.search.includes('data-rail-guide-leave="inpage"') &&
+    studySlots.register.includes('data-rail-guide-leave="inpage"') &&
+    mypageRegister.includes('data-rail-guide-leave="inpage"') &&
+    !studySlots.search.includes('target="_blank"') &&
+    !studySlots.register.includes('target="_blank"') &&
+    !mypageRegister.includes('target="_blank"') &&
+    !studySlots.search.includes('/#/guide') &&
+    !studySlots.register.includes('/#/guide'),
+  `search=${leaveOf(studySlots.search).join(',')} register=${leaveOf(studySlots.register).join(',')}`,
+);
+ok(
+  'leave_home_hash_detail_blank',
+  leaveOf(studySlots.home).every((v) => v === 'hash') &&
+    leaveOf(studySlots.detail).every((v) => v === 'blank') &&
+    studySlots.detail.includes('data-rail-guide-leave="blank"') &&
+    !studySlots.home.includes('data-rail-guide-leave="inpage"'),
+  `home=${leaveOf(studySlots.home).join(',')} detail=${leaveOf(studySlots.detail).join(',')}`,
+);
+
 console.log('\n역할별 정보 배너 개수(레일별):');
 for (const [role, line] of Object.entries(exposure)) console.log(`  ${role.padEnd(18)} ${line}`);
 
@@ -630,7 +659,13 @@ try {
         const el = document.getElementById(t);
         const r = window.__rail;
         el.innerHTML =
-          s === 'search' ? r.renderRightRailSidebar('search_right_rail', o) : r.renderPromoWithRightRail('home_right_rail', o);
+          s === 'search'
+            ? r.renderRightRailSidebar('search_right_rail', o)
+            : s === 'register'
+              ? r.renderRegisterRightRail(o)
+              : s === 'mypage-register'
+                ? r.renderPromoWithRightRail('register_right_rail', o)
+                : r.renderPromoWithRightRail('home_right_rail', o);
         r.bindRightRailEvents(el);
       },
       { target, slot, opts },
@@ -873,7 +908,7 @@ try {
     s2 && (await ev(() => window.__store.getInfoRailList({ boardRole: 'supply-room', ownerKey: '11:study_room_owner:' }, 'info-room') === null)),
   );
 
-  // 찾기 레일(absolute 모드, 다른 번들과 같은 호출) → 팝업 동작 · 「게시판에서 보기」 새 탭
+  // 찾기 레일(호출부가 absolute여도) → 팝업은 그대로, 「게시판에서 보기」는 인페이지
   await session({ user_id: 11, role_type: 'study_room_owner', name: 'r', email: 'r@x' }, 'supply-room');
   await ev(() => {
     document.getElementById('rail').innerHTML = '';
@@ -888,12 +923,118 @@ try {
   }
   ok(`${B}search_rail_popup_opens_hash_unchanged`, sOpened && (await ev(() => location.hash)) === hashS);
   const goS = await ev((label) => {
-    const a = [...document.querySelectorAll('#rail-popup a')].find((x) => x.textContent.trim() === label);
-    return a ? { href: a.getAttribute('href'), target: a.getAttribute('target') || '' } : null;
+    const btn = [...document.querySelectorAll('#rail-popup [data-rail-popup-continue]')].find((x) => x.textContent.trim() === label);
+    const blank = [...document.querySelectorAll('#rail-popup a')].some((a) => a.getAttribute('target') === '_blank' || String(a.getAttribute('href') || '').includes('/#/library'));
+    return btn ? { tag: btn.tagName, blank } : { tag: '', blank };
   }, POLICY_COPY.goBoard);
-  ok(`${B}search_go_board_new_tab_home_base`, sOpened && goS?.href === `${HOME_BASE}/#/library/room-info` && goS.target === '_blank', JSON.stringify(goS));
+  ok(`${B}search_go_board_in_page`, sOpened && goS?.tag === 'BUTTON' && goS.blank === false, JSON.stringify(goS));
+  if (sOpened && goS?.tag === 'BUTTON') {
+    await page.click('#rail-popup [data-rail-popup-continue]').catch(() => {});
+  }
+  ok(
+    `${B}search_go_board_stays_on_screen`,
+    sOpened &&
+      (await ev(() => location.hash)) === hashS &&
+      Boolean(await ev(() => document.getElementById('rail-popup') && document.getElementById('rail-popup').getAttribute('data-rail-popup-continued') === 'true')),
+  );
   if (sOpened) await page.keyboard.press('Escape');
   await gone(popupSel);
+
+  // 찾기: 이용안내 자세히 → peek 확장, 주소 유지
+  const hashGuide = await ev(() => location.hash);
+  await page.click('#rail-search [data-rail-guide-peek="compare"]').catch(() => {});
+  const peekOpen = await wait('#rail-guide-peek-overlay');
+  const peekBtn = await ev(() => {
+    const root = document.getElementById('rail-guide-peek-overlay');
+    const expand = root?.querySelector('[data-rail-guide-expand]');
+    return {
+      expand: expand?.textContent?.trim() || '',
+      blank: Boolean(root?.querySelector('a[target="_blank"]')),
+      guideHref: Boolean(root?.querySelector('a[href*="#/guide"]')),
+    };
+  });
+  ok(`${B}search_guide_expand_no_blank`, peekOpen && peekBtn.expand === '이용안내에서 자세히' && !peekBtn.blank && !peekBtn.guideHref, JSON.stringify(peekBtn));
+  if (peekOpen && peekBtn.expand) await page.click('#rail-guide-peek-overlay [data-rail-guide-expand]').catch(() => {});
+  const peekMore = await ev(() => {
+    const root = document.getElementById('rail-guide-peek-overlay');
+    const box = root?.querySelector('[data-rail-guide-more]');
+    return {
+      shown: Boolean(box && !box.hidden && root.querySelectorAll('.guest-gate__list li').length > 0),
+      blank: Boolean(root?.querySelector('a[target="_blank"]')),
+      hash: location.hash,
+    };
+  });
+  ok(`${B}search_guide_expands_hash_unchanged`, peekMore.shown && !peekMore.blank && peekMore.hash === hashGuide, JSON.stringify(peekMore));
+  if (peekOpen) await page.keyboard.press('Escape');
+  await gone('#rail-guide-peek-overlay');
+
+  // 찾기: 고민 HOT·방 「게시판에서 보기」도 인페이지
+  const hotBtn = await ev(() => {
+    const hot = document.querySelector('#rail-search [data-rail-hot]');
+    const card = hot?.querySelector('[data-concern-rail-open]');
+    return {
+      card: card?.tagName || '',
+      leave: card?.getAttribute('data-concern-rail-leave') || hot?.getAttribute('data-concern-rail-leave') || '',
+      blank: Boolean(hot?.querySelector('a[target="_blank"]')),
+      home: Boolean(hot?.innerHTML.includes('/#/community')),
+    };
+  });
+  ok(`${B}search_hot_in_page_control`, hotBtn.card === 'BUTTON' && !hotBtn.blank && !hotBtn.home, JSON.stringify(hotBtn));
+  await page.click('#rail-search [data-rail-room] [data-concern-rail-more]').catch(() => {});
+  const concernOpen = await wait(popupSel);
+  const concernGo = await ev((label) => {
+    const btn = [...document.querySelectorAll('#rail-popup [data-rail-popup-continue]')].find((x) => x.textContent.trim() === label);
+    const blank = [...document.querySelectorAll('#rail-popup a')].some((a) => a.getAttribute('target') === '_blank');
+    return { tag: btn?.tagName || '', blank, hash: location.hash };
+  }, POLICY_COPY.goBoard);
+  ok(`${B}search_concern_go_in_page`, concernOpen && concernGo.tag === 'BUTTON' && !concernGo.blank && concernGo.hash === hashGuide, JSON.stringify(concernGo));
+  if (concernOpen) await page.keyboard.press('Escape');
+  await gone(popupSel);
+
+  async function assertRegisterSlot(label, slot, opts) {
+    await ev(() => {
+      document.getElementById('rail-search').innerHTML = '';
+    });
+    await mount('rail-search', slot, opts);
+    const ready = await wait('#rail-search [data-rail-info="info-room"][data-rail-state="posts"]', 5000);
+    const hash0 = await ev(() => location.hash);
+    await page.click('#rail-search [data-rail-guide-peek]').catch(() => {});
+    const opened = await wait('#rail-guide-peek-overlay');
+    if (opened) await page.click('#rail-guide-peek-overlay [data-rail-guide-expand]').catch(() => {});
+    const guide = await ev(() => {
+      const root = document.getElementById('rail-guide-peek-overlay');
+      const box = root?.querySelector('[data-rail-guide-more]');
+      return {
+        shown: Boolean(box && !box.hidden),
+        blank: Boolean(root?.querySelector('a[target="_blank"]')),
+        guideHref: Boolean(root?.querySelector('a[href*="#/guide"], a[href*="/#/guide"]')),
+        hash: location.hash,
+      };
+    });
+    ok(`${B}${label}_guide_in_page`, opened && guide.shown && !guide.blank && !guide.guideHref && guide.hash === hash0, JSON.stringify(guide));
+    if (opened) await page.keyboard.press('Escape');
+    await gone('#rail-guide-peek-overlay');
+    let infoOpened = false;
+    if (ready) {
+      await page.click('#rail-search [data-rail-info="info-room"] [data-info-rail-more]').catch(() => {});
+      infoOpened = await wait(popupSel);
+    }
+    const infoGo = await ev((copy) => {
+      const btn = [...document.querySelectorAll('#rail-popup [data-rail-popup-continue]')].find((x) => x.textContent.trim() === copy);
+      const login = [...document.querySelectorAll('#rail-popup a.rail-popup__login')].map((a) => a.getAttribute('href') || '');
+      const blank = [...document.querySelectorAll('#rail-popup a')].some((a) => a.getAttribute('target') === '_blank' || String(a.getAttribute('href') || '').includes('/#/library'));
+      return { tag: btn?.tagName || '', blank, login, hash: location.hash };
+    }, POLICY_COPY.goBoard);
+    ok(`${B}${label}_info_go_in_page`, infoOpened && infoGo.tag === 'BUTTON' && !infoGo.blank && infoGo.hash === hash0, JSON.stringify(infoGo));
+    if (infoOpened) await page.keyboard.press('Escape');
+    await gone(popupSel);
+  }
+
+  await assertRegisterSlot('study_room_register', 'register', { navRole: 'study_room', homeBase: HOME_BASE });
+  await session({ user_id: 21, role_type: 'tutor', name: 't', email: 't@x' }, 'supply-tutor');
+  await assertRegisterSlot('tutor_register', 'register', { navRole: 'tutor', homeBase: HOME_BASE });
+  await session({ user_id: 11, role_type: 'study_room_owner', name: 'r', email: 'r@x' }, 'supply-room');
+  await assertRegisterSlot('mypage_register', 'mypage-register', { navRole: 'study_room' });
 
   // 게스트: 배너 제목만 · 팝업 본문 없음 · 로그인 안내
   await session(null, 'guest');

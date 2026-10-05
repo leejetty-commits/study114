@@ -257,7 +257,8 @@ button.live-rail-room__link {
   color: inherit;
 }
 
-button.live-rail-action {
+button.live-rail-action,
+button.live-rail-card {
   width: 100%;
   margin: 0;
   font: inherit;
@@ -748,6 +749,18 @@ body.is-rail-popup-open {
   font-weight: var(--fw-medium, 500);
   color: #fff;
   text-decoration: none;
+}
+
+button.rail-popup__go {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+#rail-guide-peek-overlay .guest-gate--deep.is-rail-guide-expanded {
+  width: min(32.5rem, 100%);
+  max-height: min(80vh, 40rem);
+  overflow: auto;
 }
 
 .rail-popup__items {

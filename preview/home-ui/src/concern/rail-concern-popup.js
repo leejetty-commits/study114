@@ -129,6 +129,7 @@ function findOpener(mode, boardKey, postId) {
  *   guestFilter?: string,
  *   homeBase: string,
  *   leaveInNewTab: boolean,
+ *   continueInPage?: boolean,
  * }} opts
  */
 export function openConcernRailPopup(opts) {
@@ -138,6 +139,9 @@ export function openConcernRailPopup(opts) {
   const { label, path } = boardInfo(boardKey);
   const boardHref = opts.leaveInNewTab ? `${String(opts.homeBase).replace(/\/$/, '')}/#${path}` : `#${path}`;
   const blank = opts.leaveInNewTab ? ' target="_blank" rel="noopener"' : '';
+  const goBoard = opts.continueInPage
+    ? `<button type="button" class="rail-popup__go" data-rail-popup-continue>${esc(COPY.goBoard)}</button>`
+    : `<a class="rail-popup__go" href="${esc(boardHref)}" data-rail-popup-leave${blank}>${esc(COPY.goBoard)}</a>`;
   const guest = () => !getAuthUser() || navRole === 'guest';
   const postId = String(opts.postId || '');
 
@@ -174,7 +178,7 @@ export function openConcernRailPopup(opts) {
     sessionKey: () => `${ownerKey()}|${navRole}`,
     loadPage,
     renderSelected: async (id) => renderSelectedPost(await fetchConcernRailPost(boardKey, id, navRole), label, guest()),
-    footerHtml: `<a class="rail-popup__go" href="${esc(boardHref)}" data-rail-popup-leave${blank}>${esc(COPY.goBoard)}</a>`,
+    footerHtml: goBoard,
   });
 }
 
@@ -197,6 +201,7 @@ function onDocumentClick(e) {
     guestFilter: section.getAttribute('data-concern-rail-guest') || '',
     homeBase: section.getAttribute('data-concern-rail-home') || '',
     leaveInNewTab: section.getAttribute('data-concern-rail-leave') === 'blank',
+    continueInPage: section.getAttribute('data-concern-rail-leave') === 'inpage',
   });
 }
 

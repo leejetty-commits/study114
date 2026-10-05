@@ -34,6 +34,7 @@ const FOCUSABLE =
  * }} RailPopupSpec
  * renderSelected 가 돌려주는 HTML 은 여는 쪽이 이스케이프한다.
  * footerHtml 안의 [data-rail-popup-leave] 링크는 누르면 팝업을 닫고 그대로 이동한다.
+ * [data-rail-popup-continue] 는 팝업을 닫지 않고 아래 글 목록으로 스크롤한다.
  */
 
 /** @type {null | { spec: RailPopupSpec, root: HTMLElement, panel: HTMLElement, page: number, pages: number, items: RailPopupItem[], selectedId: string, pageToken: number, selectToken: number, sessionAtOpen: string, scroll: { x: number, y: number }, onKey: (e: KeyboardEvent) => void, onFocusIn: (e: FocusEvent) => void, onSession: () => void }} */
@@ -195,6 +196,20 @@ function onClick(e) {
   if (target.closest('[data-rail-popup-dismiss]')) {
     e.preventDefault();
     closeRailPopup();
+    return;
+  }
+  const stay = target.closest('[data-rail-popup-continue]');
+  if (stay) {
+    e.preventDefault();
+    c.root.setAttribute('data-rail-popup-continued', 'true');
+    const list = c.root.querySelector('[data-rail-popup-items]');
+    const scroller = c.root.querySelector('.rail-popup__scroll');
+    if (list && scroller) {
+      const top = list.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+      scroller.scrollTo({ top });
+    }
+    const first = /** @type {HTMLElement|null} */ (list?.querySelector('[data-rail-popup-item]'));
+    first?.focus();
     return;
   }
   const leave = target.closest('[data-rail-popup-leave]');

@@ -352,6 +352,55 @@ for (const slotKey of ['detail_right_rail', 'plans_right_rail', 'support_right_r
   ok(`slot_without_concern_source_${slotKey}`, roomBlocks(html).length === 0);
 }
 
+store.resetConcernData();
+server.role = 'study_room';
+server.mode = 'posts';
+await settle();
+const searchAbs = rail.renderRightRailSidebar('search_right_rail', {
+  navRole: 'study_room',
+  linkMode: 'absolute',
+  homeBase: 'http://127.0.0.1:5174',
+});
+const searchHot = sections(searchAbs).find((s) => s.hot);
+ok(
+  'm1_search_hot_inpage',
+  Boolean(searchHot) &&
+    searchHot.html.includes('data-concern-rail-open=') &&
+    searchHot.html.includes('<button') &&
+    searchHot.html.includes('data-concern-rail-leave="inpage"') &&
+    !searchHot.html.includes('target="_blank"') &&
+    !searchHot.html.includes('http://127.0.0.1:5174/#/community'),
+  searchHot ? searchHot.html.slice(0, 240) : 'no hot',
+);
+ok(
+  'm2_search_room_leave_inpage',
+  searchAbs.includes('data-concern-rail-leave="inpage"') && !searchAbs.includes('target="_blank"'),
+);
+const homeAfter = rail.renderPromoWithRightRail('home_right_rail', { navRole: 'study_room' });
+const homeHot = sections(homeAfter).find((s) => s.hot);
+ok(
+  'm4_home_hot_stays_hash',
+  Boolean(homeHot) &&
+    homeHot.html.includes('href="#/community') &&
+    !homeHot.html.includes('target="_blank"') &&
+    !homeHot.html.includes('data-concern-rail-leave="inpage"'),
+);
+const registerEntry = rail.renderRegisterRightRail({ navRole: 'study_room', homeBase: 'http://127.0.0.1:5174', linkMode: 'absolute' });
+const tutorEntry = rail.renderRegisterRightRail({ navRole: 'tutor', homeBase: 'http://127.0.0.1:5174' });
+const mypageEntry = rail.renderPromoWithRightRail('register_right_rail', { navRole: 'tutor' });
+ok('m1_register_entry_draws_no_hot', !registerEntry.includes('data-rail-hot') && !tutorEntry.includes('data-rail-hot') && roomBlocks(registerEntry).length === 0);
+ok(
+  'm3_register_guide_inpage',
+  registerEntry.includes('data-rail-guide-leave="inpage"') &&
+    tutorEntry.includes('data-rail-guide-leave="inpage"') &&
+    mypageEntry.includes('data-rail-guide-leave="inpage"') &&
+    !registerEntry.includes('target="_blank"') &&
+    !tutorEntry.includes('target="_blank"') &&
+    !mypageEntry.includes('/#/guide'),
+);
+const detailRail = rail.renderRightRailBlock('detail_right_rail', { navRole: 'study_room' });
+ok('m4_detail_guide_stays_blank', detailRail.includes('data-rail-guide-leave="blank"') && !detailRail.includes('data-rail-guide-leave="inpage"'));
+
 console.log('\n역할별 홈 레일 방 배너(상태별):');
 for (const [role, byState] of Object.entries(exposure)) {
   console.log(`  ${role.padEnd(10)} ${Object.entries(byState).map(([s, k]) => `${s}=[${k.join(',')}]`).join(' ')}`);

@@ -74,7 +74,6 @@ export function renderSearchShell(content) {
         </div>
         ${renderRightRailSidebar('search_right_rail', {
           navRole: resolveChromeRole(),
-          linkMode: 'absolute',
           homeBase: HOME_UI_BASE,
         })}
       </div>

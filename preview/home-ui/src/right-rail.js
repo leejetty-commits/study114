@@ -2,7 +2,7 @@ import { getRightRailSlot } from './right-rail-store.js';
 import { getNavRole } from './state.js';
 import { getAuthUser, isAdminUser, isEmailVerified, isLoggedIn } from './auth-session.js';
 import { isConcernBoardKey } from './board-channel-store.js';
-import { CONCERN_RAIL_COPY, getConcernBoardByKey } from './concern/copy.js';
+import { COMMUNITY_BOARD_DEFS, CONCERN_RAIL_COPY, getConcernBoardByKey } from './concern/copy.js';
 import {
   ensureBestConcernPosts,
   ensureRailConcernPosts,
@@ -93,7 +93,7 @@ function isConcernPath(hrefOrPath) {
   return railPath(hrefOrPath).startsWith('/community');
 }
 
-/** 찾기·등록·상세 레일의 고민방만 새 탭. data-nav·data-util-href는 같은 탭으로 가로채이므로 붙이지 않는다. */
+/** 상세 레일(178-6, 이번 범위 밖)의 고민방만 새 탭. data-nav·data-util-href는 같은 탭으로 가로채이므로 붙이지 않는다. */
 function railBlankAnchor(hrefOrPath, className, ctx, inner) {
   const path = railPath(hrefOrPath);
   const href = `${ctx.homeBase}/#${path}`;
@@ -105,11 +105,54 @@ function isGuidePeekRail(slotKey) {
   return isSearchOrRegisterRail(slotKey) || slotKey === 'detail_right_rail';
 }
 
+/** 상세 레일만 새 탭. 찾기·등록은 인페이지 팝업이라 여기 넣지 않는다. */
 function isBlankConcernRail(slotKey) {
-  return isSearchOrRegisterRail(slotKey) || slotKey === 'detail_right_rail';
+  return slotKey === 'detail_right_rail';
+}
+
+/**
+ * 찾기·등록은 고민 읽기 팝업(인페이지). 홈은 hash, 상세는 새 탭.
+ * @returns {'inpage'|'blank'|'hash'}
+ */
+function railLeaveMode(slotKey, ctx) {
+  if (isSearchOrRegisterRail(slotKey)) return 'inpage';
+  if (isBlankConcernRail(slotKey) || ctx.linkMode === 'absolute') return 'blank';
+  return 'hash';
+}
+
+/** 찾기·등록 HOT·고민 링크 → 방 배너와 같은 읽기 팝업 버튼. 주소는 바꾸지 않는다. */
+function concernInPageControl(hrefOrPath, className, ctx, inner) {
+  const path = railPath(hrefOrPath);
+  const posted = path.match(/^\/community\/(director|tutor|parent|solved)\/([^/]+)$/);
+  let boardKey = '';
+  let postId = '';
+  if (posted) {
+    boardKey = COMMUNITY_BOARD_DEFS.find((b) => b.slug === posted[1])?.boardKey || '';
+    try {
+      postId = decodeURIComponent(posted[2]);
+    } catch {
+      postId = posted[2];
+    }
+  } else {
+    boardKey = COMMUNITY_BOARD_DEFS.find((b) => b.path === path)?.boardKey || '';
+  }
+  if (!boardKey) {
+    boardKey =
+      ctx.navRole === 'study_room' ? 'concern-director' : ctx.navRole === 'tutor' ? 'concern-tutor' : 'concern-parent';
+  }
+  const postAttr = postId ? ` data-concern-rail-post="${esc(postId)}"` : ' data-concern-rail-more';
+  const cls = className ? ` class="${className}"` : '';
+  return `<button type="button"${cls} data-concern-rail-open="${esc(boardKey)}"${postAttr} data-concern-rail-nav="${esc(
+    ctx.navRole,
+  )}" data-concern-rail-guest="${esc(ctx.guestFilter)}" data-concern-rail-home="${esc(
+    ctx.homeBase,
+  )}" data-concern-rail-leave="inpage">${inner}</button>`;
 }
 
 function railSlotAnchor(hrefOrPath, className, ctx, inner, slotKey) {
+  if (isSearchOrRegisterRail(slotKey) && isConcernPath(hrefOrPath)) {
+    return concernInPageControl(hrefOrPath, className, ctx, inner);
+  }
   if (isBlankConcernRail(slotKey) && isConcernPath(hrefOrPath)) {
     return railBlankAnchor(hrefOrPath, className, ctx, inner);
   }
@@ -288,11 +331,11 @@ function renderLiveTracked(mode, build) {
 }
 
 /**
- * 베스트·방 배너가 여는 레일 읽기 팝업에 넘길 값. 찾기·상세·등록 레일(다른 번들·absolute)은
- * 팝업의 게시판 이동 링크를 홈 주소 새 탭으로 연다.
+ * 베스트·방 배너가 여는 레일 읽기 팝업에 넘길 값.
+ * 찾기·등록은 inpage(팝업 안에서 이어 보기). 상세·absolute는 새 탭. 홈은 hash.
  */
 function concernRailAttrs(slotKey, ctx) {
-  const leave = ctx.linkMode === 'absolute' || isBlankConcernRail(slotKey) ? 'blank' : 'hash';
+  const leave = railLeaveMode(slotKey, ctx);
   return ` data-concern-rail-nav="${esc(ctx.navRole)}" data-concern-rail-guest="${esc(ctx.guestFilter)}" data-concern-rail-home="${esc(
     ctx.homeBase,
   )}" data-concern-rail-leave="${leave}"`;
@@ -589,38 +632,66 @@ function renderActionItem(item, featured, ctx, slotKey) {
       <span>${esc(item.desc)}</span>
       <em>${esc(item.cta)}</em>`;
   if (item.peek && isGuidePeekRail(slotKey)) {
-    return `<button type="button" class="${cls}" data-rail-guide-peek="${esc(item.peek)}" data-rail-home-base="${esc(ctx.homeBase)}">${inner}</button>`;
+    const guideLeave = isSearchOrRegisterRail(slotKey) ? 'inpage' : 'blank';
+    return `<button type="button" class="${cls}" data-rail-guide-peek="${esc(item.peek)}" data-rail-guide-leave="${guideLeave}" data-rail-home-base="${esc(
+      ctx.homeBase,
+    )}">${inner}</button>`;
   }
   return railSlotAnchor(item.href, cls, ctx, inner, slotKey);
 }
 
-/** 정보 게시판 배너(볼 수 있는 게시판만, 학생은 info-student 하나). 글은 팝업으로 읽고, 팝업의 게시판 이동 링크는 찾기·상세·등록 레일과 다른 번들에서 새 탭. */
+/** 정보 게시판 배너. 찾기·등록 팝업은 인페이지로 이어 보고, 상세·absolute만 새 탭. */
 function renderMediaTeaserSlot(slotKey, ctx) {
+  const leave = railLeaveMode(slotKey, ctx);
   return renderInfoRailBanners({
     navRole: ctx.navRole,
     homeBase: ctx.homeBase,
-    leaveInNewTab: ctx.linkMode === 'absolute' || isBlankConcernRail(slotKey),
+    leaveInNewTab: leave === 'blank',
+    continueInPage: leave === 'inpage',
   });
 }
 
 const RAIL_GUIDE_PEEK_ID = 'rail-guide-peek-overlay';
 
-/** 문구 고정. 상세 경로는 guide/router.js 의 현재 등록 경로(/guide/register). */
+/**
+ * 문구는 이용안내 화면(guide/screens.js)에 있는 문장. 찾기·등록 「자세히」는 이 목록을 팝업 안에서 펼친다.
+ * 상세 경로는 guide/router.js 의 현재 등록 경로(/guide/register).
+ */
 const RAIL_GUIDE_PEEK = {
   compare: {
     title: '조건 좁히는 법',
     lead: '찜과 비교로 후보를 먼저 줄여 보세요. 마음에 드는 곳은 찜해 두고, 첫 연락은 쪽지로 안전하게 시작합니다.',
     path: '/guide/compare',
+    points: [
+      '찜 → 비교 → 쪽지 순으로 한 번만 따라가 보세요.',
+      '당장 연락하지 않아도 괜찮아요. 찜한 공부방·과외쌤에 모아 두면 나중에 다시 볼 수 있어요.',
+      '찜해 둔 곳 중 2~3개를, 지역·과목·시간·비용 등 내가 중요하게 보는 기준으로 나란히 확인합니다.',
+      '짧은 인사와 궁금한 점만 적어서 보내 보세요. 쪽지는 회원끼리 첫 연락을 하는 통로입니다.',
+      '이름·연락처·결제 정보를 쪽지에 먼저 보내지 마세요',
+    ],
   },
   safe: {
     title: '안전 가이드',
     lead: '연락 전과 개인정보를 주고받기 전에 확인할 점을 모았습니다. 공식 기준과 신고는 고객센터에서 확인할 수 있어요.',
     path: '/guide/safe',
+    points: [
+      '노출된 신뢰정보는 상대가 프로필에 보여 둔 소개·자료이며, 플랫폼이 확인·인증했다는 뜻이 아닙니다.',
+      '첫 연락은 쪽지로 시작하고, 상대 프로필을 확인하세요',
+      '수업 조건, 비용, 장소, 환불 기준은 먼저 충분히 확인해 두세요.',
+      '선입금·외부 결제·개인 계좌 요구에 바로 응하지 마세요',
+      '주민번호·통장·비밀번호 등 민감 정보를 쪽지로 보내지 마세요',
+    ],
   },
   registration: {
     title: '작성 전 체크',
     lead: '등록 전에 노출되는 정보와 쪽지 설정을 확인하세요. 기본등록은 베이직카드로 가볍게 시작할 수 있습니다.',
     path: '/guide/register',
+    points: [
+      '가입 필수정보를 입력하면 기본 노출이 시작됩니다. 상세등록은 카드와 상세 페이지에 보여줄 추가 정보를 보완하는 단계입니다.',
+      '노출을 위한 운영자 심사·승인 절차는 없습니다.',
+      '상세등록은 카드와 상세 페이지에 보여줄 추가 정보를 보완하는 단계입니다. 기본 노출의 필수 조건은 아닙니다.',
+      '저장을 눌러야 이어집니다. 창만 닫으면 저장되지 않아요.',
+    ],
   },
 };
 
@@ -635,12 +706,18 @@ function closeRailGuidePeek() {
   }
 }
 
-function openRailGuidePeek(kind, title, homeBase) {
+function openRailGuidePeek(kind, title, homeBase, leave) {
   const spec = RAIL_GUIDE_PEEK[kind];
   if (!spec) return;
   closeRailGuidePeek();
+  const inPage = leave === 'inpage';
   const base = String(homeBase || HOME_UI_BASE).replace(/\/$/, '');
   const href = `${base}/#${spec.path}`;
+  const points = (spec.points || []).map((line) => `<li>${esc(line)}</li>`).join('');
+  const more = inPage ? `<div data-rail-guide-more hidden><ul class="guest-gate__list">${points}</ul></div>` : '';
+  const secondary = inPage
+    ? `<button type="button" class="btn btn--secondary" data-rail-guide-expand>이용안내에서 자세히</button>`
+    : `<a class="btn btn--secondary" href="${esc(href)}" target="_blank" rel="noopener">이용안내에서 자세히</a>`;
   const overlay = document.createElement('div');
   overlay.id = RAIL_GUIDE_PEEK_ID;
   overlay.className = 'guest-deep-gate-overlay';
@@ -652,14 +729,22 @@ function openRailGuidePeek(kind, title, homeBase) {
     <div class="guest-gate guest-gate--deep">
       <h2 id="rail-guide-peek-title" class="guest-gate__title">${esc(title || spec.title)}</h2>
       <p class="guest-gate__lead">${esc(spec.lead)}</p>
+      ${more}
       <div class="guest-gate__actions">
         <button type="button" class="btn btn--primary" data-rail-guide-peek-dismiss>닫기</button>
-        <a class="btn btn--secondary" href="${esc(href)}" target="_blank" rel="noopener">이용안내에서 자세히</a>
+        ${secondary}
       </div>
     </div>`;
   document.body.appendChild(overlay);
   overlay.querySelectorAll('[data-rail-guide-peek-dismiss]').forEach((el) => {
     el.addEventListener('click', closeRailGuidePeek);
+  });
+  overlay.querySelector('[data-rail-guide-expand]')?.addEventListener('click', () => {
+    const box = overlay.querySelector('[data-rail-guide-more]');
+    if (box) box.hidden = false;
+    overlay.querySelector('.guest-gate--deep')?.classList.add('is-rail-guide-expanded');
+    overlay.querySelector('[data-rail-guide-expand]')?.remove();
+    overlay.querySelector('[data-rail-guide-peek-dismiss]')?.focus();
   });
   railGuidePeekOnKey = (e) => {
     if (e.key !== 'Escape') return;
@@ -677,7 +762,12 @@ function bindRailGuidePeekEvents(root) {
       e.preventDefault();
       const kind = btn.getAttribute('data-rail-guide-peek') || '';
       const title = btn.querySelector('strong')?.textContent?.trim() || '';
-      openRailGuidePeek(kind, title, btn.getAttribute('data-rail-home-base') || '');
+      openRailGuidePeek(
+        kind,
+        title,
+        btn.getAttribute('data-rail-home-base') || '',
+        btn.getAttribute('data-rail-guide-leave') || 'blank',
+      );
     });
   });
 }
@@ -730,11 +820,11 @@ export function renderRightRailBlock(slotKey = 'detail_right_rail', opts = {}) {
   return renderPromoWithRightRail(slotKey, { ...opts, variant: 'inline', tone: opts.tone || 'full' });
 }
 
-/** 공부방/과외쌤 등록 SPA — entry 밀도, home-ui 절대 링크 */
+/** 공부방/과외쌤 등록 SPA — entry 밀도. 고민·안내·정보 이동은 인페이지(절대 주소로 나가지 않음). */
 export function renderRegisterRightRail(opts = {}) {
   return renderPromoWithRightRail('register_right_rail', {
     tone: 'entry',
-    linkMode: 'absolute',
     ...opts,
+    linkMode: 'hash',
   });
 }

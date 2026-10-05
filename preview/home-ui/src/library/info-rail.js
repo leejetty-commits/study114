@@ -22,8 +22,9 @@ import { boardLoginHref, canDiscoverBoard, resolveBoardRole } from '../board-cha
 import { openRailPopup, syncRailPopupSession } from '../rail-popup.js';
 
 /**
- * @typedef {{ navRole: string, homeBase: string, leaveInNewTab: boolean }} InfoRailCtx
- * leaveInNewTab: 찾기·상세·등록 레일과 다른 번들(absolute)에서는 팝업의 게시판 이동 링크를 홈 주소 새 탭으로 연다.
+ * @typedef {{ navRole: string, homeBase: string, leaveInNewTab: boolean, continueInPage?: boolean }} InfoRailCtx
+ * leaveInNewTab: 상세 레일·absolute 에서는 팝업의 게시판 이동을 홈 주소 새 탭으로 연다.
+ * continueInPage: 찾기·등록은 팝업 안에서 본문·목록을 이어 본다.
  */
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
@@ -101,7 +102,7 @@ function renderBanner(board, ctx, liveId) {
   return `
     <section class="live-rail-slot live-rail-slot--info" data-rail-info="${key}" data-rail-state="${state}" data-info-rail-nav="${esc(
       ctx.navRole,
-    )}" data-info-rail-home="${esc(ctx.homeBase)}" data-info-rail-leave="${ctx.leaveInNewTab ? 'blank' : 'hash'}"${liveAttr}>
+    )}" data-info-rail-home="${esc(ctx.homeBase)}" data-info-rail-leave="${ctx.continueInPage ? 'inpage' : ctx.leaveInNewTab ? 'blank' : 'hash'}"${liveAttr}>
       <div class="live-rail-slot__band"><strong class="live-rail-slot__title">${esc(board.label)}</strong></div>
       ${list}
       <div class="live-rail-info__foot">
@@ -212,13 +213,16 @@ function findOpener(boardKey, postId) {
 }
 
 /**
- * @param {{ boardKey: string, postId: string, opener: HTMLElement|null, navRole: string, homeBase: string, leaveInNewTab: boolean }} opts
+ * @param {{ boardKey: string, postId: string, opener: HTMLElement|null, navRole: string, homeBase: string, leaveInNewTab: boolean, continueInPage?: boolean }} opts
  */
-function openInfoBoardPopup({ boardKey, postId, opener, navRole, homeBase, leaveInNewTab }) {
+function openInfoBoardPopup({ boardKey, postId, opener, navRole, homeBase, leaveInNewTab, continueInPage }) {
   const board = LIBRARY_BOARDS.find((b) => b.boardKey === boardKey);
   if (!board || !canDiscoverBoard(boardKey, railViewer(navRole).boardRole)) return;
   const boardHref = leaveInNewTab ? `${String(homeBase).replace(/\/$/, '')}/#${board.path}` : `#${board.path}`;
   const blank = leaveInNewTab ? ' target="_blank" rel="noopener"' : '';
+  const goBoard = continueInPage
+    ? `<button type="button" class="rail-popup__go" data-rail-popup-continue>${esc(COPY.goBoard)}</button>`
+    : `<a class="rail-popup__go" href="${esc(boardHref)}" data-rail-popup-leave${blank}>${esc(COPY.goBoard)}</a>`;
   openRailPopup({
     kind: 'info-board',
     title: board.label,
@@ -240,7 +244,7 @@ function openInfoBoardPopup({ boardKey, postId, opener, navRole, homeBase, leave
       };
     },
     renderSelected: async (id) => renderSelectedPost(board, await loadInfoPost(railViewer(navRole), boardKey, id)),
-    footerHtml: `<a class="rail-popup__go" href="${esc(boardHref)}" data-rail-popup-leave${blank}>${esc(COPY.goBoard)}</a>`,
+    footerHtml: goBoard,
   });
 }
 
@@ -257,6 +261,7 @@ function onDocumentClick(e) {
     navRole: section.getAttribute('data-info-rail-nav') || 'guest',
     homeBase: section.getAttribute('data-info-rail-home') || '',
     leaveInNewTab: section.getAttribute('data-info-rail-leave') === 'blank',
+    continueInPage: section.getAttribute('data-info-rail-leave') === 'inpage',
   });
 }
 
