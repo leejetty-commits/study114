@@ -289,21 +289,6 @@ final class ProviderTicketService
                 'region_label' => $label,
             ];
         }
-        if ($scopes === []) {
-            $top = $pdo->prepare(
-                'SELECT region_id, complex_id, region_basis_type FROM study_rooms WHERE id = ? AND deleted_at IS NULL LIMIT 1'
-            );
-            $top->execute([$studyRoomId]);
-            $row = $top->fetch(\PDO::FETCH_ASSOC);
-            if (is_array($row)) {
-                $scopes[] = [
-                    'region_basis_type' => (string) ($row['region_basis_type'] ?? 'dong'),
-                    'region_id' => isset($row['region_id']) ? (int) $row['region_id'] : null,
-                    'complex_id' => isset($row['complex_id']) ? (int) $row['complex_id'] : null,
-                    'region_label' => '',
-                ];
-            }
-        }
 
         return $scopeHelper->inventoriesForScopes($scopes);
     }

@@ -81,6 +81,8 @@ final class RsPdo extends PDO
     /** @var list<array<string, mixed>> */
     public array $listRooms = [];
     /** @var list<array<string, mixed>> */
+    public array $businessRooms = [];
+    /** @var list<array<string, mixed>> */
     public array $ticketRows = [];
     public int $rollbacks = 0;
     public int $commits = 0;
@@ -219,6 +221,19 @@ final class RsPdo extends PDO
                 }
             }
             return ['rows' => $rows];
+        }
+        if (str_contains($sql, 'region_basis_type FROM study_rooms')) {
+            $id = (int) ($p[0] ?? 0);
+            foreach ($this->businessRooms as $room) {
+                if ((int) ($room['id'] ?? 0) === $id) {
+                    return ['rows' => [[
+                        'region_id' => $room['region_id'] ?? null,
+                        'complex_id' => $room['complex_id'] ?? null,
+                        'region_basis_type' => $room['region_basis_type'] ?? 'dong',
+                    ]]];
+                }
+            }
+            return ['rows' => []];
         }
         if (str_contains($sql, 'COUNT(*) FROM provider_position_subscriptions') || str_contains($sql, 'information_schema')) {
             return ['column' => str_contains($sql, 'information_schema') ? 1 : 0];
@@ -396,6 +411,64 @@ $method = new ReflectionMethod(ProviderTicketService::class, 'primeInventoriesFo
 $inventories = $method->invoke($svcTicket, 2, $scope);
 $labels = array_map(static fn (array $row): string => (string) ($row['label'] ?? ''), $inventories);
 ok('(f) 이용권 지역 이름을 못 찾으면 빈 라벨', $labels !== [] && !array_filter($labels, static fn (string $l): bool => $l !== '' || preg_match('/#\s*\d+/', $l) === 1), json_encode($labels, JSON_UNESCAPED_UNICODE));
+
+$fnSrc = (string) file_get_contents(getcwd() . '/src/Paid/ProviderTicketService.php');
+$fnStart = strpos($fnSrc, 'function primeInventoriesForStudyRoom');
+$fnEnd = strpos($fnSrc, 'function memoPackProductName');
+$fnBody = is_int($fnStart) && is_int($fnEnd) && $fnEnd > $fnStart ? substr($fnSrc, $fnStart, $fnEnd - $fnStart) : '';
+ok('(31) primeInventoriesForStudyRoom 에 study_rooms 없음', $fnBody !== '' && !str_contains($fnBody, 'study_rooms'), $fnBody === '' ? '메서드 없음' : 'study_rooms 잔존');
+ok('(31) 홍보 조회는 study_room_regions LIMIT 3', str_contains($fnBody, 'FROM study_room_regions') && str_contains($fnBody, 'LIMIT 3'));
+
+$bizPdo = new RsPdo();
+inject($bizPdo);
+$bizPdo->roomRegions = [];
+$bizPdo->businessRooms = [[
+    'id' => 5,
+    'region_id' => 77,
+    'complex_id' => 88,
+    'region_basis_type' => 'dong',
+]];
+$bizMark = count($bizPdo->log);
+$bizScopes = $method->invoke(new ProviderTicketService(), 5, new PrimeRegionScope($bizPdo));
+$bizSql = implode("\n", array_slice($bizPdo->log, $bizMark));
+ok('(31) 홍보0+사업장있음 → prime_scopes []', $bizScopes === [], json_encode($bizScopes, JSON_UNESCAPED_UNICODE));
+ok('(31) 홍보0일 때 study_rooms SELECT 없음', !str_contains($bizSql, 'FROM study_rooms'), $bizSql);
+
+$slotPdo = new RsPdo();
+inject($slotPdo);
+$slotPdo->businessRooms = [[
+    'id' => 6,
+    'region_id' => 99,
+    'complex_id' => null,
+    'region_basis_type' => 'dong',
+]];
+$slotPdo->roomRegions = [
+    [
+        'study_room_id' => 6,
+        'slot' => 2,
+        'region_id' => 22,
+        'complex_id' => null,
+        'region_basis_type' => 'dong',
+        'is_primary' => 0,
+        'dong_name' => '홍보2동',
+        'complex_name' => '',
+    ],
+    [
+        'study_room_id' => 6,
+        'slot' => 3,
+        'region_id' => 33,
+        'complex_id' => null,
+        'region_basis_type' => 'dong',
+        'is_primary' => 0,
+        'dong_name' => '홍보3동',
+        'complex_name' => '',
+    ],
+];
+$slotScopes = $method->invoke(new ProviderTicketService(), 6, new PrimeRegionScope($slotPdo));
+$slotIds = array_map(static fn (array $row): int => (int) ($row['region_id'] ?? 0), $slotScopes);
+sort($slotIds);
+ok('(31) 홍보2·3만 있어도 스코프 포함', $slotIds === [22, 33], json_encode($slotScopes, JSON_UNESCAPED_UNICODE));
+ok('(31) 사업장 region 99는 스코프에 없음', !in_array(99, $slotIds, true), json_encode($slotIds));
 
 $axis = new TutorPositionAxis($ticketPdo);
 $city = (new ReflectionMethod(TutorPositionAxis::class, 'cityLabel'))->invoke($axis, 11);
