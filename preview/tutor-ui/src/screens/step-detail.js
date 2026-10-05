@@ -30,6 +30,7 @@ import {
 import { validatePromoUrls } from '../../../shared/promo-links.js';
 import { HOME_UI_BASE } from '../../../shared/preview-links.js';
 import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 
 function radios(name, options, selected) {
   return options
@@ -238,6 +239,7 @@ export function bindDetailEvents(root) {
   bindGlobalEvents(root);
   bindUniversityNameReselect(root);
   bindSchoolGradePairs(root);
+  bindInputFill(root.querySelector('[data-form="detail-all"]'));
   root.querySelector('[data-action="back-mypage"]')?.addEventListener('click', () => returnToMypage());
   root.querySelector('[data-action="add-subject"]')?.addEventListener('click', () => {
     registerState.subjects.push(emptySubject());

@@ -37,6 +37,7 @@ import { loadKakaoPostcode, openKakaoPostcode } from './kakao-postcode.js';
 import { displayRoad } from './address-region-match.js';
 import { ensureRegionFromKakao } from './region-ensure.js';
 import { renderMainSubjectSelect } from './main-subjects.js';
+import { refreshInputFill } from './input-fill.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -635,11 +636,13 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
     await openKakaoPostcode(async (result) => {
       if (kind === 'home') {
         applyHomeResult(form, result);
+        refreshInputFill(form);
         return;
       }
       if (kind === 'business') {
         applyBusinessResult(form, result, null);
         fillPromo1FromOpening(form, result, null);
+        refreshInputFill(form);
         try {
           const region = await resolveRegion(result);
           applyBusinessResult(form, result, region);
@@ -647,6 +650,7 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
         } catch {
           refreshPromo1Mismatch(form);
         }
+        refreshInputFill(form);
         return;
       }
       const m = String(kind).match(/^slot-(\d+)$/);
@@ -656,6 +660,7 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
       if (m[1] === '0') form.setAttribute('data-promo1-manual', '1');
       const basis = slotBasisOf(slotEl);
       applySlotResult(slotEl, result, null, basis);
+      refreshInputFill(slotEl);
       try {
         const region = await resolveRegion(result);
         applySlotResult(slotEl, result, region, basis);
@@ -663,6 +668,7 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
         /* 칸은 이미 채움. 동 코드는 저장 API가 추가한다. */
       }
       if (m[1] === '0') refreshPromo1Mismatch(form);
+      refreshInputFill(slotEl);
     });
   }
 
@@ -867,11 +873,13 @@ export function bindStudentHopeRegion(root, opts = {}) {
           if (!slotEl) return;
           const basis = slotBasisOf(slotEl);
           applyStudentHopeResult(slotEl, result, null, basis);
+          refreshInputFill(slotEl);
           opts.onApplied?.(slotEl);
           try {
             const region = await ensureRegionFromKakao(result);
             opts.onRegion?.(region);
             applyStudentHopeResult(slotEl, result, region, basis);
+            refreshInputFill(slotEl);
             opts.onApplied?.(slotEl);
           } catch {
             /* 동 이름은 이미 표시. 코드는 저장 시 보완 */

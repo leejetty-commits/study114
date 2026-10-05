@@ -18,6 +18,7 @@ import { openDetailDecision } from '../detail-decision/index.js';
 import { getStudyRoom } from './store.js';
 import { RC_COPY } from './registration-check-copy.js';
 import { cheonwonInputToWon } from '../../../shared/fee-cheonwon.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 import {
   RC_LIGHT_FIELDS,
   TEACHING_STYLE_OPTIONS,
@@ -184,6 +185,7 @@ function openDrawer(roomId, field, rerender) {
 
   let saving = false;
   const form = /** @type {HTMLFormElement} */ (wrap.querySelector('[data-rc-drawer-form]'));
+  bindInputFill(form);
   const errEl = wrap.querySelector('[data-rc-drawer-error]');
   const setError = (msg) => {
     if (!errEl) return;

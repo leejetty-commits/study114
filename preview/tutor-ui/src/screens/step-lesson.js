@@ -13,6 +13,7 @@ import { wonToCheonwonInput } from '../../../shared/fee-cheonwon.js';
 import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
@@ -141,6 +142,7 @@ export function renderLesson() {
 export function bindLessonEvents(root) {
   bindSchoolGradePairs(root);
   bindGlobalEvents(root);
+  bindInputFill(root.querySelector('[data-form="lesson"]'));
   const nextBtn = root.querySelector('[data-action="next"]');
   root.querySelector('[data-action="prev"]')?.addEventListener('click', () => navigate('/register/regions'));
   root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipDetailRegistration());

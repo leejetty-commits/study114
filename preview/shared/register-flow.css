@@ -1,4 +1,6 @@
 /* 등록 플로우 공통 — 과외쌤·공부방 상세등록 */
+@import './input-fill.css';
+
 .register-chrome-shell .register-body {
   padding-top: var(--space-4);
 }
@@ -360,7 +362,6 @@
 }
 
 .register-flow .form-address input[readonly] {
-  background: var(--gray-50, #f8fafc);
   cursor: default;
 }
 

@@ -20,6 +20,7 @@ import {
   collectTutorRegionSlots,
   validateTutorActivityRegions,
 } from '../../../shared/tutor-region-slots.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 
 function radios(name, options, selected) {
   return options
@@ -109,6 +110,7 @@ export function bindBasicEvents(root) {
   bindGlobalEvents(root);
   const units = getCityUnits(getCities());
   bindTutorRegionSlotEvents(root, units);
+  bindInputFill(root.querySelector('[data-form="basic"]'));
 
   const nextBtn = root.querySelector('[data-action="next"]');
   nextBtn?.addEventListener('click', () => {

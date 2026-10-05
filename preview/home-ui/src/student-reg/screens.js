@@ -33,7 +33,7 @@ import { STUDENT_BRANCH_COPY, STUDENT_COUNT_HALT_COPY } from './student-reg-copy
 import { getAuthUser } from '../auth-session.js';
 import { basicRegisterPathForMe } from '../../../shared/auth-redirect.js';
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
-import './student-basic-fill.css';
+import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
 
 const SUPPORT_CONTACT_PATH = '/support/contact';
 
@@ -293,7 +293,7 @@ function renderBasicForm(student) {
     : student.preferred_student_count_group || '';
 
   const formBody = `
-    <form class="p19-form" data-p19-form="basic" data-p19-basic data-p19-student-id="${student.id}" data-p19-saved-hope="${hope}">
+    <form class="p19-form" data-p19-form="basic" data-p19-student-id="${student.id}" data-p19-saved-hope="${hope}">
       ${renderFormSection(
         '기본정보',
         '카드에 보이는 기본 항목입니다.',
@@ -479,66 +479,11 @@ function renderSettings(student) {
   return `<section class="mypage-panel mp-room-panel">${renderStudentShell(student, 'settings', body)}</section>`;
 }
 
-/* basic-fill:start */
-const BASIC_FILL_SKIP_TYPES = new Set(['hidden', 'radio', 'checkbox', 'button', 'submit', 'reset', 'file', 'image', 'range', 'color']);
-
-/** text·number·select·textarea. 라디오·체크·숨김은 제외. */
-function isBasicFillControl(el) {
-  const tag = String(el?.tagName || '').toUpperCase();
-  if (tag === 'SELECT' || tag === 'TEXTAREA') return true;
-  if (tag !== 'INPUT') return false;
-  const type = String(el.type || 'text').toLowerCase();
-  return !BASIC_FILL_SKIP_TYPES.has(type);
-}
-
-function basicFillState(el) {
-  return String(el.value ?? '').trim() !== '' ? 'filled' : 'empty';
-}
-
-/** 기본정보 칸의 data-fill. 색은 student-basic-fill.css 한곳. 포커스 흰색은 :focus 가 맡는다. */
-function paintBasicFillChrome(root) {
-  if (!root || typeof root.querySelectorAll !== 'function') return;
-  root.querySelectorAll('input, select, textarea').forEach((el) => {
-    if (!isBasicFillControl(el)) {
-      el.removeAttribute('data-fill');
-      return;
-    }
-    el.setAttribute('data-fill', basicFillState(el));
-  });
-}
-
-/**
- * 입력·선택은 즉시, 분기 교체·지역 하위칸 갱신은 change 버블에서 폼 전체를 다시 칠한다.
- * 대상 요소의 change 리스너(분기 교체, 시·도 연쇄)가 먼저 값을 바꾼 뒤 이 버블이 돈다.
- */
-function bindBasicFillChrome(root) {
-  root.addEventListener('input', (e) => {
-    const el = e.target;
-    if (!isBasicFillControl(el)) return;
-    el.setAttribute('data-fill', basicFillState(el));
-  });
-  root.addEventListener('change', () => {
-    paintBasicFillChrome(root);
-  });
-  paintBasicFillChrome(root);
-}
-/* basic-fill:end */
-
-/** @param {HTMLElement} slot @param {Record<string, unknown>} [values] */
+/** 주소검색 적용 후 칸 색은 공용 bindStudentHopeRegion 이 다시 칠한다. @param {HTMLElement} slot @param {Record<string, unknown>} [values] */
 function mountStudentHopeRegion(slot, values) {
   slot.innerHTML = renderStudentHopeRegion(values || {});
-  bindStudentHopeRegionChrome(slot);
-}
-
-/** @param {HTMLElement} slot */
-function bindStudentHopeRegionChrome(slot) {
-  const paint = () => paintBasicFillChrome(slot.closest('form') || slot);
-  bindStudentHopeRegion(slot, {
-    onApplied() {
-      paint();
-    },
-  });
-  paint();
+  bindStudentHopeRegion(slot);
+  refreshInputFill(slot);
 }
 
 /**
@@ -686,9 +631,9 @@ export function bindStudentRegEvents(root, rerender) {
       const tutorPanel = form.querySelector('[data-p19-hope-panel="tutor"]');
       if (tutorPanel) bindRegionCascades(tutorPanel, getTutorCityUnits());
       const hopeSlot = form.querySelector('[data-p19-hope-region-slot]');
-      if (hopeSlot) bindStudentHopeRegionChrome(hopeSlot);
-      bindBasicFillChrome(form);
+      if (hopeSlot) bindStudentHopeRegion(hopeSlot);
     }
+    bindInputFill(form);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

@@ -21,6 +21,7 @@ import {
   formatPrimaryAudienceLabel,
 } from '../../../shared/study-room-basic-form.js';
 import { bindDraggableDialog } from '../../../shared/draggable-dialog.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -279,6 +280,7 @@ export function bindBasicEvents(root) {
       }
     },
   });
+  bindInputFill(form);
 
   document.removeEventListener('keydown', onEditEscape);
   document.addEventListener('keydown', onEditEscape);

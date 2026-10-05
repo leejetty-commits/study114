@@ -11,6 +11,7 @@ import {
   tutorHashSearchParams,
 } from './router.js';
 import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 import { wonToCheonwonInput, cheonwonInputToWon } from '../../../shared/fee-cheonwon.js';
 import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
@@ -597,23 +598,6 @@ function scrollToTutorRcFocus(root) {
   });
 }
 
-function tutorBasicFieldEmpty(el) {
-  if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement)) {
-    return true;
-  }
-  if (el.type === 'hidden' || el.type === 'radio' || el.type === 'checkbox') return true;
-  return !String(el.value || '').trim();
-}
-
-function paintTutorBasicField(el) {
-  if (!(el instanceof HTMLElement)) return;
-  if (tutorBasicFieldEmpty(el)) {
-    el.style.background = '#fff';
-    return;
-  }
-  el.style.background = document.activeElement === el ? '#fff' : '#f3f4f6';
-}
-
 function showTutorBasicFeedback(form, kind, message) {
   const box = form.querySelector('[data-p21-save-feedback]');
   if (!box) return;
@@ -641,29 +625,15 @@ function bindUniversityNameReselect(root) {
   bindUniversityNameField(root);
 }
 
-function bindTutorBasicFieldChrome(form) {
-  const fields = form.querySelectorAll('input, textarea, select');
+function bindTutorBasicDirty(form) {
   const markDirty = () => {
     form.dataset.p21Dirty = '1';
     const hint = form.querySelector('[data-p21-dirty-hint]');
     if (hint) hint.hidden = false;
   };
-  fields.forEach((el) => {
-    paintTutorBasicField(el);
-    el.addEventListener('input', () => {
-      paintTutorBasicField(el);
-      markDirty();
-    });
-    el.addEventListener('change', () => {
-      paintTutorBasicField(el);
-      markDirty();
-    });
-    el.addEventListener('focus', () => {
-      if (el instanceof HTMLElement && el.type !== 'hidden' && el.type !== 'radio' && el.type !== 'checkbox') {
-        el.style.background = '#fff';
-      }
-    });
-    el.addEventListener('blur', () => paintTutorBasicField(el));
+  form.querySelectorAll('input, textarea, select').forEach((el) => {
+    el.addEventListener('input', markDirty);
+    el.addEventListener('change', markDirty);
   });
 }
 
@@ -715,8 +685,9 @@ export function bindTutorRegEvents(root, rerender) {
   root.querySelectorAll('[data-p21-form]').forEach((form) => {
     if (form.getAttribute('data-p21-form') === 'basic') {
       bindTutorRegionSlotEvents(form, getTutorCityUnits());
-      bindTutorBasicFieldChrome(form);
+      bindTutorBasicDirty(form);
     }
+    bindInputFill(form);
     form.querySelectorAll('.p19-chip input[type="checkbox"]').forEach((input) => {
       input.addEventListener('change', () => {
         input.closest('.p19-chip')?.classList.toggle('is-checked', input.checked);

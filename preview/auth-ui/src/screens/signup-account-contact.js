@@ -3,6 +3,7 @@ import { fetchMeApi, saveAccountContactApi } from '../auth-api.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import { getLoginReturnTo, resolveAfterAuthUrl, setPostVerifyTarget } from '../../../shared/auth-redirect.js';
 import { formatMobile, isValidMobile } from '../../../shared/phone.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 
 const PHONE_GUIDE =
   '휴대폰 번호는 010-0000-0000 형식으로 입력해 주세요.\n숫자만 넣어도 됩니다.\n예: 01012345678 또는 010-1234-5678';
@@ -38,6 +39,7 @@ export function bindSignupAccountContactEvents(root) {
   const emailWrap = root.querySelector('[data-email-wrap]');
   const emailInput = root.querySelector('#account-email');
   const phoneInput = root.querySelector('#account-phone');
+  bindInputFill(form);
 
   phoneInput?.addEventListener('blur', () => {
     const formatted = formatMobile(phoneInput.value);

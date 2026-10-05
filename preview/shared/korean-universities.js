@@ -6,6 +6,8 @@
  * - 학과명·university_note 는 이 모듈 밖. SKY 판정은 학부 정식명만.
  */
 
+import { refreshInputFill } from './input-fill.js';
+
 /** 목록 밖·대학원 검색용 표시명. 화면 코드값으로 쓰지 않는다. */
 export const UNIVERSITY_NAME_OTHER = '기타';
 
@@ -730,7 +732,7 @@ export function bindUniversityNameField(root) {
       note.hidden = visible.value.trim() !== UNIVERSITY_NAME_OTHER;
     };
 
-    const publish = () => {
+    const publishValue = () => {
       const current = visible.value.trim();
       if (mode === 'register' && current === UNIVERSITY_NAME_OTHER && note instanceof HTMLInputElement) {
         note.hidden = false;
@@ -743,6 +745,10 @@ export function bindUniversityNameField(root) {
         if (current && isListedUniversityName(current)) note.value = '';
       }
       hidden.value = current;
+    };
+    const publish = () => {
+      publishValue();
+      refreshInputFill(picker);
     };
 
     sido.addEventListener('change', () => {

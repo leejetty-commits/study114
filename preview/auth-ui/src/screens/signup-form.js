@@ -3,6 +3,7 @@ import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-p
 import { openKakaoPostcode } from '../../../shared/kakao-postcode.js';
 import { isValidMobile } from '../../../shared/phone.js';
 import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
+import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -202,6 +203,7 @@ export function bindSignupFormEvents(root) {
   const zipEl = root.querySelector('#signup-address-zip');
   const addressEl = root.querySelector('#signup-address');
   const detailEl = root.querySelector('#signup-address-line2');
+  bindInputFill(form);
 
   root.querySelector('[data-action="search-address"]')?.addEventListener('click', async () => {
     if (addressError) {
@@ -226,6 +228,7 @@ export function bindSignupFormEvents(root) {
             jibunHint.textContent = '';
           }
         }
+        refreshInputFill(form);
         detailEl?.focus();
       });
     } catch (err) {

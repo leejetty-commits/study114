@@ -4,6 +4,8 @@
  * 선택이 끝나기 전에는 region_id를 비운다.
  */
 
+import { refreshInputFill } from './input-fill.js';
+
 export const REGION_LIST_ERROR = '지역 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
 export const REGION_RESELECT = '지역을 다시 선택해 주세요';
 
@@ -342,6 +344,7 @@ export function syncRegionCascade(el, units) {
     stale.hidden = true;
     stale.textContent = '';
   }
+  refreshInputFill(el);
 }
 
 /** @param {ParentNode} root @param {Array<Record<string, unknown>>|CityUnit[]} units */

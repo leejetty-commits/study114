@@ -36,6 +36,7 @@ import {
   getStudyRoomSummaryCounts,
 } from './store.js';
 import { saveStudyRoomBasicInline, saveStudyRoomDetailInline } from './inline-save.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 import {
   ensureEmbeddedRegister,
   shouldReloadEmbeddedView,
@@ -648,6 +649,7 @@ export function bindStudyRoomRegEvents(root, rerender) {
         input.closest('.p19-chip')?.classList.toggle('is-checked', input.checked);
       });
     });
+    bindInputFill(form);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

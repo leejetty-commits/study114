@@ -387,38 +387,42 @@ ok(
     /return copy\.hopeRegionComplexNameMissing/.test(screens) &&
     /missing\.includes\('희망지역'\)\) lines\.push\(copy\.regionEmptyHint\)/.test(screens),
 );
-const fillCss = read('preview/home-ui/src/student-reg/student-basic-fill.css');
-const formTags = [...screens.matchAll(/<form class="p19-form"[^>]*>/g)].map((m) => m[0]);
-const basicBindStart = screens.indexOf("if (form.getAttribute('data-p19-form') === 'basic')");
-const basicBindEnd = screens.indexOf("form.addEventListener('submit'", basicBindStart);
-const basicBind = screens.slice(basicBindStart, basicBindEnd);
+const fillCss = read('preview/shared/input-fill.css');
+const formTags = [...screens.matchAll(/<form class="p19-form[^"]*"[^>]*>/g)].map((m) => m[0]);
+const formLoopStart = screens.indexOf("root.querySelectorAll('[data-p19-form]').forEach((form) => {");
+const formLoopEnd = screens.indexOf("form.addEventListener('submit'", formLoopStart);
+const formLoop = screens.slice(formLoopStart, formLoopEnd);
+const hopeBindStart = form.indexOf('export function bindStudentHopeRegion');
+const hopeBind = form.slice(hopeBindStart, form.indexOf('\nexport function', hopeBindStart + 1));
 ok(
-  '칸 색: 기본정보 공통 paint, 희망지역 검색 적용도 같은 함수',
-  /function paintBasicFillChrome\(root\)/.test(screens) &&
-    /function bindBasicFillChrome\(root\)/.test(screens) &&
-    /import '\.\/student-basic-fill\.css'/.test(screens) &&
-    /const paint = \(\) => paintBasicFillChrome\(slot\.closest\('form'\) \|\| slot\)/.test(screens) &&
-    /onApplied\(\) \{\s*paint\(\);\s*\}/.test(screens) &&
+  '칸 색: 공용 input-fill 로 칠하고, 희망지역 주소검색 적용도 공용 refresh',
+  /import \{ bindInputFill, refreshInputFill \} from '\.\.\/\.\.\/\.\.\/shared\/input-fill\.js'/.test(screens) &&
+    !existsSync(join(ROOT, 'preview/home-ui/src/student-reg/student-basic-fill.css')) &&
+    !/student-basic-fill\.css|paintBasicFillChrome|bindBasicFillChrome/.test(screens) &&
+    /import \{ refreshInputFill \} from '\.\/input-fill\.js'/.test(form) &&
+    (hopeBind.match(/refreshInputFill\(slotEl\);\s*opts\.onApplied\?\.\(slotEl\);/g) || []).length === 2 &&
+    /function mountStudentHopeRegion\(slot, values\) \{[\s\S]*?bindStudentHopeRegion\(slot\);\s*refreshInputFill\(slot\);\s*\}/.test(screens) &&
     !/paintHopeRegionChrome/.test(screens) &&
     !/el\.style\.background/.test(screens) &&
     !/#f3f4f6|#fff\b/.test(screens),
 );
 ok(
-  '칸 색: 색 값은 CSS 변수 한곳, 기본정보 폼만, disabled 제외',
+  '칸 색: 색 값은 공용 CSS 변수 한곳, data-input-fill 폼만, disabled 제외',
   (fillCss.match(/#f3f4f6/g) || []).length === 1 &&
     (fillCss.match(/#fff\b/g) || []).length === 1 &&
-    /--student-basic-filled:\s*#f3f4f6/.test(fillCss) &&
-    /--student-basic-empty:\s*#fff/.test(fillCss) &&
-    /\[data-p19-basic\] :is\(input, select, textarea\)\[data-fill='filled'\]:not\(:disabled\):not\(:focus\)/.test(fillCss) &&
-    /background-color:\s*var\(--student-basic-filled\)/.test(fillCss) &&
-    /background-color:\s*var\(--student-basic-empty\)/.test(fillCss) &&
+    /--input-fill-filled:\s*#f3f4f6/.test(fillCss) &&
+    /--input-fill-empty:\s*#fff/.test(fillCss) &&
+    /\[data-input-fill\] :is\(input, select, textarea\)\[data-fill='filled'\]:not\(:disabled\):not\(:focus\)/.test(fillCss) &&
+    /background-color:\s*var\(--input-fill-filled\)/.test(fillCss) &&
+    /background-color:\s*var\(--input-fill-empty\)/.test(fillCss) &&
     /\[data-fill\]:focus:not\(:disabled\)/.test(fillCss) &&
     !/background\s*:/.test(fillCss) &&
     !/\bborder\b|\boutline\b|box-shadow/.test(fillCss) &&
     !/!important/.test(fillCss) &&
-    formTags.filter((tag) => tag.includes('data-p19-basic')).length === 1 &&
-    basicBind.includes('bindBasicFillChrome(form)') &&
-    screens.split('bindBasicFillChrome(form)').length === 2,
+    formTags.length >= 3 &&
+    formTags.every((tag) => !/data-p19-basic|data-input-fill/.test(tag)) &&
+    formLoop.includes('bindInputFill(form);') &&
+    screens.split('bindInputFill(form)').length === 2,
 );
 ok(
   '서버: complex_name 은 관계 키이고 ComplexEnsure::ensure 를 호출',
@@ -446,12 +450,14 @@ console.log('##### 3부 기본정보 칸 색 (스타일시트 계산) #####');
 const GRAY = 'rgb(243, 244, 246)';
 const WHITE = 'rgb(255, 255, 255)';
 const RED = 'rgb(220, 38, 38)';
-const fillStart = screens.indexOf('/* basic-fill:start */');
-const fillEnd = screens.indexOf('/* basic-fill:end */');
-ok('칸 색: 공통 함수 구간이 있다', fillStart >= 0 && fillEnd > fillStart);
-const fillSrc = screens.slice(fillStart + '/* basic-fill:start */'.length, fillEnd);
+const fillModule = await import('../preview/shared/input-fill.js');
+ok(
+  '칸 색: 공용 모듈이 bind·paint·refresh 를 내보낸다',
+  fillModule.INPUT_FILL_ATTR === 'data-input-fill' &&
+    ['bindInputFill', 'paintInputFill', 'refreshInputFill', 'isInputFillControl'].every((key) => typeof fillModule[key] === 'function'),
+);
 
-/** 선택자 엔진. student-basic-fill.css 와 기존 배경 규칙을 특이도로 겨룬다. */
+/** 선택자 엔진. shared/input-fill.css 와 기존 배경 규칙을 특이도로 겨룬다. */
 function splitTopComma(source) {
   const parts = [];
   let buf = '';
@@ -744,6 +750,13 @@ class FillNode {
     return this.querySelectorAll(selector)[0] || null;
   }
 
+  closest(selector) {
+    for (let cursor = this; cursor; cursor = cursor.parent) {
+      if (matchesSelector(cursor, selector, null)) return cursor;
+    }
+    return null;
+  }
+
   set innerHTML(html) {
     this.children = [];
     const re = /<(input|select|textarea)\b([^>]*)>/gi;
@@ -780,18 +793,18 @@ const colorRules = parseCss(`
 ok(
   '칸 색: 채움 규칙 특이도가 부모 마이페이지 배경보다 높다',
   cmpSpec(
-    specOf("[data-p19-basic] :is(input, select, textarea)[data-fill='filled']:not(:disabled):not(:focus)"),
+    specOf("[data-input-fill] :is(input, select, textarea)[data-fill='filled']:not(:disabled):not(:focus)"),
     specOf('.home-app--role-parent .mp-room .p19-input'),
   ) > 0,
 );
 
 try {
-  const { paintBasicFillChrome, bindBasicFillChrome } = new Function(`${fillSrc}; return { paintBasicFillChrome, bindBasicFillChrome };`)();
+  const { bindInputFill, refreshInputFill } = fillModule;
   const doc = new FillNode('div');
   const app = doc.append(new FillNode('div', { className: 'home-app home-app--role-parent' }));
   const layout = app.append(new FillNode('div', { className: 'mypage-layout' }));
   const room = layout.append(new FillNode('div', { className: 'mp-room' }));
-  const basic = room.append(new FillNode('form', { id: 'basic', attrs: { 'data-p19-basic': '' } }));
+  const basic = room.append(new FillNode('form', { id: 'basic', attrs: { 'data-p19-form': 'basic' } }));
   const field = (tag, opts) => basic.append(new FillNode(tag, opts));
   field('input', { id: 'name', className: 'p19-input', attrs: { name: 'public_display_name' }, value: '맑은하늘' });
   field('input', { id: 'request', className: 'p19-input', attrs: { name: 'request_summary' }, value: '' });
@@ -812,10 +825,12 @@ try {
   field('input', { id: 'err', className: 'p19-input', attrs: { name: 'err_field' }, value: '오류칸', borderTopColor: RED });
   field('input', { id: 'memo', type: 'radio', attrs: { name: 'slot_basis_x' }, value: 'dong' });
   field('input', { id: 'box', type: 'checkbox', attrs: { name: 'lesson_places' }, value: 'student_home' });
-  const saved = room.append(new FillNode('form', { id: 'saved', attrs: { 'data-p19-basic': '' } }));
+  const saved = room.append(new FillNode('form', { id: 'saved', attrs: { 'data-p19-form': 'basic' } }));
   saved.append(new FillNode('input', { id: 'saved-name', className: 'p19-input', value: '맑은하늘' }));
   saved.append(new FillNode('input', { id: 'saved-empty', className: 'p19-input', value: '' }));
-  const other = doc.append(new FillNode('form', { id: 'other' }));
+  const detail = room.append(new FillNode('form', { id: 'detail', attrs: { 'data-p19-form': 'detail' } }));
+  detail.append(new FillNode('input', { id: 'detail-school', className: 'p19-input', value: '신곡중' }));
+  const other = doc.append(new FillNode('form', { id: 'other', className: 'search-filter' }));
   other.append(new FillNode('input', { id: 'out', attrs: { 'data-fill': 'filled' }, value: '다른화면' }));
 
   let focused = null;
@@ -828,7 +843,7 @@ try {
     sido.value = lesson.value === 'study_room' ? '' : '경기도';
   });
   sido.addEventListener('change', () => { city.value = ''; });
-  bindBasicFillChrome(basic);
+  bindInputFill(basic);
 
   const snap = (sel) => {
     const node = doc.querySelector(sel);
@@ -878,16 +893,16 @@ try {
   subject.dispatchEvent({ type: 'change', target: subject, bubbles: true });
   const subjectPicked = snap('#subject');
   city.value = '의정부시';
-  paintBasicFillChrome(basic);
+  refreshInputFill(city);
   const cityFilled = snap('#city');
   sido.dispatchEvent({ type: 'change', target: sido, bubbles: true });
   const cityCleared = snap('#city');
   const dong = () => doc.querySelector('[data-p19-hope-region-slot] [data-field="dong_query"]');
   dong().value = '';
-  paintBasicFillChrome(basic);
+  refreshInputFill(hope);
   const hopeCleared = snap('[data-p19-hope-region-slot] [data-field="dong_query"]');
   dong().value = '신곡동';
-  paintBasicFillChrome(basic);
+  refreshInputFill(hope);
   const hopeApplied = snap('[data-p19-hope-region-slot] [data-field="dong_query"]');
   lesson.value = 'study_room';
   lesson.dispatchEvent({ type: 'change', target: lesson, bubbles: true });
@@ -896,7 +911,8 @@ try {
   lesson.value = 'tutor';
   lesson.dispatchEvent({ type: 'change', target: lesson, bubbles: true });
   const restored = snap('[data-p19-hope-region-slot] [data-field="dong_query"]');
-  paintBasicFillChrome(doc.querySelector('#saved'));
+  bindInputFill(saved);
+  bindInputFill(detail);
   const result = {
     ...initial,
     skipped,
@@ -916,6 +932,8 @@ try {
     restored,
     savedName: snap('#saved-name'),
     savedEmpty: snap('#saved-empty'),
+    detailSchool: snap('#detail-school'),
+    out: snap('#out'),
   };
 
   const isGray = (row) => row.bg === GRAY && row.fill === 'filled';
@@ -947,7 +965,11 @@ try {
   ok('색: 라디오·체크·숨김은 data-fill 없음', result.skipped.every((has) => has === false));
   ok('색: disabled 학년은 값이 있어도 회색으로 덮지 않음', result.grade.fill === 'filled' && result.grade.bg === WHITE);
   ok('색: 오류 테두리는 유지', result.err.border === RED && isGray(result.err));
-  ok('색: 기본정보가 아닌 폼은 채워져도 회색 아님', result.out.fill === 'filled' && result.out.bg !== GRAY);
+  ok('색: 적용 폼(상세정보)은 채우면 회색', isGray(result.detailSchool));
+  ok(
+    '색: 제외 폼은 채워져도 회색 아님',
+    result.out.fill === 'filled' && result.out.bg !== GRAY && !doc.querySelector('#other').hasAttribute('data-input-fill'),
+  );
 } catch (err) {
   ok('칸 색', false, err instanceof Error ? err.stack?.split('\n').slice(0, 4).join(' | ') : String(err));
 }

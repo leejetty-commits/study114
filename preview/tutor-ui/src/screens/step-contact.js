@@ -18,6 +18,7 @@ import {
 } from '../layout.js';
 import { validatePromoUrls } from '../../../shared/promo-links.js';
 import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 
 function radios(name, options, selected) {
   return options
@@ -121,6 +122,7 @@ function bindUniversityNameReselect(root) {
 export function bindContactEvents(root) {
   bindGlobalEvents(root);
   bindUniversityNameReselect(root);
+  bindInputFill(root.querySelector('[data-form="contact"]'));
   const nextBtn = root.querySelector('[data-action="next"]');
   root.querySelector('[data-action="prev"]')?.addEventListener('click', () => navigate('/register/lesson'));
   root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipDetailRegistration());

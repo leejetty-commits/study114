@@ -85,6 +85,7 @@ import { getPlansEffectiveRole, resolveSelectedProfile } from '../plans/profiles
 import { getHistoryRows, loadHistoryRows } from '../plans/history-mock.js';
 import { bindPaidCatalogEvents } from '../paid-checkout.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
+import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
 import {
   EMPTY_ONBOARDING,
   GUARDIAN_PLANS_COPY,
@@ -1065,6 +1066,7 @@ function bindPasswordChangeEvents(root) {
   const form = root.querySelector('[data-form="change-password"]');
   const errorEl = root.querySelector('[data-pw-change-error]');
   const successEl = root.querySelector('[data-pw-change-success]');
+  bindInputFill(form);
 
   root.querySelector('[data-action="toggle-password-change"]')?.addEventListener('click', () => {
     if (!panel) return;
@@ -1179,6 +1181,7 @@ function bindDisplayNameEvents(root, rerender) {
   const editPanel = root.querySelector('[data-display-name-edit]');
   const form = root.querySelector('[data-form="change-display-name"]');
   const errorEl = root.querySelector('[data-display-name-error]');
+  bindInputFill(form);
 
   const closeEdit = () => {
     if (editPanel) editPanel.hidden = true;
@@ -1198,6 +1201,7 @@ function bindDisplayNameEvents(root, rerender) {
         input.value = String(
           root.querySelector('[data-display-name-current]')?.textContent || '',
         ).trim();
+        refreshInputFill(input);
         input.focus();
         input.select();
       }

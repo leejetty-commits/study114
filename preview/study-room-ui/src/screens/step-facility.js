@@ -3,6 +3,7 @@ import { validatePromoUrls } from '../../../shared/promo-links.js';
 import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
 import { syncFacilityFromForm, syncCareerFromForm } from '../form-collect.js';
 import { saveCurrentStep, withSaving } from '../save-flow.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
@@ -233,6 +234,7 @@ export function bindFacilityEvents(root, opts = {}) {
   if (!opts.embed) bindGlobalEvents(root);
   bindUniversityNameReselect(root);
   const form = root.querySelector('[data-form="facility"]');
+  bindInputFill(form);
   const prevBtn = root.querySelector('[data-action="prev"]');
   const nextBtn = root.querySelector('[data-action="next"]');
   const saveBtn = root.querySelector('[data-action="save"]');

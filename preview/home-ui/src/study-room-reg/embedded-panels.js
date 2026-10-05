@@ -16,6 +16,7 @@ import {
   applyStudyRoomBasicToState,
 } from '../../../shared/study-room-basic-form.js';
 import { bindDraggableDialog } from '../../../shared/draggable-dialog.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
 import { renderRegisterCardInner } from '@study-room-ui/layout.js';
 import { renderBasicOverviewBoard, renderBasicEditModal } from '@study-room-ui/screens/step-basic.js';
@@ -473,6 +474,7 @@ export function bindEmbeddedPanelEvents(root, rerender) {
         }
       },
     });
+    bindInputFill(form);
 
     const saveBtn = overlay?.querySelector('[data-action="save-basic-all"]');
     saveBtn?.addEventListener('click', () => {

@@ -22,6 +22,7 @@ import {
 } from '../layout.js';
 import { MAIN_SUBJECT_OPTIONS } from '../../../shared/main-subjects.js';
 import { renderPromoPhotoGrid, promoPhotoHint, bindPromoPhotos, syncPromoPhotoMeta } from '../promo-photos.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -363,6 +364,7 @@ export function bindLessonEvents(root, opts = {}) {
   form?.addEventListener('input', refreshNext);
   form?.addEventListener('change', refreshNext);
   refreshNext();
+  bindInputFill(form);
 
   prevBtn?.addEventListener('click', () => navigate(basicOverviewPath()));
 

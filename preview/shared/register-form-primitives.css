@@ -173,7 +173,6 @@
 
 .register-flow .form-address input[readonly],
 .register-edit-dialog .form-address input[readonly] {
-  background: var(--gray-50, #f8fafc);
   cursor: default;
 }
 

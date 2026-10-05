@@ -331,10 +331,6 @@ form[data-form="facility"] select.form-input {
   line-height: 1.35;
 }
 
-.register-edit-dialog .form-address input[readonly] {
-  background: #fff7ee;
-}
-
 .register-nav--overview {
   display: flex;
   flex-wrap: wrap;

@@ -37,6 +37,7 @@ import {
   bindStudentHopeRegion,
   readStudentHopeRegion,
 } from '../../../shared/study-room-basic-form.js';
+import { bindInputFill } from '../../../shared/input-fill.js';
 
 function esc(s) {
   if (s == null) return '';
@@ -575,6 +576,7 @@ export function bindSignupBasicEvents(root) {
 
   syncStudentHopeBlocks();
   syncLessonCountLock();
+  bindInputFill(form);
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
