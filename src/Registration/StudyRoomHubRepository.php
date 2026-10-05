@@ -71,15 +71,16 @@ final class StudyRoomHubRepository
     /** @param array<string, mixed> $row @return array<string, mixed> */
     private function hydrateRoomRow(int $roomId, array $row, bool $ownerPhoneVerified = false): array
     {
-        $regionLabel = $this->regionLabel($roomId, $row);
+        $regionLabel = $this->regionLabel($roomId);
         $hasSubjects = $this->exists(
             'SELECT 1 FROM study_room_subject_targets WHERE study_room_id = ? LIMIT 1',
             [$roomId]
         );
+        // 홍보지역 행이 있을 때만. 사업장 study_rooms.region_id 만으로는 true가 되지 않는다.
         $hasRegions = $this->exists(
             'SELECT 1 FROM study_room_regions WHERE study_room_id = ? LIMIT 1',
             [$roomId]
-        ) || !empty($row['region_id']);
+        );
         $hasImage = $this->exists(
             'SELECT 1 FROM study_room_images WHERE study_room_id = ? LIMIT 1',
             [$roomId]
@@ -97,6 +98,8 @@ final class StudyRoomHubRepository
             'owner_phone_verified'     => $ownerPhoneVerified,
             'detail_completion_status' => (string) ($row['detail_completion_status'] ?? 'basic_only'),
             'region_label'             => $regionLabel,
+            // 사업장 위치(study_rooms). 대표 홍보가 아니다.
+            // 목록·체크리스트의 대표 홍보는 region_label(홍보1)과 has_regions(study_room_regions)를 쓴다.
             'region_id'                => !empty($row['region_id']) ? (string) (int) $row['region_id'] : '',
             'complex_id'               => !empty($row['complex_id']) ? (string) (int) $row['complex_id'] : '',
             'region_basis_type'        => isset($row['region_basis_type']) && in_array((string) $row['region_basis_type'], ['dong', 'complex'], true)
@@ -221,23 +224,12 @@ final class StudyRoomHubRepository
         return $base;
     }
 
-    /** @param array<string, mixed> $row */
-    private function regionLabel(int $roomId, array $row): string
+    /**
+     * 허브·목록 요약 지역. 홍보1(study_room_regions.is_primary = 1)의 동·단지 표기만 반환한다.
+     * 홍보1이 없으면 빈 문자열. 사업장 study_rooms.region_id 조인으로 채우지 않는다.
+     */
+    private function regionLabel(int $roomId): string
     {
-        if (!empty($row['region_id'])) {
-            $stmt = $this->pdo->prepare(
-                'SELECT CONCAT(r.dong_name, IFNULL(CONCAT(" · ", c.name), ""))
-                 FROM study_rooms sr
-                 LEFT JOIN regions r ON sr.region_id = r.id
-                 LEFT JOIN complexes c ON sr.complex_id = c.id
-                 WHERE sr.id = ? LIMIT 1'
-            );
-            $stmt->execute([$roomId]);
-            $val = $stmt->fetchColumn();
-            if ($val !== false && $val !== '') {
-                return (string) $val;
-            }
-        }
         $stmt = $this->pdo->prepare(
             'SELECT CONCAT(r.dong_name, IFNULL(CONCAT(" · ", c.name), ""))
              FROM study_room_regions srr
@@ -248,7 +240,7 @@ final class StudyRoomHubRepository
         $stmt->execute([$roomId]);
         $val = $stmt->fetchColumn();
 
-        return $val !== false ? (string) $val : '';
+        return ($val !== false && $val !== null && $val !== '') ? (string) $val : '';
     }
 
     private function gradeBand(int $roomId): ?string
