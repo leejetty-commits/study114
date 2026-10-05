@@ -97,6 +97,8 @@ import {
   A28_MEMBER_STATUS_LABELS,
   A28_MEMBER_ROLE_LABELS,
   A28_MEMBER_TIER_LABELS,
+  isAdminPreviewPath,
+  withAdminPreviewLabel,
 } from './a28-copy.js';
 import {
   getSiteSettings,
@@ -174,6 +176,7 @@ import {
   renderOpsTip,
   renderPanel,
   sectionOwnerLabel,
+  setAdminPanelPath,
   selected,
 } from './a28-screens-shared.js';
 import { peekHomePopups } from './home-popup-api.js';
@@ -614,15 +617,23 @@ function renderHub() {
     if (g.children?.length) {
       const kids = g.children.filter((c) => canAccessAdminMenu(c.menuId || c.id));
       if (!kids.length) continue;
-      cards.push({ label: g.label, path: kids[0].path, desc: g.help || kids[0].help || '' });
+      cards.push({
+        label: withAdminPreviewLabel(kids[0].path, g.label),
+        path: kids[0].path,
+        desc: g.help || kids[0].help || '',
+      });
     } else if (g.path && canAccessAdminMenu(g.menuId || g.id)) {
-      cards.push({ label: g.label, path: g.path, desc: g.help || '' });
+      cards.push({
+        label: withAdminPreviewLabel(g.path, g.label),
+        path: g.path,
+        desc: g.help || '',
+      });
     }
   }
   const cardHtml = cards
     .map(
       (n) =>
-        `<a href="#${n.path}" class="sup-admin-hub__card a28-hub__card" data-a28-nav="${n.path}">
+        `<a href="#${n.path}" class="sup-admin-hub__card a28-hub__card${isAdminPreviewPath(n.path) ? ' sup-admin-hub__card--preview' : ''}" data-a28-nav="${n.path}">
           <span class="sup-admin-hub__title">${esc(n.label)}</span>
           <span class="sup-admin-hub__desc">${esc(n.desc)}</span>
         </a>`,
@@ -663,7 +674,7 @@ function renderPromoQuickBar() {
              )}">킷 복사</button>`,
         )
         .join('')}
-      <a class="a28-promo-quick__more" href="#/admin/promo" data-a28-nav="/admin/promo">데스크 →</a>
+      <a class="a28-promo-quick__more" href="#/admin/promo" data-a28-nav="/admin/promo">${esc(withAdminPreviewLabel('/admin/promo', '데스크 →'))}</a>
     </div>`;
 }
 
@@ -1833,6 +1844,7 @@ function renderSettings(section = 'basic') {
 
 /** @param {string} path */
 export function renderA28Screen(path) {
+  setAdminPanelPath(path);
   let body = renderHub();
   if (path === '/admin') body = renderHub();
   else if (path === '/admin/promo') body = renderPromoDesk();

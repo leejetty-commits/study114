@@ -22,6 +22,75 @@ export const A28_COPY = {
     '숨김·쪽지 제한·노출 보정은 할 수 있어요. 다만 그 결과가 회원에게 심사·보증·인증처럼 보이면 안 됩니다. 「승인」「반려」「인증쌤」 같은 말은 쓰지 마세요.',
 };
 
+/** 미연동 관리자 화면 표시. 메뉴·패널·허브는 여기만 읽는다. */
+export const ADMIN_PREVIEW_PREFIX = '미리보기 · ';
+
+/** 마켓 5 · 문자 7 · 부가 4 · 홍보 1. 실도구 path는 넣지 않는다. */
+export const ADMIN_PREVIEW_PATHS = Object.freeze([
+  '/admin/market/overview',
+  '/admin/market/listings',
+  '/admin/market/stats',
+  '/admin/market/reviews',
+  '/admin/market/incomplete',
+  '/admin/notify/settings',
+  '/admin/notify/sync',
+  '/admin/notify/templates',
+  '/admin/notify/phones',
+  '/admin/notify/send',
+  '/admin/notify/logs',
+  '/admin/notify/logs-phone',
+  '/admin/addons',
+  '/admin/addons/pg',
+  '/admin/addons/sms',
+  '/admin/addons/identity',
+  '/admin/promo',
+]);
+
+export const ADMIN_PREVIEW_NOTICE =
+  '연습용 화면이에요. 이 화면은 아직 사이트와 완전히 연결되어 있지 않을 수 있어요. 여기 보이는 숫자·내용으로 운영 판단을 하지 마세요.';
+
+export const ADMIN_PREVIEW_SMS_EXTRA = '실제 문자는 나가지 않아요.';
+
+const ADMIN_PREVIEW_PATH_SET = new Set(ADMIN_PREVIEW_PATHS);
+
+/** @param {string} path */
+export function adminPreviewPathname(path) {
+  const raw = String(path ?? '').trim();
+  const noHash = raw.startsWith('#') ? raw.slice(1) : raw;
+  const pathOnly = noHash.split('?')[0];
+  if (!pathOnly) return '';
+  return pathOnly.startsWith('/') ? pathOnly : `/${pathOnly}`;
+}
+
+/** @param {string} path */
+export function isAdminPreviewPath(path) {
+  return ADMIN_PREVIEW_PATH_SET.has(adminPreviewPathname(path));
+}
+
+/** @param {string} path */
+export function isAdminNotifyPreviewPath(path) {
+  const name = adminPreviewPathname(path);
+  return name.startsWith('/admin/notify/') && isAdminPreviewPath(name);
+}
+
+/**
+ * @param {string} path
+ * @param {string} label
+ */
+export function withAdminPreviewLabel(path, label) {
+  const text = String(label ?? '');
+  if (!isAdminPreviewPath(path)) return text;
+  if (text.startsWith(ADMIN_PREVIEW_PREFIX)) return text;
+  return `${ADMIN_PREVIEW_PREFIX}${text}`;
+}
+
+/** @param {string} path */
+export function adminPreviewNoticeText(path) {
+  if (!isAdminPreviewPath(path)) return '';
+  if (isAdminNotifyPreviewPath(path)) return `${ADMIN_PREVIEW_NOTICE} ${ADMIN_PREVIEW_SMS_EXTRA}`;
+  return ADMIN_PREVIEW_NOTICE;
+}
+
 /**
  * 영카트식 2단 메뉴.
  * - 그룹 = 왼쪽 큰 메뉴(영카트 menu100/200/300…)

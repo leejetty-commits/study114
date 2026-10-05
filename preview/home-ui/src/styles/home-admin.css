@@ -145,6 +145,10 @@
   color: #f1f5f9;
 }
 
+.admin-sidebar__sublink--preview {
+  color: var(--gray-400);
+}
+
 .admin-sidebar__sublink.is-active {
   background: var(--brand-blue-light);
   border-color: #93c5fd;
@@ -638,6 +642,19 @@
 }
 .a28-ops-tip strong { display: block; margin-bottom: 0.25rem; }
 .a28-ops-tip p { margin: 0; }
+.a28-preview-notice {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 0.5rem;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  color: var(--gray-600);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.sup-admin-hub__card--preview .sup-admin-hub__title {
+  color: var(--gray-600);
+}
 .a28-redline__forbidden { display: block; margin-top: 0.25rem; font-size: var(--text-xs); color: #b91c1c; }
 .a28-nav { margin-bottom: var(--space-4); }
 .a28-panel {

@@ -3,7 +3,30 @@
  * Rollback: git revert the a28 split commit(s).
  */
 import { listSectionGroupSummary } from '../board-channel-store.js';
-import { A28_COPY } from './a28-copy.js';
+import {
+  A28_COPY,
+  ADMIN_PREVIEW_NOTICE,
+  ADMIN_PREVIEW_SMS_EXTRA,
+  isAdminNotifyPreviewPath,
+  isAdminPreviewPath,
+  withAdminPreviewLabel,
+} from './a28-copy.js';
+
+/** renderA28Screen이 패널을 그리기 전에 넣는다. */
+let adminPanelPath = '';
+
+/** @param {string} path */
+export function setAdminPanelPath(path) {
+  const raw = String(path ?? '').split('?')[0];
+  adminPanelPath = raw.startsWith('#') ? raw.slice(1) : raw;
+}
+
+/** 미리보기 화면 상단 안내. 대상이 아니면 빈 문자열. */
+export function renderAdminPreviewNotice(path) {
+  if (!isAdminPreviewPath(path)) return '';
+  const extra = isAdminNotifyPreviewPath(path) ? ` ${ADMIN_PREVIEW_SMS_EXTRA}` : '';
+  return `<p class="a28-preview-notice" role="note">${esc(ADMIN_PREVIEW_NOTICE)}${esc(extra)}</p>`;
+}
 
 export function sectionOwnerLabel(id) {
   const labels = {
@@ -67,15 +90,17 @@ export function bindDetailDrawer(root) {
  * @param {{ lead?: string }} [opts]
  */
 export function renderPanel(title, _screenId, bodyHtml, { lead = '' } = {}) {
+  const shownTitle = withAdminPreviewLabel(adminPanelPath, title);
+  const notice = renderAdminPreviewNotice(adminPanelPath);
   return `
     <section class="sup-panel-card sup-panel-card--admin a28-panel">
       <header class="sup-panel-card__head">
         <div>
-          <h2 class="sup-panel-card__title">${esc(title)} <span class="sup-admin-badge a28-badge">${esc(A28_COPY.previewBadge)}</span></h2>
+          <h2 class="sup-panel-card__title">${esc(shownTitle)} <span class="sup-admin-badge a28-badge">${esc(A28_COPY.previewBadge)}</span></h2>
           ${lead ? `<p class="sup-panel-card__lead">${lead}</p>` : ''}
         </div>
       </header>
-      <div class="sup-panel-card__body">${bodyHtml}</div>
+      <div class="sup-panel-card__body">${notice}${bodyHtml}</div>
     </section>`;
 }
 

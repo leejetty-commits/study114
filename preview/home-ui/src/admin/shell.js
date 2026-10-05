@@ -4,7 +4,7 @@
  */
 
 import { renderPreviewToolbar, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
-import { A28_COPY, A28_MENU } from './a28-copy.js';
+import { A28_COPY, A28_MENU, isAdminPreviewPath, withAdminPreviewLabel } from './a28-copy.js';
 import { findAdminNavLeaf } from './router.js';
 import { canAccessAdminMenu } from './admin-permissions.js';
 import { getAuthUser, ROLE_HOME } from '../auth-session.js';
@@ -43,7 +43,7 @@ function renderBreadcrumb(path) {
       <a href="#/admin" data-a28-nav="/admin">운영</a>
       ${groupLabel ? `<span aria-hidden="true">/</span><span>${esc(groupLabel)}</span>` : ''}
       <span aria-hidden="true">/</span>
-      <span>${esc(leaf?.label || '홈')}</span>
+      <span>${esc(withAdminPreviewLabel(leaf?.path || '', leaf?.label || '홈'))}</span>
     </nav>`;
 }
 
@@ -69,7 +69,7 @@ function renderSidebar(activePath) {
         const active = group.path === activePath ? ' is-active' : '';
         return `
           <a href="#${group.path}" class="admin-sidebar__link${active}" data-a28-nav="${group.path}">
-            <span class="admin-sidebar__label">${esc(group.label)}</span>
+            <span class="admin-sidebar__label">${esc(withAdminPreviewLabel(group.path, group.label))}</span>
           </a>`;
       }
 
@@ -81,7 +81,8 @@ function renderSidebar(activePath) {
         .map((c) => {
           const active = c.path === activeLeaf?.path ? ' is-active' : '';
           const locked = c.masterOnly ? ' admin-sidebar__sublink--locked' : '';
-          return `<a href="#${c.path}" class="admin-sidebar__sublink${active}${locked}" data-a28-nav="${c.path}">${esc(c.label)}</a>`;
+          const preview = isAdminPreviewPath(c.path) ? ' admin-sidebar__sublink--preview' : '';
+          return `<a href="#${c.path}" class="admin-sidebar__sublink${active}${locked}${preview}" data-a28-nav="${c.path}">${esc(withAdminPreviewLabel(c.path, c.label))}</a>`;
         })
         .join('');
 

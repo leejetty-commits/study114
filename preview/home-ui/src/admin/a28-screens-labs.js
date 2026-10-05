@@ -23,7 +23,7 @@ import {
   SMS_LAB_NOTICE,
 } from './vendor-addons.js';
 import { SMS_STATUS_KO } from './a28-screens-state.js';
-import { esc, renderOpsTip, renderPanel } from './a28-screens-shared.js';
+import { checked, esc, renderOpsTip, renderPanel, selected } from './a28-screens-shared.js';
 
 export function renderMarketLab(section = 'overview') {
   const data = getMarketplaceLab();
