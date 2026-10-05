@@ -103,7 +103,13 @@ final class PrimeRegionScope
     }
 
     /**
-     * 공부방 홍보지역(study_room_regions)에 속하는지 검증.
+     * 공부방 홍보지역(study_room_regions) 1·2·3 행에 속하는지 검증.
+     * 사업장 위치(study_rooms.region_id / complex_id)만 같으면 통과하지 않는다.
+     * is_primary만으로 좁히지 않는다.
+     *
+     * complex: 해당 study_room_id + complex_id 홍보 행.
+     * dong: complex_id 없는 같은 region_id 홍보 행. 없으면 같은 region_id의 아무 홍보 행
+     *       (단지 슬롯의 행정동 선택 허용).
      *
      * @param array{
      *   region_basis_type: 'dong'|'complex',
@@ -126,15 +132,6 @@ final class PrimeRegionScope
             );
             $stmt->execute([$studyRoomId, $complexId]);
             if ($stmt->fetchColumn()) {
-                return;
-            }
-            $stmtTop = $this->pdo->prepare(
-                'SELECT 1 FROM study_rooms
-                 WHERE id = ? AND complex_id = ? AND deleted_at IS NULL
-                 LIMIT 1'
-            );
-            $stmtTop->execute([$studyRoomId, $complexId]);
-            if ($stmtTop->fetchColumn()) {
                 return;
             }
             throw new InvalidArgumentException(
@@ -161,16 +158,6 @@ final class PrimeRegionScope
         );
         $stmt2->execute([$studyRoomId, $regionId]);
         if ($stmt2->fetchColumn()) {
-            return;
-        }
-        // study_room_regions 미시드여도 study_rooms 대표지역과 일치하면 허용
-        $stmtTop = $this->pdo->prepare(
-            'SELECT 1 FROM study_rooms
-             WHERE id = ? AND region_id = ? AND deleted_at IS NULL
-             LIMIT 1'
-        );
-        $stmtTop->execute([$studyRoomId, $regionId]);
-        if ($stmtTop->fetchColumn()) {
             return;
         }
 
