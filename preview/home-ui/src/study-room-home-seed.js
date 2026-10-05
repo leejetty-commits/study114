@@ -328,6 +328,28 @@ async function ensureLifetimeViews(roomId) {
 }
 
 /**
+ * 홈 목록이 서버에 넘기는 지역 키.
+ * 동 슬롯은 region_id. 단지 슬롯은 목록 소속(region_id)과 티어 키(complex_id)를 함께 보낸다.
+ * @param {object|null|undefined} slot
+ * @param {string} [promo]
+ * @returns {Record<string, string>}
+ */
+export function studyRoomHomeSearchFilters(slot, promo = '') {
+  /** @type {Record<string, string>} */
+  const filters = {};
+  if (slot?.region_id && /^\d+$/.test(String(slot.region_id))) {
+    filters.region_id = String(slot.region_id);
+  } else if (promo) {
+    filters.region_label = String(promo);
+  }
+  const complexId = String(slot?.complex_id || '').trim();
+  if (String(slot?.region_basis_type || '') === 'complex' && /^\d+$/.test(complexId)) {
+    filters.complex_id = complexId;
+  }
+  return filters;
+}
+
+/**
  * 홍보1 지역 공부방 목록(프라임 베스트 3 포함)과 조회수를 한 번 채운다.
  * @param {() => void} rerender
  */
@@ -335,18 +357,13 @@ export function bootStudyRoomHome(rerender) {
   const room = pickOwnStudyRoom();
   const promo = studyRoomPromo1Label(room);
   const slot = primarySavedRegion(room);
-  const key = `${room?.id || 0}|${slot?.region_id || ''}|${promo}`;
+  const filters = studyRoomHomeSearchFilters(slot, promo);
+  const key = `${room?.id || 0}|${filters.region_id || ''}|${filters.complex_id || ''}|${filters.region_label || ''}`;
   if (bootPromise && liveKey === key) return bootPromise;
   liveKey = key;
   bootPromise = (async () => {
-    const filters = {};
-    if (slot?.region_id && /^\d+$/.test(String(slot.region_id))) {
-      filters.region_id = String(slot.region_id);
-    } else if (promo) {
-      filters.region_label = promo;
-    }
     const jobs = [ensureLifetimeViews(room?.id)];
-    if (filters.region_id || filters.region_label) {
+    if (filters.region_id || filters.region_label || filters.complex_id) {
       jobs.push(
         searchApi('room', filters, { limit: 20, sort: 'latest' })
           .then((result) => {

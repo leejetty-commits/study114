@@ -136,10 +136,12 @@ export function getPrimeCandidatePool(kind, pool) {
   if (kind !== 'tutor') return getPrimeOccupied(pool, cap);
 
   const published = pool.filter(isListVisible);
-  const explicit = published.filter(
-    (i) => i.exposure_tier === 'prime' || i.position_sku === 'prime' || i.sku === 'prime',
+  const real = isRealDbPool(published);
+  const explicit = published.filter((i) =>
+    real ? paidSku(i) === 'prime' : i.exposure_tier === 'prime' || paidSku(i) === 'prime',
   );
   if (explicit.length) return sortByNewestFirst(explicit);
+  if (real) return [];
 
   const demoPool = Number(getPlanSetting('demo_prime_tutor_pool'));
   const n = Number.isFinite(demoPool) ? Math.max(cap, demoPool) : 12;

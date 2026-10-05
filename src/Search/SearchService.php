@@ -651,7 +651,11 @@ final class SearchService
             $center = implode("\n", $centerParts);
 
             $detailStatus = (string) ($row['detail_completion_status'] ?? '');
-            $exposureTier = $this->resolveExposureTier('study_room', (int) $row['id']);
+            $exposureTier = $this->resolveExposureTier(
+                'study_room',
+                (int) $row['id'],
+                $this->roomTierScope($filters),
+            );
             $positionSku = $exposureTier === 'basic' ? null : $exposureTier;
 
             $item = [
@@ -860,7 +864,11 @@ final class SearchService
             }
 
             $detailStatus = (string) ($row['detail_completion_status'] ?? '');
-            $exposureTier = $this->resolveExposureTier('tutor', (int) $row['id']);
+            $exposureTier = $this->resolveExposureTier(
+                'tutor',
+                (int) $row['id'],
+                $this->tutorTierScope($filters),
+            );
             $positionSku = $exposureTier === 'basic' ? null : $exposureTier;
 
             $schedule = [];
@@ -1433,15 +1441,146 @@ final class SearchService
     }
 
     /**
-     * 점유 티어는 유효한 기간형 구독만.
-     * 목록 인덱스·상세완료·published 는 결제 증명이 아니다.
+     * 공부방 목록 티어 키. 단지가 있으면 단지 구독만, 동만 있으면 동 구독만.
+     * 지역 키가 없으면 빈 배열(기간 안 구독 전체 — 기존 동작).
+     *
+     * @param array<string, mixed> $filters
+     * @return array{complex_id?: int, region_id?: int}
+     */
+    private function roomTierScope(array $filters): array
+    {
+        $complexId = $this->intFilter($filters, 'complex_id');
+        if ($complexId) {
+            return ['complex_id' => $complexId];
+        }
+        $regionId = $this->intFilter($filters, 'region_id');
+        if ($regionId) {
+            return ['region_id' => $regionId];
+        }
+
+        return [];
+    }
+
+    /**
+     * 과외쌤 목록 티어 키. 활동지역(시)과 주력과목은 검색에 있는 축만 맞춘다.
+     *
+     * @param array<string, mixed> $filters
+     * @return array{city_id?: int, subject_id?: int}
+     */
+    private function tutorTierScope(array $filters): array
+    {
+        $scope = [];
+        $cityId = $this->intFilter($filters, 'tutor_region_id');
+        if ($cityId) {
+            $scope['city_id'] = $cityId;
+        }
+        $subjectId = $this->intFilter($filters, 'subject_master_id');
+        if ($subjectId) {
+            $scope['subject_id'] = $subjectId;
+        }
+
+        return $scope;
+    }
+
+    /**
+     * @param array<string, int> $scope
+     */
+    private function positionScopeCacheKey(array $scope): string
+    {
+        if ($scope === []) {
+            return 'open';
+        }
+        ksort($scope);
+        $parts = [];
+        foreach ($scope as $key => $value) {
+            $parts[] = $key . ':' . (int) $value;
+        }
+
+        return implode('|', $parts);
+    }
+
+    /**
+     * 검색 맥락이 있을 때만 구독 지역·축을 붙인다. 컬럼이 없으면 조건을 넣지 않는다.
      *
      * @param 'study_room'|'tutor' $providerType
+     * @param array<string, int> $scope
+     * @param list<int|string> $params
+     */
+    private function positionScopeSql(PDO $pdo, string $providerType, array $scope, array &$params): string
+    {
+        if ($scope === []) {
+            return '';
+        }
+        $table = 'provider_position_subscriptions';
+        if ($providerType === 'study_room') {
+            $complexId = (int) ($scope['complex_id'] ?? 0);
+            if ($complexId > 0) {
+                if (
+                    !$this->columnCache($pdo, $table, 'region_basis_type')
+                    || !$this->columnCache($pdo, $table, 'complex_id')
+                ) {
+                    return '';
+                }
+                $params[] = $complexId;
+
+                return " AND region_basis_type = 'complex' AND complex_id = ?";
+            }
+            $regionId = (int) ($scope['region_id'] ?? 0);
+            if ($regionId <= 0 || !$this->columnCache($pdo, $table, 'region_id')) {
+                return '';
+            }
+            $params[] = $regionId;
+            if (
+                $this->columnCache($pdo, $table, 'region_basis_type')
+                && $this->columnCache($pdo, $table, 'complex_id')
+            ) {
+                return " AND region_id = ?"
+                    . " AND (region_basis_type = 'dong' OR region_basis_type IS NULL)"
+                    . ' AND (complex_id IS NULL OR complex_id = 0)';
+            }
+            if ($this->columnCache($pdo, $table, 'region_basis_type')) {
+                return " AND region_id = ? AND (region_basis_type = 'dong' OR region_basis_type IS NULL)";
+            }
+
+            return ' AND region_id = ?';
+        }
+
+        if ($providerType !== 'tutor') {
+            return '';
+        }
+        $parts = [];
+        $cityId = (int) ($scope['city_id'] ?? 0);
+        $subjectId = (int) ($scope['subject_id'] ?? 0);
+        if ($cityId > 0) {
+            if (!$this->columnCache($pdo, $table, 'city_id')) {
+                return '';
+            }
+            $params[] = $cityId;
+            $parts[] = 'city_id = ?';
+        }
+        if ($subjectId > 0 && $this->columnCache($pdo, $table, 'primary_subject_id')) {
+            $params[] = $subjectId;
+            $parts[] = 'primary_subject_id = ?';
+        }
+        if ($parts === []) {
+            return '';
+        }
+
+        return ' AND ' . implode(' AND ', $parts);
+    }
+
+    /**
+     * 점유 티어는 유효한 기간형 구독만.
+     * 목록 인덱스·상세완료·published 는 결제 증명이 아니다.
+     * 검색에 지역·축 키가 있으면 그 키의 구독만 티어가 된다.
+     *
+     * @param 'study_room'|'tutor' $providerType
+     * @param array<string, int> $scope
      * @return 'prime'|'pick'|'basic'
      */
-    private function resolveExposureTier(string $providerType, int $providerId): string
+    private function resolveExposureTier(string $providerType, int $providerId, array $scope = []): string
     {
-        $sku = $this->activePositionSku($providerType, $providerId);
+        $sku = $this->activePositionSku($providerType, $providerId, $scope);
 
         return $sku ?? 'basic';
     }
@@ -1449,16 +1588,18 @@ final class SearchService
     /**
      * provider_position_subscriptions: 대상 provider + prime|pick + 기간 안.
      * prime 이 pick 보다 우선. 컬럼·행이 없으면 점유 없음.
+     * 공부방은 이번 검색의 동 또는 단지, 과외쌤은 이번 검색의 시·주력과목과 맞는 행만.
      *
      * @param 'study_room'|'tutor' $providerType
+     * @param array<string, int> $scope
      * @return 'prime'|'pick'|null
      */
-    private function activePositionSku(string $providerType, int $providerId): ?string
+    private function activePositionSku(string $providerType, int $providerId, array $scope = []): ?string
     {
         if ($providerId <= 0 || ($providerType !== 'study_room' && $providerType !== 'tutor')) {
             return null;
         }
-        $cacheKey = $providerType . ':' . $providerId;
+        $cacheKey = $providerType . ':' . $providerId . ':' . $this->positionScopeCacheKey($scope);
         if (array_key_exists($cacheKey, $this->positionSkuCache)) {
             return $this->positionSkuCache[$cacheKey];
         }
@@ -1478,16 +1619,18 @@ final class SearchService
         $startedSql = $this->columnCache($pdo, $table, 'started_on')
             ? ' AND (started_on IS NULL OR started_on <= CURDATE())'
             : '';
+        $params = [$providerType, $providerId];
+        $scopeSql = $this->positionScopeSql($pdo, $providerType, $scope, $params);
         $stmt = $pdo->prepare(
             "SELECT sku_code FROM {$table}
              WHERE provider_type = ? AND provider_id = ?
                AND sku_code IN ('prime', 'pick')
                AND CURDATE() < end_exclusive_on
-               {$startedSql}
+               {$startedSql}{$scopeSql}
              ORDER BY CASE sku_code WHEN 'prime' THEN 0 ELSE 1 END, end_exclusive_on DESC
              LIMIT 1"
         );
-        $stmt->execute([$providerType, $providerId]);
+        $stmt->execute($params);
         $sku = $stmt->fetchColumn();
         $resolved = ($sku === 'prime' || $sku === 'pick') ? $sku : null;
 

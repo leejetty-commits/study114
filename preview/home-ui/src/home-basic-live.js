@@ -9,6 +9,12 @@ import { DEFAULT_LIST_SORT, readListSortFromHash } from '../../shared/list-sort.
 
 /** 서버 page당 최대(SearchService limit cap) */
 const PAGE_LIMIT = 50;
+
+/** 목록 티어는 검색 응답 position_sku 만. exposure_tier 만으로 올리지 않는다. */
+function paidPositionSku(item) {
+  const sku = item?.position_sku;
+  return sku === 'prime' || sku === 'pick' ? sku : '';
+}
 /** 홈 Basic이 한 번에 끌어올 최대 페이지(전체 정렬 근사) */
 const MAX_PAGES = 4;
 
@@ -66,8 +72,8 @@ function mapRoom(item) {
     inquiry_status: item.inquiry_status || 'paused',
     latitude: item.latitude ?? null,
     longitude: item.longitude ?? null,
-    exposure_tier: item.exposure_tier || 'basic',
-    position_sku: item.position_sku || (item.exposure_tier === 'prime' || item.exposure_tier === 'pick' ? item.exposure_tier : ''),
+    exposure_tier: paidPositionSku(item) || 'basic',
+    position_sku: paidPositionSku(item),
     image_path: item.image_path || item.image_path_basic || '',
     image_path_basic: item.image_path_basic || '',
     image_path_prime: item.image_path_prime || '',
@@ -102,8 +108,8 @@ function mapTutor(item) {
         : [],
     profile_status: 'published',
     compare_eligible: true,
-    exposure_tier: item.exposure_tier || 'basic',
-    position_sku: item.position_sku || (item.exposure_tier === 'prime' || item.exposure_tier === 'pick' ? item.exposure_tier : ''),
+    exposure_tier: paidPositionSku(item) || 'basic',
+    position_sku: paidPositionSku(item),
     _realDb: true,
   };
   tutor.badges = tutorBadges(tutor);
