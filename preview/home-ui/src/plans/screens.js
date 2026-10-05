@@ -1010,7 +1010,7 @@ export function renderPlansPositions() {
     roomPrimeSoldOut ||
     !selectedElig.canBuy ||
     (role === 'study_room' &&
-      selectedProduct?.productCode === 'prime' &&
+      (selectedProduct?.productCode === 'prime' || selectedProduct?.productCode === 'pick') &&
       !selectedRegionScope);
   const badgeLines = selectedBadges.map((code) => {
     const price = badgePriceKrw(providerTypeKey, undefined, code, periodLabel);
@@ -1937,7 +1937,7 @@ export function bindPlansScreenEvents(root, rerender) {
           : null;
       if (
         role === 'study_room' &&
-        productCode === 'prime' &&
+        (productCode === 'prime' || productCode === 'pick') &&
         (!region || !region.regionBasisType)
       ) {
         return;

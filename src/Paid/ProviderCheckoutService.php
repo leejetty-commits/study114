@@ -43,7 +43,7 @@ final class ProviderCheckoutService
      * @param 'study_room'|'tutor'|null $providerType
      * @param array<string, mixed> $memoIntent 1회 즉시권: student_id, body, context_label, peer_display_name
      * @param list<string> $badgeCodes
-     * @param array<string, mixed> $regionInput 공부방 Prime: region_basis_type · region_id|complex_id · slot_group? / 과외쌤: city_id
+     * @param array<string, mixed> $regionInput 공부방 Prime·Pick: region_basis_type · region_id|complex_id · slot_group? / 과외쌤: city_id
      * @return array<string, mixed>
      */
     public function createOrder(
@@ -101,14 +101,16 @@ final class ProviderCheckoutService
             $this->requireProviderContext($userId, $providerType, $providerId);
             /** @var 'study_room'|'tutor' $providerType */
             if ($kind === 'position') {
-                if ($productId === 'prime' && $providerType === 'study_room') {
+                if ($providerType === 'study_room' && ($productId === 'prime' || $productId === 'pick')) {
                     $primeRegionScope = $this->requireRoomPrimeRegionScope($providerId, $regionInput);
-                    $own = (new PrimeRegionScope($this->pdo))->findActiveOwnInScope($providerId, $primeRegionScope, false);
-                    if (is_array($own)) {
-                        $grantMode = 'extend';
-                        $activeOwn = $own;
-                    } else {
-                        $this->assertRoomPrimeAvailableInScope($primeRegionScope);
+                    if ($productId === 'prime') {
+                        $own = (new PrimeRegionScope($this->pdo))->findActiveOwnInScope($providerId, $primeRegionScope, false);
+                        if (is_array($own)) {
+                            $grantMode = 'extend';
+                            $activeOwn = $own;
+                        } else {
+                            $this->assertRoomPrimeAvailableInScope($primeRegionScope);
+                        }
                     }
                 } elseif ($providerType === 'tutor') {
                     $tutorAxis = (new TutorPositionAxis($this->pdo))->requireForTutor($providerId, $regionInput);
@@ -183,6 +185,7 @@ final class ProviderCheckoutService
             $snapshot['total_sale_krw'] = $amountWon;
         }
         if ($primeRegionScope !== null) {
+            // Pick도 같은 키에 홍보 지역을 넣는다. complete가 이 스냅샷으로 소유를 다시 본다.
             $snapshot['prime_region'] = [
                 'region_basis_type' => $primeRegionScope['region_basis_type'],
                 'region_id' => $primeRegionScope['region_id'],
@@ -590,7 +593,8 @@ final class ProviderCheckoutService
     }
 
     /**
-     * 공부방 Prime 전용 — 선택 지역 스코프 정규화·소유 검증.
+     * 공부방 Prime·Pick — 선택 홍보지역 스코프 정규화·소유 검증.
+     * 만석 검사는 Prime만 한다. 사업장 위치 폴백은 없다.
      *
      * @param array<string, mixed> $regionInput
      * @return array{
@@ -759,23 +763,25 @@ final class ProviderCheckoutService
             $grantMode = 'new';
             $activeOwn = null;
 
-            if ($productId === 'prime' && $providerType === 'study_room') {
+            if ($providerType === 'study_room' && ($productId === 'prime' || $productId === 'pick')) {
                 $primeRegion = is_array($snapshot['prime_region'] ?? null) ? $snapshot['prime_region'] : [];
                 $regionScope = $this->requireRoomPrimeRegionScope($providerId, $primeRegion);
-                $scopeHelper = new PrimeRegionScope($this->pdo);
-                $locked = $scopeHelper->lockActiveInScope($regionScope);
-                foreach ($locked as $row) {
-                    if ((int) ($row['provider_id'] ?? 0) === $providerId) {
-                        $activeOwn = $row;
-                        break;
+                if ($productId === 'prime') {
+                    $scopeHelper = new PrimeRegionScope($this->pdo);
+                    $locked = $scopeHelper->lockActiveInScope($regionScope);
+                    foreach ($locked as $row) {
+                        if ((int) ($row['provider_id'] ?? 0) === $providerId) {
+                            $activeOwn = $row;
+                            break;
+                        }
                     }
-                }
-                if (is_array($activeOwn)) {
-                    $grantMode = 'extend';
-                } elseif (count($locked) >= PrimeRegionScope::CAPACITY) {
-                    throw new PaidConflictException(
-                        '현재 선택 지역의 Prime 자리는 모두 이용 중입니다. 예약대기를 등록한 뒤 빈자리가 열릴 때 결제해 주세요. 대기 등록만으로 자리나 순번이 보장되지 않습니다.',
-                    );
+                    if (is_array($activeOwn)) {
+                        $grantMode = 'extend';
+                    } elseif (count($locked) >= PrimeRegionScope::CAPACITY) {
+                        throw new PaidConflictException(
+                            '현재 선택 지역의 Prime 자리는 모두 이용 중입니다. 예약대기를 등록한 뒤 빈자리가 열릴 때 결제해 주세요. 대기 등록만으로 자리나 순번이 보장되지 않습니다.',
+                        );
+                    }
                 }
             } elseif ($providerType === 'tutor') {
                 $axisInput = is_array($snapshot['tutor_axis'] ?? null) ? $snapshot['tutor_axis'] : [];

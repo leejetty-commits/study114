@@ -612,7 +612,7 @@ final class ProviderTicketRepository
      *   region_id?: int|null,
      *   complex_id?: int|null,
      *   slot_group?: string
-     * }|null $regionScope 공부방 Prime만 필수
+     * }|null $regionScope 공부방 Prime·Pick 필수
      * @param array{city_id: int, primary_subject_id: int}|null $tutorAxis 과외쌤 Prime/Pick 필수
      */
     public function addPositionSubscription(
@@ -639,7 +639,7 @@ final class ProviderTicketRepository
         $hasRegionScope = $this->positionRegionScopeColumnsReady();
         $writeRegion =
             $hasRegionScope
-            && $skuCode === 'prime'
+            && in_array($skuCode, ['prime', 'pick'], true)
             && $providerType === 'study_room'
             && is_array($regionScope)
             && isset($regionScope['region_basis_type']);

@@ -11,7 +11,8 @@ use Study114\Database\Connection;
 /**
  * 공부방 Prime 지역 스코프 SSOT.
  * 재고 키 = region_basis_type + (dong→region_id | complex→complex_id).
- * Pick·과외쌤에는 사용하지 않는다. label 문자열만으로는 키를 만들지 않는다.
+ * 소유 검사(assertOwnedByStudyRoom)는 Prime·Pick 공통. 재고(CAPACITY)는 Prime만.
+ * 과외쌤에는 사용하지 않는다. label 문자열만으로는 키를 만들지 않는다.
  */
 final class PrimeRegionScope
 {
