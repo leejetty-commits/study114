@@ -146,9 +146,19 @@ final class TutorRegisterService
 
                 }
 
-                $tutorId = $this->insertDraft($pdo, $userId, $input);
+                $tutorId = $this->findLatestTutorId($pdo, $userId);
 
-                $createdNow = true;
+                if ($tutorId === null) {
+
+                    $tutorId = $this->insertDraft($pdo, $userId, $input);
+
+                    $createdNow = true;
+
+                } else {
+
+                    $this->assertOwnership($pdo, $userId, $tutorId);
+
+                }
 
             } else {
 
@@ -338,11 +348,47 @@ final class TutorRegisterService
 
 
 
+    private function findLatestTutorId(PDO $pdo, int $userId): ?int
+
+    {
+
+        $stmt = $pdo->prepare(
+
+            'SELECT id FROM tutors
+
+             WHERE user_id = ?
+
+             ORDER BY updated_at DESC, id DESC
+
+             LIMIT 1'
+
+        );
+
+        $stmt->execute([$userId]);
+
+        $id = $stmt->fetchColumn();
+
+
+
+        return $id === false ? null : (int) $id;
+
+    }
+
+
+
     /** @param array<string, mixed> $input */
 
     private function insertDraft(PDO $pdo, int $userId, array $input): int
 
     {
+
+        $existing = $this->findLatestTutorId($pdo, $userId);
+
+        if ($existing !== null) {
+
+            return $existing;
+
+        }
 
         $name = $this->requireString($input, 'tutor_display_name');
 

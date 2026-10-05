@@ -134,17 +134,25 @@ function render() {
   markRegisterBootDone();
 }
 
-async function initApi() {
-  try {
-    const masters = await fetchMasters();
-    apiMasters.regions = masters.regions ?? [];
-    apiMasters.complexes = masters.complexes ?? [];
-    apiMasters.facilities = masters.facilities ?? [];
-    apiMasters.subjects = masters.subjects ?? [];
-  } catch {
-    /* 마스터 실패해도 기존 공부방 load는 이어간다 */
-  }
+/** masters 는 세션과 병렬. 실패해도 저장값 불러오기는 이어간다. */
+function loadMasters() {
+  return fetchMasters()
+    .then((masters) => {
+      apiMasters.regions = masters.regions ?? [];
+      apiMasters.complexes = masters.complexes ?? [];
+      apiMasters.facilities = masters.facilities ?? [];
+      apiMasters.subjects = masters.subjects ?? [];
+    })
+    .catch(() => {
+      /* 마스터 실패해도 기존 공부방 load는 이어간다 */
+    });
+}
 
+/**
+ * initChromeSession() 이 끝난 뒤에만 호출한다.
+ * guest/intro 면 저장값을 넣지 않는다.
+ */
+async function loadSavedRoom() {
   try {
     const gate = guardRegisterAccess(getChromeNavRole(), 'room');
     if (!gate.ok || gate.mode !== 'form') return null;
@@ -175,7 +183,10 @@ function init() {
   if (!window.location.hash) window.location.hash = '#/register/basic';
   window.addEventListener('hashchange', render);
 
-  Promise.all([initChromeSession(), initApi()])
+  const mastersReady = loadMasters();
+  initChromeSession()
+    .then(() => mastersReady)
+    .then(() => loadSavedRoom())
     .then(() => {
       chromeReady = true;
       if (isAuthRedirectPending()) {

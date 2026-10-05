@@ -11,6 +11,9 @@
  * 3부 변이: 소스를 실제로 되돌려 새 프로세스로 해당 시나리오를 돌려 실패를 확인하고, finally 에서 복구·복구 확인.
  *
  * 자식 실행: node scripts/verify-input-fill-rule.mjs --only=T1,S1  (변이 검사가 쓴다)
+ *
+ * 사이트오류-25: 시나리오 delayMeMs > 0 이면 /api/auth/me.php 응답만 그 밀리초만큼 늦춘다.
+ * me 가 masters 보다 늦어도 활동명·대학명·공부방명이 비면 안 된다. delayMeMs 0 인 기존 케이스는 그대로다.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -320,9 +323,18 @@ const sc = (def) => SCENARIOS.push(def);
 /* tutor-ui 등록 단계 */
 sc({
   id: 'T1', app: 'tutor-ui', role: 'tutor', hash: '/register/basic', form: '[data-form="basic"]',
-  async run({ page, snap, focusCheck }) {
+  async run({ snap, focusCheck, one }) {
     checkApplied('T1 과외 등록 기본', await snap());
+    const name = await one('#tutor_display_name');
+    ok('T1 지연 0: 활동명 채워짐', name?.value === '김수학', JSON.stringify(name));
     await focusCheck('T1 과외 등록 기본', '#tutor_display_name, [name="tutor_display_name"]');
+  },
+});
+sc({
+  id: 'T1D', app: 'tutor-ui', role: 'tutor', hash: '/register/basic', form: '[data-form="basic"]', delayMeMs: 40,
+  async run({ one }) {
+    const name = await one('#tutor_display_name');
+    ok('T1D 지연 me≥30: 활동명 비어 있지 않음', name?.value === '김수학', JSON.stringify(name));
   },
 });
 sc({
@@ -362,6 +374,13 @@ sc({
     await disabledCheck('T4 과외 등록 상세', '[data-form="detail-all"] [name="major_name"]', '수학과');
   },
 });
+sc({
+  id: 'T4D', app: 'tutor-ui', role: 'tutor', hash: '/register/detail', form: '[data-form="detail-all"]', delayMeMs: 40,
+  async run({ one }) {
+    const univ = await one('#tutor_univ_detail');
+    ok('T4D 지연 me≥30: 대학명(tutor_univ_detail) 비어 있지 않음', univ?.value === '서울대학교', JSON.stringify(univ));
+  },
+});
 
 /* study-room-ui 등록 단계 */
 sc({
@@ -384,6 +403,15 @@ sc({
     await wait(() => document.querySelector('[data-form="basic-all"] [name="home_address"]')?.value);
     const home = await ro('home_address');
     ok('S1 (c)(d) 집 주소 대입 뒤 회색', home?.fill === 'filled' && home.bg === GRAY, JSON.stringify(home));
+    const roomName = await one('#study_room_name');
+    ok('S1 지연 0: 공부방명 채워짐', roomName?.value === '해피공부방', JSON.stringify(roomName));
+  },
+});
+sc({
+  id: 'S1D', app: 'study-room-ui', role: 'study_room', hash: '/register/basic?edit=1', form: '[data-form="basic-all"]', delayMeMs: 40,
+  async run({ one }) {
+    const roomName = await one('#study_room_name');
+    ok('S1D 지연 me≥30: 공부방명 비어 있지 않음', roomName?.value === '해피공부방', JSON.stringify(roomName));
   },
 });
 sc({
@@ -706,6 +734,10 @@ if (selected.length) {
         }
         if (!body && u.searchParams.get('action')) body = { action: u.searchParams.get('action') };
         const out = apiAnswer(s, u, body);
+        const delayMe = Number(s.delayMeMs) || 0;
+        if (delayMe > 0 && u.pathname.endsWith('/api/auth/me.php')) {
+          await new Promise((resolve) => setTimeout(resolve, delayMe));
+        }
         return route.fulfill({ status: out ? 200 : 404, contentType: 'application/json', body: JSON.stringify(out || { ok: false, message: 'nf' }) });
       });
       try {

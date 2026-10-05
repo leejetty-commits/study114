@@ -53,6 +53,9 @@ const SCREENS = {
 
 const BASIC_KEYS = new Set(['basic', 'regions']);
 
+/** 세션·저장값 확정 전 해시 변경이 빈 폼을 그리지 않게 한다. */
+let chromeReady = false;
+
 function renderIntroShell(innerHtml) {
   const header = renderSiteHeader({
     user: getChromeUser(),
@@ -102,6 +105,7 @@ function maybeSkipBasicSteps() {
 }
 
 function render() {
+  if (!chromeReady) return;
   const mode = resolveRegisterMode();
   if (mode === 'blocked') {
     markRegisterBootDone();
@@ -134,35 +138,43 @@ function render() {
   markRegisterBootDone();
 }
 
-async function initApi() {
-  try {
-    const masters = await fetchMasters();
+/** masters 는 세션과 병렬. 실패하면 저장값 불러오기도 하지 않는다. */
+function loadMasters() {
+  return fetchMasters().then((masters) => {
     apiMasters.regions = masters.regions ?? [];
     apiMasters.cities = masters.cities ?? [];
+  });
+}
 
-    const gate = guardRegisterAccess(getChromeNavRole(), 'tutor');
-    if (!gate.ok || gate.mode !== 'form') return null;
+/**
+ * initChromeSession() 이 끝난 뒤에만 호출한다.
+ * guest/intro 면 저장값을 넣지 않는다.
+ */
+async function loadSavedTutor() {
+  const gate = guardRegisterAccess(getChromeNavRole(), 'tutor');
+  if (!gate.ok || gate.mode !== 'form') return null;
 
-    const tutor = await loadTutor().catch(() => null);
-    if (tutor) {
-      applyTutorToState(registerState, tutor);
-      registerState.basicComplete = isTutorBasicComplete(tutor);
-    } else {
-      const cached = sessionStorage.getItem('study114_tutor_id');
-      if (cached) registerState.tutor_id = Number(cached);
-      registerState.basicComplete = false;
-    }
-    return tutor;
-  } catch {
-    return null;
+  const tutor = await loadTutor().catch(() => null);
+  if (tutor) {
+    applyTutorToState(registerState, tutor);
+    registerState.basicComplete = isTutorBasicComplete(tutor);
+  } else {
+    const cached = sessionStorage.getItem('study114_tutor_id');
+    if (cached) registerState.tutor_id = Number(cached);
+    registerState.basicComplete = false;
   }
+  return tutor;
 }
 
 function init() {
   if (!window.location.hash) window.location.hash = '#/register/basic';
   window.addEventListener('hashchange', render);
-  Promise.all([initChromeSession(), initApi()])
-    .then(([, tutor]) => {
+  const mastersReady = loadMasters();
+  initChromeSession()
+    .then(() => mastersReady)
+    .then(() => loadSavedTutor())
+    .then((tutor) => {
+      chromeReady = true;
       if (isAuthRedirectPending()) {
         markRegisterBootDone();
         return;
@@ -179,6 +191,11 @@ function init() {
       render();
     })
     .catch(() => {
+      chromeReady = true;
+      if (isAuthRedirectPending()) {
+        markRegisterBootDone();
+        return;
+      }
       try {
         render();
       } catch {
