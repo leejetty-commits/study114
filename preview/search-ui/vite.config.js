@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 import { resolveViteBase } from '../shared/vite-base.mjs';
 
 export default defineConfig({
@@ -16,6 +16,9 @@ export default defineConfig({
     },
   },
   server: {
+    fs: {
+      allow: [resolve(__dirname), resolve(__dirname, '..')],
+    },
     port: 5176,
     strictPort: true,
     host: '127.0.0.1',
