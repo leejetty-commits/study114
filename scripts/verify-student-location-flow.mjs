@@ -240,10 +240,11 @@ function roomSearchLog(array $regions, array $filters): array
 attempt('R1 공부방 sigungu_region_id = 의정부시 소속 동 전체', static function () use ($REGIONS): void {
     [$sql, $p] = roomSearchLog($REGIONS, ['sigungu_region_id' => 424]);
     $ids = [];
-    foreach ($p as $k => $v) { if (str_starts_with((string) $k, 'sg_dong_')) { $ids[] = (int) $v; } }
+    foreach ($p as $k => $v) { if (str_starts_with((string) $k, 'sg_promo_')) { $ids[] = (int) $v; } }
     sort($ids);
-    ok('R1 본인 지역 IN 의정부 동(9101,9102)', $ids === [9101, 9102], json_encode($ids));
-    ok('R1 홍보지역(study_room_regions)도 같은 동', str_contains($sql, 'srr_sg.region_id IN (:sg_promo_0, :sg_promo_1)'));
+    ok('R1 홍보지역 IN 의정부 동(9101,9102)', $ids === [9101, 9102], json_encode($ids));
+    ok('R1 홍보지역(study_room_regions)만', str_contains($sql, 'srr_sg.region_id IN (:sg_promo_0, :sg_promo_1)'));
+    ok('R1 사업장 region_id 는 카운트에 없음', !str_contains($sql, 'sr.region_id'));
     ok('R1 도봉구 동(9201) 제외', !in_array(9201, $ids, true));
 });
 attempt('R2 소속 동이 없는 구 = 0건(다른 지역으로 넓히지 않음)', static function () use ($REGIONS): void {

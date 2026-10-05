@@ -9,7 +9,7 @@ declare(strict_types=1);
  * req: {}
  *   축은 서버 고정. 본문 지역값은 받지 않는다.
  *   공부방: 서울 강남구 대치동 동 행 id — 이름 또는 dong_code 11680101(개발 시드)·1168010600(법정동코드)
- *     (study_rooms.region_id 또는 홍보 study_room_regions.region_id). RegionGuLink::guestBaseDongId()
+ *     매칭은 홍보 study_room_regions.region_id (슬롯 1·2·3). RegionGuLink::guestBaseDongId()
  *   과외쌤: official_code 1168000000 이고 is_selectable=1 인 행 id (tutor_regions.region_id)
  *   학생: 그 구 id(preferred_tutor_region_id) 또는 그 구 소속 동 id(preferred_studyroom_region_id)
  *   각 축은 기존 목록 노출 조건의 total (유료만 아님).

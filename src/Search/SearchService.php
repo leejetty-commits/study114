@@ -470,44 +470,40 @@ final class SearchService
         ];
         $params = [];
 
+        // 지역 id·라벨·구 매칭 = 홍보 칸 study_room_regions.region_id (슬롯 1·2·3).
         if ($regionId = $this->intFilter($filters, 'region_id')) {
-            $where[] = '(sr.region_id = :region_id OR EXISTS (
+            $where[] = 'EXISTS (
                 SELECT 1 FROM study_room_regions srr
-                WHERE srr.study_room_id = sr.id AND srr.region_id = :region_id_promo
-            ))';
+                WHERE srr.study_room_id = sr.id AND srr.region_id = :region_id
+            )';
             $params['region_id'] = $regionId;
-            $params['region_id_promo'] = $regionId;
         } elseif ($regionLabel = $this->stringFilter($filters, 'region_label')) {
             $this->applyRegionLabelMatch(
                 $where,
                 $params,
                 $regionLabel,
                 'room',
-                'sr.region_id',
                 'study_room_regions',
                 'study_room_id',
                 'sr.id'
             );
         }
 
-        // 시·군·구 전체. 선택 단위(is_selectable) id → 그 구 소속 동(RegionGuLink) 의 본인 지역·홍보지역.
+        // 시·군·구 전체. 선택 단위(is_selectable) id → 그 구 소속 동(RegionGuLink)의 홍보지역.
         if ($sigunguId = $this->selectableRegionId($pdo, $filters, 'sigungu_region_id')) {
             $dongIds = RegionGuLink::dongIdsUnderGu($sigunguId);
             if ($dongIds === []) {
                 $where[] = '1 = 0';
             } else {
-                $own = [];
                 $promo = [];
                 foreach (array_values($dongIds) as $i => $dongId) {
-                    $params['sg_dong_' . $i] = $dongId;
                     $params['sg_promo_' . $i] = $dongId;
-                    $own[] = ':sg_dong_' . $i;
                     $promo[] = ':sg_promo_' . $i;
                 }
-                $where[] = '(sr.region_id IN (' . implode(', ', $own) . ') OR EXISTS (
+                $where[] = 'EXISTS (
                     SELECT 1 FROM study_room_regions srr_sg
                     WHERE srr_sg.study_room_id = sr.id AND srr_sg.region_id IN (' . implode(', ', $promo) . ')
-                ))';
+                )';
             }
         }
 
@@ -1349,7 +1345,7 @@ final class SearchService
     }
 
     /**
-     * 공부방 지역 라벨 매칭 (본인 region_id + 홍보 study_room_regions)
+     * 공부방 지역 라벨 매칭. 홍보 칸 study_room_regions.region_id 만 (슬롯 1·2·3).
      *
      * @param list<string> $where
      * @param array<string, mixed> $params
@@ -1359,7 +1355,6 @@ final class SearchService
         array &$params,
         string $regionLabel,
         string $prefix,
-        string $ownerRegionCol,
         string $joinTable,
         string $joinFk,
         string $ownerIdCol
@@ -1369,27 +1364,18 @@ final class SearchService
             return;
         }
         $like = '%' . $token . '%';
-        $clauses = [];
-        foreach (['dong_name', 'sigungu_name', 'sido_name'] as $i => $col) {
-            $key = $prefix . '_region_like_a' . $i;
-            $params[$key] = $like;
-            $clauses[] = "{$col} LIKE :{$key}";
-        }
         $slotClauses = [];
         foreach (['dong_name', 'sigungu_name', 'sido_name'] as $i => $col) {
-            $key = $prefix . '_region_like_b' . $i;
+            $key = $prefix . '_region_like_' . $i;
             $params[$key] = $like;
             $slotClauses[] = "r_lbl.{$col} LIKE :{$key}";
         }
-        $where[] = "({$ownerRegionCol} IN (
-                SELECT id FROM regions
-                WHERE " . implode(' OR ', $clauses) . "
-            ) OR EXISTS (
+        $where[] = "EXISTS (
                 SELECT 1 FROM {$joinTable} srr_lbl
                 INNER JOIN regions r_lbl ON r_lbl.id = srr_lbl.region_id
                 WHERE srr_lbl.{$joinFk} = {$ownerIdCol}
                   AND (" . implode(' OR ', $slotClauses) . ")
-            ))";
+            )";
     }
 
     /**

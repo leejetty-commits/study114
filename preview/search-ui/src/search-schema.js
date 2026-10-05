@@ -24,7 +24,7 @@ export const SEARCH_TABS = {
     defaultRegionHint: '내 기본 지역(동/단지) 자동 적용',
     mapEnabled: true,
     fields: [
-      { key: 'region_id', label: '지역(동/단지)', tier: 'basic', basicRow: 1, db: 'study_rooms.region_id · study_room_regions', input: 'region' },
+      { key: 'region_id', label: '지역(동/단지)', tier: 'basic', basicRow: 1, db: 'study_room_regions', input: 'region' },
       { key: 'subject_master_id', label: '주력과목', tier: 'basic', basicRow: 1, db: 'study_room_subject_targets · main_subject_note', input: 'subject' },
       { key: 'school_level', label: '대상 학교급', tier: 'basic', basicRow: 1, db: 'study_room_primary_audiences.school_level', input: 'select', optionsKey: 'school_level' },
       { key: 'grade_band', label: '대상 학년', tier: 'basic', basicRow: 1, db: 'study_room_subject_targets.grade_band', input: 'grade', dependsOn: 'school_level' },
