@@ -4,6 +4,7 @@ import { openKakaoPostcode } from '../../../shared/kakao-postcode.js';
 import { isValidMobile } from '../../../shared/phone.js';
 import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
+import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -24,7 +25,7 @@ export function renderSignupForm() {
     ${renderStepIndicator(2, 5)}
     <div class="panel auth-shell__card--wide">
       <h1 class="auth-heading">회원가입</h1>
-      <p class="auth-subheading mb-6">가입에 필요한 공통 정보만 입력합니다. 학교, 과목, 희망 조건은 여기서 받지 않습니다. 이메일 확인이 끝나면 선택한 유형의 기본정보로 이어집니다.</p>
+      <p class="auth-subheading mb-6">${AUTH_WELCOME_COPY.formSub}</p>
 
       <form data-form="signup" class="mt-8" novalidate>
         <div class="form-group">

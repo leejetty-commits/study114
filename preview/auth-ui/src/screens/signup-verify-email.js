@@ -29,6 +29,7 @@ import {
   markWaitTab,
   pingVerified,
 } from '../../../shared/email-verify-tab.js';
+import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 
 const EMAIL_VERIFY_STALE_LINK_MSG = '이미 확인되었거나 만료된 링크입니다';
 let stopWaitWatch = () => {};
@@ -59,10 +60,11 @@ function roleUiFromMeOrDraft(me) {
 }
 
 function nextStepSentence(roleUi) {
-  if (roleUi === 'study_room') return '확인이 끝나면 공부방 가입정보로 이어집니다.';
-  if (roleUi === 'tutor') return '확인이 끝나면 과외쌤 가입정보로 이어집니다.';
-  if (roleUi === 'student') return '확인이 끝나면 학생 기본정보로 이어집니다.';
-  return '확인이 끝나면 선택한 유형의 기본정보로 이어집니다.';
+  const copy = AUTH_WELCOME_COPY.verify;
+  if (roleUi === 'study_room') return copy.nextStudyRoom;
+  if (roleUi === 'tutor') return copy.nextTutor;
+  if (roleUi === 'student') return copy.nextStudent;
+  return copy.nextDefault;
 }
 
 function continueLabel(roleUi) {
@@ -104,13 +106,13 @@ function initialMailSendFailed() {
 
 function renderWaitBody(err) {
   return `
-        <h1 class="auth-heading" data-verify-title>이메일을 확인해 주세요</h1>
+        <h1 class="auth-heading" data-verify-title>${AUTH_WELCOME_COPY.verify.waitTitle}</h1>
         <p class="auth-subheading recovery-stage__desc" data-verify-lead>
-          확인 메일을 보냈습니다. 메일 안의 링크를 새 탭에서 눌러 주세요.
+          ${AUTH_WELCOME_COPY.verify.waitLead}
         </p>
-        <p class="form-note form-note--accent" data-verify-new-tab>링크 확인은 새 탭에서 하고, 기본정보는 이 화면에서 이어서 입력합니다. 이 화면을 닫지 마세요. 메일이 보이지 않으면 스팸함·프로모션함도 확인해 주세요.</p>
-        <p class="form-hint" data-verify-next>확인이 끝나면 이 화면이 기본정보 입력으로 넘어갑니다.</p>
-        <p class="form-hint">메일이 바로 보이지 않으면 잠시 후 다시 확인해 주세요. 다시 보내기는 10분 뒤에 할 수 있습니다.</p>
+        <p class="form-note form-note--accent" data-verify-new-tab>${AUTH_WELCOME_COPY.verify.waitTab}</p>
+        <p class="form-hint" data-verify-next>${AUTH_WELCOME_COPY.verify.waitNext}</p>
+        <p class="form-hint">${AUTH_WELCOME_COPY.verify.waitDelay}</p>
         ${err ? `<p class="form-error" role="alert">${esc(err)}</p>` : ''}
         <p class="recovery-stage__email-hint" data-masked-email></p>
         <p class="form-error" data-verify-status hidden role="alert"></p>
@@ -123,11 +125,11 @@ function renderWaitBody(err) {
 
 function renderSendFailedBody() {
   return `
-        <h1 class="auth-heading" data-verify-title>계정은 만들어졌지만 확인 메일을 보내지 못했습니다</h1>
+        <h1 class="auth-heading" data-verify-title>${AUTH_WELCOME_COPY.verify.failTitle}</h1>
         <p class="auth-subheading recovery-stage__desc" data-verify-lead>
-          잠시 후 확인 메일을 다시 보내 주세요.
+          ${AUTH_WELCOME_COPY.verify.failLead}
         </p>
-        <p class="form-hint" data-verify-hint-inbox>이메일 주소를 확인한 뒤 재전송할 수 있어요.</p>
+        <p class="form-hint" data-verify-hint-inbox>${AUTH_WELCOME_COPY.verify.failHint}</p>
         <p class="recovery-stage__email-hint" data-masked-email></p>
         <p class="form-error" data-verify-status hidden role="alert"></p>
         <div class="recovery-actions">
@@ -146,9 +148,9 @@ export function renderSignupVerifyEmail() {
   const body = verified
     ? `
         ${renderRecoverySuccessIcon()}
-        <h1 class="auth-heading">이메일이 확인되었습니다</h1>
-        <p class="auth-subheading recovery-stage__desc" data-verify-success-lead>확인이 끝났습니다. 기본정보는 처음에 열어 둔 화면에서 이어서 입력합니다.</p>
-        <p class="form-note form-note--accent">그 화면을 닫았다면 아래에서 이 창으로 이어갈 수 있습니다.</p>
+        <h1 class="auth-heading">${AUTH_WELCOME_COPY.verify.doneTitle}</h1>
+        <p class="auth-subheading recovery-stage__desc" data-verify-success-lead>${AUTH_WELCOME_COPY.verify.doneLead}</p>
+        <p class="form-note form-note--accent">${AUTH_WELCOME_COPY.verify.doneNote}</p>
         <button type="button" class="btn btn--secondary btn--block" data-action="continue-fallback">이 창에서 이어가기</button>
       `
     : sendFailed
@@ -189,18 +191,16 @@ function applyWaitCopyAfterSuccessfulResend(root) {
   const wrap = root.querySelector('[data-verify-wait]');
   if (wrap) wrap.setAttribute('data-mail-send-failed', '0');
   const title = root.querySelector('[data-verify-title]');
-  if (title) title.textContent = '이메일을 확인해 주세요';
+  if (title) title.textContent = AUTH_WELCOME_COPY.verify.waitTitle;
   const lead = root.querySelector('[data-verify-lead]');
   if (lead) {
-    lead.textContent = '확인 메일을 보냈습니다. 메일 안의 링크를 새 탭에서 눌러 주세요.';
+    lead.textContent = AUTH_WELCOME_COPY.verify.waitLead;
   }
   const hint = root.querySelector('[data-verify-hint-inbox]');
   if (hint) {
-    hint.innerHTML =
-      '받은편지함에서 확인 메일을 열어 주세요. 보이지 않으면 <strong>스팸함·프로모션함</strong>도 확인해 주세요.';
+    hint.textContent = AUTH_WELCOME_COPY.verify.inboxHint;
   }
-  const tabCopy =
-    '링크 확인은 새 탭에서 하고, 기본정보는 이 화면에서 이어서 입력합니다. 이 화면을 닫지 마세요. 메일이 보이지 않으면 스팸함·프로모션함도 확인해 주세요.';
+  const tabCopy = AUTH_WELCOME_COPY.verify.waitTab;
   let tabNote = root.querySelector('[data-verify-new-tab]');
   if (!tabNote && lead) {
     tabNote = document.createElement('p');

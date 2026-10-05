@@ -4,6 +4,7 @@
  */
 
 import { HOME_UI_BASE } from '../../shared/preview-links.js';
+import { AUTH_WELCOME_COPY } from '../../shared/auth-welcome-copy.js';
 
 function renderSilhouetteRoom() {
   return `
@@ -61,9 +62,7 @@ export function renderLoginStageBelow(opts = {}) {
   const guestUrl = `${String(HOME_UI_BASE).replace(/\/$/, '')}/#/guest`;
   const lead =
     opts.lead ||
-    (opts.returnTo
-      ? '로그인하면 방금 보던 화면으로 돌아갑니다.'
-      : '저장한 탐색 조건과 최근 본 후보를 이어서 확인할 수 있습니다.');
+    (opts.returnTo ? AUTH_WELCOME_COPY.login.returnLead : AUTH_WELCOME_COPY.login.savedLead);
   // 화면에서 제거: · 대치동 데모
   return `
     <div class="login-stage__below">

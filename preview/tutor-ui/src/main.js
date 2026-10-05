@@ -35,6 +35,7 @@ import { renderSiteFooter } from '../../shared/site-footer.js';
 import { apiMasters, registerState, isTutorBasicComplete } from './state.js';
 import { fetchMasters, loadTutor } from './register-api.js';
 import { applyTutorToState } from './form-collect.js';
+import { presentLoginWelcome } from '../../shared/login-welcome.js';
 import { renderBasic, bindBasicEvents } from './screens/step-basic.js';
 import { renderRegions, bindRegionsEvents } from './screens/step-regions.js';
 import { renderLesson, bindLessonEvents } from './screens/step-lesson.js';
@@ -174,6 +175,7 @@ function init() {
     .then(() => mastersReady)
     .then(() => loadSavedTutor())
     .then((tutor) => {
+      presentLoginWelcome(getChromeUser()?.name, isChromeLoggedIn());
       chromeReady = true;
       if (isAuthRedirectPending()) {
         markRegisterBootDone();

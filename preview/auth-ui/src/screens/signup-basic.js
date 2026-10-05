@@ -7,6 +7,7 @@ import {
 } from '../register-enums.js';
 import { fetchMeApi, basicRegisterApi } from '../auth-api.js';
 import { resolveAfterAuthUrl, resolveUiRoleForBasicRegister } from '../../../shared/auth-redirect.js';
+import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 import {
   buildHomeStudentImportUrl,
   isReturnImportMode,
@@ -143,7 +144,7 @@ function renderStudentBasic() {
       <div class="student-basic__field">
         <label class="form-label form-label--required" for="public_display_name">표시명</label>
         <input class="form-input" id="public_display_name" name="public_display_name" value="${esc(displayName)}" maxlength="40" autocomplete="nickname" />
-        <p class="form-hint">Basic 카드에 보이는 이름입니다.</p>
+        <p class="form-hint">${AUTH_WELCOME_COPY.basicDisplayNameHint}</p>
       </div>
       <div class="student-basic__field" data-school-grade-pair>
         <label class="form-label form-label--required" for="school_level">학교급</label>
@@ -191,7 +192,7 @@ function renderStudentBasic() {
         <select class="form-input" id="subject_names" name="subject_names">
           ${renderMainSubjectSelect(d.subject_names || '', { emptyLabel: '과목 선택' })}
         </select>
-        <p class="form-hint">Basic 카드에 먼저 보일 과목입니다.</p>
+        <p class="form-hint">${AUTH_WELCOME_COPY.basicSubjectHint}</p>
       </div>
       <div class="student-basic__field">
         <span class="form-label form-label--required">수업형태</span>
@@ -341,7 +342,7 @@ export function renderSignupBasic() {
       ${oauthMode ? '' : renderStepIndicator(4, 5)}
       ${renderBrandHero()}
       <h1 class="auth-heading">학생 기본정보</h1>
-      <p class="auth-subheading">학생 Basic 카드에 먼저 보일 핵심 정보를 입력합니다.</p>
+      <p class="auth-subheading">${AUTH_WELCOME_COPY.basicStudentLead}</p>
       ${body}
     `;
     return renderAuthShell(content, { ...shellOptions, cardClass: 'student-basic-panel' });

@@ -7,6 +7,8 @@ import {
   oauthStartUrl,
 } from '../../../shared/auth-redirect.js';
 import { renderLoginBackdrop, renderLoginStageBelow } from '../login-stage.js';
+import { AUTH_WELCOME_COPY, loginFailureMessage } from '../../../shared/auth-welcome-copy.js';
+import { withLoginWelcome } from '../../../shared/login-welcome.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -43,11 +45,11 @@ export function renderLogin() {
         </div>
         <h1 class="auth-heading">로그인</h1>
         <p class="auth-subheading login-stage__sub">
-          우리 동네 공부방·과외쌤 찾기와 쪽지 연결을 이어서 이용하세요.
+          ${AUTH_WELCOME_COPY.login.sub}
         </p>
         ${
           oauthError
-            ? `<p class="login-stage__error" role="alert">${esc(oauthError)}</p>`
+            ? `<p class="login-stage__error" role="alert">${esc(loginFailureMessage(oauthError))}</p>`
             : ''
         }
         <div class="login-stage__error-slot" data-login-error hidden></div>
@@ -90,7 +92,7 @@ export function renderLogin() {
           <span>처음이신가요?</span>
           <a href="#/signup/terms" data-nav="/signup/terms">회원가입</a>
         </div>
-        <p class="login-stage__signup-hint">학생·공부방·과외쌤 계정으로 시작합니다.</p>
+        <p class="login-stage__signup-hint">${AUTH_WELCOME_COPY.login.signupHint}</p>
 
         <div class="divider">또는</div>
 
@@ -141,9 +143,17 @@ export function bindLoginEvents(root) {
         (me.authenticated && me.email_verified === false);
       // 미확인 재로그인 시 signup의 postVerifyTarget=basic(및 역할)을 home으로 덮지 않음
       if (needsVerify) ensurePostVerifyTargetForUnverifiedLogin();
-      window.location.href = resolveAfterAuthUrl(me, returnTo);
+      const next = resolveAfterAuthUrl(me, returnTo);
+      const greet =
+        me.authenticated &&
+        me.email_verified &&
+        !me.needs_account_contact &&
+        !me.oauth_role_pending &&
+        !me.needs_basic_register &&
+        !needsVerify;
+      window.location.href = greet ? withLoginWelcome(next) : next;
     } catch (err) {
-      const message = err instanceof Error ? err.message : '로그인에 실패했습니다.';
+      const message = loginFailureMessage(err instanceof Error ? err.message : '');
       if (errorSlot) {
         errorSlot.hidden = false;
         errorSlot.textContent = message;

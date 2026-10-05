@@ -3,6 +3,8 @@
  * 서버 내부 원인·메일 인프라 문구는 노출하지 않는다.
  */
 
+import { AUTH_WELCOME_COPY, emailVerifyCooldownMessage } from '../../shared/auth-welcome-copy.js';
+
 /** @typedef {'success' | 'cooldown' | 'fail' | 'already_verified'} EmailVerifySendKind */
 
 /**
@@ -34,20 +36,10 @@ export function classifyEmailVerifySendResult(data, opts = {}) {
  * @param {{ formatCountdown?: (sec: number) => string }} [opts]
  */
 export function emailVerifySendStatusMessage(kind, resendAvailableIn = 0, opts = {}) {
-  if (kind === 'success') {
-    return '확인 메일을 다시 보냈습니다. 받은편지함과 스팸함을 확인해 주세요.';
-  }
-  if (kind === 'cooldown') {
-    const wait = Math.max(0, Math.ceil(Number(resendAvailableIn) || 0));
-    if (wait > 0 && typeof opts.formatCountdown === 'function') {
-      return `최근에 확인 메일을 보냈습니다. ${opts.formatCountdown(wait)} 후에 다시 시도해 주세요.`;
-    }
-    return '최근에 확인 메일을 보냈습니다. 잠시 후 다시 시도해 주세요.';
-  }
-  if (kind === 'already_verified') {
-    return '이미 이메일이 확인되었습니다.';
-  }
-  return '확인 메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.';
+  if (kind === 'success') return AUTH_WELCOME_COPY.verify.resendSuccess;
+  if (kind === 'cooldown') return emailVerifyCooldownMessage(resendAvailableIn, opts.formatCountdown);
+  if (kind === 'already_verified') return AUTH_WELCOME_COPY.verify.already;
+  return AUTH_WELCOME_COPY.verify.resendFail;
 }
 
 /** hash query `send=0` → 가입 직후 발송 실패 UI */

@@ -12,6 +12,7 @@ import {
 } from './pending-deep-intent.js';
 import { isChromeLoggedIn } from './chrome-session.js';
 import { authRoleType } from '../home-ui/src/auth-role.js';
+import { AUTH_WELCOME_COPY } from './auth-welcome-copy.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -110,7 +111,7 @@ const DEEP_GATE_ID = 'guest-deep-access-gate';
 
 const DEEP_ACCESS_COPY = {
   title: '로그인하고 자세히 보기',
-  lead: '로그인 후 후기, 위치, 비교, 찜, 문의 정보를 볼 수 있어요.',
+  lead: AUTH_WELCOME_COPY.guestGateLead,
   bullets: ['후기 보기', '정확한 위치 확인', '비교·찜·문의 가능'],
   primaryLabel: '로그인하기',
   laterLabel: '나중에 할게요',

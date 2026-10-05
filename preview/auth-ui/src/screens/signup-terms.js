@@ -2,6 +2,7 @@ import { TERMS } from '../state.js';
 import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { markTermsAgreed } from '../state.js';
 import { policyUiUrl } from '../../../shared/preview-links.js';
+import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 
 const TERM_POLICY_PATH = {
   service: '/policy/terms',
@@ -43,7 +44,7 @@ export function renderSignupTerms() {
         />
       </div>
       <h1 class="auth-heading">약관 동의</h1>
-      <p class="auth-subheading mb-8">우동공과 서비스 이용을 위해 약관에 동의해 주세요.</p>
+      <p class="auth-subheading mb-8">${AUTH_WELCOME_COPY.termsSub}</p>
 
       <form data-form="terms">
         <div class="terms-all">

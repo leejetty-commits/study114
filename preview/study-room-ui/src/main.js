@@ -32,6 +32,7 @@ import {
 import { getCurrentScreen, navigate, isRegisterEditMode, getHashQuery, basicOverviewPath, withRoomId } from './layout.js';
 import { HOME_UI_BASE } from '../../shared/preview-links.js';
 import { renderSiteFooter } from '../../shared/site-footer.js';
+import { presentLoginWelcome } from '../../shared/login-welcome.js';
 import { renderBasic, bindBasicEvents } from './screens/step-basic.js';
 import { renderLocation, bindLocationEvents } from './screens/step-location.js';
 import { renderLesson, bindLessonEvents } from './screens/step-lesson.js';
@@ -188,6 +189,7 @@ function init() {
     .then(() => mastersReady)
     .then(() => loadSavedRoom())
     .then(() => {
+      presentLoginWelcome(getChromeUser()?.name, isChromeLoggedIn());
       chromeReady = true;
       if (isAuthRedirectPending()) {
         markRegisterBootDone();

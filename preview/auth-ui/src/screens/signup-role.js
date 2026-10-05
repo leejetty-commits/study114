@@ -4,6 +4,7 @@ import { oauthCompleteRoleApi, fetchMeApi, parseApiJson } from '../auth-api.js';
 import { getLoginReturnTo, resolvePostLoginUrl, setPostVerifyTarget } from '../../../shared/auth-redirect.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import { verifyEmailPathForSignupResult } from '../email-verify-send-status.js';
+import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 
 const ROLES = ['student', 'study_room', 'tutor'];
 
@@ -61,13 +62,9 @@ export function renderSignupRole() {
     ${oauthMode ? '' : renderStepIndicator(3, 5)}
     <div class="panel">
       ${renderBrandHero()}
-      <h1 class="auth-heading">${oauthMode ? '가입 유형 선택' : '회원 구분 선택'}</h1>
+      <h1 class="auth-heading">${AUTH_WELCOME_COPY.roleTitle}</h1>
       <p class="auth-subheading mb-8">
-        ${
-          oauthMode
-            ? '소셜 계정으로 가입하셨습니다.<br />주로 사용할 유형을 선택해 주세요.'
-            : '사용할 유형 1개를 선택하세요.<br />계정을 만든 뒤 이메일 확인이 끝나면, 그 유형의 기본정보로 이어집니다.'
-        }
+        ${oauthMode ? AUTH_WELCOME_COPY.roleSubOAuth : AUTH_WELCOME_COPY.roleSub}
       </p>
 
       <div class="role-grid mb-8" data-role-grid>

@@ -780,3 +780,23 @@ table {
     order: 2;
   }
 }
+
+/* 로그인 직후 목적지 한 줄. 전용 페이지가 아니다. */
+.login-welcome {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  z-index: 80;
+  max-width: min(28rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--product-ink, #1c1917);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: var(--fs-2, 0.875rem);
+  line-height: var(--leading-normal, 1.5);
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(28, 25, 23, 0.18);
+  transform: translateX(-50%);
+}

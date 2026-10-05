@@ -1,4 +1,5 @@
-import { signupState, ROLE_LABELS, resetSignupState } from '../state.js';
+import { signupState, resetSignupState } from '../state.js';
+import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { fetchMeApi } from '../auth-api.js';
 import { resolveAfterAuthUrl } from '../../../shared/auth-redirect.js';
@@ -118,9 +119,14 @@ function studyRoomHasPromoSlot1(basic) {
   return false;
 }
 
+function profileKindLabel(role) {
+  if (role === 'study_room') return AUTH_WELCOME_COPY.complete.profileStudyRoom;
+  if (role === 'tutor') return AUTH_WELCOME_COPY.complete.profileTutor;
+  return '—';
+}
+
 export function renderSignupComplete() {
   const role = signupState.role || 'student';
-  const roleLabel = ROLE_LABELS[role];
   const saved = signupState.lastSignup;
   const basic = signupState.basicRegister?.[role];
   const profile = signupState.basicRegisterResult;
@@ -130,9 +136,9 @@ export function renderSignupComplete() {
     ${renderStepIndicator(5, 5)}
     <div class="panel success-message">
       <div class="success-icon">✓</div>
-      <h1 class="auth-heading">학생 기본정보</h1>
+      <h1 class="auth-heading">${AUTH_WELCOME_COPY.complete.title}</h1>
       <p class="auth-subheading">
-        입력한 정보는 학생 Basic 카드 기준 정보로 바로 반영됩니다.
+        ${AUTH_WELCOME_COPY.complete.studentLead}
       </p>
 
       <dl class="success-info">
@@ -156,27 +162,24 @@ export function renderSignupComplete() {
     ${renderStepIndicator(5, 5)}
     <div class="panel success-message">
       <div class="success-icon">✓</div>
-      <h1 class="auth-heading">가입 · 기본등록 완료</h1>
+      <h1 class="auth-heading">${AUTH_WELCOME_COPY.complete.title}</h1>
       <p class="auth-subheading">
-        계정과 기본등록이 완료되었습니다.<br />
-        아직 검색·리스트에 <strong>공개되지 않습니다</strong>.<br />
-        검색/공개에 쓰이는 항목은 <strong>상세등록</strong>에서 완성합니다.
+        ${AUTH_WELCOME_COPY.complete.providerLead}
       </p>
 
       <dl class="success-info">
         <dt>로그인 계정</dt>
         <dd>${maskEmail(saved?.email)}</dd>
         <dt>기본등록 프로필</dt>
-        <dd>${profile ? `${profile.kind} #${profile.id}` : '—'}</dd>
+        <dd>${profile ? profileKindLabel(role) : '—'}</dd>
         <dt>기본등록 요약</dt>
         <dd>${summarizeBasic(role, basic)}</dd>
       </dl>
 
       <div class="detail-cta panel panel--muted mt-6">
-        <p class="auth-section-title">다음 · 상세등록 (선택)</p>
+        <p class="auth-section-title">${AUTH_WELCOME_COPY.complete.detailTitle}</p>
         <p class="form-note">
-          기본등록만으로도 가입은 완료되었습니다. 상세등록은 나중에 마이페이지에서 이어갈 수 있습니다.
-          검색·목록 공개에 쓰이는 항목은 상세등록에서 완성합니다. (${roleLabel})
+          ${AUTH_WELCOME_COPY.complete.detailNote}
         </p>
       </div>
 
@@ -297,12 +300,12 @@ export function bindSignupCompleteEvents(root) {
 
     if (role === 'study_room' && hasSeed) {
       // 잘못된 「지역 없음」 경고 대신 완료 안내만
-      window.alert('기본등록이 완료되었습니다. 상세등록은 마이페이지에서 이어갈 수 있습니다.');
+      window.alert(AUTH_WELCOME_COPY.complete.alertDone);
     } else if (!hasSeed) {
       const proceed = window.confirm(
         role === 'student'
-          ? '희망지역이 없습니다. 그래도 홈으로 이동할까요?'
-          : '홍보지역(기본등록) 정보가 없습니다. 그래도 홈으로 이동할까요?\n마이페이지에서 기본·상세등록을 이어갈 수 있습니다.',
+          ? AUTH_WELCOME_COPY.complete.confirmStudent
+          : AUTH_WELCOME_COPY.complete.confirmProvider,
       );
       if (!proceed) return;
     }

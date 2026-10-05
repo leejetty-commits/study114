@@ -93,6 +93,8 @@ import { importNeighborhoodGreetingHandoff, pullNeighborhoodGreetings } from './
 import { guardRoleHomeAccess } from '../../shared/route-access.js';
 import { navRoleFromAuthUser } from './nav-config.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
+import { presentLoginWelcome } from '../../shared/login-welcome.js';
+import { AUTH_WELCOME_COPY } from '../../shared/auth-welcome-copy.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { showEmailVerifyOverlay } from './email-verify-overlay.js';
 import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
@@ -441,6 +443,7 @@ function init() {
       .then(async ([, , user]) => {
         if (followUpDone) return;
         followUpDone = true;
+        presentLoginWelcome(user?.name, Boolean(user));
         sessionChecked = true;
         pullNeighborhoodGreetings()
           .then((changed) => {
@@ -519,7 +522,7 @@ function init() {
         }
         const q = parseHashQuery();
         if (q.email_verified === '1') {
-          window.alert('이메일 인증이 완료되었습니다.');
+          window.alert(AUTH_WELCOME_COPY.verify.doneAlert);
         } else if (q.email_verify_error) {
           showEmailVerifyOverlay();
         }

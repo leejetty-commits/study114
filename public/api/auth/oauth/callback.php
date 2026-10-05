@@ -84,6 +84,13 @@ try {
     } else {
         $target = $homeUi . '/#/' . ltrim($roleHome, '/');
     }
+    if (!str_contains($target, 'welcome=1')) {
+        $hashPos = strpos($target, '#');
+        $joiner = ($hashPos !== false ? str_contains(substr($target, $hashPos), '?') : str_contains($target, '?'))
+            ? '&'
+            : '?';
+        $target .= $joiner . 'welcome=1';
+    }
 
     header('Location: ' . $target, true, 302);
     exit;
