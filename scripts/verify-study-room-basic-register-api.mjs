@@ -35,6 +35,7 @@ assert(formSrc.includes('filledIdx'), 'validate iterates filled slots only');
 
 const svc = readFileSync(resolve(root, 'src/Auth/BasicRegisterService.php'), 'utf8');
 assert(svc.includes('홍보지역 1(대표)을 선택해 주세요'), 'backend requires promo slot 1');
+assert(svc.includes('공부방은 계정당 1개만 등록할 수 있습니다'), 'backend blocks duplicate study_room row');
 assert(svc.includes('promoSlotHasIntent'), 'backend detects intentional empty promo slots');
 assert(svc.includes('슬롯 자체 메타만 사용'), 'backend forbids business-address fallback into promo slots');
 assert(!/RegionEnsure::fromKakao\(\$pdo,\s*\$payload\)/.test(svc), 'signup no longer ensures from merged $input+$slot');
@@ -42,20 +43,19 @@ assert(!svc.includes('AddressRegionMatch::match'), 'signup AddressRegionMatch::m
 assert(!svc.includes('$cname = $caddr'), 'signup cname = $caddr 0');
 
 const syncSrc = readFileSync(resolve(root, 'src/StudyRoom/StudyRoomRegisterService.php'), 'utf8');
-assert(syncSrc.includes('공부방은 계정당 1개만 등록할 수 있습니다'), 'backend blocks duplicate study_room row');
 assert(syncSrc.includes('사업장/집주소($input)로 빈 홍보지역 2·3을 채우지 않음'), 'detail sync forbids input address fallback');
 assert(!syncSrc.includes('AddressRegionMatch::match'), 'detail AddressRegionMatch::match calls 0');
 assert(!syncSrc.includes('$cname = $caddr'), 'detail cname = $caddr 0');
 
 const completeSrc = readFileSync(resolve(root, 'preview/auth-ui/src/screens/signup-complete.js'), 'utf8');
 assert(completeSrc.includes('studyRoomHasPromoSlot1'), 'complete go-home uses promo slot1');
-assert(completeSrc.includes('나중에 상세등록 (홈으로)'), 'complete go-home copy');
-assert(completeSrc.includes('홍보지역 1'), 'missing-seed copy uses 홍보지역');
+assert(completeSrc.includes('기본등록이 완료되었습니다. 상세등록은 마이페이지에서 이어갈 수 있습니다.'), 'complete go-home copy');
+assert(completeSrc.includes('홍보지역(기본등록)'), 'missing-seed copy uses 홍보지역');
 assert(!completeSrc.includes("'지역(기본등록) 정보가 없습니다"), 'old 지역 wording removed');
 assert(!completeSrc.includes('"지역(기본등록) 정보가 없습니다'), 'old 지역 wording removed (dq)');
 
 const overviewSrc = readFileSync(resolve(root, 'preview/study-room-ui/src/screens/step-basic.js'), 'utf8');
-assert(overviewSrc.includes('홍보지역 2·3칸'), 'mypage overview keeps optional promo 2·3');
+assert(overviewSrc.includes('미입력 홍보지역 2·3은 미표시'), 'mypage overview hides empty promo 2·3');
 
 const me = readFileSync(resolve(root, 'public/api/auth/me.php'), 'utf8');
 assert(me.includes('needs_basic_register'), 'me exposes needs_basic_register');

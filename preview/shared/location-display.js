@@ -231,6 +231,14 @@ export function normalizeLocation(input = {}, axis = 'room') {
   };
   canonical.displayLabel = formatLocationDisplay(canonical, axis);
   canonical.searchScopeLabel = canonical.displayLabel;
+  if (
+    (axis === 'room' || axis === 'study_room') &&
+    canonical.dong === '' &&
+    canonical.apartmentName === '' &&
+    canonical.displayLabel !== ''
+  ) {
+    canonical.apartmentName = canonical.displayLabel;
+  }
   canonical.regionKey = blank(input.regionKey) || buildRegionKey(canonical);
 
   if (canonical.lat == null || canonical.lng == null) {
@@ -307,6 +315,10 @@ export function formatLocationDisplay(loc, axis = 'room') {
   if (dong && district && city) return dedupeAddressTokens(`${city} ${district} ${dong}`);
   if (dong && city) return dedupeAddressTokens(`${city} ${dong}`);
   if (dong) return dedupeAddressTokens(dong);
+  const broad = dedupeAddressTokens([city, district].filter(Boolean).join(' '));
+  if (broad) return broad;
+  const provinceLabel = blank(loc.province);
+  if (provinceLabel && /시$/.test(provinceLabel)) return provinceLabel;
   return '';
 }
 

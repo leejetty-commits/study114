@@ -491,7 +491,8 @@ function discardStaleGuestLocation() {
 
 const GU_PICK_HINT = '시·군·구까지 선택해 주세요';
 const DONG_RETRY_HINT = '동을 다시 선택해 주세요';
-const STUDYROOM_ADDRESS_HINT = '주소찾기로 행정동·단지를 선택합니다. 자유입력만으로는 검색하지 않습니다.';
+const STEP3_PENDING_HINT = '주소 확인 중입니다. 잠시 후 다시 검색해 주세요.';
+const STEP3_COMPLEX_HINT = '등록된 아파트단지가 없습니다. 주소찾기로 다시 선택해 주세요.';
 
 /** @type {import('../../shared/region-cascade.js').CityUnit[]} */
 let findCityUnits = [];
@@ -597,16 +598,6 @@ function preserveStudyroomRegionId(filters) {
   return filters;
 }
 
-/** 폼 숨은 값. 확정 중이거나 실패면 비운다. */
-function renderedStudyroomDongId(state) {
-  if (state.studyroomDongPending || state.studyroomDongUnconfirmed) return '';
-  if (state.studyroomDongRegionId) return numericRegionId(state.studyroomDongRegionId);
-  const fromFilter = numericRegionId(state.lastSearchFilters?.preferred_studyroom_region_id);
-  if (fromFilter || state.role !== 'parent' || state.searchExecuted) return fromFilter;
-  const target = studentTarget('student', state);
-  return target?.scope === 'dong' && studentHope(state) === 'study_room' ? target.id : '';
-}
-
 function clearStudyroomDongId(state) {
   state.studyroomDongRegionId = '';
   if (state.lastSearchFilters) delete state.lastSearchFilters.preferred_studyroom_region_id;
@@ -626,24 +617,29 @@ async function confirmStudyroomDong(state, result, rerender) {
   state.studyroomDongUnconfirmed = false;
   clearStudyroomDongId(state);
   rerender();
+  let latest = false;
   try {
     const region = await ensureRegionFromKakao(result);
-    if (seq !== studyroomDongSeq) return;
+    if (seq !== studyroomDongSeq) return false;
     const id = numericRegionId(region?.id);
     if (!id) throw new Error(DONG_RETRY_HINT);
     state.studyroomDongRegionId = id;
     if (!state.lastSearchFilters) state.lastSearchFilters = {};
     state.lastSearchFilters.preferred_studyroom_region_id = id;
     state.studyroomDongUnconfirmed = false;
+    latest = true;
   } catch {
-    if (seq !== studyroomDongSeq) return;
+    if (seq !== studyroomDongSeq) return false;
     clearStudyroomDongId(state);
     state.studyroomDongUnconfirmed = true;
+    latest = true;
   } finally {
-    if (seq !== studyroomDongSeq) return;
-    state.studyroomDongPending = false;
-    rerender();
+    if (seq === studyroomDongSeq) {
+      state.studyroomDongPending = false;
+      rerender();
+    }
   }
+  return latest;
 }
 
 /** @param {import('./state.js').SearchTab} tab @param {Record<string, string|string[]>|null|undefined} filters @param {unknown} fallbackId */
@@ -1237,8 +1233,8 @@ function canonicalRegionLabel(label, tab, state) {
     },
     axis,
   );
-  // 같은 라벨이면 기존 좌표·source 유지
-  if (!canonical.displayLabel) {
+  // 검색 실행 뒤에는 홍보1·과외지역1로 되돌리지 않는다.
+  if (!canonical.displayLabel && !state.searchExecuted) {
     const alt = memberRepresentativeRaw(tab, state);
     if (alt && alt !== String(label || '').trim()) {
       return canonicalRegionLabel(alt, tab, state);
@@ -1348,10 +1344,7 @@ function regionLabelFromFilters(tab, filters, state, role) {
       return canonicalRegionLabel(bag.display, tab, state);
     }
     if (guLabel) {
-      if (tab === 'tutor' || (tab === 'student' && resolveStudentSearchHope(state) !== 'study_room')) {
-        return applyGuDisplayLabel(state, String(guId), guLabel);
-      }
-      return canonicalRegionLabel(guLabel, tab, state);
+      return applyGuDisplayLabel(state, String(guId), guLabel);
     }
     if (bag?.display) return canonicalRegionLabel(bag.display, tab, state);
   }
@@ -1697,7 +1690,7 @@ function resolveStudentRegionInput(state, lessonTypeValue) {
 }
 
 function blankStep3() {
-  return { basis: 'dong', display: '', dongId: '', complexId: '', unconfirmed: false, seq: 0 };
+  return { basis: 'dong', display: '', dongId: '', complexId: '', unconfirmed: false, pending: false, seq: 0 };
 }
 
 /** @param {FindSurfaceState} state @param {import('./state.js').SearchTab} tab */
@@ -1767,11 +1760,16 @@ function renderStep3Field(state, tab, opts) {
       </label>`;
   }
   const basis = bag.basis === 'complex' ? 'complex' : 'dong';
-  const dongId = bag.unconfirmed || basis === 'complex' ? '' : numericRegionId(bag.dongId);
-  const complexId = bag.unconfirmed || basis !== 'complex' ? '' : numericRegionId(bag.complexId);
-  const hint = bag.unconfirmed
-    ? '등록된 아파트단지가 없습니다. 주소찾기로 다시 선택해 주세요.'
-    : '행정동 또는 아파트단지를 주소찾기로 선택합니다.';
+  const held = bag.pending || bag.unconfirmed;
+  const dongId = held || basis === 'complex' ? '' : numericRegionId(bag.dongId);
+  const complexId = held || basis !== 'complex' ? '' : numericRegionId(bag.complexId);
+  const hint = bag.pending
+    ? STEP3_PENDING_HINT
+    : bag.unconfirmed
+      ? basis === 'complex'
+        ? STEP3_COMPLEX_HINT
+        : DONG_RETRY_HINT
+      : '행정동 또는 아파트단지를 주소찾기로 선택합니다.';
   return `
     <div class="search-field${compact ? ' search-field--compact' : ''}" data-find-step3="open">
       <span class="search-field__label">${esc(opts.label)} ${opts.dbHint}</span>
@@ -1805,17 +1803,22 @@ async function applyStep3FromKakao(state, tab, result) {
   const seq = (bag.seq = (Number(bag.seq) || 0) + 1);
   const basis = bag.basis === 'complex' ? 'complex' : 'dong';
   bag.unconfirmed = false;
+  bag.pending = true;
+  bag.dongId = '';
+  bag.complexId = '';
   try {
     const region = await ensureRegionFromKakao(result);
     if (bag.seq !== seq) return;
     const dongId = numericRegionId(region?.id);
     const place = complexNameFromKakao(result);
+    const dongName = result?.bname || result?.hname || region?.dong_name || '';
     if (basis === 'complex') {
       bag.dongId = '';
       if (!dongId || !place) {
         bag.complexId = '';
         bag.display = '';
         bag.unconfirmed = true;
+        bag.pending = false;
         return;
       }
       const params = new URLSearchParams({
@@ -1832,33 +1835,30 @@ async function applyStep3FromKakao(state, tab, result) {
       if (bag.seq !== seq) return;
       const complexId = numericRegionId(body?.complex?.id);
       bag.complexId = complexId;
-      bag.display = place;
+      bag.display = complexId && dongName ? `${dongName} · ${place}` : place;
       bag.unconfirmed = !complexId;
+      bag.pending = false;
       return;
     }
     bag.complexId = '';
     if (!dongId) {
       bag.dongId = '';
       bag.unconfirmed = true;
+      bag.pending = false;
       return;
     }
     bag.dongId = dongId;
-    const dong = result?.bname || result?.hname || region?.dong_name || '';
-    bag.display = [result?.sigungu || region?.sigungu_name || '', dong].filter(Boolean).join(' ');
+    bag.display = [result?.sigungu || region?.sigungu_name || '', dongName].filter(Boolean).join(' ');
     bag.unconfirmed = false;
+    bag.pending = false;
   } catch {
     if (bag.seq !== seq) return;
     bag.dongId = '';
     bag.complexId = '';
+    bag.display = '';
     bag.unconfirmed = true;
+    bag.pending = false;
   }
-}
-
-/** 학생 시·군·구 선택 기본값: 지금 위치(저장 지역·직접 고른 구)의 선택 단위 id. */
-function studentCascadeRegionId(tab, state) {
-  const cur = state.canonicalLocation;
-  if (cur?.level !== 'district' || state._placeTab !== tab) return '';
-  return selectableFindRegionId(cur.regionId) || regionIdFromActivityLabel(cur.displayLabel, findCityUnits);
 }
 
 /**
@@ -2537,6 +2537,26 @@ export function renderFindResultSection(tab, state, role, options = {}) {
     </section>`;
 }
 
+function step3OpenForSearch(tab, state) {
+  if (tab === 'room') return true;
+  if (tab === 'student' && resolveStudentSearchHope(state) === 'study_room') return true;
+  return false;
+}
+
+function step3SearchBlocked(state, tab) {
+  if (!step3OpenForSearch(tab, state)) return false;
+  const bag = state.step3ByTab?.[tab];
+  if (!bag) return false;
+  return bag.pending === true || bag.unconfirmed === true;
+}
+
+function step3BlockMessage(state, tab) {
+  const bag = state.step3ByTab?.[tab];
+  if (bag?.pending) return STEP3_PENDING_HINT;
+  if (bag?.basis === 'complex') return STEP3_COMPLEX_HINT;
+  return DONG_RETRY_HINT;
+}
+
 /** 숨은 시군구 id가 숫자가 아니면 검색을 막는다. 빈 선택·시·도만 포함. 세종은 숨은 id가 숫자면 통과. */
 function guPickIncomplete(form, tab, state) {
   void state;
@@ -2583,12 +2603,13 @@ export async function runFindSearch(tab, form, state, role, rerender) {
     state.searchTotal = 0;
     return;
   }
-  if (tab === 'student' && resolveStudentSearchHope(state) === 'study_room' && (state.studyroomDongPending || state.studyroomDongUnconfirmed)) {
-    const hint = form.querySelector('[data-student-region-field] .search-field__hint');
-    if (hint) hint.textContent = DONG_RETRY_HINT;
+  if (step3SearchBlocked(state, tab)) {
+    const hint = form.querySelector('[data-find-step3="open"] .search-field__hint');
+    const message = step3BlockMessage(state, tab);
+    if (hint) hint.textContent = message;
     state.searchExecuted = true;
     state.searchLoading = false;
-    state.searchError = DONG_RETRY_HINT;
+    state.searchError = message;
     state.searchExposureItems = [];
     state.searchTotal = 0;
     if (state.searchRows) state.searchRows = [];
@@ -2617,7 +2638,11 @@ export async function runFindSearch(tab, form, state, role, rerender) {
  * @param {import('./state.js').ViewerRole} role
  * @param {() => void} rerender
  */
+let findSearchSeq = 0;
+
 export async function runFindSearchWithFilters(tab, filters, state, role, rerender) {
+  const seq = ++findSearchSeq;
+  const stale = () => seq !== findSearchSeq;
   if (tab === 'student' && role === 'parent') filters.preferred_lesson_type = ensureParentHope(state);
   if (tab === 'student' && role === 'study_room') {
     delete filters.preferred_region_label;
@@ -2629,6 +2654,19 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
   if (tab === 'student') settleStudentStudyroomRegionFilter(filters);
   if (tab === 'room') settleRoomAddressFilters(filters);
   if (filters.preferred_lesson_type === 'both') delete filters.preferred_lesson_type;
+  if (stale()) return;
+  if (step3SearchBlocked(state, tab)) {
+    state.searchExecuted = true;
+    state.searchLoading = false;
+    state.searchError = step3BlockMessage(state, tab);
+    state.searchTotal = 0;
+    state.searchExposureItems = [];
+    if (state.searchRows) state.searchRows = [];
+    if (state.searchItems) state.searchItems = [];
+    state._needsSearchRestore = false;
+    rerender();
+    return;
+  }
   if (findScopeMissing(tab, filters)) {
     state.searchExecuted = true;
     state.searchLoading = false;
@@ -2682,6 +2720,7 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
       page: Number(state.searchPage) || 1,
       limit: 20,
     });
+    if (stale()) return;
     if (state.searchRows) state.searchRows = result.rows || [];
     if (state.searchItems) state.searchItems = result.items || [];
     state.searchExposureItems = filterToProviderSelf(
@@ -2693,6 +2732,7 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
     state.searchTotal = Number(result.total) || 0;
     refreshActiveResultItems(tab, state, role);
   } catch (err) {
+    if (stale()) return;
     if (state.searchRows) state.searchRows = [];
     if (state.searchItems) state.searchItems = [];
     state.searchExposureItems = [];
@@ -2700,11 +2740,13 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
     state.searchError = err instanceof Error ? err.message : '검색에 실패했습니다.';
     refreshActiveResultItems(tab, state, role);
   } finally {
-    state.searchLoading = false;
-    state._needsSearchRestore = false;
-    refreshActiveResultItems(tab, state, role);
-    syncFindHashState(state, tab);
-    rerender();
+    if (!stale()) {
+      state.searchLoading = false;
+      state._needsSearchRestore = false;
+      refreshActiveResultItems(tab, state, role);
+      syncFindHashState(state, tab);
+      rerender();
+    }
   }
 }
 
@@ -2828,9 +2870,11 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
         const step3Open = tab === 'room' || (tab === 'student' && hope === 'study_room');
         if (step3Open) {
           if (tab === 'student' && hope === 'study_room' && step3Bag(state(), tab).basis !== 'complex') {
-            await confirmStudyroomDong(state(), result, rerender);
             const bag = step3Bag(state(), tab);
-            if (studyroomDongSeq) {
+            bag.pending = true;
+            const latest = await confirmStudyroomDong(state(), result, rerender);
+            if (latest) {
+              bag.pending = false;
               bag.dongId = numericRegionId(state().studyroomDongRegionId);
               bag.complexId = '';
               bag.display = canonical.displayLabel || bag.display;
@@ -2850,57 +2894,6 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
     }
   });
 
-  root.querySelectorAll('[data-action="find-region-address"], [data-action="find-hope-address"]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const tab = ctx.getTab();
-      const fieldKey =
-        btn.getAttribute('data-region-field') ||
-        (tab === 'room' ? 'region_id' : tab === 'tutor' ? 'tutor_region_id' : 'preferred_region');
-      const inputName =
-        fieldKey === 'region_id'
-          ? 'f_region_id'
-          : fieldKey === 'tutor_region_id'
-            ? 'f_tutor_region_id'
-            : 'f_preferred_region';
-      const input =
-        root.querySelector(`input[name="${inputName}"]`) ||
-        root.querySelector('[data-student-region-field] input');
-      try {
-        await openKakaoPostcode(async (result) => {
-          const canonical = canonicalFromKakao(result, tab, state());
-          applyCanonicalLocation(state(), canonical, tab);
-          if (state().role === 'parent') state()._placeTab = tab;
-          const hope =
-            tab === 'room'
-              ? 'study_room'
-              : state().studentHopeType === 'tutor' || state().studentHopeType === 'study_room'
-                ? state().studentHopeType
-                : 'study_room';
-          const step3Open = tab === 'room' || (tab === 'student' && hope === 'study_room');
-          if (step3Open && step3Bag(state(), tab).basis === 'complex') {
-            await applyStep3FromKakao(state(), tab, result);
-          } else if (tab === 'student' && hope === 'study_room') {
-            await confirmStudyroomDong(state(), result, rerender);
-            const bag = step3Bag(state(), tab);
-            bag.dongId = numericRegionId(state().studyroomDongRegionId);
-            bag.complexId = '';
-            bag.display = canonical.displayLabel || '';
-            bag.unconfirmed = Boolean(state().studyroomDongUnconfirmed);
-          } else if (step3Open) {
-            await applyStep3FromKakao(state(), tab, result);
-          }
-          void input;
-          syncFindHashState(state(), tab);
-          refreshActiveResultItems(tab, state(), ctx.role);
-          logLocationDebug('find-region-address', { tab, fieldKey, canonical });
-          rerender();
-        });
-      } catch (err) {
-        window.alert(err instanceof Error ? err.message : '주소찾기를 열 수 없습니다.');
-      }
-    });
-  });
-
   root.querySelectorAll('[data-find-basis]').forEach((el) => {
     el.addEventListener('change', () => {
       if (!(el instanceof HTMLInputElement)) return;
@@ -2911,6 +2904,7 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
       bag.complexId = '';
       bag.display = '';
       bag.unconfirmed = false;
+      bag.pending = false;
       rerender();
     });
   });
@@ -2923,13 +2917,17 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
           const bag = step3Bag(state(), tab);
           const hope = tab === 'student' ? resolveStudentSearchHope(state()) : 'study_room';
           if (tab === 'student' && hope === 'study_room' && bag.basis !== 'complex') {
-            await confirmStudyroomDong(state(), result, rerender);
-            const next = step3Bag(state(), tab);
-            next.basis = 'dong';
-            next.dongId = numericRegionId(state().studyroomDongRegionId);
-            next.complexId = '';
-            next.display = canonicalFromKakao(result, tab, state()).displayLabel || '';
-            next.unconfirmed = Boolean(state().studyroomDongUnconfirmed);
+            bag.pending = true;
+            const latest = await confirmStudyroomDong(state(), result, rerender);
+            if (latest) {
+              const next = step3Bag(state(), tab);
+              next.pending = false;
+              next.basis = 'dong';
+              next.dongId = numericRegionId(state().studyroomDongRegionId);
+              next.complexId = '';
+              next.display = canonicalFromKakao(result, tab, state()).displayLabel || '';
+              next.unconfirmed = Boolean(state().studyroomDongUnconfirmed);
+            }
           } else {
             await applyStep3FromKakao(state(), tab, result);
           }
