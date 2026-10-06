@@ -135,7 +135,7 @@ final class SettlementLinesQuery
 
         return [
             'id' => (string) ($entry['id'] ?? ''),
-            'type' => (string) ($entry['type'] ?? ''),
+            'type' => $this->popupTypeLabel((string) ($entry['type'] ?? '')),
             'start_at' => (string) ($entry['start_at'] ?? ''),
             'end_at' => (string) ($entry['end_at'] ?? ''),
         ];
@@ -209,9 +209,21 @@ final class SettlementLinesQuery
     private function ticketRole(string $role): string
     {
         return match ($role) {
+            'guest' => '비회원',
+            'parent' => '학생',
             'study_room' => '공부방',
             'tutor' => '과외쌤',
-            default => '학생',
+            default => '역할 미확인',
+        };
+    }
+
+    private function popupTypeLabel(string $type): string
+    {
+        return match ($type) {
+            'notice' => '공지',
+            'event' => '이벤트',
+            'ad' => '광고',
+            default => $type,
         };
     }
 

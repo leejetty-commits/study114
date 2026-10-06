@@ -49,7 +49,7 @@ export function renderSettlementView(model = {}) {
         ${dateInput(period, model.date || '')}
         <p class="settlement-status" data-settlement-status>${esc(message)}</p>
         <ol class="settlement-lines">${slots}</ol>
-        <p><button type="button" class="btn btn--primary" data-settlement-print>${esc(C.print)}</button></p>
+        <p><button type="button" class="btn btn--primary" disabled data-settlement-print>${esc(C.print)}</button></p>
       </div>
       <div class="settlement-print-sheet">
         <h1 data-settlement-print-title>${esc(printTitle)}</h1>
@@ -77,9 +77,12 @@ const LINK_LABEL = {
   popup: C.linkPopup,
 };
 
-/** @param {string} line @param {Array<Record<string, string>>} items @param {number} page @param {number} total @param {string} link */
-export function renderSettlementDetail(line, items, page, total, link) {
+/** @param {string} line @param {Array<Record<string, string>>} items @param {number} page @param {number} total @param {string} link @param {boolean} [backfill] */
+export function renderSettlementDetail(line, items, page, total, link, backfill = false) {
   const tabs = detailTabs(line);
+  if (backfill && (line === 'inquiry' || line === 'report' || line === 'popup')) {
+    return `${tabs}<p>${esc(C.backfill)}</p>${renderLink(line, link)}`;
+  }
   if (!items.length) {
     return `${tabs}<p>${esc(C.emptyDetail)}</p>${renderLink(line, link)}`;
   }
@@ -187,6 +190,10 @@ function openKey(key) {
 
 /** @param {HTMLElement} root @param {() => void} _rerender */
 export function bindSettlement(root, _rerender) {
+  document.documentElement.classList.remove('is-settlement-printing');
+  window.addEventListener('hashchange', () => {
+    document.documentElement.classList.remove('is-settlement-printing');
+  }, { once: true });
   const box = root.querySelector('[data-settlement-root]');
   if (!(box instanceof HTMLElement)) return;
   let period = box.getAttribute('data-period') || 'day';
@@ -197,6 +204,7 @@ export function bindSettlement(root, _rerender) {
   let activeLine = 'pay';
   let page = 1;
   let currentDate = date;
+  let isBackfill = false;
 
   box.querySelectorAll('[data-settlement-tab]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -212,7 +220,8 @@ export function bindSettlement(root, _rerender) {
       load();
     }
   });
-  box.querySelector('[data-settlement-print]')?.addEventListener('click', () => {
+  box.querySelector('[data-settlement-print]')?.addEventListener('click', (event) => {
+    if (!(event.currentTarget instanceof HTMLButtonElement) || event.currentTarget.disabled) return;
     const time = box.querySelector('[data-settlement-print-time]');
     if (time) {
       const now = new Date();
@@ -220,10 +229,10 @@ export function bindSettlement(root, _rerender) {
       time.textContent = `${C.printTime} ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
     }
     document.documentElement.classList.add('is-settlement-printing');
+    window.addEventListener('afterprint', () => {
+      document.documentElement.classList.remove('is-settlement-printing');
+    }, { once: true });
     window.print();
-  });
-  window.addEventListener('afterprint', () => {
-    document.documentElement.classList.remove('is-settlement-printing');
   });
   box.querySelectorAll('[data-settlement-open]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -237,6 +246,13 @@ export function bindSettlement(root, _rerender) {
 
   async function load() {
     const status = box.querySelector('[data-settlement-status]');
+    const printBtn = box.querySelector('[data-settlement-print]');
+    if (printBtn instanceof HTMLButtonElement) printBtn.disabled = true;
+    const title = box.querySelector('[data-settlement-print-title]');
+    if (title) title.textContent = '';
+    const printLines = box.querySelector('[data-settlement-print-lines]');
+    if (printLines) printLines.innerHTML = '';
+    isBackfill = false;
     try {
       const data = await fetchSettlementReport(period, date);
       period = data.period || period;
@@ -254,13 +270,15 @@ export function bindSettlement(root, _rerender) {
         fillLines(['', '', '', '', '']);
         return;
       }
-      if (status) status.textContent = '';
-      const reportLines = data.report.body_lines || [];
-      fillLines(reportLines);
-      const title = box.querySelector('[data-settlement-print-title]');
-      if (title) title.textContent = data.report.print_title || C.dailyPrint;
-      const printLines = box.querySelector('[data-settlement-print-lines]');
-      if (printLines) printLines.innerHTML = reportLines.map((line) => `<p>${esc(line)}</p>`).join('');
+      if (data.state === 'ready') {
+        if (status) status.textContent = '';
+        const reportLines = data.report.body_lines || [];
+        isBackfill = Number(data.report.is_backfill) === 1;
+        fillLines(reportLines);
+        if (title) title.textContent = data.report.print_title || C.dailyPrint;
+        if (printLines) printLines.innerHTML = reportLines.map((line) => `<p>${esc(line)}</p>`).join('');
+        if (printBtn instanceof HTMLButtonElement) printBtn.disabled = false;
+      }
     } catch (err) {
       const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : '';
       if (status) status.textContent = code === 'schema_missing' ? C.schemaMissing : C.missing;
@@ -302,7 +320,7 @@ export function bindSettlement(root, _rerender) {
     }
     try {
       const data = await fetchSettlementLines(period, currentDate, activeLine, page);
-      const html = renderSettlementDetail(activeLine, data.items || [], data.page || page, data.total || 0, data.link || '');
+      const html = renderSettlementDetail(activeLine, data.items || [], data.page || page, data.total || 0, data.link || '', isBackfill);
       if (body) body.innerHTML = html;
       body?.querySelectorAll('[data-settlement-detail-tab]').forEach((btn) => {
         btn.addEventListener('click', () => {
