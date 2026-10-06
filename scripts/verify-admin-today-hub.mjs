@@ -216,10 +216,18 @@ const at = css.indexOf(marker);
 ok('css-marker', at > 0 && css.indexOf(marker, at + marker.length) === -1);
 const added = at >= 0 ? css.slice(at + marker.length) : '';
 const selectors = [...added.matchAll(/([^{}]+)\{/g)].map((m) => m[1].trim()).filter(Boolean);
-ok('css-rules-present', selectors.length >= 8, `n=${selectors.length}`);
-selectors.forEach((sel, index) => {
+const mediaHeads = selectors.filter((sel) => /^@media\b/.test(sel));
+const rules = selectors.filter((sel) => !/^@media\b/.test(sel));
+ok('css-rules-present', rules.length >= 8, `n=${rules.length}`);
+rules.forEach((sel, index) => {
   ok(`css-admin-shell-${index + 1}`, sel.startsWith('.admin-shell'), sel);
 });
+ok('css-no-if', (added.match(/if\(/g) || []).length === 0);
+ok(
+  'css-media-640',
+  mediaHeads.length === 1 && /^\s*@media\s+\(\s*max-width:\s*640px\s*\)\s*$/.test(mediaHeads[0]),
+  mediaHeads.join(' | ') || 'none',
+);
 
 console.log(`\n${fail === 0 ? 'OK' : 'FAIL'}  pass=${pass} fail=${fail}`);
 process.exit(fail === 0 ? 0 : 1);
