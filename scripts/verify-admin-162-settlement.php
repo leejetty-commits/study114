@@ -36,6 +36,7 @@ use Study114\Auth\AuthSession;
 use Study114\Database\Connection;
 use Study114\Mail\FakeMailOutbox;
 use Study114\Report\ReportPeriod;
+use Study114\Report\SettlementLinesQuery;
 use Study114\Report\SettlementMailer;
 use Study114\Report\SettlementReportRepository;
 use Study114\Report\SettlementReportService;
@@ -626,6 +627,65 @@ $res = httpCall('POST', $base . '/api/admin/settlement-report.php', [$cookie]);
 ok('admin-post-405', $res['status'] === 405, (string) $res['status']);
 $res = httpCall('PATCH', $base . '/api/admin/settlement-lines.php?period=day&date=2026-08-15&line=pay', [$cookie]);
 ok('admin-patch-405', $res['status'] === 405, (string) $res['status']);
+
+$lineQuery = new SettlementLinesQuery($pdo);
+$guestPage = $lineQuery->page([
+    'snapshot_json' => [
+        'tz' => ['db_offset_min' => 540, 'php_tz' => 'Asia/Seoul'],
+        'inquiry' => [[
+            'ticket_no' => 'G1',
+            'created_at' => '2026-08-15 01:00:00',
+            'category' => 'bug',
+            'status' => 'open',
+            'role_type' => 'guest',
+        ]],
+    ],
+], 'inquiry', 1);
+ok('lines-role-guest', ($guestPage['items'][0]['role'] ?? '') === '비회원', (string) ($guestPage['items'][0]['role'] ?? ''));
+$parentPage = $lineQuery->page([
+    'snapshot_json' => [
+        'inquiry' => [[
+            'ticket_no' => 'P1',
+            'created_at' => '2026-08-15 01:00:00',
+            'category' => 'bug',
+            'status' => 'open',
+            'role_type' => 'parent',
+        ]],
+    ],
+], 'inquiry', 1);
+ok('lines-role-parent', ($parentPage['items'][0]['role'] ?? '') === '학생', (string) ($parentPage['items'][0]['role'] ?? ''));
+$popupPage = $lineQuery->page([
+    'snapshot_json' => [
+        'popup' => [
+            ['id' => 1, 'type' => 'notice', 'start_at' => '2026-08-01', 'end_at' => '2026-08-31'],
+            ['id' => 2, 'type' => 'event', 'start_at' => '2026-08-01', 'end_at' => '2026-08-31'],
+            ['id' => 3, 'type' => 'ad', 'start_at' => '2026-08-01', 'end_at' => '2026-08-31'],
+        ],
+    ],
+], 'popup', 1);
+$popupTypes = array_map(static fn (array $item): string => (string) ($item['type'] ?? ''), $popupPage['items']);
+ok('lines-popup-ko', $popupTypes === ['공지', '이벤트', '광고'], implode(',', $popupTypes));
+
+foreach ([
+    'abc' => 'abc',
+    '2026-13-45' => 'badcal',
+    '2026-02-30' => 'feb30',
+] as $badDate => $tag) {
+    $res = httpCall('GET', $base . '/api/admin/settlement-report.php?period=day&date=' . rawurlencode($badDate), [$cookie]);
+    ok(
+        'report-date-' . $tag . '-422',
+        $res['status'] === 422 && ($res['json']['error'] ?? '') === 'validation' && !str_contains($res['body'], 'Failed to parse'),
+        $res['status'] . ' ' . $res['body']
+    );
+    $res = httpCall('GET', $base . '/api/admin/settlement-lines.php?period=day&date=' . rawurlencode($badDate) . '&line=pay', [$cookie]);
+    ok(
+        'lines-date-' . $tag . '-422',
+        $res['status'] === 422 && ($res['json']['error'] ?? '') === 'validation' && !str_contains($res['body'], 'Failed to parse'),
+        $res['status'] . ' ' . $res['body']
+    );
+}
+$res = httpCall('GET', $base . '/api/admin/settlement-report.php?period=month&date=2026-02', [$cookie]);
+ok('report-month-ym-200', $res['status'] === 200 && ($res['json']['report']['pay_count'] ?? null) === 1, $res['body']);
 
 $pdo->exec('RENAME TABLE admin_settlement_reports TO admin_settlement_reports_off');
 try {

@@ -7,6 +7,22 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 use Study114\Admin\AdminApi;
 use Study114\Report\SettlementReportService;
 
+function settlement_lines_date_ok(string $period, string $date): bool
+{
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1) {
+        $parts = array_map('intval', explode('-', $date));
+
+        return checkdate($parts[1], $parts[2], $parts[0]);
+    }
+    if ($period === 'month' && preg_match('/^\d{4}-\d{2}$/', $date) === 1) {
+        $month = (int) substr($date, 5, 2);
+
+        return $month >= 1 && $month <= 12;
+    }
+
+    return false;
+}
+
 AdminApi::bootstrap();
 
 AdminApi::run(static function (): void {
@@ -26,6 +42,9 @@ AdminApi::run(static function (): void {
     }
     if ($date === '') {
         AdminApi::fail(422, 'validation', 'date가 필요합니다.');
+    }
+    if (!settlement_lines_date_ok($period, $date)) {
+        AdminApi::fail(422, 'validation', 'date 형식이 올바르지 않습니다.');
     }
     try {
         $payload = (new SettlementReportService())->readLines(

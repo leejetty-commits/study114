@@ -49,6 +49,9 @@
 html.is-settlement-printing .admin-sidebar {
   display: none !important;
 }
+html.is-settlement-printing .home-body .admin-shell {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
 html.is-settlement-printing .admin-shell .settlement-no-print {
   display: none !important;
 }
@@ -78,6 +81,9 @@ html.is-settlement-printing body {
 @media print {
   html.is-settlement-printing .admin-sidebar {
     display: none !important;
+  }
+  html.is-settlement-printing .home-body .admin-shell {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
   html.is-settlement-printing .admin-shell .settlement-no-print {
     display: none !important;

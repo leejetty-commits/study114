@@ -220,6 +220,32 @@ const withoutMedia = cssBody.replace(/@media[^{]+\{([\s\S]*?)\n\}/g, (_, inner) 
 selectors.push(...selectorList(withoutMedia));
 ok('css-selectors', selectors.length > 0 && selectors.every((sel) => sel.startsWith('.admin-shell') || sel.startsWith('html.is-settlement-printing')), selectors.filter((sel) => !sel.startsWith('.admin-shell') && !sel.startsWith('html.is-settlement-printing')).join(' | '));
 
+const gridRule = 'html.is-settlement-printing .home-body .admin-shell';
+const gridDecl = 'grid-template-columns: minmax(0, 1fr) !important';
+const mediaInner = (css.match(/@media print \{([\s\S]*)\n\}/) || ['', ''])[1];
+const screenCss = css.replace(/@media print \{[\s\S]*\n\}/, '');
+ok('css-grid-screen', screenCss.includes(gridRule) && screenCss.includes(gridDecl));
+ok('css-grid-print', mediaInner.includes(gridRule) && mediaInner.includes(gridDecl));
+ok('print-disabled-initial', /disabled[^>]*data-settlement-print>/.test(html));
+
+const screenSrc = readFileSync(join(root, 'preview/home-ui/src/admin/a28-settlement.js'), 'utf8');
+const bindSrc = screenSrc.slice(screenSrc.indexOf('export function bindSettlement'));
+const afterprintHits = bindSrc.match(/window\.addEventListener\(\s*'afterprint'/g) || [];
+ok('load-clears-print', screenSrc.includes("title.textContent = ''") && screenSrc.includes("printLines.innerHTML = ''") && screenSrc.includes('printBtn.disabled = true'));
+ok('load-ready-only', screenSrc.includes("data.state === 'ready'") && screenSrc.includes('printBtn.disabled = false') && screenSrc.indexOf('printBtn.disabled = false') > screenSrc.indexOf("data.state === 'ready'"));
+ok(
+  'afterprint-once',
+  afterprintHits.length === 1
+    && /addEventListener\(\s*'afterprint'[\s\S]*?\{ once: true \}/.test(bindSrc)
+    && bindSrc.includes("addEventListener('hashchange'")
+    && bindSrc.includes("classList.remove('is-settlement-printing')")
+    && !/window\.addEventListener\(\s*'afterprint'\s*,\s*\(\)\s*=>\s*\{[^}]*\}\s*\)/.test(bindSrc),
+);
+ok('backfill-detail', renderSettlementDetail('inquiry', [], 1, 0, '/admin/tickets', true).includes(SETTLEMENT_COPY.backfill)
+  && renderSettlementDetail('report', [], 1, 0, '/admin/moderation', true).includes(SETTLEMENT_COPY.backfill)
+  && renderSettlementDetail('popup', [], 1, 0, '/admin/settings/popups', true).includes(SETTLEMENT_COPY.backfill)
+  && renderSettlementDetail('pay', [], 1, 0, '/admin/commerce', true).includes(SETTLEMENT_COPY.emptyDetail));
+
 for (const key of ['missing', 'inProgress', 'backfill', 'emptyDetail', 'schemaMissing']) {
   ok(`copy-${key}`, typeof SETTLEMENT_COPY[key] === 'string' && SETTLEMENT_COPY[key].length > 8);
 }
@@ -252,14 +278,17 @@ function deletedLines(file) {
   return diff.split('\n').filter((line) => line.startsWith('-') && !line.startsWith('---'));
 }
 
-for (const file of [
+const sharedFiles = [
   'preview/home-ui/src/admin/a28-copy.js',
   'preview/home-ui/src/admin/a28-screens.js',
   'preview/home-ui/src/admin/a28-screens-bind.js',
-]) {
+];
+for (const file of sharedFiles) {
   const removed = deletedLines(file);
   ok(`no-delete ${file}`, removed.length === 0, removed.join('\n'));
 }
+const sharedChanged = sharedFiles.filter((file) => execFileSync('git', ['diff', '--name-only', '02dd20e', '--', file], { cwd: root, encoding: 'utf8' }).trim() !== '');
+ok('shared-frozen-02dd20e', sharedChanged.length === 0, sharedChanged.join(','));
 
 const allow = new Set([
   'preview/home-ui/src/admin/a28-settlement.js',
