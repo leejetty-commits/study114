@@ -189,6 +189,7 @@ import {
   sectionOwnerLabel,
   selected,
 } from './a28-screens-shared.js';
+import { bindTodayHub, peekHubExposureRoute, registerTodayBinders } from './a28-today-hub.js';
 import {
   renderAddons,
   renderMarketLab,
@@ -502,6 +503,8 @@ function readMembersHash() {
 }
 
 function readExposureRoute() {
+  const hub = peekHubExposureRoute();
+  if (hub) return hub;
   const raw = window.location.hash.replace(/^#/, '');
   const q = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
   const params = new URLSearchParams(q);
@@ -512,6 +515,34 @@ function readExposureRoute() {
     userId: /^[1-9][0-9]*$/.test(userRaw) ? userRaw : '',
     hasTab: params.has('tab'),
   };
+}
+
+function adminBindHost() {
+  const raw = window.location.hash.replace(/^#/, '');
+  const path = raw.split('?')[0];
+  return path === '/admin' ? 'hub' : 'route';
+}
+
+function exposureLoadKey(route, status = getExposureStatusFilter()) {
+  return `${adminBindHost()}|${route.userId}|${route.tab}|${status}|${route.hasTab ? '1' : '0'}`;
+}
+
+function writeAdminHash(next) {
+  window.location.hash = next;
+}
+
+export function sealExposureHostLoad() {
+  lastExposureLoad = exposureLoadKey(readExposureRoute());
+}
+
+export function bindTodaySlotNav(root) {
+  root.querySelectorAll('[data-a28-nav]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = el.getAttribute('data-a28-nav');
+      if (target) window.location.hash = target.startsWith('/') ? target : `/${target}`;
+    });
+  });
 }
 
 export function bindA28ScreenEvents(root, path, rerender) {
@@ -637,160 +668,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
   }
 
   if (path === '/admin/members') {
-    const memberRoute = readMembersHash();
-    const memberHashKey = memberRoute.userId || memberRoute.q ? `user:${memberRoute.userId}|q:${memberRoute.q}` : '';
-    if (memberHashKey && lastMembersHash !== memberHashKey && isAdminApiMode()) {
-      lastMembersHash = memberHashKey;
-      if (memberRoute.q) {
-        a28Ui.memberFilters = { ...a28Ui.memberFilters, q: memberRoute.q };
-      }
-      if (memberRoute.userId) {
-        a28Ui.openMemberId = Number(memberRoute.userId);
-      }
-      void (async () => {
-        try {
-          await hydrateMembersCache(a28Ui.memberFilters);
-          if (memberRoute.userId) await hydrateMemberDetail(memberRoute.userId).catch(() => null);
-          rerender();
-        } catch (err) {
-          lastMembersHash = '';
-          window.alert(err instanceof Error ? err.message : '회원을 불러오지 못했습니다.');
-        }
-      })();
-    } else if (isAdminApiMode() && !getMembersCache()) {
-      hydrateMembersCache(a28Ui.memberFilters)
-        .then(() => rerender())
-        .catch(() => {});
-    }
-    const form = root.querySelector('[data-member-filter]');
-    form?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!(form instanceof HTMLFormElement)) return;
-      const fd = new FormData(form);
-      a28Ui.memberFilters = {
-        q: String(fd.get('q') || '').trim(),
-        status: String(fd.get('status') || 'all'),
-        role_type: String(fd.get('role_type') || 'all'),
-      };
-      try {
-        if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
-        rerender();
-      } catch (err) {
-        window.alert(err instanceof Error ? err.message : '검색 실패');
-      }
-    });
-    root.querySelectorAll('[data-member-status-chip]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const status = String(btn.getAttribute('data-member-status-chip') || 'all');
-        a28Ui.memberFilters = { ...a28Ui.memberFilters, status };
-        try {
-          if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
-          rerender();
-        } catch (err) {
-          window.alert(err instanceof Error ? err.message : '필터 실패');
-        }
-      });
-    });
-    root.querySelector('[data-member-refresh]')?.addEventListener('click', async () => {
-      try {
-        if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
-        rerender();
-      } catch (err) {
-        window.alert(err instanceof Error ? err.message : '새로고침 실패');
-      }
-    });
-    root.querySelectorAll('[data-member-open]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const id = Number(btn.getAttribute('data-member-open'));
-        if (!id) return;
-        a28Ui.openMemberId = id;
-        try {
-          if (isAdminApiMode()) await hydrateMemberDetail(id).catch(() => null);
-        } catch {
-          /* 더미 상세로 계속 */
-        }
-        rerender();
-      });
-    });
-    if (a28Ui.openMemberId) {
-      const drawer = root.querySelector(`[data-admin-drawer="member-${a28Ui.openMemberId}"]`);
-      if (drawer) drawer.hidden = false;
-    }
-    root.querySelectorAll('[data-member-action]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const action = btn.getAttribute('data-member-action');
-        const id = Number(btn.getAttribute('data-member-id'));
-        if (!id || !action) return;
-        const benefitNotice = action === 'withdraw' ? memberBenefitEndNotice(getMemberDetailCache(id)) : '';
-        const confirmText = benefitNotice
-          ? `${memberActionConfirm(action)}\n${benefitNotice}`
-          : memberActionConfirm(action);
-        if (!window.confirm(confirmText)) return;
-        const memoInput = root.querySelector(`[data-member-memo="${id}"]`);
-        const memo = memoInput instanceof HTMLInputElement ? memoInput.value.trim() : '';
-        try {
-          await apiApplyMemberAction(id, /** @type {'block'|'restore'|'withdraw'} */ (action), {
-            internalMemo: memo,
-          });
-          await hydrateMembersCache(a28Ui.memberFilters);
-          await hydrateMemberDetail(id);
-          rerender();
-        } catch (err) {
-          window.alert(err instanceof Error ? err.message : '조치 실패');
-        }
-      });
-    });
-    const chkAll = root.querySelector('[data-member-chkall]');
-    chkAll?.addEventListener('change', () => {
-      if (!(chkAll instanceof HTMLInputElement)) return;
-      root.querySelectorAll('[data-member-chk]').forEach((el) => {
-        if (el instanceof HTMLInputElement && !el.disabled) el.checked = chkAll.checked;
-      });
-    });
-    root.querySelectorAll('[data-member-bulk]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const action = btn.getAttribute('data-member-bulk');
-        if (action === 'delete') {
-          openMemberBulkDelete(root, rerender);
-          return;
-        }
-        if (action !== 'block' && action !== 'restore') return;
-        const ids = [...root.querySelectorAll('[data-member-chk]:checked')]
-          .map((el) => Number(el instanceof HTMLInputElement ? el.value : 0))
-          .filter((id) => id > 0);
-        if (!ids.length) {
-          window.alert('회원을 선택해 주세요.');
-          return;
-        }
-        if (!window.confirm(memberActionConfirm(action, ids.length))) return;
-        const memoEl = root.querySelector('[data-member-bulk-memo]');
-        const memo = memoEl instanceof HTMLInputElement ? memoEl.value.trim() : '';
-        if (!isAdminApiMode()) {
-          window.alert('미리보기에서는 일괄 조치를 쓸 수 없습니다.');
-          return;
-        }
-        try {
-          const data = await apiApplyMemberBulkAction(ids, action, { internalMemo: memo });
-          const ok = Number(data.ok_count || 0);
-          const fail = Number(data.fail_count || 0);
-          await hydrateMembersCache(a28Ui.memberFilters);
-          if (a28Ui.openMemberId) await hydrateMemberDetail(a28Ui.openMemberId).catch(() => {});
-          rerender();
-          window.alert(`완료: 성공 ${ok} · 실패 ${fail}`);
-        } catch (err) {
-          window.alert(err instanceof Error ? err.message : '일괄 조치 실패');
-        }
-      });
-    });
-    root.querySelectorAll('[data-member-delete]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        if (!isAdminApiMode()) {
-          window.alert('미리보기에서는 회원 삭제를 쓸 수 없습니다.');
-          return;
-        }
-        openMemberDeleteModal(btn, rerender);
-      });
-    });
+    bindMembersScreen(root, rerender, writeAdminHash);
   }
 
   if (path === '/admin/commerce') {
@@ -1405,60 +1283,11 @@ export function bindA28ScreenEvents(root, path, rerender) {
   }
 
   if (path === '/admin/reports') {
-    root.querySelectorAll('[data-a28-report-status]').forEach((sel) => {
-      sel.addEventListener('change', async () => {
-        const id = sel.getAttribute('data-a28-report-status');
-        if (!id) return;
-        const memoEl = root.querySelector(`[data-a28-report-memo="${id}"]`);
-        const internalMemo = memoEl instanceof HTMLTextAreaElement ? memoEl.value.trim() : '';
-        try {
-          await apiUpdateAdminReport(id, sel.value, { internalMemo });
-        } catch (err) {
-          window.alert(err instanceof Error ? err.message : '상태 변경에 실패했습니다.');
-          rerender();
-        }
-      });
-    });
+    bindReportsScreen(root, rerender, writeAdminHash);
   }
 
   if (path === '/admin/tickets') {
-    const ticketViewer = getAuthUser()?.email || 'guest';
-    if (isSupportApiMode() && ticketAdminLoadedFor !== ticketViewer) {
-      ticketAdminLoadedFor = ticketViewer;
-      void hydrateSupportCache('')
-        .then(() => rerender())
-        .catch(() => rerender());
-    }
-    root.querySelectorAll('[data-a28-ticket-status]').forEach((sel) => {
-      sel.addEventListener('change', async () => {
-        const id = sel.getAttribute('data-a28-ticket-status');
-        if (!id) return;
-        try {
-          await updateTicketStatus(id, sel.value);
-        } catch (err) {
-          window.alert(err instanceof Error ? err.message : '상태를 바꾸지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
-          rerender();
-        }
-      });
-    });
-    root.querySelectorAll('[data-a28-ticket-reply]').forEach((form) => {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = form.getAttribute('data-a28-ticket-reply');
-        const text = form.querySelector('[name="admin_reply_text"]')?.value || '';
-        if (!id) return;
-        try {
-          const updated = await updateTicketReply(id, text);
-          if (!updated) {
-            window.alert('답변 내용이 필요합니다.');
-            return;
-          }
-          rerender();
-        } catch (err) {
-          window.alert(err instanceof Error ? err.message : '답변 저장에 실패했습니다.');
-        }
-      });
-    });
+    bindTicketsScreen(root, rerender, writeAdminHash);
   }
 
   if (path === '/admin/submission-docs') {
@@ -1497,105 +1326,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
   }
 
   if (path === '/admin/exposure') {
-    const route = readExposureRoute();
-    const loadKey = `${route.userId}|${route.tab}|${getExposureStatusFilter()}|${route.hasTab ? '1' : '0'}`;
-    if (isAdminApiMode() && !exposureLoadBusy && lastExposureLoad !== loadKey) {
-      exposureLoadBusy = true;
-      lastExposureLoad = loadKey;
-      void (async () => {
-        try {
-          let tab = route.tab;
-          if (route.userId && !route.hasTab) {
-            tab = await chooseExposureTab(route.userId);
-            if (tab !== route.tab) {
-              lastExposureLoad = '';
-              exposureLoadBusy = false;
-              window.location.hash = `/admin/exposure?user=${encodeURIComponent(route.userId)}&tab=${tab}`;
-              return;
-            }
-          }
-          await hydrateExposureCache(tab, getExposureStatusFilter(), route.userId);
-          if (route.userId && !getMemberDetailCache(route.userId)) {
-            await hydrateMemberDetail(route.userId).catch(() => null);
-          }
-          rerender();
-        } catch (err) {
-          lastExposureLoad = '';
-          window.alert(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
-        } finally {
-          exposureLoadBusy = false;
-        }
-      })();
-    }
-
-    root.querySelectorAll('[data-a28-exp-tab]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const next = btn.getAttribute('data-a28-exp-tab');
-        if (!next || next === route.tab) return;
-        const params = new URLSearchParams();
-        if (route.userId) params.set('user', route.userId);
-        params.set('tab', next);
-        window.location.hash = `/admin/exposure?${params.toString()}`;
-      });
-    });
-
-    root.querySelector('[data-a28-exp-clear-user]')?.addEventListener('click', () => {
-      window.location.hash = `/admin/exposure?tab=${route.tab}`;
-    });
-
-    const filterForm = root.querySelector('[data-a28-exp-filter]');
-    filterForm?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const fd = new FormData(filterForm);
-      const status = String(fd.get('status') || '');
-      try {
-        await hydrateExposureCache(route.tab, status, route.userId);
-        lastExposureLoad = `${route.userId}|${route.tab}|${status}|${route.hasTab ? '1' : '0'}`;
-        rerender();
-      } catch (err) {
-        window.alert(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
-      }
-    });
-
-    root.querySelectorAll('[data-a28-exp-action]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const compound = btn.getAttribute('data-a28-exp-id');
-        const action = btn.getAttribute('data-a28-exp-action');
-        if (!compound || !action) return;
-        const [targetType, targetId] = compound.split(':');
-        if (!targetType || !targetId) return;
-
-        const memoEl = root.querySelector(`[data-a28-exp-memo="${compound}"]`);
-        const internalMemo = memoEl instanceof HTMLTextAreaElement ? memoEl.value.trim() : '';
-
-        let inquiryStatus;
-        if (action === 'inquiry_status') {
-          const sel = root.querySelector(`[data-a28-exp-inquiry="${compound}"]`);
-          inquiryStatus = sel instanceof HTMLSelectElement ? sel.value : '';
-        }
-
-        const confirmMsg =
-          action === 'hide'
-            ? '이 카드를 홈·찾기에서 숨길까요? 주인은 마이페이지에서 그대로 볼 수 있어요.'
-            : action === 'publish'
-              ? '이 카드를 홈·찾기에 다시 보이게 할까요?'
-              : '상담 상태를 보정할까요?';
-        if (!window.confirm(confirmMsg)) return;
-
-        try {
-          await apiApplyExposureCorrection(
-            targetType,
-            targetId,
-            /** @type {'hide'|'publish'|'inquiry_status'} */ (action),
-            { internalMemo, inquiryStatus, reasonCategory: 'internal_review' },
-          );
-          lastExposureLoad = '';
-          rerender();
-        } catch (err) {
-          window.alert(err instanceof Error ? err.message : '보정에 실패했습니다.');
-        }
-      });
-    });
+    bindExposureScreen(root, rerender, writeAdminHash);
   }
 
   if (path.startsWith('/admin/settings')) {
@@ -1681,185 +1412,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
       }
     });
 
-    const popupForm = root.querySelector('[data-popup-form]');
-    if (popupForm instanceof HTMLFormElement) {
-    if (peekHomePopups().rows === null) {
-      ensureHomePopups().then(() => rerender());
-    }
-    const showPopupError = (message) => {
-      const box = root.querySelector('[data-home-popup-form-error]');
-      if (!(box instanceof HTMLElement)) return;
-      box.textContent = message || '';
-      box.hidden = !message;
-    };
-    const syncPopupType = () => {
-      if (!(popupForm instanceof HTMLFormElement)) return;
-      const type = popupForm.querySelector('[name="type"]:checked')?.value || 'notice';
-      popupForm.querySelectorAll('[data-popup-fields]').forEach((el) => {
-        if (!(el instanceof HTMLElement)) return;
-        const on = el.getAttribute('data-popup-fields') === type;
-        el.hidden = !on;
-        el.style.display = on ? '' : 'none';
-      });
-    };
-    const syncPopupAudience = () => {
-      if (!(popupForm instanceof HTMLFormElement)) return;
-      const all = popupForm.querySelector('[name="audience"][value="all"]');
-      const others = [...popupForm.querySelectorAll('[name="audience"]')].filter(
-        (el) => el instanceof HTMLInputElement && el.value !== 'all',
-      );
-      const allOn = all instanceof HTMLInputElement && all.checked;
-      others.forEach((el) => {
-        if (!(el instanceof HTMLInputElement)) return;
-        if (allOn) el.checked = false;
-        el.disabled = allOn;
-      });
-    };
-    const syncPopupLive = () => {
-      if (!(popupForm instanceof HTMLFormElement)) return;
-      const on = popupForm.querySelector('[name="published"]:checked')?.value === '1';
-      const hint = root.querySelector('[data-home-popup-live]');
-      if (hint instanceof HTMLElement) hint.hidden = !on;
-    };
-    const resetPopupForm = () => {
-      if (!(popupForm instanceof HTMLFormElement)) return;
-      popupForm.reset();
-      const idInput = popupForm.querySelector('[name="id"]');
-      if (idInput instanceof HTMLInputElement) idInput.value = '';
-      const sort = popupForm.querySelector('[name="sortOrder"]');
-      if (sort instanceof HTMLInputElement) sort.value = '0';
-      showPopupError('');
-      syncPopupType();
-      syncPopupAudience();
-      syncPopupLive();
-    };
-    popupForm?.querySelectorAll('[name="type"]').forEach((el) => el.addEventListener('change', syncPopupType));
-    popupForm?.querySelectorAll('[name="audience"]').forEach((el) => el.addEventListener('change', syncPopupAudience));
-    popupForm?.querySelectorAll('[name="published"]').forEach((el) => el.addEventListener('change', syncPopupLive));
-    syncPopupType();
-    syncPopupAudience();
-    syncPopupLive();
-    const fieldValue = (type, name) => {
-      if (!(popupForm instanceof HTMLFormElement)) return '';
-      const box = popupForm.querySelector(`[data-popup-fields="${type}"] [name="${name}"]`);
-      if (box instanceof HTMLInputElement || box instanceof HTMLTextAreaElement) return box.value.trim();
-      return '';
-    };
-    const setField = (type, name, value) => {
-      if (!(popupForm instanceof HTMLFormElement)) return;
-      const box = popupForm.querySelector(`[data-popup-fields="${type}"] [name="${name}"]`);
-      if (box instanceof HTMLInputElement || box instanceof HTMLTextAreaElement) box.value = value;
-    };
-    root.querySelectorAll('[data-popup-edit]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-popup-edit');
-        const row = (peekHomePopups().rows || []).find((item) => String(item.id) === id);
-        if (!row || !(popupForm instanceof HTMLFormElement)) return;
-        resetPopupForm();
-        const idInput = popupForm.querySelector('[name="id"]');
-        if (idInput instanceof HTMLInputElement) idInput.value = String(row.id);
-        const type = popupForm.querySelector(`[name="type"][value="${row.type}"]`);
-        if (type instanceof HTMLInputElement) type.checked = true;
-        const family = popupForm.querySelector(`[name="family"][value="${row.family}"]`);
-        if (family instanceof HTMLInputElement) family.checked = true;
-        const audience = Array.isArray(row.audience) ? row.audience : [];
-        popupForm.querySelectorAll('[name="audience"]').forEach((el) => {
-          if (el instanceof HTMLInputElement) el.checked = audience.includes(el.value);
-        });
-        const start = popupForm.querySelector('[name="startAt"]');
-        const end = popupForm.querySelector('[name="endAt"]');
-        const sort = popupForm.querySelector('[name="sortOrder"]');
-        const published = popupForm.querySelector(`[name="published"][value="${row.published ? '1' : '0'}"]`);
-        if (start instanceof HTMLInputElement) start.value = String(row.startAt || '');
-        if (end instanceof HTMLInputElement) end.value = String(row.endAt || '');
-        if (sort instanceof HTMLInputElement) sort.value = String(row.sortOrder ?? 0);
-        if (published instanceof HTMLInputElement) published.checked = true;
-        const content = row.content && typeof row.content === 'object' ? row.content : {};
-        const typeId = String(row.type || 'notice');
-        Object.entries(content).forEach(([key, value]) => {
-          if (key === 'bullets' && Array.isArray(value)) setField(typeId, key, value.join('\n'));
-          else if (typeof value === 'string') setField(typeId, key, value);
-        });
-        syncPopupType();
-        syncPopupAudience();
-        syncPopupLive();
-        popupForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    });
-    root.querySelectorAll('[data-popup-delete]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const id = btn.getAttribute('data-popup-delete');
-        if (!id || !window.confirm('이 팝업을 삭제할까요?')) return;
-        try {
-          await deleteHomePopup(id);
-          rerender();
-        } catch (err) {
-          showPopupError(err instanceof Error ? err.message : '삭제하지 못했습니다.');
-        }
-      });
-    });
-    root.querySelectorAll('[data-popup-preview]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-popup-preview');
-        const row = (peekHomePopups().rows || []).find((item) => String(item.id) === id);
-        if (!id || !row) return;
-        const audience = Array.isArray(row.audience) ? row.audience : [];
-        let hash = '#/guest';
-        if (audience.length === 1 && audience[0] === 'studyRoom') hash = '#/study-room';
-        else if (audience.length === 1 && audience[0] === 'tutor') hash = '#/tutor';
-        else if (audience.length === 1 && audience[0] === 'student') hash = '#/parent';
-        window.open(`/?popupPreviewId=${encodeURIComponent(id)}${hash}`, '_blank');
-      });
-    });
-    root.querySelector('[data-popup-reset]')?.addEventListener('click', () => {
-      resetPopupForm();
-    });
-    popupForm?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!(popupForm instanceof HTMLFormElement)) return;
-      const audience = [...popupForm.querySelectorAll('[name="audience"]')]
-        .filter((el) => el instanceof HTMLInputElement && el.checked && !el.disabled)
-        .map((el) => (el instanceof HTMLInputElement ? el.value : ''))
-        .filter(Boolean);
-      if (!audience.length) {
-        showPopupError('대상을 하나 이상 고르세요');
-        return;
-      }
-      const type = popupForm.querySelector('[name="type"]:checked')?.value || 'notice';
-      const keys =
-        type === 'event'
-          ? ['kicker', 'title', 'chip', 'body', 'period', 'note', 'cta', 'ctaHref']
-          : type === 'ad'
-            ? ['chip', 'title', 'body', 'aside', 'primary', 'primaryHref', 'secondary', 'secondaryHref']
-            : ['date', 'title', 'body', 'bullets', 'cta', 'ctaHref'];
-      const content = {};
-      keys.forEach((key) => {
-        const value = fieldValue(type, key);
-        if (!value) return;
-        if (key === 'bullets') content.bullets = value.split('\n').map((line) => line.trim()).filter(Boolean).slice(0, 4);
-        else content[key] = value;
-      });
-      const id = String(popupForm.querySelector('[name="id"]')?.value || '');
-      const payload = {
-        type,
-        family: popupForm.querySelector('[name="family"]:checked')?.value || 'a',
-        audience,
-        content,
-        startAt: String(popupForm.querySelector('[name="startAt"]')?.value || '') || null,
-        endAt: String(popupForm.querySelector('[name="endAt"]')?.value || '') || null,
-        published: popupForm.querySelector('[name="published"]:checked')?.value === '1' ? 1 : 0,
-        sortOrder: Number(popupForm.querySelector('[name="sortOrder"]')?.value || 0),
-      };
-      if (id) payload.id = Number(id);
-      try {
-        await saveHomePopup(payload);
-        showPopupError('');
-        rerender();
-      } catch (err) {
-        showPopupError(err instanceof Error ? err.message : '저장하지 못했습니다.');
-      }
-    });
-    }
+    bindHomePopupForm(root, rerender, writeAdminHash);
 
     root.querySelectorAll('[data-legal-form]').forEach((form) => {
       form.addEventListener('submit', async (e) => {
@@ -2352,6 +1905,516 @@ export function bindA28ScreenEvents(root, path, rerender) {
   }
 
 
+  bindTodayHub(root);
 }
 
+export function bindMembersScreen(root, rerender, navigate) {
+  const memberRoute = readMembersHash();
+  const memberHashKey = memberRoute.userId || memberRoute.q ? `${adminBindHost()}|user:${memberRoute.userId}|q:${memberRoute.q}` : '';
+  if (memberHashKey && lastMembersHash !== memberHashKey && isAdminApiMode()) {
+    lastMembersHash = memberHashKey;
+    if (memberRoute.q) {
+      a28Ui.memberFilters = { ...a28Ui.memberFilters, q: memberRoute.q };
+    }
+    if (memberRoute.userId) {
+      a28Ui.openMemberId = Number(memberRoute.userId);
+    }
+    void (async () => {
+      try {
+        await hydrateMembersCache(a28Ui.memberFilters);
+        if (memberRoute.userId) await hydrateMemberDetail(memberRoute.userId).catch(() => null);
+        rerender();
+      } catch (err) {
+        lastMembersHash = '';
+        window.alert(err instanceof Error ? err.message : '회원을 불러오지 못했습니다.');
+      }
+    })();
+  } else if (isAdminApiMode() && !getMembersCache()) {
+    hydrateMembersCache(a28Ui.memberFilters)
+      .then(() => rerender())
+      .catch(() => {});
+  }
+  const form = root.querySelector('[data-member-filter]');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!(form instanceof HTMLFormElement)) return;
+    const fd = new FormData(form);
+    a28Ui.memberFilters = {
+      q: String(fd.get('q') || '').trim(),
+      status: String(fd.get('status') || 'all'),
+      role_type: String(fd.get('role_type') || 'all'),
+    };
+    try {
+      if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
+      rerender();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : '검색 실패');
+    }
+  });
+  root.querySelectorAll('[data-member-status-chip]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const status = String(btn.getAttribute('data-member-status-chip') || 'all');
+      a28Ui.memberFilters = { ...a28Ui.memberFilters, status };
+      try {
+        if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '필터 실패');
+      }
+    });
+  });
+  root.querySelector('[data-member-refresh]')?.addEventListener('click', async () => {
+    try {
+      if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
+      rerender();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : '새로고침 실패');
+    }
+  });
+  root.querySelectorAll('[data-member-open]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = Number(btn.getAttribute('data-member-open'));
+      if (!id) return;
+      a28Ui.openMemberId = id;
+      try {
+        if (isAdminApiMode()) await hydrateMemberDetail(id).catch(() => null);
+      } catch {
+        /* 더미 상세로 계속 */
+      }
+      rerender();
+    });
+  });
+  if (a28Ui.openMemberId) {
+    const drawer = root.querySelector(`[data-admin-drawer="member-${a28Ui.openMemberId}"]`);
+    if (drawer) drawer.hidden = false;
+  }
+  root.querySelectorAll('[data-member-action]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const action = btn.getAttribute('data-member-action');
+      const id = Number(btn.getAttribute('data-member-id'));
+      if (!id || !action) return;
+      const benefitNotice = action === 'withdraw' ? memberBenefitEndNotice(getMemberDetailCache(id)) : '';
+      const confirmText = benefitNotice
+        ? `${memberActionConfirm(action)}\n${benefitNotice}`
+        : memberActionConfirm(action);
+      if (!window.confirm(confirmText)) return;
+      const memoInput = root.querySelector(`[data-member-memo="${id}"]`);
+      const memo = memoInput instanceof HTMLInputElement ? memoInput.value.trim() : '';
+      try {
+        await apiApplyMemberAction(id, /** @type {'block'|'restore'|'withdraw'} */ (action), {
+          internalMemo: memo,
+        });
+        await hydrateMembersCache(a28Ui.memberFilters);
+        await hydrateMemberDetail(id);
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '조치 실패');
+      }
+    });
+  });
+  const chkAll = root.querySelector('[data-member-chkall]');
+  chkAll?.addEventListener('change', () => {
+    if (!(chkAll instanceof HTMLInputElement)) return;
+    root.querySelectorAll('[data-member-chk]').forEach((el) => {
+      if (el instanceof HTMLInputElement && !el.disabled) el.checked = chkAll.checked;
+    });
+  });
+  root.querySelectorAll('[data-member-bulk]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const action = btn.getAttribute('data-member-bulk');
+      if (action === 'delete') {
+        openMemberBulkDelete(root, rerender);
+        return;
+      }
+      if (action !== 'block' && action !== 'restore') return;
+      const ids = [...root.querySelectorAll('[data-member-chk]:checked')]
+        .map((el) => Number(el instanceof HTMLInputElement ? el.value : 0))
+        .filter((id) => id > 0);
+      if (!ids.length) {
+        window.alert('회원을 선택해 주세요.');
+        return;
+      }
+      if (!window.confirm(memberActionConfirm(action, ids.length))) return;
+      const memoEl = root.querySelector('[data-member-bulk-memo]');
+      const memo = memoEl instanceof HTMLInputElement ? memoEl.value.trim() : '';
+      if (!isAdminApiMode()) {
+        window.alert('미리보기에서는 일괄 조치를 쓸 수 없습니다.');
+        return;
+      }
+      try {
+        const data = await apiApplyMemberBulkAction(ids, action, { internalMemo: memo });
+        const ok = Number(data.ok_count || 0);
+        const fail = Number(data.fail_count || 0);
+        await hydrateMembersCache(a28Ui.memberFilters);
+        if (a28Ui.openMemberId) await hydrateMemberDetail(a28Ui.openMemberId).catch(() => {});
+        rerender();
+        window.alert(`완료: 성공 ${ok} · 실패 ${fail}`);
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '일괄 조치 실패');
+      }
+    });
+  });
+  root.querySelectorAll('[data-member-delete]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (!isAdminApiMode()) {
+        window.alert('미리보기에서는 회원 삭제를 쓸 수 없습니다.');
+        return;
+      }
+      openMemberDeleteModal(btn, rerender);
+    });
+  });
+}
 
+export function bindReportsScreen(root, rerender, navigate) {
+  root.querySelectorAll('[data-a28-report-status]').forEach((sel) => {
+    sel.addEventListener('change', async () => {
+      const id = sel.getAttribute('data-a28-report-status');
+      if (!id) return;
+      const memoEl = root.querySelector(`[data-a28-report-memo="${id}"]`);
+      const internalMemo = memoEl instanceof HTMLTextAreaElement ? memoEl.value.trim() : '';
+      try {
+        await apiUpdateAdminReport(id, sel.value, { internalMemo });
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '상태 변경에 실패했습니다.');
+        rerender();
+      }
+    });
+  });
+}
+
+export function bindTicketsScreen(root, rerender, navigate) {
+  const ticketViewer = `${adminBindHost()}|${getAuthUser()?.email || 'guest'}`;
+  if (isSupportApiMode() && ticketAdminLoadedFor !== ticketViewer) {
+    ticketAdminLoadedFor = ticketViewer;
+    void hydrateSupportCache('')
+      .then(() => rerender())
+      .catch(() => rerender());
+  }
+  root.querySelectorAll('[data-a28-ticket-status]').forEach((sel) => {
+    sel.addEventListener('change', async () => {
+      const id = sel.getAttribute('data-a28-ticket-status');
+      if (!id) return;
+      try {
+        await updateTicketStatus(id, sel.value);
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '상태를 바꾸지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+        rerender();
+      }
+    });
+  });
+  root.querySelectorAll('[data-a28-ticket-reply]').forEach((form) => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = form.getAttribute('data-a28-ticket-reply');
+      const text = form.querySelector('[name="admin_reply_text"]')?.value || '';
+      if (!id) return;
+      try {
+        const updated = await updateTicketReply(id, text);
+        if (!updated) {
+          window.alert('답변 내용이 필요합니다.');
+          return;
+        }
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '답변 저장에 실패했습니다.');
+      }
+    });
+  });
+}
+
+export function bindExposureScreen(root, rerender, navigate) {
+  const route = readExposureRoute();
+  const loadKey = exposureLoadKey(route);
+  if (isAdminApiMode() && !exposureLoadBusy && lastExposureLoad !== loadKey) {
+    exposureLoadBusy = true;
+    lastExposureLoad = loadKey;
+    void (async () => {
+      try {
+        let tab = route.tab;
+        if (route.userId && !route.hasTab) {
+          tab = await chooseExposureTab(route.userId);
+          if (tab !== route.tab) {
+            lastExposureLoad = '';
+            exposureLoadBusy = false;
+            navigate(`/admin/exposure?user=${encodeURIComponent(route.userId)}&tab=${tab}`);
+            return;
+          }
+        }
+        await hydrateExposureCache(tab, getExposureStatusFilter(), route.userId);
+        if (route.userId && !getMemberDetailCache(route.userId)) {
+          await hydrateMemberDetail(route.userId).catch(() => null);
+        }
+        rerender();
+      } catch (err) {
+        lastExposureLoad = '';
+        window.alert(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
+      } finally {
+        exposureLoadBusy = false;
+      }
+    })();
+  }
+
+  root.querySelectorAll('[data-a28-exp-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const next = btn.getAttribute('data-a28-exp-tab');
+      if (!next || next === route.tab) return;
+      const params = new URLSearchParams();
+      if (route.userId) params.set('user', route.userId);
+      params.set('tab', next);
+      navigate(`/admin/exposure?${params.toString()}`);
+    });
+  });
+
+  root.querySelector('[data-a28-exp-clear-user]')?.addEventListener('click', () => {
+    navigate(`/admin/exposure?tab=${route.tab}`);
+  });
+
+  const filterForm = root.querySelector('[data-a28-exp-filter]');
+  filterForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(filterForm);
+    const status = String(fd.get('status') || '');
+    try {
+      await hydrateExposureCache(route.tab, status, route.userId);
+      lastExposureLoad = exposureLoadKey(route, status);
+      rerender();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
+    }
+  });
+
+  root.querySelectorAll('[data-a28-exp-action]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const compound = btn.getAttribute('data-a28-exp-id');
+      const action = btn.getAttribute('data-a28-exp-action');
+      if (!compound || !action) return;
+      const [targetType, targetId] = compound.split(':');
+      if (!targetType || !targetId) return;
+
+      const memoEl = root.querySelector(`[data-a28-exp-memo="${compound}"]`);
+      const internalMemo = memoEl instanceof HTMLTextAreaElement ? memoEl.value.trim() : '';
+
+      let inquiryStatus;
+      if (action === 'inquiry_status') {
+        const sel = root.querySelector(`[data-a28-exp-inquiry="${compound}"]`);
+        inquiryStatus = sel instanceof HTMLSelectElement ? sel.value : '';
+      }
+
+      const confirmMsg =
+        action === 'hide'
+          ? '이 카드를 홈·찾기에서 숨길까요? 주인은 마이페이지에서 그대로 볼 수 있어요.'
+          : action === 'publish'
+            ? '이 카드를 홈·찾기에 다시 보이게 할까요?'
+            : '상담 상태를 보정할까요?';
+      if (!window.confirm(confirmMsg)) return;
+
+      try {
+        await apiApplyExposureCorrection(
+          targetType,
+          targetId,
+          /** @type {'hide'|'publish'|'inquiry_status'} */ (action),
+          { internalMemo, inquiryStatus, reasonCategory: 'internal_review' },
+        );
+        lastExposureLoad = '';
+        rerender();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '보정에 실패했습니다.');
+      }
+    });
+  });
+}
+
+export function bindHomePopupForm(root, rerender, navigate) {
+  const popupForm = root.querySelector('[data-popup-form]');
+  if (popupForm instanceof HTMLFormElement) {
+  if (peekHomePopups().rows === null) {
+    ensureHomePopups().then(() => rerender());
+  }
+  const showPopupError = (message) => {
+    const box = root.querySelector('[data-home-popup-form-error]');
+    if (!(box instanceof HTMLElement)) return;
+    box.textContent = message || '';
+    box.hidden = !message;
+  };
+  const syncPopupType = () => {
+    if (!(popupForm instanceof HTMLFormElement)) return;
+    const type = popupForm.querySelector('[name="type"]:checked')?.value || 'notice';
+    popupForm.querySelectorAll('[data-popup-fields]').forEach((el) => {
+      if (!(el instanceof HTMLElement)) return;
+      const on = el.getAttribute('data-popup-fields') === type;
+      el.hidden = !on;
+      el.style.display = on ? '' : 'none';
+    });
+  };
+  const syncPopupAudience = () => {
+    if (!(popupForm instanceof HTMLFormElement)) return;
+    const all = popupForm.querySelector('[name="audience"][value="all"]');
+    const others = [...popupForm.querySelectorAll('[name="audience"]')].filter(
+      (el) => el instanceof HTMLInputElement && el.value !== 'all',
+    );
+    const allOn = all instanceof HTMLInputElement && all.checked;
+    others.forEach((el) => {
+      if (!(el instanceof HTMLInputElement)) return;
+      if (allOn) el.checked = false;
+      el.disabled = allOn;
+    });
+  };
+  const syncPopupLive = () => {
+    if (!(popupForm instanceof HTMLFormElement)) return;
+    const on = popupForm.querySelector('[name="published"]:checked')?.value === '1';
+    const hint = root.querySelector('[data-home-popup-live]');
+    if (hint instanceof HTMLElement) hint.hidden = !on;
+  };
+  const resetPopupForm = () => {
+    if (!(popupForm instanceof HTMLFormElement)) return;
+    popupForm.reset();
+    const idInput = popupForm.querySelector('[name="id"]');
+    if (idInput instanceof HTMLInputElement) idInput.value = '';
+    const sort = popupForm.querySelector('[name="sortOrder"]');
+    if (sort instanceof HTMLInputElement) sort.value = '0';
+    showPopupError('');
+    syncPopupType();
+    syncPopupAudience();
+    syncPopupLive();
+  };
+  popupForm?.querySelectorAll('[name="type"]').forEach((el) => el.addEventListener('change', syncPopupType));
+  popupForm?.querySelectorAll('[name="audience"]').forEach((el) => el.addEventListener('change', syncPopupAudience));
+  popupForm?.querySelectorAll('[name="published"]').forEach((el) => el.addEventListener('change', syncPopupLive));
+  syncPopupType();
+  syncPopupAudience();
+  syncPopupLive();
+  const fieldValue = (type, name) => {
+    if (!(popupForm instanceof HTMLFormElement)) return '';
+    const box = popupForm.querySelector(`[data-popup-fields="${type}"] [name="${name}"]`);
+    if (box instanceof HTMLInputElement || box instanceof HTMLTextAreaElement) return box.value.trim();
+    return '';
+  };
+  const setField = (type, name, value) => {
+    if (!(popupForm instanceof HTMLFormElement)) return;
+    const box = popupForm.querySelector(`[data-popup-fields="${type}"] [name="${name}"]`);
+    if (box instanceof HTMLInputElement || box instanceof HTMLTextAreaElement) box.value = value;
+  };
+  root.querySelectorAll('[data-popup-edit]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-popup-edit');
+      const row = (peekHomePopups().rows || []).find((item) => String(item.id) === id);
+      if (!row || !(popupForm instanceof HTMLFormElement)) return;
+      resetPopupForm();
+      const idInput = popupForm.querySelector('[name="id"]');
+      if (idInput instanceof HTMLInputElement) idInput.value = String(row.id);
+      const type = popupForm.querySelector(`[name="type"][value="${row.type}"]`);
+      if (type instanceof HTMLInputElement) type.checked = true;
+      const family = popupForm.querySelector(`[name="family"][value="${row.family}"]`);
+      if (family instanceof HTMLInputElement) family.checked = true;
+      const audience = Array.isArray(row.audience) ? row.audience : [];
+      popupForm.querySelectorAll('[name="audience"]').forEach((el) => {
+        if (el instanceof HTMLInputElement) el.checked = audience.includes(el.value);
+      });
+      const start = popupForm.querySelector('[name="startAt"]');
+      const end = popupForm.querySelector('[name="endAt"]');
+      const sort = popupForm.querySelector('[name="sortOrder"]');
+      const published = popupForm.querySelector(`[name="published"][value="${row.published ? '1' : '0'}"]`);
+      if (start instanceof HTMLInputElement) start.value = String(row.startAt || '');
+      if (end instanceof HTMLInputElement) end.value = String(row.endAt || '');
+      if (sort instanceof HTMLInputElement) sort.value = String(row.sortOrder ?? 0);
+      if (published instanceof HTMLInputElement) published.checked = true;
+      const content = row.content && typeof row.content === 'object' ? row.content : {};
+      const typeId = String(row.type || 'notice');
+      Object.entries(content).forEach(([key, value]) => {
+        if (key === 'bullets' && Array.isArray(value)) setField(typeId, key, value.join('\n'));
+        else if (typeof value === 'string') setField(typeId, key, value);
+      });
+      syncPopupType();
+      syncPopupAudience();
+      syncPopupLive();
+      popupForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+  root.querySelectorAll('[data-popup-delete]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-popup-delete');
+      if (!id || !window.confirm('이 팝업을 삭제할까요?')) return;
+      try {
+        await deleteHomePopup(id);
+        rerender();
+      } catch (err) {
+        showPopupError(err instanceof Error ? err.message : '삭제하지 못했습니다.');
+      }
+    });
+  });
+  root.querySelectorAll('[data-popup-preview]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-popup-preview');
+      const row = (peekHomePopups().rows || []).find((item) => String(item.id) === id);
+      if (!id || !row) return;
+      const audience = Array.isArray(row.audience) ? row.audience : [];
+      let hash = '#/guest';
+      if (audience.length === 1 && audience[0] === 'studyRoom') hash = '#/study-room';
+      else if (audience.length === 1 && audience[0] === 'tutor') hash = '#/tutor';
+      else if (audience.length === 1 && audience[0] === 'student') hash = '#/parent';
+      window.open(`/?popupPreviewId=${encodeURIComponent(id)}${hash}`, '_blank');
+    });
+  });
+  root.querySelector('[data-popup-reset]')?.addEventListener('click', () => {
+    resetPopupForm();
+  });
+  popupForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!(popupForm instanceof HTMLFormElement)) return;
+    const audience = [...popupForm.querySelectorAll('[name="audience"]')]
+      .filter((el) => el instanceof HTMLInputElement && el.checked && !el.disabled)
+      .map((el) => (el instanceof HTMLInputElement ? el.value : ''))
+      .filter(Boolean);
+    if (!audience.length) {
+      showPopupError('대상을 하나 이상 고르세요');
+      return;
+    }
+    const type = popupForm.querySelector('[name="type"]:checked')?.value || 'notice';
+    const keys =
+      type === 'event'
+        ? ['kicker', 'title', 'chip', 'body', 'period', 'note', 'cta', 'ctaHref']
+        : type === 'ad'
+          ? ['chip', 'title', 'body', 'aside', 'primary', 'primaryHref', 'secondary', 'secondaryHref']
+          : ['date', 'title', 'body', 'bullets', 'cta', 'ctaHref'];
+    const content = {};
+    keys.forEach((key) => {
+      const value = fieldValue(type, key);
+      if (!value) return;
+      if (key === 'bullets') content.bullets = value.split('\n').map((line) => line.trim()).filter(Boolean).slice(0, 4);
+      else content[key] = value;
+    });
+    const id = String(popupForm.querySelector('[name="id"]')?.value || '');
+    const payload = {
+      type,
+      family: popupForm.querySelector('[name="family"]:checked')?.value || 'a',
+      audience,
+      content,
+      startAt: String(popupForm.querySelector('[name="startAt"]')?.value || '') || null,
+      endAt: String(popupForm.querySelector('[name="endAt"]')?.value || '') || null,
+      published: popupForm.querySelector('[name="published"]:checked')?.value === '1' ? 1 : 0,
+      sortOrder: Number(popupForm.querySelector('[name="sortOrder"]')?.value || 0),
+    };
+    if (id) payload.id = Number(id);
+    try {
+      await saveHomePopup(payload);
+      showPopupError('');
+      rerender();
+    } catch (err) {
+      showPopupError(err instanceof Error ? err.message : '저장하지 못했습니다.');
+    }
+  });
+  }
+
+}
+
+registerTodayBinders({
+  members: bindMembersScreen,
+  exposure: bindExposureScreen,
+  tickets: bindTicketsScreen,
+  reports: bindReportsScreen,
+  popups: bindHomePopupForm,
+  writeHash: writeAdminHash,
+  sealExposure: sealExposureHostLoad,
+  bindNav: bindTodaySlotNav,
+  bindDrawer: bindDetailDrawer,
+});

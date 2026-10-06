@@ -30,6 +30,9 @@ export const SMS_STATUS_KO = {
  *   channelFilters: { q: string, status: string, sectionOwner: string },
  *   openSectionAccessId: string|null,
  *   openMemberId: number|null,
+ *   todaySlot: null|'members'|'exposure'|'inquiry'|'popups',
+ *   todayInquiryTab: 'tickets'|'reports',
+ *   todayExposure: { tab: string, userId: string, hasTab: boolean },
  * }}
  */
 export const a28Ui = {
@@ -37,6 +40,9 @@ export const a28Ui = {
   channelFilters: { q: '', status: 'all', sectionOwner: 'all' },
   openSectionAccessId: null,
   openMemberId: null,
+  todaySlot: null,
+  todayInquiryTab: 'tickets',
+  todayExposure: { tab: 'study_room', userId: '', hasTab: true },
 };
 
 export const A28_MEMBER_SEED = [

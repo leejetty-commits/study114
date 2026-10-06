@@ -950,3 +950,28 @@
 .modal-overlay.member-delete-modal { z-index: 1400; }
 .member-delete-modal__error { color: #991b1b; margin: 0.75rem 0 0; }
 
+/* admin-159 today hub */
+.admin-shell .a28-today { margin: 0 0 1rem; }
+.admin-shell .a28-today__title { margin: 0 0 0.5rem; font-size: 1rem; }
+.admin-shell .a28-today__list { display: grid; gap: 0.5rem; }
+.admin-shell .a28-today__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  gap: 0.15rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.6rem;
+  background: #fff;
+  cursor: pointer;
+}
+.admin-shell .a28-today__card[aria-expanded="true"] { border-color: var(--gray-400, #9ca3af); }
+.admin-shell .a28-today__card-title { font-weight: 700; }
+.admin-shell .a28-today__card-desc { color: var(--gray-600, #4b5563); font-size: 0.92rem; }
+.admin-shell .a28-today__note { margin: 0.75rem 0 0; }
+.admin-shell .a28-today__expand:empty { display: none; }
+.admin-shell .a28-today__tabs { display: flex; gap: 0.4rem; margin: 0 0 0.75rem; }
+.admin-shell .a28-today__tabs button[aria-selected="true"] { font-weight: 700; }
+

@@ -536,12 +536,66 @@ export const A28_MEMBER_STATUS_LABELS = {
   withdrawn: '탈퇴',
 };
 
+/** 관리자 화면 역할 글자. 키 guardian_student 는 바꾸지 않는다. */
+export const ADMIN_GUARDIAN_ROLE_LABEL = '학생';
+
 export const A28_MEMBER_ROLE_LABELS = {
-  guardian_student: '학부모',
+  guardian_student: ADMIN_GUARDIAN_ROLE_LABEL,
   study_room_owner: '공부방',
   tutor: '과외쌤',
   admin: '운영자',
 };
+
+/** 게시판 채널 폼은 저장소 라벨을 그대로 쓰지 않고 여기만 본다. */
+export function adminChannelRoleLabel(role) {
+  if (role?.id === 'guardian_student') return ADMIN_GUARDIAN_ROLE_LABEL;
+  return String(role?.label ?? '');
+}
+
+/** 홍보 런치 데스크에만 적용. 카탈로그 원문은 그대로 둔다. */
+export const ADMIN_PROMO_AUDIENCE_LABELS = {
+  '학부모 · 원장': '학생 · 원장',
+  '학생 · 학부모(보조)': '학생',
+};
+
+/** @param {string} audience */
+export function adminPromoAudienceLabel(audience) {
+  const key = String(audience ?? '');
+  return Object.prototype.hasOwnProperty.call(ADMIN_PROMO_AUDIENCE_LABELS, key)
+    ? ADMIN_PROMO_AUDIENCE_LABELS[key]
+    : key;
+}
+
+export const ADMIN_TODAY_HEADING = '오늘 할 일';
+
+export const ADMIN_TODAY_NOTE = '아래쪽 미리보기는 연습용이에요. 실운영은 위 네 가지만.';
+
+export const ADMIN_TODAY_CARDS = [
+  {
+    id: 'members',
+    path: '/admin/members',
+    title: '회원 정리',
+    desc: '테스트·탈퇴·삭제 → 회원',
+  },
+  {
+    id: 'exposure',
+    path: '/admin/exposure',
+    title: '홈에 뭐가 보이나',
+    desc: '카드 숨김·다시 보이기 → 홈·찾기 노출',
+  },
+  {
+    id: 'inquiry',
+    paths: ['/admin/tickets', '/admin/reports'],
+    title: '문의·신고',
+    desc: '답장할 글 → 신고·문의',
+  },
+  {
+    id: 'popups',
+    path: '/admin/settings/popups',
+    title: '홈 팝업',
+    desc: '지금 뜨는 팝업 → 홈 팝업',
+  },
+];
 
 export const A28_MEMBER_TIER_LABELS = {
   free: '무료',

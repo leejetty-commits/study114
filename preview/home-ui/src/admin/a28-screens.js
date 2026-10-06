@@ -97,6 +97,8 @@ import {
   A28_MEMBER_STATUS_LABELS,
   A28_MEMBER_ROLE_LABELS,
   A28_MEMBER_TIER_LABELS,
+  adminChannelRoleLabel,
+  adminPromoAudienceLabel,
   isAdminPreviewPath,
   withAdminPreviewLabel,
 } from './a28-copy.js';
@@ -185,6 +187,7 @@ import {
   renderMarketLab,
   renderNotifyLab,
 } from './a28-screens-labs.js';
+import { peekHubExposureRoute, registerTodayRenderers, renderTodayMarkup } from './a28-today-hub.js';
 
 function adminProductLabel(code) {
   const normalized = String(code || '').toLowerCase();
@@ -490,7 +493,7 @@ function renderChannelForm(channel = null) {
   const roles = channel?.allowedRoles || ['admin'];
   const roleChecks = CHANNEL_ROLE_OPTIONS.map(
     (r) =>
-      `<label><input type="checkbox" name="role_${r.id}" data-allowed-role="${esc(r.id)}"${checked(roles.includes(r.id))} /> ${esc(r.label)}</label>`,
+      `<label><input type="checkbox" name="role_${r.id}" data-allowed-role="${esc(r.id)}"${checked(roles.includes(r.id))} /> ${esc(adminChannelRoleLabel(r))}</label>`,
   ).join('');
 
   return `
@@ -642,7 +645,8 @@ function renderHub() {
   return renderPanel(
     A28_COPY.hubTitle,
     'A28-01',
-    `${renderOpsTip()}
+    `${renderTodayMarkup()}
+     ${renderOpsTip()}
      ${renderPromoQuickBar()}
      <p>${esc(A28_COPY.hubLead)}</p>
      <div class="a28-lists">
@@ -697,7 +701,7 @@ function renderPromoDesk() {
           <strong>${esc(p.title)}</strong>
           <span class="a28-promo-card__status a28-promo-card__status--${esc(p.status)}">${esc(statusKo[p.status] || p.status)}</span>
         </div>
-        <p class="a28-help">${esc(p.audience)} · <code>${esc(p.path)}</code></p>
+        <p class="a28-help">${esc(adminPromoAudienceLabel(p.audience))} · <code>${esc(p.path)}</code></p>
         <p class="a28-help">배너: ${esc(p.railHint)}</p>
         ${
           uniqueLinked.length
@@ -1034,6 +1038,8 @@ function memberAccountCell(row) {
 }
 
 function exposureRouteParams() {
+  const hub = peekHubExposureRoute();
+  if (hub) return hub;
   const raw = window.location.hash.replace(/^#/, '');
   const q = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
   const params = new URLSearchParams(q);
@@ -1866,5 +1872,13 @@ export function renderA28Screen(path) {
 
 
 export { bindA28ScreenEvents } from './a28-screens-bind.js';
+
+registerTodayRenderers({
+  members: () => renderMembers(),
+  exposure: () => renderExposure(),
+  tickets: () => renderTicketsAdmin(),
+  reports: () => renderReports(),
+  popups: () => renderHomePopupSettings(),
+});
 
 export { getAdminScreenId };

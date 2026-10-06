@@ -18,13 +18,13 @@ export const JOIN_FIELD_OPTIONS = [
   { id: 'birth_date', label: '생년월일' },
   { id: 'sms_consent', label: '문자 수신동의 안내 강조' },
   { id: 'safe_number', label: '안전번호 안내' },
-  { id: 'children', label: '자녀 정보(학부모)' },
+  { id: 'children', label: '자녀 정보(학생)' },
   { id: 'study_room_detail', label: '공부방 상세등록 유도' },
   { id: 'tutor_detail', label: '과외쌤 상세등록 유도' },
 ];
 
 export const JOIN_ROLES = [
-  { id: 'guardian_student', label: '학부모' },
+  { id: 'guardian_student', label: '학생' },
   { id: 'study_room_owner', label: '공부방' },
   { id: 'tutor', label: '과외쌤' },
 ];
