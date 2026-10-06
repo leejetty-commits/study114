@@ -7,10 +7,12 @@ namespace Study114\Admin;
 use InvalidArgumentException;
 use Study114\Board\BoardPostRepository;
 use Study114\Database\Connection;
+use Study114\Paid\ProviderReminderRepository;
 use Study114\Registration\StudentBasicCompleteness;
 use Study114\Registration\StudentHubRepository;
 use Study114\Registration\StudyRoomHubRepository;
 use Study114\Registration\TutorHubRepository;
+use Throwable;
 
 final class ExposureDraftPublishException extends \RuntimeException
 {
@@ -19,6 +21,9 @@ final class ExposureDraftPublishException extends \RuntimeException
 final class AdminExposureService
 {
     private const INQUIRY_STATUSES = ['open', 'paused', 'capacity_full', 'waiting_only'];
+    private const HIDE_NOTICE_TITLE = '홈·찾기 숨김';
+    private const HIDE_NOTICE_BODY = '이 카드는 지금 홈·찾기에서 숨김 처리되었습니다. 궁금한 점은 고객센터 운영문의로 남겨 주세요.';
+    private const HIDE_NOTICE_HREF = '/support/contact?category=unhide_request';
 
     private AdminExposureRepository $targets;
   private StudyRoomHubRepository $studyRooms;
@@ -118,21 +123,34 @@ final class AdminExposureService
           throw new InvalidArgumentException('공부방을 찾을 수 없습니다.');
       }
 
-      [$actionKind, $userNotified] = match ($action) {
-          'hide' => ['hide_profile', true],
-          'publish' => ['exposure_correction', false],
-          'inquiry_status' => ['exposure_correction', false],
-          default => throw new InvalidArgumentException('action은 hide, publish, inquiry_status 중 하나여야 합니다.'),
-      };
-
-      if ($action === 'publish') {
-          $this->rejectDraftPublish((string) ($existing['status'] ?? ''));
+      if (!in_array($action, ['hide', 'publish', 'inquiry_status'], true)) {
+          throw new InvalidArgumentException('action은 hide, publish, inquiry_status 중 하나여야 합니다.');
       }
 
       if ($action === 'hide') {
-          $this->studyRooms->setProfileStatus($roomId, 'hidden');
-      } elseif ($action === 'publish') {
-          $this->studyRooms->setProfileStatus($roomId, 'published', date('Y-m-d H:i:s'));
+          return $this->hideProviderCard(
+              'study_room',
+              $roomId,
+              (string) ($existing['status'] ?? ''),
+              $operatorId,
+              $reasonCategory,
+              $internalMemo,
+              function () use ($roomId): void {
+                  $this->studyRooms->setProfileStatus($roomId, 'hidden');
+              },
+              fn () => $this->targets->findStudyRoom($roomId),
+          );
+      }
+
+      $missing = [];
+      if ($action === 'publish') {
+          $this->rejectDraftPublish((string) ($existing['status'] ?? ''));
+          $missing = $this->studyRoomUnhideMissing($roomId);
+          if ($missing === []) {
+              $this->studyRooms->setProfileStatus($roomId, 'published', date('Y-m-d H:i:s'));
+          } else {
+              $this->studyRooms->setProfileStatus($roomId, 'draft');
+          }
       } elseif ($action === 'inquiry_status') {
           if ($inquiryStatus === '' || !in_array($inquiryStatus, self::INQUIRY_STATUSES, true)) {
               throw new InvalidArgumentException('inquiry_status가 올바르지 않습니다.');
@@ -145,17 +163,22 @@ final class AdminExposureService
           $operatorId,
           'study_room',
           (string) $roomId,
-          $actionKind,
+          'exposure_correction',
           $reasonCategory !== '' ? $reasonCategory : null,
           $internalMemo !== '' ? $internalMemo : null,
           true,
-          $userNotified,
+          false,
       );
 
-      return [
+      $result = [
           'item' => $snapshot,
           'log' => $this->mapLog($log),
       ];
+      if ($action === 'publish' && $missing !== []) {
+          $result['missing'] = $missing;
+      }
+
+      return $result;
   }
 
   /** @return array<string, mixed> */
@@ -175,21 +198,32 @@ final class AdminExposureService
           throw new InvalidArgumentException('과외 프로필을 찾을 수 없습니다.');
       }
 
-      [$actionKind, $userNotified] = match ($action) {
-          'hide' => ['hide_profile', true],
-          'publish' => ['exposure_correction', false],
-          default => throw new InvalidArgumentException('action은 hide 또는 publish만 허용됩니다.'),
-      };
-
-      $existing = $this->targets->findTutor($tutorId);
-      if ($action === 'publish') {
-          $this->rejectDraftPublish((string) ($existing['status'] ?? ''));
+      if (!in_array($action, ['hide', 'publish'], true)) {
+          throw new InvalidArgumentException('action은 hide 또는 publish만 허용됩니다.');
       }
 
+      $existing = $this->targets->findTutor($tutorId);
       if ($action === 'hide') {
-          $this->tutors->setProfileStatus($tutorId, 'hidden');
-      } else {
+          return $this->hideProviderCard(
+              'tutor',
+              $tutorId,
+              (string) ($existing['status'] ?? ''),
+              $operatorId,
+              $reasonCategory,
+              $internalMemo,
+              function () use ($tutorId): void {
+                  $this->tutors->setProfileStatus($tutorId, 'hidden');
+              },
+              fn () => $this->targets->findTutor($tutorId),
+          );
+      }
+
+      $this->rejectDraftPublish((string) ($existing['status'] ?? ''));
+      $missing = $this->tutorUnhideMissing($tutorId);
+      if ($missing === []) {
           $this->tutors->setProfileStatus($tutorId, 'published', date('Y-m-d H:i:s'));
+      } else {
+          $this->tutors->setProfileStatus($tutorId, 'draft');
       }
 
       $snapshot = $this->targets->findTutor($tutorId);
@@ -197,17 +231,22 @@ final class AdminExposureService
           $operatorId,
           'tutor',
           (string) $tutorId,
-          $actionKind,
+          'exposure_correction',
           $reasonCategory !== '' ? $reasonCategory : null,
           $internalMemo !== '' ? $internalMemo : null,
           true,
-          $userNotified,
+          false,
       );
 
-      return [
+      $result = [
           'item' => $snapshot,
           'log' => $this->mapLog($log),
       ];
+      if ($missing !== []) {
+          $result['missing'] = $missing;
+      }
+
+      return $result;
   }
 
   /** @return array<string, mixed> */
@@ -229,7 +268,7 @@ final class AdminExposureService
       }
 
       [$actionKind, $userNotified] = match ($action) {
-          'hide' => ['hide_profile', true],
+          'hide' => ['hide_profile', false],
           'publish' => ['exposure_correction', false],
           default => throw new InvalidArgumentException('action은 hide 또는 publish만 허용됩니다.'),
       };
@@ -295,7 +334,7 @@ final class AdminExposureService
       $currentStatus = (string) $existing['status'];
 
       [$nextStatus, $actionKind, $userNotified] = match ($action) {
-          'hide' => ['hidden', 'submission_hide', true],
+          'hide' => ['hidden', 'submission_hide', false],
           'publish' => ['published', 'submission_expose', false],
           default => throw new InvalidArgumentException('action은 hide 또는 publish만 허용됩니다.'),
       };
@@ -324,6 +363,174 @@ final class AdminExposureService
           'item' => $snapshot,
           'log' => $this->mapLog($log),
       ];
+  }
+
+  /**
+   * @param callable(): void $setHidden
+   * @param callable(): ?array $reload
+   * @return array<string, mixed>
+   */
+  private function hideProviderCard(
+      string $cardType,
+      int $cardId,
+      string $currentStatus,
+      string $operatorId,
+      string $reasonCategory,
+      string $internalMemo,
+      callable $setHidden,
+      callable $reload,
+  ): array {
+      $pdo = Connection::get();
+      $pdo->beginTransaction();
+      try {
+          if ($currentStatus === 'hidden') {
+              $log = $this->logs->insert(
+                  $operatorId,
+                  $cardType,
+                  (string) $cardId,
+                  'hide_profile',
+                  $reasonCategory !== '' ? $reasonCategory : null,
+                  $internalMemo !== '' ? $internalMemo : null,
+                  true,
+                  false,
+              );
+              $pdo->commit();
+
+              return [
+                  'item' => $reload(),
+                  'log' => $this->mapLog($log),
+              ];
+          }
+
+          $setHidden();
+          $logKey = 'LOG-' . date('YmdHis') . '-' . substr(bin2hex(random_bytes(3)), 0, 6);
+          $ownerId = $this->cardOwnerUserId($cardType, $cardId);
+          $notified = false;
+          if ($ownerId > 0) {
+              try {
+                  (new ProviderReminderRepository($pdo))->upsertSystemNotice(
+                      $ownerId,
+                      'admin_hide',
+                      'admin_hide:' . $cardType . ':' . $cardId . ':' . $logKey,
+                      self::HIDE_NOTICE_TITLE,
+                      self::HIDE_NOTICE_BODY,
+                      self::HIDE_NOTICE_HREF,
+                  );
+                  $notified = true;
+              } catch (Throwable $e) {
+                  if ($pdo->inTransaction() === false) {
+                      throw $e;
+                  }
+                  $notified = false;
+              }
+          }
+
+          $log = $this->logs->insert(
+              $operatorId,
+              $cardType,
+              (string) $cardId,
+              'hide_profile',
+              $reasonCategory !== '' ? $reasonCategory : null,
+              $internalMemo !== '' ? $internalMemo : null,
+              true,
+              $notified,
+              $logKey,
+          );
+          $pdo->commit();
+
+          return [
+              'item' => $reload(),
+              'log' => $this->mapLog($log),
+          ];
+      } catch (Throwable $e) {
+          if ($pdo->inTransaction()) {
+              $pdo->rollBack();
+          }
+          throw $e;
+      }
+  }
+
+  private function cardOwnerUserId(string $cardType, int $cardId): int
+  {
+      $table = $cardType === 'tutor' ? 'tutors' : 'study_rooms';
+      $stmt = Connection::get()->prepare("SELECT user_id FROM {$table} WHERE id = ?");
+      $stmt->execute([$cardId]);
+      $id = $stmt->fetchColumn();
+
+      return $id === false ? 0 : (int) $id;
+  }
+
+  /** @return list<string> */
+  private function studyRoomUnhideMissing(int $roomId): array
+  {
+      $missing = [];
+      $pdo = Connection::get();
+      $slot = $pdo->prepare(
+          'SELECT 1 FROM study_room_regions
+           WHERE study_room_id = ? AND slot = 1
+             AND region_id IS NOT NULL AND region_id <> 0
+           LIMIT 1'
+      );
+      $slot->execute([$roomId]);
+      if ($slot->fetchColumn() === false) {
+          $missing[] = '대표지역1';
+      }
+
+      $stmt = $pdo->prepare(
+          'SELECT study_room_name, lesson_place_type, main_subject_note, slogan, address_text
+           FROM study_rooms WHERE id = ?'
+      );
+      $stmt->execute([$roomId]);
+      $row = $stmt->fetch();
+      if (!is_array($row)) {
+          $row = [];
+      }
+      $need = static function (string $value, string $label) use (&$missing): void {
+          if (trim($value) === '') {
+              $missing[] = $label;
+          }
+      };
+      $need((string) ($row['study_room_name'] ?? ''), '이름');
+      $need((string) ($row['lesson_place_type'] ?? ''), '교습형태');
+      $need((string) ($row['main_subject_note'] ?? ''), '주력과목');
+      $need((string) ($row['slogan'] ?? ''), '슬로건');
+      $need((string) ($row['address_text'] ?? ''), '사업장주소');
+
+      return $missing;
+  }
+
+  /** @return list<string> */
+  private function tutorUnhideMissing(int $tutorId): array
+  {
+      $missing = [];
+      $pdo = Connection::get();
+      $slot = $pdo->prepare(
+          'SELECT 1 FROM tutor_regions
+           WHERE tutor_id = ? AND priority_order = 0
+             AND region_id IS NOT NULL AND region_id <> 0
+           LIMIT 1'
+      );
+      $slot->execute([$tutorId]);
+      if ($slot->fetchColumn() === false) {
+          $missing[] = '과외지역1';
+      }
+
+      $stmt = $pdo->prepare(
+          'SELECT tutor_display_name, main_subject_note FROM tutors WHERE id = ?'
+      );
+      $stmt->execute([$tutorId]);
+      $row = $stmt->fetch();
+      if (!is_array($row)) {
+          $row = [];
+      }
+      if (trim((string) ($row['tutor_display_name'] ?? '')) === '') {
+          $missing[] = '표시명';
+      }
+      if (trim((string) ($row['main_subject_note'] ?? '')) === '') {
+          $missing[] = '주력과목';
+      }
+
+      return $missing;
   }
 
   /** @param array<string, mixed> $row @return array<string, mixed> */

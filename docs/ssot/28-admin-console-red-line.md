@@ -127,8 +127,8 @@
 
 | `action` | `target_type` | DB 반영 | `action_kind` (로그) | `user_notified` 기본 |
 |----------|---------------|---------|----------------------|:--------------------:|
-| `hide` | `study_room` · `tutor` | `profile_status` → `hidden` | `hide_profile` | **true** |
-| `hide` | `submission` | `status` → `hidden` | `submission_hide` | **true** |
+| `hide` | `study_room` · `tutor` | `profile_status` → `hidden` | `hide_profile` | **알림 1건 생성 시 true** |
+| `hide` | `submission` | `status` → `hidden` | `submission_hide` | **false** |
 | `publish` | `study_room` · `tutor` | `profile_status` → `published` | `exposure_correction` | **false** |
 | `publish` | `submission` | `status` → `published` (`submitted` **제외** → A28-06) | `submission_expose` | **false** |
 | `inquiry_status` | `study_room` **만** | `inquiry_status` → 값 지정 | `exposure_correction` | **false** |

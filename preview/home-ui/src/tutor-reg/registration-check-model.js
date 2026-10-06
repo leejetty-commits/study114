@@ -286,6 +286,23 @@ function buildBoard(tutor) {
 
 function nextAction(okMap, tutor, canPublish, basicIds) {
   const status = tutor?.profile_status;
+  if (status === 'hidden') {
+    if (!canPublish) {
+      const miss = firstMissing(okMap, basicIds);
+      if (miss) {
+        return {
+          id: miss.id,
+          label: TRC_COPY.next.fill(miss.label),
+          href: tutorRegistrationCheckTabHref(
+            tutor.id,
+            miss.section === 'basic' ? 'basic' : 'detail',
+            miss.id,
+          ),
+        };
+      }
+    }
+    return null;
+  }
   if (!canPublish) {
     const miss = firstMissing(okMap, basicIds);
     if (miss) {
@@ -316,9 +333,6 @@ function nextAction(okMap, tutor, canPublish, basicIds) {
       href: tutorRegistrationCheckTabHref(tutor.id, 'detail', primeMiss.id),
     };
   }
-  if (status === 'hidden') {
-    return { id: 'exposure', label: TRC_COPY.next.hidden, href: '' };
-  }
   if (status === 'published') {
     return { id: 'exposure', label: TRC_COPY.next.live, href: '' };
   }
@@ -342,14 +356,27 @@ export function buildTutorRegistrationCheckModel(tutor, readiness = {}) {
   const status = readiness.profileStatus || t.profile_status || 'draft';
   const next = nextAction(okMap, t, publishReady, basicIds);
 
-  let publishBadge = { id: 'publish', value: TRC_COPY.badges.publishNeed, tone: 'warn' };
+  const badges = [];
   if (status === 'published') {
-    publishBadge = { id: 'publish', value: TRC_COPY.badges.publishLive, tone: 'ok' };
-  } else if (status === 'hidden' && publishReady) {
-    publishBadge = { id: 'publish', value: TRC_COPY.badges.publishHidden, tone: 'warn' };
-  } else if (publishReady) {
-    publishBadge = { id: 'publish', value: TRC_COPY.badges.publishOk, tone: 'ok' };
+    badges.push({ id: 'publish', value: TRC_COPY.badges.publishLive, tone: 'ok' });
   }
+  badges.push(
+    {
+      id: 'basic',
+      value: basicLeft ? TRC_COPY.badges.basicNeed(basicLeft) : TRC_COPY.badges.basicOk,
+      tone: basicLeft ? 'warn' : 'ok',
+    },
+    {
+      id: 'pick',
+      value: pickLeft ? TRC_COPY.badges.pickNeed(pickLeft) : TRC_COPY.badges.pickOk,
+      tone: pickLeft ? 'warn' : 'ok',
+    },
+    {
+      id: 'prime',
+      value: primeLeft ? TRC_COPY.badges.primeNeed(primeLeft) : TRC_COPY.badges.primeOk,
+      tone: primeLeft ? 'warn' : 'ok',
+    },
+  );
 
   return {
     tutorId: t.id,
@@ -361,24 +388,7 @@ export function buildTutorRegistrationCheckModel(tutor, readiness = {}) {
     header: {
       title: TRC_COPY.title,
       lead: TRC_COPY.lead,
-      badges: [
-        publishBadge,
-        {
-          id: 'basic',
-          value: basicLeft ? TRC_COPY.badges.basicNeed(basicLeft) : TRC_COPY.badges.basicOk,
-          tone: basicLeft ? 'warn' : 'ok',
-        },
-        {
-          id: 'pick',
-          value: pickLeft ? TRC_COPY.badges.pickNeed(pickLeft) : TRC_COPY.badges.pickOk,
-          tone: pickLeft ? 'warn' : 'ok',
-        },
-        {
-          id: 'prime',
-          value: primeLeft ? TRC_COPY.badges.primeNeed(primeLeft) : TRC_COPY.badges.primeOk,
-          tone: primeLeft ? 'warn' : 'ok',
-        },
-      ],
+      badges,
     },
     promo: {
       ...TRC_COPY.promo,

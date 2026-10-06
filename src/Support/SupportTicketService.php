@@ -9,7 +9,8 @@ use Study114\Database\Connection;
 
 final class SupportTicketService
 {
-    private const ALLOWED_CATEGORIES = ['bug', 'policy', 'account', 'other'];
+    private const ALLOWED_CATEGORIES = ['bug', 'policy', 'account', 'other', 'unhide_request'];
+    private const ADMIN_PER_PAGE = 20;
     private const ALLOWED_ROLES = ['guest', 'parent', 'study_room', 'tutor'];
     private const ALLOWED_STATUSES = ['open', 'in_progress', 'closed'];
 
@@ -30,28 +31,87 @@ final class SupportTicketService
         return array_map(fn (array $row) => $this->mapTicket($row), $rows);
     }
 
-    /** @param array<string, mixed> $input */
-    public function create(array $input): array
+    /** @return list<array<string, mixed>> */
+    public function listMine(int $userId): array
     {
-        $email = trim((string) ($input['email'] ?? ''));
-        $category = trim((string) ($input['category'] ?? ''));
-        $body = trim((string) ($input['body'] ?? ''));
-        $role = trim((string) ($input['role'] ?? 'guest'));
+        $email = $this->accountEmail($userId);
+        $rows = $this->repo->listMine($userId, $email);
 
+        return array_map(fn (array $row) => $this->mapTicket($row), $rows);
+    }
+
+    /**
+     * @return array{tickets: list<array<string, mixed>>, total: int, page: int, per_page: int}
+     */
+    public function listAdmin(string $group, string $q, int $page): array
+    {
+        if (!in_array($group, ['open', 'closed', 'all'], true)) {
+            $group = 'open';
+        }
+        $page = max(1, $page);
+        $found = $this->repo->listAdmin($group, $q, $page, self::ADMIN_PER_PAGE);
+
+        return [
+            'tickets' => array_map(fn (array $row) => $this->mapTicket($row), $found['rows']),
+            'total' => $found['total'],
+            'page' => $page,
+            'per_page' => self::ADMIN_PER_PAGE,
+        ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function listForUserId(int $userId): array
+    {
+        return array_map(fn (array $row) => $this->mapTicket($row), $this->repo->listByUserId($userId));
+    }
+
+    /**
+     * 요청의 email·role은 쓰지 않는다. 계정 이메일과 세션 역할을 고정한다.
+     *
+     * @param array{user_id?: int, email?: string, role_type?: string} $auth
+     * @param array<string, mixed> $input
+     */
+    public function create(array $auth, array $input): array
+    {
+        $userId = (int) ($auth['user_id'] ?? 0);
+        if ($userId <= 0) {
+            throw new InvalidArgumentException('로그인이 필요합니다.');
+        }
+        $email = $this->accountEmail($userId);
         if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new InvalidArgumentException('유효한 이메일이 필요합니다.');
         }
+        $category = trim((string) ($input['category'] ?? ''));
+        $body = trim((string) ($input['body'] ?? ''));
+        $role = $this->mapSessionRole((string) ($auth['role_type'] ?? ''));
+
         if (!in_array($category, self::ALLOWED_CATEGORIES, true)) {
             throw new InvalidArgumentException('category가 올바르지 않습니다.');
-        }
-        if (!in_array($role, self::ALLOWED_ROLES, true)) {
-            $role = 'guest';
         }
         if ($body === '') {
             throw new InvalidArgumentException('문의 내용이 필요합니다.');
         }
 
-        return $this->mapTicket($this->repo->create($email, $category, $role, $body));
+        return $this->mapTicket($this->repo->create($email, $category, $role, $body, $userId));
+    }
+
+    private function accountEmail(int $userId): string
+    {
+        $stmt = Connection::get()->prepare('SELECT email FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $email = $stmt->fetchColumn();
+
+        return $email === false ? '' : trim((string) $email);
+    }
+
+    private function mapSessionRole(string $roleType): string
+    {
+        return match ($roleType) {
+            'study_room_owner' => 'study_room',
+            'tutor' => 'tutor',
+            'guardian_student' => 'parent',
+            default => 'guest',
+        };
     }
 
     public function updateStatus(string $ticketId, string $status): ?array
@@ -119,7 +179,7 @@ final class SupportTicketService
         $updatedAt = $this->isoDate($row['updated_at'] ?? null) ?? $createdAt;
         $lastActivity = $repliedAt ?? $updatedAt;
 
-        return [
+        $mapped = [
             'id' => (string) $row['ticket_no'],
             'email' => (string) $row['email'],
             'category' => (string) $row['category'],
@@ -139,6 +199,11 @@ final class SupportTicketService
             'hasAdminReply' => $replyText !== '',
             'lastActivityAt' => $lastActivity,
         ];
+        if (array_key_exists('user_id', $row)) {
+            $mapped['userId'] = $row['user_id'] === null || $row['user_id'] === '' ? null : (int) $row['user_id'];
+        }
+
+        return $mapped;
     }
 
     private function isoDate(mixed $value): ?string

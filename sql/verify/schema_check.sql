@@ -27,3 +27,7 @@ SHOW TABLES LIKE 'user_recent_views';
 SHOW TABLES LIKE 'provider_student_reviews';
 SHOW COLUMNS FROM user_recent_views LIKE 'last_route';
 SHOW COLUMNS FROM provider_student_reviews LIKE 'provider_role';
+
+SELECT 'support_tickets user link' AS check_group;
+SHOW COLUMNS FROM support_tickets LIKE 'user_id';
+SHOW COLUMNS FROM support_tickets LIKE 'category';

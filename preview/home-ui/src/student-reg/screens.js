@@ -1,3 +1,4 @@
+import { renderAdminHideOwnerLine } from '../lifecycle-copy.js';
 import { syncStoredHopeRegionsFromStudent } from '@search-ui/student-saved-region.js';
 import { setStoredStudentBranch } from '../../../shared/student-branch-store.js';
 import { renderStudentBasicSelfCard } from '../exposure-render.js';
@@ -233,8 +234,10 @@ function renderNotFound() {
 
 /** @param {import('./store.js').StudentRecord} student */
 function renderHub(student) {
+  const hideLine = renderAdminHideOwnerLine(student.exposure_status === 'hidden');
   const body = `
     <div class="p19-hub-body">
+      ${hideLine}
       <div class="p19-myprofile__card">${renderStudentBasicSelfCard(studentToExposureRow(student))}</div>
       ${renderStudentProfileRead(student)}
     </div>`;

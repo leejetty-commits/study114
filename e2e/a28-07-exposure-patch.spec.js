@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { execSync } from 'node:child_process';
 import {
   loginAs,
   logout,
@@ -11,6 +12,22 @@ import {
   restoreExposureDefaults,
   ACCOUNTS,
 } from './helpers/admin-api.js';
+
+function sqlValue(sql) {
+  const escaped = sql.replace(/"/g, '\\"');
+  return execSync(
+    `docker exec study114-mysql-dev mysql -uroot -pstudy114dev --default-character-set=utf8mb4 -N study114_dev -e "${escaped}"`,
+    { encoding: 'utf8' },
+  ).trim();
+}
+
+function hideNoticeCount(cardType, id) {
+  return Number(
+    sqlValue(
+      `SELECT COUNT(*) FROM provider_system_notices WHERE notice_kind='admin_hide' AND dedupe_key LIKE 'admin_hide:${cardType}:${id}:%'`,
+    ),
+  );
+}
 
 test.describe.configure({ mode: 'serial' });
 
@@ -102,6 +119,7 @@ test.describe('A28-07 PATCH 핵심 (부록 F Q6~Q15)', () => {
   });
 
   test('Q6 study_room hide — profile hidden · hide_profile · user_notified', async ({ request }) => {
+    const beforeNotices = hideNoticeCount('study_room', 3);
     const memo = `E2E Q6 hide ${Date.now()}`;
     const { res, body } = await patchExposure(request, {
       target_type: 'study_room',
@@ -119,6 +137,12 @@ test.describe('A28-07 PATCH 핵심 (부록 F Q6~Q15)', () => {
       userNotified: true,
       detailMemo: memo,
     });
+    expect(hideNoticeCount('study_room', 3)).toBe(beforeNotices + 1);
+    const notice = sqlValue(
+      "SELECT CONCAT(title, '|', is_read, '|', body) FROM provider_system_notices WHERE notice_kind='admin_hide' AND dedupe_key LIKE 'admin_hide:study_room:3:%' ORDER BY id DESC LIMIT 1",
+    );
+    expect(notice.startsWith('홈·찾기 숨김|0|')).toBeTruthy();
+    expect(notice).toContain('이 카드는 지금 홈·찾기에서 숨김 처리되었습니다. 궁금한 점은 고객센터 운영문의로 남겨 주세요.');
   });
 
   test('Q7 study_room publish — profile published · exposure_correction', async ({ request }) => {
@@ -154,6 +178,7 @@ test.describe('A28-07 PATCH 핵심 (부록 F Q6~Q15)', () => {
   });
 
   test('Q10 tutor hide — hide_profile', async ({ request }) => {
+    const beforeNotices = hideNoticeCount('tutor', 1);
     const { res, body } = await patchExposure(request, {
       target_type: 'tutor',
       target_id: '1',
@@ -166,6 +191,7 @@ test.describe('A28-07 PATCH 핵심 (부록 F Q6~Q15)', () => {
       target: '1',
       userNotified: true,
     });
+    expect(hideNoticeCount('tutor', 1)).toBe(beforeNotices + 1);
   });
 
   test('Q11 tutor publish — exposure_correction', async ({ request }) => {
@@ -207,7 +233,7 @@ test.describe('A28-07 PATCH 핵심 (부록 F Q6~Q15)', () => {
     expectLog(body.log, {
       action: 'submission_hide',
       target: 'submission:sub-seed-1',
-      userNotified: true,
+      userNotified: false,
       detailMemo: memo,
     });
   });
@@ -297,7 +323,7 @@ test.describe('A28-06 / A28-07 경계 회귀', () => {
     expectLog(body.log, {
       action: 'submission_hide',
       target: `submission:${boundaryPostKey}`,
-      userNotified: true,
+      userNotified: false,
       detailMemo: 'A28-07 hide after A28-06 expose',
     });
   });

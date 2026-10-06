@@ -1,5 +1,6 @@
 import {
   LIFECYCLE_FOOTNOTE_REG,
+  renderAdminHideOwnerLine,
 } from '../lifecycle-copy.js';
 import {
   parseTutorRegPath,
@@ -221,7 +222,8 @@ function renderHub(tutor) {
     neighborhood: tutor.primary_region_label || tutor.location_label || '',
     displayName: tutor.tutor_display_name || '과외쌤',
   });
-  const body = `${greeting}${renderTutorProfileRead(tutor)}`;
+  const hideLine = renderAdminHideOwnerLine(tutor.profile_status === 'hidden');
+  const body = `${hideLine}${greeting}${renderTutorProfileRead(tutor)}`;
   return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'hub', body)}</section>`;
 }
 

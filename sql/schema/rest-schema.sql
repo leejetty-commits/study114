@@ -1054,7 +1054,8 @@ CREATE TABLE support_tickets (
   id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   ticket_no       VARCHAR(30) NOT NULL,
   email           VARCHAR(190) NOT NULL,
-  category        ENUM('bug', 'policy', 'account', 'other') NOT NULL,
+  user_id         BIGINT UNSIGNED NULL COMMENT '접수한 회원. 탈퇴·삭제 후에는 NULL',
+  category        ENUM('bug', 'policy', 'account', 'other', 'unhide_request') NOT NULL,
   role_type       ENUM('guest', 'parent', 'study_room', 'tutor') NOT NULL DEFAULT 'guest',
   body            TEXT NOT NULL,
   status          ENUM('open', 'in_progress', 'closed') NOT NULL DEFAULT 'open',
@@ -1065,7 +1066,9 @@ CREATE TABLE support_tickets (
   PRIMARY KEY (id),
   UNIQUE KEY uq_support_tickets_no (ticket_no),
   KEY idx_support_tickets_email (email),
-  KEY idx_support_tickets_status (status, created_at)
+  KEY idx_support_tickets_status (status, created_at),
+  KEY idx_support_tickets_user (user_id, status, id),
+  CONSTRAINT fk_support_tickets_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='고객센터 운영 문의 티켓';
 

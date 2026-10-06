@@ -710,15 +710,20 @@ final class TutorRegisterService
 
 
 
-        $requested = isset($input['profile_status']) && trim((string) $input['profile_status']) !== ''
+        if ($currentStatus === 'hidden') {
+            $profileStatus = 'hidden';
+            $isNewPublish = false;
+        } else {
+            $requested = isset($input['profile_status']) && trim((string) $input['profile_status']) !== ''
 
-            ? $this->requireEnum($input, 'profile_status', ['draft', 'pending', 'published'])
+                ? $this->requireEnum($input, 'profile_status', ['draft', 'pending', 'published'])
 
-            : null;
+                : null;
 
-        $profileStatus = $requested ?? $currentStatus;
+            $profileStatus = $requested ?? $currentStatus;
 
-        $isNewPublish = $profileStatus === 'published' && $currentStatus !== 'published';
+            $isNewPublish = $profileStatus === 'published' && $currentStatus !== 'published';
+        }
 
 
 

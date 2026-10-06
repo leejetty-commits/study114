@@ -70,8 +70,8 @@ import { renderSubmissionBoardScreen } from '../submission-board/index.js';
 import { P18_EXPOSURE_STATUS } from './plans-catalog.js';
 import { getPaidOperationalStatus, hydratePaidCaches } from '../paid-backend.js';
 import { isMessagesApiMode, hydrateMessagesCache } from '../messages-backend.js';
-import { isSupportApiMode, hydrateSupportCache, getTicketLoadError } from '../support/support-backend.js';
-import { listTicketsByEmail } from '../support/ticket-store.js';
+import { isSupportApiMode, hydrateMyTickets, getTicketLoadError } from '../support/support-backend.js';
+import { listTickets } from '../support/ticket-store.js';
 import { TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { getMemoUsedTargets } from '../messages/thread-store.js';
 import { getStudyRoom, getStudyRooms } from '../study-room-reg/store.js';
@@ -463,8 +463,7 @@ function contactLastActivity(ticket) {
 }
 
 function renderContactHistory() {
-  const email = getAuthUser()?.email || '';
-  const tickets = email ? listTicketsByEmail(email) : [];
+  const tickets = listTickets();
   const copy = CONTACT_HISTORY_COPY;
   const header = `
     <div class="mypage-contact-head">
@@ -1395,8 +1394,7 @@ export function bindMypageScreenEvents(root, rerender) {
   }
   if (path === CONTACT_HISTORY_PATH && !contactHistoryHydrateAttempted && isSupportApiMode()) {
     contactHistoryHydrateAttempted = true;
-    const email = getAuthUser()?.email || '';
-    hydrateSupportCache(email)
+    hydrateMyTickets()
       .then(() => rerender())
       .catch((err) => console.warn('[mypage/contact] hydrate failed', err));
   }

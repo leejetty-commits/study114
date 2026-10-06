@@ -7,10 +7,7 @@ export const TRC_COPY = {
   title: '등록점검',
   lead: '필수 입력과 픽·프라임에 더 필요한 항목을 한 화면에서 확인합니다',
   badges: {
-    publishOk: '노출 조건 충족',
     publishLive: '노출 중',
-    publishHidden: '노출 중지 · 관리자 설정',
-    publishNeed: '노출 조건 부족',
     basicOk: '베이직카드 충족',
     basicNeed: (n) => `베이직카드 ${n}개 부족`,
     pickOk: '픽 추가 충족',
@@ -21,7 +18,6 @@ export const TRC_COPY = {
   next: {
     prefix: '다음',
     live: '검색에 노출 중입니다. 현황만 확인하면 됩니다',
-    hidden: '관리자가 노출을 꺼 두었습니다. 회원은 직접 다시 켤 수 없습니다',
     fill: (label) => `${label} 입력하러 가기`,
   },
   promo: {

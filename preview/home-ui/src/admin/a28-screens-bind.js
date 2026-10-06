@@ -20,8 +20,17 @@ import {
   isSeedFaqId,
   isSeedGuideSlug,
 } from '../operational-board-store.js';
-import { listTickets, updateTicketStatus, updateTicketReply } from '../support/ticket-store.js';
-import { hydrateSupportCache, isSupportApiMode } from '../support/support-backend.js';
+import { updateTicketStatus, updateTicketReply } from '../support/ticket-store.js';
+import { isSupportApiMode } from '../support/support-backend.js';
+import { fetchAdminTickets, fetchAdminTicketsByUser } from '../support/support-api.js';
+import {
+  bumpTicketAdminSeq,
+  getTicketAdminState,
+  memberSupportInquiriesLoaded,
+  patchTicketAdminState,
+  setMemberSupportInquiries,
+  ticketAdminHost,
+} from './a28-screens.js';
 import { getAuthUser } from '../auth-session.js';
 import { FAQ_TABS, TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { SUBMISSION_CATEGORIES } from '../submission-board/submission-copy.js';
@@ -483,7 +492,6 @@ let lastExposureLoad = '';
 let exposureLoadBusy = false;
 let lastCommerceLoad = '';
 let lastMembersHash = '';
-let ticketAdminLoadedFor = '';
 
 function numericHashUser() {
   const raw = window.location.hash.replace(/^#/, '');
@@ -1904,6 +1912,26 @@ export function bindA28ScreenEvents(root, path, rerender) {
   bindTodayHub(root);
 }
 
+const memberInquiryLoading = new Set();
+
+function ensureMemberSupportInquiries(userId, rerender) {
+  const key = String(userId || '');
+  if (!/^[1-9][0-9]*$/.test(key) || !isAdminApiMode()) return;
+  if (memberSupportInquiriesLoaded(key) || memberInquiryLoading.has(key)) return;
+  memberInquiryLoading.add(key);
+  void fetchAdminTicketsByUser(key)
+    .then((data) => {
+      memberInquiryLoading.delete(key);
+      setMemberSupportInquiries(key, data.tickets || []);
+      if (!document.querySelector(`[data-admin-drawer="member-${key}"]`)) return;
+      rerender();
+    })
+    .catch(() => {
+      memberInquiryLoading.delete(key);
+      setMemberSupportInquiries(key, []);
+    });
+}
+
 export function bindMembersScreen(root, rerender, navigate) {
   const memberRoute = readMembersHash();
   const memberHashKey = memberRoute.userId || memberRoute.q ? `${adminBindHost()}|user:${memberRoute.userId}|q:${memberRoute.q}` : '';
@@ -1981,6 +2009,7 @@ export function bindMembersScreen(root, rerender, navigate) {
     });
   });
   if (a28Ui.openMemberId) {
+    ensureMemberSupportInquiries(a28Ui.openMemberId, rerender);
     const drawer = root.querySelector(`[data-admin-drawer="member-${a28Ui.openMemberId}"]`);
     if (drawer) drawer.hidden = false;
   }
@@ -2078,20 +2107,102 @@ export function bindReportsScreen(root, rerender, navigate) {
   });
 }
 
-export function bindTicketsScreen(root, rerender, navigate) {
-  const ticketViewer = `${adminBindHost()}|${getAuthUser()?.email || 'guest'}`;
-  if (isSupportApiMode() && ticketAdminLoadedFor !== ticketViewer) {
-    ticketAdminLoadedFor = ticketViewer;
-    void hydrateSupportCache('')
-      .then(() => rerender())
-      .catch(() => rerender());
+function readRouteTicketQuery() {
+  const raw = window.location.hash.replace(/^#/, '');
+  const q = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
+  const params = new URLSearchParams(q);
+  const group = params.get('group') || '';
+  return {
+    group: group === 'open' || group === 'closed' || group === 'all' ? group : '',
+    q: (params.get('q') || '').trim(),
+  };
+}
+
+function ticketAdminStillOpen(host) {
+  return document.querySelector(`[data-a28-ticket-admin="${host}"]`) instanceof Element;
+}
+
+async function reloadTicketAdmin(host, rerender) {
+  const state = getTicketAdminState(host);
+  const seq = bumpTicketAdminSeq(host);
+  const group = state.group;
+  const q = state.q;
+  const page = state.page;
+  try {
+    const data = await fetchAdminTickets({ group, q, page });
+    const current = getTicketAdminState(host);
+    if (current.seq !== seq || ticketAdminHost() !== host || !ticketAdminStillOpen(host)) return;
+    patchTicketAdminState(host, {
+      tickets: data.tickets || [],
+      total: Number(data.total || 0),
+      page: Number(data.page || page),
+      perPage: Number(data.per_page || 20),
+      loadError: '',
+      loadedKey: `${group}|${q}|${page}`,
+    });
+    rerender();
+  } catch (err) {
+    const current = getTicketAdminState(host);
+    if (current.seq !== seq || ticketAdminHost() !== host || !ticketAdminStillOpen(host)) return;
+    patchTicketAdminState(host, {
+      tickets: [],
+      total: 0,
+      loadError: err instanceof Error ? err.message : '문의 목록을 불러오지 못했습니다.',
+      loadedKey: `${group}|${q}|${page}`,
+    });
+    rerender();
   }
+}
+
+export function bindTicketsScreen(root, rerender, _navigate) {
+  const host = ticketAdminHost();
+  const state = getTicketAdminState(host);
+  if (!state.initialized) {
+    if (host === 'route') {
+      const query = readRouteTicketQuery();
+      if (query.group) state.group = query.group;
+      if (query.q) state.q = query.q;
+    }
+    state.initialized = true;
+  }
+  const loadKey = `${state.group}|${state.q}|${state.page}`;
+  if (isSupportApiMode() && state.loadedKey !== loadKey && ticketAdminStillOpen(host)) {
+    state.loadedKey = loadKey;
+    void reloadTicketAdmin(host, rerender);
+  }
+  root.querySelectorAll('[data-a28-ticket-group]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const group = btn.getAttribute('data-a28-ticket-group') || 'open';
+      patchTicketAdminState(host, { group, page: 1, loadedKey: '' });
+      rerender();
+    });
+  });
+  root.querySelector('[data-a28-ticket-search]')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    if (!(form instanceof HTMLFormElement)) return;
+    const q = String(new FormData(form).get('q') || '').trim();
+    patchTicketAdminState(host, { q, page: 1, loadedKey: '' });
+    rerender();
+  });
+  root.querySelectorAll('[data-a28-ticket-page]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const dir = btn.getAttribute('data-a28-ticket-page');
+      const view = getTicketAdminState(host);
+      const pages = view.total === 0 ? 1 : Math.ceil(view.total / (view.perPage || 20));
+      const next = dir === 'prev' ? view.page - 1 : view.page + 1;
+      if (next < 1 || next > pages) return;
+      patchTicketAdminState(host, { page: next, loadedKey: '' });
+      rerender();
+    });
+  });
   root.querySelectorAll('[data-a28-ticket-status]').forEach((sel) => {
     sel.addEventListener('change', async () => {
       const id = sel.getAttribute('data-a28-ticket-status');
       if (!id) return;
       try {
         await updateTicketStatus(id, sel.value);
+        await reloadTicketAdmin(host, rerender);
       } catch (err) {
         window.alert(err instanceof Error ? err.message : '상태를 바꾸지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
         rerender();
@@ -2110,7 +2221,7 @@ export function bindTicketsScreen(root, rerender, navigate) {
           window.alert('답변 내용이 필요합니다.');
           return;
         }
-        rerender();
+        await reloadTicketAdmin(host, rerender);
       } catch (err) {
         window.alert(err instanceof Error ? err.message : '답변 저장에 실패했습니다.');
       }

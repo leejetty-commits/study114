@@ -126,94 +126,6 @@ function countProductConditions(tutor) {
   return n;
 }
 
-/** @param {TutorRecord} tutor */
-export function getProductApplyHint(tutor) {
-  const n = countProductConditions(tutor);
-  const paid = isPaidProvider();
-  if (n === 0 && tutor.profile_status !== 'hidden') {
-    return paid ? PRODUCT_APPLY.pickPrimeEligiblePaid : PRODUCT_APPLY.pickEligibleUnpaid;
-  }
-  return PRODUCT_APPLY.pickPrimeMissing(n);
-}
-
-/**
- * P21-05 §7-3 잠금 해제형 카드 (잠긴 항목만)
- * @param {TutorRecord} tutor
- */
-export function getUnlockCards(tutor) {
-  const paid = isPaidProvider();
-  const memos = getMemoCreditsRemaining();
-  const visible = tutor.profile_status !== 'hidden';
-  const expanded = tutor.detail_completion_status === 'expanded_complete';
-  const matching = getMatchingVisibility(tutor);
-
-  /** @param {string} key @param {string} label @param {{ label: string, ok: boolean }[]} conditions @param {{ label: string, external?: string, path?: string }} cta */
-  const build = (key, label, conditions, cta) => {
-    const missing = conditions.filter((c) => !c.ok);
-    if (missing.length === 0) return null;
-    return {
-      key,
-      label,
-      conditions,
-      missingCount: missing.length,
-      ctaLabel: cta.label,
-      ctaExternal: cta.external,
-      ctaPath: cta.path,
-    };
-  };
-
-  return [
-    build(
-      'matching',
-      '학생 목록 노출',
-      [
-        { label: '숨김 아님', ok: visible },
-        { label: '대표 과외지역', ok: tutor.has_primary_region },
-        { label: '필수값', ok: matching.ok },
-      ],
-      { label: '학생 목록 보기', external: '#/mypage/student-review' },
-    ),
-    build(
-      'cold_memo',
-      '학생에게 먼저 메모',
-      [
-        { label: '숨김 아님', ok: visible },
-        { label: '유료 등록', ok: paid },
-        { label: '메모권 잔여', ok: memos > 0 },
-      ],
-      { label: '이용권 확인', external: '#/mypage/plans' },
-    ),
-    build(
-      'request_doc',
-      '요청문 열람',
-      [
-        { label: '유료 등급', ok: paid },
-        { label: '숨김 아님', ok: visible },
-      ],
-      { label: '이용권 확인', external: '#/mypage/plans' },
-    ),
-    build(
-      'pick',
-      '추천 노출 신청',
-      [
-        { label: '숨김 아님', ok: visible },
-        { label: '상세등록 완료', ok: expanded },
-      ],
-      { label: '상세정보 보강', path: 'detail' },
-    ),
-    build(
-      'prime',
-      '대표 노출 신청',
-      [
-        { label: '유료 등급', ok: paid },
-        { label: '숨김 아님', ok: visible },
-        { label: '상세등록 완료', ok: expanded },
-      ],
-      { label: '이용권 확인', external: '#/mypage/plans' },
-    ),
-  ].filter(Boolean);
-}
-
 /** 마이페이지 내부 — 관심 학생(찜) 목록 */
 export function getStudentListUrl() {
   return '#/mypage/student-review';
@@ -360,7 +272,6 @@ export function getHubCtas(tutor) {
   }
   if (tutor.profile_status === 'hidden') {
     return [
-      { label: '공개 신청하기', path: 'publish', primary: true },
       { label: '기본정보 보정', path: 'basic', primary: false },
       { label: '상세정보 보정', path: 'detail', primary: false },
     ];

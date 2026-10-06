@@ -54,6 +54,11 @@ final class TutorHubService
     {
         (new \Study114\Auth\EmailVerificationGate())->assertVerified($userId);
 
+        // hydrate(TutorHubRepository)는 pending만 draft로 읽고 hidden은 그대로 둔다.
+        if ((string) ($tutor['profile_status'] ?? '') === 'hidden') {
+            return ['ok' => false, 'reason' => 'not_allowed'];
+        }
+
         // 공개 직전 필드 SSOT 재계산 — 스텝 통과로 남은 stale expanded_complete / basic_only 제거
         (new TutorDetailCompletionEvaluator())->apply(Connection::get(), $tutorId);
         $tutor = $this->repo->getForOwner($userId, $tutorId) ?? $tutor;

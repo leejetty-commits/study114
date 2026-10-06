@@ -197,7 +197,7 @@ final class AdminMemberService
             'member_ops',
             $memo !== '' ? $memo : $afterNote,
             true,
-            $action === 'block',
+            false,
         );
 
         return [

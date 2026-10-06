@@ -4,6 +4,7 @@ import {
   removeNotice,
   resetNoticeSeed,
   fetchTickets,
+  fetchMyTickets,
   submitTicket,
   patchTicketStatus,
   patchTicketReply,
@@ -38,6 +39,23 @@ export async function activateSupportApi() {
 export function deactivateSupportApi() {
   apiMode = false;
   resetCaches();
+}
+
+export async function hydrateMyTickets() {
+  ticketLoadError = '';
+  try {
+    const ticketRes = await fetchMyTickets();
+    ticketsCache = (ticketRes.tickets ?? []).map((t) => ({ ...t }));
+  } catch (err) {
+    const status = Number(err?.status || 0);
+    if (status === 401 || status === 403) {
+      ticketLoadError =
+        err instanceof Error && err.message
+          ? err.message
+          : '문의 목록을 불러오지 못했습니다. 로그인 상태를 확인해 주세요.';
+    }
+    ticketsCache = [];
+  }
 }
 
 export async function hydrateSupportCache(ticketEmail = '') {

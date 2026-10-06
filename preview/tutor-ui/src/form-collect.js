@@ -160,7 +160,10 @@ export function syncContactFromForm(form, state) {
   state.youtube_url = String(fd.get('youtube_url') ?? '');
   state.facebook_url = String(fd.get('facebook_url') ?? '');
   state.instagram_url = String(fd.get('instagram_url') ?? '');
-  state.profile_status = String(fd.get('profile_status') ?? 'draft');
+  if (fd.has('profile_status')) {
+    const raw = String(fd.get('profile_status') ?? '').trim();
+    if (raw !== '') state.profile_status = raw;
+  }
 }
 
 export function payloadForStep(step, state) {
@@ -211,19 +214,22 @@ export function payloadForStep(step, state) {
         proof_document_available: state.proof_document_available,
         teaching_style_badges: state.teaching_style_badges,
       };
-    case 'contact':
-      return {
+    case 'contact': {
+      const contact = {
         contact_time_note: state.contact_time_note,
         youtube_url: state.youtube_url,
         facebook_url: state.facebook_url,
         instagram_url: state.instagram_url,
-        profile_status: state.profile_status,
         images: state.images.map((img) => ({
           image_type: img.image_type,
           image_path: img.image_path || img.name,
           sort_order: img.sort_order,
         })),
       };
+      const contactStatus = String(state.profile_status ?? '').trim();
+      if (contactStatus !== '') contact.profile_status = contactStatus;
+      return contact;
+    }
     default:
       return {};
   }

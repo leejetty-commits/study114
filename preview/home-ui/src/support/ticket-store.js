@@ -128,10 +128,9 @@ export function listTickets() {
   return sortTicketsLatest(loadAll());
 }
 
-/** @param {string} email */
-export function listTicketsByEmail(email) {
-  const normalized = email.trim().toLowerCase();
-  return sortTicketsLatest(listTickets().filter((t) => t.email.toLowerCase() === normalized));
+/** 서버가 준 내 목록을 그대로 쓴다. 이메일로 다시 거르면 계정 이메일이 다른 옛 문의가 빠진다. */
+export function listTicketsByEmail(_email) {
+  return sortTicketsLatest(listTickets());
 }
 
 /** @param {string} id @param {TicketStatus} status */

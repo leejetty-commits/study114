@@ -389,6 +389,13 @@ export const TICKET_CATEGORIES = [
   { value: 'policy', label: '정책·이용 문의' },
   { value: 'account', label: '계정·로그인' },
   { value: 'other', label: '기타' },
+  { value: 'unhide_request', label: '숨김 해제 요청' },
+];
+
+export const TICKET_ADMIN_GROUPS = [
+  { value: 'open', label: '처리 전' },
+  { value: 'closed', label: '종료' },
+  { value: 'all', label: '전체' },
 ];
 
 export const TICKET_STATUS_LABELS = {

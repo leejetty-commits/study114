@@ -38,8 +38,9 @@ final class AdminOperationLogRepository
         ?string $detailMemo,
         bool $reversible = true,
         bool $userNotified = false,
+        ?string $logKey = null,
     ): array {
-        $logKey = 'LOG-' . date('YmdHis') . '-' . substr(bin2hex(random_bytes(3)), 0, 6);
+        $logKey = $logKey ?? ('LOG-' . date('YmdHis') . '-' . substr(bin2hex(random_bytes(3)), 0, 6));
         $stmt = $this->pdo->prepare(
             'INSERT INTO admin_operation_logs
              (log_key, operator_id, target_type, target_id, action_kind, reason_category, detail_memo, reversible, user_notified)

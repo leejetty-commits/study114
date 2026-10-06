@@ -6,6 +6,25 @@
 /** @typedef {'draft'|'published'|'hidden'|'pending'} ProfileStatusKey */
 /** @typedef {'draft'|'published'|'hidden'|'deleted'} ExposureStatusKey */
 
+/** t1504. 숨김 카드 주인 마이페이지 한 줄. 다시 켜는 버튼은 없다. */
+export const ADMIN_HIDE_OWNER_LINE =
+  '이 카드는 지금 홈·찾기에서 숨김 처리되었습니다. 궁금한 점은 고객센터 운영문의로 남겨 주세요.';
+
+export const ADMIN_HIDE_CONTACT_PATH = '/support/contact?category=unhide_request';
+
+const ADMIN_HIDE_CONTACT_LABEL = '고객센터 운영문의';
+
+/** @param {boolean} hidden */
+export function renderAdminHideOwnerLine(hidden) {
+  if (!hidden) return '';
+  const href = `#${ADMIN_HIDE_CONTACT_PATH}`;
+  const linked = ADMIN_HIDE_OWNER_LINE.replace(
+    ADMIN_HIDE_CONTACT_LABEL,
+    `<a href="${href}" data-nav="${ADMIN_HIDE_CONTACT_PATH}">${ADMIN_HIDE_CONTACT_LABEL}</a>`,
+  );
+  return `<p class="mp-admin-hide-line" data-admin-hide-line>${linked}</p>`;
+}
+
 export const PROFILE_STATUS_LABELS = {
   draft: '저장중',
   published: '공개중',

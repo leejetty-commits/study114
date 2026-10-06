@@ -1012,8 +1012,23 @@ final class StudyRoomRegisterService
 
     {
 
-        $profileStatus = $this->optionalEnum($input, 'profile_status', ['draft', 'pending', 'published'])
-            ?? 'draft';
+        $curStmt = $pdo->prepare('SELECT profile_status FROM study_rooms WHERE id = ?');
+        $curStmt->execute([$roomId]);
+        $currentStatus = (string) ($curStmt->fetchColumn() ?: 'draft');
+        if ($currentStatus === 'pending') {
+            $currentStatus = 'draft';
+        }
+
+        $requestedRaw = $input['profile_status'] ?? null;
+        $requestedEmpty = $requestedRaw === null || trim((string) $requestedRaw) === '';
+        if ($currentStatus === 'hidden') {
+            $profileStatus = 'hidden';
+        } elseif ($requestedEmpty) {
+            $profileStatus = $currentStatus;
+        } else {
+            $profileStatus = $this->optionalEnum($input, 'profile_status', ['draft', 'pending', 'published'])
+                ?? $currentStatus;
+        }
 
 
 

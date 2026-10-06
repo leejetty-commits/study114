@@ -351,7 +351,10 @@ export function syncFacilityFromForm(form, state) {
   state.youtube_url = String(fd.get('youtube_url') ?? '');
   state.facebook_url = String(fd.get('facebook_url') ?? '');
   state.instagram_url = String(fd.get('instagram_url') ?? '');
-  state.profile_status = String(fd.get('profile_status') ?? 'draft');
+  if (fd.has('profile_status')) {
+    const raw = String(fd.get('profile_status') ?? '').trim();
+    if (raw !== '') state.profile_status = raw;
+  }
 }
 
 /** @param {import('./state.js').RegisterState} state */
@@ -470,14 +473,13 @@ export function payloadForStep(step, state) {
         feature_2: state.feature_2,
         feature_3: state.feature_3,
       };
-    case 'facility':
-      return {
+    case 'facility': {
+      const facility = {
         facility_ids: state.facility_ids,
         facility_note: state.facility_note,
         youtube_url: state.youtube_url,
         facebook_url: state.facebook_url,
         instagram_url: state.instagram_url,
-        profile_status: state.profile_status,
         images: (state.images || []).map((img, i) => ({
           id: img.id || null,
           image_type: img.image_type,
@@ -490,6 +492,10 @@ export function payloadForStep(step, state) {
           sort_order: img.sort_order || i + 1,
         })),
       };
+      const facilityStatus = String(state.profile_status ?? '').trim();
+      if (facilityStatus !== '') facility.profile_status = facilityStatus;
+      return facility;
+    }
     default:
       return {};
   }

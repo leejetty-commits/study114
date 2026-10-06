@@ -1,4 +1,4 @@
-import { LIFECYCLE_FOOTNOTE_REG } from '../lifecycle-copy.js';
+import { LIFECYCLE_FOOTNOTE_REG, renderAdminHideOwnerLine } from '../lifecycle-copy.js';
 import { STUDY_ROOM_REGISTER_URL } from '../nav-config.js';
 import {
   P20_LIST_TABS,
@@ -285,7 +285,8 @@ function renderHub(room) {
         <a href="#${studyRoomSectionPath(room.id, 'publish')}" class="mp-room__checklist-link" data-p20-nav="${studyRoomSectionPath(room.id, 'publish')}">등록점검에서 채우기</a>
       </div>`
     : '';
-  const body = `${greeting}${nudge}${renderMyshopShowcase(registerState, room)}`;
+  const hideLine = renderAdminHideOwnerLine(room.profile_status === 'hidden');
+  const body = `${hideLine}${greeting}${nudge}${renderMyshopShowcase(registerState, room)}`;
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', body)}</section>`;
 }
 

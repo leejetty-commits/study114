@@ -13,9 +13,7 @@ import {
   upsertGuidePost,
   deleteGuidePost,
 } from '../operational-board-store.js';
-import { listTickets, updateTicketStatus } from '../support/ticket-store.js';
-import { getTicketLoadError } from '../support/support-backend.js';
-import { FAQ_TABS, TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
+import { FAQ_TABS, TICKET_ADMIN_GROUPS, TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { SUBMISSION_CATEGORIES } from '../submission-board/submission-copy.js';
 import { apiOpenSubmissionAttachment } from '../board/board-backend.js';
 import {
@@ -932,18 +930,100 @@ function renderGuideCmsPanel() {
      </form>`;
 }
 
+const TICKET_ADMIN_PER_PAGE = 20;
+
+function emptyTicketAdminState() {
+  return {
+    group: 'open',
+    q: '',
+    page: 1,
+    tickets: [],
+    total: 0,
+    perPage: TICKET_ADMIN_PER_PAGE,
+    loadError: '',
+    seq: 0,
+    initialized: false,
+    loadedKey: '',
+  };
+}
+
+const ticketAdminByHost = {
+  hub: emptyTicketAdminState(),
+  route: emptyTicketAdminState(),
+};
+
+export function ticketAdminHost() {
+  const raw = (typeof window !== 'undefined' ? window.location.hash : '').replace(/^#/, '');
+  const path = raw.split('?')[0];
+  return path === '/admin' ? 'hub' : 'route';
+}
+
+export function getTicketAdminState(host = ticketAdminHost()) {
+  return ticketAdminByHost[host] || ticketAdminByHost.route;
+}
+
+export function patchTicketAdminState(host, patch) {
+  Object.assign(getTicketAdminState(host), patch);
+}
+
+export function bumpTicketAdminSeq(host) {
+  const state = getTicketAdminState(host);
+  state.seq += 1;
+  return state.seq;
+}
+
+/** @type {Map<string, Array<Record<string, unknown>>>} */
+const memberSupportInquiries = new Map();
+/** @type {Set<string>} */
+const memberSupportInquiryLoaded = new Set();
+
+export function memberSupportInquiriesLoaded(userId) {
+  return memberSupportInquiryLoaded.has(String(userId));
+}
+
+export function getMemberSupportInquiries(userId) {
+  return memberSupportInquiries.get(String(userId)) || [];
+}
+
+export function setMemberSupportInquiries(userId, rows) {
+  const key = String(userId);
+  memberSupportInquiryLoaded.add(key);
+  memberSupportInquiries.set(key, Array.isArray(rows) ? rows : []);
+}
+
+function renderMemberSupportInquiries(userId) {
+  if (!memberSupportInquiriesLoaded(userId)) return '';
+  const rows = getMemberSupportInquiries(userId);
+  if (!rows.length) return '<li>없음</li>';
+  const href = `/admin/tickets?q=${encodeURIComponent(String(userId))}&group=all`;
+  return rows
+    .map((t) => {
+      const category = TICKET_CATEGORIES.find((c) => c.value === t.category)?.label || t.category || '—';
+      const status = TICKET_STATUS_LABELS[t.status] || t.status || '—';
+      const created = String(t.createdAt || t.created_at || '').slice(0, 10);
+      const reply = t.hasAdminReply || t.adminReplyText ? '답변 있음' : '답변 없음';
+      return `<li><a href="#${href}" data-a28-nav="${href}"><code>${esc(t.id)}</code></a> · ${esc(category)} · ${esc(status)} · ${esc(created)} · ${reply}</li>`;
+    })
+    .join('');
+}
+
 function renderTicketsAdmin() {
-  const tickets = listTickets();
-  const loadError = getTicketLoadError();
+  const host = ticketAdminHost();
+  const state = getTicketAdminState(host);
   const categoryLabel = (value) => TICKET_CATEGORIES.find((c) => c.value === value)?.label || value;
-  const rows = tickets
+  const pages = state.total === 0 ? 1 : Math.ceil(state.total / (state.perPage || TICKET_ADMIN_PER_PAGE));
+  const filterButtons = TICKET_ADMIN_GROUPS.map(
+    (g) =>
+      `<button type="button" class="btn btn--secondary btn--sm${state.group === g.value ? ' is-on' : ''}" data-a28-ticket-group="${esc(g.value)}">${esc(g.label)}</button>`,
+  ).join('');
+  const rows = (state.tickets || [])
     .map((t) => {
       const options = Object.entries(TICKET_STATUS_LABELS)
         .map(([value, label]) => `<option value="${value}"${t.status === value ? ' selected' : ''}>${esc(label)}</option>`)
         .join('');
       const replyFlag = t.adminReplyText ? '답변 있음' : '답변 없음';
       const repliedAt = String(t.adminRepliedAt || '').replace('T', ' ').slice(0, 16);
-      return `<tr><td><code>${esc(t.id)}</code></td><td>${esc(categoryLabel(t.category))}</td><td>${esc(t.email)}</td>
+      return `<tr><td><code>${esc(t.id)}</code></td><td>${esc(categoryLabel(t.category))}</td><td>${memberAccountLink(t.userId, t.email)}</td>
         <td><select class="sup-admin-select" data-a28-ticket-status="${esc(t.id)}">${options}</select></td>
         <td>${esc(replyFlag)}</td></tr>
         <tr class="sup-ticket-detail-row"><td colspan="5">
@@ -965,8 +1045,20 @@ function renderTicketsAdmin() {
     'A28-04b',
     `${renderOpsTip()}
      <p class="a28-help">이용·정책·오류 문의입니다. 신고 처리와는 메뉴가 다릅니다. 여기에 남긴 답변은 마이페이지 내 문의 내역에 보입니다.</p>
-     ${loadError ? `<p class="a28-help" role="alert">${esc(loadError)}</p>` : ''}
-     <table class="sup-admin-table"><thead><tr><th>번호</th><th>유형</th><th>이메일</th><th>상태</th><th>답변</th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="sup-empty">${loadError ? esc(loadError) : '티켓 없음'}</td></tr>`}</tbody></table>`,
+     <div class="a28-ticket-filters" data-a28-ticket-admin="${esc(host)}">
+       <div class="a28-ticket-filters__groups">${filterButtons}</div>
+       <form class="a28-ticket-filters__search" data-a28-ticket-search>
+         <input type="search" class="admin-input" name="q" value="${esc(state.q)}" placeholder="이메일 또는 회원 번호" />
+         <button type="submit" class="btn btn--secondary btn--sm">검색</button>
+       </form>
+     </div>
+     ${state.loadError ? `<p class="a28-help" role="alert">${esc(state.loadError)}</p>` : ''}
+     <table class="sup-admin-table"><thead><tr><th>번호</th><th>유형</th><th>이메일</th><th>상태</th><th>답변</th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="sup-empty">${state.loadError ? esc(state.loadError) : '티켓 없음'}</td></tr>`}</tbody></table>
+     <div class="a28-ticket-pager">
+       <button type="button" class="btn btn--secondary btn--sm" data-a28-ticket-page="prev" ${state.page <= 1 ? 'disabled' : ''}>이전</button>
+       <span>${state.page} / ${pages}쪽 · 총 ${state.total}건</span>
+       <button type="button" class="btn btn--secondary btn--sm" data-a28-ticket-page="next" ${state.page >= pages ? 'disabled' : ''}>다음</button>
+     </div>`,
   );
 }
 
@@ -1398,6 +1490,8 @@ function renderMembers() {
         <h4 class="admin-section-title">유료·결제 (조회)</h4>
         <p class="a28-help">노출 상품</p><ul class="a28-lists">${positions || '<li>없음</li>'}</ul>
         <p class="a28-help">횟수권</p><ul class="a28-lists">${tickets || '<li>없음</li>'}</ul>
+        <h4 class="admin-section-title">운영문의</h4>
+        <ul class="a28-lists">${renderMemberSupportInquiries(detail.id)}</ul>
         <p class="a28-help">최근 주문</p><ul class="a28-lists">${orders || '<li>없음</li>'}</ul>
         <label class="a28-help">내부 메모
           <input type="text" class="admin-input" data-member-memo="${detail.id}" placeholder="조치 사유 (로그 기록)" />

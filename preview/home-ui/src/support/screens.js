@@ -1,6 +1,6 @@
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
 import { loginUrl } from '../../../shared/route-access.js';
-import { getNavRole, navigate } from '../state.js';
+import { navigate } from '../state.js';
 import { isLoggedIn, getAuthUser } from '../auth-session.js';
 import {
   FAQ_TABS,
@@ -289,6 +289,13 @@ function renderNoticeSection() {
     ${renderAdminFooterLink()}`;
 }
 
+function contactCategoryFromHash() {
+  const raw = window.location.hash.replace(/^#/, '');
+  const q = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
+  const value = new URLSearchParams(q).get('category') || '';
+  return TICKET_CATEGORIES.some((c) => c.value === value) ? value : '';
+}
+
 function renderContactSection() {
   const flashId = sessionStorage.getItem(TICKET_FLASH_KEY);
   const flashHtml = flashId
@@ -299,8 +306,10 @@ function renderContactSection() {
        </div>`
     : '';
 
+  const presetCategory = contactCategoryFromHash();
   const categoryOptions = TICKET_CATEGORIES.map(
-    (c) => `<option value="${esc(c.value)}">${esc(c.label)}</option>`,
+    (c) =>
+      `<option value="${esc(c.value)}"${c.value === presetCategory ? ' selected' : ''}>${esc(c.label)}</option>`,
   ).join('');
   const userEmail = getAuthUser()?.email || '';
 
@@ -322,7 +331,8 @@ function renderContactSection() {
         </label>
         <label class="sup-field">
           <span>이메일</span>
-          <input type="email" name="email" placeholder="답변 받을 주소" value="${esc(userEmail)}" required />
+          <input type="email" name="email" value="${esc(userEmail)}" readonly />
+          <small class="sup-note">로그인 계정 이메일로 답변 확인</small>
         </label>
         <label class="sup-field">
           <span>문의 내용</span>
@@ -445,10 +455,9 @@ export function bindSupportScreenEvents(root, path, rerender) {
       const fd = new FormData(form);
       try {
         const ticket = await createTicket({
-          email: String(fd.get('email')),
+          email: String(fd.get('email') || ''),
           category: String(fd.get('category')),
           body: String(fd.get('body')),
-          role: getNavRole(),
         });
         sessionStorage.setItem(TICKET_FLASH_KEY, ticket.id);
         rerender?.();

@@ -84,7 +84,7 @@ export function studyRoomRegionPurchaseState(region, ctx) {
   if (room.profile_status === 'hidden') {
     return {
       purchasable: false,
-      reason: '숨김 상태 · 노출 중지 해제 후 구매 가능',
+      reason: '숨김 상태입니다. 구매는 홈·찾기에 다시 보인 뒤에 가능합니다.',
       tone: 'warn',
     };
   }

@@ -53,6 +53,11 @@ final class StudyRoomHubService
     {
         (new \Study114\Auth\EmailVerificationGate())->assertVerified($userId);
 
+        // hydrate(StudyRoomHubRepository)는 pending만 draft로 읽고 hidden은 그대로 둔다.
+        if ((string) ($room['profile_status'] ?? '') === 'hidden') {
+            return ['ok' => false, 'reason' => 'not_allowed'];
+        }
+
         if (!$this->hasPromoSlot1($roomId)) {
             throw new InvalidArgumentException('홍보지역 1(대표)을 선택해 주세요.');
         }

@@ -14,20 +14,31 @@ SupportApi::run(static function (): void {
     $method = SupportApi::method();
 
     if ($method === 'GET') {
+        $admin = SupportApi::queryString('admin');
+        $mine = SupportApi::queryString('mine');
         $email = SupportApi::queryString('email');
-        if ($email === null || $email === '') {
+        if ($admin === '1') {
             SupportApi::requireAdmin();
-            SupportApi::ok(['tickets' => $service->list(null)]);
+            $userId = SupportApi::queryInt('user_id', 0);
+            if ($userId > 0) {
+                SupportApi::ok(['tickets' => $service->listForUserId($userId)]);
+            }
+            $group = SupportApi::queryString('group') ?? 'open';
+            $q = SupportApi::queryString('q') ?? '';
+            $page = max(1, SupportApi::queryInt('page', 1));
+            SupportApi::ok($service->listAdmin($group, $q, $page));
         }
-        $auth = SupportApi::requireUser();
-        if (strcasecmp((string) $auth['email'], $email) !== 0) {
-            SupportApi::fail(403, 'forbidden', '본인 문의만 볼 수 있습니다.');
+        if ($mine === '1' || ($email !== null && $email !== '')) {
+            $auth = SupportApi::requireUser();
+            SupportApi::ok(['tickets' => $service->listMine((int) $auth['user_id'])]);
         }
-        SupportApi::ok(['tickets' => $service->list($email)]);
+        SupportApi::requireAdmin();
+        SupportApi::ok(['tickets' => $service->list(null)]);
     }
 
     if ($method === 'POST') {
-        $ticket = $service->create(SupportApi::readJson());
+        $auth = SupportApi::requireUser();
+        $ticket = $service->create($auth, SupportApi::readJson());
         SupportApi::ok(['ticket' => $ticket]);
     }
 

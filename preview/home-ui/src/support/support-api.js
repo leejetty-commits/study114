@@ -50,6 +50,31 @@ export async function fetchTickets(email = '') {
   return readJson(res);
 }
 
+export async function fetchMyTickets() {
+  const res = await fetch('/api/support/tickets.php?mine=1', CREDENTIALS);
+  return readJson(res);
+}
+
+export async function fetchAdminTickets({ group = 'open', q = '', page = 1 } = {}) {
+  const params = new URLSearchParams({
+    admin: '1',
+    group,
+    q,
+    page: String(page),
+    per_page: '20',
+  });
+  const res = await fetch(`/api/support/tickets.php?${params}`, CREDENTIALS);
+  return readJson(res);
+}
+
+export async function fetchAdminTicketsByUser(userId) {
+  const res = await fetch(
+    `/api/support/tickets.php?admin=1&user_id=${encodeURIComponent(String(userId))}`,
+    CREDENTIALS,
+  );
+  return readJson(res);
+}
+
 export async function submitTicket(input) {
   const res = await fetch('/api/support/tickets.php', {
     method: 'POST',

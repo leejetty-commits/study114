@@ -41,20 +41,25 @@ export function renderProviderNoticeBanners() {
   if (!noticesCache.length) return '';
   return noticesCache
     .map(
-      (n) => `
+      (n) => {
+        const adminHide = n.notice_kind === 'admin_hide';
+        const kindLine = adminHide ? '시스템 안내' : `시스템 안내 · ${esc(n.notice_kind)}`;
+        const actionLabel = adminHide ? '고객센터 운영문의' : '유료 서비스 안내';
+        return `
     <div class="mypage-info-box provider-notice" data-provider-notice-id="${Number(n.id)}">
-      <p class="provider-notice__kind">시스템 안내 · ${esc(n.notice_kind)}</p>
+      <p class="provider-notice__kind">${kindLine}</p>
       <strong class="provider-notice__title">${esc(n.title)}</strong>
       <p class="provider-notice__body">${esc(n.body)}</p>
       <div class="provider-notice__actions">
         ${
           n.action_href
-            ? `<a href="#${esc(n.action_href)}" class="btn btn--secondary btn--sm" data-mypage-nav="${esc(n.action_href)}">유료 서비스 안내</a>`
+            ? `<a href="#${esc(n.action_href)}" class="btn btn--secondary btn--sm" data-mypage-nav="${esc(n.action_href)}">${actionLabel}</a>`
             : ''
         }
         <button type="button" class="btn btn--secondary btn--sm" data-provider-notice-dismiss="${Number(n.id)}">확인</button>
       </div>
-    </div>`,
+    </div>`;
+      },
     )
     .join('');
 }
