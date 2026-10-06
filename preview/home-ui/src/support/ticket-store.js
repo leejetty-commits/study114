@@ -3,6 +3,7 @@
 import {
   isSupportApiMode,
   getTicketsCache,
+  getMyTicketsCache,
   apiCreateTicket,
   apiUpdateTicketStatus,
   apiUpdateTicketReply,
@@ -124,6 +125,14 @@ export async function createTicket(input) {
 export function listTickets() {
   if (isSupportApiMode()) {
     return sortTicketsLatest(getTicketsCache().map(normalizeTicket));
+  }
+  return sortTicketsLatest(loadAll());
+}
+
+/** 내 문의 내역. API 모드에서는 본인 캐시만 본다. */
+export function listMyTickets() {
+  if (isSupportApiMode()) {
+    return sortTicketsLatest(getMyTicketsCache().map(normalizeTicket));
   }
   return sortTicketsLatest(loadAll());
 }

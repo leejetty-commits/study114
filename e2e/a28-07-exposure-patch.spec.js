@@ -109,6 +109,33 @@ test.describe('A28-07 접근 가드 · 입력 검증', () => {
 });
 
 test.describe('A28-07 PATCH 핵심 (부록 F Q6~Q15)', () => {
+  test.beforeAll(() => {
+    sqlValue(
+      `UPDATE study_rooms SET
+        study_room_name = COALESCE(NULLIF(TRIM(study_room_name),''),'e2e 공부방'),
+        lesson_place_type = COALESCE(NULLIF(TRIM(lesson_place_type),''),'study_room'),
+        main_subject_note = COALESCE(NULLIF(TRIM(main_subject_note),''),'국어'),
+        slogan = COALESCE(NULLIF(TRIM(slogan),''),'e2e 슬로건'),
+        address_text = COALESCE(NULLIF(TRIM(address_text),''),'서울 강남구 e2e 주소')
+      WHERE id = 3`,
+    );
+    sqlValue(
+      `INSERT INTO study_room_regions (study_room_id, slot, region_id, is_primary)
+       SELECT 3, 1, 3, 1 FROM DUAL
+       WHERE NOT EXISTS (
+         SELECT 1 FROM study_room_regions
+         WHERE study_room_id = 3 AND slot = 1 AND region_id IS NOT NULL AND region_id <> 0
+       )`,
+    );
+    sqlValue(
+      `INSERT INTO study_room_primary_audiences (study_room_id, school_level)
+       SELECT 3, 'elementary' FROM DUAL
+       WHERE NOT EXISTS (
+         SELECT 1 FROM study_room_primary_audiences WHERE study_room_id = 3
+       )`,
+    );
+  });
+
   test.beforeEach(async ({ request }) => {
     await loginAs(request, 'admin');
   });
@@ -159,6 +186,44 @@ test.describe('A28-07 PATCH 핵심 (부록 F Q6~Q15)', () => {
       target: '3',
       userNotified: false,
     });
+  });
+
+  test('Q7b 슬로건이 비면 draft·missing, 채우면 published', async ({ request }) => {
+    const before = sqlValue('SELECT COALESCE(slogan, \'\') FROM study_rooms WHERE id = 3').replace(/'/g, "''");
+    try {
+      const hidden = await patchExposure(request, {
+        target_type: 'study_room',
+        target_id: '3',
+        action: 'hide',
+      });
+      expect(hidden.res.status()).toBe(200);
+      sqlValue("UPDATE study_rooms SET slogan = '' WHERE id = 3");
+      const draft = await patchExposure(request, {
+        target_type: 'study_room',
+        target_id: '3',
+        action: 'publish',
+      });
+      expect(draft.res.status()).toBe(200);
+      expect(draft.body.item.status).toBe('draft');
+      expect(draft.body.missing || []).toContain('슬로건');
+      sqlValue(`UPDATE study_rooms SET slogan = '${before}' WHERE id = 3`);
+      // 불완전 publish 뒤 상태는 draft다. draft에서 publish는 400이므로 숨긴 다음 다시 올린다.
+      const rehide = await patchExposure(request, {
+        target_type: 'study_room',
+        target_id: '3',
+        action: 'hide',
+      });
+      expect(rehide.res.status()).toBe(200);
+      const again = await patchExposure(request, {
+        target_type: 'study_room',
+        target_id: '3',
+        action: 'publish',
+      });
+      expect(again.res.status()).toBe(200);
+      expect(again.body.item.status).toBe('published');
+    } finally {
+      sqlValue(`UPDATE study_rooms SET slogan = '${before}', profile_status = 'published' WHERE id = 3`);
+    }
   });
 
   test('Q8 study_room inquiry_status=paused · exposure_correction', async ({ request }) => {

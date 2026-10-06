@@ -31,6 +31,8 @@ final class AdminExposureService
   private StudentHubRepository $students;
   private BoardPostRepository $posts;
   private AdminOperationLogRepository $logs;
+  /** @var bool|null study_room_primary_audiences 존재. 인스턴스에서만 기억한다. */
+  private ?bool $primaryAudienceTable = null;
 
   public function __construct(
       ?AdminExposureRepository $targets = null,
@@ -496,7 +498,30 @@ final class AdminExposureService
       $need((string) ($row['slogan'] ?? ''), '슬로건');
       $need((string) ($row['address_text'] ?? ''), '사업장주소');
 
+      if ($this->hasPrimaryAudienceTable()) {
+          $aud = $pdo->prepare('SELECT COUNT(*) FROM study_room_primary_audiences WHERE study_room_id = ?');
+          $aud->execute([$roomId]);
+          if ((int) $aud->fetchColumn() === 0) {
+              $missing[] = '주대상';
+          }
+      }
+
       return $missing;
+  }
+
+  private function hasPrimaryAudienceTable(): bool
+  {
+      if ($this->primaryAudienceTable !== null) {
+          return $this->primaryAudienceTable;
+      }
+      try {
+          $exists = Connection::get()->query("SHOW TABLES LIKE 'study_room_primary_audiences'");
+          $this->primaryAudienceTable = $exists && $exists->fetchColumn() ? true : false;
+      } catch (\PDOException $e) {
+          $this->primaryAudienceTable = false;
+      }
+
+      return $this->primaryAudienceTable;
   }
 
   /** @return list<string> */

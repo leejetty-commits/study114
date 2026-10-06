@@ -943,6 +943,7 @@ function emptyTicketAdminState() {
     loadError: '',
     seq: 0,
     initialized: false,
+    appliedHashKey: '',
     loadedKey: '',
   };
 }
@@ -1014,7 +1015,7 @@ function renderTicketsAdmin() {
   const pages = state.total === 0 ? 1 : Math.ceil(state.total / (state.perPage || TICKET_ADMIN_PER_PAGE));
   const filterButtons = TICKET_ADMIN_GROUPS.map(
     (g) =>
-      `<button type="button" class="btn btn--secondary btn--sm${state.group === g.value ? ' is-on' : ''}" data-a28-ticket-group="${esc(g.value)}">${esc(g.label)}</button>`,
+      `<button type="button" class="btn btn--sm ${state.group === g.value ? 'btn--primary' : 'btn--secondary'}" data-a28-ticket-group="${esc(g.value)}" aria-pressed="${state.group === g.value ? 'true' : 'false'}">${esc(g.label)}</button>`,
   ).join('');
   const rows = (state.tickets || [])
     .map((t) => {

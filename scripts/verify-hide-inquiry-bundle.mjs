@@ -461,7 +461,15 @@ assert('(k) 건수 4칸', ['total', 'one_match', 'zero_match', 'many_match'].eve
 assert('(g) 안내 문구', ADMIN_HIDE_OWNER_LINE === LINE);
 const shown = renderAdminHideOwnerLine(true);
 const hiddenOff = renderAdminHideOwnerLine(false);
-assert('(g) hidden 렌더 1번', shown.split(LINE.slice(0, 12)).length === 2 && (shown.match(/<a /g) || []).length === 1);
+const hideAnchorAt = shown.indexOf('<a ');
+assert(
+  '(g) hidden 렌더 1번',
+  shown.split(LINE.slice(0, 12)).length === 2
+    && (shown.match(/<a /g) || []).length === 1
+    && shown.indexOf(LINE) >= 0
+    && hideAnchorAt > shown.indexOf(LINE) + LINE.length - 1
+    && shown.includes('btn btn--secondary btn--sm'),
+);
 assert('(g) hidden 아님 0번', hiddenOff === '');
 for (const rel of [
   'preview/home-ui/src/study-room-reg/screens.js',
@@ -543,6 +551,39 @@ await hydrateProviderNotices();
 const noticeHtml = renderProviderNoticeBanners();
 assert('(화면) admin_hide 버튼은 고객센터 운영문의 · 종류는 시스템 안내', noticeHtml.includes('고객센터 운영문의') && noticeHtml.includes('>시스템 안내<') && noticeHtml.includes('data-mypage-nav="/support/contact?category=unhide_request"'));
 assert('(화면) 다른 종류는 영문 키와 유료 서비스 안내', noticeHtml.includes('시스템 안내 · expiry') && noticeHtml.includes('유료 서비스 안내'));
+
+const hydrateMine = fnBody(read('preview/home-ui/src/support/support-backend.js'), 'hydrateMyTickets');
+assert(
+  '(D1-a) hydrateMyTickets 본문에 ticketsCache 대입 없음',
+  hydrateMine.includes('myTicketsCache') && !/(^|[^A-Za-z0-9_])ticketsCache =/.test(hydrateMine),
+);
+const mypageSrc = read('preview/home-ui/src/mypage/screens.js');
+assert(
+  '(D1-b) 내 문의 내역은 listMyTickets',
+  mypageSrc.includes('listMyTickets') && (mypageSrc.match(/(^|[^A-Za-z0-9_])listTickets\(/g) || []).length === 0,
+);
+const saveFacility = fnBody(read('src/StudyRoom/StudyRoomRegisterService.php'), 'saveFacility');
+const saveContact = fnBody(read('src/Tutor/TutorRegisterService.php'), 'saveContact');
+assert(
+  '(D2) hidden 요청은 요청 없음',
+  saveFacility.includes("strtolower(trim((string) $requestedRaw)) === 'hidden'")
+    && saveContact.includes("strtolower(trim((string) $input['profile_status'])) !== 'hidden'"),
+);
+assert(
+  '(D4) 필터 aria-pressed · is-on 0',
+  render.includes('aria-pressed') && !render.includes('is-on'),
+);
+const sentenceAt = shown.indexOf(LINE);
+assert(
+  '(D5) 문장 안 a 0 · 버튼 링크 1',
+  sentenceAt >= 0
+    && !shown.slice(sentenceAt, sentenceAt + LINE.length).includes('<a')
+    && (shown.match(/class="btn btn--secondary btn--sm"/g) || []).length === 1,
+);
+const unhideMissing = fnBody(read('src/Admin/AdminExposureService.php'), 'studyRoomUnhideMissing');
+assert("(D6) studyRoomUnhideMissing 주대상", unhideMissing.includes("'주대상'"));
+const ticketState = fnBody(read('preview/home-ui/src/admin/a28-screens.js'), 'emptyTicketAdminState');
+assert('(D7) appliedHashKey', bind.includes('appliedHashKey') && ticketState.includes('appliedHashKey'));
 
 if (failed > 0) {
   console.error(`\nhide-inquiry bundle FAILED ${failed} (pass ${passed})`);

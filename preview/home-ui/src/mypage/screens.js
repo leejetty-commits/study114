@@ -71,7 +71,7 @@ import { P18_EXPOSURE_STATUS } from './plans-catalog.js';
 import { getPaidOperationalStatus, hydratePaidCaches } from '../paid-backend.js';
 import { isMessagesApiMode, hydrateMessagesCache } from '../messages-backend.js';
 import { isSupportApiMode, hydrateMyTickets, getTicketLoadError } from '../support/support-backend.js';
-import { listTickets } from '../support/ticket-store.js';
+import { listMyTickets } from '../support/ticket-store.js';
 import { TICKET_CATEGORIES, TICKET_STATUS_LABELS } from '../support/support-copy.js';
 import { getMemoUsedTargets } from '../messages/thread-store.js';
 import { getStudyRoom, getStudyRooms } from '../study-room-reg/store.js';
@@ -463,7 +463,7 @@ function contactLastActivity(ticket) {
 }
 
 function renderContactHistory() {
-  const tickets = listTickets();
+  const tickets = listMyTickets();
   const copy = CONTACT_HISTORY_COPY;
   const header = `
     <div class="mypage-contact-head">

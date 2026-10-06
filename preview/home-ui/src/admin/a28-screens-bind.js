@@ -2157,14 +2157,19 @@ async function reloadTicketAdmin(host, rerender) {
 export function bindTicketsScreen(root, rerender, _navigate) {
   const host = ticketAdminHost();
   const state = getTicketAdminState(host);
-  if (!state.initialized) {
-    if (host === 'route') {
-      const query = readRouteTicketQuery();
+  if (host === 'route') {
+    const query = readRouteTicketQuery();
+    const hashKey = `${query.group}|${query.q}`;
+    if (hashKey !== '|' && hashKey !== state.appliedHashKey) {
+      state.q = query.q;
       if (query.group) state.group = query.group;
-      if (query.q) state.q = query.q;
+      state.page = 1;
+      state.appliedHashKey = hashKey;
+    } else if (hashKey === '|') {
+      state.appliedHashKey = '';
     }
-    state.initialized = true;
   }
+  if (!state.initialized) state.initialized = true;
   const loadKey = `${state.group}|${state.q}|${state.page}`;
   if (isSupportApiMode() && state.loadedKey !== loadKey && ticketAdminStillOpen(host)) {
     state.loadedKey = loadKey;

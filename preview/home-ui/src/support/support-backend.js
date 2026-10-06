@@ -15,6 +15,9 @@ let apiMode = false;
 let noticesCache = [];
 /** @type {any[]} */
 let ticketsCache = [];
+/** 내 문의 내역 전용. 운영 전체 목록(ticketsCache)과 섞지 않는다. */
+/** @type {any[]} */
+let myTicketsCache = [];
 /** 전체 목록·본인 목록을 401·403으로 못 읽었을 때의 안내 */
 let ticketLoadError = '';
 
@@ -29,6 +32,7 @@ export function isSupportApiMode() {
 function resetCaches() {
   noticesCache = [];
   ticketsCache = [];
+  myTicketsCache = [];
 }
 
 export async function activateSupportApi() {
@@ -45,7 +49,7 @@ export async function hydrateMyTickets() {
   ticketLoadError = '';
   try {
     const ticketRes = await fetchMyTickets();
-    ticketsCache = (ticketRes.tickets ?? []).map((t) => ({ ...t }));
+    myTicketsCache = (ticketRes.tickets ?? []).map((t) => ({ ...t }));
   } catch (err) {
     const status = Number(err?.status || 0);
     if (status === 401 || status === 403) {
@@ -54,7 +58,7 @@ export async function hydrateMyTickets() {
           ? err.message
           : '문의 목록을 불러오지 못했습니다. 로그인 상태를 확인해 주세요.';
     }
-    ticketsCache = [];
+    myTicketsCache = [];
   }
 }
 
@@ -85,6 +89,10 @@ export function getTicketsCache() {
   return ticketsCache.map((t) => ({ ...t }));
 }
 
+export function getMyTicketsCache() {
+  return myTicketsCache.map((t) => ({ ...t }));
+}
+
 export function getTicketsCacheByEmail(email) {
   const norm = email.trim().toLowerCase();
   return getTicketsCache().filter((t) => String(t.email || '').toLowerCase() === norm);
@@ -112,17 +120,31 @@ function ticketSortStamp(row) {
   ];
 }
 
+function sortTicketRows(rows) {
+  rows.sort((a, b) => {
+    const aa = ticketSortStamp(a);
+    const bb = ticketSortStamp(b);
+    return bb[0].localeCompare(aa[0]) || bb[1].localeCompare(aa[1]) || bb[2].localeCompare(aa[2]) || bb[3].localeCompare(aa[3]);
+  });
+}
+
 function upsertTicketCache(row) {
   const idx = ticketsCache.findIndex((t) => t.id === row.id);
   const copy = { ...row };
   if (idx >= 0) ticketsCache[idx] = copy;
   else ticketsCache.unshift(copy);
-  ticketsCache.sort((a, b) => {
-    const aa = ticketSortStamp(a);
-    const bb = ticketSortStamp(b);
-    return bb[0].localeCompare(aa[0]) || bb[1].localeCompare(aa[1]) || bb[2].localeCompare(aa[2]) || bb[3].localeCompare(aa[3]);
-  });
+  sortTicketRows(ticketsCache);
   return copy;
+}
+
+/** @param {boolean} insert 없으면 같은 id가 이미 있을 때만 바꾼다. */
+function upsertMyTicketCache(row, insert) {
+  const idx = myTicketsCache.findIndex((t) => t.id === row.id);
+  if (idx < 0 && !insert) return;
+  const copy = { ...row };
+  if (idx >= 0) myTicketsCache[idx] = copy;
+  else myTicketsCache.unshift(copy);
+  sortTicketRows(myTicketsCache);
 }
 
 export async function apiSaveNotice(input) {
@@ -144,18 +166,27 @@ export async function apiResetNoticeSeed() {
 
 export async function apiCreateTicket(input) {
   const data = await submitTicket(input);
-  if (data.ticket) upsertTicketCache(data.ticket);
+  if (data.ticket) {
+    upsertTicketCache(data.ticket);
+    upsertMyTicketCache(data.ticket, true);
+  }
   return data.ticket;
 }
 
 export async function apiUpdateTicketStatus(id, status) {
   const data = await patchTicketStatus(id, status);
-  if (data.ticket) upsertTicketCache(data.ticket);
+  if (data.ticket) {
+    upsertTicketCache(data.ticket);
+    upsertMyTicketCache(data.ticket, false);
+  }
   return data.ticket;
 }
 
 export async function apiUpdateTicketReply(id, adminReplyText) {
   const data = await patchTicketReply(id, adminReplyText);
-  if (data.ticket) upsertTicketCache(data.ticket);
+  if (data.ticket) {
+    upsertTicketCache(data.ticket);
+    upsertMyTicketCache(data.ticket, false);
+  }
   return data.ticket;
 }

@@ -1020,7 +1020,9 @@ final class StudyRoomRegisterService
         }
 
         $requestedRaw = $input['profile_status'] ?? null;
-        $requestedEmpty = $requestedRaw === null || trim((string) $requestedRaw) === '';
+        $requestedEmpty = $requestedRaw === null
+            || trim((string) $requestedRaw) === ''
+            || strtolower(trim((string) $requestedRaw)) === 'hidden';
         if ($currentStatus === 'hidden') {
             $profileStatus = 'hidden';
         } elseif ($requestedEmpty) {

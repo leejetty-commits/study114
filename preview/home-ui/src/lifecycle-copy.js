@@ -18,11 +18,7 @@ const ADMIN_HIDE_CONTACT_LABEL = '고객센터 운영문의';
 export function renderAdminHideOwnerLine(hidden) {
   if (!hidden) return '';
   const href = `#${ADMIN_HIDE_CONTACT_PATH}`;
-  const linked = ADMIN_HIDE_OWNER_LINE.replace(
-    ADMIN_HIDE_CONTACT_LABEL,
-    `<a href="${href}" data-nav="${ADMIN_HIDE_CONTACT_PATH}">${ADMIN_HIDE_CONTACT_LABEL}</a>`,
-  );
-  return `<p class="mp-admin-hide-line" data-admin-hide-line>${linked}</p>`;
+  return `<p class="mp-admin-hide-line" data-admin-hide-line>${ADMIN_HIDE_OWNER_LINE} <a class="btn btn--secondary btn--sm" href="${href}" data-nav="${ADMIN_HIDE_CONTACT_PATH}">${ADMIN_HIDE_CONTACT_LABEL}</a></p>`;
 }
 
 export const PROFILE_STATUS_LABELS = {

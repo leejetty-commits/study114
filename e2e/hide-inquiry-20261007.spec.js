@@ -144,4 +144,16 @@ test.describe('숨김 후속 + 문의 관리 20261007', () => {
     expect(secondBody.tickets.map((t) => t.id).join(',')).toBe(firstBody.tickets.map((t) => t.id).join(','));
     expect(firstBody.per_page).toBe(20);
   });
+
+  test('관리자 mine=1 건수는 본인 user_id 문의 수와 같다', async ({ request }) => {
+    await loginAs(request, 'admin');
+    const mine = await request.get('/api/support/tickets.php?mine=1');
+    expect(mine.status()).toBe(200);
+    const body = await mine.json();
+    const own = Number(
+      sql(`SELECT COUNT(*) FROM support_tickets WHERE user_id = (SELECT id FROM users WHERE email = '${ACCOUNTS.admin}')`),
+    );
+    expect(Array.isArray(body.tickets)).toBeTruthy();
+    expect(body.tickets.length).toBe(own);
+  });
 });
