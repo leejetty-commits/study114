@@ -199,6 +199,7 @@ import {
   selected,
 } from './a28-screens-shared.js';
 import { bindTodayHub, peekHubExposureRoute, registerTodayBinders } from './a28-today-hub.js';
+import { bindRegistrationList } from './a28-registration-list.js';
 import {
   renderAddons,
   renderMarketLab,
@@ -674,6 +675,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
   if (path === '/admin/members') {
     bindMembersScreen(root, rerender, writeAdminHash);
   }
+  if (path === '/admin/registrations') bindRegistrationList(root, rerender);
 
   if (path === '/admin/commerce') {
     const commerceUserId = numericHashUser();

@@ -186,6 +186,7 @@ import {
   renderNotifyLab,
 } from './a28-screens-labs.js';
 import { peekHubExposureRoute, registerTodayRenderers, renderTodayMarkup } from './a28-today-hub.js';
+import { renderRegistrationList } from './a28-registration-list.js';
 
 function adminProductLabel(code) {
   const normalized = String(code || '').toLowerCase();
@@ -1950,6 +1951,7 @@ export function renderA28Screen(path) {
   if (path === '/admin') body = renderHub();
   else if (path === '/admin/promo') body = renderPromoDesk();
   else if (path === '/admin/members') body = renderMembers();
+  else if (path === '/admin/registrations') body = renderRegistrationList();
   else if (path === '/admin/commerce') body = renderCommerce();
   else if (path.startsWith('/admin/market/')) body = renderMarketLab(getMarketSection(path));
   else if (path === '/admin/addons' || path.startsWith('/admin/addons/')) body = renderAddons(getAddonsSection(path));
