@@ -531,10 +531,6 @@ function writeAdminHash(next) {
   window.location.hash = next;
 }
 
-export function sealExposureHostLoad() {
-  lastExposureLoad = exposureLoadKey(readExposureRoute());
-}
-
 export function bindTodaySlotNav(root) {
   root.querySelectorAll('[data-a28-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
@@ -2414,7 +2410,6 @@ registerTodayBinders({
   reports: bindReportsScreen,
   popups: bindHomePopupForm,
   writeHash: writeAdminHash,
-  sealExposure: sealExposureHostLoad,
   bindNav: bindTodaySlotNav,
   bindDrawer: bindDetailDrawer,
 });

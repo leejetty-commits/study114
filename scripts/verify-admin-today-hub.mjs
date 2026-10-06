@@ -60,8 +60,18 @@ function installShim() {
     protocol: 'http:',
   };
   if (typeof globalThis.window === 'undefined') globalThis.window = globalThis;
+  loc.replace = () => {};
   if (!globalThis.window.location) globalThis.window.location = loc;
   if (!globalThis.location) globalThis.location = globalThis.window.location;
+  if (typeof globalThis.window.dispatchEvent !== 'function') globalThis.window.dispatchEvent = () => true;
+  if (typeof globalThis.CustomEvent === 'undefined') {
+    globalThis.CustomEvent = class CustomEvent {
+      constructor(type, init = {}) {
+        this.type = type;
+        this.detail = init.detail;
+      }
+    };
+  }
   if (typeof globalThis.document === 'undefined') {
     const el = () => ({
       style: {},
@@ -89,18 +99,40 @@ function installShim() {
 }
 
 installShim();
-globalThis.fetch = async () => ({
-  ok: true,
-  json: async () => ({ ok: true, settings: {}, logs: [] }),
-});
+let sessionLevel = 'super_admin';
+globalThis.fetch = async (url) => {
+  const u = String(url);
+  if (u.includes('/api/auth/me.php')) {
+    return {
+      ok: true,
+      json: async () => ({
+        ok: true,
+        authenticated: true,
+        email_verified: true,
+        user_id: sessionLevel === 'sub_master' ? 2 : 1,
+        email: sessionLevel === 'sub_master' ? 'ops@example.com' : 'admin@example.com',
+        role_type: 'admin',
+        name: sessionLevel === 'sub_master' ? '부마스터' : '최고관리자',
+        admin_level: sessionLevel,
+        must_change_password: false,
+        oauth_role_pending: false,
+      }),
+    };
+  }
+  return {
+    ok: true,
+    json: async () => ({ ok: true, settings: {}, logs: [] }),
+  };
+};
 const { renderA28Screen } = await import('../preview/home-ui/src/admin/a28-screens.js');
 const { ensureAdminSettings } = await import('../preview/home-ui/src/admin/site-settings-store.js');
+const { initAuthSession } = await import('../preview/home-ui/src/auth-session.js');
 await ensureAdminSettings();
+await initAuthSession();
 const { a28Ui } = await import('../preview/home-ui/src/admin/a28-screens-state.js');
 
 a28Ui.todaySlot = null;
 a28Ui.todayInquiryTab = 'tickets';
-delete globalThis.__A28_TODAY_LEVEL__;
 globalThis.location.hash = '#/admin';
 
 const hub = renderA28Screen('/admin');
@@ -124,17 +156,18 @@ ok('hub-legacy-allowed', hub.includes('할 수 있는 일') && hub.indexOf('할 
 ok('hub-legacy-forbidden', hub.includes('하지 않는 일'));
 ok('hub-title', hub.includes('운영 홈'));
 
-globalThis.__A28_TODAY_LEVEL__ = 'sub_master';
+sessionLevel = 'sub_master';
+await initAuthSession();
 a28Ui.todaySlot = null;
 const subHub = renderA28Screen('/admin');
 ok('sub-master-no-popup-card', !subHub.includes('홈 팝업') && subHub.includes('회원 정리') && subHub.includes('문의·신고'));
 ok('sub-master-three', (subHub.match(/data-today-card="/g) || []).length === 3);
 
-globalThis.__A28_TODAY_LEVEL__ = 'super_admin';
+sessionLevel = 'super_admin';
+await initAuthSession();
 a28Ui.todaySlot = null;
 const superHub = renderA28Screen('/admin');
 ok('super-four', (superHub.match(/data-today-card="/g) || []).length === 4 && superHub.includes('홈 팝업'));
-delete globalThis.__A28_TODAY_LEVEL__;
 a28Ui.todaySlot = null;
 
 const members = renderA28Screen('/admin/members').replaceAll('김학부모', '');
@@ -162,17 +195,19 @@ ok('key-settings', settingsSrc.includes("id: 'guardian_student'"));
 ok('key-channel-store', channelSrc.includes("id: 'guardian_student'"));
 
 const hubSrc = readFileSync(join(srcRoot, 'admin', 'a28-today-hub.js'), 'utf8');
+const bindSrc = readFileSync(join(srcRoot, 'admin', 'a28-screens-bind.js'), 'utf8');
 ok('hub-no-hash-write', !hubSrc.includes('location.hash ='));
 ok('hub-uses-path-guard', hubSrc.includes('canAccessAdminPath('));
 ok('hub-no-home-popup-attr', !hubSrc.includes('data-home-popup'));
+ok('hub-no-level-backdoor', !hubSrc.includes('__A28_TODAY_LEVEL__') && !hubSrc.includes('getCurrentAdminLevel'));
+ok('hub-no-seal', !hubSrc.includes('seal'));
+ok('bind-no-seal', !bindSrc.includes('sealExposureHostLoad') && !bindSrc.includes('sealExposure'));
 
 a28Ui.todaySlot = 'popups';
-globalThis.__A28_TODAY_LEVEL__ = 'super_admin';
 const popupHub = renderA28Screen('/admin');
 const aside = popupHub.match(/<aside\b[^>]*>/);
 ok('popup-root-no-data-home-popup', Boolean(aside) && !/\sdata-home-popup(?:[\s=]|>)/.test(aside[0]), aside ? aside[0] : 'no aside');
 ok('popup-root-no-rail', !popupHub.includes('rail-popup') && !popupHub.includes('class="home-popup"'));
-delete globalThis.__A28_TODAY_LEVEL__;
 a28Ui.todaySlot = null;
 
 const css = readFileSync(join(srcRoot, 'styles', 'home-admin.css'), 'utf8');

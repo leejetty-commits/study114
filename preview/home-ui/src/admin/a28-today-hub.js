@@ -3,7 +3,6 @@
  * 화면 HTML과 저장 바인딩은 등록된 기존 함수를 그대로 부른다.
  */
 import { canAccessAdminPath } from './admin-guard.js';
-import { getCurrentAdminLevel } from './admin-permissions.js';
 import { ADMIN_TODAY_CARDS, ADMIN_TODAY_HEADING, ADMIN_TODAY_NOTE } from './a28-copy.js';
 import { a28Ui } from './a28-screens-state.js';
 import { esc, renderDetailDrawer } from './a28-screens-shared.js';
@@ -24,7 +23,6 @@ let todayRenderers = null;
  *   reports: Function,
  *   popups: Function,
  *   writeHash: (next: string) => void,
- *   sealExposure: () => void,
  *   bindNav: (root: ParentNode) => void,
  *   bindDrawer: (root: ParentNode) => void,
  * }} */
@@ -60,10 +58,6 @@ export function peekHubExposureRoute() {
 
 /** @param {{ id: string, path?: string, paths?: string[] }} card */
 function canSeeTodayCard(card) {
-  const forced = globalThis.__A28_TODAY_LEVEL__;
-  if (forced === 'super_admin') return true;
-  if (forced === 'sub_master') return card.id !== 'popups';
-  if (!getCurrentAdminLevel()) return true;
   const paths = card.paths || (card.path ? [card.path] : []);
   return paths.every((path) => canAccessAdminPath(path));
 }
@@ -97,6 +91,7 @@ function clearSlotDom(box) {
 
 /** @param {HTMLElement} box */
 function rerenderMembers(box) {
+  if (a28Ui.todaySlot !== 'members') return;
   const expand = box.querySelector('[data-today-expand="members"]');
   if (!expand || !todayRenderers || !todayBinders) return;
   expand.innerHTML = todayRenderers.members();
@@ -105,18 +100,15 @@ function rerenderMembers(box) {
   todayBinders.bindNav(expand);
 }
 
-/**
- * @param {HTMLElement} box
- * @param {{ seal?: boolean }} [opts]
- */
-function rerenderExposure(box, opts = {}) {
+/** @param {HTMLElement} box */
+function rerenderExposure(box) {
+  if (a28Ui.todaySlot !== 'exposure') return;
   const expand = box.querySelector('[data-today-expand="exposure"]');
   if (!expand || !todayRenderers || !todayBinders) return;
-  if (opts.seal) todayBinders.sealExposure();
   expand.innerHTML = todayRenderers.exposure();
   todayBinders.exposure(
     expand,
-    () => rerenderExposure(box, { seal: true }),
+    () => rerenderExposure(box),
     (next) => applyExposureTarget(box, next),
   );
   todayBinders.bindDrawer(expand);
@@ -135,11 +127,12 @@ function applyExposureTarget(box, next) {
     userId: /^[1-9][0-9]*$/.test(userRaw) ? userRaw : '',
     hasTab: params.has('tab'),
   };
-  rerenderExposure(box, { seal: false });
+  rerenderExposure(box);
 }
 
 /** @param {HTMLElement} box @param {'tickets'|'reports'} paneName */
 function rerenderInquiryPane(box, paneName) {
+  if (a28Ui.todaySlot !== 'inquiry') return;
   const pane = box.querySelector(`[data-today-pane="${paneName}"]`);
   if (!pane || !todayRenderers || !todayBinders) return;
   pane.innerHTML = paneName === 'tickets' ? todayRenderers.tickets() : todayRenderers.reports();
@@ -152,6 +145,7 @@ function rerenderInquiryPane(box, paneName) {
 
 /** @param {HTMLElement} box */
 function rerenderPopups(box) {
+  if (a28Ui.todaySlot !== 'popups') return;
   const pane = box.querySelector('[data-today-pane="popups"]');
   if (!pane || !todayRenderers || !todayBinders) return;
   pane.innerHTML = todayRenderers.popups();
@@ -181,8 +175,8 @@ function popupDrawerHtml() {
 }
 
 /** @param {HTMLElement} box @param {ParentNode} host */
-function bindDrawerChrome(box, host) {
-  todayBinders.bindDrawer(host);
+function bindDrawerChrome(box, host, withDrawerBind = true) {
+  if (withDrawerBind) todayBinders.bindDrawer(host);
   host.querySelectorAll('[data-admin-drawer-close]').forEach((el) => {
     el.addEventListener('click', () => {
       a28Ui.todaySlot = null;
@@ -243,7 +237,7 @@ function openSlot(box, id) {
   if (id === 'members') rerenderMembers(box);
   else if (id === 'exposure') {
     a28Ui.todayExposure = { tab: 'study_room', userId: '', hasTab: true };
-    rerenderExposure(box, { seal: false });
+    rerenderExposure(box);
   } else if (id === 'inquiry') {
     a28Ui.todayInquiryTab = 'tickets';
     paintInquiry(box);
@@ -263,16 +257,12 @@ function mountRenderedSlot(box) {
     }
     if (id === 'members') {
       todayBinders.members(expand, () => rerenderMembers(box), todayBinders.writeHash);
-      todayBinders.bindDrawer(expand);
-      todayBinders.bindNav(expand);
     } else {
       todayBinders.exposure(
         expand,
-        () => rerenderExposure(box, { seal: true }),
+        () => rerenderExposure(box),
         (next) => applyExposureTarget(box, next),
       );
-      todayBinders.bindDrawer(expand);
-      todayBinders.bindNav(expand);
     }
     return;
   }
@@ -286,14 +276,12 @@ function mountRenderedSlot(box) {
     const reports = host.querySelector('[data-today-pane="reports"]');
     if (tickets) todayBinders.tickets(tickets, () => rerenderInquiryPane(box, 'tickets'), todayBinders.writeHash);
     if (reports) todayBinders.reports(reports, () => rerenderInquiryPane(box, 'reports'), todayBinders.writeHash);
-    if (tickets) todayBinders.bindNav(tickets);
-    if (reports) todayBinders.bindNav(reports);
     bindInquiryTabs(box);
-    bindDrawerChrome(box, host);
+    bindDrawerChrome(box, host, false);
   } else if (id === 'popups') {
     const pane = host.querySelector('[data-today-pane="popups"]');
     if (pane) todayBinders.popups(pane, () => rerenderPopups(box), todayBinders.writeHash);
-    bindDrawerChrome(box, host);
+    bindDrawerChrome(box, host, false);
   }
 }
 
