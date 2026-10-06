@@ -974,4 +974,26 @@
 .admin-shell .a28-today__expand:empty { display: none; }
 .admin-shell .a28-today__tabs { display: flex; gap: 0.4rem; margin: 0 0 0.75rem; }
 .admin-shell .a28-today__tabs button[aria-selected="true"] { font-weight: 700; }
+.admin-shell [data-today-drawer-host] .admin-drawer__panel {
+  top: if(media(max-width: 640px): 0; else: 50%);
+  right: if(media(max-width: 640px): 0; else: auto);
+  bottom: if(media(max-width: 640px): 0; else: auto);
+  left: if(media(max-width: 640px): 0; else: 50%);
+  width: if(media(max-width: 640px): 100%; else: min(64rem, calc(100vw - 2rem)));
+  max-height: if(media(max-width: 640px): none; else: 90vh);
+  height: if(media(max-width: 640px): 100%; else: auto);
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: if(media(max-width: 640px): 0; else: 0.75rem);
+  transform: if(media(max-width: 640px): none; else: translate(-50%, -50%));
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+}
+.admin-shell [data-today-drawer-host] .admin-drawer__head {
+  flex: 0 0 auto;
+}
+.admin-shell [data-today-drawer-host] .admin-drawer__body {
+  overflow: auto;
+  min-height: 0;
+  flex: 1 1 auto;
+}
 
