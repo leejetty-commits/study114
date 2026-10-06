@@ -330,6 +330,14 @@ export const A28_MENU = [
         help: '결제 중 이탈·실패 건을 확인합니다. (영카트 미완료주문)',
         screenId: 'A28-07b',
       },
+      {
+        id: 'settlement',
+        menuId: 'settlement',
+        label: '보고서',
+        path: '/admin/settlement',
+        help: '하루·한 주·한 달 운영 보고서를 보고 인쇄합니다.',
+        screenId: 'A28-162',
+      },
     ],
   },
   {
@@ -503,6 +511,7 @@ export const A28_MENU_ID_LABELS = {
   members: '회원관리',
   notices: '공지·안내 글',
   commerce: '마켓·결제',
+  settlement: '보고서',
   exposure: '홈·찾기 노출',
   notify: '알림·문자',
   addons: '부가서비스',

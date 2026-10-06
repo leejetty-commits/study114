@@ -1,0 +1,101 @@
+.admin-shell .settlement-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+}
+.admin-shell .settlement-tabs button[aria-selected="true"] {
+  font-weight: 700;
+}
+.admin-shell .settlement-date {
+  margin: 0 0 0.75rem;
+}
+.admin-shell .settlement-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.admin-shell .settlement-lines li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.6rem;
+  background: #fff;
+}
+.admin-shell .settlement-status {
+  margin: 0 0 0.75rem;
+}
+.admin-shell .settlement-print-sheet {
+  display: none;
+}
+.admin-shell .settlement-detail-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+}
+.admin-shell .settlement-pager {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+.admin-shell .settlement-link {
+  display: inline-block;
+  margin-top: 0.75rem;
+}
+html.is-settlement-printing .admin-sidebar {
+  display: none !important;
+}
+html.is-settlement-printing .admin-shell .settlement-no-print {
+  display: none !important;
+}
+html.is-settlement-printing .admin-shell [data-today-drawer-host] {
+  display: none !important;
+}
+html.is-settlement-printing .admin-shell .settlement-print-sheet {
+  display: block !important;
+}
+html.is-settlement-printing .admin-shell .settlement-print-sheet h1 {
+  font-size: 1.4rem;
+  margin: 0 0 1rem;
+}
+html.is-settlement-printing .admin-shell .settlement-print-sheet p {
+  margin: 0.35rem 0;
+}
+html.is-settlement-printing .preview-toolbar,
+html.is-settlement-printing .site-footer,
+html.is-settlement-printing .admin-topbar,
+html.is-settlement-printing .admin-shell .sup-panel-card__head,
+html.is-settlement-printing .home-body > :not(.home-main) {
+  display: none !important;
+}
+html.is-settlement-printing body {
+  background: #fff !important;
+}
+@media print {
+  html.is-settlement-printing .admin-sidebar {
+    display: none !important;
+  }
+  html.is-settlement-printing .admin-shell .settlement-no-print {
+    display: none !important;
+  }
+  html.is-settlement-printing .admin-shell [data-today-drawer-host] {
+    display: none !important;
+  }
+  html.is-settlement-printing .admin-shell .settlement-print-sheet {
+    display: block !important;
+  }
+  html.is-settlement-printing .preview-toolbar,
+  html.is-settlement-printing .site-footer,
+  html.is-settlement-printing .admin-topbar,
+  html.is-settlement-printing .admin-shell .sup-panel-card__head,
+  html.is-settlement-printing .home-body > :not(.home-main) {
+    display: none !important;
+  }
+  html.is-settlement-printing body {
+    background: #fff !important;
+  }
+}
