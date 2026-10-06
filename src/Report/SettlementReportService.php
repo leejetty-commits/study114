@@ -434,7 +434,7 @@ final class SettlementReportService
         }
         $place = implode(',', array_fill(0, count($userIds), '?'));
         $stmt = $this->repo->pdo()->prepare(
-            "SELECT user_id, role_type FROM user_roles WHERE status = 'active' AND user_id IN ($place)"
+            "SELECT user_id, role_type FROM user_roles WHERE user_id IN ($place)"
         );
         $stmt->execute($userIds);
         $map = [];

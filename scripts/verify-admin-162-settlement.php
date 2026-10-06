@@ -334,6 +334,7 @@ $pdo->prepare('UPDATE users SET deleted_at = ? WHERE id = ?')->execute(['2026-08
 $adminOnly = userId($pdo, 'opswd162@t162.test', 'withdrawn');
 addRole($pdo, $adminOnly, 'admin');
 $pdo->prepare('UPDATE users SET deleted_at = ? WHERE id = ?')->execute(['2026-08-22 15:00:00', $adminOnly]);
+$pdo->exec('UPDATE user_roles SET status = \'inactive\' WHERE user_id IN (' . $leftStudent . ',' . $leftBoth . ',' . $adminOnly . ')');
 
 $memos = [
     ['one', '역할 학생 · 공부방 0 · 과외쌤 0 · 학생 1 · 결제 0건 · 끝'],
