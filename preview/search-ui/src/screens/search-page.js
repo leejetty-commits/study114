@@ -86,6 +86,7 @@ function syncHomeSubscription() {
 }
 
 function visibleCurrentPlace(tab, role, regionLabel) {
+  if (previewState.searchExecuted && role !== 'guest') return regionLabel || '';
   if (role === 'guest') {
     const base = readGuestBaseline();
     return tab === 'room' ? base.room : base.tutor;

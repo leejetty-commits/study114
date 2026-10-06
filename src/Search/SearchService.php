@@ -470,23 +470,15 @@ final class SearchService
         ];
         $params = [];
 
-        // 지역 id·라벨·구 매칭 = 홍보 칸 study_room_regions.region_id (슬롯 1·2·3).
+        $this->rejectRegionLabel($filters, 'region_label');
+
+        // 지역 id·구 매칭 = 홍보 칸 study_room_regions.region_id (슬롯 1·2·3). 라벨 LIKE 는 받지 않는다.
         if ($regionId = $this->intFilter($filters, 'region_id')) {
             $where[] = 'EXISTS (
                 SELECT 1 FROM study_room_regions srr
                 WHERE srr.study_room_id = sr.id AND srr.region_id = :region_id
             )';
             $params['region_id'] = $regionId;
-        } elseif ($regionLabel = $this->stringFilter($filters, 'region_label')) {
-            $this->applyRegionLabelMatch(
-                $where,
-                $params,
-                $regionLabel,
-                'room',
-                'study_room_regions',
-                'study_room_id',
-                'sr.id'
-            );
         }
 
         // 시·군·구 전체. 선택 단위(is_selectable) id → 그 구 소속 동(RegionGuLink)의 홍보지역.
@@ -505,6 +497,16 @@ final class SearchService
                     WHERE srr_sg.study_room_id = sr.id AND srr_sg.region_id IN (' . implode(', ', $promo) . ')
                 )';
             }
+        }
+
+        if ($complexId = $this->intFilter($filters, 'complex_id')) {
+            $where[] = 'EXISTS (
+                SELECT 1 FROM study_room_regions srr_cx
+                WHERE srr_cx.study_room_id = sr.id
+                  AND srr_cx.region_basis_type = \'complex\'
+                  AND srr_cx.complex_id = :complex_id
+            )';
+            $params['complex_id'] = $complexId;
         }
 
         if ($subjectId = $this->intFilter($filters, 'subject_master_id')) {
@@ -647,12 +649,20 @@ final class SearchService
             $center = implode("\n", $centerParts);
 
             $detailStatus = (string) ($row['detail_completion_status'] ?? '');
-            $exposureTier = $this->resolveExposureTier(
-                'study_room',
-                (int) $row['id'],
-                $this->roomTierScope($filters),
-            );
-            $positionSku = $exposureTier === 'basic' ? null : $exposureTier;
+            $guOnly = $this->intFilter($filters, 'sigungu_region_id')
+                && !$this->intFilter($filters, 'region_id')
+                && !$this->intFilter($filters, 'complex_id');
+            if ($guOnly) {
+                $exposureTier = 'basic';
+                $positionSku = null;
+            } else {
+                $exposureTier = $this->resolveExposureTier(
+                    'study_room',
+                    (int) $row['id'],
+                    $this->roomTierScope($filters),
+                );
+                $positionSku = $exposureTier === 'basic' ? null : $exposureTier;
+            }
 
             $item = [
                 'id'                         => (int) $row['id'],
@@ -962,9 +972,28 @@ final class SearchService
         if ($studyroomRegionId !== null && $regionId !== null) {
             throw new InvalidArgumentException(self::MIXED_STUDENT_REGION_MESSAGE);
         }
-        if ($studyroomRegionId !== null) {
+        $studyroomComplexId = $this->intFilter($filters, 'preferred_studyroom_complex_id');
+        $lessonForRegion = $this->stringFilter($filters, 'preferred_lesson_type');
+        if ($studyroomComplexId !== null && $lessonForRegion === 'study_room') {
+            $where[] = 's.preferred_studyroom_complex_id = :preferred_studyroom_complex_id';
+            $params['preferred_studyroom_complex_id'] = $studyroomComplexId;
+        } elseif ($studyroomRegionId !== null) {
             $where[] = 's.preferred_studyroom_region_id = :preferred_studyroom_region_id';
             $params['preferred_studyroom_region_id'] = $studyroomRegionId;
+        } elseif ($regionId !== null && $lessonForRegion === 'study_room') {
+            $dongIds = RegionGuLink::dongIdsUnderGu($regionId);
+            if ($dongIds === []) {
+                $where[] = '1 = 0';
+            } else {
+                $holders = [];
+                foreach (array_values($dongIds) as $i => $dongId) {
+                    $key = 'sr_gu_dong_' . $i;
+                    $params[$key] = $dongId;
+                    $holders[] = ':' . $key;
+                }
+                $where[] = "s.preferred_lesson_type = 'study_room'";
+                $where[] = 's.preferred_studyroom_region_id IN (' . implode(', ', $holders) . ')';
+            }
         } elseif ($regionId !== null) {
             $where[] = $this->studentGuBaseWhere($regionId, RegionGuLink::dongIdsUnderGu($regionId), $params);
         }

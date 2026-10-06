@@ -341,6 +341,9 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
   }
 
   if (tab === 'room') {
+    if (options.step3Prime) {
+      return renderProviderTierResults('study_room', exposureItems, opts, regionLabel || homeTierTag, mode);
+    }
     return useHomeTierGrammar
       ? renderProviderTierResults('study_room', exposureItems, opts, homeTierTag, mode)
       : renderProviderFlatResults('study_room', exposureItems, opts, regionLabel, mode, {

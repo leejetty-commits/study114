@@ -66,10 +66,21 @@ export function settleStudentStudyroomRegionFilter(filters) {
   const asText = (v) => (Array.isArray(v) ? String(v[0] || '') : String(v || '')).trim();
   const isNumericId = (v) => /^\d+$/.test(asText(v));
   const lesson = asText(filters.preferred_lesson_type);
+  if (lesson === 'both') delete filters.preferred_lesson_type;
   if (lesson && lesson !== 'study_room') {
     delete filters.preferred_studyroom_region_id;
+    delete filters.preferred_studyroom_complex_id;
     return;
   }
+  if (isNumericId(filters.preferred_studyroom_complex_id) && lesson === 'study_room') {
+    filters.preferred_studyroom_complex_id = asText(filters.preferred_studyroom_complex_id);
+    delete filters.preferred_studyroom_region_id;
+    delete filters.preferred_region;
+    delete filters.preferred_region_id;
+    delete filters.preferred_region_label;
+    return;
+  }
+  delete filters.preferred_studyroom_complex_id;
   if (!isNumericId(filters.preferred_studyroom_region_id)) {
     delete filters.preferred_studyroom_region_id;
     return;
@@ -83,8 +94,28 @@ export function settleStudentStudyroomRegionFilter(filters) {
 }
 
 /**
- * 공부방은 숫자가 아니면 region_label로 올린다.
- * 과외쌤·학생 과외 희망은 선택 단위 숫자 id만 남긴다. 라벨과 문자 지역은 보내지 않는다.
+ * 공부방 찾기는 숫자 id 만 남긴다. 3단계 id 가 있으면 구 키를 빼고, 단지 id 가 있으면 동 id 도 뺀다.
+ * @param {Record<string, string | string[]>} filters
+ */
+export function settleRoomAddressFilters(filters) {
+  const asText = (v) => (Array.isArray(v) ? String(v[0] || '') : String(v || '')).trim();
+  const isNumericId = (v) => /^\d+$/.test(asText(v));
+  delete filters.region_label;
+  for (const key of ['region_id', 'complex_id', 'sigungu_region_id']) {
+    if (filters[key] == null || !isNumericId(filters[key])) delete filters[key];
+    else filters[key] = asText(filters[key]);
+  }
+  if (filters.complex_id) {
+    delete filters.region_id;
+    delete filters.sigungu_region_id;
+    delete filters.region_label;
+  } else if (filters.region_id) {
+    delete filters.sigungu_region_id;
+  }
+}
+
+/**
+ * 공부방·과외쌤·학생 희망은 숫자 id만 남긴다. 라벨은 보내지 않는다.
  * 학생 공부방 희망은 preferred_studyroom_region_id 숫자를 남긴다.
  * @param {Record<string, string | string[]>} filters
  * @param {import('./state.js').SearchTab} tab
@@ -93,10 +124,7 @@ function promoteRegionLabelFilters(filters, tab) {
   const asText = (v) => (Array.isArray(v) ? String(v[0] || '') : String(v || '')).trim();
   const isNumericId = (v) => /^\d+$/.test(asText(v));
 
-  if (tab === 'room' && filters.region_id != null && !isNumericId(filters.region_id)) {
-    filters.region_label = asText(filters.region_id);
-    delete filters.region_id;
-  }
+  if (tab === 'room') settleRoomAddressFilters(filters);
   if (tab === 'tutor') {
     delete filters.tutor_region_label;
     if (filters.tutor_region_id != null && !isNumericId(filters.tutor_region_id)) {

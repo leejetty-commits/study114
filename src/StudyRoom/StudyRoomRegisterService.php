@@ -19,7 +19,6 @@ use PDOException;
 use RuntimeException;
 
 use Study114\Database\Connection;
-use Study114\Region\AddressRegionMatch;
 use Study114\Region\ComplexEnsure;
 use Study114\Region\RegionEnsure;
 use Study114\Region\SidoRegionEnsure;
@@ -555,16 +554,6 @@ final class StudyRoomRegisterService
             if ($stmt->fetchColumn()) {
                 return $regionId;
             }
-        }
-
-        $matched = AddressRegionMatch::match(
-            $pdo,
-            (string) ($input['address_sido'] ?? ''),
-            (string) ($input['address_sigungu'] ?? ''),
-            (string) ($input['address_bname'] ?? $input['address_hname'] ?? '')
-        );
-        if ($matched !== null) {
-            return $matched;
         }
 
         return (int) RegionEnsure::fromKakao($pdo, $input)['id'];
@@ -1114,23 +1103,15 @@ final class StudyRoomRegisterService
                     && trim((string) ($slot['complex_address'] ?? $slot['address_text'] ?? '')) === '') {
                     continue;
                 }
-                $matched = AddressRegionMatch::match($pdo, $sido, $sigungu, $bname);
-                if ($matched !== null) {
-                    $regionId = $matched;
-                } else {
-                    try {
-                        $regionId = (int) RegionEnsure::fromKakao($pdo, $slot)['id'];
-                    } catch (InvalidArgumentException $e) {
-                        $regionId = 0;
-                    }
+                try {
+                    $regionId = (int) RegionEnsure::fromKakao($pdo, $slot)['id'];
+                } catch (InvalidArgumentException $e) {
+                    $regionId = 0;
                 }
             }
             if ($slotBasis === 'complex' && $regionId > 0 && ($complexId === null || $complexId <= 0)) {
                 $cname = trim((string) ($slot['complex_name'] ?? ''));
                 $caddr = trim((string) ($slot['complex_address'] ?? $slot['address_text'] ?? ''));
-                if ($cname === '') {
-                    $cname = $caddr;
-                }
                 if ($cname !== '') {
                     $complexId = ComplexEnsure::ensure($pdo, $regionId, $cname, $caddr !== '' ? $caddr : null);
                 }

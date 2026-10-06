@@ -27,7 +27,9 @@ import {
 import { isProviderSelfPreviewMode } from './search-role-access.js';
 import { renderSearchMapBlock, bindSearchMapPinLinks } from './search-map.js';
 import { renderSearchTierResults } from './search-tier-render.js';
-import { collectFiltersFromForm, searchApi, settleStudentStudyroomRegionFilter } from './search-api.js';
+import { collectFiltersFromForm, searchApi, settleRoomAddressFilters, settleStudentStudyroomRegionFilter } from './search-api.js';
+import { renderListPagination } from '@home-ui/list-pagination.js';
+import { complexNameFromKakao } from '../../shared/complex-name-from-kakao.js';
 import { mapSearchResultsToExposure } from './search-exposure-mapper.js';
 import { renderBrowseList, renderGuestPaginatedListBlock } from '@home-ui/exposure-render.js';
 import { SECTION_HEADINGS, renderSectionTitleBar } from '@home-ui/section-headings.js';
@@ -424,7 +426,7 @@ export function bootStudentFindFeed(tab, state, rerender) {
  * @param {FindSurfaceState} state
  */
 function canonicalFromKakao(result, tab, state) {
-  const apt = result.apartment && result.buildingName ? result.buildingName : '';
+  const apt = complexNameFromKakao(result);
   const dong = result.bname || result.hname || '';
   const parent = state.role === 'parent';
   const city = parent ? expandKakaoSido(result.sido || '') : result.sido || '';
@@ -487,7 +489,7 @@ function discardStaleGuestLocation() {
   }
 }
 
-const GU_PICK_HINT = '구(시·군)까지 선택하면 그 지역만 검색합니다. 선택이 끝나기 전에는 지역 조건 없이 검색합니다.';
+const GU_PICK_HINT = '시·군·구까지 선택해 주세요';
 const DONG_RETRY_HINT = '동을 다시 선택해 주세요';
 const STUDYROOM_ADDRESS_HINT = '주소찾기로 행정동·단지를 선택합니다. 자유입력만으로는 검색하지 않습니다.';
 
@@ -565,6 +567,10 @@ function selectableFindRegionId(value) {
  */
 function dropLegacyLessonRegionFilters(tab, filters) {
   const next = { ...filters };
+  if (tab === 'room') {
+    delete next.region_label;
+    settleRoomAddressFilters(next);
+  }
   if (tab === 'tutor') {
     delete next.tutor_region_label;
     const id = selectableFindRegionId(next.tutor_region_id);
@@ -572,6 +578,7 @@ function dropLegacyLessonRegionFilters(tab, filters) {
     else delete next.tutor_region_id;
   }
   if (tab === 'student') {
+    if (next.preferred_lesson_type === 'both') delete next.preferred_lesson_type;
     delete next.preferred_region_label;
     const id = selectableFindRegionId(next.preferred_region_id || next.preferred_region);
     delete next.preferred_region;
@@ -611,13 +618,17 @@ function clearStudyroomDongId(state) {
  * @param {Parameters<typeof ensureRegionFromKakao>[0]} result
  * @param {() => void} rerender
  */
+let studyroomDongSeq = 0;
+
 async function confirmStudyroomDong(state, result, rerender) {
+  const seq = ++studyroomDongSeq;
   state.studyroomDongPending = true;
   state.studyroomDongUnconfirmed = false;
   clearStudyroomDongId(state);
   rerender();
   try {
     const region = await ensureRegionFromKakao(result);
+    if (seq !== studyroomDongSeq) return;
     const id = numericRegionId(region?.id);
     if (!id) throw new Error(DONG_RETRY_HINT);
     state.studyroomDongRegionId = id;
@@ -625,9 +636,11 @@ async function confirmStudyroomDong(state, result, rerender) {
     state.lastSearchFilters.preferred_studyroom_region_id = id;
     state.studyroomDongUnconfirmed = false;
   } catch {
+    if (seq !== studyroomDongSeq) return;
     clearStudyroomDongId(state);
     state.studyroomDongUnconfirmed = true;
   } finally {
+    if (seq !== studyroomDongSeq) return;
     state.studyroomDongPending = false;
     rerender();
   }
@@ -672,6 +685,9 @@ function decodeFiltersFromUrl(raw) {
     if (!raw) return null;
     const json = decodeURIComponent(escape(atob(raw)));
     const parsed = JSON.parse(json);
+    if (parsed && typeof parsed === 'object' && parsed.preferred_lesson_type === 'both') {
+      delete parsed.preferred_lesson_type;
+    }
     return parsed && typeof parsed === 'object' ? parsed : null;
   } catch {
     return null;
@@ -936,14 +952,14 @@ function restoreFindSearch(state, tab, q, canonical, axis) {
   } else if (wantsSearch) {
     // searched=1 이고 f 없음: 공부방은 표시 라벨, 과외·학생은 선택 단위 id만.
     filters = storedFilters && Object.keys(storedFilters).length ? { ...storedFilters } : {};
-    const region = canonical.displayLabel;
     const studentScope = state.role === 'parent' ? studentFeedFilters(tab, state) : null;
     if (studentScope) {
       for (const key of STUDENT_REGION_FILTER_KEYS) delete filters[key];
       Object.assign(filters, studentScope);
     } else if (tab === 'room') {
+      delete filters.region_label;
       delete filters.region_id;
-      filters.region_label = region;
+      settleRoomAddressFilters(filters);
     } else if (tab === 'tutor') {
       delete filters.tutor_region_label;
       const id = selectableFindRegionId(canonical.regionId);
@@ -1319,6 +1335,26 @@ function regionLabelFromFilters(tab, filters, state, role) {
   const viewer = role || state.role || 'guest';
   if (viewer === 'guest') return applyGuestPlace(tab, state);
   if (viewer === 'parent') return studentLabelFromFilters(tab, filters, state);
+  if (state.searchExecuted) {
+    const bag = state.step3ByTab?.[tab];
+    const guId =
+      tab === 'tutor'
+        ? filters.tutor_region_id || state.findGuByTab?.tutor
+        : tab === 'room'
+          ? filters.sigungu_region_id || state.findGuByTab?.room
+          : filters.preferred_region_id || state.findGuByTab?.student;
+    const guLabel = activityLabelFromRegionId(guId, findCityUnits);
+    if (bag?.display && (numericRegionId(bag.dongId) || numericRegionId(bag.complexId) || bag.unconfirmed)) {
+      return canonicalRegionLabel(bag.display, tab, state);
+    }
+    if (guLabel) {
+      if (tab === 'tutor' || (tab === 'student' && resolveStudentSearchHope(state) !== 'study_room')) {
+        return applyGuDisplayLabel(state, String(guId), guLabel);
+      }
+      return canonicalRegionLabel(guLabel, tab, state);
+    }
+    if (bag?.display) return canonicalRegionLabel(bag.display, tab, state);
+  }
   let raw = '';
   if (tab === 'tutor') {
     const guLabel = activityLabelFromRegionId(filters.tutor_region_id, findCityUnits);
@@ -1328,9 +1364,11 @@ function regionLabelFromFilters(tab, filters, state, role) {
       raw = viewer === 'tutor' ? tutorSavedSlotLabel(state) : '';
     }
   } else if (tab === 'room') {
-    raw =
-      String(filters.region_label || filters.region_id || '').trim() ||
-      (state.role === 'study_room' ? peekStudyRoomPromo1() : '');
+    const guLabel = activityLabelFromRegionId(
+      filters.sigungu_region_id || state.findGuByTab?.room,
+      findCityUnits,
+    );
+    raw = state.step3ByTab?.room?.display || guLabel || '';
   } else {
     const guId = filters.preferred_region_id || filters.preferred_region;
     const guLabel = activityLabelFromRegionId(guId, findCityUnits);
@@ -1648,7 +1686,7 @@ function resolveStudentSearchHope(state) {
 }
 
 /**
- * 희망 유형에 따른 지역 입력축 — 공부방=동/단지, 과외쌤(·both)=시
+ * 희망 유형에 따른 지역 입력축 — 공부방=동/단지, 과외쌤=시·군·구
  * @param {FindSurfaceState} state
  * @param {string} [lessonTypeValue]
  */
@@ -1658,41 +1696,162 @@ function resolveStudentRegionInput(state, lessonTypeValue) {
   return 'city';
 }
 
+function blankStep3() {
+  return { basis: 'dong', display: '', dongId: '', complexId: '', unconfirmed: false, seq: 0 };
+}
+
+/** @param {FindSurfaceState} state @param {import('./state.js').SearchTab} tab */
+function step3Bag(state, tab) {
+  if (!state.step3ByTab) state.step3ByTab = {};
+  if (!state.step3ByTab[tab]) state.step3ByTab[tab] = blankStep3();
+  return state.step3ByTab[tab];
+}
+
+/** @param {FindSurfaceState} state @param {import('./state.js').SearchTab} tab */
+function rememberedGuId(state, tab) {
+  if (!state.findGuByTab) state.findGuByTab = {};
+  return selectableFindRegionId(state.findGuByTab[tab]);
+}
+
+/** @param {FindSurfaceState} state @param {import('./state.js').SearchTab} tab @param {string} id */
+function rememberGuId(state, tab, id) {
+  if (!state.findGuByTab) state.findGuByTab = {};
+  state.findGuByTab[tab] = selectableFindRegionId(id);
+}
+
+/**
+ * 필터 칸은 저장 홍보·과외지역으로 채우지 않는다.
+ * 이번 화면에서 고른 구, 또는 검색을 실행한 뒤의 구 id 만 보여 준다.
+ * @param {FindSurfaceState} state
+ * @param {import('./state.js').SearchTab} tab
+ * @param {string} filterKey
+ */
+function cascadePick(state, tab, filterKey) {
+  const remembered = rememberedGuId(state, tab);
+  if (!state.searchExecuted) {
+    return remembered ? { regionId: remembered, stale: false } : { regionId: '', stale: false };
+  }
+  const fromFilter = selectableFindRegionId(state.lastSearchFilters?.[filterKey]);
+  const id = fromFilter || remembered;
+  return id ? { regionId: id, stale: false } : { regionId: '', stale: false };
+}
+
 /** @param {FindSurfaceState} state */
 function cascadePickForTutor(state) {
-  const fromFilter = String(state.lastSearchFilters?.tutor_region_id || '').trim();
-  if (fromFilter) {
-    const id = selectableFindRegionId(fromFilter);
-    return id ? { regionId: id, stale: false } : { regionId: fromFilter, stale: findCityUnits.length > 0 };
-  }
-  if (state.role === 'parent') return { regionId: studentCascadeRegionId('tutor', state), stale: false };
-  const slot = readTutorHomeRegions()?.[resolveTutorRegionIndex(state)];
-  const slotId = selectableFindRegionId(slot?.regionId);
-  if (slotId) return { regionId: slotId, stale: false };
-  const stored = resolveFindDefaultRegion('tutor', '');
-  const storedId = selectableFindRegionId(stored);
-  if (storedId) return { regionId: storedId, stale: false };
-  if (stored || (slot?.regionId && !slotId) || (slot?.label && !slotId)) {
-    return { regionId: stored || String(slot?.regionId || 'stale'), stale: findCityUnits.length > 0 };
-  }
-  return { regionId: '', stale: false };
+  return cascadePick(state, 'tutor', 'tutor_region_id');
 }
 
 /** @param {FindSurfaceState} state */
 function cascadePickForStudent(state) {
-  const fromFilter = String(
-    state.lastSearchFilters?.preferred_region_id || state.lastSearchFilters?.preferred_region || '',
-  ).trim();
-  if (/^\d+$/.test(fromFilter)) {
-    const id = selectableFindRegionId(fromFilter);
-    return id ? { regionId: id, stale: false } : { regionId: fromFilter, stale: findCityUnits.length > 0 };
+  return cascadePick(state, 'student', 'preferred_region_id');
+}
+
+/** @param {FindSurfaceState} state */
+function cascadePickForRoom(state) {
+  return cascadePick(state, 'room', 'sigungu_region_id');
+}
+
+/**
+ * @param {FindSurfaceState} state
+ * @param {import('./state.js').SearchTab} tab
+ * @param {{ compact?: boolean, label: string, dbHint: string, enabled: boolean, basisName: string, dongHiddenName: string, complexHiddenName: string }} opts
+ */
+function renderStep3Field(state, tab, opts) {
+  const bag = step3Bag(state, tab);
+  const compact = opts.compact === true;
+  if (!opts.enabled) {
+    return `
+      <label class="search-field${compact ? ' search-field--compact' : ''}" data-find-step3="disabled">
+        <span class="search-field__label">${esc(opts.label)} ${opts.dbHint}</span>
+        <input type="text" class="search-field__control" value="" placeholder="시·군·구까지입니다" disabled />
+      </label>`;
   }
-  if (state.role === 'parent') return { regionId: studentCascadeRegionId('student', state), stale: false };
-  const stored = resolveFindDefaultRegion('tutor', '');
-  const storedId = selectableFindRegionId(stored);
-  if (storedId) return { regionId: storedId, stale: false };
-  if (stored || fromFilter) return { regionId: stored || fromFilter, stale: findCityUnits.length > 0 };
-  return { regionId: '', stale: false };
+  const basis = bag.basis === 'complex' ? 'complex' : 'dong';
+  const dongId = bag.unconfirmed || basis === 'complex' ? '' : numericRegionId(bag.dongId);
+  const complexId = bag.unconfirmed || basis !== 'complex' ? '' : numericRegionId(bag.complexId);
+  const hint = bag.unconfirmed
+    ? '등록된 아파트단지가 없습니다. 주소찾기로 다시 선택해 주세요.'
+    : '행정동 또는 아파트단지를 주소찾기로 선택합니다.';
+  return `
+    <div class="search-field${compact ? ' search-field--compact' : ''}" data-find-step3="open">
+      <span class="search-field__label">${esc(opts.label)} ${opts.dbHint}</span>
+      <div class="chip-group">
+        <label class="chip">
+          <input type="radio" name="${esc(opts.basisName)}" value="dong" class="chip__input" data-find-basis ${basis === 'dong' ? 'checked' : ''} />
+          <span class="chip__label">행정동</span>
+        </label>
+        <label class="chip">
+          <input type="radio" name="${esc(opts.basisName)}" value="complex" class="chip__input" data-find-basis ${basis === 'complex' ? 'checked' : ''} />
+          <span class="chip__label">아파트단지</span>
+        </label>
+      </div>
+      <div class="search-field__address-row">
+        <input type="text" class="search-field__control" value="${esc(bag.display || '')}" placeholder="주소찾기로 선택" readonly data-find-step3-display />
+        <button type="button" class="btn btn--secondary btn--sm" data-action="find-step3-address">주소찾기</button>
+      </div>
+      <input type="hidden" name="${esc(opts.dongHiddenName)}" value="${esc(dongId)}" />
+      <input type="hidden" name="${esc(opts.complexHiddenName)}" value="${esc(complexId)}" />
+      <span class="search-field__hint">${esc(hint)}</span>
+    </div>`;
+}
+
+/**
+ * @param {FindSurfaceState} state
+ * @param {import('./state.js').SearchTab} tab
+ * @param {Parameters<typeof ensureRegionFromKakao>[0]} result
+ */
+async function applyStep3FromKakao(state, tab, result) {
+  const bag = step3Bag(state, tab);
+  const seq = (bag.seq = (Number(bag.seq) || 0) + 1);
+  const basis = bag.basis === 'complex' ? 'complex' : 'dong';
+  bag.unconfirmed = false;
+  try {
+    const region = await ensureRegionFromKakao(result);
+    if (bag.seq !== seq) return;
+    const dongId = numericRegionId(region?.id);
+    const place = complexNameFromKakao(result);
+    if (basis === 'complex') {
+      bag.dongId = '';
+      if (!dongId || !place) {
+        bag.complexId = '';
+        bag.display = '';
+        bag.unconfirmed = true;
+        return;
+      }
+      const params = new URLSearchParams({
+        action: 'complex-by-name',
+        region_id: dongId,
+        name: place,
+      });
+      const res = await fetch(`/api/auth/regions.php?${params.toString()}`, {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        credentials: 'omit',
+      });
+      const body = await res.json().catch(() => ({}));
+      if (bag.seq !== seq) return;
+      const complexId = numericRegionId(body?.complex?.id);
+      bag.complexId = complexId;
+      bag.display = place;
+      bag.unconfirmed = !complexId;
+      return;
+    }
+    bag.complexId = '';
+    if (!dongId) {
+      bag.dongId = '';
+      bag.unconfirmed = true;
+      return;
+    }
+    bag.dongId = dongId;
+    const dong = result?.bname || result?.hname || region?.dong_name || '';
+    bag.display = [result?.sigungu || region?.sigungu_name || '', dong].filter(Boolean).join(' ');
+    bag.unconfirmed = false;
+  } catch {
+    if (bag.seq !== seq) return;
+    bag.dongId = '';
+    bag.complexId = '';
+    bag.unconfirmed = true;
+  }
 }
 
 /** 학생 시·군·구 선택 기본값: 지금 위치(저장 지역·직접 고른 구)의 선택 단위 id. */
@@ -1764,11 +1923,12 @@ function renderField(field, state, opts = {}) {
           `<option value="${esc(value)}" ${selected === value ? 'selected' : ''}>${esc(label)}</option>`,
       )
       .join('');
+    const emptyOpt = field.key === 'preferred_lesson_type' ? '' : '<option value="">선택</option>';
     return `
       <label class="search-field${compact ? ' search-field--compact' : ''}">
         <span class="search-field__label">${esc(field.label)} ${dbHint}</span>
         <select class="search-field__control" name="${esc(name)}" ${field.key === 'lesson_format' ? 'data-lesson-format-select' : ''}${field.key === 'preferred_lesson_type' ? ' data-preferred-lesson-type' : ''}>
-          <option value="">선택</option>${selectOpts}
+          ${emptyOpt}${selectOpts}
         </select>
       </label>`;
   }
@@ -1847,77 +2007,70 @@ function renderField(field, state, opts = {}) {
     text: '입력',
   };
 
-  const defaultRegion =
-    field.key === 'preferred_region'
-      ? String(
-          state.lastSearchFilters?.preferred_region_label ||
-            (role === 'parent' ? '' : state.lastSearchFilters?.preferred_region) ||
-            resolveActiveRegionLabel('student', state, role) ||
-            '',
-        )
-      : field.key === 'region_id'
-        ? String(
-            state.lastSearchFilters?.region_label ||
-              (role === 'parent' ? '' : state.lastSearchFilters?.region_id) ||
-              resolveActiveRegionLabel('room', state, role) ||
-              '',
-          )
-        : field.key === 'tutor_region_id'
-          ? String(
-              state.lastSearchFilters?.tutor_region_label ||
-                state.lastSearchFilters?.tutor_region_id ||
-                resolveActiveRegionLabel('tutor', state, role) ||
-                '',
-            )
-          : '';
+  const defaultRegion = '';
 
-  if (field.key === 'preferred_region' && inputKind === 'city') {
-    return renderGuCascadeField(state, {
-      compact,
-      label: field.label,
-      dbHint,
-      hiddenName: 'f_preferred_region_id',
-      idPrefix: 'find_student_region',
-      pick: cascadePickForStudent(state),
-    });
-  }
-
-  if (field.key === 'preferred_region' && inputKind === 'region') {
-    const studyroomDongId = renderedStudyroomDongId(state);
-    const regionHint = state.studyroomDongUnconfirmed ? DONG_RETRY_HINT : STUDYROOM_ADDRESS_HINT;
+  if (field.key === 'preferred_region') {
+    const step3Open = resolveStudentSearchHope(state) === 'study_room';
     return `
-    <label class="search-field${compact ? ' search-field--compact' : ''}" data-student-region-field>
-      <span class="search-field__label">${esc(field.label)} ${dbHint}</span>
-      <div class="search-field__address-row">
-        <input type="text" class="search-field__control" name="${esc(name)}" value="${esc(defaultRegion)}" placeholder="${esc(placeholders.region)}" data-region-axis="region" readonly />
-        <button type="button" class="btn btn--secondary btn--sm" data-action="find-region-address" data-region-field="preferred_region">주소찾기</button>
-      </div>
-      <input type="hidden" name="f_preferred_studyroom_region_id" value="${esc(studyroomDongId)}" />
-      <span class="search-field__hint">${esc(regionHint)}</span>
-    </label>`;
+      ${renderGuCascadeField(state, {
+        compact,
+        label: '시·군·구',
+        dbHint,
+        hiddenName: 'f_preferred_region_id',
+        idPrefix: 'find_student_region',
+        pick: cascadePickForStudent(state),
+      })}
+      ${renderStep3Field(state, 'student', {
+        compact,
+        label: '동·단지',
+        dbHint: '',
+        enabled: step3Open,
+        basisName: 'find_student_basis',
+        dongHiddenName: 'f_preferred_studyroom_region_id',
+        complexHiddenName: 'f_preferred_studyroom_complex_id',
+      })}`;
   }
 
   if (field.key === 'tutor_region_id') {
-    return renderGuCascadeField(state, {
-      compact,
-      label: field.label,
-      dbHint,
-      hiddenName: 'f_tutor_region_id',
-      idPrefix: 'find_tutor_region',
-      pick: cascadePickForTutor(state),
-    });
+    return `
+      ${renderGuCascadeField(state, {
+        compact,
+        label: field.label,
+        dbHint,
+        hiddenName: 'f_tutor_region_id',
+        idPrefix: 'find_tutor_region',
+        pick: cascadePickForTutor(state),
+      })}
+      ${renderStep3Field(state, 'tutor', {
+        compact,
+        label: '동·단지',
+        dbHint: '',
+        enabled: false,
+        basisName: 'find_tutor_basis',
+        dongHiddenName: 'f_tutor_step3_region_id',
+        complexHiddenName: 'f_tutor_step3_complex_id',
+      })}`;
   }
 
   if (field.key === 'region_id') {
     return `
-    <label class="search-field${compact ? ' search-field--compact' : ''}" data-find-region-field="${esc(field.key)}">
-      <span class="search-field__label">${esc(field.label)} ${dbHint}</span>
-      <div class="search-field__address-row">
-        <input type="text" class="search-field__control" name="${esc(name)}" value="${esc(defaultRegion)}" placeholder="${esc(placeholders.region)}" data-region-axis="region" readonly />
-        <button type="button" class="btn btn--secondary btn--sm" data-action="find-region-address" data-region-field="${esc(field.key)}">주소찾기</button>
-      </div>
-      <span class="search-field__hint">주소찾기로 지역을 선택합니다.</span>
-    </label>`;
+      ${renderGuCascadeField(state, {
+        compact,
+        label: '시·군·구',
+        dbHint,
+        hiddenName: 'f_sigungu_region_id',
+        idPrefix: 'find_room_region',
+        pick: cascadePickForRoom(state),
+      })}
+      ${renderStep3Field(state, 'room', {
+        compact,
+        label: '동·단지',
+        dbHint: '',
+        enabled: true,
+        basisName: 'find_room_basis',
+        dongHiddenName: 'f_region_id',
+        complexHiddenName: 'f_complex_id',
+      })}`;
   }
 
   return `
@@ -2221,10 +2374,10 @@ export function renderFindResultSection(tab, state, role, options = {}) {
   state.tutorStudentSnap = role === 'tutor' && tab === 'student' && surfaceType === 'home';
   const activeItems = refreshActiveResultItems(tab, state, role);
   let regionLabel = state.activeRegionLabel || resolveActiveRegionLabel(tab, state, role);
-  if (tab === 'student' && role === 'study_room') {
+  if (!state.searchExecuted && tab === 'student' && role === 'study_room') {
     regionLabel = studentCurrentPlace(regionLabel);
   }
-  if (role === 'tutor' && tab === 'student' && surfaceType === 'search') {
+  if (!state.searchExecuted && role === 'tutor' && tab === 'student' && surfaceType === 'search') {
     const saved = tutorRepresentativeRegionLabel();
     if (saved) regionLabel = saved;
   }
@@ -2346,11 +2499,24 @@ export function renderFindResultSection(tab, state, role, options = {}) {
       </section>`;
   }
 
+  const step3Prime =
+    tab === 'room' &&
+    Boolean(
+      numericRegionId(state.lastSearchFilters?.region_id) ||
+        numericRegionId(state.lastSearchFilters?.complex_id),
+    );
   const flatHtml = renderSearchTierResults(tab, activeItems, tierCtx, {
     mode: 'search',
     regionLabel,
     surfaceType,
+    step3Prime,
   });
+  const pageHtml = `<div data-find-server-page>${renderListPagination(
+    'find-server',
+    Number(state.searchTotal) || 0,
+    Number(state.searchPage) || 1,
+    20,
+  )}</div>`;
 
   /* 검색 실행 후(결과 국면)에만 학생 수요 — 홈 browse 티어와 분리 */
   const demandHtml =
@@ -2366,24 +2532,40 @@ export function renderFindResultSection(tab, state, role, options = {}) {
     <section class="search-results search-results--executed" ${debugAttrs} data-result-mode="${esc(resultMode)}" data-surface-type="${esc(surfaceType)}">
       <h2 class="search-section__title">검색 결과 <span class="search-results__count">${state.searchTotal}건</span></h2>
       ${flatHtml}
+      ${pageHtml}
       ${demandHtml}
     </section>`;
 }
 
-/** 시·도만, 시만처럼 구(시·군) 선택이 끝나지 않았으면 true. 아무것도 고르지 않았으면 false. */
+/** 숨은 시군구 id가 숫자가 아니면 검색을 막는다. 빈 선택·시·도만 포함. 세종은 숨은 id가 숫자면 통과. */
 function guPickIncomplete(form, tab, state) {
-  if (tab === 'room') return false;
-  if (tab === 'student' && state.studentHopeType === 'study_room') return false;
-  const hiddenName = tab === 'tutor' ? 'f_tutor_region_id' : 'f_preferred_region_id';
+  void state;
+  const hiddenName = tab === 'room' ? 'f_sigungu_region_id' : tab === 'tutor' ? 'f_tutor_region_id' : 'f_preferred_region_id';
   const hidden = form.querySelector(`[name="${hiddenName}"]`);
   if (hidden instanceof HTMLInputElement && /^\d+$/.test(hidden.value.trim())) return false;
-  const prefix = tab === 'tutor' ? 'find_tutor_region' : 'find_student_region';
-  return ['sido', 'city', 'gu'].some((step) => {
-    const sel = form.querySelector(`#${prefix}_${step}`);
-    if (!(sel instanceof HTMLSelectElement) || !sel.value) return false;
-    const wrap = sel.closest('[data-city-wrap], [data-gu-wrap]');
-    return !(wrap instanceof HTMLElement && wrap.hidden);
-  });
+  return true;
+}
+
+function numericFilterId(value) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return numericRegionId(raw);
+}
+
+/** @param {import('./state.js').SearchTab} tab @param {Record<string, string|string[]>} filters */
+function findScopeMissing(tab, filters) {
+  if (tab === 'room') {
+    return !(
+      numericFilterId(filters.sigungu_region_id) ||
+      numericFilterId(filters.region_id) ||
+      numericFilterId(filters.complex_id)
+    );
+  }
+  if (tab === 'tutor') return !numericFilterId(filters.tutor_region_id);
+  return !(
+    numericFilterId(filters.preferred_region_id) ||
+    numericFilterId(filters.preferred_studyroom_region_id) ||
+    numericFilterId(filters.preferred_studyroom_complex_id)
+  );
 }
 
 /**
@@ -2394,9 +2576,11 @@ function guPickIncomplete(form, tab, state) {
  * @param {() => void} rerender
  */
 export async function runFindSearch(tab, form, state, role, rerender) {
+  state.searchPage = 1;
   if (guPickIncomplete(form, tab, state)) {
     const hint = form.querySelector('[data-find-gu-field] .search-field__hint');
     if (hint) hint.textContent = GU_PICK_HINT;
+    state.searchTotal = 0;
     return;
   }
   if (tab === 'student' && resolveStudentSearchHope(state) === 'study_room' && (state.studyroomDongPending || state.studyroomDongUnconfirmed)) {
@@ -2414,15 +2598,6 @@ export async function runFindSearch(tab, form, state, role, rerender) {
     return;
   }
   const filters = collectFiltersFromForm(form, tab);
-  if (tab === 'room' && role === 'parent' && state.canonicalLocation?.source === 'saved') {
-    // 저장 지역 그대로 검색: 라벨 매칭 대신 저장 id(시·군·구 전체 또는 동)로 건다.
-    const scope = studentFeedFilters('room', state);
-    if (scope) {
-      delete filters.region_label;
-      delete filters.region_id;
-      Object.assign(filters, scope);
-    }
-  }
   if (tab === 'student' && state.studentHopeType) {
     filters.preferred_lesson_type = state.studentHopeType;
   }
@@ -2452,6 +2627,20 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
     filters.preferred_lesson_type = state.studentHopeType;
   }
   if (tab === 'student') settleStudentStudyroomRegionFilter(filters);
+  if (tab === 'room') settleRoomAddressFilters(filters);
+  if (filters.preferred_lesson_type === 'both') delete filters.preferred_lesson_type;
+  if (findScopeMissing(tab, filters)) {
+    state.searchExecuted = true;
+    state.searchLoading = false;
+    state.searchError = GU_PICK_HINT;
+    state.searchTotal = 0;
+    state.searchExposureItems = [];
+    if (state.searchRows) state.searchRows = [];
+    if (state.searchItems) state.searchItems = [];
+    state._needsSearchRestore = false;
+    rerender();
+    return;
+  }
   state.searchExecuted = true;
   state.searchLoading = true;
   state.searchError = null;
@@ -2488,7 +2677,11 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
     const kind = tab === 'room' ? 'study_room' : tab === 'tutor' ? 'tutor' : 'student';
     const sort = readListSortFromHash(kind, { mode: 'search' });
     logLocationDebug('list-fetch', { tab, mode: 'search-api', filters, region: state.activeRegionLabel });
-    const result = await searchApi(tab, filters, { sort });
+    const result = await searchApi(tab, filters, {
+      sort,
+      page: Number(state.searchPage) || 1,
+      limit: 20,
+    });
     if (state.searchRows) state.searchRows = result.rows || [];
     if (state.searchItems) state.searchItems = result.items || [];
     state.searchExposureItems = filterToProviderSelf(
@@ -2497,7 +2690,7 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
       mapSearchResultsToExposure(tab, result.items || []),
       resolveHomeSelf(state),
     );
-    state.searchTotal = state.searchExposureItems.length;
+    state.searchTotal = Number(result.total) || 0;
     refreshActiveResultItems(tab, state, role);
   } catch (err) {
     if (state.searchRows) state.searchRows = [];
@@ -2530,6 +2723,7 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
       const hidden = el.querySelector('[data-field="region_id"]');
       const id = hidden instanceof HTMLInputElement ? selectableFindRegionId(hidden.value) : '';
       const tab = ctx.getTab();
+      rememberGuId(state(), tab, id);
       const label = id ? activityLabelFromRegionId(id, findCityUnits) : '';
       if (!state().lastSearchFilters) state().lastSearchFilters = {};
       if (tab === 'tutor') {
@@ -2562,6 +2756,9 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
     const form = getForm();
     const tab = ctx.getTab();
     resetFindSurface(state(), form instanceof HTMLFormElement ? form : undefined);
+    if (state().step3ByTab) state().step3ByTab[tab] = blankStep3();
+    if (state().findGuByTab) state().findGuByTab[tab] = '';
+    state().searchPage = 1;
     if (ctx.role === 'study_room' && (tab === 'room' || tab === 'student')) {
       state().canonicalLocation = null;
       state().activeRegionLabel = '';
@@ -2569,7 +2766,6 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
         state().studentHopeType = 'study_room';
         state().hopeTypeResolved = true;
       }
-      seedStudyRoomPromoLabel(state(), tab);
     }
     if (ctx.role === 'parent') clearStudentPick(state(), tab);
     refreshActiveResultItems(tab, state(), ctx.role);
@@ -2629,18 +2825,20 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
             : state().studentHopeType === 'tutor' || state().studentHopeType === 'study_room'
               ? state().studentHopeType
               : 'study_room';
-        const tutorGu = tab === 'tutor' || (tab === 'student' && hope === 'tutor');
-        if (!tutorGu && (tab === 'student' || tab === 'room') && state().role !== 'parent') {
-          writeStoredHopeRegion(tab === 'room' ? 'study_room' : hope, canonical.displayLabel);
-        }
-        const form = getForm();
-        if (!tutorGu && form instanceof HTMLFormElement) {
-          const name = tab === 'room' ? 'f_region_id' : 'f_preferred_region';
-          const input = form.querySelector(`input[name="${name}"]`);
-          if (input instanceof HTMLInputElement) input.value = canonical.displayLabel;
-        }
-        if (tab === 'student' && hope === 'study_room') {
-          await confirmStudyroomDong(state(), result, rerender);
+        const step3Open = tab === 'room' || (tab === 'student' && hope === 'study_room');
+        if (step3Open) {
+          if (tab === 'student' && hope === 'study_room' && step3Bag(state(), tab).basis !== 'complex') {
+            await confirmStudyroomDong(state(), result, rerender);
+            const bag = step3Bag(state(), tab);
+            if (studyroomDongSeq) {
+              bag.dongId = numericRegionId(state().studyroomDongRegionId);
+              bag.complexId = '';
+              bag.display = canonical.displayLabel || bag.display;
+              bag.unconfirmed = Boolean(state().studyroomDongUnconfirmed);
+            }
+          } else {
+            await applyStep3FromKakao(state(), tab, result);
+          }
         }
         syncFindHashState(state(), tab);
         refreshActiveResultItems(tab, state(), ctx.role);
@@ -2678,14 +2876,20 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
               : state().studentHopeType === 'tutor' || state().studentHopeType === 'study_room'
                 ? state().studentHopeType
                 : 'study_room';
-          const tutorGu = tab === 'tutor' || (tab === 'student' && hope === 'tutor');
-          if (!tutorGu && input instanceof HTMLInputElement) input.value = canonical.displayLabel;
-          if (!tutorGu && (tab === 'student' || tab === 'room') && state().role !== 'parent') {
-            writeStoredHopeRegion(tab === 'room' ? 'study_room' : hope, canonical.displayLabel);
-          }
-          if (tab === 'student' && hope === 'study_room') {
+          const step3Open = tab === 'room' || (tab === 'student' && hope === 'study_room');
+          if (step3Open && step3Bag(state(), tab).basis === 'complex') {
+            await applyStep3FromKakao(state(), tab, result);
+          } else if (tab === 'student' && hope === 'study_room') {
             await confirmStudyroomDong(state(), result, rerender);
+            const bag = step3Bag(state(), tab);
+            bag.dongId = numericRegionId(state().studyroomDongRegionId);
+            bag.complexId = '';
+            bag.display = canonical.displayLabel || '';
+            bag.unconfirmed = Boolean(state().studyroomDongUnconfirmed);
+          } else if (step3Open) {
+            await applyStep3FromKakao(state(), tab, result);
           }
+          void input;
           syncFindHashState(state(), tab);
           refreshActiveResultItems(tab, state(), ctx.role);
           logLocationDebug('find-region-address', { tab, fieldKey, canonical });
@@ -2696,6 +2900,65 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
       }
     });
   });
+
+  root.querySelectorAll('[data-find-basis]').forEach((el) => {
+    el.addEventListener('change', () => {
+      if (!(el instanceof HTMLInputElement)) return;
+      const tab = ctx.getTab();
+      const bag = step3Bag(state(), tab);
+      bag.basis = el.value === 'complex' ? 'complex' : 'dong';
+      bag.dongId = '';
+      bag.complexId = '';
+      bag.display = '';
+      bag.unconfirmed = false;
+      rerender();
+    });
+  });
+
+  root.querySelectorAll('[data-action="find-step3-address"]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const tab = ctx.getTab();
+      try {
+        await openKakaoPostcode(async (result) => {
+          const bag = step3Bag(state(), tab);
+          const hope = tab === 'student' ? resolveStudentSearchHope(state()) : 'study_room';
+          if (tab === 'student' && hope === 'study_room' && bag.basis !== 'complex') {
+            await confirmStudyroomDong(state(), result, rerender);
+            const next = step3Bag(state(), tab);
+            next.basis = 'dong';
+            next.dongId = numericRegionId(state().studyroomDongRegionId);
+            next.complexId = '';
+            next.display = canonicalFromKakao(result, tab, state()).displayLabel || '';
+            next.unconfirmed = Boolean(state().studyroomDongUnconfirmed);
+          } else {
+            await applyStep3FromKakao(state(), tab, result);
+          }
+          syncFindHashState(state(), tab);
+          rerender();
+        });
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : '주소찾기를 열 수 없습니다.');
+      }
+    });
+  });
+
+  root.addEventListener(
+    'click',
+    (e) => {
+      const target = e.target instanceof Element ? e.target : null;
+      const btn = target?.closest(
+        '[data-find-server-page] [data-guest-list-page], [data-find-server-page] [data-guest-list-more]',
+      );
+      if (!(btn instanceof HTMLElement)) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const page = Number(btn.getAttribute('data-page'));
+      if (!page || !state().lastSearchFilters) return;
+      state().searchPage = page;
+      runFindSearchWithFilters(ctx.getTab(), { ...state().lastSearchFilters }, state(), ctx.role, rerender);
+    },
+    true,
+  );
 
   root.querySelectorAll('[data-action="pick-hope-type"]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -2763,14 +3026,8 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
         state().studentHopeType = v;
         state().hopeTypeResolved = true;
         writeStoredHopeType(v);
-        if ((state().role || 'guest') === 'guest') {
-          applyGuestPlace('student', state());
-        } else {
-          const nextRaw = resolveFindDefaultRegion(v, '');
-          state().activeRegionLabel = nextRaw ? canonicalRegionLabel(nextRaw, 'student', state()) : '';
-        }
+        if (state().step3ByTab) state().step3ByTab.student = blankStep3();
       }
-      // both/빈값: 지역 UI는 시(과외) 축 유지 · 희망유형 상태만 재렌더
       rerender();
     });
   }

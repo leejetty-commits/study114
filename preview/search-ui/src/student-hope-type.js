@@ -35,6 +35,7 @@ export function writeStoredHopeType(hopeType) {
  */
 export function resolveHopeTypeFromQuery(query = {}) {
   const raw = String(query.hope || query.preferred_lesson_type || '').trim();
+  if (raw === 'both') return readStoredHopeType();
   if (raw === 'tutor' || raw === 'study_room') return raw;
   return readStoredHopeType();
 }

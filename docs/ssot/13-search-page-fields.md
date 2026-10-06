@@ -12,7 +12,8 @@
 
 - **하나의 검색페이지** · 상단 3탭: 공부방찾기 / 과외쌤찾기 / 학생찾기
 - 각 탭 = **기본검색** + **확장검색** (스킵 가능 · 기본은 접힘)
-- 지역은 로그인 사용자 **기본 지역 자동 적용** 후 변경·**광역 확장** 가능 (§8-3)
+- 지역은 1시·도(단독검색불가·세종 시완료) / 2시군구(필수·공부방 구=베이직만) / 3동·단지(공부방·학생 열림·과외 비활성). 진입 필터 비움·지도·현황·현재위치만 기본.
+- 목록·검색 결과 20 초과 시 페이지 번호, 건수=서버 total.
 - 검색 UI는 DB 항목 **가능한 전부 노출** · 핵심축은 **구조화 컬럼** (note 단독 필터 금지)
 - 검색 실행 후 하단은 **필터링 결과 전용** — 홈 Prime/Pick 참고 데이터 제거 (§8-2-1)
 
@@ -179,7 +180,7 @@
 | career_year_band | `y1_3` · `y4_6` · `y7_10` · `y10_plus` |
 | university_status | `enrolled` · `leave` · `completed` · `graduated` |
 | age_band | `early_20s` … `over_50` |
-| preferred_lesson_type | `tutor` · `study_room` · `both` |
+| preferred_lesson_type | `tutor` · `study_room` |
 | detail_completion | `basic_only` · `expanded_in_progress` · `expanded_complete` |
 
 ---

@@ -9,7 +9,6 @@ use PDO;
 use PDOException;
 use RuntimeException;
 use Study114\Database\Connection;
-use Study114\Region\AddressRegionMatch;
 use Study114\Region\ComplexEnsure;
 use Study114\Region\RegionEnsure;
 use Study114\Region\SidoRegionEnsure;
@@ -611,15 +610,6 @@ final class BasicRegisterService
             return $this->requireExplicitRegionId($input);
         }
         $pdo = Connection::get();
-        $matched = AddressRegionMatch::match(
-            $pdo,
-            (string) ($input['address_sido'] ?? ''),
-            (string) ($input['address_sigungu'] ?? ''),
-            (string) ($input['address_bname'] ?? $input['address_hname'] ?? '')
-        );
-        if ($matched !== null) {
-            return $matched;
-        }
 
         return (int) RegionEnsure::fromKakao($pdo, $input)['id'];
     }
@@ -714,9 +704,6 @@ final class BasicRegisterService
                 if ($slotBasis === 'complex') {
                     $cname = trim((string) ($slot['complex_name'] ?? ''));
                     $caddr = trim((string) ($slot['complex_address'] ?? $slot['address_text'] ?? ''));
-                    if ($cname === '') {
-                        $cname = $caddr;
-                    }
                     if (($complexId === null || $complexId <= 0) && $cname !== '') {
                         $complexId = ComplexEnsure::ensure($pdo, $regionId, $cname, $caddr !== '' ? $caddr : null);
                     }

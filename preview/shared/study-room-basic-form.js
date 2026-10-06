@@ -36,6 +36,7 @@ export function lessonPlaceNameLabel(placeType) {
 import { loadKakaoPostcode, openKakaoPostcode } from './kakao-postcode.js';
 import { displayRoad } from './address-region-match.js';
 import { ensureRegionFromKakao } from './region-ensure.js';
+import { complexNameFromKakao } from './complex-name-from-kakao.js';
 import { renderMainSubjectSelect } from './main-subjects.js';
 import { refreshInputFill } from './input-fill.js';
 
@@ -362,6 +363,10 @@ export function renderStudyRoomBasicFields(opts = {}) {
   `;
 }
 
+let businessEnsureSeq = 0;
+const slotEnsureSeq = new Map();
+let hopeEnsureSeq = 0;
+
 function setHint(el, text) {
   if (!el) return;
   el.hidden = !text;
@@ -394,11 +399,11 @@ function applyBusinessResult(root, result, region) {
   if (bcode) bcode.value = result.bcode || '';
   if (sigunguCode) sigunguCode.value = result.sigunguCode || '';
   if (regionId) regionId.value = region ? String(region.id) : '';
-  const isApt = Boolean(result.apartment && result.buildingName);
-  if (basis) basis.value = isApt ? 'complex' : 'dong';
-  if (complexName) complexName.value = isApt ? result.buildingName : '';
-  if (complexAddress) complexAddress.value = isApt ? road : '';
-  if (complexId && !isApt) complexId.value = '';
+  const place = complexNameFromKakao(result);
+  if (basis) basis.value = place ? 'complex' : 'dong';
+  if (complexName) complexName.value = place;
+  if (complexAddress) complexAddress.value = place ? road : '';
+  if (complexId && !place) complexId.value = '';
   if (result.jibunAddress) {
     const prefix = result.convertedFromJibun ? '지번 → 도로명 변환됨' : '지번 참고';
     setHint(jibun, `${prefix}: ${result.jibunAddress}`);
@@ -434,20 +439,13 @@ function setSlotMeta(slotEl, result) {
   set('address_sigungu_code', result.sigunguCode || '');
 }
 
-function complexPlaceLabel(name) {
-  const label = blank(name);
-  if (!label) return '';
-  if (/(아파트|단지)/.test(label)) return label;
-  return '';
-}
-
 /** 학생 희망지역. 도로명 번지·호는 칸에 남기지 않는다. */
 function applyStudentHopeResult(slotEl, result, region, basis) {
   if (basis !== 'complex') {
     applySlotResult(slotEl, result, region, 'dong');
     return;
   }
-  const place = complexPlaceLabel(result?.buildingName);
+  const place = complexNameFromKakao(result);
   const regionId = slotEl.querySelector('[data-field="region_id"]');
   const complexId = slotEl.querySelector('[data-field="complex_id"]');
   const basisEl = slotEl.querySelector('[data-field="region_basis_type"]');
@@ -496,8 +494,9 @@ function applySlotResult(slotEl, result, region, basis) {
   setSlotMeta(slotEl, result);
 
   if (basis === 'complex') {
+    const place = complexNameFromKakao(result);
     if (zip) zip.value = result.zonecode || '';
-    if (complexName) complexName.value = result.buildingName || '';
+    if (complexName) complexName.value = place;
     if (complexAddress) complexAddress.value = road;
     if (complexId) complexId.value = '';
     if (addressText) addressText.value = road;
@@ -640,16 +639,20 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
         return;
       }
       if (kind === 'business') {
+        const seq = ++businessEnsureSeq;
         applyBusinessResult(form, result, null);
         fillPromo1FromOpening(form, result, null);
         refreshInputFill(form);
         try {
           const region = await resolveRegion(result);
+          if (seq !== businessEnsureSeq) return;
           applyBusinessResult(form, result, region);
           fillPromo1FromOpening(form, result, region);
         } catch {
+          if (seq !== businessEnsureSeq) return;
           refreshPromo1Mismatch(form);
         }
+        if (seq !== businessEnsureSeq) return;
         refreshInputFill(form);
         return;
       }
@@ -657,16 +660,22 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
       if (!m) return;
       const slotEl = form.querySelector(`[data-region-slot="${m[1]}"]`);
       if (!slotEl) return;
-      if (m[1] === '0') form.setAttribute('data-promo1-manual', '1');
+      const slotKey = m[1];
+      const seq = (slotEnsureSeq.get(slotKey) || 0) + 1;
+      slotEnsureSeq.set(slotKey, seq);
+      if (slotKey === '0') form.setAttribute('data-promo1-manual', '1');
       const basis = slotBasisOf(slotEl);
       applySlotResult(slotEl, result, null, basis);
       refreshInputFill(slotEl);
       try {
         const region = await resolveRegion(result);
+        if (slotEnsureSeq.get(slotKey) !== seq) return;
         applySlotResult(slotEl, result, region, basis);
       } catch {
+        if (slotEnsureSeq.get(slotKey) !== seq) return;
         /* 칸은 이미 채움. 동 코드는 저장 API가 추가한다. */
       }
+      if (slotEnsureSeq.get(slotKey) !== seq) return;
       if (m[1] === '0') refreshPromo1Mismatch(form);
       refreshInputFill(slotEl);
     });
@@ -816,7 +825,7 @@ export function validateStudyRoomBasicFields(data) {
   for (const i of filledIdx) {
     const slot = slots[i];
     if (slot.region_basis_type === 'complex') {
-      if (!blank(slot.complex_address) && !blank(slot.address_text) && !blank(slot.complex_name)) {
+      if (!blank(slot.complex_name)) {
         return `홍보지역 ${i + 1}의 아파트단지를 주소 검색으로 선택해 주세요.`;
       }
       continue;
@@ -869,6 +878,7 @@ export function bindStudentHopeRegion(root, opts = {}) {
     btn.addEventListener('click', async () => {
       try {
         await openKakaoPostcode(async (result) => {
+          const seq = ++hopeEnsureSeq;
           const slotEl = scope.querySelector('[data-region-slot]');
           if (!slotEl) return;
           const basis = slotBasisOf(slotEl);
@@ -877,11 +887,13 @@ export function bindStudentHopeRegion(root, opts = {}) {
           opts.onApplied?.(slotEl);
           try {
             const region = await ensureRegionFromKakao(result);
+            if (seq !== hopeEnsureSeq) return;
             opts.onRegion?.(region);
             applyStudentHopeResult(slotEl, result, region, basis);
             refreshInputFill(slotEl);
             opts.onApplied?.(slotEl);
           } catch {
+            if (seq !== hopeEnsureSeq) return;
             /* 동 이름은 이미 표시. 코드는 저장 시 보완 */
           }
         });

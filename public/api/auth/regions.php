@@ -64,6 +64,27 @@ try {
         exit;
     }
 
+    if ($action === 'complex-by-name') {
+        $regionId = (int) ($input['region_id'] ?? $_GET['region_id'] ?? 0);
+        $name = trim((string) ($input['name'] ?? $_GET['name'] ?? ''));
+        $complex = null;
+        if ($regionId > 0 && $name !== '') {
+            $stmt = Connection::get()->prepare(
+                'SELECT id FROM complexes WHERE region_id = ? AND name = ? AND is_active = 1 LIMIT 1'
+            );
+            $stmt->execute([$regionId, $name]);
+            $id = $stmt->fetchColumn();
+            if ($id !== false && $id !== null) {
+                $complex = ['id' => (int) $id];
+            }
+        }
+        study114_regions_json([
+            'ok' => true,
+            'complex' => $complex,
+        ]);
+        exit;
+    }
+
     if ($method !== 'POST' && $method !== 'GET') {
         study114_regions_json([
             'ok' => false,
