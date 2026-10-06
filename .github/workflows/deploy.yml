@@ -100,6 +100,7 @@ jobs:
           STUDY114_MAIL_PROBE_KEY: ${{ secrets.STUDY114_MAIL_PROBE_KEY }}
           STUDY114_PHONE_OTP_PEPPER: ${{ secrets.STUDY114_PHONE_OTP_PEPPER }}
           STUDY114_RESEND_API_KEY: ${{ secrets.STUDY114_RESEND_API_KEY }}
+          STUDY114_REPORT_CRON_KEY: ${{ secrets.STUDY114_REPORT_CRON_KEY }}
         shell: bash
         run: |
           set -euo pipefail
@@ -137,6 +138,12 @@ jobs:
             esac
             data="${data//"$token"/"$repl"}"
           done
+          report_token="__STUDY114_REPORT_CRON_KEY__"
+          case "$data" in
+            *"$report_token"*) ;;
+            *) echo "::error::placeholder $report_token not found"; exit 1 ;;
+          esac
+          data="${data//"$report_token"/"${STUDY114_REPORT_CRON_KEY:-}"}"
           printf '%s\n' "$data" > "$htaccess"
           if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__' "$htaccess"; then
             echo "::error::치환되지 않은 placeholder가 남아 있습니다."

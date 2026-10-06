@@ -199,6 +199,7 @@ import {
   selected,
 } from './a28-screens-shared.js';
 import { bindTodayHub, peekHubExposureRoute, registerTodayBinders } from './a28-today-hub.js';
+import { bindSettlement } from './a28-settlement.js';
 import {
   renderAddons,
   renderMarketLab,
@@ -551,6 +552,7 @@ export function bindTodaySlotNav(root) {
 
 export function bindA28ScreenEvents(root, path, rerender) {
   bindDetailDrawer(root);
+  if (path === '/admin/settlement') bindSettlement(root, rerender);
 
   root.querySelectorAll('[data-promo-copy-url]').forEach((btn) => {
     btn.addEventListener('click', async () => {

@@ -186,6 +186,7 @@ import {
   renderNotifyLab,
 } from './a28-screens-labs.js';
 import { peekHubExposureRoute, registerTodayRenderers, renderTodayMarkup } from './a28-today-hub.js';
+import { renderSettlement } from './a28-settlement.js';
 
 function adminProductLabel(code) {
   const normalized = String(code || '').toLowerCase();
@@ -1962,6 +1963,7 @@ export function renderA28Screen(path) {
   else if (path === '/admin/logs') body = renderLogs();
   else if (path.startsWith('/admin/settings')) body = renderSettings(getSettingsSection(path));
   else if (path === '/admin/permissions') body = renderPermissions();
+  else if (path === '/admin/settlement') body = renderSettlement();
   return body;
 }
 

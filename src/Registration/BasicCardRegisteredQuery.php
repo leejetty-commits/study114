@@ -1,0 +1,141 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Study114\Registration;
+
+use DateTimeImmutable;
+use InvalidArgumentException;
+use PDO;
+use Study114\Database\Connection;
+use Study114\Report\ReportPeriod;
+
+/**
+ * 베이직카드 등록 사실. 162는 includeDeleted=true, 159-c는 나중에 false.
+ * 공부방·과외쌤은 profile_status로 거르지 않는다.
+ */
+final class BasicCardRegisteredQuery
+{
+    private PDO $pdo;
+
+    private ReportPeriod $period;
+
+    public function __construct(?PDO $pdo = null, ?ReportPeriod $period = null)
+    {
+        $this->pdo = $pdo ?? Connection::get();
+        $this->period = $period ?? new ReportPeriod();
+    }
+
+    /** @return array{study_room: int, tutor: int, student: int} */
+    public function countByRole(DateTimeImmutable $start, DateTimeImmutable $end, bool $includeDeleted): array
+    {
+        return [
+            'study_room' => $this->countRole('study_room', $start, $end, $includeDeleted),
+            'tutor' => $this->countRole('tutor', $start, $end, $includeDeleted),
+            'student' => $this->countRole('student', $start, $end, $includeDeleted),
+        ];
+    }
+
+    /**
+     * @return array{total: int, items: list<array{role: string, id: int, registered_at: string, display_name: string}>}
+     */
+    public function listByRole(
+        string $role,
+        DateTimeImmutable $start,
+        DateTimeImmutable $end,
+        bool $includeDeleted,
+        int $page,
+        int $perPage,
+    ): array {
+        $this->assertRole($role);
+        $page = max(1, $page);
+        $perPage = max(1, min(10000, $perPage));
+        $offset = ($page - 1) * $perPage;
+        $bounds = $this->bounds($role, $start, $end);
+        $where = $this->where($role, $includeDeleted);
+        $total = $this->countRole($role, $start, $end, $includeDeleted);
+        $sql = 'SELECT ' . $this->selectList($role) . ' FROM ' . $this->from($role)
+            . ' WHERE ' . $where
+            . ' ORDER BY registered_at, id LIMIT ' . $perPage . ' OFFSET ' . $offset;
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($bounds);
+        $items = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $items[] = [
+                'role' => $role,
+                'id' => (int) $row['id'],
+                'registered_at' => (string) $row['registered_at'],
+                'display_name' => (string) ($row['display_name'] ?? ''),
+            ];
+        }
+
+        return ['total' => $total, 'items' => $items];
+    }
+
+    private function countRole(string $role, DateTimeImmutable $start, DateTimeImmutable $end, bool $includeDeleted): int
+    {
+        $this->assertRole($role);
+        $sql = 'SELECT COUNT(*) FROM ' . $this->from($role) . ' WHERE ' . $this->where($role, $includeDeleted);
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($this->bounds($role, $start, $end));
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    /** @return array{start: string, end: string} */
+    private function bounds(string $role, DateTimeImmutable $start, DateTimeImmutable $end): array
+    {
+        $source = $role === 'student' ? 'php' : 'db';
+
+        return [
+            'start' => $this->period->toStorage($start, $source),
+            'end' => $this->period->toStorage($end, $source),
+        ];
+    }
+
+    private function from(string $role): string
+    {
+        return match ($role) {
+            'student' => 'students s',
+            'study_room' => 'study_rooms sr',
+            'tutor' => 'tutors t',
+        };
+    }
+
+    private function where(string $role, bool $includeDeleted): string
+    {
+        if ($role === 'student') {
+            $alive = $includeDeleted ? '1 = 1' : 's.deleted_at IS NULL';
+
+            return 's.published_at IS NOT NULL AND s.published_at >= :start AND s.published_at < :end AND ' . $alive;
+        }
+        if ($role === 'study_room') {
+            $alive = $includeDeleted ? '1 = 1' : 'sr.deleted_at IS NULL';
+
+            return 'sr.created_at >= :start AND sr.created_at < :end AND EXISTS (
+                SELECT 1 FROM study_room_regions r
+                WHERE r.study_room_id = sr.id AND r.slot = 1 AND r.region_id IS NOT NULL AND r.region_id <> 0
+            ) AND ' . $alive;
+        }
+        return 't.created_at >= :start AND t.created_at < :end AND EXISTS (
+            SELECT 1 FROM tutor_regions r
+            WHERE r.tutor_id = t.id AND r.priority_order = 0 AND r.region_id IS NOT NULL AND r.region_id <> 0
+        )';
+    }
+
+    private function selectList(string $role): string
+    {
+        return match ($role) {
+            'student' => 's.id, s.published_at AS registered_at, COALESCE(s.public_display_name, \'\') AS display_name',
+            'study_room' => 'sr.id, sr.created_at AS registered_at, sr.study_room_name AS display_name',
+            'tutor' => 't.id, t.created_at AS registered_at, t.tutor_display_name AS display_name',
+        };
+    }
+
+    private function assertRole(string $role): void
+    {
+        if (!in_array($role, ['study_room', 'tutor', 'student'], true)) {
+            throw new InvalidArgumentException('role은 study_room, tutor, student만 가능합니다.');
+        }
+    }
+}
