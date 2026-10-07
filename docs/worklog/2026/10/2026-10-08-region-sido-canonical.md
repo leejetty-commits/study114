@@ -158,5 +158,10 @@
 ## 9. 검수 및 승인 기록
 
 - 작업 세션: Cursor Subagent
-- 검수자: 사용자
-- 상태: **대기**
+- 검수 (2026-10-08 07:05, Cursor 메인 에이전트, 작업 세션과 별개): **통과** — 대상 `043caf1`
+  - `RegionAlias::SIDO_MAP` 17개 정식명·옛 이름(강원도·전라북도) 확인. `RegionEnsure`: 새 행은 정식명으로 INSERT, 조회는 `sido_name IN (정식명, 원래값)`이라 DB 정리 전(「경기」 3행)·후 모두 기존 행을 찾음. `dong_code` 폴백·「시 대표」 제외·hydrate(DB 값 기준) 유지
+  - 시군구 연결(`RegionGuLink`)은 이미 여러 시·도 표기를 허용(`sido_name IN (:sido_a, :sido_b, :sido_c)`)해 영향 없음. `AddressRegionMatch`는 주소 통일 배포 때 삭제됨
+  - `verify-study-room-basic-register-api.mjs` 4건 실패는 메인이 수정 전(`b249ccc` 기준 worktree)에서 같은 4건 재현 → **기존 실패, 이 작업과 무관**(CI 게이트 아님). 별도 정리 과제로 보고
+  - 주소 통일 브랜치와 merge-tree 충돌 0
+- 승인: 사용자 위임 (2026-10-08 04:17 「배포까지 승인하겠다. 무결성은 제외.」) — `main` push는 Cursor 자동 검토가 사용자 승인 카드를 요구해 기상 후 배포
+- **DB 순서:** 코드 배포 → 사용자가 SELECT 확인 후 `UPDATE regions SET sido_name='경기도' WHERE sido_name='경기'` (배포 전 UPDATE 금지)
