@@ -4,6 +4,12 @@
  * Slot1 Neutral · Slot2 Signal · Slot3 Neutral media
  */
 
+:root {
+  --rail-tone-community: #6d28d9;
+  --rail-tone-hot: #be123c;
+  --rail-tone-info: #475569;
+}
+
 .home-sidebar--live-rail,
 .right-rail--live-inline {
   display: flex;
@@ -24,9 +30,19 @@
   overflow: hidden;
 }
 
-.live-rail-slot--field,
+.live-rail-slot--best,
 .live-rail-slot--room {
-  border-left: 2px solid var(--uds-line);
+  --rail-tone: var(--rail-tone-community);
+}
+
+.live-rail-slot--field {
+  --rail-tone: var(--rail-tone-hot);
+}
+
+.live-rail-slot--best,
+.live-rail-slot--room,
+.live-rail-slot--field {
+  border-left: 2px solid var(--rail-tone, var(--uds-primary));
 }
 
 .live-rail-slot--room > .live-rail-slot__band:first-child {
@@ -68,7 +84,7 @@ button.live-rail-room__link {
 
 .live-rail-room__link:hover,
 .live-rail-room__link:focus-visible {
-  color: var(--uds-primary);
+  color: var(--rail-tone, var(--uds-primary));
   text-decoration: underline;
 }
 
@@ -89,7 +105,7 @@ button.live-rail-room__link {
   font-family: inherit;
   font-size: var(--fs-12);
   font-weight: var(--fw-medium);
-  color: var(--uds-primary);
+  color: var(--rail-tone, var(--uds-primary));
   cursor: pointer;
 }
 
@@ -100,10 +116,6 @@ button.live-rail-room__link {
 }
 
 /* 레일 맨 위 「이달의 베스트」 — 방별 1개 */
-.live-rail-slot--best {
-  border-left: 2px solid var(--uds-primary);
-}
-
 .live-rail-slot--best > .live-rail-slot__band:first-child {
   margin-top: calc(-1 * var(--space-4));
 }
@@ -151,7 +163,7 @@ button.live-rail-room__link {
 
 .live-rail-best__item:hover .live-rail-best__title,
 .live-rail-best__item:focus-visible .live-rail-best__title {
-  color: var(--uds-primary);
+  color: var(--rail-tone, var(--uds-primary));
   text-decoration: underline;
 }
 
@@ -184,7 +196,7 @@ button.live-rail-room__link {
 .live-rail-slot__band {
   margin: var(--space-2) calc(-1 * var(--space-4)) 0;
   padding: var(--space-2) var(--space-4);
-  background: var(--uds-primary, #3b82f6);
+  background: var(--rail-tone, var(--uds-primary, #3b82f6));
 }
 
 .live-rail-slot__band .live-rail-slot__title {
@@ -271,7 +283,12 @@ button.live-rail-card {
 .live-rail-action:hover,
 .live-rail-card:focus-visible,
 .live-rail-action:focus-visible {
-  border-color: var(--uds-primary);
+  border-color: var(--rail-tone, var(--uds-primary));
+}
+
+.live-rail-card:hover .live-rail-card__title,
+.live-rail-card:focus-visible .live-rail-card__title {
+  color: var(--rail-tone, var(--uds-primary));
 }
 
 .live-rail-action--signal {
@@ -330,7 +347,7 @@ button.live-rail-card {
   margin-top: var(--space-2);
   font-size: var(--fs-12);
   font-weight: var(--fw-medium);
-  color: var(--uds-primary);
+  color: var(--rail-tone, var(--uds-primary));
   text-decoration: none;
 }
 
@@ -538,7 +555,8 @@ body.is-rail-media-open {
 
 /* 정보 게시판 배너 — 띠·제목은 고민방 방 배너(.live-rail-slot--room)와 같은 규칙 */
 .live-rail-slot--info {
-  border-left: 2px solid var(--uds-line);
+  --rail-tone: var(--rail-tone-info);
+  border-left: 2px solid var(--rail-tone, var(--uds-primary));
 }
 
 .live-rail-slot--info > .live-rail-slot__band:first-child {
@@ -580,7 +598,7 @@ body.is-rail-media-open {
 
 .live-rail-info__link:hover .live-rail-info__title,
 .live-rail-info__link:focus-visible .live-rail-info__title {
-  color: var(--uds-primary);
+  color: var(--rail-tone, var(--uds-primary));
   text-decoration: underline;
 }
 
@@ -611,6 +629,15 @@ body.is-rail-popup-open {
   align-items: center;
   justify-content: center;
   padding: var(--space-4, 1rem);
+}
+
+.rail-popup[data-rail-popup-kind='concern-room'],
+.rail-popup[data-rail-popup-kind='concern-best'] {
+  --rail-tone: var(--rail-tone-community);
+}
+
+.rail-popup[data-rail-popup-kind='info-board'] {
+  --rail-tone: var(--rail-tone-info);
 }
 
 .rail-popup__backdrop {
@@ -644,7 +671,7 @@ body.is-rail-popup-open {
   justify-content: space-between;
   gap: var(--space-3, 0.75rem);
   padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  background: var(--uds-primary, #3b82f6);
+  background: var(--rail-tone, var(--uds-primary, #3b82f6));
 }
 
 .rail-popup__title {
@@ -698,7 +725,7 @@ body.is-rail-popup-open {
 
 .rail-popup__category {
   font-weight: var(--fw-medium, 500);
-  color: var(--uds-primary, #3b82f6);
+  color: var(--rail-tone, var(--uds-primary, #3b82f6));
 }
 
 .rail-popup__post-title {
@@ -744,7 +771,7 @@ body.is-rail-popup-open {
   min-height: var(--btn-h-compact, 2rem);
   padding: 0 var(--space-3, 0.75rem);
   border-radius: var(--radius-control, 0.5rem);
-  background: var(--uds-primary, #3b82f6);
+  background: var(--rail-tone, var(--uds-primary, #3b82f6));
   font-size: var(--fs-14, 0.875rem);
   font-weight: var(--fw-medium, 500);
   color: #fff;
@@ -805,7 +832,7 @@ button.rail-popup__go {
 .rail-popup__item[aria-current='true'] .rail-popup__item-title,
 .rail-popup__item:hover .rail-popup__item-title,
 .rail-popup__item:focus-visible .rail-popup__item-title {
-  color: var(--uds-primary, #3b82f6);
+  color: var(--rail-tone, var(--uds-primary, #3b82f6));
 }
 
 .rail-popup__item[aria-current='true'] .rail-popup__item-title {
@@ -838,8 +865,8 @@ button.rail-popup__go {
 }
 
 .rail-popup__page[aria-current='page'] {
-  border-color: var(--uds-primary, #3b82f6);
-  background: var(--uds-primary, #3b82f6);
+  border-color: var(--rail-tone, var(--uds-primary, #3b82f6));
+  background: var(--rail-tone, var(--uds-primary, #3b82f6));
   color: #fff;
 }
 
