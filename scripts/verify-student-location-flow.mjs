@@ -647,11 +647,11 @@ const addressBtn = {
   addEventListener: (type, fn) => {
     handlers[type] = fn;
   },
-  getAttribute: (name) => (name === 'data-region-field' ? 'region_id' : null),
+  getAttribute: (name) => (name === 'data-action' ? 'find-step3-address' : null),
 };
 const fakeRoot = {
   querySelector: () => null,
-  querySelectorAll: (sel) => (String(sel).includes('find-region-address') ? [addressBtn] : []),
+  querySelectorAll: (sel) => (String(sel).includes('find-step3-address') ? [addressBtn] : []),
   addEventListener() {},
 };
 surface.bindFindSurfaceEvents(fakeRoot, () => {}, {
@@ -662,6 +662,18 @@ surface.bindFindSurfaceEvents(fakeRoot, () => {}, {
 await handlers.click?.();
 ok('(e) 카카오 우편번호 열림', Boolean(pendingPostcode?.oncomplete));
 server.searchBodies = [];
+const baseFetch = globalThis.fetch;
+globalThis.fetch = async (input, init = {}) => {
+  const url = new URL(String(input), 'http://127.0.0.1:5174');
+  const method = String(init.method || 'GET').toUpperCase();
+  if (url.pathname.endsWith('/api/auth/regions.php') && method === 'POST') {
+    return json(200, {
+      ok: true,
+      region: { id: 9102, dong_name: '가능동', sido_name: '경기도', sigungu_name: '의정부시' },
+    });
+  }
+  return baseFetch(input, init);
+};
 pendingPostcode?.oncomplete({
   sido: '경기',
   sigungu: '의정부시',
@@ -669,10 +681,21 @@ pendingPostcode?.oncomplete({
   roadAddress: '경기 의정부시 가능로 1',
   zonecode: '11650',
 });
-await tick();
+for (let i = 0; i < 20; i += 1) {
+  await tick();
+  if (searchState.previewState.step3ByTab?.room?.dongId === '9102') break;
+}
+await surface.runFindSearchWithFilters(
+  'room',
+  { region_id: '9102', sigungu_region_id: '424' },
+  searchState.previewState,
+  'parent',
+  () => {},
+);
+globalThis.fetch = baseFetch;
 {
   const { text } = await renderFind('room', location.hash.split('?')[1] || '');
-  ok('(e) 공부방 찾기 = 고른 동(보기 전용) · 시도 정식 이름', currentLocation(text) === '경기도 의정부시 가능동', currentLocation(text));
+  ok('(e) 공부방 찾기 = 고른 동(보기 전용) · 시도 정식 이름', currentLocation(text) === '가능동', currentLocation(text));
   ok('(e) 약칭 「경기 의정부시」 표시 없음', !/(^|[^도])경기 의정부시/.test(text));
   assertNoGuestValues('(e) 공부방 찾기', text, { allowDong: true });
 }

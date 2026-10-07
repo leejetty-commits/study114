@@ -41,6 +41,7 @@ import {
   tutorRepresentativeRegionLabel,
   refreshActiveResultItems,
   runFindSearchWithFilters,
+  whenFindCitiesReady,
   bootFindGpsIfNeeded,
   bootGuestFindSurface,
 } from '../search-find-surface.js';
@@ -86,6 +87,7 @@ function syncHomeSubscription() {
 }
 
 function visibleCurrentPlace(tab, role, regionLabel) {
+  if (previewState.searchExecuted && role !== 'guest') return regionLabel || '';
   if (role === 'guest') {
     const base = readGuestBaseline();
     return tab === 'room' ? base.room : base.tutor;
@@ -246,7 +248,9 @@ export function afterSearchPageMount(rerender, opts = {}) {
     });
     previewState._needsSearchRestore = false;
     queueMicrotask(() => {
-      runFindSearchWithFilters(tab, filters, previewState, previewState.role, rerender);
+      whenFindCitiesReady().then(() => {
+        runFindSearchWithFilters(tab, filters, previewState, previewState.role, rerender);
+      });
     });
     return;
   }

@@ -67,7 +67,6 @@ export const GENDER_GROUP_LABELS = {
 export const PREFERRED_LESSON_TYPE_LABELS = {
   tutor: '과외쌤',
   study_room: '공부방',
-  both: '과외쌤+공부방',
 };
 
 export const FACILITY_LABELS = {

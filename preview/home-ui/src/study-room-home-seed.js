@@ -335,12 +335,11 @@ async function ensureLifetimeViews(roomId) {
  * @returns {Record<string, string>}
  */
 export function studyRoomHomeSearchFilters(slot, promo = '') {
+  void promo;
   /** @type {Record<string, string>} */
   const filters = {};
   if (slot?.region_id && /^\d+$/.test(String(slot.region_id))) {
     filters.region_id = String(slot.region_id);
-  } else if (promo) {
-    filters.region_label = String(promo);
   }
   const complexId = String(slot?.complex_id || '').trim();
   if (String(slot?.region_basis_type || '') === 'complex' && /^\d+$/.test(complexId)) {

@@ -429,6 +429,13 @@ ok(
   /'complex_name', 'complex_address'/.test(hub) && /ComplexEnsure::ensure\(/.test(hub),
 );
 ok(
+  '검색 경로: regions complex-by-name 은 SELECT 이고 SearchService 는 ComplexEnsure 를 부르지 않음',
+  /action === 'complex-by-name'/.test(read('public/api/auth/regions.php')) &&
+    /SELECT id FROM complexes WHERE region_id = \? AND name = \? AND is_active = 1 LIMIT 1/.test(read('public/api/auth/regions.php')) &&
+    !/ComplexEnsure::ensure/.test(read('src/Search/SearchService.php')) &&
+    !/INSERT INTO complexes/.test(read('public/api/auth/regions.php')),
+);
+ok(
   '서버: 과외 분기에서는 단지 이름을 단지로 만들지 않음',
   /if \(\$branch !== 'study_room'\) \{\s*return;\s*\}/.test(hub),
 );

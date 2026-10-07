@@ -39,9 +39,13 @@ assert(svc.includes('공부방은 계정당 1개만 등록할 수 있습니다')
 assert(svc.includes('promoSlotHasIntent'), 'backend detects intentional empty promo slots');
 assert(svc.includes('슬롯 자체 메타만 사용'), 'backend forbids business-address fallback into promo slots');
 assert(!/RegionEnsure::fromKakao\(\$pdo,\s*\$payload\)/.test(svc), 'signup no longer ensures from merged $input+$slot');
+assert(!svc.includes('AddressRegionMatch::match'), 'signup AddressRegionMatch::match calls 0');
+assert(!svc.includes('$cname = $caddr'), 'signup cname = $caddr 0');
 
 const syncSrc = readFileSync(resolve(root, 'src/StudyRoom/StudyRoomRegisterService.php'), 'utf8');
 assert(syncSrc.includes('사업장/집주소($input)로 빈 홍보지역 2·3을 채우지 않음'), 'detail sync forbids input address fallback');
+assert(!syncSrc.includes('AddressRegionMatch::match'), 'detail AddressRegionMatch::match calls 0');
+assert(!syncSrc.includes('$cname = $caddr'), 'detail cname = $caddr 0');
 
 const completeSrc = readFileSync(resolve(root, 'preview/auth-ui/src/screens/signup-complete.js'), 'utf8');
 assert(completeSrc.includes('studyRoomHasPromoSlot1'), 'complete go-home uses promo slot1');

@@ -141,6 +141,10 @@ if (!IS_CHILD) {
     .sort();
   ok('(b) input-fill.js 를 부르는 파일 = 적용 폼 목록(관리자·찾기·게시판·쪽지·후기·고객센터·상품 없음)', users.join(',') === EXPECTED_USERS.join(','), users.join(','));
   ok(
+    '(hold) complex-name-from-kakao.js 는 input-fill.js 를 import 하지 않음',
+    !/input-fill/.test(read('preview/shared/complex-name-from-kakao.js')),
+  );
+  ok(
     '(b) 제외 화면 폴더는 공용 모듈을 부르지 않음',
     users.every((f) => !/\/(admin|board|messages|provider-reviews|support|plans|concern|search-ui|neighborhood)/.test(f)),
   );

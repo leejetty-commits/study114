@@ -452,10 +452,29 @@ assertPromoOnly(countSql($pdo), 'region_id');
 ok('region_id 홍보 EXISTS', str_contains(countSql($pdo), 'srr.region_id = :region_id'));
 
 $pdo->log = [];
-$byLabel = $search->search('room', ['region_label' => '대치동'], 1, 20);
-ok('region_label 대치동: 같은 세 방', ids($byLabel) === $expect && (int) $byLabel['total'] === 3, json_encode(ids($byLabel)) . ' total=' . $byLabel['total']);
-assertPromoOnly(countSql($pdo), 'region_label');
-ok('region_label 홍보 EXISTS', str_contains(countSql($pdo), 'FROM study_room_regions srr_lbl'));
+$withComplex = $search->search('room', ['region_id' => 100, 'complex_id' => 9], 1, 20);
+ok(
+    '{region_id:100, complex_id:X} id 집합 = {region_id:100}',
+    ids($withComplex) === ids($byId) && (int) $withComplex['total'] === (int) $byId['total'],
+    json_encode(ids($withComplex)) . ' total=' . $withComplex['total']
+);
+assertPromoOnly(countSql($pdo), 'region+complex');
+ok(
+    'region+complex 는 단지 티어 조건을 넣지 않음',
+    !str_contains(countSql($pdo), 'srr_cx') && !str_contains(countSql($pdo), "region_basis_type = 'complex'")
+);
+
+$pdo->log = [];
+$labelThrew = false;
+$labelMessage = '';
+try {
+    $search->search('room', ['region_label' => '대치동'], 1, 20);
+} catch (InvalidArgumentException $e) {
+    $labelThrew = true;
+    $labelMessage = $e->getMessage();
+}
+ok('region_label → InvalidArgumentException(검증 422)', $labelThrew && $labelMessage === '지역은 구(시·군)까지 선택해 주세요.', $labelMessage);
+ok('region_label 는 조회 SQL 없음', countSql($pdo) === '');
 
 $pdo->log = [];
 $byGu = $search->search('room', ['sigungu_region_id' => 500], 1, 20);

@@ -31,7 +31,12 @@ function parseRegionParts(regionLabel, coords = {}) {
     { raw: regionLabel, lat: coords.lat, lng: coords.lng },
     'room',
   );
-  const dong = canonical.dong || canonical.apartmentName || '';
+  const dong =
+    canonical.dong ||
+    canonical.apartmentName ||
+    (canonical.level === 'district' || canonical.displayLabel === '세종특별자치시'
+      ? canonical.displayLabel
+      : '');
   return {
     city: canonical.city,
     gu: canonical.district,

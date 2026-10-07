@@ -21,7 +21,7 @@
 export const SEARCH_TABS = {
   room: {
     label: '공부방 찾기',
-    defaultRegionHint: '내 기본 지역(동/단지) 자동 적용',
+    defaultRegionHint: '시·군·구를 선택한 뒤 검색',
     mapEnabled: true,
     fields: [
       { key: 'region_id', label: '지역(동/단지)', tier: 'basic', basicRow: 1, db: 'study_room_regions', input: 'region' },
@@ -43,7 +43,7 @@ export const SEARCH_TABS = {
   },
   tutor: {
     label: '과외쌤 찾기',
-    defaultRegionHint: '내 기본 시 자동 적용',
+    defaultRegionHint: '시·군·구를 선택한 뒤 검색',
     mapEnabled: false,
     fields: [
       { key: 'tutor_region_id', label: '과외지역', tier: 'basic', basicRow: 1, db: 'tutor_regions.region_id', input: 'city' },
@@ -64,7 +64,7 @@ export const SEARCH_TABS = {
   },
   student: {
     label: '학생 찾기',
-    defaultRegionHint: '내 영업권 지역 자동 적용',
+    defaultRegionHint: '시·군·구를 선택한 뒤 검색',
     mapEnabled: false,
     fields: [
       { key: 'preferred_lesson_type', label: '희망 유형', tier: 'basic', basicRow: 1, db: 'students.preferred_lesson_type', input: 'select', optionsKey: 'preferred_lesson_type' },

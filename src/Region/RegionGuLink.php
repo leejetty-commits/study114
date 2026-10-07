@@ -100,7 +100,10 @@ final class RegionGuLink
              WHERE d.unit_level = \'dong\'
                AND CHAR_LENGTH(g.official_code) >= 5
                AND CHAR_LENGTH(d.sigungu_code) >= 5
-               AND LEFT(d.sigungu_code, 5) = LEFT(g.official_code, 5)
+               AND (
+                 LEFT(d.sigungu_code, 5) = LEFT(g.official_code, 5)
+                 OR (LEFT(g.official_code, 5) = \'36000\' AND LEFT(d.sigungu_code, 5) = \'36110\')
+               )
              ORDER BY d.id'
         );
         $stmt->execute([$guId]);
