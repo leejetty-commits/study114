@@ -24,6 +24,20 @@ study114_send_cors_headers();
 try {
     $service = NeighborhoodGreetingService::fromDefaultPath();
     if ($method === 'GET') {
+        if (isset($_GET['mine']) && (string) $_GET['mine'] === '1') {
+            $user = AuthSession::userIfActive();
+            if ($user === null) {
+                http_response_code(401);
+                echo json_encode(['ok' => false, 'error' => 'auth_required', 'message' => '로그인이 필요해요.'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+            $providerType = (string) ($_GET['provider_type'] ?? '');
+            $registrationId = (int) ($_GET['registration_id'] ?? 0);
+            $mine = $service->getMine((int) $user['user_id'], (string) ($user['role_type'] ?? ''), $providerType, $registrationId);
+            echo json_encode(['ok' => true, 'item' => $mine], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
         $full = false;
         try {
             $full = AuthSession::userIfActive() !== null;
@@ -57,6 +71,9 @@ try {
         'provider_type' => $saved['provider_type'],
         'registration_id' => $saved['registration_id'],
         'status' => $saved['status'],
+        'body' => $saved['body'] ?? '',
+        'history' => $saved['history'] ?? [],
+        'updated_at' => $saved['updated_at'] ?? 0,
     ]], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);

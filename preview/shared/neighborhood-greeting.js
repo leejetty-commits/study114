@@ -85,6 +85,7 @@ export function buildGreetingRecord(input) {
   const neighborhood = String(input.neighborhood ?? '').trim();
   if (!neighborhood) return { ok: false, error: '등록된 동네가 있어야 올릴 수 있어요.' };
   const displayName = String(input.displayName ?? '').trim() || (providerType === 'tutor' ? '과외쌤' : '공부방');
+  const historyId = input.historyId || input.history_id ? String(input.historyId || input.history_id).trim() : undefined;
   return {
     ok: true,
     record: {
@@ -96,6 +97,7 @@ export function buildGreetingRecord(input) {
       displayName,
       status: 'up',
       updatedAt: Date.now(),
+      ...(historyId ? { historyId } : {}),
     },
   };
 }

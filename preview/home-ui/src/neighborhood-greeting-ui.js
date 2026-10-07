@@ -5,6 +5,8 @@
 
 import { greetingError, greetingTeaser, maskGreetingName, sameNeighborhood } from '../../shared/neighborhood-greeting.js';
 import {
+  deleteGreeting,
+  fetchMineGreeting,
   greetingForRegistration,
   importGreetingHandoff,
   publishGreeting,
@@ -442,23 +444,65 @@ export async function openGreetingTarget(opts) {
   return 'card';
 }
 
+function formatMmDd(ts) {
+  if (!ts) return '';
+  const d = new Date(Number(ts));
+  if (isNaN(d.getTime())) return '';
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${m}.${day}`;
+}
+
+/**
+ * 최근 인사 목록 HTML (최대 3개).
+ * @param {Array<{ id: string, body: string, updated_at?: number }>} history
+ * @param {boolean} isUp
+ */
+export function renderGreetingHistoryList(history, isUp) {
+  if (!Array.isArray(history) || history.length === 0) {
+    return `<p class="ng-editor__history-empty">아직 올린 인사가 없어요.</p>`;
+  }
+  const items = history.slice(0, 3).map((item, index) => {
+    const isCurrentActive = index === 0 && isUp;
+    const dateStr = formatMmDd(item.updated_at);
+    const badgeHtml = isCurrentActive
+      ? `<span class="ng-editor__badge">게시 중</span><button type="button" class="ng-editor__down-btn" data-ng-down>내리기</button>`
+      : '';
+    return `
+      <li class="ng-editor__history-item" data-history-id="${esc(item.id)}">
+        <button type="button" class="ng-editor__item-body" data-ng-pick-history="${esc(item.id)}" title="클릭하여 수정">${esc(item.body)}</button>
+        <span class="ng-editor__item-meta">
+          ${dateStr ? `<span class="ng-editor__item-date">${esc(dateStr)}</span>` : ''}
+          ${badgeHtml}
+          <button type="button" class="ng-editor__del-btn" data-ng-del-history="${esc(item.id)}" aria-label="인사 지우기">×</button>
+        </span>
+      </li>`;
+  }).join('');
+  return `<ul class="ng-editor__history-list">${items}</ul>`;
+}
+
 /**
  * @param {{ providerType: 'study_room'|'tutor', registrationId: number, neighborhood: string, displayName: string }} opts
  */
 export function renderNeighborhoodGreetingEditor(opts) {
   const current = greetingForRegistration(opts.providerType, opts.registrationId);
   const up = current?.status === 'up';
-  const body = up ? current.body : '';
+  const history = Array.isArray(current?.history) ? current.history : (current?.body ? [{ id: 'init', body: current.body, updated_at: current.updatedAt }] : []);
+  const historyHtml = renderGreetingHistoryList(history, up);
+
   return `
     <section class="ng-editor" data-ng-editor data-ng-type="${esc(opts.providerType)}" data-ng-id="${Number(opts.registrationId)}" data-ng-area="${esc(opts.neighborhood)}" data-ng-name="${esc(opts.displayName)}">
-      <h3 class="ng-editor__title">동네 인사</h3>
+      <div class="ng-editor__head">
+        <h3 class="ng-editor__title">동네 인사</h3>
+        <button type="button" class="btn btn--secondary btn--sm ng-editor__submit-btn" data-ng-save>올리기</button>
+      </div>
       <p class="ng-editor__note">한 줄, 80자. 전화·카톡·주소는 넣지 않아요.</p>
-      <textarea class="form-input ng-editor__input" maxlength="80" rows="2" data-ng-body>${esc(body)}</textarea>
+      <p class="ng-editor__editing-hint" data-ng-editing-hint hidden>고르신 인사를 고치는 중 · <button type="button" class="ng-editor__cancel-edit" data-ng-cancel-edit>취소</button></p>
+      <textarea class="form-input ng-editor__input" maxlength="80" rows="2" data-ng-body placeholder="동네 이웃에게 전할 한 줄 인사를 적어보세요"></textarea>
       <p class="ng-editor__status" data-ng-status role="status" hidden></p>
       <p class="ng-editor__error" data-ng-error hidden></p>
-      <div class="ng-editor__actions">
-        <button type="button" class="btn btn--secondary" data-ng-save>${up ? '수정' : '올리기'}</button>
-        ${up ? '<button type="button" class="btn btn--secondary" data-ng-down>내리기</button>' : ''}
+      <div class="ng-editor__history-wrap" data-ng-history-wrap>
+        ${historyHtml}
       </div>
     </section>`;
 }
@@ -471,6 +515,15 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
   if (!editor) return;
   const errorEl = editor.querySelector('[data-ng-error]');
   const statusEl = editor.querySelector('[data-ng-status]');
+  const hintEl = editor.querySelector('[data-ng-editing-hint]');
+  const bodyEl = editor.querySelector('[data-ng-body]');
+  const historyWrap = editor.querySelector('[data-ng-history-wrap]');
+
+  const providerType = editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room';
+  const registrationId = Number(editor.getAttribute('data-ng-id') || 0);
+
+  /** @type {string | null} */
+  let editingHistoryId = null;
   /** @type {number} */
   let statusTimer = 0;
 
@@ -508,37 +561,93 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
     }, STATUS_HIDE_MS);
   };
 
-  editor.querySelector('[data-ng-body]')?.addEventListener('input', () => {
+  const setEditingMode = (id, body) => {
+    editingHistoryId = id;
+    if (bodyEl instanceof HTMLTextAreaElement) {
+      bodyEl.value = body;
+      bodyEl.focus();
+    }
+    if (hintEl) {
+      hintEl.hidden = false;
+    }
+    hideStatus();
+  };
+
+  const clearEditingMode = () => {
+    editingHistoryId = null;
+    if (bodyEl instanceof HTMLTextAreaElement) {
+      bodyEl.value = '';
+    }
+    if (hintEl) {
+      hintEl.hidden = true;
+    }
+  };
+
+  const refreshHistoryList = (item) => {
+    if (!historyWrap) return;
+    const current = item || greetingForRegistration(providerType, registrationId);
+    const up = current?.status === 'up';
+    const history = Array.isArray(current?.history) ? current.history : (current?.body ? [{ id: 'init', body: current.body, updated_at: current.updatedAt }] : []);
+    historyWrap.innerHTML = renderGreetingHistoryList(history, up);
+  };
+
+  bodyEl?.addEventListener('input', () => {
     hideStatus();
   });
 
-  /** @param {boolean} up */
-  const syncActions = (up) => {
-    const saveBtn = editor.querySelector('[data-ng-save]');
-    if (saveBtn) saveBtn.textContent = up ? '수정' : '올리기';
-    const downBtn = editor.querySelector('[data-ng-down]');
-    if (up) {
-      if (downBtn) return;
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn btn--secondary';
-      btn.setAttribute('data-ng-down', '');
-      btn.textContent = '내리기';
-      editor.querySelector('.ng-editor__actions')?.appendChild(btn);
-      return;
+  // Background sync on mount to ensure fresh history from server
+  fetchMineGreeting(providerType, registrationId).then((res) => {
+    if (res.ok && res.item && editor.isConnected) {
+      refreshHistoryList(res.item);
     }
-    downBtn?.remove();
-    const bodyEl = editor.querySelector('[data-ng-body]');
-    if (bodyEl instanceof HTMLTextAreaElement) bodyEl.value = '';
-  };
+  }).catch(() => {});
 
   editor.addEventListener('click', async (event) => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
-    const providerType = editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room';
-    const registrationId = Number(editor.getAttribute('data-ng-id') || 0);
+
+    // 취소 버튼
+    if (target.closest('[data-ng-cancel-edit]')) {
+      clearEditingMode();
+      return;
+    }
+
+    // 목록 항목 클릭 (본문 불러오기)
+    const pickBtn = target.closest('[data-ng-pick-history]');
+    if (pickBtn) {
+      const hid = pickBtn.getAttribute('data-ng-pick-history');
+      const current = greetingForRegistration(providerType, registrationId);
+      const history = Array.isArray(current?.history) ? current.history : (current?.body ? [{ id: 'init', body: current.body, updated_at: current.updatedAt }] : []);
+      const found = history.find((h) => h.id === hid);
+      if (found) {
+        setEditingMode(found.id, found.body);
+      }
+      return;
+    }
+
+    // × 삭제 버튼
+    const delBtn = target.closest('[data-ng-del-history]');
+    if (delBtn) {
+      const hid = delBtn.getAttribute('data-ng-del-history');
+      if (!hid) return;
+      if (!window.confirm('이 인사를 지울까요?')) return;
+      const res = await deleteGreeting(providerType, registrationId, hid);
+      if (!res.ok) {
+        showError(res.error);
+        return;
+      }
+      if (editingHistoryId === hid) {
+        clearEditingMode();
+      }
+      invalidateGreetings();
+      refreshHistoryList(res.item);
+      showStatus('지웠어요');
+      return;
+    }
+
+    // 올리기 버튼
     if (target.closest('[data-ng-save]')) {
-      const text = editor.querySelector('[data-ng-body]')?.value || '';
+      const text = (bodyEl instanceof HTMLTextAreaElement ? bodyEl.value : '') || '';
       const error = greetingError(text);
       if (error) {
         showError(error);
@@ -550,25 +659,31 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
         body: text,
         neighborhood: editor.getAttribute('data-ng-area') || '',
         displayName: editor.getAttribute('data-ng-name') || '',
+        historyId: editingHistoryId || undefined,
       });
       if (!saved.ok) {
         showError(saved.error);
         return;
       }
+      clearEditingMode();
       invalidateGreetings();
-      syncActions(true);
-      showStatus('저장되었습니다');
+      refreshHistoryList(saved.item);
+      showStatus('올렸어요');
       return;
     }
-    if (!target.closest('[data-ng-down]')) return;
-    const saved = await unpublishGreeting(providerType, registrationId);
-    if (!saved.ok) {
-      showError(saved.error);
+
+    // 내리기 버튼
+    if (target.closest('[data-ng-down]')) {
+      const saved = await unpublishGreeting(providerType, registrationId);
+      if (!saved.ok) {
+        showError(saved.error);
+        return;
+      }
+      invalidateGreetings();
+      refreshHistoryList(saved.item);
+      showStatus('내렸어요');
       return;
     }
-    invalidateGreetings();
-    syncActions(false);
-    showStatus('내렸습니다');
   });
 }
 
