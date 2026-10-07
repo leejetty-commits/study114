@@ -1,0 +1,86 @@
+=== Origin direct 2026-09-22 17:59:23 KST ===
+--- resolve dothome ---
+112.175.184.80
+112.175.184.126
+study114.dothome.co.kr has address 112.175.184.80
+--- TCP 443 to 112.175.184.80 ---
+TCP 443 OPEN
+TCP 80 OPEN
+--: line 12: nc: command not found
+--- TLS SNI=study114.net ---
+depth=2 OU=GlobalSign Root CA - R6, O=GlobalSign, CN=GlobalSign
+depth=1 C=BE, O=GlobalSign nv-sa, CN=GlobalSign GCC R6 AlphaSSL CA 2025
+depth=0 CN=*.dothome.co.kr
+CONNECTED(00000005)
+subject=CN=*.dothome.co.kr
+issuer=C=BE, O=GlobalSign nv-sa, CN=GlobalSign GCC R6 AlphaSSL CA 2025
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Protocol: TLSv1.3
+Verify return code: 0 (ok)
+CERT details SNI study114.net:
+subject=CN=*.dothome.co.kr
+issuer=C=BE, O=GlobalSign nv-sa, CN=GlobalSign GCC R6 AlphaSSL CA 2025
+notBefore=May 28 05:29:11 2026 GMT
+notAfter=Dec 13 05:29:11 2026 GMT
+X509v3 Subject Alternative Name: 
+    DNS:*.dothome.co.kr, DNS:dothome.co.kr
+--- TLS SNI=study114.dothome.co.kr ---
+depth=2 OU=GlobalSign Root CA - R6, O=GlobalSign, CN=GlobalSign
+depth=1 C=BE, O=GlobalSign nv-sa, CN=GlobalSign GCC R6 AlphaSSL CA 2025
+depth=0 CN=*.dothome.co.kr
+CONNECTED(00000005)
+subject=CN=*.dothome.co.kr
+issuer=C=BE, O=GlobalSign nv-sa, CN=GlobalSign GCC R6 AlphaSSL CA 2025
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Protocol: TLSv1.3
+Verify return code: 0 (ok)
+CERT details SNI study114.dothome.co.kr:
+subject=CN=*.dothome.co.kr
+issuer=C=BE, O=GlobalSign nv-sa, CN=GlobalSign GCC R6 AlphaSSL CA 2025
+notBefore=May 28 05:29:11 2026 GMT
+notAfter=Dec 13 05:29:11 2026 GMT
+X509v3 Subject Alternative Name: 
+    DNS:*.dothome.co.kr, DNS:dothome.co.kr
+--- HTTP Host: study114.net via origin IP (HTTPS, insecure) ---
+http_code=200 time=0.632659 err=
+HTTP/1.1 200 OK
+Date: Tue, 22 Sep 2026 08:59:27 GMT
+Server: Apache
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Transfer-Encoding: chunked
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="우동공과 메인 화면 UI 프리뷰" />
+    <title>우동공과 — 메인 화면 프리뷰</title>
+    <link 
+--- HTTP Host: study114.dothome.co.kr ---
+http_code=301 time=0.661399 err=
+HTTP/1.1 301 Moved Permanently
+Date: Tue, 22 Sep 2026 08:59:27 GMT
+Server: Apache
+Location: https://study114.net/
+Content-Length: 229
+Content-Type: text/html; charset=iso-8859-1
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>301 Moved Permanently</title>
+</head><body>
+<h1>Moved Permanently</h1>
+<p>The document has moved <a href="https://study114.net/">here</a>.</p>
+</body></html>
+
+--- STRICT verify with SNI study114.net (expect fail if SAN mismatch) ---
+curl: (60) SSL: no alternative certificate subject name matches target hostname 'study114.net'
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the webpage mentioned above.
+http_code=000 ssl_verify=1 err=SSL: no alternative certificate subject name matches target hostname 'study114.net'

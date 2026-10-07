@@ -1,0 +1,44 @@
+=== Redirect / HTTP vs HTTPS 2026-09-22 17:59:41 KST ===
+--- http:// (no follow) ---
+HTTP/1.1 200 OK
+Date: Tue, 22 Sep 2026 08:59:43 GMT
+Content-Type: text/html; charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Server: cloudflare
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Report-To: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=REDACTED"}]}
+Nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: DYNAMIC
+CF-RAY: a3f01d6dfe353926-IAD
+alt-svc: h3=":443"; ma=86400
+
+--- http://www ---
+HTTP/1.1 301 Moved Permanently
+Date: Tue, 22 Sep 2026 08:59:43 GMT
+Content-Type: text/html; charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Location: https://study114.net/
+Report-To: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=REDACTED"}]}
+Nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+Server: cloudflare
+CF-RAY: a3f01d7a8915c93c-IAD
+alt-svc: h3=":443"; ma=86400
+
+--- https://www ---
+HTTP/2 301 
+date: Tue, 22 Sep 2026 08:59:43 GMT
+content-type: text/html; charset=UTF-8
+location: https://study114.net/
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=REDACTED"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+server: cloudflare
+cf-ray: a3f01d7acea5d633-IAD
+alt-svc: h3=":443"; ma=86400
+
+
+code=301 time=0.033242
+--- https:// with -L follow ---
+final_url=http://study114.net/ code=200 redirects=0 time=4.060545

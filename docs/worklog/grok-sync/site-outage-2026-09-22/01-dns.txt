@@ -1,0 +1,50 @@
+=== DNS diagnosis 2026-09-22 17:58:46 KST ===
+--- A ---
+study114.net.		300	IN	A	172.67.210.220
+study114.net.		300	IN	A	104.21.93.139
+--- AAAA ---
+study114.net.		300	IN	AAAA	2606:4700:3033::6815:5d8b
+study114.net.		300	IN	AAAA	2606:4700:3034::ac43:d2dc
+--- CNAME ---
+--- NS ---
+study114.net.		22531	IN	NS	marek.ns.cloudflare.com.
+study114.net.		22531	IN	NS	rosalie.ns.cloudflare.com.
+--- FULL A ---
+
+; <<>> DiG 9.20.29-1~deb13u1-Debian <<>> study114.net A
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 22458
+;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;study114.net.			IN	A
+
+;; ANSWER SECTION:
+study114.net.		299	IN	A	104.21.93.139
+study114.net.		299	IN	A	172.67.210.220
+
+;; Query time: 3 msec
+;; SERVER: 10.0.0.2#53(10.0.0.2) (UDP)
+;; WHEN: Tue Sep 22 17:58:47 KST 2026
+;; MSG SIZE  rcvd: 73
+
+--- nslookup ---
+Server:		10.0.0.2
+Address:	10.0.0.2#53
+
+Non-authoritative answer:
+Name:	study114.net
+Address: 172.67.210.220
+Name:	study114.net
+Address: 104.21.93.139
+Name:	study114.net
+Address: 2606:4700:3034::ac43:d2dc
+Name:	study114.net
+Address: 2606:4700:3033::6815:5d8b
+
+--- Cloudflare IP ranges check (common CF ranges) ---
+IP: 104.21.93.139
+IP: 172.67.210.220

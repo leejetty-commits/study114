@@ -1,0 +1,317 @@
+34:   ];
+35: 
+36:   /* Sample occupancy per region — room Prime only */
+37:   const OCCUPANCY = {
+38:     "1": [
+
+----
+
+83:       region: ["1", "2", "3"].includes(q.get("region")) ? q.get("region") : "1",
+84:       prime: ["partial", "full", "held"].includes(q.get("prime")) ? q.get("prime") : "partial",
+85:       waitlist: q.get("waitlist") === "1",
+86:       wlStatus: ["waiting", "payable", "done"].includes(q.get("wlStatus"))
+87:         ? q.get("wlStatus")
+
+----
+
+92:       ticket: ["1", "5", "10"].includes(q.get("ticket")) ? q.get("ticket") : "5",
+93:       heldUntil: null,
+94:       waitlistRows: [],
+95:     };
+96:   }
+
+----
+
+105:       q.set("term", state.term);
+106:       if (state.badge) q.set("badge", state.badge);
+107:       if (state.waitlist) {
+108:         q.set("waitlist", "1");
+109:         q.set("wlStatus", state.wlStatus);
+
+----
+
+106:       if (state.badge) q.set("badge", state.badge);
+107:       if (state.waitlist) {
+108:         q.set("waitlist", "1");
+109:         q.set("wlStatus", state.wlStatus);
+110:       }
+
+----
+
+152:     } else if (primeMode === "partial" && regionId === "3") {
+153:       /* region 3 base is full — for partial demo force region 1 style when explicitly partial on 3 */
+154:       /* keep as-is from OCCUPANCY which is full for region 3 — URL prime=partial on region 3 still shows region's natural occupancy */
+155:     }
+156:     return slots;
+
+----
+
+168:     const rows = [];
+169:     const regionName = REGIONS.find((r) => r.id === state.region)?.name || "대치1동";
+170:     if (state.waitlist || state.wlStatus) {
+171:       if (state.wlStatus === "waiting" || state.waitlist) {
+172:         rows.push({
+
+----
+
+169:     const regionName = REGIONS.find((r) => r.id === state.region)?.name || "대치1동";
+170:     if (state.waitlist || state.wlStatus) {
+171:       if (state.wlStatus === "waiting" || state.waitlist) {
+172:         rows.push({
+173:           id: "wl1",
+
+----
+
+230:           <select data-proto="role">
+231:             <option value="room"${state.role === "room" ? " selected" : ""}>공부방</option>
+232:             <option value="tutor"${state.role === "tutor" ? " selected" : ""}>과외쌤</option>
+233:           </select>
+234:         </label>
+
+----
+
+264:           </select>
+265:         </label>
+266:         <button type="button" data-proto-act="waitlist">내 예약대기 ${state.waitlist ? "숨기기" : "보기"}</button>
+267:         <button type="button" data-proto-act="wl-waiting">대기 등록 시드</button>
+268:         <button type="button" data-proto-act="wl-payable">결제 가능 시드</button>
+
+----
+
+275:           <select data-proto="role">
+276:             <option value="room"${state.role === "room" ? " selected" : ""}>공부방</option>
+277:             <option value="tutor"${state.role === "tutor" ? " selected" : ""}>과외쌤</option>
+278:           </select>
+279:         </label>
+
+----
+
+300:       const selected = state.product === kind && state.term === term;
+301:       let benefit = "";
+302:       if (state.role === "tutor") {
+303:         const msgs = kind === "prime" ? pack.msgPrime[i] : pack.msgPick[i];
+304:         benefit = `무료 쪽지 ${msgs}회`;
+
+----
+
+372:     if (full && !held) {
+373:       extra += `
+374:         <div class="waitlist-box">
+375:           <p>현재 선택 지역의 Prime 자리는 모두 이용 중입니다. 예약대기를 등록하면 빈자리가 열릴 때 알려드립니다. 대기 등록만으로 자리나 순번이 보장되지는 않으며 결제가 완료되어야 확정됩니다.</p>
+376:           <button type="button" class="btn btn-primary" id="btnWaitlistRegister" aria-label="Prime 노출 예약대기 등록">예약대기 등록</button>
+
+----
+
+434:     const el = document.getElementById("applyTarget");
+435:     if (!el) return;
+436:     const isRoom = state.role === "room";
+437:     const regionOpts = REGIONS.map(
+438:       (r) => `<option value="${r.id}"${state.region === r.id ? " selected" : ""}>${r.name}</option>`
+
+----
+
+440:     el.innerHTML = `
+441:       <div class="profile-row">
+442:         <div class="avatar" aria-hidden="true">${isRoom ? "방" : "쌤"}</div>
+443:         <div>
+444:           <div class="value">${isRoom ? "대치동 공부방" : "김○○ 과외쌤"}</div>
+
+----
+
+442:         <div class="avatar" aria-hidden="true">${isRoom ? "방" : "쌤"}</div>
+443:         <div>
+444:           <div class="value">${isRoom ? "대치동 공부방" : "김○○ 과외쌤"}</div>
+445:           <div><span class="status-ok">공개 중</span> · ${isRoom ? "공부방" : "과외쌤"}</div>
+446:           <small style="color:var(--muted)">현재 이용 중: Basic 무료 노출</small>
+
+----
+
+443:         <div>
+444:           <div class="value">${isRoom ? "대치동 공부방" : "김○○ 과외쌤"}</div>
+445:           <div><span class="status-ok">공개 중</span> · ${isRoom ? "공부방" : "과외쌤"}</div>
+446:           <small style="color:var(--muted)">현재 이용 중: Basic 무료 노출</small>
+447:         </div>
+
+----
+
+449:       <div class="apply-grid">
+450:         <div class="apply-item">
+451:           <label for="applyRegion">${isRoom ? "적용 지역 (대표 홍보지역)" : "적용 지역 (활동지역)"}</label>
+452:           <select id="applyRegion" aria-label="적용 지역">${regionOpts}</select>
+453:         </div>
+
+----
+
+453:         </div>
+454:         <div class="apply-item">
+455:           <label>${isRoom ? "적용 프로필" : "주력과목"}</label>
+456:           <div class="value">${isRoom ? "대치동 공부방 · 공개" : "수학 · 고등학교"}</div>
+457:         </div>
+
+----
+
+454:         <div class="apply-item">
+455:           <label>${isRoom ? "적용 프로필" : "주력과목"}</label>
+456:           <div class="value">${isRoom ? "대치동 공부방 · 공개" : "수학 · 고등학교"}</div>
+457:         </div>
+458:       </div>
+
+----
+
+472:     const cta = document.getElementById("buyCta");
+473:     if (!el) return;
+474:     const isRoom = state.role === "room";
+475:     const regionName = REGIONS.find((r) => r.id === state.region)?.name || "";
+476:     const productName = state.product === "prime" ? "Prime 노출" : "Pick 노출";
+
+----
+
+479:     const list = listPrice(base, disc);
+480:     const msgs =
+481:       state.role === "tutor" && ti >= 0
+482:         ? state.product === "prime"
+483:           ? PRICING.tutor.msgPrime[ti]
+
+----
+
+486: 
+487:     const slots = cloneSlots(state.region, state.prime);
+488:     const full = isRoom && state.product === "prime" && (state.prime === "full" || isFull(slots));
+489: 
+490:     el.innerHTML = `
+
+----
+
+489: 
+490:     el.innerHTML = `
+491:       <div class="sum-row"><span>적용 프로필</span><b>${isRoom ? "대치동 공부방" : "김○○ 과외쌤"}</b></div>
+492:       <div class="sum-row"><span>상품</span><b>${productName}</b></div>
+493:       <div class="sum-row"><span>기간</span><b>${state.term}</b></div>
+
+----
+
+508:         cta.textContent = "예약대기 등록";
+509:         cta.setAttribute("aria-label", "Prime 노출 예약대기 등록");
+510:         cta.dataset.mode = "waitlist";
+511:         cta.disabled = false;
+512:       } else if (slots.some((s) => s.status === "held") && state.product === "prime" && isRoom) {
+
+----
+
+510:         cta.dataset.mode = "waitlist";
+511:         cta.disabled = false;
+512:       } else if (slots.some((s) => s.status === "held") && state.product === "prime" && isRoom) {
+513:         cta.textContent = "결제 계속하기";
+514:         cta.setAttribute("aria-label", `${productName} 결제 계속하기`);
+
+----
+
+529: 
+530:   function renderWaitlist(state) {
+531:     const panel = document.getElementById("waitlistPanel");
+532:     if (!panel) return;
+533:     if (!state.waitlist && state.waitlistRows.length === 0) {
+
+----
+
+531:     const panel = document.getElementById("waitlistPanel");
+532:     if (!panel) return;
+533:     if (!state.waitlist && state.waitlistRows.length === 0) {
+534:       panel.classList.add("hidden");
+535:       return;
+
+----
+
+536:     }
+537:     panel.classList.remove("hidden");
+538:     const rows = state.waitlistRows.length ? state.waitlistRows : seedWaitlist(state);
+539:     state.waitlistRows = rows;
+540: 
+
+----
+
+537:     panel.classList.remove("hidden");
+538:     const rows = state.waitlistRows.length ? state.waitlistRows : seedWaitlist(state);
+539:     state.waitlistRows = rows;
+540: 
+541:     const statusLabel = {
+
+----
+
+587:       } else {
+588:         primeLead.textContent =
+589:           "선택한 시와 주력과목의 Prime 영역에 페이지당 3명씩 노출되며, 15분마다 공정하게 순환합니다.";
+590:       }
+591:     }
+
+----
+
+592:     if (pickLead) {
+593:       pickLead.textContent =
+594:         "한 페이지에 10명씩 노출되며, 15분마다 공정하게 순환합니다.\n추천·후기 수는 카드 통계로만 표시되며, 노출 순위를 보장하지 않습니다.";
+595:     }
+596:     const roleLabel = document.getElementById("heroRoleHint");
+
+----
+
+613:     renderWaitlist(state);
+614: 
+615:     /* hide occupancy when pick selected or tutor */
+616:     const occ = document.getElementById("primeOccupancy");
+617:     if (occ && (state.role !== "room" || state.product !== "prime")) {
+
+----
+
+715:   function registerWaitlist() {
+716:     const regionName = REGIONS.find((r) => r.id === state.region)?.name || "";
+717:     state.waitlist = true;
+718:     state.wlStatus = "waiting";
+719:     state.waitlistRows = [
+
+----
+
+717:     state.waitlist = true;
+718:     state.wlStatus = "waiting";
+719:     state.waitlistRows = [
+720:       {
+721:         id: "wl-new-" + Date.now(),
+
+----
+
+725:         status: "waiting",
+726:       },
+727:       ...state.waitlistRows.filter((r) => r.status !== "waiting" || r.region !== regionName),
+728:     ];
+729:     rerender();
+
+----
+
+728:     ];
+729:     rerender();
+730:     document.getElementById("waitlistPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+731:   }
+732: 
+
+----
+
+738:         state.badge = "";
+739:       }
+740:       if (state.role === "tutor") {
+741:         state.waitlist = false;
+742:         state.prime = "partial";
+
+----
+
+739:       }
+740:       if (state.role === "tutor") {
+741:         state.waitlist = false;
+742:         state.prime = "partial";
+743:       }
+
+----
+
+774:     }
+775: 
+776:     if (e.target.id === "btnWaitlistRegister" || (e.target.closest("#buyCta") && e.target.closest("#buyCta").dataset.mode === "waitlist")) {
+777:       registerWaitlist();
+778:       return;

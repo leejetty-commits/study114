@@ -1,0 +1,65 @@
+=== Edge TLS 2026-09-22 17:59:23 KST ===
+subject=CN=study114.net
+issuer=C=US, O=Google Trust Services, CN=WE1
+notBefore=Aug 17 08:13:27 2026 GMT
+notAfter=Nov 15 09:11:03 2026 GMT
+X509v3 Subject Alternative Name: 
+    DNS:study114.net, DNS:*.study114.net
+--- verify ---
+subject=CN=study114.net
+issuer=C=US, O=Google Trust Services, CN=WE1
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Protocol: TLSv1.3
+Verify return code: 0 (ok)
+--- curl -v head ---
+* IPv6: 2606:4700:3034::ac43:d2dc, 2606:4700:3033::6815:5d8b
+* IPv4: 104.21.93.139, 172.67.210.220
+*   Trying [2606:4700:3034::ac43:d2dc]:443...
+* Immediate connect fail for 2606:4700:3034::ac43:d2dc: Network is unreachable
+*   Trying [2606:4700:3033::6815:5d8b]:443...
+* Immediate connect fail for 2606:4700:3033::6815:5d8b: Network is unreachable
+*   Trying 104.21.93.139:443...
+* ALPN: curl offers h2,http/1.1
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS change cipher, Change cipher spec (1):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519MLKEM768 / id-ecPublicKey
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=study114.net
+*  start date: Aug 17 08:13:27 2026 GMT
+*  expire date: Nov 15 09:11:03 2026 GMT
+*  subjectAltName: host "study114.net" matched cert's "study114.net"
+*  issuer: C=US; O=Google Trust Services; CN=WE1
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type EC/prime256v1 (256/128 Bits/secBits), signed using ecdsa-with-SHA256
+*   Certificate level 1: Public key type EC/prime256v1 (256/128 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 2: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+* Connected to study114.net (104.21.93.139) port 443
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://study114.net/
+* [HTTP/2] [1] [:method: HEAD]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: study114.net]
+* [HTTP/2] [1] [:path: /]
+* [HTTP/2] [1] [user-agent: curl/8.14.1]
+* [HTTP/2] [1] [accept: */*]
+> HEAD / HTTP/2
+* Request completely sent off
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0< HTTP/2 200 
+< server: cloudflare
+< cf-ray: a3f01d029bd3d633-IAD
+* Connection #0 to host study114.net left intact
+HTTP/2 200 
+server: cloudflare
+cf-ray: a3f01d029bd3d633-IAD

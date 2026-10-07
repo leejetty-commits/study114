@@ -1,0 +1,38 @@
+=== HTTPS via Cloudflare 2026-09-22 17:58:47 KST ===
+--: line 4: /index.php: No such file or directory
+=== Clean 5x retries on / 2026-09-22 17:58:47 KST ===
+--- try 1 ---
+http_code=200 time_total=6.788585 remote_ip=172.67.210.220 err=
+HTTP/2 200 
+server: cloudflare
+cf-ray: a3f01c1c68d8d633-IAD
+<!DOCTYPE html> <html lang="ko">   <head>     <meta charset="UTF-8" />     <meta name="viewport" content="width=device-width, initial-scale=1.0" />     <meta name="description" content="우동공과 메인 화면 UI 프리뷰" />     <title>우동공과 — 메인 화면 프리뷰</title>     <link rel="preconnect" href="https://cdn.jsdelivr.net" />     <link       rel="stylesheet"       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"     />   
+
+--- try 2 ---
+http_code=200 time_total=10.852170 remote_ip=104.21.93.139 err=
+HTTP/2 200 
+server: cloudflare
+cf-ray: a3f01c46eaffd633-IAD
+<!DOCTYPE html> <html lang="ko">   <head>     <meta charset="UTF-8" />     <meta name="viewport" content="width=device-width, initial-scale=1.0" />     <meta name="description" content="우동공과 메인 화면 UI 프리뷰" />     <title>우동공과 — 메인 화면 프리뷰</title>     <link rel="preconnect" href="https://cdn.jsdelivr.net" />     <link       rel="stylesheet"       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"     />   
+
+--- try 3 ---
+http_code=200 time_total=1.534172 remote_ip=172.67.210.220 err=
+HTTP/2 200 
+server: cloudflare
+cf-ray: a3f01c8ada15d633-IAD
+<!DOCTYPE html> <html lang="ko">   <head>     <meta charset="UTF-8" />     <meta name="viewport" content="width=device-width, initial-scale=1.0" />     <meta name="description" content="우동공과 메인 화면 UI 프리뷰" />     <title>우동공과 — 메인 화면 프리뷰</title>     <link rel="preconnect" href="https://cdn.jsdelivr.net" />     <link       rel="stylesheet"       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"     />   
+
+--- try 4 ---
+http_code=200 time_total=0.481610 remote_ip=104.21.93.139 err=
+HTTP/2 200 
+server: cloudflare
+cf-ray: a3f01c9489ffd633-IAD
+<!DOCTYPE html> <html lang="ko">   <head>     <meta charset="UTF-8" />     <meta name="viewport" content="width=device-width, initial-scale=1.0" />     <meta name="description" content="우동공과 메인 화면 UI 프리뷰" />     <title>우동공과 — 메인 화면 프리뷰</title>     <link rel="preconnect" href="https://cdn.jsdelivr.net" />     <link       rel="stylesheet"       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"     />   
+
+--- try 5 ---
+http_code=200 time_total=0.470537 remote_ip=172.67.210.220 err=
+HTTP/2 200 
+server: cloudflare
+cf-ray: a3f01c979d1fd633-IAD
+<!DOCTYPE html> <html lang="ko">   <head>     <meta charset="UTF-8" />     <meta name="viewport" content="width=device-width, initial-scale=1.0" />     <meta name="description" content="우동공과 메인 화면 UI 프리뷰" />     <title>우동공과 — 메인 화면 프리뷰</title>     <link rel="preconnect" href="https://cdn.jsdelivr.net" />     <link       rel="stylesheet"       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"     />   
+

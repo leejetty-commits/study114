@@ -1,0 +1,27 @@
+=== CACHE-BUST CF assets (force origin) 2026-09-22 18:29:19 KST ===
+try=1 room-js 200 ttfb=0.610355 total=1.183950 size=181338 speed=153163
+cf-cache-status: MISS cf-ray: a3f048dbeec4d633-IAD 
+try=2 room-js 200 ttfb=0.665418 total=1.282627 size=181338 speed=141380
+cf-cache-status: MISS cf-ray: a3f048e36e42d633-IAD 
+try=3 room-js 200 ttfb=0.638891 total=1.235728 size=181338 speed=146745
+cf-cache-status: MISS cf-ray: a3f048eb8ef8d633-IAD 
+try=4 room-js 200 ttfb=0.612391 total=1.179519 size=181338 speed=153738
+cf-cache-status: MISS cf-ray: a3f048f35892d633-IAD 
+try=5 room-js 200 ttfb=0.599694 total=1.155867 size=181338 speed=156884
+cf-cache-status: MISS cf-ray: a3f048fac899d633-IAD 
+try=1 main-js 200 ttfb=0.580006 total=1.648957 size=1287716 speed=780927
+cf-cache-status: MISS cf-ray: a3f049021938d633-IAD 
+try=2 main-js 200 ttfb=0.637813 total=1.819759 size=1287716 speed=707629
+cf-cache-status: MISS cf-ray: a3f0490c8da0d633-IAD 
+try=3 main-js 200 ttfb=0.624992 total=1.787089 size=1287716 speed=720566
+cf-cache-status: MISS cf-ray: a3f04917fa42d633-IAD 
+try=1 room-html 200 ttfb=0.590927 total=0.592703 size=1137 speed=1918
+cf-cache-status: DYNAMIC 
+try=2 room-html 200 ttfb=0.212910 total=0.214535 size=1137 speed=5299
+cf-cache-status: DYNAMIC 
+try=3 room-html 200 ttfb=0.213384 total=0.213531 size=1137 speed=5324
+cf-cache-status: DYNAMIC 
+try=4 room-html 200 ttfb=0.214209 total=0.215965 size=1137 speed=5264
+cf-cache-status: DYNAMIC 
+try=5 room-html 200 ttfb=0.213996 total=0.215325 size=1137 speed=5280
+cf-cache-status: DYNAMIC 

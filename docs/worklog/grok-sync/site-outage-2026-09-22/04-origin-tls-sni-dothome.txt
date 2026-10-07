@@ -1,0 +1,83 @@
+Connecting to 112.175.184.80
+depth=2 OU=GlobalSign Root CA - R6, O=GlobalSign, CN=GlobalSign
+verify return:1
+depth=1 C=BE, O=GlobalSign nv-sa, CN=GlobalSign GCC R6 AlphaSSL CA 2025
+verify return:1
+depth=0 CN=*.dothome.co.kr
+verify return:1
+CONNECTED(00000005)
+---
+Certificate chain
+ 0 s:CN=*.dothome.co.kr
+   i:C=BE, O=GlobalSign nv-sa, CN=GlobalSign GCC R6 AlphaSSL CA 2025
+   a:PKEY: RSA, 2048 (bit); sigalg: sha256WithRSAEncryption
+   v:NotBefore: May 28 05:29:11 2026 GMT; NotAfter: Dec 13 05:29:11 2026 GMT
+ 1 s:C=BE, O=GlobalSign nv-sa, CN=GlobalSign GCC R6 AlphaSSL CA 2025
+   i:OU=GlobalSign Root CA - R6, O=GlobalSign, CN=GlobalSign
+   a:PKEY: RSA, 2048 (bit); sigalg: sha256WithRSAEncryption
+   v:NotBefore: May 21 02:36:52 2025 GMT; NotAfter: May 21 00:00:00 2027 GMT
+ 2 s:OU=GlobalSign Root CA - R6, O=GlobalSign, CN=GlobalSign
+   i:OU=GlobalSign Root CA - R3, O=GlobalSign, CN=GlobalSign
+   a:PKEY: RSA, 4096 (bit); sigalg: sha384WithRSAEncryption
+   v:NotBefore: Feb 20 00:00:00 2019 GMT; NotAfter: Mar 18 10:00:00 2029 GMT
+---
+Server certificate
+-----BEGIN CERTIFICATE-----
+MIIGYTCCBUmgAwIBAgIMa124qWiTEzdc5DwtMA0GCSqGSIb3DQEBCwUAMFUxCzAJ
+BgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSswKQYDVQQDEyJH
+bG9iYWxTaWduIEdDQyBSNiBBbHBoYVNTTCBDQSAyMDI1MB4XDTI2MDUyODA1Mjkx
+MVoXDTI2MTIxMzA1MjkxMVowGjEYMBYGA1UEAwwPKi5kb3Rob21lLmNvLmtyMIIB
+IjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApALlzypIWLXogU8Y3Z2qliQQ
+BhMQSxf3bytN6A6nR0N1xNi0VPGqVLFNqxcU+LnDwCaY6sIO9NEEKfHdABS7Dfbi
+2bUkuXFX52OsgNHf8dt8Qri+zRfKSATI9I1U0W7Ibb1z1fkH4gP9JlKHp4STDrLS
+P0g8UZqNO6QFCNd/lV/uwd/WdkWRi4x5Xtk+BDq10P0oduWbB5O6v4ow8YFUyfsJ
+3mkT97M/lbCQKsBmNLFrQkSNJkV4zTmT4arnKuWmT/0wlc2cZw1j5Z1Ock+01R/Q
+f11+Z3Hr3NP8MDhwXXE9poTts25ylrdosX84oAhm/Tke0iUnxBCrz9q+HNMecwID
+AQABo4IDajCCA2YwDgYDVR0PAQH/BAQDAgWgMAwGA1UdEwEB/wQCMAAwgZkGCCsG
+AQUFBwEBBIGMMIGJMEkGCCsGAQUFBzAChj1odHRwOi8vc2VjdXJlLmdsb2JhbHNp
+Z24uY29tL2NhY2VydC9nc2djY3I2YWxwaGFzc2xjYTIwMjUuY3J0MDwGCCsGAQUF
+BzABhjBodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3I2YWxwaGFzc2xj
+YTIwMjUwVwYDVR0gBFAwTjAIBgZngQwBAgEwQgYKKwYBBAGgMgoBAzA0MDIGCCsG
+AQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzBE
+BgNVHR8EPTA7MDmgN6A1hjNodHRwOi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2Nj
+cjZhbHBoYXNzbGNhMjAyNS5jcmwwKQYDVR0RBCIwIIIPKi5kb3Rob21lLmNvLmty
+gg1kb3Rob21lLmNvLmtyMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjAf
+BgNVHSMEGDAWgBTFtJOPbyvcHki/txAwhc7RsrtILTAdBgNVHQ4EFgQUhs1+pXyY
+jEM6SS4tYcAt/wkMd9AwggF/BgorBgEEAdZ5AgQCBIIBbwSCAWsBaQB2AMs49xWJ
+fIShRF9bwd37yW7ymlnNRwppBYWwyxTDFFjnAAABnm0O7PkAAAQDAEcwRQIgH+Km
+3e7iKd6BxPNqv/filpr0Fo5ilIYSTom+beQqeHsCIQCRbXYWOTJC39EeFYy4sBKJ
+aSVLbIc45Cvx5pkrDC82ggB2AK9niDtXsE7dj6bZfvYuqOuBCsdxYPAkXlXWDC/n
+hYc6AAABnm0O7VIAAAQDAEcwRQIgM2OGlMM24+3Jt2WbwGrPhaUY98vCVhCVlUNR
+fOjZIT8CIQDw3jn8dRh14YCtvvrSqtd4iFyxWNTOZVAvba5Y1/dSnwB3AMIxfldF
+GaNF7n843rKQQevHwiFaIr9/1bWtdprZDlLNAAABnm0O7REAAAQDAEgwRgIhAISA
+H06Bv1JK+dYd337K+QP6t5iQHbKESTMjXBTgJwiKAiEAvEEgP1R88uUWRSL4Z6bW
+5TnotvyQu4U8O4/QhYqW5JwwDQYJKoZIhvcNAQELBQADggEBAHwyljBNSLo8BaJF
+s1PdMkGF5Ih0Se2nXfh3aZ3kgecfMIwPhhxLgPM+0pN+l+7xfpkVbAc9jqdcpvaX
+WjXsBFOadxnWwnqVNazrDzClLilniu8gPaJS7rZENVpSs+SoknjPK3cowijxgYU4
+rMwYIoUPBqTdEmJBVzLkdu8C1BTmJb4oAc2/nlV5KaAkmrLeWRjPSaZFME3Ctvkr
+T7j3XEPqlST42cyVsE+sV6u9vtqPlfB3fQiFz/MLysXjCFY7VwCaKq/Jw9tMReHq
+AnNC+LSoCVkWJNa8NYYD9E+0S+SMY/QYyNIwl+d2QJoLyp4FsUggIt975eC6O/3Z
+2XI8mFU=
+-----END CERTIFICATE-----
+subject=CN=*.dothome.co.kr
+issuer=C=BE, O=GlobalSign nv-sa, CN=GlobalSign GCC R6 AlphaSSL CA 2025
+---
+No client certificate CA names sent
+Peer signing digest: SHA256
+Peer signature type: rsa_pss_rsae_sha256
+Peer Temp Key: X25519, 253 bits
+---
+SSL handshake has read 4987 bytes and written 1644 bytes
+Verification: OK
+---
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Protocol: TLSv1.3
+Server public key is 2048 bit
+This TLS version forbids renegotiation.
+Compression: NONE
+Expansion: NONE
+No ALPN negotiated
+Early data was not sent
+Verify return code: 0 (ok)
+---
+DONE

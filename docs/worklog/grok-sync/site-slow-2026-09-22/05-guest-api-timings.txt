@@ -1,0 +1,7 @@
+=== Guest-critical APIs CF 2026-09-22 18:29:43 KST ===
+/api/auth/me.php: 200, ttfb samples 0.618,0.225,0.222,0.224,0.225 size=33 DYNAMIC
+/api/study-room/register.php: 405 (GET), ttfb ~0.22-0.23 size=220
+/api/study-room/public.php: 400, ttfb 0.22-0.60 size=226
+/api/registrations/study-rooms.php: 401, ttfb 0.21-0.58 size=381
+/api/auth/regions.php: 200, ttfb ~0.37 size=9011
+/api/tutor/register.php: 405 (GET), ttfb ~0.21-0.22 size=220
