@@ -106,5 +106,10 @@
 - **없음** (SQL 변경 없음, .htaccess 변경 없음, 환경변수/Secrets 변경 없음)
 
 ## 검수 및 승인
-- 검수: 대기
-- 승인: 대기
+- 검수 (2026-10-08 06:55, Cursor 메인 에이전트, 작업 세션과 별개): **통과** — 대상 `d815df7`
+  - (1) `resolveCanonicalGuRegionId`: 사용 함수 import 전부 확인(`expandKakaoSido`·`normalizeLocation`·`activityLabelFromRegionId`·`regionIdFromActivityLabel`). 직접 id 판정은 기존 `selectableFindRegionId`와 같은 규칙(도시 단위 목록에 있는 id만). `parseKoreanAddressParts`가 첫 토큰을 `city`(시·도)로, 다음을 `district`(시군구, 구 있는 시는 「수원시 영통구」)로 두므로 `expandKakaoSido(city) + district` 조합이 단위 라벨과 맞음. `region_label` 요청 경로 0, 못 구하면 null(요청 안 함). 단위 목록 로드 전 null → `bootFindCities(rerender)` 뒤 재계산
+  - (2) `findScopeMissing` 분기: `searchExecuted`·목록 배열·`searchError` 손대지 않음, `_needsSearchRestore=false` 유지. `findScopeHint`는 기본 안내와 같은 문구라 화면 차이는 없음(무해)
+  - 검사 스크립트: PHP 시험(R11)은 삭제가 아니라 `php -v` 실패 시에만 건너뜀. 기존 assert 유지. 이 스크립트는 CI 게이트 아님
+  - 메인 재실행: `verify-hold-find-address` OK, `verify-student-location-flow` 189/0
+  - 남는 점(배포 막지 않음): 지역 없는 저장 필터는 지워지지 않아 다음 진입 때도 안내만 다시 뜸
+- 승인: 사용자 위임 (2026-10-08 04:17 「배포까지 승인하겠다. 무결성은 제외.」) — 메인 검수 통과 시 `main` 반영·배포
