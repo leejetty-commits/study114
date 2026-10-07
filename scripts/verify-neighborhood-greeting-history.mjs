@@ -133,6 +133,8 @@ assert(css.includes('.ng-editor__submit-btn'), '.ng-editor__submit-btn 올리기
 assert(css.includes('.ng-editor__editing-hint'), '.ng-editor__editing-hint 편집 중 안내 문구 클래스가 존재한다');
 assert(css.includes('.ng-editor__input') && (css.includes('var(--space-2') || css.includes('padding: 0.5rem') || css.includes('padding: var(--space-2')), 'textarea(.ng-editor__input) 안쪽 들여쓰기 여백(padding var(--space-2)...) 규칙이 존재한다');
 assert(css.includes('.ng-editor__history-list'), '.ng-editor__history-list 이력 목록 클래스가 존재한다');
+assert(css.includes('.ng-editor__history-loading'), '.ng-editor__history-loading 클래스가 존재한다');
+assert(css.includes('.ng-editor__history-fallback'), '.ng-editor__history-fallback 클래스가 존재한다');
 assert(css.includes('.ng-editor__badge'), '.ng-editor__badge 게시 중 배지 클래스가 존재한다');
 assert(css.includes('.ng-editor__down-btn'), '.ng-editor__down-btn 내리기 버튼 클래스가 존재한다');
 assert(css.includes('.ng-editor__del-btn'), '.ng-editor__del-btn 삭제 버튼 클래스가 존재한다');
@@ -141,6 +143,11 @@ assert(css.includes('.ng-editor__del-btn'), '.ng-editor__del-btn 삭제 버튼 �
 // 3. JS 클라이언트 Store 및 UI 모듈 검증
 // --------------------------------------------------------------------------
 console.log('\n3. 클라이언트 모듈(Store & UI) 검증');
+
+const uiSource = readFileSync(resolve(ROOT, 'preview/home-ui/src/neighborhood-greeting-ui.js'), 'utf8');
+const storeSource = readFileSync(resolve(ROOT, 'preview/shared/neighborhood-greeting-store.js'), 'utf8');
+assert(!uiSource.includes("'init'") && !uiSource.includes('"init"'), 'UI 소스에 가짜 id("init")가 존재하지 않는다');
+assert(!storeSource.includes("'init'") && !storeSource.includes('"init"'), 'Store 소스에 가짜 id("init")가 존재하지 않는다');
 
 const store = await import('../preview/shared/neighborhood-greeting-store.js');
 const greetingHelper = await import('../preview/shared/neighborhood-greeting.js');
@@ -172,7 +179,8 @@ assert(htmlEmpty.includes('data-ng-save>올리기</button>'), '제목줄에 [올
 assert(htmlEmpty.includes('<textarea class="form-input ng-editor__input"'), '입력창(textarea)이 렌더링된다');
 assert(htmlEmpty.includes('data-ng-editing-hint'), '편집 중 안내문 컨테이너가 렌더링된다');
 assert(htmlEmpty.includes('data-ng-history-wrap'), '입력창 아래에 이력 목록 컨테이너가 렌더링된다');
-assert(htmlEmpty.includes('아직 올린 인사가 없어요'), '이력이 없을 때 안내 문구가 표시된다');
+assert(htmlEmpty.includes('불러오는 중…') || htmlEmpty.includes('ng-editor__history-loading'), '서버 이력 동기화 전에는 "불러오는 중…"이 표시된다');
+assert(ui.renderGreetingHistoryList([], false).includes('아직 올린 인사가 없어요'), '이력이 빈 배열일 때 안내 문구가 표시된다');
 
 // (c) renderGreetingHistoryList 렌더링 검증
 const mockHistory = [

@@ -487,8 +487,9 @@ export function renderGreetingHistoryList(history, isUp) {
 export function renderNeighborhoodGreetingEditor(opts) {
   const current = greetingForRegistration(opts.providerType, opts.registrationId);
   const up = current?.status === 'up';
-  const history = Array.isArray(current?.history) ? current.history : (current?.body ? [{ id: 'init', body: current.body, updated_at: current.updatedAt }] : []);
-  const historyHtml = renderGreetingHistoryList(history, up);
+  const historyHtml = Array.isArray(current?.history)
+    ? renderGreetingHistoryList(current.history, up)
+    : `<p class="ng-editor__history-loading">불러오는 중…</p>`;
 
   return `
     <section class="ng-editor" data-ng-editor data-ng-type="${esc(opts.providerType)}" data-ng-id="${Number(opts.registrationId)}" data-ng-area="${esc(opts.neighborhood)}" data-ng-name="${esc(opts.displayName)}">
@@ -583,12 +584,27 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
     }
   };
 
+  const renderFallbackView = () => {
+    if (!historyWrap) return;
+    const current = greetingForRegistration(providerType, registrationId);
+    if (current?.body) {
+      historyWrap.innerHTML = `<p class="ng-editor__history-fallback">${esc(current.body)}</p>`;
+    } else {
+      historyWrap.innerHTML = `<p class="ng-editor__history-empty">아직 올린 인사가 없어요.</p>`;
+    }
+  };
+
   const refreshHistoryList = (item) => {
     if (!historyWrap) return;
     const current = item || greetingForRegistration(providerType, registrationId);
     const up = current?.status === 'up';
-    const history = Array.isArray(current?.history) ? current.history : (current?.body ? [{ id: 'init', body: current.body, updated_at: current.updatedAt }] : []);
-    historyWrap.innerHTML = renderGreetingHistoryList(history, up);
+    if (Array.isArray(current?.history)) {
+      historyWrap.innerHTML = renderGreetingHistoryList(current.history, up);
+    } else if (current?.body) {
+      historyWrap.innerHTML = `<p class="ng-editor__history-fallback">${esc(current.body)}</p>`;
+    } else {
+      historyWrap.innerHTML = `<p class="ng-editor__history-empty">아직 올린 인사가 없어요.</p>`;
+    }
   };
 
   bodyEl?.addEventListener('input', () => {
@@ -596,11 +612,20 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
   });
 
   // Background sync on mount to ensure fresh history from server
-  fetchMineGreeting(providerType, registrationId).then((res) => {
-    if (res.ok && res.item && editor.isConnected) {
-      refreshHistoryList(res.item);
-    }
-  }).catch(() => {});
+  fetchMineGreeting(providerType, registrationId)
+    .then((res) => {
+      if (!editor.isConnected) return;
+      if (res.ok && res.item) {
+        refreshHistoryList(res.item);
+      } else {
+        renderFallbackView();
+      }
+    })
+    .catch(() => {
+      if (editor.isConnected) {
+        renderFallbackView();
+      }
+    });
 
   editor.addEventListener('click', async (event) => {
     const target = event.target instanceof Element ? event.target : null;
@@ -617,7 +642,7 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
     if (pickBtn) {
       const hid = pickBtn.getAttribute('data-ng-pick-history');
       const current = greetingForRegistration(providerType, registrationId);
-      const history = Array.isArray(current?.history) ? current.history : (current?.body ? [{ id: 'init', body: current.body, updated_at: current.updatedAt }] : []);
+      const history = Array.isArray(current?.history) ? current.history : [];
       const found = history.find((h) => h.id === hid);
       if (found) {
         setEditingMode(found.id, found.body);
