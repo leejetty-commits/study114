@@ -8,7 +8,7 @@ use Study114\Database\Connection;
 use Study114\StudyRoom\StudyRoomPublicReadService;
 use Study114\Visibility\WithdrawnOwnerSql;
 
-    /** 동네 인사 1차. 파일 저장. 랭킹 가산 없음. */
+/** 동네 인사 1차. 파일 저장. 랭킹 가산 없음. */
 final class NeighborhoodGreetingService
 {
     private const MAX = 80;

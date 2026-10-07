@@ -118,7 +118,7 @@ JSON 파일(`storage/neighborhood-greetings.json`)에 저장되는 각 공급자
 
 - **하위 호환성**: 기존 데이터에 `history`가 없을 경우 `extractHistory()`를 통해 `body`와 `updated_at`으로 `history[0]`을 자동 구성.
 - **공개 보호**: `listPublic` 응답은 기존 형태 그대로 유지하며 `history` 배열을 일절 노출하지 않음.
-- **본인 조회 보안**: `GET /api/neighborhood-greetings.php?mine=1` 시 세션 확인, 역할 검증, 소유자 검증(`assertOwns`)을 강제하여 타인의 `history` 조회를 철저히 차단.
+- **본인 조회 보안**: `GET /api/neighborhood-greetings.php?mine=1` 시 세션 확인(미로그인 401), 역할 검증 및 소유자 검증(`assertOwns` 불일치 시 `InvalidArgumentException` → API 400 반환)을 강제하여 타인의 `history` 조회를 철저히 차단.
 
 ---
 
@@ -126,13 +126,13 @@ JSON 파일(`storage/neighborhood-greetings.json`)에 저장되는 각 공급자
 
 | 파일 경로 | 변경 내용 요약 |
 |---|---|
-| `src/Neighborhood/NeighborhoodGreetingService.php` | `history` 관리(최대 3개, 중복방지, 맨위삽입, 하위호환 `extractHistory`), `getMine`(본인 조회 및 소유자 검증), `delete`(소유자 검증 및 `history[0]` 삭제 시 자동공개 방지 `status: down`) |
+| `src/Neighborhood/NeighborhoodGreetingService.php` | `history` 관리(최대 3개, 중복방지, 맨위삽입, 하위호환 `extractHistory`), `getMine`(본인 조회 및 소유자 검증), `delete`(소유자 검증 및 `history[0]` 삭제 시 자동공개 방지 `status: down`), 클래스 주석 들여쓰기 원복 |
 | `public/api/neighborhood-greetings.php` | `GET ?mine=1` 본인 history 조회 분기 추가 (인증/소유권 검증), `POST` 저장 및 삭제 응답에 `history` 필드 추가 |
 | `preview/shared/neighborhood-greeting-store.js` | `publishGreeting`에 `historyId` 전달 및 로컬 `history` 반영, `unpublishGreeting` 및 `deleteGreeting`, `fetchMineGreeting` 추가 |
 | `preview/shared/neighborhood-greeting.js` | `buildGreetingRecord`에 `historyId` 옵션 지원 |
-| `preview/home-ui/src/neighborhood-greeting-ui.js` | 제목줄 [올리기] 버튼 레이아웃, `renderGreetingHistoryList`(최대 3개, 본문 말줄임, 날짜, 게시 중/내리기, 삭제), 항목 클릭 불러오기, 편집 중 취소, 저장 시 입력칸 비움 및 '올렸어요' 표시 |
-| `preview/home-ui/src/styles/neighborhood-greeting.css` | `.ng-editor__head`, `.ng-editor__submit-btn`, `.ng-editor__editing-hint`, textarea padding(`var(--space-2)`/`var(--space-3)`), `.ng-editor__history-*`, 배지/버튼 스타일 및 `[hidden]` 방어 규칙 |
-| `scripts/verify-neighborhood-greeting-history.mjs` | 서버 소스 정적 assert(PHP 없음 대응), CSS 규칙 검증, JS 스토어 및 UI 렌더링/모의 DOM 상호작용 검증 스크립트 (총 60개 테스트) |
+| `preview/home-ui/src/neighborhood-greeting-ui.js` | 제목줄 [올리기] 버튼 레이아웃, `renderGreetingHistoryList`(최대 3개, 본문 말줄임, 날짜, 게시 중/내리기, 삭제), 항목 클릭 불러오기, 편집 중 취소, 저장 시 입력칸 비움 및 '올렸어요' 표시, 클라이언트 가짜 ID('init') 완전 제거, 로딩 중 '불러오는 중…' 및 mine 조회 실패 시 평문 fallback 표시 |
+| `preview/home-ui/src/styles/neighborhood-greeting.css` | `.ng-editor__head`, `.ng-editor__submit-btn`, `.ng-editor__editing-hint`, textarea padding(`var(--space-2)`/`var(--space-3)`), `.ng-editor__history-*` (loading, fallback 포함), 배지/버튼 스타일 및 `[hidden]` 방어 규칙 |
+| `scripts/verify-neighborhood-greeting-history.mjs` | 서버 소스 정적 assert(PHP 없음 대응), CSS 규칙 검증, JS 스토어 및 UI 렌더링/모의 DOM 상호작용 검증, 클라이언트 가짜 ID('init') 부재 assert 추가 (총 65개 테스트) |
 
 ---
 
@@ -140,7 +140,7 @@ JSON 파일(`storage/neighborhood-greetings.json`)에 저장되는 각 공급자
 
 | 검사 항목 | 명령어 / 스크립트 | 결과 | 비고 |
 |---|---|---|---|
-| 동네 인사 이력 종합 검증 | `cd preview/home-ui ; npx --yes vite-node ../../scripts/verify-neighborhood-greeting-history.mjs` | **PASS (60/60 통과)** | 서버 소스 정적 assert (PHP 실행 미실시: php 없음), CSS 규칙, JS 렌더 및 모의 상호작용 전부 통과 |
+| 동네 인사 이력 종합 검증 | `cd preview/home-ui ; npx --yes vite-node ../../scripts/verify-neighborhood-greeting-history.mjs` | **PASS (65/65 통과)** | 서버 소스 정적 assert (PHP 실행 미실시: php 없음), CSS 규칙, 가짜 id 부재 검증, JS 렌더 및 모의 상호작용 전부 통과 |
 | ShopPage 검증 게이트 | `npm run verify:shop-page` | **PASS (54/54 통과)** | deploy.yml 배포 게이트 1 |
 | 비밀값 커밋 검사 | `bash scripts/check-no-committed-secrets.sh` | **PASS** | deploy.yml 배포 게이트 2 |
 | 과외쌤 쪽지설정 SSOT | `npm run verify:tutor-inquiries-settings` | **PASS** | deploy.yml 배포 게이트 3 |
@@ -154,18 +154,30 @@ JSON 파일(`storage/neighborhood-greetings.json`)에 저장되는 각 공급자
 
 Edge Headless 브라우저(`msedge.exe --headless=new --window-size=900,600`)로 렌더링 하네스를 캡처하여 시각적 검증 완료:
 
-1. **목록 0개**: `tmp-shots/case1-empty.png`
+1. **목록 0개**: `tmp-shots/case1-empty.png` (17,312 바이트)
    - 제목줄 오른쪽 '올리기' 버튼 배치
    - 비어 있는 입력칸 (placeholder 표시)
    - "아직 올린 인사가 없어요." 안내 문구 표시
-2. **최근 3개 이력 및 게시 중**: `tmp-shots/case2-active.png`
+2. **최근 3개 이력 및 게시 중**: `tmp-shots/case2-active.png` (30,993 바이트)
    - 첫 번째 항목: 본문 말줄임, 날짜(10.08), `게시 중` 초록 배지, `내리기` 텍스트 버튼, `×` 삭제 버튼
    - 두/세 번째 항목: 본문, 날짜, `×` 삭제 버튼
    - 입력칸은 비어 있고 들여쓰기 여백 적용
-3. **목록 클릭 후 편집 중**: `tmp-shots/case3-editing.png`
+3. **목록 클릭 후 편집 중**: `tmp-shots/case3-editing.png` (33,075 바이트)
    - "고르신 인사를 고치는 중 · 취소" 안내 표시
    - 선택한 항목 본문이 textarea에 불러와짐
    - 취소 클릭 시 비워지고 편집 모드 해제
+
+### `Get-ChildItem tmp-shots` 실행 결과
+```text
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----      2026-10-08   오전 6:49          71657 case1-empty.html
+-a----      2026-10-08   오전 6:58          17312 case1-empty.png
+-a----      2026-10-08   오전 6:49          73346 case2-active.html
+-a----      2026-10-08   오전 6:58          30993 case2-active.png
+-a----      2026-10-08   오전 6:49          73442 case3-editing.html
+-a----      2026-10-08   오전 6:58          33075 case3-editing.png
+```
 
 *(주의: `tmp-shots/` 폴더는 규칙에 따라 git 커밋 대상에서 제외)*
 
@@ -174,3 +186,29 @@ Edge Headless 브라우저(`msedge.exe --headless=new --window-size=900,600`)로
 ## 7. 배포 전 사용자 할 일
 - **없음 (SQL 변경 없음, .htaccess 변경 없음, env 변경 없음)**
 - 저장은 기존 파일 기반(`storage/neighborhood-greetings.json`)으로 동작하며 자동 하위 호환됩니다.
+
+---
+
+## 8. 메인 검수 1차 반려(하자 1~4)와 수정 내용 (커밋 대상: `6c9fa67`)
+
+### 하자 1 (기능) — 클라이언트가 만든 가짜 id 'init' 제거 및 fallback 처리
+- **원인**: `neighborhood-greeting-ui.js`에서 로컬 캐시에 history가 없을 때 임의로 `{ id: 'init', body: current.body, ... }`를 생성하여, 서버의 실제 id(`h_<updated_at>_<md5 6자>`)와 불일치 발생.
+- **수정**:
+  - 클라이언트는 임의 id 생성을 일절 하지 않고 서버가 응답한 `history`만 사용하도록 변경.
+  - 서버 history가 아직 도착하지 않은 초기 상태에는 `<p class="ng-editor__history-loading">불러오는 중…</p>` 안내 표시.
+  - mine 조회가 실패하거나 없는 경우 현재 본문을 버튼/삭제 링크가 없는 평문 한 줄(`<p class="ng-editor__history-fallback">`)로만 표시하여 오동작 방지.
+  - `scripts/verify-neighborhood-greeting-history.mjs`에 UI/Store 소스 코드에 'init' 가짜 id가 포함되어 있지 않음을 검증하는 assert 추가.
+
+### 하자 2 (정리) — PHP 클래스 주석 들여쓰기 공백 제거
+- **원인**: `src/Neighborhood/NeighborhoodGreetingService.php` 11줄 `/** 동네 인사 1차. 파일 저장. 랭킹 가산 없음. */` 앞에 4칸 공백이 포함됨.
+- **수정**: 앞의 4칸 공백을 제거하여 들여쓰기 없는 원래 코드로 원복.
+
+### 하자 3 (보고 사실 불일치) — Edge Headless 화면 캡처 실제 수행 및 확인
+- **원인**: 이전 보고서에 화면 캡처 파일이 누락되어 보고와 실제 파일 상태 불일치.
+- **수정**:
+  - Windows PowerShell에서 Edge Headless(`msedge.exe --headless=new --window-size=900,600`) 명령을 직접 실행하여 `case1-empty.png`, `case2-active.png`, `case3-editing.png` 3장을 실제로 생성 완료.
+  - `Get-ChildItem tmp-shots` 결과 원문을 확인하여 보고서와 worklog에 기록.
+
+### 하자 4 (기록 정정) — HTTP 상태 코드 표기 정정 (403 → 400)
+- **원인**: 보고서에 '비소유자 접근 시 403'으로 잘못 기재됨. 실제 코드는 `assertOwns` 실패 시 `InvalidArgumentException`을 던지고, API는 이를 catch하여 HTTP 400 및 오류 JSON을 반환함.
+- **수정**: 소스 코드 동작은 유지하고 기록상 표기를 400으로 정정.

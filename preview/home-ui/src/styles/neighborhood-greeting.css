@@ -295,10 +295,19 @@ textarea.ng-editor__input,
   color: #b91c1c;
 }
 
-.ng-editor__history-empty {
+.ng-editor__history-empty,
+.ng-editor__history-loading,
+.ng-editor__history-fallback {
   margin: 0;
   color: #78716c;
   font-size: 0.75rem;
+}
+
+.ng-editor__history-fallback {
+  color: #292524;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ng-unavailable {
