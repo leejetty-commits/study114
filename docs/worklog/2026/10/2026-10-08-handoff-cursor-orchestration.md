@@ -13,7 +13,7 @@
 - **사용량 정책 (10-08 01:21, CSV 분석 결과):** 10-01~08 약 29억 토큰. 최대 원인 = 그록봇이 띄운 클라우드 에이전트 32개(`grok-4.7-high-fast`, 6.7억, 추정 ~$850), 다음 그록봇 자체(`grok-bot-default` 7.5억), 이 PC 채팅 Opus 5.5 high fast(3.2억). 대시보드: **Cursor 모델 통 28%**(3일), 기타 모델 통 1%. 10-05 추가 결제 2건 $28.59.
   - 사용자 조치: Grok 4.7 끄고 4.6 사용, Opus 최상위 끔.
   - 원칙: **Fast 변형 금지**, Claude는 위험도 높음 독립 검수만. 과제는 파일 몇 개 범위로 작게, 동시 2~3개. 대화가 길어지면 메인이 새 채팅 전환을 제안(자동으로 열 수는 없음)
-  - **하위 에이전트 모델 (사용자 지시 10-08 01:29 「비싼 모델은 안 됨」):** 기본 `gemini-3.8-flash-high`(기타 모델 통, 저가). 결과가 부정확하면(같은 일 2회 실패) `claude-sonnet-5-5-high`까지만 올리고 사용자에게 알림. 금지: Opus·Fable 등 최상위, 이름에 `fast`가 붙은 모델(선택 목록의 `cursor-grok-4.6-high-fast`, `composer-2.5-fast` 포함 — Fast 아닌 판은 목록에 없음)
+  - **하위 에이전트 모델 (사용자 지시 10-08 01:29 「비싼 모델은 안 됨」):** 기본 `gemini-3.8-flash-high`(기타 모델 통, 저가). 결과가 부정확하면(같은 일 2회 실패) `claude-sonnet-5-5-high`까지만 올리고 사용자에게 알림. **10-08 04:04 사용자 승인:** `claude-sonnet-5-5-high`가 선택 목록에 없으므로 대신 `claude-4.6-sonnet-medium-thinking`(Claude 4.6 Sonnet) 사용 — 159c 재실행 포함. 금지: Opus·Fable 등 최상위, 이름에 `fast`가 붙은 모델(선택 목록의 `cursor-grok-4.6-high-fast`, `composer-2.5-fast` 포함 — Fast 아닌 판은 목록에 없음)
 - **기록 원칙:** 작업기록은 각 저장소 `docs/worklog/`에 커밋·push. 저장소 밖·에이전트 가상 PC·채팅에만 있는 기록은 무효. 그록봇 컴퓨터·GitHub·이 PC 3곳 동기화.
 - **루틴 정본 초안:** `D:\work\study114-routine` (브랜치 `docs/work-routine`, origin/main `2723c5f` 기준, **미커밋**)
   - `docs/internal/70-work-routine-review-approval.md`, `docs/worklog/README.md`, `docs/worklog/_TEMPLATE.md`, `.cursor/rules/work-routine.mdc`, `AGENTS.md`, 이 문서
@@ -56,10 +56,14 @@
 | 과제 | worktree / 브랜치 | 03:58 상태 | 이어서 할 일 |
 |---|---|---|---|
 | 주소 통일 합친 상태 검증 + 배포 전 수정 2건 | `D:\work\study114-hold-verify` / `cursor/hold-find-address-merge-verify-20261008` | 커밋 `e7b825c`(02:21) + 미커밋 6파일 | 위 「주소 통일 배포 전 추가 수정」 (1)(2) 반영 확인 → 재검사(게이트·관련 verify) → worklog 기록 → push → 최종 hash 사용자 승인 |
-| 레일 띠 그룹 색 | `D:\work\study114-rail-band` / `cursor/rail-band-group-colors-20261008` | 수정 0 (`b249ccc` 그대로) | 착수 안 된 것으로 보고 재지시 |
-| 시·도 정식명 | `D:\work\study114-sido-canonical` / `cursor/region-sido-canonical-20261008` | 미커밋 2파일 | 완료 여부 확인, hold 브랜치와 충돌 검사 후 검수 |
+| 레일 띠 그룹 색 | `D:\work\study114-rail-band` / `cursor/rail-band-group-colors-20261008` | 05:28 에이전트 오류 종료(1회 실패). 코드 수정 0, `tmp/` 게이트 산출물만 | Gemini 3.8 Flash로 재지시(2회째 실패 시 Sonnet 5.5) |
+| 시·도 정식명 | `D:\work\study114-sido-canonical` / `cursor/region-sido-canonical-20261008` | 05:49 에이전트 오류 종료(1회 실패). 미커밋 2파일 +63 −11: `RegionAlias::SIDO_MAP`(17개 시·도 약칭·옛 이름 → 정식명), `RegionEnsure`가 정식명으로 INSERT, `findExisting`은 `sido_name IN (정식명, 원문)` | 이어서 마무리·검수. 확인할 점: ① `강원도`→`강원특별자치도`, `전라북도`→`전북특별자치도` 매핑이 운영 DB 기존 값과 맞는지(SELECT로 확인, 다르면 새 행 생길 위험 — `dong_code` 대체 조회가 막는지) ② `canonicalSido`의 다른 호출처 `AddressRegionMatch`(main에 있음, hold가 삭제)의 동작이 넓어짐 → 배포 순서 hold 뒤로 ③ hold 브랜치와 같은 파일 충돌 검사 ④ worklog·커밋·push 후 hash 승인 |
 | 동네 인사 최근 3개 | `D:\work\study114-ng-history` / `cursor/neighborhood-greeting-history-20261008` | 수정 0 | 재지시 (레이아웃: 입력칸 전체 폭, 올리기는 제목줄 우측, 목록은 입력칸 아래). 이 PC에 PHP 없음 → 서버 검사는 소스 기준 |
 | 159c 리베이스 | `D:\work\study114-159c-rebase` / `cursor/admin-159c-rebase-20261008` | 미커밋 12파일, 멈춤 의심 | 상태 확인 후 Sonnet 5.5로 재실행. 순서상 주소 통일 배포 뒤 |
+
+**배포 위임 (10-08 04:17 사용자 승인 「배포까지 승인하겠다. 무결성은 제외.」, 사용자 취침):** 메인 검수 통과한 과제는 메인이 `main` 반영·배포·운영 확인까지 진행. 한 건씩 배포 → Actions 확인 → 운영 확인 후 다음. 순서 = 주소 통일 → 159c(리베이스 재검수 후) → 나머지(레일 띠·동네 인사·시·도). 무결성 검사에서 나온 수정은 배포 위임 대상 아님(보고만). SQL·Secrets 변경은 여전히 사용자 몫. **시·도 순서(04:20 확정):** 코드 배포 먼저 → 사용자가 기상 후 ①②③ 쿼리(③ UPDATE는 코드 배포 뒤에만; 옛 코드에서 UPDATE하면 「경기」 중복 행 재생성 위험). 「DB 먼저 필요한 배포」는 현재 없음 — 생기면 그 과제만 대기.
+
+**다음 과제 예약 (10-08 04:09 사용자 결정): 공부방 모드 무결성 검사** — 진행 중 작업 전부 끝난 뒤 착수. 운영 `https://study114.net`, 공부방 모드만. 로그인 정보는 채팅 금지 → 사용자가 `%USERPROFILE%\Documents\study114-secrets\studyroom-login.txt`(1줄 아이디, 2줄 비번)에 저장 또는 브라우저 탭 직접 로그인. 메인 에이전트가 직접 로그인(하위 에이전트에 계정 전달 금지). 쿼터 절약(04:21 사용자 지시): 로그인 후 탐색은 저가 모델 browser-use 하위 에이전트에 로그인된 탭만 넘기고, 메인은 지시·결과 검수·보고서만. 범위: **결제만 제외, 나머지 쓰기 시험 허용**. 시험 글은 「[테스트]」 표시 후 원복·삭제, 다른 실제 회원에게 가는 쪽지·문의는 본인 다른 계정 대상 또는 건별 확인. 본인 수신 계정(학생 1·과외쌤 2) 목록 = `study114-secrets\test-recipients.txt`(저장소 밖). 로그인 파일 형식 확인 완료(04:13).
 
 예상 소요(10-08 03:55 사용자에게 보고): 주소 통일 배포 직전까지 1.5~2시간, 마이페이지 디자인까지 5~6시간(승인 대기 제외).
 
