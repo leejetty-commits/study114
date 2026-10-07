@@ -11,6 +11,13 @@ const MAX_ITEMS = 40;
 /** @typedef {import('./neighborhood-greeting.js').buildGreetingRecord extends (...args: any) => infer R ? R : never} Built */
 
 /**
+ * @typedef {object} GreetingHistoryItem
+ * @property {string} id
+ * @property {string} body
+ * @property {number} updated_at
+ */
+
+/**
  * @typedef {object} GreetingRecord
  * @property {string} id
  * @property {'study_room'|'tutor'} providerType
@@ -22,6 +29,8 @@ const MAX_ITEMS = 40;
  * @property {number} updatedAt
  * @property {string} [teaser]
  * @property {string} [maskedName]
+ * @property {string} [historyId]
+ * @property {GreetingHistoryItem[]} [history]
  */
 
 /** @returns {GreetingRecord[]} */
@@ -46,17 +55,25 @@ function writeGreetings(items) {
 /**
  * 서버에 반영된 뒤에만 ok.
  * @param {object} input
- * @returns {Promise<{ ok: true, record: GreetingRecord } | { ok: false, error: string }>}
+ * @returns {Promise<{ ok: true, record: GreetingRecord, item?: any } | { ok: false, error: string }>}
  */
 export async function publishGreeting(input) {
   const built = buildGreetingRecord(input);
   if (!built.ok) return built;
   const pushed = await pushGreeting(built.record);
   if (!pushed.ok) return { ok: false, error: pushed.message };
+  const history = Array.isArray(pushed.item?.history) ? pushed.item.history : built.record.history;
+  const record = {
+    ...built.record,
+    body: pushed.item?.body || built.record.body,
+    updatedAt: Number(pushed.item?.updated_at) || built.record.updatedAt,
+    status: pushed.item?.status || built.record.status,
+    history,
+  };
   const items = readGreetings().filter((row) => row.id !== built.record.id);
-  items.unshift(built.record);
+  items.unshift(record);
   writeGreetings(items);
-  return { ok: true, record: built.record };
+  return { ok: true, record, item: pushed.item };
 }
 
 /** @param {'study_room'|'tutor'} providerType @param {number} registrationId */
@@ -64,12 +81,95 @@ export async function unpublishGreeting(providerType, registrationId) {
   const id = `${providerType === 'tutor' ? 'tutor' : 'study_room'}:${Number(registrationId)}`;
   const current = readGreetings().find((row) => row.id === id);
   if (!current) return { ok: false, error: '올릴 인사가 없어요.' };
-  const row = { ...current, status: 'down', updatedAt: Date.now() };
+  const row = { ...current, status: /** @type {'down'} */ ('down'), updatedAt: Date.now() };
   const pushed = await pushGreeting(row);
   if (!pushed.ok) return { ok: false, error: pushed.message };
-  const items = readGreetings().map((item) => (item.id === id ? row : item));
+  const history = Array.isArray(pushed.item?.history) ? pushed.item.history : current.history;
+  const nextRow = { ...row, history };
+  const items = readGreetings().map((item) => (item.id === id ? nextRow : item));
   writeGreetings(items);
-  return { ok: true };
+  return { ok: true, item: pushed.item };
+}
+
+/**
+ * @param {'study_room'|'tutor'} providerType
+ * @param {number} registrationId
+ * @param {string} historyId
+ * @returns {Promise<{ ok: true, item?: any } | { ok: false, error: string }>}
+ */
+export async function deleteGreeting(providerType, registrationId, historyId) {
+  try {
+    const res = await fetch('/api/neighborhood-greetings.php', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete',
+        provider_type: providerType,
+        registration_id: registrationId,
+        history_id: historyId,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      return { ok: false, error: String(data.message || '삭제하지 못했어요.') };
+    }
+    const id = `${providerType === 'tutor' ? 'tutor' : 'study_room'}:${Number(registrationId)}`;
+    const current = readGreetings().find((row) => row.id === id);
+    if (current) {
+      const updated = {
+        ...current,
+        status: data.item?.status || current.status,
+        body: data.item?.body ?? current.body,
+        history: Array.isArray(data.item?.history) ? data.item.history : [],
+        updatedAt: Number(data.item?.updated_at) || Date.now(),
+      };
+      const items = readGreetings().map((item) => (item.id === id ? updated : item));
+      writeGreetings(items);
+    }
+    return { ok: true, item: data.item };
+  } catch {
+    return { ok: false, error: '삭제하지 못했어요.' };
+  }
+}
+
+/**
+ * 로그인한 소유자의 본인 history/status를 조회해 로컬 캐시를 갱신한다.
+ * @param {'study_room'|'tutor'} providerType
+ * @param {number} registrationId
+ * @returns {Promise<{ ok: true, item?: any } | { ok: false, error: string }>}
+ */
+export async function fetchMineGreeting(providerType, registrationId) {
+  try {
+    const res = await fetch(
+      `/api/neighborhood-greetings.php?mine=1&provider_type=${encodeURIComponent(providerType)}&registration_id=${encodeURIComponent(registrationId)}`,
+      { credentials: 'include' }
+    );
+    if (!res.ok) return { ok: false, error: '조회 실패' };
+    const data = await res.json().catch(() => ({}));
+    if (!data?.ok) return { ok: false, error: String(data?.message || '조회 실패') };
+    if (data.item) {
+      const id = `${providerType === 'tutor' ? 'tutor' : 'study_room'}:${Number(registrationId)}`;
+      const prev = readGreetings().find((row) => row.id === id);
+      const record = {
+        id,
+        providerType,
+        registrationId,
+        body: String(data.item.body || ''),
+        neighborhood: String(data.item.neighborhood || prev?.neighborhood || ''),
+        displayName: String(data.item.display_name || prev?.displayName || ''),
+        status: data.item.status === 'up' ? /** @type {'up'} */ ('up') : /** @type {'down'} */ ('down'),
+        updatedAt: Number(data.item.updated_at) || Date.now(),
+        history: Array.isArray(data.item.history) ? data.item.history : [],
+      };
+      const items = readGreetings().filter((row) => row.id !== id);
+      items.unshift(record);
+      writeGreetings(items);
+    }
+    return { ok: true, item: data.item };
+  } catch {
+    return { ok: false, error: '조회 실패' };
+  }
 }
 
 /** @param {'study_room'|'tutor'} providerType @param {number} registrationId */
@@ -102,7 +202,7 @@ export async function pullGreetingsFromApi() {
 
 /**
  * @param {GreetingRecord} record
- * @returns {Promise<{ ok: true } | { ok: false, message: string }>}
+ * @returns {Promise<{ ok: true, item?: any } | { ok: false, message: string }>}
  */
 async function pushGreeting(record) {
   try {
@@ -117,13 +217,14 @@ async function pushGreeting(record) {
         neighborhood: record.neighborhood,
         display_name: record.displayName,
         status: record.status,
+        history_id: record.historyId || undefined,
       }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
       return { ok: false, message: String(data.message || '저장하지 못했어요.') };
     }
-    return { ok: true };
+    return { ok: true, item: data.item };
   } catch {
     return { ok: false, message: '저장하지 못했어요.' };
   }
@@ -155,6 +256,7 @@ function fromApi(row) {
     updatedAt: Number(row.updated_at) || Date.now(),
     teaser: String(row.teaser || ''),
     maskedName: String(row.masked_name || ''),
+    history: Array.isArray(row.history) ? row.history : undefined,
   };
 }
 
