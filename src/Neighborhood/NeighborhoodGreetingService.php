@@ -8,7 +8,7 @@ use Study114\Database\Connection;
 use Study114\StudyRoom\StudyRoomPublicReadService;
 use Study114\Visibility\WithdrawnOwnerSql;
 
-/** 동네 인사 1차. 파일 저장. 랭킹 가산 없음. */
+    /** 동네 인사 1차. 파일 저장. 랭킹 가산 없음. */
 final class NeighborhoodGreetingService
 {
     private const MAX = 80;
@@ -60,6 +60,11 @@ final class NeighborhoodGreetingService
      */
     public function save(int $userId, string $roleType, array $input): array
     {
+        $action = (string) ($input['action'] ?? '');
+        if ($action === 'delete') {
+            return $this->delete($userId, $roleType, $input);
+        }
+
         $providerType = ($input['provider_type'] ?? '') === 'tutor' ? 'tutor' : 'study_room';
         $expected = $providerType === 'tutor' ? 'tutor' : 'study_room_owner';
         if ($roleType !== $expected) {
@@ -80,6 +85,7 @@ final class NeighborhoodGreetingService
             }
             $existing['status'] = 'down';
             $existing['updated_at'] = (int) round(microtime(true) * 1000);
+            $existing['history'] = self::extractHistory($existing);
             $this->upsert($existing);
             return $existing;
         }
@@ -91,18 +97,200 @@ final class NeighborhoodGreetingService
         if ($neighborhood === '') {
             throw new \InvalidArgumentException('등록된 동네가 있어야 올릴 수 있어요.');
         }
+
+        $historyId = trim((string) ($input['history_id'] ?? ''));
+        $now = (int) round(microtime(true) * 1000);
+        $history = $existing !== null ? self::extractHistory($existing) : [];
+
+        // 1. 입력에 history_id가 있고 목록에 있으면 그 항목 제거 후 고친 body 로 맨 앞에 삽입 (id 유지)
+        $targetId = '';
+        if ($historyId !== '') {
+            foreach ($history as $idx => $item) {
+                if ($item['id'] === $historyId) {
+                    $targetId = $item['id'];
+                    array_splice($history, $idx, 1);
+                    break;
+                }
+            }
+        }
+
+        // 2. 같은 본문이 이미 목록에 있으면 중복 만들지 말고 그 항목 제거 (id 재사용)
+        foreach ($history as $idx => $item) {
+            if ($item['body'] === $body) {
+                if ($targetId === '') {
+                    $targetId = $item['id'];
+                }
+                array_splice($history, $idx, 1);
+                break;
+            }
+        }
+
+        // 3. 없으면 새 id 생성
+        if ($targetId === '') {
+            $targetId = 'h_' . $now . '_' . bin2hex(random_bytes(3));
+        }
+
+        // 맨 앞에 삽입
+        array_unshift($history, [
+            'id' => $targetId,
+            'body' => $body,
+            'updated_at' => $now,
+        ]);
+
+        // 최대 3개 유지
+        $history = array_slice($history, 0, 3);
+
         $row = [
             'provider_type' => $providerType,
             'registration_id' => $registrationId,
             'user_id' => $userId,
-            'body' => $body,
+            'body' => $history[0]['body'],
             'neighborhood' => $neighborhood,
             'display_name' => $displayName !== '' ? $displayName : ($providerType === 'tutor' ? '과외쌤' : '공부방'),
             'status' => 'up',
-            'updated_at' => (int) round(microtime(true) * 1000),
+            'updated_at' => $now,
+            'history' => $history,
         ];
         $this->upsert($row);
         return $row;
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return array<string, mixed>
+     */
+    public function delete(int $userId, string $roleType, array $input): array
+    {
+        $providerType = ($input['provider_type'] ?? '') === 'tutor' ? 'tutor' : 'study_room';
+        $expected = $providerType === 'tutor' ? 'tutor' : 'study_room_owner';
+        if ($roleType !== $expected) {
+            throw new \InvalidArgumentException('공부방·과외쌤만 인사를 지울 수 있어요.');
+        }
+        $registrationId = (int) ($input['registration_id'] ?? 0);
+        if ($registrationId < 1) {
+            throw new \InvalidArgumentException('기본등록이 연결된 뒤에 지울 수 있어요.');
+        }
+        $this->assertOwns($userId, $providerType, $registrationId);
+        $historyId = trim((string) ($input['history_id'] ?? ''));
+        if ($historyId === '') {
+            throw new \InvalidArgumentException('삭제할 인사를 지정해 주세요.');
+        }
+        $existing = $this->find($providerType, $registrationId);
+        if ($existing === null) {
+            throw new \InvalidArgumentException('올릴 인사가 없어요.');
+        }
+        $history = self::extractHistory($existing);
+        $foundIndex = -1;
+        foreach ($history as $idx => $item) {
+            if ($item['id'] === $historyId) {
+                $foundIndex = $idx;
+                break;
+            }
+        }
+        if ($foundIndex === -1) {
+            throw new \InvalidArgumentException('삭제할 인사를 찾을 수 없어요.');
+        }
+
+        $wasTop = ($foundIndex === 0);
+        $wasUp = ($existing['status'] ?? 'down') === 'up';
+        array_splice($history, $foundIndex, 1);
+
+        $now = (int) round(microtime(true) * 1000);
+        // 삭제한 항목이 history[0] 이고 status up 이었다면 status 'down'(공개 내림)으로 바꾸고 나머지는 유지
+        $newStatus = ($wasTop && $wasUp) ? 'down' : (string) ($existing['status'] ?? 'down');
+        $newBody = count($history) > 0 ? (string) $history[0]['body'] : '';
+
+        $row = [
+            'provider_type' => $providerType,
+            'registration_id' => $registrationId,
+            'user_id' => $userId,
+            'body' => $newBody,
+            'neighborhood' => (string) ($existing['neighborhood'] ?? ''),
+            'display_name' => (string) ($existing['display_name'] ?? ''),
+            'status' => $newStatus,
+            'updated_at' => $now,
+            'history' => $history,
+        ];
+        $this->upsert($row);
+        return $row;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return list<array{id: string, body: string, updated_at: int}>
+     */
+    public static function extractHistory(array $row): array
+    {
+        $history = $row['history'] ?? null;
+        if (is_array($history) && $history !== []) {
+            $result = [];
+            foreach ($history as $h) {
+                if (!is_array($h)) {
+                    continue;
+                }
+                $body = trim((string) ($h['body'] ?? ''));
+                if ($body === '') {
+                    continue;
+                }
+                $id = trim((string) ($h['id'] ?? ''));
+                if ($id === '') {
+                    $id = 'h_' . ((int) ($h['updated_at'] ?? round(microtime(true) * 1000))) . '_' . substr(md5($body), 0, 6);
+                }
+                $result[] = [
+                    'id' => $id,
+                    'body' => $body,
+                    'updated_at' => (int) ($h['updated_at'] ?? 0),
+                ];
+            }
+            if ($result !== []) {
+                return array_slice($result, 0, 3);
+            }
+        }
+
+        $body = trim((string) ($row['body'] ?? ''));
+        if ($body !== '') {
+            $updatedAt = (int) ($row['updated_at'] ?? round(microtime(true) * 1000));
+            return [
+                [
+                    'id' => 'h_' . $updatedAt . '_' . substr(md5($body), 0, 6),
+                    'body' => $body,
+                    'updated_at' => $updatedAt,
+                ],
+            ];
+        }
+
+        return [];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getMine(int $userId, string $roleType, string $providerType, int $registrationId): ?array
+    {
+        $providerType = $providerType === 'tutor' ? 'tutor' : 'study_room';
+        $expected = $providerType === 'tutor' ? 'tutor' : 'study_room_owner';
+        if ($roleType !== $expected) {
+            throw new \InvalidArgumentException('공부방·과외쌤만 인사를 조회할 수 있어요.');
+        }
+        if ($registrationId < 1) {
+            throw new \InvalidArgumentException('기본등록이 연결된 뒤에 조회할 수 있어요.');
+        }
+        $this->assertOwns($userId, $providerType, $registrationId);
+        $existing = $this->find($providerType, $registrationId);
+        if ($existing === null) {
+            return null;
+        }
+        $history = self::extractHistory($existing);
+        return [
+            'provider_type' => $existing['provider_type'],
+            'registration_id' => (int) $existing['registration_id'],
+            'status' => (string) ($existing['status'] ?? 'down'),
+            'body' => (string) ($existing['body'] ?? ($history[0]['body'] ?? '')),
+            'neighborhood' => (string) ($existing['neighborhood'] ?? ''),
+            'display_name' => (string) ($existing['display_name'] ?? ''),
+            'updated_at' => (int) ($existing['updated_at'] ?? 0),
+            'history' => $history,
+        ];
     }
 
     public static function normalize(string $text): string
