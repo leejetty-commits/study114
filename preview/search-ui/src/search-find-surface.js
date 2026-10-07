@@ -547,6 +547,11 @@ function bootFindCities(rerender) {
   return findCitiesBoot;
 }
 
+/** 복원 검색은 시·군·구 단위 목록이 끝난 뒤에 라벨을 계산한다. */
+export function whenFindCitiesReady() {
+  return bootFindCities();
+}
+
 /** @param {unknown} value */
 function numericRegionId(value) {
   const text = String(value ?? '').trim();
@@ -1052,7 +1057,10 @@ export async function bootFindGpsIfNeeded(state, tab, rerender) {
       : null;
   const axis = axisFromSearchTab(tab, hope);
   const geo = await reverseGeocodeCoords(coords.lat, coords.lng, axis);
-  if (!geo?.displayLabel) {
+  const roomGps = axis === 'room' || axis === 'study_room';
+  const noDongPlace =
+    roomGps && !String(geo?.dong || '').trim() && !String(geo?.apartmentName || '').trim();
+  if (!geo?.displayLabel || noDongPlace) {
     logLocationDebug('gps-skip', { reason: 'broad-region-only' });
     return;
   }
@@ -1327,12 +1335,31 @@ export function resolveActiveRegionLabel(tab, state, role) {
  * @param {Record<string, unknown>} filters
  * @param {FindSurfaceState} state
  */
+/** 확정된 3단계(동·단지) 표시. 대기·미확인은 막힌 검색이라 라벨을 바꾸지 않는다. */
+function confirmedStep3Label(state, tab) {
+  if (!state.searchExecuted) return '';
+  const bag = state.step3ByTab?.[tab];
+  if (!bag || bag.pending || bag.unconfirmed) return '';
+  if (!(numericRegionId(bag.dongId) || numericRegionId(bag.complexId))) return '';
+  return String(bag.display || '').trim();
+}
+
 function regionLabelFromFilters(tab, filters, state, role) {
   const viewer = role || state.role || 'guest';
   if (viewer === 'guest') return applyGuestPlace(tab, state);
+  const step3Text = confirmedStep3Label(state, tab);
+  if (step3Text) {
+    if (viewer === 'parent') {
+      return applyStudentPlace(
+        state,
+        tab,
+        studentPickedCanonical({ raw: step3Text, source: 'address' }, tab, state),
+      );
+    }
+    return canonicalRegionLabel(step3Text, tab, state);
+  }
   if (viewer === 'parent') return studentLabelFromFilters(tab, filters, state);
   if (state.searchExecuted) {
-    const bag = state.step3ByTab?.[tab];
     const guId =
       tab === 'tutor'
         ? filters.tutor_region_id || state.findGuByTab?.tutor
@@ -1340,13 +1367,9 @@ function regionLabelFromFilters(tab, filters, state, role) {
           ? filters.sigungu_region_id || state.findGuByTab?.room
           : filters.preferred_region_id || state.findGuByTab?.student;
     const guLabel = activityLabelFromRegionId(guId, findCityUnits);
-    if (bag?.display && (numericRegionId(bag.dongId) || numericRegionId(bag.complexId) || bag.unconfirmed)) {
-      return canonicalRegionLabel(bag.display, tab, state);
-    }
     if (guLabel) {
       return applyGuDisplayLabel(state, String(guId), guLabel);
     }
-    if (bag?.display) return canonicalRegionLabel(bag.display, tab, state);
   }
   let raw = '';
   if (tab === 'tutor') {
@@ -1848,7 +1871,8 @@ async function applyStep3FromKakao(state, tab, result) {
       return;
     }
     bag.dongId = dongId;
-    bag.display = [result?.sigungu || region?.sigungu_name || '', dongName].filter(Boolean).join(' ');
+    const dongShown = normalizeLocation({ raw: dongName, dong: dongName }, 'room').displayLabel;
+    bag.display = dongShown || String(dongName || '').trim();
     bag.unconfirmed = false;
     bag.pending = false;
   } catch {
@@ -2596,26 +2620,16 @@ function findScopeMissing(tab, filters) {
  * @param {() => void} rerender
  */
 export async function runFindSearch(tab, form, state, role, rerender) {
+  if (step3SearchBlocked(state, tab)) {
+    const hint = form.querySelector('[data-find-step3="open"] .search-field__hint');
+    if (hint) hint.textContent = step3BlockMessage(state, tab);
+    return;
+  }
   state.searchPage = 1;
   if (guPickIncomplete(form, tab, state)) {
     const hint = form.querySelector('[data-find-gu-field] .search-field__hint');
     if (hint) hint.textContent = GU_PICK_HINT;
     state.searchTotal = 0;
-    return;
-  }
-  if (step3SearchBlocked(state, tab)) {
-    const hint = form.querySelector('[data-find-step3="open"] .search-field__hint');
-    const message = step3BlockMessage(state, tab);
-    if (hint) hint.textContent = message;
-    state.searchExecuted = true;
-    state.searchLoading = false;
-    state.searchError = message;
-    state.searchExposureItems = [];
-    state.searchTotal = 0;
-    if (state.searchRows) state.searchRows = [];
-    if (state.searchItems) state.searchItems = [];
-    refreshActiveResultItems(tab, state, role);
-    rerender();
     return;
   }
   const filters = collectFiltersFromForm(form, tab);
@@ -2640,6 +2654,42 @@ export async function runFindSearch(tab, form, state, role, rerender) {
  */
 let findSearchSeq = 0;
 
+function applySearchedRegionLabel(tab, filters, state, role) {
+  const regionText = regionLabelFromFilters(tab, filters, state, role);
+  // 학생은 regionLabelFromFilters 가 저장·선택 위치를 이미 확정한다. 축 변환으로 시·군·구를 지우지 않는다.
+  if (role !== 'parent') {
+    const axis = locationAxisForState(tab, state);
+    applyCanonicalLocation(
+      state,
+      normalizeLocation(
+        {
+          raw: regionText,
+          lat: state.canonicalLocation?.lat,
+          lng: state.canonicalLocation?.lng,
+          source: state.canonicalLocation?.source || 'session',
+        },
+        axis,
+      ),
+      tab,
+    );
+  }
+  return regionText;
+}
+
+/** 단위 목록이 검색보다 늦으면, 끝난 뒤 시군구 라벨을 다시 계산한다. */
+function refreshSearchedLabelWhenCitiesReady(tab, state, role, rerender, seq) {
+  if (findCitiesStatus === 'ready') return;
+  const boot = findCitiesBoot || bootFindCities();
+  boot.then(() => {
+    if (seq !== findSearchSeq) return;
+    if (findCitiesStatus !== 'ready') return;
+    if (!state.searchExecuted || !state.lastSearchFilters) return;
+    applySearchedRegionLabel(tab, state.lastSearchFilters, state, role);
+    syncFindHashState(state, tab);
+    rerender();
+  });
+}
+
 export async function runFindSearchWithFilters(tab, filters, state, role, rerender) {
   const seq = ++findSearchSeq;
   const stale = () => seq !== findSearchSeq;
@@ -2655,18 +2705,7 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
   if (tab === 'room') settleRoomAddressFilters(filters);
   if (filters.preferred_lesson_type === 'both') delete filters.preferred_lesson_type;
   if (stale()) return;
-  if (step3SearchBlocked(state, tab)) {
-    state.searchExecuted = true;
-    state.searchLoading = false;
-    state.searchError = step3BlockMessage(state, tab);
-    state.searchTotal = 0;
-    state.searchExposureItems = [];
-    if (state.searchRows) state.searchRows = [];
-    if (state.searchItems) state.searchItems = [];
-    state._needsSearchRestore = false;
-    rerender();
-    return;
-  }
+  if (step3SearchBlocked(state, tab)) return;
   if (findScopeMissing(tab, filters)) {
     state.searchExecuted = true;
     state.searchLoading = false;
@@ -2688,24 +2727,8 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
   }
   writeStoredFilters(tab, state.lastSearchFilters);
 
-  const regionText = regionLabelFromFilters(tab, filters, state, role);
-  // 학생은 regionLabelFromFilters 가 저장·선택 위치를 이미 확정한다. 축 변환으로 시·군·구를 지우지 않는다.
-  if (role !== 'parent') {
-    const axis = locationAxisForState(tab, state);
-    applyCanonicalLocation(
-      state,
-      normalizeLocation(
-        {
-          raw: regionText,
-          lat: state.canonicalLocation?.lat,
-          lng: state.canonicalLocation?.lng,
-          source: state.canonicalLocation?.source || 'session',
-        },
-        axis,
-      ),
-      tab,
-    );
-  }
+  applySearchedRegionLabel(tab, filters, state, role);
+  refreshSearchedLabelWhenCitiesReady(tab, state, role, rerender, seq);
   // hydrate 재진입 시 동일 검색을 다시 돌리지 않도록 복원 키 선기록
   state._restoredSearchKey = `${tab}::${encodeFiltersForUrl(state.lastSearchFilters)}::${regionRestoreToken(tab, state.lastSearchFilters, state.canonicalLocation?.regionId)}`;
   syncFindHashState(state, tab);

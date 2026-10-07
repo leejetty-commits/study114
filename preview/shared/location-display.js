@@ -230,16 +230,24 @@ export function normalizeLocation(input = {}, axis = 'room') {
     source: /** @type {LocationSource|undefined} */ (input.source) || undefined,
   };
   canonical.displayLabel = formatLocationDisplay(canonical, axis);
-  canonical.searchScopeLabel = canonical.displayLabel;
+  // 동·단지가 없는 공부방 축의 검색 범위 키는 11b0c0d 와 같이 비운다. 화면 표시만 시군구·세종을 채운다.
+  canonical.searchScopeLabel =
+    (axis === 'room' || axis === 'study_room') && !blank(canonical.dong) && !blank(canonical.apartmentName)
+      ? ''
+      : canonical.displayLabel;
+  canonical.regionKey = blank(input.regionKey) || buildRegionKey(canonical);
+  // 세종은 시·군·구 단위가 없다. 표시만 채우고 regionKey 는 parts 가 비면 빈 값으로 둔다.
   if (
     (axis === 'room' || axis === 'study_room') &&
-    canonical.dong === '' &&
-    canonical.apartmentName === '' &&
-    canonical.displayLabel !== ''
+    !blank(input.regionKey) &&
+    canonical.displayLabel === '세종특별자치시' &&
+    !blank(canonical.city) &&
+    !blank(canonical.district) &&
+    !blank(canonical.dong) &&
+    !blank(canonical.apartmentName)
   ) {
-    canonical.apartmentName = canonical.displayLabel;
+    canonical.regionKey = '';
   }
-  canonical.regionKey = blank(input.regionKey) || buildRegionKey(canonical);
 
   if (canonical.lat == null || canonical.lng == null) {
     const fromLabel = coordsFromLabel(canonical.displayLabel || raw);
@@ -315,10 +323,11 @@ export function formatLocationDisplay(loc, axis = 'room') {
   if (dong && district && city) return dedupeAddressTokens(`${city} ${district} ${dong}`);
   if (dong && city) return dedupeAddressTokens(`${city} ${dong}`);
   if (dong) return dedupeAddressTokens(dong);
-  const broad = dedupeAddressTokens([city, district].filter(Boolean).join(' '));
-  if (broad) return broad;
+  const cityLabel = blank(city);
+  const districtLabel = blank(district);
+  if (cityLabel && districtLabel) return dedupeAddressTokens(`${cityLabel} ${districtLabel}`);
   const provinceLabel = blank(loc.province);
-  if (provinceLabel && /시$/.test(provinceLabel)) return provinceLabel;
+  if (provinceLabel === '세종특별자치시' || cityLabel === '세종특별자치시') return '세종특별자치시';
   return '';
 }
 
@@ -339,6 +348,8 @@ export function placeCaption(loc, axis = 'room') {
   const dong = blank(canonical.dong);
   if (apt && !isBroadRegionOnly(apt)) return dong && !isBroadRegionOnly(dong) ? `${dong} · ${apt}` : apt;
   if (dong && !isBroadRegionOnly(dong)) return dong;
+  const districtCaption = formatLocationDisplay(canonical, 'room');
+  if (districtCaption && !blank(canonical.dong) && !blank(canonical.apartmentName)) return districtCaption;
   return '';
 }
 

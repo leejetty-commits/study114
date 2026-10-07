@@ -41,6 +41,7 @@ import {
   tutorRepresentativeRegionLabel,
   refreshActiveResultItems,
   runFindSearchWithFilters,
+  whenFindCitiesReady,
   bootFindGpsIfNeeded,
   bootGuestFindSurface,
 } from '../search-find-surface.js';
@@ -247,7 +248,9 @@ export function afterSearchPageMount(rerender, opts = {}) {
     });
     previewState._needsSearchRestore = false;
     queueMicrotask(() => {
-      runFindSearchWithFilters(tab, filters, previewState, previewState.role, rerender);
+      whenFindCitiesReady().then(() => {
+        runFindSearchWithFilters(tab, filters, previewState, previewState.role, rerender);
+      });
     });
     return;
   }

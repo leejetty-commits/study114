@@ -3,10 +3,11 @@
  * 실행: npx --yes vite-node scripts/verify-hold-find-address.mjs
  */
 import { spawnSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync, unlinkSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { complexNameFromKakao } from '../preview/shared/complex-name-from-kakao.js';
 import { renderListPagination } from '../preview/home-ui/src/list-pagination.js';
+import { normalizeLocation } from '../preview/shared/location-display.js';
 
 const root = process.cwd();
 const read = (rel) => readFileSync(resolve(root, rel), 'utf8');
@@ -554,6 +555,138 @@ assert(form.includes('slotEnsureSeq.get(slotKey) !== seq'), '5f 홍보 순번');
 assert(form.includes('seq !== hopeEnsureSeq'), '5f 학생 순번');
 assert(surface.includes('seq !== studyroomDongSeq'), '5f confirmStudyroomDong 순번');
 assert(/basis===complex|region_basis_type === 'complex'[\s\S]{0,180}complex_name/.test(form), '5c 단지명 필수');
+
+const roomOf = (raw) => normalizeLocation({ raw }, 'room');
+const tutorOf = (raw) => normalizeLocation({ raw }, 'tutor');
+assert(roomOf('서울특별시').displayLabel === '', 'S3 공부방 서울특별시 display 빈값');
+assert(roomOf('경기도').displayLabel === '', 'S3 공부방 경기도 display 빈값');
+const gangnam = roomOf('서울특별시 강남구');
+assert(gangnam.displayLabel === '서울특별시 강남구', 'S3 공부방 서울특별시 강남구 표시');
+assert(gangnam.apartmentName === '', 'S3 강남구 apartmentName 빈값');
+assert(gangnam.regionKey === '서울특별시|강남구', 'S3 강남구 regionKey');
+assert(gangnam.level === 'district', 'S3 강남구 level district');
+const sejong = roomOf('세종특별자치시');
+assert(sejong.displayLabel === '세종특별자치시', 'S3 세종 표시');
+assert(sejong.apartmentName === '', 'S3 세종 apartmentName 빈값');
+assert(sejong.regionKey === '', 'S3 세종 regionKey 빈값');
+assert(roomOf('경기도 의정부시').displayLabel === '경기도 의정부시', 'S3 경기도 의정부시 표시');
+assert(roomOf('서울시 강남구').displayLabel === '서울시 강남구', 'S3 서울시 강남구 표시');
+assert(roomOf('대치동 · 은마아파트').displayLabel === '대치동 · 은마아파트', 'S3 단지 표시');
+assert(roomOf('서울 강남구 대치동').displayLabel === '서울 강남구 대치동', 'S3 동 표시');
+assert(roomOf('강남구').displayLabel === '', 'S3 구 단독 display 빈값');
+assert(tutorOf('서울특별시 강남구').displayLabel === '서울특별시 강남구', 'S3 과외 강남구');
+assert(tutorOf('서울특별시').displayLabel === '서울특별시', 'S3 과외 서울특별시');
+assert(tutorOf('경기도').displayLabel === '경기도', 'S3 과외 경기도');
+assert(tutorOf('세종특별자치시').displayLabel === '세종특별자치시', 'S3 과외 세종');
+assert(tutorOf('세종특별자치시').regionKey === '세종특별자치시', 'S3 과외 세종 regionKey');
+assert(tutorOf('경기도 의정부시').displayLabel === '경기도 의정부시', 'S3 과외 의정부');
+assert(tutorOf('대치동 · 은마아파트').apartmentName === '은마아파트', 'S3 과외 단지 apartmentName');
+assert(tutorOf('서울 강남구 대치동').regionKey === '서울|강남구|대치동', 'S3 과외 동 regionKey');
+assert(tutorOf('강남구').displayLabel === '강남구', 'S3 과외 강남구 단독');
+
+const pageSrc = read('preview/search-ui/src/screens/search-page.js');
+const restoreBody = sliceFn(pageSrc, 'afterSearchPageMount');
+assert(
+  restoreBody.includes('whenFindCitiesReady') && restoreBody.includes('runFindSearchWithFilters'),
+  'S1 복원 검색은 단위 목록 로드 뒤',
+);
+const refreshBody = sliceFn(surface, 'refreshSearchedLabelWhenCitiesReady');
+assert(
+  refreshBody.includes('findCitiesStatus') &&
+    refreshBody.includes('applySearchedRegionLabel') &&
+    refreshBody.includes('syncFindHashState'),
+  'S1 목록 로드 뒤 라벨 재계산',
+);
+const gpsBody = sliceFn(surface, 'bootFindGpsIfNeeded');
+assert(
+  gpsBody.includes('noDongPlace') && gpsBody.includes("reason: 'broad-region-only'"),
+  'S3 GPS 공부방 동 없는 결과 건너뜀',
+);
+const step3Body = sliceFn(surface, 'applyStep3FromKakao');
+assert(
+  step3Body.includes('normalizeLocation({ raw: dongName, dong: dongName }, \'room\')') &&
+    !step3Body.includes("join(' ')"),
+  'S4 동 표시는 공부방 축 동 라벨',
+);
+
+const behaviorSrc = `
+const citiesReady = {};
+citiesReady.promise = new Promise((resolve) => { citiesReady.go = resolve; });
+const mem = new Map();
+const storage = {
+  getItem: (k) => (mem.has(k) ? mem.get(k) : null),
+  setItem: (k, v) => mem.set(k, String(v)),
+  removeItem: (k) => mem.delete(k),
+  clear: () => mem.clear(),
+  key: (i) => [...mem.keys()][i] ?? null,
+  get length() { return mem.size; },
+};
+globalThis.localStorage = storage;
+globalThis.sessionStorage = storage;
+globalThis.window = globalThis;
+globalThis.location = { hash: '#/search/tutor', href: 'http://127.0.0.1:5174/search/', origin: 'http://127.0.0.1:5174', pathname: '/search/', search: '' };
+globalThis.history = { replaceState(_s, _t, url) { const text = String(url || ''); if (text.startsWith('#')) location.hash = text; }, pushState() {} };
+let searchCalls = 0;
+globalThis.fetch = async (input) => {
+  const url = String(input);
+  if (url.includes('action=cities')) {
+    await citiesReady.promise;
+    return { ok: true, json: async () => ({ ok: true, cities: [
+      { id: 27, label: '강남구', sido_code: '11', sido_name: '서울특별시', official_code: '1168000000', city_name: '강남구', gu_name: '', kind: 'gu' },
+    ] }) };
+  }
+  searchCalls += 1;
+  return { ok: true, json: async () => ({ ok: true, items: [], total: 21 }) };
+};
+const surfaceMod = await import('../search-ui/src/search-find-surface.js');
+const lateState = { role: 'tutor', searchPage: 1, searchExecuted: false, searchTotal: 0, searchExposureItems: [], canonicalLocation: null, activeRegionLabel: '' };
+const lateRun = surfaceMod.runFindSearchWithFilters('tutor', { tutor_region_id: '27' }, lateState, 'tutor', () => {});
+await Promise.resolve();
+console.log((/^\\d+$/.test(String(lateState.activeRegionLabel || '')) ? 'PASS' : 'FAIL') + ': S1 목록 전 라벨은 숫자 id (' + lateState.activeRegionLabel + ')');
+citiesReady.go();
+await lateRun;
+await new Promise((r) => setTimeout(r, 50));
+console.log((lateState.activeRegionLabel === '서울특별시 강남구' ? 'PASS' : 'FAIL') + ': S1 목록 뒤 강남구 (' + lateState.activeRegionLabel + ')');
+console.log((!/^\\d+$/.test(String(lateState.activeRegionLabel || '')) ? 'PASS' : 'FAIL') + ': S1 숫자 id 0');
+for (const kind of ['dong', 'complex', 'pending']) {
+  const blocked = {
+    role: 'study_room', searchPage: 2, searchExecuted: true, searchTotal: 21,
+    searchExposureItems: [{ id: 1 }], searchRows: [{ id: 1 }], searchItems: [{ id: 1 }],
+    activeRegionLabel: '대치동',
+    canonicalLocation: { displayLabel: '대치동', source: 'session', dong: '대치동' },
+    lastSearchFilters: { region_id: '100' },
+    step3ByTab: { room: { basis: kind === 'complex' ? 'complex' : 'dong', display: kind === 'complex' ? '은마아파트' : '', dongId: '', complexId: '', unconfirmed: kind !== 'pending', pending: kind === 'pending', seq: 1 } },
+  };
+  const callsBefore = searchCalls;
+  const hashBefore = String(globalThis.location.hash || '');
+  await surfaceMod.runFindSearchWithFilters('room', { sigungu_region_id: '27' }, blocked, 'study_room', () => {});
+  console.log((searchCalls === callsBefore ? 'PASS' : 'FAIL') + ': S5 ' + kind + ' search.php 0');
+  console.log((blocked.searchTotal === 21 ? 'PASS' : 'FAIL') + ': S5 ' + kind + ' 건수 유지');
+  console.log((blocked.activeRegionLabel === '대치동' ? 'PASS' : 'FAIL') + ': S5 ' + kind + ' 현재위치 유지 (' + blocked.activeRegionLabel + ')');
+  console.log((String(globalThis.location.hash || '') === hashBefore ? 'PASS' : 'FAIL') + ': S5 ' + kind + ' URL 유지');
+}
+`;
+
+const behaviorFile = resolve(root, 'preview/home-ui/.hold-s1-behavior.mjs');
+writeFileSync(behaviorFile, behaviorSrc);
+let behavior;
+try {
+  behavior = spawnSync('npx', ['--yes', 'vite-node', '.hold-s1-behavior.mjs'], {
+    cwd: resolve(root, 'preview/home-ui'),
+    encoding: 'utf8',
+  });
+} finally {
+  try { unlinkSync(behaviorFile); } catch { /* ignore */ }
+}
+const behaviorOut = `${behavior.stdout || ''}\n${behavior.stderr || ''}`;
+for (const line of behaviorOut.split(/\r?\n/)) {
+  if (line.startsWith('PASS:')) console.log(line);
+  else if (line.startsWith('FAIL:')) {
+    failed += 1;
+    console.error(line);
+  }
+}
+assert(behavior.status === 0 && /S1 목록 뒤 강남구/.test(behavior.stdout || ''), `S1 행동 종료 0 (${behavior.status} ${(behavior.stderr || '').slice(0, 400)})`);
 
 if (failed > 0) {
   console.error(`\nverify-hold-find-address FAILED (${failed})`);
