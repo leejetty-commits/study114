@@ -158,5 +158,26 @@
 
 | 구분 | 담당 | 결과 |
 |---|---|---|
-| 검수 | (미정) | **대기** |
-| 승인 | 사용자(종현) | **대기** |
+| 검수 | Cursor 메인 에이전트 (작업 세션과 분리) | **통과** — 아래 검수 기록 |
+| 승인 | 사용자(종현) | 04:17 "배포까지 승인하겠다. 무결성은 제외." 위임. `main` push는 사용자 승인 카드 필요 |
+
+### 검수 기록 (2026-10-08, 메인 에이전트)
+
+대상: 코드 `a105f12`, 기록 `e16923e` (기준 `7d4de59` = 찾기 주소 통일 최종)
+
+- `git diff 7d4de59 HEAD --stat`: 13파일 +1520 / −0. 삭제 0.
+- `BasicCardRegisteredQuery.php`, `ReportPeriod.php`: 159c 원본 `4c865bd`와 바이트 동일. 162 판 대비 +145/−0.
+- 충돌 해소 3파일(`a28-copy.js`, `a28-screens.js`, `a28-screens-bind.js`): 159c 원본 대비 차이는 162 정산서 메뉴·import·분기 추가뿐. 162의 `settlement`와 159c의 `registrations` 둘 다 살아 있음.
+- `public/api/admin/registrations.php`: `requireAdmin()` + GET 외 405. 쓰기 없음.
+- 검사는 `vite-node`로 수정 전(`7d4de59`)·후 비교 (그냥 `node`는 `import.meta.env` 없어 실행 불가):
+
+| 검사 | 7d4de59 | 159c 후 | 판정 |
+|---|---|---|---|
+| `verify-admin-162-settlement` | 49 PASS / 4 FAIL | 49 PASS / 4 FAIL | 같음. FAIL 4건(`no-delete` 2, `shared-frozen-02dd20e`, `diff-inside-allow`)은 옛 기준 커밋 대비 변경 파일 목록 검사라 기존부터 실패. 작업 기록의 "FAIL 3건"은 4건이 맞음 |
+| `verify-admin-registration-list` | — | 45 PASS / 1 FAIL | FAIL은 `diff-allowed`(이번 작업과 무관한 `deploy.yml` 등이 목록에 잡힘). 기능 45건 PASS |
+| `verify-admin-preview-labels` | 202 / 0 | 206 / 0 | 통과 |
+| `verify-admin-today-hub` | 59 / 0 | 61 / 0 | 통과 |
+| home-ui `vite build` | — | 성공 | |
+
+- PHP 실행 검사: 미실행(이 PC에 php 없음).
+- 남은 일(배포와 별개): `diff-*` 계열 검사는 기준 커밋이 고정돼 있어 계속 실패로 뜸 → 검사 스크립트 기준 갱신은 별도 과제로 보고.
