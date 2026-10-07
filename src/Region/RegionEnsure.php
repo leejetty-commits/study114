@@ -36,6 +36,8 @@ final class RegionEnsure
             throw new InvalidArgumentException('주소에서 시·동을 읽지 못했습니다. 다른 주소를 검색해 주세요.');
         }
 
+        $canonicalSido = RegionAlias::canonicalSido($sido);
+
         $sidoCode = strlen($bcode) >= 2
             ? substr($bcode, 0, 2)
             : (strlen($sigunguCodeIn) >= 2 ? substr($sigunguCodeIn, 0, 2) : '');
@@ -54,27 +56,27 @@ final class RegionEnsure
 
         $dongCode = self::dongCodeFor($bcode, $sigunguCode, $dongName, $hname, $bname);
 
-        $found = self::findExisting($pdo, $sido, $sigungu, $dongName, $dongCode);
+        $found = self::findExisting($pdo, $canonicalSido, $sido, $sigungu, $dongName, $dongCode);
         if ($found !== null) {
             return $found;
         }
 
         try {
-            return self::insertRow($pdo, $sidoCode, $sido, $sigunguCode, $sigungu, $dongCode, $dongName);
+            return self::insertRow($pdo, $sidoCode, $canonicalSido, $sigunguCode, $sigungu, $dongCode, $dongName);
         } catch (PDOException $e) {
-            $found = self::findExisting($pdo, $sido, $sigungu, $dongName, $dongCode);
+            $found = self::findExisting($pdo, $canonicalSido, $sido, $sigungu, $dongName, $dongCode);
             if ($found !== null) {
                 return $found;
             }
             $altCode = self::altDongCode($sigunguCode, $dongName);
-            $found = self::findExisting($pdo, $sido, $sigungu, $dongName, $altCode);
+            $found = self::findExisting($pdo, $canonicalSido, $sido, $sigungu, $dongName, $altCode);
             if ($found !== null) {
                 return $found;
             }
             try {
-                return self::insertRow($pdo, $sidoCode, $sido, $sigunguCode, $sigungu, $altCode, $dongName);
+                return self::insertRow($pdo, $sidoCode, $canonicalSido, $sigunguCode, $sigungu, $altCode, $dongName);
             } catch (PDOException $retry) {
-                $found = self::findExisting($pdo, $sido, $sigungu, $dongName, $altCode);
+                $found = self::findExisting($pdo, $canonicalSido, $sido, $sigungu, $dongName, $altCode);
                 if ($found !== null) {
                     return $found;
                 }
@@ -153,7 +155,8 @@ final class RegionEnsure
      */
     private static function findExisting(
         PDO $pdo,
-        string $sido,
+        string $canonicalSido,
+        string $rawSido,
         string $sigungu,
         string $dongName,
         string $dongCode
@@ -165,12 +168,12 @@ final class RegionEnsure
                AND unit_level = \'dong\'
                AND dong_name = ?
                AND dong_name <> \'시 대표\'
-               AND sido_name = ?
+               AND sido_name IN (?, ?)
                AND (sigungu_name = ? OR ? = \'\')
              ORDER BY id ASC
              LIMIT 1'
         );
-        $stmt->execute([$dongName, $sido, $sigungu, $sigungu]);
+        $stmt->execute([$dongName, $canonicalSido, $rawSido, $sigungu, $sigungu]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if (is_array($row)) {
             return self::hydrate($row);
