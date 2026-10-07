@@ -352,6 +352,54 @@ function hydrateStudentPlace(state, tab, q) {
 }
 
 /**
+ * 현재 위치(동·단지 또는 시·군·구)에서 상위 시·군·구 region id 를 구한다.
+ * 도시 단위 목록(findCityUnits)이 없거나 시·군·구를 특정할 수 없으면 '' 반환.
+ * @param {import('../../shared/location-display.js').CanonicalLocation|null|undefined} cur
+ * @returns {string}
+ */
+function resolveCanonicalGuRegionId(cur) {
+  if (!cur || !findCityUnits.length) return '';
+  const directId = numericRegionId(cur.regionId);
+  if (directId && activityLabelFromRegionId(directId, findCityUnits)) {
+    return directId;
+  }
+
+  if (cur.level === 'district' && cur.displayLabel) {
+    const labelId = regionIdFromActivityLabel(cur.displayLabel, findCityUnits);
+    if (labelId) return labelId;
+  }
+
+  const sido = expandKakaoSido(cur.city || cur.province || '') || String(cur.city || cur.province || '').trim();
+  const district = String(cur.district || cur.sigungu || '').trim();
+  if (sido && district) {
+    const id = regionIdFromActivityLabel(`${sido} ${district}`, findCityUnits);
+    if (id) return id;
+  }
+
+  if (sido === '세종특별자치시' || sido === '세종') {
+    const id = regionIdFromActivityLabel('세종특별자치시', findCityUnits);
+    if (id) return id;
+  }
+
+  const rawText = String(cur.raw || cur.displayLabel || '').trim();
+  if (rawText) {
+    const parsed = normalizeLocation({ raw: rawText }, 'room');
+    const parsedSido = expandKakaoSido(parsed.city || parsed.province || '') || String(parsed.city || parsed.province || '').trim();
+    const parsedDistrict = String(parsed.district || '').trim();
+    if (parsedSido && parsedDistrict) {
+      const id = regionIdFromActivityLabel(`${parsedSido} ${parsedDistrict}`, findCityUnits);
+      if (id) return id;
+    }
+    if (parsedSido === '세종특별자치시' || parsedSido === '세종') {
+      const id = regionIdFromActivityLabel('세종특별자치시', findCityUnits);
+      if (id) return id;
+    }
+  }
+
+  return '';
+}
+
+/**
  * 학생 현재 위치 → search.php 지역 조건. 위치가 없으면 null(목록을 부르지 않는다).
  * @param {import('./state.js').SearchTab} tab
  * @param {FindSurfaceState} state
@@ -370,8 +418,8 @@ function studentFeedFilters(tab, state) {
     return scope;
   }
   if (tab === 'room') {
-    const guId = cur.level === 'district' ? selectableFindRegionId(cur.regionId) : '';
-    return guId ? { sigungu_region_id: guId } : { region_label: cur.displayLabel };
+    const guId = resolveCanonicalGuRegionId(cur);
+    return guId ? { sigungu_region_id: guId } : null;
   }
   const id = selectableFindRegionId(cur.regionId) || regionIdFromActivityLabel(cur.displayLabel, findCityUnits);
   if (!id) return null;
@@ -1890,7 +1938,6 @@ async function applyStep3FromKakao(state, tab, result) {
  * @param {{ compact?: boolean, label: string, dbHint: string, hiddenName: string, idPrefix: string, pick: { regionId: string, stale: boolean } }} opts
  */
 function renderGuCascadeField(state, opts) {
-  void state;
   const compact = opts.compact === true;
   const body = findCityUnits.length
     ? renderRegionCascade({
@@ -1903,7 +1950,7 @@ function renderGuCascadeField(state, opts) {
       })
     : `<p class="search-field__hint">${esc(findCitiesStatus === 'error' ? REGION_LIST_ERROR : '지역 목록을 불러오는 중…')}</p>
        <input type="hidden" name="${esc(opts.hiddenName)}" value="" />`;
-  const note = GU_PICK_HINT;
+  const note = state?.findScopeHint || GU_PICK_HINT;
   return `
     <div class="search-field${compact ? ' search-field--compact' : ''}" data-find-gu-field="${esc(opts.hiddenName)}">
       <span class="search-field__label">${esc(opts.label)} ${opts.dbHint}</span>
@@ -2707,17 +2754,16 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
   if (stale()) return;
   if (step3SearchBlocked(state, tab)) return;
   if (findScopeMissing(tab, filters)) {
-    state.searchExecuted = true;
-    state.searchLoading = false;
-    state.searchError = GU_PICK_HINT;
-    state.searchTotal = 0;
-    state.searchExposureItems = [];
-    if (state.searchRows) state.searchRows = [];
-    if (state.searchItems) state.searchItems = [];
+    state.findScopeHint = GU_PICK_HINT;
     state._needsSearchRestore = false;
+    if (typeof document !== 'undefined') {
+      const hint = document.querySelector('[data-find-gu-field] .search-field__hint');
+      if (hint) hint.textContent = GU_PICK_HINT;
+    }
     rerender();
     return;
   }
+  state.findScopeHint = '';
   state.searchExecuted = true;
   state.searchLoading = true;
   state.searchError = null;

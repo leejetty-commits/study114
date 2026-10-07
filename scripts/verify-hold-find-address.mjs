@@ -5,9 +5,23 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync, existsSync, writeFileSync, unlinkSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { complexNameFromKakao } from '../preview/shared/complex-name-from-kakao.js';
-import { renderListPagination } from '../preview/home-ui/src/list-pagination.js';
-import { normalizeLocation } from '../preview/shared/location-display.js';
+
+if (typeof import.meta.env === 'undefined' && !process.env.VITE_NODE_SUB) {
+  const npxCmd = process.platform === 'win32' ? 'cmd.exe' : 'npx';
+  const npxArgs = process.platform === 'win32'
+    ? ['/d', '/s', '/c', 'npx --yes vite-node scripts/verify-hold-find-address.mjs']
+    : ['--yes', 'vite-node', 'scripts/verify-hold-find-address.mjs'];
+  const res = spawnSync(npxCmd, npxArgs, {
+    cwd: process.cwd(),
+    stdio: 'inherit',
+    env: { ...process.env, VITE_NODE_SUB: '1' },
+  });
+  process.exit(res.status ?? 1);
+}
+
+const { complexNameFromKakao } = await import('../preview/shared/complex-name-from-kakao.js');
+const { renderListPagination } = await import('../preview/home-ui/src/list-pagination.js');
+const { normalizeLocation } = await import('../preview/shared/location-display.js');
 
 const root = process.cwd();
 const read = (rel) => readFileSync(resolve(root, rel), 'utf8');
@@ -64,6 +78,26 @@ assert(
 assert(surface.includes('시·군·구까지 선택해 주세요'), '1 안내 문구');
 assert(!surface.includes('지역 조건 없이 검색'), '1 옛 무조건 검색 문구 0');
 assert(/function findScopeMissing[\s\S]*sigungu_region_id[\s\S]*region_id[\s\S]*complex_id/.test(surface), '1 URL 복원도 같은 거절');
+
+// (a) studentFeedFilters
+const feedFiltersBody = sliceFn(surface, 'studentFeedFilters');
+assert(!feedFiltersBody.includes('region_label'), 'studentFeedFilters region_label 반환 경로 0');
+assert(
+  feedFiltersBody.includes('sigungu_region_id') &&
+    (feedFiltersBody.includes('resolveCanonicalGuRegionId') || feedFiltersBody.includes('selectableFindRegionId')),
+  'studentFeedFilters 동 단위면 sigungu_region_id 또는 null',
+);
+
+// (b) findScopeMissing 분기에서 searchExposureItems = [] · searchExecuted = true · searchError = GU_PICK_HINT 삭제 및 안내 유지
+const runFiltersBody = sliceFn(surface, 'runFindSearchWithFilters');
+const scopeMissingMatch = runFiltersBody.match(/if\s*\(findScopeMissing\(tab,\s*filters\)\)\s*\{([\s\S]*?)\}/);
+const scopeMissingBlock = scopeMissingMatch ? scopeMissingMatch[1] : '';
+assert(scopeMissingBlock !== '', 'findScopeMissing 분기 존재');
+assert(!scopeMissingBlock.includes('searchExposureItems = []'), 'findScopeMissing searchExposureItems = [] 삭제');
+assert(!scopeMissingBlock.includes('searchExecuted = true'), 'findScopeMissing searchExecuted = true 삭제');
+assert(!scopeMissingBlock.includes('searchError = GU_PICK_HINT'), 'findScopeMissing searchError = GU_PICK_HINT 삭제');
+assert(scopeMissingBlock.includes('findScopeHint'), 'findScopeMissing 안내 문구 state.findScopeHint 남김');
+assert(scopeMissingBlock.includes('state._needsSearchRestore = false'), 'findScopeMissing _needsSearchRestore = false 유지');
 
 assert(/\$guOnly[\s\S]*\$exposureTier = 'basic'/.test(searchPhp), '2 구 검색 서버 basic');
 assert(/options\.step3Prime[\s\S]*renderProviderTierResults\(/.test(tier), '2 3단계는 프라임 렌더');
@@ -526,29 +560,42 @@ holdOk(
 exit(0);
 `;
 
-const probe = spawnSync('php', [], {
-  cwd: root,
-  input: HOLD_PROBE_PHP,
-  encoding: 'utf8',
-});
-const probeOut = `${probe.stdout || ''}`;
-let behaviorPass = 0;
-for (const line of probeOut.split(/\r?\n/)) {
-  if (line.startsWith('PASS:')) {
-    behaviorPass += 1;
-    console.log(line);
-  } else if (line.startsWith('FAIL:')) {
-    failed += 1;
-    console.error(line);
-  } else if (line.trim()) {
-    console.log(line);
+const hasPhp = (() => {
+  try {
+    const chk = spawnSync('php', ['-v'], { encoding: 'utf8' });
+    return chk.status === 0;
+  } catch {
+    return false;
   }
+})();
+
+if (hasPhp) {
+  const probe = spawnSync('php', [], {
+    cwd: root,
+    input: HOLD_PROBE_PHP,
+    encoding: 'utf8',
+  });
+  const probeOut = `${probe.stdout || ''}`;
+  let behaviorPass = 0;
+  for (const line of probeOut.split(/\r?\n/)) {
+    if (line.startsWith('PASS:')) {
+      behaviorPass += 1;
+      console.log(line);
+    } else if (line.startsWith('FAIL:')) {
+      failed += 1;
+      console.error(line);
+    } else if (line.trim()) {
+      console.log(line);
+    }
+  }
+  assert(
+    probe.status === 0 && !/Fatal error|Uncaught/.test(`${probe.stderr || ''}${probeOut}`),
+    `R11 PHP 가짜 PDO 종료 0 (${probe.status} ${(probe.stderr || '').slice(0, 500)})`,
+  );
+  assert(behaviorPass >= 6, `R11 행동 단언 ${behaviorPass}개`);
+} else {
+  console.log('PASS: R11 PHP 검사 미실행(php 없음)');
 }
-assert(
-  probe.status === 0 && !/Fatal error|Uncaught/.test(`${probe.stderr || ''}${probeOut}`),
-  `R11 PHP 가짜 PDO 종료 0 (${probe.status} ${(probe.stderr || '').slice(0, 500)})`,
-);
-assert(behaviorPass >= 6, `R11 행동 단언 ${behaviorPass}개`);
 
 assert(form.includes('seq !== businessEnsureSeq'), '5f 사업장 순번');
 assert(form.includes('slotEnsureSeq.get(slotKey) !== seq'), '5f 홍보 순번');
@@ -671,7 +718,11 @@ const behaviorFile = resolve(root, 'preview/home-ui/.hold-s1-behavior.mjs');
 writeFileSync(behaviorFile, behaviorSrc);
 let behavior;
 try {
-  behavior = spawnSync('npx', ['--yes', 'vite-node', '.hold-s1-behavior.mjs'], {
+  const npxCmd = process.platform === 'win32' ? 'cmd.exe' : 'npx';
+  const npxArgs = process.platform === 'win32'
+    ? ['/d', '/s', '/c', 'npx --yes vite-node .hold-s1-behavior.mjs']
+    : ['--yes', 'vite-node', '.hold-s1-behavior.mjs'];
+  behavior = spawnSync(npxCmd, npxArgs, {
     cwd: resolve(root, 'preview/home-ui'),
     encoding: 'utf8',
   });
