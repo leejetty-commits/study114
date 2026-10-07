@@ -114,8 +114,8 @@
 
 | 검사 대상 | 실행 명령 | 결과 | 세부 내용 / 비고 |
 |---|---|:---:|---|
-| 새 검증 스크립트 | `node scripts/verify-region-sido-canonical.mjs` | **PASS** | (a)~(e) 19개 assertion 전체 통과 |
-| 공부방 기본등록 API 검증 | `npx --yes vite-node scripts/verify-study-room-basic-register-api.mjs` | FAIL | 4건 실패 (이전 커밋 이후 문구 변경으로 인한 기존 실패 사항, 본 티켓 수정 파일과 무관) |
+| 새 검증 스크립트 | `node scripts/verify-region-sido-canonical.mjs` | **PASS** | (a)~(e) 20개 assertion 전체 통과 |
+| 공부방 기본등록 API 검증 | `npx --yes vite-node scripts/verify-study-room-basic-register-api.mjs` | FAIL | 4건 실패 (duplicate study_room 문구, complete go-home 문구, 홍보지역 문구, mypage overview 2·3 미표시). 이 스크립트는 BasicRegisterService.php·signup-complete.js·step-basic.js 등만 읽고 본 티켓 수정 파일을 읽지 않으므로 기반 `b249ccc`에서도 같은 결과로 판단(기반 커밋에서 직접 재실행은 하지 않음). 원인 미조사 |
 | 계정 카드 대표 지역 검증 | `cd preview/home-ui; npx vite-node ../../scripts/verify-mypage-account-region.mjs` | **PASS** | 41 passed, 0 failed |
 | 포지션 지역 티어 검증 | `cd preview/home-ui; npx vite-node ../../scripts/verify-position-region-tier.mjs` | **PASS** | 19 passed, 0 failed |
 | 지역 저장 규칙 검증 | `cd preview/home-ui; npx vite-node ../../scripts/verify-region-save-rules.mjs` | **PASS** | 46 passed, 0 failed |
@@ -149,7 +149,9 @@
 
 - 기준 커밋: `origin/cursor/hold-find-address-merge-verify-20261008`
 - 대상: 본 커밋 HEAD
-- 충돌 여부: (커밋 후 기록 및 최종 보고)
+- 검사 커밋: `043caf17b9c7be822ab3942463e0f3fbc2b1b15c`
+- 명령: `git merge-tree --write-tree origin/cursor/hold-find-address-merge-verify-20261008 HEAD`
+- 결과: exit 0, 트리 `48cac76d8b78da31f37ae20030154f502acf5630` — **충돌 없음**
 
 ---
 
