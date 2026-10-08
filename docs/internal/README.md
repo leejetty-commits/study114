@@ -33,6 +33,7 @@
 | [53-shop-page-common-format-proof.md](./53-shop-page-common-format-proof.md) | 공통 포맷 **밀도 A/B/C·formatter·스크린샷** (36/36 YES) | ★ |
 | [54-shop-page-lock.md](./54-shop-page-lock.md) | **ShopPage 정본** · 레드라인4 · CI 게이트 · 등록점검 우선 | ★★ |
 | [64-tutor-inquiry-status-lock.md](./64-tutor-inquiry-status-lock.md) | 과외쌤 쪽지설정 `inquiry_status` SSOT · 064 배포 전 필수 | ★ 쪽지설정 |
+| [71-neighborhood-welcome-lock.md](./71-neighborhood-welcome-lock.md) | **새 이웃 환영 줄** · 동네 인사 통합 · 노출 정책 현행 유지 · 레드라인6 | ★ 동네 인사 |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
 
 ---
