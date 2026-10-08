@@ -12,7 +12,6 @@ import { tutorToExposureRow } from './format.js';
 import {
   TRC_COPY,
   TRC_BASIC_FIELD_IDS,
-  TRC_PUBLISH_EXTRA_FIELD_IDS,
   TRC_PICK_FIELD_IDS,
   TRC_PRIME_FIELD_IDS,
   TRC_BOARD_BASIC_FIELDS,
@@ -74,7 +73,7 @@ function feeBasisLabel(tutor) {
   return '';
 }
 
-/** 기본정보 항목은 shared/tutor-basic-fields.js, 나머지는 공개·픽·프라임 조건. */
+/** 기본정보 항목은 shared/tutor-basic-fields.js, 나머지는 상세·픽·프라임 항목. */
 /** @param {import('./store.js').TutorRecord} tutor */
 export function tutorFieldOkMap(tutor) {
   const t = tutor && typeof tutor === 'object' ? tutor : {};
@@ -94,15 +93,9 @@ export function tutorFieldOkMap(tutor) {
   };
 }
 
-const BASIC_VIA_COMPLETE = new Set(['fee_basis', 'schedule', 'university']);
-
-/** Basic 공개 게이트 = 기본정보 8개 + 공개 추가 항목. 상세등록 완료면 완료 판정에 든 항목은 뺀다. */
-function basicIdsForTutor(tutor) {
-  const ids = [...TRC_BASIC_FIELD_IDS, ...TRC_PUBLISH_EXTRA_FIELD_IDS];
-  if (tutor?.detail_completion_status === 'expanded_complete') {
-    return ids.filter((id) => !BASIC_VIA_COMPLETE.has(id));
-  }
-  return ids;
+/** 베이직카드 = 기본정보 8개. 다 채우면 노출 (정본 73 0절). 상세 항목은 노출 조건이 아니다. */
+function basicIdsForTutor() {
+  return [...TRC_BASIC_FIELD_IDS];
 }
 
 /** 등록점검 항목 id → 입력 화면 data-trc-field (항목이 칸 하나가 아닐 때만) */

@@ -334,32 +334,11 @@ export function offerGoToMessageInquiry(roomId) {
   const url = messageInquiryPageUrl(roomId);
   if (!url) return false;
   const go = window.confirm(
-    '입력값이 저장되었습니다.\n\n쪽지 기본값은 「받는 중」입니다. 공개와는 별개이며, 지금 설정하지 않아도 됩니다.\n\n지금 「쪽지설정」으로 이동할까요?\n(나중에 마이페이지 → 내 등록 → 쪽지설정에서 바꿀 수 있습니다)',
+    '입력값이 저장되었습니다.\n\n쪽지 기본값은 「받는 중」입니다. 카드 노출과는 별개이며, 지금 설정하지 않아도 됩니다.\n\n지금 「쪽지설정」으로 이동할까요?\n(나중에 마이페이지 → 내 등록 → 쪽지설정에서 바꿀 수 있습니다)',
   );
   if (!go) return false;
   window.location.assign(url);
   return true;
-}
-
-export function renderPublishStatusBlock(status, opts = {}) {
-  const v = String(status || 'draft');
-  const lead =
-    opts.lead ||
-    '베이직 검색 공개는 무료이며, 상세·쪽지·픽/프라임과 무관합니다. 저장만 하면 비공개, 공개를 고르면 검색에 나갑니다.';
-  return `
-    <section class="register-publish-block" data-publish-block>
-      <h3 class="register-publish-block__title">공개 상태</h3>
-      <p class="register-publish-block__lead">${lead}</p>
-      <div class="form-group">
-        <label class="form-label" for="${opts.inputId || 'profile_status'}">지금 상태를 고르세요</label>
-        <select class="form-input" id="${opts.inputId || 'profile_status'}" name="profile_status">
-          <option value="draft" ${v === 'draft' || v === 'pending' ? 'selected' : ''}>저장만 (아직 비공개)</option>
-          <option value="published" ${v === 'published' ? 'selected' : ''}>공개 (베이직 노출)</option>
-        </select>
-      </div>
-      ${opts.extraHtml || ''}
-    </section>
-  `;
 }
 
 /** 상세정보 건너뜀 — DB에 저장된 값 요약 화면으로 */

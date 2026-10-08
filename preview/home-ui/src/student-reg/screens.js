@@ -215,7 +215,7 @@ export function renderStudentCountHalt() {
   </section>`;
 }
 
-/** 목록·공개 탭은 그리지 않고, 학생 1명이면 마이프로필로 보낸다. */
+/** 목록·탭은 그리지 않고, 학생 1명이면 마이프로필로 보낸다. */
 function renderSingleProfileEntry() {
   const dest = getParentStudentProfilePath();
   if (!dest) return renderStudentCountHalt();

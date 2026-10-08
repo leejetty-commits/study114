@@ -9,7 +9,6 @@ import {
   renderSectionTitle,
   renderDetailStepNav,
   renderGuideNotice,
-  renderPublishStatusBlock,
   renderMessageInquiryNotice,
   bindGlobalEvents,
   navigate,
@@ -23,7 +22,7 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-/** 픽·프라임 카드 항목만 * 표시. 저장·공개는 막지 않는다. */
+/** 픽·프라임 카드 항목만 * 표시. 저장은 막지 않는다. */
 function starLabel(forId, text) {
   const forAttr = forId ? ` for="${forId}"` : '';
   return `<label class="form-label form-label--required form-label--required-text"${forAttr}>${text}<em class="register-required-mark">필수</em></label>`;
@@ -78,11 +77,11 @@ function persistForm(form) {
 }
 
 /**
- * @param {{ includeStepNav?: boolean, includePublishBlock?: boolean, includeFooterActions?: boolean }} [opts]
+ * @param {{ includeStepNav?: boolean, includeInquiryNotice?: boolean, includeFooterActions?: boolean }} [opts]
  */
 export function renderFacilityFormHtml(opts = {}) {
   const includeStepNav = opts.includeStepNav !== false;
-  const includePublishBlock = opts.includePublishBlock !== false;
+  const includeInquiryNotice = opts.includeInquiryNotice !== false;
   const includeFooterActions = opts.includeFooterActions ?? !includeStepNav;
   const s = registerState;
   const notes = proofNotes(s);
@@ -187,14 +186,7 @@ export function renderFacilityFormHtml(opts = {}) {
         </div>
       </div>
 
-      ${
-        includePublishBlock
-          ? renderPublishStatusBlock(s.profile_status, {
-              lead: '모두 채운 뒤 공개할지, 지금은 저장만 할지 정하는 칸입니다. 등록 완료 화면에서도 다시 고를 수 있습니다.',
-              extraHtml: renderMessageInquiryNotice(),
-            })
-          : ''
-      }
+      ${includeInquiryNotice ? renderMessageInquiryNotice() : ''}
 
       ${
         includeStepNav
@@ -215,7 +207,7 @@ export function renderFacilityFormHtml(opts = {}) {
 }
 
 export function renderFacility() {
-  return renderRegisterShell(renderFacilityFormHtml({ includeStepNav: true, includePublishBlock: true }), {
+  return renderRegisterShell(renderFacilityFormHtml({ includeStepNav: true, includeInquiryNotice: true }), {
     stepKey: 'facility',
     title: '경력 · 신뢰 · 시설',
   });

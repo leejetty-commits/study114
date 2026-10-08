@@ -67,20 +67,17 @@ export const TRC_COPY = {
   },
 };
 
-/** 베이직카드 항목 = 기본정보 필수 — shared/tutor-basic-fields.js 한 목록 (공개 판정과 같음) */
+/** 베이직카드 항목 = 기본정보 필수 — shared/tutor-basic-fields.js 한 목록. 다 채우면 카드 노출 (정본 73 0절) */
 export const TRC_BASIC_FIELD_IDS = TUTOR_BASIC_FIELD_KEYS;
 
-/** 공개 판정에서 기본정보 다음으로 보는 상세 항목 (강의장소·상세등록 완료·프로필 이미지·소개문) */
-export const TRC_PUBLISH_EXTRA_FIELD_IDS = ['lesson_places', 'fee_basis', 'schedule', 'intro', 'university', 'profile_image'];
-
-/** Pick 추가 — Basic 공개 외에 픽 카드에 더 필요한 입력 */
+/** Pick 추가 — 베이직카드 외에 픽 카드에 더 필요한 입력 */
 export const TRC_PICK_FIELD_IDS = ['feature_1', 'student_target'];
 
 /** Prime 추가 — Pick/Basic 외에 프라임 카드에 더 필요한 입력 */
 export const TRC_PRIME_FIELD_IDS = ['intro_long', 'feature_2', 'feature_3'];
 
 export const TRC_REQUIRED_FIELD_IDS = [
-  ...new Set([...TRC_BASIC_FIELD_IDS, ...TRC_PUBLISH_EXTRA_FIELD_IDS, ...TRC_PICK_FIELD_IDS, ...TRC_PRIME_FIELD_IDS]),
+  ...new Set([...TRC_BASIC_FIELD_IDS, ...TRC_PICK_FIELD_IDS, ...TRC_PRIME_FIELD_IDS]),
 ];
 
 /**

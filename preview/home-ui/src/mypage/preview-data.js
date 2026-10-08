@@ -190,7 +190,7 @@ export function getPrimaryCta(role) {
     if (!room) {
       return {
         text: '첫 공부방 등록하기',
-        hint: '가게 프로필을 만들고 공개 준비를 시작하세요.',
+        hint: '기본등록을 마치면 카드가 바로 노출됩니다.',
         externalRegister: true,
         kind: 'study_room',
       };
@@ -205,8 +205,8 @@ export function getPrimaryCta(role) {
       };
     }
     return {
-      text: '공부방 공개 상태 살펴보기',
-      hint: '미리보기 후 공개할 수 있습니다.',
+      text: '공부방 카드 살펴보기',
+      hint: '등록점검에서 카드 모습을 확인할 수 있습니다.',
       path: studyRoomSectionPath(room.id, 'publish'),
     };
   }
@@ -219,13 +219,13 @@ export function getPrimaryCta(role) {
       if (!r.canPublish) {
         return {
           text: '과외 프로필을 조금 더 채워보세요',
-          hint: `공개 준비 ${r.doneCount}/${r.totalCount}개 완료 · 부족한 항목부터 하나씩 이어가세요.`,
+          hint: `기본등록 ${r.doneCount}/${r.totalCount}개 완료 · 다 채우면 카드가 노출됩니다.`,
           path: tutorSectionPath(draft.id, 'basic'),
         };
       }
       return {
-        text: '내 과외 프로필 미리보기',
-        hint: '학생에게 보일 모습을 확인한 뒤 공개할 수 있어요.',
+        text: '내 과외 카드 살펴보기',
+        hint: '등록점검에서 학생에게 보이는 모습을 확인할 수 있어요.',
         path: tutorSectionPath(draft.id, 'publish'),
       };
     }
@@ -239,7 +239,7 @@ export function getPrimaryCta(role) {
     }
     return {
       text: '과외 운영 상태 확인',
-      hint: '내 프로필과 공개 상태를 한눈에 살펴보세요.',
+      hint: '내 프로필과 노출 상태를 한눈에 살펴보세요.',
       path: tutors[0] ? tutorHubPath(tutors[0].id) : '/mypage/registrations/tutors',
     };
   }

@@ -452,6 +452,7 @@ final class BasicRegisterService
             if ($existingId !== false) {
                 $roomId = (int) $existingId;
                 if ($this->studyRoomRowHasPromoSlot1($pdo, $roomId)) {
+                    \Study114\StudyRoom\StudyRoomBasicExposure::syncProfileStatus($pdo, $roomId);
                     $pdo->commit();
                     return $roomId;
                 }
@@ -579,6 +580,7 @@ final class BasicRegisterService
                 'INSERT INTO study_room_subject_targets (study_room_id, subject_name, school_level, subject_master_id, is_main)
                  VALUES (?, ?, ?, ?, 1)'
             )->execute([$roomId, $this->firstSubjectName($mainSubject), 'middle', $subjectId]);
+            \Study114\StudyRoom\StudyRoomBasicExposure::syncProfileStatus($pdo, $roomId);
 
             $pdo->commit();
         } catch (PDOException $e) {
@@ -761,6 +763,7 @@ final class BasicRegisterService
                 'SELECT id FROM tutors WHERE user_id = ? ORDER BY id ASC LIMIT 1'
             );
             if ($existingTutorId !== null && TutorBasicFields::missingForTutor($pdo, $existingTutorId) === []) {
+                TutorBasicFields::syncProfileStatus($pdo, $existingTutorId);
                 $pdo->commit();
                 return $existingTutorId;
             }
@@ -796,6 +799,7 @@ final class BasicRegisterService
             foreach ($regionIds as $order => $regionId) {
                 $ins->execute([$tutorId, $regionId, 'city', $order, $order === 0 ? 1 : 0]);
             }
+            TutorBasicFields::syncProfileStatus($pdo, $tutorId);
 
             $pdo->commit();
         } catch (InvalidArgumentException $e) {

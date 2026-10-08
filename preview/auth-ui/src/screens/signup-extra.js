@@ -1,6 +1,6 @@
 /**
  * signup/extra는 사용자-facing 독립 단계가 아님 (Notion 14장 §9).
- * 지역 2~3·공개용 세부값은 상세등록 책임 → 가입완료로 넘긴다.
+ * 지역 2~3·카드 세부값은 상세등록 책임 → 가입완료로 넘긴다.
  */
 import { bindGlobalEvents, navigate } from '../layout.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';

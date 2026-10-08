@@ -176,6 +176,39 @@ final class TutorBasicFields
         return self::labelsFor($ok);
     }
 
+    /**
+     * 기본등록 완료 = 노출(published), 미완료 = draft. 관리자 숨김(hidden)은 건드리지 않는다.
+     * 회원이 노출 상태를 고르는 동작은 없다(정본 22·73).
+     */
+    public static function syncProfileStatus(PDO $pdo, int $tutorId): void
+    {
+        $status = self::missingForTutor($pdo, $tutorId) === [] ? 'published' : 'draft';
+        $pdo->prepare(
+            "UPDATE tutors SET profile_status = ?,
+                published_at = CASE WHEN ? = 'published' THEN COALESCE(published_at, NOW()) ELSE published_at END
+             WHERE id = ? AND profile_status <> 'hidden'"
+        )->execute([$status, $status, $tutorId]);
+    }
+
+    /**
+     * missingForTutor() 의 과외지역 1을 뺀 7개를 SQL 조건으로. 과외지역 1은 검색의 tutorSlot1Sql 이 본다.
+     * 검색 노출이 가입 게이트(needsBasicRegister)와 같은 기준을 쓰게 한다.
+     */
+    public static function completeSql(string $alias): string
+    {
+        $levels = "'" . implode("', '", self::SCHOOL_LEVELS) . "'";
+
+        return "(TRIM(COALESCE({$alias}.tutor_display_name, '')) <> ''
+            AND TRIM(COALESCE({$alias}.main_subject_note, '')) <> ''
+            AND COALESCE({$alias}.preferred_fee_amount, 0) > 0
+            AND COALESCE({$alias}.lessons_per_week, 0) > 0
+            AND COALESCE({$alias}.minutes_per_lesson, 0) > 0
+            AND TRIM(COALESCE({$alias}.slogan, '')) <> ''
+            AND (SELECT tbf_st.school_level FROM tutor_subject_targets tbf_st
+                 WHERE tbf_st.tutor_id = {$alias}.id
+                 ORDER BY tbf_st.is_primary DESC, tbf_st.id ASC LIMIT 1) IN ({$levels}))";
+    }
+
     /** 슬롯 1(priority_order=0)이 과외 단위 지역이면 true. 등록 허브 has_primary_region 과 같은 기준. */
     public static function hasPrimaryRegion(PDO $pdo, int $tutorId): bool
     {

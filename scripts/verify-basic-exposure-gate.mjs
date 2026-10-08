@@ -4,6 +4,7 @@
  *
  * 가짜 PDO 가 TutorRegisterService · StudyRoomRegisterService · BasicRegisterService
  * · SearchService · NeighborhoodGreetingService · StudyRoomHubService 실경로를 탄다.
+ * (e) 회원 publish 동작은 없다(2026-10-09 remove-publish-code). 기본등록 완료 = 노출.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -814,7 +815,7 @@ try {
 } catch (Throwable $e) {
     $pubMsg = get_class($e) . ': ' . $e->getMessage();
 }
-ok('(e) 공부방 publish 홍보1 없으면 거부', $pubMsg === '홍보지역 1(대표)을 선택해 주세요.', (string) $pubMsg);
+ok('(e) 공부방 회원 publish 동작 없음', $pubMsg === '지원하지 않는 요청입니다.', (string) $pubMsg);
 ok('(e) 거부 시 profile_status 는 draft', ($pub->rooms[0]['profile_status'] ?? '') === 'draft', (string) ($pub->rooms[0]['profile_status'] ?? ''));
 `;
 

@@ -43,7 +43,7 @@ export function renderContact() {
   ).join('');
 
   const content = `
-    ${renderGuideNotice('상세등록 마지막 단계입니다. 학력·경력과 연락·공개를 함께 확인한 뒤 등록을 마쳐 주세요.')}
+    ${renderGuideNotice('상세등록 마지막 단계입니다. 학력·경력과 소셜홍보를 확인한 뒤 등록을 마쳐 주세요.')}
     <form data-form="contact" class="register-form-narrow">
       ${renderSectionTitle('학력 · 경력 · 특징')}
       <div class="register-grid-2 register-grid-2--tight">
@@ -82,15 +82,8 @@ export function renderContact() {
         <div class="register-check-grid">${badges}</div>
       </div>
 
-      ${renderSectionTitle('소셜홍보 · 공개')}
+      ${renderSectionTitle('소셜홍보')}
       <div class="register-grid-2 register-grid-2--tight">
-        <div class="form-group">
-          <label class="form-label" for="profile_status">공개 상태</label>
-          <select class="form-input" id="profile_status" name="profile_status">
-            <option value="draft" ${s.profile_status === 'draft' || s.profile_status === 'pending' ? 'selected' : ''}>저장만 (아직 비공개)</option>
-            <option value="published" ${s.profile_status === 'published' ? 'selected' : ''}>공개</option>
-          </select>
-        </div>
         <div class="form-group">
           <label class="form-label" for="youtube_url">유튜브 링크</label>
           <input class="form-input" type="url" id="youtube_url" name="youtube_url" value="${s.youtube_url}" placeholder="https://www.youtube.com/..." />
@@ -104,13 +97,12 @@ export function renderContact() {
           <input class="form-input" type="url" id="instagram_url" name="instagram_url" value="${s.instagram_url}" placeholder="https://www.instagram.com/..." />
         </div>
       </div>
-      <p class="form-hint">공개는 내용을 확인한 뒤 켜 주세요. 사진 업로드는 곧 연결됩니다.</p>
       ${renderNavButtons('/register/lesson', '등록 완료', { skipLabel: '나중에 하기' })}
     </form>`;
   return renderRegisterShell(content, {
     stepKey: 'contact',
     title: '학력 · 연락',
-    subtitle: '상세등록 2/2 · 학력·경력과 연락·공개를 함께 마무리합니다.',
+    subtitle: '상세등록 2/2 · 학력·경력과 소셜홍보를 함께 마무리합니다.',
   });
 }
 

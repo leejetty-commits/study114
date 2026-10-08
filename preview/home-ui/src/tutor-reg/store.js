@@ -131,30 +131,14 @@ export function getTutor(id) {
 
 /** @param {TutorRecord} tutor */
 export function getPublishReadiness(tutor) {
-  /** 기본정보 항목은 shared/tutor-basic-fields.js 한 목록 (서버 TutorHubService::publishMissing 과 같음) */
+  /**
+   * 기본등록 완료 = 카드 노출 (정본 73 0절). 항목은 shared/tutor-basic-fields.js 한 목록
+   * (서버 TutorBasicFields::missingForTutor 와 같음). 상세 항목은 노출 조건이 아니다.
+   */
   const basicOk = tutorBasicOkMap(tutorBasicValuesFromRecord(tutor));
   /** @type {string[]} */
   const missing = tutorBasicMissing(tutorBasicValuesFromRecord(tutor));
-  const need = (ok, label) => {
-    if (!ok) missing.push(label);
-  };
-
-  const placesDone = !!tutor.has_lesson_places;
-  const detailDone = tutor.detail_completion_status === 'expanded_complete';
-  const imageDone = !!tutor.has_profile_image;
-  const introDone = !!(tutor.intro_short?.trim() || tutor.intro_long?.trim());
-  need(placesDone, '강의장소');
-  need(detailDone, '상세등록 완료');
-  need(imageDone, '프로필 이미지');
-  need(introDone, '소개문');
-
-  if (Array.isArray(tutor.detail_missing) && tutor.detail_missing.length) {
-    for (const label of tutor.detail_missing) {
-      if (!missing.includes(label)) missing.push(label);
-    }
-  }
-
-  const checks = [...TUTOR_BASIC_FIELD_KEYS.map((key) => basicOk[key]), placesDone, detailDone, imageDone, introDone];
+  const checks = TUTOR_BASIC_FIELD_KEYS.map((key) => basicOk[key]);
   const doneCount = checks.filter(Boolean).length;
 
   /** @type {string[]} */
@@ -221,30 +205,6 @@ export async function setTutorInquiryStatus(id, inquiry_status) {
     return getTutor(id);
   }
   return updateTutor(id, { inquiry_status });
-}
-
-/** @param {number} id */
-export async function publishTutor(id) {
-  if (isRegistrationsApiMode()) {
-    try {
-      await apiTutorAction(id, 'publish');
-    } catch (err) {
-      const data = err?.payload;
-      if (data?.ok === false && data.reason) return { ok: false, reason: data.reason, missing: data.missing };
-      throw err;
-    }
-    return { ok: true };
-  }
-  const tutor = getTutor(id);
-  if (!tutor) return { ok: false, reason: 'not_found' };
-  const r = getPublishReadiness(tutor);
-  if (!r.canPublish) return { ok: false, reason: 'incomplete', missing: r.missing };
-  updateTutor(id, {
-    profile_status: 'published',
-    published_at: new Date().toISOString(),
-    compare_eligible: true,
-  });
-  return { ok: true };
 }
 
 export function getTutorSummaryCounts() {

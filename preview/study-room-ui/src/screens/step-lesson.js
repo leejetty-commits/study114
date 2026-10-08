@@ -181,7 +181,7 @@ function renderClassCard(row, idx, total) {
   `;
 }
 
-/** 픽·프라임 카드 항목은 *만. 저장·공개는 막지 않는다. */
+/** 픽·프라임 카드 항목은 *만. 저장은 막지 않는다. */
 export function lessonSaveGuard() {
   return '';
 }

@@ -40,45 +40,11 @@ final class StudyRoomHubService
             throw new InvalidArgumentException('공부방을 찾을 수 없습니다.');
         }
 
+        // 기본등록 완료 = 카드 노출. 회원 공개·숨김 동작은 없다(숨김은 관리자 페이지만).
         return match ($action) {
-            'publish'        => $this->publish($userId, $roomId, $room),
             'inquiry_status' => $this->setInquiry($userId, $roomId, $input),
-            'delete'         => throw new InvalidArgumentException('지원하지 않는 요청입니다.'),
             default          => throw new InvalidArgumentException('지원하지 않는 요청입니다.'),
         };
-    }
-
-    /** @param array<string, mixed> $room */
-    private function publish(int $userId, int $roomId, array $room): array
-    {
-        (new \Study114\Auth\EmailVerificationGate())->assertVerified($userId);
-
-        // hydrate(StudyRoomHubRepository)는 pending만 draft로 읽고 hidden은 그대로 둔다.
-        if ((string) ($room['profile_status'] ?? '') === 'hidden') {
-            return ['ok' => false, 'reason' => 'not_allowed'];
-        }
-
-        if (!$this->hasPromoSlot1($roomId)) {
-            throw new InvalidArgumentException('홍보지역 1(대표)을 선택해 주세요.');
-        }
-
-        // 공개는 입력 완성도·쪽지 설정과 독립. 베이직 노출은 빈 상세값이 있어도 가능.
-        $this->repo->setProfileStatus($roomId, 'published', date('Y-m-d H:i:s'));
-
-        return ['room' => $this->repo->getForOwner($userId, $roomId) ?? $room];
-    }
-
-    private function hasPromoSlot1(int $roomId): bool
-    {
-        $stmt = Connection::get()->prepare(
-            'SELECT 1 FROM study_room_regions
-             WHERE study_room_id = ? AND slot = 1
-               AND region_id IS NOT NULL AND region_id <> 0
-             LIMIT 1'
-        );
-        $stmt->execute([$roomId]);
-
-        return $stmt->fetchColumn() !== false;
     }
 
     /** @param array<string, mixed> $input */

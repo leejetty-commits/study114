@@ -7,8 +7,8 @@
 export const P21_LIST_TABS = [
   { key: 'all', label: '전체' },
   { key: 'draft', label: '저장' },
-  { key: 'published', label: '공개중' },
-  { key: 'not_ready', label: '공개 준비 미완료' },
+  { key: 'published', label: '노출중' },
+  { key: 'not_ready', label: '기본등록 미완료' },
 ];
 
 /** §3-3 금지 UI 문구 — 22장 · pending deprecated */
@@ -44,7 +44,7 @@ export const PRODUCT_APPLY = {
 /** §6 상태판 블록 제목 */
 export const P21_HUB_BLOCK_TITLES = {
   diagnosis: '한 줄 진단',
-  readiness: '공개 준비',
+  readiness: '기본등록',
   gauges: '운영 게이지',
   accessMatrix: '접근·쪽지',
   matching: '매칭 가시성',

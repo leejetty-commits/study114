@@ -400,7 +400,7 @@ export function renderEmbeddedPanel(room, section) {
       room.id,
       `${renderReturnToRegistrationCheckBanner(room.id)}${renderFacilityFormHtml({
         includeStepNav: false,
-        includePublishBlock: false,
+        includeInquiryNotice: false,
         includeFooterActions: true,
       })}`,
       {
