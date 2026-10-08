@@ -20,16 +20,18 @@
 
 ## 배포 전후 사용자 할 일
 
-- 과외쌤 쓰기·반응 검사(C4) 종료 뒤 phpMyAdmin:
-  ```sql
-  DELETE FROM tutor_regions WHERE tutor_id = 5 AND priority_order = 2 AND region_id = 2;
-  UPDATE tutor_regions SET region_id = 224 WHERE region_id = 1  AND tutor_id IN (3, 5);
-  UPDATE tutor_regions SET region_id = 264 WHERE region_id = 2  AND tutor_id = 5;
-  UPDATE tutor_regions SET region_id = 337 WHERE region_id = 39 AND tutor_id = 9;
-  UPDATE tutor_regions SET region_id = 317 WHERE region_id = 29 AND tutor_id = 9;
-  ```
-- 과외쌤 9 대표지역(19 서울특별시)은 마이페이지에서 서울 구를 다시 선택.
-- 실행 뒤 정본 4장 A·B·C 재확인.
+> **[폐기 — 실행 금지]**
+> 아래 구 단위 이관 SQL은 2026-10-08 20:10 사용자 정책 변경(광역시·시·군 단위 복귀)에 따라 **전면 폐기**되었습니다.
+> 운영 DB에 아래 SQL을 절대로 실행하지 마십시오. 새로운 과외 단위 이관 SQL은 개정된 정본 `docs/internal/72-region-unit-lock.md` 제9장을 참조하십시오.
+
+```sql
+-- [폐기된 구 단위 이관 쿼리 - 실행 금지]
+-- DELETE FROM tutor_regions WHERE tutor_id = 5 AND priority_order = 2 AND region_id = 2;
+-- UPDATE tutor_regions SET region_id = 224 WHERE region_id = 1  AND tutor_id IN (3, 5);
+-- UPDATE tutor_regions SET region_id = 264 WHERE region_id = 2  AND tutor_id = 5;
+-- UPDATE tutor_regions SET region_id = 337 WHERE region_id = 39 AND tutor_id = 9;
+-- UPDATE tutor_regions SET region_id = 317 WHERE region_id = 29 AND tutor_id = 9;
+```
 
 ## 작업 지시서
 
@@ -166,4 +168,30 @@
   1. `preview/shared/register-flow.css`의 전역 `.mypage-badge`, `.mypage-badge--warn` 규칙을 완전 삭제.
   2. 지역 슬롯 내부로 범위를 좁힌 규칙 `.register-region-slot__head .mypage-badge--warn`만 정의하여 슬롯 외부 마이페이지 배지에 어떠한 부작용도 미치지 않도록 격리.
   3. `scripts/verify-region-unit-lock.mjs`에 회귀 방지 검사(7부) 추가: `preview/shared/*.css` 내에 부모 선택자 없이 전역으로 선언된 `.mypage-badge` 및 `.mypage-badge--*` 선택자가 존재할 경우 즉시 FAIL 처리 (인위적 전역 규칙 추가 시 FAIL 발생 및 원복 후 PASS 검증 완료).
+
+---
+
+## 정책 변경 (2026-10-08 20:10 사용자 결정)
+
+### 1. 사용자 결정 원문
+- 「정책은 과외쌤을 시군구로 했는데, 사실 구로 나누는게 크게 의미가 없어. 왜냐하면 광역시는 교통이 너무 발달되어 있어서 충분히 과외활동에 지역이 커버가 가능해. 서울을 예로 들면, 서울 하나만 해도 전철로 다 과외하러 다닐수 있어...」
+- 「광역을 하나로 봐도 돼. 학생이 과외쌤을 구에서 찾는게 아니라, 서울, 인천, 의정부 이렇게 찾을수 있으니...」
+- 「과외쌤은 시군구가 아니라, 광역시,시,군 이렇게 되네. 도는 제외야」
+- 「과외쌤은 어차피 프리미엄의 자리갯수가 제한되지 않아. 페이지넘버링이야」
+
+### 2. 사용자 확정 선택 3건
+1. **광역시 안의 군 포함**: 강화·옹진·기장·달성·군위·울주는 해당 광역시에 포함.
+2. **학생 과외 희망 지역**: 과외쌤 단위와 완전히 동일한 단위 적용.
+3. **과외쌤 유료 노출(Pick·Prime)**: 동일한 단위 + 주력과목 축으로 판매, 매진 없이 페이지네이션 적용.
+
+### 3. 정책 내력
+- 2026-08-04 `ca075c5`: 「과외지역은 광역시 단독·도→시 선택을 기본 단위로 한다」
+- 2026-09-24 `4660fd8`: 회원가입 개편 중 「tutor sido→si/gun」
+- 2026-10-01 `67b9a63`: 공식 행정구역 072·073 도입하며 「구(시·군) 단위 통일」
+- 2026-10-08 20:10: 8월 정책(광역시 단독, 도는 시·군)으로 정식 복귀 및 정본 개정.
+
+### 4. 진행 현황 및 운영 상태
+- 지금까지의 구현 커밋(`5c97025` ~ `a639a4e`)은 **운영 서버에 배포되지 않은 상태**임.
+- 기존에 작성되었던 구 단위 이관 SQL(`region_id 224/264/337/317`)은 **전면 폐기**되었으며 실행해서는 안 됨.
+- 정본 `docs/internal/72-region-unit-lock.md`를 새 정책에 맞게 전면 개정 완료하였으며, 다음 코드 구현 단계에서 판정 기준과 저장/검색 로직을 새로운 과외 단위로 변경할 예정임.
 
