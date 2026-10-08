@@ -3,8 +3,9 @@
 - 작업 일자: 2026-10-09
 - 작업 브랜치: `cursor/wishlist-card-zoom-20261009` (기준: `origin/main` `90cc0f0`)
 - 작업 디렉토리: `D:\work\study114\.wt\wishlist-card-zoom`
-- 커밋: `1a668ec` (서버) · `d388cd6` (화면) · `69ecc51` (검증 스크립트) · 이 기록 커밋
-- 상태: 검수·승인 대기 (작업 세션은 자기 작업을 승인하지 않는다)
+- 커밋: `1a668ec` (서버) · `d388cd6` (화면) · `69ecc51` (검증 스크립트) · `96356d3` (기록)
+  - 추가 지시(10절): `81d57fd`·`5d4a15a` (origin/main `253116a`·`bd853f6` merge) · `3878003` (잠금 검사) · `337c5db` (리뷰 낮음 2건) · 이 기록 커밋
+- 상태: 독립 리뷰 승인 권고 → 지적 반영, 사용자 승인 대기 (작업 세션은 자기 작업을 승인하지 않는다)
 
 ---
 
@@ -141,12 +142,50 @@ study114 저장소(D:\work\study114) 작업자다. 한국어로 기록·보고�
 
 ## 8. 남은 질문 · 판단
 
-1. `verify-tutor-region-unit` 의 「searchRooms 본문 = origin/main」 잠금이 이 브랜치에서 1건 늘어난다(위 6절). `searchRooms` 를 건드리지 않고 번호 조회를 하려면 공개 조건을 복제하거나 전체 목록을 읽어 거르는 방법뿐이라, 같은 매퍼·같은 노출 조건 재사용을 택했다. 잠금 의도(과외 단위 작업이 공부방 검색을 바꾸지 않음)와 충돌하지 않는지 검수에서 확인 바람.
+1. (10절에서 해결) `verify-tutor-region-unit` 의 「searchRooms 본문 = origin/main」 잠금이 이 브랜치에서 1건 늘어난다(위 6절). `searchRooms` 를 건드리지 않고 번호 조회를 하려면 공개 조건을 복제하거나 전체 목록을 읽어 거르는 방법뿐이라, 같은 매퍼·같은 노출 조건 재사용을 택했다. 잠금 의도(과외 단위 작업이 공부방 검색을 바꾸지 않음)와 충돌하지 않는지 검수에서 확인 바람.
 2. 찜 카드의 노출 등급(`exposure_tier`·`position_sku`)은 지역 없는 검색과 같은 기준(기간 안 구독 전체)이다. 특정 동·시 검색 맥락의 등급과 다를 수 있다.
 3. 찜 카드 레일의 추천(👍) 버튼은 마이페이지에서 따로 바인딩하지 않았다(로그인 홈 카드도 카드 레일 추천은 바인딩이 없고, 확대카드 안 추천은 동작). 필요하면 별도 과제.
 4. 찜 해제 직후 같은 화면에서 재조회가 겹치면(카드 없는 찜이 있을 때만 재조회) 잠깐 해제 전 목록이 보일 수 있다. 다음 렌더에서 맞춰진다.
 
 ## 9. 검수 · 승인
 
-- 검수: (다른 세션 / 다른 모델)
-- 승인: 사용자 (커밋 hash 단위)
+- 검수: 독립 리뷰(다른 세션) — **승인 권고**, 결함 중간 1 · 낮음 2. 내용과 반영은 10절.
+- 승인: 사용자 (커밋 hash 단위) — 대기
+
+## 10. 추가 지시 (2026-10-09, 독립 리뷰 반영)
+
+지시 요약(메인 → 작업자):
+- origin/main 이 `253116a` 로 올랐고, 거기서 `scripts/verify-tutor-region-unit.mjs` 의 비교 기준이 `const BASE_REF = '6b37357'` 로 고정됐다(c97b21a). 독립 리뷰는 `searchRooms` 변경이 기존 검색 호출(`cardIds = null`) 결과를 바꾸지 않는다고 확인했지만, 「searchRooms 본문 = 변경 전 main」 잠금은 병합 후에도 계속 실패한다.
+- 할 일: origin/main 일반 merge, 잠금 의도(공부방 검색 결과 불변)는 유지하되 찜 전용 추가분만 정확히 떼고 비교, 「cardIds 조건은 cardIds 가 있을 때만」 검사 1건, 리뷰 낮음 2건 최소 수정, 검증·변조 확인(커밋 금지), 기록.
+- 진행 중 사용자 지시로 한 번 중지했다가(커밋·push 없음) 사용자 승인으로 재개. 재개 때 origin/main 이 `bd853f6`(문서·규칙만)으로 올라 다시 merge.
+
+독립 리뷰 결과와 반영:
+
+| 등급 | 지적 | 반영 |
+|---|---|---|
+| 중간 | `verify-tutor-region-unit` searchRooms 잠금이 기준 고정(`6b37357`) 뒤에는 병합해도 계속 실패 | `3878003` — 아래 세 조각이 **각각 정확히 한 번** 있을 때만 떼어 내고 나머지 본문은 `6b37357` 과 글자 그대로 비교. 조각 모양이 다르거나 두 번 이상이면 실패. 세 조각: 매개변수 `, ?array $cardIds = null`, 조건 블록 `if ($cardIds !== null) { $where[] = $this->cardIdsSql('sr.id', …); }`, 그리고 `fnBody` 가 다음 함수(searchTutors) 문서 주석까지 잘라 오므로 그 `@param list<int>\|null $cardIds publicCardsByIds 전용` 한 줄. 검사 추가: 「공부방 검색: 찜 카드 번호 조건은 번호를 줄 때만 붙음」 |
+| 낮음 | `mypage/screens.js` `wishlistRefreshKey` 가 모듈 전역이라 SPA 로 다른 화면에 갔다 다시 오면 카드 정보 없는 찜 재조회가 생략될 수 있음 | `337c5db` — 주소가 바뀌면(`hashchange`) 키를 비운다. 같은 방문 안에서는 여전히 한 번만 |
+| 낮음 | 찜 카드 → `openDetailDecision` 에 viewer 미전달 | `337c5db` — 같은 파일의 기존 호출(최근 본 목록·학생 리뷰)처럼 `viewer: getNavRole()` |
+
+검증(작업 트리 = `337c5db`):
+
+| 검사 | 결과 |
+|---|---|
+| `npm run verify:tutor-region-unit` | **135 passed / 0 failed** (리뷰 시점에는 searchRooms 잠금 1건 실패) |
+| 잠금 변조 확인 1: `searchRooms` 의 `'sr.deleted_at IS NULL'` 을 임시로 `'sr.deleted_at IS NULL AND 1 = 1'` | 「본문 = 변경 전 main」 FAIL (134/1) → 되돌림 |
+| 잠금 변조 확인 2: cardIds `if` 를 없애 항상 조건을 붙임 | 「번호를 줄 때만」·「본문」 둘 다 FAIL (133/2) → 되돌림 |
+| `npm run verify:wishlist-card-zoom` | **41 PASS / 0 FAIL** (php 15/0 · 화면 26/0, 화면 검사 2건 추가: 같은 방문 1회 재조회 · 재방문 시 재조회) |
+| 같은 검사 `--ref 90cc0f0` (과제 전) | 14 PASS / 27 FAIL (php 4/11 · 화면 10/16) |
+| 같은 검사 `--ref 69ecc51` (리뷰 반영 전) | 40 PASS / 1 FAIL (「재방문 시 재조회」만 실패) |
+| `verify:no-sample-data` · `verify:shop-page` · `verify:location-ssot` | 통과 (415 파일 OK · exit 0 · All passed) |
+| 배포 게이트: tutor-inquiries-settings · study-room-inquiries-samples · board-acl js/php | 모두 통과 |
+| PHP: position-region-tier 19/0 · room-promo-region-match 38/0 · student-request-text-exposure 82/82 · `php -l` 2파일 | 통과 |
+| vite-node: card-visual 34/0 · card-visual-penetration · tutor-mypage-route-integrity · mypage-account-region 41/0 · mypage-notice-top 49/0 · guest-baseline-map-cards 78/78 · student-branch-two-tabs 162/0 · student-location-flow 189/0 · tutor-home-student-tab 63/0 · student-home-tutor-tier 24/0 · student-mypage-hope-region 75/0 · position-region-tier 19/0 · student-mypage-metrics · hide-inquiry-bundle · parent-review-positive 11/0 | 모두 통과 |
+| `preview/home-ui` `vite build` (임시 폴더, public/ 미변경) | 성공 |
+
+배포 전 사용자 할 일: 변화 없음(SQL·환경변수·`.htaccess` 없음).
+
+남은 위험:
+- 잠금은 세 조각의 글자 모양에 묶여 있다. 찜 조회 부분을 고치면 잠금 검사도 같이 고쳐야 한다(의도된 동작).
+- `hashchange` 리스너는 모듈을 불러올 때 한 번 등록되고 해제하지 않는다(키 하나를 비우는 일만 함).
+- 8절 2~4 는 그대로 남는다.
