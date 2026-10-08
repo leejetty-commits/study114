@@ -645,7 +645,8 @@ function renderHub() {
   return renderPanel(
     A28_COPY.hubTitle,
     'A28-01',
-    `${renderSettlementHub()}
+    `<div class="a28-hub-body">
+     ${renderSettlementHub()}
      ${renderTodayMarkup()}
      ${renderOpsTip()}
      ${renderPromoQuickBar()}
@@ -654,7 +655,8 @@ function renderHub() {
        <div><h3>할 수 있는 일</h3><ul>${ALLOWED_OPERATOR_ACTIONS.map((a) => `<li>${esc(a)}</li>`).join('')}</ul></div>
        <div><h3>하지 않는 일</h3><ul>${FORBIDDEN_OPERATOR_ACTIONS.map((a) => `<li>${esc(a)}</li>`).join('')}</ul></div>
      </div>
-     <div class="sup-admin-hub">${cardHtml}</div>`,
+     <div class="sup-admin-hub">${cardHtml}</div>
+    </div>`,
   );
 }
 

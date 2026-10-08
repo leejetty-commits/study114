@@ -297,11 +297,23 @@ export function bindSettlement(root, _rerender) {
       time.textContent = `${C.printTime} ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
     }
     document.documentElement.classList.add('is-settlement-printing');
+    let mql = null;
+    let mqlHandler = null;
     const cleanUp = () => {
       document.documentElement.classList.remove('is-settlement-printing');
+      window.removeEventListener('afterprint', cleanUp);
+      if (mql && mqlHandler) {
+        mql.removeEventListener('change', mqlHandler);
+      }
     };
     window.addEventListener('afterprint', cleanUp, { once: true });
-    window.setTimeout(cleanUp, 3000);
+    if (typeof window.matchMedia === 'function') {
+      mql = window.matchMedia('print');
+      mqlHandler = (e) => {
+        if (!e.matches) cleanUp();
+      };
+      mql.addEventListener('change', mqlHandler);
+    }
     window.print();
   });
   box.querySelectorAll('[data-settlement-open]').forEach((btn) => {

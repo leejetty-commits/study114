@@ -51,12 +51,10 @@
 - **내용:**
   - `[data-settlement-print]:disabled`에 대한 시각적 스타일(opacity, cursor 등)이 지정되어 있지 않아, 사용자가 볼 때 버튼이 활성화된 것처럼 파란색으로 보이지만 실제로는 `disabled` 상태라 눌러도 아무 반응이 없었음.
 
-### 원인 4: ready 상태에서도 인쇄가 되지 않는 문제 (User Activation & requestAnimationFrame)
-- **위치:** `preview/home-ui/src/admin/a28-settlement.js` (신규 291~315행)
+### 예방 보강 4: 비동기 호출 지연 방지 및 인쇄 모드 해제 보강
+- **위치:** `preview/home-ui/src/admin/a28-settlement.js` (291~315행)
 - **내용:**
-  - 브라우저는 보안 정책(User Activation / Transient Activation)에 따라 사용자의 직접적인 마우스 클릭/키 입력 핸들러(동기 context) 내에서만 `window.print()`를 신뢰성 있게 실행함.
-  - 만약 `requestAnimationFrame` 또는 비동기 콜백 내부에서 `window.print()`를 지연 호출할 경우, 브라우저의 사용자 제스처 토큰이 만료되어 호출이 무시되거나 백그라운드 탭에서 아예 프레임이 돌지 않아 `window.print()`가 실행되지 않는 현상이 발생함.
-  - 이에 따라 동기적으로 `window.print()`를 즉시 실행하고, `afterprint` 및 3초 timeout fallback으로 `is-settlement-printing` 클래스를 안전하게 해제하도록 개선함.
+  - `window.print()`를 사용자 제스처 동기 context에서 즉시 실행하고, `afterprint` 및 `matchMedia('print')` 보조로 `is-settlement-printing` 클래스를 안전하게 정리하도록 예방 차원에서 보강함 (확인된 원인은 1~3번 항목임).
 
 ---
 
@@ -126,13 +124,44 @@
 
 1. `01-admin-hub-report-above-today.png`: 운영 홈(`/admin`)에서 보고서가 「오늘 할 일」 바로 위에 배치된 모습
 2. `02-admin-sidebar-menu-order.png`: 좌측 메뉴에서 「홍보 런치」가 「공지·안내 글」 아래, 「마켓·결제」 위에 배치된 모습
-3. `03-report-day-ready-print.png`: 일간 ready 상태 인쇄 모드(`@media print`) 시트 렌더링 모습
-4. `04-report-week-missing-print.png`: 주간 missing(내역 없음) 상태 인쇄 모드 시트 렌더링 모습
-5. `05-report-month-missing-print.png`: 월간 missing(내역 없음) 상태 인쇄 모드 시트 렌더링 모습
+3. `03-report-day-ready-print.png`: 일간 ready 상태 인쇄 모드(`@media print`) 시트 렌더링 모습 (격리 단언 통과)
+4. `04-report-week-missing-print.png`: 주간 missing(내역 없음) 상태 인쇄 모드 시트 렌더링 모습 (격리 단언 통과)
+5. `05-report-month-missing-print.png`: 월간 missing(내역 없음) 상태 인쇄 모드 시트 렌더링 모습 (격리 단언 통과)
 6. `06-admin-settlement-direct-page.png`: `#/admin/settlement` 직접 접속 시 정산 보고서 단독 화면 렌더링 모습
+7. `07-admin-settlement-direct-print.png`: `#/admin/settlement` 직접 접속 후 인쇄 모드 시트 렌더링 모습 (격리 단언 통과)
 
 ---
 
-## 8. 남은 문제 및 불확실한 점
+## 8. 메인 검수 반려 1 (2026-10-08)
 
-- 없음. 사용자 요청 3가지(인쇄 주간/월간 빈 포맷 노출 및 인쇄 무반응 수정, 보고서 운영 홈 일일업무 상단 배치, 홍보 런치 메뉴 순서 이동)가 모두 실브라우저 캡처 및 단위 테스트를 통해 완전히 검증됨.
+### 반려 내용 원문
+> 1. **인쇄물에 운영 홈 안내문이 섞임 (필수):** `04-report-week-missing-print.png`에서 출력 시각 아래에 「신고 대응, 노출 보정, 제출자료 확인처럼 서비스 운영에 필요한 최소 조치만 모았습니다…」 문장이 찍힌다. 이것은 `a28-screens.js` `renderHub()`의 `<p>${esc(A28_COPY.hubLead)}</p>`로, 인쇄 모드에서 숨겨지지 않았다. 운영 홈에서 인쇄할 때 보고서 인쇄 시트(제목·①~⑤·출력 시각) 외에는 아무것도 찍히지 않게 하라. 선택자를 하나씩 나열하지 말고, 보고서 섹션 외 운영 홈 패널 본문의 다른 형제 요소를 모두 숨기는 방식(예: hub 패널 본문 컨테이너에 클래스/속성을 주고 `html.is-settlement-printing` 아래에서 `> :not(.a28-hub-settlement)` 숨김)을 우선 검토하라. 화면 표시는 바뀌면 안 된다.
+> 2. **3초 타이머 제거:** `bindSettlement` 인쇄 핸들러의 `window.setTimeout(cleanUp, 3000)`은 `window.print()`가 비차단으로 동작하는 브라우저에서 인쇄 대화상자가 열려 있는 동안 인쇄 모드를 풀어 전체 페이지가 인쇄될 위험이 있다. 제거하고 `afterprint`만 쓰라(필요하면 `matchMedia('print')`의 change에서 matches=false일 때 정리 보조 허용). 원인 분석 4번(User Activation)은 추측이므로 작업 기록에서 「확인된 원인」이 아니라 「예방 보강」으로 표기를 고쳐라. 확인된 원인은 1~3번(조기 return으로 버튼 비활성 유지, 시트 비움, disabled 스타일 부재)이다.
+> 3. 실렌더 재촬영: `scripts/capture-admin-report-menu.mjs`에 「운영 홈에서 인쇄 모드(print media + is-settlement-printing)일 때 보이는 텍스트에 hubLead 문장·「오늘 할 일」·사이드바 메뉴가 없고, 보고서 제목·①~⑤·출력 시각만 있다」는 단언을 추가하고 03/04/05 스크린샷을 다시 찍어라. `/admin/settlement` 단독 화면 인쇄도 같은 단언으로 한 장 추가(07-...png).
+> 4. 재검증: `verify-admin-162-settlement.mjs`, `verify-admin-today-hub.mjs`, `verify-admin-preview-labels.mjs`, `npm run verify:shop-page`, 캡처 스크립트, `npm run build:dothome`.
+> 5. 작업 기록에 「메인 검수 반려 1」 절을 추가(반려 내용 원문 + 수정 + 검증 결과).
+
+### 수정 내용
+1. **운영 홈 안내문 인쇄 섞임 방지:**
+   - `preview/home-ui/src/admin/a28-screens.js`: `renderHub()`에서 본문 컨테이너 `<div class="a28-hub-body">`를 도입.
+   - `preview/home-ui/src/styles/admin-settlement.css`: `html.is-settlement-printing .admin-shell .a28-hub-body > :not(.a28-hub-settlement)` 및 `.sup-panel-card__body > :not(.a28-hub-body):not([data-settlement-root])` 규칙으로 형제 요소 전체 일괄 숨김 적용.
+2. **3초 타이머 제거:**
+   - `preview/home-ui/src/admin/a28-settlement.js`: `window.setTimeout(cleanUp, 3000)`을 완전히 제거하고 `afterprint` 및 `window.matchMedia('print')` change 이벤트 리스너를 통한 안전한 정리 로직으로 전환.
+   - 원인 4번을 추측/예방 보강으로 재분류하고 확인된 원인은 1~3번으로 문서 정리.
+3. **실렌더 격리 단언 및 07 스크린샷 추가:**
+   - `scripts/capture-admin-report-menu.mjs`에 `assertPrintIsolation` 단언 함수 작성. 인쇄 모드 텍스트에 hubLead 문장, 「오늘 할 일」, 사이드바 메뉴가 없고 보고서 제목, ①~⑤ 줄, 출력 시각만 존재하는지 검사.
+   - 03, 04, 05 스크린샷 재촬영 및 `07-admin-settlement-direct-print.png` 추가 촬영 완료.
+
+### 검증 결과
+- `node scripts/capture-admin-report-menu.mjs`: 일간 ready, 주간 missing, 월간 missing, 단독화면 인쇄 모두 `assertPrintIsolation` 단언 통과 (PASS).
+- `verify-admin-162-settlement.mjs`: 57개 항목 전체 PASS.
+- `verify-admin-today-hub.mjs`: 61개 항목 전체 PASS.
+- `verify-admin-preview-labels.mjs`: 202개 항목 전체 PASS.
+- `verify:shop-page`: 54개 항목 전체 PASS.
+- `npm run build:dothome`: 성공 (Exit code: 0).
+
+---
+
+## 9. 남은 문제 및 불확실한 점
+
+- 없음. 반려 1회에 대한 지시사항(안내문 인쇄 섞임 방지, 3초 타이머 제거, 격리 단언 추가 및 실렌더 재촬영, 단위/빌드 재검증)이 모두 정확히 반영되고 통과됨.

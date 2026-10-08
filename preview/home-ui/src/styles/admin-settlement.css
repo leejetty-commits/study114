@@ -76,12 +76,10 @@ html.is-settlement-printing .preview-toolbar,
 html.is-settlement-printing .site-footer,
 html.is-settlement-printing .admin-topbar,
 html.is-settlement-printing .admin-shell .sup-panel-card__head,
-html.is-settlement-printing .admin-shell .a28-today,
-html.is-settlement-printing .admin-shell .a28-ops-tip,
-html.is-settlement-printing .admin-shell .a28-promo-quick,
-html.is-settlement-printing .admin-shell .a28-lists,
-html.is-settlement-printing .admin-shell .sup-admin-hub,
-html.is-settlement-printing .admin-shell .a28-hub-settlement > h3,
+html.is-settlement-printing .admin-shell .a28-hub-body > :not(.a28-hub-settlement),
+html.is-settlement-printing .admin-shell .a28-hub-settlement > :not([data-settlement-root]),
+html.is-settlement-printing .admin-shell [data-settlement-root] > :not(.settlement-print-sheet),
+html.is-settlement-printing .admin-shell .sup-panel-card__body > :not(.a28-hub-body):not([data-settlement-root]),
 html.is-settlement-printing .home-body > :not(.home-main) {
   display: none !important;
 }
@@ -108,12 +106,10 @@ html.is-settlement-printing body {
   html.is-settlement-printing .site-footer,
   html.is-settlement-printing .admin-topbar,
   html.is-settlement-printing .admin-shell .sup-panel-card__head,
-  html.is-settlement-printing .admin-shell .a28-today,
-  html.is-settlement-printing .admin-shell .a28-ops-tip,
-  html.is-settlement-printing .admin-shell .a28-promo-quick,
-  html.is-settlement-printing .admin-shell .a28-lists,
-  html.is-settlement-printing .admin-shell .sup-admin-hub,
-  html.is-settlement-printing .admin-shell .a28-hub-settlement > h3,
+  html.is-settlement-printing .admin-shell .a28-hub-body > :not(.a28-hub-settlement),
+  html.is-settlement-printing .admin-shell .a28-hub-settlement > :not([data-settlement-root]),
+  html.is-settlement-printing .admin-shell [data-settlement-root] > :not(.settlement-print-sheet),
+  html.is-settlement-printing .admin-shell .sup-panel-card__body > :not(.a28-hub-body):not([data-settlement-root]),
   html.is-settlement-printing .home-body > :not(.home-main) {
     display: none !important;
   }

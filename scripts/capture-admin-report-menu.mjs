@@ -16,6 +16,43 @@ const { createServer } = await import('file:///d:/work/study114/preview/home-ui/
 
 process.env.PLAYWRIGHT_BROWSERS_PATH = 'C:\\Users\\jetty\\AppData\\Local\\ms-playwright';
 
+async function assertPrintIsolation(page, expectedTitleKeyword, contextLabel) {
+  const visibleText = await page.evaluate(() => document.body.innerText);
+
+  // 1. 없어야 하는 것:
+  // - hubLead: 「신고 대응, 노출 보정, 제출자료 확인처럼 서비스 운영에 필요한 최소 조치만 모았습니다」
+  if (visibleText.includes('신고 대응') || visibleText.includes('노출 보정')) {
+    throw new Error(`FAIL [${contextLabel}]: 인쇄 모드에 hubLead 문장이 노출되었습니다! text snippet: ${visibleText.slice(0, 300)}`);
+  }
+  // - 오늘 할 일
+  if (visibleText.includes('오늘 할 일')) {
+    throw new Error(`FAIL [${contextLabel}]: 인쇄 모드에 「오늘 할 일」이 노출되었습니다!`);
+  }
+  // - 사이드바 메뉴 (예: 공지·안내 글, 마켓·결제, 회원관리 등)
+  if (visibleText.includes('공지·안내 글') || visibleText.includes('마켓·결제') || visibleText.includes('회원관리')) {
+    throw new Error(`FAIL [${contextLabel}]: 인쇄 모드에 사이드바 메뉴가 노출되었습니다!`);
+  }
+
+  // 2. 있어야 하는 것:
+  // - 보고서 제목
+  if (!visibleText.includes(expectedTitleKeyword)) {
+    throw new Error(`FAIL [${contextLabel}]: 인쇄 모드에 보고서 제목('${expectedTitleKeyword}')이 노출되지 않았습니다! visibleText: ${visibleText}`);
+  }
+  // - ①~⑤ 라인
+  const requiredPrefixes = ['①', '②', '③', '④', '⑤'];
+  for (const prefix of requiredPrefixes) {
+    if (!visibleText.includes(prefix)) {
+      throw new Error(`FAIL [${contextLabel}]: 인쇄 모드에 라인 '${prefix}' 항목이 노출되지 않았습니다! visibleText: ${visibleText}`);
+    }
+  }
+  // - 출력 시각
+  if (!visibleText.includes('출력 시각')) {
+    throw new Error(`FAIL [${contextLabel}]: 인쇄 모드에 출력 시각이 노출되지 않았습니다! visibleText: ${visibleText}`);
+  }
+
+  console.log(`PASS [${contextLabel}]: 인쇄 모드 격리 단언 통과 (안내문/오늘할일/사이드바 없음, 제목/①~⑤/출력시각만 노출)`);
+}
+
 async function main() {
   console.log('1. Starting Vite preview/dev server...');
   const server = await createServer({
@@ -232,8 +269,9 @@ async function main() {
   }
   console.log('PASS: (c) 일간 ready 인쇄 버튼 클릭 시 window.print 호출 확인!');
 
-  // print 미디어 에뮬레이션 스크린샷
+  // print 미디어 에뮬레이션 스크린샷 및 인쇄 모드 격리 단언
   await page.emulateMedia({ media: 'print' });
+  await assertPrintIsolation(page, '일일정산서', '운영 홈 일간 ready');
   await page.screenshot({
     path: join(assetsDir, '03-report-day-ready-print.png'),
     fullPage: false,
@@ -265,8 +303,9 @@ async function main() {
   }
   console.log('PASS: (d) 주간 missing 인쇄 버튼 클릭 시 window.print 호출 확인!');
 
-  // 주간 인쇄 시트 확인
+  // 주간 인쇄 시트 확인 및 인쇄 모드 격리 단언
   await page.emulateMedia({ media: 'print' });
+  await assertPrintIsolation(page, '주간 보고서', '운영 홈 주간 missing');
   await page.screenshot({
     path: join(assetsDir, '04-report-week-missing-print.png'),
     fullPage: false,
@@ -299,6 +338,7 @@ async function main() {
   console.log('PASS: (e) 월간 missing 인쇄 버튼 클릭 시 window.print 호출 확인!');
 
   await page.emulateMedia({ media: 'print' });
+  await assertPrintIsolation(page, '월간 보고서', '운영 홈 월간 missing');
   await page.screenshot({
     path: join(assetsDir, '05-report-month-missing-print.png'),
     fullPage: false,
@@ -315,6 +355,20 @@ async function main() {
     fullPage: false,
   });
   console.log('Saved 06-admin-settlement-direct-page.png');
+
+  // (g) 단독 화면 인쇄 모드 및 격리 단언
+  console.log('Testing Direct Route Print Mode...');
+  const directPrintBtn = page.locator('[data-settlement-print]');
+  await directPrintBtn.waitFor({ state: 'visible' });
+  await directPrintBtn.click();
+  await page.emulateMedia({ media: 'print' });
+  await assertPrintIsolation(page, '일일정산서', '단독 화면 /admin/settlement 인쇄');
+  await page.screenshot({
+    path: join(assetsDir, '07-admin-settlement-direct-print.png'),
+    fullPage: false,
+  });
+  console.log('Saved 07-admin-settlement-direct-print.png');
+  await page.emulateMedia({ media: 'screen' });
 
   console.log('All tests passed successfully!');
   await browser.close();
