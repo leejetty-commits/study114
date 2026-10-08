@@ -542,6 +542,13 @@ export function bindSignupBasicEvents(root) {
     const tutor = form?.querySelector('[data-student-tutor-block]');
     study?.toggleAttribute('hidden', hope !== 'study_room');
     tutor?.toggleAttribute('hidden', hope !== 'tutor');
+    // 숨은 칸의 required 는 브라우저 검사에 남아 submit 자체를 막는다. 보이는 쪽만 required.
+    [study, tutor].forEach((block) => {
+      block?.querySelectorAll('[required], [data-required-when-shown]').forEach((el) => {
+        el.setAttribute('data-required-when-shown', '');
+        el.toggleAttribute('required', !block.hidden);
+      });
+    });
     const tutorBudget = form?.querySelector('[data-student-tutor-budget]');
     const studyBudget = form?.querySelector('[data-student-studyroom-budget]');
     tutorBudget?.toggleAttribute('hidden', hope !== 'tutor');

@@ -49,6 +49,7 @@
     "verify:tutor-inquiries-settings": "npx --yes vite-node scripts/verify-tutor-inquiries-settings.mjs",
     "verify:no-sample-data": "node scripts/verify-no-sample-data.mjs",
     "verify:location-ssot": "node scripts/verify-location-ssot.mjs",
+    "verify:student-hope-hidden-required": "node scripts/verify-student-hope-hidden-required.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {
