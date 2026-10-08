@@ -71,7 +71,6 @@ const cssFiles = [
   'preview/home-ui/src/styles/product-chrome.css',
   'preview/home-ui/src/styles/mypage-ops.css',
   'preview/home-ui/src/styles/registration-check.css',
-  'preview/home-ui/src/styles/home-card-samples.css',
   'preview/shared/register-form-primitives.css',
   'preview/shared/input-fill.css',
   'preview/shared/register-flow.css',
