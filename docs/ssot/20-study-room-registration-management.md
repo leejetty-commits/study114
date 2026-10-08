@@ -2,7 +2,7 @@
 
 **상태: UX·실행 1차 잠금** (Notion · Cursor · **home-ui 20a ✅** · API/DDL △)  
 **작성:** 2026-07-06  
-**역할:** `study_room` 역할의 **공부방(study_rooms) 프로필** — **저장 / 공개 / 수정 / 숨김 / 상담조정 / 삭제 lifecycle** 및 **노출·상담·상품 연결 운영**  
+**역할:** `study_room` 역할의 **공부방(study_rooms) 프로필** — **저장 / 수정 / 상담조정 / 삭제 lifecycle** 및 **노출·상담·상품 연결 운영** (2026-10-09: 공개 단계·본인 숨김 폐기 — 161)  
 **연동:** [22장](22-platform-lifecycle-principles.md) · [24장](24-detail-decision-layer.md) · [30장](30-first-route-map-and-screen-inventory.md) · [5장](05-study-room-db.md) · [11장](11-main-exposure-and-compare.md) · [13장](13-search-page-fields.md) · [15장](15-mypage-structure.md) · [16장](16-messages-structure-proposal.md) · [18장](18-paid-services-rough.md) · [19장](19-student-registration-management.md) · [21장](21-tutor-registration-management.md)  
 **후속:** [21장](21-tutor-registration-management.md) (과외 운영센터 · 20장 동형)  
 **프리뷰:** `preview/study-room-ui/` (입력) · `preview/home-ui/` P15-04 → P20-xx  
@@ -16,7 +16,7 @@
 ## 0. 핵심 문장 (잠금 방향)
 
 - **대상:** 공부방 원장(`study_room`) · `study_rooms.user_id` 기준 **1 : 공부방 N**
-- **운영 단위:** 「등록 폼」이 아니라 **공부방 카드** — 전환 → 저장 / 공개 / 수정 / 숨김 / 상담조정 / 삭제
+- **운영 단위:** 「등록 폼」이 아니라 **공부방 카드** — 기본등록 완료 = 카드 노출 → 수정 / 상담조정 / 삭제 (공개 단계·본인 숨김 없음, 숨김은 관리자만)
 - **저장 ≠ 공개:** `profile_status` — `draft`는 검색·상세 **미노출** · `published`만 11·13장 노출
 - **공개 ≠ 상담:** **노출(`profile_status`)** 과 **문의 수용(`inquiry_status`)** 은 **분리** · 둘 다 **원장이 직접 선택**
 - **비교검색:** **있음** (6·11·13장 — 학생 19장과 대비)
@@ -56,7 +56,7 @@
 
 ## 2. 목적
 
-공부방은 학부모에게 **비교·판단 가능한 샵 프로필**(5장)이다. 등록 UI(study-room-ui)와 별도로 **저장 → 상세보강 → 미리보기 → 공개 → 숨김/상담조정 → 노출강화** 흐름을 한 세트로 잠근다.
+공부방은 학부모에게 **비교·판단 가능한 샵 프로필**(5장)이다. 등록 UI(study-room-ui)와 별도로 **기본등록(=노출) → 상세보강 → 미리보기 → 상담조정 → 노출강화** 흐름을 한 세트로 잠근다. (2026-10-09: 공개·본인 숨김 단계 제거)
 
 **운영센터 컨셉:** 건강검진표 + 노출 조종판 — 원장이 「지금 공개 중인가 · 무엇이 부족한가 · 상담 받는가」에 즉답.
 
