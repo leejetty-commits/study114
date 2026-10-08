@@ -44,6 +44,42 @@ import {
   readStudentHopeRegion,
 } from '../../../shared/study-room-basic-form.js';
 import { bindInputFill } from '../../../shared/input-fill.js';
+import { wonToCheonwonInput, cheonwonInputToWon } from '../../../shared/fee-cheonwon.js';
+import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
+import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
+import {
+  GENDER_GROUP_OPTIONS,
+  STUDENT_COUNT_OPTIONS as TUTOR_STUDENT_COUNT_OPTIONS,
+  TUTOR_PLACE_OPTIONS,
+  TUTOR_FEATURE_MAX,
+  TUTOR_SLOGAN_MAX,
+  tutorBasicMissing,
+  tutorBasicMissingMessage,
+} from '../../../shared/tutor-basic-fields.js';
+import {
+  TUTOR_PROFILE_PHOTO_SPEC,
+  prepareTutorProfilePhoto,
+  uploadTutorProfilePhotoApi,
+} from '../../../shared/tutor-profile-photo.js';
+
+/** 과외쌤 가입: 고른 프로필 사진(아직 안 올림). 행이 생긴 뒤 같은 화면에서 올린다. */
+let pendingTutorPhoto = null;
+
+/** tutor_images.image_path(사이트 절대경로)만 미리보기로 쓴다. */
+function profileImageSrc(path) {
+  const p = String(path || '').trim();
+  return p.startsWith('/') ? p : '';
+}
+
+function optionsHtml(options, selected) {
+  const current = String(selected ?? '');
+  return [
+    '<option value="">선택</option>',
+    ...options.map(
+      (o) => `<option value="${esc(o.value)}" ${current === String(o.value) ? 'selected' : ''}>${esc(o.label)}</option>`,
+    ),
+  ].join('');
+}
 
 function esc(s) {
   if (s == null) return '';
@@ -278,6 +314,13 @@ function renderTutorBasic() {
     is_primary: i === 0,
   }));
   const citiesReady = units.some((u) => /^\d+$/.test(String(u.id)));
+  const places = Array.isArray(d.lesson_places) ? d.lesson_places.map(String) : [];
+  const photoSrc = pendingTutorPhoto?.previewSrc || d.profile_image_src || '';
+  const photoStatus = pendingTutorPhoto
+    ? '고른 사진은 가입정보 저장 때 함께 올라갑니다.'
+    : d.has_profile_image
+      ? '올린 사진이 있습니다. 사진은 가입 후 마이페이지 기본정보에서 바꿀 수 있습니다.'
+      : '아직 고른 사진이 없습니다.';
   return `
     <form data-form="basic-tutor" class="basic-register">
       <p class="auth-section-title">과외쌤 가입정보</p>
@@ -297,8 +340,50 @@ function renderTutorBasic() {
               <p class="form-note form-note--error" data-field-error="tutor_display_name" hidden></p>
             </div>
             <div class="form-group form-group--full">
+              <label class="form-label form-label--required" for="school_level">대상(학교급)</label>
+              <select class="form-input" id="school_level" name="school_level" required>${optionsHtml(SCHOOL_LEVEL_FORM_OPTIONS, d.school_level)}</select>
+            </div>
+            <div class="form-group form-group--full">
               ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '')}
               <p class="form-note form-note--error" data-field-error="main_subject" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label form-label--required" for="preferred_fee_amount">월 과외비 (천원)</label>
+              <input class="form-input" id="preferred_fee_amount" name="preferred_fee_amount" type="number" min="1" step="1" inputmode="numeric" value="${esc(wonToCheonwonInput(d.preferred_fee_amount))}" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label form-label--required" for="lessons_per_week">주 회수</label>
+              <select class="form-input" id="lessons_per_week" name="lessons_per_week" required>${optionsHtml(lessonWeeklyOptions(d.lessons_per_week), lessonWeeklySelectValue(d.lessons_per_week))}</select>
+            </div>
+            <div class="form-group">
+              <label class="form-label form-label--required" for="minutes_per_lesson">1회 수업시간</label>
+              <select class="form-input" id="minutes_per_lesson" name="minutes_per_lesson" required>${optionsHtml(lessonDurationOptions(d.minutes_per_lesson), lessonDurationSelectValue(d.minutes_per_lesson))}</select>
+            </div>
+            <div class="form-group">
+              <label class="form-label form-label--required" for="student_gender_group">지도 대상 성별</label>
+              <select class="form-input" id="student_gender_group" name="student_gender_group" required>${optionsHtml(GENDER_GROUP_OPTIONS, d.student_gender_group)}</select>
+            </div>
+            <div class="form-group">
+              <label class="form-label form-label--required" for="student_count_group">수업인원</label>
+              <select class="form-input" id="student_count_group" name="student_count_group" required>${optionsHtml(TUTOR_STUDENT_COUNT_OPTIONS, d.student_count_group)}</select>
+            </div>
+            <div class="form-group form-group--full">
+              <span class="form-label form-label--required">강의장소</span>
+              <div class="register-check-grid">${TUTOR_PLACE_OPTIONS.map(
+                (o) => `
+                <label class="form-check">
+                  <input type="checkbox" name="lesson_places" value="${esc(o.value)}" ${places.includes(o.value) ? 'checked' : ''} />
+                  <span class="form-check__label">${esc(o.label)}</span>
+                </label>`,
+              ).join('')}</div>
+            </div>
+            <div class="form-group form-group--full">
+              <label class="form-label form-label--required" for="feature_1">특징 1</label>
+              <input class="form-input" id="feature_1" name="feature_1" maxlength="${TUTOR_FEATURE_MAX}" value="${esc(d.feature_1 || '')}" required />
+            </div>
+            <div class="form-group form-group--full">
+              <label class="form-label form-label--required" for="slogan">슬로건</label>
+              <input class="form-input" id="slogan" name="slogan" maxlength="${TUTOR_SLOGAN_MAX}" value="${esc(d.slogan || '')}" placeholder="한 줄로 소개해 주세요" required />
             </div>
           </div>
         </div>
@@ -308,6 +393,21 @@ function renderTutorBasic() {
           <p class="form-note mb-2">1번은 필수, 2·3번은 선택입니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.</p>
           ${slots.map((slot, i) => renderTutorRegionSlot(slot, i, units, { showPrimary: false, labelPrefix: '과외지역' })).join('')}
         </div>
+      </div>
+      <div class="form-group form-group--full" data-tutor-signup-photo>
+        <label class="form-label form-label--required" for="tutor_profile_photo">프로필 사진</label>
+        <p class="form-hint">대표 사진 1장입니다. 사진 2·3번은 가입 후 마이페이지 기본정보에서 더 올릴 수 있습니다. JPG · PNG · WebP, 파일 최대 4MB. 가운데를 기준으로 맞춥니다.</p>
+        ${
+          photoSrc
+            ? `<img src="${esc(photoSrc)}" alt="프로필 사진 미리보기" data-tutor-photo-preview style="display:block;width:120px;height:120px;object-fit:cover;border-radius:12px;margin:0 0 0.5rem;" />`
+            : ''
+        }
+        <p class="form-note" data-tutor-photo-status>${esc(photoStatus)}</p>
+        ${
+          d.has_profile_image && !pendingTutorPhoto
+            ? ''
+            : `<input class="form-input" id="tutor_profile_photo" type="file" accept="${TUTOR_PROFILE_PHOTO_SPEC.accept},image/*" />`
+        }
       </div>
       <div class="actions-stack">
         <button type="submit" class="btn btn--primary btn--block">가입정보 저장</button>
@@ -408,11 +508,25 @@ async function loadIncompleteBasicDraft(role) {
   if (role === 'tutor') {
     const tutor = data.tutor;
     if (!tutor) return null;
+    const images = Array.isArray(tutor.images) ? tutor.images : [];
+    const firstImage = images.find((img) => String(img?.image_path || '').trim() !== '');
     return {
+      tutor_id: tutor.tutor_id || null,
       tutor_display_name: tutor.tutor_display_name || '',
+      school_level: tutor.school_level || '',
       main_subject_note: tutor.main_subject_note || '',
       main_subjects: tutor.main_subject_note ? [tutor.main_subject_note] : [],
       saved_regions: Array.isArray(tutor.saved_regions) ? tutor.saved_regions : [],
+      preferred_fee_amount: tutor.preferred_fee_amount || '',
+      lessons_per_week: tutor.lessons_per_week || '',
+      minutes_per_lesson: tutor.minutes_per_lesson || '',
+      lesson_places: Array.isArray(tutor.lesson_places) ? tutor.lesson_places : [],
+      student_gender_group: tutor.student_gender_group || '',
+      student_count_group: tutor.student_count_group || '',
+      feature_1: tutor.feature_1 || '',
+      slogan: tutor.slogan || '',
+      has_profile_image: !!firstImage,
+      profile_image_src: profileImageSrc(firstImage?.image_path),
       gender: tutor.gender || '',
     };
   }
@@ -437,6 +551,48 @@ async function loadIncompleteBasicDraft(role) {
     complex_name: room.complex_name || '',
     saved_regions: Array.isArray(room.saved_regions) ? room.saved_regions : [],
   };
+}
+
+function bindTutorSignupPhoto(root) {
+  const box = root.querySelector('[data-tutor-signup-photo]');
+  const input = box?.querySelector('#tutor_profile_photo');
+  if (!box || !input) return;
+  input.addEventListener('change', async () => {
+    const file = input.files?.[0] || null;
+    if (!file) return;
+    const status = box.querySelector('[data-tutor-photo-status]');
+    if (status) status.textContent = '사진을 준비하는 중입니다…';
+    try {
+      pendingTutorPhoto = await prepareTutorProfilePhoto(file);
+    } catch (err) {
+      input.value = '';
+      if (status) status.textContent = err instanceof Error ? err.message : '사진을 준비하지 못했습니다.';
+      return;
+    }
+    let img = box.querySelector('[data-tutor-photo-preview]');
+    if (!img) {
+      img = document.createElement('img');
+      img.setAttribute('data-tutor-photo-preview', '');
+      img.alt = '프로필 사진 미리보기';
+      img.style.cssText = 'display:block;width:120px;height:120px;object-fit:cover;border-radius:12px;margin:0 0 0.5rem;';
+      status?.before(img);
+    }
+    img.src = pendingTutorPhoto.previewSrc;
+    if (status) status.textContent = '고른 사진은 가입정보 저장 때 함께 올라갑니다.';
+  });
+}
+
+/** 고른 사진을 올린다. 성공하면 가입 초안에 「사진 있음」을 남긴다. */
+async function uploadPendingTutorPhoto(tutorId) {
+  const photo = pendingTutorPhoto;
+  if (!photo) return;
+  const image = await uploadTutorProfilePhotoApi(tutorId, photo.file, photo.crop);
+  pendingTutorPhoto = null;
+  const draft = signupState.basicRegister?.tutor;
+  if (draft) {
+    draft.has_profile_image = true;
+    draft.profile_image_src = profileImageSrc(image?.image_path || image?.basic_720_path) || photo.previewSrc;
+  }
 }
 
 export function bindSignupBasicEvents(root) {
@@ -512,6 +668,7 @@ export function bindSignupBasicEvents(root) {
 
   if (role === 'tutor') {
     bindTutorRegionSlotEvents(root, getCityUnits(signupState.tutorUnits || []));
+    bindTutorSignupPhoto(root);
   }
 
   if (role === 'study_room') {
@@ -752,10 +909,21 @@ export function bindSignupBasicEvents(root) {
       }
       data.region_label = label;
       data.activity_city = label;
-    }
 
-    if (role === 'tutor') {
-      /* tutor subject/regions already validated above */
+      const draft = signupState.basicRegister?.tutor || {};
+      data.preferred_fee_amount = cheonwonInputToWon(data.preferred_fee_amount);
+      data.lesson_places = new FormData(form).getAll('lesson_places').map(String);
+      data.feature_1 = String(data.feature_1 || '').trim();
+      data.slogan = String(data.slogan || '').trim();
+      const missing = tutorBasicMissing({
+        ...data,
+        has_primary_region: true,
+        has_profile_image: !!(pendingTutorPhoto || draft.has_profile_image),
+      });
+      if (missing.length) {
+        alert(tutorBasicMissingMessage(missing));
+        return;
+      }
     }
 
     const submitBtn = form.querySelector('[type="submit"]');
@@ -764,10 +932,35 @@ export function bindSignupBasicEvents(root) {
       submitBtn.textContent = '저장 중…';
     }
     try {
+      const prevDraft = signupState.basicRegister?.[role] || {};
+      const knownTutorId = role === 'tutor' ? Number(prevDraft.tutor_id || 0) : 0;
+      if (role === 'tutor' && knownTutorId > 0) {
+        // 이미 만들어진 행은 서버가 사진까지 확인하므로 먼저 올린다.
+        await uploadPendingTutorPhoto(knownTutorId);
+      }
       const result = await basicRegisterApi(role, data);
       if (!signupState.basicRegister) signupState.basicRegister = {};
-      signupState.basicRegister[role] = data;
+      signupState.basicRegister[role] =
+        role === 'tutor'
+          ? {
+              ...data,
+              tutor_id: result.id,
+              has_profile_image: !!signupState.basicRegister.tutor?.has_profile_image || !pendingTutorPhoto,
+              profile_image_src: signupState.basicRegister.tutor?.profile_image_src || '',
+            }
+          : data;
       signupState.basicRegisterResult = result;
+      if (role === 'tutor' && pendingTutorPhoto) {
+        try {
+          await uploadPendingTutorPhoto(Number(result.id));
+        } catch (photoErr) {
+          signupState.basicRegister.tutor.has_profile_image = false;
+          alert(
+            `가입정보는 저장했지만 프로필 사진을 올리지 못했습니다. 가입정보 저장을 한 번 더 눌러 주세요.\n(${photoErr instanceof Error ? photoErr.message : photoErr})`,
+          );
+          return;
+        }
+      }
 
       // 홈 기본값용 — 공부방은 홍보지역 1 (사업장 region_id와 분리)
       try {

@@ -65,10 +65,7 @@ export function renderContact() {
         <div class="form-radio-group">${radios('career_year_band', CAREER_YEAR_BAND_OPTIONS, s.career_year_band)}</div>
       </div>
       <div class="form-group"><label class="form-label">주교재</label><input class="form-input" name="main_material_note" value="${s.main_material_note}" /></div>
-      <div class="register-grid-2 register-grid-2--tight">
-        <div class="form-group"><label class="form-label">특징 1</label><input class="form-input" name="feature_1" value="${s.feature_1}" /></div>
-        <div class="form-group"><label class="form-label">특징 2</label><input class="form-input" name="feature_2" value="${s.feature_2}" /></div>
-      </div>
+      <div class="form-group"><label class="form-label">특징 2</label><input class="form-input" name="feature_2" value="${s.feature_2}" /></div>
       <div class="form-group">
         <label class="form-check">
           <input type="checkbox" name="proof_document_available" ${s.proof_document_available ? 'checked' : ''} />
@@ -104,7 +101,7 @@ export function renderContact() {
           <input class="form-input" type="url" id="instagram_url" name="instagram_url" value="${s.instagram_url}" placeholder="https://www.instagram.com/..." />
         </div>
       </div>
-      <p class="form-hint">공개는 내용을 확인한 뒤 켜 주세요. 사진 업로드는 곧 연결됩니다.</p>
+      <p class="form-hint">공개는 내용을 확인한 뒤 켜 주세요. 프로필 사진은 기본정보에서 올립니다.</p>
       ${renderNavButtons('/register/lesson', '등록 완료', { skipLabel: '나중에 하기' })}
     </form>`;
   return renderRegisterShell(content, {

@@ -9,6 +9,7 @@ import {
   hydrateRegistrationsCache,
 } from '../registrations-backend.js';
 import { getTutor, updateTutor } from './store.js';
+import { tutorBasicMissing, tutorBasicMissingMessage } from '../../../shared/tutor-basic-fields.js';
 
 async function postRegisterSave(step, tutorId, payload) {
   const res = await fetch('/api/tutor/register.php', {
@@ -28,81 +29,103 @@ async function postRegisterSave(step, tutorId, payload) {
 }
 
 /**
+ * 기본정보(베이직카드 항목) 저장. 과외지역은 basic.saved_regions 가 있을 때만 같이 보낸다.
  * @param {number} tutorId
  * @param {Record<string, unknown>} basic
  */
 export async function saveTutorBasicInline(tutorId, basic) {
-  const name = String(basic.tutor_display_name || '').trim();
-  const subject = String(basic.main_subject_note || '').trim();
-  const regionLabel = String(basic.primary_region_label || '').trim();
-  const slots = Array.isArray(basic.saved_regions)
-    ? basic.saved_regions.filter((s) => /^\d+$/.test(String(s.region_id || '')))
+  const current = getTutor(tutorId) || {};
+  const hasRegions = Array.isArray(basic.saved_regions);
+  const slots = hasRegions
+    ? basic.saved_regions.filter((s) => /^[1-9]\d*$/.test(String(s.region_id || '')))
     : [];
-  if (!name) throw new Error('표시명을 입력해 주세요.');
-  if (!subject) throw new Error('주력과목을 선택해 주세요.');
-  if (!slots.length) throw new Error('과외지역을 1곳 이상 선택해 주세요. (도는 시까지 선택)');
-  if (!regionLabel) throw new Error('과외지역(시·도)을 선택해 주세요.');
+  const regionLabel = String(basic.primary_region_label || '').trim();
+  const values = {
+    tutor_display_name: String(basic.tutor_display_name || '').trim(),
+    has_primary_region: hasRegions
+      ? slots.length > 0 && regionLabel !== ''
+      : !!(current.has_primary_region && String(current.primary_region_label || '').trim()),
+    school_level: String(basic.school_level || ''),
+    main_subject_note: String(basic.main_subject_note || '').trim(),
+    preferred_fee_amount: basic.preferred_fee_amount,
+    lessons_per_week: String(basic.lessons_per_week || ''),
+    minutes_per_lesson: String(basic.minutes_per_lesson || ''),
+    lesson_places: Array.isArray(basic.lesson_places) ? basic.lesson_places.map(String) : [],
+    student_gender_group: String(basic.student_gender_group || ''),
+    student_count_group: String(basic.student_count_group || ''),
+    feature_1: String(basic.feature_1 || '').trim(),
+    slogan: String(basic.slogan || '').trim(),
+    has_profile_image: !!current.has_profile_image,
+  };
+  const missing = tutorBasicMissing(values);
+  if (missing.length) throw new Error(tutorBasicMissingMessage(missing));
 
   if (isRegistrationsApiMode()) {
-    const current = getTutor(tutorId) || {};
-    await postRegisterSave('basic', tutorId, {
-      tutor_display_name: name,
-      main_subject_note: subject,
-      slogan: current.slogan || '',
-      intro_short: current.intro_short || '',
-      intro_long: current.intro_long || '',
-      student_gender_group: current.student_gender_group || 'mixed',
-      student_count_group: current.student_count_group || 'solo',
-      age_band: current.age_band || '',
-      gender: basic.gender || current.gender || 'male',
-    });
-    await postRegisterSave('regions', tutorId, {
-      saved_regions: slots.map((s) => ({
+    const payload = {
+      tutor_display_name: values.tutor_display_name,
+      school_level: values.school_level,
+      main_subject_note: values.main_subject_note,
+      preferred_fee_amount: values.preferred_fee_amount,
+      lessons_per_week: values.lessons_per_week,
+      minutes_per_lesson: values.minutes_per_lesson,
+      lesson_places: values.lesson_places,
+      student_gender_group: values.student_gender_group,
+      student_count_group: values.student_count_group,
+      feature_1: values.feature_1,
+      slogan: values.slogan,
+    };
+    if (hasRegions) {
+      payload.saved_regions = slots.map((s) => ({
         region_id: String(s.region_id),
         scope_type: 'city',
         is_primary: !!s.is_primary,
-      })),
-    });
+      }));
+    }
+    await postRegisterSave('basic', tutorId, payload);
     await hydrateRegistrationsCache();
     return getTutor(tutorId);
   }
 
-  return updateTutor(tutorId, {
-    tutor_display_name: name,
-    main_subject_note: subject,
+  const patch = {
+    tutor_display_name: values.tutor_display_name,
+    school_level: values.school_level,
+    main_subject_note: values.main_subject_note,
     has_primary_subject: true,
-    primary_region_label: regionLabel,
-    location_label: regionLabel,
-    has_primary_region: true,
-    primary_region_id: basic.primary_region_id || undefined,
-    saved_regions: Array.isArray(basic.saved_regions) ? basic.saved_regions : undefined,
-  });
+    preferred_fee_amount: Number(values.preferred_fee_amount),
+    lessons_per_week: Number(values.lessons_per_week),
+    minutes_per_lesson: Number(values.minutes_per_lesson),
+    lesson_places: values.lesson_places,
+    has_lesson_places: true,
+    student_gender_group: values.student_gender_group,
+    student_count_group: values.student_count_group,
+    feature_1: values.feature_1,
+    slogan: values.slogan,
+  };
+  if (hasRegions) {
+    Object.assign(patch, {
+      primary_region_label: regionLabel,
+      location_label: regionLabel,
+      has_primary_region: true,
+      primary_region_id: basic.primary_region_id || undefined,
+      saved_regions: basic.saved_regions,
+    });
+  }
+  return updateTutor(tutorId, patch);
 }
 
 /**
+ * 상세정보 저장. 기본정보 항목은 saveTutorBasicInline 만 저장한다.
  * @param {number} tutorId
  * @param {Record<string, unknown>} detail
  */
 export async function saveTutorDetailInline(tutorId, detail) {
-  const current = getTutor(tutorId) || {};
-  const subject = String(detail.main_subject_note || current.main_subject_note || '').trim();
-  const fee = Number(detail.preferred_fee_amount || 0);
-  const places = Array.isArray(detail.lesson_places) ? detail.lesson_places : [];
-  const feeBasis = String(detail.fee_basis_type || current.fee_basis_type || 'monthly_by_weekly_schedule');
-  const minutes = Number(detail.minutes_per_lesson || current.minutes_per_lesson || 0);
-  const lessonsPerWeek = Number(detail.lessons_per_week || current.lessons_per_week || 0);
-  const monthlySessions = Number(detail.monthly_session_count || current.monthly_session_count || 0);
+  const feeBasis = String(detail.fee_basis_type || '');
+  const monthlySessions = Number(detail.monthly_session_count || 0);
   const university = String(detail.university_name || '').trim();
   const introShort = String(detail.intro_short || '').trim();
   const introLong = String(detail.intro_long || '').trim();
 
-  if (!subject) throw new Error('주력과목이 없습니다. 기본등록에서 주력과목을 먼저 저장해 주세요.');
-  if (!fee || fee <= 0) throw new Error('월 과외비를 입력해 주세요.');
-  if (!places.length) throw new Error('강의장소를 1개 이상 선택해 주세요.');
-  if (!minutes || minutes <= 0) throw new Error('1회 수업시간을 입력해 주세요.');
-  if (feeBasis === 'monthly_by_weekly_schedule' && (!lessonsPerWeek || lessonsPerWeek <= 0)) {
-    throw new Error('주 회수를 입력해 주세요.');
-  }
+  if (!feeBasis) throw new Error('산정방식을 선택해 주세요.');
   if (feeBasis === 'monthly_by_total_sessions' && (!monthlySessions || monthlySessions <= 0)) {
     throw new Error('월 총 횟수를 입력해 주세요.');
   }
@@ -111,30 +134,16 @@ export async function saveTutorDetailInline(tutorId, detail) {
 
   if (isRegistrationsApiMode()) {
     await postRegisterSave('lesson', tutorId, {
-      main_subject_note: subject,
-      student_gender_group: detail.student_gender_group || current.student_gender_group || 'mixed',
-      student_count_group: detail.student_count_group || current.student_count_group || 'solo',
-      age_band: detail.age_band || current.age_band || '',
-      preferred_fee_amount: fee,
       fee_basis_type: feeBasis,
-      lessons_per_week: detail.lessons_per_week || current.lessons_per_week || '',
       monthly_session_count: detail.monthly_session_count || '',
-      minutes_per_lesson: minutes,
       fee_description: detail.fee_description || '',
-      lesson_places: places,
-      subjects: detail.subjects || [],
     });
     await postRegisterSave('career', tutorId, {
       university_name: university,
       major_name: detail.major_name || '',
       university_status: detail.university_status || '',
-      career_year_band: detail.career_year_band || '',
-      feature_1: detail.feature_1 || '',
       feature_2: detail.feature_2 || '',
       feature_3: detail.feature_3 || '',
-      main_material_note: detail.main_material_note || '',
-      proof_document_available: !!detail.proof_document_available,
-      teaching_style_badges: detail.teaching_style_badges || [],
     });
     await postRegisterSave('contact', tutorId, {
       contact_time_note: detail.contact_time_note || '',
@@ -149,22 +158,12 @@ export async function saveTutorDetailInline(tutorId, detail) {
   }
 
   return updateTutor(tutorId, {
-    main_subject_note: subject,
-    has_primary_subject: true,
-    preferred_fee_amount: fee,
     fee_basis_type: feeBasis,
-    lessons_per_week: lessonsPerWeek || undefined,
     monthly_session_count: monthlySessions || undefined,
-    minutes_per_lesson: minutes,
     fee_description: String(detail.fee_description || ''),
-    lesson_places: places,
-    has_lesson_places: places.length > 0,
-    student_gender_group: detail.student_gender_group || undefined,
-    student_count_group: detail.student_count_group || undefined,
     university_name: university,
     major_name: String(detail.major_name || ''),
     university_status: String(detail.university_status || ''),
-    feature_1: String(detail.feature_1 || ''),
     feature_2: String(detail.feature_2 || ''),
     feature_3: String(detail.feature_3 || ''),
     intro_short: introShort,

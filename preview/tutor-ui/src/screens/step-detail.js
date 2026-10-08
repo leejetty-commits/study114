@@ -4,9 +4,6 @@
 import {
   registerState,
   FEE_BASIS_OPTIONS,
-  TUTOR_PLACE_OPTIONS,
-  GENDER_GROUP_OPTIONS,
-  STUDENT_COUNT_OPTIONS,
   AGE_BAND_OPTIONS,
   UNIVERSITY_STATUS_OPTIONS,
   CAREER_YEAR_BAND_OPTIONS,
@@ -15,9 +12,6 @@ import {
 } from '../state.js';
 import { syncLessonFromForm, syncCareerFromForm, syncContactFromForm, validateLessonState, validateCareerState, validateIntroState } from '../form-collect.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, bindSchoolGradePairs } from '../../../shared/school-grade.js';
-import { wonToCheonwonInput } from '../../../shared/fee-cheonwon.js';
-import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
-import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
   renderRegisterShell,
@@ -60,7 +54,6 @@ function subjectRow(sub, idx) {
         <select class="form-input" data-field="grade_band"${grade.disabled ? ' disabled' : ''}>${grade.html}</select>
       </label>
       <input class="form-input" data-field="subject_name" value="${sub.subject_name}" placeholder="예: 미적분2, 확률과 통계" />
-      <label class="form-check"><input type="checkbox" data-field="is_primary" ${sub.is_primary ? 'checked' : ''} /> 주력</label>
     </div>`;
 }
 
@@ -73,25 +66,8 @@ function returnToMypage() {
   window.location.assign(`${HOME_UI_BASE}/#/mypage/registrations`);
 }
 
-function renderLessonSelect(options, selected) {
-  const current = String(selected ?? '');
-  return [
-    '<option value="">선택</option>',
-    ...options.map(
-      (o) => `<option value="${o.value}" ${current === o.value ? 'selected' : ''}>${o.label}</option>`,
-    ),
-  ].join('');
-}
-
 export function renderDetail() {
   const s = registerState;
-  const places = TUTOR_PLACE_OPTIONS.map(
-    (p) => `
-    <label class="form-check">
-      <input type="checkbox" name="lesson_places" value="${p.value}" ${s.lesson_places.includes(p.value) ? 'checked' : ''} />
-      <span class="form-check__label">${p.label}</span>
-    </label>`,
-  ).join('');
   const feeBasis = FEE_BASIS_OPTIONS.map(
     (o) => `
     <label class="form-radio">
@@ -112,44 +88,23 @@ export function renderDetail() {
     <form data-form="detail-all">
       ${renderSectionTitle('수업 · 과목 · 가격')}
       ${s.main_subject_note ? `<p class="form-hint">주력과목(기본등록): <strong>${s.main_subject_note}</strong></p>` : ''}
-      <div class="register-grid-2">
-        <div class="form-group">
-          <span class="form-label form-label--required">지도 대상 성별</span>
-          <div class="form-radio-group">${radios('student_gender_group', GENDER_GROUP_OPTIONS, s.student_gender_group)}</div>
-        </div>
-        <div class="form-group">
-          <span class="form-label form-label--required">수업인원</span>
-          <div class="form-radio-group">${radios('student_count_group', STUDENT_COUNT_OPTIONS, s.student_count_group)}</div>
-        </div>
-      </div>
       <div class="form-group">
         <span class="form-label">과외쌤 연령대</span>
         <div class="form-radio-group">${radios('age_band', AGE_BAND_OPTIONS, s.age_band)}</div>
       </div>
+      <p class="form-hint">추가 과목 (선택)</p>
       <div data-subjects-list>${s.subjects.map(subjectRow).join('')}</div>
       <button type="button" class="btn btn--secondary btn--sm" data-action="add-subject">+ 과목 추가</button>
       <div class="register-grid-2" style="margin-top:var(--space-4);">
         <div class="form-group">
-          <label class="form-label form-label--required" for="preferred_fee_amount">월 대표 과외비 (천원)</label>
-          <input class="form-input" type="number" id="preferred_fee_amount" name="preferred_fee_amount" value="${wonToCheonwonInput(s.preferred_fee_amount)}" min="1" />
-        </div>
-        <div class="form-group">
           <span class="form-label form-label--required">산정방식</span>
           <div class="form-radio-group">${feeBasis}</div>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">주 회수</label><select class="form-input" name="lessons_per_week">${renderLessonSelect(lessonWeeklyOptions(s.lessons_per_week), lessonWeeklySelectValue(s.lessons_per_week))}</select></div>
         <div class="form-group"><label class="form-label">월 총 횟수</label><input class="form-input" name="monthly_session_count" value="${s.monthly_session_count}" /></div>
-        <div class="form-group"><label class="form-label">1회 수업시간</label><select class="form-input" name="minutes_per_lesson">${renderLessonSelect(lessonDurationOptions(s.minutes_per_lesson), lessonDurationSelectValue(s.minutes_per_lesson))}</select></div>
       </div>
       <div class="form-group">
         <label class="form-label" for="fee_description">가격 설명</label>
         <textarea class="form-input form-textarea" name="fee_description" rows="2">${s.fee_description}</textarea>
-      </div>
-      <div class="form-group">
-        <span class="form-label form-label--required">강의장소</span>
-        <div class="register-check-grid">${places}</div>
       </div>
 
       <div class="register-form-narrow">
@@ -173,10 +128,7 @@ export function renderDetail() {
           <div class="form-radio-group">${radios('career_year_band', CAREER_YEAR_BAND_OPTIONS, s.career_year_band)}</div>
         </div>
         <div class="form-group"><label class="form-label">주교재</label><input class="form-input" name="main_material_note" value="${s.main_material_note}" /></div>
-        <div class="register-grid-2 register-grid-2--tight">
-          <div class="form-group"><label class="form-label">특징 1</label><input class="form-input" name="feature_1" value="${s.feature_1}" /></div>
-          <div class="form-group"><label class="form-label">특징 2</label><input class="form-input" name="feature_2" value="${s.feature_2}" /></div>
-        </div>
+        <div class="form-group"><label class="form-label">특징 2</label><input class="form-input" name="feature_2" value="${s.feature_2}" /></div>
         <div class="form-group">
           <label class="form-check">
             <input type="checkbox" name="proof_document_available" ${s.proof_document_available ? 'checked' : ''} />
