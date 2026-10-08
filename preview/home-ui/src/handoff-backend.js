@@ -16,6 +16,7 @@ import {
   toggleStudentReview as apiToggleStudentReview,
   removeStudentReview as apiRemoveStudentReview,
 } from './handoff-api.js';
+import { mapSearchRoomItem, mapSearchTutorItem } from './home-basic-live.js';
 
 let apiMode = false;
 
@@ -31,6 +32,12 @@ let recentCache = [];
 /** @type {Array<{ id: number, savedAt: string, providerRole?: string|null }>} */
 let studentReviewCache = [];
 
+/**
+ * 찜 목록 API 의 카드. 서버가 unknown(조회 실패)을 주면 넣지 않는다.
+ * @type {{ study_room: Map<number, { status: 'visible'|'unavailable', item: object|null }>, tutor: Map<number, { status: 'visible'|'unavailable', item: object|null }> }}
+ */
+const favoriteCards = { study_room: new Map(), tutor: new Map() };
+
 export function isHandoffApiMode() {
   return apiMode;
 }
@@ -40,8 +47,52 @@ function resetCaches() {
   userActionsCache.wishlist.tutor = [];
   userActionsCache.compare.study_room = [];
   userActionsCache.compare.tutor = [];
+  favoriteCards.study_room.clear();
+  favoriteCards.tutor.clear();
   recentCache = [];
   studentReviewCache = [];
+}
+
+/** @param {Array<Record<string, unknown>>} rows */
+function applyFavoriteRows(rows) {
+  userActionsCache.wishlist.study_room = [];
+  userActionsCache.wishlist.tutor = [];
+  favoriteCards.study_room.clear();
+  favoriteCards.tutor.clear();
+  for (const row of rows) {
+    const type = String(row.target_type);
+    const id = Number(row.target_id);
+    if (type !== 'study_room' && type !== 'tutor') continue;
+    if (!userActionsCache.wishlist[type].includes(id)) {
+      userActionsCache.wishlist[type].push(id);
+    }
+    if (row.card_status === 'visible' && row.card && typeof row.card === 'object') {
+      const item = type === 'tutor' ? mapSearchTutorItem(row.card) : mapSearchRoomItem(row.card);
+      favoriteCards[type].set(id, { status: 'visible', item });
+    } else if (row.card_status === 'unavailable') {
+      favoriteCards[type].set(id, { status: 'unavailable', item: null });
+    }
+  }
+}
+
+/**
+ * @param {'study_room'|'tutor'} kind
+ * @param {number|string} id
+ * @returns {{ status: 'visible'|'unavailable', item: object|null } | null}
+ */
+export function getFavoriteCard(kind, id) {
+  const map = favoriteCards[kind];
+  if (!map) return null;
+  return map.get(Number(id)) || null;
+}
+
+/** 찜 목록만 다시 읽는다(카드가 없는 찜이 있을 때). */
+export async function refreshFavorites() {
+  if (!apiMode) return false;
+  const favorites = await listFavorites();
+  if (!apiMode) return false;
+  applyFavoriteRows(favorites.items ?? []);
+  return true;
 }
 
 /** @param {Record<string, unknown>} row */
@@ -84,18 +135,7 @@ export async function hydrateHandoffCache() {
     listStudentReviews().catch(() => ({ items: [] })),
   ]);
 
-  userActionsCache.wishlist.study_room = [];
-  userActionsCache.wishlist.tutor = [];
-  for (const row of favorites.items ?? []) {
-    const type = String(row.target_type);
-    const id = Number(row.target_id);
-    if (type === 'study_room' && !userActionsCache.wishlist.study_room.includes(id)) {
-      userActionsCache.wishlist.study_room.push(id);
-    }
-    if (type === 'tutor' && !userActionsCache.wishlist.tutor.includes(id)) {
-      userActionsCache.wishlist.tutor.push(id);
-    }
-  }
+  applyFavoriteRows(favorites.items ?? []);
 
   userActionsCache.compare.study_room = (compareSr.items ?? []).map((r) => Number(r.target_id));
   userActionsCache.compare.tutor = (compareT.items ?? []).map((r) => Number(r.target_id));

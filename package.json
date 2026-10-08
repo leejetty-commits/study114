@@ -50,6 +50,7 @@
     "verify:no-sample-data": "node scripts/verify-no-sample-data.mjs",
     "verify:location-ssot": "node scripts/verify-location-ssot.mjs",
     "verify:student-hope-hidden-required": "node scripts/verify-student-hope-hidden-required.mjs",
+    "verify:wishlist-card-zoom": "node scripts/verify-wishlist-card-zoom.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {

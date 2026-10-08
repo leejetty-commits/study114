@@ -7,6 +7,8 @@ namespace Study114\Handoff;
 use InvalidArgumentException;
 use Study114\Database\Connection;
 use Study114\Paid\ProviderRoiService;
+use Study114\Search\SearchService;
+use Throwable;
 
 /**
  * 25장 부록 B — Handoff basket API surface (서버 영속)
@@ -24,21 +26,72 @@ final class HandoffService
 
     private HandoffRepository $repo;
     private ProviderRoiService $roi;
+    private ?SearchService $search;
 
-    public function __construct(?HandoffRepository $repo = null, ?ProviderRoiService $roi = null)
-    {
+    public function __construct(
+        ?HandoffRepository $repo = null,
+        ?ProviderRoiService $roi = null,
+        ?SearchService $search = null,
+    ) {
         $this->repo = $repo ?? new HandoffRepository(Connection::get());
         $this->roi = $roi ?? new ProviderRoiService();
+        $this->search = $search;
     }
 
-    /** @return list<array<string, mixed>> */
+    /**
+     * 본인 찜 행 + 카드. card_status: visible(card 있음) | unavailable(지금 공개 아님, card null)
+     * | unknown(카드 조회 실패, card null). 카드 필드는 검색 목록 카드와 같다.
+     *
+     * @return list<array<string, mixed>>
+     */
     public function listFavorites(int $userId, ?string $targetType = null): array
     {
         if ($targetType !== null) {
             $this->assertProviderTargetType($targetType);
         }
 
-        return $this->repo->listFavorites($userId, $targetType);
+        return $this->attachPublicCards($this->repo->listFavorites($userId, $targetType));
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
+    private function attachPublicCards(array $rows): array
+    {
+        $idsByType = ['study_room' => [], 'tutor' => []];
+        foreach ($rows as $row) {
+            $type = (string) ($row['target_type'] ?? '');
+            $id = (int) ($row['target_id'] ?? 0);
+            if ($id > 0 && isset($idsByType[$type])) {
+                $idsByType[$type][] = $id;
+            }
+        }
+
+        $cards = ['study_room' => [], 'tutor' => []];
+        $failed = false;
+        try {
+            $this->search ??= new SearchService();
+            foreach ($idsByType as $type => $ids) {
+                if ($ids !== []) {
+                    $cards[$type] = $this->search->publicCardsByIds($type, $ids);
+                }
+            }
+        } catch (Throwable $e) {
+            error_log('[handoff] favorite cards: ' . $e->getMessage());
+            $failed = true;
+        }
+
+        $out = [];
+        foreach ($rows as $row) {
+            $type = (string) ($row['target_type'] ?? '');
+            $card = $failed ? null : ($cards[$type][(int) ($row['target_id'] ?? 0)] ?? null);
+            $row['card_status'] = $failed ? 'unknown' : ($card !== null ? 'visible' : 'unavailable');
+            $row['card'] = $card;
+            $out[] = $row;
+        }
+
+        return $out;
     }
 
     public function toggleFavorite(int $userId, string $targetType, int $targetId): bool

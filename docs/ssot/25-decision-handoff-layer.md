@@ -347,6 +347,7 @@ copy: `handoff-copy.js` 또는 `lifecycle-copy.js` 확장.
 | DELETE | `/api/handoff/student-reviews?student_id=` | `student-reviews.php` | `removeStudentReview` |
 
 **공통:** `HandoffApi.php` · 세션 쿠키 · JSON `{ ok, ... }` · **401** 비로그인.  
+**찜 목록 GET 응답:** 본인 행(`id`·`target_type`·`target_id`·`created_at`)마다 `card_status`(`visible`|`unavailable`|`unknown`) · `card`. `card`는 검색 목록 카드와 같은 필드(`SearchService::publicCardsByIds`, 검색 노출 조건 동일)이고 `visible`일 때만 있다. 숨김·삭제·탈퇴·홍보지역 1 없음 = `unavailable`(카드 없음, 찜 해제는 가능). 마이페이지 찜 = 카드 → 탭하면 홈·찾기와 같은 확대카드.  
 **클라이언트:** `handoff-api.js` · `handoff-backend.js` · `auth-session.js` — **store 스왑 ✅**
 
 **1차 프리뷰:** 비로그인 = sessionStorage · Dev 로그인 = API 영속 (`:8080` proxy)
@@ -357,6 +358,7 @@ copy: `handoff-copy.js` 또는 `lifecycle-copy.js` 확장.
 
 | 날짜 | 내용 |
 |------|------|
+| 2026-10-09 | **찜 카드·확대카드** — 찜 목록 GET 에 `card_status`·`card`(검색 카드 필드) · 마이페이지 찜 = Basic 카드 + 확대카드 |
 | 2026-07-06 | **P25-S10 1.5a** — student-review store · `#/mypage/student-review` · 상세·노출 CTA |
 | 2026-07-07 | **P25-S10 2차** — P20-02/05 검토함 브리지 · `from=exposure` · 29장 copy 통합 |
 | 2026-07-06 | **Source Route return CTA** — toast 확장 · `handoff-utils.js` · `showP24Toast` CTA |

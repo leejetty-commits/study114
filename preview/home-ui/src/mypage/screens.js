@@ -36,11 +36,13 @@ import { openDetailDecision } from '../detail-decision/index.js';
 import { startFirstMemoFlow } from '../messages/compose-flow.js';
 import { exposureStatusLabel } from '../lifecycle-copy.js';
 import {
-  getWishlistItems,
+  getWishlistEntries,
   removeWishlist,
   addCompareFromWishlist,
 } from '../user-actions-state.js';
-import { formatMonthlyWon, formatTutorFeeCard } from '../exposure-format.js';
+import { isHandoffApiMode, refreshFavorites } from '../handoff-backend.js';
+import { renderBasicRow } from '../exposure-render.js';
+import { bindUserActionEvents } from '../user-actions-ui.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { notifyCompareToggle } from '../handoff-utils.js';
 import { renderEmptyStateCard } from '../empty-state-copy.js';
@@ -90,6 +92,8 @@ import {
   EMPTY_ONBOARDING,
   GUARDIAN_PLANS_COPY,
   WISHLIST_NOTE,
+  WISHLIST_CARD_UNAVAILABLE,
+  WISHLIST_CARD_UNKNOWN,
   REGISTRATIONS_LEAD,
   CONTACT_HISTORY_COPY,
 } from './mypage-copy.js';
@@ -274,9 +278,44 @@ function renderRegistrationsIndex(role) {
     </section>`;
 }
 
+/** @param {{ kind: 'study_room'|'tutor', id: number, status: string, item: object|null }} entry */
+function renderWishlistEntry(entry) {
+  const { kind, id, item, status } = entry;
+  const removeBtn = `<button type="button" class="btn btn--secondary btn--sm" data-mypage-wish-remove data-kind="${kind}" data-id="${id}">찜 해제</button>`;
+  if (status !== 'visible' || !item) {
+    const copy = status === 'unavailable' ? WISHLIST_CARD_UNAVAILABLE : WISHLIST_CARD_UNKNOWN;
+    return `
+      <div class="mypage-wish-card is-muted" data-wish-status="${esc(status)}">
+        <article class="expo-basic expo-card--empty" data-wish-unavailable="${kind}" data-id="${id}">
+          <div class="expo-empty-prime">
+            <p class="expo-empty-prime__title">${esc(copy)}</p>
+          </div>
+        </article>
+        <div class="mypage-wish-card__foot">
+          <div class="mypage-entity__actions">${removeBtn}</div>
+        </div>
+      </div>`;
+  }
+  const lifecycleBadge = renderBasketLifecycleBadge(kind, item);
+  const stickers = renderDecisionStickers(kind, item.id);
+  const muted = isBasketLifecycleMuted(item, kind);
+  return `
+    <div class="mypage-wish-card${muted ? ' is-muted' : ''}" data-wish-status="visible">
+      ${renderBasicRow(kind, item, { guest: false, sourceRoute: 'wishlist' })}
+      <div class="mypage-wish-card__foot">
+        ${stickers}
+        ${lifecycleBadge}
+        <div class="mypage-entity__actions">
+          <button type="button" class="btn btn--secondary btn--sm" data-mypage-wish-compare data-kind="${kind}" data-id="${id}">비교(≤${COMPARE_MAX})</button>
+          ${removeBtn}
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderWishlistSection(kind, label) {
-  const items = getWishlistItems(kind);
-  if (!items.length) {
+  const entries = getWishlistEntries(kind);
+  if (!entries.length) {
     return renderEmptyStateCard('wishlist', {
       ctaHref: '#/mypage/recent',
       links: [
@@ -288,33 +327,63 @@ function renderWishlistSection(kind, label) {
     });
   }
   return `
-    <ul class="mypage-entity-list">
-      ${items
-        .map((item) => {
-          const title = kind === 'tutor' ? item.tutor_display_name : item.study_room_name;
-          const meta =
-            kind === 'tutor'
-              ? `${item.main_subject_note} · ${formatTutorFeeCard(item)}`
-              : `${item.main_subject_note} · ${formatMonthlyWon(item.price_amount)}`;
-          const lifecycleBadge = renderBasketLifecycleBadge(kind, item);
-          const stickers = renderDecisionStickers(kind, item.id);
-          const muted = isBasketLifecycleMuted(item, kind);
-          return `
-          <li class="mypage-entity${muted ? ' is-muted' : ''}">
-            <div>
-              <strong>${esc(title)}</strong>
-              ${stickers}
-              ${lifecycleBadge}
-              <span class="mypage-muted">${esc(meta)}</span>
-            </div>
-            <div class="mypage-entity__actions">
-              <button type="button" class="btn btn--secondary btn--sm" data-mypage-wish-compare data-kind="${kind}" data-id="${item.id}">비교(≤${COMPARE_MAX})</button>
-              <button type="button" class="btn btn--secondary btn--sm" data-mypage-wish-remove data-kind="${kind}" data-id="${item.id}">찜 해제</button>
-            </div>
-          </li>`;
-        })
-        .join('')}
-    </ul>`;
+    <div class="browse-list browse-list--table mypage-wish-cards" role="list" data-mypage-wishlist="${kind}" aria-label="찜한 ${esc(label)}">
+      ${entries.map(renderWishlistEntry).join('')}
+    </div>`;
+}
+
+let wishlistRefreshKey = '';
+if (typeof window !== 'undefined') {
+  window.addEventListener?.('hashchange', () => {
+    wishlistRefreshKey = '';
+  });
+}
+
+/** 카드가 없는 찜이 있으면 찜 목록을 한 번 다시 읽는다. 한 번 들어온 동안 같은 번호 묶음으로는 다시 부르지 않는다. */
+function scheduleWishlistRefresh(rerender) {
+  if (!isHandoffApiMode()) return;
+  const unknown = ['study_room', 'tutor'].flatMap((kind) =>
+    getWishlistEntries(kind)
+      .filter((e) => e.status === 'unknown')
+      .map((e) => `${kind}:${e.id}`),
+  );
+  if (!unknown.length) return;
+  const key = unknown.sort().join(',');
+  if (key === wishlistRefreshKey) return;
+  wishlistRefreshKey = key;
+  refreshFavorites()
+    .then((changed) => {
+      if (changed) rerender();
+    })
+    .catch((err) => console.warn('[mypage/wishlist] refresh failed', err));
+}
+
+/** 찜 카드 탭·상세 → 홈·찾기와 같은 확대카드. 마이샵은 확대카드 안 버튼으로만. */
+function bindWishlistCardEvents(root, rerender) {
+  root.querySelectorAll('[data-mypage-wishlist]').forEach((list) => {
+    const kind = list.getAttribute('data-mypage-wishlist');
+    if (kind !== 'study_room' && kind !== 'tutor') return;
+    const open = (id) => {
+      const entry = getWishlistEntries(kind).find((e) => e.id === id);
+      if (!entry || entry.status !== 'visible' || !entry.item) return;
+      openDetailDecision({ kind, id, item: entry.item, viewer: getNavRole(), onRerender: rerender, sourceRoute: 'wishlist' });
+    };
+    list.querySelectorAll('[data-provider-id][data-provider-kind]').forEach((article) => {
+      article.classList.add('p24-card--clickable');
+      article.addEventListener('click', (e) => {
+        if (e.target?.closest?.('button, a, [data-action], .item-actions, .expo-compare-chip')) return;
+        open(Number(article.getAttribute('data-provider-id')));
+      });
+    });
+    list.querySelectorAll('[data-action="search-open-detail"]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        open(Number(btn.getAttribute('data-search-id')));
+      });
+    });
+    bindUserActionEvents(list, rerender, { sourceRoute: 'wishlist' });
+  });
 }
 
 function renderWishlist() {
@@ -1442,6 +1511,10 @@ export function bindMypageScreenEvents(root, rerender) {
   bindPasswordChangeEvents(root);
   bindDisplayNameEvents(root, rerender);
   bindWithdrawEvents(root);
+  if (path === '/mypage/wishlist') {
+    bindWishlistCardEvents(root, rerender);
+    scheduleWishlistRefresh(rerender);
+  }
   root.querySelectorAll('[data-mypage-wish-remove]').forEach((btn) => {
     btn.addEventListener('click', () => {
       removeWishlist(btn.dataset.kind, btn.dataset.id);

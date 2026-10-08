@@ -8,6 +8,7 @@ import { AUTH_UI_BASE } from '../data.js';
 import { bindReviewSheetTriggers } from '../provider-reviews/sheet.js';
 import { guardGuestDeepAccess, canOpenDetailForViewer } from '../guest-deep-access.js';
 import { getHomeBasicPool } from '../home-basic-live.js';
+import { getFavoriteCard } from '../handoff-backend.js';
 
 export { closeDetailModal, openDetailModal } from './detail-shell.js';
 export { showP24Toast } from './detail-utils.js';
@@ -48,7 +49,10 @@ export function resolveDetailItem(kind, id) {
       : kind === 'tutor'
         ? EXPOSURE_TUTORS
         : EXPOSURE_STUDY_ROOMS;
-  return bridged.find((x) => Number(x.id) === Number(id)) || null;
+  const hit = bridged.find((x) => Number(x.id) === Number(id));
+  if (hit) return hit;
+  if (kind === 'study_room' || kind === 'tutor') return getFavoriteCard(kind, id)?.item || null;
+  return null;
 }
 
 /**

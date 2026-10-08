@@ -412,11 +412,29 @@ function fnBody(src, name) {
   const ends = [next, nextPub].filter((n) => n > 0);
   return src.slice(at, ends.length ? Math.min(...ends) : undefined);
 }
+// 찜 목록 카드(publicCardsByIds) 전용 추가분. 이 세 조각이 정확히 한 번씩 있을 때만 떼어 내고 비교한다.
+// fnBody 는 다음 함수(searchTutors)의 문서 주석까지 잘라 오므로 그 @param 한 줄도 포함한다.
+const ROOM_CARD_IDS_ARG = ', ?array $cardIds = null): array\n';
+const ROOM_CARD_IDS_BLOCK = "        if ($cardIds !== null) {\n            $where[] = $this->cardIdsSql('sr.id', $cardIds, $params);\n        }\n";
+const NEXT_DOC_CARD_IDS = '     * @param list<int>|null $cardIds publicCardsByIds 전용\n';
+function withoutWishlistCardIds(body) {
+  const parts = [ROOM_CARD_IDS_ARG, ROOM_CARD_IDS_BLOCK, NEXT_DOC_CARD_IDS];
+  const counts = parts.map((part) => body.split(part).length - 1);
+  if (counts.every((n) => n === 0)) return body;
+  if (counts.some((n) => n !== 1)) return null;
+  return body.replace(ROOM_CARD_IDS_ARG, '): array\n').replace(ROOM_CARD_IDS_BLOCK, '').replace(NEXT_DOC_CARD_IDS, '');
+}
 const mainSearch = spawnSync('git', ['show', `${BASE_REF}:src/Search/SearchService.php`], { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
 if (mainSearch.status === 0) {
   const a = fnBody(mainSearch.stdout.replace(/\r\n/g, '\n'), 'searchRooms');
   const b = fnBody(searchPhp.replace(/\r\n/g, '\n'), 'searchRooms');
-  ok('공부방 검색 searchRooms 본문 = 변경 전 main 과 같음', a !== '' && a === b, `${a.length}/${b.length}`);
+  const bBase = withoutWishlistCardIds(b);
+  ok(
+    '공부방 검색: 찜 카드 번호 조건은 번호를 줄 때만 붙음',
+    bBase !== null && !bBase.includes('cardIds'),
+    bBase === null ? '찜 전용 조각 모양이 다름' : '',
+  );
+  ok('공부방 검색 searchRooms 본문 = 변경 전 main 과 같음 (찜 카드 번호 조건만 빼고)', a !== '' && bBase === a, `${a.length}/${bBase?.length ?? 'null'}`);
 } else {
   ok('변경 전 main SearchService 읽기', false, mainSearch.stderr);
 }

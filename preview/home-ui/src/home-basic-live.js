@@ -131,6 +131,9 @@ function mapStudent(item) {
   };
 }
 
+/** 검색 API 카드 → 홈 카드 필드. 찜 목록 카드(handoff favorites card)도 같은 매퍼를 쓴다. */
+export { mapRoom as mapSearchRoomItem, mapTutor as mapSearchTutorItem };
+
 /**
  * @param {'room'|'tutor'|'student'} tab
  * @param {string} sort
