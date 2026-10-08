@@ -329,6 +329,25 @@ function normalizeRegionTerm(line) {
     .replace(/활동 지역/g, '과외지역')
     .replace(/활동 시/g, '과외지역');
 }
+/** 디자인 통일 v2(A1: 과외 마이프로필 kicker·버튼 삭제, 미입력, 안내문구 변경) 승인 변경 */
+function isApprovedProfileReadChange(line) {
+  const trimmed = line.trim();
+  return (
+    trimmed === ''
+    || trimmed === 'export const TUTOR_PROFILE_LEAD_COPY ='
+    || trimmed === "'입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.';"
+    || trimmed === '<dd class="p21-profile__value${r.value ? \'\' : \' is-empty\'}">${r.value ? esc(r.value) : \'\'}</dd>'
+    || trimmed === '<dd class="p21-profile__value${r.value ? \'\' : \' is-empty\'}">${r.value ? esc(r.value) : \'미입력\'}</dd>'
+    || trimmed === '<p class="p21-profile__kicker">마이프로필</p>'
+    || trimmed === '<p class="p21-profile__lead">입력한 프로필 정보를 그대로 확인합니다. 수정은 기본정보·상세정보에서 합니다.</p>'
+    || trimmed === '<p class="p21-profile__lead">${TUTOR_PROFILE_LEAD_COPY}</p>'
+    || trimmed === '<div class="p21-profile__actions">'
+    || trimmed === '<a class="btn btn--secondary" href="#${basicHref}" data-p21-nav="${basicHref}">기본정보 수정</a>'
+    || trimmed === '<a class="btn btn--secondary" href="#${detailHref}" data-p21-nav="${detailHref}">상세정보 수정</a>'
+    || trimmed === '</div>'
+  );
+}
+
 function termOnlyClientDiff(stdout) {
   const removed = [];
   const added = [];
@@ -343,8 +362,15 @@ function termOnlyClientDiff(stdout) {
     ) {
       continue;
     }
-    if (line.startsWith('-')) removed.push(normalizeRegionTerm(line.slice(1)));
-    else if (line.startsWith('+')) added.push(normalizeRegionTerm(line.slice(1)));
+    if (line.startsWith('-')) {
+      const content = line.slice(1);
+      if (isApprovedProfileReadChange(content)) continue;
+      removed.push(normalizeRegionTerm(content));
+    } else if (line.startsWith('+')) {
+      const content = line.slice(1);
+      if (isApprovedProfileReadChange(content)) continue;
+      added.push(normalizeRegionTerm(content));
+    }
   }
   if (removed.length !== added.length) {
     return { ok: false, detail: `변경 줄 수 ${removed.length}−/${added.length}+` };

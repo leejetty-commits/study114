@@ -89,8 +89,8 @@ function renderTextarea(name, value, { rows = 3, placeholder = '' } = {}) {
   return `<textarea name="${name}" class="p19-input p19-textarea" rows="${rows}" placeholder="${esc(placeholder)}">${esc(value || '')}</textarea>`;
 }
 
-/** @param {string} title @param {string} [lead] @param {string} body */
-function renderFormSection(title, lead, body) {
+/** @param {string} title @param {string} [lead] @param {string} body @param {string} [foot] */
+function renderFormSection(title, lead, body, foot = '') {
   return `
     <section class="p19-form-section">
       <header class="p19-form-section__head">
@@ -98,6 +98,7 @@ function renderFormSection(title, lead, body) {
         ${lead ? `<p class="p19-form-section__lead">${lead}</p>` : ''}
       </header>
       <div class="p19-form-section__body">${body}</div>
+      ${foot}
     </section>`;
 }
 
@@ -235,11 +236,11 @@ function renderNotFound() {
 /** @param {import('./store.js').StudentRecord} student */
 function renderHub(student) {
   const hideLine = renderAdminHideOwnerLine(student.exposure_status === 'hidden');
+  const previewHtml = `<div class="p19-myprofile__card">${renderStudentBasicSelfCard(studentToExposureRow(student))}</div>`;
   const body = `
     <div class="p19-hub-body">
       ${hideLine}
-      <div class="p19-myprofile__card">${renderStudentBasicSelfCard(studentToExposureRow(student))}</div>
-      ${renderStudentProfileRead(student)}
+      ${renderStudentProfileRead(student, previewHtml)}
     </div>`;
 
   return `<section class="mypage-panel mp-room-panel">${renderStudentShell(student, 'hub', body)}</section>`;
@@ -305,14 +306,16 @@ function renderBasicForm(student) {
           <span class="p19-field__label">표시명</span>
           ${renderTextInput('public_display_name', student.public_display_name || '', { maxlength: 40 })}
         </label>
-        <label class="p19-field">
-          <span class="p19-field__label">학교급</span>
-          ${renderSelect('school_level', schoolOptions, student.school_level || '', { empty: true })}
-        </label>
-        <label class="p19-field">
-          <span class="p19-field__label">학년</span>
-          <select name="grade_level" class="p19-input p19-select" ${grade.disabled ? 'disabled' : ''}>${grade.html}</select>
-        </label>
+        <div class="p19-row2">
+          <label class="p19-field">
+            <span class="p19-field__label">학교급</span>
+            ${renderSelect('school_level', schoolOptions, student.school_level || '', { empty: true })}
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">학년</span>
+            <select name="grade_level" class="p19-input p19-select" ${grade.disabled ? 'disabled' : ''}>${grade.html}</select>
+          </label>
+        </div>
         <label class="p19-field">
           <span class="p19-field__label">희망 유형</span>
           ${renderSelect('preferred_lesson_type', FORM_OPTIONS.lessonType, hope, { required: true })}
@@ -338,20 +341,22 @@ function renderBasicForm(student) {
           <span class="p19-field__label">희망과목</span>
           ${renderSelect('subject_label', subjectOptions, subjectValue, { empty: true })}
         </label>
-        <label class="p19-field">
-          <span class="p19-field__label">수업형태</span>
-          ${renderSelect('lesson_format', FORM_OPTIONS.lessonFormat, student.lesson_format || '', { empty: true })}
-        </label>
-        <label class="p19-field">
-          <span class="p19-field__label">수업인원</span>
-          ${renderSelect('preferred_student_count_group', FORM_OPTIONS.studentCount, countValue, { empty: true })}
-        </label>
+        <div class="p19-row2">
+          <label class="p19-field">
+            <span class="p19-field__label">수업형태</span>
+            ${renderSelect('lesson_format', FORM_OPTIONS.lessonFormat, student.lesson_format || '', { empty: true })}
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">수업인원</span>
+            ${renderSelect('preferred_student_count_group', FORM_OPTIONS.studentCount, countValue, { empty: true })}
+          </label>
+        </div>
         <label class="p19-field p19-field--full">
           <span class="p19-field__label">한 줄 요청문</span>
           ${renderTextInput('request_summary', student.request_summary || '', { maxlength: 200 })}
         </label>`,
+        renderFormFooter('', '<button type="submit" class="btn btn--primary">저장</button>'),
       )}
-      ${renderFormFooter('', '<button type="submit" class="btn btn--primary">저장</button>')}
     </form>`;
 
   return `<section class="mypage-panel mp-room-panel">${renderStudentShell(student, 'basic', formBody)}</section>`;
@@ -371,88 +376,92 @@ function renderDetailField(label, hint, control) {
 function renderDetailForm(student) {
   const formBody = `
     <form class="p19-form student-detail-form" data-p19-form="detail" data-p19-student-id="${student.id}">
-      <header class="student-detail-head">
-        <h2 class="student-detail-title">학생 상세정보</h2>
-        <p class="student-detail-lead">입력데이터가 맞을수록 더 적합한 과외쌤, 공부방을 만날 수 있습니다.</p>
-      </header>
-      ${renderDetailField(
-        '희망지역 추가값',
-        '기본정보에 적은 희망지역 외에 더 알리고 싶은 지역입니다.',
-        renderTextInput('preferred_region_note', student.preferred_region_note || '', {
-          placeholder: '예: 대치동 주변',
-          maxlength: 255,
-        }),
-      )}
-      ${renderDetailField(
-        '희망 수업장소',
-        '수업이 이루어지면 좋은 장소입니다.',
-        renderCheckboxGroup('lesson_places', FORM_OPTIONS.lessonPlaces, student.lesson_places),
-      )}
-      <div class="student-detail-grid">
-        ${renderDetailField(
-          '주 회수',
-          '일주일에 원하는 수업 횟수입니다.',
-          renderSelect('lessons_per_week', lessonWeeklyOptions(student.lessons_per_week), lessonWeeklySelectValue(student.lessons_per_week), { empty: true }),
-        )}
-        ${renderDetailField(
-          '1회 수업시간',
-          '한 번 수업의 길이입니다.',
-          renderSelect('minutes_per_lesson', lessonDurationOptions(student.minutes_per_lesson), lessonDurationSelectValue(student.minutes_per_lesson), { empty: true }),
-        )}
-      </div>
-      ${renderDetailField(
-        '희망 강의스타일',
-        '마음에 드는 수업 방식을 고릅니다.',
-        renderCheckboxGroup('teaching_style_badges', FORM_OPTIONS.teachingStyle, student.teaching_style_badges),
-      )}
-      <div class="student-detail-grid">
-        ${renderDetailField(
-          '희망 과외쌤 성별',
-          '과외쌤 성별 선호입니다.',
-          renderSelect(
-            'preferred_tutor_gender',
-            [
-              { value: 'female', label: '여' },
-              { value: 'male', label: '남' },
-              { value: 'any', label: '무관' },
-            ],
-            student.preferred_tutor_gender || '',
-            { empty: true },
-          ),
-        )}
-        ${renderDetailField(
-          '학생 성별',
-          '학생의 성별입니다.',
-          renderSelect(
-            'gender',
-            [
-              { value: 'female', label: '여' },
-              { value: 'male', label: '남' },
-            ],
-            student.gender || '',
-            { empty: true },
-          ),
-        )}
-      </div>
-      ${renderDetailField(
-        '출생연도',
-        '태어난 해를 네 자리로 적습니다.',
-        renderTextInput('birth_year', student.birth_year || '', {
-          type: 'number',
-          min: 1900,
-          max: 2100,
-          placeholder: '2012',
-        }),
-      )}
-      ${renderDetailField(
-        '특이요청사항',
-        '매칭에 도움이 되는 요청입니다.',
-        renderTextarea('special_request_note', student.special_request_note || '', {
-          rows: 3,
-          placeholder: '예: 저녁 시간, 개념부터 천천히',
-        }),
-      )}
-      ${renderFormFooter('', '<button type="submit" class="btn btn--primary">저장</button>')}
+      <section class="p19-form-section student-detail-section">
+        <header class="p19-form-section__head student-detail-head">
+          <h3 class="p19-form-section__title student-detail-title">학생 상세정보</h3>
+          <p class="p19-form-section__lead student-detail-lead">입력데이터가 맞을수록 더 적합한 과외쌤, 공부방을 만날 수 있습니다.</p>
+        </header>
+        <div class="p19-form-section__body student-detail-body">
+          ${renderDetailField(
+            '희망지역 추가값',
+            '기본정보에 적은 희망지역 외에 더 알리고 싶은 지역입니다.',
+            renderTextInput('preferred_region_note', student.preferred_region_note || '', {
+              placeholder: '예: 대치동 주변',
+              maxlength: 255,
+            }),
+          )}
+          ${renderDetailField(
+            '희망 수업장소',
+            '수업이 이루어지면 좋은 장소입니다.',
+            renderCheckboxGroup('lesson_places', FORM_OPTIONS.lessonPlaces, student.lesson_places),
+          )}
+          <div class="student-detail-grid">
+            ${renderDetailField(
+              '주 회수',
+              '일주일에 원하는 수업 횟수입니다.',
+              renderSelect('lessons_per_week', lessonWeeklyOptions(student.lessons_per_week), lessonWeeklySelectValue(student.lessons_per_week), { empty: true }),
+            )}
+            ${renderDetailField(
+              '1회 수업시간',
+              '한 번 수업의 길이입니다.',
+              renderSelect('minutes_per_lesson', lessonDurationOptions(student.minutes_per_lesson), lessonDurationSelectValue(student.minutes_per_lesson), { empty: true }),
+            )}
+          </div>
+          ${renderDetailField(
+            '희망 강의스타일',
+            '마음에 드는 수업 방식을 고릅니다.',
+            renderCheckboxGroup('teaching_style_badges', FORM_OPTIONS.teachingStyle, student.teaching_style_badges),
+          )}
+          <div class="student-detail-grid">
+            ${renderDetailField(
+              '희망 과외쌤 성별',
+              '과외쌤 성별 선호입니다.',
+              renderSelect(
+                'preferred_tutor_gender',
+                [
+                  { value: 'female', label: '여' },
+                  { value: 'male', label: '남' },
+                  { value: 'any', label: '무관' },
+                ],
+                student.preferred_tutor_gender || '',
+                { empty: true },
+              ),
+            )}
+            ${renderDetailField(
+              '학생 성별',
+              '학생의 성별입니다.',
+              renderSelect(
+                'gender',
+                [
+                  { value: 'female', label: '여' },
+                  { value: 'male', label: '남' },
+                ],
+                student.gender || '',
+                { empty: true },
+              ),
+            )}
+          </div>
+          ${renderDetailField(
+            '출생연도',
+            '태어난 해를 네 자리로 적습니다.',
+            renderTextInput('birth_year', student.birth_year || '', {
+              type: 'number',
+              min: 1900,
+              max: 2100,
+              placeholder: '2012',
+            }),
+          )}
+          ${renderDetailField(
+            '특이요청사항',
+            '매칭에 도움이 되는 요청입니다.',
+            renderTextarea('special_request_note', student.special_request_note || '', {
+              rows: 3,
+              placeholder: '예: 저녁 시간, 개념부터 천천히',
+            }),
+          )}
+        </div>
+        ${renderFormFooter('', '<button type="submit" class="btn btn--primary">저장</button>')}
+      </section>
     </form>`;
 
   return `<section class="mypage-panel mp-room-panel student-detail-screen">${renderStudentShell(student, 'detail', formBody)}</section>`;
@@ -463,20 +472,28 @@ function renderSettings(student) {
   const status = student.memo_status === 'paused' ? 'paused' : 'open';
   const body = `
     <form class="p19-form" data-p19-form="settings" data-p19-memo-shell data-p19-student-id="${student.id}">
-      <div class="p21-inq">
-        <p class="p21-inq__lead">쪽지 수신</p>
-        <div class="p21-inq-choices" role="radiogroup" aria-label="쪽지 수신">
-          <label class="p21-inq-choice${status === 'open' ? ' is-selected' : ''}">
-            <input type="radio" name="memo_status" value="open" ${status === 'open' ? 'checked' : ''} />
-            <span>받음</span>
-          </label>
-          <label class="p21-inq-choice${status === 'paused' ? ' is-selected' : ''}">
-            <input type="radio" name="memo_status" value="paused" ${status === 'paused' ? 'checked' : ''} />
-            <span>안 받음</span>
-          </label>
+      <section class="p19-form-section">
+        <header class="p19-form-section__head">
+          <h3 class="p19-form-section__title">쪽지 수신</h3>
+        </header>
+        <div class="p19-form-section__body">
+          <div class="p21-inq">
+            <div class="p21-inq-choices" role="radiogroup" aria-label="쪽지 수신">
+              <label class="p21-inq-choice${status === 'open' ? ' is-selected' : ''}">
+                <input type="radio" name="memo_status" value="open" ${status === 'open' ? 'checked' : ''} />
+                <span class="p21-inq-choice__dot" aria-hidden="true"></span>
+                <span>받음</span>
+              </label>
+              <label class="p21-inq-choice${status === 'paused' ? ' is-selected' : ''}">
+                <input type="radio" name="memo_status" value="paused" ${status === 'paused' ? 'checked' : ''} />
+                <span class="p21-inq-choice__dot" aria-hidden="true"></span>
+                <span>안 받음</span>
+              </label>
+            </div>
+          </div>
         </div>
-      </div>
-      ${renderFormFooter('', '<button type="submit" class="btn btn--primary">저장</button>')}
+        ${renderFormFooter('', '<button type="submit" class="btn btn--primary">저장</button>')}
+      </section>
     </form>`;
 
   return `<section class="mypage-panel mp-room-panel">${renderStudentShell(student, 'settings', body)}</section>`;

@@ -117,7 +117,8 @@
 }
 
 .p21-profile__value.is-empty {
-  color: transparent;
+  color: #9ca3af;
+  font-weight: 400;
 }
 
 @media (max-width: 640px) {

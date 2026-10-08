@@ -165,6 +165,9 @@ function renderProfileGallery(tutor) {
   return `<div class="p21-profile__gallery" aria-label="프로필 사진">${items}</div>`;
 }
 
+export const TUTOR_PROFILE_LEAD_COPY =
+  '입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.';
+
 export function renderTutorProfileRead(tutor) {
   const name = display(tutor?.tutor_display_name) || '과외 프로필';
   const basicHref = tutorSectionPath(tutor.id, 'basic');
@@ -180,7 +183,7 @@ export function renderTutorProfileRead(tutor) {
           (r) => `
         <div class="p21-profile__row">
           <dt class="p21-profile__label">${esc(r.label)}</dt>
-          <dd class="p21-profile__value${r.value ? '' : ' is-empty'}">${r.value ? esc(r.value) : ''}</dd>
+          <dd class="p21-profile__value${r.value ? '' : ' is-empty'}">${r.value ? esc(r.value) : '미입력'}</dd>
         </div>`,
         )
         .join('');
@@ -198,14 +201,9 @@ export function renderTutorProfileRead(tutor) {
   return `
     <div class="p21-profile" data-p21-profile>
       <header class="p21-profile__head">
-        <p class="p21-profile__kicker">마이프로필</p>
         ${renderProfileGallery(tutor)}
         <h2 class="p21-profile__name">${esc(name)}</h2>
-        <p class="p21-profile__lead">입력한 프로필 정보를 그대로 확인합니다. 수정은 기본정보·상세정보에서 합니다.</p>
-        <div class="p21-profile__actions">
-          <a class="btn btn--secondary" href="#${basicHref}" data-p21-nav="${basicHref}">기본정보 수정</a>
-          <a class="btn btn--secondary" href="#${detailHref}" data-p21-nav="${detailHref}">상세정보 수정</a>
-        </div>
+        <p class="p21-profile__lead">${TUTOR_PROFILE_LEAD_COPY}</p>
       </header>
       ${sections}
     </div>`;

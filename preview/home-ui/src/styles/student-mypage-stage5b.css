@@ -1,5 +1,5 @@
 /**
- * 학생 마이페이지·내 등록 Stage5B.
+ * 학생 마이페이지·내 등록 Stage5B (디자인 통일 스펙 v2 1차).
  * .home-app--role-parent 안에서만. 홈·공부방·과외쌤에는 닿지 않는다.
  * Primary #266BC4는 내 등록의 대표 저장 버튼만.
  */
@@ -16,10 +16,11 @@
   --s5-role-line: #d4cff0;
 }
 
-.home-app--role-parent .mypage-sidebar__title,
-.home-app--role-parent .mypage-content:has(.mp-room) .mypage-content__title {
+/* 좌측 사이드바 제목: 학생만 28→18 */
+.home-app--role-parent .mypage-sidebar__title {
   color: var(--s5-ink);
-  font-size: 28px;
+  font-size: 18px;
+  font-weight: 700;
   line-height: 1.3;
 }
 
@@ -45,70 +46,230 @@
   font-size: 14px;
 }
 
+/* 탭 바 14px 유지 */
 .home-app--role-parent .mp-room__head {
-  border-bottom-color: var(--s5-line);
+  border-bottom: 1px solid var(--s5-line);
+  margin-bottom: 24px;
 }
 
 .home-app--role-parent .mp-room__tab {
   color: var(--s5-muted);
   font-size: 14px;
+  font-weight: 500;
+  padding: 12px 16px;
   background: transparent;
 }
 
 .home-app--role-parent .mp-room__tab.is-active {
   color: var(--s5-role);
+  font-weight: 700;
   background: transparent;
 }
 
 .home-app--role-parent .mp-room__tab.is-active::after {
   background: var(--s5-role);
+  height: 2px;
 }
 
-.home-app--role-parent .mp-room .btn.btn--primary {
-  background: var(--s5-primary);
-  border-color: var(--s5-primary);
-  color: #fff;
-  border-radius: 8px;
-  font-size: 16px;
+/* 폭 100%: 콘텐츠 열 전체 너비 사용 */
+.home-app--role-parent .mp-room,
+.home-app--role-parent .mp-room .p19-hub-body,
+.home-app--role-parent .mp-room .p19-form,
+.home-app--role-parent .mp-room .student-detail-form,
+.home-app--role-parent .mp-room .p21-profile {
+  max-width: none !important;
+  width: 100%;
 }
 
+.home-app--role-parent .mp-room .p19-hub-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 섹션 카드 공통 */
 .home-app--role-parent .mp-room .p19-form-section,
 .home-app--role-parent .mp-room .p21-profile__section,
-.home-app--role-parent .mp-room .student-detail-form {
+.home-app--role-parent .mp-room .student-detail-section {
   background: var(--s5-surface);
-}
-
-.home-app--role-parent .mp-room .p19-form-section {
   border: 1px solid var(--s5-line);
   border-radius: 12px;
-  padding: 16px;
+  padding: 24px;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+/* 회색 머리띠 제거: 카드 헤더 */
+.home-app--role-parent .mp-room .p19-form-section__head,
+.home-app--role-parent .mp-room .p21-profile__section-head {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin-bottom: 24px;
 }
 
 .home-app--role-parent .mp-room .p19-form-section__title,
 .home-app--role-parent .mp-room .p21-profile__section-title {
   color: var(--s5-ink);
   font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0;
 }
 
 .home-app--role-parent .mp-room .p19-form-section__lead,
-.home-app--role-parent .mp-room .p21-profile__lead,
-.home-app--role-parent .mp-room .student-detail-lead {
+.home-app--role-parent .mp-room .p21-profile__lead {
   color: var(--s5-muted);
-  font-size: 16px;
-}
-
-.home-app--role-parent .mp-room .p19-field__label,
-.home-app--role-parent .mp-room .student-detail-label,
-.home-app--role-parent .mp-room .p21-profile__label {
-  color: var(--s5-ink);
   font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
+/* 마이프로필 카드 1 (요약 카드) */
+.home-app--role-parent .mp-room .p21-profile {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.home-app--role-parent .mp-room .p21-profile__section--summary {
+  padding: 24px;
+}
+
+.home-app--role-parent .mp-room .p21-profile__preview-wrap {
+  background: var(--s5-bg);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.home-app--role-parent .mp-room .p21-profile__name {
+  color: var(--s5-ink);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.home-app--role-parent .mp-room .p21-profile__lead {
+  color: var(--s5-muted);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+/* 카드 2·3 헤더 및 「수정」 링크 */
+.home-app--role-parent .mp-room .p21-profile__section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.home-app--role-parent .mp-room .p21-profile__edit {
+  color: var(--s5-primary) !important;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  background: transparent;
+  padding-top: 2px;
+  white-space: nowrap;
+}
+
+.home-app--role-parent .mp-room .p21-profile__edit:hover {
+  text-decoration: underline;
+}
+
+/* 마이프로필 열람 행: 라벨 14/400 (폭 144) · 값 16/500 */
+.home-app--role-parent .mp-room .p21-profile__list {
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+}
+
+.home-app--role-parent .mp-room .p21-profile__row {
+  display: grid;
+  grid-template-columns: 144px 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--s5-line);
+  border-bottom: 0;
+}
+
+.home-app--role-parent .mp-room .p21-profile__row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.home-app--role-parent .mp-room .p21-profile__row:last-child {
+  padding-bottom: 0;
 }
 
 .home-app--role-parent .mp-room .p21-profile__label {
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--s5-muted);
+  margin: 0;
+  line-height: 1.5;
 }
 
+.home-app--role-parent .mp-room .p21-profile__value {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--s5-ink);
+  min-height: 24px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.home-app--role-parent .mp-room .p21-profile__value.is-empty {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #9ca3af !important;
+  background: transparent !important;
+  border-radius: 0;
+}
+
+/* 필드 구조 및 간격 (세로 24, 컨트롤 상단 8) */
+.home-app--role-parent .mp-room .p19-form-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.home-app--role-parent .mp-room .p19-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.home-app--role-parent .mp-room .p19-field__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--s5-ink);
+  line-height: 1.5;
+}
+
+.home-app--role-parent .mp-room .p19-field__hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--s5-muted);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.home-app--role-parent .mp-room .p19-row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* 입력·선택 컨트롤 (h44, padding 0 12, radius 8, 16px) */
 .home-app--role-parent .mp-room .p19-input,
 .home-app--role-parent .mp-room .p19-select,
 .home-app--role-parent .mp-room .p19-textarea {
@@ -119,79 +280,279 @@
   font-size: 16px;
 }
 
+.home-app--role-parent .mp-room .p19-input:not(.p19-textarea),
+.home-app--role-parent .mp-room .p19-select {
+  height: 44px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  margin-top: 8px;
+}
+
+.home-app--role-parent .mp-room .p19-textarea {
+  height: auto;
+  min-height: 96px;
+  padding: 12px;
+  box-sizing: border-box;
+  margin-top: 8px;
+  line-height: 1.55;
+}
+
+/* 칩 (h44, radius 6, 14px) */
 .home-app--role-parent .mp-room .p19-chip {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 16px;
   border-radius: 6px;
-  border-color: var(--s5-line);
+  border: 1px solid var(--s5-line);
   font-size: 14px;
+  font-weight: 500;
+  color: var(--s5-ink);
   background: var(--s5-surface);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
 .home-app--role-parent .mp-room .p19-chip.is-checked {
   background: var(--s5-role-soft);
   border-color: var(--s5-role-line);
   color: var(--s5-role);
+  font-weight: 600;
 }
 
-.home-app--role-parent .mp-room .p21-profile {
-  max-width: 720px;
-}
-
-.home-app--role-parent .mp-room .p21-profile__kicker {
-  color: var(--s5-muted);
-  font-size: 12px;
-  letter-spacing: 0.01em;
-  text-transform: none;
-}
-
-.home-app--role-parent .mp-room .p21-profile__name {
-  color: var(--s5-ink);
-  font-size: 22px;
-}
-
-.home-app--role-parent .mp-room .p21-profile__section {
-  border-color: var(--s5-line);
-  border-radius: 12px;
-}
-
-.home-app--role-parent .mp-room .p21-profile__value {
-  color: var(--s5-ink);
-  font-size: 14px;
-}
-
-.home-app--role-parent .mp-room .p21-profile__value.is-empty {
-  background: var(--s5-bg);
-  border-radius: 4px;
-  color: transparent;
-}
-
-.home-app--role-parent .mp-room .p21-profile__edit {
-  color: var(--s5-role);
-  font-size: 14px;
+/* 저장 바 (카드 안 맨 아래, 위 1px solid #E5E7EB, 좌측 정렬) */
+.home-app--role-parent .mp-room .p19-form-footer {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--s5-line);
   background: transparent;
+  border-bottom: 0;
+  border-left: 0;
+  border-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
 }
 
-.home-app--role-parent .mp-room .expo-hcard__badge,
-.home-app--role-parent .mp-room .expo-basic__badge {
-  border-radius: 4px;
+.home-app--role-parent .mp-room .p19-form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
 }
 
-.home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq__lead {
-  color: var(--s5-ink);
+.home-app--role-parent .mp-room .btn.btn--primary,
+.home-app--role-parent .mp-room .p19-form-actions .btn--primary {
+  background: var(--s5-primary);
+  border-color: var(--s5-primary);
+  color: #fff;
+  height: 44px;
+  min-width: 96px;
+  padding: 0 24px;
+  border-radius: 8px;
   font-size: 16px;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+/* 쪽지설정 (단일 칩: 라디오 점, h44, radius 6) */
+.home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq {
+  margin: 0;
+  padding: 0;
+}
+
+.home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choice {
-  border-radius: 8px;
-  border-color: var(--s5-line);
+  height: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--s5-line);
+  border-radius: 6px;
   background: var(--s5-surface);
   color: var(--s5-ink);
   font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choice__dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid #9ca3af;
+  background: #fff;
+  flex: none;
+  box-sizing: border-box;
 }
 
 .home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choice.is-selected {
   background: var(--s5-role-soft);
   border-color: var(--s5-role-line);
   color: var(--s5-role);
+  font-weight: 600;
+}
+
+.home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choice.is-selected .p21-inq-choice__dot {
+  border-color: var(--s5-role);
+  background: var(--s5-role);
+  box-shadow: inset 0 0 0 3px #fff;
+}
+
+/* 희망지역 (§2-5: 색 박스 제거, 같은 시작선, 주소칸 좌우 12, 결과 줄 10/12, Secondary h44) */
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__toolbar {
+  display: none !important;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis-hint {
+  width: 100%;
+  order: -1;
+  font-size: 12px;
+  color: var(--s5-muted);
+  line-height: 1.4;
+  margin: 0 0 8px;
+}
+
+.home-app--role-parent .mp-room__tabs {
+  margin: 0;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis .chip {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--s5-line);
+  border-radius: 6px;
+  background: var(--s5-surface);
+  color: var(--s5-ink);
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis .chip .chip__label {
+  font-size: 14px;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis .chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis .chip::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid #9ca3af;
+  background: #fff;
+  flex: none;
+  box-sizing: border-box;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis .chip:has(input:checked) {
+  background: var(--s5-role-soft);
+  border-color: var(--s5-role-line);
+  color: var(--s5-role);
+  font-weight: 600;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis .chip:has(input:checked)::before {
+  border-color: var(--s5-role);
+  background: var(--s5-role);
+  box-shadow: inset 0 0 0 3px #fff;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .form-address__zip-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .form-address__zip-row .form-input {
+  flex: 1;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--s5-line);
+  border-radius: 8px;
+  font-size: 16px;
+  color: var(--s5-ink);
+  box-sizing: border-box;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .form-address__zip-row .btn,
+.home-app--role-parent .mp-room [data-hope-region] .form-address__zip-row .btn--secondary {
+  height: 44px;
+  min-width: 96px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #fff;
+  color: var(--s5-primary);
+  border: 1px solid var(--s5-primary);
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .form-hint {
+  font-size: 12px;
+  color: var(--s5-muted);
+  line-height: 1.4;
+  margin-top: 8px;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] [data-slot-resolved] {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--s5-bg);
+  font-size: 14px;
+  color: var(--s5-ink);
+  margin-top: 8px;
+  border: 0;
+  box-sizing: border-box;
 }
 
 .home-app--role-parent .mypage-empty {
@@ -200,9 +561,8 @@
 }
 
 @media (max-width: 640px) {
-  .home-app--role-parent .mypage-content:has(.mp-room) .mypage-content__title,
   .home-app--role-parent .mypage-sidebar__title {
-    font-size: 22px;
+    font-size: 18px;
   }
 
   .home-app--role-parent .mp-room__tabs {
@@ -214,5 +574,21 @@
     padding: 10px 8px;
     font-size: 14px;
     text-align: center;
+  }
+
+  .home-app--role-parent .mp-room .p19-form-section,
+  .home-app--role-parent .mp-room .p21-profile__section,
+  .home-app--role-parent .mp-room .p21-profile__section--summary,
+  .home-app--role-parent .mp-room .student-detail-section {
+    padding: 16px;
+  }
+
+  .home-app--role-parent .mp-room .p21-profile__row {
+    grid-template-columns: 112px 1fr;
+    gap: 8px;
+  }
+
+  .home-app--role-parent .mp-room .p19-row2 {
+    grid-template-columns: 1fr;
   }
 }

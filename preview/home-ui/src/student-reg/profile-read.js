@@ -83,8 +83,15 @@ export function buildStudentProfileReadSections(student) {
   ];
 }
 
-/** @param {import('./store.js').StudentRecord} student */
-export function renderStudentProfileRead(student) {
+export const STUDENT_PROFILE_LEAD_COPY =
+  '입력한 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.';
+// 2안: '입력한 정보가 그대로 보입니다. 고칠 내용은 카드 오른쪽 위 수정에서 바꿀 수 있어요.'
+
+/**
+ * @param {import('./store.js').StudentRecord} student
+ * @param {string} [cardPreviewHtml]
+ */
+export function renderStudentProfileRead(student, cardPreviewHtml = '') {
   const name = display(student?.public_display_name) || '학생 프로필';
   const basicHref = studentSectionPath(student.id, 'basic');
   const detailHref = studentSectionPath(student.id, 'detail');
@@ -96,7 +103,7 @@ export function renderStudentProfileRead(student) {
           (r) => `
         <div class="p21-profile__row">
           <dt class="p21-profile__label">${esc(r.label)}</dt>
-          <dd class="p21-profile__value${r.value ? '' : ' is-empty'}">${r.value ? esc(r.value) : ''}</dd>
+          <dd class="p21-profile__value${r.value ? '' : ' is-empty'}">${r.value ? esc(r.value) : '미입력'}</dd>
         </div>`,
         )
         .join('');
@@ -113,15 +120,11 @@ export function renderStudentProfileRead(student) {
 
   return `
     <div class="p21-profile" data-p19-profile>
-      <header class="p21-profile__head">
-        <p class="p21-profile__kicker">마이프로필</p>
+      <article class="p21-profile__section p21-profile__section--summary">
+        ${cardPreviewHtml ? `<div class="p21-profile__preview-wrap">${cardPreviewHtml}</div>` : ''}
         <h2 class="p21-profile__name">${esc(name)}</h2>
-        <p class="p21-profile__lead">입력한 정보를 그대로 확인합니다. 수정은 기본정보·상세정보에서 합니다.</p>
-        <div class="p21-profile__actions">
-          <a class="btn btn--secondary" href="#${basicHref}" data-p19-nav="${basicHref}">기본정보 수정</a>
-          <a class="btn btn--secondary" href="#${detailHref}" data-p19-nav="${detailHref}">상세정보 수정</a>
-        </div>
-      </header>
+        <p class="p21-profile__lead">${STUDENT_PROFILE_LEAD_COPY}</p>
+      </article>
       ${sections}
     </div>`;
 }

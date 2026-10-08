@@ -70,7 +70,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
   const authUser = getAuthUser();
   const roleLabel =
     role === 'parent'
-      ? '학부모'
+      ? '학생'
       : role === 'study_room'
         ? '공부방'
         : role === 'tutor'
