@@ -155,3 +155,16 @@
 - R5: 검증 스크립트에 welcome 항목 `basicCard()` assert 확인.
 - 메인 재실행: `verify-neighborhood-welcome.php` ALL PASS, `verify-home-news-row.mjs` 226/0, `verify-basic-exposure-gate.mjs` 24/0.
 - 남은 절차: 다른 모델 독립 리뷰 → 사용자 배포 승인.
+
+### 독립 리뷰 — `ed0ac8e` 배포 가능 (2026-10-08 19:00, Claude Sonnet 4.6)
+
+- 정본 71 레드라인 6개 준수. 남의 등록 `welcome_off` 불가, SQL 바인딩·화면 escape 확인, 기존 동네 인사 올리기·내리기·이력·카드 팝업 유지, 운영 MySQL 컬럼 존재 확인.
+- 지적 1 (낮음): `welcome_off` 저장 시 클라이언트 `neighborhood`·`display_name`을 받아 줄 여지 → 레드라인 3과 어긋남. 3차 수정으로 반영.
+- 지적 2 (참고): `tutors.created_at`·`study_rooms.created_at` 색인 없음. 현재 규모 문제없음. 배포 후 선택 SQL(사용자 할 일).
+- 지적 3 (참고): PHP·DB 시간대 명시 없음. 이번 변경과 무관한 기존 상태. 기록만.
+
+### 3차 메인 검수 — `64ea9e1` 통과 (2026-10-08 19:12)
+
+- `save()` `welcome_off` 분기: 입력값 사용 코드 삭제, `lookupPrimaryDongName()`·`lookupDisplayName()`만 사용 확인 (2줄).
+- 메인 재실행: `verify-neighborhood-welcome.php` ALL PASS (0 failed, 3-2 assert 포함).
+- 남은 절차: 사용자 배포 승인.
