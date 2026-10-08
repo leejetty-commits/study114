@@ -72,32 +72,41 @@
 main `908c8f4`에서도 똑같이 실패하는 기존 실패(이번 변경과 무관, 실패 줄 동일):
 paid-renewal, cur-006-email-sent-ui, cur-006-email-verify-inventory, cur-006-post-verify-role, study-room-basic-register-api, tutor-registration-check-frame, tutor-basic-required, student-hope-hidden-required, basic-exposure-gate(과외쌤 등록 테스트에서 `TutorBasicFields:74` 예외), cur-006-email-verify-flow(docker API 필요), WSL bash 필요 스크립트(php-syntax, paid-pr-a-ci, paid-pr-b-ci).
 
-## 6. 배포 전 사용자 할 일 (적용하지 않음, 초안)
+위 기존 실패의 원인 조사와 수정은 `docs/worklog/2026/10/2026-10-09-verify-stale-fix.md`.
 
-기존 카드 중 기본등록은 끝났는데 `draft`로 남은 카드는 다음 저장 때 `published`로 바뀐다. 즉시 맞추려면 운영 phpMyAdmin에서 아래를 한 번 실행한다(적용 전 SELECT로 건수 확인).
+## 6. 배포 전 사용자 할 일
 
-```sql
--- 공부방: 지역 slot1 있음 + draft → published
-UPDATE study_rooms sr
-SET sr.profile_status = 'published',
-    sr.published_at = COALESCE(sr.published_at, NOW())
-WHERE sr.profile_status = 'draft'
-  AND EXISTS (
-    SELECT 1 FROM study_room_regions r
-    WHERE r.study_room_id = sr.id AND r.slot = 1
-      AND r.region_id IS NOT NULL AND r.region_id <> 0
-  );
-```
-
-과외쌤은 필수 8개 판정이 여러 테이블에 걸쳐 있어 SQL 대신 각 과외쌤 저장 시 자동 동기화에 맡기는 것을 권장. 일괄 처리가 필요하면 별도 지시로 PHP 1회 스크립트를 만든다.
+- 없음. 가입자가 없어 노출 상태를 맞출 기존 카드가 없다. 앞으로 가입하는 카드는 기본등록 저장 시 노출 상태가 자동으로 정해진다(9절).
+- SQL·환경변수·Secrets·`.htaccess` 변경 없음.
 
 ## 7. 보고만 (이번에 고치지 않음)
 
-- 자동저장된 기존 「중등」 `school_level` 데이터: 현재 값 목록에 없어 필수 8개 판정에서 대상 미완료로 잡힐 수 있음. 정리 SQL 필요(별도 지시).
-- 관리자 통계 `BasicCardRegisteredQuery`의 과외쌤 집계는 지역 slot1만 본다(필수 8개와 다름).
+- 「중등」: 해당 없음. 이전 가입 화면이 대상을 `middle`로 고정 저장했으나(`docs/worklog/2026/10/2026-10-09-tutor-basic-required.md` 43·72행) 그 고정은 main `a5b0e6b`(2026-10-09 04:37)에서 없어졌고, 가입자가 없어 해당 카드도 없다.
+- 관리자 통계 과외쌤 집계: 고칠 것 없음. 사용자 지시 「과외쌤 집계는 과외쌤 카드갯수로」. `BasicCardRegisteredQuery`는 과외지역 1이 있는 과외쌤 행을 센다. 카드 행은 기본등록 필수 8개를 통과해야만 생기고(`BasicRegisterService::registerTutor` → `TutorBasicFields::normalizeInput`), 기본정보 수정도 8개를 다 요구하므로(`TutorRegisterService::saveBasic`) 이 수가 곧 카드 수다. tutor-ui `insertDraft`는 이름만 있는 행을 만들 수 있으나 과외지역 1이 없어 집계에 안 잡힌다.
 - `hasPrimaryRegion`은 지역 라벨까지 요구, 검색 slot1 SQL은 요구 안 함(작은 차이).
-- 정본 19/20/21 화면 ID 표에 「공개」 문구 잔존(문서 정리 때).
+- 정본 19/20/21 화면 ID 표에 「공개」 문구 잔존 — 사용자 지시 「작업순서에 맞추어서」.
+
+## 9. 보고 정정 (2026-10-09 07:01~07:11)
+
+사용자 지적 원문:
+
+> 2. 기존 카드 노출 상태 맞추기를 왜 맞추지...? 지금 비정상적인 카드가 없는데... 가입자가 없는데...
+
+> 검색 API … ===> 이게 뭔 소리야? 전국 결과가 왜 나와? 로그인하면 본인이 등록된 지역에 맞는 것만 나오는데...?? 어디에 기준을 두고서 이런 망언을 하는거니?
+
+> 지역 값은 가입할 때 기본등록정보에 있는 홍보지역이나 과외지역의 대표1을 불러와서 지도와 '현재위치'에 반영을 하고 있다. 만약 홈화면의 지역값을 바꾸고자 한다면 마이페이지의 내등록의 기본등록정보에서 수정을 하고 새로고침을 하면 지역이 변경된다. 이게 정본에 있는 내용이고, 정석인데, 넌 근거도 없이 마구 내뱉고 있다.
+
+정정:
+
+- 기존 카드 SQL 초안(이전 6절): 운영 가입자 여부를 확인하지 않고 쓴 것. 삭제.
+- 「중등」(이전 7절): "미완료로 잡힐 수 있음"은 반대였다(고정값 `middle`은 완료로 판정). 해당 카드도 없음.
+- 검색 API "로그인하면 전국 결과": 서버 코드 일부만 보고 한 잘못된 주장. 근거:
+  - 정본 `docs/worklog/grok-sync/docs/193-study-room-box-match-tutor-investigation-2026-10-02.md` 606행 — 로그인 공부방 지도 = 홍보1(대표). 대치동은 비로그인 게스트만.
+  - 정본 `106-tutor-student-find-primary-location-ticket.md`·`107-tutor-student-find-106-acceptance.md` — 과외쌤 현재위치 = 대표 활동지역(과외지역 1).
+  - 코드 `preview/home-ui/src/study-room-home-seed.js` 30~93행 — 기본등록 `saved_regions`의 대표 슬롯을 현재위치 라벨·지도 질의에 쓰고 다른 값으로 대체하지 않는다.
+  - `public/api/search/search.php`: 비로그인은 게스트 지역으로 고정, 로그인은 위 대표지역 기준 요청을 받는다. 문제 없음. 검사 실패는 분류표 누락(낡은 검사).
 
 ## 8. 승인 기록
 
 - (대기) 사용자 승인 커밋 hash:
+- 독립 리뷰: 사용자 결정 대기.
