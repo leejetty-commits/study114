@@ -172,3 +172,17 @@
    - 학생/보호자 계정이 `public_display_name` 없이 등록된 경우 고민방 참여 시 422 에러가 발생할 수 있으므로, 기본 익명 닉네임 자동 부여(예: `익명`, `회원#123` 등) 또는 가입/마이페이지 시 닉네임 입력 유도에 대한 정책 결정 필요.
 2. **공부방 원장 개인 닉네임 관리 UI**:
    - 현재 등록 화면은 `study_room_name`만 입력받으므로 모든 신규 원장은 공부방명으로 글이 작성됨. 원장이 공부방명이 아닌 개인 호칭(예: "행복원장님")으로 활동하길 원하는 경우, 마이페이지/등록정보 수정 화면에서 `operator_display_name`을 입력·수정할 수 있는 폼 필드 추가 검토 필요.
+
+---
+
+## 9. 메인 검수 (2026-10-08 16:35, 커밋 `7510691`)
+
+- 판정: **통과** (작업 세션과 다른 메인 세션 검수)
+- diff 확인: 변경 3파일(resolver 20줄, 검증 스크립트, 본 기록). `use PDO;` 존재, 단일 쿼리로 두 칼럼 조회, `operator_display_name` 우선 → 비면 `study_room_name` → 둘 다 비면 ''(기존 422 유지).
+- 메인 재실행 (`D:\php8.2\php.exe`):
+  - `php -l src/Board/AuthorDisplayNameResolver.php` → No syntax errors
+  - `php -d extension=pdo_sqlite scripts/verify-board-studyroom-displayname-fallback.php` → 0 failed
+  - `php scripts/verify-board-channel-acl.php` → ok
+- 근거 데이터: 운영 DB `study_rooms` id 7 `operator_display_name` = NULL (사용자 phpMyAdmin SELECT, 16:16).
+- 남은 결정(사용자): 학생·보호자 `public_display_name` 빈값 시 같은 422 가능 — 대체 이름 정책 필요. 원장 개인 표시 이름 입력칸은 보류.
+- 배포: 사용자 승인 대기. SQL·환경변수 변경 없음.
