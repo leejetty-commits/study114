@@ -114,7 +114,7 @@
 | `verify-admin-registration-list.mjs` | ✅ 45/46 PASS | `diff-allowed` 1건 FAIL — 스크립트가 `2723c5f` 기준 diff 검사, b249ccc 기반 브랜치에서 기대된 오탐. 기능 45건 전부 PASS |
 | `verify-admin-162-settlement.mjs` | ✅ 49/53 PASS | `diff-inside-allow`, `shared-frozen` FAIL 3건 — 동일한 base mismatch 오탐. 기능 49건 PASS |
 | `verify:shop-page` | ✅ 54/54 PASS | |
-| `check-no-committed-secrets` (수동) | ✅ PASS | bash 없어 수동 확인: .htaccess placeholder 정상, GOCSPX- 패턴 없음 |
+| `check-no-committed-secrets` (수동) | ✅ PASS | bash 없어 수동 확인: .htaccess placeholder 정상, Google client_secret 접두어 없음 |
 | `npm run build:dothome` | ✅ PASS | 빌드 성공, git status clean (산출물 gitignore) |
 | PHP 눈 점검 | ✅ 이상 없음 | 아래 참조 |
 | PHP `php -S` 실행 | ⚠️ 미실행 | 이 PC에 PHP 없음 |
@@ -180,4 +180,5 @@
 | home-ui `vite build` | — | 성공 | |
 
 - PHP 실행 검사: 미실행(이 PC에 php 없음).
+- 13:15 배포 실패 정정: 이 기록의 검사 표에 비밀키 접두어를 글자 그대로 적어 Actions 비밀키 검사가 배포를 막음(실제 비밀값 없음, FTP 전 단계라 운영 영향 없음). 문구만 고치고 로컬 Git Bash로 `check-no-committed-secrets.sh` 통과 확인. 작업 기록의 "bash 없어 수동 확인"은 틀림 — `C:\Program Files\Git\bin\bash.exe`로 실행 가능.
 - 남은 일(배포와 별개): `diff-*` 계열 검사는 기준 커밋이 고정돼 있어 계속 실패로 뜸 → 검사 스크립트 기준 갱신은 별도 과제로 보고.
