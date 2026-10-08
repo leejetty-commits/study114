@@ -9,7 +9,6 @@ import {
   renderBasicListBlock,
   renderBrowseList,
   renderGuestVacantBasicList,
-  renderExposureBox,
   renderEmptyPrimePromo,
   renderEmptyPickPromo,
   renderEmptyBasicPromo,
@@ -17,7 +16,6 @@ import {
   getPrimeCandidatePool,
 } from '@home-ui/exposure-render.js';
 import { getExposurePageSizes } from '@home-ui/exposure-rules.js';
-import { buildStudyRoomSampleItem, buildTutorSampleItem } from '@home-ui/home-card-samples/presets.js';
 import { STUDENT_BRANCH_COPY } from '@home-ui/student-reg/student-reg-copy.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar, renderSectionTitleBar } from '@home-ui/section-headings.js';
 import { partitionByExposureTier } from './search-exposure-mapper.js';
@@ -33,19 +31,8 @@ function tutorPrimaryRegionLabel() {
   return tutorHomePrimaryLabel();
 }
 
-/** 학생 홈 0건 전용 샘플. 지역 라벨 = 학생 저장 지역. 목록 풀에 넣지 않는다. */
-function studentHomeSample(kind, tier, place) {
-  const item = kind === 'tutor' ? buildTutorSampleItem(tier) : buildStudyRoomSampleItem(tier);
-  item.id = `student-home-sample-${kind}-${tier}`;
-  item._vacantSample = true;
-  if (kind === 'tutor') item.tutor_display_name = '샘플 과외쌤';
-  else item.study_room_name = '샘플 공부방';
-  item.location_label = place;
-  return item;
-}
-
 /**
- * 학생 홈 0건 — 공부방 홈 빈 자리와 같은 방식: 티어마다 샘플 1장 + 나머지 빈 카드 박스.
+ * 학생 홈 0건 — 공부방 홈 빈 자리와 같은 방식: 티어마다 빈 카드 박스.
  * @param {'study_room'|'tutor'} kind
  * @param {string} place
  * @param {object} opts
@@ -58,14 +45,8 @@ function renderStudentHomeVacantTiers(kind, place, opts) {
       ? { prime: SECTION_HEADINGS.primeStudyRoom, pick: SECTION_HEADINGS.pickStudyRoom, basic: SECTION_HEADINGS.basicStudyRoom, color: 'content-section--orange' }
       : { prime: SECTION_HEADINGS.primeTutor, pick: SECTION_HEADINGS.pickTutor, basic: SECTION_HEADINGS.basicTutor, color: 'content-section--blue' };
   const boxOpts = { ...opts, guest: false };
-  const prime = [
-    renderExposureBox(kind, 'prime', studentHomeSample(kind, 'prime', place), '', boxOpts),
-    ...Array.from({ length: Math.max(0, primeSlots - 1) }, () => renderEmptyPrimePromo(kind)),
-  ].join('');
-  const pick = [
-    renderExposureBox(kind, 'pick', studentHomeSample(kind, 'pick', place), '', boxOpts),
-    ...Array.from({ length: pickRowSlots - 1 }, () => renderEmptyPickPromo(kind)),
-  ].join('');
+  const prime = Array.from({ length: primeSlots }, () => renderEmptyPrimePromo(kind)).join('');
+  const pick = Array.from({ length: pickRowSlots }, () => renderEmptyPickPromo(kind)).join('');
   return `
     <div class="content-section ${section.color} search-tier-results" data-surface="home-tier" data-student-home-vacant="${kind}">
       ${renderSectionHeading({ ...section.prime, locationLabel: place })}
@@ -78,9 +59,9 @@ function renderStudentHomeVacantTiers(kind, place, opts) {
       </div>
       <div class="list-subsection">
         ${renderSectionTitleBar({ ...section.basic, locationLabel: place, desc: undefined })}
-        ${renderBrowseList(kind, [studentHomeSample(kind, 'basic', place)], {
+        ${renderBrowseList(kind, [], {
           ...boxOpts,
-          tailHtml: renderEmptyBasicPromo(),
+          tailHtml: renderEmptyBasicPromo() + renderEmptyBasicPromo(),
         })}
       </div>
     </div>`;
@@ -140,7 +121,7 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
   // 지역은 제목 아래 toolbar「현재위치」(정렬과 같은 행)
   const loc =
     opts.viewerRole === 'tutor' && opts.pinTutorPrimary ? tutorPrimaryRegionLabel() : sectionTag || '';
-  const vacantSamples =
+  const vacantFill =
     opts.guest !== true &&
     ((kind === 'study_room' && opts.viewerRole === 'study_room') ||
       (kind === 'tutor' && opts.viewerRole === 'tutor' && opts.pinTutorPrimary === true));
@@ -149,7 +130,7 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
       ${renderSectionToolbar({ locationLabel: loc })}
       ${renderPrimeSlotGrid(kind, occupied, {
         ...opts,
-        vacantSamples,
+        vacantFill,
         listId: kind === 'tutor' ? section.primeListId : undefined,
       })}`;
 
@@ -158,7 +139,7 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
     section.pickListId,
     { ...section.pick, locationLabel: loc, desc: undefined },
     items,
-    { ...opts, primeOccupied: occupied, vacantSamples },
+    { ...opts, primeOccupied: occupied, vacantFill },
   );
 
   const basicHtml = renderBasicListBlock(
@@ -211,7 +192,7 @@ function renderProviderFlatResults(
     return `
     <div class="content-section search-flat-results" data-surface="search-flat" data-search-phase="region" data-guest-landing="1">
       ${renderSectionTitleBar({ ...basicHeading, locationLabel: loc })}
-      ${renderGuestVacantBasicList(kind)}
+      ${renderGuestVacantBasicList()}
     </div>`;
   }
 
@@ -264,7 +245,7 @@ function renderStudentTierResults(items, opts = {}, sectionTag = '', mode = 'sea
     return `
       <div class="content-section search-tier-results" data-surface="student-blind" data-guest-landing="1">
         ${renderSectionTitleBar({ ...SECTION_HEADINGS.students, locationLabel: sectionTag || '' })}
-        ${renderGuestVacantBasicList('student')}
+        ${renderGuestVacantBasicList()}
       </div>`;
   }
 

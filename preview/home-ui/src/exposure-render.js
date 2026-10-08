@@ -54,8 +54,6 @@ import {
   renderPromoBadgeRow,
   renderTrustBadgeRow,
 } from './card-visual.js';
-import { buildStudyRoomSampleItem, buildTutorSampleItem } from './home-card-samples/presets.js';
-import { readGuestBaseline } from '../../shared/location-display.js';
 
 function esc(s) {
   if (s == null || s === '') return '';
@@ -160,17 +158,7 @@ export function renderItemActions(opts = {}) {
     review_count = 0,
     message_count = 0,
     compare_count = 0,
-    inert = false,
   } = opts;
-  if (inert) {
-    const rail = ['👍', '💬', '♡', '⇄', '✉']
-      .map(
-        (icon) =>
-          `<button type="button" class="item-actions__btn" disabled aria-disabled="true" tabindex="-1" title="예시"><span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count"><span class="item-actions__count-empty">없음</span></span></button>`,
-      )
-      .join('');
-    return `<div class="card-visual__rail" data-expo-sample-rail="1" aria-hidden="true"><div class="card-stats">${rail}</div></div>`;
-  }
   const kind = compareKind;
   const wished = !guest && itemId != null && isWishlisted(kind, itemId);
   const inCompare = !guest && itemId != null && isInCompare(kind, itemId);
@@ -304,9 +292,6 @@ function renderMediaBlock(image_path, alt, ratio, zones = {}, opts = {}) {
   if (zones.mid) parts.push(`<div class="expo-media-overlay__mid">${zones.mid}</div>`);
   if (zones.bl) parts.push(`<div class="expo-media-overlay__bl">${zones.bl}</div>`);
   if (zones.br) parts.push(`<div class="expo-media-overlay__br">${zones.br}</div>`);
-  if (zones.sample) {
-    parts.push(`<div class="expo-media-overlay__sample">${sampleStampHtml()}</div>`);
-  }
   const overlay = parts.length
     ? `<div class="expo-media-overlay" aria-hidden="false">${parts.join('')}</div>`
     : '';
@@ -324,51 +309,7 @@ function listingImage(item, ratio) {
   return item.image_path_basic || item.image_path || '';
 }
 
-function isVacantSample(item) {
-  return item?._vacantSample === true;
-}
-
-function sampleStampHtml() {
-  return `<span class="expo-sample-stamp">샘플</span>`;
-}
-
-/** 실점유 0 전용. 풀에 넣지 않는다. 게스트 샘플 지역은 게스트 기준 지역과 같다. */
-function vacantStudyRoomSample(tier, guest = false) {
-  const item = buildStudyRoomSampleItem(tier);
-  item.id = `vacant-sample-${tier}`;
-  item._vacantSample = true;
-  item.study_room_name = '샘플 공부방';
-  item.location_label = guest ? readGuestBaseline().room : '가상';
-  return item;
-}
-
-/** 실점유 0 전용. 풀에 넣지 않는다. 게스트 샘플 지역은 게스트 기준 지역과 같다. */
-function vacantTutorSample(tier, guest = false) {
-  const item = buildTutorSampleItem(tier);
-  item.id = `vacant-tutor-sample-${tier}`;
-  item._vacantSample = true;
-  item.tutor_display_name = '샘플 과외쌤';
-  item.location_label = guest ? readGuestBaseline().tutor : '가상';
-  return item;
-}
-
-/** 게스트 학생 실등록 0. 티저는 student-blind-teaser. */
-function vacantStudentSample() {
-  return {
-    id: 'vacant-student-sample',
-    _vacantSample: true,
-    public_display_name: '김민수',
-    grade_level: '중2',
-    subject_label: '수학',
-    location_label: readGuestBaseline().student,
-    preferred_lesson_type: 'tutor',
-    preferred_fee_amount: 500000,
-    budget_amount: 500000,
-  };
-}
-
 function cardIdentityAttrs(item, kind) {
-  if (isVacantSample(item)) return 'data-expo-sample="1" data-expo-virtual="1"';
   return `data-provider-id="${item.id}" data-provider-kind="${kind}"`;
 }
 
@@ -379,7 +320,6 @@ function renderStudyRoomMediaOverlay(item) {
     'prime',
     {
       tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
-      sample: isVacantSample(item),
     },
     { roomDefault: true },
   );
@@ -392,7 +332,6 @@ function renderPickStudyRoomMedia(item) {
     'pick',
     {
       tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
-      sample: isVacantSample(item),
     },
     { roomDefault: true },
   );
@@ -449,7 +388,6 @@ function renderTutorFeeOverlay(item) {
 function renderTutorMediaOverlay(item, ratio = 'prime') {
   return renderMediaBlock(item.image_path, item.tutor_display_name, ratio, {
     tl: `<span class="expo-overlay-val">${esc(item.location_label)}</span>`,
-    sample: isVacantSample(item),
     bl: renderTutorOverlayBottomGrid(item),
   });
 }
@@ -568,7 +506,7 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
 function renderPrimeStudyRoom(item, actions, opts) {
   const rows = studyRoomTableRows(item, { showIntro: true, featureMax: 3 }, actions);
   return `
-    <article class="expo-card expo-card--prime expo-card--study_room${isVacantSample(item) ? ' expo-card--sample' : ''}" ${cardIdentityAttrs(item, 'study_room')}>
+    <article class="expo-card expo-card--prime expo-card--study_room" ${cardIdentityAttrs(item, 'study_room')}>
       ${renderStudyRoomMediaOverlay(item)}
       ${renderExpoTable(rows, 'expo-tbl--card')}
     </article>`;
@@ -577,7 +515,7 @@ function renderPrimeStudyRoom(item, actions, opts) {
 function renderPrimeTutor(item, actions, opts) {
   const rows = tutorTableRows(item, { showIntro: true, featureMax: 3 }, actions);
   return `
-    <article class="expo-card expo-card--prime expo-card--tutor${isVacantSample(item) ? ' expo-card--sample' : ''}" ${cardIdentityAttrs(item, 'tutor')}>
+    <article class="expo-card expo-card--prime expo-card--tutor" ${cardIdentityAttrs(item, 'tutor')}>
       ${renderTutorMediaOverlay(item, 'prime')}
       ${renderExpoTable(rows, 'expo-tbl--card')}
     </article>`;
@@ -586,7 +524,7 @@ function renderPrimeTutor(item, actions, opts) {
 function renderPickStudyRoom(item, actions, opts) {
   const rows = studyRoomTableRows(item, { showIntro: false, featureMax: 1, stack: true }, actions);
   return `
-    <article class="expo-card expo-card--pick expo-card--study_room${isVacantSample(item) ? ' expo-card--sample' : ''}" ${cardIdentityAttrs(item, 'study_room')}>
+    <article class="expo-card expo-card--pick expo-card--study_room" ${cardIdentityAttrs(item, 'study_room')}>
       ${renderPickStudyRoomMedia(item)}
       ${renderExpoTable(rows, 'expo-tbl--card expo-tbl--compact')}
     </article>`;
@@ -595,7 +533,7 @@ function renderPickStudyRoom(item, actions, opts) {
 function renderPickTutor(item, actions, opts) {
   const rows = tutorTableRows(item, { showIntro: false, featureMax: 1, verifyMax: 1, stack: true }, actions);
   return `
-    <article class="expo-card expo-card--pick expo-card--tutor${isVacantSample(item) ? ' expo-card--sample' : ''}" ${cardIdentityAttrs(item, 'tutor')}>
+    <article class="expo-card expo-card--pick expo-card--tutor" ${cardIdentityAttrs(item, 'tutor')}>
       ${renderTutorMediaOverlay(item, 'pick')}
       ${renderExpoTable(rows, 'expo-tbl--card expo-tbl--compact')}
     </article>`;
@@ -606,13 +544,11 @@ function renderPickTutor(item, actions, opts) {
  * @param {'prime' | 'pick'} tier
  */
 export function renderExposureBox(kind, tier, item, slotLabel, opts = {}) {
-  const sample = isVacantSample(item);
   const actionOpts = actionOptsFromItem(item, {
     guest: opts.guest,
     compareKind: kind,
-    showCompare: opts.showCompare !== false && !sample,
-    showWish: opts.showWish !== false && !sample,
-    inert: sample,
+    showCompare: opts.showCompare !== false,
+    showWish: opts.showWish !== false,
   });
   const actions = renderItemActions(actionOpts);
   if (tier === 'prime') {
@@ -652,22 +588,16 @@ export function renderEmptyBasicPromo() {
     </article>`;
 }
 
-/** 실등록 0 — 샘플 1 + 빈 1. 풀에 넣지 않는다. */
-export function renderGuestVacantBasicList(kind) {
-  const sample =
-    kind === 'student'
-      ? vacantStudentSample()
-      : kind === 'tutor'
-        ? vacantTutorSample('basic', true)
-        : vacantStudyRoomSample('basic', true);
+/** 실등록 0 — 빈 칸 2. */
+export function renderGuestVacantBasicList() {
   return `
     <div class="browse-list browse-list--table" role="list">
-      ${renderBasicRow(kind, sample, { guest: true })}
+      ${renderEmptyBasicPromo()}
       ${renderEmptyBasicPromo()}
     </div>`;
 }
 
-/** 픽 빈 슬롯 — 실픽 카드와 같은 줄. 샘플로 채우지 않는다. */
+/** 픽 빈 슬롯 — 실픽 카드와 같은 줄. */
 export function renderEmptyPickPromo(kind) {
   const copy = getPrimeEmptyCopy(kind);
   const tone = kind === 'tutor' ? 'tutor' : 'study_room';
@@ -693,7 +623,7 @@ export function renderEmptyPickPromo(kind) {
 export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
   const { primeSlots, pickRotationMinutes } = getExposurePageSizes();
 
-  if (kind === 'tutor' && opts.vacantSamples !== true) {
+  if (kind === 'tutor' && opts.vacantFill !== true) {
     const pool = occupiedItems;
     const rotated = rotateSetPool(pool, primeSlots, pickRotationMinutes);
     const listId = opts.listId || 'prime_tutor';
@@ -702,13 +632,7 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
     const guestPad =
       opts.guest === true ? Math.max(0, primeSlots - pageItems.length) : 0;
     let cards;
-    if (!pageItems.length && opts.guest === true) {
-      const sample = vacantTutorSample('prime', true);
-      cards = [
-        renderExposureBox(kind, 'prime', sample, '', opts),
-        ...Array.from({ length: primeSlots - 1 }, () => renderEmptyPrimePromo(kind)),
-      ].join('');
-    } else if (!pageItems.length) {
+    if (!pageItems.length) {
       cards = Array.from({ length: primeSlots }, () => renderEmptyPrimePromo(kind)).join('');
     } else {
       cards = [
@@ -724,10 +648,6 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
   }
 
   const slots = buildPrimeSlotArray(occupiedItems, primeSlots);
-  if (opts.vacantSamples === true && occupiedItems.length === 0) {
-    const guest = opts.guest === true;
-    slots[0] = kind === 'tutor' ? vacantTutorSample('prime', guest) : vacantStudyRoomSample('prime', guest);
-  }
   const cards = slots
     .map((item) => {
       if (!item) return renderEmptyPrimePromo(kind);
@@ -756,16 +676,14 @@ function renderHcardMetaItem(label, value) {
 }
 
 function renderBasicStudyRoomRow(item, opts) {
-  const sampleRow = isVacantSample(item);
   const actionOpts = actionOptsFromItem(item, {
     guest: opts.guest,
     compareKind: 'study_room',
-    showCompare: opts.showCompare !== false && !sampleRow,
-    showWish: opts.showWish !== false && !sampleRow,
-    inert: sampleRow,
+    showCompare: opts.showCompare !== false,
+    showWish: opts.showWish !== false,
   });
-  const actions = sampleRow ? '' : renderItemActions(actionOpts);
-  const locationLabel = opts.guest && !sampleRow
+  const actions = renderItemActions(actionOpts);
+  const locationLabel = opts.guest
     ? coarseRegionForGuest(item.location_label)
     : item.location_label;
 
@@ -796,11 +714,9 @@ function renderBasicStudyRoomRow(item, opts) {
 
   const slogan = item.slogan || '';
   const badgeLayers = renderCardBadgeLayers('study_room', item);
-  const sample = isVacantSample(item);
   return `
-    <article class="expo-basic expo-basic--study_room expo-hcard${sample ? ' expo-card--sample' : ''}" ${sample ? 'data-expo-sample="1"' : `data-provider-id="${item.id}" data-provider-kind="study_room"`}>
+    <article class="expo-basic expo-basic--study_room expo-hcard" data-provider-id="${item.id}" data-provider-kind="study_room">
       <div class="expo-hcard__media-wrap">
-        ${sample ? sampleStampHtml() : ''}
         ${renderMedia(listingImage(item, 'list'), item.study_room_name, 'list', { roomDefault: true })}
         ${badgeLayers}
       </div>
@@ -823,26 +739,24 @@ function renderBasicStudyRoomRow(item, opts) {
       </div>
       <div class="expo-hcard__side">
         <div class="expo-hcard__actions">${actions}</div>
-        ${sample ? '' : `<button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="study_room" data-search-id="${item.id}">상세</button>`}
+        <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="study_room" data-search-id="${item.id}">상세</button>
       </div>
     </article>`;
 }
 
 function renderBasicTutorRow(item, opts) {
-  const sampleRow = isVacantSample(item);
   const actionOpts = actionOptsFromItem(item, {
     guest: opts.guest,
     compareKind: 'tutor',
-    showCompare: opts.showCompare !== false && !sampleRow,
-    showWish: opts.showWish !== false && !sampleRow,
-    inert: sampleRow,
+    showCompare: opts.showCompare !== false,
+    showWish: opts.showWish !== false,
   });
-  const actions = sampleRow ? '' : renderItemActions(actionOpts);
+  const actions = renderItemActions(actionOpts);
   const schedule =
     item.lessons_per_week && item.minutes_per_lesson
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
       : '—';
-  const locationLabel = opts.guest && !sampleRow
+  const locationLabel = opts.guest
     ? coarseRegionForGuest(item.location_label)
     : item.location_label;
 
@@ -881,11 +795,9 @@ function renderBasicTutorRow(item, opts) {
     ? `<span class="expo-hcard__gender">${esc(gender)}</span>${esc(item.tutor_display_name || '')}`
     : esc(item.tutor_display_name || '');
   const badgeLayers = renderCardBadgeLayers('tutor', item);
-  const sample = isVacantSample(item);
   return `
-    <article class="expo-basic expo-basic--tutor expo-hcard${sample ? ' expo-card--sample' : ''}" ${sample ? 'data-expo-sample="1"' : `data-provider-id="${item.id}" data-provider-kind="tutor"`}>
+    <article class="expo-basic expo-basic--tutor expo-hcard" data-provider-id="${item.id}" data-provider-kind="tutor">
       <div class="expo-hcard__media-wrap">
-        ${sample ? sampleStampHtml() : ''}
         ${renderMedia(item.image_path, item.tutor_display_name, 'list')}
         ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
         ${badgeLayers}
@@ -913,7 +825,7 @@ function renderBasicTutorRow(item, opts) {
       </div>
       <div class="expo-hcard__side">
         <div class="expo-hcard__actions">${actions}</div>
-        ${sample ? '' : `<button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="tutor" data-search-id="${item.id}">상세</button>`}
+        <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="tutor" data-search-id="${item.id}">상세</button>
       </div>
     </article>`;
 }
@@ -941,15 +853,13 @@ function renderBasicStudentRow(item, opts) {
     : opts.viewerRole || (opts.guest ? 'guest' : navRoleFromAuthUser(getAuthUser()));
   const isGuest = !selfView && Boolean(opts.guest || viewerRole === 'guest');
   const maskedName = maskPublicDisplayName(item.public_display_name);
-  const sampleRow = isVacantSample(item);
-  const locationLabel = isGuest && !sampleRow
+  const locationLabel = isGuest
     ? coarseRegionForGuest(item.location_label)
     : item.location_label;
 
   if (opts.layout === 'table') {
     if (isGuest) {
       const t = guestStudentTeaserFields(item);
-      if (sampleRow) t.region = item.location_label;
       const meta = [t.band, t.subject, t.region, t.budget].filter((x) => x && x !== '—').join(' · ');
       const hopeLine = t.hope || t.chip;
       return `
@@ -1010,11 +920,9 @@ function renderBasicStudentRow(item, opts) {
   if (isGuest) {
     const t = guestStudentTeaserFields(item);
     const hopeLine = t.hope || t.chip;
-    const sample = isVacantSample(item);
     return `
-    <article class="expo-basic expo-basic--student expo-hcard${sample ? ' expo-card--sample' : ''}" ${sample ? 'data-expo-sample="1"' : `data-student-id="${item.id}" data-action="open-student-detail"`}>
+    <article class="expo-basic expo-basic--student expo-hcard" data-student-id="${item.id}" data-action="open-student-detail">
       <div class="expo-hcard__media-wrap">
-        ${sample ? sampleStampHtml() : ''}
         ${renderMedia(item.image_path, t.name || '학생', 'list')}
         ${t.band ? `<span class="expo-hcard__badge">${esc(t.band)}</span>` : ''}
       </div>
@@ -1036,7 +944,7 @@ function renderBasicStudentRow(item, opts) {
         <div class="expo-hcard__actions">
           <button type="button" class="btn btn--secondary btn--sm" data-action="login-gate" data-gate="student" data-gate-label="학생상세">로그인하고 보기</button>
         </div>
-        ${sample ? '' : `<button type="button" class="expo-hcard__detail" data-action="open-student-detail" data-student-id="${item.id}">상세</button>`}
+        <button type="button" class="expo-hcard__detail" data-action="open-student-detail" data-student-id="${item.id}">상세</button>
       </div>
     </article>`;
   }
@@ -1106,7 +1014,7 @@ function renderBasicRow(kind, item, opts) {
  * @param {'study_room'|'tutor'|'student'} kind
  * @param {object[]} items
  * @param {{ tailHtml?: string }} [opts]
- * tailHtml 는 같은 그리드의 뒤 칸(샘플 오른쪽 빈카드 등). 목록 앞에 두지 않는다.
+ * tailHtml 는 같은 그리드의 뒤 칸(빈카드 등). 목록 앞에 두지 않는다.
  */
 export function renderBrowseList(kind, items, opts = {}) {
   return `
@@ -1123,17 +1031,10 @@ export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opt
   const page = opts.page ?? getGuestListPage(listId);
   const pageItems = slicePage(pickPool, page, pickSetSize);
   const vacantPick =
-    opts.vacantSamples === true && (kind === 'study_room' || kind === 'tutor') && pickPool.length === 0;
+    opts.vacantFill === true && (kind === 'study_room' || kind === 'tutor') && pickPool.length === 0;
   const pickRowSlots = 5;
-  const guest = opts.guest === true;
-  const vacantPickSample =
-    kind === 'tutor' ? vacantTutorSample('pick', guest) : vacantStudyRoomSample('pick', guest);
   const cards = vacantPick
-    ? Array.from({ length: pickRowSlots }, (_, index) =>
-        index === 0
-          ? renderExposureBox(kind, 'pick', vacantPickSample, '', opts)
-          : renderEmptyPickPromo(kind),
-      ).join('')
+    ? Array.from({ length: pickRowSlots }, () => renderEmptyPickPromo(kind)).join('')
     : pageItems.map((item) => renderExposureBox(kind, 'pick', item, '', opts)).join('');
   const emptyNote = cards ? '' : '<p class="mypage-muted">픽 노출 후보가 없습니다.</p>';
 
@@ -1163,7 +1064,7 @@ export function renderGuestPaginatedListBlock(kind, listId, headingCfg, allItems
   const page = opts.page ?? getGuestListPage(listId);
   const pageItems = slicePage(pool, page, basicPageSize);
   const sortBar = renderListSortSelect(kind, sort, { listId, mode: sortMode });
-  const guestVacant = opts.guest === true && opts.vacantSamples === true && pool.length === 0;
+  const guestVacant = opts.guest === true && opts.vacantFill === true && pool.length === 0;
 
   return `
     <div class="list-subsection" data-guest-list="${listId}">
@@ -1171,7 +1072,7 @@ export function renderGuestPaginatedListBlock(kind, listId, headingCfg, allItems
         locationLabel: headingCfg.locationLabel,
         sortHtml: sortBar,
       })}
-      ${guestVacant ? renderGuestVacantBasicList(kind) : renderBrowseList(kind, pageItems, { guest: opts.guest ?? true, ...opts })}
+      ${guestVacant ? renderGuestVacantBasicList() : renderBrowseList(kind, pageItems, { guest: opts.guest ?? true, ...opts })}
       ${guestVacant ? '' : renderListPagination(listId, pool.length, page, basicPageSize)}
     </div>
   `;

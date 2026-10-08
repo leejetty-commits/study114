@@ -337,20 +337,6 @@ textarea:focus,
   align-self: center;
 }
 
-.expo-sample-stamp {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 3.25rem;
-  padding: 0.2rem 0.55rem;
-  border-radius: 0.25rem;
-  background: rgba(15, 23, 42, 0.72);
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
 .state-card__mark {
   width: 1.25rem;
   height: 1.25rem;
