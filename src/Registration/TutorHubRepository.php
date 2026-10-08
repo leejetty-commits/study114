@@ -100,6 +100,10 @@ final class TutorHubRepository
             'intro_short'              => $row['intro_short'] !== null ? (string) $row['intro_short'] : null,
             'intro_long'               => $row['intro_long'] !== null ? (string) $row['intro_long'] : null,
             'feature_1'                => $row['feature_1'] !== null ? (string) $row['feature_1'] : null,
+            'feature_2'                => $row['feature_2'] !== null ? (string) $row['feature_2'] : null,
+            'feature_3'                => $row['feature_3'] !== null ? (string) $row['feature_3'] : null,
+            'slogan'                   => $row['slogan'] !== null ? (string) $row['slogan'] : null,
+            'school_level'             => $this->primarySchoolLevel($tutorId),
             'university_name'          => $row['university_name'] !== null ? (string) $row['university_name'] : null,
             'major_name'               => $row['major_name'] !== null ? (string) $row['major_name'] : null,
             'university_status'        => $row['university_status'] !== null ? (string) $row['university_status'] : null,
@@ -222,18 +226,26 @@ final class TutorHubRepository
         return $val !== false ? (string) $val : '';
     }
 
-    private function gradeBand(int $tutorId): ?string
+    /** 대표 과목 행의 학교급 코드. 없으면 ''. */
+    private function primarySchoolLevel(int $tutorId): string
     {
         $stmt = $this->pdo->prepare(
-            'SELECT school_level FROM tutor_subject_targets WHERE tutor_id = ? LIMIT 1'
+            'SELECT school_level FROM tutor_subject_targets WHERE tutor_id = ? ORDER BY is_primary DESC, id ASC LIMIT 1'
         );
         $stmt->execute([$tutorId]);
         $val = $stmt->fetchColumn();
-        if ($val === false) {
+
+        return $val !== false ? (string) $val : '';
+    }
+
+    private function gradeBand(int $tutorId): ?string
+    {
+        $val = $this->primarySchoolLevel($tutorId);
+        if ($val === '') {
             return null;
         }
 
-        return match ((string) $val) {
+        return match ($val) {
             'elementary' => '초등',
             'middle'     => '중등',
             'high'       => '고등',

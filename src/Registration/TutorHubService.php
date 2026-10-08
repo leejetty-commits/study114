@@ -6,6 +6,7 @@ namespace Study114\Registration;
 
 use InvalidArgumentException;
 use Study114\Database\Connection;
+use Study114\Tutor\TutorBasicFields;
 use Study114\Tutor\TutorDetailCompletionEvaluator;
 
 /** 21장 P21 — tutors 허브 API */
@@ -95,20 +96,14 @@ final class TutorHubService
      */
     private function publishMissing(array $tutor): array
     {
-        $missing = [];
+        $missing = TutorBasicFields::missingForTutor(Connection::get(), (int) $tutor['id']);
         $need = static function (bool $ok, string $label) use (&$missing): void {
             if (!$ok) {
                 $missing[] = $label;
             }
         };
 
-        $need(!empty($tutor['tutor_display_name']), '표시명');
-        $need($tutor['has_primary_region'] && !empty($tutor['primary_region_label']), '대표 과외지역');
-        $need($tutor['has_primary_subject'] && !empty($tutor['main_subject_note']), '주력과목');
-        $need($tutor['has_lesson_places'], '강의장소');
-        $need(!empty($tutor['preferred_fee_amount']), '과외비');
         $need($tutor['detail_completion_status'] === 'expanded_complete', '상세등록 완료');
-        $need($tutor['has_profile_image'], '프로필 이미지');
         $need(!empty($tutor['intro_short']) || !empty($tutor['intro_long']), '소개문');
 
         return $missing;

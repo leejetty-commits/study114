@@ -170,7 +170,7 @@ final class TutorRegisterService
 
             match ($step) {
 
-                'basic'    => $this->saveBasic($pdo, $tutorId, $input),
+                'basic'    => $this->saveBasic($pdo, $tutorId, $input, $createdNow),
 
                 'regions'  => $this->saveRegions($pdo, $tutorId, $input),
 
@@ -188,7 +188,7 @@ final class TutorRegisterService
 
             }
 
-            if ($step === 'basic') {
+            if ($step === 'basic' && isset($input['gender']) && (string) $input['gender'] !== '') {
                 \Study114\Auth\ProfileGenderSync::sync($userId, $input);
             }
 
@@ -410,66 +410,24 @@ final class TutorRegisterService
 
 
 
-    /** @param array<string, mixed> $input */
-
-    private function saveBasic(PDO $pdo, int $tutorId, array $input): void
-
+    /**
+     * 기본정보 = TutorBasicFields 필수 항목. 과외지역 1은 이 요청의 saved_regions 또는 저장된 행으로 본다.
+     * 프로필 사진은 /api/tutor/profile-image.php 로 올린다. 이 요청으로 행을 처음 만들 때만 사진 없이 저장하고,
+     * 화면이 저장 직후 같은 화면에서 올린다. 소개·연령대 등 기본정보가 아닌 칸은 건드리지 않는다.
+     *
+     * @param array<string, mixed> $input
+     */
+    private function saveBasic(PDO $pdo, int $tutorId, array $input, bool $createdNow): void
     {
-
-        $stmt = $pdo->prepare(
-
-            'UPDATE tutors SET
-
-                tutor_display_name = ?,
-
-                main_subject_note = COALESCE(?, main_subject_note),
-
-                slogan = ?,
-
-                intro_short = ?,
-
-                intro_long = ?,
-
-                student_gender_group = ?,
-
-                student_count_group = ?,
-
-                age_band = ?
-
-             WHERE id = ?'
-
+        $hasRegion = array_key_exists('saved_regions', $input)
+            ? $this->inputHasTutorSlot1($input)
+            : TutorBasicFields::hasPrimaryRegion($pdo, $tutorId);
+        $values = TutorBasicFields::normalizeInput(
+            $input,
+            $hasRegion,
+            $createdNow || TutorBasicFields::hasProfileImage($pdo, $tutorId)
         );
-
-        $mainSubject = isset($input['main_subject_note']) && (string) $input['main_subject_note'] !== ''
-            ? $this->requireString($input, 'main_subject_note')
-            : null;
-
-        $stmt->execute([
-
-            $this->requireString($input, 'tutor_display_name'),
-
-            $mainSubject,
-
-            $this->optionalString($input, 'slogan'),
-
-            $this->optionalString($input, 'intro_short'),
-
-            $this->optionalString($input, 'intro_long'),
-
-            $this->requireEnum($input, 'student_gender_group', ['male', 'female', 'mixed']),
-
-            $this->requireEnum($input, 'student_count_group', ['solo', 'two', 'three', 'four_plus']),
-
-            $this->optionalEnum($input, 'age_band', [
-
-                'early_20s', 'late_20s', 'early_30s', 'late_30s', 'early_40s', 'late_40s', 'over_50',
-
-            ]),
-
-            $tutorId,
-
-        ]);
-
+        TutorBasicFields::write($pdo, $tutorId, $values);
     }
 
 
@@ -548,144 +506,80 @@ final class TutorRegisterService
 
 
 
-    /** @param array<string, mixed> $input */
-
+    /**
+     * 상세 1(수업 상세). 기본정보 항목(과외비·주 회수·1회 수업시간·강의장소·원생수·대표 과목)은 basic 단계만 저장한다.
+     * 보낸 칸만 고친다. 보내지 않은 칸은 지우지 않는다.
+     *
+     * @param array<string, mixed> $input
+     */
     private function saveLesson(PDO $pdo, int $tutorId, array $input): void
-
     {
+        $set = [];
+        $params = [];
+        if (array_key_exists('age_band', $input)) {
+            $set[] = 'age_band = ?';
+            $params[] = $this->optionalEnum($input, 'age_band', [
+                'early_20s', 'late_20s', 'early_30s', 'late_30s', 'early_40s', 'late_40s', 'over_50',
+            ]);
+        }
+        if (array_key_exists('fee_basis_type', $input)) {
+            $set[] = 'fee_basis_type = ?';
+            $params[] = $this->optionalEnum($input, 'fee_basis_type', ['monthly_by_weekly_schedule', 'monthly_by_total_sessions']);
+        }
+        if (array_key_exists('monthly_session_count', $input)) {
+            $set[] = 'monthly_session_count = ?';
+            $params[] = $this->optionalInt($input, 'monthly_session_count');
+        }
+        if (array_key_exists('fee_description', $input)) {
+            $set[] = 'fee_description = ?';
+            $params[] = $this->optionalString($input, 'fee_description');
+        }
+        if ($set !== []) {
+            $params[] = $tutorId;
+            $pdo->prepare('UPDATE tutors SET ' . implode(', ', $set) . ' WHERE id = ?')->execute($params);
+        }
 
-        $stmt = $pdo->prepare(
-
-            'UPDATE tutors SET
-
-                main_subject_note = ?,
-
-                student_gender_group = COALESCE(?, student_gender_group),
-
-                student_count_group = COALESCE(?, student_count_group),
-
-                age_band = COALESCE(?, age_band),
-
-                preferred_fee_amount = ?,
-
-                fee_basis_type = ?,
-
-                lessons_per_week = ?,
-
-                monthly_session_count = ?,
-
-                minutes_per_lesson = ?,
-
-                fee_description = ?
-
-             WHERE id = ?'
-
-        );
-
-        $stmt->execute([
-
-            $this->requireString($input, 'main_subject_note'),
-
-            isset($input['student_gender_group']) && (string) $input['student_gender_group'] !== ''
-                ? $this->requireEnum($input, 'student_gender_group', ['male', 'female', 'mixed'])
-                : null,
-
-            isset($input['student_count_group']) && (string) $input['student_count_group'] !== ''
-                ? $this->requireEnum($input, 'student_count_group', ['solo', 'two', 'three', 'four_plus'])
-                : null,
-
-            isset($input['age_band']) && (string) $input['age_band'] !== ''
-                ? $this->optionalEnum($input, 'age_band', [
-                    'early_20s', 'late_20s', 'early_30s', 'late_30s', 'early_40s', 'late_40s', 'over_50',
-                ])
-                : null,
-
-            $this->requirePositiveInt($input, 'preferred_fee_amount'),
-
-            $this->requireEnum($input, 'fee_basis_type', ['monthly_by_weekly_schedule', 'monthly_by_total_sessions']),
-
-            $this->optionalInt($input, 'lessons_per_week'),
-
-            $this->optionalInt($input, 'monthly_session_count'),
-
-            $this->optionalInt($input, 'minutes_per_lesson'),
-
-            $this->optionalString($input, 'fee_description'),
-
-            $tutorId,
-
-        ]);
-
-
-
-        $this->syncSubjects($pdo, $tutorId, $input);
-
-        $this->syncLessonPlaces($pdo, $tutorId, $input);
-
+        if (array_key_exists('subjects', $input)) {
+            $this->syncSubjects($pdo, $tutorId, $input);
+        }
     }
 
 
 
-    /** @param array<string, mixed> $input */
-
+    /**
+     * 상세 2(학력·경력·특징 2·3). 특징 1은 basic 단계만 저장한다.
+     * 보낸 칸만 고친다. 보내지 않은 칸은 지우지 않는다.
+     *
+     * @param array<string, mixed> $input
+     */
     private function saveCareer(PDO $pdo, int $tutorId, array $input): void
-
     {
+        $columns = [
+            'university_name'    => fn () => $this->optionalString($input, 'university_name'),
+            'major_name'         => fn () => $this->optionalString($input, 'major_name'),
+            'university_status'  => fn () => $this->optionalEnum($input, 'university_status', ['enrolled', 'leave', 'completed', 'graduated']),
+            'career_year_band'   => fn () => $this->optionalEnum($input, 'career_year_band', ['y1_3', 'y4_6', 'y7_10', 'y10_plus']),
+            'main_material_note' => fn () => $this->optionalString($input, 'main_material_note'),
+            'feature_2'          => fn () => $this->optionalString($input, 'feature_2'),
+            'feature_3'          => fn () => $this->optionalString($input, 'feature_3'),
+            'proof_document_available' => fn () => !empty($input['proof_document_available']) ? 1 : 0,
+        ];
+        $set = [];
+        $params = [];
+        foreach ($columns as $column => $value) {
+            if (array_key_exists($column, $input)) {
+                $set[] = $column . ' = ?';
+                $params[] = $value();
+            }
+        }
+        if ($set !== []) {
+            $params[] = $tutorId;
+            $pdo->prepare('UPDATE tutors SET ' . implode(', ', $set) . ' WHERE id = ?')->execute($params);
+        }
 
-        $stmt = $pdo->prepare(
-
-            'UPDATE tutors SET
-
-                university_name = ?,
-
-                major_name = ?,
-
-                university_status = ?,
-
-                career_year_band = ?,
-
-                main_material_note = ?,
-
-                feature_1 = ?,
-
-                feature_2 = ?,
-
-                feature_3 = ?,
-
-                proof_document_available = ?
-
-             WHERE id = ?'
-
-        );
-
-        $stmt->execute([
-
-            $this->optionalString($input, 'university_name'),
-
-            $this->optionalString($input, 'major_name'),
-
-            $this->optionalEnum($input, 'university_status', ['enrolled', 'leave', 'completed', 'graduated']),
-
-            $this->optionalEnum($input, 'career_year_band', ['y1_3', 'y4_6', 'y7_10', 'y10_plus']),
-
-            $this->optionalString($input, 'main_material_note'),
-
-            $this->optionalString($input, 'feature_1'),
-
-            $this->optionalString($input, 'feature_2'),
-
-            $this->optionalString($input, 'feature_3'),
-
-            !empty($input['proof_document_available']) ? 1 : 0,
-
-            $tutorId,
-
-        ]);
-
-
-
-        $this->syncStyleBadges($pdo, $tutorId, $input);
-
+        if (array_key_exists('teaching_style_badges', $input)) {
+            $this->syncStyleBadges($pdo, $tutorId, $input);
+        }
     }
 
 
@@ -821,141 +715,45 @@ final class TutorRegisterService
 
 
 
-    /** @param array<string, mixed> $input */
-
+    /**
+     * 추가 과목 행만 다시 쓴다. 대표 과목 행(주력과목·대상 학교급)은 basic 단계(TutorBasicFields)만 고친다.
+     *
+     * @param array<string, mixed> $input
+     */
     private function syncSubjects(PDO $pdo, int $tutorId, array $input): void
-
     {
-
         $subjects = $input['subjects'] ?? [];
-
-        if (!is_array($subjects) || $subjects === []) {
-
-            $main = $this->requireString($input, 'main_subject_note');
-
-            $subjects = [['subject_name' => $main, 'school_level' => 'middle', 'is_primary' => true]];
-
+        if (!is_array($subjects)) {
+            $subjects = [];
         }
 
-
-
-        $pdo->prepare('DELETE FROM tutor_subject_targets WHERE tutor_id = ?')->execute([$tutorId]);
-
-
+        $pdo->prepare('DELETE FROM tutor_subject_targets WHERE tutor_id = ? AND is_primary = 0')->execute([$tutorId]);
 
         foreach ($subjects as $sub) {
-
             if (!is_array($sub)) {
-
                 continue;
-
             }
-
-            $nameRaw = isset($sub['subject_name']) ? trim((string) $sub['subject_name']) : '';
-
-            if ($nameRaw === '') {
-
+            $name = isset($sub['subject_name']) ? trim((string) $sub['subject_name']) : '';
+            if ($name === '') {
                 continue;
-
             }
-
-            $name = $nameRaw;
-
             $level = $this->requireEnum($sub, 'school_level', $this->schoolLevelCodes());
-
             $masterId = isset($sub['subject_master_id']) && $sub['subject_master_id'] !== ''
-
                 ? (int) $sub['subject_master_id']
-
                 : $this->findSubjectMasterId($pdo, $name);
 
-
-
             $pdo->prepare(
-
                 'INSERT INTO tutor_subject_targets
-
                  (tutor_id, subject_name, school_level, grade_band, subject_master_id, is_primary)
-
-                 VALUES (?, ?, ?, ?, ?, ?)'
-
+                 VALUES (?, ?, ?, ?, ?, 0)'
             )->execute([
-
                 $tutorId,
-
                 $name,
-
                 $level,
-
                 $this->optionalString($sub, 'grade_band'),
-
                 $masterId,
-
-                !empty($sub['is_primary']) ? 1 : 0,
-
-            ]);
-
-        }
-
-        // 모두 빈 행이면 주력과목으로 1건 보장
-        $countStmt = $pdo->prepare('SELECT COUNT(*) FROM tutor_subject_targets WHERE tutor_id = ?');
-        $countStmt->execute([$tutorId]);
-        if ((int) $countStmt->fetchColumn() === 0) {
-            $main = $this->requireString($input, 'main_subject_note');
-            $pdo->prepare(
-                'INSERT INTO tutor_subject_targets
-                 (tutor_id, subject_name, school_level, grade_band, subject_master_id, is_primary)
-                 VALUES (?, ?, ?, ?, ?, ?)'
-            )->execute([
-                $tutorId,
-                $main,
-                'middle',
-                null,
-                $this->findSubjectMasterId($pdo, $main),
-                1,
             ]);
         }
-
-    }
-
-
-
-    /** @param array<string, mixed> $input */
-
-    private function syncLessonPlaces(PDO $pdo, int $tutorId, array $input): void
-
-    {
-
-        $places = $input['lesson_places'] ?? [];
-
-        if (!is_array($places)) {
-
-            $places = $places === '' || $places === null ? [] : [$places];
-
-        }
-
-
-
-        $pdo->prepare('DELETE FROM tutor_lesson_places WHERE tutor_id = ?')->execute([$tutorId]);
-
-
-
-        foreach ($places as $place) {
-
-            $place = (string) $place;
-
-            if (!in_array($place, ['student_home_visit', 'public_place', 'tutor_home'], true)) {
-
-                continue;
-
-            }
-
-            $pdo->prepare('INSERT INTO tutor_lesson_places (tutor_id, place_type) VALUES (?, ?)')
-
-                ->execute([$tutorId, $place]);
-
-        }
-
     }
 
 
@@ -1104,6 +902,20 @@ final class TutorRegisterService
 
 
 
+    /** @param list<array{school_level: string, is_primary: bool}> $subjects */
+    private function primarySchoolLevel(array $subjects): string
+    {
+        foreach ($subjects as $s) {
+            if ($s['is_primary'] && in_array($s['school_level'], TutorBasicFields::SCHOOL_LEVELS, true)) {
+                return $s['school_level'];
+            }
+        }
+
+        return '';
+    }
+
+
+
     /** @param array<string, mixed> $row */
 
     private function hydrateTutor(int $tutorId, array $row): array
@@ -1242,9 +1054,11 @@ final class TutorRegisterService
 
             'intro_long'                 => (string) ($row['intro_long'] ?? ''),
 
-            'student_gender_group'       => (string) ($row['student_gender_group'] ?? 'mixed'),
+            'student_gender_group'       => (string) ($row['student_gender_group'] ?? ''),
 
-            'student_count_group'        => (string) ($row['student_count_group'] ?? 'solo'),
+            'student_count_group'        => (string) ($row['student_count_group'] ?? ''),
+
+            'school_level'               => $this->primarySchoolLevel($subjects),
 
             'age_band'                   => (string) ($row['age_band'] ?? ''),
 
@@ -1254,7 +1068,7 @@ final class TutorRegisterService
 
             'preferred_fee_amount'       => $row['preferred_fee_amount'] !== null ? (string) $row['preferred_fee_amount'] : '',
 
-            'fee_basis_type'             => (string) ($row['fee_basis_type'] ?? 'monthly_by_weekly_schedule'),
+            'fee_basis_type'             => (string) ($row['fee_basis_type'] ?? ''),
 
             'lessons_per_week'           => $row['lessons_per_week'] !== null ? (string) $row['lessons_per_week'] : '',
 
@@ -1505,32 +1319,6 @@ final class TutorRegisterService
         }
 
         return $value;
-
-    }
-
-
-
-    /** @param array<string, mixed> $input */
-
-    private function requirePositiveInt(array $input, string $key): int
-
-    {
-
-        if (!isset($input[$key]) || $input[$key] === '') {
-
-            throw new InvalidArgumentException("{$key}: 필수 입력입니다.");
-
-        }
-
-        $n = (int) $input[$key];
-
-        if ($n <= 0) {
-
-            throw new InvalidArgumentException("{$key}: 1 이상 입력해 주세요.");
-
-        }
-
-        return $n;
 
     }
 

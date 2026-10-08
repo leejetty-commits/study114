@@ -156,6 +156,9 @@ final class TutorProfileImageService
         if (!is_array($row)) {
             throw new InvalidArgumentException('사진을 찾을 수 없습니다.');
         }
+        if (count($this->listImages($pdo, $tutorId)) <= 1) {
+            throw new InvalidArgumentException('프로필 사진은 기본정보 필수 항목이라 1장은 남겨야 합니다. 새 사진을 먼저 올린 뒤 지워 주세요.');
+        }
         $pdo->prepare('DELETE FROM tutor_images WHERE id = ? AND tutor_id = ?')->execute([$imageId, $tutorId]);
         $this->unlinkVariants((string) ($row['image_path'] ?? ''));
         $remaining = $this->listImages($pdo, $tutorId);
