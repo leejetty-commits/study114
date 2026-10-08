@@ -2286,6 +2286,10 @@
   color: #1d4ed8;
   background: #eff6ff;
 }
+.my-box__region-pill.is-reselect {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
 .my-box__region-pill.is-active {
   border-color: #1d4ed8;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);

@@ -32,6 +32,25 @@
   border: 1px solid var(--gray-200);
 }
 
+.search-results__hint--reselect {
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  background: #fffbeb;
+  border-radius: 0.5rem;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.search-results__hint--reselect p {
+  margin: 0;
+  color: inherit;
+}
+
 .search-tier-results--empty {
   margin-top: var(--space-4);
 }

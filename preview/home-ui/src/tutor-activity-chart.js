@@ -136,7 +136,7 @@ export function renderTutorActivityBars(opts = {}) {
   const body = source
     .map((row) => {
       if (row.selectable === false) {
-        const editPath = tutorHomeEditRegionPath(row.tutorId);
+        const editPath = tutorHomeEditRegionPath();
         return `
       <div class="act-bars__row act-bars__row--reselect" role="listitem">
         <span class="act-bars__region">${esc(row.label)}${row.primary ? '<em>대표</em>' : ''}</span>

@@ -150,3 +150,12 @@
    - 원인: `tutor-home-seed.js`의 `ensureHomeRegions`에서 옛 id(선택 단위 아님)는 `activityLabelFromRegionId`가 `''`를 돌려줄 수 있어 대표 칸이 아닌 슬롯의 경우 라벨이 빈칸으로 남던 문제.
    - 조치: `selectable === false`이고 `label`이 비어 있는 경우 `label = '옛 지역'`으로 대체하도록 보완.
 
+### 독립 리뷰(Claude Sonnet 4.6) — e583dbe 수정 후 배포: CSS 3건+인자 1건
+
+- 판정: 수정 후 배포 (기능·보안·회귀 이상 없음, CSS 누락 및 인자 정리)
+- 조치 내용:
+  1. `preview/search-ui/src/styles/search.css`: `.search-results__hint--reselect` 스타일 추가 (배경 #fffbeb, 테두리 1px #fde68a, border-radius 0.5rem, 안쪽 여백, 글자 #92400e, 문구와 버튼 사이 간격 배치).
+  2. `preview/home-ui/src/styles/home-listings.css`: `.my-box__region-pill.is-reselect` 스타일 추가 (`border-color: #fde68a; background: #fffbeb;`).
+  3. `preview/shared/register-flow.css`: tutor-ui·auth-ui·home-ui 3개 UI가 모두 임포트하는 공용 CSS 파일에 `.mypage-badge` 및 `.mypage-badge--warn` 정의를 `home-member-flows.css`(813행)와 동일한 값으로 추가하여 tutor-ui 내 다시 선택 필요 배지 스타일 누락 해소.
+  4. `preview/home-ui/src/tutor-activity-chart.js`: `tutorHomeEditRegionPath()`가 인자를 받지 않는 시그니처이므로 `tutorHomeEditRegionPath(row.tutorId)` 호출을 인자 없이 `tutorHomeEditRegionPath()`로 수정하여 혼선 방지.
+
