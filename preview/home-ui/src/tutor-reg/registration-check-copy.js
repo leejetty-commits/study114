@@ -3,6 +3,8 @@
  * Pick/Prime 차등 안내는 여기만. 입력 화면 배지와 섞지 않는다.
  */
 
+import { TUTOR_BASIC_FIELDS, TUTOR_BASIC_FIELD_KEYS } from '../../../shared/tutor-basic-fields.js';
+
 export const TRC_COPY = {
   title: '등록점검',
   lead: '필수 입력과 픽·프라임에 더 필요한 항목을 한 화면에서 확인합니다',
@@ -65,20 +67,11 @@ export const TRC_COPY = {
   },
 };
 
-/** Basic 공개·검색 게이트 — getPublishReadiness + expanded_complete 필드를 항목명으로 풀어 쓴다 */
-export const TRC_BASIC_FIELD_IDS = [
-  'display_name',
-  'main_subject',
-  'primary_region',
-  'lesson_places',
-  'fee',
-  'fee_basis',
-  'schedule',
-  'minutes',
-  'intro',
-  'university',
-  'profile_image',
-];
+/** 베이직카드 항목 = 기본정보 필수 — shared/tutor-basic-fields.js 한 목록 (공개 판정과 같음) */
+export const TRC_BASIC_FIELD_IDS = TUTOR_BASIC_FIELD_KEYS;
+
+/** 공개 판정에서 기본정보 다음으로 보는 상세 항목 (강의장소·상세등록 완료·프로필 이미지·소개문) */
+export const TRC_PUBLISH_EXTRA_FIELD_IDS = ['lesson_places', 'fee_basis', 'schedule', 'intro', 'university', 'profile_image'];
 
 /** Pick 추가 — Basic 공개 외에 픽 카드에 더 필요한 입력 */
 export const TRC_PICK_FIELD_IDS = ['feature_1', 'student_target'];
@@ -87,28 +80,21 @@ export const TRC_PICK_FIELD_IDS = ['feature_1', 'student_target'];
 export const TRC_PRIME_FIELD_IDS = ['intro_long', 'feature_2', 'feature_3'];
 
 export const TRC_REQUIRED_FIELD_IDS = [
-  ...new Set([...TRC_BASIC_FIELD_IDS, ...TRC_PICK_FIELD_IDS, ...TRC_PRIME_FIELD_IDS]),
+  ...new Set([...TRC_BASIC_FIELD_IDS, ...TRC_PUBLISH_EXTRA_FIELD_IDS, ...TRC_PICK_FIELD_IDS, ...TRC_PRIME_FIELD_IDS]),
 ];
 
 /**
  * 상세정보 탭 실제 입력 항목 = 등록점검 보드 행.
  * 상세정보1 = 수업 · 가격, 상세정보2 = 학력 · 소개 · 연락.
  */
-export const TRC_BOARD_BASIC_FIELDS = [
-  { id: 'display_name', label: '표시명', required: true },
-  { id: 'main_subject', label: '주력과목', required: true },
-  { id: 'primary_region', label: '과외지역', required: true },
-];
+export const TRC_BOARD_BASIC_FIELDS = TUTOR_BASIC_FIELDS.map((f) => ({ id: f.key, label: f.label, required: true }));
 
 export const TRC_BOARD_DETAIL1_FIELDS = [
-  { id: 'fee', label: '월 과외비', required: true },
   { id: 'fee_basis', label: '산정방식', required: true },
-  { id: 'lessons_per_week', label: '주 회수', required: true },
   { id: 'monthly_session_count', label: '월 총 횟수', required: false },
-  { id: 'minutes', label: '1회 수업시간', required: true },
-  { id: 'student_gender_group', label: '지도 대상 성별', required: true },
-  { id: 'student_count_group', label: '수업인원', required: true },
-  { id: 'lesson_places', label: '강의장소', required: true },
+  { id: 'student_gender_group', label: '지도 대상 성별', required: false },
+  { id: 'student_count_group', label: '수업인원', required: false },
+  { id: 'lesson_places', label: '강의장소', required: false },
   { id: 'fee_description', label: '가격 설명', required: false },
 ];
 
@@ -116,11 +102,11 @@ export const TRC_BOARD_DETAIL2_FIELDS = [
   { id: 'university_name', label: '대학/대학원', required: true },
   { id: 'major_name', label: '전공', required: false },
   { id: 'university_status', label: '학적상태', required: false },
-  { id: 'feature_1', label: '특징 1', required: true },
+  { id: 'feature_1', label: '특징 1', required: false },
   { id: 'feature_2', label: '특징 2', required: false },
   { id: 'feature_3', label: '특징 3', required: false },
   { id: 'intro_short', label: '짧은 소개', required: true },
-  { id: 'profile_image', label: '프로필 사진', required: true },
+  { id: 'profile_image', label: '프로필 사진', required: false },
   { id: 'intro_long', label: '상세 소개', required: true },
   { id: 'contact_time_note', label: '연락 가능 시간', required: false },
 ];
@@ -131,15 +117,22 @@ export const TRC_BOARD_REQUIRED_IDS = new Set(
     .map((f) => f.id),
 );
 
+const TRC_BASIC_HINTS = {
+  display_name: '검색·카드에 바로 보입니다',
+  primary_region: '지역 검색 노출에 필요합니다',
+  school_level: '베이직카드 대상 학교급입니다',
+  main_subject: '과외 매칭의 첫 조건입니다',
+  fee: '검색 카드 가격대에 쓰입니다',
+  lessons_per_week: '베이직카드 주 ○회에 쓰입니다',
+  minutes: '1회 수업 분량을 보여 줍니다',
+  slogan: '베이직카드 한 줄 소개입니다',
+};
+
 export const TRC_PROMO_MISSING_DEFS = [
-  { id: 'display_name', label: '표시명', hint: '검색·카드에 바로 보입니다', section: 'basic' },
-  { id: 'main_subject', label: '주력과목', hint: '과외 매칭의 첫 조건입니다', section: 'basic' },
-  { id: 'primary_region', label: '대표 과외지역', hint: '지역 검색 노출에 필요합니다', section: 'basic' },
+  ...TUTOR_BASIC_FIELDS.map((f) => ({ id: f.key, label: f.label, hint: TRC_BASIC_HINTS[f.key], section: 'basic' })),
   { id: 'lesson_places', label: '강의장소', hint: '방문·공공장소 등 수업 방식을 보여 줍니다', section: 'detail' },
-  { id: 'fee', label: '과외비', hint: '검색 카드 가격대에 쓰입니다', section: 'detail' },
   { id: 'fee_basis', label: '과외비 산정방식', hint: '주 회수 또는 월 총 횟수 기준을 정합니다', section: 'detail' },
   { id: 'schedule', label: '주 회수/월 총 횟수', hint: '산정방식에 맞는 횟수가 필요합니다', section: 'detail' },
-  { id: 'minutes', label: '1회 수업 시간', hint: '1회 수업 분량을 보여 줍니다', section: 'detail' },
   { id: 'intro', label: '소개문', hint: '짧은 소개 또는 상세 소개 중 하나가 필요합니다', section: 'detail' },
   { id: 'university', label: '대학/대학원', hint: '상세등록 완료·검색 노출 조건입니다', section: 'detail' },
   { id: 'profile_image', label: '프로필 사진', hint: '검색 카드 신뢰에 필요합니다', section: 'detail' },

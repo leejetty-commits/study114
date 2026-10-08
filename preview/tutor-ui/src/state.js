@@ -1,5 +1,7 @@
 /** 과외쌤 등록 — 기본등록(미완료 시) + 상세등록 2단계 */
 
+import { tutorBasicMissing, tutorBasicValuesFromRegisterTutor } from '../../shared/tutor-basic-fields.js';
+
 export const REGISTER_PHASES = {
   basic: {
     label: '기본등록',
@@ -129,41 +131,38 @@ export function getTutorUnits() {
   return apiMasters.tutorUnits.length ? apiMasters.tutorUnits : [];
 }
 
-/** 기본등록(이름+과외지역) 완료 여부 — 상세등록 진입 시 스킵 판단 */
+/** 기본등록(필수 8개 = shared/tutor-basic-fields.js) 완료 여부 — 상세등록 진입 시 스킵 판단 */
 export function isTutorBasicComplete(tutor) {
   if (!tutor || !tutor.tutor_id) return false;
-  const hasName = String(tutor.tutor_display_name || '').trim() !== '';
-  const hasRegion =
-    Array.isArray(tutor.saved_regions) &&
-    tutor.saved_regions.some((r) => String(r?.region_id || '').trim() !== '');
-  return hasName && hasRegion;
+  return tutorBasicMissing(tutorBasicValuesFromRegisterTutor(tutor)).length === 0;
 }
 
 export const registerState = {
   tutor_id: null,
-  gender: 'male',
+  gender: '',
   tutor_display_name: '',
   slogan: '',
   intro_short: '',
   intro_long: '',
-  student_gender_group: 'mixed',
-  student_count_group: 'solo',
+  student_gender_group: '',
+  student_count_group: '',
   age_band: 'early_30s',
   saved_regions: [
     { region_id: '', scope_type: 'city', is_primary: true },
     { region_id: '', scope_type: 'city', is_primary: false },
     { region_id: '', scope_type: 'city', is_primary: false },
   ],
+  /** 대표 과목 행 학교급 = 베이직카드 「대상」 */
+  school_level: '',
   main_subject_note: '',
   preferred_fee_amount: '',
-  fee_basis_type: 'monthly_by_weekly_schedule',
+  fee_basis_type: '',
   lessons_per_week: '',
   monthly_session_count: '',
   minutes_per_lesson: '',
   fee_description: '',
-  subjects: [
-    { school_level: 'middle', grade_band: '', subject_master_id: '', subject_name: '', is_primary: true },
-  ],
+  /** 추가 과목 행만 (대표 과목은 main_subject_note·school_level) */
+  subjects: [],
   lesson_places: [],
   university_name: '',
   major_name: '',
@@ -179,7 +178,8 @@ export const registerState = {
   youtube_url: '',
   facebook_url: '',
   instagram_url: '',
-  images: [{ image_type: 'profile', sort_order: 1, name: 'profile.jpg' }],
+  /** 서버 tutor_images (load 응답). 올리기는 /api/tutor/profile-image.php */
+  images: [],
   profile_status: 'draft',
   detail_completion_status: 'basic_only',
   /** @type {boolean} */

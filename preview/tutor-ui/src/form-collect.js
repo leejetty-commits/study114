@@ -4,11 +4,15 @@ import { cheonwonInputToWon } from '../../shared/fee-cheonwon.js';
 export function syncBasicFromForm(form, state) {
   if (!form) return;
   const fd = new FormData(form);
-  state.gender = String(fd.get('gender') ?? 'male');
   state.tutor_display_name = String(fd.get('tutor_display_name') ?? '');
   if (fd.has('main_subject_note')) {
     state.main_subject_note = String(fd.get('main_subject_note') ?? '');
   }
+  state.school_level = String(fd.get('school_level') ?? '');
+  state.preferred_fee_amount = cheonwonInputToWon(fd.get('preferred_fee_amount'));
+  state.lessons_per_week = String(fd.get('lessons_per_week') ?? '');
+  state.minutes_per_lesson = String(fd.get('minutes_per_lesson') ?? '');
+  state.slogan = String(fd.get('slogan') ?? '').trim();
 }
 
 export function syncRegionsFromForm(root, state) {
@@ -32,37 +36,27 @@ export function syncRegionsFromForm(root, state) {
   state.saved_regions = state.saved_regions.slice(0, 3);
 }
 
+/** 상세 1(수업 상세). 기본등록 항목(과외비·주 회수·1회 수업시간·대표 과목)은 syncBasicFromForm. */
 export function syncLessonFromForm(form, state) {
   if (!form) return;
   const fd = new FormData(form);
-  // 상세등록에서는 주력과목 필드를 두지 않음 — 있으면만 갱신, 없으면 기본등록 값 유지
-  if (fd.has('main_subject_note')) {
-    state.main_subject_note = String(fd.get('main_subject_note') ?? '');
-  }
-  if (fd.has('student_gender_group')) {
-    state.student_gender_group = String(fd.get('student_gender_group') ?? 'mixed');
-  }
-  if (fd.has('student_count_group')) {
-    state.student_count_group = String(fd.get('student_count_group') ?? 'solo');
-  }
+  state.student_gender_group = String(fd.get('student_gender_group') ?? '');
+  state.student_count_group = String(fd.get('student_count_group') ?? '');
+  state.lesson_places = fd.getAll('lesson_places').map(String);
   if (fd.has('age_band')) {
     state.age_band = String(fd.get('age_band') ?? '');
   }
-  state.preferred_fee_amount = cheonwonInputToWon(fd.get('preferred_fee_amount'));
-  state.fee_basis_type = String(fd.get('fee_basis_type') ?? 'monthly_by_weekly_schedule');
-  state.lessons_per_week = String(fd.get('lessons_per_week') ?? '');
+  state.fee_basis_type = String(fd.get('fee_basis_type') ?? '');
   state.monthly_session_count = String(fd.get('monthly_session_count') ?? '');
-  state.minutes_per_lesson = String(fd.get('minutes_per_lesson') ?? '');
   state.fee_description = String(fd.get('fee_description') ?? '');
-  state.lesson_places = fd.getAll('lesson_places');
   state.subjects = [];
   form.querySelectorAll('[data-subject-idx]').forEach((row) => {
     state.subjects.push({
-      school_level: row.querySelector('[data-field="school_level"]')?.value ?? 'middle',
+      school_level: row.querySelector('[data-field="school_level"]')?.value ?? '',
       grade_band: row.querySelector('[data-field="grade_band"]')?.value ?? '',
       subject_master_id: row.querySelector('[data-field="subject_master_id"]')?.value ?? '',
       subject_name: row.querySelector('[data-field="subject_name"]')?.value ?? '',
-      is_primary: row.querySelector('[data-field="is_primary"]')?.checked ?? false,
+      is_primary: false,
     });
   });
 }
@@ -92,28 +86,12 @@ function optionalPositiveIntMessage(value, label) {
 
 /** @returns {string|null} 안내 문구. 통과면 null */
 export function validateLessonState(state) {
-  if (!String(state.main_subject_note || '').trim()) {
-    return '주력과목이 없습니다. 기본등록에서 주력과목을 먼저 저장해 주세요.';
-  }
-  const fee = Number(state.preferred_fee_amount);
-  if (!Number.isFinite(fee) || fee <= 0) {
-    return '월 대표 과외비를 입력해 주세요.';
-  }
   if (!String(state.fee_basis_type || '').trim()) {
     return '산정방식을 선택해 주세요.';
   }
   // UI 선택값: 공란이면 단계 이동 허용. 값이 있으면 양의 정수만.
-  for (const [key, label] of [
-    ['lessons_per_week', '주 회수'],
-    ['monthly_session_count', '월 총 횟수'],
-    ['minutes_per_lesson', '1회 수업시간'],
-  ]) {
-    const msg = optionalPositiveIntMessage(state[key], label);
-    if (msg) return msg;
-  }
-  if (!Array.isArray(state.lesson_places) || state.lesson_places.length === 0) {
-    return '강의장소를 1개 이상 선택해 주세요.';
-  }
+  const monthlyMsg = optionalPositiveIntMessage(state.monthly_session_count, '월 총 횟수');
+  if (monthlyMsg) return monthlyMsg;
   for (const sub of state.subjects || []) {
     const name = String(sub.subject_name || '').trim();
     const grade = String(sub.grade_band || '').trim();
@@ -170,34 +148,28 @@ export function payloadForStep(step, state) {
   switch (step) {
     case 'basic':
       return {
-        gender: state.gender,
         tutor_display_name: state.tutor_display_name,
+        school_level: state.school_level,
         main_subject_note: state.main_subject_note,
+        preferred_fee_amount: state.preferred_fee_amount,
+        lessons_per_week: state.lessons_per_week,
+        minutes_per_lesson: state.minutes_per_lesson,
         slogan: state.slogan,
-        intro_short: state.intro_short,
-        intro_long: state.intro_long,
-        student_gender_group: state.student_gender_group,
-        student_count_group: state.student_count_group,
-        age_band: state.age_band,
         saved_regions: state.saved_regions,
       };
     case 'regions':
       return { saved_regions: state.saved_regions };
     case 'lesson': {
-      const subjects = (state.subjects || []).filter((s) => String(s.subject_name || '').trim());
+      // 추가 과목 행만. 빈 과목 행은 제외. 대표 과목은 basic 단계.
+      const subjects = (state.subjects || []).filter((s) => !s.is_primary && String(s.subject_name || '').trim());
       return {
-        main_subject_note: state.main_subject_note,
         student_gender_group: state.student_gender_group,
         student_count_group: state.student_count_group,
-        age_band: state.age_band,
-        preferred_fee_amount: state.preferred_fee_amount,
-        fee_basis_type: state.fee_basis_type,
-        lessons_per_week: state.lessons_per_week,
-        monthly_session_count: state.monthly_session_count,
-        minutes_per_lesson: state.minutes_per_lesson,
-        fee_description: state.fee_description,
         lesson_places: state.lesson_places,
-        // 빈 과목 행은 제외 → 서버가 주력과목으로 폴백
+        age_band: state.age_band,
+        fee_basis_type: state.fee_basis_type,
+        monthly_session_count: state.monthly_session_count,
+        fee_description: state.fee_description,
         subjects,
       };
     }
@@ -220,11 +192,6 @@ export function payloadForStep(step, state) {
         youtube_url: state.youtube_url,
         facebook_url: state.facebook_url,
         instagram_url: state.instagram_url,
-        images: state.images.map((img) => ({
-          image_type: img.image_type,
-          image_path: img.image_path || img.name,
-          sort_order: img.sort_order,
-        })),
       };
       const contactStatus = String(state.profile_status ?? '').trim();
       if (contactStatus !== '') contact.profile_status = contactStatus;
@@ -239,4 +206,7 @@ export function applyTutorToState(target, tutor) {
   if (!tutor) return;
   Object.assign(target, tutor);
   if (tutor.tutor_id) target.tutor_id = tutor.tutor_id;
+  if (Array.isArray(tutor.subjects)) {
+    target.subjects = tutor.subjects.filter((s) => !s?.is_primary);
+  }
 }

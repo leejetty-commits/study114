@@ -128,10 +128,14 @@ const boardIds = [
   ...TRC_BOARD_DETAIL2_FIELDS,
 ].map((f) => f.id);
 assert(boardIds.length === new Set(boardIds).size, 'board field ids unique');
-assert(TRC_BOARD_BASIC_FIELDS.map((f) => f.id).join(',') === 'display_name,main_subject,primary_region', 'basic tab 1:1');
+assert(
+  TRC_BOARD_BASIC_FIELDS.map((f) => f.id).join(',') ===
+    'display_name,primary_region,school_level,main_subject,fee,lessons_per_week,minutes,slogan',
+  'basic tab 1:1 (정본 73 0-2 기본등록 8개)',
+);
 assert(
   TRC_BOARD_DETAIL1_FIELDS.map((f) => f.id).join(',') ===
-    'fee,fee_basis,lessons_per_week,monthly_session_count,minutes,student_gender_group,student_count_group,lesson_places,fee_description',
+    'fee_basis,monthly_session_count,student_gender_group,student_count_group,lesson_places,fee_description',
   'detail1 = 수업 · 가격 1:1',
 );
 assert(

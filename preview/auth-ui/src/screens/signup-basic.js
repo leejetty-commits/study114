@@ -44,6 +44,20 @@ import {
   readStudentHopeRegion,
 } from '../../../shared/study-room-basic-form.js';
 import { bindInputFill } from '../../../shared/input-fill.js';
+import { wonToCheonwonInput, cheonwonInputToWon } from '../../../shared/fee-cheonwon.js';
+import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
+import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
+import { TUTOR_SLOGAN_MAX, tutorBasicMissing, tutorBasicMissingMessage } from '../../../shared/tutor-basic-fields.js';
+
+function optionsHtml(options, selected) {
+  const current = String(selected ?? '');
+  return [
+    '<option value="">선택해 주세요</option>',
+    ...options.map(
+      (o) => `<option value="${esc(o.value)}" ${current === String(o.value) ? 'selected' : ''}>${esc(o.label)}</option>`,
+    ),
+  ].join('');
+}
 
 function esc(s) {
   if (s == null) return '';
@@ -126,7 +140,7 @@ function renderMainSubjectOne(selected = '') {
   const value = selected || '';
   return `
     <div class="form-group">
-      <label class="form-label form-label--required" for="main_subject">주력과목 1개</label>
+      <label class="form-label" for="main_subject">주력과목 1개</label>
       ${dbField('main_subject_note')}
       <select class="form-input" name="main_subject" id="main_subject" required>
         ${renderMainSubjectSelect(value, { includeEmpty: true, emptyLabel: '과목 선택' })}
@@ -291,21 +305,41 @@ function renderTutorBasic() {
         <div class="register-basic-col">
           <div class="register-basic-fields">
             <div class="form-group form-group--full">
-              <label class="form-label form-label--required" for="tutor_display_name">표시명</label>
+              <label class="form-label" for="tutor_display_name">표시명</label>
               ${dbField('tutors.tutor_display_name')}
               <input class="form-input" id="tutor_display_name" name="tutor_display_name" value="${esc(d.tutor_display_name || '')}" required />
               <p class="form-note form-note--error" data-field-error="tutor_display_name" hidden></p>
             </div>
             <div class="form-group form-group--full">
+              <label class="form-label" for="school_level">대상(학교급)</label>
+              <select class="form-input" id="school_level" name="school_level" required>${optionsHtml(SCHOOL_LEVEL_FORM_OPTIONS, d.school_level)}</select>
+            </div>
+            <div class="form-group form-group--full">
               ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '')}
               <p class="form-note form-note--error" data-field-error="main_subject" hidden></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="preferred_fee_amount">월 과외비 (천원)</label>
+              <input class="form-input" id="preferred_fee_amount" name="preferred_fee_amount" type="number" min="1" step="1" inputmode="numeric" value="${esc(wonToCheonwonInput(d.preferred_fee_amount))}" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="lessons_per_week">주 회수</label>
+              <select class="form-input" id="lessons_per_week" name="lessons_per_week" required>${optionsHtml(lessonWeeklyOptions(d.lessons_per_week), lessonWeeklySelectValue(d.lessons_per_week))}</select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="minutes_per_lesson">1회 수업시간</label>
+              <select class="form-input" id="minutes_per_lesson" name="minutes_per_lesson" required>${optionsHtml(lessonDurationOptions(d.minutes_per_lesson), lessonDurationSelectValue(d.minutes_per_lesson))}</select>
+            </div>
+            <div class="form-group form-group--full">
+              <label class="form-label" for="slogan">슬로건</label>
+              <input class="form-input" id="slogan" name="slogan" maxlength="${TUTOR_SLOGAN_MAX}" value="${esc(d.slogan || '')}" placeholder="한 줄로 소개해 주세요" required />
             </div>
           </div>
         </div>
         <div class="register-basic-col">
-          <span class="form-label form-label--required">과외지역 (최대 3곳)</span>
+          <span class="form-label">과외지역 (최대 3곳)</span>
           ${dbField('tutor_regions.scope_type=city')}
-          <p class="form-note mb-2">1번은 필수, 2·3번은 선택입니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.</p>
+          <p class="form-note mb-2">과외지역 1이 대표입니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.</p>
           ${slots.map((slot, i) => renderTutorRegionSlot(slot, i, units, { showPrimary: false, labelPrefix: '과외지역' })).join('')}
         </div>
       </div>
@@ -410,9 +444,14 @@ async function loadIncompleteBasicDraft(role) {
     if (!tutor) return null;
     return {
       tutor_display_name: tutor.tutor_display_name || '',
+      school_level: tutor.school_level || '',
       main_subject_note: tutor.main_subject_note || '',
       main_subjects: tutor.main_subject_note ? [tutor.main_subject_note] : [],
       saved_regions: Array.isArray(tutor.saved_regions) ? tutor.saved_regions : [],
+      preferred_fee_amount: tutor.preferred_fee_amount || '',
+      lessons_per_week: tutor.lessons_per_week || '',
+      minutes_per_lesson: tutor.minutes_per_lesson || '',
+      slogan: tutor.slogan || '',
       gender: tutor.gender || '',
     };
   }
@@ -752,10 +791,14 @@ export function bindSignupBasicEvents(root) {
       }
       data.region_label = label;
       data.activity_city = label;
-    }
 
-    if (role === 'tutor') {
-      /* tutor subject/regions already validated above */
+      data.preferred_fee_amount = cheonwonInputToWon(data.preferred_fee_amount);
+      data.slogan = String(data.slogan || '').trim();
+      const missing = tutorBasicMissing({ ...data, has_primary_region: true });
+      if (missing.length) {
+        alert(tutorBasicMissingMessage(missing));
+        return;
+      }
     }
 
     const submitBtn = form.querySelector('[type="submit"]');

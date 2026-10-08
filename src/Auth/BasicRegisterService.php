@@ -15,6 +15,7 @@ use Study114\Region\SidoRegionEnsure;
 use Study114\Region\TutorRegionUnit;
 use Study114\Registration\StudentBasicCompleteness;
 use Study114\Registration\StudentHubRepository;
+use Study114\Tutor\TutorBasicFields;
 
 final class BasicRegisterService
 {
@@ -34,8 +35,8 @@ final class BasicRegisterService
 
     /**
      * 기본등록 미완료 여부.
-     * tutor / study_room_owner 는 행이 있고 대표지역 1이 있을 때만 완료.
-     * 대표1 = tutor_regions.priority_order=0(지역 값 있음) / study_room_regions.slot=1(region_id 있음).
+     * tutor 는 행이 있고 TutorBasicFields 필수 8개(과외지역 1 포함)가 모두 있을 때만 완료.
+     * study_room_owner 는 행이 있고 홍보지역 1(study_room_regions.slot=1)이 있을 때만 완료.
      * guardian_student 는 기존 학생 기본정보 판정.
      */
     public function needsBasicRegister(int $userId, string $roleType): bool
@@ -45,29 +46,23 @@ final class BasicRegisterService
         }
         $pdo = Connection::get();
         return match ($roleType) {
-            'tutor' => !$this->tutorAccountHasSlot1($pdo, $userId),
+            'tutor' => !$this->tutorAccountBasicComplete($pdo, $userId),
             'study_room_owner' => !$this->studyRoomAccountHasPromoSlot1($pdo, $userId),
             'guardian_student' => $this->studentNeedsBasicInfo($pdo, $userId),
             default => false,
         };
     }
 
-    private function tutorAccountHasSlot1(PDO $pdo, int $userId): bool
+    private function tutorAccountBasicComplete(PDO $pdo, int $userId): bool
     {
-        return $this->existsRow(
-            $pdo,
-            'SELECT 1 FROM tutors t
-             WHERE t.user_id = ?
-               AND EXISTS (
-                 SELECT 1 FROM tutor_regions tr
-                 WHERE tr.tutor_id = t.id
-                   AND tr.priority_order = 0
-                   AND tr.region_id IS NOT NULL
-                   AND tr.region_id <> 0
-               )
-             LIMIT 1',
-            [$userId]
-        );
+        $stmt = $pdo->prepare('SELECT id FROM tutors WHERE user_id = ? ORDER BY id ASC LIMIT 1');
+        $stmt->execute([$userId]);
+        $tutorId = $stmt->fetchColumn();
+        if ($tutorId === false) {
+            return false;
+        }
+
+        return TutorBasicFields::missingForTutor($pdo, (int) $tutorId) === [];
     }
 
     private function studyRoomAccountHasPromoSlot1(PDO $pdo, int $userId): bool
@@ -89,18 +84,6 @@ final class BasicRegisterService
                )
              LIMIT 1',
             [$userId]
-        );
-    }
-
-    private function tutorRowHasSlot1(PDO $pdo, int $tutorId): bool
-    {
-        return $this->existsRow(
-            $pdo,
-            'SELECT 1 FROM tutor_regions
-             WHERE tutor_id = ? AND priority_order = 0
-               AND region_id IS NOT NULL AND region_id <> 0
-             LIMIT 1',
-            [$tutorId]
         );
     }
 
@@ -750,16 +733,20 @@ final class BasicRegisterService
     }
 
     /**
-     * 가입 seed: 표시명 + 활동지역 1~3(시) + 주력과목 1.
+     * 가입 기본정보: TutorBasicFields 필수 8개 + 활동지역 1~3(과외 단위).
      * 활동지역 1 필수 · 2·3 선택 · 빈 슬롯은 저장하지 않음 · 회원주소 폴백 금지.
      *
      * @param array<string, mixed> $input
      */
     private function registerTutor(int $userId, array $input): int
     {
-        $displayName = $this->requireString($input, 'tutor_display_name');
-        $regionIds = $this->normalizeTutorSignupRegions($input);
-        $mainSubject = $this->resolveMainSubjectNote($input);
+        if (trim((string) ($input['main_subject_note'] ?? '')) === '' && isset($input['main_subjects'])) {
+            try {
+                $input['main_subject_note'] = $this->resolveMainSubjectNote($input);
+            } catch (InvalidArgumentException) {
+                $input['main_subject_note'] = '';
+            }
+        }
 
         if (isset($input['gender']) && (string) $input['gender'] !== '') {
             ProfileGenderSync::sync($userId, $input);
@@ -773,46 +760,35 @@ final class BasicRegisterService
                 $userId,
                 'SELECT id FROM tutors WHERE user_id = ? ORDER BY id ASC LIMIT 1'
             );
-            if ($existingTutorId !== null) {
-                if ($this->tutorRowHasSlot1($pdo, $existingTutorId)) {
-                    $pdo->commit();
-                    return $existingTutorId;
-                }
-                $pdo->prepare(
-                    'UPDATE tutors SET tutor_display_name = ?, main_subject_note = ? WHERE id = ?'
-                )->execute([$displayName, $mainSubject, $existingTutorId]);
-                $pdo->prepare('DELETE FROM tutor_regions WHERE tutor_id = ?')->execute([$existingTutorId]);
-                $ins = $pdo->prepare(
-                    'INSERT INTO tutor_regions (tutor_id, region_id, scope_type, priority_order, is_primary)
-                     VALUES (?, ?, ?, ?, ?)'
-                );
-                foreach ($regionIds as $order => $regionId) {
-                    $ins->execute([$existingTutorId, $regionId, 'city', $order, $order === 0 ? 1 : 0]);
-                }
-                $pdo->prepare('DELETE FROM tutor_subject_targets WHERE tutor_id = ?')->execute([$existingTutorId]);
-                $subjectId = $this->findSubjectMasterId($pdo, $this->firstSubjectName($mainSubject));
-                $pdo->prepare(
-                    'INSERT INTO tutor_subject_targets (tutor_id, subject_name, school_level, subject_master_id, is_primary)
-                     VALUES (?, ?, ?, ?, 1)'
-                )->execute([$existingTutorId, $this->firstSubjectName($mainSubject), 'middle', $subjectId]);
+            if ($existingTutorId !== null && TutorBasicFields::missingForTutor($pdo, $existingTutorId) === []) {
                 $pdo->commit();
                 return $existingTutorId;
             }
-            $stmt = $pdo->prepare(
-                'INSERT INTO tutors (
-                    user_id, tutor_display_name, main_subject_note,
-                    profile_status, detail_completion_status
-                ) VALUES (?, ?, ?, ?, ?)'
-            );
-            $stmt->execute([
-                $userId,
-                $displayName,
-                $mainSubject,
-                'draft',
-                'basic_only',
-            ]);
-            $tutorId = (int) $pdo->lastInsertId();
 
+            $values = TutorBasicFields::normalizeInput($input, $this->tutorSignupHasSlot1($input));
+            $regionIds = $this->normalizeTutorSignupRegions($input);
+
+            if ($existingTutorId !== null) {
+                $tutorId = $existingTutorId;
+            } else {
+                $pdo->prepare(
+                    'INSERT INTO tutors (
+                        user_id, tutor_display_name, main_subject_note,
+                        profile_status, detail_completion_status
+                    ) VALUES (?, ?, ?, ?, ?)'
+                )->execute([
+                    $userId,
+                    $values['tutor_display_name'],
+                    $values['main_subject_note'],
+                    'draft',
+                    'basic_only',
+                ]);
+                $tutorId = (int) $pdo->lastInsertId();
+            }
+
+            TutorBasicFields::write($pdo, $tutorId, $values);
+
+            $pdo->prepare('DELETE FROM tutor_regions WHERE tutor_id = ?')->execute([$tutorId]);
             $ins = $pdo->prepare(
                 'INSERT INTO tutor_regions (tutor_id, region_id, scope_type, priority_order, is_primary)
                  VALUES (?, ?, ?, ?, ?)'
@@ -821,19 +797,29 @@ final class BasicRegisterService
                 $ins->execute([$tutorId, $regionId, 'city', $order, $order === 0 ? 1 : 0]);
             }
 
-            $subjectId = $this->findSubjectMasterId($pdo, $this->firstSubjectName($mainSubject));
-            $pdo->prepare(
-                'INSERT INTO tutor_subject_targets (tutor_id, subject_name, school_level, subject_master_id, is_primary)
-                 VALUES (?, ?, ?, ?, 1)'
-            )->execute([$tutorId, $this->firstSubjectName($mainSubject), 'middle', $subjectId]);
-
             $pdo->commit();
+        } catch (InvalidArgumentException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
         } catch (PDOException $e) {
             $pdo->rollBack();
             throw new RuntimeException('과외쌤 가입정보 저장 실패: ' . $e->getMessage(), 0, $e);
         }
 
         return $tutorId;
+    }
+
+    /** @param array<string, mixed> $input */
+    private function tutorSignupHasSlot1(array $input): bool
+    {
+        $slots = $input['saved_regions'] ?? null;
+        if (is_array($slots) && isset($slots[0]) && is_array($slots[0])) {
+            return (int) ($slots[0]['region_id'] ?? 0) > 0;
+        }
+
+        return (int) ($input['region_id'] ?? 0) > 0;
     }
 
     /**

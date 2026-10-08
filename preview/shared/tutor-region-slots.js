@@ -33,7 +33,7 @@ export function renderTutorRegionSlot(slot, idx, units, opts = {}) {
   return `
     <div class="register-region-slot${slot.is_primary ? ' is-primary' : ''}" data-region-slot="${idx}">
       <div class="form-row register-region-slot__head">
-        <strong>${labelPrefix} ${idx + 1}${idx === 0 ? ' (필수)' : ' (선택)'}</strong>
+        <strong>${labelPrefix} ${idx + 1}${idx === 0 ? '' : ' (선택)'}</strong>
         ${primaryUi}
       </div>
       <div class="register-region-slot__fields">

@@ -181,8 +181,14 @@ function basicPayload(string $name): array
     return [
         'tutor_display_name' => $name,
         'gender' => 'male',
+        'school_level' => 'middle',
+        'main_subject_note' => '수학',
+        'preferred_fee_amount' => '300000',
+        'lessons_per_week' => '2',
+        'minutes_per_lesson' => '90',
         'student_gender_group' => 'mixed',
         'student_count_group' => 'solo',
+        'slogan' => '꾸준히',
         'saved_regions' => [
             ['region_id' => 11, 'scope_type' => 'city'],
         ],

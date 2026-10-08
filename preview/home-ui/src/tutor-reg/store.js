@@ -10,6 +10,12 @@ import {
 import { getMemoTicketsRemaining } from '../provider-entitlement.js';
 import { isMessagesApiMode } from '../messages-backend.js';
 import { isPaidRoiApiMode } from '../paid-backend.js';
+import {
+  TUTOR_BASIC_FIELD_KEYS,
+  tutorBasicOkMap,
+  tutorBasicMissing,
+  tutorBasicValuesFromRecord,
+} from '../../../shared/tutor-basic-fields.js';
 
 const KEY = 'study114-preview-tutors-v1';
 
@@ -26,6 +32,8 @@ const KEY = 'study114-preview-tutors-v1';
  * @property {{region_id: string, scope_type: string, is_primary: boolean}[]} [saved_regions]
  * @property {string} main_subject_note
  * @property {string} [grade_band]
+ * @property {string} [school_level] 대표 과목 행 학교급 코드
+ * @property {string} [slogan]
  * @property {number} [preferred_fee_amount]
  * @property {string} [fee_basis_type]
  * @property {number} [lessons_per_week]
@@ -123,20 +131,22 @@ export function getTutor(id) {
 
 /** @param {TutorRecord} tutor */
 export function getPublishReadiness(tutor) {
+  /** 기본정보 항목은 shared/tutor-basic-fields.js 한 목록 (서버 TutorHubService::publishMissing 과 같음) */
+  const basicOk = tutorBasicOkMap(tutorBasicValuesFromRecord(tutor));
   /** @type {string[]} */
-  const missing = [];
+  const missing = tutorBasicMissing(tutorBasicValuesFromRecord(tutor));
   const need = (ok, label) => {
     if (!ok) missing.push(label);
   };
 
-  need(!!tutor.tutor_display_name?.trim(), '표시명');
-  need(tutor.has_primary_region && !!tutor.primary_region_label, '대표 과외지역');
-  need(tutor.has_primary_subject && !!tutor.main_subject_note, '주력과목');
-  need(tutor.has_lesson_places, '강의장소');
-  need(!!tutor.preferred_fee_amount, '과외비');
-  need(tutor.detail_completion_status === 'expanded_complete', '상세등록 완료');
-  need(tutor.has_profile_image, '프로필 이미지');
-  need(!!(tutor.intro_short?.trim() || tutor.intro_long?.trim()), '소개문');
+  const placesDone = !!tutor.has_lesson_places;
+  const detailDone = tutor.detail_completion_status === 'expanded_complete';
+  const imageDone = !!tutor.has_profile_image;
+  const introDone = !!(tutor.intro_short?.trim() || tutor.intro_long?.trim());
+  need(placesDone, '강의장소');
+  need(detailDone, '상세등록 완료');
+  need(imageDone, '프로필 이미지');
+  need(introDone, '소개문');
 
   if (Array.isArray(tutor.detail_missing) && tutor.detail_missing.length) {
     for (const label of tutor.detail_missing) {
@@ -144,16 +154,7 @@ export function getPublishReadiness(tutor) {
     }
   }
 
-  const checks = [
-    !!tutor.tutor_display_name?.trim(),
-    tutor.has_primary_region,
-    tutor.has_primary_subject,
-    tutor.has_lesson_places,
-    !!tutor.preferred_fee_amount,
-    tutor.detail_completion_status === 'expanded_complete',
-    tutor.has_profile_image,
-    !!(tutor.intro_short?.trim() || tutor.intro_long?.trim()),
-  ];
+  const checks = [...TUTOR_BASIC_FIELD_KEYS.map((key) => basicOk[key]), placesDone, detailDone, imageDone, introDone];
   const doneCount = checks.filter(Boolean).length;
 
   /** @type {string[]} */

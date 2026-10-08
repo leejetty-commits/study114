@@ -12,11 +12,15 @@ import { tutorToExposureRow } from './format.js';
 import {
   TRC_COPY,
   TRC_BASIC_FIELD_IDS,
+  TRC_PUBLISH_EXTRA_FIELD_IDS,
   TRC_PICK_FIELD_IDS,
   TRC_PRIME_FIELD_IDS,
+  TRC_BOARD_BASIC_FIELDS,
   TRC_BOARD_REQUIRED_IDS,
   TRC_PROMO_MISSING_DEFS,
 } from './registration-check-copy.js';
+import { tutorBasicOkMap, tutorBasicValuesFromRecord } from '../../../shared/tutor-basic-fields.js';
+import { SCHOOL_LEVEL_FORM_LABELS } from '../../../shared/school-grade.js';
 
 const GENDER_GROUP_LABELS = { male: '남학생', female: '여학생', mixed: '혼성' };
 const STUDENT_COUNT_LABELS = { solo: '단독', two: '2명', three: '3명', four_plus: '4명 이상' };
@@ -70,36 +74,49 @@ function feeBasisLabel(tutor) {
   return '';
 }
 
+/** 기본정보 항목은 shared/tutor-basic-fields.js, 나머지는 공개·픽·프라임 조건. */
 /** @param {import('./store.js').TutorRecord} tutor */
 export function tutorFieldOkMap(tutor) {
   const t = tutor && typeof tutor === 'object' ? tutor : {};
   return {
-    display_name: !!blank(t.tutor_display_name),
-    main_subject: !!(t.has_primary_subject && blank(t.main_subject_note)),
-    primary_region: !!(t.has_primary_region && blank(t.primary_region_label)),
-    lesson_places: !!t.has_lesson_places || (Array.isArray(t.lesson_places) && t.lesson_places.length > 0),
-    fee: Number(t.preferred_fee_amount) > 0,
     fee_basis: feeBasisOk(t),
     schedule: scheduleOk(t),
-    minutes: minutesOk(t),
     intro: introOk(t),
     university: !!blank(t.university_name),
+    lesson_places: !!t.has_lesson_places || (Array.isArray(t.lesson_places) && t.lesson_places.length > 0),
     profile_image: !!t.has_profile_image,
     feature_1: !!blank(t.feature_1),
     student_target: !!(blank(t.student_gender_group) || blank(t.student_count_group)),
     intro_long: !!blank(t.intro_long),
     feature_2: !!blank(t.feature_2),
     feature_3: !!blank(t.feature_3),
+    ...tutorBasicOkMap(tutorBasicValuesFromRecord(t)),
   };
 }
 
-const BASIC_VIA_COMPLETE = new Set(['fee_basis', 'schedule', 'minutes', 'university']);
+const BASIC_VIA_COMPLETE = new Set(['fee_basis', 'schedule', 'university']);
 
+/** Basic 공개 게이트 = 기본정보 8개 + 공개 추가 항목. 상세등록 완료면 완료 판정에 든 항목은 뺀다. */
 function basicIdsForTutor(tutor) {
+  const ids = [...TRC_BASIC_FIELD_IDS, ...TRC_PUBLISH_EXTRA_FIELD_IDS];
   if (tutor?.detail_completion_status === 'expanded_complete') {
-    return TRC_BASIC_FIELD_IDS.filter((id) => !BASIC_VIA_COMPLETE.has(id));
+    return ids.filter((id) => !BASIC_VIA_COMPLETE.has(id));
   }
-  return TRC_BASIC_FIELD_IDS;
+  return ids;
+}
+
+/** 등록점검 항목 id → 입력 화면 data-trc-field (항목이 칸 하나가 아닐 때만) */
+const TRC_FOCUS_FIELD = {
+  schedule: 'monthly_session_count',
+};
+
+/** @param {{ id: string, section?: string }} def */
+function defHref(tutorId, def) {
+  return tutorRegistrationCheckTabHref(
+    tutorId,
+    def.section === 'basic' ? 'basic' : 'detail',
+    TRC_FOCUS_FIELD[def.id] || def.id,
+  );
 }
 
 function remainingCount(okMap, ids) {
@@ -121,7 +138,7 @@ function missingForTier(okMap, ids, tutorId) {
         id,
         label: def.label,
         hint: def.hint,
-        href: tutorRegistrationCheckTabHref(tutorId, def.section === 'basic' ? 'basic' : 'detail', def.id),
+        href: defHref(tutorId, def),
         section: def.section,
       };
     })
@@ -208,38 +225,39 @@ function buildBoard(tutor) {
   const count = STUDENT_COUNT_LABELS[tutor?.student_count_group] || '';
   const weekly = weeklyLabel(tutor);
   const monthly = monthlyLabel(tutor);
+  const basicOk = tutorBasicOkMap(tutorBasicValuesFromRecord(tutor));
+  const basicValues = {
+    display_name: tutor?.tutor_display_name,
+    primary_region: tutor?.primary_region_label || tutor?.location_label,
+    school_level: SCHOOL_LEVEL_FORM_LABELS[tutor?.school_level] || tutor?.school_level,
+    main_subject: tutor?.main_subject_note,
+    fee,
+    lessons_per_week: weekly,
+    minutes,
+    slogan: tutor?.slogan,
+  };
 
   const basic = {
     id: 'basic',
     title: TRC_COPY.board.sections.basic,
     collapsedDefault: false,
     editSection: 'basic',
-    rows: [
-      row('display_name', '표시명', tutor?.tutor_display_name, textStatus(tutor?.tutor_display_name)),
-      row('main_subject', '주력과목', tutor?.main_subject_note, textStatus(tutor?.main_subject_note)),
-      row(
-        'primary_region',
-        '과외지역',
-        tutor?.primary_region_label || tutor?.location_label,
-        tutor?.has_primary_region && blank(tutor?.primary_region_label) ? 'filled' : 'empty',
-      ),
-    ],
+    rows: TRC_BOARD_BASIC_FIELDS.map((f) =>
+      row(f.id, f.label, basicValues[f.id], basicOk[f.id] ? 'filled' : 'empty'),
+    ),
   };
 
   const detail1 = {
     id: 'detail1',
     title: TRC_COPY.board.sections.detail1,
     rows: [
-      row('fee', '월 과외비', fee, textStatus(fee)),
       row('fee_basis', '산정방식', basis, textStatus(basis)),
-      row('lessons_per_week', '주 회수', weekly, Number(tutor?.lessons_per_week) > 0 ? 'filled' : 'empty'),
       row(
         'monthly_session_count',
         '월 총 횟수',
         monthly,
         Number(tutor?.monthly_session_count) > 0 ? 'filled' : 'empty',
       ),
-      row('minutes', '1회 수업시간', minutes, textStatus(minutes)),
       row('student_gender_group', '지도 대상 성별', gender, textStatus(gender)),
       row('student_count_group', '수업인원', count, textStatus(count)),
       row('lesson_places', '강의장소', places, textStatus(places)),
@@ -284,55 +302,21 @@ function buildBoard(tutor) {
   return [basic, detail].map(withSummary);
 }
 
+function fillAction(tutorId, miss) {
+  return { id: miss.id, label: TRC_COPY.next.fill(miss.label), href: defHref(tutorId, miss) };
+}
+
 function nextAction(okMap, tutor, canPublish, basicIds) {
   const status = tutor?.profile_status;
+  const publishMiss = canPublish ? null : firstMissing(okMap, basicIds);
   if (status === 'hidden') {
-    if (!canPublish) {
-      const miss = firstMissing(okMap, basicIds);
-      if (miss) {
-        return {
-          id: miss.id,
-          label: TRC_COPY.next.fill(miss.label),
-          href: tutorRegistrationCheckTabHref(
-            tutor.id,
-            miss.section === 'basic' ? 'basic' : 'detail',
-            miss.id,
-          ),
-        };
-      }
-    }
-    return null;
+    return publishMiss ? fillAction(tutor.id, publishMiss) : null;
   }
-  if (!canPublish) {
-    const miss = firstMissing(okMap, basicIds);
-    if (miss) {
-      return {
-        id: miss.id,
-        label: TRC_COPY.next.fill(miss.label),
-        href: tutorRegistrationCheckTabHref(
-          tutor.id,
-          miss.section === 'basic' ? 'basic' : 'detail',
-          miss.id,
-        ),
-      };
-    }
-  }
+  if (publishMiss) return fillAction(tutor.id, publishMiss);
   const pickMiss = firstMissing(okMap, TRC_PICK_FIELD_IDS);
-  if (pickMiss) {
-    return {
-      id: pickMiss.id,
-      label: TRC_COPY.next.fill(pickMiss.label),
-      href: tutorRegistrationCheckTabHref(tutor.id, 'detail', pickMiss.id),
-    };
-  }
+  if (pickMiss) return fillAction(tutor.id, pickMiss);
   const primeMiss = firstMissing(okMap, TRC_PRIME_FIELD_IDS);
-  if (primeMiss) {
-    return {
-      id: primeMiss.id,
-      label: TRC_COPY.next.fill(primeMiss.label),
-      href: tutorRegistrationCheckTabHref(tutor.id, 'detail', primeMiss.id),
-    };
-  }
+  if (primeMiss) return fillAction(tutor.id, primeMiss);
   if (status === 'published') {
     return { id: 'exposure', label: TRC_COPY.next.live, href: '' };
   }

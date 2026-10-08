@@ -34,6 +34,8 @@ import { renderTutorProfileRead } from './profile-read.js';
 import { renderTutorProfilePhotoEditor, bindTutorProfilePhotos } from './profile-photos.js';
 import { TRC_COPY } from './registration-check-copy.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
+import { SCHOOL_LEVEL_FORM_OPTIONS } from '../../../shared/school-grade.js';
+import { TUTOR_SLOGAN_MAX } from '../../../shared/tutor-basic-fields.js';
 import {
   renderTutorRegionSlot,
   bindTutorRegionSlotEvents,
@@ -309,7 +311,12 @@ async function persistTutorBasicForm(form) {
   }
   await saveTutorBasicInline(id, {
     tutor_display_name: String(fd.get('tutor_display_name') || ''),
+    school_level: String(fd.get('school_level') || ''),
     main_subject_note: String(fd.get('main_subject_note') || ''),
+    preferred_fee_amount: cheonwonInputToWon(fd.get('preferred_fee_amount')),
+    lessons_per_week: String(fd.get('lessons_per_week') || ''),
+    minutes_per_lesson: String(fd.get('minutes_per_lesson') || ''),
+    slogan: String(fd.get('slogan') || '').trim(),
     primary_region_label: label,
     primary_region_id: primary.region_id,
     saved_regions: slots,
@@ -366,25 +373,45 @@ function renderBasicForm(tutor) {
     <form class="p19-form p21-inline-form" data-p21-form="basic" data-p21-tutor-id="${tutor.id}">
       ${renderFormSection(
         '기본정보 · 과외지역',
-        '표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.',
+        '베이직카드에 나오는 기본정보와 과외지역을 한 화면에서 수정합니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.',
         `
         <div class="register-grid-2">
           <div class="register-basic-col">
             <div class="register-basic-fields">
               <label class="p19-field" data-trc-field="display_name">
-                <span class="p19-field__label">표시명 ${reqMark()}</span>
+                <span class="p19-field__label">표시명</span>
                 <input class="p19-input" name="tutor_display_name" value="${esc(tutor.tutor_display_name || '')}" required />
               </label>
+              <label class="p19-field" data-trc-field="school_level">
+                <span class="p19-field__label">대상(학교급)</span>
+                <select class="p19-input" name="school_level" required>${lessonSelectHtml(SCHOOL_LEVEL_FORM_OPTIONS, tutor.school_level)}</select>
+              </label>
               <label class="p19-field" data-trc-field="main_subject">
-                <span class="p19-field__label">주력과목 ${reqMark()}</span>
+                <span class="p19-field__label">주력과목</span>
                 <select class="p19-input" name="main_subject_note" required>
                   ${renderMainSubjectSelect(tutor.main_subject_note || '')}
                 </select>
               </label>
+              <label class="p19-field" data-trc-field="fee">
+                <span class="p19-field__label">월 과외비 (천원)</span>
+                <input class="p19-input" type="number" name="preferred_fee_amount" value="${esc(wonToCheonwonInput(tutor.preferred_fee_amount))}" required min="1" />
+              </label>
+              <label class="p19-field" data-trc-field="lessons_per_week">
+                <span class="p19-field__label">주 회수</span>
+                <select class="p19-input" name="lessons_per_week" required>${lessonSelectHtml(lessonWeeklyOptions(tutor.lessons_per_week), lessonWeeklySelectValue(tutor.lessons_per_week))}</select>
+              </label>
+              <label class="p19-field" data-trc-field="minutes">
+                <span class="p19-field__label">1회 수업시간</span>
+                <select class="p19-input" name="minutes_per_lesson" required>${lessonSelectHtml(lessonDurationOptions(tutor.minutes_per_lesson), lessonDurationSelectValue(tutor.minutes_per_lesson))}</select>
+              </label>
+              <label class="p19-field" data-trc-field="slogan">
+                <span class="p19-field__label">슬로건</span>
+                <input class="p19-input" name="slogan" value="${esc(tutor.slogan || '')}" maxlength="${TUTOR_SLOGAN_MAX}" required />
+              </label>
             </div>
           </div>
           <div class="register-basic-col" data-trc-field="primary_region">
-            <p class="p19-field__label" style="margin:0 0 var(--space-2);">과외지역 ${reqMark()}</p>
+            <p class="p19-field__label" style="margin:0 0 var(--space-2);">과외지역</p>
             <p class="p19-field__hint" style="margin-bottom:var(--space-3);">지역 1이 대표입니다. 지역 2·3은 선택입니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.</p>
             ${regionSlotsHtml}
           </div>
@@ -413,53 +440,31 @@ function renderDetailForm(tutor) {
         <span>${esc(p.label)}</span>
       </label>`,
   ).join('');
-  const feeBasis = tutor.fee_basis_type || 'monthly_by_weekly_schedule';
-  const gender = tutor.student_gender_group || 'mixed';
-  const count = tutor.student_count_group || 'solo';
-
   const formBody = `
     <form class="p19-form p21-inline-form" data-p21-form="detail" data-p21-tutor-id="${tutor.id}">
       ${renderFormSection(
         '수업 · 가격',
-        '주력과목은 기본등록에서 수정합니다. 여기서는 수업·가격 상세를 채웁니다.',
+        '월 과외비·주 회수·1회 수업시간은 기본정보에서 수정합니다. 여기서는 수업 상세를 채웁니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
-          <label class="p19-field" data-trc-field="fee">
-            <span class="p19-field__label">월 과외비 (천원) ${reqMark()}</span>
-            <input class="p19-input" type="number" name="preferred_fee_amount" value="${esc(wonToCheonwonInput(tutor.preferred_fee_amount))}" required min="1" />
-          </label>
           <label class="p19-field" data-trc-field="fee_basis">
             <span class="p19-field__label">산정방식 ${reqMark()}</span>
-            <select class="p19-input" name="fee_basis_type">
-              ${FEE_BASIS_OPTS.map((o) => `<option value="${o.value}" ${feeBasis === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
-            </select>
-          </label>
-          <label class="p19-field" data-trc-field="schedule">
-            <span class="p19-field__label">주 회수 ${reqMark()}</span>
-            <select class="p19-input" name="lessons_per_week">${lessonSelectHtml(lessonWeeklyOptions(tutor.lessons_per_week), lessonWeeklySelectValue(tutor.lessons_per_week))}</select>
+            <select class="p19-input" name="fee_basis_type">${lessonSelectHtml(FEE_BASIS_OPTS, tutor.fee_basis_type)}</select>
           </label>
           <label class="p19-field" data-trc-field="monthly_session_count">
             <span class="p19-field__label">월 총 횟수</span>
             <input class="p19-input" name="monthly_session_count" value="${esc(tutor.monthly_session_count || '')}" />
           </label>
-          <label class="p19-field" data-trc-field="minutes">
-            <span class="p19-field__label">1회 수업시간 ${reqMark()}</span>
-            <select class="p19-input" name="minutes_per_lesson">${lessonSelectHtml(lessonDurationOptions(tutor.minutes_per_lesson), lessonDurationSelectValue(tutor.minutes_per_lesson))}</select>
-          </label>
           <label class="p19-field" data-trc-field="student_target">
-            <span class="p19-field__label">지도 대상 성별 ${reqMark()}</span>
-            <select class="p19-input" name="student_gender_group">
-              ${GENDER_GROUP_OPTS.map((o) => `<option value="${o.value}" ${gender === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
-            </select>
+            <span class="p19-field__label">지도 대상 성별</span>
+            <select class="p19-input" name="student_gender_group">${lessonSelectHtml(GENDER_GROUP_OPTS, tutor.student_gender_group)}</select>
           </label>
           <label class="p19-field" data-trc-field="student_count_group">
-            <span class="p19-field__label">수업인원 ${reqMark()}</span>
-            <select class="p19-input" name="student_count_group">
-              ${STUDENT_COUNT_OPTS.map((o) => `<option value="${o.value}" ${count === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
-            </select>
+            <span class="p19-field__label">수업인원</span>
+            <select class="p19-input" name="student_count_group">${lessonSelectHtml(STUDENT_COUNT_OPTS, tutor.student_count_group)}</select>
           </label>
           <label class="p19-field p19-field--full" data-trc-field="lesson_places">
-            <span class="p19-field__label">강의장소 ${reqMark()}</span>
+            <span class="p19-field__label">강의장소</span>
             <div class="p19-chip-group">${placeChecks}</div>
           </label>
           <label class="p19-field p19-field--full" data-trc-field="fee_description">
@@ -494,7 +499,7 @@ function renderDetailForm(tutor) {
             </select>
           </label>
           <label class="p19-field" data-trc-field="feature_1">
-            <span class="p19-field__label">특징 1 ${reqMark()}</span>
+            <span class="p19-field__label">특징 1</span>
             <input class="p19-input" name="feature_1" value="${esc(tutor.feature_1 || '')}" />
           </label>
           <label class="p19-field" data-trc-field="feature_2">
@@ -510,7 +515,7 @@ function renderDetailForm(tutor) {
             <textarea class="p19-input p19-textarea" name="intro_short" rows="2">${esc(tutor.intro_short || '')}</textarea>
           </label>
           <div class="p19-field p19-field--full" data-trc-field="profile_image">
-            <span class="p19-field__label">프로필 사진 ${reqMark()}</span>
+            <span class="p19-field__label">프로필 사진</span>
             ${renderTutorProfilePhotoEditor(tutor)}
           </div>
           <label class="p19-field p19-field--full" data-trc-field="intro_long">
@@ -709,14 +714,9 @@ export function bindTutorRegEvents(root, rerender) {
           basicSaveFlash = '저장되었습니다.';
           markTutorBasicClean(form);
         } else if (kind === 'detail') {
-          const current = getTutor(id) || {};
           await saveTutorDetailInline(id, {
-            main_subject_note: String(current.main_subject_note || ''),
-            preferred_fee_amount: Number(cheonwonInputToWon(fd.get('preferred_fee_amount')) || 0),
             fee_basis_type: String(fd.get('fee_basis_type') || ''),
-            lessons_per_week: String(fd.get('lessons_per_week') || ''),
             monthly_session_count: String(fd.get('monthly_session_count') || ''),
-            minutes_per_lesson: String(fd.get('minutes_per_lesson') || ''),
             fee_description: String(fd.get('fee_description') || ''),
             student_gender_group: String(fd.get('student_gender_group') || ''),
             student_count_group: String(fd.get('student_count_group') || ''),
