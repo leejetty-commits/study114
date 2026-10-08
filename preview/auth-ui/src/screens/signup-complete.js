@@ -1,4 +1,4 @@
-import { signupState, resetSignupState } from '../state.js';
+import { signupState } from '../state.js';
 import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { fetchMeApi } from '../auth-api.js';
@@ -148,14 +148,17 @@ export function renderSignupComplete() {
         <dd>${studentSummary || '—'}</dd>
       </dl>
 
+      <p class="form-note mt-6">
+        ${AUTH_WELCOME_COPY.complete.studentDetailNote}
+      </p>
+
       <div class="actions-stack">
         <button type="button" class="btn btn--primary btn--block" data-action="go-detail-register">
-          이어서 입력하기
+          ${AUTH_WELCOME_COPY.complete.studentDetailCta}
         </button>
         <button type="button" class="btn btn--secondary btn--block" data-action="go-home">
           홈으로
         </button>
-        <button type="button" class="btn btn--ghost btn--block" data-nav="/login">로그인하기</button>
       </div>
     </div>
   ` : `
@@ -188,9 +191,8 @@ export function renderSignupComplete() {
           상세등록 이어하기
         </button>
         <button type="button" class="btn btn--secondary btn--block" data-action="go-home">
-          나중에 상세등록 (홈으로)
+          ${AUTH_WELCOME_COPY.complete.providerLaterCta}
         </button>
-        <button type="button" class="btn btn--ghost btn--block" data-nav="/login">로그인하기</button>
       </div>
     </div>
   `;
@@ -333,9 +335,5 @@ export function bindSignupCompleteEvents(root) {
     const home =
       role === 'study_room' ? homeUiUrl('study-room') : role === 'tutor' ? homeUiUrl('tutor') : homeUiUrl('parent');
     window.location.assign(home);
-  });
-
-  root.querySelector('[data-nav="/login"]')?.addEventListener('click', () => {
-    resetSignupState();
   });
 }

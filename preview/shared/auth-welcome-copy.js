@@ -49,13 +49,17 @@ export const AUTH_WELCOME_COPY = {
   complete: {
     title: '가입이 끝났어요',
     studentLead: '적어 주신 내용은 학생 카드에 바로 반영돼요.',
+    studentDetailNote:
+      '기본정보만으로도 가입은 끝났어요. 이어서 상세정보를 입력할 수 있고, 나중에 마이페이지에서도 입력하고 고칠 수 있어요.',
+    studentDetailCta: '상세정보 이어서 입력하기',
     providerLead:
-      '계정과 기본등록이 끝났어요. 아직은 검색에 안 보여요. 상세등록을 채우면 이웃에게 열려요.',
+      '계정과 기본등록이 끝났어요. 지금부터 우리 동네에 카드가 노출되고, 사이트 곳곳을 둘러볼 수 있어요.',
     profileStudyRoom: '공부방',
     profileTutor: '과외쌤',
     detailTitle: '다음 · 상세등록 (선택)',
     detailNote:
-      '기본등록만으로도 가입은 끝났어요. 상세등록은 나중에 마이페이지에서 이어갈 수 있어요. 검색에 쓰이는 항목은 상세등록에서 채워요.',
+      '기본등록만으로도 가입은 끝났어요. 이어서 상세등록을 할 수 있고, 나중에 마이페이지에서도 입력하고 고칠 수 있어요.',
+    providerLaterCta: '나중에 하고 홈으로',
     alertDone: '기본등록이 끝났어요. 상세등록은 마이페이지에서 이어갈 수 있어요.',
     confirmStudent: '희망지역이 없어요. 그래도 홈으로 갈까요?',
     confirmProvider:
