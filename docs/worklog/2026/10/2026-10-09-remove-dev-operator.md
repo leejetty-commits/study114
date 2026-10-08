@@ -492,3 +492,11 @@ preview 밖이라 손대지 않았지만 알릴 것: `sql/schema/021_board_engin
 - 삭제 SQL: ops@dev.local 1행·blocked·보호 계정 제외·소유 행 없음 조건, FK 순서·멱등 확인. 제출자료 SQL STEP 2 전부 주석.
 - `verify-no-sample-data` OK. `demo_prime_*` 규칙은 실제 카드의 배치 규칙이며 가짜 데이터 생성 없음(이번 범위 밖, 사용자 결정 대기).
 - 사용자 승인: 대기 (승인 대상 hash `1eb8f2e`). 배포 전 사용자 할 일: 제출자료 SQL STEP 1 조회. 배포 후: ops@dev.local 삭제 SQL.
+
+## 15. 사용자 승인 · main 진행분 병합 (2026-10-09 02:10)
+
+- 사용자 승인: `1eb8f2e` (새 채팅에서 선택).
+- 그 사이 `origin/main` 이 `b5ffeb5`(과외지역 단위 배포)로 나가 빨리감기 불가 → `origin/main` 병합 `6b12094`. 충돌 없음.
+- 겹친 파일은 `scripts/verify-student-mypage-metrics.mjs` 하나. main 은 과외 단위 응답·검사 항목, 브랜치는 학생 1 시드(`addStudent`) — 서로 다른 구간, 자동 병합 결과 양쪽 다 살아 있음.
+- 병합본 검사(메인 검수): `verify:no-sample-data` OK · `verify:shop-page` 54 pass / 0 fail · `verify:location-ssot` 통과. PHP 문법은 CI 에서.
+- 승인 뒤 새 커밋이므로 사용자 재승인 필요: 대상 hash `6b12094`.
