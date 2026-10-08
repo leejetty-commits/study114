@@ -141,3 +141,13 @@
 | R3 | 내 인사 조회가 500 날 수 있음 | `welcomeInfoForMine()` 쿼리 예외 처리 없음 | 예외 시 `error_log` + null |
 | R4 | 환영 상태가 브라우저 저장소에 「내린 인사」로 기록됨 | `fetchMineGreeting()` 이 `status:'welcome'` 을 `'down'` 으로 저장 | 환영 상태는 인사 기록으로 저장하지 않고 welcome 정보만 넘긴다 |
 | R5 | 레드라인 2 보증 부족 | 공부방 조건이 `getPublishedById()`+`roomHasPromoSlot1()` 과 같은 내용을 복제 | 검증 스크립트에서 모든 환영 항목에 대해 `basicCard()` 가 null 이 아님을 확인 |
+
+### 2차 메인 검수 — `5c3be6b` 통과 (2026-10-08 18:52)
+
+- R1: 과외쌤 경로 3곳 `sigungu_name`, 공부방 `dong_name` 유지 확인.
+- R2: 서비스 파일 `echo` 0건, `error_log` 사용 확인.
+- R3: `welcomeInfoForMine()` 전체 try/catch + `error_log` 확인.
+- R4: `fetchMineGreeting()` 이 welcome 응답을 로컬 저장하지 않음, 편집 칸은 「아직 올린 인사가 없어요」+ D-n 배너 확인.
+- R5: 검증 스크립트에 welcome 항목 `basicCard()` assert 확인.
+- 메인 재실행: `verify-neighborhood-welcome.php` ALL PASS, `verify-home-news-row.mjs` 226/0, `verify-basic-exposure-gate.mjs` 24/0.
+- 남은 절차: 다른 모델 독립 리뷰 → 사용자 배포 승인.
