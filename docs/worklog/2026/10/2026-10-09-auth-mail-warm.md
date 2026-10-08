@@ -195,6 +195,11 @@ https://study114.net/api/auth/email/verify.php?token=…
 
 다시 만들기: `php scripts/verify-auth-mail-warm.php`
 
+## 7-1. 커밋
+
+- `695aa50` feat(mail): 가입 확인·비밀번호 재설정 메일을 역할 배지·HTML 우동공과 편지로 (코드·검증·이 기록)
+- 다음 커밋: 이 절(커밋 hash 기록)만 추가
+
 ## 8. 배포 전 사용자 할 일
 
 - 없음. SQL·환경변수·Secrets·`.htaccess` 변경 없음. 실메일 발송·운영 로그인·운영 DB 변경 하지 않음.
