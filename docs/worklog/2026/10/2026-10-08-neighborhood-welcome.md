@@ -108,4 +108,12 @@
 
 ## 검수 기록
 
-(메인 검수 후 추가)
+### 1차 메인 검수 — `b62be07` 반려 (2026-10-08 18:40)
+
+| # | 문제 | 근거 | 요구 |
+|---|---|---|---|
+| R1 | 과외쌤 환영 줄이 실제로 나오지 않음 | 과외 지역은 구(시·군) 단위(073 공식 행 `dong_name=''`). 환영 쿼리가 `r.dong_name <> ''` 를 요구 | 정본 4-1(6)·4-2 정정(메인, 정본 기술 오류): 과외쌤은 `sigungu_name`. 검증 스크립트에 구 단위 지역(동 이름 빈 값) 과외쌤 통과 사례 추가 |
+| R2 | 공개 GET 응답 JSON이 깨질 수 있음 | `listWelcomeItems()` catch 에서 `echo "Tutor welcome error..."` | `error_log` 로 바꾸고 빈 목록 반환 |
+| R3 | 내 인사 조회가 500 날 수 있음 | `welcomeInfoForMine()` 쿼리 예외 처리 없음 | 예외 시 `error_log` + null |
+| R4 | 환영 상태가 브라우저 저장소에 「내린 인사」로 기록됨 | `fetchMineGreeting()` 이 `status:'welcome'` 을 `'down'` 으로 저장 | 환영 상태는 인사 기록으로 저장하지 않고 welcome 정보만 넘긴다 |
+| R5 | 레드라인 2 보증 부족 | 공부방 조건이 `getPublishedById()`+`roomHasPromoSlot1()` 과 같은 내용을 복제 | 검증 스크립트에서 모든 환영 항목에 대해 `basicCard()` 가 null 이 아님을 확인 |
