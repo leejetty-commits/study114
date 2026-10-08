@@ -503,3 +503,11 @@ preview 밖이라 손대지 않았지만 알릴 것: `sql/schema/021_board_engin
 - 사용자 재승인: `6b12094` (02:01, "제거. jetty@naver.com 은 제외. 관리자용 2계정 제외").
   - 삭제 SQL 은 `ops@dev.local` 1행만 지우고 `jetty@naver.com`·`leejetty@gmail.com` 은 조건으로 제외 — 그 밖의 계정은 대상 아님.
   - 코드에서 지운 `@dev.local` 부마스터 예외는 `role_type = admin` 인데 등급이 없을 때만 닿던 분기이고 기본값도 부마스터라, 실제 관리자 계정 권한은 바뀌지 않음.
+
+## 16. 배포 · 운영 DB 정리 결과 (2026-10-09 02:29)
+
+- main `b230d0a` 배포, Actions 8개 성공. 운영 로그인 화면에 `dev.local` 안내 없음.
+- 사용자 phpMyAdmin 실행 `sql/ops/2026-10-09-delete-ops-dev-local.sql`:
+  - STEP 1: id 7 `ops@dev.local` blocked·sub_master / id 9 `jetty@naver.com` · id 11 `leejetty@gmail.com` active·super_admin.
+  - STEP 2: 운영 로그 1행 삽입(id 25), user_roles·user_profiles·users 각 1행 삭제, `ops_rows_left` = 0, COMMIT.
+  - STEP 3: 사용자 확인 「정상」 (보호 계정 2개 유지).
