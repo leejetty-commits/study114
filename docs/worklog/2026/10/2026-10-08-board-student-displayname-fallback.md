@@ -163,3 +163,8 @@
 - diff 확인: `fromStudent()`만 변경. 별명 있으면 그 값, NULL·공백이면 `'학생'`(클래스 상수), `students` 행 없으면 ''(기본정보 미등록 계정에 글쓰기 허용 범위를 넓히지 않음 — 공부방·과외쌤과 같은 기준). 실명 칼럼은 조회하지 않음.
 - 메인 재실행 (`D:\php8.2\php.exe`): `php -l` 통과, 학생 대체 검증 0 failed, 공부방 대체 회귀 0 failed, `verify-board-channel-acl.php` ok.
 - SQL·환경변수 변경 없음. 배포: 사용자 승인 대기.
+
+## 배포 (2026-10-08 17:41)
+
+- 사용자 승인 「지금 배포」 → `origin/main` `704de8c` 병합(`691e3e6`) 후 `main` fast-forward `704de8c..691e3e6`.
+- Actions: Deploy to dothome `37751309470`·Board ACL gate·ShopPage gate success.
