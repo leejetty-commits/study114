@@ -1,15 +1,10 @@
 /**
- * 공부방 노출지역 시·도 이름. 과외·학생 지역 선택은 region-cascade.js가 서버 cities만 쓴다.
+ * 공부방 노출지역 시·도 이름. 과외 단위(광역시 / 도의 시·군)는 tutor-unit-cascade.js 가 서버 tutor_units 만 쓴다.
  * 여기의 시·도 이름은 공부방 화면이 이미 가져가므로 유지한다. 시·군 정적 옵션은 만들지 않는다.
  */
 
-import {
-  activityLabelForUnit,
-  activityLabelFromRegionId,
-  normalizeCities,
-  regionIdFromActivityLabel,
-  regionIdFromSelection,
-} from './region-cascade.js';
+import { normalizeCities } from './region-cascade.js';
+import { tutorUnitIdFromLabel, tutorUnitLabelFromId } from './tutor-unit-cascade.js';
 
 /** @typedef {{ code: string, label: string }} SidoUnit */
 
@@ -44,9 +39,13 @@ export const KOREA_SIDOS = [
   ...KOREA_PROVINCES.map((p) => ({ code: p.code, label: p.label })),
 ];
 
-export { activityLabelForUnit, activityLabelFromRegionId, regionIdFromActivityLabel, regionIdFromSelection };
+/** 과외 단위 id → 공식 전체 이름(「서울특별시」「경기도 수원시」). units 는 서버 tutor_units. */
+export const activityLabelFromRegionId = tutorUnitLabelFromId;
 
-/** 서버 cities를 선택 단위로만 돌려준다. 정적 폴백은 없다. */
+/** 과외 단위 공식 전체 이름 → id. 같은 이름이 하나일 때만. */
+export const regionIdFromActivityLabel = tutorUnitIdFromLabel;
+
+/** 서버 cities(구 단위)를 선택 단위로만 돌려준다. 정적 폴백은 없다. */
 export function buildCityUnitOptions(apiCities = []) {
   return normalizeCities(apiCities);
 }

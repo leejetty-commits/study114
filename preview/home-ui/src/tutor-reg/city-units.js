@@ -1,13 +1,13 @@
 /**
- * 마이페이지 과외·학생 희망지역 — /api/auth/regions.php?action=cities
- * 실패·빈 목록이면 정적 목록으로 대체하지 않는다.
+ * 마이페이지 과외지역·학생 과외 희망지역 — /api/auth/regions.php?action=tutor_units
+ * 과외 단위(광역시 / 도의 시·군). 실패·빈 목록이면 정적 목록으로 대체하지 않는다.
  */
 
-import { REGION_LIST_ERROR } from '../../../shared/region-cascade.js';
+import { TUTOR_UNIT_LIST_ERROR } from '../../../shared/tutor-unit-cascade.js';
 import { getCityUnits } from '../../../shared/tutor-region-slots.js';
 
-/** @type {Array<{id: string, label: string, sido_code?: string, sido_name?: string, kind?: string}>} */
-let cities = [];
+/** @type {Array<Record<string, unknown>>} */
+let units = [];
 /** @type {Promise<boolean>|null} */
 let loadPromise = null;
 let lastError = '';
@@ -21,29 +21,28 @@ export function tutorCityUnitsError() {
 }
 
 export function getTutorCityUnits() {
-  if (!cities.length) return [];
-  return getCityUnits(cities).filter((u) => /^\d+$/.test(String(u.id || '')));
+  if (!units.length) return [];
+  return getCityUnits(units);
 }
 
 /** 실패 뒤 「다시 불러오기」. 이전 빈 캐시를 지우고 다시 요청한다. */
 export function retryTutorCityUnits() {
-  cities = [];
+  units = [];
   lastError = '';
   loadPromise = null;
   return ensureTutorCityUnits();
 }
 
-function applyCities(list) {
-  if (!Array.isArray(list) || !list.length) return false;
-  if (!getCityUnits(list).length) {
-    cities = [];
+function applyUnits(list) {
+  if (!Array.isArray(list) || !getCityUnits(list).length) {
+    units = [];
     return false;
   }
-  cities = list;
+  units = list;
   return true;
 }
 
-async function readCitiesPayload(res) {
+async function readUnitsPayload(res) {
   const text = await res.text();
   const body = text.trim();
   if (!body.startsWith('{')) return null;
@@ -54,10 +53,10 @@ async function readCitiesPayload(res) {
   }
 }
 
-async function fetchCitiesOnce() {
+async function fetchUnitsOnce() {
   const calls = [
     () =>
-      fetch('/api/auth/regions.php?action=cities', {
+      fetch('/api/auth/regions.php?action=tutor_units', {
         method: 'GET',
         headers: { Accept: 'application/json' },
         credentials: 'omit',
@@ -67,7 +66,7 @@ async function fetchCitiesOnce() {
         method: 'POST',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
         credentials: 'omit',
-        body: JSON.stringify({ action: 'cities' }),
+        body: JSON.stringify({ action: 'tutor_units' }),
       }),
     () =>
       fetch('/api/auth/regions.php', {
@@ -77,17 +76,17 @@ async function fetchCitiesOnce() {
         body: JSON.stringify({ action: 'list' }),
       }),
   ];
-  let last = new Error(REGION_LIST_ERROR);
+  let last = new Error(TUTOR_UNIT_LIST_ERROR);
   for (const call of calls) {
     try {
       const res = await call();
-      const data = await readCitiesPayload(res);
-      const list = Array.isArray(data?.cities) ? data.cities : [];
-      if (data && data.ok !== false && applyCities(list)) {
+      const data = await readUnitsPayload(res);
+      const list = Array.isArray(data?.tutor_units) ? data.tutor_units : [];
+      if (data && data.ok !== false && applyUnits(list)) {
         lastError = '';
         return;
       }
-      last = new Error(data?.message || REGION_LIST_ERROR);
+      last = new Error(data?.message || TUTOR_UNIT_LIST_ERROR);
     } catch (err) {
       last = err instanceof Error ? err : last;
     }
@@ -97,20 +96,20 @@ async function fetchCitiesOnce() {
 
 /** @returns {Promise<boolean>} true면 이번에 새로 불러와 재렌더가 필요 */
 export function ensureTutorCityUnits() {
-  if (cities.length) return Promise.resolve(false);
+  if (units.length) return Promise.resolve(false);
   if (loadPromise) return loadPromise;
   loadPromise = (async () => {
     let last = null;
     for (let i = 0; i < 3; i += 1) {
       try {
-        await fetchCitiesOnce();
+        await fetchUnitsOnce();
         return true;
       } catch (err) {
         last = err;
         await new Promise((r) => setTimeout(r, 350 * (i + 1)));
       }
     }
-    lastError = last instanceof Error ? last.message : REGION_LIST_ERROR;
+    lastError = last instanceof Error ? last.message : TUTOR_UNIT_LIST_ERROR;
     return false;
   })().finally(() => {
     loadPromise = null;

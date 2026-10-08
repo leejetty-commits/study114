@@ -94,10 +94,12 @@ final class GbPdo extends PDO
     #[\ReturnTypeWillChange] public function prepare(string $q, array $o = []): GbStmt { return new GbStmt($this, $q); }
 }
 
-const GU = ['id' => 500, 'sido_name' => '서울특별시', 'sigungu_name' => '강남구', 'sigungu_code' => '11680', 'dong_code' => null, 'dong_name' => '', 'unit_level' => 'sigungu', 'official_code' => '1168000000', 'is_selectable' => 1, 'is_active' => 1];
+const GU = ['id' => 500, 'sido_code' => '11', 'sido_name' => '서울특별시', 'sigungu_name' => '강남구', 'sigungu_code' => '11680', 'dong_code' => null, 'dong_name' => '', 'unit_level' => 'sigungu', 'official_code' => '1168000000', 'is_selectable' => 1, 'is_active' => 1];
+/** 과외 단위 서울특별시(073 시도 행). 과외쌤 축 기준 행. */
+const SEOUL = ['id' => 100, 'sido_code' => '11', 'sido_name' => '서울특별시', 'sigungu_name' => '', 'sigungu_code' => '11000', 'dong_code' => null, 'dong_name' => '', 'unit_level' => 'sido', 'official_code' => '1100000000', 'is_selectable' => 0, 'is_active' => 1];
 function dongRow(int $id, string $sido, string $gu, string $sgCode, string $code, string $name): array
 {
-    return ['id' => $id, 'sido_name' => $sido, 'sigungu_name' => $gu, 'sigungu_code' => $sgCode, 'dong_code' => $code, 'dong_name' => $name, 'unit_level' => 'dong', 'official_code' => null, 'is_selectable' => 0, 'is_active' => 1];
+    return ['id' => $id, 'sido_code' => substr($sgCode, 0, 2), 'sido_name' => $sido, 'sigungu_name' => $gu, 'sigungu_code' => $sgCode, 'dong_code' => $code, 'dong_name' => $name, 'unit_level' => 'dong', 'official_code' => null, 'is_selectable' => 0, 'is_active' => 1];
 }
 
 /** regions 표 + 축별 실카드 수(지역 id → 수). 표에 없는 조건은 빈 결과. */
@@ -124,6 +126,13 @@ function resolver(array $regions, array $counts): callable
             foreach ($regions as $r) { if ($r['official_code'] === ($p[0] ?? null) && (int) $r['is_selectable'] === 1) { return ['column' => $r['id']]; } }
             return ['column' => false];
         }
+        if (preg_match('/FROM regions WHERE id = \? LIMIT 1/', $sql) && str_contains($sql, 'sido_code')) {
+            $r = $byId[(int) ($p[0] ?? 0)] ?? null;
+            return ['rows' => $r ? [$r] : []];
+        }
+        if (preg_match("/FROM regions WHERE unit_level = 'sido' AND sido_code = \? ORDER BY/", $sql)) {
+            return ['rows' => array_values(array_filter($regions, static fn ($r) => $r['unit_level'] === 'sido' && $r['sido_code'] === ($p[0] ?? null)))];
+        }
         if (preg_match('/SELECT 1 FROM regions WHERE id = \? AND is_selectable = 1/', $sql)) {
             return ['column' => (int) ($byId[(int) ($p[0] ?? 0)]['is_selectable'] ?? 0) === 1 ? 1 : false];
         }
@@ -140,13 +149,14 @@ function resolver(array $regions, array $counts): callable
         if (str_contains($sql, 'information_schema.TABLES')) { return ['column' => false]; }
         if (str_contains($sql, 'COUNT(DISTINCT sr.id)')) { return ['column' => $counts['room'][(int) ($p['region_id'] ?? 0)] ?? 0]; }
         if (str_contains($sql, 'COUNT(DISTINCT t.id)')) { return ['column' => $counts['tutor'][(int) ($p['tutor_region_id'] ?? 0)] ?? 0]; }
-        if (str_contains($sql, 'COUNT(DISTINCT s.id)')) { return ['column' => $counts['student'][(int) ($p['guest_gu_id'] ?? 0)] ?? 0]; }
+        if (str_contains($sql, 'COUNT(DISTINCT s.id)')) { return ['column' => $counts['student'][(int) ($p['guest_tutor_unit_id'] ?? 0)] ?? 0]; }
         return [];
     };
 }
 
 function inject(array $regions, array $counts = []): GbPdo
 {
+    $regions[] = SEOUL;
     $pdo = new GbPdo(resolver($regions, $counts + ['room' => [], 'tutor' => [], 'student' => []]));
     (new ReflectionProperty(Connection::class, 'pdo'))->setValue(null, $pdo);
     return $pdo;
@@ -174,7 +184,8 @@ function logLines(string $file): array
 $opsDong = dongRow(9001, '서울', '강남구', '11680', '1168010600', '대치동');
 $otherDong = dongRow(9002, '경기도', '의정부시', '41150', '4115010900', '가능동');
 $daechi1 = dongRow(9003, '서울', '강남구', '11680', '11680abcde', '대치1동');
-$counts = ['room' => [9001 => 3, 1 => 2, 9100 => 4, 9002 => 50], 'tutor' => [500 => 5], 'student' => [500 => 7]];
+// 과외쌤 수는 서울특별시 단위(100) 기준, 학생 수는 과외 희망 서울특별시(100) + 강남구 소속 동 공부방 희망.
+$counts = ['room' => [9001 => 3, 1 => 2, 9100 => 4, 9002 => 50], 'tutor' => [100 => 5, 500 => 99], 'student' => [100 => 7, 500 => 99]];
 
 echo "=== [P1·가] 운영 마스터: 카카오 주소검색 행(시도 서울 · 법정동코드 1168010600 · 대치동) ===\n";
 attempt('P1 운영 마스터 행', static function () use ($opsDong, $otherDong, $daechi1, $counts): void {
@@ -183,7 +194,9 @@ attempt('P1 운영 마스터 행', static function () use ($opsDong, $otherDong,
     ok('P1 운영 마스터: regionIds.room = 대치동 행 9001', $c['regionIds']['room'] === 9001, var_export($c['regionIds']['room'], true));
     ok('P1 운영 마스터: 공부방 수 = 대치동 실카드 3', $c['studyRooms'] === 3, (string) $c['studyRooms']);
     ok('P1 운영 마스터: axes.room = 대치동', $c['axes']['room'] === '대치동', $c['axes']['room']);
-    ok('P4 운영 마스터: regionIds.tutor/student = 강남구 500', $c['regionIds']['tutor'] === 500 && $c['regionIds']['student'] === 500);
+    ok('P4 운영 마스터: regionIds.tutor = 과외 단위 서울특별시 100', $c['regionIds']['tutor'] === 100, var_export($c['regionIds']['tutor'], true));
+    ok('P4 운영 마스터: regionIds.student = 강남구 500', $c['regionIds']['student'] === 500, var_export($c['regionIds']['student'], true));
+    ok('P4 운영 마스터: axes.tutor = 서울특별시', $c['axes']['tutor'] === '서울특별시', $c['axes']['tutor']);
     ok('P4 운영 마스터: 과외쌤 5 · 학생 7', $c['tutors'] === 5 && $c['studentRequests'] === 7, $c['tutors'] . '/' . $c['studentRequests']);
 });
 
@@ -239,9 +252,11 @@ attempt('P7 guestScopedFilters', static function () use ($opsDong, $otherDong): 
     $room0 = scoped('room', []);
     ok('P7 공부방: 지역 조건 없는 요청도 대치동', is_array($room0) && (int) ($room0['region_id'] ?? 0) === 9001);
     $tutor = scoped('tutor', ['tutor_region_id' => 777, 'tutor_region_label' => '의정부시']);
-    ok('P7 과외쌤: 강남구 500 고정', is_array($tutor) && (int) ($tutor['tutor_region_id'] ?? 0) === 500 && !isset($tutor['tutor_region_label']), json_encode($tutor, JSON_UNESCAPED_UNICODE));
+    ok('P7 과외쌤: 과외 단위 서울특별시 100 고정', is_array($tutor) && (int) ($tutor['tutor_region_id'] ?? 0) === 100 && !isset($tutor['tutor_region_label']), json_encode($tutor, JSON_UNESCAPED_UNICODE));
     $student = scoped('student', ['preferred_studyroom_region_id' => 9002, 'preferred_region' => 777]);
     ok('P7 학생: 강남구 500 고정', is_array($student) && (int) ($student['preferred_region_id'] ?? 0) === 500 && !isset($student['preferred_studyroom_region_id']) && !isset($student['preferred_region']), json_encode($student, JSON_UNESCAPED_UNICODE));
+    $studentTutor = scoped('student', ['preferred_lesson_type' => 'tutor', 'preferred_region_id' => 777]);
+    ok('P7 학생(과외 희망): 과외 단위 서울특별시 100 고정', is_array($studentTutor) && (int) ($studentTutor['preferred_region_id'] ?? 0) === 100, json_encode($studentTutor, JSON_UNESCAPED_UNICODE));
     inject([$otherDong]);
     ok('P7 기준 행 없음: 공부방 null(지역 없이 부르지 않음)', scoped('room', ['region_id' => 9002]) === null);
     ok('P7 기준 행 없음: 과외쌤 null', scoped('tutor', []) === null);
@@ -306,14 +321,14 @@ const GU_CITY = { id: 500, official_code: '1168000000', sido_name: '서울특별
 {
   const mod = await freshLocation('ok', async (url) =>
     String(url).includes('region-stats')
-      ? jsonRes({ ok: true, studyRooms: 3, tutors: 5, studentRequests: 7, axes: { room: '대치동', tutor: '강남구', student: '강남구' }, regionIds: { room: 9001, tutor: 500, student: 500 } })
+      ? jsonRes({ ok: true, studyRooms: 3, tutors: 5, studentRequests: 7, axes: { room: '대치동', tutor: '서울특별시', student: '강남구' }, regionIds: { room: 9001, tutor: 100, student: 500 } })
       : jsonRes({ ok: true, cities: [GU_CITY] }),
   );
   const base = mod.readGuestBaseline();
   ok('P1 표기: 공부방 대치동', base.room === '대치동', base.room);
-  ok('P4 표기: 과외쌤·학생 서울시 강남구', base.tutor === '서울시 강남구' && base.student === '서울시 강남구', JSON.stringify(base));
+  ok('P4 표기: 과외쌤 서울특별시(과외 단위) · 학생 서울시 강남구', base.tutor === '서울특별시' && base.student === '서울시 강남구', JSON.stringify(base));
   ok('P1·P8 공부방 목록 필터 = 기준 행 id', JSON.stringify(mod.guestScopeFilters('room')) === JSON.stringify({ region_id: '9001' }));
-  ok('P4·P8 과외쌤 목록 필터 = 강남구 id', JSON.stringify(mod.guestScopeFilters('tutor')) === JSON.stringify({ tutor_region_id: '500' }));
+  ok('P4·P8 과외쌤 목록 필터 = 과외 단위 서울특별시 id', JSON.stringify(mod.guestScopeFilters('tutor')) === JSON.stringify({ tutor_region_id: '100' }));
   ok('P4·P8 학생 목록 필터 = 강남구 id', JSON.stringify(mod.guestScopeFilters('student')) === JSON.stringify({ preferred_region_id: '500' }));
   ok('P6 박스 수치 = region-stats 실수 그대로', JSON.stringify(mod.readGuestAxisCounts()) === JSON.stringify({ studyRooms: 3, tutors: 5, studentRequests: 7 }));
 }
@@ -326,7 +341,7 @@ const GU_CITY = { id: 500, official_code: '1168000000', sido_name: '서울특별
   ok('P6 실카드 0: 박스 수치 0(샘플 미포함)', JSON.stringify(mod.readGuestAxisCounts()) === JSON.stringify({ studyRooms: 0, tutors: 0, studentRequests: 0 }));
   ok('P7 기준 행 없음: 공부방 필터 null(지역 없이 부르지 않음)', mod.guestScopeFilters('room') === null);
   ok('P7 기준 행 없음: 과외쌤 필터 null', mod.guestScopeFilters('tutor') === null);
-  ok('P1·P11 기준 행 없음: 표기는 대치동 · 서울시 강남구(빈 값·안내문 아님)', mod.readGuestBaseline().room === '대치동' && mod.readGuestBaseline().tutor === '서울시 강남구');
+  ok('P1·P11 기준 행 없음: 표기는 대치동 · 서울특별시 · 서울시 강남구(빈 값·안내문 아님)', mod.readGuestBaseline().room === '대치동' && mod.readGuestBaseline().tutor === '서울특별시' && mod.readGuestBaseline().student === '서울시 강남구', JSON.stringify(mod.readGuestBaseline()));
 }
 {
   const mod = await freshLocation('fail', async () => {
@@ -334,7 +349,15 @@ const GU_CITY = { id: 500, official_code: '1168000000', sido_name: '서울특별
   });
   ok('P6 region-stats 실패: 수치 null(대시 유지, 더미 숫자 없음)', mod.readGuestAxisCounts() === null);
   ok('P7 region-stats 실패: 목록 필터 null', mod.guestScopeFilters('room') === null && mod.guestScopeFilters('tutor') === null);
-  ok('P11 region-stats 실패: 표기는 대치동 · 서울시 강남구', mod.readGuestBaseline().room === '대치동' && mod.readGuestBaseline().tutor === '서울시 강남구');
+  ok('P11 region-stats 실패: 표기는 대치동 · 서울특별시 · 서울시 강남구', mod.readGuestBaseline().room === '대치동' && mod.readGuestBaseline().tutor === '서울특별시' && mod.readGuestBaseline().student === '서울시 강남구', JSON.stringify(mod.readGuestBaseline()));
+}
+{
+  const mod = await freshLocation('stats-fail-cities-ok', async (url) => {
+    if (String(url).includes('region-stats')) throw new Error('offline');
+    return jsonRes({ ok: true, cities: [GU_CITY] });
+  });
+  ok('P7 region-stats 실패 · cities 성공: 과외쌤 필터는 구 id 로 보충하지 않음(null)', mod.guestScopeFilters('tutor') === null, JSON.stringify(mod.guestScopeFilters('tutor')));
+  ok('P7 region-stats 실패 · cities 성공: 학생 필터는 강남구 id 보충', JSON.stringify(mod.guestScopeFilters('student')) === JSON.stringify({ preferred_region_id: '500' }));
 }
 
 // ───────────────────────── 프런트: 화면 소스 단정 ─────────────────────────

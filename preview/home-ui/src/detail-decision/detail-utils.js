@@ -59,14 +59,14 @@ export function buildJudgmentTokens(kind, item, viewer) {
     const price = formatMonthlyWon(item.price_amount);
     const inquiry = studyRoomParentInquiryLine(item.inquiry_status);
     const loc =
-      viewer === 'guest' ? coarseRegionForGuest(item.location_label) : item.location_label;
+      viewer === 'guest' ? coarseRegionForGuest(item.location_label, 'study_room') : item.location_label;
     return [loc, item.grade_band, item.main_subject_note, inquiry, price].filter(Boolean);
   }
   if (kind === 'tutor') {
     const fee = formatTutorFeeCard(item);
     const places = formatTutorLessonPlaces(item.lesson_places);
     const loc =
-      viewer === 'guest' ? coarseRegionForGuest(item.location_label) : item.location_label;
+      viewer === 'guest' ? coarseRegionForGuest(item.location_label, 'tutor') : item.location_label;
     const contactToken = viewer === 'guest' ? '로그인 후 쪽지' : '쪽지 가능';
     return [loc, item.main_subject_note, places, contactToken, fee].filter(Boolean);
   }

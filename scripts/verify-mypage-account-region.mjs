@@ -31,31 +31,14 @@ function ok(name, cond, detail = '') {
   }
 }
 
+/** 과외 단위(광역시 / 도의 시·군) — regions.php action=tutor_units 응답 모양 */
 const UNITS = [
-  {
-    id: '101',
-    label: '서울특별시 강남구',
-    sido_code: '11',
-    sido_name: '서울특별시',
-    official_code: '1168000000',
-    city_name: '강남구',
-    gu_name: '',
-    kind: 'metro_gu',
-  },
-  {
-    id: '202',
-    label: '부산광역시 해운대구',
-    sido_code: '26',
-    sido_name: '부산광역시',
-    official_code: '2635000000',
-    city_name: '해운대구',
-    gu_name: '',
-    kind: 'metro_gu',
-  },
+  { id: '101', label: '서울특별시', sido_code: '11', sido_name: '서울특별시', unit_name: '', kind: 'metro', official_code: '1100000000' },
+  { id: '202', label: '부산광역시', sido_code: '26', sido_name: '부산광역시', unit_name: '', kind: 'metro', official_code: '2600000000' },
 ];
 
-const GANGNAM = '서울특별시 강남구';
-const HAEUNDAE = '부산광역시 해운대구';
+const SEOUL_UNIT = '서울특별시';
+const BUSAN_UNIT = '부산광역시';
 
 const mem = new Map();
 const storage = {
@@ -183,16 +166,16 @@ globalThis.fetch = async (input) => {
     return responseJson({ ok: true, tutors: session.role_type === 'tutor' ? session.tutors : [] });
   }
   if (url.includes('/api/auth/regions.php')) {
-    return responseJson({ ok: true, cities: UNITS });
+    return responseJson({ ok: true, cities: [], tutor_units: UNITS });
   }
-  return responseJson({ ok: true, threads: [], posts: [], items: [], cities: UNITS });
+  return responseJson({ ok: true, threads: [], posts: [], items: [], cities: [], tutor_units: UNITS });
 };
 
 const labelMod = await import('../preview/home-ui/src/mypage/account-region-label.js');
 const { initAuthSession } = await import('../preview/home-ui/src/auth-session.js');
 const { isRegistrationsApiMode } = await import('../preview/home-ui/src/registrations-backend.js');
 const { renderMypageScreen } = await import('../preview/home-ui/src/mypage/screens.js');
-const { activityLabelFromRegionId } = await import('../preview/shared/region-cascade.js');
+const { tutorUnitLabelFromId } = await import('../preview/shared/tutor-unit-cascade.js');
 
 const {
   ACCOUNT_REGION_UNSET,
@@ -230,7 +213,7 @@ ok('(a) 과외쌤 대표 region_id 라벨', () => {
       ],
     },
   });
-  return !view.pending && view.text === activityLabelFromRegionId('101', UNITS) && view.text === GANGNAM && view.text !== HAEUNDAE;
+  return !view.pending && view.text === tutorUnitLabelFromId('101', UNITS) && view.text === SEOUL_UNIT && view.text !== BUSAN_UNIT;
 });
 
 ok('(a) 학생 과외 분기 1번', () => {
@@ -238,12 +221,12 @@ ok('(a) 학생 과외 분기 1번', () => {
     student: {
       preferred_lesson_type: 'tutor',
       preferred_tutor_region_id: '101',
-      preferred_tutor_region_label: GANGNAM,
+      preferred_tutor_region_label: SEOUL_UNIT,
       preferred_studyroom_region_id: '55',
       preferred_studyroom_region_label: '대치동',
     },
   });
-  return !view.pending && view.text === GANGNAM;
+  return !view.pending && view.text === SEOUL_UNIT;
 });
 
 ok('(a) 학생 공부방 분기 1번', () => {
@@ -251,7 +234,7 @@ ok('(a) 학생 공부방 분기 1번', () => {
     student: {
       preferred_lesson_type: 'study_room',
       preferred_tutor_region_id: '101',
-      preferred_tutor_region_label: GANGNAM,
+      preferred_tutor_region_label: SEOUL_UNIT,
       preferred_studyroom_region_id: '55',
       preferred_studyroom_region_label: '대치동',
     },
@@ -277,7 +260,7 @@ ok('(M8) is_primary 없는 첫 슬롯은 대표가 아님', () => {
       ],
     },
   });
-  return !view.pending && view.text === ACCOUNT_REGION_UNSET && view.text !== GANGNAM && view.text !== HAEUNDAE;
+  return !view.pending && view.text === ACCOUNT_REGION_UNSET && view.text !== SEOUL_UNIT && view.text !== BUSAN_UNIT;
 });
 
 ok('(M8) is_primary 없으면 서버 primary_region_label', () => {
@@ -288,7 +271,7 @@ ok('(M8) is_primary 없으면 서버 primary_region_label', () => {
       saved_regions: [{ region_id: '101', is_primary: 0 }],
     },
   });
-  return !view.pending && view.text === '서버표시' && view.text !== GANGNAM;
+  return !view.pending && view.text === '서버표시' && view.text !== SEOUL_UNIT;
 });
 
 ok('(c) #숫자·지역 id 는 나오지 않음', () => {
@@ -331,11 +314,11 @@ ok('(d) 공부방 분기는 과외 지역을 쓰지 않음', () => {
     student: {
       preferred_lesson_type: 'study_room',
       preferred_tutor_region_id: '101',
-      preferred_tutor_region_label: GANGNAM,
+      preferred_tutor_region_label: SEOUL_UNIT,
       preferred_studyroom_region_label: '',
     },
   });
-  return view.text === ACCOUNT_REGION_UNSET && view.text !== GANGNAM;
+  return view.text === ACCOUNT_REGION_UNSET && view.text !== SEOUL_UNIT;
 });
 
 ok('(e) 사업장 동만 있으면 등록 전', () => {
@@ -423,7 +406,7 @@ ok('계정 화면 갱신은 칸만 고치고 rerender 를 부르지 않음', () 
 });
 ok('합성은 account-region-label 한 곳', () => {
   const src = read('preview/home-ui/src/mypage/account-region-label.js');
-  return src.includes('studyRoomPromo1Label') && src.includes('primaryHopeRegionLabel') && src.includes('activityLabelFromRegionId') && src.includes('hydrateRegistrationsCache');
+  return src.includes('studyRoomPromo1Label') && src.includes('primaryHopeRegionLabel') && src.includes('tutorUnitLabelFromId') && src.includes('hydrateRegistrationsCache');
 });
 
 function regionCell(html) {
@@ -567,11 +550,11 @@ const root = {
 await ensureAccountRegionLabel('tutor');
 paintAccountRegionLabel(root, 'tutor');
 ok('입력 중인 값은 지역 칸 갱신 뒤에도 유지', typing.value === '입력중');
-ok('(a) 과외 대표 지역은 단위 조합 라벨', slot.textContent === GANGNAM && !slot.attrs['data-pending'] && noHash(slot.textContent), slot.textContent);
+ok('(a) 과외 대표 지역은 과외 단위 라벨', slot.textContent === SEOUL_UNIT && !slot.attrs['data-pending'] && noHash(slot.textContent), slot.textContent);
 
 const tutorHtml = accountHtml();
 const tutorCell = regionCell(tutorHtml);
-ok('(a) 과외 카드 HTML 이 대표 라벨', tutorCell && tutorCell.text === GANGNAM && !tutorHtml.includes(HAEUNDAE) && noHash(tutorCell.text), tutorCell && tutorCell.text);
+ok('(a) 과외 카드 HTML 이 대표 라벨', tutorCell && tutorCell.text === SEOUL_UNIT && !tutorHtml.includes(BUSAN_UNIT) && noHash(tutorCell.text), tutorCell && tutorCell.text);
 
 session.students = [
   {
@@ -579,7 +562,7 @@ session.students = [
     exposure_status: 'published',
     preferred_lesson_type: 'tutor',
     preferred_tutor_region_id: '101',
-    preferred_tutor_region_label: GANGNAM,
+    preferred_tutor_region_label: SEOUL_UNIT,
     preferred_studyroom_region_id: '55',
     preferred_studyroom_region_label: '대치동',
     preferred_tutor_regions: [],
@@ -588,7 +571,7 @@ session.students = [
 ];
 await login('guardian_student', 'guardian1@dev.local', '학생');
 const studentTutor = regionCell(accountHtml());
-ok('(d) 화면 학생 과외 분기는 공부방 지역을 안 씀', studentTutor && studentTutor.text === GANGNAM && studentTutor.text !== '대치동', studentTutor && studentTutor.text);
+ok('(d) 화면 학생 과외 분기는 공부방 지역을 안 씀', studentTutor && studentTutor.text === SEOUL_UNIT && studentTutor.text !== '대치동', studentTutor && studentTutor.text);
 
 session.students = [
   {
@@ -596,7 +579,7 @@ session.students = [
     exposure_status: 'published',
     preferred_lesson_type: 'study_room',
     preferred_tutor_region_id: '101',
-    preferred_tutor_region_label: GANGNAM,
+    preferred_tutor_region_label: SEOUL_UNIT,
     preferred_studyroom_region_id: '55',
     preferred_studyroom_region_label: '대치동',
     preferred_tutor_regions: [],
@@ -605,20 +588,20 @@ session.students = [
 ];
 await login('guardian_student', 'guardian1@dev.local', '학생');
 const studentRoom = regionCell(accountHtml());
-ok('(d) 화면 학생 공부방 분기는 과외 지역을 안 씀', studentRoom && studentRoom.text === '대치동' && studentRoom.text !== GANGNAM, studentRoom && studentRoom.text);
+ok('(d) 화면 학생 공부방 분기는 과외 지역을 안 씀', studentRoom && studentRoom.text === '대치동' && studentRoom.text !== SEOUL_UNIT, studentRoom && studentRoom.text);
 
 session.students = [
   {
     id: 1,
     exposure_status: 'published',
     preferred_lesson_type: 'study_room',
-    preferred_tutor_region_label: GANGNAM,
+    preferred_tutor_region_label: SEOUL_UNIT,
     preferred_studyroom_region_label: '',
   },
 ];
 await login('guardian_student', 'guardian1@dev.local', '학생');
 const studentEmpty = regionCell(accountHtml());
-ok('(b) 학생 분기 지역이 없으면 등록 전', studentEmpty && studentEmpty.text === '등록 전' && !accountHtml().includes(GANGNAM), studentEmpty && studentEmpty.text);
+ok('(b) 학생 분기 지역이 없으면 등록 전', studentEmpty && studentEmpty.text === '등록 전' && !accountHtml().includes(SEOUL_UNIT), studentEmpty && studentEmpty.text);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

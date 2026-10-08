@@ -42,6 +42,7 @@ import {
 import {
   maskPublicDisplayName,
   guestStudentTeaserFields,
+  guestStudentRegionKind,
   coarseRegionForGuest,
 } from './student-blind-teaser.js';
 import {
@@ -684,7 +685,7 @@ function renderBasicStudyRoomRow(item, opts) {
   });
   const actions = renderItemActions(actionOpts);
   const locationLabel = opts.guest
-    ? coarseRegionForGuest(item.location_label)
+    ? coarseRegionForGuest(item.location_label, 'study_room')
     : item.location_label;
 
   if (opts.layout === 'table') {
@@ -757,7 +758,7 @@ function renderBasicTutorRow(item, opts) {
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
       : '—';
   const locationLabel = opts.guest
-    ? coarseRegionForGuest(item.location_label)
+    ? coarseRegionForGuest(item.location_label, 'tutor')
     : item.location_label;
 
   if (opts.layout === 'table') {
@@ -854,7 +855,7 @@ function renderBasicStudentRow(item, opts) {
   const isGuest = !selfView && Boolean(opts.guest || viewerRole === 'guest');
   const maskedName = maskPublicDisplayName(item.public_display_name);
   const locationLabel = isGuest
-    ? coarseRegionForGuest(item.location_label)
+    ? coarseRegionForGuest(item.location_label, guestStudentRegionKind(item))
     : item.location_label;
 
   if (opts.layout === 'table') {

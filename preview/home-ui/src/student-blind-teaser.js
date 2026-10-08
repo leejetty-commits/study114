@@ -5,6 +5,8 @@
  * - 비로그인 티저: 조건은 보이되 사람·세부는 특정되지 않게
  */
 
+import { isTutorUnitLabel } from '../../shared/tutor-unit-cascade.js';
+
 /**
  * 공개 표시명 마스킹 — 김○○ / 이○ / 박○학생 / 맑○○
  * @param {string | null | undefined} raw
@@ -50,12 +52,15 @@ export function primarySubjectOne(subjectLabel) {
 }
 
 /**
- * 비로그인: 단지명 제외 · 동/권역만
+ * 비로그인: 단지명 제외 · 동/권역만. 과외 축(kind 'tutor')의 과외 단위 표기(서울특별시·경기도 수원시)는
+ * 이미 넓은 지역이라 그대로. 공부방 축은 main 과 같은 규칙.
  * @param {string | null | undefined} locationLabel
+ * @param {'tutor' | 'study_room'} [kind]
  */
-export function coarseRegionForGuest(locationLabel) {
+export function coarseRegionForGuest(locationLabel, kind = 'study_room') {
   const s = String(locationLabel || '').trim();
   if (!s) return '—';
+  if (kind === 'tutor' && isTutorUnitLabel(s)) return s;
   const noComplex = s.split('·')[0].trim();
   const dong = noComplex.match(/([가-힣]{1,8}동)/);
   if (dong) return dong[1];
@@ -121,6 +126,15 @@ export function formatGuestStudentTeaserLine(item) {
 }
 
 /**
+ * 학생 카드 지역 축: 과외 희망이면 과외 단위 라벨, 그 밖은 공부방 축.
+ * @param {{ preferred_lesson_type?: string | null }} item
+ * @returns {'tutor' | 'study_room'}
+ */
+export function guestStudentRegionKind(item) {
+  return item?.preferred_lesson_type === 'tutor' ? 'tutor' : 'study_room';
+}
+
+/**
  * @param {object} item
  * @returns {{ name: string, band: string, subject: string, region: string, budget: string, hope: string, chip: string }}
  */
@@ -133,7 +147,7 @@ export function guestStudentTeaserFields(item) {
     name: maskPublicDisplayName(item.public_display_name),
     band: schoolBandFromGrade(item.grade_level),
     subject: primarySubjectOne(item.subject_label),
-    region: coarseRegionForGuest(item.location_label),
+    region: coarseRegionForGuest(item.location_label, guestStudentRegionKind(item)),
     budget: budgetBandLabel(amount),
     hope: hopeTypeLabel(item.preferred_lesson_type),
     chip: oneLessonHopeChip(item),

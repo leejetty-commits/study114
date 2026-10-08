@@ -1,4 +1,4 @@
-import { registerState, PERSONAL_GENDER_OPTIONS, getCities } from '../state.js';
+import { registerState, PERSONAL_GENDER_OPTIONS, getTutorUnits } from '../state.js';
 import { syncBasicFromForm } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import {
@@ -52,19 +52,19 @@ function ensureThreeSlots() {
   registerState.saved_regions = slots.slice(0, 3);
 }
 
-/** 기본등록 = 표시명·과목·성별 + 과외지역(시 단위) 한 화면 */
+/** 기본등록 = 표시명·과목·성별 + 과외지역(광역시 / 도의 시·군) 한 화면 */
 export function renderBasic() {
   const s = registerState;
   const editing = isRegisterEditMode();
   ensureThreeSlots();
-  const units = getCityUnits(getCities());
+  const units = getCityUnits(getTutorUnits());
 
   const content = `
     <form data-form="basic">
       ${renderGuideNotice(
         editing
           ? '기본정보와 과외지역을 한 화면에서 수정합니다. 저장하면 마이페이지로 돌아갑니다.'
-          : '표시명·주력과목과 과외지역(시 단위)을 함께 등록합니다. 광역시는 그 자체, 도는 시까지 선택합니다.',
+          : '표시명·주력과목과 과외지역을 함께 등록합니다. 광역시는 시 전체, 도는 시·군까지 선택합니다.',
       )}
       <div class="register-grid-2">
         <div class="register-basic-col">
@@ -88,7 +88,7 @@ export function renderBasic() {
         </div>
         <div class="register-basic-col">
           ${renderSectionTitle('과외지역')}
-          <p class="form-note" style="margin-top:0;">최대 3곳 · 대표 1곳 필수. 기본 단위는 「시」입니다.</p>
+          <p class="form-note" style="margin-top:0;">최대 3곳 · 대표 1곳 필수. 광역시는 시 전체, 도는 시·군 단위입니다.</p>
           ${s.saved_regions.map((slot, i) => renderTutorRegionSlot(slot, i, units)).join('')}
         </div>
       </div>
@@ -108,7 +108,7 @@ export function renderBasic() {
 
 export function bindBasicEvents(root) {
   bindGlobalEvents(root);
-  const units = getCityUnits(getCities());
+  const units = getCityUnits(getTutorUnits());
   bindTutorRegionSlotEvents(root, units);
   bindInputFill(root.querySelector('[data-form="basic"]'));
 

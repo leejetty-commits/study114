@@ -1,5 +1,5 @@
 /**
- * 과외쌤 가입정보 seed — cities pipe · 활동지역 1~3 · 대표=1 · copy gate
+ * 과외쌤 가입정보 seed — tutor_units pipe · 활동지역 1~3 · 대표=1 · copy gate
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -21,7 +21,8 @@ function assert(cond, msg) {
 }
 
 const api = readFileSync(resolve(root, 'preview/auth-ui/src/auth-api.js'), 'utf8');
-assert(api.includes('cities: data.cities'), 'fetchRegions returns cities');
+assert(api.includes('tutorUnits: data.tutor_units'), 'fetchRegions returns tutor units');
+assert(!api.includes('cities: data.cities'), 'fetchRegions no longer hands 구 cities to tutor signup');
 assert(api.includes('import.meta.env'), 'auth-api DEV failure logging');
 
 const basic = readFileSync(resolve(root, 'preview/auth-ui/src/screens/signup-basic.js'), 'utf8');

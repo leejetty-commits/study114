@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Registration;
 
 use PDO;
+use Study114\Region\TutorRegionUnit;
 use Study114\Tutor\TutorDetailCompletionEvaluator;
 
 /** 21장 P21 — tutors 등록 허브 */
@@ -181,8 +182,8 @@ final class TutorHubRepository
     }
 
     /**
-     * 슬롯 1(priority_order=0)의 공식 시·군·구 라벨.
-     * 지역 행이 없거나 공식 이름을 풀 수 없으면 null.
+     * 슬롯 1(priority_order=0)의 과외 단위 이름(「서울특별시」「경기도 수원시」).
+     * 지역 행이 없거나 과외 단위가 아니면 null.
      */
     private function primaryRegionLabel(int $tutorId): ?string
     {
@@ -190,9 +191,8 @@ final class TutorHubRepository
         if ($regionId === null) {
             return null;
         }
-        $label = (new OfficialRegionLabel($this->pdo))->sigunguLabel($regionId);
 
-        return ($label !== null && $label !== '') ? $label : null;
+        return TutorRegionUnit::labelForId($this->pdo, $regionId);
     }
 
     /** 슬롯 1(priority_order=0) 지역 id. 없으면 null. */

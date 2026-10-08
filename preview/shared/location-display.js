@@ -615,7 +615,10 @@ export function expandKakaoSido(sido) {
 
 /** 게스트 확정 표기. 서버 기준 행 이름을 못 받았거나 다르게 받아도 이 문구만 쓴다. */
 export const GUEST_BASE_ROOM_LABEL = '대치동';
-export const GUEST_BASE_TUTOR_LABEL = '서울시 강남구';
+/** 과외쌤 축은 과외 단위(정본 72) 표기. 서버 region-stats axes.tutor 와 같다. */
+export const GUEST_BASE_TUTOR_LABEL = '서울특별시';
+/** 학생 축은 기준 구(GUEST_BASE_GU_OFFICIAL_CODE) 그대로. */
+export const GUEST_BASE_STUDENT_LABEL = '서울시 강남구';
 
 /** 게스트 표기 전용. 회원 저장 라벨·검색 요청값에는 쓰지 않는다. */
 function guestSidoShort(sidoName) {
@@ -627,18 +630,18 @@ function guestSidoShort(sidoName) {
  * 시도+구를 「서울시 강남구」로 조합한다. 시도가 없거나 조합 결과가 확정 표기와 다르면 확정 표기.
  * @param {unknown} sidoName @param {unknown} guName
  */
-function guestTutorLabel(sidoName, guName) {
+function guestStudentLabel(sidoName, guName) {
   const sido = guestSidoShort(sidoName);
   const gu = blank(guName);
   const label = sido && gu ? `${sido} ${gu}` : '';
-  return label === GUEST_BASE_TUTOR_LABEL ? label : GUEST_BASE_TUTOR_LABEL;
+  return label === GUEST_BASE_STUDENT_LABEL ? label : GUEST_BASE_STUDENT_LABEL;
 }
 
 /** @type {{ room: string, tutor: string, student: string }} */
 let guestBaseline = {
   room: GUEST_BASE_ROOM_LABEL,
   tutor: GUEST_BASE_TUTOR_LABEL,
-  student: GUEST_BASE_TUTOR_LABEL,
+  student: GUEST_BASE_STUDENT_LABEL,
 };
 /** @type {{ room: number|null, tutor: number|null, student: number|null }} */
 let guestBaseIds = { room: null, tutor: null, student: null };
@@ -682,8 +685,9 @@ function positiveId(value) {
 }
 
 /**
- * 표기는 확정 문구만 낸다. 공부방은 「대치동」, 과외 문구는 cities 기준 구 행의 시도+구 → 「서울시 강남구」.
- * axes.tutor 는 구 이름뿐이라 표기에 쓰지 않는다. 기준 행 id는 region-stats regionIds, 구 id는 cities 행으로도 보충한다.
+ * 표기는 확정 문구만 낸다. 공부방은 「대치동」, 과외쌤은 과외 단위 「서울특별시」,
+ * 학생은 cities 기준 구 행의 시도+구 → 「서울시 강남구」.
+ * 기준 행 id는 region-stats regionIds. 학생 구 id만 cities 행으로 보충한다.
  */
 export function loadGuestBaseline() {
   if (guestBaselinePromise) return guestBaselinePromise;
@@ -700,12 +704,12 @@ export function loadGuestBaseline() {
       const ids = statsOk && stats.regionIds && typeof stats.regionIds === 'object' ? stats.regionIds : {};
       const cities = citiesBody && Array.isArray(citiesBody.cities) ? citiesBody.cities : [];
       const gu = cities.find((row) => String(row?.official_code || '') === GUEST_BASE_GU_OFFICIAL_CODE);
-      const tutor = guestTutorLabel(gu?.sido_name, gu?.gu_name || gu?.city_name);
-      const guId = positiveId(ids.tutor) ?? positiveId(gu?.id);
+      const student = guestStudentLabel(gu?.sido_name, gu?.gu_name || gu?.city_name);
+      // 과외쌤 기준은 과외 단위(서울특별시) id 라 구 행으로 보충하지 않는다.
       guestBaseIds = {
         room: positiveId(ids.room),
-        tutor: guId,
-        student: positiveId(ids.student) ?? guId,
+        tutor: positiveId(ids.tutor),
+        student: positiveId(ids.student) ?? positiveId(gu?.id),
       };
       if (statsOk) {
         const counts = [stats.studyRooms, stats.tutors, stats.studentRequests].map(Number);
@@ -713,7 +717,7 @@ export function loadGuestBaseline() {
           ? { studyRooms: counts[0], tutors: counts[1], studentRequests: counts[2] }
           : null;
       }
-      guestBaseline = { room: GUEST_BASE_ROOM_LABEL, tutor, student: tutor };
+      guestBaseline = { room: GUEST_BASE_ROOM_LABEL, tutor: GUEST_BASE_TUTOR_LABEL, student };
       return guestBaseline;
     })
     .catch(() => guestBaseline);

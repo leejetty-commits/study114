@@ -12,7 +12,11 @@ import {
 } from './router.js';
 import { getParentStudentProfilePath } from '../mypage/router.js';
 import { FORM_OPTIONS, studentToExposureRow } from './format.js';
-import { renderRegionCascade, bindRegionCascades, REGION_LIST_ERROR } from '../../../shared/region-cascade.js';
+import {
+  renderTutorUnitCascade,
+  bindTutorUnitCascades,
+  TUTOR_UNIT_LIST_ERROR,
+} from '../../../shared/tutor-unit-cascade.js';
 import {
   bindStudentHopeRegion,
   readStudentHopeRegion,
@@ -266,10 +270,10 @@ function hopeRegionValues(student) {
   };
 }
 
-/** 과외 희망지역(시·군·구) 선택칸. @param {number} studentId @param {string|number|null|undefined} regionId */
+/** 과외 희망지역(광역시 / 도의 시·군) 선택칸. @param {number} studentId @param {string|number|null|undefined} regionId */
 function renderTutorRegionField(studentId, regionId) {
   return tutorCityUnitsReady()
-    ? renderRegionCascade({
+    ? renderTutorUnitCascade({
         idPrefix: `p19_tutor_region_${studentId}`,
         units: getTutorCityUnits(),
         regionId,
@@ -550,7 +554,7 @@ function bindLessonTypeChange(form, syncBasic) {
       const slot = form.querySelector('[data-p19-tutor-region-slot]');
       if (!slot) return;
       slot.innerHTML = renderTutorRegionField(studentId, restore ? savedTutorRegion : '');
-      bindRegionCascades(slot, getTutorCityUnits());
+      bindTutorUnitCascades(slot, getTutorCityUnits());
       return;
     }
     const slot = form.querySelector('[data-p19-hope-region-slot]');
@@ -649,7 +653,7 @@ export function bindStudentRegEvents(root, rerender) {
       });
       syncBasic();
       const tutorPanel = form.querySelector('[data-p19-hope-panel="tutor"]');
-      if (tutorPanel) bindRegionCascades(tutorPanel, getTutorCityUnits());
+      if (tutorPanel) bindTutorUnitCascades(tutorPanel, getTutorCityUnits());
       const hopeSlot = form.querySelector('[data-p19-hope-region-slot]');
       if (hopeSlot) bindStudentHopeRegion(hopeSlot);
     }
@@ -690,14 +694,14 @@ export function bindStudentRegEvents(root, rerender) {
         }
       } else if (formKind === 'basic') {
         if (!tutorCityUnitsReady()) {
-          alert(tutorCityUnitsError() || REGION_LIST_ERROR);
+          alert(tutorCityUnitsError() || TUTOR_UNIT_LIST_ERROR);
           return;
         }
         const regionId = String(patch.preferred_tutor_region_id || '').trim();
         const picker = form.querySelector('[data-p19-hope-panel="tutor"] [data-region-cascade]');
         const started = Boolean(picker?.querySelector('[data-field="region_sido"]')?.value);
         if (!/^\d+$/.test(regionId)) {
-          alert(started ? '희망지역을 끝까지 선택해 주세요.' : '희망지역을 선택해 주세요.');
+          alert(started ? '희망지역의 시·군을 선택해 주세요.' : '희망지역을 선택해 주세요.');
           return;
         }
       }

@@ -40,7 +40,7 @@ export function normalizeHopeSlots(saved, count = 3) {
   }));
 }
 
-/** 과외 희망지역 라벨. 시·구까지 포함한 문장을 그대로 둔다. */
+/** 과외 희망지역 라벨. 과외 단위 표기(「경기도 수원시」)를 그대로 둔다. */
 export function cityLabelFromRegionLabel(label) {
   return String(label || '').trim();
 }

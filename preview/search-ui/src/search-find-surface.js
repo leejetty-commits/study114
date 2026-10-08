@@ -57,6 +57,15 @@ import {
   regionIdFromActivityLabel,
   renderRegionCascade,
 } from '../../shared/region-cascade.js';
+import {
+  TUTOR_UNIT_LIST_ERROR,
+  bindTutorUnitCascades,
+  normalizeTutorUnits,
+  renderTutorUnitCascade,
+  tutorUnitIdForAddress,
+  tutorUnitIdFromLabel,
+  tutorUnitLabelFromId,
+} from '../../shared/tutor-unit-cascade.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
 import { bindListSortControls, readListSortFromHash } from '../../shared/list-sort.js';
 import { MAIN_SUBJECT_OPTIONS } from '../../shared/main-subjects.js';
@@ -89,15 +98,16 @@ const HOPE_REGION_STORAGE_KEY = 'study114.studentFind.lastRegionByHope';
 const STALE_GUEST_LABELS = new Set(['서울시', '부산시', '인천시', '서울 강남구 대치동']);
 let guestBaselineBooted = false;
 
-/** 게스트 축. 공부방은 동(대치동), 과외쌤·학생은 구(서울시 강남구). 학생 희망유형과 무관하다. */
+/** 게스트 축. 공부방은 동(대치동), 과외쌤은 과외 단위(서울특별시), 학생은 구(서울시 강남구). 학생 희망유형과 무관하다. */
 function guestAxis(tab) {
   return tab === 'room' ? 'room' : 'tutor';
 }
 
-/** 게스트 현재 위치. 공부방 대치동, 과외쌤·학생 서울시 강남구. */
+/** 게스트 현재 위치. 공부방 대치동, 과외쌤 서울특별시, 학생 서울시 강남구. */
 function guestServerPlace(tab) {
   const base = readGuestBaseline();
-  return guestAxis(tab) === 'room' ? base.room : base.tutor;
+  if (guestAxis(tab) === 'room') return base.room;
+  return tab === 'student' ? base.student : base.tutor;
 }
 
 /** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state */
@@ -210,6 +220,7 @@ function renderGuestFeedList(tab, items, regionLabel) {
 export function bootGuestFindSurface(tab, rerender) {
   bootGuestPlaceBaseline(rerender);
   bootFindCities(rerender);
+  bootFindTutorUnits(rerender);
   bootGuestFeed(tab, rerender);
 }
 
@@ -421,7 +432,9 @@ function studentFeedFilters(tab, state) {
     const guId = resolveCanonicalGuRegionId(cur);
     return guId ? { sigungu_region_id: guId } : null;
   }
-  const id = selectableFindRegionId(cur.regionId) || regionIdFromActivityLabel(cur.displayLabel, findCityUnits);
+  const id = isTutorUnitAxis(tab, state)
+    ? tutorUnitIdForPlace(cur)
+    : selectableFindRegionId(cur.regionId) || regionIdFromActivityLabel(cur.displayLabel, findCityUnits);
   if (!id) return null;
   if (tab === 'tutor') return { tutor_region_id: id };
   return { preferred_lesson_type: hope, preferred_region_id: id };
@@ -450,6 +463,7 @@ function studentFeedEntry(tab, state) {
 export function bootStudentFindFeed(tab, state, rerender) {
   if (state.role !== 'parent' || state.searchExecuted) return;
   bootFindCities(rerender);
+  bootFindTutorUnits(rerender);
   const filters = studentFeedFilters(tab, state);
   if (!filters) return;
   const key = studentFeedKey(tab, filters);
@@ -487,8 +501,8 @@ function canonicalFromKakao(result, tab, state) {
     raw: [city, district, dong].filter(Boolean).join(' '),
     source: 'address',
   };
-  if (!parent) return normalizeLocation(input, locationAxisForState(tab, state));
-  const canonical = studentPickedCanonical(input, tab, state);
+  if (!parent) return liftTutorPlace(normalizeLocation(input, locationAxisForState(tab, state)), tab, state);
+  const canonical = liftTutorPlace(studentPickedCanonical(input, tab, state), tab, state);
   state.studentPicks = { ...(state.studentPicks || {}), [tab]: canonical };
   return canonical;
 }
@@ -595,9 +609,62 @@ function bootFindCities(rerender) {
   return findCitiesBoot;
 }
 
-/** 복원 검색은 시·군·구 단위 목록이 끝난 뒤에 라벨을 계산한다. */
-export function whenFindCitiesReady() {
-  return bootFindCities();
+const TUTOR_UNIT_PICK_HINT = '광역시는 시·도, 도는 시·군까지 선택해 주세요';
+
+/** 과외 단위(regions.php action=tutor_units). 과외쌤 탭·과외 희망 학생 탭만 쓴다. @type {import('../../shared/tutor-unit-cascade.js').TutorUnit[]} */
+let findTutorUnits = [];
+/** @type {Promise<import('../../shared/tutor-unit-cascade.js').TutorUnit[]>|null} */
+let findTutorUnitsBoot = null;
+/** @type {'idle'|'loading'|'ready'|'error'} */
+let findTutorUnitsStatus = 'idle';
+/** @type {Set<() => void>} */
+const findTutorUnitsWaiters = new Set();
+let findTutorUnitsFailRendered = false;
+
+/** @param {() => void} [rerender] */
+function bootFindTutorUnits(rerender) {
+  if (!findTutorUnitsBoot) {
+    findTutorUnitsStatus = 'loading';
+    findTutorUnitsBoot = fetch('/api/auth/regions.php?action=tutor_units', {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      credentials: 'omit',
+    })
+      .then((res) => res.json())
+      .then((body) => {
+        findTutorUnits = normalizeTutorUnits(body?.tutor_units);
+        findTutorUnitsStatus = findTutorUnits.length ? 'ready' : 'error';
+        return findTutorUnits;
+      })
+      .catch(() => {
+        findTutorUnitsBoot = null;
+        findTutorUnitsStatus = 'error';
+        findTutorUnits = [];
+        return findTutorUnits;
+      })
+      .then((units) => {
+        const waiters = [...findTutorUnitsWaiters];
+        findTutorUnitsWaiters.clear();
+        if (findTutorUnitsStatus === 'ready' || !findTutorUnitsFailRendered) {
+          if (findTutorUnitsStatus !== 'ready') findTutorUnitsFailRendered = true;
+          waiters.forEach((fn) => fn());
+        }
+        return units;
+      });
+  }
+  if (typeof rerender === 'function' && findTutorUnitsStatus === 'loading') {
+    findTutorUnitsWaiters.add(rerender);
+  }
+  return findTutorUnitsBoot;
+}
+
+/**
+ * 복원 검색은 지역 목록이 끝난 뒤에 라벨을 계산한다. 공부방 탭은 시·군·구 목록만 기다린다.
+ * @param {import('./state.js').SearchTab} [tab]
+ */
+export function whenFindCitiesReady(tab) {
+  if (tab === 'room') return bootFindCities();
+  return Promise.all([bootFindCities(), bootFindTutorUnits()]);
 }
 
 /** @param {unknown} value */
@@ -615,6 +682,93 @@ function selectableFindRegionId(value) {
 }
 
 /**
+ * 과외 단위 축 = 과외쌤 탭, 과외 희망 학생 탭. 공부방 탭·공부방 희망 학생 탭은 시·군·구 목록 그대로.
+ * @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state
+ */
+function isTutorUnitAxis(tab, state) {
+  if (tab === 'tutor') return true;
+  return tab === 'student' && resolveStudentSearchHope(state) === 'tutor';
+}
+
+/** 단위 목록이 있으면 과외 단위 id만 통과한다. */
+function tutorUnitFindId(value) {
+  const id = numericRegionId(value);
+  if (!id) return '';
+  if (!findTutorUnits.length) return id;
+  return tutorUnitLabelFromId(id, findTutorUnits) ? id : '';
+}
+
+/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {unknown} value */
+function axisFindRegionId(tab, state, value) {
+  return isTutorUnitAxis(tab, state) ? tutorUnitFindId(value) : selectableFindRegionId(value);
+}
+
+/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {unknown} id */
+function axisRegionLabel(tab, state, id) {
+  return isTutorUnitAxis(tab, state)
+    ? tutorUnitLabelFromId(String(id ?? ''), findTutorUnits)
+    : activityLabelFromRegionId(String(id ?? ''), findCityUnits);
+}
+
+/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state */
+function findPickHint(tab, state) {
+  return isTutorUnitAxis(tab, state) ? TUTOR_UNIT_PICK_HINT : GU_PICK_HINT;
+}
+
+/**
+ * 위치(저장 지역·URL 라벨·주소찾기·GPS) → 과외 단위 id. 구·동·일반구는 그 단위로 올린다.
+ * 도만 있으면 ''. 단위 목록 전에는 숫자 id만 그대로 둔다(서버가 판정).
+ * @param {import('../../shared/location-display.js').CanonicalLocation|null|undefined} cur
+ */
+function tutorUnitIdForPlace(cur) {
+  if (!cur) return '';
+  if (!findTutorUnits.length) return numericRegionId(cur.regionId);
+  const direct = tutorUnitFindId(cur.regionId);
+  if (direct) return direct;
+  const byLabel = tutorUnitIdFromLabel(cur.displayLabel, findTutorUnits);
+  if (byLabel) return byLabel;
+  const sido = String(cur.province || cur.city || '').trim();
+  const sigungu = String((cur.province ? cur.city : cur.district) || '').trim();
+  const byAddress = tutorUnitIdForAddress(sido, sigungu, findTutorUnits);
+  if (byAddress) return byAddress;
+  const parsed = normalizeLocation({ raw: String(cur.raw || cur.displayLabel || '') }, 'room');
+  return tutorUnitIdForAddress(
+    parsed.province || parsed.city,
+    parsed.province ? parsed.city : parsed.district,
+    findTutorUnits,
+  );
+}
+
+/** 위치를 과외 단위 표기·id로 바꾼다. 단위를 못 찾으면 null. */
+function tutorUnitCanonical(cur) {
+  if (!cur || !findTutorUnits.length) return null;
+  const id = tutorUnitIdForPlace(cur);
+  const label = id ? tutorUnitLabelFromId(id, findTutorUnits) : '';
+  if (!label) return null;
+  return {
+    ...cur,
+    province: '',
+    city: '',
+    district: '',
+    dong: '',
+    apartmentName: '',
+    displayLabel: label,
+    searchScopeLabel: label,
+    regionKey: label.toLowerCase(),
+    regionId: id,
+    level: 'city',
+    raw: label,
+    axis: 'tutor',
+  };
+}
+
+/** 과외 단위 축이면 위치를 그 단위로 올린다. 못 올리면 그대로. */
+function liftTutorPlace(canonical, tab, state) {
+  if (!canonical || !isTutorUnitAxis(tab, state)) return canonical;
+  return tutorUnitCanonical(canonical) || canonical;
+}
+
+/**
  * 과외·학생 URL/저장 필터에서 라벨과 선택 단위가 아닌 지역값을 뺀다.
  * @param {import('./state.js').SearchTab} tab
  * @param {Record<string, string|string[]>} filters
@@ -627,14 +781,20 @@ function dropLegacyLessonRegionFilters(tab, filters) {
   }
   if (tab === 'tutor') {
     delete next.tutor_region_label;
-    const id = selectableFindRegionId(next.tutor_region_id);
+    const id = tutorUnitFindId(next.tutor_region_id);
     if (id) next.tutor_region_id = id;
     else delete next.tutor_region_id;
   }
   if (tab === 'student') {
     if (next.preferred_lesson_type === 'both') delete next.preferred_lesson_type;
     delete next.preferred_region_label;
-    const id = selectableFindRegionId(next.preferred_region_id || next.preferred_region);
+    const raw = next.preferred_region_id || next.preferred_region;
+    const id =
+      next.preferred_lesson_type === 'tutor'
+        ? tutorUnitFindId(raw)
+        : next.preferred_lesson_type === 'study_room'
+          ? selectableFindRegionId(raw)
+          : selectableFindRegionId(raw) || tutorUnitFindId(raw);
     delete next.preferred_region;
     if (id) next.preferred_region_id = id;
     else delete next.preferred_region_id;
@@ -801,6 +961,7 @@ function readStoredCanonical(tab, axis) {
  * @param {import('./state.js').SearchTab} [tab]
  */
 export function applyCanonicalLocation(state, canonical, tab) {
+  if (tab && (state.role || 'guest') !== 'guest') canonical = liftTutorPlace(canonical, tab, state);
   state.canonicalLocation = canonical;
   state.activeRegionLabel = canonical.displayLabel;
   // 홍보1 기본값(source=saved)은 게스트 찾기 공부방 기준 저장값을 덮지 않는다.
@@ -1011,13 +1172,15 @@ function restoreFindSearch(state, tab, q, canonical, axis) {
       settleRoomAddressFilters(filters);
     } else if (tab === 'tutor') {
       delete filters.tutor_region_label;
-      const id = selectableFindRegionId(canonical.regionId);
+      const id = tutorUnitIdForPlace(canonical);
       if (id) filters.tutor_region_id = id;
       else delete filters.tutor_region_id;
     } else {
       delete filters.preferred_region_label;
       delete filters.preferred_region;
-      const id = selectableFindRegionId(canonical.regionId);
+      const id = isTutorUnitAxis(tab, state)
+        ? tutorUnitIdForPlace(canonical)
+        : selectableFindRegionId(canonical.regionId);
       if (id) filters.preferred_region_id = id;
       else delete filters.preferred_region_id;
       preserveStudyroomRegionId(filters);
@@ -1104,7 +1267,16 @@ export async function bootFindGpsIfNeeded(state, tab, rerender) {
       ? state.studentHopeType
       : null;
   const axis = axisFromSearchTab(tab, hope);
-  const geo = await reverseGeocodeCoords(coords.lat, coords.lng, axis);
+  let geo = await reverseGeocodeCoords(coords.lat, coords.lng, axis);
+  if (isTutorUnitAxis(tab, state)) {
+    await bootFindTutorUnits();
+    const unit = tutorUnitCanonical(geo);
+    if (!unit) {
+      logLocationDebug('gps-skip', { reason: 'no-tutor-unit' });
+      return;
+    }
+    geo = unit;
+  }
   const roomGps = axis === 'room' || axis === 'study_room';
   const noDongPlace =
     roomGps && !String(geo?.dong || '').trim() && !String(geo?.apartmentName || '').trim();
@@ -1280,14 +1452,18 @@ function locationAxisForState(tab, state) {
 function canonicalRegionLabel(label, tab, state) {
   const axis = locationAxisForState(tab, state);
   const prev = state.canonicalLocation;
-  const canonical = normalizeLocation(
-    {
-      raw: label,
-      lat: prev?.displayLabel === String(label || '').trim() ? prev.lat : null,
-      lng: prev?.displayLabel === String(label || '').trim() ? prev.lng : null,
-      source: prev?.source || 'session',
-    },
-    axis,
+  const canonical = liftTutorPlace(
+    normalizeLocation(
+      {
+        raw: label,
+        lat: prev?.displayLabel === String(label || '').trim() ? prev.lat : null,
+        lng: prev?.displayLabel === String(label || '').trim() ? prev.lng : null,
+        source: prev?.source || 'session',
+      },
+      axis,
+    ),
+    tab,
+    state,
   );
   // 검색 실행 뒤에는 홍보1·과외지역1로 되돌리지 않는다.
   if (!canonical.displayLabel && !state.searchExecuted) {
@@ -1414,14 +1590,14 @@ function regionLabelFromFilters(tab, filters, state, role) {
         : tab === 'room'
           ? filters.sigungu_region_id || state.findGuByTab?.room
           : filters.preferred_region_id || state.findGuByTab?.student;
-    const guLabel = activityLabelFromRegionId(guId, findCityUnits);
+    const guLabel = axisRegionLabel(tab, state, guId);
     if (guLabel) {
       return applyGuDisplayLabel(state, String(guId), guLabel);
     }
   }
   let raw = '';
   if (tab === 'tutor') {
-    const guLabel = activityLabelFromRegionId(filters.tutor_region_id, findCityUnits);
+    const guLabel = tutorUnitLabelFromId(String(filters.tutor_region_id ?? ''), findTutorUnits);
     if (guLabel) return applyGuDisplayLabel(state, String(filters.tutor_region_id), guLabel);
     raw = String(filters.tutor_region_id || filters.tutor_region_label || '').trim();
     if (!raw || (viewer === 'tutor' && isTutorMockCityLabel(raw))) {
@@ -1435,7 +1611,7 @@ function regionLabelFromFilters(tab, filters, state, role) {
     raw = state.step3ByTab?.room?.display || guLabel || '';
   } else {
     const guId = filters.preferred_region_id || filters.preferred_region;
-    const guLabel = activityLabelFromRegionId(guId, findCityUnits);
+    const guLabel = axisRegionLabel(tab, state, guId);
     if (guLabel && resolveStudentSearchHope(state) !== 'study_room') {
       return applyGuDisplayLabel(state, String(guId), guLabel);
     }
@@ -1481,7 +1657,7 @@ function studentLabelFromFilters(tab, filters, state) {
     if (state.canonicalLocation?.displayLabel === roomLabel && state._placeTab === tab) return roomLabel;
     return applyStudentPlace(state, tab, studentPickedCanonical({ raw: roomLabel, source: 'session' }, tab, state));
   }
-  const label = id ? activityLabelFromRegionId(id, findCityUnits) : '';
+  const label = id ? axisRegionLabel(tab, state, id) : '';
   if (label) {
     applyGuDisplayLabel(state, id, label);
     state.canonicalLocation.source = 'session';
@@ -1774,13 +1950,13 @@ function step3Bag(state, tab) {
 /** @param {FindSurfaceState} state @param {import('./state.js').SearchTab} tab */
 function rememberedGuId(state, tab) {
   if (!state.findGuByTab) state.findGuByTab = {};
-  return selectableFindRegionId(state.findGuByTab[tab]);
+  return axisFindRegionId(tab, state, state.findGuByTab[tab]);
 }
 
 /** @param {FindSurfaceState} state @param {import('./state.js').SearchTab} tab @param {string} id */
 function rememberGuId(state, tab, id) {
   if (!state.findGuByTab) state.findGuByTab = {};
-  state.findGuByTab[tab] = selectableFindRegionId(id);
+  state.findGuByTab[tab] = axisFindRegionId(tab, state, id);
 }
 
 /**
@@ -1795,7 +1971,7 @@ function cascadePick(state, tab, filterKey) {
   if (!state.searchExecuted) {
     return remembered ? { regionId: remembered, stale: false } : { regionId: '', stale: false };
   }
-  const fromFilter = selectableFindRegionId(state.lastSearchFilters?.[filterKey]);
+  const fromFilter = axisFindRegionId(tab, state, state.lastSearchFilters?.[filterKey]);
   const id = fromFilter || remembered;
   return id ? { regionId: id, stale: false } : { regionId: '', stale: false };
 }
@@ -1827,7 +2003,7 @@ function renderStep3Field(state, tab, opts) {
     return `
       <label class="search-field${compact ? ' search-field--compact' : ''}" data-find-step3="disabled">
         <span class="search-field__label">${esc(opts.label)} ${opts.dbHint}</span>
-        <input type="text" class="search-field__control" value="" placeholder="시·군·구까지입니다" disabled />
+        <input type="text" class="search-field__control" value="" placeholder="광역시·시·군까지입니다" disabled />
       </label>`;
   }
   const basis = bag.basis === 'complex' ? 'complex' : 'dong';
@@ -1960,6 +2136,32 @@ function renderGuCascadeField(state, opts) {
 }
 
 /**
+ * 과외 단위 선택칸. 시·도 → 광역시·세종이면 끝, 도·전남광주면 시·군. 구 단계 없음.
+ * @param {FindSurfaceState} state
+ * @param {{ compact?: boolean, label: string, dbHint: string, hiddenName: string, idPrefix: string, pick: { regionId: string, stale: boolean } }} opts
+ */
+function renderTutorUnitField(state, opts) {
+  const compact = opts.compact === true;
+  const body = findTutorUnits.length
+    ? renderTutorUnitCascade({
+        idPrefix: opts.idPrefix,
+        units: findTutorUnits,
+        regionId: opts.pick.regionId,
+        selectClass: 'search-field__control',
+        hiddenName: opts.hiddenName,
+      })
+    : `<p class="search-field__hint">${esc(findTutorUnitsStatus === 'error' ? TUTOR_UNIT_LIST_ERROR : '지역 목록을 불러오는 중…')}</p>
+       <input type="hidden" name="${esc(opts.hiddenName)}" value="" />`;
+  const note = state?.findScopeHint || TUTOR_UNIT_PICK_HINT;
+  return `
+    <div class="search-field${compact ? ' search-field--compact' : ''}" data-find-gu-field="${esc(opts.hiddenName)}" data-find-tutor-unit>
+      <span class="search-field__label">${esc(opts.label)} ${opts.dbHint}</span>
+      ${body}
+      <span class="search-field__hint">${esc(note)}</span>
+    </div>`;
+}
+
+/**
  * @param {import('./search-schema.js').SEARCH_TABS.room.fields[0]} field
  * @param {FindSurfaceState} state
  * @param {{ compact?: boolean }} [opts]
@@ -2082,15 +2284,25 @@ function renderField(field, state, opts = {}) {
 
   if (field.key === 'preferred_region') {
     const step3Open = resolveStudentSearchHope(state) === 'study_room';
+    const regionField = step3Open
+      ? renderGuCascadeField(state, {
+          compact,
+          label: '시·군·구',
+          dbHint,
+          hiddenName: 'f_preferred_region_id',
+          idPrefix: 'find_student_region',
+          pick: cascadePickForStudent(state),
+        })
+      : renderTutorUnitField(state, {
+          compact,
+          label: '과외 희망지역',
+          dbHint,
+          hiddenName: 'f_preferred_region_id',
+          idPrefix: 'find_student_region',
+          pick: cascadePickForStudent(state),
+        });
     return `
-      ${renderGuCascadeField(state, {
-        compact,
-        label: '시·군·구',
-        dbHint,
-        hiddenName: 'f_preferred_region_id',
-        idPrefix: 'find_student_region',
-        pick: cascadePickForStudent(state),
-      })}
+      ${regionField}
       ${renderStep3Field(state, 'student', {
         compact,
         label: '동·단지',
@@ -2104,7 +2316,7 @@ function renderField(field, state, opts = {}) {
 
   if (field.key === 'tutor_region_id') {
     return `
-      ${renderGuCascadeField(state, {
+      ${renderTutorUnitField(state, {
         compact,
         label: field.label,
         dbHint,
@@ -2197,7 +2409,7 @@ function renderTutorRegionHint(role) {
   if (role === 'tutor') {
     return `<p class="tutor-region-hint">등록한 과외지역 탭을 선택한 뒤, 아래 조건으로 경쟁 과외쌤을 검색할 수 있습니다.</p>`;
   }
-  return `<p class="tutor-region-hint">희망 지역 탭을 선택하면 해당 시·구의 과외쌤 목록이 표시됩니다.</p>`;
+  return `<p class="tutor-region-hint">희망 지역 탭을 선택하면 해당 광역시·시·군의 과외쌤 목록이 표시됩니다.</p>`;
 }
 
 /**
@@ -2675,7 +2887,7 @@ export async function runFindSearch(tab, form, state, role, rerender) {
   state.searchPage = 1;
   if (guPickIncomplete(form, tab, state)) {
     const hint = form.querySelector('[data-find-gu-field] .search-field__hint');
-    if (hint) hint.textContent = GU_PICK_HINT;
+    if (hint) hint.textContent = findPickHint(tab, state);
     state.searchTotal = 0;
     return;
   }
@@ -2725,11 +2937,13 @@ function applySearchedRegionLabel(tab, filters, state, role) {
 
 /** 단위 목록이 검색보다 늦으면, 끝난 뒤 시군구 라벨을 다시 계산한다. */
 function refreshSearchedLabelWhenCitiesReady(tab, state, role, rerender, seq) {
-  if (findCitiesStatus === 'ready') return;
-  const boot = findCitiesBoot || bootFindCities();
+  const tutorAxis = isTutorUnitAxis(tab, state);
+  const listReady = () => (tutorAxis ? findTutorUnitsStatus : findCitiesStatus) === 'ready';
+  if (listReady()) return;
+  const boot = tutorAxis ? findTutorUnitsBoot || bootFindTutorUnits() : findCitiesBoot || bootFindCities();
   boot.then(() => {
     if (seq !== findSearchSeq) return;
-    if (findCitiesStatus !== 'ready') return;
+    if (!listReady()) return;
     if (!state.searchExecuted || !state.lastSearchFilters) return;
     applySearchedRegionLabel(tab, state.lastSearchFilters, state, role);
     syncFindHashState(state, tab);
@@ -2754,11 +2968,11 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
   if (stale()) return;
   if (step3SearchBlocked(state, tab)) return;
   if (findScopeMissing(tab, filters)) {
-    state.findScopeHint = GU_PICK_HINT;
+    state.findScopeHint = findPickHint(tab, state);
     state._needsSearchRestore = false;
     if (typeof document !== 'undefined') {
       const hint = document.querySelector('[data-find-gu-field] .search-field__hint');
-      if (hint) hint.textContent = GU_PICK_HINT;
+      if (hint) hint.textContent = state.findScopeHint;
     }
     rerender();
     return;
@@ -2827,15 +3041,23 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
 export function bindFindSurfaceEvents(root, rerender, ctx) {
   if ((ctx.role || ctx.getState()?.role || 'guest') === 'guest') bootGuestPlaceBaseline(rerender);
   bootFindCities(rerender);
+  bootFindTutorUnits(rerender);
   bindUniversityNameField(root);
-  bindRegionCascades(root, findCityUnits);
+  bindRegionCascades(
+    {
+      querySelectorAll: (sel) =>
+        [...root.querySelectorAll(sel)].filter((el) => el.getAttribute('data-region-cascade') !== 'tutor_unit'),
+    },
+    findCityUnits,
+  );
+  bindTutorUnitCascades(root, findTutorUnits);
   root.querySelectorAll('[data-region-cascade]').forEach((el) => {
     el.addEventListener('change', () => {
       const hidden = el.querySelector('[data-field="region_id"]');
-      const id = hidden instanceof HTMLInputElement ? selectableFindRegionId(hidden.value) : '';
       const tab = ctx.getTab();
+      const id = hidden instanceof HTMLInputElement ? axisFindRegionId(tab, state(), hidden.value) : '';
       rememberGuId(state(), tab, id);
-      const label = id ? activityLabelFromRegionId(id, findCityUnits) : '';
+      const label = id ? axisRegionLabel(tab, state(), id) : '';
       if (!state().lastSearchFilters) state().lastSearchFilters = {};
       if (tab === 'tutor') {
         delete state().lastSearchFilters.tutor_region_label;

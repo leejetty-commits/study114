@@ -28,8 +28,8 @@ export const signupState = {
   lastSignup: null,
   /** @type {Array<{id: number, label: string}>} */
   regions: [],
-  /** @type {Array<{id: number, label: string}>} */
-  cities: [],
+  /** 과외 단위(광역시 / 도의 시·군). regions.php tutor_units. @type {Array<{id: number, label: string}>} */
+  tutorUnits: [],
   /** @type {Array<{id: number, region_id: number, label: string, address: string}>} */
   complexes: [],
   basicRegisterResult: null,
@@ -89,7 +89,7 @@ export function resetSignupState() {
   signupState.basicRegisterResult = null;
   signupState.lastSignup = null;
   signupState.regions = [];
-  signupState.cities = [];
+  signupState.tutorUnits = [];
   signupState.complexes = [];
 }
 

@@ -19,7 +19,7 @@ export function renderTutorDetailBody(item, viewer) {
       ? `주 ${item.lessons_per_week}회 · ${item.minutes_per_lesson}분`
       : '—';
   const locationLabel = isGuest
-    ? coarseRegionForGuest(item.location_label)
+    ? coarseRegionForGuest(item.location_label, 'tutor')
     : item.location_label || '—';
   const features = [item.feature_1, item.feature_2, item.feature_3].filter(Boolean).join(' · ') || '—';
 

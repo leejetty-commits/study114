@@ -89,24 +89,17 @@ $subjectSelected = (string) study114_old($old, 'subject_names', '');
   <div class="student-basic__field" data-student-tutor-block <?= $hope === 'tutor' ? '' : 'hidden' ?>>
     <label class="form-label form-label--required" for="region_id_city">희망지역</label>
     <select class="form-input" id="region_id_city" name="region_id" <?= $hope === 'tutor' ? '' : 'disabled' ?>>
-      <option value="">시·도 선택</option>
+      <option value="">지역 선택</option>
       <?php
-        $cities = [];
-        foreach ($regions as $r) {
-            $label = trim((string) ($r['label'] ?? ''));
-            $sido = $label !== '' ? explode(' ', $label)[0] : '';
-            if ($sido === '' || isset($cities[$sido])) {
-                continue;
-            }
-            $cities[$sido] = (string) ($r['id'] ?? '');
-        }
+        $tutorUnits = is_array($tutorUnits ?? null) ? $tutorUnits : [];
         $oldRegion = (string) study114_old($old, 'region_id', '');
-        foreach ($cities as $sido => $cid):
+        foreach ($tutorUnits as $unit):
+            $uid = (string) ($unit['id'] ?? '');
       ?>
-        <option value="<?= study114_e($cid) ?>" <?= $oldRegion === $cid ? 'selected' : '' ?>><?= study114_e($sido) ?></option>
+        <option value="<?= study114_e($uid) ?>" <?= $oldRegion === $uid ? 'selected' : '' ?>><?= study114_e((string) ($unit['label'] ?? '')) ?></option>
       <?php endforeach; ?>
     </select>
-    <p class="form-hint">과외쌤을 찾을 시·도를 고릅니다.</p>
+    <p class="form-hint">광역시는 시 전체, 도는 시·군을 고릅니다.</p>
   </div>
 
   <div class="student-basic__field">

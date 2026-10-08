@@ -7,7 +7,7 @@
 import { studyRoomPromo1Label, pickOwnStudyRoom } from '../study-room-home-seed.js';
 import { tutorHomePrimaryLabel, tutorHomeRegionsReady } from '../tutor-home-seed.js';
 import { primaryHopeRegionLabel } from '../../../shared/student-hope-regions.js';
-import { activityLabelFromRegionId } from '../../../shared/region-cascade.js';
+import { tutorUnitLabelFromId } from '../../../shared/tutor-unit-cascade.js';
 import { ensureTutorCityUnits, getTutorCityUnits, tutorCityUnitsError, tutorCityUnitsReady } from '../tutor-reg/city-units.js';
 import { getStudents } from '../student-reg/store.js';
 import { getTutors } from '../tutor-reg/store.js';
@@ -52,7 +52,7 @@ export function primaryTutorRegionId(tutor) {
   return /^\d+$/.test(fallback) ? fallback : '';
 }
 
-/** 클라이언트 조합. 홈 칩이 이미 있으면 그 라벨, 아니면 대표 region_id → 시도 시 [구]. */
+/** 클라이언트 조합. 홈 칩이 이미 있으면 그 라벨, 아니면 대표 region_id → 과외 단위 이름. */
 function tutorClientLabel(tutor, units) {
   if (tutorHomeRegionsReady()) {
     const home = sanitizeAccountRegionLabel(tutorHomePrimaryLabel());
@@ -60,7 +60,7 @@ function tutorClientLabel(tutor, units) {
   }
   const id = primaryTutorRegionId(tutor);
   if (!id) return '';
-  return sanitizeAccountRegionLabel(activityLabelFromRegionId(id, units || []));
+  return sanitizeAccountRegionLabel(tutorUnitLabelFromId(id, units || []));
 }
 
 function finish(raw) {

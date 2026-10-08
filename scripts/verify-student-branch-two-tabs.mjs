@@ -152,15 +152,21 @@ final class BtPdo extends PDO
 
 function gu(int $id, string $sido, string $name, string $code): array
 {
-    return ['id' => $id, 'sido_name' => $sido, 'sigungu_name' => $name, 'sigungu_code' => substr($code, 0, 5), 'dong_name' => '', 'unit_level' => 'sigungu', 'official_code' => $code, 'is_selectable' => 1, 'is_active' => 1];
+    return ['id' => $id, 'sido_code' => substr($code, 0, 2), 'sido_name' => $sido, 'sigungu_name' => $name, 'sigungu_code' => substr($code, 0, 5), 'dong_name' => '', 'unit_level' => 'sigungu', 'official_code' => $code, 'is_selectable' => 1, 'is_active' => 1];
+}
+/** 과외 단위 광역시(073 시도 행). */
+function metroUnit(int $id, string $sidoCode, string $sido): array
+{
+    return ['id' => $id, 'sido_code' => $sidoCode, 'sido_name' => $sido, 'sigungu_name' => '', 'sigungu_code' => $sidoCode . '000', 'dong_name' => '', 'unit_level' => 'sido', 'official_code' => $sidoCode . '00000000', 'is_selectable' => 0, 'is_active' => 1];
 }
 function dong(int $id, string $sido, string $gu, string $sgCode, string $name): array
 {
-    return ['id' => $id, 'sido_name' => $sido, 'sigungu_name' => $gu, 'sigungu_code' => $sgCode, 'dong_name' => $name, 'unit_level' => 'dong', 'official_code' => null, 'is_selectable' => 0, 'is_active' => 1];
+    return ['id' => $id, 'sido_code' => substr($sgCode, 0, 2), 'sido_name' => $sido, 'sigungu_name' => $gu, 'sigungu_code' => $sgCode, 'dong_name' => $name, 'unit_level' => 'dong', 'official_code' => null, 'is_selectable' => 0, 'is_active' => 1];
 }
+// 424 경기도 의정부시는 구 단위(공부방 축)이자 과외 단위, 117 은 과외 단위 서울특별시.
 $REGIONS = [
     gu(424, '경기도', '의정부시', '4115000000'),
-    gu(117, '서울특별시', '도봉구', '1132000000'),
+    metroUnit(117, '11', '서울특별시'),
     dong(9101, '경기', '의정부시', '41150', '신곡동'),
     dong(9201, '서울', '도봉구', '11320', '창동'),
 ];
@@ -246,7 +252,7 @@ attempt('E2 공부방(단지 기준)→과외 분기 변경 + 새 과외 지역 
     ok('E2 공부방 지역 NULL(요청 9201 무시)', $s['preferred_studyroom_region_id'] === null, var_export($s['preferred_studyroom_region_id'], true));
     ok('E2 단지·기준 NULL', $s['preferred_studyroom_complex_id'] === null && $s['preferred_studyroom_region_basis'] === null);
     ok('E2 기본정보 완료 → published 유지', $s['exposure_status'] === 'published');
-    ok('E2 응답 region_label = 서울특별시 도봉구', ($out['student']['region_label'] ?? '') === '서울특별시 도봉구', (string) ($out['student']['region_label'] ?? ''));
+    ok('E2 응답 region_label = 서울특별시(과외 단위)', ($out['student']['region_label'] ?? '') === '서울특별시', (string) ($out['student']['region_label'] ?? ''));
     $rows['tutor_dobong'] = $out['student'];
 });
 
@@ -390,7 +396,11 @@ console.warn = () => {};
 const ME = { user_id: 21, role_type: 'guardian_student', name: '학생보호자', email: 'p@x.test', email_verified: true };
 const CITIES = [
   { id: 424, label: '의정부시', sido_code: '41', sido_name: '경기도', official_code: '4115000000', city_name: '의정부시', gu_name: '', kind: 'city' },
-  { id: 117, label: '도봉구', sido_code: '11', sido_name: '서울특별시', official_code: '1132000000', city_name: '도봉구', gu_name: '', kind: 'gu' },
+];
+/** 과외 단위 목록 — regions.php action=tutor_units 응답 모양 */
+const TUTOR_UNITS = [
+  { id: 117, label: '서울특별시', sido_code: '11', sido_name: '서울특별시', unit_name: '', kind: 'metro', official_code: '1100000000' },
+  { id: 424, label: '경기도 의정부시', sido_code: '41', sido_name: '경기도', unit_name: '의정부시', kind: 'city', official_code: '4115000000' },
 ];
 const server = { students: [ROWS.tutor_uijeongbu], searchBodies: [] };
 function firstStudentBranch(students) {
@@ -416,7 +426,7 @@ globalThis.fetch = async (input, init = {}) => {
     return json(200, { ok: true, authenticated: true, ...ME, student_branch: firstStudentBranch(server.students) });
   }
   if (url.pathname.endsWith('/api/registrations/students.php')) return json(200, { ok: true, students: server.students });
-  if (url.pathname.endsWith('/api/auth/regions.php')) return json(200, { ok: true, cities: CITIES });
+  if (url.pathname.endsWith('/api/auth/regions.php')) return json(200, { ok: true, cities: CITIES, tutor_units: TUTOR_UNITS });
   if (url.pathname.endsWith('/api/search/search.php')) {
     server.searchBodies.push(body);
     return json(200, { ok: true, items: [], total: 0 });

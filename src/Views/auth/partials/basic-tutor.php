@@ -1,21 +1,8 @@
 <?php
 /** @var array<string, mixed>|null $old */
 $old = is_array($old ?? null) ? $old : [];
-$regions = is_array($regions ?? null) ? $regions : [];
-
-/** 시(도) 단위 옵션 — 라벨 첫 토큰 기준 중복 제거 */
-$cities = [];
-foreach ($regions as $r) {
-    $label = trim((string) ($r['label'] ?? ''));
-    $sido = $label !== '' ? explode(' ', $label)[0] : '';
-    if ($sido === '' || isset($cities[$sido])) {
-        continue;
-    }
-    $cities[$sido] = [
-        'id' => (string) ($r['id'] ?? ''),
-        'label' => $sido,
-    ];
-}
+/** 과외 단위(광역시 / 도의 시·군). BasicRegisterService::listTutorUnits */
+$tutorUnits = is_array($tutorUnits ?? null) ? $tutorUnits : [];
 $oldRegion = (string) study114_old($old, 'region_id', '');
 ?>
 <form method="post" action="/auth/signup/basic" class="basic-register">
@@ -32,8 +19,8 @@ $oldRegion = (string) study114_old($old, 'region_id', '');
     <label class="form-label form-label--required" for="region_id">과외지역 1번</label>
     <select class="form-input" id="region_id" name="region_id" required>
       <option value="">선택</option>
-      <?php foreach ($cities as $city): ?>
-        <option value="<?= study114_e($city['id']) ?>" <?= $oldRegion === $city['id'] ? 'selected' : '' ?>><?= study114_e($city['label']) ?></option>
+      <?php foreach ($tutorUnits as $unit): $uid = (string) ($unit['id'] ?? ''); ?>
+        <option value="<?= study114_e($uid) ?>" <?= $oldRegion === $uid ? 'selected' : '' ?>><?= study114_e((string) ($unit['label'] ?? '')) ?></option>
       <?php endforeach; ?>
     </select>
   </div>

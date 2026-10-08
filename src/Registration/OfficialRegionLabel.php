@@ -7,7 +7,8 @@ namespace Study114\Registration;
 use PDO;
 
 /**
- * regions 행 → 「시도 시군구(+동)」 정식 라벨. 학생 희망지역 · 과외쌤 대표 지역이 같이 쓴다.
+ * regions 행 → 「시도 시군구(+동)」 정식 라벨. 공부방 축(학생 공부방 희망지역 등)·관리자 등록 목록이 쓴다.
+ * 과외 축(과외쌤 과외지역·학생 과외 희망지역)의 이름은 Study114\Region\TutorRegionUnit 이 만든다.
  * 카카오 주소검색으로 만든 동 행은 시도가 약칭(경기)이라 같은 시군구 코드의 선택 단위 행(공식 시드)에서
  * 시도·시군구 이름을 가져온다. 행이 없으면 null. 지역 id 숫자를 라벨로 쓰지 않는다.
  */
@@ -57,30 +58,6 @@ final class OfficialRegionLabel
             'sigungu_id' => $gu !== null ? (int) $gu['id'] : null,
             'sigungu_label' => $guLabel !== '' ? $guLabel : null,
         ];
-    }
-
-    /**
-     * 「시도 시군구」(구가 있는 시는 「경기도 수원시 영통구」). TutorPositionAxis::cityLabel 규칙과 같다.
-     * 동 행은 상위 시·군·구로 올리고, 세종처럼 시도·시군구 이름이 같으면 한 번만 쓴다.
-     */
-    public function sigunguLabel(mixed $regionId): ?string
-    {
-        $row = $this->fetchRow($regionId);
-        if ($row === null) {
-            return null;
-        }
-        $sido = (string) $row['sido_name'];
-        $sigungu = (string) $row['sigungu_name'];
-        if ((string) ($row['unit_level'] ?? 'dong') === 'dong') {
-            $gu = $this->selectableSigunguForDong((string) ($row['sigungu_code'] ?? ''));
-            if ($gu !== null) {
-                $sido = (string) $gu['sido_name'];
-                $sigungu = (string) $gu['sigungu_name'];
-            }
-        }
-        $label = self::joinRegionTokens([$sido, $sigungu]);
-
-        return $label === '' ? null : $label;
     }
 
     /** @return array<string, mixed>|null */

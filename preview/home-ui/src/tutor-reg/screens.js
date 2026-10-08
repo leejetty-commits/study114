@@ -358,7 +358,7 @@ function renderBasicForm(tutor) {
     ? ''
     : cityErr
       ? `<p class="p19-field__hint">${esc(cityErr)} <button type="button" class="btn btn--ghost btn--sm" data-p21-retry-cities>다시 불러오기</button></p>`
-      : '<p class="p19-field__hint">시 목록을 연결하는 중입니다.</p>';
+      : '<p class="p19-field__hint">과외지역 목록을 불러오는 중입니다.</p>';
   const regionSlotsHtml = `${slots
     .map((slot, i) => renderTutorRegionSlot(slot, i, units, { namePrefix: 'p21_' }))
     .join('')}${regionHint}`;
@@ -366,7 +366,7 @@ function renderBasicForm(tutor) {
     <form class="p19-form p21-inline-form" data-p21-form="basic" data-p21-tutor-id="${tutor.id}">
       ${renderFormSection(
         '기본정보 · 과외지역',
-        '표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.',
+        '표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.',
         `
         <div class="register-grid-2">
           <div class="register-basic-col">
@@ -385,7 +385,7 @@ function renderBasicForm(tutor) {
           </div>
           <div class="register-basic-col" data-trc-field="primary_region">
             <p class="p19-field__label" style="margin:0 0 var(--space-2);">과외지역 ${reqMark()}</p>
-            <p class="p19-field__hint" style="margin-bottom:var(--space-3);">지역 1이 대표입니다. 지역 2·3은 선택입니다. 구가 있는 곳은 구까지 고릅니다.</p>
+            <p class="p19-field__hint" style="margin-bottom:var(--space-3);">지역 1이 대표입니다. 지역 2·3은 선택입니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.</p>
             ${regionSlotsHtml}
           </div>
         </div>`,

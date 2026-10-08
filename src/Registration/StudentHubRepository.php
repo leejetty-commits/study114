@@ -6,7 +6,7 @@ namespace Study114\Registration;
 
 use PDO;
 use Study114\Region\ComplexEnsure;
-use Study114\Region\SidoRegionEnsure;
+use Study114\Region\TutorRegionUnit;
 
 /** 19장 P19 — students 등록 허브 */
 final class StudentHubRepository
@@ -427,7 +427,7 @@ final class StudentHubRepository
                 throw new \InvalidArgumentException('preferred_tutor_region_id: 값을 확인해 주세요.');
             }
             $regionId = (int) $value;
-            SidoRegionEnsure::assertSelectable($this->pdo, $regionId);
+            TutorRegionUnit::assertUnit($this->pdo, $regionId);
 
             return $regionId;
         }
@@ -550,7 +550,7 @@ final class StudentHubRepository
     /** @param array<string, mixed> $row @return array<string, mixed> */
     private function hydrateStudentRow(int $studentId, array $row): array
     {
-        $tutorRegion = $this->officialRegion($row['preferred_tutor_region_id'] ?? null);
+        $tutorRegion = $this->tutorUnitRegion($row['preferred_tutor_region_id'] ?? null);
         $studyroomRegion = $this->officialRegion($row['preferred_studyroom_region_id'] ?? null);
         $regionLabel = $this->resolveStudentRegionLabel($row, $tutorRegion, $studyroomRegion);
         $subject = $this->primarySubject($studentId);
@@ -655,6 +655,17 @@ final class StudentHubRepository
     private function officialRegion(mixed $regionId): ?array
     {
         return (new OfficialRegionLabel($this->pdo))->resolve($regionId);
+    }
+
+    /** 과외 희망지역은 과외 단위 이름(「서울특별시」「경기도 수원시」). @return array{label: string, sigungu_id: ?int, sigungu_label: ?string}|null */
+    private function tutorUnitRegion(mixed $regionId): ?array
+    {
+        $label = TutorRegionUnit::labelForId($this->pdo, $regionId);
+        if ($label === null) {
+            return null;
+        }
+
+        return ['label' => $label, 'sigungu_id' => (int) $regionId, 'sigungu_label' => $label];
     }
 
     /** @return array{name: string, school_level: string} */

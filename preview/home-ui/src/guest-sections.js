@@ -32,7 +32,8 @@ let guestHomeBaselineBooted = false;
 
 function guestAxisText(axis) {
   const base = readGuestBaseline();
-  return axis === 'room' ? base.room : base.tutor;
+  if (axis === 'room') return base.room;
+  return axis === 'student' ? base.student : base.tutor;
 }
 
 function haversineKm(lat1, lng1, lat2, lng2) {
@@ -176,7 +177,7 @@ export function renderGuestExposureBoxes() {
 export function renderGuestBrowseLists() {
   const roomLabel = guestAxisText('room');
   const tutorLabel = guestAxisText('tutor');
-  const studentLabel = guestAxisText('tutor');
+  const studentLabel = guestAxisText('student');
   const live = isHomeBasicLive();
   const guest = !isLoggedIn();
   const rooms = getHomeBasicPool('study_room');

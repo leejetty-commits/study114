@@ -1,6 +1,7 @@
 /**
  * 과외쌤 홈 활동지역 분포.
- * 집계: 검색 노출 카드 total. 과외쌤=tutor_region_id, 학생수요=preferred_region_id.
+ * 집계: 검색 노출 카드 total. 지역은 과외 단위(광역시 / 도의 시·군) id.
+ * 과외쌤=tutor_region_id, 학생수요=과외 희망 학생의 preferred_region_id.
  */
 
 import { searchApi } from '@search-ui/search-api.js';
@@ -39,13 +40,13 @@ function slotKey(slots) {
   return slots.map((slot) => `${slot.index}:${slot.regionId}:${slot.label}:${slot.primary ? 1 : 0}`).join('|');
 }
 
-/** 선택 단위 id가 아니면 null. 숫자를 만들지 않는다. @param {'tutor'|'student'} tab @param {string} regionId */
+/** 과외 단위 id가 아니면 null. 숫자를 만들지 않는다. @param {'tutor'|'student'} tab @param {string} regionId */
 async function countExposedCards(tab, regionId) {
   if (!/^\d+$/.test(regionId)) return null;
   const filters =
     tab === 'tutor'
       ? { tutor_region_id: regionId }
-      : { preferred_region_id: regionId };
+      : { preferred_lesson_type: 'tutor', preferred_region_id: regionId };
   const data = await searchApi(tab, filters, { page: 1, limit: 1 });
   const total = Number(data.total);
   return Number.isFinite(total) && total >= 0 ? total : null;

@@ -19,7 +19,7 @@ use PDOException;
 use RuntimeException;
 
 use Study114\Database\Connection;
-use Study114\Region\SidoRegionEnsure;
+use Study114\Region\TutorRegionUnit;
 
 
 
@@ -27,14 +27,14 @@ final class TutorRegisterService
 
 {
 
-    /** @return array{regions: list<array{id: int, label: string}>, cities: list<array{id: int, label: string}>} */
+    /** @return array{regions: list<array{id: int, label: string}>, tutor_units: list<array{id: int, label: string}>} */
 
     public function getMasters(): array
 
     {
 
         $pdo = Connection::get();
-        $cities = SidoRegionEnsure::ensureAndListCities($pdo);
+        $tutorUnits = TutorRegionUnit::listUnits($pdo);
         $regions = [];
         try {
             $regions = $this->intIdRows(
@@ -51,7 +51,7 @@ final class TutorRegisterService
 
         return [
             'regions' => $regions,
-            'cities' => $cities,
+            'tutor_units' => $tutorUnits,
         ];
 
     }
@@ -527,7 +527,7 @@ final class TutorRegisterService
 
         foreach ($parsed as $i => $row) {
             $regionId = (int) $row['region_id'];
-            SidoRegionEnsure::assertSelectable($pdo, $regionId);
+            TutorRegionUnit::assertUnit($pdo, $regionId);
             $parsed[$i]['scope'] = $this->optionalEnum($row['raw'], 'scope_type', ['city', 'district', 'metro']) ?? 'city';
         }
 

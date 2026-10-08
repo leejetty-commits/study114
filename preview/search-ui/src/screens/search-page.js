@@ -90,7 +90,7 @@ function visibleCurrentPlace(tab, role, regionLabel) {
   if (previewState.searchExecuted && role !== 'guest') return regionLabel || '';
   if (role === 'guest') {
     const base = readGuestBaseline();
-    return tab === 'room' ? base.room : base.tutor;
+    return tab === 'room' ? base.room : tab === 'student' ? base.student : base.tutor;
   }
   // 학생: 서버 저장 지역 라벨(또는 직접 고른 위치) 그대로. 동만 잘라 보이지 않는다.
   if (role === 'parent') return regionLabel || STUDENT_PLACE_PROMPT;
@@ -248,7 +248,7 @@ export function afterSearchPageMount(rerender, opts = {}) {
     });
     previewState._needsSearchRestore = false;
     queueMicrotask(() => {
-      whenFindCitiesReady().then(() => {
+      whenFindCitiesReady(tab).then(() => {
         runFindSearchWithFilters(tab, filters, previewState, previewState.role, rerender);
       });
     });

@@ -12,6 +12,7 @@ use Study114\Database\Connection;
 use Study114\Region\ComplexEnsure;
 use Study114\Region\RegionEnsure;
 use Study114\Region\SidoRegionEnsure;
+use Study114\Region\TutorRegionUnit;
 use Study114\Registration\StudentBasicCompleteness;
 use Study114\Registration\StudentHubRepository;
 
@@ -202,6 +203,16 @@ final class BasicRegisterService
     }
 
     /**
+     * 과외 단위(광역시 / 도의 시·군). 과외쌤 과외지역·학생 과외 희망지역 선택 목록.
+     *
+     * @return list<array{id: int, label: string, sido_code: string, sido_name: string, unit_name: string, kind: string, official_code: string}>
+     */
+    public function listTutorUnits(): array
+    {
+        return TutorRegionUnit::listUnits(Connection::get());
+    }
+
+    /**
      * 아파트단지 마스터 — 주소 포함 (건물 동 단위 아님)
      *
      * @return list<array{id: int, region_id: int, label: string, address: string}>
@@ -263,9 +274,9 @@ final class BasicRegisterService
                 }
             }
         } else {
-            // 과외쌤 찾기 — 선택 단위(is_selectable) region_id 필수 (가입 기본주소 폴백 금지)
+            // 과외쌤 찾기 — 과외 단위(광역시 / 도의 시·군) region_id 필수 (가입 기본주소 폴백 금지)
             $tutorRegionId = $this->requireExplicitRegionId($input);
-            SidoRegionEnsure::assertSelectable(Connection::get(), $tutorRegionId);
+            TutorRegionUnit::assertUnit(Connection::get(), $tutorRegionId);
         }
 
         $gradeLevel = $this->optionalBoundedString($input, 'grade_level', 20);
@@ -873,7 +884,7 @@ final class BasicRegisterService
                 throw new InvalidArgumentException('과외지역이 중복되었습니다. 같은 지역을 여러 칸에 넣을 수 없습니다.');
             }
             $seen[$id] = true;
-            SidoRegionEnsure::assertSelectable($pdo, $id);
+            TutorRegionUnit::assertUnit($pdo, $id);
             $out[] = $id;
         }
 

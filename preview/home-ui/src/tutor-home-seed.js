@@ -167,8 +167,8 @@ export function getTutorStudentFeedStatus() {
 
 /**
  * 활동지역 regionId 기준 과외 분기 학생 조회.
- * 지역 기준은 활동지역과 같은 선택 단위(시·군·구) id — tutor_regions.region_id 와
- * students.preferred_tutor_region_id 가 둘 다 SidoRegionEnsure::assertSelectable 을 지난 값이다.
+ * 지역 기준은 과외 단위(광역시 / 도의 시·군) id — tutor_regions.region_id 와
+ * students.preferred_tutor_region_id 가 둘 다 TutorRegionUnit::assertUnit 을 지난 값이다.
  * @param {string} regionId
  * @returns {Promise<{ items: object[]|null, status: 'ready'|'error'|'no-region' }>}
  */

@@ -9,7 +9,7 @@
  * 2부(이 프로세스, DOM 없음): 실제 모듈(auth-session · registrations-backend · search-page · home parent)을 import 해
  *   홈 분기 2탭 · 찾기 분기 2화면 문자열을 그리고, 보이는 글자에 게스트 값·id 숫자가 없는지 본다.
  *   (사이트오류-11) 학생은 분기 하나 — 반대 분기 찾기 탭은 주소로 들어와도 분기 탭으로 돌린다.
- *   (a) 의정부 저장 (b) 의정부→도봉구 변경 후 새로고침 (c) 저장 없음 (d) 임시값에 숫자 「424」
+ *   (a) 의정부 저장 (b) 의정부→양주시 변경 후 새로고침 (c) 저장 없음 (d) 임시값에 숫자 「424」
  *   (e) 공부방 분기: 공부방 주소찾기 후 학생 찾기 (f) 공부방 분기 저장 동
  * DB·PHP 서버에 접속하지 않는다. API 는 fetch 를 흉내 내고, 학생 행은 1부 PHP 출력이다.
  */
@@ -93,17 +93,18 @@ final class SlPdo extends PDO
 
 function gu(int $id, string $sido, string $name, string $code): array
 {
-    return ['id' => $id, 'sido_name' => $sido, 'sigungu_name' => $name, 'sigungu_code' => substr($code, 0, 5), 'dong_name' => '', 'unit_level' => 'sigungu', 'official_code' => $code, 'is_selectable' => 1, 'is_active' => 1];
+    return ['id' => $id, 'sido_code' => substr($code, 0, 2), 'sido_name' => $sido, 'sigungu_name' => $name, 'sigungu_code' => substr($code, 0, 5), 'dong_name' => '', 'unit_level' => 'sigungu', 'official_code' => $code, 'is_selectable' => 1, 'is_active' => 1];
 }
 function dong(int $id, string $sido, string $gu, string $sgCode, string $name): array
 {
-    return ['id' => $id, 'sido_name' => $sido, 'sigungu_name' => $gu, 'sigungu_code' => $sgCode, 'dong_name' => $name, 'unit_level' => 'dong', 'official_code' => null, 'is_selectable' => 0, 'is_active' => 1];
+    return ['id' => $id, 'sido_code' => substr($sgCode, 0, 2), 'sido_name' => $sido, 'sigungu_name' => $gu, 'sigungu_code' => $sgCode, 'dong_name' => $name, 'unit_level' => 'dong', 'official_code' => null, 'is_selectable' => 0, 'is_active' => 1];
 }
 
 // 공식 시드(시도 정식 이름) + 카카오 주소찾기로 만든 동 행(시도 약칭 「경기」·「서울」)
 $REGIONS = [
     gu(424, '경기도', '의정부시', '4115000000'),
-    gu(117, '서울특별시', '도봉구', '1132000000'),
+    gu(117, '경기도', '양주시', '4163000000'),
+    gu(119, '서울특별시', '도봉구', '1132000000'),
     gu(118, '서울특별시', '강북구', '1130500000'),
     dong(9101, '경기', '의정부시', '41150', '신곡동'),
     dong(9102, '경기', '의정부시', '41150', '가능동'),
@@ -194,10 +195,10 @@ attempt('S1 과외 분기 · 의정부시', static function () use ($REGIONS, &$
     ok('S1 id 는 숫자 칸에만', $r['preferred_tutor_region_id'] === 424);
     $rows['uijeongbu'] = $r;
 });
-attempt('S2 과외 분기 · 도봉구', static function () use ($REGIONS, &$rows): void {
+attempt('S2 과외 분기 · 양주시', static function () use ($REGIONS, &$rows): void {
     $r = hydrate($REGIONS, studentRow(31, 'tutor', 117, null));
-    ok('S2 과외 라벨 = 서울특별시 도봉구', $r['preferred_tutor_region_label'] === '서울특별시 도봉구', var_export($r['preferred_tutor_region_label'], true));
-    $rows['dobong'] = $r;
+    ok('S2 과외 라벨 = 경기도 양주시', $r['preferred_tutor_region_label'] === '경기도 양주시', var_export($r['preferred_tutor_region_label'], true));
+    $rows['yangju'] = $r;
 });
 attempt('S3 저장 지역 없음', static function () use ($REGIONS, &$rows): void {
     $r = hydrate($REGIONS, studentRow(31, 'tutor', null, null));
@@ -285,7 +286,7 @@ for (const line of `${php.stdout || ''}`.split(/\r?\n/)) {
 }
 if (php.status !== 0 || php.stderr) console.error(php.stderr || `php exit ${php.status}`);
 ok('php 실행', php.status === 0, `exit ${php.status}`);
-ok('서버 학생 행 4종(의정부·도봉·없음·공부방 분기)', ['uijeongbu', 'dobong', 'none', 'studyroom'].every((k) => ROWS[k]));
+ok('서버 학생 행 4종(의정부·양주·없음·공부방 분기)', ['uijeongbu', 'yangju', 'none', 'studyroom'].every((k) => ROWS[k]));
 
 ok('서버 guestScopedFilters 가 sigungu_region_id 를 지운다(게스트 범위 우회 불가)', () =>
   /'region_id', 'region_label', 'sigungu_region_id'/.test(read('src/Search/SearchService.php')),
@@ -364,8 +365,13 @@ console.warn = () => {};
 const ME = { user_id: 21, role_type: 'guardian_student', name: '학생보호자', email: 'p@x.test', email_verified: true };
 const CITIES = [
   { id: 424, label: '의정부시', sido_code: '41', sido_name: '경기도', official_code: '4115000000', city_name: '의정부시', gu_name: '', kind: 'city' },
-  { id: 117, label: '도봉구', sido_code: '11', sido_name: '서울특별시', official_code: '1132000000', city_name: '도봉구', gu_name: '', kind: 'gu' },
+  { id: 117, label: '양주시', sido_code: '41', sido_name: '경기도', official_code: '4163000000', city_name: '양주시', gu_name: '', kind: 'city' },
   { id: 118, label: '강북구', sido_code: '11', sido_name: '서울특별시', official_code: '1130500000', city_name: '강북구', gu_name: '', kind: 'gu' },
+];
+/** 과외 단위 목록 — regions.php action=tutor_units 응답 모양 */
+const TUTOR_UNITS = [
+  { id: 424, label: '경기도 의정부시', sido_code: '41', sido_name: '경기도', unit_name: '의정부시', kind: 'city', official_code: '4115000000' },
+  { id: 117, label: '경기도 양주시', sido_code: '41', sido_name: '경기도', unit_name: '양주시', kind: 'city', official_code: '4163000000' },
 ];
 const server = { students: [ROWS.uijeongbu], searchBodies: [] };
 
@@ -389,7 +395,7 @@ globalThis.fetch = async (input, init = {}) => {
     }
     return json(200, { ok: true, students: server.students });
   }
-  if (url.pathname.endsWith('/api/auth/regions.php')) return json(200, { ok: true, cities: CITIES });
+  if (url.pathname.endsWith('/api/auth/regions.php')) return json(200, { ok: true, cities: CITIES, tutor_units: TUTOR_UNITS });
   if (url.pathname.endsWith('/api/search/search.php')) {
     server.searchBodies.push(body);
     return json(200, { ok: true, items: [], total: 0 });
@@ -541,12 +547,12 @@ ok('(a) 임시값 = 서버 라벨(숫자 없음)', () => {
   return raw.tutor === '경기도 의정부시' && !Object.values(raw).some((v) => /^\d+$/.test(String(v)));
 });
 
-/* ── (b) 의정부 → 도봉구 변경, 화면 즉시 반영, 새로고침 ── */
-console.log('=== (b) 마이페이지 희망지역 변경(의정부 → 도봉구) ===');
-server.nextStudent = ROWS.dobong;
+/* ── (b) 의정부 → 양주시 변경, 화면 즉시 반영, 새로고침 ── */
+console.log('=== (b) 마이페이지 희망지역 변경(의정부 → 양주시) ===');
+server.nextStudent = ROWS.yangju;
 const saved = await studentStore.updateStudent(31, { preferred_tutor_region_id: 117 });
 savedRegion.syncStoredHopeRegionsFromStudent(saved);
-ok('(b) 저장 직후 임시값 = 서울특별시 도봉구', JSON.parse(localStorage.getItem(HOPE_KEY) || '{}').tutor === '서울특별시 도봉구');
+ok('(b) 저장 직후 임시값 = 경기도 양주시', JSON.parse(localStorage.getItem(HOPE_KEY) || '{}').tutor === '경기도 양주시');
 ok('(b) 마이페이지 기본·상세 저장 모두 임시값 갱신 함수를 부름', () =>
   /\(formKind === 'basic' \|\| formKind === 'detail'\) && saved\) syncStoredHopeRegionsFromStudent\(saved\)/.test(
     read('preview/home-ui/src/student-reg/screens.js'),
@@ -554,21 +560,21 @@ ok('(b) 마이페이지 기본·상세 저장 모두 임시값 갱신 함수를 
 );
 {
   const { text } = await renderFind('tutor');
-  ok('(b) 새로고침 전 과외쌤 찾기 = 서울특별시 도봉구', currentLocation(text) === '서울특별시 도봉구', currentLocation(text));
+  ok('(b) 새로고침 전 과외쌤 찾기 = 경기도 양주시', currentLocation(text) === '경기도 양주시', currentLocation(text));
   ok('(b) 새로고침 전 의정부 잔존 없음', !text.includes('의정부'));
   const home = await renderHome('tutor');
-  ok('(b) 새로고침 전 홈 과외쌤 탭 = 도봉구', /희망 지역 서울특별시 도봉구/.test(home.text));
+  ok('(b) 새로고침 전 홈 과외쌤 탭 = 양주시', /희망 지역 경기도 양주시/.test(home.text));
 }
 await reload();
 for (const tab of ['tutor', 'student']) {
   const { text } = await renderFind(tab);
-  ok(`(b) 새로고침 후 찾기 ${tab} = 서울특별시 도봉구`, currentLocation(text) === '서울특별시 도봉구', currentLocation(text));
+  ok(`(b) 새로고침 후 찾기 ${tab} = 경기도 양주시`, currentLocation(text) === '경기도 양주시', currentLocation(text));
   ok(`(b) 새로고침 후 찾기 ${tab} 의정부 없음`, !text.includes('의정부'));
   assertNoGuestValues(`(b) 찾기 ${tab}`, text);
 }
 for (const tabId of ['tutor', 'student']) {
   const { text } = await renderHome(tabId);
-  ok(`(b) 새로고침 후 홈 ${tabId} = 도봉구`, text.includes('서울특별시 도봉구') && !text.includes('의정부'));
+  ok(`(b) 새로고침 후 홈 ${tabId} = 양주시`, text.includes('경기도 양주시') && !text.includes('의정부'));
 }
 
 /* ── (c) 저장 지역 없음 ── */

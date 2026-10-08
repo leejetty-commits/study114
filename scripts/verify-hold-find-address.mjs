@@ -682,18 +682,24 @@ globalThis.fetch = async (input) => {
       { id: 27, label: '강남구', sido_code: '11', sido_name: '서울특별시', official_code: '1168000000', city_name: '강남구', gu_name: '', kind: 'gu' },
     ] }) };
   }
+  if (url.includes('action=tutor_units')) {
+    await citiesReady.promise;
+    return { ok: true, json: async () => ({ ok: true, tutor_units: [
+      { id: 11, label: '서울특별시', sido_code: '11', sido_name: '서울특별시', unit_name: '', kind: 'metro' },
+    ] }) };
+  }
   searchCalls += 1;
   return { ok: true, json: async () => ({ ok: true, items: [], total: 21 }) };
 };
 const surfaceMod = await import('../search-ui/src/search-find-surface.js');
 const lateState = { role: 'tutor', searchPage: 1, searchExecuted: false, searchTotal: 0, searchExposureItems: [], canonicalLocation: null, activeRegionLabel: '' };
-const lateRun = surfaceMod.runFindSearchWithFilters('tutor', { tutor_region_id: '27' }, lateState, 'tutor', () => {});
+const lateRun = surfaceMod.runFindSearchWithFilters('tutor', { tutor_region_id: '11' }, lateState, 'tutor', () => {});
 await Promise.resolve();
 console.log((/^\\d+$/.test(String(lateState.activeRegionLabel || '')) ? 'PASS' : 'FAIL') + ': S1 목록 전 라벨은 숫자 id (' + lateState.activeRegionLabel + ')');
 citiesReady.go();
 await lateRun;
 await new Promise((r) => setTimeout(r, 50));
-console.log((lateState.activeRegionLabel === '서울특별시 강남구' ? 'PASS' : 'FAIL') + ': S1 목록 뒤 강남구 (' + lateState.activeRegionLabel + ')');
+console.log((lateState.activeRegionLabel === '서울특별시' ? 'PASS' : 'FAIL') + ': S1 과외 단위 목록 뒤 서울특별시 (' + lateState.activeRegionLabel + ')');
 console.log((!/^\\d+$/.test(String(lateState.activeRegionLabel || '')) ? 'PASS' : 'FAIL') + ': S1 숫자 id 0');
 for (const kind of ['dong', 'complex', 'pending']) {
   const blocked = {
@@ -737,7 +743,7 @@ for (const line of behaviorOut.split(/\r?\n/)) {
     console.error(line);
   }
 }
-assert(behavior.status === 0 && /S1 목록 뒤 강남구/.test(behavior.stdout || ''), `S1 행동 종료 0 (${behavior.status} ${(behavior.stderr || '').slice(0, 400)})`);
+assert(behavior.status === 0 && /S1 과외 단위 목록 뒤 서울특별시/.test(behavior.stdout || ''), `S1 행동 종료 0 (${behavior.status} ${(behavior.stderr || '').slice(0, 400)})`);
 
 if (failed > 0) {
   console.error(`\nverify-hold-find-address FAILED (${failed})`);
