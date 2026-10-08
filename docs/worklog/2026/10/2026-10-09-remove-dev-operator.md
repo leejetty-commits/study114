@@ -500,3 +500,6 @@ preview 밖이라 손대지 않았지만 알릴 것: `sql/schema/021_board_engin
 - 겹친 파일은 `scripts/verify-student-mypage-metrics.mjs` 하나. main 은 과외 단위 응답·검사 항목, 브랜치는 학생 1 시드(`addStudent`) — 서로 다른 구간, 자동 병합 결과 양쪽 다 살아 있음.
 - 병합본 검사(메인 검수): `verify:no-sample-data` OK · `verify:shop-page` 54 pass / 0 fail · `verify:location-ssot` 통과. PHP 문법은 CI 에서.
 - 승인 뒤 새 커밋이므로 사용자 재승인 필요: 대상 hash `6b12094`.
+- 사용자 재승인: `6b12094` (02:01, "제거. jetty@naver.com 은 제외. 관리자용 2계정 제외").
+  - 삭제 SQL 은 `ops@dev.local` 1행만 지우고 `jetty@naver.com`·`leejetty@gmail.com` 은 조건으로 제외 — 그 밖의 계정은 대상 아님.
+  - 코드에서 지운 `@dev.local` 부마스터 예외는 `role_type = admin` 인데 등급이 없을 때만 닿던 분기이고 기본값도 부마스터라, 실제 관리자 계정 권한은 바뀌지 않음.
