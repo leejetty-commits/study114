@@ -14,7 +14,6 @@ import {
 } from '../../../shared/promo-image.js';
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from '../registrations-backend.js';
 import { ensureEmbeddedRegister } from './embedded-panels.js';
-import { openDetailDecision } from '../detail-decision/index.js';
 import { getStudyRoom } from './store.js';
 import { RC_COPY } from './registration-check-copy.js';
 import { cheonwonInputToWon } from '../../../shared/fee-cheonwon.js';
@@ -24,7 +23,6 @@ import {
   TEACHING_STYLE_OPTIONS,
   registrationCheckTabHref,
 } from './registration-check-model.js';
-import { buildStudyRoomSampleItem } from '../home-card-samples/presets.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -315,22 +313,6 @@ export function bindRegistrationCheckEvents(root, rerender) {
 
   page.querySelectorAll('[data-rc-cover]').forEach((btn) => {
     btn.addEventListener('click', () => openCoverModal(roomId, rerender));
-  });
-
-  const openExpand = (tier = 'prime') => {
-    const item = buildStudyRoomSampleItem(tier);
-    openDetailDecision({
-      kind: 'study_room',
-      id: 0,
-      item,
-      sourceRoute: 'registration-check',
-    });
-  };
-  page.querySelectorAll('[data-rc-expand]').forEach((el) => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      openExpand(el.getAttribute('data-rc-expand-tier') || 'prime');
-    });
   });
 
   page.querySelectorAll('[data-rc-fold]').forEach((btn) => {

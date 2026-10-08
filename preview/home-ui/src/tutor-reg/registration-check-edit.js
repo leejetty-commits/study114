@@ -1,29 +1,13 @@
 /**
- * 과외쌤 등록점검 — 확대카드 · 접기/펼치기
+ * 과외쌤 등록점검 — 접기/펼치기
  */
 
-import { buildTutorSampleItem } from '../home-card-samples/presets.js';
-import { openDetailDecision } from '../detail-decision/index.js';
 import { TRC_COPY } from './registration-check-copy.js';
 
 /** @param {HTMLElement} root */
 export function bindTutorRegistrationCheckEvents(root) {
   const page = root.querySelector('[data-trc-page]');
   if (!page) return;
-
-  page.querySelectorAll('[data-trc-expand]').forEach((el) => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      const tier = el.getAttribute('data-trc-expand-tier') || 'prime';
-      const item = buildTutorSampleItem(tier);
-      openDetailDecision({
-        kind: 'tutor',
-        id: 0,
-        item,
-        sourceRoute: 'registration-check',
-      });
-    });
-  });
 
   page.querySelectorAll('[data-trc-fold]').forEach((btn) => {
     btn.addEventListener('click', () => {

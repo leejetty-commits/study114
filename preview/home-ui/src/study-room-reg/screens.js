@@ -11,8 +11,6 @@ import {
   inquiryStatusFromForm,
   studyRoomInquiryStoredLine,
 } from './inquiry-display.js';
-import { renderInquirySamplePair } from '../home-card-samples/render.js';
-import { bindInquirySampleGuides } from '../home-card-samples/guides.js';
 import {
   parseStudyRoomRegPath,
   studyRoomHubPath,
@@ -570,16 +568,6 @@ function renderInquiries(room) {
           </div>
         </div>
       </section>
-
-      <section class="p21-inq-block p21-inq-block--samples p20-inq-sample" aria-label="${esc(P20_INQUIRY_COPY.sampleTitle)}">
-        <div class="p20-inq-sample__surface">
-          <h3 class="p21-inq-block__title">${esc(P20_INQUIRY_COPY.sampleTitle)}</h3>
-          <p class="p21-inq-block__hint">${esc(P20_INQUIRY_COPY.sampleLead)}</p>
-          <div class="inq-samples">
-            ${renderInquirySamplePair('study_room', P20_INQUIRY_COPY)}
-          </div>
-        </div>
-      </section>
     </div>`;
 
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'inquiries', body)}</section>`;
@@ -689,9 +677,6 @@ export function bindStudyRoomRegEvents(root, rerender) {
       }
     });
   });
-
-  const inquiriesPage = root.querySelector('[data-p20-inquiries]');
-  if (inquiriesPage) bindInquirySampleGuides(inquiriesPage);
 
   root.querySelectorAll('[data-p20-inquiry-receiving]').forEach((input) => {
     input.addEventListener('change', () => {
