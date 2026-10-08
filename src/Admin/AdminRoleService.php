@@ -25,13 +25,6 @@ final class AdminRoleService
      */
     private const BOOTSTRAP_SUPER_ADMIN_EMAIL = 'jetty@naver.com';
 
-    /** @var list<string> 개발용 시드 (DB 미백필 시 fallback). 가입완료 예외 아님. */
-    private const LEGACY_SUB_MASTER_EMAILS = [
-        'ops@dev.local',
-        'ops2@dev.local',
-        'ops3@dev.local',
-    ];
-
     /** @param array{email?: string, role_type?: string, admin_level?: ?string, user_id?: int} $auth */
     public function resolveLevel(array $auth): ?string
     {
@@ -62,9 +55,6 @@ final class AdminRoleService
 
         if ($this->isBootstrapSuperAdminEmail($email)) {
             return self::LEVEL_SUPER_ADMIN;
-        }
-        if (in_array($email, self::LEGACY_SUB_MASTER_EMAILS, true) || str_ends_with($email, '@dev.local')) {
-            return self::LEVEL_SUB_MASTER;
         }
 
         // admin 역할이지만 등급 없음 — 부마스터로 degrade
@@ -104,12 +94,6 @@ final class AdminRoleService
     public function listMasterEmails(): array
     {
         return [self::BOOTSTRAP_SUPER_ADMIN_EMAIL];
-    }
-
-    /** @return list<string> */
-    public function listSubMasterEmails(): array
-    {
-        return self::LEGACY_SUB_MASTER_EMAILS;
     }
 
     /** @param array{email?: string, role_type?: string, admin_level?: ?string, user_id?: int} $auth */

@@ -118,9 +118,9 @@ admin_accounts (
 | 이메일 | admin_level | 비고 |
 |--------|-------------|------|
 | `jetty@naver.com` | `super_admin` | **초기 발급 최고관리자 · 유지** |
-| `ops@dev.local` 등 | `sub_master` | 로컬/스테이징 전용 · 프로덕션 시드 제외 가능 |
+| `ops@dev.local` 등 | `sub_master` | 로컬 Docker 전용 · 운영 DB 적용 금지 (등급은 036 백필) |
 
-하드코딩 `MASTER_EMAILS` / `SUB_MASTER_EMAILS`는 **마이그레이션 브릿지**로만 남기고, DB `admin_level` 우선 → 최종 제거.
+하드코딩 `SUB_MASTER_EMAILS` / `LEGACY_SUB_MASTER_EMAILS`는 2026-10-09 제거했다. `MASTER_EMAILS`(bootstrap 1계정)만 과도기로 남는다.
 
 ### 2-5. 로그인·세션
 
@@ -257,7 +257,7 @@ bootstrap 이메일로 `role_type=admin` 강제 elevation은 **제거**. DB `adm
 | 4 | `login.php` / `me.php` / `AuthSession` master elevation | DB 없이도 admin 세션 가능 | 과도기 유지 → DB `super_admin` 필수화 후 **제거** |
 | 5 | SQL seed로만 추가 | 개발용 | 프로덕션 런북: seed는 bootstrap 1계정(+선택적 ops)만 · 나머지는 UI |
 | 6 | Admin 회원 목록에서 role을 admin으로 변경 | 없음 | **금지 유지** — members API에 role escalate 추가하지 않음 |
-| 7 | 클라이언트 Dev 로그인 버튼 | `ops@dev.local` | 개발 전용 · 프로덕션 빌드 제거/비활성 확인 |
+| 7 | 클라이언트 Dev 로그인 버튼 | `ops@dev.local` | **2026-10-09 제거** (운영 게이트 「개발용 운영자 로그인」·미리보기 「시험용·운영」) |
 
 **정리 문장:**  
 signup mode로 admin이 “생성되던” 공개 경로는 사실상 없었고, **실질 우회는 OAuth master 자동 admin + SQL seed**다. 공개 signup은 차단 상태를 고정하고, OAuth 자동 admin을 제거하는 것이 핵심이다.

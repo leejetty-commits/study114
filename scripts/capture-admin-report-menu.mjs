@@ -200,13 +200,6 @@ async function main() {
 
   console.log('3. Navigating to /#/admin (운영 홈)...');
   await page.goto(`${baseUrl}/#/admin`);
-  
-  // 게이트 화면이 뜰 경우 dev-login-admin 클릭
-  const devLoginBtn = page.locator('[data-action="dev-login-admin"]').first();
-  if (await devLoginBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    console.log('Clicking dev-login-admin button...');
-    await devLoginBtn.click();
-  }
 
   await page.waitForSelector('[data-settlement-root]', { timeout: 10000 });
   await page.waitForSelector('[data-today-root]', { timeout: 10000 });

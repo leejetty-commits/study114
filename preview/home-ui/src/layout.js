@@ -76,7 +76,6 @@ export function renderPreviewToolbar() {
         <button type="button" class="preview-toolbar__btn" data-action="dev-login-parent">시험용·학부모</button>
         <button type="button" class="preview-toolbar__btn" data-action="dev-login-room">시험용·공부방</button>
         <button type="button" class="preview-toolbar__btn" data-action="dev-login-tutor">시험용·과외</button>
-        <button type="button" class="preview-toolbar__btn" data-action="dev-login-admin">시험용·운영</button>
         ${isLoggedIn() ? `<button type="button" class="preview-toolbar__btn" data-action="dev-logout">로그아웃</button>` : ''}
         <span class="preview-toolbar__divider"></span>
         ${
@@ -471,8 +470,7 @@ export function bindLayoutEvents(root, rerender) {
           action === 'dev-logout' ||
           action === 'dev-login-parent' ||
           action === 'dev-login-room' ||
-          action === 'dev-login-tutor' ||
-          action === 'dev-login-admin';
+          action === 'dev-login-tutor';
         if (!allowed) {
           redirectToEmailVerifyWait();
           return;
@@ -481,15 +479,13 @@ export function bindLayoutEvents(root, rerender) {
       if (action === 'role-switch') {
         // GNB가 아니라 마이페이지 계정설정으로 유도
         navigate('/mypage/account');
-      } else if (action === 'dev-login-parent' || action === 'dev-login-room' || action === 'dev-login-tutor' || action === 'dev-login-admin') {
+      } else if (action === 'dev-login-parent' || action === 'dev-login-room' || action === 'dev-login-tutor') {
         const key =
           action === 'dev-login-parent'
             ? 'parent'
             : action === 'dev-login-room'
               ? 'study_room'
-              : action === 'dev-login-admin'
-                ? 'admin'
-                : 'tutor';
+              : 'tutor';
         devLoginAs(key)
           .then(() => rerender())
           .catch((err) => console.error('[dev-login]', err));

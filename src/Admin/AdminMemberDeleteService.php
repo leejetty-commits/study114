@@ -228,9 +228,6 @@ final class AdminMemberDeleteService
         if ($this->roles->isMasterEmail($email)) {
             return true;
         }
-        if (in_array($email, $this->roles->listSubMasterEmails(), true)) {
-            return true;
-        }
         $level = $this->roles->normalizeLevel($row['admin_level'] ?? null);
 
         return $level === AdminRoleService::LEVEL_SUPER_ADMIN

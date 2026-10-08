@@ -325,7 +325,7 @@ final class AdminMemberService
     private function isOperatorAccount(string $email, mixed $adminLevel): bool
     {
         $email = strtolower(trim($email));
-        if ($this->roles->isMasterEmail($email) || in_array($email, $this->roles->listSubMasterEmails(), true)) {
+        if ($this->roles->isMasterEmail($email)) {
             return true;
         }
         $level = $this->roles->normalizeLevel($adminLevel);

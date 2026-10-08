@@ -135,7 +135,7 @@
 |------|-----------|
 | `users.admin_level` (`super_admin` / `sub_master`) | **콘솔 RBAC 전용.** 가입완료(`email_verified_at`)를 대체하지 않는다. |
 | bootstrap 이메일 `jetty@naver.com` | 최고관리자 **등급 시드** 전용. 메일 확인 우회가 아니다. |
-| `ops@dev.local` 등 레거시 시드 | 부마스터 **등급 fallback** 전용. 메일 확인 우회가 아니다. |
+| `ops@dev.local` 등 레거시 시드 | 로컬 Docker 전용. 이메일로 등급을 주는 fallback은 2026-10-09 제거했다. 등급은 DB `admin_level`만 본다. |
 | 시장 SPA (`fetchSession` / chrome / `resolveAfterAuthUrl`) | `admin_level`이 있어도 미확인이면 확인 대기 화면으로 보낸다. |
 | `AdminApi::requireAdmin` | 콘솔 API도 `email_verified_at` 필수. 미확인 관리자는 403 `email_verify_required`. |
 

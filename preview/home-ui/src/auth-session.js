@@ -39,7 +39,6 @@ export const DEV_ACCOUNTS = {
   parent: { email: 'guardian1@dev.local', password: 'password', label: '학부모' },
   study_room: { email: 'room-owner1@dev.local', password: 'password', label: '공부방' },
   tutor: { email: 'tutor-owner1@dev.local', password: 'password', label: '과외' },
-  admin: { email: 'ops@dev.local', password: 'password', label: '운영' },
 };
 
 export const ROLE_HOME = {
@@ -270,7 +269,7 @@ export async function devLogin(email, password = 'password') {
   return currentUser;
 }
 
-/** @param {'parent'|'study_room'|'tutor'|'admin'} key */
+/** @param {'parent'|'study_room'|'tutor'} key */
 export async function devLoginAs(key) {
   const account = DEV_ACCOUNTS[key];
   if (!account) throw new Error('알 수 없는 dev 계정');
@@ -280,9 +279,7 @@ export async function devLoginAs(key) {
       ? '/parent'
       : key === 'study_room'
         ? '/study-room'
-        : key === 'admin'
-          ? '/admin'
-          : '/tutor';
+        : '/tutor';
   navigate(home);
   return user;
 }
