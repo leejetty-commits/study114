@@ -316,3 +316,8 @@ commit hash, 바꾼 파일 수, 화면별 요약, 검사 결과 표, 추가 발�
 - 관찰(낮음): `udx-std-apply.css`에 `.rc-tier__meta li`, `.rc-tier--preview:focus` 잔존 — 화면 영향 없음, 다음 CSS 정리 때.
 - 남은 한계(별도 과제 후보): 찜 목록 API(`/api/handoff/favorites.php`)가 id만 돌려줘서, 그 세션에서 불러온 적 없는 찜 항목은 목록에 안 나옴.
 - 사용자 승인: 대기 (승인 대상 hash: `faf4874`).
+
+## 12. 사용자 승인 (2026-10-09 01:12)
+
+- 사용자: 「1번은 네 추천대로 하고」 → 1번 = "faf4874 승인 — 지금 main에 반영·배포(추천)".
+- 승인 대상: 코드 `faf4874` (기록 커밋 `d72de7a` 및 이 승인 기록 포함). main fast-forward 반영 후 Actions·운영 사이트 확인.
