@@ -1,0 +1,41 @@
+/workspace/study114-ds/plans-ui-v4/app.js:11:      badge: [2500, 5000, 9000, 12750, 24000],
+/workspace/study114-ds/plans-ui-v4/app.js:17:      badge: [5000, 10000, 19000, 27000, 51000],
+/workspace/study114-ds/plans-ui-v4/app.js:91:      badge: q.get("badge") || "",
+/workspace/study114-ds/plans-ui-v4/app.js:106:      if (state.badge) q.set("badge", state.badge);
+/workspace/study114-ds/plans-ui-v4/app.js:258:        <label>배지
+/workspace/study114-ds/plans-ui-v4/app.js:259:          <select data-proto="badge">
+/workspace/study114-ds/plans-ui-v4/app.js:261:            ${(state.role === "room" ? ["Hot", "단과"] : ["Hot", "쪽집게", "SKY"])
+/workspace/study114-ds/plans-ui-v4/app.js:262:              .map((b) => `<option${state.badge === b ? " selected" : ""}>${b}</option>`)
+/workspace/study114-ds/plans-ui-v4/app.js:402:    const box = document.getElementById("badgeGrid");
+/workspace/study114-ds/plans-ui-v4/app.js:403:    const note = document.getElementById("badgeNote");
+/workspace/study114-ds/plans-ui-v4/app.js:405:    const names = state.role === "room" ? ["Hot", "단과"] : ["Hot", "쪽집게", "SKY"];
+/workspace/study114-ds/plans-ui-v4/app.js:407:      Hot: "지금 눈에 띄게 하는 광고 표현",
+/workspace/study114-ds/plans-ui-v4/app.js:408:      단과: "특정 과목 중심 운영 강조",
+/workspace/study114-ds/plans-ui-v4/app.js:409:      쪽집게: "핵심 대비 이미지",
+/workspace/study114-ds/plans-ui-v4/app.js:410:      SKY: "학교정보 기반 광고 표현이며 플랫폼 인증이 아님",
+/workspace/study114-ds/plans-ui-v4/app.js:413:    const price = termIdx >= 0 ? PRICING[state.role].badge[termIdx] : PRICING[state.role].badge[1];
+/workspace/study114-ds/plans-ui-v4/app.js:416:        const selected = state.badge === n;
+/workspace/study114-ds/plans-ui-v4/app.js:418:        <button type="button" class="badge-card${selected ? " selected" : ""}"
+/workspace/study114-ds/plans-ui-v4/app.js:419:          data-badge="${n}" aria-pressed="${selected}"
+/workspace/study114-ds/plans-ui-v4/app.js:420:          aria-label="홍보 배지 ${n} ${won(price)}">
+/workspace/study114-ds/plans-ui-v4/app.js:429:        "선택한 Prime 노출 또는 Pick 노출에 배지를 추가할 수 있습니다. 배지는 선택한 노출상품과 같은 기간 동안 적용됩니다. 최대 1개만 선택할 수 있습니다.";
+/workspace/study114-ds/plans-ui-v4/app.js:466:    const badge = state.badge && ti >= 0 ? pack.badge[ti] : 0;
+/workspace/study114-ds/plans-ui-v4/app.js:467:    return { base, badge, total: base + badge, ti };
+/workspace/study114-ds/plans-ui-v4/app.js:477:    const { base, badge, total, ti } = calcTotal(state);
+/workspace/study114-ds/plans-ui-v4/app.js:495:      <div class="sum-row"><span>홍보 배지</span><b>${state.badge || "없음"}</b></div>
+/workspace/study114-ds/plans-ui-v4/app.js:499:      ${badge ? `<div class="sum-row"><span>배지</span><b>${won(badge)}</b></div>` : ""}
+/workspace/study114-ds/plans-ui-v4/app.js:737:      if (state.badge && !(state.role === "room" ? ["Hot", "단과"] : ["Hot", "쪽집게", "SKY"]).includes(state.badge)) {
+/workspace/study114-ds/plans-ui-v4/app.js:738:        state.badge = "";
+/workspace/study114-ds/plans-ui-v4/app.js:756:    const badge = e.target.closest(".badge-card[data-badge]");
+/workspace/study114-ds/plans-ui-v4/app.js:757:    if (badge) {
+/workspace/study114-ds/plans-ui-v4/app.js:758:      state.badge = state.badge === badge.dataset.badge ? "" : badge.dataset.badge;
+/workspace/study114-ds/plans-ui-v4/app.js:858:      if (key === "badge" && !proto.value) state.badge = "";
+/workspace/study114-ds/plans-ui-v4/REPORT.md:24:| `role` | `room` \| `tutor` | 공부방 / 과외쌤 가격·카피·배지·점유 UI |
+/workspace/study114-ds/plans-ui-v4/REPORT.md:31:| `badge` | `Hot` \| `단과` \| `쪽집게` \| `SKY` | 홍보 배지 (역할별) |
+/workspace/study114-ds/plans-ui-v4/REPORT.md:70:- **Badges**: Title **홍보 배지 장착**; inherit main period; show period price before select; no separate period picker
+/workspace/study114-ds/plans-ui-v4/REPORT.md:73:- **Pricing**: Exact tables from brief (room/tutor/badge/tickets + tutor message bundles)
+/workspace/study114-ds/plans-ui-v4/REPORT.md:91:- 홍보 배지 장착
+/workspace/study114-ds/plans-ui-v4/REPORT.md:92:- Badge body (exact): `선택한 Prime 노출 또는 Pick 노출에 배지를 추가할 수 있습니다. 배지는 선택한 노출상품과 같은 기간 동안 적용됩니다.`
+/workspace/study114-ds/plans-ui-v4/REPORT.md:93:- SKY: 학교정보 기반 광고 표현이며 플랫폼 인증이 아님
+/workspace/study114-ds/plans-ui-v4/REPORT.md:132:- Badge mutual exclusivity with concurrent Prime+Pick (prototype: one badge on selected product)
+/workspace/study114-ds/plans-ui-v4/REPORT.md:145:| Period / badge / ticket buttons: `aria-label` includes product name + price | Pass |

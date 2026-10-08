@@ -1,0 +1,31 @@
+=== App path probes 2026-09-22 17:59:41 KST ===
+path=/ http=000 size=0 t=15.001830
+path=/ FAIL
+path=/index.php http=404 size=4507 t=1.380620
+path=/xe/ http=200 size=1073 t=0.470555
+path=/xe/index.php http=200 size=1073 t=0.423811
+path=/modules/ http=200 size=1073 t=0.533339
+path=/common/ http=200 size=1073 t=0.447619
+path=/layouts/ http=200 size=1073 t=3.984919
+path=/files/ http=200 size=1073 t=1.380673
+path=/admin http=200 size=1073 t=2.885387
+path=/admin.php http=200 size=1073 t=0.639535
+--- titles ---
+probe-_admin.body: <title>우동공과 — 메인 화면 프리뷰</title>
+
+probe-_admin.php.body: <title>우동공과 — 메인 화면 프리뷰</title>
+
+probe-_common_.body: <title>우동공과 — 메인 화면 프리뷰</title>
+
+probe-_files_.body: <title>우동공과 — 메인 화면 프리뷰</title>
+
+probe-_index.php.body: <title>페이지를 표시할 수 없습니다.</title>
+
+probe-_layouts_.body: <title>우동공과 — 메인 화면 프리뷰</title>
+
+probe-_modules_.body: <title>우동공과 — 메인 화면 프리뷰</title>
+
+probe-_xe_.body: <title>우동공과 — 메인 화면 프리뷰</title>
+
+probe-_xe_index.php.body: <title>우동공과 — 메인 화면 프리뷰</title>
+

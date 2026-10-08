@@ -1,0 +1,79 @@
+=== CF homepage-paid-shell https://study114.net/ n=8 2026-09-22 18:27:45 KST ===
+try=1 200 namelookup=0.000735 connect=0.000907 tls=0.020848 ttfb=8.218687 total=8.218855 size=1073 speed=130
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=2 200 namelookup=0.001253 connect=0.001740 tls=0.021216 ttfb=9.439069 total=9.440287 size=1073 speed=113
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=3 200 namelookup=0.000717 connect=0.000923 tls=0.017907 ttfb=1.812057 total=1.813678 size=1073 speed=591
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=4 200 namelookup=0.001334 connect=0.001507 tls=0.020409 ttfb=0.521614 total=0.523663 size=1073 speed=2049
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=5 200 namelookup=0.001159 connect=0.001374 tls=0.016737 ttfb=0.508174 total=0.508352 size=1073 speed=2110
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=6 200 namelookup=0.001314 connect=0.001737 tls=0.017768 ttfb=2.548392 total=2.550047 size=1073 speed=420
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=7 200 namelookup=0.000839 connect=0.001202 tls=0.018396 ttfb=0.557066 total=0.557262 size=1073 speed=1925
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=8 200 namelookup=0.000952 connect=0.001173 tls=0.018617 ttfb=0.564726 total=0.566627 size=1073 speed=1893
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+=== CF register-tutor-shell https://study114.net/register/tutor/ n=8 2026-09-22 18:28:12 KST ===
+try=1 200 namelookup=0.000946 connect=0.001135 tls=0.018419 ttfb=2.186016 total=2.186958 size=1140 speed=521
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=2 200 namelookup=0.001178 connect=0.001372 tls=0.017824 ttfb=1.664602 total=1.666134 size=1140 speed=684
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=3 200 namelookup=0.001283 connect=0.001928 tls=0.020224 ttfb=0.228148 total=0.228349 size=1140 speed=4992
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=4 200 namelookup=0.000854 connect=0.001044 tls=0.019436 ttfb=0.214492 total=0.216289 size=1140 speed=5270
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=5 200 namelookup=0.001224 connect=0.001557 tls=0.020232 ttfb=0.226693 total=0.226857 size=1140 speed=5025
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=6 200 namelookup=0.000862 connect=0.001254 tls=0.018956 ttfb=0.212067 total=0.214146 size=1140 speed=5323
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=7 200 namelookup=0.001143 connect=0.001350 tls=0.015980 ttfb=0.221661 total=0.223453 size=1140 speed=5101
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=8 200 namelookup=0.001460 connect=0.001983 tls=0.020695 ttfb=0.212650 total=0.215315 size=1140 speed=5294
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+=== CF plans-path-shell https://study114.net/plans n=5 2026-09-22 18:28:19 KST ===
+try=1 200 namelookup=0.000758 connect=0.000947 tls=0.017891 ttfb=0.226268 total=0.228362 size=1073 speed=4698
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=2 200 namelookup=0.000627 connect=0.000966 tls=0.017316 ttfb=0.223955 total=0.224110 size=1073 speed=4787
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=3 200 namelookup=0.001080 connect=0.001551 tls=0.016690 ttfb=0.210627 total=0.212119 size=1073 speed=5058
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=4 200 namelookup=0.001369 connect=0.001511 tls=0.017998 ttfb=0.224008 total=0.224250 size=1073 speed=4784
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+try=5 200 namelookup=0.000791 connect=0.000975 tls=0.017155 ttfb=0.223260 total=0.223430 size=1073 speed=4802
+content-type: text/html; charset=UTF-8 server: cloudflare cache-control: no-cache, no-store, must-revalidate cf-cache-status: DYNAMIC 
+=== ORIGIN homepage Host:study114.net path=/ n=8 2026-09-22 18:28:22 KST ===
+try=1 200 namelookup=0.000014 connect=0.000739 tls=0.405497 ttfb=0.773212 total=0.773321 size=1073 speed=1387
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=2 200 namelookup=0.000020 connect=0.000258 tls=0.402809 ttfb=0.767240 total=0.767335 size=1073 speed=1398
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=3 200 namelookup=0.000014 connect=0.000257 tls=0.403693 ttfb=0.771947 total=0.772096 size=1073 speed=1389
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=4 200 namelookup=0.000015 connect=0.000286 tls=0.419205 ttfb=0.805949 total=0.806079 size=1073 speed=1331
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=5 200 namelookup=0.000016 connect=0.000494 tls=0.406363 ttfb=0.774718 total=0.774833 size=1073 speed=1384
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=6 200 namelookup=0.000017 connect=0.000294 tls=0.404265 ttfb=1.366739 total=1.366889 size=1073 speed=784
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=7 200 namelookup=0.000017 connect=0.000348 tls=0.403146 ttfb=0.770353 total=0.770492 size=1073 speed=1392
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=8 200 namelookup=0.000011 connect=0.000226 tls=0.401351 ttfb=0.764871 total=0.765052 size=1073 speed=1402
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+=== ORIGIN register-tutor Host:study114.net path=/register/tutor/ n=8 2026-09-22 18:28:31 KST ===
+try=1 200 namelookup=0.000015 connect=0.000342 tls=0.419594 ttfb=0.800786 total=0.800948 size=1140 speed=1423
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=2 200 namelookup=0.000015 connect=0.000489 tls=0.423234 ttfb=0.808135 total=0.808281 size=1140 speed=1410
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=3 200 namelookup=0.000014 connect=0.000533 tls=0.405964 ttfb=0.775835 total=0.775977 size=1140 speed=1469
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=4 200 namelookup=0.000016 connect=0.000247 tls=0.404373 ttfb=0.774043 total=0.774179 size=1140 speed=1472
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=5 200 namelookup=0.000016 connect=0.000302 tls=0.422614 ttfb=0.807823 total=0.807947 size=1140 speed=1410
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=6 200 namelookup=0.000019 connect=0.000238 tls=0.406839 ttfb=0.776175 total=0.776307 size=1140 speed=1468
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=7 200 namelookup=0.000013 connect=0.000354 tls=0.402378 ttfb=0.768443 total=0.768647 size=1140 speed=1483
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 
+try=8 200 namelookup=0.000013 connect=0.000186 tls=0.403760 ttfb=0.767908 total=0.768131 size=1140 speed=1484
+Server: Apache Cache-Control: no-cache, no-store, must-revalidate Content-Type: text/html; charset=UTF-8 

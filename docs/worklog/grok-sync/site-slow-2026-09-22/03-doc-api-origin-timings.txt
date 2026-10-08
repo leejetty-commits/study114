@@ -1,0 +1,73 @@
+=== CF docs/APIs multi 2026-09-22 18:28:38 KST ===
+try=1 url=https://study114.net/ 200 ttfb=0.602500 total=0.602670 size=1073 speed=1780
+try=2 url=https://study114.net/ 200 ttfb=0.220182 total=0.221560 size=1073 speed=4842
+try=3 url=https://study114.net/ 200 ttfb=0.217270 total=0.219288 size=1073 speed=4893
+try=4 url=https://study114.net/ 200 ttfb=0.230791 total=0.232484 size=1073 speed=4615
+try=5 url=https://study114.net/ 200 ttfb=0.228967 total=0.230749 size=1073 speed=4650
+try=6 url=https://study114.net/ 200 ttfb=0.227400 total=0.229336 size=1073 speed=4678
+try=1 url=https://study114.net/register/room/ 200 ttfb=0.228983 total=0.229152 size=1137 speed=4961
+try=2 url=https://study114.net/register/room/ 200 ttfb=0.229445 total=0.231116 size=1137 speed=4919
+try=3 url=https://study114.net/register/room/ 200 ttfb=0.584269 total=0.586042 size=1137 speed=1940
+try=4 url=https://study114.net/register/room/ 200 ttfb=0.211486 total=0.214225 size=1137 speed=5307
+try=5 url=https://study114.net/register/room/ 200 ttfb=0.214125 total=0.214291 size=1137 speed=5305
+try=6 url=https://study114.net/register/room/ 200 ttfb=0.213328 total=0.213506 size=1137 speed=5325
+try=1 url=https://study114.net/register/tutor/ 200 ttfb=0.214038 total=0.214215 size=1140 speed=5321
+try=2 url=https://study114.net/register/tutor/ 200 ttfb=0.215447 total=0.215631 size=1140 speed=5286
+try=3 url=https://study114.net/register/tutor/ 200 ttfb=0.215777 total=0.218334 size=1140 speed=5221
+try=4 url=https://study114.net/register/tutor/ 200 ttfb=0.213005 total=0.213176 size=1140 speed=5347
+try=5 url=https://study114.net/register/tutor/ 200 ttfb=0.213152 total=0.213301 size=1140 speed=5344
+try=6 url=https://study114.net/register/tutor/ 200 ttfb=0.230134 total=0.232276 size=1140 speed=4907
+try=1 url=https://study114.net/api/registrations/study-rooms.php 401 ttfb=0.214408 total=0.216472 size=381 speed=1760
+try=2 url=https://study114.net/api/registrations/study-rooms.php 401 ttfb=0.230314 total=0.230475 size=381 speed=1653
+try=3 url=https://study114.net/api/registrations/study-rooms.php 401 ttfb=0.216507 total=0.216714 size=381 speed=1758
+try=4 url=https://study114.net/api/registrations/study-rooms.php 401 ttfb=0.229271 total=0.229454 size=381 speed=1660
+try=5 url=https://study114.net/api/registrations/study-rooms.php 401 ttfb=0.218115 total=0.218283 size=381 speed=1745
+try=6 url=https://study114.net/api/registrations/study-rooms.php 401 ttfb=0.233171 total=0.233393 size=381 speed=1632
+try=1 url=https://study114.net/api/paid/catalog.php 200 ttfb=0.218987 total=0.220501 size=12616 speed=57215
+try=2 url=https://study114.net/api/paid/catalog.php 200 ttfb=0.232454 total=0.235571 size=12616 speed=53554
+try=3 url=https://study114.net/api/paid/catalog.php 200 ttfb=0.217681 total=0.220086 size=12616 speed=57323
+try=4 url=https://study114.net/api/paid/catalog.php 200 ttfb=0.232900 total=0.234660 size=12616 speed=53762
+try=5 url=https://study114.net/api/paid/catalog.php 200 ttfb=0.218967 total=0.220518 size=12616 speed=57210
+try=6 url=https://study114.net/api/paid/catalog.php 200 ttfb=0.231364 total=0.232811 size=12616 speed=54189
+=== ORIGIN docs/APIs multi 2026-09-22 18:28:46 KST ===
+try=1 path=/ 200 ttfb=1.797440 total=1.797585 size=1073 speed=596
+try=2 path=/ 200 ttfb=0.632474 total=0.632609 size=1073 speed=1696
+try=3 path=/ 200 ttfb=0.769502 total=0.769646 size=1073 speed=1394
+try=4 path=/ 200 ttfb=0.781362 total=0.781486 size=1073 speed=1373
+try=5 path=/ 200 ttfb=0.765706 total=0.765912 size=1073 speed=1400
+try=1 path=/register/room/ 200 ttfb=0.811131 total=0.811266 size=1137 speed=1401
+try=2 path=/register/room/ 200 ttfb=0.781143 total=0.781273 size=1137 speed=1455
+try=3 path=/register/room/ 200 ttfb=0.770964 total=0.771074 size=1137 speed=1474
+try=4 path=/register/room/ 200 ttfb=0.807272 total=0.807424 size=1137 speed=1408
+try=5 path=/register/room/ 200 ttfb=0.608732 total=0.608861 size=1137 speed=1867
+try=1 path=/register/tutor/ 200 ttfb=0.601928 total=0.602055 size=1140 speed=1893
+try=2 path=/register/tutor/ 200 ttfb=0.771660 total=0.771804 size=1140 speed=1477
+try=3 path=/register/tutor/ 200 ttfb=0.776291 total=0.776423 size=1140 speed=1468
+try=4 path=/register/tutor/ 200 ttfb=0.770759 total=0.770985 size=1140 speed=1478
+try=5 path=/register/tutor/ 200 ttfb=0.771544 total=0.771652 size=1140 speed=1477
+try=1 path=/api/registrations/study-rooms.php 401 ttfb=0.772105 total=0.772257 size=381 speed=493
+try=2 path=/api/registrations/study-rooms.php 401 ttfb=0.773785 total=0.773905 size=381 speed=492
+try=3 path=/api/registrations/study-rooms.php 401 ttfb=0.814255 total=0.814372 size=381 speed=467
+try=4 path=/api/registrations/study-rooms.php 401 ttfb=0.771674 total=0.771805 size=381 speed=493
+try=5 path=/api/registrations/study-rooms.php 401 ttfb=0.774657 total=0.774758 size=381 speed=491
+try=1 path=/api/paid/catalog.php 200 ttfb=0.782432 total=0.814162 size=12616 speed=15495
+try=2 path=/api/paid/catalog.php 200 ttfb=0.774384 total=0.807678 size=12616 speed=15620
+try=3 path=/api/paid/catalog.php 200 ttfb=0.598337 total=0.759819 size=12616 speed=16603
+try=4 path=/api/paid/catalog.php 200 ttfb=0.770494 total=0.804009 size=12616 speed=15691
+try=5 path=/api/paid/catalog.php 200 ttfb=0.811222 total=0.842818 size=12616 speed=14968
+try=1 path=/register/room/assets/index-B3Z4U1zu.js 200 ttfb=0.769915 total=1.284850 size=181338 speed=141135
+try=2 path=/register/room/assets/index-B3Z4U1zu.js 200 ttfb=0.814860 total=1.366093 size=181338 speed=132742
+try=3 path=/register/room/assets/index-B3Z4U1zu.js 200 ttfb=0.774634 total=1.292594 size=181338 speed=140289
+try=4 path=/register/room/assets/index-B3Z4U1zu.js 200 ttfb=0.802571 total=1.340722 size=181338 speed=135253
+try=5 path=/register/room/assets/index-B3Z4U1zu.js 200 ttfb=0.775909 total=1.296687 size=181338 speed=139847
+try=1 path=/assets/index-zG8GDBsI.js 200 ttfb=0.774344 total=1.801216 size=1287716 speed=714914
+try=2 path=/assets/index-zG8GDBsI.js 200 ttfb=0.768199 total=1.788773 size=1287716 speed=719887
+try=3 path=/assets/index-zG8GDBsI.js 200 ttfb=0.618713 total=1.701997 size=1287716 speed=756591
+try=4 path=/assets/index-zG8GDBsI.js 200 ttfb=0.630046 total=1.710755 size=1287716 speed=752717
+try=5 path=/assets/index-zG8GDBsI.js 200 ttfb=0.805694 total=1.881396 size=1287716 speed=684447
+=== ORIGIN main-js x5 2026-09-22 18:29:43 KST ===
+try=1 200 ttfb=0.773253 total=1.796859 size=1287716 speed=716648
+try=2 200 ttfb=0.767208 total=1.788912 size=1287716 speed=719831
+try=3 200 ttfb=0.766501 total=1.785962 size=1287716 speed=721020
+try=4 200 ttfb=0.600109 total=1.957733 size=1287716 speed=657758
+try=5 200 ttfb=0.767396 total=1.954337 size=1287716 speed=658901

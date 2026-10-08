@@ -1,0 +1,12 @@
+/workspace/study114-ds/plans-ui-v4/app.js:665:        <div class="balance-row">
+/workspace/study114-ds/plans-ui-v4/app.js:666:          <div class="balance-card"><div class="label">현재 잔액</div><div class="val">3회</div></div>
+/workspace/study114-ds/plans-ui-v4/app.js:667:          <div class="balance-card"><div class="label">가장 빠른 만료일</div><div class="val" style="font-size:16px">2026-10-12 <span class="sample-tag">프로토타입 예시</span></div></div>
+/workspace/study114-ds/plans-ui-v4/tickets.html:61:          <li>현재 잔액과 가장 빠른 만료일을 확인하세요.</li>
+/workspace/study114-ds/plans-ui-v4/tickets.html:63:          <li>쪽지권은 만료일이 빠른 것부터 사용됩니다.</li>
+/workspace/study114-ds/plans-ui-v4/tickets.html:65:          <li>1회권은 결제 후 바로 발송되며 잔액으로 보관되지 않습니다.</li>
+/workspace/study114-ds/plans-ui-v4/tickets.html:70:    <!-- 현재 잔액 · 만료 -->
+/workspace/study114-ds/plans-ui-v4/tickets.html:72:      <h2 id="balTitle">현재 잔액·가장 빠른 만료일</h2>
+/workspace/study114-ds/plans-ui-v4/tickets.html:90:120일 만료 후 잔여 횟수: 소멸 · 환불·연장 없음
+/workspace/study114-ds/plans-ui-v4/REPORT.md:72:- **Tickets**: Own page; no region UI; equal 3 cards; titled **구매 전 확인** block; balance · earliest expiry section
+/workspace/study114-ds/plans-ui-v4/REPORT.md:100:- 환불·만료 안내 (accordion body as in page)
+/workspace/study114-ds/plans-ui-v4/REPORT.md:109:- 현재 잔액·가장 빠른 만료일

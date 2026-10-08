@@ -1,0 +1,65 @@
+=== Key paths once each ===
+URL: https://study114.net/
+HTTP/2 200 
+date: Tue, 22 Sep 2026 08:59:07 GMT
+content-type: text/html; charset=UTF-8
+server: cloudflare
+cache-control: no-cache, no-store, must-revalidate
+pragma: no-cache
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=REDACTED"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: DYNAMIC
+cf-ray: a3f01c9ab888d633-IAD
+alt-svc: h3=":443"; ma=86400
+
+
+TIMING http_code=200 time_total=0.508853 remote=104.21.93.139
+----
+URL: https://study114.net/index.php
+HTTP/2 404 
+date: Tue, 22 Sep 2026 08:59:12 GMT
+content-type: text/html; charset=UTF-8
+server: cloudflare
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=REDACTED"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: DYNAMIC
+cf-ray: a3f01c9dfbebd633-IAD
+alt-svc: h3=":443"; ma=86400
+
+
+TIMING http_code=404 time_total=4.935241 remote=172.67.210.220
+----
+URL: https://study114.net/xe/
+HTTP/2 200 
+date: Tue, 22 Sep 2026 08:59:13 GMT
+content-type: text/html; charset=UTF-8
+server: cloudflare
+cache-control: no-cache, no-store, must-revalidate
+pragma: no-cache
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=REDACTED"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: DYNAMIC
+cf-ray: a3f01cbcde12d633-IAD
+alt-svc: h3=":443"; ma=86400
+
+
+TIMING http_code=200 time_total=1.159548 remote=104.21.93.139
+----
+URL: http://study114.net/
+HTTP/1.1 200 OK
+Date: Tue, 22 Sep 2026 08:59:14 GMT
+Content-Type: text/html; charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Server: cloudflare
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Report-To: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=REDACTED"}]}
+Nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: DYNAMIC
+CF-RAY: a3f01cc41becc93c-IAD
+alt-svc: h3=":443"; ma=86400
+
+
+TIMING http_code=200 time_total=0.872714 remote=172.67.210.220
+----

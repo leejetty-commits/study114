@@ -1,0 +1,21 @@
+=== Compare origin cert vs Full(strict) implication 2026-09-22 18:00:13 KST ===
+Origin cert SAN: *.dothome.co.kr only
+CF connecting with SNI=study114.net would fail hostname check under Full (strict) -> 525
+Current CF responses are 200 with DYNAMIC cache -> origin IS being reached somehow
+Possibilities: SSL mode Full (not strict), or Flexible, or Origin cert recently changed (it has NOT)
+--- CF response headers full for / ---
+HTTP/2 200 
+date: Tue, 22 Sep 2026 09:00:14 GMT
+content-type: text/html; charset=UTF-8
+server: cloudflare
+cache-control: no-cache, no-store, must-revalidate
+pragma: no-cache
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: DYNAMIC
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=REDACTED"}]}
+cf-ray: a3f01e399a5fd633-IAD
+alt-svc: h3=":443"; ma=86400
+
+--- Body title / size ---
+1073 /workspace/study114-ds/site-outage-2026-09-22/cf-root-current.html
+<title>우동공과 — 메인 화면 프리뷰</title>

@@ -1,0 +1,4 @@
+parts=3
+total=9619222
+sha256_file=../community-support-visual-refresh.zip.sha256
+join: copy /b part00+part01+... zip

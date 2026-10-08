@@ -1,0 +1,17 @@
+28:    <p>Prime은 한정된 대표 자리, Pick은 추천 영역의 순환 노출입니다. 기간 상품에는 무료 쪽지가 포함됩니다.</p>
+55:<section class="block"><div class="block-head"><h2>Prime</h2><p>한정된 대표 자리.</p></div><div class="wait">
+56:  <h3>지금 이 지역 Prime 자리가 모두 이용 중입니다</h3>
+58:  <p>예약대기 등록만으로 자리가 보장되지 않습니다. 구매 가능 안내 후 결제 완료 시 확정됩니다.</p>
+59:  <p class="note">아래 Pick으로 바로 노출을 시작할 수 있습니다. Prime을 기다리면 요약에서 예약대기를 등록합니다.</p>
+67:  <p class="hint">한 자리 · 한 기간</p>
+75:  <p class="hint">한 자리 · 한 기간</p>
+83:  <p class="hint">한 자리 · 한 기간</p>
+91:  <p class="hint">한 자리 · 한 기간</p>
+99:  <p class="hint">한 자리 · 한 기간</p>
+109:  <p class="hint">한 자리 · 한 기간</p>
+117:  <p class="hint">한 자리 · 한 기간</p>
+125:  <p class="hint">한 자리 · 한 기간</p>
+133:  <p class="hint">한 자리 · 한 기간</p>
+141:  <p class="hint">한 자리 · 한 기간</p>
+162:      <tr><td>예약대기 상품의 이용 시작 전</td><td>전액 환불</td></tr>
+177:        <li>Prime은 지역별 3자리 구조입니다. 독점이라고 표현하지 않습니다.</li>

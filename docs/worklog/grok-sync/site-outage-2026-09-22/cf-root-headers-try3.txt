@@ -1,0 +1,12 @@
+HTTP/2 200 
+date: Tue, 22 Sep 2026 08:59:06 GMT
+content-type: text/html; charset=UTF-8
+server: cloudflare
+cache-control: no-cache, no-store, must-revalidate
+pragma: no-cache
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=REDACTED"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: DYNAMIC
+cf-ray: a3f01c8ada15d633-IAD
+alt-svc: h3=":443"; ma=86400
+
