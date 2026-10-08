@@ -11,6 +11,7 @@ import {
   EXPOSURE_STUDENTS,
 } from './exposure-data.js';
 import { studyRoomBadges, tutorBadges } from './exposure-format.js';
+import { tutorSearchCardFields } from './home-basic-live.js';
 
 export const REAL_DB_CAP = { study_room: 3, tutor: 2, student: 2 };
 
@@ -42,22 +43,20 @@ function mapRoomItem(item) {
 
 /** @param {object} item */
 function mapTutorItem(item) {
-  const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
-  const main_subject_note = summaryLines[0] || '';
+  const card = tutorSearchCardFields(item);
   return {
     id: item.id,
     tutor_display_name: item.title || '',
     location_label: item.region_label || '',
-    preferred_fee_amount: item.price_amount ?? null,
+    preferred_fee_amount: item.preferred_fee_amount ?? item.price_amount ?? null,
     university_name: item.university_name ?? '',
     recommend_count: item.recommend_count ?? 0,
     review_count: item.review_count ?? 0,
     published_at: item.published_at || item.created_at || null,
-    main_subject_note,
-    intro_short: summaryLines[1] || '',
+    ...card,
     profile_status: 'published',
     compare_eligible: true,
-    badges: tutorBadges({ ...item, main_subject_note }),
+    badges: tutorBadges({ ...item, ...card }),
     _realDb: true,
   };
 }

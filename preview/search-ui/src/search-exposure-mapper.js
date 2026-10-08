@@ -90,15 +90,18 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
   }
 
   if (tab === 'tutor') {
-    const summaryLines = String(apiItem.summary || '').split('\n').filter(Boolean);
+    // 카드 칸은 응답 값 그대로(…apiItem). summary 줄로 과목·소개를 대신 채우지 않는다.
     const merged = {
       ...apiItem,
       id,
       tutor_display_name: String(apiItem.title || ''),
       location_label: normalizeApiRegionLabel(tab, apiItem.region_label || '', apiItem),
       preferred_fee_amount: apiItem.preferred_fee_amount ?? apiItem.price_amount ?? null,
-      main_subject_note: apiItem.main_subject_note || summaryLines[0] || '',
-      intro_short: apiItem.intro_short || summaryLines[1] || '',
+      main_subject_note: String(apiItem.main_subject_note || ''),
+      intro_short: String(apiItem.intro_short || ''),
+      lesson_places: Array.isArray(apiItem.lesson_places) ? apiItem.lesson_places : [],
+      teaching_style_badges: Array.isArray(apiItem.teaching_style_badges) ? apiItem.teaching_style_badges : [],
+      image_path: String(apiItem.image_path || apiItem.image_path_basic || ''),
       career_year_band: apiItem.career_year_band || null,
       university_name: apiItem.university_name || '',
       major_name: apiItem.major_name || '',

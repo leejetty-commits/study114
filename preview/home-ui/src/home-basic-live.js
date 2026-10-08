@@ -83,8 +83,34 @@ function mapRoom(item) {
   return room;
 }
 
+/**
+ * 과외쌤 카드 칸(정본 73 0-2) = 검색 응답 값 그대로. 응답에 없으면 비운다.
+ * summary 줄(「경력 y4_6」 등)로 소개·과목을 대신 채우지 않는다.
+ */
+export function tutorSearchCardFields(item) {
+  return {
+    main_subject_note: item.main_subject_note || '',
+    intro_short: item.intro_short || '',
+    gender: item.gender || null,
+    grade_band: item.grade_band || '',
+    lessons_per_week: item.lessons_per_week ?? null,
+    minutes_per_lesson: item.minutes_per_lesson ?? null,
+    lesson_places: Array.isArray(item.lesson_places) ? item.lesson_places : [],
+    student_gender_group: item.student_gender_group || null,
+    student_count_group: item.student_count_group || null,
+    feature_1: item.feature_1 || '',
+    feature_2: item.feature_2 || '',
+    feature_3: item.feature_3 || '',
+    slogan: item.slogan || '',
+    main_material_note: item.main_material_note || '',
+    teaching_style_badges: Array.isArray(item.teaching_style_badges) ? item.teaching_style_badges : [],
+    image_path: item.image_path || item.image_path_basic || '',
+    image_path_basic: item.image_path_basic || '',
+    image_path_prime: item.image_path_prime || '',
+  };
+}
+
 function mapTutor(item) {
-  const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
   const tutor = {
     id: item.id,
     tutor_display_name: item.title || '',
@@ -99,8 +125,7 @@ function mapTutor(item) {
     review_count: Number(item.review_count) || 0,
     published_at: item.published_at || null,
     created_at: item.created_at || null,
-    main_subject_note: item.main_subject_note || summaryLines[0] || '',
-    intro_short: item.intro_short || summaryLines[1] || '',
+    ...tutorSearchCardFields(item),
     paid_badges: Array.isArray(item.paid_badges)
       ? item.paid_badges
       : Array.isArray(item.badge_codes)
