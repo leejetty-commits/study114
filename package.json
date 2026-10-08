@@ -51,6 +51,7 @@
     "verify:location-ssot": "node scripts/verify-location-ssot.mjs",
     "verify:student-hope-hidden-required": "node scripts/verify-student-hope-hidden-required.mjs",
     "verify:wishlist-card-zoom": "node scripts/verify-wishlist-card-zoom.mjs",
+    "verify:detail-card-all-fields": "cd preview/home-ui && npx --yes vite-node ../../scripts/verify-detail-card-all-fields.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {
