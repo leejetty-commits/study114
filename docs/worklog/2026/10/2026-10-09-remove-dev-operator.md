@@ -482,3 +482,13 @@ preview 밖이라 손대지 않았지만 알릴 것: `sql/schema/021_board_engin
 - `sql/ops/2026-10-09-check-submission-seed.sql` STEP 1 을 운영 phpMyAdmin 에서 실행해 결과 보고. STEP 2 는 승인 뒤에만.
 - 서버 FTP 에 이미 올라간 `assets/brand/tutor-card-sample.jpg` 는 배포가 지우지 않을 수 있다(참조 0이라 노출 영향 없음).
 - 환경변수·Secrets·`.htaccess` 변경 없음.
+
+## 14. 독립 검수 (메인 기록, 2026-10-09 01:37)
+
+- 검수자: 다른 모델(claude-4.6-sonnet), 읽기 전용, 깨끗한 별도 worktree(`1eb8f2e` detached)에서 수행. 범위: `origin/main` 6b37357 대비 브랜치 전체.
+- 판정: **승인 권고**, 결함 없음.
+- merge `a4ee42a` 추가 hunk 없음. 제거 함수·버튼·`@dev.local`(preview/·src/) 잔여 참조 0, 빌드 깨질 import 없음.
+- 관리자 판정은 DB `admin_level`/`role_type` 단일 경로(이메일 하드코딩 fallback 제거) — 기본 권한 부여 경로 없음.
+- 삭제 SQL: ops@dev.local 1행·blocked·보호 계정 제외·소유 행 없음 조건, FK 순서·멱등 확인. 제출자료 SQL STEP 2 전부 주석.
+- `verify-no-sample-data` OK. `demo_prime_*` 규칙은 실제 카드의 배치 규칙이며 가짜 데이터 생성 없음(이번 범위 밖, 사용자 결정 대기).
+- 사용자 승인: 대기 (승인 대상 hash `1eb8f2e`). 배포 전 사용자 할 일: 제출자료 SQL STEP 1 조회. 배포 후: ops@dev.local 삭제 SQL.
