@@ -29,11 +29,12 @@ test.describe('[5단계] guest → 로그인 유도', () => {
     await authPage.close();
   });
 
-  test('guest 쪽지함 · 비로그인 시 데모 스레드 노출', async ({ page }) => {
+  test('guest 쪽지함 · 비로그인 시 데모 스레드 0건', async ({ page }) => {
     await page.goto(`${HOME}/#/mypage/messages/inbox`);
-    await page.waitForSelector('.msg-panel', { timeout: 30_000 });
-    await expect(page.locator('.msg-row').first()).toBeVisible();
-    await expect(page.getByText('대치맘')).toBeVisible();
+    await page.waitForSelector('.msg-panel, .site-gate-wrap', { timeout: 30_000 });
+    await expect(page.locator('.msg-row')).toHaveCount(0);
+    await expect(page.getByText('대치맘')).toHaveCount(0);
+    await expect(page.getByText('맑은하늘')).toHaveCount(0);
     await expect(page.locator('.msg-reply')).toHaveCount(0);
   });
 });

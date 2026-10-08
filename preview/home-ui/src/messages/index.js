@@ -1,10 +1,8 @@
 import { getMessagesPath } from '../state.js';
 import { renderMessagesShell, bindMessagesShellEvents } from './shell.js';
 import { renderMessagesScreen, bindMessagesScreenEvents } from './screens.js';
-import { ensureDemoThreads } from './thread-store.js';
 
 export function renderMessages() {
-  ensureDemoThreads();
   const path = getMessagesPath();
   const body = renderMessagesScreen(path);
   return renderMessagesShell(path, body);

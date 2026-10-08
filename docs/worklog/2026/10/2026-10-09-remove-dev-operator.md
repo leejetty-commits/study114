@@ -256,3 +256,85 @@ Remove the development-only operator account `ops@dev.local` (and the legacy dev
 
 - SQL 파일 수정은 **주석만**(012·029, 로컬 전용 표기). 운영 DB 에 실행할 것 없음.
 - 환경변수·Secrets·`.htaccess` 변경 없음.
+
+---
+
+## 9. 3차 지시 원문 (2026-10-09 00:57)
+
+> 수고했다. 같은 worktree·브랜치에서 새 커밋으로 아래를 반영하라 (amend 금지).
+>
+> A. 독립 리뷰(다른 모델, `ebe3b60` 대상) 결과 「조건부 승인 권고」. 지적 반영:
+>  1. [중간] `e2e/submission-attachment-flow.spec.js` 8·64·97행과 `e2e/helpers/admin-api.js` 8·75행이 아직 `ops@dev.local`로 로그인·단언함. 로컬 Docker 시드는 남아 있어 지금은 동작하지만, 로컬 전용 계정임을 분명히 하라: e2e 전용 운영자 계정 상수를 한 곳(`e2e/helpers/` 공용)에 두고 "로컬 Docker 시드 전용(026/036), 운영 DB엔 없음" 주석과 함께 참조하게 정리. 실제 사람 계정(jetty@naver.com, leejetty@gmail.com)을 테스트에 쓰지 마라.
+>  2. [낮음] `sql/ops/2026-10-09-delete-ops-dev-local.sql` STEP 1-4 앞에 「아래 SET/PREPARE/EXECUTE/DEALLOCATE 문장은 phpMyAdmin SQL 탭에 함께 붙여넣고 실행을 한 번만 누르세요」 주석 추가. 2단계 트랜잭션 블록도 같은 안내가 있는지 확인.
+>  3. [낮음] `e2e/a28-07-ops-smoke.spec.js` 3행 주석: 로컬 Docker 전용임을 명시.
+>
+> B. 사용자 원칙(「견본카드들은 다 제거해」, 「모두 제거」)에 따라 남은 데모 데이터도 제거:
+>  - `preview/home-ui/src/mypage/recent-store.js` `ensureRecentDemo()`와 데모 항목(김수학·박국어·오영어 등) 및 호출부.
+>  - `preview/home-ui/src/messages/thread-store.js`의 쪽지 데모(맑은하늘 등)와 그 시드 경로.
+>  - 대체 데이터 만들지 말고 빈 상태(기존 빈 상태 처리)로. 다른 브랜치 `origin/cursor/remove-samples-20261009`가 이 파일들을 건드렸는지 먼저 확인하고, 겹치면 고치지 말고 보고만.
+>  - 이를 기대하는 verify/e2e 단언은 "데모 0건" 방향으로 반전(삭제만 하지 말 것).
+>
+> C. 검증: 바뀐 앱 빌드, `verify:shop-page`, 관련 verify 스크립트, `node --check`. 전과 같이 main/이전 커밋에서도 실패하는 건 구분. `git merge-tree`로 `origin/cursor/remove-samples-20261009`와 충돌 여부 재확인.
+>
+> D. worklog에 「독립 리뷰 결과·반영」과 B 결과 절 추가. 파일명 지정 stage, 새 커밋, push.
+>
+> 보고: 새 커밋 hash, 파일별 1줄, 검증 결과, 충돌 여부, 미확인.
+
+---
+
+## 10. 독립 리뷰 결과·반영 (대상 `ebe3b60`, 결과 「조건부 승인 권고」)
+
+| 지적 | 등급 | 반영 |
+|------|------|------|
+| e2e 가 `ops@dev.local` 을 파일마다 문자열로 들고 로그인·단언 | 중간 | 새 공용 파일 `e2e/helpers/local-seed-accounts.js` 에 `LOCAL_SEED_ACCOUNTS`·`LOCAL_SEED_PASSWORD`·`E2E_OPERATOR_EMAIL` 를 "로컬 Docker 시드 전용(012·026/036) · 운영 DB 에 없음 · 실제 사람 계정 금지" 주석과 함께 정의. `admin-api.js` 의 `ACCOUNTS`·`DEV_PASSWORD` 는 이 파일을 다시 내보내고(기존 import 유지), `expectLog` 기본 운영자 = `E2E_OPERATOR_EMAIL`. `submission-attachment-flow.spec.js` 는 자체 계정 표를 지우고 공용 상수를 import, 운영 로그 단언도 `E2E_OPERATOR_EMAIL`. 실제 사람 계정은 어떤 테스트에도 쓰지 않았다 |
+| 삭제 SQL STEP 1-4 동적 쿼리 실행 안내 | 낮음 | 1-4 의 `SET` 앞에 「아래 SET/PREPARE/EXECUTE/DEALLOCATE 문장은 phpMyAdmin SQL 탭에 함께 붙여넣고 실행을 한 번만 누르세요」 + 이유(연결이 바뀌면 `@s114_q` 사라짐) 주석 추가 |
+| STEP 2 트랜잭션 블록도 같은 안내 | 낮음 | 기존엔 "아래 블록 전체를 한 번에 실행"만 있었다. 「START TRANSACTION 부터 COMMIT 까지 … 함께 붙여넣고 실행을 한 번만 누르세요」 주석을 추가했다 |
+| `a28-07-ops-smoke.spec.js` 머리 주석 | 낮음 | "로컬 Docker(study114_dev) 전용 · 시드 운영자 계정(026/036, 운영 DB 에 없음) · 운영 사이트 대상으로 돌리지 않는다"로 수정. 본문의 `'password'` 문자열 2곳도 공용 상수 `DEV_PASSWORD` 로 |
+
+리뷰 범위 밖이라 그대로 둔 것: `scripts/verify-board-acl-live.mjs`(로컬 API 대상 스크립트, 자체 계정 표)와 `scripts/verify-hide-inquiry-bundle.mjs`(PHP 단위 검사에 운영자 이름 문자열로 전달)도 `ops@dev.local` 을 쓴다. 둘 다 로컬 전용이며 운영 번들에 들어가지 않는다.
+
+---
+
+## 11. 남은 데모 데이터 제거 결과 (최근열람·쪽지)
+
+### 11-1. 겹침 확인
+
+`git diff --name-only origin/main origin/cursor/remove-samples-20261009` (`763d39f`) 에 `mypage/recent-store.js`·`mypage/index.js`·`messages/thread-store.js`·`messages/index.js`·`messages/screens.js`·`scripts/verify-message-permissions-admin.mjs`·`e2e/*` 는 **없음** → 겹치지 않아 직접 고쳤다.
+
+### 11-2. 변경
+
+| 파일 | 변경 |
+|------|------|
+| `preview/home-ui/src/mypage/recent-store.js` | `ensureRecentDemo()`(대치 우등생 공부방·드림스터디 대치·아이빌 공부방·김수학·박국어·오영어) 삭제 |
+| `preview/home-ui/src/messages/thread-store.js` | `ensureDemoThreads()`(대치맘·맑은하늘·김학부모 쪽지 3건, 사업자등록증.pdf 첨부 표시) 삭제 |
+| `preview/home-ui/src/mypage/index.js` | 마이페이지 진입 시 두 데모 시드 호출·import 삭제 |
+| `preview/home-ui/src/messages/index.js` | 쪽지 화면 진입 시 데모 시드 호출·import 삭제 |
+| `preview/home-ui/src/messages/screens.js` | 요약 건수(`getMessagesSummaryCounts`) 계산 전 데모 시드 호출·import 삭제 |
+| `scripts/verify-message-permissions-admin.mjs` | 「데모 시드 함수 없음」·「빈 저장소에서 쪽지 0건」 단언 추가, 권한 검사용 스레드 3건(공부방·과외·학생, 이름 `검증상대-*`)은 스크립트가 저장소에 직접 넣는다 |
+| `e2e/core-flow-messages.spec.js` | 「guest 쪽지함 · 데모 스레드 노출」 → 「데모 스레드 0건」으로 반전 (`.msg-row` 0 · 대치맘·맑은하늘 0 · 답장 폼 0). 비로그인은 로그인 안내로 막히므로 쪽지 패널 또는 로그인 안내 중 하나를 기다린다 |
+
+대체 데이터는 만들지 않았다. 비로그인(API 아님) 상태의 최근열람·쪽지함은 각 화면의 기존 빈 상태 문구로 보인다. 최근열람 데모를 기대하던 verify/e2e 단언은 없었다(로그인 e2e 는 API 기록을 본다).
+
+### 11-3. 검증 (작업 트리, 커밋 전)
+
+| 항목 | 결과 |
+|------|------|
+| home-ui `vite build` | 성공. 산출물 `@dev.local`·`dev-login`·`ensureDemoThreads`·`ensureRecentDemo`·`대치맘` 0건 |
+| 산출물에 남은 `드림스터디 대치`·`아이빌 공부방`·`오영어`·`맑은하늘`·`김수학` 각 1건 | 출처는 `exposure-data.js` 한 파일 — 견본 제거 브랜치가 지우는 파일이라 손대지 않음 |
+| `npm run verify:shop-page` | 통과 |
+| `verify-message-permissions-admin` | 134 / 0 (전 132 + 새 단언 2) |
+| `verify-role-home-guard` 56/0 · `verify-admin-today-hub` 61/0 · `verify-admin-162-settlement` 57/0 · `verify-admin-preview-labels` 202/0 · `verify-mypage-account-region` 41/0 · `verify-mypage-notice-top` 49/0 · `verify-student-location-flow` 189/0 · `verify-student-branch-two-tabs` 162/0 · `verify-student-count-halt-and-gate` 28/0 · `verify-hide-inquiry-bundle` 30 OK | 통과 |
+| `verify-student-mypage-metrics` · `verify-parent-review-positive` · `verify-paid-renewal` · `verify-tutor-mypage-route-integrity` · `verify-tutor-mypage-frame-ia` · `verify-tutor-register-same-tab` · `verify-study-room-registration-check-frame` · `verify-cur-006-email-verify-gate` · `verify-home-news-row` | 통과 |
+| `node --check` (바뀐 e2e·scripts·src 11개) | 통과 |
+| `verify-input-fill-rule`(3건) · `verify-tutor-registration-check-frame`(3건) | **실패 — 무관.** 같은 3건이 `ebe3b60` 에서도 실패(8-5 와 동일 항목) |
+
+실행하지 못한 것: e2e(Playwright, 로컬 Docker 꺼짐) — 바뀐 e2e 4개는 문법 검사만 했다.
+
+### 11-4. 아직 남은 데모 시드 (이번 지시 범위 밖 · 사용자 결정 필요)
+
+`mypage/index.js` 가 마이페이지 진입 때 아직 부르는 `ensureWishlistDemo()`(찜), `ensureStudentReviewDemo()`(학생 후기), `ensureSubmissionBoardSeed()`(제출자료 게시판).
+
+### 11-5. 배포 전 사용자 할 일 (추가분)
+
+- `sql/ops/2026-10-09-delete-ops-dev-local.sql` 은 **주석만** 바뀌었다. 실행 순서·내용은 5절과 같다.
+- 환경변수·Secrets·`.htaccess` 변경 없음.

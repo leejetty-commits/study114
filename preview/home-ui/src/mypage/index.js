@@ -6,7 +6,6 @@ import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/g
 import { renderPreviewToolbar, renderHeader, renderFooter, renderAppShellWithPromo } from '../layout.js';
 import { renderMypageShell, bindMypageShellEvents } from './shell.js';
 import { renderMypageScreen, bindMypageScreenEvents, hydrateMypageReviewPanel } from './screens.js';
-import { ensureRecentDemo } from './recent-store.js';
 import { ensureWishlistDemo } from '../user-actions-state.js';
 import { ensureStudentReviewDemo } from '../student-review-store.js';
 import { bindStudentReviewEvents } from '../student-review-ui.js';
@@ -14,7 +13,6 @@ import { ensureStudentStore, bindStudentRegEvents } from '../student-reg/index.j
 import { consumeStudentImportFromHash } from '../student-reg/store.js';
 import { ensureStudyRoomStore, bindStudyRoomRegEvents } from '../study-room-reg/index.js';
 import { ensureTutorStore, bindTutorRegEvents } from '../tutor-reg/index.js';
-import { ensureDemoThreads } from '../messages/thread-store.js';
 import { bindMessagesScreenEvents } from '../messages/screens.js';
 import { bindReviewSheetTriggers } from '../provider-reviews/sheet.js';
 import { bindSubmissionBoardEvents, ensureSubmissionBoardSeed } from '../submission-board/index.js';
@@ -55,14 +53,12 @@ export function renderMypage() {
     return renderMypageLoginGate(gate.message);
   }
 
-  ensureRecentDemo();
   ensureWishlistDemo();
   ensureStudentReviewDemo();
   ensureStudentStore();
   ensureStudyRoomStore();
   ensureTutorStore();
   consumeStudentImportFromHash();
-  ensureDemoThreads();
   ensureSubmissionBoardSeed(getNavRole() === 'guest' ? 'tutor' : getNavRole());
   {
     const raw = (window.location.hash.slice(1) || '').split('?')[0];

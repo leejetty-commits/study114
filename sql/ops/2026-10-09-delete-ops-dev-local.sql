@@ -74,6 +74,8 @@ ORDER BY rc.DELETE_RULE, kcu.TABLE_NAME, kcu.COLUMN_NAME;
 --        - message_threads 가 cnt > 0 이면 상대방 쪽지함의 대화도 같이 사라진다.
 --        - provider_review_blocks.blocked_by_user_id 가 cnt > 0 이면 그 후기 차단 기록이 사라진다.
 --        이런 줄이 있으면 실행 전에 보고한다.
+-- ※ 아래 SET/PREPARE/EXECUTE/DEALLOCATE 문장은 phpMyAdmin SQL 탭에 함께 붙여넣고 실행을 한 번만 누르세요.
+--   (phpMyAdmin은 실행마다 연결을 새로 열어 @s114_q 변수가 사라진다. 나눠 실행하면 PREPARE 가 실패한다.)
 SET SESSION group_concat_max_len = 1000000;
 SET @s114_q := (
   SELECT CONCAT(
@@ -155,6 +157,8 @@ ORDER BY id;
 --   나머지 CASCADE / SET NULL 테이블은 users 삭제 때 MySQL이 처리한다.
 --   모든 DELETE 에 같은 조건(이메일·보호 계정 제외·등급·정지·카드 없음)을 건다.
 --   그래서 phpMyAdmin이 문장을 따로 실행해도, 조건이 안 맞으면 어느 문장도 지우지 않는다.
+-- ※ 아래 START TRANSACTION 부터 COMMIT 까지 모든 문장은 phpMyAdmin SQL 탭에 함께 붙여넣고
+--   실행을 한 번만 누르세요. (나눠 실행하면 연결이 바뀌어 트랜잭션·COMMIT 이 이어지지 않는다.)
 -- =============================================================================
 
 START TRANSACTION;

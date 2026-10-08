@@ -2,12 +2,11 @@ import { test, expect } from '@playwright/test';
 import { writeFileSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-
-const DEV_PASSWORD = 'password';
-const ACCOUNTS = {
-  tutor: 'tutor-owner1@dev.local',
-  admin: 'ops@dev.local',
-};
+import {
+  LOCAL_SEED_ACCOUNTS as ACCOUNTS,
+  LOCAL_SEED_PASSWORD as DEV_PASSWORD,
+  E2E_OPERATOR_EMAIL,
+} from './helpers/local-seed-accounts.js';
 
 /** @param {import('@playwright/test').Page} page @param {'tutor'|'admin'} role */
 async function apiDevLogin(page, role) {
@@ -94,7 +93,7 @@ test.describe('submission 첨부 → 운영 큐 → 열람 → 노출 반영', (
 
       await gotoHash(page, '/admin/logs');
       await expect(page.getByText('제출자료 노출 반영').first()).toBeVisible();
-      await expect(page.getByText('ops@dev.local').first()).toBeVisible();
+      await expect(page.getByText(E2E_OPERATOR_EMAIL).first()).toBeVisible();
     } finally {
       try {
         unlinkSync(pdfPath);
