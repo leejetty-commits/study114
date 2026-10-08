@@ -154,7 +154,11 @@ C4: 마이페이지 기본정보 저장은 지역 칸을 건드렸거나 저장�
 
 ## 검수
 
-(검수자 기록란)
+- 독립 리뷰(claude-4.6-sonnet, 2026-10-09 04:23): **승인 권고**. 높음 0.
+  - 중간: `TRC_PICK_FIELD_IDS`에 `feature_1` 남음(픽 조건은 이번 범위 밖), `publishMissing`·`getPublishReadiness`가 수업장소·사진 요구.
+  - 낮음: 기존 `school_level='middle'` 자동 저장 값이 완료로 판정, 마이페이지 상세 폼 `reqMark()`(기존).
+- 메인 검수: origin/main `3f03aaa`와 충돌 없음.
+- 후속(2026-10-09 04:24 사용자): 「공개」 단계·본인 숨김은 최초 정책상 없다(기본등록 완료 = 카드 노출, 숨김은 관리자 페이지에서 관리자만). `publishMissing`·`getPublishReadiness`는 별도 과제 「공개·본인 숨김 잔재 제거」에서 없앤다.
 
 ## 승인
 
