@@ -3,6 +3,7 @@ import {
   formatLessonOperationType,
   formatLessonPlace,
 } from '../exposure-format.js';
+import { renderMedia, listingImage } from '../exposure-render.js';
 import { esc, studyRoomParentInquiryLine } from './detail-utils.js';
 import { coarseRegionForGuest } from '../student-blind-teaser.js';
 import { renderPromoLinksSection } from '../../../shared/promo-links.js';
@@ -31,14 +32,17 @@ export function renderStudyRoomDetailBody(item, viewer) {
     <section class="p24-section">
       <h3 class="p24-section__title">핵심 조건</h3>
       <dl class="p24-dl">
+        <dt>사진</dt><dd>${renderMedia(listingImage(item, 'pick'), item.study_room_name, 'pick', { roomDefault: true })}</dd>
         <dt>과목</dt><dd>${esc(item.main_subject_note || '—')}</dd>
-        <dt>주대상</dt><dd>${esc(item.grade_band || '—')}</dd>
+        <dt>대상</dt><dd>${esc(item.grade_band || '—')}</dd>
         <dt>위치</dt><dd>${esc(locationLabel)}</dd>
         <dt>교습형태</dt><dd>${esc(formatLessonPlace(item.lesson_place_type))}</dd>
         <dt>수업형태</dt><dd>${esc(formatLessonOperationType(item.lesson_operation_type))}</dd>
-        <dt>정원</dt><dd>${esc(item.capacity_per_time || '—')}</dd>
+        <dt>원생수</dt><dd>${esc(item.capacity_per_time || '—')}</dd>
         <dt>월 수강료</dt><dd>${esc(formatMonthlyWon(item.price_amount))}</dd>
+        <dt>슬로건</dt><dd>${esc(item.slogan || '—')}</dd>
         <dt>특징</dt><dd>${esc(features)}</dd>
+        <dt>소개</dt><dd>${esc(item.intro_short || '—')}</dd>
         <dt>쪽지 문의</dt><dd>${esc(studyRoomParentInquiryLine(item.inquiry_status))}</dd>
       </dl>
     </section>

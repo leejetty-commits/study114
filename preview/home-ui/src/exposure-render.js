@@ -267,7 +267,7 @@ function placeholderInitial(alt) {
 }
 
 /** @param {'prime'|'pick'|'list'} ratio */
-function renderMedia(image_path, alt, ratio, opts = {}) {
+export function renderMedia(image_path, alt, ratio, opts = {}) {
   const cls = `expo-media expo-media--${ratio}`;
   if (image_path) {
     return `<div class="${cls}"><img src="${esc(image_path)}" alt="${esc(alt)}" loading="lazy" /></div>`;
@@ -303,7 +303,7 @@ function renderMediaBlock(image_path, alt, ratio, zones = {}, opts = {}) {
     </div>`;
 }
 
-function listingImage(item, ratio) {
+export function listingImage(item, ratio) {
   if (ratio === 'prime' || ratio === 'pick') {
     return item.image_path_prime || item.image_path || '';
   }
