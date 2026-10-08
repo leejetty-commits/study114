@@ -12,6 +12,61 @@
 
 > 주의: 작업 도중 대화가 요약되어, 지시서 메시지 원문 파일을 다시 열 수 없었다. 아래는 작업자가 보관한 사용자 인용(따옴표 부분은 원문 그대로)과 지시 항목을 그대로 옮긴 것이다. 메인 에이전트는 원문 전체를 이 절에 덧붙여 주기 바란다.
 
+### 1-0. 지시서 원문 전체 (2026-10-09 메인 에이전트가 대화 기록에서 복구해 덧붙임)
+
+````text
+너는 study114 작업자다. 보고는 한국어. Windows PowerShell(한글 출력 전 `[Console]::OutputEncoding=[Text.Encoding]::UTF8`).
+
+## 규칙 (반드시)
+- 새 worktree를 만들어 그 안에서만 작업: `cd d:\work\study114; git fetch origin; git worktree add .wt/remove-samples -b cursor/remove-samples-20261009 origin/main`. 다른 폴더(`d:\work\study114` 본체, 다른 .wt/*, d:\work\study114-*)는 절대 건드리지 마라.
+- `git add -A`/`git add .` 금지. 파일명 지정 stage. amend 금지. main push·merge 금지. 작업 브랜치만 push.
+- SQL·.htaccess·env·Secrets 변경 금지. 빌드 산출물(public/assets 등) 커밋 금지(빌드로 바뀐 추적 파일은 `git checkout -- <파일>`로 되돌림).
+- 다른 기능(지역 단위, 베이직카드 항목, 저장 버그)은 이번에 고치지 마라. 발견하면 보고만.
+
+## 사용자 지시 (2026-10-09 00:05, 원문)
+「견본카드들은 다 제거해. 그 견본카드들의 항목을 수렴할려고 또 새로운 알고리즘을 만들면 안돼. 견본카드들은 그때 그때 필요에 의해 그냥 만든 것 뿐이야. 이건 없애면 돼. … 문제는 지금부터야. 제대로 된 로직대로 가동되고 있느냐만 따지면 돼.」
+범위 선택: (가)(나)(다) 전부 제거. 사용자는 기존 계정을 전부 지우고 다시 만들 예정이다(옛 데이터 호환용 코드 만들지 말 것).
+
+## 표면 목록 (메인이 origin/main bc76015 기준으로 고정. 빠진 게 있으면 추가 보고)
+
+### (가) 가짜 회원 데이터 풀 — `preview/home-ui/src/exposure-data.js` 의 STUDY_ROOM_SEED·TUTOR_SEED·STUDENT_SEED 및 EXPOSURE_*/DUMMY_*
+사용처(전부 처리):
+1. `preview/search-ui/src/search-exposure-mapper.js` 55/109/141행: `const base = pooled || EXPOSURE_*[index % …]` 후 `...base` 펼침 → 실제 카드 빈칸에 가짜 값(대학 '서울대학교', 특징, 수업장소, 강의스타일, 성별·인원, 증빙, 유튜브 등)이 들어감. 가짜 base를 완전히 없애고, API 값만 쓴다. API에 없는 칸은 빈 값(카드에서 빈칸/미표시). `apiItem.x || base.x` 형태의 가짜 폴백 전부 제거.
+2. `preview/home-ui/src/exposure-bridge.js` patchPool: 가짜 풀에 실데이터를 덮어쓰는 구조. 풀은 **실제 API 결과만 담는 빈 배열로 시작**하게 하라(시드 제거). 새 알고리즘 만들지 말고, 기존 배열을 비운 채로 쓰는 최소 변경.
+3. `preview/home-ui/src/detail-decision/index.js` 47-50 (확대카드/상세가 풀에서 찾음), `user-actions-state.js` 54 (찜·비교), `handoff-lifecycle.js` 81, `student-review-store.js` 47, `myshop/public-resolve.js` 70, `search-ui/src/search-provider-self.js` 45 (PREVIEW_OWN_TUTOR_ID 가짜 내 카드), `home-ui/src/data.js` 9-15 재수출. → 가짜 레코드를 못 찾으면 가짜로 대체하지 말고 실제 데이터만. 실제 데이터가 없으면 기존 빈 상태/없음 처리 경로를 쓴다(없으면 null 반환하고 호출부가 이미 null을 다루는지 확인).
+4. exposure-data.js의 SEED 데이터 자체 삭제. export 이름이 여러 곳에서 쓰이면 빈 배열로 남겨도 됨(단, 가짜 항목 0개).
+
+### (나) 「샘플」 도장 카드 (실카드 0건일 때 1장)
+- `preview/home-ui/src/exposure-render.js` 332(샘플 도장), 335-355(샘플 공부방/과외쌤 아이템), 655(실등록 0 — 샘플 1 + 빈 1), 1109 주변.
+- `preview/search-ui/src/search-tier-render.js` 20, 36-48 (학생 홈 0건 샘플).
+- `preview/search-ui/src/search-find-surface.js` 137, 180, 2495 (게스트 찾기 0건 샘플 블록).
+- `preview/shared/guest-gate-ui.js` 282 (샘플 카드 클릭 처리 — 샘플이 없어지면 샘플 관련 분기만 제거, 빈카드 클릭은 유지).
+→ 0건이면 샘플 없이 **기존 빈 카드 박스/빈 상태 문구만**. 새 빈 상태 디자인을 만들지 마라. 빈 칸 수는 기존 규칙(샘플이 차지하던 자리는 빈 칸으로) 그대로.
+
+### (다) 설명용 예시 카드 (등록점검·쪽지설정)
+- `preview/home-ui/src/home-card-samples/*` (presets.js buildStudyRoomSampleItem/buildTutorSampleItem, render.js renderInquirySampleCard/등록점검 샘플), `inquiry-settings/sample-*.js`, `study-room-reg/inquiries-sample.js`, `study-room-reg/registration-check-edit.js` 27, `tutor-reg/registration-check-edit.js` 5, `tutor-reg/registration-check-sample.js`, `study-room-reg/registration-check-render.js`(rc-tier 비교 샘플), 쪽지설정 화면의 「쪽지 설정시 카드 샘플」 블록(`tutor-reg/inquiries-render.js`, study-room-reg 쪽), `main.js` 26 주석 관련 토큰, `plans/screens.js` 341(Pick 5×2 미리보기 타일 — 샘플 재사용).
+→ 예시 카드 블록과 그 블록 전용 안내 문구(registration-check-copy.js 36 「샘플은 홈 실제 카드와 같은 크기…」, inquiries-copy sampleTitle 등)를 삭제. 대체물을 만들지 마라. 단 화면이 깨지면 안 됨(빈 제목만 남는 등 금지).
+
+### 확인만 (사용자 화면에 가짜 값이 보이면 제거, 아니면 그대로 두고 보고)
+- `preview/home-ui/src/plans/history-mock.js` (결제내역: 'seed' 행이 화면에 나오는지), `preview/home-ui/src/mypage/preview-data.js`(프리뷰 더미가 실제 마이페이지에 나오는지).
+- 관리자 화면 더미(a28-screens.js, sms-lab-store.js)는 이번 범위 밖. 건드리지 말고 목록만 보고.
+
+## 검사 게이트
+- `scripts/` 의 verify 스크립트 중 샘플 카드를 **기대하는** 단언(예: verify-guest-baseline-map-cards.mjs의 「실카드 0건이면 샘플 1장」)은 「샘플 0장」으로 바꾼다. 단언을 지우기만 하지 말고 반대 방향으로 바꿔라.
+- 새 게이트 `scripts/verify-no-sample-data.mjs`: (1) preview/ 소스에서 TUTOR_SEED/STUDY_ROOM_SEED/STUDENT_SEED 정의 0, (2) search-exposure-mapper에 `EXPOSURE_` 폴백 0, (3) '샘플 과외쌓'/'샘플 공부방'/'expo-sample-stamp' 0, (4) home-card-samples presets import 0. 대상 경로는 preview/ (admin 제외).
+- 기존 deploy.yml 배포 전 게이트 전부 실행(`npm run verify:shop-page` 포함) + `npm run build:dothome` 성공. 실패는 이번 변경 때문인지(main에서도 실패하는지) 구분해 보고.
+- 로컬 화면 확인이 가능하면(vite dev) 손님 홈·과외쌤찾기·학생홈 0건 화면에 샘플이 안 보이고 빈 카드만 보이는지 확인. 불가하면 「미실행+사유」.
+
+## 기록·커밋
+- `docs/worklog/2026/10/2026-10-09-remove-samples.md`: '지시서 원문'에 이 메시지 전체, 바꾼 파일·함수 목록, 표면별 변경 전/후 표, 검사 결과 표, 표면 목록에서 빠져 있던 추가 발견, '배포 전 사용자 할 일'(없으면 없음), 검수·승인 칸 '대기'.
+- 허용 파일만 개별 add → commit(여러 개여도 됨, (가)(나)(다) 단위 권장) → `git push -u origin cursor/remove-samples-20261009`.
+
+## 보고
+커밋 hash 목록, 바꾼 파일 수, 표면별 변경 요약, 검사 결과 표, 추가 발견, 확인만 항목 결과, 미확인 목록.
+```` 
+
+### 1-1. 작업자 재구성본 (참고)
+
 ```markdown
 너는 study114 작업자다. 보고는 한국어. Windows PowerShell(한국어 출력 전 [Console]::OutputEncoding=[Text.Encoding]::UTF8).
 
