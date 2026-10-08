@@ -62,12 +62,26 @@ final class AuthorDisplayNameResolver
     private function fromStudyRoom(int $userId): string
     {
         $stmt = $this->pdo->prepare(
-            'SELECT operator_display_name FROM study_rooms WHERE user_id = ? ORDER BY id ASC LIMIT 1'
+            'SELECT operator_display_name, study_room_name FROM study_rooms WHERE user_id = ? ORDER BY id ASC LIMIT 1'
         );
         $stmt->execute([$userId]);
-        $val = $stmt->fetchColumn();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return '';
+        }
 
-        return is_string($val) ? trim($val) : '';
+        $operator = isset($row['operator_display_name']) && is_string($row['operator_display_name'])
+            ? trim($row['operator_display_name'])
+            : '';
+        if ($operator !== '') {
+            return $operator;
+        }
+
+        $studyRoomName = isset($row['study_room_name']) && is_string($row['study_room_name'])
+            ? trim($row['study_room_name'])
+            : '';
+
+        return $studyRoomName;
     }
 
     private function fromTutor(int $userId): string
