@@ -262,7 +262,7 @@
 | 49 | `preview/search-ui/src/search-schema.js` | `rg -n "searchSchema" preview/search-ui/src/search-schema.js` | L40-65 `searchSchema` | 표시 |
 | 50 | `preview/search-ui/src/search-exposure-mapper.js` | `rg -n "mapExposure" preview/search-ui/src/search-exposure-mapper.js` | L31-42 `mapExposure` | 표시 |
 | 51 | `preview/search-ui/src/search-tier-render.js` | `rg -n "renderTierBadge" preview/search-ui/src/search-tier-render.js` | L45-70 `renderTierBadge` | 표시 |
-| 52 | `preview/search-ui/src/search-map.js` | `rg -n "initMap" preview/search-ui/src/search-map.js` | L101-108, L141-142 지도 줌 레벨 | 표시 |
+| 52 | `preview/search-ui/src/search-map.js` | `rg -n "renderSearchMapBlock\|regionLevel" preview/search-ui/src/search-map.js` | L174 `renderSearchMapBlock`, L142 줌 분기 `ctx.regionLevel === 'district' ? 13 : 15` | 반드시 |
 | 53 | `preview/home-ui/src/detail-decision/student-request-card.js` | `rg -n "renderStudentRequestCard" preview/home-ui/src/detail-decision/student-request-card.js` | L79 라벨 표시 | 표시 |
 | 54 | `preview/home-ui/src/detail-decision/tutor-detail.js` | `rg -n "renderTutorDetail" preview/home-ui/src/detail-decision/tutor-detail.js` | L21-31 라벨 포맷 | 표시 |
 | 55 | `preview/home-ui/src/user-actions-ui.js` | `rg -n "renderUserActions" preview/home-ui/src/user-actions-ui.js` | L219-220 UI 라벨 | 표시 |
@@ -273,4 +273,63 @@
 | 60 | `preview/home-ui/src/provider-home.js` | `rg -n "renderProviderHome" preview/home-ui/src/provider-home.js` | L223-243 공급자 홈 라벨 | 표시 |
 | 61 | `preview/home-ui/src/screens/tutor.js` | `rg -n "renderTutorScreen" preview/home-ui/src/screens/tutor.js` | L46-61 튜터 스크린 라벨 | 표시 |
 | 62 | `preview/home-ui/src/tutor-reg/registration-check-model.js` | `rg -n "checkTutorRegistration" preview/home-ui/src/tutor-reg/registration-check-model.js` | L79, L221-224 완성도 라벨 | 표시 |
+| 63 | `src/Tutor/TutorDetailCompletionEvaluator.php` | `rg -n "hasPrimaryRegion" src/Tutor/TutorDetailCompletionEvaluator.php` | L218 `hasPrimaryRegion` (슬롯 0 과외 단위 유효성 검증 판정) | 반드시 |
+| 64 | `preview/home-ui/src/detail-decision/detail-utils.js` | `rg -n "coarseRegionForGuest" preview/home-ui/src/detail-decision/detail-utils.js` | L13 import, L62, L69 `coarseRegionForGuest` (게스트 상세 라벨 포맷팅) | 표시 |
+| 65 | `preview/home-ui/src/exposure-render.js` | `rg -n "coarseRegionForGuest" preview/home-ui/src/exposure-render.js` | L45 import, L769, L846, L946 `coarseRegionForGuest` (게스트 카드 라벨 포맷팅) | 표시 |
+| 66 | `public/api/search/region-stats.php` | `rg -n "1168000000" public/api/search/region-stats.php` | L13-14 과외 통계 옛 구(강남구 1168000000) 기준 레거시 주석 갱신 | 표시 |
+
+---
+
+## 독립 리뷰(다른 모델) — f7faf56 수정 필요
+
+f7faf56 커밋에 대한 독립 리뷰 결과 9건의 지적에 대해 메인 검수자가 판정한 결과 및 정본 72·워크로그 반영 내역이다.
+
+### 1. 지적 9건과 메인 판정 및 반영 결과
+
+| 순번 | 지적 항목 | 리뷰어 지적 요약 | 메인 판정 | 사유 및 반영 결과 |
+| :---: | :--- | :--- | :---: | :--- |
+| 1 | **[높음] 9장 SQL 2-2 `SET` 절 누락** | 전남광주 5개 구 승격 SQL 2-2(정본 321~324행)에 `SET tr.region_id = target.id` 누락 | **맞음** | 지적 수용. `SET tr.region_id = target.id` 구문 추가. 나머지 UPDATE 문 전수 점검. |
+| 2 | **[중간] 5-4장 유료 구독 MAX 단일화 SQL 부재** | 5-4장에서 `MAX(end_exclusive_on)` 단일화를 명시했으나 9장에 실제 SQL 부재 | **맞음** | 지적 수용. `provider_position_subscriptions` 스키마 실측(유니크 인덱스 없음, 비활성 status 부재 확인). 축 승격 UPDATE(2-6a~2-6d) 및 `MAX(end_exclusive_on)` 연장 후 나머지 중복 건 당일 만료(`CURDATE()`) 비활성화 이력 보존 SQL(3-1, 3-2) 작성. |
+| 3 | **[중간] `search-map.js` 함수명 및 분류 오류** | `initMap` 함수 부재. 실제는 `renderSearchMapBlock`(174행), 줌 분기는 142행 `ctx.regionLevel === 'district' ? 13 : 15`. 줌 규칙 변경이므로 분류 정정 필요 | **맞음** | 지적 수용. 함수명 및 줌 분기 실측 반영. 지도 줌 규칙 변경은 단순 텍스트 표시가 아니므로 「표시만」(순번 9)에서 「반드시」(순번 42)로 이동하고 숫자 재계산. |
+| 4 | **[중간] `TutorDetailCompletionEvaluator.php` 부록 누락** | `hasPrimaryRegion`(218행)이 유효 과외 단위 검사 없이 슬롯 0의 단순 존재 여부만으로 완성도를 판정하여 누락됨 | **맞음** | 지적 수용. `src/Tutor/TutorDetailCompletionEvaluator.php:218`을 「반드시 같이 바꿀 것」(순번 43)에 신규 추가. |
+| 5 | **[낮음] 4단계 사후 점검 SELECT 범위 부족** | 사후 점검 SELECT가 `tutor_regions`만 점검하고 있어 학생 희망지역 및 유료 구독 축 검증 부족 | **맞음** | 지적 수용. `students.preferred_tutor_region_id` 비단위 0건, `provider_position_subscriptions.city_id` 비단위 0건, 유료 구독 중복 0건 점검 쿼리 추가(4-2, 4-3, 4-5). |
+| 6 | **[낮음] 부록 누락 파일 3건** | `detail-utils.js` 및 `exposure-render.js`의 `coarseRegionForGuest` 의존, `region-stats.php` 옛 구 기준 주석 누락 | **맞음** | 지적 수용. `detail-utils.js`(L13, 62, 69), `exposure-render.js`(L45, 769, 846, 946), `region-stats.php`(L13-14)를 실측하여 「표시만 손볼 것」(순번 21, 22, 23)에 추가. |
+| 7 | **[고치지 말 것] `search-find-surface.js:541` 행 번호 지적** | 리뷰어가 541행이 아니라고 지적함 | **틀림** | 지적 기각. worktree 실측 결과 `preview/search-ui/src/search-find-surface.js` 541행에 `const GU_PICK_HINT = '시·군·구까지 선택해 주세요';`가 정확히 존재함 (리뷰어의 라인 번호 착오). 기존 541행 유지. |
+| 8 | **[보강] UPDATE 구문 전체 문법 및 SET 절 정밀 점검** | 2-1~2-6 및 3-1~3-4 모든 UPDATE 구문의 문법 및 SET 절 존재 여부 점검 필요 | **맞음** | 지적 수용. MySQL 8 BNF 문법 기준으로 전체 UPDATE/DELETE 문의 JOIN, SET, WHERE 절을 한 줄씩 대조한 정밀 점검표 작성(아래 2절). |
+| 9 | **[안전성] 유니크 충돌 순서 및 비활성화 정책 규명** | 승격과 중복 정리 순서 및 삭제 대신 비활성화 가능 여부를 스키마 보고 판단 | **맞음** | 지적 수용. `provider_position_subscriptions`에 UNIQUE 인덱스가 없어 `승격 UPDATE → 중복 단일화` 순서가 안전함을 확인. 결제 이력 보존을 위해 `DELETE` 대신 `end_exclusive_on = CURDATE(), ends_at = NOW()` 비활성화 방식 채택. |
+
+### 2. 이관 SQL UPDATE 문 문법 대조 및 SET 절 검증표 (MySQL 8 기준)
+
+| SQL 번호 | 대상 테이블 | JOIN 대상 | SET 절 대상 컬럼 및 값 | WHERE 필터 조건 | MySQL 8 문법 적합성 |
+| :---: | :--- | :--- | :--- | :--- | :---: |
+| **2-1** | `tutor_regions tr` | `regions curr`, `regions target` | `tr.region_id = target.id` | 특·광역시 6곳 산하 비-시도 행 | **적합 (SET 확인)** |
+| **2-2** | `tutor_regions tr` | `regions curr`, `regions target` | `tr.region_id = target.id` | 전남광주 옛 5개 구 (12210~12330) | **적합 (SET 추가 완료)** |
+| **2-3** | `tutor_regions tr` | `regions curr`, `regions target` | `tr.region_id = target.id` | 도 일반구 39개 행 (`sigungu_name LIKE '% %'`) | **적합 (SET 확인)** |
+| **2-4** | `tutor_regions tr` | `regions curr`, `regions target` | `tr.region_id = target.id` | 과거 dev 시드 동 행 (대치동, 우동, 시 대표) | **적합 (SET 확인)** |
+| **2-5a** | `students s` | `regions curr`, `regions target` | `s.preferred_tutor_region_id = target.id` | 특·광역시 6곳 산하 비-시도 행 | **적합 (SET 확인)** |
+| **2-5b** | `students s` | `regions curr`, `regions target` | `s.preferred_tutor_region_id = target.id` | 전남광주 옛 5개 구 (12210~12330) | **적합 (SET 확인)** |
+| **2-5c** | `students s` | `regions curr`, `regions target` | `s.preferred_tutor_region_id = target.id` | 도 일반구 39개 행 (`sigungu_name LIKE '% %'`) | **적합 (SET 확인)** |
+| **2-5d** | `students s` | `regions curr`, `regions target` | `s.preferred_tutor_region_id = target.id` | 과거 dev 시드 동 행 (대치동, 우동, 시 대표) | **적합 (SET 확인)** |
+| **2-6a** | `provider_position_subscriptions pps` | `regions curr`, `regions target` | `pps.city_id = target.id` | tutor 타입, 특·광역시 비-시도 행 | **적합 (SET 확인)** |
+| **2-6b** | `provider_position_subscriptions pps` | `regions curr`, `regions target` | `pps.city_id = target.id` | tutor 타입, 전남광주 옛 5개 구 | **적합 (SET 확인)** |
+| **2-6c** | `provider_position_subscriptions pps` | `regions curr`, `regions target` | `pps.city_id = target.id` | tutor 타입, 도 일반구 39개 행 | **적합 (SET 확인)** |
+| **2-6d** | `provider_position_subscriptions pps` | `regions curr`, `regions target` | `pps.city_id = target.id` | tutor 타입, 과거 dev 시드 동 행 | **적합 (SET 확인)** |
+| **3-1** | `provider_position_subscriptions pps` | 인라인 윈도우 서브쿼리 `agg` | `pps.end_exclusive_on = agg.max_end_date, pps.ends_at = agg.max_ends_at` | `agg.rn = 1 AND agg.group_cnt > 1` (중복 대표 1건) | **적합 (SET 확인)** |
+| **3-2** | `provider_position_subscriptions pps` | 인라인 윈도우 서브쿼리 `dup` | `pps.end_exclusive_on = CURDATE(), pps.ends_at = NOW()` | `dup.rn > 1` (대표 외 나머지 중복 건) | **적합 (SET 확인, 비활성화)** |
+| **3-3** | `tutor_regions tr` (DELETE) | 인라인 윈도우 서브쿼리 `dup` | N/A (DELETE 구문) | `dup.rn > 1` (동일 슬롯 중복 2순위 이하) | **적합 (DELETE 확인)** |
+| **3-4** | `tutor_regions tr` | 인라인 윈도우 서브쿼리 `reorder` | `tr.priority_order = reorder.new_order` | N/A (전체 잔존 슬롯 0,1,2 순차 재정렬) | **적합 (SET 확인)** |
+
+### 3. 부록 분류 숫자 변화
+
+| 분류 | 이전 (f7faf56) | 변경 후 | 변화 사유 |
+| :--- | :---: | :---: | :--- |
+| **반드시 같이 바꿀 것** | 41개 | **43개** | +1 (`search-map.js` 줌 규칙 로직 변경으로 '표시만'에서 이동), +1 (`TutorDetailCompletionEvaluator.php` 슬롯0 과외 단위 유효성 완성도 판정 로직 신규 추가) |
+| **표시만 손볼 것** | 21개 | **23개** | -1 (`search-map.js` '반드시'로 이동), +1 (`detail-utils.js` 게스트 라벨 포맷팅 추가), +1 (`exposure-render.js` 게스트 카드 라벨 포맷팅 추가), +1 (`region-stats.php` 옛 구 기준 주석 갱신 추가) |
+| **영향 없음** | 7개 | **7개** | 변동 없음 (독립 운영 체계 유지) |
+| **회귀 주의 검사 스크립트** | 8개 | **8개** | 변동 없음 (과외 단위 변경에 따른 검사 갱신 유지) |
+| **합계 (영향 파일)** | 69개 | **73개** | 순증 4개 파일 (정밀 식별 완료) |
+
+### 4. 미확인 목록
+1. 운영 DB 데이터(phpMyAdmin)의 실제 `provider_position_subscriptions` 레코드 존재 여부: 현재 로컬 작업트리 기준 스키마 파일 및 덤프를 분석하였으며, 운영 DB 접속은 원칙상 불가하므로 실제 운영 데이터에 중복 유료 구독이 몇 건 존재하는지는 배포 시점 1단계 사전 점검 SQL(1-(D)) 실행을 통해 확인해야 함.
+2. 운영 DB 내 `students.preferred_tutor_region_id`의 실제 외래키 정합성: 1-(B) 사전 점검 SELECT 실행 시 최종 확인 예정.
 

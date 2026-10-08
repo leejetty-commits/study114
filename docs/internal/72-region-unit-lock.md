@@ -200,7 +200,8 @@
 
 ### (4) 단위 통합 시 기존 다중 구 유료 구독 처리 원칙
 - **원칙**: 동일 튜터가 동일 주력과목으로 같은 광역시 내 여러 구에 구독을 보유하고 있던 경우, 단위가 통합될 때 **`MAX(end_exclusive_on)`(가장 늦은 만료일) 단일화**를 적용한다.
-- (현재 운영 데이터는 모두 테스트 계정이므로 충돌 위험이 없으나, 데이터 정합성을 위해 쿼리에서 `MAX(end_exclusive_on)`으로 단일 레코드를 유지함)
+- **스키마 분석**: `provider_position_subscriptions` 테이블의 인덱스는 비고유 인덱스(`KEY idx_position_tutor_axis`)로 정의되어 있어 UNIQUE 충돌이 발생하지 않는다. 따라서 **`승격 UPDATE → 중복 단일화(MAX 연장 및 비활성화)`** 순서로 안전하게 실행된다.
+- **이력 보존 정책**: 유료 결제/티켓 이력 보존을 위해 `DELETE` 대신 활성 만료일 당일 처리(`end_exclusive_on = CURDATE(), ends_at = NOW()`)로 비활성화한다. 대표 레코드 1건(가장 작은 id)에 `MAX(end_exclusive_on)` 및 `MAX(ends_at)`을 부여하여 기간을 합산/연장하고, 나머지 중복 레코드는 당일 만료로 비활성화하여 결제 이력을 안전하게 유지한다 (제9장 3-1, 3-2 참조).
 
 ---
 
@@ -305,6 +306,59 @@ WHERE NOT (
       AND r.is_selectable = 1 AND r.sigungu_name NOT LIKE '% %')
 );
 
+-- (B) students 중 preferred_tutor_region_id가 과외 단위가 아닌 행 점검
+SELECT s.id, s.user_id, s.preferred_tutor_region_id,
+       r.sido_name, r.sigungu_name, r.dong_name, r.unit_level, r.official_code
+FROM students s
+JOIN regions r ON r.id = s.preferred_tutor_region_id
+WHERE NOT (
+  (r.unit_level = 'sido' AND r.sido_code IN ('11','26','27','28','30','31','36'))
+  OR (r.sido_code = '12' AND r.sigungu_code = '12200')
+  OR (r.sido_code = '12' AND r.unit_level = 'sigungu' AND r.sigungu_code NOT IN ('12200','12210','12240','12270','12300','12330'))
+  OR (r.unit_level = 'sigungu' AND r.official_code IN (
+      '4111000000','4113000000','4117000000','4119000000','4127000000',
+      '4128000000','4146000000','4159000000','4311000000','4413000000',
+      '4711000000','4812000000','5211000000'
+  ))
+  OR (r.unit_level = 'sigungu' AND r.sido_code IN ('41','43','44','47','48','50','51','52')
+      AND r.is_selectable = 1 AND r.sigungu_name NOT LIKE '% %')
+);
+
+-- (C) provider_position_subscriptions 중 city_id가 과외 단위가 아닌 행 점검
+SELECT pps.id, pps.provider_id, pps.sku_code, pps.city_id, pps.end_exclusive_on,
+       r.sido_name, r.sigungu_name, r.dong_name, r.unit_level, r.official_code
+FROM provider_position_subscriptions pps
+JOIN regions r ON r.id = pps.city_id
+WHERE pps.provider_type = 'tutor'
+  AND NOT (
+    (r.unit_level = 'sido' AND r.sido_code IN ('11','26','27','28','30','31','36'))
+    OR (r.sido_code = '12' AND r.sigungu_code = '12200')
+    OR (r.sido_code = '12' AND r.unit_level = 'sigungu' AND r.sigungu_code NOT IN ('12200','12210','12240','12270','12300','12330'))
+    OR (r.unit_level = 'sigungu' AND r.official_code IN (
+        '4111000000','4113000000','4117000000','4119000000','4127000000',
+        '4128000000','4146000000','4159000000','4311000000','4413000000',
+        '4711000000','4812000000','5211000000'
+    ))
+    OR (r.unit_level = 'sigungu' AND r.sido_code IN ('41','43','44','47','48','50','51','52')
+        AND r.is_selectable = 1 AND r.sigungu_name NOT LIKE '% %')
+  );
+
+-- (D) 유료 구독 중복 발생 후보 점검 (같은 튜터, 같은 SKU, 같은 주력과목, 승격 후 같은 과외 단위가 될 활성 구독)
+SELECT pps.provider_id, pps.sku_code, pps.primary_subject_id, COUNT(*) AS dup_cnt,
+       MIN(pps.end_exclusive_on) AS min_end_date, MAX(pps.end_exclusive_on) AS max_end_date
+FROM provider_position_subscriptions pps
+JOIN regions r ON r.id = pps.city_id
+WHERE pps.provider_type = 'tutor'
+  AND pps.end_exclusive_on > CURDATE()
+GROUP BY pps.provider_id, pps.sku_code, pps.primary_subject_id,
+         CASE
+           WHEN r.sido_code IN ('11','26','27','28','30','31') THEN r.sido_code
+           WHEN r.sido_code = '12' AND r.sigungu_code IN ('12200','12210','12240','12270','12300','12330') THEN '12_gwangju'
+           WHEN r.sido_code IN ('41','43','44','47','48','52') AND r.sigungu_name LIKE '% %' THEN CONCAT(SUBSTRING(r.official_code, 1, 4), '000000')
+           ELSE r.official_code
+         END
+HAVING COUNT(*) > 1;
+
 -- -----------------------------------------------------------------------------
 -- [2단계: 이관 UPDATE (동적 매핑)]
 -- -----------------------------------------------------------------------------
@@ -321,6 +375,7 @@ WHERE curr.sido_code IN ('11','26','27','28','30','31')
 UPDATE tutor_regions tr
 JOIN regions curr ON curr.id = tr.region_id
 JOIN regions target ON target.sido_code = '12' AND target.sigungu_code = '12200'
+SET tr.region_id = target.id
 WHERE curr.sido_code = '12' AND curr.sigungu_code IN ('12210','12240','12270','12300','12330');
 
 -- 2-3. 도 일반구(39개) → 도 상위 시 행으로 승격
@@ -340,19 +395,21 @@ SET tr.region_id = target.id
 WHERE curr.dong_name IN ('대치동', '우동', '시 대표')
   AND curr.sido_code IN ('11','26');
 
--- 2-5. 학생 희망지역(students.preferred_tutor_region_id) 동일 승격 적용
+-- 2-5a. 학생 희망지역(students.preferred_tutor_region_id) 특·광역시 승격
 UPDATE students s
 JOIN regions curr ON curr.id = s.preferred_tutor_region_id
 JOIN regions target ON target.sido_code = curr.sido_code AND target.unit_level = 'sido'
 SET s.preferred_tutor_region_id = target.id
 WHERE curr.sido_code IN ('11','26','27','28','30','31') AND curr.unit_level <> 'sido';
 
+-- 2-5b. 학생 희망지역(students.preferred_tutor_region_id) 전남광주 광주 승격
 UPDATE students s
 JOIN regions curr ON curr.id = s.preferred_tutor_region_id
 JOIN regions target ON target.sido_code = '12' AND target.sigungu_code = '12200'
 SET s.preferred_tutor_region_id = target.id
 WHERE curr.sido_code = '12' AND curr.sigungu_code IN ('12210','12240','12270','12300','12330');
 
+-- 2-5c. 학생 희망지역(students.preferred_tutor_region_id) 도 일반구 승격
 UPDATE students s
 JOIN regions curr ON curr.id = s.preferred_tutor_region_id
 JOIN regions target ON target.official_code = CONCAT(SUBSTRING(curr.official_code, 1, 4), '000000')
@@ -360,7 +417,14 @@ JOIN regions target ON target.official_code = CONCAT(SUBSTRING(curr.official_cod
 SET s.preferred_tutor_region_id = target.id
 WHERE curr.sido_code IN ('41','43','44','47','48','52') AND curr.sigungu_name LIKE '% %';
 
--- 2-6. 유료 노출 축(provider_position_subscriptions.city_id) 동일 승격 적용
+-- 2-5d. 학생 희망지역 과거 dev 시드 행 매핑
+UPDATE students s
+JOIN regions curr ON curr.id = s.preferred_tutor_region_id
+JOIN regions target ON target.sido_code = curr.sido_code AND target.unit_level = 'sido'
+SET s.preferred_tutor_region_id = target.id
+WHERE curr.dong_name IN ('대치동', '우동', '시 대표') AND curr.sido_code IN ('11','26');
+
+-- 2-6a. 유료 노출 축(provider_position_subscriptions.city_id) 특·광역시 승격
 UPDATE provider_position_subscriptions pps
 JOIN regions curr ON curr.id = pps.city_id
 JOIN regions target ON target.sido_code = curr.sido_code AND target.unit_level = 'sido'
@@ -368,11 +432,77 @@ SET pps.city_id = target.id
 WHERE pps.provider_type = 'tutor'
   AND curr.sido_code IN ('11','26','27','28','30','31') AND curr.unit_level <> 'sido';
 
+-- 2-6b. 유료 노출 축(provider_position_subscriptions.city_id) 전남광주 광주 승격
+UPDATE provider_position_subscriptions pps
+JOIN regions curr ON curr.id = pps.city_id
+JOIN regions target ON target.sido_code = '12' AND target.sigungu_code = '12200'
+SET pps.city_id = target.id
+WHERE pps.provider_type = 'tutor'
+  AND curr.sido_code = '12' AND curr.sigungu_code IN ('12210','12240','12270','12300','12330');
+
+-- 2-6c. 유료 노출 축(provider_position_subscriptions.city_id) 도 일반구 승격
+UPDATE provider_position_subscriptions pps
+JOIN regions curr ON curr.id = pps.city_id
+JOIN regions target ON target.official_code = CONCAT(SUBSTRING(curr.official_code, 1, 4), '000000')
+                    AND target.unit_level = 'sigungu'
+SET pps.city_id = target.id
+WHERE pps.provider_type = 'tutor'
+  AND curr.sido_code IN ('41','43','44','47','48','52') AND curr.sigungu_name LIKE '% %';
+
+-- 2-6d. 유료 노출 축 과거 dev 시드 행 매핑
+UPDATE provider_position_subscriptions pps
+JOIN regions curr ON curr.id = pps.city_id
+JOIN regions target ON target.sido_code = curr.sido_code AND target.unit_level = 'sido'
+SET pps.city_id = target.id
+WHERE pps.provider_type = 'tutor'
+  AND curr.dong_name IN ('대치동', '우동', '시 대표') AND curr.sido_code IN ('11','26');
+
 -- -----------------------------------------------------------------------------
--- [3단계: 슬롯 중복 제거 및 순서 재부여 (MySQL 8 CTE/윈도우 함수)]
+-- [3단계: 중복 정리 및 순서 재부여 (MySQL 8 윈도우 함수/CTE)]
 -- -----------------------------------------------------------------------------
 
--- 3-1. 중복 슬롯 삭제 (같은 tutor_id 내 같은 region_id가 중복되면 is_primary 우선, priority_order 가장 작은 것 1개만 보존)
+-- 3-1. 유료 구독 중복 단일화: 대표 레코드(최초 id)의 만료일을 그룹 내 MAX(end_exclusive_on)으로 연장
+UPDATE provider_position_subscriptions pps
+JOIN (
+  SELECT id,
+         MAX(end_exclusive_on) OVER (
+           PARTITION BY provider_id, sku_code, city_id, primary_subject_id
+         ) AS max_end_date,
+         MAX(ends_at) OVER (
+           PARTITION BY provider_id, sku_code, city_id, primary_subject_id
+         ) AS max_ends_at,
+         ROW_NUMBER() OVER (
+           PARTITION BY provider_id, sku_code, city_id, primary_subject_id
+           ORDER BY id ASC
+         ) AS rn,
+         COUNT(*) OVER (
+           PARTITION BY provider_id, sku_code, city_id, primary_subject_id
+         ) AS group_cnt
+  FROM provider_position_subscriptions
+  WHERE provider_type = 'tutor'
+    AND end_exclusive_on > CURDATE()
+) agg ON agg.id = pps.id
+SET pps.end_exclusive_on = agg.max_end_date,
+    pps.ends_at = agg.max_ends_at
+WHERE agg.rn = 1 AND agg.group_cnt > 1;
+
+-- 3-2. 유료 구독 중복 비활성화: 대표 레코드를 제외한 나머지 중복 건 즉시 비활성화 (결제 이력 보존)
+UPDATE provider_position_subscriptions pps
+JOIN (
+  SELECT id,
+         ROW_NUMBER() OVER (
+           PARTITION BY provider_id, sku_code, city_id, primary_subject_id
+           ORDER BY id ASC
+         ) AS rn
+  FROM provider_position_subscriptions
+  WHERE provider_type = 'tutor'
+    AND end_exclusive_on > CURDATE()
+) dup ON dup.id = pps.id
+SET pps.end_exclusive_on = CURDATE(),
+    pps.ends_at = NOW()
+WHERE dup.rn > 1;
+
+-- 3-3. 과외 슬롯 중복 삭제: 같은 tutor_id 내 같은 region_id 중복 시 is_primary 우선, priority_order 작은 1개 보존
 DELETE tr FROM tutor_regions tr
 JOIN (
   SELECT id,
@@ -384,7 +514,7 @@ JOIN (
 ) dup ON dup.id = tr.id
 WHERE dup.rn > 1;
 
--- 3-2. 남은 슬롯의 priority_order를 0, 1, 2로 순차 재정렬
+-- 3-4. 남은 과외 슬롯의 priority_order를 0, 1, 2로 순차 재정렬
 UPDATE tutor_regions tr
 JOIN (
   SELECT id,
@@ -399,7 +529,7 @@ SET tr.priority_order = reorder.new_order;
 -- -----------------------------------------------------------------------------
 -- [4단계: 사후 점검 SELECT]
 -- -----------------------------------------------------------------------------
--- 미변환된 비단위 행이 남아있는지 최종 확인 (결과가 0행이어야 함)
+-- 4-1. tutor_regions 중 비단위 행 잔여 검증 (0건이어야 함)
 SELECT COUNT(*) AS invalid_slot_count
 FROM tutor_regions tr
 JOIN regions r ON r.id = tr.region_id
@@ -415,6 +545,61 @@ WHERE NOT (
   OR (r.unit_level = 'sigungu' AND r.sido_code IN ('41','43','44','47','48','50','51','52')
       AND r.is_selectable = 1 AND r.sigungu_name NOT LIKE '% %')
 );
+
+-- 4-2. students 중 비단위 희망지역 잔여 검증 (0건이어야 함)
+SELECT COUNT(*) AS invalid_student_region_count
+FROM students s
+JOIN regions r ON r.id = s.preferred_tutor_region_id
+WHERE NOT (
+  (r.unit_level = 'sido' AND r.sido_code IN ('11','26','27','28','30','31','36'))
+  OR (r.sido_code = '12' AND r.sigungu_code = '12200')
+  OR (r.sido_code = '12' AND r.unit_level = 'sigungu' AND r.sigungu_code NOT IN ('12200','12210','12240','12270','12300','12330'))
+  OR (r.unit_level = 'sigungu' AND r.official_code IN (
+      '4111000000','4113000000','4117000000','4119000000','4127000000',
+      '4128000000','4146000000','4159000000','4311000000','4413000000',
+      '4711000000','4812000000','5211000000'
+  ))
+  OR (r.unit_level = 'sigungu' AND r.sido_code IN ('41','43','44','47','48','50','51','52')
+      AND r.is_selectable = 1 AND r.sigungu_name NOT LIKE '% %')
+);
+
+-- 4-3. provider_position_subscriptions 중 비단위 city_id 잔여 검증 (0건이어야 함)
+SELECT COUNT(*) AS invalid_paid_axis_count
+FROM provider_position_subscriptions pps
+JOIN regions r ON r.id = pps.city_id
+WHERE pps.provider_type = 'tutor'
+  AND NOT (
+    (r.unit_level = 'sido' AND r.sido_code IN ('11','26','27','28','30','31','36'))
+    OR (r.sido_code = '12' AND r.sigungu_code = '12200')
+    OR (r.sido_code = '12' AND r.unit_level = 'sigungu' AND r.sigungu_code NOT IN ('12200','12210','12240','12270','12300','12330'))
+    OR (r.unit_level = 'sigungu' AND r.official_code IN (
+        '4111000000','4113000000','4117000000','4119000000','4127000000',
+        '4128000000','4146000000','4159000000','4311000000','4413000000',
+        '4711000000','4812000000','5211000000'
+    ))
+    OR (r.unit_level = 'sigungu' AND r.sido_code IN ('41','43','44','47','48','50','51','52')
+        AND r.is_selectable = 1 AND r.sigungu_name NOT LIKE '% %')
+  );
+
+-- 4-4. tutor_regions 중 동일 튜터 동일 단위 중복 슬롯 검증 (0건이어야 함)
+SELECT COUNT(*) AS duplicate_slot_count
+FROM (
+  SELECT tutor_id, region_id, COUNT(*) AS cnt
+  FROM tutor_regions
+  GROUP BY tutor_id, region_id
+  HAVING COUNT(*) > 1
+) d;
+
+-- 4-5. provider_position_subscriptions 중 동일 축 활성 중복 구독 검증 (0건이어야 함)
+SELECT COUNT(*) AS duplicate_active_subscription_count
+FROM (
+  SELECT provider_id, sku_code, city_id, primary_subject_id, COUNT(*) AS cnt
+  FROM provider_position_subscriptions
+  WHERE provider_type = 'tutor'
+    AND end_exclusive_on > CURDATE()
+  GROUP BY provider_id, sku_code, city_id, primary_subject_id
+  HAVING COUNT(*) > 1
+) d;
 ```
 
 ---
@@ -478,7 +663,7 @@ WHERE NOT (
 
 ---
 
-### 1. 반드시 같이 바꿀 것 (총 41개)
+### 1. 반드시 같이 바꿀 것 (총 43개)
 
 | 순번 | 파일 경로 | 주요 위치 (함수/상수명) | 분류 근거 | 바꿀 내용 |
 | :---: | :--- | :--- | :--- | :--- |
@@ -523,10 +708,12 @@ WHERE NOT (
 | 39 | `preview/search-ui/src/student-saved-region.js` | `preferred_tutor_region_id` (L60), `target.scope === 'sigungu'` 조건 (L110, L116) | 과외 탭 검색 시 학생 희망지역 scope 검사 및 조회 파라미터 조립 | 과외 단위 scope 지원 및 조회 파라미터 구성 |
 | 40 | `preview/home-ui/src/student-blind-teaser.js` | `coarseRegionForGuest` (L56) | 게스트 블라인드 티저 지역 단위 변환 | '서울특별시' 입력 시 '—'로 깨지는 단위 변환 결손 해소 |
 | 41 | `preview/home-ui/src/plans/order-blocks.js` | `listTutorApplyCities` (L125), `city_id` 추출 및 유료 구매 후보 구성 (L131, L186, L276-292) | 과외 유료 노출 판매 축 후보 목록 필터링 | 과외 단위 적용 지역 후보 필터링 및 바인딩 |
+| 42 | `preview/search-ui/src/search-map.js` | `renderSearchMapBlock` (L174), 줌 분기 `ctx.regionLevel === 'district' ? 13 : 15` (L142) | 지도 줌 레벨 결정 규칙 | 과외 단위(광역시 등) 선택 시 줌 레벨 분기 조건 및 줌 레벨 결정 규칙 변경 |
+| 43 | `src/Tutor/TutorDetailCompletionEvaluator.php` | `hasPrimaryRegion` (L218) | 과외쌤 완성도 판정 조건 | 슬롯 0의 지역이 유효한 과외 단위인지 검증하지 않고 판정하는 결손 해소 (`TutorRegionUnit::isValidTutorUnit` 검증 추가) |
 
 ---
 
-### 2. 표시만 손볼 것 (문구·라벨 모양만 다루는 로직 총 21개)
+### 2. 표시만 손볼 것 (문구·라벨 모양만 다루는 로직 총 23개)
 
 | 순번 | 파일 경로 | 주요 위치 (함수/상수명) | 분류 근거 | 바꿀 내용 |
 | :---: | :--- | :--- | :--- | :--- |
@@ -538,19 +725,21 @@ WHERE NOT (
 | 6 | `preview/search-ui/src/search-schema.js` | `searchSchema` (L40-65) | 검색 디스플레이 라벨 정의 | 정식 명칭 라벨 지원 |
 | 7 | `preview/search-ui/src/search-exposure-mapper.js` | `mapExposure` (L31-42) | 검색 결과 노출 텍스트 매핑 | 정식 지역 라벨 매핑 |
 | 8 | `preview/search-ui/src/search-tier-render.js` | `renderTierBadge` (L45-70) | '{place} 과외쌤' 텍스트 렌더링 | '서울특별시 과외쌤' 등 정식 명칭 출력 |
-| 9 | `preview/search-ui/src/search-map.js` | `initMap` (L101-108, L141-142) | 지도 줌 레벨 조정 | 과외 단위(광역시 등) 선택 시 적정 줌 레벨 조정 |
-| 10 | `preview/home-ui/src/detail-decision/student-request-card.js` | `renderStudentRequestCard` (L79) | 학생 요청 카드 텍스트 표시 | 정식 과외 단위 명칭 표시 |
-| 11 | `preview/home-ui/src/detail-decision/tutor-detail.js` | `renderTutorDetail` (L21-31) | 과외쌤 상세 팝업 지역 텍스트 포맷 | 정식 명칭 라벨 포맷 |
-| 12 | `preview/home-ui/src/user-actions-ui.js` | `renderUserActions` (L219-220) | 사용자 액션 UI 텍스트 | 지역 정식 명칭 표시 |
-| 13 | `preview/home-ui/src/student-review-ui.js` | `renderStudentReview` (L124) | 학생 리뷰 UI 텍스트 | 지역 정식 명칭 표시 |
-| 14 | `preview/home-ui/src/home-card-samples/presets.js` | `cardPresets` (L16) | 카드 샘플 프리셋 텍스트 | 정식 명칭 예시 반영 |
-| 15 | `preview/home-ui/src/guest-sections.js` | `renderGuestSections` (L70-96) | 게스트 섹션 텍스트 표시 | 정식 명칭 라벨 표시 |
-| 16 | `preview/home-ui/src/section-headings.js` | `renderSectionHeadings` (L65-73) | 섹션 헤딩 텍스트 | 정식 명칭 라벨 표시 |
-| 17 | `preview/home-ui/src/provider-home.js` | `renderProviderHome` (L223-243) | 공급자 홈 텍스트 표시 | 정식 명칭 라벨 표시 |
-| 18 | `preview/home-ui/src/screens/tutor.js` | `renderTutorScreen` (L46-61) | 튜터 스크린 텍스트 표시 | 정식 명칭 라벨 표시 |
-| 19 | `src/Admin/AdminExposureRepository.php` | `regionDisplayExpr` (L20) | 관리자 화면 지역 라벨 표현식 | 정식 명칭 표현식 연동 |
-| 20 | `src/Admin/AdminRegistrationListRepository.php` | `page` (L53-108, 특히 L71 `$region`, L83-86 `labels->resolve`) | 관리자 등록 목록 라벨 표시 및 지역 필터 | `OfficialRegionLabel` 정식 라벨 표시 연동 |
-| 21 | `preview/home-ui/src/tutor-reg/registration-check-model.js` | `checkTutorRegistration` (L79, L221-224) | 등록 점검 모델 내 지역 완성도 라벨 표시 | 과외 단위 라벨 표시 |
+| 9 | `preview/home-ui/src/detail-decision/student-request-card.js` | `renderStudentRequestCard` (L79) | 학생 요청 카드 텍스트 표시 | 정식 과외 단위 명칭 표시 |
+| 10 | `preview/home-ui/src/detail-decision/tutor-detail.js` | `renderTutorDetail` (L21-31) | 과외쌤 상세 팝업 지역 텍스트 포맷 | 정식 명칭 라벨 포맷 |
+| 11 | `preview/home-ui/src/user-actions-ui.js` | `renderUserActions` (L219-220) | 사용자 액션 UI 텍스트 | 지역 정식 명칭 표시 |
+| 12 | `preview/home-ui/src/student-review-ui.js` | `renderStudentReview` (L124) | 학생 리뷰 UI 텍스트 | 지역 정식 명칭 표시 |
+| 13 | `preview/home-ui/src/home-card-samples/presets.js` | `cardPresets` (L16) | 카드 샘플 프리셋 텍스트 | 정식 명칭 예시 반영 |
+| 14 | `preview/home-ui/src/guest-sections.js` | `renderGuestSections` (L70-96) | 게스트 섹션 텍스트 표시 | 정식 명칭 라벨 표시 |
+| 15 | `preview/home-ui/src/section-headings.js` | `renderSectionHeadings` (L65-73) | 섹션 헤딩 텍스트 | 정식 명칭 라벨 표시 |
+| 16 | `preview/home-ui/src/provider-home.js` | `renderProviderHome` (L223-243) | 공급자 홈 텍스트 표시 | 정식 명칭 라벨 표시 |
+| 17 | `preview/home-ui/src/screens/tutor.js` | `renderTutorScreen` (L46-61) | 튜터 스크린 텍스트 표시 | 정식 명칭 라벨 표시 |
+| 18 | `src/Admin/AdminExposureRepository.php` | `regionDisplayExpr` (L20) | 관리자 화면 지역 라벨 표현식 | 정식 명칭 표현식 연동 |
+| 19 | `src/Admin/AdminRegistrationListRepository.php` | `page` (L53-108, 특히 L71 `$region`, L83-86 `labels->resolve`) | 관리자 등록 목록 라벨 표시 및 지역 필터 | `OfficialRegionLabel` 정식 라벨 표시 연동 |
+| 20 | `preview/home-ui/src/tutor-reg/registration-check-model.js` | `checkTutorRegistration` (L79, L221-224) | 등록 점검 모델 내 지역 완성도 라벨 표시 | 과외 단위 라벨 표시 |
+| 21 | `preview/home-ui/src/detail-decision/detail-utils.js` | `coarseRegionForGuest` (L13, L62, L69) | 게스트 상세 카드 지역 라벨 포맷팅 | 정식 명칭 표기 연동 |
+| 22 | `preview/home-ui/src/exposure-render.js` | `coarseRegionForGuest` (L45, L769, L846, L946) | 게스트 노출 카드 지역 라벨 포맷팅 | 정식 명칭 표기 연동 |
+| 23 | `public/api/search/region-stats.php` | 레거시 주석 (L13-14) | 과외 통계 집계 주석 | 1168000000 강남구 기준 옛 주석을 과외 축 기준으로 갱신 |
 
 ---
 
