@@ -65,5 +65,6 @@
 
 ## 8. 검수·승인
 
-- CI: (push 뒤 기록)
+- CI 1차 (`70c23f6`, run 37852553457): 13단계 중 2개 실패 — `Tutor search fields`(`git show 3f03aaa` 없음), `Tutor basic required`(`origin/main` 없음). 원인은 checkout 기본값(최근 커밋 1개만 받음)으로 비교 기준 커밋이 없던 것. 코드 문제 아님. → checkout `fetch-depth: 0`으로 수정.
+- CI 2차: (push 뒤 기록)
 - 승인: 대기
