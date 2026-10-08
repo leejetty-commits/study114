@@ -350,3 +350,77 @@ f7faf56 커밋에 대한 독립 리뷰 결과 9건의 지적에 대해 메인 �
 9. GPS와 주소 선택은 단위로 올려 쓴다. 지도 확대는 단위 크기에 맞춘다. 손님 카드에도 「서울특별시」를 그대로 보여 준다. 합쳐지는 유료 구독은 가장 늦은 만료일(`MAX(end_exclusive_on)`) 하나로 남긴다.
 10. 적용 범위는 과외쌤 모드만이 아니다. 현재위치, 찾기(공부방 모드와 학생 모드의 과외쌤찾기 포함), 지도, 베이직·픽·프라임 카드, 확대카드, 가입, 마이페이지 기본정보에 모두 적용한다. 공부방 축(동·단지)은 바꾸지 않는다.
 
+## 4차 개정 및 독립 전수점검 실측 반영 — 2026-10-08 21:30
+
+- 메인 지시: 사용자 잠금(21:21) 10대 원칙을 정본 0장에 최우선 정책으로 명시, 독립 전수점검 결과 반영(코드 수정 금지, 문서 2개만 수정), SQL 2건 보완(옛 동 행 누락 방지 및 임시 테이블 `tmp_pps_city_before` 기반 유료 구독 과잉 합치기 방지), 예시 주소별 표 및 공용 함수 분리 표 신설, 사용자 확인 질문 5건 수록.
+
+### 1. 사용자 잠금 반영 요약
+- 10대 잠금 원칙을 정본 72 제0장 「[최우선 정책] 사용자 잠금 — 2026-10-08 21:21 (노션보다 우선)」에 전면 명시.
+- 10번 적용 범위 명시: 현재위치, 공부방 모드·학생 모드의 과외쌤찾기, 카드, 확대카드, 가입, 마이페이지 기본정보. (공부방 축 동·단지는 불변).
+- **사실 정정**: 지도는 오직 공부방 탭에만 존재함(`preview/search-ui/src/search-find-surface.js:2084` `showMap = tab === 'room'`). 과외 탭에는 지도가 없으므로 「지도 줌 단위 크기」는 적용 화면 없음으로 적고, `search-map.js`(부록 #42)는 「반드시 같이 바꿀 것」에서 「영향 없음(공부방 축)」으로 이동함.
+
+### 2. 독립 전수점검 실측 및 분류 숫자 변화
+부록 파일 실측 및 부록 내 없는 가상 함수명을 실제 함수명으로 전수 교체/정정 완료함.
+
+| 분류 구분 | 이전 개정 (3차) | 4차 개정 (현재) | 변화 내용 요약 |
+| :--- | :---: | :---: | :--- |
+| **반드시 같이 바꿀 것** | 43개 | **46개** | `search-map.js`, `ProviderWaitlistService`를 영향없음으로 이동(-2). `plans/screens.js`, `AdminExposureService`, `exposure-render.js(L449)`, `BasicCardRegisteredQuery`, `state.js` 신규 추가(+5). 순증 +3개 파일. |
+| **표시만 손볼 것** | 23개 | **34개** | `search-page.js`, `home-basic-live.js`, `detail-shell.js`, `compose-flow.js`, `mypage/screens.js`, `tutor-reg/format.js`, `tutor-reg/profile-read.js`, `student-reg/profile-read.js`, `registration-check-sample.js`, `exposure-format.js`, `exposure-bridge.js`, `search-handoff.js` 등 실측 추가 (+11개 파일). |
+| **영향 없음** | 7개 | **8개** | `search-map.js`(공부방 탭 전용 지도), `ProviderWaitlistService`(공부방 전용) 편입, 기존 7개 중 합계 조정 (+1개 항목). |
+| **합계 (영향 파일)** | 73개 | **88개** | 전수점검 실측 반영으로 총 88개 항목(코드 수정 대상 80개 파일 + 영향없음 8개) 완비. |
+
+### 3. 부록 함수명 및 줄 번호 정정 내역 (rg 실측)
+- `searchTutors`: L745, L756-761
+- `tutorSlot1Sql`: L308
+- `activePositionSku`: L1558
+- `guestAxisCounts`: L86
+- `guestScopedFilters`: L133
+- `guestAxisLabels`: L215
+- `loadTutorStudentDemand`: L189
+- `renderTutorActivityBars`: L117
+- `validateTutorActivityRegions`: L136
+- `regionIdFromSelection`: L216
+- 가상 함수명 실측 교체:
+  * `createPositionSubscription` → `addPositionSubscription` (L618)
+  * `renderTierBadge` → `renderSearchTierResults` (L312)
+  * `mapExposure` → `normalizeApiRegionLabel` (L31) / `mapToExposureItem` (L49)
+  * `renderUserActions` → `renderCompareBar` (L39) / `openWishlistModal` (L95)
+  * `renderStudentReview` → `renderStudentProviderActions` (L21)
+  * `renderGuestSections` → `renderGuestHero` (L70) / `renderGuestExposureBoxes` (L171) / `renderGuestBrowseLists` (L176)
+  * `renderSectionHeadings` → `renderLocationBesideTitle` (L65) / `renderSectionHeading` (L130)
+  * `renderProviderHome` → `renderProviderHomeBody` (L168) / `renderStudentDemandSnapshot` (L228)
+  * `renderTutorScreen` → `renderTutor` (L138) / `renderTutorRegionPills` (L46)
+  * `searchSchema` → `SEARCH_TABS` (L21)
+  * `syncStudentAuthBridge` → `mapAuthFormToStudentRecord` (L30)
+  * `signupComplete` → `renderSignupComplete` (L128)
+  * `studentRequestCard` → `renderStudentRequestBody` (L53)
+  * `checkTutorRegistration` → `buildTutorRegistrationCheckModel` (L346)
+  * `cardPresets` → `HOME_SAMPLE_BUILDERS` (L106) / `buildTutorSampleItem` (L85)
+  * `formatRegion` → `formatStudentSummaryLine` (L44) / `studentToExposureRow` (L19)
+  * `accountRegionLabel` → `accountRegionPresentation` (L141) / `accountRegionView` (L83)
+  * `validatePositionScope`, `joinPositionWaitlist`: 파일 내 실제 함수 미존재 명시
+
+### 4. 메인 SQL 검토 보완 2건 반영 내역
+1. **옛 동 단위 행 및 세종 누락 보완**:
+   - 2-1에 세종 `'36'` 추가.
+   - `official_code`가 NULL인 옛 동 행 및 일반 시·군 산하 옛 동 행을 위해 `sigungu_code` 기반 보조 승격 쿼리(일반구 동: `CONCAT(SUBSTRING(sigungu_code, 1, 4), '0')`, 일반 시·군 동: `target.sigungu_code = curr.sigungu_code AND target.unit_level = 'sigungu'`) 추가.
+   - `tutor_regions` (2-1~2-4), `students` (2-5a~2-5e), `provider_position_subscriptions` (2-6a~2-6e)에 동일 적용.
+   - 운영 DB 점검 ID (1, 2, 19, 29, 39) 승격 단계 매핑표 수록.
+2. **유료 구독 과잉 합치기 방지**:
+   - 2-0 단계에서 임시 테이블 `tmp_pps_city_before` 생성하여 원래 `city_id` 보존.
+   - 3-1, 3-2 단계에서 `COUNT(DISTINCT b.original_city_id) OVER (...) > 1` 조건을 필수 조인하여, 승격으로 인해 서로 다른 원래 구가 동일 단위로 통합된 경우에만 합치고 동일 구 연속 연장 건은 안전하게 보존.
+   - `starts_at` 및 예약(미래 시작일) 구독 보존 정책 명시.
+
+### 5. 공용 함수 분리 표 및 예시 주소별 표 신설
+- 제9장 「공용 함수 분리 표 (공부방 축 불변 보장)」: `ensureAndListCities`, `region-cascade.js`, `selectableRegionId`, `studentGuBaseWhere`, `OfficialRegionLabel`, `coarseRegionForGuest`, `sameNeighborhood`, `location-display.js`, `regionFilterSql` 등 9개 공용 로직의 분리 인터페이스 명시.
+- 제10장 「예시 주소별 표시·검색 비교표」: 서울 강남구 역삼동, 경기도 수원시 영통구, 경기도 광주시 경안동, 전남광주 광산구, 전남광주 순천시, 인천 강화군, 부산 기장군, 세종특별자치시, GPS 「서울시」만 등 9개 사례에 대해 지금 표시·검색 / 바뀐 뒤 표시·검색 단위 / 오작동 유발 함수를 대조 정리.
+
+### 6. 사용자 확인 질문 5건
+- 정본 끝에 광주 단위 라벨 표기(「광주」 vs 「전남광주통합특별시 광주」), 손님 학생 수 집계 범위, 손님 동네 인사 과외 줄 표시 여부, 공부방 모드 홈 과외 탭 지역 줄 내용, 과외 탭 지도 미제공 확인 질문을 정리하여 수록함.
+
+### 7. 미확인 목록
+1. 네이버 지도 API 및 카카오 지도/지오코더 API 응답 필드와 실측값: 외부 서비스 연동 상태 및 좌표 정밀도에 따라 달라지므로 미확인으로 명시함.
+2. `BasicCardRegisteredQuery.php`: 현재 작업트리 내에 물리적 파일이 존재하지 않으며, 73번 브랜치 또는 별도 모듈로 분리되었을 가능성이 있으므로 파일/함수 미확인으로 명시함.
+3. 운영 DB 내 실제 `provider_position_subscriptions` 및 `students` 외래키 정합성: 배포 시점 1단계 사전 점검 SELECT 실행으로 최종 확인 예정.
+
+
