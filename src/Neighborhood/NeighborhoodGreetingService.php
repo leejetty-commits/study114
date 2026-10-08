@@ -50,6 +50,8 @@ final class NeighborhoodGreetingService
         }
         $items = $this->withoutWithdrawnOwners($items);
         $items = $this->withoutMissingPrimaryRegion($items);
+        $welcomeItems = $this->listWelcomeItems($full);
+        $items = array_merge($items, $welcomeItems);
         usort($items, static fn (array $a, array $b): int => ($b['updated_at'] <=> $a['updated_at']));
         return $items;
     }
@@ -75,10 +77,35 @@ final class NeighborhoodGreetingService
             throw new \InvalidArgumentException('기본등록이 연결된 뒤에 올릴 수 있어요.');
         }
         $this->assertOwns($userId, $providerType, $registrationId);
-        $status = ($input['status'] ?? 'up') === 'down' ? 'down' : 'up';
+        $statusInput = (string) ($input['status'] ?? 'up');
+        $existing = $this->find($providerType, $registrationId);
+        if ($statusInput === 'welcome_off') {
+            if ($existing !== null) {
+                return $existing;
+            }
+            $pdo = Connection::get();
+            $neighborhood = $this->lookupPrimaryDongName($pdo, $providerType, $registrationId);
+            $displayName = $this->lookupDisplayName($pdo, $providerType, $registrationId);
+            $now = (int) round(microtime(true) * 1000);
+            $row = [
+                'provider_type' => $providerType,
+                'registration_id' => $registrationId,
+                'user_id' => $userId,
+                'body' => '',
+                'neighborhood' => $neighborhood,
+                'display_name' => $displayName,
+                'status' => 'down',
+                'origin' => 'welcome_off',
+                'updated_at' => $now,
+                'history' => [],
+            ];
+            $this->upsert($row);
+            return $row;
+        }
+
+        $status = $statusInput === 'down' ? 'down' : 'up';
         $neighborhood = trim((string) ($input['neighborhood'] ?? ''));
         $displayName = trim((string) ($input['display_name'] ?? ''));
-        $existing = $this->find($providerType, $registrationId);
         if ($status === 'down') {
             if ($existing === null) {
                 throw new \InvalidArgumentException('올릴 인사가 없어요.');
@@ -278,6 +305,25 @@ final class NeighborhoodGreetingService
         $this->assertOwns($userId, $providerType, $registrationId);
         $existing = $this->find($providerType, $registrationId);
         if ($existing === null) {
+            $welcome = $this->welcomeInfoForMine($userId, $providerType, $registrationId);
+            if ($welcome !== null) {
+                return [
+                    'provider_type' => $providerType,
+                    'registration_id' => $registrationId,
+                    'status' => 'welcome',
+                    'body' => '',
+                    'neighborhood' => $welcome['neighborhood'],
+                    'display_name' => $welcome['display_name'],
+                    'updated_at' => $welcome['updated_at'],
+                    'history' => [],
+                    'origin' => 'welcome',
+                    'welcome' => [
+                        'active' => true,
+                        'd_day' => 'D-' . $welcome['days_left'],
+                        'days_left' => $welcome['days_left'],
+                    ],
+                ];
+            }
             return null;
         }
         $history = self::extractHistory($existing);
@@ -290,6 +336,10 @@ final class NeighborhoodGreetingService
             'display_name' => (string) ($existing['display_name'] ?? ''),
             'updated_at' => (int) ($existing['updated_at'] ?? 0),
             'history' => $history,
+            'origin' => (string) ($existing['origin'] ?? ''),
+            'welcome' => [
+                'active' => false,
+            ],
         ];
     }
 
@@ -372,9 +422,9 @@ final class NeighborhoodGreetingService
     /** @return array<string, mixed>|null */
     private function tutorBasicCard(\PDO $pdo, int $registrationId): ?array
     {
-        $ownerSql = WithdrawnOwnerSql::notWithdrawn('t.user_id');
+        $cond = self::tutorCardCondition('t');
         $stmt = $pdo->prepare(
-            'SELECT t.id, t.tutor_display_name, t.main_subject_note, t.profile_status,
+            "SELECT t.id, t.tutor_display_name, t.main_subject_note, t.profile_status,
                     t.preferred_fee_amount, t.lessons_per_week, t.minutes_per_lesson,
                     t.feature_1, t.feature_2, t.feature_3, t.university_name, t.major_name,
                     t.career_year_band, t.intro_short,
@@ -383,16 +433,8 @@ final class NeighborhoodGreetingService
                LEFT JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.is_primary = 1
                LEFT JOIN regions r ON r.id = tr.region_id
               WHERE t.id = ?
-                AND t.profile_status <> \'hidden\'
-                AND ' . $ownerSql . '
-                AND EXISTS (
-                  SELECT 1 FROM tutor_regions tr_gate
-                  WHERE tr_gate.tutor_id = t.id
-                    AND tr_gate.priority_order = 0
-                    AND tr_gate.region_id IS NOT NULL
-                    AND tr_gate.region_id <> 0
-                )
-              LIMIT 1'
+                AND {$cond}
+              LIMIT 1"
         );
         $stmt->execute([$registrationId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -602,5 +644,325 @@ final class NeighborhoodGreetingService
             throw new \RuntimeException('저장에 실패했습니다.');
         }
         file_put_contents($this->file, $json, LOCK_EX);
+    }
+
+    public static function tutorCardCondition(string $alias = 't'): string
+    {
+        $ownerSql = WithdrawnOwnerSql::notWithdrawn("{$alias}.user_id");
+        return "{$alias}.profile_status <> 'hidden'
+            AND {$ownerSql}
+            AND EXISTS (
+              SELECT 1 FROM tutor_regions tr_gate
+               WHERE tr_gate.tutor_id = {$alias}.id
+                 AND tr_gate.priority_order = 0
+                 AND tr_gate.region_id IS NOT NULL
+                 AND tr_gate.region_id <> 0
+            )";
+    }
+
+    public static function studyRoomCardCondition(string $alias = 'sr'): string
+    {
+        $ownerSql = WithdrawnOwnerSql::notWithdrawn("{$alias}.user_id");
+        return "{$alias}.profile_status <> 'hidden'
+            AND {$alias}.deleted_at IS NULL
+            AND {$ownerSql}
+            AND EXISTS (
+              SELECT 1 FROM study_room_regions srr_gate
+               WHERE srr_gate.study_room_id = {$alias}.id
+                 AND srr_gate.slot = 1
+                 AND srr_gate.region_id IS NOT NULL
+                 AND srr_gate.region_id <> 0
+            )";
+    }
+
+    public static function welcomeDaysLeft(string $createdAtStr, int $now = 0): ?int
+    {
+        $createdEpoch = strtotime($createdAtStr);
+        if ($createdEpoch === false) {
+            return null;
+        }
+        if ($now <= 0) {
+            $now = time();
+        }
+        $diff = ($createdEpoch + 7 * 86400) - $now;
+        if ($diff <= 0) {
+            return null;
+        }
+        return (int) ceil($diff / 86400);
+    }
+
+    /**
+     * @return array{neighborhood: string, display_name: string, updated_at: int, days_left: int}|null
+     */
+    private function welcomeInfoForMine(int $userId, string $providerType, int $registrationId): ?array
+    {
+        try {
+            $pdo = Connection::get();
+            $since = date('Y-m-d H:i:s', time() - 7 * 86400);
+
+            if ($providerType === 'tutor') {
+                $cond = self::tutorCardCondition('t');
+                $stmt = $pdo->prepare(
+                    "SELECT t.id, t.user_id, t.tutor_display_name, t.created_at, r.sigungu_name
+                       FROM tutors t
+                       LEFT JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.priority_order = 0
+                       LEFT JOIN regions r ON r.id = tr.region_id
+                      WHERE t.id = ?
+                        AND t.user_id = ?
+                        AND t.created_at >= ?
+                        AND {$cond}
+                        AND NOT EXISTS (
+                          SELECT 1 FROM tutors t_old
+                           WHERE t_old.user_id = t.user_id
+                             AND (t_old.created_at < t.created_at OR (t_old.created_at = t.created_at AND t_old.id < t.id))
+                        )
+                        AND r.sigungu_name IS NOT NULL
+                        AND TRIM(r.sigungu_name) <> ''
+                      LIMIT 1"
+                );
+                $stmt->execute([$registrationId, $userId, $since]);
+                $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+                if (!$row) {
+                    return null;
+                }
+                $createdAt = (string) $row['created_at'];
+                $daysLeft = self::welcomeDaysLeft($createdAt);
+                if ($daysLeft === null) {
+                    return null;
+                }
+                $name = trim((string) ($row['tutor_display_name'] ?? ''));
+                $cEpoch = strtotime($createdAt);
+                return [
+                    'neighborhood' => trim((string) ($row['sigungu_name'] ?? '')),
+                    'display_name' => $name !== '' ? $name : '과외쌤',
+                    'updated_at' => $cEpoch !== false ? (int) ($cEpoch * 1000) : 0,
+                    'days_left' => $daysLeft,
+                ];
+            }
+
+            $cond = self::studyRoomCardCondition('sr');
+            $stmt = $pdo->prepare(
+                "SELECT sr.id, sr.user_id, sr.study_room_name, sr.created_at, r.dong_name
+                   FROM study_rooms sr
+                   LEFT JOIN study_room_regions srr ON srr.study_room_id = sr.id AND srr.slot = 1
+                   LEFT JOIN regions r ON r.id = srr.region_id
+                  WHERE sr.id = ?
+                    AND sr.user_id = ?
+                    AND sr.created_at >= ?
+                    AND {$cond}
+                    AND NOT EXISTS (
+                      SELECT 1 FROM study_rooms sr_old
+                       WHERE sr_old.user_id = sr.user_id
+                         AND (sr_old.created_at < sr.created_at OR (sr_old.created_at = sr.created_at AND sr_old.id < sr.id))
+                    )
+                    AND r.dong_name IS NOT NULL
+                    AND TRIM(r.dong_name) <> ''
+                  LIMIT 1"
+            );
+            $stmt->execute([$registrationId, $userId, $since]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$row) {
+                return null;
+            }
+            $createdAt = (string) $row['created_at'];
+            $daysLeft = self::welcomeDaysLeft($createdAt);
+            if ($daysLeft === null) {
+                return null;
+            }
+            $name = trim((string) ($row['study_room_name'] ?? ''));
+            $cEpoch = strtotime($createdAt);
+            return [
+                'neighborhood' => trim((string) ($row['dong_name'] ?? '')),
+                'display_name' => $name !== '' ? $name : '공부방',
+                'updated_at' => $cEpoch !== false ? (int) ($cEpoch * 1000) : 0,
+                'days_left' => $daysLeft,
+            ];
+        } catch (\Throwable $e) {
+            error_log('[neighborhood-welcome] welcomeInfoForMine error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function lookupPrimaryDongName(\PDO $pdo, string $providerType, int $registrationId): string
+    {
+        if ($providerType === 'tutor') {
+            $stmt = $pdo->prepare(
+                'SELECT r.sigungu_name
+                   FROM tutor_regions tr
+                   JOIN regions r ON r.id = tr.region_id
+                  WHERE tr.tutor_id = ? AND tr.priority_order = 0
+                  LIMIT 1'
+            );
+            $stmt->execute([$registrationId]);
+            $val = $stmt->fetchColumn();
+            return is_string($val) ? trim($val) : '';
+        }
+
+        $stmt = $pdo->prepare(
+            'SELECT r.dong_name
+               FROM study_room_regions srr
+               JOIN regions r ON r.id = srr.region_id
+              WHERE srr.study_room_id = ? AND srr.slot = 1
+              LIMIT 1'
+        );
+        $stmt->execute([$registrationId]);
+        $val = $stmt->fetchColumn();
+        return is_string($val) ? trim($val) : '';
+    }
+
+    private function lookupDisplayName(\PDO $pdo, string $providerType, int $registrationId): string
+    {
+        if ($providerType === 'tutor') {
+            $stmt = $pdo->prepare('SELECT tutor_display_name FROM tutors WHERE id = ? LIMIT 1');
+            $stmt->execute([$registrationId]);
+            $val = $stmt->fetchColumn();
+            return is_string($val) && trim($val) !== '' ? trim($val) : '과외쌤';
+        }
+
+        $stmt = $pdo->prepare('SELECT study_room_name FROM study_rooms WHERE id = ? LIMIT 1');
+        $stmt->execute([$registrationId]);
+        $val = $stmt->fetchColumn();
+        return is_string($val) && trim($val) !== '' ? trim($val) : '공부방';
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function listWelcomeItems(bool $full): array
+    {
+        try {
+            $pdo = Connection::get();
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $since = date('Y-m-d H:i:s', time() - 7 * 86400);
+
+        $recordedKeys = [];
+        foreach ($this->read() as $r) {
+            $pType = (string) ($r['provider_type'] ?? '');
+            $rId = (int) ($r['registration_id'] ?? 0);
+            if ($rId > 0) {
+                $recordedKeys[$pType . ':' . $rId] = true;
+            }
+        }
+
+        $items = [];
+
+        try {
+            $tutorCond = self::tutorCardCondition('t');
+            $tutorStmt = $pdo->prepare(
+                "SELECT t.id, t.user_id, t.tutor_display_name, t.created_at, r.sigungu_name
+                   FROM tutors t
+                   LEFT JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.priority_order = 0
+                   LEFT JOIN regions r ON r.id = tr.region_id
+                  WHERE t.created_at >= ?
+                    AND {$tutorCond}
+                    AND NOT EXISTS (
+                      SELECT 1 FROM tutors t_old
+                       WHERE t_old.user_id = t.user_id
+                         AND (t_old.created_at < t.created_at OR (t_old.created_at = t.created_at AND t_old.id < t.id))
+                    )
+                    AND r.sigungu_name IS NOT NULL
+                    AND TRIM(r.sigungu_name) <> ''
+                  ORDER BY t.created_at DESC"
+            );
+            $tutorStmt->execute([$since]);
+            while ($row = $tutorStmt->fetch(\PDO::FETCH_ASSOC)) {
+                $id = (int) $row['id'];
+                if (isset($recordedKeys['tutor:' . $id])) {
+                    continue;
+                }
+                $sigungu = trim((string) ($row['sigungu_name'] ?? ''));
+                if ($sigungu === '') {
+                    continue;
+                }
+                $body = "{$sigungu}에 새로 오신 과외쌤이에요. 반갑게 맞아 주세요!";
+                if (self::validate($body) !== '') {
+                    continue;
+                }
+                $name = trim((string) ($row['tutor_display_name'] ?? ''));
+                if ($name === '') {
+                    $name = '과외쌤';
+                }
+                $createdAt = strtotime((string) $row['created_at']);
+                $updatedAt = $createdAt !== false ? (int) ($createdAt * 1000) : 0;
+                $item = [
+                    'provider_type' => 'tutor',
+                    'registration_id' => $id,
+                    'neighborhood' => $sigungu,
+                    'status' => 'up',
+                    'updated_at' => $updatedAt,
+                    'origin' => 'welcome',
+                    'masked_name' => self::maskName($name),
+                    'teaser' => self::teaser($body),
+                ];
+                if ($full) {
+                    $item['display_name'] = $name;
+                    $item['body'] = $body;
+                }
+                $items[] = $item;
+            }
+        } catch (\Throwable $e) {
+            error_log('[neighborhood-welcome] Tutor welcome error: ' . $e->getMessage());
+        }
+
+        try {
+            $roomCond = self::studyRoomCardCondition('sr');
+            $roomStmt = $pdo->prepare(
+                "SELECT sr.id, sr.user_id, sr.study_room_name, sr.created_at, r.dong_name
+                   FROM study_rooms sr
+                   LEFT JOIN study_room_regions srr ON srr.study_room_id = sr.id AND srr.slot = 1
+                   LEFT JOIN regions r ON r.id = srr.region_id
+                  WHERE sr.created_at >= ?
+                    AND {$roomCond}
+                    AND NOT EXISTS (
+                      SELECT 1 FROM study_rooms sr_old
+                       WHERE sr_old.user_id = sr.user_id
+                         AND (sr_old.created_at < sr.created_at OR (sr_old.created_at = sr.created_at AND sr_old.id < sr.id))
+                    )
+                    AND r.dong_name IS NOT NULL
+                    AND TRIM(r.dong_name) <> ''
+                  ORDER BY sr.created_at DESC"
+            );
+            $roomStmt->execute([$since]);
+            while ($row = $roomStmt->fetch(\PDO::FETCH_ASSOC)) {
+                $id = (int) $row['id'];
+                if (isset($recordedKeys['study_room:' . $id])) {
+                    continue;
+                }
+                $dong = trim((string) ($row['dong_name'] ?? ''));
+                if ($dong === '') {
+                    continue;
+                }
+                $body = "{$dong}에 새 공부방이 문을 열었어요. 반갑게 맞아 주세요!";
+                if (self::validate($body) !== '') {
+                    continue;
+                }
+                $name = trim((string) ($row['study_room_name'] ?? ''));
+                if ($name === '') {
+                    $name = '공부방';
+                }
+                $createdAt = strtotime((string) $row['created_at']);
+                $updatedAt = $createdAt !== false ? (int) ($createdAt * 1000) : 0;
+                $item = [
+                    'provider_type' => 'study_room',
+                    'registration_id' => $id,
+                    'neighborhood' => $dong,
+                    'status' => 'up',
+                    'updated_at' => $updatedAt,
+                    'origin' => 'welcome',
+                    'masked_name' => self::maskName($name),
+                    'teaser' => self::teaser($body),
+                ];
+                if ($full) {
+                    $item['display_name'] = $name;
+                    $item['body'] = $body;
+                }
+                $items[] = $item;
+            }
+        } catch (\Throwable $e) {
+            error_log('[neighborhood-welcome] Room welcome error: ' . $e->getMessage());
+        }
+
+        return $items;
     }
 }

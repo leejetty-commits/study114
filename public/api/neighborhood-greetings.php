@@ -74,6 +74,7 @@ try {
         'body' => $saved['body'] ?? '',
         'history' => $saved['history'] ?? [],
         'updated_at' => $saved['updated_at'] ?? 0,
+        'origin' => $saved['origin'] ?? '',
     ]], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);

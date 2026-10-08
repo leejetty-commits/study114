@@ -160,6 +160,32 @@
   gap: 0.35rem;
 }
 
+.ng-editor__welcome-banner {
+  margin: 0 0 0.5rem;
+}
+
+.ng-editor__welcome-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  color: #166534;
+}
+
+.ng-editor__welcome-text {
+  flex: 1 1 auto;
+  line-height: 1.4;
+}
+
+.ng-editor__welcome-off-btn {
+  flex-shrink: 0;
+}
+
 .ng-editor__cancel-edit {
   border: 0;
   background: none;

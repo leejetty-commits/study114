@@ -19,4 +19,8 @@ export const HOME_NEWS_COPY = {
   popupPager: '페이지 이동',
   popupPrev: '이전',
   popupNext: '다음',
+  welcomeBadge: '새 이웃',
+  welcomeNotice: (dDay) => `우리 동네 새 이웃으로 소개되고 있어요 (${dDay}). 직접 인사를 올리면 그 인사로 바뀌어요.`,
+  welcomeOffBtn: '소개 내리기',
+  welcomeOffSuccess: '소개를 내렸어요',
 };
