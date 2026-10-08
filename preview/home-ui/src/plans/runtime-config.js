@@ -66,8 +66,6 @@ const TEST_MODE_KEY = 'study114-plans-test-mode';
 export const PLAN_RUNTIME_DEFAULTS = {
   prime_slots: 3,
   region_scope_type: 'dong',
-  demo_prime_filled: 1,
-  demo_prime_tutor_pool: 12,
   pick_set_size: 10,
   pick_rotation_minutes: 15,
   pick_page_size: 5,
@@ -231,8 +229,6 @@ export function getPlanRuntimeSettings() {
   if (!guestRuntimeOverride) return base;
   return {
     ...base,
-    demo_prime_filled: 0,
-    demo_prime_tutor_pool: 0,
     basic_page_size: 10,
     pick_set_size: 10,
     pick_page_size: 10,

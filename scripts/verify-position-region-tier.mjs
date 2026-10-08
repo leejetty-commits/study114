@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getPrimeCandidatePool, getPrimeOccupied } from '../preview/home-ui/src/exposure-rules.js';
+import { getPickPool, getPrimeCandidatePool, getPrimeOccupied } from '../preview/home-ui/src/exposure-rules.js';
 import { studyRoomHomeSearchFilters } from '../preview/home-ui/src/study-room-home-seed.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -54,10 +54,13 @@ check('M3 실데이터 프라임 칸은 position_sku 만', occupied.length === 1
 const tutorReal = getPrimeCandidatePool('tutor', realPool).map((item) => item.id);
 check('M3 과외쌤 실데이터도 position_sku 만', tutorReal.length === 1 && tutorReal[0] === 2, JSON.stringify(tutorReal));
 
-const tutorDemo = getPrimeCandidatePool('tutor', [
+const unpaid = [
   { id: 3, profile_status: 'published', exposure_tier: 'prime' },
-]).map((item) => item.id);
-check('데모 과외쌤 풀은 exposure_tier 유지', tutorDemo.includes(3), JSON.stringify(tutorDemo));
+  { id: 4, profile_status: 'published', exposure_tier: 'basic' },
+];
+check('유료 없으면 공부방 프라임 칸 비움 (실데이터 표시 없어도)', getPrimeOccupied(unpaid).length === 0, JSON.stringify(getPrimeOccupied(unpaid)));
+check('유료 없으면 과외쌤 프라임 후보 비움 (실데이터 표시 없어도)', getPrimeCandidatePool('tutor', unpaid).length === 0, JSON.stringify(getPrimeCandidatePool('tutor', unpaid)));
+check('유료 없으면 픽 후보 비움 (실데이터 표시 없어도)', getPickPool(unpaid, []).length === 0, JSON.stringify(getPickPool(unpaid, [])));
 
 console.log(`\nclient ${passed} PASS / ${failed} FAIL`);
 

@@ -33,10 +33,6 @@ function isListVisible(item) {
   return !item.profile_status || item.profile_status !== 'hidden';
 }
 
-function isRealDbPool(pool) {
-  return pool.some((i) => i && i._realDb === true);
-}
-
 function paidSku(item) {
   const sku = item?.position_sku || item?.sku;
   return sku === 'prime' || sku === 'pick' ? sku : '';
@@ -50,17 +46,7 @@ function paidSku(item) {
  */
 export function getPrimeOccupied(pool, capacity) {
   const cap = capacity ?? (Number(getPlanSetting('prime_slots')) || 3);
-  const published = pool.filter(isListVisible);
-  const real = isRealDbPool(published);
-  const explicit = published.filter((i) =>
-    real ? paidSku(i) === 'prime' : i.exposure_tier === 'prime' || paidSku(i) === 'prime',
-  );
-  if (explicit.length) return explicit.slice(0, cap);
-  if (real) return [];
-
-  const demoFilled = Number(getPlanSetting('demo_prime_filled'));
-  const fill = Number.isFinite(demoFilled) ? Math.max(0, Math.min(cap, demoFilled)) : 1;
-  return published.slice(0, fill);
+  return pool.filter((i) => isListVisible(i) && paidSku(i) === 'prime').slice(0, cap);
 }
 
 /**
@@ -85,14 +71,7 @@ export function buildPrimeSlotArray(occupied, capacity) {
  */
 export function getPickPool(pool, primeOccupied) {
   const primeIds = new Set(primeOccupied.map((i) => i.id));
-  const rest = pool.filter((i) => isListVisible(i) && !primeIds.has(i.id));
-  const real = isRealDbPool(pool);
-  const explicitPick = rest.filter((i) =>
-    real ? paidSku(i) === 'pick' : i.exposure_tier === 'pick' || paidSku(i) === 'pick',
-  );
-  if (explicitPick.length) return sortByNewestFirst(explicitPick);
-  if (real) return [];
-  return sortByNewestFirst(rest);
+  return sortByNewestFirst(pool.filter((i) => isListVisible(i) && !primeIds.has(i.id) && paidSku(i) === 'pick'));
 }
 
 /**
@@ -135,17 +114,7 @@ export function getPrimeCandidatePool(kind, pool) {
   const cap = Number(getPlanSetting('prime_slots')) || 3;
   if (kind !== 'tutor') return getPrimeOccupied(pool, cap);
 
-  const published = pool.filter(isListVisible);
-  const real = isRealDbPool(published);
-  const explicit = published.filter((i) =>
-    real ? paidSku(i) === 'prime' : i.exposure_tier === 'prime' || paidSku(i) === 'prime',
-  );
-  if (explicit.length) return sortByNewestFirst(explicit);
-  if (real) return [];
-
-  const demoPool = Number(getPlanSetting('demo_prime_tutor_pool'));
-  const n = Number.isFinite(demoPool) ? Math.max(cap, demoPool) : 12;
-  return sortByNewestFirst(published).slice(0, n);
+  return sortByNewestFirst(pool.filter((i) => isListVisible(i) && paidSku(i) === 'prime'));
 }
 
 /**
@@ -187,7 +156,5 @@ export function getExposurePageSizes() {
     pickRotationMinutes: Number(s.pick_rotation_minutes) || 15,
     basicPageSize: Number(s.basic_page_size) || 20,
     regionScopeType: String(s.region_scope_type || 'dong'),
-    /** 과외쌤 Prime 데모 후보 풀 (시 단위) */
-    demoPrimeTutorPool: Number(s.demo_prime_tutor_pool) || 12,
   };
 }
