@@ -12,6 +12,7 @@
  * (d) 서버 슬롯 페이로드에 region_selectable 포함(TutorHubRepository, TutorRegisterService).
  * (e) [R1 회귀 방지] 빈 슬롯(region_id: '')은 region_selectable: false 라도 stale/다시선택필요 가 뜨지 않음.
  * (f) [R2/R3 방지] searchApi error status/code 전달 및 옛 미정의 지역 '옛 지역' 라벨 대체.
+ * (g) [회귀 방지] preview/shared/*.css 에 전역 .mypage-badge 및 .mypage-badge--* 규칙 금지.
  */
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -185,6 +186,36 @@ ok('(R2) activity-chart: err.status === 422 || err.error === validation', chartJ
 ok('(R2) tutor-home-seed: err.status === 422 || err.error === validation', seedJs.includes("err?.status === 422 || err?.error === 'validation'"));
 
 ok("(R3) tutor-home-seed: selectable=false && !label -> '옛 지역' 대체", seedJs.includes("label = '옛 지역'"));
+
+console.log('\n##### 7. 회귀 방지: preview/shared/*.css 에 전역 .mypage-badge 규칙 금지 #####');
+
+const sharedDir = join(ROOT, 'preview/shared');
+const sharedCssFiles = readdirSync(sharedDir).filter((f) => f.endsWith('.css'));
+const globalMypageBadgeFound = [];
+
+for (const file of sharedCssFiles) {
+  const filePath = join(sharedDir, file);
+  const content = readFileSync(filePath, 'utf8');
+  const clean = content.replace(/\/\*[\s\S]*?\*\//g, '');
+  const ruleRegex = /([^{}]+)\{/g;
+  let m;
+  while ((m = ruleRegex.exec(clean)) !== null) {
+    const rawSelector = m[1].trim();
+    if (rawSelector.startsWith('@')) continue;
+    const selectors = rawSelector.split(',').map((s) => s.trim());
+    for (const sel of selectors) {
+      if (/^\.mypage-badge(\b|--)/.test(sel)) {
+        globalMypageBadgeFound.push(`${file}: ${sel}`);
+      }
+    }
+  }
+}
+
+ok(
+  '(회귀 방지) preview/shared/*.css 에 전역 .mypage-badge 규칙 없음 (슬롯 범위 한정 필수)',
+  globalMypageBadgeFound.length === 0,
+  `발견된 전역 규칙: ${globalMypageBadgeFound.join(', ')}`
+);
 
 console.log(`\n========================================`);
 console.log(`Total: ${passed} passed, ${failed} failed`);

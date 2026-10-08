@@ -159,3 +159,11 @@
   3. `preview/shared/register-flow.css`: tutor-ui·auth-ui·home-ui 3개 UI가 모두 임포트하는 공용 CSS 파일에 `.mypage-badge` 및 `.mypage-badge--warn` 정의를 `home-member-flows.css`(813행)와 동일한 값으로 추가하여 tutor-ui 내 다시 선택 필요 배지 스타일 누락 해소.
   4. `preview/home-ui/src/tutor-activity-chart.js`: `tutorHomeEditRegionPath()`가 인자를 받지 않는 시그니처이므로 `tutorHomeEditRegionPath(row.tutorId)` 호출을 인자 없이 `tutorHomeEditRegionPath()`로 수정하여 혼선 방지.
 
+### 메인 검수 — 1d65cbb 반려: 공용 배지 전역 규칙이 마이페이지 배지 색을 덮음
+
+- 문제: `preview/shared/register-flow.css`에 추가했던 전역 `.mypage-badge { background: var(--gray-200) }` 규칙이 `home-ui/src/main.js`의 후순위 import로 인해 마이페이지의 다양한 상태별 배지(`.mypage-badge--published`, `--draft`, `--pending`, `--action`, `--danger`, `--hidden`, `--contact-*` 등)의 고유 배경색을 회색으로 덮어버리는 전역 회귀 발생.
+- 조치 내용:
+  1. `preview/shared/register-flow.css`의 전역 `.mypage-badge`, `.mypage-badge--warn` 규칙을 완전 삭제.
+  2. 지역 슬롯 내부로 범위를 좁힌 규칙 `.register-region-slot__head .mypage-badge--warn`만 정의하여 슬롯 외부 마이페이지 배지에 어떠한 부작용도 미치지 않도록 격리.
+  3. `scripts/verify-region-unit-lock.mjs`에 회귀 방지 검사(7부) 추가: `preview/shared/*.css` 내에 부모 선택자 없이 전역으로 선언된 `.mypage-badge` 및 `.mypage-badge--*` 선택자가 존재할 경우 즉시 FAIL 처리 (인위적 전역 규칙 추가 시 FAIL 발생 및 원복 후 PASS 검증 완료).
+

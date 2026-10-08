@@ -435,9 +435,15 @@
   background: #eff6ff;
 }
 
-/* 마이페이지/등록 슬롯 공용 배지 */
-.mypage-badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: var(--fs-1); font-weight: 600; background: var(--gray-200); }
-.mypage-badge--warn { background: #fef2f2; color: #b91c1c; }
+.register-region-slot__head .mypage-badge--warn {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: var(--fs-1);
+  font-weight: 600;
+  background: #fef2f2;
+  color: #b91c1c;
+}
 
 .register-region-slot__head {
   align-items: center;
