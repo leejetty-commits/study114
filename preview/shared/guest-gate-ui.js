@@ -268,7 +268,7 @@ export function bindProtectedGuestActions(root) {
 }
 
 const GUEST_EMPTY_CARD_SELECTOR =
-  '[data-prime-empty], [data-basic-empty], [data-pick-empty], [data-expo-sample]';
+  '[data-prime-empty], [data-basic-empty], [data-pick-empty]';
 
 /**
  * home·search 는 auth-session 이 auth-role 에, 공부방·과외·인증 UI 는 chrome-session 에 로그인 상태를 둔다.
@@ -279,7 +279,7 @@ function isViewerLoggedIn() {
 }
 
 /**
- * 손님 빈카드·샘플 카드 전체 클릭 → 로그인 유도. 로그인 사용자는 그대로 통과시킨다.
+ * 손님 빈카드 전체 클릭 → 로그인 유도. 로그인 사용자는 그대로 통과시킨다.
  * 이미 팝업을 띄우는 찜·쪽지 버튼은 그대로 둔다.
  * @param {ParentNode} root
  */

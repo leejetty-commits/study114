@@ -1,8 +1,7 @@
 /**
- * 과외쌤 쪽지설정 렌더 — 상태 확인 → 수정 → 저장 → 카드 샘플
+ * 과외쌤 쪽지설정 렌더 — 상태 확인 → 수정 → 저장
  */
 
-import { renderInquirySamplePair } from '../home-card-samples/render.js';
 import { P21_INQUIRY_COPY, P21_INQUIRY_OFF_REASONS } from './inquiries-copy.js';
 import { tutorInquiryPrefFromStatus, tutorInquiryStoredLine, normalizeTutorInquiryStatus } from './inquiries-pref.js';
 
@@ -75,16 +74,6 @@ export function renderTutorInquiries(tutor) {
             <h4 class="p21-inq-reasons__title">${esc(P21_INQUIRY_COPY.offReasonTitle)}</h4>
             <p class="p21-inq-block__hint">${esc(P21_INQUIRY_COPY.offReasonHint)}</p>
             <div class="p21-inq-reason-list">${renderReasonRadios(pref)}</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="p21-inq-block p21-inq-block--samples p20-inq-sample" aria-label="${esc(P21_INQUIRY_COPY.sampleTitle)}">
-        <div class="p20-inq-sample__surface">
-          <h3 class="p21-inq-block__title">${esc(P21_INQUIRY_COPY.sampleTitle)}</h3>
-          <p class="p21-inq-block__hint">${esc(P21_INQUIRY_COPY.sampleLead)}</p>
-          <div class="inq-samples">
-            ${renderInquirySamplePair('tutor', P21_INQUIRY_COPY)}
           </div>
         </div>
       </section>

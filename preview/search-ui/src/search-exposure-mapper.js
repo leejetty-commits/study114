@@ -1,12 +1,5 @@
 import { toDisplayLabel, axisFromSearchTab, logLocationDebug } from '../../shared/location-display.js';
-import { resolveDetailItem } from '@home-ui/detail-decision/index.js';
-import {
-  EXPOSURE_STUDY_ROOMS,
-  EXPOSURE_TUTORS,
-  EXPOSURE_STUDENTS,
-} from '@home-ui/exposure-data.js';
 import { studyRoomBadges, tutorBadges } from '@home-ui/exposure-format.js';
-import { tabToKind } from './search-handoff.js';
 
 /** @typedef {'prime'|'pick'|'basic'} ExposureTier */
 
@@ -47,127 +40,111 @@ function normalizeApiRegionLabel(tab, raw, apiItem) {
  * @param {number} index
  */
 export function mapToExposureItem(tab, apiItem, index = 0) {
-  const kind = tabToKind(tab);
   const id = Number(apiItem.id);
-  const pooled = resolveDetailItem(kind, id);
 
   if (tab === 'room') {
-    const base = pooled || EXPOSURE_STUDY_ROOMS[index % EXPOSURE_STUDY_ROOMS.length] || EXPOSURE_STUDY_ROOMS[0];
     const summaryLines = String(apiItem.summary || '').split('\n').filter(Boolean);
     const pickContent = (key, fallback = '') =>
-      Object.prototype.hasOwnProperty.call(apiItem, key) ? apiItem[key] ?? fallback : (base[key] ?? fallback);
+      Object.prototype.hasOwnProperty.call(apiItem, key) ? apiItem[key] ?? fallback : fallback;
 
     const merged = {
-      ...base,
+      ...apiItem,
       id,
-      study_room_name: String(apiItem.title || base.study_room_name),
+      study_room_name: String(apiItem.title || ''),
       location_label: normalizeApiRegionLabel(tab, apiItem.region_label || '', apiItem),
-      price_amount: apiItem.price_amount ?? base.price_amount,
-      main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,
-      grade_band: apiItem.grade_band || base.grade_band,
-      intro_short: String(pickContent('intro_short', summaryLines[1] || base.intro_short || '')),
+      price_amount: apiItem.price_amount ?? null,
+      main_subject_note: apiItem.main_subject_note || summaryLines[0] || '',
+      grade_band: apiItem.grade_band || '',
+      intro_short: String(pickContent('intro_short', summaryLines[1] || '')),
       intro_long: String(pickContent('intro_long', '')),
-      feature_1: String(pickContent('feature_1', base.feature_1 || '')),
+      feature_1: String(pickContent('feature_1', '')),
       feature_2: String(pickContent('feature_2', '')),
       feature_3: String(pickContent('feature_3', '')),
-      slogan: String(pickContent('slogan', base.slogan || '')),
+      slogan: String(pickContent('slogan', '')),
       teaching_style: String(pickContent('teaching_style', summaryLines[2] || '')),
-      lesson_place_type: apiItem.lesson_place_type || base.lesson_place_type,
-      capacity_per_time: apiItem.capacity_per_time || base.capacity_per_time,
-      lesson_operation_type: apiItem.lesson_operation_type || base.lesson_operation_type,
+      lesson_place_type: apiItem.lesson_place_type || null,
+      capacity_per_time: apiItem.capacity_per_time || null,
+      lesson_operation_type: apiItem.lesson_operation_type || null,
       facility_summary: String(pickContent('facility_summary', '')),
-      inquiry_status: String(pickContent('inquiry_status', base.inquiry_status || '')),
-      education_office_registered:
-        apiItem.education_office_registered ?? base.education_office_registered,
-      detail_completion_status: apiItem.detail_completion_status || base.detail_completion_status,
-      prime_eligible: apiItem.prime_eligible ?? base.prime_eligible,
+      inquiry_status: String(pickContent('inquiry_status', '')),
+      education_office_registered: apiItem.education_office_registered ?? false,
+      detail_completion_status: apiItem.detail_completion_status || '',
+      prime_eligible: apiItem.prime_eligible ?? false,
       position_sku: paidPositionSku(apiItem) || null,
       latitude: apiItem.latitude ?? null,
       longitude: apiItem.longitude ?? null,
       profile_status: 'published',
       compare_eligible: apiItem.compare_eligible !== false,
-      published_at: apiItem.published_at ?? base.published_at ?? base.registered_at,
-      created_at: apiItem.created_at ?? base.created_at ?? base.registered_at,
-      recommend_count: apiItem.recommend_count ?? base.recommend_count ?? 0,
-      review_count: apiItem.review_count ?? base.review_count ?? 0,
-      image_path: String(apiItem.image_path || base.image_path || ''),
-      image_path_prime: String(apiItem.image_path_prime || apiItem.image_path || base.image_path_prime || ''),
-      image_path_basic: String(apiItem.image_path_basic || apiItem.image_path || base.image_path_basic || ''),
+      published_at: apiItem.published_at ?? null,
+      created_at: apiItem.created_at ?? null,
+      recommend_count: apiItem.recommend_count ?? 0,
+      review_count: apiItem.review_count ?? 0,
+      image_path: String(apiItem.image_path || ''),
+      image_path_prime: String(apiItem.image_path_prime || apiItem.image_path || ''),
+      image_path_basic: String(apiItem.image_path_basic || apiItem.image_path || ''),
       images: Array.isArray(apiItem.images) ? apiItem.images : [],
-      badges: studyRoomBadges({
-        ...base,
-        main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,
-        education_office_registered:
-          apiItem.education_office_registered ?? base.education_office_registered,
-      }),
     };
+    merged.badges = studyRoomBadges(merged);
     merged.exposure_tier = resolveExposureTier(merged, index);
     return merged;
   }
 
   if (tab === 'tutor') {
-    const base = pooled || EXPOSURE_TUTORS[index % EXPOSURE_TUTORS.length] || EXPOSURE_TUTORS[0];
     const summaryLines = String(apiItem.summary || '').split('\n').filter(Boolean);
     const merged = {
-      ...base,
+      ...apiItem,
       id,
-      tutor_display_name: String(apiItem.title || base.tutor_display_name),
+      tutor_display_name: String(apiItem.title || ''),
       location_label: normalizeApiRegionLabel(tab, apiItem.region_label || '', apiItem),
-      preferred_fee_amount: apiItem.preferred_fee_amount ?? apiItem.price_amount ?? base.preferred_fee_amount,
-      main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,
-      intro_short: apiItem.intro_short || summaryLines[1] || base.intro_short,
-      career_year_band: apiItem.career_year_band || base.career_year_band,
-      university_name: apiItem.university_name || base.university_name,
-      major_name: apiItem.major_name || base.major_name,
-      lessons_per_week: apiItem.lessons_per_week ?? base.lessons_per_week,
-      minutes_per_lesson: apiItem.minutes_per_lesson ?? base.minutes_per_lesson,
-      detail_completion_status: apiItem.detail_completion_status || base.detail_completion_status,
+      preferred_fee_amount: apiItem.preferred_fee_amount ?? apiItem.price_amount ?? null,
+      main_subject_note: apiItem.main_subject_note || summaryLines[0] || '',
+      intro_short: apiItem.intro_short || summaryLines[1] || '',
+      career_year_band: apiItem.career_year_band || null,
+      university_name: apiItem.university_name || '',
+      major_name: apiItem.major_name || '',
+      lessons_per_week: apiItem.lessons_per_week ?? null,
+      minutes_per_lesson: apiItem.minutes_per_lesson ?? null,
+      detail_completion_status: apiItem.detail_completion_status || '',
       position_sku: paidPositionSku(apiItem) || null,
       profile_status: 'published',
       compare_eligible: apiItem.compare_eligible !== false,
-      published_at: apiItem.published_at ?? base.published_at ?? base.registered_at,
-      created_at: apiItem.created_at ?? base.created_at ?? base.registered_at,
-      recommend_count: apiItem.recommend_count ?? base.recommend_count ?? 0,
-      review_count: apiItem.review_count ?? base.review_count ?? 0,
-      badges: tutorBadges({
-        ...base,
-        main_subject_note: apiItem.main_subject_note || summaryLines[0] || base.main_subject_note,
-      }),
+      published_at: apiItem.published_at ?? null,
+      created_at: apiItem.created_at ?? null,
+      recommend_count: apiItem.recommend_count ?? 0,
+      review_count: apiItem.review_count ?? 0,
     };
+    merged.badges = tutorBadges(merged);
     merged.exposure_tier = resolveExposureTier(merged, index);
     return merged;
   }
 
-  const base = pooled || EXPOSURE_STUDENTS[index % EXPOSURE_STUDENTS.length] || EXPOSURE_STUDENTS[0];
   const summaryParts = String(apiItem.summary || '').split(' · ').filter(Boolean);
   const merged = {
-    ...base,
+    ...apiItem,
     id,
-    public_display_name: String(apiItem.title || base.public_display_name),
-    grade_level: String(apiItem.grade_level || base.grade_level),
-    gender: apiItem.gender || base.gender,
-    subject_label: apiItem.subject_name || summaryParts[0] || base.subject_label,
+    public_display_name: String(apiItem.title || ''),
+    grade_level: String(apiItem.grade_level || ''),
+    gender: apiItem.gender || null,
+    subject_label: apiItem.subject_name || summaryParts[0] || '',
     location_label: normalizeApiRegionLabel(tab, apiItem.region_label || '', apiItem),
-    lesson_format: apiItem.lesson_format || base.lesson_format,
-    student_gender_group: apiItem.student_gender_group || base.student_gender_group,
-    preferred_student_count_group:
-      apiItem.preferred_student_count_group || base.preferred_student_count_group,
-    preferred_lesson_type: apiItem.preferred_lesson_type || base.preferred_lesson_type,
-    preferred_fee_amount: apiItem.preferred_fee_amount ?? base.preferred_fee_amount,
-    preferred_studyroom_fee_amount:
-      apiItem.preferred_studyroom_fee_amount ?? base.preferred_studyroom_fee_amount,
-    lessons_per_week: apiItem.lessons_per_week ?? base.lessons_per_week,
-    minutes_per_lesson: apiItem.minutes_per_lesson ?? base.minutes_per_lesson,
-    lesson_places: apiItem.lesson_places || base.lesson_places,
-    teaching_style_badges: apiItem.teaching_style_badges || base.teaching_style_badges,
+    lesson_format: apiItem.lesson_format || null,
+    student_gender_group: apiItem.student_gender_group || null,
+    preferred_student_count_group: apiItem.preferred_student_count_group || null,
+    preferred_lesson_type: apiItem.preferred_lesson_type || null,
+    preferred_fee_amount: apiItem.preferred_fee_amount ?? null,
+    preferred_studyroom_fee_amount: apiItem.preferred_studyroom_fee_amount ?? null,
+    lessons_per_week: apiItem.lessons_per_week ?? null,
+    minutes_per_lesson: apiItem.minutes_per_lesson ?? null,
+    lesson_places: Array.isArray(apiItem.lesson_places) ? apiItem.lesson_places : [],
+    teaching_style_badges: Array.isArray(apiItem.teaching_style_badges) ? apiItem.teaching_style_badges : [],
     request_summary: Object.prototype.hasOwnProperty.call(apiItem, 'request_summary')
       ? String(apiItem.request_summary || '')
       : '',
     special_request_note: Object.prototype.hasOwnProperty.call(apiItem, 'special_request_note')
       ? String(apiItem.special_request_note || '')
       : '',
-    published_at: apiItem.published_at ?? base.published_at,
-    created_at: apiItem.created_at ?? base.created_at,
+    published_at: apiItem.published_at ?? null,
+    created_at: apiItem.created_at ?? null,
     exposure_status: 'published',
     exposure_tier: 'basic',
   };

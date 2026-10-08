@@ -1,5 +1,5 @@
 /**
- * 게스트(비로그인) 홈·찾기 기준 지역·지도·카드·샘플 — 정책 1)~11)
+ * 게스트(비로그인) 홈·찾기 기준 지역·지도·카드(샘플 0장) — 정책 1)~11)
  * - 서버: Connection 에 메모리 가짜 PDO 를 주입한다(PHP 를 stdin 으로 실행). 실제 DB 에 접속하지 않는다.
  * - 프런트: 순수 모듈은 직접 실행하고, 화면 모듈은 소스 문자열·옵션으로 단정한다.
  * 실행: node scripts/verify-guest-baseline-map-cards.mjs
@@ -394,22 +394,23 @@ console.log('##### 프런트 (화면 소스·옵션) #####');
   ok('P5 찾기(게스트) 로딩 중: 샘플 대신 불러오는 중', /guestFeedStatus\(tab\)/.test(guestBlock) && /status !== 'ready'/.test(guestBlock));
   ok('P5 찾기(게스트) 실패: 샘플·다른 지역 대신 오류 안내', /GUEST_FEED_ERROR/.test(guestBlock) && /GUEST_FEED_ERROR\s*=\s*'[^']+'/.test(SRC.findSurface));
   const boot = fnBody(SRC.findSurface, 'bootGuestFeed');
-  ok('P5 찾기(게스트) 0건 확정 후 다시 그림(로딩 → 샘플 1장)', !/if \(raw\.length\) rerender\(\)/.test(boot) && (boot.match(/rerender\(\)/g) || []).length >= 2);
+  ok('P5 찾기(게스트) 0건 확정 후 다시 그림(로딩 → 빈 칸)', !/if \(raw\.length\) rerender\(\)/.test(boot) && (boot.match(/rerender\(\)/g) || []).length >= 2);
   ok('P7 찾기(게스트) 기준 행 없으면 부르지 않음', /if \(!filters\) throw new Error\('guest base region missing'\)/.test(boot));
   const feed = fnBody(SRC.findSurface, 'renderGuestFeedList');
   ok('P9 찾기 첫 화면(실카드): 베이직 목록만(픽·프라임 블록 없음)', /renderGuestPaginatedListBlock\(/.test(feed) && !/renderPrimeSlotGrid|renderPickPaginatedBlock|renderExposureBox/.test(feed));
   const flat = fnBody(SRC.tierRender, 'renderProviderFlatResults');
-  ok('P9 찾기 첫 화면(실카드 0): 베이직 샘플만', /if \(opts\.guest === true && mode === 'region'\)[\s\S]*?renderGuestVacantBasicList\(kind\)/.test(flat) && !/renderPrimeSlotGrid|renderPickPaginatedBlock/.test(flat));
+  ok('P9 찾기 첫 화면(실카드 0): 베이직 빈 칸만(샘플 0장)', /if \(opts\.guest === true && mode === 'region'\)[\s\S]*?renderGuestVacantBasicList\(\)/.test(flat) && !/renderPrimeSlotGrid|renderPickPaginatedBlock/.test(flat));
   ok('P9 찾기 화면은 surfaceType search(홈 티어 문법 아님)', /renderFindResultSection\(tab, previewState, previewState\.role, \{ surfaceType: 'search' \}\)/.test(SRC.searchPage));
   ok('P10 검색 결과: 받은 결과 전부(프라임·픽 포함)를 그대로 그린다', /renderBrowseList\(kind, ordered,/.test(flat) && /position_sku: paidPositionSku\(apiItem\) \|\| null/.test(SRC.mapper));
 }
 {
   const lists = fnBody(SRC.guestSections, 'renderGuestBrowseLists');
-  ok('P5 홈 목록: 샘플은 실목록을 받은 뒤(live)에만', (lists.match(/vacantSamples:\s*guest && live/g) || []).length === 3, lists.match(/vacantSamples:[^,}]+/g)?.join(' | '));
+  ok('P5 홈 목록: 빈 칸 채움은 실목록을 받은 뒤(live)에만', (lists.match(/vacantFill:\s*guest && live/g) || []).length === 3, lists.match(/vacantFill:[^,}]+/g)?.join(' | '));
+  ok('P5 홈 목록: vacantSamples 옵션 없음', !/vacantSamples/.test(lists));
   const vacant = fnBody(SRC.exposure, 'renderGuestVacantBasicList');
-  ok('P5 샘플 카드는 한 장', (vacant.match(/renderBasicRow\(kind, sample/g) || []).length === 1);
+  ok('P5 실카드 0: 샘플 카드 0장(빈 칸만)', !/renderBasicRow|sample|Sample|샘플/.test(vacant) && (vacant.match(/renderEmptyBasicPromo\(\)/g) || []).length >= 1);
   const block = fnBody(SRC.exposure, 'renderGuestPaginatedListBlock');
-  ok('P5 실카드가 있으면 샘플 없음(pool.length === 0 일 때만)', /guestVacant = opts\.guest === true && opts\.vacantSamples === true && pool\.length === 0/.test(block));
+  ok('P5 실카드가 있으면 빈 칸 없음(pool.length === 0 일 때만)', /guestVacant = opts\.guest === true && opts\.vacantFill === true && pool\.length === 0/.test(block));
 }
 {
   const hydrate = fnBody(SRC.guestSections, 'hydrateGuestRegionStats');

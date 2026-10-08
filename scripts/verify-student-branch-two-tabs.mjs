@@ -524,7 +524,7 @@ function findTabs(html) {
 
 /** 분기별 홈·찾기 공통 검사. */
 async function checkBranch(cfg) {
-  const { tag, branch, place, ownTab, ownSearch, otherSearch, ownGnb, otherGnb, sampleKind, labels } = cfg;
+  const { tag, branch, place, ownTab, ownSearch, otherSearch, ownGnb, otherGnb, vacantKind, labels } = cfg;
   ok(`${tag} 분기 = ${branch}`, savedRegion.studentBranch() === branch, savedRegion.studentBranch());
 
   /* (a) 홈 탭 2개 */
@@ -536,7 +536,7 @@ async function checkBranch(cfg) {
   const stale = await renderHome(branch === 'tutor' ? 'study_room' : 'tutor');
   ok(`(a) ${tag} 반대 분기 탭 상태(옛 값)는 첫 탭으로`, stale.active === ownTab, String(stale.active));
 
-  /* (b) 분기 탭: 검색 블록·지역변경 없음, 0건 샘플+빈칸, 링크배지 */
+  /* (b) 분기 탭: 검색 블록·지역변경 없음, 0건 빈칸만(샘플 0장), 링크배지 */
   {
     const { html, text } = await renderHome(ownTab);
     ok(`(b) ${tag} 홈 ${ownTab} 검색 폼 없음`, !/data-find-form|data-search-form|<form[^>]*find/i.test(html));
@@ -544,11 +544,11 @@ async function checkBranch(cfg) {
     ok(`(b) ${tag} 홈 ${ownTab} 필터바 없음`, !/data-find-filter-bar|find-filter-bar/.test(html));
     const filters = JSON.stringify(firstBody?.filters || {});
     ok(`(b) ${tag} 홈 ${ownTab} 카드 = 서버 /search 저장 지역 조회`, Boolean(firstBody) && /region_id/.test(filters), JSON.stringify(firstBody));
-    ok(`(b) ${tag} 홈 ${ownTab} 0건 → 샘플+빈칸(${sampleKind})`, html.includes(`data-student-home-vacant="${sampleKind}"`));
-    ok(`(b) ${tag} 홈 ${ownTab} 샘플 도장`, /샘플/.test(text));
+    ok(`(b) ${tag} 홈 ${ownTab} 0건 → 빈칸(${vacantKind})`, html.includes(`data-student-home-vacant="${vacantKind}"`));
+    ok(`(b) ${tag} 홈 ${ownTab} 샘플 도장 없음`, !/샘플/.test(text));
     ok(`(b) ${tag} 홈 ${ownTab} 빈칸 박스(프라임·픽·베이직)`, html.includes('data-prime-empty="1"') && html.includes('data-pick-empty="1"') && html.includes('data-basic-empty="1"'));
-    ok(`(b) ${tag} 홈 ${ownTab} 샘플 카드 = 티어마다 1장(프라임·픽·베이직 3장)`, (html.match(/data-vacant-sample|expo-sample-stamp|샘플 공부방|샘플 과외쌤/g) || []).length >= 3);
-    ok(`(b) ${tag} 홈 ${ownTab} 샘플 지역 = 내 지역`, html.includes(`>${place}<`) && !text.includes('서울 강남구') && !text.includes('가상'));
+    ok(`(b) ${tag} 홈 ${ownTab} 샘플 카드 0장(프라임·픽·베이직 모두 빈칸)`, (html.match(/data-vacant-sample|data-expo-sample|expo-sample-stamp|샘플 공부방|샘플 과외쌤/g) || []).length === 0);
+    ok(`(b) ${tag} 홈 ${ownTab} 제목 지역 = 내 지역 · 가짜 지역 없음`, html.includes(`>${place}<`) && !text.includes('서울 강남구') && !text.includes('가상'));
     if (ownSearch === 'tutor') {
       ok(
         `(b) ${tag} 홈 ${ownTab} 링크배지 없음`,
@@ -611,7 +611,7 @@ await checkBranch({
   otherSearch: 'room',
   ownGnb: 'find_tutor',
   otherGnb: 'find_room',
-  sampleKind: 'tutor',
+  vacantKind: 'tutor',
   labels: ['tutor:우리동네 과외쌤', 'student:우리동네 학생'],
 });
 
@@ -627,7 +627,7 @@ await checkBranch({
   otherSearch: 'tutor',
   ownGnb: 'find_room',
   otherGnb: 'find_tutor',
-  sampleKind: 'study_room',
+  vacantKind: 'study_room',
   labels: ['study_room:우리동네 공부방', 'student:우리동네 학생'],
 });
 

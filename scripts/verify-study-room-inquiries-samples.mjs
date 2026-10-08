@@ -1,15 +1,10 @@
 /**
- * 공부방 쪽지설정 — 홈 BASIC 1칸 샘플 · SVG 화살표
+ * 공부방 쪽지설정 — 상태·수정·저장 프레임. 카드 샘플 블록 없음(2026-10-09 견본카드 제거).
  */
 import './verify-dom-storage-shim.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { P20_INQUIRY_COPY } from '../preview/home-ui/src/study-room-reg/study-room-reg-copy.js';
-import { renderHomeBasicCardHtml } from '../preview/home-ui/src/home-card-samples/render.js';
-import {
-  STUDY_ROOM_CARD_SAMPLE_IMAGE,
-  buildStudyRoomInquirySampleItem,
-} from '../preview/home-ui/src/home-card-samples/presets.js';
 
 const root = process.cwd();
 let failed = 0;
@@ -34,18 +29,21 @@ assert(store.includes('hydrateRegistrationsCache'), 'store: inquiry save hydrate
 assert(store.includes("apiStudyRoomAction(id, 'inquiry_status'"), 'store: PATCH inquiry_status');
 assert(!hubService.includes('PhoneVerifyRequiredException'), 'api: study-room open does not require phone');
 const css = read('preview/home-ui/src/styles/home-member-flows.css');
-const hcsCss = read('preview/home-ui/src/styles/home-card-samples.css');
-const hcsRender = read('preview/home-ui/src/home-card-samples/render.js');
-const guides = read('preview/home-ui/src/home-card-samples/guides.js');
 const rcRender = read('preview/home-ui/src/study-room-reg/registration-check-render.js');
 const rcModel = read('preview/home-ui/src/study-room-reg/registration-check-model.js');
 
-assert(screens.includes("renderInquirySamplePair('study_room'"), 'screens: shared inquiry sample pair');
-assert(hcsRender.includes('renderBrowseList'), 'hcs: home BASIC renderBrowseList');
-assert(hcsRender.includes('INQUIRY_SAMPLE_BUILDERS'), 'hcs: inquiry preset builders');
-assert(guides.includes('data-inq-guide') || guides.includes('[data-inq-guide]'), 'guides: SVG guide');
-assert(guides.includes('item-actions [title^="쪽지"]'), 'guides: measures 쪽지 button');
-assert(!guides.includes('inq-home-width-probe'), 'guides: no width probe');
+assert(!screens.includes('renderInquirySamplePair'), 'screens: no inquiry sample pair');
+assert(!screens.includes('bindInquirySampleGuides'), 'screens: no sample arrow guides');
+assert(!screens.includes('home-card-samples'), 'screens: no home-card-samples import');
+for (const rel of [
+  'preview/home-ui/src/home-card-samples/render.js',
+  'preview/home-ui/src/home-card-samples/presets.js',
+  'preview/home-ui/src/home-card-samples/guides.js',
+  'preview/home-ui/src/study-room-reg/inquiries-sample.js',
+  'preview/home-ui/src/styles/home-card-samples.css',
+]) {
+  assert(!existsSync(resolve(root, rel)), `sample module removed: ${rel}`);
+}
 assert(!screens.includes('renderStudyRoomInquirySample'), 'screens: local sample renderer removed');
 assert(!screens.includes('renderInquiryBasicPreview'), 'screens: live owner preview removed');
 assert(!screens.includes('inquiryCoverImageSrc'), 'screens: owner cover fallback removed');
@@ -53,8 +51,10 @@ assert(!screens.includes('p20-inquiries-guide'), 'screens: old aside guide remov
 assert(!screens.includes('p20-inquiries-summary-card'), 'screens: old summary cards removed');
 assert(!screens.includes('data-p20-inquiry-toggle'), 'screens: checkbox toggle removed');
 assert(!screens.includes('카드 미리보기'), 'screens: no 카드 미리보기 title');
-assert(screens.includes('P20_INQUIRY_COPY.sampleTitle'), 'screens: sample title binding');
-assert(P20_INQUIRY_COPY.sampleTitle === '쪽지 설정시 카드 샘플', 'copy: sample title text');
+assert(!screens.includes('P20_INQUIRY_COPY.sample'), 'screens: no sample copy binding');
+for (const key of ['previewTitle', 'sampleTitle', 'sampleLead', 'sampleOpenKicker', 'sampleClosedKicker', 'sampleOpenCallout', 'sampleClosedCallout']) {
+  assert(!(key in P20_INQUIRY_COPY), `copy: ${key} key removed`);
+}
 assert(P20_INQUIRY_COPY.editHeading === '현재상태 수정', 'copy: 현재상태 수정');
 assert(!('contactHeading' in P20_INQUIRY_COPY), 'copy: contactHeading key removed');
 assert(!('verifyFirstHint' in P20_INQUIRY_COPY), 'copy: verifyFirstHint key removed');
@@ -68,7 +68,6 @@ const orderMarks = [
   'p21-inq-block--status',
   'p21-inq-block--edit',
   'data-p20-inquiry-save',
-  'p21-inq-block--samples',
 ];
 let last = -1;
 for (const mark of orderMarks) {
@@ -77,33 +76,12 @@ for (const mark of orderMarks) {
   last = idx;
 }
 
-assert(P20_INQUIRY_COPY.sampleOpenCallout.includes('여기가 쪽지 관련 표시 위치'), 'copy: open callout');
-assert(P20_INQUIRY_COPY.sampleClosedCallout.includes('여기가 쪽지 관련 표시 위치'), 'copy: closed callout');
-
-assert(hcsCss.includes('--hcs-basic-w'), 'css: basic 1-cell width token');
-assert(hcsCss.includes('hcs-sample__card--basic'), 'css: basic card cell');
-assert(!hcsCss.includes('inq-home-width-probe'), 'css: width probe removed');
+assert(!screens.includes('p21-inq-block--samples'), 'structure: no card sample block');
+assert(!screens.includes('강남 수학 공부방'), 'screens: no sample room name');
 assert(!css.includes('inq-home-width-probe'), 'member css: width probe removed');
 assert(!css.includes('--p20-listing-w'), 'css: preview listing-w removed');
-assert(!/transform:\s*scale/.test(hcsCss), 'css: sample card is not scaled');
-assert(!/100vw/.test(hcsCss), 'css: no 100vw');
-assert(!css.includes('p20-inq-sample__arrow'), 'css: old disconnected arrow removed');
-
-const imgRel = 'preview/home-ui/public/assets/brand/room-card-default-basic.svg';
-assert(existsSync(resolve(root, imgRel)), 'sample: room default image exists');
-assert(STUDY_ROOM_CARD_SAMPLE_IMAGE.includes('room-card-default-basic.svg'), 'sample: image path is brand asset');
-
-const html = renderHomeBasicCardHtml('study_room', buildStudyRoomInquirySampleItem(true));
-assert(html.includes('room-card-default-basic.svg'), 'html: filled image');
-assert(!html.includes('expo-media--placeholder'), 'html: no gray placeholder');
-assert(html.includes('강남 수학 공부방'), 'html: name filled');
-assert(html.includes('서울 강남구'), 'html: location filled');
-assert(html.includes('title="추천하기"') && html.includes('item-actions__count">22'), 'html: recommend filled');
-assert(html.includes('title="후기 보기"') && html.includes('item-actions__count">9'), 'html: review filled');
-assert(html.includes('title="찜하기"') && html.includes('item-actions__count">14'), 'html: wish filled');
-assert(html.includes('title="쪽지 보내기"') && html.includes('item-actions__count">5'), 'html: message count filled');
-assert(html.includes('expo-basic--study_room'), 'html: BASIC study_room card');
-assert(html.includes('expo-hcard'), 'html: home hcard structure');
+assert(!css.includes('inq-sample'), 'css: inquiry sample styles removed');
+assert(!css.includes('p21-inq-block--samples'), 'css: sample block style removed');
 
 assert(rcRender.includes('renderRegistrationCheck'), 'RC render untouched marker');
 assert(rcModel.includes("id: 'detail'"), 'RC model untouched');

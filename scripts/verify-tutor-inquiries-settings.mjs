@@ -47,10 +47,6 @@ const edit = read('preview/home-ui/src/tutor-reg/inquiries-edit.js');
 const pref = read('preview/home-ui/src/tutor-reg/inquiries-pref.js');
 const store = read('preview/home-ui/src/tutor-reg/store.js');
 const css = read('preview/home-ui/src/styles/home-member-flows.css');
-const sampleUi = read('preview/home-ui/src/home-card-samples/guides.js');
-const sampleCards = read('preview/home-ui/src/home-card-samples/render.js');
-const samplePresets = read('preview/home-ui/src/home-card-samples/presets.js');
-const hcsCss = read('preview/home-ui/src/styles/home-card-samples.css');
 const regsApi = read('preview/home-ui/src/registrations-api.js');
 const rcRender = read('preview/home-ui/src/tutor-reg/registration-check-render.js');
 const rcModel = read('preview/home-ui/src/tutor-reg/registration-check-model.js');
@@ -120,9 +116,18 @@ assert(render.includes('normalizeTutorInquiryStatus(tutor.inquiry_status)'), 're
 assert(render.includes('data-inquiry-status'), 'render: raw status on root');
 assert(render.includes('data-p21-inquiry-stored'), 'render: stored line from same status');
 assert(render.includes('data-p21-inquiry-save'), 'render: save button');
-assert(render.includes("renderInquirySamplePair('tutor'"), 'render: shared inquiry sample pair');
-assert(sampleCards.includes('renderBrowseList'), 'sample-cards: home BASIC renderBrowseList path');
-assert(samplePresets.includes('buildTutorInquirySampleItem'), 'sample-presets: tutor preset');
+assert(!render.includes('renderInquirySamplePair'), 'render: no inquiry sample pair');
+assert(!render.includes('home-card-samples') && !edit.includes('home-card-samples'), 'render/edit: no home-card-samples import');
+assert(!edit.includes('bindInquirySampleGuides'), 'edit: no sample arrow guides');
+for (const rel of [
+  'preview/home-ui/src/home-card-samples/render.js',
+  'preview/home-ui/src/home-card-samples/presets.js',
+  'preview/home-ui/src/home-card-samples/guides.js',
+  'preview/home-ui/src/tutor-reg/registration-check-sample.js',
+  'preview/home-ui/src/styles/home-card-samples.css',
+]) {
+  assert(!existsSync(resolve(root, rel)), `sample module removed: ${rel}`);
+}
 
 const html = renderTutorInquiries({ id: 9, tutor_display_name: '테스트쌤' });
 assert(html.includes('data-inquiry-status="paused"'), 'default status attr: paused');
@@ -155,14 +160,13 @@ assert(rcRender.includes('renderTutorRegistrationCheck'), 'RC render untouched m
 assert(rcModel.includes("id: 'detail'"), 'RC model untouched');
 assert(!read('src/Registration/StudyRoomHubService.php').includes('not_accepting'), 'study-room service untouched');
 
-// —— 화면 순서: 설명 → 현재상태+배지 → 수정 → 저장 → 카드 샘플
+// —— 화면 순서: 설명 → 현재상태+배지 → 수정 → 저장 (카드 샘플 없음)
 const htmlOrder = renderTutorInquiries({ id: 9, tutor_display_name: '테스트쌤', inquiry_status: 'paused' });
 const orderMarks = [
   'p21-inq__lead',
   'p21-inq-block--status',
   'p21-inq-block--edit',
   'data-p21-inquiry-save',
-  'p21-inq-block--samples',
 ];
 let lastOrder = -1;
 for (const mark of orderMarks) {
@@ -170,7 +174,10 @@ for (const mark of orderMarks) {
   assert(idx > lastOrder, `structure order: ${mark} after previous`);
   lastOrder = idx;
 }
-assert(htmlOrder.includes(P21_INQUIRY_COPY.sampleTitle), 'copy: sample title 쪽지 설정시 카드 샘플');
+assert(!htmlOrder.includes('p21-inq-block--samples'), 'structure: no card sample block');
+for (const key of ['sampleTitle', 'sampleLead', 'sampleOpenKicker', 'sampleClosedKicker', 'sampleOpenCallout', 'sampleClosedCallout']) {
+  assert(!(key in P21_INQUIRY_COPY), `copy: ${key} key removed`);
+}
 assert(!htmlOrder.includes('카드 미리보기'), 'copy: no 카드 미리보기');
 assert(htmlOrder.includes(P21_INQUIRY_COPY.editHeading), 'copy: 현재상태 수정');
 assert(!htmlOrder.includes('p21-inq-block--contact'), 'copy: contact verify block removed');
@@ -178,35 +185,15 @@ assert(!htmlOrder.includes('기본 연락처 검증'), 'copy: no 기본 연락�
 assert(!('contactHeading' in P21_INQUIRY_COPY), 'copy: contactHeading key removed');
 assert(!('verifyFirstHint' in P21_INQUIRY_COPY), 'copy: verifyFirstHint key removed');
 assert(css.includes('pointer-events: none'), 'css: inactive blocks pointer');
-assert(hcsCss.includes('--hcs-basic-w'), 'css: basic 1-cell width token');
-assert(hcsCss.includes('hcs-sample__card--basic'), 'css: basic card cell');
 assert(!css.includes('inq-home-width-probe'), 'css: width probe removed');
-assert(!sampleUi.includes('inq-home-width-probe'), 'sample ui: no hidden width probe');
-assert(!hcsCss.includes('home-body--with-promo'), 'sample css: no full home-body shell');
 assert(!css.includes('--p21-listing-w'), 'css: preview listing-w token removed');
-assert(!css.includes('inq-sample__card'), 'css: preview card wrapper removed');
-assert(!/transform:\s*scale/.test(hcsCss), 'css: sample card is not scaled');
-assert(!/100vw/.test(hcsCss), 'css: sample does not use 100vw');
-assert(sampleUi.includes('data-inq-guide') || sampleUi.includes('[data-inq-guide]'), 'sample ui: SVG guide');
-assert(sampleUi.includes('item-actions [title^="쪽지"]'), 'sample ui: measures 쪽지 button');
-assert(
-  existsSync(resolve(root, 'preview/home-ui/public/assets/brand/tutor-card-sample.jpg')),
-  'sample: tutor-card-sample.jpg file exists',
-);
-assert(htmlOrder.includes('tutor-card-sample.jpg'), 'sample: home BASIC portrait asset');
-assert(!htmlOrder.includes('expo-media--placeholder'), 'sample: no gray image placeholder');
-assert(htmlOrder.includes('김하린'), 'sample: name filled');
-assert(htmlOrder.includes('서울 강남구'), 'sample: location filled');
-assert(htmlOrder.includes('title="추천하기"') && htmlOrder.includes('item-actions__count">18'), 'sample: recommend count filled');
-assert(htmlOrder.includes('title="후기 보기"') && htmlOrder.includes('item-actions__count">7'), 'sample: review count filled');
-assert(htmlOrder.includes('title="찜하기"') && htmlOrder.includes('item-actions__count">11'), 'sample: wish count filled');
-assert(htmlOrder.includes('data-inq-guide'), 'sample: SVG arrow marker present');
-assert(htmlOrder.includes('data-inq-callout'), 'sample: callout present');
-assert(htmlOrder.includes('hcs-sample__card--basic'), 'sample: basic 1-cell card');
-assert(htmlOrder.includes(P21_INQUIRY_COPY.sampleOpenCallout), 'sample: open arrow copy');
-assert(htmlOrder.includes(P21_INQUIRY_COPY.sampleClosedCallout), 'sample: closed arrow copy');
-assert(htmlOrder.includes('여기가 쪽지 관련 표시 위치'), 'sample: callout names the message slot');
-assert((htmlOrder.match(/data-inq-callout/g) || []).length === 2, 'sample: both cards have callouts');
+assert(!css.includes('inq-sample'), 'css: inquiry sample styles removed');
+assert(!htmlOrder.includes('tutor-card-sample.jpg'), 'no sample: no sample portrait asset');
+assert(!htmlOrder.includes('김하린'), 'no sample: no sample tutor name');
+assert(!htmlOrder.includes('data-inq-guide'), 'no sample: no SVG arrow marker');
+assert(!htmlOrder.includes('data-inq-callout'), 'no sample: no callout');
+assert(!htmlOrder.includes('hcs-sample'), 'no sample: no sample card cell');
+assert(!htmlOrder.includes('expo-basic'), 'no sample: no card rendered on inquiries page');
 
 // —— 라우팅 5항
 const inquiriesPath = `${BASE}/7/inquiries`;

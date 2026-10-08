@@ -6,6 +6,8 @@
 
 import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS } from './exposure-data.js';
 import { COMPARE_MAX } from './exposure-schema.js';
+import { previewState } from './state.js';
+import { getHomeBasicPool } from './home-basic-live.js';
 import {
   isHandoffApiMode,
   getUserActionsCache,
@@ -51,8 +53,24 @@ function saveState(state) {
 
 /** @param {ProviderKind} kind @param {number|string} id */
 export function getExposureItem(kind, id) {
-  const pool = kind === 'tutor' ? EXPOSURE_TUTORS : EXPOSURE_STUDY_ROOMS;
-  return pool.find((item) => item.id === Number(id));
+  const n = Number(id);
+  const nameKey = kind === 'tutor' ? 'tutor_display_name' : 'study_room_name';
+  const pools = [
+    kind === 'tutor' ? EXPOSURE_TUTORS : EXPOSURE_STUDY_ROOMS,
+    previewState.parentFind?.activeResultItems,
+    previewState.studyRoomFind?.activeResultItems,
+    previewState.tutorFind?.activeResultItems,
+    previewState.parentFind?.searchExposureItems,
+    previewState.studyRoomFind?.searchExposureItems,
+    previewState.tutorFind?.searchExposureItems,
+    getHomeBasicPool(kind),
+  ];
+  for (const pool of pools) {
+    if (!Array.isArray(pool)) continue;
+    const hit = pool.find((x) => Number(x?.id) === n && x != null && nameKey in x);
+    if (hit) return hit;
+  }
+  return undefined;
 }
 
 /** @param {ProviderKind} kind */

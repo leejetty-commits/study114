@@ -1,5 +1,5 @@
 /**
- * 쪽지설정 저장·재진입·F5 + live 홈 BASIC 폭 실측
+ * 쪽지설정 저장·재진입·F5 + live 홈 BASIC 폭 실측 + 카드 샘플 없음 확인
  * Usage: node scripts/e2e-inquiry-settings-closeout.mjs
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -54,38 +54,6 @@ async function measureLiveHomeCard(page, kind) {
   }, sel);
 }
 
-async function measureSample(page, kind) {
-  const sel = `[data-inq-sample] .expo-basic--${kind}.expo-hcard`;
-  await page.waitForSelector(sel, { timeout: 15000 });
-  return page.evaluate((s) => {
-    const el = document.querySelector(s);
-    const btn = document.querySelector('[data-inq-sample].inq-sample--open .item-actions [title^="쪽지"]');
-    const svg = document.querySelector('[data-inq-sample].inq-sample--open [data-inq-guide]');
-    const callout = document.querySelector('[data-inq-sample].inq-sample--open [data-inq-callout]');
-    if (!el) return { width: null, arrow: null, selector: s };
-    const r = el.getBoundingClientRect();
-    let arrow = null;
-    if (btn && svg) {
-      const br = btn.getBoundingClientRect();
-      const sr = svg.getBoundingClientRect();
-      const circle = svg.querySelector('circle');
-      const path = svg.querySelector('path[marker-end]');
-      const cx = circle ? Number(circle.getAttribute('cx')) + sr.left : NaN;
-      const cy = circle ? Number(circle.getAttribute('cy')) + sr.top : NaN;
-      const btnCx = br.left + br.width / 2;
-      const btnCy = br.top + br.height / 2;
-      arrow = {
-        dx: Math.round((cx - btnCx) * 10) / 10,
-        dy: Math.round((cy - btnCy) * 10) / 10,
-        path: path?.getAttribute('d') || '',
-        pointsAtButton: Math.abs(cx - btnCx) <= 2 && Math.abs(cy - btnCy) <= 2,
-        hasCallout: Boolean(callout),
-      };
-    }
-    return { width: r.width, arrow, selector: s, transform: getComputedStyle(el).transform };
-  }, sel);
-}
-
 async function openInquiries(page, role) {
   const action = role === 'tutor' ? 'dev-login-tutor' : 'dev-login-room';
   await page.goto(`${LOCAL}/#/guest`, { waitUntil: 'domcontentloaded' });
@@ -100,7 +68,7 @@ async function openInquiries(page, role) {
     throw new Error(`${role}: 쪽지설정 탭 없음 hash=${await page.evaluate(() => location.hash)}`);
   }
   await tab.click();
-  await page.waitForSelector('[data-inq-sample] .expo-hcard', { timeout: 20000 });
+  await page.waitForSelector('.p21-inq-block--status', { timeout: 20000 });
   await page.waitForTimeout(500);
 }
 
@@ -119,10 +87,11 @@ async function readInquiryUi(page) {
       'p21-inq-block--status',
       'p21-inq-block--edit',
       'p21-inq-save',
-      'p21-inq-block--samples',
     ].map((cls) => document.querySelector(`.${cls}`)?.getBoundingClientRect().top ?? null);
     const otp = Boolean(document.getElementById('p20-phone-verify-modal'));
+    const sampleAbsent = !document.querySelector('[data-inq-sample], .p21-inq-block--samples, [data-inq-guide], .hcs-sample');
     return {
+      sampleAbsent,
       badge,
       receiving,
       reason,
@@ -164,7 +133,7 @@ async function reenterInquiries(page) {
     await page.waitForTimeout(700);
   }
   await page.locator('a.mp-room__tab', { hasText: '쪽지설정' }).click();
-  await page.waitForSelector('[data-inq-sample] .expo-hcard', { timeout: 20000 });
+  await page.waitForSelector('.p21-inq-block--status', { timeout: 20000 });
   await page.waitForTimeout(400);
 }
 
@@ -194,7 +163,7 @@ async function persistFlow(page, role, shotPrefix) {
   log.push({ step: 'after-open-reenter', ...afterOpenReenter });
 
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('[data-inq-sample] .expo-hcard', { timeout: 20000 });
+  await page.waitForSelector('.p21-inq-block--status', { timeout: 20000 });
   await page.waitForTimeout(500);
   const afterOpenF5 = await readInquiryUi(page);
   await page.screenshot({ path: resolve(OUT, `${shotPrefix}-04-after-open-f5.png`), fullPage: true });
@@ -217,12 +186,14 @@ async function persistFlow(page, role, shotPrefix) {
   log.push({ step: 'after-closed-reenter', ...afterClosedReenter });
 
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('[data-inq-sample] .expo-hcard', { timeout: 20000 });
+  await page.waitForSelector('.p21-inq-block--status', { timeout: 20000 });
   await page.waitForTimeout(500);
   const afterClosedF5 = await readInquiryUi(page);
   await page.screenshot({ path: resolve(OUT, `${shotPrefix}-07-after-closed-f5.png`), fullPage: true });
   log.push({ step: 'after-closed-f5', ...afterClosedF5 });
 
+  const withSample = log.filter((row) => !row.sampleAbsent).map((row) => row.step);
+  if (withSample.length) throw new Error(`${role}: 쪽지설정에 카드 샘플이 남아 있음 (${withSample.join(', ')})`);
   return log;
 }
 
@@ -258,11 +229,6 @@ try {
   attachDialogs(persistPage);
   try {
     report.persist.tutor = await persistFlow(persistPage, 'tutor', 'tutor');
-    const sampleTutor = await measureSample(persistPage, 'tutor');
-    report.widths.local['tutor-sample-desktop-after-persist'] = sampleTutor;
-    await persistPage.locator('[data-inq-sample].inq-sample--open').screenshot({
-      path: resolve(OUT, 'tutor-arrow-desktop.png'),
-    });
   } catch (err) {
     report.errors.push(`tutor persist: ${err.message}`);
     report.persist.tutor = { error: err.message };
@@ -271,11 +237,6 @@ try {
 
   try {
     report.persist.room = await persistFlow(persistPage, 'study_room', 'room');
-    const sampleRoom = await measureSample(persistPage, 'study_room');
-    report.widths.local['room-sample-desktop-after-persist'] = sampleRoom;
-    await persistPage.locator('[data-inq-sample].inq-sample--open').screenshot({
-      path: resolve(OUT, 'room-arrow-desktop.png'),
-    });
   } catch (err) {
     report.errors.push(`room persist: ${err.message}`);
     report.persist.room = { error: err.message };
@@ -283,25 +244,6 @@ try {
   }
   await persistPage.close();
 
-  for (const vp of VIEWPORTS.filter((v) => v.name !== 'desktop')) {
-    const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
-    attachDialogs(page);
-    try {
-      await openInquiries(page, 'tutor');
-      report.widths.local[`tutor-sample-${vp.name}`] = await measureSample(page, 'tutor');
-      await page.locator('[data-inq-sample].inq-sample--open').screenshot({
-        path: resolve(OUT, `tutor-arrow-${vp.name}.png`),
-      });
-      await openInquiries(page, 'study_room');
-      report.widths.local[`room-sample-${vp.name}`] = await measureSample(page, 'study_room');
-      await page.locator('[data-inq-sample].inq-sample--open').screenshot({
-        path: resolve(OUT, `room-arrow-${vp.name}.png`),
-      });
-    } catch (err) {
-      report.errors.push(`sample ${vp.name}: ${err.message}`);
-    }
-    await page.close();
-  }
 } finally {
   await browser.close();
 }

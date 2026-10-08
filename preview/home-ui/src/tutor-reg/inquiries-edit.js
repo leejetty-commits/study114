@@ -3,7 +3,6 @@
  * 저장은 tutors.inquiry_status PATCH.
  */
 
-import { bindInquirySampleGuides } from '../home-card-samples/guides.js';
 import { P21_INQUIRY_COPY } from './inquiries-copy.js';
 import { tutorInquiryStatusFromPref } from './inquiries-pref.js';
 import { setTutorInquiryStatus } from './store.js';
@@ -61,7 +60,6 @@ function syncReasonState(page) {
 export function bindTutorInquiriesEvents(root, rerender) {
   const page = root.querySelector('[data-p21-inquiries]');
   if (!page) return;
-  bindInquirySampleGuides(page);
 
   page.querySelectorAll('[data-p21-inquiry-receiving]').forEach((input) => {
     input.addEventListener('change', () => syncReasonState(page));

@@ -1,11 +1,9 @@
 /**
  * 등록점검 화면 렌더 — 상태 요약 → 부족 항목 → 수정 이동 → Pick·Prime 안내
- * 비교 카드 샘플(rc-tier)은 기존 렌더를 유지한다.
  * 공개 승인/자기확인 UI는 두지 않는다. 입력값은 있는 그대로 카드에 노출된다.
  */
 
 import { RC_COPY } from './registration-check-copy.js';
-import { renderRegistrationCheckCardSamples } from '../home-card-samples/render.js';
 import { registrationCheckTabHref } from './registration-check-model.js';
 
 function esc(s) {
@@ -81,10 +79,6 @@ function renderMissingBlock(title, items, emptyText) {
       <h3 class="rc-block__title">${esc(title)}</h3>
       ${body}
     </section>`;
-}
-
-function renderCards(vm) {
-  return renderRegistrationCheckCardSamples('study_room', vm.promo);
 }
 
 function statusCell(row) {
@@ -217,7 +211,6 @@ export function renderRegistrationCheck(vm) {
       ${renderPromoCopy(vm)}
       ${renderMissingBlock(vm.promo.pickMissingTitle, vm.promo.pickMissing, vm.promo.pickReadyBody)}
       ${renderMissingBlock(vm.promo.primeMissingTitle, vm.promo.primeMissing, vm.promo.primeReadyBody)}
-      ${renderCards(vm)}
       ${renderBoard(vm)}
     </div>`;
 }

@@ -93,13 +93,6 @@ export const P20_INQUIRY_COPY = {
   saveHint: '저장은 쪽지 상태만 바꿉니다.',
   offReasonRequired: '쪽지 안받음으로 저장하려면 이유를 선택해 주세요.',
   saveFailed: '저장에 실패했습니다. 화면은 마지막 서버값으로 되돌립니다.',
-  previewTitle: '쪽지 설정시 카드 샘플',
-  sampleTitle: '쪽지 설정시 카드 샘플',
-  sampleLead: '홈과 같은 실제 BASIC 카드입니다. 화살표가 쪽지 관련 표시 위치를 가리킵니다.',
-  sampleOpenKicker: '쪽지 받는 중',
-  sampleClosedKicker: '쪽지 안받음',
-  sampleOpenCallout: '여기가 쪽지 관련 표시 위치입니다. 받는 중이면 ✉가 활성입니다.',
-  sampleClosedCallout: '여기가 쪽지 관련 표시 위치입니다. 안받음이면 ✉가 비활성입니다.',
   saveCta: '저장하기',
   phoneGateTitle: '기본 연락처 검증이 필요합니다',
   phoneGateBody:

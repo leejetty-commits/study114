@@ -106,7 +106,7 @@ function guestHeroMapItems() {
 
 function renderStudyRoomPrimePick() {
   const pool = getHomeBasicPool('study_room');
-  const guestOpts = { guest: true, vacantSamples: true };
+  const guestOpts = { guest: true, vacantFill: true };
   const occupied = getPrimeOccupied(pool);
   const roomLabel = guestAxisText('room');
   return `
@@ -149,7 +149,7 @@ function renderTutorPrimePick() {
       ${renderPrimeSlotGrid('tutor', occupied, { ...guestOpts, listId: 'prime_tutor' })}
       ${renderPickPaginatedBlock('tutor', 'pick_tutor', { ...SECTION_HEADINGS.pickTutor, locationLabel: tutorRegion }, pool, {
         ...guestOpts,
-        vacantSamples: true,
+        vacantFill: true,
         primeOccupied: occupied,
       })}
     </div>
@@ -193,11 +193,11 @@ export function renderGuestBrowseLists() {
   return `
     ${loadingHint}
     <section class="guest-browse-lists" aria-label="우동공과 리스트">
-      ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel }, rooms, { guest, vacantSamples: guest && live, serverSorted: live })}
-      ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel }, tutors, { guest, vacantSamples: guest && live, serverSorted: live })}
+      ${renderGuestPaginatedListBlock('study_room', 'study_room', { ...SECTION_HEADINGS.basicStudyRoom, locationLabel: roomLabel }, rooms, { guest, vacantFill: guest && live, serverSorted: live })}
+      ${renderGuestPaginatedListBlock('tutor', 'tutor', { ...SECTION_HEADINGS.basicTutor, locationLabel: tutorLabel }, tutors, { guest, vacantFill: guest && live, serverSorted: live })}
     </section>
     <section class="guest-browse-lists guest-browse-lists--students" aria-label="학생 학습 의뢰">
-      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', locationLabel: studentLabel }, students, { guest, vacantSamples: guest && live, serverSorted: live })}
+      ${renderGuestPaginatedListBlock('student', 'student', { ...SECTION_HEADINGS.students, id: 'guest-students-title', locationLabel: studentLabel }, students, { guest, vacantFill: guest && live, serverSorted: live })}
     </section>
   `;
 }

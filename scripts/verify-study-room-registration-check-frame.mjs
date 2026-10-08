@@ -1,8 +1,8 @@
 /**
- * 공부방 등록점검 — 과외쌤과 같은 공통 프레임 (카드 샘플 유지)
+ * 공부방 등록점검 — 과외쌤과 같은 공통 프레임 (카드 샘플 없음, 2026-10-09 견본카드 제거)
  * publish CTA 제거 이후: 현황판(Pick/Prime)만 검증. 삭제된 RC_COPY.publish / data-p20-publish 경로 금지.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { RC_COPY } from '../preview/home-ui/src/study-room-reg/registration-check-copy.js';
@@ -44,15 +44,19 @@ assert(!screens.includes('공개 필수 체크리스트'), 'screens: old checkli
 
 assert(render.includes('rc-next'), 'render: next action');
 assert(render.includes('rc-block--action'), 'render: pick/prime action blocks');
-assert(render.includes('${renderCards(vm)}'), 'render: cards independent');
-
-const hcsRender = read('preview/home-ui/src/home-card-samples/render.js');
-const hcsCss = read('preview/home-ui/src/styles/home-card-samples.css');
-assert(hcsRender.includes('rc-block--compare'), 'render: compare block separate from missing');
-assert(render.includes("renderRegistrationCheckCardSamples('study_room'"), 'render: shared home-card samples');
-assert(hcsRender.includes('data-rc-expand'), 'render: expand on samples');
-assert(hcsRender.includes('rc-compare__row--basic'), 'render: BASIC row alone');
-assert(hcsRender.includes('rc-compare__row--upgrade'), 'render: PICK+PRIME row');
+assert(!render.includes('renderCards'), 'render: no card sample block');
+assert(!render.includes('renderRegistrationCheckCardSamples'), 'render: no shared home-card samples');
+assert(!render.includes('home-card-samples'), 'render: no home-card-samples import');
+assert(!render.includes('data-rc-expand'), 'render: no expand on samples');
+assert(!render.includes('rc-block--compare'), 'render: no compare sample block');
+for (const rel of [
+  'preview/home-ui/src/home-card-samples/render.js',
+  'preview/home-ui/src/home-card-samples/presets.js',
+  'preview/home-ui/src/home-card-samples/guides.js',
+  'preview/home-ui/src/styles/home-card-samples.css',
+]) {
+  assert(!existsSync(resolve(root, rel)), `sample module removed: ${rel}`);
+}
 assert(!render.includes('rc-compare__grid'), 'render: old 3-col grid removed');
 assert(!render.includes('rc-tier rc-tier--'), 'render: old rc-tier sample removed');
 assert(render.includes('data-rc-fold'), 'render: fold control');
@@ -62,20 +66,8 @@ assert(!render.includes('data-p20-publish'), 'render: publish CTA removed');
 assert(!render.includes('data-p20-confirm'), 'render: self-check removed');
 assert(render.includes('data-rc-subsection="${esc(child.id)}"'), 'render: subsection from board children');
 assert(render.includes('data-rc-section="${esc(sec.id)}"'), 'render: section ids');
-assert(hcsRender.includes('renderBrowseList'), 'hcs: BASIC uses renderBrowseList');
-assert(hcsRender.includes("renderExposureBox(kind, 'pick'"), 'hcs: PICK uses renderExposureBox');
-assert(hcsRender.includes("renderExposureBox(kind, 'prime'"), 'hcs: PRIME uses renderExposureBox');
-assert(hcsCss.includes('--hcs-basic-w'), 'hcs css: basic 1-cell width');
-assert(hcsCss.includes('--hcs-pick-w'), 'hcs css: pick 1-cell width');
-assert(hcsCss.includes('--hcs-prime-w'), 'hcs css: prime 1-cell width');
-assert(hcsCss.includes('rc-compare__row--upgrade'), 'hcs css: upgrade row flex');
-assert(hcsCss.includes('--hcs-grid-gap: var(--space-2)'), 'hcs css: live expo-grid gap');
-assert(hcsCss.includes('--hcs-prime-gap: var(--space-2)'), 'hcs css: live prime grid gap');
-assert(!hcsCss.includes('transform: scale'), 'hcs css: no scale');
-assert(!hcsCss.includes('0.85fr') && !hcsCss.includes('1.25fr'), 'hcs css: no artificial pick/prime stretch');
-assert(!/100vw/.test(hcsCss), 'hcs css: no 100vw');
 const mainJs = read('preview/home-ui/src/main.js');
-assert(mainJs.includes("import './styles/home-card-samples.css'"), 'main: home-card-samples.css linked');
+assert(!mainJs.includes('home-card-samples'), 'main: home-card-samples.css not linked');
 assert(!css.includes('0.85fr') && !css.includes('1.25fr'), 'rc css: no artificial pick/prime stretch');
 assert(!css.includes('[data-trc-page] .rc-sample__card--prime'), 'rc css: no legacy trc rc-sample prime width');
 assert(!css.includes('minmax(0, 28rem)'), 'rc css: no 28rem basic cap');
@@ -93,9 +85,8 @@ assert(!listings.includes('container-name: expo-prime-media'), 'listings: no exp
 const pageFn = render.slice(render.indexOf('export function renderRegistrationCheck'));
 assert(pageFn.includes('pickMissingTitle'), 'page: pick action');
 assert(pageFn.includes('primeMissingTitle'), 'page: prime action');
-assert(pageFn.indexOf('pickMissingTitle') < pageFn.indexOf('${renderCards(vm)}'), 'page: cards after pick/prime');
+assert(pageFn.indexOf('primeMissingTitle') < pageFn.indexOf('${renderBoard(vm)}'), 'page: board right after pick/prime (no cards)');
 assert(!pageFn.includes('renderPublishActions'), 'page: publish CTA removed');
-assert(pageFn.indexOf('${renderCards(vm)}') < pageFn.indexOf('${renderBoard(vm)}'), 'page: board after cards');
 assert(pageFn.indexOf('renderHeader(vm)') < pageFn.indexOf('renderPromoCopy(vm)'), 'page: header first');
 
 assert(model.includes('children: [detail1, detail2]'), 'model: 상세정보 parent with children');
@@ -130,11 +121,11 @@ assert(RC_COPY.badges.primeNeed(2) === '프라임 추가 2개', 'copy: prime rem
 assert(css.includes('[data-rc-page] .rc-next'), 'css: study-room next');
 assert(css.includes('[data-rc-page] .rc-fold-btn'), 'css: study-room fold');
 assert(css.includes('[data-rc-page] .rc-subsection'), 'css: study-room subsection');
-assert(css.includes('rc-compare--stack'), 'css: stack layout available');
+assert(!css.includes('rc-compare') && !css.includes('rc-tier'), 'css: no orphan sample compare/tier rules');
 assert(css.includes('[data-trc-page] .rc-fold-btn'), 'css: tutor fold untouched');
 
-assert(edit.includes('[data-rc-expand]'), 'edit: expand sample kept');
-assert(edit.includes('buildStudyRoomSampleItem'), 'edit: expand uses virtual sample');
+assert(!edit.includes('[data-rc-expand]'), 'edit: no expand sample');
+assert(!edit.includes('buildStudyRoomSampleItem'), 'edit: no virtual sample item');
 assert(edit.includes('[data-rc-fold]'), 'edit: fold handler');
 assert(!edit.includes('[data-p20-publish]'), 'edit: no publish CTA handler');
 assert(!edit.includes('[data-p20-confirm]'), 'edit: no self-check gate');
@@ -149,7 +140,7 @@ assert(!store.includes("id: 'contact', label: '문의·쪽지 방식'"), 'store:
 assert(tutorRender.includes('renderTutorRegistrationCheck'), 'tutor render untouched marker');
 assert(tutorModel.includes('buildTutorRegistrationCheckModel'), 'tutor model untouched marker');
 assert(tutorCopy.includes("detail1: '수업 · 가격'"), 'tutor copy labels untouched');
-assert(tutorEdit.includes('data-trc-expand'), 'tutor edit expand untouched');
+assert(!tutorEdit.includes('data-trc-expand'), 'tutor edit: no expand sample');
 assert(!tutorModel.includes('study-room-reg'), 'tutor model not mixed with study-room copy');
 assert(!tutorRender.includes('data-rc-page'), 'tutor render stays on data-trc-page');
 

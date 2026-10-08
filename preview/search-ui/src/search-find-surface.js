@@ -144,7 +144,7 @@ function guestFeedItems(tab) {
   return guestFeeds[tab]?.items || [];
 }
 
-/** 아직 부르지 않았으면 loading. 샘플은 ready 이고 0건일 때만 그린다. */
+/** 아직 부르지 않았으면 loading. 빈 칸은 ready 이고 0건일 때만 그린다. */
 function guestFeedStatus(tab) {
   return guestFeeds[tab]?.status || 'loading';
 }
@@ -187,7 +187,7 @@ function bootGuestFeed(tab, rerender) {
 }
 
 /**
- * 게스트 찾기 하단 실카드. 0건이면 이 함수를 부르지 않고 기존 샘플 블록을 그린다.
+ * 게스트 찾기 하단 실카드. 0건이면 이 함수를 부르지 않고 빈 칸 블록을 그린다.
  * @param {import('./state.js').SearchTab} tab
  * @param {object[]} items
  * @param {string} regionLabel
@@ -2704,7 +2704,7 @@ export function renderFindResultSection(tab, state, role, options = {}) {
         <p class="search-results__hint">${esc(STUDENT_PLACE_PROMPT)}</p>
       </section>`;
     }
-    // 학생 홈 0건은 티어 렌더가 샘플+빈칸(공부방·과외쌤) / 「없다」 카피(학생)를 그린다.
+    // 학생 홈 0건은 티어 렌더가 빈칸(공부방·과외쌤) / 「없다」 카피(학생)를 그린다.
     const homeEmpty = surfaceType === 'home' && status === 'ready' && !activeItems.length;
     const body =
       tab === 'room' && status === 'ready' && !activeItems.length && !homeEmpty

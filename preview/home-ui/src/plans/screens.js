@@ -338,20 +338,6 @@ function renderLowCreditBanner(tickets) {
     </div>`;
 }
 
-/** R2 공부방 Pick 5×2 미리보기 타일 (라이브 목록 아님 · 샘플 재사용) */
-const ROOM_PICK_PREVIEW_TILES = [
-  { name: '대치 ○○수학', stats: '추천 24 · 후기 18' },
-  { name: '역삼 ○○영어', stats: '추천 19 · 후기 12' },
-  { name: '잠실 ○○국어', stats: '추천 31 · 후기 22' },
-  { name: '삼성 ○○과학', stats: '추천 15 · 후기 9' },
-  { name: '서초 ○○논술', stats: '추천 27 · 후기 16' },
-  { name: '도곡 ○○수학', stats: '추천 21 · 후기 14' },
-  { name: '개포 ○○영어', stats: '추천 17 · 후기 11' },
-  { name: '청담 ○○미술', stats: '추천 13 · 후기 8' },
-  { name: '압구정 ○○피아노', stats: '추천 22 · 후기 15' },
-  { name: '대치 ○○코딩', stats: '추천 28 · 후기 19' },
-];
-
 /**
  * 공부방 Prime 점유판 (3칸 · 슬롯 선택 없음 · 만석 시 예약대기만)
  * @param {{ capacity: number, used: number, remaining: number }} prime
@@ -398,99 +384,6 @@ function renderRoomPrimeBoard(prime) {
             </div>`
           : ''
       }
-    </div>`;
-}
-
-/** 공부방 Pick 5×2=10 미리보기 (순환 목록·과외쌤 미사용) */
-function renderRoomPickPreview() {
-  return `
-    <div class="plans-room-pick" aria-label="픽 노출 미리보기 5열 2행">
-      <p class="plans-room-pick__title">픽 노출 미리보기 · 한 페이지 10명 (5열 × 2행)</p>
-      <ul class="plans-room-pick__grid">
-        ${ROOM_PICK_PREVIEW_TILES.map(
-          (p, i) => `
-          <li class="plans-room-pick__tile" aria-label="픽 미리보기 ${i + 1}">
-            <span class="plans-room-pick__thumb" aria-hidden="true">P${i + 1}</span>
-            <span class="plans-room-pick__name">${esc(p.name)}</span>
-            <span class="plans-room-pick__stats">${esc(p.stats)}</span>
-          </li>`,
-        ).join('')}
-      </ul>
-      <nav class="plans-room-pick__pager" aria-label="페이지">
-        <span class="is-current" aria-current="page">1</span><span>2</span><span>3</span>
-      </nav>
-    </div>`;
-}
-
-/** T1 과외쌤 circulation 미리보기 (점유·만석·예약대기 없음) */
-const TUTOR_PRIME_PREVIEW_TILES = [
-  { name: '김○○', subject: '수학 · 고등학교', stats: '추천 28 · 후기 19' },
-  { name: '이○○', subject: '영어 · 고등학교', stats: '추천 21 · 후기 14' },
-  { name: '박○○', subject: '국어 · 중학교', stats: '추천 17 · 후기 11' },
-];
-
-const TUTOR_PICK_PREVIEW_TILES = [
-  { name: '김○○', subject: '수학 · 고등학교', stats: '추천 28 · 후기 19' },
-  { name: '이○○', subject: '영어 · 고등학교', stats: '추천 21 · 후기 14' },
-  { name: '박○○', subject: '국어 · 중학교', stats: '추천 17 · 후기 11' },
-  { name: '최○○', subject: '과학 · 고등학교', stats: '추천 15 · 후기 9' },
-  { name: '정○○', subject: '논술 · 고등학교', stats: '추천 24 · 후기 16' },
-  { name: '강○○', subject: '수학 · 중학교', stats: '추천 19 · 후기 12' },
-  { name: '윤○○', subject: '영어 · 중학교', stats: '추천 13 · 후기 8' },
-  { name: '장○○', subject: '사회 · 고등학교', stats: '추천 22 · 후기 15' },
-  { name: '임○○', subject: '코딩 · 고등학교', stats: '추천 18 · 후기 10' },
-  { name: '한○○', subject: '국어 · 고등학교', stats: '추천 31 · 후기 22' },
-];
-
-function renderTutorCircPager() {
-  return `<nav class="plans-tutor-circ__pager" aria-label="페이지">
-        <span class="is-current" aria-current="page">1</span><span>2</span><span>3</span>
-      </nav>`;
-}
-
-function renderTutorCircTiles(tiles, prefix) {
-  return tiles
-    .map(
-      (p, i) => `
-          <li class="plans-tutor-circ__tile" aria-label="${prefix} 미리보기 ${i + 1}">
-            <span class="plans-tutor-circ__thumb" aria-hidden="true">${prefix}${i + 1}</span>
-            <span class="plans-tutor-circ__name">${esc(p.name)}</span>
-            <span class="plans-tutor-circ__subject">${esc(p.subject)}</span>
-            <span class="plans-tutor-circ__stats">${esc(p.stats)}</span>
-          </li>`,
-    )
-    .join('');
-}
-
-function renderTutorPrimeCirculation() {
-  return `
-    <div class="plans-tutor-circ plans-tutor-circ--prime" aria-label="프라임 노출 미리보기 페이지당 3명">
-      <div class="plans-tutor-circ__head">
-        <span class="plans-tutor-circ__kicker">핵심 노출 · 순환형</span>
-        <span class="plans-tutor-circ__count">3 / page</span>
-      </div>
-      <p class="plans-tutor-circ__title">프라임 순환 미리보기 · 페이지당 3명</p>
-      <p class="plans-tutor-circ__rotate">선택 시·주력과목 앞쪽 노출 · 15분마다 공정 순환 · 페이지 넘김</p>
-      <ul class="plans-tutor-circ__grid">
-        ${renderTutorCircTiles(TUTOR_PRIME_PREVIEW_TILES, 'T')}
-      </ul>
-      ${renderTutorCircPager()}
-    </div>`;
-}
-
-function renderTutorPickCirculation() {
-  return `
-    <div class="plans-tutor-circ plans-tutor-circ--pick" aria-label="픽 노출 미리보기 페이지당 10명">
-      <div class="plans-tutor-circ__head">
-        <span class="plans-tutor-circ__kicker">추천 노출 · 순환형</span>
-        <span class="plans-tutor-circ__count">10 / page</span>
-      </div>
-      <p class="plans-tutor-circ__title">픽 순환 미리보기 · 페이지당 10명</p>
-      <p class="plans-tutor-circ__rotate">선택 시·주력과목 추천 노출 · 15분마다 공정 순환 · 페이지 넘김</p>
-      <ul class="plans-tutor-circ__grid">
-        ${renderTutorCircTiles(TUTOR_PICK_PREVIEW_TILES, 'P')}
-      </ul>
-      ${renderTutorCircPager()}
     </div>`;
 }
 
@@ -1071,13 +964,7 @@ export function renderPlansPositions() {
             : '';
     const structureHtml = isRoomPrime
       ? renderRoomPrimeBoard(resolveRoomPrimeInventory(slots).prime)
-      : isRoomPick
-        ? renderRoomPickPreview()
-        : isTutorPrime
-          ? renderTutorPrimeCirculation()
-          : isTutorPick
-            ? renderTutorPickCirculation()
-            : '';
+      : '';
     return `
       <section class="plans-storefront__offer${offerMod} plans-sf-panel" data-plans-offer="${esc(product.productCode)}">
         <header class="plans-sf-panel__head">
