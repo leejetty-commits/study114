@@ -186,7 +186,7 @@ import {
   renderNotifyLab,
 } from './a28-screens-labs.js';
 import { peekHubExposureRoute, registerTodayRenderers, renderTodayMarkup } from './a28-today-hub.js';
-import { renderSettlement } from './a28-settlement.js';
+import { renderSettlement, renderSettlementHub } from './a28-settlement.js';
 import { renderRegistrationList } from './a28-registration-list.js';
 
 function adminProductLabel(code) {
@@ -645,7 +645,9 @@ function renderHub() {
   return renderPanel(
     A28_COPY.hubTitle,
     'A28-01',
-    `${renderTodayMarkup()}
+    `<div class="a28-hub-body">
+     ${renderSettlementHub()}
+     ${renderTodayMarkup()}
      ${renderOpsTip()}
      ${renderPromoQuickBar()}
      <p>${esc(A28_COPY.hubLead)}</p>
@@ -653,7 +655,8 @@ function renderHub() {
        <div><h3>할 수 있는 일</h3><ul>${ALLOWED_OPERATOR_ACTIONS.map((a) => `<li>${esc(a)}</li>`).join('')}</ul></div>
        <div><h3>하지 않는 일</h3><ul>${FORBIDDEN_OPERATOR_ACTIONS.map((a) => `<li>${esc(a)}</li>`).join('')}</ul></div>
      </div>
-     <div class="sup-admin-hub">${cardHtml}</div>`,
+     <div class="sup-admin-hub">${cardHtml}</div>
+    </div>`,
   );
 }
 

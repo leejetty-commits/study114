@@ -16,7 +16,7 @@ function allAdminPaths() {
   const fromNav = flattenAdminNav()
     .map((item) => item.path)
     .filter(Boolean);
-  return ['/admin', ...fromNav];
+  return ['/admin', '/admin/settlement', ...fromNav];
 }
 
 /** @param {string} hashPath */
@@ -56,6 +56,16 @@ export function getAdminMenuId(path) {
 /** @param {string} path */
 export function findAdminNavLeaf(path) {
   const n = normalizeAdminPath(path) || '/admin';
+  if (n === '/admin/settlement') {
+    return {
+      id: 'settlement',
+      menuId: 'settlement',
+      label: '보고서',
+      path: '/admin/settlement',
+      help: '하루·한 주·한 달 운영 보고서를 보고 인쇄합니다.',
+      screenId: 'A28-162',
+    };
+  }
   return flattenAdminNav().find((item) => item.path === n) || flattenAdminNav().find((item) => item.path === '/admin');
 }
 

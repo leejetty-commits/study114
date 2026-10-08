@@ -46,6 +46,10 @@
   display: inline-block;
   margin-top: 0.75rem;
 }
+.admin-shell [data-settlement-print]:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 html.is-settlement-printing .admin-sidebar {
   display: none !important;
 }
@@ -72,6 +76,10 @@ html.is-settlement-printing .preview-toolbar,
 html.is-settlement-printing .site-footer,
 html.is-settlement-printing .admin-topbar,
 html.is-settlement-printing .admin-shell .sup-panel-card__head,
+html.is-settlement-printing .admin-shell .a28-hub-body > :not(.a28-hub-settlement),
+html.is-settlement-printing .admin-shell .a28-hub-settlement > :not([data-settlement-root]),
+html.is-settlement-printing .admin-shell [data-settlement-root] > :not(.settlement-print-sheet),
+html.is-settlement-printing .admin-shell .sup-panel-card__body > :not(.a28-hub-body):not([data-settlement-root]),
 html.is-settlement-printing .home-body > :not(.home-main) {
   display: none !important;
 }
@@ -98,6 +106,10 @@ html.is-settlement-printing body {
   html.is-settlement-printing .site-footer,
   html.is-settlement-printing .admin-topbar,
   html.is-settlement-printing .admin-shell .sup-panel-card__head,
+  html.is-settlement-printing .admin-shell .a28-hub-body > :not(.a28-hub-settlement),
+  html.is-settlement-printing .admin-shell .a28-hub-settlement > :not([data-settlement-root]),
+  html.is-settlement-printing .admin-shell [data-settlement-root] > :not(.settlement-print-sheet),
+  html.is-settlement-printing .admin-shell .sup-panel-card__body > :not(.a28-hub-body):not([data-settlement-root]),
   html.is-settlement-printing .home-body > :not(.home-main) {
     display: none !important;
   }

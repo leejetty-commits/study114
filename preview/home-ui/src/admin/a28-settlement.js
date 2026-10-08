@@ -12,6 +12,56 @@ const LINE_KEYS = [
   ['popup', '⑤'],
 ];
 
+/** @param {string} [ymd] */
+export function computeWeekRange(ymd) {
+  if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return '';
+  const d = new Date(`${ymd}T00:00:00+09:00`);
+  if (Number.isNaN(d.getTime())) return '';
+  const day = d.getDay();
+  const diffToMon = day === 0 ? -6 : 1 - day;
+  const mon = new Date(d);
+  mon.setDate(d.getDate() + diffToMon);
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmt = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+  return `${fmt(mon)} ~ ${fmt(sun)}`;
+}
+
+/** @param {string} period */
+export function defaultLines(period) {
+  if (period === 'day') {
+    return [
+      '① 결제 내역 없음',
+      '② 남은 응대 내역 없음',
+      '③ 등록 내역 없음',
+      '④ 탈퇴·삭제 내역 없음',
+      '⑤ 홈 팝업 내역 없음',
+    ];
+  }
+  return [
+    '① 결제 내역 없음',
+    '② 새 응대 내역 없음',
+    '③ 등록 내역 없음',
+    '④ 탈퇴·삭제 내역 없음',
+    '⑤ 기간 마지막 홈 팝업 내역 없음',
+  ];
+}
+
+/** @param {string} period @param {string} [date] */
+export function formatPrintTitle(period, date = '') {
+  if (period === 'week') {
+    const range = computeWeekRange(date);
+    if (range) return `${C.weeklyPrint || '주간 보고서'} ${range}`;
+    return date ? `${C.weeklyPrint || '주간 보고서'} ${date}` : (C.weeklyPrint || '주간 보고서');
+  }
+  if (period === 'month') {
+    const ym = String(date || '').slice(0, 7);
+    return ym ? `${C.monthlyPrint || '월간 보고서'} ${ym}` : (C.monthlyPrint || '월간 보고서');
+  }
+  return date ? `${C.dailyPrint || '일일정산서'} ${date}` : (C.dailyPrint || '일일정산서');
+}
+
 /** @param {string} period */
 function dateInput(period, value) {
   if (period === 'month') {
@@ -21,12 +71,15 @@ function dateInput(period, value) {
   return `<input class="settlement-date" data-settlement-date type="date" value="${esc(value || '')}" aria-label="날짜">`;
 }
 
-/** @param {{ period?: string, date?: string, state?: string, message?: string, lines?: string[], printTitle?: string, detailHtml?: string }} model */
-export function renderSettlementView(model = {}) {
+/**
+ * @param {{ period?: string, date?: string, state?: string, message?: string, lines?: string[], printTitle?: string, detailHtml?: string }} model
+ * @param {{ isHub?: boolean }} [opts]
+ */
+export function renderSettlementView(model = {}, { isHub = false } = {}) {
   const period = model.period || 'day';
   const state = model.state || 'loading';
-  const lines = Array.isArray(model.lines) ? model.lines : ['①', '②', '③', '④', '⑤'];
-  const printTitle = model.printTitle || (period === 'day' ? C.dailyPrint : C.title);
+  const lines = Array.isArray(model.lines) ? model.lines : defaultLines(period);
+  const printTitle = model.printTitle || formatPrintTitle(period, model.date);
   const message = model.message || (state === 'loading' ? C.loading : '');
   const tabs = [
     ['day', C.tabDay],
@@ -40,7 +93,7 @@ export function renderSettlementView(model = {}) {
     const text = lines[index] || fallback;
     return `<li data-settlement-line="${key}"><span>${esc(text)}</span><button type="button" class="btn btn--secondary btn--sm" data-settlement-open="${key}">${esc(C.detail)}</button></li>`;
   }).join('');
-  const printLines = (lines.length ? lines : ['①', '②', '③', '④', '⑤']).map((line) => `<p>${esc(line)}</p>`).join('');
+  const printLines = lines.map((line) => `<p>${esc(line)}</p>`).join('');
   const detailBody = model.detailHtml || '<div data-settlement-detail-body></div>';
   const body = `
     <div data-settlement-root data-period="${esc(period)}">
@@ -60,11 +113,26 @@ export function renderSettlementView(model = {}) {
         ${renderDetailDrawer('settlement-detail', C.detail, detailBody)}
       </div>
     </div>`;
+
+  if (isHub) {
+    return `
+      <section class="a28-hub-settlement" data-settlement-hub-slot>
+        <h3 class="a28-today__title">${esc(C.title)}</h3>
+        ${body}
+      </section>`;
+  }
   return renderPanel(C.title, 'A28-162', body, { lead: esc(C.help) });
 }
 
 export function renderSettlement() {
-  return renderSettlementView({ period: 'day', state: 'loading', printTitle: C.dailyPrint });
+  return renderSettlementView({ period: 'day', state: 'loading', printTitle: C.dailyPrint, lines: defaultLines('day') });
+}
+
+export function renderSettlementHub() {
+  return renderSettlementView(
+    { period: 'day', state: 'loading', printTitle: C.dailyPrint, lines: defaultLines('day') },
+    { isHub: true },
+  );
 }
 
 const LINK_LABEL = {
@@ -229,9 +297,23 @@ export function bindSettlement(root, _rerender) {
       time.textContent = `${C.printTime} ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
     }
     document.documentElement.classList.add('is-settlement-printing');
-    window.addEventListener('afterprint', () => {
+    let mql = null;
+    let mqlHandler = null;
+    const cleanUp = () => {
       document.documentElement.classList.remove('is-settlement-printing');
-    }, { once: true });
+      window.removeEventListener('afterprint', cleanUp);
+      if (mql && mqlHandler) {
+        mql.removeEventListener('change', mqlHandler);
+      }
+    };
+    window.addEventListener('afterprint', cleanUp, { once: true });
+    if (typeof window.matchMedia === 'function') {
+      mql = window.matchMedia('print');
+      mqlHandler = (e) => {
+        if (!e.matches) cleanUp();
+      };
+      mql.addEventListener('change', mqlHandler);
+    }
     window.print();
   });
   box.querySelectorAll('[data-settlement-open]').forEach((btn) => {
@@ -249,9 +331,7 @@ export function bindSettlement(root, _rerender) {
     const printBtn = box.querySelector('[data-settlement-print]');
     if (printBtn instanceof HTMLButtonElement) printBtn.disabled = true;
     const title = box.querySelector('[data-settlement-print-title]');
-    if (title) title.textContent = '';
     const printLines = box.querySelector('[data-settlement-print-lines]');
-    if (printLines) printLines.innerHTML = '';
     isBackfill = false;
     try {
       const data = await fetchSettlementReport(period, date);
@@ -260,28 +340,44 @@ export function bindSettlement(root, _rerender) {
       box.setAttribute('data-period', period);
       syncTabs();
       syncDate();
+      const fallback = defaultLines(period);
+      const pTitle = formatPrintTitle(period, currentDate);
+
       if (data.state === 'in_progress') {
         if (status) status.textContent = C.inProgress;
-        fillLines(['', '', '', '', '']);
+        fillLines(fallback);
+        if (title) title.textContent = pTitle;
+        if (printLines) printLines.innerHTML = fallback.map((line) => `<p>${esc(line)}</p>`).join('');
+        if (printBtn instanceof HTMLButtonElement) printBtn.disabled = false;
         return;
       }
       if (data.state === 'missing' || !data.report) {
         if (status) status.textContent = C.missing;
-        fillLines(['', '', '', '', '']);
+        fillLines(fallback);
+        if (title) title.textContent = pTitle;
+        if (printLines) printLines.innerHTML = fallback.map((line) => `<p>${esc(line)}</p>`).join('');
+        if (printBtn instanceof HTMLButtonElement) printBtn.disabled = false;
         return;
       }
       if (data.state === 'ready') {
         if (status) status.textContent = '';
-        const reportLines = data.report.body_lines || [];
-        isBackfill = Number(data.report.is_backfill) === 1;
+        const reportLines = Array.isArray(data.report?.body_lines) && data.report.body_lines.length === 5
+          ? data.report.body_lines
+          : fallback;
+        isBackfill = Number(data.report?.is_backfill) === 1;
         fillLines(reportLines);
-        if (title) title.textContent = data.report.print_title || C.dailyPrint;
+        if (title) title.textContent = data.report?.print_title || pTitle;
         if (printLines) printLines.innerHTML = reportLines.map((line) => `<p>${esc(line)}</p>`).join('');
         if (printBtn instanceof HTMLButtonElement) printBtn.disabled = false;
       }
     } catch (err) {
       const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : '';
       if (status) status.textContent = code === 'schema_missing' ? C.schemaMissing : C.missing;
+      const fallback = defaultLines(period);
+      fillLines(fallback);
+      if (title) title.textContent = formatPrintTitle(period, currentDate || date);
+      if (printLines) printLines.innerHTML = fallback.map((line) => `<p>${esc(line)}</p>`).join('');
+      if (printBtn instanceof HTMLButtonElement) printBtn.disabled = false;
     }
   }
 
