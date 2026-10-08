@@ -128,11 +128,24 @@ globalThis.fetch = async (url) => {
       }),
     };
   }
+  if (urlStr.includes('/api/auth/regions.php')) {
+    const sampleCities = [
+      { id: '117', label: '서울특별시 도봉구', sido_code: '11', sido_name: '서울특별시', official_code: '1132000000', city_name: '도봉구', kind: 'city' },
+      { id: '118', label: '서울특별시 노원구', sido_code: '11', sido_name: '서울특별시', official_code: '1135000000', city_name: '노원구', kind: 'city' },
+      { id: '9101', label: '경기도 의정부시 가능동', sido_code: '41', sido_name: '경기도', official_code: '4115000000', city_name: '의정부시', kind: 'city' },
+    ];
+    return {
+      ok: true,
+      text: async () => JSON.stringify({ ok: true, cities: sampleCities }),
+      json: async () => ({ ok: true, cities: sampleCities }),
+    };
+  }
   return { ok: true, json: async () => ({ ok: true, data: [] }) };
 };
 
 const { initAuthSession } = await import('../preview/home-ui/src/auth-session.js');
 const { ensureStudentStore, getStudent, updateStudent } = await import('../preview/home-ui/src/student-reg/store.js');
+const { ensureTutorCityUnits } = await import('../preview/home-ui/src/tutor-reg/city-units.js');
 const { deactivateRegistrationsApi } = await import('../preview/home-ui/src/registrations-backend.js');
 const { activateBoardApi, hydrateNoticeHome } = await import('../preview/home-ui/src/board/board-backend.js');
 const { renderMypageShell } = await import('../preview/home-ui/src/mypage/shell.js');
@@ -143,6 +156,7 @@ await initAuthSession(false);
 setActiveRole('parent');
 deactivateRegistrationsApi();
 ensureStudentStore();
+await ensureTutorCityUnits();
 await activateBoardApi({ navRole: 'parent' });
 await hydrateNoticeHome();
 
@@ -322,6 +336,123 @@ for (const vp of VIEWPORTS) {
       if (formLeftOk) {
         console.log(`  PASS: ${tab.name} 왼쪽선 일치 (오차 <= 1px)`);
       }
+    }
+
+    // 2-1. [신규] 기본정보 희망지역 묶음 간격 및 하위 요소 규격 검사 (공부방형 & 과외형)
+    if (tab.path === '/mypage/registrations/students/1/basic') {
+      console.log(`  [희망지역 검증 - 공부방형]`);
+      const roomMetrics = await page.evaluate(() => {
+        const slot = document.querySelector('[data-p19-hope-panel="study_room"] [data-p19-hope-region-slot]');
+        const budgetLabel = document.querySelector('[data-p19-hope-panel="study_room"] label .p19-field__label');
+        const toolbar = document.querySelector('[data-hope-region] .register-region-slot__toolbar');
+        const toolbarStrong = document.querySelector('[data-hope-region] .register-region-slot__toolbar strong');
+        const hint = document.querySelector('.register-region-slot__basis-hint');
+        const chip = document.querySelector('.register-region-slot__basis .chip');
+        const zipRow = document.querySelector('.form-address__zip-row');
+        const desc = document.querySelector('.register-region-slot__search .form-hint');
+        const resolved = document.querySelector('[data-slot-resolved]');
+
+        const r = (el) => el ? el.getBoundingClientRect() : null;
+        const sr = r(slot);
+        const br = r(budgetLabel);
+        const hr = r(hint);
+        const cr = r(chip);
+        const zr = r(zipRow);
+        const dr = r(desc);
+        const rr = r(resolved);
+
+        return {
+          labelVisible: Boolean(toolbarStrong && toolbarStrong.textContent.trim() === '희망지역' && window.getComputedStyle(toolbar).display !== 'none'),
+          labelFontSize: toolbarStrong ? window.getComputedStyle(toolbarStrong).fontSize : null,
+          labelFontWeight: toolbarStrong ? window.getComputedStyle(toolbarStrong).fontWeight : null,
+          slotBottomToBudgetTop: sr && br ? Math.round((br.top - sr.bottom) * 10) / 10 : null,
+          hintBottomToChipTop: hr && cr ? Math.round((cr.top - hr.bottom) * 10) / 10 : null,
+          chipBottomToZipRowTop: cr && zr ? Math.round((zr.top - cr.bottom) * 10) / 10 : null,
+          zipRowBottomToDescTop: zr && dr ? Math.round((dr.top - zr.bottom) * 10) / 10 : null,
+          descBottomToResolvedTop: dr && rr ? Math.round((rr.top - dr.bottom) * 10) / 10 : null,
+        };
+      });
+
+      console.log('    공부방형 측정 결과:', roomMetrics);
+      const roomChecks = [
+        { name: '희망지역 라벨 노출(14px/600)', ok: roomMetrics.labelVisible && roomMetrics.labelFontSize === '14px' && (roomMetrics.labelFontWeight === '600' || roomMetrics.labelFontWeight === 'bold') },
+        { name: '희망지역 묶음 아래 → 예산 라벨 위 (24±1px)', ok: roomMetrics.slotBottomToBudgetTop !== null && Math.abs(roomMetrics.slotBottomToBudgetTop - 24) <= 1.0, val: roomMetrics.slotBottomToBudgetTop },
+        { name: '도움말 → 칩 (8±1px)', ok: roomMetrics.hintBottomToChipTop !== null && Math.abs(roomMetrics.hintBottomToChipTop - 8) <= 1.0, val: roomMetrics.hintBottomToChipTop },
+        { name: '칩 → 주소줄 (8±1px)', ok: roomMetrics.chipBottomToZipRowTop !== null && Math.abs(roomMetrics.chipBottomToZipRowTop - 8) <= 1.0, val: roomMetrics.chipBottomToZipRowTop },
+        { name: '주소줄 → 설명 (8±1px)', ok: roomMetrics.zipRowBottomToDescTop !== null && Math.abs(roomMetrics.zipRowBottomToDescTop - 8) <= 1.0, val: roomMetrics.zipRowBottomToDescTop },
+        { name: '설명 → 결과 줄 (8±1px)', ok: roomMetrics.descBottomToResolvedTop !== null && Math.abs(roomMetrics.descBottomToResolvedTop - 8) <= 1.0, val: roomMetrics.descBottomToResolvedTop },
+      ];
+
+      for (const chk of roomChecks) {
+        console.log(`    [공부방] ${chk.name}: ${chk.val !== undefined ? `${chk.val}px ` : ''}(${chk.ok ? 'PASS' : 'FAIL'})`);
+        if (!chk.ok) allPassed = false;
+      }
+
+      // 과외형 희망지역 검사
+      console.log(`  [희망지역 검증 - 과외형]`);
+      await updateStudent(1, {
+        preferred_lesson_type: 'tutor',
+        preferred_tutor_region_id: '117',
+      });
+      const tutorBody = renderMypageScreen(tab.path);
+      const tutorShell = renderMypageShell(tab.path, tutorBody);
+      await page.setContent(wrapPage('기본정보(과외형)', tutorShell), { waitUntil: 'load' });
+      await page.evaluate(() => document.fonts.ready);
+
+      const tutorMetrics = await page.evaluate(() => {
+        const slot = document.querySelector('[data-p19-hope-panel="tutor"] [data-p19-tutor-region-slot]');
+        const budgetLabel = document.querySelector('[data-p19-hope-panel="tutor"] label .p19-field__label');
+        const hopeLabel = document.querySelector('[data-p19-hope-panel="tutor"] .p19-field__label');
+        const firstSubGroup = document.querySelector('[data-region-cascade] .form-group');
+        const firstSubLabel = firstSubGroup ? firstSubGroup.querySelector('.form-label') : null;
+        const firstSelect = firstSubGroup ? firstSubGroup.querySelector('select') : null;
+        const cityWrap = document.querySelector('[data-city-wrap]');
+        const cityLabel = cityWrap ? cityWrap.querySelector('.form-label') : null;
+        const guWrap = document.querySelector('[data-gu-wrap]');
+
+        const r = (el) => el ? el.getBoundingClientRect() : null;
+        const sr = r(slot);
+        const br = r(budgetLabel);
+        const hlr = r(hopeLabel);
+        const fslr = r(firstSubLabel);
+        const fsr = r(firstSelect);
+        const clr = r(cityLabel);
+
+        const subLabelStyle = firstSubLabel ? window.getComputedStyle(firstSubLabel) : null;
+        const guWrapStyle = guWrap ? window.getComputedStyle(guWrap) : null;
+
+        return {
+          slotBottomToBudgetTop: sr && br ? Math.round((br.top - sr.bottom) * 10) / 10 : null,
+          hopeLabelBottomToFirstSubLabelTop: hlr && fslr ? Math.round((fslr.top - hlr.bottom) * 10) / 10 : null,
+          subLabelBottomToSelectTop: fslr && fsr ? Math.round((fsr.top - fslr.bottom) * 10) / 10 : null,
+          subGroupsGap: fsr && clr ? Math.round((clr.top - fsr.bottom) * 10) / 10 : null,
+          subLabelFontSize: subLabelStyle ? subLabelStyle.fontSize : null,
+          subLabelFontWeight: subLabelStyle ? subLabelStyle.fontWeight : null,
+          subLabelColor: subLabelStyle ? subLabelStyle.color : null,
+          guWrapHidden: guWrapStyle ? guWrapStyle.display === 'none' : false,
+        };
+      });
+
+      console.log('    과외형 측정 결과:', tutorMetrics);
+      const tutorChecks = [
+        { name: '희망지역 묶음 아래 → 예산 라벨 위 (24±1px)', ok: tutorMetrics.slotBottomToBudgetTop !== null && Math.abs(tutorMetrics.slotBottomToBudgetTop - 24) <= 1.0, val: tutorMetrics.slotBottomToBudgetTop },
+        { name: '희망지역 라벨 → 첫 하위 라벨 (8±1px)', ok: tutorMetrics.hopeLabelBottomToFirstSubLabelTop !== null && Math.abs(tutorMetrics.hopeLabelBottomToFirstSubLabelTop - 8) <= 1.0, val: tutorMetrics.hopeLabelBottomToFirstSubLabelTop },
+        { name: '하위 라벨 → 선택칸 (8±1px)', ok: tutorMetrics.subLabelBottomToSelectTop !== null && Math.abs(tutorMetrics.subLabelBottomToSelectTop - 8) <= 1.0, val: tutorMetrics.subLabelBottomToSelectTop },
+        { name: '하위 칸 묶음 사이 (16±1px)', ok: tutorMetrics.subGroupsGap !== null && Math.abs(tutorMetrics.subGroupsGap - 16) <= 1.0, val: tutorMetrics.subGroupsGap },
+        { name: '하위 라벨 12px/600/#4B5563', ok: tutorMetrics.subLabelFontSize === '12px' && (tutorMetrics.subLabelFontWeight === '600' || tutorMetrics.subLabelFontWeight === 'bold') && (tutorMetrics.subLabelColor === 'rgb(75, 85, 99)' || tutorMetrics.subLabelColor === '#4b5563') },
+        { name: 'hidden 묶음(data-gu-wrap) 미노출', ok: tutorMetrics.guWrapHidden },
+      ];
+
+      for (const chk of tutorChecks) {
+        console.log(`    [과외] ${chk.name}: ${chk.val !== undefined ? `${chk.val}px ` : ''}(${chk.ok ? 'PASS' : 'FAIL'})`);
+        if (!chk.ok) allPassed = false;
+      }
+
+      // 학생 1 복구 (공부방형)
+      await updateStudent(1, {
+        preferred_lesson_type: 'study_room',
+        preferred_studyroom_region_id: '9101',
+      });
     }
 
     // 3. 폰트 크기 샘플 검사

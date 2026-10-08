@@ -129,11 +129,24 @@ globalThis.fetch = async (url) => {
       }),
     };
   }
+  if (urlStr.includes('/api/auth/regions.php')) {
+    const sampleCities = [
+      { id: '117', label: '서울특별시 도봉구', sido_code: '11', sido_name: '서울특별시', official_code: '1132000000', city_name: '도봉구', kind: 'city' },
+      { id: '118', label: '서울특별시 노원구', sido_code: '11', sido_name: '서울특별시', official_code: '1135000000', city_name: '노원구', kind: 'city' },
+      { id: '9101', label: '경기도 의정부시 가능동', sido_code: '41', sido_name: '경기도', official_code: '4115000000', city_name: '의정부시', kind: 'city' },
+    ];
+    return {
+      ok: true,
+      text: async () => JSON.stringify({ ok: true, cities: sampleCities }),
+      json: async () => ({ ok: true, cities: sampleCities }),
+    };
+  }
   return { ok: true, json: async () => ({ ok: true, data: [] }) };
 };
 
 const { initAuthSession } = await import('../preview/home-ui/src/auth-session.js');
 const { ensureStudentStore, getStudent, updateStudent } = await import('../preview/home-ui/src/student-reg/store.js');
+const { ensureTutorCityUnits } = await import('../preview/home-ui/src/tutor-reg/city-units.js');
 const { deactivateRegistrationsApi } = await import('../preview/home-ui/src/registrations-backend.js');
 const { activateBoardApi, hydrateNoticeHome } = await import('../preview/home-ui/src/board/board-backend.js');
 const { renderMypageShell } = await import('../preview/home-ui/src/mypage/shell.js');
@@ -144,6 +157,7 @@ await initAuthSession(false);
 setActiveRole('parent');
 deactivateRegistrationsApi();
 ensureStudentStore();
+await ensureTutorCityUnits();
 await activateBoardApi({ navRole: 'parent' });
 await hydrateNoticeHome();
 
@@ -255,6 +269,48 @@ for (const tab of TABS) {
   console.log(`  Saved mobile shot: ${mobilePath}`);
 
   await page.close();
+
+  // 기본정보의 경우 과외형도 추가 캡처
+  if (tab.id === 'after-2-basic') {
+    await updateStudent(1, {
+      preferred_lesson_type: 'tutor',
+      preferred_tutor_region_id: '117',
+    });
+    const tutorBody = renderMypageScreen(tab.path);
+    const tutorShell = renderMypageShell(tab.path, tutorBody);
+    const tutorHtml = wrapPage(`${tab.title} (과외형)`, tutorShell);
+
+    const tPage = await browser.newPage({ viewport: { width: 1280, height: 1600 } });
+    await tPage.setContent(tutorHtml, { waitUntil: 'load' });
+    await tPage.evaluate(() => {
+      const forms = document.querySelectorAll('form');
+      forms.forEach((f) => f.setAttribute('data-input-fill', ''));
+      const SKIP_TYPES = new Set(['hidden', 'radio', 'checkbox', 'button', 'submit', 'reset', 'file', 'image', 'range', 'color']);
+      document.querySelectorAll('input, select, textarea').forEach((el) => {
+        const tag = el.tagName.toUpperCase();
+        const type = String(el.type || 'text').toLowerCase();
+        if (SKIP_TYPES.has(type)) return;
+        const val = String(el.value || '').trim();
+        el.setAttribute('data-fill', val ? 'filled' : 'empty');
+      });
+    });
+    await tPage.evaluate(() => document.fonts.ready);
+    const tutorDesktopPath = join(OUT_DIR, 'after-2-basic-tutor.png');
+    await tPage.screenshot({ path: tutorDesktopPath, fullPage: true });
+    console.log(`  Saved tutor desktop shot: ${tutorDesktopPath}`);
+
+    await tPage.setViewportSize({ width: 390, height: 1200 });
+    const tutorMobilePath = join(OUT_DIR, 'after-2-basic-tutor-m.png');
+    await tPage.screenshot({ path: tutorMobilePath, fullPage: true });
+    console.log(`  Saved tutor mobile shot: ${tutorMobilePath}`);
+    await tPage.close();
+
+    // 복구
+    await updateStudent(1, {
+      preferred_lesson_type: 'study_room',
+      preferred_studyroom_region_id: '9101',
+    });
+  }
 }
 
 await browser.close();

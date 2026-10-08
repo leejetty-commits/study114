@@ -266,3 +266,73 @@
    - 캡처 및 검증 스크립트에서 김하늘(1) 학생에 대해 `updateStudent(1, ...)`를 실행하여 공부방 희망지역(경기도 의정부시 가능동)을 주입함.
    - 캡처 페이지 내에서 `data-input-fill` 속성을 부여하고 채워진 입력칸에 대해 `data-fill="filled"`를 적용하여, 주소칸 좌우 12, 결과 줄 10/12, 값 있는 칸의 194 회색 채움이 `tmp-design\shots\after-2-basic.png`에 시안과 완벽하게 동일하게 노출됨.
 
+---
+
+## 10. 메인 검수 반려 2차 조치 내역
+
+- **작업 일시**: 2026-10-08
+- **대상**: 기본정보 희망지역 묶음 간격(24px) 및 하위 요소 규격(과외형/공부방형), 캡처 vs 실제 마크업 원인 판정
+
+### 10-1. 원인 분석 및 (a)/(b) 판정
+
+1. **과외형 희망지역 간격 불일치 원인**:
+   - `screens.js`에서 `data-p19-hope-panel="tutor"` 안에 희망지역 slot과 예산 field가 한 컨테이너로 묶여 있으나, CSS에서 `[data-p19-hope-panel]`에 `display: flex; gap: 24px;`가 선언되어 있지 않아 두 필드 사이의 간격이 0px이었음.
+   - 공용 `preview/shared/region-cascade.js`의 마크업(`[data-region-cascade] .form-group`, `.form-label`)에 대한 학생 마이페이지 전용 스타일이 누락되어, 시·도 선택칸 바로 아래에 구·군 라벨이 붙어 있었음.
+   - `.p19-field`의 기본 `gap: 0.375rem`(6px)과 슬롯 상단 마진이 중첩되어 희망지역 라벨과 첫 하위 라벨 사이가 8px 규격과 어긋났음.
+
+2. **공부방형 희망지역 이상 현상 판정**:
+   - **판정: 실제 마크업 구조(`screens.js`의 `data-p19-hope-panel`)와 CSS 오버라이드 누락(`student-mypage-stage5b.css`) 탓임 (캡처 스크립트 탓이 아님)**
+   - **세부 원인**:
+     - 「희망지역」 라벨 미노출: `student-mypage-stage5b.css` 431행에서 `.register-region-slot__toolbar`를 `display: none !important;`로 숨겨서 `<strong>희망지역</strong>`이 화면에서 제거되었음 (CSS 탓).
+     - 결과 줄 위 큰 빈 공간: `preview/shared/register-flow.css` 297행의 `.register-region-slot__search { min-height: 7.25rem; }` 규칙 때문에 116px의 강제 최소 높이가 발생했음 (CSS 탓).
+     - 결과 줄이 예산 라벨에 붙은 이유: `data-p19-hope-panel="study_room"`에 `gap: 24px`가 없어 희망지역 슬롯 아래 끝과 예산 필드 사이 간격이 0px이었음 (CSS 탓).
+
+### 10-2. 수정 내용 (`preview/home-ui/src/styles/student-mypage-stage5b.css`)
+
+1. **희망 유형 분기 패널 간격 (공통)**:
+   - `.home-app--role-parent .mp-room [data-p19-hope-panel]`: `display: flex; flex-direction: column; gap: 24px;` 적용.
+   - `.home-app--role-parent .mp-room [data-p19-hope-panel][hidden]`: `display: none !important;` 적용하여 숨김 패널 완벽 은닉.
+   - `.home-app--role-parent .mp-room .p19-field`: `gap: 0;` 적용하여 라벨과 컨트롤 사이 8px 마진 체계 단일화.
+
+2. **과외형 희망지역 규격**:
+   - 「희망지역」 라벨 → 첫 하위 라벨: `.home-app--role-parent .mp-room [data-p19-tutor-region-slot] { margin-top: 8px; }` (8px).
+   - 하위 칸 묶음 사이: `.home-app--role-parent .mp-room [data-region-cascade] { display: flex; flex-direction: column; gap: 16px; }` (16px).
+   - 하위 라벨 스타일: `.home-app--role-parent .mp-room [data-region-cascade] .form-label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; line-height: 1.4; margin: 0; }`.
+   - 하위 라벨 → 선택칸: `.home-app--role-parent .mp-room [data-region-cascade] .p19-select { margin-top: 8px; }` (8px).
+   - hidden 요소 은닉: `.home-app--role-parent .mp-room [data-region-cascade] [hidden] { display: none !important; }`.
+
+3. **공부방형 희망지역 규격**:
+   - 라벨 복원: `.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__toolbar { display: block !important; margin: 0 !important; }`, `strong` 태그 14px 600 var(--s5-ink).
+   - 도움말 → 칩: `.register-region-slot__basis-hint { margin: 0 !important; }` (부모 gap 8px로 8px 유지).
+   - 칩 → 주소줄: `.register-region-slot__search { min-height: 0 !important; margin-top: 8px !important; }` (116px 강제 공백 제거 및 8px 유지).
+   - 주소줄 → 설명: `.register-region-slot__search .form-hint { margin: 8px 0 0 0 !important; }` (8px).
+   - 설명 → 결과 줄: `[data-slot-resolved] { margin: 8px 0 0 0 !important; }` (8px), `:empty { display: none !important; }`.
+   - 묶음 아래 24: `[data-hope-region]`과 슬롯의 마진 0 처리로 `[data-p19-hope-panel]`의 `gap: 24px`가 정확히 다음 필드(예산)에 전달됨.
+
+### 10-3. 측정 및 검증 결과 (`scripts/verify-student-mypage-metrics.mjs`)
+
+PC(1280px) 및 모바일(390px) 모두에서 검증 스크립트 실행 결과:
+
+```
+[공부방] 희망지역 라벨 노출(14px/600): (PASS)
+[공부방] 희망지역 묶음 아래 → 예산 라벨 위 (24±1px): 24px (PASS)
+[공부방] 도움말 → 칩 (8±1px): 8px (PASS)
+[공부방] 칩 → 주소줄 (8±1px): 8px (PASS)
+[공부방] 주소줄 → 설명 (8±1px): 8px (PASS)
+[공부방] 설명 → 결과 줄 (8±1px): 8px (PASS)
+
+[과외] 희망지역 묶음 아래 → 예산 라벨 위 (24±1px): 24px (PASS)
+[과외] 희망지역 라벨 → 첫 하위 라벨 (8±1px): 8px (PASS)
+[과외] 하위 라벨 → 선택칸 (8±1px): 8px (PASS)
+[과외] 하위 칸 묶음 사이 (16±1px): 16px (PASS)
+[과외] 하위 라벨 12px/600/#4B5563: (PASS)
+[과외] hidden 묶음(data-gu-wrap) 미노출: (PASS)
+```
+
+- **스크린샷 산출물**:
+  - `tmp-design\shots\after-2-basic.png`: 공부방형 데스크톱 (라벨 노출, 간격 정상화, 빈 공간 제거, 24px 간격 확인)
+  - `tmp-design\shots\after-2-basic-m.png`: 공부방형 모바일
+  - `tmp-design\shots\after-2-basic-tutor.png`: 과외형 데스크톱 (시·도/구·군 16px 간격, 12px 600 라벨, 24px 예산 간격 확인)
+  - `tmp-design\shots\after-2-basic-tutor-m.png`: 과외형 모바일
+
+

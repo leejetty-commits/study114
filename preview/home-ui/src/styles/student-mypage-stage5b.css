@@ -247,6 +247,7 @@
 .home-app--role-parent .mp-room .p19-field {
   display: flex;
   flex-direction: column;
+  gap: 0;
   min-width: 0;
 }
 
@@ -418,7 +419,54 @@
   box-shadow: inset 0 0 0 3px #fff;
 }
 
-/* 희망지역 (§2-5: 색 박스 제거, 같은 시작선, 주소칸 좌우 12, 결과 줄 10/12, Secondary h44) */
+/* 희망 유형 분기 패널 (tutor / study_room) */
+.home-app--role-parent .mp-room [data-p19-hope-panel] {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.home-app--role-parent .mp-room [data-p19-hope-panel][hidden] {
+  display: none !important;
+}
+
+/* 과외 희망지역 ([data-region-cascade]): 하위 라벨 12/600/#4B5563, 라벨->선택칸 8, 하위 칸 사이 16, 희망지역 라벨->첫 하위 라벨 8 */
+.home-app--role-parent .mp-room [data-p19-tutor-region-slot] {
+  margin-top: 8px;
+}
+
+.home-app--role-parent .mp-room [data-region-cascade] {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.home-app--role-parent .mp-room [data-region-cascade] [hidden],
+.home-app--role-parent .mp-room [data-region-cascade] input[type="hidden"] {
+  display: none !important;
+}
+
+.home-app--role-parent .mp-room [data-region-cascade] .form-group {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.home-app--role-parent .mp-room [data-region-cascade] .form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.home-app--role-parent .mp-room [data-region-cascade] .p19-select {
+  margin-top: 8px;
+}
+
+/* 공부방 희망지역 (§2-5: 라벨 보임, 색 박스 제거, 같은 시작선, 주소칸 좌우 12, 결과 줄 10/12, Secondary h44) */
+.home-app--role-parent .mp-room [data-hope-region],
 .home-app--role-parent .mp-room [data-hope-region] .register-region-slot {
   background: transparent !important;
   border: 0 !important;
@@ -429,24 +477,53 @@
 }
 
 .home-app--role-parent .mp-room [data-hope-region] .register-region-slot__toolbar {
-  display: none !important;
+  display: block !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__toolbar strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--s5-ink);
+  line-height: 1.5;
+  display: block;
 }
 
 .home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
-  margin-bottom: 8px;
+  margin-top: 2px !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
 }
 
 .home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis-hint {
   width: 100%;
   order: -1;
   font-size: 12px;
+  font-weight: 400;
   color: var(--s5-muted);
   line-height: 1.4;
-  margin: 0 0 8px;
+  margin: 0 !important;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__search {
+  min-height: 0 !important;
+  margin-top: 8px !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] .register-region-slot__search .form-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--s5-muted);
+  line-height: 1.4;
+  margin: 8px 0 0 0 !important;
 }
 
 .home-app--role-parent .mp-room__tabs {
@@ -508,7 +585,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-top: 8px;
+  margin: 0 !important;
 }
 
 .home-app--role-parent .mp-room [data-hope-region] .form-address__zip-row .form-input {
@@ -553,9 +630,13 @@
   background: var(--s5-bg);
   font-size: 14px;
   color: var(--s5-ink);
-  margin-top: 8px;
+  margin: 8px 0 0 0 !important;
   border: 0;
   box-sizing: border-box;
+}
+
+.home-app--role-parent .mp-room [data-hope-region] [data-slot-resolved]:empty {
+  display: none !important;
 }
 
 .home-app--role-parent .mypage-empty {
