@@ -25,12 +25,6 @@ export const P21_INQUIRY_COPY = {
     '쪽지설정 저장 컬럼이 아직 운영 DB에 없습니다. 관리자가 064 SQL을 적용한 뒤 다시 저장해 주세요.',
   saveFailed: '저장에 실패했습니다. 화면은 마지막 서버값으로 되돌립니다.',
   saveCta: '저장하기',
-  sampleTitle: '쪽지 설정시 카드 샘플',
-  sampleLead: '홈과 같은 실제 베이직카드입니다. 화살표가 쪽지 관련 표시 위치를 가리킵니다.',
-  sampleOpenKicker: '쪽지 받는 중',
-  sampleClosedKicker: '쪽지 안받음',
-  sampleOpenCallout: '여기가 쪽지 관련 표시 위치입니다. 받는 중이면 ✉가 활성입니다.',
-  sampleClosedCallout: '여기가 쪽지 관련 표시 위치입니다. 안받음이면 ✉가 비활성입니다.',
 };
 
 export const P21_INQUIRY_OFF_REASONS = [

@@ -4,13 +4,13 @@
  *
  * PASS = 정책이 그 계층까지 연결됨
  * FAIL = 끊김·구정책·다른 문법 (최종 완료 차단 조건)
- * INFO = 의도적 분리(등록점검 샘플 등)
+ * INFO = 의도적 분리
  */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Node에서 exposure-data / reviews store가 sessionStorage를 씀 — 최소 폴리필
+// Node에서 reviews store가 sessionStorage를 씀 — 최소 폴리필
 if (typeof globalThis.sessionStorage === 'undefined') {
   const mem = new Map();
   globalThis.sessionStorage = {
@@ -45,7 +45,32 @@ const {
 const { renderBrowseList, renderExposureBox, renderItemActions } = await import(
   '../preview/home-ui/src/exposure-render.js'
 );
-const { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS } = await import('../preview/home-ui/src/exposure-data.js');
+/** 검사 전용 고정 입력(화면 노출 풀과 무관). */
+const FIXTURE_ROOM = {
+  id: 1,
+  study_room_name: '검사용 공부방',
+  region_label: '대치동',
+  main_subject_note: '수학',
+  grade_band: '중등',
+  recommend_count: 3,
+  review_count: 1,
+  education_office_registered: true,
+  career_years: 5,
+  paid_badges: ['hot'],
+  profile_status: 'published',
+  exposure_tier: 'basic',
+};
+const FIXTURE_TUTOR = {
+  id: 1,
+  tutor_display_name: '검사용 과외쌤',
+  region_label: '대치동',
+  main_subject_note: '영어',
+  recommend_count: 2,
+  review_count: 1,
+  paid_badges: ['sky'],
+  profile_status: 'published',
+  exposure_tier: 'basic',
+};
 const { countTrustItems, buildTrustStrip } = await import(
   '../preview/home-ui/src/detail-decision/detail-utils.js'
 );
@@ -86,7 +111,7 @@ const actionsHtml = renderItemActions({
   guest: false,
   compareKind: 'study_room',
   itemId: 1,
-  item: EXPOSURE_STUDY_ROOMS[0],
+  item: FIXTURE_ROOM,
 });
 record(
   !/좋아요|data-action="like"|like_count/.test(actionsHtml) ? 'PASS' : 'FAIL',
@@ -123,15 +148,15 @@ function railActions(html) {
   );
 }
 
-const roomSelfHtml = renderSearchTierResults('room', [EXPOSURE_STUDY_ROOMS[0]], { role: 'study_room', homeSelf: true }, {
+const roomSelfHtml = renderSearchTierResults('room', [FIXTURE_ROOM], { role: 'study_room', homeSelf: true }, {
   surfaceType: 'home',
   mode: 'region',
 });
-const tutorSelfHtml = renderSearchTierResults('tutor', [EXPOSURE_TUTORS[0]], { role: 'tutor', homeSelf: true }, {
+const tutorSelfHtml = renderSearchTierResults('tutor', [FIXTURE_TUTOR], { role: 'tutor', homeSelf: true }, {
   surfaceType: 'home',
   mode: 'region',
 });
-const parentRoomHtml = renderSearchTierResults('room', [EXPOSURE_STUDY_ROOMS[0]], { role: 'parent' }, {
+const parentRoomHtml = renderSearchTierResults('room', [FIXTURE_ROOM], { role: 'parent' }, {
   surfaceType: 'home',
   mode: 'region',
 });
@@ -311,8 +336,8 @@ record(
 );
 
 // —— 라우팅 스냅샷 HTML ——
-const room = EXPOSURE_STUDY_ROOMS.find((r) => (r.paid_badges || []).includes('hot')) || EXPOSURE_STUDY_ROOMS[0];
-const tutor = EXPOSURE_TUTORS.find((t) => (t.paid_badges || []).length) || EXPOSURE_TUTORS[0];
+const room = FIXTURE_ROOM;
+const tutor = FIXTURE_TUTOR;
 const snapshots = {
   basic_room: renderBrowseList('study_room', [room], { guest: false }),
   pick_room: renderExposureBox('study_room', 'pick', room, '', { guest: false }),
@@ -334,14 +359,9 @@ record(
   'compare-modal 상단 compare-policy-axis = card-visual 유료·신뢰·통계 (표형 유지)',
 );
 record(
-  'INFO',
-  'P19_registration_check_rc_tier',
-  '등록점검 rc-tier는 Pick/Prime 상품 유도 샘플 — 운영 노출카드 SSOT 비적용이 의도',
-);
-record(
-  'INFO',
-  'P20_inquiry_preview_uses_browse_list',
-  '쪽지설정 미리보기=renderBrowseList → card-visual 경로 공유 (단, room 필드 밀도에 의존)',
+  !fs.existsSync(path.join(__dirname, '../preview/home-ui/src/home-card-samples')) ? 'PASS' : 'FAIL',
+  'P19_no_sample_cards',
+  '등록점검·쪽지설정 카드 샘플(home-card-samples) 없음',
 );
 
 const report = {
@@ -367,7 +387,7 @@ const report = {
     trust: {
       db: 'education_office_registered, business_registration_available, career_years, university_status, proof_document_available',
       api: 'search.php (일부 필드 2026-08-22 추가)',
-      adapter: 'home-basic-live / exposure-bridge(불완전)',
+      adapter: 'home-basic-live / exposure-bridge',
       cardVisual: 'trustBadges[]',
     },
     paid_badges: {

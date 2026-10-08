@@ -186,6 +186,8 @@ const inner = card.appendChild(new FakeElement('span'));
 const sample = root.appendChild(new FakeElement('article', { 'data-expo-sample': '' }));
 bindGuestEmptyCardLoginGate(root);
 bindGuestEmptyCardLoginGate(root);
+const { readFileSync } = await import('node:fs');
+assert(!/data-expo-sample/.test(readFileSync(new URL('../preview/shared/guest-gate-ui.js', import.meta.url), 'utf8')), 'guest-gate-ui: 샘플카드 선택자 없음');
 assert(root.listeners.click?.length === 1, '바인딩은 한 번만(클릭 시점 판정 검증용으로 같은 핸들러 재사용)');
 
 function click(target) {
@@ -209,7 +211,7 @@ let r = click(inner);
 assert(!isLoggedIn() && r.opened, '비로그인 · 빈카드 → 로그인 창 열림');
 assert(r.e.defaultPrevented && r.e.stopped, '비로그인 · preventDefault/stopPropagation 실행');
 r = click(sample);
-assert(r.opened, '비로그인 · 샘플카드 → 로그인 창 열림');
+assert(!r.opened && !r.e.defaultPrevented, '비로그인 · 옛 data-expo-sample 요소 → 게이트 대상 아님(샘플카드 없음)');
 
 // ── (a) 로그인(home·search: auth-session) → 통과 ──
 console.log('\n=== (a) 로그인 빈카드 클릭 (auth-session) ===');
@@ -220,7 +222,7 @@ r = click(inner);
 assert(!r.opened, '로그인 · 빈카드 → 로그인 창 없음');
 assert(!r.e.defaultPrevented && !r.e.stopped, '로그인 · preventDefault/stopPropagation 없음');
 r = click(sample);
-assert(!r.opened && !r.e.defaultPrevented, '로그인 · 샘플카드 → 통과');
+assert(!r.opened && !r.e.defaultPrevented, '로그인 · 옛 data-expo-sample 요소 → 통과');
 
 const zeroParent = renderStudentCountHalt();
 assert(

@@ -31,13 +31,6 @@ export const TRC_COPY = {
     gotoField: '입력하러 가기',
     pickReadyBody: '픽에 필요한 추가 항목이 채워져 있습니다.',
     primeReadyBody: '프라임에 필요한 추가 항목이 채워져 있습니다.',
-    cardsTitle: '베이직카드/픽/프라임 이렇게 달라집니다',
-    cardsLead:
-      '샘플은 홈 실제 카드와 같은 크기·구성입니다. 1행은 베이직 목록 카드, 2행은 픽·프라임 유료 노출 카드입니다. 확대카드 보기로 상세를 엽니다.',
-    basicKicker: '베이직카드',
-    pickKicker: '픽',
-    primeKicker: '프라임',
-    expandCard: '확대카드 보기',
   },
   board: {
     title: '전체 프로필 현황',

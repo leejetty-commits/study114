@@ -2503,72 +2503,8 @@ a.msg-attach:hover { text-decoration: underline; }
   display: flex;
   justify-content: flex-start;
 }
-.p21-inq-block--samples {
-  overflow-x: auto;
-  overflow-y: visible;
-}
 .p21-inq {
   overflow: visible;
 }
 
-/* 쪽지설정 샘플 — 홈 BASIC 1칸 폭 + 화살표 가이드 */
-.inq-samples {
-  display: flex;
-  flex-direction: column;
-  gap: 1.85rem;
-  margin-top: 0.5rem;
-}
-.inq-sample {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-}
-.inq-sample__kicker {
-  margin: 0 0 0.35rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: #64748b;
-  letter-spacing: normal;
-  text-transform: none;
-}
-.inq-sample--open .inq-sample__kicker {
-  color: #047857;
-}
-.inq-sample--closed .inq-sample__kicker {
-  color: #64748b;
-}
-.inq-sample__stage {
-  position: relative;
-  overflow: visible;
-  width: max-content;
-  max-width: 100%;
-}
-.inq-sample__guide {
-  position: absolute;
-  left: 0;
-  top: 0;
-  overflow: visible;
-  pointer-events: none;
-  z-index: 2;
-}
-.inq-sample__callout {
-  position: absolute;
-  z-index: 3;
-  margin: 0;
-  max-width: 16.5rem;
-  transform: translateX(-50%);
-  font-size: 0.8125rem;
-  font-weight: 650;
-  line-height: 1.4;
-  color: #1d4ed8;
-  text-align: center;
-  pointer-events: none;
-}
-.inq-sample--closed .inq-sample__callout {
-  color: #475569;
-}
-.inq-sample--closed .item-actions [title^='쪽지'] {
-  opacity: 0.38;
-}
 

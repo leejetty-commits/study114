@@ -1,10 +1,8 @@
 /**
  * 과외쌤 등록점검 렌더 — 필수 입력 현황 + Pick/Prime 노출 안내
- * 비교 카드만 실노출 tutor 카드 HTML을 쓴다.
  */
 
 import { TRC_COPY } from './registration-check-copy.js';
-import { renderRegistrationCheckCardSamples } from '../home-card-samples/render.js';
 import { tutorRegistrationCheckTabHref } from './registration-check-model.js';
 
 function esc(s) {
@@ -80,10 +78,6 @@ function renderMissingBlock(title, items, emptyText) {
       <h3 class="rc-block__title">${esc(title)}</h3>
       ${body}
     </section>`;
-}
-
-function renderCards(vm) {
-  return renderRegistrationCheckCardSamples('tutor', vm.promo);
 }
 
 function statusCell(row) {
@@ -210,7 +204,6 @@ export function renderTutorRegistrationCheck(vm) {
       ${renderPromoCopy(vm)}
       ${renderMissingBlock(vm.promo.pickMissingTitle, vm.promo.pickMissing, vm.promo.pickReadyBody)}
       ${renderMissingBlock(vm.promo.primeMissingTitle, vm.promo.primeMissing, vm.promo.primeReadyBody)}
-      ${renderCards(vm)}
       ${renderBoard(vm)}
     </div>`;
 }

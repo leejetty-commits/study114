@@ -60,10 +60,17 @@ assert(screens.includes('isReturnToRegistrationCheck'), 'screens: save return to
 
 assert(render.includes('rc-block--action'), 'render: action blocks');
 
-const hcsRender = read('preview/home-ui/src/home-card-samples/render.js');
-const hcsCss = read('preview/home-ui/src/styles/home-card-samples.css');
-assert(hcsRender.includes('rc-block--compare'), 'render: compare block separate');
-assert(render.includes("renderRegistrationCheckCardSamples('tutor'"), 'render: shared home-card samples');
+assert(!render.includes('rc-block--compare'), 'render: no compare sample block');
+assert(!render.includes('renderRegistrationCheckCardSamples'), 'render: no shared home-card samples');
+assert(!render.includes('home-card-samples'), 'render: no home-card-samples import');
+for (const rel of [
+  'preview/home-ui/src/home-card-samples/render.js',
+  'preview/home-ui/src/home-card-samples/presets.js',
+  'preview/home-ui/src/home-card-samples/guides.js',
+  'preview/home-ui/src/styles/home-card-samples.css',
+]) {
+  assert(!existsSync(resolve(root, rel)), `sample module removed: ${rel}`);
+}
 assert(render.includes('rc-fold-btn'), 'render: explicit fold button');
 assert(render.includes('data-trc-fold'), 'render: fold control');
 assert(!render.includes('rc-section--accordion'), 'render: detail1/2 not sibling accordion');
@@ -72,30 +79,18 @@ assert(copy.includes("detail1: '수업 · 가격'"), 'copy: detail1 = 수업 · 
 assert(copy.includes("detail2: '학력 · 소개 · 연락'"), 'copy: detail2 = 학력 · 소개 · 연락');
 assert(render.includes('rc-publish'), 'render: publish wrap');
 assert(render.includes('rc-next'), 'render: next action');
-assert(hcsRender.includes('data-trc-expand'), 'render: tutor expand namespace');
-assert(hcsRender.includes("renderRegistrationCheckCardSamples"), 'hcs: shared RC samples');
-assert(hcsRender.includes('rc-compare__row--basic'), 'hcs: BASIC row');
-assert(hcsRender.includes('rc-compare__row--upgrade'), 'hcs: PICK+PRIME row');
-assert(hcsRender.includes('renderBrowseList'), 'hcs: BASIC renderBrowseList');
-assert(hcsRender.includes("renderExposureBox(kind, 'pick'"), 'hcs: PICK renderExposureBox');
-assert(hcsRender.includes("renderExposureBox(kind, 'prime'"), 'hcs: PRIME renderExposureBox');
-assert(hcsCss.includes('--hcs-basic-w'), 'hcs css: basic cell');
-assert(hcsCss.includes('--hcs-pick-w'), 'hcs css: pick cell');
-assert(hcsCss.includes('--hcs-prime-w'), 'hcs css: prime cell');
-assert(hcsCss.includes('--hcs-grid-gap: var(--space-2)'), 'hcs css: live expo-grid gap');
-assert(hcsCss.includes('--hcs-prime-gap: var(--space-2)'), 'hcs css: live prime grid gap');
-assert(!hcsCss.includes('0.85fr') && !hcsCss.includes('1.25fr'), 'hcs css: no artificial pick/prime stretch');
+assert(!render.includes('data-trc-expand'), 'render: no tutor expand sample');
 const mainJs = read('preview/home-ui/src/main.js');
-assert(mainJs.includes("import './styles/home-card-samples.css'"), 'main: home-card-samples.css linked');
+assert(!mainJs.includes('home-card-samples'), 'main: home-card-samples.css not linked');
 assert(!css.includes('0.85fr') && !css.includes('1.25fr'), 'css: no artificial pick/prime stretch');
 assert(!css.includes('[data-trc-page] .rc-sample__card--prime'), 'css: no legacy trc rc-sample prime width');
 const pageFn = render.slice(render.indexOf('export function renderTutorRegistrationCheck'));
 assert(pageFn.includes('pickMissingTitle'), 'page: pick action');
 assert(pageFn.includes('primeMissingTitle'), 'page: prime action');
-assert(pageFn.includes('${renderCards(vm)}'), 'page: independent cards');
+assert(!pageFn.includes('renderCards'), 'page: no card sample block');
 assert(
-  pageFn.indexOf('primeMissingTitle') < pageFn.indexOf('${renderCards(vm)}'),
-  'page: cards after prime action block',
+  pageFn.indexOf('primeMissingTitle') < pageFn.indexOf('${renderBoard(vm)}'),
+  'page: board right after prime action block (no cards)',
 );
 assert(pageFn.indexOf('${renderBoard(vm)}') < pageFn.indexOf('${renderPublishActions(vm)}'), 'page: CTA after board');
 
@@ -111,12 +106,11 @@ assert(!model.includes("row('grade_band'"), 'model: grade_band not on basic form
 assert(model.includes("row('fee_description'"), 'model: 가격 설명');
 assert(model.includes("row('major_name'"), 'model: 전공 단독');
 assert(model.includes("'monthly_session_count'"), 'model: 월 총 횟수 단독');
-assert(copy.includes("basicKicker: 'BASIC'"), 'copy: BASIC kicker');
+assert(!copy.includes('basicKicker'), 'copy: sample kicker removed');
 assert(copy.includes("pickMissingTitle: '[픽] 추가 입력'"), 'copy: pick title');
 assert(copy.includes("primeMissingTitle: '[프라임] 추가 입력'"), 'copy: prime title');
 assert(!copy.includes('베이직 검색은 기본정보만으로도 가능합니다'), 'copy: no study-room basic-only claim');
-assert(css.includes('rc-compare--stack'), 'css: stack layout');
-assert(hcsCss.includes('--hcs-pick-w'), 'css: pick home-cell width via hcs');
+assert(!css.includes('rc-compare') && !css.includes('rc-block--compare'), 'css: no orphan sample compare rules');
 assert(css.includes('[data-trc-page] .rc-fold-btn'), 'css: fold button');
 assert(css.includes('[data-trc-page] .rc-publish'), 'css: tutor publish scoped');
 
@@ -146,13 +140,7 @@ assert(
   'detail2 = 학력 · 소개 · 연락 1:1',
 );
 
-const sample = read('preview/home-ui/src/tutor-reg/registration-check-sample.js');
-assert(sample.includes('tutor-card-sample.jpg'), 'sample: virtual portrait asset');
-assert(sample.includes("tutor_display_name: '김하린'"), 'sample: filled name');
-assert(
-  existsSync(resolve(root, 'preview/home-ui/public/assets/brand/tutor-card-sample.jpg')),
-  'sample image in home-ui public',
-);
+assert(!existsSync(resolve(root, 'preview/home-ui/src/tutor-reg/registration-check-sample.js')), 'sample: virtual tutor sample module removed');
 assert(screens.includes('data-trc-field="fee_description"'), 'screens: 가격 설명 focus');
 assert(screens.includes('data-trc-field="major_name"'), 'screens: 전공 focus');
 assert(screens.includes('data-trc-field="monthly_session_count"'), 'screens: 월 총 횟수 focus');
@@ -168,12 +156,12 @@ assert(html.includes('수업 · 가격'), 'html: detail1 label');
 assert(html.includes('학력 · 소개 · 연락'), 'html: detail2 label');
 assert(html.includes('펼치기'), 'html: detail fold button');
 assert(html.includes('접기'), 'html: basic fold button');
-assert(html.includes('김하린'), 'html: virtual sample name');
+assert(!html.includes('김하린'), 'html: no virtual sample name');
 assert(html.includes('내프로필쌤'), 'html: board uses live tutor');
-assert(html.includes('tutor-card-sample.jpg'), 'html: virtual sample image');
-assert(html.includes('expo-basic--tutor'), 'html: BASIC home card');
-assert(html.includes('expo-card--pick'), 'html: PICK home card');
-assert(html.includes('expo-card--prime'), 'html: PRIME home card');
+assert(!html.includes('tutor-card-sample.jpg'), 'html: no virtual sample image');
+assert(!html.includes('expo-basic--tutor'), 'html: no BASIC sample card');
+assert(!html.includes('expo-card--pick'), 'html: no PICK sample card');
+assert(!html.includes('expo-card--prime'), 'html: no PRIME sample card');
 
 const qPath = `${tutorSectionPath(7, 'detail')}?return=registration-check&focus=intro_long`;
 const qRoute = parseTutorRegPath(qPath);

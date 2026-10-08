@@ -60,7 +60,6 @@ const outDir = path.join(__dirname, '../tmp/parent-review-positive');
 fs.mkdirSync(outDir, { recursive: true });
 
 const { renderItemActions } = await import('../preview/home-ui/src/exposure-render.js');
-const { EXPOSURE_STUDY_ROOMS } = await import('../preview/home-ui/src/exposure-data.js');
 const { renderSecondaryActions } = await import('../preview/home-ui/src/detail-decision/detail-shell.js');
 const { getReviewSummaryLocal, createProviderReview } = await import(
   '../preview/home-ui/src/provider-reviews/store.js'
@@ -75,7 +74,15 @@ const { renderReviewSectionMarkup } = await import('../preview/home-ui/src/provi
 
 const PARENT = { role: 'parent', userId: 6, isOwner: false };
 const TARGET_ID = 77;
-const item = { ...EXPOSURE_STUDY_ROOMS[0], id: TARGET_ID, review_count: 2, recommend_count: 1 };
+const item = {
+  id: TARGET_ID,
+  study_room_name: '검사용 공부방',
+  region_label: '대치동',
+  main_subject_note: '수학',
+  profile_status: 'published',
+  review_count: 2,
+  recommend_count: 1,
+};
 const rows = [];
 let pass = 0;
 let fail = 0;

@@ -252,14 +252,6 @@ export function statusLabel(status) {
   return exposureStatusLabel(status);
 }
 
-/** 21장 · P15-10 제출자료 항목 (프리뷰 더미) */
-export const SUBMISSION_DOC_ITEMS = [
-  { key: 'identity', label: '본인 확인 자료', status: 'submitted', visibility: 'self_only' },
-  { key: 'education', label: '학력 자료', status: 'submitted', visibility: 'public' },
-  { key: 'career', label: '경력 자료', status: 'optional', visibility: 'public' },
-  { key: 'certificate', label: '자격증', status: 'not_submitted', visibility: 'private' },
-];
-
 const SUBMISSION_STATUS_LABELS_LOCAL = SUBMISSION_STATUS_LABELS;
 const SUBMISSION_VISIBILITY_LABELS_LOCAL = SUBMISSION_VISIBILITY_LABELS;
 
@@ -273,7 +265,7 @@ export function submissionDocVisibilityLabel(visibility) {
   return SUBMISSION_VISIBILITY_LABELS_LOCAL[visibility] || visibility;
 }
 
-/** @param {typeof SUBMISSION_DOC_ITEMS} docs */
+/** @param {Array<{ status: string }>} docs */
 export function formatSubmissionDocSummary(docs) {
   const total = docs.length;
   const submitted = docs.filter((d) => d.status === 'submitted' || d.status === 'optional').length;
@@ -282,8 +274,7 @@ export function formatSubmissionDocSummary(docs) {
   return `제출 ${submitted}/${total}`;
 }
 
-/** @param {MypageRole} role */
-export function getSubmissionDocs(role) {
-  if (role !== 'tutor') return [];
-  return SUBMISSION_DOC_ITEMS;
+/** @param {MypageRole} _role @returns {Array<{ key: string, label: string, status: string, visibility: string }>} */
+export function getSubmissionDocs(_role) {
+  return [];
 }

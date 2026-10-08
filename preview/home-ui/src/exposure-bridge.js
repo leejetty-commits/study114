@@ -1,6 +1,6 @@
 /**
- * exposure-data.js ↔ 검색 API 실 ID 브리지 (Dev 로그인 시)
- * 012_search_dev_seed 기준: 공부방 3 · 과외 2 · 학생 2
+ * 검색 API 실데이터 → exposure-data.js 노출 풀 (Dev 로그인 시)
+ * 풀은 빈 배열로 시작하고 API 결과만 담는다.
  */
 
 import { isLoggedIn } from './auth-session.js';
@@ -16,64 +16,61 @@ export const REAL_DB_CAP = { study_room: 3, tutor: 2, student: 2 };
 
 let bridged = false;
 
-/**
- * @param {object} item
- * @param {object} base
- */
-function mapRoomItem(item, base) {
+/** @param {object} item */
+function mapRoomItem(item) {
   const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
-  const merged = {
-    ...base,
-    id: item.id,
-    study_room_name: item.title || base.study_room_name,
-    location_label: item.region_label || base.location_label,
-    price_amount: item.price_amount ?? base.price_amount,
-    recommend_count: item.recommend_count ?? base.recommend_count ?? 0,
-    review_count: item.review_count ?? base.review_count ?? 0,
-    published_at: item.published_at || item.created_at || base.published_at,
-    main_subject_note: summaryLines[0] || base.main_subject_note,
-    intro_short: summaryLines[1] || base.intro_short,
-    profile_status: 'published',
-    compare_eligible: true,
-    inquiry_status: item.inquiry_status ?? base.inquiry_status ?? 'paused',
-    badges: studyRoomBadges({ ...base, main_subject_note: summaryLines[0] || base.main_subject_note }),
-    latitude: item.latitude ?? base.latitude ?? null,
-    longitude: item.longitude ?? base.longitude ?? null,
-    _realDb: true,
-  };
-  return merged;
-}
-
-function mapTutorItem(item, base) {
-  const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
+  const main_subject_note = summaryLines[0] || '';
   return {
-    ...base,
     id: item.id,
-    tutor_display_name: item.title || base.tutor_display_name,
-    location_label: item.region_label || base.location_label,
-    preferred_fee_amount: item.price_amount ?? base.preferred_fee_amount,
-    university_name: item.university_name ?? base.university_name ?? '',
-    recommend_count: item.recommend_count ?? base.recommend_count ?? 0,
-    review_count: item.review_count ?? base.review_count ?? 0,
-    published_at: item.published_at || item.created_at || base.published_at,
-    main_subject_note: summaryLines[0] || base.main_subject_note,
-    intro_short: summaryLines[1] || base.intro_short,
+    study_room_name: item.title || '',
+    location_label: item.region_label || '',
+    price_amount: item.price_amount ?? null,
+    recommend_count: item.recommend_count ?? 0,
+    review_count: item.review_count ?? 0,
+    published_at: item.published_at || item.created_at || null,
+    main_subject_note,
+    intro_short: summaryLines[1] || '',
     profile_status: 'published',
     compare_eligible: true,
-    badges: tutorBadges({ ...base, main_subject_note: summaryLines[0] || base.main_subject_note }),
+    inquiry_status: item.inquiry_status ?? 'paused',
+    badges: studyRoomBadges({ ...item, main_subject_note }),
+    latitude: item.latitude ?? null,
+    longitude: item.longitude ?? null,
     _realDb: true,
   };
 }
 
-function mapStudentItem(item, base) {
+/** @param {object} item */
+function mapTutorItem(item) {
+  const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
+  const main_subject_note = summaryLines[0] || '';
+  return {
+    id: item.id,
+    tutor_display_name: item.title || '',
+    location_label: item.region_label || '',
+    preferred_fee_amount: item.price_amount ?? null,
+    university_name: item.university_name ?? '',
+    recommend_count: item.recommend_count ?? 0,
+    review_count: item.review_count ?? 0,
+    published_at: item.published_at || item.created_at || null,
+    main_subject_note,
+    intro_short: summaryLines[1] || '',
+    profile_status: 'published',
+    compare_eligible: true,
+    badges: tutorBadges({ ...item, main_subject_note }),
+    _realDb: true,
+  };
+}
+
+/** @param {object} item */
+function mapStudentItem(item) {
   const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
   return {
-    ...base,
     id: item.id,
-    public_display_name: item.title || base.public_display_name,
-    location_label: item.region_label || base.location_label,
-    subject_label: summaryLines[0] || base.subject_label,
-    grade_level: summaryLines[1]?.split('·')[0]?.trim() || base.grade_level,
+    public_display_name: item.title || '',
+    location_label: item.region_label || '',
+    subject_label: summaryLines[0] || '',
+    grade_level: summaryLines[1]?.split('·')[0]?.trim() || '',
     exposure_status: 'published',
     _realDb: true,
   };
@@ -82,15 +79,13 @@ function mapStudentItem(item, base) {
 /**
  * @param {object[]} pool
  * @param {object[]} items
- * @param {(item: object, base: object) => object} mapper
+ * @param {(item: object) => object} mapper
  * @param {number} cap
  */
 function patchPool(pool, items, mapper, cap) {
+  pool.length = 0;
   for (let i = 0; i < Math.min(cap, items.length); i++) {
-    const slotId = i + 1;
-    const idx = pool.findIndex((p) => p.id === slotId);
-    if (idx < 0) continue;
-    pool[idx] = mapper(items[i], pool[idx]);
+    pool.push(mapper(items[i]));
   }
 }
 
@@ -117,4 +112,7 @@ export async function hydrateExposureBridge() {
 
 export function resetExposureBridge() {
   bridged = false;
+  EXPOSURE_STUDY_ROOMS.length = 0;
+  EXPOSURE_TUTORS.length = 0;
+  EXPOSURE_STUDENTS.length = 0;
 }
