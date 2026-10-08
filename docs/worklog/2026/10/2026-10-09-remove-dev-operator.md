@@ -407,3 +407,78 @@ preview 밖이라 손대지 않았지만 알릴 것: `sql/schema/021_board_engin
 ### 12-6. 배포 전 사용자 할 일 (추가분)
 
 - 없음. SQL·환경변수·Secrets·`.htaccess` 변경 없음.
+
+---
+
+## 13. 5차 지시 — main 반영·견본 규칙 점검·이미지 삭제·제출자료 시드 SQL (2026-10-09 01:20)
+
+### 13-1. 지시서 원문
+
+> 수고했다. 같은 worktree·브랜치에서 새 커밋으로(amend 금지):
+>
+> 1. main 반영: 견본 제거가 승인되어 main이 `6b37357`로 앞섰다. `git fetch origin` 후 `git merge origin/main`(merge 커밋, rebase 금지). 충돌 시 양쪽 의도를 살려 해결하고 보고.
+> 2. merge 뒤 `exposure-rules.js`의 `demo_prime_filled`, `demo_prime_tutor_pool` 등 견본 풀 전용 규칙이 이제 쓰이지 않는지 grep으로 확인하고, 호출부가 0이거나 견본 풀 전용이면 제거(실제 DB 데이터 경로 동작은 바뀌면 안 됨). 애매하면 고치지 말고 보고.
+> 3. `tutor-card-sample.jpg`: merge 뒤 참조가 0이면 `git rm`. 참조가 남으면 위치 보고.
+> 4. merge 결과 기준으로 home-ui 등 바뀐 앱 빌드 → 산출물에서 데모·견본 이름(김수학, 박국어, 오영어, 맑은하늘, 드림스터디 대치, 아이빌 공부방, demo-prime-001, @dev.local 등) 0건 확인(admin 화면 파일 출처는 구분해 보고). `verify:shop-page`, `verify-no-sample-data`, 관련 verify 16개, deploy.yml 게이트. 이전부터 실패하던 건 구분.
+> 5. `sql/schema/021_board_engine.sql`의 제출자료 시드(`sub-seed-1`, `sub-seed-2`, `sub-seed-room-1`)가 운영 DB에 있는지 확인할 SELECT 한 줄과, 있으면 지우는 SQL 초안을 `sql/ops/2026-10-09-delete-ops-dev-local.sql` 뒤에 붙이지 말고 별도 파일 `sql/ops/2026-10-09-check-submission-seed.sql`로 작성(확인 SELECT → 삭제는 주석 처리된 트랜잭션 블록, 외래키·첨부 테이블 확인 포함). e2e가 이 행을 쓰는 곳은 로컬 전용임을 주석으로.
+> 6. worklog 절 추가, 파일명 지정 stage, 커밋, push.
+>
+> 보고: merge·수정 커밋 hash, 충돌 여부, 파일별 1줄, 검증, SQL 요약.
+
+### 13-2. main 반영
+
+- `git merge --no-ff origin/main` (`6b37357`) → merge 커밋 `a4ee42a`. **충돌 0.** rebase 하지 않았다.
+- 병합 결과에서 이 브랜치가 지운 함수(`ensure*Demo`·`ensureSubmissionBoardSeed`·`seedDefaults`)를 부르는 곳 0.
+
+### 13-3. 견본 풀 전용 규칙 (`exposure-rules.js`) — **고치지 않음 (애매)**
+
+- `demo_prime_filled` 는 `getPrimeOccupied`, `demo_prime_tutor_pool` 은 `getPrimeCandidatePool` 안에서 "풀에 `_realDb` 표시가 없을 때"만 쓰인다.
+- 그런데 `_realDb` 표시는 home-ui(`exposure-bridge.js`·`home-basic-live.js`·`study-room-home-seed.js`)만 붙인다. **search-ui 검색 결과(`search-exposure-mapper.js`)는 실제 API 데이터인데 `_realDb` 가 없다.** search-ui 는 `search-tier-render.js`·`search-map.js` 에서 `getPrimeOccupied`·`getPrimeCandidatePool` 을 부른다.
+- 그래서 로그인 검색 화면에서 유료 프라임이 없으면 `demo_prime_filled`(기본 1)만큼 첫 공개 항목이 프라임 칸에 들어가고, 과외쌤은 최대 12명 후보 풀이 된다. 비로그인(guest)은 `withGuestPlanOverride` 로 둘 다 0.
+- 이 경로를 지우면 실제 검색 결과의 프라임 칸 동작이 바뀐다 → 지시대로 손대지 않고 보고. 정리하려면 search-ui 매퍼에 `_realDb: true` 를 붙일지(= 실데이터 프라임은 유료만) 사용자 결정이 먼저다. `verify-position-region-tier` 에도 "데모 과외쌤 풀은 exposure_tier 유지" 검사가 있다.
+
+### 13-4. 변경
+
+| 파일 | 변경 |
+|------|------|
+| `preview/home-ui/public/assets/brand/tutor-card-sample.jpg` | `git rm` — 코드 참조 0 (남은 것은 "없어야 한다" 단언 2곳 `verify-tutor-inquiries-settings`·`verify-tutor-registration-check-frame` 과 worklog 문서뿐) |
+| `public/assets/brand/tutor-card-sample.jpg` | 같은 이유로 `git rm` |
+| `preview/home-ui/src/exposure-bridge.js` | 머리 주석 "Dev 로그인 시" → "로그인 시" (견본 제거 브랜치 병합 뒤라 이제 고칠 수 있음) |
+| `sql/ops/2026-10-09-check-submission-seed.sql` | 새 파일 — 제출자료 견본 글 확인 SELECT·삭제 초안(주석) |
+
+### 13-5. `sql/ops/2026-10-09-check-submission-seed.sql` 요약
+
+- STEP 1 (SELECT 만):
+  - 1-1 한 줄 확인: `board_posts` 에서 `board_key='submission'` 이고 `post_key` 가 `sub-seed-1`·`sub-seed-2`·`sub-seed-room-1` 인 행.
+  - 1-2 `board_posts` 를 가리키는 외래키 목록 (저장소 스키마 기준 0줄).
+  - 1-3 첨부 `board_post_attachments` (FK 없이 board_key+post_key). 있으면 서버 파일 경로 보고.
+  - 1-4 댓글·반응·신고(075, FK 없이 post_id) 건수.
+  - 1-5 운영 로그 — 노출 보정 로그는 `target_type='board_post'`, `target_id='submission:<post_key>'`. 지우지 않음(보존).
+- STEP 2 (전부 주석): `START TRANSACTION` → 첨부 → 댓글·반응·신고 → `board_posts` 삭제(`LIMIT 3`) → 남은 행 0 확인 → `COMMIT`. 모든 문장에 `board_key`·`post_key` 3개·`author_user_id IS NULL` 조건. "함께 붙여넣고 실행 한 번" 안내 포함.
+- e2e(`a28-07-exposure-patch`·`admin-api.restoreExposureDefaults`)가 `sub-seed-1` 을 쓰는 것은 로컬 Docker 전용이라 운영 삭제와 무관하다고 머리 주석에 적었다. 로컬 시드(021)는 그대로.
+
+### 13-6. 검증 (병합 결과 + 이번 변경)
+
+| 항목 | 결과 |
+|------|------|
+| `vite build` home-ui · study-room-ui · tutor-ui · auth-ui | 4개 성공 (search-ui 는 home-ui 번들에 포함, 단독 앱 node_modules 없음) |
+| 산출물 데모·견본 문자열 (`@dev.local`·`dev-login`·`Dev 로그인`·`시험용·`·`sub-seed-`·`tutor-card-sample`·김수학·박국어·오영어·이영어·맑은하늘·김하늘·김왕자·대치맘·드림스터디 대치·아이빌 공부방·대치 우등생 공부방·`demo-prime-001`·`demo-pick-002`·샘플 공부방·샘플 과외쌤·가짜 후기 문장·데모 함수 이름) | 4개 앱 모두 **0건** |
+| 산출물 `김학부모` 1건 (home-ui) | 출처 `admin/a28-screens-state.js` — admin 화면 파일, 범위 밖 |
+| `node scripts/verify-no-sample-data.mjs` | 통과 (414파일) |
+| deploy.yml 게이트: `verify:shop-page` · `check-no-committed-secrets.sh` · `verify:tutor-inquiries-settings` · `verify:study-room-inquiries-samples` | 모두 통과 |
+| board-acl-verify.yml 게이트: `php-syntax-check.sh`(309) · `verify:board-acl:js` · `verify-board-channel-acl.php` · `compare-board-acl-matrix`(75행) | 모두 통과 |
+| 관련 verify: `card-visual-penetration` · `parent-review-positive` · `board-channel-acl` · `cur-006-email-verify-gate` · `message-permissions-admin` 134/0 · `tutor-mypage-frame-ia` · `tutor-mypage-route-integrity` · `hide-inquiry-bundle` 55 · `role-home-guard` 56/0 · `mypage-account-region` 41/0 · `mypage-notice-top` 49/0 · `student-mypage-metrics` · `student-count-halt-and-gate` 29/0 · `admin-today-hub` 61/0 · `admin-preview-labels` 202/0 · `admin-162-settlement` 57/0 · `position-region-tier` 19/0 · `study-room-registration-check-frame` · `student-location-flow` 189/0 · `student-branch-two-tabs` 162/0 | 통과 |
+| `verify-input-fill-rule`(3건) · `verify-cur-006-email-verify-inventory`(1건) | **실패 — 무관.** 12-5 와 같은 항목 |
+| `verify-tutor-registration-check-frame`(2건: publish wrap · CTA after board) | **실패 — 무관.** 전에 3건이던 것 중 BASIC kicker 가 견본 제거로 빠지고 남은 2건 |
+
+실행하지 못한 것: e2e(Playwright, 로컬 Docker 꺼짐), 운영 DB 에서 SQL 실행.
+
+### 13-7. 작업 트리에 남긴 것 (이번 커밋에 넣지 않음)
+
+01:19 에 이 worktree 바깥 작업(이 세션 아님)이 `ebe3b60` 의 17개 파일을 줄바꿈만 바꿔 다시 썼다. 내용 차이는 `sql/schema/rest-schema.sql` 첫 줄 BOM 제거 1건뿐이고 나머지는 줄바꿈 표시만 다르다. 이번 커밋에는 넣지 않았다(파일명 지정 stage).
+
+### 13-8. 배포 전 사용자 할 일 (추가분)
+
+- `sql/ops/2026-10-09-check-submission-seed.sql` STEP 1 을 운영 phpMyAdmin 에서 실행해 결과 보고. STEP 2 는 승인 뒤에만.
+- 서버 FTP 에 이미 올라간 `assets/brand/tutor-card-sample.jpg` 는 배포가 지우지 않을 수 있다(참조 0이라 노출 영향 없음).
+- 환경변수·Secrets·`.htaccess` 변경 없음.
