@@ -15,6 +15,7 @@ import {
   optimisticToggleCompare,
   optimisticClearCompare,
   optimisticRemoveWishlist,
+  getFavoriteCard,
 } from './handoff-backend.js';
 
 const STORAGE_KEY = 'study114-preview-user-actions';
@@ -70,7 +71,7 @@ export function getExposureItem(kind, id) {
     const hit = pool.find((x) => Number(x?.id) === n && x != null && nameKey in x);
     if (hit) return hit;
   }
-  return undefined;
+  return getFavoriteCard(kind, n)?.item || undefined;
 }
 
 /** @param {ProviderKind} kind */
@@ -86,6 +87,23 @@ export function getCompareIds(kind) {
 /** @param {ProviderKind} kind */
 export function getWishlistItems(kind) {
   return getWishlistIds(kind).map((id) => getExposureItem(kind, id)).filter(Boolean);
+}
+
+/**
+ * 찜 카드 목록. 지금 볼 수 없는 카드도 빼지 않는다(찜 해제는 할 수 있어야 한다).
+ * unavailable = 서버가 지금 공개가 아니라고 함 · unknown = 카드 정보가 아직 없음
+ * @param {ProviderKind} kind
+ * @returns {Array<{ id: number, kind: ProviderKind, status: 'visible'|'unavailable'|'unknown', item: object|null }>}
+ */
+export function getWishlistEntries(kind) {
+  return getWishlistIds(kind).map((raw) => {
+    const id = Number(raw);
+    if (getFavoriteCard(kind, id)?.status === 'unavailable') {
+      return { id, kind, status: 'unavailable', item: null };
+    }
+    const item = getExposureItem(kind, id) || null;
+    return { id, kind, status: item ? 'visible' : 'unknown', item };
+  });
 }
 
 /** @param {ProviderKind} kind */

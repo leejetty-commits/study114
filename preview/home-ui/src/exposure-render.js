@@ -1005,7 +1005,8 @@ export function renderStudentBasicSelfCard(item) {
   return renderBasicStudentRow(item, { selfView: true });
 }
 
-function renderBasicRow(kind, item, opts) {
+/** 홈·찾기 Basic 카드 한 장. 마이페이지 찜 목록도 이 카드를 쓴다. */
+export function renderBasicRow(kind, item, opts = {}) {
   if (kind === 'student') return renderBasicStudentRow(item, opts);
   if (kind === 'tutor') return renderBasicTutorRow(item, opts);
   return renderBasicStudyRoomRow(item, opts);
