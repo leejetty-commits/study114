@@ -196,7 +196,7 @@ async function loadTutorStudentDemand(regionId) {
     );
     return { items: Array.isArray(result.items) ? result.items : [], status: 'ready' };
   } catch (err) {
-    if (err?.error === 'validation' || String(err?.message || '').includes('구(시·군)')) {
+    if (err?.status === 422 || err?.error === 'validation' || String(err?.message || '').includes('구(시·군)')) {
       return { items: null, status: 'reselect' };
     }
     return { items: null, status: 'error' };
@@ -269,6 +269,7 @@ async function ensureHomeRegions() {
           ? slot.region_selectable
           : (units.length ? units.some((u) => String(u.id) === id) : true))
       : true;
+    if (!selectable && !label) label = '옛 지역';
     return {
       label,
       primary: primary && (!!label || numeric),

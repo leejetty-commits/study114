@@ -10,11 +10,13 @@
  * (c) 과외쌤 홈 두 파일(tutor-home-seed.js, tutor-activity-chart.js)이 옛 값 안내를 처리
  *     (region_selectable 참조 또는 안내 문구 상수, searchApi 422 우회).
  * (d) 서버 슬롯 페이로드에 region_selectable 포함(TutorHubRepository, TutorRegisterService).
+ * (e) [R1 회귀 방지] 빈 슬롯(region_id: '')은 region_selectable: false 라도 stale/다시선택필요 가 뜨지 않음.
+ * (f) [R2/R3 방지] searchApi error status/code 전달 및 옛 미정의 지역 '옛 지역' 라벨 대체.
  */
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');
@@ -54,6 +56,14 @@ function findPhpFiles(dir) {
   return results;
 }
 
+function stripComments(code) {
+  return code
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('//') && !line.trim().startsWith('#'))
+    .join('\n');
+}
+
 console.log('##### 1. 저장 경로 assertSelectable 검사 (a) #####');
 
 const srcPhpFiles = findPhpFiles(join(ROOT, 'src'));
@@ -65,14 +75,6 @@ const tutorRegionInsertFiles = srcPhpFiles.filter((file) => {
 });
 
 ok('tutor_regions 저장 파일 1개 이상 존재', tutorRegionInsertFiles.length > 0, `found: ${tutorRegionInsertFiles.length}`);
-
-function stripComments(code) {
-  return code
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .split('\n')
-    .filter((line) => !line.trim().startsWith('//') && !line.trim().startsWith('#'))
-    .join('\n');
-}
 
 for (const file of tutorRegionInsertFiles) {
   const rel = file.replace(ROOT + '\\', '').replace(ROOT + '/', '');
@@ -142,6 +144,47 @@ ok('(d) TutorHubRepository: bool 반환 매핑', tutorHubRepo.includes("'region_
 ok('(d) TutorRegisterService: region_selectable 컬럼 조회', tutorRegService.includes('region_selectable'));
 ok('(d) TutorRegisterService: is_selectable=1 AND is_active=1 조건', /is_selectable\s*=\s*1\s+AND\s+.*is_active\s*=\s*1/i.test(tutorRegService));
 ok('(d) TutorRegisterService: bool 반환 매핑', tutorRegService.includes("'region_selectable' => (bool)"));
+
+console.log('\n##### 5. R1 회귀 방지: 빈 슬롯 stale/배지 노출 차단 검사 #####');
+
+const { renderTutorRegionSlot } = await import(pathToFileURL(join(ROOT, 'preview/shared/tutor-region-slots.js')).href);
+const sampleUnits = [
+  { id: '101', sido_name: '서울특별시', sigungu_name: '강남구' },
+  { id: '102', sido_name: '경기도', sigungu_name: '수원시' },
+];
+
+// (1) 빈 슬롯 + region_selectable: false -> stale 아님, 배지 없음
+const emptySlotHtml = renderTutorRegionSlot(
+  { region_id: '', scope_type: 'city', is_primary: false, region_selectable: false },
+  1,
+  sampleUnits,
+);
+
+ok('(R1) 빈 슬롯: data-region-stale 태그에 hidden 속성 있음', emptySlotHtml.includes('data-region-stale hidden'));
+ok('(R1) 빈 슬롯: 다시 선택 필요 배지 없음', !emptySlotHtml.includes('다시 선택 필요'));
+ok('(R1) 빈 슬롯: stale 안내 문구 미노출', !emptySlotHtml.includes('지역을 다시 선택해 주세요'));
+
+// (2) 옛 값 슬롯(선택단위 아님) -> stale 노출, 다시 선택 필요 배지 있음
+const staleSlotHtml = renderTutorRegionSlot(
+  { region_id: '999', scope_type: 'city', is_primary: false, region_selectable: false },
+  1,
+  sampleUnits,
+);
+
+ok('(R1) 옛 슬롯: 다시 선택 필요 배지 노출', staleSlotHtml.includes('다시 선택 필요'));
+ok('(R1) 옛 슬롯: data-region-stale 안내 문구 노출', staleSlotHtml.includes('data-region-stale>지역을 다시 선택해 주세요'));
+ok('(R1) 옛 슬롯: data-region-stale hidden 아님', !staleSlotHtml.includes('data-region-stale hidden'));
+
+console.log('\n##### 6. R2/R3 검사: searchApi error 전달 및 옛 지역 라벨 fallback #####');
+
+const searchApiJs = read('preview/search-ui/src/search-api.js');
+
+ok('(R2) searchApi: err.status 덧붙임', searchApiJs.includes('err.status = res.status'));
+ok('(R2) searchApi: err.error 덧붙임', searchApiJs.includes('err.error = body.error'));
+ok('(R2) activity-chart: err.status === 422 || err.error === validation', chartJs.includes("err?.status === 422 || err?.error === 'validation'"));
+ok('(R2) tutor-home-seed: err.status === 422 || err.error === validation', seedJs.includes("err?.status === 422 || err?.error === 'validation'"));
+
+ok("(R3) tutor-home-seed: selectable=false && !label -> '옛 지역' 대체", seedJs.includes("label = '옛 지역'"));
 
 console.log(`\n========================================`);
 console.log(`Total: ${passed} passed, ${failed} failed`);

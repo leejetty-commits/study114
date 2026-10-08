@@ -165,7 +165,10 @@ export async function searchApi(tab, filters, opts = {}) {
 
   const body = await res.json();
   if (!res.ok || !body.ok) {
-    throw new Error(body.message || `검색 서버 오류 (${res.status})`);
+    const err = new Error(body.message || `검색 서버 오류 (${res.status})`);
+    err.status = res.status;
+    err.error = body.error;
+    throw err;
   }
 
   return body;

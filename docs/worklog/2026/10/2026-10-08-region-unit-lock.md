@@ -135,3 +135,18 @@
 
 ## 검수 기록
 
+### 메인 1차 반려 R1~R3 및 조치 내역 (커밋 5c97025 기준)
+
+1. **R1 (높음, 회귀) `preview/shared/tutor-region-slots.js`**:
+   - 원인: 서버에서 빈 2·3번 슬롯에 `region_selectable: false`를 내려줄 때 `needsReselect = Boolean(slot.needsReselect) || slot.region_selectable === false || (Boolean(id) && !known)` 조건으로 인해 빈 칸에서도 `needsReselect`가 true가 되어 빈 슬롯 아래에 불필요하게 `region-cascade`의 "지역을 다시 선택해 주세요" 안내 문구가 노출되던 회귀.
+   - 조치: `needsReselect = Boolean(id) && (Boolean(slot.needsReselect) || slot.region_selectable === false || !known)`로 수정하여 `id`가 있을 때만 `needsReselect`가 true가 되도록 수정 (빈 칸 stale=false 유지).
+   - 검증 추가: `scripts/verify-region-unit-lock.mjs`에 `renderTutorRegionSlot`을 직접 import하여 빈 슬롯(`region_id: ''`, `region_selectable: false`)에서 `data-region-stale`가 hidden이고 배지가 없는지, 유효하지 않은 슬롯(`region_id: '999'`)에서는 배지와 안내 문구가 노출되는지 검증 추가.
+
+2. **R2 (중간, 죽은 코드) `preview/home-ui/src/tutor-activity-chart.js` 의 catch 및 `searchApi`**:
+   - 원인: `preview/search-ui/src/search-api.js`의 `searchApi`가 `throw new Error(...)`만 던져 `err.status`, `err.error`가 부재했음.
+   - 조치: `searchApi`에서 `err.status = res.status; err.error = body.error;`를 Error 객체에 덧붙여 던지도록 수정하고, `tutor-activity-chart.js`와 `tutor-home-seed.js`의 catch 블록 모두 `err?.status === 422 || err?.error === 'validation'` 판정으로 통일.
+
+3. **R3 (낮음, 화면) 이름 없는 옛 지역 줄**:
+   - 원인: `tutor-home-seed.js`의 `ensureHomeRegions`에서 옛 id(선택 단위 아님)는 `activityLabelFromRegionId`가 `''`를 돌려줄 수 있어 대표 칸이 아닌 슬롯의 경우 라벨이 빈칸으로 남던 문제.
+   - 조치: `selectable === false`이고 `label`이 비어 있는 경우 `label = '옛 지역'`으로 대체하도록 보완.
+

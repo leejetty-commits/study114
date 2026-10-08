@@ -26,12 +26,12 @@ export function renderTutorRegionSlot(slot, idx, units, opts = {}) {
   const labelPrefix = opts.labelPrefix || '지역';
   const id = String(slot.region_id || '').trim();
   const known = !id || units.some((row) => row.id === id);
-  const needsReselect = Boolean(slot.needsReselect) || slot.region_selectable === false || (Boolean(id) && !known);
+  const needsReselect = Boolean(id) && (Boolean(slot.needsReselect) || slot.region_selectable === false || !known);
   const primaryUi =
     showPrimary && idx === 0
       ? `<span class="register-region-slot__badge" style="margin-left:auto;">대표</span>`
       : '';
-  const warnBadge = (needsReselect && id)
+  const warnBadge = needsReselect
     ? `<span class="mypage-badge mypage-badge--warn" style="${primaryUi ? 'margin-left:auto;margin-right:0.5rem;' : 'margin-left:auto;'}">다시 선택 필요</span>`
     : '';
 

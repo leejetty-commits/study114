@@ -88,7 +88,7 @@ export function bootTutorActivityCounts(rerender) {
           countExposedCards('student', slot.regionId),
         ]);
       } catch (err) {
-        if (err?.status === 422 || err?.data?.error === 'validation') {
+        if (err?.status === 422 || err?.error === 'validation') {
           slotSelectable = false;
         }
         tutorCount = null;
