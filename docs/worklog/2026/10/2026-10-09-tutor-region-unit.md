@@ -487,3 +487,58 @@ worklog `2026-10-09-tutor-region-unit.md`에 이 지시 원문, 2단계 변경 �
 |---|---|
 | 독립 검수 | 대기 |
 | 사용자 승인 | 대기 |
+
+## 19. 2단계 독립 리뷰 결과·반영
+
+수신 2026-10-09 01:20 (UTC+9)
+
+````text
+2단계 독립 리뷰(다른 모델) 결과 「조건부 승인 권고」, 127/0 통과, 높음·중간 없음. 같은 worktree·브랜치에서 새 커밋으로(amend 금지):
+
+1. main 반영: 견본 제거가 승인되어 main이 `6b37357`로 앞섰다(`cursor/remove-samples-20261009` fast-forward). `git fetch origin` 후 `git merge origin/main`(merge 커밋, rebase 금지). 충돌이 나면 양쪽 의도를 모두 살려 해결하고 보고.
+2. F-1 [낮음, 조건]: `student-blind-teaser.js:61` `coarseRegionForGuest`의 `isTutorUnitLabel` 통과 분기가 공부방 카드(`exposure-render.js` 공부방 렌더러 ~769, 846 등)에도 적용됨 → "공부방 축 불변" 위반. 최소 수정: `coarseRegionForGuest(label, kind)`로 kind를 받아 `kind === 'tutor'`(과외 축)일 때만 통과시키고, 공부방 호출부는 기존 동작(main과 동일)이 되게. 모든 호출부를 grep해 kind를 명시하라(기본값은 공부방=기존 동작 쪽이 안전). 게이트에 "공부방 라벨 「경기도 수원시」·「서울특별시」는 main과 같은 결과" 단언 추가.
+3. 검사: merge 후 `verify-tutor-region-unit`, `verify-no-sample-data`(main에서 온 것), 기존 지역 검사 30개, deploy.yml 게이트 8개, `build:dothome`. main에서도 실패하는 건 구분.
+4. worklog에 「2단계 독립 리뷰 결과·반영」 절(판정, F-1 처리, merge 결과) 추가. 파일명 지정 stage, 커밋, push.
+보고: merge 커밋·수정 커밋 hash, 충돌 여부, 파일별 1줄, 검사 표.
+````
+
+### 19-1. 판정
+
+- 2단계 `5a9ce03` 독립 리뷰(다른 모델): **조건부 승인 권고**, 게이트 127/0, 높음·중간 지적 없음. 조건 = F-1(낮음).
+
+### 19-2. main 반영 (merge)
+
+- `git fetch origin` → `git merge --no-ff origin/main`(`6b37357`, 견본 제거 포함). rebase 안 함.
+- merge 커밋 **`60af084`**. **충돌 0건**(2단계 때 예상과 같음: `package.json`, `guest-sections.js`, `search-find-surface.js`, `verify-guest-baseline-map-cards.mjs`, `verify-student-branch-two-tabs.mjs`, `verify-student-mypage-metrics.mjs` 자동 병합).
+- merge 직전 worktree에 이 세션이 만들지 않은 미커밋 변경이 있었다: 48개 파일 줄끝(CRLF→LF)만 바뀜 + `src/Registration/StudentHubRepository.php` 1줄(`tutorUnitRegion` → `officialRegion`, 1단계 수정을 되돌리는 변형). 리뷰 중 변형 시험이 남은 것으로 보고 `tmp-tru/stray-worktree-changes.patch`(커밋 안 함)에 백업한 뒤 HEAD 내용으로 되돌렸다. 내용은 HEAD와 같음을 해시로 확인했다.
+
+### 19-3. F-1 처리
+
+| 파일 | 변경 |
+|---|---|
+| `preview/home-ui/src/student-blind-teaser.js` | `coarseRegionForGuest(locationLabel, kind = 'study_room')` — `kind === 'tutor'`일 때만 과외 단위 표기 통과. 기본값은 공부방 축(= main). `guestStudentRegionKind(item)`(새): 학생 `preferred_lesson_type === 'tutor'`면 `'tutor'`, 그 밖은 `'study_room'`. `guestStudentTeaserFields`가 사용 |
+| `preview/home-ui/src/exposure-render.js` | `renderBasicStudyRoomRow` → `'study_room'`, `renderBasicTutorRow` → `'tutor'`, `renderBasicStudentRow` → `guestStudentRegionKind(item)` |
+| `preview/home-ui/src/detail-decision/tutor-detail.js` | `'tutor'` |
+| `preview/home-ui/src/detail-decision/studyroom-detail.js` | `'study_room'` |
+| `preview/home-ui/src/detail-decision/detail-utils.js` | 공부방 분기 `'study_room'`, 과외쌤 분기 `'tutor'` |
+
+호출부 8곳(grep) 모두 kind 명시. 학생 카드는 과외 희망 학생의 지역 라벨이 1단계부터 과외 단위(「서울특별시」)라 과외 축으로 넘긴다. 공부방 희망 학생은 main과 같다.
+
+게이트 추가(`verify-tutor-region-unit`, 127 → 134): 공부방 라벨 「경기도 수원시」·「서울특별시」(+세종·안동시 등 14개) 손님 표기 = origin/main, kind 생략 = origin/main, 손님 공부방 상세 「서울특별시」 = main, 학생 카드(공부방 희망) = main, 학생 카드(과외 희망) 서울특별시 그대로, 호출부 8곳 kind 명시.
+
+### 19-4. 검사 (merge + F-1 후)
+
+| 검사 | 결과 |
+|---|---|
+| `verify-tutor-region-unit` | 통과 134/0 |
+| `verify-no-sample-data` (main에서 온 것) | 통과 (415 파일) |
+| 기존 지역 검사 30개 | 29 통과. `verify-tutor-registration-check-frame` 실패 2건(render: publish wrap / page: CTA after board) — **origin/main `6b37357`에서도 같은 2건 실패**(임시 worktree로 확인 후 제거). 지역과 무관 |
+| deploy.yml 게이트 8개 | 모두 통과 |
+| `build:dothome` | 성공. 산출물 커밋 안 함 |
+
+### 19-5. 검수·승인 (리뷰 반영 커밋)
+
+| 항목 | 상태 |
+|---|---|
+| 독립 검수 | 대기 |
+| 사용자 승인 | 대기 |

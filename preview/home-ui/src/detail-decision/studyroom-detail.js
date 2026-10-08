@@ -12,7 +12,7 @@ import { reviewSectionPlaceholder } from '../provider-reviews/ui.js';
 export function renderStudyRoomDetailBody(item, viewer) {
   const isGuest = viewer === 'guest';
   const locationLabel = isGuest
-    ? coarseRegionForGuest(item.location_label)
+    ? coarseRegionForGuest(item.location_label, 'study_room')
     : item.location_label || '—';
 
   // 별도 소개 에세이·fitHint 안내 박스 금지 — 카드 잠금 필드만 핵심 조건에 확장

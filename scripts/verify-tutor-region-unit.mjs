@@ -553,6 +553,7 @@ async function runFindPart(input) {
   const loc = await import('../preview/shared/location-display.js');
   const teaser = await import('../preview/home-ui/src/student-blind-teaser.js');
   const tutorDetail = await import('../preview/home-ui/src/detail-decision/tutor-detail.js');
+  const studyroomDetail = await import('../preview/home-ui/src/detail-decision/studyroom-detail.js');
   const surface = await import('../preview/search-ui/src/search-find-surface.js');
   const U = cascade.normalizeTutorUnits(input.units);
   const noop = () => {};
@@ -652,16 +653,28 @@ async function runFindPart(input) {
     ok('손님 과외쌤 찾기 현재 위치 = 서울특별시', st.activeRegionLabel === '서울특별시', st.activeRegionLabel);
   }
   for (const label of ['서울특별시', '세종특별자치시', '경기도 수원시', '전남광주통합특별시 광주', '경상북도 안동시']) {
-    ok(`손님 확대카드 과외지역 「${label}」 그대로(「—」 아님)`, teaser.coarseRegionForGuest(label) === label, teaser.coarseRegionForGuest(label));
+    ok(`손님 확대카드 과외지역 「${label}」 그대로(「—」 아님)`, teaser.coarseRegionForGuest(label, 'tutor') === label, teaser.coarseRegionForGuest(label, 'tutor'));
   }
   ok('손님 과외쌤 상세 본문 과외지역 = 서울특별시', tutorDetail.renderTutorDetailBody({ location_label: '서울특별시' }, 'guest').includes('<dt>과외지역</dt><dd>서울특별시</dd>'));
+  ok('손님 학생 카드(과외 희망) 지역 = 서울특별시', teaser.guestStudentTeaserFields({ location_label: '서울특별시', preferred_lesson_type: 'tutor' }).region === '서울특별시');
   {
-    const roomLabels = ['서울특별시 강남구 대치동', '서울시 강남구 대치동 · 은마아파트', '대치동', '경기도 수원시 영통구 매탄동', '서울특별시 강남구', '강남구', '역삼1동', '목동권', '', '—'];
+    const roomLabels = ['서울특별시 강남구 대치동', '서울시 강남구 대치동 · 은마아파트', '대치동', '경기도 수원시 영통구 매탄동', '서울특별시 강남구', '강남구', '역삼1동', '목동권', '', '—', '경기도 수원시', '서울특별시', '세종특별자치시', '경상북도 안동시'];
     const mainTeaser = spawnSync('git', ['show', 'origin/main:preview/home-ui/src/student-blind-teaser.js'], { cwd: ROOT, encoding: 'utf8' });
     const fn = mainTeaser.stdout.replace(/\r\n/g, '\n').match(/export function coarseRegionForGuest\(locationLabel\) \{[\s\S]*?\n\}/)?.[0] || '';
     const oldCoarse = fn ? new Function(`${fn.replace('export ', '')}; return coarseRegionForGuest;`)() : null;
-    const diff = oldCoarse ? roomLabels.filter((l) => oldCoarse(l) !== teaser.coarseRegionForGuest(l)) : ['main 읽기 실패'];
-    ok('공부방·동 라벨 손님 표기는 origin/main 과 같음', diff.length === 0, JSON.stringify(diff));
+    const diffOf = (fnNew) => (oldCoarse ? roomLabels.filter((l) => oldCoarse(l) !== fnNew(l)) : ['main 읽기 실패']);
+    ok('공부방 라벨(경기도 수원시·서울특별시 포함) 손님 표기 = origin/main (kind study_room)', diffOf((l) => teaser.coarseRegionForGuest(l, 'study_room')).length === 0, JSON.stringify(diffOf((l) => teaser.coarseRegionForGuest(l, 'study_room'))));
+    ok('kind 없이 부르면 공부방 축(= origin/main)', diffOf((l) => teaser.coarseRegionForGuest(l)).length === 0, JSON.stringify(diffOf((l) => teaser.coarseRegionForGuest(l))));
+    ok('공부방 라벨 「경기도 수원시」 = origin/main 결과', oldCoarse && teaser.coarseRegionForGuest('경기도 수원시', 'study_room') === oldCoarse('경기도 수원시'), `${teaser.coarseRegionForGuest('경기도 수원시', 'study_room')} / ${oldCoarse?.('경기도 수원시')}`);
+    ok('공부방 라벨 「서울특별시」 = origin/main 결과', oldCoarse && teaser.coarseRegionForGuest('서울특별시', 'study_room') === oldCoarse('서울특별시'), `${teaser.coarseRegionForGuest('서울특별시', 'study_room')} / ${oldCoarse?.('서울특별시')}`);
+    ok('손님 공부방 상세 본문 「서울특별시」 = origin/main 결과', oldCoarse && studyroomDetail.renderStudyRoomDetailBody({ location_label: '서울특별시' }, 'guest').includes(`<dd>${oldCoarse('서울특별시')}</dd>`));
+    {
+      const callers = ['preview/home-ui/src/exposure-render.js', 'preview/home-ui/src/detail-decision/tutor-detail.js', 'preview/home-ui/src/detail-decision/studyroom-detail.js', 'preview/home-ui/src/detail-decision/detail-utils.js', 'preview/home-ui/src/student-blind-teaser.js'];
+      const calls = callers.flatMap((f) => [...read(f).matchAll(/coarseRegionForGuest\(([^)]*\))?[^)]*\)/g)].filter((m) => !/export function/.test(read(f).slice(Math.max(0, m.index - 20), m.index))).map((m) => `${f}: ${m[0]}`));
+      const noKind = calls.filter((c) => !/coarseRegionForGuest\(item\.location_label, /.test(c));
+      ok(`coarseRegionForGuest 호출부 ${calls.length}곳 모두 kind 명시`, calls.length === 8 && noKind.length === 0, JSON.stringify(noKind.length ? noKind : calls));
+    }
+    ok('손님 학생 카드(공부방 희망) 「경기도 수원시」 = origin/main 결과', oldCoarse && teaser.guestStudentTeaserFields({ location_label: '경기도 수원시', preferred_lesson_type: 'study_room' }).region === oldCoarse('경기도 수원시'));
   }
 
   console.log('--- 공부방 찾기 = origin/main 과 같은 결과 ---');
