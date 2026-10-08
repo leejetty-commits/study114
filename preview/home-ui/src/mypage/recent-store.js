@@ -87,15 +87,3 @@ export function getRecentViews(role) {
   }
   return all;
 }
-
-/** Seed demo data once — API 모드 시 스킵 */
-export function ensureRecentDemo() {
-  if (isHandoffApiMode()) return;
-  if (loadAll().length > 0) return;
-  recordRecentView('study_room', 1, '대치 우등생 공부방', { sourceRoute: 'search', lastAction: 'view_detail' });
-  recordRecentView('study_room', 4, '드림스터디 대치', { sourceRoute: 'search', lastAction: 'compare_add' });
-  recordRecentView('study_room', 10, '아이빌 공부방', { sourceRoute: 'mypage', lastAction: 'view_detail' });
-  recordRecentView('tutor', 1, '김수학', { sourceRoute: 'search', lastAction: 'wish_add' });
-  recordRecentView('tutor', 3, '박국어', { sourceRoute: 'wishlist', lastAction: 'view_detail' });
-  recordRecentView('tutor', 7, '오영어', { sourceRoute: 'mypage', lastAction: 'view_detail' });
-}

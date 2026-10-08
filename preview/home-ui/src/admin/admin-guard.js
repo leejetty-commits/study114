@@ -55,8 +55,6 @@ export function renderAdminAccessGate(path) {
             : '로그인 후 운영자 역할이 있어야 합니다.'
         }
       </p>
-      <p class="mypage-note">개발용 운영자 계정으로 화면을 확인할 수 있습니다.</p>
-      <button type="button" class="btn btn--primary" data-action="dev-login-admin">개발용 운영자 로그인</button>
       <a href="#/admin" class="btn btn--secondary btn--sm" data-a28-nav="/admin">← 운영 홈</a>
     </section>`;
 }

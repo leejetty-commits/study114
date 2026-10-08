@@ -47,54 +47,8 @@ function saveJson(key, value) {
   sessionStorage.setItem(key, JSON.stringify(value));
 }
 
-function seedDefaults() {
-  const seed = [
-    {
-      id: 1,
-      provider_type: 'study_room',
-      provider_id: 1,
-      author_user_id: 6,
-      review_origin_type: 'consultation',
-      review_status: 'visible',
-      review_body: '상담이 부담스럽지 않았고 설명이 차분했어요. 공간이 실제 사진과 비슷했습니다.',
-      point_tags: ['상담이 친절해요', '정보가 실제와 비슷해요'],
-      created_at: '2026-08-01 10:00:00',
-    },
-    {
-      id: 2,
-      provider_type: 'study_room',
-      provider_id: 1,
-      author_user_id: 7,
-      review_origin_type: 'experience',
-      review_status: 'visible',
-      review_body: '위치가 익숙해서 보내기 좋았고, 분위기가 편안해서 아이가 금방 적응했어요.',
-      point_tags: ['동네 접근이 편해요', '분위기가 편안해요'],
-      created_at: '2026-08-03 11:00:00',
-    },
-    {
-      id: 3,
-      provider_type: 'tutor',
-      provider_id: 1,
-      author_user_id: 6,
-      review_origin_type: 'experience',
-      review_status: 'visible',
-      review_body: '개념 설명이 차근차근이라 아이도 따라가기 쉬웠어요.',
-      point_tags: ['설명이 쉬워요', '학생을 잘 봐줘요'],
-      created_at: '2026-08-02 09:30:00',
-    },
-  ];
-  saveJson(KEY, seed);
-  const quotas = {};
-  seed.forEach((r) => {
-    const k = quotaKey(r.provider_type, r.provider_id, r.author_user_id);
-    quotas[k] = (quotas[k] || 0) + 1;
-  });
-  saveJson(QUOTA_KEY, quotas);
-  return seed;
-}
-
 function loadAll() {
-  return loadJson(KEY, seedDefaults);
+  return loadJson(KEY, () => []);
 }
 
 function saveAll(list) {

@@ -86,11 +86,3 @@ export function removeStudentReview(id) {
   }
   saveAll(loadAll().filter((e) => e.id !== numId));
 }
-
-/** 25§10 lifecycle 뱃지 체험용 — API 모드 시 스킵 */
-export function ensureStudentReviewDemo() {
-  if (isHandoffApiMode()) return;
-  if (loadAll().length > 0) return;
-  toggleStudentReview(1, { providerRole: 'tutor' });
-  toggleStudentReview(4, { providerRole: 'tutor' });
-}

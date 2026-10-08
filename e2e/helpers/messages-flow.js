@@ -5,16 +5,22 @@ import { expect } from '@playwright/test';
 
 const HOME = process.env.STUDY114_HOME_UI_URL || 'http://127.0.0.1:5174';
 
+/** 로컬 Docker 시드 계정 (sql/schema/012_search_dev_seed.sql) */
+async function apiLoginAndOpen(page, email, hashPath) {
+  const res = await page.request.post(`${HOME}/api/auth/login.php`, {
+    data: { email, password: 'password' },
+  });
+  expect(res.ok()).toBeTruthy();
+  await page.goto(`${HOME}/#${hashPath}`);
+  await page.waitForURL(new RegExp(`#${hashPath}`), { timeout: 15_000 });
+}
+
 export async function devLoginParent(page) {
-  await page.goto(`${HOME}/#/guest`);
-  await page.getByRole('button', { name: '시험용·학부모' }).click();
-  await page.waitForURL(/#\/parent/, { timeout: 15_000 });
+  await apiLoginAndOpen(page, 'guardian1@dev.local', '/parent');
 }
 
 export async function devLoginTutor(page) {
-  await page.goto(`${HOME}/#/guest`);
-  await page.getByRole('button', { name: '시험용·과외' }).click();
-  await page.waitForURL(/#\/tutor/, { timeout: 15_000 });
+  await apiLoginAndOpen(page, 'tutor-owner1@dev.local', '/tutor');
 }
 
 export async function openFirstStudyRoomDetail(page) {

@@ -11,7 +11,6 @@ import {
   isChromeLoggedIn,
   getChromeNavRole,
   chromeLogout,
-  initChromeSession,
 } from '../../shared/chrome-session.js';
 import { HOME_UI_BASE } from '../../shared/preview-links.js';
 import { renderRegisterRightRail, bindRightRailEvents } from '../../home-ui/src/right-rail.js';
@@ -68,8 +67,6 @@ export function renderPreviewToolbar(activeScreen) {
             return `<button type="button" class="preview-toolbar__btn ${isActive ? 'is-active' : ''}" data-nav="${s.path}">${s.label}</button>`;
           })
           .join('')}
-        <span class="preview-toolbar__divider"></span>
-        <button type="button" class="preview-toolbar__btn" data-action="dev-login" title="tutor-owner1@dev.local">Dev 로그인</button>
         <span class="preview-toolbar__divider"></span>
         <button type="button" class="preview-toolbar__btn ${activeScreen === 'complete' ? 'is-active' : ''}" data-nav="/register/complete">완료</button>
       </div>
@@ -179,18 +176,6 @@ export function bindGlobalEvents(root) {
   ensureSiteHeaderOffsetListeners();
   syncSiteHeaderOffset(root);
   requestAnimationFrame(() => syncSiteHeaderOffset(root));
-
-  root.querySelector('[data-action="dev-login"]')?.addEventListener('click', async () => {
-    try {
-      const { devLogin } = await import('./register-api.js');
-      const user = await devLogin('tutor-owner1@dev.local', 'password');
-      await initChromeSession();
-      alert(`로그인되었습니다. (${user.role_type})`);
-      window.location.reload();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : '로그인 실패');
-    }
-  });
 }
 
 /**

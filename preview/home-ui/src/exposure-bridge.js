@@ -1,5 +1,5 @@
 /**
- * 검색 API 실데이터 → exposure-data.js 노출 풀 (Dev 로그인 시)
+ * 검색 API 실데이터 → exposure-data.js 노출 풀 (로그인 시)
  * 풀은 빈 배열로 시작하고 API 결과만 담는다.
  */
 

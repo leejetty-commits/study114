@@ -1,6 +1,13 @@
 -- =============================================================================
 -- study114 schema 026 — admin dev operator (A28 운영자 로컬 검증)
 -- Apply AFTER 025_board_post_attachments.sql
+--
+-- ⚠ 로컬 Docker(study114_dev) 전용. 운영 DB에는 절대 적용하지 않는다.
+--   비밀번호가 공개된 "password"이고 전화번호도 가짜다.
+--   운영에 이미 들어간 행은 sql/ops/2026-10-09-delete-ops-dev-local.sql 로 지운다.
+-- 코드에는 ops@dev.local 이메일로 등급을 주는 fallback이 없다.
+--   등급(users.admin_level = 'sub_master')은 036_admin_level_and_must_change.sql
+--   백필이 채운다(admin 역할·is_primary=1·active). 036 전에는 admin_level 컬럼이 없다.
 -- =============================================================================
 
 SET NAMES utf8mb4;

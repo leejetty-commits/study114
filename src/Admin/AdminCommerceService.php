@@ -165,7 +165,6 @@ final class AdminCommerceService
             'is_master' => $level === AdminRoleService::LEVEL_SUPER_ADMIN,
             'is_super_admin' => $level === AdminRoleService::LEVEL_SUPER_ADMIN,
             'master_emails' => $this->roles->listMasterEmails(),
-            'sub_master_emails' => $this->roles->listSubMasterEmails(),
         ];
     }
 }

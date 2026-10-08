@@ -34,5 +34,3 @@ $old = is_array($old ?? null) ? $old : [];
   아직 회원이 아니신가요?
   <a href="/auth/signup/terms" style="color: var(--link-color); font-weight: 600;">회원가입</a>
 </p>
-
-<p class="form-note mt-6">dev 시드 계정: <code>guardian1@dev.local</code> / <code>password</code></p>

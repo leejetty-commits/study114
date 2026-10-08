@@ -1,6 +1,7 @@
 /**
  * 운영 투입 전 스모크 — A28-07 노출 보정 · A28-06 경계
- * 전제: home-ui :5174 · API :8080 · ops@dev.local / password
+ * 전제: 로컬 Docker(study114_dev) 전용 — home-ui :5174 · API :8080 · 시드 운영자 계정
+ * (`helpers/local-seed-accounts.js`, 026/036 시드 · 운영 DB 에는 없음). 운영 사이트 대상으로 돌리지 않는다.
  */
 import { test, expect } from '@playwright/test';
 import {
@@ -9,6 +10,7 @@ import {
   getExposureItems,
   createSubmissionPost,
   ACCOUNTS,
+  DEV_PASSWORD,
 } from './helpers/admin-api.js';
 
 const SUBMITTED_422_SNIPPET = 'A28-06';
@@ -23,7 +25,7 @@ test.describe('A28-07 운영 스모크', () => {
 
   test('#/admin/exposure — 탭 3개 · 제출 드롭다운 없음', async ({ page }) => {
     await page.request.post('/api/auth/login.php', {
-      data: { email: ACCOUNTS.admin, password: 'password' },
+      data: { email: ACCOUNTS.admin, password: DEV_PASSWORD },
     });
     await page.goto('/');
     await page.waitForSelector('#app .preview-toolbar', { timeout: 30_000 });
@@ -55,7 +57,7 @@ test.describe('A28-07 운영 스모크', () => {
   test('#/admin/logs — 핵심 action_kind 라벨 구분', async ({ page, request }) => {
     await loginAs(request, 'admin');
     await page.request.post('/api/auth/login.php', {
-      data: { email: ACCOUNTS.admin, password: 'password' },
+      data: { email: ACCOUNTS.admin, password: DEV_PASSWORD },
     });
     await page.goto('/');
     await page.waitForSelector('#app .preview-toolbar', { timeout: 30_000 });

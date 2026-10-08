@@ -1,14 +1,10 @@
 import { expect } from '@playwright/test';
 import { execSync } from 'node:child_process';
+import { LOCAL_SEED_ACCOUNTS, LOCAL_SEED_PASSWORD, E2E_OPERATOR_EMAIL } from './local-seed-accounts.js';
 
-export const DEV_PASSWORD = 'password';
-
-export const ACCOUNTS = {
-  tutor: 'tutor-owner1@dev.local',
-  admin: 'ops@dev.local',
-  parent: 'guardian1@dev.local',
-  study_room: 'room-owner1@dev.local',
-};
+/** 로컬 Docker 시드 전용 — 정의는 `local-seed-accounts.js` */
+export const DEV_PASSWORD = LOCAL_SEED_PASSWORD;
+export const ACCOUNTS = LOCAL_SEED_ACCOUNTS;
 
 /** @param {import('@playwright/test').APIRequestContext} request */
 export async function loginAs(request, role) {
@@ -72,7 +68,7 @@ export function expectLog(log, expected) {
   expect(log, 'log 객체가 응답에 포함되어야 합니다').toBeTruthy();
   expect(log.action).toBe(expected.action);
   expect(log.target).toBe(expected.target);
-  expect(log.operator).toBe(expected.operator ?? ACCOUNTS.admin);
+  expect(log.operator).toBe(expected.operator ?? E2E_OPERATOR_EMAIL);
   expect(log.userNotified).toBe(expected.userNotified);
   if (expected.detailMemo !== undefined) {
     expect(log.detailMemo).toBe(expected.detailMemo);

@@ -290,9 +290,31 @@ const ACTIVE_ROLE_KEY = 'study114-preview-active-role';
 const THREADS_KEY = 'study114-preview-message-threads-v2';
 const LOGIN_REPLY_COPY = '로그인 후 답장할 수 있습니다.';
 
+sessionStorage.removeItem(THREADS_KEY);
+ok('demo_threads_seed_removed', !('ensureDemoThreads' in threadStore));
+ok('demo_threads_zero_on_empty_store', threadStore.getThreads().length === 0);
+
+/** 쪽지 데모 시드는 없다 — 검증용 스레드(공부방·과외·학생 각 1)를 저장소에 직접 넣는다 */
 function seedThreads() {
-  sessionStorage.removeItem(THREADS_KEY);
-  threadStore.ensureDemoThreads();
+  const at = new Date().toISOString();
+  const threads = ['study_room', 'tutor', 'student'].map((contextKind, i) => ({
+    id: i + 1,
+    contextKind,
+    contextId: 1,
+    contextLabel: '검증',
+    peerDisplayName: `검증상대-${contextKind}`,
+    scopeBadge: '',
+    scopeHint: '',
+    showRequestInPanel: false,
+    structuredLine: '',
+    lastPreview: '검증 쪽지',
+    updatedAt: at,
+    unread: true,
+    initiatedByMe: false,
+    initiatedByPeer: true,
+    messages: [{ id: 1, sender: 'peer', body: '검증 쪽지', createdAt: at }],
+  }));
+  sessionStorage.setItem(THREADS_KEY, JSON.stringify({ threads }));
   /** @type {Record<string, number>} */
   const ids = {};
   for (const t of threadStore.getThreads()) ids[t.contextKind] = t.id;

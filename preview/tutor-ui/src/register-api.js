@@ -38,15 +38,3 @@ export async function saveStep(step, payload, tutorId = null) {
 export async function saveBasicWithRegions(payload, tutorId = null) {
   return saveStep('basic', payload, tutorId);
 }
-
-export async function devLogin(email = 'tutor-owner1@dev.local', password = 'password') {
-  const res = await fetch('/api/auth/login.php', {
-    method: 'POST',
-    headers: JSON_HEADERS,
-    credentials: 'include',
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data.ok) throw new Error(data.message || '로그인 실패');
-  return data;
-}

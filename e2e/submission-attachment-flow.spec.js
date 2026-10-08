@@ -2,12 +2,11 @@ import { test, expect } from '@playwright/test';
 import { writeFileSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-
-const DEV_PASSWORD = 'password';
-const ACCOUNTS = {
-  tutor: 'tutor-owner1@dev.local',
-  admin: 'ops@dev.local',
-};
+import {
+  LOCAL_SEED_ACCOUNTS as ACCOUNTS,
+  LOCAL_SEED_PASSWORD as DEV_PASSWORD,
+  E2E_OPERATOR_EMAIL,
+} from './helpers/local-seed-accounts.js';
 
 /** @param {import('@playwright/test').Page} page @param {'tutor'|'admin'} role */
 async function apiDevLogin(page, role) {
@@ -94,7 +93,7 @@ test.describe('submission 첨부 → 운영 큐 → 열람 → 노출 반영', (
 
       await gotoHash(page, '/admin/logs');
       await expect(page.getByText('제출자료 노출 반영').first()).toBeVisible();
-      await expect(page.getByText('ops@dev.local').first()).toBeVisible();
+      await expect(page.getByText(E2E_OPERATOR_EMAIL).first()).toBeVisible();
     } finally {
       try {
         unlinkSync(pdfPath);
@@ -110,7 +109,7 @@ test.describe('관리자 접근 제한', () => {
     await page.request.post('/api/auth/logout.php').catch(() => {});
     await gotoHash(page, '/admin/submission-docs');
     await expect(page.getByText('운영자 전용')).toBeVisible();
-    await expect(page.getByRole('button', { name: '개발용 운영자 로그인' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '개발용 운영자 로그인' })).toHaveCount(0);
   });
 
   test('과외 계정은 admin API 403', async ({ page }) => {

@@ -19,8 +19,6 @@ import {
 
   appendMessageToThread,
 
-  ensureDemoThreads,
-
   ensureThreadDetail,
 
   setThreadArchived,
@@ -453,8 +451,6 @@ export function bindMessagesScreenEvents(root, rerender) {
 
 
 export function getMessagesSummaryCounts() {
-
-  ensureDemoThreads();
 
   return { unread: getUnreadCount(), active: getActiveCount() };
 

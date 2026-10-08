@@ -55,10 +55,9 @@ async function measureLiveHomeCard(page, kind) {
 }
 
 async function openInquiries(page, role) {
-  const action = role === 'tutor' ? 'dev-login-tutor' : 'dev-login-room';
+  const email = role === 'tutor' ? 'tutor-owner1@dev.local' : 'room-owner1@dev.local';
+  await page.request.post(`${LOCAL}/api/auth/login.php`, { data: { email, password: 'password' } });
   await page.goto(`${LOCAL}/#/guest`, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector(`[data-action="${action}"]`, { timeout: 15000 });
-  await page.click(`[data-action="${action}"]`);
   await page.waitForTimeout(2500);
   const mypageBtn = page.locator('.preview-toolbar__btn', { hasText: '마이페이지' });
   await mypageBtn.click();

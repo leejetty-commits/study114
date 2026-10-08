@@ -53,53 +53,10 @@ function saveAll(posts) {
 }
 
 /** @param {string} navRole */
-export function ensureSubmissionBoardSeed(navRole) {
-  if (isBoardApiMode()) {
-    return getSubmissionPostsCache(navRole);
-  }
-
-  const existing = loadAll();
-  if (existing?.length) return existing.filter((p) => p.authorRole === navRole);
-
-  const now = new Date().toISOString().slice(0, 10);
-  /** @type {SubmissionPost[]} */
-  const seed = [];
-  if (navRole === 'tutor') {
-    seed.push({
-      id: 'sub-seed-1',
-      title: '학력 증명서 사본',
-      description: '과외 프로필 등록 시 참고용으로 제출한 학력 증빙입니다.',
-      categoryId: 'education',
-      fileLabel: 'education-cert.pdf',
-      memo: 'tutor-ui 등록과 동일 항목',
-      status: 'published',
-      authorRole: 'tutor',
-      createdAt: '2026-06-20',
-      updatedAt: now,
-    });
-    seed.push({
-      id: 'sub-seed-2',
-      title: '경력 확인 서류',
-      description: '경력 항목 보완용 첨부.',
-      categoryId: 'education',
-      fileLabel: 'career-proof.jpg',
-      memo: '',
-      status: 'submitted',
-      authorRole: 'tutor',
-      createdAt: now,
-      updatedAt: now,
-    });
-  }
-  saveAll(seed);
-  return seed;
-}
-
-/** @param {string} navRole */
 export function listSubmissionPosts(navRole) {
   if (isBoardApiMode()) {
     return getSubmissionPostsCache(navRole);
   }
-  ensureSubmissionBoardSeed(navRole);
   const posts = loadAll() || [];
   return posts.filter((p) => p.authorRole === navRole);
 }
