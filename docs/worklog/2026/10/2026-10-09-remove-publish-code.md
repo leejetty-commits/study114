@@ -108,5 +108,6 @@ paid-renewal, cur-006-email-sent-ui, cur-006-email-verify-inventory, cur-006-pos
 
 ## 8. 승인 기록
 
-- (대기) 사용자 승인 커밋 hash:
-- 독립 리뷰: 사용자 결정 대기.
+- 2026-10-09 07:21 사용자 승인: 「승인한다. 진행해」
+  - 대상: `0cdfa5a`(작업), `39cd2ca`(작업기록 정정). 후속 검사 수정 브랜치 `cursor/verify-stale-fix-20261009`의 `d22af85`까지 함께 병합 (`2026-10-09-verify-stale-fix.md`).
+- 독립 리뷰: 사용자 지시 없음 → 진행하지 않음.

@@ -67,4 +67,7 @@
 
 - CI 1차 (`70c23f6`, run 37852553457): 13단계 중 2개 실패 — `Tutor search fields`(`git show 3f03aaa` 없음), `Tutor basic required`(`origin/main` 없음). 원인은 checkout 기본값(최근 커밋 1개만 받음)으로 비교 기준 커밋이 없던 것. 코드 문제 아님. → checkout `fetch-depth: 0`으로 수정.
 - CI 2차 (`29a63a9`, run 37852674630): **성공** — 13단계 모두 통과 (이 PC에서 mbstring 때문에 실패하던 `Tutor basic required`도 CI에서는 통과). 같은 push의 Board ACL gate도 성공.
-- 승인: 대기
+- 2026-10-09 07:21 사용자 승인: 「승인한다. 진행해」
+  - 대상: `70c23f6`(검사 수정), `29a63a9`(CI checkout), `d22af85`(CI 결과 기록). 이 브랜치의 바탕인 공개 잔재 제거(`0cdfa5a`, `39cd2ca`)와 함께 main 병합.
+  - `d22af85` CI: Verify bundle·Board ACL gate 모두 성공 (run 37852768627, 37852768919).
+  - 이 승인 기록 커밋은 문서만 바꾼다.
