@@ -178,8 +178,9 @@ assert(
 // --- static: second box is hope type (B), not member role ---
 const basicSrc = readFileSync(resolve(root, 'preview/auth-ui/src/screens/signup-basic.js'), 'utf8');
 assert(basicSrc.includes('preferred_lesson_type'), 'student hope field preferred_lesson_type');
-assert(basicSrc.includes('어떤 수업을 찾고 있나요?'), 'hope label not member-role copy');
-assert(basicSrc.includes('회원 유형이 아닙니다'), 'hope disambiguation hint');
+// 4cb19b8: 라벨 「어떤 수업을 찾고 있나요?」·안내 「회원 유형이 아닙니다」 → 「희망 유형」 하나로 바뀜.
+assert(basicSrc.includes('희망 유형'), 'hope label not member-role copy');
+assert(!basicSrc.includes('회원 유형'), 'hope disambiguation hint');
 assert(!basicSrc.includes('data-nav="/signup/role"'), 'basic form no back to role reselect');
 assert(basicSrc.includes('resolveUiRoleForBasicRegister'), 'basic binds server role align');
 assert(basicSrc.includes('needs_basic_register'), 'basic blocks completed re-entry');

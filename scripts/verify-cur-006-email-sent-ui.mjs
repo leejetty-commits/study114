@@ -38,7 +38,7 @@ assert(isSignupEmailSendFailedFlag('0'), 'send=0은 발송 실패 UI');
 // 4) 재전송 성공
 assert(classifyEmailVerifySendResult({ ok: true, sent: true, resend_available_in: 600 }) === 'success', '재전송 성공');
 assert(
-  emailVerifySendStatusMessage('success').includes('다시 보냈습니다'),
+  emailVerifySendStatusMessage('success').includes('다시 보냈어요'),
   '재전송 성공 문구',
 );
 
@@ -63,8 +63,8 @@ assert(
   classifyEmailVerifySendResult({ ok: true, sent: false, resend_available_in: 0 }) === 'fail',
   '재전송 실제 실패',
 );
-assert(emailVerifySendStatusMessage('fail').includes('보내지 못했습니다'), '실패 문구');
-assert(!emailVerifySendStatusMessage('fail').includes('보냈습니다'), '실패≠성공 문구');
+assert(emailVerifySendStatusMessage('fail').includes('보내지 못했어요'), '실패 문구');
+assert(!emailVerifySendStatusMessage('fail').includes('보냈어요'), '실패≠성공 문구');
 
 // 소스 연결 확인
 const root = resolve(process.cwd());
@@ -73,8 +73,17 @@ const verifySrc = readFileSync(resolve(root, 'preview/auth-ui/src/screens/signup
 assert(roleSrc.includes('email_sent'), 'signup-role.js가 email_sent를 읽음');
 assert(roleSrc.includes('verifyEmailPathForSignupResult'), 'signup-role.js가 경로 헬퍼 사용');
 assert(verifySrc.includes('classifyEmailVerifySendResult'), 'verify-email이 재전송 분류 사용');
-assert(verifySrc.includes('계정은 만들어졌지만 확인 메일을 보내지 못했습니다'), '발송 실패 제목 존재');
-assert(verifySrc.includes('확인 메일을 보냈습니다'), '발송 성공 대기 문구 존재');
+// 화면 문구는 공용 카피(preview/shared/auth-welcome-copy.js, 해요체)에서 읽는다.
+const welcomeSrc = readFileSync(resolve(root, 'preview/shared/auth-welcome-copy.js'), 'utf8');
+assert(
+  verifySrc.includes('AUTH_WELCOME_COPY.verify.failTitle') &&
+    welcomeSrc.includes('계정은 만들어졌지만 확인 메일을 보내지 못했어요'),
+  '발송 실패 제목 존재',
+);
+assert(
+  verifySrc.includes('AUTH_WELCOME_COPY.verify.waitLead') && welcomeSrc.includes('확인 메일을 보냈어요'),
+  '발송 성공 대기 문구 존재',
+);
 assert(!verifySrc.includes('SMTP') && !verifySrc.includes('SPF'), '내부 원인 문구 없음');
 
 const apiSrc = readFileSync(resolve(root, 'public/api/auth/email/send-verification.php'), 'utf8');

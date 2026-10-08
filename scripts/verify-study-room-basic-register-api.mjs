@@ -35,7 +35,15 @@ assert(formSrc.includes('filledIdx'), 'validate iterates filled slots only');
 
 const svc = readFileSync(resolve(root, 'src/Auth/BasicRegisterService.php'), 'utf8');
 assert(svc.includes('홍보지역 1(대표)을 선택해 주세요'), 'backend requires promo slot 1');
-assert(svc.includes('공부방은 계정당 1개만 등록할 수 있습니다'), 'backend blocks duplicate study_room row');
+// 4660fd8: 이미 있으면 오류 대신 사용자 행을 잠그고 그 공부방을 다시 쓴다(새 행 INSERT 없음).
+const roomSvcSrc = readFileSync(resolve(root, 'src/StudyRoom/StudyRoomRegisterService.php'), 'utf8');
+assert(
+  svc.includes('SELECT id FROM study_rooms WHERE user_id = ? AND deleted_at IS NULL ORDER BY id ASC LIMIT 1') &&
+    svc.includes('$this->lockUserRow($pdo, $userId);') &&
+    svc.includes('if ($existingId !== false) {') &&
+    roomSvcSrc.includes('공부방은 계정당 1개만 등록할 수 있습니다'),
+  'backend blocks duplicate study_room row',
+);
 assert(svc.includes('promoSlotHasIntent'), 'backend detects intentional empty promo slots');
 assert(svc.includes('슬롯 자체 메타만 사용'), 'backend forbids business-address fallback into promo slots');
 assert(!/RegionEnsure::fromKakao\(\$pdo,\s*\$payload\)/.test(svc), 'signup no longer ensures from merged $input+$slot');
@@ -49,13 +57,27 @@ assert(!syncSrc.includes('$cname = $caddr'), 'detail cname = $caddr 0');
 
 const completeSrc = readFileSync(resolve(root, 'preview/auth-ui/src/screens/signup-complete.js'), 'utf8');
 assert(completeSrc.includes('studyRoomHasPromoSlot1'), 'complete go-home uses promo slot1');
-assert(completeSrc.includes('기본등록이 완료되었습니다. 상세등록은 마이페이지에서 이어갈 수 있습니다.'), 'complete go-home copy');
-assert(completeSrc.includes('홍보지역(기본등록)'), 'missing-seed copy uses 홍보지역');
+// 80ee85c: 완료 화면 문구는 공용 카피(preview/shared/auth-welcome-copy.js, 해요체)에서 읽는다.
+const welcomeSrc = readFileSync(resolve(root, 'preview/shared/auth-welcome-copy.js'), 'utf8');
+assert(
+  completeSrc.includes('AUTH_WELCOME_COPY.complete.alertDone') &&
+    welcomeSrc.includes("alertDone: '기본등록이 끝났어요. 상세등록은 마이페이지에서 이어갈 수 있어요.'"),
+  'complete go-home copy',
+);
+assert(
+  completeSrc.includes('AUTH_WELCOME_COPY.complete.confirmProvider') && welcomeSrc.includes('홍보지역 정보가 없어요'),
+  'missing-seed copy uses 홍보지역',
+);
 assert(!completeSrc.includes("'지역(기본등록) 정보가 없습니다"), 'old 지역 wording removed');
 assert(!completeSrc.includes('"지역(기본등록) 정보가 없습니다'), 'old 지역 wording removed (dq)');
 
 const overviewSrc = readFileSync(resolve(root, 'preview/study-room-ui/src/screens/step-basic.js'), 'utf8');
-assert(overviewSrc.includes('미입력 홍보지역 2·3은 미표시'), 'mypage overview hides empty promo 2·3');
+// cd158a7: 빈 2·3을 숨기던 규칙 → 「항상 3칸, 빈 칸은 자리 유지」. 빈 칸에 다른 주소를 채우지 않는다.
+assert(
+  overviewSrc.includes('홍보지역은 항상 3칸. 빈 칸은 자리를 유지하고 앞으로 당기지 않음') &&
+    overviewSrc.includes('while (slots.length < 3) slots.push({});'),
+  'mypage overview keeps empty promo 2·3 slots',
+);
 
 const me = readFileSync(resolve(root, 'public/api/auth/me.php'), 'utf8');
 assert(me.includes('needs_basic_register'), 'me exposes needs_basic_register');

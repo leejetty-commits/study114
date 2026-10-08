@@ -163,6 +163,8 @@ const intentionalNoGate = [
   /\/auth\/regions\.php$/,
   /_mail-probe\.php$/,
   /\/cron\//,
+  // 공개 검색. 비로그인은 게스트 기준 지역으로 고정, 로그인은 기본등록 대표지역 기준 요청(정본 grok-sync 193·106).
+  /\/search\/search\.php$/,
 ];
 
 console.log('\n=== 세션 기반 엔드포인트 게이트 분류 ===');
