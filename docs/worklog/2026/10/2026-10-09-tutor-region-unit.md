@@ -542,3 +542,10 @@ worklog `2026-10-09-tutor-region-unit.md`에 이 지시 원문, 2단계 변경 �
 |---|---|
 | 독립 검수 | 대기 |
 | 사용자 승인 | 대기 |
+
+## 20. 독립 재검수 (메인 기록, 2026-10-09 01:30)
+
+- 검수자: 다른 모델(claude-4.6-sonnet), 읽기 전용. 대상: merge `60af084` + F-1 수정 `7603359`.
+- 판정: **승인 권고**, 결함 없음. merge는 main + 브랜치 변경과 정확히 같음(54파일·4824줄 일치). `coarseRegionForGuest` 호출부 8곳 kind 명시, 기본값 공부방(main 동작). 과외 희망 학생 카드만 과외 단위 라벨 통과 — 타당. `verify-tutor-region-unit` 134/0, `verify-no-sample-data` OK, 추적 파일 변경 없음.
+- 누적 검수: 1단계 `dad3d2e` 조건부(동시 배포 조건) → 2단계 `5a9ce03` 조건부(F-1) → `7603359` 승인 권고.
+- 사용자 승인: 대기 (승인 대상 hash `7603359`). 배포 전 사용자 할 일: `078_tutor_unit_gwangju.sql` phpMyAdmin 적용.
