@@ -159,6 +159,10 @@ final class DraftPdo extends PDO
                 'sigungu_name' => '수원시', 'unit_level' => 'sigungu', 'official_code' => '4111000000', 'is_active' => 1,
             ]]];
         }
+        if (str_contains($sql, 'FROM tutor_images')) {
+            // 기존 행은 사진을 이미 올린 상태(기본정보 필수 · 2026-10-09)
+            return ['column' => 1];
+        }
         if (str_contains($sql, 'FROM tutor_regions') || str_contains($sql, 'FROM tutor_subject_targets') || str_contains($sql, 'FROM tutor_lesson_places')) {
             return ['column' => false, 'rows' => []];
         }
@@ -181,8 +185,16 @@ function basicPayload(string $name): array
     return [
         'tutor_display_name' => $name,
         'gender' => 'male',
+        'school_level' => 'middle',
+        'main_subject_note' => '수학',
+        'preferred_fee_amount' => '300000',
+        'lessons_per_week' => '2',
+        'minutes_per_lesson' => '90',
+        'lesson_places' => ['student_home_visit'],
         'student_gender_group' => 'mixed',
         'student_count_group' => 'solo',
+        'feature_1' => '내신 대비',
+        'slogan' => '꾸준히',
         'saved_regions' => [
             ['region_id' => 11, 'scope_type' => 'city'],
         ],

@@ -115,7 +115,8 @@ assert(css.includes('[data-trc-page] .rc-fold-btn'), 'css: fold button');
 assert(css.includes('[data-trc-page] .rc-publish'), 'css: tutor publish scoped');
 
 assert(router.includes('stripHashQuery'), 'router: strip query');
-assert(TRC_PICK_FIELD_IDS.every((id) => !TRC_BASIC_FIELD_IDS.includes(id)), 'pick extras disjoint from basic');
+assert(TRC_PICK_FIELD_IDS.join(',') === 'feature_1,student_target', 'pick ids unchanged (feature_1 · student_target)');
+assert(TRC_BASIC_FIELD_IDS.includes('feature_1'), 'feature_1 is basic required (2026-10-09)');
 assert(TRC_PRIME_FIELD_IDS.every((id) => !TRC_BASIC_FIELD_IDS.includes(id)), 'prime extras disjoint from basic');
 assert(TRC_PRIME_FIELD_IDS.every((id) => !TRC_PICK_FIELD_IDS.includes(id)), 'prime extras disjoint from pick');
 assert(TRC_PICK_FIELD_IDS.includes('feature_1'), 'pick: feature_1');
@@ -128,15 +129,18 @@ const boardIds = [
   ...TRC_BOARD_DETAIL2_FIELDS,
 ].map((f) => f.id);
 assert(boardIds.length === new Set(boardIds).size, 'board field ids unique');
-assert(TRC_BOARD_BASIC_FIELDS.map((f) => f.id).join(',') === 'display_name,main_subject,primary_region', 'basic tab 1:1');
 assert(
-  TRC_BOARD_DETAIL1_FIELDS.map((f) => f.id).join(',') ===
-    'fee,fee_basis,lessons_per_week,monthly_session_count,minutes,student_gender_group,student_count_group,lesson_places,fee_description',
+  TRC_BOARD_BASIC_FIELDS.map((f) => f.id).join(',') ===
+    'display_name,primary_region,school_level,main_subject,fee,lessons_per_week,minutes,lesson_places,student_gender_group,student_count_group,feature_1,slogan,profile_image',
+  'basic tab 1:1',
+);
+assert(
+  TRC_BOARD_DETAIL1_FIELDS.map((f) => f.id).join(',') === 'fee_basis,monthly_session_count,fee_description',
   'detail1 = 수업 · 가격 1:1',
 );
 assert(
   TRC_BOARD_DETAIL2_FIELDS.map((f) => f.id).join(',') ===
-    'university_name,major_name,university_status,feature_1,feature_2,feature_3,intro_short,profile_image,intro_long,contact_time_note',
+    'university_name,major_name,university_status,feature_2,feature_3,intro_short,intro_long,contact_time_note',
   'detail2 = 학력 · 소개 · 연락 1:1',
 );
 
