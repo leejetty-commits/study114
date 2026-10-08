@@ -1,5 +1,5 @@
 /**
- * 공개 샵 — 목록/시드 캐시에서 study-room item 조회
+ * 공개 샵 — 목록/검색 결과 캐시에서 study-room item 조회
  */
 
 import { previewState } from '../state.js';

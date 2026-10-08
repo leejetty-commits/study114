@@ -27,7 +27,7 @@ export function getLocalHistoryRows() {
   } catch {
     /* ignore */
   }
-  return getSeedHistory();
+  return [];
 }
 
 /** @deprecated use getLocalHistoryRows or loadHistoryRows */
@@ -76,37 +76,6 @@ function mapApiOrder(order) {
     status: /** @type {HistoryRow['status']} */ (order.status || 'pending'),
     source: 'api',
   };
-}
-
-function getSeedHistory() {
-  /** @type {HistoryRow[]} */
-  const seed = [
-    {
-      orderRef: 'demo-prime-001',
-      productName: '대표 노출 · 1개월',
-      providerLabel: '샘플 공부방',
-      amountKrw: 10,
-      paymentMethod: 'card',
-      paidAt: '2026-07-01T10:00:00+09:00',
-      status: 'paid',
-      startedAt: '2026-07-01',
-      endedAt: '2026-07-31',
-      source: 'seed',
-    },
-    {
-      orderRef: 'demo-pick-002',
-      productName: '추천 노출 · 14일',
-      providerLabel: '샘플 과외쌤',
-      amountKrw: 10,
-      paymentMethod: 'transfer',
-      paidAt: '2026-06-20T15:30:00+09:00',
-      status: 'paid',
-      startedAt: '2026-06-20',
-      endedAt: '2026-07-04',
-      source: 'seed',
-    },
-  ];
-  return seed;
 }
 
 /** @param {string} method */

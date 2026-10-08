@@ -846,11 +846,11 @@ function renderSubmissionDocs(role) {
     <section class="mypage-panel p15-submission">
       <p class="mypage-lead">${esc(SUBMISSION_DOCS_LEAD)}</p>
       <div class="p15-submission__summary">
-        <span class="mypage-badge">${esc(formatSubmissionDocSummary(docs))}</span>
+        ${docs.length ? `<span class="mypage-badge">${esc(formatSubmissionDocSummary(docs))}</span>` : ''}
         <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">신뢰·증빙자료 제출</a>
         <a href="${TUTOR_REGISTER_URL}" class="btn btn--secondary btn--sm" data-same-tab-href="${TUTOR_REGISTER_URL}">과외쌤 등록 화면에서 자료 등록</a>
       </div>
-      <table class="p15-submission__table" aria-label="제출자료 상태">
+      ${docs.length ? `<table class="p15-submission__table" aria-label="제출자료 상태">
         <thead>
           <tr>
             <th scope="col">항목</th>
@@ -870,7 +870,7 @@ function renderSubmissionDocs(role) {
             )
             .join('')}
         </tbody>
-      </table>
+      </table>` : ''}
       <p class="mypage-note">${esc(LIFECYCLE_FOOTNOTE_SUBMISSION)}</p>
       <p class="mypage-note p22-trust-disclaimer">${esc(TRUST_PLATFORM_DISCLAIMER)}</p>
     </section>`;

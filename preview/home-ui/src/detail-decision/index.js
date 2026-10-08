@@ -42,13 +42,13 @@ export function resolveDetailItem(kind, id) {
     getHomeBasicPool(kind),
   ]);
   if (live) return live;
-  const seed =
+  const bridged =
     kind === 'student'
       ? EXPOSURE_STUDENTS
       : kind === 'tutor'
         ? EXPOSURE_TUTORS
         : EXPOSURE_STUDY_ROOMS;
-  return seed.find((x) => Number(x.id) === Number(id)) || null;
+  return bridged.find((x) => Number(x.id) === Number(id)) || null;
 }
 
 /**
