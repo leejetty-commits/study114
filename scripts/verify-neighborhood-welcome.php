@@ -397,12 +397,22 @@ try {
 ok('3-1. 남의 등록 welcome_off 거부', $blocked);
 
 // 본인 등록(user_id=109)으로 welcome_off 시도 -> 성공
+// 브라우저가 neighborhood·display_name을 보내도 저장값은 DB 값이어야 함 (정본 71 레드라인 3)
 $offRes = $service->save(109, 'tutor', [
     'provider_type' => 'tutor',
     'registration_id' => 30,
     'status' => 'welcome_off',
+    'neighborhood' => '위조동네',
+    'display_name' => '위조이름',
 ]);
 ok('3-2. 본인 등록 welcome_off 성공', ($offRes['status'] ?? '') === 'down' && ($offRes['origin'] ?? '') === 'welcome_off' && ($offRes['body'] ?? '') === '');
+$mine30 = $service->getMine(109, 'tutor', 'tutor', 30);
+ok('3-2. welcome_off 시 브라우저가 neighborhood·display_name을 보내도 저장값은 DB 값',
+    ($offRes['neighborhood'] ?? '') === '도봉구' &&
+    ($offRes['display_name'] ?? '') === '오프테스트쌤' &&
+    ($mine30['neighborhood'] ?? '') === '도봉구' &&
+    ($mine30['display_name'] ?? '') === '오프테스트쌤'
+);
 
 // 환영 목록에서 id=30 제외 확인
 $itemsAfterOff = $service->listPublic(true);

@@ -130,6 +130,10 @@
 5. `npm run verify:shop-page`: **54 pass, 0 fail (exit code 0)**
 6. `npm run build:dothome`: **빌드 성공 (exit code 0)**, 빌드 산출물 Git 커밋 제외.
 
+### 5. 3차 수정 (독립 리뷰 지적 1)
+- `NeighborhoodGreetingService::save()`의 `welcome_off` 분기에서 클라이언트 입력(`neighborhood`, `display_name`)을 쓰지 않고 항상 `lookupPrimaryDongName()`, `lookupDisplayName()` 서버 DB 값만 저장(정본 71 레드라인 3).
+- 검증 결과: `D:\php8.2\php.exe -l` 문법 검사 통과 및 `verify-neighborhood-welcome.php`에 브라우저가 전달한 임의 값 대신 DB 값 저장 확인 assert를 추가하여 40개 항목 ALL PASS 확인.
+
 ## 검수 기록
 
 ### 1차 메인 검수 — `b62be07` 반려 (2026-10-08 18:40)

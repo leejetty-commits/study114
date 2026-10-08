@@ -84,14 +84,8 @@ final class NeighborhoodGreetingService
                 return $existing;
             }
             $pdo = Connection::get();
-            $neighborhood = trim((string) ($input['neighborhood'] ?? ''));
-            if ($neighborhood === '') {
-                $neighborhood = $this->lookupPrimaryDongName($pdo, $providerType, $registrationId);
-            }
-            $displayName = trim((string) ($input['display_name'] ?? ''));
-            if ($displayName === '') {
-                $displayName = $this->lookupDisplayName($pdo, $providerType, $registrationId);
-            }
+            $neighborhood = $this->lookupPrimaryDongName($pdo, $providerType, $registrationId);
+            $displayName = $this->lookupDisplayName($pdo, $providerType, $registrationId);
             $now = (int) round(microtime(true) * 1000);
             $row = [
                 'provider_type' => $providerType,
