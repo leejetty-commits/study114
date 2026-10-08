@@ -67,7 +67,8 @@ function createWelcomeTestPdo(): PDO
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         sido_name TEXT NOT NULL,
         sigungu_name TEXT NOT NULL,
-        dong_name TEXT NOT NULL
+        dong_name TEXT NOT NULL,
+        is_selectable INTEGER NOT NULL DEFAULT 1
     )');
 
     $pdo->exec('CREATE TABLE tutors (
@@ -153,10 +154,12 @@ $dateRecent = date('Y-m-d H:i:s', $now - 2 * 86400); // 2일 전 (7일 이내)
 $dateOld = date('Y-m-d H:i:s', $now - 10 * 86400);   // 10일 전 (7일 경과)
 
 // 1) regions
-$pdo->exec("INSERT INTO regions (id, sido_name, sigungu_name, dong_name) VALUES
-    (1, '서울특별시', '도봉구', '방학동'),
-    (2, '서울특별시', '도봉구', '쌍문동'),
-    (3, '서울특별시', '노원구', '')");
+$pdo->exec("INSERT INTO regions (id, sido_name, sigungu_name, dong_name, is_selectable) VALUES
+    (1, '서울특별시', '도봉구', '방학동', 1),
+    (2, '서울특별시', '도봉구', '쌍문동', 1),
+    (3, '서울특별시', '노원구', '', 1),
+    (4, '서울특별시', '도봉구', '', 1),
+    (5, '서울특별시', '', '', 1)");
 
 // 2) users
 $pdo->exec("INSERT INTO users (id, email, status) VALUES
@@ -177,29 +180,29 @@ $pdo->exec("INSERT INTO users (id, email, status) VALUES
     (120, 'save_test_tutor@test.com', 'active')");
 
 // 3) tutors
-// id=1: 정상 환영 대상 (2일 전, 활성회원, 대표지역1=방학동)
+// id=1: 정상 환영 대상 (2일 전, 활성회원, 대표지역1=region_id 4: sigungu_name='도봉구', dong_name='', is_selectable=1 인 구 단위 지역)
 $pdo->exec("INSERT INTO tutors (id, user_id, tutor_display_name, profile_status, created_at)
     VALUES (1, 101, '김수학', 'published', '{$dateRecent}')");
 $pdo->exec("INSERT INTO tutor_regions (id, tutor_id, region_id, priority_order, is_primary)
-    VALUES (1, 1, 1, 0, 1)");
+    VALUES (1, 1, 4, 0, 1)");
 
 // id=2: 10일 전 생성 (자격 2 탈락)
 $pdo->exec("INSERT INTO tutors (id, user_id, tutor_display_name, profile_status, created_at)
     VALUES (2, 111, '이영어', 'published', '{$dateOld}')");
 $pdo->exec("INSERT INTO tutor_regions (id, tutor_id, region_id, priority_order, is_primary)
-    VALUES (2, 2, 1, 0, 1)");
+    VALUES (2, 2, 4, 0, 1)");
 
 // id=3: hidden 상태 (자격 3 탈락)
 $pdo->exec("INSERT INTO tutors (id, user_id, tutor_display_name, profile_status, created_at)
     VALUES (3, 113, '박숨김', 'hidden', '{$dateRecent}')");
 $pdo->exec("INSERT INTO tutor_regions (id, tutor_id, region_id, priority_order, is_primary)
-    VALUES (3, 3, 1, 0, 1)");
+    VALUES (3, 3, 4, 0, 1)");
 
 // id=4: 탈퇴 회원 (자격 3 탈락)
 $pdo->exec("INSERT INTO tutors (id, user_id, tutor_display_name, profile_status, created_at)
     VALUES (4, 102, '최탈퇴', 'published', '{$dateRecent}')");
 $pdo->exec("INSERT INTO tutor_regions (id, tutor_id, region_id, priority_order, is_primary)
-    VALUES (4, 4, 1, 0, 1)");
+    VALUES (4, 4, 4, 0, 1)");
 
 // id=5: 1번 자리 없음 (자격 3 탈락)
 $pdo->exec("INSERT INTO tutors (id, user_id, tutor_display_name, profile_status, created_at)
@@ -209,17 +212,17 @@ $pdo->exec("INSERT INTO tutors (id, user_id, tutor_display_name, profile_status,
 $pdo->exec("INSERT INTO tutors (id, user_id, tutor_display_name, profile_status, created_at)
     VALUES (6, 105, '선등록', 'published', '{$dateOld}')");
 $pdo->exec("INSERT INTO tutor_regions (id, tutor_id, region_id, priority_order, is_primary)
-    VALUES (6, 6, 1, 0, 1)");
+    VALUES (6, 6, 4, 0, 1)");
 $pdo->exec("INSERT INTO tutors (id, user_id, tutor_display_name, profile_status, created_at)
     VALUES (7, 105, '후등록', 'published', '{$dateRecent}')");
 $pdo->exec("INSERT INTO tutor_regions (id, tutor_id, region_id, priority_order, is_primary)
-    VALUES (7, 7, 1, 0, 1)");
+    VALUES (7, 7, 4, 0, 1)");
 
-// id=8: 동 이름 없음 (region_id=3 동 이름 빈문자열, 자격 6 탈락)
+// id=8: sigungu_name 없음 (region_id=5 sigungu_name 빈문자열, 자격 6 탈락)
 $pdo->exec("INSERT INTO tutors (id, user_id, tutor_display_name, profile_status, created_at)
-    VALUES (8, 107, '동이름없음', 'published', '{$dateRecent}')");
+    VALUES (8, 107, '지역이름없음', 'published', '{$dateRecent}')");
 $pdo->exec("INSERT INTO tutor_regions (id, tutor_id, region_id, priority_order, is_primary)
-    VALUES (8, 8, 3, 0, 1)");
+    VALUES (8, 8, 5, 0, 1)");
 
 // 4) study_rooms
 // id=10: 정상 환영 대상 (2일 전, 활성회원, 홍보1=쌍문동)
@@ -280,8 +283,12 @@ $welcomeItems = array_values(array_filter($publicItems, static fn ($i) => ($i['o
 $welcomeTutorIds = array_map(static fn ($i) => (int) $i['registration_id'], array_filter($welcomeItems, static fn ($i) => $i['provider_type'] === 'tutor'));
 $welcomeRoomIds = array_map(static fn ($i) => (int) $i['registration_id'], array_filter($welcomeItems, static fn ($i) => $i['provider_type'] === 'study_room'));
 
-ok('1-1. 정상 등록 환영 통과 (과외쌤 id=1)', in_array(1, $welcomeTutorIds, true));
+ok('1-1. 정상 등록 환영 통과 (과외쌤 id=1 - 구 단위 지역 dong_name 빈값)', in_array(1, $welcomeTutorIds, true));
 ok('1-1. 정상 등록 환영 통과 (공부방 id=10)', in_array(10, $welcomeRoomIds, true));
+
+$welcomeTutor1 = current(array_filter($welcomeItems, static fn ($i) => $i['provider_type'] === 'tutor' && (int) $i['registration_id'] === 1));
+ok('1-1. 과외쌤 환영 줄 동네는 sigungu_name(도봉구)', $welcomeTutor1 && ($welcomeTutor1['neighborhood'] ?? '') === '도봉구');
+ok('1-1. 과외쌤 환영 줄 문구는 {구·시·군}에 새로 오신 과외쌤', $welcomeTutor1 && ($welcomeTutor1['body'] ?? '') === '도봉구에 새로 오신 과외쌤이에요. 반갑게 맞아 주세요!');
 
 // 자격 2 (7일 이내) 검증: 10일 전 등록은 제외
 ok('1-2. 7일 초과 등록 제외 (과외쌤 id=2)', !in_array(2, $welcomeTutorIds, true));
@@ -299,8 +306,8 @@ ok('1-3. 대표지역 슬롯1 없는 공부방 제외 (공부방 id=14)', !in_ar
 ok('1-5. 이전 등록이 있는 회원의 후등록 제외 (과외쌤 id=7)', !in_array(7, $welcomeTutorIds, true));
 ok('1-5. 삭제된 이전 등록이 있는 회원의 재등록 제외 (공부방 id=16)', !in_array(16, $welcomeRoomIds, true));
 
-// 자격 6 (동 이름): 동 이름 비어있으면 제외
-ok('1-6. 동 이름이 빈 문자열인 등록 제외 (과외쌤 id=8)', !in_array(8, $welcomeTutorIds, true));
+// 자격 6 (동네 이름): sigungu_name/dong_name 비어있으면 제외
+ok('1-6. sigungu_name이 빈 문자열인 등록 제외 (과외쌤 id=8)', !in_array(8, $welcomeTutorIds, true));
 
 // 자격 4 (인사 기록 하나도 없음): 본인이 인사를 올리거나 내리면 환영 줄에서 제외
 // 임의의 새 과외쌤 id=20 생성 (독립된 user_id=120)
@@ -354,7 +361,7 @@ foreach ($authItems as $it) {
     }
 }
 ok('2-2. 로그인 시 display_name 포함', isset($authTutor1) && $authTutor1['display_name'] === '김수학');
-ok('2-2. 로그인 시 body 포함', isset($authTutor1) && $authTutor1['body'] === '방학동에 새로 오신 과외쌤이에요. 반갑게 맞아 주세요!');
+ok('2-2. 로그인 시 body 포함', isset($authTutor1) && $authTutor1['body'] === '도봉구에 새로 오신 과외쌤이에요. 반갑게 맞아 주세요!');
 ok('2-2. 로그인 시 origin=welcome', isset($authTutor1) && $authTutor1['origin'] === 'welcome');
 
 // 공부방 로그인 시 문구 확인
@@ -428,11 +435,31 @@ ok('4-2. GET listPublic() 호출 후 파일 mtime 불변', $mtimeBefore === $mti
 // =========================================================================
 // 5. 문구가 validate() 통과 검증
 // =========================================================================
-$tutorMsg = "방학동에 새로 오신 과외쌤이에요. 반갑게 맞아 주세요!";
+$tutorMsg = "도봉구에 새로 오신 과외쌤이에요. 반갑게 맞아 주세요!";
 $roomMsg = "쌍문동에 새 공부방이 문을 열었어요. 반갑게 맞아 주세요!";
 
 ok('5-1. 과외쌤 자동 문구 validate() 통과', NeighborhoodGreetingService::validate($tutorMsg) === '');
 ok('5-2. 공부방 자동 문구 validate() 통과', NeighborhoodGreetingService::validate($roomMsg) === '');
+
+// =========================================================================
+// 6. R5: basicCard() null 아님 검증 (모든 origin===welcome 항목)
+// =========================================================================
+$hasWelcomeTutor = false;
+$hasWelcomeRoom = false;
+foreach ($welcomeItems as $wItem) {
+    $pType = (string) ($wItem['provider_type'] ?? '');
+    $rId = (int) ($wItem['registration_id'] ?? 0);
+    $card = $service->basicCard($pType, $rId);
+    ok("6-1. basicCard() null 아님 ({$pType} id={$rId})", $card !== null);
+    if ($pType === 'tutor') {
+        $hasWelcomeTutor = true;
+    }
+    if ($pType === 'study_room') {
+        $hasWelcomeRoom = true;
+    }
+}
+ok('6-2. 환영 과외쌤 사례 포함', $hasWelcomeTutor);
+ok('6-3. 환영 공부방 사례 포함', $hasWelcomeRoom);
 
 // 요약 출력
 echo "\n" . ($failed === 0 ? "ALL PASS ({$failed} failed)\n" : "FAILED ({$failed} failures)\n");

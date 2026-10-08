@@ -149,6 +149,9 @@ export async function fetchMineGreeting(providerType, registrationId) {
     const data = await res.json().catch(() => ({}));
     if (!data?.ok) return { ok: false, error: String(data?.message || '조회 실패') };
     if (data.item) {
+      if (data.item.status === 'welcome') {
+        return { ok: true, item: data.item };
+      }
       const id = `${providerType === 'tutor' ? 'tutor' : 'study_room'}:${Number(registrationId)}`;
       const prev = readGreetings().find((row) => row.id === id);
       const record = {

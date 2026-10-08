@@ -668,7 +668,11 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
     .then((res) => {
       if (!editor.isConnected) return;
       if (res.ok && res.item) {
-        refreshHistoryList(res.item);
+        if (res.item.status === 'welcome') {
+          renderFallbackView();
+        } else {
+          refreshHistoryList(res.item);
+        }
         renderWelcomeBanner(res.item.welcome);
       } else {
         renderFallbackView();

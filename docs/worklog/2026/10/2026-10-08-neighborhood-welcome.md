@@ -106,6 +106,30 @@
 - 없음. 정본 `docs/internal/71-neighborhood-welcome-lock.md`의 레드라인 6개, 자격 6가지, 문구 원칙, API 계약, 홈 칸 최대 1줄 상한, 본인 제어(welcome_off)를 100% 그대로 구현함.
 - 마이페이지 편집 칸의 환영 상태 인식 방식: 새 라우트나 API 파일 추가 없이, 기존 `getMine()` 응답에 `welcome: { active: true, d_day: 'D-n', days_left: n }`를 반환하도록 하여 최소 변경으로 가장 단순하게 연동함.
 
+### 4. 2차 수정 (1차 메인 검수 R1~R5 반영)
+
+- **R1 (과외쌤 동네를 sigungu_name으로 정정)**:
+  - 과외 지역 공식 행(`regions.dong_name=''`) 특성에 맞추어 `NeighborhoodGreetingService`의 `listWelcomeItems()`, `welcomeInfoForMine()`, `lookupPrimaryDongName()`(과외쌤 분기)에서 `r.sigungu_name`을 조회·사용하도록 수정.
+  - 과외쌤 환영 문구를 「{구·시·군}에 새로 오신 과외쌤이에요. 반갑게 맞아 주세요!」로 생성.
+  - 검증 스크립트(`scripts/verify-neighborhood-welcome.php`)에 `dong_name=''`, `sigungu_name='도봉구'`, `is_selectable=1` 인 구 단위 지역을 대표지역으로 둔 과외쌤(id=1)이 환영 줄에 정상 노출되고 `neighborhood='도봉구'` 및 해당 문구를 가지는 사례 검증 추가.
+- **R2 (출력 금지 및 error_log 전환)**:
+  - `listWelcomeItems()` catch 블록의 `echo` 2곳을 `error_log('[neighborhood-welcome] ...')`로 수정하여 JSON 응답 깨짐 방지.
+- **R3 (welcomeInfoForMine 예외 방어)**:
+  - `welcomeInfoForMine()` 내부 쿼리 실행을 try-catch로 감싸고 예외 시 `error_log` 후 null을 반환하여 내 인사 조회가 500 오류가 나지 않도록 방어.
+- **R4 (환영 상태 로컬 저장소 쓰기 방지 및 빈 이력 오노출 방지)**:
+  - `preview/shared/neighborhood-greeting-store.js`의 `fetchMineGreeting()`에서 응답이 `status === 'welcome'`이면 로컬 인사 저장소에 기록을 쓰지 않고(기존 기록 불변 유지) welcome 정보만 호출자에게 반환하도록 수정.
+  - `preview/home-ui/src/neighborhood-greeting-ui.js`에서도 `fetchMineGreeting()` 콜백에서 `status === 'welcome'` 시 `renderFallbackView()`를 호출하여 「내린 인사」나 빈 배지가 아닌 「아직 올린 인사가 없어요.」 문구와 D-n 소개 배너가 깔끔하게 렌더링되도록 확인 및 정돈.
+- **R5 (레드라인 2: 모든 환영 항목의 basicCard 유효성 보증)**:
+  - `scripts/verify-neighborhood-welcome.php`에 `listPublic()`이 반환한 모든 `origin === 'welcome'` 항목에 대해 `basicCard(provider_type, registration_id)`가 null이 아님을 확인하는 assert 추가(과외쌤·공부방 사례 모두 포함).
+
+#### 2차 검증 결과 요약
+1. `D:\php8.2\php.exe -l` (수정된 PHP 파일 전체): No syntax errors detected.
+2. `D:\php8.2\php.exe -d extension=pdo_sqlite scripts/verify-neighborhood-welcome.php`: **ALL PASS (39 passed, 0 failed)**
+3. `cd preview/home-ui && npx vite-node ../../scripts/verify-home-news-row.mjs`: **226 passed / 0 failed (exit code 0)**
+4. `npx --prefix preview/home-ui vite-node scripts/verify-basic-exposure-gate.mjs`: **24 passed, 0 failed (exit code 0)**
+5. `npm run verify:shop-page`: **54 pass, 0 fail (exit code 0)**
+6. `npm run build:dothome`: **빌드 성공 (exit code 0)**, 빌드 산출물 Git 커밋 제외.
+
 ## 검수 기록
 
 ### 1차 메인 검수 — `b62be07` 반려 (2026-10-08 18:40)
