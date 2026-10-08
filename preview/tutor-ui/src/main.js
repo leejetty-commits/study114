@@ -143,7 +143,7 @@ function render() {
 function loadMasters() {
   return fetchMasters().then((masters) => {
     apiMasters.regions = masters.regions ?? [];
-    apiMasters.cities = masters.cities ?? [];
+    apiMasters.tutorUnits = masters.tutor_units ?? [];
   });
 }
 

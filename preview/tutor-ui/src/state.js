@@ -117,15 +117,16 @@ export const IMAGE_TYPES = [
 
 export const apiMasters = {
   regions: /** @type {Array<{id: number, label: string}>} */ ([]),
-  cities: /** @type {Array<{id: number, label: string}>} */ ([]),
+  /** 과외 단위(광역시 / 도의 시·군). register.php masters.tutor_units */
+  tutorUnits: /** @type {Array<{id: number, label: string}>} */ ([]),
 };
 
 export function getRegions() {
   return apiMasters.regions.length ? apiMasters.regions : [];
 }
 
-export function getCities() {
-  return apiMasters.cities.length ? apiMasters.cities : [];
+export function getTutorUnits() {
+  return apiMasters.tutorUnits.length ? apiMasters.tutorUnits : [];
 }
 
 /** 기본등록(이름+과외지역) 완료 여부 — 상세등록 진입 시 스킵 판단 */

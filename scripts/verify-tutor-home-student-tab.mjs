@@ -86,15 +86,15 @@ ok(
   /if \(\$lessonType = \$this->stringFilter\(\$filters, 'preferred_lesson_type'\)\)[\s\S]{0,160}s\.preferred_lesson_type = :preferred_lesson_type/.test(searchPhp),
 );
 ok(
-  '서버: preferred_region_id = selectableRegionId(구·시·군) → preferred_tutor_region_id 비교',
-  /\$regionId = \$this->selectableRegionId\(\$pdo, \$filters, 'preferred_region_id'\)/.test(searchPhp) &&
-    /studentGuBaseWhere\(\$regionId, RegionGuLink::dongIdsUnderGu\(\$regionId\), \$params\)/.test(searchPhp) &&
-    /s\.preferred_tutor_region_id = :guest_gu_id/.test(searchPhp),
+  '서버: preferred_lesson_type=tutor 면 preferred_region_id = 과외 단위 id → preferred_tutor_region_id 그대로 비교',
+  /\$regionId = \$this->studentRegionId\(\$pdo, \$filters, 'preferred_region_id', \$lessonForRegion\)/.test(searchPhp) &&
+    /\$regionId !== null && \$lessonForRegion === 'tutor'\) \{\s*\$where\[\] = 's\.preferred_tutor_region_id = :preferred_tutor_unit_id'/.test(searchPhp) &&
+    /return \$this->tutorUnitRegionId\(\$pdo, \$filters, \$key\)/.test(searchPhp),
 );
 ok(
-  '서버: 선택 단위 기준이 같다 — tutor_regions.region_id 와 preferred_tutor_region_id 모두 assertSelectable',
-  /SidoRegionEnsure::assertSelectable\(\$pdo, \$regionId\)/.test(tutorRegPhp) &&
-    /SidoRegionEnsure::assertSelectable\(\$this->pdo, \$regionId\)/.test(studentHubPhp),
+  '서버: 과외 단위 기준이 같다 — tutor_regions.region_id 와 preferred_tutor_region_id 모두 TutorRegionUnit::assertUnit',
+  /TutorRegionUnit::assertUnit\(\$pdo, \$regionId\)/.test(tutorRegPhp) &&
+    /TutorRegionUnit::assertUnit\(\$this->pdo, \$regionId\)/.test(studentHubPhp),
 );
 ok(
   'PHP·SQL 변경 없음(조회 전용) — SearchService 에 새 필터 키를 넣지 않았다',
@@ -204,12 +204,13 @@ Object.defineProperty(globalThis, 'location', {
 globalThis.history = { replaceState() {}, pushState() {} };
 console.warn = () => {};
 
-const CITIES = [
-  { id: 424, label: '의정부시', sido_code: '41', sido_name: '경기도', official_code: '4115000000', city_name: '의정부시', gu_name: '', kind: 'city' },
-  { id: 117, label: '도봉구', sido_code: '11', sido_name: '서울특별시', official_code: '1132000000', city_name: '도봉구', gu_name: '', kind: 'gu' },
-  { id: 118, label: '노원구', sido_code: '11', sido_name: '서울특별시', official_code: '1135000000', city_name: '노원구', gu_name: '', kind: 'gu' },
+/** 과외 단위(광역시 / 도의 시·군) 목록 — regions.php action=tutor_units 응답 모양 */
+const TUTOR_UNITS = [
+  { id: 117, label: '서울특별시', sido_code: '11', sido_name: '서울특별시', unit_name: '', kind: 'metro', official_code: '1100000000' },
+  { id: 424, label: '경기도 의정부시', sido_code: '41', sido_name: '경기도', unit_name: '의정부시', kind: 'city', official_code: '4115000000' },
+  { id: 118, label: '경기도 양주시', sido_code: '41', sido_name: '경기도', unit_name: '양주시', kind: 'city', official_code: '4163000000' },
 ];
-const REGION_LABEL = { 424: '경기도 의정부시', 117: '서울특별시 도봉구', 118: '서울특별시 노원구' };
+const REGION_LABEL = { 424: '경기도 의정부시', 117: '서울특별시', 118: '경기도 양주시' };
 
 function studentRow(id, name, regionLabel) {
   return {
@@ -245,7 +246,7 @@ globalThis.fetch = async (input, init = {}) => {
   } catch {
     body = null;
   }
-  if (url.pathname.endsWith('/api/auth/regions.php')) return reply(200, { ok: true, cities: CITIES });
+  if (url.pathname.endsWith('/api/auth/regions.php')) return reply(200, { ok: true, cities: [], tutor_units: TUTOR_UNITS });
   if (url.pathname.endsWith('/api/registrations/tutors.php')) return reply(200, { ok: true, tutors: server.tutors });
   if (url.pathname.endsWith('/api/messages/threads.php')) return reply(200, { ok: true, threads: [] });
   if (url.pathname.endsWith('/api/paid/roi.php')) return reply(200, { ok: true, lifetime_views: 0 });
@@ -337,7 +338,7 @@ server.tutors = [
   ]),
 ];
 server.studentsByRegion = {
-  117: [studentRow(501, '도봉 학생A', '서울특별시 도봉구'), studentRow(502, '도봉 학생B', '서울특별시 도봉구')],
+  117: [studentRow(501, '서울 학생A', '서울특별시'), studentRow(502, '서울 학생B', '서울특별시')],
   424: [studentRow(601, '의정부 학생', '경기도 의정부시')],
   118: [],
 };
@@ -364,7 +365,7 @@ server.searchBodies = [];
   ok('(M4) 샘플 카드로 채우지 않는다', !/샘플 학생|data-vacant-sample|_vacantSample/.test(html));
   ok('(c) 활동지역 3탭이 학생 탭에 보인다', (html.match(/data-tutor-region="\d"/g) || []).length === 3, html.slice(0, 120));
   ok('(c) 대표 탭이 기본 선택', /data-tutor-region="0"[^>]*aria-selected="true"/.test(html));
-  ok('(M1) 지역 라벨 = 대표 활동지역', text.includes('도봉'), text.slice(0, 200));
+  ok('(M1) 지역 라벨 = 대표 과외 단위(서울특별시)', text.includes('서울특별시'), text.slice(0, 200));
 }
 
 /* ── 3탭 전환 → 그 지역으로 재조회 ── */
@@ -388,9 +389,9 @@ server.searchBodies = [];
 clickRegionTab(2);
 {
   const { html, text } = await renderStudentTab();
-  ok('(M3) 탭 3 전환 → 노원구(118) 조회', String(lastStudentBody()?.filters?.preferred_region_id) === '118', JSON.stringify(lastStudentBody()?.filters));
+  ok('(M3) 탭 3 전환 → 경기도 양주시(118) 조회', String(lastStudentBody()?.filters?.preferred_region_id) === '118', JSON.stringify(lastStudentBody()?.filters));
   ok('(b) 조회 끝 0건 → 감성 카피', text.includes(COPY.emptyBody) && /아직 함께 공부할 학생이 보이지 않아요/.test(text), text.slice(0, 220));
-  ok('(b) 0건 카피 지역 = 선택 활동지역', text.includes('노원'), text.slice(0, 200));
+  ok('(b) 0건 카피 지역 = 선택 과외 단위', text.includes('양주시'), text.slice(0, 200));
   ok('(b) 0건에 「공개 중인 학생이 없습니다」(옛 문구) 안 씀', !text.includes('공개 중인 학생이 없습니다'));
   ok('(b) 0건 → data-tutor-student-feed="ready"', html.includes('data-tutor-student-feed="ready"'));
   ok('(b) 0건에 샘플 카드 없음', !/data-vacant-sample|샘플/.test(html));

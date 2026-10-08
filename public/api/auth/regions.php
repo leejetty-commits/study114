@@ -55,6 +55,14 @@ try {
         exit;
     }
 
+    if ($action === 'tutor_units') {
+        study114_regions_json([
+            'ok' => true,
+            'tutor_units' => $service->listTutorUnits(),
+        ]);
+        exit;
+    }
+
     if ($action === 'ensure') {
         $region = RegionEnsure::fromKakao(Connection::get(), $input);
         study114_regions_json([
@@ -97,6 +105,7 @@ try {
     $cities = [];
     $regions = [];
     $complexes = [];
+    $tutorUnits = [];
     $warnings = [];
 
     try {
@@ -104,6 +113,12 @@ try {
     } catch (Throwable $e) {
         error_log('[regions] cities: ' . $e->getMessage());
         $warnings[] = 'cities';
+    }
+    try {
+        $tutorUnits = $service->listTutorUnits();
+    } catch (Throwable $e) {
+        error_log('[regions] tutor_units: ' . $e->getMessage());
+        $warnings[] = 'tutor_units';
     }
     try {
         $regions = $service->listRegions();
@@ -123,6 +138,7 @@ try {
         'regions' => $regions,
         'complexes' => $complexes,
         'cities' => $cities,
+        'tutor_units' => $tutorUnits,
     ];
     if ($warnings) {
         $payload['warnings'] = $warnings;
@@ -141,5 +157,6 @@ try {
         'error' => 'server_error',
         'message' => $e->getMessage(),
         'cities' => [],
+        'tutor_units' => [],
     ]);
 }

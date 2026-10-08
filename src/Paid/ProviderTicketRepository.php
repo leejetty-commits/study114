@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Study114\Paid;
 
 use PDO;
-use Study114\Registration\OfficialRegionLabel;
+use Study114\Region\TutorRegionUnit;
 
 /** 18b — 횟수권 · 기간형 포지션 */
 final class ProviderTicketRepository
@@ -192,7 +192,7 @@ final class ProviderTicketRepository
 
     /**
      * 공부방 is_primary / 과외쌤 is_primary 필수 1번 지역 표시명
-     * 과외쌤은 「시도 시군구」, 대표 지역이 없으면 null.
+     * 과외쌤은 과외 단위 이름(「서울특별시」「경기도 수원시」), 대표 지역이 없으면 null.
      */
     public function primaryRegionLabel(string $providerType, int $providerId): ?string
     {
@@ -209,7 +209,7 @@ final class ProviderTicketRepository
                 $stmt->execute([$providerId]);
                 $regionId = $stmt->fetchColumn();
 
-                return $regionId !== false ? (new OfficialRegionLabel($this->pdo))->sigunguLabel($regionId) : null;
+                return $regionId !== false ? TutorRegionUnit::labelForId($this->pdo, $regionId) : null;
             }
             $stmt = $this->pdo->prepare(
                 'SELECT CONCAT(r.dong_name, IFNULL(CONCAT(" · ", c.name), ""))

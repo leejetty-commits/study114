@@ -167,16 +167,22 @@ final class HopePdo extends PDO
     }
 }
 
+/** 과외 단위 광역시(073 시도 행). 과외 희망지역은 이 행만 저장된다. */
+function metroUnit(int $id, string $sidoCode, string $sido): array
+{
+    return ['id' => $id, 'sido_code' => $sidoCode, 'sido_name' => $sido, 'sigungu_name' => '', 'sigungu_code' => $sidoCode . '000', 'dong_name' => '', 'unit_level' => 'sido', 'official_code' => $sidoCode . '00000000', 'is_selectable' => 0, 'is_active' => 1];
+}
 function gu(int $id, string $sido, string $name, string $code): array
 {
-    return ['id' => $id, 'sido_name' => $sido, 'sigungu_name' => $name, 'sigungu_code' => substr($code, 0, 5), 'dong_name' => '', 'unit_level' => 'sigungu', 'official_code' => $code, 'is_selectable' => 1, 'is_active' => 1];
+    return ['id' => $id, 'sido_code' => substr($code, 0, 2), 'sido_name' => $sido, 'sigungu_name' => $name, 'sigungu_code' => substr($code, 0, 5), 'dong_name' => '', 'unit_level' => 'sigungu', 'official_code' => $code, 'is_selectable' => 1, 'is_active' => 1];
 }
 function dong(int $id, string $sido, string $gu, string $sgCode, string $name): array
 {
-    return ['id' => $id, 'sido_name' => $sido, 'sigungu_name' => $gu, 'sigungu_code' => $sgCode, 'dong_name' => $name, 'unit_level' => 'dong', 'official_code' => null, 'is_selectable' => 0, 'is_active' => 1];
+    return ['id' => $id, 'sido_code' => substr($sgCode, 0, 2), 'sido_name' => $sido, 'sigungu_name' => $gu, 'sigungu_code' => $sgCode, 'dong_name' => $name, 'unit_level' => 'dong', 'official_code' => null, 'is_selectable' => 0, 'is_active' => 1];
 }
 $REGIONS = [
-    gu(117, '서울특별시', '도봉구', '1132000000'),
+    metroUnit(117, '11', '서울특별시'),
+    gu(118, '서울특별시', '도봉구', '1132000000'),
     dong(9101, '경기', '의정부시', '41150', '신곡동'),
 ];
 function seedComplexes(): array
@@ -275,6 +281,20 @@ attempt('S2 공부방→과외 분기에 단지 이름을 실어도 단지를 �
     ok('S2 INSERT 없음', $pdo->inserts === 0);
     ok('S2 과외 지역 = 117', $s['preferred_tutor_region_id'] === 117, var_export($s['preferred_tutor_region_id'], true));
     ok('S2 공부방 동·단지·기준 NULL', $s['preferred_studyroom_region_id'] === null && $s['preferred_studyroom_complex_id'] === null && $s['preferred_studyroom_region_basis'] === null, json_encode([$s['preferred_studyroom_region_id'], $s['preferred_studyroom_complex_id'], $s['preferred_studyroom_region_basis']]));
+});
+
+attempt('S2b 과외 희망지역에 구(도봉구 118)·동(9101)은 저장 거부', static function (): void {
+    foreach ([118 => '구', 9101 => '동'] as $badId => $kind) {
+        $pdo = boot(row('tutor', 117, null));
+        $msg = null;
+        try {
+            patchVia($pdo, ['preferred_lesson_type' => 'tutor', 'preferred_tutor_region_id' => $badId]);
+        } catch (InvalidArgumentException $e) {
+            $msg = $e->getMessage();
+        }
+        ok('S2b 과외 희망 ' . $kind . ' 행 거부', $msg !== null && str_contains($msg, '광역시 또는 도의 시·군'), (string) $msg);
+        ok('S2b 과외 희망 ' . $kind . ' 거부 후 기존 117 유지', $pdo->student['preferred_tutor_region_id'] === 117, var_export($pdo->student['preferred_tutor_region_id'], true));
+    }
 });
 
 attempt('S3 과외→공부방 + 단지 이름 저장, 과외 지역은 비움', static function (): void {

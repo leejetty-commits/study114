@@ -134,10 +134,15 @@ globalThis.fetch = async (url) => {
       { id: '118', label: '서울특별시 노원구', sido_code: '11', sido_name: '서울특별시', official_code: '1135000000', city_name: '노원구', kind: 'city' },
       { id: '9101', label: '경기도 의정부시 가능동', sido_code: '41', sido_name: '경기도', official_code: '4115000000', city_name: '의정부시', kind: 'city' },
     ];
+    // 과외 단위(광역시 / 도의 시·군) — regions.php action=tutor_units 응답 모양
+    const sampleTutorUnits = [
+      { id: '118', label: '서울특별시', sido_code: '11', sido_name: '서울특별시', unit_name: '', kind: 'metro' },
+      { id: '117', label: '경기도 양주시', sido_code: '41', sido_name: '경기도', unit_name: '양주시', kind: 'city' },
+    ];
     return {
       ok: true,
-      text: async () => JSON.stringify({ ok: true, cities: sampleCities }),
-      json: async () => ({ ok: true, cities: sampleCities }),
+      text: async () => JSON.stringify({ ok: true, cities: sampleCities, tutor_units: sampleTutorUnits }),
+      json: async () => ({ ok: true, cities: sampleCities, tutor_units: sampleTutorUnits }),
     };
   }
   return { ok: true, json: async () => ({ ok: true, data: [] }) };
@@ -430,6 +435,8 @@ for (const vp of VIEWPORTS) {
           subLabelFontWeight: subLabelStyle ? subLabelStyle.fontWeight : null,
           subLabelColor: subLabelStyle ? subLabelStyle.color : null,
           guWrapHidden: guWrapStyle ? guWrapStyle.display === 'none' : false,
+          tutorUnitCascade: !!document.querySelector('[data-p19-hope-panel="tutor"] [data-region-cascade="tutor_unit"]'),
+          guWrapAbsent: !document.querySelector('[data-p19-hope-panel="tutor"] [data-gu-wrap]'),
         };
       });
 
@@ -440,7 +447,8 @@ for (const vp of VIEWPORTS) {
         { name: '하위 라벨 → 선택칸 (8±1px)', ok: tutorMetrics.subLabelBottomToSelectTop !== null && Math.abs(tutorMetrics.subLabelBottomToSelectTop - 8) <= 1.0, val: tutorMetrics.subLabelBottomToSelectTop },
         { name: '하위 칸 묶음 사이 (16±1px)', ok: tutorMetrics.subGroupsGap !== null && Math.abs(tutorMetrics.subGroupsGap - 16) <= 1.0, val: tutorMetrics.subGroupsGap },
         { name: '하위 라벨 12px/600/#4B5563', ok: tutorMetrics.subLabelFontSize === '12px' && (tutorMetrics.subLabelFontWeight === '600' || tutorMetrics.subLabelFontWeight === 'bold') && (tutorMetrics.subLabelColor === 'rgb(75, 85, 99)' || tutorMetrics.subLabelColor === '#4b5563') },
-        { name: 'hidden 묶음(data-gu-wrap) 미노출', ok: tutorMetrics.guWrapHidden },
+        { name: '과외 단위 선택칸(시·도 → 시·군) 사용', ok: tutorMetrics.tutorUnitCascade },
+        { name: '구 단계 칸(data-gu-wrap) 없음', ok: tutorMetrics.guWrapAbsent },
       ];
 
       for (const chk of tutorChecks) {

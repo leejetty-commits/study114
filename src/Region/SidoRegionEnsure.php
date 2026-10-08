@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Study114\Region;
 
-use InvalidArgumentException;
 use PDO;
 
 /**
- * 과외·학생 선택 단위 = regions.is_selectable = 1.
+ * 구 단위 목록 = regions.is_selectable = 1. 공부방 축(찾기 구 검색·공부방 홍보지역)이 쓴다.
+ * 과외 단위(광역시 / 도의 시·군)는 TutorRegionUnit 이 따로 판정한다.
  * ensure()는 더 이상 「시 대표」 행을 만들지 않는다. 기존 행은 지우지 않는다.
  */
 final class SidoRegionEnsure
@@ -47,19 +47,6 @@ final class SidoRegionEnsure
         }
 
         return $out;
-    }
-
-    public static function assertSelectable(PDO $pdo, int $regionId): void
-    {
-        $stmt = $pdo->prepare(
-            'SELECT 1 FROM regions
-             WHERE id = ? AND is_active = 1 AND is_selectable = 1
-             LIMIT 1'
-        );
-        $stmt->execute([$regionId]);
-        if (!$stmt->fetchColumn()) {
-            throw new InvalidArgumentException('과외지역은 목록에서 구(시·군)까지 선택해 주세요.');
-        }
     }
 
     /**

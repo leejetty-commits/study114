@@ -1,21 +1,21 @@
 /**
- * 과외지역 슬롯 — 서버 cities 기준 2~3단계. 대표는 1번.
+ * 과외지역 슬롯 — 서버 tutor_units 기준. 시·도 1단계(광역시·세종) 또는 시·도 → 시·군 2단계. 대표는 1번.
  */
 
 import {
-  bindRegionCascades,
-  normalizeCities,
-  renderRegionCascade,
-  syncRegionCascade,
-} from './region-cascade.js';
+  bindTutorUnitCascades,
+  normalizeTutorUnits,
+  renderTutorUnitCascade,
+  syncTutorUnitCascade,
+} from './tutor-unit-cascade.js';
 
-/** @param {Array<Record<string, unknown>>} apiCities */
-export function getCityUnits(apiCities) {
-  return normalizeCities(apiCities || []);
+/** @param {Array<Record<string, unknown>>} apiUnits 서버 tutor_units */
+export function getCityUnits(apiUnits) {
+  return normalizeTutorUnits(apiUnits || []);
 }
 
 /**
- * @param {{ region_id?: string|number, is_primary?: boolean, needsReselect?: boolean }} slot
+ * @param {{ region_id?: string|number, is_primary?: boolean }} slot
  * @param {number} idx
  * @param {ReturnType<typeof getCityUnits>} units
  * @param {{ namePrefix?: string, showPrimary?: boolean, labelPrefix?: string, selectClass?: string }} [opts]
@@ -25,7 +25,6 @@ export function renderTutorRegionSlot(slot, idx, units, opts = {}) {
   const showPrimary = opts.showPrimary !== false;
   const labelPrefix = opts.labelPrefix || '지역';
   const id = String(slot.region_id || '').trim();
-  const known = !id || units.some((row) => row.id === id);
   const primaryUi =
     showPrimary && idx === 0
       ? `<span class="register-region-slot__badge" style="margin-left:auto;">대표</span>`
@@ -38,11 +37,10 @@ export function renderTutorRegionSlot(slot, idx, units, opts = {}) {
         ${primaryUi}
       </div>
       <div class="register-region-slot__fields">
-        ${renderRegionCascade({
+        ${renderTutorUnitCascade({
           idPrefix: `${prefix}region_${idx}`,
           units,
-          regionId: known ? id : '',
-          stale: Boolean(slot.needsReselect) || !known,
+          regionId: id,
           selectClass: opts.selectClass,
           required: idx === 0 && units.length > 0,
         })}
@@ -58,7 +56,7 @@ export function renderTutorRegionSlot(slot, idx, units, opts = {}) {
  */
 export function bindTutorRegionSlotEvents(root, units) {
   root.querySelectorAll('[data-region-slot]').forEach((slotEl) => {
-    bindRegionCascades(slotEl, units);
+    bindTutorUnitCascades(slotEl, units);
     const clear = () => clearTutorRegionSlotError(slotEl);
     slotEl.querySelectorAll('select').forEach((sel) => sel.addEventListener('change', clear));
   });
@@ -91,7 +89,7 @@ export function clearTutorRegionSlotError(slotEl) {
  */
 export function syncTutorRegionSlotIds(root, units) {
   root.querySelectorAll('[data-region-slot] [data-region-cascade]').forEach((el) => {
-    syncRegionCascade(el, units);
+    syncTutorUnitCascade(el, units);
   });
 }
 
@@ -105,8 +103,7 @@ export function collectTutorRegionSlots(root) {
     const regionId = slotEl.querySelector('[data-field="region_id"]')?.value ?? '';
     const sido = slotEl.querySelector('[data-field="region_sido"]')?.value || '';
     const city = slotEl.querySelector('[data-field="region_city"]')?.value || '';
-    const gu = slotEl.querySelector('[data-field="region_gu"]')?.value || '';
-    const started = Boolean(sido || city || gu);
+    const started = Boolean(sido || city);
     slots.push({
       region_id: regionId,
       scope_type: 'city',
@@ -136,7 +133,7 @@ export function validateTutorActivityRegions(slots) {
 
   for (let i = 0; i < 3; i += 1) {
     if (list[i]?.partial) {
-      return { ok: false, index: i, message: `과외지역 ${i + 1}을 끝까지 선택해 주세요.` };
+      return { ok: false, index: i, message: `과외지역 ${i + 1}의 시·군을 선택해 주세요.` };
     }
   }
 

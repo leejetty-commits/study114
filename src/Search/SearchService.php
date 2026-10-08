@@ -10,6 +10,7 @@ use Study114\Database\Connection;
 use Study114\Paid\AutoNewBadge;
 use Study114\Paid\PaidBadgeResolver;
 use Study114\Region\RegionGuLink;
+use Study114\Region\TutorRegionUnit;
 use Study114\Visibility\WithdrawnOwnerSql;
 
 final class SearchService
@@ -70,13 +71,16 @@ final class SearchService
 
     private const SELECTABLE_REGION_MESSAGE = '지역은 구(시·군)까지 선택해 주세요.';
 
+    private const TUTOR_UNIT_REGION_MESSAGE = '지역은 광역시 또는 도의 시·군으로 선택해 주세요.';
+
     private const DONG_REGION_MESSAGE = '동을 목록에서 선택해 주세요.';
 
     private const MIXED_STUDENT_REGION_MESSAGE = '희망 지역은 한 가지만 선택해 주세요.';
 
     /**
      * 게스트 지도 박스 실수. 로그인 후 화면은 이 함수를 쓰지 않는다.
-     * 공부방은 RegionGuLink::guestBaseDongId() 행 id, 과외쌤·학생은 GUEST_BASE_GU_OFFICIAL_CODE 행 id.
+     * 공부방은 RegionGuLink::guestBaseDongId() 행 id, 학생은 GUEST_BASE_GU_OFFICIAL_CODE 행 id,
+     * 과외쌤은 그 구가 속한 과외 단위(서울특별시) 행 id.
      * 목록 노출·비삭제·탈퇴 제외는 기존 검색과 같다. 유료 티어만 세지 않는다.
      * 기준 행이 없으면 그 축은 0이고 로그 한 줄만 남긴다.
      * regionIds 는 게스트 목록이 같은 행으로 search 필터를 걸 때 쓴다. 기준 행이 없으면 null.
@@ -88,6 +92,7 @@ final class SearchService
         $pdo = Connection::get();
         $dongId = RegionGuLink::guestBaseDongId();
         $guId = RegionGuLink::guIdByOfficialCode(RegionGuLink::GUEST_BASE_GU_OFFICIAL_CODE);
+        $tutorUnitId = $guId === null ? null : TutorRegionUnit::unitIdForRegion($pdo, $guId);
 
         $studyRooms = 0;
         $tutors = 0;
@@ -104,19 +109,23 @@ final class SearchService
         if ($guId === null) {
             error_log('[guestAxisCounts] base gu row missing official_code=' . RegionGuLink::GUEST_BASE_GU_OFFICIAL_CODE);
         } else {
-            $tutor = $this->search('tutor', ['tutor_region_id' => $guId], 1, 1);
-            $tutors = (int) $tutor['total'];
             $studentRequests = $this->countGuestStudentsAtGu($pdo, $guId);
+        }
+        if ($tutorUnitId === null) {
+            error_log('[guestAxisCounts] tutor unit row missing for official_code=' . RegionGuLink::GUEST_BASE_GU_OFFICIAL_CODE);
+        } else {
+            $tutor = $this->search('tutor', ['tutor_region_id' => $tutorUnitId], 1, 1);
+            $tutors = (int) $tutor['total'];
         }
 
         return [
             'studyRooms' => $studyRooms,
             'tutors' => $tutors,
             'studentRequests' => $studentRequests,
-            'axes' => $this->guestAxisLabels($pdo, $dongId, $guId),
+            'axes' => $this->guestAxisLabels($pdo, $dongId, $guId, $tutorUnitId),
             'regionIds' => [
                 'room' => $dongId,
-                'tutor' => $guId,
+                'tutor' => $tutorUnitId,
                 'student' => $guId,
             ],
         ];
@@ -124,7 +133,8 @@ final class SearchService
 
     /**
      * 비로그인 search.php 요청. 지역 조건은 게스트 기준 행으로 덮고 요청한 지역은 버린다.
-     * 공부방은 guestBaseDongId(), 과외쌤·학생은 GUEST_BASE_GU_OFFICIAL_CODE 행. guestAxisCounts 와 같은 행이다.
+     * 공부방은 guestBaseDongId(), 학생은 GUEST_BASE_GU_OFFICIAL_CODE 행(과외 희망만 고르면 그 과외 단위),
+     * 과외쌤은 그 구의 과외 단위. guestAxisCounts 와 같은 행이다.
      * 기준 행이 없으면 null. 호출부는 지역 조건 없이 검색하지 않고 빈 결과를 낸다.
      *
      * @param array<string, mixed> $filters
@@ -155,7 +165,12 @@ final class SearchService
             if ($guId === null) {
                 return null;
             }
-            $filters[$tab === 'tutor' ? 'tutor_region_id' : 'preferred_region_id'] = $guId;
+            $tutorAxis = $tab === 'tutor' || $this->stringFilter($filters, 'preferred_lesson_type') === 'tutor';
+            $regionId = $tutorAxis ? TutorRegionUnit::unitIdForRegion(Connection::get(), $guId) : $guId;
+            if ($regionId === null) {
+                return null;
+            }
+            $filters[$tab === 'tutor' ? 'tutor_region_id' : 'preferred_region_id'] = $regionId;
 
             return $filters;
         }
@@ -164,36 +179,44 @@ final class SearchService
     }
 
     /**
-     * 학생 지역 조건. 게스트 박스와 학생 검색이 이 메서드를 같이 쓴다.
-     * 과외 희망지역이 구(시·군) id이거나, 공부방 희망지역이 그 구 소속 동 id이다.
-     * 소속 동이 없으면 과외 희망지역만 비교한다.
-     * 게스트 박스에서 공부방 분기를 포함할지는 종현 확인이 필요하다.
+     * 학생 지역 조건(희망 유형을 고르지 않았을 때). 게스트 박스와 학생 검색이 이 메서드를 같이 쓴다.
+     * 과외 희망지역이 그 과외 단위 id이거나, 공부방 희망지역이 그 구 소속 동 id이다.
+     * 과외 단위가 없으면 공부방 쪽만, 소속 동이 없으면 과외 쪽만 비교한다.
      *
      * @param list<int> $dongIds
      * @param array<string, int|string> $params
      */
-    private function studentGuBaseWhere(int $guId, array $dongIds, array &$params): string
+    private function studentGuBaseWhere(?int $tutorUnitId, array $dongIds, array &$params): string
     {
-        $params['guest_gu_id'] = $guId;
-        if ($dongIds === []) {
-            return 's.preferred_tutor_region_id = :guest_gu_id';
+        $parts = [];
+        if ($tutorUnitId !== null) {
+            $params['guest_tutor_unit_id'] = $tutorUnitId;
+            $parts[] = 's.preferred_tutor_region_id = :guest_tutor_unit_id';
+        }
+        if ($dongIds !== []) {
+            $holders = [];
+            foreach (array_values($dongIds) as $i => $dongId) {
+                $key = 'guest_dong_' . $i;
+                $params[$key] = $dongId;
+                $holders[] = ':' . $key;
+            }
+            $parts[] = 's.preferred_studyroom_region_id IN (' . implode(', ', $holders) . ')';
+        }
+        if ($parts === []) {
+            return '1 = 0';
         }
 
-        $holders = [];
-        foreach (array_values($dongIds) as $i => $dongId) {
-            $key = 'guest_dong_' . $i;
-            $params[$key] = $dongId;
-            $holders[] = ':' . $key;
-        }
-
-        return '(s.preferred_tutor_region_id = :guest_gu_id'
-            . ' OR s.preferred_studyroom_region_id IN (' . implode(', ', $holders) . '))';
+        return count($parts) === 1 ? $parts[0] : '(' . implode(' OR ', $parts) . ')';
     }
 
     private function countGuestStudentsAtGu(PDO $pdo, int $guId): int
     {
         $params = [];
-        $regionSql = $this->studentGuBaseWhere($guId, RegionGuLink::dongIdsUnderGu($guId), $params);
+        $regionSql = $this->studentGuBaseWhere(
+            TutorRegionUnit::unitIdForRegion($pdo, $guId),
+            RegionGuLink::dongIdsUnderGu($guId),
+            $params,
+        );
         $where = [
             "s.exposure_status = 'published'",
             's.deleted_at IS NULL',
@@ -212,14 +235,15 @@ final class SearchService
     /**
      * @return array{room: string, tutor: string, student: string}
      */
-    private function guestAxisLabels(PDO $pdo, ?int $dongId, ?int $guId): array
+    private function guestAxisLabels(PDO $pdo, ?int $dongId, ?int $guId, ?int $tutorUnitId): array
     {
         $room = $dongId === null ? '' : $this->regionColumn($pdo, $dongId, 'dong_name');
         $gu = $guId === null ? '' : $this->regionColumn($pdo, $guId, 'sigungu_name');
+        $tutor = $tutorUnitId === null ? '' : (TutorRegionUnit::labelForId($pdo, $tutorUnitId) ?? '');
 
         return [
             'room' => $room,
-            'tutor' => $gu,
+            'tutor' => $tutor,
             'student' => $gu,
         ];
     }
@@ -753,7 +777,7 @@ final class SearchService
         $params = [];
 
         $this->rejectRegionLabel($filters, 'tutor_region_label');
-        if ($regionId = $this->selectableRegionId($pdo, $filters, 'tutor_region_id')) {
+        if ($regionId = $this->tutorUnitRegionId($pdo, $filters, 'tutor_region_id')) {
             $where[] = 'EXISTS (
                 SELECT 1 FROM tutor_regions tr
                 WHERE tr.tutor_id = t.id AND tr.region_id = :tutor_region_id
@@ -834,7 +858,8 @@ final class SearchService
                    t.profile_status, t.published_at, t.created_at,
                    {$recommendExpr} AS recommend_count,
                    {$reviewExpr} AS review_count,
-                   tst.subject_name, r.sigungu_name, r.sido_name
+                   tst.subject_name, r.sigungu_name, r.sido_name,
+                   r.sido_code, r.sigungu_code, r.unit_level, r.official_code, r.is_active
             FROM tutors t
             LEFT JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.is_primary = 1
             LEFT JOIN regions r ON tr.region_id = r.id
@@ -856,7 +881,7 @@ final class SearchService
         $rows = [];
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $regionLabel = trim(($row['sido_name'] ?? '') . ' ' . ($row['sigungu_name'] ?? ''));
+            $regionLabel = TutorRegionUnit::labelFromRow($row);
             $subjectLine = $row['subject_name'] ?: '';
             if ($row['university_name']) {
                 $subjectLine .= ($subjectLine !== '' ? ' · ' : '') . $row['university_name'];
@@ -963,9 +988,10 @@ final class SearchService
         }
 
         $this->rejectRegionLabel($filters, 'preferred_region_label');
+        $lessonForRegion = $this->stringFilter($filters, 'preferred_lesson_type');
         $studyroomRegionId = $this->dongRegionId($pdo, $filters, 'preferred_studyroom_region_id');
-        $regionId = $this->selectableRegionId($pdo, $filters, 'preferred_region_id');
-        $regionAlt = $this->selectableRegionId($pdo, $filters, 'preferred_region');
+        $regionId = $this->studentRegionId($pdo, $filters, 'preferred_region_id', $lessonForRegion);
+        $regionAlt = $this->studentRegionId($pdo, $filters, 'preferred_region', $lessonForRegion);
         if ($regionId !== null && $regionAlt !== null && $regionId !== $regionAlt) {
             throw new InvalidArgumentException(self::SELECTABLE_REGION_MESSAGE);
         }
@@ -974,7 +1000,6 @@ final class SearchService
             throw new InvalidArgumentException(self::MIXED_STUDENT_REGION_MESSAGE);
         }
         $studyroomComplexId = $this->intFilter($filters, 'preferred_studyroom_complex_id');
-        $lessonForRegion = $this->stringFilter($filters, 'preferred_lesson_type');
         if ($studyroomComplexId !== null && $lessonForRegion === 'study_room') {
             $where[] = 's.preferred_studyroom_complex_id = :preferred_studyroom_complex_id';
             $params['preferred_studyroom_complex_id'] = $studyroomComplexId;
@@ -995,8 +1020,16 @@ final class SearchService
                 $where[] = "s.preferred_lesson_type = 'study_room'";
                 $where[] = 's.preferred_studyroom_region_id IN (' . implode(', ', $holders) . ')';
             }
+        } elseif ($regionId !== null && $lessonForRegion === 'tutor') {
+            $where[] = 's.preferred_tutor_region_id = :preferred_tutor_unit_id';
+            $params['preferred_tutor_unit_id'] = $regionId;
         } elseif ($regionId !== null) {
-            $where[] = $this->studentGuBaseWhere($regionId, RegionGuLink::dongIdsUnderGu($regionId), $params);
+            $isGu = $this->isSelectableRegion($pdo, $regionId);
+            $where[] = $this->studentGuBaseWhere(
+                $isGu ? TutorRegionUnit::unitIdForRegion($pdo, $regionId) : $regionId,
+                $isGu ? RegionGuLink::dongIdsUnderGu($regionId) : [],
+                $params,
+            );
         }
 
         if ($subjectId = $this->intFilter($filters, 'subject_master_id')) {
@@ -1083,6 +1116,7 @@ final class SearchService
                    s.published_at, s.created_at,
                    {$budgetExpr} AS budget_amount,
                    r.dong_name, r.sigungu_name, r.sido_name, c.name AS complex_name,
+                   r.sido_code, r.sigungu_code, r.unit_level, r.official_code, r.is_active,
                    sst.subject_name
             FROM students s
             LEFT JOIN regions r ON r.id = CASE WHEN s.preferred_lesson_type = 'study_room'
@@ -1123,7 +1157,7 @@ final class SearchService
                     ? $dongName . ' · ' . $complexName
                     : $dongName;
             } else {
-                $placeRegion = trim((string) ($row['sido_name'] ?? '') . ' ' . (string) ($row['sigungu_name'] ?? ''));
+                $placeRegion = TutorRegionUnit::labelFromRow($row);
             }
             if ($placeRegion !== '') {
                 $centerParts[] = $placeRegion;
@@ -1314,11 +1348,62 @@ final class SearchService
             throw new InvalidArgumentException(self::SELECTABLE_REGION_MESSAGE);
         }
 
+        if (!$this->isSelectableRegion($pdo, $id)) {
+            throw new InvalidArgumentException(self::SELECTABLE_REGION_MESSAGE);
+        }
+
+        return $id;
+    }
+
+    private function isSelectableRegion(PDO $pdo, int $id): bool
+    {
         $stmt = $pdo->prepare(
             'SELECT 1 FROM regions WHERE id = ? AND is_selectable = 1 LIMIT 1'
         );
         $stmt->execute([$id]);
-        if (!$stmt->fetchColumn()) {
+
+        return (bool) $stmt->fetchColumn();
+    }
+
+    /**
+     * 키가 없거나 빈 값이면 null. 값이 있으면 과외 단위(광역시 / 도의 시·군) id만 반환한다.
+     *
+     * @param array<string, mixed> $filters
+     */
+    private function tutorUnitRegionId(PDO $pdo, array $filters, string $key): ?int
+    {
+        if (!isset($filters[$key]) || $filters[$key] === '' || $filters[$key] === []) {
+            return null;
+        }
+
+        $id = $this->intFilter($filters, $key);
+        if ($id === null || $id <= 0 || !TutorRegionUnit::isUnitId($pdo, $id)) {
+            throw new InvalidArgumentException(self::TUTOR_UNIT_REGION_MESSAGE);
+        }
+
+        return $id;
+    }
+
+    /**
+     * 학생 희망지역 검색 id. 과외 희망은 과외 단위, 공부방 희망은 구 단위,
+     * 희망 유형이 없으면 둘 중 하나.
+     *
+     * @param array<string, mixed> $filters
+     */
+    private function studentRegionId(PDO $pdo, array $filters, string $key, ?string $lessonType): ?int
+    {
+        if ($lessonType === 'tutor') {
+            return $this->tutorUnitRegionId($pdo, $filters, $key);
+        }
+        if ($lessonType === 'study_room') {
+            return $this->selectableRegionId($pdo, $filters, $key);
+        }
+        if (!isset($filters[$key]) || $filters[$key] === '' || $filters[$key] === []) {
+            return null;
+        }
+        $id = $this->intFilter($filters, $key);
+        if ($id === null || $id <= 0
+            || (!$this->isSelectableRegion($pdo, $id) && !TutorRegionUnit::isUnitId($pdo, $id))) {
             throw new InvalidArgumentException(self::SELECTABLE_REGION_MESSAGE);
         }
 

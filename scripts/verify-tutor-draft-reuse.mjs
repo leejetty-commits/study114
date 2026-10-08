@@ -152,6 +152,13 @@ final class DraftPdo extends PDO
         if (str_contains($sql, 'SELECT 1 FROM regions')) {
             return ['column' => 1];
         }
+        if (str_contains($sql, 'FROM regions WHERE id = ? LIMIT 1') && str_contains($sql, 'sido_code')) {
+            // 과외 단위 행(경기도 수원시) — TutorRegionUnit::fetchRow
+            return ['rows' => [[
+                'id' => (int) ($p[0] ?? 0), 'sido_code' => '41', 'sido_name' => '경기도', 'sigungu_code' => '41110',
+                'sigungu_name' => '수원시', 'unit_level' => 'sigungu', 'official_code' => '4111000000', 'is_active' => 1,
+            ]]];
+        }
         if (str_contains($sql, 'FROM tutor_regions') || str_contains($sql, 'FROM tutor_subject_targets') || str_contains($sql, 'FROM tutor_lesson_places')) {
             return ['column' => false, 'rows' => []];
         }

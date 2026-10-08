@@ -96,6 +96,14 @@ final class TierPdo extends PDO
 
             return ['column' => $table === 'provider_position_subscriptions' ? 1 : false];
         }
+        if (str_contains($sql, 'FROM regions WHERE id = ? LIMIT 1') && str_contains($sql, 'sido_code')) {
+            // 과외 단위 행(도의 시) — TutorRegionUnit::fetchRow. 시 축 city_id 100·200 은 단위 id 다.
+            $id = (int) ($p[0] ?? 0);
+            return ['rows' => $id > 0 ? [[
+                'id' => $id, 'sido_code' => '41', 'sido_name' => '경기도', 'sigungu_code' => (string) (41000 + $id),
+                'sigungu_name' => '시' . $id, 'unit_level' => 'sigungu', 'official_code' => (41000 + $id) . '00000', 'is_active' => 1,
+            ]] : []];
+        }
         if (str_contains($sql, 'FROM regions') && str_contains($sql, 'is_selectable = 1')) {
             return ['column' => ((int) ($p[0] ?? 0)) > 0 ? 1 : false];
         }

@@ -7,6 +7,7 @@ namespace Study114\Paid;
 use InvalidArgumentException;
 use PDO;
 use Study114\Database\Connection;
+use Study114\Region\TutorRegionUnit;
 
 /**
  * 과외쌤 노출상품 축 SSOT.
@@ -162,20 +163,7 @@ final class TutorPositionAxis
 
     private function cityLabel(int $cityId): string
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT CASE
-                WHEN NULLIF(TRIM(sigungu_name), "") IS NOT NULL
-                 AND TRIM(sigungu_name) <> TRIM(COALESCE(sido_name, ""))
-                    THEN TRIM(CONCAT_WS(" ", NULLIF(TRIM(sido_name), ""), TRIM(sigungu_name)))
-                WHEN NULLIF(TRIM(sigungu_name), "") IS NOT NULL THEN TRIM(sigungu_name)
-                ELSE COALESCE(NULLIF(TRIM(sido_name), ""), NULLIF(TRIM(dong_name), ""), CAST(id AS CHAR))
-             END
-             FROM regions WHERE id = ? LIMIT 1'
-        );
-        $stmt->execute([$cityId]);
-        $val = $stmt->fetchColumn();
-
-        return $val !== false && (string) $val !== '' ? (string) $val : '';
+        return TutorRegionUnit::labelForId($this->pdo, $cityId) ?? '';
     }
 
     private function positiveIntOrNull(mixed $raw): ?int

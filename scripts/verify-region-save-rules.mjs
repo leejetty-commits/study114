@@ -144,8 +144,9 @@ final class RsPdo extends PDO
         if (str_contains($sql, 'SELECT 1 FROM tutors WHERE id = ? AND user_id = ?')) {
             return ['column' => 1];
         }
-        if (str_contains($sql, 'FROM regions') && str_contains($sql, 'is_selectable = 1')) {
-            return ['column' => in_array((int) ($p[0] ?? 0), [11, 22, 33, 99], true) ? 1 : false];
+        if (str_contains($sql, 'FROM regions WHERE id = ? LIMIT 1') && str_contains($sql, 'sido_code')) {
+            $row = self::regionRows()[(int) ($p[0] ?? 0)] ?? null;
+            return ['rows' => $row === null ? [] : [$row]];
         }
         if (str_contains($sql, 'SELECT * FROM tutors WHERE id = ?')) {
             return ['rows' => [self::tutorRow()]];
@@ -242,6 +243,26 @@ final class RsPdo extends PDO
             return ['column' => false, 'rows' => []];
         }
         return ['column' => false, 'rows' => []];
+    }
+
+    /**
+     * 과외 단위 판정용 regions 행. 11·22·33·99 는 단위(광역시·도의 시·군), 44 는 일반구, 55 는 도 행.
+     * @return array<int, array<string, mixed>>
+     */
+    public static function regionRows(): array
+    {
+        $row = static fn (int $id, string $sido, string $sidoName, ?string $code, string $name, string $level, ?string $official): array => [
+            'id' => $id, 'sido_code' => $sido, 'sido_name' => $sidoName, 'sigungu_code' => $code,
+            'sigungu_name' => $name, 'unit_level' => $level, 'official_code' => $official, 'is_active' => 1,
+        ];
+        return [
+            11 => $row(11, '11', '서울특별시', null, '서울특별시', 'sido', '1100000000'),
+            22 => $row(22, '41', '경기도', '41110', '수원시', 'sigungu', '4111000000'),
+            33 => $row(33, '41', '경기도', '41610', '광주시', 'sigungu', '4161000000'),
+            99 => $row(99, '51', '강원특별자치도', '51820', '고성군', 'sigungu', '5182000000'),
+            44 => $row(44, '41', '경기도', '41117', '수원시 영통구', 'sigungu', '4111700000'),
+            55 => $row(55, '41', '경기도', null, '경기도', 'sido', '4100000000'),
+        ];
     }
 
     /** @return array<string, mixed> */
@@ -346,6 +367,18 @@ try {
     $slot3Msg = $e->getMessage();
 }
 ok('(b) 3번만 저장 거부', $slot3Msg === '과외지역 1을 선택해 주세요.' && sameRows(tutorRows($pdo), $before), (string) $slot3Msg);
+
+foreach ([44 => '일반구(수원시 영통구)', 55 => '도(경기도)'] as $badId => $badName) {
+    $badMsg = null;
+    try {
+        $svc->saveStep(1, 7, 'regions', ['saved_regions' => [
+            ['region_id' => (string) $badId, 'scope_type' => 'city', 'is_primary' => true],
+        ]]);
+    } catch (InvalidArgumentException $e) {
+        $badMsg = $e->getMessage();
+    }
+    ok('(b) 과외 단위가 아닌 ' . $badName . ' 저장 거부', $badMsg === \Study114\Region\TutorRegionUnit::INVALID_MESSAGE && sameRows(tutorRows($pdo), $before), (string) $badMsg);
+}
 
 $svc->saveStep(1, 7, 'regions', ['saved_regions' => [
     ['region_id' => '11', 'scope_type' => 'city', 'is_primary' => false],
@@ -471,8 +504,12 @@ ok('(31) 홍보2·3만 있어도 스코프 포함', $slotIds === [22, 33], json_
 ok('(31) 사업장 region 99는 스코프에 없음', !in_array(99, $slotIds, true), json_encode($slotIds));
 
 $axis = new TutorPositionAxis($ticketPdo);
-$city = (new ReflectionMethod(TutorPositionAxis::class, 'cityLabel'))->invoke($axis, 11);
+$city = (new ReflectionMethod(TutorPositionAxis::class, 'cityLabel'))->invoke($axis, 404);
 ok('(f) 시 이름을 못 찾으면 빈 값', $city === '' && !str_contains((string) $city, '#'), var_export($city, true));
+$cityGu = (new ReflectionMethod(TutorPositionAxis::class, 'cityLabel'))->invoke($axis, 44);
+ok('(f) 과외 단위가 아닌 일반구는 빈 값', $cityGu === '', var_export($cityGu, true));
+$cityUnit = (new ReflectionMethod(TutorPositionAxis::class, 'cityLabel'))->invoke($axis, 22);
+ok('(f) 과외 단위는 공식 전체 이름', $cityUnit === '경기도 수원시', var_export($cityUnit, true));
 
 $hubPdo = new RsPdo();
 inject($hubPdo);

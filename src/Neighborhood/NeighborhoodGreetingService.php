@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Neighborhood;
 
 use Study114\Database\Connection;
+use Study114\Region\TutorRegionUnit;
 use Study114\StudyRoom\StudyRoomPublicReadService;
 use Study114\Visibility\WithdrawnOwnerSql;
 
@@ -13,6 +14,9 @@ final class NeighborhoodGreetingService
 {
     private const MAX = 80;
     private const TEASER = 20;
+
+    /** 과외쌤 과외지역 1 → 과외 단위 이름(TutorRegionUnit::labelFromRow). regions 별칭은 r. */
+    private const TUTOR_UNIT_COLUMNS = 'r.sido_code, r.sido_name, r.sigungu_code, r.sigungu_name, r.unit_level, r.official_code, r.is_active';
 
     public function __construct(private readonly string $file)
     {
@@ -428,7 +432,7 @@ final class NeighborhoodGreetingService
                     t.preferred_fee_amount, t.lessons_per_week, t.minutes_per_lesson,
                     t.feature_1, t.feature_2, t.feature_3, t.university_name, t.major_name,
                     t.career_year_band, t.intro_short,
-                    r.dong_name, r.sigungu_name, r.sido_name
+                    " . self::TUTOR_UNIT_COLUMNS . "
                FROM tutors t
                LEFT JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.is_primary = 1
                LEFT JOIN regions r ON r.id = tr.region_id
@@ -441,11 +445,7 @@ final class NeighborhoodGreetingService
         if (!$row) {
             return null;
         }
-        $place = trim(implode(' ', array_filter([
-            (string) ($row['sido_name'] ?? ''),
-            (string) ($row['sigungu_name'] ?? ''),
-            (string) ($row['dong_name'] ?? ''),
-        ])));
+        $place = TutorRegionUnit::labelFromRow($row);
         return [
             'id' => (int) $row['id'],
             'tutor_display_name' => (string) ($row['tutor_display_name'] ?? ''),
@@ -703,10 +703,11 @@ final class NeighborhoodGreetingService
             if ($providerType === 'tutor') {
                 $cond = self::tutorCardCondition('t');
                 $stmt = $pdo->prepare(
-                    "SELECT t.id, t.user_id, t.tutor_display_name, t.created_at, r.sigungu_name
+                    "SELECT t.id, t.user_id, t.tutor_display_name, t.created_at,
+                            " . self::TUTOR_UNIT_COLUMNS . "
                        FROM tutors t
-                       LEFT JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.priority_order = 0
-                       LEFT JOIN regions r ON r.id = tr.region_id
+                       JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.priority_order = 0
+                       JOIN regions r ON r.id = tr.region_id
                       WHERE t.id = ?
                         AND t.user_id = ?
                         AND t.created_at >= ?
@@ -716,13 +717,15 @@ final class NeighborhoodGreetingService
                            WHERE t_old.user_id = t.user_id
                              AND (t_old.created_at < t.created_at OR (t_old.created_at = t.created_at AND t_old.id < t.id))
                         )
-                        AND r.sigungu_name IS NOT NULL
-                        AND TRIM(r.sigungu_name) <> ''
                       LIMIT 1"
                 );
                 $stmt->execute([$registrationId, $userId, $since]);
                 $row = $stmt->fetch(\PDO::FETCH_ASSOC);
                 if (!$row) {
+                    return null;
+                }
+                $unitLabel = TutorRegionUnit::labelFromRow($row);
+                if ($unitLabel === '') {
                     return null;
                 }
                 $createdAt = (string) $row['created_at'];
@@ -733,7 +736,7 @@ final class NeighborhoodGreetingService
                 $name = trim((string) ($row['tutor_display_name'] ?? ''));
                 $cEpoch = strtotime($createdAt);
                 return [
-                    'neighborhood' => trim((string) ($row['sigungu_name'] ?? '')),
+                    'neighborhood' => $unitLabel,
                     'display_name' => $name !== '' ? $name : '과외쌤',
                     'updated_at' => $cEpoch !== false ? (int) ($cEpoch * 1000) : 0,
                     'days_left' => $daysLeft,
@@ -787,15 +790,15 @@ final class NeighborhoodGreetingService
     {
         if ($providerType === 'tutor') {
             $stmt = $pdo->prepare(
-                'SELECT r.sigungu_name
+                'SELECT ' . self::TUTOR_UNIT_COLUMNS . '
                    FROM tutor_regions tr
                    JOIN regions r ON r.id = tr.region_id
                   WHERE tr.tutor_id = ? AND tr.priority_order = 0
                   LIMIT 1'
             );
             $stmt->execute([$registrationId]);
-            $val = $stmt->fetchColumn();
-            return is_string($val) ? trim($val) : '';
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            return is_array($row) ? TutorRegionUnit::labelFromRow($row) : '';
         }
 
         $stmt = $pdo->prepare(
@@ -850,10 +853,11 @@ final class NeighborhoodGreetingService
         try {
             $tutorCond = self::tutorCardCondition('t');
             $tutorStmt = $pdo->prepare(
-                "SELECT t.id, t.user_id, t.tutor_display_name, t.created_at, r.sigungu_name
+                "SELECT t.id, t.user_id, t.tutor_display_name, t.created_at,
+                        " . self::TUTOR_UNIT_COLUMNS . "
                    FROM tutors t
-                   LEFT JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.priority_order = 0
-                   LEFT JOIN regions r ON r.id = tr.region_id
+                   JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.priority_order = 0
+                   JOIN regions r ON r.id = tr.region_id
                   WHERE t.created_at >= ?
                     AND {$tutorCond}
                     AND NOT EXISTS (
@@ -861,8 +865,6 @@ final class NeighborhoodGreetingService
                        WHERE t_old.user_id = t.user_id
                          AND (t_old.created_at < t.created_at OR (t_old.created_at = t.created_at AND t_old.id < t.id))
                     )
-                    AND r.sigungu_name IS NOT NULL
-                    AND TRIM(r.sigungu_name) <> ''
                   ORDER BY t.created_at DESC"
             );
             $tutorStmt->execute([$since]);
@@ -871,7 +873,7 @@ final class NeighborhoodGreetingService
                 if (isset($recordedKeys['tutor:' . $id])) {
                     continue;
                 }
-                $sigungu = trim((string) ($row['sigungu_name'] ?? ''));
+                $sigungu = TutorRegionUnit::labelFromRow($row);
                 if ($sigungu === '') {
                     continue;
                 }

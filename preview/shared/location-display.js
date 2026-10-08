@@ -683,7 +683,7 @@ function positiveId(value) {
 
 /**
  * 표기는 확정 문구만 낸다. 공부방은 「대치동」, 과외 문구는 cities 기준 구 행의 시도+구 → 「서울시 강남구」.
- * axes.tutor 는 구 이름뿐이라 표기에 쓰지 않는다. 기준 행 id는 region-stats regionIds, 구 id는 cities 행으로도 보충한다.
+ * axes.tutor 는 표기에 쓰지 않는다. 기준 행 id는 region-stats regionIds. 학생 구 id만 cities 행으로 보충한다.
  */
 export function loadGuestBaseline() {
   if (guestBaselinePromise) return guestBaselinePromise;
@@ -701,11 +701,11 @@ export function loadGuestBaseline() {
       const cities = citiesBody && Array.isArray(citiesBody.cities) ? citiesBody.cities : [];
       const gu = cities.find((row) => String(row?.official_code || '') === GUEST_BASE_GU_OFFICIAL_CODE);
       const tutor = guestTutorLabel(gu?.sido_name, gu?.gu_name || gu?.city_name);
-      const guId = positiveId(ids.tutor) ?? positiveId(gu?.id);
+      // 과외쌤 기준은 과외 단위(서울특별시) id 라 구 행으로 보충하지 않는다.
       guestBaseIds = {
         room: positiveId(ids.room),
-        tutor: guId,
-        student: positiveId(ids.student) ?? guId,
+        tutor: positiveId(ids.tutor),
+        student: positiveId(ids.student) ?? positiveId(gu?.id),
       };
       if (statsOk) {
         const counts = [stats.studyRooms, stats.tutors, stats.studentRequests].map(Number);

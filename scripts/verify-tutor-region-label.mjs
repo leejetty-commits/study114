@@ -1,12 +1,13 @@
 /**
- * 사이트오류-10 · 과외쌤 대표 지역 라벨 = 「시도 시군구」(서버)
+ * 사이트오류-10 · 과외쌤 대표 지역 라벨 = 과외 단위 공식 이름(서버). 2026-10-09 과외 단위 규칙으로 갱신.
  * 실행(저장소 루트): node scripts/verify-tutor-region-label.mjs
  *
  * 1부(정적): TutorHubRepository · ProviderTicketRepository 가 sido_name 만 읽지 않고
- *   OfficialRegionLabel::sigunguLabel 로 라벨을 만든다. 응답 필드명 유지, '—' 같은 대체 문자열 없음.
+ *   TutorRegionUnit::labelForId 로 라벨을 만든다. 응답 필드명 유지, '—' 같은 대체 문자열 없음.
  * 2부(PHP, 가짜 PDO): regions 는 sql/schema/073_region_official_seed.sql 공식 시드를 그대로 읽어 쓴다.
  *   동 행은 RegionEnsure(카카오 주소검색)가 만드는 모양(시도 약칭 · unit_level=dong · official_code NULL).
- *   경기도 양주시 / 서울 강남구 / 세종 / 수원시 영통구 / 대표 없음 / 동 행 / 지역 행 없음.
+ *   경기도 양주시 / 서울특별시 / 세종 / 경기도 수원시 → 단위 라벨.
+ *   서울 강남구 · 수원시 영통구 · 동 행은 과외 단위가 아니라 라벨 없음(옛 데이터 호환 없음).
  * 3부(정적): 마이프로필 화면이 서버 primary_region_label 을 그대로 쓰고 클라이언트에서 다시 조합하지 않는다.
  * DB·PHP 서버에 접속하지 않는다.
  */
@@ -44,18 +45,21 @@ const ticketPhp = read('src/Paid/ProviderTicketRepository.php');
 const helperPhp = read('src/Registration/OfficialRegionLabel.php');
 const studentPhp = read('src/Registration/StudentHubRepository.php');
 
-ok('헬퍼 OfficialRegionLabel 존재', helperPhp.includes('final class OfficialRegionLabel'));
-ok('헬퍼 sigunguLabel(): ?string', /public function sigunguLabel\(mixed \$regionId\): \?string/.test(helperPhp));
+const unitPhp = read('src/Region/TutorRegionUnit.php');
+ok('헬퍼 OfficialRegionLabel 존재(공부방 축)', helperPhp.includes('final class OfficialRegionLabel'));
+ok('과외 단위 라벨 헬퍼 TutorRegionUnit::labelForId(): ?string', /public static function labelForId\(PDO \$pdo, mixed \$regionId\): \?string/.test(unitPhp));
+ok('과외 축 sigunguLabel 제거(라벨은 TutorRegionUnit 한곳)', !/function sigunguLabel/.test(helperPhp));
 ok('TutorHub: sido_name 단독 조회 제거', !/SELECT r\.sido_name FROM tutor_regions/.test(hubPhp));
-ok('TutorHub: OfficialRegionLabel::sigunguLabel 사용', hubPhp.includes('(new OfficialRegionLabel($this->pdo))->sigunguLabel('));
+ok('TutorHub: TutorRegionUnit::labelForId 사용', hubPhp.includes('TutorRegionUnit::labelForId($this->pdo, $regionId)'));
 ok('TutorHub: primaryRegionLabel(): ?string', /private function primaryRegionLabel\(int \$tutorId\): \?string/.test(hubPhp));
 ok("TutorHub: 응답 키 primary_region_label 유지", /'primary_region_label'\s*=>\s*\$primaryRegion,/.test(hubPhp));
 ok("TutorHub: 응답 키 location_label 유지(대체 문자열 없음)", /'location_label'\s*=>\s*\$primaryRegion,/.test(hubPhp));
 ok("TutorHub: '—' 대체값 제거", !hubPhp.includes("? $primaryRegion : '—'"));
 ok('Ticket: sido_name 단독 조회 제거', !/SELECT r\.sido_name FROM tutor_regions/.test(ticketPhp));
-ok('Ticket: OfficialRegionLabel 사용', ticketPhp.includes('use Study114\\Registration\\OfficialRegionLabel;') && ticketPhp.includes('->sigunguLabel($regionId)'));
+ok('Ticket: TutorRegionUnit 사용', ticketPhp.includes('use Study114\\Region\\TutorRegionUnit;') && ticketPhp.includes('TutorRegionUnit::labelForId($this->pdo, $regionId)'));
 ok('Ticket: 공부방 분기 쿼리 그대로', ticketPhp.includes('SELECT CONCAT(r.dong_name, IFNULL(CONCAT(" · ", c.name), ""))'));
-ok('Student: 같은 헬퍼로 위임(중복 구현 없음)', studentPhp.includes('(new OfficialRegionLabel($this->pdo))->resolve($regionId)')
+ok('Student: 공부방 축은 OfficialRegionLabel, 과외 축은 TutorRegionUnit(중복 구현 없음)', studentPhp.includes('(new OfficialRegionLabel($this->pdo))->resolve($regionId)')
+  && studentPhp.includes('TutorRegionUnit::labelForId($this->pdo, $regionId)')
   && !studentPhp.includes('function joinRegionTokens') && !studentPhp.includes('function selectableSigunguForDong'));
 
 /* ══════════════════════ 2부: 서버 (가짜 PDO) ══════════════════════ */
@@ -67,6 +71,7 @@ const seed = [];
 for (const m of seedSql.matchAll(SEED_RE)) {
   seed.push({
     id: 1000 + seed.length,
+    sido_code: m[1],
     sido_name: m[2],
     sigungu_code: m[3],
     sigungu_name: m[4],
@@ -82,14 +87,18 @@ const YANGJU = byCode('4163000000');
 const GANGNAM = byCode('1168000000');
 const SEJONG = byCode('3600000000');
 const YEONGTONG = byCode('4111700000');
+const SEOUL = byCode('1100000000');
+const SUWON = byCode('4111000000');
 ok('시드: 경기도 양주시', YANGJU?.sido_name === '경기도' && YANGJU?.sigungu_name === '양주시');
 ok('시드: 서울특별시 강남구', GANGNAM?.sido_name === '서울특별시' && GANGNAM?.sigungu_name === '강남구');
 ok('시드: 세종(시도=시군구 이름)', SEJONG?.sido_name === '세종특별자치시' && SEJONG?.sigungu_name === '세종특별자치시');
 ok('시드: 수원시 영통구', YEONGTONG?.sigungu_name === '수원시 영통구');
+ok('시드: 서울특별시 시도 행', SEOUL?.sido_code === '11' && SEOUL?.unit_level === 'sido');
+ok('시드: 경기도 수원시(상위 시)', SUWON?.sigungu_name === '수원시' && SUWON?.unit_level === 'sigungu');
 
 // RegionEnsure::insertRow 모양 — 카카오 시도 약칭, unit_level 기본 dong, official_code NULL
 const dongRow = (id, sido, sigunguName, sigunguCode, dong) => ({
-  id, sido_name: sido, sigungu_code: sigunguCode, sigungu_name: sigunguName, dong_name: dong,
+  id, sido_code: sigunguCode.slice(0, 2), sido_name: sido, sigungu_code: sigunguCode, sigungu_name: sigunguName, dong_name: dong,
   unit_level: 'dong', official_code: null, is_selectable: 0,
 });
 const DONGS = [
@@ -101,8 +110,10 @@ const REGIONS = [...seed, ...DONGS];
 
 const CASES = {
   yangju: [{ region_id: YANGJU.id, is_primary: 1 }],
-  gangnam: [{ region_id: GANGNAM.id, is_primary: 1 }, { region_id: YANGJU.id, is_primary: 0 }],
+  seoul: [{ region_id: SEOUL.id, is_primary: 1 }, { region_id: YANGJU.id, is_primary: 0 }],
+  gangnam: [{ region_id: GANGNAM.id, is_primary: 1 }],
   sejong: [{ region_id: SEJONG.id, is_primary: 1 }],
+  suwon: [{ region_id: SUWON.id, is_primary: 1 }],
   yeongtong: [{ region_id: YEONGTONG.id, is_primary: 1 }],
   none: [],
   no_primary: [{ region_id: YANGJU.id, is_primary: 0 }],
@@ -110,7 +121,7 @@ const CASES = {
   dong_maetan: [{ region_id: 9002, is_primary: 1 }],
   dong_city_rep: [{ region_id: 9003, is_primary: 1 }],
   missing_row: [{ region_id: 777777, is_primary: 1 }],
-  second_slot_primary: [{ region_id: YANGJU.id, is_primary: 0 }, { region_id: YEONGTONG.id, is_primary: 1 }],
+  second_slot_primary: [{ region_id: YANGJU.id, is_primary: 0 }, { region_id: SUWON.id, is_primary: 1 }],
 };
 
 const PHP_CODE = String.raw`<?php
@@ -279,10 +290,12 @@ function expectLabel(key, want, title, ticketWant = want) {
 }
 
 expectLabel('yangju', '경기도 양주시', 'C1 경기도 양주시');
-expectLabel('gangnam', '서울특별시 강남구', 'C2 서울 강남구');
+expectLabel('seoul', '서울특별시', 'C2 서울특별시(광역시 단위)');
+expectLabel('gangnam', null, 'C2b 구 행(서울 강남구)은 과외 단위가 아님 → 라벨 없음');
 expectLabel('sejong', '세종특별자치시', 'C3 세종(반복 제거)');
 ok('C3 세종 · 「세종특별자치시 세종특별자치시」 아님', R.sejong?.primary_region_label !== '세종특별자치시 세종특별자치시');
-expectLabel('yeongtong', '경기도 수원시 영통구', 'C4 구가 있는 시(수원시 영통구)');
+expectLabel('suwon', '경기도 수원시', 'C4 구가 있는 시는 상위 시(경기도 수원시)');
+expectLabel('yeongtong', null, 'C4b 일반구 행(수원시 영통구)은 과외 단위가 아님 → 라벨 없음');
 expectLabel('none', null, 'C5 활동지역 없음');
 {
   const r = R.no_primary || {};
@@ -295,11 +308,11 @@ expectLabel('none', null, 'C5 활동지역 없음');
 }
 expectLabel('missing_row', null, 'C5c 대표 region_id 행이 regions 에 없음');
 ok('C5c · 라벨에 region_id 777777 이 새지 않음', !String(R.missing_row?.primary_region_label ?? '').includes('777777') && !String(R.missing_row?.ticket ?? '').includes('777777'));
-expectLabel('dong_okjeong', '경기도 양주시', 'C6 동 행(경기 양주시 옥정동) → 상위 시군구');
-ok('C6 · 동 이름(옥정동) 미포함 · 약칭(경기) 펴짐', !String(R.dong_okjeong?.primary_region_label).includes('옥정동') && String(R.dong_okjeong?.primary_region_label).startsWith('경기도 '));
-expectLabel('dong_maetan', '경기도 수원시 영통구', 'C6b 동 행(수원시 영통구 매탄동) → 상위 구');
-expectLabel('dong_city_rep', '경기도 양주시', 'C6c 시 대표 동 행 → 상위 시');
-expectLabel('second_slot_primary', '경기도 양주시', 'C7 대표는 슬롯1', '경기도 수원시 영통구');
+expectLabel('dong_okjeong', null, 'C6 동 행(경기 양주시 옥정동)은 저장 불가 값 → 라벨 없음(호환 보정 없음)');
+ok('C6 · 동 이름(옥정동) 미노출', !String(R.dong_okjeong?.primary_region_label ?? '').includes('옥정동'));
+expectLabel('dong_maetan', null, 'C6b 동 행(수원시 영통구 매탄동) → 라벨 없음');
+expectLabel('dong_city_rep', null, 'C6c 시 대표 동 행 → 라벨 없음');
+expectLabel('second_slot_primary', '경기도 양주시', 'C7 대표는 슬롯1', '경기도 수원시');
 ok('C7 · primary_region_id = 슬롯1 id', R.second_slot_primary?.primary_region_id === String(YANGJU.id), JSON.stringify(R.second_slot_primary?.primary_region_id));
 ok("Z1 이용권 providerId 0 (tutor) = null", R._ticket_zero === null, JSON.stringify(R._ticket_zero));
 ok('Z2 이용권 공부방 분기 = 홍보1 라벨 그대로', R._ticket_room === '대치동 · 은마', JSON.stringify(R._ticket_room));
@@ -327,7 +340,10 @@ function normalizeRegionTerm(line) {
     .replace(/대표 활동 시/g, '대표 과외지역')
     .replace(/활동지역/g, '과외지역')
     .replace(/활동 지역/g, '과외지역')
-    .replace(/활동 시/g, '과외지역');
+    .replace(/활동 시/g, '과외지역')
+    // 2026-10-09 과외 단위(광역시 / 도의 시·군) 안내 문구 정정
+    .replace(/구가 있는 곳은 구까지 고릅니다\./g, '광역시는 시 전체, 도는 시·군까지 고릅니다.')
+    .replace(/시 목록을 연결하는 중입니다\./g, '과외지역 목록을 불러오는 중입니다.');
 }
 /** 디자인 통일 v2(A1: 과외 마이프로필 kicker·버튼 삭제, 미입력, 안내문구 변경) 승인 변경 */
 function isApprovedProfileReadChange(line) {

@@ -17,7 +17,12 @@ import { renderAuthShell, renderBrandHero, renderStepIndicator, renderRoleBadge,
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import { resolvePostLoginUrl } from '../../../shared/auth-redirect.js';
 import { activityLabelFromRegionId, regionIdFromActivityLabel } from '../../../shared/korea-sidos.js';
-import { REGION_LIST_ERROR, renderRegionCascade, bindRegionCascades, selectionFromRegionId } from '../../../shared/region-cascade.js';
+import {
+  TUTOR_UNIT_LIST_ERROR,
+  renderTutorUnitCascade,
+  bindTutorUnitCascades,
+  tutorSelectionFromRegionId,
+} from '../../../shared/tutor-unit-cascade.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, bindSchoolGradePairs } from '../../../shared/school-grade.js';
 import {
@@ -87,16 +92,16 @@ function studentBasicMissing(data) {
 
 /** 저장된 과외 희망지역 id. 라벨만 있으면 서버 목록에서 다시 찾는다. */
 function savedStudentTutorRegionId(draft) {
-  const units = getCityUnits(signupState.cities || []);
-  const byId = selectionFromRegionId(draft?.region_id || '', units);
+  const units = getCityUnits(signupState.tutorUnits || []);
+  const byId = tutorSelectionFromRegionId(draft?.region_id || '', units);
   if (byId.row) return byId.row.id;
   const label = String(draft?.activity_city || draft?.region_label || '').trim();
   return regionIdFromActivityLabel(label, units);
 }
 
-/** 화면 라벨(경기도 의정부시) → 시 단위 region_id. 행정동 목록은 쓰지 않는다. */
+/** 화면 라벨(서울특별시, 경기도 의정부시) → 과외 단위 region_id. 행정동 목록은 쓰지 않는다. */
 function regionIdForSido(activityLabel) {
-  return regionIdFromActivityLabel(activityLabel, getCityUnits(signupState.cities || []));
+  return regionIdFromActivityLabel(activityLabel, getCityUnits(signupState.tutorUnits || []));
 }
 
 function renderChips(name, options, { selected = [], required = true } = {}) {
@@ -137,7 +142,7 @@ function renderStudentBasic() {
   const displayName = d.public_display_name || d.student_name || '';
   const lessonFormat = d.lesson_format || '';
   const count = lessonFormat === 'one_on_one' ? 'solo' : d.preferred_student_count_group || '';
-  const tutorUnits = getCityUnits(signupState.cities || []);
+  const tutorUnits = getCityUnits(signupState.tutorUnits || []);
   const savedTutorRegionId = savedStudentTutorRegionId(d);
   return `
     <form data-form="basic-student" class="basic-register student-basic">
@@ -178,14 +183,14 @@ function renderStudentBasic() {
       </div>
       <div class="student-basic__field" data-student-tutor-block ${hope === 'tutor' ? '' : 'hidden'}>
         <span class="form-label form-label--required">희망지역</span>
-        ${renderRegionCascade({
+        ${renderTutorUnitCascade({
           idPrefix: 'student_hope',
           units: tutorUnits,
           regionId: savedTutorRegionId,
           required: tutorUnits.length > 0,
           hiddenLabelName: 'activity_city',
         })}
-        <p class="form-hint">구가 있는 곳은 구까지, 없는 곳은 시·군까지 고릅니다. 세종은 시 선택으로 끝납니다.</p>
+        <p class="form-hint">광역시·세종은 시·도 선택으로 끝나고, 도는 시·군까지 고릅니다.</p>
       </div>
       <div class="student-basic__field">
         <label class="form-label form-label--required" for="subject_names">희망과목</label>
@@ -265,7 +270,7 @@ function renderStudyRoomBasic() {
 
 function renderTutorBasic() {
   const d = signupState.basicRegister?.tutor || {};
-  const units = getCityUnits(signupState.cities || []);
+  const units = getCityUnits(signupState.tutorUnits || []);
   const saved = Array.isArray(d.saved_regions) ? d.saved_regions : [];
   const slots = [0, 1, 2].map((i) => ({
     region_id: saved[i]?.region_id || (i === 0 ? d.region_id || '' : ''),
@@ -280,7 +285,7 @@ function renderTutorBasic() {
       ${
         citiesReady
           ? ''
-          : `<p class="form-note form-note--error mb-4">${esc(REGION_LIST_ERROR)}</p>`
+          : `<p class="form-note form-note--error mb-4">${esc(TUTOR_UNIT_LIST_ERROR)}</p>`
       }
       <div class="register-grid-2">
         <div class="register-basic-col">
@@ -298,9 +303,9 @@ function renderTutorBasic() {
           </div>
         </div>
         <div class="register-basic-col">
-          <span class="form-label form-label--required">과외지역 (시 기준 · 최대 3곳)</span>
+          <span class="form-label form-label--required">과외지역 (최대 3곳)</span>
           ${dbField('tutor_regions.scope_type=city')}
-          <p class="form-note mb-2">1번은 필수, 2·3번은 선택입니다. 구가 있는 곳은 구까지 고릅니다.</p>
+          <p class="form-note mb-2">1번은 필수, 2·3번은 선택입니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.</p>
           ${slots.map((slot, i) => renderTutorRegionSlot(slot, i, units, { showPrimary: false, labelPrefix: '과외지역' })).join('')}
         </div>
       </div>
@@ -506,7 +511,7 @@ export function bindSignupBasicEvents(root) {
   const form = root.querySelector('form[data-form^="basic-"]');
 
   if (role === 'tutor') {
-    bindTutorRegionSlotEvents(root, getCityUnits(signupState.cities || []));
+    bindTutorRegionSlotEvents(root, getCityUnits(signupState.tutorUnits || []));
   }
 
   if (role === 'study_room') {
@@ -564,7 +569,7 @@ export function bindSignupBasicEvents(root) {
 
   const studentTutorBlock = form?.querySelector('[data-student-tutor-block]');
   if (studentTutorBlock) {
-    bindRegionCascades(studentTutorBlock, getCityUnits(signupState.cities || []));
+    bindTutorUnitCascades(studentTutorBlock, getCityUnits(signupState.tutorUnits || []));
   }
 
   // min=1 위반(0 입력)은 브라우저 말풍선 대신 서버와 같은 「예산」 안내로 막는다.
@@ -646,9 +651,9 @@ export function bindSignupBasicEvents(root) {
           data.region_label = place;
         }
       } else {
-        const units = getCityUnits(signupState.cities || []);
+        const units = getCityUnits(signupState.tutorUnits || []);
         if (!units.length) {
-          alert(REGION_LIST_ERROR);
+          alert(TUTOR_UNIT_LIST_ERROR);
           return;
         }
         const picker = form.querySelector('[data-student-tutor-block] [data-region-cascade]');
@@ -656,11 +661,10 @@ export function bindSignupBasicEvents(root) {
         const city = String(picker?.querySelector('[data-field="region_activity_label"]')?.value || '').trim();
         const started = Boolean(
           picker?.querySelector('[data-field="region_sido"]')?.value ||
-            picker?.querySelector('[data-field="region_city"]')?.value ||
-            picker?.querySelector('[data-field="region_gu"]')?.value,
+            picker?.querySelector('[data-field="region_city"]')?.value,
         );
         if (!regionId) {
-          alert(started ? '희망지역을 끝까지 선택해 주세요.' : '희망지역을 선택해 주세요.');
+          alert(started ? '희망지역의 시·군을 선택해 주세요.' : '희망지역을 선택해 주세요.');
           return;
         }
         if (regionIdForSido(city) !== regionId) {
@@ -711,9 +715,9 @@ export function bindSignupBasicEvents(root) {
         return;
       }
 
-      const units = getCityUnits(signupState.cities || []);
+      const units = getCityUnits(signupState.tutorUnits || []);
       if (!units.some((u) => /^\d+$/.test(String(u.id)))) {
-        alert(REGION_LIST_ERROR);
+        alert(TUTOR_UNIT_LIST_ERROR);
         return;
       }
 

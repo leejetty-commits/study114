@@ -81,7 +81,7 @@ function init() {
     fetchRegions()
       .then((data) => {
         signupState.regions = data.regions ?? data;
-        signupState.cities = data.cities ?? [];
+        signupState.tutorUnits = data.tutorUnits ?? [];
         signupState.complexes = data.complexes ?? [];
       })
       .catch(() => {}),
