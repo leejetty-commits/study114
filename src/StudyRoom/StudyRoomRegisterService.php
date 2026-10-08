@@ -247,6 +247,7 @@ final class StudyRoomRegisterService
 
 
             $this->refreshDetailStatus($pdo, $roomId, $step);
+            StudyRoomBasicExposure::syncProfileStatus($pdo, $roomId);
 
 
 
@@ -1001,28 +1002,7 @@ final class StudyRoomRegisterService
 
     {
 
-        $curStmt = $pdo->prepare('SELECT profile_status FROM study_rooms WHERE id = ?');
-        $curStmt->execute([$roomId]);
-        $currentStatus = (string) ($curStmt->fetchColumn() ?: 'draft');
-        if ($currentStatus === 'pending') {
-            $currentStatus = 'draft';
-        }
-
-        $requestedRaw = $input['profile_status'] ?? null;
-        $requestedEmpty = $requestedRaw === null
-            || trim((string) $requestedRaw) === ''
-            || strtolower(trim((string) $requestedRaw)) === 'hidden';
-        if ($currentStatus === 'hidden') {
-            $profileStatus = 'hidden';
-        } elseif ($requestedEmpty) {
-            $profileStatus = $currentStatus;
-        } else {
-            $profileStatus = $this->optionalEnum($input, 'profile_status', ['draft', 'pending', 'published'])
-                ?? $currentStatus;
-        }
-
-
-
+        // 노출 상태는 saveStep 의 StudyRoomBasicExposure 가 정한다. 입력 profile_status 는 무시.
         $stmt = $pdo->prepare(
 
             'UPDATE study_rooms SET
@@ -1033,11 +1013,7 @@ final class StudyRoomRegisterService
 
                 facebook_url = ?,
 
-                instagram_url = ?,
-
-                profile_status = ?,
-
-                published_at = CASE WHEN ? = "published" THEN COALESCE(published_at, NOW()) ELSE published_at END
+                instagram_url = ?
 
              WHERE id = ?'
 
@@ -1052,10 +1028,6 @@ final class StudyRoomRegisterService
             $this->optionalUrl($input, 'facebook_url'),
 
             $this->optionalUrl($input, 'instagram_url'),
-
-            $profileStatus,
-
-            $profileStatus,
 
             $roomId,
 

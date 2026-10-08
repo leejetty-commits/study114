@@ -408,6 +408,10 @@ const sidos = await shared('preview/shared/korea-sidos.js');
 const subjects = await shared('preview/shared/main-subjects.js');
 const school = await shared('preview/shared/school-grade.js');
 const inputFill = await shared('preview/shared/input-fill.js');
+const feeCheonwon = await shared('preview/shared/fee-cheonwon.js');
+const lessonDuration = await shared('preview/shared/lesson-duration-options.js');
+const lessonWeekly = await shared('preview/shared/lesson-weekly-options.js');
+const tutorBasic = await shared('preview/shared/tutor-basic-fields.js');
 
 const UNITS = [
   { id: '11', label: '서울특별시', sido_code: '11', sido_name: '서울특별시', unit_name: '', kind: 'metro' },
@@ -450,6 +454,10 @@ const DEPS = {
   ...studyForm,
   bindStudentHopeRegion: noop,
   bindInputFill: inputFill.bindInputFill,
+  ...feeCheonwon,
+  ...lessonDuration,
+  ...lessonWeekly,
+  ...tutorBasic,
 };
 const missing = imported.filter((n) => !(n in DEPS));
 ok('signup-basic.js import 이름을 모두 채움(실제 모듈 · 브라우저 전용만 대체)', missing.length === 0, missing.join(', '));

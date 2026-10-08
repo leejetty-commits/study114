@@ -4,6 +4,7 @@
  *
  * 가짜 PDO 가 TutorRegisterService · StudyRoomRegisterService · BasicRegisterService
  * · SearchService · NeighborhoodGreetingService · StudyRoomHubService 실경로를 탄다.
+ * (e) 회원 publish 동작은 없다(2026-10-09 remove-publish-code). 기본등록 완료 = 노출.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -70,6 +71,8 @@ final class GatePdo extends PDO
     public array $tutors = [];
     /** @var list<array<string, mixed>> */
     public array $tutorRegions = [];
+    /** @var array<int, string> tutor_id => 대표 과목 행 school_level */
+    public array $tutorLevels = [];
     /** @var list<array<string, mixed>> */
     public array $rooms = [];
     /** @var list<array<string, mixed>> */
@@ -103,6 +106,60 @@ final class GatePdo extends PDO
     /** @param list<mixed> $p @return array{rows?: list<array<string, mixed>>, column?: mixed} */
     public function answer(string $sql, array $p): array
     {
+        // TutorRegionUnit::fetchRow — 11·22·33 = 광역시 과외 단위(서울·부산·대구)
+        if (str_contains($sql, 'FROM regions WHERE id = ? LIMIT 1') && str_contains($sql, 'sido_code')) {
+            $units = [
+                11 => ['11', '서울특별시'],
+                22 => ['26', '부산광역시'],
+                33 => ['27', '대구광역시'],
+            ];
+            $id = (int) ($p[0] ?? 0);
+            if (!isset($units[$id])) {
+                return ['rows' => []];
+            }
+            [$code, $name] = $units[$id];
+            return ['rows' => [[
+                'id' => $id, 'sido_code' => $code, 'sido_name' => $name, 'sigungu_code' => null,
+                'sigungu_name' => null, 'unit_level' => 'sido', 'official_code' => $code . '00000000', 'is_active' => 1,
+            ]]];
+        }
+        // TutorBasicFields::missingForTutor
+        if (str_contains($sql, 'SELECT * FROM tutors WHERE id = ?')) {
+            $id = (int) ($p[0] ?? 0);
+            foreach ($this->tutors as $row) {
+                if ((int) $row['id'] === $id) {
+                    return ['rows' => [$row]];
+                }
+            }
+            return ['rows' => []];
+        }
+        if (str_contains($sql, 'SELECT school_level FROM tutor_subject_targets')) {
+            return ['column' => $this->tutorLevels[(int) ($p[0] ?? 0)] ?? false];
+        }
+        // TutorBasicFields::write — 대표 과목 행 id 는 tutor_id * 1000
+        if (str_contains($sql, 'SELECT id FROM tutor_subject_targets') && str_contains($sql, 'is_primary = 1')) {
+            $id = (int) ($p[0] ?? 0);
+            return ['column' => isset($this->tutorLevels[$id]) ? $id * 1000 : false];
+        }
+        if (str_contains($sql, 'UPDATE tutor_subject_targets SET subject_name')) {
+            $this->tutorLevels[intdiv((int) ($p[3] ?? 0), 1000)] = (string) ($p[1] ?? '');
+            return [];
+        }
+        if (str_contains($sql, 'INSERT INTO tutor_subject_targets')) {
+            $this->tutorLevels[(int) ($p[0] ?? 0)] = (string) ($p[2] ?? '');
+            return [];
+        }
+        // TutorBasicFields::syncProfileStatus
+        if (str_contains($sql, 'UPDATE tutors SET profile_status')) {
+            $id = (int) ($p[2] ?? 0);
+            foreach ($this->tutors as &$row) {
+                if ((int) $row['id'] === $id && ($row['profile_status'] ?? '') !== 'hidden') {
+                    $row['profile_status'] = (string) ($p[0] ?? '');
+                }
+            }
+            unset($row);
+            return [];
+        }
         if (str_contains($sql, 'INSERT INTO tutors (')) {
             $this->tutorInserts++;
             $id = ++$this->nextId;
@@ -118,11 +175,18 @@ final class GatePdo extends PDO
         }
         if (str_contains($sql, 'UPDATE tutors SET') && str_contains($sql, 'tutor_display_name')) {
             $this->tutorUpdates++;
-            $id = (int) ($p[2] ?? 0);
+            $id = (int) ($p[count($p) - 1] ?? 0);
             foreach ($this->tutors as &$row) {
                 if ((int) $row['id'] === $id) {
                     $row['tutor_display_name'] = (string) ($p[0] ?? '');
                     $row['main_subject_note'] = (string) ($p[1] ?? '');
+                    if (count($p) === 7) {
+                        // TutorBasicFields::write — 이름·과목·월 과외비·주 회수·1회 시간·슬로건·id
+                        $row['preferred_fee_amount'] = (int) $p[2];
+                        $row['lessons_per_week'] = (int) $p[3];
+                        $row['minutes_per_lesson'] = (int) $p[4];
+                        $row['slogan'] = (string) $p[5];
+                    }
                 }
             }
             unset($row);
@@ -271,7 +335,8 @@ final class GatePdo extends PDO
         if (str_contains($sql, 'SELECT 1 FROM user_profiles') || str_contains($sql, 'SELECT gender FROM user_profiles')) {
             return ['column' => str_contains($sql, 'gender') ? 'male' : 1];
         }
-        if (str_contains($sql, 'FROM user_profiles')) {
+        // 검색 목록 SQL 은 성별 하위 조회(user_profiles)를 품는다(d29fa20) — 아래 목록 응답으로 보낸다.
+        if (str_contains($sql, 'FROM user_profiles') && !str_contains($sql, 'FROM tutors t')) {
             return ['rows' => [], 'column' => false];
         }
         if (str_contains($sql, 'COUNT(DISTINCT t.id)') && str_contains($sql, 'FROM tutors t')) {
@@ -657,12 +722,20 @@ ok('(b) 공부방 행만 있고 홍보1 없음 needs=true', $basic->needsBasicRe
 
 $done = new GatePdo();
 inject($done);
-$done->tutors[] = ['id' => 5, 'user_id' => 1, 'tutor_display_name' => '완성', 'main_subject_note' => '수학', 'profile_status' => 'draft', 'has_primary' => true];
+// 과외쌤 기본등록 완료 = 필수 8개(정본 73 0절). 공부방 = 홍보지역 1.
+$done->tutors[] = [
+    'id' => 5, 'user_id' => 1, 'tutor_display_name' => '완성', 'main_subject_note' => '수학',
+    'preferred_fee_amount' => 300000, 'lessons_per_week' => 2, 'minutes_per_lesson' => 60, 'slogan' => '슬로건',
+    'profile_status' => 'draft', 'has_primary' => true,
+];
+$done->tutorLevels[5] = 'high';
 $done->tutorRegions[] = ['tutor_id' => 5, 'region_id' => 11, 'scope_type' => 'city', 'priority_order' => 0, 'is_primary' => 1];
 $done->rooms[] = ['id' => 8, 'user_id' => 4, 'study_room_name' => '완성방', 'profile_status' => 'draft', 'has_primary' => true];
 $done->roomRegions[] = ['study_room_id' => 8, 'slot' => 1, 'region_id' => 11];
-ok('(b) 과외쌤 행+대표1 needs=false', $basic->needsBasicRegister(1, 'tutor') === false);
+ok('(b) 과외쌤 필수 8개+대표1 needs=false', $basic->needsBasicRegister(1, 'tutor') === false);
 ok('(b) 공부방 행+홍보1 needs=false', $basic->needsBasicRegister(4, 'study_room_owner') === false);
+$done->tutors[0]['slogan'] = '';
+ok('(b) 과외쌤 대표1 있어도 슬로건 빠지면 needs=true', $basic->needsBasicRegister(1, 'tutor') === true);
 
 $draft = new GatePdo();
 inject($draft);
@@ -711,6 +784,11 @@ $beforeInserts = $fixTutor->tutorInserts;
 $tutorResult = $basic->register(1, 'tutor', [
     'tutor_display_name' => '완성쌤',
     'main_subject_note' => '수학',
+    'school_level' => 'high',
+    'preferred_fee_amount' => '300000',
+    'lessons_per_week' => '2',
+    'minutes_per_lesson' => '60',
+    'slogan' => '슬로건',
     'saved_regions' => [
         ['region_id' => '11', 'scope_type' => 'city'],
         ['region_id' => '22', 'scope_type' => 'city'],
@@ -725,6 +803,7 @@ foreach ($fixTutor->tutorRegions as $r) {
 ok('(c) 불완전 과외쌤 제출은 기존 id', ($tutorResult['id'] ?? 0) === 5 && ($tutorResult['kind'] ?? '') === 'tutor', json_encode($tutorResult, JSON_UNESCAPED_UNICODE));
 ok('(c) 과외쌤 행 수 불변·INSERT 없음·UPDATE 있음', count($fixTutor->tutors) === $beforeTutors && $fixTutor->tutorInserts === $beforeInserts && $fixTutor->tutorUpdates >= 1, 'rows=' . count($fixTutor->tutors) . ' ins=' . $fixTutor->tutorInserts . ' upd=' . $fixTutor->tutorUpdates);
 ok('(c) 과외쌤 대표1이 UPDATE 경로로 저장', $slot1, json_encode($fixTutor->tutorRegions, JSON_UNESCAPED_UNICODE));
+ok('(c) 과외쌤 기본등록 완료 → 노출중(published)', ($fixTutor->tutors[0]['profile_status'] ?? '') === 'published', (string) ($fixTutor->tutors[0]['profile_status'] ?? ''));
 
 $fixRoom = new GatePdo();
 inject($fixRoom);
@@ -814,7 +893,7 @@ try {
 } catch (Throwable $e) {
     $pubMsg = get_class($e) . ': ' . $e->getMessage();
 }
-ok('(e) 공부방 publish 홍보1 없으면 거부', $pubMsg === '홍보지역 1(대표)을 선택해 주세요.', (string) $pubMsg);
+ok('(e) 공부방 회원 publish 동작 없음', $pubMsg === '지원하지 않는 요청입니다.', (string) $pubMsg);
 ok('(e) 거부 시 profile_status 는 draft', ($pub->rooms[0]['profile_status'] ?? '') === 'draft', (string) ($pub->rooms[0]['profile_status'] ?? ''));
 `;
 

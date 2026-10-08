@@ -99,7 +99,7 @@ export const STUDENT_REG_MENUS = [
   { key: 'settings', label: '쪽지설정', screenId: 'P19-05' },
 ];
 
-/** 목록·탭·미리보기(공개) — 마이프로필로 보내는 구 경로 */
+/** 목록·탭·미리보기 — 마이프로필로 보내는 구 경로 */
 export function isStudentLegacyEntryPath(hashPath) {
   const route = parseStudentRegPath(hashPath);
   if (!route) return false;

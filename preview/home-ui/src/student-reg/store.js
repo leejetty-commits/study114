@@ -195,26 +195,6 @@ export function getPublishReadiness(student) {
   return { basicOk: missing.length === 0, detailOk: true, canPublish: missing.length === 0, missing };
 }
 
-/** @param {number} id */
-export async function publishStudent(id) {
-  if (isRegistrationsApiMode()) {
-    try {
-      await apiStudentAction(id, 'publish');
-    } catch (err) {
-      const data = err?.payload;
-      if (data?.ok === false && data.reason) return { ok: false, reason: data.reason, missing: data.missing };
-      throw err;
-    }
-    return { ok: true };
-  }
-  const s = getStudent(id);
-  if (!s) return { ok: false, reason: 'not_found' };
-  const r = getPublishReadiness(s);
-  if (!r.canPublish) return { ok: false, reason: 'incomplete', missing: r.missing };
-  updateStudent(id, { exposure_status: 'published', published_at: new Date().toISOString() });
-  return { ok: true };
-}
-
 export function getStudentSummaryCounts() {
   const list = getStudents();
   return {

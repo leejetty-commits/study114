@@ -169,18 +169,11 @@ export function renderDetail() {
           <div class="register-check-grid">${badges}</div>
         </div>
 
-        ${renderSectionTitle('연락 · 공개')}
+        ${renderSectionTitle('연락')}
         <div class="register-grid-2 register-grid-2--tight">
           <div class="form-group">
             <label class="form-label" for="contact_time_note">연락 가능 시간</label>
             <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note}" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="profile_status">공개 상태</label>
-            <select class="form-input" id="profile_status" name="profile_status">
-              <option value="draft" ${s.profile_status === 'draft' || s.profile_status === 'pending' ? 'selected' : ''}>저장만 (아직 비공개)</option>
-              <option value="published" ${s.profile_status === 'published' ? 'selected' : ''}>공개</option>
-            </select>
           </div>
           <div class="form-group">
             <label class="form-label" for="youtube_url">유튜브</label>

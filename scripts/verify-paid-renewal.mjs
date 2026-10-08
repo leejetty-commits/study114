@@ -79,10 +79,10 @@ ok(
 );
 // 정책(65-paid-renewal-checklist 26·27)은 과외쌤에 매진·예약대기 카피 자체를 금지한다.
 // 부정문 존재가 아니라 순환형 카피 + 점유/만석 분기가 공부방 Prime에 묶여 있는지로 본다.
+// 과외쌤 순환 미리보기 블록(renderTutor*Circulation)은 견본 제거(1fbe4ae)로 없어졌고 안내 문구만 남는다.
 ok(
   'tutor 가이드: 점유·예약대기 금지 카피',
-  screens.includes('renderTutorPickCirculation') &&
-    screens.includes('15분마다 공정하게 순환합니다') &&
+  screens.includes('15분마다 공정하게 순환합니다') &&
     /const roomPrimeOnly = role === 'study_room'/.test(screens) &&
     /const soldOut = roomPrimeOnly &&/.test(screens),
 );

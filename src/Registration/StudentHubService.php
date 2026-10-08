@@ -40,35 +40,11 @@ final class StudentHubService
             throw new InvalidArgumentException('학생 의뢰를 찾을 수 없습니다.');
         }
 
+        // 기본등록 완료 = 카드 노출(rejudgeExposure). 회원 공개·숨김 동작은 없다(숨김은 관리자 페이지만).
         return match ($action) {
-            'publish' => $this->publish($guardianUserId, $studentId, $student),
             'update'  => $this->update($guardianUserId, $studentId, $input),
-            'delete'  => throw new InvalidArgumentException('지원하지 않는 요청입니다.'),
             default   => throw new InvalidArgumentException('지원하지 않는 요청입니다.'),
         };
-    }
-
-    /** @param array<string, mixed> $student */
-    private function publish(int $guardianUserId, int $studentId, array $student): array
-    {
-        (new \Study114\Auth\EmailVerificationGate())->assertVerified($guardianUserId);
-
-        $status = (string) ($student['exposure_status'] ?? '');
-        if ($status === 'published') {
-            return ['student' => $student];
-        }
-        // 관리자가 내린 카드(hidden)는 학생 요청으로 되살리지 않는다.
-        if ($status !== 'draft') {
-            return ['ok' => false, 'reason' => 'not_allowed'];
-        }
-        $missing = StudentBasicCompleteness::missingLabels($student);
-        if ($missing !== []) {
-            return ['ok' => false, 'reason' => 'incomplete', 'missing' => $missing];
-        }
-        $this->repo->transitionExposureStatus($studentId, 'draft', 'published', date('Y-m-d H:i:s'));
-        $updated = $this->repo->getForGuardian($guardianUserId, $studentId);
-
-        return ['student' => $updated ?? $student];
     }
 
     /** @param array<string, mixed> $input */

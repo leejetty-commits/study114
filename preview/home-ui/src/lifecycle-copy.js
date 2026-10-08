@@ -1,5 +1,5 @@
 /**
- * 22장 — 등록·공개 lifecycle 공통 원칙 (횡단 copy · UI 라벨)
+ * 22장 — 등록·노출 lifecycle 공통 원칙 (횡단 copy · UI 라벨). 기본등록 완료 = 노출, 숨김은 관리자만.
  * SSOT: docs/ssot/22-platform-lifecycle-principles.md
  */
 
@@ -23,18 +23,18 @@ export function renderAdminHideOwnerLine(hidden) {
 
 export const PROFILE_STATUS_LABELS = {
   draft: '저장중',
-  published: '공개중',
+  published: '노출중',
   /** 회원 배지. 관리자 화면 라벨(숨김)은 AdminExposure·a28 copy가 따로 가진다. */
-  hidden: '비공개',
+  hidden: '관리자 숨김',
   /** @deprecated 22§3 */
   pending: '저장중',
 };
 
 export const EXPOSURE_STATUS_LABELS = {
   draft: '저장중',
-  published: '공개중',
+  published: '노출중',
   /** 회원 배지. 관리자 화면 라벨(숨김)은 AdminExposure·a28 copy가 따로 가진다. */
-  hidden: '비공개',
+  hidden: '관리자 숨김',
   deleted: '삭제',
 };
 
@@ -76,12 +76,6 @@ export function exposureStatusLabel(status) {
   return EXPOSURE_STATUS_LABELS[/** @type {ExposureStatusKey} */ (status)] || status || '—';
 }
 
-/** @param {boolean} canPublish @param {number} [missingCount] */
-export function publishReadinessLabel(canPublish, missingCount = 0) {
-  if (canPublish) return '공개 가능';
-  return missingCount > 0 ? `공개 준비 미완료 · ${missingCount}항목` : '공개 준비 미완료';
-}
-
 /** @param {number} publicCount */
 export function formatSubmissionDocPublicLabel(publicCount) {
   if (!publicCount) return '—';
@@ -108,24 +102,13 @@ export function formatVerificationDocCountPublic(item) {
 }
 
 export const LIFECYCLE_FOOTNOTE_REG =
-  '22장 · 운영자 심사·반려 없음 · 공개는 당사자가 직접 전환합니다.';
+  '22장 · 운영자 심사·반려 없음 · 기본등록을 마치면 카드가 바로 노출됩니다.';
 
 export const LIFECYCLE_FOOTNOTE_SUBMISSION =
   '22장 · 승인·반려·검수중 UI 없음 · 공개된 자료를 보고 직접 판단합니다.';
-
-export const LIFECYCLE_PUBLISH_CONFIRM_DIRECT =
-  '플랫폼 심사 없이 제가 직접 공개합니다 (22장)';
-
-export const LIFECYCLE_PUBLISH_CONFIRM_NOTE =
-  '공개 확인은 운영자 심사가 아니라 등록한 본인의 확인입니다.';
 
 export const TRUST_PLATFORM_DISCLAIMER =
   '제출자료는 등록자가 공개한 참고 정보입니다. 우동공과는 해당 서류를 인증하거나 보증하지 않으며, 중요한 서류는 필요한 경우 발급기관 기준으로 직접 다시 확인해 주세요.';
 
 export const SUBMISSION_DOCS_LEAD =
   '제출 여부와 공개 범위만 표시하며 플랫폼이 심사하거나 반려하지 않습니다.';
-
-export const REGISTER_UI_PROFILE_STATUS_OPTIONS = [
-  { value: 'draft', label: '저장 중' },
-  { value: 'published', label: '공개 (운영 화면에서도 확인 권장)' },
-];

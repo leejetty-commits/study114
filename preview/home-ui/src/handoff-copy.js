@@ -75,7 +75,7 @@ export function getHandoffEmptyLine(key) {
 
 /** 25§10 Lifecycle-aware basket */
 export const LIFECYCLE_BASKET = {
-  profileStopped: '현재 공개가 중지된 대상입니다',
+  profileStopped: '현재 노출이 중지된 대상입니다',
 };
 
 /** P21-05 ↔ P25-S10 딥링크 배너 · CTA */
@@ -102,7 +102,7 @@ export const STUDENT_REVIEW = {
   toastAdded: '학생 검토함에 넣었습니다',
   toastRemoved: '학생 검토함에서 뺐습니다',
   note: '관심 있는 학생을 저장해 두고, 준비가 되었을 때 쪽지를 이어가세요. (학부모 이용 후기와는 다른 기능입니다)',
-  lifecycleHidden: '현재 공개가 중지된 의뢰입니다',
+  lifecycleHidden: '현재 노출이 중지된 의뢰입니다',
 };
 
 /** @param {'tutor'|'study_room'} role */

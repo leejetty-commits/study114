@@ -351,10 +351,6 @@ export function syncFacilityFromForm(form, state) {
   state.youtube_url = String(fd.get('youtube_url') ?? '');
   state.facebook_url = String(fd.get('facebook_url') ?? '');
   state.instagram_url = String(fd.get('instagram_url') ?? '');
-  if (fd.has('profile_status')) {
-    const raw = String(fd.get('profile_status') ?? '').trim();
-    if (raw !== '') state.profile_status = raw;
-  }
 }
 
 /** @param {import('./state.js').RegisterState} state */
@@ -492,8 +488,6 @@ export function payloadForStep(step, state) {
           sort_order: img.sort_order || i + 1,
         })),
       };
-      const facilityStatus = String(state.profile_status ?? '').trim();
-      if (facilityStatus !== '') facility.profile_status = facilityStatus;
       return facility;
     }
     default:

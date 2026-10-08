@@ -1,0 +1,96 @@
+# 노출·가입·결제 정적 검사 묶음 — 작업 브랜치·main push 와 PR 마다 실행
+# Docker 실DB(email-verify-flow)·WSL bash 의존 검사는 제외한다.
+
+name: Verify bundle
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "cursor/**"
+
+concurrency:
+  group: verify-bundle-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-bundle:
+    name: verify bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, curl, pdo
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: preview/home-ui/package-lock.json
+
+      - name: Install home-ui deps
+        working-directory: preview/home-ui
+        run: npm ci
+
+      - name: Basic exposure gate
+        if: ${{ !cancelled() }}
+        run: node scripts/verify-basic-exposure-gate.mjs
+
+      - name: Remove publish
+        if: ${{ !cancelled() }}
+        run: npm run verify:remove-publish
+
+      - name: Hide inquiry bundle
+        if: ${{ !cancelled() }}
+        run: npx --yes vite-node scripts/verify-hide-inquiry-bundle.mjs
+
+      - name: Tutor search fields
+        if: ${{ !cancelled() }}
+        run: npm run verify:tutor-search-fields
+
+      - name: Tutor basic required
+        if: ${{ !cancelled() }}
+        run: npm run verify:tutor-basic-required
+
+      - name: Paid renewal
+        if: ${{ !cancelled() }}
+        run: npm run verify:paid-renewal
+
+      - name: Email sent UI
+        if: ${{ !cancelled() }}
+        run: npm run verify:cur-006-email-sent-ui
+
+      - name: Email verify inventory
+        if: ${{ !cancelled() }}
+        run: npm run verify:cur-006-email-verify-inventory
+
+      - name: Post-verify role
+        if: ${{ !cancelled() }}
+        run: npm run verify:cur-006-post-verify-role
+
+      - name: Study-room basic register API
+        if: ${{ !cancelled() }}
+        run: npm run verify:study-room-basic-register-api
+
+      - name: Tutor registration check frame
+        if: ${{ !cancelled() }}
+        run: npm run verify:tutor-registration-check-frame
+
+      - name: Student hope hidden required
+        if: ${{ !cancelled() }}
+        run: npm run verify:student-hope-hidden-required
+
+      - name: Secret placeholder guard
+        if: ${{ !cancelled() }}
+        run: bash scripts/check-no-committed-secrets.sh

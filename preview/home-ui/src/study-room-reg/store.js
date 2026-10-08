@@ -56,7 +56,7 @@ const KEY = 'study114-preview-study-rooms-v1';
  * @property {{ id: string, label: string, ok: boolean, section: 'basic'|'detail'|'publish' }[]} items
  */
 
-/** 공개는 입력 완성도와 독립 — Pick/Prime 자격 안내용 품질 항목만 유지 */
+/** 카드 노출은 입력 완성도와 독립 — Pick/Prime 자격 안내용 품질 항목만 유지 */
 export const PUBLISH_CHECKLIST_DEFS = [
   { id: 'name', label: '공부방명', section: 'basic' },
   { id: 'region', label: '대표 홍보지역', section: 'basic' },
@@ -156,7 +156,7 @@ export function getPublishReadiness(room) {
   if (!room.slogan?.trim()) qualityHints.push('슬로건 추가 권장');
 
   return {
-    // 공개 자체는 완성도와 무관. 베이직 노출은 빈 항목이 있어도 가능.
+    // 카드 노출은 기본등록 완료(홍보지역 1)로 정해지고 상세 완성도와 무관하다.
     canPublish: true,
     detailRecommended: room.detail_completion_status !== 'expanded_complete',
     exposureBoostReady: room.detail_completion_status === 'expanded_complete',
@@ -174,7 +174,7 @@ export function getStudyRoomsByTab(tab) {
   const all = getStudyRooms();
   if (tab === 'all') return all;
   if (tab === 'not_ready') {
-    // 미공개(draft) — 공개 게이트는 없으므로 "아직 공개하지 않음"만 모은다.
+    // 저장중(draft) = 기본등록(홍보지역 1) 미완료.
     return all.filter((r) => r.profile_status === 'draft');
   }
   return all.filter((r) => r.profile_status === tab);
@@ -188,23 +188,6 @@ export function updateStudyRoom(id, patch) {
   rooms[idx] = { ...rooms[idx], ...patch, updated_at: new Date().toISOString() };
   saveAll(rooms);
   return rooms[idx];
-}
-
-/** @param {number} id */
-export async function publishStudyRoom(id) {
-  if (isRegistrationsApiMode()) {
-    const data = await apiStudyRoomAction(id, 'publish');
-    if (data.ok === false) return { ok: false, reason: data.reason, missing: data.missing };
-    return { ok: true };
-  }
-  const room = getStudyRoom(id);
-  if (!room) return { ok: false, reason: 'not_found' };
-  updateStudyRoom(id, {
-    profile_status: 'published',
-    published_at: new Date().toISOString(),
-    compare_eligible: true,
-  });
-  return { ok: true };
 }
 
 /** @param {number} id @param {StudyRoomRecord['inquiry_status']} inquiry_status */

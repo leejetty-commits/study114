@@ -138,10 +138,6 @@ export function syncContactFromForm(form, state) {
   state.youtube_url = String(fd.get('youtube_url') ?? '');
   state.facebook_url = String(fd.get('facebook_url') ?? '');
   state.instagram_url = String(fd.get('instagram_url') ?? '');
-  if (fd.has('profile_status')) {
-    const raw = String(fd.get('profile_status') ?? '').trim();
-    if (raw !== '') state.profile_status = raw;
-  }
 }
 
 export function payloadForStep(step, state) {
@@ -186,17 +182,13 @@ export function payloadForStep(step, state) {
         proof_document_available: state.proof_document_available,
         teaching_style_badges: state.teaching_style_badges,
       };
-    case 'contact': {
-      const contact = {
+    case 'contact':
+      return {
         contact_time_note: state.contact_time_note,
         youtube_url: state.youtube_url,
         facebook_url: state.facebook_url,
         instagram_url: state.instagram_url,
       };
-      const contactStatus = String(state.profile_status ?? '').trim();
-      if (contactStatus !== '') contact.profile_status = contactStatus;
-      return contact;
-    }
     default:
       return {};
   }

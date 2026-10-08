@@ -115,9 +115,14 @@ console.log('\n── (2) 정적: 노출 조건·정렬·손님 경로 무변경
   const baseT = fnBody(base, 'searchTutors');
   const whereFrom = '$where = [';
   const whereTo = '$total = (int) $stmt->fetchColumn();';
-  const cw = between(curT, whereFrom, whereTo);
+  /** 기본등록 완료 게이트(161 remove-publish-code)만 허용. 그 밖의 글자는 기준 커밋과 같아야 한다. */
+  const gateLine = "\n            TutorBasicFields::completeSql('t'),";
+  const cwRaw = between(curT, whereFrom, whereTo);
+  const gateOnce = cwRaw !== null && cwRaw.split(gateLine).length === 2;
+  ok('searchTutors WHERE 에 기본등록 완료 조건(TutorBasicFields::completeSql) 정확히 1번', gateOnce);
+  const cw = gateOnce ? cwRaw.replace(gateLine, '') : null;
   const bw = between(baseT, whereFrom, whereTo);
-  ok('searchTutors WHERE·필터·COUNT·정렬식(orderBy) = 기준 커밋 글자 그대로', cw !== null && bw !== null && cw === bw,
+  ok('searchTutors WHERE·필터·COUNT·정렬식(orderBy) = 기준 커밋 글자 그대로 (게이트 1줄 제외)', cw !== null && bw !== null && cw === bw,
     `${cw?.length ?? 'null'}/${bw?.length ?? 'null'}`);
   const fromTo = ['FROM tutors t\n            LEFT JOIN', 'LIMIT :limit OFFSET :offset'];
   const cf = between(curT, ...fromTo);

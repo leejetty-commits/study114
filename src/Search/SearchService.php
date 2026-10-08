@@ -11,6 +11,7 @@ use Study114\Paid\AutoNewBadge;
 use Study114\Paid\PaidBadgeResolver;
 use Study114\Region\RegionGuLink;
 use Study114\Region\TutorRegionUnit;
+use Study114\Tutor\TutorBasicFields;
 use Study114\Visibility\WithdrawnOwnerSql;
 
 final class SearchService
@@ -826,11 +827,12 @@ final class SearchService
      */
     private function searchTutors(PDO $pdo, array $filters, int $limit, int $offset, string $sort, ?array $cardIds = null): array
     {
-        // 목록/검색 노출 = 숨김(hidden)만 제외. 공개·완성도 게이트 없음.
+        // 목록/검색 노출 = 기본등록 완료(필수 8개, 정본 73 0절) · 관리자 숨김(hidden) 제외 · 탈퇴 제외.
         $where = [
             "t.profile_status <> 'hidden'",
             WithdrawnOwnerSql::notWithdrawn('t.user_id'),
             $this->tutorSlot1Sql('t'),
+            TutorBasicFields::completeSql('t'),
         ];
         $params = [];
         if ($cardIds !== null) {

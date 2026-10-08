@@ -54,6 +54,7 @@
     "verify:wishlist-card-zoom": "node scripts/verify-wishlist-card-zoom.mjs",
     "verify:tutor-search-fields": "node scripts/verify-tutor-search-fields.mjs",
     "verify:detail-card-all-fields": "cd preview/home-ui && npx --yes vite-node ../../scripts/verify-detail-card-all-fields.mjs",
+    "verify:remove-publish": "cd preview/home-ui && npx --yes vite-node ../../scripts/verify-remove-publish.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {

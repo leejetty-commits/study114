@@ -944,29 +944,8 @@ form[data-form="facility"] > .register-guide {
   margin-bottom: 0.35rem;
 }
 
-form[data-form="facility"] .register-publish-block {
+form[data-form="facility"] .register-message-notice {
   margin-top: 2rem;
-}
-
-.register-publish-block {
-  margin: 0.75rem 0 1.1rem;
-  padding: 1rem 1.05rem 0.95rem;
-  border: 2px solid var(--brand-orange, #f57c00);
-  border-radius: 0.85rem;
-  background: #fff7ed;
-}
-
-.register-publish-block__title {
-  margin: 0 0 0.35rem;
-  font-size: 1.02rem;
-  color: #9a3412;
-}
-
-.register-publish-block__lead {
-  margin: 0 0 0.75rem;
-  color: #7c2d12;
-  font-size: 0.85rem;
-  line-height: 1.5;
 }
 
 .register-message-notice {
@@ -991,13 +970,4 @@ form[data-form="facility"] .register-publish-block {
   line-height: 1.45;
   color: #1e40af;
 }
-
-.register-publish-block .form-group {
-  margin-bottom: 0.65rem;
-}
-
-.register-publish-block [data-action="save-publish"] {
-  margin-top: 0.15rem;
-}
-
 

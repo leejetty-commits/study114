@@ -7,8 +7,8 @@
 export const P20_LIST_TABS = [
   { key: 'all', label: '전체' },
   { key: 'draft', label: '저장' },
-  { key: 'published', label: '공개중' },
-  { key: 'not_ready', label: '미공개' },
+  { key: 'published', label: '노출중' },
+  { key: 'not_ready', label: '기본등록 미완료' },
 ];
 
 /** §3-3 금지 UI 문구 — 22장 · pending deprecated */
@@ -60,8 +60,8 @@ export const DETAIL_STATUS_LABELS = {
 
 /** §6 P20-02 상태판 블록 제목 */
 export const P20_HUB_BLOCK_TITLES = {
-  readiness: '공개 준비',
-  publishStatus: '현재 공개 상태',
+  readiness: '기본등록',
+  publishStatus: '현재 노출 상태',
   exposureMatrix: '노출 가능 매트릭스',
   inquiryBoard: '쪽지설정',
   pickPrimeNudge: '픽·프라임 노출 준비',
@@ -109,9 +109,9 @@ export const P20_INQUIRY_COPY = {
 /** P20-01 목록 헤더 */
 export const P20_LIST_HEAD = {
   title: '공부방 운영',
-  lead: '공부방별로 공개·쪽지 상태를 관리합니다.',
+  lead: '공부방별로 노출·쪽지 상태를 확인합니다.',
   registerCta: '+ 공부방 등록',
-  notReadyBadge: '미공개',
+  notReadyBadge: '기본등록 미완료',
   manageCta: '운영하기 →',
 };
 

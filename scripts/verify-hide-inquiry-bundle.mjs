@@ -144,11 +144,15 @@ final class BPdo extends PDO {
             return ['column' => $this->tutorStatus];
         }
         if (str_contains($sql, 'facility_note')) {
-            $this->roomStatus = (string) ($p[4] ?? $this->roomStatus);
+            if (str_contains($sql, 'profile_status')) {
+                $this->roomStatus = (string) ($p[4] ?? $this->roomStatus);
+            }
             return [];
         }
         if (str_contains($sql, 'UPDATE tutors SET contact_time_note')) {
-            $this->tutorStatus = (string) ($p[4] ?? $this->tutorStatus);
+            if (str_contains($sql, 'profile_status')) {
+                $this->tutorStatus = (string) ($p[4] ?? $this->tutorStatus);
+            }
             return [];
         }
         if (str_contains($sql, 'UPDATE study_rooms SET profile_status')) {
@@ -288,7 +292,7 @@ $saveFacility->invoke($roomSvc, $pdo, 8, ['facility_note' => '메모']);
 ok('(a) 요청 없음+published 유지', $pdo->roomStatus === 'published', $pdo->roomStatus);
 $pdo->roomStatus = 'published';
 $saveFacility->invoke($roomSvc, $pdo, 8, ['profile_status' => 'draft']);
-ok('(a) 요청 draft+published 는 draft', $pdo->roomStatus === 'draft', $pdo->roomStatus);
+ok('(a) 회원이 draft 를 보내도 published 유지(회원은 노출 상태를 못 바꿈)', $pdo->roomStatus === 'published', $pdo->roomStatus);
 
 $tutorSvc = new TutorRegisterService();
 $saveContact = new ReflectionMethod($tutorSvc, 'saveContact');
@@ -296,20 +300,14 @@ $saveContact->setAccessible(true);
 $pdo->tutorStatus = 'hidden';
 $saveContact->invoke($tutorSvc, $pdo, 5, ['profile_status' => 'published']);
 ok('(b) 과외 hidden+published 요청은 hidden', $pdo->tutorStatus === 'hidden', $pdo->tutorStatus);
+$pdo->tutorStatus = 'published';
+$saveContact->invoke($tutorSvc, $pdo, 5, ['profile_status' => 'draft']);
+ok('(b) 과외 회원이 draft 를 보내도 published 유지', $pdo->tutorStatus === 'published', $pdo->tutorStatus);
 
-$hub = new StudyRoomHubService();
-$publish = new ReflectionMethod($hub, 'publish');
-$publish->setAccessible(true);
-$before = updates($pdo, 'UPDATE study_rooms SET profile_status');
-$denied = $publish->invoke($hub, 4, 8, ['profile_status' => 'hidden']);
-ok('(c) 공부방 publish hidden은 not_allowed', ($denied['reason'] ?? '') === 'not_allowed' && updates($pdo, 'UPDATE study_rooms SET profile_status') === $before);
-
-$thub = new TutorHubService();
-$tpublish = new ReflectionMethod($thub, 'publish');
-$tpublish->setAccessible(true);
-$beforeT = updates($pdo, 'UPDATE tutors SET profile_status');
-$tdenied = $tpublish->invoke($thub, 4, 5, ['profile_status' => 'hidden']);
-ok('(c) 과외 publish hidden은 not_allowed', ($tdenied['reason'] ?? '') === 'not_allowed' && updates($pdo, 'UPDATE tutors SET profile_status') === $beforeT);
+ok('(c) 공부방·과외·학생 허브에 회원 publish 동작 없음',
+    !(new ReflectionClass(StudyRoomHubService::class))->hasMethod('publish')
+    && !(new ReflectionClass(TutorHubService::class))->hasMethod('publish')
+    && !(new ReflectionClass(\Study114\Registration\StudentHubService::class))->hasMethod('publish'));
 
 $admin = new AdminExposureService();
 $pdo->roomStatus = 'published';
@@ -565,9 +563,10 @@ assert(
 const saveFacility = fnBody(read('src/StudyRoom/StudyRoomRegisterService.php'), 'saveFacility');
 const saveContact = fnBody(read('src/Tutor/TutorRegisterService.php'), 'saveContact');
 assert(
-  '(D2) hidden 요청은 요청 없음',
-  saveFacility.includes("strtolower(trim((string) $requestedRaw)) === 'hidden'")
-    && saveContact.includes("strtolower(trim((string) $input['profile_status'])) !== 'hidden'"),
+  '(D2) 회원 저장은 profile_status 를 쓰지 않음',
+  saveFacility !== '' && saveContact !== ''
+    && !saveFacility.includes('profile_status = ?') && !saveContact.includes('profile_status = ?')
+    && !saveFacility.includes("$input['profile_status']") && !saveContact.includes("$input['profile_status']"),
 );
 assert(
   '(D4) 필터 aria-pressed · is-on 0',

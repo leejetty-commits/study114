@@ -195,6 +195,7 @@ final class TutorRegisterService
 
 
             $detailEval = $this->refreshDetailStatus($pdo, $tutorId, $step);
+            TutorBasicFields::syncProfileStatus($pdo, $tutorId);
 
 
 
@@ -614,39 +615,7 @@ final class TutorRegisterService
 
     {
 
-        $curStmt = $pdo->prepare('SELECT profile_status FROM tutors WHERE id = ?');
-
-        $curStmt->execute([$tutorId]);
-
-        $currentStatus = (string) ($curStmt->fetchColumn() ?: 'draft');
-
-        if ($currentStatus === 'pending') {
-
-            $currentStatus = 'draft';
-
-        }
-
-
-
-        if ($currentStatus === 'hidden') {
-            $profileStatus = 'hidden';
-            $isNewPublish = false;
-        } else {
-            $requested = isset($input['profile_status'])
-                && trim((string) $input['profile_status']) !== ''
-                && strtolower(trim((string) $input['profile_status'])) !== 'hidden'
-
-                ? $this->requireEnum($input, 'profile_status', ['draft', 'pending', 'published'])
-
-                : null;
-
-            $profileStatus = $requested ?? $currentStatus;
-
-            $isNewPublish = $profileStatus === 'published' && $currentStatus !== 'published';
-        }
-
-
-
+        // 노출 상태는 saveStep 의 TutorBasicFields::syncProfileStatus 가 정한다. 입력 profile_status 는 무시.
         // home-ui 인라인 상세저장이 contact 에 intro 를 실어 보내는 경로 지원
 
         if (array_key_exists('intro_short', $input) || array_key_exists('intro_long', $input)) {
@@ -673,7 +642,7 @@ final class TutorRegisterService
 
         $stmt = $pdo->prepare(
 
-            'UPDATE tutors SET contact_time_note = ?, youtube_url = ?, facebook_url = ?, instagram_url = ?, profile_status = ? WHERE id = ?'
+            'UPDATE tutors SET contact_time_note = ?, youtube_url = ?, facebook_url = ?, instagram_url = ? WHERE id = ?'
 
         );
 
@@ -687,8 +656,6 @@ final class TutorRegisterService
 
             $this->optionalUrl($input, 'instagram_url'),
 
-            $profileStatus,
-
             $tutorId,
 
         ]);
@@ -698,42 +665,6 @@ final class TutorRegisterService
         $this->syncImages($pdo, $tutorId, $input);
 
 
-
-        // 이미 공개된 프로필의 상세 수정은 공개 게이트를 다시 타지 않는다.
-
-        // 새로 published 로 올릴 때만 완료·이미지 검사.
-
-        if ($isNewPublish) {
-
-            $eval = (new TutorDetailCompletionEvaluator())->evaluate($pdo, $tutorId);
-
-            if ($eval['status'] !== TutorDetailCompletionEvaluator::STATUS_COMPLETE) {
-
-                throw new InvalidArgumentException(
-
-                    '상세등록이 완료되지 않아 공개할 수 없습니다. 부족: ' . implode(', ', $eval['missing'])
-
-                );
-
-            }
-
-            $countStmt = $pdo->prepare('SELECT COUNT(*) FROM tutor_images WHERE tutor_id = ?');
-
-            $countStmt->execute([$tutorId]);
-
-            if ((int) $countStmt->fetchColumn() < 1) {
-
-                throw new InvalidArgumentException('프로필 이미지가 없어 공개할 수 없습니다.');
-
-            }
-
-            $pdo->prepare(
-
-                'UPDATE tutors SET published_at = COALESCE(published_at, NOW()) WHERE id = ?'
-
-            )->execute([$tutorId]);
-
-        }
 
     }
 

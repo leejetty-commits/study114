@@ -109,9 +109,9 @@ function imageLine(img) {
 function profileStatusLabel(v) {
   const raw = str(v);
   if (!raw) return '';
-  if (raw === 'published') return '공개';
-  if (raw === 'hidden') return '숨김';
-  if (raw === 'draft' || raw === 'pending') return '저장만 (비공개)';
+  if (raw === 'published') return '노출중';
+  if (raw === 'hidden') return '관리자 숨김';
+  if (raw === 'draft' || raw === 'pending') return '저장중';
   return raw;
 }
 
@@ -209,7 +209,7 @@ export function buildRoomInputSummary(room) {
         { label: '유튜브', value: str(s.youtube_url) },
         { label: '페이스북', value: str(s.facebook_url) },
         { label: '인스타그램', value: str(s.instagram_url) },
-        { label: '공개 상태', value: profileStatusLabel(s.profile_status) },
+        { label: '카드 노출', value: profileStatusLabel(s.profile_status) },
         { label: '상세정보 상태', value: detailStatusLabel(s.detail_completion_status) },
       ],
     },

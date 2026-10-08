@@ -77,7 +77,8 @@ assert(!render.includes('rc-section--accordion'), 'render: detail1/2 not sibling
 assert(copy.includes("detail: '상세정보'"), 'copy: 상세정보 parent section');
 assert(copy.includes("detail1: '수업 · 가격'"), 'copy: detail1 = 수업 · 가격');
 assert(copy.includes("detail2: '학력 · 소개 · 연락'"), 'copy: detail2 = 학력 · 소개 · 연락');
-assert(render.includes('rc-publish'), 'render: publish wrap');
+// 72f0e40·회원 공개 제거: 등록점검에 공개 버튼 영역이 없다(기본등록 완료 = 카드 노출).
+assert(!render.includes('rc-publish'), 'render: no publish wrap');
 assert(render.includes('rc-next'), 'render: next action');
 assert(!render.includes('data-trc-expand'), 'render: no tutor expand sample');
 const mainJs = read('preview/home-ui/src/main.js');
@@ -92,7 +93,10 @@ assert(
   pageFn.indexOf('primeMissingTitle') < pageFn.indexOf('${renderBoard(vm)}'),
   'page: board right after prime action block (no cards)',
 );
-assert(pageFn.indexOf('${renderBoard(vm)}') < pageFn.indexOf('${renderPublishActions(vm)}'), 'page: CTA after board');
+assert(
+  pageFn.includes('${renderBoard(vm)}') && !render.includes('renderPublishActions'),
+  'page: board without publish CTA',
+);
 
 assert(model.includes('buildTutorRegistrationCheckModel'), 'model export');
 assert(model.includes('missingForTier(okMap, TRC_PICK_FIELD_IDS'), 'model: pick extras only');
