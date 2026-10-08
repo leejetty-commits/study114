@@ -1,4 +1,5 @@
 -- dev: @dev.local 계정 이메일 인증 완료 (E2E·로컬 행동 게이트)
+-- ⚠ 로컬 Docker(study114_dev) 전용. 운영 DB에는 절대 적용하지 않는다.
 USE study114;
 
 UPDATE users

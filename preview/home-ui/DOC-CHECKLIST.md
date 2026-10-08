@@ -395,7 +395,7 @@ CTA: **guest** → 로그인 유도 + 운영 문의 · **로그인** → 쪽지�
 | 역할 전환 UI | `[임시]` placeholder |
 | 지도 API | `[임시]` CSS placeholder |
 | 광고 실제 슬롯·구매 연동 | `[임시]` dashed box |
-| auth-ui 로그인 연동 | Dev 로그인 툴바 · `/api/auth/me.php` · `:8080` proxy |
+| auth-ui 로그인 연동 | auth-ui 로그인 화면 · `/api/auth/me.php` · `:8080` proxy (툴바 시험용 로그인은 2026-10-09 제거) |
 | **9장 부록 인증정책** | 비번 규칙 · **§E** 메일 링크 4단계 재설정 · **행동 전 이메일 인증** (`email_verify_required` · `email-verify-overlay.js`) |
 | auth ↔ home 흐름 | 로그인→home · 비번찾기→재설정→로그인 — [§E-11 Dev/QA만](../../docs/ssot/09-appendix-login-and-auth-policy.md) (`mail.log`는 사용자 플로우 아님) |
 | 실데이터·API | 미구현 |

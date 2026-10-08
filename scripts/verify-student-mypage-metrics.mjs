@@ -144,7 +144,7 @@ globalThis.fetch = async (url) => {
 };
 
 const { initAuthSession } = await import('../preview/home-ui/src/auth-session.js');
-const { ensureStudentStore, getStudent, updateStudent } = await import('../preview/home-ui/src/student-reg/store.js');
+const { ensureStudentStore, getStudent, updateStudent, addStudent } = await import('../preview/home-ui/src/student-reg/store.js');
 const { ensureTutorCityUnits } = await import('../preview/home-ui/src/tutor-reg/city-units.js');
 const { deactivateRegistrationsApi } = await import('../preview/home-ui/src/registrations-backend.js');
 const { activateBoardApi, hydrateNoticeHome } = await import('../preview/home-ui/src/board/board-backend.js');
@@ -156,6 +156,7 @@ await initAuthSession(false);
 setActiveRole('parent');
 deactivateRegistrationsApi();
 ensureStudentStore();
+if (!getStudent(1)) addStudent({ student_name: '김하늘', gender: 'female', birth_year: 2012, exposure_status: 'published' });
 await ensureTutorCityUnits();
 await activateBoardApi({ navRole: 'parent' });
 await hydrateNoticeHome();

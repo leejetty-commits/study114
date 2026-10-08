@@ -44,17 +44,3 @@ export async function saveStep(step, payload, studyRoomId = null) {
     payload,
   });
 }
-
-export async function devLogin(email = 'room-owner1@dev.local', password = 'password') {
-  const res = await fetch('/api/auth/login.php', {
-    method: 'POST',
-    headers: JSON_HEADERS,
-    credentials: 'include',
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data.ok) {
-    throw new Error(data.message || '로그인 실패');
-  }
-  return data;
-}

@@ -142,7 +142,7 @@ const { bindGuestEmptyCardLoginGate } = await import('../preview/shared/guest-ga
 const { initAuthSession, isLoggedIn, logout } = await import('../preview/home-ui/src/auth-session.js');
 const { initChromeSession, chromeLogout } = await import('../preview/shared/chrome-session.js');
 const { renderStudentCountHalt } = await import('../preview/home-ui/src/student-reg/screens.js');
-const { getStudents, updateStudent } = await import('../preview/home-ui/src/student-reg/store.js');
+const { getStudents, updateStudent, addStudent } = await import('../preview/home-ui/src/student-reg/store.js');
 const { STUDENT_COUNT_HALT_COPY } = await import('../preview/home-ui/src/student-reg/student-reg-copy.js');
 const { AUTH_UI_BASE } = await import('../preview/shared/preview-links.js');
 
@@ -151,8 +151,11 @@ const authBase = String(AUTH_UI_BASE).replace(/\/$/, '');
 
 // ── (c) 학생 수 안내 화면 ──
 console.log('\n=== (c) 학생 수 안내 화면 ===');
+addStudent({ student_name: '검증학생1', exposure_status: 'published' });
+addStudent({ student_name: '검증학생2', exposure_status: 'draft' });
+addStudent({ student_name: '검증학생3', exposure_status: 'hidden' });
 const seedActive = getStudents();
-assert(seedActive.length >= 2, `store SEED 활성 학생 ${seedActive.length}명(2명 이상 시나리오 준비)`);
+assert(seedActive.length >= 2, `검증용 활성 학생 ${seedActive.length}명(2명 이상 시나리오 준비)`);
 for (const s of seedActive.slice(2)) await updateStudent(s.id, { exposure_status: 'deleted' });
 assert(getStudents().length === 2, '활성 학생 2명으로 맞춤');
 const many = renderStudentCountHalt();

@@ -288,7 +288,7 @@ test.describe('guest UI concern intro (preview)', () => {
     await expect(page.locator('body')).toContainText(DIRECTOR_SEED_TITLE, { timeout: 20_000 });
 
     await page.locator('[data-action="dev-logout"]').click();
-    await expect(page.getByRole('button', { name: '시험용·과외' })).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator('[data-action="dev-logout"]')).toHaveCount(0, { timeout: 20_000 });
 
     await page.goto(`${HOME}/#/community/director`);
     await expect(page.locator('body')).toContainText('공부방 고민방', { timeout: 20_000 });

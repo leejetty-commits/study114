@@ -84,130 +84,13 @@ export function getMemoCreditsRemaining() {
   return isPaidProvider() ? 3 : 0;
 }
 
-/** @returns {TutorRecord} */
-function withDefaults(raw, id) {
-  return {
-    inquiry_status: 'paused',
-    detail_completion_status: 'basic_only',
-    proof_document_available: false,
-    has_primary_region: false,
-    has_primary_subject: false,
-    has_lesson_places: false,
-    has_profile_image: false,
-    profile_images: [],
-    education_doc_submitted: false,
-    education_doc_public: false,
-    career_doc_submitted: false,
-    compare_eligible: false,
-    lesson_places: [],
-    teaching_style_badges: [],
-    ...raw,
-    id,
-    updated_at: raw.updated_at || new Date().toISOString(),
-    deleted_at: raw.deleted_at ?? null,
-  };
-}
-
-const SEED = [
-  withDefaults(
-    {
-      id: 1,
-      tutor_display_name: '김수학',
-      profile_status: 'published',
-      detail_completion_status: 'expanded_complete',
-      location_label: '',
-      primary_region_label: '',
-      main_subject_note: '수학',
-      grade_band: '중·고',
-      preferred_fee_amount: 480000,
-      fee_basis_type: 'monthly_by_weekly_schedule',
-      lessons_per_week: 2,
-      minutes_per_lesson: 90,
-      intro_short: '중·고 수학 전문',
-      intro_long: '내신 1등급 다수 배출 · 개념+유형 병행',
-      feature_1: '내신 1등급 다수',
-      university_name: '서울대학교',
-      major_name: '수학과',
-      university_status: 'graduated',
-      proof_document_available: true,
-      has_primary_region: false,
-      has_primary_subject: true,
-      has_lesson_places: true,
-      has_profile_image: true,
-      profile_images: [
-        {
-          id: 'seed-1',
-          name: 'tutor-card-sample.jpg',
-          image_path: '/assets/brand/tutor-card-sample.jpg',
-          basic_720_path: '/assets/brand/tutor-card-sample.jpg',
-          prime_1280_path: '/assets/brand/tutor-card-sample.jpg',
-          sort_order: 1,
-          image_type: 'profile',
-        },
-      ],
-      education_doc_submitted: true,
-      education_doc_public: true,
-      career_doc_submitted: true,
-      compare_eligible: true,
-      student_gender_group: 'mixed',
-      student_count_group: 'solo',
-      lesson_places: ['student_home_visit', 'public_place'],
-      teaching_style_badges: ['meticulous', 'concept_focus'],
-      published_at: new Date().toISOString(),
-    },
-    1,
-  ),
-  withDefaults(
-    {
-      id: 2,
-      tutor_display_name: '박국어',
-      profile_status: 'draft',
-      detail_completion_status: 'basic_only',
-      location_label: '',
-      primary_region_label: '',
-      main_subject_note: '국어',
-      preferred_fee_amount: 400000,
-      intro_short: '',
-      has_primary_subject: true,
-      has_lesson_places: false,
-      education_doc_submitted: false,
-      compare_eligible: false,
-    },
-    2,
-  ),
-  withDefaults(
-    {
-      id: 3,
-      tutor_display_name: '이영어',
-      profile_status: 'hidden',
-      detail_completion_status: 'expanded_complete',
-      location_label: '',
-      primary_region_label: '',
-      main_subject_note: '영어',
-      preferred_fee_amount: 440000,
-      fee_basis_type: 'monthly_by_weekly_schedule',
-      lessons_per_week: 2,
-      minutes_per_lesson: 80,
-      intro_short: '회화·문법 병행',
-      has_primary_region: false,
-      has_primary_subject: true,
-      has_lesson_places: true,
-      has_profile_image: true,
-      education_doc_submitted: true,
-      education_doc_public: false,
-      compare_eligible: true,
-    },
-    3,
-  ),
-];
-
 function loadAll() {
   try {
     const raw = sessionStorage.getItem(KEY);
-    if (!raw) return SEED.map((r) => ({ ...r }));
+    if (!raw) return [];
     return JSON.parse(raw).tutors || [];
   } catch {
-    return SEED.map((r) => ({ ...r }));
+    return [];
   }
 }
 
@@ -221,7 +104,7 @@ function nextId(tutors) {
 
 export function ensureTutorStore() {
   if (isRegistrationsApiMode()) return;
-  if (!sessionStorage.getItem(KEY)) saveAll(SEED.map((r) => ({ ...r })));
+  if (!sessionStorage.getItem(KEY)) saveAll([]);
 }
 
 /** @returns {TutorRecord[]} */

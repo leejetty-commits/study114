@@ -1,4 +1,4 @@
-/** 16장 thread · message — sessionStorage `[임시]` · Dev 로그인 시 API (DDL 014) */
+/** 16장 thread · message — sessionStorage `[임시]` · 로그인 시 API (DDL 014) */
 
 
 

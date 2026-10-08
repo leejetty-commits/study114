@@ -163,3 +163,96 @@ Remove the development-only operator account `ops@dev.local` (and the legacy dev
 - `admin` 역할 행이 있는데 `admin_level` 이 비어 있는 계정은 여전히 부마스터로 본다(서버·앞단 공통 규칙, 이메일과 무관). ops@dev.local 은 운영에서 지우면 해당 없음.
 - `src/Views/auth/login.php` 의 dev 시드 안내 문구가 운영 화면에 보이는지.
 - e2e(Playwright) 는 로컬 Docker 가 꺼져 있어 실행하지 못했다.
+
+---
+
+## 8. 추가 지시 — 남은 개발용 로그인·가짜 등록 SEED 전부 제거 (2026-10-09)
+
+### 8-1. 지시서 원문
+
+> 추가 지시 (사용자 승인 2026-10-09 00:43, 원문: 「모두 제거」). 같은 worktree `d:\work\study114\.wt\remove-dev-operator`, 같은 브랜치 `cursor/remove-dev-operator-20261009`에서 이어서 작업하라. `ebe3b60`은 이미 push되어 독립 리뷰 중이니 amend 금지, 새 커밋으로만.
+>
+> 1. 네가 "남은 개발용 로그인"으로 보고한 것 전부 제거: home-ui `DEV_ACCOUNTS`·`devLogin`/`devLoginAs` 및 호출부(운영 번들에 `@dev.local`·dev 비밀번호 문자열 0건), home-ui 툴바 「시험용·학부모/공부방/과외」 버튼과 핸들러, study-room-ui·tutor-ui의 「Dev 로그인」 버튼과 핸들러, auth-ui 로그인 화면의 `guardian1@dev.local` 미리 채움, `src/Views/auth/login.php`의 "dev 시드 계정" 안내 문구. 참조하는 e2e/verify 스크립트는 깨지지 않게 최소 수정(버튼이 "없어야 한다" 쪽으로 바꾸거나, 로컬 전용 로그인은 API 직접 호출로 대체). 로컬 Docker 시드 SQL 자체는 지우지 말고 "로컬 전용" 주석만.
+> 2. 견본 제거 작업자가 남겨 둔 가짜 등록 SEED도 제거: `preview/home-ui/src/tutor-reg/store.js`, `preview/home-ui/src/student-reg/store.js`의 API 모드가 아닐 때 쓰는 가짜 등록 데이터(김수학 등, `tutor-card-sample.jpg` 참조). 새 대체 데이터를 만들지 말고, 빈 초기값으로. 이미지 파일 `tutor-card-sample.jpg`가 다른 곳에서 안 쓰이면 삭제. 다른 브랜치(`cursor/remove-samples-20261009`)가 이 두 파일을 건드렸는지 `git diff origin/main origin/cursor/remove-samples-20261009 --stat`로 확인하고, 겹치면 고치지 말고 보고만.
+> 3. 전체 grep: `git grep -n "@dev.local\|devLogin\|dev-login\|Dev 로그인\|시험용·"` (preview/, src/, public/ 기준) 결과를 정리해 보고.
+> 4. 검증: `vite build`(home-ui 등 바뀐 앱) 후 산출물에 `@dev.local` 0건 확인, `npm run verify:shop-page`, 관련 verify 스크립트, PHP `php -l`. main에서도 실패하는 건 구분해 보고.
+> 5. worklog `docs/worklog/2026/10/2026-10-09-remove-dev-operator.md`에 이 추가 지시 원문과 결과 덧붙임. 파일명 지정 stage, 새 커밋, push. main 병합 금지.
+>
+> 보고: 새 커밋 hash, 파일별 1줄 변경, grep 결과, 검증 결과, 겹침 여부, 미확인.
+
+### 8-2. 변경 파일 (기준 `ebe3b60` 위 새 커밋)
+
+| 파일 | 변경 |
+|------|------|
+| `preview/home-ui/src/auth-session.js` | `DEV_ACCOUNTS`·`devLogin()`·`devLoginAs()` 와 안 쓰게 된 `JSON_HEADERS` 삭제 |
+| `preview/home-ui/src/layout.js` | 툴바 「시험용·학부모/공부방/과외」 버튼·dev-login 핸들러·import 삭제. 툴바 「로그아웃」(`dev-logout`)은 유지 |
+| `preview/home-ui/src/tutor-reg/store.js` | 가짜 과외쌤 `SEED`(김수학·박국어·이영어, `tutor-card-sample.jpg`)·`withDefaults` 삭제, 초기값 `[]` |
+| `preview/home-ui/src/student-reg/store.js` | 가짜 학생 `SEED`(김하늘·김왕자·김별) 삭제, 초기값 `[]` |
+| `preview/home-ui/src/messages/thread-store.js` | 머리 주석 "Dev 로그인 시 API" → "로그인 시 API" |
+| `preview/study-room-ui/src/layout.js` | 「Dev 로그인」 버튼·핸들러·안 쓰는 import 삭제 |
+| `preview/study-room-ui/src/register-api.js` | `devLogin()`(room-owner1@dev.local) 삭제 |
+| `preview/tutor-ui/src/layout.js` | 「Dev 로그인」 버튼·핸들러·안 쓰는 import 삭제 |
+| `preview/tutor-ui/src/register-api.js` | `devLogin()`(tutor-owner1@dev.local) 삭제 |
+| `preview/auth-ui/src/screens/login.js` | DEV 때 이메일 칸 `guardian1@dev.local` 미리 채움 삭제 |
+| `src/Views/auth/login.php` | 「dev 시드 계정: …」 안내 문구 삭제 |
+| `e2e/helpers/messages-flow.js` | `devLoginParent`/`devLoginTutor` 를 툴바 클릭 대신 `/api/auth/login.php` 직접 호출로 변경 |
+| `e2e/board-channel-acl.spec.js` | 「시험용·과외」 보임 검사 → 운영 빌드 툴바(`dev-logout`) 0개 검사 |
+| `scripts/e2e-inquiry-settings-closeout.mjs` | 툴바 클릭 대신 로그인 API 직접 호출 |
+| `scripts/verify-student-count-halt-and-gate.mjs` | SEED 대신 `addStudent` 로 검증용 학생 3명(공개·임시·숨김)을 직접 만든 뒤 검사 |
+| `scripts/verify-student-mypage-metrics.mjs` | 1번 학생이 없으면 `addStudent` 로 만든 뒤 검사 |
+| `scripts/capture-student-mypage-shots.mjs` | 위와 같음 |
+| `sql/schema/012_search_dev_seed.sql` | "로컬 Docker 전용·운영 적용 금지·앞단 로그인 버튼 없음" 머리 주석 |
+| `sql/schema/029_dev_email_verified.sql` | "로컬 Docker 전용" 주석 1줄 |
+| `preview/tutor-ui/DOC-CHECKLIST.md` | 시드 계정은 auth-ui 로그인 화면으로 로그인한다고 수정 |
+| `preview/home-ui/DOC-CHECKLIST.md` | auth-ui 줄에 "툴바 시험용 로그인은 2026-10-09 제거" 표기 |
+
+`tutor-card-sample.jpg`(`preview/home-ui/public/assets/brand/`, `public/assets/brand/`)는 **삭제하지 않았다.** 이 브랜치에서 아직 `home-card-samples/presets.js`·`tutor-reg/registration-check-sample.js` 와 verify 스크립트 2개(`verify-tutor-inquiries-settings`·`verify-tutor-registration-check-frame`)가 참조한다. 견본 제거 브랜치가 main 에 들어간 뒤 다시 확인해서 지운다.
+
+### 8-3. 다른 브랜치와 겹침 (`origin/cursor/remove-samples-20261009` @ `763d39f`)
+
+- `tutor-reg/store.js`·`student-reg/store.js`: 견본 제거 브랜치가 **건드리지 않음** → 이번에 고쳤다.
+- `layout.js`·`auth-session.js`: 겹치지 않음.
+- 양쪽이 모두 고친 파일(서로 다른 위치): `scripts/e2e-inquiry-settings-closeout.mjs`, `scripts/verify-student-count-halt-and-gate.mjs`, `scripts/verify-student-mypage-metrics.mjs`, `scripts/capture-student-mypage-shots.mjs`. 병합 시 충돌 여부는 커밋 뒤 `git merge-tree` 로 확인(보고에 기재).
+- `scripts/measure-inquiry-basic-cards.mjs`: 견본 제거 브랜치가 **삭제**하는 파일이라 손대지 않았다. 이 브랜치만 단독으로는 이 스크립트가 없는 버튼(`dev-login-tutor`)을 찾다 실패한다.
+- `preview/home-ui/src/exposure-bridge.js` 2행 "Dev 로그인 시" 주석: 견본 제거 브랜치가 같은 줄을 바꾸므로 손대지 않았다.
+
+### 8-4. 전체 grep (`preview/ src/ public/`)
+
+`git grep -n -e "@dev.local" -e "devLogin" -e "dev-login" -e "Dev 로그인" -e "시험용·" -- preview src public` — 코드 실행 경로 0건. 남은 것은 문서·주석뿐:
+
+| 위치 | 내용 |
+|------|------|
+| `preview/home-ui/DOC-CHECKLIST.md` 62·80·99·133·382행 | 2026-07-06 기록 "Dev 로그인 시 … API" (과거 이력) |
+| `preview/home-ui/src/exposure-bridge.js` 2행 | 주석 (견본 제거 브랜치 담당 줄) |
+| `preview/tutor-ui/DOC-CHECKLIST.md` 9행 | 이번에 쓴 "로컬 시드 계정은 auth-ui 로 로그인 · 툴바 버튼 제거" 안내 |
+
+`src/`·`public/` 0건.
+
+### 8-5. 검증
+
+| 항목 | 결과 |
+|------|------|
+| `vite build` home-ui·study-room-ui·tutor-ui·auth-ui | 4개 모두 성공 |
+| 빌드 산출물(js·html) `@dev.local`·`dev-login`·`Dev 로그인`·`시험용·`·`password: 'password'` | 4개 앱 모두 **0건** |
+| `npm run verify:shop-page` | 54 통과 / 0 실패 |
+| `verify-student-count-halt-and-gate` | 28 / 0 (SEED 제거로 처음 7건 실패 → 검증용 학생 직접 생성으로 고침) |
+| `verify-student-mypage-metrics` | 통과 (위와 같은 방식으로 고침) |
+| `verify-student-location-flow` 189/0 · `verify-student-branch-two-tabs` 162/0 · `verify-role-home-guard` 56/0 · `verify-admin-today-hub` 61/0 · `verify-admin-162` 57/0 · `verify-admin-preview-labels` 202/0 · `verify-message-permissions-admin` 132/0 · `verify-mypage-account-region` 41/0 | 통과 |
+| `verify-tutor-inquiries-settings` · `verify-study-room-registration-check-frame` · `verify-study-room-inquiries-samples` · `verify-tutor-mypage-route-integrity` · `verify-tutor-register-same-tab` · `verify-tutor-lesson-optional-step` · `verify-tutor-signup-seed` · `verify-cur-006-email-verify-gate` · `verify-home-news-row` | 통과 |
+| `php -l src/Views/auth/login.php` | 문법 오류 없음 |
+| `node --check` (고친 e2e·scripts) | 통과 |
+| `verify-input-fill-rule`(3건) · `verify-tutor-registration-check-frame`(3건) · `verify-cur-006-post-verify-role`(2건) | **실패 — 무관.** 이번 변경을 stash 한 `ebe3b60` 에서도 같은 실패 |
+| `verify-admin-registration-list` · `sync:inventory:check` | **실패 — 무관** (4절과 같음, main 에서도 실패) |
+
+실행하지 못한 것: e2e(Playwright, 로컬 Docker 꺼짐), `capture-student-mypage-shots`(스크린샷 캡처, 브라우저 필요).
+
+### 8-6. 남은 가짜·데모 데이터 (사용자 결정 필요 · 이번 범위 밖)
+
+- `preview/home-ui/src/mypage/recent-store.js` `ensureRecentDemo` — 최근 본 목록 데모(김수학·박국어·오영어 등).
+- `preview/home-ui/src/messages/thread-store.js` 비로그인 데모 쪽지(맑은하늘).
+- 빌드 산출물에 남은 `김수학`·`맑은하늘`·`tutor-card-sample` 문자열은 위 두 파일과 견본 제거 브랜치 담당 파일(`exposure-data.js`·`presets.js`)에서 온다.
+
+### 8-7. 배포 전 사용자 할 일 (추가분)
+
+- SQL 파일 수정은 **주석만**(012·029, 로컬 전용 표기). 운영 DB 에 실행할 것 없음.
+- 환경변수·Secrets·`.htaccess` 변경 없음.

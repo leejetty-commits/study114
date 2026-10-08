@@ -6,7 +6,7 @@
 
 http://localhost:5177 · `cd preview/tutor-ui && npm install && npm run dev`
 
-Dev 로그인: `tutor-owner1@dev.local` / `password`
+로컬 Docker 시드 계정 `tutor-owner1@dev.local` 은 auth-ui 로그인 화면으로 로그인한다 (2026-10-09 툴바 Dev 로그인 버튼 제거).
 
 ## 6화면
 

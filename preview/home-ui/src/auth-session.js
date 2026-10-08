@@ -27,19 +27,12 @@ import {
   noteSessionStudentBranch,
 } from '../../shared/student-branch-store.js';
 
-const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
 
 /** @typedef {{ user_id: number, email: string, role_type: string, name: string, email_verified?: boolean, oauth_role_pending?: boolean, phone_verified?: boolean, admin_level?: string|null, must_change_password?: boolean, oauth_providers?: string[], oauth_provider_labels?: string[] }} AuthUser */
 
 /** @type {AuthUser|null} */
 let currentUser = null;
-
-export const DEV_ACCOUNTS = {
-  parent: { email: 'guardian1@dev.local', password: 'password', label: '학부모' },
-  study_room: { email: 'room-owner1@dev.local', password: 'password', label: '공부방' },
-  tutor: { email: 'tutor-owner1@dev.local', password: 'password', label: '과외' },
-};
 
 export const ROLE_HOME = {
   guardian_student: '/parent',
@@ -223,65 +216,6 @@ export async function initAuthSession(navigateHome = false) {
     resetExposureBridge();
     return null;
   }
-}
-
-/**
- * @param {string} email
- * @param {string} [password]
- * @returns {Promise<AuthUser>}
- */
-export async function devLogin(email, password = 'password') {
-  const res = await fetch('/api/auth/login.php', {
-    method: 'POST',
-    headers: JSON_HEADERS,
-    ...CREDENTIALS,
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data.ok) {
-    throw new Error(data.message || '로그인 실패');
-  }
-  currentUser = {
-    user_id: data.user_id,
-    email: data.email,
-    role_type: data.role_type,
-    name: data.name,
-    email_verified: false,
-    admin_level: data.admin_level ?? null,
-    must_change_password: Boolean(data.must_change_password),
-  };
-  try {
-    const me = await fetch('/api/auth/me.php', CREDENTIALS);
-    const meData = await me.json().catch(() => ({}));
-    if (me.ok && meData.ok && meData.authenticated) {
-      noteSessionStudentBranch(meData);
-      currentUser.email_verified = Boolean(meData.email_verified);
-      currentUser.admin_level = meData.admin_level ?? currentUser.admin_level;
-      currentUser.must_change_password = Boolean(meData.must_change_password);
-      currentUser.phone_verified = Boolean(meData.phone_verified);
-    }
-  } catch {
-    failStudentBranchSession();
-  }
-  applyRoleContext(currentUser.role_type);
-  await hydrateSessionDependencies();
-  window.dispatchEvent(new CustomEvent('auth:login', { detail: currentUser }));
-  return currentUser;
-}
-
-/** @param {'parent'|'study_room'|'tutor'} key */
-export async function devLoginAs(key) {
-  const account = DEV_ACCOUNTS[key];
-  if (!account) throw new Error('알 수 없는 dev 계정');
-  const user = await devLogin(account.email, account.password);
-  const home =
-    key === 'parent'
-      ? '/parent'
-      : key === 'study_room'
-        ? '/study-room'
-        : '/tutor';
-  navigate(home);
-  return user;
 }
 
 export async function logout() {

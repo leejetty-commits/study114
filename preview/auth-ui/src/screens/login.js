@@ -28,7 +28,6 @@ function readOAuthError() {
 export function renderLogin() {
   const returnTo = getLoginReturnTo();
   const oauthError = readOAuthError();
-  const devEmail = import.meta.env.DEV ? 'guardian1@dev.local' : '';
 
   const content = `
     <div class="login-stage">
@@ -63,7 +62,6 @@ export function renderLogin() {
               id="login-email"
               name="email"
               placeholder="example@email.com"
-              value="${esc(devEmail)}"
               autocomplete="email"
               required
             />

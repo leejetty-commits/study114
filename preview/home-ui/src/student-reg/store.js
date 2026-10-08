@@ -81,67 +81,13 @@ function withDefaults(raw, id) {
   return /** @type {StudentRecord} */ (merged);
 }
 
-const SEED = [
-  withDefaults(
-    {
-      id: 1,
-      student_name: '김하늘',
-      public_display_name: '맑은하늘',
-      grade_level: '중2',
-      gender: 'female',
-      birth_year: 2012,
-      exposure_status: 'published',
-      preferred_lesson_type: 'tutor',
-      preferred_tutor_gender: 'female',
-      preferred_tutor_regions: [],
-      preferred_studyroom_regions: [],
-      request_summary: '주 2회 수학 집중',
-      published_at: new Date().toISOString(),
-    },
-    1,
-  ),
-  withDefaults(
-    {
-      id: 2,
-      student_name: '김왕자',
-      public_display_name: '초등왕',
-      grade_level: '초5',
-      gender: 'male',
-      birth_year: 2015,
-      exposure_status: 'draft',
-      preferred_lesson_type: 'study_room',
-      preferred_tutor_gender: '',
-      lesson_format: 'one_on_one',
-      subject_label: '영어',
-      preferred_studyroom_fee_amount: 380000,
-    },
-    2,
-  ),
-  withDefaults(
-    {
-      id: 3,
-      student_name: '김별',
-      public_display_name: '숨김테스트',
-      grade_level: '중1',
-      gender: 'male',
-      birth_year: 2013,
-      exposure_status: 'hidden',
-      preferred_lesson_type: 'tutor',
-      preferred_tutor_gender: 'any',
-      preferred_tutor_regions: [],
-      preferred_studyroom_regions: [],
-    },
-    3,
-  ),
-];
-
 function loadAll() {
   try {
     const raw = sessionStorage.getItem(KEY);
-    if (!raw) return SEED.map((s) => ({ ...s }));
+    if (!raw) return [];
     return JSON.parse(raw).students || [];
   } catch {
-    return SEED.map((s) => ({ ...s }));
+    return [];
   }
 }
 
@@ -155,7 +101,7 @@ function nextId(students) {
 
 export function ensureStudentStore() {
   if (isRegistrationsApiMode()) return;
-  if (!sessionStorage.getItem(KEY)) saveAll(SEED.map((s) => ({ ...s })));
+  if (!sessionStorage.getItem(KEY)) saveAll([]);
 }
 
 /** @returns {StudentRecord[]} */
