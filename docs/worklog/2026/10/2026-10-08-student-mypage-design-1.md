@@ -354,4 +354,11 @@ PC(1280px) 및 모바일(390px) 모두에서 검증 스크립트 실행 결과:
 - 판정: **메인 검수 통과 (`b0851f0`)**. 운영 반영은 사용자 승인(커밋 hash 단위) 후.
 - 배포 전 사용자 할 일: 없음(SQL·환경변수·Secrets·`.htaccess` 변경 없음).
 
+## 12. 배포·승인
+
+- 10-08 15:25 사용자 「배포 승인」 → `git push origin 4fcb5ea:refs/heads/main` (`44ea9f7..4fcb5ea`, fast-forward).
+- Actions(커밋 `4fcb5ea`): Deploy to dothome `37737566959` 성공(2m46s), ShopPage gate `37737566658`·Board ACL gate `37737566845`·Tutor mypage frame IA `37737566849` 성공.
+- 운영 확인(가로채기 없이, 시험 학생 계정): 4탭 PC·모바일 제목 28/22, 왼쪽선 273/49px 일치, 마이프로필 kicker·버튼 없음, 화면 JS 오류 0. 공부방·과외쌤 마이페이지(제목 28·내 공지 soft만 바뀜)는 로그인 세션이 없어 운영 확인 못 함 → 사용자 확인 항목.
+- 10-08 15:32 사용자 **승인 — `4fcb5ea`**.
+
 
