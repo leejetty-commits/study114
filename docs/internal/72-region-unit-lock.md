@@ -1,6 +1,6 @@
 # 72. 과외 지역 단위 및 역할별 저장 정본 — 광역시·시·군 단위 체계와 데이터 이관
 
-- 상태: 정본 (2026-10-08 21:30 4차 개정 — 사용자 잠금 및 전수점검 실측 반영)
+- 상태: 정본 (2026-10-08 21:55 5차 개정 — 이관 SQL 결함(GROUP BY 파생테이블) 및 옛 행정코드 누락 보완)
 - 이전 정책(구·시·군 통일)에서 **광역시 단독·도(시·군) 단위 체계**로 복귀·개정.
 
 ---
@@ -209,7 +209,8 @@
 ### (3) 단위 통합 시 기존 다중 구 유료 구독 처리 원칙
 - **원칙**: 단위 승격으로 인해 **서로 다른 원래 구(original_city_id)가 동일한 과외 단위로 통합된 경우에만** `MAX(end_exclusive_on)`(가장 늦은 만료일) 단일화를 적용한다.
 - **정상 연장(연속 기간) 보존**: 동일한 구에서 기간을 연장하여 연속된 여러 건을 보유하고 있던 구독은 원래 지역이 같으므로(`COUNT(DISTINCT original_city_id) = 1`), 이를 강제로 하나로 합치거나 당일 만료시키지 않고 정상 보존한다.
-- **예약(미래 시작) 구독 처리**: 시작일이 미래(`starts_at > NOW()`)인 예약 구독 역시 동일 지역 연장인 경우 보존되며, 다른 구에서 승격되어 겹치는 경우에만 전체 기간(`MIN(started_on) ~ MAX(end_exclusive_on)`)을 대표 레코드에 흡수한다.
+- **시작일 및 기간 공백 처리**: 잠금 9번은 `MAX(end_exclusive_on)`만 명시. 대표 레코드(`keep_id`)의 시작일은 그대로 유지하고 종료일만 `MAX(end_exclusive_on)`으로 연장하여, 서로 다른 두 구독 사이에 공백 기간이 있을 때 무상 연장이 발생하는 문제를 방지한다 (제안 A 채택). 전체 기간을 `MIN(started_on) ~ MAX(end_exclusive_on)`으로 덮는 대안 B는 [사용자 확인 질문 6]에서 결정한다.
+- **예약(미래 시작) 구독 처리**: 시작일이 미래(`starts_at > NOW()`)인 예약 구독 역시 동일 지역 연장인 경우 보존되며, 다른 구에서 승격되어 겹치는 경우 대표 레코드에 종료일이 통합된다.
 - **이력 보존**: 결제 이력 보존을 위해 `DELETE` 대신 활성 만료일 당일 처리(`end_exclusive_on = CURDATE(), ends_at = NOW()`)로 비활성화한다. (제11장 3-1, 3-2 참조)
 
 ---
@@ -302,16 +303,17 @@
 
 ---
 
-## 11. 사용자 이관 SQL (MySQL 8 — 운영 phpMyAdmin 실행용)
+## 11. 사용자 이관 SQL (MySQL 8 / MariaDB 10.x — 운영 phpMyAdmin 실행용)
 
 ID 하드코딩을 배제하고 `sido_code`, `sigungu_code`, `official_code`를 기준으로 동적 매핑하는 안전한 이관 쿼리다.
-- **옛 동 단위 행 및 세종 누락 보완**: `official_code`가 NULL인 옛 동 행과 도 산하 일반 시·군 동 행을 빠짐없이 승격하고 세종('36')을 포함함.
+- **MySQL 8.0 / MariaDB 10.x 문법 호환 (결함 1 보완)**: 윈도우 DISTINCT(`<window function>(DISTINCT ..)`) 지원 불가 문제를 해소하기 위해, `GROUP BY provider_id, sku_code, city_id, primary_subject_id` 파생 집계 테이블 조인 방식으로 전면 개편함. 시작일은 대표 건(`keep_id`) 값을 보존하여 공백 기간 무상 연장을 방지함.
+- **옛 행정코드 전수 보완 (결함 2 보완)**: `RegionEnsure::fromKakao`로 저장된 옛 시도 코드(광주 '29', 전남 '46', 강원 '42', 전북 '45') 및 전남광주 소속 시·군 산하 동 행을 누락 없이 전수 승격함.
 - **유료 구독 과잉 합치기 방지**: 임시 테이블 `tmp_pps_city_before`를 생성하여 승격으로 인해 **서로 다른 원래 구가 동일 단위로 통합된 경우에만** 합치고 동일 지역 연장 건은 보존함.
 
 ```sql
 -- =============================================================================
--- 과외 단위 광역시·시·군 전환 이관 SQL (MySQL 8)
--- SSOT: docs/internal/72-region-unit-lock.md (개정 4차)
+-- 과외 단위 광역시·시·군 전환 이관 SQL (MySQL 8.0 / MariaDB 10.x 호환)
+-- SSOT: docs/internal/72-region-unit-lock.md (개정 5차)
 -- =============================================================================
 
 USE study114;
@@ -332,6 +334,9 @@ WHERE NOT EXISTS (
 -- -----------------------------------------------------------------------------
 -- [1단계: 사전 점검 SELECT]
 -- -----------------------------------------------------------------------------
+-- (0) 운영 DB 엔진 및 버전 확인 (MySQL 8.0 또는 MariaDB 10.2+ 호환 확인)
+SELECT VERSION() AS db_version;
+
 -- (A) tutor_regions 중 과외 단위가 아닌 행 점검
 SELECT tr.id, tr.tutor_id, tr.priority_order, tr.is_primary, r.id AS current_region_id,
        r.sido_name, r.sigungu_name, r.dong_name, r.unit_level, r.official_code
@@ -404,10 +409,33 @@ GROUP BY pps.provider_id, pps.sku_code, pps.primary_subject_id,
          CASE
            WHEN r.sido_code IN ('11','26','27','28','30','31','36') THEN r.sido_code
            WHEN r.sido_code = '12' AND (r.sigungu_code IN ('12200','12210','12240','12270','12300','12330') OR r.unit_level = 'dong') THEN '12_gwangju'
+           WHEN r.sido_code = '29' THEN '12_gwangju'
+           WHEN r.sido_code = '46' THEN CONCAT('12_', r.sigungu_name)
+           WHEN r.sido_code = '42' THEN CONCAT('51_', r.sigungu_name)
+           WHEN r.sido_code = '45' AND r.sigungu_name LIKE '전주시%' THEN '52_jeonju'
+           WHEN r.sido_code = '45' THEN CONCAT('52_', r.sigungu_name)
            WHEN r.sido_code IN ('41','43','44','47','48','52') AND r.sigungu_name LIKE '% %' THEN CONCAT(SUBSTRING(r.sigungu_code, 1, 4), '0')
            ELSE r.sigungu_code
          END
 HAVING COUNT(*) > 1 AND distinct_orig_cnt > 1;
+
+-- (E) 과외 관련 3개 테이블이 참조하는 regions 중 073 공식 시도(16개)에 속하지 않는 옛 시도 코드 점검 ('29', '42', '45', '46' 등)
+SELECT 'tutor_regions' AS tbl, tr.id, tr.tutor_id, r.id AS region_id, r.sido_code, r.sido_name, r.sigungu_code, r.sigungu_name, r.dong_name
+FROM tutor_regions tr
+JOIN regions r ON r.id = tr.region_id
+WHERE r.sido_code NOT IN ('11','12','26','27','28','30','31','36','41','43','44','47','48','50','51','52')
+UNION ALL
+SELECT 'students', s.id, s.user_id, r.id, r.sido_code, r.sido_name, r.sigungu_code, r.sigungu_name, r.dong_name
+FROM students s
+JOIN regions r ON r.id = s.preferred_tutor_region_id
+WHERE s.preferred_tutor_region_id IS NOT NULL
+  AND r.sido_code NOT IN ('11','12','26','27','28','30','31','36','41','43','44','47','48','50','51','52')
+UNION ALL
+SELECT 'provider_position_subscriptions', pps.id, pps.provider_id, r.id, r.sido_code, r.sido_name, r.sigungu_code, r.sigungu_name, r.dong_name
+FROM provider_position_subscriptions pps
+JOIN regions r ON r.id = pps.city_id
+WHERE pps.provider_type = 'tutor'
+  AND r.sido_code NOT IN ('11','12','26','27','28','30','31','36','41','43','44','47','48','50','51','52');
 
 -- -----------------------------------------------------------------------------
 -- [2단계: 이관 UPDATE (동적 매핑)]
@@ -437,6 +465,64 @@ WHERE curr.sido_code = '12'
   AND (curr.sigungu_code IN ('12210','12240','12270','12300','12330')
        OR (curr.unit_level = 'dong' AND curr.sigungu_code IN ('12210','12240','12270','12300','12330')));
 
+-- 2-2a. 옛 광주 코드('29') 구·동 행 전부 → 12200 광주 통합 단위 행으로 승격
+UPDATE tutor_regions tr
+JOIN regions curr ON curr.id = tr.region_id
+JOIN regions target ON target.sido_code = '12' AND target.sigungu_code = '12200'
+SET tr.region_id = target.id
+WHERE curr.sido_code = '29';
+
+-- 2-2b. 옛 전남 코드('46') 구·동 행 → 073 전남광주('12') 시·군 행으로 승격 (이름 매칭 우선)
+UPDATE tutor_regions tr
+JOIN regions curr ON curr.id = tr.region_id
+JOIN regions target ON target.sido_code = '12'
+                    AND target.unit_level = 'sigungu'
+                    AND target.sigungu_name = curr.sigungu_name
+                    AND target.sigungu_code NOT IN ('12200','12210','12240','12270','12300','12330')
+SET tr.region_id = target.id
+WHERE curr.sido_code = '46';
+
+-- 2-2c. 옛 전남 코드('46') 보조 승격 (코드 '12' + SUBSTRING(sigungu_code, 3) 매칭)
+UPDATE tutor_regions tr
+JOIN regions curr ON curr.id = tr.region_id
+JOIN regions target ON target.sido_code = '12'
+                    AND target.unit_level = 'sigungu'
+                    AND target.sigungu_code = CONCAT('12', SUBSTRING(curr.sigungu_code, 3))
+                    AND target.sigungu_code NOT IN ('12200','12210','12240','12270','12300','12330')
+SET tr.region_id = target.id
+WHERE curr.sido_code = '46';
+
+-- 2-2d. 옛 강원 코드('42') 구·동 행 → 073 강원특별자치도('51') 시·군 행으로 승격 (이름 매칭 우선, 코드 보조)
+UPDATE tutor_regions tr
+JOIN regions curr ON curr.id = tr.region_id
+JOIN regions target ON target.sido_code = '51'
+                    AND target.unit_level = 'sigungu'
+                    AND (target.sigungu_name = curr.sigungu_name
+                         OR target.sigungu_code = CONCAT('51', SUBSTRING(curr.sigungu_code, 3)))
+SET tr.region_id = target.id
+WHERE curr.sido_code = '42';
+
+-- 2-2e. 옛 전북 코드('45') 일반구 행(전주시 완산구·덕진구 및 산하 동) → 073 전북('52') 전주시 상위 시 행(52110)으로 승격
+UPDATE tutor_regions tr
+JOIN regions curr ON curr.id = tr.region_id
+JOIN regions target ON target.sido_code = '52'
+                    AND target.sigungu_code = '52110'
+                    AND target.unit_level = 'sigungu'
+SET tr.region_id = target.id
+WHERE curr.sido_code = '45'
+  AND (curr.sigungu_name LIKE '전주시%' OR curr.sigungu_code IN ('45111','45113'));
+
+-- 2-2f. 옛 전북 코드('45') 일반 시·군 구·동 행 → 073 전북('52') 시·군 행으로 승격 (이름 매칭 우선, 코드 보조)
+UPDATE tutor_regions tr
+JOIN regions curr ON curr.id = tr.region_id
+JOIN regions target ON target.sido_code = '52'
+                    AND target.unit_level = 'sigungu'
+                    AND (target.sigungu_name = curr.sigungu_name
+                         OR target.sigungu_code = CONCAT('52', SUBSTRING(curr.sigungu_code, 3)))
+                    AND target.is_selectable = 1
+SET tr.region_id = target.id
+WHERE curr.sido_code = '45';
+
 -- 2-3a. 도 일반구(39개) → official_code 기준 상위 시 행으로 승격
 UPDATE tutor_regions tr
 JOIN regions curr ON curr.id = tr.region_id
@@ -458,7 +544,7 @@ WHERE curr.sido_code IN ('41','43','44','47','48','52')
   AND curr.unit_level = 'dong'
   AND curr.sigungu_name LIKE '% %';
 
--- 2-3c. 도 일반 시·군(일반구가 없는 시·군) 산하 옛 동 행 → 해당 시·군 행으로 승격
+-- 2-3c. 도 및 전남광주 일반 시·군(일반구가 없는 시·군) 산하 옛 동 행 → 해당 시·군 행으로 승격 ('12' 포함, 광주 5구 제외)
 UPDATE tutor_regions tr
 JOIN regions curr ON curr.id = tr.region_id
 JOIN regions target ON target.sido_code = curr.sido_code
@@ -466,11 +552,12 @@ JOIN regions target ON target.sido_code = curr.sido_code
                     AND target.unit_level = 'sigungu'
                     AND target.is_selectable = 1
 SET tr.region_id = target.id
-WHERE curr.sido_code IN ('41','43','44','47','48','50','51','52')
+WHERE curr.sido_code IN ('12','41','43','44','47','48','50','51','52')
   AND curr.unit_level = 'dong'
-  AND curr.sigungu_name NOT LIKE '% %';
+  AND curr.sigungu_name NOT LIKE '% %'
+  AND curr.sigungu_code NOT IN ('12200','12210','12240','12270','12300','12330');
 
--- 2-4. 과거 dev 시드 행(id 1 대치동, id 2 우동) 및 기타 레거시 동 행 보조 fallback
+-- 2-4. 과거 dev 시드 행(id 1 대치동, id 2 우동) 및 기타 레거시 동 행 보조 fallback (2-1에서 이미 승격되므로 중복·무해 fallback 보존)
 UPDATE tutor_regions tr
 JOIN regions curr ON curr.id = tr.region_id
 JOIN regions target ON target.sido_code = curr.sido_code AND target.unit_level = 'sido'
@@ -485,7 +572,7 @@ JOIN regions target ON target.sido_code = curr.sido_code AND target.unit_level =
 SET s.preferred_tutor_region_id = target.id
 WHERE curr.sido_code IN ('11','26','27','28','30','31','36') AND curr.unit_level <> 'sido';
 
--- 2-5b. 학생 희망지역(students.preferred_tutor_region_id) 전남광주 광주 승격
+-- 2-5b. 학생 희망지역(students.preferred_tutor_region_id) 전남광주 광주 옛 5구 승격
 UPDATE students s
 JOIN regions curr ON curr.id = s.preferred_tutor_region_id
 JOIN regions target ON target.sido_code = '12' AND target.sigungu_code = '12200'
@@ -493,6 +580,55 @@ SET s.preferred_tutor_region_id = target.id
 WHERE curr.sido_code = '12'
   AND (curr.sigungu_code IN ('12210','12240','12270','12300','12330')
        OR (curr.unit_level = 'dong' AND curr.sigungu_code IN ('12210','12240','12270','12300','12330')));
+
+-- 2-5-legacy-a. 학생 희망지역 옛 광주 코드('29') 구·동 행 전부 → 12200 광주 통합 단위 행 승격
+UPDATE students s
+JOIN regions curr ON curr.id = s.preferred_tutor_region_id
+JOIN regions target ON target.sido_code = '12' AND target.sigungu_code = '12200'
+SET s.preferred_tutor_region_id = target.id
+WHERE curr.sido_code = '29';
+
+-- 2-5-legacy-b. 학생 희망지역 옛 전남 코드('46') 구·동 행 → 073 전남광주('12') 시·군 행 승격 (이름 매칭 우선, 코드 보조)
+UPDATE students s
+JOIN regions curr ON curr.id = s.preferred_tutor_region_id
+JOIN regions target ON target.sido_code = '12'
+                    AND target.unit_level = 'sigungu'
+                    AND (target.sigungu_name = curr.sigungu_name
+                         OR target.sigungu_code = CONCAT('12', SUBSTRING(curr.sigungu_code, 3)))
+                    AND target.sigungu_code NOT IN ('12200','12210','12240','12270','12300','12330')
+SET s.preferred_tutor_region_id = target.id
+WHERE curr.sido_code = '46';
+
+-- 2-5-legacy-c. 학생 희망지역 옛 강원 코드('42') 구·동 행 → 073 강원특별자치도('51') 시·군 행 승격 (이름 매칭 우선, 코드 보조)
+UPDATE students s
+JOIN regions curr ON curr.id = s.preferred_tutor_region_id
+JOIN regions target ON target.sido_code = '51'
+                    AND target.unit_level = 'sigungu'
+                    AND (target.sigungu_name = curr.sigungu_name
+                         OR target.sigungu_code = CONCAT('51', SUBSTRING(curr.sigungu_code, 3)))
+SET s.preferred_tutor_region_id = target.id
+WHERE curr.sido_code = '42';
+
+-- 2-5-legacy-d. 학생 희망지역 옛 전북 코드('45') 일반구 행(전주시 완산구·덕진구 등) → 073 전북('52') 전주시 상위 시 행(52110) 승격
+UPDATE students s
+JOIN regions curr ON curr.id = s.preferred_tutor_region_id
+JOIN regions target ON target.sido_code = '52'
+                    AND target.sigungu_code = '52110'
+                    AND target.unit_level = 'sigungu'
+SET s.preferred_tutor_region_id = target.id
+WHERE curr.sido_code = '45'
+  AND (curr.sigungu_name LIKE '전주시%' OR curr.sigungu_code IN ('45111','45113'));
+
+-- 2-5-legacy-e. 학생 희망지역 옛 전북 코드('45') 일반 시·군 구·동 행 → 073 전북('52') 시·군 행 승격 (이름 매칭 우선, 코드 보조)
+UPDATE students s
+JOIN regions curr ON curr.id = s.preferred_tutor_region_id
+JOIN regions target ON target.sido_code = '52'
+                    AND target.unit_level = 'sigungu'
+                    AND (target.sigungu_name = curr.sigungu_name
+                         OR target.sigungu_code = CONCAT('52', SUBSTRING(curr.sigungu_code, 3)))
+                    AND target.is_selectable = 1
+SET s.preferred_tutor_region_id = target.id
+WHERE curr.sido_code = '45';
 
 -- 2-5c. 학생 희망지역(students.preferred_tutor_region_id) 도 일반구 official_code 승격
 UPDATE students s
@@ -515,7 +651,7 @@ WHERE curr.sido_code IN ('41','43','44','47','48','52')
   AND curr.unit_level = 'dong'
   AND curr.sigungu_name LIKE '% %';
 
--- 2-5e. 학생 희망지역(students.preferred_tutor_region_id) 도 일반 시·군 산하 동 승격
+-- 2-5e. 학생 희망지역(students.preferred_tutor_region_id) 도 및 전남광주 일반 시·군 산하 동 승격 ('12' 포함, 광주 5구 제외)
 UPDATE students s
 JOIN regions curr ON curr.id = s.preferred_tutor_region_id
 JOIN regions target ON target.sido_code = curr.sido_code
@@ -523,9 +659,17 @@ JOIN regions target ON target.sido_code = curr.sido_code
                     AND target.unit_level = 'sigungu'
                     AND target.is_selectable = 1
 SET s.preferred_tutor_region_id = target.id
-WHERE curr.sido_code IN ('41','43','44','47','48','50','51','52')
+WHERE curr.sido_code IN ('12','41','43','44','47','48','50','51','52')
   AND curr.unit_level = 'dong'
-  AND curr.sigungu_name NOT LIKE '% %';
+  AND curr.sigungu_name NOT LIKE '% %'
+  AND curr.sigungu_code NOT IN ('12200','12210','12240','12270','12300','12330');
+
+-- 2-5f. 학생 희망지역 과거 dev 시드 행 매핑 (2-5a에서 이미 승격되므로 중복·무해 fallback 보존)
+UPDATE students s
+JOIN regions curr ON curr.id = s.preferred_tutor_region_id
+JOIN regions target ON target.sido_code = curr.sido_code AND target.unit_level = 'sido'
+SET s.preferred_tutor_region_id = target.id
+WHERE curr.dong_name IN ('대치동', '우동', '시 대표') AND curr.sido_code IN ('11','26');
 
 -- 2-6a. 유료 노출 축(provider_position_subscriptions.city_id) 특·광역시·세종 승격
 UPDATE provider_position_subscriptions pps
@@ -535,7 +679,7 @@ SET pps.city_id = target.id
 WHERE pps.provider_type = 'tutor'
   AND curr.sido_code IN ('11','26','27','28','30','31','36') AND curr.unit_level <> 'sido';
 
--- 2-6b. 유료 노출 축(provider_position_subscriptions.city_id) 전남광주 광주 승격
+-- 2-6b. 유료 노출 축(provider_position_subscriptions.city_id) 전남광주 광주 옛 5구 승격
 UPDATE provider_position_subscriptions pps
 JOIN regions curr ON curr.id = pps.city_id
 JOIN regions target ON target.sido_code = '12' AND target.sigungu_code = '12200'
@@ -544,6 +688,60 @@ WHERE pps.provider_type = 'tutor'
   AND curr.sido_code = '12'
   AND (curr.sigungu_code IN ('12210','12240','12270','12300','12330')
        OR (curr.unit_level = 'dong' AND curr.sigungu_code IN ('12210','12240','12270','12300','12330')));
+
+-- 2-6-legacy-a. 유료 노출 축 옛 광주 코드('29') 구·동 행 전부 → 12200 광주 통합 단위 행 승격
+UPDATE provider_position_subscriptions pps
+JOIN regions curr ON curr.id = pps.city_id
+JOIN regions target ON target.sido_code = '12' AND target.sigungu_code = '12200'
+SET pps.city_id = target.id
+WHERE pps.provider_type = 'tutor'
+  AND curr.sido_code = '29';
+
+-- 2-6-legacy-b. 유료 노출 축 옛 전남 코드('46') 구·동 행 → 073 전남광주('12') 시·군 행 승격 (이름 매칭 우선, 코드 보조)
+UPDATE provider_position_subscriptions pps
+JOIN regions curr ON curr.id = pps.city_id
+JOIN regions target ON target.sido_code = '12'
+                    AND target.unit_level = 'sigungu'
+                    AND (target.sigungu_name = curr.sigungu_name
+                         OR target.sigungu_code = CONCAT('12', SUBSTRING(curr.sigungu_code, 3)))
+                    AND target.sigungu_code NOT IN ('12200','12210','12240','12270','12300','12330')
+SET pps.city_id = target.id
+WHERE pps.provider_type = 'tutor'
+  AND curr.sido_code = '46';
+
+-- 2-6-legacy-c. 유료 노출 축 옛 강원 코드('42') 구·동 행 → 073 강원특별자치도('51') 시·군 행 승격 (이름 매칭 우선, 코드 보조)
+UPDATE provider_position_subscriptions pps
+JOIN regions curr ON curr.id = pps.city_id
+JOIN regions target ON target.sido_code = '51'
+                    AND target.unit_level = 'sigungu'
+                    AND (target.sigungu_name = curr.sigungu_name
+                         OR target.sigungu_code = CONCAT('51', SUBSTRING(curr.sigungu_code, 3)))
+SET pps.city_id = target.id
+WHERE pps.provider_type = 'tutor'
+  AND curr.sido_code = '42';
+
+-- 2-6-legacy-d. 유료 노출 축 옛 전북 코드('45') 일반구 행(전주시 완산구·덕진구 등) → 073 전북('52') 전주시 상위 시 행(52110) 승격
+UPDATE provider_position_subscriptions pps
+JOIN regions curr ON curr.id = pps.city_id
+JOIN regions target ON target.sido_code = '52'
+                    AND target.sigungu_code = '52110'
+                    AND target.unit_level = 'sigungu'
+SET pps.city_id = target.id
+WHERE pps.provider_type = 'tutor'
+  AND curr.sido_code = '45'
+  AND (curr.sigungu_name LIKE '전주시%' OR curr.sigungu_code IN ('45111','45113'));
+
+-- 2-6-legacy-e. 유료 노출 축 옛 전북 코드('45') 일반 시·군 구·동 행 → 073 전북('52') 시·군 행 승격 (이름 매칭 우선, 코드 보조)
+UPDATE provider_position_subscriptions pps
+JOIN regions curr ON curr.id = pps.city_id
+JOIN regions target ON target.sido_code = '52'
+                    AND target.unit_level = 'sigungu'
+                    AND (target.sigungu_name = curr.sigungu_name
+                         OR target.sigungu_code = CONCAT('52', SUBSTRING(curr.sigungu_code, 3)))
+                    AND target.is_selectable = 1
+SET pps.city_id = target.id
+WHERE pps.provider_type = 'tutor'
+  AND curr.sido_code = '45';
 
 -- 2-6c. 유료 노출 축(provider_position_subscriptions.city_id) 도 일반구 official_code 승격
 UPDATE provider_position_subscriptions pps
@@ -568,7 +766,7 @@ WHERE pps.provider_type = 'tutor'
   AND curr.unit_level = 'dong'
   AND curr.sigungu_name LIKE '% %';
 
--- 2-6e. 유료 노출 축(provider_position_subscriptions.city_id) 도 일반 시·군 산하 동 승격
+-- 2-6e. 유료 노출 축(provider_position_subscriptions.city_id) 도 및 전남광주 일반 시·군 산하 동 승격 ('12' 포함, 광주 5구 제외)
 UPDATE provider_position_subscriptions pps
 JOIN regions curr ON curr.id = pps.city_id
 JOIN regions target ON target.sido_code = curr.sido_code
@@ -577,9 +775,18 @@ JOIN regions target ON target.sido_code = curr.sido_code
                     AND target.is_selectable = 1
 SET pps.city_id = target.id
 WHERE pps.provider_type = 'tutor'
-  AND curr.sido_code IN ('41','43','44','47','48','50','51','52')
+  AND curr.sido_code IN ('12','41','43','44','47','48','50','51','52')
   AND curr.unit_level = 'dong'
-  AND curr.sigungu_name NOT LIKE '% %';
+  AND curr.sigungu_name NOT LIKE '% %'
+  AND curr.sigungu_code NOT IN ('12200','12210','12240','12270','12300','12330');
+
+-- 2-6f. 유료 노출 축 과거 dev 시드 행 매핑 (2-6a에서 이미 승격되므로 중복·무해 fallback 보존)
+UPDATE provider_position_subscriptions pps
+JOIN regions curr ON curr.id = pps.city_id
+JOIN regions target ON target.sido_code = curr.sido_code AND target.unit_level = 'sido'
+SET pps.city_id = target.id
+WHERE pps.provider_type = 'tutor'
+  AND curr.dong_name IN ('대치동', '우동', '시 대표') AND curr.sido_code IN ('11','26');
 
 -- -----------------------------------------------------------------------------
 -- [운영 DB 사전 점검 확인 ID (1, 2, 19, 29, 39) 승격 단계 매핑표]
@@ -592,60 +799,64 @@ WHERE pps.provider_type = 'tutor'
 -- ID 39 (도 시·군/구 행)   : 일반구면 2-3a/2-3b 상위 시 승격, 일반 시·군이면 2-3c(또는 이미 유효)
 
 -- -----------------------------------------------------------------------------
--- [3단계: 중복 정리 및 순서 재부여 (MySQL 8 윈도우 함수/CTE)]
+-- [3단계: 중복 정리 및 순서 재부여 (GROUP BY 파생 테이블 조인 및 MySQL 8.0 / MariaDB 10.2+ ROW_NUMBER)]
 -- -----------------------------------------------------------------------------
 
 -- 3-1. 유료 구독 중복 단일화:
 -- 승격으로 서로 다른 원래 지역(distinct_orig_cnt > 1)이 같은 단위가 된 그룹만 단일화.
--- 대표 레코드(최초 id)의 기간을 그룹 내 MIN(started_on/starts_at) ~ MAX(end_exclusive_on/ends_at)으로 통합 연장.
--- (동일 지역 연속 연장 건은 distinct_orig_cnt = 1 이므로 변경되지 않음)
+-- 대표 레코드(최초 id = keep_id)의 종료일을 그룹 내 MAX(end_exclusive_on), MAX(ends_at)으로 연장.
+-- (사용자 잠금 9번: MAX(end_exclusive_on) 단일화 원칙 준수, 시작일은 대표 레코드 값 유지로 공백 기간 무상 연장 방지)
+-- 대안 (B - 공백 메움): pps.started_on = g.min_started_on, pps.starts_at = g.min_starts_at
 UPDATE provider_position_subscriptions pps
 JOIN (
-  SELECT p.id,
-         MIN(p.started_on) OVER w AS min_started_on,
-         MIN(p.starts_at) OVER w AS min_starts_at,
-         MAX(p.end_exclusive_on) OVER w AS max_end_date,
-         MAX(p.ends_at) OVER w AS max_ends_at,
-         ROW_NUMBER() OVER (
-           PARTITION BY p.provider_id, p.sku_code, p.city_id, p.primary_subject_id
-           ORDER BY p.id ASC
-         ) AS rn,
-         COUNT(DISTINCT b.original_city_id) OVER w AS distinct_orig_cnt
+  SELECT p.provider_id,
+         p.sku_code,
+         p.city_id,
+         p.primary_subject_id,
+         COUNT(DISTINCT b.original_city_id) AS distinct_orig_cnt,
+         MIN(p.id) AS keep_id,
+         MIN(p.started_on) AS min_started_on,
+         MIN(p.starts_at) AS min_starts_at,
+         MAX(p.end_exclusive_on) AS max_end_date,
+         MAX(p.ends_at) AS max_ends_at
   FROM provider_position_subscriptions p
   JOIN tmp_pps_city_before b ON b.id = p.id
   WHERE p.provider_type = 'tutor'
     AND p.end_exclusive_on > CURDATE()
-  WINDOW w AS (PARTITION BY p.provider_id, p.sku_code, p.city_id, p.primary_subject_id)
-) agg ON agg.id = pps.id
-SET pps.started_on = agg.min_started_on,
-    pps.starts_at = agg.min_starts_at,
-    pps.end_exclusive_on = agg.max_end_date,
-    pps.ends_at = agg.max_ends_at
-WHERE agg.rn = 1 AND agg.distinct_orig_cnt > 1;
+  GROUP BY p.provider_id, p.sku_code, p.city_id, p.primary_subject_id
+  HAVING distinct_orig_cnt > 1
+) g ON g.keep_id = pps.id
+SET pps.end_exclusive_on = g.max_end_date,
+    pps.ends_at = g.max_ends_at;
 
 -- 3-2. 유료 구독 중복 비활성화:
--- 다른 지역에서 승격 합체된 나머지 중복 건(rn > 1 AND distinct_orig_cnt > 1)만 즉시 비활성화.
+-- 다른 지역에서 승격 합체된 그룹 중 대표 레코드(keep_id)를 제외한 나머지 중복 건 즉시 비활성화.
 -- 동일 지역 연속 연장 및 미래 예약 건(distinct_orig_cnt = 1)은 정상 유지됨.
 UPDATE provider_position_subscriptions pps
 JOIN (
-  SELECT p.id,
-         ROW_NUMBER() OVER (
-           PARTITION BY p.provider_id, p.sku_code, p.city_id, p.primary_subject_id
-           ORDER BY p.id ASC
-         ) AS rn,
-         COUNT(DISTINCT b.original_city_id) OVER (
-           PARTITION BY p.provider_id, p.sku_code, p.city_id, p.primary_subject_id
-         ) AS distinct_orig_cnt
+  SELECT p.provider_id,
+         p.sku_code,
+         p.city_id,
+         p.primary_subject_id,
+         COUNT(DISTINCT b.original_city_id) AS distinct_orig_cnt,
+         MIN(p.id) AS keep_id
   FROM provider_position_subscriptions p
   JOIN tmp_pps_city_before b ON b.id = p.id
   WHERE p.provider_type = 'tutor'
     AND p.end_exclusive_on > CURDATE()
-) dup ON dup.id = pps.id
+  GROUP BY p.provider_id, p.sku_code, p.city_id, p.primary_subject_id
+  HAVING distinct_orig_cnt > 1
+) g ON g.provider_id = pps.provider_id
+   AND g.sku_code = pps.sku_code
+   AND g.city_id = pps.city_id
+   AND g.primary_subject_id = pps.primary_subject_id
 SET pps.end_exclusive_on = CURDATE(),
     pps.ends_at = NOW()
-WHERE dup.rn > 1 AND dup.distinct_orig_cnt > 1;
+WHERE pps.provider_type = 'tutor'
+  AND pps.end_exclusive_on > CURDATE()
+  AND pps.id <> g.keep_id;
 
--- 3-3. 과외 슬롯 중복 삭제: 같은 tutor_id 내 같은 region_id 중복 시 is_primary 우선, priority_order 작은 1개 보존
+-- 3-3. 과외 슬롯 중복 삭제: 같은 tutor_id 내 같은 region_id 중복 시 is_primary 우선, priority_order 작은 1개 보존 (MySQL 8.0 / MariaDB 10.2+)
 DELETE tr FROM tutor_regions tr
 JOIN (
   SELECT id,
@@ -657,7 +868,7 @@ JOIN (
 ) dup ON dup.id = tr.id
 WHERE dup.rn > 1;
 
--- 3-4. 남은 과외 슬롯의 priority_order를 0, 1, 2로 순차 재정렬
+-- 3-4. 남은 과외 슬롯의 priority_order를 0, 1, 2로 순차 재정렬 (MySQL 8.0 / MariaDB 10.2+)
 UPDATE tutor_regions tr
 JOIN (
   SELECT id,
@@ -672,6 +883,19 @@ SET tr.priority_order = reorder.new_order;
 -- -----------------------------------------------------------------------------
 -- [4단계: 사후 점검 SELECT]
 -- -----------------------------------------------------------------------------
+-- 4-0. 옛 시도 코드('29','42','45','46') 잔여 검증 (0건이어야 함)
+SELECT 'tutor_regions' AS tbl, COUNT(*) AS legacy_sido_cnt
+FROM tutor_regions tr JOIN regions r ON r.id = tr.region_id
+WHERE r.sido_code IN ('29','42','45','46')
+UNION ALL
+SELECT 'students', COUNT(*)
+FROM students s JOIN regions r ON r.id = s.preferred_tutor_region_id
+WHERE r.sido_code IN ('29','42','45','46')
+UNION ALL
+SELECT 'provider_position_subscriptions', COUNT(*)
+FROM provider_position_subscriptions pps JOIN regions r ON r.id = pps.city_id
+WHERE pps.provider_type = 'tutor' AND r.sido_code IN ('29','42','45','46');
+
 -- 4-1. tutor_regions 중 비단위 행 잔여 검증 (0건이어야 함)
 SELECT COUNT(*) AS invalid_slot_count
 FROM tutor_regions tr
@@ -935,9 +1159,9 @@ FROM (
 
 ---
 
-## [사용자 확인 질문 (5건)]
+## [사용자 확인 질문 (6건)]
 
-정본 개정 및 코드 반영 착수 전, 사용자 최종 확인이 필요한 5가지 질문이다.
+정본 개정 및 코드 반영 착수 전, 사용자 최종 확인이 필요한 6가지 질문이다.
 
 1. **광주 단위 라벨 표기**:
    - 후보 A: 「광주」 (사용자 20:20 구두 표현)
@@ -953,3 +1177,8 @@ FROM (
 5. **과외 탭 지도 없음 확인**:
    - 현재 코드상 지도는 공부방 탭에만 노출되고 과외 탭에는 지도가 없습니다 (`search-find-surface.js:2084` `showMap = tab === 'room'`).
    - 과외 탭에서는 지도 없이 목록 카드만 노출되는 현재 체제를 유지하는 것이 맞는지 확인 부탁드립니다.
+6. **유료 구독 단일화 시 시작일 처리 방식 (시작일 대표 유지 vs 전체 기간 메움)**:
+   - 배경: 서로 다른 원래 지역(예: 강남구, 서초구)에서 각각 유료 구독을 보유하던 과외쌤이 '서울특별시'로 승격·통합될 때, 잠금 9번은 가장 늦은 만료일(`MAX(end_exclusive_on)`)로 단일화하도록 명시하고 있습니다. 만약 두 구독 사이에 공백 기간이 존재할 경우(예: 강남구 1월~3월 구독 후 해지, 이후 서초구 5월~7월 진행 중), 시작일을 가장 이른 날짜(`MIN(started_on)`)로 앞당기면 공백 기간(4월)까지 소급하여 무상으로 연장되는 효과가 발생합니다.
+   - 후보 A (제안 / 잠금 9번 문구 일치): 대표 건(`keep_id`)의 시작일은 그대로 유지하고, 만료일만 그룹 내 가장 늦은 만료일(`MAX(end_exclusive_on)`)로 연장. 공백 기간의 무상 소급 연장 없음.
+   - 후보 B (대안): 시작일을 가장 이른 시작일(`MIN(started_on)`), 만료일을 가장 늦은 만료일(`MAX(end_exclusive_on)`)로 설정하여 전체 기간을 하나로 메움.
+   - **제안**: 잠금 9번의 취지와 무상 연장 방지 원칙에 따라 **후보 A**를 SQL 본문으로 채택하고, 후보 B는 주석 대안으로 기재하였습니다. 후보 A로 확정하시겠습니까?

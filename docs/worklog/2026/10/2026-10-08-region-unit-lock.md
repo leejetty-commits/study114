@@ -314,10 +314,10 @@ f7faf56 커밋에 대한 독립 리뷰 결과 9건의 지적에 대해 메인 �
 | **2-6b** | `provider_position_subscriptions pps` | `regions curr`, `regions target` | `pps.city_id = target.id` | tutor 타입, 전남광주 옛 5개 구 | **적합 (SET 확인)** |
 | **2-6c** | `provider_position_subscriptions pps` | `regions curr`, `regions target` | `pps.city_id = target.id` | tutor 타입, 도 일반구 39개 행 | **적합 (SET 확인)** |
 | **2-6d** | `provider_position_subscriptions pps` | `regions curr`, `regions target` | `pps.city_id = target.id` | tutor 타입, 과거 dev 시드 동 행 | **적합 (SET 확인)** |
-| **3-1** | `provider_position_subscriptions pps` | 인라인 윈도우 서브쿼리 `agg` | `pps.end_exclusive_on = agg.max_end_date, pps.ends_at = agg.max_ends_at` | `agg.rn = 1 AND agg.group_cnt > 1` (중복 대표 1건) | **적합 (SET 확인)** |
-| **3-2** | `provider_position_subscriptions pps` | 인라인 윈도우 서브쿼리 `dup` | `pps.end_exclusive_on = CURDATE(), pps.ends_at = NOW()` | `dup.rn > 1` (대표 외 나머지 중복 건) | **적합 (SET 확인, 비활성화)** |
-| **3-3** | `tutor_regions tr` (DELETE) | 인라인 윈도우 서브쿼리 `dup` | N/A (DELETE 구문) | `dup.rn > 1` (동일 슬롯 중복 2순위 이하) | **적합 (DELETE 확인)** |
-| **3-4** | `tutor_regions tr` | 인라인 윈도우 서브쿼리 `reorder` | `tr.priority_order = reorder.new_order` | N/A (전체 잔존 슬롯 0,1,2 순차 재정렬) | **적합 (SET 확인)** |
+| **3-1** | `provider_position_subscriptions pps` | 파생 집계 테이블 `g` (`GROUP BY provider_id, sku_code, city_id, primary_subject_id`) | `pps.end_exclusive_on = g.max_end_date, pps.ends_at = g.max_ends_at` | `g.keep_id = pps.id AND g.distinct_orig_cnt > 1` (대표 건 1개) | **적합 (GROUP BY 파생테이블 조인)** |
+| **3-2** | `provider_position_subscriptions pps` | 파생 집계 테이블 `g` | `pps.end_exclusive_on = CURDATE(), pps.ends_at = NOW()` | `pps.id <> g.keep_id AND g.distinct_orig_cnt > 1` (나머지 중복 건) | **적합 (GROUP BY 파생테이블 조인, 비활성화)** |
+| **3-3** | `tutor_regions tr` (DELETE) | ROW_NUMBER() 인라인 서브쿼리 `dup` | N/A (DELETE 구문) | `dup.rn > 1` (동일 슬롯 중복 2순위 이하) | **적합 (ROW_NUMBER DELETE, MySQL 8.0/MariaDB 10.2+)** |
+| **3-4** | `tutor_regions tr` | ROW_NUMBER() 인라인 서브쿼리 `reorder` | `tr.priority_order = reorder.new_order` | N/A (전체 잔존 슬롯 0,1,2 순차 재정렬) | **적합 (ROW_NUMBER UPDATE, MySQL 8.0/MariaDB 10.2+)** |
 
 ### 3. 부록 분류 숫자 변화
 
@@ -422,5 +422,40 @@ f7faf56 커밋에 대한 독립 리뷰 결과 9건의 지적에 대해 메인 �
 1. 네이버 지도 API 및 카카오 지도/지오코더 API 응답 필드와 실측값: 외부 서비스 연동 상태 및 좌표 정밀도에 따라 달라지므로 미확인으로 명시함.
 2. `BasicCardRegisteredQuery.php`: 현재 작업트리 내에 물리적 파일이 존재하지 않으며, 73번 브랜치 또는 별도 모듈로 분리되었을 가능성이 있으므로 파일/함수 미확인으로 명시함.
 3. 운영 DB 내 실제 `provider_position_subscriptions` 및 `students` 외래키 정합성: 배포 시점 1단계 사전 점검 SELECT 실행으로 최종 확인 예정.
+
+---
+
+## 5차 개정 — 이관 SQL 결함 수정 및 옛 행정코드 누락 전수 보완 (2026-10-08 21:55)
+
+- 메인 검수 지시: 커밋 6207fca의 이관 SQL에서 MySQL 8.0/MariaDB 10.x 실행 불가 결함(ERROR 1235) 및 카카오 임포트(`RegionEnsure::fromKakao`) 옛 행정코드 누락 발견에 따른 5차 개정.
+- **원칙 준수**: 여전히 **코드 수정 절대 금지, 문서 2개만 수정**(`docs/internal/72-region-unit-lock.md`, `docs/worklog/2026/10/2026-10-08-region-unit-lock.md`). 워크로그의 '사용자 잠금 — 2026-10-08 21:21' 절은 한 글자도 바꾸지 않음.
+
+### 1. 결함 1 (실행 불가 — 윈도우 DISTINCT 제거 및 GROUP BY 파생테이블 조인)
+- **원인 분석**: 3-1, 3-2의 `COUNT(DISTINCT b.original_city_id) OVER (...)` 구문은 MySQL 8.0 및 MariaDB 10.x 모두 지원하지 않음 (`ERROR 1235 (42000): This version of MySQL doesn't yet support '<window function>(DISTINCT ..)'`).
+- **수정 반영**:
+  1. 윈도우 DISTINCT 함수를 완전히 배제하고, `GROUP BY provider_id, sku_code, city_id, primary_subject_id`로 집계한 파생 테이블 `g`를 생성하여 JOIN하도록 전면 수정.
+  2. 파생 테이블 집계 항목: `COUNT(DISTINCT b.original_city_id) AS distinct_orig_cnt`, `MIN(p.id) AS keep_id`, `MIN(p.started_on) AS min_started_on`, `MIN(p.starts_at) AS min_starts_at`, `MAX(p.end_exclusive_on) AS max_end_date`, `MAX(p.ends_at) AS max_ends_at`. 활성 조건 `p.end_exclusive_on > CURDATE()`, `provider_type = 'tutor'` 유지.
+  3. **3-1 단일화 UPDATE**: `g.keep_id = pps.id` 조인. 대표 레코드의 시작일은 그대로 유지하고 만료일만 `MAX(end_exclusive_on)`, `MAX(ends_at)`으로 연장 (기본 제안 A: 공백 기간 무상 연장 방지, 잠금 9번 일치). 전체 기간 메움(`MIN~MAX`, 대안 B)은 주석 병기.
+  4. **3-2 비활성화 UPDATE**: `pps.id <> g.keep_id`인 나머지 중복 건 즉시 당일 만료(`CURDATE()`, `NOW()`) 처리.
+  5. 3-3, 3-4의 `ROW_NUMBER()`는 MySQL 8.0 및 MariaDB 10.2+ 모두 완벽 지원함.
+  6. **1단계 사전 점검에 `SELECT VERSION();` 추가**: 운영 DB 엔진 및 버전 선행 확인.
+  7. **사용자 확인 질문 6번 추가**: 유료 구독 단일화 시 시작일 처리 방식 (A) 시작일 대표 유지, 만료일만 MAX(제안) vs (B) MIN~MAX 전체 기간 메움.
+
+### 2. 결함 2 (데이터 누락 — 카카오 임포트 옛 행정코드 전수 보완)
+- **원인 분석**: `RegionEnsure::fromKakao`(`src/Region/RegionEnsure.php:39-47`)가 카카오 법정동코드(bcode) 앞자리를 `sido_code` / `sigungu_code`로 저장하여, 과거 통합 전·코드 개편 전 데이터(옛 광주 '29', 전남 '46', 강원 '42', 전북 '45')가 기존 승격 SQL에서 누락됨.
+- **수정 반영 (tutor_regions 2-1~2-4, students 2-5, provider_position_subscriptions 2-6 전수 적용)**:
+  1. **옛 광주 코드('29') 전부** → `12200` 광주 통합 행으로 승격 (`2-2a`, `2-5-legacy-a`, `2-6-legacy-a`).
+  2. **옛 전남 코드('46')** → 073 전남광주('12') 시·군 행으로 승격 (이름 매칭 우선, 코드 `'12' + SUBSTRING(sigungu_code, 3)` 보조) (`2-2b, 2-2c`, `2-5-legacy-b`, `2-6-legacy-b`).
+  3. **옛 강원 코드('42')** → 073 강원특별자치도('51') 시·군 행으로 승격 (이름 매칭 우선, 코드 보조) (`2-2d`, `2-5-legacy-c`, `2-6-legacy-c`).
+  4. **옛 전북 코드('45')** → 일반구(전주시 완산구·덕진구 등)는 전주시 상위 시 행(`52110`)으로 승격, 일반 시·군은 '52' 시·군 행으로 승격 (`2-2e, 2-2f`, `2-5-legacy-d, e`, `2-6-legacy-d, e`).
+  5. **2-3c의 sido_code 목록에 '12' 추가**: 전남광주 소속 일반 시·군 산하 동 행 승격 지원 (광주 5구 12210~12330 및 12200 제외).
+  6. **2-4 (대치동/우동)**: 2-1에서 이미 승격되므로 '중복·무해 fallback 보존'으로 명시.
+  7. **1단계 사전 점검에 (E) 쿼리 추가**: 과외 3개 테이블이 참조하는 regions 중 073 공식 16개 시도 코드에 속하지 않는 옛 코드('29','42','45','46' 등) 조회.
+  8. **4단계 사후 점검에 (4-0) 쿼리 추가**: 과외 3개 테이블 내 옛 시도 코드 잔여 0건 검증.
+
+### 3. 미확인 목록
+1. 운영 DB 데이터(phpMyAdmin)의 실제 `provider_position_subscriptions` 레코드 존재 여부 및 옛 행정코드 잔존 건수: 실제 운영 데이터는 배포 시점 1단계 사전 점검 SQL(1-(0), 1-(D), 1-(E)) 실행을 통해 확인해야 함.
+2. 운영 DB 내 `students.preferred_tutor_region_id`의 실제 외래키 정합성: 1-(B) 및 1-(E) 사전 점검 SELECT 실행 시 최종 확인 예정.
+3. 유료 구독 단일화 시 시작일 처리 방식: 사용자 확인 질문 6번(후보 A 대표 건 시작일 유지 vs 후보 B MIN~MAX 전체 메움)에 대한 사용자 최종 선택 대기.
 
 
