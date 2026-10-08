@@ -19,3 +19,8 @@
 - 수정 전 127 통과 / 7 실패 → 수정 후 134 통과 / 0 실패 (`node scripts/verify-tutor-region-unit.mjs`).
 - 검증 스크립트 1개, 운영 코드 영향 없음 → 메인 검수.
 - 사용자 승인: 대기.
+
+## 사용자 승인·main 반영
+
+- 2026-10-09 02:48 사용자 「승인」 — 커밋 `c97b21a`.
+- 병합본 검증: verify:tutor-region-unit 134/0, verify-position-region-tier 19/0, verify:no-sample-data OK, verify:shop-page OK.

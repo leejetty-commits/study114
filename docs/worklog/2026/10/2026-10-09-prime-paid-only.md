@@ -21,3 +21,8 @@
 - `verify:no-sample-data` OK, `verify:shop-page` 54/0.
 - 홈은 원래 유료만이라 동작 같음. 바뀌는 곳은 로그인 검색 화면의 프라임·픽 칸(유료 없으면 빈칸).
 - 사용자 승인: 대기.
+
+## 사용자 승인·main 반영
+
+- 2026-10-09 02:48 사용자 「승인」 — 커밋 `8d80860`.
+- 병합본 검증: verify:tutor-region-unit 134/0, verify-position-region-tier 19/0, verify:no-sample-data OK, verify:shop-page OK.
