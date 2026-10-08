@@ -295,6 +295,59 @@ final class SearchService
         return $result;
     }
 
+    /**
+     * 찜 목록 카드. 검색 목록과 같은 공개 조건(숨김·삭제·탈퇴·홍보지역 1 없음 제외)과 같은 카드 필드.
+     * 대상 번호는 search() filters 로 받지 않는다(search.php 손님 지역 제한 우회 방지).
+     *
+     * @param 'study_room'|'tutor' $providerType
+     * @param list<int> $ids
+     * @return array<int, array<string, mixed>> 대상 번호 => 카드. 지금 공개가 아닌 번호는 없다.
+     */
+    public function publicCardsByIds(string $providerType, array $ids): array
+    {
+        if ($providerType !== 'study_room' && $providerType !== 'tutor') {
+            throw new InvalidArgumentException('target_type: study_room | tutor');
+        }
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $ids),
+            static fn (int $id): bool => $id > 0,
+        )));
+        if ($ids === []) {
+            return [];
+        }
+
+        $pdo = Connection::get();
+        $cards = [];
+        foreach (array_chunk($ids, 50) as $chunk) {
+            $result = $providerType === 'tutor'
+                ? $this->searchTutors($pdo, [], count($chunk), 0, 'latest', $chunk)
+                : $this->searchRooms($pdo, [], count($chunk), 0, 'latest', $chunk);
+            foreach ($result['items'] as $item) {
+                $cards[(int) $item['id']] = $item;
+            }
+        }
+
+        return $cards;
+    }
+
+    /**
+     * @param list<int> $cardIds
+     * @param array<string, mixed> $params
+     */
+    private function cardIdsSql(string $column, array $cardIds, array &$params): string
+    {
+        if ($cardIds === []) {
+            return '1 = 0';
+        }
+        $marks = [];
+        foreach (array_values($cardIds) as $i => $id) {
+            $params['card_id_' . $i] = (int) $id;
+            $marks[] = ':card_id_' . $i;
+        }
+
+        return $column . ' IN (' . implode(', ', $marks) . ')';
+    }
+
     private function normalizeSort(string $tab, string $sort): string
     {
         $key = strtolower(trim($sort));
@@ -481,9 +534,10 @@ final class SearchService
 
     /**
      * @param array<string, mixed> $filters
+     * @param list<int>|null $cardIds publicCardsByIds 전용
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
      */
-    private function searchRooms(PDO $pdo, array $filters, int $limit, int $offset, string $sort): array
+    private function searchRooms(PDO $pdo, array $filters, int $limit, int $offset, string $sort, ?array $cardIds = null): array
     {
         // 목록/검색 노출 = 숨김(hidden)만 제외. 공개(published) 게이트·완성도 게이트 없음.
         // Pick/Prime 후보는 detail_completion_status 로 별도 판정(prime_eligible).
@@ -494,6 +548,9 @@ final class SearchService
             $this->roomPromoSlot1Sql('sr'),
         ];
         $params = [];
+        if ($cardIds !== null) {
+            $where[] = $this->cardIdsSql('sr.id', $cardIds, $params);
+        }
 
         $this->rejectRegionLabel($filters, 'region_label');
 
@@ -764,9 +821,10 @@ final class SearchService
 
     /**
      * @param array<string, mixed> $filters
+     * @param list<int>|null $cardIds publicCardsByIds 전용
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
      */
-    private function searchTutors(PDO $pdo, array $filters, int $limit, int $offset, string $sort): array
+    private function searchTutors(PDO $pdo, array $filters, int $limit, int $offset, string $sort, ?array $cardIds = null): array
     {
         // 목록/검색 노출 = 숨김(hidden)만 제외. 공개·완성도 게이트 없음.
         $where = [
@@ -775,6 +833,9 @@ final class SearchService
             $this->tutorSlot1Sql('t'),
         ];
         $params = [];
+        if ($cardIds !== null) {
+            $where[] = $this->cardIdsSql('t.id', $cardIds, $params);
+        }
 
         $this->rejectRegionLabel($filters, 'tutor_region_label');
         if ($regionId = $this->tutorUnitRegionId($pdo, $filters, 'tutor_region_id')) {
