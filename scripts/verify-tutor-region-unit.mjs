@@ -9,10 +9,13 @@
  *   공부방 구 단위(selectableRegionId · dongIdsUnderGu · is_selectable 수)는 그대로.
  * 2부 프런트(tutor-unit-cascade.js): 같은 단위 목록으로 주소 → 단위 id, 1·2단계 선택.
  * 3부 정적: 저장 경로가 TutorRegionUnit 을 쓰고, 공부방 검색 searchRooms 본문이 origin/main 과 같다.
+ * 4부 찾기 화면(2단계): 과외쌤 찾기 선택·검색(서울 시·도만 / 경기도만 불가 / 경기도 수원시 / 전남광주 광주),
+ *   GPS → 과외 단위, 손님 라벨 서울특별시, 확대카드 「—」 아님, 공부방 찾기 결과 = origin/main 모듈과 같음.
  * 운영 DB·서버에 접속하지 않는다. 샘플·가짜 회원 데이터를 만들지 않는다.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -50,6 +53,12 @@ const ADDRESSES = [
   { key: 'sejong', title: '세종', sido: '세종', sigungu: '', code: '3600000000', want: '세종특별자치시' },
   { key: 'goseong_gw', title: '강원 고성군', sido: '강원', sigungu: '고성군', code: '5182000000', want: '강원특별자치도 고성군' },
 ];
+
+if (process.env.TRU_FIND_INPUT) {
+  await runFindPart(JSON.parse(readFileSync(process.env.TRU_FIND_INPUT, 'utf8')));
+  console.log(`\n${passed} passed, ${failed} failed`);
+  process.exit(failed ? 1 : 0);
+}
 
 const PHP_CODE = String.raw`<?php
 declare(strict_types=1);
@@ -226,6 +235,8 @@ $seoul = $addr['gangnam']['unit_id'];
 $gangnam = $idOf('1168000000');
 $out['search'] = [
     'tutor_unit' => $call('tutorUnitRegionId', [$pdo, ['tutor_region_id' => $seoul], 'tutor_region_id']),
+    'tutor_suwon' => $call('tutorUnitRegionId', [$pdo, ['tutor_region_id' => TutorRegionUnit::unitIdForRegion($pdo, (int) $idOf('4111700000'))], 'tutor_region_id']),
+    'tutor_gwangju' => $call('tutorUnitRegionId', [$pdo, ['tutor_region_id' => $addr['gwangsan']['unit_id']], 'tutor_region_id']),
     'tutor_gu' => $call('tutorUnitRegionId', [$pdo, ['tutor_region_id' => $gangnam], 'tutor_region_id']),
     'tutor_dong' => $call('tutorUnitRegionId', [$pdo, ['tutor_region_id' => $dongIds['daechi']], 'tutor_region_id']),
     'tutor_province' => $call('tutorUnitRegionId', [$pdo, ['tutor_region_id' => $idOf('4100000000')], 'tutor_region_id']),
@@ -325,6 +336,8 @@ ok('가입 저장: 2번 칸 일반구 거부', /광역시 또는 도의 시·군
 console.log('--- 검색 ---');
 const S = R.search || {};
 ok('과외쌤 찾기 tutor_region_id = 단위 id 통과', S.tutor_unit?.ok === R.addr?.gangnam?.unit_id, JSON.stringify(S.tutor_unit));
+ok('과외쌤 찾기 tutor_region_id = 경기도 수원시 단위 통과', S.tutor_suwon?.ok === R.addr?.yeongtong?.unit_id, JSON.stringify(S.tutor_suwon));
+ok('과외쌤 찾기 tutor_region_id = 전남광주 광주 단위 통과', S.tutor_gwangju?.ok === R.addr?.gwangsan?.unit_id, JSON.stringify(S.tutor_gwangju));
 ok('과외쌤 찾기 tutor_region_id 구 거부', /광역시 또는 도의 시·군/.test(S.tutor_gu?.error || ''), JSON.stringify(S.tutor_gu));
 ok('과외쌤 찾기 tutor_region_id 동 거부', /광역시 또는 도의 시·군/.test(S.tutor_dong?.error || ''), JSON.stringify(S.tutor_dong));
 ok('과외쌤 찾기 tutor_region_id 도 행 거부', /광역시 또는 도의 시·군/.test(S.tutor_province?.error || ''), JSON.stringify(S.tutor_province));
@@ -409,5 +422,309 @@ const regionCascade = read('preview/shared/region-cascade.js');
 const mainCascade = spawnSync('git', ['show', 'origin/main:preview/shared/region-cascade.js'], { cwd: ROOT, encoding: 'utf8' });
 ok('공부방·찾기 공용 region-cascade.js 불변', mainCascade.status === 0 && mainCascade.stdout.replace(/\r\n/g, '\n') === regionCascade.replace(/\r\n/g, '\n'));
 
+/* ══════════════ 4부 찾기 화면 (2단계) ══════════════ */
+console.log('##### 4부 찾기 화면 (search-find-surface.js · 같은 단위 목록 · @home-ui 별칭 때문에 preview/home-ui 에서 실행) #####');
+{
+  const inputFile = join(tmpdir(), `tru-find-${process.pid}.json`);
+  writeFileSync(inputFile, JSON.stringify({
+    units,
+    gangnamGu: R.addr?.gangnam?.row_id,
+    seoul: R.addr?.gangnam?.unit_id,
+    suwon: R.addr?.yeongtong?.unit_id,
+    gwangju: R.addr?.gwangsan?.unit_id,
+  }));
+  const child = spawnSync(
+    process.platform === 'win32' ? 'cmd.exe' : 'npx',
+    process.platform === 'win32'
+      ? ['/d', '/s', '/c', 'npx --yes vite-node ../../scripts/verify-tutor-region-unit.mjs']
+      : ['--yes', 'vite-node', '../../scripts/verify-tutor-region-unit.mjs'],
+    { cwd: join(ROOT, 'preview/home-ui'), encoding: 'utf8', env: { ...process.env, TRU_FIND_INPUT: inputFile }, maxBuffer: 32 * 1024 * 1024 },
+  );
+  rmSync(inputFile, { force: true });
+  const lines = String(child.stdout || '').split(/\r?\n/);
+  for (const l of lines) {
+    if (l.startsWith('PASS  ')) {
+      passed += 1;
+      console.log(l);
+    } else if (l.startsWith('##### ') || l.startsWith('--- ')) {
+      console.log(l);
+    }
+  }
+  for (const l of String(child.stderr || '').split(/\r?\n/)) {
+    if (l.startsWith('FAIL  ')) {
+      failed += 1;
+      console.error(l);
+    }
+  }
+  ok('4부 하위 실행 종료 0', child.status === 0, `${child.status} ${String(child.stderr || '').split(/\r?\n/).filter((l) => !l.startsWith('FAIL  ')).join(' ').slice(0, 800)}`);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
+
+/**
+ * 4부 본문(하위 실행). 브라우저 API(저장소·주소·fetch·GPS·네이버 역지오코딩)만 흉내 내고 실제 모듈을 부른다.
+ * 공부방 분기는 origin/main 의 search-find-surface.js 를 같은 조건으로 돌려 결과가 같은지 본다.
+ * @param {{ units: object[], gangnamGu: number, seoul: number, suwon: number, gwangju: number }} input
+ */
+async function runFindPart(input) {
+  console.log('##### 4부 찾기 화면 #####');
+  const mem = new Map();
+  const storage = {
+    getItem: (k) => (mem.has(k) ? mem.get(k) : null),
+    setItem: (k, v) => mem.set(k, String(v)),
+    removeItem: (k) => mem.delete(k),
+    clear: () => mem.clear(),
+    key: (i) => [...mem.keys()][i] ?? null,
+    get length() {
+      return mem.size;
+    },
+  };
+  globalThis.sessionStorage = storage;
+  globalThis.localStorage = storage;
+  globalThis.window = globalThis;
+  const winEvents = new EventTarget();
+  globalThis.addEventListener = winEvents.addEventListener.bind(winEvents);
+  globalThis.removeEventListener = winEvents.removeEventListener.bind(winEvents);
+  globalThis.dispatchEvent = winEvents.dispatchEvent.bind(winEvents);
+  if (typeof globalThis.CustomEvent === 'undefined') {
+    globalThis.CustomEvent = class extends Event {
+      constructor(type, init = {}) {
+        super(type);
+        this.detail = init.detail;
+      }
+    };
+  }
+  for (const name of ['HTMLElement', 'HTMLInputElement', 'HTMLFormElement', 'HTMLSelectElement', 'HTMLButtonElement']) {
+    if (typeof globalThis[name] === 'undefined') globalThis[name] = class {};
+  }
+  Object.defineProperty(globalThis, 'location', {
+    value: { hash: '#/search/tutor', href: 'http://127.0.0.1:5174/search/#/search/tutor', origin: 'http://127.0.0.1:5174', host: '127.0.0.1:5174', hostname: '127.0.0.1', protocol: 'http:', pathname: '/search/', search: '', assign() {}, replace() {} },
+    writable: true,
+    configurable: true,
+  });
+  globalThis.history = {
+    replaceState(_s, _t, url) {
+      const text = String(url || '');
+      if (text.startsWith('#')) location.hash = text;
+    },
+    pushState() {},
+  };
+  console.warn = () => {};
+  console.info = () => {};
+
+  /** 네이버 역지오코딩 결과(시도·시군구·동). GPS 경우마다 바꾼다. */
+  let gpsArea = ['서울특별시', '강남구', '대치동'];
+  Object.defineProperty(globalThis, 'navigator', {
+    value: { geolocation: { getCurrentPosition: (okFn) => okFn({ coords: { latitude: 37.5, longitude: 127.06 } }) } },
+    writable: true,
+    configurable: true,
+  });
+  globalThis.naver = {
+    maps: {
+      LatLng: class {},
+      Service: {
+        OrderType: { ADDR: 'addr', ROAD_ADDR: 'roadaddr' },
+        Status: { OK: 200 },
+        reverseGeocode: (_req, cb) => cb(200, { v2: { results: [{ region: { area1: { name: gpsArea[0] }, area2: { name: gpsArea[1] }, area3: { name: gpsArea[2] } } }] } }),
+      },
+    },
+  };
+
+  const CITIES = [
+    { id: input.gangnamGu, label: '강남구', sido_code: '11', sido_name: '서울특별시', official_code: '1168000000', city_name: '강남구', gu_name: '', kind: 'gu' },
+  ];
+  /** @type {Array<{ tab: string, filters: Record<string, unknown> }>} */
+  const searches = [];
+  globalThis.fetch = async (url, init = {}) => {
+    const text = String(url);
+    const res = (body) => ({ ok: true, status: 200, json: async () => body });
+    if (text.includes('action=tutor_units')) return res({ ok: true, tutor_units: input.units });
+    if (text.includes('action=cities')) return res({ ok: true, cities: CITIES });
+    if (text.includes('/api/search/search.php')) {
+      searches.push(JSON.parse(String(init.body || '{}')));
+      return res({ ok: true, items: [], total: 0 });
+    }
+    if (text.includes('/api/auth/me.php')) return res({ ok: true, authenticated: false });
+    throw new Error(`offline ${text}`);
+  };
+
+  const cascade = await import('../preview/shared/tutor-unit-cascade.js');
+  const loc = await import('../preview/shared/location-display.js');
+  const teaser = await import('../preview/home-ui/src/student-blind-teaser.js');
+  const tutorDetail = await import('../preview/home-ui/src/detail-decision/tutor-detail.js');
+  const surface = await import('../preview/search-ui/src/search-find-surface.js');
+  const U = cascade.normalizeTutorUnits(input.units);
+  const noop = () => {};
+  const tick = (ms = 30) => new Promise((r) => setTimeout(r, ms));
+  const freshState = (role) => ({ role, searchPage: 1, searchExecuted: false, searchTotal: 0, searchExposureItems: [], canonicalLocation: null, activeRegionLabel: '', expanded: false });
+  const PICK_HINT = '광역시는 시·도, 도는 시·군까지 선택해 주세요';
+
+  await surface.whenFindCitiesReady('tutor');
+
+  console.log('--- 과외쌤 찾기: 선택 → 검색 ---');
+  {
+    const st = freshState('study_room');
+    const html = surface.renderCompactFindForm('tutor', st, { role: 'study_room' });
+    ok('과외쌤 찾기 지역칸 = 과외 단위 2칸(시·도 · 시·군) · 구 칸 없음', html.includes('data-region-cascade="tutor_unit"') && html.includes('data-field="region_city"') && !html.includes('region_gu'), html.slice(0, 200));
+    ok('과외쌤 찾기 안내 = 광역시는 시·도, 도는 시·군', html.includes(PICK_HINT));
+  }
+  /** @param {string} sidoName @param {string} [unitName] */
+  async function searchTutor(sidoName, unitName = '') {
+    const pick = cascade.resolveTutorCascade(U, { sidoName, unitName });
+    const st = freshState('study_room');
+    const before = searches.length;
+    const hint = { textContent: '' };
+    const form = {
+      querySelector: (sel) => {
+        if (sel.includes('f_tutor_region_id')) {
+          const el = new globalThis.HTMLInputElement();
+          el.value = String(pick.regionId || '');
+          return el;
+        }
+        return sel.includes('search-field__hint') ? hint : null;
+      },
+    };
+    if (!pick.regionId) {
+      await surface.runFindSearch('tutor', form, st, 'study_room', noop);
+      await surface.runFindSearchWithFilters('tutor', {}, st, 'study_room', noop);
+    } else {
+      await surface.runFindSearchWithFilters('tutor', { tutor_region_id: pick.regionId }, st, 'study_room', noop);
+    }
+    await tick();
+    return { pick, st, sent: searches.slice(before), hint: hint.textContent };
+  }
+  {
+    const r = await searchTutor('서울특별시');
+    ok('서울: 시·도만으로 검색됨(tutor_region_id = 서울특별시 단위)', r.pick.complete && r.sent.length === 1 && String(r.sent[0].filters?.tutor_region_id) === String(input.seoul), JSON.stringify(r.sent));
+    ok('서울: 현재 위치 = 서울특별시', r.st.activeRegionLabel === '서울특별시', r.st.activeRegionLabel);
+  }
+  {
+    const r = await searchTutor('경기도');
+    ok('경기도만: 검색 요청 없음', r.sent.length === 0, JSON.stringify(r.sent));
+    ok('경기도만: 시·군 선택 안내', r.hint === PICK_HINT && r.st.findScopeHint === PICK_HINT, `${r.hint} / ${r.st.findScopeHint}`);
+  }
+  {
+    const r = await searchTutor('경기도', '수원시');
+    ok('경기도 수원시: 검색됨(tutor_region_id = 수원시 단위)', r.sent.length === 1 && String(r.sent[0].filters?.tutor_region_id) === String(input.suwon), JSON.stringify(r.sent));
+    ok('경기도 수원시: 현재 위치 = 경기도 수원시', r.st.activeRegionLabel === '경기도 수원시', r.st.activeRegionLabel);
+  }
+  {
+    const r = await searchTutor('전남광주통합특별시', '광주');
+    ok('전남광주 광주: 검색됨(tutor_region_id = 078 광주 단위)', r.sent.length === 1 && String(r.sent[0].filters?.tutor_region_id) === String(input.gwangju), JSON.stringify(r.sent));
+    ok('전남광주 광주: 현재 위치 = 전남광주통합특별시 광주', r.st.activeRegionLabel === '전남광주통합특별시 광주', r.st.activeRegionLabel);
+  }
+
+  console.log('--- 현재 위치 · GPS ---');
+  /** @param {string} tab @param {string[]} area @param {object} [extra] */
+  async function gps(tab, area, extra = {}) {
+    gpsArea = area;
+    sessionStorage.clear();
+    const st = { ...freshState('study_room'), ...extra };
+    await surface.bootFindGpsIfNeeded(st, tab, noop);
+    await tick();
+    return st;
+  }
+  {
+    const st = await gps('tutor', ['서울특별시', '강남구', '대치동']);
+    ok('GPS 강남구 대치동 → 과외쌤 찾기 위치 서울특별시', st.canonicalLocation?.displayLabel === '서울특별시' && String(st.canonicalLocation?.regionId) === String(input.seoul), JSON.stringify(st.canonicalLocation));
+    ok('GPS 강남구 → 화면 라벨 서울특별시', surface.resolveActiveRegionLabel('tutor', st, 'study_room') === '서울특별시', surface.resolveActiveRegionLabel('tutor', st, 'study_room'));
+  }
+  {
+    const st = await gps('tutor', ['경기도', '수원시 영통구', '매탄동']);
+    ok('GPS 수원시 영통구 → 경기도 수원시', st.canonicalLocation?.displayLabel === '경기도 수원시' && String(st.canonicalLocation?.regionId) === String(input.suwon), JSON.stringify(st.canonicalLocation));
+  }
+  {
+    const st = await gps('student', ['서울특별시', '강남구', '대치동'], { studentHopeType: 'tutor', hopeTypeResolved: true });
+    ok('GPS 학생 찾기(과외 희망) → 서울특별시', st.canonicalLocation?.displayLabel === '서울특별시', JSON.stringify(st.canonicalLocation));
+  }
+
+  console.log('--- 손님 · 확대카드 ---');
+  ok('손님 과외쌤 기준 라벨 상수 = 서울특별시', loc.GUEST_BASE_TUTOR_LABEL === '서울특별시');
+  ok('손님 기준(서버 전) 과외쌤 = 서울특별시 · 학생 = 서울시 강남구 · 공부방 = 대치동', (() => {
+    const b = loc.readGuestBaseline();
+    return b.tutor === '서울특별시' && b.student === '서울시 강남구' && b.room === loc.GUEST_BASE_ROOM_LABEL;
+  })(), JSON.stringify(loc.readGuestBaseline()));
+  {
+    const st = freshState('guest');
+    await surface.runFindSearchWithFilters('tutor', { tutor_region_id: String(input.seoul) }, st, 'guest', noop);
+    await tick();
+    ok('손님 과외쌤 찾기 현재 위치 = 서울특별시', st.activeRegionLabel === '서울특별시', st.activeRegionLabel);
+  }
+  for (const label of ['서울특별시', '세종특별자치시', '경기도 수원시', '전남광주통합특별시 광주', '경상북도 안동시']) {
+    ok(`손님 확대카드 과외지역 「${label}」 그대로(「—」 아님)`, teaser.coarseRegionForGuest(label) === label, teaser.coarseRegionForGuest(label));
+  }
+  ok('손님 과외쌤 상세 본문 과외지역 = 서울특별시', tutorDetail.renderTutorDetailBody({ location_label: '서울특별시' }, 'guest').includes('<dt>과외지역</dt><dd>서울특별시</dd>'));
+  {
+    const roomLabels = ['서울특별시 강남구 대치동', '서울시 강남구 대치동 · 은마아파트', '대치동', '경기도 수원시 영통구 매탄동', '서울특별시 강남구', '강남구', '역삼1동', '목동권', '', '—'];
+    const mainTeaser = spawnSync('git', ['show', 'origin/main:preview/home-ui/src/student-blind-teaser.js'], { cwd: ROOT, encoding: 'utf8' });
+    const fn = mainTeaser.stdout.replace(/\r\n/g, '\n').match(/export function coarseRegionForGuest\(locationLabel\) \{[\s\S]*?\n\}/)?.[0] || '';
+    const oldCoarse = fn ? new Function(`${fn.replace('export ', '')}; return coarseRegionForGuest;`)() : null;
+    const diff = oldCoarse ? roomLabels.filter((l) => oldCoarse(l) !== teaser.coarseRegionForGuest(l)) : ['main 읽기 실패'];
+    ok('공부방·동 라벨 손님 표기는 origin/main 과 같음', diff.length === 0, JSON.stringify(diff));
+  }
+
+  console.log('--- 공부방 찾기 = origin/main 과 같은 결과 ---');
+  const mainSrc = spawnSync('git', ['show', 'origin/main:preview/search-ui/src/search-find-surface.js'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+  const mainFile = join(ROOT, 'preview/search-ui/src/zz-tru-main-find-surface.tmp.js');
+  let mainSurface = null;
+  if (mainSrc.status === 0) {
+    writeFileSync(mainFile, mainSrc.stdout);
+    try {
+      mainSurface = await import(/* @vite-ignore */ pathToFileURL(mainFile).href);
+      await mainSurface.whenFindCitiesReady();
+    } finally {
+      rmSync(mainFile, { force: true });
+    }
+  }
+  ok('origin/main search-find-surface.js 불러옴', !!mainSurface, mainSrc.stderr);
+  if (mainSurface) {
+    /** @param {any} mod @param {string} tab @param {string} role @param {Record<string, string>} filters @param {object} [extra] */
+    async function roomRun(mod, tab, role, filters, extra = {}) {
+      sessionStorage.clear();
+      location.hash = `#/search/${tab}`;
+      const st = { ...freshState(role), ...extra };
+      const formBefore = mod.renderCompactFindForm(tab, st, { role });
+      const before = searches.length;
+      await mod.runFindSearchWithFilters(tab, { ...filters }, st, role, noop);
+      await tick();
+      return {
+        formBefore,
+        formAfter: mod.renderCompactFindForm(tab, st, { role }),
+        bar: mod.renderFindFilterBar(tab, st),
+        sent: searches.slice(before).map((s) => ({ tab: s.tab, filters: s.filters })),
+        label: st.activeRegionLabel,
+        place: st.canonicalLocation?.displayLabel,
+        hash: location.hash,
+      };
+    }
+    const cases = [
+      ['공부방 찾기 강남구(공부방 회원)', 'room', 'study_room', { sigungu_region_id: String(input.gangnamGu) }, {}],
+      ['공부방 찾기 강남구(손님)', 'room', 'guest', { sigungu_region_id: String(input.gangnamGu) }, {}],
+      ['공부방 찾기 지역 없음', 'room', 'study_room', {}, {}],
+      ['학생 찾기(공부방 희망) 강남구', 'student', 'study_room', { preferred_region_id: String(input.gangnamGu), preferred_lesson_type: 'study_room' }, { studentHopeType: 'study_room', hopeTypeResolved: true }],
+    ];
+    for (const [name, tab, role, filters, extra] of cases) {
+      const a = await roomRun(mainSurface, tab, role, filters, extra);
+      const b = await roomRun(surface, tab, role, filters, extra);
+      const keys = Object.keys(a).filter((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
+      ok(`${name}: 폼 HTML · 검색 요청 · 현재 위치 · 주소 = origin/main`, keys.length === 0, keys.map((k) => `${k}: ${JSON.stringify(a[k]).slice(0, 160)} ≠ ${JSON.stringify(b[k]).slice(0, 160)}`).join(' | '));
+      if (name === '공부방 찾기 강남구(공부방 회원)') {
+        ok('공부방 찾기 강남구: sigungu_region_id = 강남구 id 그대로', String(b.sent[0]?.filters?.sigungu_region_id) === String(input.gangnamGu), JSON.stringify(b.sent));
+      }
+    }
+    {
+      gpsArea = ['서울특별시', '강남구', '대치동'];
+      const run = async (mod) => {
+        sessionStorage.clear();
+        const st = freshState('study_room');
+        await mod.bootFindGpsIfNeeded(st, 'room', noop);
+        await tick();
+        return JSON.stringify({ place: st.canonicalLocation?.displayLabel, level: st.canonicalLocation?.level, dong: st.canonicalLocation?.dong });
+      };
+      const a = await run(mainSurface);
+      const b = await run(surface);
+      ok('공부방 찾기 GPS 강남구 대치동 = origin/main', a === b && b.includes('대치동'), `${a} / ${b}`);
+    }
+  }
+}

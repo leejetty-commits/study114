@@ -100,6 +100,18 @@ export function tutorUnitIdFromLabel(label, units) {
   return hits.length === 1 ? hits[0].id : '';
 }
 
+/**
+ * 과외 단위 표기 모양인지(목록 없이 글자만 본다). 「서울특별시」「세종특별자치시」「경기도 수원시」
+ * 「강원특별자치도 고성군」「전남광주통합특별시 광주」. 구·동·읍·면이 붙으면 아니다.
+ * @param {unknown} label
+ */
+export function isTutorUnitLabel(label) {
+  const text = String(label ?? '').trim();
+  if (/^[가-힣]+(특별시|광역시|특별자치시)$/.test(text)) return true;
+  const m = text.match(/^([가-힣]+(?:도|통합특별시)) ([가-힣]+)$/);
+  return Boolean(m) && !/(구|동|읍|면|리)$/.test(m[2]);
+}
+
 /** 주소 검색·GPS 가 주는 시도 약칭 → 정식 시도 이름. */
 const SIDO_ALIASES = {
   서울: '서울특별시',

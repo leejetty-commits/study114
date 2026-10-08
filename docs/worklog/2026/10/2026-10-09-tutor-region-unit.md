@@ -1,4 +1,4 @@
-# 2026-10-09 과외지역 단위 1단계 (입력·저장·표기 원천)
+# 2026-10-09 과외지역 단위 1단계 (입력·저장·표기 원천) + 2단계 (찾기)
 
 - 브랜치: `cursor/tutor-region-unit-20261009` (기준 `origin/main`)
 - worktree: `d:\work\study114\.wt\tutor-region-unit`
@@ -74,7 +74,7 @@
 | `src/Region/TutorRegionUnit.php` | `isUnitRow`, `labelFromRow`, `present`, `listUnits`, `fetchRow`, `isUnitId`, `assertUnit`, `labelForId`, `unitIdForRegion`, `findUnit` |
 | `preview/shared/tutor-unit-cascade.js` | `normalizeTutorUnits`, `listTutorSidoOptions`, `listTutorUnitsInSido`, `resolveTutorCascade`, `tutorSelectionFromRegionId`, `tutorUnitLabelFromId`, `tutorUnitIdFromLabel`, `tutorUnitIdForAddress`, `renderTutorUnitCascade`, `syncTutorUnitCascade`, `bindTutorUnitCascades` |
 | `sql/schema/078_tutor_unit_gwangju.sql` | 「광주」 단위 행 1개 멱등 INSERT (작성만) |
-| `sql/ops/2026-10-09-wipe-member-accounts.sql` | 관리자 제외 회원 계정 삭제 초안 (작성만) |
+| ~~`sql/ops/2026-10-09-wipe-member-accounts.sql`~~ | 관리자 제외 회원 계정 삭제 초안 (작성만) → **2단계 커밋에서 `git rm`** (사용자가 관리자 콘솔로 직접 삭제 완료, 12절) |
 | `scripts/verify-tutor-region-unit.mjs` | 새 게이트 (`npm run verify:tutor-region-unit`) |
 
 ### 서버
@@ -131,7 +131,7 @@
 | 마이페이지 계정 지역 라벨 (`account-region-label.js`) | 구 라벨 「서울 강남구」 | 단위 라벨 「서울특별시」 |
 | 과외쌤 홈 학생 탭·활동 차트 (`tutor-home-seed.js`, `tutor-activity-chart.js`) | 학생 축 수를 구 id로 셈 | 과외 희망 학생 + 단위 id로 셈 |
 | 동네 인사 (서버) | 「강남구에 새로 오신 과외쌤」 | 「서울특별시에 새로 오신 과외쌤이에요.」 |
-| 손님 기준(location-display) | 과외쌤 기준 id 없으면 강남구 id로 보충 | 보충하지 않음(서버 단위 id만). **표기 「서울시 강남구」는 그대로 → 2단계** |
+| 손님 기준(location-display) | 과외쌤 기준 id 없으면 강남구 id로 보충 | 보충하지 않음(서버 단위 id만). 표기는 2단계에서 「서울특별시」로(14절) |
 | 공부방 가입·찾기·공부방 희망지역 | — | 변경 없음 (`searchRooms`·`region-cascade.js` main과 동일을 새 게이트가 확인) |
 
 ## 5. 검사 표
@@ -210,7 +210,7 @@
 - 검색: 과외쌤 탭은 단위만, 학생(과외 희망)은 단위만, 학생(공부방 희망)·공부방 축은 강남구 그대로 통과(서울 단위·광주 078 행은 공부방 축에서 거절). `searchRooms` 본문 main과 동일.
 - 화면: 시·도 16개, 서울·세종 1단계 완료, 경기도 2단계, 2단계에 구 없음, 전남광주 2단계에 광주. 렌더 HTML에 `region_gu` 없음. 목록 비면 오류 문구.
 
-## 7. 2단계(찾기) 할 일 — 이번 금지 파일이라 손대지 않음
+## 7. 2단계(찾기) 할 일 — 1단계 때 금지 파일이라 손대지 않음 (→ 2단계에서 처리, 12~17절)
 
 **1단계와 2단계는 같이 배포해야 한다.** 지금 찾기 화면은 과외쌤 탭·학생(과외 희망) 탭에 `cities` 기준 구 id를 보내고, 서버는 이제 구 id를 거절한다(`지역은 광역시 또는 도의 시·군으로 선택해 주세요.`).
 
@@ -268,30 +268,220 @@
 ## 8. 배포 전 사용자 할 일
 
 1. **운영 phpMyAdmin에서 `sql/schema/078_tutor_unit_gwangju.sql` 적용** (072·073 선행). 적용 전에는 전남광주 「광주」 단위가 없어 옛 광주 구 주소는 단위를 못 찾는다. 두 번 실행해도 1행.
-2. **`sql/ops/2026-10-09-wipe-member-accounts.sql` 검토 후 단계별 실행** (먼저 DB 백업).
-   - 0단계 SELECT로 남길 관리자·건수 확인 → 1단계 대상 표 → 2~5·7단계 트랜잭션 → 확인 SELECT → COMMIT/ROLLBACK → 8단계 정리.
-   - 「사용자 확인 필요」: 6단계 결제·정산(6-A 결제 기록 남기고 회원 표시만 지움 / 6-B 결제 기록까지 삭제 / 둘 다 안 함), 게시판 글·댓글·반응·신고, 1:1 문의(user_id NULL로 남음), 겸직 관리자의 등록 카드, 업로드 파일·동네 인사 JSON(DB 밖).
-3. **1단계(이 브랜치)와 2단계(찾기)는 같이 배포.** 1단계만 나가면 찾기 화면 과외쌤 탭·과외 희망 학생 탭이 구 id를 보내 서버가 거절한다.
+2. 회원 계정 삭제: **사용자가 관리자 콘솔로 직접 삭제 완료(00:33)**. 남은 회원 jetty@naver.com(마스터·공부방), leejetty@gmail.com(관리자·학생). 삭제 SQL 초안은 2단계 커밋에서 지움.
+3. **1단계와 2단계(찾기)는 같이 배포.** 두 단계 모두 이 브랜치에 있다(1단계 `dad3d2e` + 2단계 커밋). 1단계만 나가면 찾기 화면 과외쌤 탭·과외 희망 학생 탭이 구 id를 보내 서버가 거절한다.
 4. 환경변수·Secrets·`.htaccess` 변경 없음.
 
-## 9. SQL 두 파일 요약
+## 9. SQL 요약
 
 - `078_tutor_unit_gwangju.sql`: `regions`에 (`sido_code '12'`, `sido_name '전남광주통합특별시'`, `sigungu_code '12200'`, `sigungu_name '광주'`, `unit_level 'sigungu'`, `official_code NULL`, `is_selectable 0`, `is_active 1`) 1행을 `WHERE NOT EXISTS`로 멱등 INSERT + 확인 SELECT. `is_selectable 0`이라 공부방 구 목록·검색에 안 나온다. 되돌리기 DELETE 주석 포함.
-- `2026-10-09-wipe-member-accounts.sql`: 관리자를 남기고 회원·등록 데이터 삭제 초안.
-  - 관리자 판정(하나라도 맞으면 남김): ① `users.admin_level IS NOT NULL` (036_admin_level_and_must_change.sql, `AdminRoleService` 「등급 정본」) ② `user_roles.role_type='admin'` (001_init, 036 백필) ③ 코드 보호 이메일 `jetty@naver.com`·`*@dev.local` (`src/Admin/AdminRoleService.php` 26-33·66, `AdminMemberDeleteService::isProtectedOperator`).
-  - 순서 근거: `AdminMemberDeleteService` 삭제 순서 + sql/schema 001~077 FK 확인(RESTRICT: user_profiles·user_roles·students·study_rooms·tutors / CASCADE 자식 표 / SET NULL: provider_profile_views.viewer_user_id·support_tickets.user_id / FK 없는 target 참조는 직접 삭제, 남는 카드 추천 수 보정).
-  - 결제·정산(6단계)은 「사용자 확인 필요」로 주석 처리. 071 적용 여부를 0-3 SELECT로 확인.
+- 회원 계정 삭제 SQL 초안(`sql/ops/2026-10-09-wipe-member-accounts.sql`)은 폐기·삭제(사용자가 관리자 콘솔로 직접 삭제 완료, 00:33).
 
 ## 10. 미확인
 
 - 실제 브라우저·운영 사이트 확인 안 함(작업 브랜치, 미배포).
-- SQL 두 파일은 실행하지 않음(운영 DB 구조와 FK 이름은 sql/schema 파일 기준으로만 확인).
-- 결제·정산 처리 방식은 사용자 결정 필요.
+- 078 SQL은 실행하지 않음(운영 DB 구조는 sql/schema 파일 기준으로만 확인).
 - 관리자 화면 `AdminExposureRepository::regionDisplayExpr`가 세종을 두 번 표기 — 이번 범위 밖.
 - `scripts/capture-student-mypage-shots.mjs`(캡처 도구, 게이트 아님)는 여전히 `cities`만 흉내 냄.
 - `verify-tutor-registration-check-frame.mjs` 실패는 main과 같은 기존 실패(등록점검 파일, 이번 금지 범위).
 
-## 11. 검수·승인
+## 11. 검수·승인 (1단계 `dad3d2e`)
+
+| 항목 | 상태 |
+|---|---|
+| 독립 검수 | 대기 |
+| 사용자 승인 | 대기 |
+
+---
+
+# 2단계 (찾기)
+
+## 12. 지시서 원문 (2단계)
+
+수신 2026-10-09 00:48 (UTC+9)
+
+````text
+수고했다. 이어서 2단계(찾기)를 같은 worktree `d:\work\study114\.wt\tutor-region-unit`, 같은 브랜치 `cursor/tutor-region-unit-20261009`에서 새 커밋으로 진행하라. `dad3d2e`는 독립 리뷰 중이니 amend 금지.
+
+## 먼저: 계정 삭제 SQL 폐기
+사용자가 관리자 콘솔에서 일반 회원을 직접 다 지웠다(2026-10-09 00:33 「회원은 관리자 2개만 남아 있어.」). 남은 회원: jetty@naver.com(마스터·공부방), leejetty@gmail.com(관리자·학생). `ops@dev.local`은 정지됐고 다른 브랜치(`cursor/remove-dev-operator-20261009`)에서 `*@dev.local` 보호·대체 처리를 코드에서 제거 중이다. 따라서 `sql/ops/2026-10-09-wipe-member-accounts.sql`은 필요 없으니 `git rm`으로 지우고, worklog의 배포 전 할 일에서 계정 삭제 항목을 빼고 「사용자가 관리자 콘솔로 직접 삭제 완료(00:33)」로 바꿔라.
+
+## 2단계 범위 (네가 worklog 7절에 적은 5개 그대로)
+사용자 규칙(원문): 「공부방찾기는 기존대로, 과외쌤찾기는 광역시 검색가능, 도는 시나 군까지 입력해야 검색가능.」
+1. 과외쌤찾기 탭 `search-find-surface.js`: `tutor_units` 기준 선택(광역시·세종은 시·도만으로 검색 가능, 도·전남광주는 시·군 선택해야 검색 가능). 구 단계 없음. 공부방찾기는 기존 동작 그대로(바이트 단위로 바뀌지 않게, 공부방 분기 diff 0 확인).
+2. 공부방 모드의 과외쌤 탭 `studentFeedFilters`: 구·동 id → 과외 단위 id로 올려서 `tutor_region_id`.
+3. 현재 위치·GPS·`canonicalFromKakao`: 과외 축이면 `tutorUnitIdForAddress`로 단위 id.
+4. 확대카드 `coarseRegionForGuest`: 「서울특별시」가 「—」로 바뀌지 않게(과외 단위 라벨은 그대로 보여 줌). `tutor-detail.js`, `exposure-render.js` 해당 줄.
+5. 손님 기준 라벨 `location-display.js` `GUEST_BASE_TUTOR_LABEL`·`guestTutorLabel`·`loadGuestBaseline`: 과외 축 손님 기준은 「서울특별시」.
+
+## 겹침 주의
+다른 브랜치 `cursor/remove-samples-20261009`(리뷰 중, 아직 main 아님)가 `search-find-surface.js`(약 137, 180, 2495행 샘플 블록), `exposure-render.js`(샘플 도장·샘플 아이템), `search-tier-render.js`를 고쳤다. 너는 샘플 관련 줄을 건드리지 말고 지역 로직만 고쳐서, 나중에 두 브랜치를 합칠 때 충돌이 작게 하라. 작업 끝에 `git merge-tree $(git merge-base HEAD origin/cursor/remove-samples-20261009) HEAD origin/cursor/remove-samples-20261009` 등으로 충돌 예상 파일·구간을 보고하라(실제 merge는 하지 마라).
+
+## 금지
+베이직카드 항목(정본 73)·저장 버그·샘플 제거는 이번에 고치지 마라(발견 시 보고만). SQL·env·.htaccess 변경 금지(078은 이미 있음). `git add -A` 금지, main push·merge 금지.
+
+## 검사
+새 게이트 `verify-tutor-region-unit`에 2단계 항목 추가(과외쌤찾기: 서울 시·도만으로 검색 가능 / 경기도만으로는 불가 / 경기도 수원시 가능 / 전남광주 광주 가능, GPS 강남구 → 서울특별시, 손님 라벨 서울특별시, 확대카드 「—」 아님, 공부방찾기 강남구 그대로). 기존 지역 검사 30개, deploy.yml 게이트 8개, `build:dothome`. main에서도 실패하는 건 구분. 가능하면 vite dev + 실제 PHP로 과외쌤찾기 화면 확인, 불가하면 미실행+사유.
+
+## 기록
+worklog `2026-10-09-tutor-region-unit.md`에 이 지시 원문, 2단계 변경 파일·함수, 화면별 전/후, 검사 표, 충돌 예상 보고. 파일명 지정 stage, 새 커밋, push.
+
+보고: 새 커밋 hash, 파일별 1줄, 검사 표, 충돌 예상, 배포 전 사용자 할 일, 미확인.
+````
+
+## 13. 2단계 바꾼 파일·함수
+
+| 파일 | 함수·위치 | 변경 |
+|---|---|---|
+| `sql/ops/2026-10-09-wipe-member-accounts.sql` | — | `git rm` (사용자가 관리자 콘솔로 직접 삭제 완료 00:33) |
+| `preview/search-ui/src/search-find-surface.js` | import | `tutor-unit-cascade.js`에서 `TUTOR_UNIT_LIST_ERROR`, `bindTutorUnitCascades`, `normalizeTutorUnits`, `renderTutorUnitCascade`, `tutorUnitIdForAddress`, `tutorUnitIdFromLabel`, `tutorUnitLabelFromId` |
+| 〃 | `bootFindTutorUnits`(새), `whenFindCitiesReady(tab)` | 과외 축 목록 `regions.php?action=tutor_units`를 따로 받음. 공부방 탭은 `cities`만 기다림(그대로) |
+| 〃 | `isTutorUnitAxis`, `tutorUnitFindId`, `axisFindRegionId`, `axisRegionLabel`, `findPickHint`, `tutorUnitIdForPlace`, `tutorUnitCanonical`, `liftTutorPlace` (새) | 과외 축 = 과외쌤 탭 + 학생 탭(과외 희망). 위치(id·라벨·시도/시군구·원문)를 단위로 올림. 도만 있으면 단위 없음 |
+| 〃 | `renderTutorUnitField`(새), `renderField`(`tutor_region_id`, `preferred_region` 과외 희망) | 과외 축은 시·도 → (도·전남광주만) 시·군 2칸. 구 칸 없음. 안내 「광역시는 시·도, 도는 시·군까지 선택해 주세요」. 공부방 희망 학생은 `renderGuCascadeField` 그대로 |
+| 〃 | `studentFeedFilters` | 과외 축이면 현재 위치(구·동)를 단위 id로 올려 `tutor_region_id`/`preferred_region_id` |
+| 〃 | `canonicalFromKakao`, `applyCanonicalLocation`, `canonicalRegionLabel` | 과외 축이면 주소찾기·저장 라벨·URL 라벨을 단위로 올림(손님 제외) |
+| 〃 | `bootFindGpsIfNeeded` | 과외 축이면 역지오코딩 결과를 `tutorUnitCanonical`로 단위로. 못 찾으면 `gps-skip no-tutor-unit` |
+| 〃 | `dropLegacyLessonRegionFilters`, `restoreFindSearch` | 복원 id를 단위 판정(학생은 희망 분기별) |
+| 〃 | `regionLabelFromFilters`, `studentLabelFromFilters`, `rememberedGuId`, `rememberGuId`, `cascadePick` | 축별 id·라벨(`axisFindRegionId`, `axisRegionLabel`) |
+| 〃 | `renderStep3Field` (비활성 문구), `renderTutorRegionHint` | 「광역시·시·군까지입니다」, 「해당 광역시·시·군의 과외쌤 목록」 |
+| 〃 | `runFindSearch`, `runFindSearchWithFilters`, `refreshSearchedLabelWhenCitiesReady` | 안내 문구·목록 대기를 축별로 |
+| 〃 | `bindFindSurfaceEvents`, `guestServerPlace`, `bootGuestFindSurface`, `bootStudentFindFeed` | `region-cascade.js` 바인딩은 `tutor_unit` 칸을 빼고, 단위 칸은 `bindTutorUnitCascades`. 손님 학생 탭은 `base.student` |
+| `preview/search-ui/src/screens/search-page.js` | 검색 복원, 손님 현재 위치 | `whenFindCitiesReady(tab)`, 손님 학생 탭 `base.student` |
+| `preview/shared/location-display.js` | `GUEST_BASE_TUTOR_LABEL`, `GUEST_BASE_STUDENT_LABEL`(새), `guestStudentLabel`(← `guestTutorLabel`), `loadGuestBaseline` | 손님 과외쌤 기준 표기 「서울특별시」. 학생 기준은 「서울시 강남구」 그대로(서버 학생 축 = 강남구) |
+| `preview/home-ui/src/guest-sections.js` | `guestAxisText`, 학생 섹션 라벨 | 학생 섹션은 `base.student` |
+| `preview/shared/tutor-unit-cascade.js` | `isTutorUnitLabel`(새) | 목록 없이 글자로 과외 단위 표기인지 판정 |
+| `preview/home-ui/src/student-blind-teaser.js` | `coarseRegionForGuest` | 과외 단위 표기면 그대로 반환 |
+| `scripts/verify-tutor-region-unit.mjs` | 1부 검색 2건, 4부(새) | 4부 = 실제 `search-find-surface.js` 하위 실행(14·15절) |
+| `scripts/verify-guest-baseline-map-cards.mjs` | P4·P1·P11 | 과외쌤 표기 단언 「서울시 강남구」 → 「서울특별시」, 학생 「서울시 강남구」 단언 추가 |
+| `scripts/verify-hold-find-address.mjs` | S1 | 과외쌤 탭 늦은 목록 = `tutor_units`(서울특별시)로 교체. 같은 「목록 전 숫자 → 목록 뒤 라벨」 단언 유지 |
+
+4번(확대카드)은 `tutor-detail.js`·`exposure-render.js`를 고치지 않고 두 파일이 부르는 `coarseRegionForGuest` 한 곳에서 처리했다. 두 파일 모두 `cursor/remove-samples-20261009`가 고친 파일이라 충돌을 피하려는 것이고, 같은 함수를 쓰는 `detail-utils.js`·`studyroom-detail.js`·학생 티저에도 같이 적용된다. 동 단위 공부방 라벨 결과는 main과 같다(게이트로 확인).
+
+## 14. 화면별 전/후 (2단계)
+
+| 화면 | 전 | 후 |
+|---|---|---|
+| 과외쌤 찾기 지역칸 | `cities` 시·도 → 시·군·구. 「시·군·구까지 선택해 주세요」. 서울은 구까지 골라야 검색 | 시·도 → (도·전남광주만) 시·군. 서울·세종 등 광역시는 시·도만으로 검색. 경기도만 고르면 검색 안 하고 「광역시는 시·도, 도는 시·군까지 선택해 주세요」 |
+| 과외쌤 찾기 결과·현재 위치 | 「서울특별시 강남구」, `tutor_region_id` = 구 id (1단계 서버는 거절) | 「서울특별시」·「경기도 수원시」·「전남광주통합특별시 광주」, `tutor_region_id` = 단위 id |
+| 학생 찾기(과외 희망) | 구 단위 | 과외쌤 찾기와 같은 단위 2칸 |
+| 학생 찾기(공부방 희망)·공부방 찾기 | 구 + 동(3단계) | **변경 없음** (origin/main 모듈과 폼 HTML·검색 요청·현재 위치·주소 비교 같음) |
+| 공부방 회원의 과외쌤 탭 피드 | 현재 위치 구·동 id 그대로 `tutor_region_id` | 단위 id로 올려서 보냄 |
+| GPS·주소찾기 (과외 축) | 「서울시 강남구」 | 「서울특별시」(강남구 대치동), 「경기도 수원시」(영통구 매탄동) |
+| 손님 과외쌤 기준 표기 | 「서울시 강남구」 | 「서울특별시」. 손님 학생 표기는 「서울시 강남구」 그대로 |
+| 손님 확대카드·상세 과외지역 | 「서울특별시」 → 「—」, 「경상북도 안동시」 → 「안동」 | 과외 단위 표기는 그대로. 동 라벨(공부방)은 main과 같음 |
+
+## 15. 검사 표 (2단계)
+
+### 15-1. 새 게이트 `verify-tutor-region-unit` (127 통과, 1단계 93 + 2단계 34)
+
+| 항목 | 결과 |
+|---|---|
+| 서버: `tutor_region_id` = 경기도 수원시 단위 / 전남광주 광주 단위 통과 (실제 PHP, sqlite 073+078) | 통과 |
+| 과외쌤 찾기 지역칸 = 시·도·시·군 2칸, 구 칸 없음, 안내 문구 | 통과 |
+| 서울: 시·도만으로 검색(`tutor_region_id` = 서울 단위), 현재 위치 서울특별시 | 통과 |
+| 경기도만: 검색 요청 0건 + 시·군 안내 | 통과 |
+| 경기도 수원시: 검색, 현재 위치 경기도 수원시 | 통과 |
+| 전남광주 광주: 검색(078 행), 현재 위치 전남광주통합특별시 광주 | 통과 |
+| GPS 강남구 대치동 → 서울특별시(단위 id), 화면 라벨 서울특별시 / 영통구 매탄동 → 경기도 수원시 / 학생(과외 희망) → 서울특별시 | 통과 |
+| 손님 기준 과외쌤 서울특별시 · 학생 서울시 강남구 · 공부방 대치동, 손님 과외쌤 찾기 현재 위치 서울특별시 | 통과 |
+| 확대카드 서울특별시·세종특별자치시·경기도 수원시·전남광주통합특별시 광주·경상북도 안동시 그대로(「—」 아님), 상세 본문 서울특별시 | 통과 |
+| 공부방·동 라벨 손님 표기 = origin/main `coarseRegionForGuest` | 통과 |
+| 공부방 찾기 강남구(공부방 회원·손님), 지역 없음, 학생(공부방 희망) 강남구: 폼 HTML·검색 요청·현재 위치·주소 = origin/main 모듈 | 통과 |
+| 공부방 찾기 `sigungu_region_id` = 강남구 id 그대로, GPS 강남구 대치동 = origin/main | 통과 |
+
+공부방 비교 단언이 실제로 차이를 잡는지 확인: `axisRegionLabel` 공부방 분기에 일부러 글자를 바꾸면 2건 실패 → 되돌림.
+
+### 15-2. 기존 지역 검사 30개 (+ 새 게이트)
+
+| 스크립트 | main | 2단계 후 | 비고 |
+|---|---|---|---|
+| verify-region-save-rules.mjs | 통과 | 통과 50 | |
+| verify-tutor-region-label.mjs | 통과 | 통과 115 | |
+| verify-mypage-account-region.mjs | 통과 | 통과 41 | |
+| verify-location-ssot.mjs | 통과 | 통과 | |
+| verify-tutor-home-student-tab.mjs | 통과 | 통과 63 | |
+| verify-student-mypage-hope-region.mjs | 통과 | 통과 75 | |
+| verify-position-region-tier.mjs | 통과 | 통과 | |
+| verify-student-branch-two-tabs.mjs | 통과 | 통과 162 | |
+| verify-guest-baseline-map-cards.mjs | 통과 | 통과 77 | 단언 교체(13절) |
+| verify-hold-find-address.mjs | 통과 | 통과 | S1 교체(13절) |
+| verify-tutor-signup-seed.mjs | 통과 | 통과 | |
+| verify-tutor-box-real-values.mjs | 통과 | 통과 49 | |
+| verify-student-location-flow.mjs | 통과 | 통과 189 | |
+| verify-region-sido-canonical.mjs | 통과 | 통과 | |
+| verify-student-home-tutor-tier.mjs | 통과 | 통과 24 | |
+| verify-tutor-draft-reuse.mjs | 통과 | 통과 10 | |
+| verify-student-count-halt-and-gate.mjs | 통과 | 통과 28 | |
+| verify-tutor-register-same-tab.mjs | 통과 | 통과 | |
+| verify-tutor-lesson-optional-step.mjs | 통과 | 통과 | |
+| verify-tutor-mypage-frame-ia.mjs | 통과 | 통과 | |
+| **verify-tutor-registration-check-frame.mjs** | **실패 3** | **실패 3** | main과 같은 기존 실패(render: publish wrap / page: CTA after board / copy: BASIC kicker). 지역과 무관 |
+| verify-tutor-inquiries-settings.mjs | 통과 | 통과 | |
+| verify-study-room-inquiries-samples.mjs | 통과 | 통과 | |
+| verify-neighborhood-greeting-history.mjs | 통과 | 통과 65 | |
+| verify-neighborhood-welcome.php | 통과 | 통과 | |
+| verify-position-region-tier.php | 통과 | 통과 | |
+| verify-room-promo-region-match.php | 통과 | 통과 | |
+| verify-pick-region-ownership.php | 통과 | 통과 | |
+| verify-prime-region-ownership.php | 통과 | 통과 | |
+| verify-student-request-text-exposure.php | 통과 | 통과 | |
+| verify-tutor-region-unit.mjs (새) | — | 통과 127 | |
+
+### 15-3. deploy.yml 게이트 8개 + 빌드
+
+| 게이트 | 결과 |
+|---|---|
+| `scripts/php-syntax-check.sh` | 통과 |
+| `npm run verify:board-acl:js` | 통과 |
+| `verify-board-channel-acl.php` | 통과 |
+| `compare-board-acl-matrix.mjs` | 통과 |
+| `npm run verify:shop-page` | 통과 |
+| `scripts/check-no-committed-secrets.sh` | 통과 |
+| `npm run verify:tutor-inquiries-settings` | 통과 |
+| `npm run verify:study-room-inquiries-samples` | 통과 |
+| `npm run build:dothome` | 성공. `public/assets/index-*.js`·`public/search/assets/index-*.js`에 새 안내 문구 포함. 산출물 커밋 안 함 |
+
+### 15-4. vite dev + 실제 PHP 화면 확인
+
+**미실행.** 사유: 이 PC에 MySQL이 없고(127.0.0.1:3306 닫힘, mysqld 프로세스 없음) `config/database.php`도 없다. `Connection`은 MySQL 전용이라 PHP API가 뜨지 않는다. 설정 파일·DB를 새로 만드는 것은 env/설정 변경이고 가짜 데이터가 필요해 금지 범위다. 대신 4부가 실제 `search-find-surface.js`·`location-display.js`·`tutor-detail.js` 모듈을 실제 PHP(sqlite 073+078)가 만든 단위 목록으로 돌린다(브라우저 API만 흉내).
+
+## 16. 충돌 예상 (`origin/cursor/remove-samples-20261009`, 실제 merge 안 함)
+
+`git merge-tree <merge-base> <2단계 트리> origin/cursor/remove-samples-20261009`와 `git merge-tree --write-tree --name-only --messages`로 확인(merge-base `bc76015`). **충돌 0건(충돌 표시 0, `--write-tree` 종료 0).** 양쪽이 고친 6개 파일은 모두 자동 병합된다.
+
+| 파일 | 이 브랜치 구간(base 기준 행) | samples 브랜치 구간 | 판단 |
+|---|---|---|---|
+| `preview/search-ui/src/search-find-surface.js` | 59~2838 사이 지역 로직 40여 곳 | 137, 180, 2495 (샘플 블록) | 자동 병합. 가장 가까운 곳: 우리 100/212 ↔ 137·180, 우리 2200/2678 ↔ 2495. 병합 결과 `node --check` 통과 |
+| `preview/home-ui/src/guest-sections.js` | 35, 179 | 108, 151, 195~199 | 자동 병합. 179 ↔ 195가 16행 차이로 가장 가깝다. 병합 결과 `node --check` 통과 |
+| `scripts/verify-guest-baseline-map-cards.mjs` | 97~337 | 2, 374~389 | 자동 병합. 병합 결과 `node --check` 통과 |
+| `scripts/verify-student-branch-two-tabs.mjs` | 155~419 (1단계) | 517~620 | 자동 병합 |
+| `scripts/verify-student-mypage-metrics.mjs` | 136~443 (1단계) | 74 | 자동 병합 |
+| `package.json` | 40 (1단계 스크립트 1줄) | 48 | 자동 병합 |
+
+`exposure-render.js`·`search-tier-render.js`·`tutor-detail.js`는 이 브랜치가 건드리지 않았다. samples 브랜치가 지운 샘플 파일 10개는 이 브랜치가 건드리지 않았다.
+
+## 17. 배포 전 사용자 할 일 · 발견 보고 · 미확인 (2단계)
+
+배포 전 사용자 할 일:
+
+1. 운영 phpMyAdmin에서 `sql/schema/078_tutor_unit_gwangju.sql` 적용(1단계와 같음, 이번에 SQL 변경 없음).
+2. 1단계 `dad3d2e`와 2단계 커밋을 **같이** 배포.
+3. 회원 계정 삭제는 사용자가 관리자 콘솔로 직접 삭제 완료(00:33) — 할 일 없음.
+4. 환경변수·Secrets·`.htaccess` 변경 없음.
+
+발견 보고(고치지 않음):
+
+- `coarseRegionForGuest`는 공부방 카드(`exposure-render` 769)·`studyroom-detail.js`도 쓴다. 공부방 라벨이 동 없이 정확히 「서울특별시」·「경기도 수원시」 모양이면 전에는 「—」·「수원시권」, 이제는 그대로 나온다. 동이 있는 공부방 라벨은 main과 같다(게이트 확인).
+- GPS로 올린 광역시 위치(「서울특별시」)는 저장 후 새로고침 때 `normalizeLocation`이 GPS 넓은 지명이라 버려 다시 GPS를 돈다(기존 GPS 규칙). 결과는 같은 단위.
+- `runFindSearchWithFilters`를 구 id로 직접 부르면 그대로 서버로 간다. 화면 경로(선택칸·URL 복원·저장값)는 단위만 남기고, 서버도 거절한다.
+- 베이직카드(정본 73)·저장 버그는 이번 작업 중 새로 본 것 없음.
+
+미확인:
+
+- 실제 브라우저·운영 사이트 확인 안 함(15-4).
+- 손님 홈 학생 섹션 표기(「서울시 강남구」)는 서버 학생 축(강남구)에 맞춰 둠 — 학생 축 단위화는 이번 범위 밖.
+
+## 18. 검수·승인 (2단계 커밋)
 
 | 항목 | 상태 |
 |---|---|

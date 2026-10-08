@@ -5,6 +5,8 @@
  * - 비로그인 티저: 조건은 보이되 사람·세부는 특정되지 않게
  */
 
+import { isTutorUnitLabel } from '../../shared/tutor-unit-cascade.js';
+
 /**
  * 공개 표시명 마스킹 — 김○○ / 이○ / 박○학생 / 맑○○
  * @param {string | null | undefined} raw
@@ -50,12 +52,13 @@ export function primarySubjectOne(subjectLabel) {
 }
 
 /**
- * 비로그인: 단지명 제외 · 동/권역만
+ * 비로그인: 단지명 제외 · 동/권역만. 과외 단위 표기(서울특별시·경기도 수원시)는 이미 넓은 지역이라 그대로.
  * @param {string | null | undefined} locationLabel
  */
 export function coarseRegionForGuest(locationLabel) {
   const s = String(locationLabel || '').trim();
   if (!s) return '—';
+  if (isTutorUnitLabel(s)) return s;
   const noComplex = s.split('·')[0].trim();
   const dong = noComplex.match(/([가-힣]{1,8}동)/);
   if (dong) return dong[1];

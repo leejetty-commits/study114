@@ -326,7 +326,7 @@ const GU_CITY = { id: 500, official_code: '1168000000', sido_name: '서울특별
   );
   const base = mod.readGuestBaseline();
   ok('P1 표기: 공부방 대치동', base.room === '대치동', base.room);
-  ok('P4 표기: 과외쌤·학생 서울시 강남구', base.tutor === '서울시 강남구' && base.student === '서울시 강남구', JSON.stringify(base));
+  ok('P4 표기: 과외쌤 서울특별시(과외 단위) · 학생 서울시 강남구', base.tutor === '서울특별시' && base.student === '서울시 강남구', JSON.stringify(base));
   ok('P1·P8 공부방 목록 필터 = 기준 행 id', JSON.stringify(mod.guestScopeFilters('room')) === JSON.stringify({ region_id: '9001' }));
   ok('P4·P8 과외쌤 목록 필터 = 과외 단위 서울특별시 id', JSON.stringify(mod.guestScopeFilters('tutor')) === JSON.stringify({ tutor_region_id: '100' }));
   ok('P4·P8 학생 목록 필터 = 강남구 id', JSON.stringify(mod.guestScopeFilters('student')) === JSON.stringify({ preferred_region_id: '500' }));
@@ -341,7 +341,7 @@ const GU_CITY = { id: 500, official_code: '1168000000', sido_name: '서울특별
   ok('P6 실카드 0: 박스 수치 0(샘플 미포함)', JSON.stringify(mod.readGuestAxisCounts()) === JSON.stringify({ studyRooms: 0, tutors: 0, studentRequests: 0 }));
   ok('P7 기준 행 없음: 공부방 필터 null(지역 없이 부르지 않음)', mod.guestScopeFilters('room') === null);
   ok('P7 기준 행 없음: 과외쌤 필터 null', mod.guestScopeFilters('tutor') === null);
-  ok('P1·P11 기준 행 없음: 표기는 대치동 · 서울시 강남구(빈 값·안내문 아님)', mod.readGuestBaseline().room === '대치동' && mod.readGuestBaseline().tutor === '서울시 강남구');
+  ok('P1·P11 기준 행 없음: 표기는 대치동 · 서울특별시 · 서울시 강남구(빈 값·안내문 아님)', mod.readGuestBaseline().room === '대치동' && mod.readGuestBaseline().tutor === '서울특별시' && mod.readGuestBaseline().student === '서울시 강남구', JSON.stringify(mod.readGuestBaseline()));
 }
 {
   const mod = await freshLocation('fail', async () => {
@@ -349,7 +349,7 @@ const GU_CITY = { id: 500, official_code: '1168000000', sido_name: '서울특별
   });
   ok('P6 region-stats 실패: 수치 null(대시 유지, 더미 숫자 없음)', mod.readGuestAxisCounts() === null);
   ok('P7 region-stats 실패: 목록 필터 null', mod.guestScopeFilters('room') === null && mod.guestScopeFilters('tutor') === null);
-  ok('P11 region-stats 실패: 표기는 대치동 · 서울시 강남구', mod.readGuestBaseline().room === '대치동' && mod.readGuestBaseline().tutor === '서울시 강남구');
+  ok('P11 region-stats 실패: 표기는 대치동 · 서울특별시 · 서울시 강남구', mod.readGuestBaseline().room === '대치동' && mod.readGuestBaseline().tutor === '서울특별시' && mod.readGuestBaseline().student === '서울시 강남구', JSON.stringify(mod.readGuestBaseline()));
 }
 {
   const mod = await freshLocation('stats-fail-cities-ok', async (url) => {
