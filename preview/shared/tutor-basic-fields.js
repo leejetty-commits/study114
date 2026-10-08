@@ -1,7 +1,8 @@
 /**
- * 과외쌤 기본정보 필수 항목 = 베이직카드 항목 (정본 73 2절).
+ * 과외쌤 기본등록 필수 8개 (정본 73 0-2절).
  * src/Tutor/TutorBasicFields.php LABELS 와 같은 키·라벨·순서.
- * 과외지역 2·3번은 선택이라 목록에 없다. 성별은 계정 단계 값이라 넣지 않는다.
+ * 과외지역 2·3번은 선택이라 목록에 없다. 성별은 계정 단계 값이다.
+ * 사진·수업장소·원생수·특징은 상세등록 선택 항목이다.
  */
 
 export const TUTOR_BASIC_FIELDS = [
@@ -12,12 +13,7 @@ export const TUTOR_BASIC_FIELDS = [
   { key: 'fee', label: '월 과외비' },
   { key: 'lessons_per_week', label: '주 회수' },
   { key: 'minutes', label: '1회 수업시간' },
-  { key: 'lesson_places', label: '강의장소' },
-  { key: 'student_gender_group', label: '지도 대상 성별' },
-  { key: 'student_count_group', label: '수업인원' },
-  { key: 'feature_1', label: '특징 1' },
   { key: 'slogan', label: '슬로건' },
-  { key: 'profile_image', label: '프로필 사진' },
 ];
 
 export const TUTOR_BASIC_FIELD_KEYS = TUTOR_BASIC_FIELDS.map((f) => f.key);
@@ -26,26 +22,6 @@ export const TUTOR_BASIC_LABELS = Object.fromEntries(TUTOR_BASIC_FIELDS.map((f) 
 
 export const TUTOR_SCHOOL_LEVEL_CODES = ['preschool', 'elementary', 'middle', 'high', 'n_su', 'general', 'other'];
 
-export const TUTOR_PLACE_OPTIONS = [
-  { value: 'student_home_visit', label: '학생자택방문' },
-  { value: 'public_place', label: '공공장소' },
-  { value: 'tutor_home', label: '강사자택' },
-];
-
-export const GENDER_GROUP_OPTIONS = [
-  { value: 'male', label: '남학생' },
-  { value: 'female', label: '여학생' },
-  { value: 'mixed', label: '남여' },
-];
-
-export const STUDENT_COUNT_OPTIONS = [
-  { value: 'solo', label: '단독' },
-  { value: 'two', label: '2명' },
-  { value: 'three', label: '3명' },
-  { value: 'four_plus', label: '4명 이상' },
-];
-
-export const TUTOR_FEATURE_MAX = 100;
 export const TUTOR_SLOGAN_MAX = 255;
 export const TUTOR_DISPLAY_NAME_MAX = 50;
 
@@ -71,18 +47,12 @@ function positiveInt(v, max) {
  * @property {number|string} [preferred_fee_amount] 원 단위
  * @property {number|string} [lessons_per_week]
  * @property {number|string} [minutes_per_lesson]
- * @property {string[]} [lesson_places]
- * @property {string} [student_gender_group]
- * @property {string} [student_count_group]
- * @property {string} [feature_1]
  * @property {string} [slogan]
- * @property {boolean} [has_profile_image]
  */
 
 /** @param {TutorBasicValues} v @returns {Record<string, boolean>} */
 export function tutorBasicOkMap(v) {
   const t = v && typeof v === 'object' ? v : {};
-  const places = Array.isArray(t.lesson_places) ? t.lesson_places : [];
   return {
     display_name: text(t.tutor_display_name) !== '' && text(t.tutor_display_name).length <= TUTOR_DISPLAY_NAME_MAX,
     primary_region: t.has_primary_region === true,
@@ -91,12 +61,7 @@ export function tutorBasicOkMap(v) {
     fee: positiveInt(t.preferred_fee_amount, 4294967295),
     lessons_per_week: positiveInt(t.lessons_per_week, SMALLINT_UNSIGNED_MAX),
     minutes: positiveInt(t.minutes_per_lesson, SMALLINT_UNSIGNED_MAX),
-    lesson_places: places.some((p) => TUTOR_PLACE_OPTIONS.some((o) => o.value === p)),
-    student_gender_group: GENDER_GROUP_OPTIONS.some((o) => o.value === text(t.student_gender_group)),
-    student_count_group: STUDENT_COUNT_OPTIONS.some((o) => o.value === text(t.student_count_group)),
-    feature_1: text(t.feature_1) !== '' && text(t.feature_1).length <= TUTOR_FEATURE_MAX,
     slogan: text(t.slogan) !== '' && text(t.slogan).length <= TUTOR_SLOGAN_MAX,
-    profile_image: t.has_profile_image === true,
   };
 }
 
@@ -123,12 +88,7 @@ export function tutorBasicValuesFromRecord(t) {
     preferred_fee_amount: r.preferred_fee_amount,
     lessons_per_week: r.lessons_per_week,
     minutes_per_lesson: r.minutes_per_lesson,
-    lesson_places: r.lesson_places,
-    student_gender_group: r.student_gender_group,
-    student_count_group: r.student_count_group,
-    feature_1: r.feature_1,
     slogan: r.slogan,
-    has_profile_image: !!r.has_profile_image,
   };
 }
 
@@ -136,7 +96,6 @@ export function tutorBasicValuesFromRecord(t) {
 export function tutorBasicValuesFromRegisterTutor(t) {
   const r = t && typeof t === 'object' ? t : {};
   const regions = Array.isArray(r.saved_regions) ? r.saved_regions : [];
-  const images = Array.isArray(r.images) ? r.images : [];
   return {
     tutor_display_name: r.tutor_display_name,
     has_primary_region: /^[1-9]\d*$/.test(text(regions[0]?.region_id)),
@@ -145,11 +104,6 @@ export function tutorBasicValuesFromRegisterTutor(t) {
     preferred_fee_amount: r.preferred_fee_amount,
     lessons_per_week: r.lessons_per_week,
     minutes_per_lesson: r.minutes_per_lesson,
-    lesson_places: r.lesson_places,
-    student_gender_group: r.student_gender_group,
-    student_count_group: r.student_count_group,
-    feature_1: r.feature_1,
     slogan: r.slogan,
-    has_profile_image: images.some((img) => text(img?.image_path || img?.name) !== ''),
   };
 }

@@ -35,7 +35,7 @@ import { renderTutorProfilePhotoEditor, bindTutorProfilePhotos } from './profile
 import { TRC_COPY } from './registration-check-copy.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS } from '../../../shared/school-grade.js';
-import { TUTOR_FEATURE_MAX, TUTOR_SLOGAN_MAX } from '../../../shared/tutor-basic-fields.js';
+import { TUTOR_SLOGAN_MAX } from '../../../shared/tutor-basic-fields.js';
 import {
   renderTutorRegionSlot,
   bindTutorRegionSlotEvents,
@@ -290,10 +290,7 @@ function takeBasicSaveFlash() {
   return message;
 }
 
-/**
- * 기본정보 폼 → DB 저장. 과외지역은 칸을 바꿨거나 저장된 지역 1이 없을 때만 검사·저장한다.
- * 도시 목록이 없거나 숫자 region_id가 없으면 저장하지 않는다.
- */
+/** 기본정보 폼 → DB 저장. 도시 목록이 없거나 숫자 region_id가 없으면 저장하지 않는다. */
 async function persistTutorBasicForm(form) {
   if (!tutorCityUnitsReady()) {
     throw new Error(
@@ -302,41 +299,28 @@ async function persistTutorBasicForm(form) {
   }
   const id = Number(form.dataset.p21TutorId);
   const fd = new FormData(form);
-  const current = getTutor(id) || {};
-  const regionsChanged =
-    form.dataset.p21RegionsDirty === '1' ||
-    !(current.has_primary_region && String(current.primary_region_label || '').trim());
-  const payload = {
+  const units = getTutorCityUnits();
+  syncTutorRegionSlotIds(form, units);
+  const checked = validateTutorActivityRegions(collectTutorRegionSlots(form));
+  if (!checked.ok) throw new Error(checked.message);
+  const slots = checked.slots;
+  const primary = slots.find((s) => s.is_primary) || slots[0];
+  const label = activityLabelFromRegionId(primary.region_id, units);
+  if (!label) {
+    throw new Error('과외지역 목록을 다시 불러온 뒤 지역 1을 선택해 주세요.');
+  }
+  await saveTutorBasicInline(id, {
     tutor_display_name: String(fd.get('tutor_display_name') || ''),
     school_level: String(fd.get('school_level') || ''),
     main_subject_note: String(fd.get('main_subject_note') || ''),
     preferred_fee_amount: cheonwonInputToWon(fd.get('preferred_fee_amount')),
     lessons_per_week: String(fd.get('lessons_per_week') || ''),
     minutes_per_lesson: String(fd.get('minutes_per_lesson') || ''),
-    lesson_places: fd.getAll('lesson_places').map(String),
-    student_gender_group: String(fd.get('student_gender_group') || ''),
-    student_count_group: String(fd.get('student_count_group') || ''),
-    feature_1: String(fd.get('feature_1') || ''),
-    slogan: String(fd.get('slogan') || ''),
-  };
-  if (regionsChanged) {
-    const units = getTutorCityUnits();
-    syncTutorRegionSlotIds(form, units);
-    const checked = validateTutorActivityRegions(collectTutorRegionSlots(form));
-    if (!checked.ok) throw new Error(checked.message);
-    const slots = checked.slots;
-    const primary = slots.find((s) => s.is_primary) || slots[0];
-    const label = activityLabelFromRegionId(primary.region_id, units);
-    if (!label) {
-      throw new Error('과외지역 목록을 다시 불러온 뒤 지역 1을 선택해 주세요.');
-    }
-    Object.assign(payload, {
-      primary_region_label: label,
-      primary_region_id: primary.region_id,
-      saved_regions: slots,
-    });
-  }
-  await saveTutorBasicInline(id, payload);
+    slogan: String(fd.get('slogan') || '').trim(),
+    primary_region_label: label,
+    primary_region_id: primary.region_id,
+    saved_regions: slots,
+  });
 }
 
 const LESSON_PLACE_OPTS = [
@@ -385,80 +369,52 @@ function renderBasicForm(tutor) {
   const regionSlotsHtml = `${slots
     .map((slot, i) => renderTutorRegionSlot(slot, i, units, { namePrefix: 'p21_' }))
     .join('')}${regionHint}`;
-  const places = tutor.lesson_places || [];
-  const placeChecks = LESSON_PLACE_OPTS.map(
-    (p) => `
-      <label class="p19-chip${places.includes(p.value) ? ' is-checked' : ''}">
-        <input type="checkbox" name="lesson_places" value="${esc(p.value)}" ${places.includes(p.value) ? 'checked' : ''} />
-        <span>${esc(p.label)}</span>
-      </label>`,
-  ).join('');
   const formBody = `
     <form class="p19-form p21-inline-form" data-p21-form="basic" data-p21-tutor-id="${tutor.id}">
       ${renderFormSection(
         '기본정보 · 과외지역',
-        '베이직카드에 나오는 항목입니다. 과외지역 2·3번 말고는 모두 필수입니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.',
+        '베이직카드에 나오는 기본정보와 과외지역을 한 화면에서 수정합니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.',
         `
         <div class="register-grid-2">
           <div class="register-basic-col">
             <div class="register-basic-fields">
               <label class="p19-field" data-trc-field="display_name">
-                <span class="p19-field__label">표시명 ${reqMark()}</span>
+                <span class="p19-field__label">표시명</span>
                 <input class="p19-input" name="tutor_display_name" value="${esc(tutor.tutor_display_name || '')}" required />
               </label>
               <label class="p19-field" data-trc-field="school_level">
-                <span class="p19-field__label">대상(학교급) ${reqMark()}</span>
+                <span class="p19-field__label">대상(학교급)</span>
                 <select class="p19-input" name="school_level" required>${lessonSelectHtml(SCHOOL_LEVEL_FORM_OPTIONS, tutor.school_level)}</select>
               </label>
               <label class="p19-field" data-trc-field="main_subject">
-                <span class="p19-field__label">주력과목 ${reqMark()}</span>
+                <span class="p19-field__label">주력과목</span>
                 <select class="p19-input" name="main_subject_note" required>
                   ${renderMainSubjectSelect(tutor.main_subject_note || '')}
                 </select>
               </label>
               <label class="p19-field" data-trc-field="fee">
-                <span class="p19-field__label">월 과외비 (천원) ${reqMark()}</span>
+                <span class="p19-field__label">월 과외비 (천원)</span>
                 <input class="p19-input" type="number" name="preferred_fee_amount" value="${esc(wonToCheonwonInput(tutor.preferred_fee_amount))}" required min="1" />
               </label>
               <label class="p19-field" data-trc-field="lessons_per_week">
-                <span class="p19-field__label">주 회수 ${reqMark()}</span>
+                <span class="p19-field__label">주 회수</span>
                 <select class="p19-input" name="lessons_per_week" required>${lessonSelectHtml(lessonWeeklyOptions(tutor.lessons_per_week), lessonWeeklySelectValue(tutor.lessons_per_week))}</select>
               </label>
               <label class="p19-field" data-trc-field="minutes">
-                <span class="p19-field__label">1회 수업시간 ${reqMark()}</span>
+                <span class="p19-field__label">1회 수업시간</span>
                 <select class="p19-input" name="minutes_per_lesson" required>${lessonSelectHtml(lessonDurationOptions(tutor.minutes_per_lesson), lessonDurationSelectValue(tutor.minutes_per_lesson))}</select>
               </label>
-              <label class="p19-field" data-trc-field="student_gender_group">
-                <span class="p19-field__label">지도 대상 성별 ${reqMark()}</span>
-                <select class="p19-input" name="student_gender_group" required>${lessonSelectHtml(GENDER_GROUP_OPTS, tutor.student_gender_group)}</select>
-              </label>
-              <label class="p19-field" data-trc-field="student_count_group">
-                <span class="p19-field__label">수업인원 ${reqMark()}</span>
-                <select class="p19-input" name="student_count_group" required>${lessonSelectHtml(STUDENT_COUNT_OPTS, tutor.student_count_group)}</select>
-              </label>
-              <label class="p19-field" data-trc-field="lesson_places">
-                <span class="p19-field__label">강의장소 ${reqMark()}</span>
-                <div class="p19-chip-group">${placeChecks}</div>
-              </label>
-              <label class="p19-field" data-trc-field="feature_1">
-                <span class="p19-field__label">특징 1 ${reqMark()}</span>
-                <input class="p19-input" name="feature_1" value="${esc(tutor.feature_1 || '')}" maxlength="${TUTOR_FEATURE_MAX}" required />
-              </label>
               <label class="p19-field" data-trc-field="slogan">
-                <span class="p19-field__label">슬로건 ${reqMark()}</span>
+                <span class="p19-field__label">슬로건</span>
                 <input class="p19-input" name="slogan" value="${esc(tutor.slogan || '')}" maxlength="${TUTOR_SLOGAN_MAX}" required />
               </label>
             </div>
           </div>
           <div class="register-basic-col" data-trc-field="primary_region">
-            <p class="p19-field__label" style="margin:0 0 var(--space-2);">과외지역 ${reqMark()}</p>
+            <p class="p19-field__label" style="margin:0 0 var(--space-2);">과외지역</p>
             <p class="p19-field__hint" style="margin-bottom:var(--space-3);">지역 1이 대표입니다. 지역 2·3은 선택입니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.</p>
             ${regionSlotsHtml}
           </div>
-        </div>
-        <div class="p19-field p19-field--full" data-trc-field="profile_image">
-          <span class="p19-field__label">프로필 사진 ${reqMark()}</span>
-          ${renderTutorProfilePhotoEditor(tutor)}
         </div>`,
       )}
       <p class="p21-save-feedback" data-p21-save-feedback role="status" ${saveFlash ? '' : 'hidden'} style="margin:0 0 0.75rem;padding:0.5rem 0.75rem;border-radius:0.5rem;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-weight:600;">${saveFlash ? esc(saveFlash) : ''}</p>
@@ -476,11 +432,19 @@ function renderBasicForm(tutor) {
 
 /** @param {import('./store.js').TutorRecord} tutor */
 function renderDetailForm(tutor) {
+  const places = tutor.lesson_places || [];
+  const placeChecks = LESSON_PLACE_OPTS.map(
+    (p) => `
+      <label class="p19-chip${places.includes(p.value) ? ' is-checked' : ''}">
+        <input type="checkbox" name="lesson_places" value="${esc(p.value)}" ${places.includes(p.value) ? 'checked' : ''} />
+        <span>${esc(p.label)}</span>
+      </label>`,
+  ).join('');
   const formBody = `
     <form class="p19-form p21-inline-form" data-p21-form="detail" data-p21-tutor-id="${tutor.id}">
       ${renderFormSection(
         '수업 · 가격',
-        '월 과외비·주 회수·1회 수업시간·강의장소·원생수는 기본정보에서 수정합니다. 여기서는 가격 상세를 채웁니다.',
+        '월 과외비·주 회수·1회 수업시간은 기본정보에서 수정합니다. 여기서는 수업 상세를 채웁니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <label class="p19-field" data-trc-field="fee_basis">
@@ -491,6 +455,18 @@ function renderDetailForm(tutor) {
             <span class="p19-field__label">월 총 횟수</span>
             <input class="p19-input" name="monthly_session_count" value="${esc(tutor.monthly_session_count || '')}" />
           </label>
+          <label class="p19-field" data-trc-field="student_target">
+            <span class="p19-field__label">지도 대상 성별</span>
+            <select class="p19-input" name="student_gender_group">${lessonSelectHtml(GENDER_GROUP_OPTS, tutor.student_gender_group)}</select>
+          </label>
+          <label class="p19-field" data-trc-field="student_count_group">
+            <span class="p19-field__label">수업인원</span>
+            <select class="p19-input" name="student_count_group">${lessonSelectHtml(STUDENT_COUNT_OPTS, tutor.student_count_group)}</select>
+          </label>
+          <label class="p19-field p19-field--full" data-trc-field="lesson_places">
+            <span class="p19-field__label">강의장소</span>
+            <div class="p19-chip-group">${placeChecks}</div>
+          </label>
           <label class="p19-field p19-field--full" data-trc-field="fee_description">
             <span class="p19-field__label">가격 설명</span>
             <textarea class="p19-input p19-textarea" name="fee_description" rows="2">${esc(tutor.fee_description || '')}</textarea>
@@ -499,7 +475,7 @@ function renderDetailForm(tutor) {
       )}
       ${renderFormSection(
         '학력 · 소개 · 연락',
-        '특징 1과 프로필 사진은 기본정보에서 수정합니다.',
+        '프로필 사진은 아래에서 최대 3장까지 올릴 수 있습니다. 1번 사진이 베이직카드·픽·프라임 카드 대표 사진입니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <div data-trc-field="university">
@@ -522,6 +498,10 @@ function renderDetailForm(tutor) {
               ${UNIVERSITY_STATUS_OPTS.map((o) => `<option value="${o.value}" ${String(tutor.university_status || '') === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
             </select>
           </label>
+          <label class="p19-field" data-trc-field="feature_1">
+            <span class="p19-field__label">특징 1</span>
+            <input class="p19-input" name="feature_1" value="${esc(tutor.feature_1 || '')}" />
+          </label>
           <label class="p19-field" data-trc-field="feature_2">
             <span class="p19-field__label">특징 2</span>
             <input class="p19-input" name="feature_2" value="${esc(tutor.feature_2 || '')}" />
@@ -534,6 +514,10 @@ function renderDetailForm(tutor) {
             <span class="p19-field__label">짧은 소개 ${reqMark()}</span>
             <textarea class="p19-input p19-textarea" name="intro_short" rows="2">${esc(tutor.intro_short || '')}</textarea>
           </label>
+          <div class="p19-field p19-field--full" data-trc-field="profile_image">
+            <span class="p19-field__label">프로필 사진</span>
+            ${renderTutorProfilePhotoEditor(tutor)}
+          </div>
           <label class="p19-field p19-field--full" data-trc-field="intro_long">
             <span class="p19-field__label">상세 소개 ${reqMark()}</span>
             <textarea class="p19-input p19-textarea" name="intro_long" rows="4">${esc(tutor.intro_long || '')}</textarea>
@@ -658,43 +642,6 @@ function bindTutorBasicDirty(form) {
     el.addEventListener('input', markDirty);
     el.addEventListener('change', markDirty);
   });
-  form.querySelectorAll('[data-region-slot] select, [data-region-slot] input').forEach((el) => {
-    el.addEventListener('change', () => {
-      form.dataset.p21RegionsDirty = '1';
-    });
-  });
-}
-
-/** 사진을 올리거나 지운 뒤 다시 그릴 때, 아직 저장하지 않은 기본정보 칸(지역 칸 제외)을 되살린다. */
-function rerenderKeepingBasicFields(root, rerender) {
-  const form = root.querySelector('[data-p21-form="basic"]');
-  const kept = [];
-  const dirty = form?.dataset.p21Dirty === '1';
-  form?.querySelectorAll('[name]').forEach((el) => {
-    if (el.closest('[data-region-slot]') || el.type === 'file') return;
-    kept.push({ name: el.name, value: el.value, checked: el.checked, type: el.type });
-  });
-  rerender();
-  const next = root.querySelector('[data-p21-form="basic"]');
-  if (!next || !kept.length) return;
-  kept.forEach((k) => {
-    const el =
-      k.type === 'checkbox'
-        ? next.querySelector(`[name="${k.name}"][value="${CSS.escape(k.value)}"]`)
-        : next.querySelector(`[name="${k.name}"]`);
-    if (!el) return;
-    if (k.type === 'checkbox') {
-      el.checked = k.checked;
-      el.closest('.p19-chip')?.classList.toggle('is-checked', k.checked);
-    } else {
-      el.value = k.value;
-    }
-  });
-  if (dirty) {
-    next.dataset.p21Dirty = '1';
-    const hint = next.querySelector('[data-p21-dirty-hint]');
-    if (hint) hint.hidden = false;
-  }
 }
 
 /** @param {HTMLElement} root @param {() => void} rerender */
@@ -709,11 +656,11 @@ export function bindTutorRegEvents(root, rerender) {
   scrollToTutorRcFocus(root);
 
   bindUniversityNameReselect(root);
-  const basicForm = root.querySelector('[data-p21-form="basic"]');
-  if (basicForm) {
+  const detailForm = root.querySelector('[data-p21-form="detail"]');
+  if (detailForm) {
     bindTutorProfilePhotos(root, {
-      tutorId: Number(basicForm.dataset.p21TutorId || 0),
-      rerender: () => rerenderKeepingBasicFields(root, rerender),
+      tutorId: Number(detailForm.dataset.p21TutorId || 0),
+      rerender,
     });
   }
 
@@ -771,9 +718,13 @@ export function bindTutorRegEvents(root, rerender) {
             fee_basis_type: String(fd.get('fee_basis_type') || ''),
             monthly_session_count: String(fd.get('monthly_session_count') || ''),
             fee_description: String(fd.get('fee_description') || ''),
+            student_gender_group: String(fd.get('student_gender_group') || ''),
+            student_count_group: String(fd.get('student_count_group') || ''),
+            lesson_places: fd.getAll('lesson_places').map(String),
             university_name: String(fd.get('university_name') || '').trim(),
             major_name: String(fd.get('major_name') || '').trim(),
             university_status: String(fd.get('university_status') || ''),
+            feature_1: String(fd.get('feature_1') || ''),
             feature_2: String(fd.get('feature_2') || ''),
             feature_3: String(fd.get('feature_3') || ''),
             intro_short: String(fd.get('intro_short') || ''),

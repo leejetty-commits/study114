@@ -103,7 +103,9 @@ final class TutorHubService
             }
         };
 
+        $need($tutor['has_lesson_places'], '강의장소');
         $need($tutor['detail_completion_status'] === 'expanded_complete', '상세등록 완료');
+        $need($tutor['has_profile_image'], '프로필 이미지');
         $need(!empty($tutor['intro_short']) || !empty($tutor['intro_long']), '소개문');
 
         return $missing;

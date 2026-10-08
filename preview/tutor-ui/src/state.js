@@ -1,12 +1,6 @@
 /** 과외쌤 등록 — 기본등록(미완료 시) + 상세등록 2단계 */
 
-import {
-  GENDER_GROUP_OPTIONS,
-  STUDENT_COUNT_OPTIONS,
-  TUTOR_PLACE_OPTIONS,
-  tutorBasicMissing,
-  tutorBasicValuesFromRegisterTutor,
-} from '../../shared/tutor-basic-fields.js';
+import { tutorBasicMissing, tutorBasicValuesFromRegisterTutor } from '../../shared/tutor-basic-fields.js';
 
 export const REGISTER_PHASES = {
   basic: {
@@ -40,7 +34,18 @@ export const PERSONAL_GENDER_OPTIONS = [
   { value: 'female', label: '여' },
 ];
 
-export { GENDER_GROUP_OPTIONS, STUDENT_COUNT_OPTIONS, TUTOR_PLACE_OPTIONS };
+export const GENDER_GROUP_OPTIONS = [
+  { value: 'male', label: '남학생' },
+  { value: 'female', label: '여학생' },
+  { value: 'mixed', label: '남여' },
+];
+
+export const STUDENT_COUNT_OPTIONS = [
+  { value: 'solo', label: '단독' },
+  { value: 'two', label: '2명' },
+  { value: 'three', label: '3명' },
+  { value: 'four_plus', label: '4명 이상' },
+];
 
 export const AGE_BAND_OPTIONS = [
   { value: 'early_20s', label: '20대 전반' },
@@ -73,6 +78,12 @@ export const GRADE_BAND_OPTIONS = [
 export const FEE_BASIS_OPTIONS = [
   { value: 'monthly_by_weekly_schedule', label: '주간 일정 기준' },
   { value: 'monthly_by_total_sessions', label: '월 총 횟수 기준' },
+];
+
+export const TUTOR_PLACE_OPTIONS = [
+  { value: 'student_home_visit', label: '학생자택방문' },
+  { value: 'public_place', label: '공공장소' },
+  { value: 'tutor_home', label: '강사자택' },
 ];
 
 export const TEACHING_STYLE_OPTIONS = [
@@ -120,7 +131,7 @@ export function getTutorUnits() {
   return apiMasters.tutorUnits.length ? apiMasters.tutorUnits : [];
 }
 
-/** 기본등록(베이직카드 항목 = shared/tutor-basic-fields.js) 완료 여부 — 상세등록 진입 시 스킵 판단 */
+/** 기본등록(필수 8개 = shared/tutor-basic-fields.js) 완료 여부 — 상세등록 진입 시 스킵 판단 */
 export function isTutorBasicComplete(tutor) {
   if (!tutor || !tutor.tutor_id) return false;
   return tutorBasicMissing(tutorBasicValuesFromRegisterTutor(tutor)).length === 0;
@@ -128,7 +139,7 @@ export function isTutorBasicComplete(tutor) {
 
 export const registerState = {
   tutor_id: null,
-  gender: 'male',
+  gender: '',
   tutor_display_name: '',
   slogan: '',
   intro_short: '',

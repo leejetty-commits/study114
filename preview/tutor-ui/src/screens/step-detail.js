@@ -4,6 +4,9 @@
 import {
   registerState,
   FEE_BASIS_OPTIONS,
+  TUTOR_PLACE_OPTIONS,
+  GENDER_GROUP_OPTIONS,
+  STUDENT_COUNT_OPTIONS,
   AGE_BAND_OPTIONS,
   UNIVERSITY_STATUS_OPTIONS,
   CAREER_YEAR_BAND_OPTIONS,
@@ -68,6 +71,13 @@ function returnToMypage() {
 
 export function renderDetail() {
   const s = registerState;
+  const places = TUTOR_PLACE_OPTIONS.map(
+    (p) => `
+    <label class="form-check">
+      <input type="checkbox" name="lesson_places" value="${p.value}" ${s.lesson_places.includes(p.value) ? 'checked' : ''} />
+      <span class="form-check__label">${p.label}</span>
+    </label>`,
+  ).join('');
   const feeBasis = FEE_BASIS_OPTIONS.map(
     (o) => `
     <label class="form-radio">
@@ -88,6 +98,16 @@ export function renderDetail() {
     <form data-form="detail-all">
       ${renderSectionTitle('수업 · 과목 · 가격')}
       ${s.main_subject_note ? `<p class="form-hint">주력과목(기본등록): <strong>${s.main_subject_note}</strong></p>` : ''}
+      <div class="register-grid-2">
+        <div class="form-group">
+          <span class="form-label">지도 대상 성별</span>
+          <div class="form-radio-group">${radios('student_gender_group', GENDER_GROUP_OPTIONS, s.student_gender_group)}</div>
+        </div>
+        <div class="form-group">
+          <span class="form-label">수업인원</span>
+          <div class="form-radio-group">${radios('student_count_group', STUDENT_COUNT_OPTIONS, s.student_count_group)}</div>
+        </div>
+      </div>
       <div class="form-group">
         <span class="form-label">과외쌤 연령대</span>
         <div class="form-radio-group">${radios('age_band', AGE_BAND_OPTIONS, s.age_band)}</div>
@@ -105,6 +125,10 @@ export function renderDetail() {
       <div class="form-group">
         <label class="form-label" for="fee_description">가격 설명</label>
         <textarea class="form-input form-textarea" name="fee_description" rows="2">${s.fee_description}</textarea>
+      </div>
+      <div class="form-group">
+        <span class="form-label">강의장소</span>
+        <div class="register-check-grid">${places}</div>
       </div>
 
       <div class="register-form-narrow">
@@ -128,7 +152,10 @@ export function renderDetail() {
           <div class="form-radio-group">${radios('career_year_band', CAREER_YEAR_BAND_OPTIONS, s.career_year_band)}</div>
         </div>
         <div class="form-group"><label class="form-label">주교재</label><input class="form-input" name="main_material_note" value="${s.main_material_note}" /></div>
-        <div class="form-group"><label class="form-label">특징 2</label><input class="form-input" name="feature_2" value="${s.feature_2}" /></div>
+        <div class="register-grid-2 register-grid-2--tight">
+          <div class="form-group"><label class="form-label">특징 1</label><input class="form-input" name="feature_1" value="${s.feature_1}" /></div>
+          <div class="form-group"><label class="form-label">특징 2</label><input class="form-input" name="feature_2" value="${s.feature_2}" /></div>
+        </div>
         <div class="form-group">
           <label class="form-check">
             <input type="checkbox" name="proof_document_available" ${s.proof_document_available ? 'checked' : ''} />

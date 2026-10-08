@@ -4,7 +4,6 @@ import { cheonwonInputToWon } from '../../shared/fee-cheonwon.js';
 export function syncBasicFromForm(form, state) {
   if (!form) return;
   const fd = new FormData(form);
-  state.gender = String(fd.get('gender') ?? 'male');
   state.tutor_display_name = String(fd.get('tutor_display_name') ?? '');
   if (fd.has('main_subject_note')) {
     state.main_subject_note = String(fd.get('main_subject_note') ?? '');
@@ -13,10 +12,6 @@ export function syncBasicFromForm(form, state) {
   state.preferred_fee_amount = cheonwonInputToWon(fd.get('preferred_fee_amount'));
   state.lessons_per_week = String(fd.get('lessons_per_week') ?? '');
   state.minutes_per_lesson = String(fd.get('minutes_per_lesson') ?? '');
-  state.lesson_places = fd.getAll('lesson_places').map(String);
-  state.student_gender_group = String(fd.get('student_gender_group') ?? '');
-  state.student_count_group = String(fd.get('student_count_group') ?? '');
-  state.feature_1 = String(fd.get('feature_1') ?? '').trim();
   state.slogan = String(fd.get('slogan') ?? '').trim();
 }
 
@@ -41,10 +36,13 @@ export function syncRegionsFromForm(root, state) {
   state.saved_regions = state.saved_regions.slice(0, 3);
 }
 
-/** 상세 1(수업 상세). 베이직카드 항목(과외비·주 회수·1회 수업시간·강의장소·원생수)은 syncBasicFromForm. */
+/** 상세 1(수업 상세). 기본등록 항목(과외비·주 회수·1회 수업시간·대표 과목)은 syncBasicFromForm. */
 export function syncLessonFromForm(form, state) {
   if (!form) return;
   const fd = new FormData(form);
+  state.student_gender_group = String(fd.get('student_gender_group') ?? '');
+  state.student_count_group = String(fd.get('student_count_group') ?? '');
+  state.lesson_places = fd.getAll('lesson_places').map(String);
   if (fd.has('age_band')) {
     state.age_band = String(fd.get('age_band') ?? '');
   }
@@ -126,6 +124,7 @@ export function syncCareerFromForm(form, state) {
   state.university_status = String(fd.get('university_status') ?? '');
   state.career_year_band = String(fd.get('career_year_band') ?? '');
   state.main_material_note = String(fd.get('main_material_note') ?? '');
+  state.feature_1 = String(fd.get('feature_1') ?? '');
   state.feature_2 = String(fd.get('feature_2') ?? '');
   state.feature_3 = String(fd.get('feature_3') ?? '');
   state.proof_document_available = fd.has('proof_document_available');
@@ -149,17 +148,12 @@ export function payloadForStep(step, state) {
   switch (step) {
     case 'basic':
       return {
-        gender: state.gender,
         tutor_display_name: state.tutor_display_name,
         school_level: state.school_level,
         main_subject_note: state.main_subject_note,
         preferred_fee_amount: state.preferred_fee_amount,
         lessons_per_week: state.lessons_per_week,
         minutes_per_lesson: state.minutes_per_lesson,
-        lesson_places: state.lesson_places,
-        student_gender_group: state.student_gender_group,
-        student_count_group: state.student_count_group,
-        feature_1: state.feature_1,
         slogan: state.slogan,
         saved_regions: state.saved_regions,
       };
@@ -169,6 +163,9 @@ export function payloadForStep(step, state) {
       // 추가 과목 행만. 빈 과목 행은 제외. 대표 과목은 basic 단계.
       const subjects = (state.subjects || []).filter((s) => !s.is_primary && String(s.subject_name || '').trim());
       return {
+        student_gender_group: state.student_gender_group,
+        student_count_group: state.student_count_group,
+        lesson_places: state.lesson_places,
         age_band: state.age_band,
         fee_basis_type: state.fee_basis_type,
         monthly_session_count: state.monthly_session_count,
@@ -183,6 +180,7 @@ export function payloadForStep(step, state) {
         university_status: state.university_status,
         career_year_band: state.career_year_band,
         main_material_note: state.main_material_note,
+        feature_1: state.feature_1,
         feature_2: state.feature_2,
         feature_3: state.feature_3,
         proof_document_available: state.proof_document_available,

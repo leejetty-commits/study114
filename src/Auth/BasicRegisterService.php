@@ -35,7 +35,7 @@ final class BasicRegisterService
 
     /**
      * 기본등록 미완료 여부.
-     * tutor 는 행이 있고 TutorBasicFields 필수 항목(과외지역 1·프로필 사진 포함)이 모두 있을 때만 완료.
+     * tutor 는 행이 있고 TutorBasicFields 필수 8개(과외지역 1 포함)가 모두 있을 때만 완료.
      * study_room_owner 는 행이 있고 홍보지역 1(study_room_regions.slot=1)이 있을 때만 완료.
      * guardian_student 는 기존 학생 기본정보 판정.
      */
@@ -733,11 +733,8 @@ final class BasicRegisterService
     }
 
     /**
-     * 가입 기본정보: TutorBasicFields 필수 항목 + 활동지역 1~3(과외 단위).
+     * 가입 기본정보: TutorBasicFields 필수 8개 + 활동지역 1~3(과외 단위).
      * 활동지역 1 필수 · 2·3 선택 · 빈 슬롯은 저장하지 않음 · 회원주소 폴백 금지.
-     * 프로필 사진은 행이 생긴 뒤 /api/tutor/profile-image.php 로 올린다.
-     * 이미 행이 있으면 사진을 먼저 올린 뒤 저장해야 하고, 새 행이면 저장 직후 같은 화면에서 올린다.
-     * 사진까지 있어야 needsBasicRegister() 가 완료로 본다.
      *
      * @param array<string, mixed> $input
      */
@@ -768,11 +765,7 @@ final class BasicRegisterService
                 return $existingTutorId;
             }
 
-            $values = TutorBasicFields::normalizeInput(
-                $input,
-                $this->tutorSignupHasSlot1($input),
-                $existingTutorId === null || TutorBasicFields::hasProfileImage($pdo, $existingTutorId)
-            );
+            $values = TutorBasicFields::normalizeInput($input, $this->tutorSignupHasSlot1($input));
             $regionIds = $this->normalizeTutorSignupRegions($input);
 
             if ($existingTutorId !== null) {

@@ -50,12 +50,7 @@ export async function saveTutorBasicInline(tutorId, basic) {
     preferred_fee_amount: basic.preferred_fee_amount,
     lessons_per_week: String(basic.lessons_per_week || ''),
     minutes_per_lesson: String(basic.minutes_per_lesson || ''),
-    lesson_places: Array.isArray(basic.lesson_places) ? basic.lesson_places.map(String) : [],
-    student_gender_group: String(basic.student_gender_group || ''),
-    student_count_group: String(basic.student_count_group || ''),
-    feature_1: String(basic.feature_1 || '').trim(),
     slogan: String(basic.slogan || '').trim(),
-    has_profile_image: !!current.has_profile_image,
   };
   const missing = tutorBasicMissing(values);
   if (missing.length) throw new Error(tutorBasicMissingMessage(missing));
@@ -68,10 +63,6 @@ export async function saveTutorBasicInline(tutorId, basic) {
       preferred_fee_amount: values.preferred_fee_amount,
       lessons_per_week: values.lessons_per_week,
       minutes_per_lesson: values.minutes_per_lesson,
-      lesson_places: values.lesson_places,
-      student_gender_group: values.student_gender_group,
-      student_count_group: values.student_count_group,
-      feature_1: values.feature_1,
       slogan: values.slogan,
     };
     if (hasRegions) {
@@ -94,11 +85,6 @@ export async function saveTutorBasicInline(tutorId, basic) {
     preferred_fee_amount: Number(values.preferred_fee_amount),
     lessons_per_week: Number(values.lessons_per_week),
     minutes_per_lesson: Number(values.minutes_per_lesson),
-    lesson_places: values.lesson_places,
-    has_lesson_places: true,
-    student_gender_group: values.student_gender_group,
-    student_count_group: values.student_count_group,
-    feature_1: values.feature_1,
     slogan: values.slogan,
   };
   if (hasRegions) {
@@ -121,6 +107,7 @@ export async function saveTutorBasicInline(tutorId, basic) {
 export async function saveTutorDetailInline(tutorId, detail) {
   const feeBasis = String(detail.fee_basis_type || '');
   const monthlySessions = Number(detail.monthly_session_count || 0);
+  const places = Array.isArray(detail.lesson_places) ? detail.lesson_places.map(String) : [];
   const university = String(detail.university_name || '').trim();
   const introShort = String(detail.intro_short || '').trim();
   const introLong = String(detail.intro_long || '').trim();
@@ -137,11 +124,15 @@ export async function saveTutorDetailInline(tutorId, detail) {
       fee_basis_type: feeBasis,
       monthly_session_count: detail.monthly_session_count || '',
       fee_description: detail.fee_description || '',
+      student_gender_group: detail.student_gender_group || '',
+      student_count_group: detail.student_count_group || '',
+      lesson_places: places,
     });
     await postRegisterSave('career', tutorId, {
       university_name: university,
       major_name: detail.major_name || '',
       university_status: detail.university_status || '',
+      feature_1: detail.feature_1 || '',
       feature_2: detail.feature_2 || '',
       feature_3: detail.feature_3 || '',
     });
@@ -161,9 +152,14 @@ export async function saveTutorDetailInline(tutorId, detail) {
     fee_basis_type: feeBasis,
     monthly_session_count: monthlySessions || undefined,
     fee_description: String(detail.fee_description || ''),
+    lesson_places: places,
+    has_lesson_places: places.length > 0,
+    student_gender_group: String(detail.student_gender_group || ''),
+    student_count_group: String(detail.student_count_group || ''),
     university_name: university,
     major_name: String(detail.major_name || ''),
     university_status: String(detail.university_status || ''),
+    feature_1: String(detail.feature_1 || ''),
     feature_2: String(detail.feature_2 || ''),
     feature_3: String(detail.feature_3 || ''),
     intro_short: introShort,

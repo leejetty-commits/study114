@@ -2,8 +2,8 @@
  * tutor-ui lesson step gate — UI 선택값은 단계 이동을 막지 않음
  * validateLessonState + payloadForStep 동작 검증 (문자열 삭제 여부에만 의존하지 않음)
  *
- * 2026-10-09 기본정보 필수(베이직카드 항목): 월 과외비·주 회수·1회 수업시간·강의장소·원생수·주력과목은
- * 기본정보 단계로 옮겨 필수. 수업 단계는 산정방식(필수)·월 총 횟수(선택)·가격 설명·추가 과목만.
+ * 정본 73 0절(2026-10-09): 월 과외비·주 회수·1회 수업시간·주력과목은 기본등록 필수 8개라 기본 단계에서 검사.
+ * 수업 단계는 산정방식(필수)·월 총 횟수·가격 설명·추가 과목, 그리고 상세 선택 항목 강의장소·원생수.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -27,6 +27,9 @@ function base(overrides = {}) {
     fee_basis_type: 'monthly_by_weekly_schedule',
     monthly_session_count: '',
     fee_description: '',
+    lesson_places: [],
+    student_gender_group: '',
+    student_count_group: '',
     subjects: [],
     ...overrides,
   };
@@ -39,8 +42,25 @@ function base(overrides = {}) {
   const p = payloadForStep('lesson', state);
   assert(!('lessons_per_week' in p), '1 lesson payload has no lessons_per_week (basic step)');
   assert(!('minutes_per_lesson' in p), '1 lesson payload has no minutes_per_lesson (basic step)');
-  assert(!('preferred_fee_amount' in p) && !('lesson_places' in p), '1 lesson payload has no fee/places (basic step)');
+  assert(!('preferred_fee_amount' in p), '1 lesson payload has no fee (basic step)');
   assert(p.fee_basis_type === 'monthly_by_weekly_schedule', '1 weekly-basis: basis preserved');
+  assert(Array.isArray(p.lesson_places) && p.lesson_places.length === 0, '1 lesson payload carries places (detail, empty ok)');
+  assert(p.student_gender_group === '' && p.student_count_group === '', '1 lesson payload: 원생수 empty, no default');
+}
+
+// —— 1b) 상세 선택 항목(강의장소·원생수) 입력 시 lesson payload 로 저장
+{
+  const state = base({
+    lesson_places: ['public_place'],
+    student_gender_group: 'female',
+    student_count_group: 'two',
+  });
+  assert(validateLessonState(state) === null, '1b filled detail optionals pass');
+  const p = payloadForStep('lesson', state);
+  assert(p.lesson_places.join(',') === 'public_place', '1b payload keeps lesson_places');
+  assert(p.student_gender_group === 'female' && p.student_count_group === 'two', '1b payload keeps 원생수');
+  const basicP = payloadForStep('basic', state);
+  assert(!('lesson_places' in basicP) && !('student_gender_group' in basicP), '1b basic payload has no detail items');
 }
 
 // —— 2) 월 총 횟수 기준: 필수만, 선택 공란 → 통과
@@ -83,13 +103,14 @@ function base(overrides = {}) {
   assert(ok({ lessons_per_week: '9007199254740993' }).lessons_per_week === false, '3b beyond Number.isSafeInteger FAIL');
 }
 
-// —— 4) 필수값 누락 → 차단 (과외비·강의장소·주력과목은 기본정보 검사, 산정방식은 수업 단계)
+// —— 4) 필수값 누락 → 차단 (과외비·주력과목은 기본정보 검사, 산정방식은 수업 단계). 강의장소는 선택.
 {
   const missing = tutorBasicMissing({});
   assert(missing.includes('월 과외비'), '4a missing fee blocked (basic)');
   assert(tutorBasicOkMap({ preferred_fee_amount: '0' }).fee === false, '4a fee zero blocked (basic)');
   assert(validateLessonState(base({ fee_basis_type: '' })) === '산정방식을 선택해 주세요.', '4b missing fee basis blocked');
-  assert(missing.includes('강의장소'), '4c missing places blocked (basic)');
+  assert(!missing.includes('강의장소'), '4c places not in basic required list');
+  assert(validateLessonState(base({ lesson_places: [] })) === null, '4c empty places pass lesson step (선택)');
   assert(missing.includes('주력과목'), '4d missing main subject blocked (basic)');
   assert(tutorBasicOkMap({ main_subject_note: '   ' }).main_subject === false, '4d blank main subject blocked (basic)');
 }
@@ -121,8 +142,10 @@ assert(
   assert(lesson.includes("saveAndNavigate(registerState, 'lesson', '/register/contact')"), 'step-lesson saveAndNavigate unchanged');
   assert(lesson.includes('validateLessonState'), 'step-lesson still calls validateLessonState');
   assert(!lesson.includes('name="lessons_per_week"') && !lesson.includes('name="preferred_fee_amount"'), 'step-lesson: weekly/fee inputs moved out');
-  assert(basic.includes('form-label--required" for="lessons_per_week">주 회수'), 'step-basic: 주 회수 required');
-  assert(basic.includes('form-label--required" for="preferred_fee_amount">월 대표 과외비'), 'step-basic: 월 과외비 required');
+  assert(basic.includes('for="lessons_per_week">주 회수') && basic.includes('name="lessons_per_week" required'), 'step-basic: 주 회수 on basic, required');
+  assert(basic.includes('for="preferred_fee_amount">월 과외비') && basic.includes('name="preferred_fee_amount"'), 'step-basic: 월 과외비 on basic');
+  assert(!basic.includes('form-label--required'), 'step-basic: no 필수 mark (정본 73 0-3)');
+  assert(lesson.includes('name="lesson_places"') && !lesson.includes('form-label--required">강의장소'), 'step-lesson: 강의장소 optional');
 }
 
 // —— 범위: home-ui 기본정보 저장은 공용 목록 · evaluator 미수정 · API 는 TutorBasicFields

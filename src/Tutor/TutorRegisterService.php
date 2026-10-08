@@ -170,7 +170,7 @@ final class TutorRegisterService
 
             match ($step) {
 
-                'basic'    => $this->saveBasic($pdo, $tutorId, $input, $createdNow),
+                'basic'    => $this->saveBasic($pdo, $tutorId, $input),
 
                 'regions'  => $this->saveRegions($pdo, $tutorId, $input),
 
@@ -411,23 +411,17 @@ final class TutorRegisterService
 
 
     /**
-     * 기본정보 = TutorBasicFields 필수 항목. 과외지역 1은 이 요청의 saved_regions 또는 저장된 행으로 본다.
-     * 프로필 사진은 /api/tutor/profile-image.php 로 올린다. 이 요청으로 행을 처음 만들 때만 사진 없이 저장하고,
-     * 화면이 저장 직후 같은 화면에서 올린다. 소개·연령대 등 기본정보가 아닌 칸은 건드리지 않는다.
+     * 기본등록 = TutorBasicFields 필수 8개. 과외지역 1은 이 요청의 saved_regions 또는 저장된 행으로 본다.
+     * 상세등록 항목(수업장소·원생수·특징·사진 등)은 건드리지 않는다.
      *
      * @param array<string, mixed> $input
      */
-    private function saveBasic(PDO $pdo, int $tutorId, array $input, bool $createdNow): void
+    private function saveBasic(PDO $pdo, int $tutorId, array $input): void
     {
         $hasRegion = array_key_exists('saved_regions', $input)
             ? $this->inputHasTutorSlot1($input)
             : TutorBasicFields::hasPrimaryRegion($pdo, $tutorId);
-        $values = TutorBasicFields::normalizeInput(
-            $input,
-            $hasRegion,
-            $createdNow || TutorBasicFields::hasProfileImage($pdo, $tutorId)
-        );
-        TutorBasicFields::write($pdo, $tutorId, $values);
+        TutorBasicFields::write($pdo, $tutorId, TutorBasicFields::normalizeInput($input, $hasRegion));
     }
 
 
@@ -534,21 +528,50 @@ final class TutorRegisterService
             $set[] = 'fee_description = ?';
             $params[] = $this->optionalString($input, 'fee_description');
         }
+        if (array_key_exists('student_gender_group', $input)) {
+            $set[] = 'student_gender_group = ?';
+            $params[] = $this->optionalEnum($input, 'student_gender_group', ['male', 'female', 'mixed']);
+        }
+        if (array_key_exists('student_count_group', $input)) {
+            $set[] = 'student_count_group = ?';
+            $params[] = $this->optionalEnum($input, 'student_count_group', ['solo', 'two', 'three', 'four_plus']);
+        }
         if ($set !== []) {
             $params[] = $tutorId;
             $pdo->prepare('UPDATE tutors SET ' . implode(', ', $set) . ' WHERE id = ?')->execute($params);
         }
 
+        if (array_key_exists('lesson_places', $input)) {
+            $this->syncLessonPlaces($pdo, $tutorId, $input);
+        }
         if (array_key_exists('subjects', $input)) {
             $this->syncSubjects($pdo, $tutorId, $input);
+        }
+    }
+
+    /** @param array<string, mixed> $input */
+    private function syncLessonPlaces(PDO $pdo, int $tutorId, array $input): void
+    {
+        $places = $input['lesson_places'] ?? [];
+        if (!is_array($places)) {
+            $places = $places === '' || $places === null ? [] : [$places];
+        }
+
+        $pdo->prepare('DELETE FROM tutor_lesson_places WHERE tutor_id = ?')->execute([$tutorId]);
+        foreach ($places as $place) {
+            $place = (string) $place;
+            if (!in_array($place, ['student_home_visit', 'public_place', 'tutor_home'], true)) {
+                continue;
+            }
+            $pdo->prepare('INSERT INTO tutor_lesson_places (tutor_id, place_type) VALUES (?, ?)')
+                ->execute([$tutorId, $place]);
         }
     }
 
 
 
     /**
-     * 상세 2(학력·경력·특징 2·3). 특징 1은 basic 단계만 저장한다.
-     * 보낸 칸만 고친다. 보내지 않은 칸은 지우지 않는다.
+     * 상세 2(학력·경력·특징). 보낸 칸만 고친다. 보내지 않은 칸은 지우지 않는다.
      *
      * @param array<string, mixed> $input
      */
@@ -560,6 +583,7 @@ final class TutorRegisterService
             'university_status'  => fn () => $this->optionalEnum($input, 'university_status', ['enrolled', 'leave', 'completed', 'graduated']),
             'career_year_band'   => fn () => $this->optionalEnum($input, 'career_year_band', ['y1_3', 'y4_6', 'y7_10', 'y10_plus']),
             'main_material_note' => fn () => $this->optionalString($input, 'main_material_note'),
+            'feature_1'          => fn () => $this->optionalString($input, 'feature_1'),
             'feature_2'          => fn () => $this->optionalString($input, 'feature_2'),
             'feature_3'          => fn () => $this->optionalString($input, 'feature_3'),
             'proof_document_available' => fn () => !empty($input['proof_document_available']) ? 1 : 0,
@@ -1044,7 +1068,7 @@ final class TutorRegisterService
 
             'tutor_id'                   => $tutorId,
 
-            'gender'                     => \Study114\Auth\ProfileGenderSync::get((int) $row['user_id']) ?? 'male',
+            'gender'                     => \Study114\Auth\ProfileGenderSync::get((int) $row['user_id']) ?? '',
 
             'tutor_display_name'         => (string) ($row['tutor_display_name'] ?? ''),
 

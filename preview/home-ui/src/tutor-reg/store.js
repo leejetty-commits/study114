@@ -139,9 +139,13 @@ export function getPublishReadiness(tutor) {
     if (!ok) missing.push(label);
   };
 
+  const placesDone = !!tutor.has_lesson_places;
   const detailDone = tutor.detail_completion_status === 'expanded_complete';
+  const imageDone = !!tutor.has_profile_image;
   const introDone = !!(tutor.intro_short?.trim() || tutor.intro_long?.trim());
+  need(placesDone, '강의장소');
   need(detailDone, '상세등록 완료');
+  need(imageDone, '프로필 이미지');
   need(introDone, '소개문');
 
   if (Array.isArray(tutor.detail_missing) && tutor.detail_missing.length) {
@@ -150,7 +154,7 @@ export function getPublishReadiness(tutor) {
     }
   }
 
-  const checks = [...TUTOR_BASIC_FIELD_KEYS.map((key) => basicOk[key]), detailDone, introDone];
+  const checks = [...TUTOR_BASIC_FIELD_KEYS.map((key) => basicOk[key]), placesDone, detailDone, imageDone, introDone];
   const doneCount = checks.filter(Boolean).length;
 
   /** @type {string[]} */

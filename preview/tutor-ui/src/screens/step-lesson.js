@@ -1,6 +1,9 @@
 import {
   registerState,
   FEE_BASIS_OPTIONS,
+  TUTOR_PLACE_OPTIONS,
+  GENDER_GROUP_OPTIONS,
+  STUDENT_COUNT_OPTIONS,
   AGE_BAND_OPTIONS,
   emptySubject,
 } from '../state.js';
@@ -52,6 +55,13 @@ function subjectRow(sub, idx) {
 
 export function renderLesson() {
   const s = registerState;
+  const places = TUTOR_PLACE_OPTIONS.map(
+    (p) => `
+    <label class="form-check">
+      <input type="checkbox" name="lesson_places" value="${p.value}" ${s.lesson_places.includes(p.value) ? 'checked' : ''} />
+      <span class="form-check__label">${p.label}</span>
+    </label>`,
+  ).join('');
   const feeBasis = FEE_BASIS_OPTIONS.map(
     (o) => `
     <label class="form-radio">
@@ -66,6 +76,16 @@ export function renderLesson() {
       ${renderGuideNotice('상세등록 1단계입니다. 필수 항목을 채운 뒤 다음으로 진행하세요. 나중에 해도 됩니다.')}
       ${renderSectionTitle('수업 · 과목 · 가격')}
       ${s.main_subject_note ? `<p class="form-hint">주력과목(기본등록): <strong>${s.main_subject_note}</strong> · 마이페이지에서 수정</p>` : ''}
+      <div class="register-grid-2">
+        <div class="form-group">
+          <span class="form-label">지도 대상 성별</span>
+          <div class="form-radio-group">${radios('student_gender_group', GENDER_GROUP_OPTIONS, s.student_gender_group)}</div>
+        </div>
+        <div class="form-group">
+          <span class="form-label">수업인원</span>
+          <div class="form-radio-group">${radios('student_count_group', STUDENT_COUNT_OPTIONS, s.student_count_group)}</div>
+        </div>
+      </div>
       <div class="form-group">
         <span class="form-label">과외쌤 연령대</span>
         <div class="form-radio-group">${radios('age_band', AGE_BAND_OPTIONS, s.age_band)}</div>
@@ -84,7 +104,11 @@ export function renderLesson() {
         <label class="form-label" for="fee_description">가격 설명</label>
         <textarea class="form-input form-textarea" name="fee_description" rows="2">${s.fee_description}</textarea>
       </div>
-      <a class="register-mypage-link" href="${mypageRegistrationsUrl()}">월 과외비·주 회수·1회 수업시간·강의장소·원생수 등 기본정보는 마이페이지에서 수정</a>
+      <div class="form-group">
+        <span class="form-label">강의장소</span>
+        <div class="register-check-grid">${places}</div>
+      </div>
+      <a class="register-mypage-link" href="${mypageRegistrationsUrl()}">표시명·과외지역·월 과외비·주 회수·1회 수업시간 등 기본정보는 마이페이지에서 수정</a>
       ${renderNavButtons(prevPath, '다음: 학력·연락', { skipLabel: '나중에 하기' })}
     </form>`;
   return renderRegisterShell(content, {
