@@ -13,7 +13,7 @@
   - 「광역을 하나로 봐도 돼. 학생이 과외쌤을 구에서 찾는게 아니라, 서울, 인천, 의정부 이렇게 찾을수 있으니...」
   - 「과외쌤은 시군구가 아니라, 광역시,시,군 이렇게 되네. 도는 제외야」
   - 「과외쌤은 어차피 프리미엄의 자리갯수가 제한되지 않아. 페이지넘버링이야」
-- **20:18~20:26 (추가 결정 원문)**:
+- **20:18~20:26 (추가 세부 결정 원문)**:
   - 전남광주통합특별시: 옛 광주 5개 구(12210~12330)는 「광주」 하나의 과외 단위, 나머지(시 5·군 17)는 도처럼 시·군 각각.
   - 표시 이름: 정식 이름. 「서울특별시」「인천광역시」「세종특별자치시」(한 번만, 중복 제거), 도는 「경기도 광주시」「강원특별자치도 고성군」. (사용자 원문: 「경기도 광주시 ... 이렇게 나타내야 다 알수가 있지?」)
   - 동네 인사·새 이웃 환영 줄: 「지역을 카드와 같은 방식으로」 → 과외쌤은 카드와 같은 이름·같은 범위(예: 「서울특별시에 새로 오신 과외쌤이에요. 반갑게 맞아 주세요!」). 보는 사람과 같은 과외 단위 번호(`region_id`)일 때 노출.
@@ -89,9 +89,36 @@
 | **공부방 격리** | **완벽 격리** (`is_selectable=0`이므로 공부방 노출 안 됨) | 공부방 격리는 되나 저장이 실패 | 공부방 선택기에 노출되어 혼선 유발 |
 | **공식 코드 충돌** | **없음** (`official_code = NULL`로 안전 처리) | 없음 | 동구 공식 코드가 광주 전체로 오인 |
 
-- **FK 확인 사실**: `sql/schema/008_tutors.sql:78`(`CONSTRAINT fk_tr_region FOREIGN KEY (region_id) REFERENCES regions (id)`) 및 `sql/schema/004_member_ssot_align.sql:105`(`CONSTRAINT fk_students_tutor_region FOREIGN KEY (preferred_tutor_region_id) REFERENCES regions (id)`)에 명시적으로 `FOREIGN KEY`가 선언되어 있다.
-- **결정**: 따라서 가상 키(나)를 사용할 경우 DB 저장 시 MySQL 1452 에러가 발생하여 서비스가 즉시 중단되므로, **(가) SQL로 `regions`에 단위 행 1개를 INSERT하는 방식을 필수로 채택**한다.
-- **표시 이름**: **「전남광주통합특별시 광주」** (정식 명칭 체계에 부합).
+- **FK 확인 사실**:
+  - `sql/schema/008_tutors.sql:78`: `CONSTRAINT fk_tr_region FOREIGN KEY (region_id) REFERENCES regions (id)`
+  - `sql/schema/004_member_ssot_align.sql:105`: `CONSTRAINT fk_students_tutor_region FOREIGN KEY (preferred_tutor_region_id) REFERENCES regions (id)`
+  - 실제 외래키가 선언되어 있어 가상 키 사용 시 MySQL 1452 에러가 발생함.
+- **결정**: **(가) SQL로 `regions`에 단위 행 1개를 INSERT하는 방식을 필수로 채택**한다.
+- **비공식 내부 번호 명시**:
+  - `sigungu_code` '12200'은 **비공식 내부 번호**이며 공식 행정표준코드가 아님.
+  - **073에 12200이 없음을 확인한 근거**: `073_region_official_seed.sql`에서 전남광주(12) 산하 코드는 시도 `12000`, 시 `12110~12190`, 자치구 5개 `12210~12330`, 군 17개 `12710~12870`이며, `12200`은 정의되지 않은 빈 번호임.
+- **INSERT 문 및 스키마 제약조건 통과 확인**:
+  - `001_init.sql`의 원래 스키마: `dong_code`가 NOT NULL이었고 `uk_regions_dong_code` UNIQUE 제약이 있었음.
+  - `072_region_unit_level.sql`의 변경 스키마:
+    * `dong_code`: `ALTER TABLE regions MODIFY dong_code VARCHAR(10) NULL COMMENT '동 코드. 공식 시·구 행은 NULL'`로 수정되어 **NULL 허용**.
+    * `official_code`: `official_code VARCHAR(10) NULL`, `UNIQUE KEY uk_regions_official_code (official_code)` 추가. MySQL UNIQUE 인덱스는 NULL 값의 복수 저장을 허용하므로 **`official_code = NULL`**로 안전함.
+    * `unit_level`: `ENUM('sido','sigungu','dong') NOT NULL DEFAULT 'dong'`. 과외 단위 광주 행은 `'sigungu'`.
+    * `is_selectable`: `TINYINT(1) NOT NULL DEFAULT 0`. 공부방에 영향 없도록 `0`.
+  - **중복 실행에 안전한 멱등 INSERT 문**:
+    ```sql
+    INSERT INTO regions (
+      sido_code, sido_name, sigungu_code, sigungu_name, dong_code, dong_name,
+      unit_level, official_code, is_selectable, is_active
+    )
+    SELECT '12', '전남광주통합특별시', '12200', '광주', NULL, '',
+           'sigungu', NULL, 0, 1
+    WHERE NOT EXISTS (
+      SELECT 1 FROM regions WHERE sido_code = '12' AND sigungu_code = '12200'
+    );
+    ```
+- **코드 단계 주의**:
+  - 저장소 내에서 `RegionGuLink.php`(102행), `BasicCardRegisteredQuery.php`(259행) 등이 `LEFT(sigungu_code, 5) = LEFT(official_code, 5)` 패턴으로 구-동을 연결한다(공부방 전용).
+  - 과외 단위 광주 행은 `official_code`가 `NULL`이므로, **코드에서 `official_code`를 기준으로 시도/시군구를 파싱하거나 자르면 안 되며, 반드시 `sido_code`('12') 및 `sigungu_code`('12200') 컬럼을 직접 읽어야 한다.**
 
 ### (4) 「한눈에 보는 규칙」 표 (실제 주소 → 과외 단위 → 정식 표시 이름)
 
@@ -392,34 +419,29 @@ WHERE NOT (
 
 ---
 
-## 10. 코드 단계 작업 순서안 및 배포 순서
+## 10. 확정 배포 순서 및 중간 상태 대응
 
-### (1) 코드 작업 5단계 분할안 (작은 단위로 단계별 검수)
-- **1단계: 판정 코어 모듈 구축**:
-  - PHP: `src/Region/TutorRegionUnit.php` 신규 작성 (`isTutorUnit($regionId)`, `canonicalTutorUnit($regionRow)`).
-  - JS: `preview/shared/tutor-region-unit.js` 신규 작성.
-- **2단계: 저장/조회 서버 서비스 반영**:
-  - `src/Region/SidoRegionEnsure.php`: `assertTutorUnit()` 분리 및 예외 문구 교체.
-  - `src/Registration/OfficialRegionLabel.php`: 과외 단위(시도 행 및 상위 시 행)의 라벨을 정식 명칭으로 정상 변환.
-  - `src/Tutor/TutorRegisterService.php`, `src/Auth/BasicRegisterService.php`: 과외 단위 검증 적용.
-  - `src/Registration/TutorHubRepository.php`, `src/Registration/StudentHubRepository.php`: 슬롯/희망지역 반환 및 정식 라벨 제공.
-- **3단계: 검색·피드 및 게스트 축 개편**:
-  - `src/Search/SearchService.php`: 게스트 축을 강남구에서 `1100000000` 서울특별시로 변경, 과외 탭 과외 단위 필터링 연동.
-  - `preview/search-ui/src/search-find-surface.js` 및 `preview/shared/location-display.js`: 게스트 베이스라인 및 주소 올림 로직 개편.
-- **4단계: 프론트 UI 및 동네 인사 연동**:
-  - `preview/shared/region-cascade.js`: 2단계 캐스케이드(특·광역·세종 1단계 완료, 도 지역 2단계 시·군 노출) 개편 및 중복 라벨 해소.
-  - `preview/shared/korea-sidos.js`: `12 전남광주통합특별시` 반영.
-  - `preview/auth-ui/src/screens/signup-basic.js`, `preview/home-ui/src/tutor-reg/screens.js`, `preview/home-ui/src/student-reg/screens.js`: UI 선택기 연동.
-  - `src/Neighborhood/NeighborhoodGreetingService.php` 및 `preview/shared/neighborhood-greeting.js`: 환영 줄 시도 포괄 및 단위 ID 기반 일치 비교 연동.
-- **5단계: 자동 검사 갱신 및 CI 검증**:
-  - `scripts/verify-region-unit-lock.mjs` 전면 갱신 및 전체 통합 테스트 통과.
+### (1) 배포 4단계 순서
+1. **1단계 (사용자): 광주 행 INSERT 실행**:
+   - `0단계 SQL` 실행하여 `regions`에 `12200 광주` 행 추가.
+   - `is_selectable = 0`이므로 기존 공부방·과외 화면에 아무런 영향을 주지 않음.
+2. **2단계 (개발/CI): 코드 배포**:
+   - GitHub Actions를 통해 신규 코드(판정, 캐스케이드, 검색) 배포.
+   - 신규 코드는 옛 비단위 데이터를 만나도 500 에러를 내지 않고 안내 문구(다시 선택)로 안전하게 격리 처리함.
+3. **3단계 (사용자): 직후 이관 SQL 실행**:
+   - 운영 DB(phpMyAdmin)에서 `2단계(이관 UPDATE)` 및 `3단계(중복 제거)` 실행.
+4. **4단계 (사용자/공통): 사후 점검 및 화면 확인**:
+   - `4단계 SQL` 실행하여 `invalid_slot_count = 0` 확인.
+   - 실제 운영 사이트에서 과외쌤 마이페이지, 과외 홈, 검색 탭 정상 노출 확인.
 
-### (2) 배포 순서 (무장애 보장)
-1. **사전 준비**: 운영 DB(phpMyAdmin)에서 `0단계(전남광주 광주 단위 행 INSERT)` 실행.
-2. **코드 배포**: GitHub Actions를 통해 변경된 코드 배포 (Vite 빌드 포함).
-   - 신규 코드는 비단위 데이터를 만나도 500 오류 없이 안내 문구로 우아하게 대응하도록 설계되므로 배포 즉시 장애 없음.
-3. **데이터 이관**: 운영 DB에서 `2단계(이관 UPDATE)` 및 `3단계(중복 제거)` 실행.
-4. **사후 확인**: `4단계(사후 점검 SELECT)` 실행하여 유효하지 않은 슬롯이 0건임을 확인.
+### (2) 각 단계 사이 중간 상태 화면 동작표
+
+| 단계 사이 | 상태 요약 | 과외쌤 마이페이지 (지역 수정) | 과외쌤 홈 (우리동네 학생) | 과외 검색 탭 | 게스트 화면 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **(1) 직후<br>(INSERT 완료, 코드 배포 전)** | DB에 `12200 광주` 행만 추가됨.<br>기존 코드 계속 동작 중. | 기존과 100% 동일하게 동작. | 기존 422 오류(옛 데이터인 경우) 또는 기존 상태 유지. | 기존과 100% 동일하게 동작. | 기존과 동일 (서울 강남구 기준). |
+| **(2) 직후<br>(코드 배포 완료, 이관 SQL 전)** | 신규 코드가 배포되었으나<br>DB에는 아직 옛 데이터(구/동) 잔존. | 옛 슬롯에 **`「과외지역을 다시 선택해 주세요 (광역시 또는 시·군)」`** 안내 표시 (500 오류 없음). | 옛 데이터 슬롯은 searchApi 호출 스킵(422 발생 방지), 안내 문구 및 마이페이지 링크 표시. | 과외 탭은 과외 단위 기준으로 필터링, 게스트 기준은 서울특별시로 전환. 미이관 튜터는 일시 미노출. | 과외/학생 축 게스트 카드에 '서울특별시' 정상 표시, '—' 결손 해소. |
+| **(3) 직후<br>(이관 SQL 완료, 점검 전)** | DB 데이터가 모두 공식 161개 과외 단위로 승격 및 중복 제거 완료됨. | 모든 슬롯이 정식 과외 단위(예: '서울특별시', '경기도 수원시')로 정상 표시, 경고 배지 자동 해제. | 대표 슬롯이 정상 과외 단위이므로 학생 수요 목록이 422 없이 즉시 정상 로드. | 이관된 튜터/학생이 통합된 광역 단위 검색에서 전원 정상 노출. | 전원 정상 노출. |
+| **(4) 직후<br>(사후 점검 SELECT 완료)** | 점검 쿼리 `COUNT=0` 확인. | 정상. | 정상. | 정상. | 정상. |
 
 ---
 
@@ -447,84 +469,102 @@ WHERE NOT (
 
 ## [부록] 영향 파일 전체 목록 및 분류
 
-### 1. 반드시 같이 바꿀 것 (코어 판정·저장·검색·캐스케이드·등록 슬롯 등 총 24개)
+기준:
+- **반드시 같이 바꿀 것**: 저장·조회 조건·선택지 목록·단위 변환 로직
+- **표시만 손볼 것**: 문구·라벨 모양만 다루는 로직
+- **영향 없음**: 독립 운영 체계 (공부방 전용 등)
 
-| 파일 경로 | 주요 위치 | 현재 하는 일 | 바꿀 내용 |
-| :--- | :--- | :--- | :--- |
-| `src/Region/SidoRegionEnsure.php` | 61, 78-122행 | `is_selectable=1` 검증 및 '구(시·군)' 예외 문구, 시도 중복 라벨 | 과외 단위 판정 분리, 광역시 또는 시·군 예외 문구, 정식 라벨 |
-| `src/Region/TutorRegionUnit.php` (신규) | 전체 | (없음) | 161개 과외 단위 판정 및 올림 SSOT 클래스 |
-| `src/Search/SearchService.php` | 71, 86-123, 133-164, 215-225, 486~, 745~행 | 게스트 축 강남구, `is_selectable` 의존 검색, '구(시·군)' 문구 | 게스트 과외/학생 축을 서울특별시로 변경, 과외 단위 필터링, 공부방은 강남구 유지 |
-| `src/Region/RegionGuLink.php` | 40-75행 | `is_selectable=1` 기반 구 ID 조회 | 공부방 축 유지, 과외/학생 축 분리 인터페이스 제공 |
-| `src/Registration/OfficialRegionLabel.php` | 31-40행 | `is_selectable=1`일 때만 sigungu_label 반환하여 시도/상위시 null | 과외 단위 행에 대해 정식 명칭 라벨 정상 반환 |
-| `src/Tutor/TutorRegisterService.php` | 45-65행 | `SidoRegionEnsure::assertSelectable` 호출 | `TutorRegionUnit::assertTutorUnit` 호출로 교체 |
-| `src/Auth/BasicRegisterService.php` | 110-135행 | 가입 시 과외지역/희망지역 검증 | 과외 단위 검증으로 교체 |
-| `src/Registration/TutorHubRepository.php` | 159-182, 188-197행 | 과외 슬롯 조회 및 `primaryRegionLabel` 조회 | 과외 단위 라벨 및 `region_selectable` 플래그 정확한 제공 |
-| `src/Registration/StudentHubRepository.php` | 95-120행 | 학생 희망지역 조회 및 라벨 제공 | 과외 단위 라벨 및 유효성 플래그 제공 |
-| `src/Registration/StudentBasicCompleteness.php` | 42-60행 | 학생 기본정보 완성도 판정 시 희망지역 검사 | 과외 단위 유효성 기반 판정 |
-| `src/Paid/TutorPositionAxis.php` | 50-85행 | 과외 유료 노출 축 검증 | 과외 단위 `city_id` 검증 및 정식 라벨 제공 |
-| `src/Paid/ProviderCheckoutService.php` | 110-135행 | 유료 결제 시 노출 축 검증 | 과외 단위 기반 검증 |
-| `src/Paid/ProviderTicketRepository.php` | 210-245행 | 티켓 발급 시 노출 축 할당 | 과외 단위 기반 할당 |
-| `src/Paid/ProviderWaitlistService.php` | 70-95행 | 과외 대기열 검증 | 과외는 매진 없음 원칙 반영 (대기열 미발생) |
-| `src/Neighborhood/NeighborhoodGreetingService.php` | 423-466, 696-784, 786-811, 829-967행 | `sigungu_name <> ''` 필터로 광역 과외쌤 누락, 환영 문구 sigungu_name 의존 | 시도 행 포괄 쿼리, 정식 라벨 기반 환영 문구, 단위 ID 일치 비교 |
-| `preview/shared/korea-sidos.js` | 15-39행 | 정적 광역/도 목록 (29 광주, 46 전남 유지, 12 누락) | `12 전남광주통합특별시` 정식 반영 |
-| `preview/shared/region-cascade.js` | 91-98, 104~, 180~행 | `activityLabelForUnit` 중복 라벨, 광역 2단계 강제 | 정식 명칭 표기, 특·광역·세종 1단계 완료, 도 지역만 2단계 처리 |
-| `preview/shared/tutor-region-slots.js` | 35행 부근 | 슬롯 렌더링 및 '구(시·군)' 문구 | 과외 단위 안내 문구 교체 |
-| `preview/shared/location-display.js` | 576, 618, 688-721행 | `GUEST_BASE_TUTOR_LABEL = '서울시 강남구'` | 게스트 과외/학생 축을 `서울특별시`로 변경 |
-| `preview/shared/neighborhood-greeting.js` | 54-66행 | `sameNeighborhood` 문자열 포함(`includes`) 비교 | 과외쌤은 과외 단위 ID(`region_id`) 일치 비교로 교체 |
-| `preview/home-ui/src/neighborhood-greeting-ui.js` | 58-76, 110-119, 195-224행 | 동네 인사 뷰어 영역 판정 | 과외 단위 번호 기준 필터링 |
-| `preview/home-ui/src/tutor-home-seed.js` | 199, 272행 | 422 '구(시·군)' 문자열 비교 및 학생 수요 로드 | 과외 단위 기반 로드 및 정정된 안내 문구 대응 |
-| `preview/home-ui/src/tutor-activity-chart.js` | 144행 | 차트 내 `활동지역을 구(시·군)까지 다시 선택해 주세요` 안내 | `과외지역을 다시 선택해 주세요 (광역시 또는 시·군)` 문구 교체 |
-| `scripts/verify-region-unit-lock.mjs` | 전체 | 구 단위 검증 및 '구(시·군)' 문자열 검사 | 161개 과외 단위 전수 정합성 및 신규 정책 검증으로 전면 갱신 |
+위치 표기: **「파일 + 함수/상수 이름」**을 주로 적고, 줄 번호는 `rg -n` 실행 결과에서 확인된 줄만 괄호로 병기함.
 
 ---
 
-### 2. 표시만 손볼 것 (문구·라벨·뷰·필터·맵 줌 등 총 28개)
+### 1. 반드시 같이 바꿀 것 (총 41개)
 
-| 파일 경로 | 주요 위치 | 현재 하는 일 | 바꿀 내용 |
-| :--- | :--- | :--- | :--- |
-| `preview/auth-ui/src/screens/signup-basic.js` | 188, 303행 | 가입 화면 지역 힌트 문구 | '광역시 또는 시·군' 2단계 힌트 문구로 수정 |
-| `preview/auth-ui/src/screens/signup-complete.js` | 45-60행 | 가입 완료 시 지역 표시 | 정식 명칭 표시 |
-| `src/Views/auth/partials/basic-tutor.php` | 25-45행 | SSR 과외 기본가입 폼 지역 힌트 | 2단계 선택 안내 문구 수정 |
-| `src/Views/auth/partials/basic-student.php` | 20-40행 | SSR 학생 기본가입 폼 희망지역 힌트 | 광역시 또는 시·군 안내 문구 수정 |
-| `preview/tutor-ui/src/screens/step-basic.js` | 60-85행 | 과외 기본정보 지역 선택기 연동 | 2단계 캐스케이드 바인딩 |
-| `preview/tutor-ui/src/form-collect.js` | 40-55행 | 과외 지역 데이터 수집 | 과외 단위 id 수집 |
-| `preview/tutor-ui/src/state.js` | 30-45행 | 과외 등록 상태 관리 | 과외 단위 상태 보존 |
-| `preview/home-ui/src/tutor-reg/screens.js` | 219-224, 369, 388행 | 마이페이지 기본정보 수정 지역 폼 및 문구 | 과외 단위 선택기 및 힌트 문구 교체 |
-| `preview/home-ui/src/tutor-reg/inline-save.js` | 34-60행 | 인라인 기본 저장 시 지역 검증 | 지역 미변경 시 불필요한 재검증 스킵 처리 |
-| `preview/home-ui/src/tutor-reg/store.js` | 80-110행 | 튜터 등록 스토어 | 과외 단위 데이터 저장 |
-| `preview/home-ui/src/tutor-reg/city-units.js` | 15-40행 | 과외 단위 목록 스토어 | 161개 과외 단위 스토어 지원 |
-| `preview/home-ui/src/tutor-reg/registration-check-model.js` | 79, 221-224행 | 등록 점검 모델 내 지역 완성도 검사 | 과외 단위 유효성 검사 |
-| `preview/home-ui/src/student-reg/student-reg-copy.js` | 72행 | `reselect` 문구 정의 | `과외지역을 다시 선택해 주세요 (광역시 또는 시·군)` 등록 |
-| `preview/home-ui/src/student-reg/screens.js` | 50-75행 | 학생 희망지역 선택 화면 | 2단계 캐스케이드 연동 |
-| `preview/home-ui/src/student-reg/store.js` | 40-65행 | 학생 등록 스토어 | 과외 단위 희망지역 저장 |
-| `preview/home-ui/src/student-reg/format.js` | 138-153행 | 학생 지역 포맷팅 | 정식 명칭 포맷팅 |
-| `preview/home-ui/src/mypage/account-region-label.js` | 30-55행 | 마이페이지 계정 지역 라벨 | 시도 단독 행 정식 라벨 표시 |
-| `preview/shared/student-hope-regions.js` | 25-50행 | 학생 희망지역 슬롯 유틸 | 과외 단위 슬롯 연동 |
-| `preview/shared/student-auth-bridge.js` | 35-60행 | 가입-로그인 브릿지 지역 데이터 전달 | 과외 단위 전달 |
-| `preview/search-ui/src/student-saved-region.js` | 20-45행 | 학생 저장 지역 로드 | 과외 단위 로드 |
-| `preview/search-ui/src/search-schema.js` | 40-65행 | 검색 스키마 정의 | 과외 단위 필드 지원 |
-| `preview/search-ui/src/search-find-surface.js` | 90, 273-298, 360-401, 541, 1203-1206, 1831행 | STALE 라벨, 구 올림, 모의 시 라벨, 피드 필터 | 과외 단위 자동 올림, 손님 서울특별시 라벨 수용 |
-| `preview/search-ui/src/search-exposure-mapper.js` | 31-42행 | 검색 결과 노출 매핑 | 정식 지역 라벨 매핑 |
-| `preview/search-ui/src/search-tier-render.js` | 45-70행 | '{place} 과외쌤' 렌더링 | '서울특별시 과외쌤' 등 정식 명칭 출력 |
-| `preview/search-ui/src/search-map.js` | 101-108, 141-142행 | 지도 줌 레벨 (13 고정) | 과외 단위(광역시 등) 선택 시 적정 줌 레벨 조정 |
-| `preview/home-ui/src/detail-decision/student-request-card.js` | 79행 부근 | 학생 요청 카드 지역 표시 | 정식 과외 단위 명칭 표시 |
-| `preview/home-ui/src/exposure-render.js` | 376-455, 768, 845, 945행 | 카드 티저 및 지역 라벨 포맷 | 시도 행 단독 정식 라벨 처리 |
-| `preview/home-ui/src/student-blind-teaser.js` | 56-73행 | 블라인드 티저 coarseRegion | 서울시만 남을 때 '—' 결손 방지 |
+| 순번 | 파일 경로 | 주요 위치 (함수/상수명) | 분류 근거 | 바꿀 내용 |
+| :---: | :--- | :--- | :--- | :--- |
+| 1 | `src/Region/SidoRegionEnsure.php` | `assertSelectable` (L52), `present` (L78) | 과외 단위 판정 및 예외 처리 코어 | 과외 단위 판정 분리, 광역시 또는 시·군 예외 문구, 정식 라벨 |
+| 2 | `src/Region/TutorRegionUnit.php` (신규) | `isTutorUnit`, `canonicalTutorUnit` | 161개 과외 단위 판정 SSOT | 신규 작성 |
+| 3 | `src/Search/SearchService.php` | `SELECTABLE_REGION_MESSAGE` (L71), `guestAxisCounts` (L87), `guestScopedFilters` (L134), `guestAxisLabels` (L216), `searchTutors` (L734), `tutorSlot1Sql` (L740), `activePositionSku` (L1583) | 검색 조회 조건 및 게스트 축 구성 | 게스트 과외/학생 축을 서울특별시로 변경, 과외 단위 필터링 |
+| 4 | `src/Region/RegionGuLink.php` | `GUEST_BASE_GU_OFFICIAL_CODE` (L28), `guIdByOfficialCode` (L66), `dongIdsUnderGu` (L90) | 공부방 축 유지 및 과외/학생 축 분리 | 공부방 구 연결 유지, 과외/학생 축 분리 인터페이스 제공 |
+| 5 | `src/Registration/OfficialRegionLabel.php` | `resolve` (L25), `sigunguLabel` (L66), `selectableSigunguForDong` (L107) | 과외 단위 라벨 풀이 로직 | 과외 단위 행에 대해 정식 명칭 라벨 정상 반환 |
+| 6 | `src/Tutor/TutorRegisterService.php` | `assertRegionSelectable` (L526, L530) | 과외쌤 활동지역 저장 검증 | `TutorRegionUnit::assertTutorUnit` 호출로 교체 |
+| 7 | `src/Auth/BasicRegisterService.php` | `registerTutorBasic` (L268), `assertStudentPreferredRegionValid` (L876) | 가입 시 과외지역/희망지역 저장 검증 | 과외 단위 검증으로 교체 |
+| 8 | `src/Registration/TutorHubRepository.php` | `savedRegions` (L161), `primaryRegionLabel` (L188), `slot1RegionId` (L199) | 과외 슬롯 조회 및 대표지역 라벨 제공 | 과외 단위 라벨 및 `region_selectable` 플래그 제공 |
+| 9 | `src/Registration/StudentHubRepository.php` | `studentBasic` (L87), `updatePreferredTutorRegionId` (L430) | 학생 희망지역 저장 및 조회 | 과외 단위 검증 및 정식 라벨 제공 |
+| 10 | `src/Registration/StudentBasicCompleteness.php` | `isComplete` (L30), `preferredTutorRegionId` (L48) | 학생 기본정보 완성도 판정 조건 | 과외 단위 유효성 기반 완성도 판정 |
+| 11 | `src/Paid/TutorPositionAxis.php` | `columnsReady` (L26), `requireForTutor` (L49) | 과외 유료 노출 축 검증 및 저장 | 과외 단위 `city_id` 검증 및 정식 라벨 제공 |
+| 12 | `src/Paid/ProviderCheckoutService.php` | `validatePositionScope` | 유료 결제 시 노출 축 검증 | 과외 단위 기반 검증 |
+| 13 | `src/Paid/ProviderTicketRepository.php` | `createPositionSubscription` | 티켓 발급 시 노출 축 할당 | 과외 단위 기반 할당 |
+| 14 | `src/Paid/ProviderWaitlistService.php` | `joinPositionWaitlist` | 과외 대기열 검증 | 과외는 매진 없음 원칙 반영 (대기열 미발생) |
+| 15 | `src/Neighborhood/NeighborhoodGreetingService.php` | `tutorBasicCard` (L423), `welcomeInfoForMine` (L696), `lookupPrimaryDongName` (L786), `listWelcomeItems` (L829) | 환영 줄 쿼리 조건 및 단위 ID 비교 | 시도 행 포괄 쿼리, 정식 라벨 기반 환영 문구, 단위 ID 일치 비교 |
+| 16 | `preview/shared/korea-sidos.js` | `KOREA_METROS` (L17), `KOREA_PROVINCES` (L29), `KOREA_SIDOS` (L42) | 정적 시도 목록 선택지 | `12 전남광주통합특별시` 정식 반영 |
+| 17 | `preview/shared/region-cascade.js` | `activityLabelForUnit` (L91), `resolveCascade` (L104), `regionIdFromSelection` (L180) | 캐스케이드 2단계 선택지 및 단위 변환 | 정식 명칭 표기, 특·광역·세종 1단계 완료, 도 지역 2단계 시·군 노출 |
+| 18 | `preview/shared/tutor-region-slots.js` | `renderTutorRegionSlot` (L30), `validateTutorActivityRegions` (L70) | 슬롯 렌더링 및 유효성 검증 | 과외 단위 슬롯 렌더링 및 검증 |
+| 19 | `preview/shared/location-display.js` | `GUEST_BASE_TUTOR_LABEL` (L618), `guestTutorLabel` (L630), `loadGuestBaseline` (L688) | 게스트 기준 축 정의 및 조회 파라미터 | 게스트 과외/학생 축을 `서울특별시`로 변경 |
+| 20 | `preview/shared/neighborhood-greeting.js` | `sameNeighborhood` (L54) | 동네 일치 판정 조건 | 과외쌤은 과외 단위 ID(`region_id`) 일치 비교로 교체 |
+| 21 | `preview/home-ui/src/neighborhood-greeting-ui.js` | `viewerAreas` (L58, L110, L195) | 동네 인사 뷰어 영역 조회 조건 | 과외 단위 번호 기준 필터링 |
+| 22 | `preview/home-ui/src/tutor-home-seed.js` | `loadTutorStudentDemand` (L160), 422 catch (L199), `readTutorHomeRegions` (L272) | 과외 홈 학생 수요 조회 조건 | 과외 단위 기반 로드 및 정정된 안내 대응 |
+| 23 | `preview/home-ui/src/tutor-activity-chart.js` | `renderTutorActivityBars` (L110), 144행 안내 문구 | 활동지역 분포 차트 조회 및 슬롯별 재선택 | `과외지역을 다시 선택해 주세요 (광역시 또는 시·군)` 문구 교체 |
+| 24 | `scripts/verify-region-unit-lock.mjs` | 전체 | 과외 단위 검증 게이트 스크립트 | 161개 과외 단위 전수 정합성 및 신규 정책 검증으로 전면 갱신 |
+| 25 | `preview/auth-ui/src/screens/signup-basic.js` | `regionIdForSido` (L98), `data.saved_regions` (L730), `data.region_id` (L736) | 가입 화면 과외지역 3칸 및 학생 희망지역 선택·검증·제출 | 과외 단위 기반 수집 및 검증으로 교체 |
+| 26 | `src/Views/auth/partials/basic-tutor.php` | `$cities` (L7-18), `<select name="region_id">` (L32-39) | 서버 렌더 과외 가입 폼의 시도 선택지 목록 생성 및 저장 | 과외 단위 선택지 생성 및 제출 바인딩 |
+| 27 | `src/Views/auth/partials/basic-student.php` | `$cities` (L93-102), `<select name="region_id">` (L91-108) | 서버 렌더 학생 가입 폼의 과외 희망지역 선택지 목록 생성 및 저장 | 과외 단위 선택지 생성 및 제출 바인딩 |
+| 28 | `preview/tutor-ui/src/screens/step-basic.js` | `collectTutorRegionSlots` (L125), `validateTutorActivityRegions` (L126), `registerState.saved_regions` (L47-52) | 과외 등록 step-basic 슬롯 수집·검증 및 저장 상태 갱신 | 과외 단위 슬롯 검증 및 저장 상태 반영 |
+| 29 | `preview/tutor-ui/src/form-collect.js` | `state.saved_regions` (L16-32, L182, L185) | 과외 등록 폼 제출 페이로드 구성 | 과외 단위 슬롯 페이로드 수집 |
+| 30 | `preview/tutor-ui/src/state.js` | `saved_regions` (L151-154), `hasSavedRegions` (L136-137) | 과외 등록 상태 관리 | 과외 단위 상태 보존 및 유효성 판정 |
+| 31 | `preview/home-ui/src/tutor-reg/screens.js` | `tutor.saved_regions` (L252), `saveTutorBasicInline` 호출 (L310-315) | 마이페이지 기본정보 과외지역 슬롯 렌더링 및 저장 수집 | 과외 단위 선택기 렌더링 및 저장 연동 |
+| 32 | `preview/home-ui/src/tutor-reg/inline-save.js` | `saveTutorBasicInline` (L34), `saved_regions` 필터 및 패치 전송 (L38-60) | 마이페이지 인라인 기본 정보 저장 시 지역 슬롯 검증 | 과외 단위 검증 및 지역 미변경 시 재검증 스킵 |
+| 33 | `preview/home-ui/src/tutor-reg/store.js` | `saved_regions` (L26) | 튜터 등록 정보 스토어 및 상태 보존 | 과외 단위 데이터 저장 |
+| 34 | `preview/home-ui/src/tutor-reg/city-units.js` | 과외 단위 목록 로더 및 스토어 | 과외 단위 선택지 목록 제공 | 161개 과외 단위 스토어 지원 |
+| 35 | `preview/shared/student-hope-regions.js` | `normalizeHopeSlots` (L21), `preferred_tutor_regions` (L55, L73-81) | 학생 희망지역 슬롯 데이터 정규화 및 바인딩 | 과외 단위 슬롯 정규화 및 검증 |
+| 36 | `preview/home-ui/src/student-reg/screens.js` | `hopeRegionValues` (L250), `preferred_tutor_region_id` 바인딩 (L277, L544, L696) | 학생 마이페이지 과외 희망지역 선택·저장 수집 | 과외 단위 선택기 렌더링 및 패치 연동 |
+| 37 | `preview/home-ui/src/student-reg/store.js` | `preferred_tutor_region_id` (L38), `preferred_tutor_regions` (L36, L96, L131) | 학생 등록 상태 및 희망지역 스토어 | 과외 단위 희망지역 저장 |
+| 38 | `preview/search-ui/src/search-find-surface.js` | `STALE_GUEST_LABELS` (L90), `resolveCanonicalGuRegionId` (L361), `studentFeedFilters` (L409), `isTutorMockCityLabel` (L1203) | 검색/피드의 구 올림, 조회 조건, 모의 시 라벨, 피드 필터 | 과외 단위 자동 올림, 손님 서울특별시 라벨 수용 |
+| 39 | `preview/search-ui/src/student-saved-region.js` | `preferred_tutor_region_id` (L60), `target.scope === 'sigungu'` 조건 (L110, L116) | 과외 탭 검색 시 학생 희망지역 scope 검사 및 조회 파라미터 조립 | 과외 단위 scope 지원 및 조회 파라미터 구성 |
+| 40 | `preview/home-ui/src/student-blind-teaser.js` | `coarseRegionForGuest` (L56) | 게스트 블라인드 티저 지역 단위 변환 | '서울특별시' 입력 시 '—'로 깨지는 단위 변환 결손 해소 |
+| 41 | `preview/home-ui/src/plans/order-blocks.js` | `listTutorApplyCities` (L125), `city_id` 추출 및 유료 구매 후보 구성 (L131, L186, L276-292) | 과외 유료 노출 판매 축 후보 목록 필터링 | 과외 단위 적용 지역 후보 필터링 및 바인딩 |
 
 ---
 
-### 3. 영향 없음 (독립 운영 체계 총 8개)
+### 2. 표시만 손볼 것 (문구·라벨 모양만 다루는 로직 총 21개)
 
-| 항목 / 파일 경로 | 이유 |
-| :--- | :--- |
-| `preview/home-ui/src/myshop/ShopPage.js` 등 ShopPage 관련 전체 | 공부방 전용 페이지 (`docs/internal/54-shop-page-lock.md`). 과외쌤은 상세 팝업/페이지를 별도 사용 |
-| 공부방 지도 마커 핀 (`search-map.js` 중 room 핀) | 공부방은 고유 동/좌표 핀을 사용하며 과외 단위에 영향받지 않음 |
-| 쪽지·문의·리뷰 (`src/Messages/*`, `src/Reviews/*`) | provider_id 및 user_id 기준 구동, 지역 단위 로직 없음 |
-| 회원 메일 발송 (`src/Mail/*`) | 지역 단위 로직 없음 |
-| 쪽지 수신 설정 (`src/Tutor/TutorInquiryStatus.php`) | `inquiry_status` 컬럼 독립 운영 |
-| SEO 메타태그 생성기 | 정적 라우트 기반, 과외 단위 종속성 없음 |
-| `src/Paid/TutorPositionAxis.php` 내 `cityLabel` 인터페이스 | 호출 시그니처 유지 (내부 매핑만 정본 72 정식 명칭 적용) |
-| `AdminRegistrationListRepository.php` | **미확인 (파일 없음)** — `src/Admin` 내에 해당 파일이 실존하지 않음 |
+| 순번 | 파일 경로 | 주요 위치 (함수/상수명) | 분류 근거 | 바꿀 내용 |
+| :---: | :--- | :--- | :--- | :--- |
+| 1 | `preview/auth-ui/src/screens/signup-complete.js` | `signupComplete` (L45-60) | 가입 완료 화면 텍스트 표시 | 정식 명칭 라벨 표시 |
+| 2 | `preview/home-ui/src/student-reg/student-reg-copy.js` | `TUTOR_HOME_STUDENT_COPY.reselect` (L72) | 안내 문구 사전 정의 | `'과외지역을 다시 선택해 주세요 (광역시 또는 시·군)'` 등록 |
+| 3 | `preview/home-ui/src/student-reg/format.js` | `formatRegion` (L138-153) | 학생 지역 문자열 포맷팅 | 정식 명칭 포맷팅 |
+| 4 | `preview/home-ui/src/mypage/account-region-label.js` | `accountRegionLabel` (L30-55) | 마이페이지 계정 지역 텍스트 표시 | 시도 단독 행 정식 라벨 표시 |
+| 5 | `preview/shared/student-auth-bridge.js` | `syncStudentAuthBridge` (L35-60) | 가입 브릿지 지역 라벨 문자열 전달 | 정식 라벨 전달 |
+| 6 | `preview/search-ui/src/search-schema.js` | `searchSchema` (L40-65) | 검색 디스플레이 라벨 정의 | 정식 명칭 라벨 지원 |
+| 7 | `preview/search-ui/src/search-exposure-mapper.js` | `mapExposure` (L31-42) | 검색 결과 노출 텍스트 매핑 | 정식 지역 라벨 매핑 |
+| 8 | `preview/search-ui/src/search-tier-render.js` | `renderTierBadge` (L45-70) | '{place} 과외쌤' 텍스트 렌더링 | '서울특별시 과외쌤' 등 정식 명칭 출력 |
+| 9 | `preview/search-ui/src/search-map.js` | `initMap` (L101-108, L141-142) | 지도 줌 레벨 조정 | 과외 단위(광역시 등) 선택 시 적정 줌 레벨 조정 |
+| 10 | `preview/home-ui/src/detail-decision/student-request-card.js` | `renderStudentRequestCard` (L79) | 학생 요청 카드 텍스트 표시 | 정식 과외 단위 명칭 표시 |
+| 11 | `preview/home-ui/src/detail-decision/tutor-detail.js` | `renderTutorDetail` (L21-31) | 과외쌤 상세 팝업 지역 텍스트 포맷 | 정식 명칭 라벨 포맷 |
+| 12 | `preview/home-ui/src/user-actions-ui.js` | `renderUserActions` (L219-220) | 사용자 액션 UI 텍스트 | 지역 정식 명칭 표시 |
+| 13 | `preview/home-ui/src/student-review-ui.js` | `renderStudentReview` (L124) | 학생 리뷰 UI 텍스트 | 지역 정식 명칭 표시 |
+| 14 | `preview/home-ui/src/home-card-samples/presets.js` | `cardPresets` (L16) | 카드 샘플 프리셋 텍스트 | 정식 명칭 예시 반영 |
+| 15 | `preview/home-ui/src/guest-sections.js` | `renderGuestSections` (L70-96) | 게스트 섹션 텍스트 표시 | 정식 명칭 라벨 표시 |
+| 16 | `preview/home-ui/src/section-headings.js` | `renderSectionHeadings` (L65-73) | 섹션 헤딩 텍스트 | 정식 명칭 라벨 표시 |
+| 17 | `preview/home-ui/src/provider-home.js` | `renderProviderHome` (L223-243) | 공급자 홈 텍스트 표시 | 정식 명칭 라벨 표시 |
+| 18 | `preview/home-ui/src/screens/tutor.js` | `renderTutorScreen` (L46-61) | 튜터 스크린 텍스트 표시 | 정식 명칭 라벨 표시 |
+| 19 | `src/Admin/AdminExposureRepository.php` | `regionDisplayExpr` (L20) | 관리자 화면 지역 라벨 표현식 | 정식 명칭 표현식 연동 |
+| 20 | `src/Admin/AdminRegistrationListRepository.php` | `page` (L53-108, 특히 L71 `$region`, L83-86 `labels->resolve`) | 관리자 등록 목록 라벨 표시 및 지역 필터 | `OfficialRegionLabel` 정식 라벨 표시 연동 |
+| 21 | `preview/home-ui/src/tutor-reg/registration-check-model.js` | `checkTutorRegistration` (L79, L221-224) | 등록 점검 모델 내 지역 완성도 라벨 표시 | 과외 단위 라벨 표시 |
+
+---
+
+### 3. 영향 없음 (독립 운영 체계 총 7개)
+
+| 순번 | 항목 / 파일 경로 | 이유 |
+| :---: | :--- | :--- |
+| 1 | `preview/home-ui/src/myshop/ShopPage.js` 등 ShopPage 관련 전체 | 공부방 전용 페이지 (`docs/internal/54-shop-page-lock.md`). 과외쌤은 상세 팝업/페이지를 별도 사용 |
+| 2 | 공부방 지도 마커 핀 (`search-map.js` 중 room 핀) | 공부방은 고유 동/단지 좌표 핀을 사용하며 과외 단위에 영향받지 않음 |
+| 3 | 쪽지·문의·리뷰 (`src/Messages/*`, `src/Reviews/*`) | `provider_id` 및 `user_id` 기준 구동, 지역 단위 로직 없음 |
+| 4 | 회원 메일 발송 (`src/Mail/*`) | 지역 단위 로직 없음 |
+| 5 | 쪽지 수신 설정 (`src/Tutor/TutorInquiryStatus.php`) | `inquiry_status` 컬럼 독립 운영 |
+| 6 | SEO 메타태그 생성기 | 정적 라우트 기반, 과외 단위 종속성 없음 |
+| 7 | `src/Paid/TutorPositionAxis.php` 내 `cityLabel` 인터페이스 | 호출 시그니처 유지 (내부 매핑만 정본 72 정식 명칭 적용) |
 
 ---
 

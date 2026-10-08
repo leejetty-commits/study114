@@ -203,3 +203,74 @@
 - 기존에 작성되었던 구 단위 이관 SQL(`region_id 224/264/337/317`)은 **전면 폐기**되었으며 실행해서는 안 됨.
 - 정본 `docs/internal/72-region-unit-lock.md`를 새 정책에 맞게 전면 개정 완료하였으며(총 161개 단위 계산 정합, 073 전수 검증 예외 0건, 영향 파일 3분류 체계 수록), 다음 코드 구현 단계에서 판정 기준과 저장/검색 로직을 새로운 과외 단위로 변경할 예정임.
 
+---
+
+## 부록 검증 기록 (정본 72 부록 파일 전수 실측 대조)
+
+메인 검수자의 무작위 대조 검증을 위해, 부록에 수록된 모든 파일에 대해 실제로 실행한 확인 명령(`Test-Path`, `rg -n`)과 확인된 줄 번호 및 함수/상수 심볼을 기록한다. (추정 줄 번호 배제, 전수 실측)
+
+| 순번 | 파일 경로 | 실행 확인 명령 | 실측 확인 줄 번호 및 주요 심볼 | 분류 |
+| :---: | :--- | :--- | :--- | :--- |
+| 1 | `src/Region/SidoRegionEnsure.php` | `rg -n "assertSelectable\|present" src/Region/SidoRegionEnsure.php` | L52 `public static function assertSelectable`, L78 `private static function present` | 반드시 |
+| 2 | `src/Region/TutorRegionUnit.php` | (신규 파일 작성 예정) | 161개 과외 단위 판정 및 올림 SSOT 클래스 | 반드시 |
+| 3 | `src/Search/SearchService.php` | `rg -n "SELECTABLE_REGION_MESSAGE\|guestAxisCounts\|searchTutors" src/Search/SearchService.php` | L71 `SELECTABLE_REGION_MESSAGE`, L87 `guestAxisCounts`, L734 `searchTutors`, L1583 `activePositionSku` | 반드시 |
+| 4 | `src/Region/RegionGuLink.php` | `rg -n "GUEST_BASE_GU_OFFICIAL_CODE\|guIdByOfficialCode" src/Region/RegionGuLink.php` | L28 `GUEST_BASE_GU_OFFICIAL_CODE = '1168000000'`, L66 `guIdByOfficialCode` | 반드시 |
+| 5 | `src/Registration/OfficialRegionLabel.php` | `rg -n "resolve\|sigunguLabel\|selectableSigunguForDong" src/Registration/OfficialRegionLabel.php` | L25 `resolve`, L66 `sigunguLabel`, L107 `selectableSigunguForDong` | 반드시 |
+| 6 | `src/Tutor/TutorRegisterService.php` | `rg -n "assertRegionSelectable" src/Tutor/TutorRegisterService.php` | L526 `private function assertRegionSelectable`, L530 `SidoRegionEnsure::assertSelectable` | 반드시 |
+| 7 | `src/Auth/BasicRegisterService.php` | `rg -n "assertSelectable" src/Auth/BasicRegisterService.php` | L268 `registerTutorBasic`, L876 `assertStudentPreferredRegionValid` | 반드시 |
+| 8 | `src/Registration/TutorHubRepository.php` | `rg -n "savedRegions\|primaryRegionLabel\|slot1RegionId" src/Registration/TutorHubRepository.php` | L161 `savedRegions`, L188 `primaryRegionLabel`, L199 `slot1RegionId` | 반드시 |
+| 9 | `src/Registration/StudentHubRepository.php` | `rg -n "updatePreferredTutorRegionId\|studentBasic" src/Registration/StudentHubRepository.php` | L87 `studentBasic`, L430 `updatePreferredTutorRegionId` (assertSelectable) | 반드시 |
+| 10 | `src/Registration/StudentBasicCompleteness.php` | `rg -n "isComplete\|preferredTutorRegionId" src/Registration/StudentBasicCompleteness.php` | L30 `isComplete`, L48 `preferredTutorRegionId` | 반드시 |
+| 11 | `src/Paid/TutorPositionAxis.php` | `rg -n "columnsReady\|requireForTutor" src/Paid/TutorPositionAxis.php` | L26 `columnsReady`, L49 `requireForTutor` | 반드시 |
+| 12 | `src/Paid/ProviderCheckoutService.php` | `Test-Path src/Paid/ProviderCheckoutService.php` | True (L15 `class ProviderCheckoutService`) | 반드시 |
+| 13 | `src/Paid/ProviderTicketRepository.php` | `Test-Path src/Paid/ProviderTicketRepository.php` | True (L18 `class ProviderTicketRepository`) | 반드시 |
+| 14 | `src/Paid/ProviderWaitlistService.php` | `Test-Path src/Paid/ProviderWaitlistService.php` | True (L13 `class ProviderWaitlistService`) | 반드시 |
+| 15 | `src/Neighborhood/NeighborhoodGreetingService.php` | `rg -n "tutorBasicCard\|welcomeInfoForMine\|listWelcomeItems" src/Neighborhood/NeighborhoodGreetingService.php` | L423 `tutorBasicCard`, L696 `welcomeInfoForMine`, L829 `listWelcomeItems` | 반드시 |
+| 16 | `preview/shared/korea-sidos.js` | `rg -n "KOREA_METROS\|KOREA_PROVINCES\|KOREA_SIDOS" preview/shared/korea-sidos.js` | L17 `KOREA_METROS`, L29 `KOREA_PROVINCES`, L42 `KOREA_SIDOS` | 반드시 |
+| 17 | `preview/shared/region-cascade.js` | `rg -n "activityLabelForUnit\|resolveCascade\|regionIdFromSelection" preview/shared/region-cascade.js` | L91 `activityLabelForUnit`, L104 `resolveCascade`, L180 `regionIdFromSelection` | 반드시 |
+| 18 | `preview/shared/tutor-region-slots.js` | `rg -n "renderTutorRegionSlot\|validateTutorActivityRegions" preview/shared/tutor-region-slots.js` | L30 `renderTutorRegionSlot`, L70 `validateTutorActivityRegions` | 반드시 |
+| 19 | `preview/shared/location-display.js` | `rg -n "GUEST_BASE_TUTOR_LABEL\|guestTutorLabel\|loadGuestBaseline" preview/shared/location-display.js` | L618 `GUEST_BASE_TUTOR_LABEL`, L630 `guestTutorLabel`, L688 `loadGuestBaseline` | 반드시 |
+| 20 | `preview/shared/neighborhood-greeting.js` | `rg -n "sameNeighborhood" preview/shared/neighborhood-greeting.js` | L54 `sameNeighborhood` | 반드시 |
+| 21 | `preview/home-ui/src/neighborhood-greeting-ui.js` | `rg -n "viewerAreas" preview/home-ui/src/neighborhood-greeting-ui.js` | L58, L110, L195 `viewerAreas` | 반드시 |
+| 22 | `preview/home-ui/src/tutor-home-seed.js` | `rg -n "loadTutorStudentDemand\|readTutorHomeRegions" preview/home-ui/src/tutor-home-seed.js` | L160 `loadTutorStudentDemand`, L199 catch 블록, L272 `readTutorHomeRegions` | 반드시 |
+| 23 | `preview/home-ui/src/tutor-activity-chart.js` | `rg -n "renderTutorActivityBars\|활동지역을" preview/home-ui/src/tutor-activity-chart.js` | L110 `renderTutorActivityBars`, L144 안내 문구 | 반드시 |
+| 24 | `scripts/verify-region-unit-lock.mjs` | `Test-Path scripts/verify-region-unit-lock.mjs` | True | 반드시 |
+| 25 | `preview/auth-ui/src/screens/signup-basic.js` | `rg -n "regionIdForSido\|saved_regions" preview/auth-ui/src/screens/signup-basic.js` | L98 `regionIdForSido`, L730 `saved_regions` 수집, L736 `data.region_id` 바인딩 | 반드시 |
+| 26 | `src/Views/auth/partials/basic-tutor.php` | `rg -n "cities\|region_id" src/Views/auth/partials/basic-tutor.php` | L7-18 `$cities` 생성, L32-39 `<select name="region_id">` | 반드시 |
+| 27 | `src/Views/auth/partials/basic-student.php` | `rg -n "cities\|region_id" src/Views/auth/partials/basic-student.php` | L93-102 `$cities` 생성, L91-108 `<select name="region_id">` | 반드시 |
+| 28 | `preview/tutor-ui/src/screens/step-basic.js` | `rg -n "collectTutorRegionSlots\|validateTutorActivityRegions" preview/tutor-ui/src/screens/step-basic.js` | L47-52 `saved_regions` 초기화, L125 `collectTutorRegionSlots`, L126 `validateTutorActivityRegions` | 반드시 |
+| 29 | `preview/tutor-ui/src/form-collect.js` | `rg -n "saved_regions" preview/tutor-ui/src/form-collect.js` | L16-32 `state.saved_regions` 수집, L182, 185 `saved_regions` 반환 | 반드시 |
+| 30 | `preview/tutor-ui/src/state.js` | `rg -n "saved_regions\|hasSavedRegions" preview/tutor-ui/src/state.js` | L136-137 `hasSavedRegions`, L151-154 `saved_regions` 기본값 | 반드시 |
+| 31 | `preview/home-ui/src/tutor-reg/screens.js` | `rg -n "saved_regions\|saveTutorBasicInline" preview/home-ui/src/tutor-reg/screens.js` | L252 `tutor.saved_regions`, L310-315 `saveTutorBasicInline` 호출 | 반드시 |
+| 32 | `preview/home-ui/src/tutor-reg/inline-save.js` | `rg -n "saveTutorBasicInline\|saved_regions" preview/home-ui/src/tutor-reg/inline-save.js` | L34 `saveTutorBasicInline`, L38-60 `saved_regions` 필터 및 패치 전송 | 반드시 |
+| 33 | `preview/home-ui/src/tutor-reg/store.js` | `rg -n "saved_regions" preview/home-ui/src/tutor-reg/store.js` | L26 `saved_regions` 정의 | 반드시 |
+| 34 | `preview/home-ui/src/tutor-reg/city-units.js` | `Test-Path preview/home-ui/src/tutor-reg/city-units.js` | True | 반드시 |
+| 35 | `preview/shared/student-hope-regions.js` | `rg -n "normalizeHopeSlots\|preferred_tutor" preview/shared/student-hope-regions.js` | L21 `normalizeHopeSlots`, L55, L73-81 `preferred_tutor_regions` / `preferred_tutor_region_id` 바인딩 | 반드시 |
+| 36 | `preview/home-ui/src/student-reg/screens.js` | `rg -n "hopeRegionValues\|preferred_tutor_region_id" preview/home-ui/src/student-reg/screens.js` | L250 `hopeRegionValues`, L277, L544, L696 `preferred_tutor_region_id` 바인딩 | 반드시 |
+| 37 | `preview/home-ui/src/student-reg/store.js` | `rg -n "preferred_tutor_region_id\|preferred_tutor_regions" preview/home-ui/src/student-reg/store.js` | L36, L96, L131 `preferred_tutor_regions`, L38 `preferred_tutor_region_id` | 반드시 |
+| 38 | `preview/search-ui/src/search-find-surface.js` | `rg -n "STALE_GUEST_LABELS\|resolveCanonicalGuRegionId\|studentFeedFilters\|isTutorMockCityLabel" preview/search-ui/src/search-find-surface.js` | L90 `STALE_GUEST_LABELS`, L361 `resolveCanonicalGuRegionId`, L409 `studentFeedFilters`, L1203 `isTutorMockCityLabel` | 반드시 |
+| 39 | `preview/search-ui/src/student-saved-region.js` | `rg -n "preferred_tutor_region_id\|target\.scope" preview/search-ui/src/student-saved-region.js` | L60 `preferred_tutor_region_id`, L110, L116 `target.scope === 'sigungu'` | 반드시 |
+| 40 | `preview/home-ui/src/student-blind-teaser.js` | `rg -n "coarseRegionForGuest" preview/home-ui/src/student-blind-teaser.js` | L56 `coarseRegionForGuest` (서울시만 남을 때 '—' 결손 발생 로직) | 반드시 |
+| 41 | `preview/home-ui/src/plans/order-blocks.js` | `rg -n "listTutorApplyCities\|city_id" preview/home-ui/src/plans/order-blocks.js` | L125 `listTutorApplyCities`, L131, L186, L276-292 `city_id` 추출 및 필터링 | 반드시 |
+| 42 | `src/Admin/AdminRegistrationListRepository.php` | `Test-Path src/Admin/AdminRegistrationListRepository.php` | True (L15 `class AdminRegistrationListRepository`, L71 `$region`, L83-86 `labels->resolve`) | 표시 |
+| 43 | `src/Admin/AdminExposureRepository.php` | `rg -n "regionDisplayExpr\|listTutors" src/Admin/AdminExposureRepository.php` | L20 `regionDisplayExpr`, L58 `listTutors`, L85 `listStudents` | 표시 |
+| 44 | `preview/auth-ui/src/screens/signup-complete.js` | `rg -n "signupComplete" preview/auth-ui/src/screens/signup-complete.js` | L45-60 라벨 표시 | 표시 |
+| 45 | `preview/home-ui/src/student-reg/student-reg-copy.js` | `rg -n "reselect" preview/home-ui/src/student-reg/student-reg-copy.js` | L72 `reselect: '활동지역을 구(시·군)까지 다시 선택해 주세요'` | 표시 |
+| 46 | `preview/home-ui/src/student-reg/format.js` | `rg -n "formatRegion" preview/home-ui/src/student-reg/format.js` | L138-153 `formatRegion` | 표시 |
+| 47 | `preview/home-ui/src/mypage/account-region-label.js` | `rg -n "accountRegionLabel" preview/home-ui/src/mypage/account-region-label.js` | L30-55 `accountRegionLabel` | 표시 |
+| 48 | `preview/shared/student-auth-bridge.js` | `rg -n "syncStudentAuthBridge" preview/shared/student-auth-bridge.js` | L35-60 `syncStudentAuthBridge` | 표시 |
+| 49 | `preview/search-ui/src/search-schema.js` | `rg -n "searchSchema" preview/search-ui/src/search-schema.js` | L40-65 `searchSchema` | 표시 |
+| 50 | `preview/search-ui/src/search-exposure-mapper.js` | `rg -n "mapExposure" preview/search-ui/src/search-exposure-mapper.js` | L31-42 `mapExposure` | 표시 |
+| 51 | `preview/search-ui/src/search-tier-render.js` | `rg -n "renderTierBadge" preview/search-ui/src/search-tier-render.js` | L45-70 `renderTierBadge` | 표시 |
+| 52 | `preview/search-ui/src/search-map.js` | `rg -n "initMap" preview/search-ui/src/search-map.js` | L101-108, L141-142 지도 줌 레벨 | 표시 |
+| 53 | `preview/home-ui/src/detail-decision/student-request-card.js` | `rg -n "renderStudentRequestCard" preview/home-ui/src/detail-decision/student-request-card.js` | L79 라벨 표시 | 표시 |
+| 54 | `preview/home-ui/src/detail-decision/tutor-detail.js` | `rg -n "renderTutorDetail" preview/home-ui/src/detail-decision/tutor-detail.js` | L21-31 라벨 포맷 | 표시 |
+| 55 | `preview/home-ui/src/user-actions-ui.js` | `rg -n "renderUserActions" preview/home-ui/src/user-actions-ui.js` | L219-220 UI 라벨 | 표시 |
+| 56 | `preview/home-ui/src/student-review-ui.js` | `rg -n "renderStudentReview" preview/home-ui/src/student-review-ui.js` | L124 리뷰 UI 라벨 | 표시 |
+| 57 | `preview/home-ui/src/home-card-samples/presets.js` | `rg -n "cardPresets" preview/home-ui/src/home-card-samples/presets.js` | L16 프리셋 라벨 | 표시 |
+| 58 | `preview/home-ui/src/guest-sections.js` | `rg -n "renderGuestSections" preview/home-ui/src/guest-sections.js` | L70-96 게스트 섹션 라벨 | 표시 |
+| 59 | `preview/home-ui/src/section-headings.js` | `rg -n "renderSectionHeadings" preview/home-ui/src/section-headings.js` | L65-73 헤딩 라벨 | 표시 |
+| 60 | `preview/home-ui/src/provider-home.js` | `rg -n "renderProviderHome" preview/home-ui/src/provider-home.js` | L223-243 공급자 홈 라벨 | 표시 |
+| 61 | `preview/home-ui/src/screens/tutor.js` | `rg -n "renderTutorScreen" preview/home-ui/src/screens/tutor.js` | L46-61 튜터 스크린 라벨 | 표시 |
+| 62 | `preview/home-ui/src/tutor-reg/registration-check-model.js` | `rg -n "checkTutorRegistration" preview/home-ui/src/tutor-reg/registration-check-model.js` | L79, L221-224 완성도 라벨 | 표시 |
+
