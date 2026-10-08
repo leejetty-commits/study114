@@ -110,7 +110,7 @@ assert(!copy.includes('basicKicker'), 'copy: sample kicker removed');
 assert(copy.includes("pickMissingTitle: '[픽] 추가 입력'"), 'copy: pick title');
 assert(copy.includes("primeMissingTitle: '[프라임] 추가 입력'"), 'copy: prime title');
 assert(!copy.includes('베이직 검색은 기본정보만으로도 가능합니다'), 'copy: no study-room basic-only claim');
-assert(css.includes('rc-compare--stack'), 'css: stack layout');
+assert(!css.includes('rc-compare') && !css.includes('rc-block--compare'), 'css: no orphan sample compare rules');
 assert(css.includes('[data-trc-page] .rc-fold-btn'), 'css: fold button');
 assert(css.includes('[data-trc-page] .rc-publish'), 'css: tutor publish scoped');
 

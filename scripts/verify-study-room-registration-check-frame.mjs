@@ -121,7 +121,7 @@ assert(RC_COPY.badges.primeNeed(2) === '프라임 추가 2개', 'copy: prime rem
 assert(css.includes('[data-rc-page] .rc-next'), 'css: study-room next');
 assert(css.includes('[data-rc-page] .rc-fold-btn'), 'css: study-room fold');
 assert(css.includes('[data-rc-page] .rc-subsection'), 'css: study-room subsection');
-assert(css.includes('rc-compare--stack'), 'css: stack layout available');
+assert(!css.includes('rc-compare') && !css.includes('rc-tier'), 'css: no orphan sample compare/tier rules');
 assert(css.includes('[data-trc-page] .rc-fold-btn'), 'css: tutor fold untouched');
 
 assert(!edit.includes('[data-rc-expand]'), 'edit: no expand sample');

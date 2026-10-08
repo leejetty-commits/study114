@@ -270,6 +270,41 @@ commit hash, 바꾼 파일 수, 화면별 요약, 검사 결과 표, 추가 발�
 
 | 항목 | 내용 |
 |---|---|
-| 독립 검수 | 대기 |
+| 독립 검수 | 1차: 조건부 승인 권고 (다른 모델) → 10절에 반영. 반영 커밋 재검수 대기 |
 | 사용자 승인 | 대기 |
 | 승인 대상 커밋 | — |
+
+---
+
+## 10. 독립 리뷰 결과·반영
+
+리뷰 판정: **조건부 승인 권고** (다른 모델 독립 리뷰, 대상 HEAD `763d39f`). 아래 항목만 새 커밋으로 반영(amend 없음).
+
+| ID | 등급 | 지적 | 처리 |
+|---|---|---|---|
+| F-1 | 중간 | `user-actions-state.js` `getExposureItem` 이 `EXPOSURE_*` 풀(bridge cap)만 조회 → cap 밖 찜·비교가 마이페이지에서 빈 목록 | **반영.** 새 알고리즘 없이 `public-resolve.js`·`resolveDetailItem` 과 같은 실캐시 순서를 재사용: bridge 풀 → `previewState.{parentFind,studyRoomFind,tutorFind}.activeResultItems` → 같은 3개의 `searchExposureItems` → `getHomeBasicPool(kind)`. 공부방·과외쌤 id 가 겹칠 수 있어 매퍼가 붙이는 이름 키(`study_room_name` / `tutor_display_name`)가 있는 항목만 해당 종류로 인정. 실캐시에도 없으면 지금처럼 제외(가짜 대체 없음). `detail-decision` 은 순환 import 때문에 쓰지 않고 `state.js`·`home-basic-live.js` 를 직접 import |
+| F-2 | 낮음 | 빈 칸 문구 | **그대로 둠**(지시). 기존 문구 유지, 새 문구 없음 |
+| F-3 | 낮음 | 제출서류 표 숨김 | **그대로 둠**(지시) |
+| F-4 | 낮음 | `vacantSamples` 재도입 차단 없음 | **반영.** `scripts/verify-no-sample-data.mjs` 에 `5) vacantSamples 옵션 재도입 0` 검사 1줄 추가 |
+| F-5 | 낮음 | `tutor-reg/store.js`·`student-reg/store.js` SEED | **그대로 둠**(지시). 다른 브랜치 `cursor/remove-dev-operator-20261009` 에서 제거 중이라 두 파일 미수정 |
+| F-6 | 낮음 | CSS 고아 규칙 | **반영.** preview JS/HTML grep 0건 확인 후 삭제. `registration-check.css` 41규칙(`.rc-compare*`·`.rc-tier*`·`.rc-compare__row*`·`[data-trc-page] .rc-block--compare` 등 + 비게 된 `@media (min-width:860px)` 블록, 견본 주석 2곳 정리), `plans-store.css` 49규칙·`plans-theme.css` 11규칙(`plans-room-pick*`·`plans-tutor-circ*`). 삭제 외 변경 없음. 이 클래스 존재를 확인하던 RC 프레임 검사 2개(`verify-study-room-…`·`verify-tutor-…`)는 "고아 규칙 없음" 확인으로 바꿈 |
+
+### 10-1. 검사 결과 (반영 커밋 기준)
+
+| 검사 | 결과 |
+|---|---|
+| `verify-no-sample-data` | 5/5 통과 (신규 5번 포함) |
+| `npm run verify:shop-page` | 54 통과 / 0 실패 |
+| `verify-study-room-registration-check-frame` | 통과 |
+| `verify-tutor-registration-check-frame` | 2 실패("render: publish wrap", "page: CTA after board") — main 에서도 같은 2건 실패(이번 변경과 무관). CSS 단언은 통과 |
+| `verify:tutor-inquiries-settings` · `verify:study-room-inquiries-samples` | 통과 |
+| `scripts/check-no-committed-secrets.sh` | 통과 |
+| 찜·비교 전용 verify 스크립트 | 저장소에 없음. 임시 vite-node 스크립트로 6/6 확인 후 삭제(풀 안 항목 표시 / cap 밖 id 실캐시로 찾음 / 같은 id 다른 종류 섞이지 않음 / 모르는 id 제외 / 과외쌤 풀 안·밖 / 비교도 실캐시로 찾음) |
+| `npm run build:dothome` | 5개 앱 성공. 추적 산출물 변경 없음(커밋 안 함) |
+| 브라우저(mock API) | 학부모(과외쌤 분기) 세션, 찜 = 공부방 2·50·999 + 과외쌤 60. 홈에서 과외쌤 11·13·60 로드 후 `#/mypage/wishlist`: **실공부방2(풀 안)·실과외쌤60(cap 밖, 실캐시)** 표시, 999 제외, "샘플" 0건. 공부방 50 은 이 경로에서 공부방 검색 결과를 불러오지 않아 어느 실캐시에도 없음 → 지시대로 제외 |
+
+### 10-2. 미확인·남은 점
+
+- 이번 세션에서 한 번도 불러오지 않은 항목(예: 위 공부방 50)은 여전히 찜 목록에 안 보임. 지시(실캐시에 없으면 제외, 새 알고리즘 금지) 범위 밖이라 보고만 함 — 상시 표시하려면 id 단건 조회 API가 필요.
+- 실제 PHP·DB 환경과 운영 사이트에서의 찜·비교 화면(main 미병합).
+- 과외쌤 RC 프레임 검사의 기존 2건 실패 원인(이번 범위 밖).

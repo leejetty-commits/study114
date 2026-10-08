@@ -7,6 +7,7 @@
  * 2) search-exposure-mapper 의 EXPOSURE_ 폴백 0
  * 3) '샘플 과외쌤' / '샘플 공부방' / 'expo-sample-stamp' 0
  * 4) home-card-samples 프리셋 import 0
+ * 5) vacantSamples 옵션 재도입 0
  */
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -83,6 +84,8 @@ check(
       : []),
   ],
 );
+
+check('5) vacantSamples 옵션 재도입 0', grepAll(/vacantSamples/));
 
 console.log(`\n검사 파일 ${files.length}개 (preview/, admin 제외)`);
 if (failed) {

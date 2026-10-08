@@ -447,60 +447,6 @@
   border-color: var(--plans-warn-line);
 }
 
-.plans-theme .plans-room-pick {
-  background: #fcfaf6;
-  border-color: #cfc3b3;
-}
-
-.plans-theme .plans-room-pick__tile {
-  background: var(--plans-surface);
-  border-color: var(--plans-line);
-}
-
-.plans-theme .plans-room-pick__pager span.is-current {
-  background: var(--plans-ink);
-  color: #fff;
-}
-
-.plans-theme .plans-tutor-circ {
-  background: #fffdf8;
-  border-color: var(--plans-line);
-}
-
-.plans-theme .plans-tutor-circ--prime {
-  background: #f7f3ea;
-  border-color: #d7c9b0;
-}
-
-.plans-theme .plans-tutor-circ--pick {
-  background: #fcfbf8;
-  border-color: var(--plans-line);
-}
-
-.plans-theme .plans-tutor-circ__kicker {
-  color: var(--plans-primary);
-}
-
-.plans-theme .plans-tutor-circ__count {
-  background: var(--plans-ink);
-  color: #fff;
-}
-
-.plans-theme .plans-tutor-circ--pick .plans-tutor-circ__count {
-  background: var(--plans-primary);
-}
-
-.plans-theme .plans-tutor-circ__tile {
-  background: var(--plans-surface);
-  border-color: var(--plans-line);
-  color: var(--plans-ink);
-}
-
-.plans-theme .plans-tutor-circ__pager span.is-current {
-  background: var(--plans-ink);
-  color: #fff;
-}
-
 .plans-theme .plans-pick-preview__pager span {
   border-color: var(--plans-line);
   color: var(--plans-muted);

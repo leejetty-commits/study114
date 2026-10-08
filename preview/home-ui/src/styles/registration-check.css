@@ -226,187 +226,6 @@
   color: #fff;
 }
 
-.rc-compare {
-  margin-top: 1rem;
-}
-
-.rc-compare__grid {
-  display: grid;
-  gap: 0.75rem;
-}
-
-@media (min-width: 860px) {
-  .rc-compare__grid {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
-}
-
-.rc-tier {
-  border: 1px solid #e2e8f0;
-  border-radius: 0.65rem;
-  padding: 0.7rem 0.75rem 0.8rem;
-  background: #fff;
-  min-width: 0;
-}
-
-.rc-tier--pick {
-  border-color: #fdba74;
-  background: #fffbeb;
-}
-
-.rc-tier--prime {
-  border-color: #93c5fd;
-  background: #eff6ff;
-}
-
-.rc-tier__kicker {
-  margin: 0 0 0.45rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #64748b;
-}
-
-.rc-tier--pick .rc-tier__kicker {
-  color: #c2410c;
-}
-
-.rc-tier--prime .rc-tier__kicker {
-  color: #1d4ed8;
-}
-
-.rc-tier__media {
-  position: relative;
-  overflow: hidden;
-  border-radius: 0.4rem;
-  background: #e2e8f0;
-  margin-bottom: 0.55rem;
-}
-
-.rc-tier__media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.rc-tier__media--basic,
-.rc-tier__media--pick {
-  aspect-ratio: 1 / 1;
-  max-height: 9.5rem;
-}
-
-.rc-tier__media--prime {
-  /* 옛 샘플 경로. 실카드 Prime media는 .expo-media--prime height scale */
-  aspect-ratio: 16 / 9;
-}
-
-.rc-tier__badge {
-  position: absolute;
-  top: 0.4rem;
-  left: 0.4rem;
-  padding: 0.12rem 0.4rem;
-  border-radius: 0.25rem;
-  font-size: 0.625rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: #fff;
-}
-
-.rc-tier__badge--pick {
-  background: #ea580c;
-}
-
-.rc-tier__badge--prime {
-  background: #1d4ed8;
-}
-
-.rc-tier__name {
-  margin: 0 0 0.25rem;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.rc-tier__intro {
-  margin: 0 0 0.4rem;
-  font-size: 0.75rem;
-  line-height: 1.45;
-  color: #334155;
-}
-
-.rc-tier__intro.is-empty {
-  color: #94a3b8;
-}
-
-.rc-tier__meta {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.rc-tier__meta li {
-  font-size: 0.6875rem;
-  color: #475569;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid #e2e8f0;
-  border-radius: 999px;
-  padding: 0.1rem 0.45rem;
-}
-
-.rc-tier__extra,
-.rc-tier__note {
-  margin: 0.45rem 0 0;
-  font-size: 0.6875rem;
-  color: #64748b;
-}
-
-.rc-compare__cta {
-  display: none;
-}
-
-.rc-tier--preview {
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-}
-
-.rc-tier--preview:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-
-.rc-tier--preview:hover {
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-}
-
-.rc-tier__live {
-  pointer-events: none;
-  user-select: none;
-  max-height: 22rem;
-  overflow: hidden;
-  border-radius: 0.45rem;
-}
-
-.rc-tier__live .browse-list {
-  margin: 0;
-}
-
-.rc-tier__live .expo-hcard__side,
-.rc-tier__live .expo-hcard__detail,
-.rc-tier__live .expo-tbl__cell--actions,
-.rc-tier__live .item-actions {
-  display: none;
-}
-
-.rc-tier__live .expo-card {
-  margin: 0;
-}
-
 .rc-link {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -724,45 +543,6 @@
   }
 }
 
-/* —— 등록점검 비교 스택: hcs-rc-compare가 라이브 outer 1칸 폭 담당. Pick/Prime fr 스트레치 금지 —— */
-.rc-compare--stack {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  margin-top: 0.35rem;
-}
-
-.rc-compare__row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  min-width: 0;
-  align-items: flex-start;
-}
-
-.rc-compare__row--basic {
-  display: block;
-}
-
-.rc-compare__row--upgrade {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 1.25rem;
-}
-
-.rc-tier--basic .rc-tier__live {
-  max-height: none;
-}
-
-.rc-tier--pick .rc-tier__live {
-  max-height: 18rem;
-}
-
-.rc-tier--prime .rc-tier__live {
-  max-height: 26rem;
-}
-
 .rc-section--accordion {
   border: 1px solid #e2e8f0;
   border-radius: 0.55rem;
@@ -890,25 +670,9 @@
   border-radius: 0.5rem;
 }
 
-/* 과외쌤 RC — 샘플 폭은 home-card-samples(.hcs-*) SSOT. 옛 rc-sample 폭(프로모 미차감 listing) 폐기 */
+/* 과외쌤 RC */
 [data-trc-page] {
   max-width: calc(var(--home-max) - 2 * var(--page-gutter));
-}
-
-[data-trc-page] .rc-block--compare {
-  overflow-x: auto;
-}
-
-[data-trc-page] .rc-compare__row--basic {
-  display: block;
-}
-
-[data-trc-page] .rc-compare__row--upgrade {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 1.25rem;
-  grid-template-columns: none;
 }
 
 [data-trc-page] .rc-section {
@@ -999,7 +763,7 @@
   color: #64748b;
 }
 
-/* 공부방 등록점검 — 과외쌤과 같은 공통 프레임. 카드 샘플(rc-tier)은 기존 유지 */
+/* 공부방 등록점검 — 과외쌤과 같은 공통 프레임 */
 [data-rc-page] .rc-next {
   display: inline-flex;
   margin: 0.55rem 0 0;
