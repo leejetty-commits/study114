@@ -8,9 +8,9 @@
  *   구·동·도 행 저장 거부(TutorRegionUnit::assertUnit · BasicRegisterService · SearchService 과외 필터).
  *   공부방 구 단위(selectableRegionId · dongIdsUnderGu · is_selectable 수)는 그대로.
  * 2부 프런트(tutor-unit-cascade.js): 같은 단위 목록으로 주소 → 단위 id, 1·2단계 선택.
- * 3부 정적: 저장 경로가 TutorRegionUnit 을 쓰고, 공부방 검색 searchRooms 본문이 origin/main 과 같다.
+ * 3부 정적: 저장 경로가 TutorRegionUnit 을 쓰고, 공부방 검색 searchRooms 본문이 변경 전 main 과 같다.
  * 4부 찾기 화면(2단계): 과외쌤 찾기 선택·검색(서울 시·도만 / 경기도만 불가 / 경기도 수원시 / 전남광주 광주),
- *   GPS → 과외 단위, 손님 라벨 서울특별시, 확대카드 「—」 아님, 공부방 찾기 결과 = origin/main 모듈과 같음.
+ *   GPS → 과외 단위, 손님 라벨 서울특별시, 확대카드 「—」 아님, 공부방 찾기 결과 = 변경 전 main 모듈과 같음.
  * 운영 DB·서버에 접속하지 않는다. 샘플·가짜 회원 데이터를 만들지 않는다.
  */
 import { spawnSync } from 'node:child_process';
@@ -20,6 +20,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+/** 과외지역 단위 변경(dad3d2e~b5ffeb5)이 main 에 들어가기 직전 커밋. 공부방 축 무변경 비교 기준이라 origin/main 으로 바꾸면 안 된다. */
+const BASE_REF = '6b37357';
 const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');
 
 let passed = 0;
@@ -410,16 +412,16 @@ function fnBody(src, name) {
   const ends = [next, nextPub].filter((n) => n > 0);
   return src.slice(at, ends.length ? Math.min(...ends) : undefined);
 }
-const mainSearch = spawnSync('git', ['show', 'origin/main:src/Search/SearchService.php'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+const mainSearch = spawnSync('git', ['show', `${BASE_REF}:src/Search/SearchService.php`], { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
 if (mainSearch.status === 0) {
   const a = fnBody(mainSearch.stdout.replace(/\r\n/g, '\n'), 'searchRooms');
   const b = fnBody(searchPhp.replace(/\r\n/g, '\n'), 'searchRooms');
-  ok('공부방 검색 searchRooms 본문 = origin/main 과 같음', a !== '' && a === b, `${a.length}/${b.length}`);
+  ok('공부방 검색 searchRooms 본문 = 변경 전 main 과 같음', a !== '' && a === b, `${a.length}/${b.length}`);
 } else {
-  ok('origin/main SearchService 읽기', false, mainSearch.stderr);
+  ok('변경 전 main SearchService 읽기', false, mainSearch.stderr);
 }
 const regionCascade = read('preview/shared/region-cascade.js');
-const mainCascade = spawnSync('git', ['show', 'origin/main:preview/shared/region-cascade.js'], { cwd: ROOT, encoding: 'utf8' });
+const mainCascade = spawnSync('git', ['show', `${BASE_REF}:preview/shared/region-cascade.js`], { cwd: ROOT, encoding: 'utf8' });
 ok('공부방·찾기 공용 region-cascade.js 불변', mainCascade.status === 0 && mainCascade.stdout.replace(/\r\n/g, '\n') === regionCascade.replace(/\r\n/g, '\n'));
 
 /* ══════════════ 4부 찾기 화면 (2단계) ══════════════ */
@@ -464,7 +466,7 @@ process.exit(failed ? 1 : 0);
 
 /**
  * 4부 본문(하위 실행). 브라우저 API(저장소·주소·fetch·GPS·네이버 역지오코딩)만 흉내 내고 실제 모듈을 부른다.
- * 공부방 분기는 origin/main 의 search-find-surface.js 를 같은 조건으로 돌려 결과가 같은지 본다.
+ * 공부방 분기는 변경 전 main 의 search-find-surface.js 를 같은 조건으로 돌려 결과가 같은지 본다.
  * @param {{ units: object[], gangnamGu: number, seoul: number, suwon: number, gwangju: number }} input
  */
 async function runFindPart(input) {
@@ -659,26 +661,26 @@ async function runFindPart(input) {
   ok('손님 학생 카드(과외 희망) 지역 = 서울특별시', teaser.guestStudentTeaserFields({ location_label: '서울특별시', preferred_lesson_type: 'tutor' }).region === '서울특별시');
   {
     const roomLabels = ['서울특별시 강남구 대치동', '서울시 강남구 대치동 · 은마아파트', '대치동', '경기도 수원시 영통구 매탄동', '서울특별시 강남구', '강남구', '역삼1동', '목동권', '', '—', '경기도 수원시', '서울특별시', '세종특별자치시', '경상북도 안동시'];
-    const mainTeaser = spawnSync('git', ['show', 'origin/main:preview/home-ui/src/student-blind-teaser.js'], { cwd: ROOT, encoding: 'utf8' });
+    const mainTeaser = spawnSync('git', ['show', `${BASE_REF}:preview/home-ui/src/student-blind-teaser.js`], { cwd: ROOT, encoding: 'utf8' });
     const fn = mainTeaser.stdout.replace(/\r\n/g, '\n').match(/export function coarseRegionForGuest\(locationLabel\) \{[\s\S]*?\n\}/)?.[0] || '';
     const oldCoarse = fn ? new Function(`${fn.replace('export ', '')}; return coarseRegionForGuest;`)() : null;
     const diffOf = (fnNew) => (oldCoarse ? roomLabels.filter((l) => oldCoarse(l) !== fnNew(l)) : ['main 읽기 실패']);
-    ok('공부방 라벨(경기도 수원시·서울특별시 포함) 손님 표기 = origin/main (kind study_room)', diffOf((l) => teaser.coarseRegionForGuest(l, 'study_room')).length === 0, JSON.stringify(diffOf((l) => teaser.coarseRegionForGuest(l, 'study_room'))));
-    ok('kind 없이 부르면 공부방 축(= origin/main)', diffOf((l) => teaser.coarseRegionForGuest(l)).length === 0, JSON.stringify(diffOf((l) => teaser.coarseRegionForGuest(l))));
-    ok('공부방 라벨 「경기도 수원시」 = origin/main 결과', oldCoarse && teaser.coarseRegionForGuest('경기도 수원시', 'study_room') === oldCoarse('경기도 수원시'), `${teaser.coarseRegionForGuest('경기도 수원시', 'study_room')} / ${oldCoarse?.('경기도 수원시')}`);
-    ok('공부방 라벨 「서울특별시」 = origin/main 결과', oldCoarse && teaser.coarseRegionForGuest('서울특별시', 'study_room') === oldCoarse('서울특별시'), `${teaser.coarseRegionForGuest('서울특별시', 'study_room')} / ${oldCoarse?.('서울특별시')}`);
-    ok('손님 공부방 상세 본문 「서울특별시」 = origin/main 결과', oldCoarse && studyroomDetail.renderStudyRoomDetailBody({ location_label: '서울특별시' }, 'guest').includes(`<dd>${oldCoarse('서울특별시')}</dd>`));
+    ok('공부방 라벨(경기도 수원시·서울특별시 포함) 손님 표기 = 변경 전 main (kind study_room)', diffOf((l) => teaser.coarseRegionForGuest(l, 'study_room')).length === 0, JSON.stringify(diffOf((l) => teaser.coarseRegionForGuest(l, 'study_room'))));
+    ok('kind 없이 부르면 공부방 축(= 변경 전 main)', diffOf((l) => teaser.coarseRegionForGuest(l)).length === 0, JSON.stringify(diffOf((l) => teaser.coarseRegionForGuest(l))));
+    ok('공부방 라벨 「경기도 수원시」 = 변경 전 main 결과', oldCoarse && teaser.coarseRegionForGuest('경기도 수원시', 'study_room') === oldCoarse('경기도 수원시'), `${teaser.coarseRegionForGuest('경기도 수원시', 'study_room')} / ${oldCoarse?.('경기도 수원시')}`);
+    ok('공부방 라벨 「서울특별시」 = 변경 전 main 결과', oldCoarse && teaser.coarseRegionForGuest('서울특별시', 'study_room') === oldCoarse('서울특별시'), `${teaser.coarseRegionForGuest('서울특별시', 'study_room')} / ${oldCoarse?.('서울특별시')}`);
+    ok('손님 공부방 상세 본문 「서울특별시」 = 변경 전 main 결과', oldCoarse && studyroomDetail.renderStudyRoomDetailBody({ location_label: '서울특별시' }, 'guest').includes(`<dd>${oldCoarse('서울특별시')}</dd>`));
     {
       const callers = ['preview/home-ui/src/exposure-render.js', 'preview/home-ui/src/detail-decision/tutor-detail.js', 'preview/home-ui/src/detail-decision/studyroom-detail.js', 'preview/home-ui/src/detail-decision/detail-utils.js', 'preview/home-ui/src/student-blind-teaser.js'];
       const calls = callers.flatMap((f) => [...read(f).matchAll(/coarseRegionForGuest\(([^)]*\))?[^)]*\)/g)].filter((m) => !/export function/.test(read(f).slice(Math.max(0, m.index - 20), m.index))).map((m) => `${f}: ${m[0]}`));
       const noKind = calls.filter((c) => !/coarseRegionForGuest\(item\.location_label, /.test(c));
       ok(`coarseRegionForGuest 호출부 ${calls.length}곳 모두 kind 명시`, calls.length === 8 && noKind.length === 0, JSON.stringify(noKind.length ? noKind : calls));
     }
-    ok('손님 학생 카드(공부방 희망) 「경기도 수원시」 = origin/main 결과', oldCoarse && teaser.guestStudentTeaserFields({ location_label: '경기도 수원시', preferred_lesson_type: 'study_room' }).region === oldCoarse('경기도 수원시'));
+    ok('손님 학생 카드(공부방 희망) 「경기도 수원시」 = 변경 전 main 결과', oldCoarse && teaser.guestStudentTeaserFields({ location_label: '경기도 수원시', preferred_lesson_type: 'study_room' }).region === oldCoarse('경기도 수원시'));
   }
 
-  console.log('--- 공부방 찾기 = origin/main 과 같은 결과 ---');
-  const mainSrc = spawnSync('git', ['show', 'origin/main:preview/search-ui/src/search-find-surface.js'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+  console.log('--- 공부방 찾기 = 변경 전 main 과 같은 결과 ---');
+  const mainSrc = spawnSync('git', ['show', `${BASE_REF}:preview/search-ui/src/search-find-surface.js`], { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
   const mainFile = join(ROOT, 'preview/search-ui/src/zz-tru-main-find-surface.tmp.js');
   let mainSurface = null;
   if (mainSrc.status === 0) {
@@ -690,7 +692,7 @@ async function runFindPart(input) {
       rmSync(mainFile, { force: true });
     }
   }
-  ok('origin/main search-find-surface.js 불러옴', !!mainSurface, mainSrc.stderr);
+  ok('변경 전 main search-find-surface.js 불러옴', !!mainSurface, mainSrc.stderr);
   if (mainSurface) {
     /** @param {any} mod @param {string} tab @param {string} role @param {Record<string, string>} filters @param {object} [extra] */
     async function roomRun(mod, tab, role, filters, extra = {}) {
@@ -721,7 +723,7 @@ async function runFindPart(input) {
       const a = await roomRun(mainSurface, tab, role, filters, extra);
       const b = await roomRun(surface, tab, role, filters, extra);
       const keys = Object.keys(a).filter((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
-      ok(`${name}: 폼 HTML · 검색 요청 · 현재 위치 · 주소 = origin/main`, keys.length === 0, keys.map((k) => `${k}: ${JSON.stringify(a[k]).slice(0, 160)} ≠ ${JSON.stringify(b[k]).slice(0, 160)}`).join(' | '));
+      ok(`${name}: 폼 HTML · 검색 요청 · 현재 위치 · 주소 = 변경 전 main`, keys.length === 0, keys.map((k) => `${k}: ${JSON.stringify(a[k]).slice(0, 160)} ≠ ${JSON.stringify(b[k]).slice(0, 160)}`).join(' | '));
       if (name === '공부방 찾기 강남구(공부방 회원)') {
         ok('공부방 찾기 강남구: sigungu_region_id = 강남구 id 그대로', String(b.sent[0]?.filters?.sigungu_region_id) === String(input.gangnamGu), JSON.stringify(b.sent));
       }
@@ -737,7 +739,7 @@ async function runFindPart(input) {
       };
       const a = await run(mainSurface);
       const b = await run(surface);
-      ok('공부방 찾기 GPS 강남구 대치동 = origin/main', a === b && b.includes('대치동'), `${a} / ${b}`);
+      ok('공부방 찾기 GPS 강남구 대치동 = 변경 전 main', a === b && b.includes('대치동'), `${a} / ${b}`);
     }
   }
 }
