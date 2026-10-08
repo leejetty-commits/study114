@@ -69,4 +69,8 @@
 
 ## 7. 승인·main 반영
 
-- 사용자 2026-10-09 08:04 「말투는 네 제안에 따르고, 병합을 승인한다.」 — 작업 전 사전 승인. 병합 커밋·CI·배포 결과는 아래에 이어 적는다.
+- 사용자 2026-10-09 08:04 「말투는 네 제안에 따르고, 병합을 승인한다.」 — 작업 전 사전 승인.
+- 작업 커밋 `a7de36d`. 브랜치 CI: Verify bundle·Board ACL gate 성공.
+- main 병합: 분리 worktree `.wt/merge-scc`에서 `--no-ff`, 병합 커밋 `b6591b1` (`01427d5` → `b6591b1`), main push는 승인 창으로 사용자 확인.
+- main Actions(`b6591b1`): ShopPage gate·Tutor register same-tab·Verify bundle·Board ACL gate·Deploy to dothome 모두 성공.
+- 운영 확인(`https://study114.net/auth/` 번들 `index-DP3fCMXi.js`): 새 문구 5개 있음(공급자 안내·상세 설명·학생 상세 안내·학생 버튼·공급자 버튼), 옛 문구 「아직은 검색에 안 보여요」·옛 버튼 「나중에 상세등록 (홈으로)」 없음. 실제 가입 후 화면 눈확인은 하지 않음(시험 가입 미실시).
