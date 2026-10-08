@@ -83,3 +83,9 @@ Final report: commit hash(es), files changed with one line each, verification re
 - 가짜 DOM 은 브라우저 제약검사를 흉내 낸 것이다. 운영 진단(`:invalid` = 숨은 `SELECT#student_hope_sido` 하나)과 같은 결과를 내는 것까지 확인했다.
 - `verify-tutor-region-unit.mjs` 4부의 origin/main 비교 정규식은 이미 병합된 main 과 맞지 않는다. 별도 과제로 고쳐야 한다(이번 범위 밖, 보고만).
 - 배포 전 사용자 할 일: 없음(SQL·환경변수·Secrets·`.htaccess` 변경 없음).
+
+## 독립 검수 (메인 기록, 2026-10-09 01:55)
+
+- 검수자: 다른 모델(claude-4.6-sonnet), 읽기 전용, 별도 worktree(df08bb7). 판정: **승인 권고**, 결함 없음.
+- 숨은 블록 required 토글 7개 시나리오 정상, 캐스케이드가 나중에 required를 추가하는 경로 없음, 검사 스크립트 수정 전 7 실패·수정 후 18/18, 변경 파일 4개만, no-sample-data OK.
+- 사용자 승인: 대기 (승인 대상 `e89333d`). 배포 전 사용자 할 일 없음.
