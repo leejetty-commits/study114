@@ -305,6 +305,8 @@ globalThis.history = globalThis.history || { pushState() {}, replaceState() {}, 
 if (typeof globalThis.dispatchEvent !== 'function') {
   const winEvents = new EventTarget();
   globalThis.dispatchEvent = (event) => winEvents.dispatchEvent(event);
+  globalThis.addEventListener = (type, fn, opts) => winEvents.addEventListener(type, fn, opts);
+  globalThis.removeEventListener = (type, fn, opts) => winEvents.removeEventListener(type, fn, opts);
 }
 try {
   Object.defineProperty(globalThis, 'navigator', {
@@ -548,6 +550,29 @@ ok(
   '카드 정보 없는 찜은 찜 목록을 다시 읽어 카드로 그림',
   refreshed && providerCard(root, 'tutor', 12).textContent.includes('나중에 찜한 과외쌤'),
 );
+
+// 서버가 계속 카드 정보를 못 주면: 한 번 들어온 동안은 한 번만, 다른 화면에 갔다 다시 오면 다시 읽는다.
+const { refreshFavorites } = await mod('preview/home-ui/src/handoff-backend.js');
+favoriteRows = [
+  ...favoriteRows,
+  { id: 10, target_type: 'tutor', target_id: 13, created_at: '2026-10-03 10:00:00', card_status: 'unknown', card: null },
+];
+if (typeof refreshFavorites === 'function') await refreshFavorites();
+const favGets = () => calls.filter((c) => c.method === 'GET' && c.url.includes('/api/handoff/favorites')).length;
+const g0 = favGets();
+render();
+await until(() => favGets() > g0);
+await tick(20);
+const g1 = favGets();
+render();
+await tick(20);
+const g2 = favGets();
+globalThis.dispatchEvent(new Event('hashchange'));
+render();
+await until(() => favGets() > g2);
+const g3 = favGets();
+ok('카드 정보 없는 찜: 같은 방문에서는 한 번만 다시 읽음', g1 === g0 + 1 && g2 === g1, `${g0}→${g1}→${g2}`);
+ok('카드 정보 없는 찜: 다른 화면에 갔다 다시 오면 다시 읽음', g3 === g2 + 1, `${g2}→${g3}`);
 
 await runAs('study_room_owner', '공부방');
 

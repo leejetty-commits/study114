@@ -333,8 +333,13 @@ function renderWishlistSection(kind, label) {
 }
 
 let wishlistRefreshKey = '';
+if (typeof window !== 'undefined') {
+  window.addEventListener?.('hashchange', () => {
+    wishlistRefreshKey = '';
+  });
+}
 
-/** 카드가 없는 찜이 있으면 찜 목록을 한 번 다시 읽는다. 같은 번호 묶음으로는 다시 부르지 않는다. */
+/** 카드가 없는 찜이 있으면 찜 목록을 한 번 다시 읽는다. 한 번 들어온 동안 같은 번호 묶음으로는 다시 부르지 않는다. */
 function scheduleWishlistRefresh(rerender) {
   if (!isHandoffApiMode()) return;
   const unknown = ['study_room', 'tutor'].flatMap((kind) =>
@@ -361,7 +366,7 @@ function bindWishlistCardEvents(root, rerender) {
     const open = (id) => {
       const entry = getWishlistEntries(kind).find((e) => e.id === id);
       if (!entry || entry.status !== 'visible' || !entry.item) return;
-      openDetailDecision({ kind, id, item: entry.item, onRerender: rerender, sourceRoute: 'wishlist' });
+      openDetailDecision({ kind, id, item: entry.item, viewer: getNavRole(), onRerender: rerender, sourceRoute: 'wishlist' });
     };
     list.querySelectorAll('[data-provider-id][data-provider-kind]').forEach((article) => {
       article.classList.add('p24-card--clickable');
