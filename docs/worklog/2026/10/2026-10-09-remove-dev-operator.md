@@ -299,7 +299,7 @@ Remove the development-only operator account `ops@dev.local` (and the legacy dev
 
 ### 11-1. 겹침 확인
 
-`git diff --name-only origin/main origin/cursor/remove-samples-20261009` (`763d39f`) 에 `mypage/recent-store.js`·`mypage/index.js`·`messages/thread-store.js`·`messages/index.js`·`messages/screens.js`·`scripts/verify-message-permissions-admin.mjs`·`e2e/*` 는 **없음** → 겹치지 않아 직접 고쳤다.
+`git diff --name-only origin/main origin/cursor/remove-samples-20261009` (처음 `763d39f`, 커밋 뒤 최신 `d72de7a` 로 재확인 — 결과 같음) 에 `mypage/recent-store.js`·`mypage/index.js`·`messages/thread-store.js`·`messages/index.js`·`messages/screens.js`·`scripts/verify-message-permissions-admin.mjs`·`e2e/*` 는 **없음** → 겹치지 않아 직접 고쳤다.
 
 ### 11-2. 변경
 
@@ -332,9 +332,78 @@ Remove the development-only operator account `ops@dev.local` (and the legacy dev
 
 ### 11-4. 아직 남은 데모 시드 (이번 지시 범위 밖 · 사용자 결정 필요)
 
-`mypage/index.js` 가 마이페이지 진입 때 아직 부르는 `ensureWishlistDemo()`(찜), `ensureStudentReviewDemo()`(학생 후기), `ensureSubmissionBoardSeed()`(제출자료 게시판).
+`mypage/index.js` 가 마이페이지 진입 때 아직 부르는 `ensureWishlistDemo()`(찜), `ensureStudentReviewDemo()`(학생 후기), `ensureSubmissionBoardSeed()`(제출자료 게시판). → 12절에서 제거.
 
 ### 11-5. 배포 전 사용자 할 일 (추가분)
 
 - `sql/ops/2026-10-09-delete-ops-dev-local.sql` 은 **주석만** 바뀌었다. 실행 순서·내용은 5절과 같다.
 - 환경변수·Secrets·`.htaccess` 변경 없음.
+
+---
+
+## 12. 4차 지시 — 남은 마이페이지 데모 시드 제거 (2026-10-09 01:08)
+
+### 12-1. 지시서 원문
+
+> 수고했다. 사용자 원칙(「모두 제거」)에 따라 네가 보고한 남은 마이페이지 데모 시드도 같은 worktree·브랜치에서 새 커밋으로 제거하라 (amend 금지).
+> - `ensureWishlistDemo`(찜 데모), `ensureStudentReviewDemo`(학생 후기 데모), `ensureSubmissionBoardSeed`(제출자료 게시판 시드)와 그 호출부. 이 밖에 preview/(admin 제외)에서 `ensure*Demo`/`*Seed`/`demo` 형태로 가짜 데이터를 채우는 함수가 더 있으면 같이 정리하고 목록 보고.
+> - 대체 데이터 만들지 말고 기존 빈 상태로. 이를 기대하는 verify/e2e 단언은 "데모 0건" 방향으로 반전.
+> - 겹침 규칙: 먼저 `git fetch` 후 `git diff origin/main origin/cursor/remove-samples-20261009 --stat`로 견본 제거 브랜치(현재 `d72de7a`, 승인 대기 중)가 고친 파일 목록을 확인. 특히 `user-actions-state.js`는 그 브랜치가 고쳤다. 겹치는 파일은 수정 위치가 그 브랜치 변경과 떨어져 있고 `git merge-tree` 충돌 0이면 고쳐도 되고, 충돌이 나면 고치지 말고 보고만.
+> - 검증: home-ui 빌드 후 산출물에서 데모 이름 0건(단 `exposure-data.js` 출처는 견본 제거 브랜치 범위라 제외하고 보고), `verify:shop-page`, 관련 verify, `node --check`. 이전 커밋에서도 실패하던 것은 구분.
+> - worklog 11-1절 겹침 기준을 최신 `d72de7a`로 고치고, 이번 결과 절 추가. 파일명 지정 stage, 새 커밋, push.
+> 보고: 새 커밋 hash, 파일별 1줄, 검증, 충돌 여부, 남은 데모 목록.
+
+### 12-2. 겹침 확인 (`origin/cursor/remove-samples-20261009` @ `d72de7a`)
+
+- 이번에 고친 파일 중 그 브랜치도 고친 파일: `preview/home-ui/src/user-actions-state.js` 하나. 그 브랜치는 51~75행 근처(`findProvider` 풀 확장·import 2줄)를 바꾸고, 이번 변경은 176~189행 `ensureWishlistDemo()` 삭제라 떨어져 있다. `git merge-tree` 충돌 0 (12-5).
+- `plans/history-mock.js` 의 가짜 결제내역(`demo-prime-001`·`demo-pick-002`)은 그 브랜치가 이미 지운다 → 손대지 않음.
+
+### 12-3. 변경
+
+| 파일 | 변경 |
+|------|------|
+| `preview/home-ui/src/user-actions-state.js` | `ensureWishlistDemo()`(공부방 1·4·5·10, 과외 1·3·7 찜) 삭제 |
+| `preview/home-ui/src/student-review-store.js` | `ensureStudentReviewDemo()`(관심 학생 1·4) 삭제 |
+| `preview/home-ui/src/submission-board/submission-store.js` | `ensureSubmissionBoardSeed()`(가짜 제출자료 `sub-seed-1` 학력 증명서 사본·`sub-seed-2` 경력 확인 서류) 삭제. `listSubmissionPosts` 는 API 모드면 캐시, 아니면 저장된 글만(없으면 빈 목록) |
+| `preview/home-ui/src/submission-board/index.js` | `ensureSubmissionBoardSeed` 다시 내보내기 삭제 |
+| `preview/home-ui/src/provider-reviews/store.js` | `seedDefaults()`(가짜 후기 3건 · 작성 횟수 시드) 삭제. 저장된 후기가 없으면 빈 목록 |
+| `preview/home-ui/src/mypage/index.js` | 마이페이지 진입 때 찜·관심 학생·제출자료 시드 호출 3개와 import 삭제 |
+
+대체 데이터는 만들지 않았다. 각 화면은 기존 빈 상태 문구로 보인다. 이 데모를 기대하던 verify/e2e 단언은 없었다(찜·후기 e2e 는 로그인 API 로 직접 만든 뒤 본다).
+
+### 12-4. preview/(admin 제외) 가짜 데이터 채우기 함수 전수 점검
+
+| 함수 | 판단 |
+|------|------|
+| `ensureWishlistDemo` · `ensureStudentReviewDemo` · `ensureSubmissionBoardSeed` · `provider-reviews` `seedDefaults` | **가짜 데이터 → 이번에 삭제** |
+| `ensureRecentDemo` · `ensureDemoThreads` | 3차(`c1def04`)에서 삭제 |
+| `plans/history-mock.js` `getSeedHistory` | 가짜 결제내역 — 견본 제거 브랜치가 삭제 |
+| `exposure-data.js` `STUDY_ROOM_SEED`·`TUTOR_SEED`·`STUDENT_SEED` · `home-card-samples/*` · `tutor-reg/registration-check-sample.js` | 견본 카드 — 견본 제거 브랜치 범위 |
+| `exposure-rules.js` `demo_prime_filled`·`demo_prime_tutor_pool` | 데이터가 아니라 견본 풀(`exposure-data`)에 대표 노출 자리를 채우는 규칙. 실DB 풀이면 쓰지 않는다. 견본 풀이 지워지면 의미 없음 — 이번에 손대지 않음(사용자 결정) |
+| `support/notice-store.js` `seedIfEmpty` · `operational-board-store.js` 공지·FAQ·가이드 seed | 실제 서비스 안내 문구(고객센터 공지 2건·FAQ·안전과외 가이드) — 가짜 아님, 유지 |
+| `board-channel-store.js` `seedChannels` · `right-rail-store.js` 기본 슬롯 | 게시판 채널·우측 배너 **설정 기본값** — 가짜 아님, 유지 |
+| `home-popup/gate.js` `readPopupDemo`/`writePopupDemo` | 관리자 전용 팝업 미리보기(`?popupDemo=`) — 데이터 아님, 유지 |
+| `study-room-home-seed.js` · `tutor-home-seed.js` · search-ui `seedStudyRoomPromoLabel` | 이름만 seed. 내 등록·저장 지역에서 실제 값을 읽는다 — 유지 |
+
+preview 밖이라 손대지 않았지만 알릴 것: `sql/schema/021_board_engine.sql` 이 서버 DB 에 제출자료 글 `sub-seed-1`·`sub-seed-2`·`sub-seed-room-1` 을 넣는다(e2e `a28-07-exposure-patch`·`admin-api.restoreExposureDefaults` 가 이 행을 쓴다). 운영 DB 에 들어갔는지는 미확인.
+
+### 12-5. 검증 (작업 트리)
+
+| 항목 | 결과 |
+|------|------|
+| home-ui `vite build` | 성공 |
+| 산출물 데모 문자열 (`sub-seed-`·가짜 제출자료 제목·가짜 후기 3문장·`ensure*Demo`/`ensureSubmissionBoardSeed`·대치맘·김하늘·김왕자·`@dev.local`) | **0건** |
+| 산출물에 남은 김수학·박국어·오영어·이영어·맑은하늘·드림스터디 대치·아이빌 공부방·대치 우등생 공부방 각 1건 | 출처 `exposure-data.js` — 견본 제거 브랜치 범위 |
+| 산출물 `demo-prime-001` 1건 | 출처 `plans/history-mock.js` — 견본 제거 브랜치가 지움 |
+| 산출물 `김학부모` 1건 | 출처 `admin/a28-screens-state.js` — admin 제외 범위 |
+| `npm run verify:shop-page` | 통과 |
+| `verify-card-visual-penetration` · `verify-parent-review-positive` · `verify-board-channel-acl` · `verify-cur-006-email-verify-gate` · `verify-message-permissions-admin` 134/0 · `verify-tutor-mypage-frame-ia` · `verify-tutor-mypage-route-integrity` · `verify-hide-inquiry-bundle` 30 · `verify-role-home-guard` 56/0 · `verify-mypage-account-region` 41/0 · `verify-mypage-notice-top` 49/0 · `verify-student-mypage-metrics` · `verify-student-count-halt-and-gate` 28/0 · `verify-admin-today-hub` 61/0 · `verify-admin-preview-labels` 202/0 · `verify-admin-162-settlement` 57/0 | 통과 |
+| `node --check` (바뀐 src 6개) | 통과 |
+| `verify-input-fill-rule`(3건) · `verify-tutor-registration-check-frame`(3건) | **실패 — 무관.** 8-5·11-3 과 같은 항목 |
+| `verify-cur-006-email-verify-inventory`(1건: `public/api/search/search.php` 미분류) | **실패 — 무관.** 이번 변경을 stash 한 `c1def04` 에서도 같은 실패 |
+
+실행하지 못한 것: e2e(Playwright, 로컬 Docker 꺼짐).
+
+### 12-6. 배포 전 사용자 할 일 (추가분)
+
+- 없음. SQL·환경변수·Secrets·`.htaccess` 변경 없음.

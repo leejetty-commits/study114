@@ -172,18 +172,3 @@ export function removeWishlist(kind, id) {
   if (idx >= 0) list.splice(idx, 1);
   saveState(state);
 }
-
-/** 25§10 lifecycle 뱃지 체험용 — API 모드·기존 데이터 시 스킵 */
-export function ensureWishlistDemo() {
-  if (isHandoffApiMode()) return;
-  const state = loadState();
-  const hasAny = state.wishlist.study_room.length || state.wishlist.tutor.length;
-  if (hasAny) return;
-  [1, 4, 5, 10].forEach((id) => {
-    if (!state.wishlist.study_room.includes(id)) state.wishlist.study_room.push(id);
-  });
-  [1, 3, 7].forEach((id) => {
-    if (!state.wishlist.tutor.includes(id)) state.wishlist.tutor.push(id);
-  });
-  saveState(state);
-}
