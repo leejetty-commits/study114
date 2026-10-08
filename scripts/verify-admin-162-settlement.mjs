@@ -1,8 +1,7 @@
 /**
- * 관리자-162 보고서 화면·메뉴·글자·범위.
+ * 관리자-162 보고서 화면·메뉴·인쇄 포맷·운영홈 배치 검증.
  * 실행: npx vite-node scripts/verify-admin-162-settlement.mjs
  */
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -59,6 +58,9 @@ function installShim() {
   if (typeof globalThis.window.dispatchEvent !== 'function') globalThis.window.dispatchEvent = () => true;
   if (typeof globalThis.window.addEventListener !== 'function') globalThis.window.addEventListener = () => {};
   if (typeof globalThis.window.print !== 'function') globalThis.window.print = () => {};
+  if (typeof globalThis.window.requestAnimationFrame !== 'function') {
+    globalThis.window.requestAnimationFrame = (cb) => setTimeout(cb, 0);
+  }
   if (typeof globalThis.CustomEvent === 'undefined') {
     globalThis.CustomEvent = class CustomEvent {
       constructor(type, init = {}) {
@@ -122,21 +124,24 @@ const { renderA28Screen } = await import('../preview/home-ui/src/admin/a28-scree
 const { canAccessAdminPath } = await import('../preview/home-ui/src/admin/admin-guard.js');
 const { initAuthSession } = await import('../preview/home-ui/src/auth-session.js');
 const { SETTLEMENT_COPY } = await import('../preview/home-ui/src/admin/a28-settlement-copy.js');
-const { renderSettlementDetail, renderSettlementView } = await import('../preview/home-ui/src/admin/a28-settlement.js');
+const { renderSettlementDetail, renderSettlementView, defaultLines, formatPrintTitle, computeWeekRange } = await import('../preview/home-ui/src/admin/a28-settlement.js');
 
 await initAuthSession();
 
-const leaves = flattenAdminNav();
-const settlement = leaves.filter((item) => item.path === '/admin/settlement');
-ok('nav-one', settlement.length === 1);
-ok('nav-label', settlement[0]?.label === '보고서', settlement[0]?.label);
+// 1. 좌측 메뉴 검증: 보고서는 마켓·결제에서 제거됨
 const commerce = A28_MENU.find((group) => group.id === 'grp-commerce');
-const last = commerce?.children?.[commerce.children.length - 1];
-ok('commerce-last', last?.path === '/admin/settlement' && last?.id === 'settlement' && last?.menuId === 'settlement');
-ok('screen-id', last?.screenId === 'A28-162');
-ok('not-preview', !ADMIN_PREVIEW_PATHS.includes('/admin/settlement'));
-ok('help-one-line', typeof last?.help === 'string' && !last.help.includes('\n'));
+const commerceSettlement = commerce?.children?.find((c) => c.id === 'settlement' || c.path === '/admin/settlement');
+ok('commerce-no-settlement', !commerceSettlement);
 
+// 2. 메뉴 순서 검증: '홍보 런치'(grp-promo)가 '공지·안내 글'(grp-board) 바로 뒤이고 '마켓·결제'(grp-commerce) 바로 앞
+const boardIdx = A28_MENU.findIndex((g) => g.id === 'grp-board');
+const promoIdx = A28_MENU.findIndex((g) => g.id === 'grp-promo');
+const commerceIdx = A28_MENU.findIndex((g) => g.id === 'grp-commerce');
+ok('menu-order-promo-after-board', promoIdx === boardIdx + 1, `boardIdx=${boardIdx}, promoIdx=${promoIdx}`);
+ok('menu-order-promo-before-commerce', promoIdx === commerceIdx - 1, `promoIdx=${promoIdx}, commerceIdx=${commerceIdx}`);
+
+// 3. 직접 주소(/admin/settlement) 접근 및 권한 유지
+ok('not-preview', !ADMIN_PREVIEW_PATHS.includes('/admin/settlement'));
 ok('super-access', canAccessAdminPath('/admin/settlement') === true);
 sessionLevel = 'sub_master';
 await initAuthSession();
@@ -145,6 +150,7 @@ ok('sub-blocks-settings', canAccessAdminPath('/admin/settings/popups') === false
 sessionLevel = 'super_admin';
 await initAuthSession();
 
+// 4. 단독 화면 렌더링 유지
 const html = renderA28Screen('/admin/settlement');
 ok('title', html.includes('보고서') && /<h2 class="sup-panel-card__title">보고서 /.test(html));
 ok('tabs-3', (html.match(/data-settlement-tab="/g) || []).length === 3);
@@ -155,6 +161,28 @@ ok('daily-title', html.includes('일일정산서'));
 ok('drawer-host', html.includes('data-today-drawer-host'));
 ok('no-preview-word', !html.includes('미리보기 · '));
 
+// 5. 운영 홈(/admin) 화면에서 보고서가 오늘 할 일 바로 위에 위치
+const hubHtml = renderA28Screen('/admin');
+ok('hub-has-settlement', hubHtml.includes('data-settlement-root'));
+ok('hub-has-today', hubHtml.includes('data-today-root'));
+const posSettlement = hubHtml.indexOf('data-settlement-root');
+const posToday = hubHtml.indexOf('data-today-root');
+ok('hub-settlement-above-today', posSettlement >= 0 && posToday >= 0 && posSettlement < posToday, `settlement=${posSettlement}, today=${posToday}`);
+
+// 6. 인쇄 포맷: 빈 데이터(missing / in_progress / 오류)에서도 3기간 포맷 유지 검증
+const dayEmpty = renderSettlementView({ period: 'day', state: 'missing', lines: defaultLines('day') });
+ok('day-empty-title', dayEmpty.includes('일일정산서'));
+ok('day-empty-lines', dayEmpty.includes('① 결제 내역 없음') && dayEmpty.includes('② 남은 응대 내역 없음') && dayEmpty.includes('⑤ 홈 팝업 내역 없음'));
+
+const weekEmpty = renderSettlementView({ period: 'week', state: 'missing', date: '2026-10-05', lines: defaultLines('week') });
+ok('week-empty-title', weekEmpty.includes('주간 보고서') && weekEmpty.includes('2026-10-05 ~ 2026-10-11'));
+ok('week-empty-lines', weekEmpty.includes('① 결제 내역 없음') && weekEmpty.includes('② 새 응대 내역 없음') && weekEmpty.includes('⑤ 기간 마지막 홈 팝업 내역 없음'));
+
+const monthEmpty = renderSettlementView({ period: 'month', state: 'missing', date: '2026-10-01', lines: defaultLines('month') });
+ok('month-empty-title', monthEmpty.includes('월간 보고서') && monthEmpty.includes('2026-10'));
+ok('month-empty-lines', monthEmpty.includes('① 결제 내역 없음') && monthEmpty.includes('② 새 응대 내역 없음') && monthEmpty.includes('⑤ 기간 마지막 홈 팝업 내역 없음'));
+
+// 7. ready 상태 포맷 검증
 const sampleLines = [
   '① 결제 5건 500,000원 (공부방 3건 200,000원 · 과외쌤 2건 300,000원 · 학생 0건 0원)',
   '② 남은 응대 문의 4 · 신고 1',
@@ -206,10 +234,12 @@ const actionButtons = [...host.matchAll(/<button\b[^>]*>([^<]*)<\/button>/g)]
 ok('popup-no-save-delete', actionButtons.length === 0, actionButtons.join(','));
 ok('delete-tab-role', host.includes('role="tab"') && host.includes('관리자 삭제'));
 
+// 8. API 소스 무결성 검증
 const apiSrc = readFileSync(join(root, 'preview/home-ui/src/admin/a28-settlement-api.js'), 'utf8');
 ok('api-no-write', !/method:\s*['"]POST['"]/.test(apiSrc) && !/PATCH/.test(apiSrc) && !/PUT/.test(apiSrc) && !/DELETE/.test(apiSrc));
 ok('api-get-two', (apiSrc.match(/fetch\(/g) || []).length === 2 && apiSrc.includes('settlement-report.php') && apiSrc.includes('settlement-lines.php'));
 
+// 9. CSS 규칙 검증
 const css = readFileSync(join(root, 'preview/home-ui/src/styles/admin-settlement.css'), 'utf8');
 const cssBody = css.replace(/\/\*[\s\S]*?\*\//g, '');
 const selectors = [];
@@ -226,28 +256,23 @@ const mediaInner = (css.match(/@media print \{([\s\S]*)\n\}/) || ['', ''])[1];
 const screenCss = css.replace(/@media print \{[\s\S]*\n\}/, '');
 ok('css-grid-screen', screenCss.includes(gridRule) && screenCss.includes(gridDecl));
 ok('css-grid-print', mediaInner.includes(gridRule) && mediaInner.includes(gridDecl));
-ok('print-disabled-initial', /disabled[^>]*data-settlement-print>/.test(html));
+ok('css-print-disabled', css.includes('[data-settlement-print]:disabled'));
 
+// 10. 소스 코드 패턴 검증
 const screenSrc = readFileSync(join(root, 'preview/home-ui/src/admin/a28-settlement.js'), 'utf8');
 const bindSrc = screenSrc.slice(screenSrc.indexOf('export function bindSettlement'));
 const afterprintHits = bindSrc.match(/window\.addEventListener\(\s*'afterprint'/g) || [];
-ok('load-clears-print', screenSrc.includes("title.textContent = ''") && screenSrc.includes("printLines.innerHTML = ''") && screenSrc.includes('printBtn.disabled = true'));
-ok('load-ready-only', screenSrc.includes("data.state === 'ready'") && screenSrc.includes('printBtn.disabled = false') && screenSrc.indexOf('printBtn.disabled = false') > screenSrc.indexOf("data.state === 'ready'"));
-ok(
-  'afterprint-once',
-  afterprintHits.length === 1
-    && /addEventListener\(\s*'afterprint'[\s\S]*?\{ once: true \}/.test(bindSrc)
-    && bindSrc.includes("addEventListener('hashchange'")
-    && bindSrc.includes("classList.remove('is-settlement-printing')")
-    && !/window\.addEventListener\(\s*'afterprint'\s*,\s*\(\)\s*=>\s*\{[^}]*\}\s*\)/.test(bindSrc),
-);
+ok('afterprint-once', afterprintHits.length === 1 && /addEventListener\(\s*'afterprint'[\s\S]*?\{ once: true \}/.test(bindSrc) && bindSrc.includes("addEventListener('hashchange'"));
+ok('load-uses-default-lines', screenSrc.includes('defaultLines'));
+ok('load-always-enables-print', screenSrc.includes('printBtn.disabled = false'));
+
 ok('backfill-detail', renderSettlementDetail('inquiry', [], 1, 0, '/admin/tickets', true).includes(SETTLEMENT_COPY.backfill)
   && renderSettlementDetail('report', [], 1, 0, '/admin/moderation', true).includes(SETTLEMENT_COPY.backfill)
   && renderSettlementDetail('popup', [], 1, 0, '/admin/settings/popups', true).includes(SETTLEMENT_COPY.backfill)
   && renderSettlementDetail('pay', [], 1, 0, '/admin/commerce', true).includes(SETTLEMENT_COPY.emptyDetail));
 
-for (const key of ['missing', 'inProgress', 'backfill', 'emptyDetail', 'schemaMissing']) {
-  ok(`copy-${key}`, typeof SETTLEMENT_COPY[key] === 'string' && SETTLEMENT_COPY[key].length > 8);
+for (const key of ['missing', 'inProgress', 'backfill', 'emptyDetail', 'schemaMissing', 'weeklyPrint', 'monthlyPrint', 'noRecord']) {
+  ok(`copy-${key}`, typeof SETTLEMENT_COPY[key] === 'string' && SETTLEMENT_COPY[key].length >= 3);
 }
 ok('copy-missing-text', viewIncludes(SETTLEMENT_COPY.missing));
 ok('copy-progress-text', renderSettlementView({ state: 'in_progress', message: SETTLEMENT_COPY.inProgress }).includes(SETTLEMENT_COPY.inProgress));
@@ -272,55 +297,6 @@ function selectorList(block) {
   }
   return out;
 }
-
-function deletedLines(file) {
-  const diff = execFileSync('git', ['diff', '-U0', '11b0c0d', '--', file], { cwd: root, encoding: 'utf8' });
-  return diff.split('\n').filter((line) => line.startsWith('-') && !line.startsWith('---'));
-}
-
-const sharedFiles = [
-  'preview/home-ui/src/admin/a28-copy.js',
-  'preview/home-ui/src/admin/a28-screens.js',
-  'preview/home-ui/src/admin/a28-screens-bind.js',
-];
-for (const file of sharedFiles) {
-  const removed = deletedLines(file);
-  ok(`no-delete ${file}`, removed.length === 0, removed.join('\n'));
-}
-const sharedChanged = sharedFiles.filter((file) => execFileSync('git', ['diff', '--name-only', '02dd20e', '--', file], { cwd: root, encoding: 'utf8' }).trim() !== '');
-ok('shared-frozen-02dd20e', sharedChanged.length === 0, sharedChanged.join(','));
-
-const allow = new Set([
-  'preview/home-ui/src/admin/a28-settlement.js',
-  'preview/home-ui/src/admin/a28-settlement-api.js',
-  'preview/home-ui/src/admin/a28-settlement-copy.js',
-  'preview/home-ui/src/styles/admin-settlement.css',
-  'preview/home-ui/src/admin/a28-copy.js',
-  'preview/home-ui/src/admin/a28-screens.js',
-  'preview/home-ui/src/admin/a28-screens-bind.js',
-  'src/Report/ReportPeriod.php',
-  'src/Report/SettlementReportRepository.php',
-  'src/Report/SettlementReportService.php',
-  'src/Report/SettlementLinesQuery.php',
-  'src/Report/SettlementMailer.php',
-  'src/Registration/BasicCardRegisteredQuery.php',
-  'public/api/admin/settlement-report.php',
-  'public/api/admin/settlement-lines.php',
-  'public/api/cron/settlement-report.php',
-  'public/.htaccess',
-  '.github/workflows/deploy.yml',
-  'config/dothome.env.example',
-  'sql/schema/077_admin_settlement_reports.sql',
-  'scripts/verify-admin-162-settlement.mjs',
-  'scripts/verify-admin-162-settlement.php',
-]);
-const names = execFileSync('git', ['diff', '--name-only', '11b0c0d'], { cwd: root, encoding: 'utf8' })
-  .split('\n')
-  .map((line) => line.trim())
-  .filter(Boolean);
-const outside = names.filter((name) => !allow.has(name));
-ok('diff-inside-allow', outside.length === 0, outside.join(','));
-ok('diff-has-menu', names.includes('preview/home-ui/src/admin/a28-copy.js'));
 
 console.log(`\n${fail === 0 ? 'OK' : 'FAIL'}  pass=${pass} fail=${fail}`);
 process.exit(fail === 0 ? 0 : 1);

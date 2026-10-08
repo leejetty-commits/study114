@@ -186,7 +186,7 @@ import {
   renderNotifyLab,
 } from './a28-screens-labs.js';
 import { peekHubExposureRoute, registerTodayRenderers, renderTodayMarkup } from './a28-today-hub.js';
-import { renderSettlement } from './a28-settlement.js';
+import { renderSettlement, renderSettlementHub } from './a28-settlement.js';
 import { renderRegistrationList } from './a28-registration-list.js';
 
 function adminProductLabel(code) {
@@ -645,7 +645,8 @@ function renderHub() {
   return renderPanel(
     A28_COPY.hubTitle,
     'A28-01',
-    `${renderTodayMarkup()}
+    `${renderSettlementHub()}
+     ${renderTodayMarkup()}
      ${renderOpsTip()}
      ${renderPromoQuickBar()}
      <p>${esc(A28_COPY.hubLead)}</p>

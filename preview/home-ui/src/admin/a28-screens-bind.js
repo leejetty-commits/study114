@@ -553,7 +553,7 @@ export function bindTodaySlotNav(root) {
 
 export function bindA28ScreenEvents(root, path, rerender) {
   bindDetailDrawer(root);
-  if (path === '/admin/settlement') bindSettlement(root, rerender);
+  if (path === '/admin/settlement' || path === '/admin') bindSettlement(root, rerender);
 
   root.querySelectorAll('[data-promo-copy-url]').forEach((btn) => {
     btn.addEventListener('click', async () => {

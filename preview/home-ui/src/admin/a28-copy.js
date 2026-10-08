@@ -128,21 +128,6 @@ export const A28_MENU = [
     screenId: 'A28-01',
   },
   {
-    id: 'grp-promo',
-    label: '홍보 런치',
-    help: '프로모션 랜딩 URL · 배너 연결 · 공유 문구',
-    children: [
-      {
-        id: 'promo-desk',
-        menuId: 'promo',
-        label: '홍보 런치 데스크',
-        path: '/admin/promo',
-        help: '홍보 풀페이지를 열고, URL·공유 문구를 복사하고, 배너 연결 상태를 확인합니다.',
-        screenId: 'A28-promo',
-      },
-    ],
-  },
-  {
     // Youngcart menu100 환경설정
     id: 'grp-config',
     label: '사이트 기본',
@@ -277,6 +262,21 @@ export const A28_MENU = [
     ],
   },
   {
+    id: 'grp-promo',
+    label: '홍보 런치',
+    help: '프로모션 랜딩 URL · 배너 연결 · 공유 문구',
+    children: [
+      {
+        id: 'promo-desk',
+        menuId: 'promo',
+        label: '홍보 런치 데스크',
+        path: '/admin/promo',
+        help: '홍보 풀페이지를 열고, URL·공유 문구를 복사하고, 배너 연결 상태를 확인합니다.',
+        screenId: 'A28-promo',
+      },
+    ],
+  },
+  {
     // Youngcart menu400·500 쇼핑몰 — 상품 = 공부방·과외쌤
     id: 'grp-commerce',
     label: '마켓·결제',
@@ -337,14 +337,6 @@ export const A28_MENU = [
         path: '/admin/market/incomplete',
         help: '결제 중 이탈·실패 건을 확인합니다. (영카트 미완료주문)',
         screenId: 'A28-07b',
-      },
-      {
-        id: 'settlement',
-        menuId: 'settlement',
-        label: '보고서',
-        path: '/admin/settlement',
-        help: '하루·한 주·한 달 운영 보고서를 보고 인쇄합니다.',
-        screenId: 'A28-162',
       },
     ],
   },

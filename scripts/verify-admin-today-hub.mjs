@@ -160,7 +160,9 @@ sessionLevel = 'sub_master';
 await initAuthSession();
 a28Ui.todaySlot = null;
 const subHub = renderA28Screen('/admin');
-ok('sub-master-no-popup-card', !subHub.includes('홈 팝업') && subHub.includes('회원 정리') && subHub.includes('문의·신고'));
+const subTodayAt = subHub.indexOf('data-today-root');
+const subTodayHtml = subTodayAt >= 0 ? subHub.slice(subTodayAt) : subHub;
+ok('sub-master-no-popup-card', !subTodayHtml.includes('홈 팝업') && !subHub.includes('data-today-card="popups"') && subHub.includes('회원 정리') && subHub.includes('문의·신고'));
 ok('sub-master-three', (subHub.match(/data-today-card="/g) || []).length === 3);
 
 sessionLevel = 'super_admin';
