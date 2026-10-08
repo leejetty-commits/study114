@@ -13,6 +13,8 @@ use Study114\Database\Connection;
  */
 final class AuthorDisplayNameResolver
 {
+    private const STUDENT_FALLBACK_NAME = '학생';
+
     private PDO $pdo;
 
     public function __construct(?PDO $pdo = null)
@@ -101,8 +103,18 @@ final class AuthorDisplayNameResolver
             'SELECT public_display_name FROM students WHERE guardian_user_id = ? ORDER BY id ASC LIMIT 1'
         );
         $stmt->execute([$userId]);
-        $val = $stmt->fetchColumn();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return '';
+        }
 
-        return is_string($val) ? trim($val) : '';
+        $publicName = isset($row['public_display_name']) && is_string($row['public_display_name'])
+            ? trim($row['public_display_name'])
+            : '';
+        if ($publicName !== '') {
+            return $publicName;
+        }
+
+        return self::STUDENT_FALLBACK_NAME;
     }
 }
