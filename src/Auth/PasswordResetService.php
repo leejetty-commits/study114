@@ -6,6 +6,8 @@ namespace Study114\Auth;
 
 use PDO;
 use Study114\Database\Connection;
+use Study114\Mail\MemberMailRole;
+use Study114\Mail\MemberMailTemplate;
 
 /** 9장 부록 §17 — 이메일 링크 비밀번호 재설정 */
 final class PasswordResetService
@@ -68,10 +70,17 @@ final class PasswordResetService
         $socialOnly = $providers !== [] && $phoneDigits === '';
 
         $this->tokens->invalidatePurpose($userId, 'password_reset');
+        $role = MemberMailRole::lookup($pdo, $userId);
+        $supportUrl = MemberMailTemplate::supportUrl((string) ($this->config['home_ui'] ?? ''));
 
         if ($socialOnly) {
             $this->tokens->create($userId, 'password_reset', (int) $this->config['password_reset_ttl_minutes']);
-            $mail = PasswordResetMailTemplate::buildSocialOnly($providerLabels);
+            $mail = PasswordResetMailTemplate::buildSocialOnly(
+                $providerLabels,
+                $role,
+                $this->config['auth_ui'] . '/#/login',
+                $supportUrl
+            );
             $this->mailer->send($email, $mail['subject'], $mail['plain'], $mail['html']);
             return ['sent' => true, 'resend_available_in' => $cooldown];
         }
@@ -81,7 +90,9 @@ final class PasswordResetService
         $mail = PasswordResetMailTemplate::build(
             $link,
             (int) $this->config['password_reset_ttl_minutes'],
-            $providerLabels
+            $providerLabels,
+            $role,
+            $supportUrl
         );
         $this->mailer->send($email, $mail['subject'], $mail['plain'], $mail['html']);
 

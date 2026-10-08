@@ -32,6 +32,7 @@
     "verify:paid-pr-b-ci": "bash scripts/verify-paid-pr-b-ci.sh",
     "verify:cur-006-email-sent-ui": "npx --yes vite-node scripts/verify-cur-006-email-sent-ui.mjs",
     "verify:cur-006-resend": "npx --yes vite-node scripts/verify-cur-006-resend.mjs",
+    "verify:auth-mail-warm": "php scripts/verify-auth-mail-warm.php",
     "verify:cur-006-email-verify-gate": "npx --yes vite-node scripts/verify-cur-006-email-verify-gate.mjs",
     "verify:cur-006-email-verify-flow": "php scripts/verify-cur-006-email-verify-flow.php",
     "verify:cur-006-email-verify-inventory": "npx --yes vite-node scripts/verify-cur-006-email-verify-inventory.mjs",
