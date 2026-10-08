@@ -1,6 +1,7 @@
 /**
- * 글자 크기 집합 {12, 14, 16, 18, 22, 28} 만족 여부 및
- * 내 공지 / 탭 바 / 카드의 오른쪽 끝 정렬(±1px) 측정
+ * 글자 크기 집합 {12, 14, 16, 18, 22, 28} 만족 여부,
+ * 내 공지 / 탭 바 / 카드의 오른쪽 끝 정렬(±1px),
+ * 카드 제목 == 첫 라벨 == 첫 입력칸 == 저장 버튼의 왼쪽선 정렬(±1px) 측정 (PC & 모바일)
  * 실행: cd preview/home-ui && npx vite-node ../../scripts/verify-student-mypage-metrics.mjs
  */
 import { chromium } from 'playwright';
@@ -64,6 +65,7 @@ const cssFiles = [
   'preview/home-ui/src/styles/home.css',
   'preview/home-ui/src/styles/home-member-flows.css',
   'preview/home-ui/src/styles/home-right-rail.css',
+  'preview/search-ui/src/styles/search.css',
   'preview/home-ui/src/styles/design-system.css',
   'preview/home-ui/src/styles/home-listings.css',
   'preview/home-ui/src/styles/product-chrome.css',
@@ -71,8 +73,11 @@ const cssFiles = [
   'preview/home-ui/src/styles/registration-check.css',
   'preview/home-ui/src/styles/home-card-samples.css',
   'preview/shared/register-form-primitives.css',
+  'preview/shared/input-fill.css',
   'preview/shared/register-flow.css',
   'preview/study-room-ui/src/styles/register.css',
+  'preview/search-ui/src/styles/search-visily.css',
+  'preview/home-ui/src/styles/udx-std-apply.css',
   'preview/home-ui/src/styles/student-detail.css',
   'preview/home-ui/src/styles/inquiry-settings-catalog.css',
   'preview/home-ui/src/styles/student-mypage-stage5b.css',
@@ -127,7 +132,7 @@ globalThis.fetch = async (url) => {
 };
 
 const { initAuthSession } = await import('../preview/home-ui/src/auth-session.js');
-const { ensureStudentStore } = await import('../preview/home-ui/src/student-reg/store.js');
+const { ensureStudentStore, getStudent, updateStudent } = await import('../preview/home-ui/src/student-reg/store.js');
 const { deactivateRegistrationsApi } = await import('../preview/home-ui/src/registrations-backend.js');
 const { activateBoardApi, hydrateNoticeHome } = await import('../preview/home-ui/src/board/board-backend.js');
 const { renderMypageShell } = await import('../preview/home-ui/src/mypage/shell.js');
@@ -140,6 +145,30 @@ deactivateRegistrationsApi();
 ensureStudentStore();
 await activateBoardApi({ navRole: 'parent' });
 await hydrateNoticeHome();
+
+// 김하늘(1) 학생에 공부방 희망지역 주입(시안과 동일한 주소 및 단지)
+await updateStudent(1, {
+  public_display_name: '학생',
+  preferred_lesson_type: 'study_room',
+  preferred_studyroom_regions: [
+    {
+      region_id: '9101',
+      region_label: '경기도 의정부시 가능동',
+      region_basis_type: 'dong',
+      address_text: '경기도 의정부시 가능동',
+      address_bname: '가능동',
+      is_primary: true,
+    },
+  ],
+  preferred_studyroom_region_id: '9101',
+  preferred_studyroom_fee_amount: 420000,
+  school_level: '초등',
+  grade_level: '초5',
+  lesson_format: 'one_on_one',
+  preferred_student_count_group: 'solo',
+  subject_label: '수학',
+  request_summary: '숙제 조금만',
+});
 
 async function launchChromium(chromium) {
   try {
@@ -166,84 +195,164 @@ function wrapPage(title, bodyHtml) {
 }
 
 const browser = await launchChromium(chromium);
-const page = await browser.newPage({ viewport: { width: 1280, height: 1600 } });
 
 const TABS = [
-  { name: '마이프로필', path: '/mypage/registrations/students/1' },
-  { name: '기본정보', path: '/mypage/registrations/students/1/basic' },
-  { name: '상세정보', path: '/mypage/registrations/students/1/detail' },
-  { name: '쪽지설정', path: '/mypage/registrations/students/1/settings' },
+  { name: '마이프로필', path: '/mypage/registrations/students/1', isForm: false },
+  { name: '기본정보', path: '/mypage/registrations/students/1/basic', isForm: true },
+  { name: '상세정보', path: '/mypage/registrations/students/1/detail', isForm: true },
+  { name: '쪽지설정', path: '/mypage/registrations/students/1/settings', isForm: true },
 ];
 
 const ALLOWED_FONT_SIZES = new Set([12, 14, 16, 18, 22, 28]);
+const VIEWPORTS = [
+  { name: 'PC', width: 1280, height: 1600 },
+  { name: '모바일', width: 390, height: 1400 },
+];
 
-for (const tab of TABS) {
-  console.log(`\n=== Checking ${tab.name} (${tab.path}) ===`);
-  loc.hash = `#${tab.path}`;
-  const body = renderMypageScreen(tab.path);
-  const shell = renderMypageShell(tab.path, body);
-  await page.setContent(wrapPage(tab.name, shell), { waitUntil: 'load' });
-  await page.evaluate(() => document.fonts.ready);
+let allPassed = true;
 
-  // 1. 오른쪽 끝 정렬 (내 공지, 탭 바, 카드)
-  const rightBounds = await page.evaluate(() => {
-    const notice = document.querySelector('.mypage-notice');
-    const tabs = document.querySelector('.mp-room__tabs');
-    const cards = Array.from(document.querySelectorAll('.p21-profile__card, .student-form-card, .student-detail-section, .p21-inq-card'));
-    const content = document.querySelector('.mypage-content');
+for (const vp of VIEWPORTS) {
+  console.log(`\n========================================`);
+  console.log(` 검증 시작: ${vp.name} (${vp.width}x${vp.height})`);
+  console.log(`========================================`);
+  const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
 
-    const getRight = (el) => {
-      if (!el) return null;
-      const rect = el.getBoundingClientRect();
-      return Math.round(rect.right * 10) / 10;
-    };
+  for (const tab of TABS) {
+    console.log(`\n--- [${vp.name}] ${tab.name} (${tab.path}) ---`);
+    loc.hash = `#${tab.path}`;
+    const body = renderMypageScreen(tab.path);
+    const shell = renderMypageShell(tab.path, body);
+    await page.setContent(wrapPage(tab.name, shell), { waitUntil: 'load' });
 
-    return {
-      contentRight: getRight(content),
-      noticeRight: getRight(notice),
-      tabsRight: getRight(tabs),
-      cardRights: cards.map(getRight),
-    };
-  });
+    // 194 회색 채움 적용
+    await page.evaluate(() => {
+      const forms = document.querySelectorAll('form');
+      forms.forEach((f) => f.setAttribute('data-input-fill', ''));
+      const SKIP_TYPES = new Set(['hidden', 'radio', 'checkbox', 'button', 'submit', 'reset', 'file', 'image', 'range', 'color']);
+      document.querySelectorAll('input, select, textarea').forEach((el) => {
+        const tag = el.tagName.toUpperCase();
+        const type = String(el.type || 'text').toLowerCase();
+        if (SKIP_TYPES.has(type)) return;
+        const val = String(el.value || '').trim();
+        el.setAttribute('data-fill', val ? 'filled' : 'empty');
+      });
+    });
 
-  console.log('Right bounds:', rightBounds);
-  if (rightBounds.noticeRight && rightBounds.tabsRight) {
-    const diff = Math.abs(rightBounds.noticeRight - rightBounds.tabsRight);
-    console.log(`  내 공지 ↔ 탭 바 차이: ${diff}px (기준: <= 1px)`);
-  }
-  if (rightBounds.tabsRight && rightBounds.cardRights.length) {
-    for (let i = 0; i < rightBounds.cardRights.length; i++) {
-      const diff = Math.abs(rightBounds.tabsRight - rightBounds.cardRights[i]);
-      console.log(`  탭 바 ↔ 카드[${i}] 차이: ${diff}px (기준: <= 1px)`);
+    await page.evaluate(() => document.fonts.ready);
+
+    // 1. 오른쪽 끝 정렬 (내 공지, 탭 바, 카드)
+    const rightBounds = await page.evaluate(() => {
+      const notice = document.querySelector('.mypage-notice');
+      const tabs = document.querySelector('.mp-room__tabs');
+      const cards = Array.from(document.querySelectorAll('.p21-profile__section, .p19-form-section, .student-detail-section'));
+      const getRight = (el) => {
+        if (!el) return null;
+        const rect = el.getBoundingClientRect();
+        return Math.round(rect.right * 10) / 10;
+      };
+
+      return {
+        noticeRight: getRight(notice),
+        tabsRight: getRight(tabs),
+        cardRights: cards.map(getRight),
+      };
+    });
+
+    if (rightBounds.noticeRight && rightBounds.tabsRight) {
+      const diff = Math.abs(rightBounds.noticeRight - rightBounds.tabsRight);
+      const ok = diff <= 1.0;
+      console.log(`  [오른쪽 정렬] 내 공지 ↔ 탭 바: ${diff}px (${ok ? 'PASS' : 'FAIL'})`);
+      if (!ok) allPassed = false;
     }
-  }
-
-  // 2. 학생 마이페이지 영역 내 폰트 크기 샘플 검사
-  const fontSizes = await page.evaluate(() => {
-    const elements = document.querySelectorAll('.mypage-content *');
-    const sizes = new Set();
-    const oddElements = [];
-    for (const el of elements) {
-      if (!el.textContent.trim()) continue;
-      const fs = Math.round(parseFloat(window.getComputedStyle(el).fontSize));
-      sizes.add(fs);
-      if (fs === 13 || fs === 19) {
-        oddElements.push({ tag: el.tagName, cls: el.className, fs, text: el.textContent.trim().slice(0, 30) });
+    if (rightBounds.tabsRight && rightBounds.cardRights.length) {
+      for (let i = 0; i < rightBounds.cardRights.length; i++) {
+        const diff = Math.abs(rightBounds.tabsRight - rightBounds.cardRights[i]);
+        const ok = diff <= 1.0;
+        console.log(`  [오른쪽 정렬] 탭 바 ↔ 카드[${i}]: ${diff}px (${ok ? 'PASS' : 'FAIL'})`);
+        if (!ok) allPassed = false;
       }
     }
-    return { sizes: Array.from(sizes).sort((a, b) => a - b), oddElements };
-  });
 
-  console.log('Font sizes in content:', fontSizes.sizes);
-  if (fontSizes.oddElements.length) {
-    console.log('  Odd elements:', fontSizes.oddElements);
+    // 2. [핵심] 왼쪽선 정렬 (카드 제목 == 첫 라벨 == 첫 입력칸/칩 == 저장 버튼)
+    if (tab.isForm) {
+      const leftMetrics = await page.evaluate(() => {
+        const card = document.querySelector('.p19-form-section, .student-detail-section');
+        const title = document.querySelector('.p19-form-section__title, .student-detail-title');
+        const lead = document.querySelector('.p19-form-section__lead, .student-detail-lead');
+        const firstLabel = document.querySelector('.p19-field__label, .student-detail-label');
+        const firstInput = document.querySelector('.p19-input:not([type="hidden"]), .p19-select, .p21-inq-choice');
+        const submitBtn = document.querySelector('.p19-form-footer button[type="submit"], .p19-form-actions button[type="submit"]');
+        const footerBar = document.querySelector('.p19-form-footer');
+
+        const getLeft = (el) => {
+          if (!el) return null;
+          return Math.round(el.getBoundingClientRect().left * 10) / 10;
+        };
+
+        return {
+          cardLeft: getLeft(card),
+          titleLeft: getLeft(title),
+          leadLeft: getLeft(lead),
+          firstLabelLeft: getLeft(firstLabel),
+          firstInputLeft: getLeft(firstInput),
+          submitBtnLeft: getLeft(submitBtn),
+          footerBarLeft: getLeft(footerBar),
+        };
+      });
+
+      console.log(`  [왼쪽선 측정]`, leftMetrics);
+      const ref = leftMetrics.titleLeft;
+      const targets = [
+        { name: '첫 라벨', val: leftMetrics.firstLabelLeft },
+        { name: '첫 입력/칩', val: leftMetrics.firstInputLeft },
+        { name: '저장 버튼', val: leftMetrics.submitBtnLeft },
+        { name: '저장 바 구분선', val: leftMetrics.footerBarLeft },
+      ].filter((t) => t.val !== null);
+
+      let formLeftOk = true;
+      for (const t of targets) {
+        const diff = Math.abs(ref - t.val);
+        const ok = diff <= 1.0;
+        console.log(`    카드 제목(${ref}px) ↔ ${t.name}(${t.val}px): 차이 ${diff}px (${ok ? 'PASS' : 'FAIL'})`);
+        if (!ok) {
+          formLeftOk = false;
+          allPassed = false;
+        }
+      }
+      if (formLeftOk) {
+        console.log(`  PASS: ${tab.name} 왼쪽선 일치 (오차 <= 1px)`);
+      }
+    }
+
+    // 3. 폰트 크기 샘플 검사
+    const fontSizes = await page.evaluate(() => {
+      const elements = document.querySelectorAll('.mypage-content *');
+      const sizes = new Set();
+      for (const el of elements) {
+        if (!el.textContent.trim()) continue;
+        const fs = Math.round(parseFloat(window.getComputedStyle(el).fontSize));
+        sizes.add(fs);
+      }
+      return Array.from(sizes).sort((a, b) => a - b);
+    });
+
+    const disallowed = fontSizes.filter((s) => !ALLOWED_FONT_SIZES.has(s));
+    if (disallowed.length === 0) {
+      console.log(`  PASS: 모든 폰트 크기가 {12, 14, 16, 18, 22, 28} 만족 (${fontSizes.join(', ')})`);
+    } else {
+      console.log(`  WARNING: 허용 외 폰트: ${disallowed.join(', ')}px (전체: ${fontSizes.join(', ')})`);
+    }
   }
-  const disallowed = fontSizes.sizes.filter((s) => !ALLOWED_FONT_SIZES.has(s));
-  if (disallowed.length === 0) {
-    console.log('  PASS: 모든 폰트 크기가 {12, 14, 16, 18, 22, 28} 집합을 만족함.');
-  } else {
-    console.log(`  WARNING: 허용 집합 외 폰트 크기 발견: ${disallowed.join(', ')}px`);
-  }
+
+  await page.close();
 }
 
 await browser.close();
+
+console.log(`\n========================================`);
+if (allPassed) {
+  console.log('✅ 모든 정렬 검증 (PC & 모바일) PASS!');
+} else {
+  console.log('❌ 일부 정렬 검증 실패!');
+  process.exit(1);
+}

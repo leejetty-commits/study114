@@ -235,8 +235,10 @@
   border-radius: 0;
 }
 
-/* 필드 구조 및 간격 (세로 24, 컨트롤 상단 8) */
+/* 필드 구조 및 간격 (세로 24, 컨트롤 상단 8, 이중 패딩 제거) */
 .home-app--role-parent .mp-room .p19-form-section__body {
+  padding: 0 !important;
+  margin: 0 !important;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -366,6 +368,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin: 0 !important;
 }
 
 .home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choice {

@@ -221,3 +221,48 @@
 ## 8. 최종 상태
 
 - **상태**: 구현 완료, 검수 대기 (사용자 승인 대기)
+
+---
+
+## 9. 메인 검수 반려 1차 조치 내역
+
+- **작업 일시**: 2026-10-08
+- **대상**: 폼 3탭 카드 왼쪽선 정렬, 쪽지설정 간격, 마이프로필 카드 미리보기 판정 및 캡처 정상화
+
+### 9-1. 반려 내용 및 조치 내역
+
+1. **[반려 1] 폼 3탭(기본정보·상세정보·쪽지설정) 카드 내부 왼쪽선 불일치 및 쪽지설정 세로 간격**:
+   - **반려 내용**:
+     - 기본정보, 상세정보, 쪽지설정 세 폼 탭 모두 카드 제목(「기본정보」「학생 상세정보」「쪽지 수신」)보다 필드 라벨, 입력칸, 칩이 약 12~20px 안쪽에서 시작하는 이중 들여쓰기 발생 (SPEC §2-3 「카드 안 카드 금지, 들여쓰기 2단 금지」 위반).
+     - 쪽지설정 카드 제목과 칩 사이 세로 간격이 시안보다 과도하게 큼.
+   - **원인 분석**:
+     - `preview/home-ui/src/styles/home-member-flows.css`의 1951행 `.p19-form-section__body { padding: var(--space-5); }` (모바일 2180행 `var(--space-4)`)의 이중 패딩이 `student-mypage-stage5b.css`의 카드 패딩(24px) 내부에서 추가 적용되고 있었음.
+     - 쪽지설정의 경우 `home-member-flows.css`의 `.p21-inq-choices { margin-top: 0.55rem; }` 및 바디 패딩이 중첩되어 제목과 칩 사이 간격이 비대해졌음.
+   - **수정 내용**:
+     - `preview/home-ui/src/styles/student-mypage-stage5b.css`에 `.home-app--role-parent .mp-room .p19-form-section__body { padding: 0 !important; margin: 0 !important; }`를 선언하여 폼 본문의 이중 안쪽 여백/마진을 완전히 제거.
+     - `.home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choices { margin: 0 !important; }`를 적용하여 카드 제목 묶음(`margin-bottom: 24px`) 아래 정확히 24px 간격으로 칩이 배치되도록 수정.
+   - **측정 스크립트 강화 및 검증 결과**:
+     - `scripts/verify-student-mypage-metrics.mjs`에 「카드 제목 left == 첫 라벨 left == 첫 입력칸/칩 left == 저장 버튼 left == 저장 바 구분선 left (±1px)」 측정 및 단언 추가.
+     - PC (1280px):
+       - 기본정보: 제목(273px) = 라벨(273px) = 입력칸(273px) = 저장버튼(273px) = 구분선(273px) (차이 0px, PASS)
+       - 상세정보: 제목(273px) = 라벨(273px) = 입력칸(273px) = 저장버튼(273px) = 구분선(273px) (차이 0px, PASS)
+       - 쪽지설정: 제목(273px) = 칩(273px) = 저장버튼(273px) = 구분선(273px) (차이 0px, PASS)
+     - 모바일 (390px):
+       - 기본정보: 제목(49px) = 라벨(49px) = 입력칸(49px) = 저장버튼(49px) = 구분선(49px) (차이 0px, PASS)
+       - 상세정보: 제목(49px) = 라벨(49px) = 입력칸(49px) = 저장버튼(49px) = 구분선(49px) (차이 0px, PASS)
+       - 쪽지설정: 제목(49px) = 칩(49px) = 저장버튼(49px) = 구분선(49px) (차이 0px, PASS)
+
+2. **[확인 2] 마이프로필 학생 베이직 카드 미리보기 깨짐 원인 판정**:
+   - **판정 결과**: **(a) 캡처 스크립트의 CSS 파일 누락**
+   - **상세 분석 및 근거**:
+     - 카드 렌더러 `renderStudentBasicSelfCard`가 생성하는 마크업은 `<article class="expo-basic expo-basic--student expo-hcard">` 구조임.
+     - 해당 가로형 카드의 핵심 스타일(`.expo-hcard`, `.expo-hcard__media-wrap`, `.expo-hcard__body`, `.expo-basic--student.expo-hcard` 등)은 모두 `preview/search-ui/src/styles/search-visily.css` 및 `preview/search-ui/src/styles/search.css`에 선언되어 있음.
+     - 실제 브라우저 번들(`preview/home-ui/src/main.js`)은 `@search-ui/styles/search.css`, `@search-ui/styles/search-visily.css`, `styles/udx-std-apply.css`를 정상적으로 import하고 있었음.
+     - 그러나 기존 캡처 스크립트(`scripts/capture-student-mypage-shots.mjs`)와 검증 스크립트의 `cssFiles` 목록에는 해당 파일들과 `preview/shared/input-fill.css`가 누락되어 있어 헤드리스 캡처 시 카드 스타일이 누락된 것이었음.
+     - `preview/` 하위 전체를 `rg`로 검색한 결과, `.p19-myprofile__card` 관련 CSS 규칙은 어디에도 존재하지 않으므로 (b)의 부모 선택자 불일치는 원인이 아님을 코드로 확인.
+     - 캡처 스크립트의 `cssFiles`에 누락된 스타일시트 4종을 추가하고 재캡처한 결과, `tmp-design\shots\after-1-myprofile.png`에서 시안과 동일한 가로형 학생 카드가 정상 렌더링됨.
+
+3. **[참고] 희망지역 주소칸 및 194 회색 채움 화면 반영**:
+   - 캡처 및 검증 스크립트에서 김하늘(1) 학생에 대해 `updateStudent(1, ...)`를 실행하여 공부방 희망지역(경기도 의정부시 가능동)을 주입함.
+   - 캡처 페이지 내에서 `data-input-fill` 속성을 부여하고 채워진 입력칸에 대해 `data-fill="filled"`를 적용하여, 주소칸 좌우 12, 결과 줄 10/12, 값 있는 칸의 194 회색 채움이 `tmp-design\shots\after-2-basic.png`에 시안과 완벽하게 동일하게 노출됨.
+
