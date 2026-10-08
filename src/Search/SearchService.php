@@ -911,12 +911,24 @@ final class SearchService
         $stmt->execute($params);
         $total = (int) $stmt->fetchColumn();
 
+        // 카드 칸(정본 73 0-2·4-1). user_profiles 는 성별만 읽는다(실명·연락처·주소 금지).
+        $genderExpr = '(SELECT up.gender FROM user_profiles up WHERE up.user_id = t.user_id LIMIT 1)';
+        $schoolLevelExpr = '(SELECT tst_lv.school_level FROM tutor_subject_targets tst_lv
+                 WHERE tst_lv.tutor_id = t.id AND tst_lv.is_primary = 1
+                 ORDER BY tst_lv.id ASC LIMIT 1)';
+        $tutorImgExpr = $this->tutorCoverImageExpr();
+
         $sql = "
             SELECT DISTINCT t.id, t.tutor_display_name, t.preferred_fee_amount,
                    t.university_name, t.major_name, t.career_year_band,
                    t.university_status, t.proof_document_available,
                    t.lessons_per_week, t.minutes_per_lesson, t.detail_completion_status,
                    t.profile_status, t.published_at, t.created_at,
+                   t.slogan, t.intro_short, t.feature_1, t.feature_2, t.feature_3,
+                   t.main_material_note, t.student_gender_group, t.student_count_group,
+                   {$genderExpr} AS tutor_gender,
+                   {$schoolLevelExpr} AS primary_school_level,
+                   {$tutorImgExpr} AS image_path_basic,
                    {$recommendExpr} AS recommend_count,
                    {$reviewExpr} AS review_count,
                    tst.subject_name, r.sigungu_name, r.sido_name,
@@ -978,6 +990,12 @@ final class SearchService
             }
             $right .= "\n" . strtoupper($exposureTier);
 
+            $gender = (string) ($row['tutor_gender'] ?? '');
+            $imageBasic = trim((string) ($row['image_path_basic'] ?? ''));
+            $imagePrime = str_contains($imageBasic, '_basic_720')
+                ? str_replace('_basic_720', '_prime_1280', $imageBasic)
+                : $imageBasic;
+
             $item = [
                 'id'                     => (int) $row['id'],
                 'title'                  => (string) $row['tutor_display_name'],
@@ -986,6 +1004,16 @@ final class SearchService
                 'price_label'            => $this->formatMonthlyPrice($row['preferred_fee_amount']),
                 'preferred_fee_amount'   => $row['preferred_fee_amount'] !== null ? (int) $row['preferred_fee_amount'] : null,
                 'main_subject_note'      => (string) ($row['subject_name'] ?? ''),
+                'gender'                 => isset(self::GENDER_LABELS[$gender]) ? $gender : null,
+                'grade_band'             => self::SCHOOL_LEVEL_LABELS[(string) ($row['primary_school_level'] ?? '')] ?? '',
+                'slogan'                 => (string) ($row['slogan'] ?? ''),
+                'intro_short'            => (string) ($row['intro_short'] ?? ''),
+                'feature_1'              => (string) ($row['feature_1'] ?? ''),
+                'feature_2'              => (string) ($row['feature_2'] ?? ''),
+                'feature_3'              => (string) ($row['feature_3'] ?? ''),
+                'main_material_note'     => (string) ($row['main_material_note'] ?? ''),
+                'student_gender_group'   => $row['student_gender_group'] ?? null,
+                'student_count_group'    => $row['student_count_group'] ?? null,
                 'university_name'        => (string) ($row['university_name'] ?? ''),
                 'major_name'             => (string) ($row['major_name'] ?? ''),
                 'university_status'      => $row['university_status'] ?? null,
@@ -1010,6 +1038,9 @@ final class SearchService
                     'tutor',
                     (int) $row['id'],
                 ),
+                'image_path_prime'       => $imagePrime,
+                'image_path_basic'       => $imageBasic,
+                'image_path'             => $exposureTier === 'prime' ? $imagePrime : $imageBasic,
             ];
 
             $items[] = $item;
@@ -1019,6 +1050,16 @@ final class SearchService
                 'right'  => $right,
             ];
         }
+
+        $tutorIds = array_map(static fn (array $it): int => (int) $it['id'], $items);
+        $placeMap = $this->loadTutorCodeMap($pdo, 'lesson_places', $tutorIds);
+        $badgeMap = $this->loadTutorCodeMap($pdo, 'teaching_style_badges', $tutorIds);
+        foreach ($items as &$item) {
+            $id = (int) $item['id'];
+            $item['lesson_places'] = $placeMap[$id] ?? [];
+            $item['teaching_style_badges'] = $badgeMap[$id] ?? [];
+        }
+        unset($item);
 
         return ['tab' => 'tutor', 'total' => $total, 'rows' => $rows, 'items' => $items];
     }
@@ -1833,6 +1874,63 @@ final class SearchService
                 'image_type' => (string) ($row['image_type'] ?? 'other'),
                 'image_path' => $path,
             ];
+        }
+
+        return $map;
+    }
+
+    /**
+     * 과외쌤 카드 사진 = 프로필 사진 1번(sort_order·id 순, TutorHubRepository::profileImages 와 같은 순서).
+     * 증빙 보조(proof_aux)와 업로드 공개 경로(/uploads/)가 아닌 값(파일 이름만 있는 행 등)은 쓰지 않는다.
+     */
+    private function tutorCoverImageExpr(): string
+    {
+        return "(SELECT ti.image_path
+                  FROM tutor_images ti
+                 WHERE ti.tutor_id = t.id
+                   AND ti.image_type <> 'proof_aux'
+                   AND ti.image_path LIKE '/uploads/%'
+                 ORDER BY ti.sort_order ASC, ti.id ASC
+                 LIMIT 1)";
+    }
+
+    /**
+     * 과외쌤 카드 목록형 칸(수업장소 · 강의스타일). 코드값 그대로, 화면이 라벨로 바꾼다.
+     *
+     * @param 'lesson_places'|'teaching_style_badges' $kind
+     * @param list<int> $tutorIds
+     * @return array<int, list<string>>
+     */
+    private function loadTutorCodeMap(PDO $pdo, string $kind, array $tutorIds): array
+    {
+        $tutorIds = array_values(array_filter(array_map('intval', $tutorIds), static fn (int $id): bool => $id > 0));
+        if ($tutorIds === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($tutorIds), '?'));
+        $sql = match ($kind) {
+            'lesson_places' => "SELECT tutor_id, place_type AS code FROM tutor_lesson_places
+                                 WHERE tutor_id IN ({$placeholders}) ORDER BY tutor_id ASC, id ASC",
+            'teaching_style_badges' => "SELECT tutor_id, badge_name AS code FROM tutor_teaching_style_badges
+                                 WHERE tutor_id IN ({$placeholders}) ORDER BY tutor_id ASC, display_order ASC, id ASC",
+        };
+
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($tutorIds);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $map = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['tutor_id'] ?? 0);
+            $code = trim((string) ($row['code'] ?? ''));
+            if ($id <= 0 || $code === '') {
+                continue;
+            }
+            $map[$id][] = $code;
         }
 
         return $map;
