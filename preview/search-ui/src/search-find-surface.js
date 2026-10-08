@@ -23,6 +23,7 @@ import {
   readTutorHomeRegions,
   getTutorStudentLiveItems,
   getTutorStudentFeedStatus,
+  tutorHomeEditRegionPath,
 } from '@home-ui/tutor-home-seed.js';
 import { isProviderSelfPreviewMode } from './search-role-access.js';
 import { renderSearchMapBlock, bindSearchMapPinLinks } from './search-map.js';
@@ -2524,6 +2525,14 @@ export function renderFindResultSection(tab, state, role, options = {}) {
       </section>`;
     if (status === 'no-region') {
       return wrap(`<p class="search-results__hint">${esc(TUTOR_HOME_STUDENT_COPY.noRegion)}</p>`);
+    }
+    if (status === 'reselect') {
+      const editPath = tutorHomeEditRegionPath();
+      return wrap(`
+        <div class="search-results__hint search-results__hint--reselect" role="alert">
+          <p>${esc(TUTOR_HOME_STUDENT_COPY.reselect)}</p>
+          <a href="#${editPath}" class="btn btn--secondary btn--sm" data-nav="${editPath}">과외지역 수정</a>
+        </div>`);
     }
     if (status === 'error') {
       return wrap(`<p class="search-results__hint" role="alert">${esc(TUTOR_HOME_STUDENT_COPY.error)}</p>`);

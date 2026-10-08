@@ -12,6 +12,7 @@ import { isMessagesApiMode } from './messages-backend.js';
 import { getUnreadCount } from './messages/thread-store.js';
 import { ensureTutorCityUnits, getTutorCityUnits } from './tutor-reg/city-units.js';
 import { activityLabelFromRegionId } from '../../shared/korea-sidos.js';
+import { tutorSectionPath } from './tutor-reg/router.js';
 
 /** @type {number|null} */
 let lifetimeViews = null;
@@ -96,15 +97,15 @@ export function readTutorMemberBox() {
   }
 }
 
-/** @type {Array<{label: string, primary: boolean, regionId: string}>|null} */
+/** @type {Array<{label: string, primary: boolean, regionId: string, selectable?: boolean, tutorId?: number}>|null} */
 let homeRegions = null;
 let regionBoot = 0;
 
 function blankTutorHomeRegions() {
   return [
-    { label: '', primary: false, regionId: '' },
-    { label: '', primary: false, regionId: '' },
-    { label: '', primary: false, regionId: '' },
+    { label: '', primary: false, regionId: '', selectable: true, tutorId: 0 },
+    { label: '', primary: false, regionId: '', selectable: true, tutorId: 0 },
+    { label: '', primary: false, regionId: '', selectable: true, tutorId: 0 },
   ];
 }
 
@@ -136,10 +137,24 @@ export function tutorHomeRegionId(index = 0) {
   return String(slots[idx]?.regionId || '').trim();
 }
 
+/** saved_regions[idx] 선택 단위 여부. 기본값 true. */
+export function tutorHomeRegionSelectable(index = 0) {
+  const slots = Array.isArray(homeRegions) ? homeRegions : [];
+  const idx = Number(index);
+  if (!Number.isFinite(idx) || idx < 0 || idx >= slots.length) return true;
+  return slots[idx]?.selectable !== false;
+}
+
+/** 과외 등록 지역 수정 경로 */
+export function tutorHomeEditRegionPath() {
+  const tutor = getTutors().find((row) => !row?.deleted_at) || null;
+  return tutor?.id ? tutorSectionPath(tutor.id, 'basic') : '/mypage/registrations/tutors';
+}
+
 /** 대표 활동지역 슬롯 번호. 대표가 없으면 0. */
 export function tutorHomePrimaryIndex() {
   const slots = Array.isArray(homeRegions) ? homeRegions : [];
-  const idx = slots.findIndex((slot) => slot?.primary && slot?.label);
+  const idx = slots.findIndex((slot) => slot?.primary && (slot?.label || slot?.regionId));
   return idx >= 0 ? idx : 0;
 }
 
@@ -150,7 +165,7 @@ export function tutorHomeRegionsReady() {
 /** @type {object[]|null} null = 아직 조회 전 */
 let studentLive = null;
 let studentKey = '';
-/** @type {'idle'|'loading'|'ready'|'error'|'no-region'} */
+/** @type {'idle'|'loading'|'ready'|'error'|'no-region'|'reselect'} */
 let studentStatus = 'idle';
 /** @type {Promise<void>|null} */
 let studentBoot = null;
@@ -160,17 +175,16 @@ export function getTutorStudentLiveItems() {
   return studentLive;
 }
 
-/** @returns {'idle'|'loading'|'ready'|'error'|'no-region'} */
+/** @returns {'idle'|'loading'|'ready'|'error'|'no-region'|'reselect'} */
 export function getTutorStudentFeedStatus() {
   return studentStatus;
 }
 
 /**
  * 활동지역 regionId 기준 과외 분기 학생 조회.
- * 지역 기준은 활동지역과 같은 선택 단위(시·군·구) id — tutor_regions.region_id 와
- * students.preferred_tutor_region_id 가 둘 다 SidoRegionEnsure::assertSelectable 을 지난 값이다.
+ * 옛 값은 region_selectable=false 로 올 수 있다. 선택 단위가 아닌 슬롯은 조회를 건너뛰고 안내한다.
  * @param {string} regionId
- * @returns {Promise<{ items: object[]|null, status: 'ready'|'error'|'no-region' }>}
+ * @returns {Promise<{ items: object[]|null, status: 'ready'|'error'|'no-region'|'reselect' }>}
  */
 async function loadTutorStudentDemand(regionId) {
   if (!regionId) return { items: null, status: 'no-region' };
@@ -181,7 +195,10 @@ async function loadTutorStudentDemand(regionId) {
       { limit: 20, sort: 'latest' },
     );
     return { items: Array.isArray(result.items) ? result.items : [], status: 'ready' };
-  } catch {
+  } catch (err) {
+    if (err?.error === 'validation' || String(err?.message || '').includes('구(시·군)')) {
+      return { items: null, status: 'reselect' };
+    }
     return { items: null, status: 'error' };
   }
 }
@@ -198,10 +215,19 @@ export function bootTutorStudentDemand(index, rerender) {
   const raw = Number(index);
   const idx = Number.isInteger(raw) && raw >= 0 && raw <= 2 ? raw : tutorHomePrimaryIndex();
   const regionId = tutorHomeRegionId(idx);
-  const key = `${idx}|${regionId}`;
+  const selectable = tutorHomeRegionSelectable(idx);
+  const key = `${idx}|${regionId}|${selectable ? 1 : 0}`;
   if (studentBoot && studentKey === key) return studentBoot;
   studentKey = key;
   studentLive = null;
+
+  if (regionId && !selectable) {
+    studentStatus = 'reselect';
+    studentBoot = Promise.resolve();
+    if (typeof rerender === 'function') rerender();
+    return studentBoot;
+  }
+
   studentStatus = regionId ? 'loading' : 'no-region';
   studentBoot = loadTutorStudentDemand(regionId).then((result) => {
     if (studentKey !== key) return;
@@ -238,7 +264,18 @@ async function ensureHomeRegions() {
     let label = numeric ? activityLabelFromRegionId(id, units) : '';
     const primary = slot.is_primary === true || slot.is_primary === 1 || slot.is_primary === '1';
     if (!label && primary && primaryText && primaryText !== '—') label = primaryText;
-    return { label, primary: primary && !!label, regionId: numeric ? id : '' };
+    const selectable = numeric
+      ? (typeof slot.region_selectable === 'boolean'
+          ? slot.region_selectable
+          : (units.length ? units.some((u) => String(u.id) === id) : true))
+      : true;
+    return {
+      label,
+      primary: primary && (!!label || numeric),
+      regionId: numeric ? id : '',
+      selectable,
+      tutorId: tutor?.id ? Number(tutor.id) : 0,
+    };
   });
   if (!homeRegions.some((s) => s.primary) && homeRegions[0].label) homeRegions[0].primary = true;
 }

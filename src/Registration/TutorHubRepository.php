@@ -156,25 +156,30 @@ final class TutorHubRepository
     }
 
     /**
-     * @return list<array{region_id: string, scope_type: string, is_primary: bool}>
+     * @return list<array{region_id: string, scope_type: string, is_primary: bool, region_selectable: bool}>
      */
     private function savedRegions(int $tutorId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT region_id, scope_type, is_primary
-             FROM tutor_regions WHERE tutor_id = ? ORDER BY priority_order ASC, is_primary DESC, id ASC'
+            'SELECT tr.region_id, tr.scope_type, tr.is_primary,
+                    CASE WHEN r.id IS NOT NULL AND r.is_selectable = 1 AND r.is_active = 1 THEN 1 ELSE 0 END AS region_selectable
+             FROM tutor_regions tr
+             LEFT JOIN regions r ON r.id = tr.region_id
+             WHERE tr.tutor_id = ?
+             ORDER BY tr.priority_order ASC, tr.is_primary DESC, tr.id ASC'
         );
         $stmt->execute([$tutorId]);
         $slots = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
             $slots[] = [
-                'region_id' => (string) $r['region_id'],
-                'scope_type' => (string) ($r['scope_type'] ?: 'city'),
-                'is_primary' => (bool) $r['is_primary'],
+                'region_id'         => (string) $r['region_id'],
+                'scope_type'        => (string) ($r['scope_type'] ?: 'city'),
+                'is_primary'        => (bool) $r['is_primary'],
+                'region_selectable' => (bool) $r['region_selectable'],
             ];
         }
         while (count($slots) < 3) {
-            $slots[] = ['region_id' => '', 'scope_type' => 'city', 'is_primary' => false];
+            $slots[] = ['region_id' => '', 'scope_type' => 'city', 'is_primary' => false, 'region_selectable' => false];
         }
 
         return array_slice($slots, 0, 3);

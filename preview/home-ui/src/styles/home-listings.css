@@ -2447,4 +2447,40 @@
   font-size: 0.625rem;
   color: var(--gray-400);
 }
+.act-bars__row--reselect {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+.act-bars__row--reselect:hover {
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+.act-bars__reselect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.act-bars__reselect-text {
+  font-size: 0.75rem;
+  color: #92400e;
+  font-weight: 600;
+}
+.act-bars__reselect-link {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.35rem;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.act-bars__reselect-link:hover {
+  background: #d97706;
+  color: #fff;
+}
 

@@ -1115,35 +1115,25 @@ final class TutorRegisterService
 
 
         $regionStmt = $pdo->prepare(
-
-            'SELECT region_id, scope_type, is_primary, priority_order
-
-             FROM tutor_regions WHERE tutor_id = ? ORDER BY priority_order ASC'
-
+            'SELECT tr.region_id, tr.scope_type, tr.is_primary, tr.priority_order,
+                    CASE WHEN r.id IS NOT NULL AND r.is_selectable = 1 AND r.is_active = 1 THEN 1 ELSE 0 END AS region_selectable
+             FROM tutor_regions tr
+             LEFT JOIN regions r ON r.id = tr.region_id
+             WHERE tr.tutor_id = ?
+             ORDER BY tr.priority_order ASC'
         );
-
         $regionStmt->execute([$tutorId]);
-
         $savedRegions = [];
-
         foreach ($regionStmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
-
             $savedRegions[] = [
-
-                'region_id'  => (string) $r['region_id'],
-
-                'scope_type' => (string) $r['scope_type'],
-
-                'is_primary' => (bool) $r['is_primary'],
-
+                'region_id'         => (string) $r['region_id'],
+                'scope_type'        => (string) $r['scope_type'],
+                'is_primary'        => (bool) $r['is_primary'],
+                'region_selectable' => (bool) $r['region_selectable'],
             ];
-
         }
-
         while (count($savedRegions) < 3) {
-
-            $savedRegions[] = ['region_id' => '', 'scope_type' => 'city', 'is_primary' => false];
-
+            $savedRegions[] = ['region_id' => '', 'scope_type' => 'city', 'is_primary' => false, 'region_selectable' => false];
         }
 
 

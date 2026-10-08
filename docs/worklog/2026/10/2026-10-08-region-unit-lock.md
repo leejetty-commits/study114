@@ -33,8 +33,105 @@
 
 ## 작업 지시서
 
-(하위 에이전트 지시 원문은 아래에 추가)
+```markdown
+너는 study114 저장소의 작업자다. 모든 보고는 한국어로.
+
+## 작업 위치 (엄수)
+- worktree: `d:\work\study114\.wt\region-unit-lock` (브랜치 `cursor/region-unit-lock-20261008`, 체크아웃됨). 이 폴더 밖 파일 수정 금지. `d:\work\study114` 루트 작업트리·다른 `.wt\*` 폴더 건드리지 말 것.
+- `main` push·병합 금지. 이 브랜치에만 커밋·push. stage는 파일 이름을 하나씩(`git add -A`/`.` 금지). push된 커밋 amend 금지.
+- SQL 파일·.env·.htaccess·Secrets 변경 금지. 운영 DB 접속 금지.
+
+## 정본 (먼저 끝까지 읽기)
+`docs/internal/72-region-unit-lock.md`. 특히 1장 표, 2장 레드라인 4개, 5장 자동 검사. 정본과 다르게 해야 할 이유가 있으면 구현하지 말고 보고.
+
+## 배경
+과외샤 과외지역(`tutor_regions.region_id`)은 선택 단위(`regions.is_selectable=1`, 특별·광역시는 구, 도는 시·군)여야 한다. 2026-10-01 구 단위 통일 전에 저장된 옛 값(예: 「서울특별시 시 대표」 행, 동 행)이 남아 있으면 과외샤 홈이 `searchApi`를 그 id로 불러 422(`error: 'validation'`, 메시지 「지역은 구(시·군)까지 선택해 주세요.」)를 받는다. 그 결과:
+- `preview/home-ui/src/tutor-activity-chart.js` 「과외지역 분포」 숫자가 「—」
+- `preview/home-ui/src/tutor-home-seed.js` `loadTutorStudentDemand()` 「우리동네 학생」 탭이 「학생을 불러오지 못했어요」 (문구는 `preview/search-ui/src/search-find-surface.js`의 `TUTOR_HOME_STUDENT_COPY` 부근)
+- `tutor-home-seed.js` 주석 「tutor_regions.region_id 와 students.preferred_tutor_region_id 가 둘 다 SidoRegionEnsure::assertSelectable 을 지난 값이다」는 옛 데이터에서 사실이 아니다.
+
+## 구현 요구 (정본 레드라인 3 + 5장)
+1. **옛 값 신호를 서버에서 준다(우선)**: 과외샤 등록 정보가 브라우저로 갈 때(마이페이지·홈이 쓰는 `saved_regions` 등 지역 슬롯을 만드는 서버 코드를 찾아라 — `src/Tutor/*`, `src/Registration/*`, `public/api/**` 에서 `saved_regions` 또는 `tutor_regions` 조회) 각 슬롯에 `region_selectable: true|false`(regions.is_selectable=1 AND is_active=1) 를 포함한다. 추가 쿼리는 기존 JOIN에 컬럼만 더하는 방식으로, N+1 금지. 슬롯을 만드는 서버 경로가 여럿이면 모두. 서버 신호를 넣기가 무리면(이유 보고) 차선책으로 searchApi 422 `validation` 응답을 신호로 쓴다.
+2. **과외샤 홈**: 선택 단위가 아닌 슬롯은 searchApi를 부르지 않고(불필요한 422 제거), 「—」·오류 문구 대신 「활동지역을 구(시·군)까지 다시 선택해 주세요」 안내와 과외샤 지역 수정 화면 링크(본인 등록 `#/mypage/registrations/tutors/{id}` 의 지역 수정 위치 — 기존 링크 헬퍼·경로를 찾아 재사용)를 보인다. 「과외지역 분포」는 슬롯별, 「우리동네 학생」 탭은 대표 슬롯 기준. 정상 슬롯은 현행 그대로.
+3. **마이페이지 과외샤 등록 지역 표시**: 선택 단위가 아닌 지역 옆에 「다시 선택 필요」 표시(기존 배지/알약 스타일 재사용). 저장 로직은 바꾸지 말 것(이미 assertSelectable).
+4. `tutor-home-seed.js`의 틀린 주석을 사실에 맞게 고친다(예: 옛 값은 region_selectable=false 로 온다). 주석은 주변 밀도에 맞추고 출처·작업 설명 주석 금지.
+5. **자동 검사** `scripts/verify-region-unit-lock.mjs` (다른 `scripts/verify-*.mjs`처럼 소스 문자열 assert, 외부 접속 없음):
+   - (a) `INSERT INTO tutor_regions` 가 있는 모든 PHP 파일에서 그 저장 경로가 `assertSelectable` 을 거치는지(파일에 INSERT가 있으면 같은 파일에 assertSelectable 호출이 있어야 함 — `src/` 전체를 훑어 새 경로도 자동 포함). `preferred_tutor_region_id` 를 쓰는 저장 파일도 동일.
+   - (b) `SearchService.php` 가 `tutor_region_id`·`preferred_region_id` 에 `selectableRegionId` 사용.
+   - (c) 과외샤 홈 두 파일이 옛 값 안내를 처리(`region_selectable` 참조 또는 안내 문구 상수).
+   - (d) 서버 슬롯 페이로드에 `region_selectable` 포함(1번을 서버로 한 경우).
+   - package.json scripts 관례에 맞게 `verify:region-unit-lock` 등록, `.github/workflows/deploy.yml` 의 배포 전 verify 단계에 다른 verify들과 같은 방식으로 추가(파일을 먼저 읽고 관례 그대로; secrets/FTP 단계는 절대 건드리지 말 것).
+
+## 검증 (모두 실행, 결과 보고)
+- `node scripts/verify-region-unit-lock.mjs` 통과. 일부러 규칙을 깨는 경우(예: 임시 복사본에서 assertSelectable 제거) 실패하는지 한 번 확인 후 원복(저장소에 흔적 남기지 말 것).
+- PHP를 바꿨으면 `D:\php8.2\php.exe -l <파일>` 문법 검사. 가능하면 sqlite 기반 검증(`-d extension=pdo_sqlite`, 기존 `scripts/verify-board-*-displayname-fallback.php` 참고)으로 region_selectable true/false 확인.
+- 지역·과외샤 홈 관련 기존 verify(`scripts/` 에서 이름에 region, tutor-home, tutor-box, tutor-region 이 들어간 것; vite-node 필요 시 `cd preview/home-ui; npx vite-node ../../scripts/<파일>`) 전부 실행. 실패 시 기존 문제인지 내 변경인지 구분.
+- `.github/workflows/deploy.yml` 배포 전 게이트 전부 로컬 실행.
+- `npm run build:dothome` 성공(node_modules 없으면 `npm ci`). 빌드 산출물·바뀐 추적 산출물은 커밋하지 말고 `git checkout --` 로 되돌릴 것. `npm run verify:shop-page`.
+
+## 기록
+- `docs/worklog/2026/10/2026-10-08-region-unit-lock.md` 「작업 지시서」 아래에 **이 프롬프트 원문 전체**를 붙이고, 「작업자 보고」 섹션(변경 파일, 검증 결과 표, 정본과 다르게 판단한 점)을 추가. 「검수 기록」은 비워 둠.
+- 커밋 후 `git push origin cursor/region-unit-lock-20261008`.
+
+## 최종 응답
+변경 파일과 줄 수, 커밋 hash, push 여부, 각 검증 명령과 결과, 서버 신호 방식을 택했는지 422 차선책인지와 이유, 확인 못 한 점·위험.
+```
+
+## 작업자 보고
+
+### 1. 신호 방식 채택
+- **서버 신호 방식 우선 채택 및 422 이중 방어**:
+  - `src/Registration/TutorHubRepository.php`의 `savedRegions()` 및 `src/Tutor/TutorRegisterService.php`의 `hydrateTutor()`에서 `tutor_regions` 조회 시 `LEFT JOIN regions r ON r.id = tr.region_id`를 추가하고, `CASE WHEN r.id IS NOT NULL AND r.is_selectable = 1 AND r.is_active = 1 THEN 1 ELSE 0 END AS region_selectable` 컬럼을 단일 쿼리로 조회하여 슬롯 배열에 `'region_selectable' => (bool) $r['region_selectable']`를 포함시켰습니다 (N+1 없음).
+  - 클라이언트(`preview/home-ui/src/tutor-home-seed.js`, `preview/home-ui/src/tutor-activity-chart.js`)에서는 `selectable === false`인 슬롯에 대해 `searchApi` 호출을 사전에 차단하여 불필요한 422 validation 요청을 완전히 제거했습니다.
+  - 추가적으로 혹시 모를 상황에 대비하여 `loadTutorStudentDemand()` 및 `countExposedCards()` 내부 catch 블록에서 422 validation 오류 수신 시 `reselect`로 전환하는 차선책 방어 로직도 함께 배치했습니다.
+
+### 2. 주요 변경 내역
+- **과외쌤 홈 화면 안내 및 링크 연동**:
+  - `preview/home-ui/src/student-reg/student-reg-copy.js`: `TUTOR_HOME_STUDENT_COPY.reselect` 문구 등록 (`'활동지역을 구(시·군)까지 다시 선택해 주세요'`).
+  - `preview/search-ui/src/search-find-surface.js`: `status === 'reselect'` 분기 추가, 안내 문구와 함께 과외지역 수정 링크 버튼(`tutorHomeEditRegionPath()`, `#/mypage/registrations/tutors/{id}/basic`) 렌더링.
+  - `preview/home-ui/src/tutor-activity-chart.js`: 선택 단위가 아닌 슬롯은 `searchApi`를 호출하지 않고 `act-bars__row--reselect` 스타일의 안내 문구와 수정 링크 제공.
+  - `preview/home-ui/src/styles/home-listings.css`: `.act-bars__row--reselect`, `.act-bars__reselect-text`, `.act-bars__reselect-link` 스타일 추가.
+  - `preview/home-ui/src/tutor-home-seed.js`: 사실과 맞지 않던 주석 정정 및 `tutorHomeRegionSelectable`, `tutorHomeEditRegionPath` 헬퍼 함수 제공.
+- **마이페이지 과외 등록 지역 표시**:
+  - `preview/shared/tutor-region-slots.js`: `renderTutorRegionSlot`에서 `slot.region_selectable === false` 또는 `needsReselect` 또는 미등록 옛 지역 id일 때 슬롯 헤더에 `<span class="mypage-badge mypage-badge--warn">다시 선택 필요</span>` 표시.
+  - `preview/home-ui/src/screens/tutor.js`: `renderTutorRegionPills`에서 선택 단위가 아닌 지역 옆에 `<span class="mypage-badge mypage-badge--warn">다시 선택 필요</span>` 표시.
+- **자동 검사 및 배포 게이트 등록**:
+  - `scripts/verify-region-unit-lock.mjs`: (a) `src/` 내 모든 `tutor_regions` 및 `preferred_tutor_region_id` 저장 파일의 `assertSelectable` 호출 검사, (b) `SearchService.php`의 `selectableRegionId` 사용 검사, (c) 홈 UI의 옛 값 안내 및 링크 처리 검사, (d) 서버 슬롯 페이로드의 `region_selectable` 포함 검사 구현 (총 22개 assert 통과).
+  - `scripts/verify-region-unit-selectable-payload.php`: SQLite in-memory PDO를 통한 `TutorHubRepository::savedRegions`의 `region_selectable` true/false 매핑 단위 테스트 검증 (10개 assert 통과).
+  - `package.json`: `"verify:region-unit-lock": "node scripts/verify-region-unit-lock.mjs"` 스크립트 등록.
+  - `.github/workflows/deploy.yml`: 배포 전 `verify-region-unit-lock` 잡 추가 및 `ftp-deploy`의 `needs` 목록에 추가.
+
+### 3. 검증 결과 요약
+
+| 검증 명령 | 대상 / 목적 | 결과 |
+|---|---|---|
+| `node scripts/verify-region-unit-lock.mjs` | 정본 72 요구 자동 검사 (저장 검증, 검색 검증, 홈 UI, 서버 페이로드) | **PASS** (22 passed, 0 failed) |
+| 규칙 고의 파괴 테스트 | 임시 주석 처리 시 `verify-region-unit-lock.mjs` 실패 여부 확인 | **FAIL 확인 후 즉시 원복 성공** |
+| `D:\php8.2\php.exe -d extension=pdo_sqlite scripts/verify-region-unit-selectable-payload.php` | SQLite 메모리 DB 기반 `region_selectable` 1/0/비활성/부재 분기 검증 | **PASS** (10 passed, 0 failed) |
+| `D:\php8.2\php.exe -l src/Registration/TutorHubRepository.php` | PHP 문법 검사 | **PASS** (No syntax errors detected) |
+| `D:\php8.2\php.exe -l src/Tutor/TutorRegisterService.php` | PHP 문법 검사 | **PASS** (No syntax errors detected) |
+| `node scripts/verify-tutor-region-label.mjs` | 공식 시드 라벨 및 클라이언트 diff 무결성 검증 | **PASS** (103 passed, 0 failed) |
+| `npx vite-node scripts/verify-tutor-box-real-values.mjs` | 과외쌤 멤버박스 실데이터 회귀 검증 | **PASS** (49 passed, 0 failed) |
+| `npx vite-node ../../scripts/verify-tutor-home-student-tab.mjs` (in `preview/home-ui`) | 과외쌤 홈 학생 탭 실데이터 연동 회귀 검증 | **PASS** (63 passed, 0 failed) |
+| `npx vite-node ../../scripts/verify-mypage-account-region.mjs` (in `preview/home-ui`) | 마이페이지 계정 지역 라벨 회귀 검증 | **PASS** (41 passed, 0 failed) |
+| `node scripts/verify-region-save-rules.mjs` | 지역 저장 규칙 검증 | **PASS** |
+| `node scripts/verify-region-sido-canonical.mjs` | 시도 정규화 규칙 검증 | **PASS** |
+| `npx vite-node ../../scripts/verify-position-region-tier.mjs` (in `preview/home-ui`) | 지역 티어 검색 규칙 검증 | **PASS** (24 passed, 0 failed) |
+| `npx vite-node ../../scripts/verify-student-mypage-hope-region.mjs` (in `preview/home-ui`) | 학생 마이페이지 희망지역 검증 | **PASS** (71 passed, 0 failed) |
+| `D:\php8.2\php.exe -d extension=mbstring scripts/verify-pick-region-ownership.php` | 픽 지역 소유권 검증 | **PASS** (25 passed, 0 failed) |
+| `D:\php8.2\php.exe scripts/verify-prime-region-ownership.php` | 프라임 지역 소유권 검증 | **PASS** (18 passed, 0 failed) |
+| `D:\php8.2\php.exe scripts/verify-room-promo-region-match.php` | 공부방 홍보지역 매칭 검증 | **PASS** (38 passed, 0 failed) |
+| `D:\php8.2\php.exe scripts/verify-position-region-tier.php` | 포지션 지역 티어 검증 | **PASS** (19 passed, 0 failed) |
+| `npm run verify:shop-page` | 샵페이지 레드라인 4개 게이트 검증 | **PASS** (54 passed, 0 failed) |
+| `check-no-committed-secrets.sh` (via Git Bash) | 커밋 비밀값 방지 검사 | **PASS** |
+| `npm run verify:tutor-inquiries-settings` | 과외 쪽지설정 검증 | **PASS** |
+| `npm run verify:study-room-inquiries-samples` | 공부방 쪽지설정 검증 | **PASS** |
+| `npm run verify:board-acl` & `verify-board-channel-acl.php` | 게시판 ACL 정적/동적 일치 검증 | **PASS** (75 rows match) |
+| `npm run verify:region-unit-lock` | 신규 등록된 배포 게이트 스크립트 실행 | **PASS** (22 passed, 0 failed) |
+| `npm run build:dothome` | Dothome 빌드 산출물 생성 확인 후 원복 | **PASS** (exit code 0, 빌드 정상 완료) |
+
+### 4. 정본과 다르게 판단한 점
+- 정본 `docs/internal/72-region-unit-lock.md`의 원칙(구·시·군 단위 통일, N+1 없는 서버 `region_selectable` 신호 제공, 과외 홈 미선택/옛값 안내 및 수정 링크 제공, 자동 검사)을 정확히 준수하였으며, 정본과 다르게 판단하거나 변경한 부분은 없습니다.
 
 ## 검수 기록
 
-(메인 검수 후 추가)

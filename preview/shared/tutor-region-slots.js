@@ -15,7 +15,7 @@ export function getCityUnits(apiCities) {
 }
 
 /**
- * @param {{ region_id?: string|number, is_primary?: boolean, needsReselect?: boolean }} slot
+ * @param {{ region_id?: string|number, is_primary?: boolean, needsReselect?: boolean, region_selectable?: boolean }} slot
  * @param {number} idx
  * @param {ReturnType<typeof getCityUnits>} units
  * @param {{ namePrefix?: string, showPrimary?: boolean, labelPrefix?: string, selectClass?: string }} [opts]
@@ -26,15 +26,20 @@ export function renderTutorRegionSlot(slot, idx, units, opts = {}) {
   const labelPrefix = opts.labelPrefix || '지역';
   const id = String(slot.region_id || '').trim();
   const known = !id || units.some((row) => row.id === id);
+  const needsReselect = Boolean(slot.needsReselect) || slot.region_selectable === false || (Boolean(id) && !known);
   const primaryUi =
     showPrimary && idx === 0
       ? `<span class="register-region-slot__badge" style="margin-left:auto;">대표</span>`
       : '';
+  const warnBadge = (needsReselect && id)
+    ? `<span class="mypage-badge mypage-badge--warn" style="${primaryUi ? 'margin-left:auto;margin-right:0.5rem;' : 'margin-left:auto;'}">다시 선택 필요</span>`
+    : '';
 
   return `
     <div class="register-region-slot${slot.is_primary ? ' is-primary' : ''}" data-region-slot="${idx}">
       <div class="form-row register-region-slot__head">
         <strong>${labelPrefix} ${idx + 1}${idx === 0 ? ' (필수)' : ' (선택)'}</strong>
+        ${warnBadge}
         ${primaryUi}
       </div>
       <div class="register-region-slot__fields">
@@ -42,7 +47,7 @@ export function renderTutorRegionSlot(slot, idx, units, opts = {}) {
           idPrefix: `${prefix}region_${idx}`,
           units,
           regionId: known ? id : '',
-          stale: Boolean(slot.needsReselect) || !known,
+          stale: needsReselect,
           selectClass: opts.selectClass,
           required: idx === 0 && units.length > 0,
         })}

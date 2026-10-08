@@ -4,7 +4,7 @@
  */
 
 import { searchApi } from '@search-ui/search-api.js';
-import { readTutorHomeRegions } from './tutor-home-seed.js';
+import { readTutorHomeRegions, tutorHomeEditRegionPath } from './tutor-home-seed.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -14,7 +14,7 @@ function esc(s) {
 }
 
 /**
- * @typedef {{ index: number, label: string, regionId: string, primary: boolean, tutorCount: number|null, studentCount: number|null }} ActivityRow
+ * @typedef {{ index: number, label: string, regionId: string, primary: boolean, selectable: boolean, tutorId: number|null, tutorCount: number|null, studentCount: number|null }} ActivityRow
  */
 
 /** @type {ActivityRow[]} */
@@ -31,12 +31,16 @@ function citySlots() {
       label: String(slot?.label || '').trim(),
       regionId: String(slot?.regionId || '').trim(),
       primary: !!slot?.primary && !!String(slot?.label || '').trim(),
+      selectable: slot?.selectable !== false && slot?.region_selectable !== false,
+      tutorId: slot?.tutorId || null,
     }))
     .filter((slot) => slot.label || slot.regionId);
 }
 
 function slotKey(slots) {
-  return slots.map((slot) => `${slot.index}:${slot.regionId}:${slot.label}:${slot.primary ? 1 : 0}`).join('|');
+  return slots
+    .map((slot) => `${slot.index}:${slot.regionId}:${slot.label}:${slot.primary ? 1 : 0}:${slot.selectable ? 1 : 0}`)
+    .join('|');
 }
 
 /** 선택 단위 id가 아니면 null. 숫자를 만들지 않는다. @param {'tutor'|'student'} tab @param {string} regionId */
@@ -63,14 +67,30 @@ export function bootTutorActivityCounts(rerender) {
     /** @type {ActivityRow[]} */
     const next = [];
     for (const slot of slots) {
+      if (slot.selectable === false) {
+        next.push({
+          index: slot.index,
+          label: slot.label,
+          primary: slot.primary,
+          selectable: false,
+          tutorId: slot.tutorId,
+          tutorCount: null,
+          studentCount: null,
+        });
+        continue;
+      }
       let tutorCount = null;
       let studentCount = null;
+      let slotSelectable = true;
       try {
         [tutorCount, studentCount] = await Promise.all([
           countExposedCards('tutor', slot.regionId),
           countExposedCards('student', slot.regionId),
         ]);
-      } catch {
+      } catch (err) {
+        if (err?.status === 422 || err?.data?.error === 'validation') {
+          slotSelectable = false;
+        }
         tutorCount = null;
         studentCount = null;
       }
@@ -78,6 +98,8 @@ export function bootTutorActivityCounts(rerender) {
         index: slot.index,
         label: slot.label,
         primary: slot.primary,
+        selectable: slotSelectable,
+        tutorId: slot.tutorId,
         tutorCount,
         studentCount,
       });
@@ -98,7 +120,13 @@ export function renderTutorActivityBars(opts = {}) {
   const key = slotKey(slots);
   const pending = key !== readyKey;
   const source = pending
-    ? slots.map((slot) => ({ ...slot, tutorCount: null, studentCount: null }))
+    ? slots.map((slot) => ({
+        ...slot,
+        selectable: slot.selectable,
+        tutorId: slot.tutorId,
+        tutorCount: null,
+        studentCount: null,
+      }))
     : rows;
   const maxVal = Math.max(
     1,
@@ -107,6 +135,17 @@ export function renderTutorActivityBars(opts = {}) {
 
   const body = source
     .map((row) => {
+      if (row.selectable === false) {
+        const editPath = tutorHomeEditRegionPath(row.tutorId);
+        return `
+      <div class="act-bars__row act-bars__row--reselect" role="listitem">
+        <span class="act-bars__region">${esc(row.label)}${row.primary ? '<em>대표</em>' : ''}</span>
+        <span class="act-bars__reselect">
+          <span class="act-bars__reselect-text">활동지역을 구(시·군)까지 다시 선택해 주세요</span>
+          <a href="#${editPath}" class="act-bars__reselect-link" data-nav="${editPath}">과외지역 수정</a>
+        </span>
+      </div>`;
+      }
       const tutorKnown = !pending && row.tutorCount != null;
       const studentKnown = !pending && row.studentCount != null;
       const tPct = tutorKnown ? Math.round((row.tutorCount / maxVal) * 100) : 0;

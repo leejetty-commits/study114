@@ -51,9 +51,10 @@ function renderTutorRegionPills() {
     .map((region) => {
       const label = region.label || (loaded ? '미선택' : '…');
       const primary = !!region.primary && !!region.label;
+      const reselect = !!region.label && region.selectable === false;
       return `
-    <span class="my-box__region-pill${primary ? ' is-primary' : ''}">
-      ${escTutor(label)}${primary ? '<span class="tutor-region-tabs__primary">대표</span>' : ''}
+    <span class="my-box__region-pill${primary ? ' is-primary' : ''}${reselect ? ' is-reselect' : ''}">
+      ${escTutor(label)}${primary ? '<span class="tutor-region-tabs__primary">대표</span>' : ''}${reselect ? '<span class="mypage-badge mypage-badge--warn">다시 선택 필요</span>' : ''}
     </span>`;
     })
     .join('');
