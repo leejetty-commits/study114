@@ -160,6 +160,8 @@ export async function fetchMineGreeting(providerType, registrationId) {
         displayName: String(data.item.display_name || prev?.displayName || ''),
         status: data.item.status === 'up' ? /** @type {'up'} */ ('up') : /** @type {'down'} */ ('down'),
         updatedAt: Number(data.item.updated_at) || Date.now(),
+        origin: data.item.origin ? String(data.item.origin) : prev?.origin,
+        welcome: data.item.welcome,
         history: Array.isArray(data.item.history) ? data.item.history : [],
       };
       const items = readGreetings().filter((row) => row.id !== id);
@@ -169,6 +171,49 @@ export async function fetchMineGreeting(providerType, registrationId) {
     return { ok: true, item: data.item };
   } catch {
     return { ok: false, error: '조회 실패' };
+  }
+}
+
+/** @param {'study_room'|'tutor'} providerType @param {number} registrationId */
+export async function turnOffWelcomeGreeting(providerType, registrationId) {
+  try {
+    const res = await fetch('/api/neighborhood-greetings.php', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider_type: providerType,
+        registration_id: registrationId,
+        status: 'welcome_off',
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      return { ok: false, error: String(data.message || '소개를 내리지 못했어요.') };
+    }
+    const id = `${providerType === 'tutor' ? 'tutor' : 'study_room'}:${Number(registrationId)}`;
+    const current = readGreetings().find((row) => row.id === id);
+    const updated = {
+      ...(current || {
+        id,
+        providerType,
+        registrationId,
+        body: '',
+        neighborhood: '',
+        displayName: providerType === 'tutor' ? '과외쌤' : '공부방',
+      }),
+      status: /** @type {'down'} */ ('down'),
+      origin: 'welcome_off',
+      body: data.item?.body ?? (current?.body || ''),
+      history: Array.isArray(data.item?.history) ? data.item.history : (current?.history || []),
+      updatedAt: Number(data.item?.updated_at) || Date.now(),
+    };
+    const items = readGreetings().filter((row) => row.id !== id);
+    items.unshift(updated);
+    writeGreetings(items);
+    return { ok: true, item: data.item };
+  } catch {
+    return { ok: false, error: '소개를 내리지 못했어요.' };
   }
 }
 
@@ -254,6 +299,7 @@ function fromApi(row) {
     displayName: String(row.display_name || ''),
     status: row.status === 'down' ? 'down' : 'up',
     updatedAt: Number(row.updated_at) || Date.now(),
+    origin: row.origin ? String(row.origin) : undefined,
     teaser: String(row.teaser || ''),
     maskedName: String(row.masked_name || ''),
     history: Array.isArray(row.history) ? row.history : undefined,

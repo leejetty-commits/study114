@@ -11,6 +11,7 @@ import {
   importGreetingHandoff,
   publishGreeting,
   pullGreetingsFromApi,
+  turnOffWelcomeGreeting,
   unpublishGreeting,
 } from '../../shared/neighborhood-greeting-store.js';
 import { getAuthUser, isLoggedIn } from './auth-session.js';
@@ -134,6 +135,7 @@ function fromApi(row) {
     displayName: String(row.display_name || ''),
     status: row.status === 'down' ? 'down' : 'up',
     updatedAt: Number(row.updated_at) || 0,
+    origin: row.origin ? String(row.origin) : undefined,
     teaser: String(row.teaser || ''),
     maskedName: String(row.masked_name || ''),
   };
@@ -204,6 +206,8 @@ function greetingRows(viewer) {
     .sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt))
     .map((row) => {
       const full = loggedIn ? row.body || row.teaser || '' : row.teaser || greetingTeaser(row.body);
+      const isWelcome = row.origin === 'welcome';
+      const kindLabel = isWelcome ? (COPY.welcomeBadge || '새 이웃') : (row.providerType === 'tutor' ? '과외쌤' : '공부방');
       return {
         providerType: row.providerType === 'tutor' ? 'tutor' : 'study_room',
         registrationId: Number(row.registrationId),
@@ -212,7 +216,9 @@ function greetingRows(viewer) {
           : row.maskedName || maskGreetingName(row.displayName),
         summary: greetingTeaser(full),
         full,
-        kindLabel: row.providerType === 'tutor' ? '과외쌤' : '공부방',
+        kindLabel,
+        origin: row.origin,
+        updatedAt: row.updatedAt,
       };
     });
 }
@@ -248,8 +254,24 @@ export function greetingCellBody(viewer) {
   }
   const rows = greetingRows(viewer);
   if (!rows.length) return { state: 'empty', html: `<p class="home-news-row__state">${esc(greetingEmptyCopy(viewer))}</p>` };
-  const lines = rows
-    .slice(0, GREETING_HOME_LINES)
+
+  const memberRows = rows.filter((r) => r.origin !== 'welcome');
+  const welcomeRows = rows.filter((r) => r.origin === 'welcome');
+
+  let chosen = [];
+  if (welcomeRows.length > 0) {
+    const welcomeLine = welcomeRows[0];
+    const memberLines = memberRows.slice(0, GREETING_HOME_LINES - 1);
+    chosen = [...memberLines, welcomeLine].sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt));
+  } else {
+    chosen = memberRows.slice(0, GREETING_HOME_LINES);
+  }
+
+  if (!chosen.length) {
+    return { state: 'empty', html: `<p class="home-news-row__state">${esc(greetingEmptyCopy(viewer))}</p>` };
+  }
+
+  const lines = chosen
     .map(
       (row, index) => `
         <li class="ng-rail__item">
@@ -491,6 +513,17 @@ export function renderNeighborhoodGreetingEditor(opts) {
     ? renderGreetingHistoryList(current.history, up)
     : `<p class="ng-editor__history-loading">불러오는 중…</p>`;
 
+  const welcome = current?.welcome;
+  const showWelcome = Boolean(welcome?.active);
+  const welcomeHtml = showWelcome
+    ? `<div class="ng-editor__welcome-banner" data-ng-welcome-banner>
+         <div class="ng-editor__welcome-card">
+           <span class="ng-editor__welcome-text">${esc(typeof COPY.welcomeNotice === 'function' ? COPY.welcomeNotice(welcome?.d_day || 'D-7') : `우리 동네 새 이웃으로 소개되고 있어요 (${welcome?.d_day || 'D-7'}). 직접 인사를 올리면 그 인사로 바뀌어요.`)}</span>
+           <button type="button" class="btn btn--secondary btn--sm ng-editor__welcome-off-btn" data-ng-welcome-off>${esc(COPY.welcomeOffBtn || '소개 내리기')}</button>
+         </div>
+       </div>`
+    : `<div class="ng-editor__welcome-banner" data-ng-welcome-banner hidden></div>`;
+
   return `
     <section class="ng-editor" data-ng-editor data-ng-type="${esc(opts.providerType)}" data-ng-id="${Number(opts.registrationId)}" data-ng-area="${esc(opts.neighborhood)}" data-ng-name="${esc(opts.displayName)}">
       <div class="ng-editor__head">
@@ -498,6 +531,7 @@ export function renderNeighborhoodGreetingEditor(opts) {
         <button type="button" class="btn btn--secondary btn--sm ng-editor__submit-btn" data-ng-save>올리기</button>
       </div>
       <p class="ng-editor__note">한 줄, 80자. 전화·카톡·주소는 넣지 않아요.</p>
+      ${welcomeHtml}
       <p class="ng-editor__editing-hint" data-ng-editing-hint hidden>고르신 인사를 고치는 중 · <button type="button" class="ng-editor__cancel-edit" data-ng-cancel-edit>취소</button></p>
       <textarea class="form-input ng-editor__input" maxlength="80" rows="2" data-ng-body placeholder="동네 이웃에게 전할 한 줄 인사를 적어보세요"></textarea>
       <p class="ng-editor__status" data-ng-status role="status" hidden></p>
@@ -519,6 +553,7 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
   const hintEl = editor.querySelector('[data-ng-editing-hint]');
   const bodyEl = editor.querySelector('[data-ng-body]');
   const historyWrap = editor.querySelector('[data-ng-history-wrap]');
+  const welcomeBannerEl = editor.querySelector('[data-ng-welcome-banner]');
 
   const providerType = editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room';
   const registrationId = Number(editor.getAttribute('data-ng-id') || 0);
@@ -527,6 +562,23 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
   let editingHistoryId = null;
   /** @type {number} */
   let statusTimer = 0;
+
+  const renderWelcomeBanner = (welcome) => {
+    if (!welcomeBannerEl) return;
+    if (welcome?.active) {
+      const dDay = welcome.d_day || 'D-7';
+      const text = typeof COPY.welcomeNotice === 'function' ? COPY.welcomeNotice(dDay) : `우리 동네 새 이웃으로 소개되고 있어요 (${dDay}). 직접 인사를 올리면 그 인사로 바뀌어요.`;
+      welcomeBannerEl.hidden = false;
+      welcomeBannerEl.innerHTML = `
+        <div class="ng-editor__welcome-card">
+          <span class="ng-editor__welcome-text">${esc(text)}</span>
+          <button type="button" class="btn btn--secondary btn--sm ng-editor__welcome-off-btn" data-ng-welcome-off>${esc(COPY.welcomeOffBtn || '소개 내리기')}</button>
+        </div>`;
+    } else {
+      welcomeBannerEl.hidden = true;
+      welcomeBannerEl.innerHTML = '';
+    }
+  };
 
   const hideStatus = () => {
     if (statusTimer) {
@@ -617,6 +669,7 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
       if (!editor.isConnected) return;
       if (res.ok && res.item) {
         refreshHistoryList(res.item);
+        renderWelcomeBanner(res.item.welcome);
       } else {
         renderFallbackView();
       }
@@ -630,6 +683,21 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
   editor.addEventListener('click', async (event) => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
+
+    // 소개 내리기 (welcome_off)
+    const welcomeOffBtn = target.closest('[data-ng-welcome-off]');
+    if (welcomeOffBtn) {
+      const res = await turnOffWelcomeGreeting(providerType, registrationId);
+      if (!res.ok) {
+        showError(res.error);
+        return;
+      }
+      renderWelcomeBanner(null);
+      invalidateGreetings();
+      refreshHistoryList(res.item);
+      showStatus(COPY.welcomeOffSuccess || '소개를 내렸어요');
+      return;
+    }
 
     // 취소 버튼
     if (target.closest('[data-ng-cancel-edit]')) {
@@ -691,6 +759,7 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
         return;
       }
       clearEditingMode();
+      renderWelcomeBanner(null);
       invalidateGreetings();
       refreshHistoryList(saved.item);
       showStatus('올렸어요');
@@ -704,6 +773,7 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
         showError(saved.error);
         return;
       }
+      renderWelcomeBanner(null);
       invalidateGreetings();
       refreshHistoryList(saved.item);
       showStatus('내렸어요');
