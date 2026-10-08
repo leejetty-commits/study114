@@ -3,8 +3,8 @@
 - 브랜치: `cursor/detail-card-all-fields-20261009` (기준 `origin/main` 90cc0f0)
 - worktree: `d:\work\study114\.wt\detail-card-all-fields`
 - 작업자: Cursor 하위 에이전트 (작업한 세션은 자기 작업을 검수·승인하지 않는다)
-- 검수: **대기**
-- 승인: **대기** (사용자, 커밋 hash 단위)
+- 검수: 메인 2026-10-09 03:30 — diff 확인(라벨이 기본카드와 일치, 학적·학교는 손님에게 「로그인 후 확인」), `verify:detail-card-all-fields` 142/0, `verify:shop-page` 실패 0, origin/main 충돌 없음 — 승인 권고.
+- 승인: 사용자 2026-10-09 03:41 「승인」 — `861bce3`. main 병합.
 
 ## 1. 지시서 원문
 
