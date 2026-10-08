@@ -312,10 +312,11 @@ f7faf56 커밋에 대한 독립 리뷰 결과 9건의 지적에 대해 메인 �
 | **2-5d** | `students s` | `regions curr`, `regions target` | `s.preferred_tutor_region_id = target.id` | 과거 dev 시드 동 행 (대치동, 우동, 시 대표) | **적합 (SET 확인)** |
 | **2-6a** | `provider_position_subscriptions pps` | `regions curr`, `regions target` | `pps.city_id = target.id` | tutor 타입, 특·광역시 비-시도 행 | **적합 (SET 확인)** |
 | **2-6b** | `provider_position_subscriptions pps` | `regions curr`, `regions target` | `pps.city_id = target.id` | tutor 타입, 전남광주 옛 5개 구 | **적합 (SET 확인)** |
+| **2-0** | 안전 백업 테이블 3종 생성 | `bak_region_unit_20261008_pps`, `bak_region_unit_20261008_tutor_regions`, `bak_region_unit_20261008_students` | N/A (CREATE TABLE AS SELECT) | `IF NOT EXISTS` 제외 (재실행 덮어쓰기 방지) | **적합 (세션 독립 일반 백업)** |
 | **2-6c** | `provider_position_subscriptions pps` | `regions curr`, `regions target` | `pps.city_id = target.id` | tutor 타입, 도 일반구 39개 행 | **적합 (SET 확인)** |
 | **2-6d** | `provider_position_subscriptions pps` | `regions curr`, `regions target` | `pps.city_id = target.id` | tutor 타입, 과거 dev 시드 동 행 | **적합 (SET 확인)** |
-| **3-1** | `provider_position_subscriptions pps` | 파생 집계 테이블 `g` (`GROUP BY provider_id, sku_code, city_id, primary_subject_id`) | `pps.end_exclusive_on = g.max_end_date, pps.ends_at = g.max_ends_at` | `g.keep_id = pps.id AND g.distinct_orig_cnt > 1` (대표 건 1개) | **적합 (GROUP BY 파생테이블 조인)** |
-| **3-2** | `provider_position_subscriptions pps` | 파생 집계 테이블 `g` | `pps.end_exclusive_on = CURDATE(), pps.ends_at = NOW()` | `pps.id <> g.keep_id AND g.distinct_orig_cnt > 1` (나머지 중복 건) | **적합 (GROUP BY 파생테이블 조인, 비활성화)** |
+| **3-1** | `provider_position_subscriptions pps` | 파생 집계 테이블 `g` (`GROUP BY provider_id, sku_code, city_id, primary_subject_id`) | `pps.end_exclusive_on = g.max_end_date, pps.ends_at = g.max_ends_at` | `g.keep_id = pps.id AND g.distinct_orig_cnt > 1 AND p.city_id IS NOT NULL` (대표 건 1개) | **적합 (GROUP BY 조인, city_id NOT NULL)** |
+| **3-2** | `provider_position_subscriptions pps` | 파생 집계 테이블 `g` | `pps.end_exclusive_on = CURDATE(), pps.ends_at = NOW()` | `pps.id <> g.keep_id AND g.distinct_orig_cnt > 1 AND g.city_id <=> pps.city_id AND g.primary_subject_id <=> pps.primary_subject_id` (나머지 중복 건) | **적합 (NULL-safe <=> 조인, 비활성화)** |
 | **3-3** | `tutor_regions tr` (DELETE) | ROW_NUMBER() 인라인 서브쿼리 `dup` | N/A (DELETE 구문) | `dup.rn > 1` (동일 슬롯 중복 2순위 이하) | **적합 (ROW_NUMBER DELETE, MySQL 8.0/MariaDB 10.2+)** |
 | **3-4** | `tutor_regions tr` | ROW_NUMBER() 인라인 서브쿼리 `reorder` | `tr.priority_order = reorder.new_order` | N/A (전체 잔존 슬롯 0,1,2 순차 재정렬) | **적합 (ROW_NUMBER UPDATE, MySQL 8.0/MariaDB 10.2+)** |
 
@@ -457,5 +458,42 @@ f7faf56 커밋에 대한 독립 리뷰 결과 9건의 지적에 대해 메인 �
 1. 운영 DB 데이터(phpMyAdmin)의 실제 `provider_position_subscriptions` 레코드 존재 여부 및 옛 행정코드 잔존 건수: 실제 운영 데이터는 배포 시점 1단계 사전 점검 SQL(1-(0), 1-(D), 1-(E)) 실행을 통해 확인해야 함.
 2. 운영 DB 내 `students.preferred_tutor_region_id`의 실제 외래키 정합성: 1-(B) 및 1-(E) 사전 점검 SELECT 실행 시 최종 확인 예정.
 3. 유료 구독 단일화 시 시작일 처리 방식: 사용자 확인 질문 6번(후보 A 대표 건 시작일 유지 vs 후보 B MIN~MAX 전체 메움)에 대한 사용자 최종 선택 대기.
+
+---
+
+## 6차 개정 — NULL-safe 조인 및 백업 테이블 롤백 보강 (2026-10-08 22:15)
+
+- 메인 검수 지시(d697968): 13개 상위 시 코드·제주·GROUP BY 개편 승인 완료. 잔여 결함 2건(NULL 비교 결함, 임시 테이블 세션 의존 결함)에 대한 6차 개정.
+- **원칙 준수**: 여전히 **코드 수정 절대 금지, 문서 2개만 수정**(`docs/internal/72-region-unit-lock.md`, `docs/worklog/2026/10/2026-10-08-region-unit-lock.md`). 워크로그의 '사용자 잠금 — 2026-10-08 21:21' 절은 한 글자도 바꾸지 않음.
+
+### 1. 결함 1 (NULL 비교 결함 해소 및 NULL-safe 조인)
+- **원인 분석**: 066 스키마에서 `provider_position_subscriptions.city_id`와 `primary_subject_id`는 둘 다 `BIGINT UNSIGNED NULL`. 3-1의 GROUP BY는 NULL을 한 그룹으로 묶어 대표 건 종료일을 늘리지만, 3-2의 JOIN `g.primary_subject_id = pps.primary_subject_id`(및 city_id)는 SQL 표준상 `NULL = NULL`이 FALSE이므로 NULL인 중복 건을 매칭하지 못해 대표 외 중복 행이 비활성화되지 않고 연장만 된 채 활성 잔존하는 치명적 결함 발생.
+- **수정 반영**:
+  1. 3-2 JOIN의 `city_id`, `primary_subject_id` 비교 연산자를 NULL-safe 일치 연산자인 `<=>`로 전면 교체:
+     `g.city_id <=> pps.city_id AND g.primary_subject_id <=> pps.primary_subject_id`.
+  2. `city_id IS NULL`인 구독은 지역 미지정 상태이므로 과외 단위 승격 대상이 아님. 따라서 3-1 및 3-2의 서브쿼리와 본 쿼리 WHERE 절에 `p.city_id IS NOT NULL`, `pps.city_id IS NOT NULL`을 명시하여 안전하게 제외.
+  3. 1단계 사전 점검에 `(F)` 쿼리 신설: tutor 활성 구독 중 `city_id` 또는 `primary_subject_id`가 NULL인 건수 점검 SELECT 추가.
+
+### 2. 결함 2 (임시 테이블 세션 의존 탈피 및 전방위 백업·롤백 체계 완비)
+- **원인 분석**: `tmp_pps_city_before`가 `TEMPORARY TABLE`로 정의되어 있어, 관리자가 phpMyAdmin에서 1단계, 2단계, 3단계를 나누어 실행할 경우(요청마다 DB 연결 세션이 변경될 수 있음) 3-1 시점에 임시 테이블이 소실되어 SQL 실행 오류가 발생하는 문제점 확인. 또한 3-3에서 중복 슬롯을 DELETE하므로 롤백을 위한 원본 백업이 필수적임.
+- **수정 반영**:
+  1. **세션 무관 일반 백업 테이블 3종 생성 (2-0단계)**:
+     - `bak_region_unit_20261008_pps`: `(id, original_city_id, original_end_exclusive_on, original_ends_at)` — 원래 종료일까지 보관하여 3-1 단일화 판단 및 롤백에 동시 활용.
+     - `bak_region_unit_20261008_tutor_regions`: `(id, tutor_id, region_id, priority_order, is_primary)` — 3-3단계 중복 슬롯 DELETE 대비 전 행 보관.
+     - `bak_region_unit_20261008_students`: `(id, preferred_tutor_region_id)` — 학생 희망지역 원상 복구용.
+  2. **재실행 시 원본 덮어쓰기 원천 차단**:
+     - `CREATE TABLE ... AS SELECT` 사용 시 `IF NOT EXISTS`를 의도적으로 제외하여, 백업 테이블이 이미 존재할 경우 쿼리가 즉시 실패하도록 설계. 이미 변경된 상태의 데이터를 원본 백업에 덮어쓰는 사고를 원천 방지함.
+  3. **3-1 및 3-2 테이블 교체**: `tmp_pps_city_before` 조인을 `bak_region_unit_20261008_pps` 조인으로 전면 교체.
+  4. **5단계 비상 롤백 SQL 신설**:
+     - `tutor_regions`: 업데이트된 슬롯 복원 및 3-3에서 삭제된 중복 슬롯 재삽입(`UPDATE + INSERT`).
+     - `students`: `preferred_tutor_region_id` 백업 값으로 복원.
+     - `provider_position_subscriptions`: `city_id`, `end_exclusive_on`, `ends_at` 원래 값으로 복원.
+  5. **사후 정리 안내 명시**: 배포 검증 완료 후 1~2주 경과 시 백업 테이블 3종을 DROP하는 안내 주석 수록.
+
+### 3. 미확인 목록
+1. 운영 DB의 실제 활성 유료 구독 중 `city_id` 또는 `primary_subject_id`가 NULL인 건수: 배포 전 1단계 사전 점검 (F) 실행으로 확인 예정.
+2. 운영 DB 데이터(phpMyAdmin)의 실제 `provider_position_subscriptions` 레코드 존재 여부 및 옛 행정코드 잔존 건수: 1-(0), 1-(D), 1-(E) 실행을 통해 확인.
+3. 유료 구독 단일화 시 시작일 처리 방식: 사용자 확인 질문 6번(후보 A 대표 건 시작일 유지 vs 후보 B MIN~MAX 전체 메움)에 대한 사용자 최종 선택 대기.
+
 
 

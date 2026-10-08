@@ -1,6 +1,6 @@
 # 72. 과외 지역 단위 및 역할별 저장 정본 — 광역시·시·군 단위 체계와 데이터 이관
 
-- 상태: 정본 (2026-10-08 21:55 5차 개정 — 이관 SQL 결함(GROUP BY 파생테이블) 및 옛 행정코드 누락 보완)
+- 상태: 정본 (2026-10-08 22:15 6차 개정 — NULL-safe 조인 및 세션 독립 백업 테이블 롤백 완비)
 - 이전 정책(구·시·군 통일)에서 **광역시 단독·도(시·군) 단위 체계**로 복귀·개정.
 
 ---
@@ -308,12 +308,14 @@
 ID 하드코딩을 배제하고 `sido_code`, `sigungu_code`, `official_code`를 기준으로 동적 매핑하는 안전한 이관 쿼리다.
 - **MySQL 8.0 / MariaDB 10.x 문법 호환 (결함 1 보완)**: 윈도우 DISTINCT(`<window function>(DISTINCT ..)`) 지원 불가 문제를 해소하기 위해, `GROUP BY provider_id, sku_code, city_id, primary_subject_id` 파생 집계 테이블 조인 방식으로 전면 개편함. 시작일은 대표 건(`keep_id`) 값을 보존하여 공백 기간 무상 연장을 방지함.
 - **옛 행정코드 전수 보완 (결함 2 보완)**: `RegionEnsure::fromKakao`로 저장된 옛 시도 코드(광주 '29', 전남 '46', 강원 '42', 전북 '45') 및 전남광주 소속 시·군 산하 동 행을 누락 없이 전수 승격함.
-- **유료 구독 과잉 합치기 방지**: 임시 테이블 `tmp_pps_city_before`를 생성하여 승격으로 인해 **서로 다른 원래 구가 동일 단위로 통합된 경우에만** 합치고 동일 지역 연장 건은 보존함.
+- **세션 독립 일반 백업 테이블 및 비상 롤백 지원 (6차 개정)**: `TEMPORARY TABLE` 대신 세션 무관 일반 백업 테이블(`bak_region_unit_20261008_pps`, `bak_region_unit_20261008_tutor_regions`, `bak_region_unit_20261008_students`)을 2-0에서 생성하여 phpMyAdmin 다단계 분할 실행 시 세션 분리 소실 방지 및 3-3 DELETE 복구 지원. 재실행 시 원본 덮어쓰기 방지를 위해 `IF NOT EXISTS`를 쓰지 않고 `CREATE TABLE ... AS SELECT` 사용.
+- **NULL-safe 조인 및 NULL 예외 격리 (6차 개정)**: `provider_position_subscriptions.city_id`와 `primary_subject_id`가 NULL 허용(066 스키마)이므로, 3-2 JOIN에 NULL-safe 일치 연산자(`<=>`)를 적용하고, 승격 비대상인 `city_id IS NULL`은 3-1·3-2 집계/조인에서 안전하게 제외함. 사전 점검에 NULL 건수 SELECT 추가.
+- **유료 구독 과잉 합치기 방지**: 백업 테이블 `bak_region_unit_20261008_pps`의 원래 `original_city_id`를 기준으로 승격으로 인해 **서로 다른 원래 구가 동일 단위로 통합된 경우에만** 합치고 동일 지역 연장 건은 보존함.
 
 ```sql
 -- =============================================================================
 -- 과외 단위 광역시·시·군 전환 이관 SQL (MySQL 8.0 / MariaDB 10.x 호환)
--- SSOT: docs/internal/72-region-unit-lock.md (개정 5차)
+-- SSOT: docs/internal/72-region-unit-lock.md (개정 6차)
 -- =============================================================================
 
 USE study114;
@@ -437,16 +439,42 @@ JOIN regions r ON r.id = pps.city_id
 WHERE pps.provider_type = 'tutor'
   AND r.sido_code NOT IN ('11','12','26','27','28','30','31','36','41','43','44','47','48','50','51','52');
 
+-- (F) tutor 활성 구독 중 city_id 또는 primary_subject_id가 NULL인 건수 점검 (066 스키마 대응, city_id NULL은 승격 비대상)
+SELECT COUNT(*) AS total_active_tutor_sub_count,
+       SUM(CASE WHEN city_id IS NULL THEN 1 ELSE 0 END) AS null_city_count,
+       SUM(CASE WHEN primary_subject_id IS NULL THEN 1 ELSE 0 END) AS null_subject_count,
+       SUM(CASE WHEN city_id IS NULL OR primary_subject_id IS NULL THEN 1 ELSE 0 END) AS null_either_count
+FROM provider_position_subscriptions
+WHERE provider_type = 'tutor'
+  AND end_exclusive_on > CURDATE();
+
 -- -----------------------------------------------------------------------------
 -- [2단계: 이관 UPDATE (동적 매핑)]
 -- -----------------------------------------------------------------------------
 
--- 2-0. 유료 구독 원래 city_id 임시 보존 (과잉 단일화 방지용)
-DROP TEMPORARY TABLE IF EXISTS tmp_pps_city_before;
-CREATE TEMPORARY TABLE tmp_pps_city_before AS
-SELECT id, city_id AS original_city_id
+-- 2-0. 안전 백업 테이블 생성 (세션 분리 방지 및 롤백용)
+-- ※ IF NOT EXISTS를 쓰지 않는 이유: 이미 백업 테이블이 존재할 때 재실행하면 오류를 발생시켜 실행을 멈추도록 함으로써,
+--   이미 변경된 상태의 데이터를 원본 백업에 덮어쓰는 사고를 원천 차단함.
+--   phpMyAdmin에서 단계별로 분할 실행(HTTP 요청별 DB 연결 분리)해도 세션 종료로 인한 데이터 소실 없음.
+
+-- (1) 유료 구독 백업: 원래 city_id 및 원래 만료일 보관 (단일화 판단 및 롤백용)
+CREATE TABLE bak_region_unit_20261008_pps AS
+SELECT id,
+       city_id AS original_city_id,
+       end_exclusive_on AS original_end_exclusive_on,
+       ends_at AS original_ends_at
 FROM provider_position_subscriptions
 WHERE provider_type = 'tutor';
+
+-- (2) 과외 슬롯 백업: 3-3단계 중복 슬롯 DELETE 대비 전 행 보관 (롤백 필수 백업)
+CREATE TABLE bak_region_unit_20261008_tutor_regions AS
+SELECT id, tutor_id, region_id, priority_order, is_primary
+FROM tutor_regions;
+
+-- (3) 학생 희망지역 백업: students 백업 (롤백용)
+CREATE TABLE bak_region_unit_20261008_students AS
+SELECT id, preferred_tutor_region_id
+FROM students;
 
 -- 2-1. 특·광역시·세종 산하 구/군 및 동/옛 시 대표 행 → 시도 행으로 승격 (세종 '36' 포함)
 UPDATE tutor_regions tr
@@ -806,6 +834,7 @@ WHERE pps.provider_type = 'tutor'
 -- 승격으로 서로 다른 원래 지역(distinct_orig_cnt > 1)이 같은 단위가 된 그룹만 단일화.
 -- 대표 레코드(최초 id = keep_id)의 종료일을 그룹 내 MAX(end_exclusive_on), MAX(ends_at)으로 연장.
 -- (사용자 잠금 9번: MAX(end_exclusive_on) 단일화 원칙 준수, 시작일은 대표 레코드 값 유지로 공백 기간 무상 연장 방지)
+-- (city_id IS NOT NULL: 지역 미지정 구독은 승격 대상이 아니므로 안전하게 제외)
 -- 대안 (B - 공백 메움): pps.started_on = g.min_started_on, pps.starts_at = g.min_starts_at
 UPDATE provider_position_subscriptions pps
 JOIN (
@@ -820,8 +849,9 @@ JOIN (
          MAX(p.end_exclusive_on) AS max_end_date,
          MAX(p.ends_at) AS max_ends_at
   FROM provider_position_subscriptions p
-  JOIN tmp_pps_city_before b ON b.id = p.id
+  JOIN bak_region_unit_20261008_pps b ON b.id = p.id
   WHERE p.provider_type = 'tutor'
+    AND p.city_id IS NOT NULL
     AND p.end_exclusive_on > CURDATE()
   GROUP BY p.provider_id, p.sku_code, p.city_id, p.primary_subject_id
   HAVING distinct_orig_cnt > 1
@@ -831,6 +861,8 @@ SET pps.end_exclusive_on = g.max_end_date,
 
 -- 3-2. 유료 구독 중복 비활성화:
 -- 다른 지역에서 승격 합체된 그룹 중 대표 레코드(keep_id)를 제외한 나머지 중복 건 즉시 비활성화.
+-- (NULL 비교: primary_subject_id 및 city_id가 NULL일 수 있으므로 NULL-safe 비교인 <=> 사용)
+-- (city_id IS NOT NULL: 지역 미지정 구독 제외)
 -- 동일 지역 연속 연장 및 미래 예약 건(distinct_orig_cnt = 1)은 정상 유지됨.
 UPDATE provider_position_subscriptions pps
 JOIN (
@@ -841,18 +873,20 @@ JOIN (
          COUNT(DISTINCT b.original_city_id) AS distinct_orig_cnt,
          MIN(p.id) AS keep_id
   FROM provider_position_subscriptions p
-  JOIN tmp_pps_city_before b ON b.id = p.id
+  JOIN bak_region_unit_20261008_pps b ON b.id = p.id
   WHERE p.provider_type = 'tutor'
+    AND p.city_id IS NOT NULL
     AND p.end_exclusive_on > CURDATE()
   GROUP BY p.provider_id, p.sku_code, p.city_id, p.primary_subject_id
   HAVING distinct_orig_cnt > 1
 ) g ON g.provider_id = pps.provider_id
    AND g.sku_code = pps.sku_code
-   AND g.city_id = pps.city_id
-   AND g.primary_subject_id = pps.primary_subject_id
+   AND g.city_id <=> pps.city_id
+   AND g.primary_subject_id <=> pps.primary_subject_id
 SET pps.end_exclusive_on = CURDATE(),
     pps.ends_at = NOW()
 WHERE pps.provider_type = 'tutor'
+  AND pps.city_id IS NOT NULL
   AND pps.end_exclusive_on > CURDATE()
   AND pps.id <> g.keep_id;
 
@@ -967,6 +1001,47 @@ FROM (
   GROUP BY provider_id, sku_code, city_id, primary_subject_id
   HAVING COUNT(*) > 1
 ) d;
+
+-- -----------------------------------------------------------------------------
+-- [5단계: 비상 롤백 SQL (백업 테이블 기반 원상 복구)]
+-- ※ 이관 작업 중 오류가 발생하거나 긴급 원상 복구가 필요한 경우 phpMyAdmin에서 실행합니다.
+-- -----------------------------------------------------------------------------
+
+-- 5-1. 과외 슬롯 원상 복구 (업데이트된 슬롯 복원 및 3-3에서 삭제된 중복 슬롯 재삽입)
+UPDATE tutor_regions tr
+JOIN bak_region_unit_20261008_tutor_regions b ON b.id = tr.id
+SET tr.region_id = b.region_id,
+    tr.priority_order = b.priority_order,
+    tr.is_primary = b.is_primary;
+
+INSERT INTO tutor_regions (id, tutor_id, region_id, priority_order, is_primary)
+SELECT b.id, b.tutor_id, b.region_id, b.priority_order, b.is_primary
+FROM bak_region_unit_20261008_tutor_regions b
+LEFT JOIN tutor_regions tr ON tr.id = b.id
+WHERE tr.id IS NULL;
+
+-- 5-2. 학생 희망지역 원상 복구
+UPDATE students s
+JOIN bak_region_unit_20261008_students b ON b.id = s.id
+SET s.preferred_tutor_region_id = b.preferred_tutor_region_id;
+
+-- 5-3. 유료 구독 원래 city_id 및 원래 종료일 원상 복구
+UPDATE provider_position_subscriptions pps
+JOIN bak_region_unit_20261008_pps b ON b.id = pps.id
+SET pps.city_id = b.original_city_id,
+    pps.end_exclusive_on = b.original_end_exclusive_on,
+    pps.ends_at = b.original_ends_at;
+
+-- 5-4. (선택 사항) 0단계 생성 광주 행 정리 (필요한 경우에만 실행)
+-- DELETE FROM regions WHERE sido_code = '12' AND sigungu_code = '12200';
+
+-- -----------------------------------------------------------------------------
+-- [사후 정리 안내: 배포 검증 완료 후 백업 테이블 DROP]
+-- ※ 운영 배포 및 정상 작동이 충분히 검증된 후(예: 1~2주 경과 후) 아래 명령으로 백업 테이블을 삭제합니다.
+-- DROP TABLE bak_region_unit_20261008_pps;
+-- DROP TABLE bak_region_unit_20261008_tutor_regions;
+-- DROP TABLE bak_region_unit_20261008_students;
+-- -----------------------------------------------------------------------------
 ```
 
 ---
@@ -981,7 +1056,7 @@ FROM (
    - GitHub Actions를 통해 신규 코드(판정, 캐스케이드, 검색) 배포.
    - 신규 코드는 옛 비단위 데이터를 만나도 500 에러를 내지 않고 안내 문구(다시 선택)로 안전하게 격리 처리함.
 3. **3단계 (사용자): 직후 이관 SQL 실행**:
-   - 운영 DB(phpMyAdmin)에서 `2단계(이관 UPDATE)` 및 `3단계(중복 제거)` 실행.
+   - 운영 DB(phpMyAdmin)에서 `1단계(사전 점검)` 확인 후, `2-0단계(백업 테이블 생성)` -> `2-1~2-6단계(이관 UPDATE)` -> `3단계(중복 정리)` 순차 실행. (만약 롤백이 필요한 경우 `5단계(비상 롤백)` 실행)
 4. **4단계 (사용자/공통): 사후 점검 및 화면 확인**:
    - `4단계 SQL` 실행하여 `invalid_slot_count = 0` 확인.
    - 실제 운영 사이트에서 과외쌤 마이페이지, 과외 홈, 검색 탭 정상 노출 확인.
