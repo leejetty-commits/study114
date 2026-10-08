@@ -89,3 +89,9 @@ Final report: commit hash(es), files changed with one line each, verification re
 - 검수자: 다른 모델(claude-4.6-sonnet), 읽기 전용, 별도 worktree(df08bb7). 판정: **승인 권고**, 결함 없음.
 - 숨은 블록 required 토글 7개 시나리오 정상, 캐스케이드가 나중에 required를 추가하는 경로 없음, 검사 스크립트 수정 전 7 실패·수정 후 18/18, 변경 파일 4개만, no-sample-data OK.
 - 사용자 승인: 대기 (승인 대상 `e89333d`). 배포 전 사용자 할 일 없음.
+
+## 사용자 승인 · main 반영 (2026-10-09 02:13)
+
+- 사용자 승인: `e89333d` ("수정 승인").
+- main 이 그 사이 `b230d0a`(개발용 운영자 제거) · `2025692`(작업 루틴 규칙)로 나가 `2025692` 병합 후 main 빨리감기. 겹치는 파일 없음.
+- 기존 학생 2분기 흐름(희망 유형 → 분기별 지역·수강료 칸)은 그대로, 숨은 분기 칸의 required 만 해제.
