@@ -125,7 +125,7 @@ C4: 마이페이지 기본정보 저장은 지역 칸을 건드렸거나 저장�
 | `verify:location-ssot` | 14 pass |
 | `verify:shop-page` | 54 / 0 |
 | `verify-tutor-home-student-tab.mjs` | 22 pass 후 `@home-enums` 별칭 해석 실패로 중단 — base 와 같음. 이번 변경 파일은 이 별칭을 쓰지 않음 |
-| `verify-tutor-region-label.mjs` | 「클라이언트 파일 diff vs HEAD」 가드 때문에 커밋 후 실행(결과는 아래 9절) |
+| `verify-tutor-region-label.mjs` | 「클라이언트 파일 diff vs HEAD」 가드 때문에 커밋 후 실행 → 115 / 0 |
 | PHP 문법 `php -l` (바뀐 PHP 5개) | 오류 없음 |
 | vite build (auth-ui, home-ui, tutor-ui, tmp 출력) | 성공 (기존 CSS 경고만) |
 
@@ -135,7 +135,8 @@ C4: 마이페이지 기본정보 저장은 지역 칸을 건드렸거나 저장�
 
 - 이전 push(13항목 작업): `14a4d48` 서버·공용 목록, `bbfdd46` 화면, `0378cbc` 검사 스크립트, `e78ab11` 문서
 - `d04e796` merge origin/main `bd853f6` (정본 73 최종)
-- 이번 커밋: 최종 사양 8개 정리(이 기록 포함). hash 는 보고에 적는다(push 된 커밋 amend 금지).
+- `542c1f4` 최종 사양 8개 정리(코드·검사·이 기록)
+- `542c1f4` 뒤 재실행: `verify-tutor-region-label.mjs` 115 / 0, `verify:tutor-basic-required` OK(PASS 160), `verify:shop-page` 54 / 0
 
 ## 10. 배포 전 사용자 할 일
 
