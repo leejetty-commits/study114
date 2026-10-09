@@ -92,4 +92,8 @@
 ## 7. 승인·main 반영
 
 - 작업 전 확인: 사용자 2026-10-09 18:5x 「진행」·「수업운영방식」·「고쳐」.
-- 작업 커밋 `4222bec2` (브랜치 push 완료). main 병합은 사용자 승인 후.
+- 작업 커밋 `4222bec2`, 작업기록 커밋 `8d550726`. 브랜치 CI: Verify bundle·Board ACL gate 성공.
+- main 병합 승인: 사용자 2026-10-09 19:10 「병합 배포」 (커밋 `8d550726`).
+- main 병합: 분리 worktree `.wt/merge-rcs`에서 `--no-ff`, 병합 커밋 `8bbfd88f` (`0d125cc1` → `8bbfd88f`).
+- main Actions(`8bbfd88f`): ShopPage gate·Board ACL gate·Verify bundle·Deploy to dothome 모두 성공.
+- 운영 번들 확인: 홈 `https://study114.net/` `index-D3jJqPej.js`, 찾기 `https://study114.net/search/` `index-CJ30_tWl.js` 모두 원생수 한글 표(`one_to_four:"1~4명"`), 확대카드 `<dt>수업운영방식</dt>`, 베이직 가로카드 「슬로건」·「특징」 항목 제목 있음. 실제 로그인 화면 눈확인은 하지 않음.
