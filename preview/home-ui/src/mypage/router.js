@@ -67,7 +67,7 @@ export const MYPAGE_NAV = [
     emphasis: ['parent', 'study_room', 'tutor'],
     roles: ['parent', 'study_room', 'tutor'],
   },
-  { path: '/mypage/messages', label: '쪽지·후기함', icon: '✉', screenId: 'P15-08', labels: { parent: '쪽지' } },
+  { path: '/mypage/messages', label: '쪽지·후기함', icon: '✉\uFE0E', screenId: 'P15-08', labels: { parent: '쪽지' } },
   { path: '/mypage/recent', label: '최근열람', icon: '◷', screenId: 'P15-07' },
   {
     path: '/mypage/student-review',
@@ -77,17 +77,17 @@ export const MYPAGE_NAV = [
     emphasis: ['study_room', 'tutor'],
     roles: ['study_room', 'tutor'],
   },
-  { path: '/mypage/wishlist', label: '찜한 공부방·과외쌤', icon: '♡', screenId: 'P15-06', labels: { parent: '찜·비교' }, emphasis: ['parent'] },
+  { path: '/mypage/wishlist', label: '찜한 공부방·과외쌤', labelLines: ['찜한 공부방·', '과외쌤'], icon: '♡', screenId: 'P15-06', labels: { parent: '찜·비교' }, emphasis: ['parent'] },
   { path: CONTACT_HISTORY_PATH, label: '내 문의 내역', icon: '▤', screenId: 'P17-07', roles: ['parent', 'study_room', 'tutor'] },
   {
     path: '/mypage/plans',
     label: '구매이력',
-    icon: '◌',
+    icon: '₩',
     screenId: 'P15-09',
     emphasis: ['study_room', 'tutor'],
     roles: ['study_room', 'tutor'],
   },
-  { path: '/mypage/account', label: '계정설정', icon: '⚙', screenId: 'P15-11' },
+  { path: '/mypage/account', label: '계정설정', icon: '⚙\uFE0E', screenId: 'P15-11' },
 ];
 
 /** @type {Record<string, MypageScreenId>} */
