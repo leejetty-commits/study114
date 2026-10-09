@@ -178,3 +178,10 @@
   - 메인 재실행: `verify-admin-162-settlement` 57/0, `verify-admin-today-hub` 61/0, `verify-admin-preview-labels` 202/0, `verify:shop-page` fail 0.
 - 남은 확인: 실제 브라우저 인쇄창(배포 후 사용자 확인). SQL·환경변수 변경 없음.
 - 배포: 사용자 승인 대기.
+
+## 배포 (2026-10-08 17:38)
+
+- 사용자 지시 「배포」(17:26) → `origin/main` `ec50fcd`를 브랜치에 병합(`704de8c`) 후 `main` fast-forward `ec50fcd..704de8c`.
+- Actions: Deploy to dothome `37750935222` success, Board ACL gate·ShopPage gate success.
+- 운영 번들 확인: `/assets/index-BsPwbVfZ.js`에 `a28-hub-body` 포함.
+- 사용자 확인 대기: 관리자 운영 홈 보고서 위치, 일간·주간·월간 인쇄창, 메뉴 순서.

@@ -120,3 +120,14 @@
 - 기존 `scripts/verify-home-news-row.mjs`, `scripts/verify-basic-exposure-gate.mjs` 통과.
 - 홈 칸에서 환영 줄 최대 1줄, 팝업 목록 섞임, 이름 클릭 시 카드 팝업 열림(브라우저 확인).
 - `npm run build:dothome`, `npm run verify:shop-page`.
+
+---
+
+## 9. 정본 72 개정에 따른 연동 메모 (2026-10-08 20:26 사용자 확정)
+
+- **과외쌤 동네 범위 및 환영 문구**: 정본 72 개정에 따라 과외 단위가 특별시·광역시 시도 행 및 도 시·군 행으로 정립됨. 이에 따라 과외쌤 환영 줄의 동네 범위는 카드와 동일하게 과외 단위 정식 명칭을 따름 (예: 「서울특별시에 새로 오신 과외쌤이에요. 반갑게 맞아 주세요!」).
+- **시도 행 과외쌤 누락 방지**: 특별시·광역시 과외쌤은 시도 행 등록으로 `sigungu_name`이 비어 있으므로, `NeighborhoodGreetingService`에서 `r.sigungu_name <> ''` 조건을 사용하지 않고 시도/시군구를 포괄하는 `region_label` 표현식을 사용하여 환영 줄이 정상 노출되도록 연동함.
+- **노출 일치 비교 정밀화**: 프론트엔드(`neighborhood-greeting.js`)의 동네 일치 조건(`sameNeighborhood`)에서 과외쌤은 단순 문자열 부분 포함(`includes`) 대신 **과외 단위 ID(`region_id`) 일치 비교**로 정밀화됨. (공부방 인사는 기존 동 단위 유지)
+  - 2026-10-09 main 대조: `preview/shared/neighborhood-greeting.js` 54행 `sameNeighborhood`는 아직 문자열 비교(`includes`)다. 이 항목은 코드 미반영.
+- **노출 정책 불변**: 정본 71의 핵심 노출 정책(최대 3건, 최신 등록 우선, 만료 7일, 직접 쓴 인사 우선 등)은 일체 변경 없이 100% 유지됨.
+
