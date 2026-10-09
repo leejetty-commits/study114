@@ -121,6 +121,10 @@
 - 원인(코드 확인): 공부방 찾기 화면을 보는 사람은 손님·운영자·공부방 원장·공부방 분기 학생(`preview/shared/site-nav-config.js` 104–150). 이 중 원장(121 `find_tutor: 'hide'`)과 공부방 분기 학생(149)은 과외쌤 찾기가 막혀 있어, 버튼을 누르면 `search-role-access.js` 89–91이 공부방 찾기로 되돌림 — 누르면 아무 일도 없는 버튼. 2차에서 지운 과외쌤 찾기 배너 버튼과 같은 구조.
 - `preview/home-ui/src/home-marketing-banner.js` `search_room` 버튼을 「홈으로」 하나로. 쓰는 곳이 없어진 `searchUiUrl` import 제거.
 - 확인: `scripts/verify-integrity-fix-20261009.mjs`에 10번(공부방 찾기 배너) 추가 → 44 pass. `node --check` 통과.
+- 배포(16:33, 사용자 「배포 안한 것이 있으면 하도록 하라」 → 선택 「편지 메일 + 기록 문서 모두 배포」): `main` `97bdd9bd` = 편지 메일(`cursor/mail-lifecycle-20261009`) + 이 브랜치 `9d73dd48` + 인수인계·무결성 재확인 기록. 병합 결과에서 편지 메일 검사 446 pass(`-d extension=pdo_sqlite` 필요), A단계 메일 검사 417 pass, 비밀값 검사 통과. Actions 9개 성공(Deploy to dothome `37899635871`).
+- 운영 확인(손님): `search/#/search/room` 배너 버튼 「홈으로」 하나.
+- 운영 DB(16:45, 사용자 phpMyAdmin): `SHOW TABLES LIKE 'provider_reminder_dispatches'` → 있음. 편지 메일용 SQL 실행 불필요.
+- 고민방 팝업 「게시판에서 보기」 이동 안 됨(16:27 사용자 제보, 홈 우측 레일): 손님으로 운영 홈에서 눌러 보면 `#/community/parent`로 이동(정상). 코드상 과외쌤 홈도 같은 링크. 16:47 사용자 「모두 해결됐어」 — 코드 수정 없음. 원인은 미확인(제보 시각이 16:11·16:33 배포 사이라 옛 화면 파일이었을 가능성).
 
 ## 배포 전 사용자 할 일
 
