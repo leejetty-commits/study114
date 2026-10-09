@@ -171,6 +171,51 @@
   opacity: 0.85;
 }
 
+.mypage-nav__label-line {
+  display: block;
+  white-space: nowrap;
+}
+
+.mypage-nav__link.is-multiline {
+  align-items: start;
+}
+
+/* 공부방·과외쌤 메뉴: 학생(s5b)과 같은 모양 — 왼쪽 3px 역할색 막대 · 역할색 아이콘 · 굵기는 활성만 */
+.home-app--role-study_room .mypage-nav__link,
+.home-app--role-tutor .mypage-nav__link {
+  color: #4b5563;
+}
+
+.home-app--role-study_room .mypage-nav__link:hover,
+.home-app--role-tutor .mypage-nav__link:hover {
+  color: var(--mp-ink);
+}
+
+.home-app--role-study_room .mypage-nav__link.is-active,
+.home-app--role-tutor .mypage-nav__link.is-active {
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--role-accent) !important;
+}
+
+.home-app--role-study_room .mypage-nav__link.is-emphasis:not(.is-active),
+.home-app--role-tutor .mypage-nav__link.is-emphasis:not(.is-active) {
+  font-weight: 500;
+}
+
+.home-app--role-study_room .mypage-nav__label,
+.home-app--role-tutor .mypage-nav__label {
+  line-height: 1.3;
+}
+
+.home-app--role-study_room .mypage-nav__icon,
+.home-app--role-tutor .mypage-nav__icon {
+  height: 1.3em;
+  color: var(--role-accent);
+  font-size: 14px;
+  line-height: 1.3;
+  opacity: 1;
+}
+
 .mypage-nav__admin {
   margin-top: 0.75rem;
   padding: 0.5rem 0.65rem;
@@ -228,6 +273,11 @@
 
 .mypage-breadcrumb__sep {
   color: #cbd5e1;
+}
+
+.home-app--role-study_room .mypage-breadcrumb,
+.home-app--role-tutor .mypage-breadcrumb {
+  color: #4b5563;
 }
 
 /* —— 패널 · 리스트 —— */
@@ -620,6 +670,11 @@
 
   .mypage-nav__link + .mypage-nav__link::before {
     content: none;
+  }
+
+  .home-app--role-study_room .mypage-nav,
+  .home-app--role-tutor .mypage-nav {
+    align-items: start;
   }
 }
 

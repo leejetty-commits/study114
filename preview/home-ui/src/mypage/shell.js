@@ -97,10 +97,14 @@ export function renderMypageShell(currentPath, bodyHtml) {
     const href = item.path === '/mypage/registrations' ? getDefaultMypagePath(role) : item.path;
     const active = navItemIsActive(item, currentPath);
     const emph = item.emphasis?.includes(role) ? ' is-emphasis' : '';
+    const lines = !item.labels?.[role] && item.labelLines ? item.labelLines : null;
+    const label = lines
+      ? `<span class="mypage-nav__label">${lines.map((line) => `<span class="mypage-nav__label-line">${esc(line)}</span>`).join('')}</span>`
+      : `<span class="mypage-nav__label">${esc(mypageNavLabel(item, role))}</span>`;
     return `
-      <a href="#${href}" class="mypage-nav__link${active ? ' is-active' : ''}${emph}" data-mypage-nav="${href}">
+      <a href="#${href}" class="mypage-nav__link${active ? ' is-active' : ''}${emph}${lines ? ' is-multiline' : ''}" data-mypage-nav="${href}">
         <span class="mypage-nav__icon" aria-hidden="true">${esc(item.icon || '•')}</span>
-        <span>${esc(mypageNavLabel(item, role))}</span>
+        ${label}
       </a>`;
     })
     .join('');
