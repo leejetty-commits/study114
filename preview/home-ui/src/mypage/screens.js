@@ -84,7 +84,7 @@ import { renderPaidGuide, renderPaidUsage } from './paid-screens.js';
 import { renderPlansHistory, schedulePlansStatusHydrate, resetPlansStatusSync, plansStatusFlags } from '../plans/screens.js';
 import { parsePlansQuery } from '../plans/router.js';
 import { getPlansEffectiveRole, resolveSelectedProfile } from '../plans/profiles.js';
-import { getHistoryRows, loadHistoryRows } from '../plans/history-mock.js';
+import { getHistoryRows, loadHistoryRows, orderStatusLabel } from '../plans/history-mock.js';
 import { bindPaidCatalogEvents } from '../paid-checkout.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
@@ -96,6 +96,8 @@ import {
   WISHLIST_CARD_UNKNOWN,
   REGISTRATIONS_LEAD,
   CONTACT_HISTORY_COPY,
+  memoPackProviderLabel,
+  memoPackStatusLabel,
 } from './mypage-copy.js';
 
 function esc(s) {
@@ -103,8 +105,8 @@ function esc(s) {
 }
 
 function roleLabel(role) {
-  const map = { parent: '학생(학부모)', study_room: '공부방', tutor: '과외쌤' };
-  return map[role] || role;
+  const map = { parent: '학생', study_room: '공부방', tutor: '과외쌤' };
+  return map[role] || '회원';
 }
 
 /** @returns {'parent'|'study_room'|'tutor'|''} */
@@ -657,8 +659,8 @@ function exposureKindLabel(sku) {
   const code = String(sku || '').toLowerCase();
   if (code.includes('prime')) return '프라임 노출';
   if (code.includes('pick')) return '픽 노출';
-  if (code.includes('basic')) return '베이직 노출';
-  return code ? `${String(sku).toUpperCase()} 노출` : '유료 노출';
+  if (code.includes('basic')) return '베이직카드 노출';
+  return '유료 노출';
 }
 
 function expiryAlertDays(position) {
@@ -764,7 +766,7 @@ function renderPlans(role) {
       <section class="mypage-panel">
         <h2 class="mypage-subhead">이용 안내</h2>
         <div class="mypage-info-box">
-          <p>학부모 계정은 공부방과 과외쌤을 찾고, 찜하고, 상담하는 기본 기능을 편하게 이용할 수 있어요.</p>
+          <p>학생 계정은 공부방과 과외쌤을 찾고, 찜하고, 상담하는 기본 기능을 편하게 이용할 수 있어요.</p>
           <p class="mypage-muted">${GUARDIAN_PLANS_COPY.body}</p>
         </div>
         <a href="#/support/faq" class="btn btn--secondary" data-nav="/support/faq">이용 안내 보기</a>
@@ -805,7 +807,7 @@ function renderPlans(role) {
                   <td>${esc(r.productName)}</td>
                   <td>${Number(r.amountKrw || 0).toLocaleString('ko-KR')}원</td>
                   <td>${esc(String(r.paidAt || '').slice(0, 16).replace('T', ' '))}</td>
-                  <td>${esc(r.status || '')}</td>
+                  <td>${esc(orderStatusLabel(r.status))}</td>
                 </tr>`,
                       )
                       .join('')
@@ -882,14 +884,14 @@ function renderPlansMyInventory(role) {
                   .map(
                     (p) => `
                   <tr data-plans-pack-row data-plans-pack-grant="${esc(String(p.grant_label || ''))}" data-plans-pack-status="${esc(String(p.status || ''))}" data-plans-pack-granted="${esc(String(p.granted_count ?? ''))}" data-plans-pack-remaining="${esc(String(p.remaining ?? ''))}" data-plans-pack-provider="${esc(String(p.provider_id ?? ''))}">
-                    <td>${esc(p.provider_type || '미확인')} #${esc(String(p.provider_id ?? ''))}</td>
+                    <td>${esc(memoPackProviderLabel(p.provider_type))}</td>
                     <td>${esc(p.product_name || '')}</td>
                     <td>${esc(p.grant_label || '')}</td>
                     <td>${p.granted_count ?? '—'}</td>
                     <td>${p.remaining ?? '—'}</td>
                     <td>${esc(String(p.purchased_at || '').slice(0, 10))}</td>
                     <td data-plans-pack-expires>${esc(String(p.expires_at || '').slice(0, 10))}</td>
-                    <td>${esc(p.status || '')}</td>
+                    <td>${esc(memoPackStatusLabel(p.status))}</td>
                   </tr>`,
                   )
                   .join('')}
@@ -900,7 +902,7 @@ function renderPlansMyInventory(role) {
       }
       ${
         plansRole === 'study_room' && profile
-          ? `<h2 class="mypage-subhead">Prime 예약대기</h2>
+          ? `<h2 class="mypage-subhead">프라임 예약대기</h2>
             <div class="plans-my-waitlist" data-plans-my-waitlist data-study-room-id="${esc(String(profile.id))}">
               <p class="mypage-muted">예약대기 목록을 불러오는 중…</p>
             </div>`

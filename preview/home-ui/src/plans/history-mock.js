@@ -2,6 +2,13 @@
 
 import { fetchPaidHistory } from '../paid-api.js';
 import { getProductConfig } from './runtime-config.js';
+import {
+  ORDER_STATUS_LABELS,
+  PAYMENT_METHOD_LABELS,
+  UNKNOWN_STATUS_LABEL,
+  UNKNOWN_PAYMENT_METHOD_LABEL,
+  UNKNOWN_PRODUCT_LABEL,
+} from '../mypage/mypage-copy.js';
 
 const STORAGE_KEY = 'study114-plans-history-mock';
 
@@ -64,11 +71,13 @@ export async function loadHistoryRows() {
 function mapApiOrder(order) {
   const productId = String(order.product_id || '');
   const variant = String(order.variant_label || '');
-  const cfg = getProductConfig(productId);
-  const name = cfg?.name || productId;
   return {
     orderRef: String(order.order_ref || ''),
-    productName: `${name} · ${variant}`,
+    /** 가격표가 결제 내역보다 늦게 올 수 있어, 다시 그릴 때마다 이름을 찾는다 */
+    get productName() {
+      const name = getProductConfig(productId)?.name || UNKNOWN_PRODUCT_LABEL;
+      return `${name} · ${variant}`;
+    },
     providerLabel: '내 프로필',
     amountKrw: Number(order.amount_won) || 0,
     paymentMethod: String(order.pg_provider || 'card') === 'dev_mock' ? 'card' : String(order.pg_provider || 'card'),
@@ -80,17 +89,10 @@ function mapApiOrder(order) {
 
 /** @param {string} method */
 export function paymentMethodLabel(method) {
-  const map = { card: '카드', transfer: '계좌이체', vbank: '무통장', dev_mock: '카드(mock)' };
-  return map[method] || method;
+  return PAYMENT_METHOD_LABELS[method] || UNKNOWN_PAYMENT_METHOD_LABEL;
 }
 
 /** @param {string} status */
 export function orderStatusLabel(status) {
-  const map = {
-    paid: '결제완료',
-    failed: '실패',
-    canceled: '취소',
-    pending: '결제 대기',
-  };
-  return map[status] || status;
+  return ORDER_STATUS_LABELS[status] || UNKNOWN_STATUS_LABEL;
 }
