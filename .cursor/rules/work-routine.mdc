@@ -5,8 +5,8 @@ alwaysApply: true
 
 # 작업 루틴 (정본 70)
 
-정본 초안: `D:\work\study114-routine\docs\internal\70-work-routine-review-approval.md` (브랜치 `docs/work-routine`, `main` 병합 전)
-인수인계: `D:\work\study114-routine\docs\worklog\2026\10\2026-10-08-handoff-cursor-orchestration.md` — 새 채팅은 먼저 읽는다.
+정본 초안: `D:\work\study114-routine\docs\internal\70-work-routine-review-approval.md` — 저장소에 커밋되지 않은 초안. 이 규칙 파일이 현재 유효한 요약이다.
+인수인계: **새 채팅은 먼저 `docs/worklog/YYYY/MM/` 아래 가장 최근 날짜의 `*-handoff*.md`를 읽는다.** 현재 최신 = `docs/worklog/2026/10/2026-10-09-handoff.md`. 새 인수인계를 쓰면 이 줄도 같이 고친다.
 
 ## 역할
 
