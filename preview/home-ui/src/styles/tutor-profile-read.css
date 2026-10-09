@@ -127,3 +127,8 @@
     gap: 0.2rem;
   }
 }
+
+.home-app--role-tutor .mypage-content .p21-profile {
+  max-width: none;
+  width: 100%;
+}
