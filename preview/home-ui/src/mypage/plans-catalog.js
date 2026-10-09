@@ -169,23 +169,6 @@ export const ROI_FREE_METRICS = [
   { id: 'compare', label: '비교 담김', value: 0, period: '누적', hint: '비교 후보함 (≤3)' },
 ];
 
-export const P18_HEADLINE = '가게 품질 무료 · 홍보·획득 유료';
-
-export const P18_GUIDE_LEAD =
-  '대표·추천 노출 기간형 + 쪽지권 횟수권 · 한 번씩 결제 · 자동연장 없음';
-
-export const P18_USAGE_LEAD =
-  '조회·찜·비교 담기는 무료입니다. 노출 만료나 횟수 소진은 안내 문구로 알려 드립니다.';
-
-export const P18_RENEWAL_COPY = {
-  title: '만료·갱신 안내',
-  items: [
-    '구독 만료처럼 급하게 재촉하지 않습니다. 노출 흐름·시즌 준비·연결 기회로 안내합니다.',
-    '같은 조건으로 연장하거나, 짧게/길게 바꾸거나, 기본 노출로 쉴 수 있습니다.',
-    '만료 7일·3일·1일 전에 메일·문자로 안내합니다. (전자결제 연동 후 적용)',
-  ],
-};
-
 export const P18_EXPOSURE_STATUS = {
   basic: '베이직 노출 이용중 - 무료광고',
   note: '프라임·픽 노출 종료 시 베이직 노출(무료광고)로 복귀 · 프로필 유지 · 광고배지만 내려감',

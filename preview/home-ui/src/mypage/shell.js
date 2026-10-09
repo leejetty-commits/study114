@@ -22,8 +22,7 @@ function navItemIsActive(item, currentPath) {
     (item.path === '/mypage/registrations' && currentPath.startsWith('/mypage/registrations')) ||
     (item.path === '/mypage/messages' && currentPath.startsWith('/mypage/messages')) ||
     (item.path === '/mypage/contact' && currentPath.startsWith('/mypage/contact')) ||
-    (item.path === '/mypage/plans' &&
-      (currentPath.startsWith('/mypage/plans') || currentPath.startsWith('/mypage/paid')))
+    (item.path === '/mypage/plans' && currentPath.startsWith('/mypage/plans'))
   );
 }
 
@@ -82,7 +81,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
   const accountSecondary = '';
   const railSlotKey = currentPath.startsWith('/mypage/registrations')
     ? 'register_right_rail'
-    : currentPath.startsWith('/mypage/paid') || currentPath.startsWith('/mypage/plans')
+    : currentPath.startsWith('/mypage/plans')
       ? 'plans_right_rail'
       : currentPath.startsWith('/mypage/submission-board')
         ? 'detail_right_rail'
