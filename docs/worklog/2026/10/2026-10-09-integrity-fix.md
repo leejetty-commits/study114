@@ -97,6 +97,18 @@
 - 「지워도 돼」 = 비교용 임시 작업 폴더 `.wt\base-fix-compare` 삭제 승인.
 - 배포 범위: 이 브랜치(무결성 1·2차). 편지 메일(`cursor/mail-lifecycle-20261009`)은 운영 DB 표 확인(배포 전 사용자 할 일)이 남아 이번 배포에 넣지 않음.
 
+## 배포 (16:11)
+
+- `main` = `afb725fd` (`--no-ff` 병합 2개: 이 브랜치 `9523f742` → 병합 `721a917c`, 인수인계 `c4dde0f7` → 병합 `afb725fd`). 병합 결과와 이 브랜치의 차이는 인수인계 문서·규칙 파일 3개뿐.
+- Actions 7개 성공: Deploy to dothome `37897570099`(1분 43초), Verify bundle, ShopPage gate, Board ACL gate, Tutor lesson step gate, Tutor register same-tab, Tutor mypage frame IA.
+- 운영 확인(`https://study114.net`, 손님, 읽기만, Cursor 브라우저):
+  - `#/myshop/study-room/999999` → 「이 공부방 소개를 찾을 수 없습니다.」, `tickets.php` 요청 0
+  - `#/support/admin/notices` → 「운영자 전용 화면이에요」
+  - `search/#/search/tutor` → 배너 버튼 「홈으로」 하나, 탭 제목 「우동공과 — 공부방·과외쌤 찾기」, `tickets.php` 요청 0
+  - `#/community/director` → 본문 `word-break: keep-all`, 「공부방 운영·모집·학부모 응대」 한 줄
+  - 메인 탭 제목 「우동공과 — 우리동네 공부방·과외쌤」
+- 운영 미확인: 로그인 상태 2건(고민방 주소로 바로 열기 → 글쓰기 버튼, 다른 역할 등록 화면 → 돌려보내기). 계정 정보는 채팅·도구에 넣지 않으므로 사용자 확인 필요.
+
 ## 배포 전 사용자 할 일
 
 - 없음(SQL·환경변수·Secrets·`.htaccess` 변경 없음).
