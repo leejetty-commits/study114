@@ -35,9 +35,11 @@ function resetCaches() {
   myTicketsCache = [];
 }
 
+/** 부트는 세션 확인 전이라 공지만 받는다. 운영 전체 문의 목록은 관리자 문의 관리 화면이 들어갈 때 받는다. */
 export async function activateSupportApi() {
   apiMode = true;
-  await hydrateSupportCache();
+  const noticeRes = await fetchNotices().catch(() => ({ notices: [] }));
+  noticesCache = (noticeRes.notices ?? []).map((n) => ({ ...n, body: [...(n.body ?? [])] }));
 }
 
 export function deactivateSupportApi() {

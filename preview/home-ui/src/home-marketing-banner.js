@@ -141,10 +141,7 @@ const SURFACE_BANNER = {
     copyId: 'tutor_find',
     layout: 'cinema',
     image: '/assets/banners/explore.webp',
-    ctas: [
-      { label: '우리동네 공부방 찾기', href: searchUiUrl('room'), external: true, kind: 'primary' },
-      { label: '홈으로', href: '', external: true, kind: 'secondary' },
-    ],
+    ctas: [{ label: '홈으로', href: '', external: true, kind: 'secondary' }],
   },
   search_student: {
     copyId: 'student_find',

@@ -1,7 +1,7 @@
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
 import { loginUrl } from '../../../shared/route-access.js';
 import { navigate } from '../state.js';
-import { isLoggedIn, getAuthUser } from '../auth-session.js';
+import { isLoggedIn, getAuthUser, isAdminUser } from '../auth-session.js';
 import {
   FAQ_TABS,
   OPERATIONAL_CONTACT,
@@ -101,10 +101,21 @@ function renderContactLoginGate() {
     </section>`;
 }
 
+function renderAdminDeniedGate() {
+  return `
+    <section class="login-wall" aria-label="운영자 전용 안내">
+      <h1>운영자 전용 화면이에요</h1>
+      <p>공지·문의 관리는 운영자만 볼 수 있어요. 문의는 고객센터의 운영문의에서 남길 수 있어요.</p>
+      <div class="sup-contact-gate__actions" style="justify-content:center;position:relative;z-index:1;display:flex;gap:10px;flex-wrap:wrap">
+        <a href="#/support" class="btn btn--primary" data-sup-nav="/support">고객센터로</a>
+      </div>
+    </section>`;
+}
+
 /** @param {string} path */
 export function renderSupportScreen(path) {
   if (isAdminSupportPath(path)) {
-    return renderAdminScreen(path);
+    return isAdminUser() ? renderAdminScreen(path) : renderAdminDeniedGate();
   }
 
   const contactPath = path === '/support/contact' || path === '/support/contact/tickets';

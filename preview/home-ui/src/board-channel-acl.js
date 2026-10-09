@@ -505,7 +505,7 @@ export function roleGateCopy(boardKey, navRole = 'guest') {
     return {
       kind: 'role',
       title: intro.title,
-      body: `아직 올라온 고민이 없습니다. 이 게시판은 ${intro.allowedRolesLabel} 회원에게 열려 있어요. 제목은 볼 수 있어요.`,
+      body: `아직 올라온 고민이 없습니다. 이 게시판은 ${boardAudienceText(intro.allowedRolesLabel)}에게 열려 있어요. 제목은 볼 수 있어요.`,
       roleLabel: intro.allowedRolesLabel,
     };
   }
@@ -516,6 +516,15 @@ export function roleGateCopy(boardKey, navRole = 'guest') {
     body: intro.body,
     roleLabel: intro.allowedRolesLabel,
   };
+}
+
+/**
+ * 「이 게시판은 ○○에게 열려 있어요」의 ○○. 「로그인한 회원」처럼 이미 「회원」으로 끝나면 다시 붙이지 않는다.
+ * @param {string} label allowedRolesLabel
+ */
+export function boardAudienceText(label) {
+  const s = String(label || '').trim();
+  return s.endsWith('회원') ? s : `${s} 회원`;
 }
 
 /** @param {string} boardKey @param {string} navRole */

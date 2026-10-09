@@ -82,6 +82,8 @@ export function bindPublicMyshopEvents(root, rerender) {
       if (fallback && (mount.querySelector('[data-pm-loading]') || mount.querySelector('.shop--empty'))) {
         mount.innerHTML = renderShowcaseHtml(fallback);
         bindMyshopEvents(root);
+      } else if (!fallback && mount.querySelector('[data-pm-loading]')) {
+        mount.innerHTML = renderShowcaseHtml(null);
       }
       return;
     }

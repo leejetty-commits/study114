@@ -29,6 +29,7 @@ import {
 import { getNavRole, navigate, getCommunityPath } from '../state.js';
 import { getAuthUser, isLoggedIn } from '../auth-session.js';
 import {
+  boardAudienceText,
   boardLoginHref,
   canComposeBoard,
   canDiscoverBoard,
@@ -434,7 +435,7 @@ function titleOnlyNotice(role, board) {
   if (role === 'guest') {
     return `<p class="concern-note">로그인하면 전체 내용을 볼 수 있어요. <a class="concern-note__link" href="${esc(boardLoginHref('community'))}">로그인</a></p>`;
   }
-  return `<p class="concern-note">이 게시판은 ${esc(intro.allowedRolesLabel)} 회원에게 열려 있어요. 지금은 제목만 볼 수 있어요.</p>`;
+  return `<p class="concern-note">이 게시판은 ${esc(boardAudienceText(intro.allowedRolesLabel))}에게 열려 있어요. 지금은 제목만 볼 수 있어요.</p>`;
 }
 
 /* ── 목록 도구 (종류 필터·정렬) ── */

@@ -168,12 +168,13 @@ function detailKey(boardKey, postId) {
 }
 
 /**
- * 지금 조건(sort·type)과 같은 목록 캐시만 돌려준다. 없으면 null.
- * @returns {{ query: {sort:string,type:string}, posts: any[], access: string, total: number, hasMore: boolean }|null}
+ * 지금 조건(sort·type)과 지금 역할로 받은 목록 캐시만 돌려준다. 없으면 null.
+ * 로그인 확인 전(손님)에 받은 목록은 로그인 뒤 역할과 달라 다시 받는다.
+ * @returns {{ query: {sort:string,type:string}, role: string, posts: any[], access: string, total: number, hasMore: boolean }|null}
  */
 export function getConcernList(boardKey, query) {
   const entry = _lists.get(boardKey);
-  if (!entry) return null;
+  if (!entry || entry.role !== getNavRole()) return null;
   return sameQuery(entry.query, normalizeListQuery(query)) ? entry : null;
 }
 
@@ -195,14 +196,14 @@ function replaceInCaches(boardKey, post) {
 
 /* ── 목록 (GET /api/board/posts.php?sort&type&limit&offset) ── */
 
-function toListEntry(data, query, prevPosts = []) {
+function toListEntry(data, query, role, prevPosts = []) {
   const access = data.access || 'full';
   const fresh = (data.posts ?? []).map((p) => normalizeConcernItem(p, access));
   const seen = new Set(prevPosts.map((p) => p.id));
   const posts = [...prevPosts, ...fresh.filter((p) => !seen.has(p.id))];
   const total = Number.isFinite(data.total) ? data.total : posts.length;
   const hasMore = typeof data.hasMore === 'boolean' ? data.hasMore : posts.length < total;
-  return { query, posts, access, total, hasMore };
+  return { query, role, posts, access, total, hasMore };
 }
 
 /**
@@ -212,13 +213,14 @@ function toListEntry(data, query, prevPosts = []) {
  */
 export async function fetchConcernPosts(boardKey, query = {}) {
   const q = normalizeListQuery(query);
+  const role = getNavRole();
   const data = await fetchBoardPosts(boardKey, {
-    navRole: getNavRole(),
+    navRole: role,
     sort: q.sort,
     type: q.type || undefined,
     limit: CONCERN_PAGE_SIZE,
   });
-  const entry = toListEntry(data, q);
+  const entry = toListEntry(data, q, role);
   _lists.set(boardKey, entry);
   return entry;
 }
@@ -228,14 +230,14 @@ export async function fetchMoreConcernPosts(boardKey) {
   const entry = _lists.get(boardKey);
   if (!entry || !entry.hasMore) return entry ?? null;
   const data = await fetchBoardPosts(boardKey, {
-    navRole: getNavRole(),
+    navRole: entry.role,
     sort: entry.query.sort,
     type: entry.query.type || undefined,
     limit: CONCERN_PAGE_SIZE,
     offset: entry.posts.length,
   });
   if (_lists.get(boardKey) !== entry) return _lists.get(boardKey) ?? null;
-  const next = toListEntry(data, entry.query, entry.posts);
+  const next = toListEntry(data, entry.query, entry.role, entry.posts);
   _lists.set(boardKey, next);
   return next;
 }
@@ -272,10 +274,11 @@ export async function fetchConcernRailPost(boardKey, postId, navRole) {
 
 /** 서버에서 글 하나를 가져온다. 없으면 post=null 로 캐시해 다시 묻지 않는다. */
 export async function fetchConcernPost(boardKey, postId) {
-  const data = await fetchBoardPosts(boardKey, { navRole: getNavRole(), postKey: postId, limit: 1 });
+  const role = getNavRole();
+  const data = await fetchBoardPosts(boardKey, { navRole: role, postKey: postId, limit: 1 });
   const access = data.access || 'full';
   const raw = (data.posts ?? []).find((p) => String(p.id) === String(postId)) ?? null;
-  const entry = { post: raw ? normalizeConcernItem(raw, access) : null, access };
+  const entry = { post: raw ? normalizeConcernItem(raw, access) : null, access, role };
   _details.set(detailKey(boardKey, postId), entry);
   return entry;
 }
@@ -285,9 +288,11 @@ export async function fetchConcernPost(boardKey, postId) {
  * @returns {{ post: any|null, access: string }|null}
  */
 export function findConcernPost(boardKey, postId) {
+  const role = getNavRole();
   const detail = _details.get(detailKey(boardKey, postId));
-  if (detail) return detail;
+  if (detail && detail.role === role) return detail;
   const entry = _lists.get(boardKey);
+  if (entry && entry.role !== role) return null;
   const post = entry?.posts.find((p) => p.id === postId);
   return post ? { post, access: entry.access } : null;
 }
@@ -318,7 +323,7 @@ export async function saveConcernPost(input) {
     throw new Error(data.message || '글 저장에 실패했습니다.');
   }
   const post = normalizeConcernItem(data.post, 'full');
-  _details.set(detailKey(input.boardKey, post.id), { post, access: 'full' });
+  _details.set(detailKey(input.boardKey, post.id), { post, access: 'full', role: getNavRole() });
   if (input.postKey) replaceInCaches(input.boardKey, post);
   else invalidateConcernList(input.boardKey);
   return post;
