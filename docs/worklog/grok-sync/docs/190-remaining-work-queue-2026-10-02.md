@@ -444,3 +444,4 @@
 - 13:31 숨김+문의 배포 성공: main 2723c5f, Deploy #394 success. 배포후 검수 중(종현 관리자·사이트, 게스트 스모크 병행).
 - 13:35 숨김+문의 게스트 스모크 **OK**: https://study114.net 홈·/search 로드·콘솔 치명0(게스트 tickets 401만)·학부모 가시 1(기존 「학생/학부모 고민방」)·번들 `index-BkqNkP6S.js`에 `unhide_request`×2·Deploy #394/`2723c5f`(관리자·운영DB 미접촉).
 - 15:29 숨김+문의 종현 배포후 검수 **OK**(관리자·사이트). → 15:3x 162 **배포지시서** [216](216-admin-162-deploy-order-2026-10-07.md) 작성(tip `0a7005c`, main `2723c5f` → ff 불가·리베이스 dry run 충돌0, SQL-first 077, GitHub Secret STUDY114_REPORT_CRON_KEY, 외부 cron 00:05·00:20 KST POST; 머지/Deploy/운영SQL 미실행).
+- [2026-10-09] 「마이샵」금지 문서 정정: 166·179·180에 인라인 정정(과외쌤 화면만 적용·공부방 등록 첫 탭 「마이샵」유지·복원·과외쌤은 「마이프로필」). 원문 삭제 없음.
