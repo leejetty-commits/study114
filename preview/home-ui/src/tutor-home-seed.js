@@ -212,6 +212,61 @@ export function bootTutorStudentDemand(index, rerender) {
   return studentBoot;
 }
 
+/** @type {object[]|null} null = 아직 조회 전 */
+let tutorLive = null;
+let tutorKey = '';
+/** @type {'idle'|'loading'|'ready'|'error'|'no-region'} */
+let tutorStatus = 'idle';
+/** @type {Promise<void>|null} */
+let tutorBoot = null;
+
+/** 홈 「우리동네 과외쌤」 탭 목록. null 이면 아직 조회 전. */
+export function getTutorHomeTutorLiveItems() {
+  return tutorLive;
+}
+
+/** @returns {'idle'|'loading'|'ready'|'error'|'no-region'} */
+export function getTutorHomeTutorFeedStatus() {
+  return tutorStatus;
+}
+
+/**
+ * 대표 과외지역에 노출된 과외쌤 베이직카드 전부(내 카드 포함).
+ * @param {string} regionId
+ * @returns {Promise<{ items: object[]|null, status: 'ready'|'error'|'no-region' }>}
+ */
+async function loadTutorHomeTutors(regionId) {
+  if (!regionId) return { items: null, status: 'no-region' };
+  try {
+    const result = await searchApi('tutor', { tutor_region_id: regionId }, { limit: 20, sort: 'latest' });
+    return { items: Array.isArray(result.items) ? result.items : [], status: 'ready' };
+  } catch {
+    return { items: null, status: 'error' };
+  }
+}
+
+/**
+ * 홈 「우리동네 과외쌤」 탭 조회. 대표 과외지역이 바뀌면 다시 조회한다.
+ * 활동지역 조회(bootTutorHome)가 끝나기 전에는 요청하지 않는다 — 그 boot 의 rerender 가 여기를 다시 부른다.
+ * rerender 는 .then 안에서만 부른다(같은 틱에 부르면 다시 그리기가 이 함수를 다시 불러 반복한다).
+ * @param {() => void} [rerender]
+ */
+export function bootTutorHomeTutors(rerender) {
+  if (!tutorHomeRegionsReady()) return null;
+  const regionId = tutorHomeRegionId(tutorHomePrimaryIndex());
+  if (tutorBoot && tutorKey === regionId) return tutorBoot;
+  tutorKey = regionId;
+  tutorLive = null;
+  tutorStatus = regionId ? 'loading' : 'no-region';
+  tutorBoot = loadTutorHomeTutors(regionId).then((result) => {
+    if (tutorKey !== regionId) return;
+    tutorLive = result.items;
+    tutorStatus = result.status;
+    if (typeof rerender === 'function') rerender();
+  });
+  return tutorBoot;
+}
+
 async function ensureHomeRegions() {
   try {
     if (isRegistrationsApiMode()) await hydrateRegistrationsCache();

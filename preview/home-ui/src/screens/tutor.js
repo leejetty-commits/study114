@@ -23,6 +23,7 @@ import { restoreMyshopScrollAndFocusIfPending } from '../myshop/return-snapshot.
 import {
   bootTutorHome,
   bootTutorStudentDemand,
+  bootTutorHomeTutors,
   readTutorMemberBox,
   readTutorHomeRegions,
 } from '../tutor-home-seed.js';
@@ -147,7 +148,6 @@ export function renderTutor() {
       hideHead: showMyBox,
       hideRegionBar: showMyBox,
       hideSearchCrossLink: showMyBox,
-      hideSelfNote: true,
     })}
     ${isProviderHomeSelfTab('tutor', tab) ? '' : renderCompareBar()}
   `;
@@ -162,6 +162,8 @@ export function bindTutorEvents(root, rerender) {
   bootTutorActivityCounts(rerender);
   if (previewState.tutorTab === 'student') {
     bootTutorStudentDemand(resolveTutorStudentRegionIndex(previewState.tutorFind), rerender);
+  } else {
+    bootTutorHomeTutors(rerender);
   }
 
   bindProviderHomeTabEvents(root, rerender, {

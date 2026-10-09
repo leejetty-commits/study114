@@ -124,8 +124,8 @@ export async function fetchSession() {
     window.location.href = oauthRoleSelectionUrl();
     return null;
   }
-  // 학생 행이 없거나 draft 인데 기본정보가 비어 있으면(서버 판정) 기본정보 화면부터 다시 채운다.
-  if (data.needs_basic_register && data.role_type === 'guardian_student' && !isGuidePublicPath()) {
+  // 기본정보를 다 채우기 전(서버 판정)에는 역할과 관계없이 사이트를 쓸 수 없다. 기본정보 화면부터 다시 채운다.
+  if (data.needs_basic_register && !isGuidePublicPath()) {
     window.location.replace(`${String(AUTH_UI_BASE).replace(/\/$/, '')}/#${basicRegisterPathForMe(data)}`);
     return null;
   }

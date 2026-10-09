@@ -32,12 +32,13 @@ function tutorPrimaryRegionLabel() {
 }
 
 /**
- * 학생 홈 0건 — 공부방 홈 빈 자리와 같은 방식: 티어마다 빈 카드 박스.
+ * 학생 홈·과외쌤 홈 0건 — 공부방 홈 빈 자리와 같은 방식: 티어마다 빈 카드 박스.
  * @param {'study_room'|'tutor'} kind
  * @param {string} place
  * @param {object} opts
+ * @param {string} [surfaceAttr]
  */
-function renderStudentHomeVacantTiers(kind, place, opts) {
+function renderStudentHomeVacantTiers(kind, place, opts, surfaceAttr = 'data-student-home-vacant') {
   const { primeSlots } = getExposurePageSizes();
   const pickRowSlots = 5;
   const section =
@@ -48,7 +49,7 @@ function renderStudentHomeVacantTiers(kind, place, opts) {
   const prime = Array.from({ length: primeSlots }, () => renderEmptyPrimePromo(kind)).join('');
   const pick = Array.from({ length: pickRowSlots }, () => renderEmptyPickPromo(kind)).join('');
   return `
-    <div class="content-section ${section.color} search-tier-results" data-surface="home-tier" data-student-home-vacant="${kind}">
+    <div class="content-section ${section.color} search-tier-results" data-surface="home-tier" ${surfaceAttr}="${kind}">
       ${renderSectionHeading({ ...section.prime, locationLabel: place })}
       ${renderSectionToolbar({ locationLabel: place })}
       <div class="expo-grid--3">${prime}</div>
@@ -319,6 +320,9 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
     if (tab === 'room') return renderStudentHomeVacantTiers('study_room', place, opts);
     if (tab === 'tutor') return renderStudentHomeVacantTiers('tutor', place, opts);
     return renderStudentHomeNoStudents(place);
+  }
+  if (pinTutorPrimary && ctx.tutorHomeReady === true && !exposureItems.length) {
+    return renderStudentHomeVacantTiers('tutor', homeTierTag, opts, 'data-tutor-home-vacant');
   }
 
   if (tab === 'room') {

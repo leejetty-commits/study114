@@ -32,18 +32,16 @@
 - [x] home-ui GNB → `searchUiUrl(tab, role)` 연동
 - [x] 탭 라벨 역할별 오버라이드 (`ROLE_SEARCH_TAB_LABELS`)
 
-## 자기 노출 vs 경쟁 확인 (`search-provider-self.js`)
+## 공급자 홈 목록 (2026-10-09 — 「본인만」 보기 폐지)
 
 | 맥락 | 공부방 `room` | 과외 `tutor` |
 |------|---------------|--------------|
-| search-ui · study_room | **본인만** (`PREVIEW_OWN_STUDY_ROOM_ID`) | — |
-| search-ui · tutor | — | **경쟁 목록** (지역 필터) |
-| home-ui · study_room 탭1 | **본인만** (`homeSelf`) | — |
-| home-ui · tutor 탭1 | — | **본인만** (`homeSelf` · `getProviderSelfFeed(..., { home: true })`) |
+| search-ui · study_room | 홍보1 지역 목록 | — |
+| search-ui · tutor | — | 지역 목록 |
+| home-ui · study_room 탭1 | 홍보1 지역 노출 카드 전부 (`getStudyRoomHomeLiveItems`) | — |
+| home-ui · tutor 탭1 | — | 대표 과외지역 노출 카드 전부, 내 카드 포함 (`bootTutorHomeTutors`) · 0장이면 빈 카드 칸 |
 
-- [x] `isProviderSelfPreviewMode(tab, role, homeSelf)` — 비교·찜 비활성
-- [x] `filterToProviderSelf` — 검색 실행 후에도 본인만 유지 (공부방·과외 홈)
-- [x] 자기 노출 안내 문구 (`search-note--self`)
+- [x] `search-provider-self.js`(본인만 걸러내기) 삭제
 
 ## 지역 피드 (`search-region-feed.js`)
 

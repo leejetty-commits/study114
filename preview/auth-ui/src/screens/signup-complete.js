@@ -42,12 +42,6 @@ function providerDisplayName(role, basic) {
   return basic?.tutor_display_name || '과외쌤';
 }
 
-function roleHomeUrl(role) {
-  if (role === 'study_room') return homeUiUrl('study-room');
-  if (role === 'tutor') return homeUiUrl('tutor');
-  return homeUiUrl('parent');
-}
-
 function renderGreetingModal() {
   return `
     <div class="ng-prompt-modal" data-ng-prompt role="dialog" aria-modal="true" aria-labelledby="ng-prompt-title">
@@ -208,9 +202,10 @@ export function bindSignupCompleteEvents(root) {
   if ((roleNow === 'study_room' || roleNow === 'tutor') && !promptDone()) {
     document.body.insertAdjacentHTML('beforeend', renderGreetingModal());
   }
-  const goRoleHome = () => {
+  // 팝업만 닫는다. 가입 완료 화면의 「상세등록 이어하기 / 나중에」는 회원이 고른다.
+  const closePrompt = () => {
     markPromptDone();
-    window.location.assign(roleHomeUrl(roleNow));
+    document.querySelectorAll('[data-ng-prompt]').forEach((el) => el.remove());
   };
   const prompt = document.querySelector('[data-ng-prompt]');
   const errorEl = prompt?.querySelector('[data-ng-error]');
@@ -226,20 +221,11 @@ export function bindSignupCompleteEvents(root) {
     errorEl.hidden = !message;
     errorEl.textContent = message || '';
   };
-  const showStatus = (message) => {
-    if (errorEl) {
-      errorEl.hidden = true;
-      errorEl.textContent = '';
-    }
-    if (!statusEl) return;
-    statusEl.hidden = false;
-    statusEl.textContent = message;
-  };
   prompt?.querySelector('[data-ng-body]')?.addEventListener('input', () => {
     hideStatus();
   });
   document.querySelector('[data-ng-skip]')?.addEventListener('click', () => {
-    goRoleHome();
+    closePrompt();
   });
   document.querySelector('[data-ng-publish]')?.addEventListener('click', async () => {
     const saved = await publishGreeting({
@@ -253,7 +239,7 @@ export function bindSignupCompleteEvents(root) {
       showError(saved.error);
       return;
     }
-    showStatus('저장되었습니다');
+    closePrompt();
   });
 
   fetchMeApi()
