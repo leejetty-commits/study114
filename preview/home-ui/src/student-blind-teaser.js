@@ -8,7 +8,8 @@
 import { isTutorUnitLabel } from '../../shared/tutor-unit-cascade.js';
 
 /**
- * 공개 표시명 마스킹 — 김○○ / 이○ / 박○학생 / 맑○○
+ * 공개 표시명 마스킹 — 마지막 글자만 가린다 (정보게시판 작성자 규칙과 같음).
+ * 3자 이상 이공○ / 남궁○, 2자 이○, 1자 ○. 끝의 「학생」은 떼고 가린 뒤 다시 붙인다(김민○학생).
  * @param {string | null | undefined} raw
  */
 export function maskPublicDisplayName(raw) {
@@ -17,11 +18,11 @@ export function maskPublicDisplayName(raw) {
   const hasStudentSuffix = /학생$/.test(s);
   const base = hasStudentSuffix ? s.replace(/학생$/, '') : s;
   const chars = [...base];
+  const suffix = hasStudentSuffix ? '학생' : '';
   if (!chars.length) return hasStudentSuffix ? '○학생' : '○○';
-  const first = chars[0];
-  const rest = chars.length - 1;
-  const mask = rest <= 1 ? '○' : '○○';
-  return `${first}${mask}${hasStudentSuffix ? '학생' : ''}`;
+  if (chars.length === 1) return `○${suffix}`;
+  if (chars.length === 2) return `${chars[0]}○${suffix}`;
+  return `${chars[0]}${chars[1]}○${suffix}`;
 }
 
 /**
@@ -114,7 +115,7 @@ export function oneLessonHopeChip(item) {
 
 /**
  * 비로그인 티저 한 줄
- * 예: 김○○ · 중등 · 수학 · 대치동 · 400~600천원
+ * 예: 김민○ · 중등 · 수학 · 대치동 · 400~600천원
  * @param {object} item
  */
 export function formatGuestStudentTeaserLine(item) {

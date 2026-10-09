@@ -36,7 +36,7 @@
 
 **코드 관찰 (이번 단계 BLOCKER 아님):**
 
-- `search-handoff.js`의 `data-action="search-open-detail"` — import/핸들러 없음 (dead code). 실제 상세 진입은 **카드 클릭** (`bindDetailDecisionEvents`) 경로.
+- `search-handoff.js`의 `data-action="search-open-detail"` — import/핸들러 없음 (dead code). 실제 상세 진입은 **카드 클릭** (`bindDetailDecisionEvents`) 경로. → 2026-10-09 카드의 「상세」 버튼과 이 dead code 모두 삭제. 확대카드는 카드 클릭으로만 연다.
 - guest 카드 찜/비교는 `data-action="login-gate"` (`guest-sections.js`) — 로그인 유도만.
 
 **운영 src/ 미동기화:** **PARTIAL** 유지 — study_room/tutor basic-register 운영 최종 확정은 별도 src/ 동기화 필요. **4단계 진행 차단 아님.**

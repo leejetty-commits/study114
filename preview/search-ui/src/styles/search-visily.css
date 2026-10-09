@@ -534,28 +534,6 @@
   gap: 0.1rem;
 }
 
-.expo-hcard__detail {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.65rem;
-  padding: 0.2rem 0.55rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.35rem;
-  background: #fff;
-  color: #475569;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  order: 0;
-}
-
-.expo-hcard__detail:hover {
-  border-color: var(--brand-blue, #2563eb);
-  color: var(--brand-blue, #2563eb);
-}
-
 .expo-hcard .expo-compare-chip {
   margin: 0;
   border-radius: 0.35rem;

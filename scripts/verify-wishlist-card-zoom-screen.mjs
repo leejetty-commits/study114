@@ -512,12 +512,13 @@ async function runAs(roleType, label) {
   );
   closeDetailModal();
 
-  const tutorDetail = tutor?.querySelector('[data-action="search-open-detail"]');
-  tutorDetail?.click();
+  ok(`[${label}] 카드에 「상세」 버튼 없음 (카드 탭으로 확대)`, !r.querySelector('.expo-hcard__detail') && !r.querySelector('[data-action="search-open-detail"]'));
+  const tutorBody = tutor?.querySelector('.expo-hcard__name') || tutor;
+  tutorBody?.click();
   await tick();
   const m2 = modal();
   ok(
-    `[${label}] 과외쌤 카드 「상세」도 같은 확대카드`,
+    `[${label}] 과외쌤 카드를 탭해도 같은 확대카드`,
     !!m2 && (m2.querySelector('.p24-modal__title')?.textContent || '') === '찜한 과외쌤',
   );
   closeDetailModal();
