@@ -111,6 +111,10 @@ export function tutorSearchCardFields(item) {
     intro_short: item.intro_short || '',
     gender: item.gender || null,
     grade_band: item.grade_band || '',
+    major_name: item.major_name || '',
+    university_status: item.university_status || null,
+    career_year_band: item.career_year_band || null,
+    proof_document_available: Boolean(item.proof_document_available),
     lessons_per_week: item.lessons_per_week ?? null,
     minutes_per_lesson: item.minutes_per_lesson ?? null,
     lesson_places: Array.isArray(item.lesson_places) ? item.lesson_places : [],
@@ -135,10 +139,6 @@ function mapTutor(item) {
     location_label: item.region_label || '',
     preferred_fee_amount: item.preferred_fee_amount ?? item.price_amount ?? null,
     university_name: item.university_name || '',
-    major_name: item.major_name || '',
-    university_status: item.university_status || null,
-    career_year_band: item.career_year_band || null,
-    proof_document_available: Boolean(item.proof_document_available),
     recommend_count: Number(item.recommend_count) || 0,
     review_count: Number(item.review_count) || 0,
     published_at: item.published_at || null,
@@ -175,7 +175,7 @@ function mapStudent(item) {
 }
 
 /** 검색 API 카드 → 홈 카드 필드. 찜 목록 카드(handoff favorites card)도 같은 매퍼를 쓴다. */
-export { mapRoom as mapSearchRoomItem, mapTutor as mapSearchTutorItem };
+export { mapRoom as mapSearchRoomItem, mapTutor as mapSearchTutorItem, mapStudent as mapSearchStudentItem };
 
 /**
  * @param {'room'|'tutor'|'student'} tab

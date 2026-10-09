@@ -86,6 +86,8 @@ function patchPool(pool, items, mapper, cap) {
   }
 }
 
+export { mapRoomItem as mapBridgeRoomItem, mapTutorItem as mapBridgeTutorItem, mapStudentItem as mapBridgeStudentItem };
+
 export function isExposureBridged() {
   return bridged;
 }

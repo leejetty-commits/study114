@@ -81,6 +81,12 @@ const fnBody = (src, name) => {
 
 ok('(1) 홈 변환: 공부방 카드 값 함수(studyRoomSearchCardFields) 사용', /export function studyRoomSearchCardFields/.test(liveSrc) && /\.\.\.studyRoomSearchCardFields\(item\)/.test(fnBody(liveSrc, 'mapRoom')));
 ok('(1) 확대카드 대체 변환(exposure-bridge): 같은 함수 사용', /studyRoomSearchCardFields\(item\)/.test(fnBody(bridgeSrc, 'mapRoomItem')));
+{
+  const seedSrc = read('preview/home-ui/src/study-room-home-seed.js');
+  ok('(1) 공부방 모드 홈 변환(study-room-home-seed mapLiveRoom): 같은 함수 사용', /\.\.\.studyRoomSearchCardFields\(item\)/.test(fnBody(seedSrc, 'mapLiveRoom')));
+  ok('(2) 공부방 모드 홈 변환: summary 로 대신 채우지 않음', fnBody(seedSrc, 'mapLiveRoom').length > 0 && !/summary/.test(fnBody(seedSrc, 'mapLiveRoom')));
+  ok('(2) 쓰지 않던 값 지어내기 변환(mapSearchItemToDetail) 삭제', !/mapSearchItemToDetail/.test(read('preview/search-ui/src/search-handoff.js')));
+}
 ok('(2) 홈 변환: summary 로 대신 채우지 않음', !/summary/.test(fnBody(liveSrc, 'mapRoom')) && !/summary/.test(fnBody(liveSrc, 'studyRoomSearchCardFields')));
 ok('(2) 확대카드 대체 변환: summary 로 대신 채우지 않음', !/summary/.test(fnBody(bridgeSrc, 'mapRoomItem')));
 {
@@ -171,6 +177,12 @@ ok('(1) 홈·찜 변환: 슬로건 그대로', mapped.slogan === '잘 가르쳐�
   ok('(3) 계동공부방1 베이직: 원생수 칸 있음 · 「—」', s['원생수'] === '—', s['원생수']);
   ok('(3) 계동공부방1 베이직: 수업운영방식 칸 있음 · 「—」', s['수업운영방식'] === '—', s['수업운영방식']);
   ok('(3) 계동공부방1 베이직: 가격 자리 「—」', /expo-hcard__price">—</.test(html));
+}
+{
+  const seed = await load('preview/home-ui/src/study-room-home-seed.js').catch(() => ({}));
+  const viaSeed = typeof seed.mapLiveRoom === 'function' ? seed.mapLiveRoom(SERVER_ROOM) : null;
+  const s = viaSeed ? slots(renderBrowseList('study_room', [viaSeed], { guest: false })) : {};
+  ok('(1) 공부방 모드 홈 경로 베이직: 교습형태·대상·슬로건 그대로', s['교습형태'] === '공부방' && s['대상'] === '초등' && s['슬로건'] === '잘 가르쳐요', JSON.stringify(s));
 }
 
 const ROOM_LABELS_BASIC = ['교습형태', '대상', '과목', '원생수', '수업운영방식', '슬로건'];
