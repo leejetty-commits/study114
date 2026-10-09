@@ -30,6 +30,19 @@ export const GUARDIAN_PLANS_COPY = {
   footnote: '상품 구성과 가격은 상품 안내에서 확인할 수 있어요.',
 };
 
+/** 공급자 꾸미기 화면 이름 — 공부방 마이샵, 과외쌤 마이프로필, 그 밖(로그인 전·학생)은 둘 다 */
+export const PROVIDER_PAGE_NAME = {
+  study_room: '마이샵',
+  tutor: '마이프로필',
+  other: '마이샵·마이프로필',
+};
+
+/** @param {string} [role] */
+export function providerPageName(role) {
+  if (role === 'study_room' || role === 'tutor') return PROVIDER_PAGE_NAME[role];
+  return PROVIDER_PAGE_NAME.other;
+}
+
 export const HOME_STATS_NOTE = '내 상태는 활동에 따라 달라져요.';
 
 export const WISHLIST_NOTE = '찜한 공부방·과외쌤을 모아 보고, 비교에도 담을 수 있어요.';

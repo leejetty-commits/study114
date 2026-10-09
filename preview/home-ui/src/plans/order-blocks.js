@@ -8,6 +8,7 @@ import { formatKrw, resolveCheckoutAmount } from './runtime-config.js';
 import { getStudyRoom } from '../study-room-reg/store.js';
 import { getTutor } from '../tutor-reg/store.js';
 import { buildPlansHref, parsePlansQuery } from './router.js';
+import { providerPageName } from '../mypage/mypage-copy.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -432,8 +433,9 @@ export function renderAccessPurchaseCheck() {
 
 /**
  * @param {'position'|'access'} family
+ * @param {string} [role]
  */
-export function renderPolicyAccordion(family) {
+export function renderPolicyAccordion(family, role) {
   if (family === 'access') {
     return `
       <details class="plans-policy-acc">
@@ -456,7 +458,7 @@ export function renderPolicyAccordion(family) {
         <ul class="plans-tier-list">
           <li>시작 전: 전액 환불</li>
           <li>시작 후: 요청일 다음 날부터 남은 미사용 기간을 실제 결제금액 기준 일할 계산</li>
-          <li>만료 후 베이직카드(기본 노출)로 복귀 · 프로필 꾸미기는 유지</li>
+          <li>만료 후 베이직카드(기본 노출)로 복귀 · ${providerPageName(role)}은 유지</li>
           <li>자동연장 없음</li>
         </ul>
         <p class="mypage-muted">환불 금액은 서버 정본으로 산정합니다. 화면 안내는 참고용입니다.</p>
@@ -464,10 +466,11 @@ export function renderPolicyAccordion(family) {
     </details>`;
 }
 
-export function renderBasicFreeRow() {
+/** @param {string} [role] */
+export function renderBasicFreeRow(role) {
   return `
     <div class="plans-basic-free" data-plans-basic-free>
-      <strong>프로필 꾸미기와 베이직카드 노출은 무료입니다.</strong>
+      <strong>${providerPageName(role)} 꾸미기와 베이직카드 노출은 무료입니다.</strong>
       <p>별도의 끌어올리기(UP) 상품은 제공하지 않습니다. 더 좋은 자리가 필요하면 노출상품을 선택하세요.</p>
     </div>`;
 }

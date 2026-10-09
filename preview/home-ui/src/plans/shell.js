@@ -7,6 +7,7 @@ import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { renderPromoWithRightRail } from '../right-rail.js';
 import { isPaidHubPath, isPaidStorefrontPath, isPaidTrackPath, wrapPaidStorefront } from './theme.js';
 import { renderPlansHubCinema, renderPlansHubRailCard } from './hub-home.js';
+import { getPlansEffectiveRole } from './profiles.js';
 
 /**
  * plans 라우트의 getNavRole()은 guest로 고정된다.
@@ -41,7 +42,7 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
               <a href="#/plans" class="plans-sf-hub" data-plans-nav="/plans">상품홈</a>`;
     const trackHtml = `
       <div class="plans-hub-shell${isHub ? ' plans-hub-shell--cinema' : ''}" data-plans-track${isHub ? ' data-plans-hub-v21' : ' data-plans-shell-fit'}>
-        ${isHub ? renderPlansHubCinema() : ''}
+        ${isHub ? renderPlansHubCinema(getPlansEffectiveRole()) : ''}
         <div class="plans-hub-warm" aria-hidden="true"></div>
         <div class="plans-hub-gutter-l" aria-hidden="true"></div>
         ${renderPlansNav(currentPath, { guestCatalogOnly, shellFit: true })}
