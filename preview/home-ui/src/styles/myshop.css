@@ -691,3 +691,21 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* 마이페이지 마이샵 탭: 바깥 큰 박스 없음 (공개 #/myshop 은 위 .shop 그대로) */
+.mypage-content .mp-room-panel .shop[data-shop-root],
+.mypage-content .mp-room-panel .shop.shop--loading {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  animation: none;
+}
+
+.mypage-content .mp-room-panel .shop[data-shop-root] .shop-bento__label {
+  font-size: 0.75rem;
+}
