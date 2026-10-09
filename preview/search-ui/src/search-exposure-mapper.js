@@ -43,7 +43,7 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
   const id = Number(apiItem.id);
 
   if (tab === 'room') {
-    const summaryLines = String(apiItem.summary || '').split('\n').filter(Boolean);
+    // 카드 칸은 응답 값 그대로. summary 줄로 과목·소개를 대신 채우지 않는다.
     const pickContent = (key, fallback = '') =>
       Object.prototype.hasOwnProperty.call(apiItem, key) ? apiItem[key] ?? fallback : fallback;
 
@@ -53,15 +53,15 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       study_room_name: String(apiItem.title || ''),
       location_label: normalizeApiRegionLabel(tab, apiItem.region_label || '', apiItem),
       price_amount: apiItem.price_amount ?? null,
-      main_subject_note: apiItem.main_subject_note || summaryLines[0] || '',
+      main_subject_note: String(apiItem.main_subject_note || ''),
       grade_band: apiItem.grade_band || '',
-      intro_short: String(pickContent('intro_short', summaryLines[1] || '')),
+      intro_short: String(pickContent('intro_short', '')),
       intro_long: String(pickContent('intro_long', '')),
       feature_1: String(pickContent('feature_1', '')),
       feature_2: String(pickContent('feature_2', '')),
       feature_3: String(pickContent('feature_3', '')),
       slogan: String(pickContent('slogan', '')),
-      teaching_style: String(pickContent('teaching_style', summaryLines[2] || '')),
+      teaching_style: String(pickContent('teaching_style', '')),
       lesson_place_type: apiItem.lesson_place_type || null,
       capacity_per_time: apiItem.capacity_per_time || null,
       lesson_operation_type: apiItem.lesson_operation_type || null,

@@ -9,6 +9,7 @@ import {
   formatStudentBudgetCard,
   formatLessonOperationType,
   formatLessonPlace,
+  formatStudyRoomCapacity,
   formatTutorLessonPlaces,
   formatTeachingStyleBadges,
   formatUniversityStatus,
@@ -65,11 +66,17 @@ function blankDash(text) {
   return text === '—' ? '' : text;
 }
 
+/** 카드 칸 값 — 비어 있으면 「—」. 칸은 없애지 않는다. */
+function slotDash(text) {
+  const s = String(text ?? '').trim();
+  return s || '—';
+}
+
 /** 괄호 필드 — 값만 */
 function valOnly(text, opts = {}) {
   const { cls: extraCls, ...rest } = opts;
   return {
-    text: blankDash(text || ''),
+    text: slotDash(text),
     cls: `expo-tbl__cell--val-only${extraCls ? ` ${extraCls}` : ''}`,
     ...rest,
   };
@@ -78,7 +85,7 @@ function valOnly(text, opts = {}) {
 /** 항목제목 + 값 (대표·추천 노출 표) */
 function labeled(label, text, opts = {}) {
   return {
-    html: `<span class="expo-tbl__label">${esc(label)}</span><span class="expo-tbl__val">${esc(blankDash(text || ''))}</span>`,
+    html: `<span class="expo-tbl__label">${esc(label)}</span><span class="expo-tbl__val">${esc(slotDash(text))}</span>`,
     cls: opts.cls || '',
     col: opts.col,
   };
@@ -338,15 +345,8 @@ function renderPickStudyRoomMedia(item) {
   );
 }
 
-/** 교습형태 미입력 시 (선택) */
-function optionalStudyRoomPlace(lesson_place_type) {
-  const v = formatLessonPlace(lesson_place_type);
-  return v === '—' ? '(선택)' : v;
-}
-
 function optionalTutorPlaces(lesson_places) {
-  const v = formatTutorLessonPlaces(lesson_places);
-  return v === '—' ? '(선택)' : v;
+  return formatTutorLessonPlaces(lesson_places);
 }
 
 function optionalStudentPlaces(lesson_places) {
@@ -355,10 +355,7 @@ function optionalStudentPlaces(lesson_places) {
 }
 
 function appendSloganAndActions(rows, item, actions, { showIntro = true } = {}) {
-  const slogan = distinctSlogan(item);
-  if (slogan || !String(item?.slogan || '').trim()) {
-    rows.push([labeled('슬로건', slogan || '—', { col: 2, cls: 'expo-tbl__cell--slogan' })]);
-  }
+  rows.push([labeled('슬로건', item?.slogan, { col: 2, cls: 'expo-tbl__cell--slogan' })]);
   rows.push([{ html: actions, col: 2, cls: 'expo-tbl__cell--actions' }]);
   return rows;
 }
@@ -427,9 +424,9 @@ function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = fa
       [{ html: badgeCell, col: 2, cls: 'expo-tbl__cell--badges' }],
       [labeled('대상', item.grade_band), studyRoomPriceCell(item)],
       [labeled('과목', item.main_subject_note, { col: 2 })],
-      [labeled('교습형태', optionalStudyRoomPlace(item.lesson_place_type), { col: 2 })],
-      [labeled('원생수', item.capacity_per_time || '—', { col: 2 })],
-      [labeled('수업형태', formatLessonOperationType(item.lesson_operation_type), { col: 2 })],
+      [labeled('교습형태', formatLessonPlace(item.lesson_place_type), { col: 2 })],
+      [labeled('원생수', formatStudyRoomCapacity(item.capacity_per_time), { col: 2 })],
+      [labeled('수업운영방식', formatLessonOperationType(item.lesson_operation_type), { col: 2 })],
       [labeled('특징', joinFeatures(item, featureMax), { col: 2, cls: 'expo-tbl__cell--features' })],
     ];
     return appendSloganAndActions(rows, item, actions, { showIntro });
@@ -440,8 +437,8 @@ function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = fa
     [{ html: badgeCell, col: 2, cls: 'expo-tbl__cell--badges' }],
     [labeled('대상', item.grade_band), studyRoomPriceCell(item)],
     [labeled('과목', item.main_subject_note, { col: 2 })],
-    [labeled('교습형태', optionalStudyRoomPlace(item.lesson_place_type)), labeled('원생수', item.capacity_per_time || '—')],
-    [labeled('수업형태', formatLessonOperationType(item.lesson_operation_type), { col: 2 })],
+    [labeled('교습형태', formatLessonPlace(item.lesson_place_type)), labeled('원생수', formatStudyRoomCapacity(item.capacity_per_time))],
+    [labeled('수업운영방식', formatLessonOperationType(item.lesson_operation_type), { col: 2 })],
     [labeled('특징', joinFeatures(item, featureMax), { col: 2, cls: 'expo-tbl__cell--features' })],
   ];
   if (showIntro) {
@@ -662,18 +659,19 @@ function featureTagList(item, max = 3) {
   return [item.feature_1, item.feature_2, item.feature_3].filter(Boolean).slice(0, max);
 }
 
-/** 특징 칩과 같은 문구(예: IELTS)를 슬로건에 한 번 더 붙이지 않는다. */
-function distinctSlogan(item) {
-  const slogan = String(item?.slogan || '').trim();
-  if (!slogan) return '';
-  const features = [item.feature_1, item.feature_2, item.feature_3].map((v) => String(v || '').trim());
-  return features.includes(slogan) ? '' : slogan;
-}
-
 function renderHcardMetaItem(label, value) {
   const v = blankDash(value || '');
   if (!v) return '';
   return `<li class="expo-hcard__meta-item"><span class="expo-hcard__k">${esc(label)}</span><span class="expo-hcard__v">${esc(v)}</span></li>`;
+}
+
+/** 공부방·과외쌤 베이직 칸 — 값이 없어도 항목제목과 「—」를 보여 준다. */
+function renderHcardSlot(label, value) {
+  return `<li class="expo-hcard__meta-item"><span class="expo-hcard__k">${esc(label)}</span><span class="expo-hcard__v">${esc(slotDash(value))}</span></li>`;
+}
+
+function renderHcardSlogan(slogan) {
+  return `<p class="expo-hcard__slogan"><span class="expo-hcard__k">슬로건</span> ${esc(slotDash(slogan))}</p>`;
 }
 
 function renderBasicStudyRoomRow(item, opts) {
@@ -699,13 +697,13 @@ function renderBasicStudyRoomRow(item, opts) {
             valOnly(formatMonthlyWon(item.price_amount), { cls: 'expo-tbl__cell--price', col: 3 }),
           ],
           [
-            labeled('교습형태', optionalStudyRoomPlace(item.lesson_place_type)),
+            labeled('교습형태', formatLessonPlace(item.lesson_place_type)),
             labeled('대상', item.grade_band),
             labeled('과목', item.main_subject_note),
-            labeled('원생수', item.capacity_per_time || '—'),
+            labeled('원생수', formatStudyRoomCapacity(item.capacity_per_time)),
             labeled('수업운영방식', formatLessonOperationType(item.lesson_operation_type)),
           ],
-          [labeled('슬로건', item.slogan || '—', { col: 5 })],
+          [labeled('슬로건', item.slogan, { col: 5 })],
           [{ html: actions, col: 5, cls: 'expo-tbl__cell--actions' }],
         ],
         'expo-tbl--basic expo-tbl--card',
@@ -713,7 +711,6 @@ function renderBasicStudyRoomRow(item, opts) {
     </article>`;
   }
 
-  const slogan = item.slogan || '';
   const badgeLayers = renderCardBadgeLayers('study_room', item);
   return `
     <article class="expo-basic expo-basic--study_room expo-hcard" data-provider-id="${item.id}" data-provider-kind="study_room">
@@ -725,18 +722,18 @@ function renderBasicStudyRoomRow(item, opts) {
         <div class="expo-hcard__top">
           <div class="expo-hcard__title-row">
             <h3 class="expo-hcard__name">${esc(item.study_room_name || '')}</h3>
-            ${locationLabel ? `<span class="expo-hcard__loc">${esc(locationLabel)}</span>` : ''}
+            <span class="expo-hcard__loc">${esc(slotDash(locationLabel))}</span>
           </div>
           <p class="expo-hcard__price">${esc(formatMonthlyWon(item.price_amount))}</p>
         </div>
         <ul class="expo-hcard__meta">
-          ${renderHcardMetaItem('교습형태', optionalStudyRoomPlace(item.lesson_place_type))}
-          ${renderHcardMetaItem('대상', item.grade_band)}
-          ${renderHcardMetaItem('과목', item.main_subject_note)}
-          ${renderHcardMetaItem('원생수', item.capacity_per_time || '—')}
-          ${renderHcardMetaItem('수업운영방식', formatLessonOperationType(item.lesson_operation_type))}
+          ${renderHcardSlot('교습형태', formatLessonPlace(item.lesson_place_type))}
+          ${renderHcardSlot('대상', item.grade_band)}
+          ${renderHcardSlot('과목', item.main_subject_note)}
+          ${renderHcardSlot('원생수', formatStudyRoomCapacity(item.capacity_per_time))}
+          ${renderHcardSlot('수업운영방식', formatLessonOperationType(item.lesson_operation_type))}
         </ul>
-        ${slogan ? `<p class="expo-hcard__slogan">${esc(slogan)}</p>` : ''}
+        ${renderHcardSlogan(item.slogan)}
       </div>
       <div class="expo-hcard__side">
         <div class="expo-hcard__actions">${actions}</div>
@@ -778,7 +775,7 @@ function renderBasicTutorRow(item, opts) {
             valOnly(schedule),
             labeled('특징', item.feature_1 || '—'),
           ],
-          ...(distinctSlogan(item) ? [[labeled('슬로건', distinctSlogan(item), { col: 5 })]] : []),
+          [labeled('슬로건', item.slogan, { col: 5 })],
           [{ html: actions, col: 5, cls: 'expo-tbl__cell--actions' }],
         ],
         'expo-tbl--basic expo-tbl--card',
@@ -789,7 +786,6 @@ function renderBasicTutorRow(item, opts) {
   const tags = featureTagList(item)
     .map((t) => `<span class="expo-hcard__tag">${esc(t)}</span>`)
     .join('');
-  const slogan = distinctSlogan(item);
   const gender = item.gender && item.gender !== '—' ? formatGender(item.gender) : '';
   const nameLine = gender
     ? `<span class="expo-hcard__gender">${esc(gender)}</span>${esc(item.tutor_display_name || '')}`
@@ -799,29 +795,25 @@ function renderBasicTutorRow(item, opts) {
     <article class="expo-basic expo-basic--tutor expo-hcard" data-provider-id="${item.id}" data-provider-kind="tutor">
       <div class="expo-hcard__media-wrap">
         ${renderMedia(item.image_path, item.tutor_display_name, 'list')}
-        ${item.grade_band ? `<span class="expo-hcard__badge">${esc(item.grade_band)}</span>` : ''}
+        <span class="expo-hcard__badge">${esc(slotDash(item.grade_band))}</span>
         ${badgeLayers}
       </div>
       <div class="expo-hcard__body">
         <div class="expo-hcard__top">
           <div class="expo-hcard__title-row">
             <h3 class="expo-hcard__name">${nameLine}</h3>
-            ${locationLabel ? `<span class="expo-hcard__loc">${esc(locationLabel)}</span>` : ''}
+            <span class="expo-hcard__loc">${esc(slotDash(locationLabel))}</span>
           </div>
           <p class="expo-hcard__price">${esc(formatTutorFeeCard(item))}</p>
         </div>
         <ul class="expo-hcard__meta">
-          ${renderHcardMetaItem('과목', item.main_subject_note)}
-          ${renderHcardMetaItem('원생수', formatTutorStudentTarget(item))}
-          ${renderHcardMetaItem('수업장소', optionalTutorPlaces(item.lesson_places))}
-          ${
-            schedule && schedule !== '—'
-              ? `<li class="expo-hcard__meta-item"><span class="expo-hcard__v">${esc(schedule)}</span></li>`
-              : ''
-          }
+          ${renderHcardSlot('과목', item.main_subject_note)}
+          ${renderHcardSlot('원생수', formatTutorStudentTarget(item))}
+          ${renderHcardSlot('수업장소', optionalTutorPlaces(item.lesson_places))}
+          <li class="expo-hcard__meta-item"><span class="expo-hcard__v">${esc(slotDash(schedule))}</span></li>
         </ul>
-        ${tags ? `<div class="expo-hcard__tags">${tags}</div>` : ''}
-        ${slogan ? `<p class="expo-hcard__slogan">${esc(slogan)}</p>` : ''}
+        <div class="expo-hcard__tags"><span class="expo-hcard__k">특징</span>${tags || `<span class="expo-hcard__v">—</span>`}</div>
+        ${renderHcardSlogan(item.slogan)}
       </div>
       <div class="expo-hcard__side">
         <div class="expo-hcard__actions">${actions}</div>

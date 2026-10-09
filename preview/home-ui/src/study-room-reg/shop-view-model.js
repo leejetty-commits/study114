@@ -183,7 +183,7 @@ export function buildShopViewModel(s, room = {}) {
     { label: '교습형태', value: place },
     { label: '원생수', value: formatCapacity(s?.capacity_per_time) },
     { label: '가격대', value: fee },
-    { label: '수업형태', value: formatLessonOperation(s?.lesson_operation_type) },
+    { label: '수업운영방식', value: formatLessonOperation(s?.lesson_operation_type) },
     { label: '1일 수업', value: formatMinutesPerLesson(s?.minutes_per_lesson) },
     { label: '주당 회수', value: formatWeeklyCount(s?.lessons_per_week) },
     { label: '1:1', value: formatBoolFlag(s?.one_on_one_available, '가능') },

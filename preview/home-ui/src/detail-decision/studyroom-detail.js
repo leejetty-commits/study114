@@ -2,6 +2,7 @@ import {
   formatMonthlyWon,
   formatLessonOperationType,
   formatLessonPlace,
+  formatStudyRoomCapacity,
 } from '../exposure-format.js';
 import { renderMedia, listingImage } from '../exposure-render.js';
 import { esc, studyRoomParentInquiryLine } from './detail-utils.js';
@@ -37,8 +38,8 @@ export function renderStudyRoomDetailBody(item, viewer) {
         <dt>대상</dt><dd>${esc(item.grade_band || '—')}</dd>
         <dt>위치</dt><dd>${esc(locationLabel)}</dd>
         <dt>교습형태</dt><dd>${esc(formatLessonPlace(item.lesson_place_type))}</dd>
-        <dt>수업형태</dt><dd>${esc(formatLessonOperationType(item.lesson_operation_type))}</dd>
-        <dt>원생수</dt><dd>${esc(item.capacity_per_time || '—')}</dd>
+        <dt>수업운영방식</dt><dd>${esc(formatLessonOperationType(item.lesson_operation_type))}</dd>
+        <dt>원생수</dt><dd>${esc(formatStudyRoomCapacity(item.capacity_per_time))}</dd>
         <dt>월 수강료</dt><dd>${esc(formatMonthlyWon(item.price_amount))}</dd>
         <dt>슬로건</dt><dd>${esc(item.slogan || '—')}</dd>
         <dt>특징</dt><dd>${esc(features)}</dd>
