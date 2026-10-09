@@ -162,4 +162,8 @@
 ### 커밋·승인
 
 - 2차 작업 커밋 `eee1c375`. 브랜치 CI: Board ACL gate·Verify bundle 성공.
-- main 병합: 사용자 승인 대기.
+- 작업기록 커밋 `e2871275`.
+- main 병합 승인: 사용자 2026-10-09 「병합 배포」 (커밋 `e2871275`). 같은 답에서 학생 카드 「세 가지 모두 고치기」(별도 브랜치) 지시.
+- main 병합: 분리 worktree `.wt/merge-rcs2`에서 `--no-ff`, 병합 커밋 `2f34c476` (`8bbfd88f` → `2f34c476`).
+- main Actions(`2f34c476`): ShopPage gate·Board ACL gate·Verify bundle·Deploy to dothome 모두 성공.
+- 운영 번들: 홈 `index-D_x1_xmE.js`(과외쌤 공통 함수에 학과·경력·증빙 있음), 찾기 `/search/` `index-3GxTys0z.js`(값 지어내던 `lessons_per_week:2,minutes_per_lesson:90` 없음). 로그인 화면 눈확인은 하지 않음.
