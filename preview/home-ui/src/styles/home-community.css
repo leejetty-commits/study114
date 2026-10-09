@@ -39,7 +39,7 @@
 @media (min-width: 900px) {
   .concern-frame { grid-template-columns: 13rem minmax(0, 1fr); gap: var(--space-6); }
 }
-.concern-frame__body { min-width: 0; display: flex; flex-direction: column; gap: var(--space-5); }
+.concern-frame__body { min-width: 0; display: flex; flex-direction: column; gap: var(--space-5); word-break: keep-all; overflow-wrap: break-word; }
 .concern-nav {
   position: sticky;
   top: calc(var(--preview-toolbar-h, 0px) + var(--ops-chrome-h, 0px) + 5.5rem);

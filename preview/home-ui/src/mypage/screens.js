@@ -173,9 +173,25 @@ export function renderMypageScreen(path) {
     return renderStudentRegScreen(dest);
   }
 
-  if (isStudentRegPath(path)) return renderStudentRegScreen(path);
-  if (isStudyRoomRegPath(path)) return renderStudyRoomRegScreen(path);
-  if (isTutorRegPath(path)) return renderTutorRegScreen(path);
+  // 등록 화면은 자기 역할 것만. 주소로 다른 역할 등록 화면에 들어오면 내 등록으로 돌려보낸다.
+  const studentReg = isStudentRegPath(path);
+  const studyRoomReg = isStudyRoomRegPath(path);
+  const tutorReg = isTutorRegPath(path);
+  if (studentReg || studyRoomReg || tutorReg) {
+    const own =
+      (r === 'parent' && studentReg) || (r === 'study_room' && studyRoomReg) || (r === 'tutor' && tutorReg);
+    if (!own) {
+      const dest = getDefaultMypagePath(r);
+      queueMicrotask(() => {
+        const hashPath = (window.location.hash.slice(1) || '').split('?')[0];
+        if (hashPath === path) window.location.replace(`#${dest}`);
+      });
+      return renderMypageScreen(dest);
+    }
+  }
+  if (studentReg) return renderStudentRegScreen(path);
+  if (studyRoomReg) return renderStudyRoomRegScreen(path);
+  if (tutorReg) return renderTutorRegScreen(path);
 
   if (path === '/mypage/registrations') return renderRegistrationsIndex(r);
   if (path === '/mypage/wishlist') return renderWishlist();
