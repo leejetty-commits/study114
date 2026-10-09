@@ -66,4 +66,8 @@
 
 - 작업 전 확인: 사용자 2026-10-09 22:49 「1-a 2-b 3-a」.
 - 작업 커밋 `fd95fafc`. 브랜치 CI: Verify bundle·Board ACL gate 성공.
-- main 병합: 사용자 승인 대기.
+- 작업기록 커밋 `dfb2c616`.
+- main 병합 승인: 사용자 2026-10-09 23:06 「병합 배포」 (커밋 `dfb2c616`).
+- main 병합: 분리 worktree `.wt/merge-scf`에서 `--no-ff`, 병합 커밋 `8ba65742` (`2f34c476` → `8ba65742`).
+- main Actions(`8ba65742`): ShopPage gate·Board ACL gate·Verify bundle·Deploy to dothome 모두 성공.
+- 운영 확인: 홈 `index-yMZhsvJ3.js`·찾기 `/search/` `index-yuDX0_hu.js` 모두 「선생님만 보기」 문구 있음. 운영 학생 검색 API(POST, 손님) `ok=true`·SQL 오류 없음(새 SELECT 칸이 운영 DB에 있음, 손님 범위라 0건). 로그인 화면 눈확인은 하지 않음.
