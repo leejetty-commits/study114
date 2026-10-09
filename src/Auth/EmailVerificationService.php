@@ -6,6 +6,8 @@ namespace Study114\Auth;
 
 use PDO;
 use Study114\Database\Connection;
+use Study114\Mail\MemberMailRole;
+use Study114\Mail\MemberMailTemplate;
 
 /** 9장 C-2 — 가입 완료 조건 + 공개·쪽지 2차 게이트 */
 final class EmailVerificationService
@@ -58,11 +60,13 @@ final class EmailVerificationService
         $raw = $this->tokens->create($userId, 'email_verify', (int) $this->config['email_verify_ttl_minutes']);
 
         $link = $this->config['api_base'] . '/api/auth/email/verify.php?token=' . rawurlencode($raw);
-        $sent = $this->mailer->send(
-            $email,
-            '[우동공과] 이메일 확인',
-            "안녕하세요.\n\n가입을 완료하려면 아래 링크를 눌러 이메일을 확인해 주세요.\n링크는 새 탭에서 열립니다. 확인이 끝나면, 가입을 시작했던 원래 화면에서 기본정보를 입력해 주세요.\n\n{$link}\n\n이 메일은 로그인 및 계정 확인에 사용됩니다."
+        $mail = EmailVerifyMailTemplate::build(
+            MemberMailRole::lookup(Connection::get(), $userId),
+            $link,
+            (int) $this->config['email_verify_ttl_minutes'],
+            MemberMailTemplate::supportUrl((string) ($this->config['home_ui'] ?? ''))
         );
+        $sent = $this->mailer->send($email, $mail['subject'], $mail['plain'], $mail['html']);
         if (!$sent) {
             $this->tokens->invalidatePurpose($userId, 'email_verify');
             return ['sent' => false, 'resend_available_in' => 0, 'already_verified' => false];

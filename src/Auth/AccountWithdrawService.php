@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use PDO;
 use RuntimeException;
 use Study114\Database\Connection;
+use Study114\Mail\MemberLifecycleMailer;
 
 final class AccountWithdrawService
 {
@@ -36,7 +37,12 @@ final class AccountWithdrawService
             throw new RuntimeException('계정을 찾을 수 없습니다.');
         }
 
+        $farewell = $this->lifecycleMailer($pdo);
+        $snapshot = $farewell?->captureWithdrawSnapshot($userId);
+
         $this->runPurge($pdo, $userId);
+
+        $farewell?->sendWithdrawFarewell($snapshot);
 
         return [
             'user_id' => $userId,
@@ -122,6 +128,18 @@ final class AccountWithdrawService
         }
 
         return $first . '○○';
+    }
+
+    /** 본인 탈퇴 완료 메일. 관리자 강제 탈퇴(purgeWithdrawnAccount 직접 호출)에서는 보내지 않는다. */
+    private function lifecycleMailer(PDO $pdo): ?MemberLifecycleMailer
+    {
+        try {
+            return new MemberLifecycleMailer($pdo);
+        } catch (\Throwable $e) {
+            error_log('[lifecycle-mail] withdraw hook: ' . $e->getMessage());
+
+            return null;
+        }
     }
 
     private function runPurge(PDO $pdo, int $userId): void

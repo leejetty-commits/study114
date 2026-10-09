@@ -7,6 +7,7 @@ namespace Study114\Paid;
 use InvalidArgumentException;
 use PDO;
 use Study114\Database\Connection;
+use Study114\Mail\MemberLifecycleMailer;
 use Study114\Messages\MessagesRepository;
 
 /**
@@ -31,6 +32,7 @@ final class ProviderCheckoutService
         ?PaidBadgeRepository $badges = null,
         ?PDO $pdo = null,
         ?ImmediateMemoRepository $immediate = null,
+        private ?MemberLifecycleMailer $lifecycleMail = null,
     ) {
         $this->pdo = $pdo ?? Connection::get();
         $this->orders = $orders ?? new ProviderCheckoutRepository($this->pdo);
@@ -450,6 +452,7 @@ final class ProviderCheckoutService
                         $payload['primary_subject_id'] = (int) $grant['primary_subject_id'];
                     }
                 }
+                $this->notifyPositionPurchase($userId, $paid, $payload);
 
                 return $payload;
             }
@@ -908,6 +911,22 @@ final class ProviderCheckoutService
         $decoded = json_decode($raw, true);
 
         return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * Prime·Pick 구매 감사 메일. 결제·지급은 이미 커밋됐으므로 실패해도 응답은 그대로다.
+     *
+     * @param array<string, mixed> $order
+     * @param array<string, mixed> $payload
+     */
+    private function notifyPositionPurchase(int $userId, array $order, array $payload): void
+    {
+        try {
+            $this->lifecycleMail ??= new MemberLifecycleMailer($this->pdo);
+            $this->lifecycleMail->afterPositionPurchase($userId, $payload, $this->decodeOrderSnapshot($order));
+        } catch (\Throwable $e) {
+            error_log('[lifecycle-mail] purchase hook: ' . $e->getMessage());
+        }
     }
 
     /** @param array<string, mixed> $order */
