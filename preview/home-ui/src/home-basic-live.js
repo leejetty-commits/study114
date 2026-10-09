@@ -46,8 +46,30 @@ function scopeFilters(kind) {
   return state.scope[kind] || null;
 }
 
+/**
+ * 공부방 카드 칸 = 검색 응답 값 그대로. 응답에 없으면 비운다.
+ * summary 줄로 과목·소개를 대신 채우지 않는다.
+ */
+export function studyRoomSearchCardFields(item) {
+  return {
+    main_subject_note: item.main_subject_note || '',
+    intro_short: item.intro_short || '',
+    grade_band: item.grade_band || '',
+    lesson_place_type: item.lesson_place_type || null,
+    capacity_per_time: item.capacity_per_time || null,
+    lesson_operation_type: item.lesson_operation_type || null,
+    feature_1: item.feature_1 || '',
+    feature_2: item.feature_2 || '',
+    feature_3: item.feature_3 || '',
+    slogan: item.slogan || '',
+    detail_completion_status: item.detail_completion_status || '',
+    image_path: item.image_path || item.image_path_basic || '',
+    image_path_basic: item.image_path_basic || '',
+    image_path_prime: item.image_path_prime || '',
+  };
+}
+
 function mapRoom(item) {
-  const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
   const room = {
     id: item.id,
     study_room_name: item.title || '',
@@ -57,8 +79,7 @@ function mapRoom(item) {
     review_count: Number(item.review_count) || 0,
     published_at: item.published_at || null,
     created_at: item.created_at || null,
-    main_subject_note: item.main_subject_note || summaryLines[0] || '',
-    intro_short: item.intro_short || summaryLines[1] || '',
+    ...studyRoomSearchCardFields(item),
     education_office_registered: Boolean(item.education_office_registered),
     career_years: item.career_years ?? null,
     business_registration_available: Boolean(item.business_registration_available),
@@ -74,9 +95,6 @@ function mapRoom(item) {
     longitude: item.longitude ?? null,
     exposure_tier: paidPositionSku(item) || 'basic',
     position_sku: paidPositionSku(item),
-    image_path: item.image_path || item.image_path_basic || '',
-    image_path_basic: item.image_path_basic || '',
-    image_path_prime: item.image_path_prime || '',
     _realDb: true,
   };
   room.badges = studyRoomBadges(room);
