@@ -45,7 +45,7 @@ import { renderBasicRow } from '../exposure-render.js';
 import { bindUserActionEvents } from '../user-actions-ui.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { notifyCompareToggle } from '../handoff-utils.js';
-import { renderEmptyStateCard } from '../empty-state-copy.js';
+import { getEmptyCopy, renderEmptyStateCard } from '../empty-state-copy.js';
 import { renderMessagesScreen } from '../messages/screens.js';
 import { isMessagesDetailPath, MESSAGES_BASE, threadPath } from '../messages/router.js';
 import { isStudentRegPath } from '../student-reg/router.js';
@@ -69,7 +69,6 @@ import {
 } from '../auth/display-identity.js';
 import { renderTutorRegScreen } from '../tutor-reg/screens.js';
 import { renderSubmissionBoardScreen } from '../submission-board/index.js';
-import { P18_EXPOSURE_STATUS } from './plans-catalog.js';
 import { getPaidOperationalStatus, hydratePaidCaches } from '../paid-backend.js';
 import { isMessagesApiMode, hydrateMessagesCache } from '../messages-backend.js';
 import { isSupportApiMode, hydrateMyTickets, getTicketLoadError } from '../support/support-backend.js';
@@ -721,18 +720,18 @@ function renderPaidExposureDetail(positions, role) {
       const leftText = Number.isFinite(left) ? ` · 남은 ${left}일` : '';
       const region = getPrimaryPromoRegionLabel(role, p);
       return `
-        <li class="plans-exposure-item">
-          <p><strong>${esc(exposureKindLabel(p.sku))}</strong></p>
-          <p>노출 위치(필수 1번 지역): ${esc(region)}</p>
-          <p>구매일 ${esc(started || '—')} · 종료일 ${esc(ends || '—')}${esc(leftText)}</p>
+        <li class="mp-card__row">
+          <p class="mp-card__row-title">${esc(exposureKindLabel(p.sku))}</p>
+          <p class="mp-card__row-meta">노출 위치(필수 1번 지역): ${esc(region)}</p>
+          <p class="mp-card__row-meta">구매일 ${esc(started || '—')} · 종료일 ${esc(ends || '—')}${esc(leftText)}</p>
           ${renderExpiryGuide(p)}
         </li>`;
     })
     .join('');
   return `
-    <ul class="plans-exposure-list">${rows}</ul>
-    <div class="plans-renewal-note">
-      <p>같은 조건으로 연장하거나 기간을 바꿔 재구매할 수 있습니다.</p>
+    <ul class="mp-card__rows">${rows}</ul>
+    <div class="mp-card__foot">
+      <p class="mp-card__desc">같은 조건으로 연장하거나 기간을 바꿔 재구매할 수 있습니다.</p>
       <a href="#/plans/positions" class="btn btn--secondary btn--sm" data-nav="/plans/positions">노출상품 재구매</a>
     </div>`;
 }
@@ -740,20 +739,20 @@ function renderPaidExposureDetail(positions, role) {
 function renderMemoUsedTargets() {
   const targets = getMemoUsedTargets();
   if (!targets.length) {
-    return `<p class="mypage-muted">쪽지를 사용한 대상이 없습니다.</p>`;
+    return `<p class="mp-card__empty">${esc(getEmptyCopy('memoUsedTargets').title)}</p>`;
   }
   return `
-    <ul class="memo-used-list">
+    <ul class="mp-card__rows">
       ${targets
         .map((t) => {
           const href = threadPath(t.threadId);
           return `
-        <li class="memo-used-item">
+        <li class="mp-card__row mp-card__row--split">
           <div>
-            <strong>${esc(t.name)}</strong>
-            ${t.contextLabel ? `<span class="mypage-muted">${esc(t.contextLabel)}</span>` : ''}
+            <p class="mp-card__row-title">${esc(t.name)}</p>
+            ${t.contextLabel ? `<p class="mp-card__row-meta">${esc(t.contextLabel)}</p>` : ''}
           </div>
-          <a href="#${href}" class="mypage-badge mypage-badge--action" data-mypage-nav="${href}">쪽지상세</a>
+          <a href="#${href}" class="mp-card__link" data-mypage-nav="${href}">쪽지상세</a>
         </li>`;
         })
         .join('')}
@@ -779,43 +778,46 @@ function renderPlans(role) {
   const historyRows = (plansHistoryRows ?? getHistoryRows()).slice(0, 8);
 
   return `
-    <div class="mypage-home">
-      <section class="mypage-panel mypage-panel--bare mypage-usage-overview">
-        ${renderProviderNoticeBanners()}
-        <h3 class="mypage-subhead">이용중인 노출광고</h3>
+    ${renderProviderNoticeBanners()}
+    <div class="mp-card-stack">
+      <section class="mp-card">
+        <h2 class="mp-card__title">이용중인 노출광고</h2>
         ${
           positions.length
             ? renderPaidExposureDetail(positions, role)
-            : `<p class="mypage-muted">${esc(P18_EXPOSURE_STATUS.basic)}</p>`
+            : `<p class="mp-card__empty">${esc(getEmptyCopy('plansExposure').title)}</p>`
         }
-        <h3 class="mypage-subhead">쪽지 사용한 대상</h3>
+      </section>
+
+      <section class="mp-card">
+        <h2 class="mp-card__title">쪽지 사용한 대상</h2>
         ${renderMemoUsedTargets()}
       </section>
 
-      <section class="mypage-plans-history">
-        <h2 class="mypage-subhead">결제 내역</h2>
-        <div class="mypage-history-box">
+      <section class="mp-card">
+        <h2 class="mp-card__title">결제 내역</h2>
+        ${
+          historyRows.length
+            ? `<div class="mp-card__scroll">
           <table class="plans-table" aria-label="결제 내역">
             <thead><tr><th>상품</th><th>금액</th><th>일시</th><th>상태</th></tr></thead>
             <tbody>
-              ${
-                historyRows.length
-                  ? historyRows
-                      .map(
-                        (r) => `
+              ${historyRows
+                .map(
+                  (r) => `
                 <tr>
                   <td>${esc(r.productName)}</td>
                   <td>${Number(r.amountKrw || 0).toLocaleString('ko-KR')}원</td>
                   <td>${esc(String(r.paidAt || '').slice(0, 16).replace('T', ' '))}</td>
                   <td>${esc(orderStatusLabel(r.status))}</td>
                 </tr>`,
-                      )
-                      .join('')
-                  : `<tr><td colspan="4" class="mypage-muted">결제 내역이 없습니다.</td></tr>`
-              }
+                )
+                .join('')}
             </tbody>
           </table>
-        </div>
+        </div>`
+            : `<p class="mp-card__empty">${esc(getEmptyCopy('plansHistory').title)}</p>`
+        }
       </section>
     </div>`;
 }

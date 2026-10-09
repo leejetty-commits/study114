@@ -166,6 +166,24 @@ export const EMPTY_COPY = {
     body: '다른 상태를 확인해 보세요.',
     cta: null,
   },
+  plansExposure: {
+    screenId: 'P15-09',
+    title: '베이직 노출 이용중 - 무료광고',
+    body: '',
+    cta: null,
+  },
+  memoUsedTargets: {
+    screenId: 'P15-09',
+    title: '쪽지를 사용한 대상이 없습니다.',
+    body: '',
+    cta: null,
+  },
+  plansHistory: {
+    screenId: 'P15-09',
+    title: '결제 내역이 없습니다.',
+    body: '',
+    cta: null,
+  },
 };
 
 /** §5 0건 — 검색·지역 피드 결과 없음 (13장 · 29장 톤) */
@@ -317,7 +335,7 @@ export function getErrorCopy(kind) {
 }
 
 /**
- * @param {'wishlist'|'recent'|'messages'|'compare'|'compareNeedMore'|'studentReview'|'students'|'studentsTab'|'contactHistory'} key
+ * @param {'wishlist'|'recent'|'messages'|'compare'|'compareNeedMore'|'studentReview'|'students'|'studentsTab'|'contactHistory'|'plansExposure'|'memoUsedTargets'|'plansHistory'} key
  */
 export function getEmptyCopy(key) {
   return EMPTY_COPY[key] || { title: '항목이 없습니다', body: '', cta: null };
