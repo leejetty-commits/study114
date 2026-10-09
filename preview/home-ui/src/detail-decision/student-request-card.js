@@ -58,6 +58,10 @@ export function renderStudentRequestBody(student, viewer) {
   const styles = (student.teaching_style_badges || [])
     .map((b) => TEACHING_STYLE_LABELS[b] || b)
     .join(' · ');
+  const schedule =
+    student.lessons_per_week && student.minutes_per_lesson
+      ? `주${student.lessons_per_week}·${student.minutes_per_lesson}분`
+      : '—';
   const budget =
     student.preferred_lesson_type === 'study_room'
       ? student.preferred_studyroom_fee_amount
@@ -84,8 +88,9 @@ export function renderStudentRequestBody(student, viewer) {
           student.lesson_format === 'group'
             ? `<dt>그룹 구성</dt><dd>${esc(STUDENT_GENDER_GROUP_LABELS[student.student_gender_group] || '—')}</dd>
         <dt>희망 수업인원</dt><dd>${esc(STUDENT_COUNT_LABELS[student.preferred_student_count_group] || '—')}</dd>`
-            : `<dt>희망 수업인원</dt><dd>단독</dd>`
+            : `<dt>희망 수업인원</dt><dd>${student.lesson_format === 'one_on_one' ? '단독' : '—'}</dd>`
         }
+        <dt>일정</dt><dd>${esc(schedule)}</dd>
         <dt>희망 강의스타일</dt><dd>${esc(styles || '—')}</dd>
         <dt>수업예산</dt><dd>${budget != null && Number(budget) > 0 ? `월 ${Math.round(Number(budget) / 1000).toLocaleString('ko-KR')}천원` : '—'}</dd>
       </dl>

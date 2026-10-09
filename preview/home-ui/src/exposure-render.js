@@ -56,6 +56,7 @@ import {
   renderPromoBadgeRow,
   renderTrustBadgeRow,
 } from './card-visual.js';
+import { isPaidProviderViewer, STUDENT_REQUEST_CARD_LOCK } from './student-visibility.js';
 
 function esc(s) {
   if (s == null || s === '') return '';
@@ -347,11 +348,6 @@ function renderPickStudyRoomMedia(item) {
 
 function optionalTutorPlaces(lesson_places) {
   return formatTutorLessonPlaces(lesson_places);
-}
-
-function optionalStudentPlaces(lesson_places) {
-  const v = formatStudentPlaces(lesson_places);
-  return v === '—' ? '(선택)' : v;
 }
 
 function appendSloganAndActions(rows, item, actions, { showIntro = true } = {}) {
@@ -821,20 +817,23 @@ function renderBasicTutorRow(item, opts) {
     </article>`;
 }
 
-function studentProtectedPreview(text, viewerRole) {
-  const isProvider = viewerRole === 'tutor' || viewerRole === 'study_room' || viewerRole === 'admin';
-  if (!isProvider) return '—';
+/** 요청문 원문은 서버가 유료 공급자·관리자에게만 보낸다. 원문이 오면 그대로, 안 오면 볼 수 있는 사람만 「—」. */
+function studentProtectedPreview(text, viewerRole, selfView = false) {
   const raw = String(text || '').trim();
-  if (!raw) return '—';
-  return raw.length > 18 ? `${raw.slice(0, 18)}…` : raw;
+  const short = raw.length > 18 ? `${raw.slice(0, 18)}…` : raw;
+  if (selfView) return short || '—';
+  const isProvider = viewerRole === 'tutor' || viewerRole === 'study_room' || viewerRole === 'admin';
+  if (!isProvider) return STUDENT_REQUEST_CARD_LOCK.nonProvider;
+  if (short) return short;
+  return isPaidProviderViewer(viewerRole) ? '—' : STUDENT_REQUEST_CARD_LOCK.unpaidProvider;
 }
 
-function studentRequestPreview(item, viewerRole) {
-  return studentProtectedPreview(item.request_summary, viewerRole);
+function studentRequestPreview(item, viewerRole, selfView = false) {
+  return studentProtectedPreview(item.request_summary, viewerRole, selfView);
 }
 
-function studentSpecialRequestPreview(item, viewerRole) {
-  return studentProtectedPreview(item.special_request_note, viewerRole);
+function studentSpecialRequestPreview(item, viewerRole, selfView = false) {
+  return studentProtectedPreview(item.special_request_note, viewerRole, selfView);
 }
 
 function renderBasicStudentRow(item, opts) {
@@ -878,8 +877,8 @@ function renderBasicStudentRow(item, opts) {
       item.lessons_per_week && item.minutes_per_lesson
         ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
         : '—';
-    const request = studentRequestPreview(item, selfView ? 'tutor' : viewerRole);
-    const specialRequest = studentSpecialRequestPreview(item, viewerRole);
+    const request = studentRequestPreview(item, viewerRole, selfView);
+    const specialRequest = studentSpecialRequestPreview(item, viewerRole, selfView);
     return `
     <article class="expo-basic expo-basic--student" data-student-id="${item.id}" data-action="open-student-detail">
       ${renderExpoTable(
@@ -889,18 +888,16 @@ function renderBasicStudentRow(item, opts) {
             labeled('대상', item.grade_level),
             labeled('과목', item.subject_label),
             valOnly(formatStudentBudgetCard(item), { cls: 'expo-tbl__cell--price' }),
-            request !== '—'
-              ? labeled('한 줄 요청', request, { cls: 'expo-tbl__cell--request' })
-              : valOnly(request, { cls: 'expo-tbl__cell--request' }),
+            labeled('한 줄 요청', request, { cls: 'expo-tbl__cell--request' }),
           ],
           [
             valOnly(item.location_label),
-            labeled('수업장소', optionalStudentPlaces(item.lesson_places)),
+            labeled('수업장소', formatStudentPlaces(item.lesson_places)),
             labeled('원생수', formatStudentLessonTarget(item)),
-            valOnly(schedule),
+            labeled('일정', schedule),
             labeled('강의스타일', formatTeachingStyleBadges(item.teaching_style_badges, 2)),
           ],
-          ...(specialRequest !== '—' ? [[labeled('특이요청', specialRequest, { col: 5 })]] : []),
+          [labeled('특이요청', specialRequest, { col: 5 })],
           [{ html: actions, col: 5, cls: 'expo-tbl__cell--actions' }],
         ],
         'expo-tbl--basic expo-tbl--card',
@@ -951,8 +948,8 @@ function renderBasicStudentRow(item, opts) {
     item.lessons_per_week && item.minutes_per_lesson
       ? `주${item.lessons_per_week}·${item.minutes_per_lesson}분`
       : '—';
-  const request = studentRequestPreview(item, selfView ? 'tutor' : viewerRole);
-  const specialRequest = studentSpecialRequestPreview(item, viewerRole);
+  const request = studentRequestPreview(item, viewerRole, selfView);
+  const specialRequest = studentSpecialRequestPreview(item, viewerRole, selfView);
 
   const side = selfView
     ? ''
@@ -964,24 +961,24 @@ function renderBasicStudentRow(item, opts) {
     <article class="expo-basic expo-basic--student expo-hcard" data-student-id="${item.id}"${selfView ? '' : ' data-action="open-student-detail"'}>
       <div class="expo-hcard__media-wrap">
         ${renderMedia(item.image_path, maskedName || '학생', 'list')}
-        ${item.grade_level ? `<span class="expo-hcard__badge">${esc(item.grade_level)}</span>` : ''}
+        <span class="expo-hcard__badge">${esc(slotDash(item.grade_level))}</span>
       </div>
       <div class="expo-hcard__body">
         <div class="expo-hcard__top">
           <div class="expo-hcard__title-row">
             <h3 class="expo-hcard__name">${esc(maskedName)}</h3>
-            ${locationLabel ? `<span class="expo-hcard__loc">${esc(locationLabel)}</span>` : ''}
+            <span class="expo-hcard__loc">${esc(slotDash(locationLabel))}</span>
           </div>
           <p class="expo-hcard__price">${esc(formatStudentBudgetCard(item))}</p>
         </div>
         <ul class="expo-hcard__meta">
-          ${renderHcardMetaItem('과목', item.subject_label)}
-          ${renderHcardMetaItem('수업장소', optionalStudentPlaces(item.lesson_places))}
-          ${renderHcardMetaItem('원생수', formatStudentLessonTarget(item))}
-          ${renderHcardMetaItem('일정', schedule)}
-          ${renderHcardMetaItem('한 줄 요청', request)}
-          ${renderHcardMetaItem('특이요청', specialRequest)}
-          ${renderHcardMetaItem('강의스타일', formatTeachingStyleBadges(item.teaching_style_badges, 2))}
+          ${renderHcardSlot('과목', item.subject_label)}
+          ${renderHcardSlot('수업장소', formatStudentPlaces(item.lesson_places))}
+          ${renderHcardSlot('원생수', formatStudentLessonTarget(item))}
+          ${renderHcardSlot('일정', schedule)}
+          ${renderHcardSlot('한 줄 요청', request)}
+          ${renderHcardSlot('특이요청', specialRequest)}
+          ${renderHcardSlot('강의스타일', formatTeachingStyleBadges(item.teaching_style_badges, 2))}
         </ul>
       </div>
       ${side}
