@@ -65,3 +65,5 @@
 ## 7. 승인·main 반영
 
 - 작업 전 확인: 사용자 2026-10-09 22:49 「1-a 2-b 3-a」.
+- 작업 커밋 `fd95fafc`. 브랜치 CI: Verify bundle·Board ACL gate 성공.
+- main 병합: 사용자 승인 대기.
