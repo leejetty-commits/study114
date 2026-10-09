@@ -47,22 +47,6 @@ export function getSearchTabLabel(tab, role) {
 }
 
 /**
- * 공급자 자기 노출 미리보기
- * - 검색 UI: 공부방 + room 탭
- * - 홈 UI: 과외쌤 + tutor 탭 (homeSelf)
- * @param {SearchTab} tab
- * @param {ViewerRole} role
- * @param {boolean} [homeSelf]
- */
-export function isProviderSelfPreviewMode(tab, role, homeSelf = false) {
-  if (role === 'study_room' && tab === 'room') {
-    // 홈·찾기 모두 홍보1 지역 목록. 자기 방만 끼워 넣지 않는다.
-    return false;
-  }
-  return homeSelf === true && role === 'tutor' && tab === 'tutor';
-}
-
-/**
  * @param {SearchTab} tab
  * @param {ViewerRole} role
  */

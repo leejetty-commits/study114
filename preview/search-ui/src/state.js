@@ -113,7 +113,6 @@ export {
   resolveAllowedTab,
   ROLE_SEARCH_HEADING,
   getSearchTabLabel,
-  isProviderSelfPreviewMode,
 } from './search-role-access.js';
 
 import { canShowSearchTab as canShowSearchTabFn } from './search-role-access.js';

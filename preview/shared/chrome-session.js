@@ -13,6 +13,7 @@ import {
   isUnverifiedAllowedAuthPath,
   isOnAuthUi,
   currentAuthHashPath,
+  basicRegisterPathForMe,
 } from './auth-redirect.js';
 
 /** @typedef {{ user_id: number, email: string, role_type: string, name: string, admin_level?: string|null, oauth_provider_labels?: string[], email_verified?: boolean, oauth_role_pending?: boolean }} AuthUser */
@@ -36,7 +37,10 @@ export function getChromeNavRole() {
   return navRoleFromAuthUser(currentUser);
 }
 
-export async function initChromeSession() {
+/**
+ * @param {{ basicGate?: boolean }} [opts] basicGate=false 는 기본정보 화면이 있는 auth-ui 전용.
+ */
+export async function initChromeSession({ basicGate = true } = {}) {
   try {
     const res = await fetch('/api/auth/me.php', { credentials: 'include' });
     const data = await res.json().catch(() => ({}));
@@ -62,6 +66,12 @@ export async function initChromeSession() {
             currentUser = null;
             return null;
           }
+        } else if (basicGate && data.needs_basic_register) {
+          // 기본정보를 다 채우기 전에는 상세등록 화면도 쓸 수 없다.
+          const base = String(AUTH_UI_BASE).replace(/\/$/, '');
+          window.location.replace(`${base}/#${basicRegisterPathForMe(src)}`);
+          currentUser = null;
+          return null;
         }
         currentUser = {
           user_id: src.user_id,

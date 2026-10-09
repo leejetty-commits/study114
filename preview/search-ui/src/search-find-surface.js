@@ -7,7 +7,6 @@ import {
   SEARCH_TABS,
 } from './search-schema.js';
 import { getRegionFeed, getStudentDemandForRegion } from './search-region-feed.js';
-import { filterToProviderSelf } from './search-provider-self.js';
 import {
   getStudyRoomHomeLiveItems,
   getStudyRoomStudentLiveItems,
@@ -23,8 +22,9 @@ import {
   readTutorHomeRegions,
   getTutorStudentLiveItems,
   getTutorStudentFeedStatus,
+  getTutorHomeTutorLiveItems,
+  getTutorHomeTutorFeedStatus,
 } from '@home-ui/tutor-home-seed.js';
-import { isProviderSelfPreviewMode } from './search-role-access.js';
 import { renderSearchMapBlock, bindSearchMapPinLinks } from './search-map.js';
 import { renderSearchTierResults } from './search-tier-render.js';
 import { collectFiltersFromForm, searchApi, settleRoomAddressFilters, settleStudentStudyroomRegionFilter } from './search-api.js';
@@ -1415,6 +1415,10 @@ function regionFeedContext(tab, state, role) {
   if (tab === 'tutor') {
     ctx.tutorRegionIndex = resolveTutorRegionIndex(state);
   }
+  if (tab === 'tutor' && role === 'tutor' && state.homeSelf === true && !state.searchExecuted) {
+    ctx.tutorHome = true;
+    ctx.liveTutorItems = getTutorHomeTutorLiveItems();
+  }
   if (tab === 'student' && (state.studentHopeType === 'tutor' || state.studentHopeType === 'study_room')) {
     ctx.hopeType = state.studentHopeType;
   }
@@ -1813,12 +1817,9 @@ export function refreshActiveResultItems(tab, state, role) {
     return [];
   }
 
-  const homeSelf = resolveHomeSelf(state);
-  state.activeResultItems = filterToProviderSelf(tab, role, state.searchExposureItems || [], homeSelf);
+  state.activeResultItems = state.searchExposureItems || [];
   state.activeResultSource = 'search';
-  state.activeRegionLabel = isProviderSelfPreviewMode(tab, role, homeSelf)
-    ? canonicalRegionLabel(state.activeResultItems[0]?.location_label || '', tab, state)
-    : resolveActiveRegionLabel(tab, state, role);
+  state.activeRegionLabel = resolveActiveRegionLabel(tab, state, role);
   logLocationDebug('list-fetch', {
     tab,
     mode: 'search',
@@ -2503,13 +2504,6 @@ export function renderCompactRegionBar(tab, state, options = {}) {
     </div>`;
 }
 
-function renderProviderSelfNote(tab, role, homeSelf = false, hidden = false) {
-  if (hidden) return '';
-  if (!isProviderSelfPreviewMode(tab, role, homeSelf)) return '';
-  // 홈 본문 주석 제거 — 이용안내(HOME_EXPOSURE_GUIDES)로 이전
-  return '';
-}
-
 /**
  * @param {import('./state.js').SearchTab} tab
  * @param {FindSurfaceState} state
@@ -2524,7 +2518,6 @@ export function renderCompactFindForm(tab, state, options = {}) {
     homeSelf = false,
     hideSearchForm = false,
     hideRegionBar = false,
-    hideSelfNote = false,
   } = options;
   if (homeSelf) state.homeSelf = true;
   if (role === 'parent') state.role = 'parent';
@@ -2532,7 +2525,6 @@ export function renderCompactFindForm(tab, state, options = {}) {
   const basicFields = meta.fields.filter((f) => f.tier === 'basic');
   const expandedFields = meta.fields.filter((f) => f.tier === 'expanded');
   const activeItems = refreshActiveResultItems(tab, state, role);
-  const homeSelfFlag = resolveHomeSelf(state);
   const ssotRegion = state.activeRegionLabel || resolveActiveRegionLabel(tab, state, role);
   if (showMap && ssotRegion) {
     const mapRegion = state.activeRegionLabel || '';
@@ -2592,7 +2584,6 @@ export function renderCompactFindForm(tab, state, options = {}) {
     : state.activeRegionLabel || '';
 
   return `
-    ${renderProviderSelfNote(tab, role, homeSelfFlag, hideSelfNote)}
     ${regionBar}
     ${showMap
       ? renderSearchMapBlock(activeItems, {
@@ -2753,6 +2744,28 @@ export function renderFindResultSection(tab, state, role, options = {}) {
         }),
       );
     }
+  }
+
+  /* 과외쌤 홈 「우리동네 과외쌤」 — 조회 중 / 조회 실패 / 조회 끝(0장이면 기존 빈 카드 칸). */
+  if (tab === 'tutor' && role === 'tutor' && surfaceType === 'home' && state.homeSelf === true && !state.searchExecuted) {
+    const status = getTutorHomeTutorFeedStatus();
+    const wrap = (inner) => `
+      <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}" data-tutor-home-feed="${esc(status)}">
+        ${inner}
+      </section>`;
+    if (status === 'error') {
+      return wrap(`<p class="search-results__hint" role="alert">${GUEST_FEED_ERROR}</p>`);
+    }
+    if (status === 'idle' || status === 'loading') {
+      return wrap(`<p class="search-results__hint">${GUEST_FEED_LOADING}</p>`);
+    }
+    return wrap(
+      renderSearchTierResults(tab, activeItems, { ...tierCtx, tutorHomeReady: true }, {
+        mode: 'region',
+        regionLabel,
+        surfaceType,
+      }),
+    );
   }
 
   if (!state.searchExecuted) {
@@ -3006,12 +3019,7 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
     if (stale()) return;
     if (state.searchRows) state.searchRows = result.rows || [];
     if (state.searchItems) state.searchItems = result.items || [];
-    state.searchExposureItems = filterToProviderSelf(
-      tab,
-      role,
-      mapSearchResultsToExposure(tab, result.items || []),
-      resolveHomeSelf(state),
-    );
+    state.searchExposureItems = mapSearchResultsToExposure(tab, result.items || []);
     state.searchTotal = Number(result.total) || 0;
     refreshActiveResultItems(tab, state, role);
   } catch (err) {

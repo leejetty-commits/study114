@@ -163,7 +163,7 @@ export function renderSearchCrossLink(role, searchTab, opts = {}) {
  * @param {ProviderHomeRole} role
  * @param {ProviderHomeTabId} tabId
  * @param {import('@search-ui/search-find-surface.js').FindSurfaceState} findState
- * @param {{ hideHead?: boolean, hideRegionBar?: boolean, hideSearchCrossLink?: boolean, hideSelfNote?: boolean }} [opts]
+ * @param {{ hideHead?: boolean, hideRegionBar?: boolean, hideSearchCrossLink?: boolean }} [opts]
  */
 export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
   const mode = getProviderHomeMode(role, tabId);
@@ -195,7 +195,6 @@ export function renderProviderHomeBody(role, tabId, findState, opts = {}) {
         homeSelf,
         hideSearchForm,
         hideRegionBar: opts.hideRegionBar === true,
-        hideSelfNote: opts.hideSelfNote !== false && hideHead,
       })}
       ${parentHome ? '' : renderFindFilterBar(searchTab, findState)}
       ${renderFindResultSection(searchTab, findState, role, { surfaceType: 'home' })}

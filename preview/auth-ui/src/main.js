@@ -77,7 +77,7 @@ function init() {
   window.addEventListener('hashchange', render);
   window.addEventListener('themechange', render);
   Promise.all([
-    initChromeSession().catch(() => null),
+    initChromeSession({ basicGate: false }).catch(() => null),
     fetchRegions()
       .then((data) => {
         signupState.regions = data.regions ?? data;
