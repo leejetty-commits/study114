@@ -80,12 +80,10 @@ import { getStudyRoom, getStudyRooms } from '../study-room-reg/store.js';
 import { getTutor, getTutors } from '../tutor-reg/store.js';
 import { getPlanSetting, hydratePaidCatalog } from '../plans/runtime-config.js';
 import { hydrateProviderNotices, renderProviderNoticeBanners, bindProviderNoticeEvents } from '../provider-notices.js';
-import { renderPaidGuide, renderPaidUsage } from './paid-screens.js';
 import { renderPlansHistory, schedulePlansStatusHydrate, resetPlansStatusSync, plansStatusFlags } from '../plans/screens.js';
 import { parsePlansQuery } from '../plans/router.js';
 import { getPlansEffectiveRole, resolveSelectedProfile } from '../plans/profiles.js';
 import { getHistoryRows, loadHistoryRows, orderStatusLabel } from '../plans/history-mock.js';
-import { bindPaidCatalogEvents } from '../paid-checkout.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
 import {
@@ -204,8 +202,6 @@ export function renderMypageScreen(path) {
   if (path === '/mypage/plans') return renderPlans(r);
   if (path === '/mypage/plans/my') return renderPlansMyInventory(r);
   if (path === '/mypage/plans/history') return renderPlansHistory();
-  if (path === '/mypage/paid') return renderPaidGuide(r);
-  if (path === '/mypage/paid/usage') return renderPaidUsage(r);
   if (path === '/mypage/submission-docs' || path === '/mypage/verification') return renderSubmissionDocs(r);
   if (path === '/mypage/submission-board' || path.startsWith('/mypage/submission-board/')) {
     if (r === 'study_room' || r === 'parent') return renderSubmissionDocs(r);
@@ -1582,6 +1578,5 @@ export function bindMypageScreenEvents(root, rerender) {
       rerender();
     });
   });
-  bindPaidCatalogEvents(root, rerender);
   bindProviderNoticeEvents(root, rerender);
 }

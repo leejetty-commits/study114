@@ -22,7 +22,6 @@ import {
   parseSubmissionBoardPath,
   submissionBoardScreenTitle,
 } from '../submission-board/submission-router.js';
-import { isPaidPath, parsePaidPath, paidScreenTitle } from './paid-router.js';
 import { getStudyRooms } from '../study-room-reg/store.js';
 import { studyRoomHubPath, BASE as STUDY_ROOM_BASE } from '../study-room-reg/router.js';
 import { getStudents } from '../student-reg/store.js';
@@ -128,7 +127,6 @@ export function normalizeMypagePath(hashPath) {
   if (normalizeMessagesPath(p)) return normalizeMessagesPath(p);
   const subBoard = normalizeSubmissionBoardPath(p);
   if (subBoard) return subBoard;
-  if (isPaidPath(p)) return p;
   return MYPAGE_PATH_TO_SCREEN[p] ? p : null;
 }
 
@@ -152,7 +150,6 @@ export function isParentLockedMypagePath(path) {
   if (p === '/mypage/home' || p === '/mypage/registrations') return true;
   if (p === '/mypage/student-review' || p.startsWith('/mypage/student-review/')) return true;
   if (p === '/mypage/plans' || p.startsWith('/mypage/plans/')) return true;
-  if (p === '/mypage/paid' || p.startsWith('/mypage/paid/')) return true;
   if (p === '/mypage/submission-docs' || p === '/mypage/verification') return true;
   if (p === '/mypage/submission-board' || p.startsWith('/mypage/submission-board/')) return true;
   return false;
@@ -199,8 +196,6 @@ export function getScreenIdForPath(path) {
   if (tr) return tr.screenId;
   if (path === MESSAGES_BASE || isMessagesDetailPath(path)) return getMessagesScreenId(path);
   if (isSubmissionBoardPath(path)) return parseSubmissionBoardPath(path).screenId;
-  const paid = parsePaidPath(path);
-  if (paid) return paid;
   return MYPAGE_PATH_TO_SCREEN[path] || 'P15-01';
 }
 
@@ -234,8 +229,6 @@ export function screenTitle(screenId, path, role) {
     if (isSubmissionBoardPath(path)) {
       return submissionBoardScreenTitle(parseSubmissionBoardPath(path).screenId, path);
     }
-    const paidId = parsePaidPath(path);
-    if (paidId) return paidScreenTitle(paidId);
   }
   const map = {
     'P15-01': '내 등록',
