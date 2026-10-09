@@ -9,6 +9,7 @@ use PDO;
 use PDOException;
 use RuntimeException;
 use Study114\Database\Connection;
+use Study114\Mail\MemberLifecycleMailer;
 use Study114\Region\ComplexEnsure;
 use Study114\Region\RegionEnsure;
 use Study114\Region\SidoRegionEnsure;
@@ -25,12 +26,25 @@ final class BasicRegisterService
      */
     public function register(int $userId, string $roleUi, array $input): array
     {
-        return match ($roleUi) {
+        $result = match ($roleUi) {
             'student'    => ['kind' => 'student', 'id' => $this->registerStudent($userId, $input)],
             'study_room' => ['kind' => 'study_room', 'id' => $this->registerStudyRoom($userId, $input)],
             'tutor'      => ['kind' => 'tutor', 'id' => $this->registerTutor($userId, $input)],
             default      => throw new InvalidArgumentException('role: 지원하지 않는 역할입니다.'),
         };
+        $this->notifyCardPosted($userId, $result['kind'], $result['id']);
+
+        return $result;
+    }
+
+    /** 카드 게시 환영 메일. 실패해도 등록 결과는 그대로 돌려준다. */
+    private function notifyCardPosted(int $userId, string $kind, int $profileId): void
+    {
+        try {
+            (new MemberLifecycleMailer(Connection::get()))->afterBasicRegister($userId, $kind, $profileId);
+        } catch (\Throwable $e) {
+            error_log('[lifecycle-mail] card_posted hook: ' . $e->getMessage());
+        }
     }
 
     /**

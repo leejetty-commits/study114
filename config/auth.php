@@ -30,6 +30,8 @@ return [
     'email_verify_ttl_minutes'   => 24 * 60,
     /** 가입 확인 메일 재전송 최소 간격(초). 서버·클라이언트 동일 — 10분 */
     'email_verify_resend_cooldown_seconds' => 600,
+    /** 생활 메일(카드 게시·Prime/Pick 구매 감사·탈퇴). STUDY114_LIFECYCLE_MAIL=0 이면 끈다. */
+    'lifecycle_mail_enabled'     => study114_env('STUDY114_LIFECYCLE_MAIL', '1') !== '0',
     /** P20-05 SMS OTP — 재발송 간격(초) · 유효(분) · HMAC pepper */
     'phone_otp_resend_cooldown_seconds' => 60,
     'phone_otp_ttl_minutes'             => 3,

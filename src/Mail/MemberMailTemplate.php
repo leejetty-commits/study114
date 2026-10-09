@@ -6,7 +6,7 @@ namespace Study114\Mail;
 
 /**
  * 「우동공과 편지」 공통 틀 — 회원에게 가는 정보성 메일(text + HTML 한 쌍).
- * 계정 메일(이메일 확인·비밀번호 재설정)과 이후 생활 메일(게시 환영·구매 감사·탈퇴)이 같이 쓴다.
+ * 계정 메일(이메일 확인·비밀번호 재설정)과 생활 메일(게시 환영·구매 감사·탈퇴)이 같이 쓴다.
  *
  * 규칙: 실명 대신 역할 호칭 · 광고·할인 문구 금지 · 바닥글에 보내기 전용 고지 · 외부 CSS/JS·추적 픽셀 없음.
  * 동적 값은 모두 htmlspecialchars. 이메일 앱이 불러올 수 있도록 로고는 운영 절대 주소.
@@ -39,7 +39,9 @@ final class MemberMailTemplate
      *   badge?: ?string,
      *   role?: string,
      *   preheader?: string,
+     *   highlight?: ?array{title: string, items: list<string>},
      *   button?: ?array{label: string, url: string},
+     *   notes_title?: string,
      *   notes?: list<string>,
      * } $mail
      * @return array{subject: string, plain: string, html: string}
@@ -92,6 +94,14 @@ final class MemberMailTemplate
             $lines[] = (string) $p;
             $lines[] = '';
         }
+        $highlight = $mail['highlight'] ?? null;
+        if (is_array($highlight)) {
+            $lines[] = '■ ' . $highlight['title'];
+            foreach ($highlight['items'] as $item) {
+                $lines[] = '  - ' . $item;
+            }
+            $lines[] = '';
+        }
         $button = $mail['button'] ?? null;
         if (is_array($button)) {
             $lines[] = '▶ ' . $button['label'];
@@ -99,6 +109,10 @@ final class MemberMailTemplate
             $lines[] = '';
         }
         $notes = $mail['notes'] ?? [];
+        $notesTitle = trim((string) ($mail['notes_title'] ?? ''));
+        if ($notes !== [] && $notesTitle !== '') {
+            $lines[] = $notesTitle;
+        }
         foreach ($notes as $note) {
             $lines[] = '· ' . $note;
         }
@@ -175,9 +189,38 @@ HTML;
 HTML;
         }
 
+        $highlightHtml = '';
+        $highlight = $mail['highlight'] ?? null;
+        if (is_array($highlight)) {
+            $accent = MemberMailRole::accent((string) ($mail['role'] ?? ''));
+            $fg = $accent['fg'];
+            $bg = $accent['bg'];
+            $hTitle = $e((string) $highlight['title']);
+            $hItems = '';
+            foreach ($highlight['items'] as $item) {
+                $hItems .= '<tr><td valign="top" style="padding:0 8px 8px 0;font-size:15px;line-height:1.7;color:' . $fg . ';font-weight:700;">✓</td>'
+                    . '<td style="padding:0 0 8px;font-size:15px;line-height:1.7;color:' . $ink . ';">' . $e((string) $item) . "</td></tr>\n";
+            }
+            $highlightHtml = <<<HTML
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 18px;background:{$bg};border:1px solid {$fg};border-radius:10px;">
+                <tr>
+                  <td style="padding:16px 18px 8px;">
+                    <p style="margin:0 0 10px;font-size:17px;line-height:1.5;font-weight:700;color:{$fg};">{$hTitle}</p>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+{$hItems}                    </table>
+                  </td>
+                </tr>
+              </table>
+HTML;
+        }
+
         $notesHtml = '';
         $notes = $mail['notes'] ?? [];
         if ($notes !== []) {
+            $notesTitle = trim((string) ($mail['notes_title'] ?? ''));
+            $notesTitleHtml = $notesTitle === ''
+                ? ''
+                : '<p style="margin:0 0 10px;font-size:14px;line-height:1.6;font-weight:700;color:' . $ink . ';">' . $e($notesTitle) . '</p>';
             $items = '';
             foreach ($notes as $note) {
                 $items .= '<tr><td valign="top" style="padding:0 8px 10px 0;font-size:14px;line-height:1.7;color:' . $muted . ';">·</td>'
@@ -187,6 +230,7 @@ HTML;
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 8px;background:{$pageBg};border-radius:8px;">
                 <tr>
                   <td style="padding:16px 16px 6px;">
+                    {$notesTitleHtml}
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 {$items}                    </table>
                   </td>
@@ -226,6 +270,7 @@ HTML;
             <td style="padding:20px 28px 8px;font-family:{$font};">
               <h1 style="margin:0 0 16px;font-size:22px;line-height:1.4;font-weight:700;color:{$ink};">{$heading}</h1>
               {$paragraphs}
+{$highlightHtml}
 {$buttonHtml}
 {$notesHtml}
               <p style="margin:20px 0 8px;font-size:16px;line-height:1.6;font-weight:600;color:{$ink};">{$signature}</p>

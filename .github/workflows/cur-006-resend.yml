@@ -17,6 +17,10 @@ on:
       - "src/Auth/PasswordResetMailTemplate.php"
       - "src/Auth/EmailVerifyMailTemplate.php"
       - "scripts/verify-auth-mail-warm.php"
+      - "scripts/verify-mail-lifecycle.php"
+      - "src/Auth/BasicRegisterService.php"
+      - "src/Auth/AccountWithdrawService.php"
+      - "src/Paid/ProviderCheckoutService.php"
       - "src/Paid/ProviderReminderService.php"
       - "public/api/auth/password/_mail-probe.php"
       - "public/api/auth/email/**"
@@ -64,7 +68,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: mbstring, curl
+          extensions: mbstring, curl, pdo_sqlite
           coverage: none
 
       - name: Setup Node.js
@@ -87,6 +91,9 @@ jobs:
 
       - name: Auth mail copy (verify / reset)
         run: php scripts/verify-auth-mail-warm.php
+
+      - name: Lifecycle mail (card posted / purchase / withdraw)
+        run: php scripts/verify-mail-lifecycle.php
 
       - name: Node static contract
         run: npm run verify:cur-006-resend
