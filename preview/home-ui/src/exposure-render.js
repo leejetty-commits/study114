@@ -740,7 +740,6 @@ function renderBasicStudyRoomRow(item, opts) {
       </div>
       <div class="expo-hcard__side">
         <div class="expo-hcard__actions">${actions}</div>
-        <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="study_room" data-search-id="${item.id}">상세</button>
       </div>
     </article>`;
 }
@@ -826,7 +825,6 @@ function renderBasicTutorRow(item, opts) {
       </div>
       <div class="expo-hcard__side">
         <div class="expo-hcard__actions">${actions}</div>
-        <button type="button" class="expo-hcard__detail" data-action="search-open-detail" data-search-kind="tutor" data-search-id="${item.id}">상세</button>
       </div>
     </article>`;
 }
@@ -945,7 +943,6 @@ function renderBasicStudentRow(item, opts) {
         <div class="expo-hcard__actions">
           <button type="button" class="btn btn--secondary btn--sm" data-action="login-gate" data-gate="student" data-gate-label="학생상세">로그인하고 보기</button>
         </div>
-        <button type="button" class="expo-hcard__detail" data-action="open-student-detail" data-student-id="${item.id}">상세</button>
       </div>
     </article>`;
   }
@@ -969,7 +966,6 @@ function renderBasicStudentRow(item, opts) {
     ? ''
     : `<div class="expo-hcard__side">
         <div class="expo-hcard__actions">${actions}</div>
-        <button type="button" class="expo-hcard__detail" data-action="open-student-detail" data-student-id="${item.id}">상세</button>
       </div>`;
 
   return `

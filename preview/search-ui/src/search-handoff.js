@@ -2,9 +2,7 @@
  * 13장 ↔ 24·25장 handoff 브리지 — search-ui 결과행 · compare · P24 상세
  */
 
-import { isWishlisted, isInCompare } from '@home-ui/user-actions-state.js';
 import { isLoggedIn } from '@home-ui/auth-session.js';
-import { WISH_LABELS } from '@home-ui/handoff-copy.js';
 
 /** @param {import('../state.js').SearchTab} tab */
 export function tabToKind(tab) {
@@ -66,38 +64,6 @@ export function mapSearchItemToDetail(tab, item) {
     exposure_status: 'published',
     preferred_lesson_type: 'tutor',
   };
-}
-
-/**
- * @param {import('../state.js').SearchTab} tab
- * @param {Record<string, unknown>} item
- * @param {import('../state.js').ViewerRole} role
- */
-export function renderSearchRowActions(tab, item, role) {
-  const kind = tabToKind(tab);
-  const id = Number(item.id);
-  const guest = role === 'guest';
-
-  if (tab === 'student') {
-    if (guest) {
-      return `<button type="button" class="btn btn--secondary btn--sm" disabled title="로그인 필요">상세</button>`;
-    }
-    // parent: 비교 열람 허용 · 블라인드 유지 (29#3). 공급자와 동일하게 상세 오픈
-    return `<button type="button" class="btn btn--secondary btn--sm" data-action="search-open-detail" data-search-kind="student" data-search-id="${id}">상세</button>`;
-  }
-
-  if (!canUseCompare(tab, role)) {
-    return `
-      <button type="button" class="btn btn--secondary btn--sm" data-action="compare-guest-blocked" data-compare-kind="${kind}">⇄ 비교</button>
-      <button type="button" class="btn btn--secondary btn--sm" data-action="search-open-detail" data-search-kind="${kind}" data-search-id="${id}">상세</button>`;
-  }
-
-  const wished = isWishlisted(kind, id);
-  const inCmp = isInCompare(kind, id);
-  return `
-    <button type="button" class="btn btn--secondary btn--sm${wished ? ' is-active' : ''}" data-action="wish-toggle" data-item-kind="${kind}" data-item-id="${id}">${wished ? WISH_LABELS.remove : WISH_LABELS.add}</button>
-    <button type="button" class="btn btn--secondary btn--sm${inCmp ? ' is-active' : ''}" data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${id}">⇄ ${inCmp ? '비교 해제' : '비교'}</button>
-    <button type="button" class="btn btn--primary btn--sm" data-action="search-open-detail" data-search-kind="${kind}" data-search-id="${id}">상세</button>`;
 }
 
 /** @param {import('../state.js').ViewerRole} role */

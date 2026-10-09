@@ -391,13 +391,6 @@ function bindWishlistCardEvents(root, rerender) {
         open(Number(article.getAttribute('data-provider-id')));
       });
     });
-    list.querySelectorAll('[data-action="search-open-detail"]').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        open(Number(btn.getAttribute('data-search-id')));
-      });
-    });
     bindUserActionEvents(list, rerender, { sourceRoute: 'wishlist' });
   });
 }

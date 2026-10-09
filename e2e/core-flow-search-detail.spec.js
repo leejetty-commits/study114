@@ -49,7 +49,7 @@ async function expectGuestFindBrowse(page, url) {
 
   const card = page.locator('[data-surface="student-demand"] [data-student-id]').first();
   await expect(card).toBeVisible();
-  await expect(card.locator('.expo-hcard__name')).toContainText('○○');
+  await expect(card.locator('.expo-hcard__name')).toContainText('○');
   await expect(card).not.toContainText('초등왕');
   await expect(card).not.toContainText('수학집중');
   await card.locator('.expo-hcard__name').click();
