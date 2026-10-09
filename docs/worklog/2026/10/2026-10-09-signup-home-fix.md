@@ -71,8 +71,8 @@
 
 ## 6. 미확인
 
-- 운영 사이트에서 실제 가입으로 팝업 → 완료 화면 흐름 눈확인은 하지 않음(배포 전).
-- 운영 계정으로 과외쌤 홈 「우리동네 과외쌤」 실제 카드 노출 눈확인은 배포 후.
+- 운영 사이트에서 실제 가입으로 팝업 → 완료 화면 흐름 눈확인은 하지 않음.
+- 운영 계정으로 과외쌤 홈 「우리동네 과외쌤」 실제 카드 노출 눈확인은 하지 않음.
 
 ## 7. 배포 전 사용자 할 일
 
@@ -81,4 +81,8 @@
 ## 8. 승인·main 반영
 
 - 작업 전 승인: 사용자 2026-10-09 17:20 「ㅇㅋ」 (1~3번 진행).
-- main 병합: **대기** (커밋 hash 단위 사용자 승인 후).
+- 작업 커밋 `0c05a9b2`. 브랜치 CI: Verify bundle·Board ACL gate 성공.
+- main 병합 승인: 사용자 2026-10-09 「승인 — main 병합·배포 후 운영 사이트 확인까지」 (커밋 `0c05a9b2`).
+- main 병합: 분리 worktree `.wt/merge-shf`에서 `--no-ff`, 병합 커밋 `3763a8c8` (`97bdd9bd` → `3763a8c8`), main push는 승인 창으로 사용자 확인.
+- main Actions(`3763a8c8`): ShopPage gate·Tutor register same-tab·Verify bundle·Board ACL gate·Deploy to dothome 모두 성공.
+- 운영 번들 확인: 홈 `https://study114.net/` `index-DV2L7RFM.js`에 과외쌤 홈 빈 칸·조회 상태 표시(`data-tutor-home-vacant`·`data-tutor-home-feed`)와 대표 과외지역 검색(`tutor_region_id`) 있음. 가입 `https://study114.net/auth/` `index-FGRQWFnQ.js`에 `basicGate` 있음, 팝업의 옛 「저장되었습니다」 없음. 실제 가입·로그인 화면 눈확인은 하지 않음.
