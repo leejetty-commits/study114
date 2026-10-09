@@ -4,6 +4,8 @@
  * 구매 UI(기간/횟수/배지 폼/주문요약)는 넣지 않는다.
  */
 
+import { providerPageName } from '../mypage/mypage-copy.js';
+
 /** 노출상품·쪽지권 상단 배너와 같은 실내/서가 사진. 추상 SVG 자리채움 금지. */
 const HUB_CINEMA_IMG = '/assets/banners/plans.jpg';
 
@@ -11,8 +13,8 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 }
 
-/** 홈 전용 시네마. 상세 페이지에서 호출하지 말 것. */
-export function renderPlansHubCinema() {
+/** 홈 전용 시네마. 상세 페이지에서 호출하지 말 것. @param {string} [role] */
+export function renderPlansHubCinema(role) {
   return `
     <section class="plans-hub-cinema home-cinema--soft" aria-label="유료상품 안내">
       <div class="cinema-bg" aria-hidden="true">
@@ -22,7 +24,7 @@ export function renderPlansHubCinema() {
       <div class="cinema-content">
         <div class="cinema-eyebrow">유료 안내</div>
         <h1>무료로 시작하고,<br>필요할 때만 올린다</h1>
-        <p class="cinema-lead">프로필 꾸미기와 베이직카드 노출은 무료입니다. 더 자주 보이고 싶을 때는 노출상품, 먼저 연락하고 싶을 때는 쪽지권을 선택하세요.</p>
+        <p class="cinema-lead">${esc(providerPageName(role))} 꾸미기와 베이직카드 노출은 무료입니다. 더 자주 보이고 싶을 때는 노출상품, 먼저 연락하고 싶을 때는 쪽지권을 선택하세요.</p>
         <div class="cinema-actions">
           <a class="btn-cinema-primary" href="#/plans/positions" data-plans-nav="/plans/positions">노출상품 자세히 보기</a>
           <a class="btn-cinema-ghost" href="#/plans/access" data-plans-nav="/plans/access">쪽지권 자세히 보기</a>
@@ -52,10 +54,11 @@ export function renderPlansHubRailCard() {
 }
 
 /**
- * @param {{ noticesHtml?: string }} [opts]
+ * @param {{ noticesHtml?: string, role?: string }} [opts]
  */
 export function renderPlansHomeBody(opts = {}) {
   const notices = String(opts.noticesHtml || '').trim();
+  const pageName = esc(providerPageName(opts.role));
   return `
     <div class="plans-hub-page__inner" data-plans-home-hub>
       ${notices ? `<div class="plans-hub-notices">${notices}</div>` : ''}
@@ -98,7 +101,7 @@ export function renderPlansHomeBody(opts = {}) {
           <li>목록·추천에서 더 자주 보이고 싶을 때 → <strong>노출상품</strong></li>
           <li>관심 학생에게 먼저 쪽지를 보내고 싶을 때 → <strong>쪽지권</strong></li>
           <li>노출상품에 짧은 강조 표시를 더하고 싶을 때 → <strong>홍보 배지</strong>(노출과 함께·최대 2개)</li>
-          <li>프로필 꾸미기·베이직카드 노출만으로 충분할 때는 유료 없이 이용해도 됩니다</li>
+          <li>${pageName} 꾸미기·베이직카드 노출만으로 충분할 때는 유료 없이 이용해도 됩니다</li>
         </ul>
       </section>
 
@@ -107,7 +110,7 @@ export function renderPlansHomeBody(opts = {}) {
         <div class="free-paid-grid">
           <div class="fp-cell">
             <strong>무료</strong>
-            <span>프로필 꾸미기 · 베이직카드 목록 노출 · 받은 쪽지에 답장</span>
+            <span>${pageName} 꾸미기 · 베이직카드 목록 노출 · 받은 쪽지에 답장</span>
           </div>
           <div class="fp-cell">
             <strong>선택 유료</strong>

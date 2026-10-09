@@ -264,7 +264,7 @@ function renderHub(room) {
     });
     const loading = `
       <div class="shop shop--loading" data-myshop data-sr-load-pending="${room.id}:hub">
-        <p class="shop-prose">샵 페이지를 준비하고 있어요…</p>
+        <p class="shop-prose">마이샵을 준비하고 있어요…</p>
       </div>`;
     return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', loading)}</section>`;
   }
@@ -349,7 +349,7 @@ function renderBasicForm(room) {
         '기본등록을 마친 카드는 저장 내용이 바로 반영됩니다.',
         `<button type="submit" class="btn btn--primary">기본정보 저장</button>
          <a href="#${studyRoomSectionPath(room.id, 'detail')}" class="btn btn--secondary" data-p20-nav="${studyRoomSectionPath(room.id, 'detail')}">상세정보로</a>
-         <a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">프로필 꾸미기</a>`,
+         <a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">마이샵</a>`,
       )}
     </form>`;
 
@@ -418,7 +418,7 @@ function renderDetailForm(room) {
         '저장 후 등록점검에서 카드 모습을 확인하세요.',
         `<button type="submit" class="btn btn--primary">상세정보 저장</button>
          <a href="#${studyRoomSectionPath(room.id, 'publish')}" class="btn btn--secondary" data-p20-nav="${studyRoomSectionPath(room.id, 'publish')}">등록점검</a>
-         <a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">프로필 꾸미기</a>`,
+         <a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">마이샵</a>`,
       )}
     </form>`;
 

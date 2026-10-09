@@ -72,6 +72,7 @@ import {
   productIcon,
 } from './store-ui.js';
 import { renderPlansHomeBody } from './hub-home.js';
+import { providerPageName } from '../mypage/mypage-copy.js';
 import {
   renderApplyTargetBlock,
   getApplyTargetReadiness,
@@ -851,6 +852,7 @@ function renderTestModeToggle() {
 export function renderPlansHome() {
   return renderPlansHomeBody({
     noticesHtml: renderProviderNoticeBanners(),
+    role: getPlansEffectiveRole(),
   });
 }
 
@@ -989,10 +991,10 @@ export function renderPlansPositions() {
         ${renderPlansHero({
           eyebrow: '유료 안내',
           title: '노출상품',
-          lead: '더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\n프로필 꾸미기와 베이직카드 목록 노출은 무료입니다.\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.',
+          lead: `더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\n${providerPageName(role)} 꾸미기와 베이직카드 목록 노출은 무료입니다.\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.`,
           sub: '프라임과 픽은 홈·찾기 화면에서 프로필을 더 잘 발견할 수 있도록 돕는 유료 노출상품입니다.',
         })}
-        ${renderBasicFreeRow()}
+        ${renderBasicFreeRow(role)}
       </header>
 
       <div class="plans-storefront__body">
@@ -1054,7 +1056,7 @@ export function renderPlansPositions() {
       </div>
 
       <div class="plans-storefront__foot">
-        ${renderPolicyAccordion('position')}
+        ${renderPolicyAccordion('position', role)}
         ${role === 'study_room' || role === 'tutor' ? renderTestModeToggle() : ''}
       </div>
     </section>`;
