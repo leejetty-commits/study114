@@ -101,7 +101,7 @@ export const STUDENT_REVIEW = {
   itemLabelStudyRoom: '상담후보',
   toastAdded: '학생 검토함에 넣었습니다',
   toastRemoved: '학생 검토함에서 뺐습니다',
-  note: '관심 있는 학생을 저장해 두고, 준비가 되었을 때 쪽지를 이어가세요. (학부모 이용 후기와는 다른 기능입니다)',
+  note: '관심 있는 학생을 저장해 두고, 준비가 되었을 때 쪽지를 이어가세요. (학생이 남기는 이용 후기와는 다른 기능이에요)',
   lifecycleHidden: '현재 노출이 중지된 의뢰입니다',
 };
 
@@ -112,20 +112,29 @@ export function studentReviewItemLabel(role) {
 
 /** 25§6 resume token — 최근열람 · 상세 Entry Context Ribbon */
 export const RESUME_ROUTE_LABELS = {
-  search: '검색에서',
-  parent: '학부모 홈에서',
-  detail: '상세에서',
-  wishlist: '찜한 공부방·과외쌤에서',
+  search: '찾기에서',
+  parent: '학생 홈에서',
+  study_room: '공부방 홈에서',
+  tutor: '과외쌤 홈에서',
+  guest: '첫 화면에서',
+  home: '홈에서',
+  resume: '로그인 후 이어보기에서',
+  detail: '자세히 보기에서',
+  wishlist: '찜 목록에서',
   mypage: '마이페이지에서',
-  'student-review': '학생 검토함에서',
+  'student-review': '관심 학생에서',
 };
 
 export const RESUME_ACTION_LABELS = {
-  view_detail: '상세 열람',
-  wish_add: '찜함',
-  compare_add: '비교 담음',
-  review_add: '검토함에 넣음',
+  view_detail: '자세히 봤어요',
+  wish_add: '찜했어요',
+  compare_add: '비교에 담았어요',
+  review_add: '관심 학생에 담았어요',
 };
+
+/** 표에 없는 키는 원문 대신 이 문구 */
+export const RESUME_ROUTE_UNKNOWN = '둘러보다가';
+export const RESUME_ACTION_UNKNOWN = '봤어요';
 
 /** 25§2차 판단 스티커 — basket 행 */
 export const DECISION_STICKER = {

@@ -2,7 +2,12 @@
  * 25장 §6 2차 — resume token · Entry Context Ribbon
  */
 
-import { RESUME_ROUTE_LABELS, RESUME_ACTION_LABELS } from './handoff-copy.js';
+import {
+  RESUME_ROUTE_LABELS,
+  RESUME_ACTION_LABELS,
+  RESUME_ROUTE_UNKNOWN,
+  RESUME_ACTION_UNKNOWN,
+} from './handoff-copy.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -13,9 +18,9 @@ function esc(s) {
  * @param {string} [lastAction]
  */
 export function formatResumeToken(lastRoute, lastAction) {
-  const route = RESUME_ROUTE_LABELS[/** @type {keyof typeof RESUME_ROUTE_LABELS} */ (lastRoute)] || lastRoute || '탐색에서';
+  const route = RESUME_ROUTE_LABELS[/** @type {keyof typeof RESUME_ROUTE_LABELS} */ (lastRoute)] || RESUME_ROUTE_UNKNOWN;
   const action =
-    RESUME_ACTION_LABELS[/** @type {keyof typeof RESUME_ACTION_LABELS} */ (lastAction)] || lastAction || '열람';
+    RESUME_ACTION_LABELS[/** @type {keyof typeof RESUME_ACTION_LABELS} */ (lastAction)] || RESUME_ACTION_UNKNOWN;
   return `${route} · ${action}`;
 }
 

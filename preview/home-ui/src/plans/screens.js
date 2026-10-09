@@ -72,7 +72,12 @@ import {
   productIcon,
 } from './store-ui.js';
 import { renderPlansHomeBody } from './hub-home.js';
-import { providerPageName } from '../mypage/mypage-copy.js';
+import {
+  providerPageName,
+  memoPackProviderLabel,
+  memoPackStatusLabel,
+  waitlistStatusLabel,
+} from '../mypage/mypage-copy.js';
 import {
   renderApplyTargetBlock,
   getApplyTargetReadiness,
@@ -991,7 +996,7 @@ export function renderPlansPositions() {
         ${renderPlansHero({
           eyebrow: '유료 안내',
           title: '노출상품',
-          lead: `더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\n${providerPageName(role)} 꾸미기와 베이직카드 목록 노출은 무료입니다.\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.`,
+          lead: `더 좋은 자리에서 학생에게 발견될 기회를 제공합니다.\n${providerPageName(role)} 꾸미기와 베이직카드 목록 노출은 무료입니다.\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.`,
           sub: '프라임과 픽은 홈·찾기 화면에서 프로필을 더 잘 발견할 수 있도록 돕는 유료 노출상품입니다.',
         })}
         ${renderBasicFreeRow(role)}
@@ -1287,14 +1292,14 @@ export function renderPlansMy() {
                   .map(
                     (p) => `
                   <tr data-plans-pack-row data-plans-pack-grant="${esc(String(p.grant_label || ''))}" data-plans-pack-status="${esc(String(p.status || ''))}" data-plans-pack-granted="${esc(String(p.granted_count ?? ''))}" data-plans-pack-remaining="${esc(String(p.remaining ?? ''))}" data-plans-pack-provider="${esc(String(p.provider_id ?? ''))}">
-                    <td>${esc(p.provider_type || '미확인')} #${esc(String(p.provider_id ?? ''))}</td>
+                    <td>${esc(memoPackProviderLabel(p.provider_type))}</td>
                     <td>${esc(p.product_name || '')}</td>
                     <td>${esc(p.grant_label || '')}</td>
                     <td>${p.granted_count ?? '—'}</td>
                     <td>${p.remaining ?? '—'}</td>
                     <td>${esc(String(p.purchased_at || '').slice(0, 10))}</td>
                     <td data-plans-pack-expires>${esc(String(p.expires_at || '').slice(0, 10))}</td>
-                    <td>${esc(p.status || '')}</td>
+                    <td>${esc(memoPackStatusLabel(p.status))}</td>
                   </tr>`,
                   )
                   .join('')}
@@ -1691,7 +1696,7 @@ export function bindPlansScreenEvents(root, rerender) {
                   <tr>
                     <td>${esc(w.product || '프라임')}</td>
                     <td>${esc(w.region || '—')}</td>
-                    <td>${esc(w.status_label || w.status || '')}</td>
+                    <td>${esc(waitlistStatusLabel(w))}</td>
                     <td>${esc(String(w.registered_at || '').slice(0, 10))}</td>
                     <td>${
                       w.can_cancel

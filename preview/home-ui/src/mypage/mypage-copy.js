@@ -25,7 +25,7 @@ export const EMPTY_ONBOARDING = ONBOARDING_GUARD_COPY;
 
 /** §7 학부모 P15-09 */
 export const GUARDIAN_PLANS_COPY = {
-  lead: '학부모 계정은 상품 안내를 볼 수 있으며 구매 기능은 제공하지 않아요.',
+  lead: '학생 계정은 상품 안내를 볼 수 있고, 구매 기능은 없어요.',
   body: '대표 노출·추천 노출과 쪽지권은 공부방과 과외쌤을 위한 유료 서비스입니다.',
   footnote: '상품 구성과 가격은 상품 안내에서 확인할 수 있어요.',
 };
@@ -41,6 +41,60 @@ export const PROVIDER_PAGE_NAME = {
 export function providerPageName(role) {
   if (role === 'study_room' || role === 'tutor') return PROVIDER_PAGE_NAME[role];
   return PROVIDER_PAGE_NAME.other;
+}
+
+/** 결제·쪽지권·예약대기에 오는 내부 값 → 화면 글자. 표에 없는 값은 원문 대신 중립 문구 */
+export const ORDER_STATUS_LABELS = {
+  paid: '결제 완료',
+  pending: '결제 대기',
+  failed: '결제 실패',
+  canceled: '결제 취소',
+  cancelled: '결제 취소',
+  refunded: '환불 완료',
+};
+
+export const PAYMENT_METHOD_LABELS = {
+  card: '카드',
+  transfer: '계좌이체',
+  vbank: '무통장 입금',
+  dev_mock: '카드(시험 결제)',
+};
+
+export const PROVIDER_TYPE_LABELS = {
+  study_room: '공부방',
+  tutor: '과외쌤',
+};
+
+export const WAITLIST_STATUS_LABELS = {
+  registered: '대기 등록',
+  notified: '결제 가능',
+  paid: '구매 완료',
+  cancelled: '취소',
+  expired: '만료',
+};
+
+export const UNKNOWN_STATUS_LABEL = '확인 중';
+export const UNKNOWN_PAYMENT_METHOD_LABEL = '기타';
+export const UNKNOWN_PRODUCT_LABEL = '유료 상품';
+export const ALL_PROFILES_LABEL = '모든 프로필 공통';
+
+/** @param {string} [providerType] */
+export function memoPackProviderLabel(providerType) {
+  const key = String(providerType || '');
+  if (!key) return ALL_PROFILES_LABEL;
+  return PROVIDER_TYPE_LABELS[/** @type {keyof typeof PROVIDER_TYPE_LABELS} */ (key)] || UNKNOWN_STATUS_LABEL;
+}
+
+/** 서버가 한글로 보내는 상태. 영문이 오면 원문 대신 「확인 중」 @param {string} [status] */
+export function memoPackStatusLabel(status) {
+  const text = String(status || '');
+  return /[A-Za-z]/.test(text) ? UNKNOWN_STATUS_LABEL : text;
+}
+
+/** @param {{ status_label?: string, status?: string }} row */
+export function waitlistStatusLabel(row) {
+  if (row?.status_label) return String(row.status_label);
+  return WAITLIST_STATUS_LABELS[/** @type {keyof typeof WAITLIST_STATUS_LABELS} */ (String(row?.status || ''))] || UNKNOWN_STATUS_LABEL;
 }
 
 export const HOME_STATS_NOTE = '내 상태는 활동에 따라 달라져요.';
