@@ -71,4 +71,8 @@
 ## 7. 승인·main 반영
 
 - 작업 전 확인: 사용자 2026-10-09 범위 답 + 「진행」.
-- main 병합: **대기** (커밋 hash 단위 사용자 승인 후).
+- 작업 커밋 `32f475f3`. 브랜치 CI: Verify bundle·Board ACL gate 성공.
+- main 병합 승인: 사용자 2026-10-09 18:35 「병합 배포」 (커밋 `32f475f3`).
+- main 병합: 분리 worktree `.wt/merge-cdm`에서 `--no-ff`, 병합 커밋 `0d125cc1` (`3763a8c8` → `0d125cc1`), main push는 승인 창으로 사용자 확인.
+- main Actions(`0d125cc1`): ShopPage gate·Tutor mypage frame IA·Verify bundle·Board ACL gate·Deploy to dothome 모두 성공.
+- 운영 번들 확인: 홈 `https://study114.net/` `index-DGRx0qpf.js`, 찾기 `https://study114.net/search/` `index-D-PZsGA6.js` 모두 `expo-hcard__detail`·`search-open-detail` 없음, 학생 카드 클릭 연결(`open-student-detail`) 있음. 찾기 번들의 이름 가리기 함수가 새 규칙(1자 ○, 2자 첫 글자+○, 3자 이상 앞 두 글자+○)으로 바뀐 것 확인. 실제 로그인 화면 눈확인은 하지 않음.
