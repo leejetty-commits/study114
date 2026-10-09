@@ -11,7 +11,7 @@ import {
   EXPOSURE_STUDENTS,
 } from './exposure-data.js';
 import { studyRoomBadges, tutorBadges } from './exposure-format.js';
-import { studyRoomSearchCardFields, tutorSearchCardFields } from './home-basic-live.js';
+import { studentSearchCardFields, studyRoomSearchCardFields, tutorSearchCardFields } from './home-basic-live.js';
 
 export const REAL_DB_CAP = { study_room: 3, tutor: 2, student: 2 };
 
@@ -61,13 +61,11 @@ function mapTutorItem(item) {
 
 /** @param {object} item */
 function mapStudentItem(item) {
-  const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
   return {
     id: item.id,
     public_display_name: item.title || '',
     location_label: item.region_label || '',
-    subject_label: summaryLines[0] || '',
-    grade_level: summaryLines[1]?.split('·')[0]?.trim() || '',
+    ...studentSearchCardFields(item),
     exposure_status: 'published',
     _realDb: true,
   };

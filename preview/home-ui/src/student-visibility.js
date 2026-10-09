@@ -50,3 +50,9 @@ export const PEER_STUDENT_REQUEST_GATE_COPY = {
 };
 
 export const PAID_GATE_MESSAGE = PERMISSION_DENIED_COPY.paid.body;
+
+/** 베이직 카드 「한 줄 요청」「특이요청」 칸 — 볼 수 없는 사람에게 보이는 잠금 문구 */
+export const STUDENT_REQUEST_CARD_LOCK = {
+  nonProvider: '선생님만 보기',
+  unpaidProvider: '픽·프라임 이용 시 보기',
+};

@@ -93,6 +93,18 @@
 - ○ 학생 정보는 보호를 위해 제한적으로만 공개됩니다.
 - ○ 학생 상세 정보는 공개 범위 안에서만 확인할 수 있습니다.
 
+### 6-1. 학생 카드 칸 (2026-10-09 사용자 결정)
+
+- 학생 베이직 카드(로그인)는 학년 배지·지역·과목·수업장소·원생수·일정·한 줄 요청·특이요청·강의스타일 칸을 **늘 보인다**. 값이 없으면 「—」. 「(선택)」 표시 없음.
+- 「한 줄 요청」「특이요청」 원문은 서버가 픽·프라임 이용 중인 공부방·과외쌤과 관리자에게만 보낸다(`StudentRequestTextAccess`). 카드에는:
+  - 학부모 등 공급자가 아닌 사람: 「선생님만 보기」
+  - 이용권 없는 공부방·과외쌤: 「픽·프라임 이용 시 보기」
+  - 볼 수 있는 사람: 원문, 비어 있으면 「—」
+  - 학생 본인 카드: 자기 원문
+- 확대카드도 같은 칸(일정 포함)을 모두 보이고, 값이 없으면 「—」. 값이 없을 때 「단독」처럼 지어내지 않는다.
+- 손님 학생 카드는 로그인 유도 요약(과목·희망)만 — 이 규칙 밖.
+- 코드: `preview/home-ui/src/exposure-render.js` `renderBasicStudentRow`, `student-visibility.js` `STUDENT_REQUEST_CARD_LOCK`, `detail-decision/student-request-card.js`. 검사: `scripts/verify-card-field-paths-20261009.mjs`, `scripts/verify-student-search-fields.php`.
+
 ---
 
 ## 7. CTA 원칙

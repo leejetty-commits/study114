@@ -121,14 +121,14 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
     return merged;
   }
 
-  const summaryParts = String(apiItem.summary || '').split(' · ').filter(Boolean);
+  // 과목이 비면 비워 둔다. summary 첫 조각은 지역일 수 있다.
   const merged = {
     ...apiItem,
     id,
     public_display_name: String(apiItem.title || ''),
     grade_level: String(apiItem.grade_level || ''),
     gender: apiItem.gender || null,
-    subject_label: apiItem.subject_name || summaryParts[0] || '',
+    subject_label: String(apiItem.subject_name || ''),
     location_label: normalizeApiRegionLabel(tab, apiItem.region_label || '', apiItem),
     lesson_format: apiItem.lesson_format || null,
     student_gender_group: apiItem.student_gender_group || null,

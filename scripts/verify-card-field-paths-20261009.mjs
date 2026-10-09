@@ -9,8 +9,9 @@
  *   과외쌤  홈·찜(mapTutor) / 확대카드 대체(exposure-bridge) / 찾기·검색·과외쌤 모드 홈(search-exposure-mapper)
  *   학생    홈(mapStudent) / 확대카드 대체(exposure-bridge) / 찾기·검색·공부방·과외쌤 모드 홈(search-exposure-mapper)
  * 카드: 베이직(가로) · 픽 · 프라임 · 확대카드. 학생은 베이직 · 확대카드.
- * 공부방·과외쌤은 실패하면 종료 코드 1. 학생은 「점검」으로만 센다(규칙 미정).
+ * 하나라도 어긋나면 종료 코드 1. 학생 빈 칸 「—」·요청문 잠금 문구·서버 응답 칸도 본다.
  */
+import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -94,6 +95,7 @@ const SERVER_STUDENT = {
   preferred_student_count_group: 'two', preferred_lesson_type: 'tutor', preferred_fee_amount: 300000,
   preferred_studyroom_fee_amount: null, budget_amount: null, published_at: '2026-10-01 10:00:00', created_at: '2026-10-01 10:00:00',
   exposure_tier: 'basic', request_summary: '요청문구', special_request_note: '특이문구',
+  lessons_per_week: 2, minutes_per_lesson: 60, lesson_places: ['student_home', 'public_place'], teaching_style_badges: ['kind'],
 };
 
 /* ── 기대값 = 서버 값을 화면 표시 함수에 넣은 결과 ── */
@@ -122,11 +124,16 @@ const TUTOR_DETAIL = {
   주교재: '주교재X', 강의스타일: '열정', 특징: '특징가 · 특징나 · 특징다', '학교·학과': '점검대 점검과', 소개: '과외소개',
 };
 
+const studentStyle = F.formatTeachingStyleBadges(SERVER_STUDENT.teaching_style_badges, 2);
 const STUDENT_BASIC = {
-  과목: '수학', 원생수: F.formatStudentLessonTarget(SERVER_STUDENT), '(대상 배지)': '중2', '(가격)': '월 300천원',
-  '한 줄 요청': '요청문구', 특이요청: '특이문구',
+  과목: '수학', 수업장소: '학생자택 · 공공장소', 원생수: F.formatStudentLessonTarget(SERVER_STUDENT), 일정: '주2·60분',
+  '한 줄 요청': '요청문구', 특이요청: '특이문구', 강의스타일: studentStyle,
+  '(대상 배지)': '중2', '(가격)': F.formatStudentBudgetCard(SERVER_STUDENT),
 };
-const STUDENT_DETAIL = { 학년: '중2', '희망 과목': '수학', 수업형태: '그룹과외', '희망 수업인원': '2명', 수업예산: '월 300천원' };
+const STUDENT_DETAIL = {
+  학년: '중2', '희망 과목': '수학', '희망 수업장소': '학생자택 · 공공장소', 수업형태: '그룹과외', '그룹 구성': '남',
+  '희망 수업인원': '2명', 일정: '주2·60분', '희망 강의스타일': studentStyle, 수업예산: '월 300천원',
+};
 
 /* ── 경로 ── */
 const PATHS = {
@@ -171,7 +178,6 @@ const CARDS = {
 const KO = { study_room: '공부방', tutor: '과외쌤', student: '학생' };
 let hardFail = 0;
 let pass = 0;
-let studentGap = 0;
 for (const kind of ['study_room', 'tutor', 'student']) {
   console.log(`\n===== ${KO[kind]} =====`);
   for (const [pathName, toItem] of Object.entries(PATHS[kind])) {
@@ -180,8 +186,7 @@ for (const kind of ['study_room', 'tutor', 'student']) {
       item = toItem();
     } catch (e) {
       console.error(`FAIL  ${KO[kind]} ${pathName}: 변환 실패 ${e?.message || e}`);
-      if (kind === 'student') studentGap += 1;
-      else hardFail += 1;
+      hardFail += 1;
       continue;
     }
     for (const [cardName, [read, expect]] of Object.entries(CARDS[kind])) {
@@ -196,9 +201,6 @@ for (const kind of ['study_room', 'tutor', 'student']) {
       if (!bad.length) {
         pass += 1;
         console.log(`PASS  ${tag} (${Object.keys(expect).length}칸)`);
-      } else if (kind === 'student') {
-        studentGap += 1;
-        console.warn(`점검  ${tag}\n        ${bad.join('\n        ')}`);
       } else {
         hardFail += 1;
         console.error(`FAIL  ${tag}\n        ${bad.join('\n        ')}`);
@@ -207,10 +209,60 @@ for (const kind of ['study_room', 'tutor', 'student']) {
   }
 }
 
-console.log('\n===== 서버 응답에 없는 학생 카드 칸 =====');
-for (const key of ['lesson_places', 'lessons_per_week', 'minutes_per_lesson', 'teaching_style_badges']) {
-  console.log(`  ${key}: ${key in SERVER_STUDENT ? '있음' : '없음 (SearchService::searchStudents items 에 없음)'}`);
+function check(name, cond, detail = '') {
+  if (cond) {
+    pass += 1;
+    console.log(`PASS  ${name}`);
+  } else {
+    hardFail += 1;
+    console.error(`FAIL  ${name}${detail ? `\n        ${detail}` : ''}`);
+  }
 }
 
-console.log(`\n${pass} passed, ${hardFail} failed (공부방·과외쌤), 학생 점검 ${studentGap}건`);
+console.log('\n===== 서버 학생 응답 칸 (SearchService::searchStudents) =====');
+{
+  const php = readFileSync(join(ROOT, 'src/Search/SearchService.php'), 'utf8');
+  const start = php.indexOf('private function searchStudents(');
+  const body = start >= 0 ? php.slice(start, php.indexOf('\n    private function ', start + 10)) : '';
+  check('SELECT 에 주회·분', /s\.lessons_per_week/.test(body) && /s\.minutes_per_lesson/.test(body));
+  check("응답에 'lessons_per_week'·'minutes_per_lesson'", /'lessons_per_week'\s*=>/.test(body) && /'minutes_per_lesson'\s*=>/.test(body));
+  check('응답에 희망 수업장소·강의스타일', /loadStudentCodeMap\(\$pdo, 'lesson_places'/.test(body) && /loadStudentCodeMap\(\$pdo, 'teaching_style_badges'/.test(body) && /\['lesson_places'\]/.test(body) && /\['teaching_style_badges'\]/.test(body));
+  check('희망 수업장소·강의스타일 표에서 읽음', /FROM student_preferred_lesson_places/.test(php) && /FROM student_preferred_teaching_style_badges/.test(php));
+}
+
+console.log('\n===== 학생 빈 값 · 요청문 잠금 =====');
+{
+  const vis = await load('preview/home-ui/src/student-visibility.js');
+  const isPaidProviderViewer = vis.isPaidProviderViewer;
+  const LOCK = vis.STUDENT_REQUEST_CARD_LOCK || { nonProvider: '(잠금 문구 없음)', unpaidProvider: '(잠금 문구 없음)' };
+  const EMPTY = { id: 8399, public_display_name: '빈학생', location_label: '' };
+  const want = ['과목', '수업장소', '원생수', '일정', '한 줄 요청', '특이요청', '강의스타일'];
+  const tutorView = slots(R.renderBrowseList('student', [EMPTY], { guest: false, viewerRole: 'tutor' }));
+  check('빈 학생 베이직: 항목제목 7개 모두 보임', want.every((k) => k in tutorView), `빠짐: ${want.filter((k) => !(k in tutorView)).join(', ')}`);
+  const plain = ['과목', '수업장소', '원생수', '일정', '강의스타일', '(대상 배지)', '(위치)'];
+  check('빈 학생 베이직: 값 자리 「—」(학년 배지·위치 포함)', plain.every((k) => tutorView[k] === '—'), plain.map((k) => `${k}=${tutorView[k]}`).join(', '));
+  check('빈 학생 베이직: 「(선택)」 없음', !R.renderBrowseList('student', [EMPTY], { guest: false, viewerRole: 'tutor' }).includes('(선택)'));
+
+  const providerEmpty = isPaidProviderViewer('tutor') ? '—' : LOCK.unpaidProvider;
+  check(`과외쌤(이용권 ${isPaidProviderViewer('tutor') ? '있음' : '없음'}) · 요청문 없음 → 「${providerEmpty}」`, tutorView['한 줄 요청'] === providerEmpty && tutorView['특이요청'] === providerEmpty, `${tutorView['한 줄 요청']} / ${tutorView['특이요청']}`);
+  const adminView = slots(R.renderBrowseList('student', [EMPTY], { guest: false, viewerRole: 'admin' }));
+  check('관리자 · 요청문 없음 → 「—」', adminView['한 줄 요청'] === '—' && adminView['특이요청'] === '—', `${adminView['한 줄 요청']} / ${adminView['특이요청']}`);
+  const parentView = slots(R.renderBrowseList('student', [{ ...EMPTY, request_summary: '보이면안됨', special_request_note: '보이면안됨' }], { guest: false, viewerRole: 'parent' }));
+  check(`학부모 → 「${LOCK.nonProvider}」 (원문 있어도)`, parentView['한 줄 요청'] === LOCK.nonProvider && parentView['특이요청'] === LOCK.nonProvider, `${parentView['한 줄 요청']} / ${parentView['특이요청']}`);
+  const self = slots(R.renderStudentBasicSelfCard({ ...EMPTY, request_summary: '내요청', special_request_note: '내특이' }));
+  check('학생 본인 카드 → 자기 요청문 그대로', self['한 줄 요청'] === '내요청' && self['특이요청'] === '내특이', `${self['한 줄 요청']} / ${self['특이요청']}`);
+
+  const dNone = details(renderStudentRequestBody({ ...EMPTY }, 'tutor'));
+  check('확대카드 · 수업형태 없음 → 희망 수업인원 「—」(「단독」 지어내지 않음)', dNone['희망 수업인원'] === '—', dNone['희망 수업인원']);
+  check('확대카드 · 일정 칸 있음 · 빈 값 「—」', dNone['일정'] === '—', dNone['일정']);
+  const dOne = details(renderStudentRequestBody({ ...EMPTY, lesson_format: 'one_on_one' }, 'tutor'));
+  check('확대카드 · 1:1 → 희망 수업인원 「단독」', dOne['희망 수업인원'] === '단독', dOne['희망 수업인원']);
+
+  const noSubject = mapper.mapToExposureItem('student', { ...SERVER_STUDENT, subject_name: null }, 0);
+  check('찾기 변환 · 과목 없음 → 비워 둠(summary 첫 조각 대체 없음)', noSubject.subject_label === '', noSubject.subject_label);
+  const noSubjectHome = live.mapSearchStudentItem({ ...SERVER_STUDENT, subject_name: null });
+  check('홈 변환 · 과목 없음 → 비워 둠', noSubjectHome.subject_label === '', noSubjectHome.subject_label);
+}
+
+console.log(`\n${pass} passed, ${hardFail} failed`);
 process.exit(hardFail ? 1 : 0);

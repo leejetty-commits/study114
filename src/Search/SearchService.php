@@ -1215,7 +1215,7 @@ final class SearchService
             SELECT DISTINCT s.id, s.public_display_name, s.grade_level, s.gender,
                    s.lesson_format, s.student_gender_group, s.preferred_student_count_group,
                    s.preferred_fee_amount, s.preferred_studyroom_fee_amount,
-                   s.preferred_lesson_type,
+                   s.preferred_lesson_type, s.lessons_per_week, s.minutes_per_lesson,
                    s.request_summary, s.special_request_note,
                    s.published_at, s.created_at,
                    {$budgetExpr} AS budget_amount,
@@ -1301,6 +1301,8 @@ final class SearchService
                 'preferred_fee_amount' => $row['preferred_fee_amount'] !== null ? (int) $row['preferred_fee_amount'] : null,
                 'preferred_studyroom_fee_amount' => $row['preferred_studyroom_fee_amount'] !== null ? (int) $row['preferred_studyroom_fee_amount'] : null,
                 'budget_amount' => $row['budget_amount'] !== null ? (int) $row['budget_amount'] : null,
+                'lessons_per_week' => $row['lessons_per_week'] !== null ? (int) $row['lessons_per_week'] : null,
+                'minutes_per_lesson' => $row['minutes_per_lesson'] !== null ? (int) $row['minutes_per_lesson'] : null,
                 'published_at' => $row['published_at'] ?? null,
                 'created_at' => $row['created_at'] ?? null,
                 'exposure_tier' => 'basic',
@@ -1319,6 +1321,16 @@ final class SearchService
                 'right'  => $right,
             ];
         }
+
+        $studentIds = array_map(static fn (array $it): int => (int) $it['id'], $items);
+        $placeMap = $this->loadStudentCodeMap($pdo, 'lesson_places', $studentIds);
+        $badgeMap = $this->loadStudentCodeMap($pdo, 'teaching_style_badges', $studentIds);
+        foreach ($items as &$item) {
+            $id = (int) $item['id'];
+            $item['lesson_places'] = $placeMap[$id] ?? [];
+            $item['teaching_style_badges'] = $badgeMap[$id] ?? [];
+        }
+        unset($item);
 
         return ['tab' => 'student', 'total' => $total, 'rows' => $rows, 'items' => $items];
     }
@@ -1928,6 +1940,48 @@ final class SearchService
         $map = [];
         foreach ($rows as $row) {
             $id = (int) ($row['tutor_id'] ?? 0);
+            $code = trim((string) ($row['code'] ?? ''));
+            if ($id <= 0 || $code === '') {
+                continue;
+            }
+            $map[$id][] = $code;
+        }
+
+        return $map;
+    }
+
+    /**
+     * 학생 카드 목록형 칸(희망 수업장소 · 희망 강의스타일). 코드값 그대로, 화면이 라벨로 바꾼다.
+     *
+     * @param 'lesson_places'|'teaching_style_badges' $kind
+     * @param list<int> $studentIds
+     * @return array<int, list<string>>
+     */
+    private function loadStudentCodeMap(PDO $pdo, string $kind, array $studentIds): array
+    {
+        $studentIds = array_values(array_filter(array_map('intval', $studentIds), static fn (int $id): bool => $id > 0));
+        if ($studentIds === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($studentIds), '?'));
+        $sql = match ($kind) {
+            'lesson_places' => "SELECT student_id, place_type AS code FROM student_preferred_lesson_places
+                                 WHERE student_id IN ({$placeholders}) ORDER BY student_id ASC, id ASC",
+            'teaching_style_badges' => "SELECT student_id, badge_name AS code FROM student_preferred_teaching_style_badges
+                                 WHERE student_id IN ({$placeholders}) ORDER BY student_id ASC, display_order ASC, id ASC",
+        };
+
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($studentIds);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $map = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['student_id'] ?? 0);
             $code = trim((string) ($row['code'] ?? ''));
             if ($id <= 0 || $code === '') {
                 continue;

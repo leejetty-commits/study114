@@ -159,15 +159,34 @@ function mapTutor(item) {
   return tutor;
 }
 
+/** 학생 카드 칸 값 — 검색 응답 그대로. summary 줄로 대신 채우지 않는다. */
+export function studentSearchCardFields(item) {
+  return {
+    grade_level: item.grade_level || '',
+    gender: item.gender || null,
+    subject_label: item.subject_name || '',
+    lesson_format: item.lesson_format || null,
+    student_gender_group: item.student_gender_group || null,
+    preferred_student_count_group: item.preferred_student_count_group || null,
+    preferred_lesson_type: item.preferred_lesson_type || null,
+    preferred_fee_amount: item.preferred_fee_amount ?? null,
+    preferred_studyroom_fee_amount: item.preferred_studyroom_fee_amount ?? null,
+    budget_amount: item.budget_amount ?? null,
+    lessons_per_week: item.lessons_per_week ?? null,
+    minutes_per_lesson: item.minutes_per_lesson ?? null,
+    lesson_places: Array.isArray(item.lesson_places) ? item.lesson_places : [],
+    teaching_style_badges: Array.isArray(item.teaching_style_badges) ? item.teaching_style_badges : [],
+    request_summary: String(item.request_summary || ''),
+    special_request_note: String(item.special_request_note || ''),
+  };
+}
+
 function mapStudent(item) {
-  const summaryLines = String(item.summary || '').split('\n').filter(Boolean);
   return {
     id: item.id,
     public_display_name: item.title || '',
     location_label: item.region_label || '',
-    subject_label: summaryLines[0] || '',
-    grade_level: summaryLines[1]?.split('·')[0]?.trim() || '',
-    budget_amount: item.budget_amount ?? item.price_amount ?? null,
+    ...studentSearchCardFields(item),
     published_at: item.published_at || item.created_at || null,
     exposure_status: 'published',
     _realDb: true,
