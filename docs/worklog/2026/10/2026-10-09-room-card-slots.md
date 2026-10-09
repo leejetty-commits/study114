@@ -92,4 +92,74 @@
 ## 7. 승인·main 반영
 
 - 작업 전 확인: 사용자 2026-10-09 18:5x 「진행」·「수업운영방식」·「고쳐」.
-- 작업 커밋 `4222bec2` (브랜치 push 완료). main 병합은 사용자 승인 후.
+- 작업 커밋 `4222bec2`, 작업기록 커밋 `8d550726`. 브랜치 CI: Verify bundle·Board ACL gate 성공.
+- main 병합 승인: 사용자 2026-10-09 19:10 「병합 배포」 (커밋 `8d550726`).
+- main 병합: 분리 worktree `.wt/merge-rcs`에서 `--no-ff`, 병합 커밋 `8bbfd88f` (`0d125cc1` → `8bbfd88f`).
+- main Actions(`8bbfd88f`): ShopPage gate·Board ACL gate·Verify bundle·Deploy to dothome 모두 성공.
+- 운영 번들 확인: 홈 `https://study114.net/` `index-D3jJqPej.js`, 찾기 `https://study114.net/search/` `index-CJ30_tWl.js` 모두 원생수 한글 표(`one_to_four:"1~4명"`), 확대카드 `<dt>수업운영방식</dt>`, 베이직 가로카드 「슬로건」·「특징」 항목 제목 있음. 실제 로그인 화면 눈확인은 하지 않음.
+
+## 8. 2차 (배포 뒤 사용자 신고)
+
+### 지시 원문
+
+> 카드에 제대로 안들어갔어... ㅜ ㅜ 기본정보에 교습형태, 대상, 슬로건 다 들어있는데, 빈칸이야(하이픈). 그리고 카드에 성별이 들어가지 않나?
+
+점검 보고 뒤 답: 「진행」(공부방 모드 홈 변환을 공통 함수로 · 값 지어내는 `mapSearchItemToDetail` 삭제 · 모든 변환 검사 추가 · 빌드·push·보고, main은 승인 후) · 성별 「넣지 않음」(원장 성별은 카드에 안 넣는 기존 결정 유지).
+
+> 모든 카드들에 항목이 제대로 연결되어 들어가는지 의심을 하지 않을수 없다.
+
+### 원인
+
+1차에서 공부방 카드를 만드는 변환 4곳 중 3곳만 고침. 공부방 모드 홈(`study-room-home-seed.js` `mapLiveRoom`)이 과목·소개만 넘기고 교습형태·대상·슬로건·원생수·수업운영방식·특징을 버림 → 공부방 모드 홈 카드가 「—」.
+
+### 변경
+
+| 파일 | 내용 |
+|---|---|
+| `preview/home-ui/src/study-room-home-seed.js` | `mapLiveRoom`이 `studyRoomSearchCardFields()`를 씀(export해서 검사가 직접 부름) |
+| `preview/home-ui/src/home-basic-live.js` | 과외쌤 공통 함수 `tutorSearchCardFields()`에 학과·재학상태·경력·증빙을 넣음 → 확대카드 대체 변환도 학과를 넘김(전에는 확대카드 「학교·학과」에 학교만). 학생 변환 export(검사용) |
+| `preview/home-ui/src/exposure-bridge.js` | 변환 3개 export(검사용) |
+| `preview/search-ui/src/search-handoff.js` | 쓰는 곳 없이 값을 지어내던 `mapSearchItemToDetail` 삭제(과외쌤 주2회·90분·학생집 방문, 공부방 대상 「—」 등) |
+| `scripts/verify-room-card-slots-20261009.mjs` | 공부방 모드 홈 변환 정적·실행 검사, `mapSearchItemToDetail` 삭제 검사 |
+| `scripts/verify-card-field-paths-20261009.mjs` | 새 검사: 서버 응답 모양(`SearchService.php` 항목 키만)의 꽉 찬 데이터를 모든 변환 × 모든 카드에 넣어 칸마다 값 비교 |
+
+### 전체 경로 점검 (`verify-card-field-paths-20261009.mjs`)
+
+| 대상 | 변환(쓰는 화면) | 베이직 | 픽 | 프라임 | 확대카드 |
+|---|---|---|---|---|---|
+| 공부방 | `home-basic-live` mapRoom (홈·찜) | 통과 | 통과 | 통과 | 통과 |
+| 공부방 | `study-room-home-seed` mapLiveRoom (공부방 모드 홈·홍보지역 찾기) | 통과 | 통과 | 통과 | 통과 |
+| 공부방 | `exposure-bridge` mapRoomItem (확대카드 대체) | 통과 | 통과 | 통과 | 통과 |
+| 공부방 | `search-exposure-mapper` (찾기·검색) | 통과 | 통과 | 통과 | 통과 |
+| 과외쌤 | `home-basic-live` mapTutor (홈·찜) | 통과 | 통과 | 통과 | 통과 |
+| 과외쌤 | `exposure-bridge` mapTutorItem (확대카드 대체) | 통과 | 통과 | 통과 | 통과(수정 전 학과 빠짐) |
+| 과외쌤 | `search-exposure-mapper` (찾기·검색·과외쌤 모드 홈) | 통과 | 통과 | 통과 | 통과 |
+| 학생 | `home-basic-live` mapStudent (홈) | 어긋남 | — | — | 어긋남 |
+| 학생 | `exposure-bridge` mapStudentItem (확대카드 대체) | 어긋남 | — | — | 어긋남 |
+| 학생 | `search-exposure-mapper` (찾기·검색·모드 홈) | 통과 | — | — | 통과 |
+
+결과: 공부방·과외쌤 30 passed, 0 failed. 학생 점검 4건(이번 범위 밖, 사용자 결정 필요):
+
+- 홈·확대카드 대체 학생 변환이 요약 한 줄 전체(「수학 · 강남구 · 그룹과외 · 남 · 2명」)를 과목 칸에 넣고, 학년·수업형태·인원·예산·요청문구를 버림.
+- 서버 학생 응답(`SearchService.php` 1288~1313행)에 수업장소·주회·분·강의스타일이 없음 → 모든 학생 카드에서 늘 빈 값. DB에는 있음(1171·1185행 필터가 씀).
+- 학생 가로카드는 아직 빈 항목을 숨김(`renderHcardMetaItem`).
+
+그 밖에 확인: 등록점검 `previewItem`(공부방·과외쌤)은 만들기만 하고 그리는 곳 없음. 동네 인사·마이페이지 찜은 위 변환을 씀.
+
+### 검수
+
+- 새 경로 검사: 30 passed, 0 failed (학생 점검 4건 별도 표시)
+- `verify-room-card-slots-20261009.mjs`: **79 passed, 0 failed**. main `8bbfd88f`의 `study-room-home-seed.js`에는 공통 함수가 없고 `mapSearchItemToDetail`이 있음 → 새 검사가 이번 신고를 잡음.
+- 기존 검사 실패 0: detail-card-all-fields, card-detail-mask-20261009, card-visual, card-visual-penetration, guest-baseline-map-cards, role-home-guard 56/0, student-home-tutor-tier, tutor-box-real-values 49/0, tutor-search-fields, wishlist-card-zoom, wishlist-card-zoom-screen
+- 배포 전 검사: `verify:shop-page`, `verify:tutor-inquiries-settings`, `verify:study-room-inquiries-samples`, `verify:board-acl:js`, `verify:no-sample-data`, `check-no-committed-secrets.sh` 성공
+- `npm run build:dothome`: 성공
+- 로그인 화면 눈확인: 하지 않음(미확인). 손님 검색은 대치동 범위라 0건.
+
+### 배포 전 사용자 할 일
+
+- 없음.
+
+### 커밋·승인
+
+- 2차 작업 커밋 `eee1c375`. 브랜치 CI: Board ACL gate·Verify bundle 성공.
+- main 병합: 사용자 승인 대기.

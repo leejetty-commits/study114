@@ -7,6 +7,7 @@ import { getStudyRooms } from './study-room-reg/store.js';
 import { getUnreadCount } from './messages/thread-store.js';
 import { fetchRoiSummary } from './paid-api.js';
 import { studyRoomBadges } from './exposure-format.js';
+import { studyRoomSearchCardFields } from './home-basic-live.js';
 import { searchApi } from '@search-ui/search-api.js';
 import { normalizeLocation } from '../../shared/location-display.js';
 
@@ -271,7 +272,7 @@ export function applyStudyRoomHomePromo(state) {
   return state.activeRegionLabel;
 }
 
-function mapLiveRoom(item) {
+export function mapLiveRoom(item) {
   const sku = item?.position_sku === 'prime' || item?.position_sku === 'pick' ? item.position_sku : '';
   const room = {
     id: Number(item.id),
@@ -282,8 +283,7 @@ function mapLiveRoom(item) {
     review_count: Number(item.review_count) || 0,
     published_at: item.published_at || null,
     created_at: item.created_at || null,
-    main_subject_note: item.main_subject_note || '',
-    intro_short: item.intro_short || '',
+    ...studyRoomSearchCardFields(item),
     education_office_registered: Boolean(item.education_office_registered),
     career_years: item.career_years ?? null,
     profile_status: 'published',
@@ -293,9 +293,6 @@ function mapLiveRoom(item) {
     longitude: item.longitude ?? null,
     position_sku: sku || null,
     exposure_tier: sku || 'basic',
-    image_path: item.image_path || item.image_path_basic || '',
-    image_path_basic: item.image_path_basic || '',
-    image_path_prime: item.image_path_prime || '',
     _realDb: true,
   };
   room.badges = studyRoomBadges(room);
