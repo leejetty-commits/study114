@@ -3,7 +3,7 @@
  * 카피·레이아웃·CTA를 surface(페이지) 단위로 분배한다.
  */
 
-import { searchUiUrl, HOME_UI_BASE } from './nav-config.js';
+import { HOME_UI_BASE } from './nav-config.js';
 import { homeHashUrl, roleHomeHashPath } from '../../shared/site-nav-config.js';
 import { getAuthUser } from './auth-session.js';
 
@@ -132,10 +132,7 @@ const SURFACE_BANNER = {
     copyId: 'compare',
     layout: 'cinema',
     image: '/assets/banners/room.webp',
-    ctas: [
-      { label: '우리동네 과외쌤 찾기', href: searchUiUrl('tutor'), external: true, kind: 'primary' },
-      { label: '홈으로', href: '', external: true, kind: 'secondary' },
-    ],
+    ctas: [{ label: '홈으로', href: '', external: true, kind: 'secondary' }],
   },
   search_tutor: {
     copyId: 'tutor_find',
