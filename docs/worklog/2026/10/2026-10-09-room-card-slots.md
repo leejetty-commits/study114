@@ -158,3 +158,8 @@
 ### 배포 전 사용자 할 일
 
 - 없음.
+
+### 커밋·승인
+
+- 2차 작업 커밋 `eee1c375`. 브랜치 CI: Board ACL gate·Verify bundle 성공.
+- main 병합: 사용자 승인 대기.
