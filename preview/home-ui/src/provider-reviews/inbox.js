@@ -130,8 +130,8 @@ function providerDisplayName(type, id) {
 
 export function renderReviewInboxPlaceholder() {
   return `
-    <section class="review-inbox" data-review-inbox data-mode="list" data-lane="all">
-      <div data-review-inbox-body><p class="review-sheet__empty">불러오는 중…</p></div>
+    <section class="review-inbox mp-card" data-review-inbox data-mode="list" data-lane="all">
+      <div data-review-inbox-body><p class="review-sheet__empty mp-card__empty">불러오는 중…</p></div>
     </section>`;
 }
 
@@ -164,6 +164,12 @@ export async function hydrateReviewInbox(root, rerender) {
     const filterLead = filtered
       ? `<p class="review-inbox__lead">${esc(data.provider_label || '이 대상')} 후기</p>`
       : '';
+    const navRole = getNavRole();
+    const providerEmpty = !filtered && (navRole === 'study_room' || navRole === 'tutor');
+    const emptyHtml = providerEmpty
+      ? `<p class="review-sheet__empty mp-card__empty">${esc(PROVIDER_REVIEW_COPY.inboxEmptyReceivedProvider)}</p>`
+      : `${filterLead}<p class="review-sheet__empty mp-card__empty">${esc(PROVIDER_REVIEW_COPY.inboxEmptyAll)}</p>
+        <p class="review-inbox__lead">${esc(emptyLead)}</p>`;
     body.innerHTML = items.length
       ? `${filterLead}<ul class="review-sheet__list">${items
           .map((r) =>
@@ -176,10 +182,9 @@ export async function hydrateReviewInbox(root, rerender) {
         ${pager(data.page || page, data.total || 0, data.page_size || 10, (p) =>
           reviewsArchivePath({ ...archiveOpts, page: p }),
         )}`
-      : `${filterLead}<p class="review-sheet__empty">${esc(PROVIDER_REVIEW_COPY.inboxEmptyAll)}</p>
-        <p class="review-inbox__lead">${esc(emptyLead)}</p>`;
+      : emptyHtml;
   } catch {
-    body.innerHTML = `<p class="review-sheet__empty">후기를 불러오지 못했습니다.</p>`;
+    body.innerHTML = `<p class="review-sheet__empty mp-card__empty">후기를 불러오지 못했습니다.</p>`;
   }
 
   bindInbox(host, rerender);

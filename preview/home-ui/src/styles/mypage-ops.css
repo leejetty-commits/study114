@@ -1940,3 +1940,131 @@
   }
 }
 
+/* ── 쪽지·후기함 (마이페이지 안만. 바깥 후기 시트 .review-sheet는 그대로) ── */
+.mypage-content .msg-hub {
+  margin: 0 0 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.mypage-content .msg-hub__tab {
+  padding: 12px 16px;
+  border-bottom: 2px solid transparent;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.mypage-content .msg-hub__tab:hover {
+  color: #1c1917;
+}
+.mypage-content .msg-hub__tab.is-active {
+  border-bottom-color: var(--role-accent);
+  color: var(--role-accent);
+  font-weight: 700;
+}
+.home-app--role-parent .mypage-content .msg-hub__tab.is-active {
+  border-bottom-color: var(--s5-role, #5b4bd6);
+  color: var(--s5-role, #5b4bd6);
+}
+.mypage-content .msg-list {
+  gap: 0;
+}
+.mypage-content .msg-list__label {
+  margin: 16px 0 4px;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.mypage-content .msg-list__label:first-child {
+  margin-top: 0;
+}
+.mypage-content .msg-row {
+  margin: 0 -12px;
+  padding: 12px;
+  border: 0;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0;
+  background: #fff;
+}
+.mypage-content .msg-row:last-child {
+  border-bottom: 0;
+}
+.mypage-content .msg-row.is-important {
+  background: #fff;
+}
+.mypage-content .msg-row.is-unread,
+.mypage-content .msg-row.is-open {
+  background: #eef4fb;
+}
+.mypage-content .msg-row__dot {
+  background: var(--brand-blue);
+}
+.mypage-content .msg-star {
+  font-size: 16px;
+}
+.mypage-content .msg-read-badge {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+.mypage-content .msg-read-badge--unread {
+  background: var(--brand-blue-light);
+  color: var(--brand-blue);
+}
+.mypage-content .msg-bubble__read {
+  font-size: 12px;
+}
+.mypage-content .msg-reply__file {
+  font-size: 14px;
+}
+.mypage-content .review-inbox .review-sheet__list {
+  gap: 0;
+}
+.mypage-content .review-inbox .review-sheet__item {
+  border: 0;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0;
+  background: #fff;
+}
+.mypage-content .review-inbox .review-sheet__item:last-child {
+  border-bottom: 0;
+}
+.mypage-content .review-inbox .review-inbox__badges {
+  padding: 12px 0 0;
+}
+.mypage-content .review-inbox .review-sheet__item:first-child .review-inbox__badges {
+  padding-top: 0;
+}
+.mypage-content .review-inbox .review-sheet__item-btn {
+  padding: 8px 0 12px;
+}
+.mypage-content .review-inbox .review-sheet__item-actions {
+  padding: 0 0 12px;
+}
+.mypage-content .review-inbox__tag {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+.mypage-content .review-inbox__pager {
+  margin-top: 16px;
+  font-size: 14px;
+}
+.mypage-content .review-inbox__lead {
+  margin: 0;
+  color: #4b5563;
+  font-size: 14px;
+}
+

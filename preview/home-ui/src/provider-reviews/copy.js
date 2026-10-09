@@ -90,6 +90,7 @@ export const PROVIDER_REVIEW_COPY = {
   inboxEmptyReceivedOtherRole: '공부방·과외쌤으로 등록하면 받은 후기를 여기에서 관리할 수 있어요.',
   inboxEmptyAll: '작성한 후기가 없습니다.',
   inboxEmptyAllLead: '쪽지 상담 후에 후기를 남기면 여기에 모입니다.',
+  inboxEmptyReceivedProvider: '아직 받은 후기가 없어요. 좋은 수업은 언젠가 꼭 기억으로 돌아와요.',
   inboxKindConsultation: '상담 후기',
   inboxKindExperience: '수업 후기',
   blockCta: '후기차단',
