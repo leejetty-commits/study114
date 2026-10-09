@@ -128,5 +128,15 @@ function check(name, ok, detail = '') {
   check('고민방 본문 keep-all', /\.concern-frame__body \{[^}]*word-break: keep-all;[^}]*overflow-wrap: break-word;/.test(css));
 }
 
+/* 9. 과외쌤 찾기 배너에서 「우리동네 공부방 찾기」 제거 */
+{
+  const src = read('preview/home-ui/src/home-marketing-banner.js');
+  const m = src.match(/search_tutor: \{([\s\S]*?)\n  \},/);
+  const block = m ? m[1] : '';
+  check('과외쌤 찾기 배너 찾음', Boolean(m));
+  check('과외쌤 찾기 배너에 「우리동네 공부방 찾기」 없음', !block.includes('우리동네 공부방 찾기') && !block.includes("searchUiUrl('room')"));
+  check('과외쌤 찾기 배너 「홈으로」 유지', block.includes("label: '홈으로'"));
+}
+
 console.log(`\n${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
