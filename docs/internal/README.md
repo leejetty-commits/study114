@@ -34,6 +34,7 @@
 | [54-shop-page-lock.md](./54-shop-page-lock.md) | **ShopPage 정본** · 레드라인4 · CI 게이트 · 등록점검 우선 | ★★ |
 | [64-tutor-inquiry-status-lock.md](./64-tutor-inquiry-status-lock.md) | 과외쌤 쪽지설정 `inquiry_status` SSOT · 064 배포 전 필수 | ★ 쪽지설정 |
 | [71-neighborhood-welcome-lock.md](./71-neighborhood-welcome-lock.md) | **새 이웃 환영 줄** · 동네 인사 통합 · 노출 정책 현행 유지 · 레드라인6 | ★ 동네 인사 |
+| [72-region-unit-lock.md](./72-region-unit-lock.md) | **과외 지역 단위 정본** · 과외=광역시 통째·도는 시·군 · 공부방=동·단지 · 이관 SQL | ★★ 지역 |
 | [73-tutor-basic-card-lock.md](./73-tutor-basic-card-lock.md) | **과외쌤 기본정보 필수 항목 = 베이직카드 항목** · 상세정보는 다시 묻지 않음 · 충돌 문서 목록 (승인 대기) | ★ 과외쌤 등록 |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
 
