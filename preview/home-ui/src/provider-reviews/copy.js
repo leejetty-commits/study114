@@ -50,6 +50,7 @@ export const REVIEW_POLICY = {
 export const PROVIDER_REVIEW_COPY = {
   sectionTitle: '후기',
   sheetSubtitle: '실제 이용자들이 남긴 이야기',
+  loadFailed: '후기를 불러오지 못했습니다.',
   guestTeaser: null,
   writeCta: '후기 남기기',
   manageCta: '내 후기 관리하기',
