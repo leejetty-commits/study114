@@ -212,7 +212,8 @@ function paint(host, summary, view, extra = {}) {
     .map((t) => `<span class="p24-review-tag">${esc(t)}</span>`)
     .join('');
   let body = '';
-  if (view === 'write' || view === 'edit') body = renderForm(summary, { editId: extra.editId });
+  if (summary.load_failed) body = `<p class="review-sheet__empty">${esc(PROVIDER_REVIEW_COPY.loadFailed)}</p>`;
+  else if (view === 'write' || view === 'edit') body = renderForm(summary, { editId: extra.editId });
   else if (view === 'manage') body = renderManage(summary);
   else if (view === 'write_gate') body = renderWriteGate(summary);
   else {
@@ -233,13 +234,13 @@ function paint(host, summary, view, extra = {}) {
             : ''
       }`;
   }
-  const footer = view === 'consume' ? `<div class="review-sheet__cta">${renderCta(summary)}</div>` : '';
+  const footer = view === 'consume' && !summary.load_failed ? `<div class="review-sheet__cta">${renderCta(summary)}</div>` : '';
   host.innerHTML = `
     <div class="review-sheet" role="dialog" aria-modal="true" aria-labelledby="review-sheet-title">
       <div class="review-sheet__panel">
         <header class="review-sheet__head">
           <div>
-            <h2 id="review-sheet-title">후기 ${count}</h2>
+            <h2 id="review-sheet-title">후기${summary.load_failed ? '' : ` ${count}`}</h2>
             <p>${esc(PROVIDER_REVIEW_COPY.sheetSubtitle)}</p>
           </div>
           <button type="button" class="review-sheet__close" data-review-sheet-act="close" aria-label="닫기">×</button>

@@ -21,12 +21,35 @@ const WRITE_KEY = 'study114-preview-review-write-status-v1';
 const QUOTA_KEY = 'study114-preview-review-quotas-v1';
 const API = '/api/reviews/index.php';
 
+/** 배포 빌드는 항상 서버. 개발 서버·Node 검사 스크립트만 sessionStorage 미리보기(아래 값으로 서버 강제 가능). */
 function apiMode() {
+  if ((import.meta.env || {}).PROD) return true;
   try {
     return sessionStorage.getItem('study114-api-mode') === '1' || window.STUDY114_API_MODE === true;
   } catch {
     return false;
   }
+}
+
+/** 서버 요약을 못 받았을 때. 빈 후기처럼 보이지 않게 load_failed 로 표시한다. */
+function failedSummary(providerType, providerId) {
+  return {
+    provider_type: providerType,
+    provider_id: providerId,
+    review_count: 0,
+    summary_tags: [],
+    can_read_body: true,
+    can_write: false,
+    can_manage: false,
+    has_written: false,
+    cta_kind: 'load_failed',
+    is_owner: false,
+    allowed_tags: pointTagsForProvider(providerType),
+    reviews: [],
+    my_reviews: [],
+    guest_teaser: null,
+    load_failed: true,
+  };
 }
 
 function nowStamp() {
@@ -300,8 +323,9 @@ export async function fetchReviewSummary(providerType, providerId, viewer = {}) 
     const data = await res.json();
     if (!res.ok || data.ok === false) throw new Error(data.message || 'load failed');
     return data;
-  } catch {
-    return getReviewSummaryLocal(providerType, providerId, viewer);
+  } catch (err) {
+    console.warn('[provider-reviews] summary', err);
+    return failedSummary(providerType, providerId);
   }
 }
 

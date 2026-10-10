@@ -27,6 +27,9 @@ function formatWhen(iso) {
 }
 
 function renderTeaserBody(summary, providerType, providerId) {
+  if (summary.load_failed) {
+    return `<p class="shop-review-teaser__empty">${esc(PROVIDER_REVIEW_COPY.loadFailed)}</p>`;
+  }
   const count = Number(summary.review_count) || 0;
   const items = (summary.reviews || []).slice(0, SHOP_REVIEW_TEASER_LIMIT);
   if (!items.length || count <= 0) {

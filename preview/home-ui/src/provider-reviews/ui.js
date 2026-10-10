@@ -43,7 +43,9 @@ export function renderReviewSectionMarkup(summary) {
     .join('');
   const reviews = summary.reviews || [];
   let bodyHtml = '';
-  if (!reviews.length) {
+  if (summary.load_failed) {
+    bodyHtml = `<p class="p24-review-empty">${esc(PROVIDER_REVIEW_COPY.loadFailed)}</p>`;
+  } else if (!reviews.length) {
     bodyHtml = `<p class="p24-review-empty">${esc(
       summary.cta_kind === 'write' ? PROVIDER_REVIEW_COPY.emptyEligible : PROVIDER_REVIEW_COPY.empty,
     )}</p>`;
