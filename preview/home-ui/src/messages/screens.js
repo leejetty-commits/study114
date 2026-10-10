@@ -1,4 +1,5 @@
 import { getNavRole } from '../state.js';
+import { getEmptyCopy } from '../empty-state-copy.js';
 
 import { canReplyInThread, getReplyBlockedMessage } from './permissions.js';
 
@@ -133,7 +134,7 @@ function renderList(expandedId) {
   if (threads.length === 0) {
     return `
     ${renderMessagesHub('messages')}
-    <p class="msg-empty-plain">쪽지가 없습니다</p>`;
+    <section class="mp-card msg-card"><p class="mp-card__empty">${esc(getEmptyCopy('messages').title)}</p></section>`;
   }
 
   const important = threads.filter((t) => t.isImportant);
@@ -149,7 +150,7 @@ function renderList(expandedId) {
 
   return `
     ${renderMessagesHub('messages')}
-    <div class="msg-list">${sections.join('')}</div>`;
+    <section class="mp-card msg-card"><div class="msg-list">${sections.join('')}</div></section>`;
 }
 
 /**

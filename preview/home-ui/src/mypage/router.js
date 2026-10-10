@@ -223,8 +223,10 @@ export function screenTitle(screenId, path, role) {
       return tutorRegScreenTitle(tr.screenId);
     }
     if (path === MESSAGES_BASE || isMessagesDetailPath(path)) {
-      if (role === 'parent' && path === MESSAGES_BASE) return '쪽지';
-      return messagesScreenTitle(getMessagesScreenId(path));
+      const msgScreenId = getMessagesScreenId(path);
+      const isThread = msgScreenId === 'P16-02';
+      if (role === 'parent' && (path === MESSAGES_BASE || isThread)) return '쪽지';
+      return messagesScreenTitle(isThread ? 'P15-08' : msgScreenId);
     }
     if (isSubmissionBoardPath(path)) {
       return submissionBoardScreenTitle(parseSubmissionBoardPath(path).screenId, path);
