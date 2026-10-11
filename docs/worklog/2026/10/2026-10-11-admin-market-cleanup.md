@@ -2,7 +2,7 @@
 
 - 브랜치: `cursor/admin-market-cleanup-20261011` (기준 `origin/main` = `07a6a544`)
 - 앞선 작업: `2026-10-11-review-api-connect.md` (후기 저장소 연결, main `44960800`, Deploy #436)
-- 상태: 구현·검사·화면 확인 완료 → 검수·승인 대기. main 병합·배포는 이 커밋 hash 승인 후.
+- 상태: 종현 승인 `cf0001e8` → main `154b8956` → Deploy #438 성공 → 운영 확인 통과 (§7).
 
 ---
 
@@ -109,3 +109,39 @@
 - 작업 세션은 이 작업을 승인하지 않는다. 승인은 종현 님이 커밋 hash 단위로 한다.
 - 위험도: 낮음. 관리자 미리보기 화면만 바뀐다. 회원 화면·서버·저장소 변화 없음.
 - 배포 전 사용자 할 일: 없음 (SQL·환경변수·Secrets·`.htaccess` 변경 없음).
+
+### 6-1. 2026-10-11 19:16 종현
+
+```
+1.승인 배포까지
+2.메인에 합쳐라. 작업한 내용들만 합친다.
+```
+
+뜻: ① `cf0001e8` 승인·배포 ② main에 안 들어간 브랜치 중 작업 내용만 main에 합친다 (§8).
+
+## 7. 배포 기록
+
+| 항목 | 내용 |
+|---|---|
+| 병합 | `origin/main` `07a6a544` 위에 `cf0001e8`(이 작업)·`e0c78515`(작업 목록 문서) `--no-ff` → `154b8956` |
+| 병합본 검사 | `build:dothome` 성공 · `verify:shop-page` 통과 · 관리자 메뉴 검사 `199/0 previewScreens=16` · 관리자 홈 검사 `61/0` · 비밀값 검사 통과 |
+| push·배포 | `07a6a544..154b8956` · Deploy #438 (run 38131459482) `completed / success` |
+| 운영 확인 (19:25, 실제 운영 화면 그대로, §4와 같은 방법) | 사이드 메뉴 「이용 후기」 없음 · 마켓 4화면 숫자칸 0·표 0 · 옛 주소 → 마켓 현황 · 페이지 오류 0 |
+
+- 원본: 로컬 `%TEMP%\s114-t3\amc-post-live\` (커밋하지 않음).
+
+## 8. main에 안 들어간 브랜치 20개 점검 (지시 6-1 ②)
+
+방법: 브랜치마다 main과 파일 단위 비교 + main에 합쳤을 때 결과를 미리 계산(`git merge-tree`, main은 건드리지 않음). 2026-10-11 19:20, main `154b8956` 기준.
+
+| 결과 | 브랜치 | 판단 |
+|---|---|---|
+| 합쳐도 main이 바뀌지 않음 (내용이 이미 main에 똑같이 있음) — 7개 | `admin-report-print-menu`, `board-student-displayname-fallback`, `integrity-studyroom`, `integrity-tutor`, `plan-growth`, `rail-band-group-colors`, `region-sido-canonical` | 합칠 내용 없음 |
+| 충돌 — main에 같은 문서의 더 새 판이 있음 — 4개 | `handoff-20261009`(main 23:24판 > 브랜치 16:48판), `tutor-basic-card`(main 「최종 정본」 10-09판 > 브랜치 초안), `docs/work-routine`(main에 「낡은 문서」 표시 판), `deploy-train`(기록·코드 모두 main이 더 새 판) | 합치면 옛 판으로 되돌아감 → 합치지 않음 |
+| 충돌 — main에 같은 기능의 더 새 코드가 있음 — 5개 | `admin-159c`, `admin-162`, `auth-mail-warm`, `neighborhood-greeting-history`, `fix/cur-006-email-sent-ui` | 브랜치 쪽 파일이 main보다 줄 수가 적은 옛 판(예: 동네 인사 서버 파일 384줄 차이). 합치면 기능이 되돌아감 → 합치지 않음 |
+| 충돌 — 9월 옛 화면 작업, 이후 main 상품 화면이 크게 바뀜 — 1개 | `fix/cur-006-authenticated-smtp` (9-16~17 유료 상품 화면 테마) | 파일 13개 중 10개 충돌. 일부(상품 화면 `screens.js`)는 브랜치에만 있는 줄도 있으나, 그 뒤 main에서 옛 `/mypage/paid` 삭제(T1-b) 등으로 화면 구조가 바뀜. 작업 목록 D절 「9월 옛 작업 → 정리 후보」 → 합치지 않음 |
+| 충돌 — 정책이 바뀌어 대체됨 — 1개 | `region-unit-lock` (옛 「구 단위」) | 10-08 20:10 정책 변경으로 대체(작업 목록 D절) → 합치지 않음 |
+| 충돌 — main에 없는 작업, 사용자 보류 결정 — 1개 | `cur-007-phone-identity` (PR #27, 공급자 본인확인) | 새 파일 7개 + SQL `069` 포함. 보류 결정 유지, 합치려면 사용자 결정·충돌 해결·SQL 적용 필요 |
+| (이번 작업) | `admin-market-cleanup` | §7로 합침 |
+
+- 결론: 「작업한 내용」 중 main에 아직 없는 것은 보류 중인 `cur-007` 하나뿐이다. 나머지는 이미 main에 같거나 더 새 판으로 들어가 있어 합칠 것이 없다. 그래서 브랜치를 추가로 합치지 않았다.
