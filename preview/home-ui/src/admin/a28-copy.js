@@ -25,12 +25,11 @@ export const A28_COPY = {
 /** 미연동 관리자 화면 표시. 메뉴·패널·허브는 여기만 읽는다. */
 export const ADMIN_PREVIEW_PREFIX = '미리보기 · ';
 
-/** 마켓 5 · 문자 7 · 부가 4 · 홍보 1. 실도구 path는 넣지 않는다. */
+/** 마켓 4 · 문자 7 · 부가 4 · 홍보 1. 실도구 path는 넣지 않는다. */
 export const ADMIN_PREVIEW_PATHS = Object.freeze([
   '/admin/market/overview',
   '/admin/market/listings',
   '/admin/market/stats',
-  '/admin/market/reviews',
   '/admin/market/incomplete',
   '/admin/notify/settings',
   '/admin/notify/sync',
@@ -280,14 +279,14 @@ export const A28_MENU = [
     // Youngcart menu400·500 쇼핑몰 — 상품 = 공부방·과외쌤
     id: 'grp-commerce',
     label: '마켓·결제',
-    help: '공부방·과외 노출, 결제, 매출·후기 운영',
+    help: '공부방·과외 노출, 결제, 매출 운영',
     children: [
       {
         id: 'market-overview',
         menuId: 'commerce',
         label: '마켓 현황',
         path: '/admin/market/overview',
-        help: '오늘 결제·미완료·문의·후기 등 한눈에 봅니다. (영카트 쇼핑몰현황)',
+        help: '오늘 결제·미완료·문의 등 한눈에 봅니다. (영카트 쇼핑몰현황)',
         screenId: 'A28-07b',
       },
       {
@@ -320,14 +319,6 @@ export const A28_MENU = [
         label: '매출·순위',
         path: '/admin/market/stats',
         help: '기간 매출과 공부방·과외 조회/결제 순위입니다. (영카트 매출·판매순위)',
-        screenId: 'A28-07b',
-      },
-      {
-        id: 'market-reviews',
-        menuId: 'commerce',
-        label: '이용 후기',
-        path: '/admin/market/reviews',
-        help: '이용 후기를 공개하거나 숨깁니다. (영카트 사용후기 · 승인 아님)',
         screenId: 'A28-07b',
       },
       {

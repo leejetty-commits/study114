@@ -130,12 +130,6 @@ import {
 } from './site-settings-store.js';
 import { deleteHomePopup, ensureHomePopups, peekHomePopups, saveHomePopup } from './home-popup-api.js';
 import {
-  getMarketplaceLab,
-  setReviewStatus,
-  dismissIncomplete,
-  resetMarketplaceLab,
-} from './marketplace-lab-store.js';
-import {
   getSmsLab,
   saveSmsSettings,
   listTemplateGroups,
@@ -1452,31 +1446,6 @@ export function bindA28ScreenEvents(root, path, rerender) {
         window.alert(err instanceof Error ? err.message : '초기값으로 되돌리지 못했습니다.');
         rerender();
       }
-    });
-  }
-
-  if (path.startsWith('/admin/market/')) {
-    root.querySelector('[data-market-reset]')?.addEventListener('click', () => {
-      if (!window.confirm('마켓 예시 데이터를 초기화할까요?')) return;
-      resetMarketplaceLab();
-      rerender();
-    });
-    root.querySelectorAll('[data-review-status]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-review-status');
-        const next = btn.getAttribute('data-review-next');
-        if (!id || !next) return;
-        setReviewStatus(id, next);
-        rerender();
-      });
-    });
-    root.querySelectorAll('[data-incomplete-dismiss]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-incomplete-dismiss');
-        if (!id) return;
-        dismissIncomplete(id);
-        rerender();
-      });
     });
   }
 
