@@ -4,9 +4,6 @@
  */
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import {
-  getMarketplaceLab,
-} from './marketplace-lab-store.js';
-import {
   getSmsLab,
   listTemplateGroups,
   listTemplates,
@@ -25,123 +22,47 @@ import {
 import { SMS_STATUS_KO } from './a28-screens-state.js';
 import { checked, esc, renderOpsTip, renderPanel, selected } from './a28-screens-shared.js';
 
+/** 마켓 묶음은 실제 자료와 연결 전이라 숫자·목록을 그리지 않고 실제 메뉴로만 안내한다. */
 export function renderMarketLab(section = 'overview') {
-  const data = getMarketplaceLab();
-  const kindKo = { study_room: '공부방', tutor: '과외쌤' };
-  const statusKo = { published: '공개중', hidden: '숨김', pending: '대기', draft: '비공개' };
-
-  if (section === 'overview') {
-    const k = data.kpi;
-    return renderPanel(
-      '마켓 현황',
-      'A28-07b',
-      `${renderOpsTip()}
-       <p class="a28-help">공부방·과외쌤이 곧 「상품」입니다. 오늘 운영 숫자를 먼저 보고, 아래 메뉴로 내려가세요.</p>
-       <div class="admin-kpi-row">
-         <div class="admin-kpi"><span>오늘 주문</span><strong>${k.ordersToday}</strong></div>
-         <div class="admin-kpi"><span>오늘 결제</span><strong>${k.paidToday}</strong></div>
-         <div class="admin-kpi"><span>미완료 결제</span><strong>${k.incomplete}</strong><small><a href="#/admin/market/incomplete" data-a28-nav="/admin/market/incomplete">보기</a></small></div>
-         <div class="admin-kpi"><span>열린 문의</span><strong>${k.openInquiries}</strong><small><a href="#/admin/tickets" data-a28-nav="/admin/tickets">문의</a></small></div>
-         <div class="admin-kpi"><span>후기 대기</span><strong>${k.reviewsPending}</strong><small><a href="#/admin/market/reviews" data-a28-nav="/admin/market/reviews">후기</a></small></div>
-         <div class="admin-kpi"><span>관심(찜)</span><strong>${k.bookmarks}</strong></div>
-       </div>
-       <p class="a28-help"><a href="#/admin/commerce" data-a28-nav="/admin/commerce">→ 결제·주문 상세</a> · <a href="#/admin/exposure" data-a28-nav="/admin/exposure">→ 홈·찾기 노출</a></p>
-       <button type="button" class="btn btn--secondary btn--sm" data-market-reset>예시 데이터 초기화</button>`,
-    );
-  }
+  const link = (path, label) => `<a href="#${path}" data-a28-nav="${path}">${esc(label)}</a>`;
+  const notConnected = '<p class="a28-help">아직 실제 자료와 연결되지 않아 숫자·목록을 보여 드리지 않습니다.</p>';
 
   if (section === 'listings') {
-    const rows = data.listings
-      .map(
-        (r) => `<tr>
-          <td>${esc(kindKo[r.kind] || r.kind)}</td>
-          <td>${esc(r.name)}</td>
-          <td>${esc(r.region)}</td>
-          <td>${esc(statusKo[r.status] || r.status)}</td>
-          <td><a class="btn btn--secondary btn--sm" href="#/admin/exposure" data-a28-nav="/admin/exposure">홈·찾기 노출</a></td>
-        </tr>`,
-      )
-      .join('');
     return renderPanel(
       '공부방·과외 목록',
       'A28-07a',
       `${renderOpsTip()}
-       <p class="a28-help">등록된 공부방·과외쌤 목록입니다. 숨기거나 다시 보이게 하려면 「홈·찾기 노출」로 가세요.</p>
-       <table class="sup-admin-table"><thead><tr><th>구분</th><th>이름</th><th>지역</th><th>상태</th><th></th></tr></thead>
-       <tbody>${rows || '<tr><td colspan="5" class="sup-empty">목록 없음</td></tr>'}</tbody></table>`,
+       ${notConnected}
+       <p class="a28-help">등록된 공부방·과외쌤은 ${link('/admin/registrations', '등록 목록')}에서 봅니다. 숨기거나 다시 보이게 하려면 ${link('/admin/exposure', '홈·찾기 노출')}로 가세요.</p>`,
     );
   }
 
   if (section === 'stats') {
-    const sales = data.sales
-      .map((r) => `<tr><td>${esc(r.period)}</td><td>${Number(r.amount).toLocaleString()}원</td><td>${r.orders}건</td></tr>`)
-      .join('');
-    const ranks = data.ranks
-      .map(
-        (r, i) =>
-          `<tr><td>${i + 1}</td><td>${esc(kindKo[r.kind] || r.kind)}</td><td>${esc(r.name)}</td><td>${r.views}</td><td>${r.pays}</td></tr>`,
-      )
-      .join('');
     return renderPanel(
       '매출·순위',
       'A28-07b',
       `${renderOpsTip()}
-       <p class="a28-help">미리보기용 예시 숫자입니다. 나중에 실제 결제 기록과 연결하면 됩니다.</p>
-       <h3 class="admin-section-title">매출 요약</h3>
-       <table class="sup-admin-table"><thead><tr><th>기간</th><th>금액</th><th>건수</th></tr></thead><tbody>${sales}</tbody></table>
-       <h3 class="admin-section-title">공부방·과외 순위</h3>
-       <table class="sup-admin-table"><thead><tr><th>#</th><th>구분</th><th>이름</th><th>조회</th><th>결제</th></tr></thead><tbody>${ranks}</tbody></table>`,
+       <p class="a28-help">실제 매출과 아직 연결되지 않았습니다. 결제 기록은 ${link('/admin/commerce', '결제·주문')}에서 보세요.</p>`,
     );
   }
 
-  if (section === 'reviews') {
-    const rows = data.reviews
-      .map(
-        (r) => `<tr>
-          <td>${esc(r.id)}</td>
-          <td>${esc(kindKo[r.kind] || r.kind)}</td>
-          <td>${esc(r.target)}</td>
-          <td>${r.rating}점</td>
-          <td>${esc(r.body)}</td>
-          <td>${esc(r.status === 'published' ? '공개' : r.status === 'pending' ? '대기' : '숨김')}</td>
-          <td class="sup-admin-actions">
-            <button type="button" class="btn btn--primary btn--sm" data-review-status="${esc(r.id)}" data-review-next="published">공개</button>
-            <button type="button" class="btn btn--secondary btn--sm" data-review-status="${esc(r.id)}" data-review-next="hidden">숨김</button>
-          </td>
-        </tr>`,
-      )
-      .join('');
+  if (section === 'incomplete') {
     return renderPanel(
-      '이용 후기',
+      '미완료 결제',
       'A28-07b',
       `${renderOpsTip()}
-       <p class="a28-help">「승인」이 아닙니다. 공개할지·숨길지만 고릅니다. 회원 화면에 인증·보증처럼 보이지 않게 하세요.</p>
-       <table class="sup-admin-table"><thead><tr><th>번호</th><th>구분</th><th>대상</th><th>별점</th><th>내용</th><th>상태</th><th></th></tr></thead>
-       <tbody>${rows || '<tr><td colspan="7" class="sup-empty">후기 없음</td></tr>'}</tbody></table>`,
+       ${notConnected}
+       <p class="a28-help">결제창에서 나가거나 실패한 건을 모아 볼 화면입니다. 지금은 ${link('/admin/commerce', '결제·주문')}에서 결제 내역을 확인하세요.</p>`,
     );
   }
 
-  // incomplete
-  const rows = data.incomplete
-    .map(
-      (r) => `<tr>
-        <td>${esc(r.id)}</td>
-        <td>${esc(r.email)}</td>
-        <td>${esc(r.product)}</td>
-        <td>${Number(r.amount).toLocaleString()}원</td>
-        <td>${esc(r.step)}</td>
-        <td>${esc(r.at)}</td>
-        <td><button type="button" class="btn btn--secondary btn--sm" data-incomplete-dismiss="${esc(r.id)}">목록에서 빼기</button></td>
-      </tr>`,
-    )
-    .join('');
   return renderPanel(
-    '미완료 결제',
+    '마켓 현황',
     'A28-07b',
     `${renderOpsTip()}
-     <p class="a28-help">결제창에서 나가거나 실패한 건입니다. 연락이 필요하면 회원관리에서 찾아보세요.</p>
-     <table class="sup-admin-table"><thead><tr><th>번호</th><th>계정</th><th>상품</th><th>금액</th><th>단계</th><th>시각</th><th></th></tr></thead>
-     <tbody>${rows || '<tr><td colspan="7" class="sup-empty">미완료 없음</td></tr>'}</tbody></table>`,
+     <p class="a28-help">공부방·과외쌤이 곧 「상품」입니다.</p>
+     ${notConnected}
+     <p class="a28-help">실제 자료: ${link('/admin/commerce', '결제·주문')} · ${link('/admin/registrations', '등록 목록')} · ${link('/admin/exposure', '홈·찾기 노출')} · ${link('/admin/tickets', '문의')}</p>`,
   );
 }
 

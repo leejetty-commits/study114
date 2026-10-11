@@ -11,7 +11,7 @@
 |---|------|------|
 | 1 | 관리자 본문 폭·사이드바·운영홈 2단 | ✅ |
 | 2 | 쇼핑몰관리 → 마켓·결제 메뉴 차용 | ✅ Lab |
-| 3 | 쇼핑몰현황/기타 → 매출·순위·후기·미완료 | ✅ Lab |
+| 3 | 쇼핑몰현황/기타 → 매출·순위·미완료 | ✅ Lab · 2026-10-11 가짜 예시 숫자 삭제, 「이용 후기」 메뉴 삭제 |
 | 4 | SMS → 알림·문자 Lab (게이트웨이 없이 1차) | ✅ Lab |
 | 5 | 문서·라우터 검증 | ✅ |
 | 6 | 회원 상세 드로어(더미 포맷) | ✅ |
@@ -30,15 +30,17 @@
 
 | 경로 | 설명 |
 |------|------|
-| `#/admin/market/overview` | 마켓 현황 KPI |
-| `#/admin/market/listings` | 공부방·과외 목록 → 노출 보정 |
+| `#/admin/market/overview` | 마켓 현황 — 연결 전 안내 + 실제 메뉴 링크 |
+| `#/admin/market/listings` | 공부방·과외 목록 — 연결 전 안내 → 등록 목록·노출 보정 |
 | `#/admin/commerce` | 결제·주문 (기존) |
 | `#/admin/exposure` | 노출 보정 (기존) |
-| `#/admin/market/stats` | 매출·순위 Lab |
-| `#/admin/market/reviews` | 이용 후기 공개/숨김 |
-| `#/admin/market/incomplete` | 미완료 결제 |
+| `#/admin/market/stats` | 매출·순위 — 연결 전 안내 → 결제·주문 |
+| `#/admin/market/incomplete` | 미완료 결제 — 연결 전 안내 → 결제·주문 |
 
 제외(1차): 재고·배송비·쿠폰존·가격비교사이트
+
+- 2026-10-11: 마켓 화면의 가짜 예시 숫자(주문·매출·순위·미완료·목록)와 `marketplace-lab-store.js`를 지웠다. 실제 자료와 연결되기 전에는 숫자·목록을 그리지 않는다.
+- 2026-10-11: 「이용 후기」(`#/admin/market/reviews`) 메뉴 삭제. 후기는 정본 05 §11-4대로 운영 검수를 하지 않는다(공급자 도구: 후기차단). 옛 주소는 마켓 현황으로 넘긴다.
 
 ## 4. 알림·문자 Lab (영카트 menu900 정밀)
 
@@ -78,6 +80,5 @@ API 실패/캐시 없음 → seed/더미로도 항상 열림 (`buildMemberDetail
 ## 코드
 
 - `preview/home-ui/src/admin/sms-lab-store.js`
-- `preview/home-ui/src/admin/marketplace-lab-store.js`
 - `preview/home-ui/src/admin/vendor-addons.js`
 - `a28-copy.js` 메뉴 · `router.js` · `a28-screens.js` · `shell.js` · `layout.js` · `home.css`

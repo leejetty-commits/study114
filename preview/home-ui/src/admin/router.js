@@ -10,6 +10,7 @@ import { flattenAdminNav } from './a28-copy.js';
 const LEGACY_REDIRECTS = {
   '/admin/notices': '/admin/notices/channels',
   '/admin/settings': '/admin/settings/basic',
+  '/admin/market/reviews': '/admin/market/overview',
 };
 
 function allAdminPaths() {

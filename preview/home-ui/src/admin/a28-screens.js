@@ -110,12 +110,6 @@ import {
   getSettingsError,
 } from './site-settings-store.js';
 import {
-  getMarketplaceLab,
-  setReviewStatus,
-  dismissIncomplete,
-  resetMarketplaceLab,
-} from './marketplace-lab-store.js';
-import {
   getSmsLab,
   saveSmsSettings,
   listTemplateGroups,

@@ -27,7 +27,6 @@ const PANEL_BASE = {
   '/admin/market/overview': '마켓 현황',
   '/admin/market/listings': '공부방·과외 목록',
   '/admin/market/stats': '매출·순위',
-  '/admin/market/reviews': '이용 후기',
   '/admin/market/incomplete': '미완료 결제',
   '/admin/notify/settings': '문자 기본설정',
   '/admin/notify/sync': '회원번호 동기화',
@@ -149,8 +148,8 @@ const leafByPath = new Map(leaves.map((item) => [item.path, item]));
 const previewPaths = [...ADMIN_PREVIEW_PATHS];
 const realLeaves = leaves.filter((item) => !isAdminPreviewPath(item.path));
 
-ok('preview-count-17', previewPaths.length === 17, `count=${previewPaths.length}`);
-ok('preview-paths-unique', new Set(previewPaths).size === 17);
+ok('preview-count-16', previewPaths.length === 16, `count=${previewPaths.length}`);
+ok('preview-paths-unique', new Set(previewPaths).size === 16);
 
 for (const path of previewPaths) {
   const leaf = leafByPath.get(path);
@@ -179,11 +178,22 @@ for (const path of previewPaths) {
   ok(`preview-sms-extra ${path}`, extraOk, `hits=${extraHits} want=${wantExtra ? 1 : 0}`);
   if (titleOk && noticeOk && extraOk) previewPass += 1;
 }
-ok('preview-screens-17', previewPass === 17, `pass=${previewPass}`);
+ok('preview-screens-16', previewPass === 16, `pass=${previewPass}`);
 
 ok(
   'stats-body-kept',
-  renderA28Screen('/admin/market/stats').includes('미리보기용 예시 숫자입니다.'),
+  renderA28Screen('/admin/market/stats').includes('실제 매출과 아직 연결되지 않았습니다.'),
+);
+ok(
+  'market-reviews-removed',
+  !leafByPath.has('/admin/market/reviews') && !previewPaths.includes('/admin/market/reviews'),
+);
+ok(
+  'market-no-sample-numbers',
+  ['overview', 'listings', 'stats', 'incomplete'].every((s) => {
+    const html = renderA28Screen(`/admin/market/${s}`);
+    return !html.includes('admin-kpi') && !html.includes('sup-admin-table') && !html.includes('대치중등');
+  }),
 );
 ok(
   'send-body-kept',
