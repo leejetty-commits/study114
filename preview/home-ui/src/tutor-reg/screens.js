@@ -6,6 +6,7 @@ import {
   parseTutorRegPath,
   tutorHubPath,
   tutorSectionPath,
+  tutorBlankPath,
   TUTOR_REG_TOP_TABS,
   BASE as TUTOR_REG_BASE,
   isReturnToRegistrationCheck,
@@ -76,7 +77,7 @@ function reqMark() {
 
 function renderReturnToRegistrationCheckBanner(tutorId) {
   if (!isReturnToRegistrationCheck()) return '';
-  const href = tutorSectionPath(tutorId, 'publish');
+  const href = Number(tutorId) ? tutorSectionPath(tutorId, 'publish') : tutorBlankPath('publish');
   return `<div class="rc-return-banner">
     <a class="rc-return-banner__link" href="#${href}" data-p21-nav="${href}">${esc(TRC_COPY.returnBanner.label)}</a>
     <p class="rc-return-banner__hint">${esc(TRC_COPY.returnBanner.hint)}</p>
@@ -93,14 +94,17 @@ function renderTutorShell(tutor, activeSection, bodyHtml) {
         : 'hub';
 
   const tabs = TUTOR_REG_TOP_TABS.map((t) => {
-    const href =
-      t.key === 'hub' ? tutorHubPath(tutor.id) : tutorSectionPath(tutor.id, /** @type {any} */ (t.key));
+    const href = !Number(tutor?.id)
+      ? tutorBlankPath(t.key)
+      : t.key === 'hub'
+        ? tutorHubPath(tutor.id)
+        : tutorSectionPath(tutor.id, /** @type {any} */ (t.key));
     const active = section === t.key;
     return `<a href="#${href}" class="mp-room__tab${active ? ' is-active' : ''}" data-p21-nav="${href}">${esc(t.label)}</a>`;
   }).join('');
 
   return `
-    <div class="mp-room">
+    <div class="mp-room"${Number(tutor?.id) ? '' : ' data-blank-reg="1"'}>
       <header class="mp-room__head">
         <nav class="mp-room__tabs" aria-label="과외쌤 메뉴">${tabs}</nav>
       </header>
@@ -112,6 +116,26 @@ function renderTutorShell(tutor, activeSection, bodyHtml) {
 export function renderTutorRegScreen(path) {
   const route = parseTutorRegPath(path);
   if (!route) return '';
+
+  if (route.blank) {
+    const tutors = getTutors();
+    const section = route.section || 'hub';
+    if (tutors.length) {
+      const tutor = tutors[0];
+      const dest = section === 'hub' ? tutorHubPath(tutor.id) : tutorSectionPath(tutor.id, section);
+      queueMicrotask(() => {
+        const hashPath = (window.location.hash.slice(1) || '').split('?')[0];
+        const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+        if (p === tutorBlankPath(section)) window.location.replace(`#${dest}`);
+      });
+      if (section === 'basic') return renderBasicBridge(tutor);
+      if (section === 'detail') return renderDetailBridge(tutor);
+      if (section === 'publish') return renderPublish(tutor);
+      if (section === 'inquiries') return renderInquiries(tutor);
+      return renderHub(tutor);
+    }
+    return renderBlankTutor(section);
+  }
 
   if (route.screenId === 'P21-01') {
     const tutors = getTutors();
@@ -135,7 +159,7 @@ export function renderTutorRegScreen(path) {
       });
       return renderHub(tutors[0]);
     }
-    return renderEmptyNoProfile();
+    return renderBlankTutor('hub');
   }
   if (!route.tutorId) return renderNotFound();
 
@@ -190,6 +214,45 @@ function renderNotFound() {
     <p>과외 프로필을 찾을 수 없습니다.</p>
     <a href="#/mypage/registrations" class="btn btn--secondary" data-p21-nav="/mypage/registrations">내 등록으로</a>
   </section>`;
+}
+
+function tutorNav(tutor, section) {
+  if (!Number(tutor?.id)) return tutorBlankPath(section);
+  return section === 'hub' ? tutorHubPath(tutor.id) : tutorSectionPath(tutor.id, section);
+}
+
+function blankTutor() {
+  return {
+    id: 0,
+    tutor_display_name: '',
+    primary_region_label: '',
+    location_label: '',
+    profile_status: 'draft',
+    inquiry_status: '',
+    saved_regions: [],
+    lesson_places: [],
+    profile_images: [],
+    detail_completion_status: '',
+    deleted_at: null,
+  };
+}
+
+/** 등록 0건. 탭과 페이지 칸은 두고, 값은 비운다. 저장은 하지 않는다. */
+function renderBlankTutor(section) {
+  const tutor = blankTutor();
+  const sec = section || 'hub';
+  if (sec === 'basic') return renderBasicForm(tutor);
+  if (sec === 'detail') return renderDetailForm(tutor);
+  if (sec === 'publish') return renderPublish(tutor);
+  if (sec === 'inquiries') return renderInquiries(tutor);
+  const greeting = renderNeighborhoodGreetingEditor({
+    providerType: 'tutor',
+    registrationId: 0,
+    neighborhood: '',
+    displayName: '',
+  });
+  const body = `${greeting}${renderTutorProfileRead(tutor)}`;
+  return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'hub', body)}</section>`;
 }
 
 /** 프로필 0개 — 복수 등록 CTA 없음 */
@@ -422,8 +485,8 @@ function renderBasicForm(tutor) {
       ${renderFormFooter(
         '저장해도 검색 노출이 바로 바뀌지는 않습니다. 부족한 항목은 등록점검에서 확인합니다.',
         `<button type="submit" class="btn btn--primary" ${units.length ? '' : 'disabled'}>기본정보 저장</button>
-         <a href="#${tutorSectionPath(tutor.id, 'detail')}" class="btn btn--secondary" data-p21-nav="${tutorSectionPath(tutor.id, 'detail')}">상세정보로</a>
-         <a href="#${tutorSectionPath(tutor.id, 'publish')}" class="btn btn--ghost" data-p21-nav="${tutorSectionPath(tutor.id, 'publish')}">등록점검</a>`,
+         <a href="#${tutorNav(tutor, 'detail')}" class="btn btn--secondary" data-p21-nav="${tutorNav(tutor, 'detail')}">상세정보로</a>
+         <a href="#${tutorNav(tutor, 'publish')}" class="btn btn--ghost" data-p21-nav="${tutorNav(tutor, 'publish')}">등록점검</a>`,
       )}
     </form>`;
 
@@ -531,8 +594,8 @@ function renderDetailForm(tutor) {
       ${renderFormFooter(
         '저장 후 등록점검에서 입력 현황을 확인하세요.',
         `<button type="submit" class="btn btn--primary">상세정보 저장</button>
-         <a href="#${tutorSectionPath(tutor.id, 'publish')}" class="btn btn--secondary" data-p21-nav="${tutorSectionPath(tutor.id, 'publish')}">등록점검</a>
-         <a href="#${tutorHubPath(tutor.id)}" class="btn btn--ghost" data-p21-nav="${tutorHubPath(tutor.id)}">마이프로필</a>`,
+         <a href="#${tutorNav(tutor, 'publish')}" class="btn btn--secondary" data-p21-nav="${tutorNav(tutor, 'publish')}">등록점검</a>
+         <a href="#${tutorNav(tutor, 'hub')}" class="btn btn--ghost" data-p21-nav="${tutorNav(tutor, 'hub')}">마이프로필</a>`,
       )}
     </form>`;
 
@@ -704,6 +767,7 @@ export function bindTutorRegEvents(root, rerender) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = Number(form.dataset.p21TutorId);
+      if (!id) return;
       const kind = form.getAttribute('data-p21-form');
       const fd = new FormData(form);
       const btn = form.querySelector('button[type="submit"]');

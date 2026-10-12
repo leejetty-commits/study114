@@ -430,6 +430,7 @@ export function bindEmbeddedPanelEvents(root, rerender) {
   if (!wrap) return;
   const section = /** @type {'basic'|'detail'|'detail2'} */ (wrap.getAttribute('data-embed-section'));
   const roomId = Number(wrap.getAttribute('data-embed-room-id'));
+  if (!roomId) return;
 
   wrap.querySelectorAll('[data-embed-edit], [data-action="embed-edit"]').forEach((el) => {
     el.addEventListener('click', () => {

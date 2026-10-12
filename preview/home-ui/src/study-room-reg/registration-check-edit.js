@@ -297,6 +297,30 @@ export function bindRegistrationCheckEvents(root, rerender) {
   const page = root.querySelector('[data-rc-page]');
   if (!page) return;
   const roomId = Number(page.getAttribute('data-rc-room-id'));
+  if (!roomId) {
+    page.querySelectorAll('[data-rc-light], [data-rc-cover]').forEach((btn) => {
+      btn.addEventListener('click', (e) => e.preventDefault());
+    });
+    page.querySelectorAll('[data-rc-heavy]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const section = /** @type {'basic'|'detail'|'detail2'} */ (btn.getAttribute('data-rc-heavy') || 'detail');
+        window.location.hash = registrationCheckTabHref(0, section).slice(1);
+      });
+    });
+    page.querySelectorAll('[data-rc-fold]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const section = btn.closest('[data-rc-section]');
+        if (!section) return;
+        const body = section.querySelector('.rc-section__body');
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+        btn.textContent = expanded ? RC_COPY.board.foldOpen : RC_COPY.board.foldClose;
+        if (body) body.hidden = expanded;
+        section.classList.toggle('is-collapsed', expanded);
+      });
+    });
+    return;
+  }
 
   page.querySelectorAll('[data-rc-light]').forEach((btn) => {
     btn.addEventListener('click', () => {

@@ -6,7 +6,7 @@
 import { formatTutorFeeCard } from '../exposure-format.js';
 import { formatTeachingStyleBadges } from '../exposure-format.js';
 import { CAREER_YEAR_BAND_LABELS, TUTOR_PLACE_LABELS, UNIVERSITY_STATUS_LABELS } from '../tutor-enums.js';
-import { tutorSectionPath } from './router.js';
+import { tutorBlankPath, tutorSectionPath } from './router.js';
 import { lessonDurationLabel } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
 import { normalizeTutorProfileImages, tutorPhotoPreviewSrc } from './profile-photos.js';
@@ -170,11 +170,12 @@ export const TUTOR_PROFILE_LEAD_COPY =
 
 export function renderTutorProfileRead(tutor) {
   const name = display(tutor?.tutor_display_name) || '과외 프로필';
-  const basicHref = tutorSectionPath(tutor.id, 'basic');
-  const detailHref = tutorSectionPath(tutor.id, 'detail');
+  const pagePath = (section) => (Number(tutor?.id) ? tutorSectionPath(tutor.id, section) : tutorBlankPath(section));
+  const basicHref = pagePath('basic');
+  const detailHref = pagePath('detail');
   const sections = buildTutorProfileReadSections(tutor)
     .map((sec) => {
-      const editHref = sec.editSection ? tutorSectionPath(tutor.id, sec.editSection) : '';
+      const editHref = sec.editSection ? pagePath(sec.editSection) : '';
       const edit = editHref
         ? `<a class="p21-profile__edit" href="#${editHref}" data-p21-nav="${editHref}">수정</a>`
         : '';

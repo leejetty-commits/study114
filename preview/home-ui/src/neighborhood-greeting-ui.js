@@ -557,6 +557,7 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
 
   const providerType = editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room';
   const registrationId = Number(editor.getAttribute('data-ng-id') || 0);
+  if (!registrationId) return;
 
   /** @type {string | null} */
   let editingHistoryId = null;
