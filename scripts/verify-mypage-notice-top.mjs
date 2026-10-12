@@ -66,7 +66,7 @@ for (const file of walkCss(join(ROOT, 'preview/home-ui/src/styles'))) {
 ok('(f) border-bottom 2px var(--gray-300) 이 스타일 한 곳', cssHits.length === 1 && cssHits[0].endsWith('mypage-ops.css:1'), cssHits.join(','));
 ok('(f) 그 선언은 .mypage-notice 안', () => {
   const rule = css.match(/\.mypage-notice \{[^}]*\}/);
-  return Boolean(rule && rule[0].includes(borderNeedle) && rule[0].includes('margin: 0 0 var(--space-4, 16px)'));
+  return Boolean(rule && rule[0].includes(borderNeedle) && rule[0].includes('margin: 0 0 var(--space-6, 24px)'));
 });
 ok('(f) 화면 제목 구분선은 1px 로 별도', /\.mypage-content__head \{[\s\S]*?border-bottom:\s*1px solid var\(--mp-line\);/.test(css));
 ok('(M7) 제목 말줄임 유지', /\.mypage-notice__title \{[\s\S]*?text-overflow:\s*ellipsis;[\s\S]*?white-space:\s*nowrap;/.test(css));
