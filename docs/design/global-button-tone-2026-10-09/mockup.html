@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>study114 전역 버튼 톤 다운 — 목업 (2026-10-09, 종현 확정: B색 + 납작2)</title>
+<style>
+@font-face{font-family:Pretendard;font-weight:400;src:url(fonts/Pretendard-Regular.woff2) format("woff2")}
+@font-face{font-family:Pretendard;font-weight:600;src:url(fonts/Pretendard-SemiBold.woff2) format("woff2")}
+@font-face{font-family:Pretendard;font-weight:700;src:url(fonts/Pretendard-Bold.woff2) format("woff2")}
+:root{
+  /* 현재 */
+  --cur-bg:#266BC4;--cur-hover:#1F5BA8;--cur-fg:#fff;--cur-h:44px;--cur-h-c:40px;--cur-fs:16px;--cur-pad:16px;--cur-rad:8px;
+  /* 변경안 (B색 + 납작2) */
+  --btn-tone-bg:#729FD9;--btn-tone-fg:#0B2545;--btn-tone-hover:#6797D6;--btn-tone-active:#5C8FD3;
+  --btn-tone-h:30px;--btn-tone-h-sm:26px;--btn-tone-fs:14px;--btn-tone-pad:14px;--btn-tone-pad-sm:12px;--btn-tone-radius:6px;--btn-tone-hit:44px;
+  --btn-strong-bg:#266BC4;--btn-strong-hover:#1F5BA8;
+  --ink:#1C1917;--muted:#4B5563;--line:#E5E7EB;--bg:#F7F8FA;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,system-ui,sans-serif;font-size:14px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 20px 40px}
+h1{font-size:22px;margin:0 0 4px}.lead{color:var(--muted);margin:0 0 20px}
+h2{font-size:18px;margin:28px 0 10px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.col{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+.col>.cap{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;display:flex;gap:6px;align-items:center}
+.after>.cap{color:#B45309}
+.tag-x{font-size:11px;font-weight:700;background:#FEF3C7;color:#92400E;border-radius:4px;padding:1px 6px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.card{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.card .t{font-weight:700}.card .d{font-size:12px;color:var(--muted)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.grid5 .card{padding:10px 4px}.grid5 .t{font-size:13px}
+.mybox{border:1px solid #9DB8E0;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mybox b{font-size:16px;white-space:nowrap}.pill4{font-size:11px;color:#266BC4;border:1px solid #C5D4E8;border-radius:4px;padding:1px 4px;margin-left:4px;white-space:nowrap}
+.filter{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.inp{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;display:flex;align-items:center;color:#64748B;background:#fff}
+.right{justify-content:flex-end}
+.sortbar{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-top:10px;font-size:13px;color:var(--muted)}
+select{font-family:inherit;border:1px solid #CBD5E1;background:#fff;color:var(--ink)}
+.before select{height:44px;font-size:16px;border-radius:8px;padding:0 8px}
+.after select{height:30px;font-size:14px;border-radius:6px;padding:0 8px}
+.authcard{max-width:360px;margin:0 auto;display:grid;gap:8px}
+.authcard .inp{height:44px}
+.note{font-size:12px;color:var(--muted);margin:6px 0 0}
+/* ---- 버튼: 공통 ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;font-family:inherit;font-weight:600;border:1px solid transparent;cursor:pointer;text-decoration:none}
+.btn--secondary{background:#fff;color:#334155;border-color:var(--line)}
+.btn--secondary:hover{border-color:#266BC4;color:#1F5BA8}
+/* 현재 */
+.before .btn{min-height:var(--cur-h);padding:0 var(--cur-pad);font-size:var(--cur-fs);border-radius:var(--cur-rad);line-height:1.5}
+.before .btn--sm,.before .card .btn{min-height:var(--cur-h-c)}
+.before .btn--primary{background:var(--cur-bg);border-color:var(--cur-bg);color:var(--cur-fg)}
+.before .btn--primary:hover{background:var(--cur-hover)}
+/* 변경안 */
+.after .btn{min-height:var(--btn-tone-h);padding:0 var(--btn-tone-pad);font-size:var(--btn-tone-fs);border-radius:var(--btn-tone-radius);line-height:1}
+.after .btn--sm{min-height:var(--btn-tone-h-sm);padding:0 var(--btn-tone-pad-sm)}
+.after .btn--search{min-width:72px}
+.after .btn--primary{background:var(--btn-tone-bg);border-color:var(--btn-tone-bg);color:var(--btn-tone-fg)}
+.after .btn--primary:hover,.after .btn--primary.is-hover{background:var(--btn-tone-hover);border-color:var(--btn-tone-hover)}
+.after .btn--primary:active,.after .btn--primary.is-active{background:var(--btn-tone-active);border-color:var(--btn-tone-active)}
+.after .btn:focus-visible,.after .btn.is-focus{outline:2px solid #266BC4;outline-offset:2px}
+.after .btn:disabled,.after .btn.is-disabled{opacity:.5;cursor:not-allowed}
+/* 제외: 강한 파랑 유지 (폼 최종 제출 · 결제) — 양쪽 동일 */
+.btn.btn--strong{min-height:44px;padding:0 16px;font-size:16px;border-radius:8px;line-height:1.5;background:var(--btn-strong-bg);border-color:var(--btn-strong-bg);color:#fff}
+.btn.btn--strong:hover{background:var(--btn-strong-hover)}
+.btn--block{width:100%}
+/* 모바일 터치 영역 */
+@media (max-width:768px){
+  .pair{grid-template-columns:1fr}
+  .grid5{grid-template-columns:repeat(2,1fr)}.grid3{grid-template-columns:1fr}
+  .filter{grid-template-columns:1fr}
+  .after .btn{position:relative}
+  .after .btn::after{content:"";position:absolute;left:0;right:0;top:50%;height:max(100%,var(--btn-tone-hit));transform:translateY(-50%)}
+  .show-hit .after .btn::after{background:rgba(234,88,12,.12);outline:1px dashed rgba(234,88,12,.6)}
+  .before select{height:44px}.after select{height:44px}
+}
+.states{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.states figure{margin:0;text-align:center;font-size:11px;color:var(--muted);display:grid;gap:6px;justify-items:center}
+table.spec{border-collapse:collapse;width:100%;font-size:13px;background:#fff}
+table.spec th,table.spec td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+table.spec th{background:#F1F5F9}
+</style></head>
+<body class="show-hit"><div class="wrap">
+<h1>study114 전역 「배지형」 파란 버튼 톤 다운 — 목업</h1>
+<p class="lead">2026-10-09 · 종현 확정: <b>B색</b>(바탕 #729FD9 · 글자 #0B2545 · hover #6797D6) + <b>납작2</b>(채움·카드 버튼 30 / 머리·작은 버튼 26 · 14px/600 · line-height 1 · 좌우 14/12 · radius 6). 흰 테두리 버튼은 색 그대로, 크기만 같음. <span class="tag-x">제외</span> = 폼 최종 제출·결제(강한 파랑 #266BC4 유지). 모바일(≤768) 주황 점선 = 누르는 영역 44px(보이는 높이는 그대로).</p>
+
+<h2>상태 · 수치</h2>
+<div class="col after"><div class="cap">변경안 상태별 (채움 / 흰 테두리 / 작은 버튼)</div>
+<div class="states">
+<figure><a class="btn btn--primary">유료상품 보기</a>기본 #729FD9 · 5.62:1</figure>
+<figure><a class="btn btn--primary is-hover">유료상품 보기</a>hover #6797D6 · 5.11:1</figure>
+<figure><a class="btn btn--primary is-active">유료상품 보기</a>눌림 #5C8FD3 · 4.63:1</figure>
+<figure><a class="btn btn--primary is-focus">유료상품 보기</a>포커스 (기존 유지·예시)</figure>
+<figure><button class="btn btn--primary" disabled>유료상품 보기</button>disabled (기존 규칙 유지·흐리게)</figure>
+<figure><a class="btn btn--secondary">초기화</a>흰 테두리 · 10.35:1</figure>
+<figure><a class="btn btn--primary btn--sm">마이페이지</a>sm 26</figure>
+<figure><a class="btn btn--secondary btn--sm">쪽지 후기함</a>sm 26</figure>
+</div></div>
+
+<h2>① 공부방 홈 — 머리 박스 (쪽지 후기함 · 마이페이지)</h2>
+<div class="pair">
+ <div class="col before"><div class="cap">현재</div><div class="mybox"><div><b>계동공부방1</b><span class="pill4">공부방 박스</span></div><div class="row"><a class="btn btn--secondary btn--sm">쪽지 후기함</a><a class="btn btn--primary btn--sm">마이페이지</a></div></div></div>
+ <div class="col after"><div class="cap">변경안</div><div class="mybox"><div><b>계동공부방1</b><span class="pill4">공부방 박스</span></div><div class="row"><a class="btn btn--secondary btn--sm">쪽지 후기함</a><a class="btn btn--primary btn--sm">마이페이지</a></div></div></div>
+</div>
+
+<h2>② 프라임 · 픽 빈 칸 — 유료상품 보기</h2>
+<div class="pair">
+ <div class="col before"><div class="cap">현재</div>
+  <div class="grid3"><div class="card"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출을 먼저 잡아보세요</div><a class="btn btn--primary btn--sm">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출을 먼저 잡아보세요</div><a class="btn btn--primary btn--sm">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출을 먼저 잡아보세요</div><a class="btn btn--primary btn--sm">유료상품 보기</a></div></div>
+  <div class="grid5" style="margin-top:8px"><div class="card"><div class="t">이 자리에 공부방을 홍보</div><a class="btn btn--primary btn--sm">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보</div><a class="btn btn--primary btn--sm">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보</div><a class="btn btn--primary btn--sm">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보</div><a class="btn btn--primary btn--sm">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보</div><a class="btn btn--primary btn--sm">유료상품 보기</a></div></div>
+ </div>
+ <div class="col after"><div class="cap">변경안 (카드 안 버튼 = 30)</div>
+  <div class="grid3"><div class="card"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출을 먼저 잡아보세요</div><a class="btn btn--primary">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출을 먼저 잡아보세요</div><a class="btn btn--primary">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출을 먼저 잡아보세요</div><a class="btn btn--primary">유료상품 보기</a></div></div>
+  <div class="grid5" style="margin-top:8px"><div class="card"><div class="t">이 자리에 공부방을 홍보</div><a class="btn btn--primary">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보</div><a class="btn btn--primary">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보</div><a class="btn btn--primary">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보</div><a class="btn btn--primary">유료상품 보기</a></div><div class="card"><div class="t">이 자리에 공부방을 홍보</div><a class="btn btn--primary">유료상품 보기</a></div></div>
+  <div class="sortbar">정렬 <select><option>최신순</option></select></div>
+ </div>
+</div>
+
+<h2>③ 비회원 머리 · 등록 안내 — 로그인 · 회원가입 · 로그인 후 등록 이어하기</h2>
+<div class="pair">
+ <div class="col before"><div class="cap">현재</div><div class="row right"><a class="btn btn--primary btn--sm">로그인</a><a class="btn btn--secondary btn--sm">회원가입</a></div>
+  <div class="row" style="margin-top:12px"><a class="btn btn--primary">로그인 후 등록 이어하기</a><a class="btn btn--secondary">회원가입</a></div></div>
+ <div class="col after"><div class="cap">변경안</div><div class="row right"><a class="btn btn--primary btn--sm">로그인</a><a class="btn btn--secondary btn--sm">회원가입</a></div>
+  <div class="row" style="margin-top:12px"><a class="btn btn--primary">로그인 후 등록 이어하기</a><a class="btn btn--secondary">회원가입</a></div></div>
+</div>
+
+<h2>④ 공부방찾기 — 초기화 · 검색 · 최신순</h2>
+<div class="pair">
+ <div class="col before"><div class="cap">현재</div><div class="filter"><div class="inp">사·도 선택</div><div class="inp">대상 학교급</div><div class="inp">과목 선택</div></div><div class="row right"><a class="btn btn--secondary">초기화</a><a class="btn btn--primary btn--search" style="min-width:72px">검색</a></div><div class="sortbar">정렬 <select><option>최신순</option></select></div></div>
+ <div class="col after"><div class="cap">변경안 (검색 최소 너비 72 유지)</div><div class="filter"><div class="inp">사·도 선택</div><div class="inp">대상 학교급</div><div class="inp">과목 선택</div></div><div class="row right"><a class="btn btn--secondary">초기화</a><a class="btn btn--primary btn--search">검색</a></div><div class="sortbar">정렬 <select><option>최신순</option></select></div></div>
+</div>
+
+<h2>⑤ 고객센터 · 이용안내 CTA</h2>
+<div class="pair">
+ <div class="col before"><div class="cap">현재</div><div class="row"><a class="btn btn--primary">자주 묻는 질문</a><a class="btn btn--secondary">운영문의 남기기</a><a class="btn btn--secondary">고객센터 가기</a></div>
+  <div class="row" style="margin-top:10px"><a class="btn btn--primary">찜한 공부방·과외쌤 보기</a><a class="btn btn--secondary">쪽지함 보기</a></div>
+  <div class="row" style="margin-top:10px"><a class="btn btn--primary">공부방 찾기 시작</a><a class="btn btn--secondary">과외쌤 찾기 시작</a></div></div>
+ <div class="col after"><div class="cap">변경안</div><div class="row"><a class="btn btn--primary">자주 묻는 질문</a><a class="btn btn--secondary">운영문의 남기기</a><a class="btn btn--secondary">고객센터 가기</a></div>
+  <div class="row" style="margin-top:10px"><a class="btn btn--primary">찜한 공부방·과외쌤 보기</a><a class="btn btn--secondary">쪽지함 보기</a></div>
+  <div class="row" style="margin-top:10px"><a class="btn btn--primary">공부방 찾기 시작</a><a class="btn btn--secondary">과외쌤 찾기 시작</a></div></div>
+</div>
+
+<h2>⑥ 마이페이지 — 작은 버튼 vs 폼 저장(제외)</h2>
+<div class="pair">
+ <div class="col before"><div class="cap">현재</div><div class="row"><a class="btn btn--primary btn--sm">새 운영문의 남기기</a><a class="btn btn--secondary btn--sm">구매이력</a></div><div class="row right" style="margin-top:12px"><button class="btn btn--strong">상세정보 저장</button></div></div>
+ <div class="col after"><div class="cap">변경안 <span class="tag-x">제외</span> 저장 버튼은 그대로</div><div class="row"><a class="btn btn--primary btn--sm">새 운영문의 남기기</a><a class="btn btn--secondary btn--sm">구매이력</a></div><div class="row right" style="margin-top:12px"><button class="btn btn--strong">상세정보 저장</button></div></div>
+</div>
+
+<h2>⑦ 제외 확인 — 로그인 화면 최종 제출 · 결제</h2>
+<div class="pair">
+ <div class="col before"><div class="cap">현재</div><div class="authcard"><div class="inp">아이디(이메일)</div><div class="inp">비밀번호</div><button class="btn btn--strong btn--block">로그인</button></div><div class="row right" style="margin-top:12px"><button class="btn btn--strong">결제하기</button></div></div>
+ <div class="col after"><div class="cap">변경안 <span class="tag-x">제외</span> 동일해야 함</div><div class="authcard"><div class="inp">아이디(이메일)</div><div class="inp">비밀번호</div><button class="btn btn--strong btn--block">로그인</button></div><div class="row right" style="margin-top:12px"><button class="btn btn--strong">결제하기</button></div></div>
+</div>
+
+<h2>수치 요약</h2>
+<table class="spec"><tr><th>항목</th><th>현재</th><th>변경안</th></tr>
+<tr><td>채움 바탕 / 글자</td><td>#266BC4 / #FFFFFF (5.27:1)</td><td>#729FD9 / #0B2545 (5.62:1)</td></tr>
+<tr><td>hover / 눌림</td><td>#1F5BA8 / —</td><td>#6797D6 (5.11:1) / #5C8FD3 (4.63:1)</td></tr>
+<tr><td>높이 (기본·카드 / 작은·머리)</td><td>44·40 / 40</td><td>30 / 26 (모바일도 동일 + 누르는 영역 44)</td></tr>
+<tr><td>글자</td><td>16px / 600</td><td>14px / 600 · line-height 1</td></tr>
+<tr><td>좌우 padding</td><td>16</td><td>14 (기본) / 12 (작은)</td></tr>
+<tr><td>radius</td><td>8</td><td>6</td></tr>
+<tr><td>흰 테두리 버튼</td><td>#FFF / #334155 / #E5E7EB</td><td>색 동일 · 크기만 위와 같음</td></tr>
+<tr><td>제외 (폼 최종 제출·결제·홍보 배너)</td><td colspan="2">#266BC4 / 흰 글자 · 44(모바일 44)·16px·radius 8 그대로</td></tr>
+</table>
+</div></body></html>

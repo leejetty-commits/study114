@@ -1,0 +1,74 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   2026-10-09 전역 버튼 톤 (종현 확정: B색 + 납작2) — study114-ds docs/217
+   - 위쪽 기존 버튼 규칙은 지우지 않는다. 제외 버튼(폼 최종 제출·결제·홍보 배너)은 그 값을 그대로 쓴다.
+   - 아래 규칙은 제외 목록이 아닌 버튼만 덮는다. :not(:where(…))는 특이도 0 → 기존 선택자와 특이도 동일, 뒤에 있어서 이김.
+   - 제외 목록 (12개 — 바꿀 때는 이 블록 안 모든 :not(:where(…)) 목록을 똑같이 바꾼다):
+     .btn--block · button[type=submit]:not(.btn--search) · .p19-form-actions .btn · [data-action=save|save-basic-all|save-detail|next]
+     · [data-plans-pay] · .plans-order-summary__cta · .plans-card__cta · .home-mkt__cta · .home-app--role-parent .mp-room .btn
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* (1) 크기 — 기본 30 */
+.btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+.uds-theme .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+.guest-gate__actions .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)) {
+  min-height: var(--btn-tone-h);
+  padding-block: 0;
+  padding-inline: var(--btn-tone-pad);
+  border-radius: var(--btn-tone-radius) !important;
+  font-size: var(--btn-tone-fs);
+  font-weight: var(--fw-semibold, 600);
+  line-height: 1;
+}
+
+/* (2) 검색 30 (최소 폭 72는 기존 규칙 유지) */
+.btn--search:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+.search-find-bar .btn--primary:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+.find-toolbar .btn--primary:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)) {
+  min-height: var(--btn-tone-h);
+  padding-block: 0;
+}
+
+/* (3) 작은·머리 26 */
+.btn--sm:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+.btn--compact:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+.uds-theme .btn--sm:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+.mypage-next-action .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+.mypage-layout .mypage-actions-row .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)) {
+  min-height: var(--btn-tone-h-sm);
+  padding-inline: var(--btn-tone-pad-sm);
+  font-size: var(--btn-tone-fs);
+}
+
+/* (4) 카드 안 버튼 30 (「유료상품 보기」 btn--sm이어도 30) */
+.expo-card .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+.slot-card .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+.browse-row .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+.btn--detail:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)) {
+  min-height: var(--btn-tone-h);
+  padding-inline: var(--btn-tone-pad);
+}
+
+/* (6) 색 — 일반 채움 (B안). 기존 !important 규칙(design-system·product-chrome·mypage-ops)보다 특이도 높음 */
+.btn.btn--primary:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)) {
+  background: var(--btn-tone-bg) !important;
+  border-color: var(--btn-tone-bg) !important;
+  color: var(--btn-tone-fg) !important;
+}
+.btn.btn--primary:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)):hover {
+  background: var(--btn-tone-hover) !important;
+  border-color: var(--btn-tone-hover) !important;
+  filter: none;
+}
+.btn.btn--primary:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)):active {
+  background: var(--btn-tone-active) !important;
+  border-color: var(--btn-tone-active) !important;
+}
+
+/* (8) 정렬 select 「최신순」 — 데스크톱 30·14px / 모바일 44·16px(iOS 확대 방지) */
+select.list-sort-bar__select {
+  min-height: var(--btn-tone-h);
+  height: var(--btn-tone-h);
+  padding-block: 0;
+  font-size: var(--btn-tone-fs);
+  border-radius: var(--btn-tone-radius);
+}

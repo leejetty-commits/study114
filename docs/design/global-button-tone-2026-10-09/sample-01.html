@@ -1,0 +1,61 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>sample-01</title>
+<style>
+@font-face{font-family:Pretendard;font-weight:400;src:url(fonts/Pretendard-Regular.woff2)}
+@font-face{font-family:Pretendard;font-weight:600;src:url(fonts/Pretendard-SemiBold.woff2)}
+@font-face{font-family:Pretendard;font-weight:700;src:url(fonts/Pretendard-Bold.woff2)}
+*{box-sizing:border-box}body{margin:0;background:#F7F8FA;font-family:Pretendard,sans-serif;color:#1C1917;padding:20px}
+h1{font-size:22px;margin:0 0 4px}.sub{font-size:14px;color:#4B5563;margin:0 0 16px}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.col{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:14px}
+.col.rec{border:3px solid #E8A400;box-shadow:0 0 0 4px #FFF3C4}
+.tag{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.tag b{font-size:18px}.star{background:#E8A400;color:#1C1917;font-size:12px;font-weight:700;padding:2px 6px;border-radius:4px}
+.spec{font-size:12px;color:#4B5563;line-height:1.5;margin:0 0 10px;min-height:54px}
+.spec code{font-family:inherit;font-weight:600;color:#1C1917}
+.sec{font-size:12px;color:#4B5563;margin:12px 0 6px;font-weight:600}
+.mybox{border:1px solid #9DB8E0;border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mybox>div:first-child{white-space:nowrap}.mybox .nm{font-weight:700;font-size:16px}.mybox .bx{white-space:nowrap;font-size:11px;color:#266BC4;border:1px solid #C5D4E8;border-radius:4px;padding:1px 4px;margin-left:4px}
+.acts{display:flex;gap:6px}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.slot{border:1px solid #E5E7EB;border-radius:12px;padding:12px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.slot .t{font-weight:700;font-size:14px}.slot .d{font-size:12px;color:#4B5563}
+.picks{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.picks .slot{padding:10px 4px}.picks .t{font-size:13px}
+.btn{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:8px;font-family:inherit;font-weight:600;line-height:1;border:1px solid transparent}
+/* before (현재 라이브 계산값) */
+.before .btn{min-height:40px;padding:0 16px;font-size:16px}
+.before .btn--p{background:#266BC4;color:#fff;border-color:#266BC4}
+.before .btn--s{background:#fff;color:#334155;border-color:#E5E7EB}
+/* after 공통 크기: md 36 / sm 32, 14px */
+.after .btn{font-size:14px}
+.after .btn--md{min-height:36px;padding:0 14px}
+.after .btn--sm{min-height:32px;padding:0 12px}
+.after .btn--s{background:#fff;color:#334155;border-color:#E5E7EB}
+.optA .btn--p{background:#4373B1;color:#fff;border-color:#4373B1}
+.optB .btn--p{background:#729FD9;color:#0B2545;border-color:#729FD9}
+.optC .btn--p{background:#DCE8F7;color:#1A4F96;border-color:#C5D4E8}
+.foot{font-size:12px;color:#4B5563;margin-top:12px}
+</style></head><body>
+<h1>study114 전역 파란 버튼 톤 다운 — 샘플 1 (공부방 홈 일부)</h1>
+<p class="sub">왼쪽 현재 → 오른쪽 3안. 3안 모두 글자 16→14px, 높이 40→36(카드 버튼)·32(머리 버튼), 글자/바탕 대비 WCAG AA 4.5:1 이상. 노란 테두리 = 추천안.</p>
+<div class="cols">
+<div class="col before "><div class="tag"><b>현재</b></div><p class="spec"><code>#266BC4</code> + 흰 글자 · 대비 <code>5.27:1</code><br>16px · 높이 40 · 좌우 16</p>
+<div class="sec">머리 박스 (쪽지 후기함 · 마이페이지)</div>
+<div class="mybox"><div><span class="nm">계동공부방1</span><span class="bx">공부방 박스</span></div><div class="acts"><a class="btn btn--s ">쪽지 후기함</a><a class="btn btn--p ">마이페이지</a></div></div>
+<div class="sec">프라임 빈 칸</div><div class="slots"><div class="slot"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p ">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p ">유료상품 보기</a></div></div>
+<div class="sec">픽 빈 칸</div><div class="picks"><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p ">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p ">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p ">유료상품 보기</a></div></div></div><div class="col after optA "><div class="tag"><b>A안 · 흰 글자 유지</b></div><p class="spec"><code>#4373B1</code>(채도↓) + 흰 글자 · <code>4.85:1</code><br>밝기 거의 그대로, 채도만 낮춤</p>
+<div class="sec">머리 박스 (쪽지 후기함 · 마이페이지)</div>
+<div class="mybox"><div><span class="nm">계동공부방1</span><span class="bx">공부방 박스</span></div><div class="acts"><a class="btn btn--s btn--sm">쪽지 후기함</a><a class="btn btn--p btn--sm">마이페이지</a></div></div>
+<div class="sec">프라임 빈 칸</div><div class="slots"><div class="slot"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div></div>
+<div class="sec">픽 빈 칸</div><div class="picks"><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div></div></div><div class="col after optB rec"><div class="tag"><b>B안 · 35% 밝게</b><span class="star">추천</span></div><p class="spec"><code>#729FD9</code>(흰색 35% 혼합) + 진남색 <code>#0B2545</code> · <code>5.62:1</code><br>(흰 글자면 2.74:1 → 불합격)</p>
+<div class="sec">머리 박스 (쪽지 후기함 · 마이페이지)</div>
+<div class="mybox"><div><span class="nm">계동공부방1</span><span class="bx">공부방 박스</span></div><div class="acts"><a class="btn btn--s btn--sm">쪽지 후기함</a><a class="btn btn--p btn--sm">마이페이지</a></div></div>
+<div class="sec">프라임 빈 칸</div><div class="slots"><div class="slot"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div></div>
+<div class="sec">픽 빈 칸</div><div class="picks"><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div></div></div><div class="col after optC "><div class="tag"><b>C안 · 연한 파랑 바탕</b></div><p class="spec"><code>#DCE8F7</code> + 진파랑 글자 <code>#1A4F96</code> · <code>6.50:1</code><br>테두리 <code>#C5D4E8</code></p>
+<div class="sec">머리 박스 (쪽지 후기함 · 마이페이지)</div>
+<div class="mybox"><div><span class="nm">계동공부방1</span><span class="bx">공부방 박스</span></div><div class="acts"><a class="btn btn--s btn--sm">쪽지 후기함</a><a class="btn btn--p btn--sm">마이페이지</a></div></div>
+<div class="sec">프라임 빈 칸</div><div class="slots"><div class="slot"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보하세요</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div></div>
+<div class="sec">픽 빈 칸</div><div class="picks"><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div><div class="slot"><div class="t">이 자리에 공부방을 홍보</div><div class="d">우리 동네 상단 노출</div><a class="btn btn--p btn--md">유료상품 보기</a></div></div></div>
+</div>
+<p class="foot">대비값은 WCAG 2.x 상대휘도 공식으로 계산. 모바일(≤768px)은 높이 40px 제안(현행 44 규칙 변경 필요 — 결정 사항). 2026-10-09 KST · 시안 · 승인 전.</p>
+</body></html>

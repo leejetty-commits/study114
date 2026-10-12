@@ -1,0 +1,49 @@
+/* (5) 모바일 — 보이는 높이 유지 (기존 44 규칙을 같은 특이도로 덮음) */
+@media (max-width: 768px) {
+  .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+  .btn--search:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+  .expo-card .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+  .slot-card .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+  .uds-theme .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+  .guest-gate__actions .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)) {
+    min-height: var(--btn-tone-h);
+  }
+  .btn--sm:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+  .btn--compact:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+  .uds-theme .btn--sm:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+  .mypage-next-action .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)) {
+    min-height: var(--btn-tone-h-sm);
+  }
+}
+@media (max-width: 480px) {
+  :is(.guide-app, .concern-app, .support-app) .cta-row .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)),
+  :is(.guide-app, .concern-app, .support-app) .slim-cta .btn:not(:where(.btn--block, button[type='submit']:not(.btn--search), .p19-form-actions .btn, [data-action='save'], [data-action='save-basic-all'], [data-action='save-detail'], [data-action='next'], [data-plans-pay], .plans-order-summary__cta, .plans-card__cta, .home-mkt__cta, .home-app--role-parent .mp-room .btn)) {
+    min-height: var(--btn-tone-h);
+    padding-inline: var(--btn-tone-pad);
+  }
+}
+
+/* (7) 모바일 누르는 영역 ≥44 — 투명 레이어, 레이아웃 이동 없음 */
+@media (max-width: 768px) {
+  :where(.btn) {
+    position: relative;
+  }
+  .btn::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: max(100%, var(--btn-tone-hit));
+    transform: translateY(-50%);
+  }
+}
+
+/* (8-m) 정렬 select 모바일 — 44·16px(iOS 확대 방지) */
+@media (max-width: 768px) {
+  select.list-sort-bar__select {
+    min-height: var(--input-h);
+    height: var(--input-h);
+    font-size: var(--fs-3);
+  }
+}
