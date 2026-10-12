@@ -22,7 +22,7 @@ import {
   collectRegionLabels,
   resolveFacilityNames,
 } from './shop-formatters.js';
-import { studyRoomSectionPath } from './router.js';
+import { studyRoomBlankPath, studyRoomSectionPath } from './router.js';
 import { withEmbedQuery } from './embedded-panels.js';
 import {
   RC_COPY,
@@ -458,6 +458,7 @@ export function buildRegistrationCheckModel(s, room, readiness = {}) {
  * @param {string} [focusId]
  */
 export function registrationCheckTabHref(roomId, section, focusId) {
+  if (!Number(roomId)) return `#${studyRoomBlankPath(section)}`;
   return `#${withEmbedQuery(studyRoomSectionPath(roomId, section), {
     edit: true,
     returnRegistrationCheck: true,

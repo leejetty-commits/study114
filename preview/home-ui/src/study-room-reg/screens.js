@@ -15,6 +15,7 @@ import {
   parseStudyRoomRegPath,
   studyRoomHubPath,
   studyRoomSectionPath,
+  studyRoomBlankPath,
   studyRoomListTabPath,
   STUDY_ROOM_TOP_TABS,
   studyRoomLegacyExposureRedirect,
@@ -44,7 +45,7 @@ import {
 } from './embedded-panels.js';
 import { renderMyshopShowcase, bindMyshopEvents } from './myshop-render.js';
 import { getShopCompletenessSummary } from './shop-completeness.js';
-import { registerState } from '@study-room-ui/state.js';
+import { emptyRoomState, registerState } from '@study-room-ui/state.js';
 import { buildRegistrationCheckModel } from './registration-check-model.js';
 import { renderRegistrationCheck } from './registration-check-render.js';
 import { bindRegistrationCheckEvents } from './registration-check-edit.js';
@@ -97,8 +98,11 @@ function renderTopTabs(room, activeSection) {
   return `
     <nav class="mp-room__tabs" aria-label="공부방 메뉴">
       ${STUDY_ROOM_TOP_TABS.map((tab) => {
-        const href =
-          tab.key === 'hub' ? studyRoomHubPath(room.id) : studyRoomSectionPath(room.id, /** @type {any} */ (tab.key));
+        const href = !Number(room?.id)
+          ? studyRoomBlankPath(tab.key)
+          : tab.key === 'hub'
+            ? studyRoomHubPath(room.id)
+            : studyRoomSectionPath(room.id, /** @type {any} */ (tab.key));
         const active = activeSection === tab.key;
         return `<a href="#${href}" class="mp-room__tab${active ? ' is-active' : ''}" data-p20-nav="${href}">${esc(tab.label)}</a>`;
       }).join('')}
@@ -107,7 +111,7 @@ function renderTopTabs(room, activeSection) {
 
 function renderRoomShell(room, activeSection, bodyHtml) {
   return `
-    <div class="mp-room">
+    <div class="mp-room"${Number(room?.id) ? '' : ' data-blank-reg="1"'}>
       <header class="mp-room__head">
         ${renderTopTabs(room, activeSection)}
       </header>
@@ -132,6 +136,26 @@ export function renderStudyRoomRegScreen(path) {
   const route = parseStudyRoomRegPath(pathOnly);
   if (!route) return '';
 
+  if (route.blank) {
+    const rooms = getStudyRooms();
+    const section = route.section || 'hub';
+    if (rooms.length) {
+      const room = rooms[0];
+      const dest = section === 'hub' ? studyRoomHubPath(room.id) : studyRoomSectionPath(room.id, section);
+      queueMicrotask(() => {
+        const hashPath = stripHashQuery(window.location.hash.slice(1) || '');
+        if (hashPath === studyRoomBlankPath(section)) window.location.replace(`#${dest}`);
+      });
+      if (section === 'basic') return renderEmbeddedSection(room, 'basic');
+      if (section === 'detail') return renderEmbeddedSection(room, 'detail');
+      if (section === 'detail2') return renderEmbeddedSection(room, 'detail2');
+      if (section === 'publish') return renderPublish(room);
+      if (section === 'inquiries') return renderInquiries(room);
+      return renderHub(room);
+    }
+    return renderBlankStudyRoom(section);
+  }
+
   if (route.screenId === 'P20-01') {
     const rooms = getStudyRooms();
     if (route.listTab === 'hidden') {
@@ -152,7 +176,7 @@ export function renderStudyRoomRegScreen(path) {
       });
       return renderHub(rooms[0]);
     }
-    return renderList(route.listTab === 'hidden' ? 'all' : route.listTab || 'all');
+    return renderBlankStudyRoom('hub');
   }
   if (!route.roomId) return renderNotFound();
 
@@ -177,6 +201,57 @@ export function renderStudyRoomRegScreen(path) {
     default:
       return renderHub(room);
   }
+}
+
+function blankStudyRoom() {
+  return {
+    id: 0,
+    study_room_name: '',
+    region_label: '',
+    location_label: '',
+    profile_status: 'draft',
+    inquiry_status: '',
+    deleted_at: null,
+  };
+}
+
+function withEmptyRegisterState(fn) {
+  const snapshot = JSON.parse(JSON.stringify(registerState));
+  const empty = emptyRoomState();
+  for (const key of Object.keys(registerState)) delete registerState[key];
+  Object.assign(registerState, empty);
+  try {
+    return fn();
+  } finally {
+    for (const key of Object.keys(registerState)) delete registerState[key];
+    Object.assign(registerState, snapshot);
+  }
+}
+
+/** 등록 0건. 탭과 페이지 칸은 두고, 값은 비운다. 저장은 하지 않는다. */
+function renderBlankStudyRoom(section) {
+  const room = blankStudyRoom();
+  const sec = section || 'hub';
+  if (sec === 'basic' || sec === 'detail' || sec === 'detail2') {
+    const inner = withEmptyRegisterState(() => renderEmbeddedPanel(room, sec));
+    return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, sec, inner)}</section>`;
+  }
+  if (sec === 'publish') {
+    const inner = withEmptyRegisterState(() => {
+      const vm = buildRegistrationCheckModel(registerState, room, { profileStatus: 'draft' });
+      return renderRegistrationCheck(vm);
+    });
+    return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'publish', inner)}</section>`;
+  }
+  if (sec === 'inquiries') return renderInquiries(room);
+  const greeting = renderNeighborhoodGreetingEditor({
+    providerType: 'study_room',
+    registrationId: 0,
+    neighborhood: '',
+    displayName: '',
+  });
+  const shop = withEmptyRegisterState(() => renderMyshopShowcase(registerState, room));
+  return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', `${greeting}${shop}`)}</section>`;
 }
 
 function renderNotFound() {
@@ -497,7 +572,7 @@ function renderInquiries(room) {
     markEmbeddedViewLoaded(room.id, 'inquiries');
     return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'inquiries', embeddedLoadErrorHtml())}</section>`;
   }
-  if (shouldReloadEmbeddedView(room.id, 'inquiries')) {
+  if (Number(room.id) && shouldReloadEmbeddedView(room.id, 'inquiries')) {
     queueMicrotask(() => {
       ensureEmbeddedRegister(room.id, { force: true })
         .then(() => {
@@ -643,6 +718,7 @@ export function bindStudyRoomRegEvents(root, rerender) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = Number(form.dataset.p20RoomId);
+      if (!id) return;
       const kind = form.getAttribute('data-p20-form');
       const fd = new FormData(form);
       const btn = form.querySelector('button[type="submit"]');
@@ -693,6 +769,7 @@ export function bindStudyRoomRegEvents(root, rerender) {
     btn.addEventListener('click', async () => {
       const section = btn.closest('[data-p20-inquiries]');
       const id = Number(section?.dataset.p20RoomId);
+      if (!id) return;
       const receiving = section?.querySelector('input[name="p20_inquiry_receiving"]:checked')?.value === '1';
       const reasonEl = section?.querySelector('input[name="inquiry_off_reason"]:checked');
       if (!receiving && (!reasonEl || (reasonEl.value !== 'paused' && reasonEl.value !== 'capacity_full'))) {

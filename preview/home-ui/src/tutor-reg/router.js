@@ -8,6 +8,7 @@
  * @property {number} [tutorId]
  * @property {'all'|'draft'|'published'|'hidden'|'not_ready'} [listTab]
  * @property {'hub'|'basic'|'detail'|'publish'|'access'|'inquiries'|'exposure'} [section]
+ * @property {boolean} [blank]
  */
 
 export const BASE = '/mypage/registrations/tutors';
@@ -41,6 +42,22 @@ export function parseTutorRegPath(hashPath) {
   const tabMatch = p.match(/^\/mypage\/registrations\/tutors\/tab\/(all|draft|published|hidden|not_ready)$/);
   if (tabMatch) {
     return { screenId: 'P21-01', listTab: /** @type {any} */ (tabMatch[1]) };
+  }
+
+  const blankMatch = p.match(/^\/mypage\/registrations\/tutors\/(basic|detail|publish|inquiries)$/);
+  if (blankMatch) {
+    const sec = blankMatch[1];
+    const map = {
+      basic: 'P21-03a',
+      detail: 'P21-03b',
+      publish: 'P21-04',
+      inquiries: 'P21-05',
+    };
+    return {
+      screenId: /** @type {TutorRegScreenId} */ (map[sec]),
+      section: /** @type {any} */ (sec),
+      blank: true,
+    };
   }
 
   const hubMatch = p.match(/^\/mypage\/registrations\/tutors\/(\d+)$/);
@@ -101,6 +118,13 @@ export function tutorHubPath(id) {
 export function tutorSectionPath(id, section) {
   const sec = section === 'access' ? 'inquiries' : section;
   return `${BASE}/${id}/${sec}`;
+}
+
+/** 등록이 없을 때 탭 주소. 저장 번호는 붙이지 않는다. */
+export function tutorBlankPath(section) {
+  if (!section || section === 'hub') return BASE;
+  const sec = section === 'access' ? 'inquiries' : section;
+  return `${BASE}/${sec}`;
 }
 
 /** @param {'all'|'draft'|'published'|'hidden'|'not_ready'} tab */

@@ -8,6 +8,7 @@
  * @property {number} [roomId]
  * @property {'all'|'draft'|'published'|'hidden'|'not_ready'} [listTab]
  * @property {'hub'|'basic'|'detail'|'detail2'|'publish'|'inquiries'|'submission'} [section]
+ * @property {boolean} [blank]
  */
 
 export const BASE = '/mypage/registrations/study-rooms';
@@ -29,6 +30,23 @@ export function parseStudyRoomRegPath(hashPath) {
   const tabMatch = p.match(/^\/mypage\/registrations\/study-rooms\/tab\/(all|draft|published|hidden|not_ready)$/);
   if (tabMatch) {
     return { screenId: 'P20-01', listTab: /** @type {any} */ (tabMatch[1]) };
+  }
+
+  const blankMatch = p.match(/^\/mypage\/registrations\/study-rooms\/(basic|detail2|detail|publish|inquiries)$/);
+  if (blankMatch) {
+    const sec = blankMatch[1];
+    const map = {
+      basic: 'P20-03a',
+      detail: 'P20-03b',
+      detail2: 'P20-03c',
+      publish: 'P20-04',
+      inquiries: 'P20-05',
+    };
+    return {
+      screenId: /** @type {StudyRoomRegScreenId} */ (map[sec]),
+      section: /** @type {any} */ (sec),
+      blank: true,
+    };
   }
 
   const hubMatch = p.match(/^\/mypage\/registrations\/study-rooms\/(\d+)$/);
@@ -93,6 +111,12 @@ export function studyRoomRegScreenTitle(screenId) {
 /** @param {number} id */
 export function studyRoomHubPath(id) {
   return `${BASE}/${id}`;
+}
+
+/** 등록이 없을 때 탭 주소. 저장 번호는 붙이지 않는다. */
+export function studyRoomBlankPath(section) {
+  if (!section || section === 'hub') return BASE;
+  return `${BASE}/${section}`;
 }
 
 /** @param {number} id @param {'basic'|'detail'|'detail2'|'publish'|'inquiries'|'submission'} section */

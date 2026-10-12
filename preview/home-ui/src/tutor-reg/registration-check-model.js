@@ -7,7 +7,7 @@ import { formatTutorFeeCard } from '../exposure-format.js';
 import { lessonDurationLabel } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
 import { TUTOR_PLACE_LABELS, UNIVERSITY_STATUS_LABELS } from '../tutor-enums.js';
-import { tutorSectionPath, tutorHubPath } from './router.js';
+import { tutorBlankPath, tutorSectionPath, tutorHubPath } from './router.js';
 import { tutorToExposureRow } from './format.js';
 import {
   TRC_COPY,
@@ -154,6 +154,7 @@ function hashQuery(opts = {}) {
 
 /** @param {number} tutorId @param {'basic'|'detail'} section @param {string} [focusId] */
 export function tutorRegistrationCheckTabHref(tutorId, section, focusId) {
+  if (!Number(tutorId)) return `#${tutorBlankPath(section)}`;
   return `#${tutorSectionPath(tutorId, section)}${hashQuery({
     returnRegistrationCheck: true,
     focus: focusId || undefined,

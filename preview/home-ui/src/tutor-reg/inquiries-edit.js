@@ -70,6 +70,7 @@ export function bindTutorInquiriesEvents(root, rerender) {
 
   page.querySelector('[data-p21-inquiry-save]')?.addEventListener('click', async () => {
     const id = Number(page.dataset.p21TutorId);
+    if (!id) return;
     const receiving = selectedReceiving(page);
     const reason = selectedReason(page);
     if (!receiving && (!hasClosedReason(page) || !reason)) {
