@@ -33,12 +33,18 @@
   border-radius: 8px;
   color: var(--s5-muted);
   font-size: 14px;
+  font-weight: 500;
 }
 
 .home-app--role-parent .mypage-nav__link.is-active {
   background: var(--s5-role-soft) !important;
   color: var(--s5-role) !important;
   box-shadow: inset 3px 0 0 var(--s5-role) !important;
+  font-weight: 700;
+}
+
+.home-app--role-parent .mypage-nav__link.is-emphasis:not(.is-active) {
+  font-weight: 500;
 }
 
 .home-app--role-parent .mypage-nav__icon {
@@ -47,9 +53,12 @@
 }
 
 /* 탭 바 14px 유지 */
+.home-app--role-parent .mp-room {
+  gap: 24px;
+}
+
 .home-app--role-parent .mp-room__head {
   border-bottom: 1px solid var(--s5-line);
-  margin-bottom: 24px;
 }
 
 .home-app--role-parent .mp-room__tab {
