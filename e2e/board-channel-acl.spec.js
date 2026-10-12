@@ -244,7 +244,7 @@ test.describe('wishlist all logged-in roles', () => {
     });
     await expect(page.locator('.mypage-nav a[data-mypage-nav="/mypage/student-review"]')).toBeVisible();
     await page.goto(`${HOME}/#/mypage/wishlist`);
-    await expect(page.locator('.mypage-panel')).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator('.mp-card')).toBeVisible({ timeout: 20_000 });
   });
 });
 
