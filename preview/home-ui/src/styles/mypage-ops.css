@@ -2074,3 +2074,107 @@
   font-size: 14px;
 }
 
+/* 관심 학생·내 문의: 흰 칸 안 줄. 아래 문의 버튼은 그대로 둔다. */
+.mypage-content .mp-card__row--split .mypage-entity__actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.mypage-content .mp-card.mypage-contact .mypage-contact-list {
+  gap: 0;
+  margin-top: 16px;
+}
+.mypage-content .mp-card.mypage-contact .mypage-contact-item {
+  border: 0;
+  border-radius: 0;
+  border-top: 1px solid #e5e7eb;
+  background: transparent;
+  box-shadow: none;
+}
+.mypage-content .mp-card.mypage-contact .mypage-contact-list > li:first-child .mypage-contact-item {
+  border-top: 0;
+}
+.mypage-content .mp-card.mypage-contact .mypage-badge {
+  border-radius: 4px;
+}
+
+/* 계정설정: 그라데이션·그림자 없이 흰 칸 */
+.mypage-content .account-settings {
+  gap: 16px;
+}
+.mypage-content .account-settings__hero {
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+}
+.mypage-content .account-settings__hero::after {
+  content: none;
+}
+.mypage-content .account-settings__name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.3;
+  color: #1c1917;
+}
+.mypage-content .account-card,
+.mypage-content .account-card--danger {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: none;
+}
+.mypage-content .account-card:hover {
+  border-color: #e5e7eb;
+  box-shadow: none;
+}
+.mypage-content .account-card__head,
+.mypage-content .account-card--session .account-card__head,
+.mypage-content .account-card--danger .account-card__head {
+  background: #fff;
+  border-bottom-color: #e5e7eb;
+}
+.mypage-content .account-card__title,
+.mypage-content .account-card--danger .account-card__title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #1c1917;
+}
+.mypage-content .account-form .form-input {
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 16px;
+}
+@media (max-width: 640px) {
+  .mypage-content .account-settings__hero {
+    padding: 16px;
+  }
+}
+
+/* 공부방 내 등록 탭. 과외쌤은 포함 여부가 정해지기 전이라 그대로 둔다. */
+.home-app--role-study_room .mp-room {
+  gap: 24px;
+}
+.home-app--role-study_room .mp-room__tab {
+  padding: 12px 16px;
+  font-size: 14px;
+}
+.home-app--role-study_room .mp-room__tab.is-active {
+  color: var(--role-accent);
+  font-weight: 700;
+}
+.home-app--role-study_room .mp-room__tab.is-active::after {
+  left: 16px;
+  right: 16px;
+  background: var(--role-accent);
+}
+@media (max-width: 720px) {
+  .home-app--role-study_room .mp-room__tab {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
