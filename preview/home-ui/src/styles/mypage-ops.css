@@ -10,7 +10,7 @@
   --mp-bg: var(--product-page-bg, #f7f8fa);
   --mp-panel: var(--product-panel, #ffffff);
   --mp-ink: var(--product-ink, #1c1917);
-  --mp-muted: var(--product-muted, #6b7280);
+  --mp-muted: #4B5563;
   --mp-line: var(--product-line, #e5e7eb);
   --mp-accent: var(--brand-blue);
   --mp-accent-soft: var(--brand-blue-light);
