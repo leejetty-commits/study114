@@ -166,6 +166,21 @@
   --chip-h: 2rem; /* 32 */
   --badge-h: 1.25rem; /* 20 */
   --input-h: 2.75rem; /* 44 */
+  /* 2026-10-09 전역 버튼 톤 (종현 확정: B색 + 납작2) — docs/217 */
+  --btn-tone-bg: #729fd9; /* 5.62:1 with --btn-tone-fg */
+  --btn-tone-fg: #0b2545;
+  --btn-tone-hover: #6797d6; /* 5.11:1 */
+  --btn-tone-active: #5c8fd3; /* 4.63:1 */
+  --btn-strong-bg: var(--brand-blue); /* 폼 최종 제출·결제 (제외) */
+  --btn-strong-hover: var(--brand-blue-dark);
+  --btn-strong-fg: #ffffff;
+  --btn-tone-h: 30px; /* 기본·카드 안 */
+  --btn-tone-h-sm: 26px; /* 작은·머리 */
+  --btn-tone-fs: 14px;
+  --btn-tone-pad: 14px;
+  --btn-tone-pad-sm: 12px;
+  --btn-tone-radius: 6px;
+  --btn-tone-hit: 44px; /* 모바일 누르는 영역 */
 
   /* UDX alias — footer/rail 공통 외피 */
   --uds-ink: var(--product-ink);
