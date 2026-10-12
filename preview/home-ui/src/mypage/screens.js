@@ -45,7 +45,7 @@ import { renderBasicRow } from '../exposure-render.js';
 import { bindUserActionEvents } from '../user-actions-ui.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { notifyCompareToggle } from '../handoff-utils.js';
-import { getEmptyCopy, renderEmptyStateCard } from '../empty-state-copy.js';
+import { getEmptyCopy } from '../empty-state-copy.js';
 import { renderMessagesScreen } from '../messages/screens.js';
 import { isMessagesDetailPath, MESSAGES_BASE, threadPath } from '../messages/router.js';
 import { isStudentRegPath } from '../student-reg/router.js';
@@ -410,9 +410,9 @@ function renderWishlist() {
 
 function renderStudentReview(role) {
   if (role === 'parent') {
-    return `<section class="mypage-panel mypage-empty">
-      <p>학생 검토함은 공부방·과외쌤 전용입니다. 공부방·과외쌤은 찜한 공부방·과외쌤에 저장할 수 있어요.</p>
-      <p><a href="#/mypage/wishlist" data-mypage-nav="/mypage/wishlist">찜한 공부방·과외쌤 보기</a></p>
+    return `<section class="mp-card">
+      <p class="mp-card__desc">학생 검토함은 공부방·과외쌤 전용입니다. 공부방·과외쌤은 찜한 공부방·과외쌤에 저장할 수 있어요.</p>
+      <div class="mp-card__foot"><a href="#/mypage/wishlist" class="mp-card__link" data-mypage-nav="/mypage/wishlist">찜한 공부방·과외쌤 보기</a></div>
     </section>`;
   }
 
@@ -425,19 +425,22 @@ function renderStudentReview(role) {
       : fromHandoff === 'access'
         ? HANDOFF_DEEPLINK.reviewFromAccess
         : null;
+  const banner = fromBanner ? `<div class="handoff-deeplink-banner" role="status">${esc(fromBanner)}</div>` : '';
 
   if (!items.length) {
+    const copy = getEmptyCopy('studentReview');
     return `
-      <section class="mypage-panel mypage-panel--bare mypage-empty">
-        ${fromBanner ? `<div class="handoff-deeplink-banner" role="status">${esc(fromBanner)}</div>` : ''}
-        ${renderEmptyStateCard('studentReview')}
+      ${banner}
+      <section class="mp-card">
+        <p class="mp-card__empty">${esc(copy.title)}</p>
+        ${copy.body ? `<p class="mp-card__desc">${esc(copy.body)}</p>` : ''}
       </section>`;
   }
 
   return `
-    <section class="mypage-panel mypage-panel--bare">
-      ${fromBanner ? `<div class="handoff-deeplink-banner" role="status">${esc(fromBanner)}</div>` : ''}
-      <ul class="mypage-entity-list">
+    ${banner}
+    <section class="mp-card">
+      <ul class="mp-card__rows">
         ${items
           .map((item) => {
             const meta = `${item.grade_level || '—'} · ${item.subject_label || '—'} · ${item.location_label || '—'}`;
@@ -447,14 +450,15 @@ function renderStudentReview(role) {
             const roleBadge = !lifecycleBadge
               ? `<span class="mypage-badge">${esc(itemLabel)}</span>`
               : '';
+            const mutedNote = muted
+              ? `<p>${esc(exposureStatusLabel(item.exposure_status))}</p>`
+              : '';
             return `
-          <li class="mypage-entity${muted ? ' is-muted' : ''}">
+          <li class="mp-card__row mp-card__row--split${muted ? ' is-muted' : ''}">
             <div>
-              <strong>${esc(item.public_display_name || '학습 요청')}</strong>
-              ${stickers}
-              ${lifecycleBadge || roleBadge}
-              <span class="mypage-muted">${esc(meta)} · ${new Date(item.savedAt).toLocaleString('ko-KR')}</span>
-              ${muted ? `<span class="mypage-muted">${esc(exposureStatusLabel(item.exposure_status))}</span>` : ''}
+              <p class="mp-card__row-title">${esc(item.public_display_name || '학습 요청')} ${stickers} ${lifecycleBadge || roleBadge}</p>
+              <p>${esc(meta)} · ${new Date(item.savedAt).toLocaleString('ko-KR')}</p>
+              ${mutedNote}
             </div>
             <div class="mypage-entity__actions">
               <button type="button" class="btn btn--secondary btn--sm" data-mypage-review-detail data-student-id="${item.id}">상세</button>
@@ -568,19 +572,23 @@ function renderContactHistory() {
   const loadError = getTicketLoadError();
   if (!tickets.length && loadError) {
     return `
-    <section class="mypage-panel mypage-panel--bare mypage-contact">
+    <section class="mp-card mypage-contact">
       ${header}
-      <p class="mypage-lead" role="alert">${esc(loadError)}</p>
+      <p class="mp-card__desc" role="alert">${esc(loadError)}</p>
     </section>`;
   }
 
   if (!tickets.length) {
+    const empty = getEmptyCopy('contactHistory');
+    const emptyCta = empty.cta
+      ? `<div class="mp-card__foot"><a href="#${esc(copy.newHref)}" class="btn btn--secondary btn--sm" data-nav="${esc(copy.newHref)}">${esc(empty.cta)}</a></div>`
+      : '';
     return `
-    <section class="mypage-panel mypage-panel--bare mypage-contact">
+    <section class="mp-card mypage-contact">
       ${header}
-      ${renderEmptyStateCard('contactHistory', {
-        ctaHref: `#${copy.newHref}`,
-      })}
+      <p class="mp-card__empty">${esc(empty.title)}</p>
+      ${empty.body ? `<p class="mp-card__desc">${esc(empty.body)}</p>` : ''}
+      ${emptyCta}
     </section>`;
   }
 
@@ -651,7 +659,7 @@ function renderContactHistory() {
     .join('');
 
   return `
-    <section class="mypage-panel mypage-panel--bare mypage-contact">
+    <section class="mp-card mypage-contact">
       ${header}
       ${recentNote}
       <ul class="mypage-contact-list">${items}</ul>
