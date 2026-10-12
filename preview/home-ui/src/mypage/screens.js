@@ -564,10 +564,6 @@ function renderContactHistory() {
       <p class="mypage-lead">${esc(copy.lead)}</p>
       <a href="#${copy.newHref}" class="btn btn--secondary btn--sm" data-nav="${copy.newHref}">${esc(copy.newCta)}</a>
     </div>`;
-  const footer = `
-    <div class="mypage-contact-foot">
-      <a href="#${copy.newHref}" class="btn btn--secondary btn--sm" data-nav="${copy.newHref}">${esc(copy.newCta)}</a>
-    </div>`;
 
   const loadError = getTicketLoadError();
   if (!tickets.length && loadError) {
@@ -663,7 +659,6 @@ function renderContactHistory() {
       ${header}
       ${recentNote}
       <ul class="mypage-contact-list">${items}</ul>
-      ${footer}
     </section>`;
 }
 
