@@ -30,7 +30,7 @@ import {
   isBasketLifecycleMuted,
   resolveBasketItem,
 } from '../handoff-lifecycle.js';
-import { renderResumeToken } from '../handoff-resume.js';
+import { formatResumeToken } from '../handoff-resume.js';
 import { renderDecisionStickers } from '../handoff-sticker.js';
 import { openDetailDecision } from '../detail-decision/index.js';
 import { startFirstMemoFlow } from '../messages/compose-flow.js';
@@ -469,37 +469,47 @@ function renderStudentReview(role) {
     </section>`;
 }
 
+function renderRecentEmpty(role) {
+  const copy = getEmptyCopy('recent');
+  const dest = getDefaultMypagePath(role);
+  const cta = copy.cta
+    ? `<a href="#${esc(dest)}" class="btn btn--secondary btn--sm" data-mypage-nav="${esc(dest)}">${esc(copy.cta)}</a>`
+    : '';
+  return `
+    <section class="mp-card">
+      <p class="mp-card__empty">${esc(copy.title)}</p>
+      ${copy.body ? `<p class="mp-card__desc">${esc(copy.body)}</p>` : ''}
+      <div class="mp-card__foot">
+        ${cta}
+        <a href="#${esc(dest)}" class="mp-card__link" data-mypage-nav="${esc(dest)}">내 등록</a>
+      </div>
+    </section>`;
+}
+
 function renderRecent(role) {
   const items = getRecentViews(role);
-  if (!items.length) {
-    return `
-    <section class="mypage-panel mypage-panel--bare">
-      ${renderEmptyStateCard('recent', {
-        ctaHref: `#${getDefaultMypagePath(role)}`,
-        links: [{ label: '내 등록', href: `#${getDefaultMypagePath(role)}` }],
-      })}
-    </section>`;
-  }
+  if (!items.length) return renderRecentEmpty(role);
   return `
-    <section class="mypage-panel mypage-panel--bare">
-      <ul class="mypage-entity-list">
+    <section class="mp-card">
+      <ul class="mp-card__rows">
         ${items
           .map((e) => {
             const item = resolveBasketItem(e);
             const lifecycleBadge = item ? renderBasketLifecycleBadge(e.kind, item) : '';
             const stickers = item ? renderDecisionStickers(e.kind, e.id) : '';
-            const resumeToken = renderResumeToken(e.lastRoute, e.lastAction);
+            const resumeToken =
+              e.lastRoute || e.lastAction
+                ? `<p>${esc(formatResumeToken(e.lastRoute, e.lastAction))}</p>`
+                : '';
             const muted = item ? isBasketLifecycleMuted(item, e.kind) : false;
             const kindLabel =
               e.kind === 'study_room' ? '공부방' : e.kind === 'tutor' ? '과외쌤' : '학생';
             return `
-          <li class="mypage-entity${muted ? ' is-muted' : ''}">
+          <li class="mp-card__row mp-card__row--split${muted ? ' is-muted' : ''}">
             <div>
-              <strong>${esc(e.title)}</strong>
-              ${stickers}
-              ${lifecycleBadge}
+              <p class="mp-card__row-title">${esc(e.title)} ${stickers} ${lifecycleBadge}</p>
               ${resumeToken}
-              <span class="mypage-muted">${esc(kindLabel)} · ${new Date(e.viewedAt).toLocaleString('ko-KR')}</span>
+              <p>${esc(kindLabel)} · ${new Date(e.viewedAt).toLocaleString('ko-KR')}</p>
             </div>
             <div class="mypage-entity__actions">
               <button type="button" class="btn btn--secondary btn--sm" data-mypage-recent-detail

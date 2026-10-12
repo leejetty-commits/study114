@@ -102,7 +102,7 @@ test.describe('[6단계] parent 마이페이지 · 최근열람', () => {
     await closeDetailModal(page);
 
     await page.goto(`${HOME}/#/mypage/recent`);
-    await page.waitForSelector('.mypage-entity-list', { timeout: 30_000 });
+    await page.waitForSelector('.mp-card__rows', { timeout: 30_000 });
     await expect(page.getByText(title, { exact: false })).toBeVisible({ timeout: 15_000 });
 
     const recent = await page.request.get('/api/handoff/recent.php');

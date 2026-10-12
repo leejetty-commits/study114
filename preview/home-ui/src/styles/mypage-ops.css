@@ -1873,6 +1873,12 @@
   justify-content: space-between;
   gap: 12px;
 }
+.mypage-content .mp-card__row.is-muted {
+  opacity: 0.72;
+}
+.mypage-content .mp-card__row.is-muted .btn:not([disabled]) {
+  opacity: 1;
+}
 .mypage-content .mp-card__row p {
   margin: 4px 0 0;
   color: #4b5563;

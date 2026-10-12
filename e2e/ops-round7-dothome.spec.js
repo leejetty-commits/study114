@@ -98,7 +98,7 @@ test.describe('[라운드7] 닷홈 운영 실측', () => {
     await page.locator('[data-p24-action="close"]').click();
 
     await page.goto(`${PROD}/#/mypage/recent`, { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.mypage-entity-list', { timeout: 30_000 });
+    await page.waitForSelector('.mp-card__rows', { timeout: 30_000 });
     await expect(page.getByText(title, { exact: false })).toBeVisible({ timeout: 15_000 });
   });
 
