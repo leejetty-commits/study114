@@ -29,8 +29,8 @@ test.describe('[6단계] parent 마이페이지 · 찜', () => {
     await closeDetailModal(page);
 
     await page.goto(`${HOME}/#/mypage/wishlist`);
-    await page.waitForSelector('.mypage-panel', { timeout: 30_000 });
-    await expect(page.locator('.mypage-entity-list').getByText(title, { exact: false })).toBeVisible({
+    await page.waitForSelector('.mp-card', { timeout: 30_000 });
+    await expect(page.locator('[data-mypage-wishlist="study_room"]').getByText(title, { exact: false })).toBeVisible({
       timeout: 15_000,
     });
 

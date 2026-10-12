@@ -326,19 +326,20 @@ function renderWishlistEntry(entry) {
     </div>`;
 }
 
+function renderWishlistEmpty() {
+  const copy = getEmptyCopy('wishlist');
+  const cta = copy.cta
+    ? `<div class="mp-card__foot"><a href="#/mypage/recent" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/recent">${esc(copy.cta)}</a></div>`
+    : '';
+  return `
+    <p class="mp-card__empty">${esc(copy.title)}</p>
+    ${copy.body ? `<p class="mp-card__desc">${esc(copy.body)}</p>` : ''}
+    ${cta}`;
+}
+
 function renderWishlistSection(kind, label) {
   const entries = getWishlistEntries(kind);
-  if (!entries.length) {
-    return renderEmptyStateCard('wishlist', {
-      ctaHref: '#/mypage/recent',
-      links: [
-        {
-          label: '최근 본 목록',
-          href: '#/mypage/recent',
-        },
-      ],
-    });
-  }
+  if (!entries.length) return renderWishlistEmpty();
   return `
     <div class="browse-list browse-list--table mypage-wish-cards" role="list" data-mypage-wishlist="${kind}" aria-label="찜한 ${esc(label)}">
       ${entries.map(renderWishlistEntry).join('')}
@@ -394,13 +395,17 @@ function bindWishlistCardEvents(root, rerender) {
 
 function renderWishlist() {
   return `
-    <section class="mypage-panel">
-      <p class="mypage-note">${WISHLIST_NOTE}</p>
-      <h2 class="mypage-subhead">공부방</h2>
-      ${renderWishlistSection('study_room', '공부방')}
-      <h2 class="mypage-subhead">과외쌤</h2>
-      ${renderWishlistSection('tutor', '과외쌤')}
-    </section>`;
+    <p class="mypage-note">${WISHLIST_NOTE}</p>
+    <div class="mp-card-stack">
+      <section class="mp-card">
+        <h2 class="mp-card__title">공부방</h2>
+        ${renderWishlistSection('study_room', '공부방')}
+      </section>
+      <section class="mp-card">
+        <h2 class="mp-card__title">과외쌤</h2>
+        ${renderWishlistSection('tutor', '과외쌤')}
+      </section>
+    </div>`;
 }
 
 function renderStudentReview(role) {
