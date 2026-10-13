@@ -10,6 +10,10 @@
 | 카드 게시 환영 | `MemberLifecycleMailer` ← `BasicRegisterService::register` | **연결** | 기본등록으로 카드가 처음 노출될 때 1회 |
 | Prime·Pick 구매 감사 | `MemberLifecycleMailer` ← `ProviderCheckoutService::completeOrder` | **연결** | 지급 커밋 뒤, 주문당 1회 |
 | 탈퇴 완료 | `MemberLifecycleMailer` ← `AccountWithdrawService::withdraw` | **연결** | 본인 탈퇴만. 관리자 강제 탈퇴는 보내지 않음 |
+| 첫 일주일 안부 | `MemberLifecycleMailer` ← `MemberMailScheduler` ← `api/cron/member-mail.php` | **연결** | 가입 7~10일, 회원당 1회 |
+| Prime·Pick 마무리 3일 전 | `MemberLifecycleMailer` ← `MemberMailScheduler` ← `api/cron/member-mail.php` | **연결** | 이용권·끝나는 날마다 1회. 옛 만료 안내 메일 채널은 제거 |
+
+**회원 메일 정본: [74-member-mail-lock.md](./74-member-mail-lock.md)** (종류·받는 사람·보내는 규칙·문안 규칙). 아래는 2026-10-09 기록.
 
 생활 메일 3종은 `STUDY114_LIFECYCLE_MAIL=0`으로 끈다. 중복 방지는 `provider_reminder_dispatches`(dedupe_key `lifecycle:*`), 그 표가 없으면 보내지 않는다. 문안 `src/Mail/MemberLifecycleMailTemplate.php`, 검증 `php scripts/verify-mail-lifecycle.php` (기록: `docs/worklog/2026/10/2026-10-09-mail-lifecycle.md`).
 

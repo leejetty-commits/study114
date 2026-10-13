@@ -25,6 +25,8 @@ on:
       - "src/Auth/AccountWithdrawService.php"
       - "src/Paid/ProviderCheckoutService.php"
       - "src/Paid/ProviderReminderService.php"
+      - "src/Paid/ProviderReminderChannelPolicy.php"
+      - "docs/internal/74-member-mail-lock.md"
       - "public/api/auth/password/_mail-probe.php"
       - "public/api/auth/email/**"
       - "public/.htaccess"

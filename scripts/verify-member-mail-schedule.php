@@ -36,6 +36,7 @@ use Study114\Mail\MemberLifecycleMailTemplate as T;
 use Study114\Mail\MemberMailScheduler as S;
 use Study114\Mail\MemberMailTemplate;
 use Study114\Paid\PositionPeriodCalculator;
+use Study114\Paid\ProviderReminderChannelPolicy;
 
 $failed = 0;
 $passed = 0;
@@ -415,6 +416,16 @@ check(str_contains($wf, '${{ secrets.STUDY114_REPORT_CRON_KEY }}') && str_contai
 check(!preg_match('/member-mail\.php\?/', $wf), 'workflow: 주소에 키 없음');
 check(str_contains($wf, 'https://study114.net/api/cron/member-mail.php'), 'workflow: 정본 도메인 주소');
 check(S::SEND_FROM_HOUR === 9 && S::SEND_UNTIL_HOUR === 21, 'workflow·서버 시간대 일치(9~21시)');
+
+// ── 5. 만료 안내 메일은 「마무리 3일 전」 하나 (정본 74) ──
+$policy = new ProviderReminderChannelPolicy();
+foreach (['position_expiry_d7', 'position_expiry_d3', 'position_expiry_d1'] as $kind) {
+    $ch = $policy->channelsFor($kind);
+    check(!in_array('email', $ch, true) && in_array('sms', $ch, true) && in_array('onsite', $ch, true), "old-reminder: {$kind} = 문자·사이트 알림만(메일 없음)");
+}
+check(in_array('email', $policy->channelsFor('ticket_pack_expiry_d7'), true), 'old-reminder: 쪽지권 만료 등 다른 안내는 그대로');
+$doc = (string) @file_get_contents($root . '/docs/internal/74-member-mail-lock.md');
+check($doc !== '' && str_contains($doc, 'MemberMailScheduler') && str_contains($doc, (string) S::DAILY_CAP . '통'), '정본 74: 회원 메일 규칙 문서 있음');
 
 // ── 미리보기 ──
 $previewDir = $tmp . DIRECTORY_SEPARATOR . 'study114-mail-preview';
