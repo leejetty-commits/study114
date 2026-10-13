@@ -43,6 +43,8 @@
 | `npm run build:dothome` | 성공. 홈·찾기 묶음에 「최대 9명」 있음, 「카달로그」 없음. 산출물은 커밋 안 함 |
 | e2e(Playwright)·화면 눈확인 | 안 함(로컬 서버 필요). 배포 후 운영 확인 |
 
+브랜치 CI 「Verify bundle」 1차 실패(`0ffb0f76`): `verify-tutor-basic-required.mjs` G절 「sql/ 변경 없음(새 컬럼 없음)」이 merge-base 대비 `sql/` 파일 변경을 모두 막음. 10-09 기본등록 필수 작업(`542c1f4f`)용 가드로, 그 뒤 SQL을 더한 브랜치가 없었음(main에서는 비교가 비어 항상 통과). 가드 문구의 목적대로 **추가한 줄에 `ADD COLUMN`·`CREATE TABLE`이 있을 때만** 실패하도록 좁힘(`eac56d53`). 079는 `MODIFY COLUMN` 기본값 변경이라 통과. 재실행: Verify bundle·Board ACL gate 성공. 로컬은 이 PC PHP에 `mb_strlen`이 없어 PHP 하위 검사 4건 실패(10-09 기록과 같은 환경 문제), 바꾼 항목 「sql/ 새 컬럼·새 표 없음」은 통과.
+
 작업 중 사고: 수정 전 비교를 하려고 `git stash`를 썼다가 되돌리기가 `tmp/` 파일 때문에 멈춤. 수정 내용이 stash와 같은지(추적 파일 diff 0, 079 파일 해시 같음) 확인하고 이 작업의 stash만 지움. 수정 전 비교는 본편 병합 폴더(`.wt/merge-1010`, `f5c09149`)에서 다시 함.
 
 ## 4. 배포 전 사용자 할 일
