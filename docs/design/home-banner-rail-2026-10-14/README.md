@@ -1,0 +1,8 @@
+# 홈 배너·여백·베스트 빨강 + 레일 노출 (2026-10-14)
+
+- 요청: 종현 · 작성: 우동공과2 · 기준 `origin/main` @ 4446404
+- `218-home-banner-gap-best-red-work-order.md` — Cursor 작업지시서(218-1 홍보 화면 3칸 유지, 218-2/3 상단 여백 8px 통일, 218-4 이달의 베스트 빨강 #BE123C, 218-5 003 매뉴얼 반영 diff)
+- `219-rail-exposure-briefing.md` — 레일 화면×모드 현황표, 문서 규칙 인용, 잠긴 정책과 어긋난 오류, 추천안(미확정)
+- `png/` — 로컬 렌더 캡처. `before-*` = 현재 코드, `after-*` = 218 diff를 임시 적용해 찍은 것(커밋 안 함). 파일명 = 세션역할-화면-폭.
+- 측정: 로컬 vite + playwright chromium, `/api/auth/me.php` 역할 흉내. 라이브(https://study114.dothome.co.kr) 렌더 아님.
+- 코드 변경·배포 없음.
