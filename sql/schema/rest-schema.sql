@@ -406,8 +406,8 @@ CREATE TABLE tutors (
   contact_time_note            VARCHAR(255)    NULL,
   default_student_feed_mode    VARCHAR(50)     NULL,
   profile_status               ENUM('draft', 'pending', 'published', 'hidden') NOT NULL DEFAULT 'draft',
-  inquiry_status               ENUM('open', 'paused', 'not_accepting') NOT NULL DEFAULT 'paused'
-    COMMENT '과외쌤 쪽지 수신: open=받는 중, paused=잠시 쉼(일시 중단), not_accepting=신규 학생 안 받음(신규 모집 닫힘)',
+  inquiry_status               ENUM('open', 'paused', 'not_accepting') NOT NULL DEFAULT 'open'
+    COMMENT '과외쌤 쪽지 수신: open=받는 중(기본), paused=잠시 쉼(일시 중단), not_accepting=신규 학생 안 받음(신규 모집 닫힘)',
   created_at                   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at                   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),

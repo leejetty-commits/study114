@@ -74,7 +74,7 @@ assert(tutorInquiryStatusFromPref(false, 'capacity_full') === null, 'map: study-
 assert(tutorInquiryPrefFromStatus('open').receiving === true, 'map: open → receiving');
 assert(tutorInquiryPrefFromStatus('paused').receiving === false, 'map: paused → closed');
 assert(tutorInquiryPrefFromStatus('not_accepting').reason === 'not_accepting', 'map: not_accepting reason');
-assert(tutorInquiryPrefFromStatus(undefined).receiving === false, 'map: missing → paused/closed');
+assert(tutorInquiryPrefFromStatus(undefined).receiving === true, 'map: missing → open/receiving');
 ['open', 'paused', 'not_accepting'].forEach((status) => {
   assert(foldTutorInquiryStatus(status) === status, `roundtrip: ${status} ↔ UI ↔ ${status}`);
   assert(normalizeTutorInquiryStatus(status) === status, `normalize keeps ${status}`);
@@ -130,10 +130,10 @@ for (const rel of [
 }
 
 const html = renderTutorInquiries({ id: 9, tutor_display_name: '테스트쌤' });
-assert(html.includes('data-inquiry-status="paused"'), 'default status attr: paused');
-assert(html.includes(P21_INQUIRY_COPY.badgeClosed), 'default badge: 안받음');
-assert(html.includes(P21_INQUIRY_COPY.storedPaused), 'default stored line: paused');
-assert(!html.includes('is-inactive'), 'default closed: reasons stay active');
+assert(html.includes('data-inquiry-status="open"'), 'default status attr: open');
+assert(html.includes(P21_INQUIRY_COPY.badgeReceiving), 'default badge: 받는 중');
+assert(html.includes(P21_INQUIRY_COPY.storedOpen), 'default stored line: open');
+assert(html.includes('is-inactive'), 'default open: reasons inactive');
 
 const htmlOn = renderTutorInquiries({ id: 9, tutor_display_name: '테스트쌤', inquiry_status: 'open' });
 assert(htmlOn.includes('data-inquiry-status="open"'), 'open status attr');

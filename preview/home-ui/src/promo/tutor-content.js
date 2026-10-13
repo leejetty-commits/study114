@@ -6,7 +6,7 @@
 export const TUTOR_PROMO = {
   meta: {
     path: '/promo/tutor',
-    title: '과외쌤 카달로그',
+    title: '과외쌤 카탈로그',
     eyebrow: '과외쌤 프로필',
   },
   hero: {

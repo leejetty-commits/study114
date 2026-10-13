@@ -162,7 +162,7 @@ final class RegisterEnums
         return [
             ['value' => 'one_to_four', 'label' => '1~4명'],
             ['value' => 'five_to_eight', 'label' => '5~8명'],
-            ['value' => 'nine_plus', 'label' => '9명 이상'],
+            ['value' => 'nine_plus', 'label' => '최대 9명'],
         ];
     }
 

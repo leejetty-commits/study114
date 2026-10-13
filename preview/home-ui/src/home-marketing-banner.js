@@ -203,14 +203,14 @@ function renderCta(cta) {
 const HOME_PROMO_TRIO = [
   {
     tone: 'study',
-    eyebrow: '공부방 카달로그',
+    eyebrow: '공부방 카탈로그',
     title: '내가 찾는 공부방',
     sub: '가까운 곳부터 비교하고, 등록은 가볍게 시작하세요',
     path: '/promo/study-room',
   },
   {
     tone: 'tutor',
-    eyebrow: '과외쌤 카달로그',
+    eyebrow: '과외쌤 카탈로그',
     title: '나의 과외쌤은 어디에?',
     sub: '과외지역·주력 과목으로 프로필을 분명하게',
     path: '/promo/tutor',

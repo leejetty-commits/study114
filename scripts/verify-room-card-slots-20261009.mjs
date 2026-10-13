@@ -6,7 +6,7 @@
  * (1) 홈·찜·확대카드 변환이 검색 응답의 공부방 카드 값(대상·교습형태·슬로건·원생수·수업운영방식·특징)을 그대로 넘긴다.
  * (2) summary 줄로 과목·소개를 대신 채우지 않는다(홈·확대카드·검색 페이지 변환).
  * (3) 공부방·과외쌤 베이직·픽·프라임·확대카드: 값이 없어도 항목제목은 보이고 값 자리는 「—」. 「(선택)」 표시 없음.
- * (4) 원생수는 1~4명 / 5~8명 / 9명 이상 으로 보인다(영어 코드 그대로 안 보임).
+ * (4) 원생수는 1~4명 / 5~8명 / 최대 9명 으로 보인다(영어 코드 그대로 안 보임).
  * (5) 칸 이름은 「수업운영방식」 하나(「수업형태」 안 씀).
  */
 import { existsSync, readFileSync } from 'node:fs';
@@ -207,7 +207,7 @@ for (const [tier, [render, labels]] of Object.entries(ROOM_RENDERS)) {
   ok(`(5) 공부방 ${tier}: 「수업형태」 없음`, !html.includes('수업형태'));
 }
 
-const CAP = { one_to_four: '1~4명', five_to_eight: '5~8명', nine_plus: '9명 이상' };
+const CAP = { one_to_four: '1~4명', five_to_eight: '5~8명', nine_plus: '최대 9명' };
 for (const [code, label] of Object.entries(CAP)) {
   const it = { ...EMPTY_ROOM, capacity_per_time: code };
   for (const [tier, [render]] of Object.entries(ROOM_RENDERS)) {

@@ -17,6 +17,8 @@ DDL: `sql/schema/064_tutor_inquiry_status.sql`
 | `paused` | **잠시 쉼** — 일시 중단. 나중에 다시 열 수 있음 | 배지 안받음 · 이유 잠시 쉼 |
 | `not_accepting` | **신규 학생 안 받음** — 신규 모집을 닫은 운영 상태. `paused`가 아니다 | 배지 안받음 · 이유 신규 학생 안 받음 |
 
+**처음 값·빈 값 = `open` (2026-10-14 종현 결정).** 새 과외쌤은 쪽지 받음으로 시작한다(DB 기본값, `079_tutor_inquiry_status_default_open.sql`). 값이 비거나 모르는 값이면 화면·서버 모두 `open`으로 읽는다. 공부방도 같다(DB 기본 `open`, 카드 변환 빈 값 `open`).
+
 `not_accepting`은 표시용 카피가 아니라 서버에 남는 값이다. 공부방 `capacity_full` / `waiting_only`를 쓰지 않는다.
 
 배지 · 현재상태 저장값 문구 · 수신/이유 라디오 · 재진입 초기값은 **같은 `inquiry_status` 하나**만 본다. 카드 샘플 2장은 비교용이라 SSOT가 아니다.
@@ -38,7 +40,9 @@ GitHub Actions는 SQL을 실행하지 않는다.
 1. 운영 phpMyAdmin에서 `064_tutor_inquiry_status.sql` 적용
 2. 그 다음 `main` 배포 (FTP `public/` + `src/`)
 
-미적용 시 저장 API는 `503 schema_missing`으로 실패한다. GET이 `paused`처럼 보여도 저장된 값이 아니다.
+미적용 시 저장 API는 `503 schema_missing`으로 실패한다. GET이 `open`처럼 보여도 저장된 값이 아니다.
+
+처음 값 변경(`079`)은 운영 phpMyAdmin에서 따로 적용한다. 미적용이어도 저장·조회는 그대로 되고, 새 과외쌤이 `paused`로 시작할 뿐이다.
 
 검증: `npm run verify:tutor-inquiries-settings`  
 CI: `tutor-inquiries-gate.yml` + `deploy.yml` job `verify-tutor-inquiries`
