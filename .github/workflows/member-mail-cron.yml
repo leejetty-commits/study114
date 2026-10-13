@@ -1,0 +1,38 @@
+# 회원 생활 메일(첫 일주일 안부 · Prime/Pick 마무리 3일 전) — 낮 동안 매시간 운영 cron 주소를 부른다.
+# 보낼 대상 고르기·나눠 보내기·하루 한도는 서버(MemberMailScheduler)가 한다. 이 작업은 깨우기만 한다.
+# schedule은 기본 브랜치(main)에 있을 때만 돈다. GitHub가 늦거나 건너뛰어도 다음 호출이 이어 보낸다.
+
+name: member-mail-cron
+
+on:
+  schedule:
+    # UTC 00:07~11:07 = KST 09:07~20:07, 매시간
+    - cron: "7 0-11 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: member-mail-cron
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  call:
+    if: github.repository == 'leejetty-commits/study114'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: POST /api/cron/member-mail.php
+        env:
+          CRON_KEY: ${{ secrets.STUDY114_REPORT_CRON_KEY }}
+        run: |
+          if [ -z "$CRON_KEY" ]; then
+            echo "::error::Secret STUDY114_REPORT_CRON_KEY is not set"
+            exit 1
+          fi
+          code=$(curl -sS -o response.json -w "%{http_code}" --max-time 60 \
+            -X POST -H "X-Cron-Key: ${CRON_KEY}" \
+            https://study114.net/api/cron/member-mail.php)
+          echo "HTTP ${code}"
+          cat response.json; echo
+          test "$code" = "200"

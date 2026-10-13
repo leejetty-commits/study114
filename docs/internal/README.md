@@ -36,6 +36,7 @@
 | [71-neighborhood-welcome-lock.md](./71-neighborhood-welcome-lock.md) | **새 이웃 환영 줄** · 동네 인사 통합 · 노출 정책 현행 유지 · 레드라인6 | ★ 동네 인사 |
 | [72-region-unit-lock.md](./72-region-unit-lock.md) | **과외 지역 단위 정본** · 과외=광역시 통째·도는 시·군 · 공부방=동·단지 · 이관 SQL | ★★ 지역 |
 | [73-tutor-basic-card-lock.md](./73-tutor-basic-card-lock.md) | **과외쌤 기본정보 필수 항목 = 베이직카드 항목** · 상세정보는 다시 묻지 않음 · 충돌 문서 목록 (승인 대기) | ★ 과외쌤 등록 |
+| [74-member-mail-lock.md](./74-member-mail-lock.md) | **회원 메일 정본** · 계정/생활 메일 종류 · 받는 사람 · 매시간 자동 발송(30통씩·하루 60통) · 문안 규칙(효과 숫자·부정어·재촉 금지) | ★ 회원 메일 |
 | `.cursor/rules/study114-workflow.mdc` | Cursor 에이전트 작업 원칙 (Git·빌드·배포) | ★ 개발 시 |
 
 ---

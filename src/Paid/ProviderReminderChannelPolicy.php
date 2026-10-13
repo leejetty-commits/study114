@@ -7,11 +7,15 @@ namespace Study114\Paid;
 /** 18§4 — 채널 분기 (메일 · 문자 · 온사이트) */
 final class ProviderReminderChannelPolicy
 {
-    /** @return list<'email'|'sms'|'onsite'> */
+    /**
+     * Prime·Pick 만료 안내 메일은 MemberLifecycleMailer「마무리 3일 전」 하나뿐이다(정본 74) — 여기서 메일을 내면 두 번 간다.
+     *
+     * @return list<'email'|'sms'|'onsite'>
+     */
     public function channelsFor(string $reminderKind): array
     {
         if (str_starts_with($reminderKind, 'position_expiry_')) {
-            return ['email', 'sms', 'onsite'];
+            return ['sms', 'onsite'];
         }
         if (str_starts_with($reminderKind, 'ticket_pack_expiry_')) {
             return ['email', 'onsite'];
