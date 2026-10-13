@@ -21,6 +21,12 @@ on:
       - "scripts/verify-member-mail-schedule.php"
       - "public/api/cron/member-mail.php"
       - ".github/workflows/member-mail-cron.yml"
+      - "scripts/verify-member-mail-admin.php"
+      - "public/api/admin/member-mail.php"
+      - "preview/home-ui/src/admin/a28-member-mail*.js"
+      - "preview/home-ui/src/admin/a28-copy.js"
+      - "preview/home-ui/src/admin/a28-screens.js"
+      - "preview/home-ui/src/admin/a28-screens-bind.js"
       - "src/Auth/BasicRegisterService.php"
       - "src/Auth/AccountWithdrawService.php"
       - "src/Paid/ProviderCheckoutService.php"
@@ -102,6 +108,9 @@ jobs:
 
       - name: Scheduled member mail (welcome week / position ending)
         run: php scripts/verify-member-mail-schedule.php
+
+      - name: Member mail admin (switches / preview / test send)
+        run: php scripts/verify-member-mail-admin.php
 
       - name: Node static contract
         run: npm run verify:cur-006-resend

@@ -194,6 +194,7 @@ import {
 } from './a28-screens-shared.js';
 import { bindTodayHub, peekHubExposureRoute, registerTodayBinders } from './a28-today-hub.js';
 import { bindSettlement } from './a28-settlement.js';
+import { MEMBER_MAIL_PATH, bindMemberMail } from './a28-member-mail.js';
 import { bindRegistrationList } from './a28-registration-list.js';
 import {
   renderAddons,
@@ -548,6 +549,7 @@ export function bindTodaySlotNav(root) {
 export function bindA28ScreenEvents(root, path, rerender) {
   bindDetailDrawer(root);
   if (path === '/admin/settlement' || path === '/admin') bindSettlement(root, rerender);
+  if (path === MEMBER_MAIL_PATH) bindMemberMail(root);
 
   root.querySelectorAll('[data-promo-copy-url]').forEach((btn) => {
     btn.addEventListener('click', async () => {

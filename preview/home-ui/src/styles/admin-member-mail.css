@@ -1,0 +1,40 @@
+.admin-shell .member-mail__table-wrap {
+  overflow-x: auto;
+}
+.admin-shell .member-mail__table th[scope="row"] {
+  white-space: nowrap;
+  text-align: left;
+}
+.admin-shell .member-mail__state {
+  display: inline-block;
+  font-weight: 700;
+}
+.admin-shell .member-mail__state--on {
+  color: var(--brand-blue, #266bc4);
+}
+.admin-shell .member-mail__state--off {
+  color: var(--gray-600, #4b5563);
+}
+.admin-shell .member-mail__changed {
+  display: block;
+  color: var(--gray-600, #4b5563);
+}
+.admin-shell .member-mail__num {
+  text-align: right;
+  white-space: nowrap;
+}
+.admin-shell .member-mail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.admin-shell .member-mail__subject {
+  margin: 0.5rem 0;
+}
+.admin-shell .member-mail__frame {
+  width: 100%;
+  min-height: 70vh;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 8px;
+  background: #fff;
+}

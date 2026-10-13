@@ -409,6 +409,14 @@ export const A28_MENU = [
     help: '문자·이메일 알림 설정·템플릿·주소록·미리보기 발송',
     children: [
       {
+        id: 'notify-member-mail',
+        menuId: 'notify',
+        label: '회원 메일',
+        path: '/admin/notify/member-mail',
+        help: '우동공과 편지를 종류별로 켜고 끄고, 미리 보고, 내 메일로 시험 발송해요.',
+        screenId: 'A28-09',
+      },
+      {
         id: 'notify-settings',
         menuId: 'notify',
         label: '문자 기본설정',

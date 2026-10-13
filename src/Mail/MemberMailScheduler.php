@@ -54,6 +54,12 @@ final class MemberMailScheduler
         if ($hour < self::SEND_FROM_HOUR || $hour >= self::SEND_UNTIL_HOUR) {
             return ['ran' => false, 'reason' => 'quiet_hours'];
         }
+        $settings = $this->mailer->settings();
+        $endingOn = $settings->isEnabled(MemberMailSettings::POSITION_ENDING);
+        $welcomeOn = $settings->isEnabled(MemberMailSettings::WELCOME_WEEK);
+        if (!$endingOn && !$welcomeOn) {
+            return ['ran' => false, 'reason' => 'paused'];
+        }
 
         $sentToday = $this->countSentToday($now);
         $budget = min(self::BATCH, self::DAILY_CAP - $sentToday);
@@ -75,11 +81,15 @@ final class MemberMailScheduler
         $started = ($this->clock)();
         $today = $now->format('Y-m-d');
         $jobs = [];
-        foreach ($this->endingCandidates($now) as $sub) {
-            $jobs[] = ['position_ending', fn (): string => $this->mailer->sendPositionEnding($sub, $today)];
+        if ($endingOn) {
+            foreach ($this->endingCandidates($now) as $sub) {
+                $jobs[] = ['position_ending', fn (): string => $this->mailer->sendPositionEnding($sub, $today)];
+            }
         }
-        foreach ($this->welcomeCandidates($now) as $userId) {
-            $jobs[] = ['welcome_week', fn (): string => $this->mailer->sendWelcomeWeek($userId)];
+        if ($welcomeOn) {
+            foreach ($this->welcomeCandidates($now, $settings->enabledSince(MemberMailSettings::WELCOME_WEEK)) as $userId) {
+                $jobs[] = ['welcome_week', fn (): string => $this->mailer->sendWelcomeWeek($userId)];
+            }
         }
 
         foreach ($jobs as [$kind, $send]) {
@@ -137,11 +147,23 @@ final class MemberMailScheduler
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /** @return list<int> 가입 7~10일, 받을 수 있는 회원(대표 역할이 회원 역할), 아직 안 받은 회원 */
-    private function welcomeCandidates(DateTimeImmutable $now): array
+    /**
+     * 가입 7~10일, 받을 수 있는 회원(대표 역할이 회원 역할), 아직 안 받은 회원.
+     * $enabledSince(다시 켠 시각)가 있으면 가입 7일이 그 뒤에 된 회원만 — 꺼져 있던 동안 쌓인 대상에게 몰아서 보내지 않는다.
+     *
+     * @return list<int>
+     */
+    private function welcomeCandidates(DateTimeImmutable $now, ?string $enabledSince = null): array
     {
         $upper = $now->modify('-' . self::WELCOME_MIN_DAYS . ' days')->format('Y-m-d H:i:s');
         $lower = $now->modify('-' . self::WELCOME_MAX_DAYS . ' days')->format('Y-m-d H:i:s');
+        if ($enabledSince !== null) {
+            $since = (new DateTimeImmutable($enabledSince, PositionPeriodCalculator::timezone()))
+                ->modify('-' . self::WELCOME_MIN_DAYS . ' days')->format('Y-m-d H:i:s');
+            if ($since > $lower) {
+                $lower = $since;
+            }
+        }
         $key = $this->concat(["'" . MemberLifecycleMailer::DEDUPE_WELCOME_WEEK . "'", 'u.id']);
         $roles = implode(', ', array_map(static fn (string $r): string => "'" . $r . "'", self::MEMBER_ROLE_TYPES));
         $stmt = $this->pdo->prepare(

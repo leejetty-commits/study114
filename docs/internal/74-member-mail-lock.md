@@ -1,6 +1,6 @@
 # 74 · 회원 메일 정본 — 종류 · 받는 사람 · 보내는 규칙 · 문안 규칙
 
-- 상태: **1단계(첫 일주일 안부 · 마무리 3일 전) 구현 — 사용자 검수 대기** (브랜치 `cursor/member-mail-4-20261014`)
+- 상태: 1단계(첫 일주일 안부 · 마무리 3일 전) **main 반영·배포 2026-10-14** (승인 `c614cb11` → 병합 `2f448d30`). **2단계(관리자 「회원 메일」) 구현 — 사용자 검수 대기** (브랜치 `cursor/member-mail-4-20261014`)
 - 근거: `docs/worklog/2026/10/2026-10-09-mail-lifecycle.md` (생활 메일 3종) · `docs/worklog/2026/10/2026-10-14-member-mail-4.md` (새 메일 4종 지시·승인 문구) · `2026-10-13-decisions-batch.md`
 - 이 문서가 회원 메일 규칙의 정본이다. 메일 종류·조건·한도·문안 규칙을 바꾸면 **코드·검사·이 문서를 같은 커밋에서** 고친다.
 
@@ -70,7 +70,45 @@ Resend 무료 요금제(하루 100통): 생활 메일 60통 + 가입 확인·비
 
 - 생활 메일 전체 스위치: 환경변수 `STUDY114_LIFECYCLE_MAIL` — 설정이 없으면 **켜짐**, `0`이면 5종 모두 끔(`config/auth.php` `lifecycle_mail_enabled`). 사용자가 따로 켤 것은 없다.
 - 계정 메일(1-1)은 끌 수 없다.
-- 2단계(예정): 관리자 「알림·문자 › 회원 메일」에서 종류별 켜고 끄기·미리보기·내 메일로 시험 발송. 끈 동안의 메일은 다시 켜도 몰아서 보내지 않는다 — 켠 시각을 저장해 그 뒤에 조건이 된 회원만 고른다. 구현하면 이 절을 고친다.
+- 전체 스위치가 꺼져 있으면 종류별 스위치를 켜 두어도 나가지 않는다(관리자 화면에 경고가 뜬다).
+
+### 4-1. 종류별 스위치 — 관리자 「알림·문자 › 회원 메일」
+
+| 항목 | 규칙 | 코드 |
+|------|------|------|
+| 위치 | 관리자 `#/admin/notify/member-mail` — 「알림·문자」 메뉴 맨 위. 연습용(미리보기) 화면이 아닌 실제 화면 | `preview/home-ui/src/admin/a28-member-mail.js` |
+| 대상 | 생활 메일 5종(1-2) 각각. 계정 메일은 목록에 없다 | `MemberMailSettings::KINDS` |
+| 저장 | `site_settings` 한 행 `setting_key = 'member_mail'`, `value_json.kinds.{종류} = {enabled, enabled_at, changed_at, changed_by}`(시각은 KST). **저장한 적 없는 종류는 켜짐** | `src/Mail/MemberMailSettings.php` |
+| 테이블 없음 | `site_settings`(SQL `070`)가 없으면 모두 켜짐으로 읽고, 켜고 끄기 저장은 503 `schema_missing` | |
+| 누가 | 보기·미리보기·시험 발송 = 운영자 전원. **켜고 끄기 = 최고관리자만**(부관리자는 버튼이 잠기고 서버도 403) | `AdminApi::requireMaster` |
+| 멈출 때 | 확인 창을 띄운다. 다시 켤 때는 바로 켠다 | |
+| 운영 로그 | 상태가 실제로 바뀔 때만 `admin_operation_logs`에 `member_mail_toggle` 한 줄(같은 상태로 다시 누르면 안 남김) | `MemberMailAdminService::setEnabled` |
+| 멈춘 동안 — 바로 보내는 메일 | 카드 게시 환영·구매 감사·탈퇴 완료는 보내지 않고 발송 기록도 남기지 않는다. **다시 켜도 그때 일을 뒤늦게 보내지 않는다** | `MemberLifecycleMailer::guard()` → `skipped:paused` |
+| 멈춘 동안 — 정해진 시각 메일 | 멈춘 종류는 대상을 고르지 않는다. 둘 다 멈추면 자동 작업이 `paused`로 끝난다 | `MemberMailScheduler::run()` |
+| 다시 켤 때 — 첫 일주일 안부 | 다시 켠 시각 `enabled_at`을 남기고, **가입 7일째가 그 시각 뒤에 된 회원만** 고른다 → 멈춘 동안 쌓인 회원에게 몰아서 보내지 않는다 | `welcomeCandidates(..., enabledSince)` |
+| 다시 켤 때 — 마무리 3일 전 | 원래 「그날 하루」만 대상이라 따로 막지 않는다(다시 켠 날 대상만 나간다) | |
+| 최근 7일 보낸 수 | 지금부터 7일(168시간) 안에 `provider_reminder_dispatches`에 남은 **메일** 발송 기록 수(종류별) | `MemberMailAdminService::sentLast7Days` |
+
+### 4-2. 미리보기 · 내 메일로 시험 발송
+
+- 미리보기·시험 발송은 **실제 문안 함수를 견본 값으로** 부른다(해솔공부방 · 경기도 수원시 · 역삼동 · 50,000원 · 오늘 기준 날짜). 회원 정보를 읽지 않는다.
+- 견본(종류별, 첫 번째가 기본): 카드 게시 환영 = 공부방·과외쌤·학생 / 구매 감사 = 공부방·과외쌤 × Prime·Pick / 첫 일주일 안부 = 공부방·과외쌤·학생·카드 없는 공부방 / 마무리 3일 전 = 공부방·과외쌤 × Prime·Pick / 탈퇴 완료 = 공부방·과외쌤·학생 — 모두 18개(`MemberMailAdminService::VARIANTS`).
+- 미리보기 본문은 스크립트를 막은 iframe(`sandbox=""`)에 그린다.
+- 시험 발송은 **로그인한 운영자 계정 이메일로만** 보낸다(주소를 입력받지 않음). 내부 주소(2절)면 보내지 않는다. 시험 발송 버튼은 종류의 기본 견본을 보낸다.
+- 제목 앞에 `[시험] `을 붙인다. 회원 발송 기록(`provider_reminder_dispatches`)·하루 한도(3절)에 넣지 않는다. 멈춘 종류도 시험 발송은 된다.
+- 운영자 한 명당 **하루(KST) 10번**. 넘으면 429 `test_limit`. 성공한 발송만 `admin_operation_logs`의 `member_mail_test`로 세고, 실패하면(502 `send_failed`) 세지 않는다.
+- 닷홈은 4xx 응답 본문을 자기 오류 페이지로 바꾼다 → 화면은 상태 코드(403·429·503)로도 안내 문구를 고른다.
+
+### 4-3. API
+
+`/api/admin/member-mail.php` (관리자 로그인 필요)
+
+| 요청 | 하는 일 |
+|------|---------|
+| `GET` | 종류별 상태·바꾼 시각·바꾼 사람·최근 7일 보낸 수·견본 목록, 전체 스위치 상태, 수정 가능 여부, 하루 한도, 오늘 남은 시험 발송 수 |
+| `PATCH {kind, enabled}` | 켜고 끄기(최고관리자). `enabled`는 true/false만 |
+| `POST {action: "preview", kind, variant}` | 미리보기 제목·본문 |
+| `POST {action: "test", kind, variant}` | 내 메일로 시험 발송 |
 
 ## 5. 문안 규칙
 
@@ -100,14 +138,17 @@ Resend 무료 요금제(하루 100통): 생활 메일 60통 + 가입 확인·비
 | 자동 작업 주소 | `public/api/cron/member-mail.php` |
 | 깨우기 | `.github/workflows/member-mail-cron.yml` |
 | 옛 만료 안내 채널 | `src/Paid/ProviderReminderChannelPolicy.php` |
+| 종류별 켜고 끄기 저장 | `src/Mail/MemberMailSettings.php` |
+| 관리자 보기·미리보기·시험 발송·운영 로그 | `src/Mail/MemberMailAdminService.php` · API `public/api/admin/member-mail.php` |
+| 관리자 화면 | `preview/home-ui/src/admin/a28-member-mail.js` · 문구 `a28-member-mail-copy.js` · 호출 `a28-member-mail-api.js` · `styles/admin-member-mail.css` |
 | 검사 — 생활 메일 3종 | `php -d extension=pdo_sqlite scripts/verify-mail-lifecycle.php` |
 | 검사 — 정해진 시각 메일·한도·이 문서 | `php -d extension=pdo_sqlite scripts/verify-member-mail-schedule.php` (`npm run verify:member-mail-schedule`) |
+| 검사 — 종류별 스위치·미리보기·시험 발송·관리자 화면 | `php -d extension=pdo_sqlite scripts/verify-member-mail-admin.php` (`npm run verify:member-mail-admin`) |
 | 검사 — 계정 메일 | `php scripts/verify-auth-mail-warm.php` |
 
-세 검사는 CI `cur-006-resend.yml`(main 대상 PR, `src/Mail/**` 등 변경 시)에서 돈다.
+네 검사는 CI `cur-006-resend.yml`(main 대상 PR, `src/Mail/**` 등 변경 시)에서 돈다.
 
 ## 8. 남은 일
 
-- 2단계: 관리자 「회원 메일」 화면(4절).
 - 3단계: 탈퇴 사유 받기 — SQL `080` 필요. **DB에 SQL을 돌리기 전에 사용자에게 미리 알린다**(2026-10-14 지시).
 - 별건(미결): `public/api/cron/paid-reminders.php` 키 기본값 `dev-cron-key` 위험(그록봇 204·205).

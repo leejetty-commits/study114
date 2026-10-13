@@ -42,14 +42,21 @@ final class MemberLifecycleMailer
         private readonly PDO $pdo,
         private ?AuthMailer $mailer = null,
         ?array $config = null,
+        private ?MemberMailSettings $settings = null,
     ) {
         $this->config = $config ?? study114_config('auth');
+    }
+
+    /** 관리자 종류별 켜고 끄기 (정본 74 §4) */
+    public function settings(): MemberMailSettings
+    {
+        return $this->settings ??= new MemberMailSettings($this->pdo);
     }
 
     /** 기본등록 직후. 카드가 지금 노출(published) 상태가 된 경우에만 보낸다. */
     public function afterBasicRegister(int $userId, string $kind, int $profileId): string
     {
-        return $this->guard('card_posted', function () use ($userId, $kind, $profileId): string {
+        return $this->guard(MemberMailSettings::CARD_POSTED, function () use ($userId, $kind, $profileId): string {
             $role = MemberMailRole::normalize($kind);
             if ($role === '' || $profileId < 1) {
                 return 'skipped:kind';
@@ -82,7 +89,7 @@ final class MemberLifecycleMailer
      */
     public function afterPositionPurchase(int $userId, array $payload, array $snapshot): string
     {
-        return $this->guard('purchase_thanks', function () use ($userId, $payload, $snapshot): string {
+        return $this->guard(MemberMailSettings::PURCHASE_THANKS, function () use ($userId, $payload, $snapshot): string {
             $product = (string) ($payload['product_id'] ?? '');
             $role = MemberMailRole::normalize((string) ($payload['provider_type'] ?? ''));
             $orderRef = trim((string) ($payload['order_ref'] ?? ''));
@@ -149,7 +156,7 @@ final class MemberLifecycleMailer
     /** @param array{user_id: int, email: string, role: string}|null $snapshot */
     public function sendWithdrawFarewell(?array $snapshot): string
     {
-        return $this->guard('withdraw_farewell', function () use ($snapshot): string {
+        return $this->guard(MemberMailSettings::WITHDRAW_FAREWELL, function () use ($snapshot): string {
             if ($snapshot === null) {
                 return 'skipped:recipient';
             }
@@ -169,7 +176,7 @@ final class MemberLifecycleMailer
      */
     public function sendWelcomeWeek(int $userId): string
     {
-        return $this->guard('welcome_week', function () use ($userId): string {
+        return $this->guard(MemberMailSettings::WELCOME_WEEK, function () use ($userId): string {
             $role = MemberMailRole::lookup($this->pdo, $userId);
             if ($role === '') {
                 return 'skipped:kind';
@@ -203,7 +210,7 @@ final class MemberLifecycleMailer
      */
     public function sendPositionEnding(array $sub, string $today): string
     {
-        return $this->guard('position_ending', function () use ($sub, $today): string {
+        return $this->guard(MemberMailSettings::POSITION_ENDING, function () use ($sub, $today): string {
             $subId = (int) ($sub['id'] ?? 0);
             $userId = (int) ($sub['user_id'] ?? 0);
             $product = (string) ($sub['sku_code'] ?? '');
@@ -300,13 +307,17 @@ final class MemberLifecycleMailer
         return $id === false ? 0 : (int) $id;
     }
 
-    /** @param callable(): string $fn */
+    /** @param string $label MemberMailSettings::KINDS 중 하나 @param callable(): string $fn */
     private function guard(string $label, callable $fn): string
     {
         if (!$this->enabled()) {
             return 'skipped:disabled';
         }
         try {
+            if (!$this->settings()->isEnabled($label)) {
+                return 'skipped:paused';
+            }
+
             return $fn();
         } catch (\Throwable $e) {
             error_log('[lifecycle-mail] ' . $label . ': ' . $e->getMessage());
