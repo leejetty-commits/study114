@@ -12,7 +12,8 @@ use Study114\Paid\PositionPeriodCalculator;
 use Study114\Paid\ProviderTicketRepository;
 
 /**
- * 생활 메일 발송 — 카드 게시 환영 · Prime/Pick 구매 감사 · 탈퇴 완료.
+ * 생활 메일 발송 — 카드 게시 환영 · Prime/Pick 구매 감사 · 탈퇴 완료
+ * · 첫 일주일 안부 · Prime/Pick 마무리 3일 전(이 둘은 MemberMailScheduler가 대상을 고른다).
  *
  * 본 기능(등록·결제·탈퇴)을 절대 막지 않는다: 모든 진입점은 예외를 밖으로 던지지 않고 결과 코드만 돌려준다.
  * 중복 방지는 provider_reminder_dispatches(dedupe_key UNIQUE)에 먼저 자리를 잡은 뒤 보낸다.
@@ -24,6 +25,11 @@ final class MemberLifecycleMailer
     public const KIND_CARD_POSTED = 'lifecycle_card_posted';
     public const KIND_PURCHASE_THANKS = 'lifecycle_purchase_thanks';
     public const KIND_WITHDRAW_FAREWELL = 'lifecycle_withdraw_farewell';
+    public const KIND_WELCOME_WEEK = 'lifecycle_welcome_week';
+    public const KIND_POSITION_ENDING = 'lifecycle_position_ending';
+
+    public const DEDUPE_WELCOME_WEEK = 'lifecycle:welcome_week:';
+    public const DEDUPE_POSITION_ENDING = 'lifecycle:position_ending:';
 
     /** 기본등록을 다시 저장해도 오래전에 게시된 카드에는 환영 메일을 보내지 않는다. */
     private const CARD_POSTED_WINDOW_SECONDS = 86400;
@@ -157,6 +163,143 @@ final class MemberLifecycleMailer
         });
     }
 
+    /**
+     * 가입 7일 뒤 안부 (MemberMailScheduler가 대상을 고른다).
+     * 공부방·과외쌤: 노출 중 카드 있음 → 안부, 초안뿐이거나 없음 → 등록 안내, 그 밖(숨김 등) → 안 보냄.
+     */
+    public function sendWelcomeWeek(int $userId): string
+    {
+        return $this->guard('welcome_week', function () use ($userId): string {
+            $role = MemberMailRole::lookup($this->pdo, $userId);
+            if ($role === '') {
+                return 'skipped:kind';
+            }
+            $card = $this->cardState($userId, $role);
+            if ($role !== MemberMailRole::STUDENT && $card['published_id'] === 0 && $card['other']) {
+                return 'skipped:card';
+            }
+            $to = $this->recipient($userId);
+            if ($to === null) {
+                return 'skipped:recipient';
+            }
+
+            $ctx = ['home_ui' => $this->homeUi(), 'has_card' => $card['published_id'] > 0];
+            if ($role === MemberMailRole::STUDY_ROOM && $card['published_id'] > 0) {
+                $ctx['room_name'] = $this->roomName($card['published_id']);
+            } elseif ($role === MemberMailRole::TUTOR && $card['published_id'] > 0) {
+                $ctx['region_label'] = $this->tutorRegionLabel($card['published_id']);
+            }
+            $mail = MemberLifecycleMailTemplate::welcomeWeek($role, $ctx);
+
+            return $this->deliver($userId, self::KIND_WELCOME_WEEK, self::DEDUPE_WELCOME_WEEK . $userId, $to, $mail);
+        });
+    }
+
+    /**
+     * Prime·Pick 마무리 3일 전. 카드가 지금 노출 중일 때만 보낸다(본문이 「베이직으로 이어서 노출」을 약속하므로).
+     *
+     * @param array<string, mixed> $sub provider_position_subscriptions 행
+     *   (id, user_id, sku_code, provider_type, provider_id, started_on, end_exclusive_on)
+     */
+    public function sendPositionEnding(array $sub, string $today): string
+    {
+        return $this->guard('position_ending', function () use ($sub, $today): string {
+            $subId = (int) ($sub['id'] ?? 0);
+            $userId = (int) ($sub['user_id'] ?? 0);
+            $product = (string) ($sub['sku_code'] ?? '');
+            $endExclusive = substr(trim((string) ($sub['end_exclusive_on'] ?? '')), 0, 10);
+            if ($subId < 1 || $userId < 1 || !in_array($product, ['prime', 'pick'], true)
+                || preg_match('/^\d{4}-\d{2}-\d{2}$/', $endExclusive) !== 1 || $endExclusive <= $today) {
+                return 'skipped:subscription';
+            }
+            $role = MemberMailRole::normalize((string) ($sub['provider_type'] ?? ''));
+            if ($role === '') {
+                $role = MemberMailRole::lookup($this->pdo, $userId);
+            }
+            if (!in_array($role, [MemberMailRole::STUDY_ROOM, MemberMailRole::TUTOR], true)) {
+                return 'skipped:kind';
+            }
+            $providerId = (int) ($sub['provider_id'] ?? 0);
+            $cardId = $this->publishedProviderCard($userId, $role, $providerId);
+            if ($cardId === 0) {
+                return 'skipped:card';
+            }
+            $to = $this->recipient($userId);
+            if ($to === null) {
+                return 'skipped:recipient';
+            }
+
+            $lastDay = (new DateTimeImmutable($endExclusive, PositionPeriodCalculator::timezone()))->modify('-1 day')->format('Y-m-d');
+            $ctx = [
+                'home_ui' => $this->homeUi(),
+                'product' => $product,
+                'started_on' => substr(trim((string) ($sub['started_on'] ?? '')), 0, 10),
+                'ends_on' => $lastDay,
+            ];
+            if ($role === MemberMailRole::STUDY_ROOM) {
+                $ctx['room_name'] = $this->roomName($cardId);
+            }
+            $mail = MemberLifecycleMailTemplate::positionEnding($role, $ctx);
+
+            return $this->deliver(
+                $userId,
+                self::KIND_POSITION_ENDING,
+                self::DEDUPE_POSITION_ENDING . $subId . ':' . $endExclusive,
+                $to,
+                $mail,
+            );
+        });
+    }
+
+    public function isEnabled(): bool
+    {
+        return $this->enabled();
+    }
+
+    /**
+     * 내 카드 상태. published_id = 노출 중인 첫 카드 id(없으면 0), other = 초안·노출 말고 다른 상태(숨김 등) 카드 있음.
+     *
+     * @return array{published_id: int, other: bool}
+     */
+    private function cardState(int $userId, string $role): array
+    {
+        [$sql, $draft] = match ($role) {
+            MemberMailRole::STUDY_ROOM => ['SELECT id, profile_status AS s FROM study_rooms WHERE user_id = ? ORDER BY id', 'draft'],
+            MemberMailRole::TUTOR => ['SELECT id, profile_status AS s FROM tutors WHERE user_id = ? ORDER BY id', 'draft'],
+            default => ['SELECT id, exposure_status AS s FROM students WHERE guardian_user_id = ? ORDER BY id', 'draft'],
+        };
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$userId]);
+        $publishedId = 0;
+        $other = false;
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $status = (string) $row['s'];
+            if ($status === 'published') {
+                $publishedId = $publishedId ?: (int) $row['id'];
+            } elseif ($status !== $draft) {
+                $other = true;
+            }
+        }
+
+        return ['published_id' => $publishedId, 'other' => $other];
+    }
+
+    /** 이용권의 카드(provider_id)가 본인 것이고 노출 중이면 그 id. provider_id가 없던 옛 행은 본인 노출 카드 중 첫 번째. */
+    private function publishedProviderCard(int $userId, string $role, int $providerId): int
+    {
+        $table = $role === MemberMailRole::STUDY_ROOM ? 'study_rooms' : 'tutors';
+        if ($providerId > 0) {
+            $stmt = $this->pdo->prepare("SELECT id FROM {$table} WHERE id = ? AND user_id = ? AND profile_status = 'published' LIMIT 1");
+            $stmt->execute([$providerId, $userId]);
+        } else {
+            $stmt = $this->pdo->prepare("SELECT id FROM {$table} WHERE user_id = ? AND profile_status = 'published' ORDER BY id LIMIT 1");
+            $stmt->execute([$userId]);
+        }
+        $id = $stmt->fetchColumn();
+
+        return $id === false ? 0 : (int) $id;
+    }
+
     /** @param callable(): string $fn */
     private function guard(string $label, callable $fn): string
     {
@@ -194,10 +337,11 @@ final class MemberLifecycleMailer
     {
         $insert = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite' ? 'INSERT OR IGNORE' : 'INSERT IGNORE';
         $stmt = $this->pdo->prepare(
-            $insert . ' INTO provider_reminder_dispatches (user_id, channel, reminder_kind, dedupe_key)
-             VALUES (?, ?, ?, ?)'
+            $insert . ' INTO provider_reminder_dispatches (user_id, channel, reminder_kind, dedupe_key, sent_at)
+             VALUES (?, ?, ?, ?, ?)'
         );
-        $stmt->execute([$userId, 'email', $kind, $dedupeKey]);
+        $sentAt = (new DateTimeImmutable('now', PositionPeriodCalculator::timezone()))->format('Y-m-d H:i:s');
+        $stmt->execute([$userId, 'email', $kind, $dedupeKey, $sentAt]);
 
         return $stmt->rowCount() === 1;
     }

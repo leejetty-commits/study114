@@ -18,6 +18,9 @@ on:
       - "src/Auth/EmailVerifyMailTemplate.php"
       - "scripts/verify-auth-mail-warm.php"
       - "scripts/verify-mail-lifecycle.php"
+      - "scripts/verify-member-mail-schedule.php"
+      - "public/api/cron/member-mail.php"
+      - ".github/workflows/member-mail-cron.yml"
       - "src/Auth/BasicRegisterService.php"
       - "src/Auth/AccountWithdrawService.php"
       - "src/Paid/ProviderCheckoutService.php"
@@ -94,6 +97,9 @@ jobs:
 
       - name: Lifecycle mail (card posted / purchase / withdraw)
         run: php scripts/verify-mail-lifecycle.php
+
+      - name: Scheduled member mail (welcome week / position ending)
+        run: php scripts/verify-member-mail-schedule.php
 
       - name: Node static contract
         run: npm run verify:cur-006-resend
