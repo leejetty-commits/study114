@@ -16,6 +16,7 @@ final class MemberMailTemplate
     public const SITE_URL = 'https://study114.net';
     public const LOGO_URL = self::SITE_URL . '/assets/brand/logo-wordmark.png';
     public const SUPPORT_PATH = '/support/contact';
+    public const HELP_EMAIL = 'help@study114.net';
     public const SIGNATURE = '— 우동공과 드림';
     public const FOOTER_NOTICE = '이 메일은 우동공과(study114.net)에서 입력하신 주소로 보내드렸어요. '
         . '보내기 전용 메일이라 답장을 받을 수 없어요. '

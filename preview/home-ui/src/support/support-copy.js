@@ -405,7 +405,9 @@ export const TICKET_STATUS_LABELS = {
 };
 
 export const OPERATIONAL_CONTACT = {
-  email: 'support@udonggong.example',
+  email: 'help@study114.net',
+  guestMailLead: '로그인이 어렵거나 이미 탈퇴하셨다면',
+  guestMailTail: '으로 메일을 보내 주세요.',
   note: '제출하면 문의 번호가 안내됩니다. 답변과 진행 상태는 마이페이지 > 내 문의 내역에서 확인할 수 있습니다.',
   ticketSuccessTitle: '운영문의가 접수되었습니다',
 };

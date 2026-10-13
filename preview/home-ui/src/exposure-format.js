@@ -116,7 +116,7 @@ export function formatLessonOperationType(lesson_operation_type) {
 const STUDY_ROOM_CAPACITY_LABELS = {
   one_to_four: '1~4명',
   five_to_eight: '5~8명',
-  nine_plus: '9명 이상',
+  nine_plus: '최대 9명',
 };
 
 /** study_rooms.capacity_per_time — 코드 값은 한글로, 모르는 코드는 비운다. 예전 자유 입력 문구는 그대로. */

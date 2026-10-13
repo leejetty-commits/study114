@@ -31,7 +31,7 @@ export const LESSON_OPERATION_LABELS = {
 export const CAPACITY_LABELS = {
   one_to_four: '1~4명',
   five_to_eight: '5~8명',
-  nine_plus: '9명 이상',
+  nine_plus: '최대 9명',
 };
 
 export const CAREER_YEAR_BAND_LABELS = {

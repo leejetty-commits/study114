@@ -169,7 +169,7 @@ foreach ([MemberMailRole::STUDY_ROOM => '공부방 원장님 · 탈퇴 완료', 
     commonChecks($id, $bye, $badge, null, $supportUrl, $forbidden);
     check(str_contains($bye['plain'], '2026년 10월 9일 오후 8시 5분에 탈퇴가 완료되었어요.'), "{$id}: 탈퇴 시각");
     check(str_contains($bye['plain'], '같은 이메일로 새로 가입할 수 있어요.'), "{$id}: 재가입 안내");
-    check(str_contains($bye['plain'], '직접 탈퇴하지 않으셨다면, 같은 이메일로 다시 가입한 뒤 고객센터 1:1 문의로'), "{$id}: 본인 아님 연락 경로");
+    check(str_contains($bye['plain'], '직접 탈퇴하지 않으셨다면, help@study114.net으로 바로 알려 주세요.'), "{$id}: 본인 아님 연락 경로");
     check(str_contains($bye['plain'], '오늘 자로 끝났어요'), "{$id}: Prime·Pick 종료 안내");
 }
 check(T::dateTimeLabel('2026-10-09 00:00:00') === '2026년 10월 9일 오전 12시', 'dateTimeLabel 자정');

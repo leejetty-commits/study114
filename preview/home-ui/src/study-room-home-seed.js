@@ -288,7 +288,7 @@ export function mapLiveRoom(item) {
     career_years: item.career_years ?? null,
     profile_status: 'published',
     compare_eligible: item.compare_eligible !== false,
-    inquiry_status: item.inquiry_status || 'paused',
+    inquiry_status: item.inquiry_status || 'open',
     latitude: item.latitude ?? null,
     longitude: item.longitude ?? null,
     position_sku: sku || null,

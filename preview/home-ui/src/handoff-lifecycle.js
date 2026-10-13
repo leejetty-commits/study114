@@ -28,7 +28,7 @@ export function resolveBasketLifecycleBadge(kind, item) {
         muted: true,
       };
     }
-    const inq = item.inquiry_status || 'paused';
+    const inq = item.inquiry_status || 'open';
     if (inq === 'paused' || inq === 'capacity_full' || inq === 'waiting_only') {
       return { label: inquiryStatusLabel(inq), variant: 'warn', muted: true };
     }

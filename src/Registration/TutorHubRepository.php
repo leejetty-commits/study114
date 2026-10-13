@@ -155,9 +155,9 @@ final class TutorHubRepository
      */
     private function normalizeInquiryStatus(mixed $raw): string
     {
-        $status = (string) ($raw ?? 'paused');
+        $status = (string) ($raw ?? 'open');
 
-        return in_array($status, ['open', 'paused', 'not_accepting'], true) ? $status : 'paused';
+        return in_array($status, ['open', 'paused', 'not_accepting'], true) ? $status : 'open';
     }
 
     /**

@@ -17,7 +17,7 @@ export const TUTOR_INQUIRY_STATUSES = /** @type {const} */ (['open', 'paused', '
 
 /** @param {unknown} raw @returns {'open'|'paused'|'not_accepting'} */
 export function normalizeTutorInquiryStatus(raw) {
-  return raw === 'open' || raw === 'not_accepting' ? raw : 'paused';
+  return raw === 'paused' || raw === 'not_accepting' ? raw : 'open';
 }
 
 /** @param {unknown} status @returns {TutorInquiryPref} */

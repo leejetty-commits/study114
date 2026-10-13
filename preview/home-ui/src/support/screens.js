@@ -98,6 +98,7 @@ function renderContactLoginGate() {
         <a href="${esc(href)}" class="btn btn--primary" data-sup-external="login">운영문의 남기기</a>
         <a href="${esc(AUTH_UI_BASE)}/#/signup/terms" class="btn btn--secondary" data-sup-external="login">회원가입</a>
       </div>
+      <p class="sup-note">${esc(OPERATIONAL_CONTACT.guestMailLead)} <a href="mailto:${esc(OPERATIONAL_CONTACT.email)}">${esc(OPERATIONAL_CONTACT.email)}</a>${esc(OPERATIONAL_CONTACT.guestMailTail)}</p>
     </section>`;
 }
 

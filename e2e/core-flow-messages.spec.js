@@ -92,7 +92,7 @@ test.describe('[5단계] 종료·권한 상태', () => {
   test('보관함(archive) 빈 상태', async ({ page }) => {
     await page.goto('/#/mypage/messages/archive', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('.msg-panel', { timeout: 30_000 });
-    await expect(page.getByText('쪽지가 없습니다')).toBeVisible();
+    await expect(page.getByText('아직 주고받은 쪽지가 없어요')).toBeVisible();
   });
 
   test('차단 후 답장 불가 · 종료 배너', async ({ page }) => {
