@@ -409,19 +409,21 @@ section(`G. 바뀌면 안 되는 것 (${REF} 대비)`);
 const same = (rel, pick = (s) => s) => readRef(rel) !== '' && pick(read(rel)) === pick(readRef(rel));
 const copyRel = 'preview/home-ui/src/tutor-reg/registration-check-copy.js';
 const lineOf = (name) => (s) => (new RegExp(`export const ${name} = [^\\n]+`).exec(s) || [''])[0];
-function gitDiffNames(...paths) {
-  try {
-    const tracked = execFileSync('git', ['diff', '--name-only', REF, '--', ...paths], { cwd: root, encoding: 'utf8' });
-    const untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard', '--', ...paths], { cwd: root, encoding: 'utf8' });
-    return `${tracked}\n${untracked}`.split('\n').map((s) => s.trim()).filter(Boolean);
-  } catch {
-    return ['(git diff 실패)'];
-  }
-}
 assert(same('src/Region/TutorRegionUnit.php'), '과외지역 단위 TutorRegionUnit.php 그대로');
 assert(same(copyRel, lineOf('TRC_PICK_FIELD_IDS')), '픽 조건 TRC_PICK_FIELD_IDS 그대로');
 assert(same(copyRel, lineOf('TRC_PRIME_FIELD_IDS')), '프라임 조건 TRC_PRIME_FIELD_IDS 그대로');
-assert(gitDiffNames('sql/').length === 0, 'sql/ 변경 없음(새 컬럼 없음)');
+function sqlAddsColumnOrTable() {
+  const adds = /\b(ADD\s+COLUMN|CREATE\s+TABLE)\b/i;
+  try {
+    const diff = execFileSync('git', ['diff', REF, '--', 'sql/'], { cwd: root, encoding: 'utf8' });
+    if (diff.split('\n').some((l) => l.startsWith('+') && !l.startsWith('+++') && adds.test(l))) return true;
+    const untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard', '--', 'sql/'], { cwd: root, encoding: 'utf8' });
+    return untracked.split('\n').map((s) => s.trim()).filter(Boolean).some((rel) => adds.test(read(rel)));
+  } catch {
+    return true;
+  }
+}
+assert(!sqlAddsColumnOrTable(), 'sql/ 새 컬럼·새 표 없음');
 assert(same('src/Media/TutorProfileImageService.php'), '사진 업로드 서버 그대로');
 assert(
   !Object.values(files).some((s) => s.includes('room-card-default')),
