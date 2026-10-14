@@ -39,6 +39,7 @@ on:
       - "preview/home-ui/src/support/screens.js"
       - "preview/home-ui/src/mypage/screens.js"
       - "preview/home-ui/src/admin/a28-withdraw-reasons.js"
+      - "preview/home-ui/src/policy-copy.js"
       - "src/Auth/BasicRegisterService.php"
       - "src/Auth/AccountWithdrawService.php"
       - "src/Paid/ProviderCheckoutService.php"

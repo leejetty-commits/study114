@@ -15,8 +15,9 @@ use Throwable;
 /**
  * 탈퇴 사유 받기 (정본 74 §1-4 · SQL 080).
  *
- * - 사유 표 withdraw_reasons 에는 회원 번호·이메일을 두지 않는다. 날짜(KST)만 남긴다.
- * - 메일 링크 표 withdraw_reason_links 는 링크 값의 sha256·역할·만료 시각만. 한 번 쓰면 행을 지운다.
+ * - 사유 표 withdraw_reasons 에 탈퇴 회원 번호를 함께 둔다 — 관리자가 누가 남긴 사유인지 본다(2026-10-14 사용자 결정).
+ *   이메일·연락처는 두지 않는다. 회원 번호는 답한 날로부터 1년이 지나면 지운다(개인정보처리방침).
+ * - 메일 링크 표 withdraw_reason_links 는 링크 값의 sha256·회원 번호·역할·만료 시각. 한 번 쓰면 행을 지운다.
  * - 표가 없으면(SQL 080 적용 전) 저장·링크 만들기는 조용히 건너뛴다 → 탈퇴는 그대로 진행.
  */
 final class WithdrawReasonService
@@ -45,7 +46,11 @@ final class WithdrawReasonService
     /** 관리자 화면에서 고를 수 있는 기간(일) */
     public const SUMMARY_DAYS = [30, 90, 365];
 
-    private const NOTES_LIMIT = 50;
+    /** 회원 번호를 남겨 두는 기간 — 답한 날로부터. 개인정보처리방침 「개인정보 보유 및 이용 기간」과 같아야 한다 */
+    public const MEMBER_KEEP = '1 year';
+
+    /** 관리자 「알려 준 이유 목록」 최대 줄 수 */
+    public const LIST_LIMIT = 100;
 
     public function __construct(
         private readonly PDO $pdo,
@@ -100,10 +105,10 @@ final class WithdrawReasonService
     }
 
     /** 사유 한 건 저장. 실패해도 예외를 밖으로 던지지 않는다(탈퇴를 막지 않음). */
-    public function record(string $role, string $code, ?string $note, string $source): bool
+    public function record(int $userId, string $role, string $code, ?string $note, string $source): bool
     {
         try {
-            $this->insertReason($role, $code, $note, $source);
+            $this->insertReason($userId, $role, $code, $note, $source);
 
             return true;
         } catch (Throwable $e) {
@@ -114,15 +119,16 @@ final class WithdrawReasonService
     }
 
     /** 메일 링크 값(64자). 표가 없거나 실패하면 null → 메일에 링크를 넣지 않는다. */
-    public function issueLink(string $role): ?string
+    public function issueLink(int $userId, string $role): ?string
     {
         try {
             $token = bin2hex(random_bytes(32));
             $this->pdo->prepare('DELETE FROM withdraw_reason_links WHERE expires_at < ?')->execute([$this->stamp()]);
             $this->pdo->prepare(
-                'INSERT INTO withdraw_reason_links (token_hash, role_type, expires_at) VALUES (?, ?, ?)'
+                'INSERT INTO withdraw_reason_links (token_hash, user_id, role_type, expires_at) VALUES (?, ?, ?, ?)'
             )->execute([
                 hash('sha256', $token),
+                $userId > 0 ? $userId : null,
                 self::normalizeRole($role),
                 $this->now()->modify('+' . self::LINK_DAYS . ' days')->format('Y-m-d H:i:s'),
             ]);
@@ -176,7 +182,7 @@ final class WithdrawReasonService
         $this->pdo->beginTransaction();
         try {
             $stmt = $this->pdo->prepare(
-                'SELECT id, role_type FROM withdraw_reason_links WHERE token_hash = ? AND expires_at >= ? LIMIT 1'
+                'SELECT id, user_id, role_type FROM withdraw_reason_links WHERE token_hash = ? AND expires_at >= ? LIMIT 1'
                 . ($mysql ? ' FOR UPDATE' : '')
             );
             $stmt->execute([hash('sha256', $token), $this->stamp()]);
@@ -193,7 +199,7 @@ final class WithdrawReasonService
 
                 return false;
             }
-            $this->insertReason((string) $row['role_type'], $answer['code'], $answer['note'], self::SOURCE_MAIL);
+            $this->insertReason((int) ($row['user_id'] ?? 0), (string) $row['role_type'], $answer['code'], $answer['note'], self::SOURCE_MAIL);
             $this->pdo->commit();
 
             return true;
@@ -220,8 +226,9 @@ final class WithdrawReasonService
      *   days: int, since: string, total: int,
      *   by_source: array{withdraw: int, mail: int},
      *   rows: list<array{code: string, study_room: int, tutor: int, student: int, unknown: int, total: int}>,
-     *   notes: list<array{on: string, role: string, note: string}>
+     *   list: list<array{on: string, user_id: int|null, name: string, withdrawn_on: string, role: string, code: string, note: string, source: string}>
      * }
+     * list = 기간 안 최근 LIST_LIMIT건. name = 탈퇴 때 가린 이름(user_profiles), withdrawn_on = users.deleted_at 날짜.
      */
     public function summary(int $days): array
     {
@@ -239,15 +246,15 @@ final class WithdrawReasonService
             $stmt->execute([$since]);
             $counts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $notesStmt = $this->pdo->prepare(
-                'SELECT answered_on, role_type, reason_note
+            $listStmt = $this->pdo->prepare(
+                'SELECT user_id, role_type, reason_code, reason_note, source, answered_on
                    FROM withdraw_reasons
-                  WHERE answered_on >= ? AND reason_code = ? AND reason_note IS NOT NULL AND reason_note <> \'\'
+                  WHERE answered_on >= ?
                   ORDER BY answered_on DESC, id DESC
-                  LIMIT ' . self::NOTES_LIMIT
+                  LIMIT ' . self::LIST_LIMIT
             );
-            $notesStmt->execute([$since, self::OTHER]);
-            $noteRows = $notesStmt->fetchAll(PDO::FETCH_ASSOC);
+            $listStmt->execute([$since]);
+            $listRows = $listStmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             if ($this->isMissingTable($e)) {
                 throw new RuntimeException(self::SCHEMA_MISSING, 0, $e);
@@ -277,18 +284,96 @@ final class WithdrawReasonService
             $total += $n;
         }
 
+        $members = $this->memberLabels(array_map(static fn (array $r): int => (int) ($r['user_id'] ?? 0), $listRows));
+
         return [
             'days' => $days,
             'since' => $since,
             'total' => $total,
             'by_source' => $bySource,
             'rows' => array_values($rows),
-            'notes' => array_map(static fn (array $r): array => [
-                'on' => (string) $r['answered_on'],
-                'role' => self::normalizeRole((string) $r['role_type']),
-                'note' => (string) $r['reason_note'],
-            ], $noteRows),
+            'list' => array_map(static function (array $r) use ($members): array {
+                $userId = (int) ($r['user_id'] ?? 0);
+
+                return [
+                    'on' => (string) $r['answered_on'],
+                    'user_id' => $userId > 0 ? $userId : null,
+                    'name' => $members[$userId]['name'] ?? '',
+                    'withdrawn_on' => $members[$userId]['withdrawn_on'] ?? '',
+                    'role' => self::normalizeRole((string) $r['role_type']),
+                    'code' => (string) $r['reason_code'],
+                    'note' => (string) ($r['reason_note'] ?? ''),
+                    'source' => (string) $r['source'],
+                ];
+            }, $listRows),
         ];
+    }
+
+    /**
+     * 답한 날로부터 MEMBER_KEEP이 지난 사유의 회원 번호를 지우고, 기한이 지난 메일 링크를 지운다.
+     * 회원 메일 cron(public/api/cron/member-mail.php)이 매시간 부른다. 표가 없으면(080 전) null.
+     *
+     * @return array{members_forgotten: int, links_deleted: int}|null
+     */
+    public function forgetExpired(): ?array
+    {
+        $cutoff = $this->now()->modify('-' . self::MEMBER_KEEP)->format('Y-m-d');
+        try {
+            $forget = $this->pdo->prepare('UPDATE withdraw_reasons SET user_id = NULL WHERE user_id IS NOT NULL AND answered_on < ?');
+            $forget->execute([$cutoff]);
+            $links = $this->pdo->prepare('DELETE FROM withdraw_reason_links WHERE expires_at < ?');
+            $links->execute([$this->stamp()]);
+        } catch (PDOException $e) {
+            if ($this->isMissingTable($e)) {
+                return null;
+            }
+            throw $e;
+        }
+
+        return ['members_forgotten' => $forget->rowCount(), 'links_deleted' => $links->rowCount()];
+    }
+
+    /**
+     * 목록에 보일 회원 표시 — 탈퇴 때 가린 이름 · 탈퇴일. 회원 행이 없으면(회원 정리 SQL 등) 빈 값.
+     *
+     * @param list<int> $ids
+     * @return array<int, array{name: string, withdrawn_on: string}>
+     */
+    private function memberLabels(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter($ids, static fn (int $id): bool => $id > 0)));
+        if ($ids === []) {
+            return [];
+        }
+        $out = [];
+        foreach ($ids as $id) {
+            $out[$id] = ['name' => '', 'withdrawn_on' => ''];
+        }
+        $in = implode(',', array_fill(0, count($ids), '?'));
+        try {
+            $stmt = $this->pdo->prepare("SELECT id, deleted_at FROM users WHERE id IN ({$in})");
+            $stmt->execute($ids);
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $u) {
+                $out[(int) $u['id']]['withdrawn_on'] = substr((string) ($u['deleted_at'] ?? ''), 0, 10);
+            }
+        } catch (PDOException $e) {
+            error_log('[withdraw-reason] members: ' . $e->getMessage());
+        }
+        // 운영은 real_name(SQL 004), 옛 스키마는 name
+        foreach (['real_name', 'name'] as $column) {
+            try {
+                $stmt = $this->pdo->prepare("SELECT user_id, {$column} AS label FROM user_profiles WHERE user_id IN ({$in})");
+                $stmt->execute($ids);
+                foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $p) {
+                    $out[(int) $p['user_id']]['name'] = (string) ($p['label'] ?? '');
+                }
+                break;
+            } catch (PDOException) {
+                continue;
+            }
+        }
+
+        return $out;
     }
 
     public static function isToken(string $token): bool
@@ -296,7 +381,7 @@ final class WithdrawReasonService
         return preg_match('/^[a-f0-9]{64}$/', $token) === 1;
     }
 
-    private function insertReason(string $role, string $code, ?string $note, string $source): void
+    private function insertReason(int $userId, string $role, string $code, ?string $note, string $source): void
     {
         if (!in_array($code, self::allCodes(), true)) {
             throw new RuntimeException('unknown reason code');
@@ -305,8 +390,9 @@ final class WithdrawReasonService
             throw new RuntimeException('unknown reason source');
         }
         $this->pdo->prepare(
-            'INSERT INTO withdraw_reasons (role_type, reason_code, reason_note, source, answered_on) VALUES (?, ?, ?, ?, ?)'
+            'INSERT INTO withdraw_reasons (user_id, role_type, reason_code, reason_note, source, answered_on) VALUES (?, ?, ?, ?, ?, ?)'
         )->execute([
+            $userId > 0 ? $userId : null,
             self::normalizeRole($role),
             $code,
             $code === self::OTHER ? $note : null,

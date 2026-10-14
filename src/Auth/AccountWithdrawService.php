@@ -48,7 +48,7 @@ final class AccountWithdrawService
         $this->runPurge($pdo, $userId);
 
         $reasonGiven = $answer !== null
-            && (new WithdrawReasonService($pdo))->record($role, $answer['code'], $answer['note'], WithdrawReasonService::SOURCE_WITHDRAW);
+            && (new WithdrawReasonService($pdo))->record($userId, $role, $answer['code'], $answer['note'], WithdrawReasonService::SOURCE_WITHDRAW);
         $farewell?->sendWithdrawFarewell($snapshot, $reasonGiven);
 
         return [

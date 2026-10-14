@@ -170,7 +170,7 @@ final class MemberLifecycleMailer
             if ($reasonGiven === true) {
                 $reason = ['reason' => 'given'];
             } elseif ($reasonGiven === false) {
-                $token = (new WithdrawReasonService($this->pdo))->issueLink($role);
+                $token = (new WithdrawReasonService($this->pdo))->issueLink($userId, $role);
                 if ($token !== null) {
                     $reason = ['reason' => 'ask', 'reason_url' => MemberLifecycleMailTemplate::withdrawReasonUrl($this->homeUi(), $token)];
                 }

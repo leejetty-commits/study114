@@ -31,14 +31,6 @@
 .admin-shell .member-mail__subject {
   margin: 0.5rem 0;
 }
-.admin-shell .withdraw-reasons__notes {
-  margin: 0;
-  padding-left: 1.1rem;
-  line-height: 1.7;
-}
-.admin-shell .withdraw-reasons__notes small {
-  color: var(--gray-600, #4b5563);
-}
 .admin-shell [data-withdraw-reasons-days][aria-pressed="true"] {
   border-color: var(--brand-blue, #266bc4);
   color: var(--brand-blue, #266bc4);

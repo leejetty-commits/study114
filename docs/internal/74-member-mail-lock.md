@@ -43,22 +43,25 @@
 
 ### 1-4. 탈퇴 사유 받기 (SQL `080`)
 
+결정(2026-10-14 사용자): **관리자는 누가 남긴 사유인지 본다.** 「관리자가 알게하고, 그에 맞춘 작업을 진행한다」 — 처음 초안의 「누가 남겼는지 알 수 없게」는 정본 근거 없이 메인이 넣은 것이라 걷어냈다. 회원 번호 보관 **1년**(사용자 선택). 근거·문구 승인: `docs/worklog/2026/10/2026-10-14-member-mail-4.md` §5-7·§5-8.
+
 | 항목 | 규칙 | 코드 |
 |------|------|------|
-| 탈퇴 화면 | 마이페이지 탈퇴 확인 칸에 「떠나시는 이유를 알려 주시겠어요? (선택)」. **고르지 않아도 탈퇴된다.** 모르는 선택지가 오면 고르지 않은 것으로 보고 탈퇴는 진행 | `AccountWithdrawService::withdraw` · `preview/home-ui/src/withdraw-reason-ui.js` |
+| 탈퇴 화면 | 마이페이지 탈퇴 확인 칸에 「떠나시는 이유를 알려 주시겠어요? (선택)」 + 「고르지 않아도 탈퇴할 수 있어요. 알려 주신 이유는 더 좋은 동네를 만드는 데만 써요.」 **고르지 않아도 탈퇴된다.** 모르는 선택지가 오면 고르지 않은 것으로 보고 탈퇴는 진행. 회원에게 「누가 남겼는지 알 수 없게」라고 약속하지 않는다 | `AccountWithdrawService::withdraw` · `preview/home-ui/src/withdraw-reason-ui.js` |
 | 선택지 | 학생·학부모: 좋은 선생님을 찾았어요 / 원하는 선생님·공부방이 없었어요. 공부방: 원생이 충분히 모였어요 / 쪽지(문의)가 오지 않았어요 / 비용이 부담돼요. 과외쌤: 학생을 충분히 만났어요 / 쪽지(문의)가 오지 않았어요 / 비용이 부담돼요. 모두: 쓰기가 불편했어요 / 다른 서비스를 쓰기로 했어요 / 잠시 쉬어 가려고요 / 기타(한 줄) | 서버 `WithdrawReasonService::ROLE_CODES·COMMON_CODES` = 화면 `withdraw-reason-copy.js`(검사가 같은지 본다) |
 | 기타 한 줄 | 「기타」일 때만 남긴다. 줄바꿈·제어문자 → 공백, **100자** | `normalizeAnswer` |
 | 역할 | 탈퇴 정리(역할 끔) **전에** 대표 활성 역할을 읽는다. 회원 역할이 아니면 빈 값(관리자 모음에서 합계에만) | `MemberMailRole::lookup` |
 | 순서 | 탈퇴 정리가 끝난 **뒤** 사유 저장 → 탈퇴 완료 메일. 저장이 실패해도 탈퇴는 끝난 상태 | |
-| **누가 남겼는지 모르게** | 사유 표 `withdraw_reasons`: 역할 · 선택지 · 기타 한 줄 · 경로(`withdraw` 탈퇴 화면 / `mail` 메일 링크) · **날짜(KST)만**. 회원 번호·이메일 없음. 시각을 남기면 탈퇴 기록과 맞춰 볼 수 있어 날짜만 | `sql/schema/080_withdraw_reasons.sql` |
+| **회원 번호와 함께 저장** | 사유 표 `withdraw_reasons`: **탈퇴 회원 번호(`user_id`)** · 역할 · 선택지 · 기타 한 줄 · 경로(`withdraw` 탈퇴 화면 / `mail` 메일 링크) · 답한 날(KST). 이메일·연락처는 두지 않는다(탈퇴 때 지워짐). `users`와 외래 키를 걸지 않는다(회원 정리 SQL을 막지 않게) | `sql/schema/080_withdraw_reasons.sql` |
+| **회원 번호 1년 보관** | 답한 날로부터 1년이 지나면(딱 1년인 날까지 남김, 다음 날 지움) 회원 번호만 `NULL`로 지운다. 사유·기타 한 줄은 남는다. 회원 메일 cron이 매시간 부른다(실패해도 메일은 보냄). 기한이 지난 메일 링크도 같이 지운다. **개인정보처리방침 「개인정보 보유 및 이용 기간」에 같은 내용**: 「다만 탈퇴할 때 직접 알려 주신 탈퇴 사유는 서비스 개선을 위해 회원 번호와 함께 1년 보관한 뒤 회원 번호를 지웁니다.」 — 기간을 바꾸면 `MEMBER_KEEP`·방침 문구·이 줄을 같이 고친다 | `WithdrawReasonService::MEMBER_KEEP` · `forgetExpired` · `public/api/cron/member-mail.php` · `preview/home-ui/src/policy-copy.js` |
 | 메일 — 고른 경우 | 탈퇴 완료 메일에 「떠나시는 이유를 알려 주셔서 고마워요. 꼭 살펴볼게요.」 | `MemberLifecycleMailTemplate::withdrawn` `reason=given` |
 | 메일 — 안 고른 경우 | 「혹시 떠나시는 이유를 알려 주실 수 있을까요? 하나만 골라 주시면 돼요. 로그인은 필요 없어요.」 + 버튼 「떠나는 이유 알려 주기」 + 안내 「30일 동안 한 번 쓸 수 있어요」 | `reason=ask` |
 | 메일 링크 | `https://study114.net/#/support/leave-reason?t={64자}` — 고객센터 아래 공개 화면, 로그인 없음. **30일**, **한 번만**(저장과 같은 트랜잭션에서 링크 행을 지움). 선택지가 틀리면 링크를 쓰지 않는다 | `WithdrawReasonService::issueLink·peekLink·answerLink` |
-| 링크 표 | `withdraw_reason_links`: 링크 값의 **sha256** · 역할 · 만료 시각. 원래 값은 메일에만 있다. 회원 번호·이메일 없음. 새 링크를 만들 때 지난 링크를 지운다 | |
+| 링크 표 | `withdraw_reason_links`: 링크 값의 **sha256** · 탈퇴 회원 번호 · 역할 · 만료 시각. 원래 값은 메일에만 있다. 답하면 회원 번호·역할을 사유로 옮기고 링크 행을 지운다. 새 링크를 만들 때와 매시간 cron에서 지난 링크를 지운다 | |
 | 링크를 만드는 때 | 탈퇴 완료 메일을 **실제로 보낼 때만**(메일 멈춤·받을 주소 없음·생활 메일 전체 꺼짐이면 안 만듦) | `MemberLifecycleMailer::sendWithdrawFarewell` |
-| 보낸 뒤 화면 | 「알려 주셔서 고마워요. 남겨 주신 한마디로 우리 동네를 더 좋게 만들게요.」 쓸 수 없는 링크(만료·이미 씀·형식 틀림)는 「이 링크는 이미 쓰였거나 30일이 지났어요. 알려 주시려던 마음만으로도 고마워요.」 | `preview/home-ui/src/support/leave-reason.js` |
-| API | `GET/POST /api/auth/withdraw-reason.php` — 쓸 수 없는 링크도 **200**(`valid`/`saved` = false, 닷홈 4xx 본문 교체 대비). 선택지 틀림만 422 | |
-| 관리자 모음 | `#/admin/members/withdraw-reasons` 「회원관리 › 탈퇴 사유」(운영자 전원). 최근 30일·90일·1년, 선택지 × 역할 수, 탈퇴 화면/메일 나눔, 기타 한 줄 최근 50개(날짜·역할만). API `GET /api/admin/withdraw-reasons.php?days=` | `WithdrawReasonService::summary` |
+| 링크 화면 | 「떠나시는 이유를 알려 주시겠어요?」 + 「하나만 골라 주시면 돼요. 알려 주신 이유는 더 좋은 동네를 만드는 데만 써요.」 보낸 뒤 「알려 주셔서 고마워요. 남겨 주신 한마디로 우리 동네를 더 좋게 만들게요.」 쓸 수 없는 링크(만료·이미 씀·형식 틀림)는 「이 링크는 이미 쓰였거나 30일이 지났어요. 알려 주시려던 마음만으로도 고마워요.」 | `preview/home-ui/src/support/leave-reason.js` |
+| API | `GET/POST /api/auth/withdraw-reason.php` — 쓸 수 없는 링크도 **200**(`valid`/`saved` = false, 닷홈 4xx 본문 교체 대비). 선택지 틀림만 422. 링크 값이 글자가 아니면 빈 값으로 본다 | |
+| 관리자 모음 | `#/admin/members/withdraw-reasons` 「회원관리 › 탈퇴 사유」(운영자 전원). 안내 「탈퇴한 회원 번호와 가린 이름으로 보여요. 이메일·연락처는 탈퇴 때 지워져 여기에도 없어요.」 최근 30일·90일·1년, 선택지 × 역할 수, 탈퇴 화면/메일 나눔. **알려 준 이유 목록**(기간 안 최근 100건): 답한 날 · 회원 번호 · 이름(탈퇴 때 「김○○」로 가린 `user_profiles` 이름) · 탈퇴일(`users.deleted_at`) · 역할 · 이유 · 한 줄 · 받은 곳. 회원 번호를 지웠거나 회원 행이 없으면 「—」. API `GET /api/admin/withdraw-reasons.php?days=` | `WithdrawReasonService::summary` · `preview/home-ui/src/admin/a28-withdraw-reasons.js` |
 | SQL 080 적용 전 | 탈퇴·탈퇴 완료 메일은 그대로. 사유 저장·메일 링크는 조용히 건너뛰고(메일에 사유 문장 없음), 관리자 모음은 503 `schema_missing` | |
 
 ## 2. 받는 사람 (모든 생활 메일 공통)
@@ -155,7 +158,7 @@ Resend 무료 요금제(하루 100통): 생활 메일 60통 + 가입 확인·비
 | 생활 메일 발송·조건·중복 | `src/Mail/MemberLifecycleMailer.php` |
 | 생활 메일 문안 | `src/Mail/MemberLifecycleMailTemplate.php` (공통 틀 `src/Mail/MemberMailTemplate.php`) |
 | 정해진 시각 메일 고르기·나눠 보내기·한도 | `src/Mail/MemberMailScheduler.php` |
-| 자동 작업 주소 | `public/api/cron/member-mail.php` |
+| 자동 작업 주소 (탈퇴 사유 회원 번호 1년 정리 포함) | `public/api/cron/member-mail.php` |
 | 깨우기 | `.github/workflows/member-mail-cron.yml` |
 | 옛 만료 안내 채널 | `src/Paid/ProviderReminderChannelPolicy.php` |
 | 종류별 켜고 끄기 저장 | `src/Mail/MemberMailSettings.php` |
@@ -163,7 +166,7 @@ Resend 무료 요금제(하루 100통): 생활 메일 60통 + 가입 확인·비
 | 관리자 화면 | `preview/home-ui/src/admin/a28-member-mail.js` · 문구 `a28-member-mail-copy.js` · 호출 `a28-member-mail-api.js` · `styles/admin-member-mail.css` |
 | 검사 — 생활 메일 3종 | `php -d extension=pdo_sqlite scripts/verify-mail-lifecycle.php` |
 | 검사 — 정해진 시각 메일·한도·이 문서 | `php -d extension=pdo_sqlite scripts/verify-member-mail-schedule.php` (`npm run verify:member-mail-schedule`) |
-| 탈퇴 사유 저장·메일 링크·관리자 모음 | `src/Auth/WithdrawReasonService.php` · SQL `sql/schema/080_withdraw_reasons.sql` · API `public/api/auth/withdraw-reason.php`(링크 화면) · `public/api/admin/withdraw-reasons.php`(관리자) |
+| 탈퇴 사유 저장·메일 링크·관리자 모음·1년 정리 | `src/Auth/WithdrawReasonService.php` · SQL `sql/schema/080_withdraw_reasons.sql` · API `public/api/auth/withdraw-reason.php`(링크 화면) · `public/api/admin/withdraw-reasons.php`(관리자) · 개인정보처리방침 `preview/home-ui/src/policy-copy.js` |
 | 탈퇴 사유 화면 | 문구·선택지 `preview/home-ui/src/withdraw-reason-copy.js` · 선택 칸 `withdraw-reason-ui.js` · 마이페이지 탈퇴 칸 `mypage/screens.js` · 링크 화면 `support/leave-reason.js` · 관리자 `admin/a28-withdraw-reasons.js` |
 | 검사 — 종류별 스위치·미리보기·시험 발송·관리자 화면 | `php -d extension=pdo_sqlite scripts/verify-member-mail-admin.php` (`npm run verify:member-mail-admin`) |
 | 검사 — 탈퇴 사유 | `php -d extension=pdo_sqlite scripts/verify-withdraw-reason.php` (`npm run verify:withdraw-reason`) |
@@ -173,5 +176,5 @@ Resend 무료 요금제(하루 100통): 생활 메일 60통 + 가입 확인·비
 
 ## 8. 남은 일
 
-- SQL `080`은 운영 phpMyAdmin에서 사용자가 적용한다. **DB에 SQL을 돌리기 전에 사용자에게 미리 알린다**(2026-10-14 지시).
+- SQL `080`은 운영 phpMyAdmin에서 사용자가 적용한다. **DB에 SQL을 돌리기 전에 사용자에게 미리 알린다**(2026-10-14 지시). 회원 번호 칸이 들어간 080(2026-10-14 17시 판)을 적용한다 — 그 전 판(회원 번호 없음)은 운영에 적용하지 않았다.
 - 별건(미결): `public/api/cron/paid-reminders.php` 키 기본값 `dev-cron-key` 위험(그록봇 204·205).
