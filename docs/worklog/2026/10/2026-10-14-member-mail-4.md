@@ -3,7 +3,7 @@
 - 브랜치: `cursor/member-mail-4-20261014` (기준 origin/main `4446404f`)
 - 결정 근거: `2026-10-13-decisions-batch.md` 「새 메일 4종 … 만든다. 상황에 맞게 예쁜 카피로」 · `2026-10-14-handoff.md` 3절 3번
 - 앞 단계: `2026-10-09-mail-lifecycle.md`(게시 환영 · 구매 감사 · 탈퇴 완료) · 원래 기획 `2026-10-08-growth-plan-welcome-shorts-mail.md` ③④
-- 상태: 문구 승인 완료 · 1단계(①② 자동 발송) **main 반영·배포** (`c614cb11` → `2f448d30`) · 2단계(④ 관리자 「회원 메일」) **main 반영·배포** (`28082302` → `3ad1fdf8`) · 3단계(③ 탈퇴 사유 받기 · SQL 080, 관리자가 누군지 봄 — 5-8) **main 반영·배포** (`81510980` → `c2f00c63`) · **SQL 080 운영 적용 대기(사용자)**
+- 상태: 문구 승인 완료 · 1단계(①② 자동 발송) **main 반영·배포** (`c614cb11` → `2f448d30`) · 2단계(④ 관리자 「회원 메일」) **main 반영·배포** (`28082302` → `3ad1fdf8`) · 3단계(③ 탈퇴 사유 받기 · SQL 080, 관리자가 누군지 봄 — 5-8) **main 반영·배포** (`81510980` → `c2f00c63`) · **SQL 080 운영 적용 완료(10-14 18:59)**
 
 ## 1. 지시 (원문)
 
@@ -278,3 +278,9 @@
 - 바로잡은 설명: 앞서 「077까지만 보임」「main을 받으면 폴더에 보인다」고 한 것은 틀렸다. 사용자 DB 작업 폴더는 루트이고 거기에 파일이 와야 한다.
 - 조치: `078_tutor_unit_gwangju.sql`(1649바이트) · `079_tutor_inquiry_status_default_open.sql`(844) · `080_withdraw_reasons.sql`(3201)을 `git cat-file blob origin/main:…`으로 루트 `sql\schema`에 복사, 세 파일 모두 main 원본과 SHA-256 같음 확인. 080은 회원 번호 칸 들어간 17시 판. 루트 브랜치·기존 파일·커밋 안 된 파일은 건드리지 않음. 078·079는 이미 적용 — 다시 돌리지 않는다. 돌릴 것은 080 하나.
 - 재발 방지: 작업 규칙 `.cursor/rules/work-routine.mdc`(저장소 밖 규칙 파일)에 「SQL이 main에 들어가면 같은 날 루트 `sql\schema`에 원본 그대로 복사·확인, 안내도 이 경로로」 추가.
+
+### 5-11. SQL 080 운영 적용 (2026-10-14 18시 59분 보고)
+
+- 사용자가 운영 phpMyAdmin(`study114.dothome.co.kr/myadmin`, 가져오기)에서 루트 `sql\schema\080_withdraw_reasons.sql` 실행. 모든 문 성공, 마지막 `SHOW TABLES LIKE 'withdraw_reason%'` → `withdraw_reason_links` · `withdraw_reasons` 두 표. 회원 번호 칸 들어간 17시 판.
+- 이제 탈퇴 화면 사유 저장 · 탈퇴 완료 메일 사유 링크 · 관리자 「회원관리 › 탈퇴 사유」 · 매시간 1년 정리가 모두 동작하는 상태. (로그인 없는 사유 링크 API는 표가 있든 없든 `valid:false`라 운영 확인은 phpMyAdmin 결과로 한다.)
+- 함께 발견(미조치, 별건): `member-mail-cron.yml` 예약 실행이 오늘 13:46 KST 1번뿐 — 14시~18시 매시간 실행 기록 없음(`gh run list --workflow member-mail-cron.yml`). 1단계 메일(첫 일주일 안부 · 마무리 3일 전)이 제때 안 나갈 수 있다. 원인·대책은 사용자 확인 뒤 따로.
