@@ -1,9 +1,10 @@
-# 231 · Cursor 작업지시 C (224 갱신판) — 홈 「오늘의 현장 · 지금 고민 HOT」 읽기 팝업 + 「원장」 문구 2곳 (218-6 · 218-8)
+# 231 · Cursor 작업지시 C (개정 3, 224 갱신판) — 홈 「오늘의 현장 · 지금 고민 HOT」 읽기 팝업 + 「원장」 문구 2곳 (218-6 · 218-8)
 
 - 작성: 우동공과2(개발팀장), 2026-10-15 · **개정 1 (종현 t1651, 05:2x KST)**: 찾기·등록 팝업 「게시판에서 보기」도 게시판으로 이동(218-9) 추가.
 - **개정 2 (종현 t1652, 05:3x KST)**: 찾기·등록의 **모든** 배너 팝업(고민방 + 자료실 정보 게시판)으로 넓힘, 같은 탭 확정, 검증 스크립트 갱신 포함 → 파일 5개. 홈 HOT 지금 동작을 0-1절에 정확히 적음.
-- ⛔ **시작 보류(대기)**: 아래 8절 P1(홈 레일을 같이 쓰는 「공부방 카탈로그」「과외쌤 카탈로그」「학생 카탈로그」 화면도 팝업이 되는지) 종현 답이 오기 전에는 시작하지 말 것. 이 diff 그대로면 세 카탈로그 화면 레일의 HOT 도 팝업이 됨(코드에서 홈과 구분되지 않음, `promo/shell.js:34` `slotKey: 'home_right_rail'`).
-- 기준: origin/main `e50ab987`(문서 커밋, 코드는 B2 merge `58036395` 와 같음). 아래 줄 번호는 `40264c14`·`58036395`·`e50ab987` 에서 모두 같음(B2 는 494·497 제자리 수정). `231-C.diff` 는 `e50ab987` 위에서 `git apply --check` 통과.
+- **개정 3 (종현 t1655~t1662, 05:5x KST)**: 「시작 보류」 **해제** — 세 카탈로그 화면(「공부방 카탈로그」「과외쌤 카탈로그」「학생 카탈로그」, `promo/shell.js:34` `home_right_rail`)도 HOT 팝업, 범위에 포함. 새로 **2단계**(9절): HOT 팝업 10개(방별 3 + 해결 후기 1, 학생은 학생·학부모 고민방만 10) + 학생 HOT 해결 후기방 서버 제외. 1단계 = `231-C.diff` 그대로(개정 2와 같음), 2단계 = 9절.
+- 순서: **231(이 문서) 먼저 → 그다음 232**.
+- 기준: origin/main `268afbd` 이상(문서 커밋만 늘어남, 코드는 B2 merge `58036395` 와 같음). 아래 줄 번호는 `40264c14`·`58036395`·`e50ab987` 에서 모두 같음(B2 는 494·497 제자리 수정). `231-C.diff` 는 `e50ab987` 위에서 `git apply --check` 통과.
 - 방 이름 「학생·학부모 고민방」 통일(218-10)은 다른 파일이라 **별도 작은 지시 232**.
 - 이 문서만 보고 작업할 수 있게 썼습니다(대화 기록 없음 전제). **224를 대체**합니다(내용은 같고, 기준·줄 확인·브랜치 이름·시험 방식만 새로 씀). 224는 아직 아무도 시작하지 않았음(원격에 home-c 브랜치 없음, 확인 2026-10-15 05:1x).
 - 한 줄 요약: 홈 레일 「지금 고민 HOT」 카드와 그 아래 버튼을 **읽기 팝업**으로 열고, 「원장」 문구 **2곳**을 바꾸고, 찾기·등록 화면 고민방 팝업의 「게시판에서 보기」가 **게시판으로 이동**하게 한다. 파일 5개(코드 4 + 검증 스크립트 1).
@@ -20,6 +21,12 @@
 | 2026-10-15 | 종현 t1652 | (Q1 답) 홈 「지금 고민 HOT」 카드와 아래 버튼을 팝업으로 — t1582 그대로 | 218-6 |
 | 2026-10-15 | 종현 t1652 | (Q2 답) 찾기·등록 화면의 **모든** 배너 팝업(고민방, 자료실 정보 게시판 등) 「게시판에서 보기」는 그 게시판으로 이동 | 218-9 |
 | 2026-10-15 | 종현 t1652 | (Q3 답) 이동은 **같은 탭** | 218-9 |
+| 2026-10-15 | 종현 t1655 | 세 카탈로그 화면도 HOT 팝업(홈 레일 공유). 231 범위 포함, 보류 해제 | 218-6 |
+| 2026-10-15 | 종현 t1656 | 학생·비회원 「커뮤니티 더 보기」 이름 그대로(커뮤니티로) | 218-6 |
+| 2026-10-15 | 종현 t1658 | HOT 규칙 그대로(최근 7일·반응 가중 점수순), 이달의 베스트와 겹쳐도 됨. 변경 없음 | 218-12 |
+| 2026-10-15 | 종현 t1659 | 레일 HOT 칸 3개(학생 1개) 그대로 | 218-12 |
+| 2026-10-15 | 종현 t1661 | **HOT 팝업 10개**: 공부방·과외쌤·비회원 = 세 방 3개씩 + 해결 후기 1개, 학생 = 학생·학부모 고민방만 최대 10(해결 후기 빠짐) | 218-12 · 9절 |
+| 2026-10-15 | 종현 t1662 | **학생 HOT 해결 후기방 서버에서 제외**(버그: 학생 레일 HOT 이 빌 수 있음) | 218-13 · 9절 |
 | 2026-10-14 | 종현 t1582 | 적용 순서 218-4 → 218-7 → 218-6 → 218-8 (218-4·218-7은 작업 B·B2로 끝) | 218 343행 |
 
 ## 0-1. 지금 홈 「지금 고민 HOT」 동작 (origin/main 코드 확인, 우동공과2)
@@ -27,7 +34,7 @@
   - 머리(「오늘의 현장」·「지금 고민 HOT」)에는 더보기 링크가 **없음**(`right-rail.js:527-530`).
   - 글 카드: 누르면 팝업 없이 **그 글의 게시판 화면으로 바로 이동**(`renderLivePostCard` → `railSlotAnchor` → 홈은 일반 링크, `right-rail.js:415`·`159`).
   - 아래 버튼 하나: 이름은 모드마다 다름 — 공부방 「원장 고민방 더 보기」, 과외쌤 「과외쌤 고민방 더 보기」, 학생·비회원 「커뮤니티 더 보기」(`right-rail.js:244-248`). 누르면 팝업 없이 **게시판으로 이동**(`:535`).
-- 바꾼 뒤: 카드 → 그 글을 연 읽기 팝업, 아래 버튼 → 그 방 읽기 팝업(학생·비회원은 학생·학부모 고민방). 팝업 안 「게시판에서 보기」 → 같은 탭 게시판. 공부방 버튼 이름은 「공부방 고민방 더 보기」(218-8).
+- 바꾼 뒤(1단계): 카드 → 그 글을 연 읽기 팝업, 아래 버튼 → 그 방 읽기 팝업. **2단계(9절)에서 홈·카탈로그 HOT 은 「지금 고민 HOT」 10개 팝업으로 바뀜**. 팝업 안 「게시판에서 보기」 → 같은 탭 게시판. 공부방 버튼 이름은 「공부방 고민방 더 보기」(218-8).
 
 ## 1. 손대기 전 다시 확인(필수, 다르면 짐작하지 말고 멈춘 뒤 보고)
 
@@ -293,7 +300,7 @@ index 6a0bd1f0..624822bd 100644
 - 검증 스크립트: 위 검사 4개를 3개로 바꿈 — 찾기 자료실·찾기 고민방·등록(3곳) 자료실 팝업 「게시판에서 보기」가 `A` 링크, `/#/library` 또는 `/#/community` 포함, `target=_blank` 없음. (`search_go_board_stays_on_screen` 은 뜻이 반대가 되어 삭제)
 - `rail-popup.js:201-212` 의 `data-rail-popup-continue` 처리는 이제 쓰는 곳이 없지만 **지우지 않음**(범위 밖, 정리 금지).
 
-## 3. 허용 파일 (이 밖은 한 줄이라도 바꾸면 불합격)
+## 3. 허용 파일 (이 밖은 한 줄이라도 바꾸면 불합격) — 1단계. 2단계는 9-6
 1. `preview/home-ui/src/right-rail.js` — 2절 diff 범위만
 2. `preview/home-ui/src/concern/copy.js` — 64행 문구만
 3. `preview/home-ui/src/concern/rail-concern-popup.js` — 2절 diff 세 곳만
@@ -326,20 +333,121 @@ index 6a0bd1f0..624822bd 100644
 화면 측정·Docker·스크린숏 **하지 않음**.
 
 ## 7. 진행 순서
-0. 8절 P1 답이 왔는지 확인(안 왔으면 시작하지 말 것).
 1. `git fetch origin` → 1절 R1~R17 (다르면 멈추고 보고).
 2. `git switch -c cursor/home-c-hot-popup-20261015 origin/main`
 3. `git apply docs/design/home-banner-rail-2026-10-14/231-C.diff`
 4. `git add preview/home-ui/src/right-rail.js preview/home-ui/src/concern/copy.js preview/home-ui/src/concern/rail-concern-popup.js preview/home-ui/src/library/info-rail.js scripts/verify-rail-info-banners.mjs`
 5. 커밋: `fix(rail): 홈 현장·HOT 읽기 팝업 + 「원장」 문구 2곳 + 찾기·등록 팝업 게시판 이동 (218-6·218-8·218-9, 종현 t1582·t1651·t1652)`
-6. 6절 다섯 명령 실행.
+6. **1단계 커밋 직후(2단계 전에)** 6절 다섯 명령 실행.
+6-1. 9절 2단계 작업 → `git add` 9-6 의 6파일 이름으로 → 커밋 `feat(rail): HOT 팝업 10개(방별 3·해결 1) + 학생 HOT 해결 후기 서버 제외 (218-12·218-13, 종현 t1661·t1662)` → 9-7 여섯 명령.
 7. `git push origin cursor/home-c-hot-popup-20261015` (브랜치만, 일반 push).
-8. 답장: **브랜치 커밋 해시 + 6절 다섯 명령의 출력만**(보고서 파일·그림·work-queue 줄 없음).
+8. 답장: **커밋 해시 두 개 + 6절 다섯·9-7 여섯 명령의 출력만**(보고서 파일·그림·work-queue 줄 없음).
 
 ## 8. 질문 상태
-- ~~Q1 홈 HOT 팝업~~ → **답함** (t1652): t1582 그대로.
-- ~~Q3 자료실 팝업도?~~ → **답함** (t1652): 모든 배너 팝업. 이 문서에 포함.
-- ~~Q4 같은 탭?~~ → **답함** (t1652): 같은 탭.
-- **P1 (대기, 시작 조건)**: 홈 레일을 같이 쓰는 화면 — 화면 제목 「공부방 카탈로그」(`#/promo/study-room`)·「과외쌤 카탈로그」(`#/promo/tutor`)·「학생 카탈로그」(`#/promo/parent`), 출처 `promo/catalog.js:21`·`:30`·`:39` → `promo/shell.js:14`·`:22` 제목. 들어가는 길: 홈 안내 3칸 카드 「공부방 카탈로그」「과외쌤 카탈로그」「우리동네 학생」(`home-marketing-banner.js:206`·`:213`·`:220`). 이 세 화면 레일 HOT 도 팝업이 되는지? 아니라면 diff 에 「카탈로그 화면 제외」 조건을 더해야 해서 이 문서를 다시 고침.
-- **P2 (대기)**: 학생·비회원 HOT 아래 버튼 이름 「커뮤니티 더 보기」 — 누르면 학생·학부모 고민방 팝업이 열림. 이름 그대로 둘지? (diff 는 그대로 둠)
-- 이용안내 「자세히」 미리보기(`right-rail.js:644`, 찾기·등록은 화면 안에서 펼침)는 「게시판에서 보기」가 없는 다른 종류라 범위 밖으로 봄 — 맞는지 확인 필요(P3).
+- 답함: Q1 홈 HOT 팝업(t1652) · 자료실 팝업 포함(t1652) · 같은 탭(t1652) · **카탈로그 화면 HOT 팝업 = 예(t1655)** · **「커뮤니티 더 보기」 이름 그대로(t1656)** · HOT 규칙 그대로(t1658) · 레일 3/1개(t1659) · HOT 팝업 10개(t1661) · 학생 해결 후기 서버 제외(t1662).
+- 확인 필요(진행 전 종현 확인 — 이 문서는 아래 「기본」으로 썼고, 다르면 고침):
+  - U1. 찾기·등록 화면의 HOT(「많이 보는 고민」「지금 현장 고민」)도 10개 HOT 팝업으로? 기본: **아니오**, 지금처럼 그 글 방 팝업(t1661 은 홈 HOT 팝업 기준으로 읽음).
+  - U2. HOT 팝업 「게시판에서 보기」 이동처. 기본: 아래 버튼과 같은 곳(공부방 → 공부방 고민방, 과외쌤 → 과외쌤 고민방, 학생·비회원 → 커뮤니티).
+  - U3. 어떤 방 글이 3개보다 적으면 다른 방 글로 채워 10개를 맞출지? 기본: **안 채움**(10개보다 적게 보일 수 있음).
+  - U4. 관리자 계정 HOT 팝업. 기본: 공부방·과외쌤과 같은 방별 규칙.
+  - U5. 이용안내 「자세히」 미리보기(찾기·등록, 「게시판에서 보기」 없음)는 범위 밖으로 둠 — 맞는지.
+
+## 9. 2단계 — HOT 팝업 10개(218-12) + 학생 HOT 해결 후기방 서버 제외(218-13) (종현 t1661·t1662)
+
+1단계(`231-C.diff`) 커밋 **뒤에** 같은 브랜치에서 두 번째 커밋으로 한다. 아래 줄 번호는 origin/main(`268afbd`) 기준이고, 1단계 적용 뒤 `right-rail.js`·`rail-concern-popup.js` 줄은 밀려 있음 → 함수 이름으로 찾을 것.
+
+### 9-0. 확정 규칙 (그대로 지킬 것, 바꾸지 말 것)
+- HOT 고르는 규칙은 **지금 그대로**: 최근 7일, 반응 가중 점수(`score`) 많은 순, 같으면 새 글(id 큰) 먼저(`ConcernService.php:599`). 이달의 베스트와 겹쳐도 됨(t1658).
+- 레일 HOT 칸 글 수는 **그대로**: 3개, 학생 1개(`right-rail.js:284-288` `railCardLimit`, t1659).
+- **새 HOT 팝업 = 최대 10개** (t1661):
+  - 공부방·과외쌤·비회원: 공부방 고민방(`concern-director`)·과외쌤 고민방(`concern-tutor`)·학생·학부모 고민방(`concern-parent`) **방마다 최대 3개** + 해결 후기(`concern-solved`) **최대 1개** = 최대 10개. 순서는 점수순 그대로(방별로 묶지 않음).
+  - 학생: 학생·학부모 고민방(`concern-parent`) 글만, 최대 10개. 해결 후기 **빠짐**.
+- **학생 HOT 에서 해결 후기방은 서버가 뺀다** (t1662). 지금은 서버가 학생에게도 `concern-solved` 를 섞어 주고(`ConcernService.php:16-24` 목록에 있고, `:24` 숨김 목록에는 director·tutor 만), 화면이 방 목록으로 걸러서(`store.js:564-571`) 상위 10개가 해결 후기뿐이면 학생 레일 HOT 이 **비어 보임**.
+
+### 9-1. 서버 `src/Board/ConcernService.php` (`listHot`, 538-607)
+1. 상수 두 개 추가(클래스 위 상수 묶음, `:35` `LATEST_LIMIT_MAX` 아래):
+   ```php
+   /** HOT 팝업 글 수(종현 t1661). */
+   public const HOT_POPUP_LIMIT = 10;
+   /** HOT 팝업 방별 최대 개수. 학생·학부모(demand)는 쓰지 않는다(학생·학부모 고민방만, 최대 10). */
+   private const HOT_POPUP_QUOTA = ['concern-director' => 3, 'concern-tutor' => 3, 'concern-parent' => 3, 'concern-solved' => 1];
+   ```
+2. 함수 머리: `public function listHot(?array $auth = null, int $limit = 10, bool $perRoom = false): array`
+3. 방 고르는 반복(`:547-557`)의 `isHiddenFromFeed` 다음에 한 덩어리:
+   ```php
+   // 학생·학부모 HOT 에는 해결 후기방을 넣지 않는다(종현 t1662). 최신·베스트는 그대로.
+   if ($boardRole === 'demand' && $k === 'concern-solved') {
+       continue;
+   }
+   ```
+   `DEMAND_HIDDEN_FEED_KEYS`(`:24`)에 넣지 말 것 — 그 목록은 최신·베스트(`:624`, `:708`)도 같이 막음.
+4. 점수 정렬(`:599`) 다음, `array_slice`(`:600`) **앞에**:
+   ```php
+   if ($perRoom && $boardRole !== 'demand') {
+       $used = [];
+       $items = array_values(array_filter($items, static function (array $it) use (&$used): bool {
+           $bk = (string) $it['row']['board_key'];
+           $cap = self::HOT_POPUP_QUOTA[$bk] ?? 0;
+           if (($used[$bk] ?? 0) >= $cap) {
+               return false;
+           }
+           $used[$bk] = ($used[$bk] ?? 0) + 1;
+           return true;
+       }));
+   }
+   ```
+   모자라는 방은 비워 둠(다른 방 글로 채우지 않음). 고르는 규칙·7일·점수 계산은 손대지 말 것.
+
+### 9-2. 서버 `public/api/board/concern-hot.php`
+- `:34` 레일용 `limit` 상한 20 은 **그대로**(레일은 10개 받아 화면에서 3개·1개만 씀. 9-1-3 으로 학생 빈 칸 원인이 서버에서 없어져 상한을 올릴 필요 없음).
+- `latest` 분기(`:27-32`) 다음에 팝업용 갈래 추가(개수는 서버가 정함, `limit` 안 받음):
+  ```php
+  if ($view === 'hot-popup') {
+      BoardApi::ok(['view' => 'hot-popup', 'posts' => $service->listHot($auth, ConcernService::HOT_POPUP_LIMIT, true)]);
+  }
+  ```
+
+### 9-3. `preview/home-ui/src/concern/store.js`
+- `fetchBestPosts` 아래:
+  ```js
+  export const HOT_POPUP_LIMIT = 10;
+  export async function fetchHotPopupPosts() {
+    const data = await fetchConcernHotView({ view: 'hot-popup' });
+    return normalizeItemList(data.posts).slice(0, HOT_POPUP_LIMIT);
+  }
+  ```
+- 로더 묶음(`:503-505`)에 `const _hotPopupLoader = createRailLoader(() => fetchHotPopupPosts(), []);`
+- 내보내기 세 개(베스트 helper 근처): `ensureHotPopupPosts()` → `_hotPopupLoader.ensure(railOwnerKey())`, `getHotPopupPosts()` → `_hotPopupLoader.peek(railOwnerKey()) || []`, `getHotPopupStatus()` → `_hotPopupLoader.status(railOwnerKey())`.
+- 레일 HOT(`_hotLoader`, `getHotConcernSamples`)는 **그대로**.
+
+### 9-4. `preview/home-ui/src/right-rail.js`
+- 1단계의 `railConcernControl` 안 `home_right_rail` 갈래만 바꿈: 방 팝업 버튼(`concernInPageControl`) 대신 새 `hotPopupControl(hrefOrPath, className, ctx, inner, railLeaveMode(slotKey, ctx))`.
+- 새 `hotPopupControl` (railConcernControl 바로 위):
+  - 글 주소(`/community/<방>/<글>`)면 글 id 를 꺼내 `data-concern-hot-post="<id>"`, 아래 버튼(글 주소 아님)이면 없음.
+  - `<button type="button" class="…" data-concern-hot-open data-concern-hot-board="<communityHubForRole(ctx.navRole).href 의 경로>" data-concern-rail-nav data-concern-rail-guest data-concern-rail-home data-concern-rail-leave>` — 뒤 네 속성은 `concernInPageControl` 과 같은 값.
+- 적용 화면: `home_right_rail` 을 쓰는 홈 + 세 카탈로그 화면(「공부방 카탈로그」「과외쌤 카탈로그」「학생 카탈로그」, `promo/shell.js:34`). **찾기·등록·상세 HOT 은 지금처럼**(찾기·등록 = 그 글 방 팝업).
+- 아래 버튼 이름 그대로(공부방 「공부방 고민방 더 보기」(218-8), 과외쌤 「과외쌤 고민방 더 보기」, 학생·비회원 「커뮤니티 더 보기」 t1656). `railCardLimit` 그대로.
+
+### 9-5. 팝업 `preview/home-ui/src/concern/rail-concern-popup.js` (+ 제목 문구 `concern/copy.js`)
+- `copy.js` `CONCERN_RAIL_COPY` 에 `hotTitle: '지금 고민 HOT'` 한 줄(레일 제목과 같은 글자, 새 문구 아님).
+- 새 `openHotPopup(opts)`: `openRailPopup` 공용 틀 그대로.
+  - `kind: 'concern-hot'`, `title: COPY.hotTitle`, `pageSize: CONCERN_POPUP_PAGE_SIZE`(10 → 한 쪽).
+  - `loadPage`: `await ensureHotPopupPosts()`; `getHotPopupStatus() !== 'ready'` 면 `{status:'failed'}`; 아니면 `getHotPopupPosts()` 를 `{ id, title, meta: <방 이름> · itemMeta(p) }` 로.
+  - `renderSelected(id)`: 받은 목록에서 그 글의 `boardKey` 를 찾아 `fetchConcernRailPost(boardKey, id, navRole)` → `renderSelectedPost(…, <그 방 이름>, guest())`(비회원은 지금처럼 제목·로그인 안내만).
+  - `selectedId`: 누른 카드의 `data-concern-hot-post`(아래 버튼이면 비움).
+  - 빈 문구: 기존 `COPY.hotEmpty`.
+  - 「게시판에서 보기」: `data-concern-hot-board` 경로로, 개정 2 규칙 그대로(홈 = `#경로`, 찾기·등록·새 탭 = 홈 주소 붙임, 같은 탭). → 공부방 = 공부방 고민방, 과외쌤 = 과외쌤 고민방, 학생·비회원 = 커뮤니티(t1656).
+- `onDocumentClick`: `[data-concern-rail-open]`·`[data-concern-best-open]` 다음에 `[data-concern-hot-open]` 이면 `openHotPopup`. 기존 방·베스트 팝업은 그대로.
+
+### 9-6. 2단계 허용 파일 (6개, 이 밖 금지)
+`src/Board/ConcernService.php` · `public/api/board/concern-hot.php` · `preview/home-ui/src/concern/store.js` · `preview/home-ui/src/right-rail.js` · `preview/home-ui/src/concern/rail-concern-popup.js` · `preview/home-ui/src/concern/copy.js`(`hotTitle` 한 줄)
+금지: `listLatest`·`listBest`·`DEMAND_HIDDEN_FEED_KEYS`·`isHiddenFromFeed`, 점수 계산, `railCardLimit`, 레일 HOT 로더, CSS, `rail-popup.js`, SQL·DB, 새 검증 스크립트.
+
+### 9-7. 2단계 합격 기준 (가볍게 — 229 §10, Docker·DB 없음)
+1. `git diff --stat HEAD~1 HEAD` = 정확히 위 6파일
+2. `php -l src/Board/ConcernService.php && php -l public/api/board/concern-hot.php` → 둘 다 `No syntax errors`
+3. `node --check preview/home-ui/src/concern/store.js && node --check preview/home-ui/src/right-rail.js && node --check preview/home-ui/src/concern/rail-concern-popup.js` → 출력 없음
+4. `git grep -n "HOT_POPUP_QUOTA\|=== 'concern-solved'" HEAD -- src/Board/ConcernService.php` → 상수 1 + 사용 1 + 학생 제외 1 = 3줄
+5. `git grep -n "hot-popup" HEAD -- public preview/home-ui/src` → `concern-hot.php` 2줄(조건·응답) + `store.js` 1줄
+6. `git grep -c "data-concern-hot-open" HEAD -- preview/home-ui/src/right-rail.js preview/home-ui/src/concern/rail-concern-popup.js` → 두 파일 모두 1 이상
+화면 확인(홈·카탈로그 팝업 10개, 학생 레일 HOT 이 해결 후기 때문에 비지 않는지)은 우동공과2가 검수 때.
