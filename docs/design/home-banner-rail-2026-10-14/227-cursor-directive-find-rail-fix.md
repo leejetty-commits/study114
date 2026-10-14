@@ -1,6 +1,6 @@
 # 227 · Cursor 보완 지시 — 찾기 레일 고민방 3칸 브랜치에서 서버·SQL 변경 빼기
 
-- 작성: 우동공과2(개발팀장), 2026-10-15 · 기준 origin/main `aa0c74d` · 대상 브랜치 `cursor/home-find-rail-three-20261015` @ `91e03e3`
+- 작성: 우동공과2(개발팀장), 2026-10-15 · 기준 origin/main `2beb93c`(aa0c74d 뒤 문서 1커밋만) · 대상 브랜치 `cursor/home-find-rail-three-20261015` @ `91e03e3`
 - 이 문서만 보고 작업할 수 있게 썼습니다(대화 기록 없음 전제).
 - 한 줄 요약: **화면 코드 두 파일은 그대로 둡니다.** 지시 범위 밖이었던 `sql/schema/081…` 삭제, PHP 두 파일은 origin/main 으로 되돌림. 새 커밋을 위에 쌓고 force-push 는 금지.
 
