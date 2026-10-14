@@ -12,3 +12,4 @@
 - `220-cursor-directive-A.md` — Cursor 작업지시 A(218-1·2·3만, 브랜치 cursor/home-a-banner-gap-20261014, main merge 금지, 작업 기록은 main)
 - `221-home-a-review.md` — 작업 A 검수(배포 후 확인) PASS. main 원본은 docs/worklog/2026/10/2026-10-14-home-a-review.md
 - `222-cursor-directive-B.md` — Cursor 작업지시 B(218-4 베스트 빨강 띠·팝업 + 218-7 0건 빈 팝업, 브랜치 cursor/home-b-best-red-20261014, main merge 금지). 측정 스크립트 `222-measure-B.py`
+- `223-home-b-review.md` — 작업 B 검수(배포 전) PASS + 배포 지시. main 원본 docs/worklog/2026/10/2026-10-14-home-b-review.md
