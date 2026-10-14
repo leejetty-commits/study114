@@ -66,7 +66,7 @@ API가 돌려준 1,000건 기준 어림(실제 과금은 작업마다 1분 올�
 ## 5-1. 브랜치 CI
 
 - `3d5d69e1`(workflow·문서 함께 바뀐 push): Board ACL gate `38553185622` success(43초) · Verify bundle `38553185599` success(31초). ShopPage gate·배포는 뜨지 않음(예상대로).
-- 이 기록을 적은 다음 커밋(문서만 바뀐 push): 뜬 workflow가 없어야 한다 — 확인 결과는 보고에 적는다.
+- 이 기록을 적은 다음 커밋 `e0c16ffd`(문서만 바뀐 push): push 뒤 50초가 지나도 `gh run list --commit e0c16ffd…` 결과 0건 — 문서만 바뀐 push에서 검사가 돌지 않음 확인. 이 줄을 더한 커밋도 문서만 바뀐 push.
 
 ## 6. 배포 전 사용자 할 일
 
