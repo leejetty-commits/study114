@@ -244,3 +244,33 @@
   - ② 뉴아우토반 일반형 대상 여부
   - ③ Cloudflare Origin CA 수동 설치 가능 여부
   - ④ 인증서 미설치 상태에서 443이 기본 인증서로 응답하는지
+
+### F. 2026-10-15 01:35 KST 확인 — 카페24 DB 엔진·버전과 스키마 호환
+
+**결론:** 앞에서 적은 「MariaDB 10.x」는 **맞다**(정정 없음). 마이너 버전은 공식 표기가 없다.
+
+**카페24 공식 문구**
+- 뉴아우토반 기술 사양(https://hosting.cafe24.com/?controller=new_product_page&page=newautobahn, 2026-10-15 검색 확인)
+  - 표 행: 「OS | PHP 8.X : Rocky OS, PHP 7.4 : CentOS」, 「PHP 8.4, 8.2, 7.4」, 「**MariaDB 10.x(InnoDB)**」, 「MySQL 외부 접근」
+  - 상품별 DB 표의 절약형·일반형·비즈니스·퍼스트클래스·자이언트에 모두 「MariaDB 10.x / InnoDB / UTF-8」
+  - **MySQL 선택지는 없다.** 「MySQL 외부 접근」은 접속 기능 이름일 뿐이다.
+- 자이언트플러스(https://hosting.cafe24.com/?controller=new_product_page&page=unlimited)도 「MariaDB 10.x」
+
+**정확한 버전**
+- 공식 표기가 없어 **미확인**이다.
+- 사례: 2026-10-08 뉴아우토반 PHP 8.4 계정 「제 서버는 10.6」(https://agentickorea.net/articles/cafe24-hosting-setup) → **사례만**
+- 확인 방법: 스테이징 계정 phpMyAdmin에서 `SELECT VERSION();`
+- 참고: repo `docs/internal/01-cafe24-staging-deploy.md:17`, `docs/internal/README.md:54`도 「MariaDB 10.x」. 닷홈은 MySQL 8.0.
+
+**study114 스키마 호환 (origin/main `1071fbb1` 기준 읽기 조사)**
+
+| 항목 | 결과 | 판단 |
+|---|---|---|
+| `JSON` 컬럼 | 018:16, 021:20, 022:22, 035:18·43, 040:20, 017:15, 061:21, 070:13, 077:45 등 | MariaDB 10.2.7+에서 `JSON` = `LONGTEXT` 별칭이고 `JSON_VALID` CHECK가 붙는다. **생성·가져오기 가능**. 차이는 JSON 정렬·비교와 MySQL의 바이너리 저장 정도. 앱 PHP에서 `JSON_EXTRACT`·`->>`·`JSON_TABLE` 같은 SQL JSON 함수는 **쓰지 않음**(검색 0건) → 영향 없음 |
+| Collation | 번호 스키마 파일의 `CREATE TABLE`이 **모두** `COLLATE=utf8mb4_unicode_ci`를 명시(불일치 0건). `utf8mb4_0900` 문자열은 sql/src에 0건 | 테이블 정의는 MariaDB와 호환. **위험은 닷홈 덤프 쪽뿐이다.** MySQL 8 DB 기본값이나 나중에 직접 만든 테이블·컬럼에 `utf8mb4_0900_ai_ci`가 찍히면 MariaDB 10.x에서 가져오기 실패(MariaDB 11.4.5+만 별칭 지원). 내보낸 파일에서 `0900` 검색 → `utf8mb4_unicode_ci`로 치환 |
+| CHECK | `001_init.sql:216,257` | MariaDB 10.2+ 적용됨 |
+| MySQL 8 전용 문법 | `JSON_TABLE`·`LATERAL`·`MEMBER OF`·`->>`·`VALUES ROW`·`ON DUPLICATE … AS new`·함수 인덱스·생성열 모두 **0건** | 호환 |
+| 윈도 함수 | 이관 SQL(`docs/internal/72-region-unit-lock.md:830`)의 ROW_NUMBER | MariaDB 10.2+ 지원 |
+| 덤프 기타 | MySQL 8 덤프 머리말의 `/*!80016 … */` 등 버전 주석 | MariaDB는 버전 주석을 대부분 무시한다. **미확인** → 스테이징 가져오기로 확인 |
+
+→ D절 「DB 옮기기」 행은 그대로 유효하다. 추가 절차: 내보낸 파일에서 `utf8mb4_0900` 검색·치환, 가져온 뒤 `SELECT VERSION();` 기록.
