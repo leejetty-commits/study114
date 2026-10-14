@@ -68,7 +68,7 @@ export const DEFAULT_RIGHT_RAIL_SLOTS = [
     enabled: true,
     sourceType: 'mixed',
     sourceBoardKey: 'faq',
-    sourceBoardKeys: ['faq', 'concern-director', 'concern-tutor', 'concern-parent', 'safe-guide'],
+    sourceBoardKeys: ['faq', 'concern-director', 'concern-tutor', 'concern-parent', 'library-template', 'safe-guide'],
     selectionMode: 'curated',
     itemLimit: 3,
     sectionTitle: '탐색 도움말',
