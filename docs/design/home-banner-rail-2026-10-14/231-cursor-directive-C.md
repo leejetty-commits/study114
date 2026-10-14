@@ -57,7 +57,7 @@
 | R12 | `preview/home-ui/src/concern/rail-concern-popup.js:141` | `  const boardHref = opts.leaveInNewTab ? `…`/#${path}` : `#${path}`;` |
 | R13 | `rail-concern-popup.js:143-145` | `opts.continueInPage` 이면 `<button … data-rail-popup-continue>`(목록으로 스크롤만, `rail-popup.js:201-212`), 아니면 `<a … data-rail-popup-leave>` |
 | R14 | `rail-concern-popup.js:206` | `    continueInPage: section.getAttribute('data-concern-rail-leave') === 'inpage',` (이 값을 쓰는 곳은 여기 하나) |
-| R16 | `preview/home-ui/src/library/info-rail.js:221-225` | 자료실 팝업도 `continueInPage` 이면 `data-rail-popup-continue` 버튼(목록 스크롤만), `:263` `continueInPage: … === 'inpage'` |
+| R16 | `preview/home-ui/src/library/info-rail.js:221-225` | 자료실 팝업도 `continueInPage` 이면 `data-rail-popup-continue` 버튼(목록 스크롤만), `:264` `continueInPage: … === 'inpage'` |
 | R17 | `scripts/verify-rail-info-banners.mjs:911-940`, `:971-990`, `:1020-1028` | 찾기·등록 팝업 「게시판에서 보기」가 `BUTTON`·`data-rail-popup-continue` 이라고 확인하는 검사 4개(`search_go_board_in_page`, `search_go_board_stays_on_screen`, `search_concern_go_in_page`, `${label}_info_go_in_page`) |
 | R15 | `right-rail.js:117-121` + `preview/search-ui/src/layout.js:75-78` | 찾기 레일은 `search_right_rail` → `inpage`. 찾기 화면은 **다른 앱**(search-ui)이라 `#/community/…` 만 쓰면 찾기 앱 안에 머묾 → 홈 주소(`homeBase`, 비면 `HOME_UI_BASE`, right-rail.js:68)를 붙여야 함 |
 
