@@ -29,6 +29,7 @@ export function normalizeSupportPath(hashPath) {
   const faqMatch = p.match(/^\/support\/faq\/([a-z0-9-]+)$/);
   if (faqMatch && FAQ_SLUGS.includes(faqMatch[1])) return p;
   if (p === '/support/contact/tickets') return p;
+  if (p === '/support/leave-reason') return p;
   if (p === '/support/admin' || p === '/support/admin/') return '/support/admin';
   if (p === '/support/admin/notices' || p === '/support/admin/tickets') return p;
   if (p === '/support/policies' || p === '/support/policies/') return '/support/policies';

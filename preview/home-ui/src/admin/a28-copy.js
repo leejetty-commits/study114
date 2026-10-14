@@ -210,6 +210,14 @@ export const A28_MENU = [
         help: '최근 1주 공부방·과외쌤·학생 등록을 봅니다.',
         screenId: 'A28-159c',
       },
+      {
+        id: 'members-withdraw-reasons',
+        menuId: 'members',
+        label: '탈퇴 사유',
+        path: '/admin/members/withdraw-reasons',
+        help: '탈퇴할 때나 탈퇴 완료 메일에서 회원이 알려 준 이유를 모아 봐요.',
+        screenId: 'A28-02w',
+      },
     ],
   },
   {

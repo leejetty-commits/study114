@@ -27,6 +27,18 @@ on:
       - "preview/home-ui/src/admin/a28-copy.js"
       - "preview/home-ui/src/admin/a28-screens.js"
       - "preview/home-ui/src/admin/a28-screens-bind.js"
+      - "scripts/verify-withdraw-reason.php"
+      - "src/Auth/WithdrawReasonService.php"
+      - "public/api/auth/withdraw.php"
+      - "public/api/auth/withdraw-reason.php"
+      - "public/api/admin/withdraw-reasons.php"
+      - "sql/schema/080_withdraw_reasons.sql"
+      - "preview/home-ui/src/withdraw-reason-*.js"
+      - "preview/home-ui/src/support/leave-reason.js"
+      - "preview/home-ui/src/support/router.js"
+      - "preview/home-ui/src/support/screens.js"
+      - "preview/home-ui/src/mypage/screens.js"
+      - "preview/home-ui/src/admin/a28-withdraw-reasons.js"
       - "src/Auth/BasicRegisterService.php"
       - "src/Auth/AccountWithdrawService.php"
       - "src/Paid/ProviderCheckoutService.php"
@@ -111,6 +123,9 @@ jobs:
 
       - name: Member mail admin (switches / preview / test send)
         run: php scripts/verify-member-mail-admin.php
+
+      - name: Withdraw reasons (anonymous / one-time link / admin summary)
+        run: php scripts/verify-withdraw-reason.php
 
       - name: Node static contract
         run: npm run verify:cur-006-resend

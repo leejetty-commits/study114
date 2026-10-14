@@ -6,6 +6,8 @@ import {
 import { TUTOR_REGISTER_URL, navRoleFromAuthUser, roleHomeHashPath } from '../nav-config.js';
 import { getNavRole, getMypagePath } from '../state.js';
 import { isStudyRoomAuth } from '../auth-role.js';
+import { WITHDRAW_REASON_COPY } from '../withdraw-reason-copy.js';
+import { bindWithdrawReasonChoices, readWithdrawReason, renderWithdrawReasonChoices } from '../withdraw-reason-ui.js';
 import {
   getPreviewProfile,
   getSubmissionDocs,
@@ -1126,6 +1128,11 @@ function renderAccount(role, profile) {
             <li>환불은 환불규정에 따라서 조치를 해 드립니다.</li>
           </ul>
           <form data-form="withdraw-account" class="account-form" autocomplete="off">
+            ${renderWithdrawReasonChoices(role === 'parent' ? 'student' : role, {
+              idPrefix: 'mypage-withdraw-reason',
+              legend: WITHDRAW_REASON_COPY.title,
+              lead: WITHDRAW_REASON_COPY.lead,
+            })}
             <label class="account-check">
               <input type="checkbox" name="ack_irreversible" required />
               <span>위 안내를 확인했으며, 탈퇴가 되돌리기 어렵다는 점에 동의합니다.</span>
@@ -1389,9 +1396,13 @@ function bindWithdrawEvents(root) {
     }
   });
 
+  if (form) bindWithdrawReasonChoices(form);
+
   root.querySelector('[data-action="cancel-withdraw"]')?.addEventListener('click', () => {
     if (panel) panel.hidden = true;
     form?.reset();
+    const reasonNote = form?.querySelector('[data-withdraw-reason-note]');
+    if (reasonNote instanceof HTMLInputElement) reasonNote.hidden = true;
     if (errorEl) {
       errorEl.hidden = true;
       errorEl.textContent = '';
@@ -1422,6 +1433,7 @@ function bindWithdrawEvents(root) {
       submitBtn.disabled = true;
       submitBtn.textContent = '처리 중…';
     }
+    const reason = readWithdrawReason(form);
     const ac = new AbortController();
     const timer = window.setTimeout(() => ac.abort(), 20000);
     try {
@@ -1429,7 +1441,10 @@ function bindWithdrawEvents(root) {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirm_text: confirmText }),
+        body: JSON.stringify({
+          confirm_text: confirmText,
+          ...(reason ? { reason_code: reason.code, reason_note: reason.note } : {}),
+        }),
         signal: ac.signal,
       });
       const data = await res.json().catch(() => ({}));

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Study114\Mail;
 
+use Study114\Auth\WithdrawReasonService;
+
 /**
  * 「우동공과 편지」 생활 메일 문안 — 카드 게시 환영 · Prime/Pick 구매 감사 · 탈퇴 완료
  * · 첫 일주일 안부 · Prime/Pick 마무리 3일 전.
@@ -202,7 +204,9 @@ final class MemberLifecycleMailTemplate
     }
 
     /**
-     * @param array{home_ui: string, withdrawn_at: string} $ctx
+     * 탈퇴 사유(정본 74 §1-4): reason = given(탈퇴 화면에서 고름) · ask(안 고름 → reason_url 링크) · 빈 값(덧붙이지 않음).
+     *
+     * @param array{home_ui: string, withdrawn_at: string, reason?: string, reason_url?: string} $ctx
      * @return array{subject: string, plain: string, html: string}
      */
     public static function withdrawn(string $role, array $ctx): array
@@ -211,27 +215,49 @@ final class MemberLifecycleMailTemplate
         $support = MemberMailTemplate::supportUrl($homeUi);
         $label = MemberMailRole::label($role);
         $when = self::dateTimeLabel($ctx['withdrawn_at']);
+        $reason = (string) ($ctx['reason'] ?? '');
+        $reasonUrl = trim((string) ($ctx['reason_url'] ?? ''));
+        if ($reason === 'ask' && $reasonUrl === '') {
+            $reason = '';
+        }
 
-        return MemberMailTemplate::render([
+        $paragraphs = [
+            '그동안 고마웠어요.',
+            ($when !== '' ? $when . '에 ' : '') . '탈퇴가 완료되었어요.',
+            '아이들의 공부가 계속되는 한, 우리 동네 어딘가에서 다시 만나길 바라요.',
+        ];
+        $notes = [
+            '노출되던 카드는 이제 다른 회원에게 보이지 않아요.',
+            '이용 중이던 Prime·Pick이 있었다면 오늘 자로 끝났어요.',
+            '같은 이메일로 새로 가입할 수 있어요. 다만 이전 기록은 되살릴 수 없어요.',
+            '직접 탈퇴하지 않으셨다면, ' . MemberMailTemplate::HELP_EMAIL . '으로 바로 알려 주세요.',
+        ];
+        $mail = [
             'subject' => '[우동공과] 그동안 우동공과와 함께해 주셔서 고맙습니다',
             'support_url' => $support,
             'role' => $role,
             'badge' => ($label !== '' ? $label . ' · ' : '') . '탈퇴 완료',
             'preheader' => '탈퇴가 완료되었어요. 정리된 내용과 다시 오시는 방법을 알려 드릴게요.',
             'heading' => '탈퇴가 완료되었어요',
-            'paragraphs' => [
-                '그동안 고마웠어요.',
-                ($when !== '' ? $when . '에 ' : '') . '탈퇴가 완료되었어요.',
-                '아이들의 공부가 계속되는 한, 우리 동네 어딘가에서 다시 만나길 바라요.',
-            ],
             'notes_title' => '정리된 내용',
-            'notes' => [
-                '노출되던 카드는 이제 다른 회원에게 보이지 않아요.',
-                '이용 중이던 Prime·Pick이 있었다면 오늘 자로 끝났어요.',
-                '같은 이메일로 새로 가입할 수 있어요. 다만 이전 기록은 되살릴 수 없어요.',
-                '직접 탈퇴하지 않으셨다면, ' . MemberMailTemplate::HELP_EMAIL . '으로 바로 알려 주세요.',
-            ],
-        ]);
+        ];
+        if ($reason === 'given') {
+            $paragraphs[] = '떠나시는 이유를 알려 주셔서 고마워요. 꼭 살펴볼게요.';
+        } elseif ($reason === 'ask') {
+            $paragraphs[] = '혹시 떠나시는 이유를 알려 주실 수 있을까요? 하나만 골라 주시면 돼요. 로그인은 필요 없어요.';
+            $mail['button'] = ['label' => '떠나는 이유 알려 주기', 'url' => $reasonUrl];
+            $notes[] = '「떠나는 이유 알려 주기」는 ' . WithdrawReasonService::LINK_DAYS . '일 동안 한 번 쓸 수 있어요.';
+        }
+        $mail['paragraphs'] = $paragraphs;
+        $mail['notes'] = $notes;
+
+        return MemberMailTemplate::render($mail);
+    }
+
+    /** 탈퇴 완료 메일의 사유 받기 링크 (고객센터 아래 공개 화면) */
+    public static function withdrawReasonUrl(string $homeUi, string $token): string
+    {
+        return self::base($homeUi) . WithdrawReasonService::LINK_PATH . '?t=' . rawurlencode($token);
     }
 
     /**

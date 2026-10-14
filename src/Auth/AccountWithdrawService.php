@@ -9,6 +9,7 @@ use PDO;
 use RuntimeException;
 use Study114\Database\Connection;
 use Study114\Mail\MemberLifecycleMailer;
+use Study114\Mail\MemberMailRole;
 
 final class AccountWithdrawService
 {
@@ -18,9 +19,11 @@ final class AccountWithdrawService
     private array $columnCache = [];
 
     /**
+     * 탈퇴 사유(정본 74 §1-4)는 선택. 모르는 선택지면 고르지 않은 것으로 본다 — 사유 때문에 탈퇴를 막지 않는다.
+     *
      * @return array{user_id: int, status: string}
      */
-    public function withdraw(int $userId, string $confirmText): array
+    public function withdraw(int $userId, string $confirmText, mixed $reasonCode = null, mixed $reasonNote = null): array
     {
         if ($userId < 1) {
             throw new InvalidArgumentException('로그인이 필요합니다.');
@@ -37,12 +40,16 @@ final class AccountWithdrawService
             throw new RuntimeException('계정을 찾을 수 없습니다.');
         }
 
+        $answer = WithdrawReasonService::normalizeAnswer($reasonCode, $reasonNote);
+        $role = MemberMailRole::lookup($pdo, $userId);
         $farewell = $this->lifecycleMailer($pdo);
         $snapshot = $farewell?->captureWithdrawSnapshot($userId);
 
         $this->runPurge($pdo, $userId);
 
-        $farewell?->sendWithdrawFarewell($snapshot);
+        $reasonGiven = $answer !== null
+            && (new WithdrawReasonService($pdo))->record($role, $answer['code'], $answer['note'], WithdrawReasonService::SOURCE_WITHDRAW);
+        $farewell?->sendWithdrawFarewell($snapshot, $reasonGiven);
 
         return [
             'user_id' => $userId,

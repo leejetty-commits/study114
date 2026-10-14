@@ -182,6 +182,7 @@ import {
 import { peekHubExposureRoute, registerTodayRenderers, renderTodayMarkup } from './a28-today-hub.js';
 import { renderSettlement, renderSettlementHub } from './a28-settlement.js';
 import { MEMBER_MAIL_PATH, renderMemberMail } from './a28-member-mail.js';
+import { WITHDRAW_REASONS_PATH, renderWithdrawReasons } from './a28-withdraw-reasons.js';
 import { renderRegistrationList } from './a28-registration-list.js';
 
 function adminProductLabel(code) {
@@ -1951,6 +1952,7 @@ export function renderA28Screen(path) {
   else if (path === '/admin/promo') body = renderPromoDesk();
   else if (path === '/admin/members') body = renderMembers();
   else if (path === '/admin/registrations') body = renderRegistrationList();
+  else if (path === WITHDRAW_REASONS_PATH) body = renderWithdrawReasons();
   else if (path === '/admin/commerce') body = renderCommerce();
   else if (path.startsWith('/admin/market/')) body = renderMarketLab(getMarketSection(path));
   else if (path === '/admin/addons' || path.startsWith('/admin/addons/')) body = renderAddons(getAddonsSection(path));

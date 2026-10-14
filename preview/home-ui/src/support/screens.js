@@ -25,6 +25,7 @@ import { bindSingleOpenBoard } from '../../../shared/board/index.js';
 import { POLICY_PAGES, POLICY_SHORT_NOTICE, getPolicyPage } from '../policy-copy.js';
 import { LIBRARY_ENTRY_COPY } from '../library/library-copy.js';
 import { renderLibraryBoardCards, bindInfoBoardEntry } from '../library/info-board-screens.js';
+import { LEAVE_REASON_PATH, bindLeaveReason, renderLeaveReasonScreen } from './leave-reason.js';
 
 const TICKET_FLASH_KEY = 'study114-support-ticket-flash';
 
@@ -117,6 +118,10 @@ function renderAdminDeniedGate() {
 export function renderSupportScreen(path) {
   if (isAdminSupportPath(path)) {
     return isAdminUser() ? renderAdminScreen(path) : renderAdminDeniedGate();
+  }
+
+  if (path === LEAVE_REASON_PATH) {
+    return renderLeaveReasonScreen();
   }
 
   const contactPath = path === '/support/contact' || path === '/support/contact/tickets';
@@ -442,6 +447,7 @@ export function bindSupportScreenEvents(root, path, rerender) {
 
   bindSingleOpenBoard(root);
   if (path.startsWith('/support/library')) bindInfoBoardEntry(root, rerender);
+  if (path === LEAVE_REASON_PATH) bindLeaveReason(root);
 
   root.querySelectorAll('[data-support-faq]').forEach((list) => {
     list.addEventListener('click', (e) => {

@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use PDO;
 use Study114\Auth\AccountContactService;
 use Study114\Auth\AuthMailer;
+use Study114\Auth\WithdrawReasonService;
 use Study114\Paid\PositionPeriodCalculator;
 use Study114\Paid\ProviderTicketRepository;
 
@@ -153,18 +154,31 @@ final class MemberLifecycleMailer
         }
     }
 
-    /** @param array{user_id: int, email: string, role: string}|null $snapshot */
-    public function sendWithdrawFarewell(?array $snapshot): string
+    /**
+     * @param array{user_id: int, email: string, role: string}|null $snapshot
+     * @param bool|null $reasonGiven 탈퇴 사유(정본 74 §1-4): true 고름 → 고맙다는 한 줄 · false 안 고름 → 사유 받기 링크 · null 덧붙이지 않음
+     */
+    public function sendWithdrawFarewell(?array $snapshot, ?bool $reasonGiven = null): string
     {
-        return $this->guard(MemberMailSettings::WITHDRAW_FAREWELL, function () use ($snapshot): string {
+        return $this->guard(MemberMailSettings::WITHDRAW_FAREWELL, function () use ($snapshot, $reasonGiven): string {
             if ($snapshot === null) {
                 return 'skipped:recipient';
             }
             $userId = (int) $snapshot['user_id'];
-            $mail = MemberLifecycleMailTemplate::withdrawn((string) $snapshot['role'], [
+            $role = (string) $snapshot['role'];
+            $reason = ['reason' => ''];
+            if ($reasonGiven === true) {
+                $reason = ['reason' => 'given'];
+            } elseif ($reasonGiven === false) {
+                $token = (new WithdrawReasonService($this->pdo))->issueLink($role);
+                if ($token !== null) {
+                    $reason = ['reason' => 'ask', 'reason_url' => MemberLifecycleMailTemplate::withdrawReasonUrl($this->homeUi(), $token)];
+                }
+            }
+            $mail = MemberLifecycleMailTemplate::withdrawn($role, [
                 'home_ui' => $this->homeUi(),
                 'withdrawn_at' => (new DateTimeImmutable('now', PositionPeriodCalculator::timezone()))->format('Y-m-d H:i:s'),
-            ]);
+            ] + $reason);
 
             return $this->deliver($userId, self::KIND_WITHDRAW_FAREWELL, 'lifecycle:withdraw_farewell:' . $userId, (string) $snapshot['email'], $mail);
         });

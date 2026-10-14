@@ -50,7 +50,7 @@ $confirmText = (string) ($input['confirm_text'] ?? '');
 
 try {
     $svc = new AccountWithdrawService();
-    $result = $svc->withdraw($userId, $confirmText);
+    $result = $svc->withdraw($userId, $confirmText, $input['reason_code'] ?? null, $input['reason_note'] ?? null);
     AuthSession::logout();
 
     echo json_encode([

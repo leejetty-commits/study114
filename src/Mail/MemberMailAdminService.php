@@ -42,8 +42,11 @@ final class MemberMailAdminService
         MemberMailSettings::PURCHASE_THANKS => ['study_room_prime', 'study_room_pick', 'tutor_prime', 'tutor_pick'],
         MemberMailSettings::WELCOME_WEEK => ['study_room', 'tutor', 'student', 'no_card'],
         MemberMailSettings::POSITION_ENDING => ['study_room_prime', 'study_room_pick', 'tutor_prime', 'tutor_pick'],
-        MemberMailSettings::WITHDRAW_FAREWELL => ['study_room', 'tutor', 'student'],
+        MemberMailSettings::WITHDRAW_FAREWELL => ['study_room', 'tutor', 'student', 'reason_given'],
     ];
+
+    /** 미리보기·시험 발송의 사유 받기 링크 값 — 실제 링크가 아니라 열면 「쓸 수 없는 링크」로 보인다 */
+    public const SAMPLE_REASON_TOKEN = 'sample';
 
     /** @var array<string, mixed> */
     private array $config;
@@ -138,7 +141,9 @@ final class MemberMailAdminService
             MemberMailSettings::WITHDRAW_FAREWELL => MemberLifecycleMailTemplate::withdrawn($role, [
                 'home_ui' => $home,
                 'withdrawn_at' => $this->now()->format('Y-m-d H:i:s'),
-            ]),
+            ] + ($variant === 'reason_given'
+                ? ['reason' => 'given']
+                : ['reason' => 'ask', 'reason_url' => MemberLifecycleMailTemplate::withdrawReasonUrl($home, self::SAMPLE_REASON_TOKEN)])),
         };
     }
 

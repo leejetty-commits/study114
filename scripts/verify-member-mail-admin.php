@@ -218,7 +218,7 @@ foreach (A::VARIANTS as $kind => $variants) {
         $count++;
     }
 }
-check($count === 18, 'preview: 견본 18개');
+check($count === 19, 'preview: 견본 19개');
 check($svc->preview(M::POSITION_ENDING, '') === $svc->preview(M::POSITION_ENDING, 'study_room_prime'), 'preview: 견본을 안 고르면 첫 번째');
 check(str_contains($svc->preview(M::POSITION_ENDING, 'tutor_prime')['plain'], '과외쌤 찾기 가장 앞자리'), 'preview: 과외쌤 Prime 문구(정본 74 §5)');
 check(str_contains($svc->preview(M::WELCOME_WEEK, 'no_card')['subject'], '카드 한 장이면'), 'preview: 카드 없는 견본 = 등록 안내');
