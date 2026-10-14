@@ -14,3 +14,5 @@
 - `222-cursor-directive-B.md` — Cursor 작업지시 B(218-4 베스트 빨강 띠·팝업 + 218-7 0건 빈 팝업, 브랜치 cursor/home-b-best-red-20261014, main merge 금지). 측정 스크립트 `222-measure-B.py`
 - `223-home-b-review.md` — 작업 B 검수(배포 전) PASS + 배포 지시. main 원본 docs/worklog/2026/10/2026-10-14-home-b-review.md
 - `224-cursor-directive-C.md` — Cursor 작업지시 C(218-6 홈 현장·HOT 읽기 팝업 + 218-8 「원장」 2곳, 브랜치 cursor/home-c-hot-popup-20261014, main merge 금지). 측정 `224-measure-C.py`·판정 `224-judge-C.py`
+- 2026-10-15 갱신(종현 t1595): 218 확정 기록에 「0건 베스트 팝업 제목 = 이달의 베스트」, 「베스트 빈 문구 12px/18px」 추가.
+- `225-cursor-directive-B2.md` — Cursor 작업지시 B2(218-7 보완, 브랜치 cursor/home-b2-best-fix-20261015, C → B2 순서 권장). 측정 `225-measure-B2.py`·판정 `225-judge-B2.py`
