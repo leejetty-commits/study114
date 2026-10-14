@@ -265,3 +265,16 @@
 - Actions 9개 모두 성공(Deploy to dothome 1분 48초 · Verify bundle · Board ACL · ShopPage 등).
 - 운영 확인(study114.net): 홈 200 · 번들 `index-BVS-2zkQ.js`에 「알려 준 이유 목록」·관리자 안내·탈퇴 화면 안내·방침 「회원 번호와 함께 1년 보관」 문구 있음 · `/api/admin/withdraw-reasons.php` 로그인 없이 401 · `/api/auth/withdraw-reason.php?t=` 200 `valid:false` (`t[]=x`도 경고 없이 200 `valid:false`) · cron 주소 GET 405 / 키 없는 POST 403(키 검사 그대로).
 - SQL 080은 이제 main `sql/schema/080_withdraw_reasons.sql`에 있다. 운영 phpMyAdmin 적용은 사용자(미리 알림 완료). 적용 전까지 탈퇴·탈퇴 완료 메일은 그대로이고 사유만 저장되지 않는다.
+
+### 5-10. 사용자 DB 작업 폴더에 078 ~ 080이 없던 일 (2026-10-14 17시 40분)
+
+> 폴더에 80번이 없어. 그리고 77번에서 80번으로 건너뛴 이유는 뭐니? 일을 정확하게 하라
+> d:\work\study114 ===> 이게 루트인데, 무슨 소리야? 누가 내 허락도 없이 변경하는데???
+> 본래 db작업폴더가 기존 77번까지 하던 곳이야. 이걸 왜 갑자기 바꾼 거냐고?????
+> 진행해. 정확하게 작업해. 내가 안보이니까 안보인다 한거야.
+
+- 사실(git 기록): 루트 `d:\work\study114`는 09-24 00:42부터 `feat/student-mypage-a-g`(마지막 커밋 10-06 04:30)이고 그 뒤 브랜치를 바꾼 기록은 없다(10-09 01:04 `reset: moving to HEAD` 1건 — 같은 커밋, 누가 했는지 기록 없음). 070~075는 그 브랜치 커밋으로, **076·077은 10-07 18:54에 main 원본을 루트 `sql\schema`에 복사**(git 추적 안 됨, main과 내용 같음)해서 사용자 DB 작업 폴더에 있었다.
+- 원인: 078(10-09)·079(10-14 새벽)·080은 과제별 작업 폴더(`.wt\…`)에서 만들어 main에 넣기만 하고 **루트 `sql\schema`에 복사하지 않았다.** 번호를 건너뛴 것이 아니다 — 078·079는 main에 있고 운영 적용 완료(078 10-09 id 489, 079 10-14 03:44).
+- 바로잡은 설명: 앞서 「077까지만 보임」「main을 받으면 폴더에 보인다」고 한 것은 틀렸다. 사용자 DB 작업 폴더는 루트이고 거기에 파일이 와야 한다.
+- 조치: `078_tutor_unit_gwangju.sql`(1649바이트) · `079_tutor_inquiry_status_default_open.sql`(844) · `080_withdraw_reasons.sql`(3201)을 `git cat-file blob origin/main:…`으로 루트 `sql\schema`에 복사, 세 파일 모두 main 원본과 SHA-256 같음 확인. 080은 회원 번호 칸 들어간 17시 판. 루트 브랜치·기존 파일·커밋 안 된 파일은 건드리지 않음. 078·079는 이미 적용 — 다시 돌리지 않는다. 돌릴 것은 080 하나.
+- 재발 방지: 작업 규칙 `.cursor/rules/work-routine.mdc`(저장소 밖 규칙 파일)에 「SQL이 main에 들어가면 같은 날 루트 `sql\schema`에 원본 그대로 복사·확인, 안내도 이 경로로」 추가.
