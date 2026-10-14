@@ -487,15 +487,24 @@ function renderBestSection(boardKeys, attrs, liveId) {
     ? boardKeys.map((key) => ({ key, post: bestPostsForBoard(boards, key)[0] })).filter((item) => item.post)
     : [];
   const stateBody = railStateBody(status, items.length, CONCERN_RAIL_COPY.bestEmpty);
-  const body =
-    stateBody ?? `<ul class="live-rail-best__list">${items.map((item) => renderBestItem(item.key, item.post)).join('')}</ul>`;
+  // 0건(받기 끝)일 때만 띠·빈 문구를 눌러 그 역할 첫 방의 빈 베스트 팝업을 연다(218-7).
+  const emptyOpenKey = status === 'ready' && !items.length ? boardKeys[0] || '' : '';
+  const titleHtml = `<strong class="live-rail-slot__title">${esc(CONCERN_RAIL_COPY.bestTitle)}</strong>`;
+  const band = emptyOpenKey
+    ? `<button type="button" class="live-rail-slot__band live-rail-best__open" data-concern-best-open="${esc(emptyOpenKey)}">${titleHtml}</button>`
+    : `<div class="live-rail-slot__band">${titleHtml}</div>`;
+  const body = emptyOpenKey
+    ? `<button type="button" class="live-rail-empty live-rail-best__open" data-concern-best-open="${esc(emptyOpenKey)}">${esc(
+        CONCERN_RAIL_COPY.bestEmpty,
+      )}</button>`
+    : stateBody ?? `<ul class="live-rail-best__list">${items.map((item) => renderBestItem(item.key, item.post)).join('')}</ul>`;
   const liveAttr = liveId ? ` ${LIVE_FIELD_ATTR}="${esc(liveId)}"` : '';
   return `
     <section class="live-rail-slot live-rail-slot--best" data-rail-best data-rail-state="${railStateName(
       status,
       items.length,
     )}"${attrs}${liveAttr}>
-      <div class="live-rail-slot__band"><strong class="live-rail-slot__title">${esc(CONCERN_RAIL_COPY.bestTitle)}</strong></div>
+      ${band}
       ${body}
     </section>`;
 }
