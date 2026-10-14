@@ -130,6 +130,7 @@ function findOpener(mode, boardKey, postId) {
  *   homeBase: string,
  *   leaveInNewTab: boolean,
  *   continueInPage?: boolean,
+ *   allRooms?: boolean,
  * }} opts
  */
 export function openConcernRailPopup(opts) {
@@ -169,7 +170,8 @@ export function openConcernRailPopup(opts) {
 
   openRailPopup({
     kind: mode === 'best' ? 'concern-best' : 'concern-room',
-    title: mode === 'best' ? `${label} · ${COPY.bestTitle}` : label,
+    // 0건 베스트(방을 고르지 않음)는 방 이름 없이 「이달의 베스트」(종현 t1595, 2026-10-15).
+    title: mode === 'best' ? (opts.allRooms ? COPY.bestTitle : `${label} · ${COPY.bestTitle}`) : label,
     copy: popupCopy(mode === 'best' ? COPY.bestEmpty : COPY.roomEmpty),
     pageSize: CONCERN_POPUP_PAGE_SIZE,
     selectedId: postId,
@@ -202,6 +204,7 @@ function onDocumentClick(e) {
     homeBase: section.getAttribute('data-concern-rail-home') || '',
     leaveInNewTab: section.getAttribute('data-concern-rail-leave') === 'blank',
     continueInPage: section.getAttribute('data-concern-rail-leave') === 'inpage',
+    allRooms: !room && btn.hasAttribute('data-concern-best-all'),
   });
 }
 
