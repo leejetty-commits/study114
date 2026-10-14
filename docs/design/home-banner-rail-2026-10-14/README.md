@@ -19,3 +19,6 @@
 - 2026-10-15 갱신(종현 t1610·t1611): 219 E3 「고민방 3칸 홈 전용?」 보류 닫음 — 찾기 레일도 공부방·과외쌤·비회원 세 방(비회원 제목만), 학생 1칸. 218 확정 기록·219 갱신.
 - `227-cursor-directive-find-rail-fix.md` — Cursor 보완 지시(브랜치 cursor/home-find-rail-three-20261015: 081 SQL 삭제, PHP 2개 origin/main 으로, 화면 코드 유지, force-push 금지). 측정 `227-measure-find-rail.py`·판정 `227-judge-find-rail.py`(91e03e3 vs aa0c74d 24/24 PASS). 그림 `png/227-find-*.png`
 - 2026-10-15 갱신(종현 t1625): 227 개정 — 「DB·서버·화면 일치」. 081 SQL·PHP 2개 유지(081 공백 무관 비교로 고침), right-rail.js 강제 세 방 10줄 제거, 저장 목록 old/removed 경우 측정 추가. 081 적용 확인 SELECT `227-081-check.sql`. 그림 `png/227-find-studyroom-oldlist-1280.png`
+- `228-review-find-rail.md` — 227 개정 검수 PASS(a0617643, 4파일, 081 지시서와 동일, 세 경우 24/24 재현). 그림 `png/228-find-review-*.png`
+- 2026-10-15 갱신(종현 t1636): 운영 옛 값 = 자료실만 → 자료실 유지 + 세 방, 02:28 운영 UPDATE(6개). 218·219·227·228 기록.
+- `229-cursor-directive-find-rail-six.md` — Cursor 보완 지시(화면 기본값·seed 2곳·081 을 6개로, 081 운영 0행). 측정 `229-measure-find-rail.py`·판정 `229-judge-find-rail.py`(default·six·old·removed·libold, a061764 기준 모두 24/24)

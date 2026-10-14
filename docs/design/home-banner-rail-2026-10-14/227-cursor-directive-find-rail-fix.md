@@ -5,6 +5,8 @@
 - **이 개정이 앞선 227(「081·PHP 빼기」, main 73a8f4a·7563ffe)을 대체합니다.** 앞선 지시대로 이미 작업했다면 그 커밋을 `git revert` 로 되돌린 뒤(새 커밋, force-push 금지) 이 지시를 하세요.
 - 한 줄 요약: **081 SQL과 PHP 두 파일은 남기고(081은 튼튼하게 고침), `right-rail.js` 의 세 방 강제 끼워 넣기 10줄은 뺀다.** `right-rail-store.js` 기본값(세 방)은 남긴다.
 
+
+> **2026-10-15 추가 기록(종현 t1636):** 운영 `search_right_rail` 은 이 문서의 가정(학생/학부모 방만)과 달리 `['faq','library-template','safe-guide']` 였다. 종현이 02:28 KST 운영에서 `["faq","concern-director","concern-tutor","concern-parent","library-template","safe-guide"]` 로 바꿈(1행). 목록 값·081 은 **229 지시서가 대체**한다. 이 문서의 나머지(강제 세 방 제거, 측정 방법)는 유효.
 ## 0. 배경과 확정 기록
 
 | 날짜 | 근거 | 확정 내용 |
