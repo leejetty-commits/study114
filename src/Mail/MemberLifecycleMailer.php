@@ -217,7 +217,8 @@ final class MemberLifecycleMailer
     }
 
     /**
-     * Prime·Pick 마무리 3일 전. 카드가 지금 노출 중일 때만 보낸다(본문이 「베이직으로 이어서 노출」을 약속하므로).
+     * Prime·Pick 마무리 3일 전(못 보냈으면 2일 전). 카드가 지금 노출 중일 때만 보낸다(본문이 「베이직으로 이어서 노출」을 약속하므로).
+     * 남은 날이 2~3일이 아니면 보내지 않는다 — 제목·안내에 그 날수가 들어간다.
      *
      * @param array<string, mixed> $sub provider_position_subscriptions 행
      *   (id, user_id, sku_code, provider_type, provider_id, started_on, end_exclusive_on)
@@ -231,6 +232,11 @@ final class MemberLifecycleMailer
             $endExclusive = substr(trim((string) ($sub['end_exclusive_on'] ?? '')), 0, 10);
             if ($subId < 1 || $userId < 1 || !in_array($product, ['prime', 'pick'], true)
                 || preg_match('/^\d{4}-\d{2}-\d{2}$/', $endExclusive) !== 1 || $endExclusive <= $today) {
+                return 'skipped:subscription';
+            }
+            $tz = PositionPeriodCalculator::timezone();
+            $daysLeft = (int) (new DateTimeImmutable($today, $tz))->diff(new DateTimeImmutable($endExclusive, $tz))->days;
+            if ($daysLeft < MemberMailScheduler::ENDING_LAST_CHANCE_DAYS_LEFT || $daysLeft > MemberMailScheduler::ENDING_DAYS_LEFT) {
                 return 'skipped:subscription';
             }
             $role = MemberMailRole::normalize((string) ($sub['provider_type'] ?? ''));
@@ -250,12 +256,13 @@ final class MemberLifecycleMailer
                 return 'skipped:recipient';
             }
 
-            $lastDay = (new DateTimeImmutable($endExclusive, PositionPeriodCalculator::timezone()))->modify('-1 day')->format('Y-m-d');
+            $lastDay = (new DateTimeImmutable($endExclusive, $tz))->modify('-1 day')->format('Y-m-d');
             $ctx = [
                 'home_ui' => $this->homeUi(),
                 'product' => $product,
                 'started_on' => substr(trim((string) ($sub['started_on'] ?? '')), 0, 10),
                 'ends_on' => $lastDay,
+                'days_left' => $daysLeft,
             ];
             if ($role === MemberMailRole::STUDY_ROOM) {
                 $ctx['room_name'] = $this->roomName($cardId);

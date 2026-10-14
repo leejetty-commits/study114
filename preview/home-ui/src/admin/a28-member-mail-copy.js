@@ -41,7 +41,7 @@ export const MEMBER_MAIL_COPY = {
   lifecycleOff: '서버 설정으로 회원 메일 전체가 꺼져 있어요. 여기서 켜 두어도 나가지 않아요.',
   /** @param {number} cap */
   scheduleNote: (cap) =>
-    `첫 일주일 안부·이용 마무리 3일 전은 낮 9시부터 21시까지 매시간 나눠 보내요. 오늘 나간 회원 메일이 ${cap}통이 되면 이 두 메일은 다음 날 이어 보내요.`,
+    `첫 일주일 안부·이용 마무리 3일 전은 낮 9시부터 21시까지 한 시간에 두 번 나눠 보내요. 오늘 나간 회원 메일이 ${cap}통이 되면 이 두 메일은 다음 날 이어 보내요.`,
   accountNote: '이메일 확인·비밀번호 재설정 메일은 회원 안전을 위해 끌 수 없어요.',
 
   previewTitle: '메일 미리보기',
@@ -71,7 +71,7 @@ export const MEMBER_MAIL_KINDS = {
   },
   position_ending: {
     name: '이용 마무리 3일 전',
-    when: 'Prime·Pick 기간이 3일 남은 날 낮',
+    when: 'Prime·Pick 기간이 3일 남은 날 낮 (못 보내면 2일 남은 날)',
     who: '카드가 노출 중인 이용자',
   },
   withdraw_farewell: {

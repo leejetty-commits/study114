@@ -9,8 +9,9 @@ use PDO;
 use Study114\Paid\PositionPeriodCalculator;
 
 /**
- * 정해진 시각에 나가는 생활 메일 — 첫 일주일 안부 · Prime/Pick 마무리 3일 전.
+ * 정해진 시각에 나가는 생활 메일 — 첫 일주일 안부 · Prime/Pick 마무리 3일 전(못 보내면 2일 전).
  * cron(public/api/cron/member-mail.php)이 낮 동안 여러 번 부른다. 한 번에 조금씩 보내고, 남은 것은 다음 호출이 잇는다.
+ * GitHub 예약 실행은 버려질 수 있다(2026-10-14 실제로 11번 중 9번) → 대상은 하루 이상 기회를 둔다.
  *
  * - 밤(21시~9시)에는 보내지 않는다.
  * - Resend 무료 한도(하루 100통)는 가입 확인·비밀번호 재설정과 같이 쓴다 → 생활 메일이 하루 DAILY_CAP통이면 멈춘다.
@@ -27,6 +28,8 @@ final class MemberMailScheduler
     public const WELCOME_MIN_DAYS = 7;
     public const WELCOME_MAX_DAYS = 10;
     public const ENDING_DAYS_LEFT = 3;
+    /** 3일 전에 못 보낸 이용권(GitHub 예약 실행 누락·하루 한도)은 하루 뒤 이만큼 남았을 때 한 번 더 기회를 준다. */
+    public const ENDING_LAST_CHANCE_DAYS_LEFT = 2;
 
     /** user_roles.role_type 중 회원 역할(admin 제외) */
     private const MEMBER_ROLE_TYPES = ['study_room_owner', 'tutor', 'guardian_student'];
@@ -82,7 +85,7 @@ final class MemberMailScheduler
         $today = $now->format('Y-m-d');
         $jobs = [];
         if ($endingOn) {
-            foreach ($this->endingCandidates($now) as $sub) {
+            foreach ($this->endingCandidates($now, $settings->enabledSince(MemberMailSettings::POSITION_ENDING)) as $sub) {
                 $jobs[] = ['position_ending', fn (): string => $this->mailer->sendPositionEnding($sub, $today)];
             }
         }
@@ -126,23 +129,37 @@ final class MemberMailScheduler
         return (int) $stmt->fetchColumn();
     }
 
-    /** @return list<array<string, mixed>> 오늘이 마지막 이용일 3일 전(end_exclusive_on = 오늘 + 3일)인 이용권 */
-    private function endingCandidates(DateTimeImmutable $now): array
+    /**
+     * 남은 기간이 3일(end_exclusive_on = 오늘 + 3일)인 이용권, 그리고 따라잡기 — 2일 남았는데 아직 못 받은 이용권.
+     * 따라잡기는 3일 남았던 어제 이미 이용 중이던 이용권만(오늘 시작한 짧은 이용권에 갑자기 보내지 않음),
+     * 그리고 이 메일을 오늘 다시 켰으면 하지 않는다(꺼져 있던 어제 몫을 몰아 보내지 않음).
+     * 덜 남은 이용권부터 보낸다 — 오늘이 마지막 기회라서.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function endingCandidates(DateTimeImmutable $now, ?string $enabledSince = null): array
     {
-        $endExclusive = $now->modify('+' . self::ENDING_DAYS_LEFT . ' days')->format('Y-m-d');
+        $today = $now->format('Y-m-d');
+        $where = 's.end_exclusive_on = ?';
+        $params = [$now->modify('+' . self::ENDING_DAYS_LEFT . ' days')->format('Y-m-d')];
+        if ($enabledSince === null || substr($enabledSince, 0, 10) < $today) {
+            $where = '(' . $where . ' OR (s.end_exclusive_on = ? AND s.started_on < ?))';
+            $params[] = $now->modify('+' . self::ENDING_LAST_CHANCE_DAYS_LEFT . ' days')->format('Y-m-d');
+            $params[] = $today;
+        }
         $key = $this->concat(["'" . MemberLifecycleMailer::DEDUPE_POSITION_ENDING . "'", 's.id', "':'", 's.end_exclusive_on']);
         $stmt = $this->pdo->prepare(
             "SELECT s.id, s.user_id, s.sku_code, s.provider_type, s.provider_id, s.started_on, s.end_exclusive_on
                FROM provider_position_subscriptions s
                JOIN users u ON u.id = s.user_id
-              WHERE s.end_exclusive_on = ?
+              WHERE {$where}
                 AND s.sku_code IN ('prime', 'pick')
                 AND " . $this->mailableUserSql('u') . "
                 AND NOT EXISTS (SELECT 1 FROM provider_reminder_dispatches d WHERE d.dedupe_key = {$key})
-              ORDER BY s.id
+              ORDER BY s.end_exclusive_on, s.id
               LIMIT " . self::CANDIDATE_LIMIT
         );
-        $stmt->execute([$endExclusive]);
+        $stmt->execute($params);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

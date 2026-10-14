@@ -8,7 +8,7 @@ use Study114\Auth\WithdrawReasonService;
 
 /**
  * 「우동공과 편지」 생활 메일 문안 — 카드 게시 환영 · Prime/Pick 구매 감사 · 탈퇴 완료
- * · 첫 일주일 안부 · Prime/Pick 마무리 3일 전.
+ * · 첫 일주일 안부 · Prime/Pick 마무리 3일 전(못 보냈으면 2일 전).
  * 실명은 쓰지 않는다. 공부방 이름(카드에 노출되는 상호)만 넣는다. 권유·할인 문구 없음.
  * 조회 수 같은 성과 숫자, 부정적인 말(「조용한」「만날 수 없어요」)은 쓰지 않는다 (2026-10-14 종현).
  */
@@ -367,9 +367,10 @@ final class MemberLifecycleMailTemplate
     }
 
     /**
-     * Prime·Pick 마무리 3일 전. ends_on = 마지막 이용일(end_exclusive_on 하루 전).
+     * Prime·Pick 마무리 3일 전(못 보냈으면 2일 전). ends_on = 마지막 이용일(end_exclusive_on 하루 전).
+     * days_left = 오늘부터 남은 이용일 수(3 또는 2). 없거나 그 밖이면 3.
      *
-     * @param array{home_ui: string, product: 'prime'|'pick', started_on: string, ends_on: string, room_name?: string} $ctx
+     * @param array{home_ui: string, product: 'prime'|'pick', started_on: string, ends_on: string, days_left?: int, room_name?: string} $ctx
      * @return array{subject: string, plain: string, html: string}
      */
     public static function positionEnding(string $role, array $ctx): array
@@ -381,6 +382,10 @@ final class MemberLifecycleMailTemplate
         $isRoom = $role === MemberMailRole::STUDY_ROOM;
         $address = $isRoom ? '원장님' : '선생님';
         $endLabel = self::dateLabel($ctx['ends_on']);
+        $daysLeft = $ctx['days_left'] ?? 3;
+        if (!in_array($daysLeft, [2, 3], true)) {
+            $daysLeft = 3;
+        }
 
         $summary = $product . ' 노출';
         $from = self::dateLabel($ctx['started_on']);
@@ -397,7 +402,7 @@ final class MemberLifecycleMailTemplate
         $who = $isRoom ? ($room !== '' ? $room : '원장님의 공부방') : '선생님';
 
         return MemberMailTemplate::render([
-            'subject' => '[우동공과] ' . $address . ', ' . $product . ' 기간이 3일 남았어요',
+            'subject' => '[우동공과] ' . $address . ', ' . $product . ' 기간이 ' . $daysLeft . '일 남았어요',
             'support_url' => $support,
             'role' => $role,
             'badge' => MemberMailRole::label($role) . ' · ' . $product . ' 마무리 안내',
@@ -411,7 +416,7 @@ final class MemberLifecycleMailTemplate
                 '기간이 끝나면 카드는 베이직으로 이어서 노출돼요. 카드 내용, 찜, 받은 쪽지도 모두 그대로예요.',
             ],
             'button' => ['label' => '구매이력에서 확인하기', 'url' => $homeUi . self::PLANS_PATH],
-            'notes_title' => '남은 3일을 알차게',
+            'notes_title' => '남은 ' . $daysLeft . '일을 알차게',
             'notes' => [
                 '대표 사진과 소개가 지금 모습 그대로인지 한 번 봐 주세요.',
                 '아직 답하지 않은 쪽지가 있는지 확인해 주세요.',

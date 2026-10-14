@@ -34,6 +34,7 @@ use Study114\Mail\MailTransport;
 use Study114\Mail\MemberLifecycleMailer;
 use Study114\Mail\MemberLifecycleMailTemplate as T;
 use Study114\Mail\MemberMailScheduler as S;
+use Study114\Mail\MemberMailSettings;
 use Study114\Mail\MemberMailTemplate;
 use Study114\Paid\PositionPeriodCalculator;
 use Study114\Paid\ProviderReminderChannelPolicy;
@@ -173,6 +174,20 @@ check(str_contains($eTutorPrime['plain'], '지금처럼 과외쌤 찾기 가장 
 check(!str_contains($eTutorPrime['plain'], '우리 동네 가장 앞자리') && !preg_match('/(?<!쪽)지도/u', $eTutorPrime['plain']), 'ending-tutor-prime: 동네·지도 표현 없음(「쪽지도」는 제외)');
 $eTutorPick = T::positionEnding('tutor', $endBase + ['product' => 'pick']);
 commonChecks('ending-tutor-pick', $eTutorPick, '과외쌤 선생님 · Pick 마무리 안내', $plansUrl, $supportUrl, $forbidden);
+
+// 따라잡기 문구 — 남은 날수(3 또는 2)가 제목·안내 제목에 들어간다. 승인 2026-10-14 「3일 / 2일 남았어요」
+$eTwo = T::positionEnding('study_room', $endBase + ['product' => 'prime', 'room_name' => '해솔공부방', 'days_left' => 2]);
+$previews['schedule-ending-room-prime-2days'] = $eTwo;
+check($eTwo['subject'] === '[우동공과] 원장님, Prime 기간이 2일 남았어요', 'ending-2days: 제목');
+check(str_contains($eTwo['plain'], "남은 2일을 알차게\n") && !str_contains($eTwo['plain'], '3일'), 'ending-2days: 안내 제목 「남은 2일」 · 「3일」 없음');
+commonChecks('ending-2days', $eTwo, '공부방 원장님 · Prime 마무리 안내', $plansUrl, $supportUrl, $forbidden);
+$eTwoBody = str_replace(['2일 남았어요', '남은 2일을'], ['3일 남았어요', '남은 3일을'], $eTwo['plain']);
+check($eTwoBody === $eRoomPrime['plain'], 'ending-2days: 날수 말고 본문은 3일 메일과 같음');
+check(T::positionEnding('tutor', $endBase + ['product' => 'pick', 'days_left' => 3])['subject'] === '[우동공과] 선생님, Pick 기간이 3일 남았어요', 'ending-days: 3 → 「3일」');
+foreach ([1, 4, 0, '2'] as $odd) {
+    check(T::positionEnding('tutor', $endBase + ['product' => 'pick', 'days_left' => $odd])['subject'] === '[우동공과] 선생님, Pick 기간이 3일 남았어요',
+        'ending-days: 2·3 밖(' . var_export($odd, true) . ') → 「3일」로(보내는 쪽이 막음)');
+}
 
 check(T::objectParticle('해솔공부방') === '을' && T::objectParticle('늘봄스터디') === '를', 'josa: 받침 있음 을 · 없음 를');
 check(T::objectParticle('선생님') === '을' && T::objectParticle('원장님의 공부방') === '을', 'josa: 호칭');
@@ -400,6 +415,103 @@ if (!in_array('sqlite', PDO::getAvailableDrivers(), true)) {
     $sT = new CountingTransport();
     $s1 = (new S($pdoS, new MemberLifecycleMailer($pdoS, new AuthMailer($sT), $cfg)))->run($now);
     check($s1['sent'] === 1 && ($sT->sent[0]['to'] ?? '') === 'real@example.com', 'select: 내부 주소 ' . $n . '명 뒤의 회원도 그날 받음');
+
+    // 마무리 따라잡기 — 3일 전에 못 보냈으면 2일 전에 (GitHub 예약 실행 누락 · 하루 한도, 2026-10-14)
+    $catchUpDb = static function () use ($daysAgo, $now, $today, $dayPlus): PDO {
+        $p = scheduleDb();
+        addUser($p, 1, 'room@example.com', $daysAgo(40), 'study_room_owner');
+        $p->prepare('INSERT INTO study_rooms VALUES (?, ?, ?, ?, ?)')->execute([11, 1, '해솔공부방', 'published', $daysAgo(40)]);
+        $s = $p->prepare('INSERT INTO provider_position_subscriptions VALUES (?, ?, ?, ?, ?, ?, ?)');
+        $longAgo = $now->modify('-20 days')->format('Y-m-d');
+        $s->execute([201, 1, 'prime', 'study_room', 11, $longAgo, $dayPlus(2)]);
+        $s->execute([202, 1, 'pick', 'study_room', 11, $today, $dayPlus(2)]);
+        $s->execute([203, 1, 'prime', 'study_room', 11, $longAgo, $dayPlus(2)]);
+        $s->execute([204, 1, 'pick', 'study_room', 11, $longAgo, $dayPlus(1)]);
+        $s->execute([205, 1, 'pick', 'study_room', 11, $longAgo, $dayPlus(3)]);
+        $s->execute([206, 1, 'prime', 'study_room', 11, $now->modify('-1 day')->format('Y-m-d'), $dayPlus(2)]);
+        $p->prepare("INSERT INTO provider_reminder_dispatches (user_id, channel, reminder_kind, dedupe_key, sent_at) VALUES (1, 'email', 'lifecycle_position_ending', ?, ?)")
+            ->execute(['lifecycle:position_ending:203:' . $dayPlus(2), $now->modify('-1 day')->format('Y-m-d') . ' 10:17:00']);
+
+        return $p;
+    };
+    $pdoE = $catchUpDb();
+    $eT = new CountingTransport();
+    $eS = new S($pdoE, new MemberLifecycleMailer($pdoE, new AuthMailer($eT), $cfg));
+    $e1 = $eS->run($now);
+    $eSubjects = array_map(static fn (array $m): string => (string) $m['subject'], $eT->sent);
+    $eKeys = $pdoE->query("SELECT dedupe_key FROM provider_reminder_dispatches WHERE reminder_kind = 'lifecycle_position_ending' AND sent_at >= '{$today}' ORDER BY id")->fetchAll(PDO::FETCH_COLUMN);
+    check($e1['sent'] === 3, 'catch-up: 2일 남은 이용권 2건 + 3일 남은 1건 = 3통 — 실제 ' . $e1['sent']);
+    check($eKeys === ['lifecycle:position_ending:201:' . $dayPlus(2), 'lifecycle:position_ending:206:' . $dayPlus(2), 'lifecycle:position_ending:205:' . $dayPlus(3)],
+        'catch-up: 덜 남은 이용권(2일)부터, 같은 날수는 이용권 번호 순 — 중복 방지 키는 이용권 + 끝나는 날 그대로');
+    check(($eSubjects[0] ?? '') === '[우동공과] 원장님, Prime 기간이 2일 남았어요', 'catch-up: 제목 「기간이 2일 남았어요」');
+    check(str_contains((string) ($eT->sent[0]['body'] ?? ''), "남은 2일을 알차게\n"), 'catch-up: 안내 제목 「남은 2일을 알차게」');
+    check(str_contains((string) ($eT->sent[0]['body'] ?? ''), T::dateLabel($dayPlus(1)) . '까지는 지금처럼'), 'catch-up: 마지막 이용일 = 끝나는 날 하루 전(내일)');
+    check(($eSubjects[2] ?? '') === '[우동공과] 원장님, Pick 기간이 3일 남았어요', 'catch-up: 3일 남은 이용권은 그대로 「3일」');
+    check(!in_array('lifecycle:position_ending:202:' . $dayPlus(2), $eKeys, true), 'catch-up: 오늘 시작한 이용권(3일 남은 날에 없었음) → 안 보냄');
+    check(!in_array('lifecycle:position_ending:203:' . $dayPlus(2), $eKeys, true)
+        && (int) $pdoE->query("SELECT COUNT(*) FROM provider_reminder_dispatches WHERE dedupe_key = 'lifecycle:position_ending:203:" . $dayPlus(2) . "'")->fetchColumn() === 1,
+        'catch-up: 어제(3일 전) 이미 받은 이용권 → 다시 안 보냄');
+    check(!in_array('lifecycle:position_ending:204:' . $dayPlus(1), $eKeys, true), 'catch-up: 1일 남은 이용권 → 안 보냄(2일까지만)');
+    check(in_array('lifecycle:position_ending:206:' . $dayPlus(2), $eKeys, true), 'catch-up: 어제 시작한 이용권(3일 남은 날 이용 중) → 보냄');
+    $e2 = $eS->run($now->setTime(16, 43));
+    check($e2['sent'] === 0, 'catch-up: 같은 날 다시 불러도 두 번 안 보냄');
+    $e3 = $eS->run($now->modify('+1 day'));
+    check(($e3['by_kind']['position_ending'] ?? []) === [], 'catch-up: 다음 날 — 3일 전에 받은 이용권(205)이 2일 남아도 다시 안 보냄');
+
+    // 오늘 마무리 메일을 다시 켰으면 따라잡기 안 함(꺼져 있던 어제 몫을 몰아 보내지 않음) · 어제 켰으면 함
+    foreach ([['오늘 다시 켬', $today . ' 09:30:00', 1], ['어제 다시 켬', $now->modify('-1 day')->format('Y-m-d') . ' 20:00:00', 3]] as [$label, $enabledAt, $want]) {
+        $pdoR = $catchUpDb();
+        $pdoR->exec('CREATE TABLE site_settings (setting_key TEXT PRIMARY KEY, value_json TEXT)');
+        $pdoR->prepare('INSERT INTO site_settings (setting_key, value_json) VALUES (?, ?)')->execute([
+            MemberMailSettings::KEY,
+            json_encode(['kinds' => [MemberMailSettings::POSITION_ENDING => ['enabled' => true, 'enabled_at' => $enabledAt]]]),
+        ]);
+        $rT = new CountingTransport();
+        $rr = (new S($pdoR, new MemberLifecycleMailer($pdoR, new AuthMailer($rT), $cfg)))->run($now);
+        check($rr['sent'] === $want, "catch-up: {$label} → {$want}통 — 실제 " . $rr['sent']);
+    }
+
+    // 3일 남은 날 실행이 하나도 없었던 이용권 → 다음 날 「2일」로 받음
+    $pdoM = scheduleDb();
+    addUser($pdoM, 1, 'tutor@example.com', $daysAgo(40), 'tutor');
+    $pdoM->prepare('INSERT INTO tutors VALUES (?, ?, ?, ?)')->execute([21, 1, 'published', $daysAgo(40)]);
+    $pdoM->prepare('INSERT INTO provider_position_subscriptions VALUES (?, ?, ?, ?, ?, ?, ?)')
+        ->execute([301, 1, 'pick', 'tutor', 21, $now->modify('-27 days')->format('Y-m-d'), $dayPlus(3)]);
+    $mT = new CountingTransport();
+    $mS = new S($pdoM, new MemberLifecycleMailer($pdoM, new AuthMailer($mT), $cfg));
+    $m1 = $mS->run($now->modify('+1 day')->setTime(9, 17));
+    check($m1['sent'] === 1 && ($mT->sent[0]['subject'] ?? '') === '[우동공과] 선생님, Pick 기간이 2일 남았어요', 'missed-day: 3일 남은 날 실행 0번 → 다음 날 「2일」로 보냄');
+    check($mS->run($now->modify('+2 days'))['sent'] === 0, 'missed-day: 그다음 날(1일 남음)에는 안 보냄');
+
+    // 하루 한도로 3일 전에 못 보낸 이용권 → 다음 날 따라잡음
+    $pdoK = scheduleDb();
+    addUser($pdoK, 1, 'tutor@example.com', $daysAgo(40), 'tutor');
+    $pdoK->prepare('INSERT INTO tutors VALUES (?, ?, ?, ?)')->execute([21, 1, 'published', $daysAgo(40)]);
+    $pdoK->prepare('INSERT INTO provider_position_subscriptions VALUES (?, ?, ?, ?, ?, ?, ?)')
+        ->execute([401, 1, 'prime', 'tutor', 21, $now->modify('-27 days')->format('Y-m-d'), $dayPlus(3)]);
+    $capIns = $pdoK->prepare("INSERT INTO provider_reminder_dispatches (user_id, channel, reminder_kind, dedupe_key, sent_at) VALUES (900, 'email', 'lifecycle_card_posted', ?, ?)");
+    for ($i = 1; $i <= S::DAILY_CAP; $i++) {
+        $capIns->execute(['seed:' . $i, $today . ' 09:30:00']);
+    }
+    $kT = new CountingTransport();
+    $kS = new S($pdoK, new MemberLifecycleMailer($pdoK, new AuthMailer($kT), $cfg));
+    check($kS->run($now)['stopped'] === 'daily_cap' && $kT->sent === [], 'cap-ending: 오늘 한도 참 → 3일 전 메일 못 보냄');
+    $k2 = $kS->run($now->modify('+1 day'));
+    check($k2['sent'] === 1 && ($kT->sent[0]['subject'] ?? '') === '[우동공과] 선생님, Prime 기간이 2일 남았어요', 'cap-ending: 다음 날 「2일」로 따라잡음');
+}
+
+// 보내는 쪽도 2~3일만 — 고르기를 거치지 않고 불러도 그 밖이면 안 보냄
+if (in_array('sqlite', PDO::getAvailableDrivers(), true)) {
+    $pdoG = scheduleDb();
+    addUser($pdoG, 1, 'room@example.com', $daysAgo(40), 'study_room_owner');
+    $pdoG->prepare('INSERT INTO study_rooms VALUES (?, ?, ?, ?, ?)')->execute([11, 1, '해솔공부방', 'published', $daysAgo(40)]);
+    $gT = new CountingTransport();
+    $gM = new MemberLifecycleMailer($pdoG, new AuthMailer($gT), $cfg);
+    $gSub = ['id' => 501, 'user_id' => 1, 'sku_code' => 'prime', 'provider_type' => 'study_room', 'provider_id' => 11, 'started_on' => $daysAgo(20)];
+    check($gM->sendPositionEnding($gSub + ['end_exclusive_on' => $dayPlus(1)], $today) === 'skipped:subscription', 'guard: 1일 남음 → 안 보냄');
+    check($gM->sendPositionEnding($gSub + ['end_exclusive_on' => $dayPlus(4)], $today) === 'skipped:subscription', 'guard: 4일 남음 → 안 보냄');
+    check($gM->sendPositionEnding($gSub + ['end_exclusive_on' => $dayPlus(2)], $today) === 'sent'
+        && str_contains((string) ($gT->sent[0]['subject'] ?? ''), '기간이 2일 남았어요'), 'guard: 2일 남음 → 「2일」로 보냄');
 }
 
 // ── 4. 자동 작업 주소·GitHub 일정(정적) ──
@@ -411,11 +523,21 @@ check(str_contains($cron, "\$_SERVER['HTTP_X_CRON_KEY']") && !str_contains($cron
 check(str_contains($cron, 'hash_equals($expected, $given)'), 'cron: 키 비교 hash_equals');
 check(str_contains($cron, 'new MemberMailScheduler('), 'cron: 스케줄러 실행');
 $wf = (string) file_get_contents($root . '/.github/workflows/member-mail-cron.yml');
-check(str_contains($wf, 'cron: "7 0-11 * * *"'), 'workflow: KST 9시 7분~20시 7분 매시간');
+check(str_contains($wf, 'cron: "17,43 0-11 * * *"'), 'workflow: KST 9시 17분~20시 43분, 한 시간에 두 번(17분·43분)');
+check(preg_match_all('/^\s*-\s*cron:\s*"([^"]+)"/m', $wf, $wfCron) === 1
+    && preg_match('/^(\d+(?:,\d+)*) /', $wfCron[1][0], $wfMin) === 1
+    && array_filter(explode(',', $wfMin[1]), static fn (string $m): bool => (int) $m % 15 === 0) === [],
+    'workflow: 정각·15·30·45분 피함(GitHub가 붐벼 예약 실행을 버리는 때)');
+check(str_contains($wf, '0-11 * * *') && S::SEND_FROM_HOUR === 9 && S::SEND_UNTIL_HOUR === 21 && 11 + 9 < S::SEND_UNTIL_HOUR,
+    'workflow: 마지막 호출(UTC 11시 = KST 20시대)이 보내는 시간(21시 전) 안');
 check(str_contains($wf, '${{ secrets.STUDY114_REPORT_CRON_KEY }}') && str_contains($wf, '-H "X-Cron-Key: ${CRON_KEY}"'), 'workflow: Secret을 헤더로 전달');
 check(!preg_match('/member-mail\.php\?/', $wf), 'workflow: 주소에 키 없음');
 check(str_contains($wf, 'https://study114.net/api/cron/member-mail.php'), 'workflow: 정본 도메인 주소');
 check(S::SEND_FROM_HOUR === 9 && S::SEND_UNTIL_HOUR === 21, 'workflow·서버 시간대 일치(9~21시)');
+$adminCopy = (string) file_get_contents($root . '/preview/home-ui/src/admin/a28-member-mail-copy.js');
+check(str_contains($adminCopy, '낮 9시부터 21시까지 한 시간에 두 번 나눠 보내요.') && !str_contains($adminCopy, '매시간'), '관리자 안내: 한 시간에 두 번(workflow와 같음)');
+check(str_contains($adminCopy, "when: 'Prime·Pick 기간이 3일 남은 날 낮 (못 보내면 2일 남은 날)'"), '관리자 안내: 마무리 메일 — 못 보내면 2일 남은 날');
+check(S::ENDING_DAYS_LEFT === 3 && S::ENDING_LAST_CHANCE_DAYS_LEFT === 2, '마무리: 3일 전, 못 보내면 2일 전(정본 74)');
 
 // ── 5. 만료 안내 메일은 「마무리 3일 전」 하나 (정본 74) ──
 $policy = new ProviderReminderChannelPolicy();
@@ -426,6 +548,11 @@ foreach (['position_expiry_d7', 'position_expiry_d3', 'position_expiry_d1'] as $
 check(in_array('email', $policy->channelsFor('ticket_pack_expiry_d7'), true), 'old-reminder: 쪽지권 만료 등 다른 안내는 그대로');
 $doc = (string) @file_get_contents($root . '/docs/internal/74-member-mail-lock.md');
 check($doc !== '' && str_contains($doc, 'MemberMailScheduler') && str_contains($doc, (string) S::DAILY_CAP . '통'), '정본 74: 회원 메일 규칙 문서 있음');
+check(str_contains($doc, '`cron: "17,43 0-11 * * *"`') && str_contains($doc, 'KST 9시 17분 ~ 20시 43분') && !str_contains($doc, '9시 7분 ~ 20시 7분 매시간'),
+    '정본 74: 깨우기 = 매시 17분·43분(옛 매시 7분 걷어냄)');
+check(str_contains($doc, 'ENDING_LAST_CHANCE_DAYS_LEFT = 2') && str_contains($doc, '`started_on < 오늘`') && str_contains($doc, '오늘 다시 켰으면 따라잡기')
+    && str_contains($doc, '기간이 **{3|2}일** 남았어요') && !str_contains($doc, '원래 「그날 하루」만 대상이라 따로 막지 않는다'),
+    '정본 74: 마무리 따라잡기 규칙·문구(옛 「그날 하루」 규칙 걷어냄)');
 
 // ── 미리보기 ──
 $previewDir = $tmp . DIRECTORY_SEPARATOR . 'study114-mail-preview';

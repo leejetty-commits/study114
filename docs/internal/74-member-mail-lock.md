@@ -1,6 +1,6 @@
 # 74 · 회원 메일 정본 — 종류 · 받는 사람 · 보내는 규칙 · 문안 규칙
 
-- 상태: 1단계(첫 일주일 안부 · 마무리 3일 전) **main 반영·배포 2026-10-14** (승인 `c614cb11` → 병합 `2f448d30`). 2단계(관리자 「회원 메일」) **main 반영·배포 2026-10-14** (승인 `28082302` → main `3ad1fdf8`). 3단계(탈퇴 사유 받기 · SQL 080) **main 반영·배포 2026-10-14** (승인 `81510980` → main `c2f00c63`). **SQL 080 운영 적용 완료 2026-10-14 18:59**(사용자, phpMyAdmin — 두 표 확인)
+- 상태: 1단계(첫 일주일 안부 · 마무리 3일 전) **main 반영·배포 2026-10-14** (승인 `c614cb11` → 병합 `2f448d30`). 2단계(관리자 「회원 메일」) **main 반영·배포 2026-10-14** (승인 `28082302` → main `3ad1fdf8`). 3단계(탈퇴 사유 받기 · SQL 080) **main 반영·배포 2026-10-14** (승인 `81510980` → main `c2f00c63`). **SQL 080 운영 적용 완료 2026-10-14 18:59**(사용자, phpMyAdmin — 두 표 확인). 예약 실행 누락 대책(매시 17·43분 깨우기 + 마무리 2일 전 따라잡기) **구현 — 사용자 검수 대기** (브랜치 `cursor/member-mail-cron-catchup-20261014`)
 - 근거: `docs/worklog/2026/10/2026-10-09-mail-lifecycle.md` (생활 메일 3종) · `docs/worklog/2026/10/2026-10-14-member-mail-4.md` (새 메일 4종 지시·승인 문구) · `2026-10-13-decisions-batch.md`
 - 이 문서가 회원 메일 규칙의 정본이다. 메일 종류·조건·한도·문안 규칙을 바꾸면 **코드·검사·이 문서를 같은 커밋에서** 고친다.
 
@@ -22,7 +22,7 @@
 | 카드 게시 환영 | 기본등록으로 카드가 노출 상태가 된 직후. 게시된 지 24시간이 지난 카드는 다시 저장해도 안 보냄 | 공부방 · 과외쌤 · 학생(학부모) | 카드마다 1회 `lifecycle:card_posted:{역할}:{카드 id}` |
 | Prime·Pick 구매 감사 | 지급이 커밋된 직후(연장 포함) | 공부방 · 과외쌤 | 주문마다 1회 `lifecycle:purchase_thanks:{주문번호}` |
 | **첫 일주일 안부** | 가입 **7일 이상 10일 미만**, 낮 시간 자동 발송(3절) | 대표 활성 역할이 회원 역할(공부방·과외쌤·학생)인 회원 | 회원마다 1회 `lifecycle:welcome_week:{회원 id}` |
-| **Prime·Pick 마무리 3일 전** | 이용권의 `end_exclusive_on` = **오늘 + 3일** (마지막 이용일 = 오늘 + 2일), 낮 시간 자동 발송(3절) | 이용권 주인 | 이용권·끝나는 날마다 1회 `lifecycle:position_ending:{이용권 id}:{end_exclusive_on}` |
+| **Prime·Pick 마무리 3일 전** | 이용권의 `end_exclusive_on` = **오늘 + 3일** (마지막 이용일 = 오늘 + 2일), 낮 시간 자동 발송(3절). **그날 못 보냈으면 다음 날(`end_exclusive_on` = 오늘 + 2일) 한 번 더 기회**(아래 「따라잡기」) | 이용권 주인 | 이용권·끝나는 날마다 1회 `lifecycle:position_ending:{이용권 id}:{end_exclusive_on}` — 3일 전에 받았으면 2일 전에 다시 안 감 |
 | 탈퇴 완료 (사유 받기 포함, 1-4) | 본인 탈퇴 직후. 관리자 강제 탈퇴는 안 보냄 | 탈퇴한 본인(정리 전에 잡아 둔 주소) | 회원마다 1회 `lifecycle:withdraw_farewell:{회원 id}` |
 
 첫 일주일 안부 — 역할·카드 상태별
@@ -35,6 +35,14 @@
 - 상품은 `prime` · `pick`만.
 - 이용권의 카드가 **본인 카드이고 지금 노출 중일 때만** 보낸다(본문이 「끝나면 베이직으로 이어서 노출」을 약속하므로). `provider_id`가 비어 있는 옛 이용권은 본인 노출 카드 중 첫 번째.
 - 연장하면 같은 이용권의 끝나는 날이 늦춰진다 → 새 끝나는 날 3일 전에 **다시 한 번** 안내한다(키에 끝나는 날이 들어감).
+
+마무리 3일 전 — 따라잡기 (2026-10-14 사용자 결정 「1. 2.을 구현할수 있으면 꼼꼼히 진행해」, 문구 승인 「3일 / 2일 남았어요」)
+- 까닭: GitHub 예약 실행은 붐빌 때 버려진다(2026-10-14 실제로 11번 중 9번). 그날 낮 실행이 한 번도 안 돌거나 하루 한도(60통)가 차면 3일 전 메일을 못 보낸다.
+- 3일 전에 못 보낸 이용권은 **2일 남은 날** 보낸다(`MemberMailScheduler::ENDING_LAST_CHANCE_DAYS_LEFT = 2`). 1일 남은 날에는 보내지 않는다. 중복 방지 키가 같아 3일 전에 받았으면 2일 전에 다시 안 간다.
+- 따라잡기는 **3일 남았던 어제 이미 이용 중이던 이용권만**(`started_on < 오늘`). 오늘 시작한 짧은 이용권에 갑자기 보내지 않는다.
+- 이 메일을 **오늘 다시 켰으면** 따라잡지 않는다(꺼져 있던 어제 몫을 몰아 보내지 않음 — 4-1).
+- 덜 남은 이용권(2일)부터 보낸다(그날이 마지막 기회).
+- 문구: 제목 「[우동공과] {원장님|선생님}, {Prime|Pick} 기간이 **{3|2}일** 남았어요」, 안내 제목 「남은 **{3|2}일**을 알차게」 — 실제 남은 날수. 나머지 본문은 같다. 보내는 쪽도 남은 날이 2~3일이 아니면 보내지 않는다(`sendPositionEnding` → `skipped:subscription`).
 
 ### 1-3. Prime·Pick 만료 안내 메일은 「마무리 3일 전」 하나뿐
 
@@ -74,16 +82,16 @@
 
 | 항목 | 값 | 코드 |
 |------|----|------|
-| 깨우기 | GitHub Actions `member-mail-cron.yml`가 **KST 9시 7분 ~ 20시 7분 매시간** `POST https://study114.net/api/cron/member-mail.php` | 닷홈에 cron이 없어서 GitHub가 깨운다. schedule은 **main에 있을 때만** 돈다 |
+| 깨우기 | GitHub Actions `member-mail-cron.yml`가 **KST 9시 17분 ~ 20시 43분, 매시 17분·43분(하루 24번)** `POST https://study114.net/api/cron/member-mail.php` (`cron: "17,43 0-11 * * *"`, UTC) | 닷홈에 cron이 없어서 GitHub가 깨운다. schedule은 **main에 있을 때만** 돈다. GitHub는 붐빌 때(특히 정각 무렵) 예약 실행을 **버릴 수 있다** — 2026-10-14 매시 7분 11번 중 9번 버려짐 → 정각·15·30·45분을 피하고 한 시간에 두 번(2026-10-14 사용자 결정 「미국시각으로 가장 덜 붐비는 시간대로」: KST 낮 = 미국 밤이라 이미 그 시간대이고, 그날 버려진 때도 미국 새벽이었다 → 분을 옮겼다) |
 | 키 | 헤더 `X-Cron-Key` = `STUDY114_REPORT_CRON_KEY`(정산 보고서 키 재사용, GitHub Secret → 배포 때 `.htaccess` 주입). 주소(GET)로는 안 받음 | 키 없음·32자 미만·`__`로 시작·`dev-cron-key` → 503, 틀림 → 403 |
 | 밤 | 21시 ~ 다음 날 9시에는 보내지 않음 | `MemberMailScheduler::SEND_FROM_HOUR / SEND_UNTIL_HOUR` |
 | 순서 | 마무리 3일 전 먼저, 그다음 안부 | |
 | 한 번에 | 최대 **30통** · **20초**. 남은 대상은 다음 시간 호출이 잇는다 | `BATCH` · `TIME_BUDGET_SECONDS` |
-| 하루 한도 | 오늘(KST 0시부터) 나간 생활 메일(위 5종 모두)이 **60통**이 되면 정해진 시각 메일을 멈춘다. 다음 날 이어 보낸다 | `DAILY_CAP`. 계정 메일은 세지 않는다 |
+| 하루 한도 | 오늘(KST 0시부터) 나간 생활 메일(위 5종 모두)이 **60통**이 되면 정해진 시각 메일을 멈춘다. 다음 날 이어 보낸다(안부는 7~10일 범위 안에서, 마무리는 2일 남은 날 따라잡기로) | `DAILY_CAP`. 계정 메일은 세지 않는다 |
 | 후보 | 한 번에 종류별 최대 100명. 보낼 수 없는 회원(2절)은 **고를 때 SQL에서 뺀다** → 회원이 많아져도 받을 사람이 밀리지 않는다 | `CANDIDATE_LIMIT` · `mailableUserSql()` |
 | 중복 | 이미 키가 있는 대상은 고를 때 빠지고, 보내기 직전에 `provider_reminder_dispatches.dedupe_key`(UNIQUE)에 먼저 자리를 잡는다 | `MemberLifecycleMailer::claim()` |
 | 실패 | 보내기에 실패하면 자리를 지워 다음 호출이 다시 시도한다 | |
-| 놓친 날 | 안부는 7~10일 사이 3일 동안 기회가 있다. 마무리 3일 전은 **그날 하루**만 대상이다(하루 12번 호출 중 한 번이라도 돌면 나간다) | |
+| 놓친 날 | 안부는 7~10일 사이 3일 동안 기회가 있다. 마무리는 **3일 남은 날과 2일 남은 날, 이틀**(하루 24번 호출 × 2일 중 한 번이라도 돌면 나간다). 2026-10-14 전에는 「그날 하루」뿐이었다 | `ENDING_LAST_CHANCE_DAYS_LEFT` |
 
 Resend 무료 요금제(하루 100통): 생활 메일 60통 + 가입 확인·비밀번호 메일 몫 40통. 유료로 바꾸면 `DAILY_CAP`만 올린다.
 
@@ -109,7 +117,7 @@ Resend 무료 요금제(하루 100통): 생활 메일 60통 + 가입 확인·비
 | 멈춘 동안 — 바로 보내는 메일 | 카드 게시 환영·구매 감사·탈퇴 완료는 보내지 않고 발송 기록도 남기지 않는다. **다시 켜도 그때 일을 뒤늦게 보내지 않는다** | `MemberLifecycleMailer::guard()` → `skipped:paused` |
 | 멈춘 동안 — 정해진 시각 메일 | 멈춘 종류는 대상을 고르지 않는다. 둘 다 멈추면 자동 작업이 `paused`로 끝난다 | `MemberMailScheduler::run()` |
 | 다시 켤 때 — 첫 일주일 안부 | 다시 켠 시각 `enabled_at`을 남기고, **가입 7일째가 그 시각 뒤에 된 회원만** 고른다 → 멈춘 동안 쌓인 회원에게 몰아서 보내지 않는다 | `welcomeCandidates(..., enabledSince)` |
-| 다시 켤 때 — 마무리 3일 전 | 원래 「그날 하루」만 대상이라 따로 막지 않는다(다시 켠 날 대상만 나간다) | |
+| 다시 켤 때 — 마무리 3일 전 | **오늘 다시 켰으면 따라잡기(2일 남은 이용권)를 하지 않는다** — 꺼져 있던 어제 몫을 몰아 보내지 않는다. 3일 남은 오늘 대상은 나간다. 어제 이전에 켰으면 따라잡기도 한다 | `endingCandidates(..., enabledSince)` |
 | 최근 7일 보낸 수 | 지금부터 7일(168시간) 안에 `provider_reminder_dispatches`에 남은 **메일** 발송 기록 수(종류별) | `MemberMailAdminService::sentLast7Days` |
 
 ### 4-2. 미리보기 · 내 메일로 시험 발송
@@ -165,7 +173,7 @@ Resend 무료 요금제(하루 100통): 생활 메일 60통 + 가입 확인·비
 | 관리자 보기·미리보기·시험 발송·운영 로그 | `src/Mail/MemberMailAdminService.php` · API `public/api/admin/member-mail.php` |
 | 관리자 화면 | `preview/home-ui/src/admin/a28-member-mail.js` · 문구 `a28-member-mail-copy.js` · 호출 `a28-member-mail-api.js` · `styles/admin-member-mail.css` |
 | 검사 — 생활 메일 3종 | `php -d extension=pdo_sqlite scripts/verify-mail-lifecycle.php` |
-| 검사 — 정해진 시각 메일·한도·이 문서 | `php -d extension=pdo_sqlite scripts/verify-member-mail-schedule.php` (`npm run verify:member-mail-schedule`) |
+| 검사 — 정해진 시각 메일·한도·마무리 따라잡기·깨우기 시각·이 문서 | `php -d extension=pdo_sqlite scripts/verify-member-mail-schedule.php` (`npm run verify:member-mail-schedule`) |
 | 탈퇴 사유 저장·메일 링크·관리자 모음·1년 정리 | `src/Auth/WithdrawReasonService.php` · SQL `sql/schema/080_withdraw_reasons.sql` · API `public/api/auth/withdraw-reason.php`(링크 화면) · `public/api/admin/withdraw-reasons.php`(관리자) · 개인정보처리방침 `preview/home-ui/src/policy-copy.js` |
 | 탈퇴 사유 화면 | 문구·선택지 `preview/home-ui/src/withdraw-reason-copy.js` · 선택 칸 `withdraw-reason-ui.js` · 마이페이지 탈퇴 칸 `mypage/screens.js` · 링크 화면 `support/leave-reason.js` · 관리자 `admin/a28-withdraw-reasons.js` |
 | 검사 — 종류별 스위치·미리보기·시험 발송·관리자 화면 | `php -d extension=pdo_sqlite scripts/verify-member-mail-admin.php` (`npm run verify:member-mail-admin`) |
@@ -177,5 +185,6 @@ Resend 무료 요금제(하루 100통): 생활 메일 60통 + 가입 확인·비
 ## 8. 남은 일
 
 - SQL `080` — **운영 적용 완료 2026-10-14 18:59** (사용자, phpMyAdmin. 파일은 사용자 DB 작업 폴더 `d:\work\study114\sql\schema\080_withdraw_reasons.sql` = main 원본 복사. 회원 번호 칸이 들어간 17시 판. `SHOW TABLES`로 두 표 확인). 코드 배포는 main `c2f00c63`(같은 날 17:30) — 그 사이 탈퇴한 회원은 없었다(사용자 확인). 19:06 cron 응답의 `withdraw_reasons`가 null이 아니어서 운영 코드가 표를 읽는 것도 확인. **DB에 SQL을 돌리기 전에 사용자에게 미리 알린다**(2026-10-14 지시).
-- 결정 필요: GitHub 예약 실행은 부하 때 **버려질 수 있다**. 2026-10-14 실제로 9:07~19:07 11번 칸 중 2번만 실행(13:46 · 19:06 KST). 첫 일주일 안부는 7~10일 범위라 따라잡지만, **마무리 3일 전은 `end_exclusive_on = 오늘 + 3일` 그날 낮에 한 번도 안 돌면 그 회원은 못 받는다**(`member-mail-cron.yml` 주석 「GitHub가 늦거나 건너뛰어도 다음 호출이 이어 보낸다」는 이 메일에는 그날 안에서만 맞다). 같은 이유로 3절 하루 한도 「다음 날 이어 보낸다」도 마무리 3일 전에는 맞지 않는다 — 그날 60통이 차면 남은 대상은 다음 날 대상이 아니다. 대책 후보·조사 근거는 작업 기록 `2026-10-14-member-mail-4.md` 5-12.
+- GitHub 예약 실행 누락(2026-10-14 9:07~19:07 11번 칸 중 2번만 실행) — **대책 반영 2026-10-14**: 매시 17분·43분 하루 24번(3절 깨우기) + 마무리 2일 전 따라잡기(1-2). 조사 근거 `docs/worklog/2026/10/2026-10-14-member-mail-4.md` 5-12, 작업 `2026-10-14-member-mail-cron-catchup.md`. 배포 뒤 며칠 동안 하루 실행 수를 본다.
+- Actions 사용 시간: 저장소가 비공개라 예약 실행도 요금제 시간에 들어간다(실행마다 1분 이상으로 셈). 하루 24번 ≈ 한 달 720분. 남은 시간은 사용자가 GitHub 결제 설정에서 본다(메인 권한으로는 못 봄).
 - 별건(미결): `public/api/cron/paid-reminders.php` 키 기본값 `dev-cron-key` 위험(그록봇 204·205).
