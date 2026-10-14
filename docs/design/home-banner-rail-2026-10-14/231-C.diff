@@ -43,6 +43,36 @@ index 9ca529f3..fd54baa4 100644
      allRooms: !room && btn.hasAttribute('data-concern-best-all'),
    });
  }
+diff --git a/preview/home-ui/src/library/info-rail.js b/preview/home-ui/src/library/info-rail.js
+index 4072a037..41c66e76 100644
+--- a/preview/home-ui/src/library/info-rail.js
++++ b/preview/home-ui/src/library/info-rail.js
+@@ -24,7 +24,7 @@ import { openRailPopup, syncRailPopupSession } from '../rail-popup.js';
+ /**
+  * @typedef {{ navRole: string, homeBase: string, leaveInNewTab: boolean, continueInPage?: boolean }} InfoRailCtx
+  * leaveInNewTab: 상세 레일·absolute 에서는 팝업의 게시판 이동을 홈 주소 새 탭으로 연다.
+- * continueInPage: 찾기·등록은 팝업 안에서 본문·목록을 이어 본다.
++ * continueInPage: 찾기·등록. 팝업 「게시판에서 보기」는 홈 주소를 붙여 같은 탭에서 게시판으로 간다(218-9).
+  */
+ 
+ if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+@@ -216,13 +216,12 @@ function findOpener(boardKey, postId) {
+  * @param {{ boardKey: string, postId: string, opener: HTMLElement|null, navRole: string, homeBase: string, leaveInNewTab: boolean, continueInPage?: boolean }} opts
+  */
+ function openInfoBoardPopup({ boardKey, postId, opener, navRole, homeBase, leaveInNewTab, continueInPage }) {
++  // 찾기·등록(continueInPage)도 홈처럼 게시판으로 간다. 찾기는 다른 앱이라 홈 주소를 붙인다(218-9).
+   const board = LIBRARY_BOARDS.find((b) => b.boardKey === boardKey);
+   if (!board || !canDiscoverBoard(boardKey, railViewer(navRole).boardRole)) return;
+-  const boardHref = leaveInNewTab ? `${String(homeBase).replace(/\/$/, '')}/#${board.path}` : `#${board.path}`;
++  const boardHref = leaveInNewTab || continueInPage ? `${String(homeBase).replace(/\/$/, '')}/#${board.path}` : `#${board.path}`;
+   const blank = leaveInNewTab ? ' target="_blank" rel="noopener"' : '';
+-  const goBoard = continueInPage
+-    ? `<button type="button" class="rail-popup__go" data-rail-popup-continue>${esc(COPY.goBoard)}</button>`
+-    : `<a class="rail-popup__go" href="${esc(boardHref)}" data-rail-popup-leave${blank}>${esc(COPY.goBoard)}</a>`;
++  const goBoard = `<a class="rail-popup__go" href="${esc(boardHref)}" data-rail-popup-leave${blank}>${esc(COPY.goBoard)}</a>`;
+   openRailPopup({
+     kind: 'info-board',
+     title: board.label,
 diff --git a/preview/home-ui/src/right-rail.js b/preview/home-ui/src/right-rail.js
 index 3635e523..625ab65e 100644
 --- a/preview/home-ui/src/right-rail.js
@@ -100,3 +130,94 @@ index 3635e523..625ab65e 100644
      </section>`;
  }
  
+diff --git a/scripts/verify-rail-info-banners.mjs b/scripts/verify-rail-info-banners.mjs
+index 6a0bd1f0..624822bd 100644
+--- a/scripts/verify-rail-info-banners.mjs
++++ b/scripts/verify-rail-info-banners.mjs
+@@ -908,7 +908,7 @@ try {
+     s2 && (await ev(() => window.__store.getInfoRailList({ boardRole: 'supply-room', ownerKey: '11:study_room_owner:' }, 'info-room') === null)),
+   );
+ 
+-  // 찾기 레일(호출부가 absolute여도) → 팝업은 그대로, 「게시판에서 보기」는 인페이지
++  // 찾기 레일(호출부가 absolute여도) → 팝업은 그대로, 「게시판에서 보기」는 홈 게시판 같은 탭 링크(218-9)
+   await session({ user_id: 11, role_type: 'study_room_owner', name: 'r', email: 'r@x' }, 'supply-room');
+   await ev(() => {
+     document.getElementById('rail').innerHTML = '';
+@@ -923,19 +923,18 @@ try {
+   }
+   ok(`${B}search_rail_popup_opens_hash_unchanged`, sOpened && (await ev(() => location.hash)) === hashS);
+   const goS = await ev((label) => {
+-    const btn = [...document.querySelectorAll('#rail-popup [data-rail-popup-continue]')].find((x) => x.textContent.trim() === label);
+-    const blank = [...document.querySelectorAll('#rail-popup a')].some((a) => a.getAttribute('target') === '_blank' || String(a.getAttribute('href') || '').includes('/#/library'));
+-    return btn ? { tag: btn.tagName, blank } : { tag: '', blank };
++    const a = [...document.querySelectorAll('#rail-popup a[data-rail-popup-leave]')].find((x) => x.textContent.trim() === label);
++    return {
++      tag: a?.tagName || '',
++      href: a?.getAttribute('href') || '',
++      blank: a?.getAttribute('target') === '_blank',
++      cont: Boolean(document.querySelector('#rail-popup [data-rail-popup-continue]')),
++    };
+   }, POLICY_COPY.goBoard);
+-  ok(`${B}search_go_board_in_page`, sOpened && goS?.tag === 'BUTTON' && goS.blank === false, JSON.stringify(goS));
+-  if (sOpened && goS?.tag === 'BUTTON') {
+-    await page.click('#rail-popup [data-rail-popup-continue]').catch(() => {});
+-  }
+   ok(
+-    `${B}search_go_board_stays_on_screen`,
+-    sOpened &&
+-      (await ev(() => location.hash)) === hashS &&
+-      Boolean(await ev(() => document.getElementById('rail-popup') && document.getElementById('rail-popup').getAttribute('data-rail-popup-continued') === 'true')),
++    `${B}search_go_board_link_same_tab`,
++    sOpened && goS.tag === 'A' && goS.href.includes('/#/library') && !goS.blank && !goS.cont,
++    JSON.stringify(goS),
+   );
+   if (sOpened) await page.keyboard.press('Escape');
+   await gone(popupSel);
+@@ -968,7 +967,7 @@ try {
+   if (peekOpen) await page.keyboard.press('Escape');
+   await gone('#rail-guide-peek-overlay');
+ 
+-  // 찾기: 고민 HOT·방 「게시판에서 보기」도 인페이지
++  // 찾기: 고민 HOT·방 레일 버튼은 인페이지(팝업), 팝업 「게시판에서 보기」는 홈 게시판 같은 탭 링크(218-9)
+   const hotBtn = await ev(() => {
+     const hot = document.querySelector('#rail-search [data-rail-hot]');
+     const card = hot?.querySelector('[data-concern-rail-open]');
+@@ -983,11 +982,14 @@ try {
+   await page.click('#rail-search [data-rail-room] [data-concern-rail-more]').catch(() => {});
+   const concernOpen = await wait(popupSel);
+   const concernGo = await ev((label) => {
+-    const btn = [...document.querySelectorAll('#rail-popup [data-rail-popup-continue]')].find((x) => x.textContent.trim() === label);
+-    const blank = [...document.querySelectorAll('#rail-popup a')].some((a) => a.getAttribute('target') === '_blank');
+-    return { tag: btn?.tagName || '', blank, hash: location.hash };
++    const a = [...document.querySelectorAll('#rail-popup a[data-rail-popup-leave]')].find((x) => x.textContent.trim() === label);
++    return { tag: a?.tagName || '', href: a?.getAttribute('href') || '', blank: a?.getAttribute('target') === '_blank', hash: location.hash };
+   }, POLICY_COPY.goBoard);
+-  ok(`${B}search_concern_go_in_page`, concernOpen && concernGo.tag === 'BUTTON' && !concernGo.blank && concernGo.hash === hashGuide, JSON.stringify(concernGo));
++  ok(
++    `${B}search_concern_go_board_link_same_tab`,
++    concernOpen && concernGo.tag === 'A' && concernGo.href.includes('/#/community') && !concernGo.blank && concernGo.hash === hashGuide,
++    JSON.stringify(concernGo),
++  );
+   if (concernOpen) await page.keyboard.press('Escape');
+   await gone(popupSel);
+ 
+@@ -1020,12 +1022,14 @@ try {
+       infoOpened = await wait(popupSel);
+     }
+     const infoGo = await ev((copy) => {
+-      const btn = [...document.querySelectorAll('#rail-popup [data-rail-popup-continue]')].find((x) => x.textContent.trim() === copy);
+-      const login = [...document.querySelectorAll('#rail-popup a.rail-popup__login')].map((a) => a.getAttribute('href') || '');
+-      const blank = [...document.querySelectorAll('#rail-popup a')].some((a) => a.getAttribute('target') === '_blank' || String(a.getAttribute('href') || '').includes('/#/library'));
+-      return { tag: btn?.tagName || '', blank, login, hash: location.hash };
++      const a = [...document.querySelectorAll('#rail-popup a[data-rail-popup-leave]')].find((x) => x.textContent.trim() === copy);
++      return { tag: a?.tagName || '', href: a?.getAttribute('href') || '', blank: a?.getAttribute('target') === '_blank', hash: location.hash };
+     }, POLICY_COPY.goBoard);
+-    ok(`${B}${label}_info_go_in_page`, infoOpened && infoGo.tag === 'BUTTON' && !infoGo.blank && infoGo.hash === hash0, JSON.stringify(infoGo));
++    ok(
++      `${B}${label}_info_go_board_link_same_tab`,
++      infoOpened && infoGo.tag === 'A' && infoGo.href.includes('/#/library') && !infoGo.blank && infoGo.hash === hash0,
++      JSON.stringify(infoGo),
++    );
+     if (infoOpened) await page.keyboard.press('Escape');
+     await gone(popupSel);
+   }
