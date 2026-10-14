@@ -255,6 +255,8 @@ $reasonApi = (string) file_get_contents($root . '/public/api/auth/withdraw-reaso
 check(!str_contains($reasonApi, 'AuthSession') && str_contains($reasonApi, "\$send(200, ['ok' => true, 'valid' => \$link !== null")
     && str_contains($reasonApi, "\$send(200, ['ok' => true, 'saved' => \$saved])"), 'api: 링크 화면은 로그인 없음 · 쓸 수 없는 링크도 200(닷홈 4xx 대비)');
 check(str_contains($reasonApi, "\$send(422, ['ok' => false, 'error' => 'validation'"), 'api: 선택지가 틀릴 때만 422');
+check(substr_count($reasonApi, 'is_string($token) ? $token : \'\'') === 2 && !str_contains($reasonApi, "(string) (\$_GET['t']") && !str_contains($reasonApi, "(string) (\$input['t']"),
+    'api: 링크 값이 글자가 아니면(배열 등) 빈 값 — PHP 경고로 JSON이 깨지지 않음');
 $adminApi = (string) file_get_contents($root . '/public/api/admin/withdraw-reasons.php');
 check(str_contains($adminApi, 'AdminApi::requireAdmin()') && str_contains($adminApi, "AdminApi::fail(503, 'schema_missing'"), 'api: 관리자 모음은 운영자만 · 표 없음 503');
 

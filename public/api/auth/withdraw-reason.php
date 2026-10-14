@@ -37,7 +37,8 @@ try {
     $service = new WithdrawReasonService(Connection::get());
 
     if ($method === 'GET') {
-        $link = $service->peekLink((string) ($_GET['t'] ?? ''));
+        $token = $_GET['t'] ?? '';
+        $link = $service->peekLink(is_string($token) ? $token : '');
         $send(200, ['ok' => true, 'valid' => $link !== null, 'role' => $link['role'] ?? '']);
     }
 
@@ -46,7 +47,8 @@ try {
         if (!is_array($input)) {
             $input = [];
         }
-        $saved = $service->answerLink((string) ($input['t'] ?? ''), $input['code'] ?? null, $input['note'] ?? null);
+        $token = $input['t'] ?? '';
+        $saved = $service->answerLink(is_string($token) ? $token : '', $input['code'] ?? null, $input['note'] ?? null);
         if ($saved === null) {
             $send(422, ['ok' => false, 'error' => 'validation', 'message' => '이유를 하나 골라 주세요.']);
         }

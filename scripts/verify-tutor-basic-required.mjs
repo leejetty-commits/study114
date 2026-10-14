@@ -414,8 +414,9 @@ assert(same(copyRel, lineOf('TRC_PICK_FIELD_IDS')), '픽 조건 TRC_PICK_FIELD_I
 assert(same(copyRel, lineOf('TRC_PRIME_FIELD_IDS')), '프라임 조건 TRC_PRIME_FIELD_IDS 그대로');
 /** 과외쌤 표(tutors · tutor_*)에 새 컬럼·새 표를 만드는 SQL인가. 다른 표의 새 SQL(예: 080 탈퇴 사유)은 이 작업의 「새 컬럼 금지」 대상이 아니다 */
 function sqlAddsTutorColumnOrTable(sql) {
-  return /CREATE\s+TABLE\s+(IF\s+NOT\s+EXISTS\s+)?`?tutor\w*/i.test(sql)
-    || /ALTER\s+TABLE\s+`?tutor\w*`?[^;]*?\bADD\s+COLUMN\b/i.test(sql);
+  const table = '(?:`?\\w+`?\\.)?`?tutor\\w*`?';
+  return new RegExp(`CREATE\\s+TABLE\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?${table}`, 'i').test(sql)
+    || new RegExp(`ALTER\\s+TABLE\\s+${table}[^;]*?\\bADD\\s+COLUMN\\b`, 'i').test(sql);
 }
 /** REF 이후 새 컬럼·새 표 줄이 더해진 sql/ 파일. git 실패면 null */
 function sqlFilesAddingColumnOrTable() {
@@ -460,6 +461,10 @@ tamper(!hasDetailInputs(detailOf['마이페이지 renderDetailForm'].replace('na
 tamper(sqlAddsTutorColumnOrTable(read('sql/schema/064_tutor_inquiry_status.sql')), 'SQL 064(tutors 새 컬럼)을 다시 더함');
 tamper(sqlAddsTutorColumnOrTable('ALTER TABLE `tutor_regions` ADD COLUMN x INT NULL;'), 'tutor_regions 새 컬럼');
 tamper(sqlAddsTutorColumnOrTable('CREATE TABLE IF NOT EXISTS tutor_badges (id INT);'), '과외쌤 새 표');
+tamper(sqlAddsTutorColumnOrTable('ALTER TABLE study114.tutors ADD COLUMN x INT NULL;'), 'DB 이름 붙인 tutors 새 컬럼');
+tamper(sqlAddsTutorColumnOrTable('ALTER TABLE `study114`.`tutors` ADD COLUMN x INT NULL;'), 'DB 이름 붙인 `tutors` 새 컬럼');
+tamper(sqlAddsTutorColumnOrTable('CREATE TABLE study114.tutor_badges (id INT);'), 'DB 이름 붙인 과외쌤 새 표');
+assert(!sqlAddsTutorColumnOrTable('ALTER TABLE study114.users ADD COLUMN tutor_note INT NULL;'), 'DB 이름 붙인 다른 표는 과외쌤 표 변경 아님');
 assert(!sqlAddsTutorColumnOrTable(read('sql/schema/080_withdraw_reasons.sql')), '다른 표 새 SQL(080 탈퇴 사유, 주석에 tutor 글자)은 과외쌤 표 변경 아님');
 assert(!sqlAddsTutorColumnOrTable('ALTER TABLE users ADD COLUMN tutor_note INT NULL;'), '다른 표에 tutor 이름 컬럼은 과외쌤 표 변경 아님');
 tamper(
