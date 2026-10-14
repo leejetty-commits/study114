@@ -1,14 +1,26 @@
 # 노출·가입·결제 정적 검사 묶음 — 작업 브랜치·main push 와 PR 마다 실행
 # Docker 실DB(email-verify-flow)·WSL bash 의존 검사는 제외한다.
+# 문서만 바뀐 push·PR 은 돌지 않는다. Actions 시간 줄이기(2026-10-14 사용자 결정).
+# 단 verify:cur-006-email-verify-inventory 가 읽는 문서(cur-006-email-verify-open-apis.md)가 바뀌면 돈다.
 
 name: Verify bundle
 
 on:
   pull_request:
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!**/*.md"
+      - "docs/internal/cur-006-email-verify-open-apis.md"
   push:
     branches:
       - main
       - "cursor/**"
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!**/*.md"
+      - "docs/internal/cur-006-email-verify-open-apis.md"
 
 concurrency:
   group: verify-bundle-${{ github.ref }}

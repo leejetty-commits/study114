@@ -1,11 +1,21 @@
 # Board ACL CI gate — JS/PHP 매트릭스. DB 불필요.
 # PR·작업 브랜치에서는 검증만. FTP 배포 없음.
+# main push 는 돌지 않는다 — deploy.yml 이 같은 검사(board-acl-verify.yml)를 배포 전에 돌린다(중복 제거).
+# 문서만 바뀐 push 는 돌지 않는다. Actions 시간 줄이기(2026-10-14 사용자 결정).
 
 name: Board ACL gate
 
 on:
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   push:
+    branches-ignore:
+      - main
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
 
 concurrency:
   group: board-acl-gate-${{ github.workflow }}-${{ github.ref }}
