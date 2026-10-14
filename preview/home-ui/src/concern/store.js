@@ -500,9 +500,17 @@ export async function fetchBestPosts() {
   return boards;
 }
 
+export const HOT_POPUP_LIMIT = 10;
+
+export async function fetchHotPopupPosts() {
+  const data = await fetchConcernHotView({ view: 'hot-popup' });
+  return normalizeItemList(data.posts).slice(0, HOT_POPUP_LIMIT);
+}
+
 const _hotLoader = createRailLoader(() => fetchHotPosts(RAIL_HOT_LIMIT), []);
 const _latestLoader = createRailLoader(() => fetchLatestPosts(RAIL_LATEST_LIMIT), []);
 const _bestLoader = createRailLoader(() => fetchBestPosts(), {});
+const _hotPopupLoader = createRailLoader(() => fetchHotPopupPosts(), []);
 
 /* ── 레일·베스트 띠용 helper ── */
 
@@ -600,6 +608,19 @@ export function getBestConcernStatus() {
 
 export function ensureBestConcernPosts() {
   return _bestLoader.ensure(railOwnerKey());
+}
+
+export function ensureHotPopupPosts() {
+  return _hotPopupLoader.ensure(railOwnerKey());
+}
+
+export function getHotPopupPosts() {
+  return _hotPopupLoader.peek(railOwnerKey()) || [];
+}
+
+/** @returns {RailLoadStatus} */
+export function getHotPopupStatus() {
+  return _hotPopupLoader.status(railOwnerKey());
 }
 
 /** 이달의 베스트. 받은 적 없으면 null, 0건이면 {}. @returns {Record<string, any[]>|null} */

@@ -9,10 +9,13 @@
 import { CONCERN_RAIL_COPY as COPY, getConcernBoardByKey } from './copy.js';
 import {
   ensureBestConcernPosts,
+  ensureHotPopupPosts,
   fetchConcernRailPage,
   fetchConcernRailPost,
   getBestConcernBoards,
   getBestConcernStatus,
+  getHotPopupPosts,
+  getHotPopupStatus,
 } from './store.js';
 import { openRailPopup } from '../rail-popup.js';
 import { getAuthUser } from '../auth-session.js';
@@ -130,6 +133,7 @@ function findOpener(mode, boardKey, postId) {
  *   homeBase: string,
  *   leaveInNewTab: boolean,
  *   continueInPage?: boolean,
+ *   leaveToHome?: boolean,
  *   allRooms?: boolean,
  * }} opts
  */
@@ -138,7 +142,9 @@ export function openConcernRailPopup(opts) {
   // 레일 배너와 같은 규칙. 학생에게는 공부방·과외쌤 고민방 팝업도 요청도 없다.
   if (!boardKey || !canShowBoardInRail(boardKey, navRole, { guestFilter: opts.guestFilter })) return;
   const { label, path } = boardInfo(boardKey);
-  const boardHref = opts.leaveInNewTab ? `${String(opts.homeBase).replace(/\/$/, '')}/#${path}` : `#${path}`;
+  // 찾기·등록(inpage)도 홈처럼 게시판으로 간다. 찾기는 다른 앱이라 홈 주소를 붙인다.
+  const toHome = opts.leaveInNewTab || opts.leaveToHome;
+  const boardHref = toHome ? `${String(opts.homeBase).replace(/\/$/, '')}/#${path}` : `#${path}`;
   const blank = opts.leaveInNewTab ? ' target="_blank" rel="noopener"' : '';
   const goBoard = opts.continueInPage
     ? `<button type="button" class="rail-popup__go" data-rail-popup-continue>${esc(COPY.goBoard)}</button>`
@@ -184,16 +190,90 @@ export function openConcernRailPopup(opts) {
   });
 }
 
+/**
+ * 홈·카탈로그 「지금 고민 HOT」 10개 팝업(218-12).
+ * @param {{
+ *   postId?: string,
+ *   boardPath?: string,
+ *   opener?: HTMLElement|null,
+ *   navRole: string,
+ *   homeBase: string,
+ *   leaveInNewTab: boolean,
+ *   leaveToHome?: boolean,
+ * }} opts
+ */
+export function openHotPopup(opts) {
+  const navRole = opts.navRole;
+  const path = String(opts.boardPath || '/community').replace(/^#/, '');
+  const boardPath = path.startsWith('/') ? path : `/${path}`;
+  const toHome = opts.leaveInNewTab || opts.leaveToHome;
+  const boardHref = toHome ? `${String(opts.homeBase).replace(/\/$/, '')}/#${boardPath}` : `#${boardPath}`;
+  const goBoard = `<a class="rail-popup__go" href="${esc(boardHref)}" data-rail-popup-leave>${esc(COPY.goBoard)}</a>`;
+  const guest = () => !getAuthUser() || navRole === 'guest';
+  const postId = String(opts.postId || '');
+
+  openRailPopup({
+    kind: 'concern-hot',
+    title: COPY.hotTitle,
+    copy: popupCopy(COPY.hotEmpty),
+    pageSize: CONCERN_POPUP_PAGE_SIZE,
+    selectedId: postId,
+    opener: opts.opener || null,
+    refocus: () => {
+      if (typeof document === 'undefined') return null;
+      const id = postId.replace(/["\\]/g, '');
+      return /** @type {HTMLElement|null} */ (
+        (id && document.querySelector(`[data-concern-hot-open][data-concern-hot-post="${id}"]`)) ||
+        document.querySelector('[data-concern-hot-open]')
+      );
+    },
+    sessionKey: () => `${ownerKey()}|${navRole}|hot`,
+    loadPage: async (offset, limit) => {
+      await ensureHotPopupPosts();
+      if (getHotPopupStatus() !== 'ready') return { status: 'failed', items: [], total: 0 };
+      const posts = getHotPopupPosts();
+      return {
+        status: 'ready',
+        total: posts.length,
+        items: posts.slice(offset, offset + limit).map((p) => ({
+          id: p.id,
+          title: p.title,
+          meta: [boardInfo(p.boardKey).label, itemMeta(p)].filter(Boolean).join(' · '),
+        })),
+      };
+    },
+    renderSelected: async (id) => {
+      const found = getHotPopupPosts().find((p) => String(p.id) === String(id));
+      const boardKey = found?.boardKey || '';
+      return renderSelectedPost(await fetchConcernRailPost(boardKey, id, navRole), boardInfo(boardKey).label, guest());
+    },
+    footerHtml: goBoard,
+  });
+}
+
 /** @param {MouseEvent} e */
 function onDocumentClick(e) {
   const target = e.target instanceof Element ? e.target : null;
   if (!target) return;
   const room = target.closest('[data-concern-rail-open]');
   const best = room ? null : target.closest('[data-concern-best-open]');
-  const btn = room || best;
+  const hot = room || best ? null : target.closest('[data-concern-hot-open]');
+  const btn = room || best || hot;
   const section = btn?.closest('[data-concern-rail-nav]');
   if (!btn || !section) return;
   e.preventDefault();
+  if (hot) {
+    openHotPopup({
+      postId: hot.getAttribute('data-concern-hot-post') || '',
+      boardPath: hot.getAttribute('data-concern-hot-board') || '',
+      opener: /** @type {HTMLElement} */ (hot),
+      navRole: section.getAttribute('data-concern-rail-nav') || 'guest',
+      homeBase: section.getAttribute('data-concern-rail-home') || '',
+      leaveInNewTab: section.getAttribute('data-concern-rail-leave') === 'blank',
+      leaveToHome: section.getAttribute('data-concern-rail-leave') === 'inpage',
+    });
+    return;
+  }
   openConcernRailPopup({
     mode: room ? 'room' : 'best',
     boardKey: btn.getAttribute(room ? 'data-concern-rail-open' : 'data-concern-best-open') || '',
@@ -203,7 +283,7 @@ function onDocumentClick(e) {
     guestFilter: section.getAttribute('data-concern-rail-guest') || '',
     homeBase: section.getAttribute('data-concern-rail-home') || '',
     leaveInNewTab: section.getAttribute('data-concern-rail-leave') === 'blank',
-    continueInPage: section.getAttribute('data-concern-rail-leave') === 'inpage',
+    leaveToHome: section.getAttribute('data-concern-rail-leave') === 'inpage',
     allRooms: !room && btn.hasAttribute('data-concern-best-all'),
   });
 }

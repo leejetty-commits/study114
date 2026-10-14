@@ -31,6 +31,10 @@ BoardApi::run(static function (): void {
             BoardApi::ok(['view' => 'latest', 'posts' => $service->listLatest($auth, $latestLimit)]);
         }
 
+        if ($view === 'hot-popup') {
+            BoardApi::ok(['view' => 'hot-popup', 'posts' => $service->listHot($auth, ConcernService::HOT_POPUP_LIMIT, true)]);
+        }
+
         $limit = ($limitRaw !== null && $limitRaw !== '') ? max(1, min((int) $limitRaw, 20)) : 10;
         $hot = $service->listHot($auth, $limit);
         BoardApi::ok(['view' => 'hot', 'posts' => $hot]);

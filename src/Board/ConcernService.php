@@ -33,6 +33,11 @@ final class ConcernService
     public const LATEST_LIMIT_DEFAULT = 3;
     public const LATEST_LIMIT_MAX = 10;
 
+    /** HOT 팝업 글 수(종현 t1661). */
+    public const HOT_POPUP_LIMIT = 10;
+    /** HOT 팝업 방별 최대 개수. 학생·학부모(demand)는 쓰지 않는다(학생·학부모 고민방만, 최대 10). */
+    private const HOT_POPUP_QUOTA = ['concern-director' => 3, 'concern-tutor' => 3, 'concern-parent' => 3, 'concern-solved' => 1];
+
     private const EMPTY_AGG = ['empathy' => 0, 'helpful' => 0, 'cheer' => 0, 'score' => 0];
 
     private const TITLE_MAX_LENGTH = 100;
@@ -535,7 +540,7 @@ final class ConcernService
      *
      * @return list<array<string, mixed>>
      */
-    public function listHot(?array $auth = null, int $limit = 10): array
+    public function listHot(?array $auth = null, int $limit = 10, bool $perRoom = false): array
     {
         $boardRole = $auth !== null ? BoardChannelAcl::boardRoleFromAuth($auth) : 'guest';
         $isGuest = $boardRole === 'guest';
@@ -546,6 +551,10 @@ final class ConcernService
         $titleOnlyKeys = [];
         foreach (self::CONCERN_BOARD_KEYS as $k) {
             if (self::isHiddenFromFeed($k, $boardRole)) {
+                continue;
+            }
+            // 학생·학부모 HOT 에는 해결 후기방을 넣지 않는다(종현 t1662). 최신·베스트는 그대로.
+            if ($boardRole === 'demand' && $k === 'concern-solved') {
                 continue;
             }
             if (BoardChannelAcl::canList($k, $boardRole)) {
@@ -597,6 +606,18 @@ final class ConcernService
         }
 
         usort($items, fn ($a, $b) => $b['score'] <=> $a['score'] ?: $b['row']['id'] <=> $a['row']['id']);
+        if ($perRoom && $boardRole !== 'demand') {
+            $used = [];
+            $items = array_values(array_filter($items, static function (array $it) use (&$used): bool {
+                $bk = (string) $it['row']['board_key'];
+                $cap = self::HOT_POPUP_QUOTA[$bk] ?? 0;
+                if (($used[$bk] ?? 0) >= $cap) {
+                    return false;
+                }
+                $used[$bk] = ($used[$bk] ?? 0) + 1;
+                return true;
+            }));
+        }
         $items = array_slice($items, 0, $limit);
 
         return array_map(function ($item) use ($titleOnlySet, $isGuest, $userId) {

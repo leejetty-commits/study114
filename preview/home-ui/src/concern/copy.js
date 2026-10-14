@@ -61,7 +61,7 @@ export const COMMUNITY_BOARD_VISUAL = {
   director: {
     kicker: '공부방',
     icon: '/assets/info-refresh/motif-room.svg',
-    desc: '운영·모집·공간 운영 질문을 남기고 이웃 원장과 나눠 보세요.',
+    desc: '운영·모집·공간 운영 질문을 남기고 이웃 공부방과 나눠 보세요.',
     cta: '입장하기',
     art: 'board-entry__art--room',
     accent: '',
@@ -201,6 +201,7 @@ export const CONCERN_RAIL_COPY = {
   bestEmpty: '이달의 베스트, 아직 글이 미도착중...',
   loadFailed: '글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요',
   bestTitle: '이달의 베스트',
+  hotTitle: '지금 고민 HOT',
   more: '더보기',
   loading: '글을 불러오는 중이에요',
   goBoard: '게시판에서 보기',
