@@ -6,6 +6,7 @@ import { renderPromoScreen, bindPromoScreenEvents } from './screens.js';
 import { getPromoView } from './router.js';
 import { getPromoLandingByPath } from './catalog.js';
 import { STUDY_ROOM_PROMO } from './study-room-content.js';
+import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 
 export function renderPromoShell(currentPath, bodyHtml) {
   const role = getNavRole();
@@ -14,6 +15,7 @@ export function renderPromoShell(currentPath, bodyHtml) {
   const sub = memberHomeHashPath(getAuthUser());
 
   const mainHtml = `
+    ${renderHomeMarketingBanner(role)}
     <div class="promo-layout">
       <header class="promo-layout__head">
         <p class="promo-layout__crumb"><a href="#${sub}" data-nav="${sub}">홈</a> <span aria-hidden="true">›</span> <span>홍보</span></p>
