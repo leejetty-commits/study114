@@ -491,10 +491,10 @@ function renderBestSection(boardKeys, attrs, liveId) {
   const emptyOpenKey = status === 'ready' && !items.length ? boardKeys[0] || '' : '';
   const titleHtml = `<strong class="live-rail-slot__title">${esc(CONCERN_RAIL_COPY.bestTitle)}</strong>`;
   const band = emptyOpenKey
-    ? `<button type="button" class="live-rail-slot__band live-rail-best__open" data-concern-best-open="${esc(emptyOpenKey)}">${titleHtml}</button>`
+    ? `<button type="button" class="live-rail-slot__band live-rail-best__open" data-concern-best-open="${esc(emptyOpenKey)}" data-concern-best-all>${titleHtml}</button>`
     : `<div class="live-rail-slot__band">${titleHtml}</div>`;
   const body = emptyOpenKey
-    ? `<button type="button" class="live-rail-empty live-rail-best__open" data-concern-best-open="${esc(emptyOpenKey)}">${esc(
+    ? `<button type="button" class="live-rail-empty live-rail-best__open" data-concern-best-open="${esc(emptyOpenKey)}" data-concern-best-all>${esc(
         CONCERN_RAIL_COPY.bestEmpty,
       )}</button>`
     : stateBody ?? `<ul class="live-rail-best__list">${items.map((item) => renderBestItem(item.key, item.post)).join('')}</ul>`;

@@ -926,6 +926,7 @@ button.rail-popup__go {
 button.live-rail-empty.live-rail-best__open {
   background: transparent;
   padding: 0;
+  font-size: var(--fs-12);
 }
 
 .live-rail-best__open:focus-visible {
