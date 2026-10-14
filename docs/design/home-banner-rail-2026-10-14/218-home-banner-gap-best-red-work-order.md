@@ -1,16 +1,19 @@
 # 218 · 홈 홍보 3칸 유지 · 상단 여백 통일 · 「이달의 베스트」 빨강 — Cursor 작업지시서 (2026-10-14)
 
 - 작성: 우동공과2(개발팀장) · 요청: 종현 (2026-10-14)
-- 기준 코드: `origin/main` @ `4446404` (Merge 기록: 10-14 인수인계)
+- 기준 코드: `origin/main` @ `4446404` (최초) → 2026-10-14 t1582 갱신 기준 `9bcabca`(문서만 추가, 앱 코드 행 번호 동일)
 - 범위: 아래 티켓 218-1 ~ 218-4 (+ 218-5 문서 반영). **배포 금지 · commit/push는 종현 지시 후.**
 
-## 확정 기록 (2026-10-14 · 근거: 종현 t1581)
+## 확정 기록 (2026-10-14 · 근거: 종현 t1581 · t1582)
 | 항목 | 상태 |
 |---|---|
-| 218-1 홍보 화면 3칸 유지 | **조건부: 쉬우면 진행, 어려우면 취소** (종현: 「상단 이미지 링크일 뿐, 풀페이지마다 유지가 어려우면 취소」). 난이도 평가는 218-1 본문 참고. 진행/취소는 종현 결정 |
+| 218-1 홍보 화면 3칸 유지 | **확정·진행** (종현 2026-10-14 t1582. 이전 t1581 「조건부」에서 변경) |
 | 218-2 비회원 홈 3칸 아래 여백 20→8px | **승인** |
 | 218-4 「이달의 베스트」 읽기 팝업 머리 색 = 레일 띠와 같은 빨강 #BE123C | **승인** — 허용 범위에 `home-right-rail.css:634-637` 추가 |
 | 「고민방 3칸」이 홈 전용인지 | **보류** — 정책 논의 중, 아무것도 적용하지 않음 |
+| 218-6 홈 「오늘의 현장 · 지금 고민 HOT」 → 팝업 | **확정** (종현 2026-10-14 t1582). 찾기·등록과 같은 읽기 팝업, 팝업 안 「게시판에서 보기」로 게시판 이동. 198의 「홈 hash 유지」를 홈에 한해 대체 |
+| 218-7 「이달의 베스트」 0건일 때 눌러도 빈 팝업 | **확정** (종현 2026-10-14 t1582). 같은 팝업 틀·빨강 머리 #BE123C·빈 문구 |
+| 218-8 화면 문구 「원장」 제거 | **확정** (종현 2026-10-14 t1582). 「원장」을 빼고, 남는 대상어가 없으면 「공부방 고민방 더 보기」 |
 - 측정 방법: 로컬 vite(`preview/home-ui`, port 5179) + playwright chromium, `/api/auth/me.php` 응답을 역할별로 흉내(role_type = `study_room_owner` / `tutor` / `guardian_student`)해 실제 역할 홈을 그림. 값은 `getBoundingClientRect()` 차이(px, 반올림).
 - 잠긴 정책(재질문 금지): 이달의 베스트 = 우측 레일 맨 위(위치 유지) · 고민방 3칸 「공부방 고민방」「과외쌤 고민방」「학생 학부모 고민방」은 「이번 시즌 추천 행동」 위 · 0건이어도 구역·제목 유지 · 정보 게시판 레일 배너 「공부방 쏙쏙정보」「과외쌤 따끈 팁가이드」 · 화면 문구는 「학생」, 개발 용어 화면 노출 금지.
 
@@ -23,9 +26,9 @@
 
 ---
 
-## 218-1 · 홍보 화면에서도 홍보 3칸 유지 (전역, 모든 모드) — 【조건부: 쉬우면 진행, 어려우면 취소】
+## 218-1 · 홍보 화면에서도 홍보 3칸 유지 (전역, 모든 모드) — 【확정·진행, 종현 2026-10-14 t1582】
 
-### 난이도 평가 (우동공과2, 결정 아님)
+### 난이도 평가 (참고, t1581 때 기록)
 - 난이도: **쉬움** — 1파일(`promo/shell.js`) 2줄(import 1 + 호출 1). 로컬에 임시 적용해 3모드 × 3폭에서 확인함.
 - 중복: 홍보 화면에는 원래 3칸이 없음 → 같은 줄이 두 번 나오지 않음. 홍보 본문 히어로(카탈로그 제목·소개)와는 다른 요소.
 - 레이아웃: 3칸 아래 8px 뒤에 「홈 › 홍보」 경로·제목이 이어짐. 우측 레일 위치·폭 변화 없음.
@@ -191,6 +194,145 @@
  | 2026-09-23 | Stage 5B·UDX-05를 docs에 전역 매뉴얼로 등록 · 홍보 페이지 이례 허용 추가 |
 +| 2026-10-14 | 홈 상단 세로 간격 8px 통일 · 레일 머리띠 색(베스트 빨강) 추가 (218) |
 ```
+
+---
+
+---
+
+## 218-6 · 홈 레일 「오늘의 현장 · 지금 고민 HOT」을 읽기 팝업으로 (확정 t1582)
+
+블록: 홈 레일 HOT 칸(위 작은 글 「오늘의 현장」, 띠 제목 「지금 고민 HOT」, `right-rail.js:507-528` `renderHotSection`).
+
+### 원인
+- 링크 방식 결정 `right-rail.js:117-121` `railLeaveMode`: 찾기·등록만 `inpage`(팝업), 홈은 `hash`(주소 이동).
+- `right-rail.js:152-160` `railSlotAnchor`: 고민방 주소를 팝업 버튼(`concernInPageControl`, `:124-150`)으로 바꾸는 건 찾기·등록 슬롯일 때뿐 → 홈은 `railAnchor`(일반 링크).
+- HOT 카드 `right-rail.js:412-424` `renderLivePostCard`와 HOT 아래 버튼 `:526`이 모두 `railSlotAnchor`를 거침 → 홈에서는 게시판으로 이동.
+- `concernInPageControl`은 `data-concern-rail-leave="inpage"`를 고정으로 씀(`:149`) → 팝업 아래 버튼이 「페이지 안에서 이어 보기」가 됨. 홈은 게시판으로 가야 하므로 이 값이 달라야 함.
+
+### 바꿀 것 (정확히, `right-rail.js` 한 파일)
+1. `concernInPageControl(hrefOrPath, className, ctx, inner)`에 4번째 뒤 인자 `leave = 'inpage'` 추가, `:149`의 `data-concern-rail-leave="inpage"`를 `data-concern-rail-leave="${esc(leave)}"`로.
+2. 새 함수 1개(`railSlotAnchor` 바로 아래):
+```js
+/** HOT 카드·HOT 아래 버튼. 홈도 읽기 팝업(팝업 안 「게시판에서 보기」는 게시판으로 이동). */
+function railHotAnchor(hrefOrPath, className, ctx, inner, slotKey) {
+  if (slotKey === 'home_right_rail' && isConcernPath(hrefOrPath)) {
+    return concernInPageControl(hrefOrPath, className, ctx, inner, 'hash');
+  }
+  return railSlotAnchor(hrefOrPath, className, ctx, inner, slotKey);
+}
+```
+3. `:415`(`renderLivePostCard`)와 `:526`(`renderHotSection` 아래 버튼)의 `railSlotAnchor(`를 `railHotAnchor(`로. **이 두 곳만.**
+- 팝업 안 이동: `concern/rail-concern-popup.js:142-144` 기존 「게시판에서 보기」 링크를 그대로 씀(`leave="hash"` → `leaveInNewTab=false, continueInPage=false` → `<a href="#/community/...">`). 팝업 파일 수정 없음.
+
+### 허용 파일
+- `preview/home-ui/src/right-rail.js` (위 3곳만)
+
+### 금지
+- `railLeaveMode`·`railSlotAnchor` 자체 변경 금지 → 홈 「이번 시즌 추천 행동」 카드(`#/community/director` 등)는 지금처럼 링크로 남아야 함.
+- 찾기·등록·상세 레일 동작 변경 금지. 팝업 모양·문구 변경 금지.
+
+### 합격 기준 (행동)
+| 폭 | 모드 | 동작 | 기대 |
+|---|---|---|---|
+| 1280 / 1023 / 390 | 공부방·과외쌤·학생·비회원 홈 | HOT 카드 클릭 | 주소(hash) 그대로, `.rail-popup[data-rail-popup-kind='concern-room']` 열림, 그 글 선택 상태 |
+| 같음 | 같음 | HOT 아래 「… 고민방 더 보기」 클릭 | 주소 그대로, 해당 역할 고민방 목록 팝업 |
+| 같음 | 같음 | 팝업 안 「게시판에서 보기」 | 같은 탭에서 `#/community/...` 게시판으로 이동 |
+| 같음 | 비회원 | HOT 카드 | 팝업에서 기존 규칙대로 제목만·로그인 안내 |
+| 1280 | 공부방 홈 | 「이번 시즌 추천 행동」 카드 | 변경 없음(링크 이동) |
+| 1280 | 찾기 3종 | HOT 카드 | 변경 없음(팝업, 「이어 보기」 버튼) |
+| 전체 | HOT 0건 | — | 구역·제목·빈 문구 그대로 |
+
+---
+
+## 218-7 · 「이달의 베스트」 0건일 때 빈 팝업 (확정 t1582)
+
+### 원인
+- `right-rail.js:483-499` `renderBestSection`: 누를 수 있는 것은 베스트 글 줄 버튼(`:466-475`, `data-concern-best-open`)뿐. 0건이면 빈 문구 `<p class="live-rail-empty">`(`:401`, 문구 `concern/copy.js:201` 「이달의 베스트, 아직 글이 미도착중...」)만 그려지고, 띠(`:498`)는 일반 `div` → 누를 곳이 없음.
+- 클릭 받는 곳 `concern/rail-concern-popup.js:186-207`은 `[data-concern-best-open]`만 봄(섹션에 `data-concern-rail-nav`는 이미 있음, `attrs`).
+
+### 클릭 대상 (정의)
+- **0건(`status === 'ready'` 이고 항목 0개)일 때만**: ① 띠 제목 「이달의 베스트」 전체와 ② 빈 문구 줄, 두 곳을 버튼으로. 둘 다 `data-concern-best-open="${boardKeys[0]}"`(그 레일 역할의 첫 방: 공부방→공부방 고민방, 과외쌤→과외쌤 고민방, 학생·비회원→학생 학부모 고민방. `orderBoardKeysForRole` 결과 첫 값).
+- 받는 중(loading)·실패(failed)일 때는 버튼 아님(지금 그대로).
+- 글이 있을 때는 지금처럼 줄 버튼만(띠는 버튼 아님).
+
+### 바꿀 것 (정확히)
+`right-rail.js` `renderBestSection` 안에서, `status === 'ready' && items.length === 0`이면:
+```html
+<button type="button" class="live-rail-slot__band live-rail-best__open" data-concern-best-open="{boardKeys[0]}"><strong class="live-rail-slot__title">이달의 베스트</strong></button>
+<button type="button" class="live-rail-empty live-rail-best__open" data-concern-best-open="{boardKeys[0]}">{CONCERN_RAIL_COPY.bestEmpty}</button>
+```
+그 외 상태는 현행 마크업 그대로. 팝업은 기존 `openConcernRailPopup` best 모드가 0건이면 빈 문구(`popupCopy(COPY.bestEmpty)`, `rail-popup.js:167`)를 보여 줌 → 팝업 코드 수정 없음.
+
+`styles/home-right-rail.css` 끝에 버튼 모양 맞춤만 추가(새 모양 금지):
+```css
+.live-rail-best__open {
+  display: block;
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+button.live-rail-empty.live-rail-best__open { background: transparent; padding: 0; }
+```
+(띠 버튼은 `.live-rail-slot__band` 기존 배경·여백을 그대로 받음.)
+
+### 허용 파일
+- `preview/home-ui/src/right-rail.js` (`renderBestSection`만)
+- `preview/home-ui/src/styles/home-right-rail.css` (위 블록 추가만)
+
+### 금지
+- 베스트 위치·순서·0건 문구 변경 금지. 글 있을 때 동작 변경 금지. 팝업 파일 수정 금지.
+
+### 합격 기준
+| 폭 | 상태 | 동작 | 기대 |
+|---|---|---|---|
+| 1280 / 1023 / 390 | 0건, 4모드 | 띠 「이달의 베스트」 클릭 | `.rail-popup[data-rail-popup-kind='concern-best']` 열림, 머리 배경 `rgb(190, 18, 60)`(218-4), 목록 자리에 「이달의 베스트, 아직 글이 미도착중...」, 「게시판에서 보기」 있음 |
+| 같음 | 0건 | 빈 문구 줄 클릭 | 위와 같음 |
+| 같음 | 0건 | 키보드 Tab → Enter | 위와 같음, 닫으면 포커스가 누른 버튼으로 돌아옴 |
+| 같음 | 0건 | 레일 겉모습 | 띠 높이·색·글자, 빈 문구 위치가 변경 전과 같음(±1px) |
+| 같음 | 글 있음 | 줄 클릭 | 현행 그대로 |
+| 같음 | 받는 중·실패 | 띠 클릭 | 아무 일 없음(현행) |
+
+---
+
+## 218-8 · 화면 문구 「원장」 제거 (확정 t1582)
+
+규칙(종현 t1582): 「원장」을 뺀다. 빼고 나서 가리킬 대상어가 남지 않으면 「공부방 고민방 더 보기」.
+
+### 변경 대상 (이번 티켓)
+| 위치 | 현재 | 변경 |
+|---|---|---|
+| `preview/home-ui/src/right-rail.js:245` (HOT 아래 버튼, 공부방 모드) | 「원장 고민방 더 보기」 | **「공부방 고민방 더 보기」** |
+| `preview/home-ui/src/concern/copy.js:64` (커뮤니티 공부방 고민방 입구 설명) | 「…이웃 원장과 나눠 보세요.」 | **「…이웃 공부방과 나눠 보세요.」** |
+
+### 목록만 (이번 티켓 변경 금지 — 고민방 이름이 아니라 직함·항목 이름이라 같은 규칙을 그대로 쓰면 뜻이 바뀜. 종현 확인 대기)
+| 위치 | 문구 | 화면 |
+|---|---|---|
+| `preview/shared/study-room-basic-form.js:305`, `:809` | 「원장성별」, 「원장성별을 선택해 주세요.」 | 공부방 기본등록 입력칸 |
+| `preview/study-room-ui/src/summary.js:148`, `preview/study-room-ui/src/screens/step-basic.js:90` | 「원장성별」 | 공부방 등록 요약 |
+| `preview/auth-ui/src/screens/signup-basic.js:273` | 「… 원장성별 …은 필수입니다」 | 가입 기본정보 안내 |
+| `preview/home-ui/src/study-room-reg/myshop-render.js:155` | 「원장 소개 · 경력」 | 공부방 마이샵 |
+| `preview/home-ui/src/promo/study-room-content.js:77` | 「공부방 원장」 | 공부방 홍보 화면 배지 |
+| `preview/home-ui/src/promo/catalog.js:22` | 「학부모 · 원장」 | 홍보 목록 대상(내부 목록 값, 화면 노출 경로 미확인) |
+| `preview/home-ui/src/admin/a28-copy.js:566` | 「학부모 · 원장」→「학생 · 원장」 | 관리자 화면 |
+(검색: `preview/**` `.js/.html`, node_modules 제외, 주석 제외. PHP·서버 문구는 이번 범위 아님.)
+
+### 허용 파일
+- `preview/home-ui/src/right-rail.js` (245행 문구만)
+- `preview/home-ui/src/concern/copy.js` (64행 문구만)
+
+### 합격 기준
+| 폭 | 모드 | 기대 |
+|---|---|---|
+| 1280 / 390 | 공부방 홈 | HOT 아래 버튼 글자 = 「공부방 고민방 더 보기」 |
+| 1280 | 커뮤니티 공부방 고민방 입구 | 설명 끝 = 「이웃 공부방과 나눠 보세요.」 |
+| — | `rg "원장 고민방" preview --glob '!**/node_modules/**'` | 0건 |
+
+---
+
+## 티켓 묶음 순서 (충돌 방지)
+- 218-6과 218-8은 같은 `right-rail.js`지만 다른 행. 218-7도 `right-rail.js`(`renderBestSection`)와 `home-right-rail.css`(218-4와 다른 블록). 한 사람이 순서대로 적용: 218-4 → 218-7 → 218-6 → 218-8.
 
 ---
 
