@@ -412,18 +412,26 @@ const lineOf = (name) => (s) => (new RegExp(`export const ${name} = [^\\n]+`).ex
 assert(same('src/Region/TutorRegionUnit.php'), '과외지역 단위 TutorRegionUnit.php 그대로');
 assert(same(copyRel, lineOf('TRC_PICK_FIELD_IDS')), '픽 조건 TRC_PICK_FIELD_IDS 그대로');
 assert(same(copyRel, lineOf('TRC_PRIME_FIELD_IDS')), '프라임 조건 TRC_PRIME_FIELD_IDS 그대로');
-function sqlAddsColumnOrTable() {
+/** 과외쌤 표(tutors · tutor_*)에 새 컬럼·새 표를 만드는 SQL인가. 다른 표의 새 SQL(예: 080 탈퇴 사유)은 이 작업의 「새 컬럼 금지」 대상이 아니다 */
+function sqlAddsTutorColumnOrTable(sql) {
+  return /CREATE\s+TABLE\s+(IF\s+NOT\s+EXISTS\s+)?`?tutor\w*/i.test(sql)
+    || /ALTER\s+TABLE\s+`?tutor\w*`?[^;]*?\bADD\s+COLUMN\b/i.test(sql);
+}
+/** REF 이후 새 컬럼·새 표 줄이 더해진 sql/ 파일. git 실패면 null */
+function sqlFilesAddingColumnOrTable() {
   const adds = /\b(ADD\s+COLUMN|CREATE\s+TABLE)\b/i;
+  const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).split('\n').map((s) => s.trimEnd()).filter(Boolean);
   try {
-    const diff = execFileSync('git', ['diff', REF, '--', 'sql/'], { cwd: root, encoding: 'utf8' });
-    if (diff.split('\n').some((l) => l.startsWith('+') && !l.startsWith('+++') && adds.test(l))) return true;
-    const untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard', '--', 'sql/'], { cwd: root, encoding: 'utf8' });
-    return untracked.split('\n').map((s) => s.trim()).filter(Boolean).some((rel) => adds.test(read(rel)));
+    const tracked = git('diff', '--name-only', REF, '--', 'sql/').filter((rel) =>
+      git('diff', REF, '--', rel).some((l) => l.startsWith('+') && !l.startsWith('+++') && adds.test(l)));
+    const untracked = git('ls-files', '--others', '--exclude-standard', '--', 'sql/').filter((rel) => adds.test(read(rel)));
+    return [...tracked, ...untracked];
   } catch {
-    return true;
+    return null;
   }
 }
-assert(!sqlAddsColumnOrTable(), 'sql/ 새 컬럼·새 표 없음');
+const sqlAdding = sqlFilesAddingColumnOrTable();
+assert(sqlAdding !== null && !sqlAdding.some((rel) => sqlAddsTutorColumnOrTable(read(rel))), 'sql/ 과외쌤 표에 새 컬럼·새 표 없음');
 assert(same('src/Media/TutorProfileImageService.php'), '사진 업로드 서버 그대로');
 assert(
   !Object.values(files).some((s) => s.includes('room-card-default')),
@@ -449,6 +457,11 @@ tamper(!noPreselected(renderedBasic.replace('<option value="middle"', '<option v
 tamper(!noDetailInputs(`${basicForm}<input type="checkbox" name="lesson_places" value="public_place" />`), '마이페이지 기본정보에 수업장소 칸 추가');
 tamper(!noDetailInputs(`${screensOf['tutor-ui renderBasic']}<input id="tutor_profile_photo" type="file" />`), 'tutor-ui 기본등록에 사진 칸 추가');
 tamper(!hasDetailInputs(detailOf['마이페이지 renderDetailForm'].replace('name="feature_1"', 'name="feature_x"')), '마이페이지 상세에서 특징 1 칸 지움');
+tamper(sqlAddsTutorColumnOrTable(read('sql/schema/064_tutor_inquiry_status.sql')), 'SQL 064(tutors 새 컬럼)을 다시 더함');
+tamper(sqlAddsTutorColumnOrTable('ALTER TABLE `tutor_regions` ADD COLUMN x INT NULL;'), 'tutor_regions 새 컬럼');
+tamper(sqlAddsTutorColumnOrTable('CREATE TABLE IF NOT EXISTS tutor_badges (id INT);'), '과외쌤 새 표');
+assert(!sqlAddsTutorColumnOrTable(read('sql/schema/080_withdraw_reasons.sql')), '다른 표 새 SQL(080 탈퇴 사유, 주석에 tutor 글자)은 과외쌤 표 변경 아님');
+assert(!sqlAddsTutorColumnOrTable('ALTER TABLE users ADD COLUMN tutor_note INT NULL;'), '다른 표에 tutor 이름 컬럼은 과외쌤 표 변경 아님');
 tamper(
   tutorBasicMissing({ ...BASIC_FILLED, slogan: '' }).join() === '슬로건' && tutorBasicMissing({ ...BASIC_FILLED, has_primary_region: false }).join() === '과외지역 1',
   'JS 공용 검사: 슬로건·과외지역 1 빼면 그 항목만 빠짐',

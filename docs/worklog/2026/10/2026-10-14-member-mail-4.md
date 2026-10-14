@@ -205,3 +205,8 @@
 - `scripts/verify-withdraw-reason.php` (`npm run verify:withdraw-reason`, CI `cur-006-resend.yml`에 추가) 94 통과: 선택지 서버=화면, 기타 한 줄 다듬기·100자, 저장(회원 번호 없음·날짜만), 메일 두 갈래·링크 형식, 링크 30일·한 번·해시만·틀린 선택지면 안 씀·지난 링크 지움·표 없음, 보내기(고름/안 고름/표 없음/메일 멈춤/받을 주소 없음), 관리자 모음(기간·역할·경로·기타 한 줄)은 sqlite로 실제 실행. 탈퇴 순서(정리 전 역할 읽기 → 정리 → 저장 → 메일)·API(로그인 없음·200·422·관리자 503)·메뉴·화면 연결·정본 74는 코드 정적 검사.
 - 다시 돌림: `verify-member-mail-admin` 95 · `verify-member-mail-schedule` 443 · `verify-mail-lifecycle` 446 · `verify-auth-mail-warm` 423 · `verify-cur-006-resend` 89 · `verify-admin-preview-labels` 207 · `verify:shop-page` 54 · 비밀값 검사 통과. `build:dothome` 성공(CSS 경고 2개는 main 배포 로그에도 있는 기존 경고).
 - 로컬 sqlite로만 돌렸다. MySQL 쪽 `FOR UPDATE`·080 DDL은 운영 적용 뒤 탈퇴 테스트로 확인 필요.
+
+브랜치 CI 「Verify bundle」 1차 실패(`7de8b85c`)
+- `verify-tutor-basic-required.mjs` G절 「sql/ 새 컬럼·새 표 없음」이 080의 `CREATE TABLE`을 잡음. 10-09 과외쌤 기본등록 작업의 「새 컬럼 만들지 말 것」(그 작업 기록 23줄)을 지키는 가드인데, main과 갈라진 뒤 아무 표든 새로 만들면 막는다(main에서는 비교가 비어 늘 통과 → 브랜치에서만 빨간불). 10-14 새벽 079 때 한 번 좁힌 기록(`2026-10-14-decision-fixes-1.md` 46줄)과 같은 문제.
+- 목적대로 **과외쌤 표(`tutors`·`tutor_*`)에 `ALTER TABLE … ADD COLUMN`·`CREATE TABLE` 할 때만** 실패하게 좁힘. 표 이름으로 본다(080 주석에 역할 값 `tutor` 글자가 있어 글자 검색은 안 됨).
+- 가드가 여전히 잡는지: 실제 064(`tutors` 새 컬럼)·`tutor_regions` 새 컬럼·과외쌤 새 표 = 잡음, 080·`users`에 tutor 이름 컬럼 = 통과. 로컬은 이 PC PHP에 `mbstring`이 없어 PHP 하위 검사 4건 실패(10-09 기록과 같은 환경 문제), 바꾼 항목은 통과.
