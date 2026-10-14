@@ -23,3 +23,4 @@
 - 2026-10-15 갱신(종현 t1636): 운영 옛 값 = 자료실만 → 자료실 유지 + 세 방, 02:28 운영 UPDATE(6개). 218·219·227·228 기록.
 - `229-cursor-directive-find-rail-six.md` — Cursor 보완 지시(화면 기본값·seed 2곳·081 을 6개로, 081 운영 0행). 측정 `229-measure-find-rail.py`·판정 `229-judge-find-rail.py`(default·six·old·removed·libold, a061764 기준 모두 24/24)
 - 2026-10-15 03:25 229 §10 범위 축소(종현): 화면·DB 측정 생략, 4곳만, 합격 = diff 4파일 + git grep 0건. §7 개발 용어 문장 정정.
+- `230-review-find-rail-six.md` — 229 검수 PASS(73e88e97, 4파일, 6개 값, seed noop, 081 운영 0행, default·six·libold 24/24). 218·219 기록.
