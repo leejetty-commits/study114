@@ -149,10 +149,32 @@ function concernInPageControl(hrefOrPath, className, ctx, inner, leave = 'inpage
   )}" data-concern-rail-leave="${esc(leave)}">${inner}</button>`;
 }
 
+/** 홈·카탈로그 HOT(218-12): 「지금 고민 HOT」 10개 팝업. 아래 버튼은 글 id 없이 같은 팝업. */
+function hotPopupControl(hrefOrPath, className, ctx, inner, leave) {
+  const path = railPath(hrefOrPath);
+  const posted = path.match(/^\/community\/(director|tutor|parent|solved)\/([^/]+)$/);
+  let postId = '';
+  if (posted) {
+    try {
+      postId = decodeURIComponent(posted[2]);
+    } catch {
+      postId = posted[2];
+    }
+  }
+  const boardPath = railPath(communityHubForRole(ctx.navRole).href);
+  const postAttr = postId ? ` data-concern-hot-post="${esc(postId)}"` : '';
+  const cls = className ? ` class="${className}"` : '';
+  return `<button type="button"${cls} data-concern-hot-open data-concern-hot-board="${esc(boardPath)}"${postAttr} data-concern-rail-nav="${esc(
+    ctx.navRole,
+  )}" data-concern-rail-guest="${esc(ctx.guestFilter)}" data-concern-rail-home="${esc(
+    ctx.homeBase,
+  )}" data-concern-rail-leave="${esc(leave)}">${inner}</button>`;
+}
+
 /** 홈 레일(218-6): 현장 카드·HOT 아래 버튼도 읽기 팝업. 게시판 이동은 홈의 다른 팝업과 같은 방식(railLeaveMode). */
 function railConcernControl(hrefOrPath, className, ctx, inner, slotKey) {
   if (slotKey === 'home_right_rail' && isConcernPath(hrefOrPath)) {
-    return concernInPageControl(hrefOrPath, className, ctx, inner, railLeaveMode(slotKey, ctx));
+    return hotPopupControl(hrefOrPath, className, ctx, inner, railLeaveMode(slotKey, ctx));
   }
   return railSlotAnchor(hrefOrPath, className, ctx, inner, slotKey);
 }

@@ -201,6 +201,7 @@ export const CONCERN_RAIL_COPY = {
   bestEmpty: '이달의 베스트, 아직 글이 미도착중...',
   loadFailed: '글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요',
   bestTitle: '이달의 베스트',
+  hotTitle: '지금 고민 HOT',
   more: '더보기',
   loading: '글을 불러오는 중이에요',
   goBoard: '게시판에서 보기',
