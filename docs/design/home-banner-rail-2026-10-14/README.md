@@ -16,3 +16,5 @@
 - `224-cursor-directive-C.md` — Cursor 작업지시 C(218-6 홈 현장·HOT 읽기 팝업 + 218-8 「원장」 2곳, 브랜치 cursor/home-c-hot-popup-20261014, main merge 금지). 측정 `224-measure-C.py`·판정 `224-judge-C.py`
 - 2026-10-15 갱신(종현 t1595): 218 확정 기록에 「0건 베스트 팝업 제목 = 이달의 베스트」, 「베스트 빈 문구 12px/18px」 추가.
 - `225-cursor-directive-B2.md` — Cursor 작업지시 B2(218-7 보완, 브랜치 cursor/home-b2-best-fix-20261015, C → B2 순서 권장). 측정 `225-measure-B2.py`·판정 `225-judge-B2.py`
+- 2026-10-15 갱신(종현 t1610·t1611): 219 E3 「고민방 3칸 홈 전용?」 보류 닫음 — 찾기 레일도 공부방·과외쌤·비회원 세 방(비회원 제목만), 학생 1칸. 218 확정 기록·219 갱신.
+- `227-cursor-directive-find-rail-fix.md` — Cursor 보완 지시(브랜치 cursor/home-find-rail-three-20261015: 081 SQL 삭제, PHP 2개 origin/main 으로, 화면 코드 유지, force-push 금지). 측정 `227-measure-find-rail.py`·판정 `227-judge-find-rail.py`(91e03e3 vs aa0c74d 24/24 PASS). 그림 `png/227-find-*.png`
