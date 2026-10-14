@@ -1,0 +1,57 @@
+diff --git a/preview/home-ui/src/board-channel-acl.js b/preview/home-ui/src/board-channel-acl.js
+index d3be0945..44ff0a3b 100644
+--- a/preview/home-ui/src/board-channel-acl.js
++++ b/preview/home-ui/src/board-channel-acl.js
+@@ -137,7 +137,7 @@ const DOWNLOAD_ROLES = {
+ 
+ const CHANNEL_INTRO = {
+   'concern-parent': {
+-    title: '학생/학부모 고민방',
++    title: '학생·학부모 고민방',
+     body: '공부방·과외 선택, 학습 루틴, 안전에 대한 고민을 나누는 공간입니다.',
+     allowedRolesLabel: '학생·학부모',
+   },
+diff --git a/preview/home-ui/src/board-engine-copy.js b/preview/home-ui/src/board-engine-copy.js
+index 15bea6a4..ce3f0b38 100644
+--- a/preview/home-ui/src/board-engine-copy.js
++++ b/preview/home-ui/src/board-engine-copy.js
+@@ -433,11 +433,11 @@ export const BOARD_REGISTRY = [
+   },
+   {
+     boardKey: 'concern-parent',
+-    label: '학생/학부모 고민방',
++    label: '학생·학부모 고민방',
+     boardType: 'upload',
+     presetId: 'concern',
+     sectionOwner: 'community',
+-    userFacingMenu: '학생/학부모 고민방',
++    userFacingMenu: '학생·학부모 고민방',
+     /** 문서 concern-family ≡ concern-parent */
+     visibility: 'public',
+     readRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],
+diff --git a/preview/home-ui/src/concern/copy.js b/preview/home-ui/src/concern/copy.js
+index 53b4c897..80bc2fac 100644
+--- a/preview/home-ui/src/concern/copy.js
++++ b/preview/home-ui/src/concern/copy.js
+@@ -42,7 +42,7 @@ export const COMMUNITY_BOARD_DEFS = [
+     id: 'parent',
+     boardKey: 'concern-parent',
+     slug: 'parent',
+-    label: '학생/학부모 고민방',
++    label: '학생·학부모 고민방',
+     roleHint: '공부방·과외 선택·루틴·안전',
+     path: '/community/parent',
+   },
+diff --git a/src/Board/BoardChannelAcl.php b/src/Board/BoardChannelAcl.php
+index f3defffc..a154e54b 100644
+--- a/src/Board/BoardChannelAcl.php
++++ b/src/Board/BoardChannelAcl.php
+@@ -414,7 +414,7 @@ final class BoardChannelAcl
+         $key = self::normalizeBoardKey($boardKey);
+         $map = [
+             'concern-parent' => [
+-                'title' => '학생/학부모 고민방',
++                'title' => '학생·학부모 고민방',
+                 'body' => '공부방·과외 선택, 학습 루틴, 안전에 대한 고민을 나누는 공간입니다.',
+                 'allowedRolesLabel' => '학생·학부모',
+             ],

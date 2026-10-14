@@ -24,3 +24,6 @@
 - `229-cursor-directive-find-rail-six.md` — Cursor 보완 지시(화면 기본값·seed 2곳·081 을 6개로, 081 운영 0행). 측정 `229-measure-find-rail.py`·판정 `229-judge-find-rail.py`(default·six·old·removed·libold, a061764 기준 모두 24/24)
 - 2026-10-15 03:25 229 §10 범위 축소(종현): 화면·DB 측정 생략, 4곳만, 합격 = diff 4파일 + git grep 0건. §7 개발 용어 문장 정정.
 - `230-review-find-rail-six.md` — 229 검수 PASS(73e88e97, 4파일, 6개 값, seed noop, 081 운영 0행, default·six·libold 24/24). 218·219 기록.
+- `231-cursor-directive-C.md` + `231-C.diff` — 작업 C(218-6 홈 HOT 읽기 팝업 + 218-8 「원장」 2곳) 갱신 지시, 224 대체. 기준 40264c1, 브랜치 cursor/home-c-hot-popup-20261015, 합격 = diff 2파일·diff 동일·grep 2개. 열린 질문 Q1(홍보 화면 레일)·Q2(「커뮤니티 더 보기」).
+- 231 **개정 1**(종현 t1651): 218-9 찾기·등록 고민방 팝업 「게시판에서 보기」 → 게시판 이동 추가, 3파일. 실제 origin/main = 58036395(B2 merge).
+- `232-cursor-directive-room-name.md` + `232-room-name.diff` — 218-10 방 이름 「학생·학부모 고민방」 5줄·4파일, 브랜치 cursor/room-name-dot-20261015.

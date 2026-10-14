@@ -1,0 +1,102 @@
+diff --git a/preview/home-ui/src/concern/copy.js b/preview/home-ui/src/concern/copy.js
+index 53b4c897..7bca12df 100644
+--- a/preview/home-ui/src/concern/copy.js
++++ b/preview/home-ui/src/concern/copy.js
+@@ -61,7 +61,7 @@ export const COMMUNITY_BOARD_VISUAL = {
+   director: {
+     kicker: '공부방',
+     icon: '/assets/info-refresh/motif-room.svg',
+-    desc: '운영·모집·공간 운영 질문을 남기고 이웃 원장과 나눠 보세요.',
++    desc: '운영·모집·공간 운영 질문을 남기고 이웃 공부방과 나눠 보세요.',
+     cta: '입장하기',
+     art: 'board-entry__art--room',
+     accent: '',
+diff --git a/preview/home-ui/src/concern/rail-concern-popup.js b/preview/home-ui/src/concern/rail-concern-popup.js
+index 9ca529f3..fd54baa4 100644
+--- a/preview/home-ui/src/concern/rail-concern-popup.js
++++ b/preview/home-ui/src/concern/rail-concern-popup.js
+@@ -130,6 +130,7 @@ function findOpener(mode, boardKey, postId) {
+  *   homeBase: string,
+  *   leaveInNewTab: boolean,
+  *   continueInPage?: boolean,
++ *   leaveToHome?: boolean,
+  *   allRooms?: boolean,
+  * }} opts
+  */
+@@ -138,7 +139,9 @@ export function openConcernRailPopup(opts) {
+   // 레일 배너와 같은 규칙. 학생에게는 공부방·과외쌤 고민방 팝업도 요청도 없다.
+   if (!boardKey || !canShowBoardInRail(boardKey, navRole, { guestFilter: opts.guestFilter })) return;
+   const { label, path } = boardInfo(boardKey);
+-  const boardHref = opts.leaveInNewTab ? `${String(opts.homeBase).replace(/\/$/, '')}/#${path}` : `#${path}`;
++  // 찾기·등록(inpage)도 홈처럼 게시판으로 간다. 찾기는 다른 앱이라 홈 주소를 붙인다.
++  const toHome = opts.leaveInNewTab || opts.leaveToHome;
++  const boardHref = toHome ? `${String(opts.homeBase).replace(/\/$/, '')}/#${path}` : `#${path}`;
+   const blank = opts.leaveInNewTab ? ' target="_blank" rel="noopener"' : '';
+   const goBoard = opts.continueInPage
+     ? `<button type="button" class="rail-popup__go" data-rail-popup-continue>${esc(COPY.goBoard)}</button>`
+@@ -203,7 +206,7 @@ function onDocumentClick(e) {
+     guestFilter: section.getAttribute('data-concern-rail-guest') || '',
+     homeBase: section.getAttribute('data-concern-rail-home') || '',
+     leaveInNewTab: section.getAttribute('data-concern-rail-leave') === 'blank',
+-    continueInPage: section.getAttribute('data-concern-rail-leave') === 'inpage',
++    leaveToHome: section.getAttribute('data-concern-rail-leave') === 'inpage',
+     allRooms: !room && btn.hasAttribute('data-concern-best-all'),
+   });
+ }
+diff --git a/preview/home-ui/src/right-rail.js b/preview/home-ui/src/right-rail.js
+index 3635e523..625ab65e 100644
+--- a/preview/home-ui/src/right-rail.js
++++ b/preview/home-ui/src/right-rail.js
+@@ -121,7 +121,7 @@ function railLeaveMode(slotKey, ctx) {
+ }
+ 
+ /** 찾기·등록 HOT·고민 링크 → 방 배너와 같은 읽기 팝업 버튼. 주소는 바꾸지 않는다. */
+-function concernInPageControl(hrefOrPath, className, ctx, inner) {
++function concernInPageControl(hrefOrPath, className, ctx, inner, leave = 'inpage') {
+   const path = railPath(hrefOrPath);
+   const posted = path.match(/^\/community\/(director|tutor|parent|solved)\/([^/]+)$/);
+   let boardKey = '';
+@@ -146,7 +146,15 @@ function concernInPageControl(hrefOrPath, className, ctx, inner) {
+     ctx.navRole,
+   )}" data-concern-rail-guest="${esc(ctx.guestFilter)}" data-concern-rail-home="${esc(
+     ctx.homeBase,
+-  )}" data-concern-rail-leave="inpage">${inner}</button>`;
++  )}" data-concern-rail-leave="${esc(leave)}">${inner}</button>`;
++}
++
++/** 홈 레일(218-6): 현장 카드·HOT 아래 버튼도 읽기 팝업. 게시판 이동은 홈의 다른 팝업과 같은 방식(railLeaveMode). */
++function railConcernControl(hrefOrPath, className, ctx, inner, slotKey) {
++  if (slotKey === 'home_right_rail' && isConcernPath(hrefOrPath)) {
++    return concernInPageControl(hrefOrPath, className, ctx, inner, railLeaveMode(slotKey, ctx));
++  }
++  return railSlotAnchor(hrefOrPath, className, ctx, inner, slotKey);
+ }
+ 
+ function railSlotAnchor(hrefOrPath, className, ctx, inner, slotKey) {
+@@ -242,7 +250,7 @@ function resolveConcernBoardKeysForSlot(slotKey, ctx) {
+ }
+ 
+ function communityHubForRole(role) {
+-  if (role === 'study_room') return { href: '#/community/director', label: '원장 고민방 더 보기' };
++  if (role === 'study_room') return { href: '#/community/director', label: '공부방 고민방 더 보기' };
+   if (role === 'tutor') return { href: '#/community/tutor', label: '과외쌤 고민방 더 보기' };
+   return { href: '#/community', label: '커뮤니티 더 보기' };
+ }
+@@ -412,7 +420,7 @@ function railStateName(status, count) {
+ function renderLivePostCard(post, ctx, slotKey) {
+   const board = getConcernBoardByKey(post.boardKey);
+   const href = `${board?.path || '/community'}/${encodeURIComponent(post.id)}`;
+-  return railSlotAnchor(
++  return railConcernControl(
+     href,
+     'live-rail-card',
+     ctx,
+@@ -532,7 +540,7 @@ function renderHotSection(slotKey, ctx, boardKeys, liveId) {
+       </div>
+       <div class="live-rail-slot__band"><strong class="live-rail-slot__title">${esc(copy.title)}</strong></div>
+       ${body}
+-      ${railSlotAnchor(copy.ctaHref, 'live-rail-slot__cta', ctx, esc(copy.ctaLabel), slotKey)}
++      ${railConcernControl(copy.ctaHref, 'live-rail-slot__cta', ctx, esc(copy.ctaLabel), slotKey)}
+     </section>`;
+ }
+ 
