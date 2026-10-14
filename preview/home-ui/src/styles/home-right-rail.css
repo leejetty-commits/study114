@@ -30,9 +30,12 @@
   overflow: hidden;
 }
 
-.live-rail-slot--best,
 .live-rail-slot--room {
   --rail-tone: var(--rail-tone-community);
+}
+
+.live-rail-slot--best {
+  --rail-tone: var(--rail-tone-hot);
 }
 
 .live-rail-slot--field {
@@ -631,9 +634,12 @@ body.is-rail-popup-open {
   padding: var(--space-4, 1rem);
 }
 
-.rail-popup[data-rail-popup-kind='concern-room'],
-.rail-popup[data-rail-popup-kind='concern-best'] {
+.rail-popup[data-rail-popup-kind='concern-room'] {
   --rail-tone: var(--rail-tone-community);
+}
+
+.rail-popup[data-rail-popup-kind='concern-best'] {
+  --rail-tone: var(--rail-tone-hot);
 }
 
 .rail-popup[data-rail-popup-kind='info-board'] {
@@ -901,4 +907,28 @@ button.rail-popup__go {
     max-height: none;
     border-radius: var(--radius-surface, 0.75rem) var(--radius-surface, 0.75rem) 0 0;
   }
+}
+
+/* 218-7 · 이달의 베스트 0건: 띠·빈 문구를 버튼으로(모양은 그대로) */
+.live-rail-best__open {
+  display: block;
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.live-rail-slot__band.live-rail-best__open {
+  width: calc(100% + 2 * var(--space-4));
+}
+
+button.live-rail-empty.live-rail-best__open {
+  background: transparent;
+  padding: 0;
+}
+
+.live-rail-best__open:focus-visible {
+  outline: 2px solid var(--uds-ink, #1c1917);
+  outline-offset: 2px;
 }
