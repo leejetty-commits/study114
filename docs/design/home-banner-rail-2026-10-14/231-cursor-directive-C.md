@@ -329,7 +329,7 @@ index 6a0bd1f0..624822bd 100644
 2. (Git Bash) `git diff origin/main...HEAD | grep -v '^index ' | diff - <(grep -v '^index ' docs/design/home-banner-rail-2026-10-14/231-C.diff)` → 빈 출력
 3. `git grep -nE "원장 고민방|이웃 원장" HEAD -- preview` → 0건
 4. `git grep -n "railConcernControl" HEAD -- preview/home-ui/src/right-rail.js` → 정확히 3줄
-5. `git grep -n "data-rail-popup-continue" HEAD -- preview/home-ui/src/concern preview/home-ui/src/library scripts/verify-rail-info-banners.mjs` → 0건
+5. `git grep -n "data-rail-popup-continue" HEAD -- preview/home-ui/src/concern preview/home-ui/src/library scripts/verify-rail-info-banners.mjs` → **정확히 2줄**: `rail-concern-popup.js:147`(`continueInPage` 갈래 — diff 가 남긴 줄, 이제 넘기는 곳이 없어 화면에 안 나옴) + `verify-rail-info-banners.mjs:931`(`cont: …` — 그 버튼이 **없어야** 통과하는 검사). `info-rail.js` 0건. (233 검수: 처음 적은 「0건」은 기대값 오류, 코드 결함 아님)
 
 화면 측정·Docker·스크린숏 **하지 않음**.
 
