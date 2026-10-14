@@ -122,3 +122,4 @@
 - 2026-10-14 작업 A(218-1·2·3) — 브랜치 cursor/home-a-banner-gap-20261014 @ a7ce6387 · 리포트 docs/worklog/2026/10/2026-10-14-home-a-report.md · 상태: 검수 대기
 - 2026-10-14 작업 B(218-4·218-7) 브랜치 cursor/home-b-best-red-20261014 ed4d6a1f push, 검수 대기
 - 2026-10-14 작업 B 배포 da26876a · 운영 확인 PASS
+- 2026-10-15 작업 B2(218-7 보완) 브랜치 cursor/home-b2-best-fix-20261015 a49f256d push, 검수 대기
