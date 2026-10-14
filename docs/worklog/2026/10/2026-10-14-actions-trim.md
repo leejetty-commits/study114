@@ -63,6 +63,11 @@ API가 돌려준 1,000건 기준 어림(실제 과금은 작업마다 1분 올�
 - deploy.yml을 읽는 검사: `node scripts/verify-cur-006-resend.mjs` OK · `php scripts/verify-cur-006-resend.php` passed=89 failed=0 · `node scripts/verify-tutor-inquiries-settings.mjs` OK
 - `npm run verify:shop-page` pass 54 / fail 0 (worktree `preview/home-ui/node_modules`는 루트 것을 junction으로 연결, git 미추적)
 
+## 5-1. 브랜치 CI
+
+- `3d5d69e1`(workflow·문서 함께 바뀐 push): Board ACL gate `38553185622` success(43초) · Verify bundle `38553185599` success(31초). ShopPage gate·배포는 뜨지 않음(예상대로).
+- 이 기록을 적은 다음 커밋(문서만 바뀐 push): 뜬 workflow가 없어야 한다 — 확인 결과는 보고에 적는다.
+
 ## 6. 배포 전 사용자 할 일
 
 - 없음(SQL·Secrets·`.htaccess`·환경변수 변경 없음).
