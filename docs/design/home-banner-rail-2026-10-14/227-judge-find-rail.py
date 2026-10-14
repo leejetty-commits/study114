@@ -1,8 +1,11 @@
-# 227 판정: python3 227-judge-find-rail.py /tmp/fr-<브랜치>.json /tmp/fr-<main>.json   기대: 24/24 PASS []
+# 227 판정: python3 227-judge-find-rail.py /tmp/fr-<브랜치>-<경우>.json /tmp/fr-<main>-default.json [default|old|removed]   기대: 경우마다 24/24 PASS []
 import json,sys
 a=json.load(open(sys.argv[1]));b=json.load(open(sys.argv[2]))
 D,T,P='concern-director','concern-tutor','concern-parent'
-FIND={'공부방':[D,T,P],'과외쌤':[T,D,P],'학생':[P],'비회원':[P,D,T]}
+scen=sys.argv[3] if len(sys.argv)>3 else 'default'
+FIND={'default':{'공부방':[D,T,P],'과외쌤':[T,D,P],'학생':[P],'비회원':[P,D,T]},
+      'old':{'공부방':[P],'과외쌤':[P],'학생':[P],'비회원':[P]},
+      'removed':{'공부방':[D,P],'과외쌤':[D,P],'학생':[P],'비회원':[P,D]}}[scen]
 BAIT=('미끼작성자','미끼본문내용')
 DEV=('concern-','undefined','null','NaN','search_right_rail','intro_only','board_key','sourceBoardKeys')
 ok=0;bad=[]
@@ -11,7 +14,8 @@ for k,v in a.items():
   if s=='find':
     c['rooms']=r.get('rooms')==FIND[n]
     c['best']=r.get('best')==FIND[n]
-    c['own_first']=bool(r.get('rooms')) and r['rooms'][0]=={'공부방':D,'과외쌤':T}.get(n,P)
+    own={'공부방':D,'과외쌤':T}.get(n,P)
+    c['own_first']=bool(r.get('rooms')) and (r['rooms'][0]==own or own not in FIND[n])
     nr=lambda o:[x for x in (o or '').split('|') if x!='live-rail-slot--room']
     c['order']=nr(r.get('order'))==nr(y.get('order'))   # 고민방 칸 말고 나머지 칸 순서는 main 과 같음
     c['room_slots']=(r.get('order') or '').split('|').count('live-rail-slot--room')==len(FIND[n])

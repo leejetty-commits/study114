@@ -1,4 +1,6 @@
-# 227 측정: python3 227-measure-find-rail.py <home-ui 포트> <search-ui 포트>  → /tmp/fr-<home포트>.json
+# 227 측정: python3 227-measure-find-rail.py <home-ui 포트> <search-ui 포트> [default|old|removed]  → /tmp/fr-<home포트>-<경우>.json
+# 경우: default = 저장 목록 없음(화면 기본값 = 081 뒤 DB 값과 같은 세 방), old = 저장 목록이 옛 값(학생/학부모 방만),
+#       removed = 운영자가 과외쌤 방을 뺀 목록. 저장 목록은 관리 화면 저장값과 같은 길(sessionStorage 덮어쓰기)로 넣는다.
 # 찾기 화면·홈 레일 × 4모드 × 3폭. 서버는 흉내(비회원 응답은 access=titles 이지만 작성자·본문 미끼를 일부러 넣음).
 import json,sys
 from urllib.parse import urlparse,parse_qs
@@ -32,13 +34,18 @@ best:[...r.querySelectorAll('.live-rail-best__item')].filter(vis).map(e=>e.datas
 order:[...r.querySelectorAll('.live-rail-slot')].map(e=>e.className.replace(/live-rail-slot /,'')).join('|'),
 text:r.innerText}}'''
 POP='''()=>{const p=document.querySelector('.rail-popup');if(!p)return null;return {text:p.innerText,body:!!p.querySelector('.rail-popup__body'),guest:!!p.querySelector('.rail-popup__guest')}}'''
-port,sport=sys.argv[1],sys.argv[2];res={}
+port,sport=sys.argv[1],sys.argv[2];scen=sys.argv[3] if len(sys.argv)>3 else 'default';res={}
+STORED={'old':['faq','concern-parent','safe-guide'],'removed':['faq','concern-director','concern-parent','safe-guide']}
+INIT=None
+if scen in STORED:
+  INIT="sessionStorage.setItem('study114-right-rail-slot-definitions-v1',JSON.stringify([{slotKey:'search_right_rail',sourceBoardKey:'faq',sourceBoardKeys:%s}]))"%json.dumps(STORED[scen])
 with sync_playwright() as p:
   br=p.chromium.launch()
   for screen in ('find','home'):
     for w in (1280,1023,390):
       for n,rt,home,find in C:
         ctx=br.new_context(viewport={'width':w,'height':1100});pg=ctx.new_page()
+        if INIT: pg.add_init_script(INIT)
         if rt: pg.route('**/api/auth/me.php',lambda route,req,rt=rt: route.fulfill(status=200,content_type='application/json',body=json.dumps({'ok':True,'authenticated':True,'email_verified':True,'role_type':rt,'user_id':1,'email':'t@t','name':'t','phone_verified':True})))
         g=rt is None
         pg.route('**/api/board/concern-hot.php*',lambda route,req,g=g: api(route,req,g))
@@ -49,9 +56,9 @@ with sync_playwright() as p:
           el=pg.locator('.live-rail-best__item').first
           if el.count():
             el.scroll_into_view_if_needed();el.click(force=True);pg.wait_for_timeout(1000);d['pop']=pg.evaluate(POP)
-            if w==1280: pg.screenshot(path=f'/tmp/fr-{port}-{n}.png')
+            if w==1280: pg.screenshot(path=f'/tmp/fr-{port}-{scen}-{n}.png')
         if d['rail']: d['rail']['text']=d['rail']['text'][:600]
         res[f'{screen}|{w}|{n}']=d;ctx.close()
   br.close()
-json.dump(res,open(f'/tmp/fr-{port}.json','w'),ensure_ascii=False,indent=0)
+json.dump(res,open(f'/tmp/fr-{port}-{scen}.json','w'),ensure_ascii=False,indent=0)
 for k,v in res.items(): print(k,json.dumps({'rooms':(v['rail'] or {}).get('rooms'),'best':(v['rail'] or {}).get('best'),'pop':bool(v.get('pop'))},ensure_ascii=False))
