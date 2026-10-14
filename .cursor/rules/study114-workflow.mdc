@@ -27,6 +27,7 @@ alwaysApply: true
 ## 4. 자동배포의 의미
 
 - GitHub Actions(`deploy.yml`)는 push 시 **CI에서 `build:dothome` 실행** 후 `public/`(+ `src/`) FTP 업로드.
+- **문서만 바뀐 `main` push(`docs/**`·`*.md`, `public/` 밖)는 배포하지 않는다** — 사이트에 바뀌는 것이 없음. 다시 배포가 필요하면 Actions 화면에서 「Deploy to dothome」 수동 실행(2026-10-14 사용자 결정 「Actions 시간 줄이기」).
 - 로컬만 변경된 파일·미 push 커밋은 배포되지 않음. 지도 키는 Variable `VITE_NAVER_MAP_CLIENT_ID` 필요.
 - **"Actions 성공" ≠ "내 최신 수정 반영"**
 
@@ -91,5 +92,5 @@ alwaysApply: true
 ## 9. ShopPage 게이트 (정본 54)
 
 - 정본: `docs/internal/54-shop-page-lock.md` · 레드라인 4 (섹션순서 / raw직접렌더 / owner·public분기 / 금지키)
-- 로컬·CI: `npm run verify:shop-page` — PR·`main`·배포 전 필수 (`shop-page-gate.yml` + `deploy.yml`)
+- 로컬·CI: `npm run verify:shop-page` — PR·`main`·배포 전 필수 (PR = `shop-page-gate.yml`, `main`·배포 = `deploy.yml` 가드. 2026-10-14부터 `main` push에서 두 번 돌지 않게 `shop-page-gate.yml`은 PR만)
 - 다음 확장: 과외쌤 일반화보다 **등록점검(마이샵 완성도)** 우선

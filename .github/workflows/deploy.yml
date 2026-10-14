@@ -1,9 +1,18 @@
 name: Deploy to dothome
 
+# 문서만 바뀐 main push(기록 병합 등)는 배포하지 않는다 — 사이트에 바뀌는 것이 없다.
+# public/ 아래 파일(.md 포함)은 FTP로 올라가므로 다시 넣는다. 필요하면 Actions 화면에서 수동 실행.
+# Actions 시간 줄이기(2026-10-14 사용자 결정).
 on:
   push:
     branches:
       - main
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!**/*.md"
+      - "public/**"
+  workflow_dispatch:
 
 jobs:
   verify-board-acl:

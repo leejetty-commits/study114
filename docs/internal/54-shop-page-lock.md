@@ -3,8 +3,8 @@
 **기준일:** 2026-08-21  
 **지위:** ShopPage 작업의 **정본(SSOT)**. 시안·꾸미기보다 포맷 붕괴 방지 우선.  
 **검증(머지 게이트):** `npm run verify:shop-page` (= `node scripts/run-verify-shop-page.mjs`)  
-- CI: `.github/workflows/shop-page-gate.yml` (PR + `main` push)  
-- 배포: `deploy.yml`에서도 동일 가드 — **실패 시 FTP 배포 불가**  
+- CI: `.github/workflows/shop-page-gate.yml` (PR)  
+- 배포: `deploy.yml`에서도 동일 가드 — **실패 시 FTP 배포 불가**. `main` push 때는 이 가드가 ShopPage 검사를 맡는다(2026-10-14 사용자 결정 「Actions 시간 줄이기」로 `shop-page-gate.yml`의 `main` push 트리거를 걷어냄 — 같은 검사가 두 번 돌던 중복. 근거 `docs/worklog/2026/10/2026-10-14-actions-trim.md`)  
 - GitHub → Settings → Branches → `main` 보호에 **`ShopPage gate / verify:shop-page`** 를 required check로 추가 권장
 
 한 줄: *지금은 샵을 더 꾸밀 단계가 아니라, 이 포맷이 다시 안 무너지게 잠그는 단계다.*
@@ -100,5 +100,5 @@ UI: 등록점검 **「마이샵 완성도」** — 공개 필수와 분리.
 | `myshop-render.js` | VM → HTML |
 | `screens.js` | 등록점검 UI |
 | `scripts/verify-shop-page.mjs` | 회귀 |
-| `.github/workflows/shop-page-gate.yml` | PR/main 게이트 |
+| `.github/workflows/shop-page-gate.yml` | PR 게이트 (`main`은 `deploy.yml` 가드) |
 | `.cursor/rules/shop-page-lock.mdc` | 에이전트 레드라인 |
