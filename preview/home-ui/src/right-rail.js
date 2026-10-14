@@ -121,7 +121,7 @@ function railLeaveMode(slotKey, ctx) {
 }
 
 /** 찾기·등록 HOT·고민 링크 → 방 배너와 같은 읽기 팝업 버튼. 주소는 바꾸지 않는다. */
-function concernInPageControl(hrefOrPath, className, ctx, inner) {
+function concernInPageControl(hrefOrPath, className, ctx, inner, leave = 'inpage') {
   const path = railPath(hrefOrPath);
   const posted = path.match(/^\/community\/(director|tutor|parent|solved)\/([^/]+)$/);
   let boardKey = '';
@@ -146,7 +146,15 @@ function concernInPageControl(hrefOrPath, className, ctx, inner) {
     ctx.navRole,
   )}" data-concern-rail-guest="${esc(ctx.guestFilter)}" data-concern-rail-home="${esc(
     ctx.homeBase,
-  )}" data-concern-rail-leave="inpage">${inner}</button>`;
+  )}" data-concern-rail-leave="${esc(leave)}">${inner}</button>`;
+}
+
+/** 홈 레일(218-6): 현장 카드·HOT 아래 버튼도 읽기 팝업. 게시판 이동은 홈의 다른 팝업과 같은 방식(railLeaveMode). */
+function railConcernControl(hrefOrPath, className, ctx, inner, slotKey) {
+  if (slotKey === 'home_right_rail' && isConcernPath(hrefOrPath)) {
+    return concernInPageControl(hrefOrPath, className, ctx, inner, railLeaveMode(slotKey, ctx));
+  }
+  return railSlotAnchor(hrefOrPath, className, ctx, inner, slotKey);
 }
 
 function railSlotAnchor(hrefOrPath, className, ctx, inner, slotKey) {
@@ -242,7 +250,7 @@ function resolveConcernBoardKeysForSlot(slotKey, ctx) {
 }
 
 function communityHubForRole(role) {
-  if (role === 'study_room') return { href: '#/community/director', label: '원장 고민방 더 보기' };
+  if (role === 'study_room') return { href: '#/community/director', label: '공부방 고민방 더 보기' };
   if (role === 'tutor') return { href: '#/community/tutor', label: '과외쌤 고민방 더 보기' };
   return { href: '#/community', label: '커뮤니티 더 보기' };
 }
@@ -412,7 +420,7 @@ function railStateName(status, count) {
 function renderLivePostCard(post, ctx, slotKey) {
   const board = getConcernBoardByKey(post.boardKey);
   const href = `${board?.path || '/community'}/${encodeURIComponent(post.id)}`;
-  return railSlotAnchor(
+  return railConcernControl(
     href,
     'live-rail-card',
     ctx,
@@ -532,7 +540,7 @@ function renderHotSection(slotKey, ctx, boardKeys, liveId) {
       </div>
       <div class="live-rail-slot__band"><strong class="live-rail-slot__title">${esc(copy.title)}</strong></div>
       ${body}
-      ${railSlotAnchor(copy.ctaHref, 'live-rail-slot__cta', ctx, esc(copy.ctaLabel), slotKey)}
+      ${railConcernControl(copy.ctaHref, 'live-rail-slot__cta', ctx, esc(copy.ctaLabel), slotKey)}
     </section>`;
 }
 

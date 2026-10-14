@@ -24,7 +24,7 @@ import { openRailPopup, syncRailPopupSession } from '../rail-popup.js';
 /**
  * @typedef {{ navRole: string, homeBase: string, leaveInNewTab: boolean, continueInPage?: boolean }} InfoRailCtx
  * leaveInNewTab: 상세 레일·absolute 에서는 팝업의 게시판 이동을 홈 주소 새 탭으로 연다.
- * continueInPage: 찾기·등록은 팝업 안에서 본문·목록을 이어 본다.
+ * continueInPage: 찾기·등록. 팝업 「게시판에서 보기」는 홈 주소를 붙여 같은 탭에서 게시판으로 간다(218-9).
  */
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
@@ -216,13 +216,12 @@ function findOpener(boardKey, postId) {
  * @param {{ boardKey: string, postId: string, opener: HTMLElement|null, navRole: string, homeBase: string, leaveInNewTab: boolean, continueInPage?: boolean }} opts
  */
 function openInfoBoardPopup({ boardKey, postId, opener, navRole, homeBase, leaveInNewTab, continueInPage }) {
+  // 찾기·등록(continueInPage)도 홈처럼 게시판으로 간다. 찾기는 다른 앱이라 홈 주소를 붙인다(218-9).
   const board = LIBRARY_BOARDS.find((b) => b.boardKey === boardKey);
   if (!board || !canDiscoverBoard(boardKey, railViewer(navRole).boardRole)) return;
-  const boardHref = leaveInNewTab ? `${String(homeBase).replace(/\/$/, '')}/#${board.path}` : `#${board.path}`;
+  const boardHref = leaveInNewTab || continueInPage ? `${String(homeBase).replace(/\/$/, '')}/#${board.path}` : `#${board.path}`;
   const blank = leaveInNewTab ? ' target="_blank" rel="noopener"' : '';
-  const goBoard = continueInPage
-    ? `<button type="button" class="rail-popup__go" data-rail-popup-continue>${esc(COPY.goBoard)}</button>`
-    : `<a class="rail-popup__go" href="${esc(boardHref)}" data-rail-popup-leave${blank}>${esc(COPY.goBoard)}</a>`;
+  const goBoard = `<a class="rail-popup__go" href="${esc(boardHref)}" data-rail-popup-leave${blank}>${esc(COPY.goBoard)}</a>`;
   openRailPopup({
     kind: 'info-board',
     title: board.label,

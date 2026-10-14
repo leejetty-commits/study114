@@ -61,7 +61,7 @@ export const COMMUNITY_BOARD_VISUAL = {
   director: {
     kicker: '공부방',
     icon: '/assets/info-refresh/motif-room.svg',
-    desc: '운영·모집·공간 운영 질문을 남기고 이웃 원장과 나눠 보세요.',
+    desc: '운영·모집·공간 운영 질문을 남기고 이웃 공부방과 나눠 보세요.',
     cta: '입장하기',
     art: 'board-entry__art--room',
     accent: '',

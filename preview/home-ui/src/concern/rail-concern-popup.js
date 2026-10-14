@@ -130,6 +130,7 @@ function findOpener(mode, boardKey, postId) {
  *   homeBase: string,
  *   leaveInNewTab: boolean,
  *   continueInPage?: boolean,
+ *   leaveToHome?: boolean,
  *   allRooms?: boolean,
  * }} opts
  */
@@ -138,7 +139,9 @@ export function openConcernRailPopup(opts) {
   // 레일 배너와 같은 규칙. 학생에게는 공부방·과외쌤 고민방 팝업도 요청도 없다.
   if (!boardKey || !canShowBoardInRail(boardKey, navRole, { guestFilter: opts.guestFilter })) return;
   const { label, path } = boardInfo(boardKey);
-  const boardHref = opts.leaveInNewTab ? `${String(opts.homeBase).replace(/\/$/, '')}/#${path}` : `#${path}`;
+  // 찾기·등록(inpage)도 홈처럼 게시판으로 간다. 찾기는 다른 앱이라 홈 주소를 붙인다.
+  const toHome = opts.leaveInNewTab || opts.leaveToHome;
+  const boardHref = toHome ? `${String(opts.homeBase).replace(/\/$/, '')}/#${path}` : `#${path}`;
   const blank = opts.leaveInNewTab ? ' target="_blank" rel="noopener"' : '';
   const goBoard = opts.continueInPage
     ? `<button type="button" class="rail-popup__go" data-rail-popup-continue>${esc(COPY.goBoard)}</button>`
@@ -203,7 +206,7 @@ function onDocumentClick(e) {
     guestFilter: section.getAttribute('data-concern-rail-guest') || '',
     homeBase: section.getAttribute('data-concern-rail-home') || '',
     leaveInNewTab: section.getAttribute('data-concern-rail-leave') === 'blank',
-    continueInPage: section.getAttribute('data-concern-rail-leave') === 'inpage',
+    leaveToHome: section.getAttribute('data-concern-rail-leave') === 'inpage',
     allRooms: !room && btn.hasAttribute('data-concern-best-all'),
   });
 }

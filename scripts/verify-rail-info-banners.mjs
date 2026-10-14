@@ -908,7 +908,7 @@ try {
     s2 && (await ev(() => window.__store.getInfoRailList({ boardRole: 'supply-room', ownerKey: '11:study_room_owner:' }, 'info-room') === null)),
   );
 
-  // 찾기 레일(호출부가 absolute여도) → 팝업은 그대로, 「게시판에서 보기」는 인페이지
+  // 찾기 레일(호출부가 absolute여도) → 팝업은 그대로, 「게시판에서 보기」는 홈 게시판 같은 탭 링크(218-9)
   await session({ user_id: 11, role_type: 'study_room_owner', name: 'r', email: 'r@x' }, 'supply-room');
   await ev(() => {
     document.getElementById('rail').innerHTML = '';
@@ -923,19 +923,18 @@ try {
   }
   ok(`${B}search_rail_popup_opens_hash_unchanged`, sOpened && (await ev(() => location.hash)) === hashS);
   const goS = await ev((label) => {
-    const btn = [...document.querySelectorAll('#rail-popup [data-rail-popup-continue]')].find((x) => x.textContent.trim() === label);
-    const blank = [...document.querySelectorAll('#rail-popup a')].some((a) => a.getAttribute('target') === '_blank' || String(a.getAttribute('href') || '').includes('/#/library'));
-    return btn ? { tag: btn.tagName, blank } : { tag: '', blank };
+    const a = [...document.querySelectorAll('#rail-popup a[data-rail-popup-leave]')].find((x) => x.textContent.trim() === label);
+    return {
+      tag: a?.tagName || '',
+      href: a?.getAttribute('href') || '',
+      blank: a?.getAttribute('target') === '_blank',
+      cont: Boolean(document.querySelector('#rail-popup [data-rail-popup-continue]')),
+    };
   }, POLICY_COPY.goBoard);
-  ok(`${B}search_go_board_in_page`, sOpened && goS?.tag === 'BUTTON' && goS.blank === false, JSON.stringify(goS));
-  if (sOpened && goS?.tag === 'BUTTON') {
-    await page.click('#rail-popup [data-rail-popup-continue]').catch(() => {});
-  }
   ok(
-    `${B}search_go_board_stays_on_screen`,
-    sOpened &&
-      (await ev(() => location.hash)) === hashS &&
-      Boolean(await ev(() => document.getElementById('rail-popup') && document.getElementById('rail-popup').getAttribute('data-rail-popup-continued') === 'true')),
+    `${B}search_go_board_link_same_tab`,
+    sOpened && goS.tag === 'A' && goS.href.includes('/#/library') && !goS.blank && !goS.cont,
+    JSON.stringify(goS),
   );
   if (sOpened) await page.keyboard.press('Escape');
   await gone(popupSel);
@@ -968,7 +967,7 @@ try {
   if (peekOpen) await page.keyboard.press('Escape');
   await gone('#rail-guide-peek-overlay');
 
-  // 찾기: 고민 HOT·방 「게시판에서 보기」도 인페이지
+  // 찾기: 고민 HOT·방 레일 버튼은 인페이지(팝업), 팝업 「게시판에서 보기」는 홈 게시판 같은 탭 링크(218-9)
   const hotBtn = await ev(() => {
     const hot = document.querySelector('#rail-search [data-rail-hot]');
     const card = hot?.querySelector('[data-concern-rail-open]');
@@ -983,11 +982,14 @@ try {
   await page.click('#rail-search [data-rail-room] [data-concern-rail-more]').catch(() => {});
   const concernOpen = await wait(popupSel);
   const concernGo = await ev((label) => {
-    const btn = [...document.querySelectorAll('#rail-popup [data-rail-popup-continue]')].find((x) => x.textContent.trim() === label);
-    const blank = [...document.querySelectorAll('#rail-popup a')].some((a) => a.getAttribute('target') === '_blank');
-    return { tag: btn?.tagName || '', blank, hash: location.hash };
+    const a = [...document.querySelectorAll('#rail-popup a[data-rail-popup-leave]')].find((x) => x.textContent.trim() === label);
+    return { tag: a?.tagName || '', href: a?.getAttribute('href') || '', blank: a?.getAttribute('target') === '_blank', hash: location.hash };
   }, POLICY_COPY.goBoard);
-  ok(`${B}search_concern_go_in_page`, concernOpen && concernGo.tag === 'BUTTON' && !concernGo.blank && concernGo.hash === hashGuide, JSON.stringify(concernGo));
+  ok(
+    `${B}search_concern_go_board_link_same_tab`,
+    concernOpen && concernGo.tag === 'A' && concernGo.href.includes('/#/community') && !concernGo.blank && concernGo.hash === hashGuide,
+    JSON.stringify(concernGo),
+  );
   if (concernOpen) await page.keyboard.press('Escape');
   await gone(popupSel);
 
@@ -1020,12 +1022,14 @@ try {
       infoOpened = await wait(popupSel);
     }
     const infoGo = await ev((copy) => {
-      const btn = [...document.querySelectorAll('#rail-popup [data-rail-popup-continue]')].find((x) => x.textContent.trim() === copy);
-      const login = [...document.querySelectorAll('#rail-popup a.rail-popup__login')].map((a) => a.getAttribute('href') || '');
-      const blank = [...document.querySelectorAll('#rail-popup a')].some((a) => a.getAttribute('target') === '_blank' || String(a.getAttribute('href') || '').includes('/#/library'));
-      return { tag: btn?.tagName || '', blank, login, hash: location.hash };
+      const a = [...document.querySelectorAll('#rail-popup a[data-rail-popup-leave]')].find((x) => x.textContent.trim() === copy);
+      return { tag: a?.tagName || '', href: a?.getAttribute('href') || '', blank: a?.getAttribute('target') === '_blank', hash: location.hash };
     }, POLICY_COPY.goBoard);
-    ok(`${B}${label}_info_go_in_page`, infoOpened && infoGo.tag === 'BUTTON' && !infoGo.blank && infoGo.hash === hash0, JSON.stringify(infoGo));
+    ok(
+      `${B}${label}_info_go_board_link_same_tab`,
+      infoOpened && infoGo.tag === 'A' && infoGo.href.includes('/#/library') && !infoGo.blank && infoGo.hash === hash0,
+      JSON.stringify(infoGo),
+    );
     if (infoOpened) await page.keyboard.press('Escape');
     await gone(popupSel);
   }
