@@ -146,7 +146,7 @@ MariaDB 컨테이너(`mariadb:10.11` 등)를 못 띄우면 「못 함」으로 �
 | removed | `['faq','concern-director','concern-parent','safe-guide']` | D,P / D,P / P / P,D |
 | libold | `['faq','library-template','safe-guide']`(운영 옛 값) | 고민방 0칸, 베스트·현장 층도 없음, 남은 칸 순서 = main 에서 베스트·현장을 뺀 것 |
 
-공통: 비회원 레일·팝업 작성자·본문 미끼 0건, 고민방 말고 다른 칸 순서가 main 과 같음, 홈 레일 4모드 main 과 글자까지 같음, 화면 글자에 `concern-`·`library-template`가 아닌 개발 용어(`undefined`·`null`·`NaN`·`search_right_rail`·`intro_only`·`board_key`·`sourceBoardKeys`) 0건.
+공통: 비회원 레일·팝업 작성자·본문 미끼 0건, 고민방 말고 다른 칸 순서가 main 과 같음, 홈 레일 4모드 main 과 글자까지 같음, 화면 글자에 `undefined`·`null`·`NaN`·`search_right_rail`·`intro_only`·`board_key`·`sourceBoardKeys` 0건.
 코드: 2-5 조건. DB: 6절 영향 행 1·1·1·1·0·0·0.
 
 우동공과2 사전 측정(a061764 그대로, main a7cddb2 기준): default·old·removed·libold·six **모두 24/24 PASS** — 화면은 이미 6개 목록과 같은 결과(자료실 키는 레일에 안 그려짐). 따라서 이번 보완 뒤에도 같은 결과여야 하고, 6개 기본값 반영은 2-5 코드 조건으로 확인.
@@ -170,3 +170,13 @@ for s in default six old removed libold; do python3 229-judge-find-rail.py /tmp/
    - `docs/worklog/2026/10/2026-10-15-find-rail-six-report.md` — 브랜치·커밋 해시, `git diff --stat origin/main...HEAD`, 1절 결과, 다섯 경우 판정 출력, 6절 영향 행 표(MySQL/MariaDB 버전), 그림 경로, 지시와 다른 점, 확인 못 한 것.
    - `docs/worklog/2026/10/2026-10-10-work-queue.md` 한 줄: `- 2026-10-15 찾기 레일 6개 목록(229, 종현 t1636) 브랜치 cursor/home-find-rail-three-20261015 <해시> push, 검수 대기 (운영 DB 는 02:28 종현 반영 완료)`
 7. 답장: 보고서 경로, 브랜치 커밋 해시, main 기록 커밋 해시.
+
+## 10. 범위 축소 (2026-10-15 03:25, 종현 지적) — 이 절이 6~9절보다 우선
+
+- **하지 않음:** 8절 화면 측정, 6절 DB 확인(MySQL·MariaDB·Docker 모두). 화면 확인은 우동공과2가 검수 때 직접 함.
+- **할 일:** 2절의 4곳만 바꿈(2-1 `right-rail-store.js:71`, 2-2 `ContentAclSeedGuard.php`, 2-3 `ContentSchemaMigrateService.php:785`, 2-4 `081` SQL) → 커밋 → `git merge --no-edit origin/main`(rebase·force-push 금지) → `git push origin cursor/home-find-rail-three-20261015`.
+- **합격 기준(이 두 개만):**
+  1. `git diff --stat origin/main...HEAD` = 정확히 4파일: `preview/home-ui/src/right-rail-store.js`, `sql/schema/081_search_rail_three_concern_boards.sql`, `src/Admin/ContentAclSeedGuard.php`, `src/Admin/ContentSchemaMigrateService.php`
+  2. `git grep -n "concern-parent', 'safe-guide'" HEAD -- preview/home-ui/src/right-rail-store.js src/Admin/ContentSchemaMigrateService.php` → **0건**
+- **보고:** 보고서 파일·그림·work-queue 줄 없이, 답장에 **브랜치 커밋 해시 + 위 두 명령의 출력**만.
+- 3절 허용 파일 중 5번(main 문서)은 이번에 쓰지 않음. 4절 금지는 그대로.
