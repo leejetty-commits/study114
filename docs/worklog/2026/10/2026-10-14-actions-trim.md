@@ -72,3 +72,12 @@ API가 돌려준 1,000건 기준 어림(실제 과금은 작업마다 1분 올�
 
 - 없음(SQL·Secrets·`.htaccess`·환경변수 변경 없음).
 - 문서만 병합한 뒤 사이트를 다시 올려야 할 일이 생기면: GitHub → Actions → 「Deploy to dothome」 → Run workflow(main).
+
+## 7. 승인·병합·배포
+
+- 사용자 「승인, 배포까지...」「메인에 병합까지」(2026-10-14 20:03) — 승인 대기였던 `3e0bd03f`(이 과제)와 `e1333e5f`(회원 메일 4종 멈춤 기록)를 함께 승인한 것으로 받음.
+- 병합: `origin/main` `83e7b387` 위에 `9004d07d`(Merge … 승인 3e0bd03f) → `c00948e0`(Merge … 승인 e1333e5f). 충돌 없음. 바뀐 파일 10개(이 과제 7 + 메일 멈춤 기록 3). 한 번에 push(`83e7b387..c00948e0`) → 배포 한 번.
+- main push에서 뜬 workflow(바뀐 조건대로): Deploy to dothome `38555598452` success(verify:tutor-inquiries-settings · verify:shop-page · verify-board-acl · ftp-deploy 모두 성공) · Verify bundle `38555598449` success · Tutor inquiries settings `38555598475` success(deploy.yml을 감시하는 별도 검사). **ShopPage gate·Board ACL gate는 main push에서 뜨지 않음** — 중복 제거 확인.
+- 사이트: `https://study114.net/` 200 · `/search/` 200 · `https://www.study114.net/` 200 (2026-10-14 20:2x).
+- SQL 없음 → DB 작업 폴더 복사 해당 없음.
+- 루트 `d:\work\study114\.cursor\rules\study114-workflow.mdc`(Cursor가 읽는 사본, 루트는 옛 브랜치)에는 이번 4절·9절 수정이 아직 없다. `work-routine.mdc` 사본 맞추기와 함께 사용자 확인 뒤 처리.
