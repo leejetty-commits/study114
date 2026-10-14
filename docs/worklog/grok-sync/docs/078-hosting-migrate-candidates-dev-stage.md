@@ -74,3 +74,173 @@
 | 2026-09-24 | 웹 조사·개발단계 후보 잠금 |
 | 2026-09-24 17:09 | 월1만 예산 → VPS 일반형 1순위·가비아 베이직 2순위 |
 | 2026-09-24 22:10 | 정책: 접속문제 자주 시 호스팅 변경 |
+
+---
+
+## 2026-10-15 추가: 닷홈→카페24 이전 작업 범위
+
+- 작성: 우동공과2 · 요청: 종현 (t1602~t1605)
+- 기준: repo origin/main `42078e92`. 읽기 조사만 했고 코드·설정은 바꾸지 않음.
+- 비밀값은 이름만 적고 값은 적지 않음.
+
+### A. 종현 결정·기존 관점 (이 절은 이것을 따른다)
+
+| 날짜 | 근거 | 내용 |
+|---|---|---|
+| 2026-09-24 | 이 문서 §4 | 「사용자 조건: 월 **1만원 이상 무리** · 개발용 · 데이터+화면 · **접속 안정** 우선」 |
+| 2026-09-24 | 이 문서 「정책 잠금」 · 076 「정책 잠금」 | 「**같은 접속 문제(522/525 등)가 자주 생기면 호스팅 업체를 변경**한다. 지금은 닷홈 공유 + Cloudflare 유지. 선제 이관 없음.」 |
+| 2026-09-24 | 076 §6 · Notion 「부록-Cloudflare·닷홈 접속불안…」 | 「정식 서비스 전·개발 단계라 **단독웹/VPS 비용 상향은 부담**」, 「닷홈 공유형 + Cloudflare Full·프록시 유지」 |
+| 2026-09-02 | Notion 같은 부록 §6 「현재 결정」 | 「유료 SSL은 당장 구매하지 않고…」 |
+| 2026-10-15 | 종현 t1602 | **아직 회원 없음. 단독웹·VPS는 초기 부담이라 제외 방향** |
+| 2026-10-15 | 종현 t1600·t1604 | SSL은 **Cloudflare SSL, 모드 Full(strict 아님)**. 호스팅 유료 SSL은 쓰지 않음(닷홈 유료 SSL도 미사용) |
+| 2026-10-15 00:32 KST | 사실(종현 보고) | Cloudflare **525** 장애. 같은 시각 원본 직접 접속도 **응답 없음** |
+
+→ 이 절에서는 VPS·단독웹·유료 SSL을 권하지 않는다. 대상은 **카페24 공유 웹호스팅**뿐이다.
+
+### B. 조사 내용(미확정) — 상품
+
+- 카페24 뉴아우토반 일반 상품은 **하루 트래픽 한도**가 있고, 넘으면 사이트를 **바로 차단**한다.
+
+  | 상품 | 월 요금 | 하루 트래픽 | 월 1만원 예산 |
+  |---|---|---|---|
+  | 일반형 | 1,500원 | 4GB | 안 |
+  | 비즈니스 | 7,000원 | 10GB | 안 |
+  | 퍼스트클래스 | 12,000원 | 20GB | 밖 |
+
+  닷홈은 월 한도라서, 하루치 몰림에는 카페24가 더 약할 수 있다.
+- **자이언트플러스**(공유)는 1,200GB/월이고 초과해도 차단 없이 1GB당 165원 후불이다. 다만 월 40,000원이라 **예산 밖**이다.
+- 고를 일은 종현님 몫이다. 그 전에 닷홈 월 트래픽과 하루 최대치를 기록해야 한다.
+- 공통 사양:
+  - PHP 8.4 / 8.2 / 7.4. **8↔7 변경 시 데이터·DB 초기화**
+  - MariaDB 10.x
+  - FTP / SFTP / SSH
+  - SNI SSL(443 포트)
+  - 자동 백업 최대 7일
+- 공유라는 점은 닷홈과 같다. 이웃 영향이 사라진다는 보장은 없다(001 §3).
+- 출처(2026-10-15 확인):
+  - https://hosting.cafe24.com/?controller=new_product_page&page=newautobahn
+  - https://hosting.cafe24.com/?controller=new_product_page&page=unlimited
+  - https://help.cafe24.com/docs/console/console/hosting-traffic-management-guide/
+
+### C. 조사 내용(미확정) — SSL: Cloudflare Full로 SSL 비용 0원이 되나
+
+**지금 닷홈이 0원으로 되는 이유**
+- 원본(닷홈)이 443 포트에서 공용 인증서 `CN=*.dothome.co.kr`을 내준다(Notion 부록 §2 「원서버 인증서」).
+- Cloudflare **Full**은 원본 인증서의 이름·유효성을 검사하지 않는다(Strict만 검사). 그래서 study114.net 인증서를 사지 않아도 연결된다.
+- 출처: Cloudflare SSL 모드 안내 https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full/
+- 즉 조건은 「원본이 443에서 TLS로 응답만 하면 된다」이다. 응답이 없거나 TLS가 깨지면 **525**가 난다.
+
+**카페24에서 확인한 것**
+
+| 질문 | 조사 결과 | 출처 |
+|---|---|---|
+| (1) 자기 도메인 무료 SSL | **SSL Basic**(Let's Encrypt, 자동 연장)은 최초 설치비 **11,000원**. 조건: PHP8 뉴아우토반, **카페24에서 산 같은 명의 도메인**, 호스팅에 연결된 도메인. **자이언트플러스는 대상 아님**. 완전 무료 자동 SSL은 웹호스팅에선 확인 안 됨(매니지드 워드프레스·홈페이지 호스팅은 무료 지원) | https://help.cafe24.com/faq/ssl-certificate/new-renewal-change/ssl_basic_what_and_how_to_apply · https://help.cafe24.com/cafe24news/20240313_ssl_basic_launch · https://hosting.cafe24.com/?controller=new_product_page&page=ssl_cert |
+| (1-b) 0원 방법 | 「SSL Basic 구매 없이도 Let's Encrypt 인증서 발급·설치·연장을 직접 할 수 있다」(카페24 SSL 상품 페이지). 직접 발급한 인증서를 **외부인증서 관리**로 설치 요청. 설치는 최대 3영업일, 완료되면 포트 안내 메일 | https://help.cafe24.com/docs/ssl-certificate/ssl-certificate-authentication-installation · 사례 https://jjoon.net/2024/02/03/lets-encrypt-인증서-카페24에-등록하기/ |
+| (2) Cloudflare Origin CA 업로드 | 사례 1건(2025-03): 외부인증서 메뉴에 Origin CA를 넣었더니 「입력하신 인증서의 설치는 제공되지 않습니다」로 거절. 카페24 CS도 정상 인증서가 아니라고 답함 → **안 되는 것으로 봐야 함** | https://lsdev.tistory.com/113 |
+| (3) 인증서 없이 443 응답 | 공식 문서에서 확인 안 됨. 상품표에 「SNI SSL(443 포트)」은 있으나, 이 도메인 인증서가 없을 때 기본 인증서로 응답하는지는 미확인. 위 사례는 인증서 없이 Full(strict)에서 525가 났고, 해결책으로 Flexible(비추)이나 무료 인증서 직접 설치를 택함. 박스 네트워크는 프록시를 거쳐 직접 시험 불가 | https://lsdev.tistory.com/113 · https://xetown.com/board/1249426 |
+| (4) 알려진 문제 | ① Origin CA 설치 거절(위) ② Cloudflare 경유 시 FTP/SSH를 도메인으로 붙으면 실패 → **서버 IP로** 접속 ③ 무료 인증서 발급 반복 시 Let's Encrypt 발급 한도 ④ 외부인증서 설치에 최대 3영업일 → 갱신 공백 위험 | 같은 출처 |
+
+**결론: 조건부 가능**
+- **0원으로 되는 길은 하나뿐이다.**
+  - Let's Encrypt 인증서를 직접 발급해서(예: win-acme, FTP로 HTTP 인증) 카페24 「외부인증서 관리」로 올린다.
+  - 그러면 원본이 443에서 응답하고, Cloudflare Full로 연결된다.
+- **단점**
+  - Let's Encrypt 인증서는 90일마다 만료된다(앞으로 더 짧아지는 추세).
+  - 카페24 설치에 최대 3영업일이 걸려서, 해마다 몇 번씩 **수동 갱신 + 설치 대기**가 생긴다. 놓치면 Full에서도 만료 인증서는 통과되는지 확인해야 한다(Cloudflare 문서상 Full은 만료 인증서도 받음).
+- **11,000원 1회**를 쓰면 SSL Basic(자동 연장)이 된다. 다만 **도메인을 카페24에서 산 경우만** 해당된다. study114.net 등록처 확인이 필요하다.
+- **Cloudflare Origin CA는 쓸 수 없다**고 본다(사례 근거).
+- 「인증서 없이 카페24 기본 인증서로 Full 통과」는 **미확인**이다.
+  - 확인 방법: 기존 스테이징 계정에 시험 서브도메인을 연결하고, Cloudflare 프록시 + Full로 접속해서 525가 나는지 본다. 종현님 10분 작업이다.
+- 비교하면 닷홈은 공용 인증서 덕분에 **지금 0원으로 자동 동작**하고, 카페24는 **0원이면 직접 갱신 수고**가 든다.
+
+### D. 조사 내용(미확정) — 작업 범위 체크리스트
+
+| 단계 | 할 일 | 누가 | 대략 공수 | 근거·비고 |
+|---|---|---|---|---|
+| 1 준비 | 상품 결정(B), 닷홈 사용량 기록, study114.net 등록처 확인(C) | 종현 | 0.5일 | |
+| 1 | PHP 8.2로 계정 생성 | 종현 | 1시간 | 현재 닷홈 8.2(`docs/internal/01-dothome-deploy.md:18`) |
+| 1 | PHP 확장 확인: curl·gd(WebP)·mbstring·fileinfo·pdo_mysql·openssl | Cursor | 0.5시간 | `src/Mail/ResendMailTransport.php:129`, `src/Auth/OAuthService.php:287`, `src/Media/PromoImageProcessor.php:75,100`, `src/Board/BoardAttachmentService.php:285` |
+| 1 | **`.htaccess` SetEnv가 PHP `getenv()`로 넘어오는지** | Cursor | 1시간 | **가장 큰 기술 위험.** 비밀값 13개 전부 `public/.htaccess:77-93`. 스테이징 문서: 「카페24는 .env 자동 로드 없음」 |
+| 1 | 기존 스테이징 계정(`study114new.mycafe24.com`)에서 먼저 시험 + C의 525 시험 | Cursor + 우동공과2 + 종현 | 1~2일 | `docs/internal/01-cafe24-staging-deploy.md`, `config/*cafe24-staging*`, `scripts/build-staging.ps1` |
+| 2 서버·DB | 웹루트 `www/`(= `public/`) + 형제 `src/`·`config/`·`storage/` | Cursor | 1시간 | `public/index.php` → `dirname(__DIR__).'/src/bootstrap.php'` |
+| 2 | 서버 전용 `config/database.php` | 종현 | 0.5시간 | git 밖(`.gitignore:11`), 틀 `config/database.php.cafe24-staging.example` |
+| 2 | DB 옮기기(MySQL 8 → MariaDB 10.x) | 종현 (Cursor 절차서) | 2~4시간 | `sql/schema` 88개 파일. MySQL 8 전용 문법 없음(`CHECK` 2곳 `001_init.sql:216,257`은 MariaDB 10.2+에서 됨). **덤프 collation `utf8mb4_0900_ai_ci`면 실패** |
+| 2 | `public/uploads/`·`storage/` 옮기기 | 종현 | 1~2시간 | git 밖(`.gitignore:26-27`), 쓰기 권한. 회원이 없어 손실 부담 작음 |
+| 3 코드·설정 | 배포 FTP 교체(지금 `112.175.184.80`, `/hosting/study114/html/`·`/src/`, 평문 FTP) | Cursor (Secret은 종현) | 2~3시간 | `.github/workflows/deploy.yml:176-202`, `FTP_PASSWORD`. Cloudflare 경유면 **IP로** 접속 |
+| 3 | SetEnv가 안 되면 비밀값을 웹루트 밖 설정 파일로 | Cursor + 우동공과2 | 0.5~1일 | `study114_env()` `src/bootstrap.php:29` |
+| 3 | 닷홈 주소·이름 정리(선택) | Cursor | 2~3시간 | `.htaccess:8-9`, `src/bootstrap.php:104-113`, `preview/shared/auth-redirect.js:23-27`, `scripts/build-dothome.sh` 등 |
+| 4 외부 연동 | OAuth·Resend·cron 2개·네이버 지도 | 종현 | 0~1시간 | 도메인 유지면 **변경 없음**(`config/oauth.php:22,27,32`, `member-mail-cron.yml:10,35`, 정산은 외부 웹 cron). 결제 `dev_mock`, SMS는 로그만, NICE 없음 |
+| 5 DNS·SSL | (C의 무료 인증서 설치) → Cloudflare A 레코드를 카페24 IP로(프록시 ON, **Full 유지**) | 종현 | 인증서 설치 대기 최대 3영업일 + 10분 | 전환 전 현재 값 기록. 카페24 「도메인 연결」 필수 |
+| 6 검수 | 4모드 화면, 로그인 4종, 글·이미지·첨부, 메일, cron 수동 POST, 배포 1회, 522/525·응답 시간 | 우동공과2 + 종현 | 반나절 + 관찰 | 닷홈 1~2주 유지 후 해지(되돌리기 = A 레코드 복귀) |
+
+- 별건 발견(이전과 무관): `STUDY114_STORAGE_SECRET`(`config/storage.php:9`), `STUDY114_CRON_KEY`(`config/paid.php:8`)는 SetEnv 주입 목록에 없다. 운영도 개발용 기본값일 수 있다(운영 값 미확인).
+- 중단 시간은 DB 마지막 동기화 동안 30분~1시간이다(회원 없음).
+- 총 공수(대략): 준비·스테이징 2~3일 + 코드 1~2일 + 전환 반나절(+인증서 설치 대기).
+
+### E. 2026-10-15 01:00 KST 추가 조사(미확정 표기 유지) — 타사 등록 도메인(study114.net)에 카페24 SSL을 쓸 수 있나
+
+- 전제(종현): study114.net은 카페24가 아닌 **다른 등록업체**에서 샀다.
+- 표기: **확인됨** = 카페24 공식 문구 인용 / **사례만** = 커뮤니티·블로그 / **미확인**
+- 출처 조회일: 2026-10-15
+- 공식 출처 약칭:
+  - [P] https://hosting.cafe24.com/?controller=new_product_page&page=ssl_cert (SSL 상품 페이지)
+  - [B] https://help.cafe24.com/faq/ssl-certificate/new-renewal-change/ssl_basic_what_and_how_to_apply
+  - [I] https://help.cafe24.com/docs/ssl-certificate/ssl-certificate-authentication-installation
+  - [Z] https://cafe24.zendesk.com/hc/ko/articles/7944940003993 (타사·타 계정 발급 인증서 FAQ)
+  - [R] https://help.cafe24.com/faq/reseller/security-certificate/reseller_enduser_ssl_install
+
+#### E-1. 카페24 SSL 상품별 (웹호스팅 기준)
+
+| 상품 | 1년 요금 / 웹호스팅 설치비 | 타사 도메인 | 연장 | 근거 |
+|---|---|---|---|---|
+| SSL Basic (Let's Encrypt) | 0원 / 11,000원 1회 | **불가 — 확인됨** | 자동, 호스팅 종료일까지 | [P] 「웹호스팅에 연결된 도메인 중 **카페24에서 구매한 도메인**에 설치할 수 있습니다」, 「**카페24로 네임서버 설정** 및 A 레코드에 연결된 서버에 설치」. [B] 「호스팅과 다른 명의에서 보유한 도메인은 제공이 불가」, 미대상 「뉴아우토반 자이언트플러스」. 발급 1~2영업일 |
+| Positive 라이트 (Sectigo DV) | 38,500원 / 무료 | 가능 — 확인됨(제한 문구 없음 + 타사 네임서버용 이메일 인증 안내) | 1년 구독. 2026-03-13부터 유효기간 199일이라 1차·2차로 나눠 자동 발급 | [P] 「본인 소유의 도메인만 인증서 신청이 가능합니다」, 「도메인 소유자 정보와 동일한 정보로 신청」. [I] 「위 조건에 해당하지 않음 → 이메일 인증(수동)」 |
+| SSL 스탠다드 | 66,000원 / 무료 | 가능 — 확인됨(위와 같음) | 위와 같음 | [P] |
+| SSL 와일드카드 | 462,000원 | **웹호스팅 적용 불가** | — | [P] 「SSL 와일드카드 / Positive 멀티도메인 인증서는 **웹호스팅 서비스에 적용이 되지 않습니다**」 |
+| Positive 멀티도메인 | 143,000원 | 웹호스팅 적용 불가 | — | [P] 같은 문구 |
+| OV / EV · GlobalSign | 상품 페이지에 없음 | 미확인 | — | [P]에는 Sectigo 계열 5종만 있음 |
+
+→ 유료 상품은 종현 결정(호스팅 유료 SSL 미사용)에 따라 **권하지 않는다.** 참고로만 적었다.
+
+#### E-2. 외부인증서 관리 (직접 받은 인증서 설치)
+
+| 항목 | 내용 | 표기 · 근거 |
+|---|---|---|
+| 타사 등록 도메인 | 도메인 등록처 제한 문구 없음. 조건은 「도메인이 정상 연결되어있는 계정」 | **확인됨** [Z] 「타사 또는 타계정에서 발급 받은 보안인증서를 카페24 계정의 서버 내 설치 원하시는 경우 … 도메인이 정상 연결되어있는 계정으로 나의서비스 관리 > 인증서 관리 > 외부인증서 관리」. 등록처 자체는 명시 없음 → 사실상 가능, 문구로는 **미확인** |
+| 대상 상품 | 리눅스 웹호스팅(뉴아우토반 포함으로 판단). 윈도우는 1:1 게시판. 가상서버·클라우드·서버호스팅은 메뉴 없음 | **확인됨** [Z] 「외부인증서 설치의 경우 **리눅스 웹호스팅 고객에 한해** 설치를 진행해 드립니다」. [I] 「리눅스 웹호스팅만 지원되며, 윈도우 웹호스팅은 1:1 문의게시판」. 상품명 「뉴아우토반」이 명시된 공식 문구는 **미확인** |
+| 비용 | 공식 문서에 외부인증서 설치비 언급 없음. 사례에서도 결제 없음 | **사례만**(무료). 공식 「무료」 문구는 **미확인** |
+| Let's Encrypt(90일) 허용 | 카페24가 직접 발급·설치·연장해도 된다고 명시 | **확인됨** [P] 「SSL Basic 상품 구매 없이도 Let's Encrypt 인증서의 발급, 설치 및 연장 작업을 직접 수행할 수 있습니다」. 실제 설치: ZeroSSL 90일 인증서 성공(2024-09-22 https://littlemobs.com/blog/cafe24-free-ssl-certificate-with-zerossl/), Let's Encrypt 성공(2024-02 https://jjoon.net/2024/02/03/…) — **사례** |
+| 절차 | CRT·개인키 붙여넣기 → 「인증서 확인」(발급사·도메인 점검) → 비밀번호(없으면 공란) → 신청 | **확인됨** [I][Z] |
+| 처리 시간 | 최대 3영업일, 완료 메일에 포트번호. 즉시 설치가 아니라 대기열 | **확인됨** [R] 「즉시 자동 설치가 아닌 **SSL 설치 대기 리스트**에 등록되며, 내부팀에서 순차적으로 설치」, 「수동 설치가 필요한 경우 평일 업무시간(09:00~17:00)」. 실제로는 「경험상 10분 이내」 — **사례만**(littlemobs) |
+| 갱신 | 별도 갱신 메뉴 문구 없음. 만료 전에 새 인증서로 같은 메뉴에서 다시 신청하는 방식 | **사례만**(littlemobs 「갱신 방법은 … 신규 생성 과정과 거의 동일」). 공식 갱신 절차는 **미확인** |
+| 업로드 거절 시 | crt·key·비밀번호를 zip으로 묶어 1:1 게시판에 접수 | **확인됨** [Z] 「업로드 불가한 인증서 또는 오류 발생되는 경우 … zip파일로 첨부 … 문의게시판으로 설치 접수」 |
+| Cloudflare Origin CA | 외부인증서 메뉴에서 「입력하신 인증서의 설치는 제공되지 않습니다. 고객센터로 문의 해 주십시오.」 | **사례만** https://lsdev.tistory.com/113 (2025-03). 1:1 zip 접수로 되는지는 **미확인** |
+
+#### E-3. Cloudflare 프록시(Full)와의 관계
+
+- 카페24 공식 문서에 Cloudflare 프록시 + Full 조합 설명은 없다 → **미확인**.
+  - 카페24는 자체 Cloudflare 부가서비스를 판다: https://hosting.cafe24.com/?controller=product_page&type=vservice&page=cloudflare (sir.kr Q&A에서 언급).
+- 공식 HTTP 자동 인증 조건은 「반드시 … A레코드를 통해 카페24 웹호스팅 서버 IP를 가리키고 있어야」이다([I]).
+  - Cloudflare 프록시 ON이면 A 레코드가 Cloudflare IP로 보이므로 **카페24 자동 인증은 실패할 가능성이 크다(추정)**.
+  - 이는 유료 상품의 발급 인증에 해당하고, 외부인증서 설치와는 무관하다.
+- 사례: 카페24 산 도메인의 NS를 Cloudflare로 넘기자 카페24 자동 갱신이 중단됐다(https://malwareanalysis.tistory.com/910, **사례만**). SSL Basic은 어차피 대상이 아니라 study114.net과는 무관하다.
+- Let's Encrypt를 직접 발급하는 경우:
+  - HTTP-01은 Cloudflare 프록시 뒤에서도 보통 통과한다(80번 경로가 원본까지 전달되기 때문). Cloudflare DNS를 쓰므로 **DNS-01(TXT)** 발급도 가능하다 → **일반 지식, 카페24 문구 아님**.
+  - 발급한 인증서는 외부인증서 관리로 설치한다.
+
+#### E-4. 결론 (study114.net, 타사 등록)
+
+- **0원으로 쓸 수 있는 것:** 직접 발급한 Let's Encrypt(또는 ZeroSSL) 인증서를 「외부인증서 관리」로 설치하는 방법뿐이다.
+  - 공식: Let's Encrypt 직접 설치 허용 **확인됨**, 리눅스 웹호스팅 대상 **확인됨**.
+  - 설치비 0원은 **사례만**.
+- **SSL Basic:** 타사 도메인이라 **불가(확인됨)**. 11,000원 대안도 사라진다.
+- **유료(Positive 라이트·스탠다드):** 타사 도메인도 가능하지만 종현 결정에 따라 제외한다.
+- **운영 부담**
+  - 만료 주기는 90일(Let's Encrypt). 공식 처리는 최대 3영업일 대기열이므로 **만료 2주 전 갱신 신청**을 원칙으로 한다.
+  - 갱신 자동화는 불가로 본다(메뉴에 직접 붙여넣는 방식, API 미확인).
+- **Origin CA:** 불가로 본다(사례만). 시험해 보려면 1:1 zip 접수로 문의하면 된다.
+- **남은 확인(종현님, 카페24 1:1 질문 1건으로 해결 가능)**
+  - ① 외부인증서 설치비 유무
+  - ② 뉴아우토반 일반형 대상 여부
+  - ③ Cloudflare Origin CA 수동 설치 가능 여부
+  - ④ 인증서 미설치 상태에서 443이 기본 인증서로 응답하는지

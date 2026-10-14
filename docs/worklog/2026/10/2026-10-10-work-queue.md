@@ -123,3 +123,4 @@
 - 2026-10-14 작업 B(218-4·218-7) 브랜치 cursor/home-b-best-red-20261014 ed4d6a1f push, 검수 대기
 - 2026-10-14 작업 B 배포 da26876a · 운영 확인 PASS
 - 2026-10-15 작업 B2(218-7 보완) 브랜치 cursor/home-b2-best-fix-20261015 a49f256d push, 검수 대기
+- 2026-10-15 찾기 레일 고민방 3칸(학생 1칸) 브랜치 cursor/home-find-rail-three-20261015 91e03e32 push, 검수 대기. 정본 9장 비회원 제목만으로 정정.
