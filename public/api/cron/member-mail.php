@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
+use Study114\Auth\WithdrawReasonService;
 use Study114\Database\Connection;
 use Study114\Mail\MemberLifecycleMailer;
 use Study114\Mail\MemberMailScheduler;
@@ -36,8 +37,15 @@ if ($given === '' || !hash_equals($expected, $given)) {
 
 try {
     $pdo = Connection::get();
+    // 탈퇴 사유의 회원 번호 1년 보관(정본 74 §1-4) — 메일 발송과 따로, 실패해도 메일은 보낸다
+    try {
+        $withdrawReasons = (new WithdrawReasonService($pdo))->forgetExpired();
+    } catch (Throwable $e) {
+        error_log('[cron/member-mail] withdraw reasons: ' . $e->getMessage());
+        $withdrawReasons = ['error' => 'failed'];
+    }
     $scheduler = new MemberMailScheduler($pdo, new MemberLifecycleMailer($pdo));
-    echo json_encode(array_merge(['ok' => true], $scheduler->run()), JSON_UNESCAPED_UNICODE);
+    echo json_encode(array_merge(['ok' => true], $scheduler->run(), ['withdraw_reasons' => $withdrawReasons]), JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     error_log('[cron/member-mail] ' . $e->getMessage());
     http_response_code(500);

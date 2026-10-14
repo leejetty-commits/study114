@@ -75,7 +75,7 @@ export const MEMBER_MAIL_KINDS = {
     who: '카드가 노출 중인 이용자',
   },
   withdraw_farewell: {
-    name: '탈퇴 완료',
+    name: '탈퇴 완료(사유 받기 포함)',
     when: '본인이 탈퇴하면 바로',
     who: '탈퇴한 본인 (관리자가 정리한 탈퇴는 제외)',
   },
@@ -91,4 +91,5 @@ export const MEMBER_MAIL_VARIANTS = {
   study_room_pick: '공부방 Pick',
   tutor_prime: '과외쌤 Prime',
   tutor_pick: '과외쌤 Pick',
+  reason_given: '탈퇴할 때 이유를 고른 회원',
 };

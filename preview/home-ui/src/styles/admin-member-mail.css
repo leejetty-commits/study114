@@ -31,6 +31,11 @@
 .admin-shell .member-mail__subject {
   margin: 0.5rem 0;
 }
+.admin-shell [data-withdraw-reasons-days][aria-pressed="true"] {
+  border-color: var(--brand-blue, #266bc4);
+  color: var(--brand-blue, #266bc4);
+  font-weight: 700;
+}
 .admin-shell .member-mail__frame {
   width: 100%;
   min-height: 70vh;

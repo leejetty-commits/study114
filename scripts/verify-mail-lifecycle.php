@@ -334,7 +334,7 @@ check($posBranch !== false && $commitPos !== false && $hookPos > $commitPos, 'ho
 check((bool) preg_match('/function notifyPositionPurchase[\s\S]{0,500}catch \(\\\\Throwable/', $checkout), 'hook: 구매 메일 예외 격리');
 $capPos = strpos($withdraw, 'captureWithdrawSnapshot($userId)');
 $purgePos = strpos($withdraw, '$this->runPurge($pdo, $userId);');
-$sendPos = strpos($withdraw, 'sendWithdrawFarewell($snapshot)');
+$sendPos = strpos($withdraw, 'sendWithdrawFarewell($snapshot, $reasonGiven)');
 check($capPos !== false && $purgePos !== false && $sendPos !== false && $capPos < $purgePos && $purgePos < $sendPos, 'hook: 탈퇴 = 주소 확보 → 정리 → 발송 순서');
 check(!str_contains(substr($withdraw, (int) strpos($withdraw, 'public function purgeWithdrawnAccount')), 'sendWithdrawFarewell'), 'hook: 관리자 강제 탈퇴 경로(purgeWithdrawnAccount)에는 메일 없음');
 check(!str_contains($admin, 'MemberLifecycleMailer'), 'hook: 관리자 회원 서비스에 생활 메일 없음');
