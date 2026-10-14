@@ -67,7 +67,7 @@ final class ContentAclSeedGuard
                 [
                     'slot_key' => 'search_right_rail',
                     'fields' => [
-                        'source_board_keys_json' => self::json(['faq', 'concern-parent', 'safe-guide']),
+                        'source_board_keys_json' => self::json(['faq', 'concern-director', 'concern-tutor', 'concern-parent', 'safe-guide']),
                         'guest_filter' => 'intro_only',
                         'visibility_rule' => 'public',
                         'role_target' => 'all',
@@ -76,6 +76,7 @@ final class ContentAclSeedGuard
                     'replaceable' => [
                         'guest_filter' => ['intro_only', 'summary_only', 'summary-only', 'summary'],
                         'source_board_keys_json' => [
+                            self::json(['faq', 'concern-director', 'concern-tutor', 'concern-parent', 'safe-guide']),
                             self::json(['faq', 'concern-parent', 'safe-guide']),
                             self::json(['faq', 'concern-family', 'safe-guide']),
                         ],

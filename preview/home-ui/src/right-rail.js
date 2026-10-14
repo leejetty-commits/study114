@@ -234,6 +234,16 @@ function resolveConcernBoardKeysForSlot(slotKey, ctx) {
   if (slot?.sourceBoardKey) configured.push(slot.sourceBoardKey);
   if (Array.isArray(slot?.sourceBoardKeys)) configured.push(...slot.sourceBoardKeys);
   const unique = [...new Set(configured.map(normalizeBoardKey).filter(Boolean))];
+  if (slotKey === 'search_right_rail') {
+    const concern = ['concern-director', 'concern-tutor', 'concern-parent'];
+    const head = [];
+    for (const key of unique) {
+      if (concern.includes(key)) break;
+      head.push(key);
+    }
+    const tail = unique.filter((key) => !concern.includes(key) && !head.includes(key));
+    unique.splice(0, unique.length, ...head, ...concern, ...tail);
+  }
   const guestFilter = ctx.guestFilter || slot?.guestFilter || 'allow';
   const visible = unique.filter(
     (key) => isConcernBoardKey(key) && canShowBoardInRail(key, ctx.navRole, { guestFilter }),
