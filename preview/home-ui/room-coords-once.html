@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>공부방 좌표 확인</title>
+    <style>
+      body { font-family: "Malgun Gothic", sans-serif; margin: 24px; color: #1a1a1a; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
+      textarea { width: 100%; min-height: 240px; margin-top: 12px; font-family: Consolas, monospace; }
+    </style>
+  </head>
+  <body>
+    <h1>공부방 좌표 확인</h1>
+    <p>사업장주소로 좌표를 구합니다. 이 화면은 저장하지 않습니다.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>번호</th>
+          <th>사업장주소</th>
+          <th>위도</th>
+          <th>경도</th>
+          <th>결과</th>
+        </tr>
+      </thead>
+      <tbody data-rows></tbody>
+    </table>
+    <h2>phpMyAdmin에 넣을 문장</h2>
+    <textarea data-sql readonly></textarea>
+    <script type="module" src="/src/room-coords-once.js"></script>
+  </body>
+</html>
