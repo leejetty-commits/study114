@@ -237,7 +237,8 @@ export function afterSearchPageMount(rerender, opts = {}) {
   if (opts.allowFindBoot === false || !canUseFind()) return;
   const tab = getCurrentTab();
   if (previewState.role === 'study_room' && tab === 'room') {
-    bootStudyRoomHome(rerender);
+    // 조회수는 이 화면의 카드·지도·레일에 없다. 목록이 끝난 뒤에 받는다.
+    bootStudyRoomHome(rerender, { viewsAfterList: true });
   }
   if (previewState.role === 'study_room' && tab === 'student') {
     bootStudyRoomStudentDemand(rerender);

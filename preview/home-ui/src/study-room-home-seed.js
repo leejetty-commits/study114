@@ -347,32 +347,47 @@ export function studyRoomHomeSearchFilters(slot, promo = '') {
 
 /**
  * 홍보1 지역 공부방 목록(프라임 베스트 3 포함)과 조회수를 한 번 채운다.
+ * viewsAfterList 는 찾기 첫 진입만. 목록이 끝난 뒤에 조회수를 받는다. 홈은 같이 받는다.
  * @param {() => void} rerender
+ * @param {{ viewsAfterList?: boolean }} [opts]
  */
-export function bootStudyRoomHome(rerender) {
+export function bootStudyRoomHome(rerender, opts = {}) {
   const room = pickOwnStudyRoom();
   const promo = studyRoomPromo1Label(room);
   const slot = primarySavedRegion(room);
   const filters = studyRoomHomeSearchFilters(slot, promo);
   const key = `${room?.id || 0}|${filters.region_id || ''}|${filters.complex_id || ''}|${filters.region_label || ''}`;
-  if (bootPromise && liveKey === key) return bootPromise;
+  if (bootPromise && liveKey === key) {
+    if (opts.viewsAfterList === true) return bootPromise;
+    const roomId = Number(room?.id);
+    const settledId = Number.isFinite(roomId) && roomId > 0 ? roomId : null;
+    const settledBefore = viewsLoaded && viewsRoomId === settledId;
+    return bootPromise.then(async () => {
+      await ensureLifetimeViews(room?.id);
+      if (!settledBefore && typeof rerender === 'function') rerender();
+    });
+  }
   liveKey = key;
   bootPromise = (async () => {
-    const jobs = [ensureLifetimeViews(room?.id)];
-    if (filters.region_id || filters.region_label || filters.complex_id) {
-      jobs.push(
-        searchApi('room', filters, { limit: 20, sort: 'latest' })
-          .then((result) => {
-            liveItems = (result.items || []).map(mapLiveRoom);
-          })
-          .catch(() => {
-            liveItems = [];
-          }),
-      );
-    } else {
-      liveItems = [];
+    const loadList = async () => {
+      if (!(filters.region_id || filters.region_label || filters.complex_id)) {
+        liveItems = [];
+        return;
+      }
+      try {
+        const result = await searchApi('room', filters, { limit: 20, sort: 'latest' });
+        liveItems = (result.items || []).map(mapLiveRoom);
+      } catch {
+        liveItems = [];
+      }
+    };
+    if (opts.viewsAfterList === true) {
+      await loadList();
+      if (typeof rerender === 'function') rerender();
+      await ensureLifetimeViews(room?.id);
+      return;
     }
-    await Promise.all(jobs);
+    await Promise.all([ensureLifetimeViews(room?.id), loadList()]);
     if (typeof rerender === 'function') rerender();
   })();
   return bootPromise;
