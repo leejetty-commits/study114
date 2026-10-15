@@ -6,7 +6,7 @@
  * 게스트·읽기 권한 없는 역할은 서버가 제목 항목만 주므로 본문 자리에 안내만 그린다.
  */
 
-import { CONCERN_RAIL_COPY as COPY, getConcernBoardByKey } from './copy.js';
+import { COMMUNITY_BOARD_DEFS, CONCERN_RAIL_COPY as COPY, getConcernBoardByKey } from './copy.js';
 import {
   ensureBestConcernPosts,
   ensureHotPopupPosts,
@@ -14,6 +14,7 @@ import {
   fetchConcernRailPost,
   getBestConcernBoards,
   getBestConcernStatus,
+  getHotConcernSamples,
   getHotPopupPosts,
   getHotPopupStatus,
 } from './store.js';
@@ -35,6 +36,22 @@ export function bestPostsForBoard(boards, boardKey) {
   return (boards?.[boardKey] || [])
     .filter((post) => post?.id && post.title && (Number(post.reactionTotal) || 0) >= BEST_MIN_REACTIONS)
     .slice(0, BEST_PER_BOARD);
+}
+
+/**
+ * HOT 팝업이 열릴 때 고른 글의 방. 카드 클릭은 팝업 목록 캐시가 채워지기 전에 본문을 읽으므로
+ * 레일 카드 캐시와 글 id(방키-시각-난수)에서 방을 고른다.
+ * @param {string} id
+ */
+function hotPostBoardKey(id) {
+  const key = String(id || '');
+  if (!key) return '';
+  const hit =
+    getHotPopupPosts().find((p) => String(p.id) === key) ||
+    getHotConcernSamples({ limit: 20 }).find((p) => String(p.id) === key);
+  if (hit?.boardKey) return hit.boardKey;
+  const boards = [...COMMUNITY_BOARD_DEFS].sort((a, b) => b.boardKey.length - a.boardKey.length);
+  return boards.find((b) => key === b.boardKey || key.startsWith(`${b.boardKey}-`))?.boardKey || '';
 }
 
 function esc(s) {
@@ -243,8 +260,11 @@ export function openHotPopup(opts) {
       };
     },
     renderSelected: async (id) => {
-      const found = getHotPopupPosts().find((p) => String(p.id) === String(id));
-      const boardKey = found?.boardKey || '';
+      let boardKey = hotPostBoardKey(id);
+      if (!boardKey) {
+        await ensureHotPopupPosts();
+        boardKey = hotPostBoardKey(id);
+      }
       return renderSelectedPost(await fetchConcernRailPost(boardKey, id, navRole), boardInfo(boardKey).label, guest());
     },
     footerHtml: goBoard,
