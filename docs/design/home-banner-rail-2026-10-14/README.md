@@ -32,3 +32,6 @@
 - 2026-10-15 06:06 **종현 확정(t1665)**: 231 8절 U1~U5 기본값대로 진행(찾기·등록 HOT 그대로 · HOT 팝업 이동처 = 아래 버튼과 같음 · 모자란 방 안 채움 · 관리자 방별 규칙 · 이용안내 미리보기 범위 밖). 231 남은 확인 없음.
 - 2026-10-15 06:1x: 231 §1 R16 줄 번호 오타 수정 — `info-rail.js:263` → `:264`(263은 leaveInNewTab). Cursor가 찾음. 내용 변경 없음.
 - 2026-10-15 06:3x: `233-review-C.md` — 231 작업 C 검수 **PASS**(8f2bce1f = 231-C.diff, 93034ef8 = §9 6파일). ⑤ `data-rail-popup-continue` 2줄은 기대값 오류 → 231 §6-5 「정확히 2줄」로 고침. php -l 미실행(박스에 php 없음).
+- 2026-10-15: 232 검수 PASS · 배포(main `f71db4db`, Deploy run 38699216148 성공).
+- `234-cursor-directive-search-rail-hot.md` — 찾기 레일 「탐색 도움/많이 보는 고민」→「오늘의 현장/지금 고민 HOT」, HOT 10개 팝업(`right-rail.js:176` 슬롯 조건에 search_right_rail). 등록 레일 그대로. 종현 t1684~t1686(231 U1 번복, 레일 항목 종류는 지금 것으로 끝). 커밋 ec7dc905·a32d86c4(m1_search_hot_inpage 후속), Deploy run 38705352820 성공. 231 U1 에 번복 표시.
+- 공부방 모드 점검 보고서: `docs/design/room-audit-2026-10-15/`(E2·E4 정상, 종현 결정 3건, 처리 칸).
