@@ -365,7 +365,7 @@ const searchHot = sections(searchAbs).find((s) => s.hot);
 ok(
   'm1_search_hot_inpage',
   Boolean(searchHot) &&
-    searchHot.html.includes('data-concern-rail-open=') &&
+    searchHot.html.includes('data-concern-hot-open') &&
     searchHot.html.includes('<button') &&
     searchHot.html.includes('data-concern-rail-leave="inpage"') &&
     !searchHot.html.includes('target="_blank"') &&
