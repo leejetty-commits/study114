@@ -22,7 +22,8 @@ import { boardLoginHref, canDiscoverBoard, resolveBoardRole } from '../board-cha
 import { openRailPopup, syncRailPopupSession } from '../rail-popup.js';
 
 /**
- * @typedef {{ navRole: string, homeBase: string, leaveInNewTab: boolean, continueInPage?: boolean }} InfoRailCtx
+ * @typedef {{ navRole: string, homeBase: string, leaveInNewTab: boolean, continueInPage?: boolean, deferFetch?: boolean }} InfoRailCtx
+ * deferFetch: 배너 제목과 받는 중 문구만 그린다. posts.php 는 보내지 않는다. 찾기 첫 그림만 쓴다.
  * leaveInNewTab: 상세 레일·absolute 에서는 팝업의 게시판 이동을 홈 주소 새 탭으로 연다.
  * continueInPage: 찾기·등록. 팝업 「게시판에서 보기」는 홈 주소를 붙여 같은 탭에서 게시판으로 간다(218-9).
  */
@@ -145,7 +146,8 @@ function redraw(boardKey) {
 function renderTracked(board, ctx) {
   const viewer = railViewer(ctx.navRole);
   const build = (liveId) => renderBanner(board, ctx, liveId);
-  if (getInfoRailList(viewer, board.boardKey) && isInfoRailFresh(viewer, board.boardKey)) return build('');
+  if (!ctx.deferFetch && getInfoRailList(viewer, board.boardKey) && isInfoRailFresh(viewer, board.boardKey)) return build('');
+  if (ctx.deferFetch) return build('');
   const id = `rif${++liveSeq}`;
   pendingBanners.set(id, { boardKey: board.boardKey, navRole: ctx.navRole, build });
   scheduleRefresh(board.boardKey, ctx.navRole);

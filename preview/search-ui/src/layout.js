@@ -55,11 +55,16 @@ function activeGnbForTab(tab) {
   return 'find_room';
 }
 
-/** 찾기 우측 레일. 그리는 순간의 resolveChromeRole() 을 쓴다. */
-export function renderSearchRightRail() {
+/**
+ * 찾기 우측 레일. 그리는 순간의 resolveChromeRole() 을 쓴다.
+ * @param {{ deferRailFetch?: boolean }} [opts]
+ * deferRailFetch 이면 칸은 받는 중으로 두고 레일 6건은 보내지 않는다.
+ */
+export function renderSearchRightRail(opts = {}) {
   return renderRightRailSidebar('search_right_rail', {
     navRole: resolveChromeRole(),
     homeBase: HOME_UI_BASE,
+    deferRailFetch: opts.deferRailFetch === true,
   });
 }
 
@@ -96,7 +101,11 @@ export function replaceSearchRightRail(root) {
   return true;
 }
 
-export function renderSearchShell(content) {
+/**
+ * @param {string} content
+ * @param {{ deferRailFetch?: boolean }} [railOpts]
+ */
+export function renderSearchShell(content, railOpts = {}) {
   const user = getAuthUser();
   const header = renderSiteHeader({
     user,
@@ -113,7 +122,7 @@ export function renderSearchShell(content) {
         <div class="home-main search-main">
           ${content}
         </div>
-        ${renderSearchRightRail()}
+        ${renderSearchRightRail(railOpts)}
       </div>
       ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>

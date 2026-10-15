@@ -196,14 +196,14 @@ function searchLoginReturnTo() {
 }
 
 /**
- * @param {{ sessionReady?: boolean }} [opts]
- * sessionReady 전: 헤더·푸터·레일만.
+ * @param {{ sessionReady?: boolean, deferRailFetch?: boolean }} [opts]
+ * sessionReady 전: 헤더·푸터·레일만. 레일 6건은 보내지 않고 받는 중 칸만 그린다.
  * 로그인했지만 이메일 미인증: 인증 대기 화면으로 이동.
  * 비로그인: 검색 폼·결과. 조작은 로그인 팝업.
  */
 export function renderSearchPage(opts = {}) {
   syncRoleFromHash();
-  if (!opts.sessionReady) return renderSearchShell('');
+  if (!opts.sessionReady) return renderSearchShell('', { deferRailFetch: opts.deferRailFetch !== false });
   if (isSearchLoggedIn() && !isEmailVerified()) {
     redirectToEmailVerifyWait();
     return '';

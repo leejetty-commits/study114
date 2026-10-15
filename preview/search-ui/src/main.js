@@ -25,7 +25,11 @@ import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, resetDeepIntentResumeFlag } from '@home-ui/resume-deep-intent.js';
 import { presentLoginWelcome } from '../../shared/login-welcome.js';
 
-/** 세션 확정 후에만 GPS·복원 검색을 1회 돌린다. 첫 셸은 me.php를 기다리지 않는다. */
+/**
+ * 세션 확정 후에만 GPS·복원 검색을 1회 돌린다. 첫 셸은 me.php를 기다리지 않는다.
+ * 레일 6건(concern-hot 3 + 정보 글 3)은 allowFindBoot 가 켜진 뒤 한 번만 보낸다.
+ * unconfirmed 도 initAuthSession 이 끝나면 이 값이 켜지고, 그때 남은 로그인 상태로 한 번 받는다.
+ */
 let allowFindBoot = false;
 let sessionFollowUpDone = false;
 let paintedHash = null;
@@ -34,7 +38,7 @@ function render() {
   const hashBefore = window.location.hash;
   syncRoleFromHash();
   const app = document.getElementById('app');
-  const html = renderSearchPage({ sessionReady: allowFindBoot });
+  const html = renderSearchPage({ sessionReady: allowFindBoot, deferRailFetch: !allowFindBoot });
   const paintBlocked = window.location.hash !== hashBefore || isAuthRedirectPending();
   if (!paintBlocked) {
     app.innerHTML = html;

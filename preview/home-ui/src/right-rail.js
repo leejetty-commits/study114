@@ -47,6 +47,7 @@ function ensureRailOwnerResolver() {
  *   guestFilter: string,
  *   linkMode: 'hash' | 'absolute',
  *   homeBase: string,
+ *   deferRailFetch?: boolean,
  * }} RailCtx
  */
 
@@ -66,6 +67,7 @@ function createRailCtx(slotKey, opts = {}) {
     guestFilter: opts.guestFilter || slot?.guestFilter || 'allow',
     linkMode: opts.linkMode === 'absolute' ? 'absolute' : 'hash',
     homeBase: String(opts.homeBase || HOME_UI_BASE).replace(/\/$/, ''),
+    deferRailFetch: opts.deferRailFetch === true,
   };
 }
 
@@ -193,7 +195,8 @@ function railSlotAnchor(hrefOrPath, className, ctx, inner, slotKey) {
  * 노션 잠금안: 3층 슬롯(현장·안내·영상). Quiet Rails.
  * channel ACL: visibilityRule · roleTarget · guestFilter · sourceBoardKeys 런타임 적용
  * @param {string} [slotKey]
- * @param {{ guestFilter?: string, tone?: 'full'|'quiet'|'entry', variant?: 'sidebar'|'inline', navRole?: string, linkMode?: 'hash'|'absolute', homeBase?: string }} [opts]
+ * @param {{ guestFilter?: string, tone?: 'full'|'quiet'|'entry', variant?: 'sidebar'|'inline', navRole?: string, linkMode?: 'hash'|'absolute', homeBase?: string, deferRailFetch?: boolean }} [opts]
+ * deferRailFetch: 칸·제목의 받는 중 그림만 내고 concern-hot·정보 글 요청은 보내지 않는다. 찾기 첫 그림(me.php 전)만 쓴다.
  */
 export function renderPromoWithRightRail(slotKey = 'home_right_rail', opts = {}) {
   const ctx = createRailCtx(slotKey, opts);
@@ -351,9 +354,11 @@ function liveEnsure(mode) {
  * 칸은 받는 중·0건·실패에도 제목과 함께 그대로 둔다.
  * @param {LiveMode} mode
  * @param {(liveId: string) => string} build
+ * @param {boolean} [holdFetch] 받기 전 칸만 그린다. 요청·다시 그리기 표식은 남기지 않는다.
  */
-function renderLiveTracked(mode, build) {
-  if (liveStatus(mode) === 'ready' && liveFresh(mode)) return build('');
+function renderLiveTracked(mode, build, holdFetch = false) {
+  if (!holdFetch && liveStatus(mode) === 'ready' && liveFresh(mode)) return build('');
+  if (holdFetch) return build('');
   const id = `rlf${++liveFieldSeq}`;
   pendingLiveFields.set(id, { mode, build });
   scheduleLiveFieldRefresh(mode);
@@ -381,11 +386,12 @@ function renderLiveFieldSlot(slotKey, ctx) {
   if (!boardKeys.length) return '';
   if (typeof document !== 'undefined') bindConcernRailEvents();
   const attrs = concernRailAttrs(slotKey, ctx);
-  const best = renderLiveTracked('best', (liveId) => renderBestSection(boardKeys, attrs, liveId));
+  const hold = ctx.deferRailFetch === true;
+  const best = renderLiveTracked('best', (liveId) => renderBestSection(boardKeys, attrs, liveId), hold);
   const rooms = boardKeys
-    .map((boardKey) => renderLiveTracked('latest', (liveId) => renderRoomBlock(boardKey, attrs, liveId)))
+    .map((boardKey) => renderLiveTracked('latest', (liveId) => renderRoomBlock(boardKey, attrs, liveId), hold))
     .join('');
-  const hot = renderLiveTracked('hot', (liveId) => renderHotSection(slotKey, ctx, boardKeys, liveId));
+  const hot = renderLiveTracked('hot', (liveId) => renderHotSection(slotKey, ctx, boardKeys, liveId), hold);
   return `${best}${rooms}${hot}`;
 }
 
@@ -687,6 +693,7 @@ function renderMediaTeaserSlot(slotKey, ctx) {
     homeBase: ctx.homeBase,
     leaveInNewTab: leave === 'blank',
     continueInPage: leave === 'inpage',
+    deferFetch: ctx.deferRailFetch === true,
   });
 }
 
