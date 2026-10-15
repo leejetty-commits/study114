@@ -967,27 +967,47 @@ try {
   if (peekOpen) await page.keyboard.press('Escape');
   await gone('#rail-guide-peek-overlay');
 
-  // 찾기: 고민 HOT·방 레일 버튼은 인페이지(팝업), 팝업 「게시판에서 보기」는 홈 게시판 같은 탭 링크(218-9)
+  // 찾기: HOT 카드·아래 버튼은 홈과 같은 10개 HOT 팝업. 「게시판에서 보기」는 공부방 게시판으로 같은 탭(234)
   const hotBtn = await ev(() => {
     const hot = document.querySelector('#rail-search [data-rail-hot]');
-    const card = hot?.querySelector('[data-concern-rail-open]');
+    const card = hot?.querySelector('[data-concern-hot-open]');
     return {
       card: card?.tagName || '',
-      leave: card?.getAttribute('data-concern-rail-leave') || hot?.getAttribute('data-concern-rail-leave') || '',
+      leave: card?.getAttribute('data-concern-rail-leave') || '',
+      board: card?.getAttribute('data-concern-hot-board') || '',
       blank: Boolean(hot?.querySelector('a[target="_blank"]')),
       home: Boolean(hot?.innerHTML.includes('/#/community')),
+      roomOpen: Boolean(hot?.querySelector('[data-concern-rail-open]')),
     };
   });
-  ok(`${B}search_hot_in_page_control`, hotBtn.card === 'BUTTON' && !hotBtn.blank && !hotBtn.home, JSON.stringify(hotBtn));
-  await page.click('#rail-search [data-rail-room] [data-concern-rail-more]').catch(() => {});
+  ok(
+    `${B}search_hot_in_page_control`,
+    hotBtn.card === 'BUTTON' && hotBtn.leave === 'inpage' && hotBtn.board === '/community/director' && !hotBtn.blank && !hotBtn.home && !hotBtn.roomOpen,
+    JSON.stringify(hotBtn),
+  );
+  await page.click('#rail-search [data-rail-hot] [data-concern-hot-open]').catch(() => {});
   const concernOpen = await wait(popupSel);
   const concernGo = await ev((label) => {
+    const root = document.getElementById('rail-popup');
     const a = [...document.querySelectorAll('#rail-popup a[data-rail-popup-leave]')].find((x) => x.textContent.trim() === label);
-    return { tag: a?.tagName || '', href: a?.getAttribute('href') || '', blank: a?.getAttribute('target') === '_blank', hash: location.hash };
+    return {
+      kind: root?.getAttribute('data-rail-popup-kind') || '',
+      title: root?.querySelector('.rail-popup__title')?.textContent?.trim() || '',
+      tag: a?.tagName || '',
+      href: a?.getAttribute('href') || '',
+      blank: a?.getAttribute('target') === '_blank',
+      hash: location.hash,
+    };
   }, POLICY_COPY.goBoard);
   ok(
     `${B}search_concern_go_board_link_same_tab`,
-    concernOpen && concernGo.tag === 'A' && concernGo.href.includes('/#/community') && !concernGo.blank && concernGo.hash === hashGuide,
+    concernOpen &&
+      concernGo.kind === 'concern-hot' &&
+      concernGo.title === '지금 고민 HOT' &&
+      concernGo.tag === 'A' &&
+      concernGo.href.includes('/#/community/director') &&
+      !concernGo.blank &&
+      concernGo.hash === hashGuide,
     JSON.stringify(concernGo),
   );
   if (concernOpen) await page.keyboard.press('Escape');

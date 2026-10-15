@@ -111,7 +111,7 @@ function isBlankConcernRail(slotKey) {
 }
 
 /**
- * 찾기·등록은 고민 읽기 팝업(인페이지). 홈은 hash, 상세는 새 탭.
+ * 찾기·등록 leave는 inpage(주소 유지, 팝업의 게시판 이동은 홈으로 같은 탭). 홈은 hash, 상세는 새 탭.
  * @returns {'inpage'|'blank'|'hash'}
  */
 function railLeaveMode(slotKey, ctx) {
@@ -120,7 +120,7 @@ function railLeaveMode(slotKey, ctx) {
   return 'hash';
 }
 
-/** 찾기·등록 HOT·고민 링크 → 방 배너와 같은 읽기 팝업 버튼. 주소는 바꾸지 않는다. */
+/** 등록 레일 고민 링크 → 방 배너와 같은 읽기 팝업 버튼. 찾기 HOT은 hotPopupControl. 주소는 바꾸지 않는다. */
 function concernInPageControl(hrefOrPath, className, ctx, inner, leave = 'inpage') {
   const path = railPath(hrefOrPath);
   const posted = path.match(/^\/community\/(director|tutor|parent|solved)\/([^/]+)$/);
@@ -149,7 +149,7 @@ function concernInPageControl(hrefOrPath, className, ctx, inner, leave = 'inpage
   )}" data-concern-rail-leave="${esc(leave)}">${inner}</button>`;
 }
 
-/** 홈·카탈로그 HOT(218-12): 「지금 고민 HOT」 10개 팝업. 아래 버튼은 글 id 없이 같은 팝업. */
+/** 홈·찾기 HOT(218-12, 234): 「지금 고민 HOT」 10개 팝업. 아래 버튼은 글 id 없이 같은 팝업. */
 function hotPopupControl(hrefOrPath, className, ctx, inner, leave) {
   const path = railPath(hrefOrPath);
   const posted = path.match(/^\/community\/(director|tutor|parent|solved)\/([^/]+)$/);
@@ -171,9 +171,9 @@ function hotPopupControl(hrefOrPath, className, ctx, inner, leave) {
   )}" data-concern-rail-leave="${esc(leave)}">${inner}</button>`;
 }
 
-/** 홈 레일(218-6): 현장 카드·HOT 아래 버튼도 읽기 팝업. 게시판 이동은 홈의 다른 팝업과 같은 방식(railLeaveMode). */
+/** 홈·찾기: 현장 카드와 HOT 아래 버튼은 10개 HOT 팝업. 게시판 이동은 railLeaveMode. 등록은 방 팝업. */
 function railConcernControl(hrefOrPath, className, ctx, inner, slotKey) {
-  if (slotKey === 'home_right_rail' && isConcernPath(hrefOrPath)) {
+  if ((slotKey === 'home_right_rail' || slotKey === 'search_right_rail') && isConcernPath(hrefOrPath)) {
     return hotPopupControl(hrefOrPath, className, ctx, inner, railLeaveMode(slotKey, ctx));
   }
   return railSlotAnchor(hrefOrPath, className, ctx, inner, slotKey);
@@ -281,8 +281,8 @@ function liveFieldCopy(slotKey, ctx) {
   const hub = communityHubForRole(ctx.navRole);
   if (slotKey === 'search_right_rail') {
     return {
-      eyebrow: '탐색 도움',
-      title: '많이 보는 고민',
+      eyebrow: '오늘의 현장',
+      title: '지금 고민 HOT',
       ctaLabel: hub.label,
       ctaHref: hub.href,
     };
