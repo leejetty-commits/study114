@@ -20,7 +20,8 @@ import { bindSearchPageEvents, renderSearchPage } from './screens/search-page.js
 import { replaceSearchRightRail } from './layout.js';
 import { mountOpsChrome } from '@home-ui/site-ops-chrome.js';
 import { syncRoleFromHash } from './state.js';
-import { initAuthSession, isEmailVerified } from '@home-ui/auth-session.js';
+import { getSessionConfirmStatus, initAuthSession, isEmailVerified } from '@home-ui/auth-session.js';
+import { hydrateExposureBridge } from '@home-ui/exposure-bridge.js';
 import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, resetDeepIntentResumeFlag } from '@home-ui/resume-deep-intent.js';
 import { presentLoginWelcome } from '../../shared/login-welcome.js';
@@ -33,6 +34,12 @@ import { presentLoginWelcome } from '../../shared/login-welcome.js';
 let allowFindBoot = false;
 let sessionFollowUpDone = false;
 let paintedHash = null;
+
+/** 공부방찾기 첫 주소. 과외쌤찾기·학생찾기는 여기 넣지 않는다. */
+function isStudyRoomFindEntry() {
+  const path = (window.location.hash || '').replace(/^#/, '').split('?')[0];
+  return path === '/search/room';
+}
 
 function render() {
   const hashBefore = window.location.hash;
@@ -72,12 +79,21 @@ function init() {
       if (window.location.hash !== paintedHash) render();
     }, 0);
   }
-  initAuthSession().then((user) => {
+  const deferExposurePool = isStudyRoomFindEntry();
+  initAuthSession(false, { deferExposurePool }).then((user) => {
     if (sessionFollowUpDone) return;
     sessionFollowUpDone = true;
     presentLoginWelcome(user?.name, Boolean(user));
     allowFindBoot = true;
     render();
+    // 목록 요청이 먼저 나간 뒤에 노출 풀을 한 탭씩 채운다. 확인 실패·비회원은 풀을 부르지 않는다.
+    if (deferExposurePool && getSessionConfirmStatus() === 'authenticated') {
+      queueMicrotask(() => {
+        hydrateExposureBridge({ sequential: true }).catch((err) => {
+          console.warn('[auth] exposure hydrate skipped', err);
+        });
+      });
+    }
     if (isAuthRedirectPending()) return;
     if (user && isEmailVerified()) {
       queueMicrotask(() => resumePendingDeepIntent());

@@ -90,14 +90,28 @@ export function isExposureBridged() {
   return bridged;
 }
 
-export async function hydrateExposureBridge() {
+/**
+ * 로그인 노출 풀. 기본은 세 탭을 동시에 받는다.
+ * sequential 은 공부방찾기 첫 진입만: 목록 요청 뒤에 한 탭씩 받는다.
+ * @param {{ sequential?: boolean }} [opts]
+ */
+export async function hydrateExposureBridge(opts = {}) {
   if (!isLoggedIn() || bridged) return;
   try {
-    const [rooms, tutors, students] = await Promise.all([
-      searchPreviewTab('room', REAL_DB_CAP.study_room),
-      searchPreviewTab('tutor', REAL_DB_CAP.tutor),
-      searchPreviewTab('student', REAL_DB_CAP.student),
-    ]);
+    const loads = [
+      () => searchPreviewTab('room', REAL_DB_CAP.study_room),
+      () => searchPreviewTab('tutor', REAL_DB_CAP.tutor),
+      () => searchPreviewTab('student', REAL_DB_CAP.student),
+    ];
+    const results =
+      opts.sequential === true
+        ? await loads.reduce(async (chain, load) => {
+            const acc = await chain;
+            acc.push(await load());
+            return acc;
+          }, Promise.resolve([]))
+        : await Promise.all(loads.map((load) => load()));
+    const [rooms, tutors, students] = results;
     patchPool(EXPOSURE_STUDY_ROOMS, rooms.items ?? [], mapRoomItem, REAL_DB_CAP.study_room);
     patchPool(EXPOSURE_TUTORS, tutors.items ?? [], mapTutorItem, REAL_DB_CAP.tutor);
     patchPool(EXPOSURE_STUDENTS, students.items ?? [], mapStudentItem, REAL_DB_CAP.student);

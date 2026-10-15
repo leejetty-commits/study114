@@ -229,8 +229,12 @@ function clearAuthRole() {
   noteAuthRoleType('');
 }
 
-/** 쪽지·등록 등 부가 API 실패가 로그인 세션을 지우지 않게 격리 */
-async function hydrateSessionDependencies() {
+/**
+ * 쪽지·등록 등 부가 API 실패가 로그인 세션을 지우지 않게 격리.
+ * deferExposurePool: 공부방찾기 첫 진입. 노출 풀 3건은 여기서 보내지 않는다.
+ * @param {{ deferExposurePool?: boolean }} [opts]
+ */
+async function hydrateSessionDependencies(opts = {}) {
   await activateProviderApis(currentUser.role_type).catch((err) => {
     console.warn('[auth] provider hydrate skipped', err);
   });
@@ -240,13 +244,17 @@ async function hydrateSessionDependencies() {
   await activateRegistrationsApi().catch((err) => {
     console.warn('[auth] registrations hydrate skipped', err);
   });
+  if (opts.deferExposurePool === true) return;
   await hydrateExposureBridge().catch((err) => {
     console.warn('[auth] exposure hydrate skipped', err);
   });
 }
 
-/** @param {boolean} [navigateHome] */
-export async function initAuthSession(navigateHome = false) {
+/**
+ * @param {boolean} [navigateHome]
+ * @param {{ deferExposurePool?: boolean }} [opts]
+ */
+export async function initAuthSession(navigateHome = false, opts = {}) {
   try {
     const user = await fetchSession();
     if (!user) {
@@ -265,7 +273,7 @@ export async function initAuthSession(navigateHome = false) {
     sessionConfirmStatus = 'authenticated';
     const contextRoleType = user.oauth_role_pending === true ? '' : user.role_type;
     applyRoleContext(contextRoleType);
-    await hydrateSessionDependencies();
+    await hydrateSessionDependencies(opts);
     if (navigateHome && ROLE_HOME[contextRoleType]) {
       navigate(ROLE_HOME[contextRoleType]);
     }
