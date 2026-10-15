@@ -51,35 +51,27 @@ export function matchRegionCenter() {
  * @param {StudyRoomMapItem} item
  * @param {{ allowRegionFallback?: boolean }} [options]
  */
-export function resolveStudyRoomPin(item, options = {}) {
-  if (item.profile_status && item.profile_status !== 'published') return null;
+export function resolveStudyRoomPin(item) {
+  if (!item || item.profile_status !== 'published') return null;
 
   const lat = parseCoord(item.latitude);
   const lng = parseCoord(item.longitude);
-  if (lat != null && lng != null) {
-    return { lat, lng, source: 'coords' };
-  }
-
-  if (options.allowRegionFallback) {
-    const label = item.location_label || item.region_label || '';
-    const center = matchRegionCenter(label);
-    if (center) return { ...center, source: 'region_fallback' };
-  }
-
-  return null;
+  if (lat == null || lng == null) return null;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+  return { lat, lng, source: 'coords' };
 }
 
 /**
  * @param {StudyRoomMapItem[]} items
  * @param {{ allowRegionFallback?: boolean }} [options]
  */
-export function mapStudyRoomPins(items, options = {}) {
+export function mapStudyRoomPins(items) {
   const list = Array.isArray(items) ? items : [];
   /** @type {Array<{ id: string, name: string, lat: number, lng: number, source: string }>} */
   const pins = [];
 
   for (const item of list) {
-    const pos = resolveStudyRoomPin(item, options);
+    const pos = resolveStudyRoomPin(item);
     if (!pos) continue;
     const id = String(item.id ?? '');
     if (!id) continue;
@@ -109,7 +101,7 @@ export function resolveMapCenter(items, regionLabel = '', explicitCenter = {}, o
 
   // 공부방 홈·찾기는 usePins:false. 핀은 사업장 좌표라 홍보1 중심을 정하지 않는다.
   if (options.usePins !== false) {
-    const pins = mapStudyRoomPins(items, { allowRegionFallback: true });
+    const pins = mapStudyRoomPins(items);
     if (pins.length > 0) {
       const lat = pins.reduce((sum, p) => sum + p.lat, 0) / pins.length;
       const lng = pins.reduce((sum, p) => sum + p.lng, 0) / pins.length;
@@ -239,12 +231,11 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
 
   const items = Array.isArray(options.items) ? options.items : [];
   const regionLabel = options.regionLabel || '';
-  const allowRegionFallback = options.allowRegionFallback !== false;
   const fitBounds = options.fitBounds !== false;
   const variant = options.variant || 'search';
   const pinAnchorsCenter = options.pinAnchorsCenter !== false;
   const memberMap = options.memberMap === true;
-  const pins = mapStudyRoomPins(items, { allowRegionFallback });
+  const pins = mapStudyRoomPins(items);
   let center = resolveMapCenter(items, regionLabel, {
     lat: options.lat,
     lng: options.lng,
@@ -289,10 +280,11 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
     mountEl.innerHTML = '';
     mountEl.classList.add('naver-map-mount', `naver-map-mount--${variant}`);
 
+    const pinHit = { w: 36, h: 48 };
     const makePinIcon = (focused = false) => ({
-      content: `<button type="button" class="naver-map-pin${focused ? ' is-focused' : ''}" aria-hidden="true"></button>`,
-      size: new naver.maps.Size(22, 22),
-      anchor: new naver.maps.Point(11, 11),
+      content: `<button type="button" class="naver-map-pin${focused ? ' is-focused' : ''}" aria-hidden="true"><img src="/assets/brand/src/udong-pin.png" alt="" /></button>`,
+      size: new naver.maps.Size(pinHit.w, pinHit.h),
+      anchor: new naver.maps.Point(pinHit.w / 2, pinHit.h),
     });
 
     const map = new naver.maps.Map(mountEl, {
@@ -409,7 +401,6 @@ export async function bindStudyRoomMapSection(root, items, options = {}) {
     regionLabel: options.regionLabel || section?.getAttribute('data-region-label') || '',
     lat: options.lat ?? (latAttr != null ? Number(latAttr) : null),
     lng: options.lng ?? (lngAttr != null ? Number(lngAttr) : null),
-    allowRegionFallback: section?.getAttribute('data-allow-fallback') !== 'false',
     fitBounds,
     variant: section?.getAttribute('data-map-variant') || 'search',
     geocodeRegion: options.geocodeRegion === true || section?.getAttribute('data-geocode-region') === 'true',

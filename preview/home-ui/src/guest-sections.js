@@ -75,7 +75,7 @@ export function renderGuestHero() {
   const sub = `${tutor} · 우리동네 공부방·과외를 쪽지로 연결하세요`;
   const cta = `${room} 공부방·과외쌤 찾기`;
   return `
-    <section class="hero-map hero-map--float-rail" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${room}" data-map-lat="${GUEST_MAP_CENTER.lat}" data-map-lng="${GUEST_MAP_CENTER.lng}" data-fit-bounds="false" data-allow-fallback="true">
+    <section class="hero-map hero-map--float-rail" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${room}" data-map-lat="${GUEST_MAP_CENTER.lat}" data-map-lng="${GUEST_MAP_CENTER.lng}" data-fit-bounds="false">
       <div class="hero-map__canvas">
         <div class="hero-map__surface hero-map__surface--naver" aria-label="${dong} 공부방 지도">
           <div class="naver-map-mount-host" data-naver-map-mount></div>
