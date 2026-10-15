@@ -34,6 +34,19 @@ const CREDENTIALS = { credentials: 'include' };
 /** @type {AuthUser|null} */
 let currentUser = null;
 
+/**
+ * me.php 확인 결과.
+ * unconfirmed(확인 실패)여도 currentUser 는 지우지 않는다.
+ * 비밀번호·토큰은 저장하지 않고, 브라우저 저장소에도 새로 쓰지 않는다.
+ * @typedef {'unknown'|'authenticated'|'anonymous'|'unconfirmed'} SessionConfirmStatus
+ */
+
+/** @type {SessionConfirmStatus} */
+let sessionConfirmStatus = 'unknown';
+
+/** 네트워크 오류·5xx 만 다시 시도한다. 401·403 은 포함하지 않는다. */
+const SESSION_RETRY_DELAYS_MS = [800, 2000];
+
 export const ROLE_HOME = {
   guardian_student: '/parent',
   study_room_owner: '/study-room',
@@ -69,6 +82,11 @@ export function getAuthUser() {
   return currentUser;
 }
 
+/** @returns {SessionConfirmStatus} */
+export function getSessionConfirmStatus() {
+  return sessionConfirmStatus;
+}
+
 export function isLoggedIn() {
   return currentUser !== null;
 }
@@ -77,70 +95,118 @@ export function isAdminUser() {
   return Boolean(currentUser?.admin_level) || currentUser?.role_type === 'admin';
 }
 
+function waitForSessionRetry(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+/** @param {number} status */
+function isRetryableMeStatus(status) {
+  return status === 0 || (status >= 500 && status <= 599);
+}
+
+class SessionUnconfirmedError extends Error {
+  /** @param {unknown} cause */
+  constructor(cause) {
+    super('me.php 확인 실패', { cause });
+    this.name = 'SessionUnconfirmedError';
+  }
+}
+
+/**
+ * me.php 한 번.
+ * 네트워크 오류·5xx 는 다시 시도하고, 401·403 을 포함한 그 외 응답은 그대로 끝낸다.
+ * @returns {Promise<{ kind: 'retry', error: unknown } | { kind: 'done', res: Response, data: Record<string, unknown> }>}
+ */
+async function requestMeOnce() {
+  try {
+    const res = await fetch('/api/auth/me.php', CREDENTIALS);
+    const data = await res.json().catch(() => ({}));
+    if (isRetryableMeStatus(res.status)) {
+      return { kind: 'retry', error: new Error(`HTTP ${res.status}`) };
+    }
+    return { kind: 'done', res, data };
+  } catch (err) {
+    return { kind: 'retry', error: err };
+  }
+}
+
+function giveUpSessionCheck(error) {
+  failStudentBranchSession();
+  throw new SessionUnconfirmedError(error);
+}
+
 /** @returns {Promise<AuthUser|null>} */
 export async function fetchSession() {
-  let res;
-  let data = {};
-  try {
-    res = await fetch('/api/auth/me.php', CREDENTIALS);
-    data = await res.json().catch(() => ({}));
-  } catch (err) {
-    failStudentBranchSession();
-    throw err;
-  }
-  if (!res.ok) {
-    failStudentBranchSession();
-    return null;
-  }
-  noteSessionStudentBranch(data);
-  if (!data.ok || !data.authenticated) {
-    return null;
-  }
-  if (data.needs_account_contact) {
-    window.location.replace(`${String(AUTH_UI_BASE).replace(/\/$/, '')}/#/signup/account-contact`);
-    return null;
-  }
-  // admin_level은 콘솔 RBAC 전용. 가입완료(email_verified) 예외가 아니다.
-  if (!data.email_verified) {
-    if (isGuidePublicPath()) {
-      return {
-        user_id: data.user_id,
-        email: data.email,
-        role_type: data.role_type,
-        name: data.name,
-        email_verified: false,
-        oauth_role_pending: data.oauth_role_pending === true,
-        admin_level: data.admin_level ?? null,
-        must_change_password: Boolean(data.must_change_password),
-        oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
-        oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
-        phone_verified: Boolean(data.phone_verified),
-      };
+  /** @type {unknown} */
+  let lastError = null;
+  const attempts = SESSION_RETRY_DELAYS_MS.length + 1;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const result = await requestMeOnce();
+    if (result.kind === 'retry') {
+      lastError = result.error;
+      if (attempt < SESSION_RETRY_DELAYS_MS.length) {
+        await waitForSessionRetry(SESSION_RETRY_DELAYS_MS[attempt]);
+        continue;
+      }
+      giveUpSessionCheck(lastError);
     }
-    redirectToEmailVerifyWait();
-    return null;
+    const { res, data } = result;
+    if (!res.ok) {
+      failStudentBranchSession();
+      return null;
+    }
+    noteSessionStudentBranch(data);
+    if (!data.ok || !data.authenticated) {
+      return null;
+    }
+    if (data.needs_account_contact) {
+      window.location.replace(`${String(AUTH_UI_BASE).replace(/\/$/, '')}/#/signup/account-contact`);
+      return null;
+    }
+    // admin_level은 콘솔 RBAC 전용. 가입완료(email_verified) 예외가 아니다.
+    if (!data.email_verified) {
+      if (isGuidePublicPath()) {
+        return {
+          user_id: data.user_id,
+          email: data.email,
+          role_type: data.role_type,
+          name: data.name,
+          email_verified: false,
+          oauth_role_pending: data.oauth_role_pending === true,
+          admin_level: data.admin_level ?? null,
+          must_change_password: Boolean(data.must_change_password),
+          oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
+          oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
+          phone_verified: Boolean(data.phone_verified),
+        };
+      }
+      redirectToEmailVerifyWait();
+      return null;
+    }
+    if (data.oauth_role_pending) {
+      window.location.href = oauthRoleSelectionUrl();
+      return null;
+    }
+    // 기본정보를 다 채우기 전(서버 판정)에는 역할과 관계없이 사이트를 쓸 수 없다. 기본정보 화면부터 다시 채운다.
+    if (data.needs_basic_register && !isGuidePublicPath()) {
+      window.location.replace(`${String(AUTH_UI_BASE).replace(/\/$/, '')}/#${basicRegisterPathForMe(data)}`);
+      return null;
+    }
+    return {
+      user_id: data.user_id,
+      email: data.email,
+      role_type: data.role_type,
+      name: data.name,
+      email_verified: Boolean(data.email_verified),
+      admin_level: data.admin_level ?? null,
+      must_change_password: Boolean(data.must_change_password),
+      oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
+      oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
+      phone_verified: Boolean(data.phone_verified),
+    };
   }
-  if (data.oauth_role_pending) {
-    window.location.href = oauthRoleSelectionUrl();
-    return null;
-  }
-  // 기본정보를 다 채우기 전(서버 판정)에는 역할과 관계없이 사이트를 쓸 수 없다. 기본정보 화면부터 다시 채운다.
-  if (data.needs_basic_register && !isGuidePublicPath()) {
-    window.location.replace(`${String(AUTH_UI_BASE).replace(/\/$/, '')}/#${basicRegisterPathForMe(data)}`);
-    return null;
-  }
-  return {
-    user_id: data.user_id,
-    email: data.email,
-    role_type: data.role_type,
-    name: data.name,
-    email_verified: Boolean(data.email_verified),
-    admin_level: data.admin_level ?? null,
-    must_change_password: Boolean(data.must_change_password),
-    oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
-    oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
-    phone_verified: Boolean(data.phone_verified),
-  };
 }
 
 export function isEmailVerified() {
@@ -185,6 +251,7 @@ export async function initAuthSession(navigateHome = false) {
   try {
     const user = await fetchSession();
     if (!user) {
+      sessionConfirmStatus = 'anonymous';
       currentUser = null;
       clearAuthRole();
       deactivateProviderApis();
@@ -196,6 +263,7 @@ export async function initAuthSession(navigateHome = false) {
       return null;
     }
     currentUser = user;
+    sessionConfirmStatus = 'authenticated';
     const contextRoleType = user.oauth_role_pending === true ? '' : user.role_type;
     applyRoleContext(contextRoleType);
     await hydrateSessionDependencies();
@@ -204,17 +272,10 @@ export async function initAuthSession(navigateHome = false) {
     }
     return user;
   } catch (err) {
-    console.warn('[auth] session check skipped — sessionStorage fallback', err);
-    failStudentBranchSession();
-    currentUser = null;
-    clearAuthRole();
-    deactivateProviderApis();
-    deactivateMessagesApi();
-    deactivateRegistrationsApi();
-    resetProviderStatus();
-    resetProviderNotices();
-    resetExposureBridge();
-    return null;
+    sessionConfirmStatus = 'unconfirmed';
+    const cause = err instanceof SessionUnconfirmedError ? err.cause : err;
+    console.warn('[auth] me.php 확인 실패 — 마지막 로그인 상태를 유지합니다', cause);
+    return currentUser;
   }
 }
 
@@ -225,6 +286,7 @@ export async function logout() {
     console.warn('[auth] logout', err);
   }
   currentUser = null;
+  sessionConfirmStatus = 'anonymous';
   clearAuthRole();
   clearStoredStudentBranch();
   deactivateProviderApis();
