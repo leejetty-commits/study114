@@ -1,5 +1,6 @@
 import { getRightRailSlot } from './right-rail-store.js';
 import { getNavRole } from './state.js';
+import { navRoleFromAuthUser } from './nav-config.js';
 import { getAuthUser, isAdminUser, isEmailVerified, isLoggedIn } from './auth-session.js';
 import { isConcernBoardKey } from './board-channel-store.js';
 import { COMMUNITY_BOARD_DEFS, CONCERN_RAIL_COPY, getConcernBoardByKey } from './concern/copy.js';
@@ -150,7 +151,7 @@ function concernInPageControl(hrefOrPath, className, ctx, inner, leave = 'inpage
 }
 
 /** 홈·찾기 HOT(218-12, 234): 「지금 고민 HOT」 10개 팝업. 아래 버튼은 글 id 없이 같은 팝업. */
-function hotPopupControl(hrefOrPath, className, ctx, inner, leave) {
+function hotPopupControl(hrefOrPath, className, ctx, inner, leave, hubRole = '') {
   const path = railPath(hrefOrPath);
   const posted = path.match(/^\/community\/(director|tutor|parent|solved)\/([^/]+)$/);
   let postId = '';
@@ -161,7 +162,7 @@ function hotPopupControl(hrefOrPath, className, ctx, inner, leave) {
       postId = posted[2];
     }
   }
-  const boardPath = railPath(communityHubForRole(ctx.navRole).href);
+  const boardPath = railPath(communityHubForRole(hubRole || ctx.navRole).href);
   const postAttr = postId ? ` data-concern-hot-post="${esc(postId)}"` : '';
   const cls = className ? ` class="${className}"` : '';
   return `<button type="button"${cls} data-concern-hot-open data-concern-hot-board="${esc(boardPath)}"${postAttr} data-concern-rail-nav="${esc(
@@ -174,7 +175,8 @@ function hotPopupControl(hrefOrPath, className, ctx, inner, leave) {
 /** 홈·찾기: 현장 카드와 HOT 아래 버튼은 10개 HOT 팝업. 게시판 이동은 railLeaveMode. 등록은 방 팝업. */
 function railConcernControl(hrefOrPath, className, ctx, inner, slotKey) {
   if ((slotKey === 'home_right_rail' || slotKey === 'search_right_rail') && isConcernPath(hrefOrPath)) {
-    return hotPopupControl(hrefOrPath, className, ctx, inner, railLeaveMode(slotKey, ctx));
+    const hubRole = slotKey === 'search_right_rail' ? searchHotHubRole(ctx) : '';
+    return hotPopupControl(hrefOrPath, className, ctx, inner, railLeaveMode(slotKey, ctx), hubRole);
   }
   return railSlotAnchor(hrefOrPath, className, ctx, inner, slotKey);
 }
@@ -277,8 +279,21 @@ function communityHubForRole(role) {
   return { href: '#/community', label: '커뮤니티 더 보기' };
 }
 
+/**
+ * 찾기 HOT 문구·게시판 이동만 로그인 세션을 본다.
+ * 방 목록·칸 수·팝업 열람(data-concern-rail-nav)은 ctx.navRole 그대로다.
+ * @param {{ navRole: string }} ctx
+ */
+function searchHotHubRole(ctx) {
+  const user = getAuthUser();
+  if (!user) return ctx.navRole;
+  const role = navRoleFromAuthUser(user);
+  if (role === 'study_room' || role === 'tutor' || role === 'parent' || role === 'guest') return role;
+  return ctx.navRole;
+}
+
 function liveFieldCopy(slotKey, ctx) {
-  const hub = communityHubForRole(ctx.navRole);
+  const hub = communityHubForRole(slotKey === 'search_right_rail' ? searchHotHubRole(ctx) : ctx.navRole);
   if (slotKey === 'search_right_rail') {
     return {
       eyebrow: '오늘의 현장',

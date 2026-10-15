@@ -350,6 +350,51 @@ for (const rc of ROLE_CASES) {
   }
 }
 
+// 234b: 찾기 HOT 문구·이동만 세션. 레일에 guest 를 넘겨도 로그인 공부방·과외쌤 버튼은 각자 허브.
+// 방 칸(data-rail-room)과 data-concern-rail-nav 는 넘긴 역할 그대로.
+const hotHubCases = [
+  { name: 'guest', me: null, label: '커뮤니티 더 보기', board: '/community' },
+  {
+    name: 'study_room',
+    me: { user_id: 11, role_type: 'study_room_owner', name: 'r', email: 'r@x', email_verified: true },
+    label: '공부방 고민방 더 보기',
+    board: '/community/director',
+  },
+  {
+    name: 'tutor',
+    me: { user_id: 21, role_type: 'tutor', name: 't', email: 't@x', email_verified: true },
+    label: '과외쌤 고민방 더 보기',
+    board: '/community/tutor',
+  },
+  {
+    name: 'parent',
+    me: { user_id: 31, role_type: 'guardian_student', name: 's', email: 's@x', email_verified: true },
+    label: '커뮤니티 더 보기',
+    board: '/community',
+  },
+];
+for (const hub of hotHubCases) {
+  await signIn(hub.me, '#/guest');
+  const html = rail?.renderRightRailSidebar?.('search_right_rail', { navRole: 'guest', homeBase: HOME_BASE }) ?? '';
+  const hot = html.match(/<section\b[^>]*data-rail-hot[\s\S]*?<\/section>/)?.[0] || '';
+  const rooms = [...html.matchAll(/data-rail-room="([^"]+)"/g)].map((m) => m[1]);
+  ok(
+    `search_hot_hub_session_${hub.name}`,
+    hot.includes(hub.label) &&
+      hot.includes(`data-concern-hot-board="${hub.board}"`) &&
+      hot.includes('data-concern-rail-nav="guest"') &&
+      rooms.join(',') === 'concern-parent,concern-director,concern-tutor',
+    `label=${hot.includes(hub.label)} board=${hot.includes(hub.board)} rooms=${rooms.join(',')}`,
+  );
+}
+await signIn(hotHubCases[1].me, '#/study-room');
+const homeWhileRoom = rail?.renderPromoWithRightRail?.('home_right_rail', { navRole: 'guest' }) ?? '';
+const homeHot = homeWhileRoom.match(/<section\b[^>]*data-rail-hot[\s\S]*?<\/section>/)?.[0] || '';
+ok(
+  'home_hot_keeps_passed_role',
+  homeHot.includes('커뮤니티 더 보기') && homeHot.includes('data-concern-hot-board="/community"') && !homeHot.includes('공부방 고민방 더 보기'),
+);
+
 // ── (d) 받는 중 · 0건 · 실패 ──
 await signIn(ROLE_CASES[0].me, '#/study-room');
 server.role = 'supply-room';
