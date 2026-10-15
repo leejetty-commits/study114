@@ -55,6 +55,47 @@ function activeGnbForTab(tab) {
   return 'find_room';
 }
 
+/** 찾기 우측 레일. 그리는 순간의 resolveChromeRole() 을 쓴다. */
+export function renderSearchRightRail() {
+  return renderRightRailSidebar('search_right_rail', {
+    navRole: resolveChromeRole(),
+    homeBase: HOME_UI_BASE,
+  });
+}
+
+const SEARCH_RAIL_MARKUP_RE = /<aside\b[^>]*\bdata-right-rail-slot="search_right_rail"[^>]*>[\s\S]*?<\/aside>/;
+
+/**
+ * 이미 그린 페이지 HTML에서 우측 레일만 지금 세션 역할로 바꾼다.
+ * @param {string} pageHtml
+ * @returns {{ html: string, swapped: boolean }}
+ */
+export function swapSearchRailMarkup(pageHtml) {
+  const next = renderSearchRightRail().trim();
+  if (!SEARCH_RAIL_MARKUP_RE.test(String(pageHtml || ''))) return { html: String(pageHtml || ''), swapped: false };
+  return { html: String(pageHtml).replace(SEARCH_RAIL_MARKUP_RE, next), swapped: true };
+}
+
+/**
+ * 전체 페이지를 못 바꿔도 우측 레일 노드만 지금 역할로 갈아끼운다.
+ * @param {ParentNode|null|undefined} root
+ * @returns {boolean}
+ */
+export function replaceSearchRightRail(root) {
+  if (!root || typeof root.querySelector !== 'function') return false;
+  const current = root.querySelector('[data-right-rail-slot="search_right_rail"]');
+  if (!current || typeof current.replaceWith !== 'function') return false;
+  const doc = current.ownerDocument;
+  if (!doc || typeof doc.createElement !== 'function') return false;
+  const tpl = doc.createElement('template');
+  tpl.innerHTML = renderSearchRightRail().trim();
+  const next = tpl.content && tpl.content.firstElementChild;
+  if (!next) return false;
+  current.replaceWith(next);
+  bindRightRailEvents(next);
+  return true;
+}
+
 export function renderSearchShell(content) {
   const user = getAuthUser();
   const header = renderSiteHeader({
@@ -72,10 +113,7 @@ export function renderSearchShell(content) {
         <div class="home-main search-main">
           ${content}
         </div>
-        ${renderRightRailSidebar('search_right_rail', {
-          navRole: resolveChromeRole(),
-          homeBase: HOME_UI_BASE,
-        })}
+        ${renderSearchRightRail()}
       </div>
       ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>

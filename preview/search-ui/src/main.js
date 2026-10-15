@@ -17,6 +17,7 @@ import './styles/search-visily.css';
 import '@home-ui/styles/udx-std-apply.css';
 
 import { bindSearchPageEvents, renderSearchPage } from './screens/search-page.js';
+import { replaceSearchRightRail } from './layout.js';
 import { mountOpsChrome } from '@home-ui/site-ops-chrome.js';
 import { syncRoleFromHash } from './state.js';
 import { initAuthSession, isEmailVerified } from '@home-ui/auth-session.js';
@@ -34,11 +35,16 @@ function render() {
   syncRoleFromHash();
   const app = document.getElementById('app');
   const html = renderSearchPage({ sessionReady: allowFindBoot });
-  if (window.location.hash !== hashBefore || isAuthRedirectPending()) return;
-  app.innerHTML = html;
-  bindSearchPageEvents(app, render, { allowFindBoot });
-  mountOpsChrome(app);
-  paintedHash = hashBefore;
+  const paintBlocked = window.location.hash !== hashBefore || isAuthRedirectPending();
+  if (!paintBlocked) {
+    app.innerHTML = html;
+    bindSearchPageEvents(app, render, { allowFindBoot });
+    mountOpsChrome(app);
+    paintedHash = hashBefore;
+    return;
+  }
+  // 해시가 바뀌거나 인증 대기로 페이지 전체를 못 심어도, 세션 전 손님 레일은 남기지 않는다.
+  if (allowFindBoot) replaceSearchRightRail(app);
 }
 
 function init() {
@@ -66,9 +72,9 @@ function init() {
     if (sessionFollowUpDone) return;
     sessionFollowUpDone = true;
     presentLoginWelcome(user?.name, Boolean(user));
-    if (isAuthRedirectPending()) return;
     allowFindBoot = true;
     render();
+    if (isAuthRedirectPending()) return;
     if (user && isEmailVerified()) {
       queueMicrotask(() => resumePendingDeepIntent());
     }
