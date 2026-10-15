@@ -35,6 +35,9 @@ jobs:
         working-directory: preview/home-ui
         run: npm ci
 
+      - name: Install root deps
+        run: npm ci
+
       - name: PHP syntax check
         run: bash scripts/php-syntax-check.sh
 
