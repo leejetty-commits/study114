@@ -792,7 +792,7 @@ try {
   thrown = true;
 }
 ok('(a) fetchSession 로드 실패는 예외', thrown);
-ok('(a) 로드 실패 후 세션 확인 완료·분기 null', branchStore.isStudentBranchSessionChecked() && branchStore.isStudentBranchAuthoritative() && branchStore.getStoredStudentBranch() === null);
+ok('(a) 로드 실패 후 세션은 확인 전·분기 null', !branchStore.isStudentBranchSessionChecked() && !branchStore.isStudentBranchAuthoritative() && branchStore.getStoredStudentBranch() === null);
 ok('(a) 로드 실패 시 학생 찾기 둘 다 hide', navConfig.getGnbVisibility('parent', 'find_room') === 'hide' && navConfig.getGnbVisibility('parent', 'find_tutor') === 'hide');
 ok('(a) 로드 실패여도 게스트 메뉴는 그대로', JSON.stringify(gnbPair('guest')) === JSON.stringify({ room: 'show', tutor: 'show', student: 'show', registerRoom: 'show', registerTutor: 'show', plans: 'show' }));
 globalThis.fetch = baseFetch;

@@ -265,6 +265,10 @@ export function openHotPopup(opts) {
         await ensureHotPopupPosts();
         boardKey = hotPostBoardKey(id);
       }
+      if (!boardKey) {
+        console.warn('[concern] HOT 팝업 글의 방을 찾지 못해 본문 요청을 건너뜁니다', id);
+        return renderSelectedPost({ post: null, access: 'full' }, '', guest());
+      }
       return renderSelectedPost(await fetchConcernRailPost(boardKey, id, navRole), boardInfo(boardKey).label, guest());
     },
     footerHtml: goBoard,

@@ -133,7 +133,6 @@ async function requestMeOnce() {
 }
 
 function giveUpSessionCheck(error) {
-  failStudentBranchSession();
   throw new SessionUnconfirmedError(error);
 }
 
@@ -272,9 +271,13 @@ export async function initAuthSession(navigateHome = false) {
     }
     return user;
   } catch (err) {
-    sessionConfirmStatus = 'unconfirmed';
-    const cause = err instanceof SessionUnconfirmedError ? err.cause : err;
-    console.warn('[auth] me.php 확인 실패 — 마지막 로그인 상태를 유지합니다', cause);
+    if (err instanceof SessionUnconfirmedError) {
+      sessionConfirmStatus = 'unconfirmed';
+      console.warn('[auth] me.php 확인 실패 — 마지막 로그인 상태를 유지합니다', err.cause ?? err);
+      return currentUser;
+    }
+    sessionConfirmStatus = 'authenticated';
+    console.warn('[auth] 로그인 뒤 부가 정보 확인 실패 — 로그인 상태는 유지합니다', err);
     return currentUser;
   }
 }

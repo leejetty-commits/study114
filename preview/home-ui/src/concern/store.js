@@ -264,6 +264,7 @@ export async function fetchConcernRailPage(boardKey, offset, limit, navRole) {
  * @returns {Promise<{ post: any|null, access: string }>}
  */
 export async function fetchConcernRailPost(boardKey, postId, navRole) {
+  if (!boardKey) return { post: null, access: 'full' };
   const data = await fetchBoardPosts(boardKey, { navRole, postKey: postId, limit: 1 });
   const access = data.access || 'full';
   const raw = (data.posts ?? []).find((p) => String(p.id) === String(postId)) ?? null;
