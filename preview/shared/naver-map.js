@@ -280,7 +280,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
     mountEl.innerHTML = '';
     mountEl.classList.add('naver-map-mount', `naver-map-mount--${variant}`);
 
-    const pinHit = { w: 36, h: 48 };
+    const pinHit = { w: 44, h: 52 };
     const makePinIcon = (focused = false) => ({
       content: `<button type="button" class="naver-map-pin${focused ? ' is-focused' : ''}" aria-hidden="true"><img src="/assets/brand/src/udong-pin.png" alt="" /></button>`,
       size: new naver.maps.Size(pinHit.w, pinHit.h),

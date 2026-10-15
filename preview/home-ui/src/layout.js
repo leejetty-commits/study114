@@ -352,9 +352,6 @@ export function renderMapBlock() {
       <div class="map-block__head">📍 공부방 지도 · ${readGuestBaseline().room}</div>
       <div class="map-block__body">
         <span>[프리뷰] 공부방 지도 영역</span>
-        <span class="map-block__pin"></span>
-        <span class="map-block__pin"></span>
-        <span class="map-block__pin"></span>
       </div>
     </div>
   `;

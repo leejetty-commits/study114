@@ -36,13 +36,6 @@
   margin-top: var(--space-4);
 }
 
-.search-shell .map-block__pin[data-map-pin] {
-  padding: 0;
-  border: none;
-  cursor: pointer;
-}
-
-.search-shell .map-block__pin.is-map-focused,
 .search-shell .expo-card.is-map-focused,
 .search-shell .expo-basic.is-map-focused {
   outline: 2px solid var(--brand-blue);

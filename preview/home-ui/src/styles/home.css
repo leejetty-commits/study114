@@ -732,33 +732,6 @@ img {
   position: relative;
 }
 
-.map-block__pin {
-  position: absolute;
-  width: 2rem;
-  height: 2rem;
-  background: var(--brand-blue);
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.map-block__pin:nth-child(2) {
-  top: 35%;
-  left: 40%;
-}
-
-.map-block__pin:nth-child(3) {
-  top: 55%;
-  left: 60%;
-  background: var(--brand-blue);
-}
-
-.map-block__pin:nth-child(4) {
-  top: 45%;
-  left: 25%;
-  background: var(--brand-purple);
-}
-
 /* ?? List ?? */
 .list-block {
   background: #fff;
@@ -1121,41 +1094,6 @@ a.sup-term-chip:hover {
   opacity: 0.8;
 }
 
-.map-block__center-pin {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 2.25rem;
-  height: 2.25rem;
-  margin: -1.125rem 0 0 -1.125rem;
-  background: var(--brand-blue);
-  border: 3px solid #fff;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  box-shadow: 0 4px 12px rgba(43, 127, 255, 0.35);
-  z-index: 2;
-}
-
-.map-block__pin--sm {
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid #fff;
-  transform: rotate(-45deg);
-  z-index: 1;
-}
-
-.map-block__pin--orange {
-  background: var(--brand-blue);
-}
-
-.map-block__pin--blue {
-  background: var(--brand-blue);
-}
-
-.map-block__pin--purple {
-  background: var(--brand-purple);
-}
-
 .map-block__placeholder {
   position: absolute;
   bottom: var(--space-2);
@@ -1314,10 +1252,10 @@ a.sup-term-chip:hover {
   align-items: flex-end;
   justify-content: center;
   box-sizing: border-box;
-  width: 36px;
-  height: 48px;
+  width: 44px;
+  height: 52px;
   margin: 0;
-  padding: 0 0 2px;
+  padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;

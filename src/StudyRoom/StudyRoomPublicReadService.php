@@ -158,6 +158,7 @@ final class StudyRoomPublicReadService
             'facebook_url'                    => (string) ($row['facebook_url'] ?? ''),
             'instagram_url'                   => (string) ($row['instagram_url'] ?? ''),
             'inquiry_status'                  => (string) ($row['inquiry_status'] ?? ''),
+            'profile_status'                  => (string) ($row['profile_status'] ?? ''),
             'latitude'                        => $row['latitude'] !== null ? (float) $row['latitude'] : null,
             'longitude'                       => $row['longitude'] !== null ? (float) $row['longitude'] : null,
             'image_path'                      => $cover,

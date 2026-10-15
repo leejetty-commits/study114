@@ -242,8 +242,6 @@ export function bindSearchMapPinLinks(root, activeResultItems = []) {
       card.classList.add('is-map-focused');
       card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-    const pin = map.querySelector(`[data-map-pin-id="${CSS.escape(String(id))}"]`);
-    pin?.classList.add('is-map-focused');
   };
 
   bindStudyRoomMapSection(root, activeResultItems, {
