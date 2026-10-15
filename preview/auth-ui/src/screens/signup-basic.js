@@ -39,6 +39,8 @@ import {
   bindStudyRoomBasicFields,
   collectStudyRoomBasicFields,
   validateStudyRoomBasicFields,
+  waitForBusinessCoordinates,
+  businessCoordsForSave,
   renderStudentHopeRegion,
   bindStudentHopeRegion,
   readStudentHopeRegion,
@@ -644,12 +646,22 @@ export function bindSignupBasicEvents(root) {
     let data = collectFormData(form);
 
     if (role === 'study_room') {
+      await waitForBusinessCoordinates();
       data = collectStudyRoomBasicFields(form);
       const err = validateStudyRoomBasicFields(data);
       if (err) {
         alert(err);
         return;
       }
+      const coords = businessCoordsForSave(
+        data.address_text,
+        data.latitude,
+        data.longitude,
+        data.geocoded_address,
+      );
+      data.latitude = coords.latitude;
+      data.longitude = coords.longitude;
+      delete data.geocoded_address;
       data.main_subjects = [data.main_subject_note];
       data.region_basis = data.region_basis_type;
     } else if (role === 'student') {
@@ -808,6 +820,10 @@ export function bindSignupBasicEvents(root) {
     }
     try {
       const result = await basicRegisterApi(role, data);
+      if (role === 'study_room') {
+        delete data.latitude;
+        delete data.longitude;
+      }
       if (!signupState.basicRegister) signupState.basicRegister = {};
       signupState.basicRegister[role] = data;
       signupState.basicRegisterResult = result;

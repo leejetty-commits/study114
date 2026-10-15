@@ -492,6 +492,7 @@ final class StudyRoomRegisterService
             }
         }
 
+        [$lat, $lng] = $this->coordinatePair($input);
         $stmt = $pdo->prepare(
             'UPDATE study_rooms SET
                 region_id = ?,
@@ -511,8 +512,8 @@ final class StudyRoomRegisterService
                 $basis,
                 $addressText,
                 $this->optionalString($input, 'address_zip'),
-                $this->optionalDecimal($input, 'latitude'),
-                $this->optionalDecimal($input, 'longitude'),
+                $lat,
+                $lng,
                 $roomId,
             ]);
         } catch (PDOException $e) {
@@ -525,8 +526,8 @@ final class StudyRoomRegisterService
                 $regionId,
                 $complexId,
                 $addressText,
-                $this->optionalDecimal($input, 'latitude'),
-                $this->optionalDecimal($input, 'longitude'),
+                $lat,
+                $lng,
                 $roomId,
             ]);
             try {
@@ -2362,20 +2363,39 @@ final class StudyRoomRegisterService
 
 
 
-    /** @param array<string, mixed> $input */
-
-    private function optionalDecimal(array $input, string $key): ?string
-
+    /**
+     * 사업장주소 좌표. 한쪽이라도 비거나 범위 밖이면 둘 다 NULL.
+     *
+     * @param array<string, mixed> $input
+     * @return array{0:?string,1:?string}
+     */
+    private function coordinatePair(array $input): array
     {
-
-        if (!isset($input[$key]) || trim((string) $input[$key]) === '') {
-
-            return null;
-
+        $lat = $this->optionalCoordinate($input, 'latitude', -90.0, 90.0);
+        $lng = $this->optionalCoordinate($input, 'longitude', -180.0, 180.0);
+        if ($lat === null || $lng === null) {
+            return [null, null];
         }
 
-        return trim((string) $input[$key]);
+        return [$lat, $lng];
+    }
 
+    /** @param array<string, mixed> $input */
+    private function optionalCoordinate(array $input, string $key, float $min, float $max): ?string
+    {
+        if (!array_key_exists($key, $input)) {
+            return null;
+        }
+        $raw = trim((string) $input[$key]);
+        if ($raw === '' || !is_numeric($raw)) {
+            return null;
+        }
+        $n = (float) $raw;
+        if ($n < $min || $n > $max) {
+            return null;
+        }
+
+        return number_format($n, 7, '.', '');
     }
 
 }

@@ -560,6 +560,7 @@ final class BasicRegisterService
                     /* 컬럼 미적용 */
                 }
             }
+            $this->saveStudyRoomCoordinates($pdo, $roomId, $input);
 
             $hasSlotBasis = $this->columnExists($pdo, 'study_room_regions', 'region_basis_type');
             foreach ($slots as $slot) {
@@ -1039,6 +1040,61 @@ final class BasicRegisterService
         foreach ($levels as $lv) {
             $ins->execute([$roomId, $lv]);
         }
+    }
+
+    /**
+     * 사업장주소 좌표. 비거나 범위 밖이면 둘 다 NULL. 실패해도 가입 저장은 계속한다.
+     *
+     * @param array<string, mixed> $input
+     */
+    private function saveStudyRoomCoordinates(PDO $pdo, int $roomId, array $input): void
+    {
+        try {
+            if (
+                !$this->columnExists($pdo, 'study_rooms', 'latitude')
+                || !$this->columnExists($pdo, 'study_rooms', 'longitude')
+            ) {
+                return;
+            }
+            [$lat, $lng] = $this->coordinatePair($input);
+            $pdo->prepare('UPDATE study_rooms SET latitude = ?, longitude = ? WHERE id = ?')
+                ->execute([$lat, $lng, $roomId]);
+        } catch (PDOException $e) {
+            /* 좌표 칸이 없거나 값이 거절돼도 주소 저장은 유지 */
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return array{0:?string,1:?string}
+     */
+    private function coordinatePair(array $input): array
+    {
+        $lat = $this->optionalCoordinate($input, 'latitude', -90.0, 90.0);
+        $lng = $this->optionalCoordinate($input, 'longitude', -180.0, 180.0);
+        if ($lat === null || $lng === null) {
+            return [null, null];
+        }
+
+        return [$lat, $lng];
+    }
+
+    /** @param array<string, mixed> $input */
+    private function optionalCoordinate(array $input, string $key, float $min, float $max): ?string
+    {
+        if (!array_key_exists($key, $input)) {
+            return null;
+        }
+        $raw = trim((string) $input[$key]);
+        if ($raw === '' || !is_numeric($raw)) {
+            return null;
+        }
+        $n = (float) $raw;
+        if ($n < $min || $n > $max) {
+            return null;
+        }
+
+        return number_format($n, 7, '.', '');
     }
 
     private function columnExists(PDO $pdo, string $table, string $column): bool

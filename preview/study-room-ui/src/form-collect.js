@@ -1,6 +1,7 @@
 /** DOM → registerState / API payload 수집 */
 
 import { emptyRoomState, TEACHING_STYLE_OPTIONS, getSubjectOptions } from './state.js';
+import { businessCoordsForSave } from '../../shared/study-room-basic-form.js';
 
 const LESSON_EXTRA_MARK = 'lesson_extra';
 
@@ -393,8 +394,7 @@ export function payloadForStep(step, state) {
         home_address: state.home_address,
         home_address_zip: state.home_address_zip,
         home_address_line2: state.home_address_line2,
-        latitude: state.latitude,
-        longitude: state.longitude,
+        ...businessCoordsForSave(state.address_text, state.latitude, state.longitude, state.geocoded_address),
         saved_regions: state.saved_regions,
       };
     case 'location':
@@ -413,8 +413,7 @@ export function payloadForStep(step, state) {
         home_address: state.home_address,
         home_address_zip: state.home_address_zip,
         home_address_line2: state.home_address_line2,
-        latitude: state.latitude,
-        longitude: state.longitude,
+        ...businessCoordsForSave(state.address_text, state.latitude, state.longitude, state.geocoded_address),
         saved_regions: state.saved_regions,
       };
     case 'lesson':
@@ -597,5 +596,17 @@ export function applyRoomToState(target, room) {
     if (!target.teaching_style_note && leftover.length) {
       target.teaching_style_note = leftover.join(', ');
     }
+  }
+  const addr = String(target.address_text || '').trim();
+  const lat = String(target.latitude ?? '').trim();
+  const lng = String(target.longitude ?? '').trim();
+  if (addr && lat && lng) {
+    target.latitude = lat;
+    target.longitude = lng;
+    target.geocoded_address = addr;
+  } else {
+    target.latitude = '';
+    target.longitude = '';
+    target.geocoded_address = '';
   }
 }

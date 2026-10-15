@@ -152,8 +152,6 @@ export function buildRoomInputSummary(room) {
         { label: '홍보지역 1', value: slotValues[0] },
         { label: '홍보지역 2', value: slotValues[1] },
         { label: '홍보지역 3', value: slotValues[2] },
-        { label: '위도', value: str(s.latitude) },
-        { label: '경도', value: str(s.longitude) },
       ],
     },
     {

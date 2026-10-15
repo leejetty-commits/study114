@@ -181,6 +181,36 @@ export function geocodeRegionCenter(naverNs, label) {
   });
 }
 
+/**
+ * 사업장주소 문자열의 좌표. 못 구하면 null.
+ * 예외를 던지지 않아 주소 저장이 멈추지 않는다.
+ * @param {string} address
+ * @returns {Promise<{ latitude: string, longitude: string }|null>}
+ */
+export async function geocodeBusinessAddress(address) {
+  const query = String(address || '').trim();
+  if (!query) return null;
+  try {
+    const naverNs = await Promise.race([
+      loadNaverMapsSdk(),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('timeout')), 8000);
+      }),
+    ]);
+    const found = await Promise.race([
+      geocodeRegionCenter(naverNs, query),
+      new Promise((resolve) => {
+        setTimeout(() => resolve(null), 8000);
+      }),
+    ]);
+    if (!found) return null;
+    if (found.lat < -90 || found.lat > 90 || found.lng < -180 || found.lng > 180) return null;
+    return { latitude: String(found.lat), longitude: String(found.lng) };
+  } catch {
+    return null;
+  }
+}
+
 export const REGION_PROMPT_MAP_STATUS = '희망지역을 등록하면 지도가 그 지역으로 이동합니다.';
 export const REGION_GEOCODE_FAIL_STATUS = '지도에서 지역 위치를 찾지 못했습니다 · 리스트는 계속 이용할 수 있습니다.';
 

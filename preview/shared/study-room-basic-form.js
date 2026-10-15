@@ -33,6 +33,7 @@ export function lessonPlaceNameLabel(placeType) {
   return placeType === 'academy' ? '교습소명' : '공부방명';
 }
 
+import { geocodeBusinessAddress } from './naver-map.js';
 import { loadKakaoPostcode, openKakaoPostcode } from './kakao-postcode.js';
 import { displayRoad } from './address-region-match.js';
 import { ensureRegionFromKakao } from './region-ensure.js';
@@ -262,6 +263,11 @@ export function renderStudyRoomBasicFields(opts = {}) {
   const selectedLevels = Array.isArray(v.primary_school_levels)
     ? v.primary_school_levels.map(String)
     : [];
+  const bizAddr = String(v.address_text || '').trim();
+  const bizLat = String(v.latitude ?? '').trim();
+  const bizLng = String(v.longitude ?? '').trim();
+  const bizTag = String(v.geocoded_address || '').trim();
+  const keepBizCoords = bizAddr !== '' && bizLat !== '' && bizLng !== '' && (bizTag === '' || bizTag === bizAddr);
 
   const placeRadios = LESSON_PLACE_TYPE_OPTIONS.map(
     (o) => `
@@ -348,6 +354,9 @@ export function renderStudyRoomBasicFields(opts = {}) {
             <input type="hidden" name="address_hname" value="${esc(v.address_hname || '')}" />
             <input type="hidden" name="address_bcode" value="${esc(v.address_bcode || '')}" />
             <input type="hidden" name="address_sigungu_code" value="${esc(v.address_sigungu_code || '')}" />
+            <input type="hidden" name="latitude" value="${esc(keepBizCoords ? bizLat : '')}" />
+            <input type="hidden" name="longitude" value="${esc(keepBizCoords ? bizLng : '')}" />
+            <input type="hidden" name="geocoded_address" value="${esc(keepBizCoords ? bizAddr : '')}" />
           </div>
         `,
       })}
@@ -364,7 +373,52 @@ export function renderStudyRoomBasicFields(opts = {}) {
 }
 
 let businessEnsureSeq = 0;
+let businessCoordTask = Promise.resolve();
 const slotEnsureSeq = new Map();
+
+function setNamedValue(form, name, value) {
+  const el = form.querySelector(`[name="${name}"]`);
+  if (el) el.value = value;
+}
+
+function clearBusinessCoordinates(form) {
+  setNamedValue(form, 'latitude', '');
+  setNamedValue(form, 'longitude', '');
+  setNamedValue(form, 'geocoded_address', '');
+}
+
+/** 지금 칸에 있는 사업장주소만 좌표로 만든다. 주소가 바뀌면 결과는 버린다. */
+async function storeBusinessCoordinates(form) {
+  const address = String(form.querySelector('[name="address_text"]')?.value || '').trim();
+  clearBusinessCoordinates(form);
+  if (!address) return;
+  const found = await geocodeBusinessAddress(address);
+  const current = String(form.querySelector('[name="address_text"]')?.value || '').trim();
+  if (current !== address || !found) return;
+  setNamedValue(form, 'latitude', found.latitude);
+  setNamedValue(form, 'longitude', found.longitude);
+  setNamedValue(form, 'geocoded_address', address);
+}
+
+/** 주소 검색 직후 좌표 계산이 끝나길 저장 전에 기다린다. */
+export function waitForBusinessCoordinates() {
+  return businessCoordTask;
+}
+
+/**
+ * 좌표는 그 주소에서 구한 값만 저장한다. 태그가 다르면 예전 좌표를 비운다.
+ * @returns {{ latitude: string, longitude: string }}
+ */
+export function businessCoordsForSave(address, latitude, longitude, geocodedAddress) {
+  const addr = String(address || '').trim();
+  const tag = String(geocodedAddress || '').trim();
+  const lat = String(latitude ?? '').trim();
+  const lng = String(longitude ?? '').trim();
+  if (!addr || tag !== addr || lat === '' || lng === '') {
+    return { latitude: '', longitude: '' };
+  }
+  return { latitude: lat, longitude: lng };
+}
 let hopeEnsureSeq = 0;
 
 function setHint(el, text) {
@@ -654,6 +708,8 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
         }
         if (seq !== businessEnsureSeq) return;
         refreshInputFill(form);
+        businessCoordTask = storeBusinessCoordinates(form);
+        await businessCoordTask;
         return;
       }
       const m = String(kind).match(/^slot-(\d+)$/);
@@ -786,6 +842,9 @@ export function collectStudyRoomBasicFields(root) {
     address_hname: get('address_hname'),
     address_bcode: get('address_bcode'),
     address_sigungu_code: get('address_sigungu_code'),
+    latitude: get('latitude'),
+    longitude: get('longitude'),
+    geocoded_address: get('geocoded_address'),
     saved_regions,
   };
 }
@@ -911,6 +970,12 @@ export function bindStudentHopeRegion(root, opts = {}) {
 }
 
 export function applyStudyRoomBasicToState(state, data) {
+  const coords = businessCoordsForSave(
+    data.address_text,
+    data.latitude,
+    data.longitude,
+    data.geocoded_address,
+  );
   Object.assign(state, {
     lesson_place_type: data.lesson_place_type,
     study_room_name: data.study_room_name,
@@ -935,6 +1000,9 @@ export function applyStudyRoomBasicToState(state, data) {
     address_hname: data.address_hname,
     address_bcode: data.address_bcode,
     address_sigungu_code: data.address_sigungu_code,
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+    geocoded_address: coords.latitude && coords.longitude ? String(data.address_text || '').trim() : '',
     saved_regions: data.saved_regions,
   });
 }

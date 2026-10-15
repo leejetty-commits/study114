@@ -17,6 +17,7 @@ import {
   collectStudyRoomBasicFields,
   validateStudyRoomBasicFields,
   applyStudyRoomBasicToState,
+  waitForBusinessCoordinates,
   lessonPlaceNameLabel,
   formatPrimaryAudienceLabel,
 } from '../../../shared/study-room-basic-form.js';
@@ -289,6 +290,7 @@ export function bindBasicEvents(root) {
   saveBtn?.addEventListener('click', () => {
     withSaving(saveBtn, async () => {
       const formEl = overlay.querySelector('[data-form="basic-all"]');
+      await waitForBusinessCoordinates();
       const data = collectStudyRoomBasicFields(formEl);
       const err = validateStudyRoomBasicFields(data);
       if (err) {
