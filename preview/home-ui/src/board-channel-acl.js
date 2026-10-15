@@ -137,7 +137,7 @@ const DOWNLOAD_ROLES = {
 
 const CHANNEL_INTRO = {
   'concern-parent': {
-    title: '학생/학부모 고민방',
+    title: '학생·학부모 고민방',
     body: '공부방·과외 선택, 학습 루틴, 안전에 대한 고민을 나누는 공간입니다.',
     allowedRolesLabel: '학생·학부모',
   },

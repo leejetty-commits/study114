@@ -433,11 +433,11 @@ export const BOARD_REGISTRY = [
   },
   {
     boardKey: 'concern-parent',
-    label: '학생/학부모 고민방',
+    label: '학생·학부모 고민방',
     boardType: 'upload',
     presetId: 'concern',
     sectionOwner: 'community',
-    userFacingMenu: '학생/학부모 고민방',
+    userFacingMenu: '학생·학부모 고민방',
     /** 문서 concern-family ≡ concern-parent */
     visibility: 'public',
     readRoles: ['member', 'demand', 'supply-room', 'supply-tutor'],

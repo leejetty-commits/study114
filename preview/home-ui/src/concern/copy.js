@@ -11,7 +11,7 @@ import { listBoardChannels } from '../board-channel-store.js';
 
 export const COMMUNITY_HUB_TITLE = '커뮤니티';
 export const COMMUNITY_HUB_LEAD =
-  '공부방·과외쌤·학생/학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 게시판에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다.';
+  '공부방·과외쌤·학생·학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 게시판에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다.';
 
 /** @deprecated alias */
 export const CONCERN_HUB_TITLE = COMMUNITY_HUB_TITLE;
@@ -42,7 +42,7 @@ export const COMMUNITY_BOARD_DEFS = [
     id: 'parent',
     boardKey: 'concern-parent',
     slug: 'parent',
-    label: '학생/학부모 고민방',
+    label: '학생·학부모 고민방',
     roleHint: '공부방·과외 선택·루틴·안전',
     path: '/community/parent',
   },
