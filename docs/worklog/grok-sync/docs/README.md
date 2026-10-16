@@ -175,3 +175,5 @@
 | 157 | [157-admin-p2-board-settings-plan.md](157-admin-p2-board-settings-plan.md) | 관리자 2순위 기획 — 공지·안내·사이트 기본 |
 | 158 | [158-admin-p3-preview-menus-plan.md](158-admin-p3-preview-menus-plan.md) | 관리자 3순위 기획 — 미리보기 메뉴 |
 | 159 | [159-admin-p4-ops-home-logs-plan.md](159-admin-p4-ops-home-logs-plan.md) | 관리자 4순위 기획 — 오늘 할 일·로그 |
+- `237-decisions-2026-10-16.md` — 2026-10-16 종현 확정: 핀 C2-small(16×30, 선택 20×38) · 235-5(10km 밖 핀은 지도에서만 빼고, 줌 하한 동 14/구 12) · 핀=사업장주소, 카드=홍보지역(홍보1 직접 수정값 유지, id6 등 테스트 데이터는 나중에 삭제) · 홍보 채널 기획(논의 단계, 시안 audits/sns-mockups) · 지시서에 작업 범위 필수(t1844) · HOT 팝업 색(236 지시서) · 밀린 일 순서(E1 → 사진 → 홍보 채널 → 232 → 주말 점검 → canonical → grok-sync 정리, E3는 정상이라 뺌).
+- `238-cursor-directive-signup-keep-values.md` — 가입폼·약관으로 돌아올 때 입력값 유지(E1). 주소 3칸·수신 동의 2개 다시 채움, 비밀번호는 다시 채우지 않고 안내(종현 확정), 약관 체크 유지. 범위 signup-form.js·signup-terms.js(필요시 state.js). 브랜치 cursor/238-signup-keep-values-20261016에서 멈춤.
