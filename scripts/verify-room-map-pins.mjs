@@ -1,7 +1,7 @@
 /**
  * 235-4: 핀은 게시된 공부방의 저장 좌표만. 동·단지로 대신 찍지 않는다.
  */
-import { resolveStudyRoomPin } from '../preview/shared/naver-map.js';
+import { pinOutsideOffset, resolveStudyRoomPin, zoomAfterFit } from '../preview/shared/naver-map.js';
 
 let failed = 0;
 function check(name, ok) {
@@ -45,6 +45,15 @@ const labelOnly = resolveStudyRoomPin({
   location_label: '수내동',
 });
 check('dong label is not a pin', labelOnly === null);
+
+check('fit zoom stays wide', zoomAfterFit(11, 15) === 11);
+check('fit zoom does not go past the neighborhood', zoomAfterFit(19, 15) === 15);
+check('same zoom stays', zoomAfterFit(15, 15) === 15);
+
+const pad = { top: 52, right: 22, bottom: 8, left: 22 };
+check('pin inside the view', pinOutsideOffset({ x: 100, y: 80 }, { width: 400, height: 300 }, pad) === false);
+check('pin above the view', pinOutsideOffset({ x: 100, y: 10 }, { width: 400, height: 300 }, pad) === true);
+check('pin under the summary card', pinOutsideOffset({ x: 390, y: 80 }, { width: 400, height: 300 }, { ...pad, right: 40 }) === true);
 
 if (failed) {
   console.error('FAIL', failed);

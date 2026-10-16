@@ -206,11 +206,67 @@ export async function geocodeBusinessAddress(address) {
 export const REGION_PROMPT_MAP_STATUS = '희망지역을 등록하면 지도가 그 지역으로 이동합니다.';
 export const REGION_GEOCODE_FAIL_STATUS = '지도에서 지역 위치를 찾지 못했습니다 · 리스트는 계속 이용할 수 있습니다.';
 
-/** 비어 있으면 기본 줌. 들어온 줌은 자르지 않는다. */
+/** 비어 있으면 기본 줌. 동네를 연 줌보다 더 들어가지는 않는다. */
 function clampNeighborhoodZoom(zoom) {
   const z = Number(zoom);
   if (!Number.isFinite(z)) return MAP_DEFAULT_ZOOM;
   return z;
+}
+
+/** 맞춘 줌이 동네 줌보다 크면 동네 줌으로 되돌린다. 더 넓은 줌은 그대로 둔다. */
+export function zoomAfterFit(fittedZoom, neighborhoodZoom) {
+  const fitted = Number(fittedZoom);
+  const cap = Number(neighborhoodZoom);
+  if (!Number.isFinite(fitted)) return Number.isFinite(cap) ? cap : MAP_DEFAULT_ZOOM;
+  if (!Number.isFinite(cap)) return fitted;
+  return fitted > cap ? cap : fitted;
+}
+
+const PIN_VIEW_PAD = { top: 52, right: 22, bottom: 8, left: 22 };
+
+/** 핀 그림(아래 끝 기준)이 보이는 칸 밖이면 true. */
+export function pinOutsideOffset(point, size, pad = PIN_VIEW_PAD) {
+  if (!point || !size || size.width < 2 || size.height < 2) return false;
+  return (
+    point.x < pad.left ||
+    point.y < pad.top ||
+    point.x > size.width - pad.right ||
+    point.y > size.height - pad.bottom
+  );
+}
+
+function delay(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function waitForGeocoder(naverNs, timeoutMs = 8000) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      if (typeof naverNs?.maps?.Service?.geocode === 'function') {
+        resolve(true);
+        return;
+      }
+      if (Date.now() - start >= timeoutMs) {
+        resolve(false);
+        return;
+      }
+      setTimeout(tick, 200);
+    };
+    tick();
+  });
+}
+
+/** 지도 좌표 기능이 준비된 뒤에 찾고, 실패하면 한 번만 다시 찾는다. */
+export async function geocodeRegionAfterReady(naverNs, label) {
+  const ready = await waitForGeocoder(naverNs);
+  if (!ready) return null;
+  const first = await geocodeRegionCenter(naverNs, label);
+  if (first) return first;
+  await delay(500);
+  return geocodeRegionCenter(naverNs, label);
 }
 
 /**
@@ -231,7 +287,6 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
 
   const items = Array.isArray(options.items) ? options.items : [];
   const regionLabel = options.regionLabel || '';
-  const fitBounds = options.fitBounds !== false;
   const variant = options.variant || 'search';
   const pinAnchorsCenter = options.pinAnchorsCenter !== false;
   const memberMap = options.memberMap === true;
@@ -265,7 +320,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
         showStatus(promptStatus, 'info');
         return null;
       }
-      const found = await geocodeRegionCenter(naver, geocodeQuery);
+      const found = await geocodeRegionAfterReady(naver, geocodeQuery);
       if (!found) {
         showStatus(failStatus, 'error');
         return null;
@@ -298,16 +353,39 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
     /** @type {Map<string, { marker: naver.maps.Marker, pin: typeof pins[number] }>} */
     const markerById = new Map();
 
-    const fitToPins = () => {
-      if (pins.length < 2) return;
+    const viewPad = () => {
+      const pad = { ...PIN_VIEW_PAD };
+      const section = mountEl.closest('[data-study-room-map]');
+      const banner = section?.querySelector('.hero-map__banner');
+      if (!(banner instanceof HTMLElement)) return pad;
+      const mapRect = mountEl.getBoundingClientRect();
+      const cardRect = banner.getBoundingClientRect();
+      const overlapX = Math.min(mapRect.right, cardRect.right) - Math.max(mapRect.left, cardRect.left);
+      const overlapY = Math.min(mapRect.bottom, cardRect.bottom) - Math.max(mapRect.top, cardRect.top);
+      if (overlapX <= 8 || overlapY <= 8) return pad;
+      const fromRight = mapRect.right - cardRect.left;
+      const fromLeft = cardRect.right - mapRect.left;
+      if (fromRight > 0 && fromRight < mapRect.width * 0.6) pad.right += fromRight;
+      else if (fromLeft > 0 && fromLeft < mapRect.width * 0.6) pad.left += fromLeft;
+      return pad;
+    };
+
+    const fitNeighborhoodAndPins = (pad) => {
       const bounds = new naver.maps.LatLngBounds(
-        new naver.maps.LatLng(pins[0].lat, pins[0].lng),
-        new naver.maps.LatLng(pins[0].lat, pins[0].lng),
+        new naver.maps.LatLng(center.lat, center.lng),
+        new naver.maps.LatLng(center.lat, center.lng),
       );
       for (const pin of pins) {
         bounds.extend(new naver.maps.LatLng(pin.lat, pin.lng));
       }
-      map.fitBounds(bounds, { top: 48, right: 24, bottom: 24, left: 24 });
+      const openZoom = map.getZoom();
+      map.fitBounds(bounds, pad);
+      const capZoom = () => {
+        const nextZoom = zoomAfterFit(map.getZoom(), openZoom);
+        if (nextZoom !== map.getZoom()) map.setZoom(nextZoom);
+      };
+      if (map.getZoom() !== openZoom) capZoom();
+      else naver.maps.Event.once(map, 'idle', capZoom);
     };
 
     for (const pin of pins) {
@@ -326,16 +404,42 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
       markerById.set(pin.id, { marker, pin });
     }
 
-    if (pinAnchorsCenter && fitBounds && pins.length > 1) fitToPins();
-    else if (pinAnchorsCenter && fitBounds && pins.length === 1) {
-      map.setCenter(new naver.maps.LatLng(pins[0].lat, pins[0].lng));
-      map.setZoom(MAP_DEFAULT_ZOOM);
-    } else if (!fitBounds) {
-      map.setCenter(new naver.maps.LatLng(center.lat, center.lng));
+    const neighborhood = new naver.maps.LatLng(center.lat, center.lng);
+    if (variant === 'detail' && pins.length >= 1) {
+      if (pins.length === 1) {
+        map.setCenter(new naver.maps.LatLng(pins[0].lat, pins[0].lng));
+        map.setZoom(MAP_DEFAULT_ZOOM);
+      } else {
+        const bounds = new naver.maps.LatLngBounds(
+          new naver.maps.LatLng(pins[0].lat, pins[0].lng),
+          new naver.maps.LatLng(pins[0].lat, pins[0].lng),
+        );
+        for (const pin of pins) bounds.extend(new naver.maps.LatLng(pin.lat, pin.lng));
+        map.fitBounds(bounds, PIN_VIEW_PAD);
+        const nextZoom = zoomAfterFit(map.getZoom(), MAP_DEFAULT_ZOOM);
+        if (nextZoom !== map.getZoom()) map.setZoom(nextZoom);
+      }
+    } else {
+      map.setCenter(neighborhood);
       map.setZoom(clampNeighborhoodZoom(center.zoom));
-    } else if (!pinAnchorsCenter) {
-      map.setCenter(new naver.maps.LatLng(center.lat, center.lng));
-      map.setZoom(clampNeighborhoodZoom(center.zoom));
+      const refitOffscreenPins = () => {
+        const size = map.getSize();
+        const proj = map.getProjection();
+        if (!proj || !size || size.width < 2 || size.height < 2) return false;
+        const pad = viewPad();
+        const outside = pins.some((pin) => {
+          const point = proj.fromCoordToOffset(new naver.maps.LatLng(pin.lat, pin.lng));
+          return pinOutsideOffset(point, size, pad);
+        });
+        if (!outside) return true;
+        fitNeighborhoodAndPins(pad);
+        return true;
+      };
+      const listener = naver.maps.Event.addListener(map, 'idle', () => {
+        if (!refitOffscreenPins()) return;
+        naver.maps.Event.removeListener(listener);
+      });
+      refitOffscreenPins();
     }
 
     const clearFocus = () => {

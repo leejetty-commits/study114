@@ -127,7 +127,7 @@ function renderFloatMap(parts, items, ctx) {
   const variant = isHero ? 'hero' : 'search';
   const extraClass = isHero ? '' : ' hero-map--search';
   const allowFallback = '';
-  /* 게스트는 홈 지도와 같은 중심(대치역)·줌. 핀 영역 맞춤(fitBounds)으로 줌이 바뀌지 않게 한다. */
+  /* 게스트는 대치 중심으로 연다. 화면 밖 핀은 동네와 함께 맞추고, 그 줌보다 더 들어가지 않는다. */
   const guestMap = bannerStyle === 'guest';
   /* 학생 지도는 좌표가 없으면 저장 지역 라벨을 지오코딩한다(구 13 · 동 15). */
   const student = !guestMap && ctx.viewerRole === 'parent';
