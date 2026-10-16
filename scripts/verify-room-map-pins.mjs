@@ -4,8 +4,10 @@
 import {
   distanceKm,
   MAP_ZOOM_FLOOR_DONG,
+  mapUsesPinAverage,
   pinOutsideOffset,
   pinsWithinNeighborhood,
+  resolveMapCenter,
   resolveStudyRoomPin,
   zoomAfterFit,
 } from '../preview/shared/naver-map.js';
@@ -112,6 +114,12 @@ const zoomB = zoomAfterFit(fittedWide, neighborhoodZoom, MAP_ZOOM_FLOOR_DONG);
 check('b both pins inside 10km', pinsB.length === 2 && kmB <= 10 && kmB >= 8);
 check('b zoom is at least the floor', zoomB >= MAP_ZOOM_FLOOR_DONG && zoomB === MAP_ZOOM_FLOOR_DONG);
 console.log('verify-b pins', pinsB.map((pin) => pin.id).join(','), 'km', kmB.toFixed(2), 'zoom', zoomB);
+
+const studentCenter = resolveMapCenter([room13, gimhae], '대치동', {}, {
+  usePins: mapUsesPinAverage('search') ? true : false,
+});
+check('student map without lat/lng is not pin average', studentCenter.source !== 'pins');
+console.log('verify-student source', studentCenter.source);
 
 if (failed) {
   console.error('FAIL', failed);

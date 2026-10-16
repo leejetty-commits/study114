@@ -114,6 +114,11 @@ export function mapStudyRoomPins(items) {
   return pins;
 }
 
+/** 상세만 핀 평균을 중심으로 쓴다. 홈·찾기는 지역 중심이다. */
+export function mapUsesPinAverage(variant) {
+  return variant === 'detail';
+}
+
 /**
  * @param {StudyRoomMapItem[]} items
  * @param {string} [regionLabel]
@@ -126,7 +131,7 @@ export function resolveMapCenter(items, regionLabel = '', explicitCenter = {}, o
     return { lat: exLat, lng: exLng, zoom: MAP_DEFAULT_ZOOM, source: 'canonical' };
   }
 
-  // 공부방 홈·찾기는 usePins:false. 핀은 사업장 좌표라 홍보1 중심을 정하지 않는다.
+  // 상세가 아닌 지도는 usePins:false. 핀 평균을 중심으로 쓰면 먼 핀까지 중심에 섞인다.
   if (options.usePins !== false) {
     const pins = mapStudyRoomPins(items);
     if (pins.length > 0) {
@@ -326,7 +331,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
   let center = resolveMapCenter(items, regionLabel, {
     lat: options.lat,
     lng: options.lng,
-  }, { usePins: pinAnchorsCenter });
+  }, { usePins: mapUsesPinAverage(variant) ? pinAnchorsCenter : false });
 
   /** @type {{ destroy: () => void, focusPin: (id: string) => void, getPins: () => typeof pins }|null} */
   let controller = null;
