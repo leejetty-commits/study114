@@ -20,6 +20,12 @@ export function renderSignupForm() {
   const prefEmail = draft?.email || (isDev ? DUMMY_USER.email : '');
   const prefName = draft?.name || (isDev ? DUMMY_USER.name : '');
   const prefPhone = draft?.phone || (isDev ? DUMMY_USER.phone : '');
+  const prefZip = draft?.address_zip || '';
+  const prefAddress = draft?.address || '';
+  const prefLine2 = draft?.address_line2 || '';
+  const passwordRetryHint = draft
+    ? '<p class="form-hint">비밀번호는 다시 입력해 주세요.</p>'
+    : '';
 
   const content = `
     ${renderStepIndicator(2, 5)}
@@ -69,6 +75,7 @@ export function renderSignupForm() {
             />
           </div>
         </div>
+        ${passwordRetryHint}
         <p class="form-hint">${PASSWORD_RULE_HINT}</p>
 
         <div class="form-group">
@@ -110,6 +117,7 @@ export function renderSignupForm() {
               id="signup-address-zip"
               name="address_zip"
               placeholder="우편번호"
+              value="${esc(prefZip)}"
               readonly
               required
               aria-label="우편번호"
@@ -122,6 +130,7 @@ export function renderSignupForm() {
             id="signup-address"
             name="address"
             placeholder="도로명 주소 (검색으로 입력)"
+            value="${esc(prefAddress)}"
             readonly
             required
             autocomplete="street-address"
@@ -132,6 +141,7 @@ export function renderSignupForm() {
             id="signup-address-line2"
             name="address_line2"
             placeholder="상세주소 (동·호수 등)"
+            value="${esc(prefLine2)}"
             autocomplete="address-line2"
           />
           <p class="form-hint" data-jibun-hint hidden></p>
@@ -147,6 +157,7 @@ export function renderSignupForm() {
               name="email_consent"
               id="signup-email-consent"
               required
+              ${draft?.email_consent ? 'checked' : ''}
             />
             <span class="form-check__label">이메일 수신 동의 <span class="form-check__required-mark">(필수)</span></span>
           </label>
@@ -156,6 +167,7 @@ export function renderSignupForm() {
               type="checkbox"
               name="sms_consent"
               id="signup-sms-consent"
+              ${draft?.sms_consent ? 'checked' : ''}
             />
             <span class="form-check__label">문자 수신 동의 <span class="form-check__optional">(선택)</span></span>
           </label>

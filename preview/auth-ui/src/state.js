@@ -15,10 +15,12 @@
  * @property {boolean} sms_consent
  */
 
-/** @type {{ role: MemberRole | null, termsAgreed: boolean, accountAddress: string, accountDraft: AccountDraft | null, basicRegister: Record<string, object>, lastSignup: { userId: number, email: string, roleType: string, emailSent?: boolean } | null }} */
+/** @type {{ role: MemberRole | null, termsAgreed: boolean, termsChecked: Record<string, boolean>, accountAddress: string, accountDraft: AccountDraft | null, basicRegister: Record<string, object>, lastSignup: { userId: number, email: string, roleType: string, emailSent?: boolean } | null }} */
 export const signupState = {
   role: null,
   termsAgreed: false,
+  /** 약관 칸별 체크. 약관 화면으로 돌아올 때 복원 */
+  termsChecked: {},
   accountAddress: '',
   /** 공통가입 폼 임시값 — 역할 선택 후 signup API 호출 */
   accountDraft: null,
@@ -81,6 +83,7 @@ export const TERMS = [
 export function resetSignupState() {
   signupState.role = null;
   signupState.termsAgreed = false;
+  signupState.termsChecked = {};
   signupState.accountAddress = '';
   signupState.accountDraft = null;
   signupState.profileGender = null;

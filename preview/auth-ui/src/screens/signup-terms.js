@@ -1,6 +1,5 @@
-import { TERMS } from '../state.js';
+import { TERMS, signupState, markTermsAgreed } from '../state.js';
 import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
-import { markTermsAgreed } from '../state.js';
 import { policyUiUrl } from '../../../shared/preview-links.js';
 import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 
@@ -12,6 +11,8 @@ const TERM_POLICY_PATH = {
 };
 
 export function renderSignupTerms() {
+  const checked = signupState.termsChecked || {};
+  const allChecked = TERMS.length > 0 && TERMS.every((term) => checked[term.id]);
   const termsItems = TERMS.map(
     (term) => `
       <div class="terms-item">
@@ -21,6 +22,7 @@ export function renderSignupTerms() {
             type="checkbox"
             name="${term.id}"
             data-required="${term.required}"
+            ${checked[term.id] ? 'checked' : ''}
           />
           <span class="form-check__label">
             ${term.required ? '<strong>[필수]</strong>' : '[선택]'} ${term.label}
@@ -49,7 +51,7 @@ export function renderSignupTerms() {
       <form data-form="terms">
         <div class="terms-all">
           <label class="form-check">
-            <input class="form-check__input" type="checkbox" id="terms-all" data-check-all />
+            <input class="form-check__input" type="checkbox" id="terms-all" data-check-all ${allChecked ? 'checked' : ''} />
             <span class="form-check__label"><strong>전체 동의</strong></span>
           </label>
           <p class="form-check__meta">선택 항목 포함 전체 동의 · 개별 선택도 가능합니다.</p>
@@ -102,6 +104,8 @@ export function bindSignupTermsEvents(root) {
     });
   });
 
+  updateSubmitState();
+
   root.querySelectorAll('[data-action="view-terms"]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const termId = btn.getAttribute('data-term-id') || 'service';
@@ -112,6 +116,11 @@ export function bindSignupTermsEvents(root) {
 
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
+    const next = {};
+    termChecks.forEach((check) => {
+      next[check.name] = check.checked;
+    });
+    signupState.termsChecked = next;
     markTermsAgreed();
     navigate('/signup/form');
   });
