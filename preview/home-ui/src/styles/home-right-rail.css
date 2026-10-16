@@ -641,6 +641,7 @@ body.is-rail-popup-open {
 .rail-popup[data-rail-popup-kind='concern-best'] {
   --rail-tone: var(--rail-tone-hot);
 }
+.rail-popup[data-rail-popup-kind='concern-hot'] { --rail-tone: var(--rail-tone-hot); }
 
 .rail-popup[data-rail-popup-kind='info-board'] {
   --rail-tone: var(--rail-tone-info);
