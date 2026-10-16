@@ -61,6 +61,33 @@ export function resolveStudyRoomPin(item) {
   return { lat, lng, source: 'coords' };
 }
 
+/** 홈·찾기 핀은 동네 중심에서 이 거리 안만 찍는다. 상세 지도는 적용하지 않는다. */
+export const MAP_PIN_RADIUS_KM = 10;
+/** 동 기준 지도가 줌 아웃해도 이보다 더 넓어지지 않는다. */
+export const MAP_ZOOM_FLOOR_DONG = 14;
+/** 학생 구 기준 지도의 줌 아웃 하한. */
+export const MAP_ZOOM_FLOOR_GU = 12;
+
+export function distanceKm(lat1, lng1, lat2, lng2) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const earthKm = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * earthKm * Math.asin(Math.sqrt(a));
+}
+
+/** @param {Array<{ lat: number, lng: number }>} pinList @param {{ lat: number, lng: number }} center */
+export function pinsWithinNeighborhood(pinList, center, radiusKm = MAP_PIN_RADIUS_KM) {
+  const list = Array.isArray(pinList) ? pinList : [];
+  const lat = parseCoord(center?.lat);
+  const lng = parseCoord(center?.lng);
+  if (lat == null || lng == null) return list;
+  return list.filter((pin) => distanceKm(lat, lng, pin.lat, pin.lng) <= radiusKm);
+}
+
 /**
  * @param {StudyRoomMapItem[]} items
  * @param {{ allowRegionFallback?: boolean }} [options]
@@ -206,20 +233,25 @@ export async function geocodeBusinessAddress(address) {
 export const REGION_PROMPT_MAP_STATUS = '희망지역을 등록하면 지도가 그 지역으로 이동합니다.';
 export const REGION_GEOCODE_FAIL_STATUS = '지도에서 지역 위치를 찾지 못했습니다 · 리스트는 계속 이용할 수 있습니다.';
 
-/** 비어 있으면 기본 줌. 동네를 연 줌보다 더 들어가지는 않는다. */
+/** 숫자가 아니면 기본 줌(17). 들어온 숫자는 자르지 않는다. 줌 상한·하한은 zoomAfterFit. */
 function clampNeighborhoodZoom(zoom) {
   const z = Number(zoom);
   if (!Number.isFinite(z)) return MAP_DEFAULT_ZOOM;
   return z;
 }
 
-/** 맞춘 줌이 동네 줌보다 크면 동네 줌으로 되돌린다. 더 넓은 줌은 그대로 둔다. */
-export function zoomAfterFit(fittedZoom, neighborhoodZoom) {
+/**
+ * 맞춘 줌이 동네 줌보다 크면 동네 줌으로 낮추고,
+ * 하한보다 작으면 하한으로 올린다. 하한이 없으면 넓은 줌은 그대로 둔다.
+ */
+export function zoomAfterFit(fittedZoom, neighborhoodZoom, floorZoom) {
   const fitted = Number(fittedZoom);
   const cap = Number(neighborhoodZoom);
-  if (!Number.isFinite(fitted)) return Number.isFinite(cap) ? cap : MAP_DEFAULT_ZOOM;
-  if (!Number.isFinite(cap)) return fitted;
-  return fitted > cap ? cap : fitted;
+  const floor = Number(floorZoom);
+  let zoom = Number.isFinite(fitted) ? fitted : Number.isFinite(cap) ? cap : MAP_DEFAULT_ZOOM;
+  if (Number.isFinite(cap) && zoom > cap) zoom = cap;
+  if (Number.isFinite(floor) && zoom < floor) zoom = floor;
+  return zoom;
 }
 
 const PIN_VIEW_PAD = { top: 52, right: 22, bottom: 8, left: 22 };
@@ -290,7 +322,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
   const variant = options.variant || 'search';
   const pinAnchorsCenter = options.pinAnchorsCenter !== false;
   const memberMap = options.memberMap === true;
-  const pins = mapStudyRoomPins(items);
+  let pins = mapStudyRoomPins(items);
   let center = resolveMapCenter(items, regionLabel, {
     lat: options.lat,
     lng: options.lng,
@@ -332,6 +364,9 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
       showStatus(promptStatus, 'info');
       return null;
     }
+    if (variant !== 'detail') {
+      pins = pinsWithinNeighborhood(pins, center);
+    }
     mountEl.innerHTML = '';
     mountEl.classList.add('naver-map-mount', `naver-map-mount--${variant}`);
 
@@ -370,6 +405,10 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
       return pad;
     };
 
+    const zoomFloor = Number.isFinite(Number(options.zoomFloor))
+      ? Number(options.zoomFloor)
+      : MAP_ZOOM_FLOOR_DONG;
+
     const fitNeighborhoodAndPins = (pad) => {
       const bounds = new naver.maps.LatLngBounds(
         new naver.maps.LatLng(center.lat, center.lng),
@@ -379,10 +418,14 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
         bounds.extend(new naver.maps.LatLng(pin.lat, pin.lng));
       }
       const openZoom = map.getZoom();
+      const neighborhood = new naver.maps.LatLng(center.lat, center.lng);
       map.fitBounds(bounds, pad);
       const capZoom = () => {
-        const nextZoom = zoomAfterFit(map.getZoom(), openZoom);
-        if (nextZoom !== map.getZoom()) map.setZoom(nextZoom);
+        const before = map.getZoom();
+        const nextZoom = zoomAfterFit(before, openZoom, zoomFloor);
+        const raisedToFloor = Number.isFinite(zoomFloor) && before < zoomFloor && nextZoom >= zoomFloor;
+        if (nextZoom !== before) map.setZoom(nextZoom);
+        if (raisedToFloor) map.setCenter(neighborhood);
       };
       if (map.getZoom() !== openZoom) capZoom();
       else naver.maps.Event.once(map, 'idle', capZoom);
@@ -516,6 +559,7 @@ export async function bindStudyRoomMapSection(root, items, options = {}) {
     memberMap: options.memberMap === true || section?.getAttribute('data-member-map') === 'true',
     pinAnchorsCenter: options.pinAnchorsCenter === false || section?.getAttribute('data-pin-center') === 'false' ? false : true,
     regionZoom: section?.getAttribute('data-map-zoom') != null ? Number(section.getAttribute('data-map-zoom')) : null,
+    zoomFloor: section?.getAttribute('data-zoom-floor') != null ? Number(section.getAttribute('data-zoom-floor')) : options.zoomFloor,
     naver: options.naver,
     onPinClick: options.onPinClick,
   });

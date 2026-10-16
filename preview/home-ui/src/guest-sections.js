@@ -26,8 +26,8 @@ import { bindProtectedGuestActions, bindGuestEmptyCardLoginGate } from '../../sh
 const LOGIN_URL = `${AUTH_UI_BASE}/#/login`;
 const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
 
-/** 게스트 지도 중심 반경. 중심 좌표는 naver-map.js GUEST_MAP_CENTER 한 곳. */
-const GUEST_MAP_RADIUS_KM = 2.2;
+/** 손님 홈 지도 핀 반경. 카드 목록은 거르지 않는다. */
+const GUEST_MAP_RADIUS_KM = 10;
 let guestHomeBaselineBooted = false;
 
 function guestAxisText(axis) {
@@ -97,7 +97,7 @@ export function renderGuestHero() {
   `;
 }
 
-/** 비로그인 핀 = 기준 지역(대치동) 공부방 목록 전체. 반경·개수로 거르지 않는다. */
+/** 비로그인 핀도 지도에 넘긴다. 동네 중심 10km는 naver-map.js가 자른다. */
 function guestHeroMapItems() {
   const pool = getHomeBasicPool('study_room');
   if (isLoggedIn()) return filterGuestDaechiMapItems(pool).slice(0, 12);

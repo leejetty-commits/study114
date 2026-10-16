@@ -138,6 +138,8 @@ function renderFloatMap(parts, items, ctx) {
   const latAttr = lat != null ? ` data-map-lat="${esc(String(lat))}"` : '';
   const lngAttr = lng != null ? ` data-map-lng="${esc(String(lng))}"` : '';
   const fitAttr = guestMap ? ' data-fit-bounds="false"' : '';
+  const zoomFloor = student && ctx.regionLevel === 'district' ? 12 : 14;
+  const floorAttr = ` data-zoom-floor="${zoomFloor}"`;
   const geocodeAttr = student
     ? ` data-geocode-region="true" data-map-zoom="${ctx.regionLevel === 'district' ? 13 : 15}"`
     : studyRoom
@@ -158,7 +160,7 @@ function renderFloatMap(parts, items, ctx) {
       </aside>`;
 
   return `
-    <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}"${latAttr}${lngAttr}${fitAttr}${geocodeAttr} data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
+    <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}"${latAttr}${lngAttr}${fitAttr}${geocodeAttr}${floorAttr} data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
       <div class="hero-map__canvas">
         <div class="hero-map__surface hero-map__surface--naver" aria-label="${esc(region)} 공부방 지도">
           <div class="naver-map-mount-host" data-naver-map-mount></div>
