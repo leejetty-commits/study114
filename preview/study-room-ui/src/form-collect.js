@@ -2,6 +2,7 @@
 
 import { emptyRoomState, TEACHING_STYLE_OPTIONS, getSubjectOptions } from './state.js';
 import { businessCoordsForSave } from '../../shared/study-room-basic-form.js';
+import { promoChannelPayload, syncPromoFieldsFromForm } from '../../shared/promo-links.js';
 
 const LESSON_EXTRA_MARK = 'lesson_extra';
 
@@ -349,9 +350,7 @@ export function syncFacilityFromForm(form, state) {
   const fd = new FormData(form);
   state.facility_ids = fd.getAll('facility_ids').map((v) => Number(v));
   state.facility_note = String(fd.get('facility_note') ?? '');
-  state.youtube_url = String(fd.get('youtube_url') ?? '');
-  state.facebook_url = String(fd.get('facebook_url') ?? '');
-  state.instagram_url = String(fd.get('instagram_url') ?? '');
+  syncPromoFieldsFromForm(form, state);
 }
 
 /** @param {import('./state.js').RegisterState} state */
@@ -472,9 +471,7 @@ export function payloadForStep(step, state) {
       const facility = {
         facility_ids: state.facility_ids,
         facility_note: state.facility_note,
-        youtube_url: state.youtube_url,
-        facebook_url: state.facebook_url,
-        instagram_url: state.instagram_url,
+        ...promoChannelPayload(state),
         images: (state.images || []).map((img, i) => ({
           id: img.id || null,
           image_type: img.image_type,

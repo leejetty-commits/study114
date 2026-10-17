@@ -24,7 +24,7 @@ import {
   getHashQuery,
   mypageSubmissionBoardUrl,
 } from '../layout.js';
-import { validatePromoUrls } from '../../../shared/promo-links.js';
+import { validatePromoUrls, renderPromoChannelFields, bindPromoChannelAdds } from '../../../shared/promo-links.js';
 import { HOME_UI_BASE } from '../../../shared/preview-links.js';
 import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
 import { bindInputFill } from '../../../shared/input-fill.js';
@@ -170,24 +170,13 @@ export function renderDetail() {
         </div>
 
         ${renderSectionTitle('연락')}
-        <div class="register-grid-2 register-grid-2--tight">
-          <div class="form-group">
-            <label class="form-label" for="contact_time_note">연락 가능 시간</label>
-            <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note}" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="youtube_url">유튜브</label>
-            <input class="form-input" type="url" id="youtube_url" name="youtube_url" value="${s.youtube_url}" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="facebook_url">페이스북</label>
-            <input class="form-input" type="url" id="facebook_url" name="facebook_url" value="${s.facebook_url}" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="instagram_url">인스타그램</label>
-            <input class="form-input" type="url" id="instagram_url" name="instagram_url" value="${s.instagram_url}" />
-          </div>
+        <div class="form-group">
+          <label class="form-label" for="contact_time_note">연락 가능 시간</label>
+          <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note}" />
         </div>
+
+        ${renderSectionTitle('홍보 채널')}
+        ${renderPromoChannelFields(s)}
       </div>
 
       <div class="register-nav">
@@ -212,6 +201,15 @@ export function bindDetailEvents(root) {
   bindUniversityNameReselect(root);
   bindSchoolGradePairs(root);
   bindInputFill(root.querySelector('[data-form="detail-all"]'));
+  bindPromoChannelAdds(root, registerState, {
+    sync: () => {
+      const form = root.querySelector('[data-form="detail-all"]');
+      syncLessonFromForm(form, registerState);
+      syncCareerFromForm(form, registerState);
+      syncContactFromForm(form, registerState);
+    },
+    refresh: () => window.dispatchEvent(new Event('hashchange')),
+  });
   root.querySelector('[data-action="back-mypage"]')?.addEventListener('click', () => returnToMypage());
   root.querySelector('[data-action="add-subject"]')?.addEventListener('click', () => {
     registerState.subjects.push(emptySubject());

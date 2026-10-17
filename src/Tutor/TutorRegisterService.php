@@ -640,22 +640,44 @@ final class TutorRegisterService
 
 
 
+        $this->assertBlogPair($input, 'blog_url_1', 'blog_title_1', '1번째');
+        $this->assertBlogPair($input, 'blog_url_2', 'blog_title_2', '2번째');
+        $yt2 = $this->promoPresentValue($input, 'youtube_url_2', 'youtube', '유튜브 2번째');
+        $yt3 = $this->promoPresentValue($input, 'youtube_url_3', 'youtube', '유튜브 3번째');
+        $yt4 = $this->promoPresentValue($input, 'youtube_url_4', 'youtube', '유튜브 4번째');
+        $blog1 = $this->promoPresentValue($input, 'blog_url_1', 'blog', '블로그 1번째');
+        $blogTitle1 = $this->blogTitlePresent($input, 'blog_title_1');
+        $blog2 = $this->promoPresentValue($input, 'blog_url_2', 'blog', '블로그 2번째');
+        $blogTitle2 = $this->blogTitlePresent($input, 'blog_title_2');
+        $tiktok = $this->promoPresentValue($input, 'tiktok_url', 'tiktok', '틱톡');
+        $clip = $this->promoPresentValue($input, 'naver_clip_url', 'naver_clip', '네이버 클립');
         $stmt = $pdo->prepare(
-
-            'UPDATE tutors SET contact_time_note = ?, youtube_url = ?, facebook_url = ?, instagram_url = ? WHERE id = ?'
-
+            'UPDATE tutors SET contact_time_note = ?, youtube_url = ?, facebook_url = ?, instagram_url = ?,
+                youtube_url_2 = IF(? = 1, ?, youtube_url_2),
+                youtube_url_3 = IF(? = 1, ?, youtube_url_3),
+                youtube_url_4 = IF(? = 1, ?, youtube_url_4),
+                blog_url_1 = IF(? = 1, ?, blog_url_1),
+                blog_title_1 = IF(? = 1, ?, blog_title_1),
+                blog_url_2 = IF(? = 1, ?, blog_url_2),
+                blog_title_2 = IF(? = 1, ?, blog_title_2),
+                tiktok_url = IF(? = 1, ?, tiktok_url),
+                naver_clip_url = IF(? = 1, ?, naver_clip_url)
+             WHERE id = ?'
         );
-
         $stmt->execute([
-
             $this->optionalString($input, 'contact_time_note'),
-
-            $this->optionalUrl($input, 'youtube_url'),
-
+            $this->optionalPromoUrl($input, 'youtube_url', 'youtube', '유튜브'),
             $this->optionalUrl($input, 'facebook_url'),
-
-            $this->optionalUrl($input, 'instagram_url'),
-
+            $this->optionalPromoUrl($input, 'instagram_url', 'instagram', '인스타그램'),
+            $yt2[0], $yt2[1],
+            $yt3[0], $yt3[1],
+            $yt4[0], $yt4[1],
+            $blog1[0], $blog1[1],
+            $blogTitle1[0], $blogTitle1[1],
+            $blog2[0], $blog2[1],
+            $blogTitle2[0], $blogTitle2[1],
+            $tiktok[0], $tiktok[1],
+            $clip[0], $clip[1],
             $tutorId,
 
         ]);
@@ -1061,9 +1083,27 @@ final class TutorRegisterService
 
             'youtube_url'                => (string) ($row['youtube_url'] ?? ''),
 
+            'youtube_url_2'              => (string) ($row['youtube_url_2'] ?? ''),
+
+            'youtube_url_3'              => (string) ($row['youtube_url_3'] ?? ''),
+
+            'youtube_url_4'              => (string) ($row['youtube_url_4'] ?? ''),
+
+            'blog_url_1'                 => (string) ($row['blog_url_1'] ?? ''),
+
+            'blog_title_1'               => (string) ($row['blog_title_1'] ?? ''),
+
+            'blog_url_2'                 => (string) ($row['blog_url_2'] ?? ''),
+
+            'blog_title_2'               => (string) ($row['blog_title_2'] ?? ''),
+
             'facebook_url'               => (string) ($row['facebook_url'] ?? ''),
 
             'instagram_url'              => (string) ($row['instagram_url'] ?? ''),
+
+            'tiktok_url'                 => (string) ($row['tiktok_url'] ?? ''),
+
+            'naver_clip_url'             => (string) ($row['naver_clip_url'] ?? ''),
 
             'images'                     => $images,
 
@@ -1201,7 +1241,112 @@ final class TutorRegisterService
 
     }
 
+    /** @param array<string, mixed> $input */
+    private function promoHasContact(string $raw): bool
+    {
+        $lower = strtolower($raw);
+        if (str_contains($lower, 'tel:')) {
+            return true;
+        }
+        if (str_contains($lower, 'open.kakao.com') || str_contains($lower, 'pf.kakao.com')) {
+            return true;
+        }
+        if (preg_match('/(^|[^\d])01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}(?!\d)/', $raw)) {
+            return true;
+        }
+        $compact = preg_replace('/[-\s.]/', '', $raw) ?? $raw;
+        return (bool) preg_match('/(^|[^\d])01[016789]\d{7,8}(?!\d)/', $compact);
+    }
 
+    private function promoHostAllowed(string $channel, string $host): bool
+    {
+        $map = [
+            'youtube' => ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'],
+            'instagram' => ['instagram.com', 'www.instagram.com'],
+            'tiktok' => ['tiktok.com', 'www.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'],
+            'naver_clip' => ['clip.naver.com'],
+            'blog' => ['blog.naver.com'],
+        ];
+        return in_array(strtolower($host), $map[$channel] ?? [], true);
+    }
+
+    /** @param array<string, mixed> $input */
+    private function optionalPromoUrl(array $input, string $key, string $channel, string $label): ?string
+    {
+        $val = $this->optionalString($input, $key);
+        if ($val === null) {
+            return null;
+        }
+        if ($this->promoHasContact($val)) {
+            throw new InvalidArgumentException('전화번호·카톡 아이디는 넣을 수 없어요');
+        }
+        if (!filter_var($val, FILTER_VALIDATE_URL)) {
+            throw new InvalidArgumentException("{$label} 주소가 아니에요");
+        }
+        $scheme = parse_url($val, PHP_URL_SCHEME);
+        $host = (string) parse_url($val, PHP_URL_HOST);
+        if (!in_array($scheme, ['http', 'https'], true) || !$this->promoHostAllowed($channel, $host)) {
+            throw new InvalidArgumentException("{$label} 주소가 아니에요");
+        }
+        return $val;
+    }
+
+    /** @param array<string, mixed> $input */
+    private function optionalBlogTitle(array $input, string $key): ?string
+    {
+        $val = $this->optionalString($input, $key);
+        if ($val === null) {
+            return null;
+        }
+        if (preg_match('/[\r\n]/', $val)) {
+            throw new InvalidArgumentException('블로그 제목은 한 줄로 적어 주세요');
+        }
+        if (mb_strlen($val) > 255) {
+            throw new InvalidArgumentException('블로그 제목은 255자까지예요');
+        }
+        return $val;
+    }
+
+    /** @param array<string, mixed> $input */
+    private function assertBlogPair(array $input, string $urlKey, string $titleKey, string $which): void
+    {
+        if (!array_key_exists($urlKey, $input) && !array_key_exists($titleKey, $input)) {
+            return;
+        }
+        $url = trim((string) ($input[$urlKey] ?? ''));
+        $title = trim((string) ($input[$titleKey] ?? ''));
+        if ($url !== '' && $title === '') {
+            throw new InvalidArgumentException("블로그 {$which} 주소를 넣었으면 제목도 적어 주세요");
+        }
+        if ($title !== '' && $url === '') {
+            throw new InvalidArgumentException("블로그 {$which} 제목만 있고 주소가 없어요");
+        }
+    }
+
+    /**
+     * 키가 없으면 [0, null]이라 UPDATE가 기존 값을 유지한다.
+     * @param array<string, mixed> $input
+     * @return array{0:int,1:?string}
+     */
+    private function promoPresentValue(array $input, string $key, string $channel, string $label): array
+    {
+        if (!array_key_exists($key, $input)) {
+            return [0, null];
+        }
+        return [1, $this->optionalPromoUrl($input, $key, $channel, $label)];
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return array{0:int,1:?string}
+     */
+    private function blogTitlePresent(array $input, string $key): array
+    {
+        if (!array_key_exists($key, $input)) {
+            return [0, null];
+        }
+        return [1, $this->optionalBlogTitle($input, $key)];
+    }
 
     /** @param array<string, mixed> $input */
 

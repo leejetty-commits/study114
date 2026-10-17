@@ -318,7 +318,6 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
           <h3 class="p24-section__title">접촉 가능성</h3>
           ${contact}
         </section>
-        ${renderRightRailBlock('detail_right_rail', { guestFilter: floating })}
         ${microSafetyCopy()}
       </div>
       <footer class="modal__foot p24-modal__foot">

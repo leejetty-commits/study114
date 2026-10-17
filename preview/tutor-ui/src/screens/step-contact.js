@@ -16,7 +16,7 @@ import {
   skipDetailRegistration,
   mypageSubmissionBoardUrl,
 } from '../layout.js';
-import { validatePromoUrls } from '../../../shared/promo-links.js';
+import { validatePromoUrls, renderPromoChannelFields, bindPromoChannelAdds } from '../../../shared/promo-links.js';
 import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
 import { bindInputFill } from '../../../shared/input-fill.js';
 
@@ -43,7 +43,7 @@ export function renderContact() {
   ).join('');
 
   const content = `
-    ${renderGuideNotice('상세등록 마지막 단계입니다. 학력·경력과 소셜홍보를 확인한 뒤 등록을 마쳐 주세요.')}
+    ${renderGuideNotice('상세등록 마지막 단계입니다. 학력·경력과 홍보 채널을 확인한 뒤 등록을 마쳐 주세요.')}
     <form data-form="contact" class="register-form-narrow">
       ${renderSectionTitle('학력 · 경력 · 특징')}
       <div class="register-grid-2 register-grid-2--tight">
@@ -82,27 +82,14 @@ export function renderContact() {
         <div class="register-check-grid">${badges}</div>
       </div>
 
-      ${renderSectionTitle('소셜홍보')}
-      <div class="register-grid-2 register-grid-2--tight">
-        <div class="form-group">
-          <label class="form-label" for="youtube_url">유튜브 링크</label>
-          <input class="form-input" type="url" id="youtube_url" name="youtube_url" value="${s.youtube_url}" placeholder="https://www.youtube.com/..." />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="facebook_url">페이스북 링크</label>
-          <input class="form-input" type="url" id="facebook_url" name="facebook_url" value="${s.facebook_url}" placeholder="https://www.facebook.com/..." />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="instagram_url">인스타그램 링크</label>
-          <input class="form-input" type="url" id="instagram_url" name="instagram_url" value="${s.instagram_url}" placeholder="https://www.instagram.com/..." />
-        </div>
-      </div>
+      ${renderSectionTitle('홍보 채널')}
+      ${renderPromoChannelFields(s)}
       ${renderNavButtons('/register/lesson', '등록 완료', { skipLabel: '나중에 하기' })}
     </form>`;
   return renderRegisterShell(content, {
     stepKey: 'contact',
     title: '학력 · 연락',
-    subtitle: '상세등록 2/2 · 학력·경력과 소셜홍보를 함께 마무리합니다.',
+    subtitle: '상세등록 2/2 · 학력·경력과 홍보 채널을 함께 마무리합니다.',
   });
 }
 
@@ -115,6 +102,14 @@ export function bindContactEvents(root) {
   bindGlobalEvents(root);
   bindUniversityNameReselect(root);
   bindInputFill(root.querySelector('[data-form="contact"]'));
+  bindPromoChannelAdds(root, registerState, {
+    sync: () => {
+      const form = root.querySelector('[data-form="contact"]');
+      syncCareerFromForm(form, registerState);
+      syncContactFromForm(form, registerState);
+    },
+    refresh: () => window.dispatchEvent(new Event('hashchange')),
+  });
   const nextBtn = root.querySelector('[data-action="next"]');
   root.querySelector('[data-action="prev"]')?.addEventListener('click', () => navigate('/register/lesson'));
   root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipDetailRegistration());

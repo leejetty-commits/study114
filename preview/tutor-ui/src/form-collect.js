@@ -1,5 +1,6 @@
 import { normalizeUniversityNameInput } from '../../shared/korean-universities.js';
 import { cheonwonInputToWon } from '../../shared/fee-cheonwon.js';
+import { promoChannelPayload, syncPromoFieldsFromForm } from '../../shared/promo-links.js';
 
 export function syncBasicFromForm(form, state) {
   if (!form) return;
@@ -135,9 +136,7 @@ export function syncContactFromForm(form, state) {
   if (!form) return;
   const fd = new FormData(form);
   state.contact_time_note = String(fd.get('contact_time_note') ?? '');
-  state.youtube_url = String(fd.get('youtube_url') ?? '');
-  state.facebook_url = String(fd.get('facebook_url') ?? '');
-  state.instagram_url = String(fd.get('instagram_url') ?? '');
+  syncPromoFieldsFromForm(form, state);
 }
 
 export function payloadForStep(step, state) {
@@ -185,9 +184,7 @@ export function payloadForStep(step, state) {
     case 'contact':
       return {
         contact_time_note: state.contact_time_note,
-        youtube_url: state.youtube_url,
-        facebook_url: state.facebook_url,
-        instagram_url: state.instagram_url,
+        ...promoChannelPayload(state),
       };
     default:
       return {};

@@ -1,5 +1,5 @@
 import { registerState, getFacilityOptions, emptyProofNote } from '../state.js';
-import { validatePromoUrls } from '../../../shared/promo-links.js';
+import { validatePromoUrls, renderPromoChannelFields, bindPromoChannelAdds } from '../../../shared/promo-links.js';
 import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
 import { syncFacilityFromForm, syncCareerFromForm } from '../form-collect.js';
 import { saveCurrentStep, withSaving } from '../save-flow.js';
@@ -169,22 +169,9 @@ export function renderFacilityFormHtml(opts = {}) {
         <textarea class="form-input form-textarea" id="facility_note" name="facility_note" rows="3">${esc(s.facility_note)}</textarea>
       </div>
 
-      ${renderSectionTitle('소셜홍보')}
+      ${renderSectionTitle('홍보 채널')}
       <p class="register-hint register-social-lead">연락은 쪽지로만 합니다. 전화번호·이메일은 이 화면과 검색·상세에 올리지 않습니다.</p>
-      <div class="register-grid-3 register-social-grid">
-        <div class="form-group">
-          <label class="form-label" for="youtube_url">유튜브 링크</label>
-          <input class="form-input" type="url" id="youtube_url" name="youtube_url" placeholder="https://www.youtube.com/..." value="${esc(s.youtube_url)}" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="facebook_url">페이스북 링크</label>
-          <input class="form-input" type="url" id="facebook_url" name="facebook_url" placeholder="https://www.facebook.com/..." value="${esc(s.facebook_url)}" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="instagram_url">인스타그램 링크</label>
-          <input class="form-input" type="url" id="instagram_url" name="instagram_url" placeholder="https://www.instagram.com/..." value="${esc(s.instagram_url)}" />
-        </div>
-      </div>
+      ${renderPromoChannelFields(s)}
 
       ${includeInquiryNotice ? renderMessageInquiryNotice() : ''}
 
@@ -272,6 +259,11 @@ export function bindFacilityEvents(root, opts = {}) {
       registerState.completeNeedsHydrate = true;
       navigate(withRoomId('/register/complete'));
     });
+  });
+
+  bindPromoChannelAdds(root, registerState, {
+    sync: () => persistForm(form),
+    refresh,
   });
 
   root.querySelector('[data-action="add-proof"]')?.addEventListener('click', () => {

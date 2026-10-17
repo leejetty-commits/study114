@@ -11,6 +11,28 @@ import {
 import { getTutor, updateTutor } from './store.js';
 import { tutorBasicMissing, tutorBasicMissingMessage } from '../../../shared/tutor-basic-fields.js';
 
+const PROMO_FIELDS_IF_PRESENT = [
+  'youtube_url_2',
+  'youtube_url_3',
+  'youtube_url_4',
+  'blog_url_1',
+  'blog_title_1',
+  'blog_url_2',
+  'blog_title_2',
+  'tiktok_url',
+  'naver_clip_url',
+];
+
+/** 호출자가 넘긴 새 채널만 싣는다. 없는 키를 빈 문자열로 넣으면 저장값이 지워진다. */
+function promoFieldsIfPresent(detail) {
+  /** @type {Record<string, string>} */
+  const out = {};
+  for (const key of PROMO_FIELDS_IF_PRESENT) {
+    if (Object.prototype.hasOwnProperty.call(detail, key)) out[key] = String(detail[key] || '');
+  }
+  return out;
+}
+
 async function postRegisterSave(step, tutorId, payload) {
   const res = await fetch('/api/tutor/register.php', {
     method: 'POST',
@@ -143,6 +165,7 @@ export async function saveTutorDetailInline(tutorId, detail) {
       youtube_url: detail.youtube_url || '',
       facebook_url: detail.facebook_url || '',
       instagram_url: detail.instagram_url || '',
+      ...promoFieldsIfPresent(detail),
     });
     await hydrateRegistrationsCache();
     return getTutor(tutorId);

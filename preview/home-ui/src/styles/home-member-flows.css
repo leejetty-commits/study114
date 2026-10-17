@@ -37,8 +37,13 @@
 .p24-intro { font-size: var(--text-sm); color: var(--gray-700); margin: 0 0 var(--space-2); line-height: 1.5; }
 .p24-promo__grid { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-start; }
 .p24-promo__item { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
+.p24-promo__icons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.p24-promo__icon { display: inline-flex; align-items: center; min-height: 2rem; padding: 0.2rem 0.7rem; border: 1px solid var(--line, #d7dbe3); border-radius: 999px; text-decoration: none; }
+.p24-promo__thumbs { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
 .p24-promo__thumb { display: block; border-radius: 0.35rem; overflow: hidden; line-height: 0; }
-.p24-promo__thumb img { display: block; max-width: 100%; height: auto; }
+.p24-promo__thumb img { display: block; width: 8rem; max-width: 100%; height: auto; }
+.p24-promo__blogs { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); }
+.p24-promo__blog { display: block; text-decoration: none; }
 .p24-fit { font-size: var(--text-xs); margin: 0 0 var(--space-2); padding: 0.5rem; border-radius: 0.35rem; }
 .p24-fit--hint { background: #eff6ff; color: #1e40af; }
 .p24-contact { list-style: none; margin: 0; padding: 0; }
