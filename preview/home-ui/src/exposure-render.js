@@ -32,6 +32,9 @@ import {
   buildPrimeSlotArray,
   getPrimeEmptyCopy,
   getExposurePageSizes,
+  shouldPadTutorPrimeSlots,
+  homePickZeroPromoCount,
+  pickZeroNote,
   rotatePickPool,
   rotateSetPool,
   sortByNewestFirst,
@@ -556,20 +559,37 @@ export function renderExposureBox(kind, tier, item, slotLabel, opts = {}) {
 }
 
 /**
- * Prime 빈 슬롯 — 다른 상품으로 채우지 않고 홍보카드 유지
+ * 프라임·픽 홍보 빈 카드. 문구와 버튼은 같다. 버튼은 「유료상품 보기」.
  * @param {'study_room'|'tutor'} kind
+ * @param {'prime'|'pick'} tier
  */
-export function renderEmptyPrimePromo(kind) {
+function renderEmptyPromoCard(kind, tier) {
   const copy = getPrimeEmptyCopy(kind);
   const tone = kind === 'tutor' ? 'tutor' : 'study_room';
+  const tierName = tier === 'pick' ? 'pick' : 'prime';
+  const flag = tier === 'pick' ? 'data-pick-empty="1"' : 'data-prime-empty="1"';
   return `
-    <article class="expo-card expo-card--prime expo-card--empty expo-card--${tone}" data-prime-empty="1">
+    <article class="expo-card expo-card--${tierName} expo-card--empty expo-card--${tone}" ${flag}>
       <div class="expo-empty-prime">
         <p class="expo-empty-prime__title">${esc(copy.title)}</p>
         <p class="expo-empty-prime__body">${esc(copy.body)}</p>
         <a href="#/plans/positions" class="btn btn--primary btn--sm" data-nav="/plans/positions">${esc(copy.cta)}</a>
       </div>
     </article>`;
+}
+
+/**
+ * Prime 빈 슬롯 — 다른 상품으로 채우지 않고 홍보카드 유지
+ * @param {'study_room'|'tutor'} kind
+ */
+export function renderEmptyPrimePromo(kind) {
+  return renderEmptyPromoCard(kind, 'prime');
+}
+
+/** @param {'study_room'|'tutor'} kind @param {number} [count] */
+export function renderEmptyPrimePromoRow(kind, count) {
+  const n = Number(count) > 0 ? Number(count) : getExposurePageSizes().primeSlots;
+  return Array.from({ length: n }, () => renderEmptyPrimePromo(kind)).join('');
 }
 
 /** 베이직·학생 빈 칸. 프라임 빈 셸과 같은 상자. */
@@ -593,16 +613,19 @@ export function renderGuestVacantBasicList() {
 
 /** 픽 빈 슬롯 — 실픽 카드와 같은 줄. */
 export function renderEmptyPickPromo(kind) {
-  const copy = getPrimeEmptyCopy(kind);
-  const tone = kind === 'tutor' ? 'tutor' : 'study_room';
-  return `
-    <article class="expo-card expo-card--pick expo-card--empty expo-card--${tone}" data-pick-empty="1">
-      <div class="expo-empty-prime">
-        <p class="expo-empty-prime__title">${esc(copy.title)}</p>
-        <p class="expo-empty-prime__body">${esc(copy.body)}</p>
-        <a href="#/plans/positions" class="btn btn--primary btn--sm" data-nav="/plans/positions">${esc(copy.cta)}</a>
-      </div>
-    </article>`;
+  return renderEmptyPromoCard(kind, 'pick');
+}
+
+/**
+ * 홈 픽 0장.
+ * 공부방·과외쌤 모드: 홍보 빈 카드 1장.
+ * 학생·비회원: 안내 한 줄.
+ * @param {'study_room'|'tutor'} kind
+ * @param {{ guest?: boolean, viewerRole?: string }} [opts]
+ */
+export function renderPickVacantMarkup(kind, opts = {}) {
+  if (homePickZeroPromoCount(opts) > 0) return renderEmptyPickPromo(kind);
+  return `<p class="mypage-muted" data-pick-vacant-note="1">${esc(pickZeroNote(kind))}</p>`;
 }
 
 /**
@@ -623,15 +646,14 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
     const listId = opts.listId || 'prime_tutor';
     const page = opts.page ?? getGuestListPage(listId);
     const pageItems = slicePage(rotated, page, primeSlots);
-    const guestPad =
-      opts.guest === true ? Math.max(0, primeSlots - pageItems.length) : 0;
+    const padCount = shouldPadTutorPrimeSlots(opts) ? Math.max(0, primeSlots - pageItems.length) : 0;
     let cards;
     if (!pageItems.length) {
-      cards = Array.from({ length: primeSlots }, () => renderEmptyPrimePromo(kind)).join('');
+      cards = renderEmptyPrimePromoRow(kind, primeSlots);
     } else {
       cards = [
         ...pageItems.map((item) => renderExposureBox(kind, 'prime', item, '', opts)),
-        ...Array.from({ length: guestPad }, () => renderEmptyPrimePromo(kind)),
+        padCount ? renderEmptyPrimePromoRow(kind, padCount) : '',
       ].join('');
     }
     return `
@@ -1017,19 +1039,31 @@ export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opt
   const pickPool = rotatePickPool(getPickPool(allItems, occupied));
   const page = opts.page ?? getGuestListPage(listId);
   const pageItems = slicePage(pickPool, page, pickSetSize);
-  const vacantPick =
-    opts.vacantFill === true && (kind === 'study_room' || kind === 'tutor') && pickPool.length === 0;
-  const pickRowSlots = 5;
-  const cards = vacantPick
-    ? Array.from({ length: pickRowSlots }, () => renderEmptyPickPromo(kind)).join('')
-    : pageItems.map((item) => renderExposureBox(kind, 'pick', item, '', opts)).join('');
-  const emptyNote = cards ? '' : '<p class="mypage-muted">픽 노출 후보가 없습니다.</p>';
+  const homeVacant = opts.surfaceMode !== 'search' && pickPool.length === 0;
+  let pickBody;
+  if (homeVacant) {
+    pickBody = renderPickVacantMarkup(kind, opts);
+  } else if (opts.surfaceMode === 'search') {
+    const vacantPick =
+      opts.vacantFill === true && (kind === 'study_room' || kind === 'tutor') && pickPool.length === 0;
+    const cards = vacantPick
+      ? Array.from({ length: 5 }, () => renderEmptyPickPromo(kind)).join('')
+      : pageItems.map((item) => renderExposureBox(kind, 'pick', item, '', opts)).join('');
+    pickBody = cards || '<p class="mypage-muted">픽 노출 후보가 없습니다.</p>';
+  } else {
+    const cards = pageItems.map((item) => renderExposureBox(kind, 'pick', item, '', opts)).join('');
+    pickBody = cards || '<p class="mypage-muted">픽 노출 후보가 없습니다.</p>';
+  }
+  const pickGrid =
+    homeVacant && homePickZeroPromoCount(opts) === 0
+      ? pickBody
+      : `<div class="expo-grid--5">${pickBody}</div>`;
 
   return `
     <div class="list-subsection" data-guest-list="${listId}">
       ${renderSectionHeading(headingCfg)}
       ${renderSectionToolbar({ locationLabel: headingCfg.locationLabel })}
-      <div class="expo-grid--5">${cards || emptyNote}</div>
+      ${pickGrid}
       ${renderListPagination(listId, pickPool.length, page, pickSetSize)}
     </div>
   `;

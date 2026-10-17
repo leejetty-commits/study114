@@ -131,7 +131,33 @@ export function getBasicPool(pool, primeOccupied, opts = {}) {
   return sortListItems(filtered, kind, opts.sort || DEFAULT_LIST_SORT);
 }
 
-/** @param {'study_room'|'tutor'} kind */
+/**
+ * 홈 처음 화면에서 과외쌤 프라임이 1~2장일 때 3칸까지 빈 카드로 채울지.
+ * 찾기 검색 결과는 비회원만 채운다(기존). 학생 홈은 채우지 않는다.
+ * @param {{ guest?: boolean, viewerRole?: string, surfaceMode?: string }} [opts]
+ */
+export function shouldPadTutorPrimeSlots(opts = {}) {
+  if (opts.surfaceMode === 'search') return opts.guest === true;
+  if (opts.guest === true) return true;
+  return opts.viewerRole === 'study_room' || opts.viewerRole === 'tutor';
+}
+
+/**
+ * 홈 픽 실제 카드가 0장일 때 홍보 빈 카드 수.
+ * 공부방·과외쌤 모드 1장, 학생·비회원 0장(안내 한 줄).
+ * 카드가 1장 이상이면 호출하지 않는다. pickSetSize로 빈 칸을 늘리지 않는다.
+ * @param {{ guest?: boolean, viewerRole?: string }} [opts]
+ */
+export function homePickZeroPromoCount(opts = {}) {
+  if (opts.guest !== true && (opts.viewerRole === 'study_room' || opts.viewerRole === 'tutor')) return 1;
+  return 0;
+}
+
+/** 학생·비회원 픽 0장 안내. 「학부모」를 쓰지 않는다. */
+export function pickZeroNote(kind) {
+  return kind === 'tutor' ? '아직 추천 과외쌤이 없어요' : '아직 추천 공부방이 없어요';
+}
+
 export function getPrimeEmptyCopy(kind) {
   const s = getPlanRuntimeSettings();
   if (kind === 'tutor') {

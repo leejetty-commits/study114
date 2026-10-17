@@ -9,13 +9,13 @@ import {
   renderBasicListBlock,
   renderBrowseList,
   renderGuestVacantBasicList,
-  renderEmptyPrimePromo,
-  renderEmptyPickPromo,
+  renderEmptyPrimePromoRow,
+  renderPickVacantMarkup,
   renderEmptyBasicPromo,
   getPrimeOccupied,
   getPrimeCandidatePool,
 } from '@home-ui/exposure-render.js';
-import { getExposurePageSizes } from '@home-ui/exposure-rules.js';
+import { homePickZeroPromoCount } from '@home-ui/exposure-rules.js';
 import { STUDENT_BRANCH_COPY } from '@home-ui/student-reg/student-reg-copy.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar, renderSectionTitleBar } from '@home-ui/section-headings.js';
 import { partitionByExposureTier } from './search-exposure-mapper.js';
@@ -39,15 +39,14 @@ function tutorPrimaryRegionLabel() {
  * @param {string} [surfaceAttr]
  */
 function renderStudentHomeVacantTiers(kind, place, opts, surfaceAttr = 'data-student-home-vacant') {
-  const { primeSlots } = getExposurePageSizes();
-  const pickRowSlots = 5;
   const section =
     kind === 'study_room'
       ? { prime: SECTION_HEADINGS.primeStudyRoom, pick: SECTION_HEADINGS.pickStudyRoom, basic: SECTION_HEADINGS.basicStudyRoom, color: 'content-section--orange' }
       : { prime: SECTION_HEADINGS.primeTutor, pick: SECTION_HEADINGS.pickTutor, basic: SECTION_HEADINGS.basicTutor, color: 'content-section--blue' };
   const boxOpts = { ...opts, guest: false };
-  const prime = Array.from({ length: primeSlots }, () => renderEmptyPrimePromo(kind)).join('');
-  const pick = Array.from({ length: pickRowSlots }, () => renderEmptyPickPromo(kind)).join('');
+  const prime = renderEmptyPrimePromoRow(kind);
+  const pick = renderPickVacantMarkup(kind, opts);
+  const pickBlock = homePickZeroPromoCount(opts) === 0 ? pick : `<div class="expo-grid--5">${pick}</div>`;
   return `
     <div class="content-section ${section.color} search-tier-results" data-surface="home-tier" ${surfaceAttr}="${kind}">
       ${renderSectionHeading({ ...section.prime, locationLabel: place })}
@@ -56,7 +55,7 @@ function renderStudentHomeVacantTiers(kind, place, opts, surfaceAttr = 'data-stu
       <div class="list-subsection">
         ${renderSectionHeading({ ...section.pick, locationLabel: place, desc: undefined })}
         ${renderSectionToolbar({ locationLabel: place })}
-        <div class="expo-grid--5">${pick}</div>
+        ${pickBlock}
       </div>
       <div class="list-subsection">
         ${renderSectionTitleBar({ ...section.basic, locationLabel: place, desc: undefined })}
@@ -132,6 +131,7 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
       ${renderPrimeSlotGrid(kind, occupied, {
         ...opts,
         vacantFill,
+        surfaceMode: mode,
         listId: kind === 'tutor' ? section.primeListId : undefined,
       })}`;
 
@@ -140,7 +140,7 @@ function renderProviderTierResults(kind, items, opts = {}, sectionTag = '지역 
     section.pickListId,
     { ...section.pick, locationLabel: loc, desc: undefined },
     items,
-    { ...opts, primeOccupied: occupied, vacantFill },
+    { ...opts, primeOccupied: occupied, vacantFill, surfaceMode: mode },
   );
 
   const basicHtml = renderBasicListBlock(
