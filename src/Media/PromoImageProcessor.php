@@ -129,6 +129,69 @@ final class PromoImageProcessor
         return [$cx, $cy, $cw, $ch];
     }
 
+    /**
+     * 긴 쪽이 $maxLongEdge 를 넘으면 그 길이로만 줄인다. 더 작은 사진은 키우지 않는다.
+     * WebP 품질 $quality 로 저장하고, 결과가 $targetBytes 를 넘으면 품질을 낮춘다.
+     * 호출한 쪽 원본 파일은 지우지 않는다.
+     *
+     * @return array{width: int, height: int, bytes: int, quality: int}
+     */
+    public function shrinkLongEdgeWebp(
+        string $sourceAbsolute,
+        string $destAbsolute,
+        int $maxLongEdge = 1600,
+        int $quality = 82,
+        int $targetBytes = 1048576,
+    ): array {
+        if (!function_exists('imagewebp')) {
+            throw new RuntimeException('사진을 WebP로 저장할 수 없어요.');
+        }
+        $this->inspect($sourceAbsolute);
+        $src = $this->load($sourceAbsolute);
+        $sw = imagesx($src);
+        $sh = imagesy($src);
+        $long = max($sw, $sh);
+        $scale = ($maxLongEdge > 0 && $long > $maxLongEdge) ? ($maxLongEdge / $long) : 1.0;
+        $tw = max(1, (int) round($sw * $scale));
+        $th = max(1, (int) round($sh * $scale));
+
+        $canvas = imagecreatetruecolor($tw, $th);
+        if ($canvas === false) {
+            imagedestroy($src);
+            throw new RuntimeException('이미지 캔버스를 만들 수 없습니다.');
+        }
+        $white = imagecolorallocate($canvas, 255, 255, 255);
+        imagefilledrectangle($canvas, 0, 0, $tw, $th, $white);
+        imagecopyresampled($canvas, $src, 0, 0, 0, 0, $tw, $th, $sw, $sh);
+        imagedestroy($src);
+
+        $dir = dirname($destAbsolute);
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+            imagedestroy($canvas);
+            throw new RuntimeException('사진 저장 폴더를 만들 수 없습니다.');
+        }
+
+        $q = max(30, min(100, $quality));
+        $floor = 30;
+        $savedBytes = 0;
+        do {
+            if (!imagewebp($canvas, $destAbsolute, $q)) {
+                imagedestroy($canvas);
+                throw new RuntimeException('사진을 저장하지 못했어요.');
+            }
+            clearstatcache(true, $destAbsolute);
+            $savedBytes = (int) (@filesize($destAbsolute) ?: 0);
+            if ($savedBytes <= $targetBytes || $q <= $floor) {
+                break;
+            }
+            $q = max($floor, $q - 10);
+        } while (true);
+
+        imagedestroy($canvas);
+
+        return ['width' => $tw, 'height' => $th, 'bytes' => $savedBytes, 'quality' => $q];
+    }
+
     /** @param \GdImage $canvas */
     private function saveWebpOrJpeg($canvas, string $dest): void
     {

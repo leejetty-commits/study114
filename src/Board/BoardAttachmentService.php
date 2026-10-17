@@ -6,11 +6,14 @@ namespace Study114\Board;
 
 use InvalidArgumentException;
 use Study114\Database\Connection;
+use Study114\Media\PromoImageProcessor;
 
 final class BoardAttachmentService
 {
     private const BOARD_KEY = 'submission';
     private const ATTACHMENT_KEY = 'primary';
+    /** @var list<string> */
+    private const CONCERN_PHOTO_KEYS = ['photo-1', 'photo-2', 'photo-3'];
 
     private BoardPostRepository $posts;
     private BoardAttachmentRepository $attachments;
@@ -318,5 +321,237 @@ final class BoardAttachmentService
             'UPDATE board_posts SET file_label = ?, updated_at = NOW() WHERE board_key = ? AND post_key = ?'
         );
         $stmt->execute([$originalName, self::BOARD_KEY, $postKey]);
+    }
+
+    /**
+     * 고민방 글 사진 1장. 원본은 저장하지 않고 줄인 WebP만 남긴다.
+     *
+     * @param array<string, mixed> $file $_FILES entry
+     * @return array<string, mixed>
+     */
+    public function uploadConcernPhoto(string $boardKey, string $postKey, array $file, int $sessionUserId): array
+    {
+        $post = $this->assertConcernAuthor($boardKey, $postKey, $sessionUserId);
+        $rules = $this->concernRules();
+        $existing = $this->attachments->listByKeys((string) $post['board_key'], $postKey, self::CONCERN_PHOTO_KEYS);
+        $maxFiles = (int) ($rules['max_files'] ?? 3);
+        if (count($existing) >= $maxFiles) {
+            throw new InvalidArgumentException('사진은 3장까지 올릴 수 있어요.');
+        }
+
+        [$originalName, $sizeBytes, $tmp] = $this->readConcernUpload($file, $rules);
+        try {
+            $info = (new PromoImageProcessor())->inspect($tmp);
+        } catch (InvalidArgumentException) {
+            throw new InvalidArgumentException('사진만 올릴 수 있어요. JPG, PNG, WebP 중에서 골라 주세요.');
+        }
+        $mime = (string) ($info['mime'] ?? '');
+        /** @var list<string> $allowedMimes */
+        $allowedMimes = $rules['allowed_mimes'] ?? ['image/jpeg', 'image/png', 'image/webp'];
+        if (!in_array($mime, $allowedMimes, true)) {
+            throw new InvalidArgumentException('사진만 올릴 수 있어요. JPG, PNG, WebP 중에서 골라 주세요.');
+        }
+
+        $used = array_map(static fn (array $row): string => (string) $row['attachment_key'], $existing);
+        $attachmentKey = '';
+        foreach (self::CONCERN_PHOTO_KEYS as $key) {
+            if (!in_array($key, $used, true)) {
+                $attachmentKey = $key;
+                break;
+            }
+        }
+        if ($attachmentKey === '') {
+            throw new InvalidArgumentException('사진은 3장까지 올릴 수 있어요.');
+        }
+
+        $storageFileName = $attachmentKey . '.webp';
+        $relativePath = $this->storage->buildRelativePath((string) $post['board_key'], $postKey, $storageFileName);
+        $shrunk = $this->writeShrunkWebp($tmp, $rules);
+        $stream = fopen($shrunk['path'], 'rb');
+        if ($stream === false) {
+            @unlink($shrunk['path']);
+            throw new InvalidArgumentException('사진을 저장하지 못했어요.');
+        }
+        try {
+            $this->storage->store($relativePath, $stream);
+        } finally {
+            fclose($stream);
+            @unlink($shrunk['path']);
+        }
+
+        $row = $this->attachments->insertKeyed(
+            (string) $post['board_key'],
+            $postKey,
+            $attachmentKey,
+            $originalName,
+            $relativePath,
+            'image/webp',
+            $shrunk['bytes'],
+        );
+
+        return $this->mapConcernPhoto($row, (string) $post['board_key'], $postKey);
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function listConcernPhotos(string $boardKey, string $postKey): array
+    {
+        $post = $this->requireConcernPost($boardKey, $postKey);
+        $rows = $this->attachments->listByKeys((string) $post['board_key'], $postKey, self::CONCERN_PHOTO_KEYS);
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = $this->mapConcernPhoto($row, (string) $post['board_key'], $postKey);
+        }
+
+        return $out;
+    }
+
+    public function deleteConcernPhoto(string $boardKey, string $postKey, string $attachmentKey, int $sessionUserId): void
+    {
+        if (!in_array($attachmentKey, self::CONCERN_PHOTO_KEYS, true)) {
+            throw new InvalidArgumentException('사진을 찾을 수 없어요.');
+        }
+        $post = $this->assertConcernAuthor($boardKey, $postKey, $sessionUserId);
+        $path = $this->attachments->deleteKeyed((string) $post['board_key'], $postKey, $attachmentKey);
+        if ($path === null) {
+            throw new InvalidArgumentException('사진을 찾을 수 없어요.');
+        }
+        try {
+            $this->storage->delete($path);
+        } catch (InvalidArgumentException) {
+            // 파일이 이미 없으면 목록에서만 뺀다.
+        }
+    }
+
+    public function streamConcernPhoto(string $boardKey, string $postKey, string $attachmentKey): never
+    {
+        if (!in_array($attachmentKey, self::CONCERN_PHOTO_KEYS, true)) {
+            throw new InvalidArgumentException('사진을 찾을 수 없어요.');
+        }
+        $post = $this->requireConcernPost($boardKey, $postKey);
+        $rows = $this->attachments->listByKeys((string) $post['board_key'], $postKey, [$attachmentKey]);
+        if ($rows === []) {
+            throw new InvalidArgumentException('사진을 찾을 수 없어요.');
+        }
+        $path = $this->storage->absolutePath((string) $rows[0]['storage_path']);
+        header('Content-Type: image/webp');
+        header('Content-Length: ' . (string) filesize($path));
+        header('Content-Disposition: inline; filename="' . $attachmentKey . '.webp"');
+        header('Cache-Control: private, max-age=300');
+        readfile($path);
+        exit;
+    }
+
+    /** @param array<string, mixed> $row @return array<string, mixed> */
+    private function mapConcernPhoto(array $row, string $boardKey, string $postKey): array
+    {
+        $key = (string) $row['attachment_key'];
+        $query = http_build_query([
+            'board_key' => $boardKey,
+            'post_key' => $postKey,
+            'file' => $key,
+        ]);
+
+        return [
+            'key' => $key,
+            'url' => '/api/board/concern-photos.php?' . $query,
+            'sizeBytes' => (int) $row['size_bytes'],
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function requireConcernPost(string $boardKey, string $postKey): array
+    {
+        $key = BoardChannelAcl::normalizeBoardKey($boardKey);
+        if (!BoardChannelAcl::isConcern($key) || $postKey === '') {
+            throw new InvalidArgumentException('고민방 글이 아닙니다.');
+        }
+        $post = $this->posts->findByKey($key, $postKey);
+        if ($post === null || (string) ($post['status'] ?? '') !== 'published') {
+            throw new InvalidArgumentException('글을 찾을 수 없어요.');
+        }
+
+        return $post;
+    }
+
+    /** @return array<string, mixed> */
+    private function assertConcernAuthor(string $boardKey, string $postKey, int $sessionUserId): array
+    {
+        $post = $this->requireConcernPost($boardKey, $postKey);
+        $ownerId = (int) ($post['author_user_id'] ?? 0);
+        if ($sessionUserId <= 0 || $ownerId <= 0 || $ownerId !== $sessionUserId) {
+            throw new BoardAccessException(403, 'forbidden', '글을 쓴 사람만 사진을 올릴 수 있어요.');
+        }
+
+        return $post;
+    }
+
+    /** @return array<string, mixed> */
+    private function concernRules(): array
+    {
+        $rules = $this->config['concern'] ?? [];
+
+        return is_array($rules) ? $rules : [];
+    }
+
+    /**
+     * @param array<string, mixed> $file
+     * @param array<string, mixed> $rules
+     * @return array{0: string, 1: int, 2: string}
+     */
+    private function readConcernUpload(array $file, array $rules): array
+    {
+        $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
+            throw new InvalidArgumentException('사진 한 장은 10MB까지 올릴 수 있어요.');
+        }
+        if ($error === UPLOAD_ERR_NO_FILE) {
+            throw new InvalidArgumentException('사진을 골라 주세요.');
+        }
+        if ($error !== UPLOAD_ERR_OK) {
+            throw new InvalidArgumentException('사진을 올리지 못했어요. 다시 골라 주세요.');
+        }
+        $tmp = (string) ($file['tmp_name'] ?? '');
+        $originalName = (string) ($file['name'] ?? '사진');
+        if ($tmp === '' || !is_uploaded_file($tmp)) {
+            throw new InvalidArgumentException('사진을 올리지 못했어요. 다시 골라 주세요.');
+        }
+        $sizeBytes = (int) ($file['size'] ?? 0);
+        $maxSize = (int) ($rules['max_size_bytes'] ?? (10 * 1024 * 1024));
+        if ($sizeBytes <= 0 || $sizeBytes > $maxSize) {
+            throw new InvalidArgumentException('사진 한 장은 10MB까지 올릴 수 있어요.');
+        }
+        $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        /** @var list<string> $allowedExt */
+        $allowedExt = $rules['allowed_extensions'] ?? ['jpg', 'jpeg', 'png', 'webp'];
+        if ($ext === '' || !in_array($ext, $allowedExt, true)) {
+            throw new InvalidArgumentException('사진만 올릴 수 있어요. JPG, PNG, WebP 중에서 골라 주세요.');
+        }
+
+        return [$originalName, $sizeBytes, $tmp];
+    }
+
+    /**
+     * @param array<string, mixed> $rules
+     * @return array{path: string, bytes: int}
+     */
+    private function writeShrunkWebp(string $sourceTmp, array $rules): array
+    {
+        $dest = tempnam(sys_get_temp_dir(), 'cphoto');
+        if ($dest === false) {
+            throw new InvalidArgumentException('사진을 저장하지 못했어요.');
+        }
+        $webp = $dest . '.webp';
+        @unlink($dest);
+        $maxEdge = (int) ($rules['max_long_edge'] ?? 1600);
+        $quality = (int) ($rules['webp_quality'] ?? 82);
+        $target = (int) ($rules['target_bytes'] ?? (1024 * 1024));
+        try {
+            $saved = (new PromoImageProcessor())->shrinkLongEdgeWebp($sourceTmp, $webp, $maxEdge, $quality, $target);
+        } catch (\Throwable $e) {
+            @unlink($webp);
+            throw new InvalidArgumentException('사진을 저장하지 못했어요.');
+        }
+
+        return ['path' => $webp, 'bytes' => (int) $saved['bytes']];
     }
 }

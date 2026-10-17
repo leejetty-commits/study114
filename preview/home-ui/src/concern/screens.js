@@ -1,6 +1,7 @@
 import {
   listCommunityBoards,
   CONCERN_COMPOSE_HINT,
+  CONCERN_PHOTO_HINT,
   CONCERN_HUB_LEAD,
   CONCERN_POST_TYPES,
   CONCERN_POST_TYPE_KEYS,
@@ -17,7 +18,8 @@ import {
   normalizeListQuery,
   invalidateConcernList,
   applyPostReaction,
-  saveConcernPost,
+  saveConcernPostThenPhotos,
+  fetchConcernPhotos,
   deleteConcernPost,
   fetchComments,
   addComment,
@@ -652,6 +654,7 @@ function renderDetail(board, postId, query) {
       <h2 class="concern-detail__title">${esc(post.title)}</h2>
       <p class="concern-detail__author">${authorLine(post)}${editedNote}</p>
       <div class="concern-detail__body">${esc(post.description || '')}</div>
+      <div class="concern-detail__photos" data-concern-photo-view data-concern-photo-board="${esc(board.boardKey)}" data-concern-photo-post="${esc(post.id)}" hidden></div>
       ${reactionsHtml}
       <div class="concern-detail__actions">${editBtn} ${deleteBtn} ${reportBtn}</div>
       <div class="concern-confirm-slot" data-concern-post-confirm-slot></div>
@@ -683,6 +686,7 @@ function renderEditForm(board, post) {
           <span>본문</span>
           <textarea name="body" rows="8" maxlength="5000" required>${esc(post.description || '')}</textarea>
         </label>
+        ${renderPhotoField()}
         <div class="concern-compose__error" data-concern-compose-error role="alert" hidden></div>
         <div class="concern-compose__actions">
           <button type="submit" class="btn btn--primary">저장</button>
@@ -763,6 +767,141 @@ function renderCommentItem(comment, access, currentUserId, numericPostId, boardK
     </li>`;
 }
 
+const CONCERN_PHOTO_MAX = 3;
+const CONCERN_PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+
+function isAllowedPhoto(file) {
+  const type = String(file?.type || '').toLowerCase();
+  const ext = String(file?.name || '').split('.').pop().toLowerCase();
+  const typeOk = type === 'image/jpeg' || type === 'image/jpg' || type === 'image/png' || type === 'image/webp';
+  const extOk = ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'webp';
+  if (type && !typeOk) return false;
+  return extOk;
+}
+
+function loadPhotoPreview(file) {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const long = Math.max(img.naturalWidth || 0, img.naturalHeight || 0);
+      resolve({ url, small: long > 0 && long < 400 });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+    img.src = url;
+  });
+}
+
+function renderPhotoField() {
+  return `
+    <div class="concern-photos" data-concern-photos-field>
+      <p class="concern-compose__hint">${esc(CONCERN_PHOTO_HINT)}</p>
+      <div class="concern-photos__list" data-concern-photo-list></div>
+      <label class="concern-photos__pick">
+        사진 고르기
+        <input type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple data-concern-photo-input />
+      </label>
+      <p class="concern-compose__error" data-concern-photo-error role="alert" hidden></p>
+    </div>`;
+}
+
+/**
+ * @param {HTMLFormElement} form
+ * @param {{ boardKey?: string, postKey?: string }} [opts]
+ */
+function bindPhotoField(form, opts = {}) {
+  const listEl = form.querySelector('[data-concern-photo-list]');
+  const input = form.querySelector('[data-concern-photo-input]');
+  const errorEl = form.querySelector('[data-concern-photo-error]');
+  /** @type {Array<{ kind: 'new', file: File, url: string, small: boolean } | { kind: 'saved', key: string, url: string }>} */
+  const items = [];
+  /** @type {string[]} */
+  const removed = [];
+
+  function showError(text) {
+    if (!errorEl) return;
+    errorEl.textContent = text || '';
+    errorEl.hidden = !text;
+  }
+
+  function renderList() {
+    if (!listEl) return;
+    listEl.innerHTML = items.map((item, index) => {
+      const small = item.kind === 'new' && item.small
+        ? '<p class="concern-photos__small">이 사진은 작아서 흐리게 보일 수 있어요.</p>'
+        : '';
+      return `
+        <div class="concern-photos__item">
+          <img src="${esc(item.url)}" alt="고른 사진 ${index + 1}" />
+          ${small}
+          <button type="button" class="btn btn--ghost btn--sm" data-concern-photo-remove="${index}">빼기</button>
+        </div>`;
+    }).join('');
+    listEl.querySelectorAll('[data-concern-photo-remove]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const index = Number(btn.getAttribute('data-concern-photo-remove'));
+        const item = items[index];
+        if (!item) return;
+        if (item.kind === 'new') URL.revokeObjectURL(item.url);
+        if (item.kind === 'saved') removed.push(item.key);
+        items.splice(index, 1);
+        showError('');
+        renderList();
+      });
+    });
+    if (input) input.disabled = items.length >= CONCERN_PHOTO_MAX;
+  }
+
+  input?.addEventListener('change', async () => {
+    const files = [...(input.files || [])];
+    input.value = '';
+    showError('');
+    for (const file of files) {
+      if (items.length >= CONCERN_PHOTO_MAX) {
+        showError('사진은 3장까지 올릴 수 있어요.');
+        break;
+      }
+      if (!isAllowedPhoto(file)) {
+        showError('사진만 올릴 수 있어요. JPG, PNG, WebP 중에서 골라 주세요.');
+        continue;
+      }
+      if (file.size > CONCERN_PHOTO_MAX_BYTES) {
+        showError('사진 한 장은 10MB까지 올릴 수 있어요.');
+        continue;
+      }
+      const loaded = await loadPhotoPreview(file);
+      if (!loaded) {
+        showError('사진만 올릴 수 있어요. JPG, PNG, WebP 중에서 골라 주세요.');
+        continue;
+      }
+      items.push({ kind: 'new', file, url: loaded.url, small: loaded.small });
+    }
+    renderList();
+  });
+
+  if (opts.boardKey && opts.postKey) {
+    fetchConcernPhotos(opts.boardKey, opts.postKey)
+      .then((photos) => {
+        photos.forEach((photo) => {
+          if (!photo?.key || !photo?.url || items.length >= CONCERN_PHOTO_MAX) return;
+          items.push({ kind: 'saved', key: String(photo.key), url: String(photo.url) });
+        });
+        renderList();
+      })
+      .catch(() => {
+        showError('올려 둔 사진을 불러오지 못했어요.');
+      });
+  }
+
+  return {
+    newFiles: () => items.filter((item) => item.kind === 'new').map((item) => item.file),
+    removeKeys: () => removed.slice(),
+  };
+}
+
 /* ── 글쓰기 화면 ── */
 
 function renderCompose(board) {
@@ -811,6 +950,7 @@ function renderCompose(board) {
           <span>본문</span>
           <textarea name="body" rows="8" maxlength="5000" required placeholder="짧은 경험이나 고민을 적어주세요"></textarea>
         </label>
+        ${renderPhotoField()}
         <div class="concern-compose__error" data-concern-compose-error role="alert" hidden></div>
         <button type="submit" class="btn btn--primary">올리기</button>
       </form>
@@ -1067,7 +1207,23 @@ export function bindConcernScreenEvents(root, rerender) {
   });
 
   // 글쓰기 폼
+  root.querySelectorAll('[data-concern-photo-view]').forEach((box) => {
+    const boardKey = box.getAttribute('data-concern-photo-board') || '';
+    const postKey = box.getAttribute('data-concern-photo-post') || '';
+    if (!boardKey || !postKey) return;
+    fetchConcernPhotos(boardKey, postKey)
+      .then((photos) => {
+        if (!photos.length) return;
+        box.hidden = false;
+        box.innerHTML = photos
+          .map((photo, index) => `<img src="${esc(photo.url)}" alt="글 사진 ${index + 1}" />`)
+          .join('');
+      })
+      .catch(() => {});
+  });
+
   root.querySelectorAll('[data-concern-compose]').forEach((form) => {
+    const photos = bindPhotoField(form);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const boardKey = form.getAttribute('data-concern-compose');
@@ -1091,9 +1247,18 @@ export function bindConcernScreenEvents(root, rerender) {
       if (errorEl) { errorEl.hidden = true; errorEl.textContent = ''; }
 
       try {
-        const post = await saveConcernPost({ boardKey, title, body, type });
-        const detailPath = `${basePath}/${post.id}`;
-        setFlash(detailPath, 'success', '글을 올렸어요.');
+        const saved = await saveConcernPostThenPhotos(
+          { boardKey, title, body, type },
+          { files: photos.newFiles() },
+        );
+        const detailPath = `${basePath}/${saved.post.id}`;
+        setFlash(
+          detailPath,
+          saved.photoError ? 'error' : 'success',
+          saved.photoError
+            ? `글은 저장됐어요. 사진은 올리지 못했어요. ${saved.photoError}`
+            : '글을 올렸어요.',
+        );
         navigate(detailPath);
       } catch (err) {
         if (errorEl) {
@@ -1107,6 +1272,10 @@ export function bindConcernScreenEvents(root, rerender) {
 
   // 글 수정 폼
   root.querySelectorAll('[data-concern-edit]').forEach((form) => {
+    const photos = bindPhotoField(form, {
+      boardKey: form.getAttribute('data-concern-edit') || '',
+      postKey: form.getAttribute('data-concern-edit-post') || '',
+    });
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const boardKey = form.getAttribute('data-concern-edit');
@@ -1130,9 +1299,18 @@ export function bindConcernScreenEvents(root, rerender) {
       if (errorEl) { errorEl.hidden = true; errorEl.textContent = ''; }
 
       try {
-        const post = await saveConcernPost({ boardKey, postKey, title, body });
-        const detailPath = `${basePath}/${post.id}`;
-        setFlash(detailPath, 'success', '글을 수정했어요.');
+        const saved = await saveConcernPostThenPhotos(
+          { boardKey, postKey, title, body },
+          { files: photos.newFiles(), removeKeys: photos.removeKeys() },
+        );
+        const detailPath = `${basePath}/${saved.post.id}`;
+        setFlash(
+          detailPath,
+          saved.photoError ? 'error' : 'success',
+          saved.photoError
+            ? `글은 저장됐어요. 사진은 올리지 못했어요. ${saved.photoError}`
+            : '글을 수정했어요.',
+        );
         navigate(detailPath);
       } catch (err) {
         if (errorEl) {
