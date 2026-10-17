@@ -422,6 +422,31 @@ final class BoardAttachmentService
         }
     }
 
+    /**
+     * 고민방 글을 지울 때 그 글의 사진 파일과 첨부 기록만 지운다.
+     * photo-1~3 만 대상이다. submission primary 와 쪽지 첨부는 다루지 않는다.
+     */
+    public function deleteConcernPhotosForPost(string $boardKey, string $postKey): void
+    {
+        $key = BoardChannelAcl::normalizeBoardKey($boardKey);
+        if (!BoardChannelAcl::isConcern($key) || $postKey === '') {
+            return;
+        }
+        $rows = $this->attachments->listByKeys($key, $postKey, self::CONCERN_PHOTO_KEYS);
+        foreach ($rows as $row) {
+            $attachmentKey = (string) ($row['attachment_key'] ?? '');
+            $path = $this->attachments->deleteKeyed($key, $postKey, $attachmentKey);
+            if ($path === null) {
+                continue;
+            }
+            try {
+                $this->storage->delete($path);
+            } catch (InvalidArgumentException) {
+                // 파일이 이미 없으면 기록만 뺀다.
+            }
+        }
+    }
+
     public function streamConcernPhoto(string $boardKey, string $postKey, string $attachmentKey): never
     {
         if (!in_array($attachmentKey, self::CONCERN_PHOTO_KEYS, true)) {
