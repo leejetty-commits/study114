@@ -140,16 +140,6 @@ export const GNB_VISIBILITY = {
 };
 
 /**
- * 학생(parent)은 가입 분기(preferred_lesson_type) 하나만 가진다. 반대 분기 찾기 메뉴는 숨긴다.
- * 과외 분기: 과외쌤찾기·학생찾기 / 공부방 분기: 공부방찾기·학생찾기
- * @type {Record<'tutor'|'study_room', string[]>}
- */
-export const PARENT_BRANCH_HIDDEN_GNB = {
-  tutor: ['find_room'],
-  study_room: ['find_tutor'],
-};
-
-/**
  * 등록 캐시가 명시 분기를 돌려주는 함수.
  * 우선순위는 parentBranch() 주석. 세션이 분기를 확정하면 이 함수는 쓰지 않는다.
  * @type {null | (() => ('tutor'|'study_room'|null))}
@@ -193,13 +183,12 @@ export const GNB_MUTED_TITLE = '현재 역할에서는 이용할 수 없습니�
  * @returns {'show' | 'hide'}
  */
 export function getGnbVisibility(role, itemId) {
+  // 학생은 분기가 확정되면 공부방찾기·과외쌤찾기·학생찾기를 모두 본다.
+  // 세션이 분기를 모르면 찾기 둘만 숨긴다. 학생찾기는 역할 표를 따른다.
   if (role === 'parent' && !isOnEmailVerifyWait()) {
     const branch = parentBranch();
     if (branch !== 'tutor' && branch !== 'study_room') {
       if (itemId === 'find_room' || itemId === 'find_tutor') return 'hide';
-    } else {
-      const hidden = PARENT_BRANCH_HIDDEN_GNB[branch] || [];
-      if (hidden.includes(itemId)) return 'hide';
     }
   }
   return GNB_VISIBILITY[role]?.[itemId] ?? 'show';

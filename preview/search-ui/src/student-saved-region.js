@@ -83,18 +83,19 @@ function branchPlace(saved) {
 }
 
 /**
- * 탭별 기준 지역. 분기 탭(공부방 분기 room / 과외 분기 tutor)과 학생 탭만 분기 지역을 쓴다.
- * 반대 분기 탭은 열리지 않으므로 null.
+ * 탭별 기준 지역. 자기 분기 탭과 학생 탭만 그 분기 저장 지역을 쓴다.
+ * 반대 탭은 null. 찾기 화면은 세션 분기를 넘긴다. 인자를 생략하면 홈이 쓰는 studentBranch().
  * @param {StudentSavedRegion|null} saved
  * @param {'room'|'tutor'|'student'} tab
+ * @param {'tutor'|'study_room'|null} [branch]
  * @returns {StudentPlace|null}
  */
-export function studentPlaceFor(saved, tab) {
+export function studentPlaceFor(saved, tab, branch = studentBranch(saved)) {
   if (!saved) return null;
-  const branch = studentBranch(saved);
+  if (branch !== 'tutor' && branch !== 'study_room') return null;
   if (tab === 'room' && branch !== 'study_room') return null;
   if (tab === 'tutor' && branch !== 'tutor') return null;
-  return branchPlace(saved);
+  return branch === 'study_room' ? saved.studyroom : saved.tutor;
 }
 
 /**

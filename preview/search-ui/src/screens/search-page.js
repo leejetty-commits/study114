@@ -46,8 +46,6 @@ import {
   bootGuestFindSurface,
 } from '../search-find-surface.js';
 import { bindSearchMapPinLinks } from '../search-map.js';
-import { studentBranch } from '../student-saved-region.js';
-import { guardParentFindTab } from '../../../shared/route-access.js';
 import { bootStudyRoomHome, bootStudyRoomStudentDemand } from '@home-ui/study-room-home-seed.js';
 import { renderBrowseList } from '@home-ui/exposure-render.js';
 import { getStudentDemandForRegion } from '../search-region-feed.js';
@@ -203,6 +201,8 @@ function searchLoginReturnTo() {
  */
 export function renderSearchPage(opts = {}) {
   syncRoleFromHash();
+  // 찾기 화면의 학생 분기는 세션 값만 쓴다. 홈 탭 상태에는 이 표시를 넣지 않는다.
+  previewState.findSurface = 'search';
   if (!opts.sessionReady) return renderSearchShell('', { deferRailFetch: opts.deferRailFetch !== false });
   if (isSearchLoggedIn() && !isEmailVerified()) {
     redirectToEmailVerifyWait();
@@ -210,14 +210,6 @@ export function renderSearchPage(opts = {}) {
   }
   if (!isSearchLoggedIn()) previewState.role = 'guest';
   const rawTab = getCurrentTab();
-  if (previewState.role === 'parent') {
-    const branchGuard = guardParentFindTab(rawTab, studentBranch());
-    if (!branchGuard.ok) {
-      resetFindSurface(previewState);
-      navigateTab(branchGuard.redirectTab);
-      return '';
-    }
-  }
   const tab = resolveAllowedTab(rawTab, previewState.role);
   if (tab !== rawTab) {
     navigateTab(tab);

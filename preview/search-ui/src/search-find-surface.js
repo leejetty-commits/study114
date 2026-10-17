@@ -41,6 +41,7 @@ import {
   resolveHopeTypeFromQuery,
   writeStoredHopeType,
 } from './student-hope-type.js';
+import { parentBranch } from '../../shared/site-nav-config.js';
 import { resolveFindDefaultRegion, writeStoredHopeRegion } from '../../shared/student-hope-regions.js';
 import {
   readStudentSavedRegion,
@@ -239,22 +240,43 @@ const STUDENT_REGION_FILTER_KEYS = [
 ];
 const STUDENT_ROOM_EMPTY = '이 동네 공부방이 아직 도착하지 않았어요';
 
-/** 학생 희망 유형 = 가입 분기 고정. URL ?hope=·직접 고른 유형은 보지 않는다. @param {FindSurfaceState} state */
-function ensureParentHope(state) {
-  state.studentHopeType = studentBranch();
-  state.hopeTypeResolved = true;
-  return state.studentHopeType;
+/**
+ * 찾기 화면은 세션이 확정한 분기만 쓴다. 모르면 null.
+ * 홈 탭은 studentBranch() 를 그대로 쓴다.
+ * @param {FindSurfaceState} state
+ * @returns {'tutor'|'study_room'|null}
+ */
+function parentFindBranch(state) {
+  if (state?.findSurface === 'search') {
+    const branch = parentBranch();
+    return branch === 'tutor' || branch === 'study_room' ? branch : null;
+  }
+  return studentBranch();
 }
 
-/** @param {FindSurfaceState} state @returns {'tutor'|'study_room'} */
+/** 학생 희망 유형. 찾기 화면은 세션 분기, 홈은 기존 분기. URL ?hope= 는 보지 않는다. @param {FindSurfaceState} state */
+function ensureParentHope(state) {
+  const branch = parentFindBranch(state);
+  if (branch === 'tutor' || branch === 'study_room') {
+    state.studentHopeType = branch;
+    state.hopeTypeResolved = true;
+    return branch;
+  }
+  state.studentHopeType = null;
+  state.hopeTypeResolved = false;
+  return null;
+}
+
+/** @param {FindSurfaceState} state @returns {'tutor'|'study_room'|null} */
 function studentHope(state) {
   return ensureParentHope(state);
 }
 
 /** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state */
 function studentTarget(tab, state) {
-  void state;
-  return studentPlaceFor(readStudentSavedRegion(), tab);
+  const saved = readStudentSavedRegion();
+  if (state?.findSurface === 'search') return studentPlaceFor(saved, tab, parentFindBranch(state));
+  return studentPlaceFor(saved, tab);
 }
 
 /** 서버 저장 지역 → 화면 위치. 라벨은 서버 정식 라벨 그대로 둔다. */
@@ -314,7 +336,9 @@ function resolveStudentActivePlace(tab, state) {
   if (studentUserPinned(state, tab)) return state.canonicalLocation.displayLabel;
   const saved = readStudentSavedRegion();
   syncStoredHopeRegionsFromSaved(saved);
-  const target = studentPlaceFor(saved, tab);
+  const target = state?.findSurface === 'search'
+    ? studentPlaceFor(saved, tab, parentFindBranch(state))
+    : studentPlaceFor(saved, tab);
   if (target) return applyStudentPlace(state, tab, studentSavedCanonical(target, tab));
   const cur = state.canonicalLocation;
   if (cur?.source === 'gps' && state._placeTab === tab && cur.displayLabel) return cur.displayLabel;
@@ -421,6 +445,7 @@ function studentFeedFilters(tab, state) {
   if (!cur?.displayLabel || state._placeTab !== tab) return null;
   const hope = studentHope(state);
   if (cur.source === 'saved') {
+    if (hope !== 'tutor' && hope !== 'study_room') return null;
     const scope = studentPlaceFilters(tab, studentTarget(tab, state), hope);
     if (scope && tab === 'student' && hope === 'study_room' && state.studyroomDongRegionId) {
       delete scope.preferred_region_id;
@@ -1239,6 +1264,14 @@ export async function bootFindGpsIfNeeded(state, tab, rerender) {
     state._gpsBootedTab = tab;
     logLocationDebug('gps-skip', { reason: 'guest-fixed' });
     return;
+  }
+  if (state.findSurface === 'search' && state.role === 'parent') {
+    const branch = parentFindBranch(state);
+    const otherFind = (tab === 'room' && branch !== 'study_room') || (tab === 'tutor' && branch !== 'tutor');
+    if (otherFind) {
+      logLocationDebug('gps-skip', { reason: 'parent-other-find' });
+      return;
+    }
   }
   if (state._gpsBootedTab === tab) return;
   state._gpsBootedTab = tab;
@@ -2181,7 +2214,9 @@ function renderField(field, state, opts = {}) {
   const name = `f_${field.key}`;
 
   if (field.key === 'preferred_lesson_type' && role === 'parent') {
-    return `<input type="hidden" name="${esc(name)}" value="${esc(ensureParentHope(state))}" data-parent-branch-fixed />`;
+    const hope = ensureParentHope(state);
+    const value = hope === 'tutor' || hope === 'study_room' ? hope : '';
+    return `<input type="hidden" name="${esc(name)}" value="${esc(value)}" data-parent-branch-fixed />`;
   }
 
   if (field.input === 'select') {
@@ -2967,7 +3002,11 @@ function refreshSearchedLabelWhenCitiesReady(tab, state, role, rerender, seq) {
 export async function runFindSearchWithFilters(tab, filters, state, role, rerender) {
   const seq = ++findSearchSeq;
   const stale = () => seq !== findSearchSeq;
-  if (tab === 'student' && role === 'parent') filters.preferred_lesson_type = ensureParentHope(state);
+  if (tab === 'student' && role === 'parent') {
+    const hope = ensureParentHope(state);
+    if (hope === 'tutor' || hope === 'study_room') filters.preferred_lesson_type = hope;
+    else delete filters.preferred_lesson_type;
+  }
   if (tab === 'student' && role === 'study_room') {
     delete filters.preferred_region_label;
     if (!filters.preferred_lesson_type) filters.preferred_lesson_type = 'study_room';
