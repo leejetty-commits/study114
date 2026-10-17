@@ -147,19 +147,6 @@ export function guardMypageAccess(loggedIn) {
   };
 }
 
-/**
- * 학생 찾기 탭. 공부방찾기·과외쌤찾기·학생찾기를 모두 연다.
- * 반대 탭을 자기 분기로 되돌리지 않는다. 다른 역할 가드는 이 함수를 쓰지 않는다.
- * @param {'room'|'tutor'|'student'} tab
- * @param {'tutor'|'study_room'|null} [branch]
- * @returns {{ ok: true }}
- */
-export function guardParentFindTab(tab, branch) {
-  void tab;
-  void branch;
-  return { ok: true };
-}
-
 /** 역할 홈 화면 키 → 그 홈을 볼 수 있는 navRole */
 const ROLE_HOME_SCREEN_ROLE = {
   parent: 'parent',

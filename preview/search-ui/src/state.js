@@ -6,7 +6,7 @@ import { parseHashQuery, parseNavRole } from '../../shared/preview-links.js';
 import { navRoleFromAuthUser } from '../../shared/site-nav-config.js';
 import { getAuthUser, isLoggedIn } from '@home-ui/auth-session.js';
 
-/** @type {{ tab: SearchTab, expanded: boolean, role: ViewerRole, subscription: ProviderSubscription, searchExecuted: boolean, searchLoading: boolean, searchError: string | null, searchTotal: number, searchRows: Array<{ left: string, center: string, right: string }>, searchItems: Array<Record<string, unknown>>, searchExposureItems: Array<Record<string, unknown>>, activeResultItems: Array<Record<string, unknown>>, activeResultSource: 'region'|'search'|null, activeRegionLabel: string, canonicalLocation: import('../../shared/location-display.js').CanonicalLocation|null, lastSearchFilters: Record<string, string|string[]>|null, _needsSearchRestore: boolean, _gpsBootedTab: string|null, _restoredSearchKey: string|null, studentLessonFormat: string, tutorRegionIndex: number }} */
+/** @type {{ tab: SearchTab, expanded: boolean, role: ViewerRole, subscription: ProviderSubscription, findSurface: 'search'|null, searchExecuted: boolean, searchLoading: boolean, searchError: string | null, searchTotal: number, searchRows: Array<{ left: string, center: string, right: string }>, searchItems: Array<Record<string, unknown>>, searchExposureItems: Array<Record<string, unknown>>, activeResultItems: Array<Record<string, unknown>>, activeResultSource: 'region'|'search'|null, activeRegionLabel: string, canonicalLocation: import('../../shared/location-display.js').CanonicalLocation|null, lastSearchFilters: Record<string, string|string[]>|null, _needsSearchRestore: boolean, _gpsBootedTab: string|null, _restoredSearchKey: string|null, studentLessonFormat: string, tutorRegionIndex: number }} */
 export const previewState = {
   tab: 'room',
   expanded: false,
@@ -26,6 +26,8 @@ export const previewState = {
   _gpsBootedTab: /** @type {string|null} */ (null),
   _restoredSearchKey: /** @type {string|null} */ (null),
   role: 'guest',
+  /** 찾기 화면이면 search. 홈 상태는 이 값을 넣지 않는다. */
+  findSurface: /** @type {'search'|null} */ (null),
   subscription: 'free',
   studentLessonFormat: 'one_on_one',
   tutorRegionIndex: 0,

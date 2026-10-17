@@ -77,11 +77,6 @@ export function studentBranch(saved = readStudentSavedRegion()) {
   return saved?.lessonType || DEFAULT_STUDENT_HOPE_TYPE;
 }
 
-/** 분기 지역. 공부방 분기 = 저장 동, 과외 분기 = 저장 시·군·구. 비어 있으면 null. @param {StudentSavedRegion} saved */
-function branchPlace(saved) {
-  return studentBranch(saved) === 'study_room' ? saved.studyroom : saved.tutor;
-}
-
 /**
  * 탭별 기준 지역. 자기 분기 탭과 학생 탭만 그 분기 저장 지역을 쓴다.
  * 반대 탭은 null. 찾기 화면은 세션 분기를 넘긴다. 인자를 생략하면 홈이 쓰는 studentBranch().
@@ -119,12 +114,17 @@ export function studentPlaceFilters(tab, target, hope) {
 
 /**
  * 임시값(lastRegionByHope)을 서버 저장 지역 라벨로 맞춘다. 분기 축만 남기고 반대 축은 지운다.
+ * 분기를 넘기지 않으면 홈과 같이 studentBranch()를 쓴다.
+ * 찾기 화면은 세션 분기를 넘긴다. null 이면 기본 tutor 로 맞추지 않고 건너뛴다.
  * @param {StudentSavedRegion|null} saved
+ * @param {'tutor'|'study_room'|null} [branch]
  */
-export function syncStoredHopeRegionsFromSaved(saved) {
+export function syncStoredHopeRegionsFromSaved(saved, branch) {
   if (!saved) return;
-  const branch = studentBranch(saved);
-  replaceStoredHopeRegions({ [branch]: branchPlace(saved)?.label || '' });
+  const resolved = branch === undefined ? studentBranch(saved) : branch;
+  if (resolved !== 'tutor' && resolved !== 'study_room') return;
+  const place = resolved === 'study_room' ? saved.studyroom : saved.tutor;
+  replaceStoredHopeRegions({ [resolved]: place?.label || '' });
 }
 
 /**

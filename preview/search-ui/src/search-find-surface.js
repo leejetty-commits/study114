@@ -335,7 +335,8 @@ function resolveStudentActivePlace(tab, state) {
   ensureParentHope(state);
   if (studentUserPinned(state, tab)) return state.canonicalLocation.displayLabel;
   const saved = readStudentSavedRegion();
-  syncStoredHopeRegionsFromSaved(saved);
+  if (state?.findSurface === 'search') syncStoredHopeRegionsFromSaved(saved, parentFindBranch(state));
+  else syncStoredHopeRegionsFromSaved(saved);
   const target = state?.findSurface === 'search'
     ? studentPlaceFor(saved, tab, parentFindBranch(state))
     : studentPlaceFor(saved, tab);
@@ -1374,6 +1375,7 @@ export async function bootFindGpsIfNeeded(state, tab, rerender) {
  * @property {string} [_placeTab] — 학생 현재 위치가 잡힌 탭
  * @property {'idle'|'loading'|'ready'|'error'} [studentFeedStatus]
  * @property {import('./state.js').ViewerRole} [role]
+ * @property {'search'|null} [findSurface] — 찾기 화면이면 search. 홈은 비운다.
  */
 
 /**
@@ -1951,11 +1953,14 @@ export function studentCurrentPlace(label) {
   return '';
 }
 
+/** @param {FindSurfaceState} state @returns {'tutor'|'study_room'|null} */
 function resolveStudentSearchHope(state) {
   if (state.studentHopeType === 'study_room' || state.studentHopeType === 'tutor') {
     return state.studentHopeType;
   }
   if (state.role === 'study_room') return 'study_room';
+  // 찾기 화면의 학생은 세션 분기가 없으면 과외로 채우지 않는다. 홈·다른 역할은 기존처럼 tutor.
+  if (state.role === 'parent' && state.findSurface === 'search') return null;
   return 'tutor';
 }
 
@@ -2319,7 +2324,11 @@ function renderField(field, state, opts = {}) {
   const defaultRegion = '';
 
   if (field.key === 'preferred_region') {
-    const step3Open = resolveStudentSearchHope(state) === 'study_room';
+    const hope = resolveStudentSearchHope(state);
+    if (hope !== 'study_room' && hope !== 'tutor') {
+      return `<p class="search-field__hint">희망 유형이 정해진 뒤에 지역을 고를 수 있어요.</p>`;
+    }
+    const step3Open = hope === 'study_room';
     const regionField = step3Open
       ? renderGuCascadeField(state, {
           compact,
@@ -3111,7 +3120,7 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
         if (id) state().lastSearchFilters.tutor_region_id = id;
         else delete state().lastSearchFilters.tutor_region_id;
       }
-      if (tab === 'student' && state().studentHopeType !== 'study_room') {
+      if (tab === 'student' && state().studentHopeType === 'tutor') {
         delete state().lastSearchFilters.preferred_region_label;
         delete state().lastSearchFilters.preferred_region;
         if (id) state().lastSearchFilters.preferred_region_id = id;
