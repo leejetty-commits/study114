@@ -23,6 +23,23 @@ return [
      * 5MB: 사업자·교육청 등록증 스캔/사진에 충분하고, 닷홈 업로드·디스크에 무리가 적다.
      * (홍보사진 4MB · 제출함 10MB 사이의 상담 채널 한도)
      */
+    /**
+     * 고민방 글 사진. 장당 10MB까지 받고, 저장은 긴 쪽 1600px WebP만 남긴다.
+     * 제출자료(submission)·쪽지(message) 규칙과는 따로다.
+     */
+    'concern' => [
+        'max_files' => 3,
+        'max_size_bytes' => 10 * 1024 * 1024,
+        'max_long_edge' => 1600,
+        'target_bytes' => 1024 * 1024,
+        'webp_quality' => 82,
+        'allowed_extensions' => ['jpg', 'jpeg', 'png', 'webp'],
+        'allowed_mimes' => [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+        ],
+    ],
     'message' => [
         'max_size_bytes' => 5 * 1024 * 1024,
         'max_files' => 3,

@@ -194,6 +194,9 @@ export const COMMUNITY_COMPOSE_HINT =
 
 export const CONCERN_COMPOSE_HINT = COMMUNITY_COMPOSE_HINT;
 
+export const CONCERN_PHOTO_HINT =
+  '사진은 최대 3장, 장당 10MB까지 올릴 수 있어요. 작은 사진은 흐리게 보일 수 있으니, 더 또렷한 사진이 있으면 그 사진으로 올려 주세요.';
+
 /** 우측 레일 고민방 배너·HOT·이달의 베스트·레일 읽기 팝업 문구. 레일 렌더러는 이 상수만 쓴다. */
 export const CONCERN_RAIL_COPY = {
   roomEmpty: '아직 글이 미도착중... 첫 이야기를 기다려요',

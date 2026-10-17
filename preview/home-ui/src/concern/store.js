@@ -330,6 +330,74 @@ export async function saveConcernPost(input) {
   return post;
 }
 
+/**
+ * 글을 먼저 저장한 뒤 사진을 올린다. 사진이 실패해도 글은 지우지 않는다.
+ * @param {{ boardKey: string, postKey?: string, title: string, body: string, type?: string }} input
+ * @param {{ files?: File[], removeKeys?: string[] }} [photo]
+ * @returns {Promise<{ post: object, photoError: string }>}
+ */
+export async function saveConcernPostThenPhotos(input, photo = {}) {
+  const post = await saveConcernPost(input);
+  const files = photo.files || [];
+  const removeKeys = photo.removeKeys || [];
+  if (!files.length && !removeKeys.length) return { post, photoError: '' };
+  try {
+    for (const key of removeKeys) {
+      await deleteConcernPhoto(input.boardKey, post.id, key);
+    }
+    if (files.length) await uploadConcernPhotos(input.boardKey, post.id, files);
+    return { post, photoError: '' };
+  } catch (err) {
+    return { post, photoError: err instanceof Error ? err.message : '사진을 올리지 못했어요.' };
+  }
+}
+
+/** @returns {Promise<{ key: string, url: string, sizeBytes: number }[]>} */
+export async function fetchConcernPhotos(boardKey, postKey) {
+  const params = new URLSearchParams({ board_key: boardKey, post_key: postKey });
+  const res = await fetch(`/api/board/concern-photos.php?${params}`, { credentials: 'include' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.message || '사진을 불러오지 못했어요.');
+  }
+  return Array.isArray(data.photos) ? data.photos : [];
+}
+
+/** @param {File[]} files */
+export async function uploadConcernPhotos(boardKey, postKey, files) {
+  for (const file of files) {
+    const body = new FormData();
+    body.append('board_key', boardKey);
+    body.append('post_key', postKey);
+    body.append('file', file);
+    const res = await fetch('/api/board/concern-photos.php', {
+      method: 'POST',
+      credentials: 'include',
+      body,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      throw new Error(data.message || '사진을 올리지 못했어요.');
+    }
+  }
+}
+
+export async function deleteConcernPhoto(boardKey, postKey, attachmentKey) {
+  const params = new URLSearchParams({
+    board_key: boardKey,
+    post_key: postKey,
+    file: attachmentKey,
+  });
+  const res = await fetch(`/api/board/concern-photos.php?${params}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    throw new Error(data.message || '사진을 빼지 못했어요.');
+  }
+}
+
 /* ── 글 삭제 (DELETE /api/board/posts.php) ── */
 
 /**
