@@ -260,6 +260,14 @@ function openFindGuestLogin() {
   });
 }
 
+/** 지금 화면에 그려진 학생을 먼저 보고, 없으면 검색 결과 목록을 본다. */
+function findSearchStudentItem(id) {
+  return (
+    previewState.activeResultItems?.find((x) => x.id === id) ||
+    previewState.searchExposureItems.find((x) => x.id === id)
+  );
+}
+
 /**
  * 비로그인 찾기: 목록 클릭은 기존 상세 가드, 검색·필터·정렬·학생 카드는 로그인 팝업.
  * 검색 API를 부르는 bindFindSurfaceEvents / afterSearchPageMount 는 붙이지 않는다.
@@ -274,7 +282,7 @@ function bindGuestFindBrowse(root, rerender) {
     onRerender: rerender,
     viewer: 'guest',
     sourceRoute: 'search',
-    getStudentItem: (id) => previewState.searchExposureItems.find((x) => x.id === id),
+    getStudentItem: findSearchStudentItem,
   });
   bindProtectedGuestActions(root);
   bindGuestEmptyCardLoginGate(root);
@@ -392,7 +400,7 @@ export function bindSearchPageEvents(root, rerender, opts = {}) {
     onRerender: rerender,
     viewer: sessionLoggedIn ? viewer : 'guest',
     sourceRoute: 'search',
-    getStudentItem: (id) => previewState.searchExposureItems.find((x) => x.id === id),
+    getStudentItem: findSearchStudentItem,
   });
 
   if (!sessionLoggedIn) {
