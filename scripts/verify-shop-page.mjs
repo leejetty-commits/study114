@@ -439,6 +439,8 @@ ok(
     idsC.includes(id),
   ),
 );
+ok('케이스C_페이스북숨김', !htmlC.includes('페이스북') && !htmlC.includes('facebook.com'));
+ok('케이스C_유튜브인스타유지', htmlC.includes('유튜브') && htmlC.includes('instagram.com'));
 ok(
   '후기섹션_티저placeholder',
   htmlC.includes('data-shop-section="reviews"') &&

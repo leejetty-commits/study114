@@ -12,6 +12,9 @@ import { getTutor, updateTutor } from './store.js';
 import { tutorBasicMissing, tutorBasicMissingMessage } from '../../../shared/tutor-basic-fields.js';
 
 const PROMO_FIELDS_IF_PRESENT = [
+  'youtube_url',
+  'facebook_url',
+  'instagram_url',
   'youtube_url_2',
   'youtube_url_3',
   'youtube_url_4',
@@ -162,9 +165,6 @@ export async function saveTutorDetailInline(tutorId, detail) {
       contact_time_note: detail.contact_time_note || '',
       intro_short: introShort || detail.intro_short || '',
       intro_long: introLong || detail.intro_long || '',
-      youtube_url: detail.youtube_url || '',
-      facebook_url: detail.facebook_url || '',
-      instagram_url: detail.instagram_url || '',
       ...promoFieldsIfPresent(detail),
     });
     await hydrateRegistrationsCache();

@@ -642,6 +642,11 @@ final class TutorRegisterService
 
         $this->assertBlogPair($input, 'blog_url_1', 'blog_title_1', '1번째');
         $this->assertBlogPair($input, 'blog_url_2', 'blog_title_2', '2번째');
+        $yt = $this->promoPresentValue($input, 'youtube_url', 'youtube', '유튜브');
+        $ig = $this->promoPresentValue($input, 'instagram_url', 'instagram', '인스타그램');
+        $fb = array_key_exists('facebook_url', $input)
+            ? [1, $this->optionalUrl($input, 'facebook_url')]
+            : [0, null];
         $yt2 = $this->promoPresentValue($input, 'youtube_url_2', 'youtube', '유튜브 2번째');
         $yt3 = $this->promoPresentValue($input, 'youtube_url_3', 'youtube', '유튜브 3번째');
         $yt4 = $this->promoPresentValue($input, 'youtube_url_4', 'youtube', '유튜브 4번째');
@@ -652,7 +657,10 @@ final class TutorRegisterService
         $tiktok = $this->promoPresentValue($input, 'tiktok_url', 'tiktok', '틱톡');
         $clip = $this->promoPresentValue($input, 'naver_clip_url', 'naver_clip', '네이버 클립');
         $stmt = $pdo->prepare(
-            'UPDATE tutors SET contact_time_note = ?, youtube_url = ?, facebook_url = ?, instagram_url = ?,
+            'UPDATE tutors SET contact_time_note = ?,
+                youtube_url = IF(? = 1, ?, youtube_url),
+                facebook_url = IF(? = 1, ?, facebook_url),
+                instagram_url = IF(? = 1, ?, instagram_url),
                 youtube_url_2 = IF(? = 1, ?, youtube_url_2),
                 youtube_url_3 = IF(? = 1, ?, youtube_url_3),
                 youtube_url_4 = IF(? = 1, ?, youtube_url_4),
@@ -666,9 +674,9 @@ final class TutorRegisterService
         );
         $stmt->execute([
             $this->optionalString($input, 'contact_time_note'),
-            $this->optionalPromoUrl($input, 'youtube_url', 'youtube', '유튜브'),
-            $this->optionalUrl($input, 'facebook_url'),
-            $this->optionalPromoUrl($input, 'instagram_url', 'instagram', '인스타그램'),
+            $yt[0], $yt[1],
+            $fb[0], $fb[1],
+            $ig[0], $ig[1],
             $yt2[0], $yt2[1],
             $yt3[0], $yt3[1],
             $yt4[0], $yt4[1],
@@ -1265,7 +1273,7 @@ final class TutorRegisterService
             'instagram' => ['instagram.com', 'www.instagram.com'],
             'tiktok' => ['tiktok.com', 'www.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'],
             'naver_clip' => ['clip.naver.com'],
-            'blog' => ['blog.naver.com'],
+            'blog' => ['blog.naver.com', 'm.blog.naver.com'],
         ];
         return in_array(strtolower($host), $map[$channel] ?? [], true);
     }

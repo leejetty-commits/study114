@@ -262,9 +262,9 @@ export function buildShopViewModel(s, room = {}) {
         ? facNoteRaw
         : '';
 
+  // facebook_url 은 state에 남긴다. 공개 샵에서는 링크만 숨긴다.
   const socialLinks = [
     blank(s?.youtube_url) && { label: '유튜브', href: blank(s.youtube_url) },
-    blank(s?.facebook_url) && { label: '페이스북', href: blank(s.facebook_url) },
     blank(s?.instagram_url) && { label: '인스타그램', href: blank(s.instagram_url) },
   ].filter(Boolean);
 

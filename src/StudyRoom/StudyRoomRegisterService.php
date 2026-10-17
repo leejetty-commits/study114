@@ -1974,7 +1974,7 @@ final class StudyRoomRegisterService
             'instagram' => ['instagram.com', 'www.instagram.com'],
             'tiktok' => ['tiktok.com', 'www.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'],
             'naver_clip' => ['clip.naver.com'],
-            'blog' => ['blog.naver.com'],
+            'blog' => ['blog.naver.com', 'm.blog.naver.com'],
         ];
         return in_array(strtolower($host), $map[$channel] ?? [], true);
     }

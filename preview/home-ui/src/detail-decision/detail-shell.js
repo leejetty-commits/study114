@@ -32,11 +32,13 @@ import { bindProviderReviewMount } from '../provider-reviews/ui.js';
 import { bindReviewSheetTriggers, openReviewSheet } from '../provider-reviews/sheet.js';
 import { isLoggedIn } from '../auth-session.js';
 import { guardGuestDeepAccess } from '../guest-deep-access.js';
+import { loadPromoChannelForCard } from './promo-channel-load.js';
 import { renderItemActions } from '../exposure-render.js';
 import { bindProtectedGuestActions } from '../../../shared/guest-gate-ui.js';
 import { toggleRecommendation } from '../search-api.js';
 
 const MODAL_ID = 'p24-detail-modal';
+let promoOpenSeq = 0;
 
 export function closeDetailModal() {
   const modal = document.getElementById(MODAL_ID);
@@ -240,6 +242,16 @@ function bindFloatingDrag(wrap) {
 export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 'search' }) {
   if ((kind === 'study_room' || kind === 'tutor') && !isLoggedIn()) {
     guardGuestDeepAccess('card_detail', { providerType: kind, providerId: Number(item?.id) || 0 });
+    return;
+  }
+  if ((kind === 'study_room' || kind === 'tutor') && item && !item._promoChannelLoaded) {
+    const seq = ++promoOpenSeq;
+    loadPromoChannelForCard(kind, item.id).then((fields) => {
+      if (seq !== promoOpenSeq) return;
+      if (fields) Object.assign(item, fields);
+      item._promoChannelLoaded = true;
+      openDetailModal({ kind, item, viewer, onRerender, sourceRoute });
+    });
     return;
   }
   closeDetailModal();
