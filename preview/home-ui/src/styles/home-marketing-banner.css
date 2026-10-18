@@ -133,21 +133,37 @@
   padding: 18px 18px 18px 22px;
   border: 1px solid #e6dfd4;
   border-radius: 12px;
-  background: #f6f1e8;
+  background-color: #f6f1e8;
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: cover;
+  overflow: hidden;
   color: #1c1917;
   text-decoration: none;
+}
+
+.home-promo-trio__card--study {
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 42%, rgba(255, 255, 255, 0.15) 100%),
+    url('/assets/banners/catalog-study.webp');
 }
 
 .home-promo-trio__card--tutor {
   --home-promo-accent: #0f766e;
   --home-promo-hover-bg: #e6f4f1;
   --home-promo-hover-line: #b7ded8;
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 42%, rgba(255, 255, 255, 0.15) 100%),
+    url('/assets/banners/catalog-tutor.webp');
 }
 
 .home-promo-trio__card--parent {
   --home-promo-accent: #c2410c;
   --home-promo-hover-bg: #fff7ed;
   --home-promo-hover-line: #fed7aa;
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 42%, rgba(255, 255, 255, 0.15) 100%),
+    url('/assets/banners/catalog-student.webp');
 }
 
 .home-promo-trio__card::before {
@@ -185,7 +201,6 @@
 
 .home-promo-trio__card:hover {
   border-color: var(--home-promo-hover-line);
-  background: var(--home-promo-hover-bg);
 }
 
 .home-promo-trio__card:hover .home-promo-trio__title {
