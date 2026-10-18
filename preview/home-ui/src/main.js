@@ -429,6 +429,9 @@ function init() {
     window.addEventListener('auth:profile', () => {
       render();
     });
+    window.addEventListener('auth:session-hydrated', () => {
+      render();
+    });
     if (shouldPaintBeforeSession()) {
       try {
         render();

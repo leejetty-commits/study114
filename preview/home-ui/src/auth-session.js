@@ -279,7 +279,10 @@ export async function initAuthSession(navigateHome = false, opts = {}) {
       return user;
     }
     // 부가 로딩이 끝나기 전에 역할 화면을 그리게, 호출자가 바로 받게 한다.
-    void hydrateSessionDependencies(opts);
+    // 저장 지역 캐시가 채워진 뒤 찾기 화면이 한 번 다시 그려지게 알린다.
+    void hydrateSessionDependencies(opts).then(() => {
+      window.dispatchEvent(new CustomEvent('auth:session-hydrated'));
+    });
     return user;
   } catch (err) {
     if (err instanceof SessionUnconfirmedError) {

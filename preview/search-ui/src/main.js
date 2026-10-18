@@ -108,6 +108,10 @@ function init() {
     allowFindBoot = true;
     render();
   });
+  window.addEventListener('auth:session-hydrated', () => {
+    if (!allowFindBoot) return;
+    render();
+  });
 }
 
 init();
