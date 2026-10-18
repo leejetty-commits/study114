@@ -54,7 +54,7 @@
 
 /* 탭 바 14px 유지 */
 .home-app--role-parent .mp-room {
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .home-app--role-parent .mp-room__head {
@@ -65,7 +65,7 @@
   color: var(--s5-muted);
   font-size: 14px;
   font-weight: 500;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   background: transparent;
 }
 
@@ -93,7 +93,7 @@
 .home-app--role-parent .mp-room .p19-hub-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 /* 섹션 카드 공통 */
@@ -103,7 +103,7 @@
   background: var(--s5-surface);
   border: 1px solid var(--s5-line);
   border-radius: 12px;
-  padding: 24px;
+  padding: var(--space-6);
   box-shadow: none;
   box-sizing: border-box;
 }
@@ -114,7 +114,7 @@
   background: transparent;
   border: 0;
   padding: 0;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .home-app--role-parent .mp-room .p19-form-section__title,
@@ -139,18 +139,18 @@
 .home-app--role-parent .mp-room .p21-profile {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .home-app--role-parent .mp-room .p21-profile__section--summary {
-  padding: 24px;
+  padding: var(--space-6);
 }
 
 .home-app--role-parent .mp-room .p21-profile__preview-wrap {
   background: var(--s5-bg);
   border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 24px;
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .home-app--role-parent .mp-room .p21-profile__name {
@@ -167,7 +167,7 @@
   font-size: 14px;
   font-weight: 400;
   line-height: 1.5;
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 /* 카드 2·3 헤더 및 「수정」 링크 */
@@ -175,8 +175,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .home-app--role-parent .mp-room .p21-profile__edit {
@@ -203,7 +203,7 @@
 .home-app--role-parent .mp-room .p21-profile__row {
   display: grid;
   grid-template-columns: 144px 1fr;
-  gap: 16px;
+  gap: var(--space-4);
   align-items: center;
   padding: 12px 0;
   border-top: 1px solid var(--s5-line);
@@ -250,7 +250,7 @@
   margin: 0 !important;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .home-app--role-parent .mp-room .p19-field {
@@ -278,7 +278,7 @@
 .home-app--role-parent .mp-room .p19-row2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 /* 입력·선택 컨트롤 (h44, padding 0 12, radius 8, 16px) */
@@ -297,15 +297,15 @@
   height: 44px;
   padding: 0 12px;
   box-sizing: border-box;
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 .home-app--role-parent .mp-room .p19-textarea {
   height: auto;
   min-height: 96px;
-  padding: 12px;
+  padding: var(--space-3);
   box-sizing: border-box;
-  margin-top: 8px;
+  margin-top: var(--space-2);
   line-height: 1.55;
 }
 
@@ -322,7 +322,7 @@
   background: var(--s5-surface);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   cursor: pointer;
   box-sizing: border-box;
 }
@@ -336,8 +336,8 @@
 
 /* 저장 바 (카드 안 맨 아래, 위 1px solid #E5E7EB, 좌측 정렬) */
 .home-app--role-parent .mp-room .p19-form-footer {
-  margin-top: 24px;
-  padding-top: 24px;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
   border-top: 1px solid var(--s5-line);
   background: transparent;
   border-bottom: 0;
@@ -350,7 +350,7 @@
 
 .home-app--role-parent .mp-room .p19-form-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: flex-start;
 }
 
@@ -377,7 +377,7 @@
 .home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choices {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   margin: 0 !important;
 }
 
@@ -393,7 +393,7 @@
   font-weight: 500;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   cursor: pointer;
   box-sizing: border-box;
   user-select: none;
@@ -432,7 +432,7 @@
 .home-app--role-parent .mp-room [data-p19-hope-panel] {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .home-app--role-parent .mp-room [data-p19-hope-panel][hidden] {
@@ -441,13 +441,13 @@
 
 /* 과외 희망지역 ([data-region-cascade]): 하위 라벨 12/600/#4B5563, 라벨->선택칸 8, 하위 칸 사이 16, 희망지역 라벨->첫 하위 라벨 8 */
 .home-app--role-parent .mp-room [data-p19-tutor-region-slot] {
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 .home-app--role-parent .mp-room [data-region-cascade] {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .home-app--role-parent .mp-room [data-region-cascade] [hidden],
@@ -471,7 +471,7 @@
 }
 
 .home-app--role-parent .mp-room [data-region-cascade] .p19-select {
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 /* 공부방 희망지역 (§2-5: 라벨 보임, 색 박스 제거, 같은 시작선, 주소칸 좌우 12, 결과 줄 10/12, Secondary h44) */
@@ -504,7 +504,7 @@
 .home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   margin-top: 2px !important;
   margin-bottom: 0 !important;
   padding: 0 !important;
@@ -522,7 +522,7 @@
 
 .home-app--role-parent .mp-room [data-hope-region] .register-region-slot__search {
   min-height: 0 !important;
-  margin-top: 8px !important;
+  margin-top: var(--space-2) !important;
   margin-bottom: 0 !important;
   padding: 0 !important;
 }
@@ -551,7 +551,7 @@
   font-weight: 500;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   cursor: pointer;
   box-sizing: border-box;
 }
@@ -592,7 +592,7 @@
 
 .home-app--role-parent .mp-room [data-hope-region] .form-address__zip-row {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
   margin: 0 !important;
 }
@@ -627,12 +627,12 @@
   font-size: 12px;
   color: var(--s5-muted);
   line-height: 1.4;
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 .home-app--role-parent .mp-room [data-hope-region] [data-slot-resolved] {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
   padding: 10px 12px;
   border-radius: 8px;
@@ -673,12 +673,12 @@
   .home-app--role-parent .mp-room .p21-profile__section,
   .home-app--role-parent .mp-room .p21-profile__section--summary,
   .home-app--role-parent .mp-room .student-detail-section {
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   .home-app--role-parent .mp-room .p21-profile__row {
     grid-template-columns: 112px 1fr;
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   .home-app--role-parent .mp-room .p19-row2 {
