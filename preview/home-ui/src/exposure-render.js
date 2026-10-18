@@ -559,11 +559,12 @@ export function renderExposureBox(kind, tier, item, slotLabel, opts = {}) {
 }
 
 /**
- * 비회원 홈 프라임 빈 줄. 화면 구분이 없을 때만 사진 자리를 넣는다.
+ * 프라임이 0장인 홈 홍보 빈 카드. 검색 결과만 사진 자리를 넣지 않는다.
+ * 공부방·과외쌤 홈은 surfaceMode가 region으로 들어온다.
  * @param {{ surfaceMode?: string }} [opts]
  */
 function homeEmptyMedia(opts = {}) {
-  return !opts.surfaceMode;
+  return opts.surfaceMode !== 'search';
 }
 
 /**
