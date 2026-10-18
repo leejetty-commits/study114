@@ -205,6 +205,11 @@ function renderScreen() {
     return;
   }
   if (isSupportRoute()) {
+    // 해시가 세션 확정 전에 고객센터로 바뀌면 비회원 화면을 그리지 않는다.
+    if (!sessionChecked) {
+      app.innerHTML = '';
+      return;
+    }
     app.innerHTML = renderSupport();
     bindSupportEvents(app, render);
     mountOpsChrome(app);
@@ -219,6 +224,11 @@ function renderScreen() {
     return;
   }
   if (isCommunityRoute()) {
+    // 해시가 세션 확정 전에 커뮤니티로 바뀌면 비회원 화면을 그리지 않는다.
+    if (!sessionChecked) {
+      app.innerHTML = '';
+      return;
+    }
     app.innerHTML = renderConcern();
     bindConcernEvents(app, render);
     mountOpsChrome(app);
@@ -358,6 +368,15 @@ function init() {
     // 게스트·공개 화면은 me.php·board·support 완료 전에 셸을 그린다.
     // 역할 홈·마이페이지·관리자는 세션 전 guard가 해시를 옮기므로 여기서 그리지 않는다.
     let bootReady = false;
+    // 해시가 바뀌기 전에 비운다. hashchange는 한 프레임 늦게 돌아 이전 게스트 홈이 남는다.
+    document.addEventListener('click', (event) => {
+      if (sessionChecked) return;
+      const target = event.target instanceof Element ? event.target : null;
+      const hit = target?.closest('[data-action="gnb-community"], [data-action="gnb-support"]');
+      if (!hit) return;
+      const app = document.getElementById('app');
+      if (app) app.innerHTML = '';
+    }, true);
     window.addEventListener('hashchange', (event) => {
       if (!bootReady) return;
       // 부트가 넣은 같은 주소 hashchange만 건너뛴다.
