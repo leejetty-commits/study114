@@ -60,7 +60,7 @@ export const GUIDE_ARTICLES = [
     slug: 'prepay',
     title: '선입금·전액선불 주의',
     priority: 'primary',
-    audience: '학부모',
+    audience: '학생·학부모',
     related: ['safe-what', 'first-meeting', 'dispute'],
     body: [
       '장기·고액 선입금은 신중히 결정하세요.',
@@ -115,7 +115,7 @@ export const GUIDE_ARTICLES = [
     slug: 'parent-check',
     title: '학부모·학생 등록 체크리스트',
     priority: 'secondary',
-    audience: '학부모',
+    audience: '학생·학부모',
     related: ['provider-check', 'prepay', 'privacy'],
     body: [
       '찾기·비교·연락은 **회원 주도**입니다. 플랫폼이 후보를 골라 주거나 대금을 보관하지 않습니다.',
@@ -258,8 +258,8 @@ export const FAQ_ITEMS = [
   },
   {
     category: 'plans',
-    q: '유료 서비스는 학부모가 구매하나요?',
-    a: '아닙니다. 공부방·과외쌤용 동네 노출(기간) 상품과 쪽지권이며, 학부모 과외비 결제와 무관합니다.',
+    q: '유료 서비스는 학생·학부모가 구매하나요?',
+    a: '아닙니다. 공부방·과외쌤용 동네 노출(기간) 상품과 쪽지권이며, 학생·학부모 과외비 결제와 무관합니다.',
   },
   {
     category: 'plans',
@@ -299,7 +299,7 @@ export const FAQ_ITEMS = [
   {
     category: 'search',
     q: '학생찾기는 누구를 위한 화면인가요?',
-    a: '공부방·과외쌤용입니다. 학부모가 공부방·과외쌤을 찾는 화면과는 방향이 반대예요. [이용안내](#/guide/start)를 보세요.',
+    a: '공부방·과외쌤용입니다. 학생·학부모가 공부방·과외쌤을 찾는 화면과는 방향이 반대예요. [이용안내](#/guide/start)를 보세요.',
   },
   {
     category: 'search',

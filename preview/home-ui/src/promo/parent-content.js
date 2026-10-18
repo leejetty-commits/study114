@@ -13,7 +13,7 @@ export const PARENT_PROMO = {
     titleLine1: '우리동네 공부방·과외,',
     titleLine2: '기준으로 비교하고 쪽지로 시작하세요',
     leadBefore: '학생은 가까운 공부방과 과외를 같은 기준으로 비교하고,',
-    leadAfter: '마음에 두면 찜한 뒤 쪽지로 묻습니다. 학부모는 함께 보면 됩니다.',
+    leadAfter: '마음에 두면 찜한 뒤 쪽지로 묻습니다. 학생·학부모가 함께 보면 됩니다.',
     primaryCta: { label: '가입하고 찾기 시작하기' },
     secondaryCta: { label: '안전이용 안내' },
   },
@@ -55,7 +55,7 @@ export const PARENT_PROMO = {
   structure: {
     badge: '시작',
     title: '가입하면 비교와 쪽지를 바로 쓸 수 있습니다',
-    body: '학생 가입 후 우리동네 공부방·과외를 찾고, 찜·비교로 후보를 줄인 다음 쪽지로 시작합니다. 학부모는 같은 화면을 함께 보면 됩니다.',
+    body: '학생 가입 후 우리동네 공부방·과외를 찾고, 찜·비교로 후보를 줄인 다음 쪽지로 시작합니다. 학생·학부모는 같은 화면을 함께 보면 됩니다.',
     cta: { label: '가입하고 찾기 시작하기' },
     formCta: '비교할 기준만 정하면 됩니다',
     formFields: [
@@ -109,7 +109,7 @@ export const PARENT_PROMO = {
   },
   finalCta: {
     title: '우리동네 공부방·과외를 기준으로 비교해 보세요',
-    lead: '학생은 찜·비교 뒤에 쪽지로 시작하고, 학부모는 그 과정을 함께 보면 됩니다.',
+    lead: '학생은 찜·비교 뒤에 쪽지로 시작하고, 학생·학부모는 그 과정을 함께 보면 됩니다.',
     primaryCta: { label: '가입하고 찾기 시작하기' },
     secondaryCta: { label: '안전이용 안내' },
   },
