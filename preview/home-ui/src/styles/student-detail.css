@@ -12,12 +12,12 @@
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 24px;
+  padding: var(--space-6);
   box-sizing: border-box;
 }
 
 .student-detail-head {
-  margin: 0 0 24px;
+  margin: 0 0 var(--space-6);
 }
 
 .student-detail-title {
@@ -29,7 +29,7 @@
 }
 
 .student-detail-lead {
-  margin: 4px 0 0;
+  margin: var(--space-1) 0 0;
   font-size: 14px;
   line-height: 1.5;
   color: #4b5563;
@@ -38,7 +38,7 @@
 .student-detail-body {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .student-detail-field {
@@ -60,13 +60,13 @@
   line-height: 1.4;
   color: #4b5563;
   margin-top: 2px;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .student-detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .student-detail-form .p19-input,
@@ -78,7 +78,7 @@
 
 .student-detail-form .p19-input:not(.p19-textarea) {
   height: 44px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   font-size: 16px;
   border: 1px solid #e5e7eb;
 }
@@ -86,7 +86,7 @@
 .student-detail-form .p19-textarea {
   height: auto;
   min-height: 96px;
-  padding: 12px;
+  padding: var(--space-3);
   font-size: 16px;
   line-height: 1.55;
   border: 1px solid #e5e7eb;
@@ -95,14 +95,14 @@
 .student-detail-form .p19-chip-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   margin-top: 0;
 }
 
 .student-detail-form .p19-chip {
   min-height: 44px;
   height: 44px;
-  padding: 0 16px;
+  padding: 0 var(--space-4);
   border-radius: 6px;
   border: 1px solid #e5e7eb;
   background: #ffffff;
@@ -111,7 +111,7 @@
   font-weight: 500;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   cursor: pointer;
   box-sizing: border-box;
   user-select: none;
@@ -152,7 +152,7 @@
 
 @media (max-width: 640px) {
   .student-detail-section {
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   .student-detail-title {
