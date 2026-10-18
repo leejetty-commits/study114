@@ -66,7 +66,7 @@ export const PARENT_PROMO = {
   },
   personas: {
     eyebrow: '누구를 위한 안내',
-    title: '학생을 중심으로, 학부모는 보조입니다',
+    title: '학생이 중심에서 고르고, 학부모는 함께 확인합니다',
     cards: [
       {
         role: '학생',
