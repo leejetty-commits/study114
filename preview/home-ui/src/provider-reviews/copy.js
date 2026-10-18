@@ -56,7 +56,7 @@ export const PROVIDER_REVIEW_COPY = {
   manageCta: '내 후기 관리하기',
   closedCta: '현재는 새 후기를 받지 않아요',
   ineligibleCta: '후기 작성은 쪽지(상담/문의) 경험 후 가능해요',
-  providerRoleCta: '후기는 이용자(학부모/학생)만 남길 수 있어요',
+  providerRoleCta: '후기는 이용자(학생·학부모)만 남길 수 있어요',
   blockedCta: '이 대상에는 더 이상 후기를 남길 수 없어요',
   moreCta: '후기 더보기',
   writeTitle: '후기 남기기',
